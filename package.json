@@ -1,0 +1,20 @@
+{
+  "name": "companion",
+  "version": "1.0.0",
+  "description": "Bitfocus Event Companion",
+  "main": "main.js",
+  "scripts": {
+    "start": "./bitfocus-skeleton/start.sh"
+  },
+  "repository": "https://github.com/bitfocus/companion",
+  "keywords": [
+    "bitfocus",
+    "companion"
+  ],
+  "author": "Bitfocus",
+  "license": "MIT",
+  "devDependencies": {},
+  "dependencies": {
+    "electron": "^1.8.4"
+  }
+}
