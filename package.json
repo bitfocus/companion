@@ -2,9 +2,21 @@
   "name": "companion",
   "version": "1.0.0",
   "description": "Bitfocus Event Companion",
-  "main": "main.js",
+  "main": "bitfocus-skeleton/main.js",
+  "build": {
+    "appId": "companion.bitfocus.no",
+    "mac": {
+      "category": "your.app.category.type"
+    },
+	  "directories": {
+	    "buildResources": "~/electron-build/",
+	    "output": "~/electron-output/"
+	  }
+  },
   "scripts": {
-    "start": "./bitfocus-skeleton/start.sh"
+    "start": "./bitfocus-skeleton/start.sh",
+    "pack": "electron-builder --dir",
+    "dist": "electron-builder"
   },
   "repository": "https://github.com/bitfocus/companion",
   "keywords": [
@@ -13,8 +25,11 @@
   ],
   "author": "Bitfocus",
   "license": "MIT",
-  "devDependencies": {},
-  "dependencies": {
+  "devDependencies": {
     "electron": "^1.8.4"
+  },
+  "dependencies": {
+    "debug": "^3.1.0",
+    "read-package-json": "^2.0.13"
   }
 }

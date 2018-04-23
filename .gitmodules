@@ -1,3 +1,6 @@
 [submodule "bitfocus-skeleton"]
 	path = bitfocus-skeleton
 	url = git@github.com:bitfocus/bitfocus-skeleton.git
+[submodule "bitfocus-libs"]
+	path = bitfocus-libs
+	url = git@github.com:bitfocus/bitfocus-libs.git
