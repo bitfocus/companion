@@ -8,22 +8,26 @@
     "mac": {
       "category": "your.app.category.type"
     },
+    "win": {
+      "target": "NSIS"
+    },
     "directories": {
-      "buildResources": "~/electron-build/",
-      "output": "~/electron-output/"
+      "buildResources": "/Users/williamv/electron-build/",
+      "output": "/Users/williamv/electron-output/"
     }
   },
   "scripts": {
     "start": "./bitfocus-skeleton/start.sh",
     "pack": "electron-builder --dir",
-    "dist": "electron-builder"
+    "dist": "electron-builder",
+    "windist": "electron-builder --platform=win32"
   },
   "repository": "https://github.com/bitfocus/companion",
   "keywords": [
     "bitfocus",
     "companion"
   ],
-  "author": "Bitfocus",
+  "author": "Bitfocus AS",
   "license": "MIT",
   "devDependencies": {
     "electron": "^1.8.4"
