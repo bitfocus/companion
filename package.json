@@ -37,6 +37,7 @@
     "express": "^4.16.3",
     "read-package-json": "^2.0.13",
     "socket.io": "^2.1.0",
-    "socket.io-client": "^2.1.0"
+    "socket.io-client": "^2.1.0",
+    "streamdeck-driver": "git+ssh://git@bitbucket.org/trippelm/streamdeck-driver.git"
   }
 }
