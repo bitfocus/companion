@@ -10,7 +10,8 @@ var config = new (require('./bitfocus-libs/config'))(system, {
 	http_bind: "0.0.0.0"
 });
 
-var http = new (require('./lib/http'))(system);
+var http   = new (require('./lib/http'))(system);
+var elgato = new (require('./lib/elgato'))(system);
 
 system.on('config_loaded', function(config) {
 	system.emit('skeleton-info', 'appName', 'Companion');
