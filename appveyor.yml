@@ -12,6 +12,8 @@ init:
 
 install:
   - ps: Install-Product node 9 x64
+  - git submodule init
+  - git submodule update
   - yarn
 
 build_script:
