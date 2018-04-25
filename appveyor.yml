@@ -19,6 +19,10 @@ install:
   - git submodule update
   - yarn
 
+artifacts:
+  - path: electron-output/*.exe
+    name: Installer
+
 build_script:
   - yarn windist
 
