@@ -12,15 +12,15 @@
       "target": "NSIS"
     },
     "directories": {
-      "buildResources": "/Users/williamv/electron-build/",
-      "output": "/Users/williamv/electron-output/"
+      "buildResources": "../electron-build/",
+      "output": "../electron-output/"
     }
   },
   "scripts": {
     "start": "./bitfocus-skeleton/start.sh",
     "pack": "electron-builder --dir",
     "dist": "electron-builder",
-    "windist": "electron-builder --platform=win32"
+    "windist": "electron-builder --win"
   },
   "repository": "https://github.com/bitfocus/companion",
   "keywords": [
@@ -34,11 +34,12 @@
   },
   "dependencies": {
     "debug": "^3.1.0",
+    "electron-debug": "^1.5.0",
     "express": "^4.16.3",
     "json-parser": "^1.1.5",
     "read-package-json": "^2.0.13",
     "socket.io": "^2.1.0",
     "socket.io-client": "^2.1.0",
-    "streamdeck-driver": "git+ssh://git@bitbucket.org/trippelm/streamdeck-driver.git"
+    "streamdeck-driver": "https://github.com/bitfocus/streamdeck-driver.git"
   }
 }
