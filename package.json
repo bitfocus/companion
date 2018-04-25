@@ -30,7 +30,8 @@
   "author": "Bitfocus AS",
   "license": "MIT",
   "devDependencies": {
-    "electron": "^1.8.4"
+    "electron": "^1.8.4",
+    "electron-builder": "^20.10.0"
   },
   "dependencies": {
     "debug": "^3.1.0",
