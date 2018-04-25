@@ -12,9 +12,8 @@ init:
 
 install:
   - ps: Install-Product node 9 x64
-  - sed 's/git@github.com:bitfocus\/bitfocus-skeleton.git/https:\/\/github.com\/bitfocus\/bitfocus-skeleton.git/g' .git/config > .git/config
-  - sed 's/git@github.com:bitfocus\/bitfocus-libs.git/https:\/\/github.com\/bitfocus\/bitfocus-libs.git/g' .git/config > .git/config
-  - cat .git/config
+  - git config --file=.gitmodules submodule.bitfocus-skeleton.url https://github.com/bitfocus/bitfocus-skeleton.git
+  - git config --file=.gitmodules submodule.bitfocus-libs.url https://github.com/bitfocus/bitfocus-libs.git
   - git submodule sync
   - git submodule init
   - git submodule update
