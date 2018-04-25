@@ -6,14 +6,14 @@
   "build": {
     "appId": "companion.bitfocus.no",
     "mac": {
-      "category": "your.app.category.type"
+      "category": "no.bitfocus.companion"
     },
     "win": {
       "target": "NSIS"
     },
     "directories": {
-      "buildResources": "../electron-build/",
-      "output": "../electron-output/"
+      "buildResources": "electron-build/",
+      "output": "electron-output/"
     }
   },
   "scripts": {
