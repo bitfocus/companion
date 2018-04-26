@@ -11,6 +11,9 @@
     "win": {
       "target": "NSIS"
     },
+    "nsis": {
+      "artifactName": "companion-win64"
+    },
     "directories": {
       "buildResources": "electron-build/",
       "output": "electron-output/"

@@ -31,5 +31,6 @@ artifacts:
 
 build_script:
   - yarn windist
+  - ./tools/build_rename_git.sh
 
 test: off
