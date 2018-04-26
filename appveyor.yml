@@ -17,6 +17,12 @@ install:
   - git submodule sync
   - git submodule init
   - git submodule update
+  - cd bitfocus-skeleton
+  - yarn
+  - cd ..
+  - cd bitfocus-libs
+  - yarn
+  - cd ..
   - yarn
 
 artifacts:
