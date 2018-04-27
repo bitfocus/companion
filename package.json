@@ -12,7 +12,7 @@
       "target": "NSIS"
     },
     "nsis": {
-      "artifactName": "companion-win64"
+      "artifactName": "companion-win64.exe"
     },
     "directories": {
       "buildResources": "assets/",
