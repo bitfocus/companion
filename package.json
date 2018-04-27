@@ -15,7 +15,7 @@
       "artifactName": "companion-win64"
     },
     "directories": {
-      "buildResources": "electron-build/",
+      "buildResources": "assets/",
       "output": "electron-output/"
     }
   },
