@@ -17,7 +17,7 @@ system.on('config_loaded', function(config) {
 system.on('exit', function() {
 	console.log("somewhere, the system wants to exit. kthxbai");
 	process.exit();
-})
+});
 
 system.on('skeleton-bind-ip', function(ip) {
 	config.bind_ip = ip;
@@ -26,6 +26,7 @@ system.on('skeleton-bind-ip', function(ip) {
 });
 
 system.on('skeleton-ready', function() {
+	
 	var http = require('./lib/http')(system, 80);
 	var io   = require('./lib/io')(system, http);
 	var panel = new (require('./lib/elgato'))(system);
@@ -88,5 +89,3 @@ system.on('skeleton-ready', function() {
 exports = module.exports = function() {
 	return system;
 }
-
-//	system.emit('skeleton-log', "Version");
