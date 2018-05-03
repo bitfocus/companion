@@ -22,8 +22,8 @@
   "scripts": {
     "start": "./bitfocus-skeleton/start.sh",
     "pack": "electron-builder --dir",
-    "dist": "electron-builder",
-    "windist": "electron-builder --win"
+    "dist": "rm -rf electron-output && electron-builder",
+    "windist": "rm -rf electron-output && electron-builder --win"
   },
   "repository": "https://github.com/bitfocus/companion",
   "keywords": [

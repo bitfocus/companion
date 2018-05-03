@@ -6,4 +6,5 @@ out/
 .cache
 build/
 out/
+electron-output/
 config
