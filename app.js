@@ -9,7 +9,7 @@ var config = new (require('./bitfocus-libs/config'))(system, {
 });
 
 system.on('config_loaded', function(config) {
-  system.emit('skeleton-info', 'appURL', 'Waiting for webserver..');
+	system.emit('skeleton-info', 'appURL', 'Waiting for webserver..');
 	system.emit('skeleton-info', 'appStatus', 'Starting');
 	system.emit('skeleton-info', 'bindInterface', config.bind_ip);
 });
@@ -26,7 +26,7 @@ system.on('skeleton-bind-ip', function(ip) {
 });
 
 system.on('skeleton-ready', function() {
-	
+
 	var http = require('./lib/http')(system, 80);
 	var io   = require('./lib/io')(system, http);
 	var panel = new (require('./lib/elgato'))(system);

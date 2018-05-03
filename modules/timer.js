@@ -132,8 +132,8 @@ module_timer.prototype.timer = function(sign) {
 	var self = this;
 	var canvas = self.panel.newCanvas();
 	var ctx = canvas.getContext('2d');
- 	ctx.translate(0.5, 0.5);
 
+	ctx.translate(0.5, 0.5);
 	ctx.textAlign="center";
 
 	if (sign == 'b') {

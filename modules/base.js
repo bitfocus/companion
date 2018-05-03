@@ -82,7 +82,7 @@ module_base.prototype.updateIcon = function() {
 	self.panel.setDesign(8, self.panel.icon.bind(self, { icon: 'eventmaster', text: 'e2 s3',textcolor: '#fff'} ));
 	self.panel.setDesign(14, self.panel.fa.bind(self, { icon: "\uf03d", text: 'projector' } ));
 	*/
-	
+
 };
 
 module_base.prototype.activate = function(key) {
