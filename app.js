@@ -16,7 +16,9 @@ system.on('config_loaded', function(config) {
 
 system.on('exit', function() {
 	console.log("somewhere, the system wants to exit. kthxbai");
-	process.exit();
+	setImmediate(function(){
+		process.exit();
+	});
 });
 
 system.on('skeleton-bind-ip', function(ip) {
@@ -38,6 +40,9 @@ system.on('skeleton-ready', function() {
 	modul['base'] = new (require('./modules/base.js'))(system, panel);
 	modul['timer'] = new (require('./modules/timer.js'))(system, panel);
 
+	system.on('exit', function() {
+		panel.quit();
+	});
 
 	console.log("waiting for loading items");
 	panel.on('ready', function() {
