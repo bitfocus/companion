@@ -23,10 +23,7 @@
     "start": "./bitfocus-skeleton/start.sh",
     "pack": "electron-builder --dir",
     "dist": "rm -rf electron-output && electron-builder",
-    "windist": "rm -rf electron-output && electron-builder --win",
-    "audit": "npm-audit",
-    "postinstall": "npm-audit",
-    "pretest": "npm-audit"
+    "windist": "rm -rf electron-output && electron-builder --win"
   },
   "repository": "https://github.com/bitfocus/companion",
   "keywords": [
@@ -41,26 +38,26 @@
     "npm-audit": "0.0.3"
   },
   "dependencies": {
+    "@coreui/coreui": "^2.0.0-rc.2",
+    "@coreui/coreui-plugin-chartjs-custom-tooltips": "1.2.0",
     "app-root-path": "^2.0.1",
+    "bootstrap": "4.1.1",
     "canvas": "^1.6.10",
+    "chart.js": "^2.7.2",
     "debug": "^3.1.0",
     "electron-debug": "^1.5.0",
     "express": "^4.16.3",
-    "json-parser": "^1.1.5",
-    "read-package-json": "^2.0.13",
-    "socket.io": "^2.1.0",
-    "socket.io-client": "^2.1.0",
-    "streamdeck-driver": "https://github.com/bitfocus/streamdeck-driver.git",
-    "@coreui/coreui": "^2.0.0-rc.2",
-    "@coreui/coreui-plugin-chartjs-custom-tooltips": "1.2.0",
-    "bootstrap": "4.1.1",
-    "chart.js": "^2.7.2",
     "flag-icon-css": "3.0.0",
     "font-awesome": "4.7.0",
     "jquery": "3.3.1",
+    "json-parser": "^1.1.5",
     "pace-progress": "1.0.2",
     "perfect-scrollbar": "^1.3.0",
     "popper.js": "1.14.3",
-    "simple-line-icons": "2.4.1"
+    "read-package-json": "^2.0.13",
+    "simple-line-icons": "2.4.1",
+    "socket.io": "^2.1.0",
+    "socket.io-client": "^2.1.0",
+    "streamdeck-driver": "https://github.com/bitfocus/streamdeck-driver.git"
   }
 }
