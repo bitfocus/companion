@@ -165,28 +165,59 @@
 							<div class="col-md-6 mb-4">
 								<ul class="nav nav-tabs" role="tablist">
 									<li class="nav-item">
-										<a class="nav-link active" data-toggle="tab" href="#home3" role="tab" aria-controls="home">
-											<i class="icon-calculator"></i> X</a>
+										<a class="nav-link active" data-toggle="tab" href="#instances" role="tab" aria-controls="instances">
+											<i class="icon-calculator"></i> Instances &nbsp;
+											<span class="badge badge-pill badge-success">OK</span>
+										</a>
 									</li>
 									<li class="nav-item">
-										<a class="nav-link" data-toggle="tab" href="#profile3" role="tab" aria-controls="profile">
-											<i class="icon-basket-loaded"></i> Y</a>
+										<a class="nav-link" data-toggle="tab" href="#actions" role="tab" aria-controls="actions">
+											<i class="icon-calculator"></i> Actions</a>
 									</li>
 									<li class="nav-item">
-										<a class="nav-link" data-toggle="tab" href="#messages3" role="tab" aria-controls="messages">
-											<i class="icon-pie-chart"></i> Z</a>
+										<a class="nav-link" data-toggle="tab" href="#variables" role="tab" aria-controls="variables">
+											<i class="icon-calculator"></i> Variables</a>
 									</li>
 								</ul>
 
 								<div class="tab-content">
-									<div class="tab-pane active" id="home3" role="tabpanel">
-										1. Lorem ipsum
+									<div class="tab-pane active" id="instances" role="tabpanel">
+										<table class="table table-responsive-sm">
+											<thead>
+												<tr>
+													<th>ID</th>
+													<th>Label</th>
+													<th>Status</th>
+													<th>Actions</th>
+												</tr>
+											</thead>
+											<tbody>
+												<tr>
+													<td>BarcoE2:1</td>
+													<td>E2</td>
+													<td><span class="badge badge-pill badge-success">OK</span></td>
+													<td>
+														<button type="button" class="btn btn-sm btn-ghost-danger active">Delete</button>
+														<button type="button" class="btn btn-sm btn-ghost-warning active">Edit</button>
+													</td>
+												</tr>
+												<tr>
+													<td>BMVHub:1</td>
+													<td>Primary matrix</td>
+													<td><span class="badge badge-pill badge-success">OK</span></td>
+													<td>
+														<button type="button" class="btn btn-sm btn-ghost-danger active">delete</button>
+														<button type="button" class="btn btn-sm btn-ghost-warning active">Edit</button>
+													</td>
+												</tr>
+											</tbody>
+										</table>
 									</div>
 
-									<div class="tab-pane" id="profile3" role="tabpanel">
+									<div class="tab-pane" id="actions" role="tabpanel">
 									</div>
 
-									<div class="tab-pane" id="messages3" role="tabpanel">
+									<div class="tab-pane" id="variables" role="tabpanel">
 									</div>
 
 								</div>
