@@ -34,14 +34,13 @@
   "license": "MIT",
   "devDependencies": {
     "electron": "^1.8.4",
-    "electron-builder": "^20.10.0" 
+    "electron-builder": "^20.10.0"
  },
   "dependencies": {
     "@coreui/coreui": "^2.0.0-rc.2",
     "@coreui/coreui-plugin-chartjs-custom-tooltips": "1.2.0",
     "app-root-path": "^2.0.1",
     "bootstrap": "4.1.1",
-    "canvas": "^1.6.10",
     "chart.js": "^2.7.2",
     "debug": "^3.1.0",
     "electron-debug": "^1.5.0",
