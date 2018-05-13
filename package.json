@@ -34,9 +34,8 @@
   "license": "MIT",
   "devDependencies": {
     "electron": "^1.8.4",
-    "electron-builder": "^20.10.0",
-    "npm-audit": "0.0.3"
-  },
+    "electron-builder": "^20.10.0" 
+ },
   "dependencies": {
     "@coreui/coreui": "^2.0.0-rc.2",
     "@coreui/coreui-plugin-chartjs-custom-tooltips": "1.2.0",
