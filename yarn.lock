@@ -362,12 +362,6 @@ camelcase@^4.0.0, camelcase@^4.1.0:
   version "4.1.0"
   resolved "https://registry.yarnpkg.com/camelcase/-/camelcase-4.1.0.tgz#d545635be1e33c542649c69173e5de6acfae34dd"
 
-canvas@^1.6.10:
-  version "1.6.10"
-  resolved "https://registry.yarnpkg.com/canvas/-/canvas-1.6.10.tgz#aa938354642e7d61479ae5a76373b3233d7bbac8"
-  dependencies:
-    nan "^2.4.0"
-
 capture-stack-trace@^1.0.0:
   version "1.0.0"
   resolved "https://registry.yarnpkg.com/capture-stack-trace/-/capture-stack-trace-1.0.0.tgz#4a6fa07399c26bba47f0b2496b4d0fb408c5550d"
@@ -1584,7 +1578,7 @@ ms@^2.1.1:
   version "2.1.1"
   resolved "https://registry.yarnpkg.com/ms/-/ms-2.1.1.tgz#30a5864eb3ebb0a66f2ebe6d727af06a09d86e0a"
 
-nan@^2.4.0, nan@^2.6.2:
+nan@^2.6.2:
   version "2.10.0"
   resolved "https://registry.yarnpkg.com/nan/-/nan-2.10.0.tgz#96d0cd610ebd58d4b4de9cc0c6828cda99c7548f"
 
@@ -1618,12 +1612,6 @@ normalize-package-data@^2.0.0, normalize-package-data@^2.3.2, normalize-package-
     is-builtin-module "^1.0.0"
     semver "2 || 3 || 4 || 5"
     validate-npm-package-license "^3.0.1"
-
-npm-audit@0.0.3:
-  version "0.0.3"
-  resolved "https://registry.yarnpkg.com/npm-audit/-/npm-audit-0.0.3.tgz#0f0c6dd2741f155e08c67189fb5c4fbf316b8072"
-  dependencies:
-    chalk "^2.0.1"
 
 npm-run-path@^2.0.0:
   version "2.0.2"
@@ -2682,6 +2670,10 @@ yargs@^11.0.0:
     which-module "^2.0.0"
     y18n "^3.2.1"
     yargs-parser "^9.0.2"
+
+yarn@^1.6.0:
+  version "1.6.0"
+  resolved "https://registry.yarnpkg.com/yarn/-/yarn-1.6.0.tgz#9cec6f7986dc237d39ec705ce74d95155fe55d4b"
 
 yauzl@2.4.1:
   version "2.4.1"
