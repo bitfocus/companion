@@ -51,6 +51,7 @@
     "json-parser": "^1.1.5",
     "pace-progress": "1.0.2",
     "perfect-scrollbar": "^1.3.0",
+    "pngjs": "^3.3.3",
     "popper.js": "1.14.3",
     "read-package-json": "^2.0.13",
     "simple-line-icons": "2.4.1",
