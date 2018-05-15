@@ -32,6 +32,8 @@ system.on('skeleton-ready', function() {
 	var http = require('./lib/http')(system, 80);
 	var io   = require('./lib/io')(system, http);
 	var panel = new (require('./lib/elgato'))(system);
+	var bank = new (require('./lib/bank'))(system);
+	var buttons = new (require('./lib/buttons'))(system, panel);
 	var appRoot = require('app-root-path');
 	var express = require('express');
 

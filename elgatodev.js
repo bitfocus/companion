@@ -4,6 +4,7 @@ var system = new EventEmitter();
 console.log("system", system);
 
 var panel = new (require('./lib/elgato'))(system);
+var bank = new (require('./lib/bank'))(system);
 var buttons = new (require('./lib/buttons'))(system, panel);
 
 system.on('exit', function() {
