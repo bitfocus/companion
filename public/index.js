@@ -88,6 +88,7 @@
 								$c.css('backgroundColor', colors[n]);
 								$c.css('width', 20);
 								$c.css('height', 20);
+								$c.addClass('colorbox');
 								$c.addClass('activecolor');
 								$c.css('float','left');
 								$div.append($c)

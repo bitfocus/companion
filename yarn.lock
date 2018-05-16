@@ -265,6 +265,12 @@ boom@5.x.x:
   dependencies:
     hoek "4.x.x"
 
+bootstrap-colorpicker@^2.5.2:
+  version "2.5.2"
+  resolved "https://registry.yarnpkg.com/bootstrap-colorpicker/-/bootstrap-colorpicker-2.5.2.tgz#33bfb2043485f12dcb3df0f60ad171762cc3c0e4"
+  dependencies:
+    jquery ">=1.10"
+
 bootstrap@4.1.1, bootstrap@^4.1.0:
   version "4.1.1"
   resolved "https://registry.yarnpkg.com/bootstrap/-/bootstrap-4.1.1.tgz#3aec85000fa619085da8d2e4983dfd67cf2114cb"
@@ -1342,7 +1348,7 @@ isstream@~0.1.2:
   version "0.1.2"
   resolved "https://registry.yarnpkg.com/isstream/-/isstream-0.1.2.tgz#47e63f7af55afa6f92e1500e690eb8b8529c099a"
 
-jquery@3.3.1, jquery@^3.3.1:
+jquery@3.3.1, jquery@>=1.10, jquery@^3.3.1:
   version "3.3.1"
   resolved "https://registry.yarnpkg.com/jquery/-/jquery-3.3.1.tgz#958ce29e81c9790f31be7792df5d4d95fc57fbca"
 
