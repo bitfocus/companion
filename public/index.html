@@ -13,6 +13,7 @@
 		<link href="node_modules/simple-line-icons/css/simple-line-icons.css" rel="stylesheet">
 		<link href="css/style.css" rel="stylesheet">
 		<link href="vendors/pace-progress/css/pace.min.css" rel="stylesheet">
+		<link href="index.css" rel="stylesheet">
 	</head>
 
 	<body class="app header-fixed sidebar-fixed aside-menu-fixed sidebar-lg-show">
@@ -264,7 +265,7 @@
 											<div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
 												<a class="dropdown-item change_style" data-style="smalltext">Small text</a>
 												<a class="dropdown-item change_style" data-style="bigtext">Big text</a>
-												<a class="dropdown-item change_style" data-style="png">Custom PNG</a>
+												<!-- <a class="dropdown-item change_style" data-style="png">Custom PNG</a> -->
 											</div>
 										</div>
 
@@ -587,103 +588,7 @@
 		<script src="node_modules/perfect-scrollbar/dist/perfect-scrollbar.min.js"></script>
 		<script src="node_modules/@coreui/coreui/dist/js/coreui.min.js"></script>
 		<script src="node_modules/socket.io-client/dist/socket.io.js"></script>
-		<script>
-
-			var socket = new io();
-
-			$(function() {
-				var $pagenav = $("#pagenav");
-				var $pagebank = $("#pagebank");
-				var page = 1;
-				var bank = undefined;
-
-				$("#editbankli").hide();
-				function populate_bank_form(page,bank,data) {
-					var config = data.config;
-					var $eb = $("#editbank_content");
-					$eb.html("content");
-					console.log("xgot",page,bank,config);
-
-
-				}
-				function changePage(pagenum) {
-					$pagenav.html("");
-					$pagebank.html("");
-					$pagenav.append($('<div id="btn_pagedown" class="pagenav col-lg-4"><div class="border">Page down</div></div>'));
-					$pagenav.append($('<div id="btn_this" class="pageat col-lg-4">Page '+pagenum+'</div>'));
-					$pagenav.append($('<div id="btn_pageup" class="pagenav col-lg-4"><div class="border">Page up</div></div>'));
-
-					for (var bank = 1; bank <= 12; bank++) {
-						var $div = $('<div class="bank col-lg-3"><div class="border" data-bank="'+bank+'">'+pagenum+'.'+bank+'</div></div>')
-						$pagebank.append($div);
-					}
-
-					$(".change_style").click(function() {
-						console.log('change_style', $(this).data('style'), page, bank);
-						socket.emit('bank_style', page, bank, $(this).data('style'));
-						socket.once('bank_style:results', function(page,bank,data) {
-							populate_bank_form(page,bank,data);
-						});
-					});
-
-					$("#pagebank .border").click(function() {
-						console.log("HEHE", page, $(this).data('bank'));
-						bank = $(this).data('bank');
-						$("#editbankli").show();
-						$('#editbankli a[href="#editbank"]').tab('show');
-						$("#editbank_content").html("Loading information...");
-						$("#editbankid").text(page + "." + $(this).data('bank'));
-
-						socket.emit('get_bank',page, $(this).data('bank'));
-
-						socket.once('get_bank:results', function(page,bank,data) {
-							populate_bank_form(page,bank,data);
-						});
-					});
-
-					$("#btn_pageup").click(function() {
-						if (page < 99) {
-							page++;
-							changePage(page);
-						}
-					});
-
-					$("#btn_pagedown").click(function() {
-						if (page > 1) {
-							page--;
-							changePage(page);
-						}
-					});
-
-				}
-
-				changePage(page);
-
-
-			});
-
-		</script>
-		<style>
-
-		#pagebank .border, #pagenav .border {
-			display:block;
-			border-radius: 4px;
-			margin-bottom:10px;
-			padding:5px 7px;
-			cursor: pointer;
-			border: 1px solid #ccc;
-			background-color: #f0f0f0;
-			text-align:center;
-		}
-
-		#pagebank .border:hover, #pagenav .border:hover {
-			background-color: #ddd;
-		}
-		.pageat {
-			text-align:center;
-			padding-top: 5px;
-			font-size: 16px;
-		}
-		</style>
+		<script src="node_modules/bootstrap-colorpicker/dist/js/bootstrap-colorpicker.min.js"></script>
+		<script src="index.js"></script>
 	</body>
 </html>

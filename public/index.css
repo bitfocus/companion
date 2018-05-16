@@ -1,0 +1,20 @@
+
+#pagebank .border, #pagenav .border {
+	display:block;
+	border-radius: 4px;
+	margin-bottom:10px;
+	padding:5px 7px;
+	cursor: pointer;
+	border: 1px solid #ccc;
+	background-color: #f0f0f0;
+	text-align:center;
+}
+
+#pagebank .border:hover, #pagenav .border:hover {
+	background-color: #ddd;
+}
+.pageat {
+	text-align:center;
+	padding-top: 5px;
+	font-size: 16px;
+}

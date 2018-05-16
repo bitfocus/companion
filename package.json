@@ -41,6 +41,7 @@
     "@coreui/coreui-plugin-chartjs-custom-tooltips": "1.2.0",
     "app-root-path": "^2.0.1",
     "bootstrap": "4.1.1",
+    "bootstrap-colorpicker": "^2.5.2",
     "chart.js": "^2.7.2",
     "debug": "^3.1.0",
     "electron-debug": "^1.5.0",
