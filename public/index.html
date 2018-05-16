@@ -10,7 +10,7 @@
 		<meta name="google" content="notranslate">
 		<link href="node_modules/flag-icon-css/css/flag-icon.min.css" rel="stylesheet">
 		<link href="node_modules/font-awesome/css/font-awesome.min.css" rel="stylesheet">
-		<link href="node_modules/simple-line-icons/css/simple-line-icons.css" rel="stylesheet">
+<!--		<link href="node_modules/simple-line-icons/css/simple-line-icons.css" rel="stylesheet"> -->
 		<link href="css/style.css" rel="stylesheet">
 		<link href="vendors/pace-progress/css/pace.min.css" rel="stylesheet">
 		<link href="index.css" rel="stylesheet">
@@ -193,15 +193,7 @@
 												</tr>
 											</thead>
 											<tbody>
-												<tr>
-													<td>BarcoE2:1</td>
-													<td>E2</td>
-													<td><span class="badge badge-pill badge-success">OK</span></td>
-													<td>
-														<button type="button" class="btn btn-sm btn-ghost-danger active">Delete</button>
-														<button type="button" class="btn btn-sm btn-ghost-warning active">Edit</button>
-													</td>
-												</tr>
+												<!--
 												<tr>
 													<td>BMVHub:1</td>
 													<td>Primary matrix</td>
@@ -211,8 +203,24 @@
 														<button type="button" class="btn btn-sm btn-ghost-warning active">Edit</button>
 													</td>
 												</tr>
+											-->
 											</tbody>
 										</table>
+
+
+										<div class="dropdown">
+											<button class="btn btn-secondary dropdown-toggle" type="button" id="addInstance" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+												Add instance
+											</button>
+											<div class="dropdown-menu" aria-labelledby="addInstance">
+												<a class="dropdown-item" data-style="smalltext">E2</a>
+												<a class="dropdown-item" data-style="bigtext">QLab</a>
+											</div>
+										</div>
+
+
+
+
 									</div>
 
 									<div class="tab-pane" id="actions" role="tabpanel">
@@ -258,7 +266,7 @@
 											<button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
 												Change button style
 											</button>
-											
+
 											<div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
 												<a class="dropdown-item change_style" data-style="smalltext">Small text</a>
 												<a class="dropdown-item change_style" data-style="bigtext">Big text</a>

@@ -26,6 +26,7 @@
 			$(function() {
 				var $pagenav = $("#pagenav");
 				var $pagebank = $("#pagebank");
+
 				var page = 1;
 				var bank = undefined;
 
@@ -58,10 +59,14 @@
 					"#935116",
 					"#5F6A6A"
 				];
-				function populate_bank_form(page,bank,config,fields) {
+				function populate_bank_form(p,b,config,fields) {
 					var $eb = $("#editbank_content");
 					$eb.html("<p><h3>Configuration</h3></p>");
-					console.log("xgot",page,bank,config,fields);
+					console.log("xgot",p,b,config,fields);
+
+					// globalize those!
+					page = p;
+					bank = b;
 
 					for (var n in fields) {
 						var field = fields[n];
@@ -77,7 +82,7 @@
 							for (var n in colors) {
 								var $c = $("<div class='colorblock' data-color='"+colors[n]+"' data-fieldid='"+field.id+"'></div>");
 								$c.click(function() {
-									socket.emit('bank_changefield', page, bank, $(this).data('fieldid'), hex2int(  $(this).data('color') ) );
+									socket.emit('bank_changefield', p, b, $(this).data('fieldid'), hex2int(  $(this).data('color') ) );
 								});
 
 								$c.css('backgroundColor', colors[n]);
@@ -109,10 +114,10 @@
 					var change = function() {
 						console.log("this",this);
 						if ($(this).data('special') == 'color') {
-							socket.emit('bank_changefield', page, bank, $(this).data('fieldid'), hex2int( $(this).val() ) );
+							socket.emit('bank_changefield', p, b, $(this).data('fieldid'), hex2int( $(this).val() ) );
 						}
 						else {
-							socket.emit('bank_changefield', page, bank, $(this).data('fieldid'), $(this).val() );
+							socket.emit('bank_changefield', p, b, $(this).data('fieldid'), $(this).val() );
 						}
 					}
 
@@ -120,6 +125,12 @@
 
 
 				}
+
+				$(".change_style").click(function() {
+					console.log('change_style', $(this).data('style'), page, bank);
+					socket.emit('bank_style', page, bank, $(this).data('style'));
+					socket.once('bank_style:results', populate_bank_form);
+				});
 
 				function changePage(pagenum) {
 
@@ -134,12 +145,6 @@
 						var $div = $('<div class="bank col-lg-3"><div class="border" data-bank="'+bank+'">'+pagenum+'.'+bank+'</div></div>')
 						$pagebank.append($div);
 					}
-
-					$(".change_style").click(function() {
-						console.log('change_style', $(this).data('style'), page, bank);
-						socket.emit('bank_style', page, bank, $(this).data('style'));
-						socket.once('bank_style:results', populate_bank_form);
-					});
 
 					$("#pagebank .border").click(function() {
 						console.log("HEHE", page, $(this).data('bank'));
