@@ -58,6 +58,6 @@
     "simple-line-icons": "2.4.1",
     "socket.io": "^2.1.0",
     "socket.io-client": "^2.1.0",
-    "streamdeck-driver": "https://github.com/bitfocus/streamdeck-driver.git"
+    "streamdeck-driver": "https://github.com/bitfocus/streamdeck-driver.git#master"
   }
 }
