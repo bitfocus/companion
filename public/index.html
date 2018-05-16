@@ -109,18 +109,6 @@
 									<a class="nav-link" href="login.html" target="_top">
 										<i class="nav-icon icon-star"></i> Login</a>
 								</li>
-								<li class="nav-item">
-									<a class="nav-link" href="register.html" target="_top">
-										<i class="nav-icon icon-star"></i> Register</a>
-								</li>
-								<li class="nav-item">
-									<a class="nav-link" href="404.html" target="_top">
-										<i class="nav-icon icon-star"></i> Error 404</a>
-								</li>
-								<li class="nav-item">
-									<a class="nav-link" href="500.html" target="_top">
-										<i class="nav-icon icon-star"></i> Error 500</a>
-								</li>
 							</ul>
 						</li>
 -->
@@ -209,17 +197,13 @@
 
 
 										<div class="dropdown">
-											<button class="btn btn-secondary dropdown-toggle" type="button" id="addInstance" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+											<button class="btn btn-primary dropdown-toggle" type="button" id="addInstance" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
 												Add instance
 											</button>
-											<div class="dropdown-menu" aria-labelledby="addInstance">
-												<a class="dropdown-item" data-style="smalltext">E2</a>
-												<a class="dropdown-item" data-style="bigtext">QLab</a>
+											<div class="dropdown-menu" aria-labelledby="addInstance" id="addInstanceContent">
+												<a class="dropdown-item addInstance" data-style="smalltext" data-id="'+im.id+'">'+ im.label +'</a>
 											</div>
 										</div>
-
-
-
 
 									</div>
 
@@ -246,7 +230,6 @@
 											<i class="icon-calculator"></i> Edit bank <span id='editbankid'>?</span>
 										</a>
 									</li>
-
 
 								</ul>
 
@@ -307,6 +290,8 @@
 		<script src="node_modules/@coreui/coreui/dist/js/coreui.min.js"></script>
 		<script src="node_modules/socket.io-client/dist/socket.io.js"></script>
 		<script src="node_modules/bootstrap-colorpicker/dist/js/bootstrap-colorpicker.min.js"></script>
-		<script src="index.js"></script>
+		<script src="bank.js"></script>
+		<script src="instance.js"></script>
+
 	</body>
 </html>
