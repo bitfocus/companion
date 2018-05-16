@@ -90,14 +90,14 @@
 							</a>
 						</li>
 
-
+<!--
 
 						<li class="nav-title">Timer Module</li>
 						<li class="nav-item">
 							<a class="nav-link" href="/module/timer/timer.html">
 								<i class="nav-icon icon-screen-desktop"></i> DSM View</a>
 						</li>
-<!--
+
 						<li class="divider"></li>
 						<li class="nav-title">Extras</li>
 						<li class="nav-item nav-dropdown">
@@ -227,34 +227,56 @@
 							<div class="col-md-6 mb-4">
 								<ul class="nav nav-tabs" role="tablist">
 									<li class="nav-item">
-										<a class="nav-link active" data-toggle="tab" href="#home4" role="tab" aria-controls="home">
-											<i class="icon-calculator"></i> Z &nbsp;
-											<span class="badge badge-success">New</span>
+										<a class="nav-link active" data-toggle="tab" href="#elgatobuttons" role="tab" aria-controls="home">
+											<i class="icon-calculator"></i> Elgato Buttons
 										</a>
 									</li>
-									<li class="nav-item">
-										<a class="nav-link" data-toggle="tab" href="#profile4" role="tab" aria-controls="profile">
-											<i class="icon-basket-loaded"></i> Y &nbsp;
-											<span class="badge badge-pill badge-danger">29</span>
+
+									<li class="nav-item" id="editbankli">
+										<a class="nav-link" data-toggle="tab" href="#editbank" role="tab" aria-controls="profile">
+											<i class="icon-calculator"></i> Edit bank <span id='editbankid'>?</span>
 										</a>
 									</li>
+<!--
 									<li class="nav-item">
 										<a class="nav-link" data-toggle="tab" href="#messages4" role="tab" aria-controls="messages">
 											<i class="icon-pie-chart"></i> Z</a>
 									</li>
+-->
 								</ul>
 
 								<div class="tab-content">
 
-									<div class="tab-pane active" id="home4" role="tabpanel">
-										Dolor sit amet
+									<div class="tab-pane active" id="elgatobuttons" role="tabpanel">
+
+										<div class="row" id='pagenav'>
+										</div>
+										<div class="row" id='pagebank'>
+										</div>
+
+									</div>
+									<div class="tab-pane" id="editbank" role="tabpanel">
+
+										<div class="dropdown">
+											<button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+												Change button style
+											</button>
+											<div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+												<a class="dropdown-item change_style" data-style="smalltext">Small text</a>
+												<a class="dropdown-item change_style" data-style="bigtext">Big text</a>
+												<a class="dropdown-item change_style" data-style="png">Custom PNG</a>
+											</div>
+										</div>
+
+										<div id="editbank_content">
+										</div>
 									</div>
 
-									<div class="tab-pane" id="profile4" role="tabpanel">
-									</div>
+<!--
 
 									<div class="tab-pane" id="messages4" role="tabpanel">
 									</div>
+-->
 								</div>
 							</div>
 							<!--/.col-->
@@ -564,5 +586,104 @@
 		<script src="node_modules/pace-progress/pace.min.js"></script>
 		<script src="node_modules/perfect-scrollbar/dist/perfect-scrollbar.min.js"></script>
 		<script src="node_modules/@coreui/coreui/dist/js/coreui.min.js"></script>
+		<script src="node_modules/socket.io-client/dist/socket.io.js"></script>
+		<script>
+
+			var socket = new io();
+
+			$(function() {
+				var $pagenav = $("#pagenav");
+				var $pagebank = $("#pagebank");
+				var page = 1;
+				var bank = undefined;
+
+				$("#editbankli").hide();
+				function populate_bank_form(page,bank,data) {
+					var config = data.config;
+					var $eb = $("#editbank_content");
+					$eb.html("content");
+					console.log("xgot",page,bank,config);
+
+
+				}
+				function changePage(pagenum) {
+					$pagenav.html("");
+					$pagebank.html("");
+					$pagenav.append($('<div id="btn_pagedown" class="pagenav col-lg-4"><div class="border">Page down</div></div>'));
+					$pagenav.append($('<div id="btn_this" class="pageat col-lg-4">Page '+pagenum+'</div>'));
+					$pagenav.append($('<div id="btn_pageup" class="pagenav col-lg-4"><div class="border">Page up</div></div>'));
+
+					for (var bank = 1; bank <= 12; bank++) {
+						var $div = $('<div class="bank col-lg-3"><div class="border" data-bank="'+bank+'">'+pagenum+'.'+bank+'</div></div>')
+						$pagebank.append($div);
+					}
+
+					$(".change_style").click(function() {
+						console.log('change_style', $(this).data('style'), page, bank);
+						socket.emit('bank_style', page, bank, $(this).data('style'));
+						socket.once('bank_style:results', function(page,bank,data) {
+							populate_bank_form(page,bank,data);
+						});
+					});
+
+					$("#pagebank .border").click(function() {
+						console.log("HEHE", page, $(this).data('bank'));
+						bank = $(this).data('bank');
+						$("#editbankli").show();
+						$('#editbankli a[href="#editbank"]').tab('show');
+						$("#editbank_content").html("Loading information...");
+						$("#editbankid").text(page + "." + $(this).data('bank'));
+
+						socket.emit('get_bank',page, $(this).data('bank'));
+
+						socket.once('get_bank:results', function(page,bank,data) {
+							populate_bank_form(page,bank,data);
+						});
+					});
+
+					$("#btn_pageup").click(function() {
+						if (page < 99) {
+							page++;
+							changePage(page);
+						}
+					});
+
+					$("#btn_pagedown").click(function() {
+						if (page > 1) {
+							page--;
+							changePage(page);
+						}
+					});
+
+				}
+
+				changePage(page);
+
+
+			});
+
+		</script>
+		<style>
+
+		#pagebank .border, #pagenav .border {
+			display:block;
+			border-radius: 4px;
+			margin-bottom:10px;
+			padding:5px 7px;
+			cursor: pointer;
+			border: 1px solid #ccc;
+			background-color: #f0f0f0;
+			text-align:center;
+		}
+
+		#pagebank .border:hover, #pagenav .border:hover {
+			background-color: #ddd;
+		}
+		.pageat {
+			text-align:center;
+			padding-top: 5px;
+			font-size: 16px;
+		}
+		</style>
 	</body>
 </html>
