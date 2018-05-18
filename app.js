@@ -1,7 +1,10 @@
+process.env['DEBUG'] = '*,-express*,-engine*,-socket.io*,-send*';
+
 var EventEmitter = require('events');
 var system = new EventEmitter();
 var fs = require("fs");
 var path = require('path')
+var debug = require('debug')('app');
 
 var config = new (require('./bitfocus-libs/config'))(system, {
 	http_port: 8000,
@@ -31,6 +34,7 @@ system.on('skeleton-ready', function() {
 
 	var http = require('./lib/http')(system, 80);
 	var io   = require('./lib/io')(system, http);
+	var db = new (require('./lib/db'))(system);
 	var appRoot = require('app-root-path');
 	var express = require('express');
 	var panel = new (require('./lib/elgato'))(system);

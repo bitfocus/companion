@@ -167,6 +167,11 @@
 										<a class="nav-link" data-toggle="tab" href="#variables" role="tab" aria-controls="variables">
 											<i class="icon-calculator"></i> Variables</a>
 									</li>
+									<li id="instanceConfigTab" class="nav-item">
+										<a class="nav-link" data-toggle="tab" href="#instanceConfig" role="tab" aria-controls="instanceConfig">
+											<i class="icon-calculator"></i> Config</a>
+									</li>
+
 								</ul>
 
 								<div class="tab-content">
@@ -180,18 +185,7 @@
 													<th>Actions</th>
 												</tr>
 											</thead>
-											<tbody>
-												<!--
-												<tr>
-													<td>BMVHub:1</td>
-													<td>Primary matrix</td>
-													<td><span class="badge badge-pill badge-success">OK</span></td>
-													<td>
-														<button type="button" class="btn btn-sm btn-ghost-danger active">delete</button>
-														<button type="button" class="btn btn-sm btn-ghost-warning active">Edit</button>
-													</td>
-												</tr>
-											-->
+											<tbody id='instanceList'>
 											</tbody>
 										</table>
 
@@ -211,6 +205,11 @@
 									</div>
 
 									<div class="tab-pane" id="variables" role="tabpanel">
+									</div>
+
+									<div class="tab-pane" id="instanceConfig" role="tabpanel">
+										<h4></h4>
+										<div id='instanceConfigFields' class="row"></div>
 									</div>
 
 								</div>

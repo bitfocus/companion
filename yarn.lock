@@ -2153,6 +2153,10 @@ shebang-regex@^1.0.0:
   version "1.0.0"
   resolved "https://registry.yarnpkg.com/shebang-regex/-/shebang-regex-1.0.0.tgz#da42f49740c0b42db2ca9728571cb190c98efea3"
 
+shortid@^2.2.8:
+  version "2.2.8"
+  resolved "https://registry.yarnpkg.com/shortid/-/shortid-2.2.8.tgz#033b117d6a2e975804f6f0969dbe7d3d0b355131"
+
 signal-exit@^3.0.0, signal-exit@^3.0.2:
   version "3.0.2"
   resolved "https://registry.yarnpkg.com/signal-exit/-/signal-exit-3.0.2.tgz#b5fdc08f1287ea1178628e415e25132b73646c6d"
@@ -2298,9 +2302,9 @@ statuses@~1.4.0:
   version "1.4.0"
   resolved "https://registry.yarnpkg.com/statuses/-/statuses-1.4.0.tgz#bb73d446da2796106efcc1b601a253d6c46bd087"
 
-"streamdeck-driver@https://github.com/bitfocus/streamdeck-driver.git":
+"streamdeck-driver@https://github.com/bitfocus/streamdeck-driver.git#master":
   version "1.0.1"
-  resolved "https://github.com/bitfocus/streamdeck-driver.git#8092b867f3798424511626513e152aa78a9c212a"
+  resolved "https://github.com/bitfocus/streamdeck-driver.git#a1354e91d15d4e0e9eae168c4740b1d3f403a087"
   dependencies:
     elgato-stream-deck-clean "^1.0.0"
     express "^4.16.2"
