@@ -1,5 +1,6 @@
+var instance = {};
+
 $(function() {
-	var instance = {};
 	var iconfig = {};
 
 	var debug = console.log;
@@ -43,7 +44,9 @@ $(function() {
 			});
 
 			$td_id.text(n);
-			$td_label.text(list[n].label);
+			if (list[n].label !== undefined) {
+				$td_label.text(list[n].label);
+			}
 
 			$tr.append($td_id);
 			$tr.append($td_label);
@@ -72,8 +75,9 @@ $(function() {
 				$instance.click(function() {
 					socket.emit('instance_add', $(this).data('id') );
 					console.log('instance_add()');
-					socket.once('instance_add:result', function(id) {
-						console.log("instance_add:result()", id);
+					socket.once('instance_add:result', function(id,db) {
+						instance.db = db;
+						console.log("instance_add:result()", id,db);
 						socket.emit('instance_edit', id);
 					});
 				});
@@ -81,6 +85,10 @@ $(function() {
 				$addInstance.append($instance)
 			}
 		}
+	});
+
+	socket.on('instance_db_update', function(db) {
+		instance.db = db;
 	});
 
 	socket.on('instance_edit:result', function(id, store, res, config ) {

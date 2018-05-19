@@ -159,6 +159,10 @@ $(function() {
 			$pagebank.append($div);
 		}
 
+		$("#elgbuttons").click(function() {
+			$("#editbankli").hide();
+		});
+
 		$("#pagebank .border").click(function() {
 			bank = $(this).data('bank');
 

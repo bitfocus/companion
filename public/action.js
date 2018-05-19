@@ -1,3 +1,4 @@
+var actionlist = {};
 
 $(function() {
 	socket.emit('get_actions');
@@ -17,12 +18,13 @@ $(function() {
 		var $ol = $("<ol></ol>");
 		for (var n in actions) {
 			var action = actions[n];
-			if (action !== null) {
+			if (action !== null && instance.db[action.instance] !== undefined) {
 				var $li = $("<li></li>");
 				$li.data("id", action.id);
-				$li.text(action.label);
-				var $del = $("<button type='button'>delete</button>");
-				$li.append($del);
+				console.log("YYYYYY", action, actionlist);
+				$li.text(instance.db[action.instance].label + ": " + actionlist[action.label].label);
+				var $del = $("<button type='button' class='btn btn-danger btn-sm'>delete</button><span>&nbsp;</span>");
+				$li.prepend($del);
 				$del.click(function() {
 					socket.emit('bank_delAction', page, bank, $(this).parent().data('id'));
 				})
@@ -34,8 +36,8 @@ $(function() {
 	});
 
 	socket.on('actions', function(actions) {
-
-		console.log("actions", actions);
+		console.log("LOOOL");
+		actionlist = actions;
 		var $ali = $("#actionsList");
 		$aba.html("");
 		$ali.html("");
@@ -43,21 +45,29 @@ $(function() {
 		var $option = $("<option>[ Select action ]</option>")
 		$aba.append($option);
 
+		console.log("actions:", actions);
+
 		for (var n in actions) {
-			var $option = $("<option value='"+n+"'>("+n+") "+actions[n].label+"</option>")
-			$aba.append($option);
+			var x = n.split(/:/);
+			var inst = x[0];
+			var act = x[1];
 
-			var $li = $("<tr></tr>");
-			var $td_id = $("<td></td>");
-			var $td_label = $("<td></td>");
-			$td_id.text(n);
-			$td_label.text(actions[n].label);
+			if (inst !== undefined && instance.db[inst] !== undefined) {
+				console.log("second", actions[n].label);
+				var $option = $("<option value='"+n+"'>"+ instance.db[inst].label + ": "+actions[n].label+"</option>")
+				$aba.append($option);
 
-			$li.append($td_id);
-			$li.append($td_label);
+				var $li = $("<tr></tr>");
+				var $td_id = $("<td></td>");
+				var $td_label = $("<td></td>");
+				$td_id.text(n);
+				$td_label.text(actions[n].label);
 
-			$ali.append($li);
+				$li.append($td_id);
+				$li.append($td_label);
 
+				$ali.append($li);
+			}
 
 		}
 

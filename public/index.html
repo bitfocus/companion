@@ -230,7 +230,7 @@
 							<div class="col-md-6 mb-4">
 								<ul class="nav nav-tabs" role="tablist">
 									<li class="nav-item">
-										<a class="nav-link active" data-toggle="tab" href="#elgatobuttons" role="tab" aria-controls="home">
+										<a class="nav-link active" data-toggle="tab" href="#elgatobuttons" id='elgbuttons' role="tab" aria-controls="home">
 											<i class="icon-calculator"></i> Elgato Buttons
 										</a>
 									</li>
@@ -256,7 +256,7 @@
 									<div class="tab-pane" id="editbank" role="tabpanel">
 
 										<div class="dropdown">
-											<button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+											<button class="btn btn-primary dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
 												Change button style
 											</button>
 											<div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
@@ -268,10 +268,11 @@
 										<div id="editbank_content">
 										</div>
 
+										<h4 id='actionsheader'>Actions</h4>
 										<div id='bankActions'>
 										</div>
-										<p>Add action
-											<select id='addBankAction'></select>
+										<p>Add action<br>
+											<select id='addBankAction' style='form-control'></select>
 										</p>
 									</div>
 
