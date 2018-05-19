@@ -202,6 +202,17 @@
 									</div>
 
 									<div class="tab-pane" id="actions" role="tabpanel">
+										<table class="table table-responsive-sm">
+											<thead>
+												<tr>
+													<th>ID</th>
+													<th>Label</th>
+												</tr>
+											</thead>
+											<tbody id='actionsList'>
+											</tbody>
+										</table>
+
 									</div>
 
 									<div class="tab-pane" id="variables" role="tabpanel">
@@ -248,7 +259,6 @@
 											<button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
 												Change button style
 											</button>
-
 											<div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
 												<a class="dropdown-item change_style" data-style="smalltext">Small text</a>
 												<a class="dropdown-item change_style" data-style="bigtext">Big text</a>
@@ -258,6 +268,11 @@
 										<div id="editbank_content">
 										</div>
 
+										<div id='bankActions'>
+										</div>
+										<p>Add action
+											<select id='addBankAction'></select>
+										</p>
 									</div>
 
 								</div>
@@ -291,6 +306,7 @@
 		<script src="node_modules/bootstrap-colorpicker/dist/js/bootstrap-colorpicker.min.js"></script>
 		<script src="bank.js"></script>
 		<script src="instance.js"></script>
+		<script src="action.js"></script>
 
 	</body>
 </html>

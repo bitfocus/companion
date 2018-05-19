@@ -22,13 +22,13 @@ function hex2int(hex) {
 	return int;
 }
 
+var page = 1;
+var bank = undefined;
+
 
 $(function() {
 	var $pagenav = $("#pagenav");
 	var $pagebank = $("#pagebank");
-
-	var page = 1;
-	var bank = undefined;
 
 	$("#editbankli").hide();
 
@@ -160,13 +160,13 @@ $(function() {
 		}
 
 		$("#pagebank .border").click(function() {
-			console.log("HEHE", page, $(this).data('bank'));
 			bank = $(this).data('bank');
+
 			$("#editbankli").show();
 			$('#editbankli a[href="#editbank"]').tab('show');
 			$("#editbank_content").html("");
 			$("#editbankid").text(page + "." + $(this).data('bank'));
-
+			socket.emit('bank_getActions', page, $(this).data('bank'));
 			socket.emit('get_bank',page, $(this).data('bank'));
 			socket.once('get_bank:results', populate_bank_form);
 		});
