@@ -1,6 +1,6 @@
 {
   "name": "companion",
-  "version": "1.0.5",
+  "version": "1.0.6",
   "description": "Event Companion",
   "main": "bitfocus-skeleton/main.js",
   "build": {
