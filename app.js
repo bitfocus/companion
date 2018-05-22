@@ -1,4 +1,4 @@
-process.env['DEBUG'] = '*,-express*,-engine*,-socket.io*,-send*,-db';
+process.env['DEBUG'] = '*,-express*,-engine*,-socket.io*,-send*,-db,-NRC*';
 
 var EventEmitter = require('events');
 var system = new EventEmitter();

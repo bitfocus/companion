@@ -2,6 +2,7 @@
 /node_modules/*
 .DS_Store
 *-x64/*
+yarn-error.log
 out/
 .cache
 build/
