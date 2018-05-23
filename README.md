@@ -11,3 +11,24 @@ Feature requests, hardware support requests, and everything are wholeheartedly w
 Please don't spam this group with questions, rather join us in our Slack chat for questions if you like: https://bit.ly/2s1kw8d
 
 Cheers!
+
+## Future device support plans
+* QLab 
+* PlayBackPro+
+* BMD Hyperdeck
+* BMD Videohub
+* BMD Atem
+* Mitti
+* AJA Kipro Ultra Plus
+* ArtNet
+* Entec DMXPro
+* Barco E2/S3
+* Barco Projectors
+* Epson Projectors
+* Panasonic Projectors
+* Digital Projection Projectors
+* Nec Projectors
+* Analogway Pulse
+* Analogway NextStage
+* Analogway Accender
+* Ross 
