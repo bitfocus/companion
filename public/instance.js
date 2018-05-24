@@ -111,6 +111,7 @@ $(function() {
 							$("#label_"+ f1).text(inp.val());
 						}
 						socket.emit('instance_config_set', f1, f2, inp.val() );
+						$("#elgbuttons").click();
 					});
 				})(id,field.id,$inp);
 				$sm.append($inp);
@@ -153,6 +154,7 @@ $(function() {
 
 	$(".addInstance").click(function() {
 		socket.emit('instance_add', $(this).data('id'));
+		$("#elgbuttons").click();
 	});
 
 });
