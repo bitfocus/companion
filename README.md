@@ -13,7 +13,7 @@ Please don't spam this group with questions, rather join us in our Slack chat fo
 Cheers!
 
 ## Future device support plans
-* QLab 
+* QLab
 * PlayBackPro+
 * BMD Hyperdeck
 * BMD Videohub
@@ -27,8 +27,12 @@ Cheers!
 * Epson Projectors
 * Panasonic Projectors
 * Digital Projection Projectors
+* Christie Projectors
 * Nec Projectors
 * Analogway Pulse
 * Analogway NextStage
 * Analogway Accender
-* Ross 
+* Ross
+* Wirecast
+* Resolume
+* disguise/d3
