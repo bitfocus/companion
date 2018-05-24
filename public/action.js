@@ -36,7 +36,7 @@ $(function() {
 	});
 
 	socket.on('actions', function(actions) {
-		console.log("LOOOL");
+
 		actionlist = actions;
 		var $ali = $("#actionsList");
 		$aba.html("");
