@@ -57,6 +57,7 @@ system.on('skeleton-ready', function() {
 	var instance = new (require('./lib/instance'))(system);
 	var variable = new (require('./lib/variable'))(system);
 	var osc = new (require('./lib/osc'))(system);
+	var rest = new (require('./lib/rest'))(system);
 
 	system.on('exit', function() {
 		panel.quit();
