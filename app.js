@@ -50,9 +50,8 @@ system.on('skeleton-ready', function() {
 	var db = new (require('./lib/db'))(system,cfgDir);
 	var appRoot = require('app-root-path');
 	var express = require('express');
-	var panel = new (require('./lib/elgato'))(system);
+	var elgatoDM = require('./lib/elgatoDM')(system);
 	var bank = new (require('./lib/bank'))(system);
-	var button = new (require('./lib/button'))(system, panel);
 	var action = new (require('./lib/action'))(system);
 	var instance = new (require('./lib/instance'))(system);
 	var variable = new (require('./lib/variable'))(system);
@@ -61,7 +60,7 @@ system.on('skeleton-ready', function() {
 	var udp = new (require('./lib/udp'))(system);
 
 	system.on('exit', function() {
-		panel.quit();
+		elgatoDM.quit();
 	});
 
 });
