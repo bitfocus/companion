@@ -171,6 +171,10 @@
 										<a class="nav-link" data-toggle="tab" href="#instanceConfig" role="tab" aria-controls="instanceConfig">
 											<i class="icon-calculator"></i> Config</a>
 									</li>
+									<li class="nav-item">
+										<a class="nav-link" data-toggle="tab" href="#devices" role="tab" aria-controls="devices">
+											<i class="icon-calculator"></i> Devices</a>
+									</li>
 
 								</ul>
 
@@ -221,6 +225,21 @@
 									<div class="tab-pane" id="instanceConfig" role="tabpanel">
 										<h4></h4>
 										<div id='instanceConfigFields' class="row"></div>
+									</div>
+
+									<div class="tab-pane" id="devices" role="tabpanel">
+										<table class="table table-responsive-sm">
+											<thead>
+												<tr>
+													<th>ID</th>
+													<th>Type</th>
+												</tr>
+											</thead>
+											<tbody id='deviceInstanceList'>
+											</tbody>
+										</table>
+
+										<button class="btn btn-primary" id="refreshUSB">Re-enumerate USB (BLOCKING!)</button>
 									</div>
 
 								</div>
@@ -308,6 +327,6 @@
 		<script src="bank.js"></script>
 		<script src="instance.js"></script>
 		<script src="action.js"></script>
-
+		<script src="devices.js"></script>
 	</body>
 </html>
