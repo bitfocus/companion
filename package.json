@@ -20,7 +20,7 @@
     }
   },
   "scripts": {
-    "start": "./bitfocus-skeleton/start.sh",
+    "start": "./tools/build_writefile.sh && ./bitfocus-skeleton/start.sh",
     "pack": "electron-builder --dir",
     "dist": "rm -rf electron-output && electron-builder",
     "windist": "rm -rf electron-output && electron-builder --win"
