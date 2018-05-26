@@ -14,7 +14,7 @@ $(function() {
 		if (!dontclear) $il.html("");
 
 		for (var n in list) {
-			var i = list[i];
+			var i = list[n];
 
 			var $tr = $("<tr></tr>");
 
