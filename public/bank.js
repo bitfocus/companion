@@ -279,17 +279,15 @@ $(function() {
 		});
 
 		$("#btn_pageup").click(function() {
-			if (page < 99) {
-				page++;
-				changePage(page);
-			}
+			page++;
+			if (page == 100) { page = 1 }
+			changePage(page);
 		});
 
 		$("#btn_pagedown").click(function() {
-			if (page > 1) {
-				page--;
-				changePage(page);
-			}
+			page--;
+			if (page == 0) { page = 99 }
+			changePage(page);
 		});
 
 	}
