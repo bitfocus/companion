@@ -57,6 +57,7 @@ system.on('skeleton-ready', function() {
 	var variable = new (require('./lib/variable'))(system);
 	var osc = new (require('./lib/osc'))(system);
 	var rest = new (require('./lib/rest'))(system);
+	var udp = new (require('./lib/udp'))(system);
 
 	system.on('exit', function() {
 		elgatoDM.quit();
