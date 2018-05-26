@@ -1,0 +1,95 @@
+<html>
+<head>
+	<style>
+		body { margin: 0; padding: 0; }
+	</style>
+</head>
+<body>
+<script src="node_modules/jquery/dist/jquery.min.js"></script>
+<script src="node_modules/socket.io-client/dist/socket.io.js"></script>
+<canvas id="streamdeck" width=948 height=746></canvas>
+<script type="text/javascript">
+	var socket = io();
+	var $canvas = $('#streamdeck');
+	var ctx = $canvas[0].getContext('2d');
+	var bg = new Image(638, 503);
+	bg.src = '/img/streamdeck.png';
+	bg.onload = resetbg;
+
+	socket.on('connect', function () {
+		socket.emit('emul_startup');
+	});
+
+	var positions = {
+		0: [491, 102],
+		1: [385, 102],
+		2: [281, 102],
+		3: [176, 102],
+		4: [72, 102],
+		5: [491, 204],
+		6: [385, 204],
+		7: [281, 204],
+		8: [176, 204],
+		9: [72, 204],
+		10: [491, 308],
+		11: [385, 308],
+		12: [281, 308],
+		13: [176, 308],
+		14: [72, 308],
+	};
+
+	socket.on('emul_fillImage', function (keyIndex, data) {
+		var sourceData = new Uint8Array(data);
+		var imageData = new ImageData(72, 72);
+
+		if (positions[keyIndex]) {
+			var si = 0, di = 0;
+			for (var y = 0; y < 72; ++y) {
+				for (var x = 0; x < 72; ++x) {
+					imageData.data[di++] = sourceData[si++];
+					imageData.data[di++] = sourceData[si++];
+					imageData.data[di++] = sourceData[si++];
+					imageData.data[di++] = 255;
+				}
+			}
+
+			ctx.putImageData(imageData, positions[keyIndex][0], positions[keyIndex][1]);
+		}
+	});
+
+	socket.on('emul_clearKey', function (keyIndex) {
+		if (positions[keyIndex]) {
+			ctx.fillStyle = 'black';
+			ctx.fillRect(positions[keyIndex][0], positions[keyIndex][1], 72, 72);
+		}
+	});
+
+	var wasDown = -1;
+	$canvas.on('mousedown', function (e) {
+		for (var key in positions) {
+			if (
+				e.offsetX > positions[key][0] &&
+				e.offsetX < positions[key][0] + 72 &&
+				e.offsetY > positions[key][1] &&
+				e.offsetY < positions[key][1] + 72
+			) {
+				e.preventDefault();
+				socket.emit('emul_down', key);
+				wasDown = key;
+			}
+		}
+		console.log(e.offsetX, e.offsetY);
+	});
+
+	$('body').on('mouseup', function (e) {
+		if (wasDown > -1) {
+			socket.emit('emul_up', wasDown);
+		}
+	});
+
+	function resetbg() {
+		ctx.drawImage(bg, 0, 0);
+	}
+</script>
+</body>
+</html>
