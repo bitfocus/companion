@@ -1131,7 +1131,7 @@ expand-template@^1.0.2:
   version "1.1.1"
   resolved "https://registry.yarnpkg.com/expand-template/-/expand-template-1.1.1.tgz#981f188c0c3a87d2e28f559bc541426ff94f21dd"
 
-express@^4.16.2, express@^4.16.3:
+express@^4.16.3:
   version "4.16.3"
   resolved "https://registry.yarnpkg.com/express/-/express-4.16.3.tgz#6af8a502350db3246ecc4becf6b5a34d22f7ed53"
   dependencies:
@@ -1703,7 +1703,7 @@ isstream@~0.1.2:
   version "0.1.2"
   resolved "https://registry.yarnpkg.com/isstream/-/isstream-0.1.2.tgz#47e63f7af55afa6f92e1500e690eb8b8529c099a"
 
-jquery@3.3.1, jquery@>=1.10, jquery@^3.3.1:
+jquery@3.3.1, jquery@>=1.10:
   version "3.3.1"
   resolved "https://registry.yarnpkg.com/jquery/-/jquery-3.3.1.tgz#958ce29e81c9790f31be7792df5d4d95fc57fbca"
 
@@ -2839,7 +2839,7 @@ socket.io-parser@~3.2.0:
     debug "~3.1.0"
     isarray "2.0.1"
 
-socket.io@^2.0.4, socket.io@^2.1.0:
+socket.io@^2.1.0:
   version "2.1.1"
   resolved "https://registry.yarnpkg.com/socket.io/-/socket.io-2.1.1.tgz#a069c5feabee3e6b214a75b40ce0652e1cfb9980"
   dependencies:
@@ -2935,15 +2935,6 @@ stream-json@^0.6.1:
   resolved "https://registry.yarnpkg.com/stream-json/-/stream-json-0.6.1.tgz#c9413e7f42ba8eac4883be712220455f64dcea67"
   dependencies:
     parser-toolkit ">=0.0.3"
-
-"streamdeck-driver@https://github.com/bitfocus/streamdeck-driver.git#master":
-  version "1.0.1"
-  resolved "https://github.com/bitfocus/streamdeck-driver.git#a1354e91d15d4e0e9eae168c4740b1d3f403a087"
-  dependencies:
-    elgato-stream-deck-clean "^1.0.0"
-    express "^4.16.2"
-    jquery "^3.3.1"
-    socket.io "^2.0.4"
 
 string-width@^1.0.1:
   version "1.0.2"
