@@ -243,6 +243,9 @@ $(function() {
 			else {
 				socket.emit('bank_changefield', p, b, $(this).data('fieldid'), $(this).val() );
 			}
+
+			// update page editor too
+			socket.emit('bank_preview_page', page);
 		}
 
 		$(".active_field").keyup(change);
@@ -253,6 +256,9 @@ $(function() {
 	$(".change_style").click(function() {
 		socket.emit('bank_style', page, bank, $(this).data('style'));
 		socket.once('bank_style:results', populate_bank_form);
+		socket.once('bank_style:results', function () {
+			socket.emit('bank_preview_page', page);
+		});
 	});
 
 	socket.on('preview_page_data', function (images) {
