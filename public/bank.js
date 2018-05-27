@@ -272,9 +272,9 @@ $(function() {
 		$pagenav.html("");
 		$pagebank.html("");
 
-		$pagenav.append($('<div id="btn_pagedown" class="pagenav col-lg-4"><div class="btn btn-primary">Page down</div></div>'));
-		$pagenav.append($('<div id="btn_this" class="pageat col-lg-4">Page '+pagenum+'</div>'));
-		$pagenav.append($('<div id="btn_pageup" class="pagenav text-right col-lg-4"><div class="btn btn-primary">Page up</div></div>'));
+		$pagenav.append($('<div class="pagenav col-lg-4"><div id="btn_pagedown" class="btn btn-primary">Page down</div></div>'));
+		$pagenav.append($('<div class="pageat col-lg-4">Page '+pagenum+'</div>'));
+		$pagenav.append($('<div class="pagenav text-right col-lg-4"><div id="btn_pageup" class="btn btn-primary">Page up</div></div>'));
 
 		for (var bank = 1; bank <= 12; bank++) {
 			var $div = $('<div class="bank col-lg-3"><div class="border" data-bank="'+bank+'"><canvas width=72 height=72 id="bank_' + page + '_' + bank + '"</div></div>');
