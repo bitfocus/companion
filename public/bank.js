@@ -305,7 +305,7 @@ $(function() {
 
 	socket.on('preview_bank_data', function (page, bank, data) {
 		console.log("preview for ", page, bank);
-		
+
 		var sourceData = new Uint8Array(data);
 		var imageData = new ImageData(72, 72);
 
