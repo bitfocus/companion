@@ -50,8 +50,8 @@ system.on('skeleton-ready', function() {
 	var db = new (require('./lib/db'))(system,cfgDir);
 	var appRoot = require('app-root-path');
 	var express = require('express');
-	var elgatoDM = require('./lib/elgatoDM')(system);
 	var bank = new (require('./lib/bank'))(system);
+	var elgatoDM = require('./lib/elgatoDM')(system);
 	var action = new (require('./lib/action'))(system);
 	var instance = new (require('./lib/instance'))(system);
 	var variable = new (require('./lib/variable'))(system);
