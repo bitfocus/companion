@@ -29,6 +29,7 @@ var bank = undefined;
 $(function() {
 	var $pagenav = $("#pagenav");
 	var $pagebank = $("#pagebank");
+	var pc = $('#bank_preview canvas')[0].getContext('2d');
 
 	$("#editbankli").hide();
 
@@ -164,11 +165,19 @@ $(function() {
 		"#993333"
 	];
 
+	function bank_preview_reset() {
+		pc.fillStyle = 'black';
+		pc.fillRect(0,0,72,72);
+	}
+
 	function populate_bank_form(p,b,config,fields) {
 		var $eb1 = $("#editbank_content");
 		$eb1.html("<p><h3>Configuration</h3></p>");
 		var $eb = $("<div class='row'></div>");
 		$eb1.append($eb);
+
+		bank_preview_reset();
+		socket.emit('bank_preview', p, b);
 
 		// globalize those!
 		page = p;
@@ -228,7 +237,6 @@ $(function() {
 		});
 
 		var change = function() {
-			console.log("this",this);
 			if ($(this).data('special') == 'color') {
 				socket.emit('bank_changefield', p, b, $(this).data('fieldid'), hex2int( $(this).val() ) );
 			}
@@ -264,6 +272,7 @@ $(function() {
 
 		$("#elgbuttons").click(function() {
 			$("#editbankli").hide();
+			socket.emit('bank_preview', false);
 		});
 
 		$("#pagebank .border").click(function() {
@@ -294,4 +303,22 @@ $(function() {
 
 	changePage(page);
 
+	socket.on('preview_bank_data', function (page, bank, data) {
+		console.log("preview for ", page, bank);
+
+		var sourceData = new Uint8Array(data);
+		var imageData = new ImageData(72, 72);
+
+		var si = 0, di = 0;
+		for (var y = 0; y < 72; ++y) {
+			for (var x = 0; x < 72; ++x) {
+				imageData.data[di++] = sourceData[si++];
+				imageData.data[di++] = sourceData[si++];
+				imageData.data[di++] = sourceData[si++];
+				imageData.data[di++] = 255;
+			}
+		}
+
+		pc.putImageData(imageData, 0, 0);
+	});
 });

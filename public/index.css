@@ -26,3 +26,9 @@
 #actionsheader {
 	padding-top: 30px;
 }
+
+#bank_preview {
+	border: 1px solid black;
+	line-height: 0px;
+	padding: 0px;
+}
