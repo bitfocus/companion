@@ -256,6 +256,18 @@ $(function() {
 		socket.once('bank_style:results', populate_bank_form);
 	});
 
+	socket.on('preview_page_data', function (images) {
+		for (var key in images) {
+			var $canvas = $('#bank_' + page + '_' + key);
+			if ($canvas.length > 0) {
+				var ctx = $canvas[0].getContext('2d');
+
+				var imageData = dataToButtonImage(images[key]);
+				ctx.putImageData(imageData, 0, 0);
+			}
+		}
+	});
+
 	function changePage(pagenum) {
 
 		$pagenav.html("");
@@ -266,10 +278,11 @@ $(function() {
 		$pagenav.append($('<div id="btn_pageup" class="pagenav text-right col-lg-4"><div class="btn btn-primary">Page up</div></div>'));
 
 		for (var bank = 1; bank <= 12; bank++) {
-			var $div = $('<div class="bank col-lg-3"><div class="border" data-bank="'+bank+'">'+pagenum+'.'+bank+'</div></div>')
+			var $div = $('<div class="bank col-lg-3"><div class="border" data-bank="'+bank+'"><canvas width=72 height=72 id="bank_' + page + '_' + bank + '"</div></div>');
 			$pagebank.append($div);
 		}
 
+		socket.emit('bank_preview_page', pagenum);
 		$("#elgbuttons").click(function() {
 			$("#editbankli").hide();
 			socket.emit('bank_preview', false);
@@ -306,19 +319,7 @@ $(function() {
 	socket.on('preview_bank_data', function (page, bank, data) {
 		console.log("preview for ", page, bank);
 
-		var sourceData = new Uint8Array(data);
-		var imageData = new ImageData(72, 72);
-
-		var si = 0, di = 0;
-		for (var y = 0; y < 72; ++y) {
-			for (var x = 0; x < 72; ++x) {
-				imageData.data[di++] = sourceData[si++];
-				imageData.data[di++] = sourceData[si++];
-				imageData.data[di++] = sourceData[si++];
-				imageData.data[di++] = 255;
-			}
-		}
-
+		var imageData = dataToButtonImage(data);
 		pc.putImageData(imageData, 0, 0);
 	});
 });

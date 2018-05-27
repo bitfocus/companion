@@ -7,6 +7,7 @@
 <body>
 <script src="node_modules/jquery/dist/jquery.min.js"></script>
 <script src="node_modules/socket.io-client/dist/socket.io.js"></script>
+<script src="js/preview.js"></script>
 <canvas id="streamdeck" width=948 height=746></canvas>
 <script type="text/javascript">
 	var socket = io();
@@ -39,20 +40,8 @@
 	};
 
 	socket.on('emul_fillImage', function (keyIndex, data) {
-		var sourceData = new Uint8Array(data);
-		var imageData = new ImageData(72, 72);
-
 		if (positions[keyIndex]) {
-			var si = 0, di = 0;
-			for (var y = 0; y < 72; ++y) {
-				for (var x = 0; x < 72; ++x) {
-					imageData.data[di++] = sourceData[si++];
-					imageData.data[di++] = sourceData[si++];
-					imageData.data[di++] = sourceData[si++];
-					imageData.data[di++] = 255;
-				}
-			}
-
+			var imageData = dataToButtonImage(data);
 			ctx.putImageData(imageData, positions[keyIndex][0], positions[keyIndex][1]);
 		}
 	});

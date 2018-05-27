@@ -13,6 +13,11 @@
 #pagebank .border:hover, #pagenav .border:hover {
 	background-color: #ddd;
 }
+
+#pagebank div.border canvas {
+	background-color: black;
+}
+
 .pageat {
 	text-align:center;
 	padding-top: 5px;
