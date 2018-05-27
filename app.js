@@ -45,19 +45,19 @@ system.on('skeleton-bind-ip', function(ip) {
 
 system.on('skeleton-ready', function() {
 
-	var http = require('./lib/http')(system, 80);
-	var io   = require('./lib/io')(system, http);
-	var db = new (require('./lib/db'))(system,cfgDir);
-	var appRoot = require('app-root-path');
-	var express = require('express');
-	var bank = new (require('./lib/bank'))(system);
-	var elgatoDM = require('./lib/elgatoDM')(system);
-	var action = new (require('./lib/action'))(system);
-	var instance = new (require('./lib/instance'))(system);
-	var variable = new (require('./lib/variable'))(system);
-	var osc = new (require('./lib/osc'))(system);
-	var rest = new (require('./lib/rest'))(system);
-	var udp = new (require('./lib/udp'))(system);
+	var http     = require('./lib/http')(system, 80);
+	var io       = require('./lib/io')(system, http);
+	var db       = require('./lib/db')(system,cfgDir);
+	var appRoot  = require('app-root-path');
+	var express  = require('express');
+	var bank     = require('./lib/bank')(system);
+	var elgatoDM = require('./lib/elgato_dm')(system);
+	var action   = require('./lib/action')(system);
+	var instance = require('./lib/instance')(system);
+	var variable = require('./lib/variable')(system);
+	var osc      = require('./lib/osc')(system);
+	var rest     = require('./lib/rest')(system);
+	var udp      = require('./lib/udp')(system);
 
 	system.on('exit', function() {
 		elgatoDM.quit();
