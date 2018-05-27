@@ -37,13 +37,15 @@ $(function() {
 	});
 
 	$('#refreshUSB').click(function () {
-		var thisbutton = this;
+		var $thisbutton = $(this);
 
 		socket.emit('devices_reenumerate');
-		$(thisbutton).button('loading');
+
+		$thisbutton.data('original-text', $thisbutton.html());
+		$thisbutton.html($thisbutton.data('loading-text')).prop('disabled', true);
 
 		socket.once('devices_reenumerate:result', function () {
-			$(thisbutton).button('reset');
+			$thisbutton.html($thisbutton.data('original-text')).prop('disabled', false);;
 		});
 
 	});
