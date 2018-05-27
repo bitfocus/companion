@@ -60,7 +60,7 @@ $(function() {
 				var $li = $("<tr></tr>");
 				var $td_id = $("<td></td>");
 				var $td_label = $("<td></td>");
-				$td_id.text(n);
+				$td_id.text(act);
 				$td_label.text(actions[n].label);
 
 				$li.append($td_id);
