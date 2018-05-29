@@ -38,6 +38,7 @@ Cheers!
 * Resolume
 * Arkaos VJ / Mediamaster
 * Avolites AI
+* Green Hippo
 * Millumin (Basic support started / tested)
 * disguise/d3 (Basic support started)
 * Panasonic PTZ
@@ -48,4 +49,3 @@ Cheers!
 * Philips Hue
 * OSC Generic module
 * UDP Generic module
- 
