@@ -9,30 +9,92 @@ $(function() {
 		$("#addBankAction").val($("#addBankAction option:first").val());
 	});
 
+	$('#bankActions').on('keyup', '.action-option', function() {
+		socket.emit('bank_update_action_option', page, bank,  $(this).data('action-id'), $(this).data('option-id'), $(this).val() );
+	});
+
 	socket.on('bank_getActions:result', function(page, bank, actions) {
-		console.log("bank_getActions:result", page, bank, actions);
 
 		$ba = $("#bankActions");
 		$ba.html("");
-		console.log("actions",actions);
-		var $ol = $("<ol></ol>");
+
+		var $table = $("<table class='table action-table'></table>");
+		var $trth = $("<thead><tr><th>Delete</th><th>Action name</th><th>Options</th></tr></thead>");
+		var $tbody = $("<tbody></tbody>");
+		$table.append($trth);
+
 		for (var n in actions) {
 			var action = actions[n];
 			if (action !== null && instance.db[action.instance] !== undefined) {
-				var $li = $("<li></li>");
-				$li.data("id", action.id);
-				console.log("YYYYYY", action, actionlist);
-				$li.text(instance.db[action.instance].label + ": " + actionlist[action.label].label);
-				var $del = $("<button type='button' class='btn btn-danger btn-sm'>delete</button><span>&nbsp;</span>");
-				$li.prepend($del);
-				$del.click(function() {
+
+
+				var idb = instance.db[action.instance];
+				var it = instance.db[action.instance].instance_type;
+				var inst = action;
+
+				var $tr = $("<tr></tr>");
+				$tr.data("id", action.id);
+
+				var $name_td = $("<td>" + instance.db[action.instance].label + ": " + actionlist[action.label].label + "</td>");
+				var $del_td = $("<td><button type='button' class='btn btn-danger btn-sm'>delete</button><span>&nbsp;</span></td>");
+				var $options = $("<td></td>");
+
+				$tr.append($del_td);
+				$tr.append($name_td);
+
+				var iopt = actionlist[inst.label];
+
+				if (iopt !== undefined && iopt.options !== undefined) {
+					var options = iopt.options;
+
+					for (var n in options) {
+						var option = options[n];
+
+						var $opt_label = $("<label>"+option.label+"</label>");
+						$options.append($opt_label);
+
+						if (option.type == 'textinput') {
+							var $opt_input = $("<input type='text' class='action-option form-control'>");
+							$opt_input.data('action-id', action.id);
+							$opt_input.data('option-id', option.id);
+
+							// if options never been stored on this action
+							if (action.options === undefined) {
+								action.options = {};
+							}
+
+							// if this option never has been saved, set default
+							if (action.options[option.id] === undefined) {
+								socket.emit('bank_update_action_option', page, bank, action.id, option.id, option.default);
+								$opt_input.val(option.default);
+							}
+
+							// else set the db value for this option.
+							else {
+								$opt_input.val( action.options[option.id] );
+							}
+
+
+							$options.append($opt_input);
+
+						}
+
+
+					}
+
+				}
+
+				$tr.append($options);
+
+				$del_td.click(function() {
 					socket.emit('bank_delAction', page, bank, $(this).parent().data('id'));
 				})
-				$ol.append($li);
+				$tbody.append($tr);
+
 			}
 		}
-		$ba.append($ol);
-
+		$table.append($tbody);
+		$ba.append($table);
 	});
 
 	socket.on('actions', function(actions) {
@@ -45,15 +107,13 @@ $(function() {
 		var $option = $("<option>[ Select action ]</option>")
 		$aba.append($option);
 
-		console.log("actions:", actions);
-
 		for (var n in actions) {
 			var x = n.split(/:/);
 			var inst = x[0];
 			var act = x[1];
 
 			if (inst !== undefined && instance.db[inst] !== undefined) {
-				console.log("second", actions[n].label);
+
 				var $option = $("<option value='"+n+"'>"+ instance.db[inst].label + ": "+actions[n].label+"</option>")
 				$aba.append($option);
 
