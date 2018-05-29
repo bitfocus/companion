@@ -13,6 +13,11 @@
 #pagebank .border:hover, #pagenav .border:hover {
 	background-color: #ddd;
 }
+
+#pagebank div.border canvas {
+	background-color: black;
+}
+
 .pageat {
 	text-align:center;
 	padding-top: 5px;
@@ -23,6 +28,18 @@
 	margin: 2px;
 	border: 1px solid #aaa;
 }
+
+.colorbox.active_color {
+	background-image: url(/img/check.png) !important;
+	background-size: contain !important;
+}
+
 #actionsheader {
 	padding-top: 30px;
+}
+
+#bank_preview {
+	border: 1px solid black;
+	line-height: 0px;
+	padding: 0px;
 }

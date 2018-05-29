@@ -1,25 +1,16 @@
 
 var socket = new io();
 
-
-// borrowed color functions. TODO: make them better?
-
 function int2hex(number) {
-	var intnumber = number - 0;
-	var red, green, blue;
-	var template = "#000000";
-	red = (intnumber&0x0000ff) << 16;
-	green = intnumber&0x00ff00;
-	blue = (intnumber&0xff0000) >>> 16;
-	intnumber = red|green|blue;
-	var HTMLcolor = intnumber.toString(16);
-	HTMLcolor = template.substring(0,7 - HTMLcolor.length) + HTMLcolor;
-	return HTMLcolor;
+	var r = ('0' + ((number >> 16) & 0xff).toString('16')).substr(-2);
+	var g = ('0' + ((number >> 8) & 0xff).toString('16')).substr(-2);
+	var b = ('0' + (number & 0xff).toString('16')).substr(-2);
+
+	return '#' + r + g + b;
 }
+
 function hex2int(hex) {
-	var int = parseInt(hex.substr(1,6),16);
-	console.log("hex2int",hex,int);
-	return int;
+	return parseInt(hex.substr(1), 16);
 }
 
 var page = 1;
@@ -29,6 +20,7 @@ var bank = undefined;
 $(function() {
 	var $pagenav = $("#pagenav");
 	var $pagebank = $("#pagebank");
+	var pc = $('#bank_preview canvas')[0].getContext('2d');
 
 	$("#editbankli").hide();
 
@@ -98,7 +90,6 @@ $(function() {
 		"#66FF66",
 		"#99FF99",
 		"#CCFFCC",
-		"#FFFFFF",
 		"#FFCCFF",
 		"#FF99FF",
 		"#FF66FF",
@@ -164,11 +155,39 @@ $(function() {
 		"#993333"
 	];
 
+	function bank_preview_reset() {
+		pc.fillStyle = 'black';
+		pc.fillRect(0,0,72,72);
+	}
+
+	function updateFromConfig(page, bank, config, updateText) {
+		$('.active_field[data-special="color"]').removeClass('active_color');
+
+		$(".active_field").each(function() {
+			if ($(this).data('fieldid') !== undefined && config[$(this).data('fieldid')] !== undefined) {
+
+				if ($(this).data('special') == 'color') {
+					if ($(this).data('color').toLowerCase() == int2hex( config[$(this).data('fieldid')] )) {
+						$(this).addClass('active_color');
+					}
+				}
+				else {
+					if (updateText) {
+						$(this).val(config[$(this).data('fieldid')]);
+					}
+				}
+			}
+		});
+	}
+
 	function populate_bank_form(p,b,config,fields) {
 		var $eb1 = $("#editbank_content");
 		$eb1.html("<p><h3>Configuration</h3></p>");
 		var $eb = $("<div class='row'></div>");
 		$eb1.append($eb);
+
+		bank_preview_reset();
+		socket.emit('bank_preview', p, b);
 
 		// globalize those!
 		page = p;
@@ -192,16 +211,13 @@ $(function() {
 				var $div = $("<div class='colorcontainer' data-fieldid='"+field.id+"' style='height:20px;'></div>");
 
 				for (var n in colors) {
-					var $c = $("<div class='colorblock' data-color='"+colors[n]+"' data-fieldid='"+field.id+"'></div>");
-					$c.click(function() {
-						socket.emit('bank_changefield', p, b, $(this).data('fieldid'), hex2int(  $(this).data('color') ) );
-					});
+					var $c = $("<div class='colorblock' data-special='color' data-color='"+colors[n]+"' data-fieldid='"+field.id+"'></div>");
 
 					$c.css('backgroundColor', colors[n]);
 					$c.css('width', 20);
 					$c.css('height', 20);
 					$c.addClass('colorbox');
-					$c.addClass('activecolor');
+					$c.addClass('active_field');
 					$c.css('float','left');
 					$div.append($c)
 				}
@@ -216,36 +232,45 @@ $(function() {
 
 		}
 
-		$(".active_field").each(function() {
-			if ($(this).data('fieldid') !== undefined && config[$(this).data('fieldid')] !== undefined) {
-				if ($(this).data('special') == 'color') {
-					$(this).val( int2hex( config[$(this).data('fieldid')] ) );
-				}
-				else {
-					$(this).val(config[$(this).data('fieldid')]);
-				}
-			}
-		});
+		updateFromConfig(page, bank, config, true);
 
 		var change = function() {
-			console.log("this",this);
 			if ($(this).data('special') == 'color') {
-				socket.emit('bank_changefield', p, b, $(this).data('fieldid'), hex2int( $(this).val() ) );
+				socket.emit('bank_changefield', p, b, $(this).data('fieldid'), hex2int( $(this).data('color') ) );
+				socket.emit('get_bank', page, bank);
+				socket.once('get_bank:results', updateFromConfig);
 			}
 			else {
 				socket.emit('bank_changefield', p, b, $(this).data('fieldid'), $(this).val() );
 			}
+
+			// update page editor too
+			socket.emit('bank_preview_page', page);
 		}
 
 		$(".active_field").keyup(change);
-
+		$(".active_field[data-special=\"color\"]").click(change);
 
 	}
 
 	$(".change_style").click(function() {
-		console.log('change_style', $(this).data('style'), page, bank);
 		socket.emit('bank_style', page, bank, $(this).data('style'));
 		socket.once('bank_style:results', populate_bank_form);
+		socket.once('bank_style:results', function () {
+			socket.emit('bank_preview_page', page);
+		});
+	});
+
+	socket.on('preview_page_data', function (images) {
+		for (var key in images) {
+			var $canvas = $('#bank_' + page + '_' + key);
+			if ($canvas.length > 0) {
+				var ctx = $canvas[0].getContext('2d');
+
+				var imageData = dataToButtonImage(images[key]);
+				ctx.putImageData(imageData, 0, 0);
+			}
+		}
 	});
 
 	function changePage(pagenum) {
@@ -253,17 +278,19 @@ $(function() {
 		$pagenav.html("");
 		$pagebank.html("");
 
-		$pagenav.append($('<div id="btn_pagedown" class="pagenav col-lg-4"><div class="btn btn-primary">Page down</div></div>'));
-		$pagenav.append($('<div id="btn_this" class="pageat col-lg-4">Page '+pagenum+'</div>'));
-		$pagenav.append($('<div id="btn_pageup" class="pagenav text-right col-lg-4"><div class="btn btn-primary">Page up</div></div>'));
+		$pagenav.append($('<div class="pagenav col-lg-4"><div id="btn_pagedown" class="btn btn-primary">Page down</div></div>'));
+		$pagenav.append($('<div class="pageat col-lg-4">Page '+pagenum+'</div>'));
+		$pagenav.append($('<div class="pagenav text-right col-lg-4"><div id="btn_pageup" class="btn btn-primary">Page up</div></div>'));
 
 		for (var bank = 1; bank <= 12; bank++) {
-			var $div = $('<div class="bank col-lg-3"><div class="border" data-bank="'+bank+'">'+pagenum+'.'+bank+'</div></div>')
+			var $div = $('<div class="bank col-lg-3"><div class="border" data-bank="'+bank+'"><canvas width=72 height=72 id="bank_' + page + '_' + bank + '"</div></div>');
 			$pagebank.append($div);
 		}
 
+		socket.emit('bank_preview_page', pagenum);
 		$("#elgbuttons").click(function() {
 			$("#editbankli").hide();
+			socket.emit('bank_preview', false);
 		});
 
 		$("#pagebank .border").click(function() {
@@ -279,21 +306,23 @@ $(function() {
 		});
 
 		$("#btn_pageup").click(function() {
-			if (page < 99) {
-				page++;
-				changePage(page);
-			}
+			page++;
+			if (page == 100) { page = 1 }
+			changePage(page);
 		});
 
 		$("#btn_pagedown").click(function() {
-			if (page > 1) {
-				page--;
-				changePage(page);
-			}
+			page--;
+			if (page == 0) { page = 99 }
+			changePage(page);
 		});
 
 	}
 
 	changePage(page);
 
+	socket.on('preview_bank_data', function (page, bank, data) {
+		var imageData = dataToButtonImage(data);
+		pc.putImageData(imageData, 0, 0);
+	});
 });
