@@ -1,9 +1,10 @@
 {
   "name": "companion",
   "version": "1.0.10",
-  "description": "Event Companion",
+  "description": "Companion",
   "main": "bitfocus-skeleton/main.js",
   "build": {
+    "productName": "Companion",
     "appId": "companion.bitfocus.no",
     "mac": {
       "category": "no.bitfocus.companion"
