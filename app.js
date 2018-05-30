@@ -6,13 +6,15 @@ var fs = require("fs");
 var path = require('path')
 var debug = require('debug')('app');
 var mkdirp = require('mkdirp');
+var skeleton_info = {};
 var config;
 var cfgDir;
 
 system.on('skeleton-info', function(key, val) {
+		skeleton_info[key] = val;
 		if (key == 'configDir') {
 			debug('configuration directory', val);
-			cfgDir = val + "/elgato/";
+			cfgDir = val + "/companion/";
 			mkdirp(cfgDir, function(err) {
 				debug("mkdirp",cfgDir,err);
 				config = new (require('./bitfocus-libs/config'))(system, cfgDir, {
@@ -22,6 +24,10 @@ system.on('skeleton-info', function(key, val) {
 			});
 		}
  });
+
+system.on('skeleton-info-info', function(cb) {
+	cb(skeleton_info);
+});
 
 system.on('config_loaded', function(config) {
 	system.emit('skeleton-info', 'appURL', 'Waiting for webserver..');
