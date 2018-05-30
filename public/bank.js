@@ -163,7 +163,6 @@ $(function() {
 				cachedata[_bank] = image_cache[_page + '_' + _bank].updated;
 			}
 		}
-		console.log("Cachedata", cachedata);
 
 		socket.emit('bank_preview_page', _page, cachedata);
 	}
@@ -281,7 +280,6 @@ $(function() {
 
 			if (images[key] === undefined) {
 				imageData = dataToButtonImage(image_cache[page + '_' + key].buffer);
-				console.log("Used cache for bank " + page + '.' + key);
 			} else {
 				image_cache[page + '_' + key] = images[key];
 				imageData = dataToButtonImage(images[key].buffer);
