@@ -13,16 +13,16 @@ Please don't spam this group with questions, rather join us in our Slack chat fo
 Cheers!
 
 ## Future device support plans
-* QLab
-* PlayBackPro+
+* QLab  (Basic support ready / tested)
+* PlayBackPro+ (Basic support ready / tested)
 * BMD Hyperdeck
 * BMD Videohub
 * BMD Atem
-* Mitti
+* Mitti (Basic support ready / tested)
 * AJA Kipro Ultra Plus
 * ArtNet
 * Entec DMXPro
-* Barco E2/S3
+* Barco E2/S3 (Basic support ready / tested)
 * Barco Projectors
 * Epson Projectors
 * Panasonic Projectors
@@ -34,5 +34,18 @@ Cheers!
 * Analogway Accender
 * Ross
 * Wirecast
+* OBS
 * Resolume
-* disguise/d3
+* Arkaos VJ / Mediamaster
+* Avolites AI
+* Green Hippo
+* Millumin (Basic support started / tested)
+* disguise/d3 (Basic support started)
+* Panasonic PTZ
+* Sony / VISCA PTZ
+* Apple Keynote
+* Microsoft Powerpoint (via support software on PPT Machine)
+* Dataton Watchout
+* Philips Hue
+* OSC Generic module
+* UDP Generic module

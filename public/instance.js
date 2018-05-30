@@ -94,7 +94,14 @@ $(function() {
 	socket.on('instance_edit:result', function(id, store, res, config ) {
 		$('#instanceConfigTab').show();
 		$('#instanceConfigTab a[href="#instanceConfig"]').tab('show');
-		$('#instanceConfig h4').text(id + ' config');
+
+		for (var n in store.module) {
+			if (store.module[n].id === store.db[id].instance_type) {
+				$('#instanceConfig h4').text( store.module[n].label + ' configuration');				
+			}
+		}
+		console.log(store,res,config);
+
 		iconfig = config;
 
 		var $icf = $("#instanceConfigFields");
@@ -102,7 +109,7 @@ $(function() {
 
 		for (var n in res) {
 			var field = res[n];
-			var $sm = $('<div class="col-sm-'+field.width+'">'+field.label+'</div>')
+			var $sm = $('<div class="col-sm-'+field.width+'"><label>'+field.label+'</label></div>')
 			if (field.type == 'textinput') {
 				var $inp = $("<input type='text' class='form-control instanceConfigField' data-type='"+field.type+"' data-id='"+field.id+"'>");
 				(function(f1,f2,inp) {
