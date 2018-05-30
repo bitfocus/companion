@@ -12,10 +12,10 @@ $(function() {
 	$('#bankActions').on('keyup', '.action-option-keyup', function() {
 		socket.emit('bank_update_action_option', page, bank,  $(this).data('action-id'), $(this).data('option-id'), $(this).val() );
 	});
+
 	$('#bankActions').on('change', '.action-option-change', function() {
 		socket.emit('bank_update_action_option', page, bank,  $(this).data('action-id'), $(this).data('option-id'), $(this).val() );
 	});
-
 
 
 	socket.on('bank_getActions:result', function(page, bank, actions) {
@@ -124,22 +124,6 @@ $(function() {
 
 						}
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 					}
 
 				}
@@ -180,7 +164,8 @@ $(function() {
 				var $li = $("<tr></tr>");
 				var $td_id = $("<td></td>");
 				var $td_label = $("<td></td>");
-				$td_id.text(act);
+
+				$td_id.text(instance.db[inst].label);
 				$td_label.text(actions[n].label);
 
 				$li.append($td_id);

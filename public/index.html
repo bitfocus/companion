@@ -40,7 +40,7 @@
 				</li>-->
 
 				<li class="nav-item px-3">
-					<a class="nav-link" target="_new" href="/emulator.html">Elgato Emulator</a>
+					<a class="nav-link" target="_new" id='versiontext' href="https://bitfocus.io/companion/">version</a>
 				</li>
 
 			</ul>
@@ -81,7 +81,7 @@
 					<ul class="nav">
 						<li class="nav-item">
 							<a class="nav-link" target="_new" href="/emulator.html">
-								<i class="nav-icon icon-speedometer"></i> Emulator
+								<i class="nav-icon icon-speedometer"></i> Elgato Emulator
 								<!-- <span class="badge badge-primary">NEW</span> -->
 							</a>
 						</li>
@@ -181,10 +181,12 @@
 										<a class="nav-link" data-toggle="tab" href="#actions" role="tab" aria-controls="actions">
 											<i class="icon-calculator"></i> Actions</a>
 									</li>
+<!--
 									<li class="nav-item">
 										<a class="nav-link" data-toggle="tab" href="#variables" role="tab" aria-controls="variables">
 											<i class="icon-calculator"></i> Variables</a>
 									</li>
+-->
 									<li id="instanceConfigTab" class="nav-item">
 										<a class="nav-link" data-toggle="tab" href="#instanceConfig" role="tab" aria-controls="instanceConfig">
 											<i class="icon-calculator"></i> Config</a>
@@ -220,6 +222,10 @@
 												<a class="dropdown-item addInstance" data-style="smalltext" data-id="'+im.id+'">'+ im.label +'</a>
 											</div>
 										</div>
+									 	<p></p>
+										<p><b>Hint:</b> Instances are the connections companion makes to other devices in order to
+										discover button actions.</p>
+
 
 									</div>
 
@@ -227,8 +233,8 @@
 										<table class="table table-responsive-sm">
 											<thead>
 												<tr>
-													<th>ID</th>
-													<th>Label</th>
+													<th>Instance</th>
+													<th>Action</th>
 												</tr>
 											</thead>
 											<tbody id='actionsList'>
@@ -288,6 +294,10 @@
 										</div>
 										<div class="row" id='pagebank'>
 										</div>
+
+										<p></p>
+										<p><b>Hint:</b> Click on the the button you like to design in the list above</p>
+
 
 									</div>
 									<div class="tab-pane" id="editbank" role="tabpanel">
@@ -352,5 +362,6 @@
 		<script src="instance.js"></script>
 		<script src="action.js"></script>
 		<script src="devices.js"></script>
+		<script src="main.js"></script>
 	</body>
 </html>
