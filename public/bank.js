@@ -1,5 +1,6 @@
 
 var socket = new io();
+var image_cache = {};
 
 function int2hex(number) {
 	var r = ('0' + ((number >> 16) & 0xff).toString('16')).substr(-2);
@@ -267,7 +268,8 @@ $(function() {
 			if ($canvas.length > 0) {
 				var ctx = $canvas[0].getContext('2d');
 
-				var imageData = dataToButtonImage(images[key]);
+				var imageData = dataToButtonImage(images[key].buffer);
+				image_cache[page + '_' + key] = images[key];
 				ctx.putImageData(imageData, 0, 0);
 			}
 		}

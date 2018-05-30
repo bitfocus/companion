@@ -52,6 +52,7 @@ system.on('skeleton-ready', function() {
 	var express  = require('express');
 	var bank     = require('./lib/bank')(system);
 	var elgatoDM = require('./lib/elgato_dm')(system);
+	var preview  = require('./lib/preview')(system);
 	var action   = require('./lib/action')(system);
 	var instance = require('./lib/instance')(system);
 	var variable = require('./lib/variable')(system);
