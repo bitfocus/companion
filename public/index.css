@@ -1,3 +1,21 @@
+#error-container {
+	display:none;
+	width: 100%;
+	position:fixed !important;
+	top:0px !important;
+	left:0px !important;
+	height: 100%;
+	z-index:15000;
+	padding-left: 30px;
+	padding-right: 30px;
+	padding-top: 100px;
+	background-color: rgba(0,0,0,0.8);
+	color:white;
+}
+#error-container .text-muted {
+	color: #ccc !important;
+}
+
 
 #pagebank .border, #pagenav .border {
 	display:block;
