@@ -156,6 +156,18 @@ $(function() {
 		"#993333"
 	];
 
+	function bank_preview_page(_page) {
+		var cachedata = {};
+		for (var _bank = 1; _bank <= 12; ++_bank) {
+			if (image_cache[_page + '_' + _bank] !== undefined) {
+				cachedata[_bank] = image_cache[_page + '_' + _bank].updated;
+			}
+		}
+		console.log("Cachedata", cachedata);
+
+		socket.emit('bank_preview_page', _page, cachedata);
+	}
+
 	function bank_preview_reset() {
 		pc.fillStyle = 'black';
 		pc.fillRect(0,0,72,72);
@@ -188,6 +200,7 @@ $(function() {
 		$eb1.append($eb);
 
 		bank_preview_reset();
+
 		socket.emit('bank_preview', p, b);
 
 		// globalize those!
@@ -246,7 +259,7 @@ $(function() {
 			}
 
 			// update page editor too
-			socket.emit('bank_preview_page', page);
+			bank_preview_page(page);
 		}
 
 		$(".active_field").keyup(change);
@@ -258,18 +271,25 @@ $(function() {
 		socket.emit('bank_style', page, bank, $(this).data('style'));
 		socket.once('bank_style:results', populate_bank_form);
 		socket.once('bank_style:results', function () {
-			socket.emit('bank_preview_page', page);
+			bank_preview_page(page);
 		});
 	});
 
 	socket.on('preview_page_data', function (images) {
-		for (var key in images) {
+		for (var key = 1; key <= 12; ++key) {
+			var imageData;
+
+			if (images[key] === undefined) {
+				imageData = dataToButtonImage(image_cache[page + '_' + key].buffer);
+				console.log("Used cache for bank " + page + '.' + key);
+			} else {
+				image_cache[page + '_' + key] = images[key];
+				imageData = dataToButtonImage(images[key].buffer);
+			}
+
 			var $canvas = $('#bank_' + page + '_' + key);
 			if ($canvas.length > 0) {
 				var ctx = $canvas[0].getContext('2d');
-
-				var imageData = dataToButtonImage(images[key].buffer);
-				image_cache[page + '_' + key] = images[key];
 				ctx.putImageData(imageData, 0, 0);
 			}
 		}
@@ -289,7 +309,7 @@ $(function() {
 			$pagebank.append($div);
 		}
 
-		socket.emit('bank_preview_page', pagenum);
+		bank_preview_page(pagenum);
 		$("#elgbuttons").click(function() {
 			$("#editbankli").hide();
 			socket.emit('bank_preview', false);
