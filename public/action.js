@@ -9,6 +9,10 @@ $(function() {
 		$("#addBankAction").val($("#addBankAction option:first").val());
 	});
 
+	$('#bankActions').on('keyup', '.action-delay-keyup', function() {
+		socket.emit('bank_update_action_delay', page, bank,  $(this).data('action-id'), $(this).val() );
+	});
+
 	$('#bankActions').on('keyup', '.action-option-keyup', function() {
 		socket.emit('bank_update_action_option', page, bank,  $(this).data('action-id'), $(this).data('option-id'), $(this).val() );
 	});
@@ -24,10 +28,9 @@ $(function() {
 		$ba.html("");
 
 		var $table = $("<table class='table action-table'></table>");
-		var $trth = $("<thead><tr><th>Delete</th><th>Action name</th><th>Options</th></tr></thead>");
+		var $trth = $("<thead><tr><th>Delete</th><th>Action name</th><th>Delay</th><th>Options</th></tr></thead>");
 		var $tbody = $("<tbody></tbody>");
 		$table.append($trth);
-
 		for (var n in actions) {
 			var action = actions[n];
 			if (action !== null && instance.db[action.instance] !== undefined) {
@@ -42,10 +45,18 @@ $(function() {
 
 				var $name_td = $("<td>" + instance.db[action.instance].label + ": " + actionlist[action.label].label + "</td>");
 				var $del_td = $("<td><button type='button' class='btn btn-danger btn-sm'>delete</button><span>&nbsp;</span></td>");
+				var $delay_td = $("<td></td>");
+				var $delay_input = $("<input type='text' value='' class='form-control action-delay-keyup' placeholder='ms'>");
+				$delay_input.data('action-id', action.id);
+
+				$delay_td.append($delay_input);
+
+				$delay_td.find('input').val(inst.delay)
 				var $options = $("<td></td>");
 
 				$tr.append($del_td);
 				$tr.append($name_td);
+				$tr.append($delay_td);
 
 				var iopt = actionlist[inst.label];
 
@@ -57,9 +68,6 @@ $(function() {
 
 						var $opt_label = $("<label>"+option.label+"</label>");
 						$options.append($opt_label);
-
-
-
 
 						if (option.type == 'textinput') {
 							var $opt_input = $("<input type='text' class='action-option-keyup form-control'>");
