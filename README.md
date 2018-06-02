@@ -8,8 +8,9 @@ Check out http://bitfocus.io/companion for more information :)
 * QLab
 * Mitti
 * PlaybackPro Plus
-* OSC (sendt custom packets)
+* OSC Generic (sendt custom packets)
 * d3/disguise (osc control)
+* Dataton Watchout
 
 ## Coming support (help wanted!)
 * BMD Hyperdeck
@@ -38,7 +39,5 @@ Check out http://bitfocus.io/companion for more information :)
 * Sony / VISCA PTZ
 * Apple Keynote
 * Microsoft Powerpoint (via support software on PPT Machine)
-* Dataton Watchout
 * Philips Hue
-* OSC Generic module
 * UDP Generic module
