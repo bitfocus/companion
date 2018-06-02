@@ -6,6 +6,6 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "author": "",
+  "author": "Dorian Meid <meid@backstage.org>",
   "license": "ISC"
 }
