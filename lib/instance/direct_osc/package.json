@@ -1,0 +1,11 @@
+{
+  "name": "direct_osc",
+  "version": "0.0.1",
+  "description": "Direct: OSC plugin for Companion",
+  "main": "direct_osc.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC"
+}
