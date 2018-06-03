@@ -1,4 +1,5 @@
 var instance = {};
+var instance_status = {};
 
 $(function() {
 	var iconfig = {};
@@ -8,6 +9,35 @@ $(function() {
 
 	socket.emit('instance_get');
 	console.log('instance_get');
+	socket.emit('instance_status_get');
+
+	function updateInstanceStatus() {
+		for (var x in instance_status) {
+			var s = instance_status[x];
+
+			// ok
+			if (s[0] === 0) {
+				$("#instance_status_"+x).html('OK').removeClass('instance-status-error').removeClass('instance-status-warn').addClass('instance-status-ok')
+			}
+
+			// warning
+			else if (s[0] === 1) {
+				$("#instance_status_"+x).html(""+s[1]).removeClass('instance-status-ok').removeClass('instance-status-error').addClass('instance-status-warn')
+			}
+
+			// error
+			else if (s[0] === 2) {
+				$("#instance_status_"+x).html(""+s[2]).removeClass('instance-status-ok').removeClass('instance-status-warn').addClass('instance-status-error')
+			}
+
+		}
+		console.log("updstat<<<<", instance_status);
+	}
+
+	socket.on('instance_status', function(obj) {
+		instance_status = obj;
+		updateInstanceStatus();
+	});
 
 	function updateInstanceList(list, dontclear) {
 		var $il = $("#instanceList");
@@ -20,7 +50,7 @@ $(function() {
 
 			var $td_id = $("<td></td>");
 			var $td_label = $("<td id='label_"+n+"'>label</td>");
-			var $td_status = $("<td></td>");
+			var $td_status = $("<td id='instance_status_"+n+"'>waiting</td>");
 			var $td_actions = $("<td></td>");
 
 			var $button_edit = $("<button type='button' data-id='"+n+"' class='instance-edit btn btn-success'>edit</button>");
@@ -62,6 +92,7 @@ $(function() {
 			$il.append($tr);
 
 		}
+		updateInstanceStatus();
 	};
 
 	socket.on('instance', function(i) {
