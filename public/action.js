@@ -164,7 +164,7 @@ $(function() {
 			var inst = x[0];
 			var act = x[1];
 
-			if (inst !== undefined && instance.db[inst] !== undefined) {
+			if (inst !== undefined && instance !== undefined && instance.db !== undefined && instance.db[inst] !== undefined) {
 
 				var $option = $("<option value='"+n+"'>"+ instance.db[inst].label + ": "+actions[n].label+"</option>")
 				$aba.append($option);
