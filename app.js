@@ -25,6 +25,10 @@ system.on('skeleton-info', function(key, val) {
 		}
  });
 
+system.on('configdir_get', function (cb) {
+	cb(cfgDir);
+});
+
 system.on('skeleton-info-info', function(cb) {
 	cb(skeleton_info);
 });

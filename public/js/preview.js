@@ -17,5 +17,27 @@
 		return imageData;
 	}
 
+	function checkImageSize(image, minW, minH, maxW, maxH, cbOK, cbKO) {
+	    //check whether browser fully supports all File API
+	    if (window.File && window.FileReader && window.FileList && window.Blob) {
+	        var fr = new FileReader;
+	        fr.onload = function() { // file is loaded
+	            var img = new Image;
+	            img.onload = function() { // image is loaded; sizes are available
+	                if(img.width < minW || img.height < minH || img.width > maxW || img.height > maxH){
+	                    cbKO();
+	                }else{
+	                    cbOK(fr.result);
+	                }
+	            };
+	            img.src = fr.result; // is the data URL because called with readAsDataURL
+	        };
+	        fr.readAsDataURL(image.files[0]);
+	    }else{
+	        alert('I am sorry, Companion requires a newer browser');
+	    }
+	}
+
 	toexport.dataToButtonImage = dataToButtonImage;
+	toexport.checkImageSize = checkImageSize;
 })(window);

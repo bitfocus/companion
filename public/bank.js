@@ -241,6 +241,30 @@ $(function() {
 				$('#auto_'+field.id).colorpicker();
 
 			}
+
+			else if (field.type == 'filepicker') {
+
+				var $p = $("<p><label>"+field.label+"</label><br></p>");
+				var $div = $("<div class='filechoosercontainer'><label class='btn btn-primary btn-file'>Browse <input type='file' data-fieldid='"+field.id+"' accept='" + field.accept + "' style='display: none;'></label></div>");
+
+				$p.append($div);
+				$field.append($p);
+
+				$field.find('input[type="file"]').change(function (e) {
+					checkImageSize(this, 72, 58, 72, 58, function (dataurl) {
+						socket.emit('bank_set_png', p, b, dataurl);
+						socket.once('bank_set_png:result', function (result) {
+							if (result != 'ok') {
+								alert('An error occured while uploading image');
+							} else {
+								bank_preview_page(p);
+							}
+						});
+					}, function () {
+						alert('Image must have the following dimensions: 72x58');
+					});
+				});
+			}
 			$eb.append($field);
 
 		}
