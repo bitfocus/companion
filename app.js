@@ -53,9 +53,15 @@ system.on('skeleton-bind-ip', function(ip) {
 	system.emit('ip_rebind');
 });
 
+system.on('skeleton-bind-port', function(port) {
+	config.http_port = port;
+	system.emit('config_set', 'http_port', port);
+	system.emit('ip_rebind');
+});
+
 system.on('skeleton-ready', function() {
 
-	var http     = require('./lib/http')(system, 80);
+	var http     = require('./lib/http')(system);
 	var io       = require('./lib/io')(system, http);
 	var db       = require('./lib/db')(system,cfgDir);
 	var appRoot  = require('app-root-path');
