@@ -20,7 +20,7 @@ $(function() {
 
 			var $td_id = $("<td></td>");
 			var $td_label = $("<td id='label_"+n+"'>label</td>");
-			var $td_status = $("<td>status</td>");
+			var $td_status = $("<td></td>");
 			var $td_actions = $("<td></td>");
 
 			var $button_edit = $("<button type='button' data-id='"+n+"' class='instance-edit btn btn-success'>edit</button>");
@@ -43,7 +43,13 @@ $(function() {
 				socket.emit('instance_edit', id);
 			});
 
-			$td_id.text(n);
+			for (var x in instance.module) {
+				if (instance.module[x].id == list[n].instance_type) {
+					$td_id.text(instance.module[x].label);
+				}
+			}
+
+
 			if (list[n].label !== undefined) {
 				$td_label.text(list[n].label);
 			}
@@ -97,7 +103,7 @@ $(function() {
 
 		for (var n in store.module) {
 			if (store.module[n].id === store.db[id].instance_type) {
-				$('#instanceConfig h4').text( store.module[n].label + ' configuration');				
+				$('#instanceConfig h4').text( store.module[n].label + ' configuration');
 			}
 		}
 		console.log(store,res,config);
