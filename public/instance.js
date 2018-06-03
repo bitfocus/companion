@@ -50,7 +50,7 @@ $(function() {
 
 			var $td_id = $("<td></td>");
 			var $td_label = $("<td id='label_"+n+"'>label</td>");
-			var $td_status = $("<td id='instance_status_"+n+"'>waiting</td>");
+			var $td_status = $("<td id='instance_status_"+n+"'>no status</td>");
 			var $td_actions = $("<td></td>");
 
 			var $button_edit = $("<button type='button' data-id='"+n+"' class='instance-edit btn btn-success'>edit</button>");
@@ -62,6 +62,7 @@ $(function() {
 
 			$button_delete.click(function() {
 				var id = $(this).data('id');
+				$("#instanceConfigTab").hide();
 				console.log("instance-delete:",id);
 				socket.emit('instance_delete', id);
 				$(this).parent().parent().remove();
