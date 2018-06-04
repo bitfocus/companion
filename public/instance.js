@@ -53,7 +53,7 @@ $(function() {
 			var $td_status = $("<td id='instance_status_"+n+"'>no status</td>");
 			var $td_actions = $("<td></td>");
 
-			var $button_edit = $("<button type='button' data-id='"+n+"' class='instance-edit btn btn-success'>edit</button>");
+			var $button_edit = $("<button type='button' data-id='"+n+"' class='instance-edit btn btn-primary'>edit</button>");
 			var $button_delete = $("<button type='button' data-id='"+n+"' class='instance-delete btn btn-sm btn-ghost-danger'>delete</button>");
 
 			$td_actions.append($button_delete)
@@ -156,7 +156,6 @@ $(function() {
 							$("#label_"+ f1).text(inp.val());
 						}
 						socket.emit('instance_config_set', f1, f2, inp.val() );
-						$("#elgbuttons").click();
 					});
 				})(id,field.id,$inp);
 				$sm.append($inp);

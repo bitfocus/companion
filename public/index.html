@@ -27,9 +27,8 @@
 						<p class="text-muted">It seems that we have lost connection to the companion app.</p>
 
 						<p class="text-muted">
-								<li class="text-muted">Check that the application is still running</li>
-								<li class="text-muted">If you're using the web gui over network - check your connection</li>
-
+							<li class="text-muted">Check that the application is still running</li>
+							<li class="text-muted">If you're using the web gui over network - check your connection</li>
 						</p>
 					</div>
 				</div>
@@ -164,7 +163,7 @@
 				<ol class="breadcrumb">
 
 					<li class="breadcrumb-item">Companion</li>
-					<li class="breadcrumb-item active">Dashboard</li>
+					<li class="breadcrumb-item active">Web GUI</li>
 
 					<!-- Breadcrumb Menu-->
 					<!--
@@ -186,28 +185,39 @@
 
 						<div class="row">
 							<!--/.col-->
-							<div class="col-md-6 mb-4">
+							<div class="col-lg-7 col-sm-12 col-xs-12">
 								<ul class="nav nav-tabs" role="tablist">
+
+
 									<li class="nav-item">
 										<a class="nav-link active" data-toggle="tab" href="#instances" role="tab" aria-controls="instances">
 											<i class="icon-calculator"></i> Instances &nbsp;
 											<!-- <span class="badge badge-pill badge-success">OK</span> -->
 										</a>
 									</li>
+
 									<li class="nav-item">
+										<a class="nav-link" data-toggle="tab" href="#elgatobuttons" id='elgbuttons' role="tab" aria-controls="home">
+											<i class="icon-calculator"></i> Buttons
+										</a>
+									</li>
+
+									<li class="nav-item" id="editbankli">
+										<a class="nav-link" data-toggle="tab" href="#editbank" role="tab" aria-controls="profile">
+											<i class="icon-calculator"></i> Edit button <span id='editbankid'>?</span>
+										</a>
+									</li>
+
+<!--									<li class="nav-item">
 										<a class="nav-link" data-toggle="tab" href="#actions" role="tab" aria-controls="actions">
 											<i class="icon-calculator"></i> Actions</a>
-									</li>
-<!--
-									<li class="nav-item">
-										<a class="nav-link" data-toggle="tab" href="#variables" role="tab" aria-controls="variables">
-											<i class="icon-calculator"></i> Variables</a>
-									</li>
--->
+									</li> -->
+
 									<li id="instanceConfigTab" class="nav-item">
 										<a class="nav-link" data-toggle="tab" href="#instanceConfig" role="tab" aria-controls="instanceConfig">
 											<i class="icon-calculator"></i> Config</a>
 									</li>
+
 									<li class="nav-item">
 										<a class="nav-link" data-toggle="tab" href="#devices" role="tab" aria-controls="devices">
 											<i class="icon-calculator"></i> Devices</a>
@@ -215,7 +225,7 @@
 
 								</ul>
 
-								<div class="tab-content">
+								<div class="tab-content padbottom">
 									<div class="tab-pane active" id="instances" role="tabpanel">
 										<table class="table table-responsive-sm">
 											<thead>
@@ -232,11 +242,11 @@
 
 
 										<div class="dropdown">
-											<button class="btn btn-primary dropdown-toggle" type="button" id="addInstance" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+											<button class="btn btn-success dropdown-toggle" type="button" id="addInstance" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
 												Add instance
 											</button>
 											<div class="dropdown-menu" aria-labelledby="addInstance" id="addInstanceContent">
-												<a class="dropdown-item addInstance" data-style="smalltext" data-id="'+im.id+'">'+ im.label +'</a>
+												<a class="dropdown-item addInstance" data-style="smalltext" data-id=""></a>
 											</div>
 										</div>
 										 <p></p>
@@ -283,29 +293,8 @@
 										<button class="btn btn-primary" data-loading-text="<i class='fa fa-spinner fa-spin '></i> Checking for new devices..." id="refreshUSB">Re-enumerate USB (BLOCKING!)</button>
 									</div>
 
-								</div>
-							</div>
 
-							<!--/.col-->
-							<div class="col-md-6 mb-4">
-								<ul class="nav nav-tabs" role="tablist">
-									<li class="nav-item">
-										<a class="nav-link active" data-toggle="tab" href="#elgatobuttons" id='elgbuttons' role="tab" aria-controls="home">
-											<i class="icon-calculator"></i> Elgato Buttons
-										</a>
-									</li>
-
-									<li class="nav-item" id="editbankli">
-										<a class="nav-link" data-toggle="tab" href="#editbank" role="tab" aria-controls="profile">
-											<i class="icon-calculator"></i> Edit bank <span id='editbankid'>?</span>
-										</a>
-									</li>
-
-								</ul>
-
-								<div class="tab-content">
-
-									<div class="tab-pane active" id="elgatobuttons" role="tabpanel">
+									<div class="tab-pane" id="elgatobuttons" role="tabpanel">
 
 										<div class="row" id='pagenav'>
 										</div>
@@ -324,7 +313,7 @@
 										</div>
 
 										<div class="dropdown">
-											<button class="btn btn-primary dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+											<button class="btn btn-success dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
 												Set button style
 											</button>
 											<div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
@@ -349,6 +338,29 @@
 								</div>
 							</div>
 							<!--/.col-->
+
+							<div class='col-lg-5 col-sm-12 col-xs-12'>
+								<ul class="nav nav-tabs" role="tablist">
+
+
+									<li class="nav-item">
+										<a class="nav-link active" data-toggle="tab" href="#log" role="tab" aria-controls="log">
+											<i class="icon-calculator"></i> Log
+											<!-- <span class="badge badge-pill badge-success">OK</span> -->
+										</a>
+									</li>
+
+								</ul>
+
+
+								<div class="tab-content">
+									<div class="tab-pane active" id="log" role="tabpanel">
+									</div>
+								</div>
+							</div>
+
+
+
 						</div>
 						<!--/.row-->
 					</div>
@@ -380,6 +392,7 @@
 		<script src="instance.js"></script>
 		<script src="action.js"></script>
 		<script src="devices.js"></script>
+		<script src="log.js"></script>
 		<script src="main.js"></script>
 	</body>
 </html>

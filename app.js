@@ -1,4 +1,4 @@
-process.env['DEBUG'] = '*,-express*,-engine*,-socket.io*,-send*,-db,-NRC*';
+process.env['DEBUG'] = '*,-express*,-engine*,-socket.io*,-send*,-db,-NRC*,-follow-redirects';
 
 var EventEmitter = require('events');
 var system = new EventEmitter();
@@ -63,6 +63,7 @@ system.on('skeleton-ready', function() {
 
 	var http     = require('./lib/http')(system);
 	var io       = require('./lib/io')(system, http);
+	var log      = require('./lib/log')(system,io);
 	var db       = require('./lib/db')(system,cfgDir);
 	var appRoot  = require('app-root-path');
 	var express  = require('express');

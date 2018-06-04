@@ -227,8 +227,8 @@ $(function() {
 					var $c = $("<div class='colorblock' data-special='color' data-color='"+colors[n]+"' data-fieldid='"+field.id+"'></div>");
 
 					$c.css('backgroundColor', colors[n]);
-					$c.css('width', 20);
-					$c.css('height', 20);
+					$c.css('width', 18);
+					$c.css('height', 18);
 					$c.addClass('colorbox');
 					$c.addClass('active_field');
 					$c.css('float','left');
@@ -332,10 +332,16 @@ $(function() {
 		}
 
 		bank_preview_page(pagenum);
-		$("#elgbuttons").click(function() {
-			$("#editbankli").hide();
-			socket.emit('bank_preview', false);
-		});
+
+		$('a.nav-link').click(function() {
+			if ($(this).attr('href') !== '#editbank' && $(this).attr('href') !== '#log') {
+				$("#editbankli").hide();
+				socket.emit('bank_preview', false);
+			}
+		})
+
+
+
 
 		$("#pagebank .border").click(function() {
 			bank = $(this).data('bank');

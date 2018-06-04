@@ -45,7 +45,7 @@
 	height: 45px;
 }
 .colorbox {
-	margin: 2px;
+	margin: 1px;
 	border: 1px solid #aaa;
 }
 
@@ -62,6 +62,7 @@
 	border: 1px solid black;
 	line-height: 0px;
 	padding: 0px;
+	border-radius: 4px;
 }
 
 
@@ -133,4 +134,14 @@ label {
 }
 .instance-status-error {
 	background-color: #fcc;
+}
+.padbottom {
+	margin-bottom:38px;
+}
+
+#log {
+	font-size: 10px;
+	height: 500px;
+	overflow-y: scroll;
+	overflow-x: visible;
 }
