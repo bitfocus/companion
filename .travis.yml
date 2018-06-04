@@ -1,6 +1,5 @@
 osx_image: xcode8.3
-
-dist: trusty
+dist: precise
 sudo: false
 
 language: node_js
@@ -12,7 +11,6 @@ env:
     - ELECTRON_BUILDER_CACHE=$HOME/.cache/electron-builder
 
 os:
-  - linux
   - osx
 
 cache:
@@ -23,19 +21,29 @@ cache:
   - $HOME/.npm/_prebuilds
 
 before_install:
-  - curl -L https://yarnpkg.com/latest.tar.gz | tar xvz && mv dist $HOME/.yarn
+  - curl -L https://yarnpkg.com/latest.tar.gz | tar xvz && mv yarn-v* $HOME/.yarn
   - export PATH="$HOME/.yarn/bin:$PATH"
+  - git config --file=.gitmodules submodule.bitfocus-skeleton.url https://github.com/bitfocus/bitfocus-skeleton.git
+  - git config --file=.gitmodules submodule.bitfocus-libs.url https://github.com/bitfocus/bitfocus-libs.git
+  - git submodule sync
   - git submodule init
   - git submodule update
 
 install:
-  - yarn
   - cd bitfocus-skeleton
   - yarn
+  - cd ..
+  - cd bitfocus-libs
+  - yarn
+  - cd ..
+  - ./tools/build_writefile.sh
+  - yarn
+
 
 script:
   - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then npm run linuxdist; fi
   - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then npm run dist; fi
+  - ./tools/build_rename_git.sh
 
 before_cache:
   - rm -rf $HOME/.cache/electron-builder/wine
@@ -43,3 +51,6 @@ before_cache:
 branches:
   except:
     - "/^v\\d+\\.\\d+\\.\\d+$/"
+
+after_success:
+  "curl -T electron-output/*.zip -u $FTP_USER:$FTP_PASSWORD ftp://$FTP_IP/deploy/electron-output/"
