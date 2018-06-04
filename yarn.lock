@@ -1563,9 +1563,9 @@ indexof@0.0.1:
   version "0.0.1"
   resolved "https://registry.yarnpkg.com/indexof/-/indexof-0.0.1.tgz#82dc336d232b9062179d05ab3293a66059fd435d"
 
-infinitton-idisplay@1.0.1:
-  version "1.0.1"
-  resolved "https://registry.yarnpkg.com/infinitton-idisplay/-/infinitton-idisplay-1.0.1.tgz#8e16f7e1f83f1da948714a2f7906f35e730c09ae"
+infinitton-idisplay@1.0.2:
+  version "1.0.2"
+  resolved "https://registry.yarnpkg.com/infinitton-idisplay/-/infinitton-idisplay-1.0.2.tgz#fea42a6229c446689293e51c944a9e27191cc2f8"
   dependencies:
     node-hid "^0.6.0"
 
