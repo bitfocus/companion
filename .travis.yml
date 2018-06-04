@@ -38,7 +38,7 @@ install:
   - cd bitfocus-libs
   - yarn
   - cd ..
-  - cmd: bash tools/build_writefile.sh
+  - ./tools/build_writefile.sh
   - yarn
 
 
