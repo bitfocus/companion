@@ -4,6 +4,7 @@ BUILD
 .DS_Store
 *-x64/*
 yarn-error.log
+package-lock.json
 out/
 .cache
 build/
