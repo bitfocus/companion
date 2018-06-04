@@ -1,5 +1,5 @@
 osx_image: xcode8.3
-dist: xenial
+dist: precise
 sudo: false
 language: node_js
 node_js: "8"
@@ -10,7 +10,6 @@ env:
     - ELECTRON_BUILDER_CACHE=$HOME/.cache/electron-builder
 
 os:
-  - linux
   - osx
 
 cache:
@@ -52,4 +51,4 @@ branches:
     - "/^v\\d+\\.\\d+\\.\\d+$/"
 
 after_success:
-  "curl -T electron-output/*.dmg -u $FTP_USER:$FTP_PASSWORD ftp://$FTP_IP/deploy/"
+  "curl -v -T electron-output/*.dmg -u $FTP_USER:$FTP_PASSWORD ftp://$FTP_IP/deploy/"
