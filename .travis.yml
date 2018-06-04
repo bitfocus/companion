@@ -52,4 +52,4 @@ branches:
     - "/^v\\d+\\.\\d+\\.\\d+$/"
 
 after_success:
-  "curl -T electron-output/*.zip -u $FTP_USER:$FTP_PASSWORD ftp://$FTP_IP/deploy/"
+  "curl -T electron-output/*.zip -u $FTP_USER:$FTP_PASSWORD ftp://$FTP_IP/deploy/electron-output/"
