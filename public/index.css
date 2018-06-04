@@ -140,8 +140,46 @@ label {
 }
 
 #log {
-	font-size: 10px;
+	font-size: 12px;
 	height: 500px;
 	overflow-y: scroll;
 	overflow-x: visible;
+}
+
+.log-line {
+	margin-top:2px;
+	margin-bottom: 2px;
+	padding-top: 4px;
+	padding-bottom: 4px;
+	padding-left: 6px;
+	padding-right: 5px;
+	border-radius: 4px;
+}
+
+.log-type-fatal {
+	background-color:black;
+	color: white;
+}
+
+.log-type-error {
+	background-color: rgba(255,0,0,0.2);
+	color: rgba(255,0,0,1);
+}
+
+.log-type-warn {
+	background-color: rgba(255,128,0,0.2);
+	color: rgba(255,128,0,1);
+}
+
+.log-type-info {
+	background-color: rgba(0,0,255,0.1);
+	color: rgba(0,0,200,0.7);
+}
+
+.log-type-debug {
+	background-color: rgba(200,200,200,0.1);
+	color: rgba(50,50,50,0.5);
+}
+
+.log-type-trace {
 }
