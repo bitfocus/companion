@@ -23,5 +23,4 @@ function release() {
 GIT_BRANCH=$(release)-$(parse_git_hash)
 
 if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then mv -f electron-output/Companion*.zip electron-output/companion-${GIT_BRANCH}-osx.zip; fi;
-
-mv -f electron-output/companion-win64.exe electron-output/companion-${GIT_BRANCH}-win64.exe
+if [[ "$TRAVIS_OS_NAME" != "osx" ]]; then mv -f electron-output/companion-win64.exe electron-output/companion-${GIT_BRANCH}-win64.exe; fi;
