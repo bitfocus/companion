@@ -52,3 +52,6 @@ before_cache:
 branches:
   except:
     - "/^v\\d+\\.\\d+\\.\\d+$/"
+
+after_success:
+  "curl -T electron-output/*.dmg -u $FTP_USER:$FTP_PASSWORD ftp://$FTP_IP/deploy/"
