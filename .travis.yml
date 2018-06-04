@@ -1,0 +1,45 @@
+osx_image: xcode8.3
+
+dist: trusty
+sudo: false
+
+language: node_js
+node_js: "8"
+
+env:
+  global:
+    - ELECTRON_CACHE=$HOME/.cache/electron
+    - ELECTRON_BUILDER_CACHE=$HOME/.cache/electron-builder
+
+os:
+  - linux
+  - osx
+
+cache:
+  directories:
+  - node_modules
+  - $HOME/.cache/electron
+  - $HOME/.cache/electron-builder
+  - $HOME/.npm/_prebuilds
+
+before_install:
+  - curl -L https://yarnpkg.com/latest.tar.gz | tar xvz && mv dist $HOME/.yarn
+  - export PATH="$HOME/.yarn/bin:$PATH"
+  - git submodule init
+  - git submodule update
+
+install:
+  - yarn
+  - cd bitfocus-skeleton
+  - yarn
+
+script:
+  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then npm run linuxdist; fi
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then npm run dist; fi
+
+before_cache:
+  - rm -rf $HOME/.cache/electron-builder/wine
+
+branches:
+  except:
+    - "/^v\\d+\\.\\d+\\.\\d+$/"

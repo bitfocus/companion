@@ -1,6 +1,6 @@
 {
   "name": "companion",
-  "version": "1.0.11",
+  "version": "1.0.12",
   "description": "Companion",
   "main": "bitfocus-skeleton/main.js",
   "build": {
@@ -24,7 +24,9 @@
     "start": "./tools/build_writefile.sh && ./bitfocus-skeleton/start.sh",
     "pack": "electron-builder --dir",
     "dist": "rm -rf electron-output && electron-builder",
-    "windist": "rm -rf electron-output && electron-builder --win"
+    "macdist": "rm -rf electron-output && electron-builder --mac",
+    "windist": "rm -rf electron-output && electron-builder --win",
+    "lindist": "rm -rf electron-output && electron-builder --linux"
   },
   "repository": "https://github.com/bitfocus/companion",
   "keywords": [
