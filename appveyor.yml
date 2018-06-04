@@ -35,3 +35,12 @@ build_script:
   - cmd: bash tools/build_rename_git.sh
 
 test: off
+
+deploy:
+  - provider: FTP
+    host: 80.241.92.222
+    protocol: ftp
+    username: companion
+    password:
+      secure: ONk7QHFaaI9JaZ+frqLkRZ+oYjdTgrwTVm21ZX3K0lg=
+    folder: deploy
