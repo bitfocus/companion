@@ -23,3 +23,4 @@ function release() {
 GIT_BRANCH=$(release)-$(parse_git_hash)
 
 mv electron-output/companion-win64.exe electron-output/companion-${GIT_BRANCH}-win64.exe
+mv electron-output/Companion*.zip electron-output/companion-${GIT_BRANCH}-osx.zip
