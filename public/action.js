@@ -15,6 +15,11 @@ $(function() {
 
 	$('#bankActions').on('keyup', '.action-option-keyup', function() {
 		socket.emit('bank_update_action_option', page, bank,  $(this).data('action-id'), $(this).data('option-id'), $(this).val() );
+		if ($(this).val().match($(this).data('option-regex')) != null) {
+			this.style.color = "black";
+		} else {
+			this.style.color = "red";
+		}
 	});
 
 	$('#bankActions').on('change', '.action-option-change', function() {
@@ -66,6 +71,7 @@ $(function() {
 					for (var n in options) {
 						var option = options[n];
 
+
 						var $opt_label = $("<label>"+option.label+"</label>");
 						$options.append($opt_label);
 
@@ -73,6 +79,13 @@ $(function() {
 							var $opt_input = $("<input type='text' class='action-option-keyup form-control'>");
 							$opt_input.data('action-id', action.id);
 							$opt_input.data('option-id', option.id);
+
+							if (option.regex){
+								var flags = option.regex.replace(/.*\/([gimy]*)$/, '$1');
+								var pattern = option.regex.replace(new RegExp('^/(.*?)/'+flags+'$'), '$1');
+								var regex = new RegExp(pattern, flags);
+								$opt_input.data('option-regex', regex);
+							}
 
 							// if options never been stored on this action
 							if (action.options === undefined) {
