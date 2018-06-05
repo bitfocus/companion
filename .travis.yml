@@ -13,6 +13,9 @@ env:
 os:
   - osx
 
+notifications:
+    slack: bitfocusio:Kf9NGYG60SzXkZ2tJO8wIknp
+
 cache:
   directories:
   - node_modules
