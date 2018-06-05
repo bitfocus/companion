@@ -80,7 +80,6 @@ system.on('skeleton-ready', function() {
 	var variable   = require('./lib/variable')(system);
 	var osc        = require('./lib/osc')(system);
 	var rest       = require('./lib/rest')(system);
-	var udp        = require('./lib/udp')(system);
 
 	system.on('exit', function() {
 		elgatoDM.quit();
