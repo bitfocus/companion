@@ -1,4 +1,8 @@
-process.env['DEBUG'] = '*,-express*,-engine*,-socket.io*,-send*,-db,-NRC*,-follow-redirects';
+process.env['DEBUG'] = '*,-express*,-engine*,-socket.io*,-send*,-db,-NRC*,-follow-redirects,-electron-timer-fix';
+
+// Fix timers in electron
+require('./electron-timer-fix').fix();
+
 
 var EventEmitter = require('events');
 var system = new EventEmitter();
