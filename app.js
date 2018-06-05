@@ -15,19 +15,19 @@ var config;
 var cfgDir;
 
 system.on('skeleton-info', function(key, val) {
-		skeleton_info[key] = val;
-		if (key == 'configDir') {
-			debug('configuration directory', val);
-			cfgDir = val + "/companion/";
-			mkdirp(cfgDir, function(err) {
-				debug("mkdirp",cfgDir,err);
-				config = new (require('./bitfocus-libs/config'))(system, cfgDir, {
-					http_port: 8000,
-					bind_ip: "127.0.0.1"
-				});
+	skeleton_info[key] = val;
+	if (key == 'configDir') {
+		debug('configuration directory', val);
+		cfgDir = val + "/companion/";
+		mkdirp(cfgDir, function(err) {
+			debug("mkdirp",cfgDir,err);
+			config = new (require('./bitfocus-libs/config'))(system, cfgDir, {
+				http_port: 8000,
+				bind_ip: "127.0.0.1"
 			});
-		}
- });
+		});
+	}
+});
 
 system.on('configdir_get', function (cb) {
 	cb(cfgDir);
