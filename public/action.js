@@ -33,7 +33,7 @@ $(function() {
 		$ba.html("");
 
 		var $table = $("<table class='table action-table'></table>");
-		var $trth = $("<thead><tr><th>Delete</th><th>Action name</th><th>Delay</th><th>Options</th></tr></thead>");
+		var $trth = $("<thead><tr><th colspan=2>Actions</th><th style='width:90px'>Delay</th><th>Options</th></tr></thead>");
 		var $tbody = $("<tbody></tbody>");
 		$table.append($trth);
 		for (var n in actions) {
@@ -48,16 +48,16 @@ $(function() {
 				var $tr = $("<tr></tr>");
 				$tr.data("id", action.id);
 
-				var $name_td = $("<td>" + instance.db[action.instance].label + ": " + actionlist[action.label].label + "</td>");
-				var $del_td = $("<td><button type='button' class='btn btn-danger btn-sm'>delete</button><span>&nbsp;</span></td>");
-				var $delay_td = $("<td></td>");
+				var $name_td = $("<td class='actionlist-td-label'>" + instance.db[action.instance].label + ": " + actionlist[action.label].label + "</td>");
+				var $del_td = $("<td class='actionlist-td-delete'><button type='button' class='btn btn-danger btn-sm'>delete</button><span>&nbsp;</span></td>");
+				var $delay_td = $("<td class='actionlist-td-delay'></td>");
 				var $delay_input = $("<input type='text' value='' class='form-control action-delay-keyup' placeholder='ms'>");
 				$delay_input.data('action-id', action.id);
 
 				$delay_td.append($delay_input);
 
 				$delay_td.find('input').val(inst.delay)
-				var $options = $("<td></td>");
+				var $options = $("<td class='actionlist-td-options'></td>");
 
 				$tr.append($del_td);
 				$tr.append($name_td);
@@ -158,7 +158,9 @@ $(function() {
 
 			}
 		}
-		$table.append($tbody);
+		if (actions.length > 0) {
+			$table.append($tbody);
+		}
 		$ba.append($table);
 	});
 
@@ -169,7 +171,7 @@ $(function() {
 		$aba.html("");
 		$ali.html("");
 
-		var $option = $("<option>[ Select action ]</option>")
+		var $option = $("<option>[ Add new action for this button ]</option>")
 		$aba.append($option);
 
 		for (var n in actions) {

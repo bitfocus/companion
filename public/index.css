@@ -183,3 +183,24 @@ label {
 
 .log-type-trace {
 }
+
+
+.actionlist-td-label {
+	padding-top:24px !important;
+}
+.actionlist-td-delay {
+	padding-top:20px !important;
+	padding-bottom:20px !important;
+}
+.actionlist-td-delete {
+	padding-top:23px !important;
+	line-height:0px;
+	width:70px;
+}
+.actionlist-td-options {
+	padding-top:0px !important;
+}
+
+#bankActions {
+	padding-top:25px;
+}
