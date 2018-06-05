@@ -15,19 +15,19 @@ var config;
 var cfgDir;
 
 system.on('skeleton-info', function(key, val) {
-		skeleton_info[key] = val;
-		if (key == 'configDir') {
-			debug('configuration directory', val);
-			cfgDir = val + "/companion/";
-			mkdirp(cfgDir, function(err) {
-				debug("mkdirp",cfgDir,err);
-				config = new (require('./bitfocus-libs/config'))(system, cfgDir, {
-					http_port: 8000,
-					bind_ip: "127.0.0.1"
-				});
+	skeleton_info[key] = val;
+	if (key == 'configDir') {
+		debug('configuration directory', val);
+		cfgDir = val + "/companion/";
+		mkdirp(cfgDir, function(err) {
+			debug("mkdirp",cfgDir,err);
+			config = new (require('./bitfocus-libs/config'))(system, cfgDir, {
+				http_port: 8000,
+				bind_ip: "127.0.0.1"
 			});
-		}
- });
+		});
+	}
+});
 
 system.on('configdir_get', function (cb) {
 	cb(cfgDir);
@@ -65,20 +65,21 @@ system.on('skeleton-bind-port', function(port) {
 
 system.on('skeleton-ready', function() {
 
-	var http     = require('./lib/http')(system);
-	var io       = require('./lib/io')(system, http);
-	var log      = require('./lib/log')(system,io);
-	var db       = require('./lib/db')(system,cfgDir);
-	var appRoot  = require('app-root-path');
-	var express  = require('express');
-	var bank     = require('./lib/bank')(system);
-	var elgatoDM = require('./lib/elgato_dm')(system);
-	var preview  = require('./lib/preview')(system);
-	var action   = require('./lib/action')(system);
-	var instance = require('./lib/instance')(system);
-	var variable = require('./lib/variable')(system);
-	var osc      = require('./lib/osc')(system);
-	var rest     = require('./lib/rest')(system);
+	var http       = require('./lib/http')(system);
+	var io         = require('./lib/io')(system, http);
+	var log        = require('./lib/log')(system,io);
+	var db         = require('./lib/db')(system,cfgDir);
+	var userconfig = require('./lib/userconfig')(system)
+	var appRoot    = require('app-root-path');
+	var express    = require('express');
+	var bank       = require('./lib/bank')(system);
+	var elgatoDM   = require('./lib/elgato_dm')(system);
+	var preview    = require('./lib/preview')(system);
+	var action     = require('./lib/action')(system);
+	var instance   = require('./lib/instance')(system);
+	var variable   = require('./lib/variable')(system);
+	var osc        = require('./lib/osc')(system);
+	var rest       = require('./lib/rest')(system);
 
 	system.on('exit', function() {
 		elgatoDM.quit();
