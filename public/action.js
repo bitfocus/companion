@@ -152,7 +152,9 @@ $(function() {
 				$tr.append($options);
 
 				$del_td.click(function() {
-					socket.emit('bank_delAction', page, bank, $(this).parent().data('id'));
+					if (confirm('Delete action?')) {
+						socket.emit('bank_delAction', page, bank, $(this).parent().data('id'));
+					}
 				})
 				$tbody.append($tr);
 

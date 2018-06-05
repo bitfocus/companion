@@ -61,11 +61,13 @@ $(function() {
 			$td_actions.append($button_edit);
 
 			$button_delete.click(function() {
-				var id = $(this).data('id');
-				$("#instanceConfigTab").hide();
-				console.log("instance-delete:",id);
-				socket.emit('instance_delete', id);
-				$(this).parent().parent().remove();
+				if (confirm('Delete instance?')) {
+					var id = $(this).data('id');
+					$("#instanceConfigTab").hide();
+					console.log("instance-delete:",id);
+					socket.emit('instance_delete', id);
+					$(this).parent().parent().remove();
+				}
 			});
 
 			$button_edit.click(function() {
