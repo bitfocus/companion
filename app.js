@@ -65,21 +65,22 @@ system.on('skeleton-bind-port', function(port) {
 
 system.on('skeleton-ready', function() {
 
-	var http     = require('./lib/http')(system);
-	var io       = require('./lib/io')(system, http);
-	var log      = require('./lib/log')(system,io);
-	var db       = require('./lib/db')(system,cfgDir);
-	var appRoot  = require('app-root-path');
-	var express  = require('express');
-	var bank     = require('./lib/bank')(system);
-	var elgatoDM = require('./lib/elgato_dm')(system);
-	var preview  = require('./lib/preview')(system);
-	var action   = require('./lib/action')(system);
-	var instance = require('./lib/instance')(system);
-	var variable = require('./lib/variable')(system);
-	var osc      = require('./lib/osc')(system);
-	var rest     = require('./lib/rest')(system);
-	var udp      = require('./lib/udp')(system);
+	var http       = require('./lib/http')(system);
+	var io         = require('./lib/io')(system, http);
+	var log        = require('./lib/log')(system,io);
+	var db         = require('./lib/db')(system,cfgDir);
+	var userconfig = require('./lib/userconfig')(system)
+	var appRoot    = require('app-root-path');
+	var express    = require('express');
+	var bank       = require('./lib/bank')(system);
+	var elgatoDM   = require('./lib/elgato_dm')(system);
+	var preview    = require('./lib/preview')(system);
+	var action     = require('./lib/action')(system);
+	var instance   = require('./lib/instance')(system);
+	var variable   = require('./lib/variable')(system);
+	var osc        = require('./lib/osc')(system);
+	var rest       = require('./lib/rest')(system);
+	var udp        = require('./lib/udp')(system);
 
 	system.on('exit', function() {
 		elgatoDM.quit();
