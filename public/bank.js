@@ -317,13 +317,24 @@ $(function() {
 		}
 	});
 
+	// to get the first page name
+	socket.once('get_page_all', function(config) {
+		changePage(page);
+	});
+
 	function changePage(pagenum) {
 
 		$pagenav.html("");
 		$pagebank.html("");
 
+		var pname = "";
+
+		if (page_info !== undefined && page_info[page] !== undefined) {
+			pname = page_info[page].name;
+		}
+
 		$pagenav.append($('<div class="pagenav col-lg-4"><div id="btn_pagedown" class="btn btn-primary">Page down</div></div>'));
-		$pagenav.append($('<div class="pageat col-lg-4">Page '+pagenum+'</div>'));
+		$pagenav.append($('<div class="pageat col-lg-4"><input id="page_title" placeholder="Page name" type="text" class="form-control" value="'+ pname +'"></div>'));
 		$pagenav.append($('<div class="pagenav text-right col-lg-4"><div id="btn_pageup" class="btn btn-primary">Page up</div></div>'));
 
 		for (var bank = 1; bank <= 12; bank++) {
