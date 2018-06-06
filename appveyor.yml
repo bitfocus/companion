@@ -26,6 +26,9 @@ install:
   - cmd: bash tools/build_writefile.sh
   - yarn
 
+environment:
+  TRAVIS_OS_NAME: win64
+
 artifacts:
   - path: electron-output/*.exe
     name: Installer

@@ -27,4 +27,6 @@ if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
 elif [[ "$TRAVIS_OS_NAME" == "linux" ]]; then
 	mkdir electron-linux-output
 	cp electron-output/*.tar.gz electron-linux-output/companion-${GIT_BRANCH}-linux.tar.gz
+elif [[ "$TRAVIS_OS_NAME" == "win64" ]]; then
+	mv -f electron-output/*.exe electron-linux-output/companion-${GIT_BRANCH}-win64.exe
 fi
