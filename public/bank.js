@@ -334,7 +334,7 @@ $(function() {
 		}
 
 		$pagenav.append($('<div class="pagenav col-lg-4"><div id="btn_pagedown" class="btn btn-primary">Page down</div></div>'));
-		$pagenav.append($('<div class="pageat col-lg-4"><input id="page_title" placeholder="Page name" type="text" class="form-control" value="'+ pname +'"></div>'));
+		$pagenav.append($('<div class="pageat col-lg-4"><small>(Page '+page+')</small> <input id="page_title" placeholder="Page name" type="text" value="'+ pname +'"></div>'));
 		$pagenav.append($('<div class="pagenav text-right col-lg-4"><div id="btn_pageup" class="btn btn-primary">Page up</div></div>'));
 
 		for (var bank = 1; bank <= 12; bank++) {
