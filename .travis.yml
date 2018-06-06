@@ -71,6 +71,6 @@ branches:
     - "/^v\\d+\\.\\d+\\.\\d+$/"
 
 after_success:
-  - "if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then curl -T electron-output/*.zip -u $FTP_USER:$FTP_PASSWORD ftp://$FTP_IP/deploy/electron-output/ ; fi"
-  - "if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then curl -T electron-output/*.snap -u $FTP_USER:$FTP_PASSWORD ftp://$FTP_IP/deploy/electron-output/ ; fi"
-  - "if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then curl -T electron-output/*.AppImage -u $FTP_USER:$FTP_PASSWORD ftp://$FTP_IP/deploy/electron-output/ ; fi"
+  - "if [[ \"$TRAVIS_OS_NAME\" == \"osx\" ]]; then curl -T electron-output/*.zip -u $FTP_USER:$FTP_PASSWORD ftp://$FTP_IP/deploy/electron-output/ ; fi"
+  - "if [[ \"$TRAVIS_OS_NAME\" == \"linux\" ]]; then curl -T electron-output/*.snap -u $FTP_USER:$FTP_PASSWORD ftp://$FTP_IP/deploy/electron-output/ ; fi"
+  - "if [[ \"$TRAVIS_OS_NAME\" == \"linux\" ]]; then curl -T electron-output/*.AppImage -u $FTP_USER:$FTP_PASSWORD ftp://$FTP_IP/deploy/electron-output/ ; fi"
