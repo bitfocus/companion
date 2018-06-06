@@ -23,9 +23,10 @@ function release() {
 GIT_BRANCH=$(release)-$(parse_git_hash)
 
 if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
-	curl -T electron-output/electron-output/Companion*.dmg -u $FTP_USER:$FTP_PASSWORD ftp://$FTP_IP/deploy/electron-output/companion-${GIT_BRANCH}-osx.dmg
+	mv -vf electron-output/Companion*.zip electron-output/companion-${GIT_BRANCH}-osx.zip
 elif [[ "$TRAVIS_OS_NAME" == "linux" ]]; then
-	curl -T electron-output/*.AppImage -u $FTP_USER:$FTP_PASSWORD ftp://$FTP_IP/deploy/electron-output/companion-${GIT_BRANCH}-linux_x86_64.AppImage
-	curl -T electron-output/*.snap -u $FTP_USER:$FTP_PASSWORD ftp://$FTP_IP/deploy/electron-output/companion-${GIT_BRANCH}-linux_amd64.snap
+	mv -vf electron-output/*.snap electron-output/companion-${GIT_BRANCH}-linux_x86_64.snap
+	mv -vf electron-output/*.AppImage electron-output/companion-${GIT_BRANCH}-linux_x86_64.AppImage
 else
-	mv -f electron-output/companion-win64.exe electron-output/companion-${GIT_BRANCH}-win64.exe; fi;
+	mv -vf electron-output/companion-win64.exe electron-output/companion-${GIT_BRANCH}-win64.exe
+fi
