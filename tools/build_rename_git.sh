@@ -24,9 +24,9 @@ GIT_BRANCH=$(release)-$(parse_git_hash)
 
 if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
 	mv -vf electron-output/Companion*.zip electron-output/companion-${GIT_BRANCH}-osx.zip
-elif [[ "$TRAVIS_OS_NAME" == "linux" ]]; then
-	mv -vf electron-output/*.snap electron-output/companion-${GIT_BRANCH}-linux_x86_64.snap
-	mv -vf electron-output/*.AppImage electron-output/companion-${GIT_BRANCH}-linux_x86_64.AppImage
+#elif [[ "$TRAVIS_OS_NAME" == "linux" ]]; then
+#	mv -vf electron-output/*.snap electron-output/companion-${GIT_BRANCH}-linux_x86_64.snap
+#	mv -vf electron-output/*.AppImage electron-output/companion-${GIT_BRANCH}-linux_x86_64.AppImage
 else
 	mv -vf electron-output/companion-win64.exe electron-output/companion-${GIT_BRANCH}-win64.exe
 fi
