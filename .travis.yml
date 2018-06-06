@@ -13,9 +13,6 @@ env:
     - ELECTRON_CACHE=$HOME/.cache/electron
     - ELECTRON_BUILDER_CACHE=$HOME/.cache/electron-builder
 
-os:
-  - osx
-
 notifications:
     slack: bitfocusio:Kf9NGYG60SzXkZ2tJO8wIknp
 
@@ -36,14 +33,7 @@ before_install:
   - git submodule update
 
 install:
-  - cd bitfocus-skeleton
-  - yarn
-  - cd ..
-  - cd bitfocus-libs
-  - yarn
-  - cd ..
   - ./tools/build_writefile.sh
-  - yarn
 
 
 script:
@@ -55,9 +45,19 @@ script:
         -v ~/.cache/electron:/root/.cache/electron \
         -v ~/.cache/electron-builder:/root/.cache/electron-builder \
         haakonn/electron-wine:v1 \
-        /bin/bash -c "apt-get update && apt-get install -y git && yarn --link-duplicates --pure-lockfile && npm run lindist";
+        /bin/bash -c "apt-get update && apt-get install -y git ; cd bitfocus-skeleton ; yarn ; cd ../bitfocus-libs ; yarn ; cd .. ; yarn --link-duplicates --pure-lockfile && npm run lindist";
     fi
-  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then npm run dist; fi
+  - |
+    if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
+      cd bitfocus-skeleton
+      yarn
+      cd ..
+      cd bitfocus-libs
+      yarn
+      cd ..
+      yarn
+      npm run dist
+    fi
   - ./tools/build_rename_git.sh
 
 before_cache:
