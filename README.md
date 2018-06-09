@@ -8,6 +8,7 @@ Check out http://bitfocus.io/companion for more information :)
 
 ## Current support
 * Barco EventMaster
+* Barco PDS
 * Millumin
 * QLab
 * Mitti
@@ -15,6 +16,7 @@ Check out http://bitfocus.io/companion for more information :)
 * OSC Generic (sendt custom packets)
 * d3/disguise (osc control)
 * Dataton Watchout
+
 
 ## Coming support (help wanted!)
 * BMD Hyperdeck

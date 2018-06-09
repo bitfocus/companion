@@ -1,0 +1,11 @@
+{
+  "name": "barco_pds",
+  "version": "0.0.2",
+  "description": "Barco PDS seamless switcher plugin for Companion",
+  "main": "barco_pds.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Dorian Meid <meid@backstage.org>",
+  "license": "ISC"
+}
