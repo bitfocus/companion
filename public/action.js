@@ -27,7 +27,7 @@ $(function() {
 	});
 
 
-	socket.on('bank_getActions:result', function(page, bank, actions) {
+	socket.on('bank_get_actions:result', function(page, bank, actions) {
 
 		$ba = $("#bankActions");
 		$ba.html("");

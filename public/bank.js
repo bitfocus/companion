@@ -193,7 +193,13 @@ $(function() {
 	}
 
 	function populate_bank_form(p,b,config,fields) {
+
 		var $eb1 = $("#editbank_content");
+
+		if (config.style !== undefined) {
+			$("#resetBankButton").show();
+		}
+
 		$eb1.html("<p><h3>Configuration</h3></p>");
 		var $eb = $("<div class='row'></div>");
 		$eb1.append($eb);
@@ -298,6 +304,18 @@ $(function() {
 		});
 	});
 
+	$("#resetBankButton").click(function() {
+		if (confirm('Clear design and all actions?')) {
+			socket.emit('reset_bank', page, bank);
+			socket.emit('bank_reset_actions', page, bank);
+			socket.emit('bank_get_actions', page, bank);
+
+			$("#resetBankButton").hide();
+			populate_bank_form(page,bank,{},{});
+			bank_preview_page(page);
+		}
+	});
+
 	socket.on('preview_page_data', function (images) {
 		for (var key = 1; key <= 12; ++key) {
 			var imageData;
@@ -351,9 +369,6 @@ $(function() {
 			}
 		})
 
-
-
-
 		$("#pagebank .border").click(function() {
 			bank = $(this).data('bank');
 
@@ -361,7 +376,7 @@ $(function() {
 			$('#editbankli a[href="#editbank"]').tab('show');
 			$("#editbank_content").html("");
 			$("#editbankid").text(page + "." + $(this).data('bank'));
-			socket.emit('bank_getActions', page, $(this).data('bank'));
+			socket.emit('bank_get_actions', page, $(this).data('bank'));
 			socket.emit('get_bank',page, $(this).data('bank'));
 			socket.once('get_bank:results', populate_bank_form);
 		});
