@@ -58,9 +58,12 @@ system.on('skeleton-bind-ip', function(ip) {
 });
 
 system.on('skeleton-bind-port', function(port) {
-	config.http_port = port;
-	system.emit('config_set', 'http_port', port);
-	system.emit('ip_rebind');
+	var p = parseInt(port);
+	if (p >= 1024 && p <= 65535) {
+		config.http_port = p;
+		system.emit('config_set', 'http_port', p);
+		system.emit('ip_rebind');
+	}
 });
 
 system.on('skeleton-ready', function() {
