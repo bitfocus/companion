@@ -18,7 +18,7 @@ fs.readdir("./font", function(err, items) {
 				for (var y = 0; y < png.height; y++) {
 					for (var x = 0; x < png.width; x++) {
 						var idx = (png.width * y + x) << 2;
-						if (png.data[idx+3] != 0) {
+						if (png.data[idx+3] > 128) {
 							dots.push([x,y]);
 						}
 					}
