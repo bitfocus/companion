@@ -157,6 +157,9 @@ $(function() {
 			var $sm = $('<div class="col-sm-'+field.width+'"><label>'+field.label+'</label></div>')
 			if (field.type == 'textinput') {
 				var $inp = $("<input type='text' class='form-control instanceConfigField' data-type='"+field.type+"' data-id='"+field.id+"'>");
+				if (field.tooltip !== undefined) {
+					$inp.attr('title', field.tooltip);
+				}
 				(function(f1,f2,inp,reg) {
 					inp.keyup(function(){
 						if (f2 == 'label') {

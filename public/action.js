@@ -77,6 +77,9 @@ $(function() {
 
 						if (option.type == 'textinput') {
 							var $opt_input = $("<input type='text' class='action-option-keyup form-control'>");
+							if (option.tooltip !== undefined) {
+								$opt_input.attr('title', option.tooltip);
+							}
 							$opt_input.data('action-id', action.id);
 							$opt_input.data('option-id', option.id);
 
@@ -116,6 +119,9 @@ $(function() {
 							var $opt_input = $("<select class='action-option-change form-control'></select>");
 							$opt_input.data('action-id', action.id);
 							$opt_input.data('option-id', option.id);
+							if (option.tooltip !== undefined) {
+								$opt_input.attr('title', option.tooltip);
+							}
 
 							for (var x in option.choices) {
 								var str = new String(option.choices[x]);
