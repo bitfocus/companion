@@ -70,6 +70,7 @@ system.on('skeleton-ready', function() {
 	var log        = require('./lib/log')(system,io);
 	var db         = require('./lib/db')(system,cfgDir);
 	var userconfig = require('./lib/userconfig')(system)
+	var update     = require('./lib/update')(system,cfgDir);
 	var page       = require('./lib/page')(system)
 	var appRoot    = require('app-root-path');
 	var express    = require('express');
