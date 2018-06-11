@@ -14,9 +14,11 @@ $(function() {
 	});
 
 	$('#bankActions').on('keyup', '.action-option-keyup', function() {
-		socket.emit('bank_update_action_option', page, bank,  $(this).data('action-id'), $(this).data('option-id'), $(this).val() );
-		if ($(this).val().match($(this).data('option-regex')) != null) {
+		var regex = $(this).data('option-regex');
+
+		if (regex === undefined || $(this).val().match(regex) != null) {
 			this.style.color = "black";
+			socket.emit('bank_update_action_option', page, bank,  $(this).data('action-id'), $(this).data('option-id'), $(this).val() );
 		} else {
 			this.style.color = "red";
 		}
@@ -83,10 +85,12 @@ $(function() {
 							$opt_input.data('action-id', action.id);
 							$opt_input.data('option-id', option.id);
 
+							var regex = undefined;
 							if (option.regex){
 								var flags = option.regex.replace(/.*\/([gimy]*)$/, '$1');
 								var pattern = option.regex.replace(new RegExp('^/(.*?)/'+flags+'$'), '$1');
-								var regex = new RegExp(pattern, flags);
+								regex = new RegExp(pattern, flags);
+
 								$opt_input.data('option-regex', regex);
 							}
 
