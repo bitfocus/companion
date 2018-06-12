@@ -92,6 +92,10 @@ system.on('skeleton-ready', function() {
 
 });
 
+system.on('skeleton-single-instance-only', function (response) {
+	response(true);
+});
+
 exports = module.exports = function() {
 	return system;
 }
