@@ -11,6 +11,7 @@ Check out http://bitfocus.io/companion for more information :)
 * OSC Generic (sendt custom packets)
 * d3/disguise (osc control)
 * Dataton Watchout
+* Ross Carbonite/Vision (rosstalk)
 
 ## Coming support (help wanted!)
 * BMD Hyperdeck
@@ -28,7 +29,6 @@ Check out http://bitfocus.io/companion for more information :)
 * Analogway Pulse
 * Analogway NextStage
 * Analogway Accender
-* Ross
 * Wirecast
 * OBS
 * Resolume
