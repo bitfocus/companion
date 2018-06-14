@@ -149,29 +149,38 @@ $(function() {
 
 		for (var n in res) {
 			var field = res[n];
+			var regex = undefined;
+
 			if (field.regex){
 				var flags = field.regex.replace(/.*\/([gimy]*)$/, '$1');
 				var pattern = field.regex.replace(new RegExp('^/(.*?)/'+flags+'$'), '$1');
-				var regex = new RegExp(pattern, flags);
+				regex = new RegExp(pattern, flags);
 			}
+
 			var $sm = $('<div class="col-sm-'+field.width+'"><label>'+field.label+'</label></div>')
 			if (field.type == 'textinput') {
 				var $inp = $("<input type='text' class='form-control instanceConfigField' data-type='"+field.type+"' data-id='"+field.id+"'>");
+
+				if (field.tooltip !== undefined) {
+					$inp.attr('title', field.tooltip);
+				}
+
 				(function(f1,f2,inp,reg) {
 					inp.keyup(function(){
 						if (f2 == 'label') {
 							$("#label_"+ f1).text(inp.val());
 						}
-							console.log("edited:", field.label, " f1 ", f1, " f2 ", f2, " reg ", reg);
-							if (inp.val().match(reg) != null) {
-								this.style.color = "black";
-							} else {
-								this.style.color = "red";
-							}
 
-						socket.emit('instance_config_set', f1, f2, inp.val() );
+						if (regex === undefined || inp.val().match(reg) !== null) {
+							this.style.color = "black";
+							socket.emit('instance_config_set', f1, f2, inp.val() );
+						} else {
+							this.style.color = "red";
+						}
+
 					});
 				})(id,field.id,$inp,regex);
+
 				$sm.append($inp);
 			}
 			else {

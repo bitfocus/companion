@@ -28,7 +28,9 @@
 	min-width: 100px;
 	text-align:center;
 }
-
+#newversiontext {
+	color:red;
+}
 #pagebank .border:hover, #pagenav .border:hover {
 	background-color: #ddd;
 }

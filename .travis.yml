@@ -23,6 +23,7 @@ cache:
   - $HOME/.cache/electron
   - $HOME/.cache/electron-builder
   - $HOME/.npm/_prebuilds
+  - $HOME/.cache/snapcraft
 
 before_install:
   - curl -L https://yarnpkg.com/latest.tar.gz | tar xvz && mv yarn-v* $HOME/.yarn
@@ -45,6 +46,7 @@ script:
         -v ${PWD}:/project \
         -v ~/.cache/electron:/root/.cache/electron \
         -v ~/.cache/electron-builder:/root/.cache/electron-builder \
+        -v ~/.cache/snapcraft:/root/.cache/snapcraft \
         haakonn/electron-wine:v1 \
         /bin/bash -c "apt-get update && apt-get install -y git ; cd bitfocus-skeleton ; yarn ; cd ../bitfocus-libs ; yarn ; cd .. ; yarn --link-duplicates --pure-lockfile && npm run lindist";
     fi
@@ -67,3 +69,7 @@ before_cache:
 branches:
   except:
     - "/^v\\d+\\.\\d+\\.\\d+$/"
+
+after_success:
+  - "if [[ \"$TRAVIS_OS_NAME\" == \"osx\" ]]; then curl -T electron-output/*.zip -u $FTP_USER:$FTP_PASSWORD ftp://$FTP_IP/deploy/electron-output/ ; fi"
+  - "if [[ \"$TRAVIS_OS_NAME\" == \"linux\" ]]; then curl -T electron-linux-output/*.tar.gz -u $FTP_USER:$FTP_PASSWORD ftp://$FTP_IP/deploy/electron-output/ ; fi"

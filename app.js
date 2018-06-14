@@ -58,9 +58,12 @@ system.on('skeleton-bind-ip', function(ip) {
 });
 
 system.on('skeleton-bind-port', function(port) {
-	config.http_port = port;
-	system.emit('config_set', 'http_port', port);
-	system.emit('ip_rebind');
+	var p = parseInt(port);
+	if (p >= 1024 && p <= 65535) {
+		config.http_port = p;
+		system.emit('config_set', 'http_port', p);
+		system.emit('ip_rebind');
+	}
 });
 
 system.on('skeleton-ready', function() {
@@ -70,6 +73,7 @@ system.on('skeleton-ready', function() {
 	var log        = require('./lib/log')(system,io);
 	var db         = require('./lib/db')(system,cfgDir);
 	var userconfig = require('./lib/userconfig')(system)
+	var update     = require('./lib/update')(system,cfgDir);
 	var page       = require('./lib/page')(system)
 	var appRoot    = require('app-root-path');
 	var express    = require('express');
@@ -86,6 +90,10 @@ system.on('skeleton-ready', function() {
 		elgatoDM.quit();
 	});
 
+});
+
+system.on('skeleton-single-instance-only', function (response) {
+	response(true);
 });
 
 exports = module.exports = function() {

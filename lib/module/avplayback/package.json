@@ -1,0 +1,11 @@
+{
+  "name": "avplayback",
+  "version": "0.0.1",
+  "description": "avplayback plugin for Companion",
+  "main": "avplayback.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Per Roine",
+  "license": "ISC"
+}

@@ -14,9 +14,11 @@ $(function() {
 	});
 
 	$('#bankActions').on('keyup', '.action-option-keyup', function() {
-		socket.emit('bank_update_action_option', page, bank,  $(this).data('action-id'), $(this).data('option-id'), $(this).val() );
-		if ($(this).val().match($(this).data('option-regex')) != null) {
+		var regex = $(this).data('option-regex');
+
+		if (regex === undefined || $(this).val().match(regex) != null) {
 			this.style.color = "black";
+			socket.emit('bank_update_action_option', page, bank,  $(this).data('action-id'), $(this).data('option-id'), $(this).val() );
 		} else {
 			this.style.color = "red";
 		}
@@ -27,7 +29,7 @@ $(function() {
 	});
 
 
-	socket.on('bank_getActions:result', function(page, bank, actions) {
+	socket.on('bank_get_actions:result', function(page, bank, actions) {
 
 		$ba = $("#bankActions");
 		$ba.html("");
@@ -77,13 +79,18 @@ $(function() {
 
 						if (option.type == 'textinput') {
 							var $opt_input = $("<input type='text' class='action-option-keyup form-control'>");
+							if (option.tooltip !== undefined) {
+								$opt_input.attr('title', option.tooltip);
+							}
 							$opt_input.data('action-id', action.id);
 							$opt_input.data('option-id', option.id);
 
+							var regex = undefined;
 							if (option.regex){
 								var flags = option.regex.replace(/.*\/([gimy]*)$/, '$1');
 								var pattern = option.regex.replace(new RegExp('^/(.*?)/'+flags+'$'), '$1');
-								var regex = new RegExp(pattern, flags);
+								regex = new RegExp(pattern, flags);
+
 								$opt_input.data('option-regex', regex);
 							}
 
@@ -116,6 +123,9 @@ $(function() {
 							var $opt_input = $("<select class='action-option-change form-control'></select>");
 							$opt_input.data('action-id', action.id);
 							$opt_input.data('option-id', option.id);
+							if (option.tooltip !== undefined) {
+								$opt_input.attr('title', option.tooltip);
+							}
 
 							for (var x in option.choices) {
 								var str = new String(option.choices[x]);

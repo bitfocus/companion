@@ -193,7 +193,13 @@ $(function() {
 	}
 
 	function populate_bank_form(p,b,config,fields) {
+
 		var $eb1 = $("#editbank_content");
+
+		if (config.style !== undefined) {
+			$("#resetBankButton").show();
+		}
+
 		$eb1.html("<p><h3>Configuration</h3></p>");
 		var $eb = $("<div class='row'></div>");
 		$eb1.append($eb);
@@ -251,7 +257,7 @@ $(function() {
 				$field.append($p);
 
 				$field.find('input[type="file"]').change(function (e) {
-					checkImageSize(this, 72, 58, 72, 58, function (dataurl) {
+					checkImageSize(this, field.imageMinWidth, field.imageMinHeight, field.imageMaxWidth, field.imageMaxHeight, function (dataurl) {
 						socket.emit('bank_set_png', p, b, dataurl);
 						socket.once('bank_set_png:result', function (result) {
 							if (result != 'ok') {
@@ -261,7 +267,7 @@ $(function() {
 							}
 						});
 					}, function () {
-						alert('Image must have the following dimensions: 72x58');
+						alert('Image must have the following dimensions: ' + field.imageMaxWidth + 'x' + field.imageMaxHeight);
 					});
 				});
 			}
@@ -296,6 +302,18 @@ $(function() {
 		socket.once('bank_style:results', function () {
 			bank_preview_page(page);
 		});
+	});
+
+	$("#resetBankButton").click(function() {
+		if (confirm('Clear design and all actions?')) {
+			socket.emit('reset_bank', page, bank);
+			socket.emit('bank_reset_actions', page, bank);
+			socket.emit('bank_get_actions', page, bank);
+
+			$("#resetBankButton").hide();
+			populate_bank_form(page,bank,{},{});
+			bank_preview_page(page);
+		}
 	});
 
 	socket.on('preview_page_data', function (images) {
@@ -351,9 +369,6 @@ $(function() {
 			}
 		})
 
-
-
-
 		$("#pagebank .border").click(function() {
 			bank = $(this).data('bank');
 
@@ -361,7 +376,7 @@ $(function() {
 			$('#editbankli a[href="#editbank"]').tab('show');
 			$("#editbank_content").html("");
 			$("#editbankid").text(page + "." + $(this).data('bank'));
-			socket.emit('bank_getActions', page, $(this).data('bank'));
+			socket.emit('bank_get_actions', page, $(this).data('bank'));
 			socket.emit('get_bank',page, $(this).data('bank'));
 			socket.once('get_bank:results', populate_bank_form);
 		});

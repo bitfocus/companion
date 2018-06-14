@@ -26,7 +26,7 @@
     "dist": "rm -rf electron-output && electron-builder",
     "macdist": "rm -rf electron-output && electron-builder --mac",
     "windist": "rm -rf electron-output && electron-builder --win",
-    "lindist": "rm -rf electron-output && electron-builder --linux"
+    "lindist": "rm -rf electron-output && electron-builder --linux tar.gz"
   },
   "repository": "https://github.com/bitfocus/companion",
   "keywords": [
