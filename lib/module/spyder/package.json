@@ -1,0 +1,11 @@
+{
+  "name": "spyder",
+  "version": "0.0.1",
+  "description": "spyder plugin for Companion",
+  "main": "spyder.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Per Roine",
+  "license": "ISC"
+}
