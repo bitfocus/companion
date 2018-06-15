@@ -174,12 +174,17 @@ $(function() {
 
 	function updateFromConfig(page, bank, config, updateText) {
 		$('.active_field[data-special="color"]').removeClass('active_color');
+		$('.active_field[data-special="alignment"]').removeClass('active_color');
 
 		$(".active_field").each(function() {
 			if ($(this).data('fieldid') !== undefined && config[$(this).data('fieldid')] !== undefined) {
 
 				if ($(this).data('special') == 'color') {
 					if ($(this).data('color').toLowerCase() == int2hex( config[$(this).data('fieldid')] )) {
+						$(this).addClass('active_color');
+					}
+				} else if ($(this).data('special') == 'alignment') {
+					if ($(this).data('alignment') == config[$(this).data('fieldid')] ) {
 						$(this).addClass('active_color');
 					}
 				}
@@ -221,6 +226,32 @@ $(function() {
 
 				var $p = $("<p><label>"+field.label+"</label><br><input type='text' data-fieldid='"+field.id+"' class='form-control active_field'></p>");
 				$field.append($p);
+
+			}
+
+
+			else if (field.type == 'alignmentcontrol') {
+				const alignurl = '"/img/alignment.png"';
+				var $p = $("<p><label>"+field.label+"</label><br></p>");
+				var $container = $("<div style='width: 60px; background-image: url("+ alignurl +"); background-repeat: no-repeat;'></div>");
+				var $div = $("<div class='alignmentcontainer' data-fieldid='"+field.id+"' style='width: 60px; display: inline-block;'></div>");
+				var alignments = ["left:top", "center:top", "right:top", "left:center", "center:center", "right:center", "left:bottom", "center:bottom", "right:bottom"];
+				for (var n in alignments) {
+					var $alg = $("<div class='alignment' data-special='alignment' data-alignment='"+alignments[n]+"' data-fieldid='"+field.id+"'></div>");
+					$alg.css('backgroundColor', '#99999900');
+					$alg.css('width', 18);
+					$alg.css('height', 18);
+					$alg.addClass('colorbox');
+					$alg.addClass('active_field');
+					$alg.css('float','left');
+
+					$div.append($alg);
+				}
+				$container.append($div);
+				$p.append($container);
+ 				$field.append($p);
+				$('#auto_'+field.id).colorpicker();
+
 
 			}
 
@@ -282,8 +313,13 @@ $(function() {
 				socket.emit('bank_changefield', p, b, $(this).data('fieldid'), hex2int( $(this).data('color') ) );
 				socket.emit('get_bank', page, bank);
 				socket.once('get_bank:results', updateFromConfig);
-			}
-			else {
+
+			} else if ($(this).data('special') == 'alignment') {
+				socket.emit('bank_changefield', p, b, $(this).data('fieldid'), $(this).data('alignment') );
+				socket.emit('get_bank', page, bank);
+				socket.once('get_bank:results', updateFromConfig);
+
+			} else {
 				socket.emit('bank_changefield', p, b, $(this).data('fieldid'), $(this).val() );
 			}
 
@@ -293,6 +329,7 @@ $(function() {
 
 		$(".active_field").keyup(change);
 		$(".active_field[data-special=\"color\"]").click(change);
+		$(".active_field[data-special=\"alignment\"]").click(change);
 
 	}
 
