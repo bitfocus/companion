@@ -231,22 +231,24 @@ $(function() {
 
 
 			else if (field.type == 'alignmentcontrol') {
-
+				const alignurl = '"/img/alignment.png"';
 				var $p = $("<p><label>"+field.label+"</label><br></p>");
-				var $div = $("<div class='alignmentcontainer' data-fieldid='"+field.id+"' style='width: 60px'></div>");
+				var $container = $("<div style='width: 60px; background-image: url("+ alignurl +"); background-repeat: no-repeat;'></div>");
+				var $div = $("<div class='alignmentcontainer' data-fieldid='"+field.id+"' style='width: 60px; display: inline-block;'></div>");
 				var alignments = ["left:top", "center:top", "right:top", "left:center", "center:center", "right:center", "left:bottom", "center:bottom", "right:bottom"];
 				for (var n in alignments) {
 					var $alg = $("<div class='alignment' data-special='alignment' data-alignment='"+alignments[n]+"' data-fieldid='"+field.id+"'></div>");
-					$alg.css('backgroundColor', '#444444');
+					$alg.css('backgroundColor', '#99999900');
 					$alg.css('width', 18);
 					$alg.css('height', 18);
 					$alg.addClass('colorbox');
 					$alg.addClass('active_field');
 					$alg.css('float','left');
+
 					$div.append($alg);
 				}
-
-				$p.append($div);
+				$container.append($div);
+				$p.append($container);
  				$field.append($p);
 				$('#auto_'+field.id).colorpicker();
 
