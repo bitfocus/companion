@@ -9,16 +9,18 @@ http://builds.bitfocus.io/companion/
 Check out http://bitfocus.io/companion for more information :)
 
 ## Current support
-* Barco EventMaster
-* Barco PDS
-* Millumin
-* QLab
-* Mitti
-* PlaybackPro Plus
-* OSC Generic (sendt custom packets)
+* Barco EventMaster (json)
+* Barco PDS (tcp)
+* Millumin (osc)
+* QLab (osc)
+* Mitti (osc)
+* PlaybackPro Plus (udp)
+* OSC Generic (send custom packets)
 * d3/disguise (osc control)
-* Dataton Watchout
+* Dataton Watchout production (tcp)
 * Ross Carbonite/Vision (rosstalk)
+* IfElse{ware} AV-Playback (udp)
+* Christie Spyder (testing) (udp)
 
 
 ## Coming support (help wanted!)
@@ -40,7 +42,7 @@ Check out http://bitfocus.io/companion for more information :)
 * Wirecast
 * OBS
 * Resolume
-* Arkaos VJ / Mediamaster
+* Arkaos Grand VJ / Mediamaster
 * Avolites AI
 * Green Hippo
 * Panasonic PTZ
@@ -49,3 +51,5 @@ Check out http://bitfocus.io/companion for more information :)
 * Microsoft Powerpoint (via support software on PPT Machine)
 * Philips Hue
 * UDP Generic module
+* Renewed Vision PVP
+* VideoLan VLC
