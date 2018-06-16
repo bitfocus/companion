@@ -18,7 +18,18 @@
     "directories": {
       "buildResources": "assets/",
       "output": "electron-output/"
-    }
+    },
+    "files": [
+     "**/*",
+      "!font/*",
+      "!tools/*",
+      "!*.md",
+      "!",
+      "!",
+      "!",
+      "!",
+      "!"
+    ]
   },
   "scripts": {
     "start": "./tools/build_writefile.sh && ./bitfocus-skeleton/start.sh",
