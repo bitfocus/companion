@@ -10,3 +10,6 @@
 [submodule "lib/module/pds"]
 	path = lib/module/pds
 	url = git@github.com:bitfocus/companion-module-pds.git
+[submodule "lib/module/osc"]
+	path = lib/module/osc
+	url = git@github.com:bitfocus/companion-module-osc.git
