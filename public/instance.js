@@ -17,21 +17,20 @@ $(function() {
 
 			// ok
 			if (s[0] === 0) {
-				$("#instance_status_"+x).html('OK').removeClass('instance-status-error').removeClass('instance-status-warn').addClass('instance-status-ok')
+				$("#instance_status_"+x).html('OK').attr('title', '').removeClass('instance-status-error').removeClass('instance-status-warn').addClass('instance-status-ok')
 			}
 
 			// warning
 			else if (s[0] === 1) {
-				$("#instance_status_"+x).html(""+s[1]).removeClass('instance-status-ok').removeClass('instance-status-error').addClass('instance-status-warn')
+				$("#instance_status_"+x).html(""+s[1]).attr('title', s[1]).removeClass('instance-status-ok').removeClass('instance-status-error').addClass('instance-status-warn')
 			}
 
 			// error
 			else if (s[0] === 2) {
-				$("#instance_status_"+x).html(""+s[2]).removeClass('instance-status-ok').removeClass('instance-status-warn').addClass('instance-status-error')
+				$("#instance_status_"+x).html("ERROR").attr('title', s[1]).removeClass('instance-status-ok').removeClass('instance-status-warn').addClass('instance-status-error')
 			}
 
 		}
-		console.log("updstat<<<<", instance_status);
 	}
 
 	socket.on('instance_status', function(obj) {
@@ -131,6 +130,48 @@ $(function() {
 		instance.db = db;
 	});
 
+	function saveConfig(button, id) {
+		var $icf = $("#instanceConfigFields");
+		var $button = $(button);
+		var ok = true;
+		var data = {};
+
+		$icf.find('.instanceConfigField').each(function () {
+			var $this = $(this);
+
+			if (!ok) {
+				return;
+			}
+
+			if ($this.data('valid') === false) {
+				console.log("Invalid data in ", this);
+				ok = false;
+				return;
+			}
+
+			if ($this.data('type') == 'textinput') {
+				data[$this.data('id')] = $this.val();
+			} else {
+				console.log("saveConfig: Unknown field type: ", $this.data('type'), this);
+			}
+		});
+
+		if (ok) {
+			socket.emit('instance_config_put', id, data);
+
+			$button.css('backgroundColor', 'lightgreen');
+			setTimeout(function () {
+				$button.css('backgroundColor', '');
+			}, 300);
+		} else {
+			$button.css('backgroundColor', 'red');
+			setTimeout(function () {
+				$button.css('backgroundColor', '');
+			}, 500);
+		}
+
+	}
+
 	socket.on('instance_edit:result', function(id, store, res, config ) {
 		$('#instanceConfigTab').show();
 		$('#instanceConfigTab a[href="#instanceConfig"]').tab('show');
@@ -173,9 +214,11 @@ $(function() {
 
 						if (regex === undefined || inp.val().match(reg) !== null) {
 							this.style.color = "black";
-							socket.emit('instance_config_set', f1, f2, inp.val() );
+
+							$(this).data('valid', true);
 						} else {
 							this.style.color = "red";
+							$(this).data('valid', false);
 						}
 
 					});
@@ -199,6 +242,15 @@ $(function() {
 
 		});
 
+		var $button = $('<button class="btn btn-primary" type="button" id="config_save">Save</button>');
+		var $bcontainer = $('<div class="col-sm-12"></div>');
+		$bcontainer.append($button);
+
+		$icf.append($bcontainer);
+
+		$button.click(function () {
+			saveConfig(this, id);
+		});
 
 		updateInstanceList(store.db);
 	});
