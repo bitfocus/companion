@@ -21,6 +21,8 @@ Check out http://bitfocus.io/companion for more information :)
 * Ross Carbonite/Vision (rosstalk)
 * IfElse{ware} AV-Playback (udp)
 * Christie Spyder (testing) (udp)
+* PJ-link (testing) (tcp)
+* Digital Projection (testing) (udp)
 
 
 ## Coming support (help wanted!)
@@ -33,7 +35,6 @@ Check out http://bitfocus.io/companion for more information :)
 * Barco Projectors
 * Epson Projectors
 * Panasonic Projectors
-* Digital Projection Projectors
 * Christie Projectors
 * Nec Projectors
 * Analogway Pulse
