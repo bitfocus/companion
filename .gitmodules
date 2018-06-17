@@ -4,3 +4,6 @@
 [submodule "bitfocus-libs"]
 	path = bitfocus-libs
 	url = https://github.com/bitfocus/bitfocus-libs.git
+[submodule "lib/module/avplayback"]
+	path = lib/module/avplayback
+	url = git@github.com:bitfocus/companion-module-avplayback.git
