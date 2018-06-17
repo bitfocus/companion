@@ -6,43 +6,43 @@
 	url = https://github.com/bitfocus/bitfocus-libs.git
 [submodule "lib/module/avplayback"]
 	path = lib/module/avplayback
-	url = git@github.com:bitfocus/companion-module-avplayback.git
+	url = https://github.com/bitfocus/companion-module-avplayback.git
 [submodule "lib/module/pds"]
 	path = lib/module/pds
-	url = git@github.com:bitfocus/companion-module-pds.git
+	url = https://github.com/bitfocus/companion-module-pds.git
 [submodule "lib/module/osc"]
 	path = lib/module/osc
-	url = git@github.com:bitfocus/companion-module-osc.git
+	url = https://github.com/bitfocus/companion-module-osc.git
 [submodule "lib/module/watchout-production"]
 	path = lib/module/watchout-production
-	url = git@github.com:bitfocus/companion-module-watchout-production.git
+	url = https://github.com/bitfocus/companion-module-watchout-production.git
 [submodule "lib/module/spyder"]
 	path = lib/module/spyder
-	url = git@github.com:bitfocus/companion-module-spyder.git
+	url = https://github.com/bitfocus/companion-module-spyder.git
 [submodule "lib/module/rosstalk"]
 	path = lib/module/rosstalk
-	url = git@github.com:bitfocus/companion-module-rosstalk.git
+	url = https://github.com/bitfocus/companion-module-rosstalk.git
 [submodule "lib/module/qlab"]
 	path = lib/module/qlab
-	url = git@github.com:bitfocus/companion-module-qlab.git
+	url = https://github.com/bitfocus/companion-module-qlab.git
 [submodule "lib/module/playbackproplus"]
 	path = lib/module/playbackproplus
-	url = git@github.com:bitfocus/companion-module-playbackproplus.git
+	url = https://github.com/bitfocus/companion-module-playbackproplus.git
 [submodule "lib/module/pjlink"]
 	path = lib/module/pjlink
-	url = git@github.com:bitfocus/companion-module-pjlink.git
+	url = https://github.com/bitfocus/companion-module-pjlink.git
 [submodule "lib/module/mitti"]
 	path = lib/module/mitti
-	url = git@github.com:bitfocus/companion-module-mitti.git
+	url = https://github.com/bitfocus/companion-module-mitti.git
 [submodule "lib/module/millumin"]
 	path = lib/module/millumin
-	url = git@github.com:bitfocus/companion-module-millumin.git
+	url = https://github.com/bitfocus/companion-module-millumin.git
 [submodule "lib/module/eventmaster"]
 	path = lib/module/eventmaster
-	url = git@github.com:bitfocus/companion-module-eventmaster.git
+	url = https://github.com/bitfocus/companion-module-eventmaster.git
 [submodule "lib/module/disguise"]
 	path = lib/module/disguise
-	url = git@github.com:bitfocus/companion-module-disguise.git
+	url = https://github.com/bitfocus/companion-module-disguise.git
 [submodule "lib/module/dphighlight"]
 	path = lib/module/dphighlight
-	url = git@github.com:bitfocus/companion-module-dphighlight.git
+	url = https://github.com/bitfocus/companion-module-dphighlight.git
