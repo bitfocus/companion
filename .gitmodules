@@ -13,3 +13,30 @@
 [submodule "lib/module/osc"]
 	path = lib/module/osc
 	url = git@github.com:bitfocus/companion-module-osc.git
+[submodule "lib/module/watchout-production"]
+	path = lib/module/watchout-production
+	url = git@github.com:bitfocus/companion-module-watchout-production.git
+[submodule "lib/module/spyder"]
+	path = lib/module/spyder
+	url = git@github.com:bitfocus/companion-module-spyder.git
+[submodule "lib/module/rosstalk"]
+	path = lib/module/rosstalk
+	url = git@github.com:bitfocus/companion-module-rosstalk.git
+[submodule "lib/module/qlab"]
+	path = lib/module/qlab
+	url = git@github.com:bitfocus/companion-module-qlab.git
+[submodule "lib/module/playbackproplus"]
+	path = lib/module/playbackproplus
+	url = git@github.com:bitfocus/companion-module-playbackproplus.git
+[submodule "lib/module/pjlink"]
+	path = lib/module/pjlink
+	url = git@github.com:bitfocus/companion-module-pjlink.git
+[submodule "lib/module/mitti"]
+	path = lib/module/mitti
+	url = git@github.com:bitfocus/companion-module-mitti.git
+[submodule "lib/module/millumin"]
+	path = lib/module/millumin
+	url = git@github.com:bitfocus/companion-module-millumin.git
+[submodule "lib/module/eventmaster"]
+	path = lib/module/eventmaster
+	url = git@github.com:bitfocus/companion-module-eventmaster.git
