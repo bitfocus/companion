@@ -43,3 +43,6 @@
 [submodule "lib/module/disguise"]
 	path = lib/module/disguise
 	url = git@github.com:bitfocus/companion-module-disguise.git
+[submodule "lib/module/dphighlight"]
+	path = lib/module/dphighlight
+	url = git@github.com:bitfocus/companion-module-dphighlight.git
