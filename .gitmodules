@@ -7,3 +7,6 @@
 [submodule "lib/module/avplayback"]
 	path = lib/module/avplayback
 	url = git@github.com:bitfocus/companion-module-avplayback.git
+[submodule "lib/module/pds"]
+	path = lib/module/pds
+	url = git@github.com:bitfocus/companion-module-pds.git
