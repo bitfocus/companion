@@ -40,3 +40,6 @@
 [submodule "lib/module/eventmaster"]
 	path = lib/module/eventmaster
 	url = git@github.com:bitfocus/companion-module-eventmaster.git
+[submodule "lib/module/disguise"]
+	path = lib/module/disguise
+	url = git@github.com:bitfocus/companion-module-disguise.git
