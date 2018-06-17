@@ -1,6 +1,6 @@
 {
   "name": "avplayback",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "avplayback plugin for Companion",
   "main": "avplayback.js",
   "scripts": {
