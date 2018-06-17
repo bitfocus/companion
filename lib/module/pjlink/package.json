@@ -1,0 +1,11 @@
+{
+  "name": "pjlink",
+  "version": "0.0.1",
+  "description": "PJ-Link plugin for Companion",
+  "main": "pjlink.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Per Roine",
+  "license": "ISC"
+}
