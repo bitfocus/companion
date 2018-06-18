@@ -5,7 +5,7 @@
 * Regular expressions to validate configuration input
 * Added dropdown choices for action settings
 * Design tweaks in the action list
-* Improvements in the internal UDP library
+* Improvements in the internal UDP and TCP libraries
 * Implemented user configuration for flipping up/down buttons on page selection
 * Pages can now have their own names
 * Added text horizontal and vertical alignment
@@ -13,6 +13,7 @@
 * Replace application icon with the companion icon
 * Ability to change port number for GUI
 * Field validation now stops the forms from saving
+* Minor bug fixes
 * Support: IfElseWare AV-Playback
 * Support: Ross Carbonite/Vision
 * Support: Spyder
