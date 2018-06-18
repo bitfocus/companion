@@ -14,14 +14,16 @@
 * Ability to change port number for GUI
 * Field validation now stops the forms from saving
 * Minor bug fixes
+* Crash if the streamdeck application is running is fixed!
 * Support: IfElseWare AV-Playback
 * Support: Ross Carbonite/Vision
 * Support: Spyder
 * Support: Digital Projection Highlight Projectors
 * Support: Barco PDS
+* Support: PJLink
 
 ## Issues closed from v1.0.12 to v1.1.0
-* [#84](https://github.com/bitfocus/companion/issues/92): Module Request: AV Playback module
+* [#84](https://github.com/bitfocus/companion/issues/84): Module Request: AV Playback module
 * [#73](https://github.com/bitfocus/companion/issues/73): Enhancement: Field validation should stop the form from saving
 * [#71](https://github.com/bitfocus/companion/issues/71): Feature: Inform or reload modules on configuration change (for that module) TODO bug enhancement
 * [#70](https://github.com/bitfocus/companion/issues/70): setTimeout issue workaround making action delays safe bug solution needed
@@ -35,3 +37,4 @@
 * [#49](https://github.com/bitfocus/companion/issues/49): Feature request: tooltips on input fields enhancement good first issue
 * [#29](https://github.com/bitfocus/companion/issues/29): Wish: reverse order of page numbers
 * [#23](https://github.com/bitfocus/companion/issues/23): Wish: Ability to change port that interface runs on
+* [#61](https://github.com/bitfocus/companion/issues/61): Bug: Handle streamdeck that is in use
