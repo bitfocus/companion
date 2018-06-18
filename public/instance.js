@@ -242,11 +242,14 @@ $(function() {
 
 		});
 
-		var $button = $('<button class="btn btn-primary" type="button" id="config_save">Save</button>');
-		var $bcontainer = $('<div class="col-sm-12"></div>');
-		$bcontainer.append($button);
+		var $button = $('<button class="btn btn-primary" type="button" id="config_save">Apply changes</button>');
+		var $bcontainer = $('<div class="col-lg-12 col-sm-12 col-xs-12"></div>');
+		var $brow = $('<div class="row padtop"></div>')
 
-		$icf.append($bcontainer);
+		$bcontainer.append($button);
+		$brow.append($bcontainer);
+
+		$('#instanceConfig').append($brow);
 
 		$button.click(function () {
 			saveConfig(this, id);
