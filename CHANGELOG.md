@@ -14,6 +14,7 @@
 * Ability to change port number for GUI
 * Field validation now stops the forms from saving
 * Minor bug fixes
+* Crash if the streamdeck application is running is fixed!
 * Support: IfElseWare AV-Playback
 * Support: Ross Carbonite/Vision
 * Support: Spyder
@@ -35,3 +36,4 @@
 * [#49](https://github.com/bitfocus/companion/issues/49): Feature request: tooltips on input fields enhancement good first issue
 * [#29](https://github.com/bitfocus/companion/issues/29): Wish: reverse order of page numbers
 * [#23](https://github.com/bitfocus/companion/issues/23): Wish: Ability to change port that interface runs on
+* [#61](https://github.com/bitfocus/companion/issues/61): Bug: Handle streamdeck that is in use
