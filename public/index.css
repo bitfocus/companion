@@ -16,7 +16,9 @@
 	color: #ccc !important;
 }
 
-
+.padtop {
+	padding-top: 12px;
+}
 #pagebank .border, #pagenav .border {
 	display:block;
 	border-radius: 4px;

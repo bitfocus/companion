@@ -1,3 +1,0 @@
-# Changelog
-
-## vx.x.x
