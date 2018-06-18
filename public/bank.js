@@ -180,18 +180,28 @@ $(function() {
 			if ($(this).data('fieldid') !== undefined && config[$(this).data('fieldid')] !== undefined) {
 
 				if ($(this).data('special') == 'color') {
+
 					if ($(this).data('color').toLowerCase() == int2hex( config[$(this).data('fieldid')] )) {
 						$(this).addClass('active_color');
 					}
+
+				} else if ($(this).data('special') == 'dropdown') {
+
+					$(this).find('option[value="' + config[$(this).data('fieldid')] + '"]').prop('selected', true);
+
 				} else if ($(this).data('special') == 'alignment') {
+
 					if ($(this).data('alignment') == config[$(this).data('fieldid')] ) {
 						$(this).addClass('active_color');
 					}
+
 				}
 				else {
+
 					if (updateText) {
 						$(this).val(config[$(this).data('fieldid')]);
 					}
+
 				}
 			}
 		});
@@ -229,6 +239,21 @@ $(function() {
 
 			}
 
+			else if (field.type == 'dropdown') {
+				var $p = $("<p><label>"+field.label+"</label><br><select data-special='dropdown' data-fieldid='"+field.id+"' class='form-control active_field'></p>");
+				var $select = $p.find('select');
+
+				for (var i = 0; i < field.choices.length; ++i) {
+					var extra = '';
+					if (field.choices[i].id == field.default) {
+						extra = ' SELECTED';
+					}
+
+					$select.append('<option value="' + field.choices[i].id + '"' + extra + '>' + field.choices[i].label);
+				}
+
+				$field.append($p);
+			}
 
 			else if (field.type == 'alignmentcontrol') {
 				const alignurl = '"/img/alignment.png"';
@@ -314,6 +339,11 @@ $(function() {
 				socket.emit('get_bank', page, bank);
 				socket.once('get_bank:results', updateFromConfig);
 
+			} else if ($(this).data('special') == 'dropdown') {
+				socket.emit('bank_changefield', p, b, $(this).data('fieldid'), $(this).val() );
+				socket.emit('get_bank', page, bank);
+				socket.once('get_bank:results', updateFromConfig);
+
 			} else if ($(this).data('special') == 'alignment') {
 				socket.emit('bank_changefield', p, b, $(this).data('fieldid'), $(this).data('alignment') );
 				socket.emit('get_bank', page, bank);
@@ -328,6 +358,7 @@ $(function() {
 		}
 
 		$(".active_field").keyup(change);
+		$(".active_field[data-special=\"dropdown\"").change(change);
 		$(".active_field[data-special=\"color\"]").click(change);
 		$(".active_field[data-special=\"alignment\"]").click(change);
 
