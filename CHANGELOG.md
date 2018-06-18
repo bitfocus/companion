@@ -20,6 +20,7 @@
 * Support: Spyder
 * Support: Digital Projection Highlight Projectors
 * Support: Barco PDS
+* Support: PJLink
 
 ## Issues closed from v1.0.12 to v1.1.0
 * [#84](https://github.com/bitfocus/companion/issues/84): Module Request: AV Playback module
