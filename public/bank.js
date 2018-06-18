@@ -234,7 +234,7 @@ $(function() {
 
 			if (field.type == 'textinput') {
 
-				var $p = $("<p><label>"+field.label+"</label><br><input type='text' data-fieldid='"+field.id+"' class='form-control active_field'></p>");
+				var $p = $("<p><label>"+field.label+"</label><br><input type='text' value='" + field.default + "' data-fieldid='"+field.id+"' class='form-control active_field'></p>");
 				$field.append($p);
 
 			}
