@@ -150,7 +150,13 @@ $(function() {
 			}
 
 			if ($this.data('type') == 'textinput') {
+
 				data[$this.data('id')] = $this.val();
+
+			} else	if ($this.data('type') == 'dropdown') {
+
+				data[$this.data('id')] = $this.val();
+
 			} else {
 				console.log("saveConfig: Unknown field type: ", $this.data('type'), this);
 			}
@@ -226,6 +232,21 @@ $(function() {
 
 				$sm.append($inp);
 			}
+			else if (field.type == 'dropdown') {
+				var $inp = $("<select class='form-control instanceConfigField' data-type='"+field.type+"' data-id='"+field.id+"'>");
+
+				if (field.tooltip !== undefined) {
+					$inp.attr('title', field.tooltip);
+				}
+
+				$inp.data('valid', true);
+
+				for (var i = 0; i < field.choices.length; ++i) {
+					$inp.append('<option value="' + field.choices[i].id + '">' + field.choices[i].label + '</option>');
+				}
+
+				$sm.append($inp);
+			}
 			else {
 				console.log("FIELD:" ,field);
 			}
@@ -249,6 +270,7 @@ $(function() {
 		$bcontainer.append($button);
 		$brow.append($bcontainer);
 
+		$('#config_save').remove();
 		$('#instanceConfig').append($brow);
 
 		$button.click(function () {

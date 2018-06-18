@@ -115,9 +115,6 @@ $(function() {
 						}
 
 
-
-
-
 						if (option.type == 'dropdown') {
 
 							var $opt_input = $("<select class='action-option-change form-control'></select>");
@@ -128,9 +125,9 @@ $(function() {
 							}
 
 							for (var x in option.choices) {
-								var str = new String(option.choices[x]);
-								var $opt_choice = $("<option value='"+x+"'>"+str.toString()+"</option>");
-								$opt_choice.data('id', x);
+								var str = new String(option.choices[x].label);
+								var $opt_choice = $("<option value='"+ option.choices[x].id + "'>" + str + "</option>");
+								$opt_choice.data('id', option.choices[x].id);
 								$opt_input.append($opt_choice);
 							}
 
