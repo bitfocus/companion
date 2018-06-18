@@ -21,7 +21,7 @@
 * Support: Barco PDS
 
 ## Issues closed from v1.0.12 to v1.1.0
-* [#84](https://github.com/bitfocus/companion/issues/92): Module Request: AV Playback module
+* [#84](https://github.com/bitfocus/companion/issues/84): Module Request: AV Playback module
 * [#73](https://github.com/bitfocus/companion/issues/73): Enhancement: Field validation should stop the form from saving
 * [#71](https://github.com/bitfocus/companion/issues/71): Feature: Inform or reload modules on configuration change (for that module) TODO bug enhancement
 * [#70](https://github.com/bitfocus/companion/issues/70): setTimeout issue workaround making action delays safe bug solution needed
