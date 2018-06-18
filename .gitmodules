@@ -46,3 +46,18 @@
 [submodule "lib/module/dphighlight"]
 	path = lib/module/dphighlight
 	url = https://github.com/bitfocus/companion-module-dphighlight.git
+[submodule "lib/module/videohub"]
+	path = lib/module/videohub
+	url = https://github.com/bitfocus/companion-module-videohub.git
+[submodule "lib/module/atem"]
+	path = lib/module/atem
+	url = https://github.com/bitfocus/companion-module-atem.git
+[submodule "lib/module/pvp"]
+	path = lib/module/pvp
+	url = https://github.com/bitfocus/companion-module-pvp.git
+[submodule "lib/module/artnet"]
+	path = lib/module/artnet
+	url = https://github.com/bitfocus/companion-module-artnet.git
+[submodule "lib/module/hyperdeck"]
+	path = lib/module/hyperdeck
+	url = https://github.com/bitfocus/companion-module-hyperdeck.git
