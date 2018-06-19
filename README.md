@@ -1,6 +1,4 @@
-# Bitfocus Companion
-
-## http://bitfocus.io/companion
+# [Bitfocus Companion](http://bitfocus.io/companion)
 
 **Build Status**
 * [![Travis Build Status](https://travis-ci.org/bitfocus/companion.svg?branch=master)](https://travis-ci.org/bitfocus/companion) Mac and Linux
