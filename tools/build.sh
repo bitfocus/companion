@@ -1,4 +1,4 @@
 #!/bin/bash
 
-yarn
+tools/yarn.sh
 npm run dist
