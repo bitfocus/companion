@@ -17,12 +17,7 @@ install:
   - git submodule sync
   - git submodule init
   - git submodule update
-  - cd bitfocus-skeleton
-  - yarn
-  - cd ..
-  - cd bitfocus-libs
-  - yarn
-  - cd ..
+  - cmd: bash tools/yarn.sh
   - cmd: bash tools/build_writefile.sh
   - yarn
 
