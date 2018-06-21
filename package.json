@@ -30,12 +30,14 @@
     ]
   },
   "scripts": {
+    "yarn": "./tools/yarn.sh",
     "start": "./tools/build_writefile.sh && ./bitfocus-skeleton/start.sh",
     "pack": "electron-builder --dir",
     "dist": "rm -rf electron-output && electron-builder",
     "macdist": "rm -rf electron-output && electron-builder --mac",
     "windist": "rm -rf electron-output && electron-builder --win",
-    "lindist": "rm -rf electron-output && electron-builder --linux tar.gz"
+    "lindist": "rm -rf electron-output && electron-builder --linux tar.gz",
+    "rpidist": "rm -rf electron-output && electron-builder --armv7l --linux tar.gz"
   },
   "repository": "https://github.com/bitfocus/companion",
   "keywords": [
@@ -45,7 +47,7 @@
   "author": "Bitfocus AS",
   "license": "MIT",
   "devDependencies": {
-    "electron": "^1.8.4",
+    "electron": "^2.0.3",
     "electron-builder": "^20.10.0"
   },
   "dependencies": {
