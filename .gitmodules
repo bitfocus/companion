@@ -61,3 +61,6 @@
 [submodule "lib/module/hyperdeck"]
 	path = lib/module/hyperdeck
 	url = https://github.com/bitfocus/companion-module-hyperdeck.git
+[submodule "lib/module/livecore"]
+	path = lib/module/livecore
+	url = https://github.com/bitfocus/companion-module-livecore.git
