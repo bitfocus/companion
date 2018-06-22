@@ -10,10 +10,16 @@
       "category": "no.bitfocus.companion"
     },
     "win": {
-      "target": "NSIS"
+      "target": "nsis"
     },
     "nsis": {
-      "artifactName": "companion-win64.exe"
+      "artifactName": "companion-win64.exe",
+      "createStartMenuShortcut": true,
+      "perMachine": true,
+      "oneClick": false,
+      "allowElevation": true,
+      "allowToChangeInstallationDirectory": true,
+      "installerIcon": "icon.ico"
     },
     "directories": {
       "buildResources": "assets/",
