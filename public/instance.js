@@ -107,8 +107,21 @@ $(function() {
 		$addInstance.html("");
 
 		if (instance.module !== undefined) {
-			for (var n in instance.module) {
-				var im = instance.module[n];
+			// Sort the list first
+			var list = instance.module.sort(function (a,b) {
+				if (a.label.toUpperCase() < b.label.toUpperCase()) {
+					return -1;
+				}
+
+				if (a.label.toUpperCase() > b.label.toUpperCase()) {
+					return 1;
+				}
+
+				return 0;
+			});
+
+			for (var n in list) {
+				var im = list[n];
 				var $instance = $('<a class="dropdown-item addInstance" data-style="smalltext" data-id="'+im.id+'">'+ im.label +'</a>');
 
 				$instance.click(function() {
