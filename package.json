@@ -19,7 +19,9 @@
       "oneClick": false,
       "allowElevation": true,
       "allowToChangeInstallationDirectory": true,
-      "installerIcon": "icon.ico"
+      "installerIcon": "icon.ico",
+      "installerSidebar": "compinst.bmp",
+      "uninstallerSidebar": "compinst.bmp"
     },
     "directories": {
       "buildResources": "assets/",
