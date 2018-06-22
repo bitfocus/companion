@@ -64,3 +64,6 @@
 [submodule "lib/module/livecore"]
 	path = lib/module/livecore
 	url = https://github.com/bitfocus/companion-module-livecore.git
+[submodule "lib/module/vlc"]
+	path = lib/module/vlc
+	url = https://github.com/bitfocus/companion-module-vlc.git
