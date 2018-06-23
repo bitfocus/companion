@@ -29,8 +29,9 @@ When you're doing changes to modules in companion, you need to upgrade the git l
 3. Commit the changes with a nice message
 4. Push your changes ```git push origin HEAD:master```
 
-Now, in the core, we need to upgrade the reference to the module to the new version. For this we've made a tool:
+Now, in the core, we need to upgrade the reference to the module to the new version. For this we've made a tool. Go to the companion base directory (not inside the module):
 ```
+cd companion
 ./tools/upgrade_module.sh <modulename>
 ```
 
