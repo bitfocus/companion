@@ -17,7 +17,7 @@ $ npm run start
 
 # Tools
 
-## Update all, including yarn in submodules
+## Update all, including yarn in submodules [Core Devs, Mod Devs]
 ./tools/update.sh
 
 # Modules
@@ -30,6 +30,7 @@ When you're doing changes to modules in companion, you need to upgrade the git l
 4. Push your changes ```git push origin HEAD:master```
 
 Now, in the core, we need to upgrade the reference to the module to the new version. For this we've made a tool. Go to the companion base directory (not inside the module):
+
 ```
 cd companion
 ./tools/upgrade_module.sh <modulename>
@@ -64,10 +65,6 @@ It's important that you didn't get any erros in the last push, because you're go
 15) ```cd ../../```
 16) ```./tools/update.sh```
 
-The module should now appear in lib/module/mynewmodule, and if you want to change something in the module after this, you need to do your changes, commit it to the repository and then run:
+The module should now appear in lib/module/mynewmodule, and if you want to change something in the module after this, you need to do your changes, commit it to the repository and read the beginning of the modules section in this document.
 
-```
-git push origin HEAD:master
-```
-
-If you're ready to release the module to the next build of companion, ask us to upgrade to the latest version :)
+Questions? SLACK! :)
