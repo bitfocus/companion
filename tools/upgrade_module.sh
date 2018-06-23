@@ -7,7 +7,6 @@ cd lib/module/
 cd $1;
 echo $1;
 git pull origin master
-git push origin HEAD:master
 cd ../../../
 ls -la
 git status
