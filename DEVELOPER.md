@@ -35,5 +35,17 @@ cd companion
 ./tools/upgrade_module.sh <modulename>
 ```
 
+## When you want to create a new ```mynewmodule``` module that doesn't have a repository yet:
 
+1) ```cd ./lib/module/```
+2) ```mkdir mynewmodule```
+3) ```cd mynewmodule```
+4) ```npm init``` (enter x 10)
+5) ```git init```
+6) ```git add package.json```
+7) ```git commit package.json -m "package.json"```
+8) ```echo node_modules/ > .gitignore```
+9) ```git add .gitignore```
+10) ```git commit .gitignore -m "gitignore to ignore the node_modules/ folder"```
 
+Now, you need to ask the core developers to create a repository for your module, and await instructions.
