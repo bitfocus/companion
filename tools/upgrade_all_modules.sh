@@ -1,5 +1,7 @@
 #!/bin/bash
 
+./tools/update.sh
+
 cd lib/module/
 
 for module in *; do
@@ -10,5 +12,8 @@ for module in *; do
 done
 
 cd ../../
+
+git commit lib/modules/* -m "module upgrades"
+git push 
 
 exit 0
