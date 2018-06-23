@@ -216,3 +216,14 @@ label {
 	padding:1px 5px;
 	font-size: 12px;
 }
+
+.fieldtype-text {
+	margin-top: 10px !important;
+}
+.fieldtype-text p {
+	background-color: #f7f7f7; !important;
+	border-top: 4px solid #f0f0f0;
+	padding: 10px;
+	color: #222;
+	font-size: 14px;
+}

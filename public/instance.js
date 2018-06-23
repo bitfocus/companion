@@ -163,14 +163,13 @@ $(function() {
 			}
 
 			if ($this.data('type') == 'textinput') {
-
 				data[$this.data('id')] = $this.val();
+			}
 
-			} else	if ($this.data('type') == 'dropdown') {
-
+			else if ($this.data('type') == 'dropdown') {
 				data[$this.data('id')] = $this.val();
-
-			} else {
+			}
+			else {
 				console.log("saveConfig: Unknown field type: ", $this.data('type'), this);
 			}
 		});
@@ -217,8 +216,19 @@ $(function() {
 				regex = new RegExp(pattern, flags);
 			}
 
-			var $sm = $('<div class="col-sm-'+field.width+'"><label>'+field.label+'</label></div>')
-			if (field.type == 'textinput') {
+			var $sm = $('<div class="fieldtype-'+field.type+' col-sm-'+field.width+'"><label>'+field.label+'</label></div>');
+
+			if (field.type == 'text') {
+				var $inp = $("<p></p>");
+				$inp.html(field.value);
+				if (field.tooltip !== undefined) {
+					$inp.attr('title', field.tooltip);
+				}
+				$sm.append($inp);
+			}
+
+
+			else if (field.type == 'textinput') {
 				var $inp = $("<input type='text' class='form-control instanceConfigField' data-type='"+field.type+"' data-id='"+field.id+"'>");
 
 				if (field.tooltip !== undefined) {
