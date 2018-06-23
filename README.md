@@ -22,23 +22,21 @@
 * Christie Spyder (testing) (udp)
 * PJ-link (tcp)
 * Digital Projection (testing) (udp)
-* Renewed Vision PVP (rest)
-* VideoLan VLC
+
+## Support in v1.1.1
+* Epson Projectors
+* BMD Atem
+* BMD Hyperdeck
 * BMD Videohub
 * ArtNet
 * Analogway Livecore
-
-
-
-
+* Renewed Vision PVP (rest)
+* VideoLan VLC
 
 ## Coming support (help wanted!)
-* BMD Hyperdeck
-* BMD Atem
 * AJA Kipro Ultra Plus
 * Entec DMXPro
 * Barco Projectors
-* Epson Projectors
 * Panasonic Projectors
 * Christie Projectors
 * Nec Projectors
