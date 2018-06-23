@@ -3,4 +3,4 @@
 git pull
 git submodule init
 git submodule update
-
+./tools/yarn.sh
