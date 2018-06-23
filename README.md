@@ -22,10 +22,14 @@
 * Christie Spyder (testing) (udp)
 * PJ-link (tcp)
 * Digital Projection (testing) (udp)
+* Renewed Vision PVP (rest)
 * VideoLan VLC
-* Renewed Vision PVP
 * BMD Videohub
 * ArtNet
+* Analogway Livecore
+
+
+
 
 
 ## Coming support (help wanted!)
@@ -38,9 +42,7 @@
 * Panasonic Projectors
 * Christie Projectors
 * Nec Projectors
-* Analogway Pulse
-* Analogway NextStage
-* Analogway Accender
+* Analogway Midra
 * Wirecast
 * OBS
 * Resolume
@@ -52,6 +54,5 @@
 * Apple Keynote
 * Microsoft Powerpoint (via support software on PPT Machine)
 * Philips Hue
-* UDP Generic module
-
-
+* UDP/TCP Generic module
+* Octopus
