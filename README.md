@@ -20,7 +20,7 @@
 * Ross Carbonite/Vision (rosstalk)
 * IfElse{ware} AV-Playback (udp)
 * Christie Spyder (testing) (udp)
-* PJ-link (testing) (tcp)
+* PJ-link (tcp)
 * Digital Projection (testing) (udp)
 
 
