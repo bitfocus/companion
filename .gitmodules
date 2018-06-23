@@ -67,3 +67,6 @@
 [submodule "lib/module/vlc"]
 	path = lib/module/vlc
 	url = https://github.com/bitfocus/companion-module-vlc.git
+[submodule "lib/module/octopus"]
+	path = lib/module/octopus
+	url = https://github.com/bitfocus/companion-module-octopus.git
