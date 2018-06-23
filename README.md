@@ -22,14 +22,16 @@
 * Christie Spyder (testing) (udp)
 * PJ-link (tcp)
 * Digital Projection (testing) (udp)
+* VideoLan VLC
+* Renewed Vision PVP
+* BMD Videohub
+* ArtNet
 
 
 ## Coming support (help wanted!)
 * BMD Hyperdeck
-* BMD Videohub
 * BMD Atem
 * AJA Kipro Ultra Plus
-* ArtNet
 * Entec DMXPro
 * Barco Projectors
 * Epson Projectors
@@ -51,5 +53,5 @@
 * Microsoft Powerpoint (via support software on PPT Machine)
 * Philips Hue
 * UDP Generic module
-* Renewed Vision PVP
-* VideoLan VLC
+
+
