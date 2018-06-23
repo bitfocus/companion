@@ -32,6 +32,7 @@
 * Analogway Livecore
 * Renewed Vision PVP (rest)
 * VideoLan VLC
+* disguise multi transport control
 
 ## Coming support (help wanted!)
 * AJA Kipro Ultra Plus
