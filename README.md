@@ -33,6 +33,7 @@
 * Renewed Vision PVP (rest)
 * VideoLan VLC
 * disguise multi transport control
+* Irisdown Remote Show Control
 
 ## Coming support (help wanted!)
 * AJA Kipro Ultra Plus
