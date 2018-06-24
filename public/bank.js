@@ -425,6 +425,13 @@ $(function() {
 		changePage(page);
 	});
 
+	$('a.nav-link').click(function() {
+		if ($(this).attr('href') !== '#editbank' && $(this).attr('href') !== '#log') {
+			$("#editbankli").hide();
+			socket.emit('bank_preview', false);
+		}
+	});
+
 	function changePage(pagenum) {
 
 		$pagenav.html("");
@@ -446,13 +453,6 @@ $(function() {
 		}
 
 		bank_preview_page(pagenum);
-
-		$('a.nav-link').click(function() {
-			if ($(this).attr('href') !== '#editbank' && $(this).attr('href') !== '#log') {
-				$("#editbankli").hide();
-				socket.emit('bank_preview', false);
-			}
-		})
 
 		$("#pagebank .border").click(function() {
 			bank = $(this).data('bank');

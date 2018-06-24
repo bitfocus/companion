@@ -235,6 +235,8 @@ $(function() {
 					$inp.attr('title', field.tooltip);
 				}
 
+				$inp.val(field.default);
+
 				(function(f1,f2,inp,reg) {
 					inp.keyup(function(){
 						if (f2 == 'label') {
@@ -267,6 +269,8 @@ $(function() {
 				for (var i = 0; i < field.choices.length; ++i) {
 					$inp.append('<option value="' + field.choices[i].id + '">' + field.choices[i].label + '</option>');
 				}
+
+				$inp.val(field.default);
 
 				$sm.append($inp);
 			}
