@@ -79,3 +79,6 @@
 [submodule "lib/module/pptrsc"]
 	path = lib/module/pptrsc
 	url = https://github.com/bitfocus/companion-module-pptrsc.git
+[submodule "lib/module/casparcg"]
+	path = lib/module/casparcg
+	url = https://github.com/bitfocus/companion-module-casparcg.git
