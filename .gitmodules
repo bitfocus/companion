@@ -73,3 +73,6 @@
 [submodule "lib/module/disguise-mtc"]
 	path = lib/module/disguise-mtc
 	url = https://github.com/bitfocus/companion-module-disguise-mtc.git
+[submodule "grandma2"]
+	path = grandma2
+	url = https://github.com/bitfocus/companion-module-grandma2.git
