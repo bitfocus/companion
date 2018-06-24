@@ -76,3 +76,6 @@
 [submodule "lib/module/grandma2"]
 	path = lib/module/grandma2
 	url = https://github.com/bitfocus/companion-module-grandma2.git
+[submodule "lib/module/pptrsc"]
+	path = lib/module/pptrsc
+	url = https://github.com/bitfocus/companion-module-pptrsc.git
