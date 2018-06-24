@@ -359,7 +359,7 @@ $(function() {
 		}
 
 		$(".active_field").keyup(change);
-		$(".active_field[data-special=\"dropdown\"").change(change);
+		$(".active_field[data-special=\"dropdown\"]").change(change);
 		$(".active_field[data-special=\"color\"]").click(change);
 		$(".active_field[data-special=\"alignment\"]").click(change);
 

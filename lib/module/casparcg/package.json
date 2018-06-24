@@ -1,0 +1,11 @@
+{
+  "name": "casparcg",
+  "version": "0.0.1",
+  "description": "CasparCG module for Companion",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Håkon Nessjøen <haakon@bitfocus.io>",
+  "license": "ISC"
+}
