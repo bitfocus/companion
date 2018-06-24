@@ -55,7 +55,9 @@
 * Microsoft Powerpoint (via support software on PPT Machine)
 * Philips Hue
 * UDP/TCP Generic module
+* Modulo Pi Modulo Player
 * Octopus
 * Behringer X32 / Midas M32
 * Behringer X-air
 * Yamaha Ql series Consoles
+* CasparCG
