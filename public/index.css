@@ -227,3 +227,6 @@ label {
 	color: #222;
 	font-size: 14px;
 }
+.bank-armed {
+	background-color: rgba(255,0,0,0.5) !important;
+}

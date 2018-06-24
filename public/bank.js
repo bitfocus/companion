@@ -1,6 +1,7 @@
 
 var socket = new io();
 var image_cache = {};
+var buttons_hot = false;
 
 function int2hex(number) {
 	var r = ('0' + ((number >> 16) & 0xff).toString('16')).substr(-2);
@@ -274,7 +275,7 @@ $(function() {
 				}
 				$container.append($div);
 				$p.append($container);
- 				$field.append($p);
+				 $field.append($p);
 				$('#auto_'+field.id).colorpicker();
 
 
@@ -364,6 +365,22 @@ $(function() {
 
 	}
 
+	$(window).keyup(function(e) {
+		if (e.keyCode == 16) {
+			buttons_hot = false;
+			$(".border").removeClass('bank-armed');
+			console.log('disarmed');
+		}
+	});
+	$(window).keydown(function(e) {
+		if (e.keyCode == 16) {
+			buttons_hot = true;
+			$(".border").addClass('bank-armed')
+			console.log("buttons hot!")
+		}
+	})
+
+
 	$(".change_style").click(function() {
 		socket.emit('bank_style', page, bank, $(this).data('style'));
 		socket.once('bank_style:results', populate_bank_form);
@@ -419,9 +436,9 @@ $(function() {
 			pname = page_info[page].name;
 		}
 
-		$pagenav.append($('<div class="pagenav col-lg-4"><div id="btn_pagedown" class="btn btn-primary">Page down</div></div>'));
+		$pagenav.append($('<div class="pagenav col-lg-4"><div id="btn_pagedown" class="btn btn-primary"><i class="fa fa-chevron-left"></i></div></div>'));
 		$pagenav.append($('<div class="pageat col-lg-4"><small>(Page '+page+')</small> <input id="page_title" placeholder="Page name" type="text" value="'+ pname +'"></div>'));
-		$pagenav.append($('<div class="pagenav text-right col-lg-4"><div id="btn_pageup" class="btn btn-primary">Page up</div></div>'));
+		$pagenav.append($('<div class="pagenav text-right col-lg-4"><div id="btn_pageup" class="btn btn-primary"><i class="fa fa-chevron-right"></i></div></div>'));
 
 		for (var bank = 1; bank <= 12; bank++) {
 			var $div = $('<div class="bank col-lg-3"><div class="border" data-bank="'+bank+'"><canvas width=72 height=72 id="bank_' + page + '_' + bank + '"</div></div>');
@@ -440,13 +457,20 @@ $(function() {
 		$("#pagebank .border").click(function() {
 			bank = $(this).data('bank');
 
-			$("#editbankli").show();
-			$('#editbankli a[href="#editbank"]').tab('show');
-			$("#editbank_content").html("");
-			$("#editbankid").text(page + "." + $(this).data('bank'));
-			socket.emit('bank_get_actions', page, $(this).data('bank'));
-			socket.emit('get_bank',page, $(this).data('bank'));
-			socket.once('get_bank:results', populate_bank_form);
+			if (buttons_hot) {
+				socket.emit('hot_press',page, $(this).data('bank'));
+			}
+
+			else {
+				$("#editbankli").show();
+				$('#editbankli a[href="#editbank"]').tab('show');
+				$("#editbank_content").html("");
+				$("#editbankid").text(page + "." + $(this).data('bank'));
+				socket.emit('bank_get_actions', page, $(this).data('bank'));
+				socket.emit('get_bank',page, $(this).data('bank'));
+				socket.once('get_bank:results', populate_bank_form);
+			}
+
 		});
 
 		$("#btn_pageup").click(function() {

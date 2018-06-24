@@ -24,10 +24,15 @@ $(function() {
 		}
 	});
 
+
+
 	$('#bankActions').on('change', '.action-option-change', function() {
 		socket.emit('bank_update_action_option', page, bank,  $(this).data('action-id'), $(this).data('option-id'), $(this).val() );
 	});
 
+	$("#testBankButton").click(function() {
+		socket.emit('hot_press',page,bank);
+	});
 
 	socket.on('bank_get_actions:result', function(page, bank, actions) {
 
@@ -38,6 +43,14 @@ $(function() {
 		var $trth = $("<thead><tr><th colspan=2>Actions</th><th style='width:90px'>Delay</th><th>Options</th></tr></thead>");
 		var $tbody = $("<tbody></tbody>");
 		$table.append($trth);
+
+		if (actions.length) {
+			$("#testBankButton").show();
+		}
+		else {
+			$("#testBankButton").hide();
+		}
+
 		for (var n in actions) {
 			var action = actions[n];
 			if (action !== null && instance.db[action.instance] !== undefined) {

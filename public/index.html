@@ -14,7 +14,9 @@
 		<link href="js/font-awesome/css/font-awesome.min.css" rel="stylesheet">
 		<link href="css/style.css" rel="stylesheet">
 		<link href="vendors/pace-progress/css/pace.min.css" rel="stylesheet">
+		<link href="/fa/css/all.css" rel="stylesheet">
 		<link href="index.css" rel="stylesheet">
+
 	</head>
 
 	<body class="app header-fixed sidebar-fixed aside-menu-fixed sidebar-lg-show">
@@ -100,28 +102,28 @@
 					<ul class="nav">
 						<li class="nav-item">
 							<a class="nav-link" target="_new" href="/emulator.html">
-								<i class="nav-icon icon-speedometer"></i> Elgato Emulator
+								<i class="nav-icon fa fa-gamepad"></i> Elgato Emulator
 								<!-- <span class="badge badge-primary">NEW</span> -->
 							</a>
 						</li>
 
 						<li class="nav-item">
 							<a class="nav-link" target="_new" href="https://github.com/bitfocus/companion/issues">
-								<i class="nav-icon icon-support"></i> Report bugs
+								<i class="nav-icon fa fa-bug"></i> Report bugs
 								<!-- <span class="badge badge-primary">NEW</span> -->
 							</a>
 						</li>
 
 						<li class="nav-item">
 							<a class="nav-link" target="_new" href="https://www.facebook.com/groups/2047850215433318/">
-								<i class="nav-icon icon-support"></i> Facebook Group
+								<i class="nav-icon fa fa-users"></i> Facebook Group
 								<!-- <span class="badge badge-primary">NEW</span> -->
 							</a>
 						</li>
 
 						<li class="nav-item">
 							<a class="nav-link" target="_new" href="https://bit.ly/2IJ1jT4">
-								<i class="nav-icon icon-support"></i> Slack group
+								<i class="nav-icon fa fa-comments"></i> Slack group
 								<!-- <span class="badge badge-primary">NEW</span> -->
 							</a>
 						</li>
@@ -194,14 +196,20 @@
 
 									<li class="nav-item">
 										<a class="nav-link active" data-toggle="tab" href="#instances" role="tab" aria-controls="instances">
-											<i class="icon-calculator"></i> Instances &nbsp;
+											<i class="fa fa-plug"></i> Instances
 											<!-- <span class="badge badge-pill badge-success">OK</span> -->
 										</a>
 									</li>
 
+									<li id="instanceConfigTab" class="nav-item">
+										<a class="nav-link" data-toggle="tab" href="#instanceConfig" role="tab" aria-controls="instanceConfig">
+											<i class="fa fa-cog"></i> Config</a>
+									</li>
+
+
 									<li class="nav-item">
 										<a class="nav-link" data-toggle="tab" href="#elgatobuttons" id='elgbuttons' role="tab" aria-controls="home">
-											<i class="icon-calculator"></i> Buttons
+											<i class="fa fa-calendar-alt"></i> Buttons
 										</a>
 									</li>
 
@@ -216,19 +224,14 @@
 											<i class="icon-calculator"></i> Actions</a>
 									</li> -->
 
-									<li id="instanceConfigTab" class="nav-item">
-										<a class="nav-link" data-toggle="tab" href="#instanceConfig" role="tab" aria-controls="instanceConfig">
-											<i class="icon-calculator"></i> Config</a>
-									</li>
-
 									<li class="nav-item">
 										<a class="nav-link" data-toggle="tab" href="#devices" role="tab" aria-controls="devices">
-											<i class="icon-calculator"></i> Devices</a>
+											<i class="fa fa-gamepad"></i> Devices</a>
 									</li>
 
 									<li class="nav-item">
 										<a class="nav-link" data-toggle="tab" href="#userconfig" role="tab" aria-controls="userconfig">
-											<i class="icon-calculator"></i> User Config</a>
+											<i class="fa fa-user-ninja"></i> User Config</a>
 									</li>
 
 								</ul>
@@ -248,10 +251,9 @@
 											</tbody>
 										</table>
 
-
 										<div class="dropdown">
 											<button class="btn btn-success dropdown-toggle" type="button" id="addInstance" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-												Add instance
+												<i class="fa fa-plus"></i> Add instance
 											</button>
 											<div class="dropdown-menu" aria-labelledby="addInstance" id="addInstanceContent">
 												<a class="dropdown-item addInstance" data-style="smalltext" data-id=""></a>
@@ -309,7 +311,8 @@
 										</div>
 
 										<p></p>
-										<b>Hint:</b> Click on the the button you like to design in the list above
+										<b>Hint:</b> Click on the the button you like to design in the list above<br>
+										<b>Hint:</b> Hold shift down to test buttons from the GUI
 
 
 									</div>
@@ -330,6 +333,9 @@
 											</div>
 											<button class="btn btn-danger" type="button" id="resetBankButton">
 												Erase
+											</button>
+											<button class="btn btn-warning" type="button" id="testBankButton">
+												Test actions
 											</button>
 
 										</div>
