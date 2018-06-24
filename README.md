@@ -34,6 +34,7 @@
 * VideoLan VLC
 * disguise multi transport control
 * Irisdown Remote Show Control
+* CasparCG
 
 ## Coming support (help wanted!)
 * AJA Kipro Ultra Plus
@@ -60,4 +61,3 @@
 * Behringer X32 / Midas M32
 * Behringer X-air
 * Yamaha Ql series Consoles
-* CasparCG
