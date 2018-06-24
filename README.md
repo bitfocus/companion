@@ -56,3 +56,6 @@
 * Philips Hue
 * UDP/TCP Generic module
 * Octopus
+* Behringer X32 / Midas M32
+* Behringer X-air
+* Yamaha Ql series Consoles
