@@ -7,7 +7,7 @@
 **Bleeding edge builds**
 * http://builds.bitfocus.io/companion/
 
-## Current support
+## Currently supports
 * Barco EventMaster (json)
 * Barco PDS (tcp)
 * Millumin (osc)
@@ -23,7 +23,7 @@
 * PJ-link (tcp)
 * Digital Projection (testing) (udp)
 
-## Support in v1.1.1
+## Support added in v1.1.1
 * Epson Projectors
 * BMD Atem
 * BMD Hyperdeck
@@ -35,6 +35,7 @@
 * disguise multi transport control
 * Irisdown Remote Show Control
 * CasparCG
+* Octopus Listener
 
 ## Coming support (help wanted!)
 * AJA Kipro Ultra Plus
