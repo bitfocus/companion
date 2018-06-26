@@ -103,8 +103,8 @@ $(function() {
 		updateInstanceList(i.db);
 		console.log('instance', i);
 
-		$addInstance = $("#addInstanceContent");
-		$addInstance.html("");
+		$addInstance = $("#addInstance");
+		$addInstance.html("<option value='null'>[ Add new instance ]</option>");
 
 		if (instance.module !== undefined) {
 			// Sort the list first
@@ -120,20 +120,23 @@ $(function() {
 				return 0;
 			});
 
-			for (var n in list) {
-				var im = list[n];
-				var $instance = $('<a class="dropdown-item addInstance" data-style="smalltext" data-id="'+im.id+'">'+ im.label +'</a>');
-
-				$instance.click(function() {
-					socket.emit('instance_add', $(this).data('id') );
+			$addInstance.change(function() {
+				if ($(this).val() !== "null") {
+					socket.emit('instance_add', $(this).val() );
 					console.log('instance_add()');
+					$(this).val("null");
 					socket.once('instance_add:result', function(id,db) {
 						instance.db = db;
 						console.log("instance_add:result()", id,db);
 						socket.emit('instance_edit', id);
 					});
-				});
+				}
+			});
 
+
+			for (var n in list) {
+				var im = list[n];
+				var $instance = $('<option value="'+im.id+'" data-id="'+im.id+'">'+ im.label +'</option>');
 				$addInstance.append($instance)
 			}
 		}
