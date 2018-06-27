@@ -174,17 +174,13 @@ $(function() {
 	}
 
 	function updateFromConfig(page, bank, config, updateText) {
-		$('.active_field[data-special="color"]').removeClass('active_color');
 		$('.active_field[data-special="alignment"]').removeClass('active_color');
 
 		$(".active_field").each(function() {
 			if ($(this).data('fieldid') !== undefined && config[$(this).data('fieldid')] !== undefined) {
 
 				if ($(this).data('special') == 'color') {
-
-					if ($(this).data('color').toLowerCase() == int2hex( config[$(this).data('fieldid')] )) {
-						$(this).addClass('active_color');
-					}
+					$(this).spectrum("set", int2hex( config[$(this).data('fieldid')] ));
 
 				} else if ($(this).data('special') == 'dropdown') {
 
@@ -275,33 +271,37 @@ $(function() {
 				}
 				$container.append($div);
 				$p.append($container);
-				 $field.append($p);
-				$('#auto_'+field.id).colorpicker();
-
+				$field.append($p);
 
 			}
 
 			else if (field.type == 'colorpicker') {
 
 				var $p = $("<p><label>"+field.label+"</label><br></p>");
-				var $div = $("<div class='colorcontainer' data-fieldid='"+field.id+"' style='height:20px;'></div>");
+				var $input = $("<input type='text' id='auto_"+field.id+"'>");
+				$input.addClass('active_field');
+				$input.data('special','color');
+				$input.data('fieldid',field.id);
 
-				for (var n in colors) {
-					var $c = $("<div class='colorblock' data-special='color' data-color='"+colors[n]+"' data-fieldid='"+field.id+"'></div>");
-
-					$c.css('backgroundColor', colors[n]);
-					$c.css('width', 18);
-					$c.css('height', 18);
-					$c.addClass('colorbox');
-					$c.addClass('active_field');
-					$c.css('float','left');
-					$div.append($c)
-				}
-
-				$p.append($div);
-
+				$p.append($input);
 				$field.append($p);
-				$('#auto_'+field.id).colorpicker();
+				(function(fval,fid) {
+					$input.spectrum({
+						color: fval,
+						preferredFormat: "rgb",
+						showInput: true,
+						showPalette: true,
+						palette: colors,
+						showButtons: false,
+						change: function(color) {
+							socket.emit('bank_changefield', p, b, fid, hex2int( color.toHexString() ) );
+						},
+
+						move: function(color) {
+							socket.emit('bank_changefield', p, b, fid, hex2int( color.toHexString() ) );
+						}
+					});
+				})(field.value, field.id);
 
 			}
 
