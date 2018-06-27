@@ -179,11 +179,26 @@ $(function() {
 
 		if (ok) {
 			socket.emit('instance_config_put', id, data);
+			socket.once('instance_config_put:result', function (err, res) {
+				if (res) {
+					$button.css('backgroundColor', 'lightgreen');
+					setTimeout(function () {
+						$button.css('backgroundColor', '');
+					}, 300);
+				} else {
 
-			$button.css('backgroundColor', 'lightgreen');
-			setTimeout(function () {
-				$button.css('backgroundColor', '');
-			}, 300);
+					if (err == 'duplicate label') {
+						var $field = $icf.find('input[data-id="label"]');
+						$field.css('backgroundColor', 'red');
+						setTimeout(function () {
+							$field.css('backgroundColor', '');
+						}, 500);
+
+						alert('The label "' + data.label + '" is already in use. Please use a unique name for this module instance');
+					}
+				}
+			});
+
 		} else {
 			$button.css('backgroundColor', 'red');
 			setTimeout(function () {
