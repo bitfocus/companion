@@ -77,12 +77,12 @@ system.on('skeleton-ready', function() {
 	var page       = require('./lib/page')(system)
 	var appRoot    = require('app-root-path');
 	var express    = require('express');
+	var variable   = require('./lib/variable')(system);
 	var bank       = require('./lib/bank')(system);
 	var elgatoDM   = require('./lib/elgato_dm')(system);
 	var preview    = require('./lib/preview')(system);
 	var action     = require('./lib/action')(system);
 	var instance   = require('./lib/instance')(system);
-	var variable   = require('./lib/variable')(system);
 	var osc        = require('./lib/osc')(system);
 	var rest       = require('./lib/rest')(system);
 
