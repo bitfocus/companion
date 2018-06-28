@@ -76,6 +76,7 @@
     "infinitton-idisplay": "^1.0.4",
     "jquery": "3.3.1",
     "json-parser": "^1.1.5",
+    "lodash": "^4.17.10",
     "mkdirp": "^0.5.1",
     "moment": "^2.22.2",
     "osc": "^2.2.2",
