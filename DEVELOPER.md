@@ -34,6 +34,11 @@ not this
 ```
 if (var == 1) return;
 ```
+not this
+```
+if (var == 1)
+  return;
+```
 
 One thing we also like to do, is to subindent similar lines like
 ```
