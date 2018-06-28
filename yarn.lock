@@ -363,12 +363,6 @@ balanced-match@^1.0.0:
   version "1.0.0"
   resolved "https://registry.yarnpkg.com/balanced-match/-/balanced-match-1.0.0.tgz#89b4d199ab2bee49de164ea02b89ce462d71b767"
 
-barco-eventmaster@^5.0.3:
-  version "5.0.3"
-  resolved "https://registry.yarnpkg.com/barco-eventmaster/-/barco-eventmaster-5.0.3.tgz#e1d34ae4ed020afb4a7fb6f2835cf8eba9ca501f"
-  dependencies:
-    node-rest-client "^3.1.0"
-
 base64-arraybuffer@0.1.5:
   version "0.1.5"
   resolved "https://registry.yarnpkg.com/base64-arraybuffer/-/base64-arraybuffer-0.1.5.tgz#73926771923b5a19747ad666aa5cd4bf9c6e9ce8"
