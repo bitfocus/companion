@@ -62,3 +62,7 @@
 * Behringer X32 / Midas M32
 * Behringer X-air
 * Yamaha Ql series Consoles
+* GrassValley Switchers (kayak)
+* Nevion Routers
+* Dante Audio Routing
+* GreenGo Digital (if they ever decide to answer our emails)
