@@ -1,8 +1,11 @@
 var instance = {};
 var instance_status = {};
+var instance_variables = {};
+var instance_variabledata = {};
 
 $(function() {
 	var iconfig = {};
+	var current_instance;
 
 	var debug = console.log;
 	$("#instanceConfigTab").hide();
@@ -208,18 +211,69 @@ $(function() {
 
 	}
 
+	function showInstanceVariables() {
+		var $icv = $('#instanceConfigVariables');
+		var $icvl = $('#instanceConfigVariableList');
+
+		if (instance_variables[current_instance] !== undefined && instance_variables[current_instance].length > 0) {
+			$icv.show();
+			$icvl.html('');
+
+			console.log()
+
+			for (var i in instance_variables[current_instance]) {
+				var variable = instance_variables[current_instance][i];
+				$icvl.append('<tr data-id="' + current_instance + ':' + variable.name + '"><td>$(' + current_instance + ':' + variable.name + ')</td><td>' + variable.label + '</td><td>' + instance_variabledata[current_instance + ':' + variable.name] + '</td></tr>');
+			}
+		}
+	}
+
+	socket.emit('variable_instance_definitions_get');
+	socket.on('variable_instance_definitions_get:result', function (err, data) {
+		if (data) {
+			instance_variables = data;
+		}
+	});
+	socket.on('variable_instance_definitions_set', function (label, variables) {
+		instance_variables[label] = variables;
+
+		if (label == current_instance) {
+			showInstanceVariables();
+		}
+	});
+
+	socket.emit('variables_get');
+	socket.on('variables_get:result', function (err, data) {
+		if (data) {
+			instance_variabledata = data;
+		}
+		showInstanceVariables();
+	});
+
+	socket.on('variable_set', function (key, value) {
+		var match = current_instance + ':';
+
+		instance_variabledata[key] = value;
+
+		$('#instanceConfigVariableList tr[data-id="' + key + '"] > td:nth-child(3)').text(value);
+	});
+
 	socket.on('instance_edit:result', function(id, store, res, config ) {
 		$('#instanceConfigTab').show();
+		$('#instanceConfigVariables').hide();
 		$('#instanceConfigTab a[href="#instanceConfig"]').tab('show');
 
 		for (var n in store.module) {
 			if (store.module[n].id === store.db[id].instance_type) {
-				$('#instanceConfig h4').text( store.module[n].label + ' configuration');
+				$('#instanceConfig h4:first').text( store.module[n].label + ' configuration');
 			}
 		}
-		console.log(store,res,config);
+
 
 		iconfig = config;
+
+		current_instance = config.label;
+		showInstanceVariables();
 
 		var $icf = $("#instanceConfigFields");
 		$icf.html("");
