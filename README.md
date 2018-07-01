@@ -36,6 +36,7 @@
 * Irisdown Remote Show Control (done)
 * CasparCG (done)
 * Octopus Listener (unknown)
+* Horae (OSC)
 
 ## Coming support (help wanted!)
 * AJA Kipro Ultra Plus

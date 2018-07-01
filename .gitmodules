@@ -82,3 +82,6 @@
 [submodule "lib/module/casparcg"]
 	path = lib/module/casparcg
 	url = https://github.com/bitfocus/companion-module-casparcg.git
+[submodule "lib/module/horae"]
+	path = lib/module/horae
+	url = https://github.com/bitfocus/companion-module-horae.git
