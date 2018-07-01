@@ -23,19 +23,19 @@
 * PJ-link (tcp)
 * Digital Projection (testing) (udp)
 
-## Support added in v1.1.1
-* Epson Projectors
-* BMD Atem
-* BMD Hyperdeck
-* BMD Videohub
-* ArtNet
-* Analogway Livecore
-* Renewed Vision PVP (rest)
-* VideoLan VLC
-* disguise multi transport control
-* Irisdown Remote Show Control
-* CasparCG
-* Octopus Listener
+## Support being added in v1.1.1
+* Epson Projectors (done)
+* BMD Atem (in progress)
+* BMD Hyperdeck (done)
+* BMD Videohub (done)
+* ArtNet (done)
+* Analogway Livecore (in progress/done)
+* Renewed Vision PVP (rest) (unknown)
+* VideoLan VLC (done)
+* disguise multi transport control (in progress/done)
+* Irisdown Remote Show Control (done)
+* CasparCG (done)
+* Octopus Listener (unknown)
 
 ## Coming support (help wanted!)
 * AJA Kipro Ultra Plus
