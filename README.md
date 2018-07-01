@@ -66,3 +66,4 @@
 * Nevion Routers
 * Dante Audio Routing
 * GreenGo Digital (if they ever decide to answer our emails)
+* Barco DCS 100/200
