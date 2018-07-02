@@ -25,7 +25,7 @@
 
 ## Support being added in v1.1.1
 * Epson Projectors (done)
-* BMD Atem (in progress)
+* BMD Atem (done)
 * BMD Hyperdeck (done)
 * BMD Videohub (done)
 * ArtNet (done)
@@ -36,6 +36,8 @@
 * Irisdown Remote Show Control (done)
 * CasparCG (done)
 * Octopus Listener (done (1 bug))
+* Microsoft Powerpoint (octopus listener and PPT RSC) (done)
+* Apple Keynote (octopus listener) (done)
 * Horae (OSC)
 
 ## Coming support (help wanted!)
@@ -54,8 +56,6 @@
 * Green Hippo
 * Panasonic PTZ
 * Sony / VISCA PTZ
-* Apple Keynote
-* Microsoft Powerpoint (via support software on PPT Machine)
 * Philips Hue
 * UDP/TCP Generic module
 * Modulo Pi Modulo Player
@@ -74,3 +74,4 @@
 * Ember+
 * Lightware OPTC
 * Lightware Routers
+* TASCAM SS-CDR250N (done)
