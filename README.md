@@ -30,12 +30,12 @@
 * BMD Videohub (done)
 * ArtNet (done)
 * Analogway Livecore (in progress/done)
-* Renewed Vision PVP (rest) (unknown)
+* Renewed Vision PVP (rest) (done)
 * VideoLan VLC (done)
 * disguise multi transport control (in progress/done)
 * Irisdown Remote Show Control (done)
 * CasparCG (done)
-* Octopus Listener (unknown)
+* Octopus Listener (done (1 bug))
 * Horae (OSC)
 
 ## Coming support (help wanted!)
@@ -68,3 +68,9 @@
 * Dante Audio Routing
 * GreenGo Digital (if they ever decide to answer our emails)
 * Barco DCS 100/200
+* V-mix
+* GrassValley AMP protocol
+* TSL Protocol
+* Ember+
+* Lightware OPTC
+* Lightware Routers
