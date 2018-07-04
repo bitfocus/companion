@@ -75,3 +75,11 @@
 * Lightware OPTC
 * Lightware Routers
 * TASCAM SS-CDR250N (done)
+* Show Cue System (windows)
+* TJ Show (windows)
+* VirtualVTR PRO (mac)
+* Kramer Presentation Switchers
+* Kramer Matrix Routers
+* Extron Presentation Switchers
+* Extron Matrix Routers
+* Newtek Tricaster
