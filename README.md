@@ -83,3 +83,4 @@
 * Extron Presentation Switchers
 * Extron Matrix Routers
 * Newtek Tricaster
+* Roland XS series
