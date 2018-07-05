@@ -85,3 +85,18 @@
 [submodule "lib/module/horae"]
 	path = lib/module/horae
 	url = https://github.com/bitfocus/companion-module-horae.git
+[submodule "lib/module/amp"]
+	path = lib/module/amp
+	url = https://github.com/bitfocus/companion-module-amp.git
+[submodule "lib/module/lightware2"]
+	path = lib/module/lightware2
+	url = https://github.com/bitfocus/companion-module-lightware2.git
+[submodule "lib/module/lightware3"]
+	path = lib/module/lightware3
+	url = https://github.com/bitfocus/companion-module-lightware3.git
+[submodule "lib/module/panasonic-avhs"]
+	path = lib/module/panasonic-avhs
+	url = https://github.com/bitfocus/companion-module-panasonic-avhs.git
+[submodule "lib/module/tascamcd"]
+	path = lib/module/tascamcd
+	url = https://github.com/bitfocus/companion-module-tascamcd.git
