@@ -83,8 +83,5 @@
 * Extron Presentation Switchers
 * Extron Matrix Routers
 * Newtek Tricaster
-<<<<<<< HEAD
-* Roland XS series
-=======
 * Panasonic AW-HS50/AV-HS410 Switchers (done)
->>>>>>> d1d9ebefd3490ed19adb15ad0ec06991596f318a
+* Roland XS series
