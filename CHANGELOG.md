@@ -21,7 +21,6 @@
 * Support: AnalogWay Livecore
 * Support: ArtNet
 * Support: GrandMA 2 (telnet)
-* Support: Livecore
 
 ## Issues closed from v1.1.0 to v1.1.1
 * [#122](https://github.com/bitfocus/companion/issues/122): Fixing instance type list that become too long
