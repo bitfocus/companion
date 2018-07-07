@@ -15,19 +15,24 @@ $(function() {
 		for (var x in instance_status) {
 			var s = instance_status[x];
 
+			// disabled
+			if (s[0] === -1) {
+				$("#instance_status_"+x).html('Disabled').attr('title', '').removeClass('instance-status-ok').removeClass('instance-status-warn').removeClass('instance-status-error').addClass('instance-status-disabled');
+			}
+
 			// ok
 			if (s[0] === 0) {
-				$("#instance_status_"+x).html('OK').attr('title', '').removeClass('instance-status-error').removeClass('instance-status-warn').addClass('instance-status-ok')
+				$("#instance_status_"+x).html('OK').attr('title', '').removeClass('instance-status-error').removeClass('instance-status-warn').removeClass('instance-status-disabled').addClass('instance-status-ok')
 			}
 
 			// warning
 			else if (s[0] === 1) {
-				$("#instance_status_"+x).html(""+s[1]).attr('title', s[1]).removeClass('instance-status-ok').removeClass('instance-status-error').addClass('instance-status-warn')
+				$("#instance_status_"+x).html(""+s[1]).attr('title', s[1]).removeClass('instance-status-ok').removeClass('instance-status-error').removeClass('instance-status-disabled').addClass('instance-status-warn')
 			}
 
 			// error
 			else if (s[0] === 2) {
-				$("#instance_status_"+x).html("ERROR").attr('title', s[1]).removeClass('instance-status-ok').removeClass('instance-status-warn').addClass('instance-status-error')
+				$("#instance_status_"+x).html("ERROR").attr('title', s[1]).removeClass('instance-status-ok').removeClass('instance-status-warn').removeClass('instance-status-disabled').addClass('instance-status-error')
 			}
 
 		}
@@ -51,11 +56,22 @@ $(function() {
 			var $td_label = $("<td id='label_"+n+"'>label</td>");
 			var $td_status = $("<td id='instance_status_"+n+"'>no status</td>");
 			var $td_actions = $("<td></td>");
-
+			console.log("list", list);
 			var $button_edit = $("<button type='button' data-id='"+n+"' class='instance-edit btn btn-primary'>edit</button>");
 			var $button_delete = $("<button type='button' data-id='"+n+"' class='instance-delete btn btn-sm btn-ghost-danger'>delete</button>");
+			var $button_disable = $("<button type='button' data-id='"+n+"' class='instance-disable btn btn-sm btn-ghost-warning'>disable</button>");
+			var $button_enable = $("<button type='button' data-id='"+n+"' class='instance-enable btn btn-sm btn-ghost-success'>enable</button>");
 
 			$td_actions.append($button_delete)
+			$td_actions.append($("<span>&nbsp;</span>"));
+
+			if (i.enabled === undefined || i.enabled === true) {
+				$td_actions.append($button_disable)
+			}
+			else {
+				$td_actions.append($button_enable);
+			}
+
 			$td_actions.append($("<span>&nbsp;</span>"));
 			$td_actions.append($button_edit);
 
@@ -73,6 +89,18 @@ $(function() {
 				var id = $(this).data('id');
 				console.log("instance-edit:",id);
 				socket.emit('instance_edit', id);
+			});
+
+			$button_disable.click(function() {
+				var id = $(this).data('id');
+				console.log("instance-disable:",id);
+				socket.emit('instance_enable', id, false);
+			});
+
+			$button_enable.click(function() {
+				var id = $(this).data('id');
+				console.log("instance-enable:",id);
+				socket.emit('instance_enable', id, true);
 			});
 
 			for (var x in instance.module) {

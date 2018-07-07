@@ -103,7 +103,7 @@ label {
 	font-weight: bold;
 	padding-left: 2px;
 }
-.instance-edit, .instance-delete {
+.instance-edit, .instance-delete, .instance-disable {
 	padding-top: 2px !important;
 	text-transform: uppercase;
 	padding-bottom: 2px !important;
