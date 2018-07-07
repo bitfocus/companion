@@ -16,29 +16,37 @@
 * PlaybackPro Plus (udp)
 * OSC Generic (send custom packets)
 * d3/disguise (osc control)
+* d3/disguise multi transport control
 * Dataton Watchout production (tcp)
 * Ross Carbonite/Vision (rosstalk)
 * IfElse{ware} AV-Playback (udp)
 * Christie Spyder (testing) (udp)
 * PJ-link (tcp)
 * Digital Projection (testing) (udp)
+* BMD Atem
+* BMD Hyperdeck
+* BMD Videohub
+* ArtNet
+* Analogway Livecore
+* Renewed Vision PVP
+* VideoLan VLC
+* Irisdown Remote Show Control
+* CasparCG
+* Octopus Listener
+* Microsoft Powerpoint (octopus listener and PPT RSC)
+* Apple Keynote (octopus listener)
+* Horae
 
-## Support being added in v1.1.1
+
+## Support being added in v1.1.2
 * Epson Projectors (done)
-* BMD Atem (done)
-* BMD Hyperdeck (done)
-* BMD Videohub (done)
-* ArtNet (done)
-* Analogway Livecore (in progress/done)
-* Renewed Vision PVP (rest) (done)
-* VideoLan VLC (done)
-* d3/disguise multi transport control (done)
-* Irisdown Remote Show Control (done)
-* CasparCG (done)
-* Octopus Listener (done)
-* Microsoft Powerpoint (octopus listener and PPT RSC) (done)
-* Apple Keynote (octopus listener) (done)
-* Horae (OSC)
+* Lightware LW2 Devices (done)
+* Lightware LW3 Devices (done)
+* TASCAM SS-CDR250N (done)
+* Panasonic AW-HS50/AV-HS410 Switchers (done)
+* Behringer X32 / Midas M32 (done)
+* Behringer X-air
+* GrassValley AMP protocol
 
 ## Coming support (help wanted!)
 * AJA Kipro Ultra Plus
@@ -60,8 +68,6 @@
 * UDP/TCP Generic module
 * Modulo Pi Modulo Player
 * Octopus
-* Behringer X32 / Midas M32
-* Behringer X-air
 * Yamaha Ql series Consoles
 * GrassValley Switchers (kayak)
 * Nevion Routers
@@ -69,12 +75,8 @@
 * GreenGo Digital (if they ever decide to answer our emails)
 * Barco DCS 100/200
 * V-mix
-* GrassValley AMP protocol
 * TSL Protocol
 * Ember+
-* Lightware LW2 Devices (done)
-* Lightware LW3 Devices (done)
-* TASCAM SS-CDR250N (done)
 * Show Cue System (windows)
 * TJ Show (windows)
 * VirtualVTR PRO (mac)
@@ -83,5 +85,4 @@
 * Extron Presentation Switchers
 * Extron Matrix Routers
 * Newtek Tricaster
-* Panasonic AW-HS50/AV-HS410 Switchers (done)
 * Roland XS series
