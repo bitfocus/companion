@@ -32,10 +32,10 @@
 * Analogway Livecore (in progress/done)
 * Renewed Vision PVP (rest) (done)
 * VideoLan VLC (done)
-* disguise multi transport control (in progress/done)
+* d3/disguise multi transport control (done)
 * Irisdown Remote Show Control (done)
 * CasparCG (done)
-* Octopus Listener (done (1 bug))
+* Octopus Listener (done)
 * Microsoft Powerpoint (octopus listener and PPT RSC) (done)
 * Apple Keynote (octopus listener) (done)
 * Horae (OSC)
@@ -72,6 +72,16 @@
 * GrassValley AMP protocol
 * TSL Protocol
 * Ember+
-* Lightware OPTC
-* Lightware Routers
+* Lightware LW2 Devices (done)
+* Lightware LW3 Devices (done)
 * TASCAM SS-CDR250N (done)
+* Show Cue System (windows)
+* TJ Show (windows)
+* VirtualVTR PRO (mac)
+* Kramer Presentation Switchers
+* Kramer Matrix Routers
+* Extron Presentation Switchers
+* Extron Matrix Routers
+* Newtek Tricaster
+* Panasonic AW-HS50/AV-HS410 Switchers (done)
+* Roland XS series

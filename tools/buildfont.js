@@ -27,5 +27,5 @@ fs.readdir("./font", function(err, items) {
 			}
 		}
 
-		console.log(JSON.stringify(font));
+		console.log(JSON.stringify(font).replace(/"(\d+)"/g, '\n\t"$1"'));
 });
