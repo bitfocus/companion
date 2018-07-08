@@ -18,7 +18,7 @@ fs.readdir(".", function(err, items) {
 				for (var y = 0; y < png.height; y++) {
 					for (var x = 0; x < png.width; x++) {
 						var idx = (png.width * y + x) << 2;
-						if (png.data[idx] < 128) {
+						if (png.data[idx+3] > 128) {
 							dots.push([x,y]);
 						}
 					}
@@ -27,5 +27,10 @@ fs.readdir(".", function(err, items) {
 			}
 		}
 
-		console.log(JSON.stringify(font).replace(/"(\d+)"/g, '\n\t"$1"'));
+		fs.writeFile('font.txt', JSON.stringify(font).replace(/"(\d+)"/g, '\n\t"$1"'), (err) => {
+  		if (err) throw err;
+  		console.log('The font has been saved to font.txt');
+		});
+//		console.log(JSON.stringify(font).replace(/"(\d+)"/g, '\n\t"$1"'));
+
 });
