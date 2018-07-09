@@ -100,3 +100,6 @@
 [submodule "lib/module/tascamcd"]
 	path = lib/module/tascamcd
 	url = https://github.com/bitfocus/companion-module-tascamcd.git
+[submodule "lib/module/x32"]
+	path = lib/module/x32
+	url = https://github.com/bitfocus/companion-module-x32.git
