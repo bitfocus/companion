@@ -102,4 +102,4 @@
 	url = https://github.com/bitfocus/companion-module-tascamcd.git
 [submodule "lib/module/x32"]
 	path = lib/module/x32
-	url = https://github.com/bitfocus/companion-module-watchout-production.git
+	url = https://github.com/bitfocus/companion-module-x32.git
