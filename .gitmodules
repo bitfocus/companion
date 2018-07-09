@@ -103,3 +103,6 @@
 [submodule "lib/module/x32"]
 	path = lib/module/x32
 	url = https://github.com/bitfocus/companion-module-x32.git
+[submodule "lib/module/chamsys"]
+	path = lib/module/chamsys
+	url = https://github.com/bitfocus/companion-module-chamsys.git
