@@ -6,8 +6,9 @@
 - - - -
 
 ### Before you open Companion
-Connect your hardware and software you want to control.
-Make sure you are in the same network with them.
+* Connect your hardware and software you want to control. Make sure you are in the same network with them.
+* In the original elgato streamdeck app, make sure to firmware upgrade the streamdeck to the latest version available
+* Close the original elgato streamdeck app. Companion will not find your device if this is open.
 
 ### Starting the server
 When you open Companion a server window will open.
