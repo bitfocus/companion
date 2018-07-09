@@ -13,7 +13,7 @@ Make sure you are in the same network with them.
 When you open Companion a server window will open.
 From the opening view choose your network interface, and change the port if needed, the default is 8000. This is the port of the Companion server.
 
-![](Screenshot%202018-07-06%2023.08.04.png)
+![](companion/documentation/images/server.png)
 
 
 Companion should be running on the same computer the streamdeck is connected, maximum of three units, the number might increase in future updates.
@@ -27,7 +27,7 @@ We recommende using Google Chrome
 - - - -
 The main window is divided into three parts.
 From left to right Community section, Main admin controls and Log
-![](Screenshot%202018-07-09%2015.58.32.jpg)
+![](companion/documentation/images/admingui.jpg)
 
 ## Community section with links
 [Companion GitHub to report bugs.](https://github.com/bitfocus/companion/issues)
@@ -57,7 +57,7 @@ Your new device should now show in the instances tab.
 Add all the devices you want to control.
 Each device needs to be a separate instance. If you have two separate Barco E2, you need to add both of them as a separate instance.
 
-![](Screenshot%202018-07-09%2017.43.35.jpg)
+![](companion/documentation/images/instance.jpg)
 
 
 If something is missing, please make a support request on the ,[GitHub page by creating an issue/feature request](https://github.com/bitfocus/companion/issues)describing the feature, use cases and providing documentation, if needed for the implementation.
@@ -80,7 +80,7 @@ Creating a text button.
 Type button text to field, select alignment and font size. Text and background colour can also be changed.
 Live preview of the button will be shown on the top right corner. Button information will update in real-time to Elgato emulator and stream deck.
 
-![](Screenshot%202018-07-09%2017.48.47.jpg)
+![](companion/documentation/images/button.jpg)
 
 
 Add action to the button from the [Add new action for this button] drop-down menu.
