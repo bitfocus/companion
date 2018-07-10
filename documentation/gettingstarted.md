@@ -281,6 +281,167 @@ Should work with all models of Blackmagic Design ATEM mixers
 
 ---
 
+## Blackmagic Design Hyperdeck
+
+**Available commands for Blackmagic Design Hyperdeck**
+
+* Play (Speed%)
+* Play
+* Record
+* Stop
+* Goto (timecode)
+* select (slot)
+
+---
+
+## Blackmagic Design VideoHub
+
+This module will connect to any BlackmagicDesign VideoHub Device.
+
+**Available commands for Blackmagic Design VideoHub**
+
+* Rename destination
+* Rename source
+* Route
+
+---
+
+## CasparCG
+
+**Available commands for CasparCG**
+
+* LOADBG
+* LOAD
+* PLAY
+* PAUSE
+* RESUME
+* STOP
+* CLEAR
+* CALL
+* SWAP
+* Manually specify AMCP command
+
+---
+
+## Dataton Watchout
+
+**Available commands for Dataton Watchout**
+
+* Run
+* Pause
+* Kill
+* Jump to time
+* Jump to cue
+* Go online
+* Enter Standby
+* Set Input
+
+---
+
+## OSC Generic
+In instaces tab specify the ip and port you want to send. In button actions tab specify the osc path and value.
+
+**Available commands for OSC Generic**
+
+* Send message
+* Send integer
+* Send float
+* Send string
+
+---
+
+## d3/disguise (OSC)
+This module sends default OSC controls to the d3/disguise server. Remember to set up the server to receive OSC.
+
+**Available commands for d3/disguise**
+
+* Play
+* Play to end of selection
+* Loop selection
+* Stop
+* Previous Section
+* Next Section
+* Previous track
+* Next track
+* Master brightnes - Fade up
+* Master brightnes - Fade down
+
+---
+
+## d3/disguise (json, multi transport control)
+
+This module uses the JSON interface in the d3/disguise server to control multiple transports individually.
+
+**Available commands for d3/disguise (json, multi transport control)**
+
+* Track Command w/timecode
+* Track Command
+
+---
+
+## Digital Projection Highlight
+
+**Available commands for Digital Projection Highlight**
+
+* Power On Projector
+* Power Off Projector
+* Open Shutter
+* Close Shutter
+* Freeze Input
+* Unfreeze Input
+* Increase Brightnes
+* Decrease Brightnes
+* Increase Contrast
+* Decrease Contrast
+* Increase Saturation
+* Decrease Saturation
+
+---
+
+## GrandMA 2 (telnet)
+
+Remember to activate Telnet Remote in Setup -> Console -> Global Settings -> Telnet
+
+**Available commands for GrandMA 2 (telnet)**
+
+* Run Command
+
+---
+
+## Horae (osc)
+
+**Available commands for Horae (osc)**
+
+* Start
+* Stop
+* Arm
+
+---
+
+## Mitti
+Sends OSC commands to port 51000. 
+
+From Mittis preferences OSC/UDP Controls tab, make sure its "Enabled"
+![Mitti](images/Modules/Mitti.jpg?raw=true "Mitti")
+
+**Available commands for Mitti**
+
+* Play
+* Toggle Play
+* Stop
+* Panic
+* Rewind
+* Jump to previous cue
+* Jump to next cue
+* Jump to specific cue (number)
+* Select previous cue
+* Select next cue
+* Goto 30
+* Goto 20
+* Goto 10
+
+---
+
 ## Millumin 2
 Sends OSC commands to Millumin 2, Millumin default port is 5000 but you can change that if needed in Millumin Interactions menu. Go to Interactions/Manage devices and from there OSC tab. 
 
@@ -308,6 +469,98 @@ Sends OSC commands to Millumin 2, Millumin default port is 5000 but you can chan
 
 ---
 
+## Octopus Listener
+
+This module is for the Octopus Listener from [noismada.com.](http://noismada.com)
+
+Can be used to send keystrokes. Be carefull, needs to have the application you want to controll active.
+
+**Available commands for Octopus Listener**
+
+* Custom command
+* Custom keystroke
+* PPT Next slide
+* PPT Previous slide
+* PPT Start presentation
+* PPT First slide
+* PPT Exit presentation
+* Keynote goto slide (number)
+* Keynote Next slide
+* Keynote Previous slide
+* Keynote Start presentation
+* Keynote First slide
+* Keynote Exit presentation
+
+---
+
+## PJLink
+
+**Available commands for PJLink**
+
+* Power On Projector
+* Power Off Projector
+* Open Shutter
+* Close Shutter
+* Freeze Input
+* Unfreeze Input
+
+---
+
+## PlaybackPro Plus
+
+**Available commands for PlaybackPro Plus**
+
+* Goto 10
+* Goto 20
+* Goto 30
+* Take
+* Pause Resume
+* Kill
+* Freeze temp
+* Loop temp
+* Previous Clip
+* Next Clip
+
+---
+
+## PPT Remote Show Control (Irisdown)
+
+**Available commands for PPT Remote Show Control (Irisdown)**
+
+* Open file
+* Close file
+* Run file
+* Stop file
+* Next slide
+* Previous slide
+* Goto Slide
+* Set background
+
+---
+
+## PVP
+
+**Available commands for PVP**
+
+* Clear Layer (id)
+* Mute Layer (id)
+* Unmute Layer (id)
+* Select Layer (id)
+* Hide Layer (id)
+* Unhide Layer (id)
+* Select Playlist (id)
+* Trigger Cue (id)
+* Trigger Playlist (id)
+* Trigger Cue in Playlist (Playlist id) (Cue id)
+* Trigger Cue in Playlist on Layer (Layer id) (Playlist id) (Cue id)
+* Clear Workspace
+* Mute Workspace
+* Hide Workspace
+* Unhide Workspace
+* Unmute Workspace
+
+---
+
 ## Qlab
 Sends OSC commands to port 53000.
 
@@ -328,30 +581,58 @@ From Qlab preferences OSC controls tab make sure you have the "Use OSC controls"
 
 ---
 
+## Ross Carbonite/Vision
 
-## Mitti
-Sends OSC commands to port 51000. 
+To make sense of the input and output names available in the actions provided by this module, you might want to read the bottom of this [reference manual.](http://help.rossvideo.com/carbonite-device/Topics/Protocol/RossTalk/CNT/RT-CNT-Comm.html)
 
-From Mittis preferences OSC/UDP Controls tab, make sure its "Enabled"
-![Mitti](images/Modules/Mitti.jpg?raw=true "Mitti")
+**Available commands for Ross Carbonite/Vision**
 
-**Available commands for Mitti**
-
-* Play
-* Toggle Play
-* Stop
-* Panic
-* Rewind
-* Jump to previous cue
-* Jump to next cue
-* Jump to specific cue (number)
-* Select previous cue
-* Select next cue
-* Goto 30
-* Goto 20
-* Goto 10
+* Trigger GPI
+* Fire custom control
+* Load Set
+* Cut
+* Auto Transition
+* XPT
+* Transition Keyer
+* Fade to black
 
 ---
+
+## Spyder
+
+**Available commands for Spyder**
+
+
+* Take
+* Basic Preset Recall (Index number)
+* Recall Script Cue (Script, Cue)
+* Transition Layer(s)
+* Freeze Layer(s)
+* Background Transition
+* Function Key Recall
+* Output Freeze
+* Device Mixer Transition
+
+---
+
+## VLC
+
+**Available commands for VLC**
+
+* Play
+* Stop
+* Pause / Resume
+* Next
+* Previous
+* Full Screen
+* Loop
+* Repeat
+
+---
+
+
+
+
 
 
 
