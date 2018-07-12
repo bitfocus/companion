@@ -1,4 +1,27 @@
-###Bitfocus Individual Contributor License Agreement for companion (core, not modules)
+### PART 1: The MIT License (MIT)
+
+Copyright (c) 2018 Bitfocus AS - William Viker & Håkon Nessjøen
+http://www.bitfocus.io/
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.
+
+### PART 2: Bitfocus Individual Contributor License Agreement for companion (core, not modules)
 
 Thank you for your interest in contributing to open source software projects (“Projects”) made available by William Viker, Håkon Nessjøen, Bitfocus or its affiliates (“Bitfocus”). This Individual Contributor License Agreement (“Agreement”) sets out the terms governing any source code, object code, bug fixes, configuration changes, tools, specifications, documentation, data, materials, feedback, information or other works of authorship that you submit or have submitted, in any form and in any manner, to Bitfocus in respect of any of the Projects (collectively “Contributions”). If you have any questions respecting this Agreement, please contact william@bitfocus.io.
 
@@ -22,10 +45,7 @@ Disputes. This Agreement shall be governed by and construed in accordance with t
 
 Assignment. You agree that Bitfocus may assign this Agreement, and all of its rights, obligations and licenses hereunder.
 
-
-
-Other licences in use in this project:
------
+## Other licences in use in this project (Must follow)
 
 The following software may be included in this product: @coreui/coreui. A copy of the source code may be downloaded from https://github.com/coreui/coreui.git. This software contains the following license and notice below:
 
