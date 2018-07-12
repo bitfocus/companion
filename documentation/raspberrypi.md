@@ -31,4 +31,15 @@ cd companion
 npm run rpidist
 ```
 
-6. Find your freshly baked build of companion for rpi in the electron-output folder!
+6. Find your freshly baked build of companion for rpi in the ```electron-output``` folder!
+
+
+And after this, whenever you want to make a new updated one:
+```
+cd companion
+./tools/update.sh
+npm run rpidist
+cd electron-output
+ls
+```
+voilla!
