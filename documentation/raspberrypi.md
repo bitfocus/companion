@@ -1,3 +1,5 @@
+# RPI DIY Builds! Yay! ;) 
+
 in your raspberry pi console (```pi@raspberry:~/ $```)
 
 1. Install node, git, curl, etc.
