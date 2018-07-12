@@ -2,8 +2,8 @@ in your raspberry pi console (```pi@raspberry:~/ $```)
 
 1. Install curl
 ```
-curl -o- -L https://yarnpkg.com/install.sh | bas
-h```
+curl -o- -L https://yarnpkg.com/install.sh | bash
+```
 
 2. When curl is installed, it will add the following to your .bashrc, but that won't take effect until you open a new terminal, so instead, do it manually for now:
 ```
