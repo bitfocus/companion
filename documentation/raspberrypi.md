@@ -1,7 +1,10 @@
 in your raspberry pi console (```pi@raspberry:~/ $```)
 
-1. Install curl
+1. Install node, git, curl, etc.
 ```
+apt-get install nodejs git build-essential
+sudo npm install n -g
+n 8.11.1
 curl -o- -L https://yarnpkg.com/install.sh | bash
 ```
 
@@ -10,7 +13,7 @@ curl -o- -L https://yarnpkg.com/install.sh | bash
 export PATH="$HOME/.yarn/bin:$HOME/.config/yarn/global/node_modules/.bin:$PATH"
 ```
 
-3. Clone the companion repository into your rpi (if you don't have git installed, type ```sudo apt-get install git```)
+3. Clone the companion repository into your RPI
 ```
 git clone https://github.com/bitfocus/companion.git
 cd companion
