@@ -1,7 +1,6 @@
 ### PART 1: The MIT License (MIT)
 
-Copyright (c) 2018 Bitfocus AS - William Viker & Håkon Nessjøen
-http://www.bitfocus.io/
+Copyright (c) 2018 Bitfocus AS - William Viker & Håkon Nessjøen, http://www.bitfocus.io/
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -44,6 +43,7 @@ No Obligation. You acknowledge that Bitfocus is under no obligation to use or in
 Disputes. This Agreement shall be governed by and construed in accordance with the laws of Oslo Tingrett, Norway, without giving effect to its principles or rules regarding conflicts of laws, other than such principles directing application of Norwegian law. The parties hereby submit to venue in, and jurisdiction of the courts located in Oslo, Norway for purposes relating to this Agreement. In the event that any of the provisions of this Agreement shall be held by a court or other tribunal of competent jurisdiction to be unenforceable, the remaining portions hereof shall remain in full force and effect.
 
 Assignment. You agree that Bitfocus may assign this Agreement, and all of its rights, obligations and licenses hereunder.
+
 
 ## Other licences in use in this project (Must follow)
 
