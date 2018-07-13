@@ -1,5 +1,5 @@
 
-###Bitfocus Individual Contributor License Agreement
+## Bitfocus Individual Contributor License Agreement
 
 Thank you for your interest in contributing to open source software projects (“Projects”) made available by William Viker, Håkon Nessjøen, Bitfocus or its affiliates (“Bitfocus”). This Individual Contributor License Agreement (“Agreement”) sets out the terms governing any source code, object code, bug fixes, configuration changes, tools, specifications, documentation, data, materials, feedback, information or other works of authorship that you submit or have submitted, in any form and in any manner, to Bitfocus in respect of any of the Projects (collectively “Contributions”). If you have any questions respecting this Agreement, please contact william@bitfocus.io.
 

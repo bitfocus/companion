@@ -66,7 +66,6 @@ Each device needs to be a separate instance. If you have two separate Barco E2, 
 
 ![Instance](images/instance.jpg?raw=true "Instance")
 
-
 If something is missing, please make a support request on the [GitHub page by creating an issue/feature request](https://github.com/bitfocus/companion/issues) describing the feature, use cases and providing documentation, if needed for the implementation.
 
 ---

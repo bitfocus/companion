@@ -47,6 +47,8 @@
 * Behringer X32 / Midas M32 (done)
 * Behringer X-air
 * GrassValley AMP protocol
+* AnalogWay Vio 4K
+* Chamsys MagicQ
 
 ## Coming support (help wanted!)
 * AJA Kipro Ultra Plus
@@ -86,3 +88,6 @@
 * Extron Matrix Routers
 * Newtek Tricaster
 * Roland XS series
+* Motu AVB interfaces / Mixers
+* VYV Photon
+* 7th Sense Delta Media server
