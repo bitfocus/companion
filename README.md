@@ -49,6 +49,7 @@
 * GrassValley AMP protocol
 * AnalogWay Vio 4K
 * Chamsys MagicQ
+* VYV Photon
 
 ## Coming support (help wanted!)
 * AJA Kipro Ultra Plus
@@ -89,5 +90,4 @@
 * Newtek Tricaster
 * Roland XS series
 * Motu AVB interfaces / Mixers
-* VYV Photon
 * 7th Sense Delta Media server
