@@ -109,3 +109,6 @@
 [submodule "lib/module/vio"]
 	path = lib/module/vio
 	url = https://github.com/bitfocus/companion-module-vio.git
+[submodule "lib/module/christiepj"]
+	path = lib/module/christiepj
+	url = https://github.com/bitfocus/companion-module-christiepj.git
