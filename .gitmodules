@@ -112,3 +112,6 @@
 [submodule "lib/module/christiepj"]
 	path = lib/module/christiepj
 	url = https://github.com/bitfocus/companion-module-christiepj.git
+[submodule "lib/module/vyvphoton"]
+	path = lib/module/vyvphoton
+	url = https://github.com/bitfocus/companion-module-vyvphoton.git
