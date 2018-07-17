@@ -393,7 +393,9 @@ $(function() {
 		if (confirm('Clear design and all actions?')) {
 			socket.emit('reset_bank', page, bank);
 			socket.emit('bank_reset_actions', page, bank);
+			socket.emit('bank_reset_feedbacks', page, bank);
 			socket.emit('bank_get_actions', page, bank);
+			socket.emit('bank_get_feedbacks', page, bank);
 
 			$("#resetBankButton").hide();
 			populate_bank_form(page,bank,{},{});
@@ -467,6 +469,7 @@ $(function() {
 				$("#editbank_content").html("");
 				$("#editbankid").text(page + "." + $(this).data('bank'));
 				socket.emit('bank_get_actions', page, $(this).data('bank'));
+				socket.emit('bank_get_feedbacks', page, $(this).data('bank'));
 				socket.emit('get_bank',page, $(this).data('bank'));
 				socket.once('get_bank:results', populate_bank_form);
 			}
