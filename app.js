@@ -103,6 +103,7 @@ system.on('skeleton-ready', function() {
 	var osc        = require('./lib/osc')(system);
 	var rest       = require('./lib/rest')(system);
 	var midi       = require('./lib/midi')(system);
+	var midi_actions = require('./lib/midi_actions')(system);
 
 	system.on('exit', function() {
 		elgatoDM.quit();
