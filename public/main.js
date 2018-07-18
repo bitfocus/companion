@@ -1,6 +1,5 @@
 var been_connected = false;
 
-
 socket.on('connect', function() {
 	if (been_connected === true) {
 		window.location.reload(true);

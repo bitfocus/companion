@@ -55,7 +55,7 @@ $(function() {
 				$tr.append($del_td);
 				$tr.append($name_td);
 
-				var iopt = feedbacklist[inst.label];
+				var iopt = feedbacklist[feedback.instance_id][feedback.type];
 
 				if (iopt !== undefined && iopt.options !== undefined) {
 					var options = iopt.options;
