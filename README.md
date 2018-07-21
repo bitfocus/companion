@@ -28,7 +28,7 @@
 * BMD Videohub
 * ArtNet
 * Analogway Livecore
-* Renewed Vision PVP
+* Renewed Vision PVP 3
 * VideoLan VLC
 * Irisdown Remote Show Control
 * CasparCG
@@ -50,13 +50,15 @@
 * AnalogWay Vio 4K
 * Chamsys MagicQ
 * VYV Photon
+* Modulo Pi Modulo Player
+* 7th Sense Delta Media server
+* Christie Projectors
 
 ## Coming support (help wanted!)
 * AJA Kipro Ultra Plus
 * Entec DMXPro
 * Barco Projectors
 * Panasonic Projectors
-* Christie Projectors
 * Nec Projectors
 * Analogway Midra
 * Wirecast
@@ -69,7 +71,6 @@
 * Sony / VISCA PTZ
 * Philips Hue
 * UDP/TCP Generic module
-* Modulo Pi Modulo Player
 * Octopus
 * Yamaha Ql series Consoles
 * GrassValley Switchers (kayak)
@@ -77,6 +78,7 @@
 * Dante Audio Routing
 * GreenGo Digital (if they ever decide to answer our emails)
 * Barco DCS 100/200
+* Barco ImagePro II
 * V-mix
 * TSL Protocol
 * Ember+
@@ -90,4 +92,3 @@
 * Newtek Tricaster
 * Roland XS series
 * Motu AVB interfaces / Mixers
-* 7th Sense Delta Media server
