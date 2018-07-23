@@ -118,3 +118,12 @@
 [submodule "lib/module/7thsensedelta"]
 	path = lib/module/7thsensedelta
 	url = https://github.com/bitfocus/companion-module-7thsensedelta.git
+[submodule "lib/module/imagepro"]
+	path = lib/module/imagepro
+	url = https://github.com/bitfocus/companion-module-imagepro.git
+[submodule "lib/module/modulo"]
+	path = lib/module/modulo
+	url = https://github.com/bitfocus/companion-module-modulo.git
+[submodule "lib/module/octopusapp"]
+	path = lib/module/octopusapp
+	url = https://github.com/bitfocus/companion-module-octopusapp.git
