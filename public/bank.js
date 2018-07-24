@@ -330,7 +330,11 @@ $(function() {
 				$field.append($p);
 
 				$field.find('input[type="file"]').change(function (e) {
+					var self = this;
 					checkImageSize(this, field.imageMinWidth, field.imageMinHeight, field.imageMaxWidth, field.imageMaxHeight, function (dataurl) {
+						// Reset file fields
+						self.value = null;
+
 						socket.emit('bank_set_png', p, b, dataurl);
 						socket.once('bank_set_png:result', function (result) {
 							if (result != 'ok') {
@@ -341,6 +345,9 @@ $(function() {
 						});
 					}, function () {
 						alert('Image must have the following dimensions: ' + field.imageMaxWidth + 'x' + field.imageMaxHeight);
+
+						// Reset file fields
+						self.value = null;
 					});
 				});
 			}
