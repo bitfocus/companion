@@ -16,33 +16,49 @@
 * PlaybackPro Plus (udp)
 * OSC Generic (send custom packets)
 * d3/disguise (osc control)
+* d3/disguise multi transport control
 * Dataton Watchout production (tcp)
 * Ross Carbonite/Vision (rosstalk)
 * IfElse{ware} AV-Playback (udp)
 * Christie Spyder (testing) (udp)
 * PJ-link (tcp)
 * Digital Projection (testing) (udp)
-
-## Support added in v1.1.1
-* Epson Projectors
 * BMD Atem
 * BMD Hyperdeck
 * BMD Videohub
 * ArtNet
 * Analogway Livecore
-* Renewed Vision PVP (rest)
+* Renewed Vision PVP 3
 * VideoLan VLC
-* disguise multi transport control
 * Irisdown Remote Show Control
 * CasparCG
 * Octopus Listener
+* Microsoft Powerpoint (octopus listener and PPT RSC)
+* Apple Keynote (octopus listener)
+* Horae
+
+
+## Support being added in v1.1.2
+* Epson Projectors (done)
+* Lightware LW2 Devices (done)
+* Lightware LW3 Devices (done)
+* TASCAM SS-CDR250N (done)
+* Panasonic AW-HS50/AV-HS410 Switchers (done)
+* Behringer X32 / Midas M32 (done)
+* Behringer X-air
+* GrassValley AMP protocol
+* AnalogWay Vio 4K
+* Chamsys MagicQ
+* VYV Photon
+* Modulo Pi Modulo Player
+* 7th Sense Delta Media server
+* Christie Projectors
 
 ## Coming support (help wanted!)
 * AJA Kipro Ultra Plus
 * Entec DMXPro
 * Barco Projectors
 * Panasonic Projectors
-* Christie Projectors
 * Nec Projectors
 * Analogway Midra
 * Wirecast
@@ -53,12 +69,26 @@
 * Green Hippo
 * Panasonic PTZ
 * Sony / VISCA PTZ
-* Apple Keynote
-* Microsoft Powerpoint (via support software on PPT Machine)
 * Philips Hue
 * UDP/TCP Generic module
-* Modulo Pi Modulo Player
 * Octopus
-* Behringer X32 / Midas M32
-* Behringer X-air
 * Yamaha Ql series Consoles
+* GrassValley Switchers (kayak)
+* Nevion Routers
+* Dante Audio Routing
+* GreenGo Digital (if they ever decide to answer our emails)
+* Barco DCS 100/200
+* Barco ImagePro II
+* V-mix
+* TSL Protocol
+* Ember+
+* Show Cue System (windows)
+* TJ Show (windows)
+* VirtualVTR PRO (mac)
+* Kramer Presentation Switchers
+* Kramer Matrix Routers
+* Extron Presentation Switchers
+* Extron Matrix Routers
+* Newtek Tricaster
+* Roland XS series
+* Motu AVB interfaces / Mixers

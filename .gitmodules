@@ -82,3 +82,48 @@
 [submodule "lib/module/casparcg"]
 	path = lib/module/casparcg
 	url = https://github.com/bitfocus/companion-module-casparcg.git
+[submodule "lib/module/horae"]
+	path = lib/module/horae
+	url = https://github.com/bitfocus/companion-module-horae.git
+[submodule "lib/module/amp"]
+	path = lib/module/amp
+	url = https://github.com/bitfocus/companion-module-amp.git
+[submodule "lib/module/lightware2"]
+	path = lib/module/lightware2
+	url = https://github.com/bitfocus/companion-module-lightware2.git
+[submodule "lib/module/lightware3"]
+	path = lib/module/lightware3
+	url = https://github.com/bitfocus/companion-module-lightware3.git
+[submodule "lib/module/panasonic-avhs"]
+	path = lib/module/panasonic-avhs
+	url = https://github.com/bitfocus/companion-module-panasonic-avhs.git
+[submodule "lib/module/tascamcd"]
+	path = lib/module/tascamcd
+	url = https://github.com/bitfocus/companion-module-tascamcd.git
+[submodule "lib/module/x32"]
+	path = lib/module/x32
+	url = https://github.com/bitfocus/companion-module-x32.git
+[submodule "lib/module/chamsys"]
+	path = lib/module/chamsys
+	url = https://github.com/bitfocus/companion-module-chamsys.git
+[submodule "lib/module/vio"]
+	path = lib/module/vio
+	url = https://github.com/bitfocus/companion-module-vio.git
+[submodule "lib/module/christiepj"]
+	path = lib/module/christiepj
+	url = https://github.com/bitfocus/companion-module-christiepj.git
+[submodule "lib/module/vyvphoton"]
+	path = lib/module/vyvphoton
+	url = https://github.com/bitfocus/companion-module-vyvphoton.git
+[submodule "lib/module/7thsensedelta"]
+	path = lib/module/7thsensedelta
+	url = https://github.com/bitfocus/companion-module-7thsensedelta.git
+[submodule "lib/module/imagepro"]
+	path = lib/module/imagepro
+	url = https://github.com/bitfocus/companion-module-imagepro.git
+[submodule "lib/module/modulo"]
+	path = lib/module/modulo
+	url = https://github.com/bitfocus/companion-module-modulo.git
+[submodule "lib/module/octopusapp"]
+	path = lib/module/octopusapp
+	url = https://github.com/bitfocus/companion-module-octopusapp.git

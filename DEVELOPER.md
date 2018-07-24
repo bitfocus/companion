@@ -14,6 +14,45 @@ $ ./tools/update.sh
 $ npm run start
 ```
 
+# Bracing and indentation
+Use tabs for indentation. We use tabwith=2, but you can do whatever you like. One indentation = one tab.
+
+For bracing, do this
+```
+if (var == 1) {
+  return;
+}
+```
+not this
+```
+if (var == 1)
+{
+  return;
+}
+```
+not this
+```
+if (var == 1) return;
+```
+not this
+```
+if (var == 1)
+  return;
+```
+
+One thing we also like to do, is to subindent similar lines like
+```
+var moda = require("modulea");
+var moduleb = require("moduleb");
+var hello = require("hello");
+```
+to being
+```
+var moda    = require("modulea");
+var moduleb = require("moduleb");
+var hello   = require("hello");
+```
+this subindentation is not done with tabs, but spaces. Looks nice!
 
 # Tools
 

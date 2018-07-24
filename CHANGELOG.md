@@ -1,5 +1,32 @@
 # Changelog
 
+## v1.1.1 Summary
+* Eventmaster freeze/unfreeze and rebuild
+* Added test button from button configurator
+* Added "hot buttons" (test/run) while holding shift button in admin gui
+* Added float to OSC
+* Color picker
+* Support for \n for newline in button labels
+* Health/Status indicator on buttons!
+* Bugfixes: Infinitton driver
+* Bugfixes: Spyder
+* Support: Mitti jump to cue
+* Support: BMD VideoHub
+* Support: BMD Hyperdeck
+* Support: BMD ATEM
+* Support: Disguise Multi Transport control (partial, ..not our fault)
+* Support: VLC
+* Support: Octopus Listener
+* Support: Irisdown Remote Show Control
+* Support: AnalogWay Livecore
+* Support: ArtNet
+* Support: GrandMA 2 (telnet)
+
+## Issues closed from v1.1.0 to v1.1.1
+* [#122](https://github.com/bitfocus/companion/issues/122): Fixing instance type list that become too long
+* [#112](https://github.com/bitfocus/companion/issues/112): Fixed gracefully handling of EADDRINUSE.
+
+
 ## v1.1.0 Summary
 * Added support for the Infinitton controller (very similar to the elgato)
 * Regular expressions to validate configuration input

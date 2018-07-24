@@ -1,3 +1,19 @@
+/*
+ * This file is part of the Companion project
+ * Copyright (c) 2018 Bitfocus AS
+ * Authors: William Viker <william@bitfocus.io>, Håkon Nessjøen <haakon@bitfocus.io>
+ *
+ * This program is free software.
+ * You should have received a copy of the MIT licence as well as the Bitfocus
+ * Individual Contributor License Agreement for companion along with
+ * this program.
+ *
+ * You can be released from the requirements of the license by purchasing
+ * a commercial license. Buying such a license is mandatory as soon as you
+ * develop commercial activities involving the Companion software without
+ * disclosing the source code of your own applications.
+ *
+ */
 
 var socket = new io();
 var image_cache = {};
@@ -174,17 +190,13 @@ $(function() {
 	}
 
 	function updateFromConfig(page, bank, config, updateText) {
-		$('.active_field[data-special="color"]').removeClass('active_color');
 		$('.active_field[data-special="alignment"]').removeClass('active_color');
 
 		$(".active_field").each(function() {
 			if ($(this).data('fieldid') !== undefined && config[$(this).data('fieldid')] !== undefined) {
 
 				if ($(this).data('special') == 'color') {
-
-					if ($(this).data('color').toLowerCase() == int2hex( config[$(this).data('fieldid')] )) {
-						$(this).addClass('active_color');
-					}
+					$(this).spectrum("set", int2hex( config[$(this).data('fieldid')] ));
 
 				} else if ($(this).data('special') == 'dropdown') {
 
@@ -275,33 +287,37 @@ $(function() {
 				}
 				$container.append($div);
 				$p.append($container);
-				 $field.append($p);
-				$('#auto_'+field.id).colorpicker();
-
+				$field.append($p);
 
 			}
 
 			else if (field.type == 'colorpicker') {
 
 				var $p = $("<p><label>"+field.label+"</label><br></p>");
-				var $div = $("<div class='colorcontainer' data-fieldid='"+field.id+"' style='height:20px;'></div>");
+				var $input = $("<input type='text' id='auto_"+field.id+"'>");
+				$input.addClass('active_field');
+				$input.data('special','color');
+				$input.data('fieldid',field.id);
 
-				for (var n in colors) {
-					var $c = $("<div class='colorblock' data-special='color' data-color='"+colors[n]+"' data-fieldid='"+field.id+"'></div>");
-
-					$c.css('backgroundColor', colors[n]);
-					$c.css('width', 18);
-					$c.css('height', 18);
-					$c.addClass('colorbox');
-					$c.addClass('active_field');
-					$c.css('float','left');
-					$div.append($c)
-				}
-
-				$p.append($div);
-
+				$p.append($input);
 				$field.append($p);
-				$('#auto_'+field.id).colorpicker();
+				(function(fval,fid) {
+					$input.spectrum({
+						color: fval,
+						preferredFormat: "rgb",
+						showInput: true,
+						showPalette: true,
+						palette: colors,
+						showButtons: false,
+						change: function(color) {
+							socket.emit('bank_changefield', p, b, fid, hex2int( color.toHexString() ) );
+						},
+
+						move: function(color) {
+							socket.emit('bank_changefield', p, b, fid, hex2int( color.toHexString() ) );
+						}
+					});
+				})(field.value, field.id);
 
 			}
 
@@ -314,7 +330,16 @@ $(function() {
 				$field.append($p);
 
 				$field.find('input[type="file"]').change(function (e) {
+					var self = this;
 					checkImageSize(this, field.imageMinWidth, field.imageMinHeight, field.imageMaxWidth, field.imageMaxHeight, function (dataurl) {
+						// Reset file fields
+						self.value = null;
+
+						if (!dataurl.match(/image\/png/)) {
+							alert('Image must be a valid PNG file');
+							return;
+						}
+
 						socket.emit('bank_set_png', p, b, dataurl);
 						socket.once('bank_set_png:result', function (result) {
 							if (result != 'ok') {
@@ -325,6 +350,9 @@ $(function() {
 						});
 					}, function () {
 						alert('Image must have the following dimensions: ' + field.imageMaxWidth + 'x' + field.imageMaxHeight);
+
+						// Reset file fields
+						self.value = null;
 					});
 				});
 			}
