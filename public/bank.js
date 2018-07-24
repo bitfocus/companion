@@ -14,7 +14,7 @@
  * disclosing the source code of your own applications.
  *
  */
- 
+
 var socket = new io();
 var image_cache = {};
 var buttons_hot = false;
@@ -334,6 +334,11 @@ $(function() {
 					checkImageSize(this, field.imageMinWidth, field.imageMinHeight, field.imageMaxWidth, field.imageMaxHeight, function (dataurl) {
 						// Reset file fields
 						self.value = null;
+
+						if (!dataurl.match(/image\/png/)) {
+							alert('Image must be a valid PNG file');
+							return;
+						}
 
 						socket.emit('bank_set_png', p, b, dataurl);
 						socket.once('bank_set_png:result', function (result) {
