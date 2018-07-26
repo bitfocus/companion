@@ -127,3 +127,6 @@
 [submodule "lib/module/octopusapp"]
 	path = lib/module/octopusapp
 	url = https://github.com/bitfocus/companion-module-octopusapp.git
+[submodule "lib/module/dcs"]
+	path = lib/module/dcs
+	url = https://github.com/bitfocus/companion-module-dcs.git
