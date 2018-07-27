@@ -130,3 +130,9 @@
 [submodule "lib/module/dcs"]
 	path = lib/module/dcs
 	url = https://github.com/bitfocus/companion-module-dcs.git
+[submodule "lib/module/xair"]
+	path = lib/module/xair
+	url = https://github.com/bitfocus/companion-module-xair.git
+[submodule "lib/module/kipro"]
+	path = lib/module/kipro
+	url = https://github.com/bitfocus/companion-module-kipro.git
