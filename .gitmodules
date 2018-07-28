@@ -136,3 +136,6 @@
 [submodule "lib/module/kipro"]
 	path = lib/module/kipro
 	url = https://github.com/bitfocus/companion-module-kipro.git
+[submodule "lib/module/scs"]
+	path = lib/module/scs
+	url = https://github.com/bitfocus/companion-module-scs.git
