@@ -139,3 +139,6 @@
 [submodule "lib/module/scs"]
 	path = lib/module/scs
 	url = https://github.com/bitfocus/companion-module-scs.git
+[submodule "lib/module/analogway-midra"]
+	path = lib/module/analogway-midra
+	url = https://github.com/bitfocus/companion-module-analogway-midra.git
