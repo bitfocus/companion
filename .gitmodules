@@ -142,3 +142,6 @@
 [submodule "lib/module/analogway-midra"]
 	path = lib/module/analogway-midra
 	url = https://github.com/bitfocus/companion-module-analogway-midra.git
+[submodule "lib/module/aja-helo"]
+	path = lib/module/aja-helo
+	url = https://github.com/bitfocus/companion-module-aja-helo.git
