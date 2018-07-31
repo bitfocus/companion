@@ -93,7 +93,6 @@ system.on('skeleton-ready', function() {
 	var update     = require('./lib/update')(system,cfgDir);
 	var page       = require('./lib/page')(system)
 	var appRoot    = require('app-root-path');
-	var express    = require('express');
 	var variable   = require('./lib/variable')(system);
 	var feedback   = require('./lib/feedback')(system);
 	var bank       = require('./lib/bank')(system);
@@ -103,6 +102,7 @@ system.on('skeleton-ready', function() {
 	var instance   = require('./lib/instance')(system);
 	var osc        = require('./lib/osc')(system);
 	var rest       = require('./lib/rest')(system);
+	var loadsave   = require('./lib/loadsave')(system);
 
 	system.on('exit', function() {
 		elgatoDM.quit();
