@@ -105,7 +105,7 @@ $(function() {
 						}
 
 
-						if (option.type == 'dropdown') {
+						else if (option.type == 'dropdown') {
 
 							var $opt_input = $("<select class='feedback-option-change form-control'></select>");
 							$opt_input.data('feedback-id', feedback.id);
@@ -139,6 +139,44 @@ $(function() {
 							}
 
 							$options.append($opt_input);
+
+						}
+
+						else if (option.type == 'colorpicker') {
+
+							console.log("Option", option, "value", feedback);
+							var $input = $("<input type='text' id='auto_"+option.id+"'>");
+							$input.addClass('active_field');
+							$input.data('special','color');
+							$input.data('feedback-id', feedback.id);
+							$input.data('option-id', option.id);
+
+							$options.append("<br />");
+							$options.append($input);
+							$options.append("<br />");
+
+							var val = option.default;
+							if (feedback.options !== undefined && feedback.options[option.id] !== undefined) {
+								val = feedback.options[option.id];
+							}
+
+							(function(fval, fid, oid) {
+								$input.spectrum({
+									color: fval,
+									preferredFormat: "rgb",
+									showInput: true,
+									showPalette: true,
+									palette: picker_colors,
+									showButtons: false,
+									change: function(color) {
+										socket.emit('bank_update_feedback_option', page, bank, fid, oid, hex2int( color.toHexString() ) );
+									},
+
+									move: function(color) {
+										socket.emit('bank_update_feedback_option', page, bank, fid, oid, hex2int( color.toHexString() ) );
+									}
+								});
+							})(int2hex(val), feedback.id, option.id);
 
 						}
 
