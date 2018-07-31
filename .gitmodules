@@ -127,3 +127,21 @@
 [submodule "lib/module/octopusapp"]
 	path = lib/module/octopusapp
 	url = https://github.com/bitfocus/companion-module-octopusapp.git
+[submodule "lib/module/dcs"]
+	path = lib/module/dcs
+	url = https://github.com/bitfocus/companion-module-dcs.git
+[submodule "lib/module/xair"]
+	path = lib/module/xair
+	url = https://github.com/bitfocus/companion-module-xair.git
+[submodule "lib/module/kipro"]
+	path = lib/module/kipro
+	url = https://github.com/bitfocus/companion-module-kipro.git
+[submodule "lib/module/scs"]
+	path = lib/module/scs
+	url = https://github.com/bitfocus/companion-module-scs.git
+[submodule "lib/module/analogway-midra"]
+	path = lib/module/analogway-midra
+	url = https://github.com/bitfocus/companion-module-analogway-midra.git
+[submodule "lib/module/aja-helo"]
+	path = lib/module/aja-helo
+	url = https://github.com/bitfocus/companion-module-aja-helo.git

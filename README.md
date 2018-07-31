@@ -53,9 +53,12 @@
 * Modulo Pi Modulo Player
 * 7th Sense Delta Media server
 * Christie Projectors
+* AJA Kipro Ultra
+* Barco DCS 100/200
+* Barco ImagePro I/II
+* Octopus app
 
 ## Coming support (help wanted!)
-* AJA Kipro Ultra Plus
 * Entec DMXPro
 * Barco Projectors
 * Panasonic Projectors
@@ -71,14 +74,11 @@
 * Sony / VISCA PTZ
 * Philips Hue
 * UDP/TCP Generic module
-* Octopus
 * Yamaha Ql series Consoles
 * GrassValley Switchers (kayak)
 * Nevion Routers
 * Dante Audio Routing
 * GreenGo Digital (if they ever decide to answer our emails)
-* Barco DCS 100/200
-* Barco ImagePro II
 * V-mix
 * TSL Protocol
 * Ember+
