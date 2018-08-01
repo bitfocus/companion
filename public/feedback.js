@@ -155,6 +155,11 @@ $(function() {
 							$options.append($input);
 							$options.append("<br />");
 
+							// if this option never has been saved, set default
+							if (feedback.options[option.id] === undefined && option.default !== undefined) {
+								socket.emit('bank_update_feedback_option', page, bank, feedback.id, option.id, option.default);
+							}
+
 							var val = option.default;
 							if (feedback.options !== undefined && feedback.options[option.id] !== undefined) {
 								val = feedback.options[option.id];
