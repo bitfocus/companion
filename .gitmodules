@@ -145,3 +145,6 @@
 [submodule "lib/module/aja-helo"]
 	path = lib/module/aja-helo
 	url = https://github.com/bitfocus/companion-module-aja-helo.git
+[submodule "lib/module/irisdown-countdowntimer"]
+	path = lib/module/irisdown-countdowntimer
+	url = https://github.com/bitfocus/companion-module-irisdown-countdowntimer.git
