@@ -13,13 +13,13 @@
 * Millumin (osc)
 * QLab (osc)
 * Mitti (osc)
-* PlaybackPro Plus (udp)
+* PlaybackPro Plus (udp /tcp)
 * OSC Generic (send custom packets)
 * d3/disguise (osc control)
 * d3/disguise multi transport control
 * Dataton Watchout production (tcp)
 * Ross Carbonite/Vision (rosstalk)
-* IfElse{ware} AV-Playback (udp)
+* IfElse{ware} AV-Playback (udp)]
 * Christie Spyder (testing) (udp)
 * PJ-link (tcp)
 * Digital Projection (testing) (udp)
@@ -45,25 +45,29 @@
 * TASCAM SS-CDR250N (done)
 * Panasonic AW-HS50/AV-HS410 Switchers (done)
 * Behringer X32 / Midas M32 (done)
-* Behringer X-air
+* Behringer X-air / Midas XR series (done)
 * GrassValley AMP protocol
-* AnalogWay Vio 4K
-* Chamsys MagicQ
-* VYV Photon
-* Modulo Pi Modulo Player
-* 7th Sense Delta Media server
-* Christie Projectors
-* AJA Kipro Ultra
-* Barco DCS 100/200
-* Barco ImagePro I/II
-* Octopus app
+* AnalogWay Vio 4K (done)
+* Analogway Midra (testing)
+* Chamsys MagicQ (under development)
+* VYV Photon (done)
+* Modulo Pi Modulo Player (done)
+* 7th Sense Delta Media server (done)
+* Christie Projectors (under development)
+* AJA Kipro Ultra (done)
+* AJA HALO
+* Barco DCS 100/200 (done)
+* Barco ImagePro I/II (under development)
+* Octopus app (done)
+* Show Cue System (windows)
+* Sony / VISCA Over IP PTZ 
+* Irisdown Countdown Timer 2.0
 
 ## Coming support (help wanted!)
 * Entec DMXPro
 * Barco Projectors
 * Panasonic Projectors
 * Nec Projectors
-* Analogway Midra
 * Wirecast
 * OBS
 * Resolume
@@ -71,7 +75,6 @@
 * Avolites AI
 * Green Hippo
 * Panasonic PTZ
-* Sony / VISCA PTZ
 * Philips Hue
 * UDP/TCP Generic module
 * Yamaha Ql series Consoles
@@ -82,8 +85,6 @@
 * V-mix
 * TSL Protocol
 * Ember+
-* Show Cue System (windows)
-* TJ Show (windows)
 * VirtualVTR PRO (mac)
 * Kramer Presentation Switchers
 * Kramer Matrix Routers
@@ -92,3 +93,6 @@
 * Newtek Tricaster
 * Roland XS series
 * Motu AVB interfaces / Mixers
+* AJA Kumo Routers
+* Barco Matrix PRO
+* Barco Matrix PRO DVI
