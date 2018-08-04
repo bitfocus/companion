@@ -55,13 +55,14 @@
 * 7th Sense Delta Media server (done)
 * Christie Projectors (under development)
 * AJA Kipro Ultra (done)
-* AJA HALO
+* AJA HELO
 * Barco DCS 100/200 (done)
 * Barco ImagePro I/II (under development)
 * Octopus app (done)
 * Show Cue System (windows)
-* Sony / VISCA Over IP PTZ 
+* Sony / VISCA Over IP PTZ
 * Irisdown Countdown Timer 2.0
+* BMD SmartView / SmartScope
 
 ## Coming support (help wanted!)
 * Entec DMXPro
@@ -96,3 +97,5 @@
 * AJA Kumo Routers
 * Barco Matrix PRO
 * Barco Matrix PRO DVI
+* Teranex standards converter
+* BMD MultiView
