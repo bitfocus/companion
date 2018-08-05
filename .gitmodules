@@ -148,3 +148,6 @@
 [submodule "lib/module/irisdown-countdowntimer"]
 	path = lib/module/irisdown-countdowntimer
 	url = https://github.com/bitfocus/companion-module-irisdown-countdowntimer.git
+[submodule "lib/module/bmd-smartview"]
+	path = lib/module/bmd-smartview
+	url = https://github.com/bitfocus/companion-module-bmd-smartview.git
