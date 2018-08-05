@@ -18,6 +18,10 @@
 var socket = new io();
 var image_cache = {};
 var buttons_hot = false;
+var buttons_functional = false;
+
+var function_state = null;
+var function_detail = {};
 
 function int2hex(number) {
 	var r = ('0' + ((number >> 16) & 0xff).toString('16')).substr(-2);
@@ -397,13 +401,16 @@ $(function() {
 		if (e.keyCode == 16) {
 			buttons_hot = false;
 			$(".border").removeClass('bank-armed');
+			$('#functionkeys').slideDown(80);
 			console.log('disarmed');
 		}
 	});
+
 	$(window).keydown(function(e) {
-		if (e.keyCode == 16) {
+		if (e.keyCode == 16 && function_state === null) {
 			buttons_hot = true;
-			$(".border").addClass('bank-armed')
+			$(".border").addClass('bank-armed');
+			$('#functionkeys').slideUp(80);
 			console.log("buttons hot!")
 		}
 	})
@@ -460,6 +467,134 @@ $(function() {
 		}
 	});
 
+
+	$('#state_copy').click(function() {
+		if (function_state === null) {
+			function_state = 'copy';
+		}
+
+		renderFunctionArea();
+	});
+
+	$('#state_move').click(function() {
+		if (function_state === null) {
+			function_state = 'move';
+		}
+
+		renderFunctionArea();
+	});
+
+	$('#state_delete').click(function() {
+		if (function_state === null) {
+			function_state = 'delete';
+		}
+
+		renderFunctionArea();
+	});
+
+	$('#state_abort').click(function() {
+		clearFunction();
+	});
+
+
+	function clearFunction() {
+		function_detail = {};
+		function_state = null;
+		renderFunctionArea();
+	}
+
+
+	function executeFunctionArea() {
+
+		if (function_state !== null) {
+
+			if (function_state === 'copy') {
+				if (function_detail.second !== undefined) {
+					alert("copy " + function_detail.first.page + "." + function_detail.first.bank + " to " + function_detail.second.page + "." + function_detail.second.bank)
+					clearFunction();
+				}
+			}
+
+			else if (function_state === 'move') {
+				console.log("move");
+				if (function_detail.second !== undefined) {
+					alert("move " + function_detail.first.page + "." + function_detail.first.bank + " to " + function_detail.second.page + "." + function_detail.second.bank)
+					clearFunction();
+				}
+			}
+			else if (function_state === 'delete') {
+				if (function_detail.first !== undefined) {
+					if (confirm("Clear style and actions for this button?")) {
+						socket.emit('reset_bank', function_detail.first.page, function_detail.first.bank);
+						socket.emit('bank_reset_actions', function_detail.first.page, function_detail.first.bank );
+						socket.emit('bank_get_actions', function_detail.first.page, function_detail.first.bank );
+						bank_preview_page(page);
+					}
+					clearFunction();
+				}
+			}
+
+		}
+
+	}
+
+	function renderFunctionArea() {
+		var $sc = $('#state_copy');
+		var $sm = $('#state_move');
+		var $sd = $('#state_delete');
+		var $sa = $('#state_abort');
+		var $sh = $('#state_hint');
+		var $cb = $('#state_' + function_state);
+
+		if (function_state !== null) {
+			$('.function-button').removeClass('btn-primary').addClass('btn-disabled');
+			$cb.addClass('btn-success');
+			$sa.show();
+
+			if (function_state == 'copy') {
+				if (function_detail.first === undefined) {
+					$sh.text("Press the button you want to copy");
+				}
+				else if (function_detail.second === undefined) {
+					$sh.text("Where do you want it?");
+				}
+			}
+
+			else if (function_state == 'move') {
+				if (function_detail.first === undefined) {
+					$sh.text("Press the button you want to move");
+				}
+				else if (function_detail.second === undefined) {
+					$sh.text("Where do you want it?");
+				}
+			}
+
+			else if (function_state == 'delete') {
+				$sh.text("Press the button you want to delete");
+			}
+
+		} else {
+			$('.function-button').removeClass('btn-disabled').removeClass('btn-success').addClass('btn-primary');
+			$sa.hide();
+			$sh.text("");
+		}
+
+	}
+
+	renderFunctionArea();
+
+
+
+	$(document).keyup(function(e) {
+
+		// grab escape key keypresses
+		if (e.keyCode == 27) {
+			console.log("ESC");
+		}
+
+	});
+
+
 	function changePage(pagenum) {
 
 		$pagenav.html("");
@@ -487,6 +622,26 @@ $(function() {
 
 			if (buttons_hot) {
 				socket.emit('hot_press',page, $(this).data('bank'));
+			}
+
+			else if (function_state !== null) {
+				var bank = $(this).data('bank')
+				if (function_detail['first'] === undefined) {
+					console.log("selecting",page,bank,"as first");
+					function_detail['first'] = {
+						page: page,
+						bank: bank,
+					};
+				}
+				else {
+					console.log("selecting",page,bank,"as second");
+					function_detail['second'] = {
+						page: page,
+						bank: bank,
+					};
+				}
+				executeFunctionArea();
+				renderFunctionArea();
 			}
 
 			else {
