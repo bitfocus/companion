@@ -154,3 +154,6 @@
 [submodule "lib/module/chamsys-magicqudp"]
 	path = lib/module/chamsys-magicqudp
 	url = https://github.com/bitfocus/companion-module-chamsys-magicqudp.git
+[submodule "lib/module/bmd-smartview"]
+	path = lib/module/bmd-smartview
+	url = https://github.com/bitfocus/companion-module-bmd-smartview.git
