@@ -148,3 +148,9 @@
 [submodule "lib/module/irisdown-countdowntimer"]
 	path = lib/module/irisdown-countdowntimer
 	url = https://github.com/bitfocus/companion-module-irisdown-countdowntimer.git
+[submodule "lib/module/motu-avb"]
+	path = lib/module/motu-avb
+	url = https://github.com/bitfocus/companion-module-motu-avb.git
+[submodule "lib/module/chamsys-magicqudp"]
+	path = lib/module/chamsys-magicqudp
+	url = https://github.com/bitfocus/companion-module-chamsys-magicqudp.git
