@@ -19,7 +19,7 @@
 * d3/disguise multi transport control
 * Dataton Watchout production (tcp)
 * Ross Carbonite/Vision (rosstalk)
-* IfElse{ware} AV-Playback (udp)]
+* IfElse{ware} AV-Playback (udp)
 * Christie Spyder (testing) (udp)
 * PJ-link (tcp)
 * Digital Projection (testing) (udp)
@@ -60,9 +60,12 @@
 * Barco ImagePro I/II (under development)
 * Octopus app (done)
 * Show Cue System (windows)
-* Sony / VISCA Over IP PTZ
+* Sony / VISCA Over IP PTZ (Under development)
+* Panasonic PTZ (under development)
 * Irisdown Countdown Timer 2.0
 * BMD SmartView / SmartScope
+* Kramer VP-727 (and posibly others)
+* Motu AVB interfaces / Mixers
 
 ## Coming support (help wanted!)
 * Entec DMXPro
@@ -75,7 +78,6 @@
 * Arkaos Grand VJ / Mediamaster
 * Avolites AI
 * Green Hippo
-* Panasonic PTZ
 * Philips Hue
 * UDP/TCP Generic module
 * Yamaha Ql series Consoles
@@ -93,7 +95,6 @@
 * Extron Matrix Routers
 * Newtek Tricaster
 * Roland XS series
-* Motu AVB interfaces / Mixers
 * AJA Kumo Routers
 * Barco Matrix PRO
 * Barco Matrix PRO DVI
