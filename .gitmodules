@@ -157,3 +157,6 @@
 [submodule "lib/module/bmd-smartview"]
 	path = lib/module/bmd-smartview
 	url = https://github.com/bitfocus/companion-module-bmd-smartview.git
+[submodule "lib/module/renewedvision-propresenter"]
+	path = lib/module/renewedvision-propresenter
+	url = https://github.com/bitfocus/companion-module-renewedvision-propresenter.git
