@@ -145,3 +145,18 @@
 [submodule "lib/module/aja-helo"]
 	path = lib/module/aja-helo
 	url = https://github.com/bitfocus/companion-module-aja-helo.git
+[submodule "lib/module/irisdown-countdowntimer"]
+	path = lib/module/irisdown-countdowntimer
+	url = https://github.com/bitfocus/companion-module-irisdown-countdowntimer.git
+[submodule "lib/module/motu-avb"]
+	path = lib/module/motu-avb
+	url = https://github.com/bitfocus/companion-module-motu-avb.git
+[submodule "lib/module/chamsys-magicqudp"]
+	path = lib/module/chamsys-magicqudp
+	url = https://github.com/bitfocus/companion-module-chamsys-magicqudp.git
+[submodule "lib/module/bmd-smartview"]
+	path = lib/module/bmd-smartview
+	url = https://github.com/bitfocus/companion-module-bmd-smartview.git
+[submodule "lib/module/renewedvision-propresenter"]
+	path = lib/module/renewedvision-propresenter
+	url = https://github.com/bitfocus/companion-module-renewedvision-propresenter.git

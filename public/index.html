@@ -336,6 +336,16 @@
 										<div class="row" id='pagebank'>
 										</div>
 
+										<div class="row" id='functionarea'>
+											<div id="functionkeys" class='col-sm-12'>
+												<button class="btn btn-primary function-button" data-function='copy' id='state_copy'>Copy</button>
+												<button class="btn btn-primary function-button" data-function='move' id='state_move'>Move</button>
+												<button class="btn btn-primary function-button" data-function='delete' id='state_delete'>Delete</button>
+												<button class="btn btn-danger" id='state_abort'>Cancel</button>
+												<button class="btn btn-disabled" id='state_hint'></button>
+											</div>
+										</div>
+
 										<p></p>
 										<b>Hint:</b> Hold shift down to test buttons from the GUI<br>
 										<b>Hint:</b> Send OSC <b>/press/bank/1/3</b> to press page 1 button 3. OSC port 12321!
