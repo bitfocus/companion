@@ -33,7 +33,7 @@
 * Irisdown Remote Show Control
 * CasparCG
 * Octopus Listener
-* Microsoft Powerpoint (octopus listener and PPT RSC)
+* Microsoft Powerpoint (octopus listener and Irisdown Remote show control)
 * Apple Keynote (octopus listener)
 * Horae
 
@@ -49,7 +49,7 @@
 * GrassValley AMP protocol
 * AnalogWay Vio 4K (done)
 * Analogway Midra (testing)
-* Chamsys MagicQ (under development)
+* Chamsys MagicQ  OSC and UDP (under development)
 * VYV Photon (done)
 * Modulo Pi Modulo Player (done)
 * 7th Sense Delta Media server (done)
@@ -66,6 +66,8 @@
 * BMD SmartView / SmartScope
 * Kramer VP-727 (and posibly others)
 * Motu AVB interfaces / Mixers
+* StudioCoast vMix
+* Resolume
 
 ## Coming support (help wanted!)
 * Entec DMXPro
@@ -74,7 +76,6 @@
 * Nec Projectors
 * Wirecast
 * OBS
-* Resolume
 * Arkaos Grand VJ / Mediamaster
 * Avolites AI
 * Green Hippo
@@ -85,7 +86,6 @@
 * Nevion Routers
 * Dante Audio Routing
 * GreenGo Digital (if they ever decide to answer our emails)
-* V-mix
 * TSL Protocol
 * Ember+
 * VirtualVTR PRO (mac)
