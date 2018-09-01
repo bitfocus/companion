@@ -296,8 +296,6 @@ $(function() {
 	$("#resetBankButton").click(function() {
 		if (confirm('Clear design and all actions?')) {
 			socket.emit('reset_bank', page, bank);
-			socket.emit('bank_reset_actions', page, bank);
-			socket.emit('bank_reset_feedbacks', page, bank);
 			socket.emit('bank_get_actions', page, bank);
 			socket.emit('bank_get_feedbacks', page, bank);
 			socket.emit('bank_reset_release_actions', page, bank);
@@ -383,7 +381,10 @@ $(function() {
 
 			if (function_state === 'copy') {
 				if (function_detail.second !== undefined) {
-					alert("copy " + function_detail.first.page + "." + function_detail.first.bank + " to " + function_detail.second.page + "." + function_detail.second.bank)
+					socket.emit('bank_copy', function_detail.first.page, function_detail.first.bank, function_detail.second.page, function_detail.second.bank);
+					socket.once('bank_copy:result', function () {
+						// TODO
+					});
 					clearFunction();
 				}
 			}
@@ -391,7 +392,10 @@ $(function() {
 			else if (function_state === 'move') {
 				console.log("move");
 				if (function_detail.second !== undefined) {
-					alert("move " + function_detail.first.page + "." + function_detail.first.bank + " to " + function_detail.second.page + "." + function_detail.second.bank)
+					socket.emit('bank_move', function_detail.first.page, function_detail.first.bank, function_detail.second.page, function_detail.second.bank);
+					socket.once('bank_move:result', function () {
+						// TODO
+					});
 					clearFunction();
 				}
 			}
@@ -399,7 +403,6 @@ $(function() {
 				if (function_detail.first !== undefined) {
 					if (confirm("Clear style and actions for this button?")) {
 						socket.emit('reset_bank', function_detail.first.page, function_detail.first.bank);
-						socket.emit('bank_reset_actions', function_detail.first.page, function_detail.first.bank );
 						socket.emit('bank_get_actions', function_detail.first.page, function_detail.first.bank );
 						socket.emit('bank_reset_release_actions', function_detail.first.page, function_detail.first.bank );
 						socket.emit('bank_get_release_actions', function_detail.first.page, function_detail.first.bank );
