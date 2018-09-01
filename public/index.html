@@ -144,37 +144,6 @@
 							</a>
 						</li>
 
-
-
-<!--
-
-						<li class="nav-title">Timer Module</li>
-						<li class="nav-item">
-							<a class="nav-link" href="/module/timer/timer.html">
-								<i class="nav-icon icon-screen-desktop"></i> DSM View</a>
-						</li>
-
-						<li class="divider"></li>
-						<li class="nav-title">Extras</li>
-						<li class="nav-item nav-dropdown">
-							<a class="nav-link nav-dropdown-toggle" href="#">
-								<i class="nav-icon icon-star"></i> Pages</a>
-							<ul class="nav-dropdown-items">
-								<li class="nav-item">
-									<a class="nav-link" href="login.html" target="_top">
-										<i class="nav-icon icon-star"></i> Login</a>
-								</li>
-							</ul>
-						</li>
--->
-
-<!--
-						<li class="nav-item mt-auto">
-							<a class="nav-link nav-link-success" href="https://coreui.io" target="_top">
-								<i class="nav-icon icon-cloud-download"></i> Download CoreUI</a>
-						</li>
--->
-
 					</ul>
 				</nav>
 				<button class="sidebar-minimizer brand-minimizer" type="button"></button>
@@ -288,7 +257,16 @@
 											<tbody id='actionsList'>
 											</tbody>
 										</table>
-
+										<table class="table table-responsive-sm">
+											<thead>
+												<tr>
+													<th>Instance</th>
+													<th>Action</th>
+												</tr>
+											</thead>
+											<tbody id='releaseActionsList'>
+											</tbody>
+										</table>
 									</div>
 
 									<div class="tab-pane" id="variables" role="tabpanel">
@@ -366,9 +344,17 @@
 
 										<div id='bankActions'>
 										</div>
-										<p>Add action<br>
+										<p>Add key down action<br>
 											<select id='addBankAction' style='form-control'></select>
 										</p>
+
+										<div id='bankReleaseActions'>
+										</div>
+										<p>Add key up action<br>
+											<select id='addBankReleaseAction' style='form-control'></select>
+										</p>
+
+
 									</div>
 
 									<div class="tab-pane" id="userconfig" role="tabpanel">
@@ -470,6 +456,7 @@
 		<script src="userconfig.js"></script>
 		<script src="instance.js"></script>
 		<script src="action.js"></script>
+		<script src="release_action.js"></script>
 		<script src="devices.js"></script>
 		<script src="log.js"></script>
 		<script src="main.js"></script>
