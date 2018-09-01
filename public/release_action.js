@@ -15,28 +15,28 @@
  *
  */
 
-var actionlist = {};
+var releaseactionlist = {};
 
 $(function() {
-	socket.emit('get_actions');
+	socket.emit('get_release_actions');
 
-	var $aba = $("#addBankAction");
+	var $aba = $("#addBankReleaseAction");
 
 	$aba.change(function() {
-		socket.emit('bank_addAction', page, bank, $(this).val() );
-		$("#addBankAction").val($("#addBankAction option:first").val());
+		socket.emit('bank_addReleaseAction', page, bank, $(this).val() );
+		$("#addBankReleaseAction").val($("#addBankReleaseAction option:first").val());
 	});
 
-	$('#bankActions').on('keyup', '.action-delay-keyup', function() {
-		socket.emit('bank_update_action_delay', page, bank,  $(this).data('action-id'), $(this).val() );
+	$('#bankReleaseActions').on('keyup', '.release-action-delay-keyup', function() {
+		socket.emit('bank_update_release_action_delay', page, bank,  $(this).data('release-action-id'), $(this).val() );
 	});
 
-	$('#bankActions').on('keyup', '.action-option-keyup', function() {
+	$('#bankReleaseActions').on('keyup', '.release-action-option-keyup', function() {
 		var regex = $(this).data('option-regex');
 
 		if (regex === undefined || $(this).val().match(regex) != null) {
 			this.style.color = "black";
-			socket.emit('bank_update_action_option', page, bank,  $(this).data('action-id'), $(this).data('option-id'), $(this).val() );
+			socket.emit('bank_update_release_action_option', page, bank,  $(this).data('release-action-id'), $(this).data('option-id'), $(this).val() );
 		} else {
 			this.style.color = "red";
 		}
@@ -44,34 +44,20 @@ $(function() {
 
 
 
-	$('#bankActions').on('change', '.action-option-change', function() {
-		socket.emit('bank_update_action_option', page, bank,  $(this).data('action-id'), $(this).data('option-id'), $(this).val() );
+	$('#bankReleaseActions').on('change', '.release-action-option-change', function() {
+		socket.emit('bank_update_release_action_option', page, bank,  $(this).data('release-action-id'), $(this).data('option-id'), $(this).val() );
 	});
 
-	$("#testBankButton").on('mousedown', function() {
-		socket.emit('hot_press',page,bank, true);
-	});
-	$("#testBankButton").on('mouseup', function() {
-		socket.emit('hot_press',page,bank, false);
-	});
+	socket.on('bank_get_release_actions:result', function(page, bank, actions) {
 
-	socket.on('bank_get_actions:result', function(page, bank, actions) {
-
-		$ba = $("#bankActions");
+		$ba = $("#bankReleaseActions");
 		$ba.html("");
 
-		var $table = $("<table class='table action-table'></table>");
-		var $trth = $("<thead><tr><th colspan=2>Button down actions</th><th style='width:90px'>Delay</th><th>Options</th></tr></thead>");
+		var $table = $("<table class='table release-action-table'></table>");
+		var $trth = $("<thead><tr><th colspan=2>Button up actions</th><th style='width:90px'>Delay</th><th>Options</th></tr></thead>");
 		var $tbody = $("<tbody></tbody>");
 		$table.append($trth);
-
-		if (actions.length) {
-			$("#testBankButton").show();
-		}
-		else {
-			$("#testBankButton").hide();
-		}
-
+		console.log("actions!", actions);
 		for (var n in actions) {
 			var action = actions[n];
 			if (action !== null && instance.db[action.instance] !== undefined) {
@@ -83,12 +69,14 @@ $(function() {
 
 				var $tr = $("<tr></tr>");
 				$tr.data("id", action.id);
+				console.log("action...", action);
+				console.log("instdb", instance.db);
 
-				var $name_td = $("<td class='actionlist-td-label'>" + instance.db[action.instance].label + ": " + actionlist[action.label].label + "</td>");
+				var $name_td = $("<td class='actionlist-td-label'>" + instance.db[action.instance].label + ": " + releaseactionlist[action.label].label + "</td>");
 				var $del_td = $("<td class='actionlist-td-delete'><button type='button' class='btn btn-danger btn-sm'>delete</button><span>&nbsp;</span></td>");
 				var $delay_td = $("<td class='actionlist-td-delay'></td>");
-				var $delay_input = $("<input type='text' value='' class='form-control action-delay-keyup' placeholder='ms'>");
-				$delay_input.data('action-id', action.id);
+				var $delay_input = $("<input type='text' value='' class='form-control release-action-delay-keyup' placeholder='ms'>");
+				$delay_input.data('release-action-id', action.id);
 
 				$delay_td.append($delay_input);
 
@@ -99,7 +87,7 @@ $(function() {
 				$tr.append($name_td);
 				$tr.append($delay_td);
 
-				var iopt = actionlist[inst.label];
+				var iopt = releaseactionlist[inst.label];
 
 				if (iopt !== undefined && iopt.options !== undefined) {
 					var options = iopt.options;
@@ -112,11 +100,11 @@ $(function() {
 						$options.append($opt_label);
 
 						if (option.type == 'textinput') {
-							var $opt_input = $("<input type='text' class='action-option-keyup form-control'>");
+							var $opt_input = $("<input type='text' class='release-action-option-keyup form-control'>");
 							if (option.tooltip !== undefined) {
 								$opt_input.attr('title', option.tooltip);
 							}
-							$opt_input.data('action-id', action.id);
+							$opt_input.data('release-action-id', action.id);
 							$opt_input.data('option-id', option.id);
 
 							var regex = undefined;
@@ -135,7 +123,7 @@ $(function() {
 
 							// if this option never has been saved, set default
 							if (action.options[option.id] === undefined) {
-								socket.emit('bank_update_action_option', page, bank, action.id, option.id, option.default);
+								socket.emit('bank_update_release_action_option', page, bank, action.id, option.id, option.default);
 								$opt_input.val(option.default);
 							}
 
@@ -151,8 +139,8 @@ $(function() {
 
 						if (option.type == 'dropdown') {
 
-							var $opt_input = $("<select class='action-option-change form-control'></select>");
-							$opt_input.data('action-id', action.id);
+							var $opt_input = $("<select class='release-action-option-change form-control'></select>");
+							$opt_input.data('release-action-id', action.id);
 							$opt_input.data('option-id', option.id);
 							if (option.tooltip !== undefined) {
 								$opt_input.attr('title', option.tooltip);
@@ -173,7 +161,7 @@ $(function() {
 
 							// if this option never has been saved, set default
 							if (action.options[option.id] === undefined) {
-								socket.emit('bank_update_action_option', page, bank, action.id, option.id, option.default);
+								socket.emit('bank_update_release_action_option', page, bank, action.id, option.id, option.default);
 								$opt_input.val(option.default);
 							}
 
@@ -194,7 +182,7 @@ $(function() {
 
 				$del_td.click(function() {
 					if (confirm('Delete action?')) {
-						socket.emit('bank_delAction', page, bank, $(this).parent().data('id'));
+						socket.emit('bank_delReleaseAction', page, bank, $(this).parent().data('id'));
 					}
 				})
 				$tbody.append($tr);
@@ -207,10 +195,12 @@ $(function() {
 		$ba.append($table);
 	});
 
+
+
 	socket.on('actions', function(actions) {
 
-		actionlist = actions;
-		var $ali = $("#actionsList");
+		releaseactionlist = actions;
+		var $ali = $("#releaseActionsList");
 		$aba.html("");
 		$ali.html("");
 
@@ -244,4 +234,5 @@ $(function() {
 
 
 	})
+
 });

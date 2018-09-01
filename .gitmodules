@@ -160,3 +160,12 @@
 [submodule "lib/module/renewedvision-propresenter"]
 	path = lib/module/renewedvision-propresenter
 	url = https://github.com/bitfocus/companion-module-renewedvision-propresenter.git
+[submodule "lib/module/kramer-vp727"]
+	path = lib/module/kramer-vp727
+	url = https://github.com/bitfocus/companion-module-kramer-vp727.git
+[submodule "lib/module/studiocoast-vmix"]
+	path = lib/module/studiocoast-vmix
+	url = https://github.com/bitfocus/companion-module-studiocoast-vmix.git
+[submodule "lib/module/highend-hog4"]
+	path = lib/module/highend-hog4
+	url = https://github.com/bitfocus/companion-module-highend-hog4.git

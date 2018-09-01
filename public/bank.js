@@ -300,6 +300,8 @@ $(function() {
 			socket.emit('bank_reset_feedbacks', page, bank);
 			socket.emit('bank_get_actions', page, bank);
 			socket.emit('bank_get_feedbacks', page, bank);
+			socket.emit('bank_reset_release_actions', page, bank);
+			socket.emit('bank_get_release_actions', page, bank);
 
 			$("#resetBankButton").hide();
 			populate_bank_form(page,bank,{},{});
@@ -399,6 +401,8 @@ $(function() {
 						socket.emit('reset_bank', function_detail.first.page, function_detail.first.bank);
 						socket.emit('bank_reset_actions', function_detail.first.page, function_detail.first.bank );
 						socket.emit('bank_get_actions', function_detail.first.page, function_detail.first.bank );
+						socket.emit('bank_reset_release_actions', function_detail.first.page, function_detail.first.bank );
+						socket.emit('bank_get_release_actions', function_detail.first.page, function_detail.first.bank );
 						bank_preview_page(page);
 					}
 					clearFunction();
@@ -522,6 +526,7 @@ $(function() {
 				$("#editbankid").text(page + "." + $(this).data('bank'));
 				socket.emit('bank_get_actions', page, $(this).data('bank'));
 				socket.emit('bank_get_feedbacks', page, $(this).data('bank'));
+				socket.emit('bank_get_release_actions', page, $(this).data('bank'));
 				socket.emit('get_bank',page, $(this).data('bank'));
 				socket.once('get_bank:results', populate_bank_form);
 			}
