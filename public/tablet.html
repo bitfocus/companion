@@ -1,0 +1,219 @@
+<!-- /*
+ * This file is part of the Companion project
+ * Copyright (c) 2018 Bitfocus AS
+ * Authors: William Viker <william@bitfocus.io>, Håkon Nessjøen <haakon@bitfocus.io>
+ *
+ * This program is free software.
+ * You should have received a copy of the MIT licence as well as the Bitfocus
+ * Individual Contributor License Agreement for companion along with
+ * this program.
+ *
+ * You can be released from the requirements of the license by purchasing
+ * a commercial license. Buying such a license is mandatory as soon as you
+ * develop commercial activities involving the Companion software without
+ * disclosing the source code of your own applications.
+ *
+ */ -->
+<html>
+<head>
+	<style>
+		body {
+			margin: 0;
+			padding: 0;
+			background-color: black;
+			font-size: 2em;
+			font-family: helvetica;
+		}
+		.page-title {
+			background-color: #000;
+			padding: 10px;
+			text-align: center;
+			text-transform: uppercase;
+			margin-top: 0.2em;
+			color: rgb(255,198,0);
+			font-size: 0.6em;
+		}
+		#control {
+			position: fixed;
+			top:0;
+			left:0;
+			color: rgb(255,198,0);
+			font-size:19px;
+			width: 100%;
+			padding: 10px;
+			background-color: #222;
+			border-bottom: 1px solid rgb(255,198,0);
+		}
+		#banks {
+			padding-top: 25px;
+		}
+		.page-bank {
+			margin-top: 0.1em;
+			margin-bottom: 0.1em;
+			display:inline-block;
+		}
+		.page-bank-content {
+			padding: 0px;
+			margin:0.1em;
+			color: white;
+			background-color: #111;
+			border-top: 1px solid #555;
+			border-left: 1px solid #333;
+			display:table-cell;
+			height: 150px;
+			width:25%;
+		}
+		.page-content {
+			display:table;
+			width:100%;
+		}
+	</style>
+	<title>Companion Tablet Surface</title>
+</head>
+<body>
+<script src="js/jquery/jquery.min.js"></script>
+<script src="socket.io/socket.io.js"></script>
+<script src="js/preview.js"></script>
+
+<div id="control">
+	Companion Browser Control
+</div>
+
+<div id="banks">
+	heh
+</div>
+
+<script type="text/javascript">
+
+	var socket = io();
+	var config = {};
+
+	function int2hex(number) {
+		var r = ('0' + ((number >> 16) & 0xff).toString('16')).substr(-2);
+		var g = ('0' + ((number >> 8) & 0xff).toString('16')).substr(-2);
+		var b = ('0' + (number & 0xff).toString('16')).substr(-2);
+
+		return '#' + r + g + b;
+	}
+
+	function hex2int(hex) {
+		return parseInt(hex.substr(1), 16);
+	}
+
+	var $bs =	$("#banks");
+	for (var page = 1; page <= 99; page++) {
+		var $page = $("<div class='page'></div>");
+
+		var $pageTitle = $("<div class='page-title'>Page "+page+"</div>");
+		var $pageContent = $("<table class='page-content'></table>");
+		var $pageBankTr = $("<tr></tr>");
+
+		var i = 1;
+
+		for (var bank = 1; bank <= 12; bank++) {
+			if (i == 1) {
+				$pageBankTr = $("<tr></tr>");
+			}
+			if (i == 4) {
+				i = 0;
+				console.log("X=3")
+				$pageContent.append($pageBankTr);
+			}
+
+			var $pageBank = $("<td class='page-bank-content' id='bank_"+page+"_"+bank+"'></td>");
+			$pageBankTr.append($pageBank);
+
+			i++;
+		}
+
+		$page.append($pageTitle);
+		$page.append($pageContent);
+
+		$bs.append($page);
+	}
+	var lastdown;
+	var touchdevice = false;
+
+	window.addEventListener('touchstart', function onFirstTouch() {
+		touchdevice = true;
+
+		$("body").on('touchstart', '.page-bank-content', function() {
+			lastdown = $(this).attr('id').split(/_/);
+			console.log("touchstart", $(this).attr('id'));
+			if (lastdown[0] == 'bank') {
+				socket.emit('hot_press', lastdown[1], lastdown[2], true);
+			}
+		});
+
+		$("body").on('touchend', '.page-bank-content', function() {
+			console.log("touchend", $(this).attr('id'));
+			if (lastdown !== undefined && lastdown[0] == 'bank') {
+				socket.emit('hot_press', lastdown[1], lastdown[2], false);
+			}
+		});
+
+		window.removeEventListener('touchstart', onFirstTouch, false);
+	}, false);
+
+
+
+	$("body").on('mousedown', '.page-bank-content', function() {
+		if (!touchdevice) {
+			lastdown = $(this).attr('id').split(/_/);
+			console.log("mousedown", $(this).attr('id'));
+
+			if (lastdown[0] == 'bank') {
+				socket.emit('hot_press', lastdown[1], lastdown[2], true);
+			}
+		}
+	});
+
+	$("body").on('mouseup', '.page-bank-content', function() {
+		if (!touchdevice) {
+			console.log("mouseup", $(this).attr('id'));
+			if (lastdown !== undefined && lastdown[0] == 'bank') {
+				socket.emit('hot_press', lastdown[1], lastdown[2], false);
+			}
+		}
+	});
+
+
+	function drawBanks(config) {
+		for (var page = 1; page <= 99; page++) {
+			for (var bank = 1; bank <= 12; bank++) {
+				if (config[page] !== undefined && config[page][bank] !== undefined) {
+					var b = config[page][bank];
+					console.log("b",b);
+					var $b = $("#bank_"+page+"_"+bank);
+					if (b.style === undefined) {
+						$b.css({backgroundColor: '#111' });
+					}
+					else if (b.style == 'text') {
+						$b.text(b.text);
+						$b.css({backgroundColor: int2hex(b.bgcolor) });
+						$b.css({color: int2hex(b.color) });
+						$b.css({fontSize: parseInt(b.size*3) });
+						var a = b.alignment.split(":");
+						var hAlign = a[0]
+						var vAlign = a[1];
+						$b.css({'vertical-align': vAlign });
+						$b.css({'text-align': hAlign });
+					}
+				}
+			}
+		}
+	}
+
+	socket.on('connect', function () {
+		socket.emit('get_all_banks');
+		socket.once('get_all_banks:result', function(config) {
+			console.log("config", config);
+			drawBanks(config);
+		});
+	});
+
+
+
+</script>
+</body>
+</html>
