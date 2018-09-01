@@ -621,13 +621,24 @@ $(function() {
 
 		bank_preview_page(pagenum);
 
+
+		$("#pagebank .border").mousedown(function() {
+			bank = $(this).data('bank');
+			if (buttons_hot) {
+				socket.emit('hot_press', page, $(this).data('bank'), true);
+			}
+		});
+
+		$("#pagebank .border").mouseup(function() {
+			bank = $(this).data('bank');
+			if (buttons_hot) {
+				socket.emit('hot_press', page, $(this).data('bank'), false);
+			}
+		});
+
 		$("#pagebank .border").click(function() {
 			bank = $(this).data('bank');
-
-			if (buttons_hot) {
-				socket.emit('hot_press',page, $(this).data('bank'));
-			}
-
+			if (buttons_hot) {}
 			else if (function_state !== null) {
 				var bank = $(this).data('bank')
 				if (function_detail['first'] === undefined) {
