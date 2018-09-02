@@ -471,9 +471,18 @@
 										<label class="btn btn-primary btn-file">Browse <input type="file" data-fieldid="importfile" style="display: none;"></label>
 
 										<br><br>
-										<p>(this should be shown after import)</p>
-										<table class="table table-responsive-sm">
 
+										<p>
+											<h5>Full configuration</h5>
+											<p>Importing a full configuration will overwrite your current configuration, buttons and instances. Make sure to
+												back up your current config if you don't want to loose anything.</p>
+
+											<button class="btn btn-primary" data-loading-text="lol?" id="importAll">Import all</button>
+										</p>
+
+										<h5>Specific pages</h5>
+
+										<table class="table table-responsive-sm">
 											<thead>
 												<tr>
 													<th>Select instance</th>
@@ -495,7 +504,23 @@
 											</tbody>
 										</table>
 
-										<p></p>
+										<p>
+											Import <select>
+												<option>Page 1 (page name)</option>
+												<option>Page 2 (page name)</option>
+											</select> into
+											<select>
+												<option>Page 1 (page name)</option>
+												<option>Page 2 (page name)</option>
+											</select>
+
+										</p>
+										<p>
+											<button class="btn btn-primary" data-loading-text="lol?" id="importAll">Import</button>
+										</p>
+
+
+
 									</div>
 
 									<div class="tab-pane" id="export" role="tabpanel">
