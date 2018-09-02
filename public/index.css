@@ -36,27 +36,57 @@
 .padtop {
 	padding-top: 12px;
 }
-#pagebank .border, #pagenav .border {
+
+#import_pagebank .importborder {
 	display:block;
 	border-radius: 4px;
 	margin-bottom:10px;
 	padding:5px 7px;
-	cursor: pointer;
 	border: 1px solid #aaa;
-	background-color: #ccc;
+	background-color: #f4f4f4;
 	min-width: 100px;
+	text-align:center;
+}
+
+#import_pagebank canvas {
+	background-color: black;
+}
+
+#pagebank .border, #import_pagebank .border , #pagenav .border {
+	display:block;
+	border-radius: 4px;
+	margin-bottom:10px;
+	padding:7px 0px 2px 0px;
+	cursor: pointer;
+	border: 1px solid #ccc;
+	background-color: #f4f4f4;
+	min-width: 74px;
 	text-align:center;
 }
 #newversiontext {
 	color:red;
 }
 #pagebank .border:hover, #pagenav .border:hover {
-	background-color: #ddd;
+	background-color: #e4e4e4;
 }
 
-#pagebank div.border canvas {
+#pagebank divpreset canvas {
 	background-color: black;
 	border-radius: 5px;
+}
+
+#presets .presetbank canvas {
+	background-color: black;
+	border-radius: 5px;
+}
+
+#presets .presetbank {
+	width: 80px;
+	height: 80px;
+	overflow: hidden;
+	border:none;
+	float:left;
+	padding: 0;
 }
 
 .pageat {
@@ -182,6 +212,9 @@ label {
 	color: white;
 }
 
+.border canvas {
+	border-radius: 4px;
+}
 .log-type-error {
 	background-color: rgba(255,0,0,0.2);
 	color: rgba(255,0,0,1);
@@ -260,22 +293,11 @@ label {
 	zoom: 1; /* For IE 6/7 (trigger hasLayout) */
 }
 
-.button-mode {
-	display: block;
-	width:130px;
-	padding: 4px; 10px;
-	background-color: #f0f0f0;
-	border: 1px solid #eee;
-	text-align: center;
-	float:left;
-	margin-right: 5px;
-	border-radius: 4px;
+#pagebank .drophere {
+	border: 1px dashed black !important;
+	background-color: #eee !important;
 }
-
-#mode_latch {
-
-}
-
-#mode_momentary {
-
+#pagebank .drophover {
+	border: 1px solid black !important;
+	background-color: #daffab !important;
 }

@@ -46,137 +46,6 @@ $(function() {
 
 	$("#editbankli").hide();
 
-	var colors = [
-		"#000000",
-		"#FFFFFF",
-		"#003366",
-		"#336699",
-		"#3366CC",
-		"#003399",
-		"#000099",
-		"#0000CC",
-		"#000066",
-		"#006666",
-		"#006699",
-		"#0099CC",
-		"#0066CC",
-		"#0033CC",
-		"#0000FF",
-		"#3333FF",
-		"#333399",
-		"#669999",
-		"#009999",
-		"#33CCCC",
-		"#00CCFF",
-		"#0099FF",
-		"#0066FF",
-		"#3366FF",
-		"#3333CC",
-		"#666699",
-		"#339966",
-		"#00CC99",
-		"#00FFCC",
-		"#00FFFF",
-		"#33CCFF",
-		"#3399FF",
-		"#6699FF",
-		"#6666FF",
-		"#6600FF",
-		"#6600CC",
-		"#339933",
-		"#00CC66",
-		"#00FF99",
-		"#66FFCC",
-		"#66FFFF",
-		"#66CCFF",
-		"#99CCFF",
-		"#9999FF",
-		"#9966FF",
-		"#9933FF",
-		"#9900FF",
-		"#006600",
-		"#00CC00",
-		"#00FF00",
-		"#66FF99",
-		"#99FFCC",
-		"#CCFFFF",
-		"#CCCCFF",
-		"#CC99FF",
-		"#CC66FF",
-		"#CC33FF",
-		"#CC00FF",
-		"#9900CC",
-		"#003300",
-		"#009933",
-		"#33CC33",
-		"#66FF66",
-		"#99FF99",
-		"#CCFFCC",
-		"#FFCCFF",
-		"#FF99FF",
-		"#FF66FF",
-		"#FF00FF",
-		"#CC00CC",
-		"#660066",
-		"#336600",
-		"#009900",
-		"#66FF33",
-		"#99FF66",
-		"#CCFF99",
-		"#FFFFCC",
-		"#FFCCCC",
-		"#FF99CC",
-		"#FF66CC",
-		"#FF33CC",
-		"#CC0099",
-		"#993399",
-		"#333300",
-		"#669900",
-		"#99FF33",
-		"#CCFF66",
-		"#FFFF99",
-		"#FFCC99",
-		"#FF9999",
-		"#FF6699",
-		"#FF3399",
-		"#CC3399",
-		"#990099",
-		"#666633",
-		"#99CC00",
-		"#CCFF33",
-		"#FFFF66",
-		"#FFCC66",
-		"#FF9966",
-		"#FF6666",
-		"#FF0066",
-		"#CC6699",
-		"#993366",
-		"#999966",
-		"#CCCC00",
-		"#FFFF00",
-		"#FFCC00",
-		"#FF9933",
-		"#FF6600",
-		"#FF5050",
-		"#CC0066",
-		"#660033",
-		"#996633",
-		"#CC9900",
-		"#FF9900",
-		"#CC6600",
-		"#FF3300",
-		"#FF0000",
-		"#CC0000",
-		"#990033",
-		"#663300",
-		"#996600",
-		"#CC3300",
-		"#993300",
-		"#990000",
-		"#800000",
-		"#993333"
-	];
-
 	function bank_preview_page(_page) {
 		var cachedata = {};
 		for (var _bank = 1; _bank <= 12; ++_bank) {
@@ -235,6 +104,8 @@ $(function() {
 		if (config.style !== undefined) {
 			$("#resetBankButton").show();
 		}
+
+		$("#oscTips").html("<p><b>Hint:</b> Send OSC message /press/bank/"+p+"/"+b+" to press this button remotely. OSC port 12321!</p>")
 
 		$eb1.html("<p><h3>Configuration</h3></p>");
 		var $eb = $("<div class='row'></div>");
@@ -323,7 +194,7 @@ $(function() {
 						preferredFormat: "rgb",
 						showInput: true,
 						showPalette: true,
-						palette: colors,
+						palette: picker_colors,
 						showButtons: false,
 						change: function(color) {
 							socket.emit('bank_changefield', p, b, fid, hex2int( color.toHexString() ) );
@@ -445,8 +316,8 @@ $(function() {
 	$("#resetBankButton").click(function() {
 		if (confirm('Clear design and all actions?')) {
 			socket.emit('reset_bank', page, bank);
-			socket.emit('bank_reset_actions', page, bank);
 			socket.emit('bank_get_actions', page, bank);
+			socket.emit('bank_get_feedbacks', page, bank);
 			socket.emit('bank_reset_release_actions', page, bank);
 			socket.emit('bank_get_release_actions', page, bank);
 
@@ -487,6 +358,12 @@ $(function() {
 		}
 	});
 
+
+	$('#erase_page_link').click(function () {
+		if (confirm('Are you sure you want to clear all buttons on page ' + page + '?')) {
+			socket.emit('loadsave_reset_page', page);
+		}
+	});
 
 	$('#state_copy').click(function() {
 		if (function_state === null) {
@@ -530,7 +407,10 @@ $(function() {
 
 			if (function_state === 'copy') {
 				if (function_detail.second !== undefined) {
-					alert("copy " + function_detail.first.page + "." + function_detail.first.bank + " to " + function_detail.second.page + "." + function_detail.second.bank)
+					socket.emit('bank_copy', function_detail.first.page, function_detail.first.bank, function_detail.second.page, function_detail.second.bank);
+					socket.once('bank_copy:result', function () {
+						// TODO
+					});
 					clearFunction();
 				}
 			}
@@ -538,7 +418,10 @@ $(function() {
 			else if (function_state === 'move') {
 				console.log("move");
 				if (function_detail.second !== undefined) {
-					alert("move " + function_detail.first.page + "." + function_detail.first.bank + " to " + function_detail.second.page + "." + function_detail.second.bank)
+					socket.emit('bank_move', function_detail.first.page, function_detail.first.bank, function_detail.second.page, function_detail.second.bank);
+					socket.once('bank_move:result', function () {
+						// TODO
+					});
 					clearFunction();
 				}
 			}
@@ -546,7 +429,6 @@ $(function() {
 				if (function_detail.first !== undefined) {
 					if (confirm("Clear style and actions for this button?")) {
 						socket.emit('reset_bank', function_detail.first.page, function_detail.first.bank);
-						socket.emit('bank_reset_actions', function_detail.first.page, function_detail.first.bank );
 						socket.emit('bank_get_actions', function_detail.first.page, function_detail.first.bank );
 						socket.emit('bank_reset_release_actions', function_detail.first.page, function_detail.first.bank );
 						socket.emit('bank_get_release_actions', function_detail.first.page, function_detail.first.bank );
@@ -622,18 +504,36 @@ $(function() {
 		$pagenav.html("");
 		$pagebank.html("");
 
+		$('#import_page').text('Import to page ' + pagenum).data('page', pagenum);
+
 		var pname = "";
 
 		if (page_info !== undefined && page_info[page] !== undefined) {
 			pname = page_info[page].name;
 		}
 
+		$('#export_page_link').attr('href', '/int/page_export/' + page);
+
 		$pagenav.append($('<div class="pagenav col-lg-4"><div id="btn_pagedown" class="btn btn-primary"><i class="fa fa-chevron-left"></i></div></div>'));
 		$pagenav.append($('<div class="pageat col-lg-4"><small>(Page '+page+')</small> <input id="page_title" placeholder="Page name" type="text" value="'+ pname +'"></div>'));
 		$pagenav.append($('<div class="pagenav text-right col-lg-4"><div id="btn_pageup" class="btn btn-primary"><i class="fa fa-chevron-right"></i></div></div>'));
 
 		for (var bank = 1; bank <= 12; bank++) {
-			var $div = $('<div class="bank col-lg-3"><div class="border" data-bank="'+bank+'"><canvas width=72 height=72 id="bank_' + page + '_' + bank + '"</div></div>');
+			var $div = $('<div class="bank col-lg-3"><div class="border" data-bank="' + bank + '" data-page="' + page + '"><canvas width=72 height=72 id="bank_' + page + '_' + bank + '"></canvas></div></div>');
+			$div.find('.border').droppable({
+				activeClass: 'drophere',
+				hoverClass: 'drophover',
+				accept: '.presetbank',
+				receiveHandler: function (info) {
+					var $source = $(info.item);
+					var $dest = $(this);
+
+					var topage = $dest.data('page');
+					var tobank = $dest.data('bank');
+
+					socket.emit('preset_drop', $source.data('instance'), all_presets[$source.data('instance')][$source.data('key')], topage, tobank);
+				}
+			});
 			$pagebank.append($div);
 		}
 
@@ -683,6 +583,7 @@ $(function() {
 				$("#editbank_content").html("");
 				$("#editbankid").text(page + "." + $(this).data('bank'));
 				socket.emit('bank_get_actions', page, $(this).data('bank'));
+				socket.emit('bank_get_feedbacks', page, $(this).data('bank'));
 				socket.emit('bank_get_release_actions', page, $(this).data('bank'));
 				socket.emit('get_bank',page, $(this).data('bank'));
 				socket.once('get_bank:results', populate_bank_form);

@@ -93,15 +93,17 @@ system.on('skeleton-ready', function() {
 	var update     = require('./lib/update')(system,cfgDir);
 	var page       = require('./lib/page')(system)
 	var appRoot    = require('app-root-path');
-	var express    = require('express');
+	var variable   = require('./lib/variable')(system);
+	var feedback   = require('./lib/feedback')(system);
 	var bank       = require('./lib/bank')(system);
 	var elgatoDM   = require('./lib/elgato_dm')(system);
 	var preview    = require('./lib/preview')(system);
 	var action     = require('./lib/action')(system);
 	var instance   = require('./lib/instance')(system);
-	var variable   = require('./lib/variable')(system);
 	var osc        = require('./lib/osc')(system);
 	var rest       = require('./lib/rest')(system);
+	var loadsave   = require('./lib/loadsave')(system);
+	var preset     = require('./lib/preset')(system);
 	var tablet     = require('./lib/tablet')(system);
 
 	system.on('exit', function() {

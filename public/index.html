@@ -156,15 +156,14 @@
 				</nav>
 				<button class="sidebar-minimizer brand-minimizer" type="button"></button>
 			</div>
-			<main class="main">
+			<main class="main" style="padding-top:26px;">
 				<!-- Breadcrumb-->
+				<!--
 				<ol class="breadcrumb">
 
 					<li class="breadcrumb-item">Companion</li>
 					<li class="breadcrumb-item active">Web GUI</li>
 
-					<!-- Breadcrumb Menu-->
-					<!--
 					<li class="breadcrumb-menu d-md-down-none">
 						<div class="btn-group" role="group" aria-label="Button group">
 							<a class="btn" href="#">
@@ -176,14 +175,14 @@
 								<i class="icon-settings"></i>  Settings</a>
 						</div>
 					</li>
-					-->
-				</ol>
+
+				</ol> -->
 				<div class="container-fluid">
 					<div class="animated fadeIn">
 
 						<div class="row">
 							<!--/.col-->
-							<div class="col-lg-7 col-sm-12 col-xs-12">
+							<div class="col-lg-6 col-sm-12 col-xs-12">
 								<ul class="nav nav-tabs" role="tablist">
 
 
@@ -283,6 +282,21 @@
 									<div class="tab-pane" id="instanceConfig" role="tabpanel">
 										<h4></h4>
 										<div id='instanceConfigFields' class="row"></div>
+										<hr>
+										<div id='instanceConfigVariables' class="row col-lg-12">
+											<h4>List of dynamic variables</h4>
+											<table class="table table-responsive-sm">
+												<thead>
+													<tr>
+														<th>Variable</th>
+														<th>Description</th>
+														<th>Current value</th>
+													</tr>
+												</thead>
+												<tbody id="instanceConfigVariableList"></tbody>
+											</table>
+										</div>
+
 									</div>
 
 									<div class="tab-pane" id="devices" role="tabpanel">
@@ -308,19 +322,21 @@
 										<div class="row" id='pagebank'>
 										</div>
 
-										<div class="row" id='functionarea'>
+										<div class="row" id='functionarea' style="padding-top:15px;">
 											<div id="functionkeys" class='col-sm-12'>
 												<button class="btn btn-primary function-button" data-function='copy' id='state_copy'>Copy</button>
 												<button class="btn btn-primary function-button" data-function='move' id='state_move'>Move</button>
 												<button class="btn btn-primary function-button" data-function='delete' id='state_delete'>Delete</button>
 												<button class="btn btn-danger" id='state_abort'>Cancel</button>
 												<button class="btn btn-disabled" id='state_hint'></button>
+												<a id="export_page_link" href="/int/page_export/1" class="btn btn-warning">Export page</a>
+												<button type="button" id="erase_page_link" class="btn btn-danger">Erase page</button>
+
 											</div>
 										</div>
 
 										<p></p>
 										<b>Hint:</b> Hold shift down to test buttons from the GUI<br>
-										<b>Hint:</b> Send OSC <b>/press/bank/1/3</b> to press page 1 button 3. OSC port 12321!
 
 									</div>
 									<div class="tab-pane" id="editbank" role="tabpanel">
@@ -350,18 +366,27 @@
 										<div id="editbank_content">
 										</div>
 
+
+										<h4 style="margin-bottom:-13px;margin-top: 15px;">Key down/on actions</h4>
 										<div id='bankActions'>
 										</div>
-										<p>
-											<select id='addBankAction' style='form-control'></select>
-										</p>
 
+										<select id='addBankAction' style='form-control'></select>
+
+										<h4 style="margin-top: 30px;">Key up/off actions</h4>
 										<div id='bankReleaseActions'>
 										</div>
-										<p>
-											<select id='addBankReleaseAction' style='form-control'></select>
-										</p>
 
+										<select id='addBankReleaseAction' style='form-control'></select>
+
+										<h4 style="margin-top: 30px;">Instance feedback</h4>
+										<div id='bankFeedbacks'>
+										</div>
+										<select id='addBankFeedback' style='form-control'></select>
+
+										<br><br>
+										<div id="oscTips">
+										</div>
 
 									</div>
 
@@ -409,16 +434,35 @@
 							</div>
 							<!--/.col-->
 
-							<div class='col-lg-5 col-sm-12 col-xs-12'>
+							<div class='col-lg-6 col-sm-12 col-xs-12'>
 								<ul class="nav nav-tabs" role="tablist">
 
 
 									<li class="nav-item">
 										<a class="nav-link active" data-toggle="tab" href="#log" role="tab" aria-controls="log">
-											<i class="icon-calculator"></i> Log
+											<i class="fa fa-clipboard-list"></i> Log
 											<!-- <span class="badge badge-pill badge-success">OK</span> -->
 										</a>
 									</li>
+
+									<li class="nav-item">
+										<a class="nav-link" id="presets_tab" data-toggle="tab" href="#presets" role="tab" aria-controls="presets">
+											<i class="fa fa-gift"></i> Presets
+										</a>
+									</li>
+
+									<li class="nav-item">
+										<a class="nav-link" id="import_tab" data-toggle="tab" href="#import" role="tab" aria-controls="import">
+											<i class="fa fa-file-import"></i> Import
+										</a>
+									</li>
+
+									<li class="nav-item">
+										<a class="nav-link" data-toggle="tab" href="#export" role="tab" aria-controls="export">
+											<i class="fa fa-file-export"></i> Export
+										</a>
+									</li>
+
 
 								</ul>
 
@@ -426,7 +470,109 @@
 								<div class="tab-content">
 									<div class="tab-pane active" id="log" role="tabpanel">
 									</div>
+
+									<div class="tab-pane" id="presets" role="tabpanel">
+									</div>
+
+									<div class="tab-pane" id="import" role="tabpanel">
+
+
+										<!-- this should be hidden after loading the file -->
+										<div id="import_fileselect">
+											<h4>Load a configuration file</h4>
+											<p>Use the button below to browse your computer for a <b>.companionconfig</b> file containing either a full companion configuration, or just a single button page export.</p>
+											<label class="btn btn-primary btn-file"><i class="fa fa-file-import"></i> Import <input type="file" id="loadconfig" data-fieldid="importfile" style="display: none;"></label>
+
+											<br><br>
+										</div>
+
+										<!-- this should be shown after loading the file -->
+										<div id="import_config">
+											<div class="row" id="import_pagenav">
+
+												<div class="pagenav col-lg-4">
+													<div id="import_btn_pagedown" class="btn btn-primary">
+														<i class="fa fa-chevron-left"></i>
+													</div>
+												</div>
+
+												<div class="pageat col-lg-4">
+													<small>(Page 1)</small>
+													<input id="import_page_title" placeholder="Page name" type="text" value="PAGE">
+												</div>
+
+												<div class="pagenav text-right col-lg-4">
+													<div id="import_btn_pageup" class="btn btn-primary">
+														<i class="fa fa-chevron-right"></i>
+													</div>
+												</div>
+
+											</div>
+
+											<div class="row" id='import_pagebank'>
+											</div>
+											<br>
+
+											<div id="import_step2">
+												<h5>What to do</h5>
+												<button class="btn btn-primary import_individual">Import individual pages</button>
+												<button class="btn btn-primary import_replace">Replace current configuration</button>
+												<br><br>
+											</div>
+
+											<div id="import_resolve">
+
+												<h5>Link config instances with local instances</h5>
+
+												<table class="table table-responsive-sm">
+													<thead>
+														<tr>
+															<th>Select instance</th>
+															<th>Config instance type</th>
+															<th>Config instance name</th>
+														</tr>
+													</thead>
+													<tbody id="importConfigInstanceList">
+														<tr>
+															<td>
+																<select>
+																	<option>[ Create new instance ]</option>
+																	<option>Our own BMD VideoHub instance</option>
+																</select>
+															</td>
+															<td>BMD VideoHub</td>
+															<td>Routeren da</td>
+														</tr>
+													</tbody>
+												</table>
+
+												<p>
+													<button class="btn btn-primary" id="import_page">Import to page 1</button>
+												</p>
+
+											</div>
+
+
+										</div>
+									</div>
+
+									<div class="tab-pane" id="export" role="tabpanel">
+											<h4>Export full configuration</h4>
+											<p>Use the button below to download a full backup of your companion settings.</p>
+											<a class="btn btn-warning" id="download_export" href="/int/full_export">
+												<span class="fa fa-download"></span> Download
+											</a>
+											<br><br>
+											<h4>Reset full configuration</h4>
+											<p>Use the button below to remove all configuration and buttons and start over.</p>
+											<button class="btn btn-danger" id="reset_all" type="button">
+												<span class="fa fa-trash-alt"></span> Reset configuration
+											</button>
+											<br><br>
+									</div>
+
 								</div>
+
 							</div>
 
 
@@ -457,6 +603,7 @@
 		<script src="js/coreui/coreui.min.js"></script>
 		<script src="socket.io/socket.io.js"></script>
 		<script src="js/moment/min/moment-with-locales.min.js"></script>
+		<script src="js/touch-dnd.js"></script>
 		<script src='js/spectrum.js'></script>
 		<script src="js/preview.js"></script>
 		<script src="page.js"></script>
@@ -464,10 +611,13 @@
 		<script src="userconfig.js"></script>
 		<script src="instance.js"></script>
 		<script src="action.js"></script>
+		<script src="import.js"></script>
+		<script src="feedback.js"></script>
 		<script src="release_action.js"></script>
 		<script src="devices.js"></script>
 		<script src="log.js"></script>
 		<script src="main.js"></script>
 		<script src="update.js"></script>
+		<script src="preset.js"></script>
 	</body>
 </html>

@@ -61,7 +61,7 @@ $(function() {
 		$ba.html("");
 
 		var $table = $("<table class='table action-table'></table>");
-		var $trth = $("<thead><tr><th colspan=2>Button down actions</th><th style='width:90px'>Delay</th><th>Options</th></tr></thead>");
+		var $trth = $("<thead><tr><th colspan=2>Action</th><th style='width:90px'>Delay</th><th>Options</th></tr></thead>");
 		var $tbody = $("<tbody></tbody>");
 		$table.append($trth);
 
@@ -214,7 +214,7 @@ $(function() {
 		$aba.html("");
 		$ali.html("");
 
-		var $option = $("<option>[ Add key down/on action ]</option>")
+		var $option = $("<option>[ Add key down/on action  ]</option>")
 		$aba.append($option);
 
 		for (var n in actions) {
