@@ -496,6 +496,8 @@ $(function() {
 		$pagenav.html("");
 		$pagebank.html("");
 
+		$('#import_page').text('Import to page ' + pagenum).data('page', pagenum);
+
 		var pname = "";
 
 		if (page_info !== undefined && page_info[page] !== undefined) {

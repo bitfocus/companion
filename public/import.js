@@ -69,6 +69,35 @@ $(function() {
 		}
 	}
 
+	$('#import .import_replace').click(function () {
+		$('#import_step2').hide();
+		$('#import_tab').click();
+
+		socket.emit('loadsave_import_full', import_data);
+	});
+
+
+	$('#import_page').click(function () {
+		var instanceconfig = {};
+
+		$('#importConfigInstanceList select').each(function () {
+			var key = $(this).data('key');
+			import_data.instances[key].import_to = $(this).val();
+		});
+
+		socket.emit('loadsave_import_page', $(this).data('page'), import_page, import_data);
+		socket.once('loadsave_import_page:result', function (err, result) {
+			$('#import_tab').click();
+		});
+	});
+
+	$('#import .import_individual').click(function () {
+		$('#import_step2').hide();
+		$('#import_resolve').show();
+
+		$('#import_page').text('Import to page ' + page).data('page', page);
+	});
+
 	$('#loadconfig').change(function () {
 		import_file(this);
 		socket.once('loadsave_import_config:result', function (err, result) {
@@ -85,18 +114,25 @@ $(function() {
 				$('#import_btn_pagedown').hide();
 				$('#import_btn_pageup').hide();
 
+				$('#import_step2').hide();
+				$('#import_resolve').show();
+
 				loadPage('', result.page, result.config);
+
+				$('#import_page').text('Import to page ' + page);
 			} else {
 				$('#import_btn_pagedown').show();
 				$('#import_btn_pageup').show();
 
-				console.log(result);
+				$('#import_step2').show();
+				$('#import_resolve').hide();
+
 				loadPage(import_page = 1, result.page[1], result.config[1]);
 			}
 
 			var $list = $('#importConfigInstanceList').html('');
 			for (var key in result.instances) {
-				var $tr = $('<tr><td><select><option value="new">[ Create new instance ]</option></select></td><td>BMD VideoHub</td><td>Routeren da</td></tr>');
+				var $tr = $('<tr><td><select data-key="' + key + '"><option value="new">[ Create new instance ]</option></select></td><td>BMD VideoHub</td><td>Routeren da</td></tr>');
 				var $sel = $tr.find('select');
 
 				var selected = '';
