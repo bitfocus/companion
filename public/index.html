@@ -477,8 +477,9 @@
 
 										<!-- this should be hidden after loading the file -->
 										<div id="import_fileselect">
-											<h5>Load a configuration file</h5>
-											<label class="btn btn-primary btn-file">Load <input type="file" id="loadconfig" data-fieldid="importfile" style="display: none;"></label>
+											<h4>Load a configuration file</h4>
+											<p>Use the button below to browse your computer for a <b>.companionconfig</b> file containing either a full companion configuration, or just a single button page export.</p>
+											<label class="btn btn-primary btn-file"><i class="fa fa-file-import"></i> Import <input type="file" id="loadconfig" data-fieldid="importfile" style="display: none;"></label>
 
 											<br><br>
 										</div>
@@ -554,7 +555,12 @@
 									</div>
 
 									<div class="tab-pane" id="export" role="tabpanel">
-
+											<h4>Export full configuration</h4>
+											<p>Use the button below to download a full backup of your companion settings.</p>
+											<button class="btn btn-danger" type="button" id="download_export">
+												<span class="fa fa-download"></span> Download
+											</button>
+											<br><br>
 									</div>
 
 								</div>
