@@ -463,24 +463,40 @@
 									</div>
 
 									<div class="tab-pane" id="import" role="tabpanel">
-										<h3>Import configuration</h3>
-										<p>Import configuration from another companion installation. You can choose between importing
-											only one single page, or the entire config.</p>
 
-										<h5>Choose a configuration file</h5>
-										<label class="btn btn-primary btn-file">Browse <input type="file" data-fieldid="importfile" style="display: none;"></label>
+
+										<!-- this should be hidden after loading the file -->
+										<h5>Load a configuration file</h5>
+										<label class="btn btn-primary btn-file">Load <input type="file" data-fieldid="importfile" style="display: none;"></label>
 
 										<br><br>
 
-										<p>
-											<h5>Full configuration</h5>
-											<p>Importing a full configuration will overwrite your current configuration, buttons and instances. Make sure to
-												back up your current config if you don't want to loose anything.</p>
+										<!-- this should be shown after loading the file -->
+										<div class="row" id="import_pagenav">
 
-											<button class="btn btn-primary" data-loading-text="lol?" id="importAll">Import all</button>
-										</p>
+											<div class="pagenav col-lg-4">
+												<div id="import_btn_pagedown" class="btn btn-primary">
+													<i class="fa fa-chevron-left"></i>
+												</div>
+											</div>
 
-										<h5>Specific pages</h5>
+											<div class="pageat col-lg-4">
+												<small>(Page 1)</small>
+												<input id="import_page_title" placeholder="Page name" type="text" value="PAGE">
+											</div>
+
+											<div class="pagenav text-right col-lg-4">
+												<div id="import_btn_pageup" class="btn btn-primary">
+													<i class="fa fa-chevron-right"></i>
+												</div>
+											</div>
+
+										</div>
+
+										<div class="row" id='import_pagebank'>
+										</div>
+
+										<h5>Resolve instance conflicts</h5>
 
 										<table class="table table-responsive-sm">
 											<thead>
@@ -503,22 +519,11 @@
 												</tr>
 											</tbody>
 										</table>
-
-										<p>
-											Import <select>
-												<option>Page 1 (page name)</option>
-												<option>Page 2 (page name)</option>
-											</select> into
-											<select>
-												<option>Page 1 (page name)</option>
-												<option>Page 2 (page name)</option>
-											</select>
-
-										</p>
+<!--
 										<p>
 											<button class="btn btn-primary" data-loading-text="lol?" id="importAll">Import</button>
 										</p>
-
+-->
 
 
 									</div>
@@ -566,6 +571,7 @@
 		<script src="userconfig.js"></script>
 		<script src="instance.js"></script>
 		<script src="action.js"></script>
+		<script src="import.js"></script>
 		<script src="feedback.js"></script>
 		<script src="release_action.js"></script>
 		<script src="devices.js"></script>

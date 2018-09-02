@@ -36,7 +36,7 @@
 .padtop {
 	padding-top: 12px;
 }
-#pagebank .border, #pagenav .border {
+#pagebank .border, #import_pagebank .border, #import_pagenav .border , #pagenav .border {
 	display:block;
 	border-radius: 4px;
 	margin-bottom:10px;
@@ -50,7 +50,7 @@
 #newversiontext {
 	color:red;
 }
-#pagebank .border:hover, #pagenav .border:hover {
+#pagebank .border:hover, #import_pagenav .border:hover, #pagenav .border:hover {
 	background-color: #ddd;
 }
 
