@@ -32,7 +32,7 @@ $(function() {
 		$ba.html("");
 
 		var $table = $("<table class='table feedback-table'></table>");
-		var $trth = $("<thead><tr><th colspan=2>Feedbacks</th><th>Options</th></tr></thead>");
+		var $trth = $("<thead><tr><th colspan=2>Feedback</th><th>Options</th></tr></thead>");
 		var $tbody = $("<tbody></tbody>");
 		$table.append($trth);
 
@@ -218,7 +218,7 @@ $(function() {
 
 		console.log("feedbacks",feedbacks);
 
-		var $option = $("<option>[ Add new feedback for this button ]</option>")
+		var $option = $("<option>[ Add feedback ]</option>")
 		$aba.append($option);
 
 		for (var inst in feedbacks) {

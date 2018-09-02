@@ -156,15 +156,14 @@
 				</nav>
 				<button class="sidebar-minimizer brand-minimizer" type="button"></button>
 			</div>
-			<main class="main">
+			<main class="main" style="padding-top:26px;">
 				<!-- Breadcrumb-->
+				<!--
 				<ol class="breadcrumb">
 
 					<li class="breadcrumb-item">Companion</li>
 					<li class="breadcrumb-item active">Web GUI</li>
 
-					<!-- Breadcrumb Menu-->
-					<!--
 					<li class="breadcrumb-menu d-md-down-none">
 						<div class="btn-group" role="group" aria-label="Button group">
 							<a class="btn" href="#">
@@ -176,8 +175,8 @@
 								<i class="icon-settings"></i>  Settings</a>
 						</div>
 					</li>
-					-->
-				</ol>
+
+				</ol> -->
 				<div class="container-fluid">
 					<div class="animated fadeIn">
 
@@ -323,7 +322,7 @@
 										<div class="row" id='pagebank'>
 										</div>
 
-										<div class="row" id='functionarea'>
+										<div class="row" id='functionarea' style="padding-top:15px;">
 											<div id="functionkeys" class='col-sm-12'>
 												<button class="btn btn-primary function-button" data-function='copy' id='state_copy'>Copy</button>
 												<button class="btn btn-primary function-button" data-function='move' id='state_move'>Move</button>
@@ -338,7 +337,6 @@
 
 										<p></p>
 										<b>Hint:</b> Hold shift down to test buttons from the GUI<br>
-										<b>Hint:</b> Send OSC <b>/press/bank/1/3</b> to press page 1 button 3. OSC port 12321!
 
 									</div>
 									<div class="tab-pane" id="editbank" role="tabpanel">
@@ -368,24 +366,26 @@
 										<div id="editbank_content">
 										</div>
 
+
+										<h4 style="margin-bottom:-13px;margin-top: 15px;">Key down/on actions</h4>
 										<div id='bankActions'>
 										</div>
-										<p>Add key down action<br>
-											<select id='addBankAction' style='form-control'></select>
-										</p>
+										<select id='addBankAction' style='form-control'></select>
 
+										<h4 style="margin-top: 30px;">Key up/off actions</h4>
 										<div id='bankReleaseActions'>
 										</div>
-										<p>Add key up action<br>
-											<select id='addBankReleaseAction' style='form-control'></select>
-										</p>
+										<select id='addBankReleaseAction' style='form-control'></select>
 
+
+										<h4 style="margin-top: 30px;">Instance feedback</h4>
 										<div id='bankFeedbacks'>
 										</div>
-										<p>Add feedback<br>
-											<select id='addBankFeedback' style='form-control'></select>
-										</p>
+										<select id='addBankFeedback' style='form-control'></select>
 
+										<br><br>
+										<div id="oscTips">
+										</div>
 
 									</div>
 

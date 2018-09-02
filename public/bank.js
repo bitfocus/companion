@@ -105,6 +105,8 @@ $(function() {
 			$("#resetBankButton").show();
 		}
 
+		$("#oscTips").html("<p><b>Hint:</b> Send OSC message /press/bank/"+p+"/"+b+" to press this button remotely. OSC port 12321!</p>")
+
 		$eb1.html("<p><h3>Configuration</h3></p>");
 		var $eb = $("<div class='row'></div>");
 		$eb1.append($eb);
