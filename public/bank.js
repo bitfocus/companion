@@ -507,7 +507,15 @@ $(function() {
 		$pagenav.append($('<div class="pagenav text-right col-lg-4"><div id="btn_pageup" class="btn btn-primary"><i class="fa fa-chevron-right"></i></div></div>'));
 
 		for (var bank = 1; bank <= 12; bank++) {
-			var $div = $('<div class="bank col-lg-3"><div class="border" data-bank="'+bank+'"><canvas width=72 height=72 id="bank_' + page + '_' + bank + '"</div></div>');
+			var $div = $('<div class="bank col-lg-3"><div class="border" data-bank="'+bank+'"><canvas width=72 height=72 id="bank_' + page + '_' + bank + '"></canvas></div></div>');
+			$div.find('.border').droppable({
+				activeClass: 'drophere',
+				hoverClass: 'drophover',
+				accept: '.presetbank',
+				receiveHandler: function () {
+					console.log("DROP receivehandler", this, arguments);
+				}
+			});
 			$pagebank.append($div);
 		}
 

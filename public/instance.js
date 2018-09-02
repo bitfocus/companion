@@ -14,7 +14,7 @@
  * disclosing the source code of your own applications.
  *
  */
- 
+
 var instance = {};
 var instance_status = {};
 var instance_variables = {};
