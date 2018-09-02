@@ -204,7 +204,7 @@ $(function() {
 		$aba.html("");
 		$ali.html("");
 
-		var $option = $("<option>[ Add new action for this button ]</option>")
+		var $option = $("<option>[ Add key up/off action  ]</option>")
 		$aba.append($option);
 
 		for (var n in actions) {

@@ -247,3 +247,35 @@ label {
 .bank-armed {
 	background-color: rgba(255,0,0,0.5) !important;
 }
+
+.group:before,
+.group:after {
+	content: "";
+	display: table;
+}
+.group:after {
+	clear: both;
+}
+.group {
+	zoom: 1; /* For IE 6/7 (trigger hasLayout) */
+}
+
+.button-mode {
+	display: block;
+	width:130px;
+	padding: 4px; 10px;
+	background-color: #f0f0f0;
+	border: 1px solid #eee;
+	text-align: center;
+	float:left;
+	margin-right: 5px;
+	border-radius: 4px;
+}
+
+#mode_latch {
+
+}
+
+#mode_momentary {
+
+}
