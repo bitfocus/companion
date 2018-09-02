@@ -448,7 +448,7 @@
 									</li>
 
 									<li class="nav-item">
-										<a class="nav-link" data-toggle="tab" href="#import" role="tab" aria-controls="import">
+										<a class="nav-link" id="import_tab" data-toggle="tab" href="#import" role="tab" aria-controls="import">
 											<i class="fa fa-file-import"></i> Import
 										</a>
 									</li>
@@ -474,66 +474,70 @@
 
 
 										<!-- this should be hidden after loading the file -->
-										<h5>Load a configuration file</h5>
-										<label class="btn btn-primary btn-file">Load <input type="file" data-fieldid="importfile" style="display: none;"></label>
+										<div id="import_fileselect">
+											<h5>Load a configuration file</h5>
+											<label class="btn btn-primary btn-file">Load <input type="file" id="loadconfig" data-fieldid="importfile" style="display: none;"></label>
 
-										<br><br>
+											<br><br>
+										</div>
 
 										<!-- this should be shown after loading the file -->
-										<div class="row" id="import_pagenav">
+										<div id="import_config">
+											<div class="row" id="import_pagenav">
 
-											<div class="pagenav col-lg-4">
-												<div id="import_btn_pagedown" class="btn btn-primary">
-													<i class="fa fa-chevron-left"></i>
+												<div class="pagenav col-lg-4">
+													<div id="import_btn_pagedown" class="btn btn-primary">
+														<i class="fa fa-chevron-left"></i>
+													</div>
 												</div>
-											</div>
 
-											<div class="pageat col-lg-4">
-												<small>(Page 1)</small>
-												<input id="import_page_title" placeholder="Page name" type="text" value="PAGE">
-											</div>
-
-											<div class="pagenav text-right col-lg-4">
-												<div id="import_btn_pageup" class="btn btn-primary">
-													<i class="fa fa-chevron-right"></i>
+												<div class="pageat col-lg-4">
+													<small>(Page 1)</small>
+													<input id="import_page_title" placeholder="Page name" type="text" value="PAGE">
 												</div>
+
+												<div class="pagenav text-right col-lg-4">
+													<div id="import_btn_pageup" class="btn btn-primary">
+														<i class="fa fa-chevron-right"></i>
+													</div>
+												</div>
+
 											</div>
+
+											<div class="row" id='import_pagebank'>
+											</div>
+											<br>
+											<h5>Resolve instance conflicts</h5>
+
+											<table class="table table-responsive-sm">
+												<thead>
+													<tr>
+														<th>Select instance</th>
+														<th>Import instance type</th>
+														<th>Import instance name</th>
+													</tr>
+												</thead>
+												<tbody id="importConfigInstanceList">
+													<tr>
+														<td>
+															<select>
+																<option>[ Create new instance ]</option>
+																<option>Our own BMD VideoHub instance</option>
+															</select>
+														</td>
+														<td>BMD VideoHub</td>
+														<td>Routeren da</td>
+													</tr>
+												</tbody>
+											</table>
+	<!--
+											<p>
+												<button class="btn btn-primary" data-loading-text="lol?" id="importAll">Import</button>
+											</p>
+	-->
+
 
 										</div>
-
-										<div class="row" id='import_pagebank'>
-										</div>
-
-										<h5>Resolve instance conflicts</h5>
-
-										<table class="table table-responsive-sm">
-											<thead>
-												<tr>
-													<th>Select instance</th>
-													<th>Import instance type</th>
-													<th>Import instance name</th>
-												</tr>
-											</thead>
-											<tbody id="instanceConfigVariableList">
-												<tr>
-													<td>
-														<select>
-															<option>[ Create new instance ]</option>
-															<option>Our own BMD VideoHub instance</option>
-														</select>
-													</td>
-													<td>BMD VideoHub</td>
-													<td>Routeren da</td>
-												</tr>
-											</tbody>
-										</table>
-<!--
-										<p>
-											<button class="btn btn-primary" data-loading-text="lol?" id="importAll">Import</button>
-										</p>
--->
-
-
 									</div>
 
 									<div class="tab-pane" id="export" role="tabpanel">

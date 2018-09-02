@@ -16,14 +16,131 @@
  */
 
 var import_page = 1;
+var import_data;
 var import_bank = undefined;
 
 $(function() {
 	var $pagenav = $("#import_pagenav");
 	var $pagebank = $("#import_pagebank");
 
-	for (var x = 1; x <= 12; x++) {
-		var $b = $("<div class='bank col-lg-3'><div class='border'>x</div></div>");
-		$pagebank.append($b);
+	$('#import_btn_pagedown').click(function () {
+		if (import_page > 1) {
+			import_page--;
+		} else {
+			import_page = 99;
+		}
+
+		loadPage(import_page, import_data.page[import_page], import_data.config[import_page]);
+	});
+
+	$('#import_btn_pageup').click(function () {
+		if (import_page < 99) {
+			import_page++;
+		} else {
+			import_page = 1;
+		}
+
+		loadPage(import_page, import_data.page[import_page], import_data.config[import_page]);
+	});
+
+	$('#import_tab').click(function () {
+		$('#import_fileselect').show();
+		$('#import_config').hide();
+	});
+
+	function loadPage(num, page, config) {
+		$('#import_config .pageat small').text(num ? '(Page ' + num + ')' : '');
+		$('#import_page_title').val(page.name);
+
+		$pagebank.html('');
+		for (var key in config) {
+			var $b = $("<div class='bank col-lg-3'><div class='importborder'><canvas width=72 height=72></canvas></div></div>");
+
+			$pagebank.append($b);
+			(function ($b) {
+				var preview_id = 'lp' + num + page.name + key;
+				socket.emit('graphics_generate_preview', config[key], preview_id);
+				socket.once('graphics_generate_preview:' + preview_id, function (img) {
+					var canv = $b.find('canvas').get(0);
+					var ctx = canv.getContext('2d');
+					ctx.putImageData(dataToButtonImage(img), 0, 0);
+				});
+			})($b);
+		}
+	}
+
+	$('#loadconfig').change(function () {
+		import_file(this);
+		socket.once('loadsave_import_config:result', function (err, result) {
+			if (err) {
+				alert('Error importing configuration: ' + err);
+				return;
+			}
+
+			$('#import_config').show();
+			$('#import_fileselect').hide();
+
+			import_data = result;
+			if (result.type == 'page') {
+				$('#import_btn_pagedown').hide();
+				$('#import_btn_pageup').hide();
+
+				loadPage('', result.page, result.config);
+			} else {
+				$('#import_btn_pagedown').show();
+				$('#import_btn_pageup').show();
+
+				console.log(result);
+				loadPage(import_page = 1, result.page[1], result.config[1]);
+			}
+
+			var $list = $('#importConfigInstanceList').html('');
+			for (var key in result.instances) {
+				var $tr = $('<tr><td><select><option value="new">[ Create new instance ]</option></select></td><td>BMD VideoHub</td><td>Routeren da</td></tr>');
+				var $sel = $tr.find('select');
+
+				var selected = '';
+				for (var ik in instance.db) {
+					if (instance.db[ik].instance_type == result.instances[key].instance_type) {
+						$sel.append('<option value="' + ik + '">' + instance.db[ik].label + '</option>');
+						if (ik == key) {
+							selected = ik;
+						}
+					}
+				}
+				if (selected != '') {
+					$sel.val(selected);
+				}
+
+				for (var i = 0; i < instance.module.length; ++i) {
+					if (instance.module[i].id == result.instances[key].instance_type) {
+						$tr.find('td:nth-child(2)').text(instance.module[i].label);
+					}
+				}
+
+				$tr.find('td:nth-child(3)').text(result.instances[key].label);
+
+				$list.append($tr);
+			}
+			console.log(result);
+		});
+	});
+
+	function import_file(upload) {
+		if (window.File && window.FileReader && window.FileList && window.Blob) {
+				if (!upload.files[0] === undefined || upload.files[0].type === undefined) {
+					alert('Unable to read config file');
+					return;
+				}
+
+				var fr = new FileReader;
+				fr.onload = function() {
+					socket.emit('loadsave_import_config', fr.result);
+				};
+				fr.readAsBinaryString(upload.files[0]);
+		} else {
+				alert('I am sorry, Companion requires a more modern browser');
+		}
+		upload.value = null;
 	}
 });
