@@ -74,8 +74,17 @@ $(function() {
 		$('#import_tab').click();
 
 		socket.emit('loadsave_import_full', import_data);
+		socket.once('loadsave_import_full:result', function () {
+			window.location.reload();
+		});
 	});
 
+	$('#reset_all').click(function () {
+		socket.emit('reset_all');
+		socket.once('reset_all:result', function () {
+			window.location.reload();
+		});
+	});
 
 	$('#import_page').click(function () {
 		var instanceconfig = {};
