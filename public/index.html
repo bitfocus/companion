@@ -175,7 +175,7 @@
 
 						<div class="row">
 							<!--/.col-->
-							<div class="col-lg-7 col-sm-12 col-xs-12">
+							<div class="col-lg-6 col-sm-12 col-xs-12">
 								<ul class="nav nav-tabs" role="tablist">
 
 
@@ -422,7 +422,7 @@
 							</div>
 							<!--/.col-->
 
-							<div class='col-lg-5 col-sm-12 col-xs-12'>
+							<div class='col-lg-6 col-sm-12 col-xs-12'>
 								<ul class="nav nav-tabs" role="tablist">
 
 
@@ -439,6 +439,19 @@
 										</a>
 									</li>
 
+									<li class="nav-item">
+										<a class="nav-link" data-toggle="tab" href="#import" role="tab" aria-controls="import">
+											<i class="fa fa-file-import"></i> Import
+										</a>
+									</li>
+
+									<li class="nav-item">
+										<a class="nav-link" data-toggle="tab" href="#export" role="tab" aria-controls="export">
+											<i class="fa fa-file-export"></i> Export
+										</a>
+									</li>
+
+
 								</ul>
 
 
@@ -448,6 +461,22 @@
 
 									<div class="tab-pane" id="presets" role="tabpanel">
 									</div>
+
+									<div class="tab-pane" id="import" role="tabpanel">
+										<h3>Import configuration</h3>
+										<p>Import configuration from another companion installation. You can choose between importing
+											only one single page, or the entire config.</p>
+
+										<h5>Choose a configuration file</h5>
+										<label class="btn btn-primary btn-file">Browse <input type="file" data-fieldid="importfile" style="display: none;"></label>
+
+										<p></p>
+									</div>
+
+									<div class="tab-pane" id="export" role="tabpanel">
+
+									</div>
+
 								</div>
 
 							</div>
