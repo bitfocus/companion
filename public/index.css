@@ -54,9 +54,23 @@
 	background-color: #ddd;
 }
 
-#pagebank div.border canvas {
+#pagebank divpreset canvas {
 	background-color: black;
 	border-radius: 5px;
+}
+
+#presets .presetbank canvas {
+	background-color: black;
+	border-radius: 5px;
+}
+
+#presets .presetbank {
+	width: 80px;
+	height: 80px;
+	overflow: hidden;
+	border:none;
+	float:left;
+	padding: 0;
 }
 
 .pageat {
@@ -246,4 +260,13 @@ label {
 }
 .bank-armed {
 	background-color: rgba(255,0,0,0.5) !important;
+}
+
+#pagebank .drophere {
+	border: 1px dashed black !important;
+	background-color: #eee !important;
+}
+#pagebank .drophover {
+	border: 1px solid black !important;
+	background-color: #daffab !important;
 }

@@ -103,6 +103,8 @@ system.on('skeleton-ready', function() {
 	var osc        = require('./lib/osc')(system);
 	var rest       = require('./lib/rest')(system);
 	var loadsave   = require('./lib/loadsave')(system);
+	var preset     = require('./lib/preset')(system);
+	var tablet     = require('./lib/tablet')(system);
 
 	system.on('exit', function() {
 		elgatoDM.quit();

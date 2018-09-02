@@ -116,6 +116,14 @@
 			<div class="sidebar">
 				<nav class="sidebar-nav">
 					<ul class="nav">
+
+						<li class="nav-item">
+							<a class="nav-link" target="_new" href="/tablet.html">
+								<i class="nav-icon fa fa-gamepad"></i> Web buttons
+								<!-- <span class="badge badge-primary">NEW</span> -->
+							</a>
+						</li>
+
 						<li class="nav-item">
 							<a class="nav-link" target="_new" href="/emulator.html">
 								<i class="nav-icon fa fa-gamepad"></i> Elgato Emulator
@@ -434,7 +442,7 @@
 									</li>
 
 									<li class="nav-item">
-										<a class="nav-link" data-toggle="tab" href="#presets" role="tab" aria-controls="presets">
+										<a class="nav-link" id="presets_tab" data-toggle="tab" href="#presets" role="tab" aria-controls="presets">
 											<i class="fa fa-gift"></i> Presets
 										</a>
 									</li>
@@ -564,6 +572,7 @@
 		<script src="js/coreui/coreui.min.js"></script>
 		<script src="socket.io/socket.io.js"></script>
 		<script src="js/moment/min/moment-with-locales.min.js"></script>
+		<script src="js/touch-dnd.js"></script>
 		<script src='js/spectrum.js'></script>
 		<script src="js/preview.js"></script>
 		<script src="page.js"></script>
@@ -578,5 +587,6 @@
 		<script src="log.js"></script>
 		<script src="main.js"></script>
 		<script src="update.js"></script>
+		<script src="preset.js"></script>
 	</body>
 </html>

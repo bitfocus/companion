@@ -68,6 +68,11 @@
 * Motu AVB interfaces / Mixers
 * StudioCoast vMix
 * Resolume
+* High End Systems Hog 4
+* Globalcashe-itac-ir
+* Globalcashe-itac-cc
+* Renewed Vision ProPresenter 6
+
 
 ## Coming support (help wanted!)
 * Entec DMXPro

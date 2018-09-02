@@ -75,6 +75,10 @@ $(function() {
 
 					$(this).find('option[value="' + config[$(this).data('fieldid')] + '"]').prop('selected', true);
 
+				} else if ($(this).data('special') == 'checkbox') {
+
+					$(this).prop('checked', config[$(this).data('fieldid')]);
+
 				} else if ($(this).data('special') == 'alignment') {
 
 					if ($(this).data('alignment') == config[$(this).data('fieldid')] ) {
@@ -138,6 +142,14 @@ $(function() {
 					$select.append('<option value="' + field.choices[i].id + '"' + extra + '>' + field.choices[i].label);
 				}
 
+				$field.append($p);
+			}
+
+			else if (field.type == 'checkbox') {
+				var $p = $("<p><label>"+field.label+"</label><br><input type='checkbox' data-special='checkbox' data-fieldid='"+field.id+"' class='form-control active_field'></p>");
+				if (field.default) {
+					$p.find('input').prop('checked', true);
+				}
 				$field.append($p);
 			}
 
@@ -241,6 +253,11 @@ $(function() {
 				socket.emit('get_bank', page, bank);
 				socket.once('get_bank:results', updateFromConfig);
 
+			} else if ($(this).data('special') == 'checkbox') {
+				socket.emit('bank_changefield', p, b, $(this).data('fieldid'), $(this).prop('checked') );
+				socket.emit('get_bank', page, bank);
+				socket.once('get_bank:results', updateFromConfig);
+
 			} else if ($(this).data('special') == 'dropdown') {
 				socket.emit('bank_changefield', p, b, $(this).data('fieldid'), $(this).val() );
 				socket.emit('get_bank', page, bank);
@@ -261,6 +278,7 @@ $(function() {
 
 		$(".active_field").keyup(change);
 		$(".active_field[data-special=\"dropdown\"]").change(change);
+		$(".active_field[data-special=\"checkbox\"]").change(change);
 		$(".active_field[data-special=\"color\"]").click(change);
 		$(".active_field[data-special=\"alignment\"]").click(change);
 
@@ -489,7 +507,15 @@ $(function() {
 		$pagenav.append($('<div class="pagenav text-right col-lg-4"><div id="btn_pageup" class="btn btn-primary"><i class="fa fa-chevron-right"></i></div></div>'));
 
 		for (var bank = 1; bank <= 12; bank++) {
-			var $div = $('<div class="bank col-lg-3"><div class="border" data-bank="'+bank+'"><canvas width=72 height=72 id="bank_' + page + '_' + bank + '"</div></div>');
+			var $div = $('<div class="bank col-lg-3"><div class="border" data-bank="'+bank+'"><canvas width=72 height=72 id="bank_' + page + '_' + bank + '"></canvas></div></div>');
+			$div.find('.border').droppable({
+				activeClass: 'drophere',
+				hoverClass: 'drophover',
+				accept: '.presetbank',
+				receiveHandler: function () {
+					console.log("DROP receivehandler", this, arguments);
+				}
+			});
 			$pagebank.append($div);
 		}
 
