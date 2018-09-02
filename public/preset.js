@@ -5,7 +5,7 @@ $(function() {
 	socket.emit('get_presets');
 	socket.once('get_presets:result', presets);
 
-	var main_presets = '<h4>Presets from instances</h4><br />';
+	var main_presets = '<h4>Available instance presets</h4>';
 
 	function get_instance(id) {
 		for (var key in instance.module) {
@@ -34,15 +34,15 @@ $(function() {
 			categories[preset.category] = 1;
 		}
 		var inst = get_instance(instance.db[id].instance_type);
-		$presets.html('<button type=button class="btn btn-primary pull-right back_main">Back</button><br><h4>Preset categories for ' + inst.label + '</h4><br />');
+		$presets.html('<button type=button class="btn btn-primary pull-right back_main">Back</button><h4>Preset categories for ' + inst.label + '</h4>');
 
 		for (var key in categories) {
-			$presets.append('<input type="button" class="btn btn-primary choose_category" data-instance="' + id + '" data-key="' + key + '" value="' + key + '"><br /><br />');
+			$presets.append('<input type="button" class="btn btn-primary choose_category" data-instance="' + id + '" data-key="' + key + '" value="' + key + '"> ');
 		}
 	}
 
 	function show_presets(instance, category) {
-		$presets.html('<button type=button class="btn btn-primary pull-right back_category" data-instance="' + instance + '">Back</button><br><h4>Presets for ' + category + '</h4><br style="clear:both">');
+		$presets.html('<button type=button class="btn btn-primary pull-right back_category" data-instance="' + instance + '">Back</button><h4>Presets for ' + category + '</h4><p>Drag and drop the preset buttons below into your buttons-configuration.</p>');
 
 		for (var key in all_presets[instance]) {
 			var preset = all_presets[instance][key];
@@ -50,7 +50,7 @@ $(function() {
 				continue;
 			}
 
-			$presets.append('<div class="presetbank col-lg-3" data-drawn="no" data-instance="' + instance + '" title="' + preset.label + '" data-key="' + key + '"><canvas width="72" height="72"></canvas></div>');
+			$presets.append('<div class="presetbank col-lg-3" data-drawn="no" data-instance="' + instance + '" title="' + preset.label + '" data-key="' + key + '"><canvas width="72" style="cursor:pointer" height="72"></canvas></div>');
 		}
 
 		$presets.append('<br style="clear: both;" />');
