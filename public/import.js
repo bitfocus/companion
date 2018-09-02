@@ -23,7 +23,7 @@ $(function() {
 	var $pagebank = $("#import_pagebank");
 
 	for (var x = 1; x <= 12; x++) {
-		var $b = $("<div class='bank col-lg-3'><div class='border'>x</div></div>");
+		var $b = $("<div class='bank col-lg-3'><div class='border' id='import_bank_"+import_page+"_"+import_page+"'><canvas width='72' height='72'></canvas></div></div>");
 		$pagebank.append($b);
 	}
 });
