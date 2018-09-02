@@ -357,6 +357,12 @@ $(function() {
 	});
 
 
+	$('#erase_page_link').click(function () {
+		if (confirm('Are you sure you want to clear all buttons on page ' + page + '?')) {
+			socket.emit('loadsave_reset_page', page);
+		}
+	});
+
 	$('#state_copy').click(function() {
 		if (function_state === null) {
 			function_state = 'copy';

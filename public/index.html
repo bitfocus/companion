@@ -331,7 +331,7 @@
 												<button class="btn btn-danger" id='state_abort'>Cancel</button>
 												<button class="btn btn-disabled" id='state_hint'></button>
 												<a id="export_page_link" href="/int/page_export/1" class="btn btn-warning">Export page</a>
-												<a id="erase_page_link" href="/int/page_erase/1" class="btn btn-danger">Erase page</a>
+												<button type="button" id="erase_page_link" class="btn btn-danger">Erase page</button>
 
 											</div>
 										</div>
@@ -521,14 +521,14 @@
 
 											<div id="import_resolve">
 
-												<h5>Resolve instance conflicts</h5>
+												<h5>Link config instances with local instances</h5>
 
 												<table class="table table-responsive-sm">
 													<thead>
 														<tr>
 															<th>Select instance</th>
-															<th>Import instance type</th>
-															<th>Import instance name</th>
+															<th>Config instance type</th>
+															<th>Config instance name</th>
 														</tr>
 													</thead>
 													<tbody id="importConfigInstanceList">
@@ -558,9 +558,9 @@
 									<div class="tab-pane" id="export" role="tabpanel">
 											<h4>Export full configuration</h4>
 											<p>Use the button below to download a full backup of your companion settings.</p>
-											<button class="btn btn-danger" type="button" id="download_export">
+											<a class="btn btn-danger" type="button" id="download_export" href="/int/full_export">
 												<span class="fa fa-download"></span> Download
-											</button>
+											</a>
 											<br><br>
 									</div>
 
