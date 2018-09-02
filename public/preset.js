@@ -106,7 +106,6 @@ $(function() {
 	});
 
 	$(window).on('resize scroll', function () {
-		console.log("resize/scroll");
 		preload_presets();
 	})
 });
