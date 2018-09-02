@@ -43,7 +43,7 @@
 	margin-bottom:10px;
 	padding:5px 7px;
 	border: 1px solid #aaa;
-	background-color: #ccc;
+	background-color: #f4f4f4;
 	min-width: 100px;
 	text-align:center;
 }
@@ -56,18 +56,18 @@
 	display:block;
 	border-radius: 4px;
 	margin-bottom:10px;
-	padding:5px 7px;
+	padding:7px 0px 2px 0px;
 	cursor: pointer;
-	border: 1px solid #aaa;
-	background-color: #ccc;
-	min-width: 100px;
+	border: 1px solid #ccc;
+	background-color: #f4f4f4;
+	min-width: 74px;
 	text-align:center;
 }
 #newversiontext {
 	color:red;
 }
 #pagebank .border:hover, #pagenav .border:hover {
-	background-color: #ddd;
+	background-color: #e4e4e4;
 }
 
 #pagebank divpreset canvas {
@@ -212,6 +212,9 @@ label {
 	color: white;
 }
 
+.border canvas {
+	border-radius: 4px;
+}
 .log-type-error {
 	background-color: rgba(255,0,0,0.2);
 	color: rgba(255,0,0,1);

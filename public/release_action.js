@@ -54,7 +54,7 @@ $(function() {
 		$ba.html("");
 
 		var $table = $("<table class='table release-action-table'></table>");
-		var $trth = $("<thead><tr><th colspan=2>Button up actions</th><th style='width:90px'>Delay</th><th>Options</th></tr></thead>");
+		var $trth = $("<thead><tr><th colspan=2>Action</th><th style='width:90px'>Delay</th><th>Options</th></tr></thead>");
 		var $tbody = $("<tbody></tbody>");
 		$table.append($trth);
 		console.log("actions!", actions);
@@ -204,7 +204,7 @@ $(function() {
 		$aba.html("");
 		$ali.html("");
 
-		var $option = $("<option>[ Add new action for this button ]</option>")
+		var $option = $("<option>[ Add key up/off action ]</option>")
 		$aba.append($option);
 
 		for (var n in actions) {
