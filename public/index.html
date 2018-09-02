@@ -509,34 +509,45 @@
 											<div class="row" id='import_pagebank'>
 											</div>
 											<br>
-											<h5>Resolve instance conflicts</h5>
 
-											<table class="table table-responsive-sm">
-												<thead>
-													<tr>
-														<th>Select instance</th>
-														<th>Import instance type</th>
-														<th>Import instance name</th>
-													</tr>
-												</thead>
-												<tbody id="importConfigInstanceList">
-													<tr>
-														<td>
-															<select>
-																<option>[ Create new instance ]</option>
-																<option>Our own BMD VideoHub instance</option>
-															</select>
-														</td>
-														<td>BMD VideoHub</td>
-														<td>Routeren da</td>
-													</tr>
-												</tbody>
-											</table>
-	<!--
-											<p>
-												<button class="btn btn-primary" data-loading-text="lol?" id="importAll">Import</button>
-											</p>
-	-->
+											<div id="import_step2">
+												<h5>What to do</h5>
+												<button class="btn btn-primary import_individual">Import individual pages</button>
+												<button class="btn btn-primary import_replace">Replace current configuration</button>
+												<br><br>
+											</div>
+
+											<div id="import_resolve">
+
+												<h5>Resolve instance conflicts</h5>
+
+												<table class="table table-responsive-sm">
+													<thead>
+														<tr>
+															<th>Select instance</th>
+															<th>Import instance type</th>
+															<th>Import instance name</th>
+														</tr>
+													</thead>
+													<tbody id="importConfigInstanceList">
+														<tr>
+															<td>
+																<select>
+																	<option>[ Create new instance ]</option>
+																	<option>Our own BMD VideoHub instance</option>
+																</select>
+															</td>
+															<td>BMD VideoHub</td>
+															<td>Routeren da</td>
+														</tr>
+													</tbody>
+												</table>
+
+												<p>
+													<button class="btn btn-primary" id="import_page">Import to page 1</button>
+												</p>
+
+											</div>
 
 
 										</div>
