@@ -451,6 +451,7 @@ $(function() {
 		var $cb = $('#state_' + function_state);
 
 		if (function_state !== null) {
+			$('#state_hide').hide();
 			$('.function-button').removeClass('btn-primary').addClass('btn-disabled');
 			$cb.addClass('btn-success');
 			$sa.show();
@@ -478,6 +479,7 @@ $(function() {
 			}
 
 		} else {
+			$('#state_hide').fadeIn();
 			$('.function-button').removeClass('btn-disabled').removeClass('btn-success').addClass('btn-primary');
 			$sa.hide();
 			$sh.text("");

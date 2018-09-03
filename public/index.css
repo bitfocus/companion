@@ -300,3 +300,7 @@ label {
 	border: 1px solid black !important;
 	background-color: #daffab !important;
 }
+
+.buttonbottompad {
+	margin-bottom: 5px;
+}

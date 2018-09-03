@@ -218,18 +218,22 @@
 
 									<li class="nav-item">
 										<a class="nav-link" data-toggle="tab" href="#devices" role="tab" aria-controls="devices">
-											<i class="fa fa-gamepad"></i> Devices</a>
+											<i class="fa fa-gamepad"></i> Surfaces</a>
 									</li>
 
 									<li class="nav-item">
 										<a class="nav-link" data-toggle="tab" href="#userconfig" role="tab" aria-controls="userconfig">
-											<i class="fa fa-user-ninja"></i> User Config</a>
+											<i class="fa fa-user-ninja"></i> Settings</a>
 									</li>
 
 								</ul>
 
 								<div class="tab-content padbottom">
 									<div class="tab-pane active" id="instances" role="tabpanel">
+
+										<h4>Connections / Instances</h4>
+										<p>Instances are the connections companion makes to other devices and software in order to control them.</p>
+
 										<table class="table table-responsive-sm">
 											<thead>
 												<tr>
@@ -247,9 +251,7 @@
 											<select id="addInstance">
 											</select>
 										</div>
-										 <p></p>
-										<b>Hint:</b> Instances are the connections companion makes to other devices in order to
-										discover button actions.
+									 <p></p>
 
 									</div>
 
@@ -300,6 +302,10 @@
 									</div>
 
 									<div class="tab-pane" id="devices" role="tabpanel">
+										<h4>Connected devices</h4>
+										<p>This is the surfaces currently connected to companion. If your streamdeck is missing from this list, you
+										might need to close the Elgato Streamdeck application and click the Rescan button below.</p><p><i>Rescanning blocks all operations while the scan is ongoing. <b>Use with care!</b></i></p>
+
 										<table class="table table-responsive-sm">
 											<thead>
 												<tr>
@@ -311,11 +317,13 @@
 											</tbody>
 										</table>
 
-										<button class="btn btn-primary" data-loading-text="<i class='fa fa-spinner fa-spin '></i> Checking for new devices..." id="refreshUSB">Re-scan USB</button> <label>Re-scanning blocks all operations while the scan is ongoing. Use with care.</label>
+										<button class="btn btn-warning" data-loading-text="<i class='fa fa-sync fa-spin '></i> Checking for new devices..." id="refreshUSB"><i class='fa fa-sync'></i> Rescan USB</button>
 									</div>
 
 
 									<div class="tab-pane" id="elgatobuttons" role="tabpanel">
+										<h4>Button layout</h4>
+										<p>The squares below represents each button on your streamdeck. Click on them to set up how you want them to look, and what they should do when you clock on them. You can navigate between pages using the blue arrow buttons.</p>
 
 										<div class="row" id='pagenav'>
 										</div>
@@ -324,14 +332,15 @@
 
 										<div class="row" id='functionarea' style="padding-top:15px;">
 											<div id="functionkeys" class='col-sm-12'>
-												<button class="btn btn-primary function-button" data-function='copy' id='state_copy'>Copy</button>
-												<button class="btn btn-primary function-button" data-function='move' id='state_move'>Move</button>
-												<button class="btn btn-primary function-button" data-function='delete' id='state_delete'>Delete</button>
-												<button class="btn btn-danger" id='state_abort'>Cancel</button>
-												<button class="btn btn-disabled" id='state_hint'></button>
-												<a id="export_page_link" href="/int/page_export/1" class="btn btn-success">Export page</a>
-												<button type="button" id="erase_page_link" class="btn btn-danger">Erase page</button>
-
+												<button class="btn btn-primary function-button buttonbottompad" data-function='copy' id='state_copy'><i class="fa fa-copy"></i> Copy</button>
+												<button class="btn btn-primary function-button buttonbottompad" data-function='move' id='state_move'><i class="fa fa-arrows-alt"></i> Move</button>
+												<button class="btn btn-primary function-button buttonbottompad" data-function='delete' id='state_delete'><i class="fa fa-trash"></i> Delete</button>
+												<button class="btn btn-danger buttonbottompad" id='state_abort'>Cancel</button>
+												<button class="btn btn-disabled buttonbottompad" id='state_hint'></button>
+												<span id='state_hide'>
+													<a id="export_page_link" href="/int/page_export/1" class="btn btn-success buttonbottompad"><i class="fa fa-file-export"></i> Export page</a>
+													<button type="button" id="erase_page_link" class="btn btn-danger buttonbottompad"><i class="fa fa-eraser"></i> Erase page</button>
+												</span>
 											</div>
 										</div>
 
@@ -391,10 +400,13 @@
 									</div>
 
 									<div class="tab-pane" id="userconfig" role="tabpanel">
+										<h4>User settings</h4>
+										<p>Settings applies instantaneously, don't worry about it!</p>
+
 										<table class='table'>
 											<thead>
 												<tr>
-													<th>User configuration</th>
+													<th>Setting</th>
 													<th>Value</th>
 												</tr>
 											</thead>
@@ -427,7 +439,6 @@
 											</tbody>
 										</table>
 
-										<b>Settings</b> applies instantaneously, don't worry about it!
 
 									</div>
 								</div>
@@ -551,7 +562,7 @@
 										<h4>Export full configuration</h4>
 										<p>Download a file containing all instances and button pages.</p>
 										<a class="btn btn-success" id="download_export" href="/int/full_export">
-											<span class="fa fa-download"></span> Download
+											<span class="fa fa-download"></span> Export
 										</a>
 										<br><br>
 										<h4>Reset full configuration</h4>

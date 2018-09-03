@@ -152,7 +152,7 @@ $(function() {
 		console.log('instance', i);
 
 		$addInstance = $("#addInstance");
-		$addInstance.html("<option value='null'>[ Add new instance ]</option>");
+		$addInstance.html("<option value='null'> + Add instance</option>");
 
 		if (instance.module !== undefined) {
 			// Sort the list first

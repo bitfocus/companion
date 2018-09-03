@@ -218,7 +218,7 @@ $(function() {
 
 		console.log("feedbacks",feedbacks);
 
-		var $option = $("<option>[ Add feedback ]</option>")
+		var $option = $("<option> + Add feedback</option>")
 		$aba.append($option);
 
 		for (var inst in feedbacks) {
