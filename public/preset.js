@@ -18,12 +18,18 @@ $(function() {
 	function choose_instance() {
 		$presets.html(main_presets);
 
+		var count = 0;
 		for (var key in all_presets) {
 			console.log(key, instance.db[key], instance.db[key].instance_type);
 			var inst = get_instance(instance.db[key].instance_type);
 			if (inst !== undefined) {
+				count++;
 				$presets.append('<input type="button" class="btn btn-primary choose_instance" data-key="' + key + '" value="' + inst.label + ' (' + instance.db[key].label + ')"><br />');
 			}
+		}
+
+		if (!count) {
+			$presets.append('You have no instances that support presets at the moment. More and more modules will support presets in the future.');
 		}
 	}
 

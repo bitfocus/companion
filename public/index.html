@@ -329,7 +329,7 @@
 												<button class="btn btn-primary function-button" data-function='delete' id='state_delete'>Delete</button>
 												<button class="btn btn-danger" id='state_abort'>Cancel</button>
 												<button class="btn btn-disabled" id='state_hint'></button>
-												<a id="export_page_link" href="/int/page_export/1" class="btn btn-warning">Export page</a>
+												<a id="export_page_link" href="/int/page_export/1" class="btn btn-success">Export page</a>
 												<button type="button" id="erase_page_link" class="btn btn-danger">Erase page</button>
 
 											</div>
@@ -453,19 +453,11 @@
 
 									<li class="nav-item">
 										<a class="nav-link" id="import_tab" data-toggle="tab" href="#import" role="tab" aria-controls="import">
-											<i class="fa fa-file-import"></i> Import
+											<i class="fa fa-file-import"></i> Import / Export
 										</a>
 									</li>
-
-									<li class="nav-item">
-										<a class="nav-link" data-toggle="tab" href="#export" role="tab" aria-controls="export">
-											<i class="fa fa-file-export"></i> Export
-										</a>
-									</li>
-
 
 								</ul>
-
 
 								<div class="tab-content">
 									<div class="tab-pane active" id="log" role="tabpanel">
@@ -479,9 +471,9 @@
 
 										<!-- this should be hidden after loading the file -->
 										<div id="import_fileselect">
-											<h4>Load a configuration file</h4>
+											<h4>Import configuration</h4>
 											<p>Use the button below to browse your computer for a <b>.companionconfig</b> file containing either a full companion configuration, or just a single button page export.</p>
-											<label class="btn btn-primary btn-file"><i class="fa fa-file-import"></i> Import <input type="file" id="loadconfig" data-fieldid="importfile" style="display: none;"></label>
+											<label class="btn btn-success btn-file"><i class="fa fa-file-import"></i> Import <input type="file" id="loadconfig" data-fieldid="importfile" style="display: none;"></label>
 
 											<br><br>
 										</div>
@@ -547,28 +539,29 @@
 												</table>
 
 												<p>
-													<button class="btn btn-primary" id="import_page">Import to page 1</button>
+													<button class="btn btn-warning" id="import_page">Import to page 1</button>
 												</p>
 
 											</div>
 
 
 										</div>
-									</div>
 
-									<div class="tab-pane" id="export" role="tabpanel">
-											<h4>Export full configuration</h4>
-											<p>Use the button below to download a full backup of your companion settings.</p>
-											<a class="btn btn-warning" id="download_export" href="/int/full_export">
-												<span class="fa fa-download"></span> Download
-											</a>
-											<br><br>
-											<h4>Reset full configuration</h4>
-											<p>Use the button below to remove all configuration and buttons and start over.</p>
-											<button class="btn btn-danger" id="reset_all" type="button">
-												<span class="fa fa-trash-alt"></span> Reset configuration
-											</button>
-											<br><br>
+
+										<h4>Export full configuration</h4>
+										<p>Download a file containing all instances and button pages.</p>
+										<a class="btn btn-success" id="download_export" href="/int/full_export">
+											<span class="fa fa-download"></span> Download
+										</a>
+										<br><br>
+										<h4>Reset full configuration</h4>
+										<p>Remove all companion configuration. This will clear all instances and buttons and start over.</p>
+										<button class="btn btn-danger" id="reset_all" type="button">
+											<span class="fa fa-trash-alt"></span> Reset configuration
+										</button>
+										<br>
+
+
 									</div>
 
 								</div>
