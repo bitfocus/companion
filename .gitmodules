@@ -169,3 +169,6 @@
 [submodule "lib/module/highend-hog4"]
 	path = lib/module/highend-hog4
 	url = https://github.com/bitfocus/companion-module-highend-hog4.git
+[submodule "lib/module/sony-visca"]
+	path = lib/module/sony-visca
+	url = https://github.com/bitfocus/companion-module-sony-visca.git
