@@ -2,8 +2,8 @@
 
 ## First:
 1. Install node.js
-2. Install n (sudo npm install n -g)
-3. Install yarn (sudo npm install yarn -g)
+2. Install n ```sudo npm install n -g```
+3. Install yarn ```sudo npm install yarn -g```
 
 ## Getting started
 ```
