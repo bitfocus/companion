@@ -1,7 +1,7 @@
 # Developers Guide. Ish.
 
 ## First:
-1. Install node.js
+1. Install [node.js](https://nodejs.org/en/)
 2. Install n ```sudo npm install n -g```
 3. Install yarn ```sudo npm install yarn -g```
 
