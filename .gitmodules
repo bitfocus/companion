@@ -172,3 +172,9 @@
 [submodule "lib/module/sony-visca"]
 	path = lib/module/sony-visca
 	url = https://github.com/bitfocus/companion-module-sony-visca.git
+[submodule "lib/module/globalcache-itac-ir"]
+	path = lib/module/globalcache-itac-ir
+	url = https://github.com/bitfocus/companion-module-globalcache-itac-ir
+[submodule "lib/module/globalcache-itac-cc"]
+	path = lib/module/globalcache-itac-cc
+	url = https://github.com/bitfocus/companion-module-globalcache-itac-cc
