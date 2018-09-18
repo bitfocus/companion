@@ -40,7 +40,8 @@ system.on('skeleton-info', function(key, val) {
 			debug("mkdirp",cfgDir,err);
 			config = new (require('./bitfocus-libs/config'))(system, cfgDir, {
 				http_port: 8000,
-				bind_ip: "127.0.0.1"
+				bind_ip: "127.0.0.1",
+				start_minimised: false,
 			});
 		});
 	}
@@ -58,6 +59,7 @@ system.on('config_loaded', function(config) {
 	system.emit('skeleton-info', 'appURL', 'Waiting for webserver..');
 	system.emit('skeleton-info', 'appStatus', 'Starting');
 	system.emit('skeleton-info', 'bindInterface', config.bind_ip);
+	system.emit('skeleton-info', 'startMinimised', config.start_minimised);
 });
 
 system.on('exit', function() {
@@ -81,6 +83,11 @@ system.on('skeleton-bind-port', function(port) {
 		system.emit('config_set', 'http_port', p);
 		system.emit('ip_rebind');
 	}
+});
+
+system.on('skeleton-start-minimised', function(minimised) {
+	config.start_minimised = minimised;
+	system.emit('config_set', 'start_minimised', minimised);
 });
 
 system.on('skeleton-ready', function() {
