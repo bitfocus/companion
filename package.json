@@ -7,7 +7,11 @@
     "productName": "Companion",
     "appId": "companion.bitfocus.no",
     "mac": {
-      "category": "no.bitfocus.companion"
+      "category": "no.bitfocus.companion",
+      "extendInfo": {
+        "LSBackgroundOnly": 1,
+        "LSUIElement": 1
+      }
     },
     "win": {
       "target": "nsis"
