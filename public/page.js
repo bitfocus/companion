@@ -14,14 +14,14 @@
  * disclosing the source code of your own applications.
  *
  */
- 
+
 var page_info = {};
 
 $(function() {
 
 	var pageUpdate = function() {
 		var $cb = $('#page_title');
-		$cb.val('pn:'+page_info[page].name);
+		$cb.val(page_info[page].name);
 	};
 
 	// when page name is changed from the input field
@@ -39,7 +39,7 @@ $(function() {
 
 	// when other browsers update page
 	socket.on('set_page', function(key, value) {
-		page[key]=value;
+		page_info[key]=value;
 		pageUpdate();
 	});
 
