@@ -1,5 +1,54 @@
 # Changelog
 
+## V1.2.0 Summary
+
+We've introduced some important stuff in this release. Feedback and presets is some of it, but it's not supported by many modules yet, but this will be better towards 1.3.0.
+
+Feedback: BMD Videohub, BMD ATEM
+Presets: Analogway PLS300, Irisdown Countdown, Mitti, PlaybackProPlus, Sony VISCA
+
+Changes:
+* Minimize launcher tray
+* Export and import pages/full configs
+* Remote triggering of buttons via OSC
+* Separate "Up actions" / Latch buttons
+* Huge improvements in fonts
+* Feedback support ("button tally" as example)
+* Preset support (template keys)
+* Variables support (dynamic text)
+* We now support more thans 3 streamdecks!
+* Erase page
+* Windows database save problem fixed
+* Cosmetic fixes in admin ui
+* Fixes: Analogway Midra
+* Fixes: Irisdown Countdowntimer
+* Fixes: PlaybackProPlus
+* Fixes: Mitti
+* Fixes: Blackmagic
+* Fixes: QLab
+* Fixes: Eventmaster
+* Fixes: Livecore
+* Fixes: PVP
+* Fixes: PPT RSC
+* Fixes: Millumin
+* Fixes: Analogway ATEM
+* Support: X32
+* Support: Chamsys
+* Support: Watchout
+* Support: Analogway VIO
+* Support: Christie PJ
+* Support: ArtNet
+* Support: 7th sense media server
+* Support: Imagepro
+* Support: Modulo
+* Support: Octopus App
+* Support: KiPro
+* Support: XAir
+* Support: SCS
+* Support: AJA Helo
+* Support: Analogway Pulse (PLS300)
+* Support: HTTP GET/POST Requests
+
 ## v1.1.1 Summary
 * Eventmaster freeze/unfreeze and rebuild
 * Added test button from button configurator
