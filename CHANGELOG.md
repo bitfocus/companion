@@ -4,8 +4,11 @@
 
 We've introduced some important stuff in this release. Feedback and presets is some of it, but it's not supported by many modules yet, but this will be better towards 1.3.0.
 
-Feedback: BMD Videohub, BMD ATEM
-Presets: Analogway PLS300, Irisdown Countdown, Mitti, PlaybackProPlus, Sony VISCA
+Feedback:
+* BMD Videohub, BMD ATEM
+
+Presets:
+* Analogway PLS300, Irisdown Countdown, Mitti, PlaybackProPlus, Sony VISCA
 
 Changes:
 * Minimize launcher tray
