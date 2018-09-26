@@ -181,3 +181,6 @@
 [submodule "lib/module/analogway-pls300"]
 	path = lib/module/analogway-pls300
 	url = https://github.com/bitfocus/companion-module-analogway-pls300
+[submodule "lib/module/generic-http"]
+	path = lib/module/generic-http
+	url = https://github.com/bitfocus/companion-module-generic-http.git
