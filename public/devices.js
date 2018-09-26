@@ -29,31 +29,35 @@ $(function() {
 		var device = device_list[id];
 		socket.emit('device_config_get', device.id);
 		socket.once('device_config_get:result', function (err, settings) {
-			console.log("device_config_get:", err,settings);
-
 			$('#deviceModal .modal-body').html('');
 
+			// Brightness
 			if (device.config.indexOf('brightness') !== -1) {
 				var $form = $('<form><div class="form-group"><label for="brightness" class="col-form-label">Brightness:</label><input type="range" class="form-control-range brightness"></div></form>');
 				var $slider = $form.find('input');
+
 				$slider.val(settings.brightness);
+
 				$slider.on('input', function () {
 					settings.brightness = parseInt($slider.val());
 					socket.emit('device_config_set', device.id, settings);
-					console.log("Value: ", $slider.val());
 				})
+
 				$('#deviceModal .modal-body').append($form);
 			}
 
+			// Rotation
 			if (device.config.indexOf('orientation') !== -1) {
 				var $form = $('<form><div class="form-group"><label for="rotation" class="col-form-label">Rotation:</label><select class="form-control"><option value="0">Normal</option><option value="90">90 CCW</option></select></div></form>');
 				var $select = $form.find('select');
+
 				$select.val(settings.rotation);
+
 				$select.on('change', function () {
 					settings.rotation = parseInt($select.val());
 					socket.emit('device_config_set', device.id, settings);
-					console.log("Value: ", $select.val());
 				})
+
 				$('#deviceModal .modal-body').append($form);
 			}
 
@@ -82,6 +86,7 @@ $(function() {
 			$td_id.text(data.serialnumber);
 			$td_type.text(data.type);
 
+			// Only show button if there is something to configure
 			if (data.config !== undefined && data.config.length > 0) {
 				$td_settings.html("<button class='device_settings align-center btn btn-success'><i class='fa fa-gear'></i> Settings</button>");
 			}
