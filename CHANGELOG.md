@@ -11,6 +11,8 @@ Presets:
 * Analogway PLS300, Irisdown Countdown, Mitti, PlaybackProPlus, Sony VISCA
 
 Changes:
+* Brightness control and button rotation on Stream Deck / Infinitton device
+* Stream Deck Mini support
 * Minimize launcher tray
 * Export and import pages/full configs
 * Remote triggering of buttons via OSC
@@ -34,7 +36,7 @@ Changes:
 * Fixes: PVP
 * Fixes: PPT RSC
 * Fixes: Millumin
-* Fixes: Analogway ATEM
+* Fixes: Blackmagic Design ATEM
 * Support: X32
 * Support: Chamsys
 * Support: Watchout
