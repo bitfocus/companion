@@ -33,10 +33,10 @@ $(function() {
 
 			// Brightness
 			if (device.config.indexOf('brightness') !== -1) {
-				var $form = $('<form><div class="form-group"><label for="brightness" class="col-form-label">Brightness:</label><input type="range" min="0" max="100" class="form-control-range brightness"></div></form>');
-				var $slider = $form.find('input');
+				var $form = $('<form><div class="form-group"><label for="brightness" class="col-form-label">Brightness:</label><input type="range" min="0" max="100" id="brightness" class="form-control-range brightness"></div></form>');
+				var $slider = $form.find('input.brightness');
 
-				$slider.val(settings.brightness);
+				$slider.val(parseInt(settings.brightness));
 
 				$slider.on('input', function () {
 					settings.brightness = parseInt($slider.val());
@@ -63,13 +63,20 @@ $(function() {
 
 			// Page
 			if (device.config.indexOf('page') !== -1) {
-				var $form = $('<form><div class="form-group"><label for="page" class="col-form-label">Page:</label><input type="range" min=1 max=99 class="form-control-range page"></div></form>');
-				var $slider = $form.find('input');
+				var $form = $('<form><div class="form-group"><label for="page" class="col-form-label">Page:</label><input type="range" min=1 max=99 class="form-control-range page"><span class="pagenum"></span></div></form>');
+				var $page = $form.find('input.page');
+				var $pagenum = $form.find('span.pagenum');
 
-				$slider.val(settings.page);
+				console.log("Settings page:", settings);
+				$page.val(settings.page);
+				$pagenum.text(settings.page);
 
-				$slider.on('input', function () {
-					settings.page = parseInt($slider.val());
+				$page.on('input', function () {
+					$pagenum.text($page.val());
+				});
+
+				$page.on('change', function () {
+					settings.page = parseInt($page.val());
 					socket.emit('device_config_set', device.id, settings);
 				})
 
