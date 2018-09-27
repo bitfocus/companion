@@ -33,7 +33,7 @@ $(function() {
 
 			// Brightness
 			if (device.config.indexOf('brightness') !== -1) {
-				var $form = $('<form><div class="form-group"><label for="brightness" class="col-form-label">Brightness:</label><input type="range" class="form-control-range brightness"></div></form>');
+				var $form = $('<form><div class="form-group"><label for="brightness" class="col-form-label">Brightness:</label><input type="range" min="0" max="100" class="form-control-range brightness"></div></form>');
 				var $slider = $form.find('input');
 
 				$slider.val(settings.brightness);
@@ -55,6 +55,21 @@ $(function() {
 
 				$select.on('change', function () {
 					settings.rotation = parseInt($select.val());
+					socket.emit('device_config_set', device.id, settings);
+				})
+
+				$('#deviceModal .modal-body').append($form);
+			}
+
+			// Page
+			if (device.config.indexOf('page') !== -1) {
+				var $form = $('<form><div class="form-group"><label for="page" class="col-form-label">Page:</label><input type="range" min=1 max=99 class="form-control-range page"></div></form>');
+				var $slider = $form.find('input');
+
+				$slider.val(settings.page);
+
+				$slider.on('input', function () {
+					settings.page = parseInt($slider.val());
 					socket.emit('device_config_set', device.id, settings);
 				})
 

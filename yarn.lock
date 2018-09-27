@@ -1093,6 +1093,12 @@ electron@^2.0.8:
     electron-download "^3.0.1"
     extract-zip "^1.0.3"
 
+"elgato-stream-deck-clean-mini@https://github.com/bitfocus/elgato-stream-deck-clean-mini.git":
+  version "1.0.0"
+  resolved "https://github.com/bitfocus/elgato-stream-deck-clean-mini.git#fff87414018bee17a8c14aec3ba2002ac54e2b42"
+  dependencies:
+    node-hid "^0.6.0"
+
 elgato-stream-deck-clean@^1.0.0:
   version "1.0.0"
   resolved "https://registry.yarnpkg.com/elgato-stream-deck-clean/-/elgato-stream-deck-clean-1.0.0.tgz#96d7fe8f27f8f459228793a353157401eb416473"
