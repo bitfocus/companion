@@ -48,7 +48,7 @@ $(function() {
 
 			// Rotation
 			if (device.config.indexOf('orientation') !== -1) {
-				var $form = $('<form><div class="form-group"><label for="rotation" class="col-form-label">Rotation:</label><select class="form-control"><option value="0">Normal</option><option value="90">90 CCW</option></select></div></form>');
+				var $form = $('<form><div class="form-group"><label for="rotation" class="col-form-label">Button rotation:</label><select class="form-control"><option value="0">Normal</option><option value="-90">90 CCW</option><option value="90">90 CW</option><option value="180">180</option></select></div></form>');
 				var $select = $form.find('select');
 
 				$select.val(settings.rotation);
