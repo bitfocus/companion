@@ -64,6 +64,7 @@
 			display:table-cell;
 			height: 150px;
 			width:25%;
+			white-space: pre-wrap;
 		}
 		.page-content {
 			display:table;
@@ -113,10 +114,10 @@
 		var i = 1;
 
 		for (var bank = 1; bank <= 12; bank++) {
-			if (i == 1) {
+			if (i === 1) {
 				$pageBankTr = $("<tr></tr>");
 			}
-			if (i == 4) {
+			if (i === 4) {
 				i = 0;
 				$pageContent.append($pageBankTr);
 			}
@@ -141,14 +142,14 @@
 		$("body").on('touchstart', '.page-bank-content', function() {
 			lastdown = $(this).attr('id').split(/_/);
 			console.log("touchstart", $(this).attr('id'));
-			if (lastdown[0] == 'bank') {
+			if (lastdown[0] === 'bank') {
 				socket.emit('hot_press', lastdown[1], lastdown[2], true);
 			}
 		});
 
 		$("body").on('touchend', '.page-bank-content', function() {
 			console.log("touchend", $(this).attr('id'));
-			if (lastdown !== undefined && lastdown[0] == 'bank') {
+			if (lastdown !== undefined && lastdown[0] === 'bank') {
 				socket.emit('hot_press', lastdown[1], lastdown[2], false);
 			}
 		});
@@ -163,7 +164,7 @@
 			lastdown = $(this).attr('id').split(/_/);
 			console.log("mousedown", $(this).attr('id'));
 
-			if (lastdown[0] == 'bank') {
+			if (lastdown[0] === 'bank') {
 				socket.emit('hot_press', lastdown[1], lastdown[2], true);
 			}
 		}
@@ -172,7 +173,7 @@
 	$("body").on('mouseup', '.page-bank-content', function() {
 		if (!touchdevice) {
 			console.log("mouseup", $(this).attr('id'));
-			if (lastdown !== undefined && lastdown[0] == 'bank') {
+			if (lastdown !== undefined && lastdown[0] === 'bank') {
 				socket.emit('hot_press', lastdown[1], lastdown[2], false);
 			}
 		}
@@ -189,13 +190,13 @@
 					if (b.style === undefined) {
 						$b.css({backgroundColor: '#111' });
 					}
-					else if (b.style == 'text') {
-						$b.text(b.text);
+					else if (b.style === 'text') {
+						$b.text(b.text.replace(/\\n/g, '\n'));
 						$b.css({backgroundColor: int2hex(b.bgcolor) });
 						$b.css({color: int2hex(b.color) });
 						$b.css({fontSize: parseInt(b.size*3) });
 						var a = b.alignment.split(":");
-						var hAlign = a[0]
+						var hAlign = a[0];
 						var vAlign = a[1];
 						$b.css({'vertical-align': vAlign });
 						$b.css({'text-align': hAlign });
