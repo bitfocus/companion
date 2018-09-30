@@ -19,6 +19,9 @@ var instance = {};
 var instance_status = {};
 var instance_variables = {};
 var instance_variabledata = {};
+var instance_manufacturer = {};
+var instance_category = {};
+var instance_name = {};
 
 $(function() {
 	var iconfig = {};
@@ -73,8 +76,8 @@ $(function() {
 			var $tr = $("<tr></tr>");
 
 			var $td_id = $("<td></td>");
-			var $td_label = $("<td id='label_"+n+"'>label</td>");
-			var $td_status = $("<td id='instance_status_"+n+"'>no status</td>");
+			var $td_label = $("<td id='label_"+n+"'></td>");
+			var $td_status = $("<td id='instance_status_"+n+"'></td>");
 			var $td_actions = $("<td></td>");
 			console.log("list", list);
 			var $button_edit = $("<button type='button' data-id='"+n+"' class='instance-edit btn btn-primary'>edit</button>");
@@ -124,8 +127,8 @@ $(function() {
 			});
 
 			for (var x in instance.module) {
-				if (instance.module[x].id == list[n].instance_type) {
-					$td_id.text(instance.module[x].label);
+				if (instance.module[x].name == list[n].instance_type) {
+					$td_id.html("<b>"+instance.module[x].manufacturer+"</b>" + "<br>" + instance.module[x].product);
 				}
 			}
 
@@ -145,48 +148,78 @@ $(function() {
 		updateInstanceStatus();
 	};
 
-	socket.on('instance', function(i) {
+	// add instance code
+	$(".add-instance-ul").on('click', '.instance-addable', function() {
+		var instance_type = $(this).data('id');
+		socket.emit('instance_add', instance_type );
+		socket.once('instance_add:result', function(id,db) {
+			instance.db = db;
+			socket.emit('instance_edit', id);
+		});
+	});
+
+	socket.on('instance', function(i,obj) {
 		instance = i;
+
+		instance_manufacturer = obj.manufacturer;
+		instance_category = obj.category;
+		instance_name = obj.name;
 
 		updateInstanceList(i.db);
 		console.log('instance', i);
 
 		$addInstance = $("#addInstance");
-		$addInstance.html("<option value='null'> + Add instance</option>");
+		$addInstanceByManufacturer = $("#addInstanceByManufacturer");
 
-		if (instance.module !== undefined) {
-			// Sort the list first
-			var list = instance.module.sort(function (a,b) {
-				if (a.label.toUpperCase() < b.label.toUpperCase()) {
-					return -1;
+		if (instance_category !== undefined) {
+
+			for (var n in instance_category) {
+
+				var $entry_li = $('<li class="dropdown-submenu"></li>');
+				var $entry_title = $('<div tabindex="-1" class="dropdown-content"></div>');
+
+				$entry_title.text(n);
+				$entry_li.append($entry_title);
+				$addInstance.append($entry_li);
+
+				var $entry_sub_ul = $('<ul class="dropdown-menu"></ul>');
+
+				for ( var sub in instance_category[n] ) {
+					var inx = instance_category[n][sub];
+					var $entry_sub_li = $('<li><div class="dropdown-content instance-addable" data-id="'+inx+'">'+instance_name[inx]+'</div></li>');
+					$entry_sub_ul.append($entry_sub_li);
 				}
 
-				if (a.label.toUpperCase() > b.label.toUpperCase()) {
-					return 1;
-				}
+				$entry_li.append($entry_sub_ul);
 
-				return 0;
-			});
-
-			$addInstance.change(function() {
-				if ($(this).val() !== "null") {
-					socket.emit('instance_add', $(this).val() );
-					console.log('instance_add()');
-					$(this).val("null");
-					socket.once('instance_add:result', function(id,db) {
-						instance.db = db;
-						console.log("instance_add:result()", id,db);
-						socket.emit('instance_edit', id);
-					});
-				}
-			});
-
-
-			for (var n in list) {
-				var im = list[n];
-				var $instance = $('<option value="'+im.id+'" data-id="'+im.id+'">'+ im.label +'</option>');
-				$addInstance.append($instance)
 			}
+
+			for (var n in instance_manufacturer) {
+
+				var $entry_li = $('<li class="dropdown-submenu"></li>');
+				var $entry_title = $('<div tabindex="-1" class="dropdown-content"></div>');
+
+				$entry_title.text(n);
+				$entry_li.append($entry_title);
+				$addInstanceByManufacturer.append($entry_li);
+
+				var $entry_sub_ul = $('<ul class="dropdown-menu"></ul>');
+
+				for ( var sub in instance_manufacturer[n] ) {
+					var inx = instance_manufacturer[n][sub];
+					var $entry_sub_li = $('<li><div class="dropdown-content instance-addable" data-id="'+inx+'">'+instance_name[inx]+'</div></li>');
+					$entry_sub_ul.append($entry_sub_li);
+				}
+
+				$entry_li.append($entry_sub_ul);
+
+			}
+
+
+
+
+
+
 		}
 	});
 
