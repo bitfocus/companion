@@ -182,7 +182,7 @@ $(function() {
 				fr.onload = function() {
 					socket.emit('loadsave_import_config', fr.result);
 				};
-				fr.readAsBinaryString(upload.files[0]);
+				fr.readAsText(upload.files[0]);
 		} else {
 				alert('I am sorry, Companion requires a more modern browser');
 		}
