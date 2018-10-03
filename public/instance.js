@@ -342,7 +342,7 @@ $(function() {
 		$('#instanceConfigTab a[href="#instanceConfig"]').tab('show');
 
 		for (var n in store.module) {
-			if (store.module[n].id === store.db[id].instance_type) {
+			if (store.module[n].name === store.db[id].instance_type) {
 				$('#instanceConfig h4:first').text( store.module[n].label + ' configuration');
 			}
 		}

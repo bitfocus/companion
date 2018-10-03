@@ -158,7 +158,7 @@ $(function() {
 				}
 
 				for (var i = 0; i < instance.module.length; ++i) {
-					if (instance.module[i].id == result.instances[key].instance_type) {
+					if (instance.module[i].name == result.instances[key].instance_type) {
 						$tr.find('td:nth-child(2)').text(instance.module[i].label);
 					}
 				}

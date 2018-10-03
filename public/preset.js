@@ -12,7 +12,7 @@ $(function() {
 
 	function get_instance(id) {
 		for (var key in instance.module) {
-			if (instance.module[key].id == id) {
+			if (instance.module[key].name == id) {
 				return instance.module[key];
 			}
 		}
