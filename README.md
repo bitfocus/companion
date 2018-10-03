@@ -7,6 +7,8 @@
 **Bleeding edge builds**
 * http://builds.bitfocus.io/companion/
 
+For checking known bugs or reporting of potential bugs, please use the [issue system](https://github.com/bitfocus/companion/issues) on GitHub
+
 ## Currently supports
 * Barco EventMaster (json)
 * Barco PDS (tcp)
@@ -20,7 +22,7 @@
 * Dataton Watchout production (tcp)
 * Ross Carbonite/Vision (rosstalk)
 * IfElse{ware} AV-Playback (udp)
-* Christie Spyder (testing) (udp)
+* Christie Spyder
 * PJ-link (tcp)
 * Digital Projection (testing) (udp)
 * BMD Atem
@@ -48,7 +50,7 @@
 * Behringer X-air / Midas XR series (done)
 * GrassValley AMP protocol
 * AnalogWay Vio 4K (done)
-* Analogway Midra (testing)
+* Analogway Midra (done)
 * Chamsys MagicQ  OSC and UDP (under development)
 * VYV Photon (done)
 * Modulo Pi Modulo Player (done)
@@ -60,17 +62,17 @@
 * Barco ImagePro I/II (under development)
 * Octopus app (done)
 * Show Cue System (windows)
-* Sony / VISCA Over IP PTZ (Under development)
+* Sony / VISCA Over IP PTZ (under development)
 * Panasonic PTZ (under development)
 * Irisdown Countdown Timer 2.0
 * BMD SmartView / SmartScope
-* Kramer VP-727 (and posibly others)
+* Kramer VP-727 (and possibly others)
 * Motu AVB interfaces / Mixers
 * StudioCoast vMix
 * Resolume
 * High End Systems Hog 4
-* Globalcashe-itac-ir
-* Globalcashe-itac-cc
+* Globalcache-itac-ir
+* Globalcache-itac-cc
 * Renewed Vision ProPresenter 6
 
 
