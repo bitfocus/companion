@@ -38,6 +38,7 @@ function replaceUnicode(str) {
 		while ((match = reg.exec(str)) !== null) {
 			if (match[1] !== undefined) {
 				str = str.replace('&#' + match[1] + ';', String.fromCodePoint(parseInt(match[1])));
+				reg.lastIndex = 0;
 			}
 		}
 	}
