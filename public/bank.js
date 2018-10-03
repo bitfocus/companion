@@ -31,6 +31,19 @@ function int2hex(number) {
 	return '#' + r + g + b;
 }
 
+function replaceUnicode(str) {
+	if (typeof str == 'string') {
+		var match, reg = /&#(\d+);/g;
+
+		while ((match = reg.exec(str)) !== null) {
+			if (match[1] !== undefined) {
+				str = str.replace('&#' + match[1] + ';', String.fromCodePoint(parseInt(match[1])));
+			}
+		}
+	}
+	return str;
+}
+
 function hex2int(hex) {
 	return parseInt(hex.substr(1), 16);
 }
@@ -271,6 +284,11 @@ $(function() {
 				socket.once('get_bank:results', updateFromConfig);
 
 			} else {
+				// Custom unicode un-escaping in text field
+				if ($(this).data('fieldid') == 'text') {
+					$(this).val(replaceUnicode($(this).val()));
+				}
+
 				socket.emit('bank_changefield', p, b, $(this).data('fieldid'), $(this).val() );
 			}
 
