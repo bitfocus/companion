@@ -184,3 +184,6 @@
 [submodule "lib/module/generic-http"]
 	path = lib/module/generic-http
 	url = https://github.com/bitfocus/companion-module-generic-http.git
+[submodule "lib/module/barco-encore"]
+	path = lib/module/barco-encore
+	url = https://github.com/bitfocus/companion-module-barco-encore.git
