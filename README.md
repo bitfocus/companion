@@ -10,7 +10,7 @@
 For checking known bugs or reporting of potential bugs, please use the [issue system](https://github.com/bitfocus/companion/issues) on GitHub
 
 **Donations**
-https://opencollective.com/companion
+* https://opencollective.com/companion
 
 ## Currently supports
 * Barco EventMaster (json)
