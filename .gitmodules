@@ -193,3 +193,6 @@
 [submodule "lib/module/bitfocus-companion"]
 	path = lib/module/bitfocus-companion
 	url = https://github.com/bitfocus/companion-module-bitfocus-companion.git
+[submodule "lib/module/ptzoptics-visca"]
+	path = lib/module/ptzoptics-visca
+	url = https://github.com/bitfocus/companion-module-ptzoptics-visca.git
