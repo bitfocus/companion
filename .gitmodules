@@ -190,3 +190,6 @@
 [submodule "lib/module/nevion-mrp"]
 	path = lib/module/nevion-mrp
 	url = https://github.com/bitfocus/companion-module-nevion-mrp.git
+[submodule "lib/module/bitfocus-companion"]
+	path = lib/module/bitfocus-companion
+	url = https://github.com/bitfocus/companion-module-bitfocus-companion.git
