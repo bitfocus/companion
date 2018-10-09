@@ -90,10 +90,13 @@ $(function() {
 
 			if (i.enabled === undefined || i.enabled === true) {
 				$td_actions.append($button_disable)
+				$button_edit.show();
 			}
 			else {
 				$td_actions.append($button_enable);
+				$button_edit.hide();
 			}
+
 
 			$td_actions.append($("<span>&nbsp;</span>"));
 			$td_actions.append($button_edit);
