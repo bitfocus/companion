@@ -96,7 +96,7 @@
 	var socket = io();
 	var config = {};
 	var cache = {};
-	var visible = {};
+	var been_connected = false;
 
 	function int2hex(number) {
 		var r = ('0' + ((number >> 16) & 0xff).toString('16')).substr(-2);
@@ -227,6 +227,11 @@
 	}
 
 	socket.on('connect', function () {
+		if (been_connected === true) {
+			window.location.reload(true);
+		}
+		been_connected = true;
+
 		socket.on('buttons_page_data', function(page, data) {
 			cache[page].wait = false;
 
@@ -244,7 +249,6 @@
 
 		for (var i = 1; i < 100; ++i) {
 			cache[i] = {};
-			visible[i] = 0;
 		}
 
 		scroll();
