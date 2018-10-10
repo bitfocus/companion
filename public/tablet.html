@@ -16,6 +16,7 @@
  */ -->
 <html>
 <head>
+	<meta name="viewport" content="width=device-width, initial-scale=1.0, shrink-to-fit=no">
 	<style>
 		body {
 			margin: 0;
@@ -66,6 +67,9 @@
 			width:25%;
 			white-space: pre-wrap;
 		}
+		.page-bank-content canvas {
+			height: 100%;
+		}
 		.page-content {
 			display:table;
 			width:100%;
@@ -76,6 +80,7 @@
 <body>
 <script src="js/jquery/jquery.min.js"></script>
 <script src="socket.io/socket.io.js"></script>
+<script src="js/viewport.js"></script>
 <script src="js/preview.js"></script>
 
 <div id="control">
@@ -90,6 +95,8 @@
 
 	var socket = io();
 	var config = {};
+	var cache = {};
+	var visible = {};
 
 	function int2hex(number) {
 		var r = ('0' + ((number >> 16) & 0xff).toString('16')).substr(-2);
@@ -122,7 +129,7 @@
 				$pageContent.append($pageBankTr);
 			}
 
-			var $pageBank = $("<td class='page-bank-content' id='bank_"+page+"_"+bank+"'></td>");
+			var $pageBank = $("<td class='page-bank-content' id='bank_"+page+"_"+bank+"'><canvas id='c"+page+"_"+bank+"'></canvas></td>");
 			$pageBankTr.append($pageBank);
 
 			i++;
@@ -130,6 +137,7 @@
 
 		$page.append($pageTitle);
 		$page.append($pageContent);
+		$page.attr('pageid', page);
 
 		$bs.append($page);
 	}
@@ -179,39 +187,67 @@
 		}
 	});
 
+	function drawBank(page, bank, data) {
+		console.log("draw bank " + page + "." + bank);
 
-	function drawBanks(config) {
-		for (var page = 1; page <= 99; page++) {
-			for (var bank = 1; bank <= 12; bank++) {
-				if (config[page] !== undefined && config[page][bank] !== undefined) {
-					var b = config[page][bank];
-					console.log("b",b);
-					var $b = $("#bank_"+page+"_"+bank);
-					if (b.style === undefined) {
-						$b.css({backgroundColor: '#111' });
-					}
-					else if (b.style === 'text') {
-						$b.text(b.text.replace(/\\n/g, '\n'));
-						$b.css({backgroundColor: int2hex(b.bgcolor) });
-						$b.css({color: int2hex(b.color) });
-						$b.css({fontSize: parseInt(b.size*3) });
-						var a = b.alignment.split(":");
-						var hAlign = a[0];
-						var vAlign = a[1];
-						$b.css({'vertical-align': vAlign });
-						$b.css({'text-align': hAlign });
-					}
+		var canvas = $('#c' + page + '_' + bank).get(0);
+		var ctx = canvas.getContext('2d');
+		var imageData = dataToButtonImage(data.buffer);
+		ctx.clearRect(0, 0, canvas.width, canvas.height);
+		ctx.putImageData(imageData, 0, 0);
+		ctx.drawImage(canvas, 0, 0, canvas.width*2, canvas.height*2);
+	}
+
+	$(window).on('scroll', scroll);
+
+	// Lazy load pages
+	function scroll() {
+		// Not ready
+		if (cache[1] === undefined) {
+			return;
+		}
+
+		$('.page').isInViewport({ tolerance: window.innerHeight }).each(function () {
+			var page = $(this).attr('pageid');
+
+			if (cache[page][1] !== undefined || cache[page].wait == true) {
+				return;
+			}
+
+			var cachedata = {};
+			for (var _bank = 1; _bank <= 12; ++_bank) {
+				if (cache[page][_bank] !== undefined) {
+					cachedata[_bank] = cache[page][_bank].updated;
 				}
 			}
-		}
+
+			socket.emit('web_buttons_page', page, cachedata);
+			cache[page].wait = true;
+		});
 	}
 
 	socket.on('connect', function () {
-		socket.emit('get_all_banks');
-		socket.once('get_all_banks:result', function(config) {
-			console.log("config", config);
-			drawBanks(config);
+		socket.on('buttons_page_data', function(page, data) {
+			cache[page].wait = false;
+
+			for (var key in data) {
+				cache[page][key] = data[key];
+				drawBank(page, key, data[key]);
+			}
 		});
+		socket.on('buttons_bank_data', function(page, data) {
+			for (key in data) {
+				drawBank(page, key, data[key]);
+			}
+		});
+		socket.emit('web_buttons');
+
+		for (var i = 1; i < 100; ++i) {
+			cache[i] = {};
+			visible[i] = 0;
+		}
+
+		scroll();
 	});
 
 
