@@ -196,3 +196,6 @@
 [submodule "lib/module/ptzoptics-visca"]
 	path = lib/module/ptzoptics-visca
 	url = https://github.com/bitfocus/companion-module-ptzoptics-visca.git
+[submodule "lib/module/globalcache-itac-sl"]
+	path = lib/module/globalcache-itac-sl
+	url = https://github.com/bitfocus/companion-module-globalcache-itac-sl.git
