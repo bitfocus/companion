@@ -73,6 +73,10 @@ $(function() {
 		for (var n in list) {
 			var i = list[n];
 
+			if (i.instance_type == 'bitfocus-companion') {
+				continue;
+			}
+
 			var $tr = $("<tr></tr>");
 
 			var $td_id = $("<td></td>");
@@ -85,20 +89,23 @@ $(function() {
 			var $button_disable = $("<button type='button' data-id='"+n+"' class='instance-disable btn btn-sm btn-ghost-warning'>disable</button>");
 			var $button_enable = $("<button type='button' data-id='"+n+"' class='instance-enable btn btn-sm btn-ghost-success'>enable</button>");
 
-			$td_actions.append($button_delete)
-			$td_actions.append($("<span>&nbsp;</span>"));
+			if (i.instance_type != 'bitfocus-companion') {
+				$td_actions.append($button_delete)
+				$td_actions.append($("<span>&nbsp;</span>"));
+			}
 
-			if (i.enabled === undefined || i.enabled === true) {
+			if (i.instance_type != 'bitfocus-companion' && (i.enabled === undefined || i.enabled === true)) {
 				$td_actions.append($button_disable)
 				$button_edit.show();
 			}
-			else {
+			else if (i.instance_type != 'bitfocus-companion') {
 				$td_actions.append($button_enable);
 				$button_edit.hide();
 			}
 
 
 			$td_actions.append($("<span>&nbsp;</span>"));
+
 			$td_actions.append($button_edit);
 
 			$button_delete.click(function() {
