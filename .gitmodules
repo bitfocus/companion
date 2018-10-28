@@ -202,3 +202,6 @@
 [submodule "lib/module/obs-studio"]
 	path = lib/module/obs-studio
 	url = https://github.com/bitfocus/companion-module-obs-studio.git
+[submodule "lib/module/analogway-eks500"]
+	path = lib/module/analogway-eks500
+	url = https://github.com/bitfocus/companion-module-analogway-eks500.git
