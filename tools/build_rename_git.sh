@@ -23,7 +23,7 @@ function parse_git_dirty() {
 
 # gets the current git branch
 function parse_git_branch() {
-	git branch --no-color 2> /dev/null | sed -e '/^[^*]/d' -e "s/* \(.*\)/\1$(parse_git_dirty)/"
+	git branch --no-color 2> /dev/null | sed -e '/^[^*]/d' -e "s/* \(.*\)/\1/"
 }
 
 # get last commit hash prepended with @ (i.e. @8a323d0)
@@ -44,10 +44,11 @@ if [[ "$(parse_git_branch)" != "master" ]]; then
 	GIT_BRANCH=$(release)-$(parse_git_branch)-$(parse_git_hash)
 fi
 
+ls -la electron-output
+echo "TO BRANCH ${GIT_BRANCH}"
+
 if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
 	echo OSX
-	echo "TO BRANCH ${GIT_BRANCH}"
-	ls -la electron-output
 	mv -vf electron-output/Companion*.zip electron-output/companion-${GIT_BRANCH}-osx.zip
 elif [[ "$TRAVIS_OS_NAME" == "linux" ]]; then
 	echo LINUX
