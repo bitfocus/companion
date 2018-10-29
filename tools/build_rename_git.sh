@@ -45,13 +45,19 @@ else
 	GIT_BRANCH=$(release)-$(parse_git_branch)-$(parse_git_hash)
 fi
 
-if [ "$TRAVIS_OS_NAME" == "osx" ]]; then
+if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
+	echo OSX
 	mv -vf electron-output/Companion*.zip electron-output/companion-${GIT_BRANCH}-osx.zip
 elif [[ "$TRAVIS_OS_NAME" == "linux" ]]; then
+	echo LINUX
 	mkdir electron-linux-output
 	cp electron-output/*.tar.gz electron-linux-output/companion-${GIT_BRANCH}-linux.tar.gz
 elif [[ "$TRAVIS_OS_NAME" == "win64" ]]; then
+	echo WINDOWS
 	mv -f electron-output/*.exe electron-output/companion-${GIT_BRANCH}-win64.exe
 elif [[ "$TRAVIS_OS_NAME" == "armv7l" ]]; then
+	echo ARM
 	mv -f electron-output/*.tar.gz electron-output/companion-${GIT_BRANCH}-armv7l.tar.gz
 fi
+
+echo DONE
