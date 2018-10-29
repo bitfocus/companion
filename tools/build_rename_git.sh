@@ -19,7 +19,7 @@
 
 # gets the current git branch
 function parse_git_branch() {
-	git branch --no-color 2> /dev/null | sed -e '/^[^*]/d' -e "s/* \(.*\)/\1/" | cut -d'-' -f2
+	git rev-parse --abbrev-ref HEAD
 }
 
 # get last commit hash prepended with @ (i.e. @8a323d0)
