@@ -31,12 +31,19 @@ function parse_git_hash() {
 	git rev-parse --short HEAD 2> /dev/null | sed "s/\(.*\)/\1/"
 }
 
+function parse_git_count() {
+	git log|egrep "^commit"|wc -l|awk '{print $1}'
+}
+
 function release() {
 	cat package.json |grep \"version\"|cut -f4 -d\"
 }
 
-# DEMO
-GIT_BRANCH=$(release)-$(parse_git_hash)
+if [ $(parse_git_branch) == "master" ]; then
+	GIT_BRANCH=$(release)-$(parse_git_hash)-$(parse_git_count)
+else
+	GIT_BRANCH=$(release)-$(parse_git_branch)-$(parse_git_hash)
+fi
 
 if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
 	mv -vf electron-output/Companion*.zip electron-output/companion-${GIT_BRANCH}-osx.zip

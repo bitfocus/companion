@@ -30,11 +30,15 @@ function parse_git_hash() {
 	git rev-parse --short HEAD 2> /dev/null | sed "s/\(.*\)/\1/"
 }
 
+function parse_git_count() {
+	git log|egrep "^commit"|wc -l|awk '{print $1}'
+}
+
 function release() {
 	cat package.json |grep \"version\"|cut -f4 -d\"
 }
 
 # DEMO
-GIT_BRANCH=$(parse_git_branch)-$(parse_git_hash)
+GIT_BRANCH=$(parse_git_branch)-$(parse_git_hash)-$(parse_git_count)
 
 echo -n ${GIT_BRANCH} > ./BUILD
