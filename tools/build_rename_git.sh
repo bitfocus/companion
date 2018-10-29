@@ -28,7 +28,7 @@ function parse_git_branch() {
 
 # get last commit hash prepended with @ (i.e. @8a323d0)
 function parse_git_hash() {
-	git rev-parse --short HEAD 2> /dev/null | sed "s/\(.*\)/\1/"
+	git rev-parse --short HEAD 2> /dev/null | perl -pe 's/^.*([0-9a-f]{7}).*$/$1/'
 }
 
 function parse_git_count() {
