@@ -16,6 +16,7 @@
 # disclosing the source code of your own applications.
 #
 
+git fetch --unshallow
 
 # gets the current git branch
 function parse_git_branch() {
