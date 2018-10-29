@@ -39,7 +39,7 @@ function release() {
 	cat package.json |grep \"version\"|cut -f4 -d\"
 }
 
-if [ $(parse_git_branch) == "master" ]; then
+if [ "$(parse_git_branch)" == "master" ]; then
 	GIT_BRANCH=$(release)-$(parse_git_hash)-$(parse_git_count)
 else
 	GIT_BRANCH=$(release)-$(parse_git_branch)-$(parse_git_hash)
