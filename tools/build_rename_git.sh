@@ -38,15 +38,16 @@ function parse_git_count() {
 function release() {
 	cat package.json |grep \"version\"|cut -f4 -d\"
 }
+GIT_BRANCH=$(release)-$(parse_git_hash)-$(parse_git_count)
 
-if [[ "$(parse_git_branch)" == "master" ]]; then
-	GIT_BRANCH=$(release)-$(parse_git_hash)-$(parse_git_count)
-else
+if [[ "$(parse_git_branch)" != "master" ]]; then
 	GIT_BRANCH=$(release)-$(parse_git_branch)-$(parse_git_hash)
 fi
 
 if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
 	echo OSX
+	echo "TO BRANCH ${GIT_BRANCH}"
+	ls -la electron-output
 	mv -vf electron-output/Companion*.zip electron-output/companion-${GIT_BRANCH}-osx.zip
 elif [[ "$TRAVIS_OS_NAME" == "linux" ]]; then
 	echo LINUX
