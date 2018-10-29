@@ -19,7 +19,15 @@
 
 # gets the current git branch
 function parse_git_branch() {
-	git rev-parse --abbrev-ref HEAD
+	if [[ -z "${TRAVIS_BRANCH}" ]]; then
+			if [[ -z "${APPVEYOR_REPO_BRANCH}" ]]; then
+			  BRANCH="UNKNOWN"
+			else
+			  BRANCH="${APPVEYOR_REPO_BRANCH}"
+			fi
+	else
+	  BRANCH="${TRAVIS_BRANCH}"
+	fi
 }
 
 # get last commit hash prepended with @ (i.e. @8a323d0)
@@ -44,6 +52,7 @@ fi
 echo "RELEASE $(release)"
 echo "PARSE_GIT_BRANCH $(parse_git_branch)"
 echo "PARSE_GIT_HASH $(parse_git_hash)"
+echo "TRAVIS_BRANCH $TRAVIS_BRANCH"
 
 ls -la electron-output
 echo "TO BRANCH ${GIT_BRANCH}"
