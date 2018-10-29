@@ -17,10 +17,6 @@
 #
 
 
-function parse_git_dirty() {
-	git diff --quiet --ignore-submodules HEAD 2>/dev/null; [ $? -eq 1 ] && echo ""
-}
-
 # gets the current git branch
 function parse_git_branch() {
 	git branch --no-color 2> /dev/null | sed -e '/^[^*]/d' -e "s/* \(.*\)/\1/"
@@ -32,17 +28,22 @@ function parse_git_hash() {
 }
 
 function parse_git_count() {
-	git log|egrep "^commit"|wc -l|awk '{print $1}'
+	git log | egrep "^commit" | wc -l | awk '{print $1}'
 }
 
 function release() {
 	cat package.json |grep \"version\"|cut -f4 -d\"
 }
+
 GIT_BRANCH=$(release)-$(parse_git_hash)-$(parse_git_count)
 
 if [[ "$(parse_git_branch)" != "master" ]]; then
 	GIT_BRANCH=$(release)-$(parse_git_branch)-$(parse_git_hash)
 fi
+
+echo "RELEASE $(release)"
+echo "PARSE_GIT_BRANCH $(parse_git_branch)"
+echo "PARSE_GIT_HASH $(parse_git_hash)"
 
 ls -la electron-output
 echo "TO BRANCH ${GIT_BRANCH}"
