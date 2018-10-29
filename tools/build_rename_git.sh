@@ -19,15 +19,7 @@
 
 # gets the current git branch
 function parse_git_branch() {
-	if [[ -z "${TRAVIS_BRANCH}" ]]; then
-			if [[ -z "${APPVEYOR_REPO_BRANCH}" ]]; then
-			  BRANCH="UNKNOWN"
-			else
-			  BRANCH="${APPVEYOR_REPO_BRANCH}"
-			fi
-	else
-	  BRANCH="${TRAVIS_BRANCH}"
-	fi
+	echo -n ${APPVEYOR_REPO_BRANCH}${TRAVIS_BRANCH}
 }
 
 # get last commit hash prepended with @ (i.e. @8a323d0)
