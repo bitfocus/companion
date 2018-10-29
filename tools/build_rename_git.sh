@@ -39,13 +39,13 @@ function release() {
 	cat package.json |grep \"version\"|cut -f4 -d\"
 }
 
-if [ "$(parse_git_branch)" == "master" ]; then
+if [[ "$(parse_git_branch)" == "master" ]]; then
 	GIT_BRANCH=$(release)-$(parse_git_hash)-$(parse_git_count)
 else
 	GIT_BRANCH=$(release)-$(parse_git_branch)-$(parse_git_hash)
 fi
 
-if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
+if [ "$TRAVIS_OS_NAME" == "osx" ]]; then
 	mv -vf electron-output/Companion*.zip electron-output/companion-${GIT_BRANCH}-osx.zip
 elif [[ "$TRAVIS_OS_NAME" == "linux" ]]; then
 	mkdir electron-linux-output
