@@ -1,4 +1,5 @@
 # [Bitfocus Companion](http://bitfocus.io/companion)
+[![Backers on Open Collective](https://opencollective.com/companion/backers/badge.svg)](#backers) [![Sponsors on Open Collective](https://opencollective.com/companion/sponsors/badge.svg)](#sponsors) 
 
 **Build Status**
 * [![Travis Build Status](https://travis-ci.org/bitfocus/companion.svg?branch=master)](https://travis-ci.org/bitfocus/companion) Mac and Linux
@@ -113,3 +114,33 @@ For checking known bugs or reporting of potential bugs, please use the [issue sy
 * Barco Matrix PRO DVI
 * Teranex standards converter
 * BMD MultiView
+
+## Contributors
+
+This project exists thanks to all the people who contribute.
+<a href="https://github.com/bitfocus/companion/contributors"><img src="https://opencollective.com/companion/contributors.svg?width=890&button=false" /></a>
+
+
+## Backers
+
+Thank you to all our backers! 🙏 [[Become a backer](https://opencollective.com/companion#backer)]
+
+<a href="https://opencollective.com/companion#backers" target="_blank"><img src="https://opencollective.com/companion/backers.svg?width=890"></a>
+
+
+## Sponsors
+
+Support this project by becoming a sponsor. Your logo will show up here with a link to your website. [[Become a sponsor](https://opencollective.com/companion#sponsor)]
+
+<a href="https://opencollective.com/companion/sponsor/0/website" target="_blank"><img src="https://opencollective.com/companion/sponsor/0/avatar.svg"></a>
+<a href="https://opencollective.com/companion/sponsor/1/website" target="_blank"><img src="https://opencollective.com/companion/sponsor/1/avatar.svg"></a>
+<a href="https://opencollective.com/companion/sponsor/2/website" target="_blank"><img src="https://opencollective.com/companion/sponsor/2/avatar.svg"></a>
+<a href="https://opencollective.com/companion/sponsor/3/website" target="_blank"><img src="https://opencollective.com/companion/sponsor/3/avatar.svg"></a>
+<a href="https://opencollective.com/companion/sponsor/4/website" target="_blank"><img src="https://opencollective.com/companion/sponsor/4/avatar.svg"></a>
+<a href="https://opencollective.com/companion/sponsor/5/website" target="_blank"><img src="https://opencollective.com/companion/sponsor/5/avatar.svg"></a>
+<a href="https://opencollective.com/companion/sponsor/6/website" target="_blank"><img src="https://opencollective.com/companion/sponsor/6/avatar.svg"></a>
+<a href="https://opencollective.com/companion/sponsor/7/website" target="_blank"><img src="https://opencollective.com/companion/sponsor/7/avatar.svg"></a>
+<a href="https://opencollective.com/companion/sponsor/8/website" target="_blank"><img src="https://opencollective.com/companion/sponsor/8/avatar.svg"></a>
+<a href="https://opencollective.com/companion/sponsor/9/website" target="_blank"><img src="https://opencollective.com/companion/sponsor/9/avatar.svg"></a>
+
+
