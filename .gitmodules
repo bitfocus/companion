@@ -205,3 +205,6 @@
 [submodule "lib/module/analogway-eks500"]
 	path = lib/module/analogway-eks500
 	url = https://github.com/bitfocus/companion-module-analogway-eks500.git
+[submodule "lib/module/resolume-arena"]
+	path = lib/module/resolume-arena
+	url = https://github.com/bitfocus/companion-module-resolume-arena.git
