@@ -1,5 +1,4 @@
 # [Bitfocus Companion](http://bitfocus.io/companion)
-[![Backers on Open Collective](https://opencollective.com/companion/backers/badge.svg)](#backers) [![Sponsors on Open Collective](https://opencollective.com/companion/sponsors/badge.svg)](#sponsors) 
 
 **Build Status**
 * [![Travis Build Status](https://travis-ci.org/bitfocus/companion.svg?branch=master)](https://travis-ci.org/bitfocus/companion) Mac and Linux
@@ -14,6 +13,8 @@
 For checking known bugs or reporting of potential bugs, please use the [issue system](https://github.com/bitfocus/companion/issues) on GitHub
 
 **Donations**
+* [![Backers on Open Collective](https://opencollective.com/companion/backers/badge.svg)](#backers)
+* [![Sponsors on Open Collective](https://opencollective.com/companion/sponsors/badge.svg)](#sponsors)
 * https://opencollective.com/companion
 
 ## Currently supports
