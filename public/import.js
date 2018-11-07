@@ -93,6 +93,12 @@ $(function() {
 			var key = $(this).data('key');
 			import_data.instances[key].import_to = $(this).val();
 		});
+		import_data.instances['bitfocus-companion'] = {
+			'import_to': 'bitfocus-companion',
+			'label': 'internal',
+			'id': 'bitfocus-companion',
+			'instance_type': 'bitfocus-companion'
+		};
 
 		socket.emit('loadsave_import_page', $(this).data('page'), import_page, import_data);
 		socket.once('loadsave_import_page:result', function (err, result) {
@@ -141,6 +147,10 @@ $(function() {
 
 			var $list = $('#importConfigInstanceList').html('');
 			for (var key in result.instances) {
+				if (key == 'companion-bitfocus' || result.instances[key].instance_type == 'bitfocus-companion') {
+					continue;
+				}
+
 				var $tr = $('<tr><td><select data-key="' + key + '"><option value="new">[ Create new instance ]</option></select></td><td>BMD VideoHub</td><td>Routeren da</td></tr>');
 				var $sel = $tr.find('select');
 
