@@ -208,6 +208,3 @@
 [submodule "lib/module/resolume-arena"]
 	path = lib/module/resolume-arena
 	url = https://github.com/bitfocus/companion-module-resolume-arena.git
-[submodule "lib/module/cockos-reaper"]
-	path = lib/module/cockos-reaper
-	url = https://github.com/bitfocus/companion-module-cockos-reaper.git
