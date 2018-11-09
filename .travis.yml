@@ -9,6 +9,10 @@ matrix:
       services: docker
       language: generic
 
+branches:
+  only:
+  - master
+
 env:
   global:
     - ELECTRON_CACHE=$HOME/.cache/electron
