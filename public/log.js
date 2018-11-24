@@ -20,7 +20,7 @@ $(function() {
 
 	var doLogResize = function() {
 		console.log("resizing");
-		$("#log").css('height', ($(window).height() - 240) + 'px')
+		$("#log").css('height', ($(window).height() - 150) + 'px')
 	};
 
 	$(window).resize(doLogResize);
