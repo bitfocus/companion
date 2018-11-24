@@ -31,7 +31,6 @@ $(function() {
 	$("#instanceConfigTab").hide();
 
 	socket.emit('instance_get');
-	console.log('instance_get');
 	socket.emit('instance_status_get');
 
 	function updateInstanceStatus() {
@@ -138,7 +137,7 @@ $(function() {
 
 			for (var x in instance.module) {
 				if (instance.module[x].name == list[n].instance_type) {
-					$td_id.html("<b>"+instance.module[x].manufacturer+"</b>" + "<br>" + instance.module[x].product);
+					$td_id.html("<b>"+instance.module[x].manufacturer+"</b>" + "<br>" + instance.module[x].shortname);
 				}
 			}
 
@@ -157,6 +156,54 @@ $(function() {
 		}
 		updateInstanceStatus();
 	};
+
+
+
+
+	// search for add instance code
+
+	var $aisf = $('#instance_add_search_field');
+	var $aisr = $('#instance_add_search_results');
+	$aisr.html("");
+	$aisf.val("");
+	$aisf.on('keyup', function() {
+
+		if ($aisf.val().length > 0) {
+			$aisr.html("");
+			for (var x in instance_name) {
+				var main_split = instance_name[x].split(":");
+				var manuf = main_split[0];
+				var prods = main_split[1].split(";");
+				console.log("Manuf",manuf,"Prods",prods);
+				for (var prod in prods) {
+					var subprod = manuf + " " + prods[prod];
+					console.log("subprod", subprod);
+					if (subprod.match( new RegExp( $aisf.val(), "i" ))) {
+						var $x = $("<div class='ais_entry'>&nbsp;<span style=''>"+subprod+"</span></div>");
+						var $button = $('<a role="button" class="btn btn-primary text-white">Add</a>');
+						$x.prepend($button);
+						$x.data('id', x);
+						$x.click(function(e) {
+							e.preventDefault();
+							var instance_type = $(this).data('id');
+							socket.emit('instance_add', instance_type );
+							$aisr.html("");
+							$aisf.val("");
+							socket.once('instance_add:result', function(id,db) {
+								instance.db = db;
+								socket.emit('instance_edit', id);
+							});
+						});
+						$aisr.append($x);
+					}
+				}
+			}
+		}
+
+		else {
+			$aisr.html("");
+		}
+	});
 
 	// add instance code
 	$(".add-instance-ul").on('click', '.instance-addable', function() {
@@ -195,9 +242,19 @@ $(function() {
 				var $entry_sub_ul = $('<ul class="dropdown-menu"></ul>');
 
 				for ( var sub in instance_category[n] ) {
+					
 					var inx = instance_category[n][sub];
-					var $entry_sub_li = $('<li><div class="dropdown-content instance-addable" data-id="'+inx+'">'+instance_name[inx]+'</div></li>');
-					$entry_sub_ul.append($entry_sub_li);
+					var res_id = inx;
+					var res_name = instance_name[inx];
+					var main_split = res_name.split(":");
+					var manuf = main_split[0];
+					var prods = main_split[1].split(";");
+
+					for (var prod in prods) {
+						var subprod = manuf + " " + prods[prod];
+						var $entry_sub_li = $('<li><div class="dropdown-content instance-addable" data-id="'+res_id+'">'+subprod+'</div></li>');
+						$entry_sub_ul.append($entry_sub_li);
+					}
 				}
 
 				$entry_li.append($entry_sub_ul);
@@ -216,21 +273,27 @@ $(function() {
 				var $entry_sub_ul = $('<ul class="dropdown-menu"></ul>');
 
 				for ( var sub in instance_manufacturer[n] ) {
+
 					var inx = instance_manufacturer[n][sub];
-					var $entry_sub_li = $('<li><div class="dropdown-content instance-addable" data-id="'+inx+'">'+instance_name[inx]+'</div></li>');
-					$entry_sub_ul.append($entry_sub_li);
+					var res_name = instance_name[inx];
+					var main_split = res_name.split(":");
+					var manuf = main_split[0];
+					var prods = main_split[1].split(";");
+
+					for (var prod in prods) {
+						var subprod = manuf + " " + prods[prod];
+						var $entry_sub_li = $('<li><div class="dropdown-content instance-addable" data-id="'+inx+'">'+subprod+'</div></li>');
+						$entry_sub_ul.append($entry_sub_li);
+					}
+
 				}
 
 				$entry_li.append($entry_sub_ul);
 
 			}
 
-
-
-
-
-
 		}
+
 	});
 
 	socket.on('instance_db_update', function(db) {
@@ -353,10 +416,9 @@ $(function() {
 
 		for (var n in store.module) {
 			if (store.module[n].name === store.db[id].instance_type) {
-				$('#instanceConfig h4:first').text( store.module[n].label + ' configuration');
+				$('#instanceConfig h4:first').text( store.module[n].shortname + ' configuration');
 			}
 		}
-
 
 		iconfig = config;
 
