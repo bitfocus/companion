@@ -16,8 +16,9 @@
  */ -->
 <html>
 <head>
-	<meta name="viewport" content="width=device-width, initial-scale=1.0, shrink-to-fit=no">
+	<meta name="viewport" content="">
 	<style>
+
 		body {
 			margin: 0;
 			padding: 0;
@@ -25,55 +26,45 @@
 			font-size: 2em;
 			font-family: helvetica;
 		}
+
+		h1 {
+			font-size: 30px;
+			padding-left: 30px;
+			padding-top: 30px;
+		}
+
 		.page-title {
-			background-color: #000;
-			padding: 10px;
-			text-align: center;
-			text-transform: uppercase;
-			margin-top: 0.2em;
 			color: rgb(255,198,0);
-			font-size: 0.6em;
-			padding-top:50px;
-			padding-bottom:30px;
+			clear:both;
+			margin-top: 20px;
+			padding-bottom: 10px;
+			margin-bottom: 0px;
 		}
-		#control {
-			position: fixed;
-			top:0;
-			left:0;
-			color: rgb(255,198,0);
-			font-size:19px;
-			width: 100%;
-			padding: 10px;
-			background-color: #222;
-			border-bottom: 1px solid rgb(255,198,0);
+
+		.page {
+			padding: 20px;
 		}
-		#banks {
-			padding-top: 25px;
-		}
-		.page-bank {
-			margin-top: 0.1em;
-			margin-bottom: 0.1em;
-			display:inline-block;
-		}
+
 		.page-bank-content {
-			padding: 0px;
-			margin:0.1em;
-			color: white;
-			background-color: #111;
-			border-top: 1px solid #555;
-			border-left: 1px solid #333;
-			display:table-cell;
-			height: 150px;
-			width:25%;
-			white-space: pre-wrap;
+			float:left;
 		}
+
 		.page-bank-content canvas {
-			height: 100%;
+			width: 144px;
+			margin: 30px;
+			height: 144px;
+			box-shadow: 0px 0px 50px #333;
+			border: 1px solid rgba(255,255,255,0.15);
 		}
-		.page-content {
-			display:table;
-			width:100%;
+
+		* {
+			-moz-user-select: none;
+			-webkit-user-select: none;
+			-ms-user-select:none;
+			user-select:none;
+			-o-user-select:none;
 		}
+
 	</style>
 	<title>Companion Tablet Surface</title>
 </head>
@@ -83,15 +74,13 @@
 <script src="js/viewport.js"></script>
 <script src="js/preview.js"></script>
 
-<div id="control">
-	Companion Browser Control
-</div>
-
-<div id="banks">
-	heh
-</div>
+<div id="pages"></div>
 
 <script type="text/javascript">
+
+	document.addEventListener('gesturestart', function (e) {
+			e.preventDefault();
+	});
 
 	var socket = io();
 	var config = {};
@@ -110,35 +99,19 @@
 		return parseInt(hex.substr(1), 16);
 	}
 
-	var $bs =	$("#banks");
+	var $bs =	$("#pages");
 	for (var page = 1; page <= 99; page++) {
-		var $page = $("<div class='page'></div>");
-
-		var $pageTitle = $("<div class='page-title'>Page "+page+"</div>");
-		var $pageContent = $("<table class='page-content'></table>");
-		var $pageBankTr = $("<tr></tr>");
-
-		var i = 1;
+		var $page = $("<div class='page'><h1 class='page-title'>Page "+page+"</h1></div>");
 
 		for (var bank = 1; bank <= 12; bank++) {
-			if (i === 1) {
-				$pageBankTr = $("<tr></tr>");
-			}
-			if (i === 4) {
-				i = 0;
-				$pageContent.append($pageBankTr);
-			}
 
-			var $pageBank = $("<td class='page-bank-content' id='bank_"+page+"_"+bank+"'><canvas id='c"+page+"_"+bank+"'></canvas></td>");
-			$pageBankTr.append($pageBank);
+			var $pageBank = $("<div class='page-bank-content' id='bank_"+page+"_"+bank+"'><canvas width=144 height=144 id='c"+page+"_"+bank+"'></canvas></div>");
 
-			i++;
+			$page.append($pageBank);
+
 		}
 
-		$page.append($pageTitle);
-		$page.append($pageContent);
 		$page.attr('pageid', page);
-
 		$bs.append($page);
 	}
 	var lastdown;
@@ -188,8 +161,6 @@
 	});
 
 	function drawBank(page, bank, data) {
-		console.log("draw bank " + page + "." + bank);
-
 		var canvas = $('#c' + page + '_' + bank).get(0);
 		var ctx = canvas.getContext('2d');
 		var imageData = dataToButtonImage(data.buffer);
@@ -202,12 +173,14 @@
 
 	// Lazy load pages
 	function scroll() {
+
 		// Not ready
 		if (cache[1] === undefined) {
 			return;
 		}
 
 		$('.page').isInViewport({ tolerance: window.innerHeight }).each(function () {
+
 			var page = $(this).attr('pageid');
 
 			if (cache[page][1] !== undefined || cache[page].wait == true) {
@@ -222,14 +195,19 @@
 			}
 
 			socket.emit('web_buttons_page', page, cachedata);
+
 			cache[page].wait = true;
+
 		});
+
 	}
 
 	socket.on('connect', function () {
+
 		if (been_connected === true) {
 			window.location.reload(true);
 		}
+
 		been_connected = true;
 
 		socket.on('buttons_page_data', function(page, data) {
@@ -240,11 +218,13 @@
 				drawBank(page, key, data[key]);
 			}
 		});
+
 		socket.on('buttons_bank_data', function(page, data) {
 			for (key in data) {
 				drawBank(page, key, data[key]);
 			}
 		});
+
 		socket.emit('web_buttons');
 
 		for (var i = 1; i < 100; ++i) {
