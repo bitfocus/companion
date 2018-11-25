@@ -16,33 +16,53 @@
 # disclosing the source code of your own applications.
 #
 
-
-function parse_git_dirty() {
-	git diff --quiet --ignore-submodules HEAD 2>/dev/null; [ $? -eq 1 ] && echo ""
-}
+git fetch --unshallow
 
 # gets the current git branch
 function parse_git_branch() {
-	git branch --no-color 2> /dev/null | sed -e '/^[^*]/d' -e "s/* \(.*\)/\1$(parse_git_dirty)/"
+	echo -n ${APPVEYOR_REPO_BRANCH}${TRAVIS_BRANCH}
 }
 
 # get last commit hash prepended with @ (i.e. @8a323d0)
 function parse_git_hash() {
-	git rev-parse --short HEAD 2> /dev/null | sed "s/\(.*\)/\1/"
+	git rev-parse --short HEAD 2> /dev/null | cut -d'-' -f2
+}
+
+function parse_git_count() {
+	git log | egrep "^commit" | wc -l | awk '{print $1}'
 }
 
 function release() {
 	cat package.json |grep \"version\"|cut -f4 -d\"
 }
 
-# DEMO
-GIT_BRANCH=$(release)-$(parse_git_hash)
+GIT_BRANCH=$(release)-$(parse_git_hash)-$(parse_git_count)
+
+if [[ "$(parse_git_branch)" != "master" ]]; then
+	GIT_BRANCH=$(release)-$(parse_git_branch)-$(parse_git_hash)
+fi
+
+echo "RELEASE $(release)"
+echo "PARSE_GIT_BRANCH $(parse_git_branch)"
+echo "PARSE_GIT_HASH $(parse_git_hash)"
+echo "TRAVIS_BRANCH $TRAVIS_BRANCH"
+
+ls -la electron-output
+echo "TO BRANCH ${GIT_BRANCH}"
 
 if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
+	echo OSX
 	mv -vf electron-output/Companion*.zip electron-output/companion-${GIT_BRANCH}-osx.zip
 elif [[ "$TRAVIS_OS_NAME" == "linux" ]]; then
+	echo LINUX
 	mkdir electron-linux-output
 	cp electron-output/*.tar.gz electron-linux-output/companion-${GIT_BRANCH}-linux.tar.gz
 elif [[ "$TRAVIS_OS_NAME" == "win64" ]]; then
+	echo WINDOWS
 	mv -f electron-output/*.exe electron-output/companion-${GIT_BRANCH}-win64.exe
+elif [[ "$TRAVIS_OS_NAME" == "armv7l" ]]; then
+	echo ARM
+	mv -f electron-output/*.tar.gz electron-output/companion-${GIT_BRANCH}-armv7l.tar.gz
 fi
+
+echo DONE

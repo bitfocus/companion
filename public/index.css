@@ -370,3 +370,17 @@ label {
 .add-instance-button {
 	color:white !important;
 }
+
+#instance_add_search_field {
+	margin-bottom: 10px;
+}
+#instance_add_search_results {
+
+}
+#instance_add_search_results div {
+	margin-bottom: 5px;
+}
+
+#instanceConfig h4 {
+	text-transform: capitalize;
+}

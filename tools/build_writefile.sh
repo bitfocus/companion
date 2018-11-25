@@ -22,12 +22,24 @@ function parse_git_dirty() {
 
 # gets the current git branch
 function parse_git_branch() {
-	git branch --no-color 2> /dev/null | sed -e '/^[^*]/d' -e "s/* \(.*\)/\1$(parse_git_dirty)/"
+	if [[ -z "${TRAVIS_BRANCH}" ]]; then
+			if [[ -z "${APPVEYOR_REPO_BRANCH}" ]]; then
+			  BRANCH="UNKNOWN"
+			else
+			  BRANCH="${APPVEYOR_REPO_BRANCH}"
+			fi
+	else
+	  BRANCH="${TRAVIS_BRANCH}"
+	fi
 }
 
 # get last commit hash prepended with @ (i.e. @8a323d0)
 function parse_git_hash() {
-	git rev-parse --short HEAD 2> /dev/null | sed "s/\(.*\)/\1/"
+	git rev-parse --short HEAD 2> /dev/null | sed "s/\(.*\)/\1/" | cut -d'-' -f2
+}
+
+function parse_git_count() {
+	git log|egrep "^commit"|wc -l|awk '{print $1}'
 }
 
 function release() {
@@ -35,6 +47,6 @@ function release() {
 }
 
 # DEMO
-GIT_BRANCH=$(parse_git_branch)-$(parse_git_hash)
+GIT_BRANCH=$(parse_git_branch)-$(parse_git_hash)-$(parse_git_count)
 
 echo -n ${GIT_BRANCH} > ./BUILD

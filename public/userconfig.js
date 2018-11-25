@@ -14,7 +14,7 @@
  * disclosing the source code of your own applications.
  *
  */
- 
+
 var userconfig = {};
 
 $(function() {
@@ -42,7 +42,27 @@ $(function() {
 			$cb.prop('checked', false);
 		}
 
+		// set the artnet enabled option
+		var state = userconfig.artnet_enabled;
+		var $cb = $('#userconfig_artnet_enabled');
+
+		if (state === true) {
+			$cb.prop('checked', true);
+		} else {
+			$cb.prop('checked', false);
+		}
+
+		var state = userconfig.artnet_universe;
+		var $cb = $('#userconfig_artnet_universe');
+		$cb.val(state);
+
+		var state = userconfig.artnet_channel;
+		var $cb = $('#userconfig_artnet_channel');
+		$cb.val(state);
+
 	};
+
+
 
 	// when userconfig is changed from the userconfig tab
 	$('#userconfig_page_direction_flipped').click(function() {
@@ -63,6 +83,23 @@ $(function() {
 		}
 	});
 
+
+	$('#userconfig_artnet_enabled').click(function() {
+		console.log('clicked', $(this).prop('checked') );
+		if ($(this).prop('checked') == true) {
+			socket.emit('set_userconfig_key', 'artnet_enabled', true);
+		} else {
+			socket.emit('set_userconfig_key', 'artnet_enabled', false);
+		}
+	});
+
+	$('#userconfig_artnet_universe').keyup(function() {
+		socket.emit('set_userconfig_key', 'artnet_universe', $('#userconfig_artnet_universe').val());
+	});
+
+	$('#userconfig_artnet_channel').keyup(function() {
+		socket.emit('set_userconfig_key', 'artnet_channel', $('#userconfig_artnet_channel').val());
+	});
 
 
 

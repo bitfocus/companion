@@ -196,3 +196,18 @@
 [submodule "lib/module/ptzoptics-visca"]
 	path = lib/module/ptzoptics-visca
 	url = https://github.com/bitfocus/companion-module-ptzoptics-visca.git
+[submodule "lib/module/globalcache-itac-sl"]
+	path = lib/module/globalcache-itac-sl
+	url = https://github.com/bitfocus/companion-module-globalcache-itac-sl.git
+[submodule "lib/module/obs-studio"]
+	path = lib/module/obs-studio
+	url = https://github.com/bitfocus/companion-module-obs-studio.git
+[submodule "lib/module/analogway-eks500"]
+	path = lib/module/analogway-eks500
+	url = https://github.com/bitfocus/companion-module-analogway-eks500.git
+[submodule "lib/module/resolume-arena"]
+	path = lib/module/resolume-arena
+	url = https://github.com/bitfocus/companion-module-resolume-arena.git
+[submodule "lib/module/cockos-reaper"]
+	path = lib/module/cockos-reaper
+	url = https://github.com/bitfocus/companion-module-cockos-reaper.git

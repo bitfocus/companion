@@ -9,6 +9,10 @@ matrix:
       services: docker
       language: generic
 
+branches:
+  only:
+  - master
+
 env:
   global:
     - ELECTRON_CACHE=$HOME/.cache/electron
@@ -28,6 +32,7 @@ cache:
 before_install:
   - curl -L https://yarnpkg.com/latest.tar.gz | tar xvz && mv yarn-v* $HOME/.yarn
   - export PATH="$HOME/.yarn/bin:$PATH"
+  - git fetch --unshallow
   - git submodule sync
   - git submodule init
   - git submodule update
