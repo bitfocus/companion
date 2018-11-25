@@ -242,7 +242,7 @@ $(function() {
 				var $entry_sub_ul = $('<ul class="dropdown-menu"></ul>');
 
 				for ( var sub in instance_category[n] ) {
-					
+
 					var inx = instance_category[n][sub];
 					var res_id = inx;
 					var res_name = instance_name[inx];
@@ -335,6 +335,8 @@ $(function() {
 			socket.emit('instance_config_put', id, data);
 			socket.once('instance_config_put:result', function (err, res) {
 				if (res) {
+					current_instance = data.label;
+
 					$button.css('backgroundColor', 'lightgreen');
 					setTimeout(function () {
 						$button.css('backgroundColor', '');
