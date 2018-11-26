@@ -63,6 +63,7 @@
 			-ms-user-select:none;
 			user-select:none;
 			-o-user-select:none;
+			touch-action: none;
 		}
 
 		canvas {
@@ -114,7 +115,7 @@
 
 		for (var bank = 1; bank <= 12; bank++) {
 
-			var $pageBank = $("<div class='page-bank-content' id='bank_"+page+"_"+bank+"'><canvas width=144 height=144 id='c"+page+"_"+bank+"'></canvas></div>");
+			var $pageBank = $("<div class='page-bank-content' id='bank_"+page+"_"+bank+"'><canvas class='canvases' width=144 height=144 id='c"+page+"_"+bank+"'></canvas></div>");
 
 			$page.append($pageBank);
 
@@ -129,14 +130,14 @@
 	window.addEventListener('touchstart', function onFirstTouch() {
 		touchdevice = true;
 
-		$("body").on('touchstart', '.page-bank-content', function() {
-			lastdown = $(this).attr('id').split(/_/);
+		$("body").on('touchstart', '.canvases', function() {
+			lastdown = $(this).parent().attr('id').split(/_/);
 			if (lastdown[0] === 'bank') {
 				socket.emit('hot_press', lastdown[1], lastdown[2], true);
 			}
 		});
 
-		$("body").on('touchend', '.page-bank-content', function() {
+		$("body").on('touchend', '.canvases', function() {
 			if (lastdown !== undefined && lastdown[0] === 'bank') {
 				socket.emit('hot_press', lastdown[1], lastdown[2], false);
 			}
@@ -147,9 +148,9 @@
 
 
 
-	$("body").on('mousedown', '.page-bank-content', function() {
+	$("body").on('mousedown', '.canvases', function() {
 		if (!touchdevice) {
-			lastdown = $(this).attr('id').split(/_/);
+			lastdown = $(this).parent().attr('id').split(/_/);
 
 			if (lastdown[0] === 'bank') {
 				socket.emit('hot_press', lastdown[1], lastdown[2], true);
@@ -157,7 +158,7 @@
 		}
 	});
 
-	$("body").on('mouseup', '.page-bank-content', function() {
+	$("body").on('mouseup', '.canvases', function() {
 		if (!touchdevice) {
 			if (lastdown !== undefined && lastdown[0] === 'bank') {
 				socket.emit('hot_press', lastdown[1], lastdown[2], false);
