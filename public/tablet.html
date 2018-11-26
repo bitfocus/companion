@@ -185,7 +185,7 @@
 			return;
 		}
 
-		$('.page').isInViewport({ tolerance: window.innerHeight }).each(function () {
+		$('.page').isInViewport({ tolerance: window.innerHeight/2 }).each(function () {
 
 			var page = $(this).attr('pageid');
 
