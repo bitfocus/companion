@@ -1,4 +1,4 @@
-# Getting started in Companion 1.1.1.
+# Getting started in Companion 1.2.0.
 
 
 

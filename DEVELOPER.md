@@ -7,7 +7,7 @@
 
 ## Getting started
 ```
-$ n 8.11.1
+$ n 8.12.0
 $ git clone <your forked repository>
 $ cd companion
 $ ./tools/update.sh
