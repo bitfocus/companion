@@ -115,7 +115,7 @@
 
 		for (var bank = 1; bank <= 12; bank++) {
 
-			var $pageBank = $("<div class='page-bank-content' id='bank_"+page+"_"+bank+"'><canvas class='canvases' width=144 height=144 id='c"+page+"_"+bank+"'></canvas></div>");
+			var $pageBank = $("<div class='page-bank-content' id='bank_"+page+"_"+bank+"'><canvas class='canvases' width=72 height=72 id='c"+page+"_"+bank+"'></canvas></div>");
 
 			$page.append($pageBank);
 
@@ -173,7 +173,7 @@
 		var imageData = dataToButtonImage(data.buffer);
 		ctx.clearRect(0, 0, canvas.width, canvas.height);
 		ctx.putImageData(imageData, 0, 0);
-		ctx.drawImage(canvas, 0, 0, canvas.width*2, canvas.height*2);
+		ctx.drawImage(canvas, 0, 0, canvas.width, canvas.height);
 	}
 
 	$(window).on('scroll', scroll);
