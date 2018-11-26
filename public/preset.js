@@ -24,10 +24,12 @@ $(function() {
 
 		var count = 0;
 		for (var key in all_presets) {
-			var inst = get_instance(instance.db[key].instance_type);
-			if (inst !== undefined) {
-				count++;
-				$presets.append('<input type="button" class="btn btn-primary choose_instance" data-key="' + key + '" value="' + inst.label + ' (' + instance.db[key].label + ')"><br /><br />');
+			if (instance.db[key] !== undefined) {
+				var inst = get_instance(instance.db[key].instance_type);
+				if (inst !== undefined) {
+					count++;
+					$presets.append('<input type="button" class="btn btn-primary choose_instance" data-key="' + key + '" value="' + inst.label + ' (' + instance.db[key].label + ')"><br /><br />');
+				}
 			}
 		}
 

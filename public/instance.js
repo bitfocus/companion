@@ -298,6 +298,7 @@ $(function() {
 
 	socket.on('instance_db_update', function(db) {
 		instance.db = db;
+		updateInstanceList(instance.db);
 	});
 
 	function saveConfig(button, id) {
