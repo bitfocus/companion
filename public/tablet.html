@@ -65,6 +65,15 @@
 			-o-user-select:none;
 		}
 
+		canvas {
+			image-rendering: optimizeSpeed;             /* Older versions of FF          */
+			image-rendering: -moz-crisp-edges;          /* FF 6.0+                       */
+			image-rendering: -webkit-optimize-contrast; /* Safari                        */
+			image-rendering: -o-crisp-edges;            /* OS X & Windows Opera (12.02+) */
+			image-rendering: pixelated;                 /* Awesome future-browsers       */
+			-ms-interpolation-mode: nearest-neighbor;   /* IE                            */
+		}
+
 	</style>
 	<title>Companion Tablet Surface</title>
 </head>
@@ -122,14 +131,12 @@
 
 		$("body").on('touchstart', '.page-bank-content', function() {
 			lastdown = $(this).attr('id').split(/_/);
-			console.log("touchstart", $(this).attr('id'));
 			if (lastdown[0] === 'bank') {
 				socket.emit('hot_press', lastdown[1], lastdown[2], true);
 			}
 		});
 
 		$("body").on('touchend', '.page-bank-content', function() {
-			console.log("touchend", $(this).attr('id'));
 			if (lastdown !== undefined && lastdown[0] === 'bank') {
 				socket.emit('hot_press', lastdown[1], lastdown[2], false);
 			}
@@ -143,7 +150,6 @@
 	$("body").on('mousedown', '.page-bank-content', function() {
 		if (!touchdevice) {
 			lastdown = $(this).attr('id').split(/_/);
-			console.log("mousedown", $(this).attr('id'));
 
 			if (lastdown[0] === 'bank') {
 				socket.emit('hot_press', lastdown[1], lastdown[2], true);
@@ -153,7 +159,6 @@
 
 	$("body").on('mouseup', '.page-bank-content', function() {
 		if (!touchdevice) {
-			console.log("mouseup", $(this).attr('id'));
 			if (lastdown !== undefined && lastdown[0] === 'bank') {
 				socket.emit('hot_press', lastdown[1], lastdown[2], false);
 			}
@@ -163,6 +168,7 @@
 	function drawBank(page, bank, data) {
 		var canvas = $('#c' + page + '_' + bank).get(0);
 		var ctx = canvas.getContext('2d');
+		ctx.webkitImageSmoothingEnabled = false;
 		var imageData = dataToButtonImage(data.buffer);
 		ctx.clearRect(0, 0, canvas.width, canvas.height);
 		ctx.putImageData(imageData, 0, 0);
