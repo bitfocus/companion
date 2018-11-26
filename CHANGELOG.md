@@ -65,10 +65,6 @@ Changes:
 
 stuff is probably missing from this list..
 
-## Issues closed from v1.1.1 to v1.2.0
-* [#xx](https://github.com/bitfocus/companion/issues/xx): xx
-this needs to be updated......
-
 ## v1.1.1 Summary
 * Eventmaster freeze/unfreeze and rebuild
 * Added test button from button configurator
