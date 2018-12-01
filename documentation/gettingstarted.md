@@ -1,16 +1,14 @@
-# Getting started in Companion 1.2.0.
+# Getting started in Companion 1.2.0
+This article is an introduction to Companion’s basic principles and user interface
 
-
-
-### This article is an introduction to Companion’s basic principles and user interface.
-- - - -
-
+## First
+  
 ### Before you open Companion
-* Connect your hardware and software you want to control. Make sure you are in the same network with them.
-* In the original elgato streamdeck app, make sure to firmware upgrade the streamdeck to the latest version available
-* Close the original elgato streamdeck app. Companion will not find your device if this is open.
+  * Connect your hardware and software you want to control. Make sure you are in the same network with them.
+  * In the original elgato streamdeck app, make sure to firmware upgrade the streamdeck to the latest version available
+  * Close the original elgato streamdeck app. Companion will not find your device if this is open.
 
-### Starting the server
+### Start the server
 When you open Companion a server window will open.
 From the opening view choose your network interface, and change the port if needed, the default is 8000. This is the port of the Companion server.
 
@@ -53,12 +51,10 @@ This section is divided into four tabs.
 ### Instances
 From the Instances tab, you can add, edit and remove devices. You can also see if a device is connected from the Status column.
 
- **To add a new device**
-
-1. Click on the [Add new instance] scroll down menu.
-2. Choose the device you want to add.
-3. Give the IP address of the device and apply changes.
-
+**To add a new device**
+ 1. Click on the [Add new instance] scroll down menu.
+ 2. Choose the device you want to add.
+ 3. Give the IP address of the device and apply changes.
 
 Your new device should now show in the instances tab.
 Add all the devices you want to control.
@@ -69,7 +65,6 @@ Each device needs to be a separate instance. If you have two separate Barco E2, 
 If something is missing, please make a support request on the [GitHub page by creating an issue/feature request](https://github.com/bitfocus/companion/issues) describing the feature, use cases and providing documentation, if needed for the implementation.
 
 ---
-
 
 ### Buttons
 From the Buttons tab, you can add, edit and remove buttons for your stream deck.
@@ -101,8 +96,6 @@ You can add multiple actions and set delay times to each action. Delay times are
 
 ![Button](images/button.jpg?raw=true "Button")
 
-
-
 **Creating a png button**
 
 Make a 72x58px .png image
@@ -130,32 +123,32 @@ On the Log segment right gives status updates of commands going out and coming b
 
 # Modules
 All the instances on Companion are modules.
-Here is a list of the current modules. As each module is different, they all have a module specific info.
 
-* AnalogWay Livecore  
-* Artnet Sender
-* IfElseWare AV-Playback
-* Barco EventMaster
-* Barco PDS
-* Blackmagic Design ATEM
-* Blackmagic Design Hyperdeck
-* Blackmagic Design VideoHub
-* CasparCG
-* Dataton Watchout
-* OSC Generic (send custom packets)
-* d3/disguise (osc control)
-* d3/disguise (json, multi transport control)
-* Digital Projection Highlight
-* GrandMA 2 (telnet)
-* Horae (osc)
-* Mitti (osc)
-* Millumin (osc)
-* Octopus Listener
-* PJLink
-* PlaybackPro Plus
-* PPT Remote Show Control (Irisdown)
-* PVP
-* QLab (osc)
-* Ross Carbonite/Vision
-* Spyder
-* VLC
+Here is a list of the current modules. As each module is different, they all have a module specific info.
+  * AnalogWay Livecore  
+  * Artnet Sender
+  * IfElseWare AV-Playback
+  * Barco EventMaster
+  * Barco PDS
+  * Blackmagic Design ATEM
+  * Blackmagic Design Hyperdeck
+  * Blackmagic Design VideoHub
+  * CasparCG
+  * Dataton Watchout
+  * OSC Generic (send custom packets)
+  * d3/disguise (osc control)
+  * d3/disguise (json, multi transport control)
+  * Digital Projection Highlight
+  * GrandMA 2 (telnet)
+  * Horae (osc)
+  * Mitti (osc)
+  * Millumin (osc)
+  * Octopus Listener
+  * PJLink
+  * PlaybackPro Plus
+  * PPT Remote Show Control (Irisdown)
+  * PVP
+  * QLab (osc)
+  * Ross Carbonite/Vision
+  * Spyder
+  * VLC
