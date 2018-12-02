@@ -1,31 +1,31 @@
 # Getting started in Companion 1.2.0
-This article is an introduction to Companion’s basic principles and user interface
+This article is an introduction to Companion’s basic principles and user interface.
 
 ## First
   
 ### Before you open Companion
-  * Connect your hardware and software you want to control. Make sure you are in the same network with them.
-  * In the original elgato streamdeck app, make sure to firmware upgrade the streamdeck to the latest version available
-  * Close the original elgato streamdeck app. Companion will not find your device if this is open.
+  * Connect the hardware and software you want to control. Make sure you are on the same network as they are.
+  * In the original Elgato Stream Deck app, make sure to firmware upgrade the streamdeck to the latest version available.
+  * Close the original Elgato Stream Deck app. Companion will not find your device if this is open.
 
 ### Start the server
 When you open Companion a server window will open.
-From the opening view choose your network interface, and change the port if needed, the default is 8000. This is the port of the Companion server.
+From the opening view, choose your network interface and change the port if needed - the default is 8000. This is the port of the Companion server.
 
 ![Server](images/server.png?raw=true "Server")
 
 
-Companion should be running on the same computer the streamdeck is connected, maximum of three units, the number might increase in future updates.
-Companion can run on the same machine than Barco eventmaster or other control/playback software; it uses minimal resources.
+Companion should be running on the same computer that the Stream Deck is connected to. There is currently a maximum of three units, however, this number might increase with future updates.
+Companion can run on the same machine as, for example, Barco Event Master or other software for control/playback; it uses minimal resources.
 
-If you need to remotely control companion from other computers in the network, use the URL under the text “Running”. Normally to configure Companion from the computer your running it click green “Launch GUI” button, it will open the Admin page in your default browser.
+If you need to remotely control Companion from other computers on the same network, use the URL under the text “Running”. Normally, to configure Companion from the computer your running it on, click the green “Launch GUI” button, it will open the Admin page in your default browser.
 
-We recommend using Google Chrome
+We recommend using Google Chrome.
 
 ### The user interface / Admin GUI
 - - - -
 The main window is divided into three parts.
-From left to right Community section, Main admin controls and Log
+From left to right: The community section, Main admin controls and the Log.
 ![Admin GUI](images/admingui.jpg?raw=true "Admin GUI")
 
 ## Community section with links
@@ -35,17 +35,17 @@ From left to right Community section, Main admin controls and Log
 
 [The slack group for developers.](https://bit.ly/2IJ1jT4)
 
-On top, there is also Elgato Emulator.
+At the top of the list, there is an Elgato Emulator.
 
-You can collapse the Community section by clicking the “burger icon” on the right of Companion logo.
+You can collapse the Community section by clicking the “burger” icon on the right of Companion logo.
 
 
 ### Elgato Emulator
-Elgato emulator is a tool to test and use the setup even if you don’t have a streamdeck connected. It will open to a new tab on the browser and will function just like a stream deck would.
+Elgato Emulator is a tool to test and use the setup, even if you don’t have a Stream Deck connected. It will open in a new browser tab and will function just like a Stream Deck would.
 
 - - - -
 ## Main admin controls
-Here all the connections, buttons and actions are configured.
+This is where all the connections, buttons and actions are configured.
 This section is divided into four tabs.
 
 ### Instances
@@ -54,10 +54,9 @@ From the Instances tab, you can add, edit and remove devices. You can also see i
 **To add a new device**
  1. Click on the [Add new instance] scroll down menu.
  2. Choose the device you want to add.
- 3. Give the IP address of the device and apply changes.
+ 3. Enter the IP address of the device and apply changes.
 
-Your new device should now show in the instances tab.
-Add all the devices you want to control.
+Your new device should now show in the instances tab along with all the other devices you want to control.
 Each device needs to be a separate instance. If you have two separate Barco E2, you need to add both of them as a separate instance.
 
 ![Instance](images/instance.jpg?raw=true "Instance")
@@ -67,64 +66,64 @@ If something is missing, please make a support request on the [GitHub page by cr
 ---
 
 ### Buttons
-From the Buttons tab, you can add, edit and remove buttons for your stream deck.
-Buttons layout has 99 pages that can be navigated from the blue top arrows left and right. Typing text on the field beside the page number can rename pages.
+From the Buttons tab, you can add, edit and remove buttons for your Stream Deck.
+The Buttons layout has 99 pages that can be navigated using the blue left/right arrows. Give your pages a unique name by replacing the word 'PAGE' right next to the page number.
 
 **Making buttons**
 
 1. First, make at least one instance.
 2. Click on the button you want to create on the grid.
-3. Set button style from the green “Set button style” button.
-4. Add Actions to button
+3. Set the button style using the green [Set button style] option.
+4. Add Actions to the button.
 
-There are three options,
+There are three options:
 
 “None” will disable the button.
 
-“Text” will generate text to the button.
+“Text” will generate text for the button.
 
-“PNG image” will allow you to upload a 72x58px .png image to be used as a button and also lets you add text over the image.
+“PNG image” will allow you to upload a 72x58px .png file to be used as a button image - you can also add text over the image.
 
 **Creating a text button**
 
-Type button text to field, select alignment and font size. Text and background colour can also be changed.
-Live preview of the button will be shown on the top right corner. Button information will update in real-time to Elgato emulator and stream deck.
+Enter your desired button text in the [Button text] field, then select the alignment and font size. Text and background colour can also be changed.
+Live preview of the button will be shown on the top right corner. Button information will update in real-time to Elgato Emulator and Stream Deck.
 
-Add action to the button from the [Add new action for this button] drop-down menu.
+Add actions to the button from the [Add new action for this button] drop-down menu.
 
-You can add multiple actions and set delay times to each action. Delay times are in milliseconds. 1000ms = 1 second.
+You can add multiple actions and set delay times for each action. Delay times are in milliseconds. 1000ms = 1 second.
 
 ![Button](images/button.jpg?raw=true "Button")
 
 **Creating a png button**
 
-Make a 72x58px .png image
-Click the blue Browse button and find the png file you want to use. The picture will appear on the top right preview of the button. Text can be applied over the image if wanted, and actions can be created the same way that to text only buttons.
+Make a 72x58px .png image.
+Click the blue [Browse] button and find the png file you want to use. The picture will appear on the top right preview of the button. Text can be applied over the image. Actions for PNG buttons are created in the same way as text-only buttons.
 
 ---
-### Devices
-This tab will show the connected Elgato Streamdecks.
-If your streamdecks are not showing, click on the blue Re-scan USB button. Use the re-scan button with care as re-scanning will block all operations while the scan is ongoing.
+### Surfaces
+This tab will show the connected Elgato Stream Decks.
+If any of your Stream Decks are not showing up, click [Rescan USB]. Use the rescan button with care as rescanning will block all operations while the scan is ongoing.
 
-**Important. If your devices are showing but they don´t show the ID, you need to update your steamdeck using the Elgato app**
-[Update instructions] (Updating streamdeck.md)
+**Important. If your devices are showing but they don't show the ID, you need to update your Stream Deck using the Elgato app**
+[Update instructions](Updating streamdeck.md)
 ![Devices](images/devices.jpg?raw=true "Devices")
 
 
-### User Config
-On User Config tab you can change some of the preferences of the page up/down behaviour and symbols used.
+### Settings
+In the Settings tab you can apply some user settings, like changing the page buttons, page directions and more!
 
 - - - -
 
-## Log on the right
-On the Log segment right gives status updates of commands going out and coming back to Companion.
+## The log
+The Log section gives status updates of commands going out and coming back to Companion.
 
 ---
 
 # Modules
 All the instances on Companion are modules.
 
-Here is a list of the current modules. As each module is different, they all have a module specific info.
+Here is a list of the current modules. As each module is different, they all have module-specific information.
   * AnalogWay Livecore  
   * Artnet Sender
   * IfElseWare AV-Playback
