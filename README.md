@@ -20,20 +20,20 @@ For checking known bugs or reporting of potential bugs, please use the [issue sy
 
 ## Currently supports
 * Barco EventMaster (json)
-* Barco PDS (tcp)
-* Millumin (osc)
+* Barco PDS
+* Millumin
 * QLab (osc)
-* Mitti (osc)
+* Mitti
 * PlaybackPro Plus (udp /tcp)
 * OSC Generic (send custom packets)
 * d3/disguise (osc control)
 * d3/disguise multi transport control
-* Dataton Watchout production (tcp)
+* Dataton Watchout production
 * Ross Carbonite/Vision (rosstalk)
-* IfElse{ware} AV-Playback (udp)
+* IfElse{ware} AV-Playback
 * Christie Spyder
-* PJ-link (tcp)
-* Digital Projection (testing) (udp)
+* PJ-link
+* Digital Projection
 * BMD Atem
 * BMD Hyperdeck
 * BMD Videohub
@@ -47,51 +47,52 @@ For checking known bugs or reporting of potential bugs, please use the [issue sy
 * Microsoft Powerpoint (octopus listener and Irisdown Remote show control)
 * Apple Keynote (octopus listener)
 * Horae
-
-
-## Support being added in v1.1.2
-* Epson Projectors (done)
-* Lightware LW2 Devices (done)
-* Lightware LW3 Devices (done)
-* TASCAM SS-CDR250N (done)
-* Panasonic AW-HS50/AV-HS410 Switchers (done)
-* Behringer X32 / Midas M32 (done)
-* Behringer X-air / Midas XR series (done)
-* GrassValley AMP protocol
-* AnalogWay Vio 4K (done)
-* Analogway Midra (done)
-* Chamsys MagicQ  OSC and UDP (under development)
-* VYV Photon (done)
-* Modulo Pi Modulo Player (done)
-* 7th Sense Delta Media server (done)
-* Christie Projectors (under development)
-* AJA Kipro Ultra (done)
-* AJA HELO
-* Barco DCS 100/200 (done)
-* Barco ImagePro I/II (under development)
-* Octopus app (done)
+* Epson Projectors (PJLink)
+* Lightware LW2 Devices
+* Lightware LW3 Devices
+* TASCAM SS-CDR250N
+* Panasonic AW-HS50/AV-HS410 Switchers
+* Behringer X32 / Midas M32
+* Behringer X-air / Midas XR series
+* AnalogWay Vio 4K
+* Analogway Midra
+* VYV Photon
+* Modulo Pi Modulo Player
+* 7th Sense Delta Media server
+* AJA Kipro Ultra
+* Barco DCS 100/200
+* Barco ImagePro I/II
+* Octopus app
+* GrassValley AMP protocol (untested)
 * Show Cue System (windows)
-* Sony / VISCA Over IP PTZ (under development)
-* Panasonic PTZ (under development)
 * Irisdown Countdown Timer 2.0
 * BMD SmartView / SmartScope
-* Kramer VP-727 (and possibly others)
-* Motu AVB interfaces / Mixers
-* StudioCoast vMix
-* Resolume
-* High End Systems Hog 4
+* BMD MultiView
 * Globalcache-itac-ir
 * Globalcache-itac-cc
+* Globalcache-itac-sl
 * Renewed Vision ProPresenter 6
+* HTTP Generic module
+* OBS
+* Kramer VP-727
+* AJA HELO
+* Nevion Routers
+* Resolume Arena
+* Motu AVB interfaces / Mixers
+* Sony PTZ, VISCA Over IP (UDP)
 
 
-## Coming support (help wanted!)
+## Support being added soon
+* Chamsys MagicQ  OSC and UDP (under development)
+* Christie Projectors (under development)
+* Panasonic PTZ (under development)
+* StudioCoast vMix
+* High End Systems Hog 4
 * Entec DMXPro
 * Barco Projectors
 * Panasonic Projectors
 * Nec Projectors
 * Wirecast
-* OBS
 * Arkaos Grand VJ / Mediamaster
 * Avolites AI
 * Green Hippo
@@ -99,7 +100,6 @@ For checking known bugs or reporting of potential bugs, please use the [issue sy
 * UDP/TCP Generic module
 * Yamaha Ql series Consoles
 * GrassValley Switchers (kayak)
-* Nevion Routers
 * Dante Audio Routing
 * GreenGo Digital (if they ever decide to answer our emails)
 * TSL Protocol
@@ -115,7 +115,6 @@ For checking known bugs or reporting of potential bugs, please use the [issue sy
 * Barco Matrix PRO
 * Barco Matrix PRO DVI
 * Teranex standards converter
-* BMD MultiView
 
 ## Contributors
 
