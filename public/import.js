@@ -54,7 +54,7 @@ $(function() {
 
 		$pagebank.html('');
 		for (var key in config) {
-			var $b = $("<div class='bank col-lg-3'><div class='importborder'><canvas width=72 height=72></canvas></div></div>");
+			var $b = $("<div class='bank buttonbankwidth'><div class='importborder'><canvas width=72 height=72></canvas></div></div>");
 
 			$pagebank.append($b);
 			(function ($b) {

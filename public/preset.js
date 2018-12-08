@@ -64,7 +64,7 @@ $(function() {
 				continue;
 			}
 
-			$presets.append('<div class="presetbank col-lg-3" data-drawn="no" data-instance="' + instance + '" title="' + preset.label + '" data-key="' + key + '"><canvas width="72" style="cursor:pointer" height="72"></canvas></div>');
+			$presets.append('<div class="presetbank buttonbankwidth" data-drawn="no" data-instance="' + instance + '" title="' + preset.label + '" data-key="' + key + '"><canvas width="72" style="cursor:pointer" height="72"></canvas></div>');
 		}
 
 		$presets.append('<br style="clear: both;" />');

@@ -558,7 +558,7 @@ $(function() {
 
 		for (var bank = 1; bank <= 15; bank++) {
 
-			var $div = $('<div class="bank col-lg-3"><div class="border" data-bank="' + bank + '" data-page="' + page + '"><canvas width=72 height=72 id="bank_' + page + '_' + bank + '"></canvas></div></div>');
+			var $div = $('<div class="bank buttonbankwidth"><div class="border" data-bank="' + bank + '" data-page="' + page + '"><canvas width=72 height=72 id="bank_' + page + '_' + bank + '"></canvas></div></div>');
 
 			$div.find('.border').droppable({
 				activeClass: 'drophere',
