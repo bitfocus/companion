@@ -41,6 +41,7 @@ function replaceUnicode(str) {
 				reg.lastIndex = 0;
 			}
 		}
+
 	}
 	return str;
 }
@@ -61,7 +62,9 @@ $(function() {
 	$("#editbankli").hide();
 
 	function bank_preview_page(_page) {
+
 		var cachedata = {};
+
 		for (var _bank = 1; _bank <= 15; ++_bank) {
 			if (image_cache[_page + '_' + _bank] !== undefined) {
 				cachedata[_bank] = image_cache[_page + '_' + _bank].updated;
@@ -80,26 +83,27 @@ $(function() {
 		$('.active_field[data-special="alignment"]').removeClass('active_color');
 
 		$(".active_field").each(function() {
+
 			if ($(this).data('fieldid') !== undefined && config[$(this).data('fieldid')] !== undefined) {
 
 				if ($(this).data('special') == 'color') {
 					$(this).spectrum("set", int2hex( config[$(this).data('fieldid')] ));
+				}
 
-				} else if ($(this).data('special') == 'dropdown') {
-
+				else if ($(this).data('special') == 'dropdown') {
 					$(this).find('option[value="' + config[$(this).data('fieldid')] + '"]').prop('selected', true);
+				}
 
-				} else if ($(this).data('special') == 'checkbox') {
-
+				else if ($(this).data('special') == 'checkbox') {
 					$(this).prop('checked', config[$(this).data('fieldid')]);
+				}
 
-				} else if ($(this).data('special') == 'alignment') {
-
+				else if ($(this).data('special') == 'alignment') {
 					if ($(this).data('alignment') == config[$(this).data('fieldid')] ) {
 						$(this).addClass('active_color');
 					}
-
 				}
+
 				else {
 
 					if (updateText) {
@@ -109,6 +113,7 @@ $(function() {
 				}
 			}
 		});
+
 	}
 
 	function populate_bank_form(p,b,config,fields) {
@@ -264,27 +269,32 @@ $(function() {
 		updateFromConfig(page, bank, config, true);
 
 		var change = function() {
+
 			if ($(this).data('special') == 'color') {
 				socket.emit('bank_changefield', p, b, $(this).data('fieldid'), hex2int( $(this).data('color') ) );
 				socket.emit('get_bank', page, bank);
 				socket.once('get_bank:results', updateFromConfig);
+			}
 
-			} else if ($(this).data('special') == 'checkbox') {
+			else if ($(this).data('special') == 'checkbox') {
 				socket.emit('bank_changefield', p, b, $(this).data('fieldid'), $(this).prop('checked') );
 				socket.emit('get_bank', page, bank);
 				socket.once('get_bank:results', updateFromConfig);
+			}
 
-			} else if ($(this).data('special') == 'dropdown') {
+			else if ($(this).data('special') == 'dropdown') {
 				socket.emit('bank_changefield', p, b, $(this).data('fieldid'), $(this).val() );
 				socket.emit('get_bank', page, bank);
 				socket.once('get_bank:results', updateFromConfig);
+			}
 
-			} else if ($(this).data('special') == 'alignment') {
+			else if ($(this).data('special') == 'alignment') {
 				socket.emit('bank_changefield', p, b, $(this).data('fieldid'), $(this).data('alignment') );
 				socket.emit('get_bank', page, bank);
 				socket.once('get_bank:results', updateFromConfig);
+			}
 
-			} else {
+			else {
 				// Custom unicode un-escaping in text field
 				if ($(this).data('fieldid') == 'text') {
 					$(this).val(replaceUnicode($(this).val()));
@@ -352,7 +362,9 @@ $(function() {
 
 			if (images[key] === undefined) {
 				imageData = dataToButtonImage(image_cache[page + '_' + key].buffer);
-			} else {
+			}
+
+			else {
 				image_cache[page + '_' + key] = images[key];
 				imageData = dataToButtonImage(images[key].buffer);
 			}
@@ -385,6 +397,7 @@ $(function() {
 	});
 
 	$('#state_copy').click(function() {
+
 		if (function_state === null) {
 			function_state = 'copy';
 		}
@@ -393,6 +406,7 @@ $(function() {
 	});
 
 	$('#state_move').click(function() {
+
 		if (function_state === null) {
 			function_state = 'move';
 		}
@@ -401,6 +415,7 @@ $(function() {
 	});
 
 	$('#state_delete').click(function() {
+
 		if (function_state === null) {
 			function_state = 'delete';
 		}
@@ -418,7 +433,6 @@ $(function() {
 		function_state = null;
 		renderFunctionArea();
 	}
-
 
 	function executeFunctionArea() {
 
@@ -444,6 +458,7 @@ $(function() {
 					clearFunction();
 				}
 			}
+
 			else if (function_state === 'delete') {
 				if (function_detail.first !== undefined) {
 					if (confirm("Clear style and actions for this button?")) {
@@ -497,7 +512,9 @@ $(function() {
 				$sh.text("Press the button you want to delete");
 			}
 
-		} else {
+		}
+
+		else {
 			$('#state_hide').fadeIn();
 			$('.function-button').removeClass('btn-disabled').removeClass('btn-success').addClass('btn-primary');
 			$sa.hide();
@@ -540,7 +557,9 @@ $(function() {
 		$pagenav.append($('<div class="pagenav text-right col-lg-4"><div id="btn_pageup" class="btn btn-primary"><i class="fa fa-chevron-right"></i></div></div>'));
 
 		for (var bank = 1; bank <= 15; bank++) {
+
 			var $div = $('<div class="bank col-lg-3"><div class="border" data-bank="' + bank + '" data-page="' + page + '"><canvas width=72 height=72 id="bank_' + page + '_' + bank + '"></canvas></div></div>');
+
 			$div.find('.border').droppable({
 				activeClass: 'drophere',
 				hoverClass: 'drophover',
@@ -555,6 +574,7 @@ $(function() {
 					socket.emit('preset_drop', $source.data('instance'), all_presets[$source.data('instance')][$source.data('key')], topage, tobank);
 				}
 			});
+
 			$pagebank.append($div);
 		}
 
@@ -563,23 +583,32 @@ $(function() {
 
 		$("#pagebank .border").mousedown(function() {
 			bank = $(this).data('bank');
+
 			if (buttons_hot) {
 				socket.emit('hot_press', page, $(this).data('bank'), true);
 			}
+
 		});
 
 		$("#pagebank .border").mouseup(function() {
+
 			bank = $(this).data('bank');
+
 			if (buttons_hot) {
 				socket.emit('hot_press', page, $(this).data('bank'), false);
 			}
+
 		});
 
 		$("#pagebank .border").click(function() {
+
 			bank = $(this).data('bank');
+
 			if (buttons_hot) {}
 			else if (function_state !== null) {
-				var bank = $(this).data('bank')
+
+				var bank = $(this).data('bank');
+
 				if (function_detail['first'] === undefined) {
 					console.log("selecting",page,bank,"as first");
 					function_detail['first'] = {
@@ -587,6 +616,7 @@ $(function() {
 						bank: bank,
 					};
 				}
+
 				else {
 					console.log("selecting",page,bank,"as second");
 					function_detail['second'] = {
@@ -594,20 +624,25 @@ $(function() {
 						bank: bank,
 					};
 				}
+
 				executeFunctionArea();
 				renderFunctionArea();
+
 			}
 
 			else {
+
 				$("#editbankli").show();
 				$('#editbankli a[href="#editbank"]').tab('show');
 				$("#editbank_content").html("");
 				$("#editbankid").text(page + "." + $(this).data('bank'));
+
 				socket.emit('bank_get_actions', page, $(this).data('bank'));
 				socket.emit('bank_get_feedbacks', page, $(this).data('bank'));
 				socket.emit('bank_get_release_actions', page, $(this).data('bank'));
 				socket.emit('get_bank',page, $(this).data('bank'));
 				socket.once('get_bank:results', populate_bank_form);
+
 			}
 
 		});
