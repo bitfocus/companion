@@ -1,4 +1,7 @@
-# [Bitfocus Companion](http://bitfocus.io/companion)
+# [Bitfocus Companion](https://bitfocus.io/companion)
+
+**Documentation**
+* https://docs.bitfocus.io/companion
 
 **Build Status**
 * [![Travis Build Status](https://travis-ci.org/bitfocus/companion.svg?branch=master)](https://travis-ci.org/bitfocus/companion) Mac and Linux
@@ -6,10 +9,10 @@
 * [![FOSSA Status](https://app.fossa.io/api/projects/git%2Bgithub.com%2Fbitfocus%2Fcompanion.svg?type=shield)](https://app.fossa.io/projects/git%2Bgithub.com%2Fbitfocus%2Fcompanion?ref=badge_shield)
 
 **Our website**
-* http://bitfocus.io/companion/
+* https://bitfocus.io/companion/
 
 **Bleeding edge builds**
-* http://builds.bitfocus.io/companion/
+* https://builds.bitfocus.io/companion/
 
 For checking known bugs or reporting of potential bugs, please use the [issue system](https://github.com/bitfocus/companion/issues) on GitHub
 
