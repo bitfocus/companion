@@ -35,6 +35,7 @@ $(function() {
 
 	function updateInstanceStatus() {
 		for (var x in instance_status) {
+
 			var s = instance_status[x];
 
 			// disabled
@@ -82,7 +83,7 @@ $(function() {
 			var $td_label = $("<td id='label_"+n+"'></td>");
 			var $td_status = $("<td id='instance_status_"+n+"'></td>");
 			var $td_actions = $("<td></td>");
-			console.log("list", list);
+
 			var $button_edit = $("<button type='button' data-id='"+n+"' class='instance-edit btn btn-primary'>edit</button>");
 			var $button_delete = $("<button type='button' data-id='"+n+"' class='instance-delete btn btn-sm btn-ghost-danger'>delete</button>");
 			var $button_disable = $("<button type='button' data-id='"+n+"' class='instance-disable btn btn-sm btn-ghost-warning'>disable</button>");
@@ -97,11 +98,11 @@ $(function() {
 				$td_actions.append($button_disable)
 				$button_edit.show();
 			}
+
 			else if (i.instance_type != 'bitfocus-companion') {
 				$td_actions.append($button_enable);
 				$button_edit.hide();
 			}
-
 
 			$td_actions.append($("<span>&nbsp;</span>"));
 
@@ -170,49 +171,65 @@ $(function() {
 
 		if ($aisf.val().length > 0) {
 			$aisr.html("");
+			
 			for (var x in instance_name) {
+
 				var main_split = instance_name[x].split(":");
 				var manuf = main_split[0];
 				var prods = main_split[1].split(";");
-				console.log("Manuf",manuf,"Prods",prods);
+
 				for (var prod in prods) {
 					var subprod = manuf + " " + prods[prod];
-					console.log("subprod", subprod);
+
 					if (subprod.match( new RegExp( $aisf.val(), "i" ))) {
+
 						var $x = $("<div class='ais_entry'>&nbsp;<span style=''>"+subprod+"</span></div>");
 						var $button = $('<a role="button" class="btn btn-primary text-white">Add</a>');
+
 						$x.prepend($button);
 						$x.data('id', x);
+
 						$x.click(function(e) {
 							e.preventDefault();
 							var instance_type = $(this).data('id');
+
 							socket.emit('instance_add', instance_type );
 							$aisr.html("");
 							$aisf.val("");
+
 							socket.once('instance_add:result', function(id,db) {
 								instance.db = db;
 								socket.emit('instance_edit', id);
 							});
+
 						});
+
 						$aisr.append($x);
+
 					}
+
 				}
+
 			}
+
 		}
 
 		else {
 			$aisr.html("");
 		}
+
 	});
 
 	// add instance code
 	$(".add-instance-ul").on('click', '.instance-addable', function() {
 		var instance_type = $(this).data('id');
 		socket.emit('instance_add', instance_type );
+
 		socket.once('instance_add:result', function(id,db) {
 			instance.db = db;
 			socket.emit('instance_edit', id);
 		});
+
 	});
 
 	socket.on('instance', function(i,obj) {
@@ -255,6 +272,7 @@ $(function() {
 						var $entry_sub_li = $('<li><div class="dropdown-content instance-addable" data-id="'+res_id+'">'+subprod+'</div></li>');
 						$entry_sub_ul.append($entry_sub_li);
 					}
+
 				}
 
 				$entry_li.append($entry_sub_ul);
@@ -307,7 +325,8 @@ $(function() {
 		var ok = true;
 		var data = {};
 
-		$icf.find('.instanceConfigField').each(function () {
+		$icf.find('.instanceConfigField').each( function () {
+
 			var $this = $(this);
 
 			if (!ok) {
@@ -327,22 +346,28 @@ $(function() {
 			else if ($this.data('type') == 'dropdown') {
 				data[$this.data('id')] = $this.val();
 			}
+
 			else {
 				console.log("saveConfig: Unknown field type: ", $this.data('type'), this);
 			}
+
 		});
 
 		if (ok) {
+
 			socket.emit('instance_config_put', id, data);
+
 			socket.once('instance_config_put:result', function (err, res) {
+
 				if (res) {
 					current_instance = data.label;
-
 					$button.css('backgroundColor', 'lightgreen');
 					setTimeout(function () {
 						$button.css('backgroundColor', '');
 					}, 300);
-				} else {
+				}
+
+				else {
 
 					if (err == 'duplicate label') {
 						var $field = $icf.find('input[data-id="label"]');
@@ -353,10 +378,14 @@ $(function() {
 
 						alert('The label "' + data.label + '" is already in use. Please use a unique name for this module instance');
 					}
+
 				}
+
 			});
 
-		} else {
+		}
+
+		else {
 			$button.css('backgroundColor', 'red');
 			setTimeout(function () {
 				$button.css('backgroundColor', '');
@@ -366,6 +395,7 @@ $(function() {
 	}
 
 	function showInstanceVariables() {
+
 		var $icv = $('#instanceConfigVariables');
 		var $icvl = $('#instanceConfigVariableList');
 
@@ -373,12 +403,11 @@ $(function() {
 			$icv.show();
 			$icvl.html('');
 
-			console.log()
-
 			for (var i in instance_variables[current_instance]) {
 				var variable = instance_variables[current_instance][i];
 				$icvl.append('<tr data-id="' + current_instance + ':' + variable.name + '"><td>$(' + current_instance + ':' + variable.name + ')</td><td>' + variable.label + '</td><td>' + instance_variabledata[current_instance + ':' + variable.name] + '</td></tr>');
 			}
+
 		}
 	}
 
@@ -388,6 +417,7 @@ $(function() {
 			instance_variables = data;
 		}
 	});
+
 	socket.on('variable_instance_definitions_set', function (label, variables) {
 		instance_variables[label] = variables;
 
@@ -397,6 +427,7 @@ $(function() {
 	});
 
 	socket.emit('variables_get');
+
 	socket.on('variables_get:result', function (err, data) {
 		if (data) {
 			instance_variabledata = data;
@@ -406,13 +437,12 @@ $(function() {
 
 	socket.on('variable_set', function (key, value) {
 		var match = current_instance + ':';
-
 		instance_variabledata[key] = value;
-
 		$('#instanceConfigVariableList tr[data-id="' + key + '"] > td:nth-child(3)').text(value);
 	});
 
 	socket.on('instance_edit:result', function(id, store, res, config ) {
+
 		$('#instanceConfigTab').show();
 		$('#instanceConfigVariables').hide();
 		$('#instanceConfigTab a[href="#instanceConfig"]').tab('show');
@@ -470,9 +500,10 @@ $(function() {
 
 						if (regex === undefined || inp.val().match(reg) !== null) {
 							this.style.color = "black";
-
 							$(this).data('valid', true);
-						} else {
+						}
+
+						else {
 							this.style.color = "red";
 							$(this).data('valid', false);
 						}
@@ -482,6 +513,7 @@ $(function() {
 
 				$sm.append($inp);
 			}
+
 			else if (field.type == 'dropdown') {
 				var $inp = $("<select class='form-control instanceConfigField' data-type='"+field.type+"' data-id='"+field.id+"'>");
 
@@ -499,9 +531,11 @@ $(function() {
 
 				$sm.append($inp);
 			}
+
 			else {
 				console.log("FIELD:" ,field);
 			}
+
 			$icf.append($sm);
 		}
 
@@ -530,22 +564,19 @@ $(function() {
 		});
 
 		updateInstanceList(store.db);
+
 	});
 
 	socket.on('instance_get:result', function(instance_list) {
-		console.log('instance_get:result:', instance_list);
 
 		for (var n in instance_list.db) {
 			var instance = instance_list.db[n];
-			console.log("Xinstance", instance);
 		}
-
 
 	});
 
 	socket.on('config_fields:result', function(id, fields, config) {
 		socket.emit('instance_get');
-		console.log("config_fields:result", id, fields, config);
 	});
 
 	$(".addInstance").click(function() {

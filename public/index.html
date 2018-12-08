@@ -17,33 +17,36 @@
  */ -->
 <html lang="en">
 	<head>
+
 		<meta charset="utf-8">
-		<meta http-equiv="X-UA-Compatible" content="IE=edge">
+
 		<meta name="viewport" content="width=device-width, initial-scale=1.0, shrink-to-fit=no">
 		<meta name="language" content="en">
-		<link rel="shortcut icon" href="/img/brand/icon.png">
-
-		<meta http-equiv="Content-Language" content="en">
-		<title>Companion Admin</title>
 		<meta name="google" content="notranslate">
+
+		<meta http-equiv="X-UA-Compatible" content="IE=edge">
+		<meta http-equiv="Content-Language" content="en">
+
+		<title>Companion Admin</title>
+
+		<link href="/img/brand/icon.png" rel="shortcut icon">
 		<link href="js/flag-icon-css/css/flag-icon.min.css" rel="stylesheet">
 		<link href="js/font-awesome/css/font-awesome.min.css" rel="stylesheet">
 		<link href="css/style.css" rel="stylesheet">
 		<link href="vendors/pace-progress/css/pace.min.css" rel="stylesheet">
 		<link href="/fa/css/all.css" rel="stylesheet">
 		<link href="index.css" rel="stylesheet">
-		<link rel='stylesheet' href='css/spectrum.css' />
+		<link href='css/spectrum.css' rel='stylesheet'>
+
 	</head>
 
 	<body class="app header-fixed sidebar-fixed aside-menu-fixed sidebar-lg-show">
-
 		<div id="error-container">
 			<div class="row justify-content-center">
 				<div class="col-md-6">
 					<div class="clearfix">
 						<h4 class="pt-3">Houston, we have a problem!</h4>
 						<p class="text-muted">It seems that we have lost connection to the companion app.</p>
-
 						<p class="text-muted">
 							<li class="text-muted">Check that the application is still running</li>
 							<li class="text-muted">If you're using the web gui over network - check your connection</li>
@@ -54,6 +57,7 @@
 		</div>
 
 		<header class="app-header navbar">
+
 			<button class="navbar-toggler sidebar-toggler d-lg-none mr-auto" type="button" data-toggle="sidebar-show">
 				<span class="navbar-toggler-icon"></span>
 			</button>
@@ -71,11 +75,12 @@
 
 				<!-- <li class="nav-item px-3">
 					<a class="nav-link" href="#">Status</a>
-				</li>-->
+				</li> -->
 
 				<li class="nav-item px-3">
 					<a class="nav-link" target="_new" id='versiontext' href="https://bitfocus.io/companion/">version</a>
 				</li>
+
 				<li class="nav-item px-3">
 					<a class="nav-link" target="_new" id='newversiontext' href="https://bitfocus.io/companion/"></a>
 				</li>
@@ -120,7 +125,6 @@
 						<li class="nav-item">
 							<a class="nav-link" target="_new" href="/emulator.html">
 								<i class="nav-icon fa fa-gamepad"></i> Emulator
-								<!-- <span class="badge badge-primary">NEW</span> -->
 							</a>
 						</li>
 
@@ -134,14 +138,12 @@
 						<li class="nav-item">
 							<a class="nav-link" target="_new" href="https://github.com/bitfocus/companion/issues">
 								<i class="nav-icon fa fa-bug"></i> Bugs &amp; Features
-								<!-- <span class="badge badge-primary">NEW</span> -->
 							</a>
 						</li>
 
 						<li class="nav-item">
 							<a class="nav-link" target="_new" href="https://www.facebook.com/groups/2047850215433318/">
 								<i class="nav-icon fa fa-users"></i> Facebook
-								<!-- <span class="badge badge-primary">NEW</span> -->
 							</a>
 						</li>
 
@@ -163,27 +165,8 @@
 				</nav>
 				<button class="sidebar-minimizer brand-minimizer" type="button"></button>
 			</div>
+
 			<main class="main" style="padding-top:26px;">
-				<!-- Breadcrumb-->
-				<!--
-				<ol class="breadcrumb">
-
-					<li class="breadcrumb-item">Companion</li>
-					<li class="breadcrumb-item active">Web GUI</li>
-
-					<li class="breadcrumb-menu d-md-down-none">
-						<div class="btn-group" role="group" aria-label="Button group">
-							<a class="btn" href="#">
-								<i class="icon-speech"></i>
-							</a>
-							<a class="btn" href="./">
-								<i class="icon-graph"></i>  Dashboard</a>
-							<a class="btn" href="#">
-								<i class="icon-settings"></i>  Settings</a>
-						</div>
-					</li>
-
-				</ol> -->
 				<div class="container-fluid">
 					<div class="animated fadeIn">
 
@@ -191,7 +174,6 @@
 							<!--/.col-->
 							<div class="col-lg-6 col-sm-12 col-xs-12">
 								<ul class="nav nav-tabs" role="tablist">
-
 
 									<li class="nav-item">
 										<a class="nav-link active" data-toggle="tab" href="#instances" role="tab" aria-controls="instances">
@@ -217,11 +199,6 @@
 											<i class="icon-calculator"></i> Edit button <span id='editbankid'>?</span>
 										</a>
 									</li>
-
-<!--									<li class="nav-item">
-										<a class="nav-link" data-toggle="tab" href="#actions" role="tab" aria-controls="actions">
-											<i class="icon-calculator"></i> Actions</a>
-									</li> -->
 
 									<li class="nav-item">
 										<a class="nav-link" data-toggle="tab" href="#devices" role="tab" aria-controls="devices">
