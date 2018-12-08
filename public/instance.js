@@ -137,7 +137,7 @@ $(function() {
 
 			for (var x in instance.module) {
 				if (instance.module[x].name == list[n].instance_type) {
-					$td_id.html("<b>"+instance.module[x].manufacturer+"</b>" + "<br>" + instance.module[x].shortname);
+					$td_id.html("<b>"+instance.module[x].shortname+"</b>" + "<br>" + instance.module[x].manufacturer);
 				}
 			}
 
