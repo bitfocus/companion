@@ -29,7 +29,7 @@ done
 
 cd ../../
 
-git commit lib/modules/* -m "module upgrades"
+git commit lib/modules/* -m "Module: Upgrade of several modules"
 git push
 
 exit 0
