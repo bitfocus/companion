@@ -92,7 +92,7 @@ For checking known bugs or reporting of potential bugs, please use the [issue sy
 * StudioCoast vMix
 * High End Systems Hog 4
 * Entec DMXPro
-* Barco Projectors
+* Barco Projectors (Pulse and HDX/HDF/HDQ)
 * Panasonic Projectors
 * Nec Projectors
 * Wirecast
