@@ -96,6 +96,8 @@
 	var config = {};
 	var cache = {};
 	var been_connected = false;
+	var pages = [];
+	var pageinfo = {};
 
 	function int2hex(number) {
 		var r = ('0' + ((number >> 16) & 0xff).toString('16')).substr(-2);
@@ -105,12 +107,47 @@
 		return '#' + r + g + b;
 	}
 
+	function parseQuery(queryString) {
+		var query = {};
+		var pairs = (queryString[0] === '?' ? queryString.substr(1) : queryString).split('&');
+
+		for (var i = 0; i < pairs.length; i++) {
+			var pair = pairs[i].split('=');
+			query[decodeURIComponent(pair[0])] = decodeURIComponent(pair[1] || '');
+		}
+
+		return query;
+	}
+
 	function hex2int(hex) {
 		return parseInt(hex.substr(1), 16);
 	}
 
+	var query = parseQuery(window.location.search);
+	if (query.pages !== undefined) {
+		var mypages = query.pages.split(/,+/).map(function (el) {return parseInt(el);});
+		if (mypages.length) {
+			pages = mypages;
+		}
+	}
+
+	function hasPage(thispage) {
+		thispage = parseInt(thispage);
+
+		if (pages.length == 0 || pages.indexOf(thispage) !== -1) {
+			return true;
+		}
+		return false;
+	}
+
+	if (pages.length == 0) {
+		for (var page = 1; page <= 99; page++) {
+			pages.push(page);
+		}
+	}
+
 	var $bs =	$("#pages");
-	for (var page = 1; page <= 99; page++) {
+	pages.forEach(function (page) {
 		var $page = $("<div class='page'><h1 class='page-title'>Page "+page+"</h1></div>");
 
 		for (var bank = 1; bank <= 12; bank++) {
@@ -123,7 +160,36 @@
 
 		$page.attr('pageid', page);
 		$bs.append($page);
-	}
+	});
+
+	socket.on('set_page', function (page, value) {
+		pageinfo[page] = value;
+
+		var $h1 = $bs.find('.page[pageid="' + page + '"] > h1');
+		if ($h1.length) {
+			if (value.name != 'PAGE') {
+				$h1.html(value.name);
+			} else {
+				$h1.html('Page ' + page);
+			}
+		}
+	});
+
+	socket.on('pages', function (_pageinfo) {
+		pageinfo = _pageinfo;
+
+		for (var page in pageinfo) {
+			var $h1 = $bs.find('.page[pageid="' + page + '"] > h1');
+			if ($h1.length) {
+				if (pageinfo[page].name != 'PAGE') {
+					$h1.html(pageinfo[page].name);
+				} else {
+					$h1.html('Page ' + page);
+				}
+			}
+		}
+	});
+
 	var lastdown;
 	var touchdevice = false;
 
@@ -167,6 +233,9 @@
 	});
 
 	function drawBank(page, bank, data) {
+		if (!hasPage(page)) {
+			return;
+		}
 		var canvas = $('#c' + page + '_' + bank).get(0);
 		var ctx = canvas.getContext('2d');
 		ctx.webkitImageSmoothingEnabled = false;
@@ -182,12 +251,11 @@
 	function scroll() {
 
 		// Not ready
-		if (cache[1] === undefined) {
+		if (cache[pages[0]] === undefined) {
 			return;
 		}
 
 		$('.page').isInViewport({ tolerance: window.innerHeight/2 }).each(function () {
-
 			var page = $(this).attr('pageid');
 
 			if (cache[page][1] !== undefined || cache[page].wait == true) {
@@ -218,6 +286,10 @@
 		been_connected = true;
 
 		socket.on('buttons_page_data', function(page, data) {
+			if (!hasPage(page)) {
+				return;
+			}
+
 			cache[page].wait = false;
 
 			for (var key in data) {
@@ -227,6 +299,10 @@
 		});
 
 		socket.on('buttons_bank_data', function(page, data) {
+			if (!hasPage(page)) {
+				return;
+			}
+
 			for (key in data) {
 				drawBank(page, key, data[key]);
 			}
@@ -238,6 +314,10 @@
 			cache[i] = {};
 		}
 
+		// Request first page
+		socket.emit('web_buttons_page', pages[0], {});
+
+		// Check what is visible
 		scroll();
 	});
 
