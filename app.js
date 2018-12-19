@@ -108,6 +108,7 @@ system.on('skeleton-ready', function() {
 	var action     = require('./lib/action')(system);
 	var instance   = require('./lib/instance')(system);
 	var osc        = require('./lib/osc')(system);
+	var tcp_server = require('./lib/tcp_server')(system);
 	var artnet     = require('./lib/artnet')(system);
 	var rest       = require('./lib/rest')(system);
 	var loadsave   = require('./lib/loadsave')(system);
