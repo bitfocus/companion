@@ -92,8 +92,8 @@ system.on('skeleton-start-minimised', function(minimised) {
 
 system.on('skeleton-ready', function() {
 
-	var http       = require('./lib/http')(system);
-	var io         = require('./lib/io')(system, http);
+	var server_http= require('./lib/server_http')(system);
+	var io         = require('./lib/io')(system, server_http);
 	var log        = require('./lib/log')(system,io);
 	var db         = require('./lib/db')(system,cfgDir);
 	var userconfig = require('./lib/userconfig')(system)
