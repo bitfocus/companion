@@ -211,3 +211,6 @@
 [submodule "lib/module/cockos-reaper"]
 	path = lib/module/cockos-reaper
 	url = https://github.com/bitfocus/companion-module-cockos-reaper.git
+[submodule "lib/module/neodarque-stagetimer2"]
+	path = lib/module/neodarque-stagetimer2
+	url = https://github.com/bitfocus/companion-module-neodarque-stagetimer2.git
