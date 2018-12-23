@@ -498,7 +498,7 @@ $(function() {
 							$("#label_"+ f1).text(inp.val());
 						}
 
-						if (regex === undefined || inp.val().match(reg) !== null) {
+						if (reg === undefined || inp.val().match(reg) !== null) {
 							this.style.color = "black";
 							$(this).data('valid', true);
 						}

@@ -92,8 +92,8 @@ system.on('skeleton-start-minimised', function(minimised) {
 
 system.on('skeleton-ready', function() {
 
-	var http       = require('./lib/http')(system);
-	var io         = require('./lib/io')(system, http);
+	var server_http= require('./lib/server_http')(system);
+	var io         = require('./lib/io')(system, server_http);
 	var log        = require('./lib/log')(system,io);
 	var db         = require('./lib/db')(system,cfgDir);
 	var userconfig = require('./lib/userconfig')(system)
@@ -108,8 +108,12 @@ system.on('skeleton-ready', function() {
 	var action     = require('./lib/action')(system);
 	var instance   = require('./lib/instance')(system);
 	var osc        = require('./lib/osc')(system);
+	var server_api = require('./lib/server_api')(system);
+	var server_tcp = require('./lib/server_tcp')(system);
+	var server_udp = require('./lib/server_udp')(system);
 	var artnet     = require('./lib/artnet')(system);
 	var rest       = require('./lib/rest')(system);
+	var rest_poll  = require('./lib/rest_poll')(system);
 	var loadsave   = require('./lib/loadsave')(system);
 	var preset     = require('./lib/preset')(system);
 	var tablet     = require('./lib/tablet')(system);

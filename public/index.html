@@ -473,10 +473,38 @@
 
 											</tbody>
 										</table>
+										<h4>TCP/UDP Remote control</h4>
+										<p>Remote triggering can be done by sending TCP (port <code>51234</code>) or UDP (port <code>51235</code>) commands.</p>
+										<p><strong>Commands:</strong>
+											<ul>
+												<li><code>PAGE-SET</code> &lt;page number&gt; &lt;surface id&gt;<br>
+												<i>Make device go to a specific page</i></li>
+												<li><code>PAGE-UP</code> &lt;surface id&gt;<br>
+												<i>Page up on a specific device</i></li>
+												<li><code>PAGE-DOWN</code> &lt;surface id&gt;<br>
+												<i>Page down on a specific surface</i></li>
+												<li><code>BANK-PRESS</code> &lt;page&gt; &lt;bank&gt;<br>
+												<i>Press and release a button (run both down and up actions)</i></li>
+												<li><code>BANK-DOWN</code> &lt;page&gt; &lt;bank&gt;<br>
+												<i>Press the button (run down actions)</i></li>
+												<li><code>BANK-UP</code> &lt;page&gt; &lt;bank&gt;<br>
+												<i>Release the button (run up actions)</i></li>
+											</ul>
+										</p>
+
+										<p>
+											<strong>Examples</strong>
+										</p>
+
+										<p>Set the emulator surface to page 23<br>
+											<code>PAGE-SET 23 emulator</code></p>
+
+										<p>Press page 1 bank 2<br>
+											<code>BANK-PRESS 1 2</code></p>
 
 										<br>
 										<a class="btn btn-success" href="/bitfocus@companion_v1.2@00.xml">
-											<i class="fa fa-file-import"></i> MA2 Fixture file
+											<i class="fa fa-file-import"></i> Download GrandMA2 Fixture file
 										</a>
 
 									</div>
