@@ -344,7 +344,7 @@ $(function() {
 
 	$("#resetBankButton").click(function() {
 		if (confirm('Clear design and all actions?')) {
-			socket.emit('reset_bank', page, bank);
+			socket.emit('bank_reset', page, bank);
 			socket.emit('bank_get_actions', page, bank);
 			socket.emit('bank_get_feedbacks', page, bank);
 			socket.emit('bank_reset_release_actions', page, bank);
@@ -462,7 +462,7 @@ $(function() {
 			else if (function_state === 'delete') {
 				if (function_detail.first !== undefined) {
 					if (confirm("Clear style and actions for this button?")) {
-						socket.emit('reset_bank', function_detail.first.page, function_detail.first.bank);
+						socket.emit('bank_reset', function_detail.first.page, function_detail.first.bank);
 						socket.emit('bank_get_actions', function_detail.first.page, function_detail.first.bank );
 						socket.emit('bank_reset_release_actions', function_detail.first.page, function_detail.first.bank );
 						socket.emit('bank_get_release_actions', function_detail.first.page, function_detail.first.bank );
