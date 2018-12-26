@@ -193,6 +193,21 @@ $(function() {
 			$table.append($tbody);
 		}
 		$ba.append($table);
+
+		var old_index = undefined;
+		$table.sortable({
+			items: "tbody tr",
+			accept: 'tbody tr',
+			handle: '.actionlist-td-label',
+			forcePlaceholderSize: true,
+		}).on("sortable:activate", function(event, ui) {
+			// Reorder started. Record current index.
+			old_index = $(ui.item).index();
+		}).on("sortable:update", function(event, ui) {
+			// Reorder completed. Update position.
+			socket.emit('bank_update_release_action_option_order', page, bank, old_index, ui.index);
+		});
+
 	});
 
 

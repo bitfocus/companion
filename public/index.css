@@ -240,6 +240,7 @@ label {
 
 .actionlist-td-label {
 	padding-top:24px !important;
+	cursor: move;
 }
 .actionlist-td-delay {
 	padding-top:20px !important;
