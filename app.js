@@ -113,6 +113,7 @@ system.on('skeleton-ready', function() {
 	var server_udp = require('./lib/server_udp')(system);
 	var artnet     = require('./lib/artnet')(system);
 	var rest       = require('./lib/rest')(system);
+	var rest_poll  = require('./lib/rest_poll')(system);
 	var loadsave   = require('./lib/loadsave')(system);
 	var preset     = require('./lib/preset')(system);
 	var tablet     = require('./lib/tablet')(system);

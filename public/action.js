@@ -148,8 +148,7 @@ $(function() {
 
 						}
 
-
-						if (option.type == 'dropdown') {
+						else if (option.type == 'dropdown') {
 
 							var $opt_input = $("<select class='action-option-change form-control'></select>");
 							$opt_input.data('action-id', action.id);
@@ -184,6 +183,48 @@ $(function() {
 
 							$options.append($opt_input);
 
+						}
+
+
+						else if (option.type == 'multiselect') {
+
+							var $opt_input = $("<select multiple class='action-option-change form-control'></select>");
+							$opt_input.data('action-id', action.id);
+							$opt_input.data('option-id', option.id);
+							if (option.tooltip !== undefined) {
+								$opt_input.attr('title', option.tooltip);
+							}
+
+							for (var x in option.choices) {
+								var str = new String(option.choices[x].label);
+								var $opt_choice = $("<option value='"+ option.choices[x].id + "'>" + str + "</option>");
+								$opt_choice.data('id', option.choices[x].id);
+								$opt_input.append($opt_choice);
+							}
+
+
+							// if options never been stored on this action
+							if (action.options === undefined) {
+								action.options = {};
+							}
+
+							// if this option never has been saved, set default
+							if (action.options[option.id] === undefined) {
+								socket.emit('bank_update_action_option', page, bank, action.id, option.id, option.default);
+								$opt_input.val(option.default);
+							}
+
+							// else set the db value for this option.
+							else {
+								$opt_input.val( action.options[option.id] );
+							}
+
+							$options.append($opt_input);
+
+						}
+
+						else {
+							console.log("UNKNOWN OPTION TYPE",option.type);
 						}
 
 					}
