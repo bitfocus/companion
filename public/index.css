@@ -240,7 +240,6 @@ label {
 
 .actionlist-td-label {
 	padding-top:24px !important;
-	cursor: move;
 }
 .actionlist-td-delay {
 	padding-top:20px !important;
@@ -253,6 +252,29 @@ label {
 }
 .actionlist-td-options {
 	padding-top:0px !important;
+}
+
+.reorder-grip {
+	cursor: ns-resize;
+	padding: 0 0.4em 0.2em 0;
+	opacity: 0.5;
+}
+
+.reorder-grip:hover {
+	opacity: 1.0;
+}
+
+.sorting-table tbody tr:not(.sorting-row) td {
+	opacity: 0.7;
+}
+
+.sorting-row {
+	cursor: ns-resize;
+	background-color: rgba(228, 228, 228, 0.3);
+}
+
+.sorting-row .reorder-grip {
+	opacity: 1.0;
 }
 
 #bankActions {

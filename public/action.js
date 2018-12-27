@@ -84,7 +84,8 @@ $(function() {
 				var $tr = $("<tr></tr>");
 				$tr.data("id", action.id);
 
-				var $name_td = $("<td class='actionlist-td-label'>" + instance.db[action.instance].label + ": " + actionlist[action.label].label + "</td>");
+				var reorder_grip = "<i class='fa fa-sort reorder-grip'></i>";
+				var $name_td = $("<td class='actionlist-td-label'>" + reorder_grip + instance.db[action.instance].label + ": " + actionlist[action.label].label + "</td>");
 				var $del_td = $("<td class='actionlist-td-delete'><button type='button' class='btn btn-danger btn-sm'>delete</button><span>&nbsp;</span></td>");
 				var $delay_td = $("<td class='actionlist-td-delay'></td>");
 				var $delay_input = $("<input type='text' value='' class='form-control action-delay-keyup' placeholder='ms'>");
@@ -247,18 +248,11 @@ $(function() {
 		}
 		$ba.append($table);
 
-		var old_index = undefined;
-		$table.sortable({
-			items: 'tbody tr',
-			accept: 'tbody tr',
-			handle: '.actionlist-td-label',
-			forcePlaceholderSize: true,
-		}).on('sortable:activate', function(event, ui) {
-			// Reorder started. Record current index.
-			old_index = $(ui.item).index();
-		}).on('sortable:update', function(event, ui) {
-			// Reorder completed. Update position.
-			socket.emit('bank_update_action_option_order', page, bank, old_index, ui.index);
+		new RowSorter($table[0], {
+			handler: '.reorder-grip',
+			onDrop: function(tbody, row, new_index, old_index) {
+				socket.emit('bank_update_action_option_order', page, bank, old_index, new_index);
+			}
 		});
 
 	});
