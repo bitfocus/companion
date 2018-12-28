@@ -253,6 +253,34 @@ label {
 .actionlist-td-options {
 	padding-top:0px !important;
 }
+td.actionlist-td-reorder {
+	/* Remove horizontal column padding */
+	padding-left: 0;
+	padding-right: 0;
+	text-align: center;
+	vertical-align: middle;
+	width: 2rem;
+}
+
+.reorder-grip {
+	cursor: ns-resize;
+	opacity: 0.5;
+	/* Give the icon a larger grip target */
+	padding: 0 0.5rem 0.3rem;
+}
+.reorder-grip:hover {
+	opacity: 1.0;
+}
+.sorting-table tbody tr:not(.sorting-row) td {
+	opacity: 0.7;
+}
+.sorting-row {
+	cursor: ns-resize;
+	background-color: rgba(228, 228, 228, 0.4);
+}
+.sorting-row .reorder-grip {
+	opacity: 1.0;
+}
 
 #bankActions {
 	padding-top:25px;
