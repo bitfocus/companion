@@ -23,13 +23,11 @@ if (process.argv.length < 3) {
     console.log("Available Interfaces:");
 
     Object.keys(ifaces).forEach(function (ifname) {
-
         ifaces[ifname].forEach(function (iface) {
             if ('IPv4' !== iface.family) {
                 // skip over non-ipv4 addresses for now
                 return;
             }
-
             console.log(ifname, iface.address);
         });
     });
@@ -59,15 +57,12 @@ if (process.argv[2] in ifaces) {
                 // skip over non-ipv4 addresses for now
                 return;
             }
-
             address = ipv.address;
     });
 
     setTimeout(function () {
         system.emit('skeleton-bind-ip', address);
-
         system.emit('skeleton-bind-port', port);
-
         system.emit('skeleton-ready');
     }, 1000);
 }
