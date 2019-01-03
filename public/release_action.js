@@ -54,7 +54,7 @@ $(function() {
 		$ba.html("");
 
 		var $table = $("<table class='table release-action-table'></table>");
-		var $trth = $("<thead><tr><th colspan=2>Action</th><th style='width:90px'>Delay</th><th>Options</th></tr></thead>");
+		var $trth = $("<thead><tr><th></th><th colspan=2>Action</th><th style='width:90px'>Delay</th><th>Options</th></tr></thead>");
 		var $tbody = $("<tbody></tbody>");
 		$table.append($trth);
 		console.log("actions!", actions);
@@ -74,6 +74,7 @@ $(function() {
 
 				var $name_td = $("<td class='actionlist-td-label'>" + instance.db[action.instance].label + ": " + releaseactionlist[action.label].label + "</td>");
 				var $del_td = $("<td class='actionlist-td-delete'><button type='button' class='btn btn-danger btn-sm'>delete</button><span>&nbsp;</span></td>");
+				var $reorder_grip = $("<td class='actionlist-td-reorder'><i class='fa fa-sort reorder-grip'></i></td>");
 				var $delay_td = $("<td class='actionlist-td-delay'></td>");
 				var $delay_input = $("<input type='text' value='' class='form-control release-action-delay-keyup' placeholder='ms'>");
 				$delay_input.data('release-action-id', action.id);
@@ -83,6 +84,7 @@ $(function() {
 				$delay_td.find('input').val(inst.delay)
 				var $options = $("<td class='actionlist-td-options'></td>");
 
+				$tr.append($reorder_grip);
 				$tr.append($del_td);
 				$tr.append($name_td);
 				$tr.append($delay_td);
@@ -193,6 +195,14 @@ $(function() {
 			$table.append($tbody);
 		}
 		$ba.append($table);
+
+		new RowSorter($table[0], {
+			handler: '.reorder-grip',
+			onDrop: function(tbody, row, new_index, old_index) {
+				socket.emit('bank_update_release_action_option_order', page, bank, old_index, new_index);
+			}
+		});
+
 	});
 
 

@@ -214,3 +214,6 @@
 [submodule "lib/module/neodarque-stagetimer2"]
 	path = lib/module/neodarque-stagetimer2
 	url = https://github.com/bitfocus/companion-module-neodarque-stagetimer2.git
+[submodule "lib/module/bmd-multiview4"]
+	path = lib/module/bmd-multiview4
+	url = https://github.com/bitfocus/companion-module-bmd-multiview4.git
