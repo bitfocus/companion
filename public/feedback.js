@@ -32,7 +32,7 @@ $(function() {
 		$ba.html("");
 
 		var $table = $("<table class='table feedback-table'></table>");
-		var $trth = $("<thead><tr><th</th><th colspan=2>Feedback</th><th>Options</th></tr></thead>");
+		var $trth = $("<thead><tr><th></th><th colspan=2>Feedback</th><th>Options</th></tr></thead>");
 		var $tbody = $("<tbody></tbody>");
 		$table.append($trth);
 
