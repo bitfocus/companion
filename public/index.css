@@ -238,22 +238,26 @@ label {
 }
 
 
-.actionlist-td-label {
+.actionlist-td-label,
+.feedbacklist-td-label{
 	padding-top:24px !important;
 }
 .actionlist-td-delay {
 	padding-top:20px !important;
 	padding-bottom:20px !important;
 }
-.actionlist-td-delete {
+.actionlist-td-delete,
+.feedbacklist-td-delete{
 	padding-top:23px !important;
 	line-height:0px;
 	width:70px;
 }
-.actionlist-td-options {
+.actionlist-td-options,
+.feedbacklist-td-options{
 	padding-top:0px !important;
 }
-td.actionlist-td-reorder {
+td.actionlist-td-reorder,
+td.feedbacklist-td-reorder{
 	/* Remove horizontal column padding */
 	padding-left: 0;
 	padding-right: 0;
