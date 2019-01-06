@@ -20,14 +20,30 @@ function parse_git_dirty() {
 	git diff --quiet --ignore-submodules HEAD 2>/dev/null; [ $? -eq 1 ] && echo ""
 }
 
+function get_git_branch() {
+	git status|grep 'On branch'|awk '{print $3}'
+}
 # gets the current git branch
 function parse_git_branch() {
-	git branch --no-color 2> /dev/null | sed -e '/^[^*]/d' -e "s/* \(.*\)/\1$(parse_git_dirty)/"
+	if [[ -z "${TRAVIS_BRANCH}" ]]; then
+			if [[ -z "${APPVEYOR_REPO_BRANCH}" ]]; then
+			  BRANCH=$(get_git_branch)
+			else
+			  BRANCH="${APPVEYOR_REPO_BRANCH}"
+			fi
+	else
+	  BRANCH="${TRAVIS_BRANCH}"
+	fi
+	echo $BRANCH
 }
 
 # get last commit hash prepended with @ (i.e. @8a323d0)
 function parse_git_hash() {
-	git rev-parse --short HEAD 2> /dev/null | sed "s/\(.*\)/\1/"
+	git rev-parse --short HEAD 2> /dev/null | sed "s/\(.*\)/\1/" | cut -d'-' -f2
+}
+
+function parse_git_count() {
+	git log|egrep "^commit"|wc -l|awk '{print $1}'
 }
 
 function release() {
@@ -35,6 +51,11 @@ function release() {
 }
 
 # DEMO
-GIT_BRANCH=$(parse_git_branch)-$(parse_git_hash)
+if [ $(get_git_branch) != "master" ]; then
+	GIT_BRANCH=$(parse_git_branch)-$(parse_git_hash)
+else
+	GIT_BRANCH=$(parse_git_branch)-$(parse_git_hash)-$(parse_git_count)
+fi
+
 
 echo -n ${GIT_BRANCH} > ./BUILD

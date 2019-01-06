@@ -116,78 +116,61 @@
 			<div class="sidebar">
 				<nav class="sidebar-nav">
 					<ul class="nav">
+
 						<li class="nav-item">
 							<a class="nav-link" target="_new" href="/emulator.html">
-								<i class="nav-icon fa fa-gamepad"></i> Elgato Emulator
+								<i class="nav-icon fa fa-gamepad"></i> Emulator
 								<!-- <span class="badge badge-primary">NEW</span> -->
 							</a>
 						</li>
 
 						<li class="nav-item">
+							<a class="nav-link" target="_new" href="/tablet.html">
+								<i class="nav-icon fa fa-gamepad"></i> Web buttons
+							</a>
+						</li>
+
+
+						<li class="nav-item">
 							<a class="nav-link" target="_new" href="https://github.com/bitfocus/companion/issues">
-								<i class="nav-icon fa fa-bug"></i> Report bugs
+								<i class="nav-icon fa fa-bug"></i> Bugs &amp; Features
 								<!-- <span class="badge badge-primary">NEW</span> -->
 							</a>
 						</li>
 
 						<li class="nav-item">
 							<a class="nav-link" target="_new" href="https://www.facebook.com/groups/2047850215433318/">
-								<i class="nav-icon fa fa-users"></i> Facebook Group
+								<i class="nav-icon fa fa-users"></i> Facebook
 								<!-- <span class="badge badge-primary">NEW</span> -->
 							</a>
 						</li>
 
 						<li class="nav-item">
 							<a class="nav-link" target="_new" href="https://bit.ly/2IJ1jT4">
-								<i class="nav-icon fa fa-comments"></i> Slack group
+								<i class="nav-icon fa fa-comments"></i> Slack Chat
 								<!-- <span class="badge badge-primary">NEW</span> -->
 							</a>
 						</li>
 
-
-
-<!--
-
-						<li class="nav-title">Timer Module</li>
 						<li class="nav-item">
-							<a class="nav-link" href="/module/timer/timer.html">
-								<i class="nav-icon icon-screen-desktop"></i> DSM View</a>
+							<a class="nav-link" target="_new" href="https://opencollective.com/companion">
+								<i class="nav-icon fa fa-dollar"></i> Donate
+								<span class="badge badge-primary">New</span>
+							</a>
 						</li>
-
-						<li class="divider"></li>
-						<li class="nav-title">Extras</li>
-						<li class="nav-item nav-dropdown">
-							<a class="nav-link nav-dropdown-toggle" href="#">
-								<i class="nav-icon icon-star"></i> Pages</a>
-							<ul class="nav-dropdown-items">
-								<li class="nav-item">
-									<a class="nav-link" href="login.html" target="_top">
-										<i class="nav-icon icon-star"></i> Login</a>
-								</li>
-							</ul>
-						</li>
--->
-
-<!--
-						<li class="nav-item mt-auto">
-							<a class="nav-link nav-link-success" href="https://coreui.io" target="_top">
-								<i class="nav-icon icon-cloud-download"></i> Download CoreUI</a>
-						</li>
--->
 
 					</ul>
 				</nav>
 				<button class="sidebar-minimizer brand-minimizer" type="button"></button>
 			</div>
-			<main class="main">
+			<main class="main" style="padding-top:26px;">
 				<!-- Breadcrumb-->
+				<!--
 				<ol class="breadcrumb">
 
 					<li class="breadcrumb-item">Companion</li>
 					<li class="breadcrumb-item active">Web GUI</li>
 
-					<!-- Breadcrumb Menu-->
-					<!--
 					<li class="breadcrumb-menu d-md-down-none">
 						<div class="btn-group" role="group" aria-label="Button group">
 							<a class="btn" href="#">
@@ -199,14 +182,14 @@
 								<i class="icon-settings"></i>  Settings</a>
 						</div>
 					</li>
-					-->
-				</ol>
+
+				</ol> -->
 				<div class="container-fluid">
 					<div class="animated fadeIn">
 
 						<div class="row">
 							<!--/.col-->
-							<div class="col-lg-7 col-sm-12 col-xs-12">
+							<div class="col-lg-6 col-sm-12 col-xs-12">
 								<ul class="nav nav-tabs" role="tablist">
 
 
@@ -242,18 +225,22 @@
 
 									<li class="nav-item">
 										<a class="nav-link" data-toggle="tab" href="#devices" role="tab" aria-controls="devices">
-											<i class="fa fa-gamepad"></i> Devices</a>
+											<i class="fa fa-gamepad"></i> Surfaces</a>
 									</li>
 
 									<li class="nav-item">
 										<a class="nav-link" data-toggle="tab" href="#userconfig" role="tab" aria-controls="userconfig">
-											<i class="fa fa-user-ninja"></i> User Config</a>
+											<i class="fa fa-user-ninja"></i> Settings</a>
 									</li>
 
 								</ul>
 
 								<div class="tab-content padbottom">
 									<div class="tab-pane active" id="instances" role="tabpanel">
+
+										<h4>Connections / Instances</h4>
+										<p>Instances are the connections companion makes to other devices and software in order to control them.</p>
+
 										<table class="table table-responsive-sm">
 											<thead>
 												<tr>
@@ -265,16 +252,32 @@
 											</thead>
 											<tbody id='instanceList'>
 											</tbody>
+
 										</table>
 
-										<div class="dropdown">
-											<select id="addInstance">
-											</select>
+										<div class="dropdown" style="float:left">
+											<a id="dLabel" role="button" data-toggle="dropdown" class="btn btn-primary add-instance-button" data-target="#">
+													Add by category</span>
+											</a>
+											<ul class="dropdown-menu multi-level add-instance-ul" id="addInstance" role="menu" aria-labelledby="dropdownMenu">
+											</ul>
 										</div>
-										 <p></p>
-										<b>Hint:</b> Instances are the connections companion makes to other devices in order to
-										discover button actions.
 
+										<div class="dropdown" style="float:left">&nbsp;
+											<a id="dLabelByManufacturer" role="button" data-toggle="dropdown" class="btn btn-primary add-instance-button" data-target="#">
+													Add by manufacturer</span>
+											</a>
+											<ul class="dropdown-menu multi-level add-instance-ul" id="addInstanceByManufacturer" role="menu" aria-labelledby="dropdownMenu">
+											</ul>
+										</div>
+
+										 <p></p>
+										<div style='clear:both'>
+											<br>
+											<input type="text" class="form-control" placeholder="Add by search.." id='instance_add_search_field'>
+											<div id='instance_add_search_results'>
+											</div>
+										</div>
 									</div>
 
 									<div class="tab-pane" id="actions" role="tabpanel">
@@ -288,7 +291,16 @@
 											<tbody id='actionsList'>
 											</tbody>
 										</table>
-
+										<table class="table table-responsive-sm">
+											<thead>
+												<tr>
+													<th>Instance</th>
+													<th>Action</th>
+												</tr>
+											</thead>
+											<tbody id='releaseActionsList'>
+											</tbody>
+										</table>
 									</div>
 
 									<div class="tab-pane" id="variables" role="tabpanel">
@@ -297,35 +309,69 @@
 									<div class="tab-pane" id="instanceConfig" role="tabpanel">
 										<h4></h4>
 										<div id='instanceConfigFields' class="row"></div>
+										<hr>
+										<div id='instanceConfigVariables' class="row col-lg-12">
+											<h4>List of dynamic variables</h4>
+											<table class="table table-responsive-sm">
+												<thead>
+													<tr>
+														<th>Variable</th>
+														<th>Description</th>
+														<th>Current value</th>
+													</tr>
+												</thead>
+												<tbody id="instanceConfigVariableList"></tbody>
+											</table>
+										</div>
+
 									</div>
 
 									<div class="tab-pane" id="devices" role="tabpanel">
+										<h4>Connected devices</h4>
+										<p>This is the surfaces currently connected to companion. If your streamdeck is missing from this list, you
+										might need to close the Elgato Streamdeck application and click the Rescan button below.</p><p><i>Rescanning blocks all operations while the scan is ongoing. <b>Use with care!</b></i></p>
+
 										<table class="table table-responsive-sm">
 											<thead>
 												<tr>
 													<th>ID</th>
 													<th>Type</th>
+													<th>&nbsp;</th>
 												</tr>
 											</thead>
 											<tbody id='deviceInstanceList'>
 											</tbody>
 										</table>
 
-										<button class="btn btn-primary" data-loading-text="<i class='fa fa-spinner fa-spin '></i> Checking for new devices..." id="refreshUSB">Re-scan USB</button> <label>Re-scanning blocks all operations while the scan is ongoing. Use with care.</label>
+										<button class="btn btn-warning" data-loading-text="<i class='fa fa-sync fa-spin '></i> Checking for new devices..." id="refreshUSB"><i class='fa fa-sync'></i> Rescan USB</button>
 									</div>
 
 
 									<div class="tab-pane" id="elgatobuttons" role="tabpanel">
+										<h4>Button layout</h4>
+										<p>The squares below represents each button on your streamdeck. Click on them to set up how you want them to look, and what they should do when you clock on them. You can navigate between pages using the blue arrow buttons.</p>
 
 										<div class="row" id='pagenav'>
 										</div>
 										<div class="row" id='pagebank'>
 										</div>
 
-										<p></p>
-										<b>Hint:</b> Click on the the button you like to design in the list above<br>
-										<b>Hint:</b> Hold shift down to test buttons from the GUI
+										<div class="row" id='functionarea' style="padding-top:15px;">
+											<div id="functionkeys" class='col-sm-12'>
+												<button class="btn btn-primary function-button buttonbottompad" data-function='copy' id='state_copy'><i class="fa fa-copy"></i> Copy</button>
+												<button class="btn btn-primary function-button buttonbottompad" data-function='move' id='state_move'><i class="fa fa-arrows-alt"></i> Move</button>
+												<button class="btn btn-primary function-button buttonbottompad" data-function='delete' id='state_delete'><i class="fa fa-trash"></i> Delete</button>
+												<button class="btn btn-danger buttonbottompad" id='state_abort'>Cancel</button>
+												<button class="btn btn-disabled buttonbottompad" id='state_hint'></button>
+												<span id='state_hide'>
+													<a id="export_page_link" href="/int/page_export/1" class="btn btn-success buttonbottompad"><i class="fa fa-file-export"></i> Export page</a>
+													<button type="button" id="erase_page_link" class="btn btn-danger buttonbottompad"><i class="fa fa-eraser"></i> Erase page</button>
+												</span>
+											</div>
+										</div>
 
+										<p></p>
+										<b>Hint:</b> Hold shift down to test buttons from the GUI<br>
 
 									</div>
 									<div class="tab-pane" id="editbank" role="tabpanel">
@@ -355,18 +401,38 @@
 										<div id="editbank_content">
 										</div>
 
+
+										<h4 style="margin-bottom:-13px;margin-top: 15px;">Key down/on actions</h4>
 										<div id='bankActions'>
 										</div>
-										<p>Add action<br>
-											<select id='addBankAction' style='form-control'></select>
-										</p>
+
+										<select id='addBankAction' style='form-control'></select>
+
+										<h4 style="margin-top: 30px;">Key up/off actions</h4>
+										<div id='bankReleaseActions'>
+										</div>
+
+										<select id='addBankReleaseAction' style='form-control'></select>
+
+										<h4 style="margin-top: 30px;">Instance feedback</h4>
+										<div id='bankFeedbacks'>
+										</div>
+										<select id='addBankFeedback' style='form-control'></select>
+
+										<br><br>
+										<div id="oscTips">
+										</div>
+
 									</div>
 
 									<div class="tab-pane" id="userconfig" role="tabpanel">
+										<h4>User settings</h4>
+										<p>Settings applies instantaneously, don't worry about it!</p>
+
 										<table class='table'>
 											<thead>
 												<tr>
-													<th>User configuration</th>
+													<th>Setting</th>
 													<th>Value</th>
 												</tr>
 											</thead>
@@ -394,36 +460,209 @@
 													</td>
 												</tr>
 
+												<tr>
+													<td>Artnet Listener</td>
+													<td>
+														<div class="form-check form-check-inline mr-1">
+															<input class="form-check-input" type="checkbox" id="userconfig_artnet_enabled" value="1">
+															<label class="form-check-label" for="userconfig_artnet_enabled">Enabled</label>
+														</div>
+													</td>
+												</tr>
+
+												<tr>
+													<td>Artnet Universe (first is 0)</td>
+													<td>
+														<div class="form-check form-check-inline mr-1">
+															<input class="form-check-input" type="text" id="userconfig_artnet_universe" value="">
+														</div>
+													</td>
+												</tr>
+
+												<tr>
+													<td>Artnet Channel</td>
+													<td>
+														<div class="form-check form-check-inline mr-1">
+															<input class="form-check-input" type="text" id="userconfig_artnet_channel" value="">
+														</div>
+													</td>
+												</tr>
+
 
 
 											</tbody>
 										</table>
+										<h4>TCP/UDP Remote control</h4>
+										<p>Remote triggering can be done by sending TCP (port <code>51234</code>) or UDP (port <code>51235</code>) commands.</p>
+										<p><strong>Commands:</strong>
+											<ul>
+												<li><code>PAGE-SET</code> &lt;page number&gt; &lt;surface id&gt;<br>
+												<i>Make device go to a specific page</i></li>
+												<li><code>PAGE-UP</code> &lt;surface id&gt;<br>
+												<i>Page up on a specific device</i></li>
+												<li><code>PAGE-DOWN</code> &lt;surface id&gt;<br>
+												<i>Page down on a specific surface</i></li>
+												<li><code>BANK-PRESS</code> &lt;page&gt; &lt;bank&gt;<br>
+												<i>Press and release a button (run both down and up actions)</i></li>
+												<li><code>BANK-DOWN</code> &lt;page&gt; &lt;bank&gt;<br>
+												<i>Press the button (run down actions)</i></li>
+												<li><code>BANK-UP</code> &lt;page&gt; &lt;bank&gt;<br>
+												<i>Release the button (run up actions)</i></li>
+											</ul>
+										</p>
 
-										<b>Settings</b> applies instantaneously, don't worry about it!
+										<p>
+											<strong>Examples</strong>
+										</p>
+
+										<p>Set the emulator surface to page 23<br>
+											<code>PAGE-SET 23 emulator</code></p>
+
+										<p>Press page 1 bank 2<br>
+											<code>BANK-PRESS 1 2</code></p>
+
+										<br>
+										<a class="btn btn-success" href="/bitfocus@companion_v1.2@00.xml">
+											<i class="fa fa-file-import"></i> Download GrandMA2 Fixture file
+										</a>
 
 									</div>
 								</div>
 							</div>
 							<!--/.col-->
 
-							<div class='col-lg-5 col-sm-12 col-xs-12'>
+							<div class='col-lg-6 col-sm-12 col-xs-12'>
 								<ul class="nav nav-tabs" role="tablist">
 
 
 									<li class="nav-item">
 										<a class="nav-link active" data-toggle="tab" href="#log" role="tab" aria-controls="log">
-											<i class="icon-calculator"></i> Log
+											<i class="fa fa-clipboard-list"></i> Log
 											<!-- <span class="badge badge-pill badge-success">OK</span> -->
+										</a>
+									</li>
+
+									<li class="nav-item">
+										<a class="nav-link" id="presets_tab" data-toggle="tab" href="#presets" role="tab" aria-controls="presets">
+											<i class="fa fa-gift"></i> Presets
+										</a>
+									</li>
+
+									<li class="nav-item">
+										<a class="nav-link" id="import_tab" data-toggle="tab" href="#import" role="tab" aria-controls="import">
+											<i class="fa fa-file-import"></i> Import / Export
 										</a>
 									</li>
 
 								</ul>
 
-
 								<div class="tab-content">
 									<div class="tab-pane active" id="log" role="tabpanel">
 									</div>
+
+									<div class="tab-pane" id="presets" role="tabpanel">
+									</div>
+
+									<div class="tab-pane" id="import" role="tabpanel">
+
+
+										<!-- this should be hidden after loading the file -->
+										<div id="import_fileselect">
+											<h4>Import configuration</h4>
+											<p>Use the button below to browse your computer for a <b>.companionconfig</b> file containing either a full companion configuration, or just a single button page export.</p>
+											<label class="btn btn-success btn-file"><i class="fa fa-file-import"></i> Import <input type="file" id="loadconfig" data-fieldid="importfile" style="display: none;"></label>
+
+											<br><br>
+										</div>
+
+										<!-- this should be shown after loading the file -->
+										<div id="import_config">
+											<div class="row" id="import_pagenav">
+
+												<div class="pagenav col-lg-4">
+													<div id="import_btn_pagedown" class="btn btn-primary">
+														<i class="fa fa-chevron-left"></i>
+													</div>
+												</div>
+
+												<div class="pageat col-lg-4">
+													<small>(Page 1)</small>
+													<input id="import_page_title" placeholder="Page name" type="text" value="PAGE">
+												</div>
+
+												<div class="pagenav text-right col-lg-4">
+													<div id="import_btn_pageup" class="btn btn-primary">
+														<i class="fa fa-chevron-right"></i>
+													</div>
+												</div>
+
+											</div>
+
+											<div class="row" id='import_pagebank'>
+											</div>
+											<br>
+
+											<div id="import_step2">
+												<h5>What to do</h5>
+												<button class="btn btn-primary import_individual">Import individual pages</button>
+												<button class="btn btn-primary import_replace">Replace current configuration</button>
+												<br><br>
+											</div>
+
+											<div id="import_resolve">
+
+												<h5>Link config instances with local instances</h5>
+
+												<table class="table table-responsive-sm">
+													<thead>
+														<tr>
+															<th>Select instance</th>
+															<th>Config instance type</th>
+															<th>Config instance name</th>
+														</tr>
+													</thead>
+													<tbody id="importConfigInstanceList">
+														<tr>
+															<td>
+																<select>
+																	<option>[ Create new instance ]</option>
+																	<option>Our own BMD VideoHub instance</option>
+																</select>
+															</td>
+															<td>BMD VideoHub</td>
+															<td>Routeren da</td>
+														</tr>
+													</tbody>
+												</table>
+
+												<p>
+													<button class="btn btn-warning" id="import_page">Import to page 1</button>
+												</p>
+
+											</div>
+
+
+										</div>
+
+
+										<h4>Export full configuration</h4>
+										<p>Download a file containing all instances and button pages.</p>
+										<a class="btn btn-success" id="download_export" href="/int/full_export">
+											<span class="fa fa-download"></span> Export
+										</a>
+										<br><br>
+										<h4>Reset full configuration</h4>
+										<p>Remove all companion configuration. This will clear all instances and buttons and start over.</p>
+										<button class="btn btn-danger" id="reset_all" type="button">
+											<span class="fa fa-trash-alt"></span> Reset configuration
+										</button>
+										<br>
+
+
+									</div>
+
 								</div>
+
 							</div>
 
 
@@ -435,15 +674,26 @@
 				</div>
 			</main>
 		</div>
-		<footer class="app-footer">
-			<div>
-				<a href="https://github.com/bitfocus/companion/issues">Event Companion</a>
-				<span>by Bitfocus AS</span>
+
+		<!-- Device modal -->
+		<div class="modal fade" id="deviceModal" tabindex="-1" role="dialog" aria-labelledby="deviceModalLabel" aria-hidden="true">
+			<div class="modal-dialog" role="document">
+				<div class="modal-content">
+					<div class="modal-header">
+						<h5 class="modal-title" id="deviceModalLabel">Device settings</h5>
+						<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+							<span aria-hidden="true">&times;</span>
+						</button>
+					</div>
+					<div class="modal-body">
+
+					</div>
+					<div class="modal-footer">
+						<button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+					</div>
+				</div>
 			</div>
-			<div class="ml-auto">
-				<a target="_new" href="https://bitfocus.io">bitfocus.io</a>
-			</div>
-		</footer>
+		</div>
 
 		<!-- Bootstrap and necessary plugins-->
 		<script src="js/jquery/jquery.min.js"></script>
@@ -454,6 +704,8 @@
 		<script src="js/coreui/coreui.min.js"></script>
 		<script src="socket.io/socket.io.js"></script>
 		<script src="js/moment/min/moment-with-locales.min.js"></script>
+		<script src="js/touch-dnd.js"></script>
+		<script src="js/rowsorter/dist/RowSorter.js"></script>
 		<script src='js/spectrum.js'></script>
 		<script src="js/preview.js"></script>
 		<script src="page.js"></script>
@@ -461,9 +713,13 @@
 		<script src="userconfig.js"></script>
 		<script src="instance.js"></script>
 		<script src="action.js"></script>
+		<script src="import.js"></script>
+		<script src="feedback.js"></script>
+		<script src="release_action.js"></script>
 		<script src="devices.js"></script>
 		<script src="log.js"></script>
 		<script src="main.js"></script>
 		<script src="update.js"></script>
+		<script src="preset.js"></script>
 	</body>
 </html>

@@ -1,5 +1,70 @@
 # Changelog
 
+## V1.2.0 Summary
+
+We've introduced some important stuff in this release. Honestly, almost too much in one single release. Feedback and presets is some of it, but it's not supported by many modules yet, but this will be better towards 1.3.0.
+
+Feedback:
+* BMD Videohub, BMD ATEM
+
+Presets:
+* Analogway PLS300, Irisdown Countdown, Mitti, PlaybackProPlus, Sony VISCA, Nevion MRP
+
+Changes:
+* Brightness control and button rotation on Stream Deck / Infinitton device
+* Stream Deck Mini support
+* Minimize launcher to tray
+* Export and import pages/full configs
+* Remote triggering of buttons via OSC and ArtNet
+* Separate "Up actions" / Latch buttons
+* Huge improvements in fonts (multiple sizes, auto size, etc.)
+* Feedback support ("button tally" as example)
+* Preset support (template keys)
+* Variables support (dynamic text)
+* We now support more thans 3 streamdecks!
+* Erase entire page
+* Panic feature in internal module to cancel all delayed actions
+* Align text and PNG background
+* Internal module to control internal stuff in companion
+* Headless operation for RPI
+* Tablet/Web buttons
+* Windows database save problem fixed
+* Cosmetic fixes in admin ui
+* Fixes: Analogway Midra
+* Fixes: Irisdown Countdowntimer
+* Fixes: PlaybackProPlus
+* Fixes: Mitti
+* Fixes: Blackmagic
+* Fixes: QLab
+* Fixes: Eventmaster
+* Fixes: Livecore
+* Fixes: PVP
+* Fixes: PPT RSC
+* Fixes: Millumin
+* Fixes: Blackmagic Design ATEM
+* Support: X32
+* Support: Chamsys
+* Support: Watchout
+* Support: Analogway VIO
+* Support: Christie PJ
+* Support: ArtNet
+* Support: 7th sense media server
+* Support: Imagepro
+* Support: Modulo
+* Support: Octopus App
+* Support: KiPro
+* Support: XAir
+* Support: SCS
+* Support: Cockos Reaper
+* Support: Nevion MRP/Multicon
+* Support: PTZOptics VISCA
+* Support: AJA Helo
+* Support: Analogway Pulse (PLS300)
+* Support: HTTP GET/POST Requests
+* Support: BlackMagic Design SmartView
+
+stuff is probably missing from this list..
+
 ## v1.1.1 Summary
 * Eventmaster freeze/unfreeze and rebuild
 * Added test button from button configurator

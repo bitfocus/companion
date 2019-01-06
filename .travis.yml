@@ -9,6 +9,10 @@ matrix:
       services: docker
       language: generic
 
+branches:
+  only:
+  - master
+
 env:
   global:
     - ELECTRON_CACHE=$HOME/.cache/electron
@@ -28,6 +32,7 @@ cache:
 before_install:
   - curl -L https://yarnpkg.com/latest.tar.gz | tar xvz && mv yarn-v* $HOME/.yarn
   - export PATH="$HOME/.yarn/bin:$PATH"
+  - git fetch --unshallow
   - git submodule sync
   - git submodule init
   - git submodule update
@@ -40,7 +45,6 @@ script:
   - |
     if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then
       docker run --rm \
-        --env-file <(env | grep -iE 'DEBUG|NODE_|ELECTRON_|YARN_|NPM_|CI|CIRCLE|TRAVIS|APPVEYOR_|CSC_|_TOKEN|_KEY|AWS_|STRIP|BUILD_') \
         -v ${PWD}:/project \
         -v ~/.cache/electron:/root/.cache/electron \
         -v ~/.cache/electron-builder:/root/.cache/electron-builder \

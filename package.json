@@ -1,13 +1,17 @@
 {
   "name": "companion",
-  "version": "1.1.1",
+  "version": "1.2.0",
   "description": "Companion",
   "main": "bitfocus-skeleton/main.js",
   "build": {
     "productName": "Companion",
     "appId": "companion.bitfocus.no",
     "mac": {
-      "category": "no.bitfocus.companion"
+      "category": "no.bitfocus.companion",
+      "extendInfo": {
+        "LSBackgroundOnly": 1,
+        "LSUIElement": 1
+      }
     },
     "win": {
       "target": "nsis"
@@ -32,6 +36,9 @@
       "**/*/*",
       "**/*/*/*",
       "**/*/*/*/*",
+      "assets/icon.png",
+      "assets/trayTemplate.png",
+      "assets/trayTemplate@2x.png",
       "!font/*",
       "!documentation/*",
       "!tools/*",
@@ -56,7 +63,7 @@
   "author": "Bitfocus AS",
   "license": "MIT",
   "devDependencies": {
-    "electron": "^2.0.3",
+    "electron": "^2.0.8",
     "electron-builder": "^20.10.0"
   },
   "dependencies": {
@@ -70,15 +77,19 @@
     "debug": "^3.1.0",
     "electron-debug": "^1.5.0",
     "elgato-stream-deck-clean": "^1.0.0",
+    "elgato-stream-deck-clean-mini": "https://github.com/bitfocus/elgato-stream-deck-clean-mini.git",
     "express": "^4.16.3",
     "flag-icon-css": "3.0.0",
     "font-awesome": "4.7.0",
+    "fs-extra": "^7.0.0",
     "infinitton-idisplay": "^1.0.4",
     "jquery": "3.3.1",
     "json-parser": "^1.1.5",
+    "lodash": "^4.17.10",
     "mkdirp": "^0.5.1",
     "moment": "^2.22.2",
     "node-rest-client": "^3.1.0",
+    "opencollective-postinstall": "^2.0.1",
     "osc": "^2.2.2",
     "pace-progress": "1.0.2",
     "perfect-scrollbar": "^1.3.0",
@@ -89,6 +100,11 @@
     "shortid": "^2.2.8",
     "simple-line-icons": "2.4.1",
     "socket.io": "^2.1.0",
-    "socket.io-client": "^2.1.0"
+    "socket.io-client": "^2.1.0",
+    "opencollective": "^1.0.3"
+  },
+  "collective": {
+    "type": "opencollective",
+    "url": "https://opencollective.com/companion"
   }
 }

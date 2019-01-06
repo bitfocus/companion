@@ -26,7 +26,7 @@ git pull origin master
 cd ../../../
 ls -la
 git status
-git commit lib/module/$1 -m "module upgrade: $1"
+git commit lib/module/$1 -m "Module: Upgraded $1"
 git push
 
 exit 0

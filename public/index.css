@@ -14,7 +14,7 @@
  * disclosing the source code of your own applications.
  *
  */
- 
+
 #error-container {
 	display:none;
 	width: 100%;
@@ -36,27 +36,57 @@
 .padtop {
 	padding-top: 12px;
 }
-#pagebank .border, #pagenav .border {
+
+#import_pagebank .importborder {
 	display:block;
 	border-radius: 4px;
 	margin-bottom:10px;
 	padding:5px 7px;
-	cursor: pointer;
 	border: 1px solid #aaa;
-	background-color: #ccc;
+	background-color: #f4f4f4;
 	min-width: 100px;
+	text-align:center;
+}
+
+#import_pagebank canvas {
+	background-color: black;
+}
+
+#pagebank .border, #import_pagebank .border , #pagenav .border {
+	display:block;
+	border-radius: 4px;
+	margin-bottom:10px;
+	padding:7px 0px 2px 0px;
+	cursor: pointer;
+	border: 1px solid #ccc;
+	background-color: #f4f4f4;
+	min-width: 74px;
 	text-align:center;
 }
 #newversiontext {
 	color:red;
 }
 #pagebank .border:hover, #pagenav .border:hover {
-	background-color: #ddd;
+	background-color: #e4e4e4;
 }
 
-#pagebank div.border canvas {
+#pagebank divpreset canvas {
 	background-color: black;
 	border-radius: 5px;
+}
+
+#presets .presetbank canvas {
+	background-color: black;
+	border-radius: 5px;
+}
+
+#presets .presetbank {
+	width: 80px;
+	height: 80px;
+	overflow: hidden;
+	border:none;
+	float:left;
+	padding: 0;
 }
 
 .pageat {
@@ -113,7 +143,6 @@
 }
 
 label {
-	text-transform: uppercase;
 	margin-bottom: -4px;
 	color: #777;
 	font-size: 11px;
@@ -182,6 +211,9 @@ label {
 	color: white;
 }
 
+.border canvas {
+	border-radius: 4px;
+}
 .log-type-error {
 	background-color: rgba(255,0,0,0.2);
 	color: rgba(255,0,0,1);
@@ -206,20 +238,52 @@ label {
 }
 
 
-.actionlist-td-label {
+.actionlist-td-label,
+.feedbacklist-td-label{
 	padding-top:24px !important;
 }
 .actionlist-td-delay {
 	padding-top:20px !important;
 	padding-bottom:20px !important;
 }
-.actionlist-td-delete {
+.actionlist-td-delete,
+.feedbacklist-td-delete{
 	padding-top:23px !important;
 	line-height:0px;
 	width:70px;
 }
-.actionlist-td-options {
+.actionlist-td-options,
+.feedbacklist-td-options{
 	padding-top:0px !important;
+}
+td.actionlist-td-reorder,
+td.feedbacklist-td-reorder{
+	/* Remove horizontal column padding */
+	padding-left: 0;
+	padding-right: 0;
+	text-align: center;
+	vertical-align: middle;
+	width: 2rem;
+}
+
+.reorder-grip {
+	cursor: ns-resize;
+	opacity: 0.5;
+	/* Give the icon a larger grip target */
+	padding: 0 0.5rem 0.3rem;
+}
+.reorder-grip:hover {
+	opacity: 1.0;
+}
+.sorting-table tbody tr:not(.sorting-row) td {
+	opacity: 0.7;
+}
+.sorting-row {
+	cursor: ns-resize;
+	background-color: rgba(228, 228, 228, 0.4);
+}
+.sorting-row .reorder-grip {
+	opacity: 1.0;
 }
 
 #bankActions {
@@ -246,4 +310,121 @@ label {
 }
 .bank-armed {
 	background-color: rgba(255,0,0,0.5) !important;
+}
+
+.group:before,
+.group:after {
+	content: "";
+	display: table;
+}
+.group:after {
+	clear: both;
+}
+.group {
+	zoom: 1; /* For IE 6/7 (trigger hasLayout) */
+}
+
+#pagebank .drophere {
+	border: 1px dashed black !important;
+	background-color: #eee !important;
+}
+#pagebank .drophover {
+	border: 1px solid black !important;
+	background-color: #daffab !important;
+}
+
+.buttonbottompad {
+	margin-bottom: 5px;
+}
+
+
+
+.dropdown-submenu {
+		position: relative;
+}
+
+.dropdown-submenu>.dropdown-menu {
+		top: 0;
+		left: 100%;
+		margin-top: -6px;
+		margin-left: -1px;
+		-webkit-border-radius: 0 6px 6px 6px;
+		-moz-border-radius: 0 6px 6px;
+		border-radius: 0 6px 6px 6px;
+}
+
+.dropdown-submenu:hover>.dropdown-menu {
+		display: block;
+}
+
+.dropdown-submenu>a:after {
+		display: block;
+		content: " ";
+		float: right;
+		width: 0;
+		height: 0;
+		border-color: transparent;
+		border-style: solid;
+		border-width: 5px 0 5px 5px;
+		border-left-color: #ccc;
+		margin-top: 5px;
+		margin-right: -10px;
+}
+
+.dropdown-submenu:hover>a:after {
+		border-left-color: #fff;
+}
+
+.dropdown-submenu.pull-left {
+		float: none;
+}
+
+.dropdown-submenu.pull-left>.dropdown-menu {
+		left: -100%;
+		margin-left: 10px;
+		-webkit-border-radius: 6px 0 6px 6px;
+		-moz-border-radius: 6px 0 6px 6px;
+		border-radius: 6px 0 6px 6px;
+}
+
+.dropdown-content {
+	border-bottom: 1px solid #e0e0e0;
+	padding: 2px 5px;
+	font-size: 11px;
+	cursor:pointer;
+}
+.dropdown-content:hover {
+	background-color: #f0f0f0;
+}
+.instance-addable {
+
+}
+.add-instance-button {
+	color:white !important;
+}
+
+input[type='checkbox'] {
+		-webkit-appearance:none;
+		width:22px;
+		height:22px;
+		background:white;
+		border-radius:4px;
+		border:1px solid #999;
+}
+input[type='checkbox']:checked {
+		background: 0 0 url("/img/check.png") no-repeat;
+}
+
+#instance_add_search_field {
+	margin-bottom: 10px;
+}
+#instance_add_search_results {
+
+}
+#instance_add_search_results div {
+	margin-bottom: 5px;
+}
+
+#instanceConfig h4 {
+	text-transform: capitalize;
 }

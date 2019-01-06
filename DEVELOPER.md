@@ -1,13 +1,13 @@
 # Developers Guide. Ish.
 
 ## First:
-1. Install node.js
-2. Install n (sudo npm install n -g)
-3. Install yarn (sudo npm install yarn -g)
+1. Install [node.js](https://nodejs.org/en/)
+2. Install n ```sudo npm install n -g```
+3. Install yarn ```sudo npm install yarn -g```
 
 ## Getting started
 ```
-$ n 8.11.1
+$ n 8.12.0
 $ git clone <your forked repository>
 $ cd companion
 $ ./tools/update.sh

@@ -40,7 +40,8 @@ system.on('skeleton-info', function(key, val) {
 			debug("mkdirp",cfgDir,err);
 			config = new (require('./bitfocus-libs/config'))(system, cfgDir, {
 				http_port: 8000,
-				bind_ip: "127.0.0.1"
+				bind_ip: "127.0.0.1",
+				start_minimised: false,
 			});
 		});
 	}
@@ -58,6 +59,7 @@ system.on('config_loaded', function(config) {
 	system.emit('skeleton-info', 'appURL', 'Waiting for webserver..');
 	system.emit('skeleton-info', 'appStatus', 'Starting');
 	system.emit('skeleton-info', 'bindInterface', config.bind_ip);
+	system.emit('skeleton-info', 'startMinimised', config.start_minimised);
 });
 
 system.on('exit', function() {
@@ -83,25 +85,38 @@ system.on('skeleton-bind-port', function(port) {
 	}
 });
 
+system.on('skeleton-start-minimised', function(minimised) {
+	config.start_minimised = minimised;
+	system.emit('config_set', 'start_minimised', minimised);
+});
+
 system.on('skeleton-ready', function() {
 
-	var http       = require('./lib/http')(system);
-	var io         = require('./lib/io')(system, http);
+	var server_http= require('./lib/server_http')(system);
+	var io         = require('./lib/io')(system, server_http);
 	var log        = require('./lib/log')(system,io);
 	var db         = require('./lib/db')(system,cfgDir);
 	var userconfig = require('./lib/userconfig')(system)
 	var update     = require('./lib/update')(system,cfgDir);
 	var page       = require('./lib/page')(system)
 	var appRoot    = require('app-root-path');
-	var express    = require('express');
+	var variable   = require('./lib/variable')(system);
+	var feedback   = require('./lib/feedback')(system);
 	var bank       = require('./lib/bank')(system);
 	var elgatoDM   = require('./lib/elgato_dm')(system);
 	var preview    = require('./lib/preview')(system);
 	var action     = require('./lib/action')(system);
 	var instance   = require('./lib/instance')(system);
-	var variable   = require('./lib/variable')(system);
 	var osc        = require('./lib/osc')(system);
+	var server_api = require('./lib/server_api')(system);
+	var server_tcp = require('./lib/server_tcp')(system);
+	var server_udp = require('./lib/server_udp')(system);
+	var artnet     = require('./lib/artnet')(system);
 	var rest       = require('./lib/rest')(system);
+	var rest_poll  = require('./lib/rest_poll')(system);
+	var loadsave   = require('./lib/loadsave')(system);
+	var preset     = require('./lib/preset')(system);
+	var tablet     = require('./lib/tablet')(system);
 
 	system.on('exit', function() {
 		elgatoDM.quit();

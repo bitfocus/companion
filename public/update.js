@@ -14,7 +14,7 @@
  * disclosing the source code of your own applications.
  *
  */
- 
+
 $(function() {
 
 	socket.on('update_data', function(data) {

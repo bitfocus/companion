@@ -14,18 +14,23 @@
  * disclosing the source code of your own applications.
  *
  */
- 
+
 var instance = {};
 var instance_status = {};
+var instance_variables = {};
+var instance_variabledata = {};
+var instance_manufacturer = {};
+var instance_category = {};
+var instance_name = {};
 
 $(function() {
 	var iconfig = {};
+	var current_instance;
 
 	var debug = console.log;
 	$("#instanceConfigTab").hide();
 
 	socket.emit('instance_get');
-	console.log('instance_get');
 	socket.emit('instance_status_get');
 
 	function updateInstanceStatus() {
@@ -67,11 +72,15 @@ $(function() {
 		for (var n in list) {
 			var i = list[n];
 
+			if (i.instance_type == 'bitfocus-companion') {
+				continue;
+			}
+
 			var $tr = $("<tr></tr>");
 
 			var $td_id = $("<td></td>");
-			var $td_label = $("<td id='label_"+n+"'>label</td>");
-			var $td_status = $("<td id='instance_status_"+n+"'>no status</td>");
+			var $td_label = $("<td id='label_"+n+"'></td>");
+			var $td_status = $("<td id='instance_status_"+n+"'></td>");
 			var $td_actions = $("<td></td>");
 			console.log("list", list);
 			var $button_edit = $("<button type='button' data-id='"+n+"' class='instance-edit btn btn-primary'>edit</button>");
@@ -79,17 +88,23 @@ $(function() {
 			var $button_disable = $("<button type='button' data-id='"+n+"' class='instance-disable btn btn-sm btn-ghost-warning'>disable</button>");
 			var $button_enable = $("<button type='button' data-id='"+n+"' class='instance-enable btn btn-sm btn-ghost-success'>enable</button>");
 
-			$td_actions.append($button_delete)
-			$td_actions.append($("<span>&nbsp;</span>"));
+			if (i.instance_type != 'bitfocus-companion') {
+				$td_actions.append($button_delete)
+				$td_actions.append($("<span>&nbsp;</span>"));
+			}
 
-			if (i.enabled === undefined || i.enabled === true) {
+			if (i.instance_type != 'bitfocus-companion' && (i.enabled === undefined || i.enabled === true)) {
 				$td_actions.append($button_disable)
+				$button_edit.show();
 			}
-			else {
+			else if (i.instance_type != 'bitfocus-companion') {
 				$td_actions.append($button_enable);
+				$button_edit.hide();
 			}
 
+
 			$td_actions.append($("<span>&nbsp;</span>"));
+
 			$td_actions.append($button_edit);
 
 			$button_delete.click(function() {
@@ -121,8 +136,8 @@ $(function() {
 			});
 
 			for (var x in instance.module) {
-				if (instance.module[x].id == list[n].instance_type) {
-					$td_id.text(instance.module[x].label);
+				if (instance.module[x].name == list[n].instance_type) {
+					$td_id.html("<b>"+instance.module[x].shortname+"</b>" + "<br>" + instance.module[x].manufacturer);
 				}
 			}
 
@@ -142,53 +157,148 @@ $(function() {
 		updateInstanceStatus();
 	};
 
-	socket.on('instance', function(i) {
+
+
+
+	// search for add instance code
+
+	var $aisf = $('#instance_add_search_field');
+	var $aisr = $('#instance_add_search_results');
+	$aisr.html("");
+	$aisf.val("");
+	$aisf.on('keyup', function() {
+
+		if ($aisf.val().length > 0) {
+			$aisr.html("");
+			for (var x in instance_name) {
+				var main_split = instance_name[x].split(":");
+				var manuf = main_split[0];
+				var prods = main_split[1].split(";");
+				console.log("Manuf",manuf,"Prods",prods);
+				for (var prod in prods) {
+					var subprod = manuf + " " + prods[prod];
+					console.log("subprod", subprod);
+					if (subprod.match( new RegExp( $aisf.val(), "i" ))) {
+						var $x = $("<div class='ais_entry'>&nbsp;<span style=''>"+subprod+"</span></div>");
+						var $button = $('<a role="button" class="btn btn-primary text-white">Add</a>');
+						$x.prepend($button);
+						$x.data('id', x);
+						$x.click(function(e) {
+							e.preventDefault();
+							var instance_type = $(this).data('id');
+							socket.emit('instance_add', instance_type );
+							$aisr.html("");
+							$aisf.val("");
+							socket.once('instance_add:result', function(id,db) {
+								instance.db = db;
+								socket.emit('instance_edit', id);
+							});
+						});
+						$aisr.append($x);
+					}
+				}
+			}
+		}
+
+		else {
+			$aisr.html("");
+		}
+	});
+
+	// add instance code
+	$(".add-instance-ul").on('click', '.instance-addable', function() {
+		var instance_type = $(this).data('id');
+		socket.emit('instance_add', instance_type );
+		socket.once('instance_add:result', function(id,db) {
+			instance.db = db;
+			socket.emit('instance_edit', id);
+		});
+	});
+
+	socket.on('instance', function(i,obj) {
 		instance = i;
+
+		instance_manufacturer = obj.manufacturer;
+		instance_category = obj.category;
+		instance_name = obj.name;
 
 		updateInstanceList(i.db);
 		console.log('instance', i);
 
 		$addInstance = $("#addInstance");
-		$addInstance.html("<option value='null'>[ Add new instance ]</option>");
+		$addInstanceByManufacturer = $("#addInstanceByManufacturer");
 
-		if (instance.module !== undefined) {
-			// Sort the list first
-			var list = instance.module.sort(function (a,b) {
-				if (a.label.toUpperCase() < b.label.toUpperCase()) {
-					return -1;
+		if (instance_category !== undefined) {
+
+			for (var n in instance_category) {
+
+				var $entry_li = $('<li class="dropdown-submenu"></li>');
+				var $entry_title = $('<div tabindex="-1" class="dropdown-content"></div>');
+
+				$entry_title.text(n);
+				$entry_li.append($entry_title);
+				$addInstance.append($entry_li);
+
+				var $entry_sub_ul = $('<ul class="dropdown-menu"></ul>');
+
+				for ( var sub in instance_category[n] ) {
+
+					var inx = instance_category[n][sub];
+					var res_id = inx;
+					var res_name = instance_name[inx];
+					var main_split = res_name.split(":");
+					var manuf = main_split[0];
+					var prods = main_split[1].split(";");
+
+					for (var prod in prods) {
+						var subprod = manuf + " " + prods[prod];
+						var $entry_sub_li = $('<li><div class="dropdown-content instance-addable" data-id="'+res_id+'">'+subprod+'</div></li>');
+						$entry_sub_ul.append($entry_sub_li);
+					}
 				}
 
-				if (a.label.toUpperCase() > b.label.toUpperCase()) {
-					return 1;
-				}
+				$entry_li.append($entry_sub_ul);
 
-				return 0;
-			});
-
-			$addInstance.change(function() {
-				if ($(this).val() !== "null") {
-					socket.emit('instance_add', $(this).val() );
-					console.log('instance_add()');
-					$(this).val("null");
-					socket.once('instance_add:result', function(id,db) {
-						instance.db = db;
-						console.log("instance_add:result()", id,db);
-						socket.emit('instance_edit', id);
-					});
-				}
-			});
-
-
-			for (var n in list) {
-				var im = list[n];
-				var $instance = $('<option value="'+im.id+'" data-id="'+im.id+'">'+ im.label +'</option>');
-				$addInstance.append($instance)
 			}
+
+			for (var n in instance_manufacturer) {
+
+				var $entry_li = $('<li class="dropdown-submenu"></li>');
+				var $entry_title = $('<div tabindex="-1" class="dropdown-content"></div>');
+
+				$entry_title.text(n);
+				$entry_li.append($entry_title);
+				$addInstanceByManufacturer.append($entry_li);
+
+				var $entry_sub_ul = $('<ul class="dropdown-menu"></ul>');
+
+				for ( var sub in instance_manufacturer[n] ) {
+
+					var inx = instance_manufacturer[n][sub];
+					var res_name = instance_name[inx];
+					var main_split = res_name.split(":");
+					var manuf = main_split[0];
+					var prods = main_split[1].split(";");
+
+					for (var prod in prods) {
+						var subprod = manuf + " " + prods[prod];
+						var $entry_sub_li = $('<li><div class="dropdown-content instance-addable" data-id="'+inx+'">'+subprod+'</div></li>');
+						$entry_sub_ul.append($entry_sub_li);
+					}
+
+				}
+
+				$entry_li.append($entry_sub_ul);
+
+			}
+
 		}
+
 	});
 
 	socket.on('instance_db_update', function(db) {
 		instance.db = db;
+		updateInstanceList(instance.db);
 	});
 
 	function saveConfig(button, id) {
@@ -224,11 +334,28 @@ $(function() {
 
 		if (ok) {
 			socket.emit('instance_config_put', id, data);
+			socket.once('instance_config_put:result', function (err, res) {
+				if (res) {
+					current_instance = data.label;
 
-			$button.css('backgroundColor', 'lightgreen');
-			setTimeout(function () {
-				$button.css('backgroundColor', '');
-			}, 300);
+					$button.css('backgroundColor', 'lightgreen');
+					setTimeout(function () {
+						$button.css('backgroundColor', '');
+					}, 300);
+				} else {
+
+					if (err == 'duplicate label') {
+						var $field = $icf.find('input[data-id="label"]');
+						$field.css('backgroundColor', 'red');
+						setTimeout(function () {
+							$field.css('backgroundColor', '');
+						}, 500);
+
+						alert('The label "' + data.label + '" is already in use. Please use a unique name for this module instance');
+					}
+				}
+			});
+
 		} else {
 			$button.css('backgroundColor', 'red');
 			setTimeout(function () {
@@ -238,18 +365,68 @@ $(function() {
 
 	}
 
+	function showInstanceVariables() {
+		var $icv = $('#instanceConfigVariables');
+		var $icvl = $('#instanceConfigVariableList');
+
+		if (instance_variables[current_instance] !== undefined && instance_variables[current_instance].length > 0) {
+			$icv.show();
+			$icvl.html('');
+
+			console.log()
+
+			for (var i in instance_variables[current_instance]) {
+				var variable = instance_variables[current_instance][i];
+				$icvl.append('<tr data-id="' + current_instance + ':' + variable.name + '"><td>$(' + current_instance + ':' + variable.name + ')</td><td>' + variable.label + '</td><td>' + instance_variabledata[current_instance + ':' + variable.name] + '</td></tr>');
+			}
+		}
+	}
+
+	socket.emit('variable_instance_definitions_get');
+	socket.on('variable_instance_definitions_get:result', function (err, data) {
+		if (data) {
+			instance_variables = data;
+		}
+	});
+	socket.on('variable_instance_definitions_set', function (label, variables) {
+		instance_variables[label] = variables;
+
+		if (label == current_instance) {
+			showInstanceVariables();
+		}
+	});
+
+	socket.emit('variables_get');
+	socket.on('variables_get:result', function (err, data) {
+		if (data) {
+			instance_variabledata = data;
+		}
+		showInstanceVariables();
+	});
+
+	socket.on('variable_set', function (key, value) {
+		var match = current_instance + ':';
+
+		instance_variabledata[key] = value;
+
+		$('#instanceConfigVariableList tr[data-id="' + key + '"] > td:nth-child(3)').text(value);
+	});
+
 	socket.on('instance_edit:result', function(id, store, res, config ) {
 		$('#instanceConfigTab').show();
+		$('#instanceConfigVariables').hide();
 		$('#instanceConfigTab a[href="#instanceConfig"]').tab('show');
 
 		for (var n in store.module) {
-			if (store.module[n].id === store.db[id].instance_type) {
-				$('#instanceConfig h4').text( store.module[n].label + ' configuration');
+			if (store.module[n].name === store.db[id].instance_type) {
+				$('#instanceConfig h4:first').text( store.module[n].shortname + ' configuration');
 			}
 		}
-		console.log(store,res,config);
 
 		iconfig = config;
+
+		current_instance = config.label;
+		showInstanceVariables();
 
 		var $icf = $("#instanceConfigFields");
 		$icf.html("");
@@ -291,7 +468,7 @@ $(function() {
 							$("#label_"+ f1).text(inp.val());
 						}
 
-						if (regex === undefined || inp.val().match(reg) !== null) {
+						if (reg === undefined || inp.val().match(reg) !== null) {
 							this.style.color = "black";
 
 							$(this).data('valid', true);

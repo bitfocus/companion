@@ -112,3 +112,108 @@
 [submodule "lib/module/christiepj"]
 	path = lib/module/christiepj
 	url = https://github.com/bitfocus/companion-module-christiepj.git
+[submodule "lib/module/vyvphoton"]
+	path = lib/module/vyvphoton
+	url = https://github.com/bitfocus/companion-module-vyvphoton.git
+[submodule "lib/module/7thsensedelta"]
+	path = lib/module/7thsensedelta
+	url = https://github.com/bitfocus/companion-module-7thsensedelta.git
+[submodule "lib/module/imagepro"]
+	path = lib/module/imagepro
+	url = https://github.com/bitfocus/companion-module-imagepro.git
+[submodule "lib/module/modulo"]
+	path = lib/module/modulo
+	url = https://github.com/bitfocus/companion-module-modulo.git
+[submodule "lib/module/octopusapp"]
+	path = lib/module/octopusapp
+	url = https://github.com/bitfocus/companion-module-octopusapp.git
+[submodule "lib/module/dcs"]
+	path = lib/module/dcs
+	url = https://github.com/bitfocus/companion-module-dcs.git
+[submodule "lib/module/xair"]
+	path = lib/module/xair
+	url = https://github.com/bitfocus/companion-module-xair.git
+[submodule "lib/module/kipro"]
+	path = lib/module/kipro
+	url = https://github.com/bitfocus/companion-module-kipro.git
+[submodule "lib/module/scs"]
+	path = lib/module/scs
+	url = https://github.com/bitfocus/companion-module-scs.git
+[submodule "lib/module/analogway-midra"]
+	path = lib/module/analogway-midra
+	url = https://github.com/bitfocus/companion-module-analogway-midra.git
+[submodule "lib/module/aja-helo"]
+	path = lib/module/aja-helo
+	url = https://github.com/bitfocus/companion-module-aja-helo.git
+[submodule "lib/module/irisdown-countdowntimer"]
+	path = lib/module/irisdown-countdowntimer
+	url = https://github.com/bitfocus/companion-module-irisdown-countdowntimer.git
+[submodule "lib/module/motu-avb"]
+	path = lib/module/motu-avb
+	url = https://github.com/bitfocus/companion-module-motu-avb.git
+[submodule "lib/module/chamsys-magicqudp"]
+	path = lib/module/chamsys-magicqudp
+	url = https://github.com/bitfocus/companion-module-chamsys-magicqudp.git
+[submodule "lib/module/bmd-smartview"]
+	path = lib/module/bmd-smartview
+	url = https://github.com/bitfocus/companion-module-bmd-smartview.git
+[submodule "lib/module/renewedvision-propresenter"]
+	path = lib/module/renewedvision-propresenter
+	url = https://github.com/bitfocus/companion-module-renewedvision-propresenter.git
+[submodule "lib/module/kramer-vp727"]
+	path = lib/module/kramer-vp727
+	url = https://github.com/bitfocus/companion-module-kramer-vp727.git
+[submodule "lib/module/studiocoast-vmix"]
+	path = lib/module/studiocoast-vmix
+	url = https://github.com/bitfocus/companion-module-studiocoast-vmix.git
+[submodule "lib/module/highend-hog4"]
+	path = lib/module/highend-hog4
+	url = https://github.com/bitfocus/companion-module-highend-hog4.git
+[submodule "lib/module/sony-visca"]
+	path = lib/module/sony-visca
+	url = https://github.com/bitfocus/companion-module-sony-visca.git
+[submodule "lib/module/globalcache-itac-ir"]
+	path = lib/module/globalcache-itac-ir
+	url = https://github.com/bitfocus/companion-module-globalcache-itac-ir
+[submodule "lib/module/globalcache-itac-cc"]
+	path = lib/module/globalcache-itac-cc
+	url = https://github.com/bitfocus/companion-module-globalcache-itac-cc
+[submodule "lib/module/analogway-pls300"]
+	path = lib/module/analogway-pls300
+	url = https://github.com/bitfocus/companion-module-analogway-pls300
+[submodule "lib/module/generic-http"]
+	path = lib/module/generic-http
+	url = https://github.com/bitfocus/companion-module-generic-http.git
+[submodule "lib/module/barco-encore"]
+	path = lib/module/barco-encore
+	url = https://github.com/bitfocus/companion-module-barco-encore.git
+[submodule "lib/module/nevion-mrp"]
+	path = lib/module/nevion-mrp
+	url = https://github.com/bitfocus/companion-module-nevion-mrp.git
+[submodule "lib/module/bitfocus-companion"]
+	path = lib/module/bitfocus-companion
+	url = https://github.com/bitfocus/companion-module-bitfocus-companion.git
+[submodule "lib/module/ptzoptics-visca"]
+	path = lib/module/ptzoptics-visca
+	url = https://github.com/bitfocus/companion-module-ptzoptics-visca.git
+[submodule "lib/module/globalcache-itac-sl"]
+	path = lib/module/globalcache-itac-sl
+	url = https://github.com/bitfocus/companion-module-globalcache-itac-sl.git
+[submodule "lib/module/obs-studio"]
+	path = lib/module/obs-studio
+	url = https://github.com/bitfocus/companion-module-obs-studio.git
+[submodule "lib/module/analogway-eks500"]
+	path = lib/module/analogway-eks500
+	url = https://github.com/bitfocus/companion-module-analogway-eks500.git
+[submodule "lib/module/resolume-arena"]
+	path = lib/module/resolume-arena
+	url = https://github.com/bitfocus/companion-module-resolume-arena.git
+[submodule "lib/module/cockos-reaper"]
+	path = lib/module/cockos-reaper
+	url = https://github.com/bitfocus/companion-module-cockos-reaper.git
+[submodule "lib/module/neodarque-stagetimer2"]
+	path = lib/module/neodarque-stagetimer2
+	url = https://github.com/bitfocus/companion-module-neodarque-stagetimer2.git
+[submodule "lib/module/bmd-multiview4"]
+	path = lib/module/bmd-multiview4
+	url = https://github.com/bitfocus/companion-module-bmd-multiview4.git

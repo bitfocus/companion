@@ -4,7 +4,7 @@ in your raspberry pi console (```pi@raspberry:~/ $```)
 
 1. Install node, git, curl, etc.
 ```
-apt-get install nodejs git build-essential
+apt-get install nodejs git build-essential libudev-dev libusb-1.0-0-dev
 sudo npm install n -g
 n 8.11.1
 curl -o- -L https://yarnpkg.com/install.sh | bash

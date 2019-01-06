@@ -14,11 +14,12 @@
  * disclosing the source code of your own applications.
  *
  */
- 
+
 var actionlist = {};
 
 $(function() {
 	socket.emit('get_actions');
+
 	var $aba = $("#addBankAction");
 
 	$aba.change(function() {
@@ -47,8 +48,11 @@ $(function() {
 		socket.emit('bank_update_action_option', page, bank,  $(this).data('action-id'), $(this).data('option-id'), $(this).val() );
 	});
 
-	$("#testBankButton").click(function() {
-		socket.emit('hot_press',page,bank);
+	$("#testBankButton").on('mousedown', function() {
+		socket.emit('hot_press',page,bank, true);
+	});
+	$("#testBankButton").on('mouseup', function() {
+		socket.emit('hot_press',page,bank, false);
 	});
 
 	socket.on('bank_get_actions:result', function(page, bank, actions) {
@@ -57,7 +61,7 @@ $(function() {
 		$ba.html("");
 
 		var $table = $("<table class='table action-table'></table>");
-		var $trth = $("<thead><tr><th colspan=2>Actions</th><th style='width:90px'>Delay</th><th>Options</th></tr></thead>");
+		var $trth = $("<thead><tr><th></th><th colspan=2>Action</th><th style='width:90px'>Delay</th><th>Options</th></tr></thead>");
 		var $tbody = $("<tbody></tbody>");
 		$table.append($trth);
 
@@ -80,8 +84,10 @@ $(function() {
 				var $tr = $("<tr></tr>");
 				$tr.data("id", action.id);
 
+				
 				var $name_td = $("<td class='actionlist-td-label'>" + instance.db[action.instance].label + ": " + actionlist[action.label].label + "</td>");
 				var $del_td = $("<td class='actionlist-td-delete'><button type='button' class='btn btn-danger btn-sm'>delete</button><span>&nbsp;</span></td>");
+				var $reorder_grip = $("<td class='actionlist-td-reorder'><i class='fa fa-sort reorder-grip'></i></td>");
 				var $delay_td = $("<td class='actionlist-td-delay'></td>");
 				var $delay_input = $("<input type='text' value='' class='form-control action-delay-keyup' placeholder='ms'>");
 				$delay_input.data('action-id', action.id);
@@ -91,6 +97,7 @@ $(function() {
 				$delay_td.find('input').val(inst.delay)
 				var $options = $("<td class='actionlist-td-options'></td>");
 
+				$tr.append($reorder_grip);
 				$tr.append($del_td);
 				$tr.append($name_td);
 				$tr.append($delay_td);
@@ -144,8 +151,7 @@ $(function() {
 
 						}
 
-
-						if (option.type == 'dropdown') {
+						else if (option.type == 'dropdown') {
 
 							var $opt_input = $("<select class='action-option-change form-control'></select>");
 							$opt_input.data('action-id', action.id);
@@ -182,6 +188,48 @@ $(function() {
 
 						}
 
+
+						else if (option.type == 'multiselect') {
+
+							var $opt_input = $("<select multiple class='action-option-change form-control'></select>");
+							$opt_input.data('action-id', action.id);
+							$opt_input.data('option-id', option.id);
+							if (option.tooltip !== undefined) {
+								$opt_input.attr('title', option.tooltip);
+							}
+
+							for (var x in option.choices) {
+								var str = new String(option.choices[x].label);
+								var $opt_choice = $("<option value='"+ option.choices[x].id + "'>" + str + "</option>");
+								$opt_choice.data('id', option.choices[x].id);
+								$opt_input.append($opt_choice);
+							}
+
+
+							// if options never been stored on this action
+							if (action.options === undefined) {
+								action.options = {};
+							}
+
+							// if this option never has been saved, set default
+							if (action.options[option.id] === undefined) {
+								socket.emit('bank_update_action_option', page, bank, action.id, option.id, option.default);
+								$opt_input.val(option.default);
+							}
+
+							// else set the db value for this option.
+							else {
+								$opt_input.val( action.options[option.id] );
+							}
+
+							$options.append($opt_input);
+
+						}
+
+						else {
+							console.log("UNKNOWN OPTION TYPE",option.type);
+						}
+
 					}
 
 				}
@@ -201,6 +249,14 @@ $(function() {
 			$table.append($tbody);
 		}
 		$ba.append($table);
+
+		new RowSorter($table[0], {
+			handler: '.reorder-grip',
+			onDrop: function(tbody, row, new_index, old_index) {
+				socket.emit('bank_update_action_option_order', page, bank, old_index, new_index);
+			}
+		});
+
 	});
 
 	socket.on('actions', function(actions) {
@@ -210,7 +266,7 @@ $(function() {
 		$aba.html("");
 		$ali.html("");
 
-		var $option = $("<option>[ Add new action for this button ]</option>")
+		var $option = $("<option> + Add key down/on action</option>")
 		$aba.append($option);
 
 		for (var n in actions) {

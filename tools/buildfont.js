@@ -14,7 +14,7 @@
  * disclosing the source code of your own applications.
  *
  */
- 
+
 var fs = require('fs');
 var PNG = require('pngjs').PNG;
 var font = {};
@@ -31,15 +31,29 @@ fs.readdir(".", function(err, items) {
 				var data = fs.readFileSync(file);
 				var png = PNG.sync.read(data);
 				var dots = [];
+				var line = {x: 0, y:0, length:0};
 
-				for (var y = 0; y < png.height; y++) {
-					for (var x = 0; x < png.width; x++) {
+				for (var x = png.width-1; x >= 0; x--) {
+					for (var y = png.height-1; y >= 0; y--) {
 						var idx = (png.width * y + x) << 2;
 						if (png.data[idx+3] > 128) {
-							dots.push([x,y]);
+							line.x = x;
+							line.y = y;
+							line.length += 1
+						} else {
+							if (line.length != 0) {
+								dots.push([line.x,line.y,line.length]);
+								line.length = 0;
+							}
 						}
 					}
+					if (line.length != 0) {
+						dots.push([line.x,line.y,line.length]);
+						line.length = 0;
+					}
 				}
+
+
 				font['' + asc] = dots;
 			}
 		}

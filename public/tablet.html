@@ -1,0 +1,328 @@
+<!-- /*
+ * This file is part of the Companion project
+ * Copyright (c) 2018 Bitfocus AS
+ * Authors: William Viker <william@bitfocus.io>, Håkon Nessjøen <haakon@bitfocus.io>
+ *
+ * This program is free software.
+ * You should have received a copy of the MIT licence as well as the Bitfocus
+ * Individual Contributor License Agreement for companion along with
+ * this program.
+ *
+ * You can be released from the requirements of the license by purchasing
+ * a commercial license. Buying such a license is mandatory as soon as you
+ * develop commercial activities involving the Companion software without
+ * disclosing the source code of your own applications.
+ *
+ */ -->
+<html>
+<head>
+	<meta name="viewport" content="">
+	<style>
+
+		body {
+			margin: 0;
+			padding: 0;
+			background-color: black;
+			font-size: 2em;
+			font-family: helvetica;
+		}
+
+		h1 {
+			font-size: 30px;
+			padding-left: 30px;
+			padding-top: 30px;
+		}
+
+		.page-title {
+			color: rgb(255,198,0);
+			clear:both;
+			margin-top: 20px;
+			padding-bottom: 10px;
+			margin-bottom: 0px;
+		}
+
+		.page {
+			padding: 20px;
+		}
+
+		.page-bank-content {
+			float:left;
+		}
+
+		.page-bank-content canvas {
+			width: 144px;
+			margin: 30px;
+			height: 144px;
+			box-shadow: 0px 0px 50px #333;
+			border: 1px solid rgba(255,255,255,0.15);
+		}
+
+		* {
+			-moz-user-select: none;
+			-webkit-user-select: none;
+			-ms-user-select:none;
+			user-select:none;
+			-o-user-select:none;
+			touch-action: none;
+		}
+
+		canvas {
+			image-rendering: optimizeSpeed;             /* Older versions of FF          */
+			image-rendering: -moz-crisp-edges;          /* FF 6.0+                       */
+			image-rendering: -webkit-optimize-contrast; /* Safari                        */
+			image-rendering: -o-crisp-edges;            /* OS X & Windows Opera (12.02+) */
+			image-rendering: pixelated;                 /* Awesome future-browsers       */
+			-ms-interpolation-mode: nearest-neighbor;   /* IE                            */
+		}
+
+	</style>
+	<title>Companion Tablet Surface</title>
+</head>
+<body>
+<script src="js/jquery/jquery.min.js"></script>
+<script src="socket.io/socket.io.js"></script>
+<script src="js/viewport.js"></script>
+<script src="js/preview.js"></script>
+
+<div id="pages"></div>
+
+<script type="text/javascript">
+
+	document.addEventListener('gesturestart', function (e) {
+			e.preventDefault();
+	});
+
+	var socket = io();
+	var config = {};
+	var cache = {};
+	var been_connected = false;
+	var pages = [];
+	var pageinfo = {};
+
+	function int2hex(number) {
+		var r = ('0' + ((number >> 16) & 0xff).toString('16')).substr(-2);
+		var g = ('0' + ((number >> 8) & 0xff).toString('16')).substr(-2);
+		var b = ('0' + (number & 0xff).toString('16')).substr(-2);
+
+		return '#' + r + g + b;
+	}
+
+	function parseQuery(queryString) {
+		var query = {};
+		var pairs = (queryString[0] === '?' ? queryString.substr(1) : queryString).split('&');
+
+		for (var i = 0; i < pairs.length; i++) {
+			var pair = pairs[i].split('=');
+			query[decodeURIComponent(pair[0])] = decodeURIComponent(pair[1] || '');
+		}
+
+		return query;
+	}
+
+	function hex2int(hex) {
+		return parseInt(hex.substr(1), 16);
+	}
+
+	var query = parseQuery(window.location.search);
+	if (query.pages !== undefined) {
+		var mypages = query.pages.split(/,+/).map(function (el) {return parseInt(el);});
+		if (mypages.length) {
+			pages = mypages;
+		}
+	}
+
+	function hasPage(thispage) {
+		thispage = parseInt(thispage);
+
+		if (pages.length == 0 || pages.indexOf(thispage) !== -1) {
+			return true;
+		}
+		return false;
+	}
+
+	if (pages.length == 0) {
+		for (var page = 1; page <= 99; page++) {
+			pages.push(page);
+		}
+	}
+
+	var $bs =	$("#pages");
+	pages.forEach(function (page) {
+		var $page = $("<div class='page'><h1 class='page-title'>Page "+page+"</h1></div>");
+
+		for (var bank = 1; bank <= 12; bank++) {
+
+			var $pageBank = $("<div class='page-bank-content' id='bank_"+page+"_"+bank+"'><canvas class='canvases' width=72 height=72 id='c"+page+"_"+bank+"'></canvas></div>");
+
+			$page.append($pageBank);
+
+		}
+
+		$page.attr('pageid', page);
+		$bs.append($page);
+	});
+
+	socket.on('set_page', function (page, value) {
+		pageinfo[page] = value;
+
+		var $h1 = $bs.find('.page[pageid="' + page + '"] > h1');
+		if ($h1.length) {
+			if (value.name != 'PAGE') {
+				$h1.html(value.name);
+			} else {
+				$h1.html('Page ' + page);
+			}
+		}
+	});
+
+	socket.on('pages', function (_pageinfo) {
+		pageinfo = _pageinfo;
+
+		for (var page in pageinfo) {
+			var $h1 = $bs.find('.page[pageid="' + page + '"] > h1');
+			if ($h1.length) {
+				if (pageinfo[page].name != 'PAGE') {
+					$h1.html(pageinfo[page].name);
+				} else {
+					$h1.html('Page ' + page);
+				}
+			}
+		}
+	});
+
+	var lastdown;
+	var touchdevice = false;
+
+	window.addEventListener('touchstart', function onFirstTouch() {
+		touchdevice = true;
+
+		$("body").on('touchstart', '.canvases', function() {
+			lastdown = $(this).parent().attr('id').split(/_/);
+			if (lastdown[0] === 'bank') {
+				socket.emit('hot_press', lastdown[1], lastdown[2], true);
+			}
+		});
+
+		$("body").on('touchend', '.canvases', function() {
+			if (lastdown !== undefined && lastdown[0] === 'bank') {
+				socket.emit('hot_press', lastdown[1], lastdown[2], false);
+			}
+		});
+
+		window.removeEventListener('touchstart', onFirstTouch, false);
+	}, false);
+
+
+
+	$("body").on('mousedown', '.canvases', function() {
+		if (!touchdevice) {
+			lastdown = $(this).parent().attr('id').split(/_/);
+
+			if (lastdown[0] === 'bank') {
+				socket.emit('hot_press', lastdown[1], lastdown[2], true);
+			}
+		}
+	});
+
+	$("body").on('mouseup', '.canvases', function() {
+		if (!touchdevice) {
+			if (lastdown !== undefined && lastdown[0] === 'bank') {
+				socket.emit('hot_press', lastdown[1], lastdown[2], false);
+			}
+		}
+	});
+
+	function drawBank(page, bank, data) {
+		if (!hasPage(page)) {
+			return;
+		}
+		var canvas = $('#c' + page + '_' + bank).get(0);
+		var ctx = canvas.getContext('2d');
+		ctx.webkitImageSmoothingEnabled = false;
+		var imageData = dataToButtonImage(data.buffer);
+		ctx.clearRect(0, 0, canvas.width, canvas.height);
+		ctx.putImageData(imageData, 0, 0);
+		ctx.drawImage(canvas, 0, 0, canvas.width, canvas.height);
+	}
+
+	$(window).on('scroll', scroll);
+
+	// Lazy load pages
+	function scroll() {
+
+		// Not ready
+		if (cache[pages[0]] === undefined) {
+			return;
+		}
+
+		$('.page').isInViewport({ tolerance: window.innerHeight/2 }).each(function () {
+			var page = $(this).attr('pageid');
+
+			if (cache[page][1] !== undefined || cache[page].wait == true) {
+				return;
+			}
+
+			var cachedata = {};
+			for (var _bank = 1; _bank <= 12; ++_bank) {
+				if (cache[page][_bank] !== undefined) {
+					cachedata[_bank] = cache[page][_bank].updated;
+				}
+			}
+
+			socket.emit('web_buttons_page', page, cachedata);
+
+			cache[page].wait = true;
+
+		});
+
+	}
+
+	socket.on('connect', function () {
+
+		if (been_connected === true) {
+			window.location.reload(true);
+		}
+
+		been_connected = true;
+
+		socket.on('buttons_page_data', function(page, data) {
+			if (!hasPage(page)) {
+				return;
+			}
+
+			cache[page].wait = false;
+
+			for (var key in data) {
+				cache[page][key] = data[key];
+				drawBank(page, key, data[key]);
+			}
+		});
+
+		socket.on('buttons_bank_data', function(page, data) {
+			if (!hasPage(page)) {
+				return;
+			}
+
+			for (key in data) {
+				drawBank(page, key, data[key]);
+			}
+		});
+
+		socket.emit('web_buttons');
+
+		for (var i = 1; i < 100; ++i) {
+			cache[i] = {};
+		}
+
+		// Request first page
+		socket.emit('web_buttons_page', pages[0], {});
+
+		// Check what is visible
+		scroll();
+	});
+
+
+
+</script>
+</body>
+</html>
