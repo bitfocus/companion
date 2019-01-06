@@ -89,6 +89,55 @@ $(function() {
 		});
 	});
 
+	function updateMidiDeviceList(obj) {
+		console.log("#### obj", obj);
+		var $il = $("#deviceMidiList");
+		$il.html("");
+
+		for (var n in obj.inputs) {
+			var data = obj.inputs[n];
+
+			var $tr = $("<tr></tr>");
+
+			var $td_id = $("<td></td>");
+			var $td_dir = $("<td>Input</td>");
+			var $td_state = $("<td></td>");
+
+			$td_id.text(data);
+			$td_state.html('<button type="button" data-id="'+data+'" class="midi-input-enable-btn btn btn-success">Connect</button>');
+
+			if (obj.config.inputs !== undefined && obj.config.inputs[data] !== undefined) {
+				if (obj.config.inputs[data].connected !== undefined && obj.config.inputs[data].connected === true) {
+					$td_state.html('<button type="button" data-id="'+data+'" class="midi-input-disable-btn btn btn-danger">Disconnect</button>');
+				}
+			}
+
+			$tr.append($td_id);
+			$tr.append($td_dir);
+			$tr.append($td_state);
+
+			$il.append($tr);
+		}
+
+		$('.midi-input-disable-btn').on('click', function() {
+			socket.emit('midi_disconnect', 'input', $(this).data('id'));
+		});
+
+		$('.midi-input-enable-btn').on('click', function() {
+			socket.emit('midi_connect', 'input', $(this).data('id'));
+		});
+
+		$('.midi-output-disable-btn').on('click', function() {
+			socket.emit('midi_disconnect', 'output', $(this).data('id'));
+		});
+
+		$('.midi-output-enable-btn').on('click', function() {
+			socket.emit('midi_connect', 'output', $(this).data('id'));
+		});
+
+	}
+
+
 	function updateDeviceInstanceList(list, dontclear) {
 		device_list = list;
 		debug('got devices', list);
@@ -122,16 +171,19 @@ $(function() {
 		}
 	};
 
+	socket.on('midi_devices_list', function(list) {
+		updateMidiDeviceList(list);
+	});
+
 	socket.on('devices_list', function(list) {
-
 		updateDeviceInstanceList(list);
-
 	});
 
 	$('#refreshUSB').click(function () {
 		var $thisbutton = $(this);
 
 		socket.emit('devices_reenumerate');
+		socket.emit('midi_reenumerate');
 
 		$thisbutton.data('original-text', $thisbutton.html());
 		$thisbutton.html($thisbutton.data('loading-text')).prop('disabled', true);
