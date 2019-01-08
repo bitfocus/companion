@@ -217,3 +217,6 @@
 [submodule "lib/module/bmd-multiview4"]
 	path = lib/module/bmd-multiview4
 	url = https://github.com/bitfocus/companion-module-bmd-multiview4.git
+[submodule "lib/module/barco-eventmaster-xml"]
+	path = lib/module/barco-eventmaster-xml
+	url = https://github.com/bitfocus/companion-module-barco-eventmaster-xml.git
