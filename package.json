@@ -89,6 +89,7 @@
     "mkdirp": "^0.5.1",
     "moment": "^2.22.2",
     "node-rest-client": "^3.1.0",
+    "opencollective": "^1.0.3",
     "opencollective-postinstall": "^2.0.1",
     "osc": "^2.2.2",
     "pace-progress": "1.0.2",
@@ -101,7 +102,7 @@
     "simple-line-icons": "2.4.1",
     "socket.io": "^2.1.0",
     "socket.io-client": "^2.1.0",
-    "opencollective": "^1.0.3"
+    "websocket": "^1.0.28"
   },
   "collective": {
     "type": "opencollective",

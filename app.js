@@ -15,7 +15,7 @@
  *
  */
 
-process.env['DEBUG'] = '*,-express*,-engine*,-socket.io*,-send*,-db,-NRC*,-follow-redirects,-electron-timer-fix';
+process.env['DEBUG'] = '*,-websocket*,-express*,-engine*,-socket.io*,-send*,-db,-NRC*,-follow-redirects,-electron-timer-fix';
 
 // Fix timers in electron
 require('./electron-timer-fix').fix();
@@ -117,6 +117,7 @@ system.on('skeleton-ready', function() {
 	var loadsave   = require('./lib/loadsave')(system);
 	var preset     = require('./lib/preset')(system);
 	var tablet     = require('./lib/tablet')(system);
+	var ws_api     = require('./lib/ws_api')(system);
 
 	system.on('exit', function() {
 		elgatoDM.quit();
