@@ -156,6 +156,20 @@ label {
 	font-size: 12px;
 }
 
+.instance_help {
+  float: right;
+	cursor: pointer;
+	cursor: hand;
+}
+
+.help-dialog {
+	max-width: 70%;
+}
+
+.help-body img {
+	max-width: 95%;
+}
+
 .btn-file {
 		position: relative;
 		overflow: hidden;

@@ -88,20 +88,17 @@ $(function() {
 			var $button_disable = $("<button type='button' data-id='"+n+"' class='instance-disable btn btn-sm btn-ghost-warning'>disable</button>");
 			var $button_enable = $("<button type='button' data-id='"+n+"' class='instance-enable btn btn-sm btn-ghost-success'>enable</button>");
 
-			if (i.instance_type != 'bitfocus-companion') {
-				$td_actions.append($button_delete)
-				$td_actions.append($("<span>&nbsp;</span>"));
-			}
+			$td_actions.append($button_delete)
+			$td_actions.append($("<span>&nbsp;</span>"));
 
-			if (i.instance_type != 'bitfocus-companion' && (i.enabled === undefined || i.enabled === true)) {
+			if (i.enabled === undefined || i.enabled === true) {
 				$td_actions.append($button_disable)
 				$button_edit.show();
 			}
-			else if (i.instance_type != 'bitfocus-companion') {
+			else {
 				$td_actions.append($button_enable);
 				$button_edit.hide();
 			}
-
 
 			$td_actions.append($("<span>&nbsp;</span>"));
 
@@ -137,7 +134,11 @@ $(function() {
 
 			for (var x in instance.module) {
 				if (instance.module[x].name == list[n].instance_type) {
-					$td_id.html("<b>"+instance.module[x].shortname+"</b>" + "<br>" + instance.module[x].manufacturer);
+					var help = '';
+					if (instance.module[x].help) {
+						help = '<div class="instance_help"><i class="fa fa-question-circle"></i></div>';
+					}
+					$td_id.html(help + "<b>"+instance.module[x].shortname+"</b>" + "<br>" + instance.module[x].manufacturer);
 				}
 			}
 
@@ -150,6 +151,24 @@ $(function() {
 			$tr.append($td_label);
 			$tr.append($td_status);
 			$tr.append($td_actions);
+
+			(function (name) {
+				$tr.find('.instance_help').click(function () {
+					socket.emit('instance_get_help', name);
+					socket.once('instance_get_help:result', function (err, result) {
+						if (err) {
+							alert('Error getting help text');
+							return;
+						}
+						if (result) {
+							var $helpModal = $('#helpModal');
+							$helpModal.find('.modal-title').html('Help for ' + name);
+							$helpModal.find('.modal-body').html(result);
+							$helpModal.modal();
+						}
+					});
+				});
+			})(list[n].instance_type);
 
 			$il.append($tr);
 
@@ -372,8 +391,6 @@ $(function() {
 		if (instance_variables[current_instance] !== undefined && instance_variables[current_instance].length > 0) {
 			$icv.show();
 			$icvl.html('');
-
-			console.log()
 
 			for (var i in instance_variables[current_instance]) {
 				var variable = instance_variables[current_instance][i];

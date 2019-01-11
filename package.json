@@ -86,6 +86,7 @@
     "jquery": "3.3.1",
     "json-parser": "^1.1.5",
     "lodash": "^4.17.10",
+    "marked": "^0.6.0",
     "mkdirp": "^0.5.1",
     "moment": "^2.22.2",
     "node-rest-client": "^3.1.0",
