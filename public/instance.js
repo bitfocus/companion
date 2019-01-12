@@ -27,7 +27,7 @@ $(function() {
 	var iconfig = {};
 	var current_instance;
 
-	var debug = console.log;
+	var debug = function () {}; // console.log;
 	$("#instanceConfigTab").hide();
 
 	socket.emit('instance_get');
@@ -98,7 +98,6 @@ $(function() {
 			var $td_label = $("<td id='label_"+n+"'></td>");
 			var $td_status = $("<td id='instance_status_"+n+"'></td>");
 			var $td_actions = $("<td></td>");
-			console.log("list", list);
 			var $button_edit = $("<button type='button' data-id='"+n+"' class='instance-edit btn btn-primary'>edit</button>");
 			var $button_delete = $("<button type='button' data-id='"+n+"' class='instance-delete btn btn-sm btn-ghost-danger'>delete</button>");
 			var $button_disable = $("<button type='button' data-id='"+n+"' class='instance-disable btn btn-sm btn-ghost-warning'>disable</button>");
@@ -124,7 +123,6 @@ $(function() {
 				if (confirm('Delete instance?')) {
 					var id = $(this).data('id');
 					$("#instanceConfigTab").hide();
-					console.log("instance-delete:",id);
 					socket.emit('instance_delete', id);
 					$(this).parent().parent().remove();
 				}
@@ -132,19 +130,16 @@ $(function() {
 
 			$button_edit.click(function() {
 				var id = $(this).data('id');
-				console.log("instance-edit:",id);
 				socket.emit('instance_edit', id);
 			});
 
 			$button_disable.click(function() {
 				var id = $(this).data('id');
-				console.log("instance-disable:",id);
 				socket.emit('instance_enable', id, false);
 			});
 
 			$button_enable.click(function() {
 				var id = $(this).data('id');
-				console.log("instance-enable:",id);
 				socket.emit('instance_enable', id, true);
 			});
 
@@ -197,10 +192,10 @@ $(function() {
 				var main_split = instance_name[x].split(":");
 				var manuf = main_split[0];
 				var prods = main_split[1].split(";");
-				console.log("Manuf",manuf,"Prods",prods);
+
 				for (var prod in prods) {
 					var subprod = manuf + " " + prods[prod];
-					console.log("subprod", subprod);
+
 					if (subprod.match( new RegExp( $aisf.val(), "i" ))) {
 						var $x = $("<div class='ais_entry'>&nbsp;<span style=''>"+subprod+"</span></div>");
 						var $button = $('<a role="button" class="btn btn-primary text-white">Add</a>');
@@ -264,7 +259,6 @@ $(function() {
 		instance_name = obj.name;
 
 		updateInstanceList(i.db);
-		console.log('instance', i);
 
 		$addInstance = $("#addInstance");
 		$addInstanceByManufacturer = $("#addInstanceByManufacturer");
@@ -572,11 +566,9 @@ $(function() {
 	});
 
 	socket.on('instance_get:result', function(instance_list) {
-		console.log('instance_get:result:', instance_list);
 
 		for (var n in instance_list.db) {
 			var instance = instance_list.db[n];
-			console.log("Xinstance", instance);
 		}
 
 
@@ -584,7 +576,6 @@ $(function() {
 
 	socket.on('config_fields:result', function(id, fields, config) {
 		socket.emit('instance_get');
-		console.log("config_fields:result", id, fields, config);
 	});
 
 	$(".addInstance").click(function() {

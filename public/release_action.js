@@ -57,7 +57,7 @@ $(function() {
 		var $trth = $("<thead><tr><th></th><th colspan=2>Action</th><th style='width:90px'>Delay</th><th>Options</th></tr></thead>");
 		var $tbody = $("<tbody></tbody>");
 		$table.append($trth);
-		console.log("actions!", actions);
+
 		for (var n in actions) {
 			var action = actions[n];
 			if (action !== null && instance.db[action.instance] !== undefined) {
@@ -69,8 +69,6 @@ $(function() {
 
 				var $tr = $("<tr></tr>");
 				$tr.data("id", action.id);
-				console.log("action...", action);
-				console.log("instdb", instance.db);
 
 				var $name_td = $("<td class='actionlist-td-label'>" + instance.db[action.instance].label + ": " + releaseactionlist[action.label].label + "</td>");
 				var $del_td = $("<td class='actionlist-td-delete'><button type='button' class='btn btn-danger btn-sm'>delete</button><span>&nbsp;</span></td>");

@@ -310,7 +310,6 @@ $(function() {
 			buttons_hot = false;
 			$(".border").removeClass('bank-armed');
 			$('#functionkeys').slideDown(80);
-			console.log('disarmed');
 		}
 	});
 
@@ -319,7 +318,6 @@ $(function() {
 			buttons_hot = true;
 			$(".border").addClass('bank-armed');
 			$('#functionkeys').slideUp(80);
-			console.log("buttons hot!")
 		}
 	})
 
@@ -435,7 +433,6 @@ $(function() {
 			}
 
 			else if (function_state === 'move') {
-				console.log("move");
 				if (function_detail.second !== undefined) {
 					socket.emit('bank_move', function_detail.first.page, function_detail.first.bank, function_detail.second.page, function_detail.second.bank);
 					socket.once('bank_move:result', function () {
@@ -581,14 +578,12 @@ $(function() {
 			else if (function_state !== null) {
 				var bank = $(this).data('bank')
 				if (function_detail['first'] === undefined) {
-					console.log("selecting",page,bank,"as first");
 					function_detail['first'] = {
 						page: page,
 						bank: bank,
 					};
 				}
 				else {
-					console.log("selecting",page,bank,"as second");
 					function_detail['second'] = {
 						page: page,
 						bank: bank,

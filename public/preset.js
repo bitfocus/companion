@@ -1,7 +1,6 @@
 var all_presets;
 $(function() {
 	var $presets = $('#presets');
-	console.log("get_presets");
 	socket.emit('get_presets');
 	socket.once('get_presets:result', presets);
 
@@ -82,7 +81,6 @@ $(function() {
 
 				var preview_id = id+'_'+key;
 				$(bank).attr('data-drawn', 'yes');
-				console.log("requesting preview for ", preview_id);
 				socket.emit('graphics_generate_preview', all_presets[id][key].bank, preview_id);
 				socket.once('graphics_generate_preview:' + preview_id, function (img) {
 					var canv = $(bank).find('canvas').get(0);

@@ -177,7 +177,6 @@ $(function() {
 
 				$list.append($tr);
 			}
-			console.log(result);
 		});
 	});
 

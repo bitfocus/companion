@@ -66,7 +66,6 @@ $(function() {
 
 	// when userconfig is changed from the userconfig tab
 	$('#userconfig_page_direction_flipped').click(function() {
-		console.log('clicked', $(this).prop('checked') );
 		if ($(this).prop('checked') == true) {
 			socket.emit('set_userconfig_key', 'page_direction_flipped', true);
 		} else {
@@ -75,7 +74,6 @@ $(function() {
 	});
 
 	$('#userconfig_page_plusminus').click(function() {
-		console.log('clicked', $(this).prop('checked') );
 		if ($(this).prop('checked') == true) {
 			socket.emit('set_userconfig_key', 'page_plusminus', true);
 		} else {
@@ -85,7 +83,6 @@ $(function() {
 
 
 	$('#userconfig_artnet_enabled').click(function() {
-		console.log('clicked', $(this).prop('checked') );
 		if ($(this).prop('checked') == true) {
 			socket.emit('set_userconfig_key', 'artnet_enabled', true);
 		} else {
@@ -108,7 +105,6 @@ $(function() {
 
 	// when server updates the entire config array
 	socket.on('get_userconfig_all', function(config) {
-		console.log('updating entire userconfig:', config)
 		userconfig = config;
 		userConfigUpdate();
 	});

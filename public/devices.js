@@ -19,9 +19,6 @@ $(function() {
 	var iconfig = {};
 	var device_list = {};
 
-	var debug = console.log;
-
-	debug('asking for devices');
 	socket.emit('devices_list_get');
 
 	$('#deviceInstanceList').on('click', '.device_settings', function () {
@@ -67,7 +64,6 @@ $(function() {
 				var $page = $form.find('input.page');
 				var $pagenum = $form.find('span.pagenum');
 
-				console.log("Settings page:", settings);
 				$page.val(settings.page);
 				$pagenum.text(settings.page);
 
@@ -91,7 +87,6 @@ $(function() {
 
 	function updateDeviceInstanceList(list, dontclear) {
 		device_list = list;
-		debug('got devices', list);
 
 		var $il = $("#deviceInstanceList");
 		if (!dontclear) $il.html("");

@@ -1,7 +1,6 @@
 var feedbacklist = {};
 
 $(function() {
-	console.log("feedback_get_definitions");
 	socket.emit('feedback_get_definitions', page, bank);
 
 	var $aba = $("#addBankFeedback");
@@ -26,8 +25,6 @@ $(function() {
 	});
 
 	socket.on('bank_get_feedbacks:result', function(page, bank, feedbacks) {
-		console.log("bank_get_feedbacks:result", page, bank, feedbacks);
-
 		$ba = $("#bankFeedbacks");
 		$ba.html("");
 
@@ -40,8 +37,6 @@ $(function() {
 			var feedback = feedbacks[n];
 
 			if (feedback !== null && instance.db[feedback.instance_id] !== undefined && instance.db[feedback.instance_id].label !== undefined) {
-				console.log("XXXXXXXXXXXX", feedback);
-				console.log("YYYYY", instance.db);
 				var idb = instance.db[feedback.instance_id];
 				var it = instance.db[feedback.instance_id].instance_type;
 				var inst = feedback;
@@ -146,7 +141,6 @@ $(function() {
 
 						else if (option.type == 'colorpicker') {
 
-							console.log("Option", option, "value", feedback);
 							var $input = $("<input type='text' id='auto_"+option.id+"'>");
 							$input.addClass('active_field');
 							$input.data('special','color');
@@ -196,7 +190,6 @@ $(function() {
 
 				$del_td.click(function() {
 					if (confirm('Delete feedback?')) {
-						console.log("delete feedback", page, bank, $(this).parent().data('id'))
 						socket.emit('bank_delFeedback', page, bank, $(this).parent().data('id'));
 					}
 				})
@@ -224,8 +217,6 @@ $(function() {
 
 		/*var $ali = $("#feedbacksList");
 		$ali.html("");*/
-
-		console.log("feedbacks",feedbacks);
 
 		var $option = $("<option> + Add feedback</option>")
 		$aba.append($option);

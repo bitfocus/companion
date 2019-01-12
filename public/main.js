@@ -158,7 +158,6 @@ socket.on('connect', function() {
 $(function() {
 
 	socket.on('skeleton-info', function(hash) {
-		console.log("skeleton-info", hash);
 		$("#versiontext").text(hash.appVersion+ " (" + hash.appBuild.replace("master-","") + ")");
 	});
 
