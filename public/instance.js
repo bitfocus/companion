@@ -33,6 +33,22 @@ $(function() {
 	socket.emit('instance_get');
 	socket.emit('instance_status_get');
 
+	function show_module_help(name) {
+		socket.emit('instance_get_help', name);
+		socket.once('instance_get_help:result', function (err, result) {
+			if (err) {
+				alert('Error getting help text');
+				return;
+			}
+			if (result) {
+				var $helpModal = $('#helpModal');
+				$helpModal.find('.modal-title').html('Help for ' + name);
+				$helpModal.find('.modal-body').html(result);
+				$helpModal.modal();
+			}
+		});
+	}
+
 	function updateInstanceStatus() {
 		for (var x in instance_status) {
 			var s = instance_status[x];
@@ -154,19 +170,7 @@ $(function() {
 
 			(function (name) {
 				$tr.find('.instance_help').click(function () {
-					socket.emit('instance_get_help', name);
-					socket.once('instance_get_help:result', function (err, result) {
-						if (err) {
-							alert('Error getting help text');
-							return;
-						}
-						if (result) {
-							var $helpModal = $('#helpModal');
-							$helpModal.find('.modal-title').html('Help for ' + name);
-							$helpModal.find('.modal-body').html(result);
-							$helpModal.modal();
-						}
-					});
+					show_module_help(name);
 				});
 			})(list[n].instance_type);
 
@@ -202,9 +206,27 @@ $(function() {
 						var $button = $('<a role="button" class="btn btn-primary text-white">Add</a>');
 						$x.prepend($button);
 						$x.data('id', x);
-						$x.click(function(e) {
+
+						var $help = $('<div class="instance_help"><i class="fa fa-question-circle"></i></div>')
+
+						for (var y in instance.module) {
+							if (instance.module[y].name == x) {
+								if (instance.module[y].help) {
+									$x.append($help);
+								}
+							}
+						}
+						$help.click(function (e) {
+							e.stopPropagation();
 							e.preventDefault();
-							var instance_type = $(this).data('id');
+							var id = $(this).parents('div').first().data('id');
+
+							show_module_help(id);
+						});
+
+						$button.click(function(e) {
+							e.preventDefault();
+							var instance_type = $(this).parents('div').first().data('id');
 							socket.emit('instance_add', instance_type );
 							$aisr.html("");
 							$aisf.val("");
