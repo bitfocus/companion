@@ -21,7 +21,7 @@ For checking known bugs or reporting of potential bugs, please use the [issue sy
 * [![Sponsors on Open Collective](https://opencollective.com/companion/sponsors/badge.svg)](#sponsors)
 * https://opencollective.com/companion
 
-## Currently supports
+## Modules (Supported devices/software)
 * GrandMA2 (MA Lighting) v1.0.0 by William Viker
 * AMP (Grass Valley) v1.0.0 by Håkon Nessjøen
 * ATEM (Blackmagic Design) v1.0.1 by Håkon Nessjøen
