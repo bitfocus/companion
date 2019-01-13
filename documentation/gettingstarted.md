@@ -1,4 +1,4 @@
-# Companion 1.2
+# Companion 1.3
 This article is an introduction to Companion’s basic principles and user interface.
 
 
