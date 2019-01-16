@@ -170,6 +170,66 @@ label {
 	max-width: 95%;
 }
 
+.help-body {
+	padding-left: 25px;
+	padding-right: 25px;
+	padding-top: 0px;
+	word-wrap: break-word;
+}
+
+.help-body table td, .help-body table th {
+  border: 1px solid #dfe2e5;
+  padding: 6px 13px;
+}
+
+.help-body table th {
+  font-weight: 600;
+}
+
+.help-body table {
+	margin-bottom: 1.5em;
+}
+
+.help-body table tr:nth-child(2n) {
+  background-color: #f6f8fa;
+}
+
+.help-body table tr {
+  background-color: #fff;
+  border-top: 1px solid #c6cbd1;
+}
+
+.help-body code {
+	background-color: rgba(27,31,35,.05);
+  border-radius: 3px;
+  font-size: 85%;
+  margin: 0;
+  padding: .2em .4em;
+	color: #3e7fe8;
+}
+
+.help-body blockquote, .help-body dl, .help-body ol, .help-body p, .help-body pre, .help-body table, .help-body ul {
+  margin-bottom: 16px;
+  margin-top: 0;
+}
+
+.help-body h1, .help-body h2, .help-body h3, .help-body h4, .help-body h5, .help-body h6 {
+	margin-bottom: 16px;
+	margin-top: 24px;
+}
+
+.help-body .highlight pre, .help-body pre {
+    background-color: #f6f8fa;
+    border-radius: 3px;
+    font-size: 85%;
+    line-height: 1.45;
+    overflow: auto;
+    padding: 16px;
+}
+.help-body pre {
+    word-wrap: normal;
+}
+
 .btn-file {
 		position: relative;
 		overflow: hidden;
