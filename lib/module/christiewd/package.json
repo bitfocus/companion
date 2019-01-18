@@ -1,0 +1,19 @@
+{
+  "name": "christiewd",
+  "version": "1.0.1",
+	"api_version": "1.0.0",
+	"keywords": [ "Media Server" ],
+	"manufacturer": "Christie Digital System",
+	"product": "Widget Designer",
+	"shortname": "WD",
+  "description": "Christie / Coolux Widget Designer",
+  "main": "christiewd.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Daniel Kaminski <daniel@dk-production.de>",
+  "license": "MIT",
+  "dependencies": {
+    "telnet-stream": "^1.0.4"
+  }
+}
