@@ -220,3 +220,6 @@
 [submodule "lib/module/barco-eventmaster-xml"]
 	path = lib/module/barco-eventmaster-xml
 	url = https://github.com/bitfocus/companion-module-barco-eventmaster-xml.git
+[submodule "lib/module/matrox-monarch"]
+	path = lib/module/matrox-monarch
+	url = https://github.com/epicsf/companion-module-matrox-monarch.git
