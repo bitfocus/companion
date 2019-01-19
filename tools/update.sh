@@ -15,9 +15,12 @@
 # develop commercial activities involving the Companion software without
 # disclosing the source code of your own applications.
 #
-
 git pull
 git submodule init
 git submodule sync
 git submodule update
 ./tools/yarn.sh
+
+# Remove old legacy module folders that is supposed to be there anymore.
+rm -rf lib/module/kipro
+
