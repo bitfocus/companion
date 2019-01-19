@@ -18,5 +18,6 @@
 
 git pull
 git submodule init
+git submodule sync
 git submodule update
 ./tools/yarn.sh
