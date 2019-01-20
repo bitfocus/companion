@@ -232,3 +232,6 @@
 [submodule "lib/module/justmacros-lua"]
 	path = lib/module/justmacros-lua
 	url = https://github.com/bitfocus/companion-module-justmacros-lua.git
+[submodule "lib/module/kramer-matrix"]
+	path = lib/module/kramer-matrix
+	url = https://github.com/bitfocus/companion-module-kramer-matrix.git
