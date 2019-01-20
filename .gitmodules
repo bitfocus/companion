@@ -222,7 +222,7 @@
 	url = https://github.com/bitfocus/companion-module-barco-eventmaster-xml.git
 [submodule "lib/module/matrox-monarch"]
 	path = lib/module/matrox-monarch
-	url = https://github.com/epicsf/companion-module-matrox-monarch.git
+	url = https://github.com/bitfocus/companion-module-matrox-monarch.git
 [submodule "lib/module/aja-kipro"]
 	path = lib/module/aja-kipro
 	url = https://github.com/bitfocus/companion-module-aja-kipro.git
