@@ -235,3 +235,6 @@
 [submodule "lib/module/kramer-matrix"]
 	path = lib/module/kramer-matrix
 	url = https://github.com/bitfocus/companion-module-kramer-matrix.git
+[submodule "lib/module/thinkm-blink1"]
+	path = lib/module/thinkm-blink1
+	url = https://github.com/bitfocus/companion-module-thinkm-blink1.git
