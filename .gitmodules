@@ -238,3 +238,6 @@
 [submodule "lib/module/thinkm-blink1"]
 	path = lib/module/thinkm-blink1
 	url = https://github.com/bitfocus/companion-module-thinkm-blink1.git
+[submodule "lib/module/vicreo-hotkey.git"]
+	path = lib/module/vicreo-hotkey.git
+	url = https://github.com/bitfocus/companion-module-vicreo-hotkey.git
