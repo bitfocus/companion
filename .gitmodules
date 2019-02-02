@@ -237,7 +237,7 @@
 	url = https://github.com/bitfocus/companion-module-kramer-matrix.git
 [submodule "lib/module/thingm-blink1"]
 	path = lib/module/thingm-blink1
-	url = https://github.com/bitfocus/companion-module-thingm-blink1.git
+	url = https://github.com/bitfocus/companion-module-thingm-blink1
 [submodule "lib/module/vicreo-hotkey"]
 	path = lib/module/vicreo-hotkey
 	url = https://github.com/bitfocus/companion-module-vicreo-hotkey.git
