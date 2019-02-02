@@ -2,7 +2,7 @@
 
 # REPOSITORY RENAMING FUNTIME 2019 IS UPON US!
 
-OLD_MODULE_NAMES=(kipro vicreo-hotkey.git)
+OLD_MODULE_NAMES=(kipro vicreo-hotkey.git thinkm-blink1)
 KEEP_MODULES=()
 REMOVE_MODULES=()
 
