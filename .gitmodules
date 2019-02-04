@@ -244,3 +244,6 @@
 [submodule "lib/module/yamaha-scp"]
 	path = lib/module/yamaha-scp
 	url = https://github.com/bitfocus/companion-module-yamaha-scp
+[submodule "lib/module/panasonic-ptz"]
+	path = lib/module/panasonic-ptz
+	url = https://github.com/bitfocus/companion-module-panasonic-ptz.git
