@@ -247,3 +247,6 @@
 [submodule "lib/module/panasonic-ptz"]
 	path = lib/module/panasonic-ptz
 	url = https://github.com/bitfocus/companion-module-panasonic-ptz.git
+[submodule "lib/module/depili-clock-8001"]
+	path = lib/module/depili-clock-8001
+	url = https://github.com/bitfocus/companion-module-depili-clock-8001.git
