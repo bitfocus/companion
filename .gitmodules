@@ -241,3 +241,6 @@
 [submodule "lib/module/vicreo-hotkey"]
 	path = lib/module/vicreo-hotkey
 	url = https://github.com/bitfocus/companion-module-vicreo-hotkey.git
+[submodule "lib/module/yamaha-scp"]
+	path = lib/module/yamaha-scp
+	url = https://github.com/bitfocus/companion-module-yamaha-scp
