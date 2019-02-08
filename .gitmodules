@@ -250,3 +250,6 @@
 [submodule "lib/module/depili-clock-8001"]
 	path = lib/module/depili-clock-8001
 	url = https://github.com/bitfocus/companion-module-depili-clock-8001.git
+[submodule "lib/module/interactive-technogies-cueserver"]
+	path = lib/module/interactive-technogies-cueserver
+	url = https://github.com/bitfocus/companion-module-interactive-technologies-cueserver.git
