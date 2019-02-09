@@ -253,3 +253,6 @@
 [submodule "lib/module/interactive-technologies-cueserver"]
 	path = lib/module/interactive-technologies-cueserver
 	url = https://github.com/bitfocus/companion-module-interactive-technologies-cueserver.git
+[submodule "lib/module/radiodj-rest"]
+	path = lib/module/radiodj-rest
+	url = https://github.com/bitfocus/companion-module-radiodj-rest.git
