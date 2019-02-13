@@ -256,3 +256,6 @@
 [submodule "lib/module/radiodj-rest"]
 	path = lib/module/radiodj-rest
 	url = https://github.com/bitfocus/companion-module-radiodj-rest.git
+[submodule "lib/module/etc-eos"]
+	path = lib/module/etc-eos
+	url = https://github.com/bitfocus/companion-module-etc-eos.git
