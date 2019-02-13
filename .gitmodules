@@ -259,3 +259,6 @@
 [submodule "lib/module/etc-eos"]
 	path = lib/module/etc-eos
 	url = https://github.com/bitfocus/companion-module-etc-eos.git
+[submodule "lib/module/techministry-protally"]
+	path = lib/module/techministry-protally
+	url = https://github.com/bitfocus/companion-module-techministry-protally.git
