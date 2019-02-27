@@ -262,3 +262,6 @@
 [submodule "lib/module/techministry-protally"]
 	path = lib/module/techministry-protally
 	url = https://github.com/bitfocus/companion-module-techministry-protally.git
+[submodule "lib/module/planningcenter-serviceslive"]
+	path = lib/module/planningcenter-serviceslive
+	url = https://github.com/bitfocus/companion-module-planningcenter-serviceslive.git
