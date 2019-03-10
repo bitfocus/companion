@@ -265,3 +265,6 @@
 [submodule "lib/module/planningcenter-serviceslive"]
 	path = lib/module/planningcenter-serviceslive
 	url = https://github.com/bitfocus/companion-module-planningcenter-serviceslive.git
+[submodule "lib/module/livingasone-decoders"]
+	path = lib/module/livingasone-decoders
+	url = https://github.com/bitfocus/companion-module-livingasone-decoders.git
