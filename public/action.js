@@ -17,6 +17,18 @@
 
 var actionlist = {};
 
+function int2hex(number) {
+	var r = ('0' + ((number >> 16) & 0xff).toString('16')).substr(-2);
+	var g = ('0' + ((number >> 8) & 0xff).toString('16')).substr(-2);
+	var b = ('0' + (number & 0xff).toString('16')).substr(-2);
+
+	return '#' + r + g + b;
+}
+
+function hex2int(hex) {
+	return parseInt(hex.substr(1), 16);
+}
+
 $(function() {
 	socket.emit('get_actions');
 
@@ -84,7 +96,7 @@ $(function() {
 				var $tr = $("<tr></tr>");
 				$tr.data("id", action.id);
 
-				
+
 				var $name_td = $("<td class='actionlist-td-label'>" + instance.db[action.instance].label + ": " + actionlist[action.label].label + "</td>");
 				var $del_td = $("<td class='actionlist-td-delete'><button type='button' class='btn btn-danger btn-sm'>delete</button><span>&nbsp;</span></td>");
 				var $reorder_grip = $("<td class='actionlist-td-reorder'><i class='fa fa-sort reorder-grip'></i></td>");
@@ -112,6 +124,10 @@ $(function() {
 
 
 						var $opt_label = $("<label>"+option.label+"</label>");
+						$opt_label.css('clear','both');
+						$opt_label.css('display','block');
+						$opt_label.css('paddingTop', '5px');
+						$opt_label.css('paddingBottom', '5px');
 						$options.append($opt_label);
 
 						if (option.type == 'textinput') {
@@ -148,6 +164,57 @@ $(function() {
 							}
 
 							$options.append($opt_input);
+
+						}
+
+						else if (option.type == 'colorpicker') {
+							var $opt_input = $("<input type='text' class='action-option-keyup form-control'>");
+
+
+							$opt_input.data('action-id', action.id);
+							$opt_input.data('option-id', option.id);
+
+							// if options never been stored on this action
+							if (action.options === undefined) {
+								action.options = {};
+							}
+
+							// if this option never has been saved, set default
+							if (action.options[option.id] === undefined) {
+								socket.emit('bank_update_action_option', page, bank, action.id, option.id, option.default || 0 );
+								$opt_input.val(option.default || 0);
+							}
+
+							// else set the db value for this option.
+							else {
+								console.log("db value", action.options[option.id] )
+								$opt_input.val( action.options[option.id] );
+							}
+
+							$options.append($opt_input);
+
+							(function(f_page,f_bank,f_aid,f_oid) {
+								console.log("db value", action.options[f_oid] )
+
+								$opt_input.spectrum({
+
+									color: int2hex(action.options[f_oid]),
+									preferredFormat: "rgb",
+									showInput: true,
+									showPalette: true,
+									palette: picker_colors,
+									showButtons: false,
+
+									change: function(color) {
+										socket.emit('bank_update_action_option', f_page, f_bank, f_aid, f_oid, hex2int( color.toHexString() ));
+									},
+
+									move: function(color) {
+										socket.emit('bank_update_action_option', f_page, f_bank, f_aid, f_oid, hex2int( color.toHexString() ));
+									}
+
+								});
+							})(page, bank, action.id, option.id);
 
 						}
 
