@@ -68,4 +68,4 @@ branches:
 
 after_success:
   - "if [[ \"$TRAVIS_OS_NAME\" == \"osx\" ]]; then curl -T electron-output/*.zip -u $FTP_USER:$FTP_PASSWORD ftp://$FTP_IP/deploy/electron-output/ ; fi"
-  - "if [[ \"$TRAVIS_OS_NAME\" == \"linux\" ]]; then curl -T electron-linux-output/*.tar.gz -u $FTP_USER:$FTP_PASSWORD ftp://$FTP_IP/deploy/electron-output/ ; fi"
+  - "if [[ \"$TRAVIS_OS_NAME\" == \"linux\" ]]; then curl -T electron-linux-output/*.tar.gz -u $FTP_USER:$FTP_PASSWORD ftp://$FTP_IP/deploy/electron-linux-output/ ; fi"
