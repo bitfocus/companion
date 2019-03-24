@@ -268,3 +268,6 @@
 [submodule "lib/module/livingasone-decoders"]
 	path = lib/module/livingasone-decoders
 	url = https://github.com/bitfocus/companion-module-livingasone-decoders.git
+[submodule "lib/module/bmd-teranex"]
+	path = lib/module/bmd-teranex
+	url = https://github.com/bitfocus/companion-module-bmd-teranex.git
