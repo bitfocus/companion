@@ -271,3 +271,6 @@
 [submodule "lib/module/bmd-teranex"]
 	path = lib/module/bmd-teranex
 	url = https://github.com/bitfocus/companion-module-bmd-teranex.git
+[submodule "lib/module/analogway-picturall"]
+	path = lib/module/analogway-picturall
+	url = https://github.com/bitfocus/companion-module-analogway-picturall.git
