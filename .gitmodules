@@ -268,3 +268,6 @@
 [submodule "lib/module/livingasone-decoders"]
 	path = lib/module/livingasone-decoders
 	url = https://github.com/bitfocus/companion-module-livingasone-decoders.git
+[submodule "lib/module/analogway-picturall"]
+	path = lib/module/analogway-picturall
+	url = https://github.com/bitfocus/companion-module-analogway-picturall.git
