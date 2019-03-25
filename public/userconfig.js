@@ -32,6 +32,16 @@ $(function() {
 			$cb.prop('checked', false);
 		}
 
+		// set the page direction flipped option
+		var state = userconfig.pin_enable;
+		var $cb = $('#userconfig_pin_enable');
+
+		if (state === true) {
+			$cb.prop('checked', true);
+		} else {
+			$cb.prop('checked', false);
+		}
+
 		// set the page plus/minus option
 		var state = userconfig.page_plusminus;
 		var $cb = $('#userconfig_page_plusminus');
@@ -56,6 +66,14 @@ $(function() {
 		var $cb = $('#userconfig_artnet_universe');
 		$cb.val(state);
 
+		var state = userconfig.pin;
+		var $cb = $('#userconfig_pin');
+		$cb.val(state);
+
+		var state = userconfig.pin_timeout;
+		var $cb = $('#userconfig_pin_timeout');
+		$cb.val(state);
+
 		var state = userconfig.artnet_channel;
 		var $cb = $('#userconfig_artnet_channel');
 		$cb.val(state);
@@ -70,6 +88,14 @@ $(function() {
 			socket.emit('set_userconfig_key', 'page_direction_flipped', true);
 		} else {
 			socket.emit('set_userconfig_key', 'page_direction_flipped', false);
+		}
+	});
+
+	$('#userconfig_pin_enable').click(function() {
+		if ($(this).prop('checked') == true) {
+			socket.emit('set_userconfig_key', 'pin_enable', true);
+		} else {
+			socket.emit('set_userconfig_key', 'pin_enable', false);
 		}
 	});
 
@@ -92,6 +118,14 @@ $(function() {
 
 	$('#userconfig_artnet_universe').keyup(function() {
 		socket.emit('set_userconfig_key', 'artnet_universe', $('#userconfig_artnet_universe').val());
+	});
+
+	$('#userconfig_pin').keyup(function() {
+		socket.emit('set_userconfig_key', 'pin', $('#userconfig_pin').val());
+	});
+
+	$('#userconfig_pin_timeout').keyup(function() {
+		socket.emit('set_userconfig_key', 'pin_timeout', $('#userconfig_pin_timeout').val());
 	});
 
 	$('#userconfig_artnet_channel').keyup(function() {
