@@ -274,3 +274,6 @@
 [submodule "lib/module/analogway-picturall"]
 	path = lib/module/analogway-picturall
 	url = https://github.com/bitfocus/companion-module-analogway-picturall.git
+[submodule "lib/module/roland-v60hd"]
+	path = lib/module/roland-v60hd
+	url = https://github.com/bitfocus/companion-module-roland-v60hd.git
