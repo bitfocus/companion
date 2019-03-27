@@ -222,7 +222,7 @@
 	url = https://github.com/bitfocus/companion-module-barco-eventmaster-xml.git
 [submodule "lib/module/matrox-monarch"]
 	path = lib/module/matrox-monarch
-	url = https://github.com/epicsf/companion-module-matrox-monarch.git
+	url = https://github.com/bitfocus/companion-module-matrox-monarch.git
 [submodule "lib/module/aja-kipro"]
 	path = lib/module/aja-kipro
 	url = https://github.com/bitfocus/companion-module-aja-kipro.git
@@ -232,3 +232,48 @@
 [submodule "lib/module/justmacros-lua"]
 	path = lib/module/justmacros-lua
 	url = https://github.com/bitfocus/companion-module-justmacros-lua.git
+[submodule "lib/module/kramer-matrix"]
+	path = lib/module/kramer-matrix
+	url = https://github.com/bitfocus/companion-module-kramer-matrix.git
+[submodule "lib/module/thingm-blink1"]
+	path = lib/module/thingm-blink1
+	url = https://github.com/bitfocus/companion-module-thingm-blink1.git
+[submodule "lib/module/vicreo-hotkey"]
+	path = lib/module/vicreo-hotkey
+	url = https://github.com/bitfocus/companion-module-vicreo-hotkey.git
+[submodule "lib/module/yamaha-scp"]
+	path = lib/module/yamaha-scp
+	url = https://github.com/bitfocus/companion-module-yamaha-scp
+[submodule "lib/module/panasonic-ptz"]
+	path = lib/module/panasonic-ptz
+	url = https://github.com/bitfocus/companion-module-panasonic-ptz.git
+[submodule "lib/module/depili-clock-8001"]
+	path = lib/module/depili-clock-8001
+	url = https://github.com/bitfocus/companion-module-depili-clock-8001.git
+[submodule "lib/module/interactive-technologies-cueserver"]
+	path = lib/module/interactive-technologies-cueserver
+	url = https://github.com/bitfocus/companion-module-interactive-technologies-cueserver.git
+[submodule "lib/module/radiodj-rest"]
+	path = lib/module/radiodj-rest
+	url = https://github.com/bitfocus/companion-module-radiodj-rest.git
+[submodule "lib/module/etc-eos"]
+	path = lib/module/etc-eos
+	url = https://github.com/bitfocus/companion-module-etc-eos.git
+[submodule "lib/module/techministry-protally"]
+	path = lib/module/techministry-protally
+	url = https://github.com/bitfocus/companion-module-techministry-protally.git
+[submodule "lib/module/planningcenter-serviceslive"]
+	path = lib/module/planningcenter-serviceslive
+	url = https://github.com/bitfocus/companion-module-planningcenter-serviceslive.git
+[submodule "lib/module/livingasone-decoders"]
+	path = lib/module/livingasone-decoders
+	url = https://github.com/bitfocus/companion-module-livingasone-decoders.git
+[submodule "lib/module/bmd-teranex"]
+	path = lib/module/bmd-teranex
+	url = https://github.com/bitfocus/companion-module-bmd-teranex.git
+[submodule "lib/module/analogway-picturall"]
+	path = lib/module/analogway-picturall
+	url = https://github.com/bitfocus/companion-module-analogway-picturall.git
+[submodule "lib/module/roland-v60hd"]
+	path = lib/module/roland-v60hd
+	url = https://github.com/bitfocus/companion-module-roland-v60hd.git

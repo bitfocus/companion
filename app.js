@@ -117,6 +117,7 @@ system.on('skeleton-ready', function() {
 	var loadsave   = require('./lib/loadsave')(system);
 	var preset     = require('./lib/preset')(system);
 	var tablet     = require('./lib/tablet')(system);
+	var satellite  = require('./lib/satellite_server')(system);
 	var ws_api     = require('./lib/ws_api')(system);
 
 	system.on('exit', function() {
