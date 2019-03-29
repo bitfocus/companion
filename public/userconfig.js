@@ -32,9 +32,19 @@ $(function() {
 			$cb.prop('checked', false);
 		}
 
-		// set the page direction flipped option
+		// enable pincode lockouts
 		var state = userconfig.pin_enable;
 		var $cb = $('#userconfig_pin_enable');
+
+		if (state === true) {
+			$cb.prop('checked', true);
+		} else {
+			$cb.prop('checked', false);
+		}
+
+		// link the surfaces lockout state together
+		var state = userconfig.link_lockouts;
+		var $cb = $('#userconfig_link_lockouts');
 
 		if (state === true) {
 			$cb.prop('checked', true);
@@ -96,6 +106,14 @@ $(function() {
 			socket.emit('set_userconfig_key', 'pin_enable', true);
 		} else {
 			socket.emit('set_userconfig_key', 'pin_enable', false);
+		}
+	});
+
+	$('#userconfig_link_lockouts').click(function() {
+		if ($(this).prop('checked') == true) {
+			socket.emit('set_userconfig_key', 'link_lockouts', true);
+		} else {
+			socket.emit('set_userconfig_key', 'link_lockouts', false);
 		}
 	});
 
