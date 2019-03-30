@@ -6,7 +6,8 @@ $(function() {
 	var $aba = $("#addBankFeedback");
 	$aba.change(function() {
 		socket.emit('bank_addFeedback', page, bank, $(this).val() );
-		$("#addBankFeedback").val($("#addBankFeedback option:first").val());
+		// Reset back to the placeholder after adding
+		$aba.val('');
 	});
 
 	$('#bankFeedbacks').on('keyup', '.feedback-option-keyup', function() {
@@ -213,20 +214,26 @@ $(function() {
 	socket.on('feedback_get_definitions:result', function(feedbacks) {
 
 		feedbacklist = feedbacks;
-		$aba.html("");
-
-		/*var $ali = $("#feedbacksList");
-		$ali.html("");*/
-
-		var $option = $("<option> + Add feedback</option>")
-		$aba.append($option);
+		$aba.find('option,optgroup').remove();
+		// An empty option is needed for the default placeholder
+		$aba.append($('<option value=""></option>'));
 
 		for (var inst in feedbacks) {
 			for (var action in feedbacks[inst]) {
 				var object = feedbacks[inst][action];
 				if (instance !== undefined && instance.db !== undefined && instance.db[inst] !== undefined) {
+
+					var $optgroup = $aba.find('optgroup[data-inst="'+inst+'"]');
+					if ($optgroup.length === 0) {
+						// Create the new optgroup
+						$optgroup = $('<optgroup>')
+							.prop('label', instance.db[inst].label + ' (' + instance.db[inst].instance_type + ')')
+							.attr('data-inst', inst);
+						$aba.append($optgroup);
+					}
+
 					var $option = $("<option value='"+inst+":"+action+"'>"+ instance.db[inst].label + ": "+object.label+"</option>")
-					$aba.append($option);
+					$optgroup.append($option);
 
 					/*
 						var $li = $("<tr></tr>");
@@ -243,6 +250,16 @@ $(function() {
 			}
 		}
 
+		$aba.select2({
+			placeholder: ' + Add feedback',
+			allowClear: true,
+			width: '500px',
+			language: {
+				noResults: function() {
+					return 'No feedbacks found';
+				}
+			}
+		});
 
 	})
 });
