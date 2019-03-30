@@ -502,3 +502,7 @@ input[type='checkbox']:checked {
 #instanceConfig h4 {
 	text-transform: capitalize;
 }
+
+.select2-container--default .select2-results > .select2-results__options {
+	max-height: 300px !important;
+}

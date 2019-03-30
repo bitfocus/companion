@@ -276,11 +276,11 @@ $(function() {
 
 		releaseactionlist = actions;
 		var $ali = $("#releaseActionsList");
-		$aba.html("");
 		$ali.html("");
 
-		var $option = $("<option> + Add key up/off action</option>")
-		$aba.append($option);
+		$aba.find('option,optgroup').remove();
+		// An empty option is needed for the default placeholder
+		$aba.append($('<option value=""></option>'));
 
 		for (var n in actions) {
 			var x = n.split(/:/);
@@ -289,8 +289,17 @@ $(function() {
 
 			if (inst !== undefined && instance !== undefined && instance.db !== undefined && instance.db[inst] !== undefined) {
 
+				var $optgroup = $aba.find('optgroup[data-inst="'+inst+'"]');
+				if ($optgroup.length === 0) {
+					// Create the new optgroup
+					$optgroup = $('<optgroup>')
+						.prop('label', instance.db[inst].label + ' (' + instance.db[inst].instance_type + ')')
+						.attr('data-inst', inst);
+					$aba.append($optgroup);
+				}
+
 				var $option = $("<option value='"+n+"'>"+ instance.db[inst].label + ": "+actions[n].label+"</option>")
-				$aba.append($option);
+				$optgroup.append($option);
 
 				var $li = $("<tr></tr>");
 				var $td_id = $("<td></td>");
@@ -307,6 +316,16 @@ $(function() {
 
 		}
 
+		$aba.select2({
+			placeholder: ' + Add key up/off action',
+			allowClear: true,
+			width: '500px',
+			language: {
+				noResults: function() {
+					return 'No actions found';
+				}
+			}
+		});
 
 	})
 
