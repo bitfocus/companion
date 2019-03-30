@@ -277,3 +277,6 @@
 [submodule "lib/module/roland-v60hd"]
 	path = lib/module/roland-v60hd
 	url = https://github.com/bitfocus/companion-module-roland-v60hd.git
+[submodule "lib/module/roland-xs62s"]
+	path = lib/module/roland-xs62s
+	url = https://github.com/bitfocus/companion-module-roland-xs62s.git
