@@ -280,6 +280,3 @@
 [submodule "lib/module/roland-xs62s"]
 	path = lib/module/roland-xs62s
 	url = https://github.com/bitfocus/companion-module-roland-xs62s.git
-[submodule "msc-router"]
-	path = msc-router
-	url = https://github.com/bitfocus/companion-module-msc-router.git
