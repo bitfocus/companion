@@ -3,7 +3,6 @@ BUILD
 /node_modules/*
 .DS_Store
 *-x64/*
-yarn-error.log
 package-lock.json
 out/
 .cache
@@ -12,3 +11,4 @@ out/
 electron-output/
 config
 db
+*.log
