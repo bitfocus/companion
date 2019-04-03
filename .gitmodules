@@ -285,4 +285,4 @@
 	url = https://github.com/bitfocus/companion-module-msc-router.git
 [submodule "lib/module/hologfx-holographics"]
 	path = lib/module/hologfx-holographics
-	url = git@github.com:bitfocus/companion-module-hologfx-holographics.git
+	url = https://github.com/bitfocus/companion-module-hologfx-holographics.git
