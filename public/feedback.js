@@ -46,11 +46,8 @@ $(function() {
 
 				var name;
 
-				if (feedbacklist[feedback.instance_id][feedback.type].label === undefined ) {
-					var extract = action.label.split(/:/);
-					var a = extract.shift();
-					a = extract.shift();
-					name = instance.db[feedback.instance_id].label + ": " + a + " <em>(undefined)</em>";
+				if (feedbacklist[feedback.instance_id] === undefined || feedbacklist[feedback.instance_id][feedback.type] === undefined) {
+					name = instance.db[feedback.instance_id].label + ": " + feedback.type + " <em>(undefined)</em>";
 				}
 				else {
 					name = instance.db[feedback.instance_id].label + ": " + feedbacklist[feedback.instance_id][feedback.type].label;
@@ -66,8 +63,8 @@ $(function() {
 				$tr.append($name_td);
 
 				var iopt;
-				
-				if (feedbacklist[feedback.instance_id][feedback.type] === undefined) {
+
+				if (feedbacklist[feedback.instance_id] !== undefined && feedbacklist[feedback.instance_id][feedback.type] !== undefined) {
 					iopt = feedbacklist[feedback.instance_id][feedback.type];
 				}
 
