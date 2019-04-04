@@ -36,7 +36,7 @@ $(function() {
 		for (var n in feedbacks) {
 			var feedback = feedbacks[n];
 
-			if (feedback !== null && instance.db[feedback.instance_id] !== undefined && instance.db[feedback.instance_id].label !== undefined) {
+			if (feedback !== undefined && instance.db[feedback.instance_id] !== undefined && instance.db[feedback.instance_id].label !== undefined) {
 				var idb = instance.db[feedback.instance_id];
 				var it = instance.db[feedback.instance_id].instance_type;
 				var inst = feedback;
@@ -44,7 +44,16 @@ $(function() {
 				var $tr = $("<tr></tr>");
 				$tr.data("id", feedback.id);
 
-				var $name_td = $("<td class='feedbacklist-td-label'>" + instance.db[feedback.instance_id].label + ": " + feedbacklist[feedback.instance_id][feedback.type].label + "</td>");
+				var name;
+
+				if (feedbacklist[feedback.instance_id] === undefined || feedbacklist[feedback.instance_id][feedback.type] === undefined) {
+					name = instance.db[feedback.instance_id].label + ": " + feedback.type + " <em>(undefined)</em>";
+				}
+				else {
+					name = instance.db[feedback.instance_id].label + ": " + feedbacklist[feedback.instance_id][feedback.type].label;
+				}
+
+				var $name_td = $("<td class='feedbacklist-td-label'>" + name + "</td>");
 				var $del_td = $("<td class='feedbacklist-td-delete'><button type='button' class='btn btn-danger btn-sm'>delete</button><span>&nbsp;</span></td>");
 				var $reorder_grip = $("<td class='feedbacklist-td-reorder'><i class='fa fa-sort reorder-grip'></i></td>");
 				var $options = $("<td class='feedbacklist-td-options'></td>");
@@ -53,7 +62,11 @@ $(function() {
 				$tr.append($del_td);
 				$tr.append($name_td);
 
-				var iopt = feedbacklist[feedback.instance_id][feedback.type];
+				var iopt;
+
+				if (feedbacklist[feedback.instance_id] !== undefined && feedbacklist[feedback.instance_id][feedback.type] !== undefined) {
+					iopt = feedbacklist[feedback.instance_id][feedback.type];
+				}
 
 				if (iopt !== undefined && iopt.options !== undefined) {
 					var options = iopt.options;
