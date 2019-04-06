@@ -96,6 +96,8 @@ For checking known bugs or reporting of potential bugs, please use the [issue sy
 * vMix (StudioCoast) v1.0.0 by Per Røine
 
 ## Support being added soon
+* Digital Projection (under development)
+* Panasonic Projectors (under development)
 * Chamsys MagicQ  OSC and UDP (under development)
 * Christie Projectors (under development)
 * Panasonic PTZ (under development)
