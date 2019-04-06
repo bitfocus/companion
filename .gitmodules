@@ -286,3 +286,9 @@
 [submodule "lib/module/hologfx-holographics"]
 	path = lib/module/hologfx-holographics
 	url = https://github.com/bitfocus/companion-module-hologfx-holographics.git
+[submodule "lib/module/barco-hdx"]
+	path = lib/module/barco-hdx
+	url = https://github.com/bitfocus/companion-module-barco-hdx.git
+[submodule "lib/module/denon-receiver"]
+	path = lib/module/denon-receiver
+	url = https://github.com/bitfocus/companion-module-denon-receiver.git

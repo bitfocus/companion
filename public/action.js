@@ -96,8 +96,19 @@ $(function() {
 				var $tr = $("<tr></tr>");
 				$tr.data("id", action.id);
 
+				var name;
 
-				var $name_td = $("<td class='actionlist-td-label'>" + instance.db[action.instance].label + ": " + actionlist[action.label].label + "</td>");
+				if (actionlist[action.label] === undefined ) {
+					var extract = action.label.split(/:/);
+					var a = extract.shift();
+					a = extract.shift();
+					name = instance.db[action.instance].label + ": " + a + " <em>(undefined)</em>";
+				}
+				else {
+					name = instance.db[action.instance].label + ": " + actionlist[action.label].label;
+				}
+
+				var $name_td = $("<td class='actionlist-td-label'>" + name + "</td>");
 				var $del_td = $("<td class='actionlist-td-delete'><button type='button' class='btn btn-danger btn-sm'>delete</button><span>&nbsp;</span></td>");
 				var $reorder_grip = $("<td class='actionlist-td-reorder'><i class='fa fa-sort reorder-grip'></i></td>");
 				var $delay_td = $("<td class='actionlist-td-delay'></td>");
