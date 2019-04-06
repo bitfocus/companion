@@ -1,6 +1,190 @@
-# Changelog
 
-## V1.2.0 Summary
+# Bitfocus Companion
+## Companion v1.4.0 - Release Notes
+
+### Resolved issues
+* [Fixes #470: Errors to log file on headless operation (silent raspberry pi services)](https://github.com/bitfocus/companion/issues/470)
+* [Fixes #512: Internal actions problem resolved (576026a William Viker)](https://github.com/bitfocus/companion/issues/512)
+* [Fixes #465: Add permissive CORS to http API requests. (25a5b87 Håkon Nessjøen)](https://github.com/bitfocus/companion/issues/465)
+* [Fixes #495](https://github.com/bitfocus/companion/issues/495) and [#367](https://github.com/bitfocus/companion/issues/367): Change background color and text color with internal actions. (f078ab9 William Viker)
+* [Fixes #519: Fix bug that lets you disable internal module from an internal module action. (0c5a32b William Viker)](https://github.com/bitfocus/companion/issues/519)
+* [Fixes #514: Web Buttons page unable to scroll in android chrome (c88f98a William Viker)](https://github.com/bitfocus/companion/issues/514)
+
+### Major changes
+* Dynamic variables of presets updates when renaming instances
+* Lockout PIN-code system
+  * Any pin length allowed.
+  * Configurable in web interface
+  * Timeouts, and manual lock and unlock with actions
+  * Can work globally or per surface
+* Emulator can now be controlled with the keyboard buttons (as explained in the emulator)
+* Support for changing page in surface config for stream deck plugin
+* Ability to control button style with OSC
+  * /style/color/page/bank (int red, int green, int blue)
+  * /style/bgcolor/page/bank (int red, int green, int blue)
+  * /style/text/page/bank (string text)
+### Minor changes
+* Broadcast message support in internal OSC module
+* OSC bundle message support in internal OSC module
+* Added Dockerfile for running companion from Docker
+* Switched telnet module for instances
+* Added hostname, date and time to export filenames
+* Added internal action to rescan USB devices
+* Stability improvements to TCP server
+* Stability improvements to bank lists and feedbacks
+* Module API: add callback structure for module feedback
+### New support added
+* Analog Way Picturall
+* Barco HDX
+* Blackmagic Design Teranex
+* Christie Widget Designer
+* Depili Clock 8001
+* Denon Receivers
+* ETC EOS
+* Hologfx Holographics
+* Interactive Technologies Cueserver
+* Kramer Matrixes
+* Living As One Decoders
+* Matrox Monarch
+* MSC Router
+* Panasonic PTZ
+* Picturall media server
+* Planning Center Services Live
+* RadioDJ
+* Roland V-60HD
+* Roland XS-62S
+* Tech Ministry ProTally
+* Thingm Blink(1)
+* VICREO Hotkeys
+* Yamaha QL/CL/TF Consoles
+### Enhanced support
+* Barco Eventmaster
+  * Making presets work for cues and preset recalling
+  * Improved AUX control
+  * Userkey support
+  * Freeze of Source, Screen, Aux
+  * Add basic presets; auto trans, cut, recall next
+* Barco PDS
+  * Feedback on buttons program/preview/logo, handle invalid signal input, minor improvements
+* Blackmagic Design ATEM
+  * additional Macro support/feedback
+  * USK/DSK source selection
+  * model selection
+  * Multiviewer routing
+* Blackmagic Design HyperDeck
+  * additional name record options
+  * control of remote function
+* Blackmagic Design Videohub
+  * support for monitoring outputs
+  * RS422 routing
+* Cockos Reaper
+  * Added custom action
+* Depili Clock 8001
+  * Add support for pause/resume
+  * Decode utf8 tally messages
+  * Compatibility with clock version 3.0.0
+* Generic HTTP
+  * Added ‘base url’ field in instance configuration
+* GrandMA2
+  * Rewritten telnet part to comply with MIT license.
+* OBS Studio
+  * Added support for transitions
+* Mitti
+  * Added support for controlling Fullscreen, Looping, Transition control and Cues
+* Neodarque StageTimer2
+  * Added increase/decrease time action
+* Rosstalk
+  * XPression naming fixes (by request from RossVideo)
+* Tascam CD
+  * Support for transports and power. (complete support of protocol)
+* X32
+  * Fixed bug where cues and snippets did not work.
+  * Fixed bug where DCA mute and fader didn’t work
+* GlobalCache ITAC IR
+  * Added help text
+* ifelseWare AV Playback
+  * Make port configurable, Pad Fix option, added nextClip and prevClip
+* PVP
+  * target set support
+  * layer preset support
+  * layer opacity control
+  * select layer target
+  * action reordering
+  * preset support
+  * Help text
+* QLab
+  * Flagged/Unflagged clip
+  * Passcode support
+* RenewedVision ProPresenter
+  * Added audio actions
+  * video countdown timer variable
+  * Help text
+  * Countdown timer control
+  * Clock time tooltip
+  * StageDisplay features
+  * Dynamic variables
+* Tascam CD
+  * Added presets for all actions
+* Playback Pro Plus
+  * Adjusted GO/GT command to the correct format
+* PTZ Optics
+  * Help text
+
+
+
+## Companion v1.3.0 - Release Notes
+
+### Major changes
+
+Added support for virtual devices (stream deck plugin) to connect via websockets.
+Help button on instances show help markup from modules
+Implemented UDP and TCP server to remote press companion buttons
+Support REST GET/POST Polling in the module API
+Action delays can be absolute or relative. Can also be reordered.
+
+### Minor changes
+Prevent 'internal' module from being searchable
+Use Interface instead of IP and Port for more consistent behavior (headless.js)
+home button functionality
+Added support for Neodarque StageTimer2
+Add "help-button" to search result as well
+Feedback reordering
+Added forgotten module for Blackmagic Multiview 4
+Improved the action reordering experience.
+CVE-2018-14041 - Upgrade bootstrap version.
+Support for choosing which pages to show in web-buttons with /tablet.html?pages=3,4,5 fixes #369. And added page names in web
+Ability to press another button with an action. Closing #397.
+Add TCP/UDP documentation to settings tab, and some internal restructuring/cleanup.
+Changed the visible order of shortname/manufacturer in instance list
+Making checkboxes larger and more visible. Closes #366
+Rearranged the PNG button configuration fields. (the new standard)
+Show build number in the WebUI. Closes #335
+Fix build_writefile.sh to provide buildnumbers for master and branch name for other branches
+Implemented multiselect form type for modules
+
+## Module related
+Added module barco-eventmaster-xml
+Feedback and variables for neodarque-stagetimer2
+Implemented an helping preset for neodarque-stagetimer2
+Upgraded AMP
+Upgraded atem module. Fixes #371
+Upgraded Blacmagick Hyperdeck module, added support for setting filename to record to. Fixes #360. I think.
+Upgraded analogway-pls300
+Upgraded barco-eventmaster-xml
+Upgraded eventmaster
+Upgraded generic-http
+Upgraded highend-hog4
+Upgraded neodarque-stagetimer2
+Upgraded renewedvision-propresenter, Dynamic variables, Pro6 Windows support, and improved websockets
+Upgraded rosstalk
+Upgraded eventmaster module to 6.2.0 upstream module
+Upgraded aja-helo
+Upgraded pjlink
+Upgraded renewedvision-propresenter
+Upgraded studiocoast-vmix
+Upgraded octopus listener module
+
+## Companion v1.2.0 - Release Notes
 
 We've introduced some important stuff in this release. Honestly, almost too much in one single release. Feedback and presets is some of it, but it's not supported by many modules yet, but this will be better towards 1.3.0.
 
