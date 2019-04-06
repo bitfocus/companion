@@ -291,4 +291,4 @@
 	url = https://github.com/bitfocus/companion-module-barco-hdx.git
 [submodule "lib/module/denon-receiver"]
 	path = lib/module/denon-receiver
-	url = https://github.com/bitfocus/denon-receiver.git
+	url = https://github.com/bitfocus/companion-module-denon-receiver.git
