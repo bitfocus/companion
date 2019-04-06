@@ -292,3 +292,6 @@
 [submodule "lib/module/denon-receiver"]
 	path = lib/module/denon-receiver
 	url = https://github.com/bitfocus/companion-module-denon-receiver.git
+[submodule "lib/module/vizio-smartcast"]
+	path = lib/module/vizio-smartcast
+	url = https://github.com/bitfocus/companion-module-vizio-smartcast.git
