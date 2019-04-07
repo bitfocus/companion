@@ -295,3 +295,6 @@
 [submodule "lib/module/vizio-smartcast"]
 	path = lib/module/vizio-smartcast
 	url = https://github.com/bitfocus/companion-module-vizio-smartcast.git
+[submodule "lib/module/brightsign-player"]
+	path = lib/module/brightsign-player
+	url = https://github.com/bitfocus/companion-module-brightsign-player.git
