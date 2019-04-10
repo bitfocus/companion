@@ -19,7 +19,7 @@ var socket = new io();
 var image_cache = {};
 var buttons_hot = false;
 var buttons_functional = false;
-
+var current_style;
 var function_state = null;
 var function_detail = {};
 
@@ -123,6 +123,29 @@ $(function() {
 		if (config.style !== undefined) {
 			$("#resetBankButton").show();
 		}
+
+		current_style = config.style;
+
+		$("#action_area").hide();
+		$(".button_style").hide();
+
+		switch(config.style) {
+			case undefined:
+				break;
+			case 'pageup':
+				$(".button_style_pageup").show();
+				break;
+			case 'pagenum':
+				$(".button_style_pagenum").show();
+				break;
+			case 'pagedown':
+				$(".button_style_pagedown").show();
+				break;
+			default:
+				$("#action_area").show();
+				break;
+		}
+
 
 		$("#oscTips").html("<p><b>Hint:</b> Control buttons with OSC or HTTP: /press/bank/"+p+"/"+b+" to press this button remotely. OSC port 12321!</p>")
 
@@ -335,20 +358,39 @@ $(function() {
 
 
 	$(".change_style").click(function() {
-		socket.emit('bank_style', page, bank, $(this).data('style'));
-		socket.once('bank_style:results', populate_bank_form);
-		socket.once('bank_style:results', function () {
-			bank_preview_page(page);
-		});
+		var no_warning = true;
+
+		var ns = $(this).data('style');
+		console.log("CURRENT STYLE", current_style, "NEW STYLE", ns);
+		if (current_style !== 'pageup' && current_style !== 'pagedown' && current_style !== 'pagenum') {
+			if (ns === 'pageup' || ns === 'pagedown' || ns === 'pagenum') {
+				no_warning = false;
+			}
+		}
+
+		if (no_warning === true || confirm('Changing to this button style will erase eventual actions and feedbacks configured for this button - continue?')) {
+			socket.emit('bank_style', page, bank, $(this).data('style'));
+			socket.once('bank_style:results', populate_bank_form);
+			socket.once('bank_style:results', function () {
+				bank_preview_page(page);
+				socket.emit('bank_actions_get', page, bank);
+				socket.emit('bank_get_feedbacks', page, bank);
+				socket.emit('bank_reset_release_actions', page, bank);
+				socket.emit('bank_release_actions_get', page, bank);
+			});
+
+
+		}
+
 	});
 
 	$("#resetBankButton").click(function() {
 		if (confirm('Clear design and all actions?')) {
 			socket.emit('bank_reset', page, bank);
-			socket.emit('bank_get_actions', page, bank);
+			socket.emit('bank_actions_get', page, bank);
 			socket.emit('bank_get_feedbacks', page, bank);
 			socket.emit('bank_reset_release_actions', page, bank);
-			socket.emit('bank_get_release_actions', page, bank);
+			socket.emit('bank_release_actions_get', page, bank);
 
 			$("#resetBankButton").hide();
 			populate_bank_form(page,bank,{},{});
@@ -389,10 +431,15 @@ $(function() {
 		}
 	});
 
-
 	$('#erase_page_link').click(function () {
-		if (confirm('Are you sure you want to clear all buttons on page ' + page + '?')) {
-			socket.emit('loadsave_reset_page', page);
+		if (confirm('Are you sure you want to clear all buttons on page ' + page + '?\nThere\'s no going back from this.')) {
+			socket.emit('loadsave_reset_page_all', page);
+		}
+	});
+
+	$('#reset_nav_link').click(function () {
+		if (confirm('Are you sure you want to reset navigation buttons?')) {
+			socket.emit('loadsave_reset_page_nav', page);
 		}
 	});
 
@@ -463,9 +510,9 @@ $(function() {
 				if (function_detail.first !== undefined) {
 					if (confirm("Clear style and actions for this button?")) {
 						socket.emit('bank_reset', function_detail.first.page, function_detail.first.bank);
-						socket.emit('bank_get_actions', function_detail.first.page, function_detail.first.bank );
+						socket.emit('bank_actions_get', function_detail.first.page, function_detail.first.bank );
 						socket.emit('bank_reset_release_actions', function_detail.first.page, function_detail.first.bank );
-						socket.emit('bank_get_release_actions', function_detail.first.page, function_detail.first.bank );
+						socket.emit('bank_release_actions_get', function_detail.first.page, function_detail.first.bank );
 						bank_preview_page(page);
 					}
 					clearFunction();
@@ -637,9 +684,9 @@ $(function() {
 				$("#editbank_content").html("");
 				$("#editbankid").text(page + "." + $(this).data('bank'));
 
-				socket.emit('bank_get_actions', page, $(this).data('bank'));
+				socket.emit('bank_actions_get', page, $(this).data('bank'));
 				socket.emit('bank_get_feedbacks', page, $(this).data('bank'));
-				socket.emit('bank_get_release_actions', page, $(this).data('bank'));
+				socket.emit('bank_release_actions_get', page, $(this).data('bank'));
 				socket.emit('get_bank',page, $(this).data('bank'));
 				socket.once('get_bank:results', populate_bank_form);
 

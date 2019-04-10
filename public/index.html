@@ -341,8 +341,10 @@
 												<button class="btn btn-danger buttonbottompad" id='state_abort'>Cancel</button>
 												<button class="btn btn-disabled buttonbottompad" id='state_hint'></button>
 												<span id='state_hide'>
+													<button type="button" id="erase_page_link" class="btn btn-danger buttonbottompad"><i class="fa fa-eraser"></i> Wipe page</button>
+													<button type="button" id="reset_nav_link" class="btn btn-danger buttonbottompad"><i class="fa fa-eraser"></i> Reset nav buttons</button><br><br>
 													<a id="export_page_link" href="/int/page_export/1" class="btn btn-success buttonbottompad"><i class="fa fa-file-export"></i> Export page</a>
-													<button type="button" id="erase_page_link" class="btn btn-danger buttonbottompad"><i class="fa fa-eraser"></i> Erase page</button>
+
 												</span>
 											</div>
 										</div>
@@ -382,23 +384,28 @@
 										<div id="editbank_content">
 										</div>
 
+										<p class='button_style button_style_pageup'>No configuration available for page up buttons</p>
+										<p class='button_style button_style_pagenum'>No configuration available for page number buttons</p>
+										<p class='button_style button_style_pagedown'>No configuration available for page down buttons</p>
 
-										<h4 style="margin-bottom:-13px;margin-top: 15px;">Key down/on actions</h4>
-										<div id='bankActions'>
+										<div id="action_area">
+											<h4 style="margin-bottom:-13px;margin-top: 15px;">Key down/on actions</h4>
+											<div id='bankActions'>
+											</div>
+
+											<select id='addBankAction' style='form-control'></select>
+
+											<h4 style="margin-top: 30px;">Key up/off actions</h4>
+											<div id='bankReleaseActions'>
+											</div>
+
+											<select id='addBankReleaseAction' style='form-control'></select>
+
+											<h4 style="margin-top: 30px;">Instance feedback</h4>
+											<div id='bankFeedbacks'>
+											</div>
+											<select id='addBankFeedback' style='form-control'></select>
 										</div>
-
-										<select id='addBankAction' style='form-control'></select>
-
-										<h4 style="margin-top: 30px;">Key up/off actions</h4>
-										<div id='bankReleaseActions'>
-										</div>
-
-										<select id='addBankReleaseAction' style='form-control'></select>
-
-										<h4 style="margin-top: 30px;">Instance feedback</h4>
-										<div id='bankFeedbacks'>
-										</div>
-										<select id='addBankFeedback' style='form-control'></select>
 
 										<br><br>
 										<div id="oscTips">

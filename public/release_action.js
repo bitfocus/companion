@@ -48,7 +48,7 @@ $(function() {
 		socket.emit('bank_update_release_action_option', page, bank,  $(this).data('release-action-id'), $(this).data('option-id'), $(this).val() );
 	});
 
-	socket.on('bank_get_release_actions:result', function(page, bank, actions) {
+	socket.on('bank_release_actions_get:result', function(page, bank, actions) {
 
 		$ba = $("#bankReleaseActions");
 		$ba.html("");
@@ -182,7 +182,7 @@ $(function() {
 
 				$del_td.click(function() {
 					if (confirm('Delete action?')) {
-						socket.emit('bank_delReleaseAction', page, bank, $(this).parent().data('id'));
+						socket.emit('bank_release_action_delete', page, bank, $(this).parent().data('id'));
 					}
 				})
 				$tbody.append($tr);

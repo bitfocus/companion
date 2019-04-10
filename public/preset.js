@@ -83,8 +83,8 @@ $(function() {
 				var preview_id = id+'_'+key;
 				$(bank).attr('data-drawn', 'yes');
 				console.log("requesting preview for ", preview_id);
-				socket.emit('graphics_generate_preview', all_presets[id][key].bank, preview_id);
-				socket.once('graphics_generate_preview:' + preview_id, function (img) {
+				socket.emit('graphics_preview_generate', all_presets[id][key].bank, preview_id);
+				socket.once('graphics_preview_generate:' + preview_id, function (img) {
 					var canv = $(bank).find('canvas').get(0);
 					var ctx = canv.getContext('2d');
 					ctx.putImageData(dataToButtonImage(img), 0, 0);

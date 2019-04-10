@@ -23,7 +23,7 @@ $(function() {
 	var $aba = $("#addBankAction");
 
 	$aba.change(function() {
-		socket.emit('bank_addAction', page, bank, $(this).val() );
+		socket.emit('bank_action_add', page, bank, $(this).val() );
 		$("#addBankAction").val($("#addBankAction option:first").val());
 	});
 
@@ -55,7 +55,7 @@ $(function() {
 		socket.emit('hot_press',page,bank, false);
 	});
 
-	socket.on('bank_get_actions:result', function(page, bank, actions) {
+	socket.on('bank_actions_get:result', function(page, bank, actions) {
 
 		$ba = $("#bankActions");
 		$ba.html("");
@@ -235,7 +235,7 @@ $(function() {
 
 				$del_td.click(function() {
 					if (confirm('Delete action?')) {
-						socket.emit('bank_delAction', page, bank, $(this).parent().data('id'));
+						socket.emit('bank_action_delete', page, bank, $(this).parent().data('id'));
 					}
 				})
 				$tbody.append($tr);
