@@ -35,18 +35,19 @@
 * Module API: add callback structure for module feedback
 ### New support added
 * Analog Way Picturall
-* Barco HDX - Need testing
+* Barco HDX **Need testing**
 * Blackmagic Design Teranex
+* BrightSign Player **Need testing**
 * Christie Widget Designer
 * Depili Clock 8001
-* Denon Receivers - Need testing
+* Denon Receivers **Need testing**
 * ETC EOS
 * Hologfx Holographics
 * Interactive Technologies Cueserver
 * Kramer Matrixes
 * Living As One Decoders
 * Matrox Monarch
-* MSC Router - Need testing
+* MSC Router **Need testing**
 * Panasonic PTZ
 * Picturall media server
 * Planning Center Services Live
@@ -57,7 +58,7 @@
 * Thingm Blink(1)
 * VICREO Hotkeys
 * Yamaha QL/CL/TF Consoles
-* Vizio Smartcast
+* Vizio Smartcast **Need testing**
 ### Enhanced support
 * Barco Eventmaster
   * Making presets work for cues and preset recalling
