@@ -301,3 +301,6 @@
 [submodule "lib/module/agf-characterworks"]
 	path = lib/module/agf-characterworks
 	url = https://github.com/bitfocus/companion-module-agf-characterworks.git
+[submodule "lib/module/allenheath-dlive"]
+	path = lib/module/allenheath-dlive
+	url = https://github.com/bitfocus/companion-module-allenheath-dlive.git
