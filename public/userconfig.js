@@ -32,6 +32,26 @@ $(function() {
 			$cb.prop('checked', false);
 		}
 
+		// enable pincode lockouts
+		var state = userconfig.pin_enable;
+		var $cb = $('#userconfig_pin_enable');
+
+		if (state === true) {
+			$cb.prop('checked', true);
+		} else {
+			$cb.prop('checked', false);
+		}
+
+		// link the surfaces lockout state together
+		var state = userconfig.link_lockouts;
+		var $cb = $('#userconfig_link_lockouts');
+
+		if (state === true) {
+			$cb.prop('checked', true);
+		} else {
+			$cb.prop('checked', false);
+		}
+
 		// set the page plus/minus option
 		var state = userconfig.page_plusminus;
 		var $cb = $('#userconfig_page_plusminus');
@@ -56,6 +76,14 @@ $(function() {
 		var $cb = $('#userconfig_artnet_universe');
 		$cb.val(state);
 
+		var state = userconfig.pin;
+		var $cb = $('#userconfig_pin');
+		$cb.val(state);
+
+		var state = userconfig.pin_timeout;
+		var $cb = $('#userconfig_pin_timeout');
+		$cb.val(state);
+
 		var state = userconfig.artnet_channel;
 		var $cb = $('#userconfig_artnet_channel');
 		$cb.val(state);
@@ -66,7 +94,6 @@ $(function() {
 
 	// when userconfig is changed from the userconfig tab
 	$('#userconfig_page_direction_flipped').click(function() {
-		console.log('clicked', $(this).prop('checked') );
 		if ($(this).prop('checked') == true) {
 			socket.emit('set_userconfig_key', 'page_direction_flipped', true);
 		} else {
@@ -74,8 +101,23 @@ $(function() {
 		}
 	});
 
+	$('#userconfig_pin_enable').click(function() {
+		if ($(this).prop('checked') == true) {
+			socket.emit('set_userconfig_key', 'pin_enable', true);
+		} else {
+			socket.emit('set_userconfig_key', 'pin_enable', false);
+		}
+	});
+
+	$('#userconfig_link_lockouts').click(function() {
+		if ($(this).prop('checked') == true) {
+			socket.emit('set_userconfig_key', 'link_lockouts', true);
+		} else {
+			socket.emit('set_userconfig_key', 'link_lockouts', false);
+		}
+	});
+
 	$('#userconfig_page_plusminus').click(function() {
-		console.log('clicked', $(this).prop('checked') );
 		if ($(this).prop('checked') == true) {
 			socket.emit('set_userconfig_key', 'page_plusminus', true);
 		} else {
@@ -85,7 +127,6 @@ $(function() {
 
 
 	$('#userconfig_artnet_enabled').click(function() {
-		console.log('clicked', $(this).prop('checked') );
 		if ($(this).prop('checked') == true) {
 			socket.emit('set_userconfig_key', 'artnet_enabled', true);
 		} else {
@@ -95,6 +136,14 @@ $(function() {
 
 	$('#userconfig_artnet_universe').keyup(function() {
 		socket.emit('set_userconfig_key', 'artnet_universe', $('#userconfig_artnet_universe').val());
+	});
+
+	$('#userconfig_pin').keyup(function() {
+		socket.emit('set_userconfig_key', 'pin', $('#userconfig_pin').val());
+	});
+
+	$('#userconfig_pin_timeout').keyup(function() {
+		socket.emit('set_userconfig_key', 'pin_timeout', $('#userconfig_pin_timeout').val());
 	});
 
 	$('#userconfig_artnet_channel').keyup(function() {
@@ -108,7 +157,6 @@ $(function() {
 
 	// when server updates the entire config array
 	socket.on('get_userconfig_all', function(config) {
-		console.log('updating entire userconfig:', config)
 		userconfig = config;
 		userConfigUpdate();
 	});

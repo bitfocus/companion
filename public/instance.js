@@ -27,11 +27,27 @@ $(function() {
 	var iconfig = {};
 	var current_instance;
 
-	var debug = console.log;
+	var debug = function () {}; // console.log;
 	$("#instanceConfigTab").hide();
 
 	socket.emit('instance_get');
 	socket.emit('instance_status_get');
+
+	function show_module_help(name) {
+		socket.emit('instance_get_help', name);
+		socket.once('instance_get_help:result', function (err, result) {
+			if (err) {
+				alert('Error getting help text');
+				return;
+			}
+			if (result) {
+				var $helpModal = $('#helpModal');
+				$helpModal.find('.modal-title').html('Help for ' + name);
+				$helpModal.find('.modal-body').html(result);
+				$helpModal.modal();
+			}
+		});
+	}
 
 	function updateInstanceStatus() {
 		for (var x in instance_status) {
@@ -89,17 +105,15 @@ $(function() {
 			var $button_disable = $("<button type='button' data-id='"+n+"' class='instance-disable btn btn-sm btn-ghost-warning'>disable</button>");
 			var $button_enable = $("<button type='button' data-id='"+n+"' class='instance-enable btn btn-sm btn-ghost-success'>enable</button>");
 
-			if (i.instance_type != 'bitfocus-companion') {
-				$td_actions.append($button_delete)
-				$td_actions.append($("<span>&nbsp;</span>"));
-			}
+			$td_actions.append($button_delete)
+			$td_actions.append($("<span>&nbsp;</span>"));
 
-			if (i.instance_type != 'bitfocus-companion' && (i.enabled === undefined || i.enabled === true)) {
+			if (i.enabled === undefined || i.enabled === true) {
 				$td_actions.append($button_disable)
 				$button_edit.show();
 			}
 
-			else if (i.instance_type != 'bitfocus-companion') {
+			else if (i.instance_type !== 'bitfocus-companion') {
 				$td_actions.append($button_enable);
 				$button_edit.hide();
 			}
@@ -112,7 +126,6 @@ $(function() {
 				if (confirm('Delete instance?')) {
 					var id = $(this).data('id');
 					$("#instanceConfigTab").hide();
-					console.log("instance-delete:",id);
 					socket.emit('instance_delete', id);
 					$(this).parent().parent().remove();
 				}
@@ -120,25 +133,26 @@ $(function() {
 
 			$button_edit.click(function() {
 				var id = $(this).data('id');
-				console.log("instance-edit:",id);
 				socket.emit('instance_edit', id);
 			});
 
 			$button_disable.click(function() {
 				var id = $(this).data('id');
-				console.log("instance-disable:",id);
 				socket.emit('instance_enable', id, false);
 			});
 
 			$button_enable.click(function() {
 				var id = $(this).data('id');
-				console.log("instance-enable:",id);
 				socket.emit('instance_enable', id, true);
 			});
 
 			for (var x in instance.module) {
 				if (instance.module[x].name == list[n].instance_type) {
-					$td_id.html("<b>"+instance.module[x].shortname+"</b>" + "<br>" + instance.module[x].manufacturer);
+					var help = '';
+					if (instance.module[x].help) {
+						help = '<div class="instance_help"><i class="fa fa-question-circle"></i></div>';
+					}
+					$td_id.html(help + "<b>"+instance.module[x].shortname+"</b>" + "<br>" + instance.module[x].manufacturer);
 				}
 			}
 
@@ -151,6 +165,12 @@ $(function() {
 			$tr.append($td_label);
 			$tr.append($td_status);
 			$tr.append($td_actions);
+
+			(function (name) {
+				$tr.find('.instance_help').click(function () {
+					show_module_help(name);
+				});
+			})(list[n].instance_type);
 
 			$il.append($tr);
 
@@ -171,7 +191,7 @@ $(function() {
 
 		if ($aisf.val().length > 0) {
 			$aisr.html("");
-			
+
 			for (var x in instance_name) {
 
 				var main_split = instance_name[x].split(":");
@@ -189,10 +209,27 @@ $(function() {
 						$x.prepend($button);
 						$x.data('id', x);
 
-						$x.click(function(e) {
-							e.preventDefault();
-							var instance_type = $(this).data('id');
+						var $help = $('<div class="instance_help"><i class="fa fa-question-circle"></i></div>')
 
+						for (var y in instance.module) {
+							if (instance.module[y].name == x) {
+								if (instance.module[y].help) {
+									$x.append($help);
+								}
+							}
+						}
+
+						$help.click(function (e) {
+							e.stopPropagation();
+							e.preventDefault();
+							var id = $(this).parents('div').first().data('id');
+
+							show_module_help(id);
+						});
+
+						$button.click(function(e) {
+							e.preventDefault();
+							var instance_type = $(this).parents('div').first().data('id');
 							socket.emit('instance_add', instance_type );
 							$aisr.html("");
 							$aisf.val("");
@@ -240,7 +277,6 @@ $(function() {
 		instance_name = obj.name;
 
 		updateInstanceList(i.db);
-		console.log('instance', i);
 
 		$addInstance = $("#addInstance");
 		$addInstanceByManufacturer = $("#addInstanceByManufacturer");

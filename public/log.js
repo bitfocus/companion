@@ -19,7 +19,6 @@ $(function() {
 
 
 	var doLogResize = function() {
-		console.log("resizing");
 		$("#log").css('height', ($(window).height() - 150) + 'px')
 	};
 

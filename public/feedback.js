@@ -1,7 +1,6 @@
 var feedbacklist = {};
 
 $(function() {
-	console.log("feedback_get_definitions");
 	socket.emit('feedback_get_definitions', page, bank);
 
 	var $aba = $("#addBankFeedback");
@@ -26,21 +25,18 @@ $(function() {
 	});
 
 	socket.on('bank_get_feedbacks:result', function(page, bank, feedbacks) {
-		console.log("bank_get_feedbacks:result", page, bank, feedbacks);
-
 		$ba = $("#bankFeedbacks");
 		$ba.html("");
 
 		var $table = $("<table class='table feedback-table'></table>");
-		var $trth = $("<thead><tr><th colspan=2>Feedback</th><th>Options</th></tr></thead>");
+		var $trth = $("<thead><tr><th></th><th colspan=2>Feedback</th><th>Options</th></tr></thead>");
 		var $tbody = $("<tbody></tbody>");
 		$table.append($trth);
 
 		for (var n in feedbacks) {
 			var feedback = feedbacks[n];
-			if (feedback !== null && instance.db[feedback.instance_id] !== undefined && instance.db[feedback.instance_id].label !== undefined) {
-				console.log("XXXXXXXXXXXX", feedback);
-				console.log("YYYYY", instance.db);
+
+			if (feedback !== undefined && instance.db[feedback.instance_id] !== undefined && instance.db[feedback.instance_id].label !== undefined) {
 				var idb = instance.db[feedback.instance_id];
 				var it = instance.db[feedback.instance_id].instance_type;
 				var inst = feedback;
@@ -48,21 +44,35 @@ $(function() {
 				var $tr = $("<tr></tr>");
 				$tr.data("id", feedback.id);
 
-				var $name_td = $("<td class='feedbacklist-td-label'>" + instance.db[feedback.instance_id].label + ": " + feedbacklist[feedback.instance_id][feedback.type].label + "</td>");
+				var name;
+
+				if (feedbacklist[feedback.instance_id] === undefined || feedbacklist[feedback.instance_id][feedback.type] === undefined) {
+					name = instance.db[feedback.instance_id].label + ": " + feedback.type + " <em>(undefined)</em>";
+				}
+				else {
+					name = instance.db[feedback.instance_id].label + ": " + feedbacklist[feedback.instance_id][feedback.type].label;
+				}
+
+				var $name_td = $("<td class='feedbacklist-td-label'>" + name + "</td>");
 				var $del_td = $("<td class='feedbacklist-td-delete'><button type='button' class='btn btn-danger btn-sm'>delete</button><span>&nbsp;</span></td>");
+				var $reorder_grip = $("<td class='feedbacklist-td-reorder'><i class='fa fa-sort reorder-grip'></i></td>");
 				var $options = $("<td class='feedbacklist-td-options'></td>");
 
+				$tr.append($reorder_grip);
 				$tr.append($del_td);
 				$tr.append($name_td);
 
-				var iopt = feedbacklist[feedback.instance_id][feedback.type];
+				var iopt;
+
+				if (feedbacklist[feedback.instance_id] !== undefined && feedbacklist[feedback.instance_id][feedback.type] !== undefined) {
+					iopt = feedbacklist[feedback.instance_id][feedback.type];
+				}
 
 				if (iopt !== undefined && iopt.options !== undefined) {
 					var options = iopt.options;
 
 					for (var n in options) {
 						var option = options[n];
-
 
 						var $opt_label = $("<label>"+option.label+"</label>");
 						$options.append($opt_label);
@@ -144,7 +154,6 @@ $(function() {
 
 						else if (option.type == 'colorpicker') {
 
-							console.log("Option", option, "value", feedback);
 							var $input = $("<input type='text' id='auto_"+option.id+"'>");
 							$input.addClass('active_field');
 							$input.data('special','color');
@@ -194,7 +203,6 @@ $(function() {
 
 				$del_td.click(function() {
 					if (confirm('Delete feedback?')) {
-						console.log("delete feedback", page, bank, $(this).parent().data('id'))
 						socket.emit('bank_delFeedback', page, bank, $(this).parent().data('id'));
 					}
 				})
@@ -206,6 +214,13 @@ $(function() {
 			$table.append($tbody);
 		}
 		$ba.append($table);
+
+		new RowSorter($table[0], {
+			handler: '.reorder-grip',
+			onDrop: function(tbody, row, new_index, old_index) {
+				socket.emit('bank_update_feedback_order', page, bank, old_index, new_index);
+			}
+		});
 	});
 
 	socket.on('feedback_get_definitions:result', function(feedbacks) {
@@ -215,8 +230,6 @@ $(function() {
 
 		/*var $ali = $("#feedbacksList");
 		$ali.html("");*/
-
-		console.log("feedbacks",feedbacks);
 
 		var $option = $("<option> + Add feedback</option>")
 		$aba.append($option);

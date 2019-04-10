@@ -15,8 +15,10 @@
 # develop commercial activities involving the Companion software without
 # disclosing the source code of your own applications.
 #
-
 git pull
 git submodule init
+git submodule sync
 git submodule update
 ./tools/yarn.sh
+
+./tools/check_renamed.sh

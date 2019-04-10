@@ -15,7 +15,7 @@
  *
  */
 
-process.env['DEBUG'] = '*,-express*,-engine*,-socket.io*,-send*,-db,-NRC*,-follow-redirects,-electron-timer-fix';
+process.env['DEBUG'] = '*,-websocket*,-express*,-engine*,-socket.io*,-send*,-db,-NRC*,-follow-redirects,-electron-timer-fix';
 
 // Fix timers in electron
 require('./electron-timer-fix').fix();
@@ -27,7 +27,13 @@ var fs = require("fs");
 var path = require('path')
 var debug = require('debug')('app');
 var mkdirp = require('mkdirp');
+var util = require('util');
+var events = require('events');
+var stripAnsi = require('strip-ansi');
+var logbuffer = [];
+var logwriting = false;
 var skeleton_info = {};
+
 var config;
 var cfgDir;
 
@@ -92,6 +98,36 @@ system.on('skeleton-start-minimised', function(minimised) {
 
 system.on('skeleton-ready', function() {
 
+	if (system.headless === true) {
+		debug("Going into headless mode. Logs will be written to companion.log")
+
+		setInterval(function() {
+
+			if (logbuffer.length > 0 && logwriting == false) {
+				var writestring = logbuffer.join("\n");
+				logbuffer = [];
+				logwriting = true;
+				fs.appendFile('./companion.log', writestring + "\n", function(err) {
+					if (err) {
+						console.log("log write error", err);
+					}
+					logwriting = false;
+				});
+			}
+		}, 1000)
+
+		process.stderr.write = function() {
+			var arr = [];
+			for (var n in arguments) {
+				arr.push(arguments[0]);
+			}
+			var line = new Date().toISOString() + " " + stripAnsi(arr.join(" ").trim() );
+			logbuffer.push(line);
+		};
+
+
+	}
+
 	var server_http= require('./lib/server_http')(system);
 	var io         = require('./lib/io')(system, server_http);
 	var log        = require('./lib/log')(system,io);
@@ -117,6 +153,8 @@ system.on('skeleton-ready', function() {
 	var loadsave   = require('./lib/loadsave')(system);
 	var preset     = require('./lib/preset')(system);
 	var tablet     = require('./lib/tablet')(system);
+	var satellite  = require('./lib/satellite_server')(system);
+	var ws_api     = require('./lib/ws_api')(system);
 
 	system.on('exit', function() {
 		elgatoDM.quit();
@@ -128,6 +166,9 @@ system.on('skeleton-single-instance-only', function (response) {
 	response(true);
 });
 
-exports = module.exports = function() {
+exports = module.exports = function(headless) {
+	if (headless !== undefined && headless === true) {
+		system.headless = true;
+	}
 	return system;
 }

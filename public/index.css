@@ -156,6 +156,80 @@ label {
 	font-size: 12px;
 }
 
+.instance_help {
+  float: right;
+	cursor: pointer;
+	cursor: hand;
+}
+
+.help-dialog {
+	max-width: 70%;
+}
+
+.help-body img {
+	max-width: 95%;
+}
+
+.help-body {
+	padding-left: 25px;
+	padding-right: 25px;
+	padding-top: 0px;
+	word-wrap: break-word;
+}
+
+.help-body table td, .help-body table th {
+  border: 1px solid #dfe2e5;
+  padding: 6px 13px;
+}
+
+.help-body table th {
+  font-weight: 600;
+}
+
+.help-body table {
+	margin-bottom: 1.5em;
+}
+
+.help-body table tr:nth-child(2n) {
+  background-color: #f6f8fa;
+}
+
+.help-body table tr {
+  background-color: #fff;
+  border-top: 1px solid #c6cbd1;
+}
+
+.help-body code {
+	background-color: rgba(27,31,35,.05);
+  border-radius: 3px;
+  font-size: 85%;
+  margin: 0;
+  padding: .2em .4em;
+	color: #3e7fe8;
+}
+
+.help-body blockquote, .help-body dl, .help-body ol, .help-body p, .help-body pre, .help-body table, .help-body ul {
+  margin-bottom: 16px;
+  margin-top: 0;
+}
+
+.help-body h1, .help-body h2, .help-body h3, .help-body h4, .help-body h5, .help-body h6 {
+	margin-bottom: 16px;
+	margin-top: 24px;
+}
+
+.help-body .highlight pre, .help-body pre {
+    background-color: #f6f8fa;
+    border-radius: 3px;
+    font-size: 85%;
+    line-height: 1.45;
+    overflow: auto;
+    padding: 16px;
+}
+.help-body pre {
+    word-wrap: normal;
+}
+
 .btn-file {
 		position: relative;
 		overflow: hidden;
@@ -242,20 +316,52 @@ label {
 }
 
 
-.actionlist-td-label {
+.actionlist-td-label,
+.feedbacklist-td-label{
 	padding-top:24px !important;
 }
 .actionlist-td-delay {
 	padding-top:20px !important;
 	padding-bottom:20px !important;
 }
-.actionlist-td-delete {
+.actionlist-td-delete,
+.feedbacklist-td-delete{
 	padding-top:23px !important;
 	line-height:0px;
 	width:70px;
 }
-.actionlist-td-options {
+.actionlist-td-options,
+.feedbacklist-td-options{
 	padding-top:0px !important;
+}
+td.actionlist-td-reorder,
+td.feedbacklist-td-reorder{
+	/* Remove horizontal column padding */
+	padding-left: 0;
+	padding-right: 0;
+	text-align: center;
+	vertical-align: middle;
+	width: 2rem;
+}
+
+.reorder-grip {
+	cursor: ns-resize;
+	opacity: 0.5;
+	/* Give the icon a larger grip target */
+	padding: 0 0.5rem 0.3rem;
+}
+.reorder-grip:hover {
+	opacity: 1.0;
+}
+.sorting-table tbody tr:not(.sorting-row) td {
+	opacity: 0.7;
+}
+.sorting-row {
+	cursor: ns-resize;
+	background-color: rgba(228, 228, 228, 0.4);
+}
+.sorting-row .reorder-grip {
+	opacity: 1.0;
 }
 
 #bankActions {
