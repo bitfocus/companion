@@ -304,3 +304,6 @@
 [submodule "lib/module/allenheath-dlive"]
 	path = lib/module/allenheath-dlive
 	url = https://github.com/bitfocus/companion-module-allenheath-dlive.git
+[submodule "lib/module/tesla-smart"]
+	path = lib/module/tesla-smart
+	url = https://github.com/bitfocus/companion-module-tesla-smart.git
