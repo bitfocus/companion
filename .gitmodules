@@ -307,3 +307,6 @@
 [submodule "lib/module/tesla-smart"]
 	path = lib/module/tesla-smart
 	url = https://github.com/bitfocus/companion-module-tesla-smart.git
+[submodule "lib/module/teradek-vidiu"]
+	path = lib/module/teradek-vidiu
+	url = https://github.com/bitfocus/companion-module-teradek-vidiu.git
