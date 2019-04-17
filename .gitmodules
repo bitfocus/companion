@@ -310,3 +310,6 @@
 [submodule "lib/module/teradek-vidiu"]
 	path = lib/module/teradek-vidiu
 	url = https://github.com/bitfocus/companion-module-teradek-vidiu.git
+[submodule "lib/module/extron-dxp"]
+	path = lib/module/extron-dxp
+	url = https://github.com/bitfocus/companion-module-extron-dxp.git
