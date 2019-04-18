@@ -34,13 +34,14 @@
 * Stability improvements to bank lists and feedbacks
 * Module API: add callback structure for module feedback
 ### New support added
+* Allen & Heath dLive **Need testing**
 * Analog Way Picturall
 * Barco HDX **Need testing**
 * Blackmagic Design Teranex
 * BrightSign Player **Need testing**
 * Christie Widget Designer
 * Depili Clock 8001
-* Denon Receivers **Need testing**
+* Denon Receivers
 * ETC EOS
 * Hologfx Holographics
 * Interactive Technologies Cueserver
