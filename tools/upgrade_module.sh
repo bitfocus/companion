@@ -26,7 +26,16 @@ git pull origin master
 cd ../../../
 ls -la
 git status
-git commit lib/module/$1 -m "Module: Upgraded $1"
+
+intro="Module: Upgraded $1"
+shift
+
+if [ -n "$1" ]; then
+	git commit lib/module/$1 -m "$intro - $*"
+else
+	git commit lib/module/$1 -m "$intro"
+fi
+
 git push
 
 exit 0
