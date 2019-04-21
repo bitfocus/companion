@@ -313,3 +313,9 @@
 [submodule "lib/module/extron-dxp"]
 	path = lib/module/extron-dxp
 	url = https://github.com/bitfocus/companion-module-extron-dxp.git
+[submodule "avolites-titan"]
+	path = avolites-titan
+	url = https://github.com/bitfocus/companion-module-avolites-titan.git
+[submodule "lib/module/avolites-titan"]
+	path = lib/module/avolites-titan
+	url = https://github.com/bitfocus/companion-module-avolites-titan.git
