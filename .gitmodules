@@ -319,3 +319,6 @@
 [submodule "lib/module/avolites-titan"]
 	path = lib/module/avolites-titan
 	url = https://github.com/bitfocus/companion-module-avolites-titan.git
+[submodule "lib/module/christie-pandorasbox"]
+	path = lib/module/christie-pandorasbox
+	url = https://github.com/bitfocus/companion-module-christie-pandorasbox.git
