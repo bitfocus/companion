@@ -322,3 +322,6 @@
 [submodule "lib/module/christie-pandorasbox"]
 	path = lib/module/christie-pandorasbox
 	url = https://github.com/bitfocus/companion-module-christie-pandorasbox.git
+[submodule "lib/module/tslproducts-umd"]
+	path = lib/module/tslproducts-umd
+	url = https://github.com/bitfocus/companion-module-tslproducts-umd.git
