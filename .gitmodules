@@ -325,3 +325,6 @@
 [submodule "lib/module/tslproducts-umd"]
 	path = lib/module/tslproducts-umd
 	url = https://github.com/bitfocus/companion-module-tslproducts-umd.git
+[submodule "lib/module/barco-dp"]
+	path = lib/module/barco-dp
+	url = https://github.com/bitfocus/companion-module-barco-dp.git
