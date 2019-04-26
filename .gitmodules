@@ -328,3 +328,6 @@
 [submodule "lib/module/barco-dp"]
 	path = lib/module/barco-dp
 	url = https://github.com/bitfocus/companion-module-barco-dp.git
+[submodule "lib/module/roland-vp42h"]
+	path = lib/module/roland-vp42h
+	url = https://github.com/bitfocus/companion-module-roland-vp42h.git
