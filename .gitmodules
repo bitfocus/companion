@@ -331,3 +331,6 @@
 [submodule "lib/module/roland-vp42h"]
 	path = lib/module/roland-vp42h
 	url = https://github.com/bitfocus/companion-module-roland-vp42h.git
+[submodule "lib/module/opticis-omm-1000"]
+	path = lib/module/opticis-omm-1000
+	url = https://github.com/bitfocus/companion-module-opticis-omm1000.git
