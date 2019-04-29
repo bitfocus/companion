@@ -337,3 +337,6 @@
 [submodule "lib/module/sounddevices-pixnet"]
 	path = lib/module/sounddevices-pixnet
 	url = https://github.com/bitfocus/companion-module-sounddevices-pixnet.git
+[submodule "lib/module/barco-pulse"]
+	path = lib/module/barco-pulse
+	url = https://github.com/bitfocus/companion-module-barco-pulse.git
