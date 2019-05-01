@@ -340,3 +340,6 @@
 [submodule "lib/module/barco-pulse"]
 	path = lib/module/barco-pulse
 	url = https://github.com/bitfocus/companion-module-barco-pulse.git
+[submodule "lib/module/barco-matrixpro"]
+	path = lib/module/barco-matrixpro
+	url = https://github.com/bitfocus/companion-module-barco-matrixpro.git
