@@ -343,3 +343,6 @@
 [submodule "lib/module/barco-matrixpro"]
 	path = lib/module/barco-matrixpro
 	url = https://github.com/bitfocus/companion-module-barco-matrixpro.git
+[submodule "lib/module/analogway-livecore-custom"]
+	path = lib/module/analogway-livecore-custom
+	url = https://github.com/bitfocus/companion-module-analogway-livecore-custom.git
