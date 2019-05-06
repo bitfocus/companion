@@ -352,12 +352,6 @@
 [submodule "lib/module/draco-tera"]
 	path = lib/module/draco-tera
 	url = https://github.com/bitfocus/companion-module-draco-tera.git
-[submodule "lib/module/roland-xs84"]
-	path = lib/module/roland-xs84
-	url = https://github.com/bitfocus/companion-module-roland-xs84.git
-[submodule "roland-xs42h"]
-	path = roland-xs42h
-	url = https://github.com/bitfocus/companion-module-roland-xs42h.git
 [submodule "lib/module/roland-xs42h"]
 	path = lib/module/roland-xs42h
 	url = https://github.com/bitfocus/companion-module-roland-xs42h.git
