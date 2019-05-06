@@ -349,3 +349,6 @@
 [submodule "lib/module/audivero-unityintercom"]
 	path = lib/module/audivero-unityintercom
 	url = https://github.com/bitfocus/companion-module-audivero-unityintercom.git
+[submodule "lib/module/roland-xs84"]
+	path = lib/module/roland-xs84
+	url = https://github.com/bitfocus/companion-module-roland-xs84.git
