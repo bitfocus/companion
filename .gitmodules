@@ -343,9 +343,6 @@
 [submodule "lib/module/barco-matrixpro"]
 	path = lib/module/barco-matrixpro
 	url = https://github.com/bitfocus/companion-module-barco-matrixpro.git
-[submodule "lib/module/analogway-livecore-custom"]
-	path = lib/module/analogway-livecore-custom
-	url = https://github.com/bitfocus/companion-module-analogway-livecore-custom.git
 [submodule "lib/module/audivero-unityintercom"]
 	path = lib/module/audivero-unityintercom
 	url = https://github.com/bitfocus/companion-module-audivero-unityintercom.git
