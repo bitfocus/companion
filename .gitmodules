@@ -358,3 +358,6 @@
 [submodule "lib/module/roland-xs84h"]
 	path = lib/module/roland-xs84h
 	url = https://github.com/bitfocus/companion-module-roland-xs84h.git
+[submodule "lib/module/extron-smx"]
+	path = lib/module/extron-smx
+	url = https://github.com/bitfocus/companion-module-extron-smx.git
