@@ -358,3 +358,6 @@
 [submodule "lib/module/extron-smx"]
 	path = lib/module/extron-smx
 	url = https://github.com/bitfocus/companion-module-extron-smx.git
+[submodule "lib/module/metus-ingest"]
+	path = lib/module/metus-ingest
+	url = https://github.com/bitfocus/companion-module-metus-ingest.git
