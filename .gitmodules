@@ -361,3 +361,6 @@
 [submodule "lib/module/metus-ingest"]
 	path = lib/module/metus-ingest
 	url = https://github.com/bitfocus/companion-module-metus-ingest.git
+[submodule "lib/module/extron-ipl-t-pcs4"]
+	path = lib/module/extron-ipl-t-pcs4
+	url = https://github.com/bitfocus/companion-module-extron-ipl-t-pcs4.git
