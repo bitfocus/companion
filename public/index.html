@@ -229,6 +229,12 @@
 									</li>
 
 									<li class="nav-item">
+										<a class="nav-link" data-toggle="tab" href="#network" id='netcontrol' role="tab">
+											<i class="fas fa-server"></i> Network
+										</a>
+									</li>
+
+									<li class="nav-item">
 										<a class="nav-link" data-toggle="tab" href="#userconfig" role="tab" aria-controls="userconfig">
 											<i class="fa fa-user-ninja"></i> Settings</a>
 									</li>
@@ -419,9 +425,85 @@
 										</div>
 										<select id='addBankFeedback' style='form-control'></select>
 
-										<br><br>
-										<div id="oscTips">
-										</div>
+
+									</div>
+
+									<div class="tab-pane" id="network" role="tabpanel">
+										<h4>Network Control</h4>
+										<p>Companion supports a wide range of network control options for those who would like to use it without, or supplement, a streamdeck surface</p>
+										<h4>OSC Control</h4>
+										<p>Companion can be controlled via OSC on UDP port <code>12321</code> using the following commands:</p>
+										<ul>
+											<li><code>/press/bank/&lt;page&gt;/&lt;button&gt;</code><br>
+												<i>Press and release the specified button</i></li>
+											<li><code>/press/bank/&lt;page&gt;/&lt;button&gt; 1</code><br>
+												<i>Press the specified button</i></li>
+											<li><code>/press/bank/&lt;page&gt;/&lt;button&gt; 0</code><br>
+												<i>Release the specified button</i></li>
+										</ul>
+
+										<h4>RossTalk Control</h4>
+										<p>Companion can be controlled via RossTalk from Carbonite, Acuity, Dashboard, and UltriCore panels on UDP port <code>7788</code> using the following commands:</p>
+										<ul>
+											<li><code>CC &lt;page&gt;:&lt;button&gt;</code><br>
+												<i>Press and release the specified button</i></li>
+											<li><code>GPI &lt;integer&gt;</code><br>
+												<i>Press and release the specified button</i></li>
+										</ul>
+										<p>Regarding GPI triggers, integers over the number specified as panel size in settings will be wrapped to the start of the next page, so with a panel size of 12, <code>GPI 20</code> will trigger page 2 button 8, but with a panel size of 6 (for a Streamdeck Mini without nav buttons), it will trigger page 4 button 12</p>
+									
+										<h4>HTTP Control</h4>
+										<p>Companion can be controlled via HTTP on the TCP port of the web interface</code> using the following commands:</p>
+										<ul>
+											<li><code>/press/bank/&lt;page&gt;/&lt;button&gt;</code><br>
+												<i>Press and release the specified button</i></li>
+										</ul>
+
+										<h4>TCP/UDP Control</h4>
+										<p>Remote triggering can be done by sending TCP (port <code>51234</code>) or UDP (port <code>51235</code>) commands.</p>
+										<p><strong>Commands:</strong>
+											<ul>
+												<li><code>PAGE-SET</code> &lt;page number&gt; &lt;surface id&gt;<br>
+												<i>Make device go to a specific page</i></li>
+												<li><code>PAGE-UP</code> &lt;surface id&gt;<br>
+												<i>Page up on a specific device</i></li>
+												<li><code>PAGE-DOWN</code> &lt;surface id&gt;<br>
+												<i>Page down on a specific surface</i></li>
+												<li><code>BANK-PRESS</code> &lt;page&gt; &lt;bank&gt;<br>
+												<i>Press and release a button (run both down and up actions)</i></li>
+												<li><code>BANK-DOWN</code> &lt;page&gt; &lt;bank&gt;<br>
+												<i>Press the button (run down actions)</i></li>
+												<li><code>BANK-UP</code> &lt;page&gt; &lt;bank&gt;<br>
+												<i>Release the button (run up actions)</i></li>
+											</ul>
+										</p>
+
+										<p>
+											<strong>Examples</strong>
+										</p>
+
+										<p>Set the emulator surface to page 23<br>
+											<code>PAGE-SET 23 emulator</code></p>
+
+										<p>Press page 1 bank 2<br>
+											<code>BANK-PRESS 1 2</code></p>
+										<br>
+
+										<h4>Artnet Control</h4>
+										<p>Companion can be controlled via the Artnet DMX over IP protocol at the universe and channel settings configurable in the settings tab.</p>
+										<p>Companion acts as a 3 channel fixture with the follwoing parameters:</p>
+										<ul>
+											<li>Ch 1: Page</li>
+											<li>Ch 2: Button</li>
+											<li>Ch 3: State</li>
+										</ul>
+										<p>The Page channel takes the value of that channel and uses it as the index of the page to trigger<br>
+										The Button channel takes the value of that channel and uses it as the index of the button to trigger<br>
+										The State channel presses the button when its value is greater than 128 and releases it when its value is equal or less than 10</p>
+										<p>A GrandMA 2 fixture file is available for your convenience:</p>
+										<a class="btn btn-success" href="/bitfocus@companion_v1.2@00.xml">
+											<i class="fa fa-file-import"></i> Download GrandMA2 Fixture file
+										</a>
 
 									</div>
 
@@ -461,10 +543,10 @@
 												</tr>
 
 												<tr>
-													<td>Panel Size (Amount of Action Buttons)</td>
+													<td>Panel Size (Amount of Action Buttons, defaults to 12)</td>
 													<td>
 														<div class="form-check form-check-inline mr-1">
-															<input class="form-check-input" type="text" id="userconfig_panel_size" value="">
+															<input class="form-check-input" type="text" id="userconfig_panel_size" value="12">
 														</div>
 													</td>
 												</tr>
@@ -537,39 +619,6 @@
 
 											</tbody>
 										</table>
-										<h4>TCP/UDP Remote control</h4>
-										<p>Remote triggering can be done by sending TCP (port <code>51234</code>) or UDP (port <code>51235</code>) commands.</p>
-										<p><strong>Commands:</strong>
-											<ul>
-												<li><code>PAGE-SET</code> &lt;page number&gt; &lt;surface id&gt;<br>
-												<i>Make device go to a specific page</i></li>
-												<li><code>PAGE-UP</code> &lt;surface id&gt;<br>
-												<i>Page up on a specific device</i></li>
-												<li><code>PAGE-DOWN</code> &lt;surface id&gt;<br>
-												<i>Page down on a specific surface</i></li>
-												<li><code>BANK-PRESS</code> &lt;page&gt; &lt;bank&gt;<br>
-												<i>Press and release a button (run both down and up actions)</i></li>
-												<li><code>BANK-DOWN</code> &lt;page&gt; &lt;bank&gt;<br>
-												<i>Press the button (run down actions)</i></li>
-												<li><code>BANK-UP</code> &lt;page&gt; &lt;bank&gt;<br>
-												<i>Release the button (run up actions)</i></li>
-											</ul>
-										</p>
-
-										<p>
-											<strong>Examples</strong>
-										</p>
-
-										<p>Set the emulator surface to page 23<br>
-											<code>PAGE-SET 23 emulator</code></p>
-
-										<p>Press page 1 bank 2<br>
-											<code>BANK-PRESS 1 2</code></p>
-
-										<br>
-										<a class="btn btn-success" href="/bitfocus@companion_v1.2@00.xml">
-											<i class="fa fa-file-import"></i> Download GrandMA2 Fixture file
-										</a>
 
 									</div>
 								</div>
