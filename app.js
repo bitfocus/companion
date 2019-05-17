@@ -69,7 +69,7 @@ system.on('config_loaded', function(config) {
 });
 
 system.on('exit', function() {
-	console.log("somewhere, the system wants to exit. kthxbai");
+	debug("somewhere, the system wants to exit. kthxbai");
 	setImmediate(function(){
 		process.exit();
 	});
@@ -109,7 +109,7 @@ system.on('skeleton-ready', function() {
 				logwriting = true;
 				fs.appendFile('./companion.log', writestring + "\n", function(err) {
 					if (err) {
-						console.log("log write error", err);
+						debug("log write error", err);
 					}
 					logwriting = false;
 				});
@@ -150,6 +150,7 @@ system.on('skeleton-ready', function() {
 	var artnet     = require('./lib/artnet')(system);
 	var rest       = require('./lib/rest')(system);
 	var rest_poll  = require('./lib/rest_poll')(system);
+	var rosstalk   = require('./lib/rosstalk')(system);
 	var loadsave   = require('./lib/loadsave')(system);
 	var preset     = require('./lib/preset')(system);
 	var tablet     = require('./lib/tablet')(system);

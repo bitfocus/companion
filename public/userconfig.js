@@ -32,6 +32,11 @@ $(function() {
 			$cb.prop('checked', false);
 		}
 
+		// customisable panel size for streamdeck mini and external control systems
+		var state = userconfig.panel_size;
+		var $cb = $('#userconfig_panel_size');
+		$cb.val(state);
+
 		// enable pincode lockouts
 		var state = userconfig.pin_enable;
 		var $cb = $('#userconfig_pin_enable');
@@ -99,6 +104,10 @@ $(function() {
 		} else {
 			socket.emit('set_userconfig_key', 'page_direction_flipped', false);
 		}
+	});
+
+	$('#userconfig_panel_size').keyup(function() {
+		socket.emit('set_userconfig_key', 'panel_size', $('#userconfig_panel_size').val());
 	});
 
 	$('#userconfig_pin_enable').click(function() {
