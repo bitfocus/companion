@@ -12,8 +12,9 @@ init:
 
 install:
   - ps: Install-Product node 9 x64
-  - ps: Set-ExecutionPolicy Bypass -Scope Process -Force; iex ((New-Object System.Net.WebClient).DownloadString('https://chocolatey.org/install.ps1'))
-  - choco install yasm
+  - if "%PLATFORM%" == "x64" curl -o "c:\yasm\yasm.exe" http://www.tortall.net/projects/yasm/releases/yasm-1.3.0-win64.exe
+  - if "%PLATFORM%" == "x86" curl -o "c:\yasm\yasm.exe" http://www.tortall.net/projects/yasm/releases/yasm-1.3.0-win32.exe
+  - yasm --version
   - git config --file=.gitmodules submodule.bitfocus-skeleton.url https://github.com/bitfocus/bitfocus-skeleton.git
   - git config --file=.gitmodules submodule.bitfocus-libs.url https://github.com/bitfocus/bitfocus-libs.git
   - git submodule sync
