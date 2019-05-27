@@ -582,6 +582,9 @@ $(function() {
 
 	});
 
+	function remap(x, in_min, in_max, out_min, out_max) {
+		return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
+	}
 
 	function resize_buttonwidth() {
 
@@ -592,22 +595,15 @@ $(function() {
 		var space = button2 - button1 - 72;
 		var abs_space = Math.abs(space);
 
-		if (ww < 422) {
-			$('.border canvas').css("width", 64 - (abs_space*0.8));
-			$('.border canvas').css("height", 64 - (abs_space*0.8));
-		}
-		else if (ww < 670) {
-			$('.border canvas').css("width", 72 - (abs_space*1));
-			$('.border canvas').css("height", 72 - (abs_space*1));
-			$(".buttonbankwidth").css('marginRight', (-1 * (abs_space / 5)));
-		}
-		else {
-			$('.border canvas').css("width", 72);
-			$('.border canvas').css("height", 72);
-			$(".buttonbankwidth").css('marginRight', (-1 * (abs_space / 5)));
+		if (ww < 597) {
+			var wmin = ww - 374;
+			var p = remap(wmin, 0, 222, 44, 72);
+			console.log("XX", wmin, "---- ", p);
+			$('.border canvas').css("width", p);
+			$('.border canvas').css("height", p);
+
 		}
 
-		console.log("button", button1, button2, space, ww);
 	}
 
 	function changePage(pagenum) {
