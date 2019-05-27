@@ -20,6 +20,7 @@ process.env['DEBUG'] = '*,-websocket*,-express*,-engine*,-socket.io*,-send*,-db,
 // Fix timers in electron
 require('./electron-timer-fix').fix();
 
+global.MAX_BUTTONS = 32;
 
 var EventEmitter = require('events');
 var system = new EventEmitter();

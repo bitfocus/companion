@@ -15,6 +15,8 @@
  *
  */
 
+var MAX_BUTTONS = 32;
+
 var socket = new io();
 var image_cache = {};
 var buttons_hot = false;
@@ -65,7 +67,7 @@ $(function() {
 
 		var cachedata = {};
 
-		for (var _bank = 1; _bank <= 15; ++_bank) {
+		for (var _bank = 1; _bank <= MAX_BUTTONS; ++_bank) {
 			if (image_cache[_page + '_' + _bank] !== undefined) {
 				cachedata[_bank] = image_cache[_page + '_' + _bank].updated;
 			}
@@ -397,7 +399,7 @@ $(function() {
 	});
 
 	socket.on('preview_page_data', function (images) {
-		for (var key = 1; key <= 15; ++key) {
+		for (var key = 1; key <= MAX_BUTTONS; ++key) {
 			var imageData;
 
 			if (images[key] === undefined) {
@@ -600,7 +602,7 @@ $(function() {
 		$pagenav.append($('<div class="pageat col-lg-4"><small>(Page '+page+')</small> <input id="page_title" placeholder="Page name" type="text" value="'+ pname +'"></div>'));
 		$pagenav.append($('<div class="pagenav text-right col-lg-4"><div id="btn_pageup" class="btn btn-primary"><i class="fa fa-chevron-right"></i></div></div>'));
 
-		for (var bank = 1; bank <= 15; bank++) {
+		for (var bank = 1; bank <= MAX_BUTTONS; bank++) {
 
 			var $div = $('<div class="bank buttonbankwidth"><div class="border" data-bank="' + bank + '" data-page="' + page + '"><canvas width=72 height=72 id="bank_' + page + '_' + bank + '"></canvas></div></div>');
 
