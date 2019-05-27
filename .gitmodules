@@ -367,3 +367,6 @@
 [submodule "lib/module/extron-smp351"]
 	path = lib/module/extron-smp351
 	url = https://github.com/bitfocus/companion-module-extron-smp351.git
+[submodule "lib/module/zenvideo-ndirouter"]
+	path = lib/module/zenvideo-ndirouter
+	url = https://github.com/bitfocus/companion-module-zenvideo-ndirouter.git
