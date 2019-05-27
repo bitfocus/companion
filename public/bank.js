@@ -583,6 +583,33 @@ $(function() {
 	});
 
 
+	function resize_buttonwidth() {
+
+		var button1 = $(".buttonbankwidth:eq(1)").position().left;
+		var button2 = $(".buttonbankwidth:eq(2)").position().left;
+		var ww = $("#elgatobuttons").width();
+
+		var space = button2 - button1 - 72;
+		var abs_space = Math.abs(space);
+
+		if (ww < 422) {
+			$('.border canvas').css("width", 64 - (abs_space*0.8));
+			$('.border canvas').css("height", 64 - (abs_space*0.8));
+		}
+		else if (ww < 670) {
+			$('.border canvas').css("width", 72 - (abs_space*1));
+			$('.border canvas').css("height", 72 - (abs_space*1));
+			$(".buttonbankwidth").css('marginRight', (-1 * (abs_space / 5)));
+		}
+		else {
+			$('.border canvas').css("width", 72);
+			$('.border canvas').css("height", 72);
+			$(".buttonbankwidth").css('marginRight', (-1 * (abs_space / 5)));
+		}
+
+		console.log("button", button1, button2, space, ww);
+	}
+
 	function changePage(pagenum) {
 
 		$pagenav.html("");
@@ -598,9 +625,7 @@ $(function() {
 
 		$('#export_page_link').attr('href', '/int/page_export/' + page);
 
-		$pagenav.append($('<div class="pagenav col-lg-4"><div id="btn_pagedown" class="btn btn-primary"><i class="fa fa-chevron-left"></i></div></div>'));
-		$pagenav.append($('<div class="pageat col-lg-4"><small>(Page '+page+')</small> <input id="page_title" placeholder="Page name" type="text" value="'+ pname +'"></div>'));
-		$pagenav.append($('<div class="pagenav text-right col-lg-4"><div id="btn_pageup" class="btn btn-primary"><i class="fa fa-chevron-right"></i></div></div>'));
+		$pagenav.append($('<div class="pagenav col-lg-12"><div id="btn_pagedown" class="btn btn-primary"><i class="fa fa-chevron-left"></i></div> <div id="btn_pageup" class="btn btn-primary"><i class="fa fa-chevron-right"></i></div> <small>(Page '+page+')</small> <input id="page_title" placeholder="Page name" type="text" value="'+ pname +'"></div>'));
 
 		for (var bank = 1; bank <= MAX_BUTTONS; bank++) {
 
@@ -624,7 +649,15 @@ $(function() {
 			$pagebank.append($div);
 		}
 
+		resize_buttonwidth();
+
+		setInterval(function() {
+			resize_buttonwidth();
+		}, 1500);
+
 		bank_preview_page(pagenum);
+
+		$(window).resize(resize_buttonwidth);
 
 
 		$("#pagebank .border").mousedown(function() {

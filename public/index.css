@@ -51,16 +51,14 @@
 #import_pagebank canvas {
 	background-color: black;
 }
-
+.border {
+	border-width: 0px !important;
+	padding-top: 5px;
+}
 #pagebank .border, #import_pagebank .border , #pagenav .border {
 	display:block;
-	border-radius: 4px;
-	margin-bottom:10px;
-	padding:7px 0px 2px 0px;
 	cursor: pointer;
-	border: 1px solid #ccc;
-	background-color: #f4f4f4;
-	min-width: 74px;
+	min-width: 72px;
 	text-align:center;
 }
 #newversiontext {
@@ -68,6 +66,10 @@
 }
 #pagebank .border:hover, #pagenav .border:hover {
 	background-color: #e4e4e4;
+}
+
+.pagenav {
+		margin-bottom: 15px;
 }
 
 #pagebank divpreset canvas {
@@ -157,7 +159,7 @@ label {
 }
 
 .instance_help {
-  float: right;
+	float: right;
 	cursor: pointer;
 	cursor: hand;
 }
@@ -178,12 +180,12 @@ label {
 }
 
 .help-body table td, .help-body table th {
-  border: 1px solid #dfe2e5;
-  padding: 6px 13px;
+	border: 1px solid #dfe2e5;
+	padding: 6px 13px;
 }
 
 .help-body table th {
-  font-weight: 600;
+	font-weight: 600;
 }
 
 .help-body table {
@@ -191,26 +193,26 @@ label {
 }
 
 .help-body table tr:nth-child(2n) {
-  background-color: #f6f8fa;
+	background-color: #f6f8fa;
 }
 
 .help-body table tr {
-  background-color: #fff;
-  border-top: 1px solid #c6cbd1;
+	background-color: #fff;
+	border-top: 1px solid #c6cbd1;
 }
 
 .help-body code {
 	background-color: rgba(27,31,35,.05);
-  border-radius: 3px;
-  font-size: 85%;
-  margin: 0;
-  padding: .2em .4em;
+	border-radius: 3px;
+	font-size: 85%;
+	margin: 0;
+	padding: .2em .4em;
 	color: #3e7fe8;
 }
 
 .help-body blockquote, .help-body dl, .help-body ol, .help-body p, .help-body pre, .help-body table, .help-body ul {
-  margin-bottom: 16px;
-  margin-top: 0;
+	margin-bottom: 16px;
+	margin-top: 0;
 }
 
 .help-body h1, .help-body h2, .help-body h3, .help-body h4, .help-body h5, .help-body h6 {
@@ -219,15 +221,15 @@ label {
 }
 
 .help-body .highlight pre, .help-body pre {
-    background-color: #f6f8fa;
-    border-radius: 3px;
-    font-size: 85%;
-    line-height: 1.45;
-    overflow: auto;
-    padding: 16px;
+		background-color: #f6f8fa;
+		border-radius: 3px;
+		font-size: 85%;
+		line-height: 1.45;
+		overflow: auto;
+		padding: 16px;
 }
 .help-body pre {
-    word-wrap: normal;
+		word-wrap: normal;
 }
 
 .btn-file {
@@ -287,6 +289,7 @@ label {
 
 .border canvas {
 	border-radius: 4px;
+	border: 1px solid white;
 }
 .log-type-error {
 	background-color: rgba(255,0,0,0.2);
@@ -298,9 +301,7 @@ label {
 	color: rgba(255,128,0,1);
 }
 .buttonbankwidth {
-	width: 8%;
-	margin-right: 2%;
-	margin-left: 2%
+	width: 12.5%;
 }
 .log-type-info {
 	background-color: rgba(0,0,255,0.1);
@@ -410,11 +411,15 @@ td.feedbacklist-td-reorder{
 	border: 1px solid black !important;
 	background-color: #daffab !important;
 }
-
+#pagebank.row {
+	margin-left: -13px;
+}
 .buttonbottompad {
 	margin-bottom: 5px;
 }
-
+#pagebank {
+	margin: 0 auto;
+}
 
 
 .dropdown-submenu {
