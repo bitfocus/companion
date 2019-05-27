@@ -54,8 +54,8 @@ script:
     fi
   - |
     if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
-      tools/yarn.sh
       brew install yasm
+      tools/yarn.sh
       npm run dist
     fi
   - ./tools/build_rename_git.sh
