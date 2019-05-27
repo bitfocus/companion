@@ -364,3 +364,6 @@
 [submodule "lib/module/extron-ipl-t-pcs4"]
 	path = lib/module/extron-ipl-t-pcs4
 	url = https://github.com/bitfocus/companion-module-extron-ipl-t-pcs4.git
+[submodule "lib/module/extron-smp351"]
+	path = lib/module/extron-smp351
+	url = https://github.com/bitfocus/companion-module-extron-smp351.git
