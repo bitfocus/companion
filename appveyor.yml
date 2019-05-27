@@ -12,8 +12,10 @@ init:
 
 install:
   - ps: Install-Product node 9 x64
-  - if "%PLATFORM%" == "x64" curl -o "c:\yasm\yasm.exe" http://www.tortall.net/projects/yasm/releases/yasm-1.3.0-win64.exe
-  - if "%PLATFORM%" == "x86" curl -o "c:\yasm\yasm.exe" http://www.tortall.net/projects/yasm/releases/yasm-1.3.0-win32.exe
+  - mkdir \yasm
+  - if "%PLATFORM%" == "x64" curl -o "\yasm\yasm.exe" http://www.tortall.net/projects/yasm/releases/yasm-1.3.0-win64.exe
+  - if "%PLATFORM%" == "x86" curl -o "\yasm\yasm.exe" http://www.tortall.net/projects/yasm/releases/yasm-1.3.0-win32.exe
+  - set "PATH=\yasm;%PATH%"
   - yasm --version
   - git config --file=.gitmodules submodule.bitfocus-skeleton.url https://github.com/bitfocus/bitfocus-skeleton.git
   - git config --file=.gitmodules submodule.bitfocus-libs.url https://github.com/bitfocus/bitfocus-libs.git
