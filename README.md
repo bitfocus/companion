@@ -48,7 +48,7 @@ For checking known bugs or reporting of potential bugs, please use the [issue sy
 * LW2 (Lightware) v1.0.1 by Håkon Nessjøen
 * LW3 (Lightware) v1.0.0 by Håkon Nessjøen
 * Listener (Octopus) v1.0.0 by Jeffrey Davidsz
-* LiveCore (Analog Way) v1.0.0 by Dorian Meid
+* LiveCore (Analog Way) v1.1.1 by Dorian Meid
 * MRP / Multicon (Nevion) v1.0.0 by William Viker
 * MagicQ (UDP) (ChamSys) v1.0.0 by Per Røine
 * MagicQ (ChamSys) v1.0.0 by Per Røine
@@ -61,7 +61,7 @@ For checking known bugs or reporting of potential bugs, please use the [issue sy
 * OSC Control (disguise) v1.0.0 by William Viker
 * OSC (Generic) v1.0.0 by William Viker
 * PDS (Barco) v1.1.0 by Dorian Meid
-* Picturall Media Server (Analog Way) v1.2.0 by Dorian Meid
+* Picturall Media Server (Analog Way) v1.2.1 by Dorian Meid
 * PLS 300 (Analog Way) v1.0.1 by Tyler Krupa
 * PVP 3 (Renewed Vision) v1.0.0 by Per Røine
 * Photon (VYV) v1.0.0 by Per Roine
@@ -96,6 +96,8 @@ For checking known bugs or reporting of potential bugs, please use the [issue sy
 * vMix (StudioCoast) v1.0.0 by Per Røine
 
 ## Support being added soon
+* Digital Projection (under development)
+* Panasonic Projectors (under development)
 * Chamsys MagicQ  OSC and UDP (under development)
 * Christie Projectors (under development)
 * Panasonic PTZ (under development)

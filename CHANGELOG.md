@@ -34,9 +34,11 @@
 * Stability improvements to bank lists and feedbacks
 * Module API: add callback structure for module feedback
 ### New support added
+* Allen & Heath dLive **Need testing**
 * Analog Way Picturall
-* Barco HDX
+* Barco HDX **Need testing**
 * Blackmagic Design Teranex
+* BrightSign Player **Need testing**
 * Christie Widget Designer
 * Depili Clock 8001
 * Denon Receivers
@@ -46,7 +48,7 @@
 * Kramer Matrixes
 * Living As One Decoders
 * Matrox Monarch
-* MSC Router
+* MSC Router **Need testing**
 * Panasonic PTZ
 * Picturall media server
 * Planning Center Services Live
@@ -57,6 +59,7 @@
 * Thingm Blink(1)
 * VICREO Hotkeys
 * Yamaha QL/CL/TF Consoles
+* Vizio Smartcast **Need testing**
 ### Enhanced support
 * Barco Eventmaster
   * Making presets work for cues and preset recalling

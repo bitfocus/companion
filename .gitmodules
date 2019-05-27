@@ -292,3 +292,75 @@
 [submodule "lib/module/denon-receiver"]
 	path = lib/module/denon-receiver
 	url = https://github.com/bitfocus/companion-module-denon-receiver.git
+[submodule "lib/module/vizio-smartcast"]
+	path = lib/module/vizio-smartcast
+	url = https://github.com/bitfocus/companion-module-vizio-smartcast.git
+[submodule "lib/module/brightsign-player"]
+	path = lib/module/brightsign-player
+	url = https://github.com/bitfocus/companion-module-brightsign-player.git
+[submodule "lib/module/agf-characterworks"]
+	path = lib/module/agf-characterworks
+	url = https://github.com/bitfocus/companion-module-agf-characterworks.git
+[submodule "lib/module/allenheath-dlive"]
+	path = lib/module/allenheath-dlive
+	url = https://github.com/bitfocus/companion-module-allenheath-dlive.git
+[submodule "lib/module/tesla-smart"]
+	path = lib/module/tesla-smart
+	url = https://github.com/bitfocus/companion-module-tesla-smart.git
+[submodule "lib/module/teradek-vidiu"]
+	path = lib/module/teradek-vidiu
+	url = https://github.com/bitfocus/companion-module-teradek-vidiu.git
+[submodule "lib/module/extron-dxp"]
+	path = lib/module/extron-dxp
+	url = https://github.com/bitfocus/companion-module-extron-dxp.git
+[submodule "avolites-titan"]
+	path = avolites-titan
+	url = https://github.com/bitfocus/companion-module-avolites-titan.git
+[submodule "lib/module/avolites-titan"]
+	path = lib/module/avolites-titan
+	url = https://github.com/bitfocus/companion-module-avolites-titan.git
+[submodule "lib/module/christie-pandorasbox"]
+	path = lib/module/christie-pandorasbox
+	url = https://github.com/bitfocus/companion-module-christie-pandorasbox.git
+[submodule "lib/module/tslproducts-umd"]
+	path = lib/module/tslproducts-umd
+	url = https://github.com/bitfocus/companion-module-tslproducts-umd.git
+[submodule "lib/module/barco-dp"]
+	path = lib/module/barco-dp
+	url = https://github.com/bitfocus/companion-module-barco-dp.git
+[submodule "lib/module/roland-vp42h"]
+	path = lib/module/roland-vp42h
+	url = https://github.com/bitfocus/companion-module-roland-vp42h.git
+[submodule "lib/module/opticis-omm-1000"]
+	path = lib/module/opticis-omm-1000
+	url = https://github.com/bitfocus/companion-module-opticis-omm1000.git
+[submodule "lib/module/sounddevices-pixnet"]
+	path = lib/module/sounddevices-pixnet
+	url = https://github.com/bitfocus/companion-module-sounddevices-pixnet.git
+[submodule "lib/module/barco-pulse"]
+	path = lib/module/barco-pulse
+	url = https://github.com/bitfocus/companion-module-barco-pulse.git
+[submodule "lib/module/barco-matrixpro"]
+	path = lib/module/barco-matrixpro
+	url = https://github.com/bitfocus/companion-module-barco-matrixpro.git
+[submodule "lib/module/audivero-unityintercom"]
+	path = lib/module/audivero-unityintercom
+	url = https://github.com/bitfocus/companion-module-audivero-unityintercom.git
+[submodule "lib/module/draco-tera"]
+	path = lib/module/draco-tera
+	url = https://github.com/bitfocus/companion-module-draco-tera.git
+[submodule "lib/module/roland-xs42h"]
+	path = lib/module/roland-xs42h
+	url = https://github.com/bitfocus/companion-module-roland-xs42h.git
+[submodule "lib/module/roland-xs84h"]
+	path = lib/module/roland-xs84h
+	url = https://github.com/bitfocus/companion-module-roland-xs84h.git
+[submodule "lib/module/extron-smx"]
+	path = lib/module/extron-smx
+	url = https://github.com/bitfocus/companion-module-extron-smx.git
+[submodule "lib/module/metus-ingest"]
+	path = lib/module/metus-ingest
+	url = https://github.com/bitfocus/companion-module-metus-ingest.git
+[submodule "lib/module/extron-ipl-t-pcs4"]
+	path = lib/module/extron-ipl-t-pcs4
+	url = https://github.com/bitfocus/companion-module-extron-ipl-t-pcs4.git
