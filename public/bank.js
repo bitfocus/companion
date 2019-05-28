@@ -341,19 +341,21 @@ $(function() {
 	}
 
 	$(window).keyup(function(e) {
-		if (e.keyCode == 16) {
+/*		if (e.keyCode == 16) {
 			buttons_hot = false;
 			$(".border").removeClass('bank-armed');
 			$('#functionkeys').slideDown(80);
-		}
+		}*/
+
 	});
 
 	$(window).keydown(function(e) {
-		if (e.keyCode == 16 && function_state === null) {
+/*		if (e.keyCode == 16 && function_state === null) {
 			buttons_hot = true;
 			$(".border").addClass('bank-armed');
 			$('#functionkeys').slideUp(80);
-		}
+		}*/
+		
 	})
 
 
@@ -621,7 +623,7 @@ $(function() {
 
 		$('#export_page_link').attr('href', '/int/page_export/' + page);
 
-		$pagenav.append($('<div class="pagenav col-lg-12"><div id="btn_pagedown" class="btn btn-primary"><i class="fa fa-chevron-left"></i></div> <div id="btn_pageup" class="btn btn-primary"><i class="fa fa-chevron-right"></i></div> <small>(Page '+page+')</small> <input id="page_title" placeholder="Page name" type="text" value="'+ pname +'"></div>'));
+		$pagenav.append($('<div class="pagenav col-lg-12"><div id="btn_pagedown" class="btn btn-primary"><i class="fa fa-chevron-left"></i></div><span class="page_curr">'+page+'</span><div id="btn_pageup" class="btn btn-primary"><i class="fa fa-chevron-right"></i></div><input id="page_title" placeholder="Page name" type="text" value="'+ pname +'"></div>'));
 
 		for (var bank = 1; bank <= MAX_BUTTONS; bank++) {
 

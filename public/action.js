@@ -109,7 +109,7 @@ $(function() {
 				}
 
 				var $name_td = $("<td class='actionlist-td-label'>" + name + "</td>");
-				var $del_td = $("<td class='actionlist-td-delete'><button type='button' class='btn btn-danger btn-sm'>delete</button><span>&nbsp;</span></td>");
+				var $del_td = $("<td class='actionlist-td-delete'><button type='button' class='btn btn-primary btn-sm'><span class='text-white fa fa-trash'></span></button></td>");
 				var $reorder_grip = $("<td class='actionlist-td-reorder'><i class='fa fa-sort reorder-grip'></i></td>");
 				var $delay_td = $("<td class='actionlist-td-delay'></td>");
 				var $delay_input = $("<input type='text' value='' class='form-control action-delay-keyup' placeholder='ms'>");

@@ -27,11 +27,12 @@
 		<meta http-equiv="X-UA-Compatible" content="IE=edge">
 		<meta http-equiv="Content-Language" content="en">
 
-		<title>Companion Admin</title>
+		<title>Bitfocus Companion - Admin</title>
 
 		<link href="/img/brand/icon.png" rel="shortcut icon">
 		<link href="js/flag-icon-css/css/flag-icon.min.css" rel="stylesheet">
 		<link href="js/font-awesome/css/font-awesome.min.css" rel="stylesheet">
+		<link href="vendors/roboto/roboto.css" rel="stylesheet">
 		<link href="css/style.css" rel="stylesheet">
 		<link href="vendors/pace-progress/css/pace.min.css" rel="stylesheet">
 		<link href="/fa/css/all.css" rel="stylesheet">
@@ -59,17 +60,18 @@
 		<header class="app-header navbar">
 
 			<button class="navbar-toggler sidebar-toggler d-lg-none mr-auto" type="button" data-toggle="sidebar-show">
-				<span class="navbar-toggler-icon"></span>
+				<span class="fa fa-bars"></span>
+			</button>
+
+			<button class="navbar-toggler sidebar-toggler d-md-down-none" type="button" data-toggle="sidebar-lg-show">
+				<span class="fa fa-bars"></span>
 			</button>
 
 			<a class="navbar-brand" href="#">
-				<img class="navbar-brand-full" src="/img/brand/logo.png" width="140" alt="Bitfocus Logo">
-				<img class="navbar-brand-minimized" src="/img/brand/icon.png" width="30" height="30" alt="Bitfocus Logo">
+				<span class="navbar-brand-full">
+					<span style="font-weight:bold">Bitfocus</span> Companion
+				</span>
 			</a>
-
-			<button class="navbar-toggler sidebar-toggler d-md-down-none" type="button" data-toggle="sidebar-lg-show">
-				<span class="navbar-toggler-icon"></span>
-			</button>
 
 			<ul class="nav navbar-nav d-md-down-none">
 
@@ -78,7 +80,7 @@
 				</li> -->
 
 				<li class="nav-item px-3">
-					<a class="nav-link" target="_new" id='versiontext' href="https://bitfocus.io/companion/">version</a>
+					<a class="nav-link" target="_new" id='versiontext' href="https://bitfocus.io/companion/">?</a>
 				</li>
 
 				<li class="nav-item px-3">
@@ -110,10 +112,10 @@
 				-->
 			</ul>
 			<button class="navbar-toggler aside-menu-toggler d-md-down-none" type="button" data-toggle="aside-menu-lg-show">
-				<span class="navbar-toggler-icon"></span>
+				<span class="fa fa-bars"></span>
 			</button>
 			<button class="navbar-toggler aside-menu-toggler d-lg-none" type="button" data-toggle="aside-menu-show">
-				<span class="navbar-toggler-icon"></span>
+				<span class="fa fa-bars"></span>
 			</button>
 		</header>
 
@@ -172,7 +174,7 @@
 
 						<div class="row">
 							<!--/.col-->
-							<div class="col-lg-7 col-sm-12 col-xs-12">
+							<div class="col-lg-6 col-sm-12 col-xs-12">
 								<ul class="nav nav-tabs" role="tablist">
 
 									<li class="nav-item">
@@ -191,12 +193,6 @@
 									<li class="nav-item">
 										<a class="nav-link" data-toggle="tab" href="#elgatobuttons" id='elgbuttons' role="tab" aria-controls="home">
 											<i class="fa fa-calendar-alt"></i> Buttons
-										</a>
-									</li>
-
-									<li class="nav-item" id="editbankli">
-										<a class="nav-link" data-toggle="tab" href="#editbank" role="tab" aria-controls="profile">
-											<i class="icon-calculator"></i> Edit button <span id='editbankid'>?</span>
 										</a>
 									</li>
 
@@ -341,74 +337,12 @@
 												<button class="btn btn-danger buttonbottompad" id='state_abort'>Cancel</button>
 												<button class="btn btn-disabled buttonbottompad" id='state_hint'></button>
 												<span id='state_hide'>
-													<button type="button" id="erase_page_link" class="btn btn-danger buttonbottompad"><i class="fa fa-eraser"></i> Wipe page</button>
-													<button type="button" id="reset_nav_link" class="btn btn-danger buttonbottompad"><i class="fa fa-eraser"></i> Reset nav buttons</button><br><br>
+													<button type="button" id="erase_page_link" class="btn btn-warning buttonbottompad"><i class="fa fa-eraser"></i> Wipe page</button>
+													<button type="button" id="reset_nav_link" class="btn btn-warning buttonbottompad"><i class="fa fa-eraser"></i> Reset nav buttons</button><br><br>
 													<a id="export_page_link" href="/int/page_export/1" class="btn btn-success buttonbottompad"><i class="fa fa-file-export"></i> Export page</a>
 
 												</span>
 											</div>
-										</div>
-
-										<p></p>
-										<b>Hint:</b> Hold shift down to test buttons from the GUI<br>
-
-									</div>
-									<div class="tab-pane" id="editbank" role="tabpanel">
-
-										<div id="bank_preview" class="pull-right">
-											<canvas width=72 height=72></canvas>
-										</div>
-
-										<div class="dropdown">
-											<button class="btn btn-success dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-												Set button type
-											</button>
-
-											<div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
-												<a class="dropdown-item change_style" data-style="png">Regular button</a>
-												<a class="dropdown-item change_style" data-style="pageup">Page up</a>
-												<a class="dropdown-item change_style" data-style="pagenum">Page number</a>
-												<a class="dropdown-item change_style" data-style="pagedown">Page down</a>
-											</div>
-
-											<button class="btn btn-danger" type="button" id="resetBankButton">
-												Erase
-											</button>
-
-											<button class="btn btn-warning" type="button" id="testBankButton">
-												Test actions
-											</button>
-
-										</div>
-
-										<div id="editbank_content">
-										</div>
-
-										<p class='button_style button_style_pageup'>No configuration available for page up buttons</p>
-										<p class='button_style button_style_pagenum'>No configuration available for page number buttons</p>
-										<p class='button_style button_style_pagedown'>No configuration available for page down buttons</p>
-
-										<div id="action_area">
-											<h4 style="margin-bottom:-13px;margin-top: 15px;">Key down/on actions</h4>
-											<div id='bankActions'>
-											</div>
-
-											<select id='addBankAction' style='form-control'></select>
-
-											<h4 style="margin-top: 30px;">Key up/off actions</h4>
-											<div id='bankReleaseActions'>
-											</div>
-
-											<select id='addBankReleaseAction' style='form-control'></select>
-
-											<h4 style="margin-top: 30px;">Instance feedback</h4>
-											<div id='bankFeedbacks'>
-											</div>
-											<select id='addBankFeedback' style='form-control'></select>
-										</div>
-
-										<br><br>
-										<div id="oscTips">
 										</div>
 
 									</div>
@@ -557,7 +491,7 @@
 							</div>
 							<!--/.col-->
 
-							<div class='col-lg-5 col-sm-12 col-xs-12'>
+							<div class='col-lg-6 col-sm-12 col-xs-12'>
 								<ul class="nav nav-tabs" role="tablist">
 
 
@@ -565,6 +499,12 @@
 										<a class="nav-link active" data-toggle="tab" href="#log" role="tab" aria-controls="log">
 											<i class="fa fa-clipboard-list"></i> Log
 											<!-- <span class="badge badge-pill badge-success">OK</span> -->
+										</a>
+									</li>
+
+									<li class="nav-item" id="editbankli">
+										<a class="nav-link" data-toggle="tab" href="#editbank" role="tab" aria-controls="profile">
+											<i class="icon-calculator"></i> Edit button <span id='editbankid'>?</span>
 										</a>
 									</li>
 
@@ -585,6 +525,65 @@
 								<div class="tab-content">
 									<div class="tab-pane active" id="log" role="tabpanel">
 									</div>
+									<div class="tab-pane" id="editbank" role="tabpanel">
+
+										<div id="bank_preview" class="pull-right">
+											<canvas width=72 height=72></canvas>
+										</div>
+
+										<div class="dropdown">
+											<button class="btn btn-success dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+												Set button type
+											</button>
+
+											<div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+												<a class="dropdown-item change_style" data-style="png">Regular button</a>
+												<a class="dropdown-item change_style" data-style="pageup">Page up</a>
+												<a class="dropdown-item change_style" data-style="pagenum">Page number</a>
+												<a class="dropdown-item change_style" data-style="pagedown">Page down</a>
+											</div>
+
+											<button class="btn btn-danger" type="button" id="resetBankButton">
+												Erase
+											</button>
+
+											<button class="btn btn-warning" type="button" id="testBankButton">
+												Test actions
+											</button>
+
+										</div>
+
+										<div id="editbank_content">
+										</div>
+
+										<p class='button_style button_style_pageup'>No configuration available for page up buttons</p>
+										<p class='button_style button_style_pagenum'>No configuration available for page number buttons</p>
+										<p class='button_style button_style_pagedown'>No configuration available for page down buttons</p>
+
+										<div id="action_area">
+											<h4 style="margin-bottom:-13px;margin-top: 15px;">Key down/on actions</h4>
+											<div id='bankActions'>
+											</div>
+
+											<select id='addBankAction' style='form-control'></select>
+
+											<h4 style="margin-top: 30px;">Key up/off actions</h4>
+											<div id='bankReleaseActions'>
+											</div>
+
+											<select id='addBankReleaseAction' style='form-control'></select>
+
+											<h4 style="margin-top: 30px;">Instance feedback</h4>
+											<div id='bankFeedbacks'>
+											</div>
+											<select id='addBankFeedback' style='form-control'></select>
+										</div>
+
+										<br><br>
+										<div id="oscTips">
+										</div>
+
+									</div>
 
 									<div class="tab-pane" id="presets" role="tabpanel">
 									</div>
@@ -603,23 +602,17 @@
 
 										<!-- this should be shown after loading the file -->
 										<div id="import_config">
-											<div class="row" id="import_pagenav">
+												<div class="row" id="import_pagenav">
 
-												<div class="pagenav col-lg-4">
+												<div class="pagenav col-lg-12">
 													<div id="import_btn_pagedown" class="btn btn-primary">
 														<i class="fa fa-chevron-left"></i>
 													</div>
-												</div>
-
-												<div class="pageat col-lg-4">
-													<small>(Page 1)</small>
-													<input id="import_page_title" placeholder="Page name" type="text" value="PAGE">
-												</div>
-
-												<div class="pagenav text-right col-lg-4">
+													<span class='page_curr'>X</span>
 													<div id="import_btn_pageup" class="btn btn-primary">
 														<i class="fa fa-chevron-right"></i>
 													</div>
+													<input id="import_page_title" placeholder="Page name" type="text" value="PAGE">
 												</div>
 
 											</div>

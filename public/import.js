@@ -49,12 +49,12 @@ $(function() {
 	});
 
 	function loadPage(num, page, config) {
-		$('#import_config .pageat small').text(num ? '(Page ' + num + ')' : '');
+		$('#import_config .page_curr').text(num);
 		$('#import_page_title').val(page.name);
 
 		$pagebank.html('');
 		for (var key in config) {
-			var $b = $("<div class='bank buttonbankwidth'><div class='importborder'><canvas width=72 height=72></canvas></div></div>");
+			var $b = $("<div class='bank buttonbankwidth'><div class='border'><canvas width=72 height=72></canvas></div></div>");
 
 			$pagebank.append($b);
 			(function ($b) {
