@@ -21,6 +21,7 @@ process.env['DEBUG'] = '*,-websocket*,-express*,-engine*,-socket.io*,-send*,-db,
 require('./electron-timer-fix').fix();
 
 global.MAX_BUTTONS = 32;
+global.MAX_BUTTONS_PER_ROW = 8;
 
 var EventEmitter = require('events');
 var system = new EventEmitter();
