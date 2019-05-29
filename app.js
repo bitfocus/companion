@@ -70,6 +70,23 @@ system.on('config_loaded', function(config) {
 
 system.on('exit', function() {
 	console.log("somewhere, the system wants to exit. kthxbai");
+
+	system.emit('instance_getall', function(instances, active) {
+		try {
+			for (var key in active) {
+				if (instances[key].label !== 'internal') {
+					try {
+						active[key].destroy();
+					} catch(e) {
+						console.log("Could not destroy",instances[key].label);
+					}
+				}
+			}
+		} catch(e) {
+			console.log("Could not destroy all instances");
+		}
+	});
+
 	setImmediate(function(){
 		process.exit();
 	});
