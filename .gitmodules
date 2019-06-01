@@ -372,4 +372,4 @@
 	url = https://github.com/bitfocus/companion-module-zenvideo-ndirouter.git
 [submodule "lib/module/obsidiancontrol-onyx"]
 	path = lib/module/obsidiancontrol-onyx
-	url = git@github.com:bitfocus/companion-module-obsidiancontrol-onyx.git
+	url = https://github.com/bitfocus/companion-module-obsidiancontrol-onyx.git
