@@ -373,3 +373,6 @@
 [submodule "lib/module/obsidiancontrol-onyx"]
 	path = lib/module/obsidiancontrol-onyx
 	url = https://github.com/bitfocus/companion-module-obsidiancontrol-onyx.git
+[submodule "lib/module/aja-kumo"]
+	path = lib/module/aja-kumo
+	url = https://github.com/bitfocus/companion-module-aja-kumo.git
