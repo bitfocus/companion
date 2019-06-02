@@ -282,21 +282,6 @@
 									<div class="tab-pane" id="instanceConfig" role="tabpanel">
 										<h4></h4>
 										<div id='instanceConfigFields' class="row"></div>
-										<hr>
-										<div id='instanceConfigVariables' class="row col-lg-12">
-											<h4>List of dynamic variables</h4>
-											<table class="table table-responsive-sm">
-												<thead>
-													<tr>
-														<th>Variable</th>
-														<th>Description</th>
-														<th>Current value</th>
-													</tr>
-												</thead>
-												<tbody id="instanceConfigVariableList"></tbody>
-											</table>
-										</div>
-
 									</div>
 
 									<div class="tab-pane" id="devices" role="tabpanel">
@@ -515,6 +500,12 @@
 									</li>
 
 									<li class="nav-item">
+										<a class="nav-link" id="variables_tab" data-toggle="tab" href="#variables" role="tab" aria-controls="variables">
+											<i class="fa fa-usd"></i> Variables
+										</a>
+									</li>
+
+									<li class="nav-item">
 										<a class="nav-link" id="import_tab" data-toggle="tab" href="#import" role="tab" aria-controls="import">
 											<i class="fa fa-file-import"></i> Import / Export
 										</a>
@@ -586,6 +577,9 @@
 									</div>
 
 									<div class="tab-pane" id="presets" role="tabpanel">
+									</div>
+
+									<div class="tab-pane" id="variables" role="tabpanel">
 									</div>
 
 									<div class="tab-pane" id="import" role="tabpanel">
