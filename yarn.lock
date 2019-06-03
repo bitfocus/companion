@@ -23,9 +23,10 @@
     "@coreui/coreui-plugin-npm-postinstall" "^1.0.2"
     bootstrap "^4.1.0"
 
-"@julusian/jpeg-turbo@github:Julusian/node-jpeg-turbo#feat/cmake":
-  version "0.5.1"
-  resolved "https://codeload.github.com/Julusian/node-jpeg-turbo/tar.gz/b2fdd3c9e5d47b849a583f16a88070af22e48cbd"
+"@julusian/jpeg-turbo@^0.5.2":
+  version "0.5.2"
+  resolved "https://registry.yarnpkg.com/@julusian/jpeg-turbo/-/jpeg-turbo-0.5.2.tgz#3a80b277a0bc553b2059068d3d9a657ca83baff1"
+  integrity sha512-Ap2jXfn71pNyAn1P2ZTkVrcyZO1F7c8/yWNxBP2fFtGRbsmpkfe1YiqRZ1PSzIMmI6Tfak1l1dOi1NnvCvEg1w==
   dependencies:
     bindings "^1.5.0"
     cmake-js "^5.2.0"
@@ -1340,11 +1341,12 @@ electron@^2.0.8:
   dependencies:
     node-hid "^0.6.0"
 
-"elgato-stream-deck-clean-xl@https://github.com/bitfocus/elgato-stream-deck-clean-xl.git#master":
-  version "1.0.6"
-  resolved "https://github.com/bitfocus/elgato-stream-deck-clean-xl.git#b46d905262f03b01fa4e1dad44f0e532c13bd9f2"
+elgato-stream-deck-clean-xl@1.0.7:
+  version "1.0.7"
+  resolved "https://registry.yarnpkg.com/elgato-stream-deck-clean-xl/-/elgato-stream-deck-clean-xl-1.0.7.tgz#02737c0687b6d768b52f1e56fac92cfd4e1a5e62"
+  integrity sha512-Fml3Y23QZvMOVGKInI/C4+uBKfZGfoAvJJnZ6YROEQSpNPyxiipNiKrIgOg0KTKy+dBu33n68SMSNN8BSkHycg==
   dependencies:
-    "@julusian/jpeg-turbo" "github:Julusian/node-jpeg-turbo#feat/cmake"
+    "@julusian/jpeg-turbo" "^0.5.2"
     node-hid "^0.7.8"
 
 elgato-stream-deck-clean@^1.0.0:
