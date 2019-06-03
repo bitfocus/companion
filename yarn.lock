@@ -25,7 +25,7 @@
 
 "@julusian/jpeg-turbo@github:Julusian/node-jpeg-turbo#feat/cmake":
   version "0.5.1"
-  resolved "https://codeload.github.com/Julusian/node-jpeg-turbo/tar.gz/7a123575dd2a89905591401906215e76b83e80d2"
+  resolved "https://codeload.github.com/Julusian/node-jpeg-turbo/tar.gz/b2fdd3c9e5d47b849a583f16a88070af22e48cbd"
   dependencies:
     bindings "^1.5.0"
     cmake-js "^5.2.0"
