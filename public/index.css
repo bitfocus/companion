@@ -274,10 +274,10 @@ label {
 }
 
 .log-line {
-	margin-top:2px;
-	margin-bottom: 2px;
-	padding-top: 4px;
-	padding-bottom: 4px;
+	margin-top:0px;
+	margin-bottom: 1px;
+	padding-top: 1px;
+	padding-bottom: 1px;
 	padding-left: 6px;
 	padding-right: 5px;
 	border-radius: 4px;
