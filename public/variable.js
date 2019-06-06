@@ -1,10 +1,7 @@
 var all_variables;
 var all_variablesdata;
-
 $(function() {
-
 	var $variables = $('#variables');
-
 	socket.emit('variable_get_definitions');
 	socket.once('variable_get_definitions:result', variables);
 
