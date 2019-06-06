@@ -47,7 +47,7 @@ system.on('skeleton-info', function(key, val) {
 		mkdirp(cfgDir, function(err) {
 			debug("mkdirp",cfgDir,err);
 			config = new (require('./bitfocus-libs/config'))(system, cfgDir, {
-				http_port: 8000,
+				http_port: 8888,
 				bind_ip: "127.0.0.1",
 				start_minimised: false,
 			});
