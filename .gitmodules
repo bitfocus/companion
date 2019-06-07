@@ -376,3 +376,6 @@
 [submodule "lib/module/aja-kumo"]
 	path = lib/module/aja-kumo
 	url = https://github.com/bitfocus/companion-module-aja-kumo.git
+[submodule "lib/module/techministry-midirelay"]
+	path = lib/module/techministry-midirelay
+	url = https://github.com/bitfocus/companion-module-techministry-midirelay.git
