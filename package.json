@@ -85,7 +85,7 @@
     "font-awesome": "4.7.0",
     "fs-extra": "^7.0.0",
     "infinitton-idisplay": "^1.0.4",
-    "jquery": "3.3.1",
+    "jquery": ">=3.4.0",
     "json-parser": "^1.1.5",
     "lodash": "^4.17.10",
     "marked": "^0.6.0",
