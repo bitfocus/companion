@@ -54,6 +54,12 @@ body {
 #import_pagebank canvas {
 	background-color: black;
 }
+
+.bank.selected .border canvas {
+  border: 3px solid #d50215;
+  margin: -2px;
+}
+
 .border {
 	border-width: 0px !important;
 	padding-top: 5px;
@@ -66,9 +72,6 @@ body {
 }
 #newversiontext {
 	color:red;
-}
-#pagebank .border:hover, #pagenav .border:hover {
-	background-color: #e4e4e4;
 }
 
 .pagenav {

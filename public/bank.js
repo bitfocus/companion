@@ -24,6 +24,8 @@ var buttons_functional = false;
 var current_style;
 var function_state = null;
 var function_detail = {};
+var selected_bank = {};
+var copyfrom = {};
 
 function int2hex(number) {
 	var r = ('0' + ((number >> 16) & 0xff).toString('16')).substr(-2);
@@ -62,6 +64,7 @@ $(function() {
 	var pc = $('#bank_preview canvas')[0].getContext('2d');
 
 	$("#editbankli").hide();
+	selected_bank = {};
 
 	function bank_preview_page(_page) {
 
@@ -341,13 +344,64 @@ $(function() {
 	}
 
 	$(window).keyup(function(e) {
-/*		if (e.keyCode == 16) {
-			buttons_hot = false;
-			$(".border").removeClass('bank-armed');
-			$('#functionkeys').slideDown(80);
-		}*/
+
+		// Delete bank with backspace
+		if (e.keyCode == 8 && selected_bank.page !== undefined) {
+			if (!$(':focus').is('input') && !$(':focus').is('textarea')) {
+				if (confirm('Clear button ' + selected_bank.page + '.' + selected_bank.bank + '?')) {
+					socket.emit('bank_reset', page, bank);
+					socket.emit('bank_actions_get', page, bank);
+					socket.emit('bank_get_feedbacks', page, bank);
+					socket.emit('bank_reset_release_actions', page, bank);
+					socket.emit('bank_release_actions_get', page, bank);
+
+					$("#resetBankButton").hide();
+					populate_bank_form(page,bank,{},{});
+					bank_preview_page(page);
+				}
+			}
+		}
 
 	});
+
+	// Copy bank with cmd+c/ctr+c
+	$(window).bind('copy', function () {
+		if (selected_bank.page !== undefined) {
+			copyfrom = { page: selected_bank.page, bank: selected_bank.bank, type: 'copy' };
+		}
+		return false;
+	});
+
+	// Cut bank with cmd+x/ctr+x
+	$(window).bind('cut', function () {
+		if (selected_bank.page !== undefined) {
+			copyfrom = { page: selected_bank.page, bank: selected_bank.bank, type: 'cut' };
+		}
+		return false;
+	});
+
+	// Paste bank with cmd+v/ctr+v
+	$(window).bind('paste', function () {
+		if (selected_bank.page !== undefined) {
+			var page = selected_bank.page;
+			var bank = selected_bank.bank;
+
+			if (copyfrom.type === 'copy') {
+				socket.emit('bank_copy', copyfrom.page, copyfrom.bank, page, bank);
+			} else if (copyfrom.type == 'cut') {
+				socket.emit('bank_move', copyfrom.page, copyfrom.bank, page, bank);
+				copyfrom = {};
+			}
+
+			socket.emit('bank_actions_get', page, bank);
+			socket.emit('bank_get_feedbacks', page, bank);
+			socket.emit('bank_release_actions_get', page, bank);
+			socket.emit('get_bank',page, bank);
+			socket.once('get_bank:results', populate_bank_form);
+		}
+		return false;
+	});
+
 
 	$(window).keydown(function(e) {
 /*		if (e.keyCode == 16 && function_state === null) {
@@ -355,7 +409,7 @@ $(function() {
 			$(".border").addClass('bank-armed');
 			$('#functionkeys').slideUp(80);
 		}*/
-		
+
 	})
 
 
@@ -429,6 +483,8 @@ $(function() {
 	$('a.nav-link').click(function() {
 		if ($(this).attr('href') !== '#editbank' && $(this).attr('href') !== '#log') {
 			$("#editbankli").hide();
+			selected_bank = {};
+			$('.bank').removeClass('selected');
 			socket.emit('bank_preview', false);
 		}
 	});
@@ -706,6 +762,12 @@ $(function() {
 			}
 
 			else {
+
+				selected_bank = { page: page, bank: $(this).data('bank') };
+
+				$('.bank').removeClass('selected');
+				var $found = $('#bank_' + selected_bank.page + '_' + selected_bank.bank);
+				$found.parents('.bank').addClass('selected');
 
 				$("#editbankli").show();
 				$('#editbankli a[href="#editbank"]').tab('show');
