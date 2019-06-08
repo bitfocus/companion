@@ -232,7 +232,7 @@ $(function() {
 
 								$opt_input.spectrum({
 
-									color: int2hex(action.options[f_oid]),
+									color: int2hex($opt_input.val()),
 									preferredFormat: "rgb",
 									showInput: true,
 									showPalette: true,
