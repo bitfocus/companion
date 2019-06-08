@@ -53,7 +53,7 @@ For checking known bugs or reporting of potential bugs, please use the [issue sy
 * MagicQ (UDP) (ChamSys) v1.0.0 by Per Røine
 * MagicQ (ChamSys) v1.0.0 by Per Røine
 * Media Server (Modulo) v1.0.0 by Per Røine
-* Midra, Eikos2, Saphyr, Pulse2, SmartMatriX2, QuickMatriX, QuickVu (Analog Way) v1.0.0 by Dorian Meid
+* Midra, Eikos2, Saphyr, Pulse2, SmartMatriX2, QuickMatriX, QuickVu (Analog Way) v1.0.2 by Dorian Meid
 * Millumin 2 (Anomes) v1.0.0 by Per Røine
 * Mitti (Imimot) v1.0.0 by Per Røine
 * Multi Transport Control (disguise) v1.0.0 by William Viker

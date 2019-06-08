@@ -33,7 +33,7 @@ $(function() {
 		}
 
 		if (!count) {
-			$presets.append('You have no instances that support presets at the moment. More and more modules will support presets in the future.');
+			$presets.append('<div class="alert alert-primary">You have no instances that support presets at the moment. More and more modules will support presets in the future.</div>');
 		}
 	}
 
