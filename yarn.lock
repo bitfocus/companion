@@ -1341,13 +1341,13 @@ electron@^2.0.8:
   dependencies:
     node-hid "^0.6.0"
 
-elgato-stream-deck-clean-xl@1.0.7:
-  version "1.0.7"
-  resolved "https://registry.yarnpkg.com/elgato-stream-deck-clean-xl/-/elgato-stream-deck-clean-xl-1.0.7.tgz#02737c0687b6d768b52f1e56fac92cfd4e1a5e62"
-  integrity sha512-Fml3Y23QZvMOVGKInI/C4+uBKfZGfoAvJJnZ6YROEQSpNPyxiipNiKrIgOg0KTKy+dBu33n68SMSNN8BSkHycg==
+elgato-stream-deck-clean-xl@1.0.8:
+  version "1.0.8"
+  resolved "https://registry.yarnpkg.com/elgato-stream-deck-clean-xl/-/elgato-stream-deck-clean-xl-1.0.8.tgz#fe16f2168d901083331a7d7b7a98e1acc5fa73db"
+  integrity sha512-8IsNB95fIr5S0hJrJYnTEzILKH9EVoVw6MBDVjEQRkpSSIhWbV7vcBT7NpLJkKM2KKmGttIffRSJEY938DIQLA==
   dependencies:
     "@julusian/jpeg-turbo" "^0.5.2"
-    node-hid "^0.7.8"
+    node-hid "^0.7.9"
 
 elgato-stream-deck-clean@^1.0.0:
   version "1.0.0"
@@ -2621,7 +2621,7 @@ node-hid@^0.6.0:
     nan "^2.6.2"
     prebuild-install "^2.2.2"
 
-node-hid@^0.7.8:
+node-hid@^0.7.9:
   version "0.7.9"
   resolved "https://registry.yarnpkg.com/node-hid/-/node-hid-0.7.9.tgz#cc0cdf1418a286a7667f0b63642b5eeb544ccd05"
   integrity sha512-vJnonTqmq3frCyTumJqG4g2IZcny3ynkfmbfDfQ90P3ZhRzcWYS/Um1ux6HFmAxmkaQnrZqIYHcGpL7kdqY8jA==

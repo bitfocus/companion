@@ -157,10 +157,10 @@ system.on('skeleton-ready', function() {
 	var appRoot    = require('app-root-path');
 	var variable   = require('./lib/variable')(system);
 	var feedback   = require('./lib/feedback')(system);
+	var action     = require('./lib/action')(system);
 	var bank       = require('./lib/bank')(system);
 	var elgatoDM   = require('./lib/elgato_dm')(system);
 	var preview    = require('./lib/preview')(system);
-	var action     = require('./lib/action')(system);
 	var instance   = require('./lib/instance')(system);
 	var osc        = require('./lib/osc')(system);
 	var server_api = require('./lib/server_api')(system);
@@ -174,6 +174,8 @@ system.on('skeleton-ready', function() {
 	var tablet     = require('./lib/tablet')(system);
 	var satellite  = require('./lib/satellite_server')(system);
 	var ws_api     = require('./lib/ws_api')(system);
+
+	system.emit('modules_loaded');
 
 	system.on('exit', function() {
 		elgatoDM.quit();
