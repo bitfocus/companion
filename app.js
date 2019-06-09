@@ -15,7 +15,7 @@
  *
  */
 
-process.env['DEBUG'] = '*,-websocket*,-express*,-engine*,-socket.io*,-send*,-db,-NRC*,-follow-redirects,-electron-timer-fix';
+process.env['DEBUG'] = '*,-websocket*,-express*,-engine*,-socket.io*,-send*,-db,-NRC*,-follow-redirects,-electron-timer-fix,-lib/db*';
 
 // Fix timers in electron
 require('./electron-timer-fix').fix();
