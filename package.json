@@ -46,14 +46,16 @@
     ]
   },
   "scripts": {
-    "yarn": "./tools/yarn.sh",
-    "start": "./tools/build_writefile.sh && ./bitfocus-skeleton/start.sh",
+    "prod": "./tools/build_writefile.sh && ./bitfocus-skeleton/start.sh",
+    "dev": "./tools/build_writefile.sh && DEVELOPER=1 ./bitfocus-skeleton/start.sh",
+    "update": "./tools/update.sh",
     "pack": "electron-builder --dir",
     "dist": "rm -rf electron-output && electron-builder",
     "macdist": "rm -rf electron-output && electron-builder --mac",
     "windist": "rm -rf electron-output && electron-builder --win",
     "lindist": "rm -rf electron-output && electron-builder --linux tar.gz",
-    "rpidist": "rm -rf electron-output && electron-builder --armv7l --linux tar.gz"
+    "rpidist": "rm -rf electron-output && electron-builder --armv7l --linux tar.gz",
+    "start": "yarn run"
   },
   "repository": "https://github.com/bitfocus/companion",
   "keywords": [
