@@ -56,8 +56,8 @@ body {
 }
 
 .bank.selected .border canvas {
-  border: 3px solid #d50215;
-  margin: -2px;
+	border: 3px solid #d50215;
+	margin: -2px;
 }
 
 .border {
@@ -314,7 +314,7 @@ label {
 
 .log-type-debug {
 	background-color: rgba(200,200,200,0.1);
-	color: rgba(50,50,50,0.5);
+	color: rgba(50,50,50,0.7);
 }
 
 .log-type-trace {
@@ -606,7 +606,7 @@ h4 {
 }
 .page_curr {
 	display:inline-block;
-	background-color: rgba(210,11,32,0.8);
+	background-color: rgba(32,32,32,0.1);
 	border-radius:4px;
 	margin-left: 5px;
 	margin-right: 5px;
@@ -615,7 +615,50 @@ h4 {
 	position: relative;
 	top: 3px;
 	text-align: center;
-	color: white;
+	color: rgba(0,0,0,0.5);
 	font-weight:bold;
 	width: 35px;
+}
+
+.margbot {
+	margin-bottom: 5px;
+}
+
+.choose_category {
+	font-size: 12px;
+}
+#log_wrapper {
+	border-radius: 6px;
+}
+.logbuttons {
+	margin-bottom: 5px;
+	margin-left: 3px;
+}
+#log {
+}
+
+.btn-debug {
+	background-color: #eee;
+	border: 1px solid #eee;
+}
+.btn-info {
+	background-color: #e6e9ff;
+	color: #4857d6;
+	border-color: #e6e9ff;
+}
+.btn-info:hover {
+	background-color: #e6e9ff;
+	color: #4857d6;
+	border-color: #e6e9ff;
+}
+
+.btn-warn {
+	background-color: #fff2cf;
+	color: #846314;
+	border-color: #fff2cf;
+}
+.btn-warn:hover {
+	background-color: #fff2cf;
+	color: #846314;
+	border-color: #fff2cf;
 }

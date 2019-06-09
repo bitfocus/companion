@@ -47,10 +47,16 @@ $(function() {
 		}
 		var inst = get_instance(instance.db[id].instance_type);
 		$presets.html('<button type=button class="btn btn-primary pull-right back_main">Back</button><h4>Preset categories for ' + inst.label + ' (' + instance.db[id].label + ')</h4>');
+		$presets.find('h4').css('marginBottom', 15);
+		
+		var $preset_wrapper = $("<div/>");
+		$preset_wrapper.addClass('row');
+		$presets.append($preset_wrapper);
 
 		for (var key in categories) {
-			$presets.append('<input type="button" class="btn btn-primary choose_category" data-instance="' + id + '" data-key="' + key + '" value="' + key + '"> ');
+			$preset_wrapper.append('<span class="col-lg-3 margbot"><input type="button" class="btn btn-block btn-primary choose_category" data-instance="' + id + '" data-key="' + key + '" value="' + key + '"></span>');
 		}
+
 	}
 
 	function show_presets(instance, category) {

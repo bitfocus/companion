@@ -27,7 +27,7 @@ $(function() {
 	socket.on('log', function(time,source,level,message) {
 		var time_format = moment(time).format('DD. HH:mm:ss')
 		var $line = $("<div class='log-line log-type-"+level+"'>"+time_format+" <strong>"+source+"</strong>: "+message+"</div>")
-		$("#log").prepend($line);
+		$("#log_wrapper").prepend($line);
 
 	});
 
