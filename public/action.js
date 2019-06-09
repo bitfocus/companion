@@ -60,6 +60,44 @@ $(function() {
 		socket.emit('bank_update_action_option', page, bank,  $(this).data('action-id'), $(this).data('option-id'), $(this).val() );
 	});
 
+	$('#bankActions').on('change', '.action-checkbox', function() {
+		socket.emit('bank_update_action_option', page, bank, $(this).data('action-id'), $(this).data('option-id'), $(this).prop('checked') );
+	});
+
+	$('#bankActions').on('change', '.action-number', function() {
+
+		var $this = $(this);
+		let min   = parseFloat($this.attr('min'));
+		let max   = parseFloat($this.attr('max'));
+		let value = parseFloat($this.val());
+
+		if (!$this.attr('required') && isNaN(value)) {
+			// Not required and isn't a number (could be empty).
+			this.style.color = 'black';
+		} else if (!isNaN(parseFloat(value)) && isFinite(value) && value >= min && value <= max) {
+			// Is required and the value is a number within range.
+			this.style.color = 'black';
+		} else {
+			this.style.color = 'red';
+			return;
+		}
+
+		if (isNaN(value)) {
+			// The value was empty (not required) and cast to a float, which makes it NaN.
+			// Set it to an empty string and store that.
+			value = '';
+		}
+
+		// If 'option.range === true' this option will contain both number and a range input types.
+		// Keep both options' values in sync.
+		$this.parents('.action-number-row').find('.action-number').each(function(index, element) {
+			$(element).val(value);
+		});
+
+		socket.emit('bank_update_action_option', page, bank, $this.data('action-id'), $this.data('option-id'), value);
+
+	});
+
 	$("#testBankButton").on('mousedown', function() {
 		socket.emit('hot_press',page,bank, true);
 	});
@@ -209,7 +247,7 @@ $(function() {
 
 								$opt_input.spectrum({
 
-									color: int2hex(action.options[f_oid]),
+									color: int2hex($opt_input.val()),
 									preferredFormat: "rgb",
 									showInput: true,
 									showPalette: true,
@@ -301,6 +339,95 @@ $(function() {
 							}
 
 							$options.append($opt_input);
+
+						}
+
+						else if (option.type == 'checkbox') {
+
+							var $opt_checkbox = $("<input type='checkbox' class='action-checkbox form-control'>");
+							if (option.tooltip !== undefined) {
+								$opt_checkbox.attr('title', option.tooltip);
+							}
+
+							// Force as a boolean
+							option.default = option.default === true;
+
+							$opt_checkbox.data('action-id', action.id)
+								.data('option-id', option.id);
+
+							// if this option never has been saved, set default
+							if (action.options[option.id] === undefined) {
+								socket.emit('bank_update_action_option', page, bank, action.id, option.id, option.default);
+								$opt_checkbox.prop('checked', option.default);
+							}
+
+							// else set the db value for this option.
+							else {
+								$opt_checkbox.prop('checked', action.options[option.id]);
+							}
+
+							$options.append($opt_checkbox);
+
+						}
+
+						else if (option.type == 'number') {
+
+							// Create both the number and the range inputs.
+							// The range will only be used if option.range is used.
+							let $opt_num   = $('<input type="number" class="action-number form-control">');
+							let $opt_range = $("<input type='range' class='action-number form-control'>");
+							
+
+							if (option.tooltip !== undefined) {
+								$opt_num.attr('title', option.tooltip);
+								$opt_range.attr('title', option.tooltip);
+							}
+
+							$opt_num.data('action-id', action.id)
+								.data('option-id', option.id)
+								.attr('min', option.min)
+								.attr('max', option.max)
+								.attr('required', option.range || option.required === true);
+
+							// if this option never has been saved, set default
+							if (action.options[option.id] === undefined) {
+								socket.emit('bank_update_action_option', page, bank, action.id, option.id, option.default);
+								$opt_num.val(option.default);
+							}
+
+							// else set the db value for this option.
+							else {
+								$opt_num.val(action.options[option.id]);
+							}
+
+							
+							if (option.range !== true) {
+
+								$options.append(
+									$('<div class="row action-number-row">').append([
+										$('<div class="col-sm-12">').append($opt_num)
+									])
+								);
+
+							}
+
+							// else include the range input in the row too
+							else {
+
+								$opt_range.data('action-id', action.id)
+									.data('option-id', option.id)
+									.attr('min', option.min)
+									.attr('max', option.max)
+									.val($opt_num.val());
+
+								$options.append(
+									$('<div class="row action-number-row">').append([
+										$('<div class="col-sm-8">').append($opt_range),
+										$('<div class="col-sm-4">').append($opt_num)
+									])
+								);
+
+							}
 
 						}
 
