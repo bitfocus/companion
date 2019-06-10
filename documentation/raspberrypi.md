@@ -84,8 +84,8 @@ Add this line before the `exit 0` line, making sure to change the interface desi
 _(display attached to Raspberry Pi)_
 
 8. At this point you are ready to confirm your fresh build of Companion functions.
-* `yarn dev` will give you debugging fuctionality
-* `yarn prod` will run silently with no debugging
+* `yarn dev` will start Companion with debugging fuctionality.
+* `yarn prod` will start Companion silently, with no debugging.
 
 9. Click the "Companion" icon in the system tray, set your desired network interface and port number, then click "Change".
 
