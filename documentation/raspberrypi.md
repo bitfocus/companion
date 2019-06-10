@@ -16,7 +16,7 @@ sudo apt-get update && sudo apt-get upgrade -y && sudo apt-get autoremove && sud
 
 2. Install some required packages.
 ```
-sudo apt-get install libgusb-dev npm nodejs git build-essential libudev-dev libusb-1.0-0-dev -y
+sudo apt-get install libgusb-dev npm nodejs git npm build-essential libudev-dev libusb-1.0-0-dev -y
 ```
 
 3. Because it is never recommended to run things on Linux as the root user, you will need to add a udev rule.
