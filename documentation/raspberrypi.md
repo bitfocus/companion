@@ -99,7 +99,3 @@ yarn update
 yarn rpidist
 sudo reboot now
 ```
-
-
-
-
