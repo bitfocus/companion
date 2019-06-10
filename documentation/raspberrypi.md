@@ -84,9 +84,6 @@ Add this line before the `exit 0` line, making sure to change the interface desi
 _(display attached to Raspberry Pi)_
 
 8. At this point you are ready to confirm your fresh build of Companion functions.
-```
-yarn dev``` or ```yarn prod
-```
 * `yarn dev` will give you debugging fuctionality
 * `yarn prod` will run silently with no debugging
 
