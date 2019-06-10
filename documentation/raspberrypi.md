@@ -10,15 +10,23 @@ Companion can be run in 2 different modes on the Raspberry Pi: Headless (no disp
 Before starting the installation process, you'll need to get your RPi set up and configured. If you intend to run your Raspberry Pi headless (no display attached), you'll need to make sure you've got SSH access enabled (`sudo raspi-config` on the RPi terminal to enable) before switching to headless mode. These instructions assume your RPi is fully configured and ready to go.
 
 1. Make sure apt and all installed packages are up-to-date.
-`sudo apt-get update && sudo apt-get upgrade -y && sudo apt-get autoremove && sudo apt-get autoclean`
+```
+sudo apt-get update && sudo apt-get upgrade -y && sudo apt-get autoremove && sudo apt-get autoclean
+```
 
 2. Install some required packages.
-`sudo apt-get install libgusb-dev npm nodejs git build-essential libudev-dev libusb-1.0-0-dev -y`
+```
+sudo apt-get install libgusb-dev npm nodejs git build-essential libudev-dev libusb-1.0-0-dev -y
+```
 
 3. Because it is never recommended to run things on Linux as the root user, you will need to add a udev rule.
-`sudo touch /etc/udev/rules.d/50-companion.rules`
+```
+sudo touch /etc/udev/rules.d/50-companion.rules
+```
 Add these lines to that new file
-`sudo nano /etc/udev/rules.d/50-companion.rules`
+```
+sudo nano /etc/udev/rules.d/50-companion.rules
+```
 ```
 SUBSYSTEM=="input", GROUP="input", MODE="0666"
 SUBSYSTEM=="usb", ATTRS{idVendor}=="0fd9", ATTRS{idProduct}=="0060", MODE:="666", GROUP="plugdev"
@@ -30,13 +38,17 @@ KERNEL=="hidraw", ATTRS{idVendor}=="ffff", ATTRS{idProduct}=="1f40", MODE:="666"
 4. Either reboot your RPi (`sudo reboot now`) or reload the udev rules `sudo udevadm control --reload-rules`
 
 5. Install Node.js tools
-`sudo npm install n -g`
-`sudo n 8.12.0`
+```
+sudo npm install n -g
+sudo n 8.12.0
+```
 *double-check https://github.com/bitfocus/companion/blob/master/DEVELOPER.md to confirm the current required node.js version*
 
 6. Install yarn and update your PATH variable
-`npm install yarn -g`
-`export PATH="$HOME/.yarn/bin:$HOME/.config/yarn/global/node_modules/.bin:$PATH"`
+```
+npm install yarn -g
+export PATH="$HOME/.yarn/bin:$HOME/.config/yarn/global/node_modules/.bin:$PATH"
+```
 
 7. Now we're ready to clone the repository and build. These commands will clone the respository, move into the `companion` directory, update all dependencies and modules, and create a fresh build.
 ```
@@ -58,9 +70,13 @@ cp ~/.config/companion/db ~/companion/
 ```
 
 9. The last step for headless operation is to ensure Companion will start at console boot. We currently do this via `rc.local`. You will first need to know the designation of the network interface you wish to have Companion run on (i.e. `eth0` or `wlan0`)
-`sudo nano /etc/rc.local`
+```
+sudo nano /etc/rc.local
+```
 Add this line before the `exit 0` line, making sure to change the interface designation if appropriate for your setup:
-`/home/pi/companion/headless eth0`
+```
+/home/pi/companion/headless eth0
+```
 
 10. Reboot your Raspberry Pi (`sudo reboot now`), wait a couple minutes, and you should be able to access the Companion UI on port 8000 of your RPi's IP address (i.e. `http://192.168.1.2:8000`)
 
@@ -68,7 +84,9 @@ Add this line before the `exit 0` line, making sure to change the interface desi
 _(display attached to Raspberry Pi)_
 
 8. At this point you are ready to confirm your fresh build of Companion functions.
-`yarn dev` or `yarn prod`
+```
+yarn dev``` or ```yarn prod
+```
 * `yarn dev` will give you debugging fuctionality
 * `yarn prod` will run silently with no debugging
 
@@ -80,8 +98,8 @@ _(display attached to Raspberry Pi)_
 ## Updating Companion
 When you want to update the local build of Companion, you'll run the following sequence of commands:
 ```
-./tools/update.sh
-npm run rpidist
+yarn update
+yarn rpidist
 sudo reboot now
 ```
 
