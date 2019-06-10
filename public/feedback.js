@@ -93,7 +93,7 @@ $(function() {
 				}
 
 				var $name_td = $("<td class='feedbacklist-td-label'>" + name + "</td>");
-				var $del_td = $("<td class='feedbacklist-td-delete'><button type='button' class='btn btn-danger btn-sm'>delete</button><span>&nbsp;</span></td>");
+				var $del_td = $("<td class='feedbacklist-td-delete'><button type='button' class='btn btn-primary btn-sm'><span class='text-white fa fa-trash'></span></button></td>");
 				var $reorder_grip = $("<td class='feedbacklist-td-reorder'><i class='fa fa-sort reorder-grip'></i></td>");
 				var $options = $("<td class='feedbacklist-td-options'></td>");
 

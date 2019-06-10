@@ -5,7 +5,7 @@ var path = require("path");
 var system = main(true);
 var os = require('os');
 
-process.env['DEBUG'] = '-*';
+console.log("Starting");
 
 function packageinfo() {
 	var self = this;
@@ -75,6 +75,7 @@ if (process.argv[2] in ifaces) {
 				system.emit('skeleton-bind-ip', address);
 				system.emit('skeleton-bind-port', port);
 				system.emit('skeleton-ready');
+				console.log("Started");
 		}, 1000);
 }
 else {

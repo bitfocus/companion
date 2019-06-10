@@ -26,7 +26,7 @@ $(function() {
 
 	// when page name is changed from the input field
 	$('#elgatobuttons').on('keyup', "#page_title", function() {
-		var str = $('#page_title').val().substr(0,11);
+		var str = $('#page_title').val();
 		page_info[page].name = str !== "" ? str : "PAGE";
 		socket.emit('set_page', page, page_info[page]);
 	});

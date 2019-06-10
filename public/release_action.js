@@ -30,7 +30,7 @@ function hex2int(hex) {
 }
 
 $(function() {
-	socket.emit('get_release_actions');
+	socket.emit('release_actions_get');
 
 	var $aba = $("#addBankReleaseAction");
 
@@ -48,18 +48,18 @@ $(function() {
 
 		if (regex === undefined || $(this).val().match(regex) != null) {
 			this.style.color = "black";
-			socket.emit('bank_update_release_action_option', page, bank,  $(this).data('release-action-id'), $(this).data('option-id'), $(this).val() );
+			socket.emit('bank_release_action_update_option', page, bank,  $(this).data('release-action-id'), $(this).data('option-id'), $(this).val() );
 		} else {
 			this.style.color = "red";
 		}
 	});
 
 	$('#bankReleaseActions').on('change', '.release-action-option-change', function() {
-		socket.emit('bank_update_release_action_option', page, bank,  $(this).data('release-action-id'), $(this).data('option-id'), $(this).val() );
+		socket.emit('bank_release_action_update_option', page, bank,  $(this).data('release-action-id'), $(this).data('option-id'), $(this).val() );
 	});
 
 	$('#bankReleaseActions').on('change', '.release-action-checkbox', function() {
-		socket.emit('bank_update_release_action_option', page, bank, $(this).data('action-id'), $(this).data('option-id'), $(this).prop('checked') );
+		socket.emit('bank_release_action_update_option', page, bank, $(this).data('action-id'), $(this).data('option-id'), $(this).prop('checked') );
 	});
 
 	$('#bankReleaseActions').on('change', '.release-action-number', function() {
@@ -92,11 +92,11 @@ $(function() {
 			$(element).val(value);
 		});
 
-		socket.emit('bank_update_release_action_option', page, bank, $this.data('action-id'), $this.data('option-id'), value);
+		socket.emit('bank_release_action_update_option', page, bank, $this.data('action-id'), $this.data('option-id'), value);
 
 	});
 
-	socket.on('bank_get_release_actions:result', function(page, bank, actions) {
+	socket.on('bank_release_actions_get:result', function(page, bank, actions) {
 
 		$ba = $("#bankReleaseActions");
 		$ba.html("");
@@ -131,7 +131,7 @@ $(function() {
 				}
 
 				var $name_td = $("<td class='actionlist-td-label'>" + name + "</td>");
-				var $del_td = $("<td class='actionlist-td-delete'><button type='button' class='btn btn-danger btn-sm'>delete</button><span>&nbsp;</span></td>");
+				var $del_td = $("<td class='actionlist-td-delete'><button type='button' class='btn btn-primary btn-sm'><span class='text-white fa fa-trash'></span></button></td>");
 				var $reorder_grip = $("<td class='actionlist-td-reorder'><i class='fa fa-sort reorder-grip'></i></td>");
 				var $delay_td = $("<td class='actionlist-td-delay'></td>");
 				var $delay_input = $("<input type='text' value='' class='form-control release-action-delay-keyup' placeholder='ms'>");
@@ -187,7 +187,7 @@ $(function() {
 
 							// if this option never has been saved, set default
 							if (action.options[option.id] === undefined) {
-								socket.emit('bank_update_release_action_option', page, bank, action.id, option.id, option.default);
+								socket.emit('bank_release_action_update_option', page, bank, action.id, option.id, option.default);
 								$opt_input.val(option.default);
 							}
 
@@ -215,7 +215,7 @@ $(function() {
 
 							// if this option never has been saved, set default
 							if (action.options[option.id] === undefined) {
-								socket.emit('bank_update_release_action_option', page, bank, action.id, option.id, option.default || 0 );
+								socket.emit('bank_release_action_update_option', page, bank, action.id, option.id, option.default || 0 );
 								$opt_input.val(option.default || 0);
 							}
 
@@ -240,11 +240,11 @@ $(function() {
 									showButtons: false,
 
 									change: function(color) {
-										socket.emit('bank_update_release_action_option', f_page, f_bank, f_aid, f_oid, hex2int( color.toHexString() ));
+										socket.emit('bank_release_action_update_option', f_page, f_bank, f_aid, f_oid, hex2int( color.toHexString() ));
 									},
 
 									move: function(color) {
-										socket.emit('bank_update_release_action_option', f_page, f_bank, f_aid, f_oid, hex2int( color.toHexString() ));
+										socket.emit('bank_release_action_update_option', f_page, f_bank, f_aid, f_oid, hex2int( color.toHexString() ));
 									}
 
 								});
@@ -276,7 +276,7 @@ $(function() {
 
 							// if this option never has been saved, set default
 							if (action.options[option.id] === undefined) {
-								socket.emit('bank_update_release_action_option', page, bank, action.id, option.id, option.default);
+								socket.emit('bank_release_action_update_option', page, bank, action.id, option.id, option.default);
 								$opt_input.val(option.default);
 							}
 
@@ -304,7 +304,7 @@ $(function() {
 
 							// if this option never has been saved, set default
 							if (action.options[option.id] === undefined) {
-								socket.emit('bank_update_release_action_option', page, bank, action.id, option.id, option.default);
+								socket.emit('bank_release_action_update_option', page, bank, action.id, option.id, option.default);
 								$opt_checkbox.prop('checked', option.default);
 							}
 
@@ -338,7 +338,7 @@ $(function() {
 
 							// if this option never has been saved, set default
 							if (action.options[option.id] === undefined) {
-								socket.emit('bank_update_release_action_option', page, bank, action.id, option.id, option.default);
+								socket.emit('bank_release_action_update_option', page, bank, action.id, option.id, option.default);
 								$opt_num.val(option.default);
 							}
 
@@ -386,7 +386,7 @@ $(function() {
 
 				$del_td.click(function() {
 					if (confirm('Delete action?')) {
-						socket.emit('bank_delReleaseAction', page, bank, $(this).parent().data('id'));
+						socket.emit('bank_release_action_delete', page, bank, $(this).parent().data('id'));
 					}
 				})
 				$tbody.append($tr);
@@ -401,7 +401,7 @@ $(function() {
 		new RowSorter($table[0], {
 			handler: '.reorder-grip',
 			onDrop: function(tbody, row, new_index, old_index) {
-				socket.emit('bank_update_release_action_option_order', page, bank, old_index, new_index);
+				socket.emit('bank_release_action_update_option_order', page, bank, old_index, new_index);
 			}
 		});
 

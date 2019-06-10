@@ -33,7 +33,7 @@ $(function() {
 		}
 
 		if (!count) {
-			$presets.append('You have no instances that support presets at the moment. More and more modules will support presets in the future.');
+			$presets.append('<div class="alert alert-primary">You have no instances that support presets at the moment. More and more modules will support presets in the future.</div>');
 		}
 	}
 
@@ -47,10 +47,16 @@ $(function() {
 		}
 		var inst = get_instance(instance.db[id].instance_type);
 		$presets.html('<button type=button class="btn btn-primary pull-right back_main">Back</button><h4>Preset categories for ' + inst.label + ' (' + instance.db[id].label + ')</h4>');
+		$presets.find('h4').css('marginBottom', 15);
+		
+		var $preset_wrapper = $("<div/>");
+		$preset_wrapper.addClass('row');
+		$presets.append($preset_wrapper);
 
 		for (var key in categories) {
-			$presets.append('<input type="button" class="btn btn-primary choose_category" data-instance="' + id + '" data-key="' + key + '" value="' + key + '"> ');
+			$preset_wrapper.append('<span class="col-lg-3 margbot"><input type="button" class="btn btn-block btn-primary choose_category" data-instance="' + id + '" data-key="' + key + '" value="' + key + '"></span>');
 		}
+
 	}
 
 	function show_presets(instance, category) {
@@ -63,7 +69,7 @@ $(function() {
 				continue;
 			}
 
-			$presets.append('<div class="presetbank col-lg-3" data-drawn="no" data-instance="' + instance + '" title="' + preset.label + '" data-key="' + key + '"><canvas width="72" style="cursor:pointer" height="72"></canvas></div>');
+			$presets.append('<div class="presetbank buttonbankwidth" data-drawn="no" data-instance="' + instance + '" title="' + preset.label + '" data-key="' + key + '"><canvas width="72" style="cursor:pointer" height="72"></canvas></div>');
 		}
 
 		$presets.append('<br style="clear: both;" />');
@@ -81,8 +87,9 @@ $(function() {
 
 				var preview_id = id+'_'+key;
 				$(bank).attr('data-drawn', 'yes');
-				socket.emit('graphics_generate_preview', all_presets[id][key].bank, preview_id);
-				socket.once('graphics_generate_preview:' + preview_id, function (img) {
+
+				socket.emit('graphics_preview_generate', all_presets[id][key].bank, preview_id);
+				socket.once('graphics_preview_generate:' + preview_id, function (img) {
 					var canv = $(bank).find('canvas').get(0);
 					var ctx = canv.getContext('2d');
 					ctx.putImageData(dataToButtonImage(img), 0, 0);
