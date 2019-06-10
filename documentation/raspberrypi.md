@@ -54,8 +54,8 @@ export PATH="$HOME/.yarn/bin:$HOME/.config/yarn/global/node_modules/.bin:$PATH"
 ```
 git clone https://github.com/bitfocus/companion.git
 cd companion
-./tools/update.sh
-npm run rpidist
+yarn update
+yarn rpidist
 ```
 
 This is the point where our instructions will diverge based on whether you intend to run your RPi headless or with a display attached.
