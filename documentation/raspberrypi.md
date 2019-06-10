@@ -46,7 +46,7 @@ sudo n 8.12.0
 
 6. Install yarn and update your PATH variable
 ```
-npm install yarn -g
+sudo npm install yarn -g
 export PATH="$HOME/.yarn/bin:$HOME/.config/yarn/global/node_modules/.bin:$PATH"
 ```
 
