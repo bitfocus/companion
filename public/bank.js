@@ -15,13 +15,17 @@
  *
  */
 
+var MAX_BUTTONS = 32;
+
 var socket = new io();
 var image_cache = {};
 var buttons_hot = false;
 var buttons_functional = false;
-
+var current_style;
 var function_state = null;
 var function_detail = {};
+var selected_bank = {};
+var copyfrom = {};
 
 function int2hex(number) {
 	var r = ('0' + ((number >> 16) & 0xff).toString('16')).substr(-2);
@@ -41,6 +45,7 @@ function replaceUnicode(str) {
 				reg.lastIndex = 0;
 			}
 		}
+
 	}
 	return str;
 }
@@ -59,10 +64,13 @@ $(function() {
 	var pc = $('#bank_preview canvas')[0].getContext('2d');
 
 	$("#editbankli").hide();
+	selected_bank = {};
 
 	function bank_preview_page(_page) {
+
 		var cachedata = {};
-		for (var _bank = 1; _bank <= 12; ++_bank) {
+
+		for (var _bank = 1; _bank <= MAX_BUTTONS; ++_bank) {
 			if (image_cache[_page + '_' + _bank] !== undefined) {
 				cachedata[_bank] = image_cache[_page + '_' + _bank].updated;
 			}
@@ -80,26 +88,27 @@ $(function() {
 		$('.active_field[data-special="alignment"]').removeClass('active_color');
 
 		$(".active_field").each(function() {
+
 			if ($(this).data('fieldid') !== undefined && config[$(this).data('fieldid')] !== undefined) {
 
 				if ($(this).data('special') == 'color') {
 					$(this).spectrum("set", int2hex( config[$(this).data('fieldid')] ));
+				}
 
-				} else if ($(this).data('special') == 'dropdown') {
-
+				else if ($(this).data('special') == 'dropdown') {
 					$(this).find('option[value="' + config[$(this).data('fieldid')] + '"]').prop('selected', true);
+				}
 
-				} else if ($(this).data('special') == 'checkbox') {
-
+				else if ($(this).data('special') == 'checkbox') {
 					$(this).prop('checked', config[$(this).data('fieldid')]);
+				}
 
-				} else if ($(this).data('special') == 'alignment') {
-
+				else if ($(this).data('special') == 'alignment') {
 					if ($(this).data('alignment') == config[$(this).data('fieldid')] ) {
 						$(this).addClass('active_color');
 					}
-
 				}
+
 				else {
 
 					if (updateText) {
@@ -109,6 +118,7 @@ $(function() {
 				}
 			}
 		});
+
 	}
 
 	function populate_bank_form(p,b,config,fields) {
@@ -118,6 +128,29 @@ $(function() {
 		if (config.style !== undefined) {
 			$("#resetBankButton").show();
 		}
+
+		current_style = config.style;
+
+		$("#action_area").hide();
+		$(".button_style").hide();
+
+		switch(config.style) {
+			case undefined:
+				break;
+			case 'pageup':
+				$(".button_style_pageup").show();
+				break;
+			case 'pagenum':
+				$(".button_style_pagenum").show();
+				break;
+			case 'pagedown':
+				$(".button_style_pagedown").show();
+				break;
+			default:
+				$("#action_area").show();
+				break;
+		}
+
 
 		$("#oscTips").html("<p><b>Hint:</b> Control buttons with OSC or HTTP: /press/bank/"+p+"/"+b+" to press this button remotely. OSC port 12321!</p>")
 
@@ -264,27 +297,32 @@ $(function() {
 		updateFromConfig(page, bank, config, true);
 
 		var change = function() {
+
 			if ($(this).data('special') == 'color') {
 				socket.emit('bank_changefield', p, b, $(this).data('fieldid'), hex2int( $(this).data('color') ) );
 				socket.emit('get_bank', page, bank);
 				socket.once('get_bank:results', updateFromConfig);
+			}
 
-			} else if ($(this).data('special') == 'checkbox') {
+			else if ($(this).data('special') == 'checkbox') {
 				socket.emit('bank_changefield', p, b, $(this).data('fieldid'), $(this).prop('checked') );
 				socket.emit('get_bank', page, bank);
 				socket.once('get_bank:results', updateFromConfig);
+			}
 
-			} else if ($(this).data('special') == 'dropdown') {
+			else if ($(this).data('special') == 'dropdown') {
 				socket.emit('bank_changefield', p, b, $(this).data('fieldid'), $(this).val() );
 				socket.emit('get_bank', page, bank);
 				socket.once('get_bank:results', updateFromConfig);
+			}
 
-			} else if ($(this).data('special') == 'alignment') {
+			else if ($(this).data('special') == 'alignment') {
 				socket.emit('bank_changefield', p, b, $(this).data('fieldid'), $(this).data('alignment') );
 				socket.emit('get_bank', page, bank);
 				socket.once('get_bank:results', updateFromConfig);
+			}
 
-			} else {
+			else {
 				// Custom unicode un-escaping in text field
 				if ($(this).data('fieldid') == 'text') {
 					$(this).val(replaceUnicode($(this).val()));
@@ -306,37 +344,109 @@ $(function() {
 	}
 
 	$(window).keyup(function(e) {
-		if (e.keyCode == 16) {
-			buttons_hot = false;
-			$(".border").removeClass('bank-armed');
-			$('#functionkeys').slideDown(80);
+
+		// Delete bank with backspace
+		if (e.keyCode == 8 && selected_bank.page !== undefined) {
+			if (!$(':focus').is('input') && !$(':focus').is('textarea')) {
+				if (confirm('Clear button ' + selected_bank.page + '.' + selected_bank.bank + '?')) {
+					socket.emit('bank_reset', page, bank);
+					socket.emit('bank_actions_get', page, bank);
+					socket.emit('bank_get_feedbacks', page, bank);
+					socket.emit('bank_reset_release_actions', page, bank);
+					socket.emit('bank_release_actions_get', page, bank);
+
+					$("#resetBankButton").hide();
+					populate_bank_form(page,bank,{},{});
+					bank_preview_page(page);
+				}
+			}
 		}
+
 	});
 
+	// Copy bank with cmd+c/ctr+c
+	$(window).bind('copy', function () {
+		if (selected_bank.page !== undefined) {
+			copyfrom = { page: selected_bank.page, bank: selected_bank.bank, type: 'copy' };
+		}
+		return false;
+	});
+
+	// Cut bank with cmd+x/ctr+x
+	$(window).bind('cut', function () {
+		if (selected_bank.page !== undefined) {
+			copyfrom = { page: selected_bank.page, bank: selected_bank.bank, type: 'cut' };
+		}
+		return false;
+	});
+
+	// Paste bank with cmd+v/ctr+v
+	$(window).bind('paste', function () {
+		if (selected_bank.page !== undefined) {
+			var page = selected_bank.page;
+			var bank = selected_bank.bank;
+
+			if (copyfrom.type === 'copy') {
+				socket.emit('bank_copy', copyfrom.page, copyfrom.bank, page, bank);
+			} else if (copyfrom.type == 'cut') {
+				socket.emit('bank_move', copyfrom.page, copyfrom.bank, page, bank);
+				copyfrom = {};
+			}
+
+			socket.emit('bank_actions_get', page, bank);
+			socket.emit('bank_get_feedbacks', page, bank);
+			socket.emit('bank_release_actions_get', page, bank);
+			socket.emit('get_bank',page, bank);
+			socket.once('get_bank:results', populate_bank_form);
+		}
+		return false;
+	});
+
+
 	$(window).keydown(function(e) {
-		if (e.keyCode == 16 && function_state === null) {
+/*		if (e.keyCode == 16 && function_state === null) {
 			buttons_hot = true;
 			$(".border").addClass('bank-armed');
 			$('#functionkeys').slideUp(80);
-		}
+		}*/
+
 	})
 
 
 	$(".change_style").click(function() {
-		socket.emit('bank_style', page, bank, $(this).data('style'));
-		socket.once('bank_style:results', populate_bank_form);
-		socket.once('bank_style:results', function () {
-			bank_preview_page(page);
-		});
+		var no_warning = true;
+
+		var ns = $(this).data('style');
+		console.log("CURRENT STYLE", current_style, "NEW STYLE", ns);
+		if (current_style !== 'pageup' && current_style !== 'pagedown' && current_style !== 'pagenum') {
+			if (ns === 'pageup' || ns === 'pagedown' || ns === 'pagenum') {
+				no_warning = false;
+			}
+		}
+
+		if (no_warning === true || confirm('Changing to this button style will erase eventual actions and feedbacks configured for this button - continue?')) {
+			socket.emit('bank_style', page, bank, $(this).data('style'));
+			socket.once('bank_style:results', populate_bank_form);
+			socket.once('bank_style:results', function () {
+				bank_preview_page(page);
+				socket.emit('bank_actions_get', page, bank);
+				socket.emit('bank_get_feedbacks', page, bank);
+				socket.emit('bank_reset_release_actions', page, bank);
+				socket.emit('bank_release_actions_get', page, bank);
+			});
+
+
+		}
+
 	});
 
 	$("#resetBankButton").click(function() {
 		if (confirm('Clear design and all actions?')) {
-			socket.emit('reset_bank', page, bank);
-			socket.emit('bank_get_actions', page, bank);
+			socket.emit('bank_reset', page, bank);
+			socket.emit('bank_actions_get', page, bank);
 			socket.emit('bank_get_feedbacks', page, bank);
 			socket.emit('bank_reset_release_actions', page, bank);
-			socket.emit('bank_get_release_actions', page, bank);
+			socket.emit('bank_release_actions_get', page, bank);
 
 			$("#resetBankButton").hide();
 			populate_bank_form(page,bank,{},{});
@@ -345,12 +455,14 @@ $(function() {
 	});
 
 	socket.on('preview_page_data', function (images) {
-		for (var key = 1; key <= 12; ++key) {
+		for (var key = 1; key <= MAX_BUTTONS; ++key) {
 			var imageData;
 
 			if (images[key] === undefined) {
 				imageData = dataToButtonImage(image_cache[page + '_' + key].buffer);
-			} else {
+			}
+
+			else {
 				image_cache[page + '_' + key] = images[key];
 				imageData = dataToButtonImage(images[key].buffer);
 			}
@@ -371,18 +483,26 @@ $(function() {
 	$('a.nav-link').click(function() {
 		if ($(this).attr('href') !== '#editbank' && $(this).attr('href') !== '#log') {
 			$("#editbankli").hide();
+			selected_bank = {};
+			$('.bank').removeClass('selected');
 			socket.emit('bank_preview', false);
 		}
 	});
 
-
 	$('#erase_page_link').click(function () {
-		if (confirm('Are you sure you want to clear all buttons on page ' + page + '?')) {
-			socket.emit('loadsave_reset_page', page);
+		if (confirm('Are you sure you want to clear all buttons on page ' + page + '?\nThere\'s no going back from this.')) {
+			socket.emit('loadsave_reset_page_all', page);
+		}
+	});
+
+	$('#reset_nav_link').click(function () {
+		if (confirm('Are you sure you want to reset navigation buttons? This will completely erase bank ' + page + '.1, ' + page + '.9 and ' + page + '.17')) {
+			socket.emit('loadsave_reset_page_nav', page);
 		}
 	});
 
 	$('#state_copy').click(function() {
+
 		if (function_state === null) {
 			function_state = 'copy';
 		}
@@ -391,6 +511,7 @@ $(function() {
 	});
 
 	$('#state_move').click(function() {
+
 		if (function_state === null) {
 			function_state = 'move';
 		}
@@ -399,6 +520,7 @@ $(function() {
 	});
 
 	$('#state_delete').click(function() {
+
 		if (function_state === null) {
 			function_state = 'delete';
 		}
@@ -416,7 +538,6 @@ $(function() {
 		function_state = null;
 		renderFunctionArea();
 	}
-
 
 	function executeFunctionArea() {
 
@@ -441,13 +562,14 @@ $(function() {
 					clearFunction();
 				}
 			}
+
 			else if (function_state === 'delete') {
 				if (function_detail.first !== undefined) {
 					if (confirm("Clear style and actions for this button?")) {
-						socket.emit('reset_bank', function_detail.first.page, function_detail.first.bank);
-						socket.emit('bank_get_actions', function_detail.first.page, function_detail.first.bank );
+						socket.emit('bank_reset', function_detail.first.page, function_detail.first.bank);
+						socket.emit('bank_actions_get', function_detail.first.page, function_detail.first.bank );
 						socket.emit('bank_reset_release_actions', function_detail.first.page, function_detail.first.bank );
-						socket.emit('bank_get_release_actions', function_detail.first.page, function_detail.first.bank );
+						socket.emit('bank_release_actions_get', function_detail.first.page, function_detail.first.bank );
 						bank_preview_page(page);
 					}
 					clearFunction();
@@ -494,7 +616,9 @@ $(function() {
 				$sh.text("Press the button you want to delete");
 			}
 
-		} else {
+		}
+
+		else {
 			$('#state_hide').fadeIn();
 			$('.function-button').removeClass('btn-disabled').removeClass('btn-success').addClass('btn-primary');
 			$sa.hide();
@@ -516,6 +640,29 @@ $(function() {
 
 	});
 
+	function remap(x, in_min, in_max, out_min, out_max) {
+		return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
+	}
+
+	function resize_buttonwidth() {
+
+		var button1 = $(".buttonbankwidth:eq(1)").position().left;
+		var button2 = $(".buttonbankwidth:eq(2)").position().left;
+		var ww = $("#elgatobuttons").width();
+
+		var space = button2 - button1 - 72;
+		var abs_space = Math.abs(space);
+
+		if (ww < 597) {
+			var wmin = ww - 374;
+			var p = remap(wmin, 0, 222, 44, 72);
+			console.log("XX", wmin, "---- ", p);
+			$('.border canvas').css("width", p);
+			$('.border canvas').css("height", p);
+
+		}
+
+	}
 
 	function changePage(pagenum) {
 
@@ -532,12 +679,12 @@ $(function() {
 
 		$('#export_page_link').attr('href', '/int/page_export/' + page);
 
-		$pagenav.append($('<div class="pagenav col-lg-4"><div id="btn_pagedown" class="btn btn-primary"><i class="fa fa-chevron-left"></i></div></div>'));
-		$pagenav.append($('<div class="pageat col-lg-4"><small>(Page '+page+')</small> <input id="page_title" placeholder="Page name" type="text" value="'+ pname +'"></div>'));
-		$pagenav.append($('<div class="pagenav text-right col-lg-4"><div id="btn_pageup" class="btn btn-primary"><i class="fa fa-chevron-right"></i></div></div>'));
+		$pagenav.append($('<div class="pagenav col-lg-12"><div id="btn_pagedown" class="btn btn-primary"><i class="fa fa-chevron-left"></i></div><span class="page_curr">'+page+'</span><div id="btn_pageup" class="btn btn-primary"><i class="fa fa-chevron-right"></i></div><input id="page_title" placeholder="Page name" type="text" value="'+ pname +'"></div>'));
 
-		for (var bank = 1; bank <= 12; bank++) {
-			var $div = $('<div class="bank col-lg-3"><div class="border" data-bank="' + bank + '" data-page="' + page + '"><canvas width=72 height=72 id="bank_' + page + '_' + bank + '"></canvas></div></div>');
+		for (var bank = 1; bank <= MAX_BUTTONS; bank++) {
+
+			var $div = $('<div class="bank buttonbankwidth"><div class="border" data-bank="' + bank + '" data-page="' + page + '"><canvas width=72 height=72 id="bank_' + page + '_' + bank + '"></canvas></div></div>');
+
 			$div.find('.border').droppable({
 				activeClass: 'drophere',
 				hoverClass: 'drophover',
@@ -552,57 +699,87 @@ $(function() {
 					socket.emit('preset_drop', $source.data('instance'), all_presets[$source.data('instance')][$source.data('key')], topage, tobank);
 				}
 			});
+
 			$pagebank.append($div);
 		}
 
+		resize_buttonwidth();
+
+		setInterval(function() {
+			resize_buttonwidth();
+		}, 1500);
+
 		bank_preview_page(pagenum);
+
+		$(window).resize(resize_buttonwidth);
 
 
 		$("#pagebank .border").mousedown(function() {
 			bank = $(this).data('bank');
+
 			if (buttons_hot) {
 				socket.emit('hot_press', page, $(this).data('bank'), true);
 			}
+
 		});
 
 		$("#pagebank .border").mouseup(function() {
+
 			bank = $(this).data('bank');
+
 			if (buttons_hot) {
 				socket.emit('hot_press', page, $(this).data('bank'), false);
 			}
+
 		});
 
 		$("#pagebank .border").click(function() {
+
 			bank = $(this).data('bank');
+
 			if (buttons_hot) {}
 			else if (function_state !== null) {
-				var bank = $(this).data('bank')
+
+				var bank = $(this).data('bank');
+
 				if (function_detail['first'] === undefined) {
 					function_detail['first'] = {
 						page: page,
 						bank: bank,
 					};
 				}
+
 				else {
 					function_detail['second'] = {
 						page: page,
 						bank: bank,
 					};
 				}
+
 				executeFunctionArea();
 				renderFunctionArea();
+
 			}
 
 			else {
+
+				selected_bank = { page: page, bank: $(this).data('bank') };
+
+				$('.bank').removeClass('selected');
+				var $found = $('#bank_' + selected_bank.page + '_' + selected_bank.bank);
+				$found.parents('.bank').addClass('selected');
+
 				$("#editbankli").show();
 				$('#editbankli a[href="#editbank"]').tab('show');
 				$("#editbank_content").html("");
 				$("#editbankid").text(page + "." + $(this).data('bank'));
-				socket.emit('bank_get_actions', page, $(this).data('bank'));
+
+				socket.emit('bank_actions_get', page, $(this).data('bank'));
 				socket.emit('bank_get_feedbacks', page, $(this).data('bank'));
-				socket.emit('bank_get_release_actions', page, $(this).data('bank'));
+				socket.emit('bank_release_actions_get', page, $(this).data('bank'));
 				socket.emit('get_bank',page, $(this).data('bank'));
 				socket.once('get_bank:results', populate_bank_form);
+
 			}
 
 		});
