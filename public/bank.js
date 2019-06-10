@@ -496,7 +496,7 @@ $(function() {
 	});
 
 	$('#reset_nav_link').click(function () {
-		if (confirm('Are you sure you want to reset navigation buttons?')) {
+		if (confirm('Are you sure you want to reset navigation buttons? This will completely erase bank ' + page + '.1, ' + page + '.9 and ' + page + '.17')) {
 			socket.emit('loadsave_reset_page_nav', page);
 		}
 	});
