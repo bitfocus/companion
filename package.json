@@ -1,6 +1,6 @@
 {
   "name": "companion",
-  "version": "2.0.0-alpha",
+  "version": "1.3.0",
   "description": "Companion",
   "main": "bitfocus-skeleton/main.js",
   "build": {
@@ -46,16 +46,14 @@
     ]
   },
   "scripts": {
-    "prod": "./tools/build_writefile.sh && ./bitfocus-skeleton/start.sh",
-    "dev": "./tools/build_writefile.sh && DEVELOPER=1 ./bitfocus-skeleton/start.sh",
-    "update": "./tools/update.sh",
+    "yarn": "./tools/yarn.sh",
+    "start": "./tools/build_writefile.sh && ./bitfocus-skeleton/start.sh",
     "pack": "electron-builder --dir",
     "dist": "rm -rf electron-output && electron-builder",
     "macdist": "rm -rf electron-output && electron-builder --mac",
     "windist": "rm -rf electron-output && electron-builder --win",
     "lindist": "rm -rf electron-output && electron-builder --linux tar.gz",
-    "rpidist": "rm -rf electron-output && electron-builder --armv7l --linux tar.gz",
-    "start": "yarn run"
+    "rpidist": "rm -rf electron-output && electron-builder --armv7l --linux tar.gz"
   },
   "repository": "https://github.com/bitfocus/companion",
   "keywords": [
@@ -79,15 +77,14 @@
     "check-ip": "^1.1.1",
     "debug": "^4.1.1",
     "electron-debug": "^1.5.0",
-    "elgato-stream-deck-clean": "^1.0.0",
-    "elgato-stream-deck-clean-mini": "https://github.com/bitfocus/elgato-stream-deck-clean-mini.git",
-    "elgato-stream-deck-clean-xl": "1.0.8",
+    "elgato-stream-deck-clean": "1.0.1",
+    "elgato-stream-deck-clean-mini": "1.0.1",
     "express": "^4.16.3",
     "flag-icon-css": "3.0.0",
     "font-awesome": "4.7.0",
     "fs-extra": "^7.0.0",
-    "infinitton-idisplay": "^1.0.5",
-    "jquery": ">=3.4.0",
+    "infinitton-idisplay": "1.0.5",
+    "jquery": "3.3.1",
     "json-parser": "^1.1.5",
     "lodash": "^4.17.10",
     "marked": "^0.6.0",
