@@ -93,13 +93,16 @@ _(display attached to Raspberry Pi)_
 
 10. Click "Launch GUI" to confirm Companion is running. The default internet browser should open a new tab to the IP:Port set in the configuration splash screen.
 
-11. To have Companion automatically start at system start-up, add the command to rc.local (`sudo nano /etc/rc.local`)
-```bash
-yarn --cwd /home/pi/companion/ prod
-```
-> Make sure you add this line _before_ the `exit 0`.
-
-12. Reboot, and confirm Companion starts at system start-up
+11. If you would like to have Companion load automatically at startup, follow these steps:
+  1. Create a directory named `autostart` in your home .config directory: `mkdir ~/.config/autostart`
+  2. Create a new `companion.desktop` file and copy the following lines
+  ```bash
+  [Desktop Entry]
+  Type=Application
+  Name=Companion
+  Exec=/usr/local/bin/yarn --cwd /home/pi/companion prod
+  ```
+  3. Reboot, and confirm Companion starts at system start-up
 
 
 ## Updating Companion
