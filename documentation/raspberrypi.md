@@ -113,20 +113,21 @@ _(display attached to Raspberry Pi)_
 11. If you would like to have Companion load automatically at startup, follow these steps:
   1. Create a directory named `autostart` in your home .config directory: `mkdir ~/.config/autostart`
   2. Create a new companion.desktop file (`sudo nano ~/.config/autostart/companion.desktop`) and copy the following lines  
-    - **v1.3 stable**  
-    ```bash  
-    [Desktop Entry]  
-    Type=Application  
-    Name=Companion  
-    Exec=npm --prefix /home/pi/companion start
-    ```  
-    - **v2.0-alpha**  
-    ```bash  
-    [Desktop Entry]  
-    Type=Application  
-    Name=Companion  
-    Exec=/usr/local/bin/yarn --cwd /home/pi/companion prod
-    ```
+   * v1.3 stable
+```bash
+[Desktop Entry]
+Type=Application
+Name=Companion
+Exec=npm --prefix /home/pi/companion start
+```
+   * v2.0-alpha
+```bash
+[Desktop Entry]
+Type=Application
+Name=Companion
+Exec=/usr/local/bin/yarn --cwd /home/pi/companion prod
+```
+
 >You will need to replace the "prod" in the v2.0-alpha file with dev if you intend to launch Companion with debugging.
 
   3. Reboot, and confirm Companion starts at system start-up
