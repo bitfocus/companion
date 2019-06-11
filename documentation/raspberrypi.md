@@ -20,18 +20,21 @@ sudo apt-get install libgusb-dev npm nodejs git build-essential cmake libudev-de
 
 3. Because it is never recommended to run things on Linux as the root user, you will need to add a udev rule.
 ```
-sudo touch /etc/udev/rules.d/50-companion.rules
-```
-Add these lines to that new file
-```
 sudo nano /etc/udev/rules.d/50-companion.rules
 ```
+Add these lines to that new file
 ```
 SUBSYSTEM=="input", GROUP="input", MODE="0666"
 SUBSYSTEM=="usb", ATTRS{idVendor}=="0fd9", ATTRS{idProduct}=="0060", MODE:="666", GROUP="plugdev"
 KERNEL=="hidraw", ATTRS{idVendor}=="0fd9", ATTRS{idProduct}=="0060", MODE:="666", GROUP="plugdev"
 SUBSYSTEM=="usb", ATTRS{idVendor}=="ffff", ATTRS{idProduct}=="1f40", MODE:="666", GROUP="plugdev"
 KERNEL=="hidraw", ATTRS{idVendor}=="ffff", ATTRS{idProduct}=="1f40", MODE:="666", GROUP="plugdev"
+SUBSYSTEM=="usb", ATTRS{idVendor}=="0fd9", ATTRS{idProduct}=="0063", MODE:="666", GROUP="plugdev"
+KERNEL=="hidraw", ATTRS{idVendor}=="0fd9", ATTRS{idProduct}=="0063", MODE:="666", GROUP="plugdev"
+SUBSYSTEM=="usb", ATTRS{idVendor}=="0fd9", ATTRS{idProduct}=="006c", MODE:="666", GROUP="plugdev"
+KERNEL=="hidraw", ATTRS{idVendor}=="0fd9", ATTRS{idProduct}=="006c", MODE:="666", GROUP="plugdev"
+SUBSYSTEM=="usb", ATTRS{idVendor}=="ffff", ATTRS{idProduct}=="1f41", MODE:="666", GROUP="plugdev"
+KERNEL=="hidraw", ATTRS{idVendor}=="ffff", ATTRS{idProduct}=="1f41", MODE:="666", GROUP="plugdev"
 ```
 
 4. Either reboot your RPi (`sudo reboot now`) or reload the udev rules `sudo udevadm control --reload-rules`
@@ -52,20 +55,13 @@ export PATH="$HOME/.yarn/bin:$HOME/.config/yarn/global/node_modules/.bin:$PATH"
 7. Now we're ready to clone the repository and build. These commands will clone the respository, move into the `companion` directory, update all dependencies and modules, and create a fresh build.
 > It's important to note which version of Companion you are hoping to install: v1.3 stable or v2.0-alpha. v2.0-alpha is not ready for production environments at the time of this writing (June 10, 2019), but is available for testing. The other important distinction to note is that the build commands are different between the two versions.
 
-* Version 1.3 (stable):
-```bash
-git clone https://github.com/bitfocus/companion.git --branch v1.3.0 --single-branch
-cd companion
-./tools/update.sh
-npm run rpidist
-```
-* Version 2.0-alpha:
-```bash
-git clone https://github.com/bitfocus/companion.git
-cd companion
-yarn update
-yarn rpidist
-```
+| Version 1.3 (stable) |
+| -------------------- |
+| <div class="highlight highlight-source-shell"><pre>git clone https://github.com/bitfocus/companion.git --branch v1.3.0 --single-branch<br><span class="pl-c1">cd</span> companion<br>./tools/update.sh<br>npm run rpidist</pre></div> |
+
+| Version 2.0 (alpha) |
+| ------------------- |
+| <div class="highlight highlight-source-shell"><pre>git clone https://github.com/bitfocus/companion.git<br><span class="pl-c1">cd</span> companion<br>yarn update<br>yarn rpidist</pre></div> |
 
 This is the point where our instructions will diverge based on whether you intend to run your RPi headless or with a display attached.
 
@@ -75,19 +71,23 @@ _(no attached display)_
 8. This will prep what's needed for `headless.js` to function properly.
 ```
 ./tools/build_writefile.sh
+```
+
+9. If this is the first time you've run Companion headless, you need to copy the db file so headless.js can pick it up.
+```
 cp ~/.config/companion/db ~/companion/
 ```
 
-9. The last step for headless operation is to ensure Companion will start at console boot. We currently do this via `rc.local`. You will first need to know the designation of the network interface you wish to have Companion run on (i.e. `eth0` or `wlan0`)
+10. The last step for headless operation is to ensure Companion will start at console boot. We currently do this via `rc.local`. You will first need to know the designation of the network interface you wish to have Companion run on (i.e. `eth0` or `wlan0`)
 ```
 sudo nano /etc/rc.local
 ```
 Add this line before the `exit 0` line, making sure to change the interface designation if appropriate for your setup:
 ```
-/home/pi/companion/headless eth0
+/home/pi/companion/headless.js eth0
 ```
 
-10. Reboot your Raspberry Pi (`sudo reboot now`), wait a couple minutes, and you should be able to access the Companion UI on port 8000 of your RPi's IP address (i.e. `http://192.168.1.2:8000`)
+11. Reboot your Raspberry Pi (`sudo reboot now`), wait a couple minutes, and you should be able to access the Companion UI on port 8000 of your RPi's IP address (i.e. `http://192.168.1.2:8000`)
 
 ### Headed Installation & Operation
 _(display attached to Raspberry Pi)_
@@ -110,26 +110,22 @@ _(display attached to Raspberry Pi)_
 
 10. Click "Launch GUI" to confirm Companion is running. The default internet browser should open a new tab to the IP:Port set in the configuration splash screen.
 
-11. If you would like to have Companion load automatically at startup, follow these steps:
-  1. Create a directory named `autostart` in your home .config directory: `mkdir ~/.config/autostart`
-  2. Create a new companion.desktop file (`sudo nano ~/.config/autostart/companion.desktop`) and copy the following lines
-    **v1.3 stable**
-    ```bash
-    [Desktop Entry]
-    Type=Application
-    Name=Companion
-    Exec=npm --prefix /home/pi/companion start
-    ```
-    **v2.0-alpha**
-    ```bash
-    [Desktop Entry]
-    Type=Application
-    Name=Companion
-    Exec=/usr/local/bin/yarn --cwd /home/pi/companion prod
-    ```
-    > You will need to replace the "prod" in the v2.0-alpha file with dev if you intend to launch Companion with debugging.
+#### Headed Autostart
+If you would like to have Companion load automatically at startup, follow these steps:
+1. Create a directory named `autostart` in your home .config directory: `mkdir ~/.config/autostart`
+2. Create a new companion.desktop file (`sudo nano ~/.config/autostart/companion.desktop`) and copy the following lines  
 
-  3. Reboot, and confirm Companion starts at system start-up
+| Version 1.3 (stable) |
+| -------------------- |
+| <div class="highlight highlight-source-shell"><pre>[Desktop Entry]<br>Type=Application<br>Name=Companion<br>Exec=npm --prefix /home/pi/companion start</pre></div> |
+
+| Version 2.0 (alpha) |
+| -------------------- |
+| <div class="highlight highlight-source-shell"><pre>[Desktop Entry]<br>Type=Application<br>Name=Companion<br>Exec=/usr/local/bin/yarn --cwd /home/pi/companion prod</pre></div> |
+
+> You will need to replace the "prod" in the v2.0-alpha file with dev if you intend to launch Companion with debugging.
+
+3. Reboot, and confirm Companion starts at system start-up
 
 
 ## Updating Companion
@@ -142,6 +138,7 @@ sudo reboot now
 
 To update the local build of Companion v2.0, run the following sequence of commands:
 ```bash
+git pull
 yarn update
 yarn rpidist
 sudo reboot now
