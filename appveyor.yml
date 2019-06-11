@@ -35,7 +35,8 @@ build_script:
   - yarn windist
   - cmd: bash tools/build_rename_git.sh
 
-test: off
+test:
+  - yarn test
 
 deploy:
   - provider: FTP
