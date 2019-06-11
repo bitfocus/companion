@@ -91,7 +91,15 @@ _(display attached to Raspberry Pi)_
 
 9. Click the "Companion" icon in the system tray, set your desired network interface and port number, then click "Change".
 
-10. Click ""
+10. Click "Launch GUI" to confirm Companion is running. The default internet browser should open a new tab to the IP:Port set in the configuration splash screen.
+
+11. To have Companion automatically start at system start-up, add the command to rc.local (`sudo nano /etc/rc.local`)
+```bash
+yarn --cwd /home/pi/companion/ prod
+```
+> Make sure you add this line _before_ the `exit 0`.
+
+12. Reboot, and confirm Companion starts at system start-up
 
 
 ## Updating Companion
