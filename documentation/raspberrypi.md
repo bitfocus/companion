@@ -50,7 +50,8 @@ export PATH="$HOME/.yarn/bin:$HOME/.config/yarn/global/node_modules/.bin:$PATH"
 ```
 
 7. Now we're ready to clone the repository and build. These commands will clone the respository, move into the `companion` directory, update all dependencies and modules, and create a fresh build.
->It's important to note which version of Companion you are hoping to install. The current stable version is 1.3, while the master branch has been updated to 2.0-alpha. 2.0-alpha is not yet ready for production, so if you're going to be using Companion in production you'll want to use version 1.3.
+> It's important to note which version of Companion you are hoping to install: v1.3 stable or v2.0-alpha. v2.0-alpha is not ready for production environments at the time of this writing (June 10, 2019), but is available for testing. The other important distinction to note is that the build commands are different between the two versions.
+
 * Version 1.3 (stable):
 ```bash
 git clone https://github.com/bitfocus/companion.git --branch v1.3.0 --single-branch
@@ -92,8 +93,13 @@ Add this line before the `exit 0` line, making sure to change the interface desi
 _(display attached to Raspberry Pi)_
 
 8. At this point you are ready to confirm your fresh build of Companion functions.
-* `yarn dev` will start Companion with debugging fuctionality.
-* `yarn prod` will start Companion silently, with no debugging.
+* v1.3 stable
+  * `npm run start` **or** `npm --prefix /home/pi/companion start`
+* v2.0-alpha
+  * `yarn dev` will start Companion with debugging fuctionality
+    * full explicit command: `/usr/local/bin/yarn --cwd /home/pi/companion dev`
+  * `yarn prod` will start Companion silently, with no debugging
+    * full explicit command: `/usr/local/bin/yarn --cwd /home/pi/companion prod`
 
 9. Click the "Companion" icon in the system tray, set your desired network interface and port number, then click "Change".
 
@@ -102,18 +108,35 @@ _(display attached to Raspberry Pi)_
 11. If you would like to have Companion load automatically at startup, follow these steps:
   1. Create a directory named `autostart` in your home .config directory: `mkdir ~/.config/autostart`
   2. Create a new companion.desktop file (`sudo nano ~/.config/autostart/companion.desktop`) and copy the following lines
-  ```bash
-  [Desktop Entry]
-  Type=Application
-  Name=Companion
-  Exec=/usr/local/bin/yarn --cwd /home/pi/companion prod
-  ```
+    **v1.3 stable**
+    ```bash
+    [Desktop Entry]
+    Type=Application
+    Name=Companion
+    Exec=npm --prefix /home/pi/companion start
+    ```
+    **v2.0-alpha**
+    ```bash
+    [Desktop Entry]
+    Type=Application
+    Name=Companion
+    Exec=/usr/local/bin/yarn --cwd /home/pi/companion prod
+    ```
+    > You will need to replace the "prod" in the v2.0-alpha file with dev if you intend to launch Companion with debugging.
+
   3. Reboot, and confirm Companion starts at system start-up
 
 
 ## Updating Companion
-When you want to update the local build of Companion, you'll run the following sequence of commands:
+To update the local build of Companion v1.3, run the following set of commands:
+```bash
+./tools/update.sh
+npm run rpidist
+sudo reboot now
 ```
+
+To update the local build of Companion v2.0, run the following sequence of commands:
+```bash
 yarn update
 yarn rpidist
 sudo reboot now
