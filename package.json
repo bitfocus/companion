@@ -55,7 +55,8 @@
     "windist": "rm -rf electron-output && electron-builder --win",
     "lindist": "rm -rf electron-output && electron-builder --linux tar.gz",
     "rpidist": "rm -rf electron-output && electron-builder --armv7l --linux tar.gz",
-    "start": "yarn run"
+    "start": "yarn run",
+    "test": "mocha"
   },
   "repository": "https://github.com/bitfocus/companion",
   "keywords": [
@@ -65,8 +66,11 @@
   "author": "Bitfocus AS",
   "license": "MIT",
   "devDependencies": {
+    "chai": "^4.2.0",
+    "chai-fs": "^2.0.0",
     "electron": "^2.0.8",
-    "electron-builder": "^20.10.0"
+    "electron-builder": "^20.10.0",
+    "mocha": "^6.1.4"
   },
   "dependencies": {
     "@coreui/coreui": "^2.0.0-rc.2",
