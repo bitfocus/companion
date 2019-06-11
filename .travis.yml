@@ -50,14 +50,16 @@ script:
         -v ~/.cache/electron-builder:/root/.cache/electron-builder \
         -v ~/.cache/snapcraft:/root/.cache/snapcraft \
         haakonn/electron-wine:v1 \
-        /bin/bash -c "apt-get update && apt-get install -y git libudev-dev ; tools/yarn.sh ; npm run lindist";
+        /bin/bash -c "apt-get update && apt-get install -y git cmake nasm libudev-dev ; tools/yarn.sh ; npm run lindist";
     fi
   - |
     if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
+      brew install nasm cmake
       tools/yarn.sh
       npm run dist
     fi
   - ./tools/build_rename_git.sh
+  - yarn test
 
 before_cache:
   - rm -rf $HOME/.cache/electron-builder/wine

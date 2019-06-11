@@ -35,7 +35,7 @@ $(function() {
 	var $aba = $("#addBankAction");
 
 	$aba.change(function() {
-		socket.emit('bank_addAction', page, bank, $(this).val() );
+		socket.emit('bank_action_add', page, bank, $(this).val() );
 		$("#addBankAction").val($("#addBankAction option:first").val());
 	});
 
@@ -105,7 +105,7 @@ $(function() {
 		socket.emit('hot_press',page,bank, false);
 	});
 
-	socket.on('bank_get_actions:result', function(page, bank, actions) {
+	socket.on('bank_actions_get:result', function(page, bank, actions) {
 
 		$ba = $("#bankActions");
 		$ba.html("");
@@ -147,7 +147,7 @@ $(function() {
 				}
 
 				var $name_td = $("<td class='actionlist-td-label'>" + name + "</td>");
-				var $del_td = $("<td class='actionlist-td-delete'><button type='button' class='btn btn-danger btn-sm'>delete</button><span>&nbsp;</span></td>");
+				var $del_td = $("<td class='actionlist-td-delete'><button type='button' class='btn btn-primary btn-sm'><span class='text-white fa fa-trash'></span></button></td>");
 				var $reorder_grip = $("<td class='actionlist-td-reorder'><i class='fa fa-sort reorder-grip'></i></td>");
 				var $delay_td = $("<td class='actionlist-td-delay'></td>");
 				var $delay_input = $("<input type='text' value='' class='form-control action-delay-keyup' placeholder='ms'>");
@@ -443,7 +443,7 @@ $(function() {
 
 				$del_td.click(function() {
 					if (confirm('Delete action?')) {
-						socket.emit('bank_delAction', page, bank, $(this).parent().data('id'));
+						socket.emit('bank_action_delete', page, bank, $(this).parent().data('id'));
 					}
 				})
 				$tbody.append($tr);

@@ -51,7 +51,7 @@ function release() {
 }
 
 # DEMO
-if [ $(get_git_branch) != "master" ]; then
+if [ "$(get_git_branch)" != "master" ]; then
 	GIT_BRANCH=$(parse_git_branch)-$(parse_git_hash)
 else
 	GIT_BRANCH=$(parse_git_branch)-$(parse_git_hash)-$(parse_git_count)

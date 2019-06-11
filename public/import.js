@@ -49,18 +49,18 @@ $(function() {
 	});
 
 	function loadPage(num, page, config) {
-		$('#import_config .pageat small').text(num ? '(Page ' + num + ')' : '');
+		$('#import_config .page_curr').text(num);
 		$('#import_page_title').val(page.name);
 
 		$pagebank.html('');
 		for (var key in config) {
-			var $b = $("<div class='bank col-lg-3'><div class='importborder'><canvas width=72 height=72></canvas></div></div>");
+			var $b = $("<div class='bank buttonbankwidth'><div class='border'><canvas width=72 height=72></canvas></div></div>");
 
 			$pagebank.append($b);
 			(function ($b) {
 				var preview_id = 'lp' + num + page.name + key;
-				socket.emit('graphics_generate_preview', config[key], preview_id);
-				socket.once('graphics_generate_preview:' + preview_id, function (img) {
+				socket.emit('graphics_preview_generate', config[key], preview_id);
+				socket.once('graphics_preview_generate:' + preview_id, function (img) {
 					var canv = $b.find('canvas').get(0);
 					var ctx = canv.getContext('2d');
 					ctx.putImageData(dataToButtonImage(img), 0, 0);
