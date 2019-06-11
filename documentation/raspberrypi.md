@@ -95,7 +95,7 @@ _(display attached to Raspberry Pi)_
 
 11. If you would like to have Companion load automatically at startup, follow these steps:
   1. Create a directory named `autostart` in your home .config directory: `mkdir ~/.config/autostart`
-  2. Create a new `companion.desktop` file and copy the following lines
+  2. Create a new companion.desktop file (`sudo nano ~/.config/autostart/companion.desktop`) and copy the following lines
   ```bash
   [Desktop Entry]
   Type=Application
