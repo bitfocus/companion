@@ -1,5 +1,5 @@
 # Raspberry Pi Installation Instructions
-These instructions are for installing Companion 1.3 on a Raspberry Pi. They have been tested with a Raspberry Pi 2B and 3B+. They should function with any version of the Raspberry Pi board, but your results may vary.
+These instructions are for installing Companion on a Raspberry Pi. Instructions differ slightly between latest stable (v1.3) and current alpha (v2.0). Instructions here cover both. They have been tested with a Raspberry Pi 2B and 3B+. They should function with any version of the Raspberry Pi board, but your results may vary.
 
 > Please note: performance on any Raspberry Pi system to date is less than optimal, and can easily break. Running Companion in its current form on a Raspberry Pi is not recommended. However, since the RPi is a popular device these instructions have been provided for you to use at your own risk. If you insist on running Companion on a Raspberry Pi, it is recommended to run Companion headless on the "Lite" version of the Raspbian OS. This will maximize the potential performance on your Raspberry Pi.
 
@@ -93,15 +93,18 @@ Add this line before the `exit 0` line, making sure to change the interface desi
 _(display attached to Raspberry Pi)_
 
 8. At this point you are ready to confirm your fresh build of Companion functions.
-* v1.3 stable
-  * `npm run start` **or** `npm --prefix /home/pi/companion start`
-* v2.0-alpha
-  * `yarn dev` will start Companion with debugging fuctionality
-    * full explicit command: `/usr/local/bin/yarn --cwd /home/pi/companion dev`
-  * `yarn prod` will start Companion silently, with no debugging
-    * full explicit command: `/usr/local/bin/yarn --cwd /home/pi/companion prod`
+  * v1.3 stable
+    * `npm run start` **or** `npm --prefix /home/pi/companion start`
+  * v2.0-alpha
+    * `yarn dev` will start Companion with debugging fuctionality
+      * full explicit command: `/usr/local/bin/yarn --cwd /home/pi/companion dev`
+    * `yarn prod` will start Companion silently, with no debugging
+      * full explicit command: `/usr/local/bin/yarn --cwd /home/pi/companion prod`
 
-9. Click the "Companion" icon in the system tray, set your desired network interface and port number, then click "Change".
+9. Click the "Companion" icon in the system tray, set your desired network interface and port number, then click "Change".  
+v1.3 Splash Screen | v2.0 Splash Screen  
+------------------ | ------------------  
+![Companion v1.3 Splash Screen](documentation/images/companion-splash-1.3.png) | ![Companion v2.0 Splash Screen](documentation/images/companion-splash-2.0.png)
 
 10. Click "Launch GUI" to confirm Companion is running. The default internet browser should open a new tab to the IP:Port set in the configuration splash screen.
 
