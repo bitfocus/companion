@@ -15,7 +15,7 @@ sudo apt-get update && sudo apt-get upgrade -y && sudo apt-get autoremove && sud
 
 2. Install some required packages.
 ```
-sudo apt-get install libgusb-dev npm nodejs git npm build-essential libudev-dev libusb-1.0-0-dev -y
+sudo apt-get install libgusb-dev npm nodejs git build-essential cmake libudev-dev libusb-1.0-0-dev -y
 ```
 
 3. Because it is never recommended to run things on Linux as the root user, you will need to add a udev rule.
@@ -50,8 +50,11 @@ export PATH="$HOME/.yarn/bin:$HOME/.config/yarn/global/node_modules/.bin:$PATH"
 ```
 
 7. Now we're ready to clone the repository and build. These commands will clone the respository, move into the `companion` directory, update all dependencies and modules, and create a fresh build.
+>It's important to note which version of Companion you are hoping to install. The current stable version is 1.3, while the master branch has been updated to 2.0-alpha. 2.0-alpha is not yet ready for production, so if you're going to be using Companion in production you'll want to use version 1.3.
+* Version 1.3 (stable): `git clone https://github.com/bitfocus/companion.git --branch v1.3.0 --single-branch`
+* Version 2.0-alpha: `git clone https://github.com/bitfocus/companion.git`
+Once you've cloned the desired branch, proceed with the following commands to build Companion
 ```
-git clone https://github.com/bitfocus/companion.git
 cd companion
 yarn update
 yarn rpidist
