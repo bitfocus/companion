@@ -34,10 +34,8 @@ artifacts:
 build_script:
   - yarn windist
   - cmd: bash tools/build_rename_git.sh
-
-test:
   - yarn test
-
+  
 deploy:
   - provider: FTP
     host: 80.241.92.222
