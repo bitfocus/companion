@@ -59,7 +59,7 @@ script:
       npm run dist
     fi
   - ./tools/build_rename_git.sh
-  - npm test
+  - yarn test
 
 before_cache:
   - rm -rf $HOME/.cache/electron-builder/wine
