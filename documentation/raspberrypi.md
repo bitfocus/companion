@@ -20,18 +20,21 @@ sudo apt-get install libgusb-dev npm nodejs git build-essential cmake libudev-de
 
 3. Because it is never recommended to run things on Linux as the root user, you will need to add a udev rule.
 ```
-sudo touch /etc/udev/rules.d/50-companion.rules
-```
-Add these lines to that new file
-```
 sudo nano /etc/udev/rules.d/50-companion.rules
 ```
+Add these lines to that new file
 ```
 SUBSYSTEM=="input", GROUP="input", MODE="0666"
 SUBSYSTEM=="usb", ATTRS{idVendor}=="0fd9", ATTRS{idProduct}=="0060", MODE:="666", GROUP="plugdev"
 KERNEL=="hidraw", ATTRS{idVendor}=="0fd9", ATTRS{idProduct}=="0060", MODE:="666", GROUP="plugdev"
 SUBSYSTEM=="usb", ATTRS{idVendor}=="ffff", ATTRS{idProduct}=="1f40", MODE:="666", GROUP="plugdev"
 KERNEL=="hidraw", ATTRS{idVendor}=="ffff", ATTRS{idProduct}=="1f40", MODE:="666", GROUP="plugdev"
+SUBSYSTEM=="usb", ATTRS{idVendor}=="0fd9", ATTRS{idProduct}=="0063", MODE:="666", GROUP="plugdev"
+KERNEL=="hidraw", ATTRS{idVendor}=="0fd9", ATTRS{idProduct}=="0063", MODE:="666", GROUP="plugdev"
+SUBSYSTEM=="usb", ATTRS{idVendor}=="0fd9", ATTRS{idProduct}=="006c", MODE:="666", GROUP="plugdev"
+KERNEL=="hidraw", ATTRS{idVendor}=="0fd9", ATTRS{idProduct}=="006c", MODE:="666", GROUP="plugdev"
+SUBSYSTEM=="usb", ATTRS{idVendor}=="ffff", ATTRS{idProduct}=="1f41", MODE:="666", GROUP="plugdev"
+KERNEL=="hidraw", ATTRS{idVendor}=="ffff", ATTRS{idProduct}=="1f41", MODE:="666", GROUP="plugdev"
 ```
 
 4. Either reboot your RPi (`sudo reboot now`) or reload the udev rules `sudo udevadm control --reload-rules`
@@ -75,19 +78,23 @@ _(no attached display)_
 8. This will prep what's needed for `headless.js` to function properly.
 ```
 ./tools/build_writefile.sh
+```
+
+9. If this is the first time you've run Companion headless, you need to copy the db file so headless.js can pick it up.
+```
 cp ~/.config/companion/db ~/companion/
 ```
 
-9. The last step for headless operation is to ensure Companion will start at console boot. We currently do this via `rc.local`. You will first need to know the designation of the network interface you wish to have Companion run on (i.e. `eth0` or `wlan0`)
+10. The last step for headless operation is to ensure Companion will start at console boot. We currently do this via `rc.local`. You will first need to know the designation of the network interface you wish to have Companion run on (i.e. `eth0` or `wlan0`)
 ```
 sudo nano /etc/rc.local
 ```
 Add this line before the `exit 0` line, making sure to change the interface designation if appropriate for your setup:
 ```
-/home/pi/companion/headless eth0
+/home/pi/companion/headless.js eth0
 ```
 
-10. Reboot your Raspberry Pi (`sudo reboot now`), wait a couple minutes, and you should be able to access the Companion UI on port 8000 of your RPi's IP address (i.e. `http://192.168.1.2:8000`)
+11. Reboot your Raspberry Pi (`sudo reboot now`), wait a couple minutes, and you should be able to access the Companion UI on port 8000 of your RPi's IP address (i.e. `http://192.168.1.2:8000`)
 
 ### Headed Installation & Operation
 _(display attached to Raspberry Pi)_
@@ -143,6 +150,7 @@ sudo reboot now
 
 To update the local build of Companion v2.0, run the following sequence of commands:
 ```bash
+git pull
 yarn update
 yarn rpidist
 sudo reboot now
