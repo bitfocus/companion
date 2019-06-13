@@ -178,7 +178,38 @@ $(function() {
 		updateInstanceStatus();
 	};
 
+	function validateNumericField($opt) {
 
+		// Note: $opt.val() will make non-numeric values ''.
+		var val = $opt.val();
+		var valid = true;
+
+		var min = $opt.attr('min');
+		var max = $opt.attr('max');
+
+		if (val === '') {
+			// Empty values are only permitted if the field isn't required
+			valid = $opt.prop('required') === false;
+		} else {
+
+			if (min !== undefined) {
+				valid &= val >= parseInt(min);
+			}
+			if (max !== undefined) {
+				valid &= val <= parseInt(max);
+			}
+
+		}
+
+		if (valid) {
+			$opt.css('color', 'black');
+			$opt.data('valid', true);
+		} else {
+			$opt.css('color', 'red');
+			$opt.data('valid', false);
+		}
+
+	}
 
 
 	// search for add instance code
@@ -383,6 +414,19 @@ $(function() {
 				data[$this.data('id')] = $this.val();
 			}
 
+			else if ($this.data('type') == 'checkbox') {
+				data[$this.data('id')] = $this.prop('checked');
+			}
+
+			else if ($this.data('type') == 'number') {
+				// Ensure only numeric or empty values get saved.
+				// Handles situation where a string is entered into a non-required numeric field.
+				var val = parseInt($this.val());
+				val = isNaN(val) ? '' : val;
+				$this.val(val);
+				data[$this.data('id')] = val;
+			}
+
 			else {
 				console.log("saveConfig: Unknown field type: ", $this.data('type'), this);
 			}
@@ -567,6 +611,53 @@ $(function() {
 
 				$sm.append($inp);
 			}
+			
+			else if (field.type == 'checkbox') {
+				var $opt_checkbox = $("<input type='checkbox' class='form-control instanceConfigField'>");
+
+				if (field.tooltip !== undefined) {
+					$opt_checkbox.attr('title', field.tooltip);
+				}
+
+				// Force as a boolean
+				field.default = field.default === true;
+
+				$opt_checkbox
+					.attr('data-id', field.id)
+					.data('type', 'checkbox')
+					.data('valid', true)
+					.prop('checked', field.default);
+	
+				$sm.append($opt_checkbox);
+
+			}
+
+			else if (field.type == 'number') {
+				let $opt_num = $("<input type='number' class='form-control instanceConfigField'>");
+				
+				if (field.tooltip !== undefined) {
+					$opt_num.attr('title', field.tooltip);
+				}
+
+				$opt_num
+					.attr('data-id', field.id)
+					.attr('min', field.min)
+					.attr('max', field.max)
+					.prop('required', field.required === true)
+					.data('type', 'number')
+					.val(field.default);
+
+				(function(field, $opt) {
+					$opt.on('change keyup', function() {
+						// Run custom validation on the number field that changed
+						validateNumericField($opt);
+					});
+				})(field, $opt_num);
+		
+				$sm.append($opt_num);
+
+			}
+
 
 			else {
 				console.log("FIELD:" ,field);
@@ -577,10 +668,22 @@ $(function() {
 
 		$(".instanceConfigField").each(function() {
 
-			var key = $(this).data('id');
+			var $this = $(this);
+
+			var key  = $this.data('id');
+			var type = $this.data('type');
 
 			if (config[key] !== undefined) {
-				$(this).val(config[key]);
+
+				if (type == 'checkbox') {
+					$this.prop('checked', config[key]);
+				} else if (type == 'number') {
+					$this.val(config[key]);
+					// Make sure the value returned from the instance is valid
+					validateNumericField($this);
+				} else {
+					$this.val(config[key]);
+				}
 			}
 
 		});
