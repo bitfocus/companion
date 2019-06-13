@@ -19,6 +19,7 @@ describe('package.json main script exists', function () {
 		var main_script = "./lib/module/"+module+"/"+ js.main;
 		var main_lib = "../lib/module/"+module;
 		it(module, function () {
+			this.timeout(10000);
 			assert.pathExists(main_script, module);
 		});
 	}
@@ -34,6 +35,7 @@ describe('Module loads', function () {
 		var main_script = "./lib/module/"+module+"/"+ js.main;
 		var main_lib = "../lib/module/"+module;
 		it(module, function () {
+			this.timeout(10000);
 			var mod = require(main_lib);
 		});
 	}
