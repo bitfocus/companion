@@ -34,9 +34,9 @@ $(function() {
 		var $this = $(this);
 		let min   = parseFloat($this.attr('min'));
 		let max   = parseFloat($this.attr('max'));
-		let value = $this.attr('required') ? parseFloat($this.val()) : $this.val();
+		let value = $this.prop('required') ? parseFloat($this.val()) : $this.val();
 
-		if (!$this.attr('required') && isNaN(value)) {
+		if (!$this.prop('required') && isNaN(value)) {
 			// Not required and isn't a number (could be empty).
 			this.style.color = 'black';
 		} else if (!isNaN(parseFloat(value)) && isFinite(value) && value >= min && value <= max) {
@@ -247,6 +247,11 @@ $(function() {
 							// Force as a boolean
 							option.default = option.default === true;
 
+							// if options never been stored on this action
+							if (feedback.options === undefined) {
+								feedback.options = {};
+							}
+
 							// if this option never has been saved, set default
 							if (feedback.options[option.id] === undefined) {
 								socket.emit('bank_update_feedback_option', page, bank, feedback.id, option.id, option.default);
@@ -279,7 +284,7 @@ $(function() {
 								.data('option-id', option.id)
 								.attr('min', option.min)
 								.attr('max', option.max)
-								.attr('required', option.range || option.required === true);
+								.prop('required', option.range || option.required === true);
 
 							// if this option never has been saved, set default
 							if (feedback.options[option.id] === undefined) {
