@@ -51,8 +51,8 @@ script:
         -v ~/.cache/electron:/root/.cache/electron \
         -v ~/.cache/electron-builder:/root/.cache/electron-builder \
         -v ~/.cache/snapcraft:/root/.cache/snapcraft \
-        haakonn/electron-wine:v1 \
-        /bin/bash -c "curl -L https://yarnpkg.com/latest.tar.gz | tar xvz && mv yarn-v* $HOME/.yarn ; apt-get update && apt-get install -y git cmake nasm libudev-dev ; yarn update ; yarn lindist ; yarn test";
+        haakonn/companion-build:2.0 \
+        /bin/bash -c "yarn update ; yarn lindist ; yarn test";
     fi
   - |
     if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
