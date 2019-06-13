@@ -52,13 +52,13 @@ script:
         -v ~/.cache/electron-builder:/root/.cache/electron-builder \
         -v ~/.cache/snapcraft:/root/.cache/snapcraft \
         haakonn/electron-wine:v1 \
-        /bin/bash -c "apt-get update && apt-get install -y git cmake nasm libudev-dev ; tools/yarn.sh ; npm run lindist";
+        /bin/bash -c "curl -L https://yarnpkg.com/latest.tar.gz | tar xvz && mv yarn-v* $HOME/.yarn ; apt-get update && apt-get install -y git cmake nasm libudev-dev ; yarn update ; yarn lindist";
     fi
   - |
     if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
       brew install nasm cmake
-      tools/yarn.sh
-      npm run dist
+      yarn update
+      yarn dist
     fi
   - ./tools/build_rename_git.sh
   - yarn test
