@@ -28,6 +28,8 @@ cache:
   - $HOME/.cache/electron-builder
   - $HOME/.npm/_prebuilds
   - $HOME/.cache/snapcraft
+  - $HOME/Library/Caches/Homebrew
+  - /usr/local/Homebrew
 
 before_install:
   - curl -L https://yarnpkg.com/latest.tar.gz | tar xvz && mv yarn-v* $HOME/.yarn
