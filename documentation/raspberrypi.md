@@ -1,12 +1,14 @@
-# Raspberry Pi Installation Instructions
-These instructions are for installing Companion on a Raspberry Pi. Instructions differ slightly between latest stable (v1.3) and current alpha (v2.0). Instructions here cover both. They have been tested with a Raspberry Pi 2B and 3B+. They should function with any version of the Raspberry Pi board, but your results may vary.
+# Raspberry Pi
+**Performance on any Raspberry Pi system to date is less than optimal, and can easily break.** 
 
-| **Performance on any Raspberry Pi system to date is less than optimal, and can easily break.** Running Companion in its current form on a Raspberry Pi is not recommended. However, since the RPi is a popular device these instructions have been provided for you to use at your own risk. If you insist on running Companion on a Raspberry Pi, it is recommended to run Companion headless on the "Lite" version of the Raspbian OS. This will maximize the potential performance on your Raspberry Pi.
-| --- |
+Running Companion in its current form on a Raspberry Pi is not recommended. However, since the RPi is a popular device these instructions have been provided for you to use at your own risk. If you insist on running Companion on a Raspberry Pi, it is recommended to run Companion headless on the "Lite" version of the Raspbian OS. This will maximize the potential performance on your Raspberry Pi.
+
+## Raspberry Pi Installation Instructions
+These instructions are for installing Companion on a Raspberry Pi. Instructions differ slightly between latest stable (v1.3) and current alpha (v2.0). Instructions here cover both. They have been tested with a Raspberry Pi 2B and 3B+. They should function with any version of the Raspberry Pi board, but your results may vary.
 
 Companion can be run in 2 different modes on the Raspberry Pi: Headless (no display attached) and Headed (display attached). The installation instructions are the same up to the point of building the code to run. In the instructions below you will note that the instructions diverge near the end to address the specific needs of headless vs headed installation and operation.
 
-# Common Installation Steps
+## Common Installation Steps
 Before starting the installation process, you'll need to get your RPi set up and configured. If you intend to run your Raspberry Pi headless (no display attached), you'll need to make sure you've got SSH access enabled (`sudo raspi-config` on the RPi terminal to enable) before switching to headless mode. These instructions assume your RPi is fully configured and ready to go.
 
 1. Make sure apt and all installed packages are up-to-date.
@@ -66,7 +68,7 @@ export PATH="$HOME/.yarn/bin:$HOME/.config/yarn/global/node_modules/.bin:$PATH"
 
 This is the point where our instructions will diverge based on whether you intend to run your RPi headless or with a display attached.
 
-## Headless Installation & Operation
+### Headless Installation & Operation
 _(no attached display)_
 
 8. This will prep what's needed for `headless.js` to function properly.
@@ -90,7 +92,7 @@ Add this line before the `exit 0` line, making sure to change the interface desi
 
 11. Reboot your Raspberry Pi (`sudo reboot now`), wait a couple minutes, and you should be able to access the Companion UI on port 8000 of your RPi's IP address (i.e. `http://192.168.1.2:8000`)
 
-## Headed Installation & Operation
+### Headed Installation & Operation
 _(display attached to Raspberry Pi)_
 
 8. At this point you are ready to confirm your fresh build of Companion functions.
@@ -111,7 +113,7 @@ _(display attached to Raspberry Pi)_
 
 10. Click "Launch GUI" to confirm Companion is running. The default internet browser should open a new tab to the IP:Port set in the configuration splash screen.
 
-### Headed Autostart
+#### Headed Autostart
 If you would like to have Companion load automatically at startup, follow these steps:
 1. Create a directory named `autostart` in your home .config directory: `mkdir ~/.config/autostart`
 2. Create a new companion.desktop file (`sudo nano ~/.config/autostart/companion.desktop`) and copy the following lines  
@@ -129,7 +131,7 @@ If you would like to have Companion load automatically at startup, follow these 
 3. Reboot, and confirm Companion starts at system start-up
 
 
-# Updating Companion
+## Updating Companion
 To update the local build of Companion v1.3, run the following set of commands:
 ```bash
 ./tools/update.sh
