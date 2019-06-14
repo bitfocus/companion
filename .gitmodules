@@ -379,3 +379,6 @@
 [submodule "lib/module/techministry-midirelay"]
 	path = lib/module/techministry-midirelay
 	url = https://github.com/bitfocus/companion-module-techministry-midirelay.git
+[submodule "lib/module/bmd-multiview16"]
+	path = lib/module/bmd-multiview16
+	url = https://github.com/bitfocus/companion-module-bmd-multiview16.git
