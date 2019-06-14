@@ -1,7 +1,8 @@
 # Raspberry Pi Installation Instructions
 These instructions are for installing Companion on a Raspberry Pi. Instructions differ slightly between latest stable (v1.3) and current alpha (v2.0). Instructions here cover both. They have been tested with a Raspberry Pi 2B and 3B+. They should function with any version of the Raspberry Pi board, but your results may vary.
 
-> Please note: performance on any Raspberry Pi system to date is less than optimal, and can easily break. Running Companion in its current form on a Raspberry Pi is not recommended. However, since the RPi is a popular device these instructions have been provided for you to use at your own risk. If you insist on running Companion on a Raspberry Pi, it is recommended to run Companion headless on the "Lite" version of the Raspbian OS. This will maximize the potential performance on your Raspberry Pi.
+| **Performance on any Raspberry Pi system to date is less than optimal, and can easily break.** Running Companion in its current form on a Raspberry Pi is not recommended. However, since the RPi is a popular device these instructions have been provided for you to use at your own risk. If you insist on running Companion on a Raspberry Pi, it is recommended to run Companion headless on the "Lite" version of the Raspbian OS. This will maximize the potential performance on your Raspberry Pi.
+| --- |
 
 Companion can be run in 2 different modes on the Raspberry Pi: Headless (no display attached) and Headed (display attached). The installation instructions are the same up to the point of building the code to run. In the instructions below you will note that the instructions diverge near the end to address the specific needs of headless vs headed installation and operation.
 
