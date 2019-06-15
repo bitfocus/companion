@@ -365,24 +365,24 @@ $(function() {
 	});
 
 	// Copy bank with cmd+c/ctr+c
-	$(window).bind('copy', function () {
-		if (selected_bank.page !== undefined) {
+	$(window).bind('copy', function (e) {
+		if (!$(e.target).is('input') && !$(e.target).is('textarea') && selected_bank.page !== undefined) {
 			copyfrom = { page: selected_bank.page, bank: selected_bank.bank, type: 'copy' };
+			return false;
 		}
-		return false;
 	});
 
 	// Cut bank with cmd+x/ctr+x
-	$(window).bind('cut', function () {
-		if (selected_bank.page !== undefined) {
+	$(window).bind('cut', function (e) {
+		if (!$(e.target).is('input') && !$(e.target).is('textarea') && selected_bank.page !== undefined) {
 			copyfrom = { page: selected_bank.page, bank: selected_bank.bank, type: 'cut' };
+			return false;
 		}
-		return false;
 	});
 
 	// Paste bank with cmd+v/ctr+v
-	$(window).bind('paste', function () {
-		if (selected_bank.page !== undefined) {
+	$(window).bind('paste', function (e) {
+		if (!$(e.target).is('input') && !$(e.target).is('textarea') && selected_bank.page !== undefined) {
 			var page = selected_bank.page;
 			var bank = selected_bank.bank;
 
@@ -398,8 +398,8 @@ $(function() {
 			socket.emit('bank_release_actions_get', page, bank);
 			socket.emit('get_bank',page, bank);
 			socket.once('get_bank:results', populate_bank_form);
+			return false;
 		}
-		return false;
 	});
 
 
