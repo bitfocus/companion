@@ -12,6 +12,7 @@ init:
 
 install:
   - ps: Install-Product node 10 x64
+  - npm -g i yarn@1.16.0
   - curl -L -o nasminst.exe http://libgd.blob.core.windows.net/nasm/nasm-2.07-installer.exe
   - start /wait nasminst.exe /S
   - ps: $env:path="C:\Program Files (x86)\nasm;$($env:path)"
