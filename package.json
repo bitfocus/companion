@@ -83,6 +83,7 @@
     "check-ip": "^1.1.1",
     "debug": "^4.1.1",
     "electron-debug": "^1.5.0",
+    "electron-rpc": "^2.0.1",
     "elgato-stream-deck-clean": "^1.0.1",
     "elgato-stream-deck-clean-mini": "^1.0.1",
     "elgato-stream-deck-clean-xl": "1.0.8",
