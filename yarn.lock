@@ -1247,6 +1247,11 @@ electron-publish@20.43.0:
     lazy-val "^1.0.4"
     mime "^2.4.3"
 
+electron-rpc@^2.0.1:
+  version "2.0.1"
+  resolved "https://registry.yarnpkg.com/electron-rpc/-/electron-rpc-2.0.1.tgz#0495f1dcf32597320f8661190cff2304a07bddc4"
+  integrity sha1-BJXx3PMllzIPhmEZDP8jBKB73cQ=
+
 electron@^2.0.8:
   version "2.0.18"
   resolved "https://registry.yarnpkg.com/electron/-/electron-2.0.18.tgz#52f1b248c3cc013b5a870094de3b6ba5de313a0f"
