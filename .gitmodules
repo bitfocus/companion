@@ -313,9 +313,6 @@
 [submodule "lib/module/extron-dxp"]
 	path = lib/module/extron-dxp
 	url = https://github.com/bitfocus/companion-module-extron-dxp.git
-[submodule "avolites-titan"]
-	path = avolites-titan
-	url = https://github.com/bitfocus/companion-module-avolites-titan.git
 [submodule "lib/module/avolites-titan"]
 	path = lib/module/avolites-titan
 	url = https://github.com/bitfocus/companion-module-avolites-titan.git
@@ -373,9 +370,6 @@
 [submodule "lib/module/obsidiancontrol-onyx"]
 	path = lib/module/obsidiancontrol-onyx
 	url = https://github.com/bitfocus/companion-module-obsidiancontrol-onyx.git
-[submodule "lib/module/aja-kumo"]
-	path = lib/module/aja-kumo
-	url = https://github.com/bitfocus/companion-module-aja-kumo.git
 [submodule "lib/module/techministry-midirelay"]
 	path = lib/module/techministry-midirelay
 	url = https://github.com/bitfocus/companion-module-techministry-midirelay.git
