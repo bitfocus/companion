@@ -364,3 +364,24 @@
 [submodule "lib/module/extron-ipl-t-pcs4"]
 	path = lib/module/extron-ipl-t-pcs4
 	url = https://github.com/bitfocus/companion-module-extron-ipl-t-pcs4.git
+[submodule "lib/module/extron-smp351"]
+	path = lib/module/extron-smp351
+	url = https://github.com/bitfocus/companion-module-extron-smp351.git
+[submodule "lib/module/zenvideo-ndirouter"]
+	path = lib/module/zenvideo-ndirouter
+	url = https://github.com/bitfocus/companion-module-zenvideo-ndirouter.git
+[submodule "lib/module/obsidiancontrol-onyx"]
+	path = lib/module/obsidiancontrol-onyx
+	url = https://github.com/bitfocus/companion-module-obsidiancontrol-onyx.git
+[submodule "lib/module/aja-kumo"]
+	path = lib/module/aja-kumo
+	url = https://github.com/bitfocus/companion-module-aja-kumo.git
+[submodule "lib/module/techministry-midirelay"]
+	path = lib/module/techministry-midirelay
+	url = https://github.com/bitfocus/companion-module-techministry-midirelay.git
+[submodule "lib/module/bmd-multiview16"]
+	path = lib/module/bmd-multiview16
+	url = https://github.com/bitfocus/companion-module-bmd-multiview16.git
+[submodule "lib/module/roland-v600uhd"]
+	path = lib/module/roland-v600uhd
+	url = https://github.com/bitfocus/companion-module-roland-v600uhd.git
