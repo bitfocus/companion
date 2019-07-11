@@ -33,9 +33,6 @@
     },
     "files": [
       "**/*",
-      "**/*/*",
-      "**/*/*/*",
-      "**/*/*/*/*",
       "assets/icon.png",
       "assets/trayTemplate.png",
       "assets/trayTemplate@2x.png",
@@ -70,7 +67,7 @@
     "chai": "^4.2.0",
     "chai-fs": "^2.0.0",
     "electron": "^2.0.8",
-    "electron-builder": "^20.10.0",
+    "electron-builder": "20.10.0",
     "mocha": "^6.1.4"
   },
   "dependencies": {
