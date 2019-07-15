@@ -385,3 +385,6 @@
 [submodule "lib/module/roland-v600uhd"]
 	path = lib/module/roland-v600uhd
 	url = https://github.com/bitfocus/companion-module-roland-v600uhd.git
+[submodule "lib/module/vaddio-ptz"]
+	path = lib/module/vaddio-ptz
+	url = https://github.com/bitfocus/companion-module-vaddio-ptz.git
