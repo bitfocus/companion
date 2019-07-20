@@ -287,8 +287,8 @@ $(function() {
 								.prop('required', option.range || option.required === true);
 
 							// if options never been stored on this action
-							if (action.options === undefined) {
-								action.options = {};
+							if (feedback.options === undefined) {
+								feedback.options = {};
 							}
 
 							// if this option never has been saved, set default
