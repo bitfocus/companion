@@ -286,6 +286,11 @@ $(function() {
 								.attr('max', option.max)
 								.prop('required', option.range || option.required === true);
 
+							// if options never been stored on this action
+							if (action.options === undefined) {
+								action.options = {};
+							}
+
 							// if this option never has been saved, set default
 							if (feedback.options[option.id] === undefined) {
 								socket.emit('bank_update_feedback_option', page, bank, feedback.id, option.id, option.default);
