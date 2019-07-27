@@ -13,16 +13,16 @@
 ### Major changes
 * Dynamic variables of presets updates when renaming instances
 * Lockout PIN-code system
-  * Any pin length allowed.
-  * Configurable in web interface
-  * Timeouts, and manual lock and unlock with actions
-  * Can work globally or per surface
+	* Any pin length allowed.
+	* Configurable in web interface
+	* Timeouts, and manual lock and unlock with actions
+	* Can work globally or per surface
 * Emulator can now be controlled with the keyboard buttons (as explained in the emulator)
 * Support for changing page in surface config for stream deck plugin
 * Ability to control button style with OSC
-  * /style/color/page/bank (int red, int green, int blue)
-  * /style/bgcolor/page/bank (int red, int green, int blue)
-  * /style/text/page/bank (string text)
+	* /style/color/page/bank (int red, int green, int blue)
+	* /style/bgcolor/page/bank (int red, int green, int blue)
+	* /style/text/page/bank (string text)
 ### Minor changes
 * Broadcast message support in internal OSC module
 * OSC bundle message support in internal OSC module
@@ -34,104 +34,138 @@
 * Stability improvements to bank lists and feedbacks
 * Module API: add callback structure for module feedback
 ### New support added
+* Agf Characterworks
+* AJA Kumo
 * Allen & Heath dLive **Need testing**
 * Analog Way Picturall
-* Barco HDX **Need testing**
+* Avolites Titan
+* Audivero Unityintercom
+* Barco HDX projectors
+* Barco DP projectors
+* Barco Pulse projectors
 * Blackmagic Design Teranex
+* Blackmagic Design multiview 16
 * BrightSign Player **Need testing**
 * Christie Widget Designer
+* Christie Pandorasbox
 * Depili Clock 8001
 * Denon Receivers
 * ETC EOS
+* Extron DXP
+* Extron SMP351
 * Hologfx Holographics
 * Interactive Technologies Cueserver
 * Kramer Matrixes
 * Living As One Decoders
 * Matrox Monarch
 * MSC Router **Need testing**
+* Opticis OMM 1000
+* OBS Studio
+* Obsidian Onyx
 * Panasonic PTZ
 * Picturall media server
 * Planning Center Services Live
 * RadioDJ
 * Roland V-60HD
+* Roland V-600UHD
+* Roland VP-42H
 * Roland XS-62S
+* Sounddevices Pixnet
 * Tech Ministry ProTally
+* Tech Ministry midirelay
+* Teradek Vidiu
+* Tesla Smart
 * Thingm Blink(1)
-* VICREO Hotkeys
+* TSL Products
+* VICREO Hotkey
 * Yamaha QL/CL/TF Consoles
-* Vizio Smartcast **Need testing**
+* Vizio Smartcast
+* zenvideo ndirouter
 ### Enhanced support
+* Extron IPL-T-PCS4
+	* Adjusted handshake
 * Barco Eventmaster
-  * Making presets work for cues and preset recalling
-  * Improved AUX control
-  * Userkey support
-  * Freeze of Source, Screen, Aux
-  * Add basic presets; auto trans, cut, recall next
+	* Sorting of dropdown
+	* Making presets work for cues and preset recalling
+	* Improved AUX control
+	* Userkey support
+	* Freeze of Source, Screen, Aux
+	* Add basic presets; auto trans, cut, recall next
 * Barco PDS
-  * Feedback on buttons program/preview/logo, handle invalid signal input, minor improvements
+	* Feedback on buttons program/preview/logo, handle invalid signal input, minor improvements
+* Barco Matrix Pro
+	* using UDP for communication
 * Blackmagic Design ATEM
-  * additional Macro support/feedback
-  * USK/DSK source selection
-  * model selection
-  * Multiviewer routing
+	* additional Macro support/feedback
+	* USK/DSK source selection
+	* model selection
+	* Multiviewer routing
 * Blackmagic Design HyperDeck
-  * additional name record options
-  * control of remote function
+	* additional name record options
+	* control of remote function
 * Blackmagic Design Videohub
-  * support for monitoring outputs
-  * RS422 routing
+	* support for monitoring outputs
+	* RS422 routing
 * Cockos Reaper
-  * Added custom action
+	* Added custom action
 * Depili Clock 8001
-  * Add support for pause/resume
-  * Decode utf8 tally messages
-  * Compatibility with clock version 3.0.0
+	* Add support for pause/resume
+	* Decode utf8 tally messages
+	* Compatibility with clock version 3.0.0
+* Disguise
+	* more OSC commands
 * Generic HTTP
-  * Added ‘base url’ field in instance configuration
+	* Added ‘base url’ field in instance configuration
 * GrandMA2
-  * Rewritten telnet part to comply with MIT license.
+	* Rewritten telnet part to comply with MIT license
+* Irisdown Countdowntimer
+	* Support for version 2.0.10
 * OBS Studio
-  * Added support for transitions
+	* Added support for transitions
+* Metus Ingest
+	* Adding Feedback
 * Mitti
-  * Added support for controlling Fullscreen, Looping, Transition control and Cues
+	* Added support for controlling Fullscreen, Looping, Transition control and Cues
+* MSC routers
+	* preset fix
 * Neodarque StageTimer2
-  * Added increase/decrease time action
+	* Added increase/decrease time action
 * Rosstalk
-  * XPression naming fixes (by request from RossVideo)
+	* XPression naming fixes (by request from RossVideo)
 * Tascam CD
-  * Support for transports and power. (complete support of protocol)
+	* Support for transports and power. (complete support of protocol)
 * X32
-  * Fixed bug where cues and snippets did not work.
-  * Fixed bug where DCA mute and fader didn’t work
+	* Fixed bug where cues and snippets did not work.
+	* Fixed bug where DCA mute and fader didn’t work
 * GlobalCache ITAC IR
-  * Added help text
+	* Added help text
 * ifelseWare AV Playback
-  * Make port configurable, Pad Fix option, added nextClip and prevClip
+	* Make port configurable, Pad Fix option, added nextClip and prevClip
 * PVP
-  * target set support
-  * layer preset support
-  * layer opacity control
-  * select layer target
-  * action reordering
-  * preset support
-  * Help text
+	* target set support
+	* layer preset support
+	* layer opacity control
+	* select layer target
+	* action reordering
+	* preset support
+	* Help text
 * QLab
-  * Flagged/Unflagged clip
-  * Passcode support
+	* Flagged/Unflagged clip
+	* Passcode support
 * RenewedVision ProPresenter
-  * Added audio actions
-  * video countdown timer variable
-  * Help text
-  * Countdown timer control
-  * Clock time tooltip
-  * StageDisplay features
-  * Dynamic variables
+	* Added audio actions
+	* video countdown timer variable
+	* Help text
+	* Countdown timer control
+	* Clock time tooltip
+	* StageDisplay features
+	* Dynamic variables
 * Tascam CD
-  * Added presets for all actions
+	* Added presets for all actions
 * Playback Pro Plus
-  * Adjusted GO/GT command to the correct format
+	* Adjusted GO/GT command to the correct format
 * PTZ Optics
-  * Help text
+	* Help text
 
 
 
