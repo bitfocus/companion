@@ -388,3 +388,6 @@
 [submodule "lib/module/vaddio-ptz"]
 	path = lib/module/vaddio-ptz
 	url = https://github.com/bitfocus/companion-module-vaddio-ptz.git
+[submodule "lib/module/generic-tcp-udp"]
+	path = lib/module/generic-tcp-udp
+	url = https://github.com/storybel/companion-module-generic-tcp-udp.git
