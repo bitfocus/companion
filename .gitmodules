@@ -388,3 +388,6 @@
 [submodule "lib/module/vaddio-ptz"]
 	path = lib/module/vaddio-ptz
 	url = https://github.com/bitfocus/companion-module-vaddio-ptz.git
+[submodule "lib/module/analogway-vertige"]
+	path = lib/module/analogway-vertige
+	url = https://github.com/bitfocus/companion-module-analogway-vertige.git
