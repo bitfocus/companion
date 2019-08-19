@@ -391,3 +391,6 @@
 [submodule "lib/module/analogway-vertige"]
 	path = lib/module/analogway-vertige
 	url = https://github.com/bitfocus/companion-module-analogway-vertige.git
+[submodule "lib/module/epiphan-pearl"]
+	path = lib/module/epiphan-pearl
+	url = https://github.com/bitfocus/companion-module-epiphan-pearl.git
