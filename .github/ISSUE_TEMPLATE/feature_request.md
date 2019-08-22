@@ -4,6 +4,11 @@ about: Create a report to request a new feature
 
 ---
 
+**PLEASE HEAD OVER TO THE COMPANION-MODULE-REQUESTS REPO IF YOU WANT SUPPORT FOR A NEW DEVICE**
+Follow this link:
+https://github.com/bitfocus/companion-module-requests/issues/new
+
+
 **Describe the feature**
 A clear and concise description of what the feature does
 
