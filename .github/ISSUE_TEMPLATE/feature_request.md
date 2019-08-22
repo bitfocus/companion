@@ -5,6 +5,7 @@ about: Create a report to request a new feature
 ---
 
 **PLEASE USE THIS PAGE IF YOU WANT SUPPORT FOR A NEW DEVICE**
+
 https://github.com/bitfocus/companion-module-requests/issues/new
 
 
