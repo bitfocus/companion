@@ -394,3 +394,6 @@
 [submodule "lib/module/epiphan-pearl"]
 	path = lib/module/epiphan-pearl
 	url = https://github.com/bitfocus/companion-module-epiphan-pearl.git
+[submodule "lib/module/extron-in1604"]
+	path = lib/module/extron-in1604
+	url = https://github.com/bitfocus/companion-module-extron-in1604.git
