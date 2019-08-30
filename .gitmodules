@@ -391,3 +391,6 @@
 [submodule "lib/module/wyrestorm-sw0402mv"]
 	path = lib/module/wyrestorm-sw0402mv
 	url = https://github.com/bitfocus/companion-module-wyrestorm-sw0402mv.git
+[submodule "lib/module/blackdiamondvideo-phantom800"]
+	path = lib/module/blackdiamondvideo-phantom800
+	url = https://github.com/bitfocus/companion-module-blackdiamondvideo-phantom800.git
