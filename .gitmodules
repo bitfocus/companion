@@ -397,3 +397,6 @@
 [submodule "lib/module/extron-in1604"]
 	path = lib/module/extron-in1604
 	url = https://github.com/bitfocus/companion-module-extron-in1604.git
+[submodule "lib/module/blackdiamondvideo-phantom800"]
+	path = lib/module/blackdiamondvideo-phantom800
+	url = https://github.com/bitfocus/companion-module-blackdiamondvideo-phantom800.git
