@@ -20,7 +20,7 @@ env:
 
 notifications:
     slack: bitfocusio:Kf9NGYG60SzXkZ2tJO8wIknp
-    webhooks: https://webhooks.bitfocus.io/travis
+    webhooks: https://webhook.bitfocus.io/travis
 
 cache:
   directories:
