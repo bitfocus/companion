@@ -382,9 +382,6 @@
 [submodule "lib/module/aja-kumo"]
 	path = lib/module/aja-kumo
 	url = https://github.com/bitfocus/companion-module-aja-kumo.git
-[submodule "lib/module/blackdiamond-phantom800"]
-	path = lib/module/blackdiamond-phantom800
-	url = https://github.com/bitfocus/companion-module-blackdiamondvideo-phantom800.git
 [submodule "wyrestorm-sw0402mv"]
 	path = wyrestorm-sw0402mv
 	url = https://github.com/bitfocus/companion-module-wyrestorm-sw0402mv.git
