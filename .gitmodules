@@ -406,3 +406,6 @@
 [submodule "lib/module/dalite-scb"]
 	path = lib/module/dalite-scb
 	url = https://github.com/bitfocus/companion-module-dalite-scb.git
+[submodule "lib/module/pixap-pixtimerpro"]
+	path = lib/module/pixap-pixtimerpro
+	url = https://github.com/bitfocus/companion-module-pixap-pixtimerpro.git
