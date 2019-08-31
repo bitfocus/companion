@@ -403,3 +403,6 @@
 [submodule "lib/module/wyrestorm-sw0402mv"]
 	path = lib/module/wyrestorm-sw0402mv
 	url = https://github.com/bitfocus/companion-module-wyrestorm-sw0402mv.git
+[submodule "lib/module/dalite-scb"]
+	path = lib/module/dalite-scb
+	url = https://github.com/bitfocus/companion-module-dalite-scb.git
