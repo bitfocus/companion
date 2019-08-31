@@ -685,6 +685,10 @@ $(function() {
 
 			var $div = $('<div class="bank buttonbankwidth"><div class="border" data-bank="' + bank + '" data-page="' + page + '"><canvas width=72 height=72 id="bank_' + page + '_' + bank + '"></canvas></div></div>');
 
+			if ([1,5,9,13,17,18,19,20,21].includes(bank)) {
+				$div.css('backgroundColor', '#00000050');
+			}
+
 			$div.find('.border').droppable({
 				activeClass: 'drophere',
 				hoverClass: 'drophover',
