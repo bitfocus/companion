@@ -409,3 +409,6 @@
 [submodule "lib/module/pixap-pixtimerpro"]
 	path = lib/module/pixap-pixtimerpro
 	url = https://github.com/bitfocus/companion-module-pixap-pixtimerpro.git
+[submodule "lib/module/dexon-dimax"]
+	path = lib/module/dexon-dimax
+	url = https://github.com/bitfocus/companion-module-dexon-dimax.git
