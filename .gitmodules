@@ -391,3 +391,6 @@
 [submodule "lib/module/blackdiamondvideo-phantom800"]
 	path = lib/module/blackdiamondvideo-phantom800
 	url = https://github.com/bitfocus/companion-module-blackdiamondvideo-phantom800.git
+[submodule "lib/module/dalite-scb"]
+	path = lib/module/dalite-scb
+	url = https://github.com/bitfocus/companion-module-dalite-scb.git
