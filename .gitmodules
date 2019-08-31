@@ -412,3 +412,6 @@
 [submodule "lib/module/dexon-dimax"]
 	path = lib/module/dexon-dimax
 	url = https://github.com/bitfocus/companion-module-dexon-dimax.git
+[submodule "lib/module/dexon-divip"]
+	path = lib/module/dexon-divip
+	url = https://github.com/bitfocus/companion-module-dexon-divip.git
