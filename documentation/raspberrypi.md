@@ -1,15 +1,17 @@
-# Raspberry Pi
+# Raspberry Pi (RPi)
 **Performance on any Raspberry Pi system to date is less than optimal, and can easily break.** 
 
-Running Companion in its current form on a Raspberry Pi is not recommended. However, since the RPi is a popular device these instructions have been provided for you to use at your own risk. If you insist on running Companion on a Raspberry Pi, it is recommended to run Companion headless on the "Lite" version of the Raspbian OS. This will maximize the potential performance on your Raspberry Pi.
+Running Companion in its current form on a RPi is not recommended. However, since the RPi is a popular device these instructions have been provided for you to use at your own risk. If you insist on running Companion on a RPi, it is recommended:
+1. to use at minimum a RPi 4 2GB. Previous versions of the RPi are built with a USB/Ethernet stack that severely impacts the performance of Companion. The design of the RPi 4 includes a USB/Ethernet stack that does not suffer this same issue.
+2. to run Companion headless on the "Lite" version of the latest build of the Raspbian OS. This will maximize the potential performance on your RPi.
 
 ## Installation Instructions
-These instructions are for installing Companion on a Raspberry Pi. Instructions differ slightly between latest stable (v1.3) and current alpha (v2.0). Instructions here cover both. They have been tested with a Raspberry Pi 2B and 3B+. They should function with any version of the Raspberry Pi board, but your results may vary.
+These instructions are for installing Companion on a RPi. Instructions differ slightly between latest stable (v1.3) and current alpha (v2.0). Instructions here cover both. They have been tested with a RPi 2B and 3B+. They should function with any version of the RPi board, but your results may vary.
 
-Companion can be run in 2 different modes on the Raspberry Pi: Headless (no display attached) and Headed (display attached). The installation instructions are the same up to the point of building the code to run. In the instructions below you will note that the instructions diverge near the end to address the specific needs of headless vs headed installation and operation.
+Companion can be run in 2 different modes on the RPi: Headless (no display attached) and Headed (display attached). The installation instructions are the same up to the point of building the code to run. In the instructions below you will note that the instructions diverge near the end to address the specific needs of headless vs headed installation and operation.
 
 ## Common Installation Steps
-Before starting the installation process, you'll need to get your RPi set up and configured. If you intend to run your Raspberry Pi headless (no display attached), you'll need to make sure you've got SSH access enabled (`sudo raspi-config` on the RPi terminal to enable) before switching to headless mode. These instructions assume your RPi is fully configured and ready to go.<br>
+Before starting the installation process, you'll need to get your RPi set up and configured. If you intend to run your RPi headless (no display attached), you'll need to make sure you've got SSH access enabled (`sudo raspi-config` on the RPi terminal to enable) before switching to headless mode. These instructions assume your RPi is fully configured and ready to go.<br>
 **These steps assume you're starting from the home directory of the current user. If not, your mileage may vary with these instructions. It is recommended to move to the home directory before starting:** `cd ~`
 
 1. Make sure apt and all installed packages are up-to-date.
@@ -101,10 +103,10 @@ Add this line before the `exit 0` line, making sure to change the interface desi
 /home/pi/companion/headless.js eth0
 ```
 
-11. Reboot your Raspberry Pi (`sudo reboot now`), wait a couple minutes, and you should be able to access the Companion UI on port 8000 of your RPi's IP address (i.e. `http://192.168.1.2:8000`)
+11. Reboot your RPi (`sudo reboot now`), wait a couple minutes, and you should be able to access the Companion UI on port 8000 of your RPi's IP address (i.e. `http://192.168.1.2:8000`)
 
 ### Headed Installation & Operation
-_(display attached to Raspberry Pi)_
+_(display attached to RPi)_
 
 8. At this point you are ready to confirm your fresh build of Companion functions.
   * v1.3 stable
