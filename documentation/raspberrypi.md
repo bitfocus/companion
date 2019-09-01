@@ -1,8 +1,8 @@
 # Raspberry Pi
 **Performance on any Raspberry Pi system to date is less than optimal, and can easily break.** 
 
-Running Companion in its current form on a Raspberry Pi is not recommended. However, since the RPi is a popular device these instructions have been provided for you to use at your own risk. If you insist on running Companion on a Raspberry Pi, it is recommended:
-1. to use at minimum a Raspberry Pi 4 2GB. Previous versions of the RPi are built with a USB/Ethernet stack that severely impacts the performance of Companion. The design of the RPi 4 includes a USB/Ethernet stack that does not suffer this same issue.
+Running Companion in its current form on a Raspberry Pi is not recommended. However, since the Raspberry Pi is a popular device these instructions have been provided for you to use at your own risk. If you insist on running Companion on a Raspberry Pi, it is recommended:
+1. to use at minimum a Raspberry Pi 4 2GB. Previous versions of the Raspberry Pi are built with a USB/Ethernet stack that severely impacts the performance of Companion. The design of the Raspberry Pi 4 includes a USB/Ethernet stack that does not suffer this same issue.
 2. to run Companion headless on the "Lite" version of the latest build of the Raspbian OS. This will maximize the potential performance on your Raspberry Pi.
 
 ## Installation Instructions
@@ -11,7 +11,7 @@ These instructions are for installing Companion on a Raspberry Pi. Instructions 
 Companion can be run in 2 different modes on the Raspberry Pi: Headless (no display attached) and Headed (display attached). The installation instructions are the same up to the point of building the code to run. In the instructions below you will note that the instructions diverge near the end to address the specific needs of headless vs headed installation and operation.
 
 ## Common Installation Steps
-Before starting the installation process, you'll need to get your RPi set up and configured. If you intend to run your Raspberry Pi headless (no display attached), you'll need to make sure you've got SSH access enabled (`sudo raspi-config` on the RPi terminal to enable) before switching to headless mode. These instructions assume your RPi is fully configured and ready to go.<br>
+Before starting the installation process, you'll need to get your Raspberry Pi set up and configured. If you intend to run your Raspberry Pi headless (no display attached), you'll need to make sure you've got SSH access enabled (`sudo raspi-config` on the Raspberry Pi terminal to enable) before switching to headless mode. These instructions assume your Raspberry Pi is fully configured and ready to go.<br>
 **These steps assume you're starting from the home directory of the current user. If not, your mileage may vary with these instructions. It is recommended to move to the home directory before starting:** `cd ~`
 
 1. Make sure apt and all installed packages are up-to-date.
@@ -43,7 +43,7 @@ SUBSYSTEM=="usb", ATTRS{idVendor}=="ffff", ATTRS{idProduct}=="1f41", MODE:="666"
 KERNEL=="hidraw", ATTRS{idVendor}=="ffff", ATTRS{idProduct}=="1f41", MODE:="666", GROUP="plugdev"
 ```
 
-4. Either reboot your RPi (`sudo reboot now`) or reload the udev rules `sudo udevadm control --reload-rules`
+4. Either reboot your Raspberry Pi (`sudo reboot now`) or reload the udev rules `sudo udevadm control --reload-rules`
 
 5. Install Node.js tools
 ```bash
@@ -73,7 +73,7 @@ export PATH="$HOME/.yarn/bin:$HOME/.config/yarn/global/node_modules/.bin:$PATH"
 | ------------------- |
 | <div class="highlight highlight-source-shell"><pre>git clone https://github.com/bitfocus/companion.git<br><span class="pl-c1">cd</span> companion<br>yarn update<br>yarn rpidist</pre></div> |
 
-This is the point where our instructions will diverge based on whether you intend to run your RPi headless or with a display attached.
+This is the point where our instructions will diverge based on whether you intend to run your Raspberry Pi headless or with a display attached.
 
 **1.4 RC1 Note:** 1.4 RC1 was inadvertently created with a syntax error in the `tools/build_writefile.sh` file we'll reference below. You will need to make a manual correction.<br>
 Open tools/build_writefile.sh in the text editor of your choice.<br>
@@ -103,7 +103,7 @@ Add this line before the `exit 0` line, making sure to change the interface desi
 /home/pi/companion/headless.js eth0
 ```
 
-11. Reboot your Raspberry Pi (`sudo reboot now`), wait a couple minutes, and you should be able to access the Companion UI on port 8000 of your RPi's IP address (i.e. `http://192.168.1.2:8000`)
+11. Reboot your Raspberry Pi (`sudo reboot now`), wait a couple minutes, and you should be able to access the Companion UI on port 8000 of your Raspberry Pi's IP address (i.e. `http://192.168.1.2:8000`)
 
 ### Headed Installation & Operation
 _(display attached to Raspberry Pi)_
