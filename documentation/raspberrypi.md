@@ -1,5 +1,5 @@
 # Raspberry Pi (RPi)
-**Performance on any bcc system to date is less than optimal, and can easily break.** 
+**Performance on any Raspberry Pi system to date is less than optimal, and can easily break.** 
 
 Running Companion in its current form on a RPi is not recommended. However, since the RPi is a popular device these instructions have been provided for you to use at your own risk. If you insist on running Companion on a RPi, it is recommended:
 1. to use at minimum a RPi 4 2GB. Previous versions of the RPi are built with a USB/Ethernet stack that severely impacts the performance of Companion. The design of the RPi 4 includes a USB/Ethernet stack that does not suffer this same issue.
