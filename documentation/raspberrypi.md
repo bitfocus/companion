@@ -56,7 +56,11 @@ export PATH="$HOME/.yarn/bin:$HOME/.config/yarn/global/node_modules/.bin:$PATH"
 ```
 
 7. Now we're ready to clone the repository and build. These commands will clone the respository, move into the `companion` directory, update all dependencies and modules, and create a fresh build.
-> It's important to note which version of Companion you are hoping to install: v1.3 stable or v2.0-alpha. v2.0-alpha is not ready for production environments at the time of this writing (June 10, 2019), but is available for testing. The other important distinction to note is that the build commands are different between the two versions.
+> It's important to note which version of Companion you are hoping to install: v1.3/v1.4 RC1 (both stable) or v2.0-alpha (not guaranteed to be stable). v2.0-alpha is not ready for production environments at the time of this writing (June 10, 2019), but is available for testing. The other important distinction to note is that the build commands are different between the two versions.
+
+| Version 1.4 RC1 (stable) |
+| -------------------- |
+| <div class="highlight highlight-source-shell"><pre>git clone https://github.com/bitfocus/companion.git --branch v1.4.0-rc1 --single-branch<br><span class="pl-c1">cd</span> companion<br>./tools/update.sh<br>npm run rpidist</pre></div> |
 
 | Version 1.3 (stable) |
 | -------------------- |

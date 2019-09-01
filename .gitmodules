@@ -388,3 +388,30 @@
 [submodule "lib/module/vaddio-ptz"]
 	path = lib/module/vaddio-ptz
 	url = https://github.com/bitfocus/companion-module-vaddio-ptz.git
+[submodule "lib/module/analogway-vertige"]
+	path = lib/module/analogway-vertige
+	url = https://github.com/bitfocus/companion-module-analogway-vertige.git
+[submodule "lib/module/epiphan-pearl"]
+	path = lib/module/epiphan-pearl
+	url = https://github.com/bitfocus/companion-module-epiphan-pearl.git
+[submodule "lib/module/extron-in1604"]
+	path = lib/module/extron-in1604
+	url = https://github.com/bitfocus/companion-module-extron-in1604.git
+[submodule "lib/module/blackdiamondvideo-phantom800"]
+	path = lib/module/blackdiamondvideo-phantom800
+	url = https://github.com/bitfocus/companion-module-blackdiamondvideo-phantom800.git
+[submodule "lib/module/wyrestorm-sw0402mv"]
+	path = lib/module/wyrestorm-sw0402mv
+	url = https://github.com/bitfocus/companion-module-wyrestorm-sw0402mv.git
+[submodule "lib/module/dalite-scb"]
+	path = lib/module/dalite-scb
+	url = https://github.com/bitfocus/companion-module-dalite-scb.git
+[submodule "lib/module/pixap-pixtimerpro"]
+	path = lib/module/pixap-pixtimerpro
+	url = https://github.com/bitfocus/companion-module-pixap-pixtimerpro.git
+[submodule "lib/module/dexon-dimax"]
+	path = lib/module/dexon-dimax
+	url = https://github.com/bitfocus/companion-module-dexon-dimax.git
+[submodule "lib/module/dexon-divip"]
+	path = lib/module/dexon-divip
+	url = https://github.com/bitfocus/companion-module-dexon-divip.git
