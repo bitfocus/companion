@@ -58,19 +58,25 @@ export PATH="$HOME/.yarn/bin:$HOME/.config/yarn/global/node_modules/.bin:$PATH"
 7. Now we're ready to clone the repository and build. These commands will clone the respository, move into the `companion` directory, update all dependencies and modules, and create a fresh build.
 > It's important to note which version of Companion you are hoping to install: v1.3/v1.4 RC1 (both stable) or v2.0-alpha (not guaranteed to be stable). v2.0-alpha is not ready for production environments at the time of this writing (June 10, 2019), but is available for testing. The other important distinction to note is that the build commands are different between the two versions.
 
-| Version 1.4 RC1 (stable) |
+| Version 1.4 RC1 (release candidate) **SEE NOTE** |
 | -------------------- |
-| <div class="highlight highlight-source-shell"><pre>git clone https://github.com/bitfocus/companion.git --branch v1.4.0-rc1 --single-branch<br><span class="pl-c1">cd</span> companion<br>./tools/update.sh<br>npm run rpidist</pre></div> |
+| <div class="highlight highlight-source-shell"><pre>git clone https://github.com/bitfocus/companion.git --branch=v1.4.0-rc1<br><span class="pl-c1">cd</span> companion<br>./tools/update.sh<br>npm run rpidist</pre></div> |
 
 | Version 1.3 (stable) |
 | -------------------- |
-| <div class="highlight highlight-source-shell"><pre>git clone https://github.com/bitfocus/companion.git --branch v1.3.0 --single-branch<br><span class="pl-c1">cd</span> companion<br>./tools/update.sh<br>npm run rpidist</pre></div> |
+| <div class="highlight highlight-source-shell"><pre>git clone https://github.com/bitfocus/companion.git --branch=v1.3.0<br><span class="pl-c1">cd</span> companion<br>./tools/update.sh<br>npm run rpidist</pre></div> |
 
 | Version 2.0 (alpha) |
 | ------------------- |
 | <div class="highlight highlight-source-shell"><pre>git clone https://github.com/bitfocus/companion.git<br><span class="pl-c1">cd</span> companion<br>yarn update<br>yarn rpidist</pre></div> |
 
 This is the point where our instructions will diverge based on whether you intend to run your RPi headless or with a display attached.
+
+**1.4 RC1 Note:** 1.4 RC1 was inadvertently created with a syntax error in the `tools/build_writefile.sh` file we'll reference below. You will need to make a manual correction.<br>
+Open tools/build_writefile.sh in the text editor of your choice.<br>
+On line 54, you need to enclose `$(get_git_branch)` in quotation marks, so the line looks like this:<br>
+`if [ "$(get_git_branch)" != "master" ]; then`<br>
+Save the file, and then proceed.<br>
 
 ### Headless Installation & Operation
 _(no attached display)_
