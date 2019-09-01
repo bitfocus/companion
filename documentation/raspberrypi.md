@@ -1,7 +1,9 @@
 # Raspberry Pi
 **Performance on any Raspberry Pi system to date is less than optimal, and can easily break.** 
 
-Running Companion in its current form on a Raspberry Pi is not recommended. However, since the RPi is a popular device these instructions have been provided for you to use at your own risk. If you insist on running Companion on a Raspberry Pi, it is recommended to run Companion headless on the "Lite" version of the Raspbian OS. This will maximize the potential performance on your Raspberry Pi.
+Running Companion in its current form on a Raspberry Pi is not recommended. However, since the RPi is a popular device these instructions have been provided for you to use at your own risk. If you insist on running Companion on a Raspberry Pi, it is recommended:
+1. to use at minimum a Raspberry Pi 4 2GB. Previous versions of the RPi are built with a USB/Ethernet stack that severely impacts the performance of Companion. The design of the RPi 4 includes a USB/Ethernet stack that does not suffer this same issue.
+2. to run Companion headless on the "Lite" version of the latest build of the Raspbian OS. This will maximize the potential performance on your Raspberry Pi.
 
 ## Installation Instructions
 These instructions are for installing Companion on a Raspberry Pi. Instructions differ slightly between latest stable (v1.3) and current alpha (v2.0). Instructions here cover both. They have been tested with a Raspberry Pi 2B and 3B+. They should function with any version of the Raspberry Pi board, but your results may vary.
