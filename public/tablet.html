@@ -16,7 +16,17 @@
  */ -->
 <html>
 <head>
-	<meta name="viewport" content="">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0 , maximum-scale=1.0, user-scalable=0">
+	<link rel="manifest" href="/manifest.json">
+	<!-- PWA support -->
+	<meta name="theme-color" content="#000000"/>
+	<!-- ios support -->
+	<link rel="apple-touch-icon" sizes="72x72" href="/img/brand/icons-72-square.png">
+	<link rel="apple-touch-icon" sizes="96x96" href="/img/brand/icons-96-square.png">
+	<link rel="apple-touch-icon" sizes="128x128" href="/img/brand/icons-128-square.png">
+	<link rel="apple-touch-icon" sizes="512x512" href="/img/brand/icons-512-square.png">
+
+
 	<style>
 
 		body {
@@ -57,6 +67,14 @@
 			border: 1px solid rgba(255,255,255,0.15);
 		}
 
+		.disable-dbl-tap-zoom {
+  			touch-action: manipulation;
+		}
+
+		*{
+			touch-action: manipulation;
+		}
+
 		* {
 			-moz-user-select: none;
 			-webkit-user-select: none;
@@ -64,6 +82,7 @@
 			user-select:none;
 			-o-user-select:none;
 			touch-action: pan-y;
+			touch-action: manipulation;
 		}
 
 		canvas {
@@ -78,7 +97,9 @@
 	</style>
 	<title>Companion Tablet Surface</title>
 </head>
-<body>
+<body class="disable-dbl-tap-zoom">
+
+
 <script src="js/jquery/jquery.min.js"></script>
 <script src="socket.io/socket.io.js"></script>
 <script src="js/viewport.js"></script>
@@ -140,7 +161,7 @@
 		return false;
 	}
 
-	if (pages.length == 0) {
+	if (pages.length == 0) {
 		for (var page = 1; page <= 99; page++) {
 			pages.push(page);
 		}
