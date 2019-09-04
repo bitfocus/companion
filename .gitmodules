@@ -417,4 +417,4 @@
 	url = https://github.com/bitfocus/companion-module-dexon-divip.git
 [submodule "lib/module/media-player-classic"]
 	path = lib/module/media-player-classic
-	url = https://github.com/bitfocus/companion-module-media-player-clasic.git
+	url = https://github.com/bitfocus/companion-module-media-player-classic.git
