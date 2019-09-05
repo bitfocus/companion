@@ -1,0 +1,58 @@
+{
+  "_comment":  "manifest.json file for tablet.html to enable PWA support (Tablet web app)",
+  "short_name": "companion",
+  "name": "bitfocus companion",
+  "icons": [
+    {
+      "src": "/img/brand/icons-72.png",
+      "type": "image/png",
+      "sizes": "72x72"
+    },
+    {
+      "src": "/img/brand/icons-96.png",
+      "type": "image/png",
+      "sizes": "96x96"
+    },
+    {
+      "src": "/img/brand/icons-128.png",
+      "type": "image/png",
+      "sizes": "128x128"
+    },
+    {
+      "src": "/img/brand/icons-144.png",
+      "type": "image/png",
+      "sizes": "144x144"
+    },
+    {
+      "src": "/img/brand/icons-152.png",
+      "type": "image/png",
+      "sizes": "152x152"
+    },
+    {
+      "src": "/img/brand/icons-192.png",
+      "type": "image/png",
+      "sizes": "192x192"
+    },
+    {
+      "src": "/img/brand/icons-384.png",
+      "type": "image/png",
+      "sizes": "384x384"
+    },
+    {
+      "src": "/img/brand/icons-512.png",
+      "type": "image/png",
+      "sizes": "512x512"
+    },
+    {
+      "src": "/img/brand/icons-1080.png",
+      "type": "image/png",
+      "sizes": "1080x1080"
+    }
+  ],
+  "start_url": "/tablet.html",
+  "background_color": "#000000",
+  "display": "standalone",
+  "scope": "/",
+  "theme_color": "#000000",
+  "orientation": "landscape-primary"
+}
