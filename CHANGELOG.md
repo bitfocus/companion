@@ -23,6 +23,7 @@
 	* /style/color/page/bank (int red, int green, int blue)
 	* /style/bgcolor/page/bank (int red, int green, int blue)
 	* /style/text/page/bank (string text)
+
 ### Minor changes
 * Broadcast message support in internal OSC module
 * OSC bundle message support in internal OSC module
