@@ -11,6 +11,7 @@
 * [Fixes #514: Web Buttons page unable to scroll in android chrome (c88f98a William Viker)](https://github.com/bitfocus/companion/issues/514)
 
 ### Major changes
+* Let users know when companion is busy doing something (import, reset, etc.)
 * Dynamic variables of presets updates when renaming instances
 * Lockout PIN-code system
 	* Any pin length allowed.
