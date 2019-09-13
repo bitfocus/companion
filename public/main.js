@@ -155,6 +155,14 @@ socket.on('connect', function() {
 	been_connected = true;
 });
 
+socket.on('io-init-since', function(time) {
+	if (time < 10000) {
+		setTimeout(function(){
+			window.location.reload();
+		}, (10000-time) );
+	}
+});
+
 $(function() {
 
 	socket.on('skeleton-info', function(hash) {

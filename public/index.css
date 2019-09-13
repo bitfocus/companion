@@ -15,7 +15,7 @@
  *
  */
 
-#error-container {
+#error-container, #working-container {
 	display:none;
 	width: 100%;
 	position:fixed !important;

@@ -72,22 +72,26 @@ $(function() {
 	$('#import .import_replace').click(function () {
 		$('#import_step2').hide();
 		$('#import_tab').click();
+		$('#working-container').show();
 
 		socket.emit('loadsave_import_full', import_data);
 		socket.once('loadsave_import_full:result', function () {
-			window.location.reload();
 		});
 	});
 
 	$('#reset_all').click(function () {
+		$('#working-container').show();
 		socket.emit('reset_all');
 		socket.once('reset_all:result', function () {
-			window.location.reload();
+			setTimeout(function() {
+				window.location.reload();
+			}, 5000);
 		});
 	});
 
 	$('#import_page').click(function () {
 		var instanceconfig = {};
+		$('#working-container').show();
 
 		$('#importConfigInstanceList select').each(function () {
 			var key = $(this).data('key');
@@ -103,6 +107,7 @@ $(function() {
 		socket.emit('loadsave_import_page', $(this).data('page'), import_page, import_data);
 		socket.once('loadsave_import_page:result', function (err, result) {
 			$('#import_tab').click();
+			$('#working-container').hide();
 		});
 	});
 
@@ -114,6 +119,7 @@ $(function() {
 	});
 
 	$('#loadconfig').change(function () {
+
 		import_file(this);
 		socket.once('loadsave_import_config:result', function (err, result) {
 			if (err) {

@@ -156,6 +156,7 @@ system.on('skeleton-ready', function() {
 	var satellite  = require('./lib/satellite_server')(system);
 	var ws_api     = require('./lib/ws_api')(system);
 
+	console.log("YAY");
 	system.on('exit', function() {
 		elgatoDM.quit();
 	});
