@@ -382,3 +382,15 @@
 [submodule "lib/module/aja-kumo"]
 	path = lib/module/aja-kumo
 	url = https://github.com/bitfocus/companion-module-aja-kumo.git
+[submodule "wyrestorm-sw0402mv"]
+	path = wyrestorm-sw0402mv
+	url = https://github.com/bitfocus/companion-module-wyrestorm-sw0402mv.git
+[submodule "lib/module/wyrestorm-sw0402mv"]
+	path = lib/module/wyrestorm-sw0402mv
+	url = https://github.com/bitfocus/companion-module-wyrestorm-sw0402mv.git
+[submodule "lib/module/blackdiamondvideo-phantom800"]
+	path = lib/module/blackdiamondvideo-phantom800
+	url = https://github.com/bitfocus/companion-module-blackdiamondvideo-phantom800.git
+[submodule "lib/module/dalite-scb"]
+	path = lib/module/dalite-scb
+	url = https://github.com/bitfocus/companion-module-dalite-scb.git

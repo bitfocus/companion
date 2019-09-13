@@ -23,6 +23,7 @@
 	* /style/color/page/bank (int red, int green, int blue)
 	* /style/bgcolor/page/bank (int red, int green, int blue)
 	* /style/text/page/bank (string text)
+
 ### Minor changes
 * Broadcast message support in internal OSC module
 * OSC bundle message support in internal OSC module
@@ -34,34 +35,39 @@
 * Stability improvements to bank lists and feedbacks
 * Module API: add callback structure for module feedback
 ### New support added
-* Agf Characterworks
+* AGF CharacterWorks
 * AJA Kumo
 * Allen & Heath dLive **Need testing**
 * Analog Way Picturall
 * Avolites Titan
-* Audivero Unityintercom
+* Audivero Unity Intercom
 * Barco HDX projectors
 * Barco DP projectors
 * Barco Pulse projectors
 * Blackmagic Design Teranex
-* Blackmagic Design multiview 16
+* Blackmagic Design MultiView 16
 * BrightSign Player **Need testing**
 * Christie Widget Designer
-* Christie Pandorasbox
+* Christie Pandora's Box
 * Depili Clock 8001
 * Denon Receivers
+* Draco Tera
 * ETC EOS
 * Extron DXP
 * Extron SMP351
+* Extron SMX
 * Hologfx Holographics
 * Interactive Technologies Cueserver
+* JustMacros LUA
 * Kramer Matrixes
 * Living As One Decoders
 * Matrox Monarch
+* Metus Ingest
 * MSC Router **Need testing**
 * Opticis OMM 1000
 * OBS Studio
 * Obsidian Onyx
+* Opticis OMM1000
 * Panasonic PTZ
 * Picturall media server
 * Planning Center Services Live
@@ -69,21 +75,21 @@
 * Roland V-60HD
 * Roland V-600UHD
 * Roland VP-42H
+* Roland XS-42H
 * Roland XS-62S
-* Sounddevices Pixnet
+* Roland XS-82H, XS-83H, XS-84H
+* Sound Devices PIXNET
 * Tech Ministry ProTally
-* Tech Ministry midirelay
-* Teradek Vidiu
+* Tech Ministry MIDI Relay
+* Teradek VidiU, VidiU Pro
 * Tesla Smart
 * Thingm Blink(1)
-* TSL Products
+* TSL Products - UMD 3.1, UMD 4.0
 * VICREO Hotkey
 * Yamaha QL/CL/TF Consoles
 * Vizio Smartcast
-* zenvideo ndirouter
+* ZEN NDIRouter
 ### Enhanced support
-* Extron IPL-T-PCS4
-	* Adjusted handshake
 * Barco Eventmaster
 	* Sorting of dropdown
 	* Making presets work for cues and preset recalling
@@ -94,17 +100,17 @@
 * Barco PDS
 	* Feedback on buttons program/preview/logo, handle invalid signal input, minor improvements
 * Barco Matrix Pro
-	* using UDP for communication
+	* Using UDP for communication
 * Blackmagic Design ATEM
-	* additional Macro support/feedback
+	* Additional Macro support/feedback
 	* USK/DSK source selection
-	* model selection
+	* Model selection
 	* Multiviewer routing
 * Blackmagic Design HyperDeck
-	* additional name record options
-	* control of remote function
+	* Additional name record options
+	* Control of remote function
 * Blackmagic Design Videohub
-	* support for monitoring outputs
+	* Support for monitoring outputs
 	* RS422 routing
 * Cockos Reaper
 	* Added custom action
@@ -113,61 +119,65 @@
 	* Decode utf8 tally messages
 	* Compatibility with clock version 3.0.0
 * Disguise
-	* more OSC commands
+	* More OSC commands
+* Extron IPL-T-PCS4
+	* Adjusted handshake
 * Generic HTTP
 	* Added ‘base url’ field in instance configuration
+	* Added ability to send JSON via POST
 * GrandMA2
 	* Rewritten telnet part to comply with MIT license
+* GlobalCache ITAC IR
+	* Added help text
+* ifelseWare AV Playback
+	* Make port configurable, Pad Fix option, added nextClip and prevClip
 * Irisdown Countdowntimer
 	* Support for version 2.0.10
-* OBS Studio
-	* Added support for transitions
 * Metus Ingest
 	* Adding Feedback
 * Mitti
 	* Added support for controlling Fullscreen, Looping, Transition control and Cues
 * MSC routers
-	* preset fix
+	* Preset fix
 * Neodarque StageTimer2
 	* Added increase/decrease time action
-* Rosstalk
-	* XPression naming fixes (by request from RossVideo)
-* Tascam CD
-	* Support for transports and power. (complete support of protocol)
-* X32
-	* Fixed bug where cues and snippets did not work.
-	* Fixed bug where DCA mute and fader didn’t work
-* GlobalCache ITAC IR
-	* Added help text
-* ifelseWare AV Playback
-	* Make port configurable, Pad Fix option, added nextClip and prevClip
-* PVP
-	* target set support
-	* layer preset support
-	* layer opacity control
-	* select layer target
-	* action reordering
-	* preset support
+* OBS Studio
+	* Added support for transitions
+	* Added start/stop streaming
+	* Added start/stop recording
+	* Added set source mute
+* Playback Pro Plus
+	* Adjusted GO/GT command to the correct format
+* PTZ Optics
 	* Help text
 * QLab
 	* Flagged/Unflagged clip
 	* Passcode support
+* RenewedVision ProVideoPlayer (PVP)
+	* Target set support
+	* Layer preset support
+	* Layer opacity control
+	* Select layer target
+	* Action reordering
+	* Preset support
+	* Help text
 * RenewedVision ProPresenter
 	* Added audio actions
-	* video countdown timer variable
+	* Video countdown timer variable
 	* Help text
 	* Countdown timer control
 	* Clock time tooltip
 	* StageDisplay features
 	* Dynamic variables
+* Rosstalk
+	* XPression naming fixes (by request from RossVideo)
+	* Added Trigger GPI By Name
 * Tascam CD
 	* Added presets for all actions
-* Playback Pro Plus
-	* Adjusted GO/GT command to the correct format
-* PTZ Optics
-	* Help text
-
-
+	* Support for transports and power. (complete support of protocol)
+* X32
+	* Fixed bug where cues and snippets did not work
+	* Fixed bug where DCA mute and fader didn’t work
 
 ## Companion v1.3.0 - Release Notes
 

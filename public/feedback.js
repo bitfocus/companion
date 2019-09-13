@@ -24,7 +24,7 @@ $(function() {
 		socket.emit('bank_update_feedback_option', page, bank,  $(this).data('feedback-id'), $(this).data('option-id'), $(this).val() );
 	});
 
-	
+
 	$('#bankFeedbacks').on('change', '.feedback-action-checkbox', function() {
 		socket.emit('bank_update_feedback_option', page, bank, $(this).data('action-id'), $(this).data('option-id'), $(this).prop('checked') );
 	});
@@ -34,9 +34,9 @@ $(function() {
 		var $this = $(this);
 		let min   = parseFloat($this.attr('min'));
 		let max   = parseFloat($this.attr('max'));
-		let value = $this.attr('required') ? parseFloat($this.val()) : $this.val();
+		let value = $this.prop('required') ? parseFloat($this.val()) : $this.val();
 
-		if (!$this.attr('required') && isNaN(value)) {
+		if (!$this.prop('required') && isNaN(value)) {
 			// Not required and isn't a number (could be empty).
 			this.style.color = 'black';
 		} else if (!isNaN(parseFloat(value)) && isFinite(value) && value >= min && value <= max) {
@@ -233,7 +233,7 @@ $(function() {
 							})(int2hex(val), feedback.id, option.id);
 
 						}
-				
+
 						else if (option.type == 'checkbox') {
 
 							var $opt_checkbox = $("<input type='checkbox' class='feedback-action-checkbox form-control'>");
@@ -246,6 +246,11 @@ $(function() {
 
 							// Force as a boolean
 							option.default = option.default === true;
+
+							// if options never been stored on this action
+							if (feedback.options === undefined) {
+								feedback.options = {};
+							}
 
 							// if this option never has been saved, set default
 							if (feedback.options[option.id] === undefined) {
@@ -268,7 +273,7 @@ $(function() {
 							// The range will only be used if option.range is used.
 							let $opt_num   = $('<input type="number" class="feedback-action-number form-control">');
 							let $opt_range = $("<input type='range' class='feedback-action-number form-control'>");
-							
+
 
 							if (option.tooltip !== undefined) {
 								$opt_num.attr('title', option.tooltip);
@@ -279,7 +284,12 @@ $(function() {
 								.data('option-id', option.id)
 								.attr('min', option.min)
 								.attr('max', option.max)
-								.attr('required', option.range || option.required === true);
+								.prop('required', option.range || option.required === true);
+
+							// if options never been stored on this action
+							if (feedback.options === undefined) {
+								feedback.options = {};
+							}
 
 							// if this option never has been saved, set default
 							if (feedback.options[option.id] === undefined) {
@@ -292,7 +302,7 @@ $(function() {
 								$opt_num.val(feedback.options[option.id]);
 							}
 
-							
+
 							if (option.range !== true) {
 
 								$options.append(

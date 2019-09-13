@@ -71,7 +71,7 @@ $(function() {
 		let max   = parseFloat($this.attr('max'));
 		let value = parseFloat($this.val());
 
-		if (!$this.attr('required') && isNaN(value)) {
+		if (!$this.prop('required') && isNaN(value)) {
 			// Not required and isn't a number (could be empty).
 			this.style.color = 'black';
 		} else if (!isNaN(parseFloat(value)) && isFinite(value) && value >= min && value <= max) {
@@ -355,6 +355,11 @@ $(function() {
 							$opt_checkbox.data('action-id', action.id)
 								.data('option-id', option.id);
 
+							// if options never been stored on this action
+							if (action.options === undefined) {
+								action.options = {};
+							}
+
 							// if this option never has been saved, set default
 							if (action.options[option.id] === undefined) {
 								socket.emit('bank_update_action_option', page, bank, action.id, option.id, option.default);
@@ -376,7 +381,7 @@ $(function() {
 							// The range will only be used if option.range is used.
 							let $opt_num   = $('<input type="number" class="action-number form-control">');
 							let $opt_range = $("<input type='range' class='action-number form-control'>");
-							
+
 
 							if (option.tooltip !== undefined) {
 								$opt_num.attr('title', option.tooltip);
@@ -387,7 +392,12 @@ $(function() {
 								.data('option-id', option.id)
 								.attr('min', option.min)
 								.attr('max', option.max)
-								.attr('required', option.range || option.required === true);
+								.prop('required', option.range || option.required === true);
+
+							// if options never been stored on this action
+							if (action.options === undefined) {
+								action.options = {};
+							}
 
 							// if this option never has been saved, set default
 							if (action.options[option.id] === undefined) {
@@ -400,7 +410,7 @@ $(function() {
 								$opt_num.val(action.options[option.id]);
 							}
 
-							
+
 							if (option.range !== true) {
 
 								$options.append(
