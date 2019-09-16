@@ -418,3 +418,6 @@
 [submodule "lib/module/media-player-classic"]
 	path = lib/module/media-player-classic
 	url = https://github.com/bitfocus/companion-module-media-player-classic.git
+[submodule "lib/module/extron-smp111"]
+	path = lib/module/extron-smp111
+	url = https://github.com/bitfocus/companion-module-extron-smp111.git
