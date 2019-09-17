@@ -421,3 +421,6 @@
 [submodule "lib/module/extron-smp111"]
 	path = lib/module/extron-smp111
 	url = https://github.com/bitfocus/companion-module-extron-smp111.git
+[submodule "lib/module/qlab-advance"]
+	path = lib/module/qlab-advance
+	url = https://github.com/bitfocus/companion-module-qlab-advance.git
