@@ -696,7 +696,7 @@ $(function() {
 		$brow.append($bcontainer);
 
 		$('#config_save').remove();
-		$('#instanceConfig').append($brow);
+		$('#instanceConfigButtons').append($brow);
 
 		$button.click(function () {
 			saveConfig(this, id);
