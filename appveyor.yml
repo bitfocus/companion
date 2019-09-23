@@ -11,7 +11,7 @@ init:
   - git config --global core.autocrlf input
 
 install:
-  - ps: Install-Product node 9 x64
+  - ps: Install-Product node 8.12.0 x64
   - git config --file=.gitmodules submodule.bitfocus-skeleton.url https://github.com/bitfocus/bitfocus-skeleton.git
   - git config --file=.gitmodules submodule.bitfocus-libs.url https://github.com/bitfocus/bitfocus-libs.git
   - git submodule sync
