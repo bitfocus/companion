@@ -397,3 +397,9 @@
 [submodule "lib/module/media-player-classic"]
 	path = lib/module/media-player-classic
 	url = https://github.com/bitfocus/companion-module-media-player-classic.git
+[submodule "sonoran-coyote"]
+	path = sonoran-coyote
+	url = https://github.com/bitfocus/companion-module-sonoran-coyote.git
+[submodule "lib/module/sonoran-coyote"]
+	path = lib/module/sonoran-coyote
+	url = https://github.com/bitfocus/companion-module-sonoran-coyote.git
