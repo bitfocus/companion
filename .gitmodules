@@ -394,3 +394,6 @@
 [submodule "lib/module/dalite-scb"]
 	path = lib/module/dalite-scb
 	url = https://github.com/bitfocus/companion-module-dalite-scb.git
+[submodule "lib/module/media-player-classic"]
+	path = lib/module/media-player-classic
+	url = https://github.com/bitfocus/companion-module-media-player-classic.git
