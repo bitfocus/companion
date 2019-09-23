@@ -427,3 +427,6 @@
 [submodule "lib/module/sonoran-coyote"]
 	path = lib/module/sonoran-coyote
 	url = https://github.com/bitfocus/companion-module-sonoran-coyote.git
+[submodule "lib/module/analogway-livepremiere"]
+	path = lib/module/analogway-livepremiere
+	url = https://github.com/bitfocus/companion-module-analogway-livepremiere.git
