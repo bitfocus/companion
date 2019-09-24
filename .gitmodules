@@ -432,4 +432,4 @@
 	url = https://github.com/bitfocus/companion-module-dexon-matrix.git
 [submodule "lib/module/analogway-livepremier"]
 	path = lib/module/analogway-livepremier
-	url = https://github.com/bitfocus/companion-module-analogway-livepremiere.git
+	url = https://github.com/bitfocus/companion-module-analogway-livepremier.git
