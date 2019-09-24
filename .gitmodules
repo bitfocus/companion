@@ -427,3 +427,6 @@
 [submodule "lib/module/sonoran-coyote"]
 	path = lib/module/sonoran-coyote
 	url = https://github.com/bitfocus/companion-module-sonoran-coyote.git
+[submodule "lib/module/dexon-matrix"]
+	path = lib/module/dexon-matrix
+	url = https://github.com/bitfocus/companion-module-dexon-matrix.git
