@@ -436,6 +436,3 @@
 [submodule "lib/module/joy-playdeck"]
 	path = lib/module/joy-playdeck
 	url = https://github.com/bitfocus/companion-module-joy-playdeck.git
-[submodule "lib/module/optoma-z28s"]
-	path = lib/module/optoma-z28s
-	url = git@github.com:bitfocus/companion-module-optoma-z28s.git
