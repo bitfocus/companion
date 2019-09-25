@@ -49,7 +49,7 @@ For checking known bugs or reporting of potential bugs, please use the [issue sy
 * LW3 (Lightware) v1.0.0 by Håkon Nessjøen
 * Listener (Octopus) v1.0.0 by Jeffrey Davidsz
 * LiveCore (Analog Way) v1.1.1 by Dorian Meid
-* LivePremier (Analog Way) v1.0.1 by Dorian Meid
+* LivePremier (Analog Way) v1.0.2 by Dorian Meid
 * MRP / Multicon (Nevion) v1.0.0 by William Viker
 * MagicQ (UDP) (ChamSys) v1.0.0 by Per Røine
 * MagicQ (ChamSys) v1.0.0 by Per Røine
