@@ -433,3 +433,6 @@
 [submodule "lib/module/analogway-livepremier"]
 	path = lib/module/analogway-livepremier
 	url = https://github.com/bitfocus/companion-module-analogway-livepremier.git
+[submodule "lib/module/joy-playdeck"]
+	path = lib/module/joy-playdeck
+	url = https://github.com/bitfocus/companion-module-joy-playdeck.git
