@@ -439,3 +439,6 @@
 [submodule "lib/module/optoma-z28s"]
 	path = lib/module/optoma-z28s
 	url = https://github.com/bitfocus/companion-module-optoma-z28s.git
+[submodule "lib/module/novastar-vx4s"]
+	path = lib/module/novastar-vx4s
+	url = https://github.com/bitfocus/companion-module-novastar-vx4s.git
