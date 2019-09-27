@@ -656,7 +656,6 @@ $(function() {
 		if (ww < 597) {
 			var wmin = ww - 374;
 			var p = remap(wmin, 0, 222, 44, 72);
-			console.log("XX", wmin, "---- ", p);
 			$('.border canvas').css("width", p);
 			$('.border canvas').css("height", p);
 
