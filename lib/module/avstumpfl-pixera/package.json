@@ -1,0 +1,17 @@
+{
+	"name": "avstumpfl-pixera",
+	"version": "1.0.0",
+	"api_version": "32",
+	"keywords": [ "Media Server" ],
+	"manufacturer": "AV Stumpfl",
+	"product": "Pixera",
+	"shortname": "Pixera",
+	"homepage": "https://avstumpfl.com/pixera/",
+	"description": "Control AV Stumpfl Pixera",
+	"main": "avstumpfl-pixera.js",
+	"scripts": {
+		"test": "echo \"Error: no test specified\" && exit 1"
+	},
+	"author": "Benni M.<info@benni-m.de> & Jonas Stade",
+	"license": "MIT"
+}
