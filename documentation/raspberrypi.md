@@ -6,7 +6,7 @@ Running Companion in its current form on a RPi is not recommended. However, sinc
 2. to run Companion headless on the "Lite" version of the latest build of the Raspbian OS. This will maximize the potential performance on your RPi.
 
 ## Installation Instructions
-These instructions are for installing Companion on a RPi. Instructions differ slightly between latest stable (v1.3) and current alpha (v2.0). Instructions here cover both. They have been tested with a RPi 2B and 3B+. They should function with any version of the RPi board, but your results may vary.
+These instructions are for installing Companion on a RPi. Instructions differ slightly between versions 1.3/1.4 (stable) and 2.0 (alpha). Instructions here cover both. They have been tested with a Raspberry Pi 2B, 3B+, and 4B 2GB/4GB. Again, it is not recommended to run Companion on anything less than a Raspberry Pi 4 2GB. They should function with any version of the RPi board, but your results may vary.
 
 Companion can be run in 2 different modes on the RPi: Headless (no display attached) and Headed (display attached). The installation instructions are the same up to the point of building the code to run. In the instructions below you will note that the instructions diverge near the end to address the specific needs of headless vs headed installation and operation.
 
