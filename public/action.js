@@ -267,7 +267,7 @@ $(function() {
 
 						}
 
-						else if (option.type == 'dropdown') {
+						else if (option.type == 'dropdown-native') {
 
 							var $opt_input = $("<select class='action-option-change form-control'></select>");
 							$opt_input.data('action-id', action.id);
@@ -304,7 +304,7 @@ $(function() {
 
 						}
 
-						else if (option.type === 'select2') {
+						else if (option.type === 'dropdown') {
 
 							var $opt_input = $("<select class='action-option-change'></select>");
 							$opt_input.data('action-id', action.id);
@@ -359,7 +359,7 @@ $(function() {
 							$opt_input.select2(selectoptions);
 
 							if (option.multiple === true && typeof option.minSelection === 'number' && option.minSelection >0) {
-								let minsel = option.minSelection + 1
+								let minsel = option.minSelection + 1;
 								$opt_input.on('select2:unselecting', function (e) {
 									if ($('.select2-selection__choice').length < minsel) {
 										return false;
