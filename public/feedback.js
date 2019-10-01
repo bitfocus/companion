@@ -4,6 +4,12 @@ $(function() {
 	socket.emit('feedback_get_definitions', page, bank);
 
 	var $aba = $("#addBankFeedback");
+	$aba.select2({
+		theme: 'option',
+		width: '100%',
+		minimumResultsForSearch: 9
+	});
+
 	$aba.change(function() {
 		socket.emit('bank_addFeedback', page, bank, $(this).val() );
 		$("#addBankFeedback").val($("#addBankFeedback option:first").val());

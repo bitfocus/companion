@@ -767,7 +767,7 @@ $(function() {
 					if (typeof config[key] === 'string' || typeof config[key] === 'number') {
 						selections.push(config[key]);
 					}
-					else if (config[key].constructor === Array) {
+					else if (Array.isArray(config[key])) {
 						selections = config[key];
 					}
 

@@ -33,6 +33,11 @@ $(function() {
 	socket.emit('get_actions');
 
 	var $aba = $("#addBankAction");
+	$aba.select2({
+		theme: 'option',
+		width: '100%',
+		minimumResultsForSearch: 9
+	});
 
 	$aba.change(function() {
 		socket.emit('bank_action_add', page, bank, $(this).val() );
@@ -374,6 +379,7 @@ $(function() {
 
 							// if this option never has been saved, set default
 							if (action.options[option.id] === undefined) {
+								action.options[option.id] = option.default;
 								socket.emit('bank_update_action_option', page, bank, action.id, option.id, option.default);
 							}
 
@@ -382,7 +388,7 @@ $(function() {
 							if (typeof action.options[option.id] === 'string' || typeof action.options[option.id] === 'number') {
 								selections.push(action.options[option.id])
 							}
-							else if (action.options[option.id].constructor === Array) {
+							else if (Array.isArray(action.options[option.id])) {
 								selections = action.options[option.id]
 							}
 
