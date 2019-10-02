@@ -442,3 +442,6 @@
 [submodule "lib/module/novastar-vx4s"]
 	path = lib/module/novastar-vx4s
 	url = https://github.com/bitfocus/companion-module-novastar-vx4s.git
+[submodule "lib/module/avstumpfl-pixera"]
+	path = lib/module/avstumpfl-pixera
+	url = https://github.com/bitfocus/companion-module-avstumpfl-pixera.git
