@@ -445,3 +445,6 @@
 [submodule "lib/module/avstumpfl-pixera"]
 	path = lib/module/avstumpfl-pixera
 	url = https://github.com/bitfocus/companion-module-avstumpfl-pixera.git
+[submodule "lib/module/avproconnect-acmx1616-auhd"]
+	path = lib/module/avproconnect-acmx1616-auhd
+	url = https://github.com/bitfocus/companion-module-avproconnect-acmx1616-auhd.git
