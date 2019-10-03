@@ -56,6 +56,7 @@ function hex2int(hex) {
 
 var page = 1;
 var bank = undefined;
+var variables_autocomplete = undefined;
 
 
 $(function() {
@@ -65,6 +66,36 @@ $(function() {
 
 	$("#editbankli").hide();
 	selected_bank = {};
+
+	variables_autocomplete = new Tribute({
+		values: [],
+		trigger: '$',
+
+		// function called on select that returns the content to insert
+		selectTemplate: function (item) {
+		  return '$(' + item.original.value + ')';
+		},
+	  
+		// template for displaying item in menu
+		menuItemTemplate: function (item) {
+		  return '<span class="var-name">' + item.original.value + '</span><span class="var-label">' + item.original.label + '</span>';
+		},
+	});
+
+	socket.on('variable_instance_definitions_get:result', function (err, data) {
+		if (data) {
+			var auto_complete_list = [];
+			for (var instance in data) {
+				for (var index in data[instance]) {
+					var item = data[instance][index];
+					var variable_name = instance + ':' + item.name;
+					auto_complete_list.push({ key: '(' + variable_name + ')', value: variable_name, label: item.label });
+				}
+			}
+
+			variables_autocomplete.append(0, auto_complete_list, true);
+		}
+	});
 
 	function bank_preview_page(_page) {
 
@@ -341,6 +372,9 @@ $(function() {
 		$(".active_field[data-special=\"color\"]").click(change);
 		$(".active_field[data-special=\"alignment\"]").click(change);
 
+		var text_field = $("input[data-fieldid=\"text\"]");
+		variables_autocomplete.attach(text_field);
+		text_field.on('tribute-replaced', change);
 	}
 
 	$(window).keyup(function(e) {
