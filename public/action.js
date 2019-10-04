@@ -33,6 +33,11 @@ $(function() {
 	socket.emit('get_actions');
 
 	var $aba = $("#addBankAction");
+	$aba.select2({
+		theme: 'option',
+		width: '100%',
+		minimumResultsForSearch: 9
+	});
 
 	$aba.change(function() {
 		socket.emit('bank_action_add', page, bank, $(this).val() );
@@ -267,7 +272,7 @@ $(function() {
 
 						}
 
-						else if (option.type == 'dropdown') {
+						else if (option.type == 'dropdown-native') {
 
 							var $opt_input = $("<select class='action-option-change form-control'></select>");
 							$opt_input.data('action-id', action.id);
@@ -304,7 +309,7 @@ $(function() {
 
 						}
 
-						else if (option.type === 'select2') {
+						else if (option.type === 'dropdown') {
 
 							var $opt_input = $("<select class='action-option-change'></select>");
 							$opt_input.data('action-id', action.id);
@@ -359,7 +364,7 @@ $(function() {
 							$opt_input.select2(selectoptions);
 
 							if (option.multiple === true && typeof option.minSelection === 'number' && option.minSelection >0) {
-								let minsel = option.minSelection + 1
+								let minsel = option.minSelection + 1;
 								$opt_input.on('select2:unselecting', function (e) {
 									if ($('.select2-selection__choice').length < minsel) {
 										return false;
@@ -374,6 +379,7 @@ $(function() {
 
 							// if this option never has been saved, set default
 							if (action.options[option.id] === undefined) {
+								action.options[option.id] = option.default;
 								socket.emit('bank_update_action_option', page, bank, action.id, option.id, option.default);
 							}
 
@@ -382,7 +388,7 @@ $(function() {
 							if (typeof action.options[option.id] === 'string' || typeof action.options[option.id] === 'number') {
 								selections.push(action.options[option.id])
 							}
-							else if (action.options[option.id].constructor === Array) {
+							else if (Array.isArray(action.options[option.id])) {
 								selections = action.options[option.id]
 							}
 
