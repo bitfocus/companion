@@ -82,18 +82,46 @@ $(function() {
 		},
 	});
 
+	function build_autocomplete_item(instance, item) {
+		var variable_name = instance + ':' + item.name;
+		return { key: variable_name + ')', value: variable_name, label: item.label };
+	}
+
+	// Listen on initial variable definitions broadcast
 	socket.on('variable_instance_definitions_get:result', function (err, data) {
 		if (data) {
 			var auto_complete_list = [];
 			for (var instance in data) {
 				for (var index in data[instance]) {
-					var item = data[instance][index];
-					var variable_name = instance + ':' + item.name;
-					auto_complete_list.push({ key: variable_name + ')', value: variable_name, label: item.label });
+					var item = build_autocomplete_item(instance, data[instance][index]);
+					auto_complete_list.push(item);
 				}
 			}
 
 			variables_autocomplete.append(0, auto_complete_list, true);
+		}
+	});
+
+	// Listen on instance enable/disable events
+	socket.on('variable_instance_definitions_set', function (instance, data) {
+		if (instance && data) {
+			var auto_complete_list = variables_autocomplete.collection[0].values;
+
+			// remove existing variables of instance
+			var index = 0;
+			while (index < auto_complete_list.length) {
+				if (auto_complete_list[index].value.startsWith(instance + ':')) {
+					auto_complete_list.splice(index, 1);
+				} else {
+					index += 1;
+				}
+			}
+
+			// add new variables
+			for (var index in data) {
+				var item = build_autocomplete_item(instance, data[index]);
+				auto_complete_list.push(item);
+			}
 		}
 	});
 
