@@ -69,7 +69,7 @@ $(function() {
 
 	variables_autocomplete = new Tribute({
 		values: [],
-		trigger: '$',
+		trigger: '$(',
 
 		// function called on select that returns the content to insert
 		selectTemplate: function (item) {
@@ -89,7 +89,7 @@ $(function() {
 				for (var index in data[instance]) {
 					var item = data[instance][index];
 					var variable_name = instance + ':' + item.name;
-					auto_complete_list.push({ key: '(' + variable_name + ')', value: variable_name, label: item.label });
+					auto_complete_list.push({ key: variable_name + ')', value: variable_name, label: item.label });
 				}
 			}
 
