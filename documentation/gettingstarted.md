@@ -63,15 +63,15 @@ Elgato Emulator is a tool to test and use the setup, even if you don’t have a 
 
 Web Buttons is a way of viewing all your buttons across all pages on a single screen, which may be useful if you want to use a web browser on a tablet to control Companion.
 
-If you would like to just view one page or a select few, you can add a little text to the end of the URL in your browser.
+If you would like to just view one page or a select few, you can add a little text to the end of the URL in your browser. Just add **?pages=** and the page numbers you want to see separated by a comma.
 
 **Examples**
 
-- http://10.30.4.60:8000/tablet.html?pages=2
-*View only page 2*
+- http://10.30.4.60:8000/tablet.html?pages=2  
+	*View only page 2*
 
-- http://10.30.4.60:8000/tablet.html?pages=3,7,12
-*View only pages 3, 7, and 12*
+- http://10.30.4.60:8000/tablet.html?pages=3,7,12  
+	*View only pages 3, 7, and 12*
 
 
 - - - -
