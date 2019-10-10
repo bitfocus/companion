@@ -26,28 +26,28 @@ require('./electron-timer-fix').fix();
 global.MAX_BUTTONS = 32;
 global.MAX_BUTTONS_PER_ROW = 8;
 
-var EventEmitter = require('events');
-var system = new EventEmitter();
-var fs = require("fs");
-var path = require('path')
-var debug = require('debug')('app');
-var mkdirp = require('mkdirp');
-var util = require('util');
-var events = require('events');
-var stripAnsi = require('strip-ansi');
-var logbuffer = [];
-var logwriting = false;
-var skeleton_info = {};
+const EventEmitter = require('events');
+let system = new EventEmitter();
+const fs = require("fs");
+const path = require('path')
+const debug = require('debug')('app');
+const mkdirp = require('mkdirp');
+const util = require('util');
+const events = require('events');
+const stripAnsi = require('strip-ansi');
+let logbuffer = [];
+let logwriting = false;
+let skeleton_info = {};
 
-var config;
-var cfgDir;
+let config;
+let cfgDir;
 
-system.on('skeleton-info', function(key, val) {
+system.on('skeleton-info', (key, val) => {
 	skeleton_info[key] = val;
 	if (key == 'configDir') {
 		debug('configuration directory', val);
 		cfgDir = val + "/companion/";
-		mkdirp(cfgDir, function(err) {
+		mkdirp(cfgDir, err => {
 			debug("mkdirp",cfgDir,err);
 			config = new (require('./bitfocus-libs/config'))(system, cfgDir, {
 				http_port: 8888,
@@ -58,25 +58,21 @@ system.on('skeleton-info', function(key, val) {
 	}
 });
 
-system.on('configdir_get', function (cb) {
-	cb(cfgDir);
-});
+system.on('configdir_get', cb => cb(cfgDir));
 
-system.on('skeleton-info-info', function(cb) {
-	cb(skeleton_info);
-});
+system.on('skeleton-info-info', cb => cb(skeleton_info));
 
-system.on('config_loaded', function(config) {
+system.on('config_loaded', config => {
 	system.emit('skeleton-info', 'appURL', 'Waiting for webserver..');
 	system.emit('skeleton-info', 'appStatus', 'Starting');
 	system.emit('skeleton-info', 'bindInterface', config.bind_ip);
 	system.emit('skeleton-info', 'startMinimised', config.start_minimised);
 });
 
-system.on('exit', function() {
+system.on('exit', () => {
 	console.log("somewhere, the system wants to exit. kthxbai");
 
-	system.emit('instance_getall', function(instances, active) {
+	system.emit('instance_getall', (instances, active) => {
 		try {
 			for (var key in active) {
 				if (instances[key].label !== 'internal') {
@@ -92,20 +88,18 @@ system.on('exit', function() {
 		}
 	});
 
-	setImmediate(function(){
-		process.exit();
-	});
+	setImmediate(() => process.exit());
 });
 
 
-system.on('skeleton-bind-ip', function(ip) {
+system.on('skeleton-bind-ip', ip => {
 	config.bind_ip = ip;
 	system.emit('config_set', 'bind_ip', ip);
 	system.emit('ip_rebind');
 });
 
-system.on('skeleton-bind-port', function(port) {
-	var p = parseInt(port);
+system.on('skeleton-bind-port', port => {
+	let p = parseInt(port);
 	if (p >= 1024 && p <= 65535) {
 		config.http_port = p;
 		system.emit('config_set', 'http_port', p);
@@ -113,23 +107,23 @@ system.on('skeleton-bind-port', function(port) {
 	}
 });
 
-system.on('skeleton-start-minimised', function(minimised) {
+system.on('skeleton-start-minimised', minimised => {
 	config.start_minimised = minimised;
 	system.emit('config_set', 'start_minimised', minimised);
 });
 
-system.on('skeleton-ready', function() {
+system.on('skeleton-ready', () => {
 
 	if (system.headless === true) {
 		debug("Going into headless mode. Logs will be written to companion.log")
 
-		setInterval(function() {
+		setInterval(() => {
 
 			if (logbuffer.length > 0 && logwriting == false) {
-				var writestring = logbuffer.join("\n");
+				let writestring = logbuffer.join("\n");
 				logbuffer = [];
 				logwriting = true;
-				fs.appendFile('./companion.log', writestring + "\n", function(err) {
+				fs.appendFile('./companion.log', writestring + "\n", err => {
 					if (err) {
 						console.log("log write error", err);
 					}
@@ -138,59 +132,59 @@ system.on('skeleton-ready', function() {
 			}
 		}, 1000)
 
-		process.stderr.write = function() {
-			var arr = [];
-			for (var n in arguments) {
+		process.stderr.write = () => {
+			let arr = [];
+			for (let n in arguments) {
 				arr.push(arguments[0]);
 			}
-			var line = new Date().toISOString() + " " + stripAnsi(arr.join(" ").trim() );
+			let line = new Date().toISOString() + " " + stripAnsi(arr.join(" ").trim() );
 			logbuffer.push(line);
 		};
 
 
 	}
 
-	var server_http= require('./lib/server_http')(system);
-	var io         = require('./lib/io')(system, server_http);
-	var log        = require('./lib/log')(system,io);
-	var db         = require('./lib/db')(system,cfgDir);
-	var userconfig = require('./lib/userconfig')(system)
-	var update     = require('./lib/update')(system,cfgDir);
-	var page       = require('./lib/page')(system)
-	var appRoot    = require('app-root-path');
-	var variable   = require('./lib/variable')(system);
-	var feedback   = require('./lib/feedback')(system);
-	var action     = require('./lib/action')(system);
-	var bank       = require('./lib/bank')(system);
-	var elgatoDM   = require('./lib/elgato_dm')(system);
-	var preview    = require('./lib/preview')(system);
-	var instance   = require('./lib/instance')(system);
-	var osc        = require('./lib/osc')(system);
-	var server_api = require('./lib/server_api')(system);
-	var server_tcp = require('./lib/server_tcp')(system);
-	var server_udp = require('./lib/server_udp')(system);
-	var artnet     = require('./lib/artnet')(system);
-	var rest       = require('./lib/rest')(system);
-	var rest_poll  = require('./lib/rest_poll')(system);
-	var loadsave   = require('./lib/loadsave')(system);
-	var preset     = require('./lib/preset')(system);
-	var tablet     = require('./lib/tablet')(system);
-	var satellite  = require('./lib/satellite_server')(system);
-	var ws_api     = require('./lib/ws_api')(system);
+	const server_http= require('./lib/server_http')(system);
+	const io         = require('./lib/io')(system, server_http);
+	const log        = require('./lib/log')(system,io);
+	const db         = require('./lib/db')(system,cfgDir);
+	const userconfig = require('./lib/userconfig')(system)
+	const update     = require('./lib/update')(system,cfgDir);
+	const page       = require('./lib/page')(system)
+	const appRoot    = require('app-root-path');
+	const variable   = require('./lib/variable')(system);
+	const feedback   = require('./lib/feedback')(system);
+	const action     = require('./lib/action')(system);
+	const bank       = require('./lib/bank')(system);
+	const elgatoDM   = require('./lib/elgato_dm')(system);
+	const preview    = require('./lib/preview')(system);
+	const instance   = require('./lib/instance')(system);
+	const osc        = require('./lib/osc')(system);
+	const server_api = require('./lib/server_api')(system);
+	const server_tcp = require('./lib/server_tcp')(system);
+	const server_udp = require('./lib/server_udp')(system);
+	const artnet     = require('./lib/artnet')(system);
+	const rest       = require('./lib/rest')(system);
+	const rest_poll  = require('./lib/rest_poll')(system);
+	const loadsave   = require('./lib/loadsave')(system);
+	const preset     = require('./lib/preset')(system);
+	const tablet     = require('./lib/tablet')(system);
+	const satellite  = require('./lib/satellite_server')(system);
+	const ws_api     = require('./lib/ws_api')(system);
 
 	system.emit('modules_loaded');
 
-	system.on('exit', function() {
+	system.on('exit', () => {
 		elgatoDM.quit();
 	});
 
 });
 
-system.on('skeleton-single-instance-only', function (response) {
+system.on('skeleton-single-instance-only', response => {
 	response(true);
 });
 
-exports = module.exports = function(headless) {
+exports = module.exports = headless => {
 	if (headless !== undefined && headless === true) {
 		system.headless = true;
 	}
