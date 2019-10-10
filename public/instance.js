@@ -189,7 +189,7 @@ $(function() {
 		new RowSorter($table[0], {
 			handler: '.reorder-grip',
 			onDrop: function(tbody, row, new_index, old_index) {
-				socket.emit('instance_order', page, bank, old_index, new_index);
+				socket.emit('instance_order', old_index, new_index);
 			}
 		});
 
