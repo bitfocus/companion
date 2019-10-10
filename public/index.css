@@ -321,7 +321,8 @@ label {
 }
 
 .actionlist-td-label,
-.feedbacklist-td-label{
+.feedbacklist-td-label,
+.instancelist-td-label{
 	padding-top:24px !important;
 }
 
@@ -331,19 +332,22 @@ label {
 }
 
 .actionlist-td-delete,
-.feedbacklist-td-delete{
+.feedbacklist-td-delete,
+.instancelist-td-delete{
 	padding-top:23px !important;
 	line-height:0px;
 	width:70px;
 }
 
 .actionlist-td-options,
-.feedbacklist-td-options{
+.feedbacklist-td-options,
+.instancelist-td-options{
 	padding-top:0px !important;
 }
 
 td.actionlist-td-reorder,
-td.feedbacklist-td-reorder{
+td.feedbacklist-td-reorder,
+td.instancelist-td-reorder{
 	/* Remove horizontal column padding */
 	padding-left: 0;
 	padding-right: 0;
@@ -669,11 +673,11 @@ h4 {
 
 /* Style for autocomplete of variable */
 .tribute-container li span {
-    display: block;
+		display: block;
 }
 .tribute-container li span.var-label {
-    overflow: hidden;
+		overflow: hidden;
 	font-weight: inherit;
 	text-overflow: ellipsis;
-  	white-space: nowrap;
+		white-space: nowrap;
 }

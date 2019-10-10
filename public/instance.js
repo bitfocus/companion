@@ -86,19 +86,24 @@ $(function() {
 		var $il = $("#instanceList");
 		if (!dontclear) $il.html("");
 
+		var $table = $("<table class='table table-responsive-sm'>");
+		var $trth = $("<thead><tr><th>#</th><th>Module</th><th>Label</th><th>Status</th><th>Actions</th></tr></thead>");
+		var $tbody = $("<tbody></tbody>");
+		$table.append($trth);
+
 		for (var n in list) {
 			var i = list[n];
 
 			if (i.instance_type == 'bitfocus-companion') {
 				continue;
 			}
-
 			var $tr = $("<tr></tr>");
 
 			var $td_id = $("<td></td>");
 			var $td_label = $("<td id='label_"+n+"'></td>");
 			var $td_status = $("<td id='instance_status_"+n+"'></td>");
 			var $td_actions = $("<td></td>");
+			var $reorder_grip = $("<td class='instancelist-td-reorder'><i class='fa fa-sort reorder-grip'></i></td>");
 
 			var $button_edit = $("<button type='button' data-id='"+n+"' class='instance-edit btn btn-primary'>edit</button>");
 			var $button_delete = $("<button type='button' data-id='"+n+"' class='instance-delete btn btn-sm btn-ghost-danger'>delete</button>");
@@ -156,11 +161,11 @@ $(function() {
 				}
 			}
 
-
 			if (list[n].label !== undefined) {
 				$td_label.text(list[n].label);
 			}
 
+			$tr.append($reorder_grip);
 			$tr.append($td_id);
 			$tr.append($td_label);
 			$tr.append($td_status);
@@ -172,10 +177,24 @@ $(function() {
 				});
 			})(list[n].instance_type);
 
-			$il.append($tr);
+			$tbody.append($tr);
 
 		}
+
+
+		$table.append($tbody);
+
+		$il.append($table);
+
+		new RowSorter($table[0], {
+			handler: '.reorder-grip',
+			onDrop: function(tbody, row, new_index, old_index) {
+				socket.emit('instance_order', page, bank, old_index, new_index);
+			}
+		});
+
 		updateInstanceStatus();
+
 	};
 
 	function validateNumericField($opt) {
@@ -688,7 +707,7 @@ $(function() {
 
 				$sm.append($inp);
 			}
-			
+
 			else if (field.type == 'checkbox') {
 				var $opt_checkbox = $("<input type='checkbox' class='form-control instanceConfigField'>");
 
@@ -704,14 +723,14 @@ $(function() {
 					.data('type', 'checkbox')
 					.data('valid', true)
 					.prop('checked', field.default);
-	
+
 				$sm.append($opt_checkbox);
 
 			}
 
 			else if (field.type == 'number') {
 				let $opt_num = $("<input type='number' class='form-control instanceConfigField'>");
-				
+
 				if (field.tooltip !== undefined) {
 					$opt_num.attr('title', field.tooltip);
 				}
@@ -730,7 +749,7 @@ $(function() {
 						validateNumericField($opt);
 					});
 				})(field, $opt_num);
-		
+
 				$sm.append($opt_num);
 
 			}
