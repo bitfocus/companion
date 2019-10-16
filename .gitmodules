@@ -448,3 +448,9 @@
 [submodule "lib/module/avproconnect-acmx1616-auhd"]
 	path = lib/module/avproconnect-acmx1616-auhd
 	url = https://github.com/bitfocus/companion-module-avproconnect-acmx1616-auhd.git
+[submodule "lib/module/sharp-tv"]
+	path = lib/module/sharp-tv
+	url = https://github.com/bitfocus/companion-module-sharp-tv.git
+[submodule "lib/module/octava-pro-dsx"]
+	path = lib/module/octava-pro-dsx
+	url = https://github.com/bitfocus/companion-module-octava-pro-dsx.git
