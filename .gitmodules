@@ -454,3 +454,6 @@
 [submodule "lib/module/octava-pro-dsx"]
 	path = lib/module/octava-pro-dsx
 	url = https://github.com/bitfocus/companion-module-octava-pro-dsx.git
+[submodule "shure-wireless"]
+	path = shure-wireless
+	url = C:\\Users\\JeffreyDavidsz\\companion\\lib\\module\\shure-wireless
