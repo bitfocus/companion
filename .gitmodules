@@ -457,3 +457,6 @@
 [submodule "lib/module/sain-smart-relay"]
 	path = lib/module/sain-smart-relay
 	url = https://github.com/bitfocus/companion-module-sain-smart-relay.git
+[submodule "lib/module/shure-wireless"]
+	path = lib/module/shure-wireless
+	url = https://github.com/bitfocus/companion-module-shure-wireless.git
