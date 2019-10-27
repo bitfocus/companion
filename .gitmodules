@@ -463,3 +463,6 @@
 [submodule "lib/module/qsys-remote-control"]
 	path = lib/module/qsys-remote-control
 	url = https://github.com/bitfocus/companion-module-qsys-remote-control.git
+[submodule "lib/module/slack-webhooks"]
+	path = lib/module/slack-webhooks
+	url = https://github.com/bitfocus/companion-module-slack-webhooks.git
