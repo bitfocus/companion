@@ -460,3 +460,6 @@
 [submodule "lib/module/shure-wireless"]
 	path = lib/module/shure-wireless
 	url = https://github.com/bitfocus/companion-module-shure-wireless.git
+[submodule "lib/module/qsys-remote-control"]
+	path = lib/module/qsys-remote-control
+	url = https://github.com/bitfocus/companion-module-qsys-remote-control.git
