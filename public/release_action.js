@@ -334,7 +334,7 @@ $(function() {
 							// populate select2 with choices
 							var selections = [];
 							if (typeof action.options[option.id] === 'string' || typeof action.options[option.id] === 'number') {
-								selections.push(action.options[option.id])
+								selections.push(action.options[option.id].toString())
 							}
 							else if (Array.isArray(action.options[option.id])) {
 								selections = action.options[option.id]
@@ -342,7 +342,7 @@ $(function() {
 
 							for (var x in option.choices) {
 								var select = false;
-								var pos = selections.indexOf(option.choices[x].id);
+								var pos = selections.indexOf(option.choices[x].id.toString());
 								if (pos >= 0) { // if i find my option in the array of selections
 									select = true; // select it
 									selections.splice(pos,1); // and remove it from the array, the remaining selections are used later
