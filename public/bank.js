@@ -466,13 +466,21 @@ $(function() {
 
 
 	$(window).keydown(function(e) {
-/*		if (e.keyCode == 16 && function_state === null) {
+		if (e.keyCode == 16 && function_state === null) {
 			buttons_hot = true;
 			$(".border").addClass('bank-armed');
 			$('#functionkeys').slideUp(80);
-		}*/
+		}
 
-	})
+	});
+	$(window).keyup(function(e) {
+		if (e.keyCode == 16 && function_state === null) {
+			buttons_hot = false;
+			$(".border").removeClass('bank-armed');
+			$('#functionkeys').slideDown(80);
+		}
+
+	});
 
 
 	$(".change_style").click(function() {
