@@ -1,4 +1,4 @@
-# Raspberry Pi (RPi)
+# Running on Raspberry Pi (RPi) or other Ubuntu Linux
 **Performance on any Raspberry Pi system to date is less than optimal, and can easily break.** 
 
 Running Companion in its current form on a RPi is not recommended. However, since the RPi is a popular device these instructions have been provided for you to use at your own risk. If you insist on running Companion on a RPi, it is recommended:
@@ -61,40 +61,41 @@ export PATH="$HOME/.yarn/bin:$HOME/.config/yarn/global/node_modules/.bin:$PATH"
 7. Now we're ready to clone the repository and build. These commands will clone the respository, move into the `companion` directory, update all dependencies and modules, and create a fresh build.
 > It's important to note which version of Companion you are hoping to install: v1.3/v1.4 RC1 (both stable) or v2.0-alpha (not guaranteed to be stable). v2.0-alpha is not ready for production environments at the time of this writing (June 10, 2019), but is available for testing. The other important distinction to note is that the build commands are different between the two versions.
 
-| Version 1.4 RC1 (release candidate) **SEE NOTE** |
-| -------------------- |
-| <div class="highlight highlight-source-shell"><pre>git clone https://github.com/bitfocus/companion.git --branch=v1.4.0-rc1<br><span class="pl-c1">cd</span> companion<br>./tools/update.sh<br>npm run rpidist</pre></div> |
+#### Version 1.4 (stable)
+```
+git clone https://github.com/bitfocus/companion.git --branch=v1.4.0
+cd companion
+./tools/update.sh
+./tools/build_writefile.sh
+```
 
-| Version 1.3 (stable) |
-| -------------------- |
-| <div class="highlight highlight-source-shell"><pre>git clone https://github.com/bitfocus/companion.git --branch=v1.3.0<br><span class="pl-c1">cd</span> companion<br>./tools/update.sh<br>npm run rpidist</pre></div> |
+#### Version 1.3 (stable)
+```
+git clone https://github.com/bitfocus/companion.git --branch=v1.3.0
+cd companion
+./tools/update.sh
+./tools/build_writefile.sh
+```
 
-| Version 2.0 (alpha) |
-| ------------------- |
-| <div class="highlight highlight-source-shell"><pre>git clone https://github.com/bitfocus/companion.git<br><span class="pl-c1">cd</span> companion<br>yarn update<br>yarn rpidist</pre></div> |
+#### Version 2.0 (alpha)
+```
+git clone https://github.com/bitfocus/companion.git
+cd companion
+yarn update
+./tools/build_writefile.sh
+```
 
-This is the point where our instructions will diverge based on whether you intend to run your RPi headless or with a display attached.
-
-**1.4 RC1 Note:** 1.4 RC1 was inadvertently created with a syntax error in the `tools/build_writefile.sh` file we'll reference below. You will need to make a manual correction.<br>
-Open tools/build_writefile.sh in the text editor of your choice.<br>
-On line 54, you need to enclose `$(get_git_branch)` in quotation marks, so the line looks like this:<br>
-`if [ "$(get_git_branch)" != "master" ]; then`<br>
-Save the file, and then proceed.<br>
+This is the point where our instructions will diverge based on whether you intend to run headless, with a display attached or a build to be copied to another device.
 
 ### Headless Installation & Operation
 _(no attached display)_
 
-8. This will prep what's needed for `headless.js` to function properly.
-```bash
-./tools/build_writefile.sh
-```
-
-9. If this is the first time you've run Companion headless, you need to copy the db file so headless.js can pick it up.
+8. If this is the first time you've run Companion headless, you need to copy the db file so headless.js can pick it up.
 ```bash
 cp ~/.config/companion/db ~/companion/
 ```
 
-10. The last step for headless operation is to ensure Companion will start at console boot. We currently do this via `rc.local`. You will first need to know the designation of the network interface you wish to have Companion run on (i.e. `eth0` or `wlan0`)
+9. The last step for headless operation is to ensure Companion will start at console boot. We currently do this via `rc.local`. You will first need to know the designation of the network interface you wish to have Companion run on (i.e. `eth0` or `wlan0`)
 ```bash
 sudo nano /etc/rc.local
 ```
@@ -103,7 +104,7 @@ Add this line before the `exit 0` line, making sure to change the interface desi
 /home/pi/companion/headless.js eth0
 ```
 
-11. Reboot your RPi (`sudo reboot now`), wait a couple minutes, and you should be able to access the Companion UI on port 8000 of your RPi's IP address (i.e. `http://192.168.1.2:8000`)
+10. Reboot your RPi (`sudo reboot now`), wait a couple minutes, and you should be able to access the Companion UI on port 8000 of your RPi's IP address (i.e. `http://192.168.1.2:8000`)
 
 ### Headed Installation & Operation
 _(display attached to RPi)_
@@ -112,10 +113,10 @@ _(display attached to RPi)_
   * v1.3 stable
     * `npm run start` **or** `npm --prefix /home/pi/companion start`
   * v2.0-alpha
-    * `yarn dev` will start Companion with debugging fuctionality
-      * full explicit command: `/usr/local/bin/yarn --cwd /home/pi/companion dev`
     * `yarn prod` will start Companion silently, with no debugging
       * full explicit command: `/usr/local/bin/yarn --cwd /home/pi/companion prod`
+    * `yarn dev` will start Companion with debugging fuctionality
+      * full explicit command: `/usr/local/bin/yarn --cwd /home/pi/companion dev`
 
 9. Click the "Companion" icon in the system tray to trigger the application window and set your desired network interface and port number, then click "Change".
 > Note the visual difference between the v1.3 and v2.0 splash screens. If you are seeing the wrong splash, you'll need to back up to step 7 in the Common Steps to pull the correct version for building.
@@ -143,19 +144,26 @@ If you would like to have Companion load automatically at startup, follow these 
 
 3. Reboot, and confirm Companion starts at system start-up
 
+### Build for another device
+_(distributable build)_
+
+Note: This will produce a Headed build, there is not currently a distributable process for headless builds
+
+8. Run a rpi build `yarn rpidist` or `yarn lindist` for desktop linux
+
+9. The build can be found as a tar.gz under electron-output
 
 ## Updating Companion
-To update the local build of Companion v1.3, run the following set of commands:
+To update to a new release version, run the following substituting in the correct version number:
 ```bash
+git checkout v1.4.0
 ./tools/update.sh
-npm run rpidist
 sudo reboot now
 ```
 
-To update the local build of Companion v2.0, run the following sequence of commands:
+To update the local build of Companion v2.0 (alpha), run the following sequence of commands:
 ```bash
 git pull
 yarn update
-yarn rpidist
 sudo reboot now
 ```
