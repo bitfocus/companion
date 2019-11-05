@@ -403,3 +403,6 @@
 [submodule "lib/module/joy-playdeck"]
 	path = lib/module/joy-playdeck
 	url = https://github.com/bitfocus/companion-module-joy-playdeck.git
+[submodule "lib/module/avstumpfl-pixera"]
+	path = lib/module/avstumpfl-pixera
+	url = https://github.com/bitfocus/companion-module-avstumpfl-pixera.git
