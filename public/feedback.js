@@ -280,6 +280,10 @@ $(function() {
 							let $opt_num   = $('<input type="number" class="feedback-action-number form-control">');
 							let $opt_range = $("<input type='range' class='feedback-action-number form-control'>");
 							
+							if (option.step !== undefined) {
+								$opt_num.attr('step', option.step);
+								$opt_range.attr('step', option.step);
+							}
 
 							if (option.tooltip !== undefined) {
 								$opt_num.attr('title', option.tooltip);
