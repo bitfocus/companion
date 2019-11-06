@@ -63,6 +63,15 @@ Elgato Emulator is a tool to test and use the setup, even if you don’t have a 
 
 Web Buttons is a way of viewing all your buttons across all pages on a single screen, which may be useful if you want to use a web browser on a tablet to control Companion.
 
+If you would like to just view one page or a select few, you can add a little text to the end of the URL in your browser. Just add **?pages=** and the page numbers you want to see separated by a comma.
+
+**Examples**
+
+- http://10.30.4.60:8000/tablet.html?pages=2  
+	*View only page 2*
+
+- http://10.30.4.60:8000/tablet.html?pages=3,7,12  
+	*View only pages 3, 7, and 12*
 
 
 - - - -
@@ -159,7 +168,7 @@ When a button is pressed and is latched, its header will appear solid.
 
 Each action can be delayed to run a certain number of milliseconds after the button is triggered. Delays can be configured to be *Absolute* (default) or *Relative*, by toggling the checkbox in the button styling section.
 
-**Absolute Delays** 
+**Absolute Delays**
 
 All actions run a certain number of milliseconds from the start of the button press. Actions without a delay start immediately. This is the default behaviour.
 
@@ -199,12 +208,21 @@ There are several internal actions you can add to a button in order to control C
 | -------------------------- | ---- |
 | Enable or disable instance | Allows you to enable or disable a specific instance of a module. |
 | Set surface to page        | Changes a surface/controller (Stream Deck or emulator) to a specific page. |
+| Trigger a device lockout   | Locks out selected streamdeck immediately. |
+| Trigger a device unlock    | Locks out selected streamdeck immediately. |
+| Run shell path             | Runs a shell command locally. |
+| Trigger all devices to unlock immediately   | Unlocks all streamdecks immediately. |
+| Trigger all devices to lock immediately   | Locks all streamdecks immediately. |
 | Increment page number      | Increments the page number of a surface. |
 | Decrement page number      | Decrements the page number of a surface. |
 | Button press and release   | Simulates a button press in a specific page/button on a controller. |
 | Button press               | Simulates holding a button down in a specific page/button on a controller. |
 | Button release             | Simulates releasing a button in a specific page/button on a controller. |
+| Button Text Color          | Changes the color of text on button. |
+| Button Background Color    | Changes the background color on button. |
 | Abort all delayed actions  | Will cancel all delayed actions (those not yet started). |
+| Kill Companion             | Shuts down Companion when its not responding. |
+| Restart Companion          | Closes and restarts Companion. |
 
 
 
@@ -318,6 +336,37 @@ Set the emulator surface to page 23:
 
 Press page 1 bank 2  
 `BANK-PRESS 1 2`
+
+#### OSC Remote control
+
+Remote triggering can be done by sending OSC commands to port <code>12321</code>.</p>
+
+**Commands**
+
+- /press/bank/ <page> <bank>
+*Press and release a button (run both down and up actions)*
+- /press/bank/ <page> <bank> <1>
+*Press the button (run down actions and hold)*
+- /press/bank/ <page> <bank> <0>
+*Release the button (run up actions)*
+- /style/bgcolor/ <page> <bank> <red 0-255> <green 0-255> <blue 0-255>
+*Change background color of button*
+- /style/color/ <page> <bank> <red 0-255> <green 0-255> <blue 0-255>
+*Change color of text on button*
+- /style/text/ <page> <bank> <text>
+*Change text on a button*
+
+
+**Examples**
+
+Press button 5 on page 1 down and hold
+/press/bank/1/5 1
+
+Change button background color of button 5 on page 1 to red
+/style/bgcolor/1/5 255 0 0
+
+Change the text of button 5 on page 1 to ONLINE
+/style/text/1/5 ONLINE
 
 - - - -
 

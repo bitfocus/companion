@@ -1,6 +1,6 @@
 {
   "name": "companion",
-  "version": "1.3.0",
+  "version": "2.0.0",
   "description": "Companion",
   "main": "bitfocus-skeleton/main.js",
   "build": {
@@ -33,9 +33,6 @@
     },
     "files": [
       "**/*",
-      "**/*/*",
-      "**/*/*/*",
-      "**/*/*/*/*",
       "assets/icon.png",
       "assets/trayTemplate.png",
       "assets/trayTemplate@2x.png",
@@ -46,14 +43,18 @@
     ]
   },
   "scripts": {
-    "yarn": "./tools/yarn.sh",
-    "start": "./tools/build_writefile.sh && ./bitfocus-skeleton/start.sh",
+    "prod": "./tools/build_writefile.sh && ./bitfocus-skeleton/start.sh",
+    "dev": "./tools/build_writefile.sh && DEVELOPER=1 ./bitfocus-skeleton/start.sh",
+    "update": "./tools/update.sh",
     "pack": "electron-builder --dir",
     "dist": "rm -rf electron-output && electron-builder",
+    "testprod": "./node_modules/electron/cli.js .",
     "macdist": "rm -rf electron-output && electron-builder --mac",
     "windist": "rm -rf electron-output && electron-builder --win",
     "lindist": "rm -rf electron-output && electron-builder --linux tar.gz",
-    "rpidist": "rm -rf electron-output && electron-builder --armv7l --linux tar.gz"
+    "rpidist": "rm -rf electron-output && electron-builder --armv7l --linux tar.gz",
+    "start": "yarn run",
+    "test": "mocha"
   },
   "repository": "https://github.com/bitfocus/companion",
   "keywords": [
@@ -63,8 +64,11 @@
   "author": "Bitfocus AS",
   "license": "MIT",
   "devDependencies": {
+    "chai": "^4.2.0",
+    "chai-fs": "^2.0.0",
     "electron": "^2.0.8",
-    "electron-builder": "^20.10.0"
+    "electron-builder": "20.10.0",
+    "mocha": "^6.1.4"
   },
   "dependencies": {
     "@coreui/coreui": "^2.0.0-rc.2",
@@ -77,19 +81,22 @@
     "check-ip": "^1.1.1",
     "debug": "^4.1.1",
     "electron-debug": "^1.5.0",
-    "elgato-stream-deck-clean": "^1.0.0",
-    "elgato-stream-deck-clean-mini": "https://github.com/bitfocus/elgato-stream-deck-clean-mini.git",
+    "electron-rpc": "^2.0.1",
+    "elgato-stream-deck-clean": "^1.0.1",
+    "elgato-stream-deck-clean-mini": "^1.0.1",
+    "elgato-stream-deck-clean-xl": "1.0.8",
     "express": "^4.16.3",
     "flag-icon-css": "3.0.0",
     "font-awesome": "4.7.0",
     "fs-extra": "^7.0.0",
-    "infinitton-idisplay": "^1.0.4",
-    "jquery": "3.3.1",
+    "infinitton-idisplay": "^1.0.5",
+    "jquery": ">=3.4.0",
     "json-parser": "^1.1.5",
     "lodash": "^4.17.10",
     "marked": "^0.6.0",
     "mkdirp": "^0.5.1",
     "moment": "^2.22.2",
+    "network": "^0.4.1",
     "node-rest-client": "^3.1.0",
     "opencollective": "^1.0.3",
     "opencollective-postinstall": "^2.0.1",
@@ -100,11 +107,13 @@
     "pngjs": "^3.3.3",
     "popper.js": "1.14.3",
     "read-package-json": "^2.0.13",
+    "select2": "4.0.3",
     "shortid": "^2.2.8",
     "simple-line-icons": "2.4.1",
     "socket.io": "^2.1.0",
     "socket.io-client": "^2.1.0",
     "strip-ansi": "^5.2.0",
+    "tributejs": "github:peschuster/tribute",
     "websocket": "^1.0.28"
   },
   "collective": {

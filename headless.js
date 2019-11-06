@@ -5,7 +5,7 @@ var path = require("path");
 var system = main(true);
 var os = require('os');
 
-process.env['DEBUG'] = '-*';
+console.log("Starting");
 
 function packageinfo() {
 	var self = this;
@@ -38,13 +38,20 @@ if (process.argv.length < 3) {
 		console.error("");
 		console.error("Example: ./headless.js eth0");
 		process.exit(1);
-		
+
 }
 
 system.emit('skeleton-info', 'appVersion', pkg.version );
 system.emit('skeleton-info', 'appBuild', build.trim() );
 system.emit('skeleton-info', 'appName', pkg.description);
 system.emit('skeleton-info', 'configDir', process.env[(process.platform == 'win32') ? 'USERPROFILE' : 'HOME'] );
+
+if (process.env.COMPANION_CONFIG_BASEDIR !== undefined) {
+	system.emit('skeleton-info', 'configDir', process.env.COMPANION_CONFIG_BASEDIR);
+}
+else {
+	system.emit('skeleton-info', 'configDir', process.env[(process.platform == 'win32') ? 'USERPROFILE' : 'HOME'] );
+}
 
 var port = '8000';
 
@@ -68,6 +75,7 @@ if (process.argv[2] in ifaces) {
 				system.emit('skeleton-bind-ip', address);
 				system.emit('skeleton-bind-port', port);
 				system.emit('skeleton-ready');
+				console.log("Started");
 		}, 1000);
 }
 else {

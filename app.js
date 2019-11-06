@@ -15,11 +15,16 @@
  *
  */
 
-process.env['DEBUG'] = '*,-websocket*,-express*,-engine*,-socket.io*,-send*,-db,-NRC*,-follow-redirects,-electron-timer-fix';
+
+if (process.env.DEVELOPER !== undefined) {
+	process.env['DEBUG'] = '*,-websocket*,-express*,-engine*,-socket.io*,-send*,-db,-NRC*,-follow-redirects,-electron-timer-fix';
+}
 
 // Fix timers in electron
 require('./electron-timer-fix').fix();
 
+global.MAX_BUTTONS = 32;
+global.MAX_BUTTONS_PER_ROW = 8;
 
 var EventEmitter = require('events');
 var system = new EventEmitter();
@@ -45,7 +50,7 @@ system.on('skeleton-info', function(key, val) {
 		mkdirp(cfgDir, function(err) {
 			debug("mkdirp",cfgDir,err);
 			config = new (require('./bitfocus-libs/config'))(system, cfgDir, {
-				http_port: 8000,
+				http_port: 8888,
 				bind_ip: "127.0.0.1",
 				start_minimised: false,
 			});
@@ -70,6 +75,23 @@ system.on('config_loaded', function(config) {
 
 system.on('exit', function() {
 	console.log("somewhere, the system wants to exit. kthxbai");
+
+	system.emit('instance_getall', function(instances, active) {
+		try {
+			for (var key in active) {
+				if (instances[key].label !== 'internal') {
+					try {
+						active[key].destroy();
+					} catch(e) {
+						console.log("Could not destroy",instances[key].label);
+					}
+				}
+			}
+		} catch(e) {
+			console.log("Could not destroy all instances");
+		}
+	});
+
 	setImmediate(function(){
 		process.exit();
 	});
@@ -138,10 +160,10 @@ system.on('skeleton-ready', function() {
 	var appRoot    = require('app-root-path');
 	var variable   = require('./lib/variable')(system);
 	var feedback   = require('./lib/feedback')(system);
+	var action     = require('./lib/action')(system);
 	var bank       = require('./lib/bank')(system);
 	var elgatoDM   = require('./lib/elgato_dm')(system);
 	var preview    = require('./lib/preview')(system);
-	var action     = require('./lib/action')(system);
 	var instance   = require('./lib/instance')(system);
 	var osc        = require('./lib/osc')(system);
 	var server_api = require('./lib/server_api')(system);
@@ -155,6 +177,8 @@ system.on('skeleton-ready', function() {
 	var tablet     = require('./lib/tablet')(system);
 	var satellite  = require('./lib/satellite_server')(system);
 	var ws_api     = require('./lib/ws_api')(system);
+
+	system.emit('modules_loaded');
 
 	system.on('exit', function() {
 		elgatoDM.quit();

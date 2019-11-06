@@ -343,9 +343,129 @@
 [submodule "lib/module/barco-matrixpro"]
 	path = lib/module/barco-matrixpro
 	url = https://github.com/bitfocus/companion-module-barco-matrixpro.git
-[submodule "lib/module/analogway-livecore-custom"]
-	path = lib/module/analogway-livecore-custom
-	url = https://github.com/bitfocus/companion-module-analogway-livecore-custom.git
 [submodule "lib/module/audivero-unityintercom"]
 	path = lib/module/audivero-unityintercom
 	url = https://github.com/bitfocus/companion-module-audivero-unityintercom.git
+[submodule "lib/module/draco-tera"]
+	path = lib/module/draco-tera
+	url = https://github.com/bitfocus/companion-module-draco-tera.git
+[submodule "lib/module/roland-xs42h"]
+	path = lib/module/roland-xs42h
+	url = https://github.com/bitfocus/companion-module-roland-xs42h.git
+[submodule "lib/module/roland-xs84h"]
+	path = lib/module/roland-xs84h
+	url = https://github.com/bitfocus/companion-module-roland-xs84h.git
+[submodule "lib/module/extron-smx"]
+	path = lib/module/extron-smx
+	url = https://github.com/bitfocus/companion-module-extron-smx.git
+[submodule "lib/module/metus-ingest"]
+	path = lib/module/metus-ingest
+	url = https://github.com/bitfocus/companion-module-metus-ingest.git
+[submodule "lib/module/extron-ipl-t-pcs4"]
+	path = lib/module/extron-ipl-t-pcs4
+	url = https://github.com/bitfocus/companion-module-extron-ipl-t-pcs4.git
+[submodule "lib/module/extron-smp351"]
+	path = lib/module/extron-smp351
+	url = https://github.com/bitfocus/companion-module-extron-smp351.git
+[submodule "lib/module/zenvideo-ndirouter"]
+	path = lib/module/zenvideo-ndirouter
+	url = https://github.com/bitfocus/companion-module-zenvideo-ndirouter.git
+[submodule "lib/module/obsidiancontrol-onyx"]
+	path = lib/module/obsidiancontrol-onyx
+	url = https://github.com/bitfocus/companion-module-obsidiancontrol-onyx.git
+[submodule "lib/module/aja-kumo"]
+	path = lib/module/aja-kumo
+	url = https://github.com/bitfocus/companion-module-aja-kumo.git
+[submodule "lib/module/techministry-midirelay"]
+	path = lib/module/techministry-midirelay
+	url = https://github.com/bitfocus/companion-module-techministry-midirelay.git
+[submodule "lib/module/bmd-multiview16"]
+	path = lib/module/bmd-multiview16
+	url = https://github.com/bitfocus/companion-module-bmd-multiview16.git
+[submodule "lib/module/roland-v600uhd"]
+	path = lib/module/roland-v600uhd
+	url = https://github.com/bitfocus/companion-module-roland-v600uhd.git
+[submodule "lib/module/vaddio-ptz"]
+	path = lib/module/vaddio-ptz
+	url = https://github.com/bitfocus/companion-module-vaddio-ptz.git
+[submodule "lib/module/analogway-vertige"]
+	path = lib/module/analogway-vertige
+	url = https://github.com/bitfocus/companion-module-analogway-vertige.git
+[submodule "lib/module/epiphan-pearl"]
+	path = lib/module/epiphan-pearl
+	url = https://github.com/bitfocus/companion-module-epiphan-pearl.git
+[submodule "lib/module/extron-in1604"]
+	path = lib/module/extron-in1604
+	url = https://github.com/bitfocus/companion-module-extron-in1604.git
+[submodule "lib/module/blackdiamondvideo-phantom800"]
+	path = lib/module/blackdiamondvideo-phantom800
+	url = https://github.com/bitfocus/companion-module-blackdiamondvideo-phantom800.git
+[submodule "lib/module/wyrestorm-sw0402mv"]
+	path = lib/module/wyrestorm-sw0402mv
+	url = https://github.com/bitfocus/companion-module-wyrestorm-sw0402mv.git
+[submodule "lib/module/dalite-scb"]
+	path = lib/module/dalite-scb
+	url = https://github.com/bitfocus/companion-module-dalite-scb.git
+[submodule "lib/module/pixap-pixtimerpro"]
+	path = lib/module/pixap-pixtimerpro
+	url = https://github.com/bitfocus/companion-module-pixap-pixtimerpro.git
+[submodule "lib/module/dexon-dimax"]
+	path = lib/module/dexon-dimax
+	url = https://github.com/bitfocus/companion-module-dexon-dimax.git
+[submodule "lib/module/dexon-divip"]
+	path = lib/module/dexon-divip
+	url = https://github.com/bitfocus/companion-module-dexon-divip.git
+[submodule "lib/module/media-player-classic"]
+	path = lib/module/media-player-classic
+	url = https://github.com/bitfocus/companion-module-media-player-classic.git
+[submodule "lib/module/extron-smp111"]
+	path = lib/module/extron-smp111
+	url = https://github.com/bitfocus/companion-module-extron-smp111.git
+[submodule "lib/module/qlab-advance"]
+	path = lib/module/qlab-advance
+	url = https://github.com/bitfocus/companion-module-qlab-advance.git
+[submodule "lib/module/sonoran-coyote"]
+	path = lib/module/sonoran-coyote
+	url = https://github.com/bitfocus/companion-module-sonoran-coyote.git
+[submodule "lib/module/dexon-matrix"]
+	path = lib/module/dexon-matrix
+	url = https://github.com/bitfocus/companion-module-dexon-matrix.git
+[submodule "lib/module/analogway-livepremier"]
+	path = lib/module/analogway-livepremier
+	url = https://github.com/bitfocus/companion-module-analogway-livepremier.git
+[submodule "lib/module/joy-playdeck"]
+	path = lib/module/joy-playdeck
+	url = https://github.com/bitfocus/companion-module-joy-playdeck.git
+[submodule "lib/module/optoma-z28s"]
+	path = lib/module/optoma-z28s
+	url = https://github.com/bitfocus/companion-module-optoma-z28s.git
+[submodule "lib/module/novastar-vx4s"]
+	path = lib/module/novastar-vx4s
+	url = https://github.com/bitfocus/companion-module-novastar-vx4s.git
+[submodule "lib/module/avstumpfl-pixera"]
+	path = lib/module/avstumpfl-pixera
+	url = https://github.com/bitfocus/companion-module-avstumpfl-pixera.git
+[submodule "lib/module/avproconnect-acmx1616-auhd"]
+	path = lib/module/avproconnect-acmx1616-auhd
+	url = https://github.com/bitfocus/companion-module-avproconnect-acmx1616-auhd.git
+[submodule "lib/module/sharp-tv"]
+	path = lib/module/sharp-tv
+	url = https://github.com/bitfocus/companion-module-sharp-tv.git
+[submodule "lib/module/octava-pro-dsx"]
+	path = lib/module/octava-pro-dsx
+	url = https://github.com/bitfocus/companion-module-octava-pro-dsx.git
+[submodule "lib/module/sain-smart-relay"]
+	path = lib/module/sain-smart-relay
+	url = https://github.com/bitfocus/companion-module-sain-smart-relay.git
+[submodule "lib/module/shure-wireless"]
+	path = lib/module/shure-wireless
+	url = https://github.com/bitfocus/companion-module-shure-wireless.git
+[submodule "lib/module/qsys-remote-control"]
+	path = lib/module/qsys-remote-control
+	url = https://github.com/bitfocus/companion-module-qsys-remote-control.git
+[submodule "lib/module/slack-webhooks"]
+	path = lib/module/slack-webhooks
+	url = https://github.com/bitfocus/companion-module-slack-webhooks.git
+[submodule "lib/module/roland-vr50hd-mk2"]
+	path = lib/module/roland-vr50hd-mk2
+	url = https://github.com/bitfocus/companion-module-roland-vr50hd-mk2.git

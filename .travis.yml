@@ -20,6 +20,7 @@ env:
 
 notifications:
     slack: bitfocusio:Kf9NGYG60SzXkZ2tJO8wIknp
+    webhooks: https://webhook.bitfocus.io/travis
 
 cache:
   directories:
@@ -28,14 +29,12 @@ cache:
   - $HOME/.cache/electron-builder
   - $HOME/.npm/_prebuilds
   - $HOME/.cache/snapcraft
+  - $HOME/Library/Caches/Homebrew
+  - /usr/local/Homebrew
 
 before_install:
   - curl -L https://yarnpkg.com/latest.tar.gz | tar xvz && mv yarn-v* $HOME/.yarn
   - export PATH="$HOME/.yarn/bin:$PATH"
-  - git fetch --unshallow
-  - git submodule sync
-  - git submodule init
-  - git submodule update
 
 install:
   - ./tools/build_writefile.sh
@@ -49,13 +48,15 @@ script:
         -v ~/.cache/electron:/root/.cache/electron \
         -v ~/.cache/electron-builder:/root/.cache/electron-builder \
         -v ~/.cache/snapcraft:/root/.cache/snapcraft \
-        haakonn/electron-wine:v1 \
-        /bin/bash -c "apt-get update && apt-get install -y git libudev-dev ; tools/yarn.sh ; npm run lindist";
+        haakonn/companion-build:2.0 \
+        /bin/bash -c "yarn update ; yarn lindist ; yarn test";
     fi
   - |
     if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
-      tools/yarn.sh
-      npm run dist
+      brew install nasm cmake
+      yarn update
+      yarn dist
+      yarn test
     fi
   - ./tools/build_rename_git.sh
 
