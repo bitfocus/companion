@@ -49,6 +49,7 @@ For checking known bugs or reporting of potential bugs, please use the [issue sy
 * LW3 (Lightware) v1.0.0 by Håkon Nessjøen
 * Listener (Octopus) v1.0.0 by Jeffrey Davidsz
 * LiveCore (Analog Way) v1.1.1 by Dorian Meid
+* LivePremier (Analog Way) v1.0.2 by Dorian Meid
 * MRP / Multicon (Nevion) v1.0.0 by William Viker
 * MagicQ (UDP) (ChamSys) v1.0.0 by Per Røine
 * MagicQ (ChamSys) v1.0.0 by Per Røine
@@ -87,7 +88,7 @@ For checking known bugs or reporting of potential bugs, please use the [issue sy
 * VLC (VideoLAN) v1.0.0 by Håkon Nessjøen
 * VP-747 (Kramer) v1.0.0 by Per Røine
 * Videohub (Blackmagic Design) v1.0.2 by William Viker
-* Watchout Production (Dataton) v1.0.0 by Dorian Meid
+* Watchout Production and Display Cluster (Dataton) v1.2.0 by Dorian Meid
 * X32/M32 (Behringer/Midas) v1.0.0 by Per Roine
 * XR/MR (Behringer/Midas) v1.0.0 by Per Roine
 * iTach IP2CC (Global Cache) v1.0.0 by Casey Selph

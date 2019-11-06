@@ -666,3 +666,14 @@ h4 {
 	color: #846314;
 	border-color: #fff2cf;
 }
+
+/* Style for autocomplete of variable */
+.tribute-container li span {
+    display: block;
+}
+.tribute-container li span.var-label {
+    overflow: hidden;
+	font-weight: inherit;
+	text-overflow: ellipsis;
+  	white-space: nowrap;
+}

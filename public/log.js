@@ -45,7 +45,7 @@ $(function() {
 		if (state === undefined) {
 			state = config[level];
 		} else {
-			config[level] = state;			
+			config[level] = state;
 		}
 
 		localstore.setItem("debug_config", JSON.stringify(config));
@@ -57,13 +57,13 @@ $(function() {
 	socket.on('log', function(time,source,level,message) {
 
 		$('.btn-clear-log').css('opacity', 1);
-		
+
 		var time_format = moment(time).format('DD. HH:mm:ss')
 		var state = log_config(level);
 
 		var $line = $("<div class='log-line log-type-"+level+"'>"+time_format+" <strong>"+source+"</strong>: "+message+"</div>")
 
-		if (state) {
+		if (state || level == 'error') {
 			$line.show();
 		} else {
 			$line.hide();
@@ -88,11 +88,13 @@ $(function() {
 
 	for (var dt in log_types) {
 		(function(dtype) {
+
 			if (log_config(dtype)) {
 				$('.logbuttons .btn-'+dtype).css('opacity', 1);
 			} else {
-				$('.logbuttons .btn-'+dtype).css('opacity', 0.2);				
+				$('.logbuttons .btn-'+dtype).css('opacity', 0.2);
 			}
+
 			$('.logbuttons .btn-'+dtype).click(function() {
 				log_config(dtype, !log_config(dtype));
 				if (log_config(dtype)) {

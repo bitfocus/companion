@@ -4,6 +4,12 @@ $(function() {
 	socket.emit('feedback_get_definitions', page, bank);
 
 	var $aba = $("#addBankFeedback");
+	$aba.select2({
+		theme: 'option',
+		width: '100%',
+		minimumResultsForSearch: 9
+	});
+
 	$aba.change(function() {
 		socket.emit('bank_addFeedback', page, bank, $(this).val() );
 		$("#addBankFeedback").val($("#addBankFeedback option:first").val());
@@ -285,6 +291,11 @@ $(function() {
 								.attr('min', option.min)
 								.attr('max', option.max)
 								.prop('required', option.range || option.required === true);
+
+							// if options never been stored on this action
+							if (feedback.options === undefined) {
+								feedback.options = {};
+							}
 
 							// if this option never has been saved, set default
 							if (feedback.options[option.id] === undefined) {

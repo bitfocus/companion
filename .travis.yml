@@ -20,6 +20,7 @@ env:
 
 notifications:
     slack: bitfocusio:Kf9NGYG60SzXkZ2tJO8wIknp
+    webhooks: https://webhook.bitfocus.io/travis
 
 cache:
   directories:
@@ -34,10 +35,6 @@ cache:
 before_install:
   - curl -L https://yarnpkg.com/latest.tar.gz | tar xvz && mv yarn-v* $HOME/.yarn
   - export PATH="$HOME/.yarn/bin:$PATH"
-  - git fetch --unshallow
-  - git submodule sync
-  - git submodule init
-  - git submodule update
 
 install:
   - ./tools/build_writefile.sh

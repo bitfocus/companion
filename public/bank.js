@@ -56,6 +56,7 @@ function hex2int(hex) {
 
 var page = 1;
 var bank = undefined;
+var variables_autocomplete = undefined;
 
 
 $(function() {
@@ -65,6 +66,64 @@ $(function() {
 
 	$("#editbankli").hide();
 	selected_bank = {};
+
+	variables_autocomplete = new Tribute({
+		values: [],
+		trigger: '$(',
+
+		// function called on select that returns the content to insert
+		selectTemplate: function (item) {
+		  return '$(' + item.original.value + ')';
+		},
+	  
+		// template for displaying item in menu
+		menuItemTemplate: function (item) {
+		  return '<span class="var-name">' + item.original.value + '</span><span class="var-label">' + item.original.label + '</span>';
+		},
+	});
+
+	function build_autocomplete_item(instance, item) {
+		var variable_name = instance + ':' + item.name;
+		return { key: variable_name + ')', value: variable_name, label: item.label };
+	}
+
+	// Listen on initial variable definitions broadcast
+	socket.on('variable_instance_definitions_get:result', function (err, data) {
+		if (data) {
+			var auto_complete_list = [];
+			for (var instance in data) {
+				for (var index in data[instance]) {
+					var item = build_autocomplete_item(instance, data[instance][index]);
+					auto_complete_list.push(item);
+				}
+			}
+
+			variables_autocomplete.append(0, auto_complete_list, true);
+		}
+	});
+
+	// Listen on instance enable/disable events
+	socket.on('variable_instance_definitions_set', function (instance, data) {
+		if (instance && data) {
+			var auto_complete_list = variables_autocomplete.collection[0].values;
+
+			// remove existing variables of instance
+			var index = 0;
+			while (index < auto_complete_list.length) {
+				if (auto_complete_list[index].value.startsWith(instance + ':')) {
+					auto_complete_list.splice(index, 1);
+				} else {
+					index += 1;
+				}
+			}
+
+			// add new variables
+			for (var index in data) {
+				var item = build_autocomplete_item(instance, data[index]);
+				auto_complete_list.push(item);
+			}
+		}
+	});
 
 	function bank_preview_page(_page) {
 
@@ -341,6 +400,9 @@ $(function() {
 		$(".active_field[data-special=\"color\"]").click(change);
 		$(".active_field[data-special=\"alignment\"]").click(change);
 
+		var text_field = $("input[data-fieldid=\"text\"]");
+		variables_autocomplete.attach(text_field);
+		text_field.on('tribute-replaced', change);
 	}
 
 	$(window).keyup(function(e) {
@@ -404,13 +466,21 @@ $(function() {
 
 
 	$(window).keydown(function(e) {
-/*		if (e.keyCode == 16 && function_state === null) {
+		if (e.keyCode == 16 && function_state === null) {
 			buttons_hot = true;
 			$(".border").addClass('bank-armed');
 			$('#functionkeys').slideUp(80);
-		}*/
+		}
 
-	})
+	});
+	$(window).keyup(function(e) {
+		if (e.keyCode == 16 && function_state === null) {
+			buttons_hot = false;
+			$(".border").removeClass('bank-armed');
+			$('#functionkeys').slideDown(80);
+		}
+
+	});
 
 
 	$(".change_style").click(function() {
@@ -656,7 +726,6 @@ $(function() {
 		if (ww < 597) {
 			var wmin = ww - 374;
 			var p = remap(wmin, 0, 222, 44, 72);
-			console.log("XX", wmin, "---- ", p);
 			$('.border canvas').css("width", p);
 			$('.border canvas').css("height", p);
 
@@ -684,6 +753,10 @@ $(function() {
 		for (var bank = 1; bank <= MAX_BUTTONS; bank++) {
 
 			var $div = $('<div class="bank buttonbankwidth"><div class="border" data-bank="' + bank + '" data-page="' + page + '"><canvas width=72 height=72 id="bank_' + page + '_' + bank + '"></canvas></div></div>');
+
+			if ([1,5,9,13,17,18,19,20,21].includes(bank)) {
+				$div.css('backgroundColor', '#00000050');
+			}
 
 			$div.find('.border').droppable({
 				activeClass: 'drophere',

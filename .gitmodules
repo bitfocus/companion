@@ -385,3 +385,87 @@
 [submodule "lib/module/roland-v600uhd"]
 	path = lib/module/roland-v600uhd
 	url = https://github.com/bitfocus/companion-module-roland-v600uhd.git
+[submodule "lib/module/vaddio-ptz"]
+	path = lib/module/vaddio-ptz
+	url = https://github.com/bitfocus/companion-module-vaddio-ptz.git
+[submodule "lib/module/analogway-vertige"]
+	path = lib/module/analogway-vertige
+	url = https://github.com/bitfocus/companion-module-analogway-vertige.git
+[submodule "lib/module/epiphan-pearl"]
+	path = lib/module/epiphan-pearl
+	url = https://github.com/bitfocus/companion-module-epiphan-pearl.git
+[submodule "lib/module/extron-in1604"]
+	path = lib/module/extron-in1604
+	url = https://github.com/bitfocus/companion-module-extron-in1604.git
+[submodule "lib/module/blackdiamondvideo-phantom800"]
+	path = lib/module/blackdiamondvideo-phantom800
+	url = https://github.com/bitfocus/companion-module-blackdiamondvideo-phantom800.git
+[submodule "lib/module/wyrestorm-sw0402mv"]
+	path = lib/module/wyrestorm-sw0402mv
+	url = https://github.com/bitfocus/companion-module-wyrestorm-sw0402mv.git
+[submodule "lib/module/dalite-scb"]
+	path = lib/module/dalite-scb
+	url = https://github.com/bitfocus/companion-module-dalite-scb.git
+[submodule "lib/module/pixap-pixtimerpro"]
+	path = lib/module/pixap-pixtimerpro
+	url = https://github.com/bitfocus/companion-module-pixap-pixtimerpro.git
+[submodule "lib/module/dexon-dimax"]
+	path = lib/module/dexon-dimax
+	url = https://github.com/bitfocus/companion-module-dexon-dimax.git
+[submodule "lib/module/dexon-divip"]
+	path = lib/module/dexon-divip
+	url = https://github.com/bitfocus/companion-module-dexon-divip.git
+[submodule "lib/module/media-player-classic"]
+	path = lib/module/media-player-classic
+	url = https://github.com/bitfocus/companion-module-media-player-classic.git
+[submodule "lib/module/extron-smp111"]
+	path = lib/module/extron-smp111
+	url = https://github.com/bitfocus/companion-module-extron-smp111.git
+[submodule "lib/module/qlab-advance"]
+	path = lib/module/qlab-advance
+	url = https://github.com/bitfocus/companion-module-qlab-advance.git
+[submodule "lib/module/sonoran-coyote"]
+	path = lib/module/sonoran-coyote
+	url = https://github.com/bitfocus/companion-module-sonoran-coyote.git
+[submodule "lib/module/dexon-matrix"]
+	path = lib/module/dexon-matrix
+	url = https://github.com/bitfocus/companion-module-dexon-matrix.git
+[submodule "lib/module/analogway-livepremier"]
+	path = lib/module/analogway-livepremier
+	url = https://github.com/bitfocus/companion-module-analogway-livepremier.git
+[submodule "lib/module/joy-playdeck"]
+	path = lib/module/joy-playdeck
+	url = https://github.com/bitfocus/companion-module-joy-playdeck.git
+[submodule "lib/module/optoma-z28s"]
+	path = lib/module/optoma-z28s
+	url = https://github.com/bitfocus/companion-module-optoma-z28s.git
+[submodule "lib/module/novastar-vx4s"]
+	path = lib/module/novastar-vx4s
+	url = https://github.com/bitfocus/companion-module-novastar-vx4s.git
+[submodule "lib/module/avstumpfl-pixera"]
+	path = lib/module/avstumpfl-pixera
+	url = https://github.com/bitfocus/companion-module-avstumpfl-pixera.git
+[submodule "lib/module/avproconnect-acmx1616-auhd"]
+	path = lib/module/avproconnect-acmx1616-auhd
+	url = https://github.com/bitfocus/companion-module-avproconnect-acmx1616-auhd.git
+[submodule "lib/module/sharp-tv"]
+	path = lib/module/sharp-tv
+	url = https://github.com/bitfocus/companion-module-sharp-tv.git
+[submodule "lib/module/octava-pro-dsx"]
+	path = lib/module/octava-pro-dsx
+	url = https://github.com/bitfocus/companion-module-octava-pro-dsx.git
+[submodule "lib/module/sain-smart-relay"]
+	path = lib/module/sain-smart-relay
+	url = https://github.com/bitfocus/companion-module-sain-smart-relay.git
+[submodule "lib/module/shure-wireless"]
+	path = lib/module/shure-wireless
+	url = https://github.com/bitfocus/companion-module-shure-wireless.git
+[submodule "lib/module/qsys-remote-control"]
+	path = lib/module/qsys-remote-control
+	url = https://github.com/bitfocus/companion-module-qsys-remote-control.git
+[submodule "lib/module/slack-webhooks"]
+	path = lib/module/slack-webhooks
+	url = https://github.com/bitfocus/companion-module-slack-webhooks.git
+[submodule "lib/module/roland-vr50hd-mk2"]
+	path = lib/module/roland-vr50hd-mk2
+	url = https://github.com/bitfocus/companion-module-roland-vr50hd-mk2.git

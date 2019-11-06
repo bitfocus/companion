@@ -414,6 +414,10 @@ $(function() {
 				data[$this.data('id')] = $this.val();
 			}
 
+			else if ($this.data('type') == 'dropdown-native') {
+				data[$this.data('id')] = $this.val();
+			}
+
 			else if ($this.data('type') == 'checkbox') {
 				data[$this.data('id')] = $this.prop('checked');
 			}
@@ -594,7 +598,80 @@ $(function() {
 				$sm.append($inp);
 			}
 
-			else if (field.type == 'dropdown') {
+			else if (field.type === 'dropdown') {
+
+				var $opt_input = $("<select class='instanceConfigField' data-type='"+field.type+"' data-id='"+field.id+"'></select>");
+				$opt_input.data('valid', true);
+				if (field.tooltip !== undefined) {
+					$opt_input.attr('title', field.tooltip);
+				}
+
+				$sm.append($opt_input);
+
+				var selectoptions = {
+					theme: 'option',
+					width: '100%',
+					multiple: false,
+					tags: false,
+					maximumSelectionLength: 0,
+					minimumResultsForSearch: -1
+				};
+
+				if (field.multiple === true) {
+					selectoptions.multiple = true;
+				}
+
+				if (typeof field.minChoicesForSearch === 'number' && field.minChoicesForSearch >=0) {
+					selectoptions.minimumResultsForSearch = field.minChoicesForSearch;
+				}
+
+				if (typeof field.maxSelection === 'number' && field.maxSelection >0) {
+					selectoptions.maximumSelectionLength = field.maxSelection;
+				}
+
+				if (field.tags === true) {
+					selectoptions.tags = true;
+					if (typeof field.regex !== 'undefined') {
+						var flags = field.regex.replace(/.*\/([gimy]*)$/, '$1');
+						var pattern = field.regex.replace(new RegExp('^/(.*?)/'+flags+'$'), '$1');
+						let regex = new RegExp(pattern, flags);
+						selectoptions.createTag = function (params) {
+							if (regex.test(params.term) === false) {
+								return null;
+							}
+
+							return {
+								id: params.term,
+								text: params.term
+							}
+						};
+					}
+
+				}
+
+				$opt_input.select2(selectoptions);
+
+				if (field.multiple === true && typeof field.minSelection === 'number' && field.minSelection >0) {
+					let minsel = field.minSelection + 1;
+					$opt_input.on('select2:unselecting', function (e) {
+						if ($('.select2-selection__choice').length < minsel) {
+							return false;
+						}
+					});
+				}
+
+				for (var x in field.choices) {
+					var newOption = new Option(field.choices[x].label, field.choices[x].id, false, false);
+					$opt_input.append(newOption);
+				}
+
+				// update the select2 element
+				$opt_input.val(field.default);
+				$opt_input.trigger('change');
+			}
+
+
+			else if (field.type == 'dropdown-native') {
 				var $inp = $("<select class='form-control instanceConfigField' data-type='"+field.type+"' data-id='"+field.id+"'>");
 
 				if (field.tooltip !== undefined) {
@@ -677,10 +754,36 @@ $(function() {
 
 				if (type == 'checkbox') {
 					$this.prop('checked', config[key]);
+
 				} else if (type == 'number') {
 					$this.val(config[key]);
 					// Make sure the value returned from the instance is valid
 					validateNumericField($this);
+
+				} else if (type === 'dropdown') {
+
+					// Get selected values and store them into an array
+					var selections = [];
+					if (typeof config[key] === 'string' || typeof config[key] === 'number') {
+						selections.push(config[key]);
+					}
+					else if (Array.isArray(config[key])) {
+						selections = config[key];
+					}
+
+					// Check if dropdown has all the selected options, if not create
+					for (var sel in selections) {
+						console.log('check for option', selections[sel], 'find', $this.find('option[value="' + selections[sel] + '"]'));
+						if ($this.find('option[value="' + selections[sel] + '"]').length < 1) {
+							var newOption = new Option(selections[sel], selections[sel], true, true);
+							$this.append(newOption).trigger('change');
+							console.log('not found, appending');
+						}
+					}
+
+					// Set stored selection (works with single values and arrays)
+					$this.val(config[key]);
+
 				} else {
 					$this.val(config[key]);
 				}
@@ -696,7 +799,7 @@ $(function() {
 		$brow.append($bcontainer);
 
 		$('#config_save').remove();
-		$('#instanceConfig').append($brow);
+		$('#instanceConfigButtons').append($brow);
 
 		$button.click(function () {
 			saveConfig(this, id);
