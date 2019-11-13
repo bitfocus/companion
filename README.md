@@ -17,9 +17,7 @@
 For checking known bugs or reporting of potential bugs, please use the [issue system](https://github.com/bitfocus/companion/issues) on GitHub
 
 **Donations**
-* [![Backers on Open Collective](https://opencollective.com/companion/backers/badge.svg)](#backers)
-* [![Sponsors on Open Collective](https://opencollective.com/companion/sponsors/badge.svg)](#sponsors)
-* https://opencollective.com/companion
+* https://donorbox.org/bitfocus-opensource
 
 ## Modules (Supported devices/software)
 * GrandMA2 (MA Lighting) v1.0.0 by William Viker
@@ -140,14 +138,14 @@ This project exists thanks to all the people who contribute.
 
 ## Backers
 
-Thank you to all our backers! 🙏 [[Become a backer](https://opencollective.com/companion#backer)]
+Thank you to all our backers! 🙏 [[Become a backer](https://donorbox.org/bitfocus-opensource)]
 
 <a href="https://opencollective.com/companion#backers" target="_blank"><img src="https://opencollective.com/companion/backers.svg?width=890"></a>
 
 
 ## Sponsors
 
-Support this project by becoming a sponsor. Your logo will show up here with a link to your website. [[Become a sponsor](https://opencollective.com/companion#sponsor)]
+Support this project by becoming a sponsor. Your logo will show up here with a link to your website. [[Become a sponsor](https://donorbox.org/bitfocus-opensource)]
 
 <a href="https://opencollective.com/companion/sponsor/0/website" target="_blank"><img src="https://opencollective.com/companion/sponsor/0/avatar.svg"></a>
 <a href="https://opencollective.com/companion/sponsor/1/website" target="_blank"><img src="https://opencollective.com/companion/sponsor/1/avatar.svg"></a>
