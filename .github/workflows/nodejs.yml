@@ -27,6 +27,7 @@ jobs:
       uses: actions/upload-artifact@v1.0.0
       with:
         name: ubuntu-build
+        path: electron-output/
   
   macbuild:
 
@@ -52,6 +53,7 @@ jobs:
       uses: actions/upload-artifact@v1.0.0
       with:
         name: mac-build
+        path: electron-output/
 
   winbuild:
 
@@ -77,3 +79,4 @@ jobs:
       uses: actions/upload-artifact@v1.0.0
       with:
         name: windows-build
+        path: electron-output/
