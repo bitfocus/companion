@@ -23,3 +23,57 @@ jobs:
         yarn run lindist
       env:
         CI: true
+    - name: Upload Artifacts
+      uses: actions/upload-artifact@v1.0.0
+      with:
+        name: ubuntu-build
+  
+  macbuild:
+
+    runs-on: macOS-latest
+
+    strategy:
+      matrix:
+        node-version: [8.12]
+
+    steps:
+    - uses: actions/checkout@v1
+    - name: Use Node.js ${{ matrix.node-version }}
+      uses: actions/setup-node@v1
+      with:
+        node-version: ${{ matrix.node-version }}
+    - name: npm install, build, and test
+      run: |
+        yarn update
+        yarn run macdist
+      env:
+        CI: true
+    - name: Upload artifacts
+      uses: actions/upload-artifact@v1.0.0
+      with:
+        name: mac-build
+
+  winbuild:
+
+    runs-on: windows-latest
+
+    strategy:
+      matrix:
+        node-version: [8.12]
+
+    steps:
+    - uses: actions/checkout@v1
+    - name: Use Node.js ${{ matrix.node-version }}
+      uses: actions/setup-node@v1
+      with:
+        node-version: ${{ matrix.node-version }}
+    - name: npm install, build, and test
+      run: |
+        yarn update
+        yarn run windist
+      env:
+        CI: true
+    - name: Upload artifacts
+      uses: actions/upload-artifact@v1.0.0
+      with:
+        name: windows-build
