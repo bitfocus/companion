@@ -82,9 +82,7 @@
     "debug": "^4.1.1",
     "electron-debug": "^1.5.0",
     "electron-rpc": "^2.0.1",
-    "elgato-stream-deck-clean": "^1.0.1",
-    "elgato-stream-deck-clean-mini": "^1.0.1",
-    "elgato-stream-deck-clean-xl": "1.0.8",
+    "elgato-stream-deck": "^3.2.0",
     "express": "^4.16.3",
     "flag-icon-css": "3.0.0",
     "font-awesome": "4.7.0",
@@ -119,5 +117,8 @@
   "collective": {
     "type": "opencollective",
     "url": "https://opencollective.com/companion"
+  },
+  "optionalDependencies": {
+    "@julusian/jpeg-turbo": "^0.5.2"
   }
 }
