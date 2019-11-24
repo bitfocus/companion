@@ -469,3 +469,6 @@
 [submodule "lib/module/roland-vr50hd-mk2"]
 	path = lib/module/roland-vr50hd-mk2
 	url = https://github.com/bitfocus/companion-module-roland-vr50hd-mk2.git
+[submodule "lib/module/faith-chapels-video-playout"]
+	path = lib/module/faith-chapels-video-playout
+	url = https://github.com/bitfocus/companion-module-faith-chapels-video-playout.git
