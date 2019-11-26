@@ -239,6 +239,7 @@ $(function() {
 
 						$x.prepend($button);
 						$x.data('id', x);
+						$x.data('product', prods[prod]);
 
 						var $help = $('<div class="instance_help"><i class="fa fa-question-circle"></i></div>')
 
@@ -261,7 +262,8 @@ $(function() {
 						$button.click(function(e) {
 							e.preventDefault();
 							var instance_type = $(this).parents('div').first().data('id');
-							socket.emit('instance_add', instance_type );
+							var product = $(this).parents('div').first().data('product');
+							socket.emit('instance_add', { type: instance_type, product: product });
 							$aisr.html("");
 							$aisf.val("");
 
@@ -291,7 +293,8 @@ $(function() {
 	// add instance code
 	$(".add-instance-ul").on('click', '.instance-addable', function() {
 		var instance_type = $(this).data('id');
-		socket.emit('instance_add', instance_type );
+		var product = $(this).data('product');
+		socket.emit('instance_add', { type: instance_type, product: product });
 
 		socket.once('instance_add:result', function(id,db) {
 			instance.db = db;
@@ -336,7 +339,7 @@ $(function() {
 
 					for (var prod in prods) {
 						var subprod = manuf + " " + prods[prod];
-						var $entry_sub_li = $('<li><div class="dropdown-content instance-addable" data-id="'+res_id+'">'+subprod+'</div></li>');
+						var $entry_sub_li = $('<li><div class="dropdown-content instance-addable" data-id="'+res_id+'" data-product="'+prods[prod]+'">'+subprod+'</div></li>');
 						$entry_sub_ul.append($entry_sub_li);
 					}
 
@@ -367,7 +370,7 @@ $(function() {
 
 					for (var prod in prods) {
 						var subprod = manuf + " " + prods[prod];
-						var $entry_sub_li = $('<li><div class="dropdown-content instance-addable" data-id="'+inx+'">'+subprod+'</div></li>');
+						var $entry_sub_li = $('<li><div class="dropdown-content instance-addable" data-id="'+inx+'" data-product="'+prods[prod]+'">'+subprod+'</div></li>');
 						$entry_sub_ul.append($entry_sub_li);
 					}
 
@@ -822,7 +825,7 @@ $(function() {
 	});
 
 	$(".addInstance").click(function() {
-		socket.emit('instance_add', $(this).data('id'));
+		socket.emit('instance_add', { type: $(this).data('id'), product: $(this).data('product') });
 		$("#elgbuttons").click();
 	});
 
