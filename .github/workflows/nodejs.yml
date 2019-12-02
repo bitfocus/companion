@@ -1,16 +1,11 @@
 name: Node CI
-
 on: [push]
-
 jobs:
-  build:
-
+  linux:
     runs-on: ubuntu-latest
-
     strategy:
       matrix:
         node-version: [8.12]
-
     steps:
     - uses: actions/checkout@v1
     - name: Use Node.js ${{ matrix.node-version }}
@@ -32,17 +27,11 @@ jobs:
         STORAGE_SERVICE_ALIAS: minio
         MIRROR_SOURCE: electron-output/
         MIRROR_TARGET: builds/companion/
-      with:
-        args: --overwrite
-
-macbuild:
-
+  macos:
     runs-on: macOS-latest
-
     strategy:
       matrix:
         node-version: [8.12]
-
     steps:
     - uses: actions/checkout@v1
     - name: Use Node.js ${{ matrix.node-version }}
@@ -60,15 +49,11 @@ macbuild:
       with:
         name: mac-build
         path: electron-output/
-
-  winbuild:
-
+  windows:
     runs-on: windows-latest
-
     strategy:
       matrix:
         node-version: [8.12]
-
     steps:
     - uses: actions/checkout@v1
     - name: Use Node.js ${{ matrix.node-version }}
