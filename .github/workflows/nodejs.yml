@@ -42,6 +42,7 @@ jobs:
       run: |
         yarn update
         yarn run macdist
+        ./tools/build_rename_git.sh
       env:
         CI: true
     - name: Upload artifacts
