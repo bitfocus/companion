@@ -23,13 +23,19 @@ jobs:
         yarn run lindist
       env:
         CI: true
-    - name: Upload Artifacts
-      uses: actions/upload-artifact@v1.0.0
+    - name: S3 Upload
+      uses: peter-evans/s3-backup@v1.0.0
+      env:
+        ACCESS_KEY_ID: ${{ secrets.BITFOCUS_ACCESS }}
+        SECRET_ACCESS_KEY: ${{ secrets.BITFOCUS_SECRET }}
+        STORAGE_SERVICE_URL: https://s3.bitfocus.io
+        STORAGE_SERVICE_ALIAS: minio
+        MIRROR_SOURCE: electron-output/
+        MIRROR_TARGET: builds/companion/
       with:
-        name: ubuntu-build
-        path: electron-output/
-  
-  macbuild:
+        args: --overwrite
+
+macbuild:
 
     runs-on: macOS-latest
 
