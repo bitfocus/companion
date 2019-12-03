@@ -1,7 +1,7 @@
 name: Node CI
 on: [push]
 jobs:
-  linux:
+  linux64:
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -16,29 +16,13 @@ jobs:
       run: |
         yarn update
         yarn run lindist
-    - name: mkdir artifact
-      run: mkdir artifact
-      working-directory: electron-output
-    - name: rename stuff
+    - name: rename and upload stuff
       run: ./tools/build_rename_git.sh
       env: 
-        TRAVIS_OS_NAME: linux
-    - name: ls la electron output
-      run: ls -la
-      working-directory: electron-output
-    - name: ls la electron output artifact
-      run: ls -la
-      working-directory: electron-output/artifact
-    - name: S3 Upload
-      uses: peter-evans/s3-backup@v1.0.0
-      env:
-        ACCESS_KEY_ID: ${{ secrets.BITFOCUS_ACCESS }}
-        SECRET_ACCESS_KEY: ${{ secrets.BITFOCUS_SECRET }}
-        STORAGE_SERVICE_URL: https://s3.bitfocus.io
-        STORAGE_SERVICE_ALIAS: minio
-        MIRROR_SOURCE: builds/companion/
-        MIRROR_TARGET: builds/companion/
-  macos:
+        TRAVIS_OS_NAME: osx
+        BITFOCUS_KEY: ${{ secrets.BITFOCUS_ACCESS }}
+        BITFOCUS_SECRET: ${{ secrets.BITFOCUS_SECRET }}
+  osx:
     runs-on: macOS-latest
     strategy:
       matrix:
@@ -53,29 +37,13 @@ jobs:
       run: |
         yarn update
         yarn run macdist
-    - name: mkdir artifact
-      run: mkdir artifact
-      working-directory: electron-output
-    - name: rename stuff
+    - name: rename and upload stuff
       run: ./tools/build_rename_git.sh
       env: 
         TRAVIS_OS_NAME: osx
-    - name: ls la electron output
-      run: ls -la
-      working-directory: electron-output
-    - name: ls la electron output artifact
-      run: ls -la
-      working-directory: electron-output/artifact
-    - name: S3 Upload
-      uses: peter-evans/s3-backup@v1.0.0
-      env:
-        ACCESS_KEY_ID: ${{ secrets.BITFOCUS_ACCESS }}
-        SECRET_ACCESS_KEY: ${{ secrets.BITFOCUS_SECRET }}
-        STORAGE_SERVICE_URL: https://s3.bitfocus.io
-        STORAGE_SERVICE_ALIAS: minio
-        MIRROR_SOURCE: builds/companion/
-        MIRROR_TARGET: builds/companion/
-  windows:
+        BITFOCUS_KEY: ${{ secrets.BITFOCUS_ACCESS }}
+        BITFOCUS_SECRET: ${{ secrets.BITFOCUS_SECRET }}
+  win64:
     runs-on: windows-latest
     strategy:
       matrix:
@@ -90,25 +58,9 @@ jobs:
       run: |
         yarn update
         yarn run windist
-    - name: mkdir artifact
-      run: mkdir artifact
-      working-directory: electron-output
-    - name: rename stuff
+    - name: rename and upload stuff
       run: ./tools/build_rename_git.sh
       env: 
-        TRAVIS_OS_NAME: win64
-    - name: ls la electron output
-      run: ls -la
-      working-directory: electron-output
-    - name: ls la electron output artifact
-      run: ls -la
-      working-directory: electron-output/artifact
-    - name: S3 Upload
-      uses: peter-evans/s3-backup@v1.0.0
-      env:
-        ACCESS_KEY_ID: ${{ secrets.BITFOCUS_ACCESS }}
-        SECRET_ACCESS_KEY: ${{ secrets.BITFOCUS_SECRET }}
-        STORAGE_SERVICE_URL: https://s3.bitfocus.io
-        STORAGE_SERVICE_ALIAS: minio
-        MIRROR_SOURCE: builds/companion/
-        MIRROR_TARGET: builds/companion/
+        TRAVIS_OS_NAME: osx
+        BITFOCUS_KEY: ${{ secrets.BITFOCUS_ACCESS }}
+        BITFOCUS_SECRET: ${{ secrets.BITFOCUS_SECRET }}
