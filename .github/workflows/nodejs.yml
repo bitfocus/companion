@@ -17,8 +17,8 @@ jobs:
         yarn update
         yarn run lindist
     - name: rename and upload stuff
-      run: ./tools/build_rename_git.sh
-      env: 
+      run: node ./tools/build_rename_git.js
+      env:
         TRAVIS_OS_NAME: linux
         BITFOCUS_KEY: ${{ secrets.BITFOCUS_ACCESS }}
         BITFOCUS_SECRET: ${{ secrets.BITFOCUS_SECRET }}
@@ -38,8 +38,8 @@ jobs:
         yarn update
         yarn run macdist
     - name: rename and upload stuff
-      run: ./tools/build_rename_git.sh
-      env: 
+      run: node ./tools/build_rename_git.js
+      env:
         TRAVIS_OS_NAME: osx
         BITFOCUS_KEY: ${{ secrets.BITFOCUS_ACCESS }}
         BITFOCUS_SECRET: ${{ secrets.BITFOCUS_SECRET }}
@@ -59,8 +59,7 @@ jobs:
         yarn update
         yarn run windist
     - name: rename and upload stuff
-      uses: "jcblw/bash@1.0.0"
-      args: ["./tools/build_rename_git.sh"]
+      run: node ./tools/build_rename_git.js
       env:
         TRAVIS_OS_NAME: win64
         BITFOCUS_KEY: ${{ secrets.BITFOCUS_ACCESS }}
