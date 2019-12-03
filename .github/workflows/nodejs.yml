@@ -21,6 +21,8 @@ jobs:
       working-directory: electron-output
     - name: rename stuff
       run: ./tools/build_rename_git.sh
+      env: 
+        TRAVIS_OS_NAME: linux
     - name: ls la electron output
       run: ls -la
       working-directory: electron-output
@@ -51,14 +53,28 @@ jobs:
       run: |
         yarn update
         yarn run macdist
-        ./tools/build_rename_git.sh
+    - name: mkdir artifact
+      run: mkdir artifact
+      working-directory: electron-output
+    - name: rename stuff
+      run: ./tools/build_rename_git.sh
+      env: 
+        TRAVIS_OS_NAME: osx
+    - name: ls la electron output
+      run: ls -la
+      working-directory: electron-output
+    - name: ls la electron output artifact
+      run: ls -la
+      working-directory: electron-output/artifact
+    - name: S3 Upload
+      uses: peter-evans/s3-backup@v1.0.0
       env:
-        CI: true
-    - name: Upload artifacts
-      uses: actions/upload-artifact@v1.0.0
-      with:
-        name: mac-build
-        path: electron-output/
+        ACCESS_KEY_ID: ${{ secrets.BITFOCUS_ACCESS }}
+        SECRET_ACCESS_KEY: ${{ secrets.BITFOCUS_SECRET }}
+        STORAGE_SERVICE_URL: https://s3.bitfocus.io
+        STORAGE_SERVICE_ALIAS: minio
+        MIRROR_SOURCE: ./electron-output/artifact/
+        MIRROR_TARGET: builds/companion/
   windows:
     runs-on: windows-latest
     strategy:
@@ -74,10 +90,25 @@ jobs:
       run: |
         yarn update
         yarn run windist
+    - name: mkdir artifact
+      run: mkdir artifact
+      working-directory: electron-output
+    - name: rename stuff
+      run: ./tools/build_rename_git.sh
+      env: 
+        TRAVIS_OS_NAME: win64
+    - name: ls la electron output
+      run: ls -la
+      working-directory: electron-output
+    - name: ls la electron output artifact
+      run: ls -la
+      working-directory: electron-output/artifact
+    - name: S3 Upload
+      uses: peter-evans/s3-backup@v1.0.0
       env:
-        CI: true
-    - name: Upload artifacts
-      uses: actions/upload-artifact@v1.0.0
-      with:
-        name: windows-build
-        path: electron-output/
+        ACCESS_KEY_ID: ${{ secrets.BITFOCUS_ACCESS }}
+        SECRET_ACCESS_KEY: ${{ secrets.BITFOCUS_SECRET }}
+        STORAGE_SERVICE_URL: https://s3.bitfocus.io
+        STORAGE_SERVICE_ALIAS: minio
+        MIRROR_SOURCE: ./electron-output/artifact/
+        MIRROR_TARGET: builds/companion/

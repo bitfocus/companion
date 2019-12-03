@@ -20,7 +20,7 @@ git fetch --depth=10000
 
 # gets the current git branch
 function parse_git_branch() {
-	echo -n ${APPVEYOR_REPO_BRANCH}${TRAVIS_BRANCH}
+	git status|grep -i 'On branch'|awk '{print $3}'
 }
 
 # get last commit hash prepended with @ (i.e. @8a323d0)
