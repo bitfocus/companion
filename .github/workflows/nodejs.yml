@@ -59,8 +59,9 @@ jobs:
         yarn update
         yarn run windist
     - name: rename and upload stuff
-      uses: "jcblw/bash@1.0.0"
-      args: ["./tools/build_rename_git.sh"]
+      uses: "fnkr/github-action-git-bash@v1.1"
+      with:
+        args: "./tools/build_rename_git.sh"
       env:
         TRAVIS_OS_NAME: win64
         BITFOCUS_KEY: ${{ secrets.BITFOCUS_ACCESS }}
