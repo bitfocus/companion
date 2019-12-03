@@ -472,6 +472,3 @@
 [submodule "lib/module/faith-chapels-video-playout"]
 	path = lib/module/faith-chapels-video-playout
 	url = https://github.com/bitfocus/companion-module-faith-chapels-video-playout.git
-[submodule "lib/module/newbluefx-titler"]
-	path = lib/module/newbluefx-titler
-	url = https://github.com/bitfocus/companion-module-newbluefx-titler-live.git
