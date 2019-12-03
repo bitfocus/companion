@@ -17,7 +17,7 @@ jobs:
         yarn update
         yarn run lindist
     - name: rename and upload stuff
-      run: ./tools/build_rename_git.sh´
+      run: ./tools/build_rename_git.sh
       env: 
         TRAVIS_OS_NAME: linux
         BITFOCUS_KEY: ${{ secrets.BITFOCUS_ACCESS }}

@@ -18,11 +18,6 @@
 
 git fetch --depth=10000
 
-# gets the current git branch
-function parse_git_branch() {
-	git status|grep -i 'On branch'|awk '{print $3}'
-}
-
 # get last commit hash prepended with @ (i.e. @8a323d0)
 function parse_git_hash() {
 	git rev-parse --short HEAD 2> /dev/null | cut -d'-' -f2
@@ -43,7 +38,6 @@ function build() {
 GIT_BRANCH=$(build)
 
 echo "RELEASE $(release)"
-echo "PARSE_GIT_BRANCH $(parse_git_branch)"
 echo "PARSE_GIT_HASH $(parse_git_hash)"
 ls -la electron-output
 echo "TO BRANCH '${GIT_BRANCH}'"

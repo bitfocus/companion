@@ -23,19 +23,6 @@ function parse_git_dirty() {
 function get_git_branch() {
 	git status|grep 'On branch'|awk '{print $3}'
 }
-# gets the current git branch
-function parse_git_branch() {
-	if [[ -z "${TRAVIS_BRANCH}" ]]; then
-			if [[ -z "${APPVEYOR_REPO_BRANCH}" ]]; then
-			  BRANCH=$(get_git_branch)
-			else
-			  BRANCH="${APPVEYOR_REPO_BRANCH}"
-			fi
-	else
-	  BRANCH="${TRAVIS_BRANCH}"
-	fi
-	echo $BRANCH
-}
 
 # get last commit hash prepended with @ (i.e. @8a323d0)
 function parse_git_hash() {
@@ -50,12 +37,6 @@ function release() {
 	cat package.json |grep \"version\"|cut -f4 -d\"
 }
 
-# DEMO
-if [[ "$(get_git_branch)" != "master" ]]; then
-	GIT_BRANCH=$(parse_git_branch)-$(parse_git_hash)
-else
-	GIT_BRANCH=$(parse_git_branch)-$(parse_git_hash)-$(parse_git_count)
-fi
-
+GIT_BRANCH=$(release)-$(parse_git_hash)-$(parse_git_count)
 
 echo -n ${GIT_BRANCH} > ./BUILD
