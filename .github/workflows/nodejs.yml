@@ -36,7 +36,7 @@ jobs:
         SECRET_ACCESS_KEY: ${{ secrets.BITFOCUS_SECRET }}
         STORAGE_SERVICE_URL: https://s3.bitfocus.io
         STORAGE_SERVICE_ALIAS: minio
-        MIRROR_SOURCE: ./electron-output/artifact/
+        MIRROR_SOURCE: builds/companion/
         MIRROR_TARGET: builds/companion/
   macos:
     runs-on: macOS-latest
@@ -73,7 +73,7 @@ jobs:
         SECRET_ACCESS_KEY: ${{ secrets.BITFOCUS_SECRET }}
         STORAGE_SERVICE_URL: https://s3.bitfocus.io
         STORAGE_SERVICE_ALIAS: minio
-        MIRROR_SOURCE: ./electron-output/artifact/
+        MIRROR_SOURCE: builds/companion/
         MIRROR_TARGET: builds/companion/
   windows:
     runs-on: windows-latest
@@ -110,5 +110,5 @@ jobs:
         SECRET_ACCESS_KEY: ${{ secrets.BITFOCUS_SECRET }}
         STORAGE_SERVICE_URL: https://s3.bitfocus.io
         STORAGE_SERVICE_ALIAS: minio
-        MIRROR_SOURCE: ./electron-output/artifact/
+        MIRROR_SOURCE: builds/companion/
         MIRROR_TARGET: builds/companion/

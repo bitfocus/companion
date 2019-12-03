@@ -36,11 +36,11 @@ function release() {
 	cat package.json |grep \"version\"|cut -f4 -d\"
 }
 
-GIT_BRANCH=$(release)-$(parse_git_hash)-$(parse_git_count)
+function build() {
+	cat BUILD
+}
 
-if [[ "$(parse_git_branch)" != "master" ]]; then
-	GIT_BRANCH=$(release)-$(parse_git_branch)-$(parse_git_hash)
-fi
+GIT_BRANCH=$(release)-$(build)
 
 echo "RELEASE $(release)"
 echo "PARSE_GIT_BRANCH $(parse_git_branch)"
@@ -65,9 +65,10 @@ elif [[ "$TRAVIS_OS_NAME" == "win64" ]]; then
 elif [[ "$TRAVIS_OS_NAME" == "armv7l" ]]; then
 	echo ARM
 	mkdir ./electron-output/artifact
-	mv -fv ./electron-output/*.tar.gz ./electron-output/artifact/companion-${GIT_BRANCH}-armv7l.tar.gz
+	mv -fv ./electron-output/*.gz ./electron-output/artifact/companion-${GIT_BRANCH}-armv7l.tar.gz
 fi
 
-ls -la electron-output
-ls -la 
+mkdir -f builds
+mv ./electron-output/artifact/ builds/companion/
+
 echo DONE
