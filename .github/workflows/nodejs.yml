@@ -12,13 +12,22 @@ jobs:
       uses: actions/setup-node@v1
       with:
         node-version: ${{ matrix.node-version }}
-    - name: npm install, build, and test
+    - name: yarn update and lindist
       run: |
         yarn update
         yarn run lindist
-        ./tools/build_rename_git.sh
-      env:
-        CI: true
+    - name: mkdir artifact
+      run: mkdir artifact
+      working-directory: electron-output
+    - name: rename stuff
+      run: ./tools/build_rename_git.sh
+      working-directory: electron-output
+    - name: ls la electron output
+      run: ls -la
+      working-directory: electron-output
+    - name: ls la electron output artifact
+      run: ls -la
+      working-directory: electron-output/artifact
     - name: S3 Upload
       uses: peter-evans/s3-backup@v1.0.0
       env:
