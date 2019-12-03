@@ -21,7 +21,6 @@ jobs:
       working-directory: electron-output
     - name: rename stuff
       run: ./tools/build_rename_git.sh
-      working-directory: electron-output
     - name: ls la electron output
       run: ls -la
       working-directory: electron-output
