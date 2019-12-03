@@ -45,7 +45,7 @@ GIT_BRANCH=$(release)-$(build)
 echo "RELEASE $(release)"
 echo "PARSE_GIT_BRANCH $(parse_git_branch)"
 echo "PARSE_GIT_HASH $(parse_git_hash)"
-echo "TRAVIS_BRANCH $TRAVIS_BRANCH"
+echo "GIT_BRANCH ${GIT_BRANCH}"
 
 ls -la electron-output
 echo "TO BRANCH ${GIT_BRANCH}"
@@ -68,7 +68,7 @@ elif [[ "$TRAVIS_OS_NAME" == "armv7l" ]]; then
 	mv -fv ./electron-output/*.gz ./electron-output/artifact/companion-${GIT_BRANCH}-armv7l.tar.gz
 fi
 
-mkdir -f builds
+mkdir builds
 mv ./electron-output/artifact/ builds/companion/
 
 echo DONE
