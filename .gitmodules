@@ -478,3 +478,6 @@
 [submodule "lib/module/foscam-ptz"]
 	path = lib/module/foscam-ptz
 	url = https://github.com/bitfocus/companion-module-foscam-ptz.git
+[submodule "lib/module/dahuasecurity-ptz"]
+	path = lib/module/dahuasecurity-ptz
+	url = https://github.com/bitfocus/companion-module-dahuasecurity-ptz.git
