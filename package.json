@@ -68,7 +68,9 @@
     "chai-fs": "^2.0.0",
     "electron": "^2.0.8",
     "electron-builder": "20.10.0",
-    "mocha": "^6.1.4"
+    "mocha": "^6.1.4",
+    "s3": "^4.4.0",
+    "s3-upload-stream": "^1.0.7"
   },
   "dependencies": {
     "@coreui/coreui": "^2.0.0-rc.2",
@@ -106,8 +108,6 @@
     "pngjs": "^3.3.3",
     "popper.js": "1.14.3",
     "read-package-json": "^2.0.13",
-    "s3": "^4.4.0",
-    "s3-upload-stream": "^1.0.7",
     "select2": "4.0.8",
     "sharp": "^0.23.3",
     "shortid": "^2.2.8",
