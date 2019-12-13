@@ -481,3 +481,6 @@
 [submodule "lib/module/dahuasecurity-ptz"]
 	path = lib/module/dahuasecurity-ptz
 	url = https://github.com/bitfocus/companion-module-dahuasecurity-ptz.git
+[submodule "lib/module/da-share-multiplay"]
+	path = lib/module/da-share-multiplay
+	url = https://github.com/bitfocus/companion-module-da-share-multiplay.git
