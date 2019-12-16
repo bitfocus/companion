@@ -484,3 +484,6 @@
 [submodule "lib/module/da-share-multiplay"]
 	path = lib/module/da-share-multiplay
 	url = https://github.com/bitfocus/companion-module-da-share-multiplay.git
+[submodule "lib/module/avolites-ai"]
+	path = lib/module/avolites-ai
+	url = https://github.com/bitfocus/companion-module-avolites-ai.git
