@@ -119,8 +119,8 @@
     "websocket": "^1.0.28"
   },
   "collective": {
-    "type": "opencollective",
-    "url": "https://opencollective.com/companion"
+    "type": "donorbox",
+    "url": "https://donorbox.org/bitfocus-opensource"
   },
   "optionalDependencies": {
     "@julusian/jpeg-turbo": "^0.5.2"

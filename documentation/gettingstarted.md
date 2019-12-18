@@ -47,7 +47,7 @@ The main window is divided into three sections. From left to right:
 
 [The Slack group for developers.](https://bit.ly/2IJ1jT4)
 
-[Donate to show your support and fund future development.](https://opencollective.com/companion)
+[Donate to show your support and fund future development.](https://donorbox.org/bitfocus-opensource)
 
 You can collapse the Community section by clicking the “burger” icon on the right of Companion logo, or shrink it by clicking the arrow at the bottom of the Community section.
 
