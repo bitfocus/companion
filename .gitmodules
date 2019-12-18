@@ -487,3 +487,6 @@
 [submodule "lib/module/avolites-ai"]
 	path = lib/module/avolites-ai
 	url = https://github.com/bitfocus/companion-module-avolites-ai.git
+[submodule "lib/module/green-hippo-hippotizer"]
+	path = lib/module/green-hippo-hippotizer
+	url = https://github.com/bitfocus/companion-module-green-hippo-hippotizer.git
