@@ -490,3 +490,6 @@
 [submodule "lib/module/green-hippo-hippotizer"]
 	path = lib/module/green-hippo-hippotizer
 	url = https://github.com/bitfocus/companion-module-green-hippo-hippotizer.git
+[submodule "lib/module/pangolin-beyond"]
+	path = lib/module/pangolin-beyond
+	url = https://github.com/bitfocus/companion-module-pangolin-beyond.git
