@@ -493,3 +493,6 @@
 [submodule "lib/module/pangolin-beyond"]
 	path = lib/module/pangolin-beyond
 	url = https://github.com/bitfocus/companion-module-pangolin-beyond.git
+[submodule "lib/module/h2r-graphics"]
+	path = lib/module/h2r-graphics
+	url = https://github.com/bitfocus/companion-module-h2r-graphics.git
