@@ -496,3 +496,9 @@
 [submodule "lib/module/h2r-graphics"]
 	path = lib/module/h2r-graphics
 	url = https://github.com/bitfocus/companion-module-h2r-graphics.git
+[submodule "lib/module/jamesholt-x32tc"]
+	path = lib/module/jamesholt-x32tc
+	url = https://github.com/bitfocus/companion-module-jamesholt-x32tc.git
+[submodule "lib/module/figure53-go-button"]
+	path = lib/module/figure53-go-button
+	url = https://github.com/bitfocus/companion-module-figure53-go-button.git
