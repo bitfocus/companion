@@ -502,3 +502,6 @@
 [submodule "lib/module/figure53-go-button"]
 	path = lib/module/figure53-go-button
 	url = https://github.com/bitfocus/companion-module-figure53-go-button.git
+[submodule "lib/module/kramer-vp734"]
+	path = lib/module/kramer-vp734
+	url = https://github.com/bitfocus/companion-module-kramer-vp734.git
