@@ -3,11 +3,6 @@
 **Documentation**
 * https://github.com/bitfocus/companion/wiki/Installation
 
-**Build Status**
-* [![Travis Build Status](https://travis-ci.org/bitfocus/companion.svg?branch=master)](https://travis-ci.org/bitfocus/companion) Mac and Linux
-* [![AppVeyor Build Status](https://ci.appveyor.com/api/projects/status/github/bitfocus/companion?branch=master&svg=true)](https://ci.appveyor.com/project/haakonnessjoen/companion/branch/master) Windows
-* [![FOSSA Status](https://app.fossa.io/api/projects/git%2Bgithub.com%2Fbitfocus%2Fcompanion.svg?type=shield)](https://app.fossa.io/projects/git%2Bgithub.com%2Fbitfocus%2Fcompanion?ref=badge_shield)
-
 **Our website**
 * https://bitfocus.io/companion/
 
