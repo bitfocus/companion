@@ -507,4 +507,4 @@
 	url = https://github.com/bitfocus/companion-module-kramer-vp734.git
 [submodule "lib/module/xiamen-sprolink-vd-series"]
 	path = lib/module/xiamen-sprolink-vd-series
-	url = git@github.com:bitfocus/companion-module-xiamen-sprolink-vd-series.git
+	url = https://github.com:bitfocus/companion-module-xiamen-sprolink-vd-series.git
