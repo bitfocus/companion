@@ -625,10 +625,15 @@ $(function() {
 
 			else if (function_state === 'move') {
 				if (function_detail.second !== undefined) {
+					if (function_detail.first.page === function_detail.second.page && function_detail.first.bank === function_detail.second.bank) {
+						console.log("oops, avoid bug");
+					}
+					else {
 					socket.emit('bank_move', function_detail.first.page, function_detail.first.bank, function_detail.second.page, function_detail.second.bank);
 					socket.once('bank_move:result', function () {
 						// TODO
 					});
+					}
 					clearFunction();
 				}
 			}
