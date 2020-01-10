@@ -511,3 +511,6 @@
 [submodule "lib/module/mikrotik-routeros"]
 	path = lib/module/mikrotik-routeros
 	url = https://github.com/bitfocus/companion-module-mikrotik-routeros.git
+[submodule "lib/module/dsan-limitimer"]
+	path = lib/module/dsan-limitimer
+	url = https://github.com/bitfocus/companion-module-dsan-limitimer.git
