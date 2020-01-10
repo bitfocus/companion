@@ -514,3 +514,6 @@
 [submodule "lib/module/dsan-limitimer"]
 	path = lib/module/dsan-limitimer
 	url = https://github.com/bitfocus/companion-module-dsan-limitimer.git
+[submodule "lib/module/dsan-perfectcue"]
+	path = lib/module/dsan-perfectcue
+	url = https://github.com/bitfocus/companion-module-dsan-perfectcue.git
