@@ -517,3 +517,6 @@
 [submodule "lib/module/dsan-perfectcue"]
 	path = lib/module/dsan-perfectcue
 	url = https://github.com/bitfocus/companion-module-dsan-perfectcue.git
+[submodule "lib/module/malighting-msc"]
+	path = lib/module/malighting-msc
+	url = https://github.com/bitfocus/companion-module-malighting-msc.git
