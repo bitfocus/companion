@@ -474,7 +474,7 @@ url=https://github.com/bitfocus/companion-module-opticis-omm-1000.git
 	url = https://github.com/bitfocus/companion-module-faith-chapels-video-playout.git
 [submodule "lib/module/newbluefx-titler"]
 	path = lib/module/newbluefx-titler
-	url = https://github.com/bitfocus/companion-module-newbluefx-titler-live.git
+url=https://github.com/bitfocus/companion-module-newbluefx-titler.git
 [submodule "lib/module/foscam-ptz"]
 	path = lib/module/foscam-ptz
 	url = https://github.com/bitfocus/companion-module-foscam-ptz.git
