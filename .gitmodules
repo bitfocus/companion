@@ -333,7 +333,7 @@
 	url = https://github.com/bitfocus/companion-module-roland-vp42h.git
 [submodule "lib/module/opticis-omm-1000"]
 	path = lib/module/opticis-omm-1000
-	url = https://github.com/bitfocus/companion-module-opticis-omm1000.git
+url=https://github.com/bitfocus/companion-module-opticis-omm-1000.git
 [submodule "lib/module/sounddevices-pixnet"]
 	path = lib/module/sounddevices-pixnet
 	url = https://github.com/bitfocus/companion-module-sounddevices-pixnet.git
