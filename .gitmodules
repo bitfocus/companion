@@ -520,3 +520,6 @@ url=https://github.com/bitfocus/companion-module-newbluefx-titler.git
 [submodule "lib/module/malighting-msc"]
 	path = lib/module/malighting-msc
 	url = https://github.com/bitfocus/companion-module-malighting-msc.git
+[submodule "lyntec-rpc-breaker"]
+	path = lyntec-rpc-breaker
+	url = https://github.com/bitfocus/companion-module-lyntec-rpc-breaker.git
