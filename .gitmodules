@@ -523,3 +523,6 @@ url=https://github.com/bitfocus/companion-module-newbluefx-titler.git
 [submodule "lib/module/lyntec-rpc-breaker"]
 	path = lib/module/lyntec-rpc-breaker
 	url = https://github.com/bitfocus/companion-module-lyntec-rpc-breaker.git
+[submodule "lib/module/mqtt"]
+	path = lib/module/mqtt
+	url = https://github.com/bitfocus/companion-module-mqtt.git
