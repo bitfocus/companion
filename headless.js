@@ -2,7 +2,7 @@
 var main = require('./app.js');
 var fs = require("fs");
 var path = require("path");
-var system = main(true);
+var system = main(process.env.DEVELOPER ? false : true);
 var os = require('os');
 
 console.log("Starting");
@@ -19,9 +19,9 @@ var pkg = packageinfo();
 
 var ifaces = os.networkInterfaces();
 
-if (process.argv.length < 3) {
+if (process.argv.length > 2 && process.argv[2].substr(0,1) == '-') {
 
-		console.error("Usage: ./headless.js <device> [port]");
+		console.error("Usage: ./headless.js [device] [port]");
 		console.error("");
 		console.error("Available Interfaces:");
 
@@ -39,6 +39,17 @@ if (process.argv.length < 3) {
 		console.error("Example: ./headless.js eth0");
 		process.exit(1);
 
+} else if (process.argv.length < 3) {
+	Object.keys(ifaces).forEach(function (ifname) {
+		ifaces[ifname].find(function (iface) {
+				if ('IPv4' === iface.family && iface.internal) {
+						process.argv.push(ifname);
+						console.error('Starting headless with interface "' + ifname + '"');
+						return true;
+				}
+				return false;
+		});
+	});
 }
 
 system.emit('skeleton-info', 'appVersion', pkg.version );

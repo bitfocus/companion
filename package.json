@@ -55,7 +55,9 @@
 		"rpidist": "./tools/build_writefile.sh ; rm -rf electron-output && electron-builder --armv7l --linux tar.gz",
 		"start": "yarn run",
 		"test": "mocha",
-		"headless": "nodemon headless.js \"Loopback Pseudo-Interface 1\""
+		"postinstall": "./tools/build_writefile.sh",
+		"headless": "nodemon headless.js",
+		"dev-headless": "DEVELOPER=1 nodemon headless.js"
 	},
 	"repository": "https://github.com/bitfocus/companion",
 	"keywords": [
@@ -70,6 +72,7 @@
 		"electron": "^2.0.8",
 		"electron-builder": "20.10.0",
 		"mocha": "^6.1.4",
+		"nodemon": "^2.0.2",
 		"s3": "^4.4.0",
 		"s3-upload-stream": "^1.0.7"
 	},
