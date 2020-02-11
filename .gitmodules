@@ -529,3 +529,6 @@ url=https://github.com/bitfocus/companion-module-newbluefx-titler.git
 [submodule "lib/module/twitch-api"]
 	path = lib/module/twitch-api
 	url = https://github.com/bitfocus/companion-module-twitch-api.git
+[submodule "lib/module/thelightingcontroller"]
+	path = lib/module/thelightingcontroller
+	url = https://github.com/bitfocus/companion-module-thelightingcontroller.git
