@@ -532,3 +532,6 @@ url=https://github.com/bitfocus/companion-module-newbluefx-titler.git
 [submodule "lib/module/thelightingcontroller"]
 	path = lib/module/thelightingcontroller
 	url = https://github.com/bitfocus/companion-module-thelightingcontroller.git
+[submodule "lib/module/haivision-connectdvr"]
+	path = lib/module/haivision-connectdvr
+	url = https://github.com/bitfocus/companion-module-haivision-connectdvr.git
