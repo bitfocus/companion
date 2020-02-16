@@ -53,10 +53,10 @@
     core-js "^3.1.3"
     regenerator-runtime "^0.13.2"
 
-"@julusian/jpeg-turbo@^0.5.2":
-  version "0.5.2"
-  resolved "https://registry.yarnpkg.com/@julusian/jpeg-turbo/-/jpeg-turbo-0.5.2.tgz#3a80b277a0bc553b2059068d3d9a657ca83baff1"
-  integrity sha512-Ap2jXfn71pNyAn1P2ZTkVrcyZO1F7c8/yWNxBP2fFtGRbsmpkfe1YiqRZ1PSzIMmI6Tfak1l1dOi1NnvCvEg1w==
+"@julusian/jpeg-turbo@^0.5.3":
+  version "0.5.3"
+  resolved "https://registry.yarnpkg.com/@julusian/jpeg-turbo/-/jpeg-turbo-0.5.3.tgz#8e208bb9c29578c06a826a58a16f0d98558c0de8"
+  integrity sha512-VqgX+5U6KZ7gQSpL21qseDycesaf1uFpVboENov6Q92fnJmdAtOnICkM77HbPRNexlB3bjX9dO4YfAGtCxuiSA==
   dependencies:
     bindings "^1.5.0"
     cmake-js "^5.2.0"
@@ -1513,14 +1513,14 @@ electron@^2.0.8:
     electron-download "^3.0.1"
     extract-zip "^1.0.3"
 
-elgato-stream-deck@^3.2.0:
-  version "3.2.0"
-  resolved "https://registry.yarnpkg.com/elgato-stream-deck/-/elgato-stream-deck-3.2.0.tgz#ddba2b08c1937e5bb442ef7290f4748472c86b5c"
-  integrity sha512-HmmDA2f0NQbRgUEiXilZI5+T5kXNharU4cS+aVo+rYP/Vi8YOR7ipKn5AC6SRKgEAfIK0Mg/JbIFdSpGYjCoHw==
+elgato-stream-deck@^3.3.0:
+  version "3.3.0"
+  resolved "https://registry.yarnpkg.com/elgato-stream-deck/-/elgato-stream-deck-3.3.0.tgz#f5cfc36bb16e0a43618a39da90e27948802c2e16"
+  integrity sha512-ByPgRTjiL4x0wD2qFUuzknox1+uPte5nl8wUmjllp+1G3Zs/bnbv+THHouktwg5EEPl6xxcq8C5FOtuC6WpCDQ==
   dependencies:
     exit-hook "^2.2.0"
     jpeg-js "^0.3.5"
-    node-hid "^0.7.9"
+    node-hid "^1.2.0"
 
 emoji-regex@^7.0.1:
   version "7.0.3"
@@ -3088,6 +3088,15 @@ node-hid@^0.7.9:
     bindings "^1.5.0"
     nan "^2.13.2"
     prebuild-install "^5.3.0"
+
+node-hid@^1.2.0:
+  version "1.2.0"
+  resolved "https://registry.yarnpkg.com/node-hid/-/node-hid-1.2.0.tgz#d084a9750832b28fd6de6fe2ccd8063fe8e3e7c0"
+  integrity sha512-ap06Wo1E0aGrZf0t1zvjWSk+IzI6yvKpTDYQRIrdxLHEelifnGDx6XOb2VVlrQhxzM4etma8jH/i0M1LUB55dA==
+  dependencies:
+    bindings "^1.5.0"
+    nan "^2.14.0"
+    prebuild-install "^5.3.3"
 
 node-rest-client@^3.1.0:
   version "3.1.0"
