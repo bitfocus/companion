@@ -1,7 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <MA xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://schemas.malighting.de/grandma2/xml/MA" xsi:schemaLocation="http://schemas.malighting.de/grandma2/xml/MA http://schemas.malighting.de/grandma2/xml/3.4.0/MA.xsd" major_vers="3" minor_vers="4" stream_vers="0">
 	<Info datetime="2018-11-05T19:01:38" showfile="None" />
-	<FixtureType index="28" name="Companion v1.2" mode="00">
+	<FixtureType index="28" name="Companion v2.0" mode="00">
 		<short_name>Companion</short_name>
 		<manufacturer>Bitfocus</manufacturer>
 		<short_manufacturer>Companion</short_manufacturer>
@@ -130,7 +130,24 @@
 						<ChannelSet index="13" name="Bank 13" from_dmx="13" to_dmx="13" />
 						<ChannelSet index="14" name="Bank 14" from_dmx="14" to_dmx="14" />
 						<ChannelSet index="15" name="Bank 15" from_dmx="15" to_dmx="15" />
-						<ChannelSet index="16" name="No Function" from_dmx="16" to_dmx="255" />
+						<ChannelSet index="16" name="Bank 16" from_dmx="16" to_dmx="16" />
+						<ChannelSet index="17" name="Bank 17" from_dmx="17" to_dmx="17" />
+						<ChannelSet index="18" name="Bank 18" from_dmx="18" to_dmx="18" />
+						<ChannelSet index="19" name="Bank 19" from_dmx="19" to_dmx="19" />
+						<ChannelSet index="20" name="Bank 20" from_dmx="20" to_dmx="20" />
+						<ChannelSet index="21" name="Bank 21" from_dmx="21" to_dmx="21" />
+						<ChannelSet index="22" name="Bank 22" from_dmx="22" to_dmx="22" />
+						<ChannelSet index="23" name="Bank 23" from_dmx="23" to_dmx="23" />
+						<ChannelSet index="24" name="Bank 24" from_dmx="24" to_dmx="24" />
+						<ChannelSet index="25" name="Bank 25" from_dmx="25" to_dmx="25" />
+						<ChannelSet index="26" name="Bank 26" from_dmx="26" to_dmx="26" />
+						<ChannelSet index="27" name="Bank 27" from_dmx="27" to_dmx="27" />
+						<ChannelSet index="28" name="Bank 28" from_dmx="28" to_dmx="28" />
+						<ChannelSet index="29" name="Bank 29" from_dmx="29" to_dmx="29" />
+						<ChannelSet index="30" name="Bank 30" from_dmx="30" to_dmx="30" />
+						<ChannelSet index="31" name="Bank 31" from_dmx="31" to_dmx="31" />
+						<ChannelSet index="32" name="Bank 32" from_dmx="32" to_dmx="32" />
+						<ChannelSet index="33" name="No Function" from_dmx="33" to_dmx="255" />
 					</ChannelFunction>
 				</ChannelType>
 				<ChannelType index="2" attribute="MACROS3" feature="MACRO" preset="CONTROL" coarse="3" snap="true">
