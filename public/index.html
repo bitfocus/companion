@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- /*
+<!--
  * This file is part of the Companion project
  * Copyright (c) 2018 Bitfocus AS
  * Authors: William Viker <william@bitfocus.io>, Håkon Nessjøen <haakon@bitfocus.io>
@@ -14,7 +14,7 @@
  * develop commercial activities involving the Companion software without
  * disclosing the source code of your own applications.
  *
- */ -->
+-->
 <html lang="en">
 	<head>
 
@@ -212,17 +212,6 @@ href="https://join.slack.com/t/bitfocusio/shared_invite/enQtODk4NTYzNTkzMjU1LTMz
 
 								<div class="tab-content padbottom">
 									<div class="tab-pane active" id="instances" role="tabpanel">
-										<div class="alert alert-danger">
-											<strong>WELCOME TO 2.0-ALPHA. DO <em>NOT</em> USE THIS IN PRODUCTION!</strong><br>
-											We've been working a long time on this and there has been very little testing until now. Please let us know on slack or github if you find bugs :)
-												<br><br><b>Known issues</b>
-												<ul style='padding-top:0px;margin-top:0px;;margin-bottom:0;padding-bottom:0;'>
-													<li>[<a href="https://github.com/bitfocus/companion/issues/687" target="_new">#687</a>] Stream Deck XL renders/scales poorly</li>
-													<li>[<a href="https://github.com/bitfocus/companion/issues/688" target="_new">#688</a>] Stream Deck plugin and its support needs to be updated</li>
-													<li>See also <a href="https://github.com/bitfocus/companion/labels/BUG" target="_new">ALL BUGS</a></li>
-												</ul>
-
-										</div>
 										<h4>Connections / Instances</h4>
 										<p>Instances are the connections companion makes to other devices and software in order to control them.</p>
 
@@ -263,6 +252,7 @@ href="https://join.slack.com/t/bitfocusio/shared_invite/enQtODk4NTYzNTkzMjU1LTMz
 											<div id='instance_add_search_results'>
 											</div>
 										</div>
+
 									</div>
 
 									<div class="tab-pane" id="actions" role="tabpanel">
@@ -734,6 +724,14 @@ href="https://join.slack.com/t/bitfocusio/shared_invite/enQtODk4NTYzNTkzMjU1LTMz
 											<span class="fa fa-trash-alt"></span> Reset configuration
 										</button>
 										<br>
+										<div class="alert alert-warning mt-3">
+											<strong>Something to know</strong><br>
+											There's been reports of weird stuff going on with import, export and reset. 
+											So, at this point after using any of the features, it's recommended to restart
+											companion manually by exiting and reopening the applications. That's been known
+											to fix most of the problems.
+
+										</div>
 
 
 									</div>
