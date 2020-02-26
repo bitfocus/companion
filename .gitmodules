@@ -538,3 +538,6 @@ url=https://github.com/bitfocus/companion-module-newbluefx-titler.git
 [submodule "lib/module/jvc-ptz"]
 	path = lib/module/jvc-ptz
 	url = https://github.com/bitfocus/companion-module-jvc-ptz.git
+[submodule "lib/module/digico-osc"]
+	path = lib/module/digico-osc
+	url = https://github.com/bitfocus/companion-module-digico-osc.git
