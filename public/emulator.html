@@ -78,6 +78,31 @@
 		31: [72, 409]
 	};
 
+	// Added last row for logitec controllers (PageUp, PageDown, F5, Escape, .)
+	var keymap_original = {
+		'49':'7',  '50':'6',  '51':'5',  '52':'4',  '53':'3', '54':'2', '55':'1', '56':'0',
+		'81':'15',  '87':'14',  '69':'13',  '82':'12',  '84':'11', '89':'10', '85':'9', '73':'8',
+		'65':'23', '83':'22', '68':'21', '70':'20', '71':'19', '72':'18', '74':'17', '75':'16',
+		'90':'31', '88':'30', '67':'29', '86':'28', '66':'27', '78':'26', '77':'25', '188':'24',
+	}
+	var keymap = keymap_original;
+
+	var logitec = {
+		'33':'6', '34':'5', '190':'4', '116':'14', '27':'13',
+	}
+
+	var dsanMastercue = {
+		'37':'6', '39':'5', '66':'4',
+	}
+
+	socket.on('emul_controlkeys', function (t) {
+		if(t) {
+			keymap = {...keymap, ...logitec, ...dsanMastercue};
+		} else {
+			keymap = keymap_original;
+		}
+	});
+
 	socket.on('emul_fillImage', function (keyIndex, data) {
 		if (positions[keyIndex]) {
 			var imageData = dataToButtonImage(data);
@@ -122,9 +147,6 @@
 	var dsanMastercue = {
 		'37':'6', '39':'5', '66':'4'
 	}
-
-
-	keymap = {...keymap, ...logitec, ...dsanMastercue};
 
 	$(document).keydown(function (e) {
 		if (keymap[e.keyCode] !== undefined) {
