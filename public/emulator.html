@@ -28,7 +28,7 @@
 
 <div style='margin:20px;padding:20px;background-color: #eee;font-family:Arial;border-radius:3px;'>
 	Use <b>1 2 3 4 5 6 7 8</b>, <b>Q W E R T Y U I</b>, <b>A S D F G H J K</b> <b>Z X C V B N M ,</b> to control this surface with your keyboard!</br>
-	A logitec R400 will send a button press to button; 2 (Back), 3 (forward), 10/11 (Start and stop), 12 (black) on each page.
+	A logitec R400/Mastercue/dSan will send a button press to button; 2 (Back), 3 (forward), 4 (black) and for logitec: 10/11 (Start and stop) on each page.
 </div>
 
 <script type="text/javascript">
@@ -112,9 +112,19 @@
 		'49':'7',  '50':'6',  '51':'5',  '52':'4',  '53':'3', '54':'2', '55':'1', '56':'0',
 		'81':'15',  '87':'14',  '69':'13',  '82':'12',  '84':'11', '89':'10', '85':'9', '73':'8',
 		'65':'23', '83':'22', '68':'21', '70':'20', '71':'19', '72':'18', '74':'17', '75':'16',
-		'90':'31', '88':'30', '67':'29', '86':'28', '66':'27', '78':'26', '77':'25', '188':'24',
-		'33':'6', '34':'5', '116':'14', '27':'13', '190':'12'
+		'90':'31', '88':'30', '67':'29', '86':'28', '66':'27', '78':'26', '77':'25', '188':'24'
 	}
+
+	var logitec = {
+		'33':'6', '34':'5', '190':'4', '116':'14', '27':'13'
+	}
+
+	var dsanMastercue = {
+		'37':'6', '39':'5', '66':'4'
+	}
+
+
+	keymap = {...keymap, ...logitec, ...dsanMastercue};
 
 	$(document).keydown(function (e) {
 		if (keymap[e.keyCode] !== undefined) {
