@@ -115,8 +115,10 @@ $(function() {
 	$('#userconfig_emulator_control_enable').click(function() {
 		if ($(this).prop('checked') == true) {
 			socket.emit('set_userconfig_key', 'emulator_control_enable', true);
+			window.open('emulator.html');
 		} else {
 			socket.emit('set_userconfig_key', 'emulator_control_enable', false);
+			window.open('emulator.html');
 		}
 	});
 
