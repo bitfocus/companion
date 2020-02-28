@@ -1,1 +1,1 @@
-Instructions for installing Companion on a Raspberry Pi (or most any other Debian-based Linux) have been moved. You will now find them here: https://github.com/bitfocus/companion/wiki/Raspberry-Pi
+Instructions for installing Companion on a Raspberry Pi (or most any other Debian-based Linux) have been moved. You will now find them here: https://github.com/bitfocus/companion/wiki/Companion-on-the-Raspberry-Pi
