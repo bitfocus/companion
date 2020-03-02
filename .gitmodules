@@ -541,3 +541,6 @@ url=https://github.com/bitfocus/companion-module-newbluefx-titler.git
 [submodule "lib/module/digico-osc"]
 	path = lib/module/digico-osc
 	url = https://github.com/bitfocus/companion-module-digico-osc.git
+[submodule "lib/module/fora-hvs"]
+	path = lib/module/fora-hvs
+	url = https://github.com/bitfocus/companion-module-fora-hvs.git
