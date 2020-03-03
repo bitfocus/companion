@@ -562,3 +562,6 @@ url=https://github.com/bitfocus/companion-module-newbluefx-titler.git
 [submodule "lib/module/denon-dn-500bd-mkii"]
 	path = lib/module/denon-dn-500bd-mkii
 	url = https://github.com/bitfocus/companion-module-denon-dn-500bd-mkii.git
+[submodule "lib/module/crystal-scte"]
+	path = lib/module/crystal-scte
+	url = https://github.com/bitfocus/companion-module-crystal-scte.git
