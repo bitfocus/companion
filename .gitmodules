@@ -553,3 +553,6 @@ url=https://github.com/bitfocus/companion-module-newbluefx-titler.git
 [submodule "lib/module/multicamsystems-multicamsuite"]
 	path = lib/module/multicamsystems-multicamsuite
 	url = https://github.com/bitfocus/companion-module-multicamsystems-multicamsuite.git
+[submodule "lib/module/gallery-virtualvtrpro"]
+	path = lib/module/gallery-virtualvtrpro
+	url = https://github.com/bitfocus/companion-module-gallery-virtualvtrpro.git
