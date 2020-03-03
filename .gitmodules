@@ -547,3 +547,6 @@ url=https://github.com/bitfocus/companion-module-newbluefx-titler.git
 [submodule "lib/module/panasonic-projector"]
 	path = lib/module/panasonic-projector
 	url = https://github.com/bitfocus/companion-module-panasonic-projector.git
+[submodule "lib/module/generic-tcp-udp"]
+	path = lib/module/generic-tcp-udp
+	url = https://github.com/bitfocus/companion-module-generic-tcp-udp.git
