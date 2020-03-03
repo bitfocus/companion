@@ -550,3 +550,6 @@ url=https://github.com/bitfocus/companion-module-newbluefx-titler.git
 [submodule "lib/module/generic-tcp-udp"]
 	path = lib/module/generic-tcp-udp
 	url = https://github.com/bitfocus/companion-module-generic-tcp-udp.git
+[submodule "lib/module/multicamsystems-multicamsuite"]
+	path = lib/module/multicamsystems-multicamsuite
+	url = https://github.com/bitfocus/companion-module-multicamsystems-multicamsuite.git
