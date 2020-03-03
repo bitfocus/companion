@@ -556,3 +556,6 @@ url=https://github.com/bitfocus/companion-module-newbluefx-titler.git
 [submodule "lib/module/gallery-virtualvtrpro"]
 	path = lib/module/gallery-virtualvtrpro
 	url = https://github.com/bitfocus/companion-module-gallery-virtualvtrpro.git
+[submodule "lib/module/tascam-bdmp1"]
+	path = lib/module/tascam-bdmp1
+	url = https://github.com/bitfocus/companion-module-tascam-bdmp1.git
