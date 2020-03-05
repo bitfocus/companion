@@ -565,3 +565,6 @@ url=https://github.com/bitfocus/companion-module-newbluefx-titler.git
 [submodule "lib/module/crystal-scte"]
 	path = lib/module/crystal-scte
 	url = https://github.com/bitfocus/companion-module-crystal-scte.git
+[submodule "lib/module/gefen-dvimatrix"]
+	path = lib/module/gefen-dvimatrix
+	url = https://github.com/bitfocus/companion-module-gefen-dvimatrix.git
