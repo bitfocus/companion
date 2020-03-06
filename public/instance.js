@@ -317,7 +317,8 @@ $(function() {
 
 		if (instance_category !== undefined) {
 
-			for (var n in instance_category) {
+			const category_names = Object.keys(instance_category).sort()
+			for (var n of category_names) {
 
 				var $entry_li = $('<li class="dropdown-submenu"></li>');
 				var $entry_title = $('<div tabindex="-1" class="dropdown-content"></div>');
@@ -349,7 +350,8 @@ $(function() {
 
 			}
 
-			for (var n in instance_manufacturer) {
+			const manufacturer_names = Object.keys(instance_manufacturer).sort()
+			for (var n of manufacturer_names) {
 
 				var $entry_li = $('<li class="dropdown-submenu"></li>');
 				var $entry_title = $('<div tabindex="-1" class="dropdown-content"></div>');
