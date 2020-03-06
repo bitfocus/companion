@@ -568,3 +568,6 @@ url=https://github.com/bitfocus/companion-module-newbluefx-titler.git
 [submodule "lib/module/gefen-dvimatrix"]
 	path = lib/module/gefen-dvimatrix
 	url = https://github.com/bitfocus/companion-module-gefen-dvimatrix.git
+[submodule "lib/module/kramer-vs41h"]
+	path = lib/module/kramer-vs41h
+	url = https://github.com/bitfocus/companion-module-kramer-vs41h.git
