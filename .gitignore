@@ -75,7 +75,3 @@ typings/
 
 # next.js build output
 .next
-
-# Ignore atem-hack
-lib/instance_skel.d.ts
-lib/instance_skel_types.d.ts
