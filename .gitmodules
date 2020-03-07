@@ -574,3 +574,6 @@ url=https://github.com/bitfocus/companion-module-newbluefx-titler.git
 [submodule "lib/module/magicsoft-recorder"]
 	path = lib/module/magicsoft-recorder
 	url = https://github.com/bitfocus/companion-module-magicsoft-recorder.git
+[submodule "lib/module/sonos-speakers"]
+	path = lib/module/sonos-speakers
+	url = https://github.com/bitfocus/companion-module-sonos-speakers.git
