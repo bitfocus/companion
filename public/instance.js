@@ -315,9 +315,16 @@ $(function() {
 		$addInstance = $("#addInstance");
 		$addInstanceByManufacturer = $("#addInstanceByManufacturer");
 
-		if (instance_category !== undefined) {
+		function compareCaseInsensitive(a, b){
+			var a2 = a.toLowerCase();
+			var b2 = b.toLowerCase();
+			if (a2 < b2) {return -1;}
+			if (a2 > b2) {return 1;}
+			return 0;
+		}
 
-			const category_names = Object.keys(instance_category).sort()
+		function compileChildNodes(obj, $instanceListElm) {
+			const category_names = Object.keys(obj).sort(compareCaseInsensitive)
 			for (var n of category_names) {
 
 				var $entry_li = $('<li class="dropdown-submenu"></li>');
@@ -325,13 +332,14 @@ $(function() {
 
 				$entry_title.text(n);
 				$entry_li.append($entry_title);
-				$addInstance.append($entry_li);
+				$instanceListElm.append($entry_li);
 
 				var $entry_sub_ul = $('<ul class="dropdown-menu"></ul>');
 
-				for ( var sub in instance_category[n] ) {
+				var child_elms = []
+				for ( var sub in obj[n] ) {
 
-					var inx = instance_category[n][sub];
+					var inx = obj[n][sub];
 					var res_id = inx;
 					var res_name = instance_name[inx];
 					var main_split = res_name.split(":");
@@ -341,47 +349,29 @@ $(function() {
 					for (var prod in prods) {
 						var subprod = manuf + " " + prods[prod];
 						var $entry_sub_li = $('<li><div class="dropdown-content instance-addable" data-id="'+res_id+'" data-product="'+prods[prod]+'">'+subprod+'</div></li>');
-						$entry_sub_ul.append($entry_sub_li);
+						child_elms.push({
+							name: manuf + " " + prods[prod],
+							elm: $entry_sub_li
+						})
 					}
+				}
 
+				child_elms.sort((a, b) => compareCaseInsensitive(a.name, b.name))
+				for ( var elm of child_elms ) {
+					$entry_sub_ul.append(elm.elm);
 				}
 
 				$entry_li.append($entry_sub_ul);
 
 			}
+		}
 
-			const manufacturer_names = Object.keys(instance_manufacturer).sort()
-			for (var n of manufacturer_names) {
+		if (instance_category !== undefined) {
+			compileChildNodes(instance_category, $addInstance)
+		}
 
-				var $entry_li = $('<li class="dropdown-submenu"></li>');
-				var $entry_title = $('<div tabindex="-1" class="dropdown-content"></div>');
-
-				$entry_title.text(n);
-				$entry_li.append($entry_title);
-				$addInstanceByManufacturer.append($entry_li);
-
-				var $entry_sub_ul = $('<ul class="dropdown-menu"></ul>');
-
-				for ( var sub in instance_manufacturer[n] ) {
-
-					var inx = instance_manufacturer[n][sub];
-					var res_name = instance_name[inx];
-					var main_split = res_name.split(":");
-					var manuf = main_split[0];
-					var prods = main_split[1].split(";");
-
-					for (var prod in prods) {
-						var subprod = manuf + " " + prods[prod];
-						var $entry_sub_li = $('<li><div class="dropdown-content instance-addable" data-id="'+inx+'" data-product="'+prods[prod]+'">'+subprod+'</div></li>');
-						$entry_sub_ul.append($entry_sub_li);
-					}
-
-				}
-
-				$entry_li.append($entry_sub_ul);
-
-			}
-
+		if (instance_manufacturer !== undefined) {
+			compileChildNodes(instance_manufacturer, $addInstanceByManufacturer)
 		}
 
 	});
