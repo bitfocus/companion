@@ -875,7 +875,7 @@ $(function() {
 			$(this).val(page);
 		}).keyup(function(e){
 			if(e.keyCode == 13) {
-				var value = $(this).val();
+				var value = parseInt($(this).val(), 10);
 				if (value > 0 && value <100) { 
 					page = value
 					changePage(value);
