@@ -604,10 +604,11 @@ h4 {
 .sidebar-minimizer, .brand-minimizer {
 	background-color: #272727 !important;
 }
-.page_curr {
+#page_curr {
 	display:inline-block;
 	background-color: rgba(32,32,32,0.1);
 	border-radius:4px;
+	border-style: none;
 	margin-left: 5px;
 	margin-right: 5px;
 	padding: 2px 0px 3px 0px;
@@ -618,6 +619,9 @@ h4 {
 	color: rgba(0,0,0,0.5);
 	font-weight:bold;
 	width: 35px;
+}
+#page_curr:hover {
+	cursor: pointer;
 }
 
 .margbot {
