@@ -577,3 +577,6 @@ url=https://github.com/bitfocus/companion-module-newbluefx-titler.git
 [submodule "lib/module/sonos-speakers"]
 	path = lib/module/sonos-speakers
 	url = https://github.com/bitfocus/companion-module-sonos-speakers.git
+[submodule "lib/module/homeassistant-server"]
+	path = lib/module/homeassistant-server
+	url = https://github.com/bitfocus/companion-module-homeassistant-server
