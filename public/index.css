@@ -380,7 +380,7 @@ td.feedbacklist-td-reorder{
 	padding-top:25px;
 }
 
-#page_title {
+.page_title {
 	width: 100px;
 	display:inline;
 	border-radius:4px;
@@ -604,7 +604,7 @@ h4 {
 .sidebar-minimizer, .brand-minimizer {
 	background-color: #272727 !important;
 }
-#page_curr {
+.page_curr {
 	display:inline-block;
 	background-color: rgba(32,32,32,0.1);
 	border-radius:4px;
@@ -620,10 +620,9 @@ h4 {
 	font-weight:bold;
 	width: 35px;
 }
-#page_curr:hover {
+.page_curr:hover {
 	cursor: pointer;
 }
-
 .margbot {
 	margin-bottom: 5px;
 }
