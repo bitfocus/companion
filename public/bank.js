@@ -384,8 +384,8 @@ $(function() {
 			else {
 				// Custom unicode un-escaping in text field
 				if ($(this).data('fieldid') == 'text') {
-					var start = this.selectionStart,
-        			end = this.selectionEnd;
+					var start = this.selectionStart;
+					var end = this.selectionEnd;
 					$(this).val(replaceUnicode($(this).val()));
 					this.setSelectionRange(start, end);
 				}
