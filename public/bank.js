@@ -753,7 +753,7 @@ $(function() {
 
 		$('#export_page_link').attr('href', '/int/page_export/' + page);
 
-		$pagenav.append($('<div class="pagenav col-lg-12"><div id="btn_pagedown" class="btn btn-primary"><i class="fa fa-chevron-left"></i></div><span class="page_curr">'+page+'</span><div id="btn_pageup" class="btn btn-primary"><i class="fa fa-chevron-right"></i></div><input id="page_title" placeholder="Page name" type="text" value="'+ pname +'"></div>'));
+		$pagenav.append($('<div class="pagenav col-lg-12"><div id="btn_pagedown" class="btn btn-primary"><i class="fa fa-chevron-left"></i></div><input id="page_curr" class="page_curr" placeholder="" type="text" value="'+page+'"><div id="btn_pageup" class="btn btn-primary"><i class="fa fa-chevron-right"></i></div><input id="page_title" class="page_title" placeholder="Page name" type="text" value="'+ pname +'"></div>'));
 
 		for (var bank = 1; bank <= MAX_BUTTONS; bank++) {
 
@@ -874,6 +874,21 @@ $(function() {
 			changePage(page);
 		});
 
+		$("#page_curr").click(function(){
+			$(this).val('');
+		}).blur(function() {
+			$(this).val(page);
+		}).keyup(function(e){
+			if(e.keyCode == 13) {
+				var value = parseInt($(this).val(), 10);
+				if (value > 0 && value <100) { 
+					page = value
+				} else {
+					alert('Not a valid page number.')
+				}
+			changePage(page);
+			}
+		});
 	}
 
 	changePage(page);
