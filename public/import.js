@@ -43,14 +43,32 @@ $(function() {
 		loadPage(import_page, import_data.page[import_page], import_data.config[import_page]);
 	});
 
+	$("#import_page_curr").click(function(){
+		$(this).val('');
+	}).blur(function() {
+		$(this).val(import_page);
+	}).keyup(function(e){
+		if(e.keyCode == 13) {
+			var value = parseInt($(this).val(), 10);
+			if (value > 0 && value <100) { 
+				import_page = value
+			} else {
+				alert('Not a valid page number.')
+			}
+		loadPage(import_page, import_data.page[import_page], import_data.config[import_page]);
+		$("#import_page_curr").blur();
+		}
+	});
+
 	$('#import_tab').click(function () {
 		$('#import_fileselect').show();
 		$('#import_config').hide();
 	});
 
 	function loadPage(num, page, config) {
-		$('#import_config .page_curr').text(num);
+		$('#import_page_curr').val(num);
 		$('#import_page_title').val(page.name);
+		$('#import_page_title').attr("disabled", "disabled");
 
 		$pagebank.html('');
 		for (var key in config) {
