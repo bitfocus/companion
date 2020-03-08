@@ -70,6 +70,10 @@ body {
 	min-width: 72px;
 	text-align:center;
 }
+#versiontext { 
+	position: relative;
+	top: 1.25px;
+}
 #newversiontext {
 	color:red;
 }
