@@ -151,7 +151,14 @@ body {
 	border-top: 1px solid #ddd;
 	background-color: #fafafa;
 }
-
+.settings-category {
+	border: 0px;
+	margin: 0px;
+	border-left: 1px solid #ddd;
+	border-top: 1px solid #ddd;
+	background-color: #fafafa;
+	font-weight: 600;
+}
 label {
 	margin-bottom: -4px;
 	color: #777;
