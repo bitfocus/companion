@@ -384,7 +384,10 @@ $(function() {
 			else {
 				// Custom unicode un-escaping in text field
 				if ($(this).data('fieldid') == 'text') {
+					var start = this.selectionStart;
+					var end = this.selectionEnd;
 					$(this).val(replaceUnicode($(this).val()));
+					this.setSelectionRange(start, end);
 				}
 
 				socket.emit('bank_changefield', p, b, $(this).data('fieldid'), $(this).val() );
