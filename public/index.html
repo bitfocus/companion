@@ -70,6 +70,9 @@
 			</button>
 
 			<a class="navbar-brand" href="#">
+				<span class="navbar-brand-minimized">
+					<img src="img/brand/icon.png" height="42px"/>
+				</span>
 				<span class="navbar-brand-full">
 					<span style="font-weight:bold">Bitfocus</span> Companion
 				</span>
@@ -82,7 +85,7 @@
 				</li> -->
 
 				<li class="nav-item px-3">
-					<a class="nav-link" target="_new" id='versiontext' href="https://bitfocus.io/companion/">?</a>
+					<a class="nav-link" target="_new" id='versiontext' title="Version Number" href="https://bitfocus.io/companion/">?</a>
 				</li>
 
 				<li class="nav-item px-3">
@@ -113,12 +116,14 @@
 				</li>
 			-->
 			</ul>
+			<!--
 			<button class="navbar-toggler aside-menu-toggler d-md-down-none" type="button" data-toggle="aside-menu-lg-show">
 				<span class="fa fa-bars"></span>
 			</button>
 			<button class="navbar-toggler aside-menu-toggler d-lg-none" type="button" data-toggle="aside-menu-show">
 				<span class="fa fa-bars"></span>
 			</button>
+			-->
 		</header>
 
 		<div class="app-body">
@@ -134,7 +139,7 @@
 
 						<li class="nav-item">
 							<a class="nav-link" target="_new" href="/tablet.html">
-								<i class="nav-icon fa fa-gamepad"></i> Web buttons
+								<i class="nav-icon fa fa-mouse-pointer"></i> Web buttons
 							</a>
 						</li>
 
@@ -355,24 +360,8 @@ href="https://join.slack.com/t/bitfocusio/shared_invite/enQtODk4NTYzNTkzMjU1LTMz
 										<p>Settings applies instantaneously, don't worry about it!</p>
 
 										<table class='table'>
-											<thead>
-												<tr>
-													<th>Setting</th>
-													<th>Value</th>
-												</tr>
-											</thead>
 											<tbody>
-
-												<!-- flip page up/down -->
-												<tr>
-													<td>Enable emulator control</td>
-													<td>
-														<div class="form-check form-check-inline mr-1">
-															<input class="form-check-input" type="checkbox" id="userconfig_emulator_control_enable" value="1">
-															<label class="form-check-label" for="userconfig_emulator_control_enable">Enabled</label>
-														</div>
-													</td>
-												</tr>
+												<td colspan="2" class="settings-category">Navigation Buttons</td>
 
 												<!-- flip page up/down -->
 												<tr>
@@ -394,6 +383,17 @@ href="https://join.slack.com/t/bitfocusio/shared_invite/enQtODk4NTYzNTkzMjU1LTMz
 														</div>
 													</td>
 												</tr>
+													<td colspan="2" class="settings-category">Devices</td>
+												<tr>
+													<td>Enable emulator control for Logitec R400/Mastercue/dSan</td>
+													<td>
+														<div class="form-check form-check-inline mr-1">
+															<input class="form-check-input" type="checkbox" id="userconfig_emulator_control_enable" value="1">
+															<label class="form-check-label" for="userconfig_emulator_control_enable">Enabled</label>
+														</div>
+													</td>
+												</tr>
+													<td colspan="2" class="settings-category">PIN Lockout</td>
 
 												<tr>
 													<td>Enable Pin Codes</td>
@@ -432,7 +432,7 @@ href="https://join.slack.com/t/bitfocusio/shared_invite/enQtODk4NTYzNTkzMjU1LTMz
 														</div>
 													</td>
 												</tr>
-
+													<td colspan="2" class="settings-category">Artnet Listener</td>
 												<tr>
 													<td>Artnet Listener</td>
 													<td>
