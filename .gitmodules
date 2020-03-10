@@ -580,3 +580,6 @@ url=https://github.com/bitfocus/companion-module-newbluefx-titler.git
 [submodule "lib/module/homeassistant-server"]
 	path = lib/module/homeassistant-server
 	url = https://github.com/bitfocus/companion-module-homeassistant-server
+[submodule "lib/module/shure-psm1000"]
+	path = lib/module/shure-psm1000
+	url = https://github.com/bitfocus/companion-module-shure-psm1000.git
