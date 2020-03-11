@@ -583,3 +583,6 @@ url=https://github.com/bitfocus/companion-module-newbluefx-titler.git
 [submodule "lib/module/shure-psm1000"]
 	path = lib/module/shure-psm1000
 	url = https://github.com/bitfocus/companion-module-shure-psm1000.git
+[submodule "lib/module/roku-tv"]
+	path = lib/module/roku-tv
+	url = https://github.com/bitfocus/companion-module-roku-tv.git
