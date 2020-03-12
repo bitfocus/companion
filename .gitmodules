@@ -153,7 +153,7 @@
 	url = https://github.com/bitfocus/companion-module-motu-avb.git
 [submodule "lib/module/chamsys-magicq-udp"]
 	path = lib/module/chamsys-magicq-udp
-	url = https://github.com/bitfocus/companion-module-chamsys-magic-udp.git
+	url = https://github.com/bitfocus/companion-module-chamsys-magicq-udp.git
 [submodule "lib/module/bmd-smartview"]
 	path = lib/module/bmd-smartview
 	url = https://github.com/bitfocus/companion-module-bmd-smartview.git
