@@ -115,9 +115,9 @@
 [submodule "lib/module/vyvphoton"]
 	path = lib/module/vyvphoton
 	url = https://github.com/bitfocus/companion-module-vyvphoton.git
-[submodule "lib/module/7thsensedelta"]
-	path = lib/module/7thsensedelta
-	url = https://github.com/bitfocus/companion-module-7thsensedelta.git
+[submodule "lib/module/7thsensedesign-delta"]
+	path = lib/module/7thsensedesign-delta
+	url = https://github.com/bitfocus/companion-module-7thsensedesign-delta.git
 [submodule "lib/module/imagepro"]
 	path = lib/module/imagepro
 	url = https://github.com/bitfocus/companion-module-imagepro.git
