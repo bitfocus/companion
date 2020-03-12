@@ -1,8 +1,8 @@
 #!/bin/bash
 
-# REPOSITORY RENAMING FUNTIME 2019 IS UPON US!
+# REPOSITORY RENAMING FUNTIME 2020 IS UPON US!
 
-OLD_MODULE_NAMES=(kipro vicreo-hotkey.git thinkm-blink1 7thsensedelta)
+OLD_MODULE_NAMES=(kipro vicreo-hotkey.git thinkm-blink1 7thsensedelta amp artnet atem avplayback)
 KEEP_MODULES=()
 REMOVE_MODULES=()
 
@@ -20,7 +20,7 @@ if [ "$FOUND" -eq 0 ]; then
 	exit 0
 fi
 			
-echo -e "\033[1mREPOSITORY RENAMING FUNTIME 2019 IS UPON US!\033[m
+echo -e "\033[1mREPOSITORY RENAMING FUNTIME 2020 IS UPON US!\033[m
 This process affects our module developers in a couple of ways 
 
 * When we deinit the old name and init the new name in git, it leaves the old module folder as untracked. But since it's there, it will cause a conflict in companion when you try to start it. You basically have the same module two places.

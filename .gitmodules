@@ -4,9 +4,9 @@
 [submodule "bitfocus-libs"]
 	path = bitfocus-libs
 	url = https://github.com/bitfocus/bitfocus-libs.git
-[submodule "lib/module/avplayback"]
-	path = lib/module/avplayback
-	url = https://github.com/bitfocus/companion-module-avplayback.git
+[submodule "lib/module/ifelseware-avplayback"]
+	path = lib/module/ifelseware-avplayback
+	url = https://github.com/bitfocus/companion-module-ifelseware-avplayback.git
 [submodule "lib/module/pds"]
 	path = lib/module/pds
 	url = https://github.com/bitfocus/companion-module-pds.git
@@ -49,15 +49,15 @@
 [submodule "lib/module/videohub"]
 	path = lib/module/videohub
 	url = https://github.com/bitfocus/companion-module-videohub.git
-[submodule "lib/module/atem"]
-	path = lib/module/atem
-	url = https://github.com/bitfocus/companion-module-atem.git
+[submodule "lib/module/bmd-atem"]
+	path = lib/module/bmd-atem
+	url = https://github.com/bitfocus/companion-module-bmd-atem.git
 [submodule "lib/module/pvp"]
 	path = lib/module/pvp
 	url = https://github.com/bitfocus/companion-module-pvp.git
-[submodule "lib/module/artnet"]
-	path = lib/module/artnet
-	url = https://github.com/bitfocus/companion-module-artnet.git
+[submodule "lib/module/generic-artnet"]
+	path = lib/module/generic-artnet
+	url = https://github.com/bitfocus/companion-module-generic-artnet.git
 [submodule "lib/module/hyperdeck"]
 	path = lib/module/hyperdeck
 	url = https://github.com/bitfocus/companion-module-hyperdeck.git
@@ -85,9 +85,9 @@
 [submodule "lib/module/horae"]
 	path = lib/module/horae
 	url = https://github.com/bitfocus/companion-module-horae.git
-[submodule "lib/module/amp"]
-	path = lib/module/amp
-	url = https://github.com/bitfocus/companion-module-amp.git
+[submodule "lib/module/grassvalley-amp"]
+	path = lib/module/grassvalley-amp
+	url = https://github.com/bitfocus/companion-module-grassvalley-amp.git
 [submodule "lib/module/lightware2"]
 	path = lib/module/lightware2
 	url = https://github.com/bitfocus/companion-module-lightware2.git
