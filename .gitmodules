@@ -586,3 +586,6 @@ url=https://github.com/bitfocus/companion-module-newbluefx-titler.git
 [submodule "lib/module/generic-wakeonlan"]
 	path = lib/module/generic-wakeonlan
 	url = https://github.com/bitfocus/companion-module-generic-wakeonlan
+[submodule "lib/module/figure53-qview"]
+	path = lib/module/figure53-qview
+	url = https://github.com/bitfocus/companion-module-figure53-qview.git
