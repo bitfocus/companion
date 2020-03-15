@@ -544,9 +544,9 @@ $(function() {
 									.val($opt_num.val());
 
 								$options.append(
-									$('<div class="row action-number-row">').append([
-										$('<div class="col-sm-8">').append($opt_range),
-										$('<div class="col-sm-4">').append($opt_num)
+									$('<div class="row action-number-row action-number-range-row">').append([
+										$('<div class="action-number-range">').append($opt_range),
+										$('<div class="action-number-number">').append($opt_num)
 									])
 								);
 

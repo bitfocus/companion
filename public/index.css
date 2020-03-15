@@ -692,3 +692,9 @@ h4 {
 	text-overflow: ellipsis;
   	white-space: nowrap;
 }
+
+.action-number-range-row {
+	display: grid;
+	padding: 0 15px;
+	grid-template-columns: minmax(70px, 1fr) minmax(75px, 85px);
+}
