@@ -695,8 +695,9 @@ h4 {
 
 .action-number-range-row {
 	display: grid;
-	padding: 0 15px;
 	grid-template-columns: minmax(70px, 1fr) minmax(75px, 85px);
+	/* Use the same td padding as in css/style.css */
+	padding: 0 0.75rem;
 }
 input[type="range"].action-number.form-control {
 	/* Remove the horizontal padding added by default to all .form-control elements. */
