@@ -698,3 +698,8 @@ h4 {
 	padding: 0 15px;
 	grid-template-columns: minmax(70px, 1fr) minmax(75px, 85px);
 }
+input[type="range"].action-number.form-control {
+	/* Remove the horizontal padding added by default to all .form-control elements. */
+	padding-left: 0;
+	padding-right: 0;
+}
