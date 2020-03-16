@@ -67,7 +67,7 @@ declare abstract class InstanceSkel<TConfig> {
   setPresetDefinitions(presets: CompanionPreset[]): void
 
   setVariable(variableId: string, value: string): void
-  getVariable(variableId: string, cb: function): void
+  getVariable(variableId: string, cb: (value: string) => void): void
   checkFeedbacks(feedbackId?: string): void
 
   status(level: null | 0 | 1 | 2, message?: string): void
