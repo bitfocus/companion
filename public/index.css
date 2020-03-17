@@ -692,3 +692,15 @@ h4 {
 	text-overflow: ellipsis;
   	white-space: nowrap;
 }
+
+.action-number-range-row {
+	display: grid;
+	grid-template-columns: minmax(70px, 1fr) minmax(75px, 85px);
+	/* Use the same td padding as in css/style.css */
+	padding: 0 0.75rem;
+}
+input[type="range"].action-number.form-control {
+	/* Remove the horizontal padding added by default to all .form-control elements. */
+	padding-left: 0;
+	padding-right: 0;
+}
