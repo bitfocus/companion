@@ -528,7 +528,20 @@ $(function() {
 
 		for (var n in store.module) {
 			if (store.module[n].name === store.db[id].instance_type) {
-				$('#instanceConfig h4:first').text( store.module[n].shortname + ' configuration');
+
+				var help = '';
+				if (store.module[n].help) {
+					help = '<div class="instance_help"><i class="fa fa-question-circle"></i></div>';
+				}
+
+				$('#instanceConfig h4:first').html(help + store.module[n].shortname + ' configuration');
+
+				(function (name) {
+					$('#instanceConfig').find('.instance_help').click(function () {
+						show_module_help(name);
+					});
+				})(store.module[n].name);
+
 			}
 		}
 
