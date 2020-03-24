@@ -53,10 +53,10 @@
     core-js "^3.1.3"
     regenerator-runtime "^0.13.2"
 
-"@julusian/jpeg-turbo@^0.5.3":
-  version "0.5.3"
-  resolved "https://registry.yarnpkg.com/@julusian/jpeg-turbo/-/jpeg-turbo-0.5.3.tgz#8e208bb9c29578c06a826a58a16f0d98558c0de8"
-  integrity sha512-VqgX+5U6KZ7gQSpL21qseDycesaf1uFpVboENov6Q92fnJmdAtOnICkM77HbPRNexlB3bjX9dO4YfAGtCxuiSA==
+"@julusian/jpeg-turbo@^0.5.4":
+  version "0.5.4"
+  resolved "https://registry.yarnpkg.com/@julusian/jpeg-turbo/-/jpeg-turbo-0.5.4.tgz#3b8c5b3717ce30a4d360411da8f118805e87fc35"
+  integrity sha512-c04XWiTBBGVUnAReyjNXNTZOzkIIhchAC1Qs1n67ydLyhNYywjcm6RfoqVqfURuNsosMXVP6WUKE8jvNECuHlw==
   dependencies:
     bindings "^1.5.0"
     cmake-js "^5.2.0"
