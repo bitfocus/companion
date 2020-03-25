@@ -73,7 +73,27 @@ $(function() {
 		}
 
 		$presets.append('<br style="clear: both;" />');
-		$presets.find('.presetbank').draggable({});
+		$presets.find('.presetbank').draggable({
+			clone: function() {
+				// Clone the preset that's being dragged instead of dragging the preset itself.
+				// This prevents the preset from animating back to its start position after a drop.
+				// See #1043
+				var returnObj    = this.clone();
+				var origPreset   = this[0];
+				var clonedPreset = returnObj[0];
+
+				// The canvas data needs to be redrawn onto the cloned canvas object.
+				var oldCanvas = origPreset.querySelector('canvas');
+				var newCanvas = clonedPreset.querySelector('canvas');
+				var newCanvasContext = newCanvas.getContext('2d');
+
+				newCanvasContext.width  = oldCanvas.width;
+				newCanvasContext.height = oldCanvas.height;
+				newCanvasContext.drawImage(oldCanvas, 0, 0);
+
+				return returnObj;
+			}
+		});
 		preload_presets();
 	}
 
