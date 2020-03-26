@@ -117,6 +117,8 @@ The Buttons layout has 99 pages that can be navigated using the red left/right a
 
 You can move to a specific page by clicking on the gray page number, entering in the desired page number, and pressing the ENTER key on your keyboard.
 
+If you hold down the SHIFT key on your keyboard, you can trigger a button directly by clicking on it.
+
 ![Instance](images/buttons.png?raw=true "Buttons")
 
 Several actions exist for rearranging your buttons, **Copy**, **Move**, or **Delete**.
@@ -144,6 +146,7 @@ There are also two buttons for resetting the page:
    1. **Regular button**: Can trigger one or more actions.
    2. **Page up**: Can move up to the next page set of buttons.
    3. **Page number**: Shows the current page number/name.
+      1. Pressing this button will return to page 1.
    4. **Page down**: Can move down to the previous page set of buttons.
 4. Give the button a name, and optionally style it further.
 5. Add Actions or Instance Feedbacks to the button.
@@ -308,7 +311,7 @@ This tab will show the connected Elgato Stream Decks.
 
 If any of your Stream Decks are not showing up, press the **Rescan USB** button. Use with care as rescanning will block all operations while the scan is ongoing.
 
-**Important: If your devices are showing but they don't show the ID, you need to update your Stream Deck using the Elgato app**. See [Update instructions](Updating%20streamdeck.md).
+**Important: If your devices are showing but they don't show the ID, you need to update your Stream Deck using the Elgato app**. See [Update instructions](https://github.com/bitfocus/companion/blob/master/documentation/Updating%20streamdeck.md).
 
 ![Devices](images/devices.png?raw=true "Devices")
 
