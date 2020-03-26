@@ -177,6 +177,7 @@ system.on('skeleton-ready', function() {
 	var tablet     = require('./lib/tablet')(system);
 	var satellite  = require('./lib/satellite_server')(system);
 	var ws_api     = require('./lib/ws_api')(system);
+	var help       = require('./lib/help')(system);
 
 	system.emit('modules_loaded');
 
