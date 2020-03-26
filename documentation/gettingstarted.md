@@ -102,7 +102,7 @@ Each device needs to be a separate instance. If you have two separate Barco E2, 
 
 ![Instance](images/instance.png?raw=true "Instance")
 
-After an instance has been created and successfully configured, it may provide you with a list of [Dynamic Variables](#dynamic-variables) you can use when configuring your button. This will be described below.
+After an instance has been created and successfully configured, it may provide you with a list of [Dynamic Variables](#header-dynamic-variables) you can use when configuring your button. This will be described below.
 
 If something is missing, please make a support request on the [GitHub page by creating an issue/feature request](https://github.com/bitfocus/companion/issues) describing the feature, use cases, and providing documentation, if needed, for the implementation.
 
@@ -132,7 +132,7 @@ There are also two buttons for resetting the page:
 
 
 
-**Export page** exports just this page's buttons to a download which can later be imported to another page or a different Companion config. See the [Import / Export](#import--export) section below.
+**Export page** exports just this page's buttons to a download which can later be imported to another page or a different Companion config. See the [Import / Export](#header-import--export) section below.
 
 
 
