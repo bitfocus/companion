@@ -37,7 +37,6 @@
 			"assets/trayTemplate.png",
 			"assets/trayTemplate@2x.png",
 			"!font/*",
-			"!documentation/*",
 			"!tools/*",
 			"!*.md"
 		]
