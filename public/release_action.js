@@ -361,7 +361,7 @@ $(function() {
 							$opt_input.trigger('change');
 						}
 
-						if (option.type == 'dropdown-native') {
+						else if (option.type == 'dropdown-native') {
 
 							var $opt_input = $("<select class='release-action-option-change form-control'></select>");
 							$opt_input.data('release-action-id', action.id);
