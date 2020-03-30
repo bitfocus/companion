@@ -159,8 +159,111 @@ $(function() {
 
 						}
 
+						else if (option.type === 'dropdown') {
 
-						else if (option.type == 'dropdown') {
+							var $opt_input = $("<select class='feedback-option-change'></select>");
+							$opt_input.data('feedback-id', feedback.id);
+							$opt_input.data('option-id', option.id);
+							if (option.tooltip !== undefined) {
+								$opt_input.attr('title', option.tooltip);
+							}
+
+							$options.append($opt_input);
+
+							var selectoptions = {
+								theme: 'option',
+								width: '100%',
+								multiple: false,
+								tags: false,
+								maximumSelectionLength: 0,
+								minimumResultsForSearch: -1
+							};
+
+							if (option.multiple === true) {
+								selectoptions.multiple = true;
+							}
+
+							if (typeof option.minChoicesForSearch === 'number' && option.minChoicesForSearch >=0) {
+								selectoptions.minimumResultsForSearch = option.minChoicesForSearch;
+							}
+
+							if (typeof option.maxSelection === 'number' && option.maxSelection >0) {
+								selectoptions.maximumSelectionLength = option.maxSelection;
+							}
+
+							if (option.tags === true) {
+								selectoptions.tags = true;
+								if (typeof option.regex !== 'undefined') {
+									var flags = option.regex.replace(/.*\/([gimy]*)$/, '$1');
+									var pattern = option.regex.replace(new RegExp('^/(.*?)/'+flags+'$'), '$1');
+									let regex = new RegExp(pattern, flags);
+									selectoptions.createTag = function (params) {
+										if (regex.test(params.term) === false) {
+											return null;
+										}
+
+										return {
+											id: params.term,
+											text: params.term
+										}
+									};
+								}
+
+							}
+
+							$opt_input.select2(selectoptions);
+
+							if (option.multiple === true && typeof option.minSelection === 'number' && option.minSelection >0) {
+								let minsel = option.minSelection + 1;
+								$opt_input.on('select2:unselecting', function (e) {
+									if ($('.select2-selection__choice').length < minsel) {
+										return false;
+									}
+								});
+							}
+
+							// if options never been stored on this feedback
+							if (feedback.options === undefined) {
+								feedback.options = {};
+							}
+
+							// if this option never has been saved, set default
+							if (feedback.options[option.id] === undefined) {
+								feedback.options[option.id] = option.default;
+								socket.emit('bank_update_feedback_option', page, bank, feedback.id, option.id, option.default);
+							}
+
+							// populate select2 with choices
+							var selections = [];
+							if (typeof feedback.options[option.id] === 'string' || typeof feedback.options[option.id] === 'number') {
+								selections.push(feedback.options[option.id].toString())
+							}
+							else if (Array.isArray(feedback.options[option.id])) {
+								selections = feedback.options[option.id]
+							}
+
+							for (var x in option.choices) {
+								var select = false;
+								var pos = selections.indexOf(option.choices[x].id.toString());
+								if (pos >= 0) { // if i find my option in the array of selections
+									select = true; // select it
+									selections.splice(pos,1); // and remove it from the array, the remaining selections are used later
+								}
+								var newOption = new Option(option.choices[x].label, option.choices[x].id, select, select);
+								$opt_input.append(newOption);
+							}
+
+							// if there are selections left the db value is not a predefined choice, so options have to be created
+							for (var x in selections) {
+								var newOption = new Option(selections[x], selections[x], true, true); // option is always selected, otherwise it wouldn't have been stored
+								$opt_input.append(newOption);
+							}
+
+							// update the select2 element
+							$opt_input.trigger('change');
+						}
+
+						else if (option.type == 'dropdown-native') {
 
 							var $opt_input = $("<select class='feedback-option-change form-control'></select>");
 							$opt_input.data('feedback-id', feedback.id);
