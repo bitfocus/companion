@@ -144,11 +144,12 @@ $(function() {
 								feedback.options = {};
 							}
 
+							// MOVED TO `bank_addFeedback`
 							// if this option never has been saved, set default
-							if (feedback.options[option.id] === undefined) {
+							/*if (feedback.options[option.id] === undefined) {
 								socket.emit('bank_update_feedback_option', page, bank, feedback.id, option.id, option.default);
 								$opt_input.val(option.default);
-							}
+							}*/
 
 							// else set the db value for this option.
 							else {

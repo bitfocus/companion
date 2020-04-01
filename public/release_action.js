@@ -190,11 +190,12 @@ $(function() {
 								action.options = {};
 							}
 
+							// MOVED TO `bank_addReleaseAction`
 							// if this option never has been saved, set default
-							if (action.options[option.id] === undefined) {
+							/*if (action.options[option.id] === undefined) {
 								socket.emit('bank_release_action_update_option', page, bank, action.id, option.id, option.default);
 								$opt_input.val(option.default);
-							}
+							}*/
 
 							// else set the db value for this option.
 							else {
