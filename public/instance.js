@@ -74,6 +74,11 @@ $(function() {
 				$("#instance_status_"+x).html("ERROR").attr('title', s[1]).removeClass('instance-status-ok').removeClass('instance-status-warn').removeClass('instance-status-disabled').addClass('instance-status-error')
 			}
 
+			// unknown
+            else if (s[0] === null) {
+                $("#instance_status_"+x).html(""+s[1]).attr('title', s[1]).removeClass('instance-status-ok').removeClass('instance-status-error').removeClass('instance-status-disabled').removeClass('instance-status-warn')
+            }
+
 		}
 	}
 
@@ -696,7 +701,7 @@ $(function() {
 
 				$sm.append($inp);
 			}
-			
+
 			else if (field.type == 'checkbox') {
 				var $opt_checkbox = $("<input type='checkbox' class='form-control instanceConfigField'>");
 
@@ -712,14 +717,14 @@ $(function() {
 					.data('type', 'checkbox')
 					.data('valid', true)
 					.prop('checked', field.default);
-	
+
 				$sm.append($opt_checkbox);
 
 			}
 
 			else if (field.type == 'number') {
 				let $opt_num = $("<input type='number' class='form-control instanceConfigField'>");
-				
+
 				if (field.tooltip !== undefined) {
 					$opt_num.attr('title', field.tooltip);
 				}
@@ -738,7 +743,7 @@ $(function() {
 						validateNumericField($opt);
 					});
 				})(field, $opt_num);
-		
+
 				$sm.append($opt_num);
 
 			}
