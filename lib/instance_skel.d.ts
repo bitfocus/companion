@@ -70,6 +70,21 @@ declare abstract class InstanceSkel<TConfig> {
   getVariable(variableId: string, cb: (value: string) => void): void
   checkFeedbacks(feedbackId?: string): void
 
+  /**
+   * Get an array of all the feedbacks for this instance
+   */
+  getAllFeedbacks(): CompanionFeedbackEvent[]
+  /**
+   * Trigger the subscribe callback on all feedbacks for this instance
+   * @param feedbackId Feedback type to call for, or undefined for all
+   */
+  subscribeFeedbacks(feedbackId?: string): void
+  /**
+   * Trigger the unsubscribe callback on all feedbacks for this instance
+   * @param feedbackId Feedback type to call for, or undefined for all
+   */
+  unsubscribeFeedbacks(feedbackId?: string): void
+
   status(level: null | 0 | 1 | 2, message?: string): void
 
   log(level: 'info' | 'warn' | 'error' | 'debug', info: string): void

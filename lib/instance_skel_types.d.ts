@@ -88,6 +88,8 @@ export interface CompanionFeedback {
   description: string
   options: SomeCompanionInputField[]
   callback?: (feedback: CompanionFeedbackEvent) => CompanionFeedbackResult
+  subscribe?: (feedback: CompanionFeedbackEvent) => void
+  unsubscribe?: (feedback: CompanionFeedbackEvent) => void
 }
 export interface CompanionPreset {
   category: string
