@@ -592,3 +592,6 @@ url=https://github.com/bitfocus/companion-module-newbluefx-titler.git
 [submodule "lib/module/bbc-raven"]
 	path = lib/module/bbc-raven
 	url = https://github.com/bitfocus/companion-module-bbc-raven.git
+[submodule "lib/module/folivora-btt"]
+	path = lib/module/folivora-btt
+	url = https://github.com/bitfocus/companion-module-folivora-btt.git
