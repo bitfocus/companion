@@ -595,3 +595,6 @@ url=https://github.com/bitfocus/companion-module-newbluefx-titler.git
 [submodule "lib/module/folivora-btt"]
 	path = lib/module/folivora-btt
 	url = https://github.com/bitfocus/companion-module-folivora-btt.git
+[submodule "lib/module/rossvideo-xpression"]
+	path = lib/module/rossvideo-xpression
+	url = https://github.com/bitfocus/companion-module-rossvideo-xpression.git
