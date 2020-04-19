@@ -598,3 +598,6 @@ url=https://github.com/bitfocus/companion-module-newbluefx-titler.git
 [submodule "lib/module/rossvideo-xpression"]
 	path = lib/module/rossvideo-xpression
 	url = https://github.com/bitfocus/companion-module-rossvideo-xpression.git
+[submodule "lib/module/datavideo-dvip"]
+	path = lib/module/datavideo-dvip
+	url = https://github.com/bitfocus/companion-module-datavideo-dvip.git
