@@ -604,3 +604,6 @@ url=https://github.com/bitfocus/companion-module-newbluefx-titler.git
 [submodule "lib/module/singularlive-studio"]
 	path = lib/module/singularlive-studio
 	url = https://github.com/bitfocus/companion-module-singularlive-studio.git
+[submodule "lib/module/soundcraft-ui"]
+	path = lib/module/soundcraft-ui
+	url = https://github.com/bitfocus/companion-module-soundcraft-ui.git
