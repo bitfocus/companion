@@ -91,7 +91,7 @@
 		"elgato-stream-deck": "^3.3.0",
 		"express": "^4.16.3",
 		"find-process": "^1.4.3",
-		"flag-icon-css": "3.0.0",
+		"flag-icon-css": "3.4.6",
 		"font-awesome": "4.7.0",
 		"fs-extra": "^7.0.0",
 		"infinitton-idisplay": "^1.0.5",
