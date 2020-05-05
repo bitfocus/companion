@@ -120,7 +120,7 @@
 		"socket.io-client": "^2.1.0",
 		"strip-ansi": "^5.2.0",
 		"tributejs": "github:peschuster/tribute",
-		"websocket": "^1.0.28"
+		"websocket": "^1.0.31"
 	},
 	"collective": {
 		"type": "donorbox",
