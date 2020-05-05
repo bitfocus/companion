@@ -83,7 +83,7 @@
 		"binopsy": "^0.0.0",
 		"bootstrap": "^4.2.1",
 		"bootstrap-colorpicker": "^2.5.2",
-		"chart.js": "^2.7.2",
+		"chart.js": "^2.9.3",
 		"check-ip": "^1.1.1",
 		"debug": "^4.1.1",
 		"electron-debug": "^1.5.0",
