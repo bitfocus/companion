@@ -42,6 +42,9 @@ var skeleton_info = {};
 var config;
 var cfgDir;
 
+// Supress warnings for too many listeners to io_connect. This can be safely increased if the warning comes back at startup
+system.setMaxListeners(20)
+
 system.on('skeleton-info', function(key, val) {
 	skeleton_info[key] = val;
 	if (key == 'configDir') {
