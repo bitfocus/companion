@@ -126,12 +126,21 @@ $(function() {
 	$('#refreshUSB').click(function () {
 		var $thisbutton = $(this);
 
+		var errorElm = $("#deviceScanError");
+		errorElm.text("");
+		errorElm.css("display", "none");
+
 		socket.emit('devices_reenumerate');
 
 		$thisbutton.data('original-text', $thisbutton.html());
 		$thisbutton.html($thisbutton.data('loading-text')).prop('disabled', true);
 
-		socket.once('devices_reenumerate:result', function () {
+		socket.once('devices_reenumerate:result', function (errMsg) {
+			if (errMsg) {
+				errorElm.text(errMsg);
+				errorElm.css("display", "block");
+			}
+
 			$thisbutton.html($thisbutton.data('original-text')).prop('disabled', false);;
 		});
 
