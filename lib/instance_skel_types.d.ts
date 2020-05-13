@@ -8,6 +8,7 @@ export type InputValue = number | string | boolean
 export interface CompanionAction {
   label: string
   options: SomeCompanionInputField[]
+  callback?: (feedback: CompanionActionEvent) => void
 }
 export interface CompanionActionEvent {
   action: string
