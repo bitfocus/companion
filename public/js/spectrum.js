@@ -3,6 +3,9 @@
 // Author: Brian Grinstead
 // License: MIT
 
+// Manually included fixes:
+// - https://github.com/bgrins/spectrum/pull/556
+
 (function (factory) {
     "use strict";
 
@@ -140,7 +143,7 @@
                 c += (tinycolor.equals(color, current)) ? " sp-thumb-active" : "";
                 var formattedString = tiny.toString(opts.preferredFormat || "rgb");
                 var swatchStyle = rgbaSupport ? ("background-color:" + tiny.toRgbString()) : "filter:" + tiny.toFilter();
-                html.push('<span title="' + formattedString + '" data-color="' + tiny.toRgbString() + '" class="' + c + '"><span class="sp-thumb-inner" style="' + swatchStyle + ';" /></span>');
+                html.push('<span title="' + formattedString + '" data-color="' + tiny.toRgbString() + '" class="' + c + '"><span class="sp-thumb-inner" style="' + swatchStyle + ';"></span></span>');
             } else {
                 var cls = 'sp-clear-display';
                 html.push($('<div />')
