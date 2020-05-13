@@ -30,8 +30,6 @@ function hex2int(hex) {
 }
 
 $(function() {
-	socket.emit('release_actions_get');
-
 	var $aba = $("#addBankReleaseAction");
 	$aba.select2({
 		theme: 'option',
