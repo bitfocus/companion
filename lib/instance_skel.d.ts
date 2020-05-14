@@ -85,6 +85,21 @@ declare abstract class InstanceSkel<TConfig> {
    */
   unsubscribeFeedbacks(feedbackId?: string): void
 
+  /**
+   * Get an array of all the actions and release_actions for this instance
+   */
+  getAllActions(): CompanionFeedbackEvent[]
+  /**
+   * Trigger the subscribe callback on all actions and release_actions for this instance
+   * @param actionId Action type to call for, or undefined for all
+   */
+  subscribeActions(actionId?: string): void
+  /**
+   * Trigger the unsubscribe callback on all actions and release_actions for this instance
+   * @param actionId Action type to call for, or undefined for all
+   */
+  unsubscribeActions(actionId?: string): void
+
   status(level: null | 0 | 1 | 2, message?: string): void
 
   log(level: 'info' | 'warn' | 'error' | 'debug', info: string): void
