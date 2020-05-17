@@ -610,3 +610,6 @@ url=https://github.com/bitfocus/companion-module-newbluefx-titler.git
 [submodule "lib/module/vivitek-projector"]
 	path = lib/module/vivitek-projector
 	url = https://github.com/bitfocus/companion-module-vivitek-projector.git
+[submodule "lib/module/novastar-controller"]
+	path = lib/module/novastar-controller
+	url = https://github.com/bitfocus/companion-module-novastar-controller.git
