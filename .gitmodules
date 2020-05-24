@@ -613,3 +613,6 @@ url=https://github.com/bitfocus/companion-module-newbluefx-titler.git
 [submodule "lib/module/novastar-controller"]
 	path = lib/module/novastar-controller
 	url = https://github.com/bitfocus/companion-module-novastar-controller.git
+[submodule "lib/module/sony-bravia"]
+	path = lib/module/sony-bravia
+	url = https://github.com/bitfocus/companion-module-sony-bravia.git
