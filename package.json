@@ -31,6 +31,11 @@
 			"buildResources": "assets/",
 			"output": "electron-output/"
 		},
+		"linux": {
+			"extraResources": [
+				"./node_modules/sharp/**/*"
+			]
+		},
 		"files": [
 			"**/*",
 			"assets/icon.png",
