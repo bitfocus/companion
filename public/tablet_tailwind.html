@@ -1,20 +1,22 @@
 <!--
-    This modified version of Companion'stablet.html is designed so that the 
+    This modified version of Companion's tablet.html is designed so that the 
     layout of buttons remains consistent. In otherwords they won't wrap 
     throughing off the layout you specified when designing your deck.
-    Semi-Scaling Buttons:
+
+    Tailwind CSS is being used to make layout & styling easier. Currently 
+    it is simply being pulled from CDN which would mean internet access 
+    is necessary for use.
+
+    Scaling Buttons:
     -----------------------
-    The buttons will change their size a bit depending on your device's
-    resolution. It'll change between 72, 90px (iPad in landscape) and 100px 
-    (higher res. tablets & desktops) buttons.
-    Note that for lower resolution mobile devices you will likely need to
-    hold it in landscape in order to see all of the buttons!
-    Previous/Next Page buttons
+    Thanks to Tailwind CSS button scaling is much imporved and I've tried to
+    work out sizes for phones and tablets that fit well.
+
     ---------------------------
     This version also includes Previous/Next buttons at the top of each
     page to allow you to move through your pages without having to scroll.
     (Any Page up/down button on the deck itself do not work!) If you've opted
-    to use the pages= querystring parameter to limit the pages the links will
+    to use the pages=x,y,z querystring parameter to limit the pages the links will
     take this into account (they don't just blindly add 1 to the current page#)
     Optional Deck_Size (# buttons)
     -------------------------------
