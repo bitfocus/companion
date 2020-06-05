@@ -1,0 +1,461 @@
+<!--
+    This modified version of Companion's tablet.html is designed so that the 
+    layout of buttons remains consistent. In otherwords they won't wrap 
+    throughing off the layout you specified when designing your deck.
+
+    Tailwind CSS is being used to make layout & styling easier.
+
+    Scaling Buttons:
+    -----------------------
+    Thanks to Tailwind CSS button scaling is much imporved and I've tried to
+    work out sizes for phones and tablets that fit well.
+
+    ---------------------------
+    This version also includes Previous/Next buttons at the top of each
+    page to allow you to move through your pages without having to scroll.
+    (Any Page up/down button on the deck itself do not work!) If you've opted
+    to use the pages=x,y,z querystring parameter to limit the pages the links will
+    take this into account (they don't just blindly add 1 to the current page#)
+    Optional Deck_Size (# buttons)
+    -------------------------------
+    Finally, an extra querystring parameter "deck_size" was added. This will
+    allow you to simulate the original 15 button steam deck (?deck_size=15)
+    or even the 6 button version (?deck_size=6) which could be useful to anyone
+    wanting to utilize their phone instead of a tablet. (Note that the buttons 
+    will not enlarge themselves - they'll be set at 72px even if technically
+    they could be larger, I just don't feel like writing that many @media 
+    queries)
+-->
+<!-- /*
+ * This file is part of the Companion project
+ * Copyright (c) 2018 Bitfocus AS
+ * Authors: William Viker <william@bitfocus.io>, Håkon Nessjøen <haakon@bitfocus.io>
+ *
+ * This program is free software.
+ * You should have received a copy of the MIT licence as well as the Bitfocus
+ * Individual Contributor License Agreement for companion along with
+ * this program.
+ *
+ * You can be released from the requirements of the license by purchasing
+ * a commercial license. Buying such a license is mandatory as soon as you
+ * develop commercial activities involving the Companion software without
+ * disclosing the source code of your own applications.
+ *
+ */ -->
+ <html>
+  <head>
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0 , maximum-scale=1.0, user-scalable=0"
+    />
+    <link rel="manifest" href="/manifest.json" />
+    <!-- PWA support -->
+    <meta name="theme-color" content="#000000" />
+    <!-- ios support -->
+    <link
+      rel="apple-touch-icon"
+      sizes="72x72"
+      href="/img/brand/icons-72-square.png"
+    />
+    <link
+      rel="apple-touch-icon"
+      sizes="96x96"
+      href="/img/brand/icons-96-square.png"
+    />
+    <link
+      rel="apple-touch-icon"
+      sizes="128x128"
+      href="/img/brand/icons-128-square.png"
+    />
+    <link
+      rel="apple-touch-icon"
+      sizes="512x512"
+      href="/img/brand/icons-512-square.png"
+    />
+
+    <!-- Tailwind for easier responsive CSS of button grid -->
+    <link rel="stylesheet" type="text/css" href="/css/tailwind.min.css">
+    
+    <link href="/fa/css/all.css" rel="stylesheet">
+    
+    <style>
+      body {
+        /* margin: 0;
+        padding: 0; */
+        background-color: black;
+        /* font-size: 2em;
+        font-family: helvetica; */
+      }
+
+      /* .page {
+        padding: 20px;
+      } */
+
+      .page-bank-content canvas {
+        /* width: 72px; */
+        /* margin: 15px; */
+        /* height: 72px; */
+
+        box-shadow: 0px 0px 25px #333;
+        border: 1px solid rgba(255, 255, 255, 0.15);
+      }
+
+      .disable-dbl-tap-zoom {
+        touch-action: manipulation;
+      }
+
+      * {
+        touch-action: manipulation;
+      }
+
+      * {
+        -moz-user-select: none;
+        -webkit-user-select: none;
+        -ms-user-select: none;
+        user-select: none;
+        -o-user-select: none;
+        touch-action: pan-y;
+        touch-action: manipulation;
+      }
+
+      canvas {
+        image-rendering: optimizeSpeed; /* Older versions of FF          */
+        image-rendering: -moz-crisp-edges; /* FF 6.0+                       */
+        image-rendering: -webkit-optimize-contrast; /* Safari                        */
+        image-rendering: -o-crisp-edges; /* OS X & Windows Opera (12.02+) */
+        image-rendering: pixelated; /* Awesome future-browsers       */
+        -ms-interpolation-mode: nearest-neighbor; /* IE                            */
+      }
+
+          </style>
+
+    <title>Companion Tablet Surface - Brian Fork</title>
+  </head>
+  <body class="disable-dbl-tap-zoom">
+    <script src="js/jquery/jquery.min.js"></script>
+    <script src="socket.io/socket.io.js"></script>
+    <script src="js/viewport.js"></script>
+    <script src="js/preview.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+    <script src="https://unpkg.com/vue-observe-visibility/dist/vue-observe-visibility.min.js"></script>
+
+
+    <div class="container mx-auto" id="companion_app">
+        <select v-model="deck_size">
+            <option disabled value="">Please select one</option>
+            <option>6</option>
+            <option>15</option>
+            <option>32</option>
+          </select>
+        <div  v-for="page in pages" :key="page" class="page m-4"
+            v-observe-visibility="(isVisible, entry) => lazyLoadPage(isVisible, entry, page)"
+        >
+            <div class="grid grid-cols-2 items-center">
+                <h1 class="text-yellow-600 text-4xl" id='page_title_${page}'>
+                  Page {{page}}
+                </h1>
+                
+                <div>
+                  &nbsp;
+              </div>
+            </div>
+            <!--grid page of buttons will be appended here-->
+            <div v-for="(row, index)  in  buttonRows" :key="'page_'+page+'_row_'+index" 
+            class="flex grid gap-4 mx-auto my-auto p-2" :class="deckGridClass" :id="'page_'+page+'_row_'+index" >
+                <!--buttons will be appended here-->
+                <div v-for="button in row" class=" page-bank-content" :id="'bank_'+page+'_'+button">
+                    <canvas class="canvases m-3 bg-gray-600 page-bank-content" :class="responsiveButtonSizes"
+                    width="72" height="72" 
+                    :ref="'canvas_'+page+'_'+button"
+                    @mousedown="mousedown(page, button)"
+                    @mouseup="mouseup(page, button)"
+                    @touchstart.prevent="touchstart(page, button)"
+                    @touchend.prevent="touchend(page, button)"
+                    ></canvas>
+                  </div>
+              </div>
+            </div>
+        
+    </div>
+    <script type="text/javascript">
+    var vue_socket = io();
+    let app = new Vue({
+        el: '#companion_app',
+        data: {
+            buttons: [],
+            deck_data: [],
+            deck_size: 32,
+            pages: Array.from({ length: 99 }, (v, k) => k + 1),
+            config: {},
+            cache: {},
+            been_connected: false,
+            pageinfo: {},
+            pages_in_viewport: []
+        },
+        computed: {
+            keeperButtons: function(){
+                if(this.deck_size == 6){
+                    return [
+                    1, 2, 3, 
+                    9, 10, 11, 
+                    ];
+                } else if (this.deck_size == 15){
+                    return [
+                    1, 2, 3, 4, 5,
+                    9, 10, 11, 12, 13,
+                    17, 18, 19, 20, 21,
+                    ];
+                } else {
+                    return Array.from({ length: 32 }, (v, k) => k + 1)
+                }
+            },
+            buttonRows: function(){
+                if(this.deck_size == 6){
+                    return [
+                    [1, 2, 3], 
+                    [9, 10, 11], 
+                    ];
+                } else if (this.deck_size == 15){
+                    return [
+                    [1, 2, 3, 4, 5],
+                    [9, 10, 11, 12, 13],
+                    [17, 18, 19, 20, 21]
+                    ];
+                } else {
+                    return [
+                        [1,2,3,4,5,6,7,8],
+                        [9,10,11,12,13,14,15,16],
+                        [17,18,19,20,21,22,23,24],
+                        [25,26,27,28,29,30,31,32]
+                    ]
+                }
+            },
+            deckGridClass: function(){
+                if(this.deck_size == 6){
+                    return 'grid-cols-3'
+                } else if (this.deck_size == 15){
+                    return 'grid-cols-5';
+                } else {
+                    return 'grid-cols-8'
+                }
+            },
+            responsiveButtonSizes: function(){
+                if(this.deck_size == 6){
+                    return "w-20 h-20 sm:w-24 sm:h-24 md:w-28 md:h-28 lg:w-32 lg:h-32";
+                } else if (this.deck_size == 15){
+                    return "w-16 h-16 sm:w-20 sm:h-20 md:w-28 md:h-28 lg:w-32 lg:h-32 sm:m-1";
+                } else {
+                    return "w-16 h-16 md:w-20 md:h-20 lg:w-24 lg:h-24";
+                }
+            },
+            rowStartingButtons: function(){
+                if(this.deck_size == 6){
+                    return [1, 9]
+                } else if (this.deck_size == 15){
+                    return [1, 9, 17]
+                } else {
+                    return [1, 9, 17, 25]
+                }
+            }
+        },//end of Computed
+        watch: {
+            deck_size: function(new_size, old_size){
+                if(parseInt(new_size) > parseInt(old_size)){
+                    this.initializeCache();
+                    this.pages_in_viewport.forEach(function(page){
+                        //re-request page's button data so can draw any new buttons
+                        vue_socket.emit("web_buttons_page", page, {});
+                    })
+                }
+            }
+        },
+        methods: {
+            hasPage(thispage) { 
+                //If user has requested only certain pages verify this one is one of them
+                thispage = parseInt(thispage);
+
+                if (this.pages.length == 0 || this.pages.indexOf(thispage) !== -1) {
+                    return true;
+                }
+                    return false;
+            },
+            drawBank(page, bank, data) {
+                if (!this.hasPage(page)) {
+                //   console.log("Not showing page " + page);
+                return;
+                }
+                // console.log("drawing bank "+bank)
+                // console.log(data)
+
+                if (this.keeperButtons.includes(parseInt(bank))) {
+                var canvas = this.$refs["canvas_" + page + "_" + bank][0];
+                
+                if (canvas) {
+                    // console.log("redrawing page "+page+" button "+bank)
+                    
+                    var ctx = canvas.getContext("2d");
+                    ctx.webkitImageSmoothingEnabled = false;
+                    var imageData = dataToButtonImage(data.buffer);
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+                    ctx.putImageData(imageData, 0, 0);
+                    ctx.drawImage(canvas, 0, 0, canvas.width, canvas.height);
+                }
+                }
+            },
+            initializeCache(){
+                for (var i = 1; i < 100; ++i) {
+                    this.cache[i] = {};
+                }
+            },
+
+            // Lazy load pages
+            lazyLoadPage(isVisible, entry, page) {
+                if(!isVisible){
+                    console.log("page "+page+" left viewport")
+                    var remove_index = this.pages_in_viewport.indexOf(page);
+                    if (remove_index > -1){
+                        console.log("was index "+remove_index+" in pages_in_viewport")
+                        this.pages_in_viewport.splice(remove_index, 1);
+                        console.log("Pages in viewport now "+this.pages_in_viewport)
+                    }
+                    
+                    return
+                } else {
+                    console.log("page "+page+" entered viewport")
+                    this.pages_in_viewport.push(page);
+                }
+                console.log("Pages in viewport now "+this.pages_in_viewport)
+                console.log("Lazy Loading page "+page);
+                // Not ready
+                if (this.cache[this.pages[0]] === undefined) {
+                    return;
+                }
+
+
+
+                if (this.cache[page][1] !== undefined || this.cache[page].wait == true) {
+                    return;
+                }
+
+                var cachedata = {};
+                for (var _bank = 1; _bank <= 12; ++_bank) {
+                if (this.cache[page][_bank] !== undefined) {
+                    cachedata[_bank] = this.cache[page][_bank].updated;
+                }
+                }
+
+                vue_socket.emit("web_buttons_page", page, cachedata);
+
+                this.cache[page].wait = true;
+                
+                
+            },
+            mousedown(page, button){
+                console.log("mouse down on page "+page+" button "+button)
+                vue_socket.emit("hot_press", page, button, true);
+            },
+            mouseup(page, button){
+                console.log("mouse up on page "+page+" button "+button)
+                vue_socket.emit("hot_press", page, button, false);
+            },
+            touchstart(page, button){
+                console.log("touch start on page "+page+" button "+button)
+                vue_socket.emit("hot_press", page, button, true);
+            },
+            touchend(page, button){
+                console.log("touch end on page "+page+" button "+button)
+                vue_socket.emit("hot_press", page, button, false);
+            },
+        },
+        created(){
+            vue_this = this;
+
+            this.initializeCache();
+
+            this.buttons = Array.from({ length: 32 }, (v, k) => k + 1)
+
+            let uri = window.location.search.substring(1); 
+            let params = new URLSearchParams(uri);
+            if(params.get("pages") != null){
+                //user requested specific pages only
+                this.pages = params.get("pages").split(/,+/).map(function (el) {
+                    return parseInt(el);
+                });
+            } 
+            if(params.get("deck_size") != null){
+                //user requested specific deck size
+                var requested_deck_size = parseInt(params.get("deck_size"))
+                if([6,15,32].includes(requested_deck_size)){
+                    this.deck_size=requested_deck_size;
+                } else {
+                    //invalid request force 32
+                    this.deck_size = 32;
+                }
+                
+            } 
+            
+            console.log(params.get("pages1"));
+
+            vue_socket.on("set_page", function (page, value) {
+                // console.log("set_page "+page)
+                vue_this.pageinfo[page] = value;
+            });
+
+            vue_socket.on("pages", function (_pageinfo) {
+                // console.log("socket on pages");
+                vue_this.pageinfo = _pageinfo;
+            });
+
+            vue_socket.on("connect", function () {
+                // console.log('websocket connect')
+                if (this.been_connected === true) {
+                    window.location.reload(true);
+                }
+            });
+
+            this.been_connected = true;
+
+            vue_socket.on("buttons_page_data", function (page, data) {
+                console.log("socket buttons_page_data for page "+page)
+                if (!vue_this.hasPage(page)) {
+                    return;
+                }
+                if (page === undefined || page == null){
+                    return
+                }
+                // console.log('buttons_page_date page '+page)
+                vue_this.cache[page].wait = false;
+
+                for (var key in data) {
+                    vue_this.cache[page][key] = data[key];
+                    vue_this.drawBank(page, key, data[key]);
+                }
+            });
+
+            vue_socket.on("buttons_bank_data", function (page, data) {
+                console.log("socket buttons_bank_data");
+                if (!vue_this.hasPage(page)) {
+                    return;
+                }
+                // console.log("buttons_bank_data for page "+page)
+                for (key in data) {
+                    vue_this.drawBank(page, key, data[key]);
+                }
+            });
+
+            vue_socket.emit("web_buttons");
+
+            // window.addEventListener('scroll', this.scroll);
+
+            // Request first page
+            vue_socket.emit("web_buttons_page", this.pages[0], {});
+
+        }//end created()
+
+    });
+    </script>
+    <div class="container mx-auto" id="pages"></div>
+
+    
+  </body>
+</html>
