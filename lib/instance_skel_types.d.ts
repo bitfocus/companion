@@ -18,6 +18,7 @@ export interface CompanionActionEvent {
 }
 
 export interface CompanionFeedbackEvent {
+  id: string
   type: string
   options: { [key: string]: InputValue | undefined }
 }
