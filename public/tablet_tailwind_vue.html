@@ -141,22 +141,54 @@
 
 
     <div class="container mx-auto" id="companion_app">
-        <select v-model="deck_size">
-            <option disabled value="">Please select one</option>
-            <option>6</option>
-            <option>15</option>
-            <option>32</option>
-          </select>
-        <div  v-for="page in pages" :key="page" class="page m-4"
+        <div class="menu grid grid-cols-2">
+            <div class="text-yellow-600">
+                <span v-if="!fullscreen" @click="requestFullscreen"><i class="fa fa-2x fa-expand"></i> Go Fullscreen</span>
+                <span v-if="fullscreen" @click="leaveFullscreen"><i class="fa fa-2x fa-compress"></i> Leave Fullscreen</span></div>
+            <div class="text-yellow-600"><span @click="showSettings = !showSettings"><i class="fa fa-2x fa-cog"></i> Settings</span></div>
+        </div>
+        <div v-if="showSettings" class="flex">
+            <div class="flex-1 ">
+                <label for="pickDeckSize" class=" text-yellow-600">Deck Size: </label> <br />
+                <select v-model="deck_size" id="pickDeckSize">
+                    <option disabled value="">Please select one</option>
+                    <option>6</option>
+                    <option>15</option>
+                    <option>32</option>
+                </select>
+            </div>
+            <div class="flex-1 ">
+                <label for="pickPage" class=" text-yellow-600">Only show pages (comma separated, blank mean show all 99)</label>
+                <br />
+                <input type="text" id="pickPage" v-model="pagesPreference" placeholder="ex. 1,3,10" />
+            </div>
+            <div class="flex-1 ">
+                <label for="companionIP" class=" text-yellow-600">Companion IP Address (if not same as loaded this page from)</label><br />
+                <input type="text" id="companionIP" v-model="companionIP" placeholder="ex. 192.168.1.123:8000" />
+            </div>
+            
+        </div>
+       
+        <div  v-for="page in pages" :key="page" :id="'page_'+page" class="page m-4"
             v-observe-visibility="(isVisible, entry) => lazyLoadPage(isVisible, entry, page)"
         >
             <div class="grid grid-cols-2 items-center">
                 <h1 class="text-yellow-600 text-4xl" id='page_title_${page}'>
-                  Page {{page}}
+                  {{pageTitle(page)}}
                 </h1>
                 
                 <div>
-                  &nbsp;
+                    <div class="space-x-4">
+                        <a :href="calcPrevPageLink(page)" 
+                        class="bg-black border border-gray-600 hover:bg-yellow-600 text-white font-bold w-8 py-2 px-8 rounded"
+                        >
+                         <i class="fa fa-arrow-up"></i><!--page up (previous)-->
+                        </a>
+                        <a :href="calcNextPageLink(page)" 
+                        class="bg-black border border-gray-600 hover:bg-yellow-600 text-white font-bold py-2 px-8 rounded">
+                        <i class="fa fa-arrow-down "></i><!--dummy button to keep placement of other button consistent-->
+                        </a>
+                      </div>
               </div>
             </div>
             <!--grid page of buttons will be appended here-->
@@ -178,21 +210,40 @@
         
     </div>
     <script type="text/javascript">
-    var vue_socket = io();
+    // var vue_socket = io();
     let app = new Vue({
         el: '#companion_app',
         data: {
             buttons: [],
             deck_data: [],
             deck_size: 32,
-            pages: Array.from({ length: 99 }, (v, k) => k + 1),
+            // pages: Array.from({ length: 99 }, (v, k) => k + 1),
             config: {},
             cache: {},
             been_connected: false,
             pageinfo: {},
-            pages_in_viewport: []
+            // pages: [],
+            pages_in_viewport: [],
+            showSettings: false,
+            pagesPreference: "",
+            companionIP: "",
+            fullscreen: false
         },
         computed: {
+            pages: function(){
+                if(this.pagesPreference == "" || this.pagesPreference === undefined){
+                    return Array.from({ length: 99 }, (v, k) => k + 1)
+                } else {
+                    var mypages = this.pagesPreference.split(/,+/).map(function (el) {
+                    return parseInt(el);
+                    });
+                    if (mypages.length) {
+                        return mypages;
+                    } else {
+                        return Array.from({ length: 99 }, (v, k) => k + 1)
+                    }
+                }
+            },
             keeperButtons: function(){
                 if(this.deck_size == 6){
                     return [
@@ -256,7 +307,8 @@
                 } else {
                     return [1, 9, 17, 25]
                 }
-            }
+            },
+            
         },//end of Computed
         watch: {
             deck_size: function(new_size, old_size){
@@ -264,9 +316,19 @@
                     this.initializeCache();
                     this.pages_in_viewport.forEach(function(page){
                         //re-request page's button data so can draw any new buttons
-                        vue_socket.emit("web_buttons_page", page, {});
+                        this.webSocket.emit("web_buttons_page", page, {});
                     })
                 }
+            },
+            pages: function(new_pages, old_pages){
+                this.pages_in_viewport.forEach(function(page){
+                        //re-request page's button data so can draw any new buttons
+                        this.webSocket.emit("web_buttons_page", page, {});
+                    })
+            },
+            companionIP: function(new_IP, old_IP){
+                this.webSocket.close()
+                this.initializeWebSocket()
             }
         },
         methods: {
@@ -308,8 +370,12 @@
                 }
             },
 
-            // Lazy load pages
+            // Lazy load pages gets fired when pages enter/leave viewport
             lazyLoadPage(isVisible, entry, page) {
+                /// when page enters viewport then get its bank button info
+                // also keep record of which pages are currently in viewport
+                // so if change a setting such that show more buttens than 
+                // have currently (like 6 -> 15 or 15 -> 32) can redraw
                 if(!isVisible){
                     console.log("page "+page+" left viewport")
                     var remove_index = this.pages_in_viewport.indexOf(page);
@@ -322,7 +388,10 @@
                     return
                 } else {
                     console.log("page "+page+" entered viewport")
-                    this.pages_in_viewport.push(page);
+                    if(this.pages_in_viewport.indexOf(page) == -1){
+                        this.pages_in_viewport.push(page);
+                    }
+                    
                 }
                 console.log("Pages in viewport now "+this.pages_in_viewport)
                 console.log("Lazy Loading page "+page);
@@ -344,27 +413,131 @@
                 }
                 }
 
-                vue_socket.emit("web_buttons_page", page, cachedata);
+                this.webSocket.emit("web_buttons_page", page, cachedata);
 
                 this.cache[page].wait = true;
                 
                 
             },
+            pageTitle(page){
+                if(this.pageinfo[page].name != "PAGE"){
+                    return this.pageinfo[page].name
+                } else {
+                    return "Page "+page;
+                }
+            },
             mousedown(page, button){
                 console.log("mouse down on page "+page+" button "+button)
-                vue_socket.emit("hot_press", page, button, true);
+                this.webSocket.emit("hot_press", page, button, true);
             },
             mouseup(page, button){
                 console.log("mouse up on page "+page+" button "+button)
-                vue_socket.emit("hot_press", page, button, false);
+                this.webSocket.emit("hot_press", page, button, false);
             },
             touchstart(page, button){
                 console.log("touch start on page "+page+" button "+button)
-                vue_socket.emit("hot_press", page, button, true);
+                this.webSocket.emit("hot_press", page, button, true);
             },
             touchend(page, button){
                 console.log("touch end on page "+page+" button "+button)
-                vue_socket.emit("hot_press", page, button, false);
+                this.webSocket.emit("hot_press", page, button, false);
+            },
+            initializeWebSocket(){
+                this.webSocket = io(this.companionIP)
+                this.webSocket.on("set_page", function (page, value) {
+                    // console.log("set_page "+page)
+                    vue_this.pageinfo[page] = value;
+                });
+
+                this.webSocket.on("pages", function (_pageinfo) {
+                    // console.log("socket on pages");
+                    vue_this.pageinfo = _pageinfo;
+                });
+
+                this.webSocket.on("connect", function () {
+                    // console.log('websocket connect')
+                    if (this.been_connected === true) {
+                        window.location.reload(true);
+                    }
+                });
+
+                this.been_connected = true;
+
+                this.webSocket.on("buttons_page_data", function (page, data) {
+                    console.log("socket buttons_page_data for page "+page)
+                    if (!vue_this.hasPage(page)) {
+                        return;
+                    }
+                    if (page === undefined || page == null){
+                        return
+                    }
+                    // console.log('buttons_page_date page '+page)
+                    vue_this.cache[page].wait = false;
+
+                    for (var key in data) {
+                        vue_this.cache[page][key] = data[key];
+                        vue_this.drawBank(page, key, data[key]);
+                    }
+                });
+
+                this.webSocket.on("buttons_bank_data", function (page, data) {
+                    console.log("socket buttons_bank_data");
+                    if (!vue_this.hasPage(page)) {
+                        return;
+                    }
+                    // console.log("buttons_bank_data for page "+page)
+                    for (key in data) {
+                        vue_this.drawBank(page, key, data[key]);
+                    }
+                });
+
+            },
+            requestFullscreen: function(){
+                if(document.documentElement.webkitRequestFullscreen){
+                    /*Chrome, Safari, Opera*/
+                    document.documentElement.webkitRequestFullscreen(Element.ALLOW_KEYBOARD_INPUT);
+                } else if (document.documentElement.mozRequestFullScreen){
+                    //firefox
+                    document.documentElement.mozRequestFullScreen();
+                } else if(document.documentElement.msRequestFullscreen){
+                    //IE or Edge
+                    document.documentElement.msRequestFullscreen();
+                } else if(document.documentElement.requestFullscreen) {
+                    document.documentElement.requestFullscreen(); // standard
+                }
+                
+                this.fullscreen=true
+            },
+            leaveFullscreen: function(){
+                if (document.webkitExitFullscreen){
+                    document.webkitExitFullscreen();
+                } else if(document.mozCancelFullScreen){
+                    document.mozCancelFullScreen();
+                } else if(document.msExitFullscreen){
+                    document.msExitFullscreen();
+                } else if(document.exitFullscreen){
+                    document.exitFullscreen();
+                }
+                this.fullscreen=false
+            },
+
+            calcNextPageLink: function(thisPage){
+                // given current page figure out anchor link for the next page
+                let pageIndex = this.pages.indexOf(thisPage);
+                if(pageIndex + 1 == this.pages.length){
+                    return false;//already at last page
+                } else {
+                    return "#page_"+this.pages[pageIndex+1]
+                }
+            },
+            calcPrevPageLink: function(thisPage){
+                // given current page figure out anchor link for the next page
+                let pageIndex = this.pages.indexOf(thisPage);
+                if(pageIndex == 0){
+                    return false;//already at first page
+                } else {
+                    return "#page_"+this.pages[pageIndex-1]
+                }
             },
         },
         created(){
@@ -378,10 +551,14 @@
             let params = new URLSearchParams(uri);
             if(params.get("pages") != null){
                 //user requested specific pages only
-                this.pages = params.get("pages").split(/,+/).map(function (el) {
-                    return parseInt(el);
-                });
-            } 
+                this.pagesPreference=params.get("pages")
+                // this.pages = params.get("pages").split(/,+/).map(function (el) {
+                //     return parseInt(el);
+                // });
+
+            }  else {
+                this.pagesPreference=""
+            }
             if(params.get("deck_size") != null){
                 //user requested specific deck size
                 var requested_deck_size = parseInt(params.get("deck_size"))
@@ -396,59 +573,13 @@
             
             console.log(params.get("pages1"));
 
-            vue_socket.on("set_page", function (page, value) {
-                // console.log("set_page "+page)
-                vue_this.pageinfo[page] = value;
-            });
-
-            vue_socket.on("pages", function (_pageinfo) {
-                // console.log("socket on pages");
-                vue_this.pageinfo = _pageinfo;
-            });
-
-            vue_socket.on("connect", function () {
-                // console.log('websocket connect')
-                if (this.been_connected === true) {
-                    window.location.reload(true);
-                }
-            });
-
-            this.been_connected = true;
-
-            vue_socket.on("buttons_page_data", function (page, data) {
-                console.log("socket buttons_page_data for page "+page)
-                if (!vue_this.hasPage(page)) {
-                    return;
-                }
-                if (page === undefined || page == null){
-                    return
-                }
-                // console.log('buttons_page_date page '+page)
-                vue_this.cache[page].wait = false;
-
-                for (var key in data) {
-                    vue_this.cache[page][key] = data[key];
-                    vue_this.drawBank(page, key, data[key]);
-                }
-            });
-
-            vue_socket.on("buttons_bank_data", function (page, data) {
-                console.log("socket buttons_bank_data");
-                if (!vue_this.hasPage(page)) {
-                    return;
-                }
-                // console.log("buttons_bank_data for page "+page)
-                for (key in data) {
-                    vue_this.drawBank(page, key, data[key]);
-                }
-            });
-
-            vue_socket.emit("web_buttons");
+            this.initializeWebSocket();
+            this.webSocket.emit("web_buttons");
 
             // window.addEventListener('scroll', this.scroll);
 
             // Request first page
-            vue_socket.emit("web_buttons_page", this.pages[0], {});
+            this.webSocket.emit("web_buttons_page", this.pages[0], {});
 
         }//end created()
 
