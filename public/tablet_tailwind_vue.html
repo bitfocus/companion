@@ -147,24 +147,35 @@
                 <span v-if="fullscreen" @click="leaveFullscreen"><i class="fa fa-2x fa-compress"></i> Leave Fullscreen</span></div>
             <div class="text-yellow-600"><span @click="showSettings = !showSettings"><i class="fa fa-2x fa-cog"></i> Settings</span></div>
         </div>
-        <div v-if="showSettings" class="flex">
+        <div v-if="showSettings" class="flex  text-yellow-600">
             <div class="flex-1 ">
-                <label for="pickDeckSize" class=" text-yellow-600">Deck Size: </label> <br />
-                <select v-model="deck_size" id="pickDeckSize">
+                <label for="pickDeckSize" >Deck Size: </label> <br />
+                <select v-model="settings.deckSize" id="pickDeckSize" class="text-black">
                     <option disabled value="">Please select one</option>
-                    <option>6</option>
-                    <option>15</option>
-                    <option>32</option>
+                    <option v-for="option in deckSizeOptions" :value="option.value">{{option.label}}</option>
+                    
                 </select>
             </div>
             <div class="flex-1 ">
-                <label for="pickPage" class=" text-yellow-600">Only show pages (comma separated, blank mean show all 99)</label>
+                <label for="pickPage" >Only show pages (comma separated, blank mean show all 99)</label>
                 <br />
-                <input type="text" id="pickPage" v-model="pagesPreference" placeholder="ex. 1,3,10" />
+                <input type="text" id="pickPage" v-model="settings.pagesPreference" placeholder="ex. 1,3,10"  class="text-black"/>
+            </div>
+            <div v-if="false" class="flex-1 ">
+                <label for="companionIP" >Companion IP Address (if not same as loaded this page from)</label><br />
+                <input type="text" id="companionIP" v-model="settings.companionIP" placeholder="ex. 192.168.1.123:8000" />
             </div>
             <div class="flex-1 ">
-                <label for="companionIP" class=" text-yellow-600">Companion IP Address (if not same as loaded this page from)</label><br />
-                <input type="text" id="companionIP" v-model="companionIP" placeholder="ex. 192.168.1.123:8000" />
+
+                <label for="pageUpButton">Page Up:</label>
+                <input type="number" min="1" max="32" size="2" id="pageUpButton" 
+                    v-model="settings.pageUpButton" placeholder="ex.1"  class="text-black"/><br />
+                <label for="pageDownButton">Page Down:</label>
+                <input type="number" min="1" max="32" size="2" id="pageDownButton" 
+                    v-model="settings.pageDownButton" placeholder="ex.17"  class="text-black"/><br />
+                <p>Specify which buttons you are using for page up/down so they can be made to work as expected 
+                    in this web interface. They <strong>must</strong> be in the same place on every page!
+                </p>
             </div>
             
         </div>
@@ -179,14 +190,27 @@
                 
                 <div>
                     <div class="space-x-4">
-                        <a :href="calcPrevPageLink(page)" 
+                        <a v-if="calcPrevPageLink(page) ":href="calcPrevPageLink(page)" 
                         class="bg-black border border-gray-600 hover:bg-yellow-600 text-white font-bold w-8 py-2 px-8 rounded"
                         >
                          <i class="fa fa-arrow-up"></i><!--page up (previous)-->
                         </a>
-                        <a :href="calcNextPageLink(page)" 
+                        <a v-else  
+                        class="bg-black border border-black hover:bg-black text-black font-bold w-8 py-2 px-8 rounded"
+                        >
+                        <!--this button essentially cloaked and won't do anything because is no previous page to go to-->
+                         <i class="fa fa-arrow-up"></i><!--page up (previous)-->
+                        </a>
+
+                        <a v-if="calcNextPageLink(page)" :href="calcNextPageLink(page)" 
                         class="bg-black border border-gray-600 hover:bg-yellow-600 text-white font-bold py-2 px-8 rounded">
-                        <i class="fa fa-arrow-down "></i><!--dummy button to keep placement of other button consistent-->
+                        <i class="fa fa-arrow-down "></i>
+                        </a><!--page down (next)-->
+                        <a v-else  
+                        class="bg-black border border-black hover:bg-black text-black font-bold w-8 py-2 px-8 rounded"
+                        >
+                        <!--this button essentially cloaked and won't do anything because is no next page to go to-->
+                         <i class="fa fa-arrow-down"></i>
                         </a>
                       </div>
               </div>
@@ -196,14 +220,25 @@
             class="flex grid gap-4 mx-auto my-auto p-2" :class="deckGridClass" :id="'page_'+page+'_row_'+index" >
                 <!--buttons will be appended here-->
                 <div v-for="button in row" class=" page-bank-content" :id="'bank_'+page+'_'+button">
-                    <canvas class="canvases m-3 bg-gray-600 page-bank-content" :class="responsiveButtonSizes"
-                    width="72" height="72" 
-                    :ref="'canvas_'+page+'_'+button"
-                    @mousedown="mousedown(page, button)"
-                    @mouseup="mouseup(page, button)"
-                    @touchstart.prevent="touchstart(page, button)"
-                    @touchend.prevent="touchend(page, button)"
-                    ></canvas>
+                    <a  :href="isPageUpDownButton(button, page)">
+                        <!--is a page up/down lin so should also serve as actual html link so can navigate pages-->
+                        <canvas class="canvases m-3 bg-gray-600 page-bank-content" :class="responsiveButtonSizes"
+                        width="72" height="72" 
+                        :ref="'canvas_'+page+'_'+button"
+                        @mousedown="mousedown(page, button)"
+                        @mouseup="mouseup(page, button)"
+                        @touchstart.prevent="touchstart(page, button)"
+                        @touchend.prevent="touchend(page, button)">
+                        </canvas>
+                    </a>
+                    <!-- <canvas v-else class="canvases m-3 bg-gray-600 page-bank-content" :class="responsiveButtonSizes"
+                        width="72" height="72" 
+                        :ref="'canvas_'+page+'_'+button"
+                        @mousedown="mousedown(page, button)"
+                        @mouseup="mouseup(page, button)"
+                        @touchstart.prevent="touchstart(page, button)"
+                        @touchend.prevent="touchend(page, button)">
+                    </canvas> -->
                   </div>
               </div>
             </div>
@@ -216,26 +251,38 @@
         data: {
             buttons: [],
             deck_data: [],
-            deck_size: 32,
-            // pages: Array.from({ length: 99 }, (v, k) => k + 1),
+            deckSizeOptions: [
+                {value: 6, label: "Mini (6)"},
+                {value: 15, label: "Standard (15)"},
+                {value: 32, label: "XL (32)"},
+            ],
+            settings: {
+                deckSize: 32,
+                pageDownButton: 17,
+                pageUpButton: 1,
+                pagesPreference: "",
+                companionIP: "",
+            },
             config: {},
             cache: {},
             been_connected: false,
             pageinfo: {},
-            // pages: [],
             pages_in_viewport: [],
             showSettings: false,
-            pagesPreference: "",
-            companionIP: "",
-            fullscreen: false
+            
+            fullscreen: false,
         },
         computed: {
             pages: function(){
-                if(this.pagesPreference == "" || this.pagesPreference === undefined){
+                //gets the pages the user wants shown
+                if(this.settings.pagesPreference == "" || this.settings.pagesPreference === undefined){
+                    //defaults to all 99
                     return Array.from({ length: 99 }, (v, k) => k + 1)
                 } else {
-                    var mypages = this.pagesPreference.split(/,+/).map(function (el) {
-                    return parseInt(el);
+                    //if user has entered a preference into settings then parse
+                    //and show only those pages
+                    var mypages = this.settings.pagesPreference.split(/,+/).map(function (el) {
+                        return parseInt(el);
                     });
                     if (mypages.length) {
                         return mypages;
@@ -245,12 +292,13 @@
                 }
             },
             keeperButtons: function(){
-                if(this.deck_size == 6){
+                // helper so know which buttons to include based on deck size
+                if(this.settings.deckSize == 6){
                     return [
                     1, 2, 3, 
                     9, 10, 11, 
                     ];
-                } else if (this.deck_size == 15){
+                } else if (this.settings.deckSize == 15){
                     return [
                     1, 2, 3, 4, 5,
                     9, 10, 11, 12, 13,
@@ -261,16 +309,18 @@
                 }
             },
             buttonRows: function(){
-                if(this.deck_size == 6){
+                // helper so know which buttons go in which rows and 
+                // which rows to include based on deck size
+                if(this.settings.deckSize == 6){
                     return [
                     [1, 2, 3], 
                     [9, 10, 11], 
                     ];
-                } else if (this.deck_size == 15){
+                } else if (this.settings.deckSize == 15){
                     return [
-                    [1, 2, 3, 4, 5],
-                    [9, 10, 11, 12, 13],
-                    [17, 18, 19, 20, 21]
+                        [1, 2, 3, 4, 5],
+                        [9, 10, 11, 12, 13],
+                        [17, 18, 19, 20, 21]
                     ];
                 } else {
                     return [
@@ -282,51 +332,53 @@
                 }
             },
             deckGridClass: function(){
-                if(this.deck_size == 6){
+                // alters the number of columns in our button grid based on 
+                // chosen deck size
+                if(this.settings.deckSize == 6){
                     return 'grid-cols-3'
-                } else if (this.deck_size == 15){
+                } else if (this.settings.deckSize == 15){
                     return 'grid-cols-5';
                 } else {
                     return 'grid-cols-8'
                 }
             },
             responsiveButtonSizes: function(){
-                if(this.deck_size == 6){
+                // applies reasonable tailwind css classes based on deck size to
+                // try to get buttons that are responsive and as large as reasonable
+                // for common mobile device screen sizes
+                if(this.settings.deckSize == 6){
                     return "w-20 h-20 sm:w-24 sm:h-24 md:w-28 md:h-28 lg:w-32 lg:h-32";
-                } else if (this.deck_size == 15){
+                } else if (this.settings.deckSize == 15){
                     return "w-16 h-16 sm:w-20 sm:h-20 md:w-28 md:h-28 lg:w-32 lg:h-32 sm:m-1";
                 } else {
                     return "w-16 h-16 md:w-20 md:h-20 lg:w-24 lg:h-24";
                 }
             },
-            rowStartingButtons: function(){
-                if(this.deck_size == 6){
-                    return [1, 9]
-                } else if (this.deck_size == 15){
-                    return [1, 9, 17]
-                } else {
-                    return [1, 9, 17, 25]
-                }
-            },
             
         },//end of Computed
         watch: {
-            deck_size: function(new_size, old_size){
+            'settings.deckSize': function(new_size, old_size){
+                //when deck size increases need to request a redraw of
+                // pages else the newly added buttons won't appera
                 if(parseInt(new_size) > parseInt(old_size)){
-                    this.initializeCache();
-                    this.pages_in_viewport.forEach(function(page){
-                        //re-request page's button data so can draw any new buttons
-                        this.webSocket.emit("web_buttons_page", page, {});
-                    })
+                    this.redrawPages()
                 }
             },
+            // 'settings.pageDownButton': function(new_button, button){
+            //     this.redrawPages()
+            // },
+            // 'settings.pageUpButton': function(new_size, old_size){
+            //     this.redrawPages()
+            // },
             pages: function(new_pages, old_pages){
-                this.pages_in_viewport.forEach(function(page){
-                        //re-request page's button data so can draw any new buttons
-                        this.webSocket.emit("web_buttons_page", page, {});
-                    })
+                // when user requests to see different pages
+                // should redraw those currently showing to avoid
+                // missing buttons
+                this.redrawPages()
             },
-            companionIP: function(new_IP, old_IP){
+            'settings.companionIP': function(new_IP, old_IP){
+                // try to allow changing the companion instance connected to
+                // not actually functional right now.
                 this.webSocket.close()
                 this.initializeWebSocket()
             }
@@ -342,6 +394,7 @@
                     return false;
             },
             drawBank(page, bank, data) {
+                // handles actually drawing the buttons to canvas
                 if (!this.hasPage(page)) {
                 //   console.log("Not showing page " + page);
                 return;
@@ -350,21 +403,24 @@
                 // console.log(data)
 
                 if (this.keeperButtons.includes(parseInt(bank))) {
-                var canvas = this.$refs["canvas_" + page + "_" + bank][0];
-                
-                if (canvas) {
-                    // console.log("redrawing page "+page+" button "+bank)
+                    var canvas = this.$refs["canvas_" + page + "_" + bank][0];
                     
-                    var ctx = canvas.getContext("2d");
-                    ctx.webkitImageSmoothingEnabled = false;
-                    var imageData = dataToButtonImage(data.buffer);
-                    ctx.clearRect(0, 0, canvas.width, canvas.height);
-                    ctx.putImageData(imageData, 0, 0);
-                    ctx.drawImage(canvas, 0, 0, canvas.width, canvas.height);
-                }
+                    if (canvas) {
+                        // console.log("redrawing page "+page+" button "+bank)
+                        
+                        var ctx = canvas.getContext("2d");
+                        ctx.webkitImageSmoothingEnabled = false;
+                        var imageData = dataToButtonImage(data.buffer);
+                        ctx.clearRect(0, 0, canvas.width, canvas.height);
+                        ctx.putImageData(imageData, 0, 0);
+                        ctx.drawImage(canvas, 0, 0, canvas.width, canvas.height);
+                    }
                 }
             },
             initializeCache(){
+                // clears the cache of button data so that will definitely
+                // get current data when next request page from server
+                // helps to avoid missing buttons on settings change
                 for (var i = 1; i < 100; ++i) {
                     this.cache[i] = {};
                 }
@@ -372,29 +428,32 @@
 
             // Lazy load pages gets fired when pages enter/leave viewport
             lazyLoadPage(isVisible, entry, page) {
+                // load page's button data from server as become visible on page
+
                 /// when page enters viewport then get its bank button info
                 // also keep record of which pages are currently in viewport
                 // so if change a setting such that show more buttens than 
                 // have currently (like 6 -> 15 or 15 -> 32) can redraw
                 if(!isVisible){
-                    console.log("page "+page+" left viewport")
+                    // console.log("page "+page+" left viewport")
                     var remove_index = this.pages_in_viewport.indexOf(page);
                     if (remove_index > -1){
-                        console.log("was index "+remove_index+" in pages_in_viewport")
+                        // console.log("was index "+remove_index+" in pages_in_viewport")
                         this.pages_in_viewport.splice(remove_index, 1);
-                        console.log("Pages in viewport now "+this.pages_in_viewport)
+                        // console.log("Pages in viewport now "+this.pages_in_viewport)
                     }
                     
                     return
                 } else {
-                    console.log("page "+page+" entered viewport")
+                    // console.log("page "+page+" entered viewport")
                     if(this.pages_in_viewport.indexOf(page) == -1){
                         this.pages_in_viewport.push(page);
                     }
                     
                 }
-                console.log("Pages in viewport now "+this.pages_in_viewport)
-                console.log("Lazy Loading page "+page);
+                // console.log("Pages in viewport now "+this.pages_in_viewport)
+                // console.log("Lazy Loading page "+page);
+
                 // Not ready
                 if (this.cache[this.pages[0]] === undefined) {
                     return;
@@ -408,42 +467,88 @@
 
                 var cachedata = {};
                 for (var _bank = 1; _bank <= 12; ++_bank) {
-                if (this.cache[page][_bank] !== undefined) {
-                    cachedata[_bank] = this.cache[page][_bank].updated;
+                    if (this.cache[page][_bank] !== undefined) {
+                        cachedata[_bank] = this.cache[page][_bank].updated;
+                    }
                 }
-                }
-
+                // ask server for update on page buttons vs what we currently have
                 this.webSocket.emit("web_buttons_page", page, cachedata);
 
                 this.cache[page].wait = true;
                 
                 
             },
+            redrawPages(){
+                // when settings are changed to show diff number of buttons or 
+                // diff pages need to redraw or tend to get some missing buttons
+                this.initializeCache(); // pretend not to know anything
+                this.pages_in_viewport.forEach(function(page){
+                    //re-request page's button data so can draw any new buttons
+                    this.webSocket.emit("web_buttons_page", page, {});
+                })
+            },
             pageTitle(page){
+                // Show actual page title when avaiable
+                if(this.pageinfo[page] === undefined){
+                    return "Page ?" //normally just temporary on first load because don't have data yet
+                }
+                
                 if(this.pageinfo[page].name != "PAGE"){
                     return this.pageinfo[page].name
                 } else {
                     return "Page "+page;
                 }
             },
+            calcNextPageLink: function(thisPage){
+                // given current page figure out anchor link for the next page
+                let pageIndex = this.pages.indexOf(thisPage);
+                if(pageIndex + 1 == this.pages.length){
+                    return false;//already at last page
+                } else {
+                    return "#page_"+this.pages[pageIndex+1]
+                }
+            },
+            calcPrevPageLink: function(thisPage){
+                // given current page figure out anchor link for the next page
+                let pageIndex = this.pages.indexOf(thisPage);
+                if(pageIndex == 0){
+                    return false;//already at first page
+                } else {
+                    return "#page_"+this.pages[pageIndex-1]
+                }
+            },
+            isPageUpDownButton(button, page){
+                // determine if the button we are creating is one of the user's
+                // Page Up/Down buttons and if so return a link that'll go to appropriate 
+                // page (the button's won't actually do anything in web interface otherwise)
+                if(parseInt(button) == this.settings.pageDownButton){
+                    return this.calcNextPageLink(page)
+                } else if(parseInt(button) == this.settings.pageUpButton){
+                    return this.calcPrevPageLink(page)
+                } else {
+                    return false
+                }
+            },
             mousedown(page, button){
-                console.log("mouse down on page "+page+" button "+button)
+                // console.log("mouse down on page "+page+" button "+button)
                 this.webSocket.emit("hot_press", page, button, true);
             },
             mouseup(page, button){
-                console.log("mouse up on page "+page+" button "+button)
+                // console.log("mouse up on page "+page+" button "+button)
                 this.webSocket.emit("hot_press", page, button, false);
             },
             touchstart(page, button){
-                console.log("touch start on page "+page+" button "+button)
+                // console.log("touch start on page "+page+" button "+button)
                 this.webSocket.emit("hot_press", page, button, true);
             },
             touchend(page, button){
-                console.log("touch end on page "+page+" button "+button)
+                // console.log("touch end on page "+page+" button "+button)
                 this.webSocket.emit("hot_press", page, button, false);
             },
             initializeWebSocket(){
-                this.webSocket = io(this.companionIP)
+                // start the websocket connection back to Companion
+                // and setup listeners to react to received data
+                this.webSocket = io(this.settings.companionIP)
                 this.webSocket.on("set_page", function (page, value) {
                     // console.log("set_page "+page)
                     vue_this.pageinfo[page] = value;
@@ -464,7 +569,7 @@
                 this.been_connected = true;
 
                 this.webSocket.on("buttons_page_data", function (page, data) {
-                    console.log("socket buttons_page_data for page "+page)
+                    // console.log("socket buttons_page_data for page "+page)
                     if (!vue_this.hasPage(page)) {
                         return;
                     }
@@ -481,18 +586,21 @@
                 });
 
                 this.webSocket.on("buttons_bank_data", function (page, data) {
-                    console.log("socket buttons_bank_data");
+                    // console.log("socket buttons_bank_data");
                     if (!vue_this.hasPage(page)) {
                         return;
                     }
                     // console.log("buttons_bank_data for page "+page)
                     for (key in data) {
+                        console.log("redraw "+page+"."+key)
                         vue_this.drawBank(page, key, data[key]);
                     }
                 });
 
             },
             requestFullscreen: function(){
+                // try to go full screen and hide browser's buttons
+                // esp helpful on mobile devices where screen area is limited
                 if(document.documentElement.webkitRequestFullscreen){
                     /*Chrome, Safari, Opera*/
                     document.documentElement.webkitRequestFullscreen(Element.ALLOW_KEYBOARD_INPUT);
@@ -521,24 +629,7 @@
                 this.fullscreen=false
             },
 
-            calcNextPageLink: function(thisPage){
-                // given current page figure out anchor link for the next page
-                let pageIndex = this.pages.indexOf(thisPage);
-                if(pageIndex + 1 == this.pages.length){
-                    return false;//already at last page
-                } else {
-                    return "#page_"+this.pages[pageIndex+1]
-                }
-            },
-            calcPrevPageLink: function(thisPage){
-                // given current page figure out anchor link for the next page
-                let pageIndex = this.pages.indexOf(thisPage);
-                if(pageIndex == 0){
-                    return false;//already at first page
-                } else {
-                    return "#page_"+this.pages[pageIndex-1]
-                }
-            },
+            
         },
         created(){
             vue_this = this;
@@ -551,27 +642,39 @@
             let params = new URLSearchParams(uri);
             if(params.get("pages") != null){
                 //user requested specific pages only
-                this.pagesPreference=params.get("pages")
+                this.settings.pagesPreference=params.get("pages")
                 // this.pages = params.get("pages").split(/,+/).map(function (el) {
                 //     return parseInt(el);
                 // });
 
             }  else {
-                this.pagesPreference=""
+                this.settings.pagesPreference=""
             }
             if(params.get("deck_size") != null){
                 //user requested specific deck size
                 var requested_deck_size = parseInt(params.get("deck_size"))
                 if([6,15,32].includes(requested_deck_size)){
-                    this.deck_size=requested_deck_size;
+                    this.settings.deckSize=requested_deck_size;
                 } else {
                     //invalid request force 32
-                    this.deck_size = 32;
+                    this.settings.deckSize = 32;
                 }
                 
             } 
+
+            if(params.get("page_up_button") != null){
+                var page_up_button = parseInt(params.get("page_up_button"))
+                if (page_up_button >= 1 && page_up_button <= 32){
+                    this.settings.pageUpButton = page_up_button
+                }
+            }
+            if(params.get("page_down_button") != null){
+                var page_down_button = parseInt(params.get("page_down_button"))
+                if (page_down_button >= 1 && page_down_button <= 32){
+                    this.settings.pageDownButton = page_down_button
+                }
+            }
             
-            console.log(params.get("pages1"));
 
             this.initializeWebSocket();
             this.webSocket.emit("web_buttons");
