@@ -1,30 +1,45 @@
 <!--
-    This modified version of Companion's tablet.html is designed so that the 
-    layout of buttons remains consistent. In otherwords they won't wrap 
-    throughing off the layout you specified when designing your deck.
-
-    Tailwind CSS is being used to make layout & styling easier.
+    This is a major re-write of BitFocus Companion's default tablet.html to
+    provide a more dynamic interface. The basic code for interacting with 
+    the Companion server over websockets has been retained but much of code 
+    has been reworked to take advantabe for VueJS 2.
 
     Scaling Buttons:
     -----------------------
     Thanks to Tailwind CSS button scaling is much imporved and I've tried to
     work out sizes for phones and tablets that fit well.
 
-    ---------------------------
-    This version also includes Previous/Next buttons at the top of each
-    page to allow you to move through your pages without having to scroll.
-    (Any Page up/down button on the deck itself do not work!) If you've opted
-    to use the pages=x,y,z querystring parameter to limit the pages the links will
-    take this into account (they don't just blindly add 1 to the current page#)
-    Optional Deck_Size (# buttons)
-    -------------------------------
-    Finally, an extra querystring parameter "deck_size" was added. This will
-    allow you to simulate the original 15 button steam deck (?deck_size=15)
-    or even the 6 button version (?deck_size=6) which could be useful to anyone
-    wanting to utilize their phone instead of a tablet. (Note that the buttons 
-    will not enlarge themselves - they'll be set at 72px even if technically
-    they could be larger, I just don't feel like writing that many @media 
-    queries)
+    Phones: 6 button decks should work in either orientation. 15 button
+        decks may just fit in landscape
+    iPads: 6 and 15 button decks should work in either orientation. The
+        full 32 buttons will work in landscape
+    Higher Resolution Tablets: Even the full 32 buttons fit OK on my
+        1280x800 Galaxy Tab A8 in portrait though the buttons are a bit 
+        small. When in landscape they fill the screen nicely.
+
+    New Features:
+    -----------------------
+    You can dynamically change the configuration of your decks through a 
+    new settings menu no more needing to discover secret URL parameters.
+    - Change the deck size between 6, 15 or 32 buttons to accomodate 
+        varying needs and screen sizes
+    - Change which page(s) are displayed if you don't need all 99
+    - Control which buttons are your page up/down buttons (these buttons
+        did not work at all in the original tablet.html)
+    
+    All of these settings can be controlled through URL parameters as well and
+    the settings menu provides the appropriate URL to preserve the current
+    configuration.
+
+    Ability to go "Full Screen" since mobile devices have limited screen
+    sizes you'll probably want to take advantage of every pixel and hide
+    your bowser's top menu
+    
+    -----------------------
+    ***WARNING, internet required***
+    Currently VueJS and a few other resources are
+    being accessed through CDNs. In order to use this version you MUST
+    have an internet connection.
 -->
 <!-- /*
  * This file is part of the Companion project
@@ -136,48 +151,86 @@
     <script src="socket.io/socket.io.js"></script>
     <script src="js/viewport.js"></script>
     <script src="js/preview.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
-    <script src="https://unpkg.com/vue-observe-visibility/dist/vue-observe-visibility.min.js"></script>
+    <script src="js/vue.min.js"></script>
+    <script src="js/vue-observe-visibility.min.js"></script>
 
 
     <div class="container mx-auto" id="companion_app">
-        <div class="menu grid grid-cols-2">
-            <div class="text-yellow-600">
+        <div class="menu grid grid-cols-3 my-4">
+            <div class="text-yellow-600 flex-grow-0 mx-2">
                 <span v-if="!fullscreen" @click="requestFullscreen"><i class="fa fa-2x fa-expand"></i> Go Fullscreen</span>
-                <span v-if="fullscreen" @click="leaveFullscreen"><i class="fa fa-2x fa-compress"></i> Leave Fullscreen</span></div>
-            <div class="text-yellow-600"><span @click="showSettings = !showSettings"><i class="fa fa-2x fa-cog"></i> Settings</span></div>
+                <span v-if="fullscreen" @click="leaveFullscreen"><i class="fa fa-2x fa-compress"></i> Leave Fullscreen</span>
+            </div>
+            <div class="flex-grow-1">
+                <img class="float-left mx-2 w-8 h-8" src="/img/brand/icons-72.png" /> 
+                <h1 class="hidden sm:visible text-xl md:block md:text-2xl lg:text-4xl text-yellow-600 p-4">
+                    Companion
+                </h1>
+            </div>
+            <div class="text-yellow-600 text-right  flex-grow-0 mx-2">
+                <span v-if="!showSettings" @click="showSettings = !showSettings"><i class="fa fa-2x fa-cog"></i> Settings</span>
+                <span v-else @click="showSettings = !showSettings"><i class="fa fa-2x fa-cog"></i> Close Settings</span>
+            </div>
         </div>
-        <div v-if="showSettings" class="flex  text-yellow-600">
-            <div class="flex-1 ">
-                <label for="pickDeckSize" >Deck Size: </label> <br />
+        <div v-if="showSettings" 
+            class="flex flex-row text-yellow-600 flex-wrap border border-gray-600">
+            <div class="px-4 py-2 m-2">
+                <fieldset>
+                <label for="pickDeckSize" class="font-bold">Deck Size: </label> <br />
                 <select v-model="settings.deckSize" id="pickDeckSize" class="text-black">
                     <option disabled value="">Please select one</option>
                     <option v-for="option in deckSizeOptions" :value="option.value">{{option.label}}</option>
                     
                 </select>
+                </fieldset>
             </div>
-            <div class="flex-1 ">
-                <label for="pickPage" >Only show pages (comma separated, blank mean show all 99)</label>
+            <div class="px-4 py-2 m-2">
+                <fieldset>
+                <label for="pickPage" class="font-bold">Only show certain pages</label>
                 <br />
-                <input type="text" id="pickPage" v-model="settings.pagesPreference" placeholder="ex. 1,3,10"  class="text-black"/>
+                <input type="text" id="pickPage" v-model="settings.pagesPreference" 
+                    placeholder="ex. 1,3,10"  class="text-black"/>
+                </fieldset>
+                <p>Comma separated list of pages to be included. Leave blank for all 99 pages.</p>
             </div>
-            <div v-if="false" class="flex-1 ">
-                <label for="companionIP" >Companion IP Address (if not same as loaded this page from)</label><br />
-                <input type="text" id="companionIP" v-model="settings.companionIP" placeholder="ex. 192.168.1.123:8000" />
+            <div v-if="false" class=" px-4 py-2 m-2">
+                <fieldset>
+                <label for="companionIP" class="font-bold">Companion IP Address (if not same as loaded this page from)</label><br />
+                <input type="text" id="companionIP" v-model="settings.companionIP" placeholder="ex. 192.168.1.123:8000" 
+                    @blur="updateCompanionIP"
+                />
+                </fieldset>
             </div>
-            <div class="flex-1 ">
-
-                <label for="pageUpButton">Page Up:</label>
-                <input type="number" min="1" max="32" size="2" id="pageUpButton" 
-                    v-model="settings.pageUpButton" placeholder="ex.1"  class="text-black"/><br />
-                <label for="pageDownButton">Page Down:</label>
-                <input type="number" min="1" max="32" size="2" id="pageDownButton" 
-                    v-model="settings.pageDownButton" placeholder="ex.17"  class="text-black"/><br />
+            <div class="px-4 py-2 m-2">
+                <p class="font-bold">Location of Your Page Up &amp; Down Buttons</p>
+                <fieldset>
+                <label for="pageUpButton" class="font-bold m-2">Page Up Button:
+                <input type="number" min="0" max="32" size="2" id="pageUpButton" 
+                    v-model="settings.pageUpButton" placeholder="ex.1"  class="text-black m-2"/>
+                </label><br />
+                <label for="pageDownButton" class="font-bold m-2">Page Down Button:
+                <input type="number" min="0" max="32" size="2" id="pageDownButton" 
+                    v-model="settings.pageDownButton" placeholder="ex.17"  class="text-black m-2"/>
+                </label>
                 <p>Specify which buttons you are using for page up/down so they can be made to work as expected 
-                    in this web interface. They <strong>must</strong> be in the same place on every page!
+                    in this web interface. They <strong>must</strong> be in the same place on every page! 
+                    If you don't want to use this feature you may set the values to zero.
+                    You may also use the up/down arrows next to the page title to move between pages of buttons.
+                    <em>Note</em>, down moves you down the webpage but up in page number while up moves you up the 
+                    page but down in page number.
+                </p>
+                </fieldset>
+            </div>
+            <div class="px-4 py-2 m-2">
+                <p class="font-bold">Save Settings</p>
+                <p>Save a bookmarks or make a home screen shortcut to the URL below:<br />
+                <a :href="currentConfigUrl">{{currentConfigUrl}}</a>
                 </p>
             </div>
-            
+            <div class="px-4 py-2 m-2">
+                <p class="font-bold">Companion Admin</p>
+                <p><a href="/"><i class="fa fa-cogs"></i> Go to Admin UI</a></p>
+            </div>
         </div>
        
         <div  v-for="page in pages" :key="page" :id="'page_'+page" class="page m-4"
@@ -190,27 +243,27 @@
                 
                 <div>
                     <div class="space-x-4">
-                        <a v-if="calcPrevPageLink(page) ":href="calcPrevPageLink(page)" 
-                        class="bg-black border border-gray-600 hover:bg-yellow-600 text-white font-bold w-8 py-2 px-8 rounded"
+                        <a v-if="calcDownPageLink(page)" :href="calcDownPageLink(page)" 
+                        class="bg-black border border-gray-600 hover:bg-yellow-600 text-white font-bold w-8 py-2 px-4 sm:px-8 rounded"
                         >
-                         <i class="fa fa-arrow-up"></i><!--page up (previous)-->
+                         <i class="fa fa-arrow-down"></i><!--page up (previous)-->
                         </a>
                         <a v-else  
-                        class="bg-black border border-black hover:bg-black text-black font-bold w-8 py-2 px-8 rounded"
+                        class="bg-black border border-black hover:bg-black text-black font-bold w-8 py-2 px-4 sm:px-8 rounded"
                         >
                         <!--this button essentially cloaked and won't do anything because is no previous page to go to-->
-                         <i class="fa fa-arrow-up"></i><!--page up (previous)-->
+                         <i class="fa fa-arrow-down"></i><!--page up (previous)-->
                         </a>
 
-                        <a v-if="calcNextPageLink(page)" :href="calcNextPageLink(page)" 
-                        class="bg-black border border-gray-600 hover:bg-yellow-600 text-white font-bold py-2 px-8 rounded">
-                        <i class="fa fa-arrow-down "></i>
+                        <a v-if="calcUpPageLink(page)" :href="calcUpPageLink(page)" 
+                        class="bg-black border border-gray-600 hover:bg-yellow-600 text-white font-bold py-2 px-4 sm:px-8 rounded">
+                        <i class="fa fa-arrow-up "></i>
                         </a><!--page down (next)-->
                         <a v-else  
                         class="bg-black border border-black hover:bg-black text-black font-bold w-8 py-2 px-8 rounded"
                         >
                         <!--this button essentially cloaked and won't do anything because is no next page to go to-->
-                         <i class="fa fa-arrow-down"></i>
+                         <i class="fa fa-arrow-up"></i>
                         </a>
                       </div>
               </div>
@@ -220,25 +273,22 @@
             class="flex grid gap-4 mx-auto my-auto p-2" :class="deckGridClass" :id="'page_'+page+'_row_'+index" >
                 <!--buttons will be appended here-->
                 <div v-for="button in row" class=" page-bank-content" :id="'bank_'+page+'_'+button">
-                    <a  :href="isPageUpDownButton(button, page)">
+                    <a v-if="isPageUpDownButton(button)" :href="isPageUpDownButton(button, page)">
                         <!--is a page up/down lin so should also serve as actual html link so can navigate pages-->
                         <canvas class="canvases m-3 bg-gray-600 page-bank-content" :class="responsiveButtonSizes"
                         width="72" height="72" 
                         :ref="'canvas_'+page+'_'+button"
-                        @mousedown="mousedown(page, button)"
-                        @mouseup="mouseup(page, button)"
-                        @touchstart.prevent="touchstart(page, button)"
-                        @touchend.prevent="touchend(page, button)">
+                        >
                         </canvas>
                     </a>
-                    <!-- <canvas v-else class="canvases m-3 bg-gray-600 page-bank-content" :class="responsiveButtonSizes"
+                    <canvas v-else class="canvases m-3 bg-gray-600 page-bank-content" :class="responsiveButtonSizes"
                         width="72" height="72" 
                         :ref="'canvas_'+page+'_'+button"
                         @mousedown="mousedown(page, button)"
                         @mouseup="mouseup(page, button)"
                         @touchstart.prevent="touchstart(page, button)"
                         @touchend.prevent="touchend(page, button)">
-                    </canvas> -->
+                    </canvas>
                   </div>
               </div>
             </div>
@@ -271,6 +321,7 @@
             showSettings: false,
             
             fullscreen: false,
+            activePage: 1
         },
         computed: {
             pages: function(){
@@ -354,7 +405,11 @@
                     return "w-16 h-16 md:w-20 md:h-20 lg:w-24 lg:h-24";
                 }
             },
-            
+            currentConfigUrl: function(){
+                var configUrl = window.location.origin + window.location.pathname +"?deck_size="+this.settings.deckSize;
+                configUrl = configUrl + "&pages="+this.settings.pagesPreference+"&page_down_button="+this.settings.pageDownButton;
+                return configUrl+"&page_up_button="+this.settings.pageUpButton;
+            }
         },//end of Computed
         watch: {
             'settings.deckSize': function(new_size, old_size){
@@ -364,26 +419,40 @@
                     this.redrawPages()
                 }
             },
-            // 'settings.pageDownButton': function(new_button, button){
-            //     this.redrawPages()
-            // },
-            // 'settings.pageUpButton': function(new_size, old_size){
-            //     this.redrawPages()
-            // },
+            'settings.pageDownButton': function(new_button, button){
+                this.redrawPages()
+            },
+            'settings.pageUpButton': function(new_size, old_size){
+                this.redrawPages()
+            },
             pages: function(new_pages, old_pages){
                 // when user requests to see different pages
                 // should redraw those currently showing to avoid
                 // missing buttons
                 this.redrawPages()
             },
-            'settings.companionIP': function(new_IP, old_IP){
-                // try to allow changing the companion instance connected to
-                // not actually functional right now.
-                this.webSocket.close()
-                this.initializeWebSocket()
-            }
+            
         },
         methods: {
+            updateCompanionIP(){
+                
+                // try to allow changing the companion instance connected to
+                // not actually functional right now.
+                console.log("trying to close current websocket connection")
+                try {
+                    this.webSocket.close()
+                } catch(err) {
+                    console.error(err)
+                }
+                console.log("trying to connect to Companion instance at "+this.settings.companionIP)
+                try {
+                    this.initializeWebSocket()
+                } catch(err){
+                    console.error(err)
+                }
+                this.redrawPages()
+            
+            },
             hasPage(thispage) { 
                 //If user has requested only certain pages verify this one is one of them
                 thispage = parseInt(thispage);
@@ -490,7 +559,8 @@
             pageTitle(page){
                 // Show actual page title when avaiable
                 if(this.pageinfo[page] === undefined){
-                    return "Page ?" //normally just temporary on first load because don't have data yet
+                    // console.error("Missing pageinfo for page "+page)
+                    return "Page "+page //normally just temporary on first load because don't have data yet
                 }
                 
                 if(this.pageinfo[page].name != "PAGE"){
@@ -499,20 +569,20 @@
                     return "Page "+page;
                 }
             },
-            calcNextPageLink: function(thisPage){
+            calcDownPageLink: function(thisPage){
                 // given current page figure out anchor link for the next page
                 let pageIndex = this.pages.indexOf(thisPage);
                 if(pageIndex + 1 == this.pages.length){
-                    return false;//already at last page
+                    return "#page_"+this.pages[0] //false;//already at last page
                 } else {
                     return "#page_"+this.pages[pageIndex+1]
                 }
             },
-            calcPrevPageLink: function(thisPage){
+            calcUpPageLink: function(thisPage){
                 // given current page figure out anchor link for the next page
                 let pageIndex = this.pages.indexOf(thisPage);
                 if(pageIndex == 0){
-                    return false;//already at first page
+                    return "#page_"+this.pages[this.pages.length -1] //false;//already at first page
                 } else {
                     return "#page_"+this.pages[pageIndex-1]
                 }
@@ -522,9 +592,9 @@
                 // Page Up/Down buttons and if so return a link that'll go to appropriate 
                 // page (the button's won't actually do anything in web interface otherwise)
                 if(parseInt(button) == this.settings.pageDownButton){
-                    return this.calcNextPageLink(page)
+                    return this.calcDownPageLink(page)
                 } else if(parseInt(button) == this.settings.pageUpButton){
-                    return this.calcPrevPageLink(page)
+                    return this.calcUpPageLink(page)
                 } else {
                     return false
                 }
@@ -532,23 +602,32 @@
             mousedown(page, button){
                 // console.log("mouse down on page "+page+" button "+button)
                 this.webSocket.emit("hot_press", page, button, true);
+                this.activePage = page;
             },
             mouseup(page, button){
                 // console.log("mouse up on page "+page+" button "+button)
                 this.webSocket.emit("hot_press", page, button, false);
+                this.activePage = page;
             },
             touchstart(page, button){
                 // console.log("touch start on page "+page+" button "+button)
                 this.webSocket.emit("hot_press", page, button, true);
+                this.activePage = page;
             },
             touchend(page, button){
                 // console.log("touch end on page "+page+" button "+button)
                 this.webSocket.emit("hot_press", page, button, false);
+                this.activePage = page;
             },
             initializeWebSocket(){
                 // start the websocket connection back to Companion
                 // and setup listeners to react to received data
-                this.webSocket = io(this.settings.companionIP)
+                try{
+                    this.webSocket = io(this.settings.companionIP)
+                } catch(err){
+                    alert("Failed to establish websocket connection!", err)
+                }
+                
                 this.webSocket.on("set_page", function (page, value) {
                     // console.log("set_page "+page)
                     vue_this.pageinfo[page] = value;
@@ -592,10 +671,19 @@
                     }
                     // console.log("buttons_bank_data for page "+page)
                     for (key in data) {
-                        console.log("redraw "+page+"."+key)
+                        // console.log("redraw "+page+"."+key)
                         vue_this.drawBank(page, key, data[key]);
                     }
                 });
+
+                // this.webSocket.on('emul_fillImage', function (keyIndex, data) {
+                //     console.log("Got emul_fillImage for keyIndex "+keyIndex)
+                //     if (vue_this.positions[keyIndex]) {
+                //         console.log("Will redraw page "+vue_this.activePage+" button "+vue_this.positions[keyIndex])
+                //         vue_this.drawBank(vue_this.activePage, vue_this.positions[keyIndex], data)
+                        
+                //     }
+                // });
 
             },
             requestFullscreen: function(){
@@ -650,6 +738,7 @@
             }  else {
                 this.settings.pagesPreference=""
             }
+
             if(params.get("deck_size") != null){
                 //user requested specific deck size
                 var requested_deck_size = parseInt(params.get("deck_size"))
@@ -674,7 +763,10 @@
                     this.settings.pageDownButton = page_down_button
                 }
             }
-            
+            if(params.get("companion_IP") != null){
+                this.settings.companionIP = params.get("companion_IP")
+                
+            }
 
             this.initializeWebSocket();
             this.webSocket.emit("web_buttons");
