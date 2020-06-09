@@ -628,3 +628,6 @@ url=https://github.com/bitfocus/companion-module-newbluefx-titler.git
 [submodule "lib/module/youtube-live"]
 	path = lib/module/youtube-live
 	url = https://github.com/bitfocus/companion-module-youtube-live.git
+[submodule "lib/module/presentationtools-aps"]
+	path = lib/module/presentationtools-aps
+	url = https://github.com/bitfocus/companion-module-presentationtools-aps.git
