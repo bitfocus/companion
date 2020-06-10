@@ -139,7 +139,7 @@
 
           </style>
 
-    <title>Companion Tablet Surface - Brian Fork</title>
+    <title>Companion Tablet Surface v2</title>
   </head>
   <body class="disable-dbl-tap-zoom">
     <script src="js/jquery/jquery.min.js"></script>
@@ -238,6 +238,17 @@
                 
                 <div>
                     <div class="space-x-4">
+                        <a v-if="calcUpPageLink(page)" :href="calcUpPageLink(page)" 
+                        class="bg-black border border-gray-600 hover:bg-yellow-600 text-white font-bold py-2 px-4 sm:px-8 rounded">
+                        <i class="fa fa-arrow-up "></i>
+                        </a><!--page down (next)-->
+                        <a v-else  
+                        class="bg-black border border-black hover:bg-black text-black font-bold w-8 py-2 px-8 rounded"
+                        >
+                        <!--this button essentially cloaked and won't do anything because is no next page to go to-->
+                         <i class="fa fa-arrow-up"></i>
+                        </a>
+
                         <a v-if="calcDownPageLink(page)" :href="calcDownPageLink(page)" 
                         class="bg-black border border-gray-600 hover:bg-yellow-600 text-white font-bold w-8 py-2 px-4 sm:px-8 rounded"
                         >
@@ -250,16 +261,7 @@
                          <i class="fa fa-arrow-down"></i><!--page up (previous)-->
                         </a>
 
-                        <a v-if="calcUpPageLink(page)" :href="calcUpPageLink(page)" 
-                        class="bg-black border border-gray-600 hover:bg-yellow-600 text-white font-bold py-2 px-4 sm:px-8 rounded">
-                        <i class="fa fa-arrow-up "></i>
-                        </a><!--page down (next)-->
-                        <a v-else  
-                        class="bg-black border border-black hover:bg-black text-black font-bold w-8 py-2 px-8 rounded"
-                        >
-                        <!--this button essentially cloaked and won't do anything because is no next page to go to-->
-                         <i class="fa fa-arrow-up"></i>
-                        </a>
+                        
                       </div>
               </div>
             </div>
@@ -564,7 +566,7 @@
                     return "Page "+page;
                 }
             },
-            calcDownPageLink: function(thisPage){
+            calcUpPageLink: function(thisPage){
                 // given current page figure out anchor link for the next page
                 let pageIndex = this.pages.indexOf(thisPage);
                 if(pageIndex + 1 == this.pages.length){
@@ -573,7 +575,7 @@
                     return "#page_"+this.pages[pageIndex+1]
                 }
             },
-            calcUpPageLink: function(thisPage){
+            calcDownPageLink: function(thisPage){
                 // given current page figure out anchor link for the next page
                 let pageIndex = this.pages.indexOf(thisPage);
                 if(pageIndex == 0){
