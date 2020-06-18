@@ -631,3 +631,6 @@ url=https://github.com/bitfocus/companion-module-newbluefx-titler.git
 [submodule "lib/module/presentationtools-aps"]
 	path = lib/module/presentationtools-aps
 	url = https://github.com/bitfocus/companion-module-presentationtools-aps.git
+[submodule "lib/module/panasonic-camera-controller"]
+	path = lib/module/panasonic-camera-controller
+	url = https://github.com/bitfocus/companion-module-panasonic-camera-controller.git
