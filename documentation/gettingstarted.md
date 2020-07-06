@@ -1,6 +1,7 @@
 # Companion 2.0
 This article is an introduction to Companion’s basic principles and user interface.
 
+
 ## Getting started
 
 ### Before you open Companion
