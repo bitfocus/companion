@@ -73,7 +73,7 @@
 	"devDependencies": {
 		"chai": "^4.2.0",
 		"chai-fs": "^2.0.0",
-		"electron": "^2.0.8",
+		"electron": "^7.2.4",
 		"electron-builder": "20.10.0",
 		"mocha": "^6.1.4",
 		"nodemon": "^2.0.2",
