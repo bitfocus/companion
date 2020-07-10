@@ -634,3 +634,6 @@ url=https://github.com/bitfocus/companion-module-newbluefx-titler.git
 [submodule "lib/module/magewell-ultrastream"]
 	path = lib/module/magewell-ultrastream
 	url = https://github.com/bitfocus/companion-module-magewell-ultrastream.git
+[submodule "lib/module/aten-matrix"]
+	path = lib/module/aten-matrix
+	url = https://github.com/bitfocus/companion-module-aten-matrix.git
