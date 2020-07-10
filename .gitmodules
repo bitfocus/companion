@@ -637,3 +637,6 @@ url=https://github.com/bitfocus/companion-module-newbluefx-titler.git
 [submodule "lib/module/aten-matrix"]
 	path = lib/module/aten-matrix
 	url = https://github.com/bitfocus/companion-module-aten-matrix.git
+[submodule "lib/module/rossvideo-nkrouter"]
+	path = lib/module/rossvideo-nkrouter
+	url = https://github.com/bitfocus/companion-module-rossvideo-nkrouter.git
