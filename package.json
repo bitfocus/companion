@@ -81,7 +81,7 @@
 		"s3-upload-stream": "^1.0.7"
 	},
 	"dependencies": {
-		"@coreui/coreui": "^2.0.0-rc.2",
+		"@coreui/coreui": "^2.1.16",
 		"@coreui/coreui-plugin-chartjs-custom-tooltips": "1.2.0",
 		"app-root-path": "^2.0.1",
 		"aws-sdk": "^2.656.0",
