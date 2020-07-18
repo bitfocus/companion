@@ -1490,10 +1490,10 @@ electron@^2.0.8:
     electron-download "^3.0.1"
     extract-zip "^1.0.3"
 
-elgato-stream-deck@^3.3.0:
-  version "3.3.0"
-  resolved "https://registry.yarnpkg.com/elgato-stream-deck/-/elgato-stream-deck-3.3.0.tgz#f5cfc36bb16e0a43618a39da90e27948802c2e16"
-  integrity sha512-ByPgRTjiL4x0wD2qFUuzknox1+uPte5nl8wUmjllp+1G3Zs/bnbv+THHouktwg5EEPl6xxcq8C5FOtuC6WpCDQ==
+elgato-stream-deck@^3.3.1:
+  version "3.3.1"
+  resolved "https://registry.yarnpkg.com/elgato-stream-deck/-/elgato-stream-deck-3.3.1.tgz#5f861e7a5908aed9533bc26ec5182dddd7a3fcd5"
+  integrity sha512-0WR8Ge3O1uHMxkZnB/q7/lcGmN8NJtSuWACEOwF5zz36JROdM79/iX4MKoErIq5XPQhV4CtKrPL0Wea/YOsEmA==
   dependencies:
     exit-hook "^2.2.0"
     jpeg-js "^0.3.5"
@@ -4585,7 +4585,6 @@ traceur@0.0.x:
 
 "tributejs@github:peschuster/tribute":
   version "4.0.0"
-  uid "56c98ab2cd1520ae1bd6d4b2deaaa7f1fcdb8baa"
   resolved "https://codeload.github.com/peschuster/tribute/tar.gz/56c98ab2cd1520ae1bd6d4b2deaaa7f1fcdb8baa"
 
 trim-newlines@^1.0.0:
