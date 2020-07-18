@@ -84,7 +84,7 @@
 		"@coreui/coreui": "^2.1.16",
 		"@coreui/coreui-plugin-chartjs-custom-tooltips": "1.2.0",
 		"app-root-path": "^2.0.1",
-		"aws-sdk": "^2.656.0",
+		"aws-sdk": "^2.706.0",
 		"binopsy": "^0.0.0",
 		"bootstrap": "^4.2.1",
 		"bootstrap-colorpicker": "^2.5.2",
