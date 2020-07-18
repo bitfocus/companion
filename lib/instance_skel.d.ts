@@ -51,13 +51,18 @@ declare abstract class InstanceSkel<TConfig> {
    * Executes the provided action.
    * @since 1.0.0
    */
-  abstract action(action: CompanionActionEvent): void
+  action?(action: CompanionActionEvent): void
 
   /**
    * Processes a feedback state.
    * @since 1.0.0
    */
   feedback?(feedback: CompanionFeedbackEvent): CompanionFeedbackResult
+
+  /**
+   * Save the current config of the module. Call this if you change any properties on this.config, so that they get persisted
+   */
+  saveConfig(): void
 
   addUpgradeScript(fcn: CompanionUpgradeScript<TConfig>): void
 
@@ -84,6 +89,21 @@ declare abstract class InstanceSkel<TConfig> {
    * @param feedbackId Feedback type to call for, or undefined for all
    */
   unsubscribeFeedbacks(feedbackId?: string): void
+
+  /**
+   * Get an array of all the actions and release_actions for this instance
+   */
+  getAllActions(): CompanionFeedbackEvent[]
+  /**
+   * Trigger the subscribe callback on all actions and release_actions for this instance
+   * @param actionId Action type to call for, or undefined for all
+   */
+  subscribeActions(actionId?: string): void
+  /**
+   * Trigger the unsubscribe callback on all actions and release_actions for this instance
+   * @param actionId Action type to call for, or undefined for all
+   */
+  unsubscribeActions(actionId?: string): void
 
   status(level: null | 0 | 1 | 2, message?: string): void
 

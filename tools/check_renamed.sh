@@ -2,7 +2,7 @@
 
 # REPOSITORY RENAMING FUNTIME 2020 IS UPON US!
 
-OLD_MODULE_NAMES=(kipro vicreo-hotkey.git thinkm-blink1 7thsensedelta amp artnet atem avplayback casparcg chamsys chamsys-magicqudp christiepj da-share-multiplay dcs dphighlight eventmaster faith-chapels-video-playout grandma2 green-hippo-hippotizer horae hyperdeck imagepro interactive-technologies-cueserver lightware2 lightware3 livecore millumin mitti mqtt octopus octopusapp osc pds pjlink playbackproplus pptrsc pvp qlab qlab-advance rosstalk scs spyder tascamcd videohub vio vlc vyvphoton watchout-production x32 xair)
+OLD_MODULE_NAMES=(kipro vicreo-hotkey.git thinkm-blink1 7thsensedelta amp artnet atem avplayback casparcg chamsys chamsys-magicqudp christiepj da-share-multiplay dcs dphighlight eventmaster faith-chapels-video-playout grandma2 green-hippo-hippotizer horae hyperdeck imagepro interactive-technologies-cueserver lightware2 lightware3 livecore millumin mitti mqtt octopus octopusapp osc pds pjlink playbackproplus pptrsc pvp qlab qlab-advance rosstalk scs spyder tascamcd videohub vio vlc vyvphoton watchout-production x32 xair novastar-vx4s)
 KEEP_MODULES=()
 REMOVE_MODULES=()
 
