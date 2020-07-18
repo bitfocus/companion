@@ -118,7 +118,7 @@
 		"popper.js": "1.16.1",
 		"read-package-json": "^2.0.13",
 		"select2": "4.0.13",
-		"sharp": "^0.23.3",
+		"sharp": "^0.25.4",
 		"shortid": "^2.2.8",
 		"simple-line-icons": "2.4.1",
 		"socket.io": "^2.1.0",
