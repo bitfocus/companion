@@ -86,7 +86,7 @@
 		"app-root-path": "^2.0.1",
 		"aws-sdk": "^2.656.0",
 		"binopsy": "^0.0.0",
-		"bootstrap": "^4.2.1",
+		"bootstrap": "^4.5.0",
 		"bootstrap-colorpicker": "^2.5.2",
 		"chart.js": "^2.7.2",
 		"check-ip": "^1.1.1",
