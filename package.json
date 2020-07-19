@@ -1,6 +1,6 @@
 {
 	"name": "companion",
-	"version": "2.0.0",
+	"version": "2.0.1",
 	"description": "Companion",
 	"main": "bitfocus-skeleton/main.js",
 	"build": {
@@ -74,7 +74,7 @@
 		"chai": "^4.2.0",
 		"chai-fs": "^2.0.0",
 		"electron": "^2.0.8",
-		"electron-builder": "20.10.0",
+		"electron-builder": "20.20.4",
 		"mocha": "^6.1.4",
 		"nodemon": "^2.0.2",
 		"s3": "^4.4.0",
@@ -88,6 +88,7 @@
 		"binopsy": "^0.0.0",
 		"bootstrap": "^4.2.1",
 		"bootstrap-colorpicker": "^2.5.2",
+		"bufferutil": "^4.0.1",
 		"chart.js": "^2.7.2",
 		"check-ip": "^1.1.1",
 		"debug": "^4.1.1",
@@ -125,6 +126,7 @@
 		"socket.io-client": "^2.1.0",
 		"strip-ansi": "^5.2.0",
 		"tributejs": "github:peschuster/tribute",
+		"utf-8-validate": "^5.0.2",
 		"websocket": "^1.0.31"
 	},
 	"collective": {
