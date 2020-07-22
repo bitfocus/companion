@@ -59,6 +59,11 @@ declare abstract class InstanceSkel<TConfig> {
    */
   feedback?(feedback: CompanionFeedbackEvent): CompanionFeedbackResult
 
+  /**
+   * Save the current config of the module. Call this if you change any properties on this.config, so that they get persisted
+   */
+  saveConfig(): void
+
   addUpgradeScript(fcn: CompanionUpgradeScript<TConfig>): void
 
   setActions(actions: CompanionActions): void
