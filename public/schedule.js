@@ -2,7 +2,7 @@ class schedule_frontend {
 	constructor(socket, plugins) {
 		this.plugins = plugins;
 
-		this.date_format = 'DD/MM HH:mm:ss';
+		this.date_format = 'MM/DD HH:mm:ss';
 		this.socket = socket;
 		this._editor_setup = false;
 
