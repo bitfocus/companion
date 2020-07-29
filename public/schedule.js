@@ -1,7 +1,5 @@
 class schedule_frontend {
-	constructor(socket, plugins) {
-		this.plugins = plugins;
-
+	constructor(socket) {
 		this.date_format = 'MM/DD HH:mm:ss';
 		this.socket = socket;
 		this._editor_setup = false;
@@ -18,6 +16,13 @@ class schedule_frontend {
 
 		this.elements.new.on('click', this.edit_event.bind(this, null));
 		this.elements.form.on('submit', this.save_form.bind(this));
+		this.socket.emit('schedule_plugins', this.load_plugins.bind(this));
+	}
+
+	load_plugins(plugins) {
+		this.plugins = plugins;
+
+		// Can't use these until plugins are loaded...
 		this.socket.emit('schedule_get', this.load_schedule.bind(this));
 		this.socket.on('schedule_refresh', this.load_schedule.bind(this));
 	}
@@ -28,9 +33,9 @@ class schedule_frontend {
 		}
 
 		this.plugins.forEach(p => {
-			const type = p.type();
+			const type = p.type;
 			let fields = $(`<div id="scheduleEditor${type}" class="scheduleConfig"></div>`);
-			p.configurable().forEach(f => {
+			p.options.forEach(f => {
 				let id = 'scheduleEditor' + type + f.key;
 				let item = $(`<div class="form-group">
 					<label for="${id}">${f.name}</label>
@@ -56,7 +61,7 @@ class schedule_frontend {
 				}
 				fields.append(item);
 			});
-			this.elements.type.append(`<option value="${type}">${p.name()}</option>`);
+			this.elements.type.append(`<option value="${type}">${p.name}</option>`);
 			this.elements.config.append(fields);
 		});
 
@@ -126,7 +131,7 @@ class schedule_frontend {
 	}
 
 	get_plugin_type(type) {
-		return this.plugins.find(p => p.type() === type);
+		return this.plugins.find(p => p.type === type);
 	}
 
 	plugin_save() {
@@ -134,7 +139,7 @@ class schedule_frontend {
 		let config = {};
 		const plugin = this.get_plugin_type(type);
 
-		plugin.configurable().forEach(x => {
+		plugin.options.forEach(x => {
 			let value;
 
 			if (x.multi) {
@@ -167,15 +172,6 @@ class schedule_frontend {
 				<td colspan="4">There currently are no events scheduled.</td>
 			</tr>`);
 		}
-	}
-
-	event_load_type(type, config) {
-		const plugin = this.get_plugin_type(type);
-		if (!plugin) {
-			return 'Unknown schedule type.';
-		}
-
-		return plugin.config_desc(config);
 	}
 
 	delete(id, evt) {
@@ -263,7 +259,7 @@ class schedule_frontend {
 		let template = $(`<tr data-event-id="${item.id}">
 			<td>${item.title}</td>
 			<td>
-				${this.event_load_type(item.type, item.config)}
+				${item.config_desc}
 				${last_run}
 			</td>
 			<td>${item.button}</td>
@@ -290,130 +286,6 @@ class schedule_frontend {
 	}
 }
 
-class schedule_plugin {
-	configurable() {
-		return [];
-	}
-
-	day_list() {
-		return [...Array(7).keys()].map(i => {
-			return {
-				id: i,
-				label: moment().weekday(i).format('ddd')
-			}
-		});
-	}
-}
-
-class schedule_plugin_instance extends schedule_plugin {
-	constructor() {
-		super();
-
-		this.options = [
-			{
-				key: 'run',
-				name: 'Run at',
-				type: 'select',
-				choices: [
-					{
-						id: 'start',
-						label: 'Startup'
-					},
-					{
-						id: 'webload',
-						label: 'Webpage Load'
-					},
-					{
-						id: 'shutdown',
-						label: 'Shutdown'
-					},
-					{
-						id: 'after-button',
-						label: 'After any button press'
-					}
-				]
-			}
-		];
-	}
-
-	type() {
-		return 'instance';
-	}
-
-	name() {
-		return 'Instance';
-	}
-
-	load_type() {
-		return this.name();
-	}
-
-	config_desc(config) {
-		const run_conf = this.options[0].choices.find(x => x.id === config.run);
-		let run_time = !run_conf ? 'unknown' : run_conf.label;
-
-		return run_time;
-	}
-
-	configurable() {
-		return this.options;
-	}
-}
-
-class schedule_plugin_tod extends schedule_plugin {
-	constructor() {
-		super();
-
-		this.options = [
-			{
-				key: 'time',
-				name: 'Time',
-				type: 'textinput',
-				placeholder: 'Time in format HH:MM:SS',
-				pattern: '(0[0-9]|1[0-9]|2[0-3])(:[0-5][0-9]){2}'
-			},
-			{
-				key: 'days',
-				name: 'Days',
-				type: 'select',
-				multi: true,
-				choices: this.day_list()
-			}
-		];
-	}
-
-	type() {
-		return 'tod';
-	}
-
-	name() {
-		return 'Time of day';
-	}
-
-	calculate_days(days) {
-		let day_str = days.toString();
-		if (days.length === 7) {
-			return 'Daily';
-		} else if (day_str === '1,2,3,4,5') {
-			return 'Weekdays';
-		} else if(day_str === '0,6') {
-			return 'Weekends';
-		} else {
-			return days.map(d => moment().weekday(d).format('ddd'))
-				.join(', ');
-		}
-	}
-
-	config_desc(config) {
-		return `<strong>${this.calculate_days(config.days)}</strong>, ${config.time}`;
-	}
-
-	configurable() {
-		return this.options;
-	}
-}
-
 $(function() {
-	let plugins = [new schedule_plugin_tod(), new schedule_plugin_instance()];
-	new schedule_frontend(socket, plugins);
+	new schedule_frontend(socket);
 });
