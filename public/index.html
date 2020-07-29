@@ -221,6 +221,12 @@ href="https://join.slack.com/t/bitfocusio/shared_invite/enQtODk4NTYzNTkzMjU1LTMz
 									</li>
 
 									<li class="nav-item">
+										<a class="nav-link" data-toggle="tab" href="#scheduler" role="tab" aria-controls="scheduler">
+											<i class="fa fa-clock"></i> Scheduler
+										</a>
+									</li>
+
+									<li class="nav-item">
 										<a class="nav-link" data-toggle="tab" href="#userconfig" role="tab" aria-controls="userconfig">
 											<i class="fa fa-user-ninja"></i> Settings</a>
 									</li>
@@ -366,6 +372,94 @@ href="https://join.slack.com/t/bitfocusio/shared_invite/enQtODk4NTYzNTkzMjU1LTMz
 											</div>
 										</div>
 
+									</div>
+
+									<div class="tab-pane" id="scheduler" role="tabpanel">
+										<h4>System Scheduler</h4>
+										<p>The system scheduler allows you to recall buttons at specific points in time.</p>
+
+										<table class="table">
+											<thead>
+												<tr>
+													<th scope="col">Title</th>
+													<th scope="col">Schedule</th>
+													<th scope="col">Button</th>
+													<th scope="col">Actions</th>
+												</tr>
+											</thead>
+											<tbody id="schedulerEventList">
+												<tr>
+													<td>Projectors Off</td>
+													<td>
+														<strong>Daily</strong>, 23:30:00<br>
+														<small>Last run: 07.26.20 23:30:30</small>
+													</td>
+													<td>1.5</td>
+													<td>
+														<a href="#" class="btn btn-sm btn-ghost-danger">Delete</a>
+														<a href="#" class="btn btn-sm btn-ghost-warning">Disable</a>
+														<a href="#" class="btn btn-sm btn-primary">Edit</a>
+													</td>
+												</tr>
+												<tr>
+													<td>Start Recording</td>
+													<td>
+														<strong>Mon, Thu</strong>, 08:30:00<br>
+														<small>Last run: Never</small>
+													</td>
+													<td>1.8</td>
+													<td>
+														<a href="#" class="btn btn-sm btn-ghost-danger">Delete</a>
+														<a href="#" class="btn btn-sm btn-ghost-warning">Disable</a>
+														<a href="#" class="btn btn-sm btn-primary">Edit</a>
+													</td>
+												</tr>
+												<tr>
+													<td>Next slide</td>
+													<td>
+														<strong>Timer</strong> <code>next-slide</code> at 30 seconds<br>
+														<small>Last run: 07.27.20 12:33:30</small>
+													</td>
+													<td>2.1</td>
+													<td>
+														<a href="#" class="btn btn-sm btn-ghost-danger">Delete</a>
+														<a href="#" class="btn btn-sm btn-ghost-warning">Disable</a>
+														<a href="#" class="btn btn-sm btn-primary">Edit</a>
+													</td>
+												</tr>
+												<tr>
+													<td>Refresh</td>
+													<td>
+														<strong>Timer</strong> <code>refresh</code> ever 60 seconds<br>
+														<small>Last run: 07.27.20 12:33:30</small>
+													</td>
+													<td>3.2</td>
+													<td>
+														<a href="#" class="btn btn-sm btn-ghost-danger">Delete</a>
+														<a href="#" class="btn btn-sm btn-ghost-warning">Disable</a>
+														<a href="#" class="btn btn-sm btn-primary">Edit</a>
+													</td>
+												</tr>
+												<tr>
+													<td>Start timers</td>
+													<td>
+														<strong>Instance startup</strong><br>
+														<small>Last run: 07.26.20 14:34:31</small>
+													</td>
+													<td>1.1</td>
+													<td>
+														<a href="#" class="btn btn-sm btn-ghost-danger">Delete</a>
+														<a href="#" class="btn btn-sm btn-ghost-warning">Disable</a>
+														<a href="#" class="btn btn-sm btn-primary">Edit</a>
+													</td>
+												</tr>
+											</tbody>
+										</table>
+
+										<!-- Button trigger modal -->
+										<button type="button" class="btn btn-primary mb-4" id="scheduleEditorNew">
+											New Schedule
+										</button>
 									</div>
 
 									<div class="tab-pane" id="userconfig" role="tabpanel">
@@ -813,6 +907,40 @@ href="https://join.slack.com/t/bitfocusio/shared_invite/enQtODk4NTYzNTkzMjU1LTMz
 			</div>
 		</div>
 
+		<div class="modal fade" id="scheduleModal" tabindex="-1" role="dialog" aria-labelledby="scheduleModalLabel" aria-hidden="true">
+			<div class="modal-dialog">
+				<form>
+					<div class="modal-content">
+						<div class="modal-header">
+							<h5 class="modal-title" id="scheduleModalLabel">Schedule Editor</h5>
+							<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+								<span aria-hidden="true">&times;</span>
+							</button>
+						</div>
+						<div class="modal-body">
+							<div class="form-group">
+								<label for="scheduleEditorTitle">Title</label>
+								<input type="text" name="title" class="form-control" id="scheduleEditorTitle">
+							</div>
+							<div class="form-group">
+								<label for="scheduleEditorType">Type</label>
+								<select id="scheduleEditorType" name="type" class="form-control"></select>
+							</div>
+							<div id="scheduleConfigurable"></div>
+							<div class="form-group">
+								<label for="scheduleEditorButton">Button</label>
+								<input type="number" name="button" class="form-control" id="scheduleEditorButton" step="0.01" min="1.01" max="99.99" placeholder="Button number, ex 1.1">
+							</div>
+						</div>
+						<div class="modal-footer">
+							<button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+							<button type="submit" class="btn btn-primary">Save</button>
+						</div>
+					</div>
+				</form>
+			</div>
+		</div>
+
 		<!-- Bootstrap and necessary plugins-->
 		<script src="js/jquery/jquery.min.js"></script>
 		<script src="js/popper/popper.min.js"></script>
@@ -841,5 +969,6 @@ href="https://join.slack.com/t/bitfocusio/shared_invite/enQtODk4NTYzNTkzMjU1LTMz
 		<script src="main.js"></script>
 		<script src="update.js"></script>
 		<script src="preset.js"></script>
+		<script src="schedule.js"></script>
 	</body>
 </html>
