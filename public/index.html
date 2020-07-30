@@ -863,7 +863,8 @@ href="https://join.slack.com/t/bitfocusio/shared_invite/enQtODk4NTYzNTkzMjU1LTMz
 							<div id="scheduleConfigurable"></div>
 							<div class="form-group">
 								<label for="scheduleEditorButton">Button</label>
-								<input type="number" name="button" class="form-control" id="scheduleEditorButton" step="0.01" min="1.01" max="99.99" placeholder="Button number, ex 1.1">
+								<input type="text" name="button" class="form-control" id="scheduleEditorButton" pattern="([1-9][0-9]?).([1-2][0-9]|[3][0-2]|[1-9])" placeholder="Button number, ex 1.1"
+									title="Must be in format BANK#.BUTTON#, for example 1.1 or 99.32. Bank max is 99, button max is 32.">
 							</div>
 						</div>
 						<div class="modal-footer">
