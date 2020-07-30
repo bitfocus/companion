@@ -1,4 +1,7 @@
 class schedule_frontend {
+	/**
+	 * @param {SocketIOClientStatic} socket
+	 */
 	constructor(socket) {
 		this.date_format = 'MM/DD HH:mm:ss';
 		this.socket = socket;
@@ -19,6 +22,10 @@ class schedule_frontend {
 		this.socket.emit('schedule_plugins', this.load_plugins.bind(this));
 	}
 
+	/**
+	 * Loads enabled plugins and begins watching for schedule events
+	 * @param {Object[]} plugins
+	 */
 	load_plugins(plugins) {
 		this.plugins = plugins;
 
@@ -27,6 +34,9 @@ class schedule_frontend {
 		this.socket.on('schedule_refresh', this.load_schedule.bind(this));
 	}
 
+	/**
+	 * Loads the editor modal
+	 */
 	_setup_editor() {
 		if (this._editor_setup) {
 			return;
@@ -68,6 +78,10 @@ class schedule_frontend {
 		this._editor_setup = true;
 	}
 
+	/**
+	 * Change plugin type and enable properties for editing
+	 * @param {string} type
+	 */
 	change_type(type) {
 		const elm_id = '#scheduleEditor' + type;
 		$(`.scheduleConfig:not(${elm_id})`).hide()
@@ -78,6 +92,10 @@ class schedule_frontend {
 			.attr('disabled', false);
 	}
 
+	/**
+	 * Edit event
+	 * @param {number} event_id
+	 */
 	edit_event(event_id = null) {
 		this._setup_editor();
 		this.elements.form.trigger('reset');
@@ -94,8 +112,12 @@ class schedule_frontend {
 			.trigger('change');
 	}
 
+	/**
+	 * Load with configuration
+	 * @param {number} event_id
+	 */
 	load_form(event_id) {
-		let init_config = this.event_list.find(x => x.id === event_id);
+		let init_config = this.get_event(event_id);
 		const config = {...init_config, ...init_config.config};
 
 		for (const name in config) {
@@ -106,6 +128,10 @@ class schedule_frontend {
 		}
 	}
 
+	/**
+	 * Save form
+	 * @param {Event} evt
+	 */
 	save_form(evt) {
 		evt.preventDefault();
 
@@ -130,10 +156,19 @@ class schedule_frontend {
 		});
 	}
 
+	/**
+	 * Get the plugin of the type given
+	 * @param {string} type
+	 * @return {Object}
+	 */
 	get_plugin_type(type) {
 		return this.plugins.find(p => p.type === type);
 	}
 
+	/**
+	 * Get configuration from form that plugin accepts to save
+	 * @return {Object}
+	 */
 	plugin_save() {
 		let type = this.form.get('type');
 		let config = {};
@@ -154,6 +189,10 @@ class schedule_frontend {
 		return config;
 	}
 
+	/**
+	 * Load event schedule list
+	 * @param {Object[]} schedule_list Array of schedules received from the server
+	 */
 	load_schedule(schedule_list) {
 		this.event_list = schedule_list;
 
@@ -165,8 +204,10 @@ class schedule_frontend {
 		}
 	}
 
+	/**
+	 * Add friendly empty message if event list is empty
+	 */
 	empty_event_list() {
-		console.log(this.event_list);
 		if (this.event_list.length === 0) {
 			this.elements.list.html(`<tr>
 				<td colspan="4">There currently are no events scheduled.</td>
@@ -174,6 +215,11 @@ class schedule_frontend {
 		}
 	}
 
+	/**
+	 * Delete event from the scheduler
+	 * @param {number} id
+	 * @param {Event} evt
+	 */
 	delete(id, evt) {
 		evt.preventDefault();
 
@@ -187,18 +233,32 @@ class schedule_frontend {
 		});
 	}
 
+	/**
+	 * Checks if the event is disabled or not
+	 * @param {number} id
+	 */
 	is_disabled(id) {
-		return this.find_event(id).disabled;
+		return this.get_event(id).disabled;
 	}
 
-	find_event(id) {
+	/**
+	 * Get an event
+	 * @param {number} id
+	 */
+	get_event(id) {
 		const event = this.event_list.find(x => x.id === id);
 		if (!event) {
 			throw new Error(`Invalid event ${id}.`);
 		}
+
 		return event;
 	}
 
+	/**
+	 * Disable an event
+	 * @param {number} id
+	 * @param {Event} evt
+	 */
 	disable(id, evt) {
 		evt.preventDefault();
 		let update = {
@@ -211,23 +271,38 @@ class schedule_frontend {
 		});
 	}
 
+	/**
+	 * Find the index of the event in the event_list
+	 * @param {number} id
+	 */
 	_find_index(id) {
 		return this.event_list.findIndex(x => x.id === id);
 	}
 
-	_update_cache(id, clean, deleted = false) {
+	/**
+	 * Updates the client side event cache
+	 * @param {number} id
+	 * @param {Object} data Clean data, this should be returned from the server to ensure everything is consistent
+	 * @param {boolean} deleted True to remove this event from cache
+	 */
+	_update_cache(id, data, deleted = false) {
 		const idx = this._find_index(id);
 		if (deleted) {
 			if (idx !== -1) {
 				this.event_list.splice(idx, 1);
 			}
 		} else if (idx === -1) {
-			this.event_list.push(clean);
+			this.event_list.push(data);
 		} else {
-			this.event_list[idx] = clean;
+			this.event_list[idx] = data;
 		}
 	}
 
+	/**
+	 * Disable/enable the event element
+	 * @param {boolean} status
+	 * @param {Element|jQuery} elm
+	 */
 	disable_elm(status, elm) {
 		let enable_class = 'btn-ghost-success',
 			disable_class = 'btn-ghost-warning',
@@ -244,10 +319,20 @@ class schedule_frontend {
 		}
 	}
 
+	/**
+	 * Returns the jQuery element based on event id
+	 * @param {number} event_id
+	 * @return {jQuery}
+	 */
 	find_elm(event_id) {
 		return this.elements.list.find(`[data-event-id=${event_id}]`);
 	}
 
+	/**
+	 * Add an event in the fromt end schedule list
+	 * @param {Object} item
+	 * @param {?number} replace_id
+	 */
 	event_item(item, replace_id = null) {
 		let last_run = '';
 		let elm_update;
@@ -286,6 +371,4 @@ class schedule_frontend {
 	}
 }
 
-$(function() {
-	new schedule_frontend(socket);
-});
+$(() => new schedule_frontend(socket));
