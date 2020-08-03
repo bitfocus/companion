@@ -51,9 +51,12 @@ class schedule_frontend {
 					<label for="${id}">${f.name}</label>
 				</div>`);
 				if (f.type === 'textinput') {
-					let textinput = $(`<input type="text" name="${f.key}" class="form-control" id="${id}" placeholder="${f.placeholder}" pattern="${f.pattern}">`);
+					let textinput = $(`<input type="text" name="${f.key}" class="form-control" id="${id}" placeholder="${f.placeholder}">`);
 					if (!f.not_required) {
 						textinput.attr('required', true);
+					}
+					if (f.pattern) {
+						textinput.attr('pattern', f.pattern);
 					}
 					item.append(textinput);
 				} else if (f.type === 'select') {
