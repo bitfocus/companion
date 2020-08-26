@@ -11,7 +11,22 @@
 			"extendInfo": {
 				"LSBackgroundOnly": 1,
 				"LSUIElement": 1
-			}
+			},
+			"asarUnpack": [
+				"public",
+				"node_modules/jquery",
+				"node_modules/popper.js/**",
+				"node_modules/bootstrap",
+				"node_modules/bootstrap-colorpicker",
+				"node_modules/pace-progress",
+				"node_modules/perfect-scrollbar",
+				"node_modules/@coreui/coreui",
+				"node_modules/flag-icon-css",
+				"node_modules/font-awesome",
+				"node_modules/moment",
+				"node_modules/select2",
+				"node_modules/tributejs/dist"
+			]
 		},
 		"win": {
 			"target": "nsis"
