@@ -1556,13 +1556,13 @@ electron@^2.0.8:
     electron-download "^3.0.1"
     extract-zip "^1.0.3"
 
-elgato-stream-deck@^3.3.1:
-  version "3.3.1"
-  resolved "https://registry.yarnpkg.com/elgato-stream-deck/-/elgato-stream-deck-3.3.1.tgz#5f861e7a5908aed9533bc26ec5182dddd7a3fcd5"
-  integrity sha512-0WR8Ge3O1uHMxkZnB/q7/lcGmN8NJtSuWACEOwF5zz36JROdM79/iX4MKoErIq5XPQhV4CtKrPL0Wea/YOsEmA==
+elgato-stream-deck@^3.3.2:
+  version "3.3.2"
+  resolved "https://registry.yarnpkg.com/elgato-stream-deck/-/elgato-stream-deck-3.3.2.tgz#99f5c9dfbbb3d45d6fc80a314c4ad8f00aabce53"
+  integrity sha512-NIrL2wFSXGsi/5ZNmBGNO/5fJGP64IhzeY1rc9e06CGoTw57+Hi6XFB4vjyUbnbnxGwbKl+aZMmO43eRAIPgRQ==
   dependencies:
     exit-hook "^2.2.0"
-    jpeg-js "^0.3.5"
+    jpeg-js "^0.4.2"
     node-hid "^1.2.0"
 
 emoji-regex@^7.0.1:
@@ -2634,10 +2634,10 @@ jmespath@0.15.0:
   resolved "https://registry.yarnpkg.com/jmespath/-/jmespath-0.15.0.tgz#a3f222a9aae9f966f5d27c796510e28091764217"
   integrity sha1-o/Iiqarp+Wb10nx5ZRDigJF2Qhc=
 
-jpeg-js@^0.3.5:
-  version "0.3.6"
-  resolved "https://registry.yarnpkg.com/jpeg-js/-/jpeg-js-0.3.6.tgz#c40382aac9506e7d1f2d856eb02f6c7b2a98b37c"
-  integrity sha512-MUj2XlMB8kpe+8DJUGH/3UJm4XpI8XEgZQ+CiHDeyrGoKPdW/8FJv6ku+3UiYm5Fz3CWaL+iXmD8Q4Ap6aC1Jw==
+jpeg-js@^0.4.2:
+  version "0.4.2"
+  resolved "https://registry.yarnpkg.com/jpeg-js/-/jpeg-js-0.4.2.tgz#8b345b1ae4abde64c2da2fe67ea216a114ac279d"
+  integrity sha512-+az2gi/hvex7eLTMTlbRLOhH6P6WFdk2ITI8HJsaH2VqYO0I594zXSYEP+tf4FW+8Cy68ScDXoAsQdyQanv3sw==
 
 jquery@>=1.10, jquery@>=3.4.0:
   version "3.5.0"
