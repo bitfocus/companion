@@ -655,3 +655,6 @@ url=https://github.com/bitfocus/companion-module-newbluefx-titler.git
 [submodule "lib/module/modelighting-edin"]
 	path = lib/module/modelighting-edin
 	url = https://github.com/bitfocus/companion-module-modelighting-edin.git
+[submodule "lib/module/newtek-ndistudiomonitor"]
+	path = lib/module/newtek-ndistudiomonitor
+	url = https://github.com/bitfocus/companion-module-newtek-ndistudiomonitor.git
