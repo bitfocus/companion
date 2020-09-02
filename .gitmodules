@@ -658,3 +658,6 @@ url=https://github.com/bitfocus/companion-module-newbluefx-titler.git
 [submodule "lib/module/newtek-ndistudiomonitor"]
 	path = lib/module/newtek-ndistudiomonitor
 	url = https://github.com/bitfocus/companion-module-newtek-ndistudiomonitor.git
+[submodule "lib/module/openweather-rest"]
+	path = lib/module/openweather-rest
+	url = https://github.com/bitfocus/companion-module-openweather-rest.git
