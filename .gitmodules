@@ -652,3 +652,6 @@ url=https://github.com/bitfocus/companion-module-newbluefx-titler.git
 [submodule "lib/module/audiostrom-liveprofessor"]
 	path = lib/module/audiostrom-liveprofessor
 	url = https://github.com/bitfocus/companion-module-audiostrom-liveprofessor.git
+[submodule "lib/module/modelighting-edin"]
+	path = lib/module/modelighting-edin
+	url = https://github.com/bitfocus/companion-module-modelighting-edin.git
