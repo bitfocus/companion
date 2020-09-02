@@ -649,3 +649,6 @@ url=https://github.com/bitfocus/companion-module-newbluefx-titler.git
 [submodule "lib/module/techministry-tallyarbiter"]
 	path = lib/module/techministry-tallyarbiter
 	url = https://github.com/bitfocus/companion-module-techministry-tallyarbiter.git
+[submodule "lib/module/audiostrom-liveprofessor"]
+	path = lib/module/audiostrom-liveprofessor
+	url = https://github.com/bitfocus/companion-module-audiostrom-liveprofessor.git
