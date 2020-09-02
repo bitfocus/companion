@@ -332,7 +332,7 @@ class schedule_frontend {
 	}
 
 	/**
-	 * Add an event in the fromt end schedule list
+	 * Add an event in the front end schedule list
 	 * @param {Object} item
 	 * @param {?number} replace_id
 	 */
