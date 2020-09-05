@@ -223,9 +223,19 @@ your bowser's top menu
 						<strong>must</strong> be in the same place on every page! If you
 						don't want to use this feature you may set the values to zero. You
 						may also use the up/down arrows next to the page title to move
-						between pages of buttons. <em>Note</em>, down moves you down the
-						webpage but up in page number while up moves you up the page but
-						down in page number.
+						between pages of buttons. 
+					</p>
+					<p v-if="settings.page_direction_flipped">
+						<strong>Page direction is flipped!</strong> Page up/down behavior is being reversed. Clicking the 
+						page down button <i class="fa fa-caret-square-down"></i> will take you from page 1 > 2 > 3.... Clicking the page up button 
+						<i class="fa fa-caret-square-up"></i>  will take you from page 3 > 2 > 1 > 99. You may change this behavior through the main 
+						Companion Admin screen's setting's tab (and then refresh the mobile buttons).
+					</p>
+					<p v-else>
+						Clicking the page up button <i class="fa fa-caret-square-up"></i>  will take you from page 1 > 2 > 3.... 
+						Clicking the page down button <i class="fa fa-caret-square-down"></i> 
+						will take you from page 3 > 2 > 1 > 99. You may change this behavior through the main 
+						Companion Admin screen's setting's tab (and then refresh the mobile buttons).
 					</p>
 				</fieldset>
 			</div>
@@ -255,29 +265,56 @@ your bowser's top menu
 					{{pageTitle(page)}}
 				</h1>
 
-				<div>
-					<div class="space-x-4">
-						<a v-if="calcUpPageLink(page)" :href="calcUpPageLink(page)"
-							class="bg-black border border-gray-600 hover:bg-yellow-600 text-white font-bold py-2 px-4 sm:px-8 rounded">
-							<i class="fa fa-arrow-up"></i> </a>
-						<!--page down (next)-->
-						<a v-else class="bg-black border border-black hover:bg-black text-black font-bold w-8 py-2 px-8 rounded">
-							<!--this button essentially cloaked and won't do anything because is no next page to go to-->
-							<i class="fa fa-arrow-up"></i>
-						</a>
+				<div><!--extra page up/down buttons-->
+					<div v-if="!settings.page_direction_flipped">
+						<div class="space-x-4">
+							<a v-if="calcUpPageLink(page)" :href="calcUpPageLink(page)"
+								class="bg-black border border-gray-600 hover:bg-yellow-600 text-white font-bold py-2 px-4 sm:px-8 rounded">
+								<i class="fa fa-arrow-up"></i> </a>
+							<!--page down (next)-->
+							<a v-else class="bg-black border border-black hover:bg-black text-black font-bold w-8 py-2 px-8 rounded">
+								<!--this button essentially cloaked and won't do anything because is no next page to go to-->
+								<i class="fa fa-arrow-up"></i>
+							</a>
 
-						<a v-if="calcDownPageLink(page)" :href="calcDownPageLink(page)"
-							class="bg-black border border-gray-600 hover:bg-yellow-600 text-white font-bold w-8 py-2 px-4 sm:px-8 rounded">
-							<i class="fa fa-arrow-down"></i>
-							<!--page up (previous)-->
-						</a>
-						<a v-else
-							class="bg-black border border-black hover:bg-black text-black font-bold w-8 py-2 px-4 sm:px-8 rounded">
-							<!--this button essentially cloaked and won't do anything because is no previous page to go to-->
-							<i class="fa fa-arrow-down"></i>
-							<!--page up (previous)-->
-						</a>
+							<a v-if="calcDownPageLink(page)" :href="calcDownPageLink(page)"
+								class="bg-black border border-gray-600 hover:bg-yellow-600 text-white font-bold w-8 py-2 px-4 sm:px-8 rounded">
+								<i class="fa fa-arrow-down"></i>
+								<!--page up (previous)-->
+							</a>
+							<a v-else
+								class="bg-black border border-black hover:bg-black text-black font-bold w-8 py-2 px-4 sm:px-8 rounded">
+								<!--this button essentially cloaked and won't do anything because is no previous page to go to-->
+								<i class="fa fa-arrow-down"></i>
+								<!--page up (previous)-->
+							</a>
+						</div>
 					</div>
+					<div v-else><!--flipped paging behavior-->
+						<div class="space-x-4">
+							<a v-if="calcDownPageLink(page)" :href="calcDownPageLink(page)"
+								class="bg-black border border-gray-600 hover:bg-yellow-600 text-white font-bold py-2 px-4 sm:px-8 rounded">
+								<i class="fa fa-arrow-up"></i> </a>
+							<!--page down (next)-->
+							<a v-else class="bg-black border border-black hover:bg-black text-black font-bold w-8 py-2 px-8 rounded">
+								<!--this button essentially cloaked and won't do anything because is no next page to go to-->
+								<i class="fa fa-arrow-up"></i>
+							</a>
+	
+							<a v-if="calcUpPageLink(page)" :href="calcUpPageLink(page)"
+								class="bg-black border border-gray-600 hover:bg-yellow-600 text-white font-bold w-8 py-2 px-4 sm:px-8 rounded">
+								<i class="fa fa-arrow-down"></i>
+								<!--page up (previous)-->
+							</a>
+							<a v-else
+								class="bg-black border border-black hover:bg-black text-black font-bold w-8 py-2 px-4 sm:px-8 rounded">
+								<!--this button essentially cloaked and won't do anything because is no previous page to go to-->
+								<i class="fa fa-arrow-down"></i>
+								<!--page up (previous)-->
+							</a>
+						</div>
+					</div>
+					
 				</div>
 			</div>
 			<!--grid page of buttons will be appended here-->
@@ -318,6 +355,7 @@ your bowser's top menu
 					pageUpButton: 1,
 					pagesPreference: "",
 					companionIP: "",
+					page_direction_flipped: false,
 				},
 				config: {},
 				cache: {},
@@ -603,9 +641,18 @@ your bowser's top menu
 					// Page Up/Down buttons and if so return a link that'll go to appropriate
 					// page (the button's won't actually do anything in web interface otherwise)
 					if (parseInt(button) == this.settings.pageDownButton) {
-						return this.calcDownPageLink(page);
+						if(!this.settings.page_direction_flipped){
+							return this.calcDownPageLink(page);
+						} else {
+							return this.calcUpPageLink(page);
+						}
+						
 					} else if (parseInt(button) == this.settings.pageUpButton) {
-						return this.calcUpPageLink(page);
+						if(!this.settings.page_direction_flipped){
+							return this.calcUpPageLink(page);
+						} else {
+							return this.calcDownPageLink(page);
+						}
 					} else {
 						return false;
 					}
@@ -687,14 +734,11 @@ your bowser's top menu
 						}
 					});
 
-					// this.webSocket.on('emul_fillImage', function (keyIndex, data) {
-					//     console.log("Got emul_fillImage for keyIndex "+keyIndex)
-					//     if (vue_this.positions[keyIndex]) {
-					//         console.log("Will redraw page "+vue_this.activePage+" button "+vue_this.positions[keyIndex])
-					//         vue_this.drawBank(vue_this.activePage, vue_this.positions[keyIndex], data)
+					this.webSocket.on("get_userconfig_all", function(data){
+						//console.log("Is page direction flipped? " + data.page_direction_flipped);
+						vue_this.settings.page_direction_flipped = data.page_direction_flipped;
+					})
 
-					//     }
-					// });
 				},
 				requestFullscreen: function () {
 					// try to go full screen and hide browser's buttons
@@ -777,6 +821,9 @@ your bowser's top menu
 
 				this.initializeWebSocket();
 				this.webSocket.emit("web_buttons");
+
+				// what's the configuration (so know if need to flip up/down button behavior)
+				this.webSocket.emit("get_userconfig_all")
 
 				// window.addEventListener('scroll', this.scroll);
 
