@@ -735,20 +735,10 @@ your bowser's top menu
 					});
 
 					this.webSocket.on("get_userconfig_all", function(data){
-						console.log("On get_userconfig_all");
-						console.log(data)
-						console.log("Is page direction flipped? " + data.page_direction_flipped);
+						//console.log("Is page direction flipped? " + data.page_direction_flipped);
 						vue_this.settings.page_direction_flipped = data.page_direction_flipped;
 					})
 
-					// this.webSocket.on('emul_fillImage', function (keyIndex, data) {
-					//     console.log("Got emul_fillImage for keyIndex "+keyIndex)
-					//     if (vue_this.positions[keyIndex]) {
-					//         console.log("Will redraw page "+vue_this.activePage+" button "+vue_this.positions[keyIndex])
-					//         vue_this.drawBank(vue_this.activePage, vue_this.positions[keyIndex], data)
-
-					//     }
-					// });
 				},
 				requestFullscreen: function () {
 					// try to go full screen and hide browser's buttons
@@ -832,8 +822,7 @@ your bowser's top menu
 				this.initializeWebSocket();
 				this.webSocket.emit("web_buttons");
 
-				// what's the config
-				this.webSocket.emit("get_userconfig");
+				// what's the configuration (so know if need to flip up/down button behavior)
 				this.webSocket.emit("get_userconfig_all")
 
 				// window.addEventListener('scroll', this.scroll);
