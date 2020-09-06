@@ -11,7 +11,22 @@
 			"extendInfo": {
 				"LSBackgroundOnly": 1,
 				"LSUIElement": 1
-			}
+			},
+			"asarUnpack": [
+				"public",
+				"node_modules/jquery",
+				"node_modules/popper.js/**",
+				"node_modules/bootstrap",
+				"node_modules/bootstrap-colorpicker",
+				"node_modules/pace-progress",
+				"node_modules/perfect-scrollbar",
+				"node_modules/@coreui/coreui",
+				"node_modules/flag-icon-css",
+				"node_modules/font-awesome",
+				"node_modules/moment",
+				"node_modules/select2",
+				"node_modules/tributejs/dist"
+			]
 		},
 		"win": {
 			"target": "nsis"
@@ -93,7 +108,7 @@
 		"debug": "^4.1.1",
 		"electron-debug": "^1.5.0",
 		"electron-rpc": "^2.0.1",
-		"elgato-stream-deck": "^3.3.0",
+		"elgato-stream-deck": "^3.3.2",
 		"express": "^4.16.3",
 		"find-process": "^1.4.3",
 		"flag-icon-css": "3.4.6",
@@ -107,6 +122,7 @@
 		"mkdirp": "^0.5.1",
 		"moment": "^2.22.2",
 		"network": "^0.4.1",
+		"node-emberplus": "^2.5.8",
 		"node-rest-client": "^3.1.0",
 		"opencollective": "^1.0.3",
 		"opencollective-postinstall": "^2.0.1",

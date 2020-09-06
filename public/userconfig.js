@@ -98,6 +98,16 @@ $(function() {
 		var $cb = $('#userconfig_artnet_channel');
 		$cb.val(state);
 
+		// set the artnet enabled option
+		var state = userconfig.rosstalk_enabled;
+		var $cb = $('#userconfig_rosstalk_enabled');
+
+		if (state === true) {
+			$cb.prop('checked', true);
+		} else {
+			$cb.prop('checked', false);
+		}
+
 	};
 
 
@@ -152,6 +162,14 @@ $(function() {
 			socket.emit('set_userconfig_key', 'artnet_enabled', true);
 		} else {
 			socket.emit('set_userconfig_key', 'artnet_enabled', false);
+		}
+	});
+
+	$('#userconfig_rosstalk_enabled').click(function() {
+		if ($(this).prop('checked') == true) {
+			socket.emit('set_userconfig_key', 'rosstalk_enabled', true);
+		} else {
+			socket.emit('set_userconfig_key', 'rosstalk_enabled', false);
 		}
 	});
 

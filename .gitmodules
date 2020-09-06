@@ -640,3 +640,27 @@ url=https://github.com/bitfocus/companion-module-newbluefx-titler.git
 [submodule "lib/module/rossvideo-nkrouter"]
 	path = lib/module/rossvideo-nkrouter
 	url = https://github.com/bitfocus/companion-module-rossvideo-nkrouter.git
+[submodule "lib/module/datavideo-visca"]
+	path = lib/module/datavideo-visca
+	url = https://github.com/bitfocus/companion-module-datavideo-visca.git
+[submodule "lib/module/roland-m5000"]
+	path = lib/module/roland-m5000
+	url = https://github.com/bitfocus/companion-module-roland-m5000.git
+[submodule "lib/module/techministry-tallyarbiter"]
+	path = lib/module/techministry-tallyarbiter
+	url = https://github.com/bitfocus/companion-module-techministry-tallyarbiter.git
+[submodule "lib/module/audiostrom-liveprofessor"]
+	path = lib/module/audiostrom-liveprofessor
+	url = https://github.com/bitfocus/companion-module-audiostrom-liveprofessor.git
+[submodule "lib/module/modelighting-edin"]
+	path = lib/module/modelighting-edin
+	url = https://github.com/bitfocus/companion-module-modelighting-edin.git
+[submodule "lib/module/newtek-ndistudiomonitor"]
+	path = lib/module/newtek-ndistudiomonitor
+	url = https://github.com/bitfocus/companion-module-newtek-ndistudiomonitor.git
+[submodule "lib/module/openweather-rest"]
+	path = lib/module/openweather-rest
+	url = https://github.com/bitfocus/companion-module-openweather-rest.git
+[submodule "lib/module/denon-recorder"]
+	path = lib/module/denon-recorder
+	url = https://github.com/bitfocus/companion-module-denon-recorder.git
