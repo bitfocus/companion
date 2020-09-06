@@ -222,7 +222,7 @@ href="https://join.slack.com/t/bitfocusio/shared_invite/enQtODk4NTYzNTkzMjU1LTMz
 
 									<li class="nav-item">
 										<a class="nav-link" data-toggle="tab" href="#scheduler" role="tab" aria-controls="scheduler">
-											<i class="fa fa-clock"></i> Scheduler
+											<i class="fa fa-clock"></i> Triggers
 										</a>
 									</li>
 
@@ -375,14 +375,14 @@ href="https://join.slack.com/t/bitfocusio/shared_invite/enQtODk4NTYzNTkzMjU1LTMz
 									</div>
 
 									<div class="tab-pane" id="scheduler" role="tabpanel">
-										<h4>Schedules and Triggers</h4>
-										<p>The scheduler allows you to recall buttons based on events.</p>
+										<h4>Triggers and Schedules</h4>
+										<p>This allows you to recall buttons based on variables or time-based events.</p>
 
 										<table class="table">
 											<thead>
 												<tr>
-													<th scope="col">Title</th>
-													<th scope="col">Schedule / Trigger</th>
+													<th scope="col">Name</th>
+													<th scope="col">Trigger</th>
 													<th scope="col">Button</th>
 													<th scope="col">Actions</th>
 												</tr>
@@ -392,7 +392,7 @@ href="https://join.slack.com/t/bitfocusio/shared_invite/enQtODk4NTYzNTkzMjU1LTMz
 
 										<!-- Button trigger modal -->
 										<button type="button" class="btn btn-primary mb-4" id="scheduleEditorNew">
-											Add New Event
+											Add New Trigger
 										</button>
 									</div>
 
@@ -875,14 +875,14 @@ href="https://join.slack.com/t/bitfocusio/shared_invite/enQtODk4NTYzNTkzMjU1LTMz
 				<form>
 					<div class="modal-content">
 						<div class="modal-header">
-							<h5 class="modal-title" id="scheduleModalLabel">Schedule Editor</h5>
+							<h5 class="modal-title" id="scheduleModalLabel">Trigger Editor</h5>
 							<button type="button" class="close" data-dismiss="modal" aria-label="Close">
 								<span aria-hidden="true">&times;</span>
 							</button>
 						</div>
 						<div class="modal-body">
 							<div class="form-group">
-								<label for="scheduleEditorTitle">Title</label>
+								<label for="scheduleEditorTitle">Name</label>
 								<input type="text" name="title" required class="form-control" id="scheduleEditorTitle">
 							</div>
 							<div class="form-group">
