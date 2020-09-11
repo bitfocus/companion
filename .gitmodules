@@ -640,3 +640,6 @@ url=https://github.com/bitfocus/companion-module-newbluefx-titler.git
 [submodule "lib/module/rossvideo-nkrouter"]
 	path = lib/module/rossvideo-nkrouter
 	url = https://github.com/bitfocus/companion-module-rossvideo-nkrouter.git
+[submodule "panasonic-tv-th"]
+	path = panasonic-tv-th
+	url = https://github.com/bitfocus/companion-module-panasonic-tv-th.git
