@@ -6,6 +6,7 @@ class schedule_frontend {
 		this.date_format = 'MM/DD HH:mm:ss';
 		this.socket = socket;
 		this._editor_setup = false;
+		this.preview_cache = {};
 
 		this.elements = {
 			list: $('#schedulerEventList'),
@@ -20,6 +21,7 @@ class schedule_frontend {
 		this.elements.new.on('click', this.edit_event.bind(this, null));
 		this.elements.form.on('submit', this.save_form.bind(this));
 		this.socket.emit('schedule_plugins', this.load_plugins.bind(this));
+		this.socket.on('schedule_preview_data', this.preview_update.bind(this));
 	}
 
 	/**
@@ -148,6 +150,13 @@ class schedule_frontend {
 		};
 
 		this.socket.emit('schedule_save_item', send_data, clean => {
+			if (this.edit_id !== null) {
+				let init_config = this.get_event(this.edit_id);
+				if (clean.button != init_config.button && $(`canvas[data-schedule-bank="${init_config.button}"]`).length === 1) {
+					this.preview_update_stop(init_config.button);
+				}
+			}
+
 			if (this.event_list.length === 0) {
 				this.load_schedule([clean]);
 			} else {
@@ -157,6 +166,48 @@ class schedule_frontend {
 
 			this.elements.modal.modal('hide');
 		});
+	}
+
+	/**
+	 * Watch for previews
+	 * @param {String} button
+	 */
+	preview_watch(button) {
+		let [page, bank] = button.split('.');
+		if (button in this.preview_cache) {
+			if (this.preview_cache[button] !== null) { // May not have received the response yet
+				this.preview_update(page, bank, this.preview_cache[button]);
+			}
+		} else {
+			this.preview_cache[button] = null;
+			this.socket.emit('scheduler_bank_preview', page, bank);
+		}
+	}
+
+	/**
+	 * Updates the preview image for the button number
+	 * @param {String} page
+	 * @param {String} bank
+	 * @param {ArrayBuffer} img
+	 */
+	preview_update(page, bank, img) {
+		this.preview_cache[`${page}.${bank}`] = img;
+
+		let canvas = $(`canvas[data-schedule-bank="${page}.${bank}"]`);
+		canvas.each((t, c) => {
+			c.getContext('2d')
+				 .putImageData(dataToButtonImage(img), 0, 0);
+		});
+	}
+
+	/**
+	 * Stop watching for previews
+	 * @param {String} button
+	 */
+	preview_update_stop(button) {
+		let [page, bank] = button.split('.');
+		this.socket.emit('scheduler_bank_preview', page, bank, true);
+		delete this.preview_cache[button];
 	}
 
 	/**
@@ -350,7 +401,7 @@ class schedule_frontend {
 				${item.config_desc}
 				${last_run}
 			</td>
-			<td>${item.button}</td>
+			<td><canvas width="72" height="72" data-schedule-bank="${item.button}"></canvas></td>
 			<td class="scheduleActions"></td>
 		</tr>`);
 
@@ -371,6 +422,8 @@ class schedule_frontend {
 		} else {
 			elm_update.replaceWith(template);
 		}
+
+		this.preview_watch(item.button);
 	}
 }
 
