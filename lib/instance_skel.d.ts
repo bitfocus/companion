@@ -8,7 +8,8 @@ import {
   CompanionActionEvent,
   CompanionFeedbackEvent,
   CompanionFeedbackResult,
-  CompanionUpgradeScript
+  CompanionUpgradeScript,
+  CompanionActionEventInfo
 } from './instance_skel_types'
 
 declare abstract class InstanceSkel<TConfig> {
@@ -51,7 +52,7 @@ declare abstract class InstanceSkel<TConfig> {
    * Executes the provided action.
    * @since 1.0.0
    */
-  action?(action: CompanionActionEvent): void
+  action?(action: CompanionActionEvent, info: CompanionActionEventInfo): void
 
   /**
    * Processes a feedback state.

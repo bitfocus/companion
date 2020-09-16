@@ -8,13 +8,20 @@ export type InputValue = number | string | boolean
 export interface CompanionAction {
   label: string
   options: SomeCompanionInputField[]
-  callback?: (action: CompanionActionEvent) => void
+  callback?: (action: CompanionActionEvent, info: CompanionActionEventInfo) => void
   subscribe?: (action: CompanionActionEvent) => void
   unsubscribe?: (action: CompanionActionEvent) => void
 }
 export interface CompanionActionEvent {
+  id: string
   action: string
   options: { [key: string]: InputValue | undefined }
+}
+
+export interface CompanionActionEventInfo {
+  deviceId: string | undefined
+  page: number
+  bank: number
 }
 
 export interface CompanionFeedbackEvent {
@@ -110,6 +117,10 @@ export interface CompanionPreset {
     options: { [key: string]: InputValue | undefined }
   }>
   actions: Array<{
+    action: string
+    options: { [key: string]: InputValue | undefined }
+  }>
+  release_actions?: Array<{
     action: string
     options: { [key: string]: InputValue | undefined }
   }>
