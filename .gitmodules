@@ -667,3 +667,6 @@ url=https://github.com/bitfocus/companion-module-newbluefx-titler.git
 [submodule "lib/module/panasonic-tv-th"]
 	path = lib/module/panasonic-tv-th
 	url = https://github.com/bitfocus/companion-module-panasonic-tv-th.git
+[submodule "lib/module/kramer-vp773a"]
+	path = lib/module/kramer-vp773a
+	url = https://github.com/bitfocus/companion-module-kramer-vp773a.git
