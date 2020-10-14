@@ -673,3 +673,6 @@ url=https://github.com/bitfocus/companion-module-newbluefx-titler.git
 [submodule "lib/module/tplink-kasasmartplug"]
 	path = lib/module/tplink-kasasmartplug
 	url = https://github.com/bitfocus/companion-module-tplink-kasasmartplug.git
+[submodule "lib/module/ubiquiti-unifi"]
+	path = lib/module/ubiquiti-unifi
+	url = https://github.com/bitfocus/companion-module-ubiquiti-unifi.git
