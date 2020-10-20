@@ -7,6 +7,7 @@ class schedule_frontend {
 		this.socket = socket;
 		this._editor_setup = false;
 		this.preview_cache = {};
+		this.event_list = [];
 
 		this.elements = {
 			list: $('#schedulerEventList'),
@@ -123,7 +124,7 @@ class schedule_frontend {
 	 */
 	load_form(event_id) {
 		let init_config = this.get_event(event_id);
-		const config = {...init_config, ...init_config.config};
+		const config = $.extend(init_config, init_config.config);
 
 		for (const name in config) {
 			const elm = this.elements.form.find(`[name="${name}"]`);
@@ -232,7 +233,12 @@ class schedule_frontend {
 			let value;
 
 			if (x.multi) {
-				value = this.form.getAll(x.key);
+				try {
+					value = this.form.getAll(x.key)
+						.filter(x => x !== null);
+				} catch (e) {
+					value = [];
+				}
 			} else {
 				value = this.form.get(x.key);
 			}
