@@ -679,3 +679,6 @@ url=https://github.com/bitfocus/companion-module-newbluefx-titler.git
 [submodule "lib/module/netio-powerbox"]
 	path = lib/module/netio-powerbox
 	url = https://github.com/bitfocus/companion-module-netio-powerbox.git
+[submodule "lib/module/rossvideo-caprica"]
+	path = lib/module/rossvideo-caprica
+	url = https://github.com/bitfocus/companion-module-rossvideo-caprica.git
