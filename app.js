@@ -172,7 +172,7 @@ system.on('skeleton-ready', function() {
 	var server_api       = require('./lib/server_api')(system);
 	var server_tcp       = require('./lib/server_tcp')(system);
 	var server_udp       = require('./lib/server_udp')(system);
-	//var server_emberplus = require('./lib/server_emberplus')(system);
+	var server_emberplus = require('./lib/server_emberplus')(system);
 	var artnet           = require('./lib/artnet')(system);
 	var rosstalk         = require('./lib/rosstalk')(system);
 	var rest             = require('./lib/rest')(system);
