@@ -90,7 +90,6 @@
 		"chai-fs": "^2.0.0",
 		"electron": "^2.0.8",
 		"electron-builder": "20.10.0",
-		"electron-rebuild": "^2.3.2",
 		"mocha": "^6.1.4",
 		"nodemon": "^2.0.2",
 		"s3": "^4.4.0",
