@@ -31,6 +31,18 @@
   resolved "https://registry.yarnpkg.com/7zip-bin/-/7zip-bin-4.0.2.tgz#6abbdc22f33cab742053777a26db2e25ca527179"
   integrity sha512-XtGk+IF57pr852UK1AhQJXqmm1WmSgS5uISL+LPs0z/iAxXouMvdlLJrHPeukP6gd7yR2rDTMSMkHNODgwIq7A==
 
+"@balte/emberplus-connection@^0.0.3":
+  version "0.0.3"
+  resolved "https://registry.yarnpkg.com/@balte/emberplus-connection/-/emberplus-connection-0.0.3.tgz#9153eee83bfbe47127e5d3573e941b66de2687bc"
+  integrity sha512-KjyXXB7FBkv48VTMLq9hoH+GUBWzB20Iogqg35lS4NG/Bb08B6cQ4rlSHKeH8eb24KeReQGVZ2Hjnuw/vqBJcg==
+  dependencies:
+    asn1 evs-broadcast/node-asn1
+    enum "^2.4.0"
+    long "^3.2.0"
+    smart-buffer "^3.0.3"
+    winston "^2.1.1"
+    winston-color "^1.0.0"
+
 "@coreui/coreui-plugin-chartjs-custom-tooltips@1.2.0":
   version "1.2.0"
   resolved "https://registry.yarnpkg.com/@coreui/coreui-plugin-chartjs-custom-tooltips/-/coreui-plugin-chartjs-custom-tooltips-1.2.0.tgz#de251422454edbba6ba925da451cfecdf9b48b22"
@@ -415,7 +427,7 @@ arraybuffer.slice@~0.0.7:
   resolved "https://registry.yarnpkg.com/arraybuffer.slice/-/arraybuffer.slice-0.0.7.tgz#3bbc4275dd584cc1b10809b89d4e8b63a69e7675"
   integrity sha512-wGUIVQXuehL5TCqQun8OW81jGzAWycqzFF8lFp+GOM5BXLYj3bKNsYC4daB7n6XjCqxQA/qgTJ+8ANR3acjrog==
 
-asn1@evs-broadcast/node-asn1, "asn1@github:evs-broadcast/node-asn1":
+"asn1@github:evs-broadcast/node-asn1":
   version "0.5.4"
   resolved "https://codeload.github.com/evs-broadcast/node-asn1/tar.gz/0146823069e479e90595480dc90c72cafa161ba1"
   dependencies:
@@ -1749,18 +1761,6 @@ elgato-stream-deck@^3.3.2:
     exit-hook "^2.2.0"
     jpeg-js "^0.4.2"
     node-hid "^1.2.0"
-
-emberplus-connection@^0.0.3:
-  version "0.0.3"
-  resolved "https://registry.yarnpkg.com/emberplus-connection/-/emberplus-connection-0.0.3.tgz#48e6679794dda1a64ef6bed9865700822396464f"
-  integrity sha512-Ie2Wtm78Zg3yOzgC2I6vSVhg+vvs+1TWqtoN/QtcsEDrmPZQI0A4CAp+8RkRDKuzU7wxCaeHc9Wm8VkguLBXYA==
-  dependencies:
-    asn1 evs-broadcast/node-asn1
-    enum "^2.4.0"
-    long "^3.2.0"
-    smart-buffer "^3.0.3"
-    winston "^2.1.1"
-    winston-color "^1.0.0"
 
 emoji-regex@^7.0.1:
   version "7.0.3"
