@@ -1,4 +1,4 @@
-FROM node:8
+FROM node:12
 # Reference: https://nodejs.org/en/docs/guides/nodejs-docker-webapp/
 
 WORKDIR /root
@@ -14,11 +14,11 @@ RUN cd /root && \
     mv companion/* . && \
     rm -rf companion && \
 
-# Installation Prep
+    # Installation Prep
     curl -L https://yarnpkg.com/latest.tar.gz | tar xvz && mv yarn-v* $HOME/.yarn && \
     apt-get update && apt-get install -y --no-install-recommends apt-utils \ 
-     libudev-dev \
-     libgusb-dev && \
+    libudev-dev \
+    libgusb-dev && \
     $APPDIR/tools/update.sh && \
     $APPDIR/tools/build_writefile.sh
 
