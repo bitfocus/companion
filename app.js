@@ -21,7 +21,7 @@ if (process.env.DEVELOPER !== undefined) {
 }
 
 // Fix timers in electron
-require('./electron-timer-fix').fix();
+// require('./electron-timer-fix').fix();
 
 global.MAX_BUTTONS = 32;
 global.MAX_BUTTONS_PER_ROW = 8;
@@ -29,11 +29,8 @@ global.MAX_BUTTONS_PER_ROW = 8;
 var EventEmitter = require('events');
 var system = new EventEmitter();
 var fs = require("fs");
-var path = require('path')
 var debug = require('debug')('app');
 var mkdirp = require('mkdirp');
-var util = require('util');
-var events = require('events');
 var stripAnsi = require('strip-ansi');
 var logbuffer = [];
 var logwriting = false;
@@ -144,7 +141,7 @@ system.on('skeleton-ready', function() {
 		process.stderr.write = function() {
 			var arr = [];
 			for (var n in arguments) {
-				arr.push(arguments[0]);
+				arr.push(arguments[n]);
 			}
 			var line = new Date().toISOString() + " " + stripAnsi(arr.join(" ").trim() );
 			logbuffer.push(line);

@@ -112,7 +112,7 @@
 		"asar": "^3.0.3",
 		"chai": "^4.2.0",
 		"chai-fs": "^2.0.0",
-		"electron": "^8.0.0",
+		"electron": "^9.3.3",
 		"electron-builder": "^22.9.1",
 		"mocha": "^6.2.3",
 		"nodemon": "^2.0.6",
