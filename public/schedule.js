@@ -37,46 +37,117 @@ class schedule_frontend {
 		this.socket.on('schedule_refresh', this.load_schedule.bind(this));
 	}
 
+	_input_text(field, id = 0) {
+		const item = $(`<input type="text" name="${field.key}" class="form-control" placeholder="${field.placeholder || ''}">`);
+
+		if (!field.not_required) {
+			item.attr('required', true);
+		}
+
+		if (field.pattern) {
+			item.attr('pattern', field.pattern);
+		}
+
+		return item;
+	}
+
+	_input_select(field, select2 = true) {
+		const item = $(`<select name="${field.key}" class="${select2 ? 'select2 ' : ''}form-control" style="width: 100%"></select>`);
+
+		if (field.multi) {
+			item.attr('multiple', true);
+		}
+
+		if (!field.not_required) {
+			item.attr('required', true);
+		}
+
+		field.choices.forEach(c => {
+			item.append(`<option value="${c.id}">${c.label}</option>`);
+		});
+
+		return item;
+	}
+
+	multiple_row(plugin, show_delete = false, table_elm = null) {
+		if (!table_elm) {
+			table_elm = $(`#scheduleEditor${plugin.type} tbody`);
+		}
+		let row = $('<tr></tr>');
+		plugin.options.forEach(f => {
+			let id = 'scheduleEditor' + plugin.type + f.key;
+			let item;
+			if (f.type === 'textinput') {
+				item = this._input_text(f);
+			} else if (f.type === 'select') {
+				item = this._input_select(f, false);
+			} else {
+				return;
+			}
+			row.append($('<td></td>').append(item));
+		});
+
+		if (show_delete) {
+			row.append($('<td></td>').append('<a href="#"><i class="fa fa-times"></i></a>').on('click', this.multiple_del.bind(this, row)));
+		}
+
+		table_elm.append(row);
+	}
+
+	multiple_table(p) {
+		let table = $(`<table></table>`);
+		let tr = $('<tr></tr>');
+		p.options.forEach(f => {
+			tr.append(`<th>${f.name}</th>`);
+		});
+		table.append(tr);
+		let tbody = $('<tbody></tbody>');
+		table.append(tbody);
+		this.multiple_row(p, false, tbody);
+
+		return table;
+	}
+
+	multiple_del(row) {
+		row.remove();
+	}
+
+	_editor_reset() {
+		this.elements.form.trigger('reset');
+		// Remove any additional conditions that may have been set
+		$(`.scheduleConfig tbody tr:nth-child(1n+2)`).remove();
+	}
+
 	/**
 	 * Loads the editor modal
 	 */
 	_setup_editor() {
 		if (this._editor_setup) {
-			return;
+			return this._editor_reset();
 		}
 
 		this.plugins.forEach(p => {
 			const type = p.type;
 			let fields = $(`<div id="scheduleEditor${type}" class="scheduleConfig"></div>`);
-			p.options.forEach(f => {
-				let id = 'scheduleEditor' + type + f.key;
-				let item = $(`<div class="form-group">
-					<label for="${id}">${f.name}</label>
-				</div>`);
-				if (f.type === 'textinput') {
-					let textinput = $(`<input type="text" name="${f.key}" class="form-control" id="${id}" placeholder="${f.placeholder}">`);
-					if (!f.not_required) {
-						textinput.attr('required', true);
+
+			// Multis are done in a table setup
+			if (p.multiple) {
+				let table = this.multiple_table(p);
+				fields.append(table);
+				fields.append($('<a href="#">Add Additional Condition</a>').on('click', this.multiple_row.bind(this, p, true, null)));
+			} else {
+				p.options.forEach(f => {
+					let item = $(`<div class="form-group">
+						<label>${f.name}</label>
+					</div>`);
+					if (f.type === 'textinput') {
+						item.append(this._input_text(f));
+					} else if (f.type === 'select') {
+						item.append(this._input_select(f));
 					}
-					if (f.pattern) {
-						textinput.attr('pattern', f.pattern);
-					}
-					item.append(textinput);
-				} else if (f.type === 'select') {
-					let choices = $(`<select id="${id}" name="${f.key}" class="select2 form-control" style="width: 100%"></select>`);
-					if (f.multi) {
-						choices.attr('multiple', true);
-					}
-					if (!f.not_required) {
-						choices.attr('required', true);
-					}
-					f.choices.forEach(c => {
-						choices.append(`<option value="${c.id}">${c.label}</option>`);
-					});
-					item.append(choices);
-				}
-				fields.append(item);
-			});
+					fields.append(item);
+				});
+			}
 			this.elements.type.append(`<option value="${type}">${p.name}</option>`);
 			this.elements.config.append(fields);
 		});
@@ -124,12 +195,31 @@ class schedule_frontend {
 	 */
 	load_form(event_id) {
 		let init_config = this.get_event(event_id);
-		const config = $.extend(init_config, init_config.config);
 
-		for (const name in config) {
-			const elm = this.elements.form.find(`[name="${name}"]`);
+		// Load title, button, type
+		this._config_load(init_config);
+
+		if (Array.isArray(init_config.config)) {
+			let pt = this.get_plugin_type(init_config.type);
+			init_config.config.forEach((c, i) => {
+				if (i > 0) {
+					this.multiple_row(pt, true);
+				}
+				this._config_load(c, i)
+			});
+		} else {
+			this._config_load(init_config.config);
+		}
+	}
+
+	/**
+	 * Loads one row of configs
+	 */
+	_config_load(config_vals, num = 0) {
+		for (const name in config_vals) {
+			const elm = this.elements.form.find(`[name="${name}"]:nth(${num})`);
 			if (elm.length) {
-				elm.val(config[name]);
+				elm.val(config_vals[name]);
 			}
 		}
 	}
@@ -226,27 +316,42 @@ class schedule_frontend {
 	 */
 	plugin_save() {
 		let type = this.form.get('type');
-		let config = {};
+		let config = [];
 		const plugin = this.get_plugin_type(type);
 
-		plugin.options.forEach(x => {
-			let value;
+		let form_elms = $(`#scheduleEditor${type}`);
+		if (plugin.multiple) {
+			form_elms = form_elms.find('tbody tr');
+		}
 
-			if (x.multi) {
-				try {
-					value = this.form.getAll(x.key)
-						.filter(x => x !== null);
-				} catch (e) {
-					value = [];
-				}
-			} else {
-				value = this.form.get(x.key);
-			}
+		form_elms.each((t, f) => {
+			const condition = {};
+			plugin.options.forEach(x => {
+				condition[x.key] = this._get_condition(f, x);
+			});
 
-			config[x.key] = value;
+			config.push(condition);
 		});
 
 		return config;
+	}
+
+	_get_condition(form, conf_key) {
+		let value;
+		const form_var = $(form).find(`[name="${conf_key.key}"]`);
+
+		if (conf_key.multi) {
+			try {
+				value = form_var.val()
+					.filter(x => x !== null);
+			} catch (e) {
+				value = [];
+			}
+		} else {
+			value = form_var.val();
+		}
+
+		return value;
 	}
 
 	/**
