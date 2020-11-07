@@ -1,4 +1,3 @@
-var s3  = require('s3');
 var AWS = require('aws-sdk');
 var fs  = require('fs');
 
