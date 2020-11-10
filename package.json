@@ -58,15 +58,16 @@
 			"assets/trayTemplate@2x.png",
 			"!font/*",
 			"!tools/*",
-			"!*.md"
+			"!*.md",
+			"!public/js/es6"
 		]
 	},
 	"scripts": {
 		"prod": "./tools/build_writefile.sh && ./bitfocus-skeleton/start.sh",
-		"dev": "./tools/build_writefile.sh && DEVELOPER=1 ./bitfocus-skeleton/start.sh",
+		"dev": "rm -rf ./public/js/dist ; ./tools/build_writefile.sh && DEVELOPER=1 ./bitfocus-skeleton/start.sh",
 		"update": "./tools/update.sh",
 		"pack": "electron-builder --dir",
-		"dist": "rm -rf electron-output && electron-builder",
+		"dist": "./node_modules/.bin/babel ./public/js/es6 --out-dir ./public/js/dist ; rm -rf electron-output && electron-builder",
 		"testprod": "./node_modules/electron/cli.js .",
 		"macdist": "./tools/build_writefile.sh ; rm -rf electron-output && electron-builder --mac",
 		"windist": "./tools/build_writefile.sh ; rm -rf electron-output && electron-builder --win",
@@ -86,6 +87,9 @@
 	"author": "Bitfocus AS",
 	"license": "MIT",
 	"devDependencies": {
+		"@babel/cli": "^7.12.1",
+		"@babel/core": "^7.12.3",
+		"@babel/preset-env": "^7.12.1",
 		"chai": "^4.2.0",
 		"chai-fs": "^2.0.0",
 		"electron": "^2.0.8",
