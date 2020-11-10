@@ -59,7 +59,7 @@
 			"!font/*",
 			"!tools/*",
 			"!*.md",
-			"!public/js/es6"
+			"!public/js/babel"
 		]
 	},
 	"scripts": {
