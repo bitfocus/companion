@@ -685,3 +685,6 @@ url=https://github.com/bitfocus/companion-module-newbluefx-titler.git
 [submodule "lib/module/birddog-visca"]
 	path = lib/module/birddog-visca
 	url = https://github.com/bitfocus/companion-module-birddog-visca.git
+[submodule "lib/module/elgato-keylight"]
+	path = lib/module/elgato-keylight
+	url = https://github.com/bitfocus/companion-module-elgato-keylight.git
