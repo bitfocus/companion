@@ -4242,6 +4242,11 @@ truncate-utf8-bytes@^1.0.0:
   dependencies:
     utf8-byte-length "^1.0.1"
 
+ts-mixer@^5.4.0:
+  version "5.4.0"
+  resolved "https://registry.yarnpkg.com/ts-mixer/-/ts-mixer-5.4.0.tgz#f98583e6acd72bf4c7a04481352ebfd203171297"
+  integrity sha512-Z5u/hpTkP4VWTIQT5vzxyeFAe8siPkatOC0Q49Uf56ccMGSHosI/IEo+t8BFvJX9yiF111YEOKfKY3m72V7F/w==
+
 tunnel-agent@^0.6.0:
   version "0.6.0"
   resolved "https://registry.yarnpkg.com/tunnel-agent/-/tunnel-agent-0.6.0.tgz#27a5dea06b36b04a0a9966774b290868f0fc40fd"

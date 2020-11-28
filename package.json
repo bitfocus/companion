@@ -161,6 +161,7 @@
 		"socket.io-client": "^2.3.1",
 		"strip-ansi": "^5.2.0",
 		"tributejs": "github:peschuster/tribute",
+		"ts-mixer": "^5.4.0",
 		"websocket": "^1.0.32"
 	},
 	"collective": {
