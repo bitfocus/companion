@@ -3,11 +3,11 @@ class schedule_frontend {
 	 * @param {SocketIOClientStatic} socket
 	 */
 	constructor(socket) {
-		this.date_format = 'MM/DD HH:mm:ss';
+		this.dateFormat = 'MM/DD HH:mm:ss';
 		this.socket = socket;
-		this._editor_setup = false;
-		this.preview_cache = {};
-		this.event_list = [];
+		this.editorSetup = false;
+		this.previewCache = {};
+		this.eventList = [];
 
 		this.elements = {
 			list: $('#schedulerEventList'),
@@ -19,28 +19,31 @@ class schedule_frontend {
 		};
 		this.form = null;
 
-		this.elements.new.on('click', this.edit_event.bind(this, null));
-		this.elements.form.on('submit', this.save_form.bind(this));
-		this.socket.emit('schedule_plugins', this.load_plugins.bind(this));
-		this.socket.on('schedule_preview_data', this.preview_update.bind(this));
+		this.elements.new.on('click', this.editEvent.bind(this, null));
+		this.elements.form.on('submit', this.saveForm.bind(this));
+		this.socket.emit('schedule_plugins', this.loadPlugins.bind(this));
+		this.socket.on('schedule_preview_data', this.previewUpdate.bind(this));
 	}
 
 	/**
 	 * Loads enabled plugins and begins watching for schedule events
 	 * @param {Object[]} plugins
 	 */
-	load_plugins(plugins) {
+	loadPlugins(plugins) {
 		this.plugins = plugins;
 
 		// Can't use these until plugins are loaded...
-		this.socket.emit('schedule_get', this.load_schedule.bind(this));
-		this.socket.on('schedule_refresh', this.load_schedule.bind(this));
+		this.socket.emit('schedule_get', this.loadSchedule.bind(this));
+		this.socket.on('schedule_refresh', this.loadSchedule.bind(this));
 	}
 
-	_input_text(field, id = 0) {
+	/**
+	 * @access protected
+	 */
+	inputText(field, id = 0) {
 		const item = $(`<input type="text" name="${field.key}" class="form-control" placeholder="${field.placeholder || ''}">`);
 
-		if (!field.not_required) {
+		if (!field.notRequired) {
 			item.attr('required', true);
 		}
 
@@ -51,14 +54,17 @@ class schedule_frontend {
 		return item;
 	}
 
-	_input_select(field, select2 = true) {
+	/**
+	 * @access protected
+	 */
+	inputSelect(field, select2 = true) {
 		const item = $(`<select name="${field.key}" class="${select2 ? 'select2 ' : ''}form-control" style="width: 100%"></select>`);
 
 		if (field.multi) {
 			item.attr('multiple', true);
 		}
 
-		if (!field.not_required) {
+		if (!field.notRequired) {
 			item.attr('required', true);
 		}
 
@@ -69,32 +75,32 @@ class schedule_frontend {
 		return item;
 	}
 
-	multiple_row(plugin, show_delete = false, table_elm = null) {
-		if (!table_elm) {
-			table_elm = $(`#scheduleEditor${plugin.type} tbody`);
+	multipleRow(plugin, showDelete = false, tableElm = null) {
+		if (!tableElm) {
+			tableElm = $(`#scheduleEditor${plugin.type} tbody`);
 		}
 		let row = $('<tr></tr>');
 		plugin.options.forEach(f => {
 			let id = 'scheduleEditor' + plugin.type + f.key;
 			let item;
 			if (f.type === 'textinput') {
-				item = this._input_text(f);
+				item = this.inputText(f);
 			} else if (f.type === 'select') {
-				item = this._input_select(f, false);
+				item = this.inputSelect(f, false);
 			} else {
 				return;
 			}
 			row.append($('<td></td>').append(item));
 		});
 
-		if (show_delete) {
-			row.append($('<td></td>').append('<a href="#"><i class="fa fa-times"></i></a>').on('click', this.multiple_del.bind(this, row)));
+		if (showDelete) {
+			row.append($('<td></td>').append('<a href="#"><i class="fa fa-times"></i></a>').on('click', this.multipleDel.bind(this, row)));
 		}
 
-		table_elm.append(row);
+		tableElm.append(row);
 	}
 
-	multiple_table(p) {
+	multipleTable(p) {
 		let table = $(`<table></table>`);
 		let tr = $('<tr></tr>');
 		p.options.forEach(f => {
@@ -103,16 +109,19 @@ class schedule_frontend {
 		table.append(tr);
 		let tbody = $('<tbody></tbody>');
 		table.append(tbody);
-		this.multiple_row(p, false, tbody);
+		this.multipleRow(p, false, tbody);
 
 		return table;
 	}
 
-	multiple_del(row) {
+	multipleDel(row) {
 		row.remove();
 	}
 
-	_editor_reset() {
+	/**
+	 * @access protected
+	 */
+	editorReset() {
 		this.elements.form.trigger('reset');
 		// Remove any additional conditions that may have been set
 		$(`.scheduleConfig tbody tr:nth-child(1n+2)`).remove();
@@ -120,10 +129,11 @@ class schedule_frontend {
 
 	/**
 	 * Loads the editor modal
+	 * @access protected
 	 */
-	_setup_editor() {
-		if (this._editor_setup) {
-			return this._editor_reset();
+	setupEditor() {
+		if (this.editorSetup) {
+			return this.editorReset();
 		}
 
 		this.plugins.forEach(p => {
@@ -132,18 +142,18 @@ class schedule_frontend {
 
 			// Multis are done in a table setup
 			if (p.multiple) {
-				let table = this.multiple_table(p);
+				let table = this.multipleTable(p);
 				fields.append(table);
-				fields.append($('<a href="#">Add Additional Condition</a>').on('click', this.multiple_row.bind(this, p, true, null)));
+				fields.append($('<a href="#">Add Additional Condition</a>').on('click', this.multipleRow.bind(this, p, true, null)));
 			} else {
 				p.options.forEach(f => {
 					let item = $(`<div class="form-group">
 						<label>${f.name}</label>
 					</div>`);
 					if (f.type === 'textinput') {
-						item.append(this._input_text(f));
+						item.append(this.inputText(f));
 					} else if (f.type === 'select') {
-						item.append(this._input_select(f));
+						item.append(this.inputSelect(f));
 					}
 					fields.append(item);
 				});
@@ -152,74 +162,75 @@ class schedule_frontend {
 			this.elements.config.append(fields);
 		});
 
-		this._editor_setup = true;
+		this.editorSetup = true;
 	}
 
 	/**
 	 * Change plugin type and enable properties for editing
 	 * @param {string} type
 	 */
-	change_type(type) {
-		const elm_id = '#scheduleEditor' + type;
-		$(`.scheduleConfig:not(${elm_id})`).hide()
+	changeType(type) {
+		const elmId = '#scheduleEditor' + type;
+		$(`.scheduleConfig:not(${elmId})`).hide()
 			.find('input, select')
 			.attr('disabled', true);
-		$(elm_id).show()
+		$(elmId).show()
 			.find('input, select')
 			.attr('disabled', false);
 	}
 
 	/**
 	 * Edit event
-	 * @param {number} event_id
+	 * @param {number} eventId
 	 */
-	edit_event(event_id = null) {
-		this._setup_editor();
+	editEvent(eventId = null) {
+		this.setupEditor();
 		this.elements.form.trigger('reset');
 
-		if (event_id !== null) {
-			this.load_form(event_id);
+		if (eventId !== null) {
+			this.loadForm(eventId);
 		}
-		this.edit_id = event_id;
+		this.editId = eventId;
 
 		this.elements.modal.modal('show');
 
 		this.elements.form.find('.select2').select2();
-		this.elements.type.on('change', x => this.change_type(x.target.value))
+		this.elements.type.on('change', x => this.changeType(x.target.value))
 			.trigger('change');
 	}
 
 	/**
 	 * Load with configuration
-	 * @param {number} event_id
+	 * @param {number} eventId
 	 */
-	load_form(event_id) {
-		let init_config = this.get_event(event_id);
+	loadForm(eventId) {
+		let initConfig = this.getEvent(eventId);
 
 		// Load title, button, type
-		this._config_load(init_config);
+		this.configLoad(initConfig);
 
-		if (Array.isArray(init_config.config)) {
-			let pt = this.get_plugin_type(init_config.type);
-			init_config.config.forEach((c, i) => {
+		if (Array.isArray(initConfig.config)) {
+			let pt = this.getPluginType(initConfig.type);
+			initConfig.config.forEach((c, i) => {
 				if (i > 0) {
-					this.multiple_row(pt, true);
+					this.multipleRow(pt, true);
 				}
-				this._config_load(c, i)
+				this.configLoad(c, i)
 			});
 		} else {
-			this._config_load(init_config.config);
+			this.configLoad(initConfig.config);
 		}
 	}
 
 	/**
 	 * Loads one row of configs
+	 * @access protected
 	 */
-	_config_load(config_vals, num = 0) {
-		for (const name in config_vals) {
+	configLoad(configVals, num = 0) {
+		for (const name in configVals) {
 			const elm = this.elements.form.find(`[name="${name}"]:nth(${num})`);
 			if (elm.length) {
-				elm.val(config_vals[name]);
+				elm.val(configVals[name]);
 			}
 		}
 	}
@@ -228,31 +239,31 @@ class schedule_frontend {
 	 * Save form
 	 * @param {Event} evt
 	 */
-	save_form(evt) {
+	saveForm(evt) {
 		evt.preventDefault();
 
 		this.form = new FormData(this.elements.form[0]);
-		let send_data = {
-			id: this.edit_id,
+		let sendData = {
+			id: this.editId,
 			title: this.form.get('title'),
 			type: this.form.get('type'),
 			button: this.form.get('button'),
-			config: this.plugin_save()
+			config: this.pluginSave()
 		};
 
-		this.socket.emit('schedule_save_item', send_data, clean => {
-			if (this.edit_id !== null) {
-				let init_config = this.get_event(this.edit_id);
-				if (clean.button != init_config.button && $(`canvas[data-schedule-bank="${init_config.button}"]`).length === 1) {
-					this.preview_update_stop(init_config.button);
+		this.socket.emit('schedule_save_item', sendData, clean => {
+			if (this.editId !== null) {
+				let initConfig = this.getEvent(this.editId);
+				if (clean.button != initConfig.button && $(`canvas[data-schedule-bank="${initConfig.button}"]`).length === 1) {
+					this.previewUpdateStop(initConfig.button);
 				}
 			}
 
-			if (this.event_list.length === 0) {
-				this.load_schedule([clean]);
+			if (this.eventList.length === 0) {
+				this.loadSchedule([clean]);
 			} else {
-				this._update_cache(clean.id, clean);
-				this.event_item(clean, clean.id);
+				this.updateCache(clean.id, clean);
+				this.eventIteam(clean, clean.id);
 			}
 
 			this.elements.modal.modal('hide');
@@ -263,14 +274,14 @@ class schedule_frontend {
 	 * Watch for previews
 	 * @param {String} button
 	 */
-	preview_watch(button) {
+	previewWatch(button) {
 		let [page, bank] = button.split('.');
-		if (button in this.preview_cache) {
-			if (this.preview_cache[button] !== null) { // May not have received the response yet
-				this.preview_update(page, bank, this.preview_cache[button]);
+		if (button in this.previewCache) {
+			if (this.previewCache[button] !== null) { // May not have received the response yet
+				this.previewUpdate(page, bank, this.previewCache[button]);
 			}
 		} else {
-			this.preview_cache[button] = null;
+			this.previewCache[button] = null;
 			this.socket.emit('scheduler_bank_preview', page, bank);
 		}
 	}
@@ -281,8 +292,8 @@ class schedule_frontend {
 	 * @param {String} bank
 	 * @param {ArrayBuffer} img
 	 */
-	preview_update(page, bank, img) {
-		this.preview_cache[`${page}.${bank}`] = img;
+	previewUpdate(page, bank, img) {
+		this.previewCache[`${page}.${bank}`] = img;
 
 		let canvas = $(`canvas[data-schedule-bank="${page}.${bank}"]`);
 		canvas.each((t, c) => {
@@ -295,10 +306,10 @@ class schedule_frontend {
 	 * Stop watching for previews
 	 * @param {String} button
 	 */
-	preview_update_stop(button) {
+	previewUpdateStop(button) {
 		let [page, bank] = button.split('.');
 		this.socket.emit('scheduler_bank_preview', page, bank, true);
-		delete this.preview_cache[button];
+		delete this.previewCache[button];
 	}
 
 	/**
@@ -306,7 +317,7 @@ class schedule_frontend {
 	 * @param {string} type
 	 * @return {Object}
 	 */
-	get_plugin_type(type) {
+	getPluginType(type) {
 		return this.plugins.find(p => p.type === type);
 	}
 
@@ -314,20 +325,20 @@ class schedule_frontend {
 	 * Get configuration from form that plugin accepts to save
 	 * @return {Object}
 	 */
-	plugin_save() {
+	pluginSave() {
 		let type = this.form.get('type');
 		let config = [];
-		const plugin = this.get_plugin_type(type);
+		const plugin = this.getPluginType(type);
 
-		let form_elms = $(`#scheduleEditor${type}`);
+		let formElms = $(`#scheduleEditor${type}`);
 		if (plugin.multiple) {
-			form_elms = form_elms.find('tbody tr');
+			formElms = formElms.find('tbody tr');
 		}
 
-		form_elms.each((t, f) => {
+		formElms.each((t, f) => {
 			const condition = {};
 			plugin.options.forEach(x => {
-				condition[x.key] = this._get_condition(f, x);
+				condition[x.key] = this.getCondition(f, x);
 			});
 
 			config.push(condition);
@@ -336,19 +347,22 @@ class schedule_frontend {
 		return config;
 	}
 
-	_get_condition(form, conf_key) {
+	/**
+	 * @access protected
+	 */
+	getCondition(form, confKey) {
 		let value;
-		const form_var = $(form).find(`[name="${conf_key.key}"]`);
+		const formVar = $(form).find(`[name="${confKey.key}"]`);
 
-		if (conf_key.multi) {
+		if (confKey.multi) {
 			try {
-				value = form_var.val()
+				value = formVar.val()
 					.filter(x => x !== null);
 			} catch (e) {
 				value = [];
 			}
 		} else {
-			value = form_var.val();
+			value = formVar.val();
 		}
 
 		return value;
@@ -356,24 +370,24 @@ class schedule_frontend {
 
 	/**
 	 * Load event schedule list
-	 * @param {Object[]} schedule_list Array of schedules received from the server
+	 * @param {Object[]} scheduleList Array of schedules received from the server
 	 */
-	load_schedule(schedule_list) {
-		this.event_list = schedule_list;
+	loadSchedule(scheduleList) {
+		this.eventList = scheduleList;
 
-		if (this.event_list.length) {
+		if (this.eventList.length) {
 			this.elements.list.html('');
-			this.event_list.forEach(i => this.event_item(i, null));
+			this.eventList.forEach(i => this.eventIteam(i, null));
 		} else {
-			this.empty_event_list();
+			this.emptyEventList();
 		}
 	}
 
 	/**
 	 * Add friendly empty message if event list is empty
 	 */
-	empty_event_list() {
-		if (this.event_list.length === 0) {
+	emptyEventList() {
+		if (this.eventList.length === 0) {
 			this.elements.list.html(`<tr>
 				<td colspan="4">There currently are no events scheduled.</td>
 			</tr>`);
@@ -392,9 +406,9 @@ class schedule_frontend {
 			deleted: true
 		};
 		this.socket.emit('schedule_update_item', id, update, clean => {
-			this._update_cache(id, {}, true);
-			this.find_elm(id).remove();
-			this.empty_event_list();
+			this.updateCache(id, {}, true);
+			this.findElm(id).remove();
+			this.emptyEventList();
 		});
 	}
 
@@ -402,16 +416,16 @@ class schedule_frontend {
 	 * Checks if the event is disabled or not
 	 * @param {number} id
 	 */
-	is_disabled(id) {
-		return this.get_event(id).disabled;
+	isDisabled(id) {
+		return this.getEvent(id).disabled;
 	}
 
 	/**
 	 * Get an event
 	 * @param {number} id
 	 */
-	get_event(id) {
-		const event = this.event_list.find(x => x.id === id);
+	getEvent(id) {
+		const event = this.eventList.find(x => x.id === id);
 		if (!event) {
 			throw new Error(`Invalid event ${id}.`);
 		}
@@ -427,21 +441,22 @@ class schedule_frontend {
 	disable(id, evt) {
 		evt.preventDefault();
 		let update = {
-			disabled: !this.is_disabled(id)
+			disabled: !this.isDisabled(id)
 		};
 
 		this.socket.emit('schedule_update_item', id, update, clean => {
-			this._update_cache(clean.id, clean);
-			this.disable_elm(clean.disabled, evt.target);
+			this.updateCache(clean.id, clean);
+			this.disableElm(clean.disabled, evt.target);
 		});
 	}
 
 	/**
 	 * Find the index of the event in the event_list
 	 * @param {number} id
+	 * @access protected
 	 */
-	_find_index(id) {
-		return this.event_list.findIndex(x => x.id === id);
+	findIndex(id) {
+		return this.eventList.findIndex(x => x.id === id);
 	}
 
 	/**
@@ -449,17 +464,18 @@ class schedule_frontend {
 	 * @param {number} id
 	 * @param {Object} data Clean data, this should be returned from the server to ensure everything is consistent
 	 * @param {boolean} deleted True to remove this event from cache
+	 * @access protected
 	 */
-	_update_cache(id, data, deleted = false) {
-		const idx = this._find_index(id);
+	updateCache(id, data, deleted = false) {
+		const idx = this.findIndex(id);
 		if (deleted) {
 			if (idx !== -1) {
-				this.event_list.splice(idx, 1);
+				this.eventList.splice(idx, 1);
 			}
 		} else if (idx === -1) {
-			this.event_list.push(data);
+			this.eventList.push(data);
 		} else {
-			this.event_list[idx] = data;
+			this.eventList[idx] = data;
 		}
 	}
 
@@ -468,73 +484,73 @@ class schedule_frontend {
 	 * @param {boolean} status
 	 * @param {Element|jQuery} elm
 	 */
-	disable_elm(status, elm) {
-		let enable_class = 'btn-ghost-success',
-			disable_class = 'btn-ghost-warning',
-			disable_name = 'disable',
-			enable_name = 'enable';
+	disableElm(status, elm) {
+		let enableClass = 'btn-ghost-success',
+			disableClass = 'btn-ghost-warning',
+			disableName = 'disable',
+			enableName = 'enable';
 		if (status) {
-			$(elm).addClass(enable_class)
-				.removeClass(disable_class)
-				.html(enable_name);
+			$(elm).addClass(enableClass)
+				.removeClass(disableClass)
+				.html(enableName);
 		} else {
-			$(elm).addClass(disable_class)
-				.removeClass(enable_class)
-				.html(disable_name);
+			$(elm).addClass(disableClass)
+				.removeClass(enableClass)
+				.html(disableName);
 		}
 	}
 
 	/**
 	 * Returns the jQuery element based on event id
-	 * @param {number} event_id
+	 * @param {number} eventId
 	 * @return {jQuery}
 	 */
-	find_elm(event_id) {
-		return this.elements.list.find(`[data-event-id=${event_id}]`);
+	findElm(eventId) {
+		return this.elements.list.find(`[data-event-id=${eventId}]`);
 	}
 
 	/**
 	 * Add an event in the front end schedule list
 	 * @param {Object} item
-	 * @param {?number} replace_id
+	 * @param {?number} replaceId
 	 */
-	event_item(item, replace_id = null) {
-		let last_run = '';
-		let elm_update;
+	eventIteam(item, replaceId = null) {
+		let lastRun = '';
+		let elmUpdate;
 
-		if (item.last_run !== null) {
-			last_run = `<br><small>Last run: ${moment(item.last_run).format(this.date_format)}<small>`;
+		if (item.lastRun !== null) {
+			lastRun = `<br><small>Last run: ${moment(item.lastRun).format(this.dateFormat)}<small>`;
 		}
 
 		let template = $(`<tr data-event-id="${item.id}">
 			<td>${item.title}</td>
 			<td>
-				${item.config_desc}
-				${last_run}
+				${item.configDesc}
+				${lastRun}
 			</td>
 			<td><canvas width="72" height="72" data-schedule-bank="${item.button}"></canvas></td>
 			<td class="scheduleActions"></td>
 		</tr>`);
 
-		let del_elm = $('<a href="#" class="btn btn-sm btn-ghost-danger">delete</a>').on('click', this.delete.bind(this, item.id));
-		let dis_elm = $('<a href="#" class="btn btn-sm btn-ghost-warning">disable</a>').on('click', this.disable.bind(this, item.id));
+		let delElm = $('<a href="#" class="btn btn-sm btn-ghost-danger">delete</a>').on('click', this.delete.bind(this, item.id));
+		let disElm = $('<a href="#" class="btn btn-sm btn-ghost-warning">disable</a>').on('click', this.disable.bind(this, item.id));
 		if (item.disabled) {
-			this.disable_elm(item.disabled, dis_elm);
+			this.disableElm(item.disabled, disElm);
 		}
-		let edit_elm = $('<a href="#" class="btn btn-sm btn-primary">edit</a>').on('click', this.edit_event.bind(this, item.id));
+		let editElm = $('<a href="#" class="btn btn-sm btn-primary">edit</a>').on('click', this.editEvent.bind(this, item.id));
 
-		template.find('.scheduleActions').append(del_elm, dis_elm, edit_elm);
+		template.find('.scheduleActions').append(delElm, disElm, editElm);
 
-		if (replace_id !== null) {
-			elm_update = this.find_elm(replace_id);
+		if (replaceId !== null) {
+			elmUpdate = this.findElm(replaceId);
 		}
-		if (replace_id === null || elm_update.length === 0) {
+		if (replaceId === null || elmUpdate.length === 0) {
 			this.elements.list.append(template);
 		} else {
-			elm_update.replaceWith(template);
+			elmUpdate.replaceWith(template);
 		}
 
-		this.preview_watch(item.button);
+		this.previewWatch(item.button);
 	}
 }
 
