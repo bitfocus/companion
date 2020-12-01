@@ -1,6 +1,91 @@
 
 # Bitfocus Companion
 
+## Companion v2.1.1 - Release Notes
+
+# 📣 ADDED CORE FEATURES
+- RossTalk Listener: Companion can now listen to incoming RossTalk messages on Port 7788. Easily press Companion buttons from your Ross video switcher!
+- Added internal action to change button text
+
+# 🐞 BUG FIXES
+- Add function check for module destroy (#1128)
+- Admin interface would crash after a few days (#567)
+- Fix Quote Glyph Alignments
+- Internal Instance: fix exception for null exec path
+- Streamdeck Library patch
+- Bug fix for multiple up on latching buttons
+
+# 🧩 NEW MODULES
+- Audiostrom Live Professor
+- Birddog VISCA Camera Control
+- DataVideo VISCA Camera Control
+- Denon Recorder
+- Elgato Keylight/Ringlight
+- Kramer VP773A
+- Mode Lighting EDIN
+- NETIO PowerBOX
+- Newtek NDI Studio Monitor
+- Open Weather REST
+- Panasonic TV TH-Series
+- Roland M5000 Audio Console
+- Ross Video Caprica
+- Tech Ministry Tally Arbiter
+- TP-Link Kasa Smart Plug
+- Ubiquiti Unifi
+
+# 👍🏻 MODULE IMPROVEMENTS
+- AJA Ki Pro: Feedback support for transport states, support to load clips by list of clips, various bug fixes/improvements
+- Allen & Heath DLive: added support for iLive models
+- ATEN Matrix: documentation updated
+- Audivero Unity Intercom: bug fixes
+- Behringer X32: Various improvements to fader levels
+- Behringer xAir: Support for relative fader actions; adds solo bus actions, feedbacks, and variables; Adds presets
+- Blackmagic ATEM: Added support for latest models, new connection protocol, supersource relative changes, in-transition feedback, Mini Pro Record and Stream control, audio input controls
+- Blackmagic HyperDeck: cleanup and bug fixes
+- Blackmagic SmartView: Bug fixes
+- Chamsys MagicQ UDP: bug fixes
+- Denon DN500BD MKII: documentation fix
+- Digico OSC: Add models and different commands
+- Disguise: Added variables, presets, and feedbacks
+- Extron SMP351: Bug fixes and cleanup
+- Figure 53 QLab Advance: reduce log spam
+- For-A HVS: Adds support for variables
+- Generic PJLink: change commands to upper case
+- Generic TCP/UDP: Fixed to pre-encode send buffer
+- Generic Wake On Lan: Destination option added
+- GlobalCache ITAC IR: Regex fix for IR codes
+- GrassValley AMP: Recording clip support; bug fixes; feedbacks, 
+- H2R Graphics: Add missing commands, bug fixes
+- HaiVision ConnectDVR: Bug fixes
+- HomeAssistant Server: bug fixes
+- James Holt X32TC: Support for latest X32TC 2.11 release; adds spare backup commands
+- Lyntec RPC Breaker: Logging cleanup
+- Magewell Ultrastream: Bug fix for authorization errors
+- OBS Studio: Trigger Hotkey action, Bug fixes
+- Novastar Controller: added support for NovaProUHDJr, VX4S presets
+- piXap piXtimer Pro: Added adjust speaker timer time
+- Planning Center Services Live: Bug fix to show correct Plan sort order
+- PTZ Optics VISCA: Added power option, Focus lock/unlock, bug fixes
+- Renewed Vision ProPresenter: Bug fixes and performance improvements
+- Roku TV: Bug fixes and better error handling
+- Roland V60HD: Bug fix for Split button function
+- Ross Video RossTalk: allow for bus selection in KeyTrans command; support for MEM command
+- Singular Live Studio: Bug fixes, switch to using API URL/tokens, time controller node support
+- Shure Wireless: Bug fixes and improvements
+- Sonos Speakers: Bug fixes
+- Sony VISCA: Increased preset count support
+- StudioCoast vMix: Bug fixes; New presets, feedbacks, and variables
+- Tech Ministry MIDI Relay: support for dummy midi port in list selection
+- Teradek VidiU: bug fixes
+- TheLightingController: documentation update
+- VICREO Hotkey: added extra action for keynote
+- VideoLan VLC: Playlist shuffle option, variables and feedback
+- Vivitek Projector: Added alternate shutter command
+- Vizio Smartcast: bug fixes
+- Yamaha SCP: Adds Surr/Div commands
+- YouTube Live: Documentation updated, bug fixes
+
+
 ## Companion v2.1.0 - Release Notes
 
 # ⭐️  ADDED CORE FEATURES
