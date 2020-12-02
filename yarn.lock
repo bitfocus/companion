@@ -1438,10 +1438,10 @@ elgato-stream-deck@^3.3.2:
     jpeg-js "^0.4.2"
     node-hid "^1.2.0"
 
-emberplus-connection@^0.0.3:
-  version "0.0.3"
-  resolved "https://registry.yarnpkg.com/emberplus-connection/-/emberplus-connection-0.0.3.tgz#48e6679794dda1a64ef6bed9865700822396464f"
-  integrity sha512-Ie2Wtm78Zg3yOzgC2I6vSVhg+vvs+1TWqtoN/QtcsEDrmPZQI0A4CAp+8RkRDKuzU7wxCaeHc9Wm8VkguLBXYA==
+emberplus-connection@^0.0.4:
+  version "0.0.4"
+  resolved "https://registry.yarnpkg.com/emberplus-connection/-/emberplus-connection-0.0.4.tgz#2b735f917917982629385eea7cafe99ed215aee9"
+  integrity sha512-OJIfsUYCMAJV9HxOFB8jlzJV8UDJ2TwwJQ/UekJY7yl72mI8WbAoPYKYx4rv4fbbgzdu+5DSpVR8QERW5pn3fA==
   dependencies:
     asn1 evs-broadcast/node-asn1
     enum "^2.4.0"

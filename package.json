@@ -132,7 +132,7 @@
 		"electron-debug": "^1.5.0",
 		"electron-rpc": "^2.0.1",
 		"elgato-stream-deck": "^3.3.2",
-		"emberplus-connection": "^0.0.3",
+		"emberplus-connection": "^0.0.4",
 		"express": "^4.16.3",
 		"find-process": "1.4.3",
 		"flag-icon-css": "3.5.0",
