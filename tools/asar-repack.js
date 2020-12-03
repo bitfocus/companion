@@ -37,7 +37,7 @@ module.exports = async function(context) {
             await runForDir(moduleDir, m)
         })
     ], {
-        concurrency: 4
+        concurrency: 1 // Higher values cause cache errors
     })
 
     console.log('repacking')
