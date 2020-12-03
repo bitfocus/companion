@@ -5,7 +5,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        node-version: [8.12]
+        node-version: [12.x]
     steps:
     - uses: actions/checkout@v1
     - name: Use Node.js ${{ matrix.node-version }}
@@ -16,6 +16,12 @@ jobs:
       run: |
         yarn update
         yarn run lindist
+
+        # manually tar it, to preserve the symlinks
+        cd electron-output
+        VERSION=$(node -e "console.log(require('../package.json').version)")
+        mv linux-unpacked companion-$VERSION
+        tar -cvzf companion-$VERSION.tar.gz companion-$VERSION
     - name: rename and upload stuff
       run: node ./tools/build_rename_git.js
       env:
@@ -27,14 +33,14 @@ jobs:
     runs-on: macOS-latest
     strategy:
       matrix:
-        node-version: [8.12]
+        node-version: [12.x]
     steps:
     - uses: actions/checkout@v1
     - name: Use Node.js ${{ matrix.node-version }}
       uses: actions/setup-node@v1
       with:
         node-version: ${{ matrix.node-version }}
-    - name: npm install, build, and test
+    - name: yarn update and macdist
       run: |
         yarn update
         yarn run macdist
@@ -49,14 +55,14 @@ jobs:
     runs-on: windows-latest
     strategy:
       matrix:
-        node-version: [8.12]
+        node-version: [12.x]
     steps:
     - uses: actions/checkout@v1
     - name: Use Node.js ${{ matrix.node-version }}
       uses: actions/setup-node@v1
       with:
         node-version: ${{ matrix.node-version }}
-    - name: npm install, build, and test
+    - name: yarn update and windist
       run: |
         yarn update
         yarn run windist

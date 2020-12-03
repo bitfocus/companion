@@ -144,6 +144,12 @@
 						</li>
 
 						<li class="nav-item">
+							<a class="nav-link" target="_new" href="/tablet2.html">
+								<i class="nav-icon fa fa-tablet-alt"></i> Mobile buttons
+							</a>
+						</li>
+
+						<li class="nav-item">
 							<a class="nav-link" target="_new" href="https://github.com/bitfocus/companion/issues">
 								<i class="nav-icon fa fa-bug"></i> Bugs &amp; Features
 							</a>
@@ -212,6 +218,12 @@ href="https://join.slack.com/t/bitfocusio/shared_invite/enQtODk4NTYzNTkzMjU1LTMz
 									<li class="nav-item">
 										<a class="nav-link" data-toggle="tab" href="#devices" role="tab" aria-controls="devices">
 											<i class="fa fa-gamepad"></i> Surfaces</a>
+									</li>
+
+									<li class="nav-item">
+										<a class="nav-link" data-toggle="tab" href="#scheduler" role="tab" aria-controls="scheduler">
+											<i class="fa fa-clock"></i> Triggers
+										</a>
 									</li>
 
 									<li class="nav-item">
@@ -362,6 +374,28 @@ href="https://join.slack.com/t/bitfocusio/shared_invite/enQtODk4NTYzNTkzMjU1LTMz
 
 									</div>
 
+									<div class="tab-pane" id="scheduler" role="tabpanel">
+										<h4>Triggers and Schedules</h4>
+										<p>This allows you to recall buttons based on variables or time-based events.</p>
+
+										<table class="table">
+											<thead>
+												<tr>
+													<th scope="col">Name</th>
+													<th scope="col">Trigger</th>
+													<th scope="col">Button</th>
+													<th scope="col">Actions</th>
+												</tr>
+											</thead>
+											<tbody id="schedulerEventList"></tbody>
+										</table>
+
+										<!-- Button trigger modal -->
+										<button type="button" class="btn btn-primary mb-4" id="scheduleEditorNew">
+											Add New Trigger
+										</button>
+									</div>
+
 									<div class="tab-pane" id="userconfig" role="tabpanel">
 										<h4>User settings</h4>
 										<p>Settings applies instantaneously, don't worry about it!</p>
@@ -439,6 +473,18 @@ href="https://join.slack.com/t/bitfocusio/shared_invite/enQtODk4NTYzNTkzMjU1LTMz
 														</div>
 													</td>
 												</tr>
+												<td colspan="2" class="settings-category">RossTalk</td>
+
+												<tr>
+													<td>RossTalk Listener</td>
+													<td>
+														<div class="form-check form-check-inline mr-1">
+															<input class="form-check-input" type="checkbox" id="userconfig_rosstalk_enabled" value="1">
+															<label class="form-check-label" for="userconfig_rosstalk_enabled">Enabled</label>
+														</div>
+													</td>
+												</tr>
+
 													<td colspan="2" class="settings-category">Artnet Listener</td>
 												<tr>
 													<td>Artnet Listener</td>
@@ -535,10 +581,32 @@ href="https://join.slack.com/t/bitfocusio/shared_invite/enQtODk4NTYzNTkzMjU1LTMz
 											<code>/style/text/1/5 ONLINE</code></p>
 
 										<br>
-										<a class="btn btn-success" href="/bitfocus@companion_v2.0@00.xml">
-											<i class="fa fa-file-import"></i> Download GrandMA2 Fixture file (v2.0)
-										</a>
+										<p>
+											<a class="btn btn-success" href="/bitfocus@companion_v2.0@00.xml">
+												<i class="fa fa-file-import"></i> Download GrandMA2 Fixture file (v2.0)
+											</a>
+										</p>
+										<p>
+											<a class="btn btn-success" href="/Bitfocus Companion Fixture.v3f">
+												<i class="fa fa-file-import"></i> Download Vista Fixture file (v2.0)
+											</a>
+										</p>
 
+										<h4>RossTalk</h4>
+										<p>Remote triggering can be done by sending RossTalk commands to port <code>7788</code>.</p>
+										<p><strong>Commands:</strong>
+											<ul>
+
+												<li><code>CC</code> &lt;page&gt;:&lt;button&gt;<br>
+													<i>Press and release button</i></li>
+											</ul>
+										</p>
+										<p>
+											<strong>Examples</strong>
+										</p>
+
+										<p>Press and release button 5 on page 2<br>
+											<code>CC 2:5</code></p>
 									</div>
 								</div>
 							</div>
@@ -807,6 +875,41 @@ href="https://join.slack.com/t/bitfocusio/shared_invite/enQtODk4NTYzNTkzMjU1LTMz
 			</div>
 		</div>
 
+		<div class="modal fade" id="scheduleModal" tabindex="-1" role="dialog" aria-labelledby="scheduleModalLabel" aria-hidden="true">
+			<div class="modal-dialog">
+				<form>
+					<div class="modal-content">
+						<div class="modal-header">
+							<h5 class="modal-title" id="scheduleModalLabel">Trigger Editor</h5>
+							<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+								<span aria-hidden="true">&times;</span>
+							</button>
+						</div>
+						<div class="modal-body">
+							<div class="form-group">
+								<label for="scheduleEditorTitle">Name</label>
+								<input type="text" name="title" required class="form-control" id="scheduleEditorTitle">
+							</div>
+							<div class="form-group">
+								<label for="scheduleEditorButton">Button</label>
+								<input type="text" required name="button" class="form-control" id="scheduleEditorButton" pattern="([1-9][0-9]?).([1-2][0-9]|[3][0-2]|[1-9])" placeholder="Button number, ex 1.1"
+									title="Must be in format BANK#.BUTTON#, for example 1.1 or 99.32. Bank max is 99, button max is 32.">
+							</div>
+							<div class="form-group">
+								<label for="scheduleEditorType">Type</label>
+								<select id="scheduleEditorType" required name="type" class="form-control"></select>
+							</div>
+							<div id="scheduleConfigurable"></div>
+						</div>
+						<div class="modal-footer">
+							<button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+							<button type="submit" class="btn btn-primary">Save</button>
+						</div>
+					</div>
+				</form>
+			</div>
+		</div>
+
 		<!-- Bootstrap and necessary plugins-->
 		<script src="js/jquery/jquery.min.js"></script>
 		<script src="js/popper/popper.min.js"></script>
@@ -835,5 +938,6 @@ href="https://join.slack.com/t/bitfocusio/shared_invite/enQtODk4NTYzNTkzMjU1LTMz
 		<script src="main.js"></script>
 		<script src="update.js"></script>
 		<script src="preset.js"></script>
+		<script src="schedule.js"></script>
 	</body>
 </html>
