@@ -82,7 +82,7 @@
 			"!tools/*",
 			"!*.md",
 			"!node_modules/sharp/vendor/lib",
-			"!public/js/es6"
+			"!public/js/babel"
 		]
 	},
 	"scripts": {
@@ -90,7 +90,7 @@
 		"dev": "rm -rf ./public/js/dist ; ./tools/build_writefile.sh && DEVELOPER=1 ./bitfocus-skeleton/start.sh",
 		"update": "./tools/update.sh",
 		"pack": "electron-builder --dir",
-		"dist": "./node_modules/.bin/babel ./public/js/es6 --out-dir ./public/js/dist ; rm -rf electron-output && electron-builder",
+		"dist": "./node_modules/.bin/babel ./public/js/babel --out-dir ./public/js/dist ; rm -rf electron-output && electron-builder",
 		"testprod": "./node_modules/electron/cli.js .",
 		"macdist": "./tools/build_writefile.sh ; rm -rf electron-output && electron-builder --publish=never --mac",
 		"windist": "./tools/build_writefile.sh ; rm -rf electron-output && electron-builder --publish=never --win",
