@@ -1,6 +1,11 @@
 
 # Bitfocus Companion
 
+## Companion v2.1.2 - Release Notes
+
+# 🐞 BUG FIXES
+- VideoLan VLC: apply default hostname
+
 ## Companion v2.1.1 - Release Notes
 
 # 📣 ADDED CORE FEATURES
