@@ -131,7 +131,7 @@
 		"debug": "^4.2.0",
 		"electron-debug": "^1.5.0",
 		"electron-rpc": "^2.0.1",
-		"elgato-stream-deck": "^3.3.2",
+		"elgato-stream-deck": "^3.3.3",
 		"emberplus-connection": "^0.0.4",
 		"express": "^4.16.3",
 		"find-process": "1.4.3",
@@ -168,7 +168,7 @@
 		"url": "https://donorbox.org/bitfocus-opensource"
 	},
 	"optionalDependencies": {
-		"@julusian/jpeg-turbo": "^0.5.6"
+		"@julusian/jpeg-turbo": "^1.0.0-3"
 	},
 	"resolutions": {
 		"infinitton-idisplay/node-hid": "^1.0.0"
