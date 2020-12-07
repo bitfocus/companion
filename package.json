@@ -37,6 +37,12 @@
 		},
 		"win": {
 			"target": "nsis",
+			"asarUnpack": [
+				"node_modules/sharp"
+			],
+			"files": [
+				"!node_modules/sharp"
+			],
 			"extraFiles": [
 				{
 					"from": "./node_modules/sharp/build/Release",
