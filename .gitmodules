@@ -1,9 +1,6 @@
 [submodule "bitfocus-skeleton"]
 	path = bitfocus-skeleton
 	url = https://github.com/bitfocus/bitfocus-skeleton.git
-[submodule "bitfocus-libs"]
-	path = bitfocus-libs
-	url = https://github.com/bitfocus/bitfocus-libs.git
 [submodule "lib/module/ifelseware-avplayback"]
 	path = lib/module/ifelseware-avplayback
 	url = https://github.com/bitfocus/companion-module-ifelseware-avplayback.git
