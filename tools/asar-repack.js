@@ -8,10 +8,18 @@ const fs = require('fs')
 const pall = require('p-all')
 
 async function runForDir(root, modName) {
-    console.log('running', modName)
-    await exec2('yarn --production --ignore-scripts', {
-        cwd: path.join(root, modName)
-    })
+    try {
+        const modDir = path.join(root, modName)
+        const pkgInfo = require(path.join(modDir, 'package.json'))
+        if (Object.keys((pkgInfo.dependencies || {})).length > 0) {
+            console.log('running', modName)
+            await exec2('yarn --production --ignore-scripts', {
+                cwd: path.join(root, modName)
+            })
+        }
+    } catch (e) {
+        console.log(`threw error: ${e}`)
+    }
 }
 
 module.exports = async function(context) {
@@ -37,7 +45,7 @@ module.exports = async function(context) {
             await runForDir(moduleDir, m)
         })
     ], {
-        concurrency: 4
+        concurrency: 1 // Higher values cause cache errors
     })
 
     console.log('repacking')
