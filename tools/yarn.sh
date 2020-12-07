@@ -23,9 +23,6 @@ function heading() {
 heading "Core"
 yarn
 echo
-heading "Bitfocus skeleton"
-yarn --cwd bitfocus-skeleton/
-echo
 heading "Module dependencies"
 
 for module in lib/module/*/; do

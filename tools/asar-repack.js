@@ -39,7 +39,6 @@ module.exports = async function(context) {
     console.log('installing')
     
     await pall([
-        async () => await runForDir(tmpApp, 'bitfocus-skeleton'),
         ...modules.map(m => async () => {
             // TODO - if a dir and has package.json?
             await runForDir(moduleDir, m)
