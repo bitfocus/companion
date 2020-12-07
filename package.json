@@ -142,7 +142,7 @@
 		"debug": "^4.2.0",
 		"electron-debug": "^1.5.0",
 		"electron-rpc": "^2.0.1",
-		"elgato-stream-deck": "^3.3.3",
+		"elgato-stream-deck": "npm:elgato-stream-deck2@^3.3.4",
 		"emberplus-connection": "^0.0.4",
 		"express": "^4.16.3",
 		"find-process": "1.4.3",
