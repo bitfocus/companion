@@ -2593,10 +2593,10 @@ electron@^9.3.3:
     "@types/node" "^12.0.12"
     extract-zip "^1.0.3"
 
-"elgato-stream-deck@npm:elgato-stream-deck2@^3.3.4":
-  version "3.3.4"
-  resolved "https://registry.yarnpkg.com/elgato-stream-deck2/-/elgato-stream-deck2-3.3.4.tgz#39c9f71f6a0f2b3202f31a3a8794df26f3876c20"
-  integrity sha512-ON5geFSSCfxQygVt4tM1B6t9bRkORK/wplBNx/gt303S1zEFJMxJtuml8XPHV0h9ZLynFJXaryWF7Dvd+T3BWQ==
+elgato-stream-deck@^3.3.5:
+  version "3.3.5"
+  resolved "https://registry.yarnpkg.com/elgato-stream-deck/-/elgato-stream-deck-3.3.5.tgz#130e8e2eccc53375c897e224836303cef81b727c"
+  integrity sha512-hWY5RNBHlM6Fvs13hYVQCJzhBwZu2E+YibQVyQvNFwehm3JiWrseDFRbyIiyJ7qxirbncxF6cTMwVb/cYpyIgA==
   dependencies:
     exit-hook "^2.2.0"
     jpeg-js "^0.4.2"
