@@ -1,6 +1,5 @@
 var Client = require('electron-rpc/client')
 var client = new Client();
-var exec = require('child_process').exec;
 var network = require('network');
 
 var skeleton_info = {
@@ -29,19 +28,7 @@ function skeleton_info_draw() {
 }
 
 document.getElementById('launch').addEventListener('click', function() {
-	var isWin = process.platform == 'win32';
-	var isMac = process.platform == 'darwin';
-	var isLinux = process.platform == 'linux';
-
-	if (skeleton_info.appURL.match(/http/)) {
-		if (isWin) {
-			exec('start ' + skeleton_info.appURL, function callback(error, stdout, stderr){});
-		} else if (isMac) {
-			exec('open ' + skeleton_info.appURL, function callback(error, stdout, stderr){});
-		} else if (isLinux) {
-			exec('xdg-open ' + skeleton_info.appURL, function callback(error, stdout, stderr){});
-		}
-	}
+	client.request('skeleton-launch-gui');
 });
 
 document.getElementById('hide').addEventListener('click', function() {
