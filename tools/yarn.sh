@@ -16,15 +16,15 @@
 # disclosing the source code of your own applications.
 #
 
+# exit when any command fails
+set -e
+
 function heading() {
 	echo -e "\033[1m$1\033[m"
 }
 
 heading "Core"
 yarn
-echo
-heading "Bitfocus skeleton"
-yarn --cwd bitfocus-skeleton/
 echo
 heading "Module dependencies"
 
