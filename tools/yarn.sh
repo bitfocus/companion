@@ -23,6 +23,19 @@ function heading() {
 	echo -e "\033[1m$1\033[m"
 }
 
+heading "Check Node version"
+NODE_VERSION=$(node -v)
+NODE_IS_CORRECT=$(node -e "console.log(require('semver').satisfies(process.version, '^12.14 || ^14'))")
+echo "Found ${NODE_VERSION}"
+if [ "$NODE_IS_CORRECT" = "true" ]; then
+	echo "Node version is OK "
+else
+	echo "The installed version of NodeJS is not supported, v12.14+ is required."
+	echo "It is recommended that you update NodeJS (the same way you installed it)."
+	echo "Alternatively, you can run \`git checkout stable-2.1\` and \`yarn update\` to stick to future 2.1 versions, but this is unlikely to get many (if any) updates"
+	exit 7
+fi
+
 heading "Core"
 yarn
 echo
