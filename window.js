@@ -31,11 +31,11 @@ document.getElementById('launch').addEventListener('click', function() {
 	client.request('skeleton-launch-gui');
 });
 
-document.getElementById('hide').addEventListener('click', function() {
+document.getElementById('minimize').addEventListener('click', function() {
 	client.request('skeleton-minimize');
 });
 
-document.getElementById('close').addEventListener('click', function() {
+document.getElementById('exit').addEventListener('click', function() {
 	client.request('skeleton-close');
 });
 
