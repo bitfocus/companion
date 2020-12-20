@@ -685,3 +685,6 @@ url=https://github.com/bitfocus/companion-module-newbluefx-titler.git
 [submodule "lib/module/avishop-hdbaset-matrix"]
 	path = lib/module/avishop-hdbaset-matrix
 	url = https://github.com/bitfocus/companion-module-avishop-hdbaset-matrix.git
+[submodule "lib/module/generic-tcp-serial"]
+	path = lib/module/generic-tcp-serial
+	url = https://github.com/bitfocus/companion-module-generic-tcp-serial.git
