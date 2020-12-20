@@ -682,3 +682,6 @@ url=https://github.com/bitfocus/companion-module-newbluefx-titler.git
 [submodule "lib/module/visualproductions-bstation2"]
 	path = lib/module/visualproductions-bstation2
 	url = https://github.com/bitfocus/companion-module-visualproductions-bstation2.git
+[submodule "lib/module/avishop-hdbaset-matrix"]
+	path = lib/module/avishop-hdbaset-matrix
+	url = https://github.com/bitfocus/companion-module-avishop-hdbaset-matrix.git
