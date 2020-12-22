@@ -30,19 +30,13 @@
 			],
 			"extraFiles": [
 				{
-					"from": "./node_modules/sharp/vendor/lib",
+					"from": "./node_modules/sharp/vendor/8.10.5/lib",
 					"to": "Frameworks"
 				}
 			]
 		},
 		"win": {
 			"target": "nsis",
-			"asarUnpack": [
-				"node_modules/sharp"
-			],
-			"files": [
-				"!node_modules/sharp"
-			],
 			"extraFiles": [
 				{
 					"from": "./node_modules/sharp/build/Release",
@@ -70,11 +64,10 @@
 			"target": "dir",
 			"extraFiles": [
 				{
-					"from": "./node_modules/sharp/vendor/lib",
+					"from": "./node_modules/sharp/vendor/8.10.5/lib",
 					"to": ".",
 					"filter": [
-						"lib*",
-						"!libcairo*"
+						"libvips*.so.*"
 					]
 				}
 			]
@@ -116,10 +109,10 @@
 	"author": "Bitfocus AS",
 	"license": "MIT",
 	"devDependencies": {
-		"asar": "^3.0.3",
 		"@babel/cli": "^7.12.1",
 		"@babel/core": "^7.12.3",
 		"@babel/preset-env": "^7.12.1",
+		"asar": "^3.0.3",
 		"chai": "^4.2.0",
 		"chai-fs": "^2.0.0",
 		"electron": "^9.3.3",
@@ -166,7 +159,7 @@
 		"popper.js": "1.16.1",
 		"read-package-json": "^2.1.2",
 		"select2": "4.0.13",
-		"sharp": "^0.25.0",
+		"sharp": "^0.27.0",
 		"shortid": "^2.2.16",
 		"socket.io": "^2.3.0",
 		"socket.io-client": "^2.3.1",
