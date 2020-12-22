@@ -214,6 +214,10 @@ function createTray() {
 		label: 'Scan USB Devices',
 		click: scanUsb,
 	}))
+	menu.append(new electron.MenuItem({
+		label: 'Quit',
+		click: trayQuit,
+	}))
 	tray.setContextMenu(menu)
 }
 
@@ -233,6 +237,17 @@ function launchUI() {
 	}
 }
 
+function trayQuit() {
+	electron.dialog.showMessageBox(undefined, {
+		title: 'Companion',
+		message: 'Are you sure you want to quit Companion?',
+		buttons: ['Quit', 'Cancel']
+	}).then((v) => {
+		if (v.response === 0) {
+			system.emit('exit');
+		}
+	})
+}
 
 function scanUsb() {
 	system.emit('devices_reenumerate')
