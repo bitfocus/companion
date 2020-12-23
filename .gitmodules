@@ -679,3 +679,15 @@ url=https://github.com/bitfocus/companion-module-newbluefx-titler.git
 [submodule "lib/module/elgato-keylight"]
 	path = lib/module/elgato-keylight
 	url = https://github.com/bitfocus/companion-module-elgato-keylight.git
+[submodule "lib/module/visualproductions-bstation2"]
+	path = lib/module/visualproductions-bstation2
+	url = https://github.com/bitfocus/companion-module-visualproductions-bstation2.git
+[submodule "lib/module/avishop-hdbaset-matrix"]
+	path = lib/module/avishop-hdbaset-matrix
+	url = https://github.com/bitfocus/companion-module-avishop-hdbaset-matrix.git
+[submodule "lib/module/generic-tcp-serial"]
+	path = lib/module/generic-tcp-serial
+	url = https://github.com/bitfocus/companion-module-generic-tcp-serial.git
+[submodule "lib/module/spotify-remote"]
+	path = lib/module/spotify-remote
+	url = https://github.com/bitfocus/companion-module-spotify-remote.git
