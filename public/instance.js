@@ -491,7 +491,8 @@ $(function() {
 				var variable = instance_variables[current_instance][i];
 				$icvl.append('<tr data-id="' + current_instance + ':' + variable.name + '"><td>$(' + current_instance + ':' + variable.name + ')</td><td>' + variable.label + '</td><td>' + instance_variabledata[current_instance + ':' + variable.name] + '</td></tr>');
 			}
-
+		} else {
+			$icv.hide();
 		}
 	}
 

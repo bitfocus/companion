@@ -1,8 +1,8 @@
 {
 	"name": "companion",
-	"version": "2.1.1",
+	"version": "2.2.0",
 	"description": "Companion",
-	"main": "bitfocus-skeleton/main.js",
+	"main": "electron.js",
 	"build": {
 		"afterPack": "./tools/asar-repack.js",
 		"productName": "Companion",
@@ -30,7 +30,7 @@
 			],
 			"extraFiles": [
 				{
-					"from": "./node_modules/sharp/vendor/lib",
+					"from": "./node_modules/sharp/vendor/8.10.5/lib",
 					"to": "Frameworks"
 				}
 			]
@@ -64,11 +64,10 @@
 			"target": "dir",
 			"extraFiles": [
 				{
-					"from": "./node_modules/sharp/vendor/lib",
+					"from": "./node_modules/sharp/vendor/8.10.5/lib",
 					"to": ".",
 					"filter": [
-						"lib*",
-						"!libcairo*"
+						"libvips*.so.*"
 					]
 				}
 			]
@@ -81,15 +80,16 @@
 			"!font/*",
 			"!tools/*",
 			"!*.md",
-			"!node_modules/sharp/vendor/lib"
+			"!node_modules/sharp/vendor/lib",
+			"!public/js/babel"
 		]
 	},
 	"scripts": {
-		"prod": "./tools/build_writefile.sh && ./bitfocus-skeleton/start.sh",
-		"dev": "./tools/build_writefile.sh && DEVELOPER=1 ./bitfocus-skeleton/start.sh",
+		"prod": "./tools/build_writefile.sh && electron .",
+		"dev": "rm -rf ./public/js/dist ; ./tools/build_writefile.sh && DEVELOPER=1 electron .",
 		"update": "./tools/update.sh",
 		"pack": "electron-builder --dir",
-		"dist": "rm -rf electron-output && electron-builder",
+		"dist": "./node_modules/.bin/babel ./public/js/babel --out-dir ./public/js/dist ; rm -rf electron-output && electron-builder",
 		"testprod": "./node_modules/electron/cli.js .",
 		"macdist": "./tools/build_writefile.sh ; rm -rf electron-output && electron-builder --publish=never --mac",
 		"windist": "./tools/build_writefile.sh ; rm -rf electron-output && electron-builder --publish=never --win",
@@ -109,6 +109,9 @@
 	"author": "Bitfocus AS",
 	"license": "MIT",
 	"devDependencies": {
+		"@babel/cli": "^7.12.1",
+		"@babel/core": "^7.12.3",
+		"@babel/preset-env": "^7.12.1",
 		"asar": "^3.0.3",
 		"chai": "^4.2.0",
 		"chai-fs": "^2.0.0",
@@ -122,6 +125,7 @@
 	},
 	"dependencies": {
 		"@coreui/coreui": "^2.1.16",
+		"@sentry/electron": "^1.3.0",
 		"app-root-path": "^2.0.1",
 		"aws-sdk": "^2.783.0",
 		"binopsy": "^0.0.0",
@@ -131,8 +135,8 @@
 		"debug": "^4.2.0",
 		"electron-debug": "^1.5.0",
 		"electron-rpc": "^2.0.1",
-		"elgato-stream-deck": "^3.3.2",
-		"emberplus-connection": "^0.0.3",
+		"elgato-stream-deck": "^3.3.5",
+		"emberplus-connection": "^0.0.4",
 		"express": "^4.16.3",
 		"find-process": "1.4.3",
 		"flag-icon-css": "3.5.0",
@@ -155,7 +159,7 @@
 		"popper.js": "1.16.1",
 		"read-package-json": "^2.1.2",
 		"select2": "4.0.13",
-		"sharp": "^0.25.0",
+		"sharp": "^0.27.0",
 		"shortid": "^2.2.16",
 		"socket.io": "^2.3.0",
 		"socket.io-client": "^2.3.1",
@@ -169,7 +173,7 @@
 		"url": "https://donorbox.org/bitfocus-opensource"
 	},
 	"optionalDependencies": {
-		"@julusian/jpeg-turbo": "^0.5.6"
+		"@julusian/jpeg-turbo": "^1.0.0-3"
 	},
 	"resolutions": {
 		"infinitton-idisplay/node-hid": "^1.0.0"

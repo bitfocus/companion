@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="UTF-8">
+		<title>BitFocus</title>
+	</head>
+	<body>
+		<style>
+			body,html {
+				margin:0;
+				padding:0;
+				-webkit-app-region:drag;
+			}
+			body {
+				background-color: rgba(35,35,35,1);
+				color: white;
+				font-family: "Helvetica";
+				overflow: hidden;
+			}
+
+			#topwrap {
+			}
+
+			#wrap {
+				width: 100%;
+				margin-top: 20px;
+				display:block;
+				text-align:center;
+			}
+
+			#logo {
+				width: 100px;
+				padding-top: 20px;
+				padding-bottom: 10px;
+				text-align:center;
+				user-select: none;
+			}
+
+			#actions {
+				padding: 10px;
+				display:block;
+				box-shadow: inset 0px 5px 10px rgba(0,0,0,0.3);
+				padding-top: 20px;
+				padding-bottom:20px;
+				background-color: #d40215;
+				user-select: none;
+			}
+
+			.dobutton {
+				font-size: 1em;
+				padding: 10px 20px;
+				border:0px;
+				user-select: none;
+				cursor: pointer;
+				border-radius:4px;
+			}
+
+			#launch {
+				background-color: rgba(255,255,255,1);
+				margin-right: 5px;
+				border: 1px solid white;
+			}
+
+			#hide {
+				background-color: rgba(255,255,255,0.1);
+				color: white;
+				margin-right: 5px;
+				border: 1px solid white;
+			}
+
+			#close {
+				background-color: rgba(255,255,255,0.1);
+				color: white;
+				border: 1px solid white;
+			}
+
+			input {
+				-webkit-appearance: textfield;
+				background-color: white;
+				-webkit-rtl-ordering: logical;
+				cursor: text;
+				padding: 1px;
+				border-width: 2px;
+				border-style: inset;
+				border-color: initial;
+				border-image: initial;
+			}
+			
+			#status, #model {
+				user-select: none !important;
+			}
+			
+			#status {
+				font-size: 40px;
+				font-weight: 100;
+				margin:0;
+				color: rgba(255,255,255,0.4);
+			}
+			#model {
+				font-size: 14px;
+			}
+			h1 {
+				font-size: 40px;
+				padding-top:20px;
+				font-weight: 100;
+			}
+			#url {
+				padding-top: 5px;
+				padding-bottom: 10px;
+				-webkit-app-region: no-drag !important;
+			}
+			#meh {
+				background-color: #b00013;
+				margin-top: 30px;
+				padding-bottom: 10px;
+			}
+			textarea:focus, input:focus{
+				outline: 0;
+			}
+			#ifs, input[type="button"] {
+				-webkit-app-region: no-drag !important;
+			}
+			input {
+				-webkit-app-region: no-drag !important;
+			}
+			#ifp {
+				width:50px;
+				text-align:center;
+				border-bottom-left-radius: 3px;
+				border-top-left-radius: 3px;
+				background-color: #d40215;
+				font-size: 13px;
+				color:#fff;
+				padding-top:3px;
+				padding-bottom:3px;
+				border: 1px solid white;
+				border-right-width: 1px;
+			}
+			#ifpb {
+				cursor: pointer;
+				border: 1px solid #ccc;
+				background-color: #b00013;
+				color: white;
+				border: 1px solid white;
+				padding: 3px 8px;
+				border-bottom-right-radius: 3px;
+				border-top-right-radius: 3px;
+				border-left-width: 0px;
+				margin-top: -1px;
+				font-size: 13px;
+
+			}
+			#ifpb:hover {
+				background-color: #666;
+			}
+			#ift {
+				color: white;
+				-webkit-appearance:checkbox;
+				cursor:pointer;
+			}
+			#ifs {
+				background-color: #d40215;
+				color: #fff;
+				border: 1px solid white;
+				font-size: 12px !important;
+				margin-bottom: -4px;
+			}
+			#guitext {
+				font-size: 12px;
+				color:white;
+				padding-top: 0px;
+				padding-bottom: 2px;
+			}
+			#bottombuttons {
+				padding-bottom: 100px;
+			}
+		</style>
+		<div id="wrap">
+			<div id="topwrap">
+				<img id="logo" src="./assets/bitfocus-logo.png">
+				<div id="model">model_text (version_etc)</div>
+			</div>
+			<div id="meh">
+				<h1 id="status">Status</h2>
+				<div id="url">URL</div>
+			</div>
+			<div id="actions">
+				<div id="guitext">GUI Interface</div>
+				<select id="ifs" style="">
+				</select>
+				<p>
+					<input type='text' maxlength="5" id='ifp' value="8000" style=""><input type='button' id='ifpb' style="" value="Change" />
+				</p>
+				<p>
+					<input type="checkbox" id="ift" style=""/>
+					<label for="ift" style="font-size:12px">Start minimized</label>
+				</p>
+				<div id="bottombuttons">
+					<input type="button" class="dobutton" value="Launch GUI" id="launch">
+					<input type="button" class="dobutton" value="Hide" id="hide">
+					<input type="button" class="dobutton" value="Quit" id="close">
+				</div>
+			</div>
+		</div>
+		<script>
+			require('./window.js');
+		</script>
+	</body>
+</html>
