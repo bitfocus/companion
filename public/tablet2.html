@@ -734,7 +734,7 @@ your bowser's top menu
 						}
 					});
 
-					this.webSocket.on("get_userconfig_all", function(data){
+					this.webSocket.on("get_userconfig_all:result", function(data){
 						//console.log("Is page direction flipped? " + data.page_direction_flipped);
 						vue_this.settings.page_direction_flipped = data.page_direction_flipped;
 					})

@@ -49,7 +49,7 @@ system.on('skeleton-info', function(key, val) {
 		cfgDir = val + "/companion/";
 		mkdirp(cfgDir, function(err) {
 			debug("mkdirp",cfgDir,err);
-			config = new (require('./lib/config'))(system, cfgDir, {
+			config = new (require('./lib/Data/Config'))(system, cfgDir, {
 				http_port: 8888,
 				bind_ip: "127.0.0.1",
 				start_minimised: false,

@@ -195,7 +195,7 @@ $(function() {
 
 
 	// when server updates the entire config array
-	socket.on('get_userconfig_all', function(config) {
+	socket.on('get_userconfig_all:result', function(config) {
 		userconfig = config;
 		userConfigUpdate();
 	});
