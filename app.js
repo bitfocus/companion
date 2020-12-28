@@ -151,7 +151,7 @@ system.on('skeleton-ready', function() {
 	}
 
 	debug('launching registry');
-	var registry = new (require('./lib/registry'))(system, cfgDir);
+	var registry = new (require('./lib/registry'))(system, config);
 
 	system.emit('modules_loaded');
 
