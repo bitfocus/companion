@@ -118,6 +118,7 @@ declare abstract class InstanceSkel<TConfig> {
   debug(formatter: string, ...args: any[]): void
 
   rgb(red: number, green: number, blue: number): number
+  rgbRev(color: number): { r: number; g: number; b: number }
 
   STATUS_UNKNOWN: null
   STATUS_OK: 0
