@@ -17,7 +17,7 @@
 
 $(function() {
 
-	socket.on('update_data', function(data) {
+	socket.on('update_data:result', function(data) {
 
 		if (data.message) {
 			$("#newversiontext").html(data.message);
