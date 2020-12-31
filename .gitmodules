@@ -691,3 +691,12 @@ url=https://github.com/bitfocus/companion-module-newbluefx-titler.git
 [submodule "lib/module/spotify-remote"]
 	path = lib/module/spotify-remote
 	url = https://github.com/bitfocus/companion-module-spotify-remote.git
+[submodule "lib/module/generic-emberplus"]
+	path = lib/module/generic-emberplus
+	url = https://github.com/bitfocus/companion-module-generic-emberplus.git
+[submodule "lib/module/presentationtools-cuetimer"]
+	path = lib/module/presentationtools-cuetimer
+	url = https://github.com/bitfocus/companion-module-presentationtools-cuetimer.git
+[submodule "lib/module/opensong-api"]
+	path = lib/module/opensong-api
+	url = https://github.com/bitfocus/companion-module-opensong-api.git

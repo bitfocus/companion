@@ -100,7 +100,7 @@ declare abstract class InstanceSkel<TConfig> {
   /**
    * Get an array of all the actions and release_actions for this instance
    */
-  getAllActions(): CompanionFeedbackEvent[]
+  getAllActions(): CompanionActionEvent[]
   /**
    * Trigger the subscribe callback on all actions and release_actions for this instance
    * @param actionId Action type to call for, or undefined for all
@@ -118,6 +118,7 @@ declare abstract class InstanceSkel<TConfig> {
   debug(formatter: string, ...args: any[]): void
 
   rgb(red: number, green: number, blue: number): number
+  rgbRev(color: number): { r: number; g: number; b: number }
 
   STATUS_UNKNOWN: null
   STATUS_OK: 0
