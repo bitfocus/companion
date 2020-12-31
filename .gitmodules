@@ -697,3 +697,6 @@ url=https://github.com/bitfocus/companion-module-newbluefx-titler.git
 [submodule "lib/module/presentationtools-cuetimer"]
 	path = lib/module/presentationtools-cuetimer
 	url = https://github.com/bitfocus/companion-module-presentationtools-cuetimer.git
+[submodule "lib/module/opensong-api"]
+	path = lib/module/opensong-api
+	url = https://github.com/bitfocus/companion-module-opensong-api.git
