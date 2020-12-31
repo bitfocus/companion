@@ -85,21 +85,23 @@
 		]
 	},
 	"scripts": {
-		"prod": "./tools/build_writefile.sh && electron .",
-		"dev": "rm -rf ./public/js/dist ; ./tools/build_writefile.sh && DEVELOPER=1 electron .",
+		"prod": "./tools/build_writefile.sh && yarn dist:js && electron .",
+		"dev": "./tools/build_writefile.sh && DEVELOPER=1 electron .",
 		"update": "./tools/update.sh",
 		"pack": "electron-builder --dir",
-		"dist": "./node_modules/.bin/babel ./public/js/babel --out-dir ./public/js/dist ; rm -rf electron-output && electron-builder",
+		"dist:js": "rm -rf public/js/dist && babel ./public/js/babel --out-dir ./public/js/dist",
+		"dist:prepare": "./tools/build_writefile.sh ; rm -rf electron-output && yarn dist:js",
+		"dist": "yarn dist:prepare && electron-builder",
+		"electron-rebuild": "electron-builder install-app-deps",
 		"testprod": "./node_modules/electron/cli.js .",
-		"macdist": "./tools/build_writefile.sh ; rm -rf electron-output && electron-builder --publish=never --mac",
-		"windist": "./tools/build_writefile.sh ; rm -rf electron-output && electron-builder --publish=never --win",
-		"lindist": "./tools/build_writefile.sh ; rm -rf electron-output && electron-builder --publish=never --linux",
-		"rpidist": "./tools/build_writefile.sh ; rm -rf electron-output && electron-builder --armv7l --linux",
-		"start": "yarn run",
+		"macdist": "yarn dist:prepare && electron-builder --publish=never --mac",
+		"windist": "yarn dist:prepare && electron-builder --publish=never --win",
+		"lindist": "yarn dist:prepare && electron-builder --publish=never --linux",
+		"rpidist": "yarn dist:prepare && electron-builder --armv7l --linux",
 		"test": "mocha",
-		"postinstall": "./tools/build_writefile.sh",
-		"headless": "nodemon headless.js",
-		"dev-headless": "DEVELOPER=1 nodemon headless.js"
+		"postinstall": "./tools/build_writefile.sh && yarn dist:js",
+		"headless": "./tools/build_writefile.sh && yarn dist:js && nodemon headless.js",
+		"dev-headless": "./tools/build_writefile.sh && DEVELOPER=1 nodemon headless.js"
 	},
 	"repository": "https://github.com/bitfocus/companion",
 	"keywords": [
@@ -135,7 +137,7 @@
 		"debug": "^4.2.0",
 		"electron-debug": "^1.5.0",
 		"electron-rpc": "^2.0.1",
-		"elgato-stream-deck": "^3.3.5",
+		"elgato-stream-deck": "^4.0.0",
 		"emberplus-connection": "^0.0.4",
 		"express": "^4.16.3",
 		"find-process": "1.4.3",
@@ -173,9 +175,9 @@
 		"url": "https://donorbox.org/bitfocus-opensource"
 	},
 	"optionalDependencies": {
-		"@julusian/jpeg-turbo": "^1.0.0-3"
+		"@julusian/jpeg-turbo": "^1.0.0"
 	},
 	"resolutions": {
-		"infinitton-idisplay/node-hid": "^1.0.0"
+		"infinitton-idisplay/node-hid": "^2.1.1"
 	}
 }

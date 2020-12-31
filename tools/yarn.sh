@@ -38,14 +38,14 @@ fi
 set -e
 
 heading "Core"
-yarn
+yarn --frozen-lockfile
 echo
 heading "Module dependencies"
 
 for module in lib/module/*/; do
 	grep '"dependencies"' ${module}package.json > /dev/null 2>&1 && (
 		echo ${module}
-		yarn --cwd ${module}
+		yarn --frozen-lockfile --cwd ${module}
 		echo ""
 	)
 done

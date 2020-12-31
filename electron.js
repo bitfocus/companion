@@ -18,16 +18,21 @@ function packageinfo() {
 
 const buildNumber = fs.readFileSync(__dirname + "/BUILD").toString().trim();
 
-init({
-	dsn: 'https://535745b2e446442ab024d1c93a349154@sentry.bitfocus.io/8',
-	release: 'companion@' + ( buildNumber !== undefined ? buildNumber.trim() : packageinfo().version),
-	beforeSend(event) {
-    if (event.exception) {
-      showReportDialog();
-    }
-    return event;
-  }
-});
+if (process.env.DEVELOPER === undefined) {
+	console.log('Configuring sentry error reporting')
+	init({
+		dsn: 'https://535745b2e446442ab024d1c93a349154@sentry.bitfocus.io/8',
+		release: 'companion@' + ( buildNumber !== undefined ? buildNumber.trim() : packageinfo().version),
+		beforeSend(event) {
+			if (event.exception) {
+				showReportDialog();
+			}
+			return event;
+		}
+	});
+} else {
+	console.log('Sentry error reporting is disabled')
+}
 
 var window;
 var exiting = false;
