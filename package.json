@@ -100,7 +100,7 @@
 		"rpidist": "yarn dist:prepare && electron-builder --armv7l --linux",
 		"test": "mocha",
 		"postinstall": "./tools/build_writefile.sh && yarn dist:js",
-		"headless": "./tools/build_writefile.sh && yarn dist:js && nodemon headless.js",
+		"headless": "nodemon headless.js",
 		"dev-headless": "./tools/build_writefile.sh && DEVELOPER=1 nodemon headless.js"
 	},
 	"repository": "https://github.com/bitfocus/companion",
