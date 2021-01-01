@@ -129,11 +129,11 @@ $(function() {
 
 		for (var n in actions) {
 			var action = actions[n];
-			if (action !== null && instance.db[action.instance] !== undefined) {
+			if (action !== null && instance[action.instance] !== undefined) {
 
 
-				var idb = instance.db[action.instance];
-				var it = instance.db[action.instance].instance_type;
+				var idb = instance[action.instance];
+				var it = instance[action.instance].instance_type;
 				var inst = action;
 
 				var $tr = $("<tr></tr>");
@@ -145,10 +145,10 @@ $(function() {
 					var extract = action.label.split(/:/);
 					var a = extract.shift();
 					a = extract.shift();
-					name = instance.db[action.instance].label + ": " + a + " <em>(undefined)</em>";
+					name = instance[action.instance].label + ": " + a + " <em>(undefined)</em>";
 				}
 				else {
-					name = instance.db[action.instance].label + ": " + actionlist[action.label].label;
+					name = instance[action.instance].label + ": " + actionlist[action.label].label;
 				}
 
 				var $name_td = $("<td class='actionlist-td-label'>" + name + "</td>");
@@ -602,16 +602,16 @@ $(function() {
 			var inst = x[0];
 			var act = x[1];
 
-			if (inst !== undefined && instance !== undefined && instance.db !== undefined && instance.db[inst] !== undefined) {
+			if (inst !== undefined && instance !== undefined && instance !== undefined && instance[inst] !== undefined) {
 
-				var $option = $("<option value='"+n+"'>"+ instance.db[inst].label + ": "+actions[n].label+"</option>")
+				var $option = $("<option value='"+n+"'>"+ instance[inst].label + ": "+actions[n].label+"</option>")
 				$aba.append($option);
 
 				var $li = $("<tr></tr>");
 				var $td_id = $("<td></td>");
 				var $td_label = $("<td></td>");
 
-				$td_id.text(instance.db[inst].label);
+				$td_id.text(instance[inst].label);
 				$td_label.text(actions[n].label);
 
 				$li.append($td_id);

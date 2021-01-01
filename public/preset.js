@@ -10,9 +10,9 @@ $(function() {
 	var main_presets = '<h4>Available instance presets</h4>';
 
 	function get_instance(id) {
-		for (var key in instance.module) {
-			if (instance.module[key].name == id) {
-				return instance.module[key];
+		for (var key in instance_config) {
+			if (instance_config[key].name == id) {
+				return instance_config[key];
 			}
 		}
 	}
@@ -23,11 +23,11 @@ $(function() {
 
 		var count = 0;
 		for (var key in all_presets) {
-			if (instance.db[key] !== undefined) {
-				var inst = get_instance(instance.db[key].instance_type);
+			if (instance[key] !== undefined) {
+				var inst = get_instance(instance[key].instance_type);
 				if (inst !== undefined) {
 					count++;
-					$presets.append('<input type="button" class="btn btn-primary choose_instance" data-key="' + key + '" value="' + inst.label + ' (' + instance.db[key].label + ')"><br /><br />');
+					$presets.append('<input type="button" class="btn btn-primary choose_instance" data-key="' + key + '" value="' + inst.label + ' (' + instance[key].label + ')"><br /><br />');
 				}
 			}
 		}
@@ -45,8 +45,8 @@ $(function() {
 			var preset = all_presets[id][key];
 			categories[preset.category] = 1;
 		}
-		var inst = get_instance(instance.db[id].instance_type);
-		$presets.html('<button type=button class="btn btn-primary pull-right back_main">Back</button><h4>Preset categories for ' + inst.label + ' (' + instance.db[id].label + ')</h4>');
+		var inst = get_instance(instance[id].instance_type);
+		$presets.html('<button type=button class="btn btn-primary pull-right back_main">Back</button><h4>Preset categories for ' + inst.label + ' (' + instance[id].label + ')</h4>');
 		$presets.find('h4').css('marginBottom', 15);
 		
 		var $preset_wrapper = $("<div/>");

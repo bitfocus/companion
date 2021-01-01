@@ -173,9 +173,9 @@ $(function() {
 				var $sel = $tr.find('select');
 
 				var selected = '';
-				for (var ik in instance.db) {
-					if (instance.db[ik].instance_type == result.instances[key].instance_type) {
-						$sel.append('<option value="' + ik + '">' + instance.db[ik].label + '</option>');
+				for (var ik in instance) {
+					if (instance[ik].instance_type == result.instances[key].instance_type) {
+						$sel.append('<option value="' + ik + '">' + instance[ik].label + '</option>');
 						if (ik == key) {
 							selected = ik;
 						}
@@ -185,9 +185,9 @@ $(function() {
 					$sel.val(selected);
 				}
 
-				for (var i = 0; i < instance.module.length; ++i) {
-					if (instance.module[i].name == result.instances[key].instance_type) {
-						$tr.find('td:nth-child(2)').text(instance.module[i].label);
+				for (var i = 0; i < instance_config.length; ++i) {
+					if (instance_config[i].name == result.instances[key].instance_type) {
+						$tr.find('td:nth-child(2)').text(instance_config[i].label);
 					}
 				}
 

@@ -22,6 +22,7 @@ var instance_variabledata = {};
 var instance_manufacturer = {};
 var instance_category = {};
 var instance_name = {};
+var instance_config = [];
 
 $(function() {
 	var iconfig = {};
@@ -151,13 +152,13 @@ $(function() {
 				socket.emit('instance_enable', id, true);
 			});
 
-			for (var x in instance.module) {
-				if (instance.module[x].name == list[n].instance_type) {
+			for (var x in instance_config) {
+				if (instance_config[x].name == list[n].instance_type) {
 					var help = '';
-					if (instance.module[x].help) {
+					if (instance_config[x].help) {
 						help = '<div class="instance_help"><i class="fa fa-question-circle"></i></div>';
 					}
-					$td_id.html(help + "<b>"+instance.module[x].shortname+"</b>" + "<br>" + instance.module[x].manufacturer);
+					$td_id.html(help + "<b>"+instance_config[x].shortname+"</b>" + "<br>" + instance_config[x].manufacturer);
 				}
 			}
 
@@ -248,9 +249,9 @@ $(function() {
 
 						var $help = $('<div class="instance_help"><i class="fa fa-question-circle"></i></div>')
 
-						for (var y in instance.module) {
-							if (instance.module[y].name == x) {
-								if (instance.module[y].help) {
+						for (var y in instance_config) {
+							if (instance_config[y].name == x) {
+								if (instance_config[y].help) {
 									$x.append($help);
 								}
 							}
@@ -273,7 +274,7 @@ $(function() {
 							$aisf.val("");
 
 							socket.once('instance_add:result', function(id,db) {
-								instance.db = db;
+								instance = db;
 								socket.emit('instance_edit', id);
 							});
 
@@ -302,7 +303,7 @@ $(function() {
 		socket.emit('instance_add', { type: instance_type, product: product });
 
 		socket.once('instance_add:result', function(id,db) {
-			instance.db = db;
+			instance = db;
 			socket.emit('instance_edit', id);
 		});
 
@@ -314,8 +315,9 @@ $(function() {
 		instance_manufacturer = obj.manufacturer;
 		instance_category = obj.category;
 		instance_name = obj.name;
+		instance_configs = obj.configs;
 
-		updateInstanceList(i.db);
+		updateInstanceList(i);
 
 		$addInstance = $("#addInstance");
 		$addInstanceByManufacturer = $("#addInstanceByManufacturer");
@@ -382,8 +384,8 @@ $(function() {
 	});
 
 	socket.on('instance_db_update', function(db) {
-		instance.db = db;
-		updateInstanceList(instance.db);
+		instance = db;
+		updateInstanceList(instance);
 	});
 
 	function saveConfig(button, id) {
@@ -526,27 +528,27 @@ $(function() {
 		$('#instanceConfigVariableList tr[data-id="' + key + '"] > td:nth-child(3)').text(value);
 	});
 
-	socket.on('instance_edit:result', function(id, store, res, config ) {
+	socket.on('instance_edit:result', function(id, configs, instances, res, config ) {
 
 		$('#instanceConfigTab').show();
 		$('#instanceConfigVariables').hide();
 		$('#instanceConfigTab a[href="#instanceConfig"]').tab('show');
 
-		for (var n in store.module) {
-			if (store.module[n].name === store.db[id].instance_type) {
+		for (var n in configs) {
+			if (configs[n].name === instances[id].instance_type) {
 
 				var help = '';
-				if (store.module[n].help) {
+				if (configs[n].help) {
 					help = '<div class="instance_help"><i class="fa fa-question-circle"></i></div>';
 				}
 
-				$('#instanceConfig h4:first').html(help + store.module[n].shortname + ' configuration');
+				$('#instanceConfig h4:first').html(help + configs[n].shortname + ' configuration');
 
 				(function (name) {
 					$('#instanceConfig').find('.instance_help').click(function () {
 						show_module_help(name);
 					});
-				})(store.module[n].name);
+				})(configs[n].name);
 
 			}
 		}
@@ -819,14 +821,14 @@ $(function() {
 			saveConfig(this, id);
 		});
 
-		updateInstanceList(store.db);
+		updateInstanceList(store);
 
 	});
 
 	socket.on('instance_get:result', function(instance_list) {
 
-		for (var n in instance_list.db) {
-			var instance = instance_list.db[n];
+		for (var n in instance_list) {
+			var instance = instance_list[n];
 		}
 
 	});

@@ -81,9 +81,9 @@ $(function() {
 		for (var n in feedbacks) {
 			var feedback = feedbacks[n];
 
-			if (feedback !== undefined && instance.db[feedback.instance_id] !== undefined && instance.db[feedback.instance_id].label !== undefined) {
-				var idb = instance.db[feedback.instance_id];
-				var it = instance.db[feedback.instance_id].instance_type;
+			if (feedback !== undefined && instance[feedback.instance_id] !== undefined && instance[feedback.instance_id].label !== undefined) {
+				var idb = instance[feedback.instance_id];
+				var it = instance[feedback.instance_id].instance_type;
 				var inst = feedback;
 
 				var $tr = $("<tr></tr>");
@@ -92,10 +92,10 @@ $(function() {
 				var name;
 
 				if (feedbacklist[feedback.instance_id] === undefined || feedbacklist[feedback.instance_id][feedback.type] === undefined) {
-					name = instance.db[feedback.instance_id].label + ": " + feedback.type + " <em>(undefined)</em>";
+					name = instance[feedback.instance_id].label + ": " + feedback.type + " <em>(undefined)</em>";
 				}
 				else {
-					name = instance.db[feedback.instance_id].label + ": " + feedbacklist[feedback.instance_id][feedback.type].label;
+					name = instance[feedback.instance_id].label + ": " + feedbacklist[feedback.instance_id][feedback.type].label;
 				}
 
 				var $name_td = $("<td class='feedbacklist-td-label'>" + name + "</td>");
@@ -488,15 +488,15 @@ $(function() {
 		for (var inst in feedbacks) {
 			for (var action in feedbacks[inst]) {
 				var object = feedbacks[inst][action];
-				if (instance !== undefined && instance.db !== undefined && instance.db[inst] !== undefined) {
-					var $option = $("<option value='"+inst+":"+action+"'>"+ instance.db[inst].label + ": "+object.label+"</option>")
+				if (instance !== undefined && instance !== undefined && instance[inst] !== undefined) {
+					var $option = $("<option value='"+inst+":"+action+"'>"+ instance[inst].label + ": "+object.label+"</option>")
 					$aba.append($option);
 
 					/*
 						var $li = $("<tr></tr>");
 						var $td_id = $("<td></td>");
 						var $td_label = $("<td></td>");
-						$td_id.text(instance.db[inst].label);
+						$td_id.text(instance[inst].label);
 						$td_label.text(feedbacks[n].label);
 						$li.append($td_id);
 						$li.append($td_label);
