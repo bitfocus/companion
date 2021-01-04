@@ -177,7 +177,6 @@
 		"@julusian/jpeg-turbo": "^1.0.1"
 	},
 	"resolutions": {
-		"infinitton-idisplay/node-hid": "^2.1.1",
-		"osc/serialport": "^9.0.4"
+		"infinitton-idisplay/node-hid": "^2.1.1"
 	}
 }
