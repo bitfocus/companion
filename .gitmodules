@@ -700,3 +700,6 @@ url=https://github.com/bitfocus/companion-module-newbluefx-titler.git
 [submodule "lib/module/opensong-api"]
 	path = lib/module/opensong-api
 	url = https://github.com/bitfocus/companion-module-opensong-api.git
+[submodule "lib/module/vicreo-tallylistener"]
+	path = lib/module/vicreo-tallylistener
+	url = https://github.com/bitfocus/companion-module-vicreo-tallylistener.git
