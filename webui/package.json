@@ -29,5 +29,13 @@
       "last 1 firefox version",
       "last 1 safari version"
     ]
+  },
+  "devDependencies": {
+    "@coreui/coreui": "^3.4.0",
+    "@coreui/react": "^3.4.3",
+    "@popperjs/core": "^2.6.0",
+    "perfect-scrollbar": "^1.5.0",
+    "react-router-dom": "^5.2.0",
+    "socket.io-client": "^3.0.5"
   }
 }
