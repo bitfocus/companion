@@ -1,6 +1,8 @@
 import React from 'react'
-import {} from '@coreui/react'
+import {CButton} from '@coreui/react'
 import { socketEmit, CompanionContext } from './util'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faQuestionCircle } from '@fortawesome/free-solid-svg-icons'
 
 export class Instances extends React.Component {
     static contextType = CompanionContext
@@ -9,18 +11,151 @@ export class Instances extends React.Component {
         super(props)
 
         this.state = {
+            // modules
             name: {},
             category: {},
             manufacturer: {},
+            modules: {},
+
+            // instances
+            instances: {},
+            instanceStatus: {},
         }
+
+        this.updateInstancesInfo = this.updateInstancesInfo.bind(this)
+        this.updateInstancesStatus = this.updateInstancesStatus.bind(this)
+    }
+
+    updateInstancesInfo(db) {
+        this.setState({
+            instances: db,
+        })
+    }
+
+    updateInstancesStatus(status) {
+        this.setState({
+            instanceStatus: status
+        })
     }
 
     componentDidMount() {
-        socketEmit(this.context.socket, 'modules_get', []).then((res) => {
-            console.log(res)
+        socketEmit(this.context.socket, 'modules_get', []).then(([res]) => {
+            const modulesObj = {}
+            for (const mod of res.modules) {
+                modulesObj[mod.name] = mod
+            }
+            this.setState({
+                ...res,
+                modules: modulesObj,
+            })
         }).catch((e) => {
             console.error('Failed to load modules list', e)
         })
+        
+        this.context.socket.on('instances_get:result', this.updateInstancesInfo)
+        this.context.socket.emit('instances_get')
+
+        this.context.socket.on('instance_status', this.updateInstancesStatus)
+        this.context.socket.emit('instance_status_get')
+    }
+
+    componentWillUnmount() {
+        this.context.socket.off('instances_get:result', this.updateInstancesInfo)
+        this.context.socket.off('instance_status', this.updateInstancesStatus)
+    }
+
+    renderInstancesTable() {
+        return Object.entries(this.state.instances).filter(i => i[1].instance_type !== 'bitfocus-companion').map(([id, instance]) => {
+            const moduleInfo = this.state.modules[instance.instance_type]
+
+            const status = this.state.instanceStatus[id]
+            let statusClassName = ''
+            let statusText = ''
+            let statusTitle = ''
+
+            if (status) {
+                switch(status[0]) {
+                    case -1:
+                        statusText = 'Disabled'
+                        statusClassName = 'instance-status-disabled'
+                        break
+                    case 0:
+                        statusText = 'OK'
+                        statusTitle = status[1] ?? ''
+                        statusClassName = 'instance-status-ok'
+                        break
+                    case 1:
+                        statusText = status[1] ?? ''
+                        statusTitle = status[1] ?? ''
+                        statusClassName = 'instance-status-warn'
+                        break
+                    case 2:
+                        statusText = 'ERROR'
+                        statusTitle = status[1] ?? ''
+                        statusClassName = 'instance-status-error'
+                        break
+                    case null:
+                        statusText = status[1] ?? ''
+                        statusTitle = status[1] ?? ''
+                        statusClassName = 'instance-status-warn'
+                        break
+                    default: break
+                }
+            }
+
+            return <tr key={id}>
+                <td>
+                    {
+                        moduleInfo
+                        ? <React.Fragment>
+                            {
+                                moduleInfo?.help ? <div className="instance_help"><FontAwesomeIcon icon={faQuestionCircle} /></div> : ''
+                            }
+                            <b>{ moduleInfo?.shortname ?? '' }</b>
+                            <br/>
+                            { moduleInfo?.manufacturer ?? '' }
+                        </React.Fragment>
+                        : instance.instance_type
+                    }
+                </td>
+                <td>{ instance.label }</td>
+                <td className={statusClassName} title={statusTitle}>{statusText}</td>
+                <td>
+                    <CButton onClick={null} variant='ghost' color='danger'>delete</CButton>
+                    {
+                        instance.enabled
+                        ? <CButton onClick={() => this.context.socket.emit('instance_enable', id, false)} variant='ghost' color='warning'>disable</CButton>
+                        : <CButton onClick={() => this.context.socket.emit('instance_enable', id, true)} variant='ghost' color='success'>enable</CButton>
+                    }
+                    {
+                        instance.enabled
+                        ? <CButton onClick={null} color='primary'>edit</CButton>
+                        : ''
+                    }
+                </td>
+            </tr>
+        })
+
+		// 	$button_delete.click(function() {
+		// 		if (confirm('Delete instance?')) {
+		// 			var id = $(this).data('id');
+		// 			$("#instanceConfigTab").hide();
+		// 			socket.emit('instance_delete', id);
+		// 			$(this).parent().parent().remove();
+		// 		}
+		// 	});
+
+		// 	$button_edit.click(function() {
+		// 		var id = $(this).data('id');
+		// 		socket.emit('instance_edit', id);
+		// 	});
+
+
+		// 	(function (name) {
+		// 		$tr.find('.instance_help').click(function () {
+		// 			show_module_help(name);
+		// 		});
+		// 	})(list[n].instance_type);
     }
 
     render() {
@@ -39,6 +174,7 @@ export class Instances extends React.Component {
                         </tr>
                     </thead>
                     <tbody>
+                        {this.renderInstancesTable()}
                     </tbody>
                 </table>
 

@@ -17,7 +17,9 @@ export default class App extends React.Component {
     this.state = {
       connected: false,
     }
+  }
 
+  componentDidMount() {
     this.socket = new io('http://localhost:8000');
     this.socket.on('connect', () => this.setState({ connected: true }));
     // this.socket.on('event', function(data){console.log('event', data)});

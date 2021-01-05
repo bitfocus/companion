@@ -13,6 +13,7 @@ export function socketEmit(socket, name, args, timeout) {
         console.log('send', name, id)
 
         socket.once(id, (...res) => {
+            console.log('got', id)
             resolve(res)
         })
 

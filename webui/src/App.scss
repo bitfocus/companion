@@ -21,3 +21,19 @@
 .fadeIn {
     animation-name: fadeIn;
 }
+
+.instance_help {
+	float: right;
+	cursor: pointer;
+	cursor: hand;
+}
+
+.instance-status-ok {
+	background-color: #cfc;
+}
+.instance-status-warn {
+    background-color: #fea;
+}
+.instance-status-error {
+	background-color: #fcc;
+}
