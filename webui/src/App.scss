@@ -1,0 +1,23 @@
+@import "~@coreui/coreui/scss/coreui";
+
+.c-sidebar-nav-link svg {
+    margin-right: 1rem;
+}
+
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+.animated {
+    animation-duration: 1s;
+}
+  
+.fadeIn {
+    animation-name: fadeIn;
+}
