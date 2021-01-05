@@ -38,8 +38,11 @@
     "@fortawesome/react-fontawesome": "^0.1.14",
     "@popperjs/core": "^2.6.0",
     "node-sass": "^4.0.0",
+    "p-timeout": "^4.1.0",
     "perfect-scrollbar": "^1.5.0",
+    "react-error-boundary": "^3.1.0",
     "react-router-dom": "^5.2.0",
-    "socket.io-client": "^3.0.5"
+    "shortid": "^2.2.16",
+    "socket.io-client": "^2.3.1"
   }
 }
