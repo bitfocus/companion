@@ -27,6 +27,13 @@ global.MAX_BUTTONS = 32;
 global.MAX_BUTTONS_PER_ROW = 8;
 
 var EventEmitter = require('events');
+/**
+ * The application's event emitter for core functionality which allows for some point to multi-point calls
+ * and `skeleton` to `app` functionality.
+ * N.B. This is not the same `system` referenced by instances.  See {@link InstanceSystem}.
+ * @class System
+ * @extends EventEmitter
+ */
 var system = new EventEmitter();
 var fs = require("fs");
 var debug = require('debug')('app');

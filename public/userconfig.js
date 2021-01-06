@@ -201,7 +201,7 @@ $(function() {
 	});
 
 	// when other browsers update userconfig
-	socket.on('set_userconfig_key', function(key, value) {
+	socket.on('set_userconfig_key:result', function(key, value) {
 		userconfig[key]=value;
 		userConfigUpdate();
 	});
