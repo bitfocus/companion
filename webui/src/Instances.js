@@ -5,6 +5,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faQuestionCircle } from '@fortawesome/free-solid-svg-icons'
 
 import { HelpModal } from './ModuleHelp'
+import { AddModule } from './ModuleAdd'
 
 export class Instances extends React.Component {
     static contextType = CompanionContext
@@ -29,6 +30,7 @@ export class Instances extends React.Component {
 
         this.updateInstancesInfo = this.updateInstancesInfo.bind(this)
         this.updateInstancesStatus = this.updateInstancesStatus.bind(this)
+        this.showHelp = this.showHelp.bind(this)
     }
 
     updateInstancesInfo(db) {
@@ -79,10 +81,6 @@ export class Instances extends React.Component {
                 this.setState({
                     helpContent: [name, result]
                 })
-                // var $helpModal = $('#helpModal');
-                // $helpModal.find('.modal-title').html('Help for ' + name);
-                // $helpModal.find('.modal-body').html(result);
-                // $helpModal.modal();
             }
         })
     }
@@ -173,12 +171,6 @@ export class Instances extends React.Component {
 		// 		socket.emit('instance_edit', id);
 		// 	});
 
-
-		// 	(function (name) {
-		// 		$tr.find('.instance_help').click(function () {
-		// 			show_module_help(name);
-		// 		});
-		// 	})(list[n].instance_type);
     }
 
     render() {
@@ -203,6 +195,8 @@ export class Instances extends React.Component {
                     </tbody>
                 </table>
 
+                <AddModule showHelp={this.showHelp} modules={this.state.modules} />
+
                 {/* <div class="dropdown" style="float:left">
                     <a id="dLabel" role="button" data-toggle="dropdown" class="btn btn-primary add-instance-button" data-target="#">
                             Add by category</span>
@@ -218,14 +212,8 @@ export class Instances extends React.Component {
                     <ul class="dropdown-menu multi-level add-instance-ul" id="addInstanceByManufacturer" role="menu" aria-labelledby="dropdownMenu">
                     </ul>
                 </div>
+                */}
 
-                    <p></p>
-                <div style='clear:both'>
-                    <br>
-                    <input type="text" class="form-control" placeholder="Add by search.." id='instance_add_search_field'>
-                    <div id='instance_add_search_results'>
-                    </div>
-                </div> */}
             </div>
         )
     }
