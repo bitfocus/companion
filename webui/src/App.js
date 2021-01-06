@@ -3,10 +3,12 @@ import {CNavbar, CNavbarBrand, CHeader, CSidebar, CSidebarNav, CSidebarNavItem, 
 import {faBug, faCalendarAlt, faClock, faCog, faComments, faDollarSign, faGamepad, faInfo, faMousePointer, faPlug, faTabletAlt, faUserNinja, faUsers} from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import io from 'socket.io-client'
-import { CompanionContext } from './util'
+import { CompanionContext, socketEmit } from './util'
 import { ErrorBoundary } from 'react-error-boundary'
 
-import {Instances} from './Instances'
+import { HelpModal } from './ModuleHelp'
+import { Instances } from './Instances'
+import { InstanceConfig } from './InstanceConfig'
 
 export default class App extends React.Component {
   constructor(props) {
@@ -16,7 +18,21 @@ export default class App extends React.Component {
 
     this.state = {
       connected: false,
+
+      // modules
+      modules: {},
+
+      activeTab1: 'instances',
+
+      instances: {},
+      configureInstanceId: null,
+
+      // help text to show
+      helpContent: null
     }
+
+    this.configureInstance = this.configureInstance.bind(this)
+    this.updateInstancesInfo = this.updateInstancesInfo.bind(this)
   }
 
   componentDidMount() {
@@ -27,13 +43,64 @@ export default class App extends React.Component {
     });
     // this.socket.on('event', function(data){console.log('event', data)});
     this.socket.on('disconnect', () => this.setState({ connected: false }));
+    
+    socketEmit(this.socket, 'modules_get', []).then(([res]) => {
+      const modulesObj = {}
+      for (const mod of res.modules) {
+          modulesObj[mod.name] = mod
+      }
+      this.setState({
+          // ...res,
+          modules: modulesObj,
+      })
+  }).catch((e) => {
+      console.error('Failed to load modules list', e)
+  })
+
+    this.socket.on('instances_get:result', this.updateInstancesInfo)
+    this.socket.emit('instances_get')
+  }
+
+  componentWillUnmount() {
+      this.socket.off('instances_get:result', this.updateInstancesInfo)
+  }
+
+  showHelp = (name) => {
+    socketEmit(this.socket, 'instance_get_help', [name]).then(([err, result]) => {
+        if (err) {
+            alert('Error getting help text');
+            return;
+        }
+        if (result) {
+            this.setState({
+                helpContent: [name, result]
+            })
+        }
+    })
+}
+
+  configureInstance(id) {
+    console.log('configureInstance', id)
+    this.setState({
+      configureInstanceId: id,
+      activeTab1: !id && this.state.activeTab1 === 'instanceConfig' ? 'instances' : 'instanceConfig' 
+    })
+  }
+
+  updateInstancesInfo(db) {
+    this.setState({
+        instances: db,
+    })
   }
 
   render() {
-    
+    const showInstanceConfig = this.state.configureInstanceId && this.state.instances[this.state.configureInstanceId]
+
     return (
-      <CompanionContext.Provider value={{ socket: this.socket }} >
+      <CompanionContext.Provider value={{ socket: this.socket, instances: this.state.instances, modules:this.state.modules  }} >
         <div className="c-app">
+          <HelpModal content={this.state.helpContent} hide={() => this.setState({ helpContent: null })} />
+
           <CSidebar>
             <CSidebarNav>
               <CSidebarBrand></CSidebarBrand>
@@ -66,22 +133,31 @@ export default class App extends React.Component {
                   <CRow>
 
                     <CCol xs={12} xl={6}>
-                      <CTabs>
+                      <CTabs activeTab={this.state.activeTab1} onActiveTabChange={(a) => this.setState({ activeTab1: a})}>
                         <CNav variant="tabs">
-                          <CNavItem><CNavLink><FontAwesomeIcon icon={faPlug} /> Instances</CNavLink></CNavItem>
-                          <CNavItem><CNavLink><FontAwesomeIcon icon={faCog} /> Config</CNavLink></CNavItem>
-                          <CNavItem><CNavLink><FontAwesomeIcon icon={faCalendarAlt} /> Buttons</CNavLink></CNavItem>
-                          <CNavItem><CNavLink><FontAwesomeIcon icon={faGamepad} /> Surfaces</CNavLink></CNavItem>
-                          <CNavItem><CNavLink><FontAwesomeIcon icon={faClock} /> Triggers</CNavLink></CNavItem>
-                          <CNavItem><CNavLink><FontAwesomeIcon icon={faUserNinja} /> Settings</CNavLink></CNavItem>
+                          <CNavItem><CNavLink data-tab="instances"><FontAwesomeIcon icon={faPlug} /> Instances</CNavLink></CNavItem>
+                          <CNavItem hidden={!showInstanceConfig}><CNavLink data-tab="instanceConfig"><FontAwesomeIcon icon={faCog} /> Config</CNavLink></CNavItem>
+                          <CNavItem><CNavLink data-tab="buttons"><FontAwesomeIcon icon={faCalendarAlt} /> Buttons</CNavLink></CNavItem>
+                          <CNavItem><CNavLink data-tab="surfaces"><FontAwesomeIcon icon={faGamepad} /> Surfaces</CNavLink></CNavItem>
+                          <CNavItem><CNavLink data-tab="triggers"><FontAwesomeIcon icon={faClock} /> Triggers</CNavLink></CNavItem>
+                          <CNavItem><CNavLink data-tab="settings"><FontAwesomeIcon icon={faUserNinja} /> Settings</CNavLink></CNavItem>
                         </CNav>
                         <CTabContent fade={false}>
-                          <CTabPane>
+                          <CTabPane data-tab="instances">
                             <ErrorBoundary>
-                              <Instances />
+                              <Instances configureInstance={this.configureInstance} showHelp={this.showHelp} />
                             </ErrorBoundary>
                           </CTabPane>
-                          <CTabPane>c</CTabPane>
+                          <CTabPane data-tab="instanceConfig">
+                            <ErrorBoundary>
+                              {
+                                this.state.configureInstanceId
+                                ? <InstanceConfig instanceId={this.state.configureInstanceId} key={this.state.configureInstanceId} showHelp={this.showHelp} />
+                                : 'No instance specified'
+                              }
+                            </ErrorBoundary>
+                          </CTabPane>
+                          <CTabPane data-tab="triggers">t</CTabPane>
                         </CTabContent>
                       </CTabs>
                     </CCol>

@@ -3,7 +3,7 @@ import React from 'react'
 import { CButton, CInput } from '@coreui/react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faQuestionCircle } from '@fortawesome/free-solid-svg-icons'
-import { CompanionContext } from './util'
+import { CompanionContext, socketEmit } from './util'
 
 export class AddModule extends React.Component {
     static contextType = CompanionContext
@@ -15,11 +15,12 @@ export class AddModule extends React.Component {
     addInstance(type, product) {
         this.setState({ filter: '' })
 
-        // TODO
-        // socket.emit('instance_add', { type: instance_type, product: product });
-        // socket.once('instance_add:result', function(id,db) {
-        //     socket.emit('instance_edit', id);
-        // });
+        socketEmit(this.context.socket, 'instance_add', [{ type: type, product: product }]).then(([id]) => {
+            console.log('NEW INSTANCE', id)
+            this.props.configureInstance(id)
+        }).catch((e) => {
+            console.error('Failed to create instance:', e)
+        })
     }
 
     getFilteredResults() {
@@ -30,7 +31,7 @@ export class AddModule extends React.Component {
         const result = []
 
         for (const [id, module] of Object.entries(this.props.modules)) {
-            const products = Array.isArray(module.product) ? module.product : [module.product]
+            const products = new Set(Array.isArray(module.product) ? module.product : [module.product])
             for (const subprod of products) {
                 const name = `${module.manufacturer} ${subprod}`
                 
@@ -47,12 +48,10 @@ export class AddModule extends React.Component {
             }
         }
 
-
         return result
     }
 
     render() {
-
         return <>
             <div style={{clear:'both'}}>
                 <CInput type="text" placeholder="Add by search.." onChange={(e) => this.setState({ filter: e.currentTarget.value })} value={this.state.filter} />
@@ -61,15 +60,5 @@ export class AddModule extends React.Component {
                 </div>
             </div>
         </>
-        // const moduleNames = Object.entries(this.props.modulesByName).map(([id, name]) => ({ value: id, label: name}))
-        // return (
-        //     <Select
-        //         getOptionLabel={getCustomOptionLabel}
-        //         placeholder="Add by search.."
-        //         value={null}
-        //         options={moduleNames}
-                
-        //     />
-        // );
     }
 }

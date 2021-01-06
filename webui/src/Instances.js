@@ -1,10 +1,9 @@
 import React from 'react'
 import {CButton} from '@coreui/react'
-import { socketEmit, CompanionContext } from './util'
+import { CompanionContext } from './util'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faQuestionCircle } from '@fortawesome/free-solid-svg-icons'
 
-import { HelpModal } from './ModuleHelp'
 import { AddModule } from './ModuleAdd'
 
 export class Instances extends React.Component {
@@ -14,29 +13,11 @@ export class Instances extends React.Component {
         super(props)
 
         this.state = {
-            // modules
-            name: {},
-            category: {},
-            manufacturer: {},
-            modules: {},
-
             // instances
-            instances: {},
             instanceStatus: {},
-
-            // help text to show
-            helpContent: null
         }
 
-        this.updateInstancesInfo = this.updateInstancesInfo.bind(this)
         this.updateInstancesStatus = this.updateInstancesStatus.bind(this)
-        this.showHelp = this.showHelp.bind(this)
-    }
-
-    updateInstancesInfo(db) {
-        this.setState({
-            instances: db,
-        })
     }
 
     updateInstancesStatus(status) {
@@ -45,49 +26,18 @@ export class Instances extends React.Component {
         })
     }
 
-    componentDidMount() {
-        socketEmit(this.context.socket, 'modules_get', []).then(([res]) => {
-            const modulesObj = {}
-            for (const mod of res.modules) {
-                modulesObj[mod.name] = mod
-            }
-            this.setState({
-                ...res,
-                modules: modulesObj,
-            })
-        }).catch((e) => {
-            console.error('Failed to load modules list', e)
-        })
-        
-        this.context.socket.on('instances_get:result', this.updateInstancesInfo)
-        this.context.socket.emit('instances_get')
-
+    componentDidMount() {        
         this.context.socket.on('instance_status', this.updateInstancesStatus)
         this.context.socket.emit('instance_status_get')
     }
 
     componentWillUnmount() {
-        this.context.socket.off('instances_get:result', this.updateInstancesInfo)
         this.context.socket.off('instance_status', this.updateInstancesStatus)
     }
 
-    showHelp(name) {
-        socketEmit(this.context.socket, 'instance_get_help', [name]).then(([err, result]) => {
-            if (err) {
-                alert('Error getting help text');
-                return;
-            }
-            if (result) {
-                this.setState({
-                    helpContent: [name, result]
-                })
-            }
-        })
-    }
-
     renderInstancesTable() {
-        return Object.entries(this.state.instances).filter(i => i[1].instance_type !== 'bitfocus-companion').map(([id, instance]) => {
-            const moduleInfo = this.state.modules[instance.instance_type]
+        return Object.entries(this.context.instances).filter(i => i[1].instance_type !== 'bitfocus-companion').map(([id, instance]) => {
+            const moduleInfo = this.context.modules[instance.instance_type]
 
             const status = this.state.instanceStatus[id]
             let statusClassName = ''
@@ -118,11 +68,13 @@ export class Instances extends React.Component {
                     case null:
                         statusText = status[1] ?? ''
                         statusTitle = status[1] ?? ''
-                        statusClassName = 'instance-status-warn'
+                        statusClassName = ''
                         break
                     default: break
                 }
             }
+
+            const isEnabled = instance.enabled === undefined || instance.enabled
 
             return <tr key={id}>
                 <td>
@@ -130,7 +82,7 @@ export class Instances extends React.Component {
                         moduleInfo
                         ? <>
                             {
-                                moduleInfo?.help ? <div className="instance_help" onClick={() => this.showHelp(instance.instance_type)}><FontAwesomeIcon icon={faQuestionCircle} /></div> : ''
+                                moduleInfo?.help ? <div className="instance_help" onClick={() => this.props.showHelp(instance.instance_type)}><FontAwesomeIcon icon={faQuestionCircle} /></div> : ''
                             }
                             <b>{ moduleInfo?.shortname ?? '' }</b>
                             <br/>
@@ -142,34 +94,25 @@ export class Instances extends React.Component {
                 <td>{ instance.label }</td>
                 <td className={statusClassName} title={statusTitle}>{statusText}</td>
                 <td>
-                    <CButton onClick={null} variant='ghost' color='danger'>delete</CButton>
+                    <CButton onClick={() => {
+                        if (window.confirm('Delete instance?')) {
+                            this.context.socket.emit('instance_delete', id)
+                            this.props.configureInstance(null)
+                        }
+                    }} variant='ghost' color='danger'>delete</CButton>
                     {
-                        instance.enabled
+                        isEnabled
                         ? <CButton onClick={() => this.context.socket.emit('instance_enable', id, false)} variant='ghost' color='warning'>disable</CButton>
                         : <CButton onClick={() => this.context.socket.emit('instance_enable', id, true)} variant='ghost' color='success'>enable</CButton>
                     }
                     {
-                        instance.enabled
-                        ? <CButton onClick={null} color='primary'>edit</CButton>
+                        isEnabled
+                        ? <CButton onClick={() => this.props.configureInstance(id)} color='primary'>edit</CButton>
                         : ''
                     }
                 </td>
             </tr>
         })
-
-		// 	$button_delete.click(function() {
-		// 		if (confirm('Delete instance?')) {
-		// 			var id = $(this).data('id');
-		// 			$("#instanceConfigTab").hide();
-		// 			socket.emit('instance_delete', id);
-		// 			$(this).parent().parent().remove();
-		// 		}
-		// 	});
-
-		// 	$button_edit.click(function() {
-		// 		var id = $(this).data('id');
-		// 		socket.emit('instance_edit', id);
-		// 	});
 
     }
 
@@ -178,8 +121,6 @@ export class Instances extends React.Component {
             <div>
                 <h4>Connections / Instances</h4>
                 <p>Instances are the connections companion makes to other devices and software in order to control them.</p>
-
-                <HelpModal content={this.state.helpContent} hide={() => this.setState({ helpContent: null })} />
 
                 <table className="table table-responsive-sm">
                     <thead>
@@ -195,7 +136,7 @@ export class Instances extends React.Component {
                     </tbody>
                 </table>
 
-                <AddModule showHelp={this.showHelp} modules={this.state.modules} />
+                <AddModule showHelp={this.props.showHelp} modules={this.context.modules} configureInstance={this.props.configureInstance} />
 
                 {/* <div class="dropdown" style="float:left">
                     <a id="dLabel" role="button" data-toggle="dropdown" class="btn btn-primary add-instance-button" data-target="#">
