@@ -4,6 +4,8 @@ import { socketEmit, CompanionContext } from './util'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faQuestionCircle } from '@fortawesome/free-solid-svg-icons'
 
+import { HelpModal } from './ModuleHelp'
+
 export class Instances extends React.Component {
     static contextType = CompanionContext
 
@@ -20,6 +22,9 @@ export class Instances extends React.Component {
             // instances
             instances: {},
             instanceStatus: {},
+
+            // help text to show
+            helpContent: null
         }
 
         this.updateInstancesInfo = this.updateInstancesInfo.bind(this)
@@ -62,6 +67,24 @@ export class Instances extends React.Component {
     componentWillUnmount() {
         this.context.socket.off('instances_get:result', this.updateInstancesInfo)
         this.context.socket.off('instance_status', this.updateInstancesStatus)
+    }
+
+    showHelp(name) {
+        socketEmit(this.context.socket, 'instance_get_help', [name]).then(([err, result]) => {
+            if (err) {
+                alert('Error getting help text');
+                return;
+            }
+            if (result) {
+                this.setState({
+                    helpContent: [name, result]
+                })
+                // var $helpModal = $('#helpModal');
+                // $helpModal.find('.modal-title').html('Help for ' + name);
+                // $helpModal.find('.modal-body').html(result);
+                // $helpModal.modal();
+            }
+        })
     }
 
     renderInstancesTable() {
@@ -107,14 +130,14 @@ export class Instances extends React.Component {
                 <td>
                     {
                         moduleInfo
-                        ? <React.Fragment>
+                        ? <>
                             {
-                                moduleInfo?.help ? <div className="instance_help"><FontAwesomeIcon icon={faQuestionCircle} /></div> : ''
+                                moduleInfo?.help ? <div className="instance_help" onClick={() => this.showHelp(instance.instance_type)}><FontAwesomeIcon icon={faQuestionCircle} /></div> : ''
                             }
                             <b>{ moduleInfo?.shortname ?? '' }</b>
                             <br/>
                             { moduleInfo?.manufacturer ?? '' }
-                        </React.Fragment>
+                        </>
                         : instance.instance_type
                     }
                 </td>
@@ -163,6 +186,8 @@ export class Instances extends React.Component {
             <div>
                 <h4>Connections / Instances</h4>
                 <p>Instances are the connections companion makes to other devices and software in order to control them.</p>
+
+                <HelpModal content={this.state.helpContent} hide={() => this.setState({ helpContent: null })} />
 
                 <table className="table table-responsive-sm">
                     <thead>

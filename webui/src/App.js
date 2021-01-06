@@ -21,12 +21,16 @@ export default class App extends React.Component {
 
   componentDidMount() {
     this.socket = new io('http://localhost:8000');
-    this.socket.on('connect', () => this.setState({ connected: true }));
+    this.socket.on('connect', () => {
+      this.setState({ connected: true })
+
+    });
     // this.socket.on('event', function(data){console.log('event', data)});
     this.socket.on('disconnect', () => this.setState({ connected: false }));
   }
 
   render() {
+    
     return (
       <CompanionContext.Provider value={{ socket: this.socket }} >
         <div className="c-app">
