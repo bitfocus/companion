@@ -2,6 +2,7 @@ import React from 'react'
 import { CompanionContext, socketEmit } from './util'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faQuestionCircle } from '@fortawesome/free-solid-svg-icons'
+import { CRow } from '@coreui/react'
 
 export class InstanceConfig extends React.Component {
     static contextType = CompanionContext
@@ -30,6 +31,39 @@ export class InstanceConfig extends React.Component {
         })
     }
 
+    renderVariablesTable() {
+        const label = this.state.instanceConfig.label
+        const variableDefinitions = this.props.variableDefinitions[label] || []
+        const variableValues = this.props.variableValues || {}
+
+        if (variableDefinitions.length > 0) {
+            return (
+                <CRow>
+                    <h4>List of dynamic variables</h4>
+                    <table className="table table-responsive-sm">
+                        <thead>
+                            <tr>
+                                <th>Variable</th>
+                                <th>Description</th>
+                                <th>Current value</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {
+                                variableDefinitions.map((variable) => <tr key={variable.name}>
+                                    <td>$({ label }:{ variable.name })</td>
+                                    <td>{ variable.label }</td>
+                                    <td>{ variableValues[label + ':' + variable.name] }</td>
+                                </tr>)
+                            }
+                        </tbody>
+                    </table>
+                </CRow>
+            )
+        } else {
+            return ''
+        }
+    }
 
     render() {
         if (!this.state.loaded) {
@@ -40,7 +74,7 @@ export class InstanceConfig extends React.Component {
 
         const instanceConfig = this.state.instanceConfig
         const moduleInfo = this.context.modules[instanceConfig.instance_type]
-
+        
         return <>
             <h4 style={{ textTransform: 'capitalize' }}>
                 {
@@ -48,22 +82,10 @@ export class InstanceConfig extends React.Component {
                 }
                 { moduleInfo?.shortname ?? instanceConfig.instance_type} configuration
             </h4>
-            <div id='instanceConfigFields' class="row"></div>
+            <div id='instanceConfigFields' className="row"></div>
             <div id='instanceConfigButtons'></div>
             <hr />
-            <div id='instanceConfigVariables' class="row col-lg-12">
-                <h4>List of dynamic variables</h4>
-                <table class="table table-responsive-sm">
-                    <thead>
-                        <tr>
-                            <th>Variable</th>
-                            <th>Description</th>
-                            <th>Current value</th>
-                        </tr>
-                    </thead>
-                    <tbody id="instanceConfigVariableList"></tbody>
-                </table>
-            </div>
+            { this.renderVariablesTable() }
         </>
     }
 }

@@ -28,7 +28,10 @@ export default class App extends React.Component {
       configureInstanceId: null,
 
       // help text to show
-      helpContent: null
+      helpContent: null,
+
+      variableDefinitions: {},
+      variableValues: {},
     }
 
     this.configureInstance = this.configureInstance.bind(this)
@@ -53,16 +56,53 @@ export default class App extends React.Component {
           // ...res,
           modules: modulesObj,
       })
-  }).catch((e) => {
-      console.error('Failed to load modules list', e)
-  })
+    }).catch((e) => {
+        console.error('Failed to load modules list', e)
+    })
+    socketEmit(this.socket, 'variable_instance_definitions_get', []).then(([data]) => {
+      this.setState({
+          variableDefinitions: data || {},
+      })
+    }).catch((e) => {
+        console.error('Failed to load variable definitions list', e)
+    })
+    socketEmit(this.socket, 'variables_get', []).then(([data]) => {
+      this.setState({
+          variableValues: data || {},
+      })
+    }).catch((e) => {
+        console.error('Failed to load variable values list', e)
+    })
 
     this.socket.on('instances_get:result', this.updateInstancesInfo)
     this.socket.emit('instances_get')
+
+    this.socket.on('variable_instance_definitions_set', this.updateVariableDefinitions)
+    this.socket.on('variable_set', this.updateVariableValue)
   }
 
   componentWillUnmount() {
       this.socket.off('instances_get:result', this.updateInstancesInfo)
+      this.socket.off('variable_instance_definitions_set', this.updateVariableDefinitions)
+      this.socket.off('variable_set', this.updateVariableValue)
+  }
+
+  updateVariableDefinitions = (label, variables) => {
+    this.setState({
+      variableDefinitions: {
+        ...this.state.variableDefinitions,
+        [label]: variables
+      }
+    })
+  }
+
+  updateVariableValue = (key, value) => {
+    this.setState({
+      variableValues: {
+        ...this.state.variableValues,
+        [key]: value
+      }
+    })
   }
 
   showHelp = (name) => {
@@ -152,7 +192,13 @@ export default class App extends React.Component {
                             <ErrorBoundary>
                               {
                                 this.state.configureInstanceId
-                                ? <InstanceConfig instanceId={this.state.configureInstanceId} key={this.state.configureInstanceId} showHelp={this.showHelp} />
+                                ? <InstanceConfig
+                                    key={this.state.configureInstanceId}
+                                    instanceId={this.state.configureInstanceId}
+                                    showHelp={this.showHelp}
+                                    variableDefinitions={this.state.variableDefinitions}
+                                    variableValues={this.state.variableValues}
+                                  />
                                 : 'No instance specified'
                               }
                             </ErrorBoundary>
