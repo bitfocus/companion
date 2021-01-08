@@ -10,6 +10,7 @@ import { HelpModal } from './ModuleHelp'
 import { Instances } from './Instances'
 import { InstanceConfig } from './InstanceConfig'
 import shortid from 'shortid'
+import { Buttons } from './Buttons'
 
 export default class App extends React.Component {
   constructor(props) {
@@ -205,6 +206,9 @@ export default class App extends React.Component {
                                 : 'No instance specified'
                               }
                             </ErrorBoundary>
+                          </CTabPane>
+                          <CTabPane data-tab="buttons">
+                            <Buttons />
                           </CTabPane>
                           <CTabPane data-tab="triggers">t</CTabPane>
                         </CTabContent>
