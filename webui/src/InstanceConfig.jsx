@@ -2,7 +2,9 @@ import React from 'react'
 import { CompanionContext, socketEmit } from './util'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faQuestionCircle } from '@fortawesome/free-solid-svg-icons'
-import { CRow } from '@coreui/react'
+import { CRow, CCol, CButton } from '@coreui/react'
+
+import { ConfigField } from './Components'
 
 export class InstanceConfig extends React.Component {
     static contextType = CompanionContext
@@ -12,27 +14,75 @@ export class InstanceConfig extends React.Component {
 
         helpContent: null,
 
+        label: '',
         configFields: [],
         instanceConfig: {},
+        validFields: {},
     }
 
     // TODO - any changes made by another client will not be shown, and will be lost if this presses save
 
     componentDidMount() {
         socketEmit(this.context.socket, 'instance_edit', [this.props.instanceId]).then(([_instanceId, configFields, instanceConfig]) => {
-            //
+            const validFields = {}
+            for (const field of configFields) {
+                // TODO - validate field
+                validFields[field.id] = true
+            }
+            
             this.setState({
                 loaded: true,
+                label: instanceConfig.label,
                 configFields: configFields,
-                instanceConfig: instanceConfig
+                instanceConfig: instanceConfig,
+                validFields: validFields,
+                
             })
         }).catch((e) => {
             console.error('Failed to load instance edit info:', e)
         })
     }
 
+    saveConfig = () => {
+        // TODO - cleaner error reporting to user
+        const isInvalid = Object.values(this.state.validFields).find(v => !v) === false
+        if (isInvalid) {
+            alert(`New instance config is not valid`)
+            return
+        }
+
+        socketEmit(this.context.socket, 'instance_config_put', [this.props.instanceId, this.state.instanceConfig]).then(([err, ok]) => {
+            if (err) {
+                if (err === 'duplicate label') {
+                    alert(`The label "${this.state.instanceConfig.label}" is already in use. Please use a unique name for this module instance`);
+                } else {
+                    alert(`Unable to save instance config: "${err}"`);
+                }
+            } else {
+                // TODO
+            }
+        }).catch((e) => {
+            alert(`Failed to save instance config: ${e}`)
+        })
+    }
+
+    setValue = (key, value, isValid) => {
+        console.log('set value', key, value)
+
+        this.setState({
+            instanceConfig: {
+                ...this.state.instanceConfig,
+                [key]: value,
+            },
+            validFields: {
+                ...this.state.validFields,
+                [key]: isValid,
+            }
+        })
+    }
+
     renderVariablesTable() {
-        const label = this.state.instanceConfig.label
+        const label = this.state.label
         const variableDefinitions = this.props.variableDefinitions[label] || []
         const variableValues = this.props.variableValues || {}
 
@@ -67,12 +117,10 @@ export class InstanceConfig extends React.Component {
 
     render() {
         if (!this.state.loaded) {
-            return <>
-                <p>Loading...</p>
-            </>
+            return <p>Loading...</p>
         }
 
-        const instanceConfig = this.state.instanceConfig
+        const { instanceConfig, validFields } = this.state
         const moduleInfo = this.context.modules[instanceConfig.instance_type]
         
         return <>
@@ -82,8 +130,26 @@ export class InstanceConfig extends React.Component {
                 }
                 { moduleInfo?.shortname ?? instanceConfig.instance_type} configuration
             </h4>
-            <div id='instanceConfigFields' className="row"></div>
-            <div id='instanceConfigButtons'></div>
+            <CRow>
+                { this.state.configFields.map((field, i) => {
+                    return (
+                        <CCol key={i} className={`fieldtype-${field.type}`} sm={field.width}>
+                            <label>{ field.label }</label>
+                            <ConfigField
+                                definition={field}
+                                value={instanceConfig[field.id]}
+                                valid={validFields[field.id]}
+                                setValue={(val, valid) => this.setValue(field.id, val, valid)}
+                            />
+                        </CCol>
+                    )
+                })}
+            </CRow>
+            <CRow style={{ paddingTop: '12px' }}>
+                <CCol xs={12}>
+                    <CButton color="primary" disabled={Object.values(validFields).find(v => !v) === false} onClick={this.saveConfig}>Apply changes</CButton>
+                </CCol>
+            </CRow>
             <hr />
             { this.renderVariablesTable() }
         </>

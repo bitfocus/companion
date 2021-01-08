@@ -9,6 +9,7 @@ import { ErrorBoundary } from 'react-error-boundary'
 import { HelpModal } from './ModuleHelp'
 import { Instances } from './Instances'
 import { InstanceConfig } from './InstanceConfig'
+import shortid from 'shortid'
 
 export default class App extends React.Component {
   constructor(props) {
@@ -26,6 +27,7 @@ export default class App extends React.Component {
 
       instances: {},
       configureInstanceId: null,
+      configureInstanceToken: null,
 
       // help text to show
       helpContent: null,
@@ -123,6 +125,7 @@ export default class App extends React.Component {
     console.log('configureInstance', id)
     this.setState({
       configureInstanceId: id,
+      configureInstanceToken: shortid(),
       activeTab1: !id && this.state.activeTab1 === 'instanceConfig' ? 'instances' : 'instanceConfig' 
     })
   }
@@ -193,7 +196,7 @@ export default class App extends React.Component {
                               {
                                 this.state.configureInstanceId
                                 ? <InstanceConfig
-                                    key={this.state.configureInstanceId}
+                                    key={this.state.configureInstanceToken}
                                     instanceId={this.state.configureInstanceId}
                                     showHelp={this.showHelp}
                                     variableDefinitions={this.state.variableDefinitions}
