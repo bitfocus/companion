@@ -3,6 +3,7 @@ import React from 'react'
 import { CompanionContext, socketEmit } from './util'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faArrowsAlt, faChevronLeft, faChevronRight, faCopy, faEraser, faFileExport, faTrash } from '@fortawesome/free-solid-svg-icons'
+import classnames from 'classnames'
 
 import { MAX_COLS, MAX_ROWS, MAX_BUTTONS, PREVIEW_BMP_HEADER } from './Constants'
 
@@ -29,6 +30,8 @@ export class Buttons extends React.Component {
         pageNumber: 1,
         pages: {},
         newPageName: null,
+        activeFunction: null,
+        activeFunctionBank: null,
     }
 
     componentDidMount() {
@@ -75,6 +78,97 @@ export class Buttons extends React.Component {
         }
     }
 
+    startFunction = (func) => {
+        if (this.state.activeFunction === null) {
+            this.setState({
+                activeFunction: func,
+                activeFunctionBank: null,
+            })
+        }
+    }
+    stopFunction = () => {
+        this.setState({
+            activeFunction: null,
+            activeFunctionBank: null,
+        })
+    }
+
+    bankClick = (index) => {
+        console.log('clicked', this.state.pageNumber, index)
+        switch(this.state.activeFunction) {
+            case 'delete':
+                if (window.confirm("Clear style and actions for this button?")) {
+                    this.context.socket.emit('bank_reset', this.state.pageNumber, index);
+                    // socket.emit('bank_actions_get', function_detail.first.page, function_detail.first.bank );
+                    // socket.emit('bank_release_actions_get', function_detail.first.page, function_detail.first.bank );
+                    // bank_preview_page(page);
+                }
+
+                this.stopFunction()
+                break
+            case 'copy':
+                if (this.state.activeFunctionBank) {
+                    const fromInfo = this.state.activeFunctionBank
+                    this.context.socket.emit('bank_copy', fromInfo.page, fromInfo.bank, this.state.pageNumber, index);
+                    this.stopFunction()
+                } else {
+                    this.setState({
+                        activeFunctionBank: {
+                            page: this.state.pageNumber,
+                            bank: index
+                        }
+                    })
+                }
+                break
+            case 'move':
+                if (this.state.activeFunctionBank) {
+                    const fromInfo = this.state.activeFunctionBank
+                    this.context.socket.emit('bank_move', fromInfo.page, fromInfo.bank, this.state.pageNumber, index);
+                    this.stopFunction()
+                } else {
+                    this.setState({
+                        activeFunctionBank: {
+                            page: this.state.pageNumber,
+                            bank: index
+                        }
+                    })
+                }
+                break
+            default:
+                // show bank edit page
+                this.props.editBank(this.state.pageNumber, index)
+                break
+        }
+    }
+
+    hintButtonText() {
+        if (this.state.activeFunction) {
+            if (!this.state.activeFunctionBank) {
+                return `Press the button you want to ${this.state.activeFunction}`
+            } else {
+                return `Where do you want it?`
+            }
+        } else {
+            return ''
+        }
+    }
+
+    getButton(label, icon, func) {
+        let color = 'primary'
+        let disabled = false
+        if (this.state.activeFunction === func) {
+            color = 'success'
+        } else if (this.state.activeFunction) {
+            disabled = true
+        }
+
+        return <CButton
+            color={color}
+            disabled={disabled}
+            onClick={() => this.startFunction(func)}
+            ><FontAwesomeIcon icon={icon} /> {label}</CButton>
+    }
+
     render() {
         if (!this.state.loaded) {
             return <p>Loading...</p>
@@ -112,17 +206,19 @@ export class Buttons extends React.Component {
             </CRow>
 
             <CRow id="pagebank">
-                <BankGrid pageNumber={pageNumber} />
+                <BankGrid pageNumber={pageNumber} onBankClick={this.bankClick} />
             </CRow>
 
             <CRow style={{paddingTop:'15px'}}>
                 <CCol sm={12} id="functionkeys">
                     {/* TODO - these */}
-                    <button className="btn btn-primary function-button buttonbottompad" data-function='copy' id='state_copy'><FontAwesomeIcon icon={faCopy} /> Copy</button>
-                    <button className="btn btn-primary function-button buttonbottompad" data-function='move' id='state_move'><FontAwesomeIcon icon={faArrowsAlt} /> Move</button>
-                    <button className="btn btn-primary function-button buttonbottompad" data-function='delete' id='state_delete'><FontAwesomeIcon icon={faTrash} /> Delete</button>
-                    <button className="btn btn-danger buttonbottompad" id='state_abort'>Cancel</button>
-                    <button className="btn btn-disabled buttonbottompad" id='state_hint'></button>
+                    {this.getButton('Copy', faCopy, 'copy')}
+                    {this.getButton('Move', faArrowsAlt, 'move')}
+                    {this.getButton('Delete', faTrash, 'delete')}
+                    <button className="btn btn-danger" onClick={() => this.stopFunction()} style={{ display: this.state.activeFunction ? '' : 'none'}}>Cancel</button>
+                    <button className="btn btn-disabled" style={{ display: this.state.activeFunction ? '' : 'none'}}>
+                        { this.hintButtonText()}
+                    </button>
                     <span id='state_hide'>
                         <button type="button" id="erase_page_link" className="btn btn-warning buttonbottompad"><FontAwesomeIcon icon={faEraser} /> Wipe page</button>
                         <button type="button" id="reset_nav_link" className="btn btn-warning buttonbottompad"><FontAwesomeIcon icon={faEraser} /> Reset page buttons</button><br/><br/>
@@ -189,7 +285,7 @@ export class BankGrid extends React.PureComponent {
                             Array(MAX_COLS).fill(0).map((_, x) => {
                                 const index = y * MAX_COLS + x + 1
                                 return (
-                                <BankPreview page={pageNumber} index={index} preview={imageCache[index]?.image} />
+                                    <BankPreview page={pageNumber} index={index} preview={imageCache[index]?.image} onClick={this.props.onBankClick} />
                                 )
                             })
                         }
@@ -203,7 +299,7 @@ export class BankGrid extends React.PureComponent {
 export class BankPreview extends React.PureComponent {
     render() {
         return (
-            <div className="bank">
+            <div className="bank" onClick={() => this.props.onClick(this.props.index)}>
                 <div className="bank-border">
                     <img width={72} height={72} src={this.props.preview} alt={`Bank ${this.props.index}`} />
                 </div>

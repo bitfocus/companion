@@ -137,6 +137,10 @@ export default class App extends React.Component {
     })
   }
 
+  editBank = (page, bank) => {
+    console.log('TODO', 'edit', page, bank)
+  }
+
   render() {
     const showInstanceConfig = this.state.configureInstanceId && this.state.instances[this.state.configureInstanceId]
 
@@ -208,7 +212,7 @@ export default class App extends React.Component {
                             </ErrorBoundary>
                           </CTabPane>
                           <CTabPane data-tab="buttons">
-                            <Buttons />
+                            <Buttons editBank={this.editBank} />
                           </CTabPane>
                           <CTabPane data-tab="triggers">t</CTabPane>
                         </CTabContent>
