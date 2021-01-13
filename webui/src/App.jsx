@@ -3,14 +3,15 @@ import {CNavbar, CNavbarBrand, CHeader, CSidebar, CSidebarNav, CSidebarNavItem, 
 import {faBug, faCalendarAlt, faClock, faCog, faComments, faDollarSign, faGamepad, faInfo, faMousePointer, faPlug, faTabletAlt, faUserNinja, faUsers} from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import io from 'socket.io-client'
-import { CompanionContext, socketEmit } from './util'
 import { ErrorBoundary } from 'react-error-boundary'
+import shortid from 'shortid'
 
+import { CompanionContext, socketEmit } from './util'
 import { HelpModal } from './ModuleHelp'
 import { Instances } from './Instances'
 import { InstanceConfig } from './InstanceConfig'
-import shortid from 'shortid'
 import { Buttons } from './Buttons'
+import { Surfaces } from './Surfaces'
 
 export default class App extends React.Component {
   constructor(props) {
@@ -213,6 +214,9 @@ export default class App extends React.Component {
                           </CTabPane>
                           <CTabPane data-tab="buttons">
                             <Buttons editBank={this.editBank} />
+                          </CTabPane>
+                          <CTabPane data-tab="surfaces">
+                            <Surfaces />
                           </CTabPane>
                           <CTabPane data-tab="triggers">t</CTabPane>
                         </CTabContent>

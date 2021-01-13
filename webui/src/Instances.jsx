@@ -16,11 +16,9 @@ export class Instances extends React.Component {
             // instances
             instanceStatus: {},
         }
-
-        this.updateInstancesStatus = this.updateInstancesStatus.bind(this)
     }
 
-    updateInstancesStatus(status) {
+    updateInstancesStatus = (status) => {
         this.setState({
             instanceStatus: status
         })

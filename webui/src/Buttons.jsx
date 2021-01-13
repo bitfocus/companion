@@ -169,6 +169,19 @@ export class Buttons extends React.Component {
             ><FontAwesomeIcon icon={icon} /> {label}</CButton>
     }
 
+    resetPage = () => {
+        const page = this.state.pageNumber
+        if (window.confirm(`Are you sure you want to clear all buttons on page ${page}?\nThere\'s no going back from this.`)) {
+			this.context.socket.emit('loadsave_reset_page_all', page);
+		}
+    }
+    resetPageNav = () => {
+        const page = this.state.pageNumber
+        if (window.confirm(`Are you sure you want to reset navigation buttons? This will completely erase bank ${page}.1, ${page}.9 and ${page}.17`)) {
+			this.context.socket.emit('loadsave_reset_page_nav', page);
+		}
+    }
+
     render() {
         if (!this.state.loaded) {
             return <p>Loading...</p>
@@ -215,13 +228,13 @@ export class Buttons extends React.Component {
                     {this.getButton('Copy', faCopy, 'copy')}
                     {this.getButton('Move', faArrowsAlt, 'move')}
                     {this.getButton('Delete', faTrash, 'delete')}
-                    <button className="btn btn-danger" onClick={() => this.stopFunction()} style={{ display: this.state.activeFunction ? '' : 'none'}}>Cancel</button>
-                    <button className="btn btn-disabled" style={{ display: this.state.activeFunction ? '' : 'none'}}>
+                    <CButton color="danger" onClick={() => this.stopFunction()} style={{ display: this.state.activeFunction ? '' : 'none'}}>Cancel</CButton>
+                    <CButton color="disabled" style={{ display: this.state.activeFunction ? '' : 'none'}}>
                         { this.hintButtonText()}
-                    </button>
+                    </CButton>
                     <span id='state_hide'>
-                        <button type="button" id="erase_page_link" className="btn btn-warning buttonbottompad"><FontAwesomeIcon icon={faEraser} /> Wipe page</button>
-                        <button type="button" id="reset_nav_link" className="btn btn-warning buttonbottompad"><FontAwesomeIcon icon={faEraser} /> Reset page buttons</button><br/><br/>
+                        <CButton color="warning" onClick={() => this.resetPage()}><FontAwesomeIcon icon={faEraser} /> Wipe page</CButton>
+                        <CButton color="warning" onClick={() => this.resetPageNav()}><FontAwesomeIcon icon={faEraser} /> Reset page buttons</CButton><br/><br/>
                         <a href={`/int/page_export/${pageNumber}`} className="btn btn-success buttonbottompad"><FontAwesomeIcon icon={faFileExport} /> Export page</a>
 
                     </span>
@@ -285,7 +298,7 @@ export class BankGrid extends React.PureComponent {
                             Array(MAX_COLS).fill(0).map((_, x) => {
                                 const index = y * MAX_COLS + x + 1
                                 return (
-                                    <BankPreview page={pageNumber} index={index} preview={imageCache[index]?.image} onClick={this.props.onBankClick} />
+                                    <BankPreview key={x} page={pageNumber} index={index} preview={imageCache[index]?.image} onClick={this.props.onBankClick} />
                                 )
                             })
                         }
