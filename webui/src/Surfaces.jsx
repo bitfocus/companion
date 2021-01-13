@@ -42,7 +42,7 @@ export class Surfaces extends React.Component {
             scanning: true,
         })
 
-        socketEmit(this.context.socket, 'devices_reenumerate', [], 30000).then(errorMsg => {
+        socketEmit(this.context.socket, 'devices_reenumerate', [], 30000).then(([errorMsg]) => {
             this.setState({
                 errorMsg: errorMsg,
                 scanning: false,
