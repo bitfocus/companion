@@ -37,9 +37,6 @@ export default class App extends React.Component {
       variableDefinitions: {},
       variableValues: {},
     }
-
-    this.configureInstance = this.configureInstance.bind(this)
-    this.updateInstancesInfo = this.updateInstancesInfo.bind(this)
   }
 
   componentDidMount() {
@@ -123,7 +120,7 @@ export default class App extends React.Component {
     })
 }
 
-  configureInstance(id) {
+  configureInstance = (id) => {
     console.log('configureInstance', id)
     this.setState({
       configureInstanceId: id,
@@ -132,7 +129,7 @@ export default class App extends React.Component {
     })
   }
 
-  updateInstancesInfo(db) {
+  updateInstancesInfo = (db) => {
     this.setState({
         instances: db,
     })
