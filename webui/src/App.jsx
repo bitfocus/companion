@@ -1,6 +1,6 @@
 import React from 'react'
-import {CNavbar, CNavbarBrand, CHeader, CSidebar, CSidebarNav, CSidebarNavItem, CSidebarBrand, CContainer, CRow, CCol, CTabs, CTabContent, CTabPane, CNav, CNavItem, CNavLink, CNavbarNav, CCollapse, CHeaderBrand, CHeaderNavItem, CHeaderNav, CHeaderNavLink} from '@coreui/react'
-import {faBug, faCalendarAlt, faClock, faCog, faComments, faDollarSign, faGamepad, faInfo, faMousePointer, faPlug, faTabletAlt, faUserNinja, faUsers} from '@fortawesome/free-solid-svg-icons'
+import {CHeader, CSidebar, CSidebarNav, CSidebarNavItem, CSidebarBrand, CContainer, CRow, CCol, CTabs, CTabContent, CTabPane, CNav, CNavItem, CNavLink, CNavbarNav, CCollapse, CHeaderBrand, CHeaderNavItem, CHeaderNav, CHeaderNavLink} from '@coreui/react'
+import {faBug, faCalculator, faCalendarAlt, faClipboardList, faClock, faCog, faComments, faDollarSign, faFileImport, faGamepad, faGift, faInfo, faMousePointer, faPlug, faTabletAlt, faUserNinja, faUsers} from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import io from 'socket.io-client'
 import { ErrorBoundary } from 'react-error-boundary'
@@ -13,6 +13,7 @@ import { InstanceConfig } from './InstanceConfig'
 import { Buttons } from './Buttons'
 import { Surfaces } from './Surfaces'
 import { UserConfig } from './UserConfig'
+import { LogPanel } from './LogPanel'
 
 export default class App extends React.Component {
   constructor(props) {
@@ -266,11 +267,15 @@ export default class App extends React.Component {
                     <CCol xs={12} xl={6}>
                       <CTabs>
                         <CNav variant="tabs">
-                        <CNavItem><CNavLink>Link</CNavLink></CNavItem>
-                          <CNavItem><CNavLink>Link2</CNavLink></CNavItem>
+                          <CNavItem><CNavLink data-tab="log"><FontAwesomeIcon icon={faClipboardList} /> Log</CNavLink></CNavItem>
+                          <CNavItem><CNavLink data-tab="edit"><FontAwesomeIcon icon={faCalculator} /> Edit Button</CNavLink></CNavItem>
+                          <CNavItem><CNavLink data-tab="presets"><FontAwesomeIcon icon={faGift} /> Presets</CNavLink></CNavItem>
+                          <CNavItem><CNavLink data-tab="importexport"><FontAwesomeIcon icon={faFileImport} /> Import / Export</CNavLink></CNavItem>
                         </CNav>
                         <CTabContent fade={false}>
-                          <CTabPane>bb</CTabPane>
+                          <CTabPane data-tab="log">
+                            <LogPanel />
+                          </CTabPane>
                           <CTabPane>c</CTabPane>
                         </CTabContent>
                       </CTabs>
