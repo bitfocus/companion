@@ -12,6 +12,7 @@ import { Instances } from './Instances'
 import { InstanceConfig } from './InstanceConfig'
 import { Buttons } from './Buttons'
 import { Surfaces } from './Surfaces'
+import { UserConfig } from './UserConfig'
 
 export default class App extends React.Component {
   constructor(props) {
@@ -186,7 +187,7 @@ export default class App extends React.Component {
                           <CNavItem><CNavLink data-tab="buttons"><FontAwesomeIcon icon={faCalendarAlt} /> Buttons</CNavLink></CNavItem>
                           <CNavItem><CNavLink data-tab="surfaces"><FontAwesomeIcon icon={faGamepad} /> Surfaces</CNavLink></CNavItem>
                           <CNavItem><CNavLink data-tab="triggers"><FontAwesomeIcon icon={faClock} /> Triggers</CNavLink></CNavItem>
-                          <CNavItem><CNavLink data-tab="settings"><FontAwesomeIcon icon={faUserNinja} /> Settings</CNavLink></CNavItem>
+                          <CNavItem><CNavLink data-tab="userconfig"><FontAwesomeIcon icon={faUserNinja} /> Settings</CNavLink></CNavItem>
                         </CNav>
                         <CTabContent fade={false}>
                           <CTabPane data-tab="instances">
@@ -216,6 +217,9 @@ export default class App extends React.Component {
                             <Surfaces />
                           </CTabPane>
                           <CTabPane data-tab="triggers">t</CTabPane>
+                          <CTabPane data-tab="userconfig">
+                            <UserConfig />
+                          </CTabPane>
                         </CTabContent>
                       </CTabs>
                     </CCol>
