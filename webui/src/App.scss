@@ -73,6 +73,7 @@
         &:nth-child(3) >.bank:nth-child(4) {
             background: #00000050;
         }
+
     }
     .bank {
         padding: Min(5px, 10%);
@@ -88,5 +89,16 @@
             border-radius: Max(12%, 4px);
             border: 1px solid white;
         }
+    }
+}
+
+.slide-height {
+    position: absolute;
+    // transition: height 0.1s ease-in-out;
+    // height: fit-content;
+    overflow: hidden;
+
+    &.slide-up {
+        height: 0;
     }
 }

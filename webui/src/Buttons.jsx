@@ -93,51 +93,55 @@ export class Buttons extends React.Component {
         })
     }
 
-    bankClick = (index) => {
-        console.log('clicked', this.state.pageNumber, index)
-        switch(this.state.activeFunction) {
-            case 'delete':
-                if (window.confirm("Clear style and actions for this button?")) {
-                    this.context.socket.emit('bank_reset', this.state.pageNumber, index);
-                    // socket.emit('bank_actions_get', function_detail.first.page, function_detail.first.bank );
-                    // socket.emit('bank_release_actions_get', function_detail.first.page, function_detail.first.bank );
-                    // bank_preview_page(page);
-                }
+    bankClick = (index, isDown) => {
+        console.log('bank', this.state.pageNumber, index, isDown)
+        if (isDown) {
+            switch(this.state.activeFunction) {
+                case 'delete':
+                    if (window.confirm("Clear style and actions for this button?")) {
+                        this.context.socket.emit('bank_reset', this.state.pageNumber, index);
+                        // socket.emit('bank_actions_get', function_detail.first.page, function_detail.first.bank );
+                        // socket.emit('bank_release_actions_get', function_detail.first.page, function_detail.first.bank );
+                        // bank_preview_page(page);
+                    }
 
-                this.stopFunction()
-                break
-            case 'copy':
-                if (this.state.activeFunctionBank) {
-                    const fromInfo = this.state.activeFunctionBank
-                    this.context.socket.emit('bank_copy', fromInfo.page, fromInfo.bank, this.state.pageNumber, index);
                     this.stopFunction()
-                } else {
-                    this.setState({
-                        activeFunctionBank: {
-                            page: this.state.pageNumber,
-                            bank: index
-                        }
-                    })
-                }
-                break
-            case 'move':
-                if (this.state.activeFunctionBank) {
-                    const fromInfo = this.state.activeFunctionBank
-                    this.context.socket.emit('bank_move', fromInfo.page, fromInfo.bank, this.state.pageNumber, index);
-                    this.stopFunction()
-                } else {
-                    this.setState({
-                        activeFunctionBank: {
-                            page: this.state.pageNumber,
-                            bank: index
-                        }
-                    })
-                }
-                break
-            default:
-                // show bank edit page
-                this.props.editBank(this.state.pageNumber, index)
-                break
+                    break
+                case 'copy':
+                    if (this.state.activeFunctionBank) {
+                        const fromInfo = this.state.activeFunctionBank
+                        this.context.socket.emit('bank_copy', fromInfo.page, fromInfo.bank, this.state.pageNumber, index);
+                        this.stopFunction()
+                    } else {
+                        this.setState({
+                            activeFunctionBank: {
+                                page: this.state.pageNumber,
+                                bank: index
+                            }
+                        })
+                    }
+                    break
+                case 'move':
+                    if (this.state.activeFunctionBank) {
+                        const fromInfo = this.state.activeFunctionBank
+                        this.context.socket.emit('bank_move', fromInfo.page, fromInfo.bank, this.state.pageNumber, index);
+                        this.stopFunction()
+                    } else {
+                        this.setState({
+                            activeFunctionBank: {
+                                page: this.state.pageNumber,
+                                bank: index
+                            }
+                        })
+                    }
+                    break
+                default:
+                    // show bank edit page
+                    this.props.buttonGridClick(this.state.pageNumber, index, true)
+                    break
+            }
+        } else if (!this.state.activeFunction) {
+            this.props.buttonGridClick(this.state.pageNumber, index, false)
         }
     }
 
@@ -218,12 +222,12 @@ export class Buttons extends React.Component {
                 </CCol>
             </CRow>
 
-            <CRow id="pagebank">
-                <BankGrid pageNumber={pageNumber} onBankClick={this.bankClick} />
+            <CRow id="pagebank" className={classnames({ 'bank-armed': this.props.isHot })}>
+                <BankGrid pageNumber={pageNumber} bankClick={this.bankClick} />
             </CRow>
 
             <CRow style={{paddingTop:'15px'}}>
-                <CCol sm={12} id="functionkeys">
+                <CCol sm={12} id="functionkeys" className={classnames({ 'slide-up': this.props.isHot, 'slide-height': true })}>
                     {/* TODO - these */}
                     {this.getButton('Copy', faCopy, 'copy')}
                     {this.getButton('Move', faArrowsAlt, 'move')}
@@ -232,13 +236,13 @@ export class Buttons extends React.Component {
                     <CButton color="disabled" style={{ display: this.state.activeFunction ? '' : 'none'}}>
                         { this.hintButtonText()}
                     </CButton>
-                    <span id='state_hide'>
+
+                    <span>
                         <CButton color="warning" onClick={() => this.resetPage()}><FontAwesomeIcon icon={faEraser} /> Wipe page</CButton>
                         <CButton color="warning" onClick={() => this.resetPageNav()}><FontAwesomeIcon icon={faEraser} /> Reset page buttons</CButton><br/><br/>
                         <CButton color='success' href={`/int/page_export/${pageNumber}`} target="_new">
                             <FontAwesomeIcon icon={faFileExport} /> Export page
                         </CButton>
-
                     </span>
                 </CCol>
             </CRow>
@@ -300,7 +304,7 @@ export class BankGrid extends React.PureComponent {
                             Array(MAX_COLS).fill(0).map((_, x) => {
                                 const index = y * MAX_COLS + x + 1
                                 return (
-                                    <BankPreview key={x} page={pageNumber} index={index} preview={imageCache[index]?.image} onClick={this.props.onBankClick} />
+                                    <BankPreview key={x} page={pageNumber} index={index} preview={imageCache[index]?.image} onClick={this.props.bankClick} />
                                 )
                             })
                         }
@@ -314,7 +318,7 @@ export class BankGrid extends React.PureComponent {
 export class BankPreview extends React.PureComponent {
     render() {
         return (
-            <div className="bank" onClick={() => this.props.onClick(this.props.index)}>
+            <div className="bank" onMouseDown={() => this.props.onClick(this.props.index, true)} onMouseUp={() => this.props.onClick(this.props.index, false)}>
                 <div className="bank-border">
                     <img width={72} height={72} src={this.props.preview} alt={`Bank ${this.props.index}`} />
                 </div>

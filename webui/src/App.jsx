@@ -36,6 +36,8 @@ export default class App extends React.Component {
       configureInstanceId: null,
       configureInstanceToken: null,
 
+      hotPress: false,
+
       // help text to show
       helpContent: null,
 
@@ -88,6 +90,9 @@ export default class App extends React.Component {
     this.socket.on('skeleton-info', this.versionInfo)
     this.socket.on('update_data', this.updateData)
     this.socket.emit('update_data')
+
+    document.addEventListener('keydown', this.handleKeyDown);
+    document.addEventListener('keyup', this.handleKeyUp);
   }
 
   componentWillUnmount() {
@@ -96,6 +101,20 @@ export default class App extends React.Component {
       this.socket.off('variable_set', this.updateVariableValue)
       this.socket.off('skeleton-info', this.versionInfo)
       this.socket.off('update_data', this.updateData)
+
+      document.removeEventListener('keydown', this.handleKeyDown);
+      document.removeEventListener('keyup', this.handleKeyUp);
+  }
+
+  handleKeyDown = (e) => {
+    if (e.key === 'Shift') {
+      this.setState({ hotPress: true })
+    }
+  }
+  handleKeyUp = (e) => {
+    if (e.key === 'Shift') {
+      this.setState({ hotPress: false })
+    }
   }
 
   updateData = (data) => {
@@ -153,8 +172,12 @@ export default class App extends React.Component {
     })
   }
 
-  editBank = (page, bank) => {
-    console.log('TODO', 'edit', page, bank)
+  buttonGridClick = (page, bank, isDown) => {
+    if (this.state.hotPress) {
+      this.socket.emit('hot_press', page, bank, isDown);
+    } else {
+      console.log('TODO', 'edit', page, bank)
+    }
   }
 
   getVersionString() {
@@ -251,7 +274,7 @@ export default class App extends React.Component {
                             </ErrorBoundary>
                           </CTabPane>
                           <CTabPane data-tab="buttons">
-                            <Buttons editBank={this.editBank} />
+                            <Buttons buttonGridClick={this.buttonGridClick} isHot={this.state.hotPress} />
                           </CTabPane>
                           <CTabPane data-tab="surfaces">
                             <Surfaces />
