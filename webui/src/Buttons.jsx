@@ -235,7 +235,9 @@ export class Buttons extends React.Component {
                     <span id='state_hide'>
                         <CButton color="warning" onClick={() => this.resetPage()}><FontAwesomeIcon icon={faEraser} /> Wipe page</CButton>
                         <CButton color="warning" onClick={() => this.resetPageNav()}><FontAwesomeIcon icon={faEraser} /> Reset page buttons</CButton><br/><br/>
-                        <a href={`/int/page_export/${pageNumber}`} className="btn btn-success buttonbottompad"><FontAwesomeIcon icon={faFileExport} /> Export page</a>
+                        <CButton color='success' href={`/int/page_export/${pageNumber}`} target="_new">
+                            <FontAwesomeIcon icon={faFileExport} /> Export page
+                        </CButton>
 
                     </span>
                 </CCol>

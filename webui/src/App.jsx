@@ -1,5 +1,5 @@
 import React from 'react'
-import {CNavbar, CNavbarBrand, CHeader, CSidebar, CSidebarNav, CSidebarNavItem, CSidebarBrand, CContainer, CRow, CCol, CTabs, CTabContent, CTabPane, CNav, CNavItem, CNavLink} from '@coreui/react'
+import {CNavbar, CNavbarBrand, CHeader, CSidebar, CSidebarNav, CSidebarNavItem, CSidebarBrand, CContainer, CRow, CCol, CTabs, CTabContent, CTabPane, CNav, CNavItem, CNavLink, CNavbarNav, CCollapse, CHeaderBrand, CHeaderNavItem, CHeaderNav, CHeaderNavLink} from '@coreui/react'
 import {faBug, faCalendarAlt, faClock, faCog, faComments, faDollarSign, faGamepad, faInfo, faMousePointer, faPlug, faTabletAlt, faUserNinja, faUsers} from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import io from 'socket.io-client'
@@ -22,6 +22,9 @@ export default class App extends React.Component {
 
     this.state = {
       connected: false,
+
+      versionInfo: null,
+      updateData: null,
 
       // modules
       modules: {},
@@ -81,12 +84,25 @@ export default class App extends React.Component {
 
     this.socket.on('variable_instance_definitions_set', this.updateVariableDefinitions)
     this.socket.on('variable_set', this.updateVariableValue)
+    this.socket.on('skeleton-info', this.versionInfo)
+    this.socket.on('update_data', this.updateData)
+    this.socket.emit('update_data')
   }
 
   componentWillUnmount() {
       this.socket.off('instances_get:result', this.updateInstancesInfo)
       this.socket.off('variable_instance_definitions_set', this.updateVariableDefinitions)
       this.socket.off('variable_set', this.updateVariableValue)
+      this.socket.off('skeleton-info', this.versionInfo)
+      this.socket.off('update_data', this.updateData)
+  }
+
+  updateData = (data) => {
+    this.setState({ updateData: data })
+  }
+
+  versionInfo = (info) => {
+    this.setState({ versionInfo: info })
   }
 
   updateVariableDefinitions = (label, variables) => {
@@ -140,6 +156,15 @@ export default class App extends React.Component {
     console.log('TODO', 'edit', page, bank)
   }
 
+  getVersionString() {
+    const info = this.state.versionInfo
+    if (info) {
+      return `${info.appVersion} (${info.appBuild.replace("master-","").replace(info.appVersion + "-", "")})`
+    } else {
+      return '?'
+    }
+  }
+
   render() {
     const showInstanceConfig = this.state.configureInstanceId && this.state.instances[this.state.configureInstanceId]
 
@@ -165,13 +190,27 @@ export default class App extends React.Component {
             </CSidebarNav>
           </CSidebar>
           <div className="c-wrapper">
-            <CHeader>
-              <CNavbar fixed="top" light={false} color='danger'>
+            <CHeader colorScheme="dark">
+              {/* <CNavbar fixed="top" light={false} color='danger'> */}
 
-                <CNavbarBrand>
+                <CHeaderBrand>
                   <span style={{fontWeight: 'bold'}}>Bitfocus</span> Companion
-                </CNavbarBrand>
-              </CNavbar>
+                </CHeaderBrand>
+
+                <CHeaderNav>
+                  <CHeaderNavItem>
+                    <CHeaderNavLink target="_new" title="Version Number" href="https://bitfocus.io/companion/">
+                        { this.getVersionString() }
+                    </CHeaderNavLink>
+                  </CHeaderNavItem>
+
+                  <CHeaderNavItem>
+                    <CHeaderNavLink target="_new" href={this.state.updateData?.link || "https://bitfocus.io/companion/"}>
+                      { this.state.updateData?.message || '' }
+                    </CHeaderNavLink>
+                  </CHeaderNavItem>
+                </CHeaderNav>
+              {/* </CNavbar> */}
             </CHeader>
             <div className="c-body">
               <CContainer fluid className="animated fadeIn">
