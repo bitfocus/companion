@@ -1,8 +1,8 @@
-import React from 'react'
-import shortid from 'shortid'
+import React, { useContext, useEffect, useState } from 'react'
 import { CAlert, CButton, CCol, CRow } from '@coreui/react'
 import { CompanionContext, socketEmit } from './util'
 import { BankPreview, dataToButtonImage } from './Buttons'
+import { useDrag } from 'react-dnd'
 
 export class InstancePresets extends React.Component {
     static contextType = CompanionContext
@@ -117,7 +117,7 @@ export class InstancePresets extends React.Component {
 
                     {
                         options.map((preset, i) => {
-                            return <BankPreview2 key={i} fixed onClick={() => null} bank={preset.bank} alt={preset.label} />
+                            return <BankTemplatePreview key={i} instanceId={this.state.selectedInstanceId} onClick={() => null} preset={preset} alt={preset.label} />
                         })
                     }
                     <div className="presetbank buttonbankwidth" data-drawn="no" data-instance="' + instance + '" title="' + preset.label + '" data-key="' + key + '">
@@ -149,35 +149,27 @@ export class InstancePresets extends React.Component {
     }
 }
 
-export class BankPreview2 extends React.PureComponent {
-    static contextType = CompanionContext
+function BankTemplatePreview({ preset, instanceId, ...childProps }) {
+    const context = useContext(CompanionContext)
+    const [previewImage, setPreviewImage] = useState(null)
 
-    state = {
-        preview: null
-    }
+    const [{}, drag] = useDrag({
+        item: { 
+            type: 'preset',
+            instanceId: instanceId,
+            preset: preset,
+        },
+      })
 
-    componentDidMount() {
-        socketEmit(this.context.socket, 'graphics_preview_generate', [this.props.bank]).then(([img]) => {
-            this.setState({
-                preview: dataToButtonImage(img)
-            })
+    useEffect(() => {
+        socketEmit(context.socket, 'graphics_preview_generate', [preset.bank]).then(([img]) => {
+            setPreviewImage(dataToButtonImage(img))
         }).catch(e => {
             console.error('Failed to preview bank')
         })
-    }
-    componentDidUpdate(prevProps) {
-        if (prevProps.bank !== this.props.bank) {
-            // Force update if the bank obj has changed
-            this.componentDidMount()
-        }
-    }
+    }, [preset.bank, context.socket])
 
-    render() {
-        const childProps = {...this.props}
-        delete childProps['bank']
-
-        return (
-            <BankPreview {...childProps} preview={this.state.preview} />
-        )
-    }
+    return (
+        <BankPreview fixedSize dragRef={drag} {...childProps} preview={previewImage} />
+    )
 }

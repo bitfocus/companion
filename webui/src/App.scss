@@ -82,10 +82,21 @@
     height: fit-content;
     cursor: pointer;
     display: inline-block;
+    border: 1px solid transparent;
 
     &.fixed img {
         width: 72px;
         height: 72px;
+    }
+
+    &.drophere {
+        border: 1px dashed black;
+        background-color: #eee;
+    }
+
+    &.drophover {
+        border: 1px solid black;
+        background-color: #daffab;
     }
 
     img {

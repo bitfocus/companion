@@ -16,6 +16,8 @@ import { UserConfig } from './UserConfig'
 import { LogPanel } from './LogPanel'
 import { InstancePresets } from './Presets'
 import { useTranslation } from 'react-i18next'
+import { DndProvider } from 'react-dnd'
+import { HTML5Backend } from 'react-dnd-html5-backend'
 
 export default class App extends React.Component {
   constructor(props) {
@@ -198,110 +200,112 @@ export default class App extends React.Component {
     return (
       <CompanionContext.Provider value={{ socket: this.socket, instances: this.state.instances, modules: this.state.modules  }} >
         <Suspense fallback={<Spinner />}>
-          <div className="c-app">
-            <HelpModal content={this.state.helpContent} hide={() => this.setState({ helpContent: null })} />
+          <DndProvider backend={HTML5Backend}>
+            <div className="c-app">
+              <HelpModal content={this.state.helpContent} hide={() => this.setState({ helpContent: null })} />
 
-          <Sidebar />
-            <div className="c-wrapper">
-              <CHeader colorScheme="dark">
-                {/* <CNavbar fixed="top" light={false} color='danger'> */}
+            <Sidebar />
+              <div className="c-wrapper">
+                <CHeader colorScheme="dark">
+                  {/* <CNavbar fixed="top" light={false} color='danger'> */}
 
-                  <CHeaderBrand>
-                    <span style={{fontWeight: 'bold'}}>Bitfocus</span> Companion
-                  </CHeaderBrand>
+                    <CHeaderBrand>
+                      <span style={{fontWeight: 'bold'}}>Bitfocus</span> Companion
+                    </CHeaderBrand>
 
-                  <CHeaderNav>
-                    <CHeaderNavItem>
-                      <CHeaderNavLink target="_new" title="Version Number" href="https://bitfocus.io/companion/">
-                          { this.getVersionString() }
-                      </CHeaderNavLink>
-                    </CHeaderNavItem>
+                    <CHeaderNav>
+                      <CHeaderNavItem>
+                        <CHeaderNavLink target="_new" title="Version Number" href="https://bitfocus.io/companion/">
+                            { this.getVersionString() }
+                        </CHeaderNavLink>
+                      </CHeaderNavItem>
 
-                    <CHeaderNavItem>
-                      <CHeaderNavLink target="_new" href={this.state.updateData?.link || "https://bitfocus.io/companion/"}>
-                        { this.state.updateData?.message || '' }
-                      </CHeaderNavLink>
-                    </CHeaderNavItem>
-                  </CHeaderNav>
-                {/* </CNavbar> */}
-              </CHeader>
-              <div className="c-body">
-                <CContainer fluid className="animated fadeIn">
-                  {
-                    this.socket && this.state.connected ? 
-                    <CRow>
+                      <CHeaderNavItem>
+                        <CHeaderNavLink target="_new" href={this.state.updateData?.link || "https://bitfocus.io/companion/"}>
+                          { this.state.updateData?.message || '' }
+                        </CHeaderNavLink>
+                      </CHeaderNavItem>
+                    </CHeaderNav>
+                  {/* </CNavbar> */}
+                </CHeader>
+                <div className="c-body">
+                  <CContainer fluid className="animated fadeIn">
+                    {
+                      this.socket && this.state.connected ? 
+                      <CRow>
 
-                      <CCol xs={12} xl={6}>
-                        <CTabs activeTab={this.state.activeTab1} onActiveTabChange={(a) => this.setState({ activeTab1: a})}>
-                          <CNav variant="tabs">
-                            <CNavItem><CNavLink data-tab="instances"><FontAwesomeIcon icon={faPlug} /> Instances</CNavLink></CNavItem>
-                            <CNavItem hidden={!showInstanceConfig}><CNavLink data-tab="instanceConfig"><FontAwesomeIcon icon={faCog} /> Config</CNavLink></CNavItem>
-                            <CNavItem><CNavLink data-tab="buttons"><FontAwesomeIcon icon={faCalendarAlt} /> Buttons</CNavLink></CNavItem>
-                            <CNavItem><CNavLink data-tab="surfaces"><FontAwesomeIcon icon={faGamepad} /> Surfaces</CNavLink></CNavItem>
-                            <CNavItem><CNavLink data-tab="triggers"><FontAwesomeIcon icon={faClock} /> Triggers</CNavLink></CNavItem>
-                            <CNavItem><CNavLink data-tab="userconfig"><FontAwesomeIcon icon={faUserNinja} /> Settings</CNavLink></CNavItem>
-                          </CNav>
-                          <CTabContent fade={false}>
-                            <CTabPane data-tab="instances">
-                              <ErrorBoundary>
-                                <Instances configureInstance={this.configureInstance} showHelp={this.showHelp} />
-                              </ErrorBoundary>
-                            </CTabPane>
-                            <CTabPane data-tab="instanceConfig">
-                              <ErrorBoundary>
-                                {
-                                  this.state.configureInstanceId
-                                  ? <InstanceConfig
-                                      key={this.state.configureInstanceToken}
-                                      instanceId={this.state.configureInstanceId}
-                                      showHelp={this.showHelp}
-                                      variableDefinitions={this.state.variableDefinitions}
-                                      variableValues={this.state.variableValues}
-                                    />
-                                  : 'No instance specified'
-                                }
-                              </ErrorBoundary>
-                            </CTabPane>
-                            <CTabPane data-tab="buttons">
-                              <Buttons buttonGridClick={this.buttonGridClick} isHot={this.state.hotPress} />
-                            </CTabPane>
-                            <CTabPane data-tab="surfaces">
-                              <Surfaces />
-                            </CTabPane>
-                            <CTabPane data-tab="triggers">t</CTabPane>
-                            <CTabPane data-tab="userconfig">
-                              <UserConfig />
-                            </CTabPane>
-                          </CTabContent>
-                        </CTabs>
-                      </CCol>
+                        <CCol xs={12} xl={6}>
+                          <CTabs activeTab={this.state.activeTab1} onActiveTabChange={(a) => this.setState({ activeTab1: a})}>
+                            <CNav variant="tabs">
+                              <CNavItem><CNavLink data-tab="instances"><FontAwesomeIcon icon={faPlug} /> Instances</CNavLink></CNavItem>
+                              <CNavItem hidden={!showInstanceConfig}><CNavLink data-tab="instanceConfig"><FontAwesomeIcon icon={faCog} /> Config</CNavLink></CNavItem>
+                              <CNavItem><CNavLink data-tab="buttons"><FontAwesomeIcon icon={faCalendarAlt} /> Buttons</CNavLink></CNavItem>
+                              <CNavItem><CNavLink data-tab="surfaces"><FontAwesomeIcon icon={faGamepad} /> Surfaces</CNavLink></CNavItem>
+                              <CNavItem><CNavLink data-tab="triggers"><FontAwesomeIcon icon={faClock} /> Triggers</CNavLink></CNavItem>
+                              <CNavItem><CNavLink data-tab="userconfig"><FontAwesomeIcon icon={faUserNinja} /> Settings</CNavLink></CNavItem>
+                            </CNav>
+                            <CTabContent fade={false}>
+                              <CTabPane data-tab="instances">
+                                <ErrorBoundary>
+                                  <Instances configureInstance={this.configureInstance} showHelp={this.showHelp} />
+                                </ErrorBoundary>
+                              </CTabPane>
+                              <CTabPane data-tab="instanceConfig">
+                                <ErrorBoundary>
+                                  {
+                                    this.state.configureInstanceId
+                                    ? <InstanceConfig
+                                        key={this.state.configureInstanceToken}
+                                        instanceId={this.state.configureInstanceId}
+                                        showHelp={this.showHelp}
+                                        variableDefinitions={this.state.variableDefinitions}
+                                        variableValues={this.state.variableValues}
+                                      />
+                                    : 'No instance specified'
+                                  }
+                                </ErrorBoundary>
+                              </CTabPane>
+                              <CTabPane data-tab="buttons">
+                                <Buttons buttonGridClick={this.buttonGridClick} isHot={this.state.hotPress} />
+                              </CTabPane>
+                              <CTabPane data-tab="surfaces">
+                                <Surfaces />
+                              </CTabPane>
+                              <CTabPane data-tab="triggers">t</CTabPane>
+                              <CTabPane data-tab="userconfig">
+                                <UserConfig />
+                              </CTabPane>
+                            </CTabContent>
+                          </CTabs>
+                        </CCol>
 
-                      <CCol xs={12} xl={6}>
-                        <CTabs>
-                          <CNav variant="tabs">
-                            <CNavItem><CNavLink data-tab="log"><FontAwesomeIcon icon={faClipboardList} /> Log</CNavLink></CNavItem>
-                            <CNavItem><CNavLink data-tab="edit"><FontAwesomeIcon icon={faCalculator} /> Edit Button</CNavLink></CNavItem>
-                            <CNavItem><CNavLink data-tab="presets" onClick={(a) => this.setState({ activePresetToken: shortid() })}><FontAwesomeIcon icon={faGift} /> Presets</CNavLink></CNavItem>
-                            <CNavItem><CNavLink data-tab="importexport"><FontAwesomeIcon icon={faFileImport} /> Import / Export</CNavLink></CNavItem>
-                          </CNav>
-                          <CTabContent fade={false}>
-                            <CTabPane data-tab="log">
-                              <LogPanel />
-                            </CTabPane>
-                            <CTabPane data-tab="presets">
-                              <InstancePresets token={this.state.activePresetToken} />
-                            </CTabPane>
-                          </CTabContent>
-                        </CTabs>
-                      </CCol>
+                        <CCol xs={12} xl={6}>
+                          <CTabs>
+                            <CNav variant="tabs">
+                              <CNavItem><CNavLink data-tab="log"><FontAwesomeIcon icon={faClipboardList} /> Log</CNavLink></CNavItem>
+                              <CNavItem><CNavLink data-tab="edit"><FontAwesomeIcon icon={faCalculator} /> Edit Button</CNavLink></CNavItem>
+                              <CNavItem><CNavLink data-tab="presets" onClick={(a) => this.setState({ activePresetToken: shortid() })}><FontAwesomeIcon icon={faGift} /> Presets</CNavLink></CNavItem>
+                              <CNavItem><CNavLink data-tab="importexport"><FontAwesomeIcon icon={faFileImport} /> Import / Export</CNavLink></CNavItem>
+                            </CNav>
+                            <CTabContent fade={false}>
+                              <CTabPane data-tab="log">
+                                <LogPanel />
+                              </CTabPane>
+                              <CTabPane data-tab="presets">
+                                <InstancePresets token={this.state.activePresetToken} />
+                              </CTabPane>
+                            </CTabContent>
+                          </CTabs>
+                        </CCol>
 
-                    </CRow>
-                    : 'Connecting' 
-                  }
-                </CContainer>
+                      </CRow>
+                      : 'Connecting' 
+                    }
+                  </CContainer>
+                </div>
               </div>
             </div>
-          </div>
+          </DndProvider>
         </Suspense>
       </CompanionContext.Provider>
     );

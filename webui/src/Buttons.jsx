@@ -1,11 +1,12 @@
 import { CButton, CCol, CInput, CRow } from '@coreui/react'
-import React from 'react'
+import React, { useContext } from 'react'
 import { CompanionContext, socketEmit } from './util'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faArrowsAlt, faChevronLeft, faChevronRight, faCopy, faEraser, faFileExport, faTrash } from '@fortawesome/free-solid-svg-icons'
 import classnames from 'classnames'
 
 import { MAX_COLS, MAX_ROWS, MAX_BUTTONS, PREVIEW_BMP_HEADER } from './Constants'
+import { useDrop } from 'react-dnd'
 
 
 export function dataToButtonImage(data) {
@@ -304,7 +305,14 @@ export class BankGrid extends React.PureComponent {
                             Array(MAX_COLS).fill(0).map((_, x) => {
                                 const index = y * MAX_COLS + x + 1
                                 return (
-                                    <BankPreview key={x} page={pageNumber} index={index} preview={imageCache[index]?.image} onClick={this.props.bankClick} alt={`Bank ${index}`} />
+                                    <BankGridPreview
+                                        key={x}
+                                        page={pageNumber}
+                                        index={index}
+                                        preview={imageCache[index]?.image}
+                                        onClick={this.props.bankClick}
+                                        alt={`Bank ${index}`}
+                                        />
                                 )
                             })
                         }
@@ -315,14 +323,34 @@ export class BankGrid extends React.PureComponent {
     }
 }
 
-export class BankPreview extends React.PureComponent {
-    render() {
-        return (
-            <div className={classnames({ bank: true, fixed: !!this.props.fixed })} onMouseDown={() => this.props.onClick(this.props.index, true)} onMouseUp={() => this.props.onClick(this.props.index, false)}>
-                <div className="bank-border">
-                    <img width={72} height={72} src={this.props.preview} alt={this.props.alt} />
-                </div>
+function BankGridPreview(props) {
+    const context = useContext(CompanionContext)
+    const [{ isOver, canDrop }, drop] = useDrop({
+        accept: 'preset',
+        drop: (dropData) => {
+            console.log('preset drop', dropData)
+            context.socket.emit('preset_drop', dropData.instanceId, dropData.preset, props.page, props.index)
+        },
+        collect: monitor => ({
+            isOver: !!monitor.isOver(),
+            canDrop: !!monitor.canDrop()
+        }),
+      })
+
+    return <BankPreview {...props} dropRef={drop} dropHover={isOver} canDrop={canDrop} />
+}
+
+export function BankPreview(props) {
+    return (
+        <div
+            ref={props.dropRef}
+            className={classnames({ bank: true, fixed: !!props.fixedSize, drophere: props.canDrop, drophover: props.dropHover })}
+            onMouseDown={() => props.onClick(props.index, true)}
+            onMouseUp={() => props.onClick(props.index, false)}
+            >
+            <div className="bank-border">
+                <img ref={props.dragRef} width={72} height={72} src={props.preview} alt={props.alt} />
             </div>
-        )
-    }
+        </div>
+    )
 }
