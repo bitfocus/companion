@@ -75,20 +75,28 @@
         }
 
     }
-    .bank {
-        padding: Min(5px, 10%);
-        height: fit-content;
-        cursor: pointer;
+}
 
-        img {
-            max-width: 72px;
-            max-height: 72px;
-            width: 100%;
-            object-fit: contain;
-            
-            border-radius: Max(12%, 4px);
-            border: 1px solid white;
-        }
+.bank {
+    padding: Min(5px, 10%);
+    height: fit-content;
+    cursor: pointer;
+    display: inline-block;
+
+    &.fixed img {
+        width: 72px;
+        height: 72px;
+    }
+
+    img {
+        max-width: 72px;
+        max-height: 72px;
+        width: 100%;
+        object-fit: contain;
+        display: block;
+        
+        border-radius: Max(12%, 4px);
+        border: 1px solid white;
     }
 }
 

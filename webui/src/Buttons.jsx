@@ -8,7 +8,7 @@ import classnames from 'classnames'
 import { MAX_COLS, MAX_ROWS, MAX_BUTTONS, PREVIEW_BMP_HEADER } from './Constants'
 
 
-function dataToButtonImage(data) {
+export function dataToButtonImage(data) {
     const sourceData = Buffer.from(data);
 
     const convertedData = Buffer.alloc(sourceData.length)
@@ -304,7 +304,7 @@ export class BankGrid extends React.PureComponent {
                             Array(MAX_COLS).fill(0).map((_, x) => {
                                 const index = y * MAX_COLS + x + 1
                                 return (
-                                    <BankPreview key={x} page={pageNumber} index={index} preview={imageCache[index]?.image} onClick={this.props.bankClick} />
+                                    <BankPreview key={x} page={pageNumber} index={index} preview={imageCache[index]?.image} onClick={this.props.bankClick} alt={`Bank ${index}`} />
                                 )
                             })
                         }
@@ -318,9 +318,9 @@ export class BankGrid extends React.PureComponent {
 export class BankPreview extends React.PureComponent {
     render() {
         return (
-            <div className="bank" onMouseDown={() => this.props.onClick(this.props.index, true)} onMouseUp={() => this.props.onClick(this.props.index, false)}>
+            <div className={classnames({ bank: true, fixed: !!this.props.fixed })} onMouseDown={() => this.props.onClick(this.props.index, true)} onMouseUp={() => this.props.onClick(this.props.index, false)}>
                 <div className="bank-border">
-                    <img width={72} height={72} src={this.props.preview} alt={`Bank ${this.props.index}`} />
+                    <img width={72} height={72} src={this.props.preview} alt={this.props.alt} />
                 </div>
             </div>
         )

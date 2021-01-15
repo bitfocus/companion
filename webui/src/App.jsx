@@ -14,6 +14,7 @@ import { Buttons } from './Buttons'
 import { Surfaces } from './Surfaces'
 import { UserConfig } from './UserConfig'
 import { LogPanel } from './LogPanel'
+import { InstancePresets } from './Presets'
 
 export default class App extends React.Component {
   constructor(props) {
@@ -31,6 +32,7 @@ export default class App extends React.Component {
       modules: {},
 
       activeTab1: 'instances',
+      activePresetToken: shortid(),
 
       instances: {},
       configureInstanceId: null,
@@ -193,7 +195,7 @@ export default class App extends React.Component {
     const showInstanceConfig = this.state.configureInstanceId && this.state.instances[this.state.configureInstanceId]
 
     return (
-      <CompanionContext.Provider value={{ socket: this.socket, instances: this.state.instances, modules:this.state.modules  }} >
+      <CompanionContext.Provider value={{ socket: this.socket, instances: this.state.instances, modules: this.state.modules  }} >
         <div className="c-app">
           <HelpModal content={this.state.helpContent} hide={() => this.setState({ helpContent: null })} />
 
@@ -292,14 +294,16 @@ export default class App extends React.Component {
                         <CNav variant="tabs">
                           <CNavItem><CNavLink data-tab="log"><FontAwesomeIcon icon={faClipboardList} /> Log</CNavLink></CNavItem>
                           <CNavItem><CNavLink data-tab="edit"><FontAwesomeIcon icon={faCalculator} /> Edit Button</CNavLink></CNavItem>
-                          <CNavItem><CNavLink data-tab="presets"><FontAwesomeIcon icon={faGift} /> Presets</CNavLink></CNavItem>
+                          <CNavItem><CNavLink data-tab="presets" onClick={(a) => this.setState({ activePresetToken: shortid() })}><FontAwesomeIcon icon={faGift} /> Presets</CNavLink></CNavItem>
                           <CNavItem><CNavLink data-tab="importexport"><FontAwesomeIcon icon={faFileImport} /> Import / Export</CNavLink></CNavItem>
                         </CNav>
                         <CTabContent fade={false}>
                           <CTabPane data-tab="log">
                             <LogPanel />
                           </CTabPane>
-                          <CTabPane>c</CTabPane>
+                          <CTabPane data-tab="presets">
+                            <InstancePresets token={this.state.activePresetToken} />
+                          </CTabPane>
                         </CTabContent>
                       </CTabs>
                     </CCol>
