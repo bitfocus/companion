@@ -5,352 +5,323 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faArrowsAlt, faChevronLeft, faChevronRight, faCopy, faEraser, faFileExport, faTrash } from '@fortawesome/free-solid-svg-icons'
 import classnames from 'classnames'
 
-import { MAX_COLS, MAX_ROWS, MAX_BUTTONS, PREVIEW_BMP_HEADER } from './Constants'
+import { MAX_COLS, MAX_ROWS, MAX_BUTTONS } from './Constants'
 import { useDrop } from 'react-dnd'
-
-
-export function dataToButtonImage(data) {
-    const sourceData = Buffer.from(data);
-
-    const convertedData = Buffer.alloc(sourceData.length)
-    for (let i = 0; i < sourceData.length; i += 3) {
-        // convert bgr to rgb 
-        convertedData.writeUInt8(sourceData.readUInt8(i), i + 2)
-        convertedData.writeUInt8(sourceData.readUInt8(i + 1), i + 1)
-        convertedData.writeUInt8(sourceData.readUInt8(i + 2), i)
-    }
-
-    return 'data:image/bmp;base64,' + Buffer.concat([PREVIEW_BMP_HEADER, convertedData]).toString('base64')
-}
+import { BankPreview, dataToButtonImage } from './Components/BankButton'
 
 export class Buttons extends React.Component {
-    static contextType = CompanionContext
+	static contextType = CompanionContext
 
-    state = {
-        loaded: false,
-        pageNumber: 1,
-        pages: {},
-        newPageName: null,
-        activeFunction: null,
-        activeFunctionBank: null,
-    }
+	state = {
+		loaded: false,
+		pageNumber: 1,
+		pages: {},
+		newPageName: null,
+		activeFunction: null,
+		activeFunctionBank: null,
+	}
 
-    componentDidMount() {
-        socketEmit(this.context.socket, 'get_page_all', []).then(([pages]) => {
-            this.setState({
-                loaded: true,
-                pages: pages,
-                
-            })
-        }).catch((e) => {
-            console.error('Failed to load pages list:', e)
-        })
+	componentDidMount() {
+		socketEmit(this.context.socket, 'get_page_all', []).then(([pages]) => {
+			this.setState({
+				loaded: true,
+				pages: pages,
 
-        this.context.socket.on('set_page', this.updatePageInfo)
-    }
+			})
+		}).catch((e) => {
+			console.error('Failed to load pages list:', e)
+		})
 
-    componentWillUnmount() {
-        this.context.socket.off('set_page', this.updatePageInfo)
-    }
+		this.context.socket.on('set_page', this.updatePageInfo)
+	}
 
-    updatePageInfo = (page, info) => {
-        this.setState({
-            pages: {
-                ...this.state.pages,
-                [page]: info,
-            }
-        })
-    }
+	componentWillUnmount() {
+		this.context.socket.off('set_page', this.updatePageInfo)
+	}
 
-    changePage = (delta) => {
-        const pageNumbers = Object.keys(this.state.pages)
-        const currentIndex = pageNumbers.findIndex(p => p === this.state.pageNumber+'')
-        let newPage = pageNumbers[0]
-        if (currentIndex !== -1) {
-            let newIndex = currentIndex + delta
-            if (newIndex < 0) newIndex += pageNumbers.length
-            if (newIndex >= pageNumbers.length) newIndex -= pageNumbers.length
+	updatePageInfo = (page, info) => {
+		this.setState({
+			pages: {
+				...this.state.pages,
+				[page]: info,
+			}
+		})
+	}
 
-            newPage = pageNumbers[newIndex]
-        }
+	changePage = (delta) => {
+		const pageNumbers = Object.keys(this.state.pages)
+		const currentIndex = pageNumbers.findIndex(p => p === this.state.pageNumber + '')
+		let newPage = pageNumbers[0]
+		if (currentIndex !== -1) {
+			let newIndex = currentIndex + delta
+			if (newIndex < 0) newIndex += pageNumbers.length
+			if (newIndex >= pageNumbers.length) newIndex -= pageNumbers.length
 
-        if (newPage !== undefined) {
-            this.setState({ pageNumber: newPage})
-        }
-    }
+			newPage = pageNumbers[newIndex]
+		}
 
-    startFunction = (func) => {
-        if (this.state.activeFunction === null) {
-            this.setState({
-                activeFunction: func,
-                activeFunctionBank: null,
-            })
-        }
-    }
-    stopFunction = () => {
-        this.setState({
-            activeFunction: null,
-            activeFunctionBank: null,
-        })
-    }
+		if (newPage !== undefined) {
+			this.setState({ pageNumber: newPage })
+		}
+	}
 
-    bankClick = (index, isDown) => {
-        console.log('bank', this.state.pageNumber, index, isDown)
-        if (isDown) {
-            switch(this.state.activeFunction) {
-                case 'delete':
-                    if (window.confirm("Clear style and actions for this button?")) {
-                        this.context.socket.emit('bank_reset', this.state.pageNumber, index);
-                        // socket.emit('bank_actions_get', function_detail.first.page, function_detail.first.bank );
-                        // socket.emit('bank_release_actions_get', function_detail.first.page, function_detail.first.bank );
-                        // bank_preview_page(page);
-                    }
+	startFunction = (func) => {
+		if (this.state.activeFunction === null) {
+			this.setState({
+				activeFunction: func,
+				activeFunctionBank: null,
+			})
+		}
+	}
+	stopFunction = () => {
+		this.setState({
+			activeFunction: null,
+			activeFunctionBank: null,
+		})
+	}
 
-                    this.stopFunction()
-                    break
-                case 'copy':
-                    if (this.state.activeFunctionBank) {
-                        const fromInfo = this.state.activeFunctionBank
-                        this.context.socket.emit('bank_copy', fromInfo.page, fromInfo.bank, this.state.pageNumber, index);
-                        this.stopFunction()
-                    } else {
-                        this.setState({
-                            activeFunctionBank: {
-                                page: this.state.pageNumber,
-                                bank: index
-                            }
-                        })
-                    }
-                    break
-                case 'move':
-                    if (this.state.activeFunctionBank) {
-                        const fromInfo = this.state.activeFunctionBank
-                        this.context.socket.emit('bank_move', fromInfo.page, fromInfo.bank, this.state.pageNumber, index);
-                        this.stopFunction()
-                    } else {
-                        this.setState({
-                            activeFunctionBank: {
-                                page: this.state.pageNumber,
-                                bank: index
-                            }
-                        })
-                    }
-                    break
-                default:
-                    // show bank edit page
-                    this.props.buttonGridClick(this.state.pageNumber, index, true)
-                    break
-            }
-        } else if (!this.state.activeFunction) {
-            this.props.buttonGridClick(this.state.pageNumber, index, false)
-        }
-    }
+	bankClick = (index, isDown) => {
+		console.log('bank', this.state.pageNumber, index, isDown)
+		if (isDown) {
+			switch (this.state.activeFunction) {
+				case 'delete':
+					if (window.confirm("Clear style and actions for this button?")) {
+						this.context.socket.emit('bank_reset', this.state.pageNumber, index);
+						// socket.emit('bank_actions_get', function_detail.first.page, function_detail.first.bank );
+						// socket.emit('bank_release_actions_get', function_detail.first.page, function_detail.first.bank );
+						// bank_preview_page(page);
+					}
 
-    hintButtonText() {
-        if (this.state.activeFunction) {
-            if (!this.state.activeFunctionBank) {
-                return `Press the button you want to ${this.state.activeFunction}`
-            } else {
-                return `Where do you want it?`
-            }
-        } else {
-            return ''
-        }
-    }
+					this.stopFunction()
+					break
+				case 'copy':
+					if (this.state.activeFunctionBank) {
+						const fromInfo = this.state.activeFunctionBank
+						this.context.socket.emit('bank_copy', fromInfo.page, fromInfo.bank, this.state.pageNumber, index);
+						this.stopFunction()
+					} else {
+						this.setState({
+							activeFunctionBank: {
+								page: this.state.pageNumber,
+								bank: index
+							}
+						})
+					}
+					break
+				case 'move':
+					if (this.state.activeFunctionBank) {
+						const fromInfo = this.state.activeFunctionBank
+						this.context.socket.emit('bank_move', fromInfo.page, fromInfo.bank, this.state.pageNumber, index);
+						this.stopFunction()
+					} else {
+						this.setState({
+							activeFunctionBank: {
+								page: this.state.pageNumber,
+								bank: index
+							}
+						})
+					}
+					break
+				default:
+					// show bank edit page
+					this.props.buttonGridClick(this.state.pageNumber, index, true)
+					break
+			}
+		} else if (!this.state.activeFunction) {
+			this.props.buttonGridClick(this.state.pageNumber, index, false)
+		}
+	}
 
-    getButton(label, icon, func) {
-        let color = 'primary'
-        let disabled = false
-        if (this.state.activeFunction === func) {
-            color = 'success'
-        } else if (this.state.activeFunction) {
-            disabled = true
-        }
+	hintButtonText() {
+		if (this.state.activeFunction) {
+			if (!this.state.activeFunctionBank) {
+				return `Press the button you want to ${this.state.activeFunction}`
+			} else {
+				return `Where do you want it?`
+			}
+		} else {
+			return ''
+		}
+	}
 
-        return <CButton
-            color={color}
-            disabled={disabled}
-            onClick={() => this.startFunction(func)}
-            ><FontAwesomeIcon icon={icon} /> {label}</CButton>
-    }
+	getButton(label, icon, func) {
+		let color = 'primary'
+		let disabled = false
+		if (this.state.activeFunction === func) {
+			color = 'success'
+		} else if (this.state.activeFunction) {
+			disabled = true
+		}
 
-    resetPage = () => {
-        const page = this.state.pageNumber
-        if (window.confirm(`Are you sure you want to clear all buttons on page ${page}?\nThere\'s no going back from this.`)) {
+		return <CButton
+			color={color}
+			disabled={disabled}
+			onClick={() => this.startFunction(func)}
+		><FontAwesomeIcon icon={icon} /> {label}</CButton>
+	}
+
+	resetPage = () => {
+		const page = this.state.pageNumber
+		if (window.confirm(`Are you sure you want to clear all buttons on page ${page}?\nThere\'s no going back from this.`)) {
 			this.context.socket.emit('loadsave_reset_page_all', page);
 		}
-    }
-    resetPageNav = () => {
-        const page = this.state.pageNumber
-        if (window.confirm(`Are you sure you want to reset navigation buttons? This will completely erase bank ${page}.1, ${page}.9 and ${page}.17`)) {
+	}
+	resetPageNav = () => {
+		const page = this.state.pageNumber
+		if (window.confirm(`Are you sure you want to reset navigation buttons? This will completely erase bank ${page}.1, ${page}.9 and ${page}.17`)) {
 			this.context.socket.emit('loadsave_reset_page_nav', page);
 		}
-    }
+	}
 
-    render() {
-        if (!this.state.loaded) {
-            return <p>Loading...</p>
-        }
+	render() {
+		if (!this.state.loaded) {
+			return <p>Loading...</p>
+		}
 
-        const { pageNumber, pages, newPageName } = this.state
+		const { pageNumber, pages, newPageName } = this.state
 
-        const pageInfo = pages[pageNumber]
-        const pageName = pageInfo?.name ?? 'PAGE'
+		const pageInfo = pages[pageNumber]
+		const pageName = pageInfo?.name ?? 'PAGE'
 
-        return <>
-            <h4>Button layout</h4>
-            <p>The squares below represent each button on your Streamdeck. Click on them to set up how you want them to look, and what they should do when you press or click on them.</p><p>You can navigate between pages using the arrow buttons, or by clicking the page number, typing in a number, and pressing 'Enter' on your keyboard.</p>
+		return <>
+			<h4>Button layout</h4>
+			<p>The squares below represent each button on your Streamdeck. Click on them to set up how you want them to look, and what they should do when you press or click on them.</p><p>You can navigate between pages using the arrow buttons, or by clicking the page number, typing in a number, and pressing 'Enter' on your keyboard.</p>
 
-            <CRow>
-                <CCol sm={12}>
-                    <CButton color="primary" onClick={() => this.changePage(-1)}><FontAwesomeIcon icon={faChevronLeft} /></CButton>
-                    <CInput type="text" placeholder={pageNumber} /> {/* TODO editing this */}
-                    <CButton color="primary" onClick={() => this.changePage(1)}><FontAwesomeIcon icon={faChevronRight} /></CButton>
-                    <CInput
-                        className="page_title"
-                        type="text"
-                        placeholder="Page name"
-                        value={newPageName ?? pageName}
-                        onBlur={() => this.setState({ newPageName: null })}
-                        onChange={(e) => {
-                            this.context.socket.emit('set_page', pageNumber, {
-                                ...pageInfo,
-                                name: e.currentTarget.value,
-                            })
-                            this.setState({ newPageName: e.currentTarget.value })
-                        }}
-                    />
-                </CCol>
-            </CRow>
+			<CRow>
+				<CCol sm={12}>
+					<CButton color="primary" onClick={() => this.changePage(-1)}><FontAwesomeIcon icon={faChevronLeft} /></CButton>
+					<CInput type="text" placeholder={pageNumber} /> {/* TODO editing this */}
+					<CButton color="primary" onClick={() => this.changePage(1)}><FontAwesomeIcon icon={faChevronRight} /></CButton>
+					<CInput
+						className="page_title"
+						type="text"
+						placeholder="Page name"
+						value={newPageName ?? pageName}
+						onBlur={() => this.setState({ newPageName: null })}
+						onChange={(e) => {
+							this.context.socket.emit('set_page', pageNumber, {
+								...pageInfo,
+								name: e.currentTarget.value,
+							})
+							this.setState({ newPageName: e.currentTarget.value })
+						}}
+					/>
+				</CCol>
+			</CRow>
 
-            <CRow id="pagebank" className={classnames({ 'bank-armed': this.props.isHot })}>
-                <BankGrid pageNumber={pageNumber} bankClick={this.bankClick} />
-            </CRow>
+			<CRow id="pagebank" className={classnames({ 'bank-armed': this.props.isHot })}>
+				<BankGrid pageNumber={pageNumber} bankClick={this.bankClick} />
+			</CRow>
 
-            <CRow style={{paddingTop:'15px'}}>
-                <CCol sm={12} id="functionkeys" className={classnames({ 'slide-up': this.props.isHot, 'slide-height': true })}>
-                    {/* TODO - these */}
-                    {this.getButton('Copy', faCopy, 'copy')}
-                    {this.getButton('Move', faArrowsAlt, 'move')}
-                    {this.getButton('Delete', faTrash, 'delete')}
-                    <CButton color="danger" onClick={() => this.stopFunction()} style={{ display: this.state.activeFunction ? '' : 'none'}}>Cancel</CButton>
-                    <CButton color="disabled" style={{ display: this.state.activeFunction ? '' : 'none'}}>
-                        { this.hintButtonText()}
-                    </CButton>
+			<CRow style={{ paddingTop: '15px' }}>
+				<CCol sm={12} id="functionkeys" className={classnames({ 'slide-up': this.props.isHot, 'slide-height': true })}>
+					{/* TODO - these */}
+					{this.getButton('Copy', faCopy, 'copy')}
+					{this.getButton('Move', faArrowsAlt, 'move')}
+					{this.getButton('Delete', faTrash, 'delete')}
+					<CButton color="danger" onClick={() => this.stopFunction()} style={{ display: this.state.activeFunction ? '' : 'none' }}>Cancel</CButton>
+					<CButton color="disabled" style={{ display: this.state.activeFunction ? '' : 'none' }}>
+						{this.hintButtonText()}
+					</CButton>
 
-                    <span>
-                        <CButton color="warning" onClick={() => this.resetPage()}><FontAwesomeIcon icon={faEraser} /> Wipe page</CButton>
-                        <CButton color="warning" onClick={() => this.resetPageNav()}><FontAwesomeIcon icon={faEraser} /> Reset page buttons</CButton><br/><br/>
-                        <CButton color='success' href={`/int/page_export/${pageNumber}`} target="_new">
-                            <FontAwesomeIcon icon={faFileExport} /> Export page
+					<span>
+						<CButton color="warning" onClick={() => this.resetPage()}><FontAwesomeIcon icon={faEraser} /> Wipe page</CButton>
+						<CButton color="warning" onClick={() => this.resetPageNav()}><FontAwesomeIcon icon={faEraser} /> Reset page buttons</CButton><br /><br />
+						<CButton color='success' href={`/int/page_export/${pageNumber}`} target="_new">
+							<FontAwesomeIcon icon={faFileExport} /> Export page
                         </CButton>
-                    </span>
-                </CCol>
-            </CRow>
-        </>
-    }
+					</span>
+				</CCol>
+			</CRow>
+		</>
+	}
 }
 
 export class BankGrid extends React.PureComponent {
 
-    static contextType = CompanionContext
+	static contextType = CompanionContext
 
-    state = {
-        imageCache: {},
-    }
+	state = {
+		imageCache: {},
+	}
 
-    componentDidMount() {
-        this.context.socket.on('preview_page_data', this.updatePreviewImages)
-        this.context.socket.emit('bank_preview_page', this.props.pageNumber)
-    }
+	componentDidMount() {
+		this.context.socket.on('preview_page_data', this.updatePreviewImages)
+		this.context.socket.emit('bank_preview_page', this.props.pageNumber)
+	}
 
-    componentWillUnmount() {
-        this.context.socket.off('preview_page_data', this.updatePreviewImages)
-    }
+	componentWillUnmount() {
+		this.context.socket.off('preview_page_data', this.updatePreviewImages)
+	}
 
-    componentDidUpdate(prevProps, prevState) {
-        if (prevProps.pageNumber !== this.props.pageNumber) {
-            // Inform server of our last updated, so it can skip unchanged previews
-            const lastUpdated = {}
-            for (const [id, data] of Object.entries(this.state.imageCache)) {
-                lastUpdated[id] = { updated: data.updated }
-            }
-            this.context.socket.emit('bank_preview_page', this.props.pageNumber, lastUpdated)
-        }
-    }
+	componentDidUpdate(prevProps, prevState) {
+		if (prevProps.pageNumber !== this.props.pageNumber) {
+			// Inform server of our last updated, so it can skip unchanged previews
+			const lastUpdated = {}
+			for (const [id, data] of Object.entries(this.state.imageCache)) {
+				lastUpdated[id] = { updated: data.updated }
+			}
+			this.context.socket.emit('bank_preview_page', this.props.pageNumber, lastUpdated)
+		}
+	}
 
-    updatePreviewImages = (images) => {
-        const newImages = { ...this.state.imageCache }
-        for (let key = 1; key <= MAX_BUTTONS; ++key) {
-            if (images[key] !== undefined) {
-                newImages[key] = {
-                    image: dataToButtonImage(images[key].buffer),
-                    updated: images[key].updated,
-                }
-            }
-        }
+	updatePreviewImages = (images) => {
+		const newImages = { ...this.state.imageCache }
+		for (let key = 1; key <= MAX_BUTTONS; ++key) {
+			if (images[key] !== undefined) {
+				newImages[key] = {
+					image: dataToButtonImage(images[key].buffer),
+					updated: images[key].updated,
+				}
+			}
+		}
 
-        this.setState({ imageCache: newImages })
-    }
+		this.setState({ imageCache: newImages })
+	}
 
-    render() {
-        const { imageCache } = this.state
-        const { pageNumber } = this.props
+	render() {
+		const { imageCache } = this.state
+		const { pageNumber } = this.props
 
-        return <>
-            {
-                Array(MAX_ROWS).fill(0).map((_, y) => {
-                    return <div key={y} className="pagebank-row">
-                        {
-                            Array(MAX_COLS).fill(0).map((_, x) => {
-                                const index = y * MAX_COLS + x + 1
-                                return (
-                                    <BankGridPreview
-                                        key={x}
-                                        page={pageNumber}
-                                        index={index}
-                                        preview={imageCache[index]?.image}
-                                        onClick={this.props.bankClick}
-                                        alt={`Bank ${index}`}
-                                        />
-                                )
-                            })
-                        }
-                    </div>
-                })
-            }
-        </>
-    }
+		return <>
+			{
+				Array(MAX_ROWS).fill(0).map((_, y) => {
+					return <div key={y} className="pagebank-row">
+						{
+							Array(MAX_COLS).fill(0).map((_, x) => {
+								const index = y * MAX_COLS + x + 1
+								return (
+									<BankGridPreview
+										key={x}
+										page={pageNumber}
+										index={index}
+										preview={imageCache[index]?.image}
+										onClick={this.props.bankClick}
+										alt={`Bank ${index}`}
+									/>
+								)
+							})
+						}
+					</div>
+				})
+			}
+		</>
+	}
 }
 
 function BankGridPreview(props) {
-    const context = useContext(CompanionContext)
-    const [{ isOver, canDrop }, drop] = useDrop({
-        accept: 'preset',
-        drop: (dropData) => {
-            console.log('preset drop', dropData)
-            context.socket.emit('preset_drop', dropData.instanceId, dropData.preset, props.page, props.index)
-        },
-        collect: monitor => ({
-            isOver: !!monitor.isOver(),
-            canDrop: !!monitor.canDrop()
-        }),
-      })
+	const context = useContext(CompanionContext)
+	const [{ isOver, canDrop }, drop] = useDrop({
+		accept: 'preset',
+		drop: (dropData) => {
+			console.log('preset drop', dropData)
+			context.socket.emit('preset_drop', dropData.instanceId, dropData.preset, props.page, props.index)
+		},
+		collect: monitor => ({
+			isOver: !!monitor.isOver(),
+			canDrop: !!monitor.canDrop()
+		}),
+	})
 
-    return <BankPreview {...props} dropRef={drop} dropHover={isOver} canDrop={canDrop} />
-}
-
-export function BankPreview(props) {
-    return (
-        <div
-            ref={props.dropRef}
-            className={classnames({ bank: true, fixed: !!props.fixedSize, drophere: props.canDrop, drophover: props.dropHover })}
-            onMouseDown={() => props.onClick(props.index, true)}
-            onMouseUp={() => props.onClick(props.index, false)}
-            >
-            <div className="bank-border">
-                <img ref={props.dragRef} width={72} height={72} src={props.preview} alt={props.alt} />
-            </div>
-        </div>
-    )
+	return <BankPreview {...props} dropRef={drop} dropHover={isOver} canDrop={canDrop} />
 }

@@ -1,25 +1,26 @@
 @import "~@coreui/coreui/scss/coreui";
 
 .c-sidebar-nav-link svg {
-    margin-right: 1rem;
+	margin-right: 1rem;
 }
 
 
 @keyframes fadeIn {
-    from {
-        opacity: 0;
-    }
-    to {
-        opacity: 1;
-    }
+	from {
+		opacity: 0;
+	}
+
+	to {
+		opacity: 1;
+	}
 }
 
 .animated {
-    animation-duration: 1s;
+	animation-duration: 1s;
 }
-  
+
 .fadeIn {
-    animation-name: fadeIn;
+	animation-name: fadeIn;
 }
 
 .instance_help {
@@ -31,16 +32,19 @@
 .instance-status-ok {
 	background-color: #cfc;
 }
+
 .instance-status-warn {
-    background-color: #fea;
+	background-color: #fea;
 }
+
 .instance-status-error {
 	background-color: #fcc;
 }
 
 #instance_add_search_results {
-    margin-top: 10px;
+	margin-top: 10px;
 }
+
 #instance_add_search_results div {
 	margin-bottom: 5px;
 }
@@ -50,74 +54,74 @@
 #pagebank {
 	display: grid;
 	grid-auto-flow: row;
-    grid-auto-rows: 1fr;
-    
-    &.bank-armed {
-        background-color: rgba(255,0,0,0.5);
-    }
+	grid-auto-rows: 1fr;
 
-    .pagebank-row {
-        display: grid;
-        grid-auto-flow: column;
-        grid-auto-columns: 1fr;
+	&.bank-armed {
+		background-color: rgba(255, 0, 0, 0.5);
+	}
 
-        // Streamdeck markings
-        &:nth-child(1) >.bank:nth-child(1),
-        &:nth-child(2) >.bank:nth-child(1),
-        &:nth-child(3) >.bank:nth-child(1),
-        &:nth-child(1) >.bank:nth-child(5),
-        &:nth-child(2) >.bank:nth-child(5),
-        &:nth-child(3) >.bank:nth-child(5),
-        &:nth-child(3) >.bank:nth-child(2),
-        &:nth-child(3) >.bank:nth-child(3),
-        &:nth-child(3) >.bank:nth-child(4) {
-            background: #00000050;
-        }
+	.pagebank-row {
+		display: grid;
+		grid-auto-flow: column;
+		grid-auto-columns: 1fr;
 
-    }
+		// Streamdeck markings
+		&:nth-child(1)>.bank:nth-child(1),
+		&:nth-child(2)>.bank:nth-child(1),
+		&:nth-child(3)>.bank:nth-child(1),
+		&:nth-child(1)>.bank:nth-child(5),
+		&:nth-child(2)>.bank:nth-child(5),
+		&:nth-child(3)>.bank:nth-child(5),
+		&:nth-child(3)>.bank:nth-child(2),
+		&:nth-child(3)>.bank:nth-child(3),
+		&:nth-child(3)>.bank:nth-child(4) {
+			background: #00000050;
+		}
+
+	}
 }
 
 .bank {
-    padding: Min(5px, 10%);
-    height: fit-content;
-    cursor: pointer;
-    display: inline-block;
-    border: 1px solid transparent;
+	padding: Min(5px, 10%);
+	height: fit-content;
+	cursor: pointer;
+	display: inline-block;
+	border: 1px solid transparent;
 
-    &.fixed img {
-        width: 72px;
-        height: 72px;
-    }
+	&.fixed img {
+		width: 72px;
+		height: 72px;
+	}
 
-    &.drophere {
-        border: 1px dashed black;
-        background-color: #eee;
-    }
+	&.drophere {
+		border: 1px dashed black;
+		background-color: #eee;
+	}
 
-    &.drophover {
-        border: 1px solid black;
-        background-color: #daffab;
-    }
+	&.drophover {
+		border: 1px solid black;
+		background-color: #daffab;
+	}
 
-    img {
-        max-width: 72px;
-        max-height: 72px;
-        width: 100%;
-        object-fit: contain;
-        display: block;
-        
-        border-radius: Max(12%, 4px);
-        border: 1px solid white;
-    }
+	img {
+		max-width: 72px;
+		max-height: 72px;
+		width: 100%;
+		object-fit: contain;
+		display: block;
+
+		border-radius: Max(12%, 4px);
+		border: 1px solid white;
+	}
 }
 
 .slide-height {
-    position: absolute;
-    // transition: height 0.1s ease-in-out;
-    // height: fit-content;
-    overflow: hidden;
+	position: absolute;
+	// transition: height 0.1s ease-in-out;
+	// height: fit-content;
+	overflow: hidden;
 
-    &.slide-up {
-        height: 0;
-    }
+	&.slide-up {
+		height: 0;
+	}
 }
