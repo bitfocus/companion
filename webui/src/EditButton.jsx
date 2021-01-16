@@ -33,6 +33,45 @@ export class EditButton extends React.Component {
 		})
 	}
 
+	resetBank = () => {
+		if (window.confirm('Clear design and all actions?')) {
+			this.setState({
+				config: {},
+			})
+			this.context.socket.emit('bank_reset', this.props.page, this.props.bank);
+			// bank_preview_page(page);
+		}
+	}
+
+	setButtonType = (newStyle) => {
+		let show_warning = false;
+
+		const currentStyle = this.state.config.style
+
+		console.log("CURRENT STYLE", currentStyle, "NEW STYLE", newStyle);
+		if (currentStyle && currentStyle !== 'pageup' && currentStyle !== 'pagedown' && currentStyle !== 'pagenum') {
+			if (newStyle === 'pageup' || newStyle === 'pagedown' || newStyle === 'pagenum') {
+				show_warning = true;
+			}
+		}
+
+		if (!show_warning || window.confirm('Changing to this button style will erase eventual actions and feedbacks configured for this button - continue?')) {
+			const { page, bank } = this.props
+			socketEmit(this.context.socket, 'bank_style', [page, bank, newStyle]).then(([p, b, config]) => {
+				this.setState({
+					config: config
+				})
+
+				// bank_preview_page(page);
+				// socket.emit('bank_actions_get', page, bank);
+				// socket.emit('bank_get_feedbacks', page, bank);
+				// socket.emit('bank_release_actions_get', page, bank);
+			}).catch(e => {
+				console.error('Failed to set bank style', e)
+			})
+		}
+	}
+
 	render() {
 		const { config } = this.state
 		if (!config) {
@@ -54,9 +93,16 @@ export class EditButton extends React.Component {
 							<CDropdownItem onClick={() => this.setButtonType('pagedown')}>Page down</CDropdownItem>
 						</CDropdownMenu>
 					</CDropdown>
-
-					<CButton color='danger' hidden={!config.style} onClick={() => null}>Erase</CButton>
-					<CButton color='warning' hidden={config.style !== 'png'} onClick={() => null}>Test actions</CButton>
+					
+					<CButton color='danger' hidden={!config.style} onClick={this.resetBank}>Erase</CButton>
+					<CButton
+						color='warning'
+						hidden={config.style !== 'png'}
+						onMouseDown={() => this.context.socket.emit('hot_press', this.props.page, this.props.bank, true)}
+						onMouseUp={() => this.context.socket.emit('hot_press', this.props.page, this.props.bank, false)}
+						>
+						Test actions
+					</CButton>
 				</div>
 
 				<CRow>
@@ -105,6 +151,10 @@ function ButtonStyleConfig({ page, bank, config, valueChanged }) {
 		})
 	}
 
+	function clearPng() {
+		context.socket.emit('bank_clear_png', page, bank)
+	}
+
 	return (
 		<CCol sm={12}>
 		<CForm>
@@ -123,7 +173,7 @@ function ButtonStyleConfig({ page, bank, config, valueChanged }) {
 				<label>72x58 PNG</label>
 				<CButtonGroup size="sm">
 					<PNGInputField onSelect={(data) => setPng(data)} />
-					<CButton color='danger' disabled={!config.png}>
+					<CButton color='danger' disabled={!config.png64} onClick={clearPng}>
 						<FontAwesomeIcon icon={faTrash} />
 					</CButton>
 				</CButtonGroup>
