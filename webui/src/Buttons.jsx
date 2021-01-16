@@ -210,7 +210,7 @@ export class Buttons extends React.Component {
 			</CRow>
 
 			<CRow id="pagebank" className={classnames({ 'bank-armed': this.props.isHot })}>
-				<BankGrid pageNumber={pageNumber} bankClick={this.bankClick} />
+				<BankGrid pageNumber={pageNumber} bankClick={this.bankClick} selectedButton={this.props.selectedButton} />
 			</CRow>
 
 			<CRow style={{ paddingTop: '15px' }}>
@@ -281,7 +281,10 @@ export class BankGrid extends React.PureComponent {
 
 	render() {
 		const { imageCache } = this.state
-		const { pageNumber } = this.props
+		const { pageNumber, selectedButton } = this.props
+
+		const selectedPage = selectedButton ? selectedButton[0] : null
+		const selectedBank = selectedButton ? selectedButton[1] : null
 
 		return <>
 			{
@@ -298,6 +301,7 @@ export class BankGrid extends React.PureComponent {
 										preview={imageCache[index]?.image}
 										onClick={this.props.bankClick}
 										alt={`Bank ${index}`}
+										selected={selectedPage === pageNumber && selectedBank === index}
 									/>
 								)
 							})

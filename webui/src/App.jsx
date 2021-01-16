@@ -20,6 +20,7 @@ import { DndProvider } from 'react-dnd'
 import { HTML5Backend } from 'react-dnd-html5-backend'
 import { MySidebar } from './Layout/Sidebar'
 import { MyHeader } from './Layout/Header'
+import { EditButton } from './EditButton'
 
 export default class App extends React.Component {
 	constructor(props) {
@@ -42,6 +43,7 @@ export default class App extends React.Component {
 			configureInstanceToken: null,
 
 			hotPress: false,
+			selectedButton: null,
 
 			// help text to show
 			helpContent: null,
@@ -168,7 +170,10 @@ export default class App extends React.Component {
 		if (this.state.hotPress) {
 			this.socket.emit('hot_press', page, bank, isDown);
 		} else {
-			console.log('TODO', 'edit', page, bank)
+			this.setState({
+				activeTab2: 'edit',
+				selectedButton: [page, bank],
+			})
 		}
 	}
 
@@ -223,7 +228,7 @@ export default class App extends React.Component {
 																	</ErrorBoundary>
 																</CTabPane>
 																<CTabPane data-tab="buttons">
-																	<Buttons buttonGridClick={this.buttonGridClick} isHot={this.state.hotPress} />
+																	<Buttons buttonGridClick={this.buttonGridClick} isHot={this.state.hotPress} selectedButton={this.state.selectedButton} />
 																</CTabPane>
 																<CTabPane data-tab="surfaces">
 																	<Surfaces />
@@ -237,16 +242,19 @@ export default class App extends React.Component {
 													</CCol>
 
 													<CCol xs={12} xl={6}>
-														<CTabs activeTab={this.state.activeTab2} onActiveTabChange={(a) => this.setState({ activeTab2: a })}>
+														<CTabs activeTab={this.state.activeTab2} onActiveTabChange={(a) => a !== this.state.activeTab2 && this.setState({ activeTab2: a, selectedButton: null })}>
 															<CNav variant="tabs">
 																<CNavItem><CNavLink data-tab="log"><FontAwesomeIcon icon={faClipboardList} /> Log</CNavLink></CNavItem>
-																<CNavItem><CNavLink data-tab="edit"><FontAwesomeIcon icon={faCalculator} /> Edit Button</CNavLink></CNavItem>
+																<CNavItem hidden={!this.state.selectedButton}><CNavLink data-tab="edit"><FontAwesomeIcon icon={faCalculator} /> Edit Button { this.state.selectedButton ? `${this.state.selectedButton[0]}.${this.state.selectedButton[1]}` : '?' }</CNavLink></CNavItem>
 																<CNavItem><CNavLink data-tab="presets" onClick={(a) => this.setState({ activePresetToken: shortid() })}><FontAwesomeIcon icon={faGift} /> Presets</CNavLink></CNavItem>
 																<CNavItem><CNavLink data-tab="importexport"><FontAwesomeIcon icon={faFileImport} /> Import / Export</CNavLink></CNavItem>
 															</CNav>
 															<CTabContent fade={false}>
 																<CTabPane data-tab="log">
 																	<LogPanel />
+																</CTabPane>
+																<CTabPane data-tab="edit">
+																	{ this.state.selectedButton ? <EditButton key={`${this.state.selectedButton[0]}.${this.state.selectedButton[1]}`} page={this.state.selectedButton[0]} bank={this.state.selectedButton[1]} /> : '' }
 																</CTabPane>
 																<CTabPane data-tab="presets">
 																	<InstancePresets token={this.state.activePresetToken} />

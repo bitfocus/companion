@@ -88,6 +88,11 @@
 	display: inline-block;
 	border: 1px solid transparent;
 
+	&.selected img {
+		border: 3px solid #d50215;
+		// margin: -2px;
+	}
+
 	&.fixed img {
 		width: 72px;
 		height: 72px;

@@ -80,6 +80,16 @@ export class InstanceConfig extends React.Component {
 			}
 		})
 	}
+	setValid = (key, isValid) => {
+		console.log('set valid', key, isValid)
+
+		this.setState({
+			validFields: {
+				...this.state.validFields,
+				[key]: isValid,
+			}
+		})
+	}
 
 	renderVariablesTable() {
 		const label = this.state.label
@@ -140,6 +150,7 @@ export class InstanceConfig extends React.Component {
 								value={instanceConfig[field.id]}
 								valid={validFields[field.id]}
 								setValue={(val, valid) => this.setValue(field.id, val, valid)}
+								setValid={(valid) => this.setValid(field.id, valid)}
 							/>
 						</CCol>
 					)

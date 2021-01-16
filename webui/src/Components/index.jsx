@@ -42,11 +42,15 @@ export class TextInputField extends React.Component {
 	}
 	componentDidUpdate(prevProps) {
 		if (prevProps.value !== this.props.value) {
-			this.onChange(this.props.value)
+			this.onChange(this.props.value, true)
 		}
 	}
 
-	onChange = (newValue) => {
+	onChange = (newValue, validateOnly) => {
+		if (validateOnly && !this.props.setValid){
+			return
+		}
+
 		const { definition } = this.props
 
 		let isValid = true
@@ -62,7 +66,11 @@ export class TextInputField extends React.Component {
 			isValid = false
 		}
 
-		this.props.setValue(newValue, isValid)
+		if (validateOnly) {
+			this.props.setValid(isValid)
+		} else {
+			this.props.setValue(newValue, isValid)
+		}
 	}
 
 	render() {
@@ -73,7 +81,7 @@ export class TextInputField extends React.Component {
 			value={value}
 			style={{ color: !valid ? 'red' : undefined }}
 			tooltip={definition.tooltip}
-			onChange={(e) => this.onChange(e.currentTarget.value)}
+			onChange={(e) => this.onChange(e.currentTarget.value, false)}
 		/>
 	}
 }
