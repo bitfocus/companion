@@ -1,8 +1,10 @@
-import { CDropdown, CDropdownToggle, CDropdownItem, CDropdownMenu, CButton, CRow, CCol } from '@coreui/react'
+import { CDropdown, CDropdownToggle, CDropdownItem, CDropdownMenu, CButton, CRow, CCol, CButtonGroup, CInputFile, CFormGroup, CLabel, CForm } from '@coreui/react'
 import React, { useContext } from 'react'
 import { CompanionContext, socketEmit } from './util'
-import { DropdownInputField, TextInputField } from './Components'
+import { AlignmentInputField, CheckboxInputField, ColorInputField, DropdownInputField, PNGInputField, TextInputField } from './Components'
 import { FONT_SIZES } from './Constants'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faTrash } from '@fortawesome/free-solid-svg-icons'
 
 export class EditButton extends React.Component {
 
@@ -91,8 +93,22 @@ function ButtonStyleConfig({ page, bank, config, valueChanged }) {
 		valueChanged()
 	}
 
+	function setPng(data) {
+		socketEmit(context.socket, 'bank_set_png', [page, bank, data]).then(([res]) => {
+			if (res !== 'ok') {
+				alert('An error occured while uploading image');
+			} else {
+				// bank_preview_page(p);
+			}
+		}).catch(e => {
+			console.error('Failed to upload png', e)
+		})
+	}
+
 	return (
-		<>
+		<CCol sm={12}>
+		<CForm>
+			<CRow form>
 			<CCol className='fieldtype-textinput' sm={6}>
 				<label>Text</label>
 				<TextInputField definition={{ default: '', tooltip: 'Button text' }} setValue={(v) => setValue('text', v)} value={config?.text} valid={true} />
@@ -104,11 +120,43 @@ function ButtonStyleConfig({ page, bank, config, valueChanged }) {
 			</CCol>
 
 			<CCol sm={3}>
-				TODO - file picker
+				<label>72x58 PNG</label>
+				<CButtonGroup size="sm">
+					<PNGInputField onSelect={(data) => setPng(data)} />
+					<CButton color='danger' disabled={!config.png}>
+						<FontAwesomeIcon icon={faTrash} />
+					</CButton>
+				</CButtonGroup>
+			</CCol>
+
+			<CCol className='fieldtype-alignment' sm={2}>
+				<label>Text Alignment</label>
+				<AlignmentInputField definition={{ default: 'center:center' }} setValue={(v) => setValue('alignment', v)} value={config?.alignment} />
+			</CCol>
+			<CCol className='fieldtype-alignment' sm={2}>
+				<label>PNG Alignment</label>
+				<AlignmentInputField definition={{ default: 'center:center' }} setValue={(v) => setValue('pngalignment', v)} value={config?.pngalignment} />
+			</CCol>
+
+			<CCol className='fieldtype-colorpicker' sm={2}>
+				<label>Color</label>
+				<ColorInputField definition={{ default: 0xffffff }} setValue={(v) => setValue('color', v)} value={config?.color} />
+			</CCol>
+			<CCol className='fieldtype-colorpicker' sm={2}>
+				<label>Background</label>
+				<ColorInputField definition={{ default: 0x000000 }} setValue={(v) => setValue('bgcolor', v)} value={config?.bgcolor} />
 			</CCol>
 			
-			<p>TODO</p>
-
-		</>
+			<CCol className='fieldtype-checkbox' sm={2}>
+				<label>Latch/Toggle</label>
+				<CheckboxInputField definition={{ default: false }} setValue={(v) => setValue('latch', v)} value={config?.latch} />
+			</CCol>
+			<CCol className='fieldtype-checkbox' sm={2}>
+				<CLabel>Relative Delays</CLabel>
+				<CheckboxInputField definition={{ default: false }} setValue={(v) => setValue('relative_delay', v)} value={config?.relative_delay} />
+			</CCol>
+			</CRow>
+		</CForm>
+		</CCol>
 	)
 }

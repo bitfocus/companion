@@ -130,3 +130,35 @@
 		height: 0;
 	}
 }
+
+.alignmentinput {
+	display: grid;
+	width: 60px;
+	height: 60px;
+
+	background-image: url('/img/alignment.png');
+
+	grid-template-columns: auto auto auto;
+	grid-template-rows: auto auto auto;
+	column-gap: 2px;
+	row-gap: 2px;
+	padding: 1px;
+
+	line-height: 0;
+
+	> div {
+    	border: 1px solid #aaa;
+		padding: 1px;
+
+		&.selected {
+			background-image: url('/img/check.png') !important;
+    		background-size: contain !important;
+		}
+	}
+}
+
+.pnginputfield {
+	input[type="file"] {
+		display: none;
+	}
+}
