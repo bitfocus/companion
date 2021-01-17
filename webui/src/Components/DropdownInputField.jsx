@@ -1,24 +1,42 @@
-import React from 'react'
+import { useMemo, useEffect, useCallback } from 'react'
 import Select from 'react-select'
 
-export class DropdownInputField extends React.Component {
+export function DropdownInputField ({ definition, multiple, value, setValue }) {
+	const options = useMemo(() => {
+		return (definition.choices || []).map(choice => ({ value: choice.id, label: choice.label }))
+	}, [definition.choices])
 
-	componentDidMount() {
-		this.onChange(this.props.value ?? this.props.definition.default)
-	}
-	componentDidUpdate(prevProps) {
-		if (prevProps.value !== this.props.value) {
-			this.onChange(this.props.value)
+	const isMultiple = !!multiple
+
+	const currentValue = useMemo(() => {
+		const selectedValue = Array.isArray(value) ? value : [value]
+		let res = []
+		for (const val of selectedValue) {
+			// eslint-disable-next-line eqeqeq
+			const entry = options.find(o => o.value == val) // Intentionally loose for compatability
+			if (entry) {
+				res.push(entry)
+			} else {
+				res.push({ value: val, label: `?? (${val})` })
+			}
 		}
-	}
+		return res
+	}, [value, options])
 
-	onChange = (newValue) => {
-		const { definition } = this.props
-		const isMultiple = !!definition.multiple
+	// If the value is undefined, populate with the default. Also inform the parent about the validity
+	useEffect(() => {
+		if (value === undefined && definition.default !== undefined) {
+			setValue(definition.default, true)
+		} else {
+			setValue(value, true)
+		}
+	}, [definition.default, value, setValue])
+
+	const onChange = useCallback((e) => {
+		const isMultiple = !!multiple
+		const newValue = isMultiple ? (e?.map(v => v.value) ?? []) : e?.value
 
 		let isValid = true
-
-		// TODO multiple etc
 
 		if (isMultiple) {
 			for (const val of newValue) {
@@ -46,58 +64,16 @@ export class DropdownInputField extends React.Component {
 			}
 		}
 
-		this.props.setValue(newValue, isValid)
-	}
+		setValue(newValue, isValid)
+	}, [setValue, multiple, definition.minSelection, definition.maximumSelectionLength, definition.choices])
 
-	render() {
-		const { definition, value, valid } = this.props
-
-		const options = []
-		for (const choice of definition.choices) {
-			const entry = { value: choice.id, label: choice.label }
-			options.push(entry)
-		}
-
-		const isMultiple = !!definition.multiple
-		const selectedValue = Array.isArray(value) ? value : [value]
-
-		let currentValue = []
-		for (const val of selectedValue) {
-			// eslint-disable-next-line eqeqeq
-			const entry = options.find(o => o.value == val) // Intentionally loose for compatability
-			if (entry) {
-				currentValue.push(entry)
-			} else {
-				currentValue.push({ value: val, label: `?? (${val})` })
-			}
-		}
-
-		// if (option.tags === true) {
-		//     selectoptions.tags = true;
-		//     if (typeof option.regex !== 'undefined') {
-		//         var flags = option.regex.replace(/.*\/([gimy]*)$/, '$1');
-		//         var pattern = option.regex.replace(new RegExp('^/(.*?)/'+flags+'$'), '$1');
-		//         let regex = new RegExp(pattern, flags);
-		//         selectoptions.createTag = function (params) {
-		//             if (regex.test(params.term) === false) {
-		//                 return null;
-		//             }
-		//             return {
-		//                 id: params.term,
-		//                 text: params.term
-		//             }
-		//         };
-		//     }
-		// }
-
-		return <Select
+	return <Select
 			isClearable={false}
 			isSearchable={typeof definition.minChoicesForSearch === 'number' && definition.minChoicesForSearch <= options.length}
 			isMulti={isMultiple}
 			tooltip={definition.tooltip}
 			options={options}
 			value={isMultiple ? currentValue : currentValue[0]}
-			onChange={(e) => isMultiple ? this.onChange(e?.map(v => v.value) ?? []) : this.onChange(e?.value)}
+			onChange={onChange}
 		/>
-	}
 }

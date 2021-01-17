@@ -26,7 +26,6 @@ export function ConfigField(props) {
 			return <CheckboxInputField {...props} />
 		case 'dropdown':
 			return <DropdownInputField {...props} />
-		// TODO dropdown-native but it appears to be unused
 		default:
 			return <p>Unknown field "{definition.type}"</p>
 	}

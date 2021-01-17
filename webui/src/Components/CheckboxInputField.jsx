@@ -1,30 +1,25 @@
-import React from 'react'
+import { useEffect, useCallback } from 'react'
 import { CInputCheckbox } from '@coreui/react'
 
-export class CheckboxInputField extends React.Component {
-
-	componentDidMount() {
-		this.onChange(this.props.value ?? this.props.definition.default)
-	}
-	componentDidUpdate(prevProps) {
-		if (prevProps.value !== this.props.value) {
-			this.onChange(this.props.value)
+export function CheckboxInputField({ definition, value, setValue }) {
+	// If the value is undefined, populate with the default. Also inform the parent about the validity
+	useEffect(() => {
+		if (value === undefined && definition.default !== undefined) {
+			setValue(definition.default, true)
+		} else {
+			setValue(value, true)
 		}
-	}
+	}, [definition.default, value, setValue])
 
-	onChange = (newValue) => {
-		this.props.setValue(!!newValue, true)
-	}
+	const onChange = useCallback((e) => {
+		setValue(!!e.currentTarget.checked, true)
+	}, [setValue])
 
-	render() {
-		const { definition, value } = this.props
-
-		return <CInputCheckbox
-			type='checkbox'
-			checked={!!value}
-			value={true}
-			tooltip={definition.tooltip}
-			onChange={(e) => this.onChange(e.currentTarget.checked)}
-		/>
-	}
+	return <CInputCheckbox
+		type='checkbox'
+		checked={!!value}
+		value={true}
+		title={definition.tooltip}
+		onChange={onChange}
+	/>
 }

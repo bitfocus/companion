@@ -1,4 +1,4 @@
-import React from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { SketchPicker } from 'react-color';
 
 function splitColors(number) {
@@ -9,98 +9,84 @@ function splitColors(number) {
 	}
 }
 
-export class ColorInputField extends React.Component {
+export function ColorInputField ({ definition, value, setValue }) {
+	const [currentColor, setCurrentColor] = useState(null)
+	const [displayPicker, setDisplayPicker] = useState(false)
 
-	state = {
-		displayColorPicker: false,
-		currentColor: null,
-	}
+	// If the value is undefined, populate with the default. Also inform the parent about the validity
+	useEffect(() => {
+		if (value === undefined && definition.default !== undefined) {
+			setValue(definition.default, true)
+		} else {
+			setValue(value, true)
+		}
+	}, [definition.default, value, setValue])
 
-	componentDidMount() {
-		this.onChange(this.props.value ?? this.props.definition.default, false)
-	}
-	// componentDidUpdate(prevProps) {
-	// 	if (prevProps.value !== this.props.value) {
-	// 		this.onChange(this.props.value)
-	// 	}
-	// }
+	const handleClick = useCallback(() => setDisplayPicker(d => !d), [])
 
-	handleClick = () => {
-		this.setState({ displayColorPicker: !this.state.displayColorPicker })
-	};
-
-	handleClose = () => {
-		this.setState({ displayColorPicker: false })
-	};
-
-	onChange = (newValue, updateState) => {
+	const onChange = useCallback((c) => {
+		const newValue = parseInt(c.hex.substr(1), 16)
 		console.log('change', newValue)
-		this.props.setValue(newValue, true)
-		if (updateState) {
-			this.setState({ currentColor: newValue })
-		}
-	}
+		setValue(newValue, true)
+		setCurrentColor(newValue)
+	}, [setValue])
 
-	onChangeComplete = (newValue) => {
+	const onChangeComplete = useCallback((c) => {
+		const newValue = parseInt(c.hex.substr(1), 16)
 		console.log('complete', newValue)
-		this.props.setValue(newValue, true)
-		this.setState({ currentColor: null })
+		setValue(newValue, true)
+		setCurrentColor(null)
+	}, [setValue])
+
+	const color = splitColors(currentColor ?? value ?? 0)
+
+	const styles = {
+		color: {
+			width: '36px',
+			height: '14px',
+			borderRadius: '2px',
+			background: `rgb(${color.r}, ${color.g}, ${color.b})`,
+		},
+		swatch: {
+			padding: '5px',
+			background: '#fff',
+			borderRadius: '1px',
+			boxShadow: '0 0 0 1px rgba(0,0,0,.1)',
+			display: 'inline-block',
+			cursor: 'pointer',
+		},
+		popover: {
+			position: 'absolute',
+			zIndex: '2',
+		},
+		cover: {
+			position: 'fixed',
+			top: '0px',
+			right: '0px',
+			bottom: '0px',
+			left: '0px',
+		},
 	}
 
-	render() {
-		const { definition, value } = this.props
-
-		const color = splitColors(this.state.newValue ?? value ?? definition.default)
-
-		const styles = {
-			color: {
-				width: '36px',
-				height: '14px',
-				borderRadius: '2px',
-				background: `rgb(${color.r}, ${color.g}, ${color.b})`,
-			},
-			swatch: {
-				padding: '5px',
-				background: '#fff',
-				borderRadius: '1px',
-				boxShadow: '0 0 0 1px rgba(0,0,0,.1)',
-				display: 'inline-block',
-				cursor: 'pointer',
-			},
-			popover: {
-				position: 'absolute',
-				zIndex: '2',
-			},
-			cover: {
-				position: 'fixed',
-				top: '0px',
-				right: '0px',
-				bottom: '0px',
-				left: '0px',
-			},
-		}
-
-		return (
-			<div>
-				<div style={styles.swatch} onClick={this.handleClick}>
-					<div style={styles.color} />
-				</div>
-				{ this.state.displayColorPicker ? <div style={styles.popover}>
-					<div style={styles.cover} onClick={this.handleClose} />
-					<SketchPicker
-						color={color}
-						onChange={(c) => this.onChange(parseInt(c.hex.substr(1), 16), true)}
-						onChangeComplete={(c) => this.onChangeComplete(parseInt(c.hex.substr(1), 16))}
-						disableAlpha={true}
-						presetColors={PICKER_COLORS}
-					/>
-				</div> : null}
-
+	return (
+		<div>
+			<div style={styles.swatch} onClick={handleClick}>
+				<div style={styles.color} />
 			</div>
-		)
-	}
-}
+			{ displayPicker ? <div style={styles.popover}>
+				<div style={styles.cover} onClick={handleClick} />
+				<SketchPicker
+					color={color}
+					onChange={onChange}
+					onChangeComplete={onChangeComplete}
+					disableAlpha={true}
+					presetColors={PICKER_COLORS}
+				/>
+			</div> : null}
 
+		</div>
+	)
+}
 
 const PICKER_COLORS = [
 	"#000000",

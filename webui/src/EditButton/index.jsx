@@ -10,8 +10,7 @@ export class EditButton extends React.Component {
 	static contextType = CompanionContext
 
 	state = {
-		config: {},
-		actions: [],
+		config: null,
 	}
 
 	actionsRef = React.createRef()
@@ -27,13 +26,13 @@ export class EditButton extends React.Component {
 	}
 
 	reloadBankData = () => {
-		socketEmit(this.context.socket, 'bank_actions_get', [this.props.page, this.props.bank]).then(([page, bank, actions]) => {
-			this.setState({
-				actions: actions || [],
-			})
-		}).catch(e => {
-			console.error('Failed to load bank actions', e)
-		})
+		// socketEmit(this.context.socket, 'bank_actions_get', [this.props.page, this.props.bank]).then(([page, bank, actions]) => {
+		// 	this.setState({
+		// 		actions: actions || [],
+		// 	})
+		// }).catch(e => {
+		// 	console.error('Failed to load bank actions', e)
+		// })
 	}
 
 	reloadConfig = () => {
@@ -124,13 +123,26 @@ export class EditButton extends React.Component {
 
 				<div>
 					<h4>Key down/on actions</h4>
-					<ActionsPanel ref={this.actionsRef} page={this.props.page} bank={this.props.bank} />
+					<ActionsPanel
+						ref={this.actionsRef}
+						page={this.props.page}
+						bank={this.props.bank}
+						getCommand="bank_actions_get"
+						setCommand="bank_update_action_option"
+						deleteCommand="bank_action_delete"
+					/>
 
 					<select id='addBankAction' className='form-control'></select>
 
 					<h4>Key up/off actions</h4>
-					<div id='bankReleaseActions'>
-					</div>
+					<ActionsPanel
+						ref={this.actionsRef}
+						page={this.props.page}
+						bank={this.props.bank}
+						getCommand="bank_release_actions_get"
+						setCommand="bank_release_action_update_option"
+						deleteCommand="bank_release_action_delete"
+					/>
 
 					<select id='addBankReleaseAction' className='form-control'></select>
 
