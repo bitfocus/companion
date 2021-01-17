@@ -1,7 +1,7 @@
 import { CDropdown, CDropdownToggle, CDropdownItem, CDropdownMenu, CButton, CRow } from '@coreui/react'
 import React from 'react'
 import { CompanionContext, socketEmit } from '../util'
-import { ActionsPanel } from './ActionsPanel'
+import { ActionsPanel, AddActionDropdown } from './ActionsPanel'
 
 import { ButtonStyleConfig } from './ButtonStyleConfig'
 
@@ -18,22 +18,22 @@ export class EditButton extends React.Component {
 	componentDidMount() {
 		this.reloadConfig()
 
-		this.reloadBankData()
+		// this.reloadBankData()
 		// socket.emit('bank_actions_get', page, $(this).data('bank'));
 		// socket.emit('bank_get_feedbacks', page, $(this).data('bank'));
 		// socket.emit('bank_release_actions_get', page, $(this).data('bank'));
 		// socket.once('get_bank:results', populate_bank_form);
 	}
 
-	reloadBankData = () => {
-		// socketEmit(this.context.socket, 'bank_actions_get', [this.props.page, this.props.bank]).then(([page, bank, actions]) => {
-		// 	this.setState({
-		// 		actions: actions || [],
-		// 	})
-		// }).catch(e => {
-		// 	console.error('Failed to load bank actions', e)
-		// })
-	}
+	// reloadBankData = () => {
+	// 	socketEmit(this.context.socket, 'bank_actions_get', [this.props.page, this.props.bank]).then(([page, bank, actions]) => {
+	// 		this.setState({
+	// 			actions: actions || [],
+	// 		})
+	// 	}).catch(e => {
+	// 		console.error('Failed to load bank actions', e)
+	// 	})
+	// }
 
 	reloadConfig = () => {
 		socketEmit(this.context.socket, 'get_bank', [this.props.page, this.props.bank]).then(([page, bank, config, fields]) => {
@@ -127,12 +127,12 @@ export class EditButton extends React.Component {
 						ref={this.actionsRef}
 						page={this.props.page}
 						bank={this.props.bank}
+						addCommand="bank_action_add"
 						getCommand="bank_actions_get"
-						setCommand="bank_update_action_option"
+						updateOption="bank_update_action_option"
+						setDelay="bank_update_action_delay"
 						deleteCommand="bank_action_delete"
 					/>
-
-					<select id='addBankAction' className='form-control'></select>
 
 					<h4>Key up/off actions</h4>
 					<ActionsPanel
@@ -140,11 +140,10 @@ export class EditButton extends React.Component {
 						page={this.props.page}
 						bank={this.props.bank}
 						getCommand="bank_release_actions_get"
-						setCommand="bank_release_action_update_option"
+						updateOption="bank_release_action_update_option"
+						setDelay="bank_update_release_action_delay"
 						deleteCommand="bank_release_action_delete"
 					/>
-
-					<select id='addBankReleaseAction' className='form-control'></select>
 
 					<h4>Instance feedback</h4>
 					<div id='bankFeedbacks'>

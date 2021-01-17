@@ -68,12 +68,12 @@ export function DropdownInputField ({ definition, multiple, value, setValue }) {
 	}, [setValue, multiple, definition.minSelection, definition.maximumSelectionLength, definition.choices])
 
 	return <Select
-			isClearable={false}
-			isSearchable={typeof definition.minChoicesForSearch === 'number' && definition.minChoicesForSearch <= options.length}
-			isMulti={isMultiple}
-			tooltip={definition.tooltip}
-			options={options}
-			value={isMultiple ? currentValue : currentValue[0]}
-			onChange={onChange}
-		/>
+		isClearable={false}
+		isSearchable={typeof definition.minChoicesForSearch === 'number' && definition.minChoicesForSearch <= options.length}
+		isMulti={isMultiple}
+		tooltip={definition.tooltip}
+		options={options}
+		value={isMultiple ? currentValue : currentValue[0]}
+		onChange={onChange}
+	/>
 }
