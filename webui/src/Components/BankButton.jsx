@@ -1,8 +1,6 @@
 import React from 'react'
 import classnames from 'classnames'
-import { PREVIEW_BMP_HEADER } from '../Constants';
-
-export const BlackImage = dataToButtonImage(Buffer.concat([PREVIEW_BMP_HEADER, Buffer.alloc(72 * 72 * 3)]))
+import { PREVIEW_BMP_HEADER } from '../Constants'
 
 export function dataToButtonImage(data) {
 	const sourceData = Buffer.from(data);
@@ -18,11 +16,21 @@ export function dataToButtonImage(data) {
 	return 'data:image/bmp;base64,' + Buffer.concat([PREVIEW_BMP_HEADER, convertedData]).toString('base64')
 }
 
-export function BankPreview(props) {
+export const BlackImage = dataToButtonImage(Buffer.concat([PREVIEW_BMP_HEADER, Buffer.alloc(72 * 72 * 3)]))
+
+export const BankPreview = React.memo(function(props) {
+	const classes = {
+		 bank: true,
+		 fixed: !!props.fixedSize,
+		 drophere: props.canDrop,
+		 drophover: props.dropHover,
+		 selected: props.selected,
+	}
+
 	return (
 		<div
 			ref={props.dropRef}
-			className={classnames({ bank: true, fixed: !!props.fixedSize, drophere: props.canDrop, drophover: props.dropHover, selected: props.selected })}
+			className={classnames(classes)}
 			onMouseDown={() => props.onClick(props.index, true)}
 			onMouseUp={() => props.onClick(props.index, false)}
 		>
@@ -31,4 +39,4 @@ export function BankPreview(props) {
 			</div>
 		</div>
 	)
-}
+})

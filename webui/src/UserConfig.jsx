@@ -1,5 +1,5 @@
 import React from 'react'
-import { CAlert, CButton, CForm, CFormGroup, CInput, CInputCheckbox, CLabel, CModal, CModalBody, CModalFooter, CModalHeader, CSelect } from '@coreui/react'
+import { CButton, CInput, CInputCheckbox } from '@coreui/react'
 import { CompanionContext, socketEmit } from './util'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faFileImport } from '@fortawesome/free-solid-svg-icons'
@@ -12,13 +12,6 @@ export class UserConfig extends React.Component {
 
 		this.state = {
 			config: {},
-			// devices: [],
-
-			// configureDeviceId: null,
-			// configureDeviceConfig: null,
-
-			// scanning: false,
-			// errorMsg: null,
 		}
 	}
 

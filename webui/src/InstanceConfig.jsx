@@ -20,8 +20,6 @@ export class InstanceConfig extends React.Component {
 		validFields: {},
 	}
 
-	// TODO - any changes made by another client will not be shown, and will be lost if this presses save
-
 	componentDidMount() {
 		socketEmit(this.context.socket, 'instance_edit', [this.props.instanceId]).then(([_instanceId, configFields, instanceConfig]) => {
 			const validFields = {}
