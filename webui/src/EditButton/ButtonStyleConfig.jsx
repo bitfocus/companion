@@ -61,7 +61,7 @@ export function ButtonStyleConfig({ page, bank, config, valueChanged }) {
 					<CCol sm={3}>
 						<label>72x58 PNG</label>
 						<CButtonGroup size="sm">
-							<PNGInputField onSelect={(data) => setPng(data)} />
+							<PNGInputField onSelect={(data) => setPng(data)} definition={{ min: { width: 72, height: 58 }, max: { width: 72, height: 58 } }} />
 							<CButton color='danger' disabled={!config.png64} onClick={clearPng}>
 								<FontAwesomeIcon icon={faTrash} />
 							</CButton>

@@ -162,7 +162,7 @@ export class Buttons extends React.Component {
 
 	resetPage = () => {
 		const page = this.state.pageNumber
-		if (window.confirm(`Are you sure you want to clear all buttons on page ${page}?\nThere\'s no going back from this.`)) {
+		if (window.confirm(`Are you sure you want to clear all buttons on page ${page}?\nThere's no going back from this.`)) {
 			this.context.socket.emit('loadsave_reset_page_all', page);
 		}
 	}
