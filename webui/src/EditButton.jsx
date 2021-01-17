@@ -1,7 +1,7 @@
 import { CDropdown, CDropdownToggle, CDropdownItem, CDropdownMenu, CButton, CRow, CCol, CButtonGroup, CInputFile, CFormGroup, CLabel, CForm } from '@coreui/react'
 import React, { useContext } from 'react'
 import { CompanionContext, socketEmit } from './util'
-import { AlignmentInputField, CheckboxInputField, ColorInputField, DropdownInputField, PNGInputField, TextInputField } from './Components'
+import { AlignmentInputField, CheckboxInputField, ColorInputField, DropdownInputField, PNGInputField, TextInputField, TextWithTextInputField } from './Components'
 import { FONT_SIZES } from './Constants'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faTrash } from '@fortawesome/free-solid-svg-icons'
@@ -161,7 +161,7 @@ function ButtonStyleConfig({ page, bank, config, valueChanged }) {
 			<CRow form>
 			<CCol className='fieldtype-textinput' sm={6}>
 				<label>Text</label>
-				<TextInputField definition={{ default: '', tooltip: 'Button text' }} setValue={(v) => setValue('text', v)} value={config?.text} valid={true} />
+				<TextWithTextInputField definition={{ default: '', tooltip: 'Button text' }} setValue={(v) => setValue('text', v)} value={config?.text} />
 			</CCol>
 
 			<CCol className='fieldtype-dropdown' sm={3}>

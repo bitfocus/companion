@@ -162,3 +162,27 @@
 		display: none;
 	}
 }
+
+
+.inputwithvariables {
+	ul[role="listbox"] {
+		background: #efefef;
+
+		overflow-y: scroll;
+		max-height: 50vh;
+	}
+	li[role="option"] {
+		padding: 5px;
+		overflow: hidden;
+
+		&[aria-selected="true"] {
+			background: #ddd;
+		}
+
+		span {
+			display: block;
+			word-wrap: break-word;
+			text-overflow: ellipsis;
+		}
+	}
+}

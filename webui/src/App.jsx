@@ -180,8 +180,16 @@ export default class App extends React.Component {
 	render() {
 		const showInstanceConfig = this.state.configureInstanceId && this.state.instances[this.state.configureInstanceId]
 
+		const contextValue = {
+			socket: this.socket,
+			instances: this.state.instances,
+			modules: this.state.modules,
+			variableDefinitions: this.state.variableDefinitions,
+			variableValues: this.state.variableValues,
+		}
+
 		return (
-			<CompanionContext.Provider value={{ socket: this.socket, instances: this.state.instances, modules: this.state.modules }} >
+			<CompanionContext.Provider value={contextValue} >
 				<Suspense fallback={<Spinner />}>
 					<DndProvider backend={HTML5Backend}>
 						<div className="c-app">
