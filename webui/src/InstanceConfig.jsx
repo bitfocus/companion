@@ -67,16 +67,23 @@ export class InstanceConfig extends React.Component {
 	setValue = (key, value, isValid) => {
 		console.log('set value', key, value)
 
-		this.setState({
-			instanceConfig: {
+		const newState = {}
+		if (value !== this.state.instanceConfig[key]) {
+			newState.instanceConfig = {
 				...this.state.instanceConfig,
 				[key]: value,
-			},
-			validFields: {
+			}
+		}
+		if (isValid !== this.state.validFields[key]) {
+			newState.validFields = {
 				...this.state.validFields,
 				[key]: isValid,
 			}
-		})
+		}
+
+		if (Object.key(newState).length > 0) {
+			this.setState(newState)
+		}
 	}
 	setValid = (key, isValid) => {
 		console.log('set valid', key, isValid)

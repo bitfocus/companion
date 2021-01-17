@@ -1,11 +1,11 @@
-import React from 'react'
+import { useEffect, useMemo, useState, useCallback } from 'react'
 import { CInput } from '@coreui/react'
 
-export class TextInputField extends React.Component {
+export function TextInputField({ definition, value, setValue }) {
+	const [tmpValue, setTmpValue] = useState(null)
 
-	compileRegex() {
-		const { definition } = this.props
-
+	// Compile the regex (and cache)
+	const regex = useMemo(() => {
 		if (definition.regex) {
 			// Compile the regex string
 			const match = definition.regex.match(/^\/(.*)\/(.*)$/)
@@ -13,55 +13,44 @@ export class TextInputField extends React.Component {
 				return new RegExp(match[1], match[2])
 			}
 		}
-
 		return null
-	}
+	}, [definition.regex])
 
-	componentDidMount() {
-		this.onChange(this.props.value ?? this.props.definition.default)
-	}
-	componentDidUpdate(prevProps) {
-		if (prevProps.value !== this.props.value) {
-			this.onChange(this.props.value, true)
-		}
-	}
-
-	onChange = (newValue, validateOnly) => {
-		if (validateOnly && !this.props.setValid) {
-			return
-		}
-
-		const { definition } = this.props
-
-		let isValid = true
-
+	// Check if the value is valid
+	const isValueValid = useCallback((val) => {
 		// Must match the regex
-		const regex = this.compileRegex()
-		if (regex && (newValue === undefined || !newValue.match(regex))) {
-			isValid = false
+		if (regex && (typeof val !== 'string' || !val.match(regex))) {
+			return false
 		}
 
 		// if required, must not be empty
-		if (definition.required && newValue === '') {
-			isValid = false
+		if (definition.required && val === '') {
+			return false
 		}
 
-		if (validateOnly) {
-			this.props.setValid(isValid)
+		return true
+	}, [regex, definition.required])
+
+	// If the value is undefined, populate with the default. Also inform the parent about the validity
+	useEffect(() => {
+		if (value === undefined && definition.default !== undefined) {
+			setValue(definition.default, isValueValid(definition.default))
 		} else {
-			this.props.setValue(newValue, isValid)
+			setValue(value, isValueValid(value))
 		}
-	}
+	}, [isValueValid, definition.default, value, setValue])
 
-	render() {
-		const { definition, value, valid } = this.props
-
-		return <CInput
-			type='text'
-			value={value}
-			style={{ color: !valid ? 'red' : undefined }}
-			tooltip={definition.tooltip}
-			onChange={(e) => this.onChange(e.currentTarget.value, false)}
-		/>
-	}
+	// Render the input
+	return <CInput
+		type='text'
+		value={tmpValue ?? value ?? ''}
+		style={{ color: !isValueValid(tmpValue ?? value) ? 'red' : undefined }}
+		title={definition.tooltip}
+		onChange={(e) => {
+			setTmpValue(e.currentTarget.value)
+			setValue(e.currentTarget.value, isValueValid(e.currentTarget.value))
+		}}
+		onFocus={() => setTmpValue(value ?? '')}
+		onBlur={() => setTmpValue(null)}
+	/>
 }

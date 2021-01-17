@@ -50,6 +50,8 @@ export default class App extends React.Component {
 
 			variableDefinitions: {},
 			variableValues: {},
+
+			actions: {},
 		}
 	}
 
@@ -95,6 +97,9 @@ export default class App extends React.Component {
 		this.socket.on('variable_instance_definitions_set', this.updateVariableDefinitions)
 		this.socket.on('variable_set', this.updateVariableValue)
 
+		this.socket.on('actions', this.updateActions)
+		this.socket.emit('get_actions')
+
 		document.addEventListener('keydown', this.handleKeyDown);
 		document.addEventListener('keyup', this.handleKeyUp);
 	}
@@ -103,6 +108,7 @@ export default class App extends React.Component {
 		this.socket.off('instances_get:result', this.updateInstancesInfo)
 		this.socket.off('variable_instance_definitions_set', this.updateVariableDefinitions)
 		this.socket.off('variable_set', this.updateVariableValue)
+		this.socket.off('actions', this.updateActions)
 
 		document.removeEventListener('keydown', this.handleKeyDown);
 		document.removeEventListener('keyup', this.handleKeyUp);
@@ -117,6 +123,12 @@ export default class App extends React.Component {
 		if (e.key === 'Shift') {
 			this.setState({ hotPress: false })
 		}
+	}
+
+	updateActions = (actions) => {
+		this.setState({
+			actions: actions,
+		})
 	}
 
 	updateVariableDefinitions = (label, variables) => {
@@ -186,6 +198,7 @@ export default class App extends React.Component {
 			modules: this.state.modules,
 			variableDefinitions: this.state.variableDefinitions,
 			variableValues: this.state.variableValues,
+			actions: this.state.actions,
 		}
 
 		return (

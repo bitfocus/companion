@@ -1,6 +1,7 @@
 import { CDropdown, CDropdownToggle, CDropdownItem, CDropdownMenu, CButton, CRow } from '@coreui/react'
 import React from 'react'
 import { CompanionContext, socketEmit } from '../util'
+import { ActionsPanel } from './ActionsPanel'
 
 import { ButtonStyleConfig } from './ButtonStyleConfig'
 
@@ -10,15 +11,29 @@ export class EditButton extends React.Component {
 
 	state = {
 		config: {},
+		actions: [],
 	}
+
+	actionsRef = React.createRef()
 
 	componentDidMount() {
 		this.reloadConfig()
 
+		this.reloadBankData()
 		// socket.emit('bank_actions_get', page, $(this).data('bank'));
 		// socket.emit('bank_get_feedbacks', page, $(this).data('bank'));
 		// socket.emit('bank_release_actions_get', page, $(this).data('bank'));
 		// socket.once('get_bank:results', populate_bank_form);
+	}
+
+	reloadBankData = () => {
+		socketEmit(this.context.socket, 'bank_actions_get', [this.props.page, this.props.bank]).then(([page, bank, actions]) => {
+			this.setState({
+				actions: actions || [],
+			})
+		}).catch(e => {
+			console.error('Failed to load bank actions', e)
+		})
 	}
 
 	reloadConfig = () => {
@@ -106,6 +121,24 @@ export class EditButton extends React.Component {
 				<CRow>
 					<ButtonStyleConfig config={config} page={this.props.page} bank={this.props.bank} valueChanged={this.reloadConfig} />
 				</CRow>
+
+				<div>
+					<h4>Key down/on actions</h4>
+					<ActionsPanel ref={this.actionsRef} page={this.props.page} bank={this.props.bank} />
+
+					<select id='addBankAction' className='form-control'></select>
+
+					<h4>Key up/off actions</h4>
+					<div id='bankReleaseActions'>
+					</div>
+
+					<select id='addBankReleaseAction' className='form-control'></select>
+
+					<h4>Instance feedback</h4>
+					<div id='bankFeedbacks'>
+					</div>
+					<select id='addBankFeedback' className='form-control'></select>
+				</div>
 
 				<p>
 					<b>Hint:</b> Control buttons with OSC or HTTP: /press/bank/{this.props.page}/{this.props.bank} to press this button remotely. OSC port 12321!
