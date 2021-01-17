@@ -228,8 +228,6 @@ export default class App extends React.Component {
 																					key={this.state.configureInstanceToken}
 																					instanceId={this.state.configureInstanceId}
 																					showHelp={this.showHelp}
-																					variableDefinitions={this.state.variableDefinitions}
-																					variableValues={this.state.variableValues}
 																				/>
 																				: 'No instance specified'
 																		}

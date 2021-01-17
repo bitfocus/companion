@@ -93,8 +93,8 @@ export class InstanceConfig extends React.Component {
 
 	renderVariablesTable() {
 		const label = this.state.label
-		const variableDefinitions = this.props.variableDefinitions[label] || []
-		const variableValues = this.props.variableValues || {}
+		const variableDefinitions = this.context.variableDefinitions[label] || []
+		const variableValues = this.context.variableValues || {}
 
 		if (variableDefinitions.length > 0) {
 			return (
