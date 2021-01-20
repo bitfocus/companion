@@ -75,6 +75,7 @@
 		"files": [
 			"**/*",
 			"assets/icon.png",
+			"assets/bitfocus-logo.png",
 			"assets/trayTemplate.png",
 			"assets/trayTemplate@2x.png",
 			"!font/*",
