@@ -703,3 +703,6 @@ url=https://github.com/bitfocus/companion-module-newbluefx-titler.git
 [submodule "lib/module/vicreo-tallylistener"]
 	path = lib/module/vicreo-tallylistener
 	url = https://github.com/bitfocus/companion-module-vicreo-tallylistener.git
+[submodule "lib/module/roland-v1200hd"]
+	path = lib/module/roland-v1200hd
+	url = https://github.com/bitfocus/companion-module-roland-v1200hd.git
