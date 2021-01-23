@@ -19,7 +19,7 @@ export class LogPanel extends React.Component {
 
 		try {
 			const rawConfig = window.localStorage.getItem("debug_config");
-			config = JSON.parse(rawConfig)
+			config = JSON.parse(rawConfig) ?? {}
 		} catch (e) {
 			// use defaults
 			window.localStorage.setItem("debug_config", JSON.stringify(config));

@@ -1,12 +1,13 @@
-import { CAlert, CButton, CForm, CFormGroup, CInput, CInputGroup, CInputGroupText, CLabel } from "@coreui/react"
+import { CButton, CForm, CInputGroup } from "@coreui/react"
 import { faSort, faTrash } from "@fortawesome/free-solid-svg-icons"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
 import React, { forwardRef, useCallback, useContext, useEffect, useImperativeHandle, useMemo, useState } from "react"
 import { ErrorBoundary } from "react-error-boundary"
-import { CheckboxInputField, ColorInputField, DropdownInputField, NumberInputField, TextInputField } from "../Components"
+import { NumberInputField } from "../Components"
 import { CompanionContext, socketEmit } from "../util"
 import update from 'immutability-helper';
 import Select from "react-select"
+import { ActionTableRowOption, ErrorFallback } from './Table'
 
 export const ActionsPanel = forwardRef(function ({ page, bank, addCommand, getCommand, updateOption, setDelay, deleteCommand }, ref) {
 	const context = useContext(CompanionContext)
@@ -41,7 +42,7 @@ export const ActionsPanel = forwardRef(function ({ page, bank, addCommand, getCo
 			const oldValue = (oldActions[actionIndex].options || {})[key]
 			if (oldValue !== val) {
 				context.socket.emit(updateOption, page, bank, actionId, key, val);
-				
+
 				return update(oldActions, {
 					[actionIndex]: {
 						options: {
@@ -63,7 +64,7 @@ export const ActionsPanel = forwardRef(function ({ page, bank, addCommand, getCo
 			const oldValue = oldActions[actionIndex].options?.delay
 			if (oldValue !== delay) {
 				context.socket.emit(setDelay, page, bank, actionId, delay);
-				
+
 				return update(oldActions, {
 					[actionIndex]: {
 						delay: { $set: delay }
@@ -111,7 +112,7 @@ export const ActionsPanel = forwardRef(function ({ page, bank, addCommand, getCo
 
 			<AddActionDropdown
 				onSelect={addAction}
-				/>
+			/>
 		</>
 	)
 })
@@ -159,7 +160,7 @@ function ActionTableRow({ action, setValue, doDelete, doDelay }) {
 						definition={{ default: 0 }}
 						value={action.delay}
 						setValue={innerDelay}
-						/>
+					/>
 					{/* <CInputGroupAppend>
 						<CInputGroupText>ms</CInputGroupText>
 					</CInputGroupAppend> */}
@@ -174,7 +175,7 @@ function ActionTableRow({ action, setValue, doDelete, doDelay }) {
 								actionId={action.id}
 								value={(action.options || {})[opt.id]}
 								setValue={setValue}
-								/>
+							/>
 						</ErrorBoundary>)
 					}
 				</CForm>
@@ -183,70 +184,15 @@ function ActionTableRow({ action, setValue, doDelete, doDelay }) {
 	)
 }
 
-function ErrorFallback ({error, resetErrorBoundary}) {
-	return (
-		<CAlert color="danger">
-			<p>Something went wrong:</p>
-			<pre>{error.message}</pre>
-			<CButton color='primary' size="sm" onClick={resetErrorBoundary}>Try again</CButton>
-		</CAlert>
-	)
-}
 
-function ActionTableRowOption({ actionId, option, value, setValue }) {
-	const setValue2 = useCallback((val) => setValue(actionId, option.id, val), [actionId, option.id, setValue])
-
-	if (!option) {
-		return <p>Unknown - TODO</p>
-	}
-
-	let control = ''
-	switch (option.type) {
-		case 'textinput': {
-			control = <TextInputField value={value} definition={option} setValue={setValue2} />
-			break
-		}
-		case 'dropdown': {
-			control = <DropdownInputField value={value} definition={option} setValue={setValue2} />
-			break
-		}
-		case 'multiselect': {
-			control = <DropdownInputField value={value} definition={option} multiple={true} setValue={setValue2} />
-			break
-		}
-		case 'checkbox': {
-			control = <CheckboxInputField value={value} definition={option} setValue={setValue2} />
-			break
-		}
-		case 'colorpicker': {
-			control = <ColorInputField value={value} definition={option} setValue={setValue2} />
-			break
-		}
-		case 'number': {
-			control = <NumberInputField value={value} definition={option} setValue={setValue2} />
-			break
-		}
-		default:
-			control = <CInputGroupText>Unknown type "{option.type}"</CInputGroupText>
-			break
-	}
-
-	return (
-		<CFormGroup>
-			<CLabel>{option.label}</CLabel>
-			{ control}
-		</CFormGroup>
-	)
-}
-
-export function AddActionDropdown ({ onSelect }) {
+function AddActionDropdown({ onSelect }) {
 	const context = useContext(CompanionContext)
 
 	const options = useMemo(() => {
 		return Object.entries(context.actions || {}).map(([id, act]) => {
 			const instanceId = id.split(/:/)[0]
 			const instanceLabel = context.instances[instanceId]?.label ?? instanceId
-			return({ value: id, label: `${instanceLabel}: ${act.label}` })
+			return ({ value: id, label: `${instanceLabel}: ${act.label}` })
 		})
 	}, [context.actions, context.instances])
 

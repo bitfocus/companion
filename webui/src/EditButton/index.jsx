@@ -1,9 +1,10 @@
 import { CDropdown, CDropdownToggle, CDropdownItem, CDropdownMenu, CButton, CRow } from '@coreui/react'
 import React from 'react'
 import { CompanionContext, socketEmit } from '../util'
-import { ActionsPanel, AddActionDropdown } from './ActionsPanel'
+import { ActionsPanel } from './ActionsPanel'
 
 import { ButtonStyleConfig } from './ButtonStyleConfig'
+import { FeedbacksPanel } from './FeedbackPanel'
 
 export class EditButton extends React.Component {
 
@@ -14,6 +15,8 @@ export class EditButton extends React.Component {
 	}
 
 	actionsRef = React.createRef()
+	releaseActionsRef = React.createRef()
+	feedbacksRef = React.createRef()
 
 	componentDidMount() {
 		this.reloadConfig()
@@ -136,9 +139,10 @@ export class EditButton extends React.Component {
 
 					<h4>Key up/off actions</h4>
 					<ActionsPanel
-						ref={this.actionsRef}
+						ref={this.releaseActionsRef}
 						page={this.props.page}
 						bank={this.props.bank}
+						addCommand="bank_addReleaseAction"
 						getCommand="bank_release_actions_get"
 						updateOption="bank_release_action_update_option"
 						setDelay="bank_update_release_action_delay"
@@ -146,9 +150,15 @@ export class EditButton extends React.Component {
 					/>
 
 					<h4>Instance feedback</h4>
-					<div id='bankFeedbacks'>
-					</div>
-					<select id='addBankFeedback' className='form-control'></select>
+					<FeedbacksPanel
+						ref={this.feedbacksRef}
+						page={this.props.page}
+						bank={this.props.bank}
+						addCommand="bank_addFeedback"
+						getCommand="bank_get_feedbacks"
+						updateOption="bank_update_feedback_option"
+						deleteCommand="bank_delFeedback"
+					/>
 				</div>
 
 				<p>

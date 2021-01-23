@@ -52,6 +52,7 @@ export default class App extends React.Component {
 			variableValues: {},
 
 			actions: {},
+			feedbacks: {},
 		}
 	}
 
@@ -100,6 +101,9 @@ export default class App extends React.Component {
 		this.socket.on('actions', this.updateActions)
 		this.socket.emit('get_actions')
 
+		this.socket.on('feedback_get_definitions:result', this.updateFeedbacks)
+		this.socket.emit('feedback_get_definitions')
+
 		document.addEventListener('keydown', this.handleKeyDown);
 		document.addEventListener('keyup', this.handleKeyUp);
 	}
@@ -109,6 +113,7 @@ export default class App extends React.Component {
 		this.socket.off('variable_instance_definitions_set', this.updateVariableDefinitions)
 		this.socket.off('variable_set', this.updateVariableValue)
 		this.socket.off('actions', this.updateActions)
+		this.socket.off('feedback_get_definitions:result', this.updateFeedbacks)
 
 		document.removeEventListener('keydown', this.handleKeyDown);
 		document.removeEventListener('keyup', this.handleKeyUp);
@@ -128,6 +133,12 @@ export default class App extends React.Component {
 	updateActions = (actions) => {
 		this.setState({
 			actions: actions,
+		})
+	}
+
+	updateFeedbacks = (feedbacks) => {
+		this.setState({
+			feedbacks: feedbacks
 		})
 	}
 
@@ -199,6 +210,7 @@ export default class App extends React.Component {
 			variableDefinitions: this.state.variableDefinitions,
 			variableValues: this.state.variableValues,
 			actions: this.state.actions,
+			feedbacks: this.state.feedbacks,
 		}
 
 		return (
