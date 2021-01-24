@@ -1,5 +1,6 @@
 import { CDropdown, CDropdownToggle, CDropdownItem, CDropdownMenu, CButton, CRow } from '@coreui/react'
-import React from 'react'
+import React, { useContext, useEffect, useState } from 'react'
+import { BankPreview, dataToButtonImage } from '../Components/BankButton'
 import { CompanionContext, socketEmit } from '../util'
 import { ActionsPanel } from './ActionsPanel'
 
@@ -92,6 +93,7 @@ export class EditButton extends React.Component {
 		if (!config) {
 			return <div>Loading...</div>
 		}
+
 		return (
 			<div>
 				<h3>Configuration</h3>
@@ -120,52 +122,58 @@ export class EditButton extends React.Component {
 					</CButton>
 				</div>
 
+				<BankPreview2 page={this.props.page} bank={this.props.bank} />
+
 				<CRow>
 					<ButtonStyleConfig config={config} page={this.props.page} bank={this.props.bank} valueChanged={this.reloadConfig} />
 				</CRow>
 
-				<div>
-					<h4>Key down/on actions</h4>
-					<ActionsPanel
-						ref={this.actionsRef}
-						page={this.props.page}
-						bank={this.props.bank}
-						dragId={'downAction'}
-						addCommand="bank_action_add"
-						getCommand="bank_actions_get"
-						updateOption="bank_update_action_option"
-						orderCommand="bank_update_action_option_order"
-						setDelay="bank_update_action_delay"
-						deleteCommand="bank_action_delete"
-					/>
+				{
+					config.style === 'png'
+					? <div>
+						<h4>Key down/on actions</h4>
+						<ActionsPanel
+							ref={this.actionsRef}
+							page={this.props.page}
+							bank={this.props.bank}
+							dragId={'downAction'}
+							addCommand="bank_action_add"
+							getCommand="bank_actions_get"
+							updateOption="bank_update_action_option"
+							orderCommand="bank_update_action_option_order"
+							setDelay="bank_update_action_delay"
+							deleteCommand="bank_action_delete"
+						/>
 
-					<h4>Key up/off actions</h4>
-					<ActionsPanel
-						ref={this.releaseActionsRef}
-						page={this.props.page}
-						bank={this.props.bank}
-						dragId={'releaseAction'}
-						addCommand="bank_addReleaseAction"
-						getCommand="bank_release_actions_get"
-						updateOption="bank_release_action_update_option"
-						orderCommand="bank_release_action_update_option_order"
-						setDelay="bank_update_release_action_delay"
-						deleteCommand="bank_release_action_delete"
-					/>
+						<h4>Key up/off actions</h4>
+						<ActionsPanel
+							ref={this.releaseActionsRef}
+							page={this.props.page}
+							bank={this.props.bank}
+							dragId={'releaseAction'}
+							addCommand="bank_addReleaseAction"
+							getCommand="bank_release_actions_get"
+							updateOption="bank_release_action_update_option"
+							orderCommand="bank_release_action_update_option_order"
+							setDelay="bank_update_release_action_delay"
+							deleteCommand="bank_release_action_delete"
+						/>
 
-					<h4>Instance feedback</h4>
-					<FeedbacksPanel
-						ref={this.feedbacksRef}
-						page={this.props.page}
-						bank={this.props.bank}
-						dragId={'feedback'}
-						addCommand="bank_addFeedback"
-						getCommand="bank_get_feedbacks"
-						updateOption="bank_update_feedback_option"
-						orderCommand="bank_update_feedback_order"
-						deleteCommand="bank_delFeedback"
-					/>
-				</div>
+						<h4>Instance feedback</h4>
+						<FeedbacksPanel
+							ref={this.feedbacksRef}
+							page={this.props.page}
+							bank={this.props.bank}
+							dragId={'feedback'}
+							addCommand="bank_addFeedback"
+							getCommand="bank_get_feedbacks"
+							updateOption="bank_update_feedback_option"
+							orderCommand="bank_update_feedback_order"
+							deleteCommand="bank_delFeedback"
+						/>
+					</div>
+					: ''
+				}
 
 				<p>
 					<b>Hint:</b> Control buttons with OSC or HTTP: /press/bank/{this.props.page}/{this.props.bank} to press this button remotely. OSC port 12321!
@@ -173,4 +181,39 @@ export class EditButton extends React.Component {
 			</div>
 		)
 	}
+}
+
+
+
+function BankPreview2({ page, bank }) {
+	const context = useContext(CompanionContext)
+	const [previewImage, setPreviewImage] = useState(null)
+
+	// On unmount
+	useEffect(() => {
+		return () => {
+			context.socket.emit('bank_preview', false)
+		}
+	}, [context.socket])
+
+	// on bank change
+	useEffect(() => {
+		context.socket.emit('bank_preview', page, bank)
+
+		const cb = (p, b, img) => {
+ 			// eslint-disable-next-line eqeqeq
+			if (p == page && b == bank) {
+				setPreviewImage(dataToButtonImage(img))
+			}
+		}
+		context.socket.on('preview_bank_data', cb)
+
+		return () => {
+			context.socket.off('preview_bank_data', cb)
+		}
+	}, [context.socket, page, bank])
+
+	return (
+		<BankPreview fixedSize preview={previewImage} />
+	)
 }
