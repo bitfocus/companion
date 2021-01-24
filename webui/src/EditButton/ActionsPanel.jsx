@@ -1,15 +1,16 @@
 import { CButton, CForm, CInputGroup } from "@coreui/react"
 import { faSort, faTrash } from "@fortawesome/free-solid-svg-icons"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
-import React, { forwardRef, useCallback, useContext, useEffect, useImperativeHandle, useMemo, useState } from "react"
+import React, { forwardRef, useCallback, useContext, useEffect, useImperativeHandle, useMemo, useRef, useState } from "react"
 import { ErrorBoundary } from "react-error-boundary"
 import { NumberInputField } from "../Components"
 import { CompanionContext, socketEmit } from "../util"
 import update from 'immutability-helper';
 import Select from "react-select"
 import { ActionTableRowOption, ErrorFallback } from './Table'
+import { useDrag, useDrop } from "react-dnd"
 
-export const ActionsPanel = forwardRef(function ({ page, bank, addCommand, getCommand, updateOption, setDelay, deleteCommand }, ref) {
+export const ActionsPanel = forwardRef(function ({ page, bank, dragId, addCommand, getCommand, updateOption, orderCommand, setDelay, deleteCommand }, ref) {
 	const context = useContext(CompanionContext)
 	const [actions, setActions] = useState([])
 
@@ -94,6 +95,21 @@ export const ActionsPanel = forwardRef(function ({ page, bank, addCommand, getCo
 		})
 	}, [context.socket, addCommand, bank, page])
 
+	const moveCard = useCallback((dragIndex, hoverIndex) => {
+		// The server doesn't repond to our change, so we assume it was ok
+		context.socket.emit(orderCommand, page, bank, dragIndex, hoverIndex);
+
+		setActions(actions => {
+			const dragCard = actions[dragIndex];
+			return update(actions, {
+				$splice: [
+					[dragIndex, 1],
+					[hoverIndex, 0, dragCard],
+				],
+			})
+		});
+	}, [context.socket, page, bank, orderCommand]);
+
 	return (
 		<>
 			<table className='table action-table'>
@@ -106,7 +122,7 @@ export const ActionsPanel = forwardRef(function ({ page, bank, addCommand, getCo
 					</tr>
 				</thead>
 				<tbody>
-					{actions.map((a, i) => <ActionTableRow key={a?.id ?? i} action={a} setValue={setValue} doDelete={doDelete} doDelay={doDelay} />)}
+					{actions.map((a, i) => <ActionTableRow key={a?.id ?? i} action={a} index={i} dragId={dragId} setValue={setValue} doDelete={doDelete} doDelay={doDelay} moveCard={moveCard} />)}
 				</tbody>
 			</table>
 
@@ -117,11 +133,64 @@ export const ActionsPanel = forwardRef(function ({ page, bank, addCommand, getCo
 	)
 })
 
-function ActionTableRow({ action, setValue, doDelete, doDelay }) {
+function ActionTableRow({ action, index, dragId, setValue, doDelete, doDelay, moveCard }) {
 	const context = useContext(CompanionContext)
 
 	const innerDelete = useCallback(() => doDelete(action.id), [action.id, doDelete])
-	const innerDelay = useCallback((delay) => doDelay(action.id, delay), [doDelay])
+	const innerDelay = useCallback((delay) => doDelay(action.id, delay), [doDelay, action.id])
+
+	const ref = useRef(null);
+	const [, drop] = useDrop({
+        accept: dragId,
+        hover(item, monitor) {
+            if (!ref.current) {
+                return;
+            }
+            const dragIndex = item.index;
+            const hoverIndex = index;
+            // Don't replace items with themselves
+            if (dragIndex === hoverIndex) {
+                return;
+            }
+            // Determine rectangle on screen
+            const hoverBoundingRect = ref.current?.getBoundingClientRect();
+            // Get vertical middle
+            const hoverMiddleY = (hoverBoundingRect.bottom - hoverBoundingRect.top) / 2;
+            // Determine mouse position
+            const clientOffset = monitor.getClientOffset();
+            // Get pixels to the top
+            const hoverClientY = clientOffset.y - hoverBoundingRect.top;
+            // Only perform the move when the mouse has crossed half of the items height
+            // When dragging downwards, only move when the cursor is below 50%
+            // When dragging upwards, only move when the cursor is above 50%
+            // Dragging downwards
+            if (dragIndex < hoverIndex && hoverClientY < hoverMiddleY) {
+                return;
+            }
+            // Dragging upwards
+            if (dragIndex > hoverIndex && hoverClientY > hoverMiddleY) {
+                return;
+            }
+            // Time to actually perform the action
+            moveCard(dragIndex, hoverIndex);
+            // Note: we're mutating the monitor item here!
+            // Generally it's better to avoid mutations,
+            // but it's good here for the sake of performance
+            // to avoid expensive index searches.
+            item.index = hoverIndex;
+        },
+    });
+	const [{ isDragging }, drag, preview] = useDrag({
+		item: {
+			type: dragId,
+			actionId: action.id,
+			index: index,
+		},
+		collect: (monitor) => ({
+            isDragging: monitor.isDragging(),
+        }),
+	})
+    preview(drop(ref));
 
 	if (!action) {
 		// Invalid action, so skip
@@ -144,17 +213,17 @@ function ActionTableRow({ action, setValue, doDelete, doDelay }) {
 	}
 
 	return (
-		<tr>
-			<td class='actionlist-td-reorder'>
+		<tr ref={ref} className={isDragging ? 'actionlist-dragging' : ''}>
+			<td ref={drag} className='actionlist-td-reorder'>
 				<FontAwesomeIcon icon={faSort} />
 			</td>
-			<td class='actionlist-td-delete'>
+			<td className='actionlist-td-delete'>
 				<CButton color="danger" size="sm" onClick={innerDelete}>
 					<FontAwesomeIcon icon={faTrash} />
 				</CButton>
 			</td>
 			<td className='actionlist-td-label'>{name}</td>
-			<td class='actionlist-td-delay'>
+			<td className='actionlist-td-delay'>
 				<CInputGroup>
 					<NumberInputField
 						definition={{ default: 0 }}
@@ -166,11 +235,12 @@ function ActionTableRow({ action, setValue, doDelete, doDelay }) {
 					</CInputGroupAppend> */}
 				</CInputGroup>
 			</td>
-			<td class='actionlist-td-options'>
+			<td className='actionlist-td-options'>
 				<CForm className="actions-options">
 					{
-						options.map(opt => <ErrorBoundary FallbackComponent={ErrorFallback}>
+						options.map((opt, i) => <ErrorBoundary FallbackComponent={ErrorFallback}>
 							<ActionTableRowOption
+								key={i}
 								option={opt}
 								actionId={action.id}
 								value={(action.options || {})[opt.id]}

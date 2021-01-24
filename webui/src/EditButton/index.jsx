@@ -130,9 +130,11 @@ export class EditButton extends React.Component {
 						ref={this.actionsRef}
 						page={this.props.page}
 						bank={this.props.bank}
+						dragId={'downAction'}
 						addCommand="bank_action_add"
 						getCommand="bank_actions_get"
 						updateOption="bank_update_action_option"
+						orderCommand="bank_update_action_option_order"
 						setDelay="bank_update_action_delay"
 						deleteCommand="bank_action_delete"
 					/>
@@ -142,9 +144,11 @@ export class EditButton extends React.Component {
 						ref={this.releaseActionsRef}
 						page={this.props.page}
 						bank={this.props.bank}
+						dragId={'releaseAction'}
 						addCommand="bank_addReleaseAction"
 						getCommand="bank_release_actions_get"
 						updateOption="bank_release_action_update_option"
+						orderCommand="bank_release_action_update_option_order"
 						setDelay="bank_update_release_action_delay"
 						deleteCommand="bank_release_action_delete"
 					/>
@@ -154,9 +158,11 @@ export class EditButton extends React.Component {
 						ref={this.feedbacksRef}
 						page={this.props.page}
 						bank={this.props.bank}
+						dragId={'feedback'}
 						addCommand="bank_addFeedback"
 						getCommand="bank_get_feedbacks"
 						updateOption="bank_update_feedback_option"
+						orderCommand="bank_update_feedback_order"
 						deleteCommand="bank_delFeedback"
 					/>
 				</div>
