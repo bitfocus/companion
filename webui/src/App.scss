@@ -190,3 +190,30 @@
 .actionlist-dragging, .feedbacklist-dragging {
 	opacity: 0.5;
 }
+
+#error-container {
+	display:none;
+	opacity: 0;
+	width: 100%;
+	position:fixed !important;
+	top:0px !important;
+	left:0px !important;
+	height: 100%;
+	z-index:15000;
+	padding-left: 30px;
+	padding-right: 30px;
+	padding-top: 100px;
+	background-color: rgba(0,0,0,0.8);
+	color:white;
+
+	transition: opacity 0.3s ease-in-out;
+
+	&.show-error {
+		display: block;
+		opacity: 1;
+	}
+
+	.text-muted {
+		color: #ccc !important;
+	}
+}

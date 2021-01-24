@@ -31,6 +31,7 @@ export default class App extends React.Component {
 
 		this.state = {
 			connected: false,
+			has_connected: false,
 
 			// modules
 			modules: {},
@@ -63,8 +64,14 @@ export default class App extends React.Component {
 	componentDidMount() {
 		this.socket = new io('http://localhost:8000');
 		this.socket.on('connect', () => {
-			this.setState({ connected: true })
-
+			if (this.state.has_connected) {
+				window.location.reload(true);
+			} else {
+				this.setState({
+					connected: true,
+					has_connected: true
+				})
+			}
 		});
 		// this.socket.on('event', function(data){console.log('event', data)});
 		this.socket.on('disconnect', () => this.setState({ connected: false }));
@@ -225,6 +232,20 @@ export default class App extends React.Component {
 
 		return (
 			<CompanionContext.Provider value={contextValue} >
+				<div id="error-container" className={this.state.has_connected && !this.state.connected ? "show-error" : ''}>
+					<div className="row justify-content-center">
+						<div className="col-md-6">
+							<div className="clearfix">
+								<h4 className="pt-3">Houston, we have a problem!</h4>
+								<p className="text-muted">It seems that we have lost connection to the companion app.</p>
+								<p className="text-muted">
+									<li className="text-muted">Check that the application is still running</li>
+									<li className="text-muted">If you're using the Admin GUI over a network - check your connection</li>
+								</p>
+							</div>
+						</div>
+					</div>
+				</div>
 				<Suspense fallback={<Spinner />}>
 					<DndProvider backend={HTML5Backend}>
 						<div className="c-app">
