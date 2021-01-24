@@ -14,7 +14,6 @@ export class Buttons extends React.Component {
 
 	state = {
 		loaded: false,
-		pageNumber: 1,
 		pages: {},
 		newPageName: null,
 		activeFunction: null,
@@ -50,7 +49,7 @@ export class Buttons extends React.Component {
 
 	changePage = (delta) => {
 		const pageNumbers = Object.keys(this.state.pages)
-		const currentIndex = pageNumbers.findIndex(p => p === this.state.pageNumber + '')
+		const currentIndex = pageNumbers.findIndex(p => p === this.props.pageNumber + '')
 		let newPage = pageNumbers[0]
 		if (currentIndex !== -1) {
 			let newIndex = currentIndex + delta
@@ -61,7 +60,7 @@ export class Buttons extends React.Component {
 		}
 
 		if (newPage !== undefined) {
-			this.setState({ pageNumber: newPage })
+			this.props.changePage(newPage)
 		}
 	}
 
@@ -81,12 +80,12 @@ export class Buttons extends React.Component {
 	}
 
 	bankClick = (index, isDown) => {
-		console.log('bank', this.state.pageNumber, index, isDown)
+		console.log('bank', this.props.pageNumber, index, isDown)
 		if (isDown) {
 			switch (this.state.activeFunction) {
 				case 'delete':
 					if (window.confirm("Clear style and actions for this button?")) {
-						this.context.socket.emit('bank_reset', this.state.pageNumber, index);
+						this.context.socket.emit('bank_reset', this.props.pageNumber, index);
 						// socket.emit('bank_actions_get', function_detail.first.page, function_detail.first.bank );
 						// socket.emit('bank_release_actions_get', function_detail.first.page, function_detail.first.bank );
 						// bank_preview_page(page);
@@ -97,12 +96,12 @@ export class Buttons extends React.Component {
 				case 'copy':
 					if (this.state.activeFunctionBank) {
 						const fromInfo = this.state.activeFunctionBank
-						this.context.socket.emit('bank_copy', fromInfo.page, fromInfo.bank, this.state.pageNumber, index);
+						this.context.socket.emit('bank_copy', fromInfo.page, fromInfo.bank, this.props.pageNumber, index);
 						this.stopFunction()
 					} else {
 						this.setState({
 							activeFunctionBank: {
-								page: this.state.pageNumber,
+								page: this.props.pageNumber,
 								bank: index
 							}
 						})
@@ -111,12 +110,12 @@ export class Buttons extends React.Component {
 				case 'move':
 					if (this.state.activeFunctionBank) {
 						const fromInfo = this.state.activeFunctionBank
-						this.context.socket.emit('bank_move', fromInfo.page, fromInfo.bank, this.state.pageNumber, index);
+						this.context.socket.emit('bank_move', fromInfo.page, fromInfo.bank, this.props.pageNumber, index);
 						this.stopFunction()
 					} else {
 						this.setState({
 							activeFunctionBank: {
-								page: this.state.pageNumber,
+								page: this.props.pageNumber,
 								bank: index
 							}
 						})
@@ -124,11 +123,11 @@ export class Buttons extends React.Component {
 					break
 				default:
 					// show bank edit page
-					this.props.buttonGridClick(this.state.pageNumber, index, true)
+					this.props.buttonGridClick(this.props.pageNumber, index, true)
 					break
 			}
 		} else if (!this.state.activeFunction) {
-			this.props.buttonGridClick(this.state.pageNumber, index, false)
+			this.props.buttonGridClick(this.props.pageNumber, index, false)
 		}
 	}
 
@@ -161,13 +160,13 @@ export class Buttons extends React.Component {
 	}
 
 	resetPage = () => {
-		const page = this.state.pageNumber
+		const page = this.props.pageNumber
 		if (window.confirm(`Are you sure you want to clear all buttons on page ${page}?\nThere's no going back from this.`)) {
 			this.context.socket.emit('loadsave_reset_page_all', page);
 		}
 	}
 	resetPageNav = () => {
-		const page = this.state.pageNumber
+		const page = this.props.pageNumber
 		if (window.confirm(`Are you sure you want to reset navigation buttons? This will completely erase bank ${page}.1, ${page}.9 and ${page}.17`)) {
 			this.context.socket.emit('loadsave_reset_page_nav', page);
 		}
@@ -178,7 +177,8 @@ export class Buttons extends React.Component {
 			return <p>Loading...</p>
 		}
 
-		const { pageNumber, pages, newPageName } = this.state
+		const { pages, newPageName } = this.state
+		const { pageNumber } = this.props
 
 		const pageInfo = pages[pageNumber]
 		const pageName = pageInfo?.name ?? 'PAGE'
@@ -189,16 +189,12 @@ export class Buttons extends React.Component {
 
 			<CRow>
 				<CCol sm={12}>
-					<CButton color="primary" onClick={() => this.changePage(-1)}><FontAwesomeIcon icon={faChevronLeft} /></CButton>
-					<CInput type="text" placeholder={pageNumber} /> {/* TODO editing this */}
-					<CButton color="primary" onClick={() => this.changePage(1)}><FontAwesomeIcon icon={faChevronRight} /></CButton>
-					<CInput
-						className="page_title"
-						type="text"
-						placeholder="Page name"
-						value={newPageName ?? pageName}
-						onBlur={() => this.setState({ newPageName: null })}
-						onChange={(e) => {
+					<BankGridHeader 
+						pageNumber={pageNumber}
+						pageName={newPageName ?? pageName}
+						changePage={this.changePage}
+						onNameBlur={() => this.setState({ newPageName: null })}
+						onNameChange={(e) => {
 							this.context.socket.emit('set_page', pageNumber, {
 								...pageInfo,
 								name: e.currentTarget.value,
@@ -235,6 +231,23 @@ export class Buttons extends React.Component {
 			</CRow>
 		</>
 	}
+}
+
+export function BankGridHeader({ pageNumber, pageName, onNameChange, onNameBlur, changePage }) {
+	return <>
+		<CButton color="primary" hidden={!changePage} onClick={() => changePage(-1)}><FontAwesomeIcon icon={faChevronLeft} /></CButton>
+		<CInput type="text" disabled={!changePage} placeholder={pageNumber} /> {/* TODO editing this */}
+		<CButton color="primary" hidden={!changePage} onClick={() => changePage(1)}><FontAwesomeIcon icon={faChevronRight} /></CButton>
+		<CInput
+			className="page_title"
+			type="text"
+			placeholder="Page name"
+			value={pageName}
+			onBlur={onNameBlur}
+			onChange={onNameChange}
+			disabled={!onNameChange}
+		/>
+	</>
 }
 
 export class BankGrid extends React.PureComponent {
