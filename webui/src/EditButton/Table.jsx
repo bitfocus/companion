@@ -1,16 +1,6 @@
-import { CAlert, CButton, CFormGroup, CInputGroupText, CLabel } from "@coreui/react"
+import { CFormGroup, CInputGroupText, CLabel } from "@coreui/react"
 import React, { useCallback } from "react"
 import { CheckboxInputField, ColorInputField, DropdownInputField, NumberInputField, TextInputField } from "../Components"
-
-export function ErrorFallback ({error, resetErrorBoundary}) {
-	return (
-		<CAlert color="danger">
-			<p>Something went wrong:</p>
-			<pre>{error.message}</pre>
-			<CButton color='primary' size="sm" onClick={resetErrorBoundary}>Try again</CButton>
-		</CAlert>
-	)
-}
 
 export function ActionTableRowOption({ actionId, option, value, setValue }) {
 	const setValue2 = useCallback((val) => setValue(actionId, option.id, val), [actionId, option.id, setValue])

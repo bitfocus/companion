@@ -2,11 +2,10 @@ import { CButton, CForm } from "@coreui/react"
 import { faSort, faTrash } from "@fortawesome/free-solid-svg-icons"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
 import React, { forwardRef, useCallback, useContext, useEffect, useImperativeHandle, useMemo, useRef, useState } from "react"
-import { ErrorBoundary } from "react-error-boundary"
-import { CompanionContext, socketEmit } from "../util"
+import { CompanionContext, MyErrorBoundary, socketEmit } from "../util"
 import update from 'immutability-helper';
 import Select from "react-select"
-import { ActionTableRowOption, ErrorFallback } from './Table'
+import { ActionTableRowOption } from './Table'
 import { useDrag, useDrop } from "react-dnd"
 
 export const FeedbacksPanel = forwardRef(function ({ page, bank, dragId, addCommand, getCommand, updateOption, orderCommand, deleteCommand }, ref) {
@@ -185,8 +184,7 @@ function FeedbackTableRow({ feedback, index, dragId, moveCard, setValue, doDelet
 	if (feedbackSpec) {
 		name = `${instanceLabel}: ${feedbackSpec.label}`;
 	} else {
-		const feedbackId = feedback.label.split(/:/)[1]
-		name = `${instanceLabel}: ${feedbackId} (undefined)`;
+		name = `${instanceLabel}: ${feedback.type} (undefined)`;
 	}
 
 	return (
@@ -203,7 +201,7 @@ function FeedbackTableRow({ feedback, index, dragId, moveCard, setValue, doDelet
 			<td className='feedbacklist-td-options'>
 				<CForm className="feedbacks-options">
 					{
-						options.map((opt, i) => <ErrorBoundary FallbackComponent={ErrorFallback}>
+						options.map((opt, i) => <MyErrorBoundary>
 							<ActionTableRowOption
 								key={i}
 								option={opt}
@@ -211,7 +209,7 @@ function FeedbackTableRow({ feedback, index, dragId, moveCard, setValue, doDelet
 								value={(feedback.options || {})[opt.id]}
 								setValue={setValue}
 							/>
-						</ErrorBoundary>)
+						</MyErrorBoundary>)
 					}
 				</CForm>
 			</td>
@@ -226,7 +224,6 @@ function AddFeedbackDropdown({ onSelect }) {
 	const options = useMemo(() => {
 		const options = []
 		for (const [instanceId, feedbacks] of Object.entries(context.feedbacks)) {
-			console.log(feedbacks)
 			for (const [feedbackId, feedback] of Object.entries(feedbacks)) {
 				const instanceLabel = context.instances[instanceId]?.label ?? instanceId
 				options.push ({ value: `${instanceId}:${feedbackId}`, label: `${instanceLabel}: ${feedback.label}` })
@@ -236,7 +233,6 @@ function AddFeedbackDropdown({ onSelect }) {
 	}, [context.feedbacks, context.instances])
 
 	const innerChange = useCallback((e) => {
-		console.log(e.value)
 		if (e.value) {
 			onSelect(e.value)
 		}

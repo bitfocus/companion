@@ -2,12 +2,11 @@ import { CButton, CForm, CInputGroup } from "@coreui/react"
 import { faSort, faTrash } from "@fortawesome/free-solid-svg-icons"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
 import React, { forwardRef, useCallback, useContext, useEffect, useImperativeHandle, useMemo, useRef, useState } from "react"
-import { ErrorBoundary } from "react-error-boundary"
 import { NumberInputField } from "../Components"
-import { CompanionContext, socketEmit } from "../util"
+import { CompanionContext, MyErrorBoundary, socketEmit } from "../util"
 import update from 'immutability-helper';
 import Select from "react-select"
-import { ActionTableRowOption, ErrorFallback } from './Table'
+import { ActionTableRowOption } from './Table'
 import { useDrag, useDrop } from "react-dnd"
 
 export const ActionsPanel = forwardRef(function ({ page, bank, dragId, addCommand, getCommand, updateOption, orderCommand, setDelay, deleteCommand }, ref) {
@@ -238,7 +237,7 @@ function ActionTableRow({ action, index, dragId, setValue, doDelete, doDelay, mo
 			<td className='actionlist-td-options'>
 				<CForm className="actions-options">
 					{
-						options.map((opt, i) => <ErrorBoundary FallbackComponent={ErrorFallback}>
+						options.map((opt, i) => <MyErrorBoundary>
 							<ActionTableRowOption
 								key={i}
 								option={opt}
@@ -246,7 +245,7 @@ function ActionTableRow({ action, index, dragId, setValue, doDelete, doDelay, mo
 								value={(action.options || {})[opt.id]}
 								setValue={setValue}
 							/>
-						</ErrorBoundary>)
+						</MyErrorBoundary>)
 					}
 				</CForm>
 			</td>

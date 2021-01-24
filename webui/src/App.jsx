@@ -3,10 +3,9 @@ import { CContainer, CRow, CCol, CTabs, CTabContent, CTabPane, CNav, CNavItem, C
 import { faCalculator, faCalendarAlt, faClipboardList, faClock, faCog, faFileImport, faGamepad, faGift, faPlug, faUserNinja } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import io from 'socket.io-client'
-import { ErrorBoundary } from 'react-error-boundary'
 import shortid from 'shortid'
 
-import { CompanionContext, socketEmit } from './util'
+import { CompanionContext, MyErrorBoundary, socketEmit } from './util'
 import { HelpModal } from './Components/HelpModal'
 import { Instances } from './Instances'
 import { InstanceConfig } from './InstanceConfig'
@@ -272,12 +271,12 @@ export default class App extends React.Component {
 															</CNav>
 															<CTabContent fade={false}>
 																<CTabPane data-tab="instances">
-																	<ErrorBoundary>
+																	<MyErrorBoundary>
 																		<Instances configureInstance={this.configureInstance} showHelp={this.showHelp} />
-																	</ErrorBoundary>
+																	</MyErrorBoundary>
 																</CTabPane>
 																<CTabPane data-tab="instanceConfig">
-																	<ErrorBoundary>
+																	<MyErrorBoundary>
 																		{
 																			this.state.configureInstanceId
 																				? <InstanceConfig
@@ -287,23 +286,29 @@ export default class App extends React.Component {
 																				/>
 																				: 'No instance specified'
 																		}
-																	</ErrorBoundary>
+																	</MyErrorBoundary>
 																</CTabPane>
 																<CTabPane data-tab="buttons">
-																	<Buttons
-																		buttonGridClick={this.buttonGridClick}
-																		isHot={this.state.hotPress}
-																		selectedButton={this.state.selectedButton}
-																		pageNumber={this.state.pageNumber}
-																		changePage={this.updatePage}
-																		/>
+																	<MyErrorBoundary>
+																		<Buttons
+																			buttonGridClick={this.buttonGridClick}
+																			isHot={this.state.hotPress}
+																			selectedButton={this.state.selectedButton}
+																			pageNumber={this.state.pageNumber}
+																			changePage={this.updatePage}
+																			/>
+																	</MyErrorBoundary>
 																</CTabPane>
 																<CTabPane data-tab="surfaces">
-																	<Surfaces />
+																	<MyErrorBoundary>
+																		<Surfaces />
+																	</MyErrorBoundary>
 																</CTabPane>
 																<CTabPane data-tab="triggers">t</CTabPane>
 																<CTabPane data-tab="userconfig">
-																	<UserConfig />
+																	<MyErrorBoundary>
+																		<UserConfig />
+																	</MyErrorBoundary>
 																</CTabPane>
 															</CTabContent>
 														</CTabs>
@@ -319,18 +324,32 @@ export default class App extends React.Component {
 															</CNav>
 															<CTabContent fade={false}>
 																<CTabPane data-tab="log">
-																	<LogPanel />
+																	<MyErrorBoundary>
+																		<LogPanel />
+																	</MyErrorBoundary>
 																</CTabPane>
 																<CTabPane data-tab="edit">
-																	{ this.state.selectedButton ? <EditButton key={`${this.state.selectedButton[0]}.${this.state.selectedButton[1]}`} page={this.state.selectedButton[0]} bank={this.state.selectedButton[1]} /> : '' }
+																	<MyErrorBoundary>
+																		{
+																			this.state.selectedButton
+																			? <EditButton
+																				key={`${this.state.selectedButton[0]}.${this.state.selectedButton[1]}`}
+																				page={this.state.selectedButton[0]}
+																				bank={this.state.selectedButton[1]}
+																				/>
+																			: ''
+																		}
+																	</MyErrorBoundary>
 																</CTabPane>
 																<CTabPane data-tab="presets">
-																	<InstancePresets token={this.state.activePresetToken} />
+																	<MyErrorBoundary>
+																		<InstancePresets token={this.state.activePresetToken} />
+																	</MyErrorBoundary>
 																</CTabPane>
 																<CTabPane data-tab="importexport">
-																	<ErrorBoundary>
+																	<MyErrorBoundary>
 																		<ImportExport key={this.state.importExportToken} pageNumber={this.state.pageNumber} />
-																	</ErrorBoundary>
+																	</MyErrorBoundary>
 																</CTabPane>
 															</CTabContent>
 														</CTabs>
