@@ -21,6 +21,7 @@ import { MySidebar } from './Layout/Sidebar'
 import { MyHeader } from './Layout/Header'
 import { EditButton } from './EditButton'
 import { ImportExport } from './ImportExport'
+import { Scheduler } from './Scheduler'
 
 export default class App extends React.Component {
 	constructor(props) {
@@ -354,7 +355,11 @@ export default class App extends React.Component {
 																		<Surfaces />
 																	</MyErrorBoundary>
 																</CTabPane>
-																<CTabPane data-tab="triggers">t</CTabPane>
+																<CTabPane data-tab="triggers">
+																	<MyErrorBoundary>
+																		<Scheduler />
+																	</MyErrorBoundary>
+																</CTabPane>
 																<CTabPane data-tab="userconfig">
 																	<MyErrorBoundary>
 																		<UserConfig />

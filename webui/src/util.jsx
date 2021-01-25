@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useEffect } from 'react'
 import shortid from 'shortid'
 import pTimeout from 'p-timeout'
 import { CAlert, CButton } from '@coreui/react'
@@ -40,3 +40,6 @@ export function KeyReceiver ({children, ...props}) {
 		{ children }
 	</div>
 }
+
+// eslint-disable-next-line react-hooks/exhaustive-deps
+export const useMountEffect = (fun) => useEffect(fun, [])
