@@ -84,9 +84,12 @@
 .bank {
 	padding: Min(5px, 10%);
 	height: fit-content;
-	cursor: pointer;
 	display: inline-block;
 	border: 1px solid transparent;
+
+	&.clickable {
+		cursor: pointer;
+	}
 
 	&.selected img {
 		border: 3px solid #d50215;

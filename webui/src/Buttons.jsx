@@ -1,6 +1,6 @@
 import { CButton, CCol, CInput, CRow } from '@coreui/react'
 import React, { useContext } from 'react'
-import { CompanionContext, socketEmit } from './util'
+import { CompanionContext, KeyReceiver, socketEmit } from './util'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faArrowsAlt, faChevronLeft, faChevronRight, faCopy, faEraser, faFileExport, faTrash } from '@fortawesome/free-solid-svg-icons'
 import classnames from 'classnames'
@@ -183,7 +183,7 @@ export class Buttons extends React.Component {
 		const pageInfo = pages[pageNumber]
 		const pageName = pageInfo?.name ?? 'PAGE'
 
-		return <>
+		return <KeyReceiver onKeyUp={this.props.onKeyUp} tabIndex={0}>
 			<h4>Button layout</h4>
 			<p>The squares below represent each button on your Streamdeck. Click on them to set up how you want them to look, and what they should do when you press or click on them.</p><p>You can navigate between pages using the arrow buttons, or by clicking the page number, typing in a number, and pressing 'Enter' on your keyboard.</p>
 
@@ -229,7 +229,7 @@ export class Buttons extends React.Component {
 					</span>
 				</CCol>
 			</CRow>
-		</>
+		</KeyReceiver>
 	}
 }
 

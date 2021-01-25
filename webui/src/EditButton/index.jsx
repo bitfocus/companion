@@ -1,7 +1,7 @@
 import { CDropdown, CDropdownToggle, CDropdownItem, CDropdownMenu, CButton, CRow } from '@coreui/react'
 import React, { useContext, useEffect, useState } from 'react'
 import { BankPreview, dataToButtonImage } from '../Components/BankButton'
-import { CompanionContext, socketEmit } from '../util'
+import { CompanionContext, KeyReceiver, socketEmit } from '../util'
 import { ActionsPanel } from './ActionsPanel'
 
 import { ButtonStyleConfig } from './ButtonStyleConfig'
@@ -22,22 +22,7 @@ export class EditButton extends React.Component {
 	componentDidMount() {
 		this.reloadConfig()
 
-		// this.reloadBankData()
-		// socket.emit('bank_actions_get', page, $(this).data('bank'));
-		// socket.emit('bank_get_feedbacks', page, $(this).data('bank'));
-		// socket.emit('bank_release_actions_get', page, $(this).data('bank'));
-		// socket.once('get_bank:results', populate_bank_form);
 	}
-
-	// reloadBankData = () => {
-	// 	socketEmit(this.context.socket, 'bank_actions_get', [this.props.page, this.props.bank]).then(([page, bank, actions]) => {
-	// 		this.setState({
-	// 			actions: actions || [],
-	// 		})
-	// 	}).catch(e => {
-	// 		console.error('Failed to load bank actions', e)
-	// 	})
-	// }
 
 	reloadConfig = () => {
 		socketEmit(this.context.socket, 'get_bank', [this.props.page, this.props.bank]).then(([page, bank, config, fields]) => {
@@ -95,7 +80,7 @@ export class EditButton extends React.Component {
 		}
 
 		return (
-			<div>
+			<KeyReceiver onKeyUp={this.props.onKeyUp} tabIndex={0}>
 				<h3>Configuration</h3>
 
 				<div>
@@ -178,7 +163,7 @@ export class EditButton extends React.Component {
 				<p>
 					<b>Hint:</b> Control buttons with OSC or HTTP: /press/bank/{this.props.page}/{this.props.bank} to press this button remotely. OSC port 12321!
 				</p>
-			</div>
+			</KeyReceiver>
 		)
 	}
 }

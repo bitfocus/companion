@@ -25,14 +25,15 @@ export const BankPreview = React.memo(function(props) {
 		 drophere: props.canDrop,
 		 drophover: props.dropHover,
 		 selected: props.selected,
+		 clickable: !!props.onClick
 	}
 
 	return (
 		<div
 			ref={props.dropRef}
 			className={classnames(classes)}
-			onMouseDown={() => props.onClick(props.index, true)}
-			onMouseUp={() => props.onClick(props.index, false)}
+			onMouseDown={() => props?.onClick?.(props.index, true)}
+			onMouseUp={() => props?.onClick?.(props.index, false)}
 		>
 			<div className="bank-border">
 				<img ref={props.dragRef} width={72} height={72} src={props.preview ?? BlackImage} alt={props.alt} />

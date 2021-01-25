@@ -39,15 +39,16 @@ export default class App extends React.Component {
 			activeTab2: 'log',
 			activePresetToken: shortid(),
 			importExportToken: shortid(),
+			editBankToken: shortid(),
 
 			instances: {},
 			configureInstanceId: null,
 			configureInstanceToken: null,
 
-
 			hotPress: false,
 			pageNumber: 1,
 			selectedButton: null,
+			copyFromButton: null,
 
 			// help text to show
 			helpContent: null,
@@ -212,7 +213,55 @@ export default class App extends React.Component {
 			this.setState({
 				activeTab2: 'edit',
 				selectedButton: [page, bank],
+				editBankToken: shortid(),
 			})
+		}
+	}
+
+	onKeyUp = (e) => {
+		if (e.target.tagName !== 'INPUT' && e.target.tagName !== 'TEXTAREA') {
+			if (this.state.selectedButton) {
+				// keyup with button selected
+
+				if (!e.ctrlKey && !e.metaKey && !e.altKey && (e.key === 'Backspace' || e.key === 'Delete')) {
+					if (window.confirm('Clear button ' + this.state.selectedButton[0] + '.' + this.state.selectedButton[1] + '?')) {
+						this.socket.emit('bank_reset', this.state.selectedButton[0], this.state.selectedButton[1]);
+						
+						// Invalidate the ui component to cause a reload
+						this.setState({ editBankToken: shortid() })
+					}
+				}
+				if ((e.ctrlKey || e.metaKey) && !e.altKey && e.key === 'c') {
+					console.log('prepare copy', this.state.selectedButton)
+					this.setState({
+						copyFromButton: [...this.state.selectedButton, 'copy']
+					})
+				}
+				if ((e.ctrlKey || e.metaKey) && !e.altKey && e.key === 'x') {
+					console.log('prepare cut', this.state.selectedButton)
+					this.setState({
+						copyFromButton: [...this.state.selectedButton, 'cut']
+					})
+				}
+				if ((e.ctrlKey || e.metaKey) && !e.altKey && e.key === 'v' && this.state.copyFromButton) {
+					console.log('do paste', this.state.copyFromButton, this.state.selectedButton)
+
+					if (this.state.copyFromButton[2] === 'copy') {
+						this.socket.emit('bank_copy', this.state.copyFromButton[0], this.state.copyFromButton[1], this.state.selectedButton[0], this.state.selectedButton[1]);
+						this.setState({
+							editBankToken: shortid(),
+						})
+					} else if (this.state.copyFromButton[2] === 'cut') {
+						this.socket.emit('bank_move', this.state.copyFromButton[0], this.state.copyFromButton[1], this.state.selectedButton[0], this.state.selectedButton[1]);
+						this.setState({
+							copyFromButton: null,
+							editBankToken: shortid(),
+						})
+					} else {
+						console.error('unknown paste operation:', this.state.copyFromButton[2])
+					}
+				}
+			}
 		}
 	}
 
@@ -296,6 +345,7 @@ export default class App extends React.Component {
 																			selectedButton={this.state.selectedButton}
 																			pageNumber={this.state.pageNumber}
 																			changePage={this.updatePage}
+																			onKeyUp={this.onKeyUp}
 																			/>
 																	</MyErrorBoundary>
 																</CTabPane>
@@ -333,9 +383,10 @@ export default class App extends React.Component {
 																		{
 																			this.state.selectedButton
 																			? <EditButton
-																				key={`${this.state.selectedButton[0]}.${this.state.selectedButton[1]}`}
+																				key={`${this.state.selectedButton[0]}.${this.state.selectedButton[1]}.${this.state.editBankToken}`}
 																				page={this.state.selectedButton[0]}
 																				bank={this.state.selectedButton[1]}
+																				onKeyUp={this.onKeyUp}
 																				/>
 																			: ''
 																		}

@@ -41,3 +41,9 @@ export function MyErrorBoundary ({ children }) {
 		{ children }
 	</ErrorBoundary>
 }
+
+export function KeyReceiver ({children, ...props}) {
+	return <div {...props} style={{ ...props.style, outline: 'none' }}>
+		{ children }
+	</div>
+}
