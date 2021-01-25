@@ -99,7 +99,7 @@ export class Surfaces extends React.Component {
 			this.setState({
 				configureDeviceConfig: newConfig,
 			})
-			this.context.socket.emit('device_config_set', 'device_config_set', this.state.configureDeviceId, newConfig)
+			this.context.socket.emit('device_config_set', this.state.configureDeviceId, newConfig)
 		}
 	}
 

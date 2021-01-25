@@ -10,16 +10,9 @@ export const CompanionContext = React.createContext({
 
 export function socketEmit(socket, name, args, timeout) {
 	const p = new Promise((resolve, reject) => {
-		const id = shortid()
+		console.log('send', name)
 
-		console.log('send', name, id)
-
-		socket.once(id, (...res) => {
-			console.log('got', id)
-			resolve(res)
-		})
-
-		socket.emit(name, id, ...args)
+		socket.emit(name, ...args, (...res) => resolve(res))
 	})
 
 	return pTimeout(p, timeout ?? 5000)
