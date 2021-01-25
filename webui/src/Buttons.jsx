@@ -1,5 +1,5 @@
 import { CButton, CCol, CInput, CRow } from '@coreui/react'
-import React, { useContext } from 'react'
+import React, { useCallback, useContext, useState } from 'react'
 import { CompanionContext, KeyReceiver, socketEmit } from './util'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faArrowsAlt, faChevronLeft, faChevronRight, faCopy, faEraser, faFileExport, faTrash } from '@fortawesome/free-solid-svg-icons'
@@ -60,6 +60,14 @@ export class Buttons extends React.Component {
 		}
 
 		if (newPage !== undefined) {
+			this.props.changePage(newPage)
+		}
+	}
+
+	setPage = (newPage) => {
+		const pageNumbers = Object.keys(this.state.pages)
+		const newIndex = pageNumbers.findIndex(p => p === newPage + '')
+		if (newIndex !== -1) {
 			this.props.changePage(newPage)
 		}
 	}
@@ -193,6 +201,7 @@ export class Buttons extends React.Component {
 						pageNumber={pageNumber}
 						pageName={newPageName ?? pageName}
 						changePage={this.changePage}
+						setPage={this.setPage}
 						onNameBlur={() => this.setState({ newPageName: null })}
 						onNameChange={(e) => {
 							this.context.socket.emit('set_page', pageNumber, {
@@ -233,11 +242,48 @@ export class Buttons extends React.Component {
 	}
 }
 
-export function BankGridHeader({ pageNumber, pageName, onNameChange, onNameBlur, changePage }) {
+export function BankGridHeader({ pageNumber, pageName, onNameChange, onNameBlur, changePage, setPage }) {
+	const [tmpText, setTmpText] = useState(null)
+
+	const inputChange = useCallback((e) => {
+		const number = parseInt(e.currentTarget.value)
+		if (number > 0) {
+			setTmpText(number)
+		} else if (e.currentTarget.value === '') {
+			setTmpText(e.currentTarget.value)
+		}
+	}, [setTmpText]) 
+	const inputBlur = useCallback(() => {
+		setTmpText(tmpText => {
+			if (typeof tmpText === 'number') {
+				setPage(tmpText)
+			}
+
+			return null
+		})
+	}, [setTmpText, setPage])
+	const inputEnter = useCallback((e) => {
+		if (e.key === 'Enter') {
+			inputBlur()
+		}
+	}, [inputBlur])
+
 	return <>
-		<CButton color="primary" hidden={!changePage} onClick={() => changePage(-1)}><FontAwesomeIcon icon={faChevronLeft} /></CButton>
-		<CInput type="text" disabled={!changePage} placeholder={pageNumber} /> {/* TODO editing this */}
-		<CButton color="primary" hidden={!changePage} onClick={() => changePage(1)}><FontAwesomeIcon icon={faChevronRight} /></CButton>
+		<CButton color="primary" hidden={!changePage} onClick={() => changePage(-1)}>
+			<FontAwesomeIcon icon={faChevronLeft} />
+		</CButton>
+		<CInput
+			type="number"
+			disabled={!setPage}
+			placeholder={pageNumber}
+			value={tmpText ?? pageNumber}
+			onChange={inputChange}
+			onBlur={inputBlur}
+			onKeyDown={inputEnter}
+		/>
+		<CButton color="primary" hidden={!changePage} onClick={() => changePage(1)}>
+			<FontAwesomeIcon icon={faChevronRight} />
+		</CButton>
 		<CInput
 			className="page_title"
 			type="text"

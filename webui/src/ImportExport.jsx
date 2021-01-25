@@ -81,6 +81,14 @@ export function ImportExport({ pageNumber }) {
 			setImportPage(newPage)
 		}
 	}, [importPage, snapshot?.config])
+	const setPage = useCallback((newPage) => {
+		const pageNumbers = Object.keys(snapshot?.config ?? {})
+		const newIndex = pageNumbers.findIndex(p => p === newPage + '')
+		if (newIndex !== -1) {
+			setImportPage(newPage)
+		}
+	}, [snapshot?.config])
+
 
 	const doFullImport = useCallback(() => {
 		if (window.confirm('Are you sure you wish to replace the config?')) {
@@ -106,6 +114,7 @@ export function ImportExport({ pageNumber }) {
 				pageNumber={importPage}
 				pageName={isSinglePage ? snapshot.page.name : snapshot.page[importPage].name}
 				changePage={isSinglePage ? null : changePage}
+				setPage={isSinglePage ? null : setPage}
 			/>
 			<BankGrid config={isSinglePage ? snapshot.config : snapshot.config[importPage]} />
 
