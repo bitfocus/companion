@@ -61,6 +61,8 @@ export default class App extends React.Component {
 
 			actions: {},
 			feedbacks: {},
+
+			showSidebar: true,
 		}
 	}
 
@@ -268,6 +270,10 @@ export default class App extends React.Component {
 		}
 	}
 
+	toggleSidebar = () => {
+		this.setState({ showSidebar: !this.state.showSidebar })
+	}
+
 	render() {
 		const showInstanceConfig = this.state.configureInstanceId && this.state.instances[this.state.configureInstanceId]
 
@@ -302,9 +308,9 @@ export default class App extends React.Component {
 						<div className="c-app">
 							<HelpModal content={this.state.helpContent} hide={() => this.setState({ helpContent: null })} />
 
-							<MySidebar />
+							<MySidebar show={this.state.showSidebar} />
 							<div className="c-wrapper">
-								<MyHeader />
+								<MyHeader toggleSidebar={this.toggleSidebar} />
 								<div className="c-body">
 									<CContainer fluid className="animated fadeIn">
 										{

@@ -1,8 +1,8 @@
 import React, { useContext, useEffect, useState } from 'react'
-import { CHeader, CHeaderBrand, CHeaderNavItem, CHeaderNav, CHeaderNavLink } from '@coreui/react'
+import { CHeader, CHeaderBrand, CHeaderNavItem, CHeaderNav, CHeaderNavLink, CToggler } from '@coreui/react'
 import { CompanionContext } from '../util'
 
-export function MyHeader() {
+export function MyHeader({ toggleSidebar }) {
 	const context = useContext(CompanionContext)
 
 	const [versionInfo, setVersionInfo] = useState(null)
@@ -25,11 +25,12 @@ export function MyHeader() {
 
 	return (
 		<CHeader colorScheme="dark">
-			<CHeaderBrand>
-				<span style={{ fontWeight: 'bold' }}>Bitfocus</span> Companion
-        </CHeaderBrand>
+			<CToggler inHeader onClick={toggleSidebar} />
+			<CHeaderBrand className='d-lg-none' >
+				<span style={{ fontWeight: 'bold' }}>Bitfocus</span>&nbsp;Companion
+        	</CHeaderBrand>
 
-			<CHeaderNav>
+			<CHeaderNav className='d-md-down-none' >
 				<CHeaderNavItem>
 					<CHeaderNavLink target="_new" title="Version Number" href="https://bitfocus.io/companion/">
 						{versionString}

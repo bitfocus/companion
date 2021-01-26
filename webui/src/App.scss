@@ -1,8 +1,9 @@
+
+@import "scss/variables";
+
 @import "~@coreui/coreui/scss/coreui";
 
-.c-sidebar-nav-link svg {
-	margin-right: 1rem;
-}
+@import "scss/layout";
 
 
 @keyframes fadeIn {
