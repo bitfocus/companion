@@ -1,7 +1,7 @@
 import React, { useCallback, useContext, useEffect, useMemo, useState } from 'react'
 import { CButton, CForm, CFormGroup, CInput, CModal, CModalBody, CModalFooter, CModalHeader, CSelect } from '@coreui/react'
 import { CompanionContext, MyErrorBoundary, useMountEffect } from './util'
-import moment from 'moment'
+import dayjs from 'dayjs'
 import Select from 'react-select'
 import { BankPreview, dataToButtonImage } from './Components/BankButton'
 
@@ -422,7 +422,7 @@ function ScheduleTableRow({ item, replaceItem, editItem, image }) {
 				<br />
 				{
 					item.last_run
-					? <small>Last run: {moment(item.last_run).format(tableDateFormat)}</small>
+					? <small>Last run: {dayjs(item.last_run).format(tableDateFormat)}</small>
 					: ''
 				}
 			</td>

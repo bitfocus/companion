@@ -2,7 +2,7 @@ import React from 'react'
 import { CButton, CRow } from '@coreui/react'
 import { CompanionContext } from './util'
 import shortid from 'shortid'
-import moment from 'moment'
+import dayjs from 'dayjs'
 
 
 export class LogPanel extends React.Component {
@@ -94,7 +94,7 @@ export class LogPanel extends React.Component {
 					this.state.history.map(h => {
 						// console.log(h)
 						if (h.level === 'error' || this.state.config[h.level]) {
-							const time_format = moment(h.time).format('DD. HH:mm:ss')
+							const time_format = dayjs(h.time).format('DD. HH:mm:ss')
 							return <div key={h.id} className={`log-line log-type-${h.level}`}>
 								{time_format} <strong>{h.source}</strong>: {h.message}
 							</div>
