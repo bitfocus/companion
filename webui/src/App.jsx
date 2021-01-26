@@ -23,6 +23,8 @@ import { EditButton } from './EditButton'
 import { ImportExport } from './ImportExport'
 import { Scheduler } from './Scheduler'
 
+const serverUrl = window.SERVER_URL === '%REACT_APP_SERVER_URL%' ? undefined : window.SERVER_URL
+
 export default class App extends React.Component {
 	constructor(props) {
 		super(props)
@@ -63,7 +65,7 @@ export default class App extends React.Component {
 	}
 
 	componentDidMount() {
-		this.socket = new io('http://localhost:8000');
+		this.socket = new io(serverUrl);
 		this.socket.on('connect', () => {
 			if (this.state.has_connected) {
 				window.location.reload(true);

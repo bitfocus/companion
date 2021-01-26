@@ -1,5 +1,4 @@
 import React, { useEffect } from 'react'
-import shortid from 'shortid'
 import pTimeout from 'p-timeout'
 import { CAlert, CButton } from '@coreui/react'
 import { ErrorBoundary } from 'react-error-boundary'
