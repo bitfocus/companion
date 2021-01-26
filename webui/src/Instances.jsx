@@ -1,5 +1,5 @@
 import React from 'react'
-import { CButton } from '@coreui/react'
+import { CButton, CButtonGroup } from '@coreui/react'
 import { CompanionContext } from './util'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faQuestionCircle } from '@fortawesome/free-solid-svg-icons'

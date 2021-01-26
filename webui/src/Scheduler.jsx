@@ -427,7 +427,7 @@ function ScheduleTableRow({ item, replaceItem, editItem, image }) {
 				}
 			</td>
 			<td><BankPreview fixedSize preview={image} /></td>
-			<td class="scheduleActions">
+			<td>
 				<CButton size='sm' color='primary' onClick={doEdit}>edit</CButton>
 				{
 					item.disabled

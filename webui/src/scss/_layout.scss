@@ -3,14 +3,46 @@ body {
 	font-family: "Roboto", sans-serif;
 }
 
+.c-body {
+	padding-top: 15px;
+}
+
 .c-sidebar-nav-link:hover {
 	background: $primary;
 }
 
 .c-sidebar .c-sidebar-brand {
-	font-size: 1.4em;
+	font-size: 1.3em;
 }
 .c-header .c-header-brand {
-	font-size: 1.4em;
+	font-size: 1.3em;
 	margin: 0 auto;
+}
+
+.tab-content {
+	background-color: #fff;
+	border: 1px solid #c8ced3;
+	margin-top: -2px;
+	margin-bottom: 38px;
+	
+	.tab-pane {
+		padding: 1rem;
+	}
+}
+
+.nav.nav-tabs {
+	.nav-item .nav-link {
+		border-bottom: white;
+		color: #eee;
+
+		&.active {
+			background-color: #fff;
+			color: black;
+		}
+
+		&:hover {
+			background: #ccc;
+			color: black;
+		}
+	}
 }

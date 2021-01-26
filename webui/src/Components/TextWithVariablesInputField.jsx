@@ -47,8 +47,8 @@ export class TextWithVariablesInputField extends React.Component {
 	renderSuggestion(suggestion, search, highlightedDisplay) {
 		return (
 			<div className="variable_suggestion">
-				<span class="name">{highlightedDisplay}</span>
-				<span class="label">{suggestion.label}</span>
+				<span className="name">{highlightedDisplay}</span>
+				<span className="label">{suggestion.label}</span>
 			</div>
 		)
 	}

@@ -1,6 +1,8 @@
+import "@fontsource/roboto"
+import './App.scss';
+
 import React from 'react';
 import ReactDOM from 'react-dom';
-import './App.scss';
 import App from './App';
 import reportWebVitals from './reportWebVitals';
 

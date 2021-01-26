@@ -5,6 +5,10 @@
 
 @import "scss/layout";
 
+h4 {
+	font-weight: bold;
+	text-transform: uppercase;
+}
 
 @keyframes fadeIn {
 	from {
