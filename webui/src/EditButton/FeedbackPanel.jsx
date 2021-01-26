@@ -94,7 +94,7 @@ export const FeedbacksPanel = forwardRef(function ({ page, bank, dragId, addComm
 				<thead>
 					<tr>
 						<th></th>
-						<th colspan="2">Feedback</th>
+						<th colSpan="2">Feedback</th>
 						<th>Options</th>
 					</tr>
 				</thead>

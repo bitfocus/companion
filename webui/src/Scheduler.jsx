@@ -3,6 +3,7 @@ import { CButton, CForm, CFormGroup, CInput, CModal, CModalBody, CModalFooter, C
 import { CompanionContext, MyErrorBoundary, useMountEffect } from './util'
 import moment from 'moment'
 import Select from 'react-select'
+import { BankPreview, dataToButtonImage } from './Components/BankButton'
 
 function getPluginSpecDefaults(pluginOptions) {
 	const config = {}
@@ -307,6 +308,71 @@ function ScheduleEditModalInput ({ spec, value, onChange }) {
 }
 const tableDateFormat = 'MM/DD HH:mm:ss';
 function ScheduleTable({ scheduleList, replaceItem, editItem }) {
+	const context = useContext(CompanionContext)
+
+	const [previewImages, setPreviewImages] = useState({})
+	const [subscribedImages, setSubscribedImages] = useState([])
+
+	useMountEffect(() => {
+		const updateImage = (p, b, img) => {
+			const id = `${p}.${b}`
+			setPreviewImages(oldImages => ({
+				...oldImages,
+				[id]: dataToButtonImage(img)
+			}))
+		}
+		context.socket.on('schedule_preview_data', updateImage);
+		
+		return () => {
+			context.socket.off('schedule_preview_data', updateImage);
+
+			// unsubscribe all
+			for (const id of subscribedImages) {
+				const [page, bank] = id.split('.');
+				context.socket.emit('scheduler_bank_preview', page, bank, true);
+			}
+		}
+	})
+
+	useEffect(() => {
+		setSubscribedImages(oldSubs => {
+			const currentSubs = new Set(oldSubs)
+			const newSubs = new Set()
+
+			for (const item of scheduleList ?? []) {
+				// Subscribe if new
+				if (!currentSubs.has(item.button) && !newSubs.has(item.button)) {
+					const [page, bank] = item.button.split('.');
+					context.socket.emit('scheduler_bank_preview', page, bank);
+				}
+
+				newSubs.add(item.button)
+			}
+
+			// Unsubscribe old
+			for (const oldSub of Array.from(currentSubs)) {
+				if (!newSubs.has(oldSub)) {
+					const [page, bank] = oldSub.split('.');
+					context.socket.emit('scheduler_bank_preview', page, bank, true);
+				}
+			}
+
+			return Array.from(newSubs)
+		})
+	}, [context.socket, scheduleList])
+
+	useEffect(() => {
+		setPreviewImages(oldImages => {
+			const newImages = {}
+
+			for (const sub of subscribedImages) {
+				newImages[sub] = oldImages[sub]
+			}
+
+			return newImages
+		})
+	}, [subscribedImages])
+
 	return (
 		<table className="table table-responsive-sm">
 			<thead>
@@ -320,16 +386,16 @@ function ScheduleTable({ scheduleList, replaceItem, editItem }) {
 			<tbody>
 				{
 					scheduleList && scheduleList.length > 0
-					? scheduleList.map(item => <ScheduleTableRow key={item.id} item={item} replaceItem={replaceItem} editItem={editItem} />)
+					? scheduleList.map(item => <ScheduleTableRow key={item.id} item={item} replaceItem={replaceItem} editItem={editItem} image={previewImages[item.button]} />)
 					: <tr>
-						<td colspan="4">There currently are no events scheduled.</td>
+						<td colSpan="4">There currently are no events scheduled.</td>
 					</tr>
 				}
 			</tbody>
 		</table>
 	)
 }
-function ScheduleTableRow({ item, replaceItem, editItem }) {
+function ScheduleTableRow({ item, replaceItem, editItem, image }) {
 	const context = useContext(CompanionContext)
 
 	const doEnableDisable = useCallback(() => {
@@ -360,7 +426,7 @@ function ScheduleTableRow({ item, replaceItem, editItem }) {
 					: ''
 				}
 			</td>
-			<td><canvas width="72" height="72"></canvas></td>
+			<td><BankPreview fixedSize preview={image} /></td>
 			<td class="scheduleActions">
 				<CButton size='sm' color='primary' onClick={doEdit}>edit</CButton>
 				{
@@ -373,3 +439,29 @@ function ScheduleTableRow({ item, replaceItem, editItem }) {
 		</tr>
 	)
 }
+
+// function BankSchedulePreview({ page, bank, ...childProps }) {
+// 	const context = useContext(CompanionContext)
+// 	const [previewImage, setPreviewImage] = useState(null)
+
+// 	useEffect(() => {
+// 		const updateImage = (p, b, img) => {
+// 			//
+// 		}
+// 		this.socket.on('schedule_preview_data', updateImage);
+// 		this.socket.emit('scheduler_bank_preview', page, bank);
+// 		// socketEmit(context.socket, 'graphics_preview_generate', [preset.bank]).then(([img]) => {
+// 		// 	setPreviewImage(dataToButtonImage(img))
+// 		// }).catch(e => {
+// 		// 	console.error('Failed to preview bank')
+// 		// })
+// 		return () => {
+// 			this.socket.off('schedule_preview_data', updateImage);
+// 			this.socket.emit('scheduler_bank_preview', page, bank, true);
+// 		}
+// 	}, [context.socket, page, bank])
+
+// 	return (
+// 		<BankPreview fixedSize {...childProps} preview={previewImage} />
+// 	)
+// }

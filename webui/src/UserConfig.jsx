@@ -52,7 +52,9 @@ export class UserConfig extends React.Component {
 
 				<table className='table'>
 					<tbody>
-						<td colspan="2" className="settings-category">Navigation Buttons</td>
+						<tr>
+							<td colSpan="2" className="settings-category">Navigation Buttons</td>
+						</tr>
 
 						<tr>
 							<td>Flip counting direction on page up/down</td>
@@ -63,7 +65,7 @@ export class UserConfig extends React.Component {
 										checked={config.page_direction_flipped}
 										onChange={(e) => this.setValue('page_direction_flipped', e.currentTarget.checked)}
 									/>
-									<label className="form-check-label" for="userconfig_page_direction_flipped">Enabled</label>
+									<label className="form-check-label" htmlFor="userconfig_page_direction_flipped">Enabled</label>
 								</div>
 							</td>
 						</tr>
@@ -77,11 +79,13 @@ export class UserConfig extends React.Component {
 										checked={config.page_plusminus}
 										onChange={(e) => this.setValue('page_plusminus', e.currentTarget.checked)}
 									/>
-									<label className="form-check-label" for="userconfig_page_plusminus">Enabled</label>
+									<label className="form-check-label" htmlFor="userconfig_page_plusminus">Enabled</label>
 								</div>
 							</td>
 						</tr>
-						<td colspan="2" className="settings-category">Devices</td>
+						<tr>
+							<td colSpan="2" className="settings-category">Devices</td>
+						</tr>
 						<tr>
 							<td>Enable emulator control for Logitec R400/Mastercue/dSan</td>
 							<td>
@@ -91,12 +95,13 @@ export class UserConfig extends React.Component {
 										checked={config.emulator_control_enable}
 										onChange={(e) => this.setValue('emulator_control_enable', e.currentTarget.checked)}
 									/>
-									<label className="form-check-label" for="userconfig_emulator_control_enable">Enabled</label>
+									<label className="form-check-label" htmlFor="userconfig_emulator_control_enable">Enabled</label>
 								</div>
 							</td>
 						</tr>
-						<td colspan="2" className="settings-category">PIN Lockout</td>
-
+						<tr>
+							<td colSpan="2" className="settings-category">PIN Lockout</td>
+						</tr>
 						<tr>
 							<td>Enable Pin Codes</td>
 							<td>
@@ -106,7 +111,7 @@ export class UserConfig extends React.Component {
 										checked={config.pin_enable}
 										onChange={(e) => this.setValue('pin_enable', e.currentTarget.checked)}
 									/>
-									<label className="form-check-label" for="userconfig_pin_enable">Enabled</label>
+									<label className="form-check-label" htmlFor="userconfig_pin_enable">Enabled</label>
 								</div>
 							</td>
 						</tr>
@@ -120,7 +125,7 @@ export class UserConfig extends React.Component {
 										checked={config.link_lockouts}
 										onChange={(e) => this.setValue('link_lockouts', e.currentTarget.checked)}
 									/>
-									<label className="form-check-label" for="userconfig_link_lockouts">Enabled</label>
+									<label className="form-check-label" htmlFor="userconfig_link_lockouts">Enabled</label>
 								</div>
 							</td>
 						</tr>
@@ -150,8 +155,9 @@ export class UserConfig extends React.Component {
 								</div>
 							</td>
 						</tr>
-						<td colspan="2" className="settings-category">RossTalk</td>
-
+						<tr>
+							<td colSpan="2" className="settings-category">RossTalk</td>
+						</tr>
 						<tr>
 							<td>RossTalk Listener</td>
 							<td>
@@ -161,12 +167,13 @@ export class UserConfig extends React.Component {
 										checked={config.rosstalk_enabled}
 										onChange={(e) => this.setValue('rosstalk_enabled', e.currentTarget.checked)}
 									/>
-									<label className="form-check-label" for="userconfig_rosstalk_enabled">Enabled</label>
+									<label className="form-check-label" htmlFor="userconfig_rosstalk_enabled">Enabled</label>
 								</div>
 							</td>
 						</tr>
-
-						<td colspan="2" className="settings-category">Artnet Listener</td>
+						<tr>
+						<td colSpan="2" className="settings-category">Artnet Listener</td>
+						</tr>
 						<tr>
 							<td>Artnet Listener</td>
 							<td>
@@ -176,7 +183,7 @@ export class UserConfig extends React.Component {
 										checked={config.artnet_enabled}
 										onChange={(e) => this.setValue('artnet_enabled', e.currentTarget.checked)}
 									/>
-									<label className="form-check-label" for="userconfig_artnet_enabled">Enabled</label>
+									<label className="form-check-label" htmlFor="userconfig_artnet_enabled">Enabled</label>
 								</div>
 							</td>
 						</tr>

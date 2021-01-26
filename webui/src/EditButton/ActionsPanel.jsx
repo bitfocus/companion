@@ -115,7 +115,7 @@ export const ActionsPanel = forwardRef(function ({ page, bank, dragId, addComman
 				<thead>
 					<tr>
 						<th></th>
-						<th colspan="2">Action</th>
+						<th colSpan="2">Action</th>
 						<th>Delay (ms)</th>
 						<th>Options</th>
 					</tr>
