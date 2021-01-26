@@ -96,10 +96,12 @@ $(function() {
 
 			var $tr = $("<tr></tr>");
 
+			var $td_no = $("<td></td>");
 			var $td_id = $("<td></td>");
 			var $td_type = $("<td></td>");
 			var $td_settings = $("<td class='text-center'></td>");
 
+			$td_no.text("#"+n);
 			$td_id.text(data.serialnumber);
 			$td_type.text(data.type);
 
@@ -108,6 +110,7 @@ $(function() {
 				$td_settings.html("<button class='device_settings align-center btn btn-success'><i class='fa fa-gear'></i> Settings</button>");
 			}
 
+			$tr.append($td_no);
 			$tr.prop('id', n);
 			$tr.append($td_id);
 			$tr.append($td_type);

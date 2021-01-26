@@ -18,16 +18,21 @@ function packageinfo() {
 
 const buildNumber = fs.readFileSync(__dirname + "/BUILD").toString().trim();
 
-init({
-	dsn: 'https://535745b2e446442ab024d1c93a349154@sentry.bitfocus.io/8',
-	release: 'companion@' + ( buildNumber !== undefined ? buildNumber.trim() : packageinfo().version),
-	beforeSend(event) {
-    if (event.exception) {
-      showReportDialog();
-    }
-    return event;
-  }
-});
+if (process.env.DEVELOPER === undefined) {
+	console.log('Configuring sentry error reporting')
+	init({
+		dsn: 'https://535745b2e446442ab024d1c93a349154@sentry.bitfocus.io/8',
+		release: 'companion@' + ( buildNumber !== undefined ? buildNumber.trim() : packageinfo().version),
+		beforeSend(event) {
+			if (event.exception) {
+				showReportDialog();
+			}
+			return event;
+		}
+	});
+} else {
+	console.log('Sentry error reporting is disabled')
+}
 
 var window;
 var exiting = false;
@@ -198,8 +203,10 @@ function createTray() {
 		path.join(__dirname, 'assets', 'trayTemplate.png') :
 		path.join(__dirname, 'assets', 'icon.png')
 	);
-	tray.on('double-click', toggleWindow);
-	tray.on('click', toggleWindow);
+	tray.setIgnoreDoubleClickEvents(true)
+	if (process.platform !== "darwin") {
+		tray.on('click', toggleWindow);
+	}
 
 	const menu = new electron.Menu()
 	menu.append(new electron.MenuItem({
@@ -213,6 +220,10 @@ function createTray() {
 	menu.append(new electron.MenuItem({
 		label: 'Scan USB Devices',
 		click: scanUsb,
+	}))
+	menu.append(new electron.MenuItem({
+		label: 'Quit',
+		click: trayQuit,
 	}))
 	tray.setContextMenu(menu)
 }
@@ -233,6 +244,17 @@ function launchUI() {
 	}
 }
 
+function trayQuit() {
+	electron.dialog.showMessageBox(undefined, {
+		title: 'Companion',
+		message: 'Are you sure you want to quit Companion?',
+		buttons: ['Quit', 'Cancel']
+	}).then((v) => {
+		if (v.response === 0) {
+			system.emit('exit');
+		}
+	})
+}
 
 function scanUsb() {
 	system.emit('devices_reenumerate')

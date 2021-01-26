@@ -30,19 +30,13 @@
 			],
 			"extraFiles": [
 				{
-					"from": "./node_modules/sharp/vendor/lib",
+					"from": "./node_modules/sharp/vendor/8.10.5/lib",
 					"to": "Frameworks"
 				}
 			]
 		},
 		"win": {
 			"target": "nsis",
-			"asarUnpack": [
-				"node_modules/sharp"
-			],
-			"files": [
-				"!node_modules/sharp"
-			],
 			"extraFiles": [
 				{
 					"from": "./node_modules/sharp/build/Release",
@@ -70,11 +64,10 @@
 			"target": "dir",
 			"extraFiles": [
 				{
-					"from": "./node_modules/sharp/vendor/lib",
+					"from": "./node_modules/sharp/vendor/8.10.5/lib",
 					"to": ".",
 					"filter": [
-						"lib*",
-						"!libcairo*"
+						"libvips*.so.*"
 					]
 				}
 			]
@@ -82,6 +75,7 @@
 		"files": [
 			"**/*",
 			"assets/icon.png",
+			"assets/bitfocus-logo.png",
 			"assets/trayTemplate.png",
 			"assets/trayTemplate@2x.png",
 			"!font/*",
@@ -92,21 +86,23 @@
 		]
 	},
 	"scripts": {
-		"prod": "./tools/build_writefile.sh && electron .",
-		"dev": "rm -rf ./public/js/dist ; ./tools/build_writefile.sh && DEVELOPER=1 electron .",
+		"prod": "./tools/build_writefile.sh && yarn dist:js && electron .",
+		"dev": "./tools/build_writefile.sh && DEVELOPER=1 electron .",
 		"update": "./tools/update.sh",
 		"pack": "electron-builder --dir",
-		"dist": "./node_modules/.bin/babel ./public/js/babel --out-dir ./public/js/dist ; rm -rf electron-output && electron-builder",
+		"dist:js": "rm -rf public/js/dist && babel ./public/js/babel --out-dir ./public/js/dist",
+		"dist:prepare": "./tools/build_writefile.sh ; rm -rf electron-output && yarn dist:js",
+		"dist": "yarn dist:prepare && electron-builder",
+		"electron-rebuild": "electron-builder install-app-deps",
 		"testprod": "./node_modules/electron/cli.js .",
-		"macdist": "./tools/build_writefile.sh ; rm -rf electron-output && electron-builder --publish=never --mac",
-		"windist": "./tools/build_writefile.sh ; rm -rf electron-output && electron-builder --publish=never --win",
-		"lindist": "./tools/build_writefile.sh ; rm -rf electron-output && electron-builder --publish=never --linux",
-		"rpidist": "./tools/build_writefile.sh ; rm -rf electron-output && electron-builder --armv7l --linux",
-		"start": "yarn run",
+		"macdist": "yarn dist:prepare && electron-builder --publish=never --mac",
+		"windist": "yarn dist:prepare && electron-builder --publish=never --win",
+		"lindist": "yarn dist:prepare && electron-builder --publish=never --linux",
+		"rpidist": "yarn dist:prepare && electron-builder --armv7l --linux",
 		"test": "mocha",
-		"postinstall": "./tools/build_writefile.sh",
+		"postinstall": "./tools/build_writefile.sh && yarn dist:js",
 		"headless": "nodemon headless.js",
-		"dev-headless": "DEVELOPER=1 nodemon headless.js"
+		"dev-headless": "./tools/build_writefile.sh && DEVELOPER=1 nodemon headless.js"
 	},
 	"repository": "https://github.com/bitfocus/companion",
 	"keywords": [
@@ -116,10 +112,10 @@
 	"author": "Bitfocus AS",
 	"license": "MIT",
 	"devDependencies": {
-		"asar": "^3.0.3",
 		"@babel/cli": "^7.12.1",
 		"@babel/core": "^7.12.3",
 		"@babel/preset-env": "^7.12.1",
+		"asar": "^3.0.3",
 		"chai": "^4.2.0",
 		"chai-fs": "^2.0.0",
 		"electron": "^9.3.3",
@@ -142,7 +138,7 @@
 		"debug": "^4.2.0",
 		"electron-debug": "^1.5.0",
 		"electron-rpc": "^2.0.1",
-		"elgato-stream-deck": "^3.3.5",
+		"elgato-stream-deck": "^4.0.0",
 		"emberplus-connection": "^0.0.4",
 		"express": "^4.16.3",
 		"find-process": "1.4.3",
@@ -166,7 +162,7 @@
 		"popper.js": "1.16.1",
 		"read-package-json": "^2.1.2",
 		"select2": "4.0.13",
-		"sharp": "^0.25.0",
+		"sharp": "^0.27.0",
 		"shortid": "^2.2.16",
 		"socket.io": "^2.3.0",
 		"socket.io-client": "^2.3.1",
@@ -179,9 +175,9 @@
 		"url": "https://donorbox.org/bitfocus-opensource"
 	},
 	"optionalDependencies": {
-		"@julusian/jpeg-turbo": "^1.0.0-3"
+		"@julusian/jpeg-turbo": "^1.0.1"
 	},
 	"resolutions": {
-		"infinitton-idisplay/node-hid": "^1.0.0"
+		"infinitton-idisplay/node-hid": "^2.1.1"
 	}
 }

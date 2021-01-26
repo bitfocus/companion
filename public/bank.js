@@ -146,6 +146,10 @@ $(function() {
 	function updateFromConfig(page, bank, config, updateText) {
 		$('.active_field[data-special="alignment"]').removeClass('active_color');
 
+		if (config.style === 'png') {
+			$('#clearPngButton')[0].disabled = config.png64 === undefined
+		}
+
 		$(".active_field").each(function() {
 
 			if ($(this).data('fieldid') !== undefined && config[$(this).data('fieldid')] !== undefined) {
@@ -315,9 +319,13 @@ $(function() {
 			}
 
 			else if (field.type == 'filepicker') {
-
 				var $p = $("<p><label>"+field.label+"</label><br></p>");
-				var $div = $("<div class='filechoosercontainer'><label class='btn btn-primary btn-file'>Browse <input type='file' data-fieldid='"+field.id+"' accept='" + field.accept + "' style='display: none;'></label></div>");
+				var $div = $(`
+					<div class='filechoosercontainer'>
+						<label class='btn btn-primary btn-file'>Browse <input type='file' data-fieldid='"+field.id+"' accept='" + field.accept + "' style='display: none;'></label>
+						<button class='btn btn-primary' id='clearPngButton'><i class='fa fa-trash'></i></button>
+					</div>
+				`);
 
 				$p.append($div);
 				$field.append($p);
@@ -339,6 +347,7 @@ $(function() {
 								alert('An error occured while uploading image');
 							} else {
 								bank_preview_page(p);
+								$('#clearPngButton')[0].disabled = false;
 							}
 						});
 					}, function () {
@@ -348,6 +357,18 @@ $(function() {
 						self.value = null;
 					});
 				});
+
+				$field.find('#clearPngButton').click(function () {
+					if (confirm("Clear image for this button?")) {
+						socket.emit('bank_clear_png', p, b);
+						socket.once('bank_clear_png:result', function () {
+							bank_preview_page(p);
+							$('#clearPngButton')[0].disabled = true;
+						});
+					}
+				});
+		
+		
 			}
 			$eb.append($field);
 

@@ -1,5 +1,5 @@
 {
-  "_comment":  "manifest.json file for tablet.html to enable PWA support (Tablet web app)",
+  "_comment":  "manifest.json file for tablet pages to enable PWA support (Tablet web app)",
   "short_name": "companion",
   "name": "bitfocus companion",
   "icons": [
@@ -49,7 +49,6 @@
       "sizes": "1080x1080"
     }
   ],
-  "start_url": "/tablet.html",
   "background_color": "#000000",
   "display": "standalone",
   "scope": "/",

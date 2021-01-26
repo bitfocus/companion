@@ -95,8 +95,8 @@ async function run() {
 	let artifact_dest;
 
 	if (process.env.TRAVIS_OS_NAME === "osx") {
-		artifact_source = list.find(file => file.match(/\.zip$/));
-		artifact_dest = `companion-${build}-osx.zip`;
+		artifact_source = list.find(file => file.match(/\.dmg$/));
+		artifact_dest = `companion-${build}-mac.dmg`;
 		console.log("OSX");
 	}
 	else if (process.env.TRAVIS_OS_NAME === 'linux') {
