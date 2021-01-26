@@ -34,14 +34,14 @@
   },
   "devDependencies": {
     "@coreui/coreui": "^3.4.0",
-    "@coreui/react": "^3.4.3",
+    "@coreui/react": "^3.4.5",
     "@fortawesome/fontawesome-svg-core": "^1.2.34",
     "@fortawesome/free-solid-svg-icons": "^5.15.2",
     "@fortawesome/react-fontawesome": "^0.1.14",
     "@popperjs/core": "^2.6.0",
     "i18next": "^19.8.4",
     "i18next-browser-languagedetector": "^6.0.1",
-    "i18next-http-backend": "^1.0.21",
+    "i18next-http-backend": "^1.0.23",
     "immutability-helper": "^3.1.1",
     "node-sass": "^4.0.0",
     "p-timeout": "^4.1.0",
@@ -53,7 +53,7 @@
     "react-i18next": "^11.8.5",
     "react-mentions": "^4.1.1",
     "react-router-dom": "^5.2.0",
-    "react-select": "^3.2.0",
+    "react-select": "^4.0.2",
     "shortid": "^2.2.16",
     "socket.io-client": "^2.3.1"
   }
