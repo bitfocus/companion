@@ -194,7 +194,7 @@ export class Buttons extends React.Component {
 		return <KeyReceiver onKeyUp={this.props.onKeyUp} tabIndex={0}>
 			<h4>
 				Button layout
-				<CButton color='success' href={`/int/page_export/${pageNumber}`} target="_new" size="sm" className="button-page-export">
+				<CButton color='success' href={`/int/page_export/${pageNumber}`} target="_new" size="sm">
 					<FontAwesomeIcon icon={faFileExport} /> Export page
 				</CButton>
 			</h4>

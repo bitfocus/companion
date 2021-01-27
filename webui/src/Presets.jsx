@@ -1,152 +1,141 @@
-import React, { useContext, useEffect, useState } from 'react'
-import { CAlert, CButton, CCol, CRow } from '@coreui/react'
+import React, { useCallback, useContext, useEffect, useState } from 'react'
+import { CAlert, CButton } from '@coreui/react'
 import { CompanionContext, socketEmit } from './util'
 import { useDrag } from 'react-dnd'
 import { BankPreview, dataToButtonImage } from './Components/BankButton'
 
-export class InstancePresets extends React.Component {
-	static contextType = CompanionContext
+export function InstancePresets({ resetToken }) {
+	const context = useContext(CompanionContext)
 
-	constructor(props) {
-		super(props)
+	const [instanceAndCategory, setInstanceAndCategory] = useState([null, null])
+	const [presetsMap, setPresetsMap] = useState({})
 
-		this.state = {
-			presets: {},
+	// Reset selection on resetToken change
+	useEffect(() => {
+		setInstanceAndCategory([null, null])
+	}, [resetToken])
 
-			selectedInstanceId: null,
-			selectedCategory: null,
-		}
-	}
+	useEffect(() => {
 
-	componentDidMount() {
-		socketEmit(this.context.socket, 'get_presets', []).then(([data]) => {
-			this.setState({ presets: data })
+		socketEmit(context.socket, 'get_presets', []).then(([data]) => {
+			setPresetsMap(data)
 		}).catch((e) => {
 			console.error('Failed to load presets')
 		})
-		this.context.socket.on('presets_update', this.updatePresets)
-		this.context.socket.on('presets_delete', this.removePresets)
-	}
-	componentWillUnmount() {
-		this.context.socket.off('presets_update', this.updatePresets)
-		this.context.socket.off('presets_delete', this.removePresets)
-	}
 
-	componentDidUpdate(prevProps) {
-		if (this.props.token !== prevProps.token) {
-			this.setInstanceAndCategory(null, null)
-		}
-	}
-
-	updatePresets = (id, presets) => {
-		this.setState({
-			presets: {
-				...this.state.presets,
+		const updatePresets = (id, presets) => {
+			setPresetsMap(oldPresets => ({
+				...oldPresets,
 				[id]: presets,
-			}
-		})
-	}
-	removePresets = (id) => {
-		const newPresets = { ...this.state.presets }
-		delete newPresets[id]
-		this.setState({ presets: newPresets })
-	}
-
-	setInstanceAndCategory = (instance, category) => {
-		this.setState({
-			selectedInstanceId: instance,
-			selectedCategory: category,
-		})
-	}
-
-	renderInstancesList() {
-		const keys = Object.keys(this.state.presets)
-		if (keys.length === 0) {
-			return <CAlert color='primary'>You have no instances that support presets at the moment. More and more modules will support presets in the future.</CAlert>
-		} else {
-			return keys.map((id) => {
-				const instance = this.context.instances[id]
-				const module = instance ? this.context.modules[instance.instance_type] : undefined
-
-				return <div key={id}>
-					<CButton color='primary' className="choose_instance" onClick={() => this.setInstanceAndCategory(id, null)}>
-						{module?.label ?? '?'} ({instance?.label ?? id})
-                    </CButton>
-					<br /><br />
-				</div>
+			}))
+		}
+		const removePresets = (id) => {
+			setPresetsMap(oldPresets => {
+				const newPresets = { ...oldPresets }
+				delete newPresets[id]
+				return newPresets
 			})
 		}
-	}
 
-	renderCategoryList() {
-		const presets = this.state.presets[this.state.selectedInstanceId] ?? []
-		const categories = new Set()
-		for (const preset of presets) {
-			categories.add(preset.category)
+		context.socket.on('presets_update', updatePresets)
+		context.socket.on('presets_delete', removePresets)
+
+		return () => {
+			context.socket.off('presets_update', updatePresets)
+			context.socket.off('presets_delete', removePresets)
 		}
+	}, [context.socket])
 
-		if (categories.size === 0) {
-			return <CAlert color='primary'>Instance has no categories.</CAlert>
+	if (instanceAndCategory[0]) {
+		const instance = context.instances[instanceAndCategory[0]]
+		const module = instance ? context.modules[instance.instance_type] : undefined
+
+		const presets = presetsMap[instanceAndCategory[0]] ?? []
+
+		if (instanceAndCategory[1]) {
+			return <PresetsButtonList presets={presets} selectedInstanceId={instanceAndCategory[0]} selectedCategory={instanceAndCategory[1]} setInstanceAndCategory={setInstanceAndCategory} />
 		} else {
-			return <CRow>
-				{
-					Array.from(categories).map((category) => {
-						return <CCol key={category} md={3} className="margbot">
-							<CButton color="primary" block onClick={() => this.setInstanceAndCategory(this.state.selectedInstanceId, category)}>{category}</CButton>
-						</CCol>
-					})
-				}
-			</CRow>
+			return <PresetsCategoryList presets={presets} instance={instance} module={module} selectedInstanceId={instanceAndCategory[0]} setInstanceAndCategory={setInstanceAndCategory} />
 		}
+	} else {
+		return <PresetsInstanceList presets={presetsMap} setInstanceAndCategory={setInstanceAndCategory} />
+	}
+}
+
+function PresetsInstanceList({ presets, setInstanceAndCategory }) {
+	const context = useContext(CompanionContext)
+
+	const options = Object.keys(presets).map((id) => {
+		const instance = context.instances[id]
+		const module = instance ? context.modules[instance.instance_type] : undefined
+
+		return <div key={id}>
+			<CButton color='primary' className="choose_instance" onClick={() => setInstanceAndCategory([id, null])}>
+				{module?.label ?? '?'} ({instance?.label ?? id})
+			</CButton>
+			<br /><br />
+		</div>
+	})
+
+	return <div>
+		<h4>Available instance presets</h4>
+
+		{
+			options.length === 0
+				? <CAlert color='primary'>You have no instances that support presets at the moment. More modules will support presets in the future.</CAlert>
+				: options
+		}
+	</div>
+}
+
+function PresetsCategoryList({ presets, instance, module, selectedInstanceId, setInstanceAndCategory }) {
+	const categories = new Set()
+	for (const preset of presets) {
+		categories.add(preset.category)
 	}
 
-	render() {
-		if (this.state.selectedInstanceId) {
-			const instance = this.context.instances[this.state.selectedInstanceId]
-			const module = instance ? this.context.modules[instance.instance_type] : undefined
+	const doBack = useCallback(() => setInstanceAndCategory([null, null]), [setInstanceAndCategory])
 
-			const presets = this.state.presets[this.state.selectedInstanceId] ?? []
+	const buttons = Array.from(categories).map((category) => {
+		return <CButton key={category} color="primary" block onClick={() => setInstanceAndCategory([selectedInstanceId, category])}>{category}</CButton>
+	})
 
-			if (this.state.selectedCategory) {
-				const options = presets.filter(p => p.category === this.state.selectedCategory)
+	return <div>
+		<h4>
+			<CButton color='primary' size="sm" onClick={doBack}>Back</CButton>
+			Preset categories for  {module?.label ?? '?'} ({instance?.label ?? selectedInstanceId})
+		</h4>
 
-				return <div>
-					<CButton color='primary' className="pull-right back_main" onClick={() => this.setInstanceAndCategory(this.state.selectedInstanceId, null)}>Back</CButton>
-					<h4>Presets for {this.state.selectedCategory}</h4>
-					<p>Drag and drop the preset buttons below into your buttons-configuration.</p>
-
-					{
-						options.map((preset, i) => {
-							return <PresetIconPreview key={i} instanceId={this.state.selectedInstanceId} onClick={() => null} preset={preset} alt={preset.label} />
-						})
-					}
-					<div className="presetbank buttonbankwidth" data-drawn="no" data-instance="' + instance + '" title="' + preset.label + '" data-key="' + key + '">
-						<canvas width="72" style={{ cursor: 'pointer' }} height="72"></canvas>
-					</div>
-
-					<br style={{ clear: 'both' }} />
+		{
+			buttons.length === 0
+				? <CAlert color='primary'>Instance has no presets.</CAlert>
+				: <div className="preset-category-grid">
+					{buttons}
 				</div>
-			} else {
-				const categories = new Set()
-				for (const preset of presets) {
-					categories.add(preset.category)
-				}
-
-				return <div>
-					<CButton color='primary' className="pull-right back_main" onClick={() => this.setInstanceAndCategory(null, null)}>Back</CButton>
-					<h4>Preset categories for  {module?.label ?? '?'} ({instance?.label ?? this.state.selectedInstanceId})</h4>
-
-					{this.renderCategoryList()}
-				</div>
-			}
-		} else {
-			return <div>
-				<h4>Available instance presets</h4>
-
-				{this.renderInstancesList()}
-			</div>
 		}
-	}
+	</div>
+}
+
+function PresetsButtonList({ presets, selectedInstanceId, selectedCategory, setInstanceAndCategory }) {
+	const doBack = useCallback(() => setInstanceAndCategory([selectedInstanceId, null]), [setInstanceAndCategory, selectedInstanceId])
+
+	const options = presets.filter(p => p.category === selectedCategory)
+
+	return <div>
+		<h4>
+			<CButton color='primary' size="sm" onClick={doBack}>Back</CButton>
+			Presets for {selectedCategory}
+		</h4>
+		<p>Drag and drop the preset buttons below into your buttons-configuration.</p>
+
+		{
+			options.map((preset, i) => {
+				return <PresetIconPreview key={i} instanceId={selectedInstanceId} preset={preset} alt={preset.label} />
+			})
+		}
+
+		<br style={{ clear: 'both' }} />
+	</div>
 }
 
 function PresetIconPreview({ preset, instanceId, ...childProps }) {

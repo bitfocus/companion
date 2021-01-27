@@ -1,7 +1,4 @@
 
-.button-page-export {
-	float: right;
-}
 
 .button-grid-header {
 	display: grid;
@@ -14,6 +11,9 @@
 	}
 }
 
+.tab-pane .nav.nav-tabs .nav-link {
+	color: black;
+}
 
 #pagebank {
 	display: grid;
