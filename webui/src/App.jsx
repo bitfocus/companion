@@ -5,7 +5,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import io from 'socket.io-client'
 import shortid from 'shortid'
 
-import { CompanionContext, MyErrorBoundary, socketEmit } from './util'
+import { MyErrorBoundary } from './util'
 import { Surfaces } from './Surfaces'
 import { UserConfig } from './UserConfig'
 import { LogPanel } from './LogPanel'
@@ -17,6 +17,7 @@ import { MyHeader } from './Layout/Header'
 import { Scheduler } from './Scheduler'
 import { InstancesPage } from './Instances'
 import { ButtonsPage } from './Buttons'
+import { ContextData } from './ContextData'
 
 const serverUrl = window.SERVER_URL === '%REACT_APP_SERVER_URL%' ? undefined : window.SERVER_URL
 
@@ -28,22 +29,12 @@ export default class App extends React.Component {
 
 		this.state = {
 			connected: false,
-			has_connected: false,
-
-			// modules
-			modules: {},
-			instances: {},
+			was_connected: false,
 
 			activeRootTab: 'instances',
 			activeRootTabToken: shortid(),
 
-			hotPress: false,
-
-			variableDefinitions: {},
-			variableValues: {},
-
-			actions: {},
-			feedbacks: {},
+			buttonGridHotPress: false,
 
 			showSidebar: true,
 		}
@@ -52,117 +43,40 @@ export default class App extends React.Component {
 	componentDidMount() {
 		this.socket = new io(serverUrl);
 		this.socket.on('connect', () => {
-			if (this.state.has_connected) {
+			if (this.state.was_connected) {
 				window.location.reload(true);
 			} else {
 				this.setState({
-					connected: true,
-					has_connected: true
+					connected: true
 				})
 			}
 		});
 		// this.socket.on('event', function(data){console.log('event', data)});
-		this.socket.on('disconnect', () => this.setState({ connected: false }));
-
-		socketEmit(this.socket, 'modules_get', []).then(([res]) => {
-			const modulesObj = {}
-			for (const mod of res.modules) {
-				modulesObj[mod.name] = mod
-			}
+		this.socket.on('disconnect', () => {
 			this.setState({
-				// ...res,
-				modules: modulesObj,
+				connected: false,
+				was_connected: this.state.connected
 			})
-		}).catch((e) => {
-			console.error('Failed to load modules list', e)
-		})
-		socketEmit(this.socket, 'variable_instance_definitions_get', []).then(([data]) => {
-			this.setState({
-				variableDefinitions: data || {},
-			})
-		}).catch((e) => {
-			console.error('Failed to load variable definitions list', e)
-		})
-		socketEmit(this.socket, 'variables_get', []).then(([data]) => {
-			this.setState({
-				variableValues: data || {},
-			})
-		}).catch((e) => {
-			console.error('Failed to load variable values list', e)
-		})
-
-		this.socket.on('instances_get:result', this.updateInstancesInfo)
-		this.socket.emit('instances_get')
-
-		this.socket.on('variable_instance_definitions_set', this.updateVariableDefinitions)
-		this.socket.on('variable_set', this.updateVariableValue)
-
-		this.socket.on('actions', this.updateActions)
-		this.socket.emit('get_actions')
-
-		this.socket.on('feedback_get_definitions:result', this.updateFeedbacks)
-		this.socket.emit('feedback_get_definitions')
+		});
 
 		document.addEventListener('keydown', this.handleKeyDown);
 		document.addEventListener('keyup', this.handleKeyUp);
 	}
 
 	componentWillUnmount() {
-		this.socket.off('instances_get:result', this.updateInstancesInfo)
-		this.socket.off('variable_instance_definitions_set', this.updateVariableDefinitions)
-		this.socket.off('variable_set', this.updateVariableValue)
-		this.socket.off('actions', this.updateActions)
-		this.socket.off('feedback_get_definitions:result', this.updateFeedbacks)
-
 		document.removeEventListener('keydown', this.handleKeyDown);
 		document.removeEventListener('keyup', this.handleKeyUp);
 	}
 
 	handleKeyDown = (e) => {
 		if (e.key === 'Shift') {
-			this.setState({ hotPress: true })
+			this.setState({ buttonGridHotPress: true })
 		}
 	}
 	handleKeyUp = (e) => {
 		if (e.key === 'Shift') {
-			this.setState({ hotPress: false })
+			this.setState({ buttonGridHotPress: false })
 		}
-	}
-
-	updateActions = (actions) => {
-		this.setState({
-			actions: actions,
-		})
-	}
-
-	updateFeedbacks = (feedbacks) => {
-		this.setState({
-			feedbacks: feedbacks
-		})
-	}
-
-	updateVariableDefinitions = (label, variables) => {
-		this.setState({
-			variableDefinitions: {
-				...this.state.variableDefinitions,
-				[label]: variables
-			}
-		})
-	}
-
-	updateVariableValue = (key, value) => {
-		this.setState({
-			variableValues: {
-				...this.state.variableValues,
-				[key]: value
-			}
-		})
-	}
-
-	updateInstancesInfo = (db) => {
-		this.setState({
-			instances: db,
-		})
 	}
 
 	toggleSidebar = () => {
@@ -170,19 +84,9 @@ export default class App extends React.Component {
 	}
 
 	render() {
-		const contextValue = {
-			socket: this.socket,
-			instances: this.state.instances,
-			modules: this.state.modules,
-			variableDefinitions: this.state.variableDefinitions,
-			variableValues: this.state.variableValues,
-			actions: this.state.actions,
-			feedbacks: this.state.feedbacks,
-		}
-
 		return (
-			<CompanionContext.Provider value={contextValue} >
-				<div id="error-container" className={this.state.has_connected && !this.state.connected ? "show-error" : ''}>
+			<ContextData socket={this.socket}>
+				<div id="error-container" className={this.state.was_connected ? "show-error" : ''}>
 					<div className="row justify-content-center">
 						<div className="col-md-6">
 							<div className="clearfix">
@@ -224,7 +128,7 @@ export default class App extends React.Component {
 														</CTabPane>
 														<CTabPane data-tab="buttons">
 															<MyErrorBoundary>
-																<ButtonsPage hotPress={this.state.hotPress} />
+																<ButtonsPage hotPress={this.state.buttonGridHotPress} />
 															</MyErrorBoundary>
 														</CTabPane>
 														<CTabPane data-tab="surfaces">
@@ -257,7 +161,7 @@ export default class App extends React.Component {
 						</div>
 					</DndProvider>
 				</Suspense>
-			</CompanionContext.Provider>
+			</ContextData>
 		);
 	}
 }
