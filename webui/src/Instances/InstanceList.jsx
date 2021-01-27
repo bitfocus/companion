@@ -1,5 +1,5 @@
-import { useContext, useEffect, useState } from 'react'
-import { CButton } from '@coreui/react'
+import { forwardRef, useCallback, useContext, useEffect, useImperativeHandle, useRef, useState } from 'react'
+import { CButton, CModal, CModalBody, CModalFooter, CModalHeader } from '@coreui/react'
 import { CompanionContext } from '../util'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faQuestionCircle } from '@fortawesome/free-solid-svg-icons'
@@ -10,6 +10,8 @@ export function InstancesList({ configureInstance, showHelp }) {
 	const context = useContext(CompanionContext)
 	const [instanceStatus, setInstanceStatus] = useState({})
 
+	const deleteModalRef = useRef()
+
 	useEffect(() => {
 		context.socket.on('instance_status', setInstanceStatus)
 		context.socket.emit('instance_status_get')
@@ -19,10 +21,17 @@ export function InstancesList({ configureInstance, showHelp }) {
 		}
 	}, [context.socket])
 
+	const doDelete = useCallback((instanceId) => {
+		context.socket.emit('instance_delete', instanceId)
+		configureInstance(null)
+	}, [context.socket, configureInstance])
+
 	return (
 		<div>
 			<h4>Connections / Instances</h4>
 			<p>Instances are the connections companion makes to other devices and software in order to control them.</p>
+
+			<ConfirmDeleteModal ref={deleteModalRef} doDelete={doDelete} />
 
 			<table className="table table-responsive-sm">
 				<thead>
@@ -45,6 +54,7 @@ export function InstancesList({ configureInstance, showHelp }) {
 									instance={instance}
 									instanceStatus={instanceStatus[id]}
 									showHelp={showHelp}
+									deleteModalRef={deleteModalRef}
 									configureInstance={configureInstance}
 								/>
 							}
@@ -59,13 +69,21 @@ export function InstancesList({ configureInstance, showHelp }) {
 	)
 }
 
-function InstancesTableRow({ id, instance, instanceStatus, showHelp, configureInstance }) {
+function InstancesTableRow({ id, instance, instanceStatus, showHelp, configureInstance, deleteModalRef }) {
 	const context = useContext(CompanionContext)
 
 	const moduleInfo = context.modules[instance.instance_type]
 
 	const status = processModuleStatus(instanceStatus)
 	const isEnabled = instance.enabled === undefined || instance.enabled
+
+	const doDelete = useCallback(() => {
+		deleteModalRef.current.show(id, instance.label)
+	}, [deleteModalRef, id, instance.label])
+
+	const doToggleEnabled = useCallback(() => {
+		context.socket.emit('instance_enable', id, !isEnabled)
+	}, [context.socket, id, isEnabled])
 
 	return <tr>
 		<td>
@@ -85,16 +103,11 @@ function InstancesTableRow({ id, instance, instanceStatus, showHelp, configureIn
 		<td>{instance.label}</td>
 		<td className={status.className} title={status.title}>{status.text}</td>
 		<td className='action-buttons'>
-			<CButton onClick={() => {
-				if (window.confirm('Delete instance?')) {
-					context.socket.emit('instance_delete', id)
-					configureInstance(null)
-				}
-			}} variant='ghost' color='danger' size='sm'>delete</CButton>
+			<CButton onClick={doDelete} variant='ghost' color='danger' size='sm'>delete</CButton>
 			{
 				isEnabled
-					? <CButton onClick={() => context.socket.emit('instance_enable', id, false)} variant='ghost' color='warning' size='sm' disabled={!moduleInfo}>disable</CButton>
-					: <CButton onClick={() => context.socket.emit('instance_enable', id, true)} variant='ghost' color='success' size='sm' disabled={!moduleInfo}>enable</CButton>
+					? <CButton onClick={doToggleEnabled} variant='ghost' color='warning' size='sm' disabled={!moduleInfo}>disable</CButton>
+					: <CButton onClick={doToggleEnabled} variant='ghost' color='success' size='sm' disabled={!moduleInfo}>enable</CButton>
 			}
 			<CButton onClick={() => configureInstance(id)} color='primary' size='sm' disabled={!moduleInfo || !isEnabled}>edit</CButton>
 		</td>
@@ -145,3 +158,42 @@ function processModuleStatus(status) {
 		className: '',
 	}
 }
+
+const ConfirmDeleteModal = forwardRef(function ConfirmDeleteModal({ doDelete }, ref) {
+	const [data, setData] = useState(null)
+
+	const doClose = useCallback(() => setData(null), [])
+	const doDelete2 = useCallback(() => {
+		setData(null)
+		doDelete(data?.[0])
+	},[data, doDelete])
+
+	useImperativeHandle(ref, () => ({
+		show(id, name) {
+			setData([id, name])	
+		}
+	}), [])
+
+	return (
+		<CModal show={!!data} onClose={doClose}>
+			<CModalHeader closeButton>
+				<h5>Delete instance</h5>
+			</CModalHeader>
+			<CModalBody>
+
+				<p>Are you sure you want to delete "{data?.[1]}"?</p>
+
+			</CModalBody>
+			<CModalFooter>
+				<CButton
+					color="secondary"
+					onClick={doClose}
+				>Cancel</CButton>
+				<CButton
+					color="primary"
+					onClick={doDelete2}
+				>Delete</CButton>
+			</CModalFooter>
+		</CModal>
+	)
+})

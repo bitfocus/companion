@@ -192,7 +192,12 @@ export class Buttons extends React.Component {
 		const pageName = pageInfo?.name ?? 'PAGE'
 
 		return <KeyReceiver onKeyUp={this.props.onKeyUp} tabIndex={0}>
-			<h4>Button layout</h4>
+			<h4>
+				Button layout
+				<CButton color='success' href={`/int/page_export/${pageNumber}`} target="_new" size="sm" className="button-page-export">
+					<FontAwesomeIcon icon={faFileExport} /> Export page
+				</CButton>
+			</h4>
 			<p>The squares below represent each button on your Streamdeck. Click on them to set up how you want them to look, and what they should do when you press or click on them.</p><p>You can navigate between pages using the arrow buttons, or by clicking the page number, typing in a number, and pressing 'Enter' on your keyboard.</p>
 
 			<CRow>
@@ -219,22 +224,19 @@ export class Buttons extends React.Component {
 			</CRow>
 
 			<CRow style={{ paddingTop: '15px' }}>
-				<CCol sm={12} id="functionkeys" className={classnames({ 'slide-up': this.props.isHot, 'slide-height': true })}>
-					{/* TODO - these */}
+				<CCol sm={12} className={classnames({ 'slide-up': this.props.isHot, 'slide-height': true })}>
 					{this.getButton('Copy', faCopy, 'copy')}
 					{this.getButton('Move', faArrowsAlt, 'move')}
 					{this.getButton('Delete', faTrash, 'delete')}
 					<CButton color="danger" onClick={() => this.stopFunction()} style={{ display: this.state.activeFunction ? '' : 'none' }}>Cancel</CButton>
-					<CButton color="disabled" style={{ display: this.state.activeFunction ? '' : 'none' }}>
-						{this.hintButtonText()}
-					</CButton>
+					<CButton color="disabled" hidden={!this.state.activeFunction}>{this.hintButtonText()}</CButton>
+						
+					&nbsp;
 
 					<span>
 						<CButton color="warning" onClick={() => this.resetPage()}><FontAwesomeIcon icon={faEraser} /> Wipe page</CButton>
 						<CButton color="warning" onClick={() => this.resetPageNav()}><FontAwesomeIcon icon={faEraser} /> Reset page buttons</CButton><br /><br />
-						<CButton color='success' href={`/int/page_export/${pageNumber}`} target="_new">
-							<FontAwesomeIcon icon={faFileExport} /> Export page
-                        </CButton>
+						
 					</span>
 				</CCol>
 			</CRow>

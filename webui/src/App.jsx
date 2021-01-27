@@ -1,6 +1,6 @@
 import React, { Suspense } from 'react'
 import { CContainer, CRow, CCol, CTabs, CTabContent, CTabPane, CNav, CNavItem, CNavLink } from '@coreui/react'
-import { faCalculator, faCalendarAlt, faClipboardList, faClock, faCog, faFileImport, faGamepad, faGift, faPlug, faUserNinja } from '@fortawesome/free-solid-svg-icons'
+import { faCalculator, faCalendarAlt, faClipboardList, faClock, faFileImport, faGamepad, faGift, faPlug, faUserNinja } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import io from 'socket.io-client'
 import shortid from 'shortid'
@@ -39,8 +39,7 @@ export default class App extends React.Component {
 			activeRootTab: 'instances',
 			activeRootTabToken: shortid(),
 
-			activeTab1: 'instances',
-			activeTab2: 'log',
+			activeTab2: 'presets',
 			activePresetToken: shortid(),
 			importExportToken: shortid(),
 			editBankToken: shortid(),
@@ -199,7 +198,7 @@ export default class App extends React.Component {
 		}
 	}
 
-	onKeyUp = (e) => {
+	handleKeyUpInButtons = (e) => {
 		if (e.target.tagName !== 'INPUT' && e.target.tagName !== 'TEXTAREA') {
 			if (this.state.selectedButton) {
 				// keyup with button selected
@@ -306,55 +305,26 @@ export default class App extends React.Component {
 														<CTabPane data-tab="buttons">
 															<CRow>
 																<CCol xs={12} xl={6}>
-																	<CTabs activeTab={this.state.activeTab1} onActiveTabChange={(a) => this.setState({ activeTab1: a })}>
-																		<CNav variant="tabs">
-																			<CNavItem><CNavLink data-tab="instances"><FontAwesomeIcon icon={faPlug} /> Instances</CNavLink></CNavItem>
-																			<CNavItem><CNavLink data-tab="buttons"><FontAwesomeIcon icon={faCalendarAlt} /> Buttons</CNavLink></CNavItem>
-																			<CNavItem><CNavLink data-tab="surfaces"><FontAwesomeIcon icon={faGamepad} /> Surfaces</CNavLink></CNavItem>
-																			<CNavItem><CNavLink data-tab="triggers"><FontAwesomeIcon icon={faClock} /> Triggers</CNavLink></CNavItem>
-																			<CNavItem><CNavLink data-tab="userconfig"><FontAwesomeIcon icon={faUserNinja} /> Settings</CNavLink></CNavItem>
-																		</CNav>
-																		<CTabContent fade={false}>
-																			<CTabPane data-tab="instances">
-																				<MyErrorBoundary>
-																					<p>Moved!</p>
-																				</MyErrorBoundary>
-																			</CTabPane>
-																			<CTabPane data-tab="instanceConfig">
-																				<MyErrorBoundary>
-																					<p>Moved!</p>
-																				</MyErrorBoundary>
-																			</CTabPane>
-																			<CTabPane data-tab="buttons">
-																				<MyErrorBoundary>
-																					<Buttons
-																						buttonGridClick={this.buttonGridClick}
-																						isHot={this.state.hotPress}
-																						selectedButton={this.state.selectedButton}
-																						pageNumber={this.state.pageNumber}
-																						changePage={this.updatePage}
-																						onKeyUp={this.onKeyUp}
-																					/>
-																				</MyErrorBoundary>
-																			</CTabPane>
-																		</CTabContent>
-																	</CTabs>
+																	<MyErrorBoundary>
+																		<Buttons
+																			buttonGridClick={this.buttonGridClick}
+																			isHot={this.state.hotPress}
+																			selectedButton={this.state.selectedButton}
+																			pageNumber={this.state.pageNumber}
+																			changePage={this.updatePage}
+																			onKeyUp={this.handleKeyUpInButtons}
+																		/>
+																	</MyErrorBoundary>
 																</CCol>
 
 																<CCol xs={12} xl={6}>
 																	<CTabs activeTab={this.state.activeTab2} onActiveTabChange={(a) => a !== this.state.activeTab2 && this.setState({ activeTab2: a, selectedButton: null })}>
 																		<CNav variant="tabs">
-																			<CNavItem><CNavLink data-tab="log"><FontAwesomeIcon icon={faClipboardList} /> Log</CNavLink></CNavItem>
 																			<CNavItem hidden={!this.state.selectedButton}><CNavLink data-tab="edit"><FontAwesomeIcon icon={faCalculator} /> Edit Button {this.state.selectedButton ? `${this.state.selectedButton[0]}.${this.state.selectedButton[1]}` : '?'}</CNavLink></CNavItem>
 																			<CNavItem><CNavLink data-tab="presets" onClick={(a) => this.setState({ activePresetToken: shortid() })}><FontAwesomeIcon icon={faGift} /> Presets</CNavLink></CNavItem>
 																			<CNavItem><CNavLink data-tab="importexport" onClick={(a) => this.setState({ importExportToken: shortid() })}><FontAwesomeIcon icon={faFileImport} /> Import / Export</CNavLink></CNavItem>
 																		</CNav>
 																		<CTabContent fade={false}>
-																			<CTabPane data-tab="log">
-																				<MyErrorBoundary>
-																					<p>Moved!</p>
-																				</MyErrorBoundary>
-																			</CTabPane>
 																			<CTabPane data-tab="edit">
 																				<MyErrorBoundary>
 																					{
@@ -363,7 +333,7 @@ export default class App extends React.Component {
 																								key={`${this.state.selectedButton[0]}.${this.state.selectedButton[1]}.${this.state.editBankToken}`}
 																								page={this.state.selectedButton[0]}
 																								bank={this.state.selectedButton[1]}
-																								onKeyUp={this.onKeyUp}
+																								onKeyUp={this.handleKeyUpInButtons}
 																							/>
 																							: ''
 																					}

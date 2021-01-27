@@ -117,7 +117,7 @@ export class InstancePresets extends React.Component {
 
 					{
 						options.map((preset, i) => {
-							return <BankTemplatePreview key={i} instanceId={this.state.selectedInstanceId} onClick={() => null} preset={preset} alt={preset.label} />
+							return <PresetIconPreview key={i} instanceId={this.state.selectedInstanceId} onClick={() => null} preset={preset} alt={preset.label} />
 						})
 					}
 					<div className="presetbank buttonbankwidth" data-drawn="no" data-instance="' + instance + '" title="' + preset.label + '" data-key="' + key + '">
@@ -149,11 +149,11 @@ export class InstancePresets extends React.Component {
 	}
 }
 
-function BankTemplatePreview({ preset, instanceId, ...childProps }) {
+function PresetIconPreview({ preset, instanceId, ...childProps }) {
 	const context = useContext(CompanionContext)
 	const [previewImage, setPreviewImage] = useState(null)
 
-	const [{ }, drag] = useDrag({
+	const [, drag] = useDrag({
 		item: {
 			type: 'preset',
 			instanceId: instanceId,
