@@ -84,7 +84,7 @@ function InstancesTableRow({ id, instance, instanceStatus, showHelp, configureIn
 		</td>
 		<td>{instance.label}</td>
 		<td className={status.className} title={status.title}>{status.text}</td>
-		<td className='btn-caps'>
+		<td className='action-buttons'>
 			<CButton onClick={() => {
 				if (window.confirm('Delete instance?')) {
 					context.socket.emit('instance_delete', id)
