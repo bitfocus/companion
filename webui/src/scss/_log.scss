@@ -1,0 +1,39 @@
+
+// .log-buttons {
+// }
+.log-panel {
+	margin-top: 5px;
+	font-size: 0.85em;
+
+	.log-line {
+		margin-top:0px;
+		margin-bottom: 1px;
+		padding-top: 1px;
+		padding-bottom: 1px;
+		padding-left: 6px;
+		padding-right: 5px;
+		border-radius: 4px;
+
+
+		&.log-type-fatal {
+			background-color:black;
+			color: white;
+		}
+		&.log-type-error {
+			background-color: rgba(255,0,0,0.2);
+			color: rgba(255,0,0,1);
+		}
+		&.log-type-warn {
+			background-color: rgba(255,128,0,0.2);
+			color: rgba(255,128,0,1);
+		}
+		&.log-type-info {
+			background-color: rgba(0,0,255,0.1);
+			color: rgba(0,0,200,0.7);
+		}
+		&.log-type-debug {
+			background-color: rgba(200,200,200,0.1);
+			color: rgba(50,50,50,0.7);
+		}
+	}
+}

@@ -4,7 +4,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faQuestionCircle, faTimes } from '@fortawesome/free-solid-svg-icons'
 import { CompanionContext, socketEmit } from '../util'
 
-export function AddModule ({ showHelp, configureInstance }) {
+export function AddModule({ showHelp, configureInstance }) {
 	const context = useContext(CompanionContext)
 	const [filter, setFilter] = useState('')
 
@@ -21,7 +21,7 @@ export function AddModule ({ showHelp, configureInstance }) {
 	}
 
 	const candidates = []
-	if (filter){
+	if (filter) {
 		try {
 			const regexp = new RegExp(filter, "i")
 
@@ -42,22 +42,25 @@ export function AddModule ({ showHelp, configureInstance }) {
 					}
 				}
 			}
-		} catch(e) {
+		} catch (e) {
 			console.error('Failed to compile candidates list:', e)
+
+			candidates.splice(0, candidates.length)
+			candidates.push(<p>Failed to compile candidates list: "{e}"</p>)
 		}
 	}
 
-	return <>
-			<div style={{ clear: 'both' }}>
-				<CInputGroup>
-					<CInput type="text" placeholder="Add by search.." onChange={(e) => setFilter(e.currentTarget.value)} value={filter} />
-					<CInputGroupAppend>
-						<CButton color='danger' onClick={() => setFilter('')}><FontAwesomeIcon icon={faTimes} /></CButton>
-					</CInputGroupAppend>
-				</CInputGroup>
-				<div id='instance_add_search_results'>
-					{ candidates }
-				</div>
+	return (
+		<div style={{ clear: 'both' }}>
+			<CInputGroup>
+				<CInput type="text" placeholder="Add by search.." onChange={(e) => setFilter(e.currentTarget.value)} value={filter} />
+				<CInputGroupAppend>
+					<CButton color='danger' onClick={() => setFilter('')}><FontAwesomeIcon icon={faTimes} /></CButton>
+				</CInputGroupAppend>
+			</CInputGroup>
+			<div id='instance_add_search_results'>
+				{candidates}
 			</div>
-		</>
+		</div>
+	)
 }

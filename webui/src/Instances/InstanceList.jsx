@@ -6,7 +6,7 @@ import { faQuestionCircle } from '@fortawesome/free-solid-svg-icons'
 
 import { AddModule } from './AddModule'
 
-export function InstancesList ({ configureInstance, showHelp }) {
+export function InstancesList({ configureInstance, showHelp }) {
 	const context = useContext(CompanionContext)
 	const [instanceStatus, setInstanceStatus] = useState({})
 
@@ -46,7 +46,7 @@ export function InstancesList ({ configureInstance, showHelp }) {
 									instanceStatus={instanceStatus[id]}
 									showHelp={showHelp}
 									configureInstance={configureInstance}
-									/>
+								/>
 							}
 						})
 					}
@@ -94,14 +94,14 @@ function InstancesTableRow({ id, instance, instanceStatus, showHelp, configureIn
 			{
 				moduleInfo && (
 					isEnabled
-					? <CButton onClick={() => context.socket.emit('instance_enable', id, false)} variant='ghost' color='warning' size='sm'>disable</CButton>
-					: <CButton onClick={() => context.socket.emit('instance_enable', id, true)} variant='ghost' color='success' size='sm'>enable</CButton>
+						? <CButton onClick={() => context.socket.emit('instance_enable', id, false)} variant='ghost' color='warning' size='sm'>disable</CButton>
+						: <CButton onClick={() => context.socket.emit('instance_enable', id, true)} variant='ghost' color='success' size='sm'>enable</CButton>
 				)
 			}
 			{
 				moduleInfo && isEnabled
-				? <CButton onClick={() => configureInstance(id)} color='primary' size='sm'>edit</CButton>
-				: ''
+					? <CButton onClick={() => configureInstance(id)} color='primary' size='sm'>edit</CButton>
+					: ''
 			}
 		</td>
 	</tr>
@@ -137,10 +137,10 @@ function processModuleStatus(status) {
 			case null:
 				return {
 					title: status[1] ?? '',
-					text:  status[1] ?? '',
+					text: status[1] ?? '',
 					className: '',
 				}
-			default: 
+			default:
 				break
 		}
 	}

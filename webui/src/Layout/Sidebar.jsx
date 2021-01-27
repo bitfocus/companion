@@ -1,5 +1,5 @@
 import React from 'react'
-import { CSidebar, CSidebarNav, CSidebarNavItem, CSidebarBrand, CSidebarMinimizer, CToggler } from '@coreui/react'
+import { CSidebar, CSidebarNav, CSidebarNavItem, CSidebarBrand, CSidebarMinimizer } from '@coreui/react'
 import { faBug, faComments, faDollarSign, faGamepad, faInfo, faMousePointer, faTabletAlt, faUsers } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { useTranslation } from 'react-i18next'
@@ -31,7 +31,7 @@ export function MySidebar({ show }) {
 				<CSidebarNavItem target="_new" href="/help.html" icon={<FontAwesomeIcon className='c-sidebar-nav-icon' icon={faInfo} />} name={t("Getting Started")} />
 
 			</CSidebarNav>
-				<CSidebarMinimizer />
+			<CSidebarMinimizer />
 		</CSidebar>
 	)
 }

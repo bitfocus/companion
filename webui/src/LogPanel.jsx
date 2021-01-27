@@ -4,7 +4,7 @@ import { CompanionContext } from './util'
 import shortid from 'shortid'
 import dayjs from 'dayjs'
 
-export function LogPanel({}) {
+export function LogPanel() {
 	const context = useContext(CompanionContext)
 	const [config, setConfig] = useState(() => loadConfig())
 	const [history, setHistory] = useState([])
@@ -75,7 +75,6 @@ export function LogPanel({}) {
 				<CCol lg={12} className='log-panel'>
 					{
 						history.map(h => {
-							// console.log(h)
 							if (h.level === 'error' || config[h.level]) {
 								const time_format = dayjs(h.time).format('DD. HH:mm:ss')
 								return <div key={h.id} className={`log-line log-type-${h.level}`}>
