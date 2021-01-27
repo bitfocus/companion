@@ -7,8 +7,8 @@ import shortid from 'shortid'
 
 import { CompanionContext, MyErrorBoundary, socketEmit } from './util'
 import { HelpModal } from './Components/HelpModal'
-import { Instances } from './Instances'
-import { InstanceConfig } from './InstanceConfig'
+import { InstancesList } from './Instances/InstanceList'
+import { InstanceConfig } from './Instances/InstanceConfig'
 import { Buttons } from './Buttons'
 import { Surfaces } from './Surfaces'
 import { UserConfig } from './UserConfig'
@@ -330,7 +330,7 @@ export default class App extends React.Component {
 															<CTabContent fade={false}>
 																<CTabPane data-tab="instances">
 																	<MyErrorBoundary>
-																		<Instances configureInstance={this.configureInstance} showHelp={this.showHelp} />
+																		<InstancesList configureInstance={this.configureInstance} showHelp={this.showHelp} />
 																	</MyErrorBoundary>
 																</CTabPane>
 																<CTabPane data-tab="instanceConfig">

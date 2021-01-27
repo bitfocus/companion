@@ -1,10 +1,10 @@
 import React from 'react'
-import { CompanionContext, socketEmit } from './util'
+import { CompanionContext, socketEmit } from '../util'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faQuestionCircle } from '@fortawesome/free-solid-svg-icons'
 import { CRow, CCol, CButton } from '@coreui/react'
 
-import { ConfigField } from './Components'
+import { ConfigField } from '../Components'
 
 export class InstanceConfig extends React.Component {
 	static contextType = CompanionContext
@@ -81,7 +81,7 @@ export class InstanceConfig extends React.Component {
 			}
 		}
 
-		if (Object.key(newState).length > 0) {
+		if (Object.keys(newState).length > 0) {
 			this.setState(newState)
 		}
 	}
