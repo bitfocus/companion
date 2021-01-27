@@ -1,7 +1,7 @@
 import { CDropdown, CDropdownToggle, CDropdownItem, CDropdownMenu, CButton, CRow } from '@coreui/react'
 import React, { useContext, useEffect, useState } from 'react'
-import { BankPreview, dataToButtonImage } from '../Components/BankButton'
-import { CompanionContext, KeyReceiver, socketEmit } from '../util'
+import { BankPreview, dataToButtonImage } from '../../Components/BankButton'
+import { CompanionContext, KeyReceiver, socketEmit } from '../../util'
 import { ActionsPanel } from './ActionsPanel'
 
 import { ButtonStyleConfig } from './ButtonStyleConfig'

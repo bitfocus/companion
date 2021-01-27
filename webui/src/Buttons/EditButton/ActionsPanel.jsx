@@ -1,23 +1,24 @@
-import { CButton, CForm } from "@coreui/react"
+import { CButton, CForm, CInputGroup } from "@coreui/react"
 import { faSort, faTrash } from "@fortawesome/free-solid-svg-icons"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
 import React, { forwardRef, useCallback, useContext, useEffect, useImperativeHandle, useMemo, useRef, useState } from "react"
-import { CompanionContext, MyErrorBoundary, socketEmit } from "../util"
+import { NumberInputField } from "../../Components"
+import { CompanionContext, MyErrorBoundary, socketEmit } from "../../util"
 import update from 'immutability-helper';
 import Select from "react-select"
 import { ActionTableRowOption } from './Table'
 import { useDrag, useDrop } from "react-dnd"
 
-export const FeedbacksPanel = forwardRef(function ({ page, bank, dragId, addCommand, getCommand, updateOption, orderCommand, deleteCommand }, ref) {
+export const ActionsPanel = forwardRef(function ({ page, bank, dragId, addCommand, getCommand, updateOption, orderCommand, setDelay, deleteCommand }, ref) {
 	const context = useContext(CompanionContext)
-	const [feedbacks, setFeedbacks] = useState([])
+	const [actions, setActions] = useState([])
 
 	// Define a reusable loadData function
 	const loadData = useCallback((page, bank) => {
-		socketEmit(context.socket, getCommand, [page, bank]).then(([page, bank, feedbacks]) => {
-			setFeedbacks(feedbacks || [])
+		socketEmit(context.socket, getCommand, [page, bank]).then(([page, bank, actions]) => {
+			setActions(actions || [])
 		}).catch(e => {
-			console.error('Failed to load bank feedbacks', e)
+			console.error('Failed to load bank actions', e)
 		})
 	}, [context.socket, getCommand])
 
@@ -33,43 +34,63 @@ export const FeedbacksPanel = forwardRef(function ({ page, bank, dragId, addComm
 		}
 	}), [loadData, page, bank])
 
-	const setValue = useCallback((feedbackId, key, val) => {
+	const setValue = useCallback((actionId, key, val) => {
 		// The server doesn't repond to our change, so we assume it was ok
-		setFeedbacks(oldFeedbacks => {
-			const feedbackIndex = oldFeedbacks.findIndex(a => a.id === feedbackId)
+		setActions(oldActions => {
+			const actionIndex = oldActions.findIndex(a => a.id === actionId)
 
-			const oldValue = (oldFeedbacks[feedbackIndex].options || {})[key]
+			const oldValue = (oldActions[actionIndex].options || {})[key]
 			if (oldValue !== val) {
-				context.socket.emit(updateOption, page, bank, feedbackId, key, val);
+				context.socket.emit(updateOption, page, bank, actionId, key, val);
 
-				return update(oldFeedbacks, {
-					[feedbackIndex]: {
+				return update(oldActions, {
+					[actionIndex]: {
 						options: {
 							[key]: { $set: val }
 						}
 					}
 				})
 			} else {
-				return oldFeedbacks
+				return oldActions
 			}
 		})
 	}, [context.socket, page, bank, updateOption])
 
-	const doDelete = useCallback((feedbackId) => {
-		if (window.confirm('Delete feedback?')) {
-			socketEmit(context.socket, deleteCommand, [page, bank, feedbackId]).then(([page, bank, feedbacks]) => {
-				setFeedbacks(feedbacks || [])
+	const doDelay = useCallback((actionId, delay) => {
+		// The server doesn't repond to our change, so we assume it was ok
+		setActions(oldActions => {
+			const actionIndex = oldActions.findIndex(a => a.id === actionId)
+
+			const oldValue = oldActions[actionIndex].options?.delay
+			if (oldValue !== delay) {
+				context.socket.emit(setDelay, page, bank, actionId, delay);
+
+				return update(oldActions, {
+					[actionIndex]: {
+						delay: { $set: delay }
+					}
+				})
+			} else {
+				return oldActions
+			}
+		})
+	}, [context.socket, page, bank, setDelay])
+
+	const doDelete = useCallback((actionId) => {
+		if (window.confirm('Delete action?')) {
+			socketEmit(context.socket, deleteCommand, [page, bank, actionId]).then(([page, bank, actions]) => {
+				setActions(actions || [])
 			}).catch(e => {
-				console.error('Failed to load bank feedbacks', e)
+				console.error('Failed to load bank actions', e)
 			})
 		}
 	}, [context.socket, page, bank, deleteCommand])
 
-	const addFeedback = useCallback((feedackTypr) => {
-		socketEmit(context.socket, addCommand, [page, bank, feedackTypr]).then(([page, bank, feedbacks]) => {
-			setFeedbacks(feedbacks || [])
+	const addAction = useCallback((actionType) => {
+		socketEmit(context.socket, addCommand, [page, bank, actionType]).then(([page, bank, actions]) => {
+			setActions(actions || [])
 		}).catch(e => {
-			console.error('Failed to add bank feedback', e)
+			console.error('Failed to add bank action', e)
 		})
 	}, [context.socket, addCommand, bank, page])
 
@@ -77,9 +98,9 @@ export const FeedbacksPanel = forwardRef(function ({ page, bank, dragId, addComm
 		// The server doesn't repond to our change, so we assume it was ok
 		context.socket.emit(orderCommand, page, bank, dragIndex, hoverIndex);
 
-		setFeedbacks(feedbacks => {
-			const dragCard = feedbacks[dragIndex];
-			return update(feedbacks, {
+		setActions(actions => {
+			const dragCard = actions[dragIndex];
+			return update(actions, {
 				$splice: [
 					[dragIndex, 1],
 					[hoverIndex, 0, dragCard],
@@ -90,30 +111,32 @@ export const FeedbacksPanel = forwardRef(function ({ page, bank, dragId, addComm
 
 	return (
 		<>
-			<table className='table feedback-table'>
+			<table className='table action-table'>
 				<thead>
 					<tr>
 						<th></th>
-						<th colSpan="2">Feedback</th>
+						<th colSpan="2">Action</th>
+						<th>Delay (ms)</th>
 						<th>Options</th>
 					</tr>
 				</thead>
 				<tbody>
-					{feedbacks.map((a, i) => <FeedbackTableRow key={a?.id ?? i} index={i} feedback={a} setValue={setValue} doDelete={doDelete} dragId={dragId} moveCard={moveCard} />)}
+					{actions.map((a, i) => <ActionTableRow key={a?.id ?? i} action={a} index={i} dragId={dragId} setValue={setValue} doDelete={doDelete} doDelay={doDelay} moveCard={moveCard} />)}
 				</tbody>
 			</table>
 
-			<AddFeedbackDropdown
-				onSelect={addFeedback}
+			<AddActionDropdown
+				onSelect={addAction}
 			/>
 		</>
 	)
 })
 
-function FeedbackTableRow({ feedback, index, dragId, moveCard, setValue, doDelete }) {
+function ActionTableRow({ action, index, dragId, setValue, doDelete, doDelay, moveCard }) {
 	const context = useContext(CompanionContext)
 
-	const innerDelete = useCallback(() => doDelete(feedback.id), [feedback.id, doDelete])
+	const innerDelete = useCallback(() => doDelete(action.id), [action.id, doDelete])
+	const innerDelay = useCallback((delay) => doDelay(action.id, delay), [doDelay, action.id])
 
 	const ref = useRef(null);
 	const [, drop] = useDrop({
@@ -159,7 +182,7 @@ function FeedbackTableRow({ feedback, index, dragId, moveCard, setValue, doDelet
 	const [{ isDragging }, drag, preview] = useDrag({
 		item: {
 			type: dragId,
-			actionId: feedback.id,
+			actionId: action.id,
 			index: index,
 		},
 		collect: (monitor) => ({
@@ -168,45 +191,58 @@ function FeedbackTableRow({ feedback, index, dragId, moveCard, setValue, doDelet
 	})
     preview(drop(ref));
 
-	if (!feedback) {
-		// Invalid feedback, so skip
+	if (!action) {
+		// Invalid action, so skip
 		return ''
 	}
 
-	const instance = context.instances[feedback.instance_id]
+	const instance = context.instances[action.instance]
 	// const module = instance ? context.modules[instance.instance_type] : undefined
-	const instanceLabel = instance?.label ?? feedback.instance_id
+	const instanceLabel = instance?.label ?? action.instance
 
-	const feedbackSpec = (context.feedbacks[feedback.instance_id] || {})[feedback.type]
-	const options = feedbackSpec?.options ?? []
+	const actionSpec = context.actions[action.label]
+	const options = actionSpec?.options ?? []
 
 	let name = ''
-	if (feedbackSpec) {
-		name = `${instanceLabel}: ${feedbackSpec.label}`;
+	if (actionSpec) {
+		name = `${instanceLabel}: ${actionSpec.label}`;
 	} else {
-		name = `${instanceLabel}: ${feedback.type} (undefined)`;
+		const actionId = action.label.split(/:/)[1]
+		name = `${instanceLabel}: ${actionId} (undefined)`;
 	}
 
 	return (
-		<tr ref={ref} className={isDragging ? 'feedbacklist-dragging' : ''}>
-			<td ref={drag} className='feedbacklist-td-reorder'>
+		<tr ref={ref} className={isDragging ? 'actionlist-dragging' : ''}>
+			<td ref={drag} className='actionlist-td-reorder'>
 				<FontAwesomeIcon icon={faSort} />
 			</td>
-			<td className='feedbacklist-td-delete'>
+			<td className='actionlist-td-delete'>
 				<CButton color="danger" size="sm" onClick={innerDelete}>
 					<FontAwesomeIcon icon={faTrash} />
 				</CButton>
 			</td>
-			<td className='feedbacklist-td-label'>{name}</td>
-			<td className='feedbacklist-td-options'>
-				<CForm className="feedbacks-options">
+			<td className='actionlist-td-label'>{name}</td>
+			<td className='actionlist-td-delay'>
+				<CInputGroup>
+					<NumberInputField
+						definition={{ default: 0 }}
+						value={action.delay}
+						setValue={innerDelay}
+					/>
+					{/* <CInputGroupAppend>
+						<CInputGroupText>ms</CInputGroupText>
+					</CInputGroupAppend> */}
+				</CInputGroup>
+			</td>
+			<td className='actionlist-td-options'>
+				<CForm className="actions-options">
 					{
 						options.map((opt, i) => <MyErrorBoundary>
 							<ActionTableRowOption
 								key={i}
 								option={opt}
-								actionId={feedback.id}
-								value={(feedback.options || {})[opt.id]}
+								actionId={action.id}
+								value={(action.options || {})[opt.id]}
 								setValue={setValue}
 							/>
 						</MyErrorBoundary>)
@@ -218,19 +254,16 @@ function FeedbackTableRow({ feedback, index, dragId, moveCard, setValue, doDelet
 }
 
 
-function AddFeedbackDropdown({ onSelect }) {
+function AddActionDropdown({ onSelect }) {
 	const context = useContext(CompanionContext)
 
 	const options = useMemo(() => {
-		const options = []
-		for (const [instanceId, feedbacks] of Object.entries(context.feedbacks)) {
-			for (const [feedbackId, feedback] of Object.entries(feedbacks)) {
-				const instanceLabel = context.instances[instanceId]?.label ?? instanceId
-				options.push ({ value: `${instanceId}:${feedbackId}`, label: `${instanceLabel}: ${feedback.label}` })
-			}
-		}
-		return options
-	}, [context.feedbacks, context.instances])
+		return Object.entries(context.actions || {}).map(([id, act]) => {
+			const instanceId = id.split(/:/)[0]
+			const instanceLabel = context.instances[instanceId]?.label ?? instanceId
+			return ({ value: id, label: `${instanceLabel}: ${act.label}` })
+		})
+	}, [context.actions, context.instances])
 
 	const innerChange = useCallback((e) => {
 		if (e.value) {

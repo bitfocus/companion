@@ -1,11 +1,11 @@
 import React, { useCallback, useContext, useEffect, useState } from 'react'
-import { CompanionContext, socketEmit } from './util'
+import { CompanionContext, socketEmit } from '../util'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faDownload, faFileImport, faTrashAlt } from '@fortawesome/free-solid-svg-icons'
 import { CButton, CAlert, CSelect, CButtonGroup } from '@coreui/react'
 import update from 'immutability-helper'
-import { BankPreview, dataToButtonImage } from './Components/BankButton'
-import { MAX_COLS, MAX_ROWS } from './Constants'
+import { BankPreview, dataToButtonImage } from '../Components/BankButton'
+import { MAX_COLS, MAX_ROWS } from '../Constants'
 import { BankGridHeader } from './Buttons'
 
 export function ImportExport({ pageNumber }) {

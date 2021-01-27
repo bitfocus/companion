@@ -1,8 +1,8 @@
 import { CButton, CRow, CCol, CButtonGroup, CLabel, CForm } from '@coreui/react'
 import React, { useCallback, useContext } from 'react'
-import { CompanionContext, socketEmit } from '../util'
-import { AlignmentInputField, CheckboxInputField, ColorInputField, DropdownInputField, PNGInputField, TextWithVariablesInputField } from '../Components'
-import { FONT_SIZES } from '../Constants'
+import { CompanionContext, socketEmit } from '../../util'
+import { AlignmentInputField, CheckboxInputField, ColorInputField, DropdownInputField, PNGInputField, TextWithVariablesInputField } from '../../Components'
+import { FONT_SIZES } from '../../Constants'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faTrash } from '@fortawesome/free-solid-svg-icons'
 

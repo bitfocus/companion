@@ -1,25 +1,22 @@
 import React, { Suspense } from 'react'
-import { CContainer, CRow, CCol, CTabs, CTabContent, CTabPane, CNav, CNavItem, CNavLink } from '@coreui/react'
-import { faCalculator, faCalendarAlt, faClipboardList, faClock, faFileImport, faGamepad, faGift, faPlug, faUserNinja } from '@fortawesome/free-solid-svg-icons'
+import { CContainer, CTabs, CTabContent, CTabPane, CNav, CNavItem, CNavLink } from '@coreui/react'
+import { faCalendarAlt, faClipboardList, faClock, faGamepad, faPlug, faUserNinja } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import io from 'socket.io-client'
 import shortid from 'shortid'
 
 import { CompanionContext, MyErrorBoundary, socketEmit } from './util'
-import { Buttons } from './Buttons'
 import { Surfaces } from './Surfaces'
 import { UserConfig } from './UserConfig'
 import { LogPanel } from './LogPanel'
-import { InstancePresets } from './Presets'
 import { useTranslation } from 'react-i18next'
 import { DndProvider } from 'react-dnd'
 import { HTML5Backend } from 'react-dnd-html5-backend'
 import { MySidebar } from './Layout/Sidebar'
 import { MyHeader } from './Layout/Header'
-import { EditButton } from './EditButton'
-import { ImportExport } from './ImportExport'
 import { Scheduler } from './Scheduler'
 import { InstancesPage } from './Instances'
+import { ButtonsPage } from './Buttons'
 
 const serverUrl = window.SERVER_URL === '%REACT_APP_SERVER_URL%' ? undefined : window.SERVER_URL
 
@@ -35,24 +32,12 @@ export default class App extends React.Component {
 
 			// modules
 			modules: {},
+			instances: {},
 
 			activeRootTab: 'instances',
 			activeRootTabToken: shortid(),
 
-			activeTab2: 'presets',
-			activePresetToken: shortid(),
-			importExportToken: shortid(),
-			editBankToken: shortid(),
-
-			instances: {},
-
 			hotPress: false,
-			pageNumber: 1,
-			selectedButton: null,
-			copyFromButton: null,
-
-			// help text to show
-			helpContent: null,
 
 			variableDefinitions: {},
 			variableValues: {},
@@ -144,12 +129,6 @@ export default class App extends React.Component {
 		}
 	}
 
-	updatePage = (pageNumber) => {
-		this.setState({
-			pageNumber: pageNumber,
-		})
-	}
-
 	updateActions = (actions) => {
 		this.setState({
 			actions: actions,
@@ -184,65 +163,6 @@ export default class App extends React.Component {
 		this.setState({
 			instances: db,
 		})
-	}
-
-	buttonGridClick = (page, bank, isDown) => {
-		if (this.state.hotPress) {
-			this.socket.emit('hot_press', page, bank, isDown);
-		} else {
-			this.setState({
-				activeTab2: 'edit',
-				selectedButton: [page, bank],
-				editBankToken: shortid(),
-			})
-		}
-	}
-
-	handleKeyUpInButtons = (e) => {
-		if (e.target.tagName !== 'INPUT' && e.target.tagName !== 'TEXTAREA') {
-			if (this.state.selectedButton) {
-				// keyup with button selected
-
-				if (!e.ctrlKey && !e.metaKey && !e.altKey && (e.key === 'Backspace' || e.key === 'Delete')) {
-					if (window.confirm('Clear button ' + this.state.selectedButton[0] + '.' + this.state.selectedButton[1] + '?')) {
-						this.socket.emit('bank_reset', this.state.selectedButton[0], this.state.selectedButton[1]);
-
-						// Invalidate the ui component to cause a reload
-						this.setState({ editBankToken: shortid() })
-					}
-				}
-				if ((e.ctrlKey || e.metaKey) && !e.altKey && e.key === 'c') {
-					console.log('prepare copy', this.state.selectedButton)
-					this.setState({
-						copyFromButton: [...this.state.selectedButton, 'copy']
-					})
-				}
-				if ((e.ctrlKey || e.metaKey) && !e.altKey && e.key === 'x') {
-					console.log('prepare cut', this.state.selectedButton)
-					this.setState({
-						copyFromButton: [...this.state.selectedButton, 'cut']
-					})
-				}
-				if ((e.ctrlKey || e.metaKey) && !e.altKey && e.key === 'v' && this.state.copyFromButton) {
-					console.log('do paste', this.state.copyFromButton, this.state.selectedButton)
-
-					if (this.state.copyFromButton[2] === 'copy') {
-						this.socket.emit('bank_copy', this.state.copyFromButton[0], this.state.copyFromButton[1], this.state.selectedButton[0], this.state.selectedButton[1]);
-						this.setState({
-							editBankToken: shortid(),
-						})
-					} else if (this.state.copyFromButton[2] === 'cut') {
-						this.socket.emit('bank_move', this.state.copyFromButton[0], this.state.copyFromButton[1], this.state.selectedButton[0], this.state.selectedButton[1]);
-						this.setState({
-							copyFromButton: null,
-							editBankToken: shortid(),
-						})
-					} else {
-						console.error('unknown paste operation:', this.state.copyFromButton[2])
-					}
-				}
-			}
-		}
 	}
 
 	toggleSidebar = () => {
@@ -303,57 +223,9 @@ export default class App extends React.Component {
 															</MyErrorBoundary>
 														</CTabPane>
 														<CTabPane data-tab="buttons">
-															<CRow>
-																<CCol xs={12} xl={6}>
-																	<MyErrorBoundary>
-																		<Buttons
-																			buttonGridClick={this.buttonGridClick}
-																			isHot={this.state.hotPress}
-																			selectedButton={this.state.selectedButton}
-																			pageNumber={this.state.pageNumber}
-																			changePage={this.updatePage}
-																			onKeyUp={this.handleKeyUpInButtons}
-																		/>
-																	</MyErrorBoundary>
-																</CCol>
-
-																<CCol xs={12} xl={6}>
-																	<CTabs activeTab={this.state.activeTab2} onActiveTabChange={(a) => a !== this.state.activeTab2 && this.setState({ activeTab2: a, selectedButton: null })}>
-																		<CNav variant="tabs">
-																			<CNavItem hidden={!this.state.selectedButton}><CNavLink data-tab="edit"><FontAwesomeIcon icon={faCalculator} /> Edit Button {this.state.selectedButton ? `${this.state.selectedButton[0]}.${this.state.selectedButton[1]}` : '?'}</CNavLink></CNavItem>
-																			<CNavItem><CNavLink data-tab="presets" onClick={(a) => this.setState({ activePresetToken: shortid() })}><FontAwesomeIcon icon={faGift} /> Presets</CNavLink></CNavItem>
-																			<CNavItem><CNavLink data-tab="importexport" onClick={(a) => this.setState({ importExportToken: shortid() })}><FontAwesomeIcon icon={faFileImport} /> Import / Export</CNavLink></CNavItem>
-																		</CNav>
-																		<CTabContent fade={false}>
-																			<CTabPane data-tab="edit">
-																				<MyErrorBoundary>
-																					{
-																						this.state.selectedButton
-																							? <EditButton
-																								key={`${this.state.selectedButton[0]}.${this.state.selectedButton[1]}.${this.state.editBankToken}`}
-																								page={this.state.selectedButton[0]}
-																								bank={this.state.selectedButton[1]}
-																								onKeyUp={this.handleKeyUpInButtons}
-																							/>
-																							: ''
-																					}
-																				</MyErrorBoundary>
-																			</CTabPane>
-																			<CTabPane data-tab="presets">
-																				<MyErrorBoundary>
-																					<InstancePresets token={this.state.activePresetToken} />
-																				</MyErrorBoundary>
-																			</CTabPane>
-																			<CTabPane data-tab="importexport">
-																				<MyErrorBoundary>
-																					<ImportExport key={this.state.importExportToken} pageNumber={this.state.pageNumber} />
-																				</MyErrorBoundary>
-																			</CTabPane>
-																		</CTabContent>
-																	</CTabs>
-																</CCol>
-
-															</CRow>
+															<MyErrorBoundary>
+																<ButtonsPage hotPress={this.state.hotPress} />
+															</MyErrorBoundary>
 														</CTabPane>
 														<CTabPane data-tab="surfaces">
 															<MyErrorBoundary>

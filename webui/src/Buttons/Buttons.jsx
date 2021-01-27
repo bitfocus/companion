@@ -1,13 +1,12 @@
 import { CButton, CCol, CInput, CInputGroup, CInputGroupAppend, CInputGroupPrepend, CRow } from '@coreui/react'
 import React, { useCallback, useContext, useState } from 'react'
-import { CompanionContext, KeyReceiver, socketEmit } from './util'
+import { CompanionContext, KeyReceiver, socketEmit } from '../util'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faArrowsAlt, faChevronLeft, faChevronRight, faCopy, faEraser, faFileExport, faTrash } from '@fortawesome/free-solid-svg-icons'
 import classnames from 'classnames'
-
-import { MAX_COLS, MAX_ROWS, MAX_BUTTONS } from './Constants'
+import { MAX_COLS, MAX_ROWS, MAX_BUTTONS } from '../Constants'
 import { useDrop } from 'react-dnd'
-import { BankPreview, dataToButtonImage } from './Components/BankButton'
+import { BankPreview, dataToButtonImage } from '../Components/BankButton'
 
 export class Buttons extends React.Component {
 	static contextType = CompanionContext

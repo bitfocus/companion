@@ -1,8 +1,8 @@
 import React, { useCallback, useContext, useEffect, useState } from 'react'
 import { CAlert, CButton } from '@coreui/react'
-import { CompanionContext, socketEmit } from './util'
+import { CompanionContext, socketEmit } from '../util'
 import { useDrag } from 'react-dnd'
-import { BankPreview, dataToButtonImage } from './Components/BankButton'
+import { BankPreview, dataToButtonImage } from '../Components/BankButton'
 
 export function InstancePresets({ resetToken }) {
 	const context = useContext(CompanionContext)
