@@ -1,5 +1,5 @@
 import React from 'react'
-import { CButton, CInput, CInputCheckbox } from '@coreui/react'
+import { CButton, CCol, CInput, CInputCheckbox, CRow } from '@coreui/react'
 import { CompanionContext, socketEmit } from './util'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faFileImport } from '@fortawesome/free-solid-svg-icons'
@@ -46,7 +46,8 @@ export class UserConfig extends React.Component {
 	render() {
 		const config = this.state.config
 		return (
-			<div>
+			<CRow>
+				<CCol xl={6}>
 				<h4>User settings</h4>
 				<p>Settings applies instantaneously, don't worry about it!</p>
 
@@ -219,8 +220,11 @@ export class UserConfig extends React.Component {
 					</tbody>
 				</table>
 
-				<RemoteControlInfo />
-			</div>
+				</CCol>
+				<CCol xl={6}>
+					<RemoteControlInfo />
+				</CCol>
+			</CRow>
 		)
 	}
 }

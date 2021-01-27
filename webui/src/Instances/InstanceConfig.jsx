@@ -4,7 +4,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faQuestionCircle } from '@fortawesome/free-solid-svg-icons'
 import { CRow, CCol, CButton } from '@coreui/react'
 
-import { ConfigField } from '../Components'
+import { CheckboxInputField, DropdownInputField, NumberInputField, TextInputField } from '../Components'
 
 export class InstanceConfig extends React.Component {
 	static contextType = CompanionContext
@@ -169,5 +169,23 @@ export class InstanceConfig extends React.Component {
 			<hr />
 			{ this.renderVariablesTable()}
 		</>
+	}
+}
+
+function ConfigField(props) {
+	const { definition } = props
+	switch (definition.type) {
+		case 'text':
+			return <p title={definition.tooltip}>{definition.value}</p>
+		case 'textinput':
+			return <TextInputField {...props} />
+		case 'number':
+			return <NumberInputField {...props} />
+		case 'checkbox':
+			return <CheckboxInputField {...props} />
+		case 'dropdown':
+			return <DropdownInputField {...props} />
+		default:
+			return <p>Unknown field "{definition.type}"</p>
 	}
 }

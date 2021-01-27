@@ -3,8 +3,27 @@ body {
 	font-family: "Roboto", sans-serif;
 }
 
+.c-wrapper {
+	height: 100vh;
+}
+
 .c-body {
-	padding-top: 15px;
+	padding: 15px 0;
+
+	// Fit minus the header
+	height: calc(100% - #{$header-height});
+
+	// Force to fill the screen and scroll internally
+	> .container-fluid {
+		height: 100%;
+
+		display: grid;
+		grid-template-rows: auto 1fr;
+
+		> .tab-content {
+			overflow-y: auto;
+		}
+	}
 }
 
 .c-sidebar-nav-link:hover {
@@ -23,7 +42,7 @@ body {
 	background-color: #fff;
 	border: 1px solid #c8ced3;
 	margin-top: -1px;
-	margin-bottom: 38px;
+	// margin-bottom: 38px;
 	
 	.tab-pane {
 		padding: 1rem;

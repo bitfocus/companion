@@ -6,9 +6,6 @@ import io from 'socket.io-client'
 import shortid from 'shortid'
 
 import { CompanionContext, MyErrorBoundary, socketEmit } from './util'
-import { HelpModal } from './Components/HelpModal'
-import { InstancesList } from './Instances/InstanceList'
-import { InstanceConfig } from './Instances/InstanceConfig'
 import { Buttons } from './Buttons'
 import { Surfaces } from './Surfaces'
 import { UserConfig } from './UserConfig'
@@ -22,6 +19,7 @@ import { MyHeader } from './Layout/Header'
 import { EditButton } from './EditButton'
 import { ImportExport } from './ImportExport'
 import { Scheduler } from './Scheduler'
+import { InstancesPage } from './Instances'
 
 const serverUrl = window.SERVER_URL === '%REACT_APP_SERVER_URL%' ? undefined : window.SERVER_URL
 
@@ -38,6 +36,9 @@ export default class App extends React.Component {
 			// modules
 			modules: {},
 
+			activeRootTab: 'instances',
+			activeRootTabToken: shortid(),
+
 			activeTab1: 'instances',
 			activeTab2: 'log',
 			activePresetToken: shortid(),
@@ -45,8 +46,6 @@ export default class App extends React.Component {
 			editBankToken: shortid(),
 
 			instances: {},
-			configureInstanceId: null,
-			configureInstanceToken: null,
 
 			hotPress: false,
 			pageNumber: 1,
@@ -182,29 +181,6 @@ export default class App extends React.Component {
 		})
 	}
 
-	showHelp = (name) => {
-		socketEmit(this.socket, 'instance_get_help', [name]).then(([err, result]) => {
-			if (err) {
-				alert('Error getting help text');
-				return;
-			}
-			if (result) {
-				this.setState({
-					helpContent: [name, result]
-				})
-			}
-		})
-	}
-
-	configureInstance = (id) => {
-		console.log('configureInstance', id)
-		this.setState({
-			configureInstanceId: id,
-			configureInstanceToken: shortid(),
-			activeTab1: !id && this.state.activeTab1 === 'instanceConfig' ? 'instances' : 'instanceConfig'
-		})
-	}
-
 	updateInstancesInfo = (db) => {
 		this.setState({
 			instances: db,
@@ -231,7 +207,7 @@ export default class App extends React.Component {
 				if (!e.ctrlKey && !e.metaKey && !e.altKey && (e.key === 'Backspace' || e.key === 'Delete')) {
 					if (window.confirm('Clear button ' + this.state.selectedButton[0] + '.' + this.state.selectedButton[1] + '?')) {
 						this.socket.emit('bank_reset', this.state.selectedButton[0], this.state.selectedButton[1]);
-						
+
 						// Invalidate the ui component to cause a reload
 						this.setState({ editBankToken: shortid() })
 					}
@@ -275,8 +251,6 @@ export default class App extends React.Component {
 	}
 
 	render() {
-		const showInstanceConfig = this.state.configureInstanceId && this.state.instances[this.state.configureInstanceId]
-
 		const contextValue = {
 			socket: this.socket,
 			instances: this.state.instances,
@@ -306,7 +280,6 @@ export default class App extends React.Component {
 				<Suspense fallback={<Spinner />}>
 					<DndProvider backend={HTML5Backend}>
 						<div className="c-app">
-							<HelpModal content={this.state.helpContent} hide={() => this.setState({ helpContent: null })} />
 
 							<MySidebar show={this.state.showSidebar} />
 							<div className="c-wrapper">
@@ -315,112 +288,126 @@ export default class App extends React.Component {
 									<CContainer fluid className="animated fadeIn">
 										{
 											this.socket && this.state.connected ?
-												<CRow>
+												<CTabs activeTab={this.state.activeRootTab} onActiveTabChange={(a) => this.setState({ activeRootTab: a, activeRootTabToken: shortid() })}>
+													<CNav variant="tabs">
+														<CNavItem><CNavLink data-tab="instances"><FontAwesomeIcon icon={faPlug} /> Instances</CNavLink></CNavItem>
+														<CNavItem><CNavLink data-tab="buttons"><FontAwesomeIcon icon={faCalendarAlt} /> Buttons</CNavLink></CNavItem>
+														<CNavItem><CNavLink data-tab="surfaces"><FontAwesomeIcon icon={faGamepad} /> Surfaces</CNavLink></CNavItem>
+														<CNavItem><CNavLink data-tab="triggers"><FontAwesomeIcon icon={faClock} /> Triggers</CNavLink></CNavItem>
+														<CNavItem><CNavLink data-tab="userconfig"><FontAwesomeIcon icon={faUserNinja} /> Settings</CNavLink></CNavItem>
+														<CNavItem><CNavLink data-tab="log"><FontAwesomeIcon icon={faClipboardList} /> Log</CNavLink></CNavItem>
+													</CNav>
+													<CTabContent fade={false}>
+														<CTabPane data-tab="instances">
+															<MyErrorBoundary>
+																<InstancesPage resetToken={this.state.activeRootTabToken} />
+															</MyErrorBoundary>
+														</CTabPane>
+														<CTabPane data-tab="buttons">
+															<CRow>
+																<CCol xs={12} xl={6}>
+																	<CTabs activeTab={this.state.activeTab1} onActiveTabChange={(a) => this.setState({ activeTab1: a })}>
+																		<CNav variant="tabs">
+																			<CNavItem><CNavLink data-tab="instances"><FontAwesomeIcon icon={faPlug} /> Instances</CNavLink></CNavItem>
+																			<CNavItem><CNavLink data-tab="buttons"><FontAwesomeIcon icon={faCalendarAlt} /> Buttons</CNavLink></CNavItem>
+																			<CNavItem><CNavLink data-tab="surfaces"><FontAwesomeIcon icon={faGamepad} /> Surfaces</CNavLink></CNavItem>
+																			<CNavItem><CNavLink data-tab="triggers"><FontAwesomeIcon icon={faClock} /> Triggers</CNavLink></CNavItem>
+																			<CNavItem><CNavLink data-tab="userconfig"><FontAwesomeIcon icon={faUserNinja} /> Settings</CNavLink></CNavItem>
+																		</CNav>
+																		<CTabContent fade={false}>
+																			<CTabPane data-tab="instances">
+																				<MyErrorBoundary>
+																					<p>Moved!</p>
+																				</MyErrorBoundary>
+																			</CTabPane>
+																			<CTabPane data-tab="instanceConfig">
+																				<MyErrorBoundary>
+																					<p>Moved!</p>
+																				</MyErrorBoundary>
+																			</CTabPane>
+																			<CTabPane data-tab="buttons">
+																				<MyErrorBoundary>
+																					<Buttons
+																						buttonGridClick={this.buttonGridClick}
+																						isHot={this.state.hotPress}
+																						selectedButton={this.state.selectedButton}
+																						pageNumber={this.state.pageNumber}
+																						changePage={this.updatePage}
+																						onKeyUp={this.onKeyUp}
+																					/>
+																				</MyErrorBoundary>
+																			</CTabPane>
+																		</CTabContent>
+																	</CTabs>
+																</CCol>
 
-													<CCol xs={12} xl={6}>
-														<CTabs activeTab={this.state.activeTab1} onActiveTabChange={(a) => this.setState({ activeTab1: a })}>
-															<CNav variant="tabs">
-																<CNavItem><CNavLink data-tab="instances"><FontAwesomeIcon icon={faPlug} /> Instances</CNavLink></CNavItem>
-																<CNavItem hidden={!showInstanceConfig}><CNavLink data-tab="instanceConfig"><FontAwesomeIcon icon={faCog} /> Config</CNavLink></CNavItem>
-																<CNavItem><CNavLink data-tab="buttons"><FontAwesomeIcon icon={faCalendarAlt} /> Buttons</CNavLink></CNavItem>
-																<CNavItem><CNavLink data-tab="surfaces"><FontAwesomeIcon icon={faGamepad} /> Surfaces</CNavLink></CNavItem>
-																<CNavItem><CNavLink data-tab="triggers"><FontAwesomeIcon icon={faClock} /> Triggers</CNavLink></CNavItem>
-																<CNavItem><CNavLink data-tab="userconfig"><FontAwesomeIcon icon={faUserNinja} /> Settings</CNavLink></CNavItem>
-															</CNav>
-															<CTabContent fade={false}>
-																<CTabPane data-tab="instances">
-																	<MyErrorBoundary>
-																		<InstancesList configureInstance={this.configureInstance} showHelp={this.showHelp} />
-																	</MyErrorBoundary>
-																</CTabPane>
-																<CTabPane data-tab="instanceConfig">
-																	<MyErrorBoundary>
-																		{
-																			this.state.configureInstanceId
-																				? <InstanceConfig
-																					key={this.state.configureInstanceToken}
-																					instanceId={this.state.configureInstanceId}
-																					showHelp={this.showHelp}
-																				/>
-																				: 'No instance specified'
-																		}
-																	</MyErrorBoundary>
-																</CTabPane>
-																<CTabPane data-tab="buttons">
-																	<MyErrorBoundary>
-																		<Buttons
-																			buttonGridClick={this.buttonGridClick}
-																			isHot={this.state.hotPress}
-																			selectedButton={this.state.selectedButton}
-																			pageNumber={this.state.pageNumber}
-																			changePage={this.updatePage}
-																			onKeyUp={this.onKeyUp}
-																			/>
-																	</MyErrorBoundary>
-																</CTabPane>
-																<CTabPane data-tab="surfaces">
-																	<MyErrorBoundary>
-																		<Surfaces />
-																	</MyErrorBoundary>
-																</CTabPane>
-																<CTabPane data-tab="triggers">
-																	<MyErrorBoundary>
-																		<Scheduler />
-																	</MyErrorBoundary>
-																</CTabPane>
-																<CTabPane data-tab="userconfig">
-																	<MyErrorBoundary>
-																		<UserConfig />
-																	</MyErrorBoundary>
-																</CTabPane>
-															</CTabContent>
-														</CTabs>
-													</CCol>
+																<CCol xs={12} xl={6}>
+																	<CTabs activeTab={this.state.activeTab2} onActiveTabChange={(a) => a !== this.state.activeTab2 && this.setState({ activeTab2: a, selectedButton: null })}>
+																		<CNav variant="tabs">
+																			<CNavItem><CNavLink data-tab="log"><FontAwesomeIcon icon={faClipboardList} /> Log</CNavLink></CNavItem>
+																			<CNavItem hidden={!this.state.selectedButton}><CNavLink data-tab="edit"><FontAwesomeIcon icon={faCalculator} /> Edit Button {this.state.selectedButton ? `${this.state.selectedButton[0]}.${this.state.selectedButton[1]}` : '?'}</CNavLink></CNavItem>
+																			<CNavItem><CNavLink data-tab="presets" onClick={(a) => this.setState({ activePresetToken: shortid() })}><FontAwesomeIcon icon={faGift} /> Presets</CNavLink></CNavItem>
+																			<CNavItem><CNavLink data-tab="importexport" onClick={(a) => this.setState({ importExportToken: shortid() })}><FontAwesomeIcon icon={faFileImport} /> Import / Export</CNavLink></CNavItem>
+																		</CNav>
+																		<CTabContent fade={false}>
+																			<CTabPane data-tab="log">
+																				<MyErrorBoundary>
+																					<p>Moved!</p>
+																				</MyErrorBoundary>
+																			</CTabPane>
+																			<CTabPane data-tab="edit">
+																				<MyErrorBoundary>
+																					{
+																						this.state.selectedButton
+																							? <EditButton
+																								key={`${this.state.selectedButton[0]}.${this.state.selectedButton[1]}.${this.state.editBankToken}`}
+																								page={this.state.selectedButton[0]}
+																								bank={this.state.selectedButton[1]}
+																								onKeyUp={this.onKeyUp}
+																							/>
+																							: ''
+																					}
+																				</MyErrorBoundary>
+																			</CTabPane>
+																			<CTabPane data-tab="presets">
+																				<MyErrorBoundary>
+																					<InstancePresets token={this.state.activePresetToken} />
+																				</MyErrorBoundary>
+																			</CTabPane>
+																			<CTabPane data-tab="importexport">
+																				<MyErrorBoundary>
+																					<ImportExport key={this.state.importExportToken} pageNumber={this.state.pageNumber} />
+																				</MyErrorBoundary>
+																			</CTabPane>
+																		</CTabContent>
+																	</CTabs>
+																</CCol>
 
-													<CCol xs={12} xl={6}>
-														<CTabs activeTab={this.state.activeTab2} onActiveTabChange={(a) => a !== this.state.activeTab2 && this.setState({ activeTab2: a, selectedButton: null })}>
-															<CNav variant="tabs">
-																<CNavItem><CNavLink data-tab="log"><FontAwesomeIcon icon={faClipboardList} /> Log</CNavLink></CNavItem>
-																<CNavItem hidden={!this.state.selectedButton}><CNavLink data-tab="edit"><FontAwesomeIcon icon={faCalculator} /> Edit Button { this.state.selectedButton ? `${this.state.selectedButton[0]}.${this.state.selectedButton[1]}` : '?' }</CNavLink></CNavItem>
-																<CNavItem><CNavLink data-tab="presets" onClick={(a) => this.setState({ activePresetToken: shortid() })}><FontAwesomeIcon icon={faGift} /> Presets</CNavLink></CNavItem>
-																<CNavItem><CNavLink data-tab="importexport"onClick={(a) => this.setState({ importExportToken: shortid() })}><FontAwesomeIcon icon={faFileImport} /> Import / Export</CNavLink></CNavItem>
-															</CNav>
-															<CTabContent fade={false}>
-																<CTabPane data-tab="log">
-																	<MyErrorBoundary>
-																		<LogPanel />
-																	</MyErrorBoundary>
-																</CTabPane>
-																<CTabPane data-tab="edit">
-																	<MyErrorBoundary>
-																		{
-																			this.state.selectedButton
-																			? <EditButton
-																				key={`${this.state.selectedButton[0]}.${this.state.selectedButton[1]}.${this.state.editBankToken}`}
-																				page={this.state.selectedButton[0]}
-																				bank={this.state.selectedButton[1]}
-																				onKeyUp={this.onKeyUp}
-																				/>
-																			: ''
-																		}
-																	</MyErrorBoundary>
-																</CTabPane>
-																<CTabPane data-tab="presets">
-																	<MyErrorBoundary>
-																		<InstancePresets token={this.state.activePresetToken} />
-																	</MyErrorBoundary>
-																</CTabPane>
-																<CTabPane data-tab="importexport">
-																	<MyErrorBoundary>
-																		<ImportExport key={this.state.importExportToken} pageNumber={this.state.pageNumber} />
-																	</MyErrorBoundary>
-																</CTabPane>
-															</CTabContent>
-														</CTabs>
-													</CCol>
-
-												</CRow>
-												: 'Connecting'
+															</CRow>
+														</CTabPane>
+														<CTabPane data-tab="surfaces">
+															<MyErrorBoundary>
+																<Surfaces />
+															</MyErrorBoundary>
+														</CTabPane>
+														<CTabPane data-tab="triggers">
+															<MyErrorBoundary>
+																<Scheduler />
+															</MyErrorBoundary>
+														</CTabPane>
+														<CTabPane data-tab="userconfig">
+															<MyErrorBoundary>
+																<UserConfig />
+															</MyErrorBoundary>
+														</CTabPane>
+														<CTabPane data-tab="log">
+															<MyErrorBoundary>
+																<LogPanel />
+															</MyErrorBoundary>
+														</CTabPane>
+													</CTabContent>
+												</CTabs>
+												: ''
 										}
 									</CContainer>
 								</div>
