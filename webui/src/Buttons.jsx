@@ -1,4 +1,4 @@
-import { CButton, CCol, CInput, CRow } from '@coreui/react'
+import { CButton, CCol, CInput, CInputGroup, CInputGroupAppend, CInputGroupPrepend, CRow } from '@coreui/react'
 import React, { useCallback, useContext, useState } from 'react'
 import { CompanionContext, KeyReceiver, socketEmit } from './util'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
@@ -268,22 +268,28 @@ export function BankGridHeader({ pageNumber, pageName, onNameChange, onNameBlur,
 		}
 	}, [inputBlur])
 
-	return <>
-		<CButton color="primary" hidden={!changePage} onClick={() => changePage(-1)}>
-			<FontAwesomeIcon icon={faChevronLeft} />
-		</CButton>
-		<CInput
-			type="number"
-			disabled={!setPage}
-			placeholder={pageNumber}
-			value={tmpText ?? pageNumber}
-			onChange={inputChange}
-			onBlur={inputBlur}
-			onKeyDown={inputEnter}
-		/>
-		<CButton color="primary" hidden={!changePage} onClick={() => changePage(1)}>
-			<FontAwesomeIcon icon={faChevronRight} />
-		</CButton>
+	return <div className="button-grid-header">
+		<CInputGroup>
+			<CInputGroupPrepend>
+				<CButton color="primary" hidden={!changePage} onClick={() => changePage(-1)}>
+					<FontAwesomeIcon icon={faChevronLeft} />
+				</CButton>
+			</CInputGroupPrepend>
+			<CInput
+				type="number"
+				disabled={!setPage}
+				placeholder={pageNumber}
+				value={tmpText ?? pageNumber}
+				onChange={inputChange}
+				onBlur={inputBlur}
+				onKeyDown={inputEnter}
+			/>
+			<CInputGroupAppend>
+				<CButton color="primary" hidden={!changePage} onClick={() => changePage(1)}>
+					<FontAwesomeIcon icon={faChevronRight} />
+				</CButton>
+			</CInputGroupAppend>
+		</CInputGroup>
 		<CInput
 			className="page_title"
 			type="text"
@@ -293,10 +299,10 @@ export function BankGridHeader({ pageNumber, pageName, onNameChange, onNameBlur,
 			onChange={onNameChange}
 			disabled={!onNameChange}
 		/>
-	</>
+	</div>
 }
 
-export class BankGrid extends React.PureComponent {
+class BankGrid extends React.PureComponent {
 
 	static contextType = CompanionContext
 
@@ -348,24 +354,26 @@ export class BankGrid extends React.PureComponent {
 		return <>
 			{
 				Array(MAX_ROWS).fill(0).map((_, y) => {
-					return <div key={y} className="pagebank-row">
-						{
-							Array(MAX_COLS).fill(0).map((_, x) => {
-								const index = y * MAX_COLS + x + 1
-								return (
-									<BankGridPreview
-										key={x}
-										page={pageNumber}
-										index={index}
-										preview={imageCache[index]?.image}
-										onClick={this.props.bankClick}
-										alt={`Bank ${index}`}
-										selected={selectedPage === pageNumber && selectedBank === index}
-									/>
-								)
-							})
-						}
-					</div>
+					return <CCol key={y} sm={12}>
+						<div className="pagebank-row">
+							{
+								Array(MAX_COLS).fill(0).map((_, x) => {
+									const index = y * MAX_COLS + x + 1
+									return (
+										<BankGridPreview
+											key={x}
+											page={pageNumber}
+											index={index}
+											preview={imageCache[index]?.image}
+											onClick={this.props.bankClick}
+											alt={`Bank ${index}`}
+											selected={selectedPage === pageNumber && selectedBank === index}
+										/>
+									)
+								})
+							}
+						</div>
+					</CCol>
 				})
 			}
 		</>
