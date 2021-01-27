@@ -21,7 +21,12 @@ body {
 		grid-template-rows: auto 1fr;
 
 		> .tab-content {
-			overflow-y: auto;
+			overflow-y: hidden;
+
+			> .tab-pane {
+				overflow-y: auto;
+				height: 100%;
+			}
 		}
 	}
 }

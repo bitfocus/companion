@@ -37,13 +37,13 @@ export function InstancesPage({ resetToken }) {
 	}, [])
 
 	return (
-		<CRow>
+		<CRow className='instances-page'>
 			<HelpModal content={helpContent} hide={closeHelp} />
 
-			<CCol xl={6}>
+			<CCol xl={6} className='instances-panel'>
 				<InstancesList configureInstance={configureInstance} showHelp={showHelp} />
 			</CCol>
-			<CCol xl={6}>
+			<CCol xl={6} className='instances-panel'>
 				{
 					selectedInstance[0]
 						? <InstanceConfig

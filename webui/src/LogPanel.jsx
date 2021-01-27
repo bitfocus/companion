@@ -58,7 +58,7 @@ export function LogPanel() {
 	const doToggleDebug = useCallback(() => doToggleConfig('debug'), [doToggleConfig])
 
 	return (
-		<div>
+		<div className='log-page'>
 			<CRow>
 				<CCol lg={12} className='log-buttons'>
 					<CButtonGroup>
@@ -71,8 +71,8 @@ export function LogPanel() {
 				</CCol>
 			</CRow>
 
-			<CRow>
-				<CCol lg={12} className='log-panel'>
+			<CRow className='log-panel'>
+				<CCol lg={12}>
 					{
 						history.map(h => {
 							if (h.level === 'error' || config[h.level]) {

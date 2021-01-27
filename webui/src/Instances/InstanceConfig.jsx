@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useContext } from 'react'
 import { CompanionContext, socketEmit } from '../util'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faQuestionCircle } from '@fortawesome/free-solid-svg-icons'
@@ -11,8 +11,6 @@ export class InstanceConfig extends React.Component {
 
 	state = {
 		loaded: false,
-
-		helpContent: null,
 
 		label: '',
 		configFields: [],
@@ -96,40 +94,6 @@ export class InstanceConfig extends React.Component {
 		})
 	}
 
-	renderVariablesTable() {
-		const label = this.state.label
-		const variableDefinitions = this.context.variableDefinitions[label] || []
-		const variableValues = this.context.variableValues || {}
-
-		if (variableDefinitions.length > 0) {
-			return (
-				<CRow>
-					<h4>List of dynamic variables</h4>
-					<table className="table table-responsive-sm">
-						<thead>
-							<tr>
-								<th>Variable</th>
-								<th>Description</th>
-								<th>Current value</th>
-							</tr>
-						</thead>
-						<tbody>
-							{
-								variableDefinitions.map((variable) => <tr key={variable.name}>
-									<td>$({label}:{variable.name})</td>
-									<td>{variable.label}</td>
-									<td>{variableValues[label + ':' + variable.name]}</td>
-								</tr>)
-							}
-						</tbody>
-					</table>
-				</CRow>
-			)
-		} else {
-			return ''
-		}
-	}
-
 	render() {
 		if (!this.state.loaded) {
 			return <p>Loading...</p>
@@ -167,7 +131,7 @@ export class InstanceConfig extends React.Component {
 				</CCol>
 			</CRow>
 			<hr />
-			{ this.renderVariablesTable()}
+			<VariablesTable label={this.state.label} />
 		</>
 	}
 }
@@ -187,5 +151,39 @@ function ConfigField(props) {
 			return <DropdownInputField {...props} />
 		default:
 			return <p>Unknown field "{definition.type}"</p>
+	}
+}
+
+function VariablesTable({ label }) {
+	const context = useContext(CompanionContext)
+	const variableDefinitions = context.variableDefinitions[label] || []
+	const variableValues = context.variableValues || {}
+
+	if (variableDefinitions.length > 0) {
+		return (
+			<CRow>
+				<h4>List of dynamic variables</h4>
+				<table className="table table-responsive-sm">
+					<thead>
+						<tr>
+							<th>Variable</th>
+							<th>Description</th>
+							<th>Current value</th>
+						</tr>
+					</thead>
+					<tbody>
+						{
+							variableDefinitions.map((variable) => <tr key={variable.name}>
+								<td>$({label}:{variable.name})</td>
+								<td>{variable.label}</td>
+								<td>{variableValues[label + ':' + variable.name]}</td>
+							</tr>)
+						}
+					</tbody>
+				</table>
+			</CRow>
+		)
+	} else {
+		return ''
 	}
 }
