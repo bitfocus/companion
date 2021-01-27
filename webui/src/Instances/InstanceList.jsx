@@ -92,17 +92,11 @@ function InstancesTableRow({ id, instance, instanceStatus, showHelp, configureIn
 				}
 			}} variant='ghost' color='danger' size='sm'>delete</CButton>
 			{
-				moduleInfo && (
-					isEnabled
-						? <CButton onClick={() => context.socket.emit('instance_enable', id, false)} variant='ghost' color='warning' size='sm'>disable</CButton>
-						: <CButton onClick={() => context.socket.emit('instance_enable', id, true)} variant='ghost' color='success' size='sm'>enable</CButton>
-				)
+				isEnabled
+					? <CButton onClick={() => context.socket.emit('instance_enable', id, false)} variant='ghost' color='warning' size='sm' disabled={!moduleInfo}>disable</CButton>
+					: <CButton onClick={() => context.socket.emit('instance_enable', id, true)} variant='ghost' color='success' size='sm' disabled={!moduleInfo}>enable</CButton>
 			}
-			{
-				moduleInfo && isEnabled
-					? <CButton onClick={() => configureInstance(id)} color='primary' size='sm'>edit</CButton>
-					: ''
-			}
+			<CButton onClick={() => configureInstance(id)} color='primary' size='sm' disabled={!moduleInfo || !isEnabled}>edit</CButton>
 		</td>
 	</tr>
 }

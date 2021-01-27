@@ -427,41 +427,15 @@ function ScheduleTableRow({ item, replaceItem, editItem, image }) {
 				}
 			</td>
 			<td><BankPreview fixedSize preview={image} /></td>
-			<td>
-				<CButton size='sm' color='primary' onClick={doEdit}>edit</CButton>
+			<td className='action-buttons'>
+				<CButton size='sm' color='ghost-danger' onClick={doDelete}>delete</CButton>
 				{
 					item.disabled
 					? <CButton size='sm' color='ghost-success' onClick={doEnableDisable}>enable</CButton>
 					: <CButton size='sm' color='ghost-warning' onClick={doEnableDisable}>disable</CButton>
 				}
-				<CButton size='sm' color='ghost-danger' onClick={doDelete}>delete</CButton>
+				<CButton size='sm' color='primary' onClick={doEdit}>edit</CButton>
 			</td>
 		</tr>
 	)
 }
-
-// function BankSchedulePreview({ page, bank, ...childProps }) {
-// 	const context = useContext(CompanionContext)
-// 	const [previewImage, setPreviewImage] = useState(null)
-
-// 	useEffect(() => {
-// 		const updateImage = (p, b, img) => {
-// 			//
-// 		}
-// 		this.socket.on('schedule_preview_data', updateImage);
-// 		this.socket.emit('scheduler_bank_preview', page, bank);
-// 		// socketEmit(context.socket, 'graphics_preview_generate', [preset.bank]).then(([img]) => {
-// 		// 	setPreviewImage(dataToButtonImage(img))
-// 		// }).catch(e => {
-// 		// 	console.error('Failed to preview bank')
-// 		// })
-// 		return () => {
-// 			this.socket.off('schedule_preview_data', updateImage);
-// 			this.socket.emit('scheduler_bank_preview', page, bank, true);
-// 		}
-// 	}, [context.socket, page, bank])
-
-// 	return (
-// 		<BankPreview fixedSize {...childProps} preview={previewImage} />
-// 	)
-// }
