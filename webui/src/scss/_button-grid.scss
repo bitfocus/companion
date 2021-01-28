@@ -1,4 +1,21 @@
+.buttons-page {
+	height: 100%;
 
+	> .primary-panel {
+		height: 100%;
+		overflow-y: auto;
+	}
+
+	> .secondary-panel {
+		height: 100%;
+		display: grid;
+		grid-template-rows: auto 1fr;
+
+		.tab-content {
+			overflow-y: scroll;
+		}
+	}
+}
 
 .button-grid-header {
 	display: grid;
@@ -29,6 +46,9 @@
 		grid-auto-flow: column;
 		grid-auto-columns: 1fr;
 
+		transition: background-color 0.15s ease-in-out;
+		background-color: none;
+
 		// Streamdeck markings
 		&:nth-child(1)>.bank:nth-child(1),
 		&:nth-child(2)>.bank:nth-child(1),
@@ -42,5 +62,14 @@
 			background: #00000050;
 		}
 
+	}
+}
+
+.fadeinout {
+	transition: opacity 0.15s ease-in-out;
+	opacity: 1;
+
+	&.out {
+		opacity: 0;
 	}
 }

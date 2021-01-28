@@ -79,8 +79,8 @@ export function ButtonsPage({ hotPress }) {
 	}, [context.socket, selectedButton, copyFromButton])
 
 	return (
-		<CRow>
-			<CCol xs={12} xl={6}>
+		<CRow className="buttons-page">
+			<CCol xs={12} xl={6} className="primary-panel">
 				<MyErrorBoundary>
 					<Buttons
 						buttonGridClick={doButtonGridClick}
@@ -93,7 +93,7 @@ export function ButtonsPage({ hotPress }) {
 				</MyErrorBoundary>
 			</CCol>
 
-			<CCol xs={12} xl={6}>
+			<CCol xs={12} xl={6} className="secondary-panel">
 				<CTabs activeTab={activeTab} onActiveTabChange={doChangeTab}>
 					<CNav variant="tabs">
 						<CNavItem hidden={!selectedButton}><CNavLink data-tab="edit"><FontAwesomeIcon icon={faCalculator} /> Edit Button {selectedButton ? `${selectedButton[0]}.${selectedButton[1]}` : '?'}</CNavLink></CNavItem>

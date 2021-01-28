@@ -93,9 +93,6 @@ export class Buttons extends React.Component {
 				case 'delete':
 					if (window.confirm("Clear style and actions for this button?")) {
 						this.context.socket.emit('bank_reset', this.props.pageNumber, index);
-						// socket.emit('bank_actions_get', function_detail.first.page, function_detail.first.bank );
-						// socket.emit('bank_release_actions_get', function_detail.first.page, function_detail.first.bank );
-						// bank_preview_page(page);
 					}
 
 					this.stopFunction()
@@ -223,7 +220,7 @@ export class Buttons extends React.Component {
 			</CRow>
 
 			<CRow style={{ paddingTop: '15px' }}>
-				<CCol sm={12} className={classnames({ 'slide-up': this.props.isHot, 'slide-height': true })}>
+				<CCol sm={12} className={classnames({ 'out': this.props.isHot, 'fadeinout': true })}>
 					{this.getButton('Copy', faCopy, 'copy')}
 					{this.getButton('Move', faArrowsAlt, 'move')}
 					{this.getButton('Delete', faTrash, 'delete')}
