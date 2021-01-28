@@ -1,5 +1,5 @@
 import { CCol, CRow } from "@coreui/react";
-import { useCallback, useContext, useEffect, useState } from "react";
+import { useCallback, useContext, useEffect, useRef, useState } from "react";
 import { HelpModal } from "./HelpModal";
 import { CompanionContext, socketEmit } from "../util";
 import { InstanceConfig } from "./InstanceConfig";
@@ -8,8 +8,8 @@ import shortid from "shortid";
 
 export function InstancesPage({ resetToken }) {
 	const context = useContext(CompanionContext)
-	const [helpContent, setHelpContent] = useState(null)
 	const [selectedInstance, setSelectedInstance] = useState([null, shortid()])
+	const helpModalRef = useRef()
 
 	// Clear the selected instance whenever the parent tab changes
 	useEffect(() => {
@@ -23,13 +23,10 @@ export function InstancesPage({ resetToken }) {
 				return;
 			}
 			if (result) {
-				setHelpContent([name, result])
-			} else {
-				setHelpContent(null)
+				helpModalRef.current?.show(name, result)
 			}
 		})
 	}, [context.socket])
-	const closeHelp = useCallback(() => setHelpContent(null), [])
 
 	const configureInstance = useCallback((id) => {
 		console.log('configureInstance', id)
@@ -38,7 +35,7 @@ export function InstancesPage({ resetToken }) {
 
 	return (
 		<CRow className='instances-page'>
-			<HelpModal content={helpContent} hide={closeHelp} />
+			<HelpModal ref={helpModalRef} />
 
 			<CCol xl={6} className='instances-panel'>
 				<InstancesList configureInstance={configureInstance} showHelp={showHelp} />
