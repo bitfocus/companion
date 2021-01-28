@@ -15,6 +15,7 @@
 			},
 			"asarUnpack": [
 				"public",
+				"webui/build",
 				"node_modules/jquery",
 				"node_modules/popper.js/**",
 				"node_modules/bootstrap",
@@ -78,6 +79,9 @@
 			"assets/bitfocus-logo.png",
 			"assets/trayTemplate.png",
 			"assets/trayTemplate@2x.png",
+			"webui/build/**/*",
+			"!webui/src/**/*",
+			"!webui/public/**/*",
 			"!font/*",
 			"!tools/*",
 			"!*.md",
@@ -91,7 +95,8 @@
 		"update": "./tools/update.sh",
 		"pack": "electron-builder --dir",
 		"dist:js": "rm -rf public/js/dist && babel ./public/js/babel --out-dir ./public/js/dist",
-		"dist:prepare": "./tools/build_writefile.sh ; rm -rf electron-output && yarn dist:js",
+		"dist:webui": "yarn --cwd webui build",
+		"dist:prepare": "./tools/build_writefile.sh ; rm -rf electron-output && yarn dist:js && yarn dist:webui",
 		"dist": "yarn dist:prepare && electron-builder",
 		"electron-rebuild": "electron-builder install-app-deps",
 		"testprod": "./node_modules/electron/cli.js .",
@@ -102,7 +107,8 @@
 		"test": "mocha",
 		"postinstall": "./tools/build_writefile.sh && yarn dist:js",
 		"headless": "nodemon headless.js",
-		"dev-headless": "./tools/build_writefile.sh && DEVELOPER=1 nodemon headless.js"
+		"dev-headless": "./tools/build_writefile.sh && DEVELOPER=1 nodemon headless.js",
+		"dev-webui": "yarn --cwd webui dev"
 	},
 	"repository": "https://github.com/bitfocus/companion",
 	"keywords": [
