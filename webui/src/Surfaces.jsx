@@ -141,6 +141,26 @@ export class Surfaces extends React.Component {
 						</CFormGroup>
 						: ''
 				}
+
+				{
+					device?.config?.includes('keysPerRow')
+						? <CFormGroup>
+							<CLabel htmlFor="keysPerRow">Keys per row</CLabel>
+							<CInput name="keysPerRow" type="range" min={1} max={99} step={1} value={config.keysPerRow} onChange={(e) => this.updateConfig('keysPerRow', parseInt(e.currentTarget.value))} />
+							<span>{config.keysPerRow}</span>
+						</CFormGroup>
+						: ''
+				}
+
+				{
+					device?.config?.includes('keysPerColumn')
+						? <CFormGroup>
+							<CLabel htmlFor="keysPerColumn">Keys per column</CLabel>
+							<CInput name="keysPerColumn" type="range" min={1} max={99} step={1} value={config.keysPerColumn} onChange={(e) => this.updateConfig('keysPerColumn', parseInt(e.currentTarget.value))} />
+							<span>{config.keysPerColumn}</span>
+						</CFormGroup>
+						: ''
+				}
 			</CForm>
 		}
 	}
