@@ -59,13 +59,6 @@ export function Scheduler () {
 	const doSave = useCallback((newConfig) => {
 		console.log('save item', newConfig)
 		context.socket.emit('schedule_save_item', newConfig, clean => {
-			// if (this.edit_id !== null) {
-			// 	let init_config = this.get_event(this.edit_id);
-			// 	if (clean.button != init_config.button && $(`canvas[data-schedule-bank="${init_config.button}"]`).length === 1) {
-			// 		this.preview_update_stop(init_config.button);
-			// 	}
-			// }
-
 			replaceItem(clean.id, clean)
 		});
 	}, [context.socket, replaceItem])

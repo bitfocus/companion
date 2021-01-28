@@ -18,7 +18,7 @@ export function socketEmit(socket, name, args, timeout) {
 }
 
 
-export function ErrorFallback ({error, resetErrorBoundary}) {
+function ErrorFallback ({error, resetErrorBoundary}) {
 	return (
 		<CAlert color="danger">
 			<p>Something went wrong:</p>

@@ -3,7 +3,6 @@ export const MAX_BUTTONS = 32;
 export const MAX_COLS = 8;
 export const MAX_ROWS = MAX_BUTTONS / MAX_COLS;
 
-
 const bmpHeaderSize = 54
 const bmpHeader = Buffer.alloc(bmpHeaderSize)
 bmpHeader.write('BM', 0, 2) // flag
