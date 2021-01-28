@@ -715,3 +715,6 @@ url=https://github.com/bitfocus/companion-module-newbluefx-titler.git
 [submodule "lib/module/lumens-visca"]
 	path = lib/module/lumens-visca
 	url = https://github.com/bitfocus/companion-module-lumens-visca.git
+[submodule "lib/module/shure-dis-ccu"]
+	path = lib/module/shure-dis-ccu
+	url = https://github.com/bitfocus/companion-module-shure-dis-ccu.git
