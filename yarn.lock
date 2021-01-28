@@ -1257,10 +1257,10 @@ anymatch@~3.1.1:
     normalize-path "^3.0.0"
     picomatch "^2.0.4"
 
-app-builder-bin@3.5.10:
-  version "3.5.10"
-  resolved "https://registry.yarnpkg.com/app-builder-bin/-/app-builder-bin-3.5.10.tgz#4a7f9999fccc0c435b6284ae1366bc76a17c4a7d"
-  integrity sha512-Jd+GW68lR0NeetgZDo47PdWBEPdnD+p0jEa7XaxjRC8u6Oo/wgJsfKUkORRgr2NpkD19IFKN50P6JYy04XHFLQ==
+app-builder-bin@3.5.10, "app-builder-bin@npm:@julusian/test-lib@3.5.11-app-builder-bin":
+  version "3.5.11-app-builder-bin"
+  resolved "https://registry.yarnpkg.com/@julusian/test-lib/-/test-lib-3.5.11-app-builder-bin.tgz#dd72f10c7617f782360853dbe7cc4f623f2e1016"
+  integrity sha512-sHI4V3k1yFc/ExU2Q4nyEfuxGiuT9V0iTz+3XBCi4ob7hUPNyjUHwXb1XvVp8aoP32K44QOP1XAO6H5RpIja0g==
 
 app-builder-lib@22.9.1:
   version "22.9.1"
