@@ -46,7 +46,7 @@ export function InstancesList({ configureInstance, showHelp }) {
 					{
 						Object.entries(context.instances).map(([id, instance]) => {
 							if (instance.instance_type === 'bitfocus-companion') {
-								return ''
+								return null
 							} else {
 								return <InstancesTableRow
 									key={id}

@@ -1,5 +1,5 @@
-import React, { Suspense } from 'react'
-import { CContainer, CTabs, CTabContent, CTabPane, CNav, CNavItem, CNavLink } from '@coreui/react'
+import React, { Suspense, useCallback, useState } from 'react'
+import { CContainer, CTabs, CTabContent, CTabPane, CNav, CNavItem, CNavLink, CRow, CCol, CFormGroup, CProgress } from '@coreui/react'
 import { faCalendarAlt, faClipboardList, faClock, faGamepad, faPlug, faUserNinja } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import io from 'socket.io-client'
@@ -31,16 +31,11 @@ export default class App extends React.Component {
 			connected: false,
 			was_connected: false,
 
-			activeRootTab: 'instances',
-			activeRootTabToken: shortid(),
-
 			buttonGridHotPress: false,
 
 			showSidebar: true,
 		}
-	}
 
-	componentDidMount() {
 		this.socket = new io(serverUrl);
 		this.socket.on('connect', () => {
 			if (this.state.was_connected) {
@@ -58,7 +53,9 @@ export default class App extends React.Component {
 				was_connected: this.state.connected
 			})
 		});
+	}
 
+	componentDidMount() {
 		document.addEventListener('keydown', this.handleKeyDown);
 		document.addEventListener('keyup', this.handleKeyUp);
 	}
@@ -86,81 +83,42 @@ export default class App extends React.Component {
 	render() {
 		return (
 			<ContextData socket={this.socket}>
-				<div id="error-container" className={this.state.was_connected ? "show-error" : ''}>
-					<div className="row justify-content-center">
-						<div className="col-md-6">
-							<div className="clearfix">
-								<h4 className="pt-3">Houston, we have a problem!</h4>
-								<p className="text-muted">It seems that we have lost connection to the companion app.</p>
-								<p className="text-muted">
-									<li className="text-muted">Check that the application is still running</li>
-									<li className="text-muted">If you're using the Admin GUI over a network - check your connection</li>
-								</p>
-							</div>
-						</div>
-					</div>
-				</div>
-				<Suspense fallback={<Spinner />}>
-					<DndProvider backend={HTML5Backend}>
-						<div className="c-app">
-
-							<MySidebar show={this.state.showSidebar} />
-							<div className="c-wrapper">
-								<MyHeader toggleSidebar={this.toggleSidebar} />
-								<div className="c-body">
-									<CContainer fluid className="animated fadeIn">
-										{
-											this.socket && this.state.connected ?
-												<CTabs activeTab={this.state.activeRootTab} onActiveTabChange={(a) => this.setState({ activeRootTab: a, activeRootTabToken: shortid() })}>
-													<CNav variant="tabs">
-														<CNavItem><CNavLink data-tab="instances"><FontAwesomeIcon icon={faPlug} /> Instances</CNavLink></CNavItem>
-														<CNavItem><CNavLink data-tab="buttons"><FontAwesomeIcon icon={faCalendarAlt} /> Buttons</CNavLink></CNavItem>
-														<CNavItem><CNavLink data-tab="surfaces"><FontAwesomeIcon icon={faGamepad} /> Surfaces</CNavLink></CNavItem>
-														<CNavItem><CNavLink data-tab="triggers"><FontAwesomeIcon icon={faClock} /> Triggers</CNavLink></CNavItem>
-														<CNavItem><CNavLink data-tab="userconfig"><FontAwesomeIcon icon={faUserNinja} /> Settings</CNavLink></CNavItem>
-														<CNavItem><CNavLink data-tab="log"><FontAwesomeIcon icon={faClipboardList} /> Log</CNavLink></CNavItem>
-													</CNav>
-													<CTabContent fade={false}>
-														<CTabPane data-tab="instances">
-															<MyErrorBoundary>
-																<InstancesPage resetToken={this.state.activeRootTabToken} />
-															</MyErrorBoundary>
-														</CTabPane>
-														<CTabPane data-tab="buttons">
-															<MyErrorBoundary>
-																<ButtonsPage hotPress={this.state.buttonGridHotPress} />
-															</MyErrorBoundary>
-														</CTabPane>
-														<CTabPane data-tab="surfaces">
-															<MyErrorBoundary>
-																<Surfaces />
-															</MyErrorBoundary>
-														</CTabPane>
-														<CTabPane data-tab="triggers">
-															<MyErrorBoundary>
-																<Scheduler />
-															</MyErrorBoundary>
-														</CTabPane>
-														<CTabPane data-tab="userconfig">
-															<MyErrorBoundary>
-																<UserConfig />
-															</MyErrorBoundary>
-														</CTabPane>
-														<CTabPane data-tab="log">
-															<MyErrorBoundary>
-																<LogPanel />
-															</MyErrorBoundary>
-														</CTabPane>
-													</CTabContent>
-												</CTabs>
-												: ''
-										}
-									</CContainer>
+				{
+					(loadingProgress, loadingComplete) => <>
+						<div id="error-container" className={this.state.was_connected ? "show-error" : ''}>
+							<div className="row justify-content-center">
+								<div className="col-md-6">
+									<div className="clearfix">
+										<h4 className="pt-3">Houston, we have a problem!</h4>
+										<p className="text-muted">It seems that we have lost connection to the companion app.</p>
+										<p className="text-muted">
+											<li className="text-muted">Check that the application is still running</li>
+											<li className="text-muted">If you're using the Admin GUI over a network - check your connection</li>
+										</p>
+									</div>
 								</div>
 							</div>
 						</div>
-					</DndProvider>
-				</Suspense>
+						<Suspense fallback={<Spinner />}>
+							<DndProvider backend={HTML5Backend}>
+								<div className="c-app">
+
+									<MySidebar show={this.state.showSidebar} />
+									<div className="c-wrapper">
+										<MyHeader toggleSidebar={this.toggleSidebar} />
+										<div className="c-body">
+											{
+												this.state.connected && loadingComplete
+													? <AppContent buttonGridHotPress={this.state.buttonGridHotPress} />
+													: <AppLoading progress={loadingProgress} connected={this.state.connected} />
+											}
+										</div>
+									</div>
+								</div>
+							</DndProvider>
+						</Suspense>
+					</>
+				}
 			</ContextData>
 		);
 	}
@@ -168,4 +126,79 @@ export default class App extends React.Component {
 
 function Spinner() {
 	return <p>Loading</p>
+}
+
+
+function AppLoading({ progress, connected }) {
+	const message = connected ? 'Syncing' : 'Connecting'
+	return (
+		<CContainer fluid className="animated fadeIn loading">
+			<CRow>
+				<CCol xxl={4} md={3} sm={2} xs={1}></CCol>
+				<CCol xxl={4} md={6} sm={8} xs={10} >
+					<CFormGroup>
+						<h3>{ message }</h3>
+						<CProgress min={0} max={100} value={connected ? progress : 0} />
+					</CFormGroup>
+				</CCol>
+			</CRow>
+		</CContainer>
+	)
+}
+
+function AppContent({ buttonGridHotPress }) {
+	const [activeRootTab, setActiveRootTab] = useState('buttons')
+	const [activeRootTabToken, setActiveRootTabToken] = useState(shortid())
+
+	const changeTab = useCallback((tab) => {
+		setActiveRootTab(tab)
+		setActiveRootTabToken(shortid())
+	}, [])
+
+	return (
+		<CContainer fluid className="animated fadeIn">
+			<CTabs activeTab={activeRootTab} onActiveTabChange={changeTab}>
+				<CNav variant="tabs">
+					<CNavItem><CNavLink data-tab="instances"><FontAwesomeIcon icon={faPlug} /> Instances</CNavLink></CNavItem>
+					<CNavItem><CNavLink data-tab="buttons"><FontAwesomeIcon icon={faCalendarAlt} /> Buttons</CNavLink></CNavItem>
+					<CNavItem><CNavLink data-tab="surfaces"><FontAwesomeIcon icon={faGamepad} /> Surfaces</CNavLink></CNavItem>
+					<CNavItem><CNavLink data-tab="triggers"><FontAwesomeIcon icon={faClock} /> Triggers</CNavLink></CNavItem>
+					<CNavItem><CNavLink data-tab="userconfig"><FontAwesomeIcon icon={faUserNinja} /> Settings</CNavLink></CNavItem>
+					<CNavItem><CNavLink data-tab="log"><FontAwesomeIcon icon={faClipboardList} /> Log</CNavLink></CNavItem>
+				</CNav>
+				<CTabContent fade={false}>
+					<CTabPane data-tab="instances">
+						<MyErrorBoundary>
+							<InstancesPage resetToken={activeRootTabToken} />
+						</MyErrorBoundary>
+					</CTabPane>
+					<CTabPane data-tab="buttons">
+						<MyErrorBoundary>
+							<ButtonsPage hotPress={buttonGridHotPress} />
+						</MyErrorBoundary>
+					</CTabPane>
+					<CTabPane data-tab="surfaces">
+						<MyErrorBoundary>
+							<Surfaces />
+						</MyErrorBoundary>
+					</CTabPane>
+					<CTabPane data-tab="triggers">
+						<MyErrorBoundary>
+							<Scheduler />
+						</MyErrorBoundary>
+					</CTabPane>
+					<CTabPane data-tab="userconfig">
+						<MyErrorBoundary>
+							<UserConfig />
+						</MyErrorBoundary>
+					</CTabPane>
+					<CTabPane data-tab="log">
+						<MyErrorBoundary>
+							<LogPanel />
+						</MyErrorBoundary>
+					</CTabPane>
+				</CTabContent>
+			</CTabs>
+		</CContainer>
+	)
 }

@@ -3,12 +3,12 @@ import { CompanionContext, socketEmit } from "./util"
 
 export function ContextData({ socket, children }) {
 
-	const [instances, setInstances] = useState({})
-	const [modules, setModules] = useState({})
-	const [actions, setActions] = useState({})
-	const [feedbacks, setFeedbacks] = useState({})
-	const [variableDefinitions, setVariableDefinitions] = useState({})
-	const [variableValues, setVariableValues] = useState({})
+	const [instances, setInstances] = useState(null)
+	const [modules, setModules] = useState(null)
+	const [actions, setActions] = useState(null)
+	const [feedbacks, setFeedbacks] = useState(null)
+	const [variableDefinitions, setVariableDefinitions] = useState(null)
+	const [variableValues, setVariableValues] = useState(null)
 
 	useEffect(() => {
 		if (socket) {
@@ -68,6 +68,7 @@ export function ContextData({ socket, children }) {
 		}
 	}, [socket])
 
+
 	const contextValue = {
 		socket: socket,
 		instances: instances,
@@ -78,7 +79,12 @@ export function ContextData({ socket, children }) {
 		feedbacks: feedbacks,
 	}
 
+	const steps = [instances, modules, variableDefinitions, variableValues, actions, feedbacks]
+	const completedSteps = steps.filter(s => s !== null && s !== undefined)
+
+	const progressPercent = (completedSteps.length / steps.length) * 100
+
 	return <CompanionContext.Provider value={contextValue} >
-		{ children}
+		{ children(progressPercent, completedSteps.length === steps.length) }
 	</CompanionContext.Provider>
 }
