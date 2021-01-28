@@ -3,19 +3,23 @@ import { CModal, CModalBody, CModalHeader, CModalFooter, CButton } from '@coreui
 
 export const HelpModal = forwardRef(function HelpModal(_props, ref) {
 	const [content, setContent] = useState(null)
+	const [show, setShow] = useState(false)
 
-	const doClose = useCallback(() => setContent(null), [])
+	const doClose = useCallback(() => setShow(false), [])
+	const onClosed = useCallback(() => setContent(null), [])
 
 	useImperativeHandle(ref, () => ({
 		show(name, description) {
-			setContent([name, description])	
+			setContent([name, description])
+			setShow(true)
 		}
 	}), [])
 
 	return (
 		<CModal
-			show={!!content}
+			show={show}
 			onClose={doClose}
+			onClosed={onClosed}
 			size="lg"
 		>
 			<CModalHeader closeButton>

@@ -161,8 +161,10 @@ function processModuleStatus(status) {
 
 const ConfirmDeleteModal = forwardRef(function ConfirmDeleteModal({ doDelete }, ref) {
 	const [data, setData] = useState(null)
+	const [show, setShow] = useState(false)
 
-	const doClose = useCallback(() => setData(null), [])
+	const doClose = useCallback(() => setShow(false), [])
+	const onClosed = useCallback(() => setData(null), [])
 	const doDelete2 = useCallback(() => {
 		setData(null)
 		doDelete(data?.[0])
@@ -170,12 +172,13 @@ const ConfirmDeleteModal = forwardRef(function ConfirmDeleteModal({ doDelete }, 
 
 	useImperativeHandle(ref, () => ({
 		show(id, name) {
-			setData([id, name])	
+			setData([id, name])
+			setShow(true)
 		}
 	}), [])
 
 	return (
-		<CModal show={!!data} onClose={doClose}>
+		<CModal show={show} onClose={doClose} onClosed={onClosed}>
 			<CModalHeader closeButton>
 				<h5>Delete instance</h5>
 			</CModalHeader>
