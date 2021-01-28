@@ -1,0 +1,20 @@
+
+h4 {
+	font-weight: bold;
+	text-transform: uppercase;
+}
+
+.action-buttons {
+	text-align: center;
+
+	.btn {
+		text-transform: uppercase;
+	}
+}
+
+
+h4, h5 {
+	.btn {
+		float: right;
+	}
+}

@@ -1,0 +1,46 @@
+
+
+.button-grid-header {
+	display: grid;
+	grid-template-columns: auto 2fr 1fr;
+	column-gap: 5px;
+	padding: 10px 0;
+
+	.input-group {
+		width: 150px;
+	}
+}
+
+.tab-pane .nav.nav-tabs .nav-link {
+	color: black;
+}
+
+#pagebank {
+	display: grid;
+	grid-auto-flow: row;
+	grid-auto-rows: 1fr;
+
+	&.bank-armed .pagebank-row {
+		background-color: rgba(255, 0, 0, 0.5);
+	}
+
+	.pagebank-row {
+		display: grid;
+		grid-auto-flow: column;
+		grid-auto-columns: 1fr;
+
+		// Streamdeck markings
+		&:nth-child(1)>.bank:nth-child(1),
+		&:nth-child(2)>.bank:nth-child(1),
+		&:nth-child(3)>.bank:nth-child(1),
+		&:nth-child(1)>.bank:nth-child(5),
+		&:nth-child(2)>.bank:nth-child(5),
+		&:nth-child(3)>.bank:nth-child(5),
+		&:nth-child(3)>.bank:nth-child(2),
+		&:nth-child(3)>.bank:nth-child(3),
+		&:nth-child(3)>.bank:nth-child(4) {
+			background: #00000050;
+		}
+
+	}
+}
