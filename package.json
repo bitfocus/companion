@@ -181,6 +181,7 @@
 		"@julusian/jpeg-turbo": "^1.0.1"
 	},
 	"resolutions": {
-		"infinitton-idisplay/node-hid": "^2.1.1"
+		"infinitton-idisplay/node-hid": "^2.1.1",
+		"electron-builder/**/app-builder-bin": "npm:@julusian/test-lib@3.5.11-app-builder-bin"
 	}
 }
