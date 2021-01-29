@@ -1,4 +1,4 @@
-import React, { useCallback, useContext, useEffect, useMemo, useState } from 'react'
+import React, { memo, useCallback, useContext, useEffect, useMemo, useState } from 'react'
 import { CButton, CForm, CFormGroup, CInput, CModal, CModalBody, CModalFooter, CModalHeader, CSelect } from '@coreui/react'
 import { CompanionContext, MyErrorBoundary, useMountEffect } from './util'
 import dayjs from 'dayjs'
@@ -24,7 +24,7 @@ function getPluginSpecDefaults(pluginOptions) {
 	return config
 }
 
-export function Scheduler () {
+export const Scheduler = memo(function Scheduler () {
 	const context = useContext(CompanionContext)
 
 	const [plugins, setPlugins] = useState(null)
@@ -92,7 +92,7 @@ export function Scheduler () {
 			<CButton color='primary' onClick={doAddNew}>Add New Trigger</CButton>
 		</div>
 	)
-}
+})
 
 function ScheduleEditModal({ doClose, doSave, item, plugins }) {
 	const [config, setConfig] = useState({})

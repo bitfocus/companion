@@ -1,6 +1,6 @@
 import React, { forwardRef, memo, useCallback, useContext, useEffect, useImperativeHandle, useState } from 'react'
-import { CompanionContext, LoadingBar, MyErrorBoundary, socketEmit } from '../util'
-import { CRow, CCol, CButton, CModalBody, CModalHeader, CModal, CModalFooter, CAlert } from '@coreui/react'
+import { CompanionContext, LoadingRetryOrError, MyErrorBoundary, socketEmit } from '../util'
+import { CRow, CCol, CButton, CModalBody, CModalHeader, CModal, CModalFooter } from '@coreui/react'
 import { CheckboxInputField, DropdownInputField, NumberInputField, TextInputField } from '../Components'
 import shortid from 'shortid'
 
@@ -80,6 +80,7 @@ export const InstanceEditModal = memo(forwardRef(function InstanceEditModal(_pro
 		}
 	}, [context.socket, instanceId, reloadToken])
 
+	const doRetryConfigLoad = useCallback(() => setReloadToken(shortid()), [])
 
 	const setValue = useCallback((key, value) => {
 		console.log('set value', key, value)
@@ -108,25 +109,7 @@ export const InstanceEditModal = memo(forwardRef(function InstanceEditModal(_pro
 			<CModalBody>
 				<MyErrorBoundary>
 					<CRow>
-						{
-							error
-							? <CCol sm={12}>
-								<CAlert color="danger" role="alert">{error}</CAlert>
-								{
-									instanceId && !dataReady
-									? <CButton color='primary' onClick={() => setReloadToken(shortid())}>Retry</CButton>
-									: ''
-								}
-							</CCol>
-							: ''
-						}
-						{
-							instanceId && !dataReady && !error
-							? <CCol sm={12}>
-								<LoadingBar />
-							</CCol>
-							: ''
-						}
+						<LoadingRetryOrError error={error} dataReady={dataReady} doRetry={doRetryConfigLoad} />
 						{
 							instanceId && dataReady
 							? configFields.map((field, i) => {

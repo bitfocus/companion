@@ -1,11 +1,11 @@
-import React, { useCallback, useContext, useEffect, useState } from 'react'
+import React, { memo, useCallback, useContext, useEffect, useState } from 'react'
 import { CAlert, CButton, CCol, CInput, CInputCheckbox, CRow } from '@coreui/react'
 import { CompanionContext, socketEmit } from './util'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faFileImport } from '@fortawesome/free-solid-svg-icons'
 import shortid from 'shortid'
 
-export function UserConfig() {
+export const UserConfig = memo(function UserConfig() {
 	return (
 		<CRow>
 			<CCol xl={6}>
@@ -20,7 +20,7 @@ export function UserConfig() {
 			</CCol>
 		</CRow>
 	)
-}
+})
 
 function UserConfigTable() {
 	const context = useContext(CompanionContext)

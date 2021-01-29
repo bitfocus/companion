@@ -5,7 +5,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import io from 'socket.io-client'
 
 import { MyErrorBoundary } from './util'
-import { Surfaces } from './Surfaces'
+import { SurfacesPage } from './Surfaces'
 import { UserConfig } from './UserConfig'
 import { LogPanel } from './LogPanel'
 // import { useTranslation } from 'react-i18next'
@@ -178,7 +178,7 @@ function AppContent({ buttonGridHotPress }) {
 					</CTabPane>
 					<CTabPane data-tab="surfaces">
 						<MyErrorBoundary>
-							<Surfaces />
+							<SurfacesPage />
 						</MyErrorBoundary>
 					</CTabPane>
 					<CTabPane data-tab="triggers">

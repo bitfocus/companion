@@ -1,10 +1,10 @@
-import React, { useCallback, useContext, useEffect, useState } from 'react'
+import React, { memo, useCallback, useContext, useEffect, useState } from 'react'
 import { CButton, CButtonGroup, CCol, CRow } from '@coreui/react'
 import { CompanionContext } from './util'
 import shortid from 'shortid'
 import dayjs from 'dayjs'
 
-export function LogPanel() {
+export const LogPanel = memo(function LogPanel() {
 	const context = useContext(CompanionContext)
 	const [config, setConfig] = useState(() => loadConfig())
 	const [history, setHistory] = useState([])
@@ -89,7 +89,7 @@ export function LogPanel() {
 			</CRow>
 		</div>
 	)
-}
+})
 
 function loadConfig() {
 	try {
