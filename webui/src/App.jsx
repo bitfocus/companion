@@ -24,8 +24,6 @@ export default class App extends React.Component {
 	constructor(props) {
 		super(props)
 
-		console.log('init')
-
 		this.state = {
 			connected: false,
 			was_connected: false,

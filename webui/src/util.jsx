@@ -62,12 +62,14 @@ export function LoadingRetryOrError({ error, dataReady, doRetry }) {
 		{
 			error
 			? <CCol sm={12}>
-				<CAlert color="danger" role="alert">{error}</CAlert>
-				{
-					!dataReady
-					? <CButton color='primary' onClick={doRetry}>Retry</CButton>
-					: ''
-				}
+				<CAlert color="danger" role="alert">
+					<p>{error}</p>
+					{
+						!dataReady
+						? <CButton color='primary' onClick={doRetry}>Retry</CButton>
+						: ''
+					}
+				</CAlert>
 			</CCol>
 			: ''
 		}

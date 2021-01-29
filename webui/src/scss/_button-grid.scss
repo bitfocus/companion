@@ -47,7 +47,7 @@
 		grid-auto-columns: 1fr;
 
 		transition: background-color 0.15s ease-in-out;
-		background-color: none;
+		background-color: transparent;
 
 		// Streamdeck markings
 		&:nth-child(1)>.bank:nth-child(1),

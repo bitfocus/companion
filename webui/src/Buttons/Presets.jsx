@@ -1,14 +1,19 @@
 import React, { useCallback, useContext, useEffect, useState } from 'react'
-import { CAlert, CButton } from '@coreui/react'
-import { CompanionContext, socketEmit } from '../util'
+import { CAlert, CButton, CRow } from '@coreui/react'
+import { CompanionContext, LoadingRetryOrError, socketEmit } from '../util'
 import { useDrag } from 'react-dnd'
-import { BankPreview, dataToButtonImage } from '../Components/BankButton'
+import { BankPreview, dataToButtonImage, RedImage } from '../Components/BankButton'
+import shortid from 'shortid'
 
-export function InstancePresets({ resetToken }) {
+export const InstancePresets = function InstancePresets({ resetToken }) {
 	const context = useContext(CompanionContext)
 
 	const [instanceAndCategory, setInstanceAndCategory] = useState([null, null])
-	const [presetsMap, setPresetsMap] = useState({})
+	const [presetsMap, setPresetsMap] = useState(null)
+	const [presetsError, setPresetError] = useState(null)
+	const [reloadToken, setReloadToken] = useState(shortid())
+
+	const doRetryPresetsLoad = useCallback(() => setReloadToken(shortid()), [])
 
 	// Reset selection on resetToken change
 	useEffect(() => {
@@ -16,24 +21,37 @@ export function InstancePresets({ resetToken }) {
 	}, [resetToken])
 
 	useEffect(() => {
-
+		setPresetsMap(null)
+		setPresetError(null)
+		
 		socketEmit(context.socket, 'get_presets', []).then(([data]) => {
 			setPresetsMap(data)
 		}).catch((e) => {
 			console.error('Failed to load presets')
+			setPresetError('Failed to load presets')
 		})
 
 		const updatePresets = (id, presets) => {
-			setPresetsMap(oldPresets => ({
-				...oldPresets,
-				[id]: presets,
-			}))
+				setPresetsMap(oldPresets => {
+					if (oldPresets) {
+						return {
+							...oldPresets,
+							[id]: presets,
+						}
+					} else {
+						return oldPresets
+					}
+				})
 		}
 		const removePresets = (id) => {
 			setPresetsMap(oldPresets => {
-				const newPresets = { ...oldPresets }
-				delete newPresets[id]
-				return newPresets
+				if (oldPresets) {
+					const newPresets = { ...oldPresets }
+					delete newPresets[id]
+					return newPresets
+				} else {
+					return oldPresets
+				}
 			})
 		}
 
@@ -44,7 +62,16 @@ export function InstancePresets({ resetToken }) {
 			context.socket.off('presets_update', updatePresets)
 			context.socket.off('presets_delete', removePresets)
 		}
-	}, [context.socket])
+	}, [context.socket, reloadToken])
+
+	if (!presetsMap) {
+		// Show loading or an error
+		return (
+			<CRow>
+				<LoadingRetryOrError error={presetsError} dataReady={presetsMap} doRetry={doRetryPresetsLoad} />
+			</CRow>
+		)
+	}
 
 	if (instanceAndCategory[0]) {
 		const instance = context.instances[instanceAndCategory[0]]
@@ -141,7 +168,9 @@ function PresetsButtonList({ presets, selectedInstanceId, selectedCategory, setI
 function PresetIconPreview({ preset, instanceId, ...childProps }) {
 	const context = useContext(CompanionContext)
 	const [previewImage, setPreviewImage] = useState(null)
-
+	const [previewError, setPreviewError] = useState(false)
+	const [retryToken, setRetryToken] = useState(shortid())
+	
 	const [, drag] = useDrag({
 		item: {
 			type: 'preset',
@@ -151,14 +180,25 @@ function PresetIconPreview({ preset, instanceId, ...childProps }) {
 	})
 
 	useEffect(() => {
+		setPreviewError(false)
+
 		socketEmit(context.socket, 'graphics_preview_generate', [preset.bank]).then(([img]) => {
 			setPreviewImage(dataToButtonImage(img))
 		}).catch(e => {
 			console.error('Failed to preview bank')
+			setPreviewError(true)
 		})
-	}, [preset.bank, context.socket])
+	}, [preset.bank, context.socket, retryToken])
+
+	const onClick = useCallback((i, isDown) => isDown && setRetryToken(shortid()), [])
 
 	return (
-		<BankPreview fixedSize dragRef={drag} {...childProps} preview={previewImage} />
+		<BankPreview
+			fixedSize
+			dragRef={drag}
+			{...childProps}
+			preview={previewError ? RedImage : previewImage}
+			onClick={previewError ? onClick : undefined}
+			/>
 	)
 }
