@@ -4,16 +4,13 @@ import { CompanionContext } from '../util'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faDollarSign, faQuestionCircle } from '@fortawesome/free-solid-svg-icons'
 
-import { AddModule } from './AddModule'
 import { InstanceVariablesModal } from './InstanceVariablesModal'
-import { InstanceEditModal } from './InstanceEditModal'
 
-export function InstancesList({ showHelp }) {
+export function InstancesList({ showHelp, doConfigureInstance }) {
 	const context = useContext(CompanionContext)
 	const [instanceStatus, setInstanceStatus] = useState({})
 
 	const deleteModalRef = useRef()
-	const editModalRef = useRef()
 	const variablesModalRef = useRef()
 
 	useEffect(() => {
@@ -29,17 +26,12 @@ export function InstancesList({ showHelp }) {
 		variablesModalRef.current.show(instanceId)
 	}, [])
 
-	const doConfigureInstance = useCallback((id) => {
-		editModalRef.current.show(id)
-	}, [])
-
 	return (
 		<div>
 			<h4>Connections / Instances</h4>
 			<p>Instances are the connections companion makes to other devices and software in order to control them.</p>
 
 			<ConfirmDeleteModal ref={deleteModalRef} />
-			<InstanceEditModal ref={editModalRef} />
 			<InstanceVariablesModal ref={variablesModalRef} />
 
 			<table className="table table-responsive-sm">
@@ -72,9 +64,6 @@ export function InstancesList({ showHelp }) {
 					}
 				</tbody>
 			</table>
-
-			<AddModule showHelp={showHelp} modules={context.modules} configureInstance={doConfigureInstance} />
-
 		</div>
 	)
 }
@@ -195,7 +184,6 @@ const ConfirmDeleteModal = forwardRef(function ConfirmDeleteModal(_props, ref) {
 		// Perform the delete
 		context.socket.emit('instance_delete', data?.[0])
 	},[data, context.socket])
-
 
 	useImperativeHandle(ref, () => ({
 		show(id, name) {

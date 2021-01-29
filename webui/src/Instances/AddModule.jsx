@@ -4,7 +4,15 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faQuestionCircle, faTimes } from '@fortawesome/free-solid-svg-icons'
 import { CompanionContext, socketEmit } from '../util'
 
-export function AddModule({ showHelp, configureInstance }) {
+export function AddInstancesPanel({ showHelp, doConfigureInstance }) {
+	const context = useContext(CompanionContext)
+
+	return <>
+		<AddModule showHelp={showHelp} modules={context.modules} configureInstance={doConfigureInstance} />
+	</>
+}
+
+function AddModule({ showHelp, configureInstance }) {
 	const context = useContext(CompanionContext)
 	const [filter, setFilter] = useState('')
 
