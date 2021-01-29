@@ -9,7 +9,7 @@ export const CompanionContext = React.createContext({
 
 export function socketEmit(socket, name, args, timeout) {
 	const p = new Promise((resolve, reject) => {
-		console.log('send', name)
+		console.log('send', name, ...args)
 
 		socket.emit(name, ...args, (...res) => resolve(res))
 	})

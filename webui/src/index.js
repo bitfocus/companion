@@ -19,7 +19,7 @@ i18n
 		lng: "en",
 		fallbackLng: "en",
 
-		debug: true, // TODO disable
+		// debug: true, // TODO disable
 
 		interpolation: {
 			escapeValue: false

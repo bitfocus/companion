@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react"
+import debounce from 'debounce-fn'
 import { CompanionContext, socketEmit } from "./util"
 
 export function ContextData({ socket, children }) {
@@ -38,12 +39,30 @@ export function ContextData({ socket, children }) {
 					[label]: variables,
 				}))
 			}
-		
+
+			let variablesQueue = {}
+			const persistVariableValues = debounce(() => {
+				setVariableValues(oldValues => {
+					const newValues = { ...oldValues }
+					for (const [key, value] of Object.entries(variablesQueue)) {
+						if (value === null) {
+							delete newValues[key]
+						} else {
+							newValues[key] = value
+						}
+					}
+					variablesQueue = {}
+					return newValues
+				})
+			}, {
+				after: true,
+				maxWait: 2000,
+				wait: 500,
+			})
 			const updateVariableValue = (key, value) => {
-				setVariableValues(oldValues => ({
-					...oldValues,
-					[key]: value,
-				}))
+				// Don't commit to state immediately, run through a debounce to rate limit the renders
+				variablesQueue[key] = value
+				persistVariableValues()
 			}
 		
 			socket.on('instances_get:result', setInstances)
