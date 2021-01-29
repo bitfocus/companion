@@ -466,10 +466,33 @@ $(function() {
 		}
 		$ba.append($table);
 
+		function translate_index(tr_index) {
+			var index = -1
+			for (var n in feedbacks) {
+				var feedback = feedbacks[n]
+				if (feedback !== undefined && instance.db[feedback.instance_id] !== undefined && instance.db[feedback.instance_id].label !== undefined) {
+					index++
+				}
+				if (index === tr_index) {
+					return n
+				}
+			}
+			return -1
+		}
+
 		new RowSorter($table[0], {
 			handler: '.reorder-grip',
 			onDrop: function(tbody, row, new_index, old_index) {
-				socket.emit('bank_update_feedback_order', page, bank, old_index, new_index);
+				var old_index2 = translate_index(old_index)
+				var new_index2 = translate_index(new_index)
+
+				if (old_index2 === -1 || new_index2 === -1) {
+					alert("Failed to move feedback")
+					return false
+				}
+
+				socket.emit('bank_update_feedback_order', page, bank, old_index2, new_index2);
+				feedbacks.splice(new_index2, 0, feedbacks.splice(old_index2, 1)[0]);
 			}
 		});
 	});
