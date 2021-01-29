@@ -40,6 +40,7 @@ $(function() {
 	});
 
 	$aba.change(function() {
+		console.log('add',$(this).val() )
 		socket.emit('bank_action_add', page, bank, $(this).val() );
 		$("#addBankAction").val($("#addBankAction option:first").val());
 	});
