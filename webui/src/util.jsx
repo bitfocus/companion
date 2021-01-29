@@ -2,19 +2,22 @@ import React, { useEffect } from 'react'
 import pTimeout from 'p-timeout'
 import { CAlert, CButton } from '@coreui/react'
 import { ErrorBoundary } from 'react-error-boundary'
+import { PRIMARY_COLOR } from './Constants'
+import { BarLoader } from 'react-spinners'
 
 export const CompanionContext = React.createContext({
 	socket: undefined,
 })
 
-export function socketEmit(socket, name, args, timeout) {
+export function socketEmit(socket, name, args, timeout, timeoutMessage) {
 	const p = new Promise((resolve, reject) => {
 		console.log('send', name, ...args)
 
 		socket.emit(name, ...args, (...res) => resolve(res))
 	})
 
-	return pTimeout(p, timeout ?? 5000)
+	timeout = timeout ?? 5000
+	return pTimeout(p, timeout, timeoutMessage ?? `Timed out after ${timeout / 1000}s`)
 }
 
 
@@ -42,3 +45,14 @@ export function KeyReceiver ({children, ...props}) {
 
 // eslint-disable-next-line react-hooks/exhaustive-deps
 export const useMountEffect = (fun) => useEffect(fun, [])
+
+export function LoadingBar (props) {
+	return <BarLoader
+		loading={true}
+		height={4}
+		width="50%"
+		css={{ margin: '0 auto', display: 'inherit' }}
+		color={PRIMARY_COLOR}
+		{...props}
+		/>
+}

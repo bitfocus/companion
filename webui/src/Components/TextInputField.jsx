@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState, useCallback } from 'react'
 import { CInput } from '@coreui/react'
 
-export function TextInputField({ definition, value, setValue }) {
+export function TextInputField({ definition, value, setValue, setValid }) {
 	const [tmpValue, setTmpValue] = useState(null)
 
 	// Compile the regex (and cache)
@@ -34,11 +34,12 @@ export function TextInputField({ definition, value, setValue }) {
 	// If the value is undefined, populate with the default. Also inform the parent about the validity
 	useEffect(() => {
 		if (value === undefined && definition.default !== undefined) {
-			setValue(definition.default, isValueValid(definition.default))
+			setValue(definition.default)
+			setValid?.(isValueValid(definition.default))
 		} else {
-			setValue(value, isValueValid(value))
+			setValid?.( isValueValid(value))
 		}
-	}, [isValueValid, definition.default, value, setValue])
+	}, [isValueValid, definition.default, value, setValue, setValid])
 
 	// Render the input
 	return <CInput
@@ -48,7 +49,8 @@ export function TextInputField({ definition, value, setValue }) {
 		title={definition.tooltip}
 		onChange={(e) => {
 			setTmpValue(e.currentTarget.value)
-			setValue(e.currentTarget.value, isValueValid(e.currentTarget.value))
+			setValue(e.currentTarget.value)
+			setValid?.(isValueValid(e.currentTarget.value))
 		}}
 		onFocus={() => setTmpValue(value ?? '')}
 		onBlur={() => setTmpValue(null)}

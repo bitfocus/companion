@@ -1,20 +1,22 @@
 
-.instance_help {
+.instance_help, .instance_variables {
 	float: right;
 	cursor: pointer;
 	cursor: hand;
 }
 
-.instances-page {
-	height: 100%;
-	
-	.instances-panel {
+// scroll if side-by-side
+@include media-breakpoint-up('xl') {
+	.instances-page {
 		height: 100%;
-		overflow-y: scroll;
-
+		
+		.instances-panel {
+			height: 100%;
+			overflow-y: scroll;
+		}
+		
 	}
 }
-
 
 .instance-status-ok {
 	background-color: #cfc;

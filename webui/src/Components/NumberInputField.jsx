@@ -1,7 +1,7 @@
 import React, { useEffect, useCallback, useState } from 'react'
 import { CCol, CInput, CRow } from '@coreui/react'
 
-export function NumberInputField({ definition, value, setValue }) {
+export function NumberInputField({ definition, value, setValue, setValid }) {
 	const [tmpValue, setTmpValue] = useState(null)
 
 	// Check if the value is valid
@@ -32,18 +32,20 @@ export function NumberInputField({ definition, value, setValue }) {
 	// If the value is undefined, populate with the default. Also inform the parent about the validity
 	useEffect(() => {
 		if (value === undefined && definition.default !== undefined) {
-			setValue(definition.default, isValueValid(definition.default))
+			setValue(definition.default)
+			setValid?.(isValueValid(definition.default))
 		} else {
-			setValue(value, isValueValid(value))
+			setValid?.(isValueValid(value))
 		}
-	}, [isValueValid, definition.default, value, setValue])
+	}, [isValueValid, definition.default, value, setValue, setValid])
 
 	const onChange = useCallback((e) => {
 		const parsedValue = parseFloat(e.currentTarget.value)
 		const processedValue = isNaN(parsedValue) ? e.currentTarget.value : parsedValue
 		setTmpValue(processedValue)
-		setValue(processedValue, isValueValid(processedValue))
-	}, [setValue, isValueValid])
+		setValue(processedValue)
+		setValid?.(isValueValid(processedValue))
+	}, [setValue, setValid, isValueValid])
 
 	// Render the input
 	const input = <CInput

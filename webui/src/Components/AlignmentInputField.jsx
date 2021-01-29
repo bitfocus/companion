@@ -19,7 +19,7 @@ export class AlignmentInputField extends React.Component {
 
 	onChange = (newValue) => {
 		console.log('change', newValue)
-		this.props.setValue(newValue, true)
+		this.props.setValue(newValue)
 	}
 
 	render() {

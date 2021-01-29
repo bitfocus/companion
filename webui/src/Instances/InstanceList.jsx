@@ -2,15 +2,19 @@ import { forwardRef, useCallback, useContext, useEffect, useImperativeHandle, us
 import { CButton, CModal, CModalBody, CModalFooter, CModalHeader } from '@coreui/react'
 import { CompanionContext } from '../util'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faQuestionCircle } from '@fortawesome/free-solid-svg-icons'
+import { faDollarSign, faQuestionCircle } from '@fortawesome/free-solid-svg-icons'
 
 import { AddModule } from './AddModule'
+import { InstanceVariablesModal } from './InstanceVariablesModal'
+import { InstanceEditModal } from './InstanceEditModal'
 
-export function InstancesList({ configureInstance, showHelp }) {
+export function InstancesList({ showHelp }) {
 	const context = useContext(CompanionContext)
 	const [instanceStatus, setInstanceStatus] = useState({})
 
 	const deleteModalRef = useRef()
+	const editModalRef = useRef()
+	const variablesModalRef = useRef()
 
 	useEffect(() => {
 		context.socket.on('instance_status', setInstanceStatus)
@@ -21,17 +25,22 @@ export function InstancesList({ configureInstance, showHelp }) {
 		}
 	}, [context.socket])
 
-	const doDelete = useCallback((instanceId) => {
-		context.socket.emit('instance_delete', instanceId)
-		configureInstance(null)
-	}, [context.socket, configureInstance])
+	const doShowVariables = useCallback((instanceId) => {
+		variablesModalRef.current.show(instanceId)
+	}, [])
+
+	const doConfigureInstance = useCallback((id) => {
+		editModalRef.current.show(id)
+	}, [])
 
 	return (
 		<div>
 			<h4>Connections / Instances</h4>
 			<p>Instances are the connections companion makes to other devices and software in order to control them.</p>
 
-			<ConfirmDeleteModal ref={deleteModalRef} doDelete={doDelete} />
+			<ConfirmDeleteModal ref={deleteModalRef} />
+			<InstanceEditModal ref={editModalRef} />
+			<InstanceVariablesModal ref={variablesModalRef} />
 
 			<table className="table table-responsive-sm">
 				<thead>
@@ -54,8 +63,9 @@ export function InstancesList({ configureInstance, showHelp }) {
 									instance={instance}
 									instanceStatus={instanceStatus[id]}
 									showHelp={showHelp}
+									showVariables={doShowVariables}
 									deleteModalRef={deleteModalRef}
-									configureInstance={configureInstance}
+									configureInstance={doConfigureInstance}
 								/>
 							}
 						})
@@ -63,13 +73,13 @@ export function InstancesList({ configureInstance, showHelp }) {
 				</tbody>
 			</table>
 
-			<AddModule showHelp={showHelp} modules={context.modules} configureInstance={configureInstance} />
+			<AddModule showHelp={showHelp} modules={context.modules} configureInstance={doConfigureInstance} />
 
 		</div>
 	)
 }
 
-function InstancesTableRow({ id, instance, instanceStatus, showHelp, configureInstance, deleteModalRef }) {
+function InstancesTableRow({ id, instance, instanceStatus, showHelp, showVariables, configureInstance, deleteModalRef }) {
 	const context = useContext(CompanionContext)
 
 	const moduleInfo = context.modules[instance.instance_type]
@@ -85,13 +95,19 @@ function InstancesTableRow({ id, instance, instanceStatus, showHelp, configureIn
 		context.socket.emit('instance_enable', id, !isEnabled)
 	}, [context.socket, id, isEnabled])
 
+	const doShowHelp = useCallback(() => showHelp(instance.instance_type), [showHelp, instance.instance_type])
+
+	const doShowVariables = useCallback(() => showVariables(instance.label), [showVariables, instance.label])
+
+	const instanceVariables = context.variableDefinitions[instance.label]
+
 	return <tr>
 		<td>
 			{
 				moduleInfo
 					? <>
 						{
-							moduleInfo?.help ? <div className="instance_help" onClick={() => showHelp(instance.instance_type)}><FontAwesomeIcon icon={faQuestionCircle} /></div> : ''
+							moduleInfo?.help ? <div className="instance_help" onClick={doShowHelp} title="Help"><FontAwesomeIcon icon={faQuestionCircle} /></div> : ''
 						}
 						<b>{moduleInfo?.shortname ?? ''}</b>
 						<br />
@@ -100,7 +116,12 @@ function InstancesTableRow({ id, instance, instanceStatus, showHelp, configureIn
 					: instance.instance_type
 			}
 		</td>
-		<td>{instance.label}</td>
+		<td>
+			{
+				instanceVariables && instanceVariables.length > 0 ? <div className="instance_variables" onClick={doShowVariables} title="Variables"><FontAwesomeIcon icon={faDollarSign} /></div> : ''
+			}
+			{instance.label}
+		</td>
 		<td className={status.className} title={status.title}>{status.text}</td>
 		<td className='action-buttons'>
 			<CButton onClick={doDelete} variant='ghost' color='danger' size='sm'>delete</CButton>
@@ -159,16 +180,22 @@ function processModuleStatus(status) {
 	}
 }
 
-const ConfirmDeleteModal = forwardRef(function ConfirmDeleteModal({ doDelete }, ref) {
+const ConfirmDeleteModal = forwardRef(function ConfirmDeleteModal(_props, ref) {
+	const context = useContext(CompanionContext)
+	
 	const [data, setData] = useState(null)
 	const [show, setShow] = useState(false)
 
 	const doClose = useCallback(() => setShow(false), [])
 	const onClosed = useCallback(() => setData(null), [])
-	const doDelete2 = useCallback(() => {
+	const doDelete = useCallback(() => {
 		setData(null)
-		doDelete(data?.[0])
-	},[data, doDelete])
+		setShow(false)
+
+		// Perform the delete
+		context.socket.emit('instance_delete', data?.[0])
+	},[data, context.socket])
+
 
 	useImperativeHandle(ref, () => ({
 		show(id, name) {
@@ -194,7 +221,7 @@ const ConfirmDeleteModal = forwardRef(function ConfirmDeleteModal({ doDelete }, 
 				>Cancel</CButton>
 				<CButton
 					color="primary"
-					onClick={doDelete2}
+					onClick={doDelete}
 				>Delete</CButton>
 			</CModalFooter>
 		</CModal>

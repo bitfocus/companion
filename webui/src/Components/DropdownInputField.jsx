@@ -1,7 +1,7 @@
 import { useMemo, useEffect, useCallback } from 'react'
 import Select from 'react-select'
 
-export function DropdownInputField ({ definition, multiple, value, setValue }) {
+export function DropdownInputField ({ definition, multiple, value, setValue, setValid }) {
 	const options = useMemo(() => {
 		return (definition.choices || []).map(choice => ({ value: choice.id, label: choice.label }))
 	}, [definition.choices])
@@ -26,11 +26,10 @@ export function DropdownInputField ({ definition, multiple, value, setValue }) {
 	// If the value is undefined, populate with the default. Also inform the parent about the validity
 	useEffect(() => {
 		if (value === undefined && definition.default !== undefined) {
-			setValue(definition.default, true)
-		} else {
-			setValue(value, true)
+			setValue(definition.default)
 		}
-	}, [definition.default, value, setValue])
+		setValid?.(true)
+	}, [definition.default, value, setValue, setValid])
 
 	const onChange = useCallback((e) => {
 		const isMultiple = !!multiple
@@ -64,8 +63,9 @@ export function DropdownInputField ({ definition, multiple, value, setValue }) {
 			}
 		}
 
-		setValue(newValue, isValid)
-	}, [setValue, multiple, definition.minSelection, definition.maximumSelectionLength, definition.choices])
+		setValue(newValue)
+		setValid?.(isValid)
+	}, [setValue, setValid, multiple, definition.minSelection, definition.maximumSelectionLength, definition.choices])
 
 	return <Select
 		isClearable={false}

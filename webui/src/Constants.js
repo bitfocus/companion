@@ -33,3 +33,5 @@ export const FONT_SIZES = [
 	{ id: '30',   label: '30pt' },
 	{ id: '44',   label: '44pt' }
 ]
+
+export const PRIMARY_COLOR = '#d50215'

@@ -32,10 +32,9 @@ export class TextWithVariablesInputField extends React.Component {
 			isValid = false
 		}
 
-		if (validateOnly) {
-			this.props.setValid(isValid)
-		} else {
-			this.props.setValue(newValue, isValid)
+		this.props.setValid(isValid)
+		if (!validateOnly) {
+			this.props.setValue(newValue)
 			if (!skipState) {
 				this.setState({
 					currentValue: newValue
