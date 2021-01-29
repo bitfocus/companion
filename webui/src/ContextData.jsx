@@ -1,6 +1,7 @@
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import debounce from 'debounce-fn'
 import { CompanionContext, socketEmit } from "./util"
+import { NotificationsManager } from "./Components/Notifications"
 
 export function ContextData({ socket, children }) {
 
@@ -87,9 +88,12 @@ export function ContextData({ socket, children }) {
 		}
 	}, [socket])
 
+	const notifierRef = useRef()
 
 	const contextValue = {
 		socket: socket,
+		notifier: notifierRef,
+
 		instances: instances,
 		modules: modules,
 		variableDefinitions: variableDefinitions,
@@ -104,6 +108,8 @@ export function ContextData({ socket, children }) {
 	const progressPercent = (completedSteps.length / steps.length) * 100
 
 	return <CompanionContext.Provider value={contextValue} >
+		<NotificationsManager ref={notifierRef} />
+
 		{ children(progressPercent, completedSteps.length === steps.length) }
 	</CompanionContext.Provider>
 }

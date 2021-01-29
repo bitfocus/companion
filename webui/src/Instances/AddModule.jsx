@@ -1,5 +1,5 @@
 import React, { useContext, useState } from 'react'
-import { CButton, CInput, CInputGroup, CInputGroupAppend } from '@coreui/react'
+import { CAlert, CButton, CInput, CInputGroup, CInputGroupAppend } from '@coreui/react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faQuestionCircle, faTimes } from '@fortawesome/free-solid-svg-icons'
 import { CompanionContext, socketEmit } from '../util'
@@ -16,14 +16,13 @@ function AddModule({ showHelp, configureInstance }) {
 	const context = useContext(CompanionContext)
 	const [filter, setFilter] = useState('')
 
-
 	const addInstance = (type, product) => {
-		setFilter('')
-
 		socketEmit(context.socket, 'instance_add', [{ type: type, product: product }]).then(([id]) => {
+			setFilter('')
 			console.log('NEW INSTANCE', id)
 			configureInstance(id)
 		}).catch((e) => {
+			context.notifier.current.show(`Failed to create instance`, e)
 			console.error('Failed to create instance:', e)
 		})
 	}
@@ -54,7 +53,7 @@ function AddModule({ showHelp, configureInstance }) {
 			console.error('Failed to compile candidates list:', e)
 
 			candidates.splice(0, candidates.length)
-			candidates.push(<p>Failed to compile candidates list: "{e}"</p>)
+			candidates.push(<CAlert color='warning' role='alert'>Failed to build list of modules:<br/>{e}</CAlert>)
 		}
 	}
 
