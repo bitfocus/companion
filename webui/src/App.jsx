@@ -3,7 +3,6 @@ import { CContainer, CTabs, CTabContent, CTabPane, CNav, CNavItem, CNavLink, CRo
 import { faCalendarAlt, faClipboardList, faClock, faGamepad, faPlug, faUserNinja } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import io from 'socket.io-client'
-import shortid from 'shortid'
 
 import { MyErrorBoundary } from './util'
 import { Surfaces } from './Surfaces'
@@ -148,11 +147,11 @@ function AppLoading({ progress, connected }) {
 
 function AppContent({ buttonGridHotPress }) {
 	const [activeRootTab, setActiveRootTab] = useState('buttons')
-	const [activeRootTabToken, setActiveRootTabToken] = useState(shortid())
+	// const [activeRootTabToken, setActiveRootTabToken] = useState(shortid())
 
 	const changeTab = useCallback((tab) => {
 		setActiveRootTab(tab)
-		setActiveRootTabToken(shortid())
+		// setActiveRootTabToken(shortid())
 	}, [])
 
 	return (
@@ -169,7 +168,7 @@ function AppContent({ buttonGridHotPress }) {
 				<CTabContent fade={false}>
 					<CTabPane data-tab="instances">
 						<MyErrorBoundary>
-							<InstancesPage resetToken={activeRootTabToken} />
+							<InstancesPage />
 						</MyErrorBoundary>
 					</CTabPane>
 					<CTabPane data-tab="buttons">

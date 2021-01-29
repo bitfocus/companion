@@ -1,12 +1,12 @@
 import { CCol, CRow } from "@coreui/react";
-import { useCallback, useContext, useRef } from "react";
+import { memo, useCallback, useContext, useRef } from "react";
 import { HelpModal } from "./HelpModal";
 import { CompanionContext, socketEmit } from "../util";
 import { InstancesList } from "./InstanceList";
 import { AddInstancesPanel } from "./AddModule";
 import { InstanceEditModal } from "./InstanceEditModal";
 
-export function InstancesPage({ resetToken }) {
+export const InstancesPage = memo(function InstancesPage() {
 	const context = useContext(CompanionContext)
 
 	const helpModalRef = useRef()
@@ -42,4 +42,4 @@ export function InstancesPage({ resetToken }) {
 			</CCol>
 		</CRow>
 	)
-}
+})

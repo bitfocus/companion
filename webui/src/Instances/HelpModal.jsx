@@ -1,7 +1,7 @@
-import React, { forwardRef, useCallback, useImperativeHandle, useState } from 'react'
+import React, { forwardRef, memo, useCallback, useImperativeHandle, useState } from 'react'
 import { CModal, CModalBody, CModalHeader, CModalFooter, CButton } from '@coreui/react'
 
-export const HelpModal = forwardRef(function HelpModal(_props, ref) {
+export const HelpModal = memo(forwardRef(function HelpModal(_props, ref) {
 	const [content, setContent] = useState(null)
 	const [show, setShow] = useState(false)
 
@@ -36,4 +36,4 @@ export const HelpModal = forwardRef(function HelpModal(_props, ref) {
 			</CModalFooter>
 		</CModal>
 	)
-})
+}))

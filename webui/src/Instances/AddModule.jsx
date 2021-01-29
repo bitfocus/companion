@@ -1,18 +1,16 @@
-import React, { useContext, useState } from 'react'
+import React, { memo, useContext, useState } from 'react'
 import { CAlert, CButton, CInput, CInputGroup, CInputGroupAppend } from '@coreui/react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faQuestionCircle, faTimes } from '@fortawesome/free-solid-svg-icons'
 import { CompanionContext, socketEmit } from '../util'
 
 export function AddInstancesPanel({ showHelp, doConfigureInstance }) {
-	const context = useContext(CompanionContext)
-
 	return <>
-		<AddModule showHelp={showHelp} modules={context.modules} configureInstance={doConfigureInstance} />
+		<AddModule showHelp={showHelp} configureInstance={doConfigureInstance} />
 	</>
 }
 
-function AddModule({ showHelp, configureInstance }) {
+const AddModule = memo(function AddModule({ showHelp, configureInstance }) {
 	const context = useContext(CompanionContext)
 	const [filter, setFilter] = useState('')
 
@@ -70,4 +68,4 @@ function AddModule({ showHelp, configureInstance }) {
 			</div>
 		</div>
 	)
-}
+})

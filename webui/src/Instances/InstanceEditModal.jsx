@@ -1,10 +1,10 @@
-import React, { forwardRef, useCallback, useContext, useEffect, useImperativeHandle, useState } from 'react'
+import React, { forwardRef, memo, useCallback, useContext, useEffect, useImperativeHandle, useState } from 'react'
 import { CompanionContext, LoadingBar, MyErrorBoundary, socketEmit } from '../util'
 import { CRow, CCol, CButton, CModalBody, CModalHeader, CModal, CModalFooter, CAlert } from '@coreui/react'
 import { CheckboxInputField, DropdownInputField, NumberInputField, TextInputField } from '../Components'
 import shortid from 'shortid'
 
-export const InstanceEditModal = forwardRef(function InstanceEditModal(_props, ref) {
+export const InstanceEditModal = memo(forwardRef(function InstanceEditModal(_props, ref) {
 	const context = useContext(CompanionContext)
 
 	const [instanceId, setInstanceId] = useState(null)
@@ -162,7 +162,7 @@ export const InstanceEditModal = forwardRef(function InstanceEditModal(_props, r
 			</CModalFooter>
 		</CModal>
 	)
-})
+}))
 
 function ConfigField({ setValue, setValid, ...props}) {
 	const id = props.definition.id
