@@ -1,8 +1,8 @@
-import React, { useCallback, useContext, useEffect, useState } from 'react'
+import React, { forwardRef, useCallback, useContext, useEffect, useImperativeHandle, useRef, useState } from 'react'
 import { CompanionContext, socketEmit } from '../util'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faDownload, faFileImport, faTrashAlt } from '@fortawesome/free-solid-svg-icons'
-import { CButton, CAlert, CSelect, CButtonGroup } from '@coreui/react'
+import { CButton, CAlert, CSelect, CButtonGroup, CModal, CModalHeader, CModalBody, CModalFooter } from '@coreui/react'
 import update from 'immutability-helper'
 import { BankPreview, dataToButtonImage } from '../Components/BankButton'
 import { MAX_COLS, MAX_ROWS } from '../Constants'
@@ -47,7 +47,7 @@ export function ImportExport({ pageNumber }) {
 			};
 			fr.readAsText(newFiles[0]);
 		} else {
-				alert('I am sorry, Companion requires a more modern browser');
+			alert('I am sorry, Companion requires a more modern browser');
 		}
 	}, [context.socket, context.instances])
 
@@ -106,7 +106,7 @@ export function ImportExport({ pageNumber }) {
 
 		return <>
 			<h4>
-				Import Configuration 
+				Import Configuration
 				<CButton color='danger' size='sm' onClick={clearSnapshot}>Cancel</CButton>
 			</h4>
 
@@ -120,71 +120,71 @@ export function ImportExport({ pageNumber }) {
 
 			{
 				!importMode
-				? <div>
-					<h5>What to do</h5>
-					<CButtonGroup>
-						<CButton color='primary' onClick={() => setImportPage('page')}>Import individual pages</CButton>
-						<CButton color='warning' onClick={doFullImport}>Replace current configuration</CButton>
-					</CButtonGroup>
-				</div>
-				: ''	
+					? <div>
+						<h5>What to do</h5>
+						<CButtonGroup>
+							<CButton color='primary' onClick={() => setImportPage('page')}>Import individual pages</CButton>
+							<CButton color='warning' onClick={doFullImport}>Replace current configuration</CButton>
+						</CButtonGroup>
+					</div>
+					: ''
 			}
 
 			{
 				importMode === 'page'
-				? <div id="import_resolve">
-					<h5>Link config instances with local instances</h5>
+					? <div id="import_resolve">
+						<h5>Link config instances with local instances</h5>
 
-					<table className="table table-responsive-sm">
-						<thead>
-							<tr>
-								<th>Select instance</th>
-								<th>Config instance type</th>
-								<th>Config instance name</th>
-							</tr>
-						</thead>
-						<tbody>
-							{
-								Object.entries(snapshot.instances || {}).map(([key, instance]) => {
-									if (key === 'companion-bitfocus' || instance.instance_type === 'bitfocus-companion') {
-										return ''
-									} else {
+						<table className="table table-responsive-sm">
+							<thead>
+								<tr>
+									<th>Select instance</th>
+									<th>Config instance type</th>
+									<th>Config instance name</th>
+								</tr>
+							</thead>
+							<tbody>
+								{
+									Object.entries(snapshot.instances || {}).map(([key, instance]) => {
+										if (key === 'companion-bitfocus' || instance.instance_type === 'bitfocus-companion') {
+											return ''
+										} else {
 
-										const snapshotModule = context.modules[instance.instance_type]
-										const currentInstances = Object.entries(context.instances).filter(([id, inst]) => inst.instance_type === instance.instance_type)
+											const snapshotModule = context.modules[instance.instance_type]
+											const currentInstances = Object.entries(context.instances).filter(([id, inst]) => inst.instance_type === instance.instance_type)
 
-										return <tr>
-											<td>
-												<CSelect value={instance.import_to ?? 'new'} onChange={(e) => {
-													setSnapshot(snapshot => update(snapshot, {
-														instances: {
-															[key]: {
-																import_to: { $set: e.target.value }
+											return <tr>
+												<td>
+													<CSelect value={instance.import_to ?? 'new'} onChange={(e) => {
+														setSnapshot(snapshot => update(snapshot, {
+															instances: {
+																[key]: {
+																	import_to: { $set: e.target.value }
+																}
 															}
+														}))
+													}}>
+														<option value="new">[ Create new instance ]</option>
+														{
+															currentInstances.map(([id, inst]) => <option value={id}>{inst.label}</option>)
 														}
-													}))
-												}}>
-												<option value="new">[ Create new instance ]</option>
-													{
-														currentInstances.map(([id, inst]) => <option value={id}>{ inst.label }</option>)
-													}
-												</CSelect>
-											</td>
-											<td>{ snapshotModule?.label ?? 'Unknown module' }</td>
-											<td>{ instance.label }</td>
-										</tr>
-									}
-								})
-							}
-						</tbody>
-					</table>
+													</CSelect>
+												</td>
+												<td>{snapshotModule?.label ?? 'Unknown module'}</td>
+												<td>{instance.label}</td>
+											</tr>
+										}
+									})
+								}
+							</tbody>
+						</table>
 
-					<p>
-						<CButton color='warning' onClick={doImport}>Import to page {pageNumber}</CButton>
-					</p>
+						<p>
+							<CButton color='warning' onClick={doImport}>Import to page {pageNumber}</CButton>
+						</p>
 
-				</div>
-				: ''
+					</div>
+					: ''
 			}
 		</>
 	}
@@ -194,7 +194,7 @@ export function ImportExport({ pageNumber }) {
 		<p>Use the button below to browse your computer for a <b>.companionconfig</b> file containing either a full companion configuration, or just a single button page export.</p>
 		<label className="btn btn-success btn-file">
 			<FontAwesomeIcon icon={faFileImport} /> Import
-			<input type="file" onChange={loadSnapshot} style={{display: 'none'}} />
+			<input type="file" onChange={loadSnapshot} style={{ display: 'none' }} />
 		</label>
 
 		<hr />
@@ -202,12 +202,12 @@ export function ImportExport({ pageNumber }) {
 		<FullExport />
 
 		<hr />
-		
+
 		<ResetConfiguration />
 	</>
 }
 
-function BankGrid({config}) {
+function BankGrid({ config }) {
 	return <>
 		{
 			Array(MAX_ROWS).fill(0).map((_, y) => {
@@ -260,19 +260,8 @@ function FullExport() {
 }
 
 function ResetConfiguration() {
-	const context = useContext(CompanionContext)
-
-	const doReset = useCallback(() => {
-		if (window.confirm('Are you sure you want to reset hte configuration')) {
-			socketEmit(context.socket, 'reset_all', [])
-			.then(() => {
-				window.location.reload()
-			})
-			.catch((e) => {
-				console.error('Failed to reset configuration:', e)
-			})
-		}
-	}, [context.socket])
+	const resetModalRef = useRef()
+	const doReset = useCallback(() => resetModalRef.current.show(), [])
 
 	return <>
 		<h4>Reset full configuration</h4>
@@ -282,6 +271,8 @@ function ResetConfiguration() {
 				<FontAwesomeIcon icon={faTrashAlt} /> Reset configuration
 			</CButton>
 		</p>
+		<ConfirmFullResetModal ref={resetModalRef} />
+
 		<CAlert color='warning'>
 			<strong>Something to know</strong>
 			<br />
@@ -289,6 +280,62 @@ function ResetConfiguration() {
 			So, at this point after using any of the features, it's recommended to restart
 			companion manually by exiting and reopening the applications. That's been known
 			to fix most of the problems.
-			</CAlert>
+		</CAlert>
 	</>
 }
+
+
+const ConfirmFullResetModal = forwardRef(function ConfirmFullResetModal(_props, ref) {
+	const context = useContext(CompanionContext)
+
+	const [show, setShow] = useState(false)
+
+	const doClose = useCallback(() => setShow(false), [])
+	const doReset = useCallback(() => {
+		setShow(false)
+
+		// Perform the reset
+		socketEmit(context.socket, 'reset_all', [])
+			.then(() => {
+				window.location.reload()
+			})
+			.catch((e) => {
+				context.notifier.current.show('Reset configuration', `Failed to reset configuration: ${e}`)
+				console.error('Failed to reset configuration:', e)
+			})
+	}, [context.socket, context.notifier])
+
+	useImperativeHandle(ref, () => ({
+		show() {
+			setShow(true)
+		}
+	}), [])
+
+	return (
+		<CModal show={show} onClose={doClose}>
+			<CModalHeader closeButton>
+				<h5>Reset Configuration</h5>
+			</CModalHeader>
+			<CModalBody>
+
+				<p>Are you sure you want to reset the configuration?</p>
+				<p>It is recommended to export the system configuration first</p>
+
+				<CButton color='success' href="/int/full_export" target="_new">
+					<FontAwesomeIcon icon={faDownload} /> Export
+				</CButton>
+
+			</CModalBody>
+			<CModalFooter>
+				<CButton
+					color="secondary"
+					onClick={doClose}
+				>Cancel</CButton>
+				<CButton
+					color="danger"
+					onClick={doReset}
+				>Reset</CButton>
+			</CModalFooter>
+		</CModal>
+	)
+})
