@@ -352,25 +352,23 @@ class BankGrid extends React.PureComponent {
 		return <>
 			{
 				Array(MAX_ROWS).fill(0).map((_, y) => {
-					return <CCol key={y} sm={12}>
-						<div className="pagebank-row">
-							{
-								Array(MAX_COLS).fill(0).map((_, x) => {
-									const index = y * MAX_COLS + x + 1
-									return (
-										<BankGridPreview
-											key={x}
-											page={pageNumber}
-											index={index}
-											preview={imageCache[index]?.image}
-											onClick={this.props.bankClick}
-											alt={`Bank ${index}`}
-											selected={selectedPage === pageNumber && selectedBank === index}
-										/>
-									)
-								})
-							}
-						</div>
+					return <CCol key={y} sm={12} className="pagebank-row">
+						{
+							Array(MAX_COLS).fill(0).map((_, x) => {
+								const index = y * MAX_COLS + x + 1
+								return (
+									<BankGridPreview
+										key={x}
+										page={pageNumber}
+										index={index}
+										preview={imageCache[index]?.image}
+										onClick={this.props.bankClick}
+										alt={`Bank ${index}`}
+										selected={selectedPage === pageNumber && selectedBank === index}
+									/>
+								)
+							})
+						}
 					</CCol>
 				})
 			}

@@ -49,6 +49,7 @@
 		transition: background-color 0.15s ease-in-out;
 		background-color: transparent;
 
+		
 		// Streamdeck markings
 		&:nth-child(1)>.bank:nth-child(1),
 		&:nth-child(2)>.bank:nth-child(1),
@@ -61,7 +62,6 @@
 		&:nth-child(3)>.bank:nth-child(4) {
 			background: #00000050;
 		}
-
 	}
 }
 
