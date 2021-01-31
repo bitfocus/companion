@@ -6,7 +6,7 @@ import { CButton, CAlert, CSelect, CButtonGroup, CModal, CModalHeader, CModalBod
 import update from 'immutability-helper'
 import { BankPreview, dataToButtonImage } from '../Components/BankButton'
 import { MAX_COLS, MAX_ROWS } from '../Constants'
-import { BankGridHeader } from './Buttons'
+import { ButtonGridHeader } from './ButtonGrid'
 
 export function ImportExport({ pageNumber }) {
 	const context = useContext(CompanionContext)
@@ -110,7 +110,7 @@ export function ImportExport({ pageNumber }) {
 				<CButton color='danger' size='sm' onClick={clearSnapshot}>Cancel</CButton>
 			</h4>
 
-			<BankGridHeader
+			<ButtonGridHeader
 				pageNumber={importPage}
 				pageName={isSinglePage ? snapshot.page.name : snapshot.page[importPage].name}
 				changePage={isSinglePage ? null : changePage}

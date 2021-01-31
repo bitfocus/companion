@@ -1,18 +1,22 @@
-.buttons-page {
-	height: 100%;
 
-	> .primary-panel {
+// scroll if side-by-side
+@include media-breakpoint-up('xl') {
+	.buttons-page {
 		height: 100%;
-		overflow-y: auto;
-	}
 
-	> .secondary-panel {
-		height: 100%;
-		display: grid;
-		grid-template-rows: auto 1fr;
+		> .primary-panel {
+			height: 100%;
+			overflow-y: auto;
+		}
 
-		.tab-content {
-			overflow-y: scroll;
+		> .secondary-panel {
+			height: 100%;
+			display: grid;
+			grid-template-rows: auto 1fr;
+
+			.tab-content {
+				overflow-y: scroll;
+			}
 		}
 	}
 }

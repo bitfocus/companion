@@ -4,7 +4,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import shortid from "shortid";
 import { InstancePresets } from "./Presets";
 import { CompanionContext, MyErrorBoundary } from "../util";
-import { Buttons } from "./Buttons";
+import { ButtonsGridPanel } from "./ButtonGrid";
 import { EditButton } from "./EditButton";
 import { ImportExport } from "./ImportExport";
 import { useCallback, useContext, useState } from "react";
@@ -82,7 +82,7 @@ export function ButtonsPage({ hotPress }) {
 		<CRow className="buttons-page">
 			<CCol xs={12} xl={6} className="primary-panel">
 				<MyErrorBoundary>
-					<Buttons
+					<ButtonsGridPanel
 						buttonGridClick={doButtonGridClick}
 						isHot={hotPress}
 						selectedButton={selectedButton}

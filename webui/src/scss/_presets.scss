@@ -10,7 +10,7 @@
 
 	align-content: stretch;
 
-	@media screen and (max-width: 576px) { // col-sm
+	@include media-breakpoint-down('xs') {
 		grid-template-columns: repeat(2, 1fr);
 	}
 
