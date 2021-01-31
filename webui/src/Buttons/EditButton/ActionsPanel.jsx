@@ -9,7 +9,7 @@ import Select from "react-select"
 import { ActionTableRowOption } from './Table'
 import { useDrag, useDrop } from "react-dnd"
 
-export const ActionsPanel = forwardRef(function ({ page, bank, dragId, addCommand, getCommand, updateOption, orderCommand, setDelay, deleteCommand }, ref) {
+export const ActionsPanel = forwardRef(function ({ page, bank, dragId, addCommand, getCommand, updateOption, orderCommand, setDelay, deleteCommand, addPlaceholder }, ref) {
 	const context = useContext(CompanionContext)
 	const [actions, setActions] = useState([])
 
@@ -127,6 +127,7 @@ export const ActionsPanel = forwardRef(function ({ page, bank, dragId, addComman
 
 			<AddActionDropdown
 				onSelect={addAction}
+				placeholder={addPlaceholder}
 			/>
 		</>
 	)
@@ -254,7 +255,7 @@ function ActionTableRow({ action, index, dragId, setValue, doDelete, doDelay, mo
 }
 
 
-function AddActionDropdown({ onSelect }) {
+function AddActionDropdown({ onSelect, placeholder }) {
 	const context = useContext(CompanionContext)
 
 	const options = useMemo(() => {
@@ -276,6 +277,7 @@ function AddActionDropdown({ onSelect }) {
 		isSearchable={true}
 		isMulti={false}
 		options={options}
+		placeholder={placeholder}
 		value={null}
 		onChange={innerChange}
 	/>

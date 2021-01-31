@@ -243,6 +243,7 @@ function AddFeedbackDropdown({ onSelect }) {
 		isSearchable={true}
 		isMulti={false}
 		options={options}
+		placeholder="+ Add feedback"
 		value={null}
 		onChange={innerChange}
 	/>

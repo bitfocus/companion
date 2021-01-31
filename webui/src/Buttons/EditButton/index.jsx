@@ -80,11 +80,10 @@ export class EditButton extends React.Component {
 		}
 
 		return (
-			<KeyReceiver onKeyUp={this.props.onKeyUp} tabIndex={0}>
-				<h3>Configuration</h3>
+			<KeyReceiver onKeyUp={this.props.onKeyUp} tabIndex={0} className="edit-button-panel">
 
 				<div>
-					<CDropdown className="mt-2">
+					<CDropdown className="mt-2" style={{ display: 'inline-block' }}>
 						<CDropdownToggle caret color="info">
 							Set button type
 						</CDropdownToggle>
@@ -95,8 +94,11 @@ export class EditButton extends React.Component {
 							<CDropdownItem onClick={() => this.setButtonType('pagedown')}>Page down</CDropdownItem>
 						</CDropdownMenu>
 					</CDropdown>
+					
+					&nbsp;
 
 					<CButton color='danger' hidden={!config.style} onClick={this.resetBank}>Erase</CButton>
+					&nbsp;
 					<CButton
 						color='warning'
 						hidden={config.style !== 'png'}
@@ -106,6 +108,8 @@ export class EditButton extends React.Component {
 						Test actions
 					</CButton>
 				</div>
+
+				<h4>Configuration</h4>
 
 				<BankPreview2 page={this.props.page} bank={this.props.bank} />
 
@@ -128,6 +132,7 @@ export class EditButton extends React.Component {
 							orderCommand="bank_update_action_option_order"
 							setDelay="bank_update_action_delay"
 							deleteCommand="bank_action_delete"
+							addPlaceholder="+ Add key down/on action"
 						/>
 
 						<h4>Key up/off actions</h4>
@@ -142,6 +147,7 @@ export class EditButton extends React.Component {
 							orderCommand="bank_release_action_update_option_order"
 							setDelay="bank_update_release_action_delay"
 							deleteCommand="bank_release_action_delete"
+							addPlaceholder="+ Add key up/off action"
 						/>
 
 						<h4>Instance feedback</h4>
