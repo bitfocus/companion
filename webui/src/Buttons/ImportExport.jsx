@@ -2,7 +2,7 @@ import React, { forwardRef, useCallback, useContext, useEffect, useImperativeHan
 import { CompanionContext, socketEmit } from '../util'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faDownload, faFileImport, faTrashAlt } from '@fortawesome/free-solid-svg-icons'
-import { CButton, CAlert, CSelect, CButtonGroup, CModal, CModalHeader, CModalBody, CModalFooter } from '@coreui/react'
+import { CButton, CAlert, CSelect, CButtonGroup, CModal, CModalHeader, CModalBody, CModalFooter, CCol, CRow } from '@coreui/react'
 import update from 'immutability-helper'
 import { BankPreview, dataToButtonImage } from '../Components/BankButton'
 import { MAX_COLS, MAX_ROWS } from '../Constants'
@@ -104,6 +104,7 @@ export function ImportExport({ pageNumber }) {
 	if (snapshot) {
 		const isSinglePage = snapshot.type === 'page'
 
+		console.log('snap', isSinglePage, snapshot, importPage)
 		return <>
 			<h4>
 				Import Configuration
@@ -116,14 +117,16 @@ export function ImportExport({ pageNumber }) {
 				changePage={isSinglePage ? null : changePage}
 				setPage={isSinglePage ? null : setPage}
 			/>
-			<BankGrid config={isSinglePage ? snapshot.config : snapshot.config[importPage]} />
+			<CRow id="pagebank">
+				<ButtonImportGrid config={isSinglePage ? snapshot.config : snapshot.config[importPage]} />
+			</CRow>
 
 			{
 				!importMode
 					? <div>
 						<h5>What to do</h5>
 						<CButtonGroup>
-							<CButton color='primary' onClick={() => setImportPage('page')}>Import individual pages</CButton>
+							<CButton color='primary' onClick={() => setImportMode('page')}>Import individual pages</CButton>
 							<CButton color='warning' onClick={doFullImport}>Replace current configuration</CButton>
 						</CButtonGroup>
 					</div>
@@ -207,16 +210,16 @@ export function ImportExport({ pageNumber }) {
 	</>
 }
 
-function BankGrid({ config }) {
+function ButtonImportGrid({ config }) {
 	return <>
 		{
 			Array(MAX_ROWS).fill(0).map((_, y) => {
-				return <div key={y} className="pagebank-row">
+				return <CCol key={y} className="pagebank-row">
 					{
 						Array(MAX_COLS).fill(0).map((_, x) => {
 							const index = y * MAX_COLS + x + 1
 							return (
-								<BankGridPreview
+								<ButtonImportPreview
 									key={x}
 									config={config[index]}
 									alt={`Bank ${index}`}
@@ -224,14 +227,14 @@ function BankGrid({ config }) {
 							)
 						})
 					}
-				</div>
+				</CCol>
 			})
 		}
 	</>
 }
 
 
-function BankGridPreview({ config, instanceId, ...childProps }) {
+function ButtonImportPreview({ config, instanceId, ...childProps }) {
 	const context = useContext(CompanionContext)
 	const [previewImage, setPreviewImage] = useState(null)
 
@@ -244,7 +247,7 @@ function BankGridPreview({ config, instanceId, ...childProps }) {
 	}, [config, context.socket])
 
 	return (
-		<BankPreview fixedSize {...childProps} preview={previewImage} />
+		<BankPreview {...childProps} preview={previewImage} />
 	)
 }
 

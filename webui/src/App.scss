@@ -76,17 +76,6 @@
 	}
 }
 
-.slide-height {
-	position: absolute;
-	// transition: height 0.1s ease-in-out;
-	// height: fit-content;
-	overflow: hidden;
-
-	&.slide-up {
-		height: 0;
-	}
-}
-
 .alignmentinput {
 	display: grid;
 	width: 60px;
