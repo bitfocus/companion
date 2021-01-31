@@ -120,7 +120,7 @@
 		"asar": "^3.0.3",
 		"chai": "^4.2.0",
 		"chai-fs": "^2.0.0",
-		"electron": "^9.3.3",
+		"electron": "^10.3.1",
 		"electron-builder": "^22.9.1",
 		"mocha": "^6.2.3",
 		"nodemon": "^2.0.6",
@@ -164,7 +164,7 @@
 		"popper.js": "1.16.1",
 		"read-package-json": "^2.1.2",
 		"select2": "4.0.13",
-		"sharp": "^0.27.0",
+		"sharp": "^0.27.1",
 		"shortid": "^2.2.16",
 		"socket.io": "^2.3.0",
 		"socket.io-client": "^2.3.1",
@@ -182,6 +182,7 @@
 	},
 	"resolutions": {
 		"infinitton-idisplay/node-hid": "^2.1.1",
-		"electron-builder/**/app-builder-bin": "npm:@julusian/test-lib@3.5.11-app-builder-bin"
+		"electron-builder/**/app-builder-bin": "npm:@julusian/test-lib@3.5.11-app-builder-bin",
+		"osc/serialport": "^9.0.6"
 	}
 }
