@@ -7,6 +7,7 @@
 		"afterPack": "./tools/asar-repack.js",
 		"productName": "Companion",
 		"appId": "companion.bitfocus.no",
+		"npmRebuild": false,
 		"mac": {
 			"category": "no.bitfocus.companion",
 			"extendInfo": {
@@ -32,7 +33,10 @@
 			"extraFiles": [
 				{
 					"from": "./node_modules/sharp/vendor/8.10.5/lib",
-					"to": "Frameworks"
+					"to": "Frameworks",
+					"filter": [
+						"glib2.0/**/*"
+					]
 				}
 			]
 		},
@@ -99,13 +103,18 @@
 		"dist:js": "rm -rf public/js/dist && babel ./public/js/babel --out-dir ./public/js/dist",
 		"dist:webui": "yarn --cwd webui build",
 		"dist:prepare": "./tools/build_writefile.sh ; rm -rf electron-output && yarn dist:js && yarn dist:webui",
-		"dist": "yarn dist:prepare && electron-builder",
-		"electron-rebuild": "electron-builder install-app-deps",
+		"dist": "yarn dist:prepare && electron-builder install-app-deps && electron-builder",
+		"electron-rebuild": "yarn dist:prepare:sharp && electron-builder install-app-deps",
 		"testprod": "./node_modules/electron/cli.js .",
-		"macdist": "yarn dist:prepare && electron-builder --publish=never --mac",
-		"windist": "yarn dist:prepare && electron-builder --publish=never --win",
-		"lindist": "yarn dist:prepare && electron-builder --publish=never --linux",
-		"rpidist": "yarn dist:prepare && electron-builder --armv7l --linux",
+		"macdist": "yarn dist:prepare && yarn dist:prepare:mac && electron-builder --publish=never --mac",
+		"windist": "yarn dist:prepare && yarn dist:prepare:win && electron-builder --publish=never --win",
+		"lindist": "yarn dist:prepare && yarn dist:prepare:linux && electron-builder --publish=never --linux",
+		"rpidist": "yarn dist:prepare && yarn dist:prepare:rpi && electron-builder --armv7l --linux",
+		"dist:prepare:sharp": "cd node_modules/sharp && rimraf vendor && node install/libvips && node install/dll-copy",
+		"dist:prepare:win": "npm_config_platform=win32 npm_config_arch=x64 yarn dist:prepare:sharp && electron-builder install-app-deps --arch x64 --platform win32",
+		"dist:prepare:mac": "npm_config_platform=darwin npm_config_arch=x64 yarn dist:prepare:sharp && electron-builder install-app-deps --arch x64 --platform darwin",
+		"dist:prepare:linux": "npm_config_platform=linux npm_config_arch=x64 yarn dist:prepare:sharp && electron-builder install-app-deps --arch x64 --platform linux",
+		"dist:prepare:rpi": "npm_config_platform=linux npm_config_arch=arm yarn dist:prepare:sharp && electron-builder install-app-deps --arch armv7l --platform linux",
 		"test": "mocha",
 		"postinstall": "./tools/build_writefile.sh && yarn dist:js",
 		"headless": "nodemon --ignore './webui/' headless.js",
@@ -126,7 +135,7 @@
 		"asar": "^3.0.3",
 		"chai": "^4.2.0",
 		"chai-fs": "^2.0.0",
-		"electron": "^9.3.3",
+		"electron": "^10.3.1",
 		"electron-builder": "^22.9.1",
 		"mocha": "^6.2.3",
 		"nodemon": "^2.0.6",
@@ -170,7 +179,7 @@
 		"popper.js": "1.16.1",
 		"read-package-json": "^2.1.2",
 		"select2": "4.0.13",
-		"sharp": "^0.27.0",
+		"sharp": "^0.27.1",
 		"shortid": "^2.2.16",
 		"socket.io": "^2.3.0",
 		"socket.io-client": "^2.3.1",
@@ -187,6 +196,8 @@
 		"@julusian/jpeg-turbo": "^1.0.1"
 	},
 	"resolutions": {
-		"infinitton-idisplay/node-hid": "^2.1.1"
+		"infinitton-idisplay/node-hid": "^2.1.1",
+		"electron-builder/**/app-builder-bin": "npm:@julusian/test-lib@3.5.11-app-builder-bin",
+		"osc/serialport": "^9.0.6"
 	}
 }

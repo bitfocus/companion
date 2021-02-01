@@ -17,11 +17,8 @@
 
 
 if (process.env.DEVELOPER !== undefined) {
-	process.env['DEBUG'] = '*,-websocket*,-express*,-engine*,-socket.io*,-send*,-db,-NRC*,-follow-redirects,-electron-timer-fix';
+	process.env['DEBUG'] = '*,-websocket*,-express*,-engine*,-socket.io*,-send*,-db,-NRC*,-follow-redirects';
 }
-
-// Fix timers in electron
-// require('./electron-timer-fix').fix();
 
 global.MAX_BUTTONS = 32;
 global.MAX_BUTTONS_PER_ROW = 8;
