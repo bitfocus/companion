@@ -31,12 +31,6 @@
 	animation-name: fadeIn;
 }
 
-.edit-button-panel {
-	h4 {
-		margin-top: 1rem;
-	}
-}
-
 .bank {
 	padding: Min(5px, 10%);
 	height: fit-content;
@@ -118,7 +112,6 @@
 	}
 }
 
-
 .inputwithvariables {
 	ul[role="listbox"] {
 		background: #efefef;
@@ -171,4 +164,19 @@
 	.text-muted {
 		color: #ccc !important;
 	}
+}
+
+input[type='checkbox'] {
+	-webkit-appearance:none;
+	width:22px;
+	height:22px;
+	background:white;
+	border-radius:4px;
+	border:1px solid #999;
+
+	margin-left: 0.3em !important;
+}
+
+input[type='checkbox']:checked {
+	background: 0 0 url("/img/check.png") no-repeat;
 }

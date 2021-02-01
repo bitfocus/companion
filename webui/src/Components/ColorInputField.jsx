@@ -70,7 +70,7 @@ export function ColorInputField ({ definition, value, setValue, setValid }) {
 	}
 
 	return (
-		<div>
+		<div style={{ lineHeight: 0 }}>
 			<div style={styles.swatch} onClick={handleClick}>
 				<div style={styles.color} />
 			</div>

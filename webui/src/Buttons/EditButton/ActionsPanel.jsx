@@ -1,4 +1,4 @@
-import { CButton, CForm, CInputGroup } from "@coreui/react"
+import { CButton, CCol, CForm, CInputGroup, CInputGroupAppend, CInputGroupText, CRow } from "@coreui/react"
 import { faSort, faTrash } from "@fortawesome/free-solid-svg-icons"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
 import React, { forwardRef, useCallback, useContext, useEffect, useImperativeHandle, useMemo, useRef, useState } from "react"
@@ -112,14 +112,6 @@ export const ActionsPanel = forwardRef(function ({ page, bank, dragId, addComman
 	return (
 		<>
 			<table className='table action-table'>
-				<thead>
-					<tr>
-						<th></th>
-						<th colSpan="2">Action</th>
-						<th>Delay (ms)</th>
-						<th>Options</th>
-					</tr>
-				</thead>
 				<tbody>
 					{actions.map((a, i) => <ActionTableRow key={a?.id ?? i} action={a} index={i} dragId={dragId} setValue={setValue} doDelete={doDelete} doDelay={doDelay} moveCard={moveCard} />)}
 				</tbody>
@@ -214,41 +206,51 @@ function ActionTableRow({ action, index, dragId, setValue, doDelete, doDelay, mo
 
 	return (
 		<tr ref={ref} className={isDragging ? 'actionlist-dragging' : ''}>
-			<td ref={drag} className='actionlist-td-reorder'>
+			<td ref={drag} className='td-reorder'>
 				<FontAwesomeIcon icon={faSort} />
 			</td>
-			<td className='actionlist-td-delete'>
-				<CButton color="danger" size="sm" onClick={innerDelete}>
-					<FontAwesomeIcon icon={faTrash} />
-				</CButton>
-			</td>
-			<td className='actionlist-td-label'>{name}</td>
-			<td className='actionlist-td-delay'>
-				<CInputGroup>
-					<NumberInputField
-						definition={{ default: 0 }}
-						value={action.delay}
-						setValue={innerDelay}
-					/>
-					{/* <CInputGroupAppend>
-						<CInputGroupText>ms</CInputGroupText>
-					</CInputGroupAppend> */}
-				</CInputGroup>
-			</td>
-			<td className='actionlist-td-options'>
-				<CForm className="actions-options">
-					{
-						options.map((opt, i) => <MyErrorBoundary>
-							<ActionTableRowOption
-								key={i}
-								option={opt}
-								actionId={action.id}
-								value={(action.options || {})[opt.id]}
-								setValue={setValue}
-							/>
-						</MyErrorBoundary>)
-					}
-				</CForm>
+			<td>
+				<div className="editor-grid">
+					<div className="cell-name">
+						<CButton color="danger" size="sm" onClick={innerDelete}>
+							<FontAwesomeIcon icon={faTrash} />
+						</CButton>
+						&nbsp;
+						{ name }
+					</div>
+
+					<div className="cell-delay">
+						<CForm>
+							<label>Delay</label>
+							<CInputGroup>
+								<NumberInputField
+									definition={{ default: 0 }}
+									value={action.delay}
+									setValue={innerDelay}
+								/>
+								<CInputGroupAppend>
+									<CInputGroupText>ms</CInputGroupText>
+								</CInputGroupAppend>
+							</CInputGroup>
+						</CForm>
+					</div>
+
+					<div className="cell-option">
+						<CForm>
+							{
+								options.map((opt, i) => <MyErrorBoundary>
+									<ActionTableRowOption
+										key={i}
+										option={opt}
+										actionId={action.id}
+										value={(action.options || {})[opt.id]}
+										setValue={setValue}
+									/>
+								</MyErrorBoundary>)
+							}
+						</CForm>
+					</div>
+				</div>
 			</td>
 		</tr>
 	)

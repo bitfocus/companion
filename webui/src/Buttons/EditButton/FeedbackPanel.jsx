@@ -91,13 +91,6 @@ export const FeedbacksPanel = forwardRef(function ({ page, bank, dragId, addComm
 	return (
 		<>
 			<table className='table feedback-table'>
-				<thead>
-					<tr>
-						<th></th>
-						<th colSpan="2">Feedback</th>
-						<th>Options</th>
-					</tr>
-				</thead>
 				<tbody>
 					{feedbacks.map((a, i) => <FeedbackTableRow key={a?.id ?? i} index={i} feedback={a} setValue={setValue} doDelete={doDelete} dragId={dragId} moveCard={moveCard} />)}
 				</tbody>
@@ -189,29 +182,35 @@ function FeedbackTableRow({ feedback, index, dragId, moveCard, setValue, doDelet
 
 	return (
 		<tr ref={ref} className={isDragging ? 'feedbacklist-dragging' : ''}>
-			<td ref={drag} className='feedbacklist-td-reorder'>
+			<td ref={drag} className='td-reorder'>
 				<FontAwesomeIcon icon={faSort} />
 			</td>
-			<td className='feedbacklist-td-delete'>
-				<CButton color="danger" size="sm" onClick={innerDelete}>
-					<FontAwesomeIcon icon={faTrash} />
-				</CButton>
-			</td>
-			<td className='feedbacklist-td-label'>{name}</td>
-			<td className='feedbacklist-td-options'>
-				<CForm className="feedbacks-options">
-					{
-						options.map((opt, i) => <MyErrorBoundary>
-							<ActionTableRowOption
-								key={i}
-								option={opt}
-								actionId={feedback.id}
-								value={(feedback.options || {})[opt.id]}
-								setValue={setValue}
-							/>
-						</MyErrorBoundary>)
-					}
-				</CForm>
+			<td>
+				<div className="editor-grid">
+					<div className="cell-name">
+						<CButton color="danger" size="sm" onClick={innerDelete}>
+							<FontAwesomeIcon icon={faTrash} />
+						</CButton>
+						&nbsp;
+						{ name }
+					</div>
+
+					<div className="cell-option">
+						<CForm>
+							{
+								options.map((opt, i) => <MyErrorBoundary>
+									<ActionTableRowOption
+										key={i}
+										option={opt}
+										actionId={feedback.id}
+										value={(feedback.options || {})[opt.id]}
+										setValue={setValue}
+									/>
+								</MyErrorBoundary>)
+							}
+						</CForm>
+					</div>
+				</div>
 			</td>
 		</tr>
 	)
