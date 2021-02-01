@@ -29,9 +29,7 @@ export function ButtonStyleConfig({ page, bank, config, valueChanged }) {
 			context.socket.emit('bank_changefield', page, bank, key, value)
 			valueChanged()
 		}
-	// config does not want to be captured
-	// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [context.socket, page, bank, valueChanged])
+	}, [context.socket, page, bank, valueChanged, config])
 
 	const setTextValue = useCallback((val) => setValueInner('text', val), [setValueInner])
 	const setSizeValue = useCallback((val) => setValueInner('size', val), [setValueInner])
@@ -63,21 +61,21 @@ export function ButtonStyleConfig({ page, bank, config, valueChanged }) {
 
 	return (
 		<CCol sm={12}>
-			<CForm>
-				<CRow form>
+			<CForm inline>
+				<CRow form className="button-style-form">
 					<CCol className='fieldtype-textinput' sm={6}>
 						<label>Text</label>
 						<TextWithVariablesInputField definition={{ default: '', tooltip: 'Button text' }} setValue={setTextValue} value={config.text} />
 					</CCol>
 
-					<CCol className='fieldtype-dropdown' sm={3}>
+					<CCol className='fieldtype-dropdown' sm={3} xs={6}>
 						<label>Font size</label>
 						<DropdownInputField definition={{ default: 'auto', choices: FONT_SIZES }} setValue={setSizeValue} value={config.size} />
 					</CCol>
 
-					<CCol sm={3}>
+					<CCol sm={3} xs={6}>
 						<label>72x58 PNG</label>
-						<CButtonGroup size="sm">
+						<CButtonGroup className="png-browse">
 							<PNGInputField onSelect={setPng} definition={{ min: { width: 72, height: 58 }, max: { width: 72, height: 58 } }} />
 							<CButton color='danger' disabled={!config.png64} onClick={clearPng}>
 								<FontAwesomeIcon icon={faTrash} />
@@ -85,31 +83,35 @@ export function ButtonStyleConfig({ page, bank, config, valueChanged }) {
 						</CButtonGroup>
 					</CCol>
 
-					<CCol className='fieldtype-alignment' sm={2}>
+					<CCol className='fieldtype-alignment' sm={2} xs={3}>
 						<label>Text Alignment</label>
 						<AlignmentInputField definition={{ default: 'center:center' }} setValue={setAlignmentValue} value={config.alignment} />
 					</CCol>
-					<CCol className='fieldtype-alignment' sm={2}>
+					<CCol className='fieldtype-alignment' sm={2} xs={3}>
 						<label>PNG Alignment</label>
 						<AlignmentInputField definition={{ default: 'center:center' }} setValue={setPngAlignmentValue} value={config.pngalignment} />
 					</CCol>
 
-					<CCol className='fieldtype-colorpicker' sm={2}>
+					<CCol className='fieldtype-colorpicker' sm={2} xs={3}>
 						<label>Color</label>
 						<ColorInputField definition={{ default: 0xffffff }} setValue={setColorValue} value={config.color} />
 					</CCol>
-					<CCol className='fieldtype-colorpicker' sm={2}>
+					<CCol className='fieldtype-colorpicker' sm={2} xs={3}>
 						<label>Background</label>
 						<ColorInputField definition={{ default: 0x000000 }} setValue={setBackgroundColorValue} value={config.bgcolor} />
 					</CCol>
 
-					<CCol className='fieldtype-checkbox' sm={2}>
+					<CCol className='fieldtype-checkbox' sm={2} xs={3}>
 						<label>Latch/Toggle</label>
-						<CheckboxInputField definition={{ default: false }} setValue={setLatchValue} value={config.latch} />
+						<p>
+							<CheckboxInputField definition={{ default: false, id: 'latch' }} setValue={setLatchValue} value={config.latch} />
+						</p>
 					</CCol>
-					<CCol className='fieldtype-checkbox' sm={2}>
+					<CCol className='fieldtype-checkbox' sm={2} xs={3}>
 						<CLabel>Relative Delays</CLabel>
-						<CheckboxInputField definition={{ default: false }} setValue={setRelativeDelayValue} value={config.relative_delay} />
+						<p>
+							<CheckboxInputField definition={{ default: false }} setValue={setRelativeDelayValue} value={config.relative_delay} />
+						</p>
 					</CCol>
 				</CRow>
 			</CForm>

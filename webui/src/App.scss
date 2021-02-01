@@ -6,6 +6,7 @@
 @import "scss/layout";
 @import "scss/common";
 
+@import "scss/button-edit";
 @import "scss/button-grid";
 @import "scss/instances";
 @import "scss/loading";
@@ -41,6 +42,10 @@
 	height: fit-content;
 	display: inline-block;
 	border: 1px solid transparent;
+
+	&.right {
+		float: right;
+	}
 
 	&.clickable {
 		cursor: pointer;

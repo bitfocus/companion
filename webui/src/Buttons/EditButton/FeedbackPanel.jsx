@@ -239,6 +239,7 @@ function AddFeedbackDropdown({ onSelect }) {
 	}, [onSelect])
 
 	return <Select
+		menuPlacement='auto'
 		isClearable={false}
 		isSearchable={true}
 		isMulti={false}

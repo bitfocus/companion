@@ -83,6 +83,8 @@ export class EditButton extends React.Component {
 			<KeyReceiver onKeyUp={this.props.onKeyUp} tabIndex={0} className="edit-button-panel">
 
 				<div>
+					<ButtonEditPreview page={this.props.page} bank={this.props.bank} />
+
 					<CDropdown className="mt-2" style={{ display: 'inline-block' }}>
 						<CDropdownToggle caret color="info">
 							Set button type
@@ -111,15 +113,15 @@ export class EditButton extends React.Component {
 
 				<h4>Configuration</h4>
 
-				<BankPreview2 page={this.props.page} bank={this.props.bank} />
-
 				<CRow>
 					<ButtonStyleConfig config={config} page={this.props.page} bank={this.props.bank} valueChanged={this.reloadConfig} />
 				</CRow>
 
 				{
 					config.style === 'png'
-					? <div>
+					? <>
+						<hr />
+
 						<h4>Key down/on actions</h4>
 						<ActionsPanel
 							ref={this.actionsRef}
@@ -134,6 +136,8 @@ export class EditButton extends React.Component {
 							deleteCommand="bank_action_delete"
 							addPlaceholder="+ Add key down/on action"
 						/>
+
+						<hr />
 
 						<h4>Key up/off actions</h4>
 						<ActionsPanel
@@ -150,6 +154,8 @@ export class EditButton extends React.Component {
 							addPlaceholder="+ Add key up/off action"
 						/>
 
+						<hr />
+
 						<h4>Instance feedback</h4>
 						<FeedbacksPanel
 							ref={this.feedbacksRef}
@@ -162,9 +168,11 @@ export class EditButton extends React.Component {
 							orderCommand="bank_update_feedback_order"
 							deleteCommand="bank_delFeedback"
 						/>
-					</div>
+					</>
 					: ''
 				}
+
+				<hr />
 
 				<p>
 					<b>Hint:</b> Control buttons with OSC or HTTP: /press/bank/{this.props.page}/{this.props.bank} to press this button remotely. OSC port 12321!
@@ -174,9 +182,7 @@ export class EditButton extends React.Component {
 	}
 }
 
-
-
-function BankPreview2({ page, bank }) {
+function ButtonEditPreview({ page, bank }) {
 	const context = useContext(CompanionContext)
 	const [previewImage, setPreviewImage] = useState(null)
 
@@ -205,6 +211,6 @@ function BankPreview2({ page, bank }) {
 	}, [context.socket, page, bank])
 
 	return (
-		<BankPreview fixedSize preview={previewImage} />
+		<BankPreview fixedSize preview={previewImage} right={true} />
 	)
 }

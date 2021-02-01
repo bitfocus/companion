@@ -68,6 +68,7 @@ export function DropdownInputField ({ definition, multiple, value, setValue, set
 	}, [setValue, setValid, multiple, definition.minSelection, definition.maximumSelectionLength, definition.choices])
 
 	return <Select
+		menuPlacement='auto'
 		isClearable={false}
 		isSearchable={typeof definition.minChoicesForSearch === 'number' && definition.minChoicesForSearch <= options.length}
 		isMulti={isMultiple}
