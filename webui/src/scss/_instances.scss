@@ -37,3 +37,19 @@
 #instance_add_search_results div {
 	margin-bottom: 5px;
 }
+
+.edit-instance {
+    & > div {
+        // column
+        margin-bottom: 10px;
+    }
+	
+    label {
+        justify-content: left;
+        font-weight: bold;
+        font-size: 0.85em;
+        margin-bottom: 0.15rem;
+	}
+	
+
+}

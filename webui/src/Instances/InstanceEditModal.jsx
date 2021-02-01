@@ -1,6 +1,6 @@
 import React, { forwardRef, memo, useCallback, useContext, useEffect, useImperativeHandle, useState } from 'react'
 import { CompanionContext, LoadingRetryOrError, MyErrorBoundary, socketEmit } from '../util'
-import { CRow, CCol, CButton, CModalBody, CModalHeader, CModal, CModalFooter } from '@coreui/react'
+import { CRow, CCol, CButton, CModalBody, CModalHeader, CModal, CModalFooter, CForm } from '@coreui/react'
 import { CheckboxInputField, DropdownInputField, NumberInputField, TextInputField } from '../Components'
 import shortid from 'shortid'
 
@@ -108,26 +108,26 @@ export const InstanceEditModal = memo(forwardRef(function InstanceEditModal(_pro
 			</CModalHeader>
 			<CModalBody>
 				<MyErrorBoundary>
-					<CRow>
-						<LoadingRetryOrError error={error} dataReady={dataReady} doRetry={doRetryConfigLoad} />
-						{
-							instanceId && dataReady
-							? configFields.map((field, i) => {
-								return (
-									<CCol key={i} className={`fieldtype-${field.type}`} sm={field.width}>
-										<label>{field.label}</label>
-										<ConfigField
-											definition={field}
-											value={instanceConfig[field.id]}
-											valid={validFields[field.id]}
-											setValue={setValue}
-											setValid={setValid}
-										/>
-									</CCol>
-								)
-							})
-							: ''
-						}
+					<CRow className="edit-instance">
+							<LoadingRetryOrError error={error} dataReady={dataReady} doRetry={doRetryConfigLoad} />
+							{
+								instanceId && dataReady
+								? configFields.map((field, i) => {
+									return (
+										<CCol key={i} className={`fieldtype-${field.type}`} sm={field.width}>
+											<label>{field.label}</label>
+											<ConfigField
+												definition={field}
+												value={instanceConfig[field.id]}
+												valid={validFields[field.id]}
+												setValue={setValue}
+												setValid={setValid}
+											/>
+										</CCol>
+									)
+								})
+								: ''
+							}
 					</CRow>
 				</MyErrorBoundary>
 
