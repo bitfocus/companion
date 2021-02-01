@@ -721,3 +721,6 @@ url=https://github.com/bitfocus/companion-module-newbluefx-titler.git
 [submodule "lib/module/phillips-hue"]
 	path = lib/module/phillips-hue
 	url = https://github.com/bitfocus/companion-module-phillips-hue.git
+[submodule "lib/module/rationalacoustics-smaart3"]
+	path = lib/module/rationalacoustics-smaart3
+	url = https://github.com/bitfocus/companion-module-rationalacoustics-smaart3.git
