@@ -1,6 +1,6 @@
 import React, { forwardRef, memo, useCallback, useContext, useEffect, useImperativeHandle, useState } from 'react'
 import { CompanionContext, LoadingRetryOrError, MyErrorBoundary, socketEmit } from '../util'
-import { CRow, CCol, CButton, CModalBody, CModalHeader, CModal, CModalFooter, CForm } from '@coreui/react'
+import { CRow, CCol, CButton, CModalBody, CModalHeader, CModal, CModalFooter } from '@coreui/react'
 import { CheckboxInputField, DropdownInputField, NumberInputField, TextInputField } from '../Components'
 import shortid from 'shortid'
 
