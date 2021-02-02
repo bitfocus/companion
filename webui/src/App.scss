@@ -192,3 +192,7 @@ input[type='checkbox']:checked {
 	text-overflow: ellipsis;
 	white-space: nowrap;
 }
+
+.form-control.input-text-with-variables {
+	width: 100%;
+}

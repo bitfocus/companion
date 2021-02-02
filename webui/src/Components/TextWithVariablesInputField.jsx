@@ -57,6 +57,7 @@ export function TextWithVariablesInputField ({ definition, value, setValue }) {
 
 	return <CInput
 		innerRef={setupTribute}
+		className="input-text-with-variables"
 		type='text'
 		value={tmpValue ?? value ?? ''}
 		title={definition.tooltip}

@@ -155,7 +155,7 @@ function ConfigField({ setValue, setValid, ...props}) {
 	const { definition } = props
 	switch (definition.type) {
 		case 'text':
-			return <p title={definition.tooltip}>{definition.value}</p>
+			return <p title={definition.tooltip}><div dangerouslySetInnerHTML={{ __html: definition.value }} /></p>
 		case 'textinput':
 			return <TextInputField {...props} setValue={setValue2} setValid={setValid2} />
 		case 'number':
