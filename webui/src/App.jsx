@@ -132,7 +132,7 @@ export default class App extends React.Component {
 function AppLoading({ progress, connected }) {
 	const message = connected ? 'Syncing' : 'Connecting'
 	return (
-		<CContainer fluid className="animated fadeIn loading">
+		<CContainer fluid className="fadeIn loading">
 			<CRow>
 				<CCol xxl={4} md={3} sm={2} xs={1}></CCol>
 				<CCol xxl={4} md={6} sm={8} xs={10} >
@@ -156,7 +156,7 @@ function AppContent({ buttonGridHotPress }) {
 	}, [])
 
 	return (
-		<CContainer fluid className="animated fadeIn">
+		<CContainer fluid className="fadeIn">
 			<CTabs activeTab={activeRootTab} onActiveTabChange={changeTab}>
 				<CNav variant="tabs">
 					<CNavItem><CNavLink data-tab="instances"><FontAwesomeIcon icon={faPlug} /> Instances</CNavLink></CNavItem>

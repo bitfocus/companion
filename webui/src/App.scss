@@ -7,8 +7,10 @@
 @import "scss/layout";
 @import "scss/common";
 
+@import "scss/bank";
 @import "scss/button-edit";
 @import "scss/button-grid";
+@import "scss/controls";
 @import "scss/instances";
 @import "scss/loading";
 @import "scss/log";
@@ -24,120 +26,9 @@
 	}
 }
 
-.animated {
-	animation-duration: 1s;
-}
-
 .fadeIn {
+	animation-duration: 1s;
 	animation-name: fadeIn;
-}
-
-.bank {
-	padding: Min(5px, 10%);
-	height: fit-content;
-	display: inline-block;
-	border: 1px solid transparent;
-
-	&.right {
-		float: right;
-	}
-
-	&.clickable {
-		cursor: pointer;
-	}
-
-	&.selected img {
-		border: 3px solid #d50215;
-		// margin: -2px;
-	}
-
-	&.fixed img {
-		width: 72px;
-		height: 72px;
-	}
-
-	&.drophere {
-		border: 1px dashed black;
-		background-color: #eee;
-	}
-
-	&.drophover {
-		border: 1px solid black;
-		background-color: #daffab;
-	}
-
-	img {
-		max-width: 72px;
-		max-height: 72px;
-		width: 100%;
-		height: 100%;
-		object-fit: contain;
-		display: block;
-
-		border-radius: Max(12%, 4px);
-		border: 1px solid white;
-
-		margin: 0 auto;
-	}
-}
-
-.alignmentinput {
-	display: grid;
-	width: 60px;
-	height: 60px;
-
-	background-image: url('/img/alignment.png');
-
-	grid-template-columns: 1fr 1fr 1fr;
-	grid-template-rows: 1fr 1fr 1fr;
-	column-gap: 2px;
-	row-gap: 2px;
-	padding: 1px;
-
-	line-height: 0;
-
-	> div {
-    	border: 1px solid #aaa;
-		padding: 1px;
-
-		&.selected {
-			background-image: url('/img/check.png') !important;
-    		background-size: contain !important;
-		}
-	}
-}
-
-.pnginputfield {
-	input[type="file"] {
-		display: none;
-	}
-}
-
-.inputwithvariables {
-	ul[role="listbox"] {
-		background: #efefef;
-
-		overflow-y: scroll;
-		max-height: 50vh;
-	}
-	li[role="option"] {
-		padding: 5px;
-		overflow: hidden;
-
-		&[aria-selected="true"] {
-			background: #ddd;
-		}
-
-		span {
-			display: block;
-			word-wrap: break-word;
-			text-overflow: ellipsis;
-		}
-	}
-}
-
-.actionlist-dragging, .feedbacklist-dragging {
-	opacity: 0.5;
 }
 
 #error-container {
@@ -165,34 +56,4 @@
 	.text-muted {
 		color: #ccc !important;
 	}
-}
-
-input[type='checkbox'] {
-	-webkit-appearance:none;
-	width:22px;
-	height:22px;
-	background:white;
-	border-radius:4px;
-	border:1px solid #999;
-
-	margin-left: 0.3em !important;
-}
-
-input[type='checkbox']:checked {
-	background: 0 0 url("/img/check.png") no-repeat;
-}
-
-/* Style for autocomplete of variable */
-.tribute-container li span {
-	display: block;
-}
-.tribute-container li span.var-label {
-	overflow: hidden;
-	font-weight: inherit;
-	text-overflow: ellipsis;
-	white-space: nowrap;
-}
-
-.form-control.input-text-with-variables {
-	width: 100%;
 }
