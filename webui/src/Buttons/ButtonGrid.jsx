@@ -1,4 +1,4 @@
-import { CButton, CCol, CInput, CInputGroup, CInputGroupAppend, CInputGroupPrepend, CModal, CModalBody, CModalFooter, CModalHeader, CRow } from '@coreui/react'
+import { CButton, CCol, CInput, CInputGroup, CInputGroupAppend, CInputGroupPrepend, CRow } from '@coreui/react'
 import React, { forwardRef, memo, useCallback, useContext, useEffect, useImperativeHandle, useRef, useState } from 'react'
 import { CompanionContext, KeyReceiver, LoadingRetryOrError, socketEmit } from '../util'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
@@ -8,6 +8,7 @@ import { MAX_COLS, MAX_ROWS, MAX_BUTTONS } from '../Constants'
 import { useDrop } from 'react-dnd'
 import { BankPreview, dataToButtonImage } from '../Components/BankButton'
 import shortid from 'shortid'
+import { GenericConfirmModal } from '../Components/GenericConfirmModal'
 
 export const ButtonsGridPanel = memo(function ButtonsPage({ pageNumber, onKeyUp, isHot, buttonGridClick, changePage, selectedButton }) {
 	const context = useContext(CompanionContext)
@@ -252,7 +253,7 @@ const ButtonGridActions = forwardRef(function ButtonGridActions({ isHot, pageNum
 	}), [context.socket, activeFunction, activeFunctionBank, pageNumber, stopFunction])
 
 	return <>
-		<ConfirmResetModal ref={resetRef} />
+		<GenericConfirmModal ref={resetRef} />
 
 		<CCol sm={12} className={classnames({ 'out': isHot, 'fadeinout': true })}>
 			<p>
@@ -422,53 +423,3 @@ function ButtonGridIcon(props) {
 
 	return <BankPreview {...props} dropRef={drop} dropHover={isOver} canDrop={canDrop} />
 }
-
-const ConfirmResetModal = forwardRef(function ConfirmResetModal(_props, ref) {
-	const context = useContext(CompanionContext)
-	
-	const [data, setData] = useState(null)
-	const [show, setShow] = useState(false)
-
-	const doClose = useCallback(() => setShow(false), [])
-	const onClosed = useCallback(() => setData(null), [])
-	const doReset = useCallback(() => {
-		setData(null)
-		setShow(false)
-
-		// Perform the reset
-		const args = data?.[3]
-		if (args) {
-			context.socket.emit(...args)
-		}
-	},[data, context.socket])
-
-	useImperativeHandle(ref, () => ({
-		show(title, message, buttonLabel,  socketArgs) {
-			setData([title, message, buttonLabel, socketArgs])
-			setShow(true)
-		}
-	}), [])
-
-	return (
-		<CModal show={show} onClose={doClose} onClosed={onClosed}>
-			<CModalHeader closeButton>
-				<h5>{data?.[0]}</h5>
-			</CModalHeader>
-			<CModalBody>
-
-				<p>{data?.[1]}</p>
-
-			</CModalBody>
-			<CModalFooter>
-				<CButton
-					color="secondary"
-					onClick={doClose}
-				>Cancel</CButton>
-				<CButton
-					color="primary"
-					onClick={doReset}
-				>{data?.[2]}</CButton>
-			</CModalFooter>
-		</CModal>
-	)
-})

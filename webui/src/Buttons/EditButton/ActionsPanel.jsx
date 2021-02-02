@@ -8,10 +8,13 @@ import update from 'immutability-helper';
 import Select from "react-select"
 import { ActionTableRowOption } from './Table'
 import { useDrag, useDrop } from "react-dnd"
+import { GenericConfirmModal } from "../../Components/GenericConfirmModal"
 
 export function ActionsPanel({ page, bank, dragId, addCommand, getCommand, updateOption, orderCommand, setDelay, deleteCommand, addPlaceholder, setLoadStatus, loadStatusKey, reloadToken }) {
 	const context = useContext(CompanionContext)
 	const [actions, setActions] = useState([])
+
+	const confirmModal = useRef()
 
 	// Ensure the correct data is loaded
 	useEffect(() => {
@@ -20,7 +23,7 @@ export function ActionsPanel({ page, bank, dragId, addCommand, getCommand, updat
 			setActions(actions || [])
 			setLoadStatus(loadStatusKey, true)
 		}).catch(e => {
-			setLoadStatus(loadStatusKey, 'Failed to load actions')
+			setLoadStatus(loadStatusKey, `Failed to load ${loadStatusKey}`)
 			console.error('Failed to load bank actions', e)
 		})
 	}, [context.socket, getCommand, setLoadStatus, loadStatusKey, page, bank, reloadToken])
@@ -67,15 +70,12 @@ export function ActionsPanel({ page, bank, dragId, addCommand, getCommand, updat
 		})
 	}, [context.socket, page, bank, setDelay])
 
+	const deleteAction = useCallback((actionId) => {
+		setActions(oldActions => oldActions.filter(a => a.id !== actionId))
+	}, [])
 	const doDelete = useCallback((actionId) => {
-		if (window.confirm('Delete action?')) {
-			socketEmit(context.socket, deleteCommand, [page, bank, actionId]).then(([page, bank, actions]) => {
-				setActions(actions || [])
-			}).catch(e => {
-				console.error('Failed to load bank actions', e)
-			})
-		}
-	}, [context.socket, page, bank, deleteCommand])
+		confirmModal.current.show('Delete action', 'Delete action?', 'Delete', [deleteCommand, page, bank, actionId], deleteAction.bind(this, actionId))
+	}, [page, bank, deleteCommand, deleteAction])
 
 	const addAction = useCallback((actionType) => {
 		socketEmit(context.socket, addCommand, [page, bank, actionType]).then(([page, bank, actions]) => {
@@ -102,6 +102,8 @@ export function ActionsPanel({ page, bank, dragId, addCommand, getCommand, updat
 
 	return (
 		<>
+			<GenericConfirmModal ref={confirmModal} />
+
 			<table className='table action-table'>
 				<tbody>
 					{actions.map((a, i) => <ActionTableRow key={a?.id ?? i} action={a} index={i} dragId={dragId} setValue={setValue} doDelete={doDelete} doDelay={doDelay} moveCard={moveCard} />)}
@@ -229,9 +231,8 @@ function ActionTableRow({ action, index, dragId, setValue, doDelete, doDelay, mo
 					<div className="cell-option">
 						<CForm>
 							{
-								options.map((opt, i) => <MyErrorBoundary>
+								options.map((opt, i) => <MyErrorBoundary key={i}>
 									<ActionTableRowOption
-										key={i}
 										option={opt}
 										actionId={action.id}
 										value={(action.options || {})[opt.id]}
@@ -246,7 +247,6 @@ function ActionTableRow({ action, index, dragId, setValue, doDelete, doDelay, mo
 		</tr>
 	)
 }
-
 
 function AddActionDropdown({ onSelect, placeholder }) {
 	const context = useContext(CompanionContext)

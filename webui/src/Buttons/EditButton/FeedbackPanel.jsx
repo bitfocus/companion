@@ -7,10 +7,13 @@ import update from 'immutability-helper';
 import Select from "react-select"
 import { ActionTableRowOption } from './Table'
 import { useDrag, useDrop } from "react-dnd"
+import { GenericConfirmModal } from "../../Components/GenericConfirmModal"
 
 export const FeedbacksPanel = function ({ page, bank, dragId, addCommand, getCommand, updateOption, orderCommand, deleteCommand, setLoadStatus, loadStatusKey, reloadToken }) {
 	const context = useContext(CompanionContext)
 	const [feedbacks, setFeedbacks] = useState([])
+
+	const confirmModal = useRef()
 
 	// Ensure the correct data is loaded
 	useEffect(() => {
@@ -46,15 +49,12 @@ export const FeedbacksPanel = function ({ page, bank, dragId, addCommand, getCom
 		})
 	}, [context.socket, page, bank, updateOption])
 
+	const deleteFeedback = useCallback((feedbackId) => {
+		setFeedbacks(oldFeedbacks => oldFeedbacks.filter(a => a.id !== feedbackId))
+	}, [])
 	const doDelete = useCallback((feedbackId) => {
-		if (window.confirm('Delete feedback?')) {
-			socketEmit(context.socket, deleteCommand, [page, bank, feedbackId]).then(([page, bank, feedbacks]) => {
-				setFeedbacks(feedbacks || [])
-			}).catch(e => {
-				console.error('Failed to load bank feedbacks', e)
-			})
-		}
-	}, [context.socket, page, bank, deleteCommand])
+		confirmModal.current.show('Delete feedback', 'Delete feedback?', 'Delete', [deleteCommand, page, bank, feedbackId], deleteFeedback.bind(this, feedbackId))
+	}, [page, bank, deleteCommand, deleteFeedback])
 
 	const addFeedback = useCallback((feedackTypr) => {
 		socketEmit(context.socket, addCommand, [page, bank, feedackTypr]).then(([page, bank, feedbacks]) => {
@@ -81,6 +81,8 @@ export const FeedbacksPanel = function ({ page, bank, dragId, addCommand, getCom
 
 	return (
 		<>
+			<GenericConfirmModal ref={confirmModal} />
+
 			<table className='table feedback-table'>
 				<tbody>
 					{feedbacks.map((a, i) => <FeedbackTableRow key={a?.id ?? i} index={i} feedback={a} setValue={setValue} doDelete={doDelete} dragId={dragId} moveCard={moveCard} />)}
@@ -189,9 +191,8 @@ function FeedbackTableRow({ feedback, index, dragId, moveCard, setValue, doDelet
 					<div className="cell-option">
 						<CForm>
 							{
-								options.map((opt, i) => <MyErrorBoundary>
+								options.map((opt, i) => <MyErrorBoundary key={i}>
 									<ActionTableRowOption
-										key={i}
 										option={opt}
 										actionId={feedback.id}
 										value={(feedback.options || {})[opt.id]}
