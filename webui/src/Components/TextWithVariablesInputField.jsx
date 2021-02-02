@@ -10,35 +10,14 @@ export class TextWithVariablesInputField extends React.Component {
 	}
 
 	componentDidMount() {
-		this.onChange(this.props.value ?? this.props.definition.default, false, true)
+		if (this.props.value === undefined && this.props.definition.default !== undefined) {
+			this.props.setValue(this.props.value ?? this.props.definition.default)
+		}
 	}
 	componentDidUpdate(prevProps) {
 		if (prevProps.value !== this.props.value) {
-			this.onChange(this.props.value, true)
-		}
-	}
-
-	onChange = (newValue, validateOnly, skipState) => {
-		if (validateOnly && !this.props.setValid) {
-			return
-		}
-
-		const { definition } = this.props
-
-		let isValid = true
-
-		// if required, must not be empty
-		if (definition.required && newValue === '') {
-			isValid = false
-		}
-
-		this.props.setValid?.(isValid)
-		if (!validateOnly) {
-			this.props.setValue(newValue)
-			if (!skipState) {
-				this.setState({
-					currentValue: newValue
-				})
+			if (this.props.value === undefined && this.props.definition.default !== undefined) {
+				this.props.setValue(this.props.value)
 			}
 		}
 	}
@@ -72,7 +51,7 @@ export class TextWithVariablesInputField extends React.Component {
 		return (
 			<MentionsInput
 				value={this.state.currentValue ?? value ?? definition.default}
-				onChange={(e, val) => this.onChange(val, false)}
+				onChange={(e, val) => this.props.setValue(val, false)}
 				onBlur={() => this.setState({ currentValue: null })}
 				singleLine={true}
 				className="inputwithvariables"

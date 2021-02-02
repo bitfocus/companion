@@ -40,7 +40,6 @@ export function ButtonStyleConfig({ page, bank, config, valueChanged }) {
 	const setLatchValue = useCallback((val) => setValueInner('latch', val), [setValueInner])
 	const setRelativeDelayValue = useCallback((val) => setValueInner('relative_delay', val), [setValueInner])
 
-
 	switch (config.style) {
 		case undefined:
 			return <CCol sm={12}><p>Select a button style</p></CCol>
@@ -52,11 +51,6 @@ export function ButtonStyleConfig({ page, bank, config, valueChanged }) {
 			return <CCol sm={12}><p>No configuration available for page down buttons</p></CCol>
 		default:
 		// See below
-	}
-
-
-	if (!config) {
-		return <CCol sm={12}>Loading...</CCol>
 	}
 
 	return (

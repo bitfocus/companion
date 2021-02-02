@@ -31,7 +31,7 @@ export function ButtonsPage({ hotPress }) {
 	const doButtonGridClick = useCallback((page, bank, isDown) => {
 		if (hotPress) {
 			context.socket.emit('hot_press', page, bank, isDown);
-		} else {
+		} else if (isDown) {
 			setActiveTab('edit')
 			setSelectedButton([page, bank])
 			setTabResetToken(shortid())

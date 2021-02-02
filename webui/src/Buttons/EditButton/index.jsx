@@ -1,55 +1,56 @@
 import { CDropdown, CDropdownToggle, CDropdownItem, CDropdownMenu, CButton, CRow } from '@coreui/react'
-import React, { useContext, useEffect, useState } from 'react'
+import React, { useCallback, useContext, useEffect, useState } from 'react'
+import shortid from 'shortid'
 import { BankPreview, dataToButtonImage } from '../../Components/BankButton'
-import { CompanionContext, KeyReceiver, socketEmit } from '../../util'
+import { CompanionContext, KeyReceiver, LoadingRetryOrError, socketEmit } from '../../util'
 import { ActionsPanel } from './ActionsPanel'
 
 import { ButtonStyleConfig } from './ButtonStyleConfig'
 import { FeedbacksPanel } from './FeedbackPanel'
 
-export class EditButton extends React.Component {
+export function EditButton({ page, bank, onKeyUp }) {
+	const context = useContext(CompanionContext)
 
-	static contextType = CompanionContext
+	const [config, setConfig] = useState(null)
+	const [configError, setConfigError] = useState(null)
+	const [tableLoadStatus, setTableLoadStatus] = useState({})
 
-	state = {
-		config: null,
-	}
+	const [reloadConfigToken, setReloadConfigToken] = useState(shortid())
+	const [reloadTablesToken, setReloadTablesToken] = useState(shortid())
 
-	actionsRef = React.createRef()
-	releaseActionsRef = React.createRef()
-	feedbacksRef = React.createRef()
-
-	componentDidMount() {
-		this.reloadConfig()
-
-	}
-
-	reloadConfig = () => {
-		socketEmit(this.context.socket, 'get_bank', [this.props.page, this.props.bank]).then(([page, bank, config, fields]) => {
-			this.setState({
-				config: config,
-			})
+	const loadConfig = useCallback(() => {
+		socketEmit(context.socket, 'get_bank', [page, bank]).then(([page, bank, config, fields]) => {
+			setConfig(config)
+			setConfigError(null)
 		}).catch(e => {
 			console.error('Failed to load bank config', e)
+			setConfig(null)
+			setConfigError('Failed to load bank config')
 		})
-	}
+	}, [context.socket, page, bank])
 
-	resetBank = () => {
-		if (window.confirm('Clear design and all actions?')) {
-			this.setState({
-				config: {},
-			})
-			this.context.socket.emit('bank_reset', this.props.page, this.props.bank);
-			// bank_preview_page(page);
-		}
-	}
+	// Keep config loaded
+	useEffect(() => {
+		setConfig(null)
+		setConfigError(null)
 
-	setButtonType = (newStyle) => {
+		loadConfig()
+
+		// reload tables too
+		setTableLoadStatus({})
+		setReloadTablesToken(shortid())
+
+	}, [loadConfig, reloadConfigToken])
+
+	const addLoadStatus = useCallback((key, value) => {
+		setTableLoadStatus(oldStatus => ({ ...oldStatus, [key] :value }))
+	}, [])
+
+	const setButtonType = useCallback((newStyle) => {
 		let show_warning = false;
 
-		const currentStyle = this.state.config.style
+		const currentStyle = config?.style
 
-		console.log("CURRENT STYLE", currentStyle, "NEW STYLE", newStyle);
 		if (currentStyle && currentStyle !== 'pageup' && currentStyle !== 'pagedown' && currentStyle !== 'pagenum') {
 			if (newStyle === 'pageup' || newStyle === 'pagedown' || newStyle === 'pagenum') {
 				show_warning = true;
@@ -57,129 +58,142 @@ export class EditButton extends React.Component {
 		}
 
 		if (!show_warning || window.confirm('Changing to this button style will erase eventual actions and feedbacks configured for this button - continue?')) {
-			const { page, bank } = this.props
-			socketEmit(this.context.socket, 'bank_style', [page, bank, newStyle]).then(([p, b, config]) => {
-				this.setState({
-					config: config
-				})
-
-				// bank_preview_page(page);
-				// socket.emit('bank_actions_get', page, bank);
-				// socket.emit('bank_get_feedbacks', page, bank);
-				// socket.emit('bank_release_actions_get', page, bank);
+			socketEmit(context.socket, 'bank_style', [page, bank, newStyle]).then(([p, b, config]) => {
+				setConfig(config)
+				setTableLoadStatus({})
+				setReloadTablesToken(shortid())
 			}).catch(e => {
 				console.error('Failed to set bank style', e)
 			})
 		}
-	}
+	}, [context.socket, page, bank, config?.style])
 
-	render() {
-		const { config } = this.state
-		if (!config) {
-			return <div>Loading...</div>
+	const doRetryLoad = useCallback(() => setReloadConfigToken(shortid()), [])
+	const resetBank = useCallback(() => {
+		if (window.confirm('Clear design and all actions?')) {
+			setReloadConfigToken(shortid())
+			context.socket.emit('bank_reset', page, bank);
 		}
+	}, [context.socket, page, bank])
 
-		return (
-			<KeyReceiver onKeyUp={this.props.onKeyUp} tabIndex={0} className="edit-button-panel">
+	const errors = Object.values(tableLoadStatus).filter(s => typeof s === 'string')
+	if (configError) errors.push(configError)
+	const loadError = errors.length> 0 ? errors.join(', ') : null
+	const dataReady = !loadError && !!config && Object.values(tableLoadStatus).filter(s => s !== true).length === 0
 
-				<div>
-					<ButtonEditPreview page={this.props.page} bank={this.props.bank} />
+	return (
+		<KeyReceiver onKeyUp={onKeyUp} tabIndex={0} className="edit-button-panel">
 
-					<CDropdown className="mt-2" style={{ display: 'inline-block' }}>
-						<CDropdownToggle caret color="info">
-							Set button type
-						</CDropdownToggle>
-						<CDropdownMenu>
-							<CDropdownItem onClick={() => this.setButtonType('png')}>Regular button</CDropdownItem>
-							<CDropdownItem onClick={() => this.setButtonType('pageup')}>Page up</CDropdownItem>
-							<CDropdownItem onClick={() => this.setButtonType('pagenum')}>Page number</CDropdownItem>
-							<CDropdownItem onClick={() => this.setButtonType('pagedown')}>Page down</CDropdownItem>
-						</CDropdownMenu>
-					</CDropdown>
-					
-					&nbsp;
+			<LoadingRetryOrError dataReady={dataReady} error={loadError} doRetry={doRetryLoad} />
+			{ 
+				config
+				? <div style={{ display: dataReady ? '' : 'none' }}>
+					<div>
+						<ButtonEditPreview page={page} bank={bank} />
 
-					<CButton color='danger' hidden={!config.style} onClick={this.resetBank}>Erase</CButton>
-					&nbsp;
-					<CButton
-						color='warning'
-						hidden={config.style !== 'png'}
-						onMouseDown={() => this.context.socket.emit('hot_press', this.props.page, this.props.bank, true)}
-						onMouseUp={() => this.context.socket.emit('hot_press', this.props.page, this.props.bank, false)}
-					>
-						Test actions
-					</CButton>
+						<CDropdown className="mt-2" style={{ display: 'inline-block' }}>
+							<CDropdownToggle caret color="info">
+								Set button type
+							</CDropdownToggle>
+							<CDropdownMenu>
+								<CDropdownItem onClick={() => setButtonType('png')}>Regular button</CDropdownItem>
+								<CDropdownItem onClick={() => setButtonType('pageup')}>Page up</CDropdownItem>
+								<CDropdownItem onClick={() => setButtonType('pagenum')}>Page number</CDropdownItem>
+								<CDropdownItem onClick={() => setButtonType('pagedown')}>Page down</CDropdownItem>
+							</CDropdownMenu>
+						</CDropdown>
+						
+						&nbsp;
+
+						<CButton color='danger' hidden={!config.style} onClick={resetBank}>Erase</CButton>
+						&nbsp;
+						<CButton
+							color='warning'
+							hidden={config.style !== 'png'}
+							onMouseDown={() => context.socket.emit('hot_press', page, bank, true)}
+							onMouseUp={() => context.socket.emit('hot_press', page, bank, false)}
+						>
+							Test actions
+						</CButton>
+					</div>
+
+					<h4>Configuration</h4>
+
+					<CRow>
+						<ButtonStyleConfig config={config} page={page} bank={bank} valueChanged={loadConfig} />
+					</CRow>
+
+					{
+						config.style === 'png'
+						? <>
+							<hr />
+
+							<h4>Key down/on actions</h4>
+							<ActionsPanel
+								page={page}
+								bank={bank}
+								dragId={'downAction'}
+								addCommand="bank_action_add"
+								getCommand="bank_actions_get"
+								updateOption="bank_update_action_option"
+								orderCommand="bank_update_action_option_order"
+								setDelay="bank_update_action_delay"
+								deleteCommand="bank_action_delete"
+								addPlaceholder="+ Add key down/on action"
+								loadStatusKey={'downActions'}
+								setLoadStatus={addLoadStatus}
+								reloadToken={reloadTablesToken}
+							/>
+
+							<hr />
+
+							<h4>Key up/off actions</h4>
+							<ActionsPanel
+								page={page}
+								bank={bank}
+								dragId={'releaseAction'}
+								addCommand="bank_addReleaseAction"
+								getCommand="bank_release_actions_get"
+								updateOption="bank_release_action_update_option"
+								orderCommand="bank_release_action_update_option_order"
+								setDelay="bank_update_release_action_delay"
+								deleteCommand="bank_release_action_delete"
+								addPlaceholder="+ Add key up/off action"
+								loadStatusKey={'releaseActions'}
+								setLoadStatus={addLoadStatus}
+								reloadToken={reloadTablesToken}
+							/>
+
+							<hr />
+
+							<h4>Instance feedback</h4>
+							<FeedbacksPanel
+								page={page}
+								bank={bank}
+								dragId={'feedback'}
+								addCommand="bank_addFeedback"
+								getCommand="bank_get_feedbacks"
+								updateOption="bank_update_feedback_option"
+								orderCommand="bank_update_feedback_order"
+								deleteCommand="bank_delFeedback"
+								loadStatusKey={'downActions'}
+								setLoadStatus={addLoadStatus}
+								reloadToken={reloadTablesToken}
+							/>
+						</>
+						: ''
+					}
+
+					<hr />
+
+					<p>
+						<b>Hint:</b> Control buttons with OSC or HTTP: /press/bank/{page}/{bank} to press this button remotely. OSC port 12321!
+					</p>
 				</div>
-
-				<h4>Configuration</h4>
-
-				<CRow>
-					<ButtonStyleConfig config={config} page={this.props.page} bank={this.props.bank} valueChanged={this.reloadConfig} />
-				</CRow>
-
-				{
-					config.style === 'png'
-					? <>
-						<hr />
-
-						<h4>Key down/on actions</h4>
-						<ActionsPanel
-							ref={this.actionsRef}
-							page={this.props.page}
-							bank={this.props.bank}
-							dragId={'downAction'}
-							addCommand="bank_action_add"
-							getCommand="bank_actions_get"
-							updateOption="bank_update_action_option"
-							orderCommand="bank_update_action_option_order"
-							setDelay="bank_update_action_delay"
-							deleteCommand="bank_action_delete"
-							addPlaceholder="+ Add key down/on action"
-						/>
-
-						<hr />
-
-						<h4>Key up/off actions</h4>
-						<ActionsPanel
-							ref={this.releaseActionsRef}
-							page={this.props.page}
-							bank={this.props.bank}
-							dragId={'releaseAction'}
-							addCommand="bank_addReleaseAction"
-							getCommand="bank_release_actions_get"
-							updateOption="bank_release_action_update_option"
-							orderCommand="bank_release_action_update_option_order"
-							setDelay="bank_update_release_action_delay"
-							deleteCommand="bank_release_action_delete"
-							addPlaceholder="+ Add key up/off action"
-						/>
-
-						<hr />
-
-						<h4>Instance feedback</h4>
-						<FeedbacksPanel
-							ref={this.feedbacksRef}
-							page={this.props.page}
-							bank={this.props.bank}
-							dragId={'feedback'}
-							addCommand="bank_addFeedback"
-							getCommand="bank_get_feedbacks"
-							updateOption="bank_update_feedback_option"
-							orderCommand="bank_update_feedback_order"
-							deleteCommand="bank_delFeedback"
-						/>
-					</>
-					: ''
-				}
-
-				<hr />
-
-				<p>
-					<b>Hint:</b> Control buttons with OSC or HTTP: /press/bank/{this.props.page}/{this.props.bank} to press this button remotely. OSC port 12321!
-				</p>
-			</KeyReceiver>
-		)
-	}
+				: ''
+			}
+		</KeyReceiver>
+	)
 }
 
 function ButtonEditPreview({ page, bank }) {

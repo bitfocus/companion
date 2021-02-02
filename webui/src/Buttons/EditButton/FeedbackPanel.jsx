@@ -1,37 +1,28 @@
 import { CButton, CForm } from "@coreui/react"
 import { faSort, faTrash } from "@fortawesome/free-solid-svg-icons"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
-import React, { forwardRef, useCallback, useContext, useEffect, useImperativeHandle, useMemo, useRef, useState } from "react"
+import React, { useCallback, useContext, useEffect, useMemo, useRef, useState } from "react"
 import { CompanionContext, MyErrorBoundary, socketEmit } from "../../util"
 import update from 'immutability-helper';
 import Select from "react-select"
 import { ActionTableRowOption } from './Table'
 import { useDrag, useDrop } from "react-dnd"
 
-export const FeedbacksPanel = forwardRef(function ({ page, bank, dragId, addCommand, getCommand, updateOption, orderCommand, deleteCommand }, ref) {
+export const FeedbacksPanel = function ({ page, bank, dragId, addCommand, getCommand, updateOption, orderCommand, deleteCommand, setLoadStatus, loadStatusKey, reloadToken }) {
 	const context = useContext(CompanionContext)
 	const [feedbacks, setFeedbacks] = useState([])
 
-	// Define a reusable loadData function
-	const loadData = useCallback((page, bank) => {
-		socketEmit(context.socket, getCommand, [page, bank]).then(([page, bank, feedbacks]) => {
-			setFeedbacks(feedbacks || [])
-		}).catch(e => {
-			console.error('Failed to load bank feedbacks', e)
-		})
-	}, [context.socket, getCommand])
-
 	// Ensure the correct data is loaded
 	useEffect(() => {
-		loadData(page, bank)
-	}, [loadData, page, bank])
-
-	// Expose reload to the parent
-	useImperativeHandle(ref, () => ({
-		reload() {
-			loadData(page, bank)
-		}
-	}), [loadData, page, bank])
+		setLoadStatus(loadStatusKey, false)
+		socketEmit(context.socket, getCommand, [page, bank]).then(([page, bank, feedbacks]) => {
+			setFeedbacks(feedbacks || [])
+			setLoadStatus(loadStatusKey, true)
+		}).catch(e => {
+			setLoadStatus(loadStatusKey, 'Failed to load feedbacks')
+			console.error('Failed to load bank feedbacks', e)
+		})
+	}, [context.socket, getCommand, setLoadStatus, loadStatusKey, page, bank, reloadToken])
 
 	const setValue = useCallback((feedbackId, key, val) => {
 		// The server doesn't repond to our change, so we assume it was ok
@@ -101,7 +92,7 @@ export const FeedbacksPanel = forwardRef(function ({ page, bank, dragId, addComm
 			/>
 		</>
 	)
-})
+}
 
 function FeedbackTableRow({ feedback, index, dragId, moveCard, setValue, doDelete }) {
 	const context = useContext(CompanionContext)

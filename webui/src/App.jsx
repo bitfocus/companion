@@ -96,7 +96,7 @@ export default class App extends React.Component {
 								</div>
 							</div>
 						</div>
-						<Suspense fallback={<Spinner />}>
+						<Suspense fallback={<AppLoading progress={loadingProgress} connected={this.state.connected} />}>
 							<DndProvider backend={HTML5Backend}>
 								<div className="c-app">
 
@@ -120,11 +120,6 @@ export default class App extends React.Component {
 		);
 	}
 }
-
-function Spinner() {
-	return <p>Loading</p>
-}
-
 
 function AppLoading({ progress, connected }) {
 	const message = connected ? 'Syncing' : 'Connecting'
