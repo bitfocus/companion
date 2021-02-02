@@ -1,69 +1,68 @@
-import React from 'react'
-import { Mention, MentionsInput } from 'react-mentions';
+import React, { useCallback, useContext, useEffect, useMemo, useState } from 'react'
 import { CompanionContext } from '../util';
+import Tribute from 'tributejs'
+import { CInput } from '@coreui/react';
 
-export class TextWithVariablesInputField extends React.Component {
-	static contextType = CompanionContext
+export function TextWithVariablesInputField ({ definition, value, setValue }) {
+	const context = useContext(CompanionContext)
 
-	state = {
-		currentValue: null,
-	}
+	const [tmpValue, setTmpValue] = useState(null)
 
-	componentDidMount() {
-		if (this.props.value === undefined && this.props.definition.default !== undefined) {
-			this.props.setValue(this.props.value ?? this.props.definition.default)
+	// If the value is undefined, populate with the default. Also inform the parent about the validity
+	useEffect(() => {
+		if (value === undefined && definition.default !== undefined) {
+			setValue(definition.default)
 		}
-	}
-	componentDidUpdate(prevProps) {
-		if (prevProps.value !== this.props.value) {
-			if (this.props.value === undefined && this.props.definition.default !== undefined) {
-				this.props.setValue(this.props.value)
-			}
-		}
-	}
+	}, [definition.default, value, setValue])
 
-	renderSuggestion(suggestion, search, highlightedDisplay) {
-		return (
-			<div className="variable_suggestion">
-				<span className="name">{highlightedDisplay}</span>
-				<span className="label">{suggestion.label}</span>
-			</div>
-		)
-	}
+	// const elmRef = useRef()
 
-	render() {
-		const { definition, value } = this.props
-
-		const { variableDefinitions } = this.context
+	const tribute = useMemo(() => {
 		const suggestions = []
-
-		for (const [instanceLabel, variables] of Object.entries(variableDefinitions)) {
+		for (const [instanceLabel, variables] of Object.entries(context.variableDefinitions)) {
 			for (const va of variables) {
 				const variableId = `${instanceLabel}:${va.name}`
 				suggestions.push({
-					id: variableId,
-					display: `$(${variableId})`,
-					label: va.label,
+					key: variableId + ')',
+					value: variableId,
+					label: va.label
 				})
 			}
 		}
 
-		return (
-			<MentionsInput
-				value={this.state.currentValue ?? value ?? definition.default}
-				onChange={(e, val) => this.props.setValue(val, false)}
-				onBlur={() => this.setState({ currentValue: null })}
-				singleLine={true}
-				className="inputwithvariables"
-			>
-				<Mention
-					trigger="$"
-					data={suggestions}
-					markup="$(__id__)"
-					displayTransform={(id, display) => `$(${display})`}
-					renderSuggestion={this.renderSuggestion}
-				/>
-			</MentionsInput>
-		)
-	}
+		
+		return new Tribute({
+			values: suggestions,
+			trigger: '$(',
+
+			// function called on select that returns the content to insert
+			selectTemplate: (item) => `$(${item.original.value})`,
+		
+			// template for displaying item in menu
+			menuItemTemplate: (item) => `<span class="var-name">${item.original.value}</span><span class="var-label">${item.original.label}</span>`,
+		})
+	}, [context.variableDefinitions])
+
+	const doOnChange = useCallback((e) => {
+		setTmpValue(e.currentTarget.value)
+		setValue(e.currentTarget.value)
+	}, [setValue])
+
+	const setupTribute = useCallback((ref) => {
+		if (ref) {
+			tribute.attach(ref)
+			ref.addEventListener('tribute-replaced', doOnChange)
+		}
+	}, [tribute, doOnChange])
+
+	return <CInput
+		innerRef={setupTribute}
+		type='text'
+		value={tmpValue ?? value ?? ''}
+		title={definition.tooltip}
+		onChange={doOnChange}
+		onFocus={() => setTmpValue(value ?? '')}
+		onBlur={() => setTmpValue(null)}
+	/>
+
 }

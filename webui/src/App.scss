@@ -2,6 +2,7 @@
 @import "scss/variables";
 
 @import "~@coreui/coreui/scss/coreui";
+@import "~tributejs/src/tribute";
 
 @import "scss/layout";
 @import "scss/common";
@@ -179,4 +180,15 @@ input[type='checkbox'] {
 
 input[type='checkbox']:checked {
 	background: 0 0 url("/img/check.png") no-repeat;
+}
+
+/* Style for autocomplete of variable */
+.tribute-container li span {
+	display: block;
+}
+.tribute-container li span.var-label {
+	overflow: hidden;
+	font-weight: inherit;
+	text-overflow: ellipsis;
+	white-space: nowrap;
 }
