@@ -55,11 +55,19 @@ export default class App extends React.Component {
 	componentDidMount() {
 		document.addEventListener('keydown', this.handleKeyDown);
 		document.addEventListener('keyup', this.handleKeyUp);
+
+		window.addEventListener('blur', this.handleWindowBlur)
 	}
 
 	componentWillUnmount() {
 		document.removeEventListener('keydown', this.handleKeyDown);
 		document.removeEventListener('keyup', this.handleKeyUp);
+
+		window.removeEventListener('blur', this.handleWindowBlur)
+	}
+
+	handleWindowBlur = () => {
+		this.setState({ buttonGridHotPress: false })
 	}
 
 	handleKeyDown = (e) => {
