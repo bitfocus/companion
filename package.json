@@ -34,7 +34,7 @@
 					"from": "./node_modules/sharp/vendor/8.10.5/lib",
 					"to": "Frameworks",
 					"filter": [
-						"glib2.0/**/*"
+						"!glib-2.0/**/*"
 					]
 				}
 			]
