@@ -12,8 +12,11 @@ async function runForDir(root, modName) {
         const modDir = path.join(root, modName)
         const pkgInfo = require(path.join(modDir, 'package.json'))
         if (Object.keys((pkgInfo.dependencies || {})).length > 0) {
+            const hasTypescript = (pkgInfo.devDependencies || {}).typescript
+            // TODO - what if it uses typescript and a native module?
+
             console.log('running', modName)
-            await exec2('yarn --production --ignore-scripts', {
+            await exec2(`yarn --production ${ hasTypescript ? '--ignore-scripts' : '' }`, {
                 cwd: path.join(root, modName)
             })
         }
