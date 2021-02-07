@@ -1,5 +1,5 @@
-import { CButton, CRow, CCol, CButtonGroup, CLabel, CForm } from '@coreui/react'
-import React, { useCallback, useContext } from 'react'
+import { CButton, CRow, CCol, CButtonGroup, CLabel, CForm, CAlert } from '@coreui/react'
+import React, { useCallback, useContext, useState } from 'react'
 import { CompanionContext, socketEmit } from '../../util'
 import { AlignmentInputField, CheckboxInputField, ColorInputField, DropdownInputField, PNGInputField, TextWithVariablesInputField } from '../../Components'
 import { FONT_SIZES } from '../../Constants'
@@ -9,19 +9,22 @@ import { faTrash } from '@fortawesome/free-solid-svg-icons'
 export function ButtonStyleConfig({ page, bank, config, valueChanged }) {
 	const context = useContext(CompanionContext)
 
+	const [pngError, setPngError] = useState(null)
 	const clearPng = useCallback(() => context.socket.emit('bank_clear_png', page, bank), [context.socket, page, bank])
 	const setPng = useCallback((data) => {
+		setPngError(null)
 		socketEmit(context.socket, 'bank_set_png', [page, bank, data]).then(([res]) => {
 			if (res !== 'ok') {
-				alert('An error occured while uploading image');
+				setPngError('An error occured while uploading image');
 			} else {
+				setPngError(null)
 				// bank_preview_page(p);
 			}
 		}).catch(e => {
 			console.error('Failed to upload png', e)
+			setPngError('Failed to set png')
 		})
 	}, [context.socket, page, bank])
-
 
 	const setValueInner = useCallback((key, value) => {
 		console.log('set', page, bank, key, value)
@@ -55,6 +58,14 @@ export function ButtonStyleConfig({ page, bank, config, valueChanged }) {
 
 	return (
 		<CCol sm={12}>
+			{
+				pngError
+				? <CAlert color="warning" closeButton>
+					{ pngError}
+				</CAlert>
+				: ''
+			}
+
 			<CForm inline>
 				<CRow form className="button-style-form">
 					<CCol className='fieldtype-textinput' sm={6}>
@@ -70,7 +81,7 @@ export function ButtonStyleConfig({ page, bank, config, valueChanged }) {
 					<CCol sm={3} xs={6}>
 						<label>72x58 PNG</label>
 						<CButtonGroup className="png-browse">
-							<PNGInputField onSelect={setPng} definition={{ min: { width: 72, height: 58 }, max: { width: 72, height: 58 } }} />
+							<PNGInputField onSelect={setPng} onError={setPngError} definition={{ min: { width: 72, height: 58 }, max: { width: 72, height: 58 } }} />
 							<CButton color='danger' disabled={!config.png64} onClick={clearPng}>
 								<FontAwesomeIcon icon={faTrash} />
 							</CButton>

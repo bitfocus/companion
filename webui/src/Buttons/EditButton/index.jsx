@@ -1,7 +1,8 @@
 import { CDropdown, CDropdownToggle, CDropdownItem, CDropdownMenu, CButton, CRow } from '@coreui/react'
-import React, { useCallback, useContext, useEffect, useState } from 'react'
+import React, { useCallback, useContext, useEffect, useRef, useState } from 'react'
 import shortid from 'shortid'
 import { BankPreview, dataToButtonImage } from '../../Components/BankButton'
+import { GenericConfirmModal } from '../../Components/GenericConfirmModal'
 import { CompanionContext, KeyReceiver, LoadingRetryOrError, socketEmit } from '../../util'
 import { ActionsPanel } from './ActionsPanel'
 
@@ -10,6 +11,8 @@ import { FeedbacksPanel } from './FeedbackPanel'
 
 export function EditButton({ page, bank, onKeyUp }) {
 	const context = useContext(CompanionContext)
+
+	const resetModalRef = useRef()
 
 	const [config, setConfig] = useState(null)
 	const [configError, setConfigError] = useState(null)
@@ -57,7 +60,7 @@ export function EditButton({ page, bank, onKeyUp }) {
 			}
 		}
 
-		if (!show_warning || window.confirm('Changing to this button style will erase eventual actions and feedbacks configured for this button - continue?')) {
+		const doChange = () => {
 			socketEmit(context.socket, 'bank_style', [page, bank, newStyle]).then(([p, b, config]) => {
 				setConfig(config)
 				setTableLoadStatus({})
@@ -66,14 +69,22 @@ export function EditButton({ page, bank, onKeyUp }) {
 				console.error('Failed to set bank style', e)
 			})
 		}
+
+		if (show_warning) {
+			resetModalRef.current.show(`Change style`, `Changing to this button style will erase eventual actions and feedbacks configured for this button - continue?`, 'OK', undefined, () => {
+				doChange()
+			})
+		} else {
+			doChange()
+		}
 	}, [context.socket, page, bank, config?.style])
 
 	const doRetryLoad = useCallback(() => setReloadConfigToken(shortid()), [])
 	const resetBank = useCallback(() => {
-		if (window.confirm('Clear design and all actions?')) {
+		resetModalRef.current.show(`Clear button ${page}.${bank}`, `This will clear the style, feedbacks and all actions`, 'Clear', undefined, () => {
+			context.socket.emit('bank_reset', page, bank)
 			setReloadConfigToken(shortid())
-			context.socket.emit('bank_reset', page, bank);
-		}
+		})
 	}, [context.socket, page, bank])
 
 	const errors = Object.values(tableLoadStatus).filter(s => typeof s === 'string')
@@ -83,6 +94,8 @@ export function EditButton({ page, bank, onKeyUp }) {
 
 	return (
 		<KeyReceiver onKeyUp={onKeyUp} tabIndex={0} className="edit-button-panel">
+
+			<GenericConfirmModal ref={resetModalRef} />
 
 			<LoadingRetryOrError dataReady={dataReady} error={loadError} doRetry={doRetryLoad} />
 			{ 

@@ -1,20 +1,24 @@
-import React from 'react'
+import React, { useCallback, useRef } from 'react'
 import { CButton, CInputFile } from "@coreui/react"
 
-export class PNGInputField extends React.Component {
+export function PNGInputField({ definition, onSelect, onError }) {
+	const inputRef = useRef()
 
-	inputRef = React.createRef()
+	const apiIsSupported = !!(window.File && window.FileReader && window.FileList && window.Blob)
 
-	onChange = (e) => {
-		const { definition } = this.props
+	const onClick = useCallback(() => {
+		onError(null)
+		inputRef.current.click()
+	}, [onError])
+	const onChange = useCallback((e) => {
 		const newFiles = e.currentTarget.files
 		e.currentTarget.files = null
 		console.log('change', newFiles)
 
 		//check whether browser fully supports all File API
-		if (window.File && window.FileReader && window.FileList && window.Blob) {
+		if (apiIsSupported) {
 			if (!newFiles.length || newFiles[0].type !== 'image/png') {
-				alert('Sorry. Only proper PNG files are supported.');
+				onError('Sorry. Only proper PNG files are supported.');
 				return;
 			}
 
@@ -24,11 +28,12 @@ export class PNGInputField extends React.Component {
 
 				img.onload = () => { // image is loaded; sizes are available
 					if (definition?.min && (img.width < definition.min.width || img.height < definition.min.height)) {
-						alert(`Image dimensions must be at least ${definition.min.width}x${definition.min.height}`);
+						onError(`Image dimensions must be at least ${definition.min.width}x${definition.min.height}`);
 					} else if (definition?.max && (img.width > definition.max.width || img.height > definition.max.height)) {
-						alert(`Image dimensions must be at most ${definition.max.width}x${definition.max.height}`);
+						onError(`Image dimensions must be at most ${definition.max.width}x${definition.max.height}`);
 					} else {
-						this.props.onSelect(fr.result, newFiles[0].name)
+						onError(null)
+						onSelect(fr.result, newFiles[0].name)
 					}
 				};
 
@@ -36,20 +41,12 @@ export class PNGInputField extends React.Component {
 			};
 			fr.readAsDataURL(newFiles[0]);
 		} else {
-			alert('I am sorry, Companion requires a newer browser');
+			onError('Companion requires a newer browser');
 		}
-	}
+	}, [definition, apiIsSupported, onSelect, onError])
 
-	onClick = () => {
-		this.inputRef.current.click()
-	}
-
-	render() {
-		// const { definition, value } = this.props
-
-		return <CButton color="primary" className="pnginputfield" onClick={this.onClick}>
+	return <CButton color="primary" className="pnginputfield" onClick={onClick} disabled={!apiIsSupported} title={apiIsSupported ? undefined : 'Not supported in your browser'}>
 			Browse
-			<CInputFile innerRef={this.inputRef} onChange={this.onChange} />
+			<CInputFile innerRef={inputRef} onChange={onChange} disabled={!apiIsSupported} />
 		</CButton>
-	}
 }
