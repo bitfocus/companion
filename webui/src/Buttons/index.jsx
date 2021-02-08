@@ -48,7 +48,8 @@ export function ButtonsPage({ hotPress }) {
 				// keyup with button selected
 
 				if (!e.ctrlKey && !e.metaKey && !e.altKey && (e.key === 'Backspace' || e.key === 'Delete')) {
-					clearModalRef.current.show(`Clear button ${selectedButton[0]}.${selectedButton[1]}`, `This will clear the style, feedbacks and all actions`, 'Clear', ['bank_reset', selectedButton[0], selectedButton[1]], () => {
+					clearModalRef.current.show(`Clear button ${selectedButton[0]}.${selectedButton[1]}`, `This will clear the style, feedbacks and all actions`, 'Clear', () => {
+						context.socket.emit('bank_reset', selectedButton[0], selectedButton[1])
 						// Invalidate the ui component to cause a reload
 						setTabResetToken(shortid())
 					})

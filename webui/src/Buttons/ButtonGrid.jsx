@@ -188,17 +188,21 @@ const ButtonGridActions = forwardRef(function ButtonGridActions({ isHot, pageNum
 			'Reset page',
 			`Are you sure you want to clear all buttons on page ${pageNumber}?\nThere's no going back from this.`,
 			'Reset',
-			['loadsave_reset_page_all', pageNumber]
+			() => {
+				context.socket.emit('loadsave_reset_page_all', pageNumber)
+			}
 		)
-	}, [pageNumber])
+	}, [context.socket,pageNumber])
 	const resetPageNav = useCallback(() => {
 		resetRef.current.show(
 			'Reset page',
 			`Are you sure you want to reset navigation buttons? This will completely erase bank ${pageNumber}.1, ${pageNumber}.9 and ${pageNumber}.17`,
 			'Reset',
-			['loadsave_reset_page_nav', pageNumber]
+			() => {
+				context.socket.emit('loadsave_reset_page_nav', pageNumber)
+			}
 		)
-	}, [pageNumber])
+	}, [context.socket,pageNumber])
 
 	useImperativeHandle(ref, () => ({
 		bankClick(index, isDown) {
@@ -209,7 +213,9 @@ const ButtonGridActions = forwardRef(function ButtonGridActions({ isHot, pageNum
 							'Clear bank',
 							`Clear style and actions for this button?`,
 							'Clear',
-							['bank_reset', pageNumber, index]
+							() => {
+								context.socket.emit('bank_reset', pageNumber, index)
+							}
 						)
 
 						stopFunction()

@@ -101,7 +101,7 @@ export function ImportExport({ pageNumber }) {
 
 
 	const doFullImport = useCallback(() => {
-		confirmModalRef.current.show('Replace config', 'Are you sure you wish to replace the config?', 'Import', undefined, () => {
+		confirmModalRef.current.show('Replace config', 'Are you sure you wish to replace the config?', 'Import', () => {
 			socketEmit(context.socket, 'loadsave_import_full', [snapshot]).then(() => {
 				window.location.reload();
 			}).catch(e => {

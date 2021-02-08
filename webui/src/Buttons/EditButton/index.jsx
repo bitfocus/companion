@@ -71,7 +71,7 @@ export function EditButton({ page, bank, onKeyUp }) {
 		}
 
 		if (show_warning) {
-			resetModalRef.current.show(`Change style`, `Changing to this button style will erase eventual actions and feedbacks configured for this button - continue?`, 'OK', undefined, () => {
+			resetModalRef.current.show(`Change style`, `Changing to this button style will erase eventual actions and feedbacks configured for this button - continue?`, 'OK', () => {
 				doChange()
 			})
 		} else {
@@ -81,7 +81,7 @@ export function EditButton({ page, bank, onKeyUp }) {
 
 	const doRetryLoad = useCallback(() => setReloadConfigToken(shortid()), [])
 	const resetBank = useCallback(() => {
-		resetModalRef.current.show(`Clear button ${page}.${bank}`, `This will clear the style, feedbacks and all actions`, 'Clear', undefined, () => {
+		resetModalRef.current.show(`Clear button ${page}.${bank}`, `This will clear the style, feedbacks and all actions`, 'Clear', () => {
 			context.socket.emit('bank_reset', page, bank)
 			setReloadConfigToken(shortid())
 		})

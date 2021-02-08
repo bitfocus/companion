@@ -1,34 +1,24 @@
 import { CButton, CModal, CModalBody, CModalFooter, CModalHeader } from "@coreui/react"
-import { forwardRef, useCallback, useContext, useImperativeHandle, useState } from "react"
-import { CompanionContext } from "../util"
+import { forwardRef, useCallback, useImperativeHandle, useState } from "react"
 
 export const GenericConfirmModal = forwardRef(function GenericConfirmModal(_props, ref) {
-	const context = useContext(CompanionContext)
-	
 	const [data, setData] = useState(null)
 	const [show, setShow] = useState(false)
 
 	const doClose = useCallback(() => setShow(false), [])
 	const onClosed = useCallback(() => setData(null), [])
-	const doReset = useCallback(() => {
+	const doAction = useCallback(() => {
 		setData(null)
 		setShow(false)
 
-		// Perform the reset
-        const args = data?.[3]
-        console.log(args)
-		if (args) {
-			context.socket.emit(...args)
-        }
-        
         // completion callback
         const cb = data?.[4]
-        if (typeof cb === 'function') cb() 
-	},[data, context.socket])
+        cb() 
+	},[data])
 
 	useImperativeHandle(ref, () => ({
-		show(title, message, buttonLabel, socketArgs, completeCallback) {
-			setData([title, message, buttonLabel, socketArgs, completeCallback])
+		show(title, message, buttonLabel, completeCallback) {
+			setData([title, message, buttonLabel, completeCallback])
 			setShow(true)
 		}
 	}), [])
@@ -50,7 +40,7 @@ export const GenericConfirmModal = forwardRef(function GenericConfirmModal(_prop
 				>Cancel</CButton>
 				<CButton
 					color="primary"
-					onClick={doReset}
+					onClick={doAction}
 				>{data?.[2]}</CButton>
 			</CModalFooter>
 		</CModal>

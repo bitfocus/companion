@@ -74,8 +74,11 @@ export function ActionsPanel({ page, bank, dragId, addCommand, getCommand, updat
 		setActions(oldActions => oldActions.filter(a => a.id !== actionId))
 	}, [])
 	const doDelete = useCallback((actionId) => {
-		confirmModal.current.show('Delete action', 'Delete action?', 'Delete', [deleteCommand, page, bank, actionId], deleteAction.bind(this, actionId))
-	}, [page, bank, deleteCommand, deleteAction])
+		confirmModal.current.show('Delete action', 'Delete action?', 'Delete', () => {
+			context.socket.emit(deleteCommand, page, bank, actionId)	
+			deleteAction(actionId)
+		})
+	}, [context.socket, page, bank, deleteCommand, deleteAction])
 
 	const addAction = useCallback((actionType) => {
 		socketEmit(context.socket, addCommand, [page, bank, actionType]).then(([page, bank, actions]) => {
