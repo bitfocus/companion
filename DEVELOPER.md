@@ -7,11 +7,11 @@
 
 ## Getting started
 ```
-$ n 8.12.0
+$ n 12.18.4
 $ git clone <your forked repository>
 $ cd companion
 $ ./tools/update.sh
-$ npm run start
+$ yarn dev
 ```
 
 # Bracing and indentation
