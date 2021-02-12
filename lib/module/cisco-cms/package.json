@@ -1,0 +1,27 @@
+{
+	"name": "cisco-cms",
+	"version": "0.1",
+	"legacy": [
+		"cms"
+	],
+	"api_version": "1.0.0",
+	"keywords": [
+		"video-conferencing"
+	],
+	"manufacturer": "Cisco",
+	"product": [
+		"CMS",
+		"Meeting Server"
+	],
+	"shortname": "cms",
+	"description": "Module to control the Cisco CMS",
+	"main": "index.js",
+	"scripts": {
+		"test": "echo \"Error: no test specified\" && exit 1"
+	},
+	"author": "Yuri Vidal <yuri.vidal@gmail.com>",
+	"contributors": [
+		"Yuri Vidal <yuri.vidal@gmail.com>"
+	],
+	"license": "MIT"
+}
