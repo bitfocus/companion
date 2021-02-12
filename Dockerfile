@@ -9,7 +9,8 @@ ENV PATH="$HOME/.yarn/bin:$PATH"
 
 # Clone repository and set as workdir 
 RUN cd /root && \
-    git clone https://github.com/bitfocus/companion.git && \
+    #git clone https://github.com/bitfocus/companion.git && \
+    git clone https://github.com/yurividal/companion.git && \
     mv companion/.[!.]* . && \
     mv companion/* . && \
     rm -rf companion && \
