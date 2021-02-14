@@ -203,8 +203,10 @@ function createTray() {
 		path.join(__dirname, 'assets', 'trayTemplate.png') :
 		path.join(__dirname, 'assets', 'icon.png')
 	);
-	tray.on('double-click', toggleWindow);
-	tray.on('click', toggleWindow);
+	tray.setIgnoreDoubleClickEvents(true)
+	if (process.platform !== "darwin") {
+		tray.on('click', toggleWindow);
+	}
 
 	const menu = new electron.Menu()
 	menu.append(new electron.MenuItem({

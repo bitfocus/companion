@@ -704,3 +704,11 @@ input[type="range"].action-number.form-control {
 	padding-left: 0;
 	padding-right: 0;
 }
+
+.filechoosercontainer {
+	white-space: nowrap;
+}
+
+.filechoosercontainer #clearPngButton {
+	margin-bottom: -4px;
+}
