@@ -10,8 +10,7 @@
 	],
 	"manufacturer": "Cisco",
 	"product": [
-		"CMS",
-		"Meeting Server"
+		"CMS Meeting Server"
 	],
 	"shortname": "cms",
 	"description": "Module to control the Cisco CMS",
