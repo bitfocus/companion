@@ -243,6 +243,7 @@ function ActionTableRow({ action, index, dragId, setValue, doDelete, doDelay, mo
 									/>
 								</MyErrorBoundary>)
 							}
+							{ options.length === 0 ? 'Nothing to configure' : ''}
 						</CForm>
 					</div>
 				</div>

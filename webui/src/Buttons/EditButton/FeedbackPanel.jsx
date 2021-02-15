@@ -203,6 +203,7 @@ function FeedbackTableRow({ feedback, index, dragId, moveCard, setValue, doDelet
 									/>
 								</MyErrorBoundary>)
 							}
+							{ options.length === 0 ? 'Nothing to configure' : ''}
 						</CForm>
 					</div>
 				</div>
