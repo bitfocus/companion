@@ -13,7 +13,7 @@ export const InstancesPage = memo(function InstancesPage() {
 	const editModalRef = useRef()
 
 	const showHelp = useCallback((name) => {
-		socketEmit(context.socket, 'instance_get_help', [name]).then(([err, result]) => {
+		socketEmit(context.socket, 'instance_get_help_md', [name]).then(([err, result]) => {
 			if (err) {
 				context.notifier.current.show('Instance help', `Failed to get help text: ${err}`)
 				return;
