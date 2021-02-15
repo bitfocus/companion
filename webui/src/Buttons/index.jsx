@@ -1,5 +1,5 @@
 import { CCol, CNav, CNavItem, CNavLink, CRow, CTabContent, CTabPane, CTabs } from "@coreui/react";
-import { faCalculator, faFileImport, faGift } from "@fortawesome/free-solid-svg-icons";
+import { faCalculator, faDollarSign, faFileImport, faGift } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import shortid from "shortid";
 import { InstancePresets } from "./Presets";
@@ -9,6 +9,7 @@ import { EditButton } from "./EditButton";
 import { ImportExport } from "./ImportExport";
 import { useCallback, useContext, useRef, useState } from "react";
 import { GenericConfirmModal } from "../Components/GenericConfirmModal";
+import { InstanceVariables } from "./Variables";
 
 export function ButtonsPage({ hotPress }) {
 	const context = useContext(CompanionContext)
@@ -103,6 +104,7 @@ export function ButtonsPage({ hotPress }) {
 					<CNav variant="tabs">
 						<CNavItem hidden={!selectedButton}><CNavLink data-tab="edit"><FontAwesomeIcon icon={faCalculator} /> Edit Button {selectedButton ? `${selectedButton[0]}.${selectedButton[1]}` : '?'}</CNavLink></CNavItem>
 						<CNavItem><CNavLink data-tab="presets"><FontAwesomeIcon icon={faGift} /> Presets</CNavLink></CNavItem>
+						<CNavItem><CNavLink data-tab="variables"><FontAwesomeIcon icon={faDollarSign} /> Variables</CNavLink></CNavItem>
 						<CNavItem><CNavLink data-tab="importexport"><FontAwesomeIcon icon={faFileImport} /> Import / Export</CNavLink></CNavItem>
 					</CNav>
 					<CTabContent fade={false}>
@@ -123,6 +125,11 @@ export function ButtonsPage({ hotPress }) {
 						<CTabPane data-tab="presets">
 							<MyErrorBoundary>
 								<InstancePresets resetToken={tabResetToken} />
+							</MyErrorBoundary>
+						</CTabPane>
+						<CTabPane data-tab="variables">
+							<MyErrorBoundary>
+								<InstanceVariables resetToken={tabResetToken} />
 							</MyErrorBoundary>
 						</CTabPane>
 						<CTabPane data-tab="importexport">
