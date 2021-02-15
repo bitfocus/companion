@@ -6,11 +6,12 @@ labels: BUG
 assignees: ''
 
 ---
-
-**Make sure you're on the latest bleeding edge build** (remove this section from the bug report)
+<!--
+**Make sure you're on the latest bleeding edge build**
 *Before you report a bug, make sure you're not reporting something that have been fixed in the master branch by downloading a "latest" build from https://builds.bitfocus.io/companion/*
 
-**This form is only for bugs related to the Companion software itself. If you are reporting a bug that you feel is limited to a specific Companion module, please make the bug report directly in that module's repository.** Most Repositories can be located within the Bitfocus Github account with the following naming convention: companion-module-*manufacturer*-*product*
+**This form is only for bugs related to the Companion software itself. If you are reporting a bug that you feel is limited to a specific Companion module, please make the bug report directly in that module's repository.** Most Repositories can be located within the Bitfocus Github account (https://github.com/bitfocus?type=source) with the following naming convention: companion-module-*manufacturer*-*product*
+-->
 
 **Describe the bug**
 A clear and concise description of what the bug is.

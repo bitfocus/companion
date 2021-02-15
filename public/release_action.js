@@ -519,10 +519,33 @@ $(function() {
 		}
 		$ba.append($table);
 
+		function translate_index(tr_index) {
+			var index = -1
+			for (var n in actions) {
+				var action = actions[n]
+				if (action !== null && instance.db[action.instance] !== undefined) {
+					index++
+				}
+				if (index === tr_index) {
+					return n
+				}
+			}
+			return -1
+		}
+
 		new RowSorter($table[0], {
 			handler: '.reorder-grip',
 			onDrop: function(tbody, row, new_index, old_index) {
-				socket.emit('bank_release_action_update_option_order', page, bank, old_index, new_index);
+				var old_index2 = translate_index(old_index)
+				var new_index2 = translate_index(new_index)
+
+				if (old_index2 === -1 || new_index2 === -1) {
+					alert("Failed to move action")
+					return false
+				}
+
+				socket.emit('bank_release_action_update_option_order', page, bank, old_index2, new_index2);
+				actions.splice(new_index2, 0, actions.splice(old_index2, 1)[0]);
 			}
 		});
 

@@ -79,6 +79,47 @@ $(function() {
 				$('#deviceModal .modal-body').append($form);
 			}
 
+			// KeysPerRow
+			if (device.config.indexOf('keysPerRow') !== -1) {
+				var $form = $('<form><div class="form-group"><label for="keysPerRow" class="col-form-label">Keys per row:</label><input type="range" min=1 max=99 class="form-control-range keysPerRow"><span class="keysPerRowNum"></span></div></form>');
+				var $keysPerRow = $form.find('input.keysPerRow');
+				var $keysPerRowNum = $form.find('span.keysPerRowNum');
+
+				$keysPerRow.val(settings.keysPerRow);
+				$keysPerRowNum.text(settings.keysPerRow);
+
+				$keysPerRow.on('input', function () {
+					$keysPerRowNum.text($keysPerRow.val());
+				});
+
+				$keysPerRow.on('change', function () {
+					settings.keysPerRow = parseInt($keysPerRow.val());
+					socket.emit('device_config_set', device.id, settings);
+				})
+
+				$('#deviceModal .modal-body').append($form);
+			}
+
+			// KeysPerRowColumn
+			if (device.config.indexOf('keysPerColumn') !== -1) {
+				var $form = $('<form><div class="form-group"><label for="keysPerColumn" class="col-form-label">Keys per column:</label><input type="range" min=1 max=99 class="form-control-range keysPerColumn"><span class="keysPerColumnNum"></span></div></form>');
+				var $keysPerColumn = $form.find('input.keysPerColumn');
+				var $keysPerColumnNum = $form.find('span.keysPerColumnNum');
+
+				$keysPerColumn.val(settings.keysPerColumn);
+				$keysPerColumnNum.text(settings.keysPerColumn);
+
+				$keysPerColumn.on('input', function () {
+					$keysPerColumnNum.text($keysPerColumn.val());
+				});
+
+				$keysPerColumn.on('change', function () {
+					settings.keysPerColumn = parseInt($keysPerColumn.val());
+					socket.emit('device_config_set', device.id, settings);
+				})
+
+				$('#deviceModal .modal-body').append($form);
+			}
 
 			$('#deviceModal').modal();
 
