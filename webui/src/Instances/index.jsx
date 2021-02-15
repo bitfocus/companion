@@ -3,7 +3,7 @@ import { memo, useCallback, useContext, useRef } from "react";
 import { HelpModal } from "./HelpModal";
 import { CompanionContext, socketEmit } from "../util";
 import { InstancesList } from "./InstanceList";
-import { AddInstancesPanel } from "./AddModule";
+import { AddInstancesPanel } from "./AddInstance";
 import { InstanceEditModal } from "./InstanceEditModal";
 
 export const InstancesPage = memo(function InstancesPage() {
@@ -37,7 +37,7 @@ export const InstancesPage = memo(function InstancesPage() {
 			<CCol xl={6} className='instances-panel'>
 				<InstancesList showHelp={showHelp} doConfigureInstance={doConfigureInstance} />
 			</CCol>
-			<CCol xl={6} className='instances-panel'>
+			<CCol xl={6} className='instances-panel add-instances-panel'>
 				<AddInstancesPanel showHelp={showHelp} doConfigureInstance={doConfigureInstance} />
 			</CCol>
 		</CRow>

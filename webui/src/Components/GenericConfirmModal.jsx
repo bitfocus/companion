@@ -12,7 +12,7 @@ export const GenericConfirmModal = forwardRef(function GenericConfirmModal(_prop
 		setShow(false)
 
         // completion callback
-        const cb = data?.[4]
+        const cb = data?.[3]
         cb() 
 	},[data])
 

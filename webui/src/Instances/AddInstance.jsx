@@ -6,11 +6,11 @@ import { CompanionContext, socketEmit } from '../util'
 
 export function AddInstancesPanel({ showHelp, doConfigureInstance }) {
 	return <>
-		<AddModule showHelp={showHelp} configureInstance={doConfigureInstance} />
+		<AddInstancesInner showHelp={showHelp} configureInstance={doConfigureInstance} />
 	</>
 }
 
-const AddModule = memo(function AddModule({ showHelp, configureInstance }) {
+const AddInstancesInner = memo(function AddInstancesInner({ showHelp, configureInstance }) {
 	const context = useContext(CompanionContext)
 	const [filter, setFilter] = useState('')
 
@@ -26,7 +26,6 @@ const AddModule = memo(function AddModule({ showHelp, configureInstance }) {
 	}
 
 	const candidates = []
-	if (filter) {
 		try {
 			const regexp = new RegExp(filter, "i")
 
@@ -34,8 +33,9 @@ const AddModule = memo(function AddModule({ showHelp, configureInstance }) {
 				const products = new Set(Array.isArray(module.product) ? module.product : [module.product])
 				for (const subprod of products) {
 					const name = `${module.manufacturer} ${subprod}`
+					const keywords = module.keywords || []
 
-					if (name.replace(';', ' ').match(regexp)) {
+					if (name.replace(';', ' ').match(regexp) || keywords.find(kw => kw.match(regexp))) {
 						candidates.push(
 							<div key={name + id}>
 								<CButton color="primary" onClick={() => addInstance(id, subprod)} >Add</CButton>
@@ -53,7 +53,6 @@ const AddModule = memo(function AddModule({ showHelp, configureInstance }) {
 			candidates.splice(0, candidates.length)
 			candidates.push(<CAlert color='warning' role='alert'>Failed to build list of modules:<br/>{e}</CAlert>)
 		}
-	}
 
 	return (
 		<div style={{ clear: 'both' }}>
