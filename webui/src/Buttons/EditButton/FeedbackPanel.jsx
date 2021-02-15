@@ -184,11 +184,13 @@ function FeedbackTableRow({ feedback, index, dragId, moveCard, setValue, doDelet
 			<td>
 				<div className="editor-grid">
 					<div className="cell-name">
-						<CButton color="danger" size="sm" onClick={innerDelete}>
+						{ name }
+					</div>
+
+					<div className="cell-actions">
+						<CButton color="danger" size="sm" onClick={innerDelete} title="Remove action">
 							<FontAwesomeIcon icon={faTrash} />
 						</CButton>
-						&nbsp;
-						{ name }
 					</div>
 
 					<div className="cell-option">

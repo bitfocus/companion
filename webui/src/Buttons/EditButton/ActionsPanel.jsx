@@ -208,10 +208,6 @@ function ActionTableRow({ action, index, dragId, setValue, doDelete, doDelay, mo
 			<td>
 				<div className="editor-grid">
 					<div className="cell-name">
-						<CButton color="danger" size="sm" onClick={innerDelete}>
-							<FontAwesomeIcon icon={faTrash} />
-						</CButton>
-						&nbsp;
 						{ name }
 					</div>
 
@@ -229,6 +225,12 @@ function ActionTableRow({ action, index, dragId, setValue, doDelete, doDelay, mo
 								</CInputGroupAppend>
 							</CInputGroup>
 						</CForm>
+					</div>
+
+					<div className="cell-actions">
+						<CButton color="danger" size="sm" onClick={innerDelete} title="Remove action">
+							<FontAwesomeIcon icon={faTrash} />
+						</CButton>
 					</div>
 
 					<div className="cell-option">
