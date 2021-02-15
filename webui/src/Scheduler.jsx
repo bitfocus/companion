@@ -411,7 +411,8 @@ function ScheduleTableRow({ item, replaceItem, editItem, image }) {
 		<tr>
 			<td>{item.title}</td>
 			<td>
-				{ item.config_desc }
+				{/* TODO - can we remove the dangerous html markup here? */}
+				<div dangerouslySetInnerHTML={{ __html: item.config_desc }} />
 				<br />
 				{
 					item.last_run

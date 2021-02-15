@@ -26,6 +26,7 @@ export const HelpModal = memo(forwardRef(function HelpModal(_props, ref) {
 				<h5>Help for {content?.[0]}</h5>
 			</CModalHeader>
 			<CModalBody>
+				{/* TODO - lets do the md to html conversion on the client */}
 				<div dangerouslySetInnerHTML={{ __html: content?.[1] }} />
 			</CModalBody>
 			<CModalFooter>
