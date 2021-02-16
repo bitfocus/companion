@@ -742,3 +742,6 @@ url=https://github.com/bitfocus/companion-module-newbluefx-titler.git
 [submodule "lib/module/allenheath-sq"]
 	path = lib/module/allenheath-sq
 	url = https://github.com/bitfocus/companion-module-allenheath-sq.git
+[submodule "lib/module/newtek-tricaster"]
+	path = lib/module/newtek-tricaster
+	url = https://github.com/bitfocus/companion-module-newtek-tricaster.git
