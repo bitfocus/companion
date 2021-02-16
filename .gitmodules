@@ -736,3 +736,6 @@ url=https://github.com/bitfocus/companion-module-newbluefx-titler.git
 [submodule "lib/module/sienna-ndimonitor"]
 	path = lib/module/sienna-ndimonitor
 	url = https://github.com/bitfocus/companion-module-sienna-ndimonitor.git
+[submodule "lib/module/datapath-fx4"]
+	path = lib/module/datapath-fx4
+	url = https://github.com/bitfocus/companion-module-datapath-fx4.git
