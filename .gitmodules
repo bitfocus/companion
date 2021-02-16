@@ -679,7 +679,6 @@ url=https://github.com/bitfocus/companion-module-newbluefx-titler.git
 [submodule "lib/module/elgato-keylight"]
 	path = lib/module/elgato-keylight
 	url = https://github.com/bitfocus/companion-module-elgato-keylight.git
-<<<<<<< HEAD
 [submodule "lib/module/visualproductions-bstation2"]
 	path = lib/module/visualproductions-bstation2
 	url = https://github.com/bitfocus/companion-module-visualproductions-bstation2.git
