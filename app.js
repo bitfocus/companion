@@ -160,7 +160,7 @@ system.on('skeleton-ready', function() {
 	system.emit('modules_loaded');
 
 	system.on('exit', function() {
-		registry.elgatoDM.quit();
+		registry.deviceController.quit();
 	});
 
 });

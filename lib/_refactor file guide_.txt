@@ -53,3 +53,4 @@ usb/elgato                  -> Device/Hardware/Elgato
 usb/handler                 -> Device/Hardware/Handler
 usb/image-write-queue       -> Resources/ImageWriteQueue
 usb/infinitton              -> Device/Hardware/Infinitton
+usb/xkeys                   -> Device/Hardware/XKeys
