@@ -748,3 +748,6 @@ url=https://github.com/bitfocus/companion-module-newbluefx-titler.git
 [submodule "lib/module/magewell-proconvert-decoder"]
 	path = lib/module/magewell-proconvert-decoder
 	url = https://github.com/bitfocus/companion-module-magewell-proconvert-decoder.git
+[submodule "lib/module/blackbox-boxilla"]
+	path = lib/module/blackbox-boxilla
+	url = https://github.com/bitfocus/companion-module-blackbox-boxilla.git
