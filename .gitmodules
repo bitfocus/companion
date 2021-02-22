@@ -751,3 +751,6 @@ url=https://github.com/bitfocus/companion-module-newbluefx-titler.git
 [submodule "lib/module/blackbox-boxilla"]
 	path = lib/module/blackbox-boxilla
 	url = https://github.com/bitfocus/companion-module-blackbox-boxilla.git
+[submodule "lib/module/gammacontrol-gmaestro"]
+	path = lib/module/gammacontrol-gmaestro
+	url = https://github.com/bitfocus/companion-module-gammacontrol-gmaestro.git
