@@ -754,3 +754,6 @@ url=https://github.com/bitfocus/companion-module-newbluefx-titler.git
 [submodule "lib/module/gammacontrol-gmaestro"]
 	path = lib/module/gammacontrol-gmaestro
 	url = https://github.com/bitfocus/companion-module-gammacontrol-gmaestro.git
+[submodule "lib/module/dolby-cinemaprocessor"]
+	path = lib/module/dolby-cinemaprocessor
+	url = https://github.com/bitfocus/companion-module-dolby-cinemaprocessor.git
