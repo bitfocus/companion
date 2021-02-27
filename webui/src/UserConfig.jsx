@@ -191,7 +191,7 @@ function UserConfigTable() {
 						</td>
 					</tr>
 					<tr>
-					<td colSpan="2" className="settings-category">Artnet Listener</td>
+						<td colSpan="2" className="settings-category">Artnet Listener</td>
 					</tr>
 					<tr>
 						<td>Artnet Listener</td>
@@ -277,6 +277,21 @@ function RemoteControlInfo() {
 				<br />
 				<i>Release the button (run up actions)</i>
 			</li>
+			<li>
+				<code>STYLE BANK</code> &lt;page&gt; &lt;bank&gt;<code> TEXT </code>&lt;text&gt;
+				<br />
+				<i>Change text on a button</i>
+			</li>
+			<li>
+				<code>STYLE BANK</code> &lt;page&gt; &lt;bank&gt;<code> COLOR </code>&lt;color HEX&gt;
+				<br />
+				<i>Change text color on a button (#000000)</i>
+			</li>
+			<li>
+				<code>STYLE BANK</code> &lt;page&gt; &lt;bank&gt;<code> BGCOLOR </code>&lt;color HEX&gt;
+				<br />
+				<i>Change background color on a button (#000000)</i>
+			</li>
 		</ul>
 
 		<p>
@@ -293,6 +308,61 @@ function RemoteControlInfo() {
 			Press page 1 bank 2
             <br />
 			<code>BANK-PRESS 1 2</code>
+		</p>
+
+		<h4>HTTP Remote control</h4>
+		<p>Remote triggering can be done by sending HTTP Requests to the same IP and port Companion is running on.</p>
+		<p>
+			<strong>Commands:</strong>
+			<ul>
+				<li>
+					<code>/press/bank/</code>&lt;page&gt;<code>/</code>&lt;bank&gt;
+					<br />
+					<i>Press and release a button (run both down and up actions)</i>
+				</li>
+				<li>
+					<code>/style/bank/</code>&lt;page&gt;<code>/</code>&lt;bank&gt;<code>?bgcolor=</code>&lt;bgcolor HEX&gt;
+					<br />
+					<i>Change background color of button</i>
+				</li>
+				<li>
+					<code>/style/bank/</code>&lt;page&gt;<code>/</code>&lt;bank&gt;<code>?color=</code>&lt;color HEX&gt;
+					<br />
+					<i>Change color of text on button</i>
+				</li>
+				<li>
+					<code>/style/bank/</code>&lt;page&gt;<code>/</code>&lt;bank&gt;<code>?text=</code>&lt;text&gt;
+					<br />
+					<i>Change text on a button</i>
+				</li>
+				<li>
+					<code>/style/bank/</code>&lt;page&gt;<code>/</code>&lt;bank&gt;<code>?size=</code>&lt;text size&gt;
+					<br />
+					<i>Change text size on a button (between the predefined values)</i>
+				</li>
+			</ul>
+		</p>
+
+		<p>
+			<strong>Examples</strong>
+		</p>
+
+		<p>
+			Press page 1 bank 2
+			<br />
+			<code>/press/bank/1/2</code>
+		</p>
+
+		<p>
+			Change the text of button 4 on page 2 to TEST
+			<br />
+			<code>/style/bank/2/4/?text=TEST</code>
+		</p>
+
+		<p>
+			Change the text of button 4 on page 2 to TEST, background color to #ffffff, text color to #000000 and font size to 28px
+			<br />
+			<code>/style/bank/2/4/?text=TEST&bgcolor=%23ffffff&color=%23000000&size=28px</code>
 		</p>
 
 		<h4>OSC Remote control</h4>
