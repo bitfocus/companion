@@ -1,16 +1,31 @@
-import { CCol, CRow } from "@coreui/react";
-import { memo, useCallback, useContext, useRef } from "react";
+import { CCol, CRow, CTabs, CTabContent, CTabPane, CNavItem, CNavLink,CNav } from "@coreui/react";
+import { memo, useCallback, useContext, useRef, useState } from "react";
 import { HelpModal } from "./HelpModal";
-import { CompanionContext, socketEmit } from "../util";
+import { CompanionContext, MyErrorBoundary, socketEmit } from "../util";
 import { InstancesList } from "./InstanceList";
 import { AddInstancesPanel } from "./AddInstance";
-import { InstanceEditModal } from "./InstanceEditModal";
+import { InstanceEditPanel } from "./InstanceEditModal";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import shortid from "shortid";
+import { faCog, faPlus } from "@fortawesome/free-solid-svg-icons";
 
 export const InstancesPage = memo(function InstancesPage() {
 	const context = useContext(CompanionContext)
 
 	const helpModalRef = useRef()
-	const editModalRef = useRef()
+
+	const [tabResetToken, setTabResetToken] = useState(shortid())
+	const [activeTab, setActiveTab] = useState('add')
+	const [selectedInstanceId, setSelectedInstanceId] = useState(null)
+	const doChangeTab = useCallback((newTab) => {
+		setActiveTab(oldTab => {
+			if (oldTab !== newTab) {
+				setSelectedInstanceId(null)
+				setTabResetToken(shortid())
+			}
+			return newTab
+		})
+	}, [])
 
 	const showHelp = useCallback((name) => {
 		socketEmit(context.socket, 'instance_get_help_md', [name]).then(([err, result]) => {
@@ -25,20 +40,41 @@ export const InstancesPage = memo(function InstancesPage() {
 	}, [context.socket, context.notifier])
 
 	const doConfigureInstance = useCallback((id) => {
-		editModalRef.current.show(id)
+		setSelectedInstanceId(id)
+		setTabResetToken(shortid())
+		setActiveTab(id ? 'edit' : 'add')
 	}, [])
 
 	return (
 		<CRow className='instances-page'>
 			<HelpModal ref={helpModalRef} />
 
-			<InstanceEditModal ref={editModalRef} />
-
 			<CCol xl={6} className='instances-panel'>
 				<InstancesList showHelp={showHelp} doConfigureInstance={doConfigureInstance} />
 			</CCol>
 			<CCol xl={6} className='instances-panel add-instances-panel'>
-				<AddInstancesPanel showHelp={showHelp} doConfigureInstance={doConfigureInstance} />
+				<CTabs activeTab={activeTab} onActiveTabChange={doChangeTab}>
+					<CNav variant="tabs">
+						<CNavItem><CNavLink data-tab="add"><FontAwesomeIcon icon={faPlus} /> Add Instance</CNavLink></CNavItem>
+						<CNavItem hidden={!selectedInstanceId}><CNavLink data-tab="edit"><FontAwesomeIcon icon={faCog} /> Edit Instance</CNavLink></CNavItem>
+					</CNav>
+					<CTabContent fade={false}>
+						<CTabPane data-tab="add">
+							<MyErrorBoundary>
+								<AddInstancesPanel showHelp={showHelp} doConfigureInstance={doConfigureInstance} />
+							</MyErrorBoundary>
+						</CTabPane>
+						<CTabPane data-tab="edit">
+							<MyErrorBoundary>
+								{
+									selectedInstanceId ? 
+									<InstanceEditPanel key={tabResetToken} showHelp={showHelp} doConfigureInstance={doConfigureInstance} instanceId={selectedInstanceId} />
+									: ''
+								}
+							</MyErrorBoundary>
+						</CTabPane>
+					</CTabContent>
+				</CTabs>
 			</CCol>
 		</CRow>
 	)
