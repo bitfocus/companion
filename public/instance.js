@@ -30,7 +30,8 @@ $(function() {
 	var debug = function () {}; // console.log;
 	$("#instanceConfigTab").hide();
 
-	socket.emit('instance_get');
+	socket.emit('modules_get');
+	socket.emit('instances_get');
 	socket.emit('instance_status_get');
 
 	function show_module_help(name) {
@@ -272,8 +273,7 @@ $(function() {
 							$aisr.html("");
 							$aisf.val("");
 
-							socket.once('instance_add:result', function(id,db) {
-								instance.db = db;
+							socket.once('instance_add:result', function(id) {
 								socket.emit('instance_edit', id);
 							});
 
@@ -301,21 +301,18 @@ $(function() {
 		var product = $(this).data('product');
 		socket.emit('instance_add', { type: instance_type, product: product });
 
-		socket.once('instance_add:result', function(id,db) {
-			instance.db = db;
+		socket.once('instance_add:result', function(id) {
 			socket.emit('instance_edit', id);
 		});
 
 	});
-
-	socket.on('instance', function(i,obj) {
-		instance = i;
-
+    
+	socket.on('modules_get:result', function(obj) {
 		instance_manufacturer = obj.manufacturer;
 		instance_category = obj.category;
 		instance_name = obj.name;
 
-		updateInstanceList(i.db);
+		instance.module = obj.modules
 
 		$addInstance = $("#addInstance");
 		$addInstanceByManufacturer = $("#addInstanceByManufacturer");
@@ -381,7 +378,7 @@ $(function() {
 
 	});
 
-	socket.on('instance_db_update', function(db) {
+	socket.on('instances_get:result', function(db) {
 		instance.db = db;
 		updateInstanceList(instance.db);
 	});
@@ -440,7 +437,6 @@ $(function() {
 		if (ok) {
 
 			socket.emit('instance_config_put', id, data);
-
 			socket.once('instance_config_put:result', function (err, res) {
 
 				if (res) {
@@ -497,7 +493,7 @@ $(function() {
 	}
 
 	socket.emit('variable_instance_definitions_get');
-	socket.on('variable_instance_definitions_get:result', function (err, data) {
+	socket.on('variable_instance_definitions_get:result', function (data) {
 		if (data) {
 			instance_variables = data;
 		}
@@ -512,8 +508,7 @@ $(function() {
 	});
 
 	socket.emit('variables_get');
-
-	socket.on('variables_get:result', function (err, data) {
+	socket.on('variables_get:result', function (data) {
 		if (data) {
 			instance_variabledata = data;
 		}
@@ -526,27 +521,27 @@ $(function() {
 		$('#instanceConfigVariableList tr[data-id="' + key + '"] > td:nth-child(3)').text(value);
 	});
 
-	socket.on('instance_edit:result', function(id, store, res, config ) {
+	socket.on('instance_edit:result', function(id, res, config ) {
 
 		$('#instanceConfigTab').show();
 		$('#instanceConfigVariables').hide();
 		$('#instanceConfigTab a[href="#instanceConfig"]').tab('show');
 
-		for (var n in store.module) {
-			if (store.module[n].name === store.db[id].instance_type) {
+		for (var n in instance.module) {
+			if (instance.module[n].name === config.instance_type) {
 
 				var help = '';
-				if (store.module[n].help) {
+				if (instance.module[n].help) {
 					help = '<div class="instance_help"><i class="fa fa-question-circle"></i></div>';
 				}
 
-				$('#instanceConfig h4:first').html(help + store.module[n].shortname + ' configuration');
+				$('#instanceConfig h4:first').html(help + instance.module[n].shortname + ' configuration');
 
 				(function (name) {
 					$('#instanceConfig').find('.instance_help').click(function () {
 						show_module_help(name);
 					});
-				})(store.module[n].name);
+				})(instance.module[n].name);
 
 			}
 		}
@@ -819,25 +814,8 @@ $(function() {
 			saveConfig(this, id);
 		});
 
-		updateInstanceList(store.db);
+		updateInstanceList(instance.db);
 
-	});
-
-	socket.on('instance_get:result', function(instance_list) {
-
-		for (var n in instance_list.db) {
-			var instance = instance_list.db[n];
-		}
-
-	});
-
-	socket.on('config_fields:result', function(id, fields, config) {
-		socket.emit('instance_get');
-	});
-
-	$(".addInstance").click(function() {
-		socket.emit('instance_add', { type: $(this).data('id'), product: $(this).data('product') });
-		$("#elgbuttons").click();
 	});
 
 });

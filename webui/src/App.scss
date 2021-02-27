@@ -1,0 +1,59 @@
+
+@import "scss/variables";
+
+@import "~@coreui/coreui/scss/coreui";
+@import "~tributejs/src/tribute";
+
+@import "scss/layout";
+@import "scss/common";
+
+@import "scss/bank";
+@import "scss/button-edit";
+@import "scss/button-grid";
+@import "scss/controls";
+@import "scss/instances";
+@import "scss/loading";
+@import "scss/log";
+@import "scss/presets";
+
+@keyframes fadeIn {
+	from {
+		opacity: 0;
+	}
+
+	to {
+		opacity: 1;
+	}
+}
+
+.fadeIn {
+	animation-duration: 1s;
+	animation-name: fadeIn;
+}
+
+#error-container {
+	display:none;
+	opacity: 0;
+	width: 100%;
+	position:fixed !important;
+	top:0px !important;
+	left:0px !important;
+	height: 100%;
+	z-index:15000;
+	padding-left: 30px;
+	padding-right: 30px;
+	padding-top: 100px;
+	background-color: rgba(0,0,0,0.8);
+	color:white;
+
+	transition: opacity 0.3s ease-in-out;
+
+	&.show-error {
+		display: block;
+		opacity: 1;
+	}
+
+	.text-muted {
+		color: #ccc !important;
+	}
+}

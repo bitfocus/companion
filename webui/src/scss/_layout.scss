@@ -1,0 +1,73 @@
+
+body {
+	font-family: "Roboto", sans-serif;
+	min-width: 400px;
+}
+
+.c-wrapper {
+	height: 100vh;
+}
+
+.c-body {
+	padding: 15px 0;
+
+	// Fit minus the header
+	height: calc(100% - #{$header-height});
+
+	// Force to fill the screen and scroll internally
+	> .container-fluid {
+		height: 100%;
+
+		display: grid;
+		grid-template-rows: auto 1fr;
+
+		> .tab-content {
+			overflow-y: hidden;
+
+			> .tab-pane {
+				overflow-y: auto;
+				height: 100%;
+			}
+		}
+	}
+}
+
+.c-sidebar-nav-link:hover {
+	background: $primary;
+}
+
+.c-sidebar .c-sidebar-brand {
+	font-size: 1.3em;
+}
+.c-header .c-header-brand {
+	font-size: 1.3em;
+	margin: 0 auto;
+}
+
+.tab-content {
+	background-color: #fff;
+	border: 1px solid #c8ced3;
+	margin-top: -1px;
+	// margin-bottom: 38px;
+	
+	.tab-pane {
+		padding: 1rem;
+	}
+}
+
+.nav.nav-tabs {
+	.nav-item .nav-link {
+		border-bottom: white;
+		color: #eee;
+
+		&.active {
+			background-color: #fff;
+			color: black;
+		}
+
+		&:hover {
+			background: #ccc;
+			color: black;
+		}
+	}
+}
