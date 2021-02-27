@@ -1,6 +1,6 @@
 import React from 'react'
 import { CSidebar, CSidebarNav, CSidebarNavItem, CSidebarBrand, CSidebarMinimizer } from '@coreui/react'
-import { faBug, faComments, faDollarSign, faGamepad, faInfo, faMousePointer, faTabletAlt, faUsers } from '@fortawesome/free-solid-svg-icons'
+import { faBug, faComments, faDollarSign, faFire, faGamepad, faInfo, faMousePointer, faTabletAlt, faUsers } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { useTranslation } from 'react-i18next'
 
@@ -29,6 +29,10 @@ export function MySidebar({ show }) {
 				<CSidebarNavItem target="_new" href="https://donorbox.org/bitfocus-opensource" icon={<FontAwesomeIcon className='c-sidebar-nav-icon' icon={faDollarSign} />} name={t("Donate")} />
 
 				<CSidebarNavItem target="_new" href="/help.html" icon={<FontAwesomeIcon className='c-sidebar-nav-icon' icon={faInfo} />} name={t("Getting Started")} />
+
+				<CSidebarNavItem>&nbsp;</CSidebarNavItem>
+
+				<CSidebarNavItem target="_new" href="/" icon={<FontAwesomeIcon className='c-sidebar-nav-icon' icon={faFire} />} name={t("Back to the old WebUI")} />
 
 			</CSidebarNav>
 			<CSidebarMinimizer />
