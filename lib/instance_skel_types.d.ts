@@ -50,7 +50,7 @@ export type SomeCompanionInputField =
   | CompanionInputFieldCheckbox
 export interface CompanionInputField {
   id: string
-  type: 'text' | 'textinput' | 'dropdown' | 'colorpicker' | 'number' | 'checkbox' // TODO - multiselect
+  type: 'text' | 'textinput' | 'dropdown' | 'colorpicker' | 'number' | 'checkbox'
   label: string
   tooltip?: string
 }

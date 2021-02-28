@@ -12,7 +12,7 @@ export function ActionTableRowOption({ actionId, option, value, setValue }) {
 	const setValue2 = useCallback((val) => setValue(actionId, option.id, val), [actionId, option.id, setValue])
 
 	if (!option) {
-		return <p>Unknown - TODO</p>
+		return <p>Bad option</p>
 	}
 
 	let control = ''
@@ -22,10 +22,11 @@ export function ActionTableRowOption({ actionId, option, value, setValue }) {
 			break
 		}
 		case 'dropdown': {
-			control = <DropdownInputField value={value} definition={option} setValue={setValue2} />
+			control = <DropdownInputField value={value} definition={option} multiple={option.multiple} setValue={setValue2} />
 			break
 		}
 		case 'multiselect': {
+			/** Deprecated: Use dropdown with `multiple: true` instead */
 			control = <DropdownInputField value={value} definition={option} multiple={true} setValue={setValue2} />
 			break
 		}
