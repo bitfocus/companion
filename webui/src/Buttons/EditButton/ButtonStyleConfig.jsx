@@ -47,11 +47,11 @@ export function ButtonStyleConfig({ page, bank, config, valueChanged }) {
 		case undefined:
 			return <CAlert color="dark" className="mt-5">Select a button style to continue</CAlert>
 		case 'pageup':
-			return <p>No configuration available for page up buttons</p>
+			return <p className="mt-3">No configuration available for page up buttons</p>
 		case 'pagenum':
-			return <p>No configuration available for page number buttons</p>
+			return <p className="mt-3">No configuration available for page number buttons</p>
 		case 'pagedown':
-			return <p>No configuration available for page down buttons</p>
+			return <p className="mt-3">No configuration available for page down buttons</p>
 		default:
 		// See below
 	}
