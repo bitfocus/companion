@@ -3,6 +3,7 @@ import { CAlert, CButton, CCol, CInput, CInputCheckbox, CRow } from '@coreui/rea
 import { CompanionContext, socketEmit } from './util'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faFileImport } from '@fortawesome/free-solid-svg-icons'
+import { Card } from './Components'
 import shortid from 'shortid'
 
 export const UserConfig = memo(function UserConfig() {
@@ -15,7 +16,7 @@ export const UserConfig = memo(function UserConfig() {
 				<UserConfigTable />
 
 			</CCol>
-			<CCol xl={6}>
+			<CCol xl={6}>				
 				<RemoteControlInfo />
 			</CCol>
 		</CRow>
@@ -69,7 +70,7 @@ function UserConfigTable() {
 		return <p>Loading</p>
 	} else {
 		return (
-			<table className='table'>
+			<table className='table table-responsive-sm'>
 				<tbody>
 					<tr>
 						<td colSpan="2" className="settings-category">Navigation Buttons</td>
@@ -243,148 +244,154 @@ function UserConfigTable() {
 
 function RemoteControlInfo() {
 	return <>
-		<h4>TCP/UDP Remote control</h4>
-		<p>Remote triggering can be done by sending TCP (port <code>51234</code>) or UDP (port <code>51235</code>) commands.</p>
-		<p><strong>Commands:</strong></p>
-		<ul>
-			<li>
-				<code>PAGE-SET</code> &lt;page number&gt; &lt;surface id&gt;
-				<br />
-				<i>Make device go to a specific page</i>
-			</li>
-			<li>
-				<code>PAGE-UP</code> &lt;surface id&gt;
-				<br />
-				<i>Page up on a specific device</i>
-			</li>
-			<li>
-				<code>PAGE-DOWN</code> &lt;surface id&gt;
-				<br />
-				<i>Page down on a specific surface</i>
-			</li>
-			<li>
-				<code>BANK-PRESS</code> &lt;page&gt; &lt;bank&gt;
-				<br />
-				<i>Press and release a button (run both down and up actions)</i>
-			</li>
-			<li>
-				<code>BANK-DOWN</code> &lt;page&gt; &lt;bank&gt;
-				<br />
-				<i>Press the button (run down actions)</i>
-			</li>
-			<li>
-				<code>BANK-UP</code> &lt;page&gt; &lt;bank&gt;
-				<br />
-				<i>Release the button (run up actions)</i>
-			</li>
-		</ul>
+		<h4>Remote control</h4>
+		<p>Companion can be remote controlled in several ways. Below you'll find how to do it.</p>
+		<Card className="mb-3">
+			<h5>TCP/UDP Remote control</h5>
+			<p>Remote triggering can be done by sending TCP (port <code>51234</code>) or UDP (port <code>51235</code>) commands.</p>
+			<p><strong>Commands:</strong></p>
+			<ul>
+				<li>
+					<code>PAGE-SET</code> &lt;page number&gt; &lt;surface id&gt;
+					<br />
+					<i>Make device go to a specific page</i>
+				</li>
+				<li>
+					<code>PAGE-UP</code> &lt;surface id&gt;
+					<br />
+					<i>Page up on a specific device</i>
+				</li>
+				<li>
+					<code>PAGE-DOWN</code> &lt;surface id&gt;
+					<br />
+					<i>Page down on a specific surface</i>
+				</li>
+				<li>
+					<code>BANK-PRESS</code> &lt;page&gt; &lt;bank&gt;
+					<br />
+					<i>Press and release a button (run both down and up actions)</i>
+				</li>
+				<li>
+					<code>BANK-DOWN</code> &lt;page&gt; &lt;bank&gt;
+					<br />
+					<i>Press the button (run down actions)</i>
+				</li>
+				<li>
+					<code>BANK-UP</code> &lt;page&gt; &lt;bank&gt;
+					<br />
+					<i>Release the button (run up actions)</i>
+				</li>
+			</ul>
 
-		<p>
-			<strong>Examples</strong>
-		</p>
+			<p>
+				<strong>Examples</strong>
+			</p>
 
-		<p>
-			Set the emulator surface to page 23
-            <br />
-			<code>PAGE-SET 23 emulator</code>
-		</p>
+			<p>
+				Set the emulator surface to page 23
+							<br />
+				<code>PAGE-SET 23 emulator</code>
+			</p>
 
-		<p>
-			Press page 1 bank 2
-            <br />
-			<code>BANK-PRESS 1 2</code>
-		</p>
+			<p>
+				Press page 1 bank 2
+							<br />
+				<code>BANK-PRESS 1 2</code>
+			</p>
+		</Card>
+		<Card className="mb-3">
+			<h5>OSC Remote control</h5>
+			<p>Remote triggering can be done by sending OSC commands to port <code>12321</code>.</p>
+			<p><strong>Commands:</strong></p>
+			<ul>
+				<li>
+					<code>/press/bank/</code>&lt;page&gt; &lt;bank&gt;
+					<br />
+					<i>Press and release a button (run both down and up actions)</i>
+				</li>
+				<li>
+					<code>/press/bank/</code> &lt;page&gt; &lt;bank&gt; &lt;1&gt;
+					<br />
+					<i>Press the button (run down actions and hold)</i>
+				</li>
+				<li>
+					<code>/press/bank/</code> &lt;page&gt; &lt;bank&gt; &lt;0&gt;
+					<br />
+					<i>Release the button (run up actions)</i>
+				</li>
+				<li>
+					<code>/style/bgcolor/</code> &lt;page&gt; &lt;bank&gt; &lt;red 0-255&gt; &lt;green 0-255&gt; &lt;blue 0-255&gt;
+					<br />
+					<i>Change background color of button</i>
+				</li>
+				<li>
+					<code>/style/color/</code> &lt;page&gt; &lt;bank&gt; &lt;red 0-255&gt; &lt;green 0-255&gt; &lt;blue 0-255&gt;
+					<br />
+					<i>Change color of text on button</i>
+				</li>
+				<li>
+					<code>/style/text/</code> &lt;page&gt; &lt;bank&gt;  &lt;text&gt;
+					<br />
+					<i>Change text on a button</i>
+				</li>
+			</ul>
 
-		<h4>OSC Remote control</h4>
-		<p>Remote triggering can be done by sending OSC commands to port <code>12321</code>.</p>
-		<p><strong>Commands:</strong></p>
-		<ul>
-			<li>
-				<code>/press/bank/</code>&lt;page&gt; &lt;bank&gt;
-				<br />
-				<i>Press and release a button (run both down and up actions)</i>
-			</li>
-			<li>
-				<code>/press/bank/</code> &lt;page&gt; &lt;bank&gt; &lt;1&gt;
-				<br />
-				<i>Press the button (run down actions and hold)</i>
-			</li>
-			<li>
-				<code>/press/bank/</code> &lt;page&gt; &lt;bank&gt; &lt;0&gt;
-				<br />
-				<i>Release the button (run up actions)</i>
-			</li>
-			<li>
-				<code>/style/bgcolor/</code> &lt;page&gt; &lt;bank&gt; &lt;red 0-255&gt; &lt;green 0-255&gt; &lt;blue 0-255&gt;
-				<br />
-				<i>Change background color of button</i>
-			</li>
-			<li>
-				<code>/style/color/</code> &lt;page&gt; &lt;bank&gt; &lt;red 0-255&gt; &lt;green 0-255&gt; &lt;blue 0-255&gt;
-				<br />
-				<i>Change color of text on button</i>
-			</li>
-			<li>
-				<code>/style/text/</code> &lt;page&gt; &lt;bank&gt;  &lt;text&gt;
-				<br />
-				<i>Change text on a button</i>
-			</li>
-		</ul>
+			<p>
+				<strong>Examples</strong>
+			</p>
 
-		<p>
-			<strong>Examples</strong>
-		</p>
+			<p>
+				Press button 5 on page 1 down and hold
+							<br />
+				<code>/press/bank/1/5 1</code>
+			</p>
 
-		<p>
-			Press button 5 on page 1 down and hold
-            <br />
-			<code>/press/bank/1/5 1</code>
-		</p>
+			<p>
+				Change button background color of button 5 on page 1 to red
+							<br />
+				<code>/style/bgcolor/1/5 255 0 0</code>
+			</p>
 
-		<p>
-			Change button background color of button 5 on page 1 to red
-            <br />
-			<code>/style/bgcolor/1/5 255 0 0</code>
-		</p>
+			<p>
+				Change the text of button 5 on page 1 to ONLINE
+							<br />
+				<code>/style/text/1/5 ONLINE</code>
+			</p>
 
-		<p>
-			Change the text of button 5 on page 1 to ONLINE
-            <br />
-			<code>/style/text/1/5 ONLINE</code>
-		</p>
+			<br />
+			<p>
+				<CButton color='success' href="/bitfocus@companion_v2.0@00.xml" target="_new">
+					<FontAwesomeIcon icon={faFileImport} /> Download GrandMA2 Fixture file (v2.0)
+							</CButton>
+			</p>
+			<p>
+				<CButton color='success' href="/Bitfocus Companion Fixture.v3f" target="_new">
+					<FontAwesomeIcon icon={faFileImport} /> Download Vista Fixture file (v2.0)
+							</CButton>
+			</p>
+		</Card>
+		<Card className="mb-3">
+			<h5>RossTalk</h5>
+			<p>Remote triggering can be done by sending RossTalk commands to port <code>7788</code>.</p>
+			<p><strong>Commands:</strong></p>
+			<ul>
 
-		<br />
-		<p>
-			<CButton color='success' href="/bitfocus@companion_v2.0@00.xml" target="_new">
-				<FontAwesomeIcon icon={faFileImport} /> Download GrandMA2 Fixture file (v2.0)
-            </CButton>
-		</p>
-		<p>
-			<CButton color='success' href="/Bitfocus Companion Fixture.v3f" target="_new">
-				<FontAwesomeIcon icon={faFileImport} /> Download Vista Fixture file (v2.0)
-            </CButton>
-		</p>
+				<li>
+					<code>CC</code> &lt;page&gt;:&lt;button&gt;
+					<br />
+					<i>Press and release button</i>
+				</li>
+			</ul>
 
-		<h4>RossTalk</h4>
-		<p>Remote triggering can be done by sending RossTalk commands to port <code>7788</code>.</p>
-		<p><strong>Commands:</strong></p>
-		<ul>
+			<p>
+				<strong>Examples</strong>
+			</p>
 
-			<li>
-				<code>CC</code> &lt;page&gt;:&lt;button&gt;
-				<br />
-				<i>Press and release button</i>
-			</li>
-		</ul>
-
-		<p>
-			<strong>Examples</strong>
-		</p>
-
-		<p>
-			Press and release button 5 on page 2
-            <br />
-			<code>CC 2:5</code>
-		</p>
+			<p>
+				Press and release button 5 on page 2
+							<br />
+				<code>CC 2:5</code>
+			</p>
+	</Card>
 	</>
 }
