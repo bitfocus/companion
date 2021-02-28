@@ -38,7 +38,7 @@ export function MyHeader({ toggleSidebar }) {
     <CHeader colorScheme="dark">
       <CToggler inHeader onClick={toggleSidebar} />
       <CHeaderBrand className="d-lg-none">
-        <span style={{ fontWeight: "bold" }}>Bitfocus</span>&nbsp;Companion
+        Bitfocus&nbsp;<span style={{ fontWeight: "bold" }}>Companion</span>
       </CHeaderBrand>
 
       <CHeaderNav className="d-md-down-none">
