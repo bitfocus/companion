@@ -16,6 +16,7 @@
 			},
 			"asarUnpack": [
 				"public",
+				"webui/build",
 				"node_modules/jquery",
 				"node_modules/popper.js/**",
 				"node_modules/bootstrap",
@@ -84,6 +85,9 @@
 			"assets/bitfocus-logo.png",
 			"assets/trayTemplate.png",
 			"assets/trayTemplate@2x.png",
+			"webui/build/**/*",
+			"!webui/src/**/*",
+			"!webui/public/**/*",
 			"!font/*",
 			"!tools/*",
 			"!*.md",
@@ -112,8 +116,9 @@
 		"dist:prepare:rpi": "npm_config_platform=linux npm_config_arch=arm yarn dist:prepare:sharp && electron-builder install-app-deps --arch armv7l --platform linux",
 		"test": "mocha",
 		"postinstall": "./tools/build_writefile.sh && yarn dist:js",
-		"headless": "nodemon headless.js",
-		"dev-headless": "./tools/build_writefile.sh && DEVELOPER=1 nodemon headless.js"
+		"headless": "nodemon --ignore './webui/' headless.js",
+		"dev-headless": "./tools/build_writefile.sh && DEVELOPER=1 nodemon --ignore './webui/' headless.js",
+		"dev-webui": "yarn --cwd webui dev"
 	},
 	"repository": "https://github.com/bitfocus/companion",
 	"keywords": [

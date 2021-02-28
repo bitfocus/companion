@@ -1,0 +1,55 @@
+.instance_help,
+.instance_variables {
+  float: right;
+  cursor: pointer;
+  cursor: hand;
+}
+
+// scroll if side-by-side
+@include media-breakpoint-up("xl") {
+  .instances-page {
+    height: 100%;
+
+    .instances-panel {
+      height: 100%;
+      overflow-y: scroll;
+    }
+  }
+}
+
+.instance-status-ok {
+  background-color: #cfc;
+}
+
+.instance-status-warn {
+  background-color: #fea;
+}
+
+.instance-status-error {
+  background-color: #fcc;
+}
+
+#instance_add_search_results {
+  margin-top: 10px;
+}
+
+#instance_add_search_results div {
+  margin-bottom: 5px;
+}
+
+.edit-instance {
+  & > div {
+    // column
+    margin-bottom: 10px;
+  }
+
+  label {
+    justify-content: left;
+    font-weight: bold;
+    font-size: 1em;
+    margin-bottom: 0.15rem;
+  }
+}
+.td-reorder {
+	cursor: ns-resize;
+}
