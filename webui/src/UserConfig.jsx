@@ -23,7 +23,7 @@ export const UserConfig = memo(function UserConfig() {
   return (
     <CRow>
       <CCol xl={6}>
-        <h4>User settings</h4>
+        <h4>Settings</h4>
         <p>Settings applies instantaneously, don't worry about it!</p>
 
         <UserConfigTable />
