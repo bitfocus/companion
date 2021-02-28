@@ -12,10 +12,11 @@ export function MySidebar({ show }) {
 			<CSidebarNav>
 				<CSidebarBrand>
 					<div className="c-sidebar-brand-full">
-						<span style={{ fontWeight: 'bold' }}>Bitfocus</span>&nbsp;Companion
+						<img src="/v2/img/brand/icon.png" height="30" alt="logo" />&nbsp;
+						Bitfocus&nbsp;<span style={{ fontWeight: 'bold' }}>Companion</span>
 					</div>
 					<div className="c-sidebar-brand-minimized">
-						<img src="img/brand/icon.png" height="42px" alt="logo" />
+						<img src="/v2/img/brand/icon.png" height="42px" alt="logo" />
 					</div>
 				</CSidebarBrand>
 
