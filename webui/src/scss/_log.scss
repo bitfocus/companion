@@ -23,7 +23,6 @@
 			padding-right: 5px;
 			border-radius: 4px;
 
-
 			&.log-type-fatal {
 				background-color:black;
 				color: white;
@@ -43,6 +42,10 @@
 			&.log-type-debug {
 				background-color: rgba(200,200,200,0.1);
 				color: rgba(50,50,50,0.7);
+			}
+
+			.log-message {
+				font-family: 'Courier New', Courier, monospace;
 			}
 		}
 	}
