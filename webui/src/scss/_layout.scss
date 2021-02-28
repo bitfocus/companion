@@ -59,6 +59,7 @@ body {
     padding: 1rem;
   }
   max-width: 1500px;
+	min-height: calc(100vh - 200px)
 }
 
 .nav.nav-tabs {

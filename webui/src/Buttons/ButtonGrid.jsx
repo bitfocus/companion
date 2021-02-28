@@ -113,7 +113,7 @@ export const ButtonsGridPanel = memo(function ButtonsPage({ pageNumber, onKeyUp,
 				<CCol sm={12}>
 
 				<CButton 
-					color='success'
+					color='light'
 					style={{
 						float:'right',
 						marginTop: 10
@@ -332,7 +332,7 @@ export function ButtonGridHeader({ pageNumber, pageName, onNameChange, onNameBlu
 	return <div className="button-grid-header">
 		<CInputGroup>
 			<CInputGroupPrepend>
-				<CButton color="primary" hidden={!changePage} onClick={() => changePage(-1)}>
+				<CButton color="dark" hidden={!changePage} onClick={() => changePage(-1)}>
 					<FontAwesomeIcon icon={faChevronLeft} />
 				</CButton>
 			</CInputGroupPrepend>
@@ -348,7 +348,7 @@ export function ButtonGridHeader({ pageNumber, pageName, onNameChange, onNameBlu
 				className="button-page-input"
 			/>
 			<CInputGroupAppend>
-				<CButton color="primary" hidden={!changePage} onClick={() => changePage(1)}>
+				<CButton color="dark" hidden={!changePage} onClick={() => changePage(1)}>
 					<FontAwesomeIcon icon={faChevronRight} />
 				</CButton>
 			</CInputGroupAppend>

@@ -97,14 +97,14 @@ function PresetsInstanceList({ presets, setInstanceAndCategory }) {
 		const module = instance ? context.modules[instance.instance_type] : undefined
 
 		return <div key={id}>
-			<CButton color='light' className="choose_instance" onClick={() => setInstanceAndCategory([id, null])}>
+			<CButton color='info' className="choose_instance" onClick={() => setInstanceAndCategory([id, null])}>
 				{module?.label ?? '?'} ({instance?.label ?? id})
 			</CButton>
 		</div>
 	})
 
 	return <div>
-		<h5>Available presets</h5>
+		<h5>Presets</h5>
 		<p>Some connections support something we call presets, it's ready made buttons with text, actions and feedback so you don't need to spend time making everything from scratch. They can be drag and dropped onto your button layout.</p>
 		{
 			options.length === 0
@@ -123,7 +123,7 @@ function PresetsCategoryList({ presets, instance, module, selectedInstanceId, se
 	const doBack = useCallback(() => setInstanceAndCategory([null, null]), [setInstanceAndCategory])
 
 	const buttons = Array.from(categories).map((category) => {
-		return <CButton key={category} color="light" block onClick={() => setInstanceAndCategory([selectedInstanceId, category])}>{category}</CButton>
+		return <CButton key={category} color="info" block onClick={() => setInstanceAndCategory([selectedInstanceId, category])}>{category}</CButton>
 	})
 
 	return <div>
@@ -150,7 +150,7 @@ function PresetsButtonList({ presets, selectedInstanceId, selectedCategory, setI
 	return <div>
 		<h5>
 			<CButton color='primary' size="sm" onClick={doBack}>Back</CButton>
-			Presets for {selectedCategory}
+			{selectedCategory}
 		</h5>
 		<p>Drag and drop the preset buttons below into your buttons-configuration.</p>
 

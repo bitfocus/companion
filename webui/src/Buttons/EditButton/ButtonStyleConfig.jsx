@@ -45,13 +45,13 @@ export function ButtonStyleConfig({ page, bank, config, valueChanged }) {
 
 	switch (config.style) {
 		case undefined:
-			return <CCol sm={12}><p>Select a button style</p></CCol>
+			return <CAlert color="dark" className="mt-5">Select a button style to continue</CAlert>
 		case 'pageup':
-			return <CCol sm={12}><p>No configuration available for page up buttons</p></CCol>
+			return <p>No configuration available for page up buttons</p>
 		case 'pagenum':
-			return <CCol sm={12}><p>No configuration available for page number buttons</p></CCol>
+			return <p>No configuration available for page number buttons</p>
 		case 'pagedown':
-			return <CCol sm={12}><p>No configuration available for page down buttons</p></CCol>
+			return <p>No configuration available for page down buttons</p>
 		default:
 		// See below
 	}

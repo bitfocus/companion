@@ -93,7 +93,7 @@ const AddInstancesInner = memo(function AddInstancesInner({
 
   return (
     <div style={{ clear: "both" }}>
-      <h4>Add new connection</h4>
+      <h4>Add connection</h4>
       <p>
         Companion currently supports {Object.keys(context.modules).length}{" "}
         different things, and the list grows every day. If you can't find the

@@ -111,10 +111,10 @@ export function EditButton({ page, bank, onKeyUp }) {
 						<CDropdown className="mt-2" style={{ display: 'inline-block' }}>
 							<CButtonGroup>
 								{/* This could be simplified to use the split property on CDropdownToggle, but then onClick doesnt work https://github.com/coreui/coreui-react/issues/179 */}
-								<CButton color="info" onClick={() => setButtonType('png')}>
+								<CButton color="success" onClick={() => setButtonType('png')}>
 									Regular button
 								</CButton>
-								<CDropdownToggle caret color="info" className='dropdown-toggle dropdown-toggle-split' >
+								<CDropdownToggle caret color="success" style={{opacity:0.8, paddingLeft:6}} className='dropdown-toggle dropdown-toggle-split' >
 									<span class="sr-only">Toggle Dropdown</span>
 								</CDropdownToggle>
 							</CButtonGroup>

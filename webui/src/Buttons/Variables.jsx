@@ -62,7 +62,7 @@ function VariablesInstanceList({ setInstance, instancesLabelMap }) {
       return (
         <div key={id}>
           <CButton
-            color="primary"
+            color="info"
             className="choose_instance mb-3 mr-2"
             onClick={() => setInstance(id)}
           >
