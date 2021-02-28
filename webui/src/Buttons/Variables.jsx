@@ -49,11 +49,11 @@ function VariablesInstanceList({ setInstance, instancesLabelMap }) {
 	})
 
 	return <div>
-		<h4>Available instance variables</h4>
+		<h5>Available variables</h5>
 
 		{
 			options.length === 0
-				? <CAlert color='primary'>You have no instances that support variables at the moment. More modules will support variables in the future.</CAlert>
+				? <CAlert color='primary'>You have no connections that support variables at the moment. More modules will support variables in the future.</CAlert>
 				: options
 		}
 	</div>

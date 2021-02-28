@@ -87,13 +87,23 @@ body {
 	color: #222;
 }
 
-.secondary-panel {
+.secondary-panel-inner {
 	box-shadow: -15px -0px 25px -20px rgba(0,0,0,0.3);
-	padding:0;
 }
+
+.secondary-panel {
+	padding-left: 15px;
+	padding-top: 5px;
+}
+
+
 .secondary-panel .tab-content {
 	border-left-width: 0;
 	border-bottom-width: 0;
 	border-right-width: 0;
 }
 
+code {
+	color: #d50215;
+	font-weight:bold;
+}

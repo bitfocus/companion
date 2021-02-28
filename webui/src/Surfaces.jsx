@@ -50,7 +50,7 @@ export const SurfacesPage = memo(function SurfacesPage() {
 
 	return (
 		<div>
-			<h4>Connected devices</h4>
+			<h4>Surfaces</h4>
 			<p>These are the surfaces currently connected to companion. If your streamdeck is missing from this list, you
 			might need to close the Elgato Streamdeck application and click the Rescan button below.</p><p><i>Rescanning blocks all operations while the scan is ongoing. <b>Use with care!</b></i></p>
 			<CAlert color="warning" role="alert" style={{ display: scanError ? '' : 'none' }}>{scanError}</CAlert>

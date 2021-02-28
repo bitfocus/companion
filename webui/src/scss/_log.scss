@@ -8,7 +8,7 @@
 	// }
 	.log-panel {
 		margin-top: 5px;
-		font-size: 0.85em;
+		font-size: 1em;
 
 		overflow-y: scroll;
 		// height: 100%;
@@ -28,8 +28,9 @@
 				color: white;
 			}
 			&.log-type-error {
-				background-color: rgba(255,0,0,0.2);
-				color: rgba(255,0,0,1);
+				background-color: rgba(255,0,0,0.05);
+				color: rgba(200,0,0,1);
+				border: 1px solid red;
 			}
 			&.log-type-warn {
 				background-color: rgba(255,128,0,0.2);
@@ -41,11 +42,11 @@
 			}
 			&.log-type-debug {
 				background-color: rgba(200,200,200,0.1);
-				color: rgba(50,50,50,0.7);
+				color: rgba(50,50,50,1);
 			}
 
 			.log-message {
-				font-family: 'Courier New', Courier, monospace;
+				/* font-family: 'Courier New', Courier, monospace; */
 			}
 		}
 	}

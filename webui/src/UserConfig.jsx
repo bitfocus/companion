@@ -94,6 +94,13 @@ function UserConfigTable() {
   } else {
     return (
       <table className="table table-responsive-sm">
+				<thead>
+					<tr>
+						<th>Setting</th>
+						<th>Value</th>
+					</tr>
+				</thead>
+
         <tbody>
           <tr>
             <td colSpan="2" className="settings-category">

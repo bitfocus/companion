@@ -128,10 +128,10 @@ function PresetsCategoryList({ presets, instance, module, selectedInstanceId, se
 	})
 
 	return <div>
-		<h4>
+		<h5>
 			<CButton color='primary' size="sm" onClick={doBack}>Back</CButton>
-			Preset categories for  {module?.label ?? '?'} ({instance?.label ?? selectedInstanceId})
-		</h4>
+			{module?.label ?? '?'} ({instance?.label ?? selectedInstanceId})
+		</h5>
 
 		{
 			buttons.length === 0
@@ -149,10 +149,10 @@ function PresetsButtonList({ presets, selectedInstanceId, selectedCategory, setI
 	const options = presets.filter(p => p.category === selectedCategory)
 
 	return <div>
-		<h4>
+		<h5>
 			<CButton color='primary' size="sm" onClick={doBack}>Back</CButton>
 			Presets for {selectedCategory}
-		</h4>
+		</h5>
 		<p>Drag and drop the preset buttons below into your buttons-configuration.</p>
 
 		{

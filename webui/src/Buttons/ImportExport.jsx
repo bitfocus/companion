@@ -204,7 +204,7 @@ export function ImportExport({ pageNumber }) {
 	}
 
 	return <>
-		<h5>Import Configuration</h5>
+		<h5>Import configuration</h5>
 		<p>Use the button below to browse your computer for a <b>.companionconfig</b> file containing either a full companion configuration, or a single page export.</p>
 
 		{

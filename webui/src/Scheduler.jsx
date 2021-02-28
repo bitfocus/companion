@@ -78,7 +78,7 @@ export const Scheduler = memo(function Scheduler () {
 
 	return (
 		<div>
-			<h4>Triggers and Schedules</h4>
+			<h4>Triggers and schedules</h4>
 			<p>This allows you to recall buttons based on variables or time-based events.</p>
 
 			{

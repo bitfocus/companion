@@ -98,49 +98,50 @@ export function ButtonsPage({ hotPress }) {
 					/>
 				</MyErrorBoundary>
 			</CCol>
-
+			
 			<CCol xs={12} xl={6} className="secondary-panel">
-				<CTabs activeTab={activeTab} onActiveTabChange={doChangeTab}>
-					<CNav variant="tabs">
-						<CNavItem hidden={!selectedButton}><CNavLink data-tab="edit"><FontAwesomeIcon icon={faCalculator} /> Edit Button {selectedButton ? `${selectedButton[0]}.${selectedButton[1]}` : '?'}</CNavLink></CNavItem>
-						<CNavItem><CNavLink data-tab="presets"><FontAwesomeIcon icon={faGift} /> Presets</CNavLink></CNavItem>
-						<CNavItem><CNavLink data-tab="variables"><FontAwesomeIcon icon={faDollarSign} /> Variables</CNavLink></CNavItem>
-						<CNavItem><CNavLink data-tab="importexport"><FontAwesomeIcon icon={faFileImport} /> Import / Export</CNavLink></CNavItem>
-					</CNav>
-					<CTabContent fade={false}>
-						<CTabPane data-tab="edit">
-							<MyErrorBoundary>
-								{
-									selectedButton
-										? <EditButton
-											key={`${selectedButton[0]}.${selectedButton[1]}.${tabResetToken}`}
-											page={selectedButton[0]}
-											bank={selectedButton[1]}
-											onKeyUp={handleKeyUpInButtons}
-										/>
-										: ''
-								}
-							</MyErrorBoundary>
-						</CTabPane>
-						<CTabPane data-tab="presets">
-							<MyErrorBoundary>
-								<InstancePresets resetToken={tabResetToken} />
-							</MyErrorBoundary>
-						</CTabPane>
-						<CTabPane data-tab="variables">
-							<MyErrorBoundary>
-								<InstanceVariables resetToken={tabResetToken} />
-							</MyErrorBoundary>
-						</CTabPane>
-						<CTabPane data-tab="importexport">
-							<MyErrorBoundary>
-								<ImportExport key={tabResetToken} pageNumber={pageNumber} />
-							</MyErrorBoundary>
-						</CTabPane>
-					</CTabContent>
-				</CTabs>
+				<div className="secondary-panel-inner">
+					<CTabs activeTab={activeTab} onActiveTabChange={doChangeTab}>
+						<CNav variant="tabs">
+							<CNavItem hidden={!selectedButton}><CNavLink data-tab="edit"><FontAwesomeIcon icon={faCalculator} /> Edit Button {selectedButton ? `${selectedButton[0]}.${selectedButton[1]}` : '?'}</CNavLink></CNavItem>
+							<CNavItem><CNavLink data-tab="presets"><FontAwesomeIcon icon={faGift} /> Presets</CNavLink></CNavItem>
+							<CNavItem><CNavLink data-tab="variables"><FontAwesomeIcon icon={faDollarSign} /> Variables</CNavLink></CNavItem>
+							<CNavItem><CNavLink data-tab="importexport"><FontAwesomeIcon icon={faFileImport} /> Import / Export</CNavLink></CNavItem>
+						</CNav>
+						<CTabContent fade={false}>
+							<CTabPane data-tab="edit">
+								<MyErrorBoundary>
+									{
+										selectedButton
+											? <EditButton
+												key={`${selectedButton[0]}.${selectedButton[1]}.${tabResetToken}`}
+												page={selectedButton[0]}
+												bank={selectedButton[1]}
+												onKeyUp={handleKeyUpInButtons}
+											/>
+											: ''
+									}
+								</MyErrorBoundary>
+							</CTabPane>
+							<CTabPane data-tab="presets">
+								<MyErrorBoundary>
+									<InstancePresets resetToken={tabResetToken} />
+								</MyErrorBoundary>
+							</CTabPane>
+							<CTabPane data-tab="variables">
+								<MyErrorBoundary>
+									<InstanceVariables resetToken={tabResetToken} />
+								</MyErrorBoundary>
+							</CTabPane>
+							<CTabPane data-tab="importexport">
+								<MyErrorBoundary>
+									<ImportExport key={tabResetToken} pageNumber={pageNumber} />
+								</MyErrorBoundary>
+							</CTabPane>
+						</CTabContent>
+					</CTabs>
+				</div>
 			</CCol>
-
 		</CRow>
 	)
 }

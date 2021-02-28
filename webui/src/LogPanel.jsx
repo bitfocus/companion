@@ -76,7 +76,7 @@ export const LogPanel = memo(function LogPanel() {
 					{
 						history.map(h => {
 							if (h.level === 'error' || config[h.level]) {
-								const time_format = dayjs(h.time).format('DD. HH:mm:ss')
+								const time_format = dayjs(h.time).format('MM/DD HH:mm:ss')
 								return <div key={h.id} className={`log-line log-type-${h.level}`}>
 									{time_format} <strong>{h.source}</strong>: <span className="log-message">{h.message}</span>
 								</div>
