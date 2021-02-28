@@ -290,8 +290,8 @@ function ResetConfiguration() {
 		<h5>Reset all configuration</h5>
 		<p>This will clear all instances and buttons and start over.</p>
 		<p>
-			<CButton color='danger' onClick={doReset}>
-				<FontAwesomeIcon icon={faTrashAlt} /> Reset configuration
+			<CButton color='danger' style={{backgroundColor:'rgba(180,0,0,1)'}} onClick={doReset}>
+				<FontAwesomeIcon icon={faTrashAlt} /> Yes, reset everything
 			</CButton>
 		</p>
 		<ConfirmFullResetModal ref={resetModalRef} />

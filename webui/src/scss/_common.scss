@@ -25,10 +25,13 @@ h5 {
 .table-responsive-sm {
 	border: 1px solid #ddd;
 	border-collapse: collapse;
+	box-shadow: 0px 2px 21px -10px rgba(0,0,0,0.2);
 }
 
 .table-responsive-sm th {
 	border-radius: 10%;
 	border-bottom-width: 0px !important;
 	background-color: #f0f0f0;
+	padding-top:6px;
+	padding-bottom:6px;
 }

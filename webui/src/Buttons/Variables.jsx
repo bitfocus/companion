@@ -41,16 +41,15 @@ function VariablesInstanceList({ setInstance, instancesLabelMap }) {
 		const module = instance ? context.modules[instance.instance_type] : undefined
 
 		return <div key={id}>
-			<CButton color='primary' className="choose_instance" onClick={() => setInstance(id)}>
+			<CButton color='primary' className="choose_instance mb-3 mr-2" onClick={() => setInstance(id)}>
 				{module?.label ?? module?.name ?? '?'} ({label ?? id})
 			</CButton>
-			<br /><br />
 		</div>
 	})
 
 	return <div>
-		<h5>Available variables</h5>
-
+		<h5>Variables</h5>
+		<p>Some connection types provide variables for you to use in button text.</p>
 		{
 			options.length === 0
 				? <CAlert color='primary'>You have no connections that support variables at the moment. More modules will support variables in the future.</CAlert>

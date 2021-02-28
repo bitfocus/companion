@@ -184,7 +184,7 @@ const ButtonGridActions = forwardRef(function ButtonGridActions({ isHot, pageNum
 	}, [])
 
 	const getButton = (label, icon, func) => {
-		let color = 'primary'
+		let color = 'light'
 		let disabled = false
 		if (activeFunction === func) {
 			color = 'success'
@@ -290,9 +290,9 @@ const ButtonGridActions = forwardRef(function ButtonGridActions({ isHot, pageNum
 				<CButton color="disabled" hidden={!activeFunction}>{ hintText }</CButton>
 				&nbsp;
 				<span style={{float:'right'}}>
-				<CButton color="warning" onClick={() => resetPage()}><FontAwesomeIcon icon={faEraser} /> Wipe page</CButton>
+				<CButton color="light" onClick={() => resetPage()}><FontAwesomeIcon icon={faEraser} /> Wipe page</CButton>
 				&nbsp;
-				<CButton color="warning" onClick={() => resetPageNav()}><FontAwesomeIcon icon={faEraser} /> Reset page buttons</CButton><br /><br />
+				<CButton color="light" onClick={() => resetPageNav()}><FontAwesomeIcon icon={faEraser} /> Reset page buttons</CButton><br /><br />
 				</span>
 			</p>
 		</CCol>
