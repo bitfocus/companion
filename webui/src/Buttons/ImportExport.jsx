@@ -193,7 +193,7 @@ export function ImportExport({ pageNumber }) {
 	}
 
 	return <>
-		<h4>Import Configuration</h4>
+		<h5>Import Configuration</h5>
 		<p>Use the button below to browse your computer for a <b>.companionconfig</b> file containing either a full companion configuration, or a single page export.</p>
 		<label className="btn btn-success btn-file">
 			<FontAwesomeIcon icon={faFileImport} /> Import
@@ -254,7 +254,7 @@ function ButtonImportPreview({ config, instanceId, ...childProps }) {
 
 function FullExport() {
 	return <>
-		<h4>Export full configuration</h4>
+		<h5>Export full configuration</h5>
 		<p>Download a file containing all instances and button pages.</p>
 		<CButton color='success' href="/int/full_export" target="_new">
 			<FontAwesomeIcon icon={faDownload} /> Export
@@ -267,8 +267,8 @@ function ResetConfiguration() {
 	const doReset = useCallback(() => resetModalRef.current.show(), [])
 
 	return <>
-		<h4>Reset full configuration</h4>
-		<p>Remove all companion configuration. This will clear all instances and buttons and start over.</p>
+		<h5>Reset all configuration</h5>
+		<p>This will clear all instances and buttons and start over.</p>
 		<p>
 			<CButton color='danger' onClick={doReset}>
 				<FontAwesomeIcon icon={faTrashAlt} /> Reset configuration

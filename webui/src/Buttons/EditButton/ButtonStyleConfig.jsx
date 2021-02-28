@@ -54,11 +54,11 @@ export function ButtonStyleConfig({ page, bank, config, valueChanged }) {
 	}
 
 	return (
-		<CCol sm={12}>
+		<CCol sm={12} className="p-0 mt-5">
 			<CForm inline>
 				<CRow form className="button-style-form">
 					<CCol className='fieldtype-textinput' sm={6}>
-						<label>Text</label>
+						<label>Button text</label>
 						<TextWithVariablesInputField definition={{ default: '', tooltip: 'Button text' }} setValue={setTextValue} value={config.text} />
 					</CCol>
 

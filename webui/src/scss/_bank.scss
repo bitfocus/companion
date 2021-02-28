@@ -14,7 +14,7 @@
 	}
 
 	&.selected img {
-		border: 3px solid #d50215;
+		border: 2px solid #d50215;
 		// margin: -2px;
 	}
 
@@ -42,8 +42,20 @@
 		display: block;
 
 		border-radius: Max(12%, 4px);
-		border: 1px solid white;
+		border: 1px solid rgba(100,100,100,0.4);
 
 		margin: 0 auto;
 	}
+}
+
+.button-page-input {
+	font-size: 1.2em;
+	text-align:center;
+	display:block;
+}
+
+.button-page-name {
+	color: black;
+	font-weight:normal;
+	font-size: 1.2em;
 }

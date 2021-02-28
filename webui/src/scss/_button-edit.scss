@@ -1,7 +1,7 @@
 
 .edit-button-panel {
-	h4 {
-		margin-top: 1rem;
+  h4 {
+    margin-top: 1rem;
     }
     
     label {
@@ -44,8 +44,9 @@ table.action-table, table.feedback-table {
         row-gap: 5px;
 
         .cell-name {
-            grid-row: 1;
-            grid-column: 1;
+          font-weight:bold;
+          grid-row: 1;
+          grid-column: 1;
         }
 
         .cell-delay {

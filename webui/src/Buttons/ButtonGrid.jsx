@@ -1,4 +1,4 @@
-import { CButton, CCol, CInput, CInputGroup, CInputGroupAppend, CInputGroupPrepend, CRow } from '@coreui/react'
+import { CAlert, CButton, CCol, CInput, CInputGroup, CInputGroupAppend, CInputGroupPrepend, CRow } from '@coreui/react'
 import React, { forwardRef, memo, useCallback, useContext, useEffect, useImperativeHandle, useRef, useState } from 'react'
 import { CompanionContext, KeyReceiver, LoadingRetryOrError, socketEmit } from '../util'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
@@ -106,32 +106,48 @@ export const ButtonsGridPanel = memo(function ButtonsPage({ pageNumber, onKeyUp,
 	return <KeyReceiver onKeyUp={onKeyUp} tabIndex={0}>
 		<h4>
 			Button layout
-			<CButton color='success' href={`/int/page_export/${pageNumber}`} target="_new" size="sm">
-				<FontAwesomeIcon icon={faFileExport} /> Export page
-			</CButton>
 		</h4>
-		<p>The squares below represent each button on your Streamdeck. Click on them to set up how you want them to look, and what they should do when you press or click on them.</p><p>You can navigate between pages using the arrow buttons, or by clicking the page number, typing in a number, and pressing 'Enter' on your keyboard.</p>
+		<p>The squares below represent each button on your Streamdeck. Click on them to set up how you want them to look, and what they should do when you press or click on them.</p>
+		<div style={{ paddingRight: 16 }}>
+			<CRow>
+				<CCol sm={12}>
 
-		<CRow>
-			<CCol sm={12}>
-				<ButtonGridHeader 
-					pageNumber={pageNumber}
-					pageName={newPageName ?? pageName}
-					changePage={changePage2}
-					setPage={setPage}
-					onNameBlur={clearNewPageName}
-					onNameChange={changeNewPageName}
-				/>
-			</CCol>
-		</CRow>
+				<CButton 
+					color='success'
+					style={{
+						float:'right',
+						marginTop: 10
+					}}
+					href={`/int/page_export/${pageNumber}`} 
+					target="_new"
+				>
+					<FontAwesomeIcon icon={faFileExport} /> Export page
+				</CButton>
 
-		<CRow id="pagebank" className={classnames({ 'bank-armed': isHot })}>
-			<ButtonGrid pageNumber={pageNumber} bankClick={bankClick} selectedButton={selectedButton} />
-		</CRow>
+					<ButtonGridHeader 
+						pageNumber={pageNumber}
+						pageName={newPageName ?? pageName}
+						changePage={changePage2}
+						setPage={setPage}
+						onNameBlur={clearNewPageName}
+						onNameChange={changeNewPageName}
+					/>
+				</CCol>
 
-		<CRow style={{ paddingTop: '15px' }}>
-			<ButtonGridActions ref={actionsRef} isHot={isHot} pageNumber={pageNumber} />
-		</CRow>
+			</CRow>
+
+			<CRow id="pagebank" className={classnames({ 'bank-armed': isHot })}>
+				<ButtonGrid pageNumber={pageNumber} bankClick={bankClick} selectedButton={selectedButton} />
+			</CRow>
+
+			<CRow style={{ paddingTop: '15px' }}>
+				<ButtonGridActions ref={actionsRef} isHot={isHot} pageNumber={pageNumber} />
+			</CRow>
+
+			<CAlert color="info">
+				You can navigate between pages using the arrow buttons, or by clicking the page number, typing in a number, and pressing 'Enter' on your keyboard.
+			</CAlert>
+		</div>
 	</KeyReceiver>
 })
 
@@ -266,16 +282,15 @@ const ButtonGridActions = forwardRef(function ButtonGridActions({ isHot, pageNum
 				<CButton color="danger" onClick={() => stopFunction()} style={{ display: activeFunction ? '' : 'none' }}>Cancel</CButton>
 				&nbsp;
 				<CButton color="disabled" hidden={!activeFunction}>{ hintText }</CButton>
-			</p>
-		</CCol>
-				
-		<CCol sm={12} className={classnames({ 'out': isHot, 'fadeinout': true })}>
-			<p>
+				&nbsp;
+				<span style={{float:'right'}}>
 				<CButton color="warning" onClick={() => resetPage()}><FontAwesomeIcon icon={faEraser} /> Wipe page</CButton>
 				&nbsp;
 				<CButton color="warning" onClick={() => resetPageNav()}><FontAwesomeIcon icon={faEraser} /> Reset page buttons</CButton><br /><br />
+				</span>
 			</p>
 		</CCol>
+				
 	</>
 })
 
@@ -299,11 +314,14 @@ export function ButtonGridHeader({ pageNumber, pageName, onNameChange, onNameBlu
 			return null
 		})
 	}, [setTmpText, setPage])
+
 	const inputEnter = useCallback((e) => {
 		if (e.key === 'Enter') {
 			inputBlur()
 		}
 	}, [inputBlur])
+
+	const inputSelectAll = (event) => event.target.select();
 
 	return <div className="button-grid-header">
 		<CInputGroup>
@@ -313,13 +331,15 @@ export function ButtonGridHeader({ pageNumber, pageName, onNameChange, onNameBlu
 				</CButton>
 			</CInputGroupPrepend>
 			<CInput
-				type="number"
+				type="text"
 				disabled={!setPage}
 				placeholder={pageNumber}
 				value={tmpText ?? pageNumber}
 				onChange={inputChange}
 				onBlur={inputBlur}
+				onFocus={inputSelectAll} 
 				onKeyDown={inputEnter}
+				className="button-page-input"
 			/>
 			<CInputGroupAppend>
 				<CButton color="primary" hidden={!changePage} onClick={() => changePage(1)}>
@@ -328,8 +348,8 @@ export function ButtonGridHeader({ pageNumber, pageName, onNameChange, onNameBlu
 			</CInputGroupAppend>
 		</CInputGroup>
 		<CInput
-			className="page_title"
 			type="text"
+			className="button-page-name"
 			placeholder="Page name"
 			value={pageName}
 			onBlur={onNameBlur}
@@ -381,7 +401,15 @@ function ButtonGrid({ bankClick, pageNumber, selectedButton }) {
 	const selectedPage = selectedButton ? selectedButton[0] : null
 	const selectedBank = selectedButton ? selectedButton[1] : null
 
-	return <>
+	return <div style={{
+				paddingTop: 14, 
+				paddingBottom: 14, 
+				backgroundColor: '#222', 
+				borderRadius: 20,
+				marginLeft: 14
+			}
+		}
+	>
 		{
 			Array(MAX_ROWS).fill(0).map((_, y) => {
 				return <CCol key={y} sm={12} className="pagebank-row">
@@ -404,7 +432,7 @@ function ButtonGrid({ bankClick, pageNumber, selectedButton }) {
 				</CCol>
 			})
 		}
-	</>
+	</div>
 }
 
 function ButtonGridIcon(props) {

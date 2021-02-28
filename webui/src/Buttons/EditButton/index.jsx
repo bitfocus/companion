@@ -117,18 +117,14 @@ export function EditButton({ page, bank, onKeyUp }) {
 						</CButton>
 					</div>
 
-					<h4>Configuration</h4>
-
-					<CRow>
-						<ButtonStyleConfig config={config} page={page} bank={bank} valueChanged={loadConfig} />
-					</CRow>
-
+					
+					<ButtonStyleConfig config={config} page={page} bank={bank} valueChanged={loadConfig} />
+					
 					{
 						config.style === 'png'
 						? <>
-							<hr />
 
-							<h4>Key down/on actions</h4>
+							<h4 className="mt-3">Press/on actions</h4>
 							<ActionsPanel
 								page={page}
 								bank={bank}
@@ -145,9 +141,7 @@ export function EditButton({ page, bank, onKeyUp }) {
 								reloadToken={reloadTablesToken}
 							/>
 
-							<hr />
-
-							<h4>Key up/off actions</h4>
+							<h4 className="mt-3">Release/off actions</h4>
 							<ActionsPanel
 								page={page}
 								bank={bank}
@@ -164,9 +158,7 @@ export function EditButton({ page, bank, onKeyUp }) {
 								reloadToken={reloadTablesToken}
 							/>
 
-							<hr />
-
-							<h4>Instance feedback</h4>
+							<h4 className="mt-3">Feedback</h4>
 							<FeedbacksPanel
 								page={page}
 								bank={bank}

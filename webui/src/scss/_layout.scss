@@ -10,6 +10,7 @@ body {
 
 .c-body {
 	padding: 15px 0;
+	background-color: #eee;
 
 	// Fit minus the header
 	height: calc(100% - #{$header-height});
@@ -44,6 +45,8 @@ body {
 	margin: 0 auto;
 }
 
+
+
 .tab-content {
 	background-color: #fff;
 	border: 1px solid #c8ced3;
@@ -53,21 +56,44 @@ body {
 	.tab-pane {
 		padding: 1rem;
 	}
+	max-width: 1500px;
 }
 
 .nav.nav-tabs {
 	.nav-item .nav-link {
-		border-bottom: white;
-		color: #eee;
+	
+		color: #444;
+		border-bottom: 3px solid transparent;
+		padding-bottom: 5px;
 
 		&.active {
-			background-color: #fff;
-			color: black;
+			background-color: #ddd;
+			border-bottom: 3px solid #d50215;
 		}
 
 		&:hover {
-			background: #ccc;
-			color: black;
+			color: #333;
 		}
 	}
 }
+
+.c-sidebar-brand-full {
+	margin-left: -22px;
+	text-align: left;
+	margin-top: 3px;
+}
+
+.form-control {
+	color: #222;
+}
+
+.secondary-panel {
+	box-shadow: -15px -0px 25px -20px rgba(0,0,0,0.3);
+	padding:0;
+}
+.secondary-panel .tab-content {
+	border-left-width: 0;
+	border-bottom-width: 0;
+	border-right-width: 0;
+}
+

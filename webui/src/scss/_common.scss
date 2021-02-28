@@ -1,7 +1,6 @@
 
 h4 {
 	font-weight: bold;
-	text-transform: uppercase;
 }
 
 .action-buttons {
@@ -17,4 +16,14 @@ h4, h5 {
 	.btn {
 		float: right;
 	}
+}
+
+.table-responsive-sm {
+	border: 1px solid #ddd;
+	border-collapse: collapse;
+}
+
+.table-responsive-sm th {
+	border-radius: 10%;
+	border-bottom-width: 0px !important;
 }
