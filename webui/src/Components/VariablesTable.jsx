@@ -12,7 +12,6 @@ export function VariablesTable({ label }) {
 
 	const onCopied = useCallback(() => {
 		context.notifier.current.show(`Copied`, 'Copied to clipboard', 5000)
-
 	}, [context.notifier])
 
 	if (variableDefinitions.length > 0) {
@@ -27,9 +26,11 @@ export function VariablesTable({ label }) {
 					</tr>
 				</thead>
 				<tbody>
-					{
-						variableDefinitions.map((variable) => <tr key={variable.name}>
-							<td>$({label}:{variable.name})</td>
+					{variableDefinitions.map((variable) => (
+						<tr key={variable.name}>
+							<td>
+								$({label}:{variable.name})
+							</td>
 							<td>{variable.label}</td>
 							<td>{variableValues[label + ':' + variable.name]}</td>
 							<td>
@@ -39,8 +40,8 @@ export function VariablesTable({ label }) {
 									</CButton>
 								</CopyToClipboard>
 							</td>
-						</tr>)
-					}
+						</tr>
+					))}
 				</tbody>
 			</table>
 		)

@@ -23,28 +23,30 @@ export const InstancePresets = function InstancePresets({ resetToken }) {
 	useEffect(() => {
 		setPresetsMap(null)
 		setPresetError(null)
-		
-		socketEmit(context.socket, 'get_presets', []).then(([data]) => {
-			setPresetsMap(data)
-		}).catch((e) => {
-			console.error('Failed to load presets')
-			setPresetError('Failed to load presets')
-		})
+
+		socketEmit(context.socket, 'get_presets', [])
+			.then(([data]) => {
+				setPresetsMap(data)
+			})
+			.catch((e) => {
+				console.error('Failed to load presets')
+				setPresetError('Failed to load presets')
+			})
 
 		const updatePresets = (id, presets) => {
-				setPresetsMap(oldPresets => {
-					if (oldPresets) {
-						return {
-							...oldPresets,
-							[id]: presets,
-						}
-					} else {
-						return oldPresets
+			setPresetsMap((oldPresets) => {
+				if (oldPresets) {
+					return {
+						...oldPresets,
+						[id]: presets,
 					}
-				})
+				} else {
+					return oldPresets
+				}
+			})
 		}
 		const removePresets = (id) => {
-			setPresetsMap(oldPresets => {
+			setPresetsMap((oldPresets) => {
 				if (oldPresets) {
 					const newPresets = { ...oldPresets }
 					delete newPresets[id]
@@ -80,9 +82,24 @@ export const InstancePresets = function InstancePresets({ resetToken }) {
 		const presets = presetsMap[instanceAndCategory[0]] ?? []
 
 		if (instanceAndCategory[1]) {
-			return <PresetsButtonList presets={presets} selectedInstanceId={instanceAndCategory[0]} selectedCategory={instanceAndCategory[1]} setInstanceAndCategory={setInstanceAndCategory} />
+			return (
+				<PresetsButtonList
+					presets={presets}
+					selectedInstanceId={instanceAndCategory[0]}
+					selectedCategory={instanceAndCategory[1]}
+					setInstanceAndCategory={setInstanceAndCategory}
+				/>
+			)
 		} else {
-			return <PresetsCategoryList presets={presets} instance={instance} module={module} selectedInstanceId={instanceAndCategory[0]} setInstanceAndCategory={setInstanceAndCategory} />
+			return (
+				<PresetsCategoryList
+					presets={presets}
+					instance={instance}
+					module={module}
+					selectedInstanceId={instanceAndCategory[0]}
+					setInstanceAndCategory={setInstanceAndCategory}
+				/>
+			)
 		}
 	} else {
 		return <PresetsInstanceList presets={presetsMap} setInstanceAndCategory={setInstanceAndCategory} />
@@ -96,22 +113,30 @@ function PresetsInstanceList({ presets, setInstanceAndCategory }) {
 		const instance = context.instances[id]
 		const module = instance ? context.modules[instance.instance_type] : undefined
 
-		return <div key={id}>
-			<CButton color='info' className="choose_instance mr-2 mb-2" onClick={() => setInstanceAndCategory([id, null])}>
-				{module?.label ?? '?'} ({instance?.label ?? id})
-			</CButton>
-		</div>
+		return (
+			<div key={id}>
+				<CButton color="info" className="choose_instance mr-2 mb-2" onClick={() => setInstanceAndCategory([id, null])}>
+					{module?.label ?? '?'} ({instance?.label ?? id})
+				</CButton>
+			</div>
+		)
 	})
 
-	return <div>
-		<h5>Presets</h5>
-		<p>Some connections support something we call presets, it's ready made buttons with text, actions and feedback so you don't need to spend time making everything from scratch. They can be drag and dropped onto your button layout.</p>
-		{
-			options.length === 0
-				? <CAlert color='info'>You have no instances that support presets at the moment.</CAlert>
-				: options
-		}
-	</div>
+	return (
+		<div>
+			<h5>Presets</h5>
+			<p>
+				Some connections support something we call presets, it's ready made buttons with text, actions and feedback so
+				you don't need to spend time making everything from scratch. They can be drag and dropped onto your button
+				layout.
+			</p>
+			{options.length === 0 ? (
+				<CAlert color="info">You have no instances that support presets at the moment.</CAlert>
+			) : (
+				options
+			)}
+		</div>
+	)
 }
 
 function PresetsCategoryList({ presets, instance, module, selectedInstanceId, setInstanceAndCategory }) {
@@ -123,45 +148,56 @@ function PresetsCategoryList({ presets, instance, module, selectedInstanceId, se
 	const doBack = useCallback(() => setInstanceAndCategory([null, null]), [setInstanceAndCategory])
 
 	const buttons = Array.from(categories).map((category) => {
-		return <CButton key={category} color="info" block onClick={() => setInstanceAndCategory([selectedInstanceId, category])}>{category}</CButton>
+		return (
+			<CButton key={category} color="info" block onClick={() => setInstanceAndCategory([selectedInstanceId, category])}>
+				{category}
+			</CButton>
+		)
 	})
 
-	return <div>
-		<h5>
-			<CButton color='primary' size="sm" onClick={doBack}>Back</CButton>
-			{module?.label ?? '?'} ({instance?.label ?? selectedInstanceId})
-		</h5>
+	return (
+		<div>
+			<h5>
+				<CButton color="primary" size="sm" onClick={doBack}>
+					Back
+				</CButton>
+				{module?.label ?? '?'} ({instance?.label ?? selectedInstanceId})
+			</h5>
 
-		{
-			buttons.length === 0
-				? <CAlert color='primary'>Instance has no presets.</CAlert>
-				: <div className="preset-category-grid">
-					{buttons}
-				</div>
-		}
-	</div>
+			{buttons.length === 0 ? (
+				<CAlert color="primary">Instance has no presets.</CAlert>
+			) : (
+				<div className="preset-category-grid">{buttons}</div>
+			)}
+		</div>
+	)
 }
 
 function PresetsButtonList({ presets, selectedInstanceId, selectedCategory, setInstanceAndCategory }) {
-	const doBack = useCallback(() => setInstanceAndCategory([selectedInstanceId, null]), [setInstanceAndCategory, selectedInstanceId])
+	const doBack = useCallback(() => setInstanceAndCategory([selectedInstanceId, null]), [
+		setInstanceAndCategory,
+		selectedInstanceId,
+	])
 
-	const options = presets.filter(p => p.category === selectedCategory)
+	const options = presets.filter((p) => p.category === selectedCategory)
 
-	return <div>
-		<h5>
-			<CButton color='primary' size="sm" onClick={doBack}>Back</CButton>
-			{selectedCategory}
-		</h5>
-		<p>Drag and drop the preset buttons below into your buttons-configuration.</p>
+	return (
+		<div>
+			<h5>
+				<CButton color="primary" size="sm" onClick={doBack}>
+					Back
+				</CButton>
+				{selectedCategory}
+			</h5>
+			<p>Drag and drop the preset buttons below into your buttons-configuration.</p>
 
-		{
-			options.map((preset, i) => {
+			{options.map((preset, i) => {
 				return <PresetIconPreview key={i} instanceId={selectedInstanceId} preset={preset} alt={preset.label} />
-			})
-		}
+			})}
 
-		<br style={{ clear: 'both' }} />
-	</div>
+			<br style={{ clear: 'both' }} />
+		</div>
+	)
 }
 
 function PresetIconPreview({ preset, instanceId, ...childProps }) {
@@ -169,7 +205,7 @@ function PresetIconPreview({ preset, instanceId, ...childProps }) {
 	const [previewImage, setPreviewImage] = useState(null)
 	const [previewError, setPreviewError] = useState(false)
 	const [retryToken, setRetryToken] = useState(shortid())
-	
+
 	const [, drag] = useDrag({
 		item: {
 			type: 'preset',
@@ -181,12 +217,14 @@ function PresetIconPreview({ preset, instanceId, ...childProps }) {
 	useEffect(() => {
 		setPreviewError(false)
 
-		socketEmit(context.socket, 'graphics_preview_generate', [preset.bank]).then(([img]) => {
-			setPreviewImage(dataToButtonImage(img))
-		}).catch(e => {
-			console.error('Failed to preview bank')
-			setPreviewError(true)
-		})
+		socketEmit(context.socket, 'graphics_preview_generate', [preset.bank])
+			.then(([img]) => {
+				setPreviewImage(dataToButtonImage(img))
+			})
+			.catch((e) => {
+				console.error('Failed to preview bank')
+				setPreviewError(true)
+			})
 	}, [preset.bank, context.socket, retryToken])
 
 	const onClick = useCallback((i, isDown) => isDown && setRetryToken(shortid()), [])
@@ -198,6 +236,6 @@ function PresetIconPreview({ preset, instanceId, ...childProps }) {
 			{...childProps}
 			preview={previewError ? RedImage : previewImage}
 			onClick={previewError ? onClick : undefined}
-			/>
+		/>
 	)
 }

@@ -1,48 +1,48 @@
 .instance_help,
 .instance_variables {
-  float: right;
-  cursor: pointer;
-  cursor: hand;
+	float: right;
+	cursor: pointer;
+	cursor: hand;
 }
 
 .instance-status-ok {
-  background-color: #cfc;
+	background-color: #cfc;
 }
 
 .instance-status-warn {
-  background-color: #fea;
+	background-color: #fea;
 }
 
 .instance-status-error {
-  background-color: #fcc;
+	background-color: #fcc;
 }
 
 #instance_add_search_results {
-  margin-top: 10px;
+	margin-top: 10px;
 }
 
 #instance_add_search_results div {
-  margin-bottom: 5px;
+	margin-bottom: 5px;
 }
 
 .edit-instance {
-  & > div {
-    // column
-    margin-bottom: 10px;
-  }
+	& > div {
+		// column
+		margin-bottom: 10px;
+	}
 
-  label {
-    justify-content: left;
-    font-weight: bold;
-    font-size: 1em;
-    margin-bottom: 0.15rem;
-  }
+	label {
+		justify-content: left;
+		font-weight: bold;
+		font-size: 1em;
+		margin-bottom: 0.15rem;
+	}
 }
 
 .td-reorder {
-  cursor: ns-resize;
+	cursor: ns-resize;
 }
 
 .variables-table {
-  word-break: break-all;
+	word-break: break-all;
 }

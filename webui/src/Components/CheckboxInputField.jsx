@@ -10,16 +10,15 @@ export function CheckboxInputField({ definition, value, setValue, setValid }) {
 		setValid?.(true)
 	}, [definition.default, value, setValue, setValid])
 
-	const onChange = useCallback((e) => {
-		setValue(!!e.currentTarget.checked)
-		setValid?.(true)
-	}, [setValue, setValid])
+	const onChange = useCallback(
+		(e) => {
+			setValue(!!e.currentTarget.checked)
+			setValid?.(true)
+		},
+		[setValue, setValid]
+	)
 
-	return <CInputCheckbox
-		type='checkbox'
-		checked={!!value}
-		value={true}
-		title={definition.tooltip}
-		onChange={onChange}
-	/>
+	return (
+		<CInputCheckbox type="checkbox" checked={!!value} value={true} title={definition.tooltip} onChange={onChange} />
+	)
 }

@@ -1,9 +1,9 @@
 import { useMemo, useEffect, useCallback } from 'react'
 import Select from 'react-select'
 
-export function DropdownInputField ({ definition, multiple, value, setValue, setValid }) {
+export function DropdownInputField({ definition, multiple, value, setValue, setValid }) {
 	const options = useMemo(() => {
-		return (definition.choices || []).map(choice => ({ value: choice.id, label: choice.label }))
+		return (definition.choices || []).map((choice) => ({ value: choice.id, label: choice.label }))
 	}, [definition.choices])
 
 	const isMultiple = !!multiple
@@ -13,7 +13,7 @@ export function DropdownInputField ({ definition, multiple, value, setValue, set
 		let res = []
 		for (const val of selectedValue) {
 			// eslint-disable-next-line eqeqeq
-			const entry = options.find(o => o.value == val) // Intentionally loose for compatability
+			const entry = options.find((o) => o.value == val) // Intentionally loose for compatability
 			if (entry) {
 				res.push(entry)
 			} else {
@@ -31,50 +31,63 @@ export function DropdownInputField ({ definition, multiple, value, setValue, set
 		setValid?.(true)
 	}, [definition.default, value, setValue, setValid])
 
-	const onChange = useCallback((e) => {
-		const isMultiple = !!multiple
-		const newValue = isMultiple ? (e?.map(v => v.value) ?? []) : e?.value
+	const onChange = useCallback(
+		(e) => {
+			const isMultiple = !!multiple
+			const newValue = isMultiple ? e?.map((v) => v.value) ?? [] : e?.value
 
-		let isValid = true
+			let isValid = true
 
-		if (isMultiple) {
-			for (const val of newValue) {
-				// Require the selected choices to be valid
-				if (!definition.choices.find(c => c.id === val)) {
+			if (isMultiple) {
+				for (const val of newValue) {
+					// Require the selected choices to be valid
+					if (!definition.choices.find((c) => c.id === val)) {
+						isValid = false
+					}
+				}
+
+				if (
+					typeof definition.minSelection === 'number' &&
+					newValue.length < definition.minSelection &&
+					newValue.length <= (this.props.value || []).length
+				) {
+					// Block change if too few are selected
+					return
+				}
+
+				if (
+					typeof definition.maximumSelectionLength === 'number' &&
+					newValue.length > definition.maximumSelectionLength &&
+					newValue.length >= (this.props.value || []).length
+				) {
+					// Block change if too many are selected
+					return
+				}
+			} else {
+				// Require the selected choice to be valid
+				if (!definition.choices.find((c) => c.id === newValue)) {
 					isValid = false
 				}
 			}
 
-			if (typeof definition.minSelection === 'number' && newValue.length < definition.minSelection && newValue.length <= (this.props.value || []).length) {
-				// Block change if too few are selected
-				return
+			setValue(newValue)
+			setValid?.(isValid)
+		},
+		[setValue, setValid, multiple, definition.minSelection, definition.maximumSelectionLength, definition.choices]
+	)
+
+	return (
+		<Select
+			menuPlacement="auto"
+			isClearable={false}
+			isSearchable={
+				typeof definition.minChoicesForSearch === 'number' && definition.minChoicesForSearch <= options.length
 			}
-
-			if (typeof definition.maximumSelectionLength === 'number' && newValue.length > definition.maximumSelectionLength && newValue.length >= (this.props.value || []).length) {
-				// Block change if too many are selected
-				return
-			}
-
-		} else {
-
-			// Require the selected choice to be valid
-			if (!definition.choices.find(c => c.id === newValue)) {
-				isValid = false
-			}
-		}
-
-		setValue(newValue)
-		setValid?.(isValid)
-	}, [setValue, setValid, multiple, definition.minSelection, definition.maximumSelectionLength, definition.choices])
-
-	return <Select
-		menuPlacement='auto'
-		isClearable={false}
-		isSearchable={typeof definition.minChoicesForSearch === 'number' && definition.minChoicesForSearch <= options.length}
-		isMulti={isMultiple}
-		tooltip={definition.tooltip}
-		options={options}
-		value={isMultiple ? currentValue : currentValue[0]}
-		onChange={onChange}
-	/>
+			isMulti={isMultiple}
+			tooltip={definition.tooltip}
+			options={options}
+			value={isMultiple ? currentValue : currentValue[0]}
+			onChange={onChange}
+		/>
+	)
 }
