@@ -5,22 +5,6 @@
   cursor: hand;
 }
 
-// scroll if side-by-side
-@include media-breakpoint-up("xl") {
-  .instances-page {
-    height: 100%;
-
-    .instances-panel {
-      height: 100%;
-      overflow-y: scroll;
-    }
-
-    .add-instances-panel {
-      padding-top: 5px;
-    }
-  }
-}
-
 .instance-status-ok {
   background-color: #cfc;
 }

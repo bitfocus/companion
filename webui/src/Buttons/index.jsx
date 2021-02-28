@@ -82,7 +82,7 @@ export function ButtonsPage({ hotPress }) {
 	}, [context.socket, selectedButton, copyFromButton])
 
 	return (
-		<CRow className="buttons-page">
+		<CRow className="buttons-page split-panels">
 
 			<GenericConfirmModal ref={clearModalRef} />
 

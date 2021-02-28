@@ -63,10 +63,10 @@ export const InstancesPage = memo(function InstancesPage() {
   }, []);
 
   return (
-    <CRow className="instances-page">
+    <CRow className="instances-page split-panels">
       <HelpModal ref={helpModalRef} />
 
-      <CCol xl={6} className="instances-panel">
+      <CCol xl={6} className="instances-panel primary-panel">
         <InstancesList
           showHelp={showHelp}
           doConfigureInstance={doConfigureInstance}
