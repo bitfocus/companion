@@ -1,79 +1,77 @@
-
 // scroll if side-by-side
-@include media-breakpoint-up('xl') {
-	.buttons-page {
-		height: 100%;
+@include media-breakpoint-up("xl") {
+  .buttons-page {
+    height: 100%;
 
-		> .primary-panel {
-			height: 100%;
-			overflow-y: auto;
-		}
+    > .primary-panel {
+      height: 100%;
+      overflow-y: auto;
+    }
 
-		> .secondary-panel {
-			height: 100%;
-			display: grid;
-			grid-template-rows: auto 1fr;
+    > .secondary-panel {
+      height: 100%;
+      display: grid;
+      grid-template-rows: auto 1fr;
 
-			.tab-content {
-				overflow-y: scroll;
-			}
-		}
-	}
+      .tab-content {
+        overflow-y: scroll;
+      }
+    }
+  }
 }
 
 .button-grid-header {
-	display: grid;
-	grid-template-columns: auto 2fr 1fr;
-	column-gap: 5px;
-	padding: 10px 0;
+  display: grid;
+  grid-template-columns: auto 2fr 1fr;
+  column-gap: 5px;
+  padding: 10px 0;
 
-	.input-group {
-		width: 150px;
-	}
+  .input-group {
+    width: 150px;
+  }
 }
 
 .tab-pane .nav.nav-tabs .nav-link {
-	color: black;
+  color: black;
 }
 
 #pagebank {
-	display: grid;
-	grid-auto-flow: row;
-	grid-auto-rows: 1fr;
+  display: grid;
+  grid-auto-flow: row;
+  grid-auto-rows: 1fr;
 
-	&.bank-armed .pagebank-row {
-		background-color: rgba(255, 0, 0, 0.5);
-	}
+  &.bank-armed .pagebank-row {
+    background-color: rgba(255, 0, 0, 0.5);
+  }
 
-	.pagebank-row {
-		display: grid;
-		grid-auto-flow: column;
-		grid-auto-columns: 1fr;
+  .pagebank-row {
+    display: grid;
+    grid-auto-flow: column;
+    grid-auto-columns: 1fr;
 
-		transition: background-color 0.15s ease-in-out;
-		background-color: transparent;
+    transition: background-color 0.15s ease-in-out;
+    background-color: transparent;
 
-		
-		// Streamdeck markings
-		&:nth-child(1)>.bank:nth-child(1),
-		&:nth-child(2)>.bank:nth-child(1),
-		&:nth-child(3)>.bank:nth-child(1),
-		&:nth-child(1)>.bank:nth-child(5),
-		&:nth-child(2)>.bank:nth-child(5),
-		&:nth-child(3)>.bank:nth-child(5),
-		&:nth-child(3)>.bank:nth-child(2),
-		&:nth-child(3)>.bank:nth-child(3),
-		&:nth-child(3)>.bank:nth-child(4) {
-			background: #00000050;
-		}
-	}
+    // Streamdeck markings
+    &:nth-child(1) > .bank:nth-child(1),
+    &:nth-child(2) > .bank:nth-child(1),
+    &:nth-child(3) > .bank:nth-child(1),
+    &:nth-child(1) > .bank:nth-child(5),
+    &:nth-child(2) > .bank:nth-child(5),
+    &:nth-child(3) > .bank:nth-child(5),
+    &:nth-child(3) > .bank:nth-child(2),
+    &:nth-child(3) > .bank:nth-child(3),
+    &:nth-child(3) > .bank:nth-child(4) {
+      background: #00000050;
+    }
+  }
 }
 
 .fadeinout {
-	transition: opacity 0.15s ease-in-out;
-	opacity: 1;
+  transition: opacity 0.15s ease-in-out;
+  opacity: 1;
 
-	&.out {
-		opacity: 0;
-	}
+  &.out {
+    opacity: 0;
+  }
 }

@@ -1,62 +1,61 @@
+input[type="checkbox"] {
+  -webkit-appearance: none;
+  width: 22px;
+  height: 22px;
+  background: white;
+  border-radius: 4px;
+  border: 1px solid #999;
 
-input[type='checkbox'] {
-	-webkit-appearance:none;
-	width:22px;
-	height:22px;
-	background:white;
-	border-radius:4px;
-	border:1px solid #999;
-
-	margin-left: 0.3em !important;
+  margin-left: 0.3em !important;
 }
 
-input[type='checkbox']:checked {
-	background: 0 0 url("/img/check.png") no-repeat;
+input[type="checkbox"]:checked {
+  background: 0 0 url("/img/check.png") no-repeat;
 }
 
 /* Style for autocomplete of variable */
 .tribute-container li span {
-	display: block;
+  display: block;
 }
 .tribute-container li span.var-label {
-	overflow: hidden;
-	font-weight: inherit;
-	text-overflow: ellipsis;
-	white-space: nowrap;
+  overflow: hidden;
+  font-weight: inherit;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .form-control.input-text-with-variables {
-	width: 100%;
+  width: 100%;
 }
 
 .alignmentinput {
-	display: grid;
-	width: 60px;
-	height: 60px;
+  display: grid;
+  width: 60px;
+  height: 60px;
 
-	background-image: url('/img/alignment.png');
+  background-image: url("/img/alignment.png");
 
-	grid-template-columns: 1fr 1fr 1fr;
-	grid-template-rows: 1fr 1fr 1fr;
-	column-gap: 2px;
-	row-gap: 2px;
-	padding: 1px;
+  grid-template-columns: 1fr 1fr 1fr;
+  grid-template-rows: 1fr 1fr 1fr;
+  column-gap: 2px;
+  row-gap: 2px;
+  padding: 1px;
 
-	line-height: 0;
+  line-height: 0;
 
-	> div {
-    	border: 1px solid #aaa;
-		padding: 1px;
+  > div {
+    border: 1px solid #aaa;
+    padding: 1px;
 
-		&.selected {
-			background-image: url('/img/check.png') !important;
-    		background-size: contain !important;
-		}
-	}
+    &.selected {
+      background-image: url("/img/check.png") !important;
+      background-size: contain !important;
+    }
+  }
 }
 
 .pnginputfield {
-	input[type="file"] {
-		display: none;
-	}
+  input[type="file"] {
+    display: none;
+  }
 }
