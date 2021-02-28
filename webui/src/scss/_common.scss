@@ -1,36 +1,47 @@
 h4 {
-  font-weight: bold;
+	font-weight: bold;
 }
 
 .action-buttons {
-  text-align: center;
+	text-align: center;
 
-  .btn {
-    text-transform: uppercase;
-  }
+	.btn {
+		text-transform: uppercase;
+	}
 }
 
 h4,
 h5 {
-  .btn {
-    float: right;
-  }
+	.btn {
+		float: right;
+	}
 }
 
 h5 {
-  font-weight: bold;
+	font-weight: bold;
 }
 
 .table-responsive-sm {
-  border: 1px solid #ddd;
-  border-collapse: collapse;
-  box-shadow: 0px 2px 21px -10px rgba(0, 0, 0, 0.2);
+	border: 1px solid #ddd;
+	border-collapse: collapse;
+	box-shadow: 0px 2px 21px -10px rgba(0, 0, 0, 0.2);
 }
 
 .table-responsive-sm th {
-  border-radius: 10%;
-  border-bottom-width: 0px !important;
-  background-color: #f0f0f0;
-  padding-top: 6px;
-  padding-bottom: 6px;
+	border-radius: 10%;
+	border-bottom-width: 0px !important;
+	background-color: #f0f0f0;
+	padding-top: 6px;
+	padding-bottom: 6px;
+}
+
+code {
+	font-family: 'Fira Code', monospace;
+	font-size: 1.05em;
+}
+
+@supports (font-variation-settings: normal) {
+	code {
+		font-family: 'Fira Code VF', monospace;
+	}
 }

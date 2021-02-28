@@ -3,6 +3,7 @@ import { CContainer, CTabs, CTabContent, CTabPane, CNav, CNavItem, CNavLink, CRo
 import { faCalendarAlt, faClipboardList, faClock, faGamepad, faPlug, faUserNinja } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import io from 'socket.io-client'
+import "@fontsource/fira-code"
 
 import { MyErrorBoundary } from './util'
 import { SurfacesPage } from './Surfaces'

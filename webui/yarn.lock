@@ -1356,6 +1356,11 @@
     minimatch "^3.0.4"
     strip-json-comments "^3.1.1"
 
+"@fontsource/fira-code@^4.2.1":
+  version "4.2.1"
+  resolved "https://registry.yarnpkg.com/@fontsource/fira-code/-/fira-code-4.2.1.tgz#02cb6d98d38bde1201a968dbf10f269b227bbbfc"
+  integrity sha512-cbhLAAuIg0lqZ+KH8e0PNc354lXMCOE58QfT9Xh6zIrtCaGtEaLeQndqbMWPpxI5cC4uRa3V4aq/xBtHBdgxSw==
+
 "@fontsource/roboto@^4.2.1":
   version "4.2.1"
   resolved "https://registry.yarnpkg.com/@fontsource/roboto/-/roboto-4.2.1.tgz#fc75a2c6f5267230f37c40c00bec5bf05d61c5c0"

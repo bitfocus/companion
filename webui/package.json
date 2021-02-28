@@ -5,6 +5,7 @@
   "dependencies": {
     "@coreui/coreui": "^3.4.0",
     "@coreui/react": "^3.4.5",
+    "@fontsource/fira-code": "^4.2.1",
     "@fontsource/roboto": "^4.2.1",
     "@fortawesome/fontawesome-svg-core": "^1.2.34",
     "@fortawesome/free-solid-svg-icons": "^5.15.2",
