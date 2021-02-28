@@ -87,7 +87,7 @@ export const InstancesPage = memo(function InstancesPage() {
               </CNavItem>
               <CNavItem hidden={!selectedInstanceId}>
                 <CNavLink data-tab="edit">
-                  <FontAwesomeIcon icon={faCog} /> Edit Instance
+                  <FontAwesomeIcon icon={faCog} /> Edit connection
                 </CNavLink>
               </CNavItem>
             </CNav>

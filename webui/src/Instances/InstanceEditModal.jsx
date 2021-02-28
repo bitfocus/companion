@@ -123,7 +123,7 @@ export const InstanceEditPanel = memo(function InstanceEditModal({
   return (
     <div>
       <h5>
-        {moduleInfo?.shortname ?? instanceConfig?.instance_type} Configuration
+        {moduleInfo?.shortname ?? instanceConfig?.instance_type} configuration
         {moduleInfo?.help ? (
           <div
             className="instance_help"
@@ -165,11 +165,8 @@ export const InstanceEditPanel = memo(function InstanceEditModal({
 
       <CRow>
         <CCol sm={12}>
-          <CButton color="secondary" onClick={doCancel}>
-            Cancel
-          </CButton>
           <CButton
-            color="primary"
+            color="success"
             disabled={
               !validFields ||
               Object.values(validFields).find((v) => !v) === false
@@ -178,6 +175,11 @@ export const InstanceEditPanel = memo(function InstanceEditModal({
           >
             Save
           </CButton>
+
+          <CButton color="secondary" className="ml-1" onClick={doCancel}>
+            Cancel
+          </CButton>
+
         </CCol>
       </CRow>
     </div>
