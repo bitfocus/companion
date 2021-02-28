@@ -1,5 +1,7 @@
 import React, { forwardRef, memo, useCallback, useImperativeHandle, useState } from 'react'
 import { CModal, CModalBody, CModalHeader, CModalFooter, CButton } from '@coreui/react'
+import sanitizeHtml from 'sanitize-html'
+import marked from 'marked'
 
 export const HelpModal = memo(forwardRef(function HelpModal(_props, ref) {
 	const [content, setContent] = useState(null)
@@ -15,6 +17,8 @@ export const HelpModal = memo(forwardRef(function HelpModal(_props, ref) {
 		}
 	}), [])
 
+	const html = content ? { __html: sanitizeHtml(marked(content[1].markdown, { baseUrl: content[1].baseUrl })) } : undefined
+
 	return (
 		<CModal
 			show={show}
@@ -26,7 +30,7 @@ export const HelpModal = memo(forwardRef(function HelpModal(_props, ref) {
 				<h5>Help for {content?.[0]}</h5>
 			</CModalHeader>
 			<CModalBody>
-				<div dangerouslySetInnerHTML={{ __html: content?.[1] }} />
+				<div dangerouslySetInnerHTML={html} />
 			</CModalBody>
 			<CModalFooter>
 				<CButton

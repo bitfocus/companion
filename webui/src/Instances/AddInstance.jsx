@@ -11,16 +11,14 @@ import { faQuestionCircle, faTimes } from "@fortawesome/free-solid-svg-icons";
 import { CompanionContext, socketEmit } from "../util";
 
 export function AddInstancesPanel({ showHelp, doConfigureInstance }) {
-	return (
-		<>
-			<AddModule showHelp={showHelp} configureInstance={doConfigureInstance} />
-		</>
-	);
+	return <>
+		<AddInstancesInner showHelp={showHelp} configureInstance={doConfigureInstance} />
+	</>
 }
 
-const AddModule = memo(function AddModule({ showHelp, configureInstance }) {
-	const context = useContext(CompanionContext);
-	const [filter, setFilter] = useState("");
+const AddInstancesInner = memo(function AddInstancesInner({ showHelp, configureInstance }) {
+	const context = useContext(CompanionContext)
+	const [filter, setFilter] = useState('')
 
 	const addInstance = (type, product) => {
 		socketEmit(context.socket, "instance_add", [
@@ -32,13 +30,12 @@ const AddModule = memo(function AddModule({ showHelp, configureInstance }) {
 				configureInstance(id);
 			})
 			.catch((e) => {
-				context.notifier.current.show(`Failed to create instance`, e);
-				console.error("Failed to create instance:", e);
+				context.notifier.current.show(`Failed to create connection`, e);
+				console.error("Failed to create connection:", e);
 			});
 	};
 
-	const candidates = [];
-	if (filter) {
+	const candidates = []
 		try {
 			const regexp = new RegExp(filter, "i");
 
@@ -47,9 +44,10 @@ const AddModule = memo(function AddModule({ showHelp, configureInstance }) {
 					Array.isArray(module.product) ? module.product : [module.product]
 				);
 				for (const subprod of products) {
-					const name = `${module.manufacturer} ${subprod}`;
+					const name = `${module.manufacturer} ${subprod}`
+					const keywords = module.keywords || []
 
-					if (name.replace(";", " ").match(regexp)) {
+					if (name.replace(';', ' ').match(regexp) || keywords.find(kw => kw.match(regexp))) {
 						candidates.push(
 							<div key={name + id}>
 								<CButton
@@ -84,7 +82,6 @@ const AddModule = memo(function AddModule({ showHelp, configureInstance }) {
 				</CAlert>
 			);
 		}
-	}
 
 	return (
 		<div style={{ clear: "both" }}>

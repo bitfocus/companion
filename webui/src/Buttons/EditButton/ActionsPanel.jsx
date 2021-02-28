@@ -74,8 +74,11 @@ export function ActionsPanel({ page, bank, dragId, addCommand, getCommand, updat
 		setActions(oldActions => oldActions.filter(a => a.id !== actionId))
 	}, [])
 	const doDelete = useCallback((actionId) => {
-		confirmModal.current.show('Delete action', 'Delete action?', 'Delete', [deleteCommand, page, bank, actionId], deleteAction.bind(this, actionId))
-	}, [page, bank, deleteCommand, deleteAction])
+		confirmModal.current.show('Delete action', 'Delete action?', 'Delete', () => {
+			context.socket.emit(deleteCommand, page, bank, actionId)	
+			deleteAction(actionId)
+		})
+	}, [context.socket, page, bank, deleteCommand, deleteAction])
 
 	const addAction = useCallback((actionType) => {
 		socketEmit(context.socket, addCommand, [page, bank, actionType]).then(([page, bank, actions]) => {
@@ -205,10 +208,6 @@ function ActionTableRow({ action, index, dragId, setValue, doDelete, doDelay, mo
 			<td>
 				<div className="editor-grid">
 					<div className="cell-name">
-						<CButton color="danger" size="sm" onClick={innerDelete}>
-							<FontAwesomeIcon icon={faTrash} />
-						</CButton>
-						&nbsp;
 						{ name }
 					</div>
 
@@ -228,6 +227,12 @@ function ActionTableRow({ action, index, dragId, setValue, doDelete, doDelay, mo
 						</CForm>
 					</div>
 
+					<div className="cell-actions">
+						<CButton color="danger" size="sm" onClick={innerDelete} title="Remove action">
+							<FontAwesomeIcon icon={faTrash} />
+						</CButton>
+					</div>
+
 					<div className="cell-option">
 						<CForm>
 							{
@@ -240,6 +245,7 @@ function ActionTableRow({ action, index, dragId, setValue, doDelete, doDelay, mo
 									/>
 								</MyErrorBoundary>)
 							}
+							{ options.length === 0 ? 'Nothing to configure' : ''}
 						</CForm>
 					</div>
 				</div>

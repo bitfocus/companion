@@ -1,14 +1,14 @@
-import React, { forwardRef, memo, useCallback, useContext, useEffect, useImperativeHandle, useState } from 'react'
-import { CompanionContext, LoadingRetryOrError, MyErrorBoundary, socketEmit } from '../util'
-import { CRow, CCol, CButton, CModalBody, CModalHeader, CModal, CModalFooter } from '@coreui/react'
+import React, { memo, useCallback, useContext, useEffect, useState } from 'react'
+import { CompanionContext, LoadingRetryOrError, socketEmit } from '../util'
+import { CRow, CCol, CButton } from '@coreui/react'
 import { CheckboxInputField, DropdownInputField, NumberInputField, TextInputField } from '../Components'
 import shortid from 'shortid'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faQuestionCircle } from '@fortawesome/free-solid-svg-icons'
 
-export const InstanceEditModal = memo(forwardRef(function InstanceEditModal(_props, ref) {
+export const InstanceEditPanel = memo(function InstanceEditModal({ instanceId, doConfigureInstance, showHelp }) {
 	const context = useContext(CompanionContext)
 
-	const [instanceId, setInstanceId] = useState(null)
-	const [show, setShow] = useState(false)
 	const [error, setError] = useState(null)
 	const [reloadToken, setReloadToken] = useState(shortid())
 
@@ -16,11 +16,10 @@ export const InstanceEditModal = memo(forwardRef(function InstanceEditModal(_pro
 	const [instanceConfig, setInstanceConfig] = useState(null)
 	const [validFields, setValidFields] = useState(null)
 
-	const doClose = useCallback(() => setShow(false), [])
-	const onClosed = useCallback(() => {
-		setInstanceId(null)
+	const doCancel = useCallback(() => {
+		doConfigureInstance(null)
 		setConfigFields([])
-	}, [])
+	}, [doConfigureInstance])
 
 	const doSave = useCallback(() => {
 		setError(null)
@@ -40,19 +39,12 @@ export const InstanceEditModal = memo(forwardRef(function InstanceEditModal(_pro
 				}
 			} else {
 				// Done
-				setShow(false)
+				doCancel()
 			}
 		}).catch((e) => {
 			setError(`Failed to save instance config: ${e}`)
 		})
-	},[context.socket, instanceId, validFields, instanceConfig])
-
-	useImperativeHandle(ref, () => ({
-		show(id) {
-			setInstanceId(id)
-			setShow(true)
-		}
-	}), [])
+	},[context.socket, instanceId, validFields, instanceConfig, doCancel])
 
 	useEffect(() => {
 		if (instanceId) {
@@ -102,50 +94,49 @@ export const InstanceEditModal = memo(forwardRef(function InstanceEditModal(_pro
 	const moduleInfo = context.modules[instanceConfig?.instance_type] ?? {}
 	const dataReady = instanceConfig && configFields && validFields
 	return (
-		<CModal show={show} onClose={doClose} onClosed={onClosed} size="lg">
-			<CModalHeader closeButton>
-				<h5>{moduleInfo?.shortname ?? instanceConfig?.instance_type} Configuration</h5>
-			</CModalHeader>
-			<CModalBody>
-				<MyErrorBoundary>
-					<CRow className="edit-instance">
-							<LoadingRetryOrError error={error} dataReady={dataReady} doRetry={doRetryConfigLoad} />
-							{
-								instanceId && dataReady
-								? configFields.map((field, i) => {
-									return (
-										<CCol key={i} className={`fieldtype-${field.type}`} sm={field.width}>
-											<label>{field.label}</label>
-											<ConfigField
-												definition={field}
-												value={instanceConfig[field.id]}
-												valid={validFields[field.id]}
-												setValue={setValue}
-												setValid={setValid}
-											/>
-										</CCol>
-									)
-								})
-								: ''
-							}
-					</CRow>
-				</MyErrorBoundary>
+		<div>
+			<h5>
+				{moduleInfo?.shortname ?? instanceConfig?.instance_type} Configuration
+				{moduleInfo?.help ? <div className="instance_help" onClick={() => showHelp(instanceConfig?.instance_type)}><FontAwesomeIcon icon={faQuestionCircle} /></div> : ''}
+			</h5>
+			<CRow className="edit-instance">
+					<LoadingRetryOrError error={error} dataReady={dataReady} doRetry={doRetryConfigLoad} />
+					{
+						instanceId && dataReady
+						? configFields.map((field, i) => {
+							return (
+								<CCol key={i} className={`fieldtype-${field.type}`} sm={field.width}>
+									<label>{field.label}</label>
+									<ConfigField
+										definition={field}
+										value={instanceConfig[field.id]}
+										valid={validFields[field.id]}
+										setValue={setValue}
+										setValid={setValid}
+									/>
+								</CCol>
+							)
+						})
+						: ''
+					}
+			</CRow>
 
-			</CModalBody>
-			<CModalFooter>
-				<CButton
-					color="secondary"
-					onClick={doClose}
-				>Cancel</CButton>
-				<CButton
-					color="primary"
-					disabled={!validFields || Object.values(validFields).find(v => !v) === false}
-					onClick={doSave}
-				>Save</CButton>
-			</CModalFooter>
-		</CModal>
+			<CRow>
+				<CCol sm={12}>
+					<CButton
+						color="secondary"
+						onClick={doCancel}
+					>Cancel</CButton>
+					<CButton
+						color="primary"
+						disabled={!validFields || Object.values(validFields).find(v => !v) === false}
+						onClick={doSave}
+					>Save</CButton>
+				</CCol>
+			</CRow>
+		</div>
 	)
-}))
+})
 
 function ConfigField({ setValue, setValid, ...props}) {
 	const id = props.definition.id

@@ -1,7 +1,8 @@
-import { CDropdown, CDropdownToggle, CDropdownItem, CDropdownMenu, CButton, CRow } from '@coreui/react'
-import React, { useCallback, useContext, useEffect, useState } from 'react'
+import { CDropdown, CDropdownToggle, CDropdownItem, CDropdownMenu, CButton, CButtonGroup, CRow } from '@coreui/react'
+import React, { useCallback, useContext, useEffect, useRef, useState } from 'react'
 import shortid from 'shortid'
 import { BankPreview, dataToButtonImage } from '../../Components/BankButton'
+import { GenericConfirmModal } from '../../Components/GenericConfirmModal'
 import { CompanionContext, KeyReceiver, LoadingRetryOrError, socketEmit } from '../../util'
 import { ActionsPanel } from './ActionsPanel'
 
@@ -10,6 +11,8 @@ import { FeedbacksPanel } from './FeedbackPanel'
 
 export function EditButton({ page, bank, onKeyUp }) {
 	const context = useContext(CompanionContext)
+
+	const resetModalRef = useRef()
 
 	const [config, setConfig] = useState(null)
 	const [configError, setConfigError] = useState(null)
@@ -50,6 +53,10 @@ export function EditButton({ page, bank, onKeyUp }) {
 		let show_warning = false;
 
 		const currentStyle = config?.style
+		if (currentStyle === newStyle) {
+			// No point changing style to itself
+			return
+		}
 
 		if (currentStyle && currentStyle !== 'pageup' && currentStyle !== 'pagedown' && currentStyle !== 'pagenum') {
 			if (newStyle === 'pageup' || newStyle === 'pagedown' || newStyle === 'pagenum') {
@@ -57,7 +64,7 @@ export function EditButton({ page, bank, onKeyUp }) {
 			}
 		}
 
-		if (!show_warning || window.confirm('Changing to this button style will erase eventual actions and feedbacks configured for this button - continue?')) {
+		const doChange = () => {
 			socketEmit(context.socket, 'bank_style', [page, bank, newStyle]).then(([p, b, config]) => {
 				setConfig(config)
 				setTableLoadStatus({})
@@ -66,14 +73,22 @@ export function EditButton({ page, bank, onKeyUp }) {
 				console.error('Failed to set bank style', e)
 			})
 		}
+
+		if (show_warning) {
+			resetModalRef.current.show(`Change style`, `Changing to this button style will erase actions and feedbacks configured for this button - continue?`, 'OK', () => {
+				doChange()
+			})
+		} else {
+			doChange()
+		}
 	}, [context.socket, page, bank, config?.style])
 
 	const doRetryLoad = useCallback(() => setReloadConfigToken(shortid()), [])
 	const resetBank = useCallback(() => {
-		if (window.confirm('Clear design and all actions?')) {
+		resetModalRef.current.show(`Clear button ${page}.${bank}`, `This will clear the style, feedbacks and all actions`, 'Clear', () => {
+			context.socket.emit('bank_reset', page, bank)
 			setReloadConfigToken(shortid())
-			context.socket.emit('bank_reset', page, bank);
-		}
+		})
 	}, [context.socket, page, bank])
 
 	const errors = Object.values(tableLoadStatus).filter(s => typeof s === 'string')
@@ -84,6 +99,8 @@ export function EditButton({ page, bank, onKeyUp }) {
 	return (
 		<KeyReceiver onKeyUp={onKeyUp} tabIndex={0} className="edit-button-panel">
 
+			<GenericConfirmModal ref={resetModalRef} />
+
 			<LoadingRetryOrError dataReady={dataReady} error={loadError} doRetry={doRetryLoad} />
 			{ 
 				config
@@ -92,11 +109,17 @@ export function EditButton({ page, bank, onKeyUp }) {
 						<ButtonEditPreview page={page} bank={bank} />
 
 						<CDropdown className="mt-2" style={{ display: 'inline-block' }}>
-							<CDropdownToggle caret color="info">
-								Set button type
-							</CDropdownToggle>
+							<CButtonGroup>
+								{/* This could be simplified to use the split property on CDropdownToggle, but then onClick doesnt work https://github.com/coreui/coreui-react/issues/179 */}
+								<CButton color="info" onClick={() => setButtonType('png')}>
+									Regular button
+								</CButton>
+								<CDropdownToggle caret color="info" className='dropdown-toggle dropdown-toggle-split' >
+									<span class="sr-only">Toggle Dropdown</span>
+								</CDropdownToggle>
+							</CButtonGroup>
 							<CDropdownMenu>
-								<CDropdownItem onClick={() => setButtonType('png')}>Regular button</CDropdownItem>
+								<CDropdownItem>Regular button</CDropdownItem>
 								<CDropdownItem onClick={() => setButtonType('pageup')}>Page up</CDropdownItem>
 								<CDropdownItem onClick={() => setButtonType('pagenum')}>Page number</CDropdownItem>
 								<CDropdownItem onClick={() => setButtonType('pagedown')}>Page down</CDropdownItem>

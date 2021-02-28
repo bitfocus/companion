@@ -7,28 +7,36 @@ import update from 'immutability-helper'
 import { BankPreview, dataToButtonImage } from '../Components/BankButton'
 import { MAX_COLS, MAX_ROWS } from '../Constants'
 import { ButtonGridHeader } from './ButtonGrid'
+import { GenericConfirmModal } from '../Components/GenericConfirmModal'
 
 export function ImportExport({ pageNumber }) {
 	const context = useContext(CompanionContext)
+
+	const confirmModalRef = useRef()
+
 	const [snapshot, setSnapshot] = useState(null)
 	const [importPage, setImportPage] = useState(1)
 	const [importMode, setImportMode] = useState(null)
 
+	const fileApiIsSupported = !!(window.File && window.FileReader && window.FileList && window.Blob)
+
+	const [loadError, setLoadError] = useState(null)
 	const clearSnapshot = useCallback(() => setSnapshot(null), [])
 	const loadSnapshot = useCallback((e) => {
 		const newFiles = e.currentTarget.files
 		e.currentTarget.files = null
-		if (window.File && window.FileReader && window.FileList && window.Blob) {
+		if (fileApiIsSupported) {
 			if (!newFiles[0] === undefined || newFiles[0].type === undefined) {
-				alert('Unable to read config file');
+				setLoadError('Unable to read config file');
 				return;
 			}
 
 			var fr = new FileReader();
 			fr.onload = () => {
+				setLoadError(null)
 				socketEmit(context.socket, 'loadsave_import_config', [fr.result]).then(([err, config]) => {
 					if (err) {
-						alert(err)
+						setLoadError(err)
 					} else {
 						for (const id in (config.instances || {})) {
 							if (context.instances[id]) {
@@ -38,18 +46,20 @@ export function ImportExport({ pageNumber }) {
 							}
 						}
 
+						setLoadError(null)
 						setSnapshot(config)
 						setImportMode(config.type === 'page' ? 'page' : null)
 					}
 				}).catch(e => {
+					setLoadError('Failed to load config to import')
 					console.error('Failed to load config to import:', e)
 				})
 			};
 			fr.readAsText(newFiles[0]);
 		} else {
-			alert('I am sorry, Companion requires a more modern browser');
+			setLoadError('Companion requires a more modern browser');
 		}
-	}, [context.socket, context.instances])
+	}, [context.socket, context.instances, fileApiIsSupported])
 
 	const doImport = useCallback(() => {
 		// setSnapshot(null)
@@ -91,25 +101,26 @@ export function ImportExport({ pageNumber }) {
 
 
 	const doFullImport = useCallback(() => {
-		if (window.confirm('Are you sure you wish to replace the config?')) {
+		confirmModalRef.current.show('Replace config', 'Are you sure you wish to replace the config?', 'Import', () => {
 			socketEmit(context.socket, 'loadsave_import_full', [snapshot]).then(() => {
 				window.location.reload();
 			}).catch(e => {
 				console.error('Failed to import full config: ', e)
 				window.location.reload();
 			})
-		}
+		})
 	}, [context.socket, snapshot])
 
 	if (snapshot) {
 		const isSinglePage = snapshot.type === 'page'
 
-		console.log('snap', isSinglePage, snapshot, importPage)
 		return <>
 			<h4>
 				Import Configuration
 				<CButton color='danger' size='sm' onClick={clearSnapshot}>Cancel</CButton>
 			</h4>
+
+			<GenericConfirmModal ref={confirmModalRef} />
 
 			<ButtonGridHeader
 				pageNumber={importPage}
@@ -195,9 +206,18 @@ export function ImportExport({ pageNumber }) {
 	return <>
 		<h5>Import Configuration</h5>
 		<p>Use the button below to browse your computer for a <b>.companionconfig</b> file containing either a full companion configuration, or a single page export.</p>
-		<label className="btn btn-success btn-file">
+
+		{
+			loadError
+			? <CAlert color="warning">
+				{ loadError}
+			</CAlert>
+			: ''
+		}
+		
+		<label className="btn btn-success btn-file" title={fileApiIsSupported ? undefined : 'Not supported in your browser'}>
 			<FontAwesomeIcon icon={faFileImport} /> Import
-			<input type="file" onChange={loadSnapshot} style={{ display: 'none' }} />
+			<input type="file" onChange={loadSnapshot} style={{ display: 'none' }} disabled={!fileApiIsSupported} />
 		</label>
 
 		<hr />

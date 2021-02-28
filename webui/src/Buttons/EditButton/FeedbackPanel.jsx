@@ -53,8 +53,11 @@ export const FeedbacksPanel = function ({ page, bank, dragId, addCommand, getCom
 		setFeedbacks(oldFeedbacks => oldFeedbacks.filter(a => a.id !== feedbackId))
 	}, [])
 	const doDelete = useCallback((feedbackId) => {
-		confirmModal.current.show('Delete feedback', 'Delete feedback?', 'Delete', [deleteCommand, page, bank, feedbackId], deleteFeedback.bind(this, feedbackId))
-	}, [page, bank, deleteCommand, deleteFeedback])
+		confirmModal.current.show('Delete feedback', 'Delete feedback?', 'Delete', () => {
+			context.socket.emit(deleteCommand, page, bank, feedbackId)
+			deleteFeedback(feedbackId)
+		})
+	}, [context.socket, page, bank, deleteCommand, deleteFeedback])
 
 	const addFeedback = useCallback((feedackTypr) => {
 		socketEmit(context.socket, addCommand, [page, bank, feedackTypr]).then(([page, bank, feedbacks]) => {
@@ -181,11 +184,13 @@ function FeedbackTableRow({ feedback, index, dragId, moveCard, setValue, doDelet
 			<td>
 				<div className="editor-grid">
 					<div className="cell-name">
-						<CButton color="danger" size="sm" onClick={innerDelete}>
+						{ name }
+					</div>
+
+					<div className="cell-actions">
+						<CButton color="danger" size="sm" onClick={innerDelete} title="Remove action">
 							<FontAwesomeIcon icon={faTrash} />
 						</CButton>
-						&nbsp;
-						{ name }
 					</div>
 
 					<div className="cell-option">
@@ -200,6 +205,7 @@ function FeedbackTableRow({ feedback, index, dragId, moveCard, setValue, doDelet
 									/>
 								</MyErrorBoundary>)
 							}
+							{ options.length === 0 ? 'Nothing to configure' : ''}
 						</CForm>
 					</div>
 				</div>

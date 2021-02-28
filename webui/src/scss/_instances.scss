@@ -14,7 +14,12 @@
       height: 100%;
       overflow-y: scroll;
     }
+
+		.add-instances-panel {
+			padding-top: 5px;
+		}
   }
+
 }
 
 .instance-status-ok {
@@ -38,7 +43,8 @@
 }
 
 .edit-instance {
-  & > div {
+
+	& > div {
     // column
     margin-bottom: 10px;
   }
@@ -50,6 +56,11 @@
     margin-bottom: 0.15rem;
   }
 }
+
 .td-reorder {
 	cursor: ns-resize;
+}
+
+.variables-table {
+	word-break: break-all;
 }

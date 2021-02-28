@@ -1,6 +1,6 @@
-import React, { forwardRef, useCallback, useContext, useImperativeHandle, useState } from 'react'
+import React, { forwardRef, useCallback, useImperativeHandle, useState } from 'react'
 import { CModal, CModalBody, CModalHeader, CModalFooter, CButton, CRow, CCol } from '@coreui/react'
-import { CompanionContext } from '../util'
+import { VariablesTable } from '../Components/VariablesTable'
 
 export const InstanceVariablesModal = forwardRef(function HelpModal(_props, ref) {
 	const [instanceLabel, setInstanceLabel] = useState(null)
@@ -42,34 +42,3 @@ export const InstanceVariablesModal = forwardRef(function HelpModal(_props, ref)
 		</CModal>
 	)
 })
-
-function VariablesTable({ label }) {
-	const context = useContext(CompanionContext)
-	const variableDefinitions = context.variableDefinitions[label] || []
-	const variableValues = context.variableValues || {}
-
-	if (variableDefinitions.length > 0) {
-		return (
-			<table className="table table-responsive-sm">
-				<thead>
-					<tr>
-						<th>Variable</th>
-						<th>Description</th>
-						<th>Current value</th>
-					</tr>
-				</thead>
-				<tbody>
-					{
-						variableDefinitions.map((variable) => <tr key={variable.name}>
-							<td>$({label}:{variable.name})</td>
-							<td>{variable.label}</td>
-							<td>{variableValues[label + ':' + variable.name]}</td>
-						</tr>)
-					}
-				</tbody>
-			</table>
-		)
-	} else {
-		return <p>Instance has no variables</p>
-	}
-}

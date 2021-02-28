@@ -727,3 +727,33 @@ url=https://github.com/bitfocus/companion-module-newbluefx-titler.git
 [submodule "lib/module/borealsystems-director"]
 	path = lib/module/borealsystems-director
 	url = https://github.com/bitfocus/companion-module-borealsystems-director.git
+[submodule "lib/module/liminalet-zoomosc"]
+	path = lib/module/liminalet-zoomosc
+	url = https://github.com/bitfocus/companion-module-liminalet-zoomosc.git
+[submodule "lib/module/cisco-cms"]
+	path = lib/module/cisco-cms
+	url = https://github.com/bitfocus/companion-module-cisco-cms.git
+[submodule "lib/module/sienna-ndimonitor"]
+	path = lib/module/sienna-ndimonitor
+	url = https://github.com/bitfocus/companion-module-sienna-ndimonitor.git
+[submodule "lib/module/datapath-fx4"]
+	path = lib/module/datapath-fx4
+	url = https://github.com/bitfocus/companion-module-datapath-fx4.git
+[submodule "lib/module/allenheath-sq"]
+	path = lib/module/allenheath-sq
+	url = https://github.com/bitfocus/companion-module-allenheath-sq.git
+[submodule "lib/module/newtek-tricaster"]
+	path = lib/module/newtek-tricaster
+	url = https://github.com/bitfocus/companion-module-newtek-tricaster.git
+[submodule "lib/module/magewell-proconvert-decoder"]
+	path = lib/module/magewell-proconvert-decoder
+	url = https://github.com/bitfocus/companion-module-magewell-proconvert-decoder.git
+[submodule "lib/module/blackbox-boxilla"]
+	path = lib/module/blackbox-boxilla
+	url = https://github.com/bitfocus/companion-module-blackbox-boxilla.git
+[submodule "lib/module/gammacontrol-gmaestro"]
+	path = lib/module/gammacontrol-gmaestro
+	url = https://github.com/bitfocus/companion-module-gammacontrol-gmaestro.git
+[submodule "lib/module/dolby-cinemaprocessor"]
+	path = lib/module/dolby-cinemaprocessor
+	url = https://github.com/bitfocus/companion-module-dolby-cinemaprocessor.git
