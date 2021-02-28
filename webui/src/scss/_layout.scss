@@ -60,6 +60,7 @@ body {
   }
   max-width: 1500px;
 	min-height: 300px;
+  max-height: 100%;
 }
 
 .nav.nav-tabs {
@@ -91,6 +92,8 @@ body {
 
 .secondary-panel-inner {
   box-shadow: -15px -0px 25px -20px rgba(0, 0, 0, 0.3);
+
+  overflow-y: hid;
 }
 
 .secondary-panel {
@@ -102,6 +105,32 @@ body {
   border-left-width: 0;
   border-bottom-width: 0;
   border-right-width: 0;
+}
+
+// scroll if side-by-side
+@include media-breakpoint-up("xl") {
+  .split-panels {
+    height: 100%;
+
+    > .primary-panel {
+      height: 100%;
+      overflow-y: auto;
+    }
+
+    > .secondary-panel {
+      height: 100%;
+
+      .secondary-panel-inner {
+        height: 100%;
+        display: grid;
+        grid-template-rows: auto 1fr;
+
+        .tab-content {
+          overflow-y: scroll;
+        }
+      }
+    }
+  }
 }
 
 code {
