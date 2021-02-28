@@ -159,7 +159,7 @@ function AppContent({ buttonGridHotPress }) {
 		<CContainer fluid className="fadeIn">
 			<CTabs activeTab={activeRootTab} onActiveTabChange={changeTab}>
 				<CNav variant="tabs">
-					<CNavItem><CNavLink data-tab="instances"><FontAwesomeIcon icon={faPlug} /> Instances</CNavLink></CNavItem>
+					<CNavItem><CNavLink data-tab="instances"><FontAwesomeIcon icon={faPlug} /> Connections</CNavLink></CNavItem>
 					<CNavItem><CNavLink data-tab="buttons"><FontAwesomeIcon icon={faCalendarAlt} /> Buttons</CNavLink></CNavItem>
 					<CNavItem><CNavLink data-tab="surfaces"><FontAwesomeIcon icon={faGamepad} /> Surfaces</CNavLink></CNavItem>
 					<CNavItem><CNavLink data-tab="triggers"><FontAwesomeIcon icon={faClock} /> Triggers</CNavLink></CNavItem>

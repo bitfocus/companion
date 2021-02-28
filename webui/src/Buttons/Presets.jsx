@@ -105,11 +105,11 @@ function PresetsInstanceList({ presets, setInstanceAndCategory }) {
 	})
 
 	return <div>
-		<h4>Available instance presets</h4>
-
+		<h5>Available presets</h5>
+		<p>Some connections support something we call presets, it's ready made buttons with text, actions and feedback so you don't need to spend time making everything from scratch. They can be drag and dropped onto your button layout.</p>
 		{
 			options.length === 0
-				? <CAlert color='primary'>You have no instances that support presets at the moment. More modules will support presets in the future.</CAlert>
+				? <CAlert color='info'>You have no instances that support presets at the moment.</CAlert>
 				: options
 		}
 	</div>

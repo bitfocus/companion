@@ -28,8 +28,8 @@ export function InstancesList({ showHelp, doConfigureInstance }) {
 
 	return (
 		<div>
-			<h4>Connections / Instances</h4>
-			<p>Instances are the connections companion makes to other devices and software in order to control them.</p>
+			<h4>Connections</h4>
+			<p>When you want to control devices or software with Companion, you need to add a connection to let Companion know how to communicate with whatever you want to control.</p>
 
 			<ConfirmDeleteModal ref={deleteModalRef} />
 			<InstanceVariablesModal ref={variablesModalRef} />
