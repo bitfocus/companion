@@ -97,7 +97,7 @@ function PresetsInstanceList({ presets, setInstanceAndCategory }) {
 		const module = instance ? context.modules[instance.instance_type] : undefined
 
 		return <div key={id}>
-			<CButton color='info' className="choose_instance" onClick={() => setInstanceAndCategory([id, null])}>
+			<CButton color='info' className="choose_instance mr-2 mb-2" onClick={() => setInstanceAndCategory([id, null])}>
 				{module?.label ?? '?'} ({instance?.label ?? id})
 			</CButton>
 		</div>
