@@ -3,11 +3,11 @@ import classnames from 'classnames'
 import { PREVIEW_BMP_HEADER } from '../Constants'
 
 export function dataToButtonImage(data) {
-	const sourceData = Buffer.from(data);
+	const sourceData = Buffer.from(data)
 
 	const convertedData = Buffer.alloc(sourceData.length)
 	for (let i = 0; i < sourceData.length; i += 3) {
-		// convert bgr to rgb 
+		// convert bgr to rgb
 		convertedData.writeUInt8(sourceData.readUInt8(i), i + 2)
 		convertedData.writeUInt8(sourceData.readUInt8(i + 1), i + 1)
 		convertedData.writeUInt8(sourceData.readUInt8(i + 2), i)
@@ -17,17 +17,19 @@ export function dataToButtonImage(data) {
 }
 
 export const BlackImage = dataToButtonImage(Buffer.concat([PREVIEW_BMP_HEADER, Buffer.alloc(72 * 72 * 3)]))
-export const RedImage = dataToButtonImage(Buffer.concat([PREVIEW_BMP_HEADER, Buffer.alloc(72 * 72 * 3, Buffer.from([255, 0, 0]))]))
+export const RedImage = dataToButtonImage(
+	Buffer.concat([PREVIEW_BMP_HEADER, Buffer.alloc(72 * 72 * 3, Buffer.from([255, 0, 0]))])
+)
 
-export const BankPreview = React.memo(function(props) {
+export const BankPreview = React.memo(function (props) {
 	const classes = {
-		 bank: true,
-		 fixed: !!props.fixedSize,
-		 drophere: props.canDrop,
-		 drophover: props.dropHover,
-		 selected: props.selected,
-		 clickable: !!props.onClick,
-		 right: !!props.right
+		bank: true,
+		fixed: !!props.fixedSize,
+		drophere: props.canDrop,
+		drophover: props.dropHover,
+		selected: props.selected,
+		clickable: !!props.onClick,
+		right: !!props.right,
 	}
 
 	return (

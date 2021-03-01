@@ -1,6 +1,12 @@
-import { CFormGroup, CInputGroupText, CLabel } from "@coreui/react"
-import React, { useCallback } from "react"
-import { CheckboxInputField, ColorInputField, DropdownInputField, NumberInputField, TextInputField } from "../../Components"
+import { CFormGroup, CInputGroupText, CLabel } from '@coreui/react'
+import React, { useCallback } from 'react'
+import {
+	CheckboxInputField,
+	ColorInputField,
+	DropdownInputField,
+	NumberInputField,
+	TextInputField,
+} from '../../Components'
 
 export function ActionTableRowOption({ actionId, option, value, setValue }) {
 	const setValue2 = useCallback((val) => setValue(actionId, option.id, val), [actionId, option.id, setValue])
@@ -43,7 +49,7 @@ export function ActionTableRowOption({ actionId, option, value, setValue }) {
 	return (
 		<CFormGroup>
 			<CLabel>{option.label}</CLabel>
-			{ control}
+			{control}
 		</CFormGroup>
 	)
 }

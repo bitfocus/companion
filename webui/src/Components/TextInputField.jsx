@@ -17,19 +17,22 @@ export function TextInputField({ definition, value, setValue, setValid }) {
 	}, [definition.regex])
 
 	// Check if the value is valid
-	const isValueValid = useCallback((val) => {
-		// Must match the regex
-		if (regex && (typeof val !== 'string' || !val.match(regex))) {
-			return false
-		}
+	const isValueValid = useCallback(
+		(val) => {
+			// Must match the regex
+			if (regex && (typeof val !== 'string' || !val.match(regex))) {
+				return false
+			}
 
-		// if required, must not be empty
-		if (definition.required && val === '') {
-			return false
-		}
+			// if required, must not be empty
+			if (definition.required && val === '') {
+				return false
+			}
 
-		return true
-	}, [regex, definition.required])
+			return true
+		},
+		[regex, definition.required]
+	)
 
 	// If the value is undefined, populate with the default. Also inform the parent about the validity
 	useEffect(() => {
@@ -37,22 +40,24 @@ export function TextInputField({ definition, value, setValue, setValid }) {
 			setValue(definition.default)
 			setValid?.(isValueValid(definition.default))
 		} else {
-			setValid?.( isValueValid(value))
+			setValid?.(isValueValid(value))
 		}
 	}, [isValueValid, definition.default, value, setValue, setValid])
 
 	// Render the input
-	return <CInput
-		type='text'
-		value={tmpValue ?? value ?? ''}
-		style={{ color: !isValueValid(tmpValue ?? value) ? 'red' : undefined }}
-		title={definition.tooltip}
-		onChange={(e) => {
-			setTmpValue(e.currentTarget.value)
-			setValue(e.currentTarget.value)
-			setValid?.(isValueValid(e.currentTarget.value))
-		}}
-		onFocus={() => setTmpValue(value ?? '')}
-		onBlur={() => setTmpValue(null)}
-	/>
+	return (
+		<CInput
+			type="text"
+			value={tmpValue ?? value ?? ''}
+			style={{ color: !isValueValid(tmpValue ?? value) ? 'red' : undefined }}
+			title={definition.tooltip}
+			onChange={(e) => {
+				setTmpValue(e.currentTarget.value)
+				setValue(e.currentTarget.value)
+				setValid?.(isValueValid(e.currentTarget.value))
+			}}
+			onFocus={() => setTmpValue(value ?? '')}
+			onBlur={() => setTmpValue(null)}
+		/>
+	)
 }
