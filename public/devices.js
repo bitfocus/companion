@@ -81,6 +81,7 @@ $(function() {
 
 			// Enable device
 			if (device.config.indexOf('enable_device') !== -1) {
+				if(settings.enable_device == undefined || settings.enable_device == null ) settings.enable_device = true
 				var $form = $(`<form><div class="form-group"><label><input type="checkbox" name="enable_device" ${settings.enable_device ? "checked " : " "}class="form-control-range enable_device">Enable device</label></div></form>`);
 				var $enable_device = $form.find('input.enable_device');
 				
