@@ -78,4 +78,4 @@ typings/
 .next
 
 # local module development
-module_local_dev/*
+module-local-dev/*
