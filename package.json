@@ -324,6 +324,7 @@
 		"companion-module-lyntec-rpc-breaker": "github:bitfocus/companion-module-lyntec-rpc-breaker",
 		"companion-module-magewell-proconvert-decoder": "github:bitfocus/companion-module-magewell-proconvert-decoder",
 		"companion-module-magicsoft-recorder": "github:bitfocus/companion-module-magicsoft-recorder",
+		"companion-module-malighting-msc": "github:bitfocus/companion-module-malighting-msc#fix/pin-mamsc",
 		"companion-module-malighting-grandma2": "github:bitfocus/companion-module-malighting-grandma2",
 		"companion-module-matrox-monarch": "github:bitfocus/companion-module-matrox-monarch",
 		"companion-module-media-player-classic": "github:bitfocus/companion-module-media-player-classic",

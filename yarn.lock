@@ -797,6 +797,13 @@
     "@babel/types" "^7.4.4"
     esutils "^2.0.2"
 
+"@babel/runtime@^7.7.7":
+  version "7.13.8"
+  resolved "https://registry.yarnpkg.com/@babel/runtime/-/runtime-7.13.8.tgz#cc886a85c072df1de23670dc1aa59fc116c4017c"
+  integrity sha512-CwQljpw6qSayc0fRG1soxHAKs1CnQMOChm4mlQP6My0kf9upVGizj/KhlTTgyUnETmHpcUXjaluNAkteRFuafg==
+  dependencies:
+    regenerator-runtime "^0.13.4"
+
 "@babel/runtime@^7.8.4":
   version "7.12.5"
   resolved "https://registry.yarnpkg.com/@babel/runtime/-/runtime-7.12.5.tgz#410e7e487441e1b360c29be715d870d9b985882e"
@@ -2863,6 +2870,12 @@ commist@^1.0.0:
 "companion-module-malighting-grandma2@github:bitfocus/companion-module-malighting-grandma2":
   version "1.0.10"
   resolved "https://codeload.github.com/bitfocus/companion-module-malighting-grandma2/tar.gz/bd1bcd1427c1830c728662025a0f17cc1f9f6098"
+
+"companion-module-malighting-msc@github:bitfocus/companion-module-malighting-msc#fix/pin-mamsc":
+  version "0.2.1"
+  resolved "https://codeload.github.com/bitfocus/companion-module-malighting-msc/tar.gz/fda79ecf42ddfcfb0849ed6c2d94667989cb320e"
+  dependencies:
+    mamsc "1.0.1"
 
 "companion-module-matrox-monarch@github:bitfocus/companion-module-matrox-monarch":
   version "1.0.0"
@@ -5799,6 +5812,15 @@ make-dir@^3.0.0:
   integrity sha512-g3FeP20LNwhALb/6Cz6Dd4F2ngze0jz7tbzrD2wAV+o9FeNHe4rL+yK2md0J/fiSf1sa1ADhXqi5+oVwOM/eGw==
   dependencies:
     semver "^6.0.0"
+
+mamsc@1.0.1:
+  version "1.0.1"
+  resolved "https://registry.yarnpkg.com/mamsc/-/mamsc-1.0.1.tgz#a5a95197f1980b5790fa0305228242d8ffaa42fc"
+  integrity sha512-dgRc3huYtyIEl+zS8VVlecyCa5DU6Lf26uuTsBe28vZ9kUlmq3pAu1OGkWbUhkE82q9xoEMjogz+KmKN5Sgpxw==
+  dependencies:
+    semver "^5.7.1"
+  optionalDependencies:
+    "@babel/runtime" "^7.7.7"
 
 map-cache@^0.2.2:
   version "0.2.2"
