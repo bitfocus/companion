@@ -2335,10 +2335,6 @@ commist@^1.0.0:
   version "1.0.2"
   resolved "https://codeload.github.com/bitfocus/companion-module-audivero-unityintercom/tar.gz/32e3b8c8df2fa5199a01b58ce0ec65afb417fc6c"
 
-"companion-module-avishop-hdbaset-matrix@github:bitfocus/companion-module-avishop-hdbaset-matrix":
-  version "1.0.1"
-  resolved "https://codeload.github.com/bitfocus/companion-module-avishop-hdbaset-matrix/tar.gz/ee4afbc50e45d366b025254f3ae0c91777db2b3d"
-
 "companion-module-avolites-ai@github:bitfocus/companion-module-avolites-ai":
   version "1.0.1"
   resolved "https://codeload.github.com/bitfocus/companion-module-avolites-ai/tar.gz/b918c3a66d77454c7321bf8167554f8cc740c680"

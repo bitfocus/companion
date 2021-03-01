@@ -4,7 +4,6 @@
 	"description": "Companion",
 	"main": "electron.js",
 	"build": {
-		"afterPack": "./tools/asar-repack.js",
 		"productName": "Companion",
 		"appId": "companion.bitfocus.no",
 		"mac": {
@@ -204,7 +203,6 @@
 		"companion-module-aten-matrix": "github:bitfocus/companion-module-aten-matrix",
 		"companion-module-audiostrom-liveprofessor": "github:bitfocus/companion-module-audiostrom-liveprofessor",
 		"companion-module-audivero-unityintercom": "github:bitfocus/companion-module-audivero-unityintercom",
-		"companion-module-avishop-hdbaset-matrix": "github:bitfocus/companion-module-avishop-hdbaset-matrix",
 		"companion-module-avolites-ai": "github:bitfocus/companion-module-avolites-ai",
 		"companion-module-avolites-titan": "github:bitfocus/companion-module-avolites-titan",
 		"companion-module-avproconnect-acmx1616-auhd": "github:bitfocus/companion-module-avproconnect-acmx1616-auhd",

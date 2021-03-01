@@ -46,14 +46,4 @@ yarn --frozen-lockfile --cwd webui
 yarn --cwd webui build
 echo
 
-heading "Module dependencies"
-
-for module in lib/module/*/; do
-	grep '"dependencies"' ${module}package.json > /dev/null 2>&1 && (
-		echo ${module}
-		yarn --frozen-lockfile --cwd ${module}
-		echo ""
-	)
-done
-
 exit 0
