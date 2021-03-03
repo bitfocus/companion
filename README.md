@@ -1,35 +1,37 @@
 # [Bitfocus Companion](https://bitfocus.io/companion)
 
 **Documentation**
-* https://github.com/bitfocus/companion/wiki/Installation
+
+- https://github.com/bitfocus/companion/wiki/Installation
 
 **Our website**
-* https://bitfocus.io/companion/
+
+- https://bitfocus.io/companion/
 
 **Bleeding edge builds**
-* https://builds.bitfocus.io/companion/
+
+- https://builds.bitfocus.io/companion/
 
 For checking known bugs or reporting of potential bugs, please use the [issue system](https://github.com/bitfocus/companion/issues) on GitHub
 
 **Donations**
-* https://donorbox.org/bitfocus-opensource
+
+- https://donorbox.org/bitfocus-opensource
 
 ## Modules (Supported devices/software)
-* https://bitfocus.io/support (200+!)
 
+- https://bitfocus.io/support (200+!)
 
 ## Contributors
 
 This project exists thanks to all the people who contribute.
 <a href="https://github.com/bitfocus/companion/contributors"><img src="https://opencollective.com/companion/contributors.svg?width=890&button=false" /></a>
 
-
 ## Backers
 
 Thank you to all our backers! 🙏 [[Become a backer](https://donorbox.org/bitfocus-opensource)]
 
 <a href="https://opencollective.com/companion#backers" target="_blank"><img src="https://opencollective.com/companion/backers.svg?width=890"></a>
-
 
 ## Sponsors
 
@@ -45,5 +47,3 @@ Support this project by becoming a sponsor. Your logo will show up here with a l
 <a href="https://opencollective.com/companion/sponsor/7/website" target="_blank"><img src="https://opencollective.com/companion/sponsor/7/avatar.svg"></a>
 <a href="https://opencollective.com/companion/sponsor/8/website" target="_blank"><img src="https://opencollective.com/companion/sponsor/8/avatar.svg"></a>
 <a href="https://opencollective.com/companion/sponsor/9/website" target="_blank"><img src="https://opencollective.com/companion/sponsor/9/avatar.svg"></a>
-
-
