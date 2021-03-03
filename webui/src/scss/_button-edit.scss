@@ -1,0 +1,79 @@
+.edit-button-panel {
+	h4 {
+		margin-top: 1rem;
+	}
+
+	label {
+		justify-content: left;
+		font-weight: bold;
+		font-size: 0.85em;
+		margin-bottom: 0.15rem;
+	}
+}
+
+.button-style-form {
+	& > div {
+		// column
+		margin-bottom: 10px;
+	}
+
+	.png-browse {
+		display: block;
+		white-space: nowrap;
+	}
+}
+
+table.action-table,
+table.feedback-table {
+	.actionlist-dragging,
+	.feedbacklist-dragging {
+		opacity: 0.5;
+	}
+
+	td.td-reorder {
+		padding-right: 0;
+		vertical-align: middle;
+	}
+
+	.editor-grid {
+		display: grid;
+		grid-template-columns: 1fr 1fr;
+		grid-template-rows: auto auto 1fr;
+		column-gap: 10px;
+		row-gap: 5px;
+
+		.cell-name {
+			font-weight: bold;
+			grid-row: 1;
+			grid-column: 1;
+		}
+
+		.cell-delay {
+			grid-row: 2;
+			grid-column: 1;
+
+			@include media-breakpoint-up('sm') {
+				width: 70%;
+			}
+		}
+
+		.cell-actions {
+			grid-row: 3;
+			grid-column: 1;
+		}
+
+		.cell-option {
+			grid-row: 1 / 4;
+			grid-column: 2;
+		}
+	}
+
+	// Give a border the bottom of the table. based on the table.td rule from coreui
+	tbody {
+		border-bottom: $table-border-width solid;
+
+		@include themes($table-theme-map, $create: parent) {
+			border-bottom-color: themes-get-value('table-border-color');
+		}
+	}
+}

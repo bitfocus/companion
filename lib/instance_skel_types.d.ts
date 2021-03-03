@@ -45,11 +45,12 @@ export type SomeCompanionInputField =
   | CompanionInputFieldColor
   | CompanionInputFieldTextInput
   | CompanionInputFieldDropdown
+  | CompanionInputFieldMultiDropdown
   | CompanionInputFieldNumber
   | CompanionInputFieldCheckbox
 export interface CompanionInputField {
   id: string
-  type: 'text' | 'textinput' | 'dropdown' | 'colorpicker' | 'number' | 'checkbox' // TODO - multiselect
+  type: 'text' | 'textinput' | 'dropdown' | 'colorpicker' | 'number' | 'checkbox'
   label: string
   tooltip?: string
 }
@@ -65,11 +66,32 @@ export interface CompanionInputFieldTextInput extends CompanionInputField {
   type: 'textinput'
   regex?: string
   default?: string
+  required?: boolean
 }
-export interface CompanionInputFieldDropdown extends CompanionInputField {
-  type: 'dropdown'
+export interface CompanionInputFieldDropdown extends CompanionInputFieldDropdownBase {
+  multiple?: false
   default: ConfigValue
+}
+export interface CompanionInputFieldMultiDropdown extends CompanionInputFieldDropdownBase {
+  multiple: true
+  default: ConfigValue[]
+
+  required?: boolean
+
+  /** The minimum number of selected values */
+  minSelection?: number
+  /** The maximum number of selected values */
+  maximumSelectionLength?: number
+}
+export interface CompanionInputFieldDropdownBase extends CompanionInputField {
+  type: 'dropdown'
+  // default: ConfigValue
   choices: DropdownChoice[]
+
+  multiple?: boolean
+
+  /** The minimum number of entries the dropdown must have before it allows searching */
+  minChoicesForSearch?: number
 }
 export interface CompanionInputFieldCheckbox extends CompanionInputField {
   type: 'checkbox'

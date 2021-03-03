@@ -1,0 +1,140 @@
+body {
+	font-family: 'Roboto', sans-serif;
+	min-width: 400px;
+}
+
+.c-wrapper {
+	height: 100vh;
+}
+
+.c-body {
+	padding: 15px 0;
+	background-color: #eee;
+
+	// Fit minus the header
+	height: calc(100% - #{$header-height});
+
+	// Force to fill the screen and scroll internally
+	> .container-fluid {
+		height: 100%;
+
+		display: grid;
+		grid-template-rows: auto 1fr;
+
+		> .tab-content {
+			overflow-y: hidden;
+
+			> .tab-pane {
+				overflow-y: auto;
+				height: 100%;
+				position: relative;
+			}
+		}
+	}
+}
+
+.c-sidebar-nav-link:hover {
+	background: $primary;
+}
+
+.c-sidebar .c-sidebar-brand {
+	font-size: 1.3em;
+}
+.c-header .c-header-brand {
+	font-size: 1.3em;
+	margin: 0 auto;
+}
+
+.choose_instance {
+	width: 45%;
+	float: left;
+}
+
+.tab-content {
+	background-color: #fff;
+	border: 1px solid #c8ced3;
+	margin-top: -1px;
+	// margin-bottom: 38px;
+
+	.tab-pane {
+		padding: 1rem;
+	}
+	max-width: 1500px;
+	min-height: 300px;
+	max-height: 100%;
+}
+
+.nav.nav-tabs {
+	.nav-item .nav-link {
+		color: #444;
+		border-bottom: 3px solid transparent;
+		padding-bottom: 5px;
+
+		&.active {
+			background-color: #ddd;
+			border-bottom: 3px solid #d50215;
+		}
+
+		&:hover {
+			color: #333;
+		}
+	}
+}
+
+.c-sidebar-brand-full {
+	margin-left: -22px;
+	text-align: left;
+	margin-top: 3px;
+}
+
+.form-control {
+	color: #222;
+}
+
+.secondary-panel-inner {
+	box-shadow: -15px -0px 25px -20px rgba(0, 0, 0, 0.3);
+
+	overflow-y: hid;
+}
+
+.secondary-panel {
+	padding-left: 15px;
+	padding-top: 5px;
+}
+
+.secondary-panel .tab-content {
+	border-left-width: 0;
+	border-bottom-width: 0;
+	border-right-width: 0;
+}
+
+// scroll if side-by-side
+@include media-breakpoint-up('xl') {
+	.split-panels {
+		height: 100%;
+
+		> .primary-panel {
+			height: 100%;
+			overflow-y: auto;
+		}
+
+		> .secondary-panel {
+			height: 100%;
+
+			.secondary-panel-inner {
+				height: 100%;
+				display: grid;
+				grid-template-rows: auto 1fr;
+
+				.tab-content {
+					overflow-y: scroll;
+				}
+			}
+		}
+	}
+}
+
+code {
+	color: #d50215;
+	font-weight: bold;
+}

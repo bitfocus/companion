@@ -88,7 +88,7 @@ $(function() {
 	}
 
 	// Listen on initial variable definitions broadcast
-	socket.on('variable_instance_definitions_get:result', function (err, data) {
+	socket.on('variable_instance_definitions_get:result', function (data) {
 		if (data) {
 			var auto_complete_list = [];
 			for (var instance in data) {
@@ -330,9 +330,10 @@ $(function() {
 				$p.append($div);
 				$field.append($p);
 
+				const field2 = field
 				$field.find('input[type="file"]').change(function (e) {
 					var self = this;
-					checkImageSize(this, field.imageMinWidth, field.imageMinHeight, field.imageMaxWidth, field.imageMaxHeight, function (dataurl) {
+					checkImageSize(this, field2.imageMinWidth, field2.imageMinHeight, field2.imageMaxWidth, field2.imageMaxHeight, function (dataurl) {
 						// Reset file fields
 						self.value = null;
 
@@ -351,7 +352,7 @@ $(function() {
 							}
 						});
 					}, function () {
-						alert('Image must have the following dimensions: ' + field.imageMaxWidth + 'x' + field.imageMaxHeight);
+						alert('Image must have the following dimensions: ' + field2.imageMaxWidth + 'x' + field2.imageMaxHeight);
 
 						// Reset file fields
 						self.value = null;
@@ -482,7 +483,7 @@ $(function() {
 			socket.emit('bank_actions_get', page, bank);
 			socket.emit('bank_get_feedbacks', page, bank);
 			socket.emit('bank_release_actions_get', page, bank);
-			socket.emit('get_bank',page, bank);
+			socket.emit('get_bank', page, bank);
 			socket.once('get_bank:results', populate_bank_form);
 			return false;
 		}
@@ -879,7 +880,7 @@ $(function() {
 				socket.emit('bank_actions_get', page, $(this).data('bank'));
 				socket.emit('bank_get_feedbacks', page, $(this).data('bank'));
 				socket.emit('bank_release_actions_get', page, $(this).data('bank'));
-				socket.emit('get_bank',page, $(this).data('bank'));
+				socket.emit('get_bank', page, $(this).data('bank'));
 				socket.once('get_bank:results', populate_bank_form);
 
 			}
