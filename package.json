@@ -118,7 +118,8 @@
 		"postinstall": "./tools/build_writefile.sh && yarn dist:js",
 		"headless": "nodemon --ignore './webui/' headless.js",
 		"dev-headless": "./tools/build_writefile.sh && DEVELOPER=1 nodemon --ignore './webui/' headless.js",
-		"dev-webui": "yarn --cwd webui dev"
+		"dev-webui": "yarn --cwd webui dev",
+		"format": "prettier --write ."
 	},
 	"repository": "https://github.com/bitfocus/companion",
 	"keywords": [
@@ -139,6 +140,7 @@
 		"mocha": "^6.2.3",
 		"nodemon": "^2.0.6",
 		"p-all": "^3.0.0",
+		"prettier": "^2.2.1",
 		"rimraf": "^3.0.2",
 		"s3-upload-stream": "^1.0.7"
 	},

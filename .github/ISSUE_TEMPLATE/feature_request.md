@@ -4,8 +4,8 @@ about: Request a new feature within Companion. (NOT device/specific software sup
 title: ''
 labels: ''
 assignees: ''
-
 ---
+
 <!--
   USE THE FOLLOWING PAGE IF YOU WANT SUPPORT FOR A NEW DEVICE OR SOFTWARE PROGRAM
   https://github.com/bitfocus/companion-module-requests/issues/new
