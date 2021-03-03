@@ -12,67 +12,21 @@
 $ n 12.18.4
 $ git clone <your forked repository>
 $ cd companion
-$ ./tools/update.sh
+$ yarn update
 $ yarn dev
 ```
 
-# Bracing and indentation
+# Code style
 
-Use tabs for indentation. We use tabwith=2, but you can do whatever you like. One indentation = one tab.
+We use [prettier](https://prettier.io/) to format the code in this project.
 
-For bracing, do this
-
-```
-if (var == 1) {
-  return;
-}
-```
-
-not this
-
-```
-if (var == 1)
-{
-  return;
-}
-```
-
-not this
-
-```
-if (var == 1) return;
-```
-
-not this
-
-```
-if (var == 1)
-  return;
-```
-
-One thing we also like to do, is to subindent similar lines like
-
-```
-var moda = require("modulea");
-var moduleb = require("moduleb");
-var hello = require("hello");
-```
-
-to being
-
-```
-var moda    = require("modulea");
-var moduleb = require("moduleb");
-var hello   = require("hello");
-```
-
-this subindentation is not done with tabs, but spaces. Looks nice!
+Many code editors support using prettier to format code you write. It is recommended to run `yarn format` before committing your changes to ensure any changes are correctly formatted.
 
 # Tools
 
 ## Update all, including yarn in submodules [Core Devs, Mod Devs]
 
-./tools/update.sh
+`yarn update`
 
 # Modules
 
@@ -95,7 +49,7 @@ cd companion
 1. `cd ./lib/module/`
 2. `mkdir mynewmodule`
 3. `cd mynewmodule`
-4. `npm init` (enter x 10)
+4. `yarn init -y`
 5. `git init`
 6. `git add package.json`
 7. `git commit package.json -m "package.json"`
@@ -117,7 +71,7 @@ It's important that you didn't get any erros in the last push, because you're go
 13. `cd ..`
 14. `rm -rf mynewmodule`
 15. `cd ../../`
-16. `./tools/update.sh`
+16. `yarn update`
 
 The module should now appear in lib/module/mynewmodule, and if you want to change something in the module after this, you need to do your changes, commit it to the repository and read the beginning of the modules section in this document.
 

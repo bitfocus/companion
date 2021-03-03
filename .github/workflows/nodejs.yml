@@ -1,6 +1,25 @@
 name: Node CI
 on: [push]
+
 jobs:
+  lint:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: [12.x]
+    steps:
+      - uses: actions/checkout@v1
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v1
+        with:
+          node-version: ${{ matrix.node-version }}
+      - name: yarn update
+        run: |
+          yarn update
+      - name: check format
+        run: |
+          yarn prettier --check .
+
   linux64:
     runs-on: ubuntu-latest
     strategy:
@@ -29,6 +48,7 @@ jobs:
           BITFOCUS_S3: ${{ secrets.BITFOCUS_S3 }}
           BITFOCUS_KEY: ${{ secrets.BITFOCUS_ACCESS }}
           BITFOCUS_SECRET: ${{ secrets.BITFOCUS_SECRET }}
+
   osx:
     runs-on: macOS-latest
     strategy:
@@ -51,6 +71,7 @@ jobs:
           BITFOCUS_S3: ${{ secrets.BITFOCUS_S3 }}
           BITFOCUS_KEY: ${{ secrets.BITFOCUS_ACCESS }}
           BITFOCUS_SECRET: ${{ secrets.BITFOCUS_SECRET }}
+
   win64:
     runs-on: windows-latest
     strategy:
