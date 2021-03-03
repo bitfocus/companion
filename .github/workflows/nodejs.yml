@@ -7,72 +7,72 @@ jobs:
       matrix:
         node-version: [12.x]
     steps:
-    - uses: actions/checkout@v1
-    - name: Use Node.js ${{ matrix.node-version }}
-      uses: actions/setup-node@v1
-      with:
-        node-version: ${{ matrix.node-version }}
-    - name: yarn update and lindist
-      run: |
-        yarn update
-        yarn run lindist
+      - uses: actions/checkout@v1
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v1
+        with:
+          node-version: ${{ matrix.node-version }}
+      - name: yarn update and lindist
+        run: |
+          yarn update
+          yarn run lindist
 
-        # manually tar it, to preserve the symlinks
-        cd electron-output
-        VERSION=$(node -e "console.log(require('../package.json').version)")
-        mv linux-unpacked companion-$VERSION
-        tar -cvzf companion-$VERSION.tar.gz companion-$VERSION
-    - name: rename and upload stuff
-      run: node ./tools/build_rename_git.js
-      env:
-        TRAVIS_OS_NAME: linux
-        BITFOCUS_S3: ${{ secrets.BITFOCUS_S3 }}
-        BITFOCUS_KEY: ${{ secrets.BITFOCUS_ACCESS }}
-        BITFOCUS_SECRET: ${{ secrets.BITFOCUS_SECRET }}
+          # manually tar it, to preserve the symlinks
+          cd electron-output
+          VERSION=$(node -e "console.log(require('../package.json').version)")
+          mv linux-unpacked companion-$VERSION
+          tar -cvzf companion-$VERSION.tar.gz companion-$VERSION
+      - name: rename and upload stuff
+        run: node ./tools/build_rename_git.js
+        env:
+          TRAVIS_OS_NAME: linux
+          BITFOCUS_S3: ${{ secrets.BITFOCUS_S3 }}
+          BITFOCUS_KEY: ${{ secrets.BITFOCUS_ACCESS }}
+          BITFOCUS_SECRET: ${{ secrets.BITFOCUS_SECRET }}
   osx:
     runs-on: macOS-latest
     strategy:
       matrix:
         node-version: [12.x]
     steps:
-    - uses: actions/checkout@v1
-    - name: Use Node.js ${{ matrix.node-version }}
-      uses: actions/setup-node@v1
-      with:
-        node-version: ${{ matrix.node-version }}
-    - name: yarn update and macdist
-      run: |
-        yarn update
-        yarn run macdist
-    - name: rename and upload stuff
-      run: node ./tools/build_rename_git.js
-      env:
-        TRAVIS_OS_NAME: osx
-        BITFOCUS_S3: ${{ secrets.BITFOCUS_S3 }}
-        BITFOCUS_KEY: ${{ secrets.BITFOCUS_ACCESS }}
-        BITFOCUS_SECRET: ${{ secrets.BITFOCUS_SECRET }}
+      - uses: actions/checkout@v1
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v1
+        with:
+          node-version: ${{ matrix.node-version }}
+      - name: yarn update and macdist
+        run: |
+          yarn update
+          yarn run macdist
+      - name: rename and upload stuff
+        run: node ./tools/build_rename_git.js
+        env:
+          TRAVIS_OS_NAME: osx
+          BITFOCUS_S3: ${{ secrets.BITFOCUS_S3 }}
+          BITFOCUS_KEY: ${{ secrets.BITFOCUS_ACCESS }}
+          BITFOCUS_SECRET: ${{ secrets.BITFOCUS_SECRET }}
   win64:
     runs-on: windows-latest
     strategy:
       matrix:
         node-version: [12.x]
     steps:
-    - uses: actions/checkout@v1
-    - name: Use Node.js ${{ matrix.node-version }}
-      uses: actions/setup-node@v1
-      with:
-        node-version: ${{ matrix.node-version }}
-    - name: yarn update and windist
-      run: |
-        # This fixes it somehow, and without it we get no logs from any shell scripts which are run
-        yarn config set script-shell bash
+      - uses: actions/checkout@v1
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v1
+        with:
+          node-version: ${{ matrix.node-version }}
+      - name: yarn update and windist
+        run: |
+          # This fixes it somehow, and without it we get no logs from any shell scripts which are run
+          yarn config set script-shell bash
 
-        yarn update
-        yarn run windist
-    - name: rename and upload stuff
-      run: node ./tools/build_rename_git.js
-      env:
-        TRAVIS_OS_NAME: win64
-        BITFOCUS_S3: ${{ secrets.BITFOCUS_S3 }}
-        BITFOCUS_KEY: ${{ secrets.BITFOCUS_ACCESS }}
-        BITFOCUS_SECRET: ${{ secrets.BITFOCUS_SECRET }}
+          yarn update
+          yarn run windist
+      - name: rename and upload stuff
+        run: node ./tools/build_rename_git.js
+        env:
+          TRAVIS_OS_NAME: win64
+          BITFOCUS_S3: ${{ secrets.BITFOCUS_S3 }}
+          BITFOCUS_KEY: ${{ secrets.BITFOCUS_ACCESS }}
+          BITFOCUS_SECRET: ${{ secrets.BITFOCUS_SECRET }}

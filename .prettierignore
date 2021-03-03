@@ -6,3 +6,4 @@ electron-output/
 public/
 webui/package.json
 webui/build/
+/LICENSE.md
