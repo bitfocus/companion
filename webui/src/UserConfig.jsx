@@ -122,6 +122,26 @@ function UserConfigTable() {
 							</div>
 						</td>
 					</tr>
+
+					<tr>
+						<td>Remove the topbar on each button</td>
+						<td>
+							<div className="form-check form-check-inline mr-1">
+								<CInputCheckbox
+									id="userconfig_remove_topbar"
+									checked={config.remove_topbar}
+									onChange={(e) => {
+											setValue('remove_topbar', e.currentTarget.checked)
+											window.location.reload()
+										}}
+								/>
+								<label className="form-check-label" htmlFor="userconfig_remove_topbar">
+									Enabled
+								</label>
+							</div>
+						</td>
+					</tr>
+
 					<tr>
 						<td colSpan="2" className="settings-category">
 							Devices
