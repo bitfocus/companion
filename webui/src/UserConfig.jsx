@@ -130,9 +130,7 @@ function UserConfigTable() {
 								<CInputCheckbox
 									id="userconfig_remove_topbar"
 									checked={config.remove_topbar}
-									onChange={(e) => {
-											setValue('remove_topbar', e.currentTarget.checked)
-										}}
+									onChange={(e) => setValue('remove_topbar', e.currentTarget.checked)}
 								/>
 								<label className="form-check-label" htmlFor="userconfig_remove_topbar">
 									Enabled
