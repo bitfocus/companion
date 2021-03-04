@@ -834,7 +834,4 @@ $(function() {
 	socket.on('config_fields:result', function(id, fields, config) {
 		socket.emit('instance_get');
 	});
-
-	});
-
 });

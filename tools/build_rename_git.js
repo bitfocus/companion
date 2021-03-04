@@ -1,4 +1,3 @@
-
 //
 // This file is part of the Companion project
 // Copyright (c) 2018 Bitfocus AS
@@ -14,120 +13,117 @@
 // develop commercial activities involving the Companion software without
 // disclosing the source code of your own applications.
 //
-const fs = require('fs-extra');
-const { spawn } = require('child_process');
+const fs = require('fs-extra')
+const { spawn } = require('child_process')
 
 function exec(command, args) {
-	let data = '';
-	let errdata = '';
+	let data = ''
+	let errdata = ''
 
 	return new Promise((resolve, reject) => {
-		const child = spawn(command, args);
-		child.stdout.on('data',  output => {
-			data += output;
-		});
-		child.stderr.on('data',  output => {
-			errdata += output;
-		});
+		const child = spawn(command, args)
+		child.stdout.on('data', (output) => {
+			data += output
+		})
+		child.stderr.on('data', (output) => {
+			errdata += output
+		})
 		child.on('exit', (code, signal) => {
 			if (code !== 0) {
-				return reject(`Command ${command} exited with code ${code}: ${errdata}`);
+				return reject(`Command ${command} exited with code ${code}: ${errdata}`)
 			}
 
-			resolve(data);
-		});
-	});
+			resolve(data)
+		})
+	})
 }
 
 async function gitFetch() {
-	return await exec("git", [ 'fetch', '--depth=10000' ]);
+	return await exec('git', ['fetch', '--depth=10000'])
 }
 
 async function gitHeadHash() {
-	const data = await exec('git', [ 'rev-parse', '--short', 'HEAD' ]);
-	return data.trim();
+	const data = await exec('git', ['rev-parse', '--short', 'HEAD'])
+	return data.trim()
 }
 
 function getRelease() {
-	const package = require(__dirname + '/../package.json');
-	return package.version;
+	const package = require(__dirname + '/../package.json')
+	return package.version
 }
 
 async function getCount() {
-	let data = await exec('git', [ 'log']);
-	data = data.split(/\r?\n/);
-	return data.filter(line => line.match(/^commit/)).length;
+	let data = await exec('git', ['log'])
+	data = data.split(/\r?\n/)
+	return data.filter((line) => line.match(/^commit/)).length
 }
 
 async function run() {
-	let build;
-	let release;
-	let head;
-	let count;
+	let build
+	let release
+	let head
+	let count
 
 	try {
-		await gitFetch();
-		head = await gitHeadHash();
-		release = getRelease();
-		count = await getCount();
+		await gitFetch()
+		head = await gitHeadHash()
+		release = getRelease()
+		count = await getCount()
 
-		build = `${release}-${head}-${count}`;
-		fs.writeFileSync(__dirname + '/../BUILD', build);
+		build = `${release}-${head}-${count}`
+		fs.writeFileSync(__dirname + '/../BUILD', build)
 	} catch (e) {
-		console.error('Error generating data for BUILD file', e);
-		process.exit(1);
+		console.error('Error generating data for BUILD file', e)
+		process.exit(1)
 	}
 
-	console.log(`RELEASE ${release}`);
-	console.log(`PARSE_GIT_HASH ${head}`);
+	console.log(`RELEASE ${release}`)
+	console.log(`PARSE_GIT_HASH ${head}`)
 
-	let list;
+	let list
 	try {
-		list = fs.readdirSync(__dirname + '/../electron-output');
-		list = list.map(line => 'electron-output/' + line);
-		console.log(list.join("\n"));
+		list = fs.readdirSync(__dirname + '/../electron-output')
+		list = list.map((line) => 'electron-output/' + line)
+		console.log(list.join('\n'))
 	} catch (e) {
-		console.error('Error opening electron-output directory', e);
-		process.exit(1);
+		console.error('Error opening electron-output directory', e)
+		process.exit(1)
 	}
 
-	let artifact_source;
-	let artifact_dest;
+	let artifact_source
+	let artifact_dest
 
-	if (process.env.TRAVIS_OS_NAME === "osx") {
-		artifact_source = list.find(file => file.match(/\.dmg$/));
-		artifact_dest = `companion-${build}-mac.dmg`;
-		console.log("OSX");
-	}
-	else if (process.env.TRAVIS_OS_NAME === 'linux') {
-		artifact_source = list.find(file => file.match(/\.gz$/));
-		artifact_dest = `companion-${build}-linux.tar.gz`;
-		console.log("LINUX");
-	}
-	else if (process.env.TRAVIS_OS_NAME === 'win64') {
-		artifact_source = list.find(file => file.match(/\.exe$/));
-		artifact_dest = `companion-${build}-win64.exe`;
-		console.log("WINDOWS");
-	}
-	else if (process.env.TRAVIS_OS_NAME === 'armv7l') {
-		artifact_source = list.find(file => file.match(/\.z$/));
-		artifact_dest = `companion-${build}-armv7l.tar.gz`;
-		console.log("ARM");
+	if (process.env.TRAVIS_OS_NAME === 'osx') {
+		artifact_source = list.find((file) => file.match(/\.dmg$/))
+		artifact_dest = `companion-${build}-mac.dmg`
+		console.log('OSX')
+	} else if (process.env.TRAVIS_OS_NAME === 'linux') {
+		artifact_source = list.find((file) => file.match(/\.gz$/))
+		artifact_dest = `companion-${build}-linux.tar.gz`
+		console.log('LINUX')
+	} else if (process.env.TRAVIS_OS_NAME === 'win64') {
+		artifact_source = list.find((file) => file.match(/\.exe$/))
+		artifact_dest = `companion-${build}-win64.exe`
+		console.log('WINDOWS')
+	} else if (process.env.TRAVIS_OS_NAME === 'armv7l') {
+		artifact_source = list.find((file) => file.match(/\.z$/))
+		artifact_dest = `companion-${build}-armv7l.tar.gz`
+		console.log('ARM')
 	} else {
-		console.error(`Unknown operating system: ${process.env.TRAVIS_OS_NAME}`);
-		process.exit(1);
+		console.error(`Unknown operating system: ${process.env.TRAVIS_OS_NAME}`)
+		process.exit(1)
 	}
 
-	console.log("UPLOADING");
+	console.log('UPLOADING')
 	try {
-		console.log("Upload ", artifact_source, " to ", artifact_dest);
-		await exec('node', [ './tools/upload_build.js', artifact_source, artifact_dest ]);
+		console.log('Upload ', artifact_source, ' to ', artifact_dest)
+		await exec('node', ['./tools/upload_build.js', artifact_source, artifact_dest])
 	} catch (e) {
-		console.error("Error uploading artifact: ", e);
-		process.exit(1);
+		console.error('Error uploading artifact: ', e)
+		process.exit(1)
 	}
 
-	console.log("DONE");
+	console.log('DONE')
 }
 
-run();
+run()

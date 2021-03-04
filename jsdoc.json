@@ -1,19 +1,19 @@
 {
-    "source": {
-        "include": ["lib", "package.json", "README.md", "app.js"],
-        "exclude": ["lib/module", "lib/Graphics/Font.js"],
-        "includePattern": ".js$",
-        "excludePattern": "(node_modules/|docs)"
-    },
-    "opts": {
-        "encoding": "utf8",
-        "readme": "./README.md",
-        "destination": "docs/",
-        "recurse": true,
-        "verbose": true,
-        "template": "node_modules/tui-jsdoc-template"
-    },
-    "templates": {
-        "useCollapsibles": true
-    }
+	"source": {
+		"include": ["lib", "package.json", "README.md", "app.js"],
+		"exclude": ["lib/module", "lib/Graphics/Font.js"],
+		"includePattern": ".js$",
+		"excludePattern": "(node_modules/|docs)"
+	},
+	"opts": {
+		"encoding": "utf8",
+		"readme": "./README.md",
+		"destination": "docs/",
+		"recurse": true,
+		"verbose": true,
+		"template": "node_modules/tui-jsdoc-template"
+	},
+	"templates": {
+		"useCollapsibles": true
+	}
 }
