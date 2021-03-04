@@ -163,10 +163,8 @@ $(function () {
 	$('#userconfig_remove_topbar').click(function () {
 		if ($(this).prop('checked') == true) {
 			socket.emit('set_userconfig_key', 'remove_topbar', true)
-			window.location.reload()
 		} else {
 			socket.emit('set_userconfig_key', 'remove_topbar', false)
-			window.location.reload()
 		}
 	})
 
