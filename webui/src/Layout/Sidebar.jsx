@@ -77,7 +77,7 @@ export function MySidebar({ show }) {
 
 				<CSidebarNavItem
 					target="_new"
-					href="/help.html"
+					href="/getting-started"
 					icon={<FontAwesomeIcon className="c-sidebar-nav-icon" icon={faInfo} />}
 					name={t('Getting Started')}
 				/>
