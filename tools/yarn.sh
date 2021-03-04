@@ -40,6 +40,12 @@ set -e
 heading "Core"
 yarn --frozen-lockfile
 echo
+
+heading "UI"
+yarn --frozen-lockfile --cwd webui
+yarn --cwd webui build
+echo
+
 heading "Module dependencies"
 
 for module in lib/module/*/; do

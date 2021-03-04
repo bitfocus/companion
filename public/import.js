@@ -77,8 +77,7 @@ $(function() {
 			$pagebank.append($b);
 			(function ($b) {
 				var preview_id = 'lp' + num + page.name + key;
-				socket.emit('graphics_preview_generate', config[key], preview_id);
-				socket.once('graphics_preview_generate:' + preview_id, function (img) {
+				socket.emit('graphics_preview_generate', config[key], function (img) {
 					var canv = $b.find('canvas').get(0);
 					var ctx = canv.getContext('2d');
 					ctx.putImageData(dataToButtonImage(img), 0, 0);

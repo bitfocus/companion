@@ -168,7 +168,6 @@ label {
 }
 .instance-edit, .instance-delete, .instance-disable {
 	padding-top: 2px !important;
-	text-transform: uppercase;
 	padding-bottom: 2px !important;
 	font-size: 12px;
 }

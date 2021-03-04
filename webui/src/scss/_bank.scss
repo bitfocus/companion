@@ -1,0 +1,58 @@
+.bank {
+	padding: Min(5px, 10%);
+	height: fit-content;
+	display: inline-block;
+	border: 1px solid transparent;
+
+	&.right {
+		float: right;
+	}
+
+	&.clickable {
+		cursor: pointer;
+	}
+
+	&.selected img {
+		border: 2px solid #d50215 !important;
+		// margin: -2px;
+	}
+
+	&.fixed img {
+		width: 72px;
+		height: 72px;
+	}
+
+	&.drophere {
+		border: 1px dashed black;
+		background-color: #eee;
+	}
+
+	&.drophover {
+		border: 1px solid black;
+		background-color: #daffab;
+	}
+
+	img {
+		max-width: 72px;
+		max-height: 72px;
+		width: 100%;
+		height: 100%;
+		object-fit: contain;
+		display: block;
+		border-radius: Max(12%, 4px);
+		border: 1px solid rgba(100, 100, 100, 0.4);
+		margin: 0 auto;
+	}
+}
+
+.button-page-input {
+	font-size: 1.2em;
+	text-align: center;
+	display: block;
+}
+
+.button-page-name {
+	color: black;
+	font-weight: normal;
+	font-size: 1.2em;
+}
