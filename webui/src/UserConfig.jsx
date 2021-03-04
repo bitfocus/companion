@@ -132,7 +132,6 @@ function UserConfigTable() {
 									checked={config.remove_topbar}
 									onChange={(e) => {
 											setValue('remove_topbar', e.currentTarget.checked)
-											window.location.reload()
 										}}
 								/>
 								<label className="form-check-label" htmlFor="userconfig_remove_topbar">
