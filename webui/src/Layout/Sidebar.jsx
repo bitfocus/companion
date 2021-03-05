@@ -39,15 +39,9 @@ export function MySidebar({ show }) {
 				/>
 				<CSidebarNavItem
 					target="_new"
-					href="/tablet.html"
-					icon={<FontAwesomeIcon className="c-sidebar-nav-icon" icon={faMousePointer} />}
-					name={t('Web buttons')}
-				/>
-				<CSidebarNavItem
-					target="_new"
-					href="/tablet2.html"
+					href="/tablet"
 					icon={<FontAwesomeIcon className="c-sidebar-nav-icon" icon={faTabletAlt} />}
-					name={t('Mobile buttons')}
+					name={t('Web/Mobile buttons')}
 				/>
 
 				<CSidebarNavItem

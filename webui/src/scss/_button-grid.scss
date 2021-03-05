@@ -13,7 +13,7 @@
 	color: black;
 }
 
-#pagebank {
+.bankgrid {
 	display: grid;
 	grid-auto-flow: row;
 	grid-auto-rows: 1fr;
@@ -22,17 +22,7 @@
 		background-color: rgba(255, 0, 0, 0.5);
 	}
 
-	.pagebank-row {
-		display: grid;
-		grid-auto-flow: column;
-		grid-auto-columns: 1fr;
-		transition: background-color 0.05s ease-in-out;
-		background-color: transparent;
-
-		img:hover {
-			border: 1px solid rgba(255, 255, 255, 0.3);
-		}
-
+	&.with-markings .pagebank-row {
 		// Streamdeck markings
 		&:nth-child(1) > .bank:nth-child(1),
 		&:nth-child(2) > .bank:nth-child(1),
@@ -55,6 +45,18 @@
 		&:nth-child(2) > .bank:nth-child(4) {
 			/* currently not in use.. dummy rule below */
 			display: inherit;
+		}
+	}
+
+	.pagebank-row {
+		display: grid;
+		grid-auto-flow: column;
+		grid-auto-columns: 1fr;
+		transition: background-color 0.05s ease-in-out;
+		background-color: transparent;
+
+		img:hover {
+			border: 1px solid rgba(255, 255, 255, 0.3);
 		}
 	}
 }

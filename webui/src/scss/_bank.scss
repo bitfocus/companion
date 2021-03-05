@@ -42,6 +42,8 @@
 		border-radius: Max(12%, 4px);
 		border: 1px solid rgba(100, 100, 100, 0.4);
 		margin: 0 auto;
+
+		-webkit-user-drag: none;
 	}
 }
 

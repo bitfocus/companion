@@ -154,7 +154,7 @@ export function ImportExport({ pageNumber }) {
 					changePage={isSinglePage ? null : changePage}
 					setPage={isSinglePage ? null : setPage}
 				/>
-				<CRow id="pagebank">
+				<CRow className="bankgrid">
 					<ButtonImportGrid config={isSinglePage ? snapshot.config : snapshot.config[importPage]} />
 				</CRow>
 

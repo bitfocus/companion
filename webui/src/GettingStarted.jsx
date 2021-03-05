@@ -10,7 +10,10 @@ export function GettingStarted() {
 	const [data, setData] = useState(null)
 	const [error, setError] = useState(null)
 
-	const doRetryLoad = () => {}
+	const doRetryLoad = () => {
+		// Cheat and just reload
+		window.location.reload()
+	}
 
 	useMountEffect(() => {
 		const socket = new io(SERVER_URL)

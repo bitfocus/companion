@@ -174,7 +174,7 @@ export const ButtonsGridPanel = memo(function ButtonsPage({
 					</CCol>
 				</CRow>
 
-				<CRow id="pagebank" className={classnames({ 'bank-armed': isHot })}>
+				<CRow className={classnames({ 'bank-armed': isHot, bankgrid: true, 'with-markings': true })}>
 					<ButtonGrid pageNumber={pageNumber} bankClick={bankClick} selectedButton={selectedButton} />
 				</CRow>
 
