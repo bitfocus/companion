@@ -7,7 +7,6 @@ import {
 	faFire,
 	faGamepad,
 	faInfo,
-	faMousePointer,
 	faTabletAlt,
 	faUsers,
 } from '@fortawesome/free-solid-svg-icons'
