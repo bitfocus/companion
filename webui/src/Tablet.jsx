@@ -54,7 +54,7 @@ class ImageCache extends EventEmitter {
 			})
 			.catch((e) => {
 				// TODO - report to user
-				console.error(`Failed to load page buttons: ${e}`)
+				console.error(`Failed to load page data: ${e}`)
 			})
 	}
 
@@ -179,42 +179,44 @@ export function Tablet() {
 	const layout = parsedQuery['layout']
 	return (
 		<div className="page-tablet">
-			<CContainer fluid className="d-flex flex-column">
-				{pages ? (
-					<>
-						<ConfigurePanel updateQueryUrl={updateQueryUrl} query={parsedQuery} orderedPages={orderedPages} />
-						{layout === 'cycle' ? (
-							<CyclePages
-								socket={socket}
-								pages={pages}
-								imageCache={imageCache}
-								orderedPages={validPages}
-								updateQueryUrl={updateQueryUrl}
-								query={parsedQuery}
-								cols={cols}
-								rows={rows}
-							/>
-						) : (
-							<InfinitePages
-								socket={socket}
-								pages={pages}
-								imageCache={imageCache}
-								orderedPages={validPages}
-								query={parsedQuery}
-								cols={cols}
-								rows={rows}
-							/>
-						)}
-					</>
-				) : (
-					<CRow className="flex-grow-1">
-						<div className="cycle-layout">
-							<div></div>
-							<LoadingRetryOrError dataReady={false} error={loadError} doRetry={doRetryLoad} />
-						</div>
-					</CRow>
-				)}
-			</CContainer>
+			<div className="scroller">
+				<CContainer fluid className="d-flex flex-column">
+					{pages ? (
+						<>
+							<ConfigurePanel updateQueryUrl={updateQueryUrl} query={parsedQuery} orderedPages={orderedPages} />
+							{layout === 'cycle' ? (
+								<CyclePages
+									socket={socket}
+									pages={pages}
+									imageCache={imageCache}
+									orderedPages={validPages}
+									updateQueryUrl={updateQueryUrl}
+									query={parsedQuery}
+									cols={cols}
+									rows={rows}
+								/>
+							) : (
+								<InfinitePages
+									socket={socket}
+									pages={pages}
+									imageCache={imageCache}
+									orderedPages={validPages}
+									query={parsedQuery}
+									cols={cols}
+									rows={rows}
+								/>
+							)}
+						</>
+					) : (
+						<CRow className="flex-grow-1">
+							<div className="cycle-layout">
+								<div></div>
+								<LoadingRetryOrError dataReady={false} error={loadError} doRetry={doRetryLoad} />
+							</div>
+						</CRow>
+					)}
+				</CContainer>
+			</div>
 		</div>
 	)
 }

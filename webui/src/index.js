@@ -39,7 +39,7 @@ ReactDOM.render(
 				<Route path="/emulator">
 					<p>Emulator</p>
 				</Route>
-				<Route path="/tablet">
+				<Route path="/tablet3">
 					<Tablet />
 				</Route>
 				<Route>

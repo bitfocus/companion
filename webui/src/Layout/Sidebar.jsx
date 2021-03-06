@@ -39,7 +39,7 @@ export function MySidebar({ show }) {
 				/>
 				<CSidebarNavItem
 					target="_new"
-					href="/tablet"
+					href="/tablet3"
 					icon={<FontAwesomeIcon className="c-sidebar-nav-icon" icon={faTabletAlt} />}
 					name={t('Web/Mobile buttons')}
 				/>
