@@ -13,7 +13,7 @@
     "@popperjs/core": "^2.8.6",
     "classnames": "^2.2.6",
     "dayjs": "^1.10.4",
-    "debounce-fn": "https://github.com/Julusian/debounce-fn.git",
+    "debounce-fn": "^5.0.0",
     "eventemitter3": "^4.0.7",
     "i18next": "^19.9.0",
     "i18next-browser-languagedetector": "^6.0.1",

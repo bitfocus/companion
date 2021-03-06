@@ -4207,9 +4207,10 @@ dayjs@^1.10.4:
   resolved "https://registry.yarnpkg.com/dayjs/-/dayjs-1.10.4.tgz#8e544a9b8683f61783f570980a8a80eaf54ab1e2"
   integrity sha512-RI/Hh4kqRc1UKLOAf/T5zdMMX5DQIlDxwUe3wSyMMnEbGunnpENCdbUgM+dW7kXidZqCttBrmw7BhN4TMddkCw==
 
-"debounce-fn@https://github.com/Julusian/debounce-fn.git":
-  version "4.0.0"
-  resolved "https://github.com/Julusian/debounce-fn.git#e616868634090b0a900d0604b0e3bc06ea775af0"
+debounce-fn@^5.0.0:
+  version "5.0.0"
+  resolved "https://registry.yarnpkg.com/debounce-fn/-/debounce-fn-5.0.0.tgz#1375e6b64a871e6fb6967c6ee05efbac08b65d9e"
+  integrity sha512-y0u25m4GMdDJ1oHX4ziszas15E4ryNoeFkQuZM/Z6yTy8jB8ity/jqSNWnQUi/csBBaQIad6Zd8eI1xKwtbFzw==
   dependencies:
     mimic-fn "^3.0.0"
 
