@@ -9,7 +9,7 @@ import { useInView } from 'react-intersection-observer'
 import * as queryString from 'query-string'
 import rangeParser from 'parse-numeric-range'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faArrowLeft, faArrowRight } from '@fortawesome/free-solid-svg-icons'
+import { faArrowLeft, faArrowRight, faCog, faExpand } from '@fortawesome/free-solid-svg-icons'
 import EventEmitter from 'eventemitter3'
 import { useHistory } from 'react-router-dom'
 
@@ -146,6 +146,27 @@ export function Tablet() {
 		}
 	})
 
+	const history = useHistory()
+	const updateQueryUrl = useCallback(
+		(key, value) => {
+			setQueryUrl((oldUrl) => {
+				const newQuery = queryString.parse(oldUrl)
+				if (value === '' || value === undefined || value === null || value === false) {
+					delete newQuery[key]
+				} else if (value === true) {
+					newQuery[key] = 1
+				} else {
+					newQuery[key] = value
+				}
+
+				const newStr = queryString.stringify(newQuery).replace('%2C', ',') // replace commas to make it readable
+				history.push(`?${newStr}`)
+				return newStr
+			})
+		},
+		[setQueryUrl, history]
+	)
+
 	// Compile the list of pages we will be showing
 	let validPages = orderedPages.filter((p) => pages && !!pages[p])
 	if (validPages.length === 0) validPages = Object.keys(pages || {}).map((p) => Number(p))
@@ -158,16 +179,17 @@ export function Tablet() {
 	const layout = parsedQuery['layout']
 	return (
 		<div className="page-tablet">
-			<CContainer fluid>
+			<CContainer fluid className="d-flex flex-column">
 				{pages ? (
 					<>
-						<ConfigurePanel setQueryUrl={setQueryUrl} query={parsedQuery} orderedPages={orderedPages} />
+						<ConfigurePanel updateQueryUrl={updateQueryUrl} query={parsedQuery} orderedPages={orderedPages} />
 						{layout === 'cycle' ? (
 							<CyclePages
 								socket={socket}
 								pages={pages}
 								imageCache={imageCache}
 								orderedPages={validPages}
+								updateQueryUrl={updateQueryUrl}
 								query={parsedQuery}
 								cols={cols}
 								rows={rows}
@@ -185,7 +207,7 @@ export function Tablet() {
 						)}
 					</>
 				) : (
-					<CRow>
+					<CRow className="flex-grow-1">
 						<div className="cycle-layout">
 							<div></div>
 							<LoadingRetryOrError dataReady={false} error={loadError} doRetry={doRetryLoad} />
@@ -197,39 +219,32 @@ export function Tablet() {
 	)
 }
 
-function ConfigurePanel({ setQueryUrl, query, orderedPages }) {
-	const history = useHistory()
+function ConfigurePanel({ updateQueryUrl, query, orderedPages }) {
+	const [show, setShow] = useState(false)
+	const [fullscreen, setFullscreen] = useState(document.fullscreenElement !== null)
 
-	const updateQueryUrl = useCallback(
-		(key, value) => {
-			setQueryUrl((oldUrl) => {
-				const newQuery = queryString.parse(oldUrl)
-				if (value === '' || value === undefined || value === null || value === false) {
-					delete newQuery[key]
-				} else if (value === true) {
-					newQuery[key] = 1
-				} else {
-					newQuery[key] = value
-				}
+	useMountEffect(() => {
+		const handleChange = () => setFullscreen(document.fullscreenElement !== null)
 
-				const newStr = queryString.stringify(newQuery).replace('%2C', ',') // replace commas to make it readable
-				console.log('new url', newStr)
-				history.push(`?${newStr}`)
-				return newStr
-			})
-			// const newQuery = {...query}
+		document.addEventListener('fullscreenchange', handleChange)
+		return () => {
+			document.removeEventListener('fullscreenchange', handleChange)
+		}
+	})
 
-			// setQueryUrl(queryString.stringify(newQuery))
-		},
-		[setQueryUrl, history]
-	)
-	return (
+	return show ? (
 		<CRow className="configure">
 			<CCol sm={12}>
-				<h3>Configure</h3>
+				<h3>
+					Configure Buttons View
+					<CButton className="close-config" onClick={() => setShow(false)} title="Close">
+						<FontAwesomeIcon icon={faCog} />
+					</CButton>
+				</h3>
 				<CForm>
 					<CRow>
 						<CCol md={4} sm={6} xs={12}>
+							<legend>Basic</legend>
 							<CFormGroup>
 								<label>Pages</label>
 								<p>use 1..6 for ranges, and commas for multiple selections. Follows provided order</p>
@@ -261,6 +276,7 @@ function ConfigurePanel({ setQueryUrl, query, orderedPages }) {
 							</CFormGroup>
 						</CCol>
 						<CCol md={4} sm={6} xs={12}>
+							<legend>Layout</legend>
 							<CFormGroup>
 								<label>Layout</label>
 								<CSelect
@@ -271,21 +287,30 @@ function ConfigurePanel({ setQueryUrl, query, orderedPages }) {
 									<option value="infinite">Infinite</option>
 								</CSelect>
 							</CFormGroup>
-							{/* <CFormGroup>
-								<label>Current index</label>
-								<CInput
-									type="number"
-									min={0}
-									max={orderedPages.length - 1}
-									value={query['index'] || 0}
-									onChange={(e) => updateQueryUrl('index', e.currentTarget.value)}
+							<CFormGroup>
+								<label>Hide configure button</label>
+								<CInputCheckbox
+									type="checkbox"
+									checked={!!query['noconfigure']}
+									value={true}
+									onChange={(e) => updateQueryUrl('noconfigure', !!e.currentTarget.checked)}
 								/>
-							</CFormGroup> */}
+							</CFormGroup>
+							<CFormGroup>
+								<label>Hide fullscreen button</label>
+								<CInputCheckbox
+									type="checkbox"
+									checked={!!query['nofullscreen']}
+									value={true}
+									onChange={(e) => updateQueryUrl('nofullscreen', !!e.currentTarget.checked)}
+								/>
+							</CFormGroup>
 						</CCol>
 
 						{query['layout'] === 'cycle' ? (
 							<>
 								<CCol md={4} sm={6} xs={12}>
+									<legend>Cycle</legend>
 									<CFormGroup>
 										<label>Loop pages</label>
 										<CInputCheckbox
@@ -300,8 +325,9 @@ function ConfigurePanel({ setQueryUrl, query, orderedPages }) {
 						) : (
 							<>
 								<CCol md={4} sm={6} xs={12}>
+									<legend>Infinite</legend>
 									<CFormGroup>
-										<label>No page headings</label>
+										<label>Hide page headings</label>
 										<CInputCheckbox
 											type="checkbox"
 											checked={!!query['noheadings']}
@@ -316,6 +342,25 @@ function ConfigurePanel({ setQueryUrl, query, orderedPages }) {
 				</CForm>
 			</CCol>
 		</CRow>
+	) : (
+		<CRow className="header">
+			<CCol xs={12}>
+				{(!fullscreen || !query['noconfigure']) && !query['nofullscreen'] ? (
+					<CButton onClick={() => document.documentElement.requestFullscreen()} title="Fullscreen">
+						<FontAwesomeIcon icon={faExpand} />
+					</CButton>
+				) : (
+					''
+				)}
+				{!query['noconfigure'] ? (
+					<CButton className="open-config" onClick={() => setShow(true)} title="Configure">
+						<FontAwesomeIcon icon={faCog} />
+					</CButton>
+				) : (
+					''
+				)}
+			</CCol>
+		</CRow>
 	)
 }
 
@@ -323,46 +368,39 @@ function clamp(val, max) {
 	return Math.min(Math.max(0, val), max)
 }
 
-function CyclePages({ socket, pages, imageCache, orderedPages, query, cols, rows }) {
+function CyclePages({ socket, pages, imageCache, orderedPages, updateQueryUrl, query, cols, rows }) {
 	const rawIndex = Number(query['index'])
 	const loop = query['loop']
-	const defaultIndex = isNaN(rawIndex) ? 0 : clamp(rawIndex, orderedPages.length - 1)
+	const currentIndex = isNaN(rawIndex) ? 0 : clamp(rawIndex, orderedPages.length - 1)
+	const currentPage = orderedPages[currentIndex]
 
-	const [currentIndex, setCurrentIndex] = useState(defaultIndex)
-	// TODO - update url while cycling
-
-	const safeIndex = clamp(currentIndex, orderedPages.length - 1)
-	const currentPage = orderedPages[safeIndex]
+	const setCurrentIndex = useCallback((newIndex) => updateQueryUrl('index', newIndex), [updateQueryUrl])
 
 	{
 		// Ensure next and prev pages are preloaded for more seamless cycling
-		const prevPage = orderedPages[safeIndex - 1]
+		const prevPage = orderedPages[currentIndex - 1]
 		if (prevPage !== undefined) imageCache.loadPage(prevPage)
-		const nextPage = orderedPages[safeIndex + 1]
+		const nextPage = orderedPages[currentIndex + 1]
 		if (nextPage !== undefined) imageCache.loadPage(nextPage)
 	}
 
 	const prevPage = useCallback(() => {
-		setCurrentIndex((oldIndex) => {
-			if (oldIndex <= 0) {
-				return orderedPages.length - 1
-			} else {
-				return oldIndex - 1
-			}
-		})
-	}, [orderedPages])
+		if (currentIndex <= 0) {
+			setCurrentIndex(orderedPages.length - 1)
+		} else {
+			setCurrentIndex(currentIndex - 1)
+		}
+	}, [orderedPages, setCurrentIndex, currentIndex])
 	const nextPage = useCallback(() => {
-		setCurrentIndex((oldIndex) => {
-			if (oldIndex >= orderedPages.length - 1) {
-				return 0
-			} else {
-				return oldIndex + 1
-			}
-		})
-	}, [orderedPages])
+		if (currentIndex >= orderedPages.length - 1) {
+			setCurrentIndex(0)
+		} else {
+			setCurrentIndex(currentIndex + 1)
+		}
+	}, [orderedPages, setCurrentIndex, currentIndex])
 
 	return (
-		<CRow>
+		<CRow className="flex-grow-1">
 			<div className="cycle-layout">
 				<MyErrorBoundary>
 					{/* <div></div> */}
