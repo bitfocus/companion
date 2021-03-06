@@ -1,16 +1,17 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { LoadingRetryOrError, MyErrorBoundary, SERVER_URL, socketEmit, useMountEffect } from './util'
 import io from 'socket.io-client'
-import { CButton, CCol, CContainer, CRow } from '@coreui/react'
+import { CButton, CCol, CContainer, CForm, CFormGroup, CInput, CInputCheckbox, CRow, CSelect } from '@coreui/react'
 import shortid from 'shortid'
 import { MAX_BUTTONS, MAX_COLS, MAX_ROWS } from './Constants'
 import { BankPreview, dataToButtonImage } from './Components/BankButton'
 import { useInView } from 'react-intersection-observer'
-import { parse } from 'query-string'
+import * as queryString from 'query-string'
 import rangeParser from 'parse-numeric-range'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faArrowLeft, faArrowRight } from '@fortawesome/free-solid-svg-icons'
 import EventEmitter from 'eventemitter3'
+import { useHistory } from 'react-router-dom'
 
 const socket = new io(SERVER_URL)
 
@@ -84,9 +85,9 @@ export function Tablet() {
 	const [pages, setPages] = useState(null)
 	const [loadError, setLoadError] = useState(null)
 
-	const locationSearch = window.location.search
+	const [queryUrl, setQueryUrl] = useState(window.location.search)
 	const { orderedPages, parsedQuery } = useMemo(() => {
-		const parsedQuery = parse(locationSearch)
+		const parsedQuery = queryString.parse(queryUrl)
 
 		const pagesRange = rangeParser(parsedQuery.pages ?? '').filter((p) => p >= 1 && p <= 99)
 
@@ -94,7 +95,7 @@ export function Tablet() {
 			parsedQuery,
 			orderedPages: pagesRange,
 		}
-	}, [locationSearch])
+	}, [queryUrl])
 
 	const imageCache = useMemo(() => new ImageCache(socket), [])
 
@@ -158,37 +159,163 @@ export function Tablet() {
 	return (
 		<div className="page-tablet">
 			<CContainer fluid>
-				<CRow>
-					<LoadingRetryOrError dataReady={pages} error={loadError} doRetry={doRetryLoad} />
-				</CRow>
-
 				{pages ? (
-					layout === 'cycle' ? (
-						<CyclePages
-							socket={socket}
-							pages={pages}
-							imageCache={imageCache}
-							orderedPages={validPages}
-							query={parsedQuery}
-							cols={cols}
-							rows={rows}
-						/>
-					) : (
-						<InfinitePages
-							socket={socket}
-							pages={pages}
-							imageCache={imageCache}
-							orderedPages={validPages}
-							query={parsedQuery}
-							cols={cols}
-							rows={rows}
-						/>
-					)
+					<>
+						<ConfigurePanel setQueryUrl={setQueryUrl} query={parsedQuery} orderedPages={orderedPages} />
+						{layout === 'cycle' ? (
+							<CyclePages
+								socket={socket}
+								pages={pages}
+								imageCache={imageCache}
+								orderedPages={validPages}
+								query={parsedQuery}
+								cols={cols}
+								rows={rows}
+							/>
+						) : (
+							<InfinitePages
+								socket={socket}
+								pages={pages}
+								imageCache={imageCache}
+								orderedPages={validPages}
+								query={parsedQuery}
+								cols={cols}
+								rows={rows}
+							/>
+						)}
+					</>
 				) : (
-					''
+					<CRow>
+						<div className="cycle-layout">
+							<div></div>
+							<LoadingRetryOrError dataReady={false} error={loadError} doRetry={doRetryLoad} />
+						</div>
+					</CRow>
 				)}
 			</CContainer>
 		</div>
+	)
+}
+
+function ConfigurePanel({ setQueryUrl, query, orderedPages }) {
+	const history = useHistory()
+
+	const updateQueryUrl = useCallback(
+		(key, value) => {
+			setQueryUrl((oldUrl) => {
+				const newQuery = queryString.parse(oldUrl)
+				if (value === '' || value === undefined || value === null || value === false) {
+					delete newQuery[key]
+				} else if (value === true) {
+					newQuery[key] = 1
+				} else {
+					newQuery[key] = value
+				}
+
+				const newStr = queryString.stringify(newQuery).replace('%2C', ',') // replace commas to make it readable
+				console.log('new url', newStr)
+				history.push(`?${newStr}`)
+				return newStr
+			})
+			// const newQuery = {...query}
+
+			// setQueryUrl(queryString.stringify(newQuery))
+		},
+		[setQueryUrl, history]
+	)
+	return (
+		<CRow className="configure">
+			<CCol sm={12}>
+				<h3>Configure</h3>
+				<CForm>
+					<CRow>
+						<CCol md={4} sm={6} xs={12}>
+							<CFormGroup>
+								<label>Pages</label>
+								<p>use 1..6 for ranges, and commas for multiple selections. Follows provided order</p>
+								<CInput
+									value={query['pages'] || ''}
+									onChange={(e) => updateQueryUrl('pages', e.currentTarget.value)}
+									placeholder={'1..99'}
+								/>
+							</CFormGroup>
+							<CFormGroup>
+								<label>Rows</label>
+								<CInput
+									type="number"
+									min={1}
+									max={MAX_ROWS}
+									value={query['rows'] || MAX_ROWS}
+									onChange={(e) => updateQueryUrl('rows', e.currentTarget.value)}
+								/>
+							</CFormGroup>
+							<CFormGroup>
+								<label>Columns</label>
+								<CInput
+									type="number"
+									min={1}
+									max={MAX_COLS}
+									value={query['cols'] || MAX_COLS}
+									onChange={(e) => updateQueryUrl('cols', e.currentTarget.value)}
+								/>
+							</CFormGroup>
+						</CCol>
+						<CCol md={4} sm={6} xs={12}>
+							<CFormGroup>
+								<label>Layout</label>
+								<CSelect
+									value={query['layout'] || 'infinite'}
+									onChange={(e) => updateQueryUrl('layout', e.currentTarget.value)}
+								>
+									<option value="cycle">Cycle</option>
+									<option value="infinite">Infinite</option>
+								</CSelect>
+							</CFormGroup>
+							{/* <CFormGroup>
+								<label>Current index</label>
+								<CInput
+									type="number"
+									min={0}
+									max={orderedPages.length - 1}
+									value={query['index'] || 0}
+									onChange={(e) => updateQueryUrl('index', e.currentTarget.value)}
+								/>
+							</CFormGroup> */}
+						</CCol>
+
+						{query['layout'] === 'cycle' ? (
+							<>
+								<CCol md={4} sm={6} xs={12}>
+									<CFormGroup>
+										<label>Loop pages</label>
+										<CInputCheckbox
+											type="checkbox"
+											checked={!!query['loop']}
+											value={true}
+											onChange={(e) => updateQueryUrl('loop', !!e.currentTarget.checked)}
+										/>
+									</CFormGroup>
+								</CCol>
+							</>
+						) : (
+							<>
+								<CCol md={4} sm={6} xs={12}>
+									<CFormGroup>
+										<label>No page headings</label>
+										<CInputCheckbox
+											type="checkbox"
+											checked={!!query['noheadings']}
+											value={true}
+											onChange={(e) => updateQueryUrl('noheadings', !!e.currentTarget.checked)}
+										/>
+									</CFormGroup>
+								</CCol>
+							</>
+						)}
+					</CRow>
+				</CForm>
+			</CCol>
+		</CRow>
 	)
 }
 
@@ -278,16 +405,18 @@ function InfinitePages({ socket, pages, imageCache, orderedPages, query, cols, r
 
 	const pageElements = orderedPages.map((number, i) => (
 		<MyErrorBoundary key={i}>
-			{!noHeadings ? (
+			<div id={`index_${number}`}>
+				{!noHeadings ? (
+					<CRow>
+						<h1>{pages[number]?.name}</h1>
+					</CRow>
+				) : (
+					''
+				)}
 				<CRow>
-					<h1 id={`page_${number}`}>{pages[number]?.name}</h1>
+					<ButtonGrid socket={socket} imageCache={imageCache} number={number} cols={cols} rows={rows} />
 				</CRow>
-			) : (
-				''
-			)}
-			<CRow>
-				<ButtonGrid socket={socket} imageCache={imageCache} number={number} cols={cols} rows={rows} />
-			</CRow>
+			</div>
 		</MyErrorBoundary>
 	))
 

@@ -9,11 +9,16 @@
 
 	.bankgrid {
 		width: 100%;
+
+		.bank img {
+			max-width: 150px;
+			max-height: 150px;
+		}
 	}
 
-	.bank img {
-		max-width: 150px;
-		max-height: 150px;
+	.configure {
+		border: 1px solid #555;
+		padding: 10px;
 	}
 
 	.btn {
