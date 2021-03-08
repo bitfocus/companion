@@ -4,7 +4,6 @@
 	"description": "Companion",
 	"main": "electron.js",
 	"build": {
-		"afterPack": "./tools/asar-repack.js",
 		"productName": "Companion",
 		"appId": "companion.bitfocus.no",
 		"mac": {
@@ -14,20 +13,6 @@
 				"LSUIElement": 1
 			},
 			"asarUnpack": [
-				"public",
-				"webui/build",
-				"node_modules/jquery",
-				"node_modules/popper.js/**",
-				"node_modules/bootstrap",
-				"node_modules/bootstrap-colorpicker",
-				"node_modules/pace-progress",
-				"node_modules/perfect-scrollbar",
-				"node_modules/@coreui/coreui",
-				"node_modules/flag-icon-css",
-				"node_modules/font-awesome",
-				"node_modules/moment",
-				"node_modules/select2",
-				"node_modules/tributejs/dist"
 			],
 			"extraFiles": [
 				{
@@ -84,14 +69,70 @@
 			"assets/bitfocus-logo.png",
 			"assets/trayTemplate.png",
 			"assets/trayTemplate@2x.png",
-			"webui/build/**/*",
-			"!webui/src/**/*",
-			"!webui/public/**/*",
+			"!webui/**/*",
+			"!public/**/*",
 			"!font/*",
 			"!tools/*",
 			"!*.md",
-			"!node_modules/sharp/vendor/lib",
-			"!public/js/babel"
+			"!node_modules/sharp/vendor/lib"
+		],
+		"extraResources": [
+			{
+				"from": "public",
+				"to": "static"
+			},
+			{
+				"from": "node_modules/jquery/dist",
+				"to": "static/js/jquery"
+			},
+			{
+				"from": "node_modules/popper.js/dist",
+				"to": "static/js/popper"
+			},
+			{
+				"from": "node_modules/bootstrap/dist/js",
+				"to": "static/js/bootstrap"
+			},
+			{
+				"from": "node_modules/bootstrap-colorpicker",
+				"to": "static/js/bootstrapcp"
+			},
+			{
+				"from": "node_modules/pace-progress",
+				"to": "static/js/pace-progress"
+			},
+			{
+				"from": "node_modules/perfect-scrollbar/dist",
+				"to": "static/js/perfect-scrollbar"
+			},
+			{
+				"from": "node_modules/@coreui/coreui/dist/js",
+				"to": "static/js/coreui"
+			},
+			{
+				"from": "node_modules/flag-icon-css",
+				"to": "static/js/flag-icon-css"
+			},
+			{
+				"from": "node_modules/font-awesome",
+				"to": "static/js/font-awesome"
+			},
+			{
+				"from": "node_modules/moment",
+				"to": "static/js/moment"
+			},
+			{
+				"from": "node_modules/select2/dist",
+				"to": "static/select2"
+			},
+			{
+				"from": "node_modules/tributejs/dist",
+				"to": "static/tributejs"
+			},
+			{
+				"from": "webui/build",
+				"to": "static/v2"
+			}
 		]
 	},
 	"scripts": {
