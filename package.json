@@ -4,6 +4,7 @@
 	"description": "Companion",
 	"main": "electron.js",
 	"build": {
+		"afterPack": "./tools/asar-repack.js",
 		"productName": "Companion",
 		"appId": "companion.bitfocus.no",
 		"mac": {
@@ -12,8 +13,6 @@
 				"LSBackgroundOnly": 1,
 				"LSUIElement": 1
 			},
-			"asarUnpack": [
-			],
 			"extraFiles": [
 				{
 					"from": "./node_modules/sharp/vendor/8.10.5/lib",
