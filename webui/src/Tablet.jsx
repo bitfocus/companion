@@ -13,8 +13,6 @@ import { faArrowLeft, faArrowRight, faCog, faExpand } from '@fortawesome/free-so
 import EventEmitter from 'eventemitter3'
 import { useHistory } from 'react-router-dom'
 
-const socket = new io(SERVER_URL)
-
 /** Cache of images across grid components */
 class ImageCache extends EventEmitter {
 	constructor(socket) {
@@ -58,7 +56,8 @@ class ImageCache extends EventEmitter {
 			})
 	}
 
-	_updateImages = (page, data) => {
+	_updateImages = (page0, data) => {
+		const page = Number(page0)
 		if (this.loadedPages.has(page)) {
 			const newImages = { ...this.imageCache.get(page) }
 
@@ -73,11 +72,28 @@ class ImageCache extends EventEmitter {
 				}
 			}
 
-			this.imageCache.set(page, newImages)
 			if (changed) {
 				this.emit(`${page}`, newImages)
 			}
+			this.imageCache.set(page, newImages)
 		}
+	}
+}
+
+function sanitisePageInfo(info) {
+	const toNumArray = (raw) => {
+		if (Array.isArray(raw)) {
+			return raw.map((v) => Number(v))
+		} else {
+			return []
+		}
+	}
+
+	return {
+		...info,
+		pageup: toNumArray(info.pageup),
+		pagenum: toNumArray(info.pagenum),
+		pagedown: toNumArray(info.pagedown),
 	}
 }
 
@@ -97,7 +113,10 @@ export function Tablet() {
 		}
 	}, [queryUrl])
 
-	const imageCache = useMemo(() => new ImageCache(socket), [])
+	const [socket, imageCache] = useMemo(() => {
+		const rawSocket = new io(SERVER_URL)
+		return [rawSocket, new ImageCache(rawSocket)]
+	}, [])
 
 	const [retryToken, setRetryToken] = useState(shortid())
 	const doRetryLoad = useCallback(() => setRetryToken(shortid()), [])
@@ -106,9 +125,13 @@ export function Tablet() {
 		setPages(null)
 
 		socketEmit(socket, 'web_buttons', [])
-			.then(([pages]) => {
+			.then(([newPages]) => {
 				setLoadError(null)
-				setPages(pages)
+				const newPages2 = {}
+				for (const [id, info] of Object.entries(newPages)) {
+					newPages2[id] = sanitisePageInfo(info)
+				}
+				setPages(newPages2)
 			})
 			.catch((e) => {
 				console.error('Failed to load pages list:', e)
@@ -121,7 +144,7 @@ export function Tablet() {
 				if (oldPages) {
 					return {
 						...oldPages,
-						[page]: info,
+						[page]: sanitisePageInfo(info),
 					}
 				} else {
 					return null
@@ -129,12 +152,12 @@ export function Tablet() {
 			})
 		}
 
-		socket.on('set_page', updatePageInfo)
+		socket.on('page_update_ext', updatePageInfo)
 
 		return () => {
-			socket.off('set_page', updatePageInfo)
+			socket.off('page_update_ext', updatePageInfo)
 		}
-	}, [retryToken])
+	}, [retryToken, socket])
 
 	useMountEffect(() => {
 		const onConnect = () => {
@@ -386,20 +409,25 @@ function CyclePages({ socket, pages, imageCache, orderedPages, updateQueryUrl, q
 		if (nextPage !== undefined) imageCache.loadPage(nextPage)
 	}
 
-	const prevPage = useCallback(() => {
+	const goPrevPage = useCallback(() => {
 		if (currentIndex <= 0) {
-			setCurrentIndex(orderedPages.length - 1)
+			if (loop) {
+				setCurrentIndex(orderedPages.length - 1)
+			}
 		} else {
 			setCurrentIndex(currentIndex - 1)
 		}
-	}, [orderedPages, setCurrentIndex, currentIndex])
-	const nextPage = useCallback(() => {
+	}, [orderedPages, setCurrentIndex, currentIndex, loop])
+	const goNextPage = useCallback(() => {
 		if (currentIndex >= orderedPages.length - 1) {
-			setCurrentIndex(0)
+			if (loop) {
+				setCurrentIndex(0)
+			}
 		} else {
 			setCurrentIndex(currentIndex + 1)
 		}
-	}, [orderedPages, setCurrentIndex, currentIndex])
+	}, [orderedPages, setCurrentIndex, currentIndex, loop])
+	const goFirstPage = useCallback(() => setCurrentIndex(0), [setCurrentIndex])
 
 	return (
 		<CRow className="flex-grow-1">
@@ -412,10 +440,10 @@ function CyclePages({ socket, pages, imageCache, orderedPages, updateQueryUrl, q
 
 							{orderedPages.length > 1 ? (
 								<>
-									<CButton onClick={nextPage} disabled={!loop && currentIndex === orderedPages.length - 1} size="lg">
+									<CButton onClick={goNextPage} disabled={!loop && currentIndex === orderedPages.length - 1} size="lg">
 										<FontAwesomeIcon icon={faArrowRight} />
 									</CButton>
-									<CButton onClick={prevPage} disabled={!loop && currentIndex === 0} size="lg">
+									<CButton onClick={goPrevPage} disabled={!loop && currentIndex === 0} size="lg">
 										<FontAwesomeIcon icon={faArrowLeft} />
 									</CButton>
 								</>
@@ -432,6 +460,10 @@ function CyclePages({ socket, pages, imageCache, orderedPages, updateQueryUrl, q
 							number={currentPage}
 							cols={cols}
 							rows={rows}
+							pageInfo={pages[currentPage]}
+							goFirstPage={goFirstPage}
+							goNextPage={goNextPage}
+							goPrevPage={goPrevPage}
 						/>
 					</div>
 				</MyErrorBoundary>
@@ -454,7 +486,14 @@ function InfinitePages({ socket, pages, imageCache, orderedPages, query, cols, r
 					''
 				)}
 				<CRow>
-					<ButtonGrid socket={socket} imageCache={imageCache} number={number} cols={cols} rows={rows} />
+					<ButtonGrid
+						socket={socket}
+						imageCache={imageCache}
+						number={number}
+						cols={cols}
+						rows={rows}
+						pageInfo={pages[number]}
+					/>
 				</CRow>
 			</div>
 		</MyErrorBoundary>
@@ -463,7 +502,7 @@ function InfinitePages({ socket, pages, imageCache, orderedPages, query, cols, r
 	return <>{pageElements}</>
 }
 
-function ButtonGrid({ socket, imageCache, number, cols, rows }) {
+function ButtonGrid({ socket, imageCache, number, cols, rows, goFirstPage, goNextPage, goPrevPage, pageInfo }) {
 	const { ref, inView } = useInView({
 		rootMargin: '50%',
 		/* Optional options */
@@ -487,9 +526,17 @@ function ButtonGrid({ socket, imageCache, number, cols, rows }) {
 
 	const bankClick = useCallback(
 		(bank, pressed) => {
-			socket.emit('hot_press', number, bank, pressed)
+			if (pressed && pageInfo && pageInfo.pageup && pageInfo.pageup.includes(bank)) {
+				goNextPage()
+			} else if (pressed && pageInfo && pageInfo.pagedown && pageInfo.pagedown.includes(bank)) {
+				goPrevPage()
+			} else if (pressed && pageInfo && pageInfo.pagenum && pageInfo.pagenum.includes(bank)) {
+				goFirstPage()
+			} else {
+				socket.emit('hot_press', number, bank, pressed)
+			}
 		},
-		[socket, number]
+		[socket, number, pageInfo, goNextPage, goPrevPage, goFirstPage]
 	)
 
 	return (
@@ -502,7 +549,7 @@ function ButtonGrid({ socket, imageCache, number, cols, rows }) {
 						<CCol key={y} sm={12} className="pagebank-row">
 							{Array(Math.min(MAX_COLS, cols))
 								.fill(0)
-								.map((_, x) => {
+								.map((_2, x) => {
 									const index = y * MAX_COLS + x + 1
 									return (
 										<BankPreview
