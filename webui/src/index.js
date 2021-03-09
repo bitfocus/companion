@@ -13,6 +13,7 @@ import LanguageDetector from 'i18next-browser-languagedetector'
 import { initReactI18next } from 'react-i18next'
 import { GettingStarted } from './GettingStarted'
 import { Tablet } from './Tablet'
+import { Emulator } from './Emulator'
 
 i18n
 	.use(Backend)
@@ -36,8 +37,8 @@ ReactDOM.render(
 				<Route path="/getting-started">
 					<GettingStarted />
 				</Route>
-				<Route path="/emulator">
-					<p>Emulator</p>
+				<Route path="/emulator2">
+					<Emulator />
 				</Route>
 				<Route path="/tablet3">
 					<Tablet />

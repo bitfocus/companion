@@ -32,7 +32,7 @@ export function MySidebar({ show }) {
 
 				<CSidebarNavItem
 					target="_new"
-					href="/emulator.html"
+					href="/emulator2"
 					icon={<FontAwesomeIcon className="c-sidebar-nav-icon" icon={faGamepad} />}
 					name={t('Emulator')}
 				/>
