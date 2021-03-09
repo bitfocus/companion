@@ -85,7 +85,7 @@
 				"to": "static/js/jquery"
 			},
 			{
-				"from": "node_modules/popper.js/dist",
+				"from": "node_modules/popper.js/dist/umd",
 				"to": "static/js/popper"
 			},
 			{
