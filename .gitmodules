@@ -763,3 +763,6 @@ url=https://github.com/bitfocus/companion-module-newbluefx-titler.git
 [submodule "lib/module/lectrosonics-aspen"]
 	path = lib/module/lectrosonics-aspen
 	url = https://github.com/bitfocus/companion-module-lectrosonics-aspen.git
+[submodule "lib/module/allenheath-qu"]
+	path = lib/module/allenheath-qu
+	url = https://github.com/bitfocus/companion-module-allenheath-qu.git
