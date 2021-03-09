@@ -24,7 +24,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import io from 'socket.io-client'
 import '@fontsource/fira-code'
 
-import { MyErrorBoundary } from './util'
+import { MyErrorBoundary, SERVER_URL } from './util'
 import { SurfacesPage } from './Surfaces'
 import { UserConfig } from './UserConfig'
 import { LogPanel } from './LogPanel'
@@ -37,8 +37,6 @@ import { Scheduler } from './Scheduler'
 import { InstancesPage } from './Instances'
 import { ButtonsPage } from './Buttons'
 import { ContextData } from './ContextData'
-
-const serverUrl = window.SERVER_URL === '%REACT_APP_SERVER_URL%' ? undefined : window.SERVER_URL
 
 export default class App extends React.Component {
 	constructor(props) {
@@ -53,7 +51,7 @@ export default class App extends React.Component {
 			showSidebar: true,
 		}
 
-		this.socket = new io(serverUrl)
+		this.socket = new io(SERVER_URL)
 		this.socket.on('connect', () => {
 			if (this.state.was_connected) {
 				window.location.reload(true)

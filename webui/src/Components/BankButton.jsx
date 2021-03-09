@@ -38,6 +38,14 @@ export const BankPreview = React.memo(function (props) {
 			className={classnames(classes)}
 			onMouseDown={() => props?.onClick?.(props.index, true)}
 			onMouseUp={() => props?.onClick?.(props.index, false)}
+			onTouchStart={() => props?.onClick?.(props.index, true)}
+			onTouchEnd={() => props?.onClick?.(props.index, false)}
+			onTouchCancel={() => props?.onClick?.(props.index, false)}
+			onContextMenu={(e) => {
+				e.preventDefault()
+				e.stopPropagation()
+				return false
+			}}
 		>
 			<div className="bank-border">
 				<img ref={props.dragRef} width={72} height={72} src={props.preview ?? BlackImage} alt={props.alt} />

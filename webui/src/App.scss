@@ -5,6 +5,7 @@
 
 @import 'scss/layout';
 @import 'scss/common';
+@import 'scss/tablet';
 
 @import 'scss/bank';
 @import 'scss/button-edit';
@@ -54,5 +55,23 @@
 
 	.text-muted {
 		color: #ccc !important;
+	}
+}
+
+.page-white {
+	background-color: white;
+	padding: 1px;
+
+	min-height: 100vh;
+
+	> div {
+		margin: 1em auto;
+		max-width: 860px;
+		line-height: 1.5rem;
+		tab-size: 4;
+
+		img {
+			max-width: 100%;
+		}
 	}
 }

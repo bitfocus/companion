@@ -7,7 +7,6 @@ import {
 	faFire,
 	faGamepad,
 	faInfo,
-	faMousePointer,
 	faTabletAlt,
 	faUsers,
 } from '@fortawesome/free-solid-svg-icons'
@@ -33,21 +32,15 @@ export function MySidebar({ show }) {
 
 				<CSidebarNavItem
 					target="_new"
-					href="/emulator.html"
+					href="/emulator2"
 					icon={<FontAwesomeIcon className="c-sidebar-nav-icon" icon={faGamepad} />}
 					name={t('Emulator')}
 				/>
 				<CSidebarNavItem
 					target="_new"
-					href="/tablet.html"
-					icon={<FontAwesomeIcon className="c-sidebar-nav-icon" icon={faMousePointer} />}
-					name={t('Web buttons')}
-				/>
-				<CSidebarNavItem
-					target="_new"
-					href="/tablet2.html"
+					href="/tablet3"
 					icon={<FontAwesomeIcon className="c-sidebar-nav-icon" icon={faTabletAlt} />}
-					name={t('Mobile buttons')}
+					name={t('Web/Mobile buttons')}
 				/>
 
 				<CSidebarNavItem
@@ -77,7 +70,7 @@ export function MySidebar({ show }) {
 
 				<CSidebarNavItem
 					target="_new"
-					href="/help.html"
+					href="/getting-started"
 					icon={<FontAwesomeIcon className="c-sidebar-nav-icon" icon={faInfo} />}
 					name={t('Getting Started')}
 				/>

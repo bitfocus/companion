@@ -1,9 +1,13 @@
 .container-fluid.loading {
 	h3 {
-		color: white;
+		// color: white;
 		text-align: center;
 
 		margin-bottom: 1rem;
+	}
+
+	.progress {
+		background-color: #3c4b64;
 	}
 
 	.row {

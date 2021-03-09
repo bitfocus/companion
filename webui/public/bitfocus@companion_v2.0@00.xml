@@ -1,0 +1,189 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<MA xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://schemas.malighting.de/grandma2/xml/MA" xsi:schemaLocation="http://schemas.malighting.de/grandma2/xml/MA http://schemas.malighting.de/grandma2/xml/3.4.0/MA.xsd" major_vers="3" minor_vers="4" stream_vers="0">
+	<Info datetime="2018-11-05T19:01:38" showfile="None" />
+	<FixtureType index="28" name="Companion v2.0" mode="00">
+		<short_name>Companion</short_name>
+		<manufacturer>Bitfocus</manufacturer>
+		<short_manufacturer>Companion</short_manufacturer>
+		<Modules index="0">
+			<Module index="0" class="None" beamtype="Wash" beam_angle="35" beam_intensity="10000">
+				<ChannelType index="0" attribute="MACROS" feature="MACRO" preset="CONTROL" coarse="1" snap="true">
+					<ChannelFunction index="0" name="Bank Selection" from="0" to="100" min_dmx_24="0" max_dmx_24="16777215" subattribute="MACROSELECT" subattribute_user_name="Select" attribute="MACROS" attribute_user_name="Macros" feature="MACRO" feature_user_name="Macro" preset="CONTROL" preset_user_name="Control">
+						<ChannelSet index="0" name="No Page" from_dmx="0" to_dmx="0" />
+						<ChannelSet index="1" name="Page 1" from_dmx="1" to_dmx="1" />
+						<ChannelSet index="2" name="Page 2" from_dmx="2" to_dmx="2" />
+						<ChannelSet index="3" name="Page 3" from_dmx="3" to_dmx="3" />
+						<ChannelSet index="4" name="Page 4" from_dmx="4" to_dmx="4" />
+						<ChannelSet index="5" name="Page 5" from_dmx="5" to_dmx="5" />
+						<ChannelSet index="6" name="Page 6" from_dmx="6" to_dmx="6" />
+						<ChannelSet index="7" name="Page 7" from_dmx="7" to_dmx="7" />
+						<ChannelSet index="8" name="Page 8" from_dmx="8" to_dmx="8" />
+						<ChannelSet index="9" name="Page 9" from_dmx="9" to_dmx="9" />
+						<ChannelSet index="10" name="Page 10" from_dmx="10" to_dmx="10" />
+						<ChannelSet index="11" name="Page 11" from_dmx="11" to_dmx="11" />
+						<ChannelSet index="12" name="Page 12" from_dmx="12" to_dmx="12" />
+						<ChannelSet index="13" name="Page 13" from_dmx="13" to_dmx="13" />
+						<ChannelSet index="14" name="Page 14" from_dmx="14" to_dmx="14" />
+						<ChannelSet index="15" name="Page 15" from_dmx="15" to_dmx="15" />
+						<ChannelSet index="16" name="Page 16" from_dmx="16" to_dmx="16" />
+						<ChannelSet index="17" name="Page 17" from_dmx="17" to_dmx="17" />
+						<ChannelSet index="18" name="Page 18" from_dmx="18" to_dmx="18" />
+						<ChannelSet index="19" name="Page 19" from_dmx="19" to_dmx="19" />
+						<ChannelSet index="20" name="Page 20" from_dmx="20" to_dmx="20" />
+						<ChannelSet index="21" name="Page 21" from_dmx="21" to_dmx="21" />
+						<ChannelSet index="22" name="Page 22" from_dmx="22" to_dmx="22" />
+						<ChannelSet index="23" name="Page 23" from_dmx="23" to_dmx="23" />
+						<ChannelSet index="24" name="Page 24" from_dmx="24" to_dmx="24" />
+						<ChannelSet index="25" name="Page 25" from_dmx="25" to_dmx="25" />
+						<ChannelSet index="26" name="Page 26" from_dmx="26" to_dmx="26" />
+						<ChannelSet index="27" name="Page 27" from_dmx="27" to_dmx="27" />
+						<ChannelSet index="28" name="Page 28" from_dmx="28" to_dmx="28" />
+						<ChannelSet index="29" name="Page 29" from_dmx="29" to_dmx="29" />
+						<ChannelSet index="30" name="Page 30" from_dmx="30" to_dmx="30" />
+						<ChannelSet index="31" name="Page 31" from_dmx="31" to_dmx="31" />
+						<ChannelSet index="32" name="Page 32" from_dmx="32" to_dmx="32" />
+						<ChannelSet index="33" name="Page 33" from_dmx="33" to_dmx="33" />
+						<ChannelSet index="34" name="Page 34" from_dmx="34" to_dmx="34" />
+						<ChannelSet index="35" name="Page 35" from_dmx="35" to_dmx="35" />
+						<ChannelSet index="36" name="Page 36" from_dmx="36" to_dmx="36" />
+						<ChannelSet index="37" name="Page 37" from_dmx="37" to_dmx="37" />
+						<ChannelSet index="38" name="Page 38" from_dmx="38" to_dmx="38" />
+						<ChannelSet index="39" name="Page 39" from_dmx="39" to_dmx="39" />
+						<ChannelSet index="40" name="Page 40" from_dmx="40" to_dmx="40" />
+						<ChannelSet index="41" name="Page 41" from_dmx="41" to_dmx="41" />
+						<ChannelSet index="42" name="Page 42" from_dmx="42" to_dmx="42" />
+						<ChannelSet index="43" name="Page 43" from_dmx="43" to_dmx="43" />
+						<ChannelSet index="44" name="Page 44" from_dmx="44" to_dmx="44" />
+						<ChannelSet index="45" name="Page 45" from_dmx="45" to_dmx="45" />
+						<ChannelSet index="46" name="Page 46" from_dmx="46" to_dmx="46" />
+						<ChannelSet index="47" name="Page 47" from_dmx="47" to_dmx="47" />
+						<ChannelSet index="48" name="Page 48" from_dmx="48" to_dmx="48" />
+						<ChannelSet index="49" name="Page 49" from_dmx="49" to_dmx="49" />
+						<ChannelSet index="50" name="Page 50" from_dmx="50" to_dmx="50" />
+						<ChannelSet index="51" name="Page 51" from_dmx="51" to_dmx="51" />
+						<ChannelSet index="52" name="Page 52" from_dmx="52" to_dmx="52" />
+						<ChannelSet index="53" name="Page 53" from_dmx="53" to_dmx="53" />
+						<ChannelSet index="54" name="Page 54" from_dmx="54" to_dmx="54" />
+						<ChannelSet index="55" name="Page 55" from_dmx="55" to_dmx="55" />
+						<ChannelSet index="56" name="Page 56" from_dmx="56" to_dmx="56" />
+						<ChannelSet index="57" name="Page 57" from_dmx="57" to_dmx="57" />
+						<ChannelSet index="58" name="Page 58" from_dmx="58" to_dmx="58" />
+						<ChannelSet index="59" name="Page 59" from_dmx="59" to_dmx="59" />
+						<ChannelSet index="60" name="Page 60" from_dmx="60" to_dmx="60" />
+						<ChannelSet index="61" name="Page 61" from_dmx="61" to_dmx="61" />
+						<ChannelSet index="62" name="Page 62" from_dmx="62" to_dmx="62" />
+						<ChannelSet index="63" name="Page 63" from_dmx="63" to_dmx="63" />
+						<ChannelSet index="64" name="Page 64" from_dmx="64" to_dmx="64" />
+						<ChannelSet index="65" name="Page 65" from_dmx="65" to_dmx="65" />
+						<ChannelSet index="66" name="Page 66" from_dmx="66" to_dmx="66" />
+						<ChannelSet index="67" name="Page 67" from_dmx="67" to_dmx="67" />
+						<ChannelSet index="68" name="Page 68" from_dmx="68" to_dmx="68" />
+						<ChannelSet index="69" name="Page 69" from_dmx="69" to_dmx="69" />
+						<ChannelSet index="70" name="Page 70" from_dmx="70" to_dmx="70" />
+						<ChannelSet index="71" name="Page 71" from_dmx="71" to_dmx="71" />
+						<ChannelSet index="72" name="Page 72" from_dmx="72" to_dmx="72" />
+						<ChannelSet index="73" name="Page 73" from_dmx="73" to_dmx="73" />
+						<ChannelSet index="74" name="Page 74" from_dmx="74" to_dmx="74" />
+						<ChannelSet index="75" name="Page 75" from_dmx="75" to_dmx="75" />
+						<ChannelSet index="76" name="Page 76" from_dmx="76" to_dmx="76" />
+						<ChannelSet index="77" name="Page 77" from_dmx="77" to_dmx="77" />
+						<ChannelSet index="78" name="Page 78" from_dmx="78" to_dmx="78" />
+						<ChannelSet index="79" name="Page 79" from_dmx="79" to_dmx="79" />
+						<ChannelSet index="80" name="Page 80" from_dmx="80" to_dmx="80" />
+						<ChannelSet index="81" name="Page 81" from_dmx="81" to_dmx="81" />
+						<ChannelSet index="82" name="Page 82" from_dmx="82" to_dmx="82" />
+						<ChannelSet index="83" name="Page 83" from_dmx="83" to_dmx="83" />
+						<ChannelSet index="84" name="Page 84" from_dmx="84" to_dmx="84" />
+						<ChannelSet index="85" name="Page 85" from_dmx="85" to_dmx="85" />
+						<ChannelSet index="86" name="Page 86" from_dmx="86" to_dmx="86" />
+						<ChannelSet index="87" name="Page 87" from_dmx="87" to_dmx="87" />
+						<ChannelSet index="88" name="Page 88" from_dmx="88" to_dmx="88" />
+						<ChannelSet index="89" name="Page 89" from_dmx="89" to_dmx="89" />
+						<ChannelSet index="90" name="Page 90" from_dmx="90" to_dmx="90" />
+						<ChannelSet index="91" name="Page 91" from_dmx="91" to_dmx="91" />
+						<ChannelSet index="92" name="Page 92" from_dmx="92" to_dmx="92" />
+						<ChannelSet index="93" name="Page 93" from_dmx="93" to_dmx="93" />
+						<ChannelSet index="94" name="Page 94" from_dmx="94" to_dmx="94" />
+						<ChannelSet index="95" name="Page 95" from_dmx="95" to_dmx="95" />
+						<ChannelSet index="96" name="Page 96" from_dmx="96" to_dmx="96" />
+						<ChannelSet index="97" name="Page 97" from_dmx="97" to_dmx="97" />
+						<ChannelSet index="98" name="Page 98" from_dmx="98" to_dmx="98" />
+						<ChannelSet index="99" name="Page 99" from_dmx="99" to_dmx="99" />
+						<ChannelSet index="100" name="No Function" from_dmx="100" to_dmx="255" />
+					</ChannelFunction>
+				</ChannelType>
+				<ChannelType index="1" attribute="MACROS2" feature="MACRO" preset="CONTROL" coarse="2" snap="true">
+					<ChannelFunction index="0" from="0" to="100" min_dmx_24="0" max_dmx_24="16777215" subattribute="MACROSELECT2" subattribute_user_name="Select2" attribute="MACROS2" attribute_user_name="Macros2" feature="MACRO" feature_user_name="Macro" preset="CONTROL" preset_user_name="Control">
+						<ChannelSet index="0" name="No Bank" from_dmx="0" to_dmx="0" />
+						<ChannelSet index="1" name="Bank 1" from_dmx="1" to_dmx="1" />
+						<ChannelSet index="2" name="Bank 2" from_dmx="2" to_dmx="2" />
+						<ChannelSet index="3" name="Bank 3" from_dmx="3" to_dmx="3" />
+						<ChannelSet index="4" name="Bank 4" from_dmx="4" to_dmx="4" />
+						<ChannelSet index="5" name="Bank 5" from_dmx="5" to_dmx="5" />
+						<ChannelSet index="6" name="Bank 6" from_dmx="6" to_dmx="6" />
+						<ChannelSet index="7" name="Bank 7" from_dmx="7" to_dmx="7" />
+						<ChannelSet index="8" name="Bank 8" from_dmx="8" to_dmx="8" />
+						<ChannelSet index="9" name="Bank 9" from_dmx="9" to_dmx="9" />
+						<ChannelSet index="10" name="Bank 10" from_dmx="10" to_dmx="10" />
+						<ChannelSet index="11" name="Bank 11" from_dmx="11" to_dmx="11" />
+						<ChannelSet index="12" name="Bank 12" from_dmx="12" to_dmx="12" />
+						<ChannelSet index="13" name="Bank 13" from_dmx="13" to_dmx="13" />
+						<ChannelSet index="14" name="Bank 14" from_dmx="14" to_dmx="14" />
+						<ChannelSet index="15" name="Bank 15" from_dmx="15" to_dmx="15" />
+						<ChannelSet index="16" name="Bank 16" from_dmx="16" to_dmx="16" />
+						<ChannelSet index="17" name="Bank 17" from_dmx="17" to_dmx="17" />
+						<ChannelSet index="18" name="Bank 18" from_dmx="18" to_dmx="18" />
+						<ChannelSet index="19" name="Bank 19" from_dmx="19" to_dmx="19" />
+						<ChannelSet index="20" name="Bank 20" from_dmx="20" to_dmx="20" />
+						<ChannelSet index="21" name="Bank 21" from_dmx="21" to_dmx="21" />
+						<ChannelSet index="22" name="Bank 22" from_dmx="22" to_dmx="22" />
+						<ChannelSet index="23" name="Bank 23" from_dmx="23" to_dmx="23" />
+						<ChannelSet index="24" name="Bank 24" from_dmx="24" to_dmx="24" />
+						<ChannelSet index="25" name="Bank 25" from_dmx="25" to_dmx="25" />
+						<ChannelSet index="26" name="Bank 26" from_dmx="26" to_dmx="26" />
+						<ChannelSet index="27" name="Bank 27" from_dmx="27" to_dmx="27" />
+						<ChannelSet index="28" name="Bank 28" from_dmx="28" to_dmx="28" />
+						<ChannelSet index="29" name="Bank 29" from_dmx="29" to_dmx="29" />
+						<ChannelSet index="30" name="Bank 30" from_dmx="30" to_dmx="30" />
+						<ChannelSet index="31" name="Bank 31" from_dmx="31" to_dmx="31" />
+						<ChannelSet index="32" name="Bank 32" from_dmx="32" to_dmx="32" />
+						<ChannelSet index="33" name="No Function" from_dmx="33" to_dmx="255" />
+					</ChannelFunction>
+				</ChannelType>
+				<ChannelType index="2" attribute="MACROS3" feature="MACRO" preset="CONTROL" coarse="3" snap="true">
+					<ChannelFunction index="0" from="0" to="100" min_dmx_24="0" max_dmx_24="16777215" subattribute="MACROSELECT3" subattribute_user_name="Select3" attribute="MACROS3" attribute_user_name="Macros3" feature="MACRO" feature_user_name="Macro" preset="CONTROL" preset_user_name="Control">
+						<ChannelSet index="0" name="No Button" from_dmx="0" to_dmx="10" />
+						<ChannelSet index="1" name="Button Down" from_dmx="11" to_dmx="128" />
+						<ChannelSet index="2" name="Button Up" from_dmx="129" to_dmx="255" />
+					</ChannelFunction>
+				</ChannelType>
+			</Module>
+		</Modules>
+		<Instances index="1">
+			<Instance index="0" module_index="0" />
+		</Instances>
+		<Wheels index="2" />
+		<VirtualFunctionBlocks index="3" />
+		<FixtureMacroCollect index="5">
+			<FixtureMacro index="0" name="No Function">
+				<PhysicalFeatures>
+					<PhysicalFeature subattribute="MACROSELECT" />
+				</PhysicalFeatures>
+				<FixtureMacroStep index="0" duration="5" attribute="MACROS" instance_index="0" />
+				<FixtureMacroStep index="1" duration="1" attribute="MACROS" instance_index="0" />
+			</FixtureMacro>
+			<FixtureMacro index="1" name="No Function">
+				<PhysicalFeatures>
+					<PhysicalFeature subattribute="MACROSELECT2" />
+				</PhysicalFeatures>
+				<FixtureMacroStep index="0" duration="5" attribute="MACROS2" instance_index="0" />
+				<FixtureMacroStep index="1" duration="1" attribute="MACROS2" instance_index="0" />
+			</FixtureMacro>
+		</FixtureMacroCollect>
+		<Body />
+		<AutoPresets index="4" />
+		<RdmNotifications index="6">
+			<RdmNotification index="0" Type="Absent" Subcategory="RDM Warning" />
+		</RdmNotifications>
+	</FixtureType>
+</MA>
