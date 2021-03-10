@@ -76,6 +76,3 @@ typings/
 
 # next.js build output
 .next
-
-# local module development
-module-local-dev/*
