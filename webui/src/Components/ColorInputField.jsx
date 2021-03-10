@@ -66,13 +66,6 @@ export function ColorInputField({ definition, value, setValue, setValid }) {
 			position: 'absolute',
 			zIndex: '2',
 		},
-		cover: {
-			position: 'fixed',
-			top: '0px',
-			right: '0px',
-			bottom: '0px',
-			left: '0px',
-		},
 	}
 
 	return (
@@ -82,7 +75,6 @@ export function ColorInputField({ definition, value, setValue, setValid }) {
 			</div>
 			{displayPicker ? (
 				<div style={styles.popover}>
-					<div style={styles.cover} onClick={handleClick} />
 					<SketchPicker
 						color={color}
 						onChange={onChange}
