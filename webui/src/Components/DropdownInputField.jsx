@@ -3,7 +3,16 @@ import Select from 'react-select'
 
 export function DropdownInputField({ definition, multiple, value, setValue, setValid }) {
 	const options = useMemo(() => {
-		return (definition.choices || []).map((choice) => ({ value: choice.id, label: choice.label }))
+		let choices = []
+		if (definition.choices) {
+			if (Array.isArray(definition.choices)) {
+				choices = definition.choices
+			} else if (typeof definition.choices === 'object') {
+				choices = Object.values(definition.choices)
+			}
+		}
+
+		return choices.map((choice) => ({ value: choice.id, label: choice.label }))
 	}, [definition.choices])
 
 	const isMultiple = !!multiple
