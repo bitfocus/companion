@@ -466,7 +466,7 @@
 		"companion-module-twitch-api": "github:bitfocus/companion-module-twitch-api#v1.0.0",
 		"companion-module-ubiquiti-unifi": "github:bitfocus/companion-module-ubiquiti-unifi#v1.0.1",
 		"companion-module-vaddio-ptz": "github:bitfocus/companion-module-vaddio-ptz#v1.0.1",
-		"companion-module-vicreo-hotkey": "github:bitfocus/companion-module-vicreo-hotkey#v1.4.0",
+		"companion-module-vicreo-hotkey": "github:bitfocus/companion-module-vicreo-hotkey#v1.4.3",
 		"companion-module-vicreo-tallylistener": "github:bitfocus/companion-module-vicreo-tallylistener#v1.0.4",
 		"companion-module-videolan-vlc": "github:bitfocus/companion-module-videolan-vlc#v1.1.7",
 		"companion-module-visualproductions-bstation2": "github:bitfocus/companion-module-visualproductions-bstation2#v1.0.6",
