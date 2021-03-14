@@ -24,7 +24,8 @@ export function ButtonsPage({ hotPress }) {
 
 	const doChangeTab = useCallback((newTab) => {
 		setActiveTab((oldTab) => {
-			if (oldTab !== newTab) {
+			const preserveButtonsTab = newTab === 'variables' && oldTab === 'edit'
+			if (newTab !== 'edit' && oldTab !== newTab && !preserveButtonsTab) {
 				setSelectedButton(null)
 				setTabResetToken(shortid())
 			}
