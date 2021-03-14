@@ -11,22 +11,28 @@ var exec = require('child_process').exec
 const { init, showReportDialog, configureScope } = require('@sentry/electron')
 var network = require('network')
 
-function packageinfo() {
-	var fileContents = fs.readFileSync(__dirname + '/package.json')
-	var object = JSON.parse(fileContents)
-	return object
+// Ensure there isn't another instance of companion running already
+var lock = app.requestSingleInstanceLock()
+if (!lock) {
+	electron.dialog.showErrorBox(
+		'Multiple instances',
+		'Another instance is already running. Please close the other instance first.'
+	)
+	app.quit()
+	return
 }
 
-const buildNumber = fs
-	.readFileSync(__dirname + '/BUILD')
-	.toString()
-	.trim()
+let skeleton_info = {}
+system.emit('skeleton-info-info', function (info) {
+	// Assume this happens synchronously
+	skeleton_info = info
+})
 
 if (process.env.DEVELOPER === undefined) {
 	console.log('Configuring sentry error reporting')
 	init({
 		dsn: 'https://535745b2e446442ab024d1c93a349154@sentry.bitfocus.io/8',
-		release: 'companion@' + (buildNumber !== undefined ? buildNumber.trim() : packageinfo().version),
+		release: `companion@${skeleton_info.appBuild || skeleton_info.appVersion}`,
 		beforeSend(event) {
 			if (event.exception) {
 				showReportDialog()
@@ -38,32 +44,8 @@ if (process.env.DEVELOPER === undefined) {
 	console.log('Sentry error reporting is disabled')
 }
 
-// Ensure there isn't another instance of companion running already
-var lock = app.requestSingleInstanceLock()
-if (!lock) {
-	if (window !== undefined) {
-		window.close()
-	}
-	electron.dialog.showErrorBox(
-		'Multiple instances',
-		'Another instance is already running. Please close the other instance first.'
-	)
-	app.quit()
-	return
-}
-
 var window
 var tray = null
-
-var skeleton_info = {
-	appName: '',
-	appBuild: '',
-	appVersion: '',
-	appURL: '',
-	appStatus: '',
-	configDir: app.getPath('appData'),
-	startMinimised: '',
-}
 
 function createWindow() {
 	window = new BrowserWindow({
@@ -177,18 +159,13 @@ function createWindow() {
 	})
 
 	try {
-		var pkg = packageinfo()
-		system.emit('skeleton-info', 'appVersion', pkg.version)
-		system.emit('skeleton-info', 'appBuild', buildNumber.trim())
-		system.emit('skeleton-info', 'appName', pkg.description)
-		system.emit('skeleton-info', 'appStatus', 'Starting')
 		system.emit('skeleton-info', 'configDir', app.getPath('appData'))
 
 		configureScope(function (scope) {
 			var machidFile = app.getPath('appData') + '/companion/machid'
 			var machid = fs.readFileSync(machidFile).toString().trim()
 			scope.setUser({ id: machid })
-			scope.setExtra('build', buildNumber.trim())
+			scope.setExtra('build', skeleton_info.appBuild)
 		})
 	} catch (e) {
 		console.log('Error reading BUILD and/or package info: ', e)

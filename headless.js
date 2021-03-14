@@ -1,24 +1,9 @@
 #!/usr/bin/env node
 var main = require('./app.js')
-var fs = require('fs')
-var path = require('path')
 var system = main(process.env.DEVELOPER ? false : true)
 var os = require('os')
 
 console.log('Starting')
-
-function packageinfo() {
-	var self = this
-	var fileContents = fs.readFileSync(__dirname + '/package.json')
-	var object = JSON.parse(fileContents)
-	return object
-}
-
-var build = fs
-	.readFileSync(__dirname + '/BUILD')
-	.toString()
-	.trim()
-var pkg = packageinfo()
 
 var ifaces = os.networkInterfaces()
 
@@ -52,11 +37,6 @@ if (process.argv.length > 2 && process.argv[2].substr(0, 1) == '-') {
 		})
 	})
 }
-
-system.emit('skeleton-info', 'appVersion', pkg.version)
-system.emit('skeleton-info', 'appBuild', build.trim())
-system.emit('skeleton-info', 'appName', pkg.description)
-system.emit('skeleton-info', 'configDir', process.env[process.platform == 'win32' ? 'USERPROFILE' : 'HOME'])
 
 if (process.env.COMPANION_CONFIG_BASEDIR !== undefined) {
 	system.emit('skeleton-info', 'configDir', process.env.COMPANION_CONFIG_BASEDIR)

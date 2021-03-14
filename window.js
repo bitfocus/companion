@@ -13,9 +13,7 @@ document.getElementById('close').addEventListener('click', function () {
 api.receive('info', function (info) {
 	document.getElementById('status').innerHTML = info.appStatus
 	document.getElementById('url').innerHTML = info.appURL
-	document.getElementById('model').innerHTML = `${info.appName} v${info.appVersion} (${info.appBuild
-		.replace(/-*master-*/, '')
-		.replace(/^-/, '')})`
+	document.getElementById('model').innerHTML = `${info.appName} v${info.appVersion} (${info.appBuild})`
 	document.getElementById('ift').checked = info.startMinimised
 	document.title = info.appName
 })
