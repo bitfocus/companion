@@ -194,7 +194,6 @@
 		"bootstrap-colorpicker": "^2.5.2",
 		"check-ip": "^1.1.1",
 		"debug": "^4.2.0",
-		"electron-rpc": "^2.0.1",
 		"elgato-stream-deck": "^4.0.1",
 		"emberplus-connection": "^0.0.4",
 		"express": "^4.16.3",
