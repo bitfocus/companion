@@ -175,10 +175,10 @@
 		"asar": "^3.0.3",
 		"chai": "^4.2.0",
 		"chai-fs": "^2.0.0",
-		"electron": "^10.3.1",
-		"electron-builder": "^22.9.1",
+		"electron": "^11.3.0",
+		"electron-builder": "^22.10.5",
 		"mocha": "^6.2.3",
-		"nodemon": "^2.0.6",
+		"nodemon": "^2.0.7",
 		"p-all": "^3.0.0",
 		"prettier": "^2.2.1",
 		"rimraf": "^3.0.2",
@@ -194,9 +194,8 @@
 		"bootstrap-colorpicker": "^2.5.2",
 		"check-ip": "^1.1.1",
 		"debug": "^4.2.0",
-		"electron-debug": "^1.5.0",
 		"electron-rpc": "^2.0.1",
-		"elgato-stream-deck": "^4.0.0",
+		"elgato-stream-deck": "^4.0.1",
 		"emberplus-connection": "^0.0.4",
 		"express": "^4.16.3",
 		"find-process": "1.4.3",
@@ -220,10 +219,10 @@
 		"popper.js": "1.16.1",
 		"read-package-json": "^2.1.2",
 		"select2": "4.0.13",
-		"sharp": "^0.27.1",
+		"sharp": "^0.27.2",
 		"shortid": "^2.2.16",
-		"socket.io": "^2.3.0",
-		"socket.io-client": "^2.3.1",
+		"socket.io": "^2.4.1",
+		"socket.io-client": "^2.4.0",
 		"strip-ansi": "^5.2.0",
 		"tributejs": "github:peschuster/tribute",
 		"websocket": "^1.0.32"
@@ -237,7 +236,7 @@
 	},
 	"resolutions": {
 		"infinitton-idisplay/node-hid": "^2.1.1",
-		"electron-builder/**/app-builder-bin": "npm:@julusian/test-lib@3.5.11-app-builder-bin",
-		"osc/serialport": "^9.0.6"
+		"electron-builder/**/app-builder-bin": "3.5.13",
+		"osc/serialport": "^9.0.7"
 	}
 }
