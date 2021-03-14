@@ -6,7 +6,7 @@ import shortid from 'shortid'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faQuestionCircle } from '@fortawesome/free-solid-svg-icons'
 
-export const InstanceEditPanel = memo(function InstanceEditModal({ instanceId, doConfigureInstance, showHelp }) {
+export const InstanceEditPanel = memo(function InstanceEditPanel({ instanceId, doConfigureInstance, showHelp }) {
 	const context = useContext(CompanionContext)
 
 	const [error, setError] = useState(null)
