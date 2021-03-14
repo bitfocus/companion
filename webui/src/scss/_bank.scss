@@ -3,6 +3,7 @@
 	height: fit-content;
 	display: inline-block;
 	border: 1px solid transparent;
+	touch-action: none;
 
 	&.right {
 		float: right;

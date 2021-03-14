@@ -38,8 +38,14 @@ export const BankPreview = React.memo(function (props) {
 			className={classnames(classes)}
 			onMouseDown={() => props?.onClick?.(props.index, true)}
 			onMouseUp={() => props?.onClick?.(props.index, false)}
-			onTouchStart={() => props?.onClick?.(props.index, true)}
-			onTouchEnd={() => props?.onClick?.(props.index, false)}
+			onTouchStart={(e) => {
+				e.preventDefault()
+				props?.onClick?.(props.index, true)
+			}}
+			onTouchEnd={(e) => {
+				e.preventDefault()
+				props?.onClick?.(props.index, false)
+			}}
 			onTouchCancel={() => props?.onClick?.(props.index, false)}
 			onContextMenu={(e) => {
 				e.preventDefault()
