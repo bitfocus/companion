@@ -220,8 +220,7 @@
 		"select2": "4.0.13",
 		"sharp": "^0.27.2",
 		"shortid": "^2.2.16",
-		"socket.io": "^2.4.1",
-		"socket.io-client": "^2.4.0",
+		"socket.io": "^4.0.0",
 		"strip-ansi": "^5.2.0",
 		"tributejs": "github:peschuster/tribute",
 		"websocket": "^1.0.32"
