@@ -26,22 +26,40 @@ export function VariablesTable({ label }) {
 					</tr>
 				</thead>
 				<tbody>
-					{variableDefinitions.map((variable) => (
-						<tr key={variable.name}>
-							<td>
-								$({label}:{variable.name})
-							</td>
-							<td>{variable.label}</td>
-							<td>{variableValues[label + ':' + variable.name]}</td>
-							<td>
-								<CopyToClipboard text={`$(${label}:${variable.name})`} onCopy={onCopied}>
-									<CButton>
-										<FontAwesomeIcon icon={faCopy} />
-									</CButton>
-								</CopyToClipboard>
-							</td>
-						</tr>
-					))}
+					{variableDefinitions.map((variable) => {
+						let value = variableValues[label + ':' + variable.name]
+						if (typeof value !== 'string') {
+							value += ''
+						}
+
+						// Split into the lines
+						const elms = []
+						const lines = value.split('\\n')
+						for (const i in lines) {
+							const l = lines[i]
+							elms.push(l)
+							if (i <= lines.length - 1) {
+								elms.push(<br key={i} />)
+							}
+						}
+
+						return (
+							<tr key={variable.name}>
+								<td>
+									$({label}:{variable.name})
+								</td>
+								<td>{variable.label}</td>
+								<td>{elms}</td>
+								<td>
+									<CopyToClipboard text={`$(${label}:${variable.name})`} onCopy={onCopied}>
+										<CButton>
+											<FontAwesomeIcon icon={faCopy} />
+										</CButton>
+									</CopyToClipboard>
+								</td>
+							</tr>
+						)
+					})}
 				</tbody>
 			</table>
 		)
