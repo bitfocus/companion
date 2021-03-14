@@ -122,8 +122,8 @@ system.on('skeleton-start-minimised', function (minimised) {
 	system.emit('config_set', 'start_minimised', minimised)
 })
 
-system.once('skeleton-ready', function () {
-	if (system.headless === true) {
+system.ready = function (logToFile) {
+	if (logToFile) {
 		debug('Going into headless mode. Logs will be written to companion.log')
 
 		setInterval(function () {
@@ -187,11 +187,6 @@ system.once('skeleton-ready', function () {
 	system.on('exit', function () {
 		elgatoDM.quit()
 	})
-})
-
-exports = module.exports = function (headless) {
-	if (headless !== undefined && headless === true) {
-		system.headless = true
-	}
-	return system
 }
+
+exports = module.exports = system

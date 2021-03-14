@@ -1,6 +1,5 @@
 #!/usr/bin/env node
-var main = require('./app.js')
-var system = main(true)
+var system = require('./app.js')
 
 console.log('Starting')
 
@@ -25,6 +24,6 @@ if (process.argv[3] != null) {
 setTimeout(function () {
 	system.emit('skeleton-bind-ip', process.argv[2])
 	system.emit('skeleton-bind-port', port)
-	system.emit('skeleton-ready')
+	system.ready(!process.env.DEVELOPER)
 	console.log('Started')
 }, 1000)

@@ -4,8 +4,7 @@ var app = electron.app
 var BrowserWindow = electron.BrowserWindow
 var path = require('path')
 var url = require('url')
-var main = require('./app.js')
-var system = main()
+var system = require('./app.js')
 var fs = require('fs')
 var exec = require('child_process').exec
 const { init, showReportDialog, configureScope } = require('@sentry/electron')
@@ -111,8 +110,8 @@ function createWindow() {
 		system.emit('skeleton-start-minimised', msg)
 	})
 
-	ipcMain.on('skeleton-ready', function () {
-		system.emit('skeleton-ready')
+	ipcMain.once('skeleton-ready', function () {
+		system.ready(!process.env.DEVELOPER)
 	})
 
 	ipcMain.on('network-interfaces:get', function () {

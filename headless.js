@@ -1,6 +1,5 @@
 #!/usr/bin/env node
-var main = require('./app.js')
-var system = main(process.env.DEVELOPER ? false : true)
+var system = require('./app.js')
 var os = require('os')
 
 console.log('Starting')
@@ -65,7 +64,7 @@ if (process.argv[2] in ifaces) {
 	setTimeout(function () {
 		system.emit('skeleton-bind-ip', address)
 		system.emit('skeleton-bind-port', port)
-		system.emit('skeleton-ready')
+		system.ready(!process.env.DEVELOPER)
 		console.log('Started')
 	}, 1000)
 } else {
