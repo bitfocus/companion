@@ -59,7 +59,7 @@
 	}
 }
 
-.page-white {
+.page-getting-started {
 	background-color: white;
 	padding: 1px;
 
@@ -75,4 +75,14 @@
 			max-width: 100%;
 		}
 	}
+}
+
+.page-emulator {
+	background-color: white;
+	padding: 1px;
+
+	min-height: 100vh;
+	min-width: 1000px;
+
+	text-align: center;
 }
