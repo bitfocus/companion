@@ -29,7 +29,7 @@ import { GenericConfirmModal } from '../Components/GenericConfirmModal'
 
 export const ButtonsGridPanel = memo(function ButtonsPage({
 	pageNumber,
-	onKeyUp,
+	onKeyDown,
 	isHot,
 	buttonGridClick,
 	changePage,
@@ -142,7 +142,7 @@ export const ButtonsGridPanel = memo(function ButtonsPage({
 	const pageName = pageInfo?.name ?? 'PAGE'
 
 	return (
-		<KeyReceiver onKeyUp={onKeyUp} tabIndex={0}>
+		<KeyReceiver onKeyDown={onKeyDown} tabIndex={0}>
 			<h4>Buttons</h4>
 			<p>
 				The squares below represent each button on your Streamdeck. Click on them to set up how you want them to look,

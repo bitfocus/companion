@@ -46,7 +46,7 @@ export function ButtonsPage({ hotPress }) {
 		[context.socket, hotPress]
 	)
 
-	const handleKeyUpInButtons = useCallback(
+	const handleKeyDownInButtons = useCallback(
 		(e) => {
 			if (e.target.tagName !== 'INPUT' && e.target.tagName !== 'TEXTAREA') {
 				if (selectedButton) {
@@ -116,7 +116,7 @@ export function ButtonsPage({ hotPress }) {
 						selectedButton={selectedButton}
 						pageNumber={pageNumber}
 						changePage={setPageNumber}
-						onKeyUp={handleKeyUpInButtons}
+						onKeyDown={handleKeyDownInButtons}
 					/>
 				</MyErrorBoundary>
 			</CCol>
@@ -155,7 +155,7 @@ export function ButtonsPage({ hotPress }) {
 											key={`${selectedButton[0]}.${selectedButton[1]}.${tabResetToken}`}
 											page={selectedButton[0]}
 											bank={selectedButton[1]}
-											onKeyUp={handleKeyUpInButtons}
+											onKeyUp={handleKeyDownInButtons}
 										/>
 									) : (
 										''
