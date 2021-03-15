@@ -383,7 +383,7 @@ export function ButtonGridHeader({ pageNumber, pageName, onNameChange, onNameBlu
 	)
 
 	const inputSelectAll = (event) => {
-		setTimeout(event.target.select.bind(event.target), 20);
+		setTimeout(event.target.select.bind(event.target), 20)
 	}
 
 	return (
