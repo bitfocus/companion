@@ -766,3 +766,6 @@ url=https://github.com/bitfocus/companion-module-newbluefx-titler.git
 [submodule "lib/module/allenheath-qu"]
 	path = lib/module/allenheath-qu
 	url = https://github.com/bitfocus/companion-module-allenheath-qu.git
+[submodule "lib/module/protopie-bridge"]
+	path = lib/module/protopie-bridge
+	url = https://github.com/bitfocus/companion-module-protopie-bridge.git
