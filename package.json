@@ -141,7 +141,6 @@
 		"fs-extra": "^9.0.1",
 		"infinitton-idisplay": "^1.0.5",
 		"lodash": "^4.17.20",
-		"marked": "0.7.0",
 		"mkdirp": "^0.5.5",
 		"moment": "^2.29.1",
 		"network": "^0.4.1",
