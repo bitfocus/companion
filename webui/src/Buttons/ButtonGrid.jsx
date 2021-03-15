@@ -382,7 +382,9 @@ export function ButtonGridHeader({ pageNumber, pageName, onNameChange, onNameBlu
 		[inputBlur]
 	)
 
-	const inputSelectAll = (event) => event.target.select()
+	const inputSelectAll = (event) => {
+		setTimeout(event.target.select.bind(event.target), 20);
+	}
 
 	return (
 		<div className="button-grid-header">
