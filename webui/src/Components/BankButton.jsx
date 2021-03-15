@@ -27,6 +27,7 @@ export const BankPreview = React.memo(function (props) {
 		fixed: !!props.fixedSize,
 		drophere: props.canDrop,
 		drophover: props.dropHover,
+		draggable: !!props.dragRef,
 		selected: props.selected,
 		clickable: !!props.onClick,
 		right: !!props.right,

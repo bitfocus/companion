@@ -33,6 +33,10 @@
 		background-color: #daffab;
 	}
 
+	&.draggable img {
+		-webkit-user-drag: inherit;
+	}
+
 	img {
 		max-width: 72px;
 		max-height: 72px;
