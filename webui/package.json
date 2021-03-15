@@ -44,7 +44,6 @@
     "tributejs": "^5.1.3",
     "web-vitals": "^0.2.4"
   },
-  "homepage": "/v2",
   "scripts": {
     "start": "react-scripts start",
     "dev": "REACT_APP_SERVER_URL=http://localhost:8000 yarn start",
