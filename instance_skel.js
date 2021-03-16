@@ -17,8 +17,8 @@
 
 var util = require('util')
 var debug = require('debug')('lib/instance_skel')
-var image = require('../lib/image')
-var icons = require('../lib/resources/icons')
+var image = require('./lib/image')
+var icons = require('./lib/resources/icons')
 
 function instance(system, id, config) {
 	var self = this
