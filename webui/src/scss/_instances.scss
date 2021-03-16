@@ -46,3 +46,11 @@
 .variables-table {
 	word-break: break-all;
 }
+
+.instances-panel {
+	.action-buttons {
+		.btn-primary.disabled {
+			opacity: 0.5;
+		}
+	}
+}

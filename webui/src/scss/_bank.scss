@@ -3,6 +3,7 @@
 	height: fit-content;
 	display: inline-block;
 	border: 1px solid transparent;
+	touch-action: none;
 
 	&.right {
 		float: right;
@@ -32,6 +33,10 @@
 		background-color: #daffab;
 	}
 
+	&.draggable img {
+		-webkit-user-drag: inherit;
+	}
+
 	img {
 		max-width: 72px;
 		max-height: 72px;
@@ -42,6 +47,8 @@
 		border-radius: Max(12%, 4px);
 		border: 1px solid rgba(100, 100, 100, 0.4);
 		margin: 0 auto;
+
+		-webkit-user-drag: none;
 	}
 }
 

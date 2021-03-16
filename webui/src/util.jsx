@@ -5,6 +5,8 @@ import { ErrorBoundary } from 'react-error-boundary'
 import { PRIMARY_COLOR } from './Constants'
 import { BarLoader } from 'react-spinners'
 
+export const SERVER_URL = window.SERVER_URL === '%REACT_APP_SERVER_URL%' ? undefined : window.SERVER_URL
+
 export const CompanionContext = React.createContext({
 	socket: undefined,
 })

@@ -3,6 +3,7 @@ import './App.scss'
 
 import React from 'react'
 import ReactDOM from 'react-dom'
+import { BrowserRouter, Route, Switch } from 'react-router-dom'
 import App from './App'
 import reportWebVitals from './reportWebVitals'
 
@@ -10,6 +11,9 @@ import i18n from 'i18next'
 import Backend from 'i18next-http-backend'
 import LanguageDetector from 'i18next-browser-languagedetector'
 import { initReactI18next } from 'react-i18next'
+import { GettingStarted } from './GettingStarted'
+import { Tablet } from './Tablet'
+import { Emulator } from './Emulator'
 
 i18n
 	.use(Backend)
@@ -28,7 +32,22 @@ i18n
 
 ReactDOM.render(
 	<React.StrictMode>
-		<App />
+		<BrowserRouter>
+			<Switch>
+				<Route path="/getting-started">
+					<GettingStarted />
+				</Route>
+				<Route path="/emulator2">
+					<Emulator />
+				</Route>
+				<Route path="/tablet3">
+					<Tablet />
+				</Route>
+				<Route>
+					<App />
+				</Route>
+			</Switch>
+		</BrowserRouter>
 	</React.StrictMode>,
 	document.getElementById('root')
 )

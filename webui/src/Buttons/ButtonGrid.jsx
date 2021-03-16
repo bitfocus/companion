@@ -29,7 +29,7 @@ import { GenericConfirmModal } from '../Components/GenericConfirmModal'
 
 export const ButtonsGridPanel = memo(function ButtonsPage({
 	pageNumber,
-	onKeyUp,
+	onKeyDown,
 	isHot,
 	buttonGridClick,
 	changePage,
@@ -142,7 +142,7 @@ export const ButtonsGridPanel = memo(function ButtonsPage({
 	const pageName = pageInfo?.name ?? 'PAGE'
 
 	return (
-		<KeyReceiver onKeyUp={onKeyUp} tabIndex={0}>
+		<KeyReceiver onKeyDown={onKeyDown} tabIndex={0}>
 			<h4>Buttons</h4>
 			<p>
 				The squares below represent each button on your Streamdeck. Click on them to set up how you want them to look,
@@ -174,7 +174,7 @@ export const ButtonsGridPanel = memo(function ButtonsPage({
 					</CCol>
 				</CRow>
 
-				<CRow id="pagebank" className={classnames({ 'bank-armed': isHot })}>
+				<CRow className={classnames({ 'bank-armed': isHot, bankgrid: true, 'with-markings': true })}>
 					<ButtonGrid pageNumber={pageNumber} bankClick={bankClick} selectedButton={selectedButton} />
 				</CRow>
 
@@ -318,22 +318,23 @@ const ButtonGridActions = forwardRef(function ButtonGridActions({ isHot, pageNum
 			<GenericConfirmModal ref={resetRef} />
 
 			<CCol sm={12} className={classnames({ out: isHot, fadeinout: true })}>
-				<p>
-					{getButton('Copy', faCopy, 'copy')}
-					&nbsp;
-					{getButton('Move', faArrowsAlt, 'move')}
-					&nbsp;
-					{getButton('Delete', faTrash, 'delete')}
-					&nbsp;
-					<CButton color="danger" onClick={() => stopFunction()} style={{ display: activeFunction ? '' : 'none' }}>
-						Cancel
-					</CButton>
-					&nbsp;
-					<CButton color="disabled" hidden={!activeFunction}>
-						{hintText}
-					</CButton>
-					&nbsp;
-					<span style={{ float: 'right' }}>
+				<div className="button-grid-controls">
+					<div>
+						{getButton('Copy', faCopy, 'copy')}
+						&nbsp;
+						{getButton('Move', faArrowsAlt, 'move')}
+						&nbsp;
+						{getButton('Delete', faTrash, 'delete')}
+						&nbsp;
+					</div>
+					<div style={{ display: activeFunction ? '' : 'none' }}>
+						<CButton color="danger" onClick={() => stopFunction()}>
+							Cancel
+						</CButton>
+						&nbsp;
+						<CButton color="disabled">{hintText}</CButton>
+					</div>
+					<div style={{ display: activeFunction ? 'none' : undefined }}>
 						<CButton color="light" onClick={() => resetPage()}>
 							<FontAwesomeIcon icon={faEraser} /> Wipe page
 						</CButton>
@@ -341,10 +342,8 @@ const ButtonGridActions = forwardRef(function ButtonGridActions({ isHot, pageNum
 						<CButton color="light" onClick={() => resetPageNav()}>
 							<FontAwesomeIcon icon={faEraser} /> Reset page buttons
 						</CButton>
-						<br />
-						<br />
-					</span>
-				</p>
+					</div>
+				</div>
 			</CCol>
 		</>
 	)
@@ -383,7 +382,9 @@ export function ButtonGridHeader({ pageNumber, pageName, onNameChange, onNameBlu
 		[inputBlur]
 	)
 
-	const inputSelectAll = (event) => event.target.select()
+	const inputSelectAll = (event) => {
+		setTimeout(event.target.select.bind(event.target), 20)
+	}
 
 	return (
 		<div className="button-grid-header">

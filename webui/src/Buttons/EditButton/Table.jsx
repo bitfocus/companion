@@ -42,6 +42,11 @@ export function ActionTableRowOption({ actionId, option, value, setValue }) {
 			control = <NumberInputField value={value} definition={option} setValue={setValue2} />
 			break
 		}
+		case 'text': {
+			// Just the label is wanted
+			control = ''
+			break
+		}
 		default:
 			control = <CInputGroupText>Unknown type "{option.type}"</CInputGroupText>
 			break

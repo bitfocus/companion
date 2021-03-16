@@ -5,6 +5,7 @@
 
 @import 'scss/layout';
 @import 'scss/common';
+@import 'scss/tablet';
 
 @import 'scss/bank';
 @import 'scss/button-edit';
@@ -14,6 +15,7 @@
 @import 'scss/loading';
 @import 'scss/log';
 @import 'scss/presets';
+@import 'scss/settings';
 
 @keyframes fadeIn {
 	from {
@@ -55,4 +57,32 @@
 	.text-muted {
 		color: #ccc !important;
 	}
+}
+
+.page-getting-started {
+	background-color: white;
+	padding: 1px;
+
+	min-height: 100vh;
+
+	> div {
+		margin: 1em auto;
+		max-width: 860px;
+		line-height: 1.5rem;
+		tab-size: 4;
+
+		img {
+			max-width: 100%;
+		}
+	}
+}
+
+.page-emulator {
+	background-color: white;
+	padding: 1px;
+
+	min-height: 100vh;
+	min-width: 1000px;
+
+	text-align: center;
 }

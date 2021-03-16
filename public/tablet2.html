@@ -805,13 +805,13 @@ your bowser's top menu
 
 				if (params.get("page_up_button") != null) {
 					var page_up_button = parseInt(params.get("page_up_button"));
-					if (page_up_button >= 1 && page_up_button <= 32) {
+					if (page_up_button >= 0 && page_up_button <= 32) {
 						this.settings.pageUpButton = page_up_button;
 					}
 				}
 				if (params.get("page_down_button") != null) {
 					var page_down_button = parseInt(params.get("page_down_button"));
-					if (page_down_button >= 1 && page_down_button <= 32) {
+					if (page_down_button >= 0 && page_down_button <= 32) {
 						this.settings.pageDownButton = page_down_button;
 					}
 				}
