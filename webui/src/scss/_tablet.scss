@@ -7,6 +7,10 @@
 	.scroller {
 		height: 100%;
 		overflow-y: auto;
+		
+		h1 {
+			padding: 0 25px;
+		}
 	}
 
 	.container-fluid {
@@ -30,7 +34,7 @@
 	}
 
 	.header {
-		padding: 10px 5%;
+		padding: 10px 10px;
 	}
 
 	.configure {
@@ -41,7 +45,7 @@
 		border: 1px solid #555;
 		background-color: #222;
 		padding: 10px;
-		margin: 0 0 10px;
+		margin: 10px 0 10px;
 	}
 
 	.btn {
@@ -63,7 +67,7 @@
 
 		.cycle-heading {
 			h1 {
-				padding: 0 5%;
+				padding: 0 25px;
 			}
 
 			.btn {

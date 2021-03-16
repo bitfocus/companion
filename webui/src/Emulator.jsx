@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { LoadingRetryOrError, SERVER_URL, useMountEffect } from './util'
 import io from 'socket.io-client'
-import { CCol, CContainer, CRow } from '@coreui/react'
+import { CAlert, CCol, CContainer, CRow } from '@coreui/react'
 import shortid from 'shortid'
 
 function dataToButtonImage(data) {
@@ -196,22 +196,14 @@ export function Emulator() {
 	)
 
 	return (
-		<div className="page-white">
+		<div className="page-emulator">
 			<CContainer fluid>
 				<CRow>
 					{keymap ? (
 						<CCol xs={12}>
 							<canvas ref={onRefChange} width={956} height={600}></canvas>
 
-							<div
-								style={{
-									margin: '20px',
-									padding: '20px',
-									backgroundColor: '#eee',
-									fontFamily: 'Arial',
-									borderRadius: '3px',
-								}}
-							>
+							<CAlert color="info" closeButton>
 								Use <b>1 2 3 4 5 6 7 8</b>, <b>Q W E R T Y U I</b>, <b>A S D F G H J K</b> <b>Z X C V B N M ,</b> to
 								control this surface with your keyboard!
 								<br />
@@ -219,7 +211,7 @@ export function Emulator() {
 								for logitec: 10/11 (Start and stop) on each page.
 								<br />
 								You need to enable these extra options in the Settings tab first!
-							</div>
+							</CAlert>
 						</CCol>
 					) : (
 						<LoadingRetryOrError dataReady={false} error={loadError} doRetry={doRetryLoad} />

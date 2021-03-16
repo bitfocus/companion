@@ -46,7 +46,7 @@ export function GettingStarted() {
 	}, [data])
 
 	return (
-		<div className="page-white">
+		<div className="page-getting-started">
 			<CContainer>
 				<CRow>
 					<LoadingRetryOrError dataReady={data} error={error} doRetry={doRetryLoad} />

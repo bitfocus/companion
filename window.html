@@ -4,6 +4,7 @@
 		<meta charset="UTF-8" />
 		<title>BitFocus</title>
 	</head>
+
 	<body>
 		<style>
 			body,
@@ -12,14 +13,12 @@
 				padding: 0;
 				-webkit-app-region: drag;
 			}
+
 			body {
 				background-color: rgba(35, 35, 35, 1);
 				color: white;
 				font-family: 'Helvetica';
 				overflow: hidden;
-			}
-
-			#topwrap {
 			}
 
 			#wrap {
@@ -98,35 +97,43 @@
 				margin: 0;
 				color: rgba(255, 255, 255, 0.4);
 			}
+
 			#model {
 				font-size: 14px;
 			}
+
 			h1 {
 				font-size: 40px;
 				padding-top: 20px;
 				font-weight: 100;
 			}
+
 			#url {
 				padding-top: 5px;
 				padding-bottom: 10px;
 				-webkit-app-region: no-drag !important;
 			}
+
 			#meh {
 				background-color: #b00013;
 				margin-top: 30px;
 				padding-bottom: 10px;
 			}
+
 			textarea:focus,
 			input:focus {
 				outline: 0;
 			}
+
 			#ifs,
 			input[type='button'] {
 				-webkit-app-region: no-drag !important;
 			}
+
 			input {
 				-webkit-app-region: no-drag !important;
 			}
+
 			#ifp {
 				width: 50px;
 				text-align: center;
@@ -140,6 +147,7 @@
 				border: 1px solid white;
 				border-right-width: 1px;
 			}
+
 			#ifpb {
 				cursor: pointer;
 				border: 1px solid #ccc;
@@ -153,14 +161,17 @@
 				margin-top: -1px;
 				font-size: 13px;
 			}
+
 			#ifpb:hover {
 				background-color: #666;
 			}
+
 			#ift {
 				color: white;
 				-webkit-appearance: checkbox;
 				cursor: pointer;
 			}
+
 			#ifs {
 				background-color: #d40215;
 				color: #fff;
@@ -168,19 +179,21 @@
 				font-size: 12px !important;
 				margin-bottom: -4px;
 			}
+
 			#guitext {
 				font-size: 12px;
 				color: white;
 				padding-top: 0px;
 				padding-bottom: 2px;
 			}
+
 			#bottombuttons {
 				padding-bottom: 100px;
 			}
 		</style>
 		<div id="wrap">
 			<div id="topwrap">
-				<img id="logo" src="./assets/bitfocus-logo.png" />
+				<img id="logo" src="./assets/bitfocus-logo.png" alt="BitFocus" />
 				<div id="model">model_text (version_etc)</div>
 			</div>
 			<div id="meh">
@@ -189,17 +202,10 @@
 			</div>
 			<div id="actions">
 				<div id="guitext">GUI Interface</div>
-				<select id="ifs" style=""></select>
+				<select id="ifs"></select>
+				<p><input type="text" maxlength="5" id="ifp" value="8000" /><input type="button" id="ifpb" value="Change" /></p>
 				<p>
-					<input type="text" maxlength="5" id="ifp" value="8000" style="" /><input
-						type="button"
-						id="ifpb"
-						style=""
-						value="Change"
-					/>
-				</p>
-				<p>
-					<input type="checkbox" id="ift" style="" />
+					<input type="checkbox" id="ift" />
 					<label for="ift" style="font-size: 12px">Start minimized</label>
 				</p>
 				<div id="bottombuttons">
@@ -209,8 +215,6 @@
 				</div>
 			</div>
 		</div>
-		<script>
-			require('./window.js')
-		</script>
+		<script type="text/javascript" src="./window.js"></script>
 	</body>
 </html>

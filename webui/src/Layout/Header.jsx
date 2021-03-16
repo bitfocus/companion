@@ -21,11 +21,7 @@ export function MyHeader({ toggleSidebar }) {
 		}
 	}, [context.socket])
 
-	const versionString = versionInfo
-		? `${versionInfo.appVersion} (${versionInfo.appBuild
-				.replace('master-', '')
-				.replace(versionInfo.appVersion + '-', '')})`
-		: '?'
+	const versionString = versionInfo ? `${versionInfo.appVersion} (${versionInfo.appBuild})` : '?'
 
 	return (
 		<CHeader colorScheme="dark">

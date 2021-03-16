@@ -30,7 +30,18 @@ var mkdirp = require('mkdirp')
 var stripAnsi = require('strip-ansi')
 var logbuffer = []
 var logwriting = false
-var skeleton_info = {}
+
+const pkgInfo = require('./package.json')
+const buildNumber = fs
+	.readFileSync(__dirname + '/BUILD')
+	.toString()
+	.trim()
+const skeleton_info = {
+	appName: pkgInfo.description,
+	appVersion: pkgInfo.version,
+	appBuild: buildNumber.replace(/-*master-*/, '').replace(/^-/, ''),
+	appStatus: 'Starting',
+}
 
 var config
 var cfgDir
@@ -64,8 +75,6 @@ system.on('skeleton-info-info', function (cb) {
 
 system.on('config_loaded', function (config) {
 	system.emit('skeleton-info', 'appURL', 'Waiting for webserver..')
-	system.emit('skeleton-info', 'appStatus', 'Starting')
-	system.emit('skeleton-info', 'bindInterface', config.bind_ip)
 	system.emit('skeleton-info', 'startMinimised', config.start_minimised)
 })
 
@@ -113,8 +122,8 @@ system.on('skeleton-start-minimised', function (minimised) {
 	system.emit('config_set', 'start_minimised', minimised)
 })
 
-system.on('skeleton-ready', function () {
-	if (system.headless === true) {
+system.ready = function (logToFile) {
+	if (logToFile) {
 		debug('Going into headless mode. Logs will be written to companion.log')
 
 		setInterval(function () {
@@ -178,15 +187,6 @@ system.on('skeleton-ready', function () {
 	system.on('exit', function () {
 		elgatoDM.quit()
 	})
-})
-
-system.on('skeleton-single-instance-only', function (response) {
-	response(true)
-})
-
-exports = module.exports = function (headless) {
-	if (headless !== undefined && headless === true) {
-		system.headless = true
-	}
-	return system
 }
+
+exports = module.exports = system

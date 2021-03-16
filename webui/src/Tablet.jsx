@@ -182,7 +182,7 @@ export function Tablet() {
 					newQuery[key] = value
 				}
 
-				const newStr = queryString.stringify(newQuery).replace('%2C', ',') // replace commas to make it readable
+				const newStr = queryString.stringify(newQuery).replaceAll('%2C', ',') // replace commas to make it readable
 				history.push(`?${newStr}`)
 				return newStr
 			})
@@ -515,6 +515,7 @@ function ButtonGrid({ socket, imageCache, number, cols, rows, goFirstPage, goNex
 	// Ensure the page is loaded when it comes into view
 	useEffect(() => {
 		if (inView) {
+			setImages(imageCache.getPage(number))
 			imageCache.on(`${number}`, setImages)
 			imageCache.loadPage(number)
 
@@ -526,11 +527,11 @@ function ButtonGrid({ socket, imageCache, number, cols, rows, goFirstPage, goNex
 
 	const bankClick = useCallback(
 		(bank, pressed) => {
-			if (pressed && pageInfo && pageInfo.pageup && pageInfo.pageup.includes(bank)) {
+			if (goNextPage && pressed && pageInfo && pageInfo.pageup && pageInfo.pageup.includes(bank)) {
 				goNextPage()
-			} else if (pressed && pageInfo && pageInfo.pagedown && pageInfo.pagedown.includes(bank)) {
+			} else if (goPrevPage && pressed && pageInfo && pageInfo.pagedown && pageInfo.pagedown.includes(bank)) {
 				goPrevPage()
-			} else if (pressed && pageInfo && pageInfo.pagenum && pageInfo.pagenum.includes(bank)) {
+			} else if (goFirstPage && pressed && pageInfo && pageInfo.pagenum && pageInfo.pagenum.includes(bank)) {
 				goFirstPage()
 			} else {
 				socket.emit('hot_press', number, bank, pressed)

@@ -50,7 +50,7 @@ export function DropdownInputField({ definition, multiple, value, setValue, setV
 			if (isMultiple) {
 				for (const val of newValue) {
 					// Require the selected choices to be valid
-					if (!definition.choices.find((c) => c.id === val)) {
+					if (!options.find((c) => c.value === val)) {
 						isValid = false
 					}
 				}
@@ -74,7 +74,7 @@ export function DropdownInputField({ definition, multiple, value, setValue, setV
 				}
 			} else {
 				// Require the selected choice to be valid
-				if (!definition.choices.find((c) => c.id === newValue)) {
+				if (!options.find((c) => c.value === newValue)) {
 					isValid = false
 				}
 			}
@@ -82,7 +82,7 @@ export function DropdownInputField({ definition, multiple, value, setValue, setV
 			setValue(newValue)
 			setValid?.(isValid)
 		},
-		[setValue, setValid, multiple, definition.minSelection, definition.maximumSelectionLength, definition.choices]
+		[setValue, setValid, multiple, definition.minSelection, definition.maximumSelectionLength, options]
 	)
 
 	return (

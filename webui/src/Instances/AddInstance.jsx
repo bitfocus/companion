@@ -24,7 +24,7 @@ const AddInstancesInner = memo(function AddInstancesInner({ showHelp, configureI
 				configureInstance(id)
 			})
 			.catch((e) => {
-				context.notifier.current.show(`Failed to create connection`, e)
+				context.notifier.current.show(`Failed to create connection`, `Failed: ${e}`)
 				console.error('Failed to create connection:', e)
 			})
 	}

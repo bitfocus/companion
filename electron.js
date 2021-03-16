@@ -1,31 +1,37 @@
 var electron = require('electron')
-var RPC = require('electron-rpc/server')
+const { ipcMain } = require('electron')
 var app = electron.app
 var BrowserWindow = electron.BrowserWindow
 var path = require('path')
 var url = require('url')
-var main = require('./app.js')
-var system = main()
+var system = require('./app.js')
 var fs = require('fs')
 var exec = require('child_process').exec
 const { init, showReportDialog, configureScope } = require('@sentry/electron')
+var network = require('network')
 
-function packageinfo() {
-	var fileContents = fs.readFileSync(__dirname + '/package.json')
-	var object = JSON.parse(fileContents)
-	return object
+// Ensure there isn't another instance of companion running already
+var lock = app.requestSingleInstanceLock()
+if (!lock) {
+	electron.dialog.showErrorBox(
+		'Multiple instances',
+		'Another instance is already running. Please close the other instance first.'
+	)
+	app.quit()
+	return
 }
 
-const buildNumber = fs
-	.readFileSync(__dirname + '/BUILD')
-	.toString()
-	.trim()
+let skeleton_info = {}
+system.emit('skeleton-info-info', function (info) {
+	// Assume this happens synchronously
+	skeleton_info = info
+})
 
 if (process.env.DEVELOPER === undefined) {
 	console.log('Configuring sentry error reporting')
 	init({
 		dsn: 'https://535745b2e446442ab024d1c93a349154@sentry.bitfocus.io/8',
-		release: 'companion@' + (buildNumber !== undefined ? buildNumber.trim() : packageinfo().version),
+		release: `companion@${skeleton_info.appBuild || skeleton_info.appVersion}`,
 		beforeSend(event) {
 			if (event.exception) {
 				showReportDialog()
@@ -38,57 +44,7 @@ if (process.env.DEVELOPER === undefined) {
 }
 
 var window
-var exiting = false
 var tray = null
-
-var skeleton_info = {
-	appName: '',
-	appBuild: '',
-	appVersion: '',
-	appURL: '',
-	appStatus: '',
-	configDir: app.getPath('appData'),
-	startMinimised: '',
-}
-
-/* Module should return true if this application should be single instance only */
-system.emit('skeleton-single-instance-only', function (response) {
-	if (response === true) {
-		if (app.requestSingleInstanceLock) {
-			// new api
-			var lock = app.requestSingleInstanceLock()
-			if (!lock) {
-				exiting = true
-
-				if (window !== undefined) {
-					window.close()
-				}
-				electron.dialog.showErrorBox(
-					'Multiple instances',
-					'Another instance is already running. Please close the other instance first.'
-				)
-				app.quit()
-				return
-			}
-		} else {
-			// old api
-			var nolock = app.makeSingleInstance(function () {})
-			if (nolock) {
-				exiting = true
-
-				if (window !== undefined) {
-					window.close()
-				}
-				electron.dialog.showErrorBox(
-					'Multiple instances',
-					'Another instance is already running. Please close the other instance first.'
-				)
-				app.quit()
-				return
-			}
-		}
-	}
-})
 
 function createWindow() {
 	window = new BrowserWindow({
@@ -104,75 +60,91 @@ function createWindow() {
 		webPreferences: {
 			pageVisibility: true,
 			nodeIntegration: true,
+			contextIsolation: true,
+			preload: path.join(__dirname, 'window-preload.js'),
 		},
 	})
 
-	window.loadURL(
-		url.format({
-			pathname: path.join(__dirname, 'window.html'),
-			protocol: 'file:',
-			slashes: true,
+	window
+		.loadURL(
+			url.format({
+				pathname: path.join(__dirname, 'window.html'),
+				protocol: 'file:',
+				slashes: true,
+			})
+		)
+		.then(() => {
+			window.webContents.setBackgroundThrottling(false)
 		})
-	)
 
-	window.webContents.setBackgroundThrottling(false)
-
-	var rpc = new RPC()
-	rpc.configure(window.webContents)
-
-	rpc.on('info', function (req, cb) {
-		cb(null, skeleton_info)
+	ipcMain.on('info', function () {
+		if (window) {
+			window.webContents.send('info', skeleton_info)
+		}
 	})
 
-	rpc.on('log', function (req, cb) {
-		cb(null, 'Started')
-	})
-
-	rpc.on('skeleton-close', function (req, cb) {
+	ipcMain.on('skeleton-close', function (req, cb) {
 		system.emit('exit')
 	})
 
-	rpc.on('skeleton-minimize', function (req, cb) {
+	ipcMain.on('skeleton-minimize', function (req, cb) {
 		window.hide()
 	})
 
-	rpc.on('skeleton-launch-gui', function () {
+	ipcMain.on('skeleton-launch-gui', function () {
 		launchUI()
 	})
 
-	rpc.on('skeleton-bind-ip', function (req, cb) {
-		console.log('changed bind ip:', req.body)
-		system.emit('skeleton-bind-ip', req.body)
+	ipcMain.on('skeleton-bind-ip', function (e, msg) {
+		console.log('changed bind ip:', msg)
+		system.emit('skeleton-bind-ip', msg)
 	})
 
-	rpc.on('skeleton-bind-port', function (req, cb) {
-		console.log('changed bind port:', req.body)
-		system.emit('skeleton-bind-port', req.body)
+	ipcMain.on('skeleton-bind-port', function (e, msg) {
+		console.log('changed bind port:', msg)
+		system.emit('skeleton-bind-port', msg)
 	})
 
-	rpc.on('skeleton-start-minimised', function (req, cb) {
-		console.log('changed start minimized:', req.body)
-		system.emit('skeleton-start-minimised', req.body)
+	ipcMain.on('skeleton-start-minimised', function (e, msg) {
+		console.log('changed start minimized:', msg)
+		system.emit('skeleton-start-minimised', msg)
 	})
 
-	rpc.on('skeleton-ready', function (req, cb) {
-		system.emit('skeleton-ready')
+	ipcMain.once('skeleton-ready', function () {
+		system.ready(!process.env.DEVELOPER)
+	})
+
+	ipcMain.on('network-interfaces:get', function () {
+		network.get_interfaces_list(function (err, list) {
+			const interfaces = [{ id: '127.0.0.1', label: 'localhost / 127.0.0.1' }]
+
+			for (const obj of list) {
+				if (obj.ip_address !== null) {
+					interfaces.push({
+						id: obj.ip_address,
+						label: `${obj.name}: ${obj.ip_address} (${obj.type})`,
+					})
+				}
+			}
+
+			if (window) {
+				window.webContents.send('network-interfaces:get', interfaces)
+			}
+		})
 	})
 
 	system.on('skeleton-ip-unavail', function () {})
 
 	system.on('skeleton-info', function (key, val) {
 		skeleton_info[key] = val
-		rpc.send('info', skeleton_info)
+		if (window) {
+			window.webContents.send('info', skeleton_info)
+		}
 	})
 
 	system.on('restart', function () {
 		app.relaunch()
 		app.exit()
-	})
-
-	system.on('skeleton-log', function (line) {
-		rpc.send('log', line)
 	})
 
 	window.on('closed', function () {
@@ -185,24 +157,17 @@ function createWindow() {
 		}
 	})
 
-	if (!exiting) {
-		try {
-			var pkg = packageinfo()
-			system.emit('skeleton-info', 'appVersion', pkg.version)
-			system.emit('skeleton-info', 'appBuild', buildNumber.trim())
-			system.emit('skeleton-info', 'appName', pkg.description)
-			system.emit('skeleton-info', 'appStatus', 'Starting')
-			system.emit('skeleton-info', 'configDir', app.getPath('appData'))
+	try {
+		system.emit('skeleton-info', 'configDir', app.getPath('appData'))
 
-			configureScope(function (scope) {
-				var machidFile = app.getPath('appData') + '/companion/machid'
-				var machid = fs.readFileSync(machidFile).toString().trim()
-				scope.setUser({ id: machid })
-				scope.setExtra('build', buildNumber.trim())
-			})
-		} catch (e) {
-			console.log('Error reading BUILD and/or package info: ', e)
-		}
+		configureScope(function (scope) {
+			var machidFile = app.getPath('appData') + '/companion/machid'
+			var machid = fs.readFileSync(machidFile).toString().trim()
+			scope.setUser({ id: machid })
+			scope.setExtra('build', skeleton_info.appBuild)
+		})
+	} catch (e) {
+		console.log('Error reading BUILD and/or package info: ', e)
 	}
 }
 
