@@ -2841,9 +2841,9 @@ commist@^1.0.0:
   version "1.0.1"
   resolved "https://codeload.github.com/bitfocus/companion-module-dexon-matrix/tar.gz/40e3948d1648caf1bbdf3760de92da72b68f3209"
 
-"companion-module-digico-osc@github:bitfocus/companion-module-digico-osc#v1.0.0":
-  version "1.0.0"
-  resolved "https://codeload.github.com/bitfocus/companion-module-digico-osc/tar.gz/aea9d97b6038beb1a36a1dce005287dd98c54e4a"
+"companion-module-digico-osc@github:bitfocus/companion-module-digico-osc#v1.0.1":
+  version "1.0.1"
+  resolved "https://codeload.github.com/bitfocus/companion-module-digico-osc/tar.gz/6fe9b8100294a18c213ffbbe2f042e7e5476bfbc"
 
 "companion-module-digitalprojection-highlight@github:bitfocus/companion-module-digitalprojection-highlight#v1.0.2":
   version "1.0.2"
