@@ -15,7 +15,6 @@
 # develop commercial activities involving the Companion software without
 # disclosing the source code of your own applications.
 #
-git checkout master
 git pull
 git submodule init
 git submodule sync
