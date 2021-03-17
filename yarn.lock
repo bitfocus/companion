@@ -2524,9 +2524,9 @@ commist@^1.0.0:
   version "1.0.2"
   resolved "https://codeload.github.com/bitfocus/companion-module-aja-kumo/tar.gz/30230cad32cd7c4cec3c28f781d532e2727bee02"
 
-"companion-module-allenheath-dlive@github:bitfocus/companion-module-allenheath-dlive#v1.3.4":
-  version "1.3.4"
-  resolved "https://codeload.github.com/bitfocus/companion-module-allenheath-dlive/tar.gz/740d9d65e21666641d189d7ab2f150e416278ee3"
+"companion-module-allenheath-dlive-ilive@github:bitfocus/companion-module-allenheath-dlive-ilive#v1.3.5":
+  version "1.3.5"
+  resolved "https://codeload.github.com/bitfocus/companion-module-allenheath-dlive-ilive/tar.gz/355acdf755963a4e9367430d491d75a73a2dd84f"
 
 "companion-module-allenheath-qu@github:bitfocus/companion-module-allenheath-qu#v1.0.5":
   version "1.0.5"
