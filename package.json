@@ -138,7 +138,7 @@
 		"dev": "./tools/build_writefile.sh && DEVELOPER=1 electron .",
 		"update": "./tools/update.sh",
 		"pack": "electron-builder --dir",
-		"dist:js": "rm -rf public/js/dist && babel ./public/js/babel --out-dir ./public/js/dist",
+		"dist:js": "rimraf public/js/dist && babel ./public/js/babel --out-dir ./public/js/dist",
 		"dist:webui": "yarn --cwd webui build",
 		"dist:prepare": "./tools/build_writefile.sh ; rm -rf electron-output && yarn dist:js && yarn dist:webui",
 		"dist": "yarn dist:prepare && yarn electron-rebuild && electron-builder",
