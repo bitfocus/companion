@@ -2532,9 +2532,9 @@ commist@^1.0.0:
   version "1.0.5"
   resolved "https://codeload.github.com/bitfocus/companion-module-allenheath-qu/tar.gz/433d4959398181b33df2863ea77a7fa86bfdb1c7"
 
-"companion-module-allenheath-sq@github:bitfocus/companion-module-allenheath-sq#v1.3.2":
-  version "1.3.2"
-  resolved "https://codeload.github.com/bitfocus/companion-module-allenheath-sq/tar.gz/f4a6204e1edcb407f18f782b4c59edf630331e0f"
+"companion-module-allenheath-sq@github:bitfocus/companion-module-allenheath-sq#v1.3.3":
+  version "1.3.3"
+  resolved "https://codeload.github.com/bitfocus/companion-module-allenheath-sq/tar.gz/2cc0375d0751806f10ea02a2e4936fd5068fb93d"
 
 "companion-module-analogway-eks500@github:bitfocus/companion-module-analogway-eks500#v1.0.1":
   version "1.0.1"
