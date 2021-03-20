@@ -3299,6 +3299,10 @@ commist@^1.0.0:
   version "1.0.2"
   resolved "https://codeload.github.com/bitfocus/companion-module-optoma-z28s/tar.gz/79f9a38298e70ab046f4e26df1c79d56f0088c3c"
 
+"companion-module-orfast-ndi@github:bitfocus/companion-module-orfast-ndi#v1.0.0":
+  version "1.0.0"
+  resolved "https://codeload.github.com/bitfocus/companion-module-orfast-ndi/tar.gz/32c28f886b07a7da3aed8a38c6a3a71881c8543e"
+
 "companion-module-panasonic-avhs@github:bitfocus/companion-module-panasonic-avhs#v1.0.1":
   version "1.0.1"
   resolved "https://codeload.github.com/bitfocus/companion-module-panasonic-avhs/tar.gz/2134927b5c0a8e3e89b512cd61721bbdb5d8256f"
