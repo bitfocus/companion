@@ -150,7 +150,7 @@
 		"lindist": "yarn dist:prepare && yarn dist:prepare:linux && electron-builder --publish=never --x64 --linux",
 		"rpidist": "yarn dist:prepare && yarn dist:prepare:rpi && electron-builder --publish=never --armv7l --linux",
 		"dist:prepare:sharp": "cd node_modules/sharp && rimraf vendor && node install/libvips && node install/dll-copy",
-		"dist:prepare:win": "npm_config_platform=win32 npm_config_arch=x64 yarn dist:prepare:sharp",
+		"dist:prepare:win": "yarn --platform=win32 --arch=x64 dist:prepare:sharp",
 		"dist:prepare:mac": "npm_config_platform=darwin npm_config_arch=x64 yarn dist:prepare:sharp",
 		"dist:prepare:linux": "npm_config_platform=linux npm_config_arch=x64 yarn dist:prepare:sharp",
 		"dist:prepare:rpi": "npm_config_platform=linux npm_config_arch=arm yarn dist:prepare:sharp",
