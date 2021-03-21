@@ -2528,9 +2528,9 @@ commist@^1.0.0:
   version "1.3.5"
   resolved "https://codeload.github.com/bitfocus/companion-module-allenheath-dlive-ilive/tar.gz/355acdf755963a4e9367430d491d75a73a2dd84f"
 
-"companion-module-allenheath-qu@github:bitfocus/companion-module-allenheath-qu#v1.0.5":
-  version "1.0.5"
-  resolved "https://codeload.github.com/bitfocus/companion-module-allenheath-qu/tar.gz/433d4959398181b33df2863ea77a7fa86bfdb1c7"
+"companion-module-allenheath-qu@github:bitfocus/companion-module-allenheath-qu#v1.0.6":
+  version "1.0.6"
+  resolved "https://codeload.github.com/bitfocus/companion-module-allenheath-qu/tar.gz/358ce765392b13b9ca8779ec21cd4d19fa9e26b8"
 
 "companion-module-allenheath-sq@github:bitfocus/companion-module-allenheath-sq#v1.3.3":
   version "1.3.3"
