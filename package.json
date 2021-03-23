@@ -498,6 +498,6 @@
 	"resolutions": {
 		"infinitton-idisplay/node-hid": "^2.1.1",
 		"electron-builder/**/app-builder-bin": "3.5.13",
-		"osc/serialport": "^9.0.7"
+		"**/osc/serialport": "^9.0.7"
 	}
 }
