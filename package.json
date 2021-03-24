@@ -343,6 +343,7 @@
 		"companion-module-lightware-lw2": "github:bitfocus/companion-module-lightware-lw2#v1.0.2",
 		"companion-module-lightware-lw3": "github:bitfocus/companion-module-lightware-lw3#v1.0.1",
 		"companion-module-liminalet-zoomosc": "github:bitfocus/companion-module-liminalet-zoomosc#v1.0.3",
+		"companion-module-linkbox-remote": "github:bitfocus/companion-module-linkbox-remote#v1.2.1",
 		"companion-module-livingasone-decoders": "github:bitfocus/companion-module-livingasone-decoders#v1.1.2",
 		"companion-module-lumens-visca": "github:bitfocus/companion-module-lumens-visca#v1.0.1",
 		"companion-module-lyntec-rpc-breaker": "github:bitfocus/companion-module-lyntec-rpc-breaker#v1.0.3",
