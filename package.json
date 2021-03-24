@@ -218,6 +218,7 @@
 		"companion-module-aten-matrix": "github:bitfocus/companion-module-aten-matrix#v1.0.0",
 		"companion-module-audiostrom-liveprofessor": "github:bitfocus/companion-module-audiostrom-liveprofessor#v1.0.0",
 		"companion-module-audivero-unityintercom": "github:bitfocus/companion-module-audivero-unityintercom#v1.0.2",
+		"companion-module-audivero-unityintercom-client": "github:bitfocus/companion-module-audivero-unityintercom-client#v1.0.0",
 		"companion-module-avishop-hdbaset-matrix": "github:bitfocus/companion-module-avishop-hdbaset-matrix#v1.0.1",
 		"companion-module-avolites-ai": "github:bitfocus/companion-module-avolites-ai#v1.0.1",
 		"companion-module-avolites-titan": "github:bitfocus/companion-module-avolites-titan#v1.1.0",
