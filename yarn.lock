@@ -3547,9 +3547,9 @@ commist@^1.0.0:
   dependencies:
     spotify-web-api-node "^5.0.1"
 
-"companion-module-studiocoast-vmix@github:bitfocus/companion-module-studiocoast-vmix#v1.2.17":
-  version "1.2.17"
-  resolved "https://codeload.github.com/bitfocus/companion-module-studiocoast-vmix/tar.gz/bbdbedb76478bc4865164ae12e8b39915ab80734"
+"companion-module-studiocoast-vmix@github:bitfocus/companion-module-studiocoast-vmix#v1.2.18":
+  version "1.2.18"
+  resolved "https://codeload.github.com/bitfocus/companion-module-studiocoast-vmix/tar.gz/3dc1ab5a95c264ac1da84913eea780b37916df8f"
   dependencies:
     lodash "^4.17.19"
     xml2js "^0.4.22"

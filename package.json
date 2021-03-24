@@ -430,7 +430,7 @@
 		"companion-module-soundcraft-ui": "github:bitfocus/companion-module-soundcraft-ui#v2.0.0",
 		"companion-module-sounddevices-pixnet": "github:bitfocus/companion-module-sounddevices-pixnet#v1.0.0",
 		"companion-module-spotify-remote": "github:bitfocus/companion-module-spotify-remote#v1.0.2",
-		"companion-module-studiocoast-vmix": "github:bitfocus/companion-module-studiocoast-vmix#v1.2.17",
+		"companion-module-studiocoast-vmix": "github:bitfocus/companion-module-studiocoast-vmix#v1.2.18",
 		"companion-module-tascam-bdmp1": "github:bitfocus/companion-module-tascam-bdmp1#v0.1.5",
 		"companion-module-tascam-cd": "github:bitfocus/companion-module-tascam-cd#v1.0.2",
 		"companion-module-techministry-midirelay": "github:bitfocus/companion-module-techministry-midirelay#v2.0.4",
