@@ -1554,6 +1554,11 @@ asar@^3.0.3:
   optionalDependencies:
     "@types/glob" "^7.1.1"
 
+asn1-ber@*:
+  version "1.1.0"
+  resolved "https://registry.yarnpkg.com/asn1-ber/-/asn1-ber-1.1.0.tgz#b69f91578c08afa65511124908a7a82f62c6571c"
+  integrity sha512-t/pm9zz3CC7jE2ItzMPi4rYUXp4d3JkLAUQY8E/5u5Lkaq7KMvMalRWrW9WWARm5gOB/HE/mkorImJwSL7fi9w==
+
 asn1@evs-broadcast/node-asn1:
   version "0.5.4"
   resolved "https://codeload.github.com/evs-broadcast/node-asn1/tar.gz/0146823069e479e90595480dc90c72cafa161ba1"
@@ -3359,6 +3364,12 @@ commist@^1.0.0:
   resolved "https://codeload.github.com/bitfocus/companion-module-protopie-bridge/tar.gz/4ac85e94181f8cbc0b84b7cf3a5db5eb7f8af57c"
   dependencies:
     socket.io-client "2.3.0"
+
+"companion-module-prsi-ipower@github:bitfocus/companion-module-prsi-ipower#v1.0.0":
+  version "1.0.0"
+  resolved "https://codeload.github.com/bitfocus/companion-module-prsi-ipower/tar.gz/eb419682e99ab37102967e74970f85f4437040bf"
+  dependencies:
+    net-snmp "^3.5.2"
 
 "companion-module-ptzoptics-visca@github:bitfocus/companion-module-ptzoptics-visca#v1.1.5":
   version "1.1.5"
@@ -6757,6 +6768,14 @@ negotiator@0.6.2:
   version "0.6.2"
   resolved "https://registry.yarnpkg.com/negotiator/-/negotiator-0.6.2.tgz#feacf7ccf525a77ae9634436a64883ffeca346fb"
   integrity sha512-hZXc7K2e+PgeI1eDBe/10Ard4ekbfrrqG8Ep+8Jmf4JID2bNg7NvCPOZN+kfF574pFQI7mum2AUqDidoKqcTOw==
+
+net-snmp@^3.5.2:
+  version "3.5.2"
+  resolved "https://registry.yarnpkg.com/net-snmp/-/net-snmp-3.5.2.tgz#cfd84833eb086fd18ed56a368e1a89dbcd27df19"
+  integrity sha512-8B3LvTnY0WllKDpbkDQHuj7i+1niGBL+21div/mbW6kp3+09gldTjuYlW4HWWtkXuNZ2Q72mN1zzTK8urFKQiw==
+  dependencies:
+    asn1-ber "*"
+    smart-buffer "^4.1.0"
 
 netmask@^1.0.6:
   version "1.0.6"
