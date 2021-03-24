@@ -2589,9 +2589,9 @@ commist@^1.0.0:
   version "1.0.0"
   resolved "https://codeload.github.com/bitfocus/companion-module-audivero-unityintercom-client/tar.gz/24504134aadbe6b488a72e0d9e01a82c64a27bfe"
 
-"companion-module-audivero-unityintercom@github:bitfocus/companion-module-audivero-unityintercom#v1.0.2":
+"companion-module-audivero-unityintercom-server@github:bitfocus/companion-module-audivero-unityintercom-server#v1.0.2":
   version "1.0.2"
-  resolved "https://codeload.github.com/bitfocus/companion-module-audivero-unityintercom/tar.gz/32e3b8c8df2fa5199a01b58ce0ec65afb417fc6c"
+  resolved "https://codeload.github.com/bitfocus/companion-module-audivero-unityintercom-server/tar.gz/32e3b8c8df2fa5199a01b58ce0ec65afb417fc6c"
 
 "companion-module-avishop-hdbaset-matrix@github:bitfocus/companion-module-avishop-hdbaset-matrix#v1.0.1":
   version "1.0.1"
