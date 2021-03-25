@@ -19,6 +19,11 @@ export function TextInputField({ definition, value, setValue, setValid }) {
 	// Check if the value is valid
 	const isValueValid = useCallback(
 		(val) => {
+			// We need a string here, but sometimes get a number...
+			if (typeof val === 'number') {
+				val = `${val}`
+			}
+
 			// Must match the regex
 			if (regex && (typeof val !== 'string' || !val.match(regex))) {
 				return false

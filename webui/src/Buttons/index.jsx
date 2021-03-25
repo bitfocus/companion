@@ -45,6 +45,9 @@ export function ButtonsPage({ hotPress }) {
 		},
 		[context.socket, hotPress]
 	)
+	const clearSelectedButton = useCallback(() => {
+		doChangeTab('presets')
+	}, [doChangeTab])
 
 	const handleKeyDownInButtons = useCallback(
 		(e) => {
@@ -117,6 +120,7 @@ export function ButtonsPage({ hotPress }) {
 						pageNumber={pageNumber}
 						changePage={setPageNumber}
 						onKeyDown={handleKeyDownInButtons}
+						clearSelectedButton={clearSelectedButton}
 					/>
 				</MyErrorBoundary>
 			</CCol>
