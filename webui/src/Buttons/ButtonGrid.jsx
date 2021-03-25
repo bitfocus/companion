@@ -214,17 +214,20 @@ const ButtonGridActions = forwardRef(function ButtonGridActions({ isHot, pageNum
 		}
 	}
 
-	const startFunction = useCallback((func) => {
-		setActiveFunction((oldFunction) => {
-			if (oldFunction === null) {
-				setActiveFunctionBank(null)
-				clearSelectedButton()
-				return func
-			} else {
-				return oldFunction
-			}
-		})
-	}, [])
+	const startFunction = useCallback(
+		(func) => {
+			setActiveFunction((oldFunction) => {
+				if (oldFunction === null) {
+					setActiveFunctionBank(null)
+					clearSelectedButton()
+					return func
+				} else {
+					return oldFunction
+				}
+			})
+		},
+		[clearSelectedButton]
+	)
 	const stopFunction = useCallback(() => {
 		setActiveFunction(null)
 		setActiveFunctionBank(null)

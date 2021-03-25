@@ -7,3 +7,4 @@ public/
 webui/package.json
 webui/build/
 /LICENSE.md
+module-local-dev
