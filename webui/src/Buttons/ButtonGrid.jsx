@@ -532,5 +532,6 @@ function ButtonGridIcon(props) {
 		}),
 	})
 
-	return <BankPreview {...props} dropRef={drop} dropHover={isOver} canDrop={canDrop} />
+	const title = `${props.page}.${props.index}`
+	return <BankPreview {...props} dropRef={drop} dropHover={isOver} canDrop={canDrop} alt={title} title={title} />
 }
