@@ -417,6 +417,7 @@
 		"companion-module-showcuesystems-scs": "github:bitfocus/companion-module-showcuesystems-scs#v1.0.1",
 		"companion-module-shure-dis-ccu": "github:bitfocus/companion-module-shure-dis-ccu#v1.0.1",
 		"companion-module-shure-psm1000": "github:bitfocus/companion-module-shure-psm1000#v1.0.0",
+		"companion-module-shure-scm820": "github:bitfocus/companion-module-shure-scm820#v1.0.0",
 		"companion-module-shure-wireless": "github:bitfocus/companion-module-shure-wireless#v1.1.3",
 		"companion-module-sienna-ndimonitor": "github:bitfocus/companion-module-sienna-ndimonitor#v1.0.0",
 		"companion-module-singularlive-studio": "github:bitfocus/companion-module-singularlive-studio#v1.0.4",
