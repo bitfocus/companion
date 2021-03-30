@@ -3603,9 +3603,9 @@ commist@^1.0.0:
   version "1.0.3"
   resolved "https://codeload.github.com/bitfocus/companion-module-tesla-smart/tar.gz/2f19dbedc1d69285eaf0c9388ba141841ef5424a"
 
-"companion-module-thelightingcontroller@github:bitfocus/companion-module-thelightingcontroller#v1.1.1":
-  version "1.1.1"
-  resolved "https://codeload.github.com/bitfocus/companion-module-thelightingcontroller/tar.gz/821213c9e6b2ed2248317de7145e605975949740"
+"companion-module-thelightingcontroller@github:bitfocus/companion-module-thelightingcontroller#v1.1.2":
+  version "1.1.2"
+  resolved "https://codeload.github.com/bitfocus/companion-module-thelightingcontroller/tar.gz/4237d1d5643e6897d308bdacb6863ed86b1f6e71"
   dependencies:
     xml2js "^0.4.17"
 
