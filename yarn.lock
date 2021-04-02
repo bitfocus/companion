@@ -3416,9 +3416,9 @@ commist@^1.0.0:
   dependencies:
     xml2js "^0.4.23"
 
-"companion-module-roland-m5000@github:bitfocus/companion-module-roland-m5000#v1.0.0":
-  version "1.0.0"
-  resolved "https://codeload.github.com/bitfocus/companion-module-roland-m5000/tar.gz/a4eec14d08c885e670f96dd88d1da71760c89e70"
+"companion-module-roland-m5000@github:bitfocus/companion-module-roland-m5000#v1.0.1":
+  version "1.0.1"
+  resolved "https://codeload.github.com/bitfocus/companion-module-roland-m5000/tar.gz/822a17694741912b76a803addee294e488033bd7"
 
 "companion-module-roland-v1200hd@github:bitfocus/companion-module-roland-v1200hd#v1.0.0":
   version "1.0.0"
