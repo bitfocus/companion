@@ -3074,9 +3074,9 @@ commist@^1.0.0:
   version "1.0.1"
   resolved "https://codeload.github.com/bitfocus/companion-module-ifelseware-avplayback/tar.gz/cf2f1e817e23d55eba5bb43df18e803930636964"
 
-"companion-module-imimot-mitti@github:bitfocus/companion-module-imimot-mitti#v1.0.5":
-  version "1.0.5"
-  resolved "https://codeload.github.com/bitfocus/companion-module-imimot-mitti/tar.gz/796eb8cf33f28f954c0092ccf64a3e4c86f7e51e"
+"companion-module-imimot-mitti@github:bitfocus/companion-module-imimot-mitti#v1.0.6":
+  version "1.0.6"
+  resolved "https://codeload.github.com/bitfocus/companion-module-imimot-mitti/tar.gz/c042253276cc9a0e9367c9681384f9f6d29f91c5"
 
 "companion-module-interactivetechnologies-cueserver@github:bitfocus/companion-module-interactivetechnologies-cueserver#v1.0.1":
   version "1.0.1"
