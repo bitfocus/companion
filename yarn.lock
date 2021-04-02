@@ -3001,9 +3001,9 @@ commist@^1.0.0:
   version "1.0.2"
   resolved "https://codeload.github.com/bitfocus/companion-module-generic-osc/tar.gz/ef0f1d64037598af251f0833caa955f9559026b5"
 
-"companion-module-generic-pjlink@github:bitfocus/companion-module-generic-pjlink#v1.0.4":
-  version "1.0.4"
-  resolved "https://codeload.github.com/bitfocus/companion-module-generic-pjlink/tar.gz/0b5d7b4d224c2b09d150a7ac846525855ee58c42"
+"companion-module-generic-pjlink@github:bitfocus/companion-module-generic-pjlink#v1.0.5":
+  version "1.0.5"
+  resolved "https://codeload.github.com/bitfocus/companion-module-generic-pjlink/tar.gz/c4db10119ed5ffd74b2164fff5867764f27caae4"
 
 "companion-module-generic-sacn@github:bitfocus/companion-module-generic-sacn#v1.0.0":
   version "1.0.0"
