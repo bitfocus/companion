@@ -24,7 +24,15 @@ export const HelpModal = memo(
 
 		const html = content
 			? {
-					__html: sanitizeHtml(marked(content[1].markdown, { baseUrl: content[1].baseUrl })),
+					__html: sanitizeHtml(
+						marked(content[1].markdown, {
+							baseUrl: content[1].baseUrl,
+						}),
+						{
+							allowedTags: sanitizeHtml.defaults.allowedTags.concat(['img']),
+							disallowedTagsMode: 'escape',
+						}
+					),
 			  }
 			: undefined
 

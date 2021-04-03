@@ -280,7 +280,66 @@ Clicking the **Settings** button next to a device lets you change some things ab
 - **Brightness**: The brightness of the buttons
 - **Button rotation**: If you've physically rotated your Stream Deck, you can use this setting to make the buttons match that orientation.
 
-### 4. Settings
+---
+
+### 4. Triggers
+
+From the Triggers tab, you can add, edit and remove triggers for your Companion Setup.
+
+Triggers can provide an extra hand in making any setup more automated and allow for you to program some simple automation based on time of day, intervals, variable state.
+
+To add a new trigger, please click the button "Add New Trigger" and fill in the information mentioned below.
+
+![Instance](images/triggers.png?raw=true 'Buttons')
+
+#### Trigger Setup
+
+All triggers have a few identical configuration fields that need to be filled out before they can be created.
+
+- **Name**  
+  An identifier for you has no direct purpose other than giving a quick way to identify one trigger from the rest.
+
+- **Button**  
+  This defines what button should be pressed when the condition below is met. The button is defined with the same syling as can be seen at the top of each button, with the page number first and the button number on that page after. A quick example could be with button 6 on page 1 becomes 1.6 , button 19 on page 3 becomes 3.19, and so on.
+
+- **Type**  
+  This specifies what type of condition should be met before the trigger presses the button selected above. Each trigger type will change what specific information will be needed for it to trigger the button press.
+
+![Trigger Edit](images/trigger_edit.png?raw=true 'Trigger Edit')
+
+There are several trigger types you should be familiar with:
+
+### Trigger Types
+
+- **Instance**
+
+  ![Trigger Instance](images/trigger_edit_instance_crop.png?raw=true 'Trigger Instance')  
+  Allows automating based on Companion states. Here you have the options for the trigger to activate on startup, webpage load or when a button has been pressed down or released. |
+
+- **Time Interval**
+
+  ![Trigger Time Interval](images/trigger_edit_interval_crop.png?raw=true 'Trigger Time Interval')  
+  Creates a Trigger that will get triggered every `X` seconds.
+
+- **Time of day**
+
+  ![Trigger Time Of Day](images/trigger_edit_time_of_day_crop.png?raw=true 'Trigger Time Of Day')  
+  Creates a Trigger that will get triggered every `X` day at `Y` time. in this trigger, you will need to specify what time of day in the format, `HH:MM:SS` and you can choose at what day of the week it'll be active.
+
+- **Variable value**
+
+  ![Trigger Variable](images/trigger_edit_variable_crop.png?raw=true 'Trigger Variable')  
+  Creates a Trigger that will get triggered every time a selected variable matches the condition or multiple conditions specified.
+
+  To find the variable you want to use, go to the instance page and click edit on the module you want a variable from. Copy the variable and paste it into the text field. The variable will look something like this when you copy it `$(vmix:fullscreen_active)`, please remove `$( )`, and it should now look like in the picture.
+
+  For each variable you add, you can perform some basic functions `=`, `!=`, `<` or `>`.
+
+  And last, you need to specify what value to check for, so for my example, I would type in `True` or `False` based if it's on or off. You might want to specify a value based on a specific state, like what input is currently on program. To find the values do as before and copy the variables page's value to ensure it matches up correctly.
+
+---
+
+### 5. Settings
 
 In the Settings tab you can apply some user settings:
 
@@ -291,6 +350,9 @@ In the Settings tab you can apply some user settings:
 
 - **Show + and - instead of arrows on page buttons**  
   Changes the page buttons from the standard arrows symbols to + and - symbols instead.
+
+- **Remove the topbar on each button**  
+  Hides the Yellow bar and the button number at the top of each button.
 
 #### Devices
 
@@ -310,6 +372,13 @@ In the Settings tab you can apply some user settings:
 
 - **Pin Timeout (seconds, 0 to turn off)**  
   The number of seconds of inactivity before a Stream Deck locks. Enter `0` if you don't want it to lock out due to inactivity (instead, add an action to a button to trigger a lockout on demand).
+
+#### RossTalk
+
+_If enabled, Companion will listen for RossTalk messages, allowing for external devices to control Companion._
+
+- **RossTalk Listener**  
+  Check to allow Companion to be controlled over RossTalk.
 
 #### Artnet Listener
 

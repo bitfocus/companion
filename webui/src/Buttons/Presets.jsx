@@ -192,7 +192,15 @@ function PresetsButtonList({ presets, selectedInstanceId, selectedCategory, setI
 			<p>Drag and drop the preset buttons below into your buttons-configuration.</p>
 
 			{options.map((preset, i) => {
-				return <PresetIconPreview key={i} instanceId={selectedInstanceId} preset={preset} alt={preset.label} />
+				return (
+					<PresetIconPreview
+						key={i}
+						instanceId={selectedInstanceId}
+						preset={preset}
+						alt={preset.label}
+						title={preset.label}
+					/>
+				)
 			})}
 
 			<br style={{ clear: 'both' }} />

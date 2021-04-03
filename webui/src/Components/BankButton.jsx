@@ -55,7 +55,14 @@ export const BankPreview = React.memo(function (props) {
 			}}
 		>
 			<div className="bank-border">
-				<img ref={props.dragRef} width={72} height={72} src={props.preview ?? BlackImage} alt={props.alt} />
+				<img
+					ref={props.dragRef}
+					width={72}
+					height={72}
+					src={props.preview ?? BlackImage}
+					alt={props.alt}
+					title={props.title}
+				/>
 			</div>
 		</div>
 	)

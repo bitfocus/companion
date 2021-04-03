@@ -4,6 +4,10 @@
 
 - https://github.com/bitfocus/companion/wiki/Installation
 
+**Slack / Chat**
+
+- https://join.slack.com/t/bitfocusio/shared_invite/zt-o1i0mohx-p_m5I7fUEUJ1BBu_KrDN2Q
+
 **Our website**
 
 - https://bitfocus.io/companion/

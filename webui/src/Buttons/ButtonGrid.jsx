@@ -34,6 +34,7 @@ export const ButtonsGridPanel = memo(function ButtonsPage({
 	buttonGridClick,
 	changePage,
 	selectedButton,
+	clearSelectedButton,
 }) {
 	const context = useContext(CompanionContext)
 
@@ -179,7 +180,12 @@ export const ButtonsGridPanel = memo(function ButtonsPage({
 				</CRow>
 
 				<CRow style={{ paddingTop: '15px' }}>
-					<ButtonGridActions ref={actionsRef} isHot={isHot} pageNumber={pageNumber} />
+					<ButtonGridActions
+						ref={actionsRef}
+						isHot={isHot}
+						pageNumber={pageNumber}
+						clearSelectedButton={clearSelectedButton}
+					/>
 				</CRow>
 
 				<CAlert color="info">
@@ -191,7 +197,7 @@ export const ButtonsGridPanel = memo(function ButtonsPage({
 	)
 })
 
-const ButtonGridActions = forwardRef(function ButtonGridActions({ isHot, pageNumber }, ref) {
+const ButtonGridActions = forwardRef(function ButtonGridActions({ isHot, pageNumber, clearSelectedButton }, ref) {
 	const context = useContext(CompanionContext)
 
 	const resetRef = useRef()
@@ -208,16 +214,20 @@ const ButtonGridActions = forwardRef(function ButtonGridActions({ isHot, pageNum
 		}
 	}
 
-	const startFunction = useCallback((func) => {
-		setActiveFunction((oldFunction) => {
-			if (oldFunction === null) {
-				setActiveFunctionBank(null)
-				return func
-			} else {
-				return oldFunction
-			}
-		})
-	}, [])
+	const startFunction = useCallback(
+		(func) => {
+			setActiveFunction((oldFunction) => {
+				if (oldFunction === null) {
+					setActiveFunctionBank(null)
+					clearSelectedButton()
+					return func
+				} else {
+					return oldFunction
+				}
+			})
+		},
+		[clearSelectedButton]
+	)
 	const stopFunction = useCallback(() => {
 		setActiveFunction(null)
 		setActiveFunctionBank(null)
@@ -240,6 +250,8 @@ const ButtonGridActions = forwardRef(function ButtonGridActions({ isHot, pageNum
 	}
 
 	const resetPage = useCallback(() => {
+		clearSelectedButton()
+
 		resetRef.current.show(
 			'Reset page',
 			`Are you sure you want to clear all buttons on page ${pageNumber}?\nThere's no going back from this.`,
@@ -248,8 +260,10 @@ const ButtonGridActions = forwardRef(function ButtonGridActions({ isHot, pageNum
 				context.socket.emit('loadsave_reset_page_all', pageNumber)
 			}
 		)
-	}, [context.socket, pageNumber])
+	}, [context.socket, pageNumber, clearSelectedButton])
 	const resetPageNav = useCallback(() => {
+		clearSelectedButton()
+
 		resetRef.current.show(
 			'Reset page',
 			`Are you sure you want to reset navigation buttons? This will completely erase bank ${pageNumber}.1, ${pageNumber}.9 and ${pageNumber}.17`,
@@ -258,7 +272,7 @@ const ButtonGridActions = forwardRef(function ButtonGridActions({ isHot, pageNum
 				context.socket.emit('loadsave_reset_page_nav', pageNumber)
 			}
 		)
-	}, [context.socket, pageNumber])
+	}, [context.socket, pageNumber, clearSelectedButton])
 
 	useImperativeHandle(
 		ref,
@@ -518,5 +532,6 @@ function ButtonGridIcon(props) {
 		}),
 	})
 
-	return <BankPreview {...props} dropRef={drop} dropHover={isOver} canDrop={canDrop} />
+	const title = `${props.page}.${props.index}`
+	return <BankPreview {...props} dropRef={drop} dropHover={isOver} canDrop={canDrop} alt={title} title={title} />
 }
