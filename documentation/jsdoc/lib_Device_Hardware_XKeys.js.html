@@ -1,0 +1,532 @@
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Source: lib/Device/Hardware/XKeys.js | Companion</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/bootstrap.min.css">
+    <link type="text/css" rel="stylesheet" href="styles/prettify-jsdoc.css">
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/tui-doc.css">
+
+    
+</head>
+<body>
+<nav class="lnb" id="lnb">
+    <div class="logo" style="width: 147px; height: 24px">
+        
+            <a href="https://bitfocus.io" rel="noopener noreferrer" target="_blank">
+                <img src="https://bitfocus.io/images/topbar-logowhite.png" width="100%" height="100%">
+            </a>
+        
+    </div>
+    <div class="title">
+        <h1><a href="index.html" class="link">Companion</a></h1>
+        
+            <span class="version">v2.2.0</span>
+        
+    </div>
+    <div class="search-container" id="search-container">
+        <input type="text" placeholder="Search">
+        <ul></ul>
+    </div>
+    
+    <div class="lnb-api hidden"><h3>Classes</h3><ul><li><a href="BankActionDefinition.html">BankActionDefinition</a><button type="button" class="hidden toggle-subnav btn btn-link">  <span class="glyphicon glyphicon-plus"></span></button><div class="hidden" id="BankActionDefinition_sub"><div class="member-type">Members</div><ul class="inner"><li><a href="BankActionDefinition.html#label">label</a></li><li><a href="BankActionDefinition.html#options">options</a></li></ul><div class="member-type">Methods</div><ul class="inner"><li><a href="BankActionDefinition.html#callback">callback</a></li><li><a href="BankActionDefinition.html#subscribe">subscribe</a></li><li><a href="BankActionDefinition.html#unsubscribe">unsubscribe</a></li></ul></div></li><li><a href="BankFeedbackController.html">BankFeedbackController</a><button type="button" class="hidden toggle-subnav btn btn-link">  <span class="glyphicon glyphicon-plus"></span></button><div class="hidden" id="BankFeedbackController_sub"><div class="member-type">Members</div><ul class="inner"><li><a href="BankFeedbackController.html#logSource">logSource</a></li><li><a href="BankFeedbackController.html#registry">registry</a></li><li><a href="BankFeedbackController.html#system">system</a></li></ul><div class="member-type">Methods</div><ul class="inner"><li><a href="BankFeedbackController.html#bank">bank</a></li><li><a href="BankFeedbackController.html#db">db</a></li><li><a href="BankFeedbackController.html#deviceController">deviceController</a></li><li><a href="BankFeedbackController.html#graphics">graphics</a></li><li><a href="BankFeedbackController.html#instance">instance</a></li><li><a href="BankFeedbackController.html#io">io</a></li><li><a href="BankFeedbackController.html#log">log</a></li><li><a href="BankFeedbackController.html#page">page</a></li><li><a href="BankFeedbackController.html#schedule">schedule</a></li><li><a href="BankFeedbackController.html#services">services</a></li><li><a href="BankFeedbackController.html#userconfig">userconfig</a></li></ul></div></li><li><a href="BankFeedbackDefinition.html">BankFeedbackDefinition</a><button type="button" class="hidden toggle-subnav btn btn-link">  <span class="glyphicon glyphicon-plus"></span></button><div class="hidden" id="BankFeedbackDefinition_sub"><div class="member-type">Members</div><ul class="inner"><li><a href="BankFeedbackDefinition.html#description">description</a></li><li><a href="BankFeedbackDefinition.html#label">label</a></li><li><a href="BankFeedbackDefinition.html#options">options</a></li></ul><div class="member-type">Methods</div><ul class="inner"><li><a href="BankFeedbackDefinition.html#callback">callback</a></li><li><a href="BankFeedbackDefinition.html#subscribe">subscribe</a></li><li><a href="BankFeedbackDefinition.html#unsubscribe">unsubscribe</a></li></ul></div></li><li><a href="BankFeedbackItems.html">BankFeedbackItems</a><button type="button" class="hidden toggle-subnav btn btn-link">  <span class="glyphicon glyphicon-plus"></span></button><div class="hidden" id="BankFeedbackItems_sub"><div class="member-type">Members</div><ul class="inner"><li><a href="BankFeedbackItems.html#controller">controller</a></li><li><a href="BankFeedbackItems.html#dbKey">dbKey</a></li><li><a href="BankFeedbackItems.html#debug">debug</a></li><li><a href="BankFeedbackItems.html#definitions">definitions</a></li><li><a href="BankFeedbackItems.html#items">items</a></li><li><a href="BankFeedbackItems.html#logSource">logSource</a></li><li><a href="BankFeedbackItems.html#registry">registry</a></li><li><a href="BankFeedbackItems.html#system">system</a></li></ul><div class="member-type">Methods</div><ul class="inner"><li><a href="BankFeedbackItems.html#addItem">addItem</a></li><li><a href="BankFeedbackItems.html#addItemByClient">addItemByClient</a></li><li><a href="BankFeedbackItems.html#bank">bank</a></li><li><a href="BankFeedbackItems.html#checkBankExists">checkBankExists</a></li><li><a href="BankFeedbackItems.html#checkBankStatus">checkBankStatus</a></li><li><a href="BankFeedbackItems.html#checkInstanceStatus">checkInstanceStatus</a></li><li><a href="BankFeedbackItems.html#checkStatus">checkStatus</a></li><li><a href="BankFeedbackItems.html#cleanupItems">cleanupItems</a></li><li><a href="BankFeedbackItems.html#db">db</a></li><li><a href="BankFeedbackItems.html#deleteInstance">deleteInstance</a></li><li><a href="BankFeedbackItems.html#deleteItem">deleteItem</a></li><li><a href="BankFeedbackItems.html#deleteItemByClient">deleteItemByClient</a></li><li><a href="BankFeedbackItems.html#deviceController">deviceController</a></li><li><a href="BankFeedbackItems.html#getAll">getAll</a></li><li><a href="BankFeedbackItems.html#getBank">getBank</a></li><li><a href="BankFeedbackItems.html#getBankByClient">getBankByClient</a></li><li><a href="BankFeedbackItems.html#getBankStyles">getBankStyles</a></li><li><a href="BankFeedbackItems.html#getInstanceItems">getInstanceItems</a></li><li><a href="BankFeedbackItems.html#getPage">getPage</a></li><li><a href="BankFeedbackItems.html#getStyle">getStyle</a></li><li><a href="BankFeedbackItems.html#graphics">graphics</a></li><li><a href="BankFeedbackItems.html#importBank">importBank</a></li><li><a href="BankFeedbackItems.html#instance">instance</a></li><li><a href="BankFeedbackItems.html#io">io</a></li><li><a href="BankFeedbackItems.html#log">log</a></li><li><a href="BankFeedbackItems.html#page">page</a></li><li><a href="BankFeedbackItems.html#resetBank">resetBank</a></li><li><a href="BankFeedbackItems.html#save">save</a></li><li><a href="BankFeedbackItems.html#schedule">schedule</a></li><li><a href="BankFeedbackItems.html#services">services</a></li><li><a href="BankFeedbackItems.html#setDefinitions">setDefinitions</a></li><li><a href="BankFeedbackItems.html#setStyle">setStyle</a></li><li><a href="BankFeedbackItems.html#subscribe">subscribe</a></li><li><a href="BankFeedbackItems.html#subscribeBank">subscribeBank</a></li><li><a href="BankFeedbackItems.html#unsubscribe">unsubscribe</a></li><li><a href="BankFeedbackItems.html#unsubscribeBank">unsubscribeBank</a></li><li><a href="BankFeedbackItems.html#updateItemOption">updateItemOption</a></li><li><a href="BankFeedbackItems.html#updateItemOrder">updateItemOrder</a></li><li><a href="BankFeedbackItems.html#userconfig">userconfig</a></li></ul></div></li><li><a href="BankItemDefinition.html">BankItemDefinition</a><button type="button" class="hidden toggle-subnav btn btn-link">  <span class="glyphicon glyphicon-plus"></span></button><div class="hidden" id="BankItemDefinition_sub"><div class="member-type">Members</div><ul class="inner"><li><a href="BankItemDefinition.html#label">label</a></li><li><a href="BankItemDefinition.html#options">options</a></li></ul></div></li><li><a href="BankItemsBase.html">BankItemsBase</a><button type="button" class="hidden toggle-subnav btn btn-link">  <span class="glyphicon glyphicon-plus"></span></button><div class="hidden" id="BankItemsBase_sub"><div class="member-type">Members</div><ul class="inner"><li><a href="BankItemsBase.html#controller">controller</a></li><li><a href="BankItemsBase.html#dbKey">dbKey</a></li><li><a href="BankItemsBase.html#definitions">definitions</a></li><li><a href="BankItemsBase.html#items">items</a></li><li><a href="BankItemsBase.html#logSource">logSource</a></li><li><a href="BankItemsBase.html#registry">registry</a></li><li><a href="BankItemsBase.html#system">system</a></li></ul><div class="member-type">Methods</div><ul class="inner"><li><a href="BankItemsBase.html#addItem">addItem</a></li><li><a href="BankItemsBase.html#addItemByClient">addItemByClient</a></li><li><a href="BankItemsBase.html#bank">bank</a></li><li><a href="BankItemsBase.html#checkBankExists">checkBankExists</a></li><li><a href="BankItemsBase.html#checkInstanceStatus">checkInstanceStatus</a></li><li><a href="BankItemsBase.html#checkStatus">checkStatus</a></li><li><a href="BankItemsBase.html#cleanupItems">cleanupItems</a></li><li><a href="BankItemsBase.html#db">db</a></li><li><a href="BankItemsBase.html#deleteInstance">deleteInstance</a></li><li><a href="BankItemsBase.html#deleteItem">deleteItem</a></li><li><a href="BankItemsBase.html#deleteItemByClient">deleteItemByClient</a></li><li><a href="BankItemsBase.html#deviceController">deviceController</a></li><li><a href="BankItemsBase.html#getAll">getAll</a></li><li><a href="BankItemsBase.html#getBank">getBank</a></li><li><a href="BankItemsBase.html#getBankByClient">getBankByClient</a></li><li><a href="BankItemsBase.html#getInstanceItems">getInstanceItems</a></li><li><a href="BankItemsBase.html#getPage">getPage</a></li><li><a href="BankItemsBase.html#graphics">graphics</a></li><li><a href="BankItemsBase.html#importBank">importBank</a></li><li><a href="BankItemsBase.html#instance">instance</a></li><li><a href="BankItemsBase.html#io">io</a></li><li><a href="BankItemsBase.html#log">log</a></li><li><a href="BankItemsBase.html#page">page</a></li><li><a href="BankItemsBase.html#resetBank">resetBank</a></li><li><a href="BankItemsBase.html#save">save</a></li><li><a href="BankItemsBase.html#schedule">schedule</a></li><li><a href="BankItemsBase.html#services">services</a></li><li><a href="BankItemsBase.html#setDefinitions">setDefinitions</a></li><li><a href="BankItemsBase.html#subscribe">subscribe</a></li><li><a href="BankItemsBase.html#subscribeBank">subscribeBank</a></li><li><a href="BankItemsBase.html#unsubscribe">unsubscribe</a></li><li><a href="BankItemsBase.html#unsubscribeBank">unsubscribeBank</a></li><li><a href="BankItemsBase.html#updateItemOption">updateItemOption</a></li><li><a href="BankItemsBase.html#updateItemOrder">updateItemOrder</a></li><li><a href="BankItemsBase.html#userconfig">userconfig</a></li></ul></div></li><li><a href="BankStyle.html">BankStyle</a><button type="button" class="hidden toggle-subnav btn btn-link">  <span class="glyphicon glyphicon-plus"></span></button><div class="hidden" id="BankStyle_sub"><div class="member-type">Members</div><ul class="inner"><li><a href="BankStyle.html#alignment">alignment</a></li><li><a href="BankStyle.html#base64">base64</a></li><li><a href="BankStyle.html#bgcolor">bgcolor</a></li><li><a href="BankStyle.html#color">color</a></li><li><a href="BankStyle.html#png64">png64</a></li><li><a href="BankStyle.html#pngalignment">pngalignment</a></li><li><a href="BankStyle.html#size">size</a></li><li><a href="BankStyle.html#text">text</a></li></ul></div></li><li><a href="Config.html">Config</a><button type="button" class="hidden toggle-subnav btn btn-link">  <span class="glyphicon glyphicon-plus"></span></button><div class="hidden" id="Config_sub"><div class="member-type">Members</div><ul class="inner"><li><a href="Config.html#debug">debug</a></li><li><a href="Config.html#SaveInterval">SaveInterval</a></li></ul><div class="member-type">Methods</div><ul class="inner"><li><a href="Config.html#deleteKey">deleteKey</a></li><li><a href="Config.html#getAll">getAll</a></li><li><a href="Config.html#getCfgDir">getCfgDir</a></li><li><a href="Config.html#getKey">getKey</a></li><li><a href="Config.html#load">load</a></li><li><a href="Config.html#loadBackup">loadBackup</a></li><li><a href="Config.html#loadDefaults">loadDefaults</a></li><li><a href="Config.html#save">save</a></li><li><a href="Config.html#saveMain">saveMain</a></li><li><a href="Config.html#setDirty">setDirty</a></li><li><a href="Config.html#setKey">setKey</a></li><li><a href="Config.html#setKeys">setKeys</a></li><li><a href="Config.html#setSaveCycle">setSaveCycle</a></li></ul></div></li><li><a href="CoreBase.html">CoreBase</a><button type="button" class="hidden toggle-subnav btn btn-link">  <span class="glyphicon glyphicon-plus"></span></button><div class="hidden" id="CoreBase_sub"><div class="member-type">Members</div><ul class="inner"><li><a href="CoreBase.html#logSource">logSource</a></li><li><a href="CoreBase.html#registry">registry</a></li><li><a href="CoreBase.html#system">system</a></li></ul><div class="member-type">Methods</div><ul class="inner"><li><a href="CoreBase.html#bank">bank</a></li><li><a href="CoreBase.html#db">db</a></li><li><a href="CoreBase.html#deviceController">deviceController</a></li><li><a href="CoreBase.html#graphics">graphics</a></li><li><a href="CoreBase.html#instance">instance</a></li><li><a href="CoreBase.html#io">io</a></li><li><a href="CoreBase.html#log">log</a></li><li><a href="CoreBase.html#page">page</a></li><li><a href="CoreBase.html#schedule">schedule</a></li><li><a href="CoreBase.html#services">services</a></li><li><a href="CoreBase.html#userconfig">userconfig</a></li></ul></div></li><li><a href="Database.html">Database</a><button type="button" class="hidden toggle-subnav btn btn-link">  <span class="glyphicon glyphicon-plus"></span></button><div class="hidden" id="Database_sub"><div class="member-type">Members</div><ul class="inner"><li><a href="Database.html#debug">debug</a></li><li><a href="Database.html#registry">registry</a></li><li><a href="Database.html#SaveInterval">SaveInterval</a></li></ul><div class="member-type">Methods</div><ul class="inner"><li><a href="Database.html#deleteKey">deleteKey</a></li><li><a href="Database.html#getAll">getAll</a></li><li><a href="Database.html#getCfgDir">getCfgDir</a></li><li><a href="Database.html#getKey">getKey</a></li><li><a href="Database.html#load">load</a></li><li><a href="Database.html#loadBackup">loadBackup</a></li><li><a href="Database.html#loadDefaults">loadDefaults</a></li><li><a href="Database.html#save">save</a></li><li><a href="Database.html#saveMain">saveMain</a></li><li><a href="Database.html#setDirty">setDirty</a></li><li><a href="Database.html#setKey">setKey</a></li><li><a href="Database.html#setKeys">setKeys</a></li><li><a href="Database.html#setSaveCycle">setSaveCycle</a></li></ul></div></li><li><a href="DataStoreBase.html">DataStoreBase</a><button type="button" class="hidden toggle-subnav btn btn-link">  <span class="glyphicon glyphicon-plus"></span></button><div class="hidden" id="DataStoreBase_sub"><div class="member-type">Methods</div><ul class="inner"><li><a href="DataStoreBase.html#deleteKey">deleteKey</a></li><li><a href="DataStoreBase.html#getAll">getAll</a></li><li><a href="DataStoreBase.html#getCfgDir">getCfgDir</a></li><li><a href="DataStoreBase.html#getKey">getKey</a></li><li><a href="DataStoreBase.html#load">load</a></li><li><a href="DataStoreBase.html#loadBackup">loadBackup</a></li><li><a href="DataStoreBase.html#loadDefaults">loadDefaults</a></li><li><a href="DataStoreBase.html#save">save</a></li><li><a href="DataStoreBase.html#saveMain">saveMain</a></li><li><a href="DataStoreBase.html#setDirty">setDirty</a></li><li><a href="DataStoreBase.html#setKey">setKey</a></li><li><a href="DataStoreBase.html#setKeys">setKeys</a></li><li><a href="DataStoreBase.html#setSaveCycle">setSaveCycle</a></li></ul></div></li><li><a href="InterfaceClient.html">InterfaceClient</a><button type="button" class="hidden toggle-subnav btn btn-link">  <span class="glyphicon glyphicon-plus"></span></button><div class="hidden" id="InterfaceClient_sub"><div class="member-type">Events</div><ul class="inner"><li><a href="InterfaceClient.html#~event:get_userconfig_all">get_userconfig_all</a></li><li><a href="InterfaceClient.html#~event:get_userconfig_all:result">get_userconfig_all:result</a></li><li><a href="InterfaceClient.html#~event:set_userconfig_key">set_userconfig_key</a></li><li><a href="InterfaceClient.html#~event:set_userconfig_key:result">set_userconfig_key:result</a></li></ul></div></li><li><a href="lib_Bank.BankActionController.html">BankActionController</a><button type="button" class="hidden toggle-subnav btn btn-link">  <span class="glyphicon glyphicon-plus"></span></button><div class="hidden" id="lib/Bank.BankActionController_sub"><div class="member-type">Members</div><ul class="inner"><li><a href="lib_Bank.BankActionController.html#actions">actions</a></li><li><a href="lib_Bank.BankActionController.html#actionsRunning">actionsRunning</a></li><li><a href="lib_Bank.BankActionController.html#bankStatus">bankStatus</a></li><li><a href="lib_Bank.BankActionController.html#debug">debug</a></li><li><a href="lib_Bank.BankActionController.html#definitions">definitions</a></li><li><a href="lib_Bank.BankActionController.html#logSource">logSource</a></li><li><a href="lib_Bank.BankActionController.html#PageStyles">PageStyles</a></li><li><a href="lib_Bank.BankActionController.html#registry">registry</a></li><li><a href="lib_Bank.BankActionController.html#releaseActions">releaseActions</a></li><li><a href="lib_Bank.BankActionController.html#skipNext">skipNext</a></li><li><a href="lib_Bank.BankActionController.html#skipUp">skipUp</a></li><li><a href="lib_Bank.BankActionController.html#system">system</a></li><li><a href="lib_Bank.BankActionController.html#timersRunning">timersRunning</a></li></ul><div class="member-type">Methods</div><ul class="inner"><li><a href="lib_Bank.BankActionController.html#bank">bank</a></li><li><a href="lib_Bank.BankActionController.html#db">db</a></li><li><a href="lib_Bank.BankActionController.html#deviceController">deviceController</a></li><li><a href="lib_Bank.BankActionController.html#graphics">graphics</a></li><li><a href="lib_Bank.BankActionController.html#instance">instance</a></li><li><a href="lib_Bank.BankActionController.html#io">io</a></li><li><a href="lib_Bank.BankActionController.html#log">log</a></li><li><a href="lib_Bank.BankActionController.html#page">page</a></li><li><a href="lib_Bank.BankActionController.html#schedule">schedule</a></li><li><a href="lib_Bank.BankActionController.html#services">services</a></li><li><a href="lib_Bank.BankActionController.html#userconfig">userconfig</a></li></ul></div></li><li><a href="lib_Bank.BankActionItems.html">BankActionItems</a><button type="button" class="hidden toggle-subnav btn btn-link">  <span class="glyphicon glyphicon-plus"></span></button><div class="hidden" id="lib/Bank.BankActionItems_sub"><div class="member-type">Members</div><ul class="inner"><li><a href="lib_Bank.BankActionItems.html#controller">controller</a></li><li><a href="lib_Bank.BankActionItems.html#dbKey">dbKey</a></li><li><a href="lib_Bank.BankActionItems.html#debug">debug</a></li><li><a href="lib_Bank.BankActionItems.html#definitions">definitions</a></li><li><a href="lib_Bank.BankActionItems.html#items">items</a></li><li><a href="lib_Bank.BankActionItems.html#logSource">logSource</a></li><li><a href="lib_Bank.BankActionItems.html#registry">registry</a></li><li><a href="lib_Bank.BankActionItems.html#system">system</a></li></ul><div class="member-type">Methods</div><ul class="inner"><li><a href="lib_Bank.BankActionItems.html#addItem">addItem</a></li><li><a href="lib_Bank.BankActionItems.html#addItemByClient">addItemByClient</a></li><li><a href="lib_Bank.BankActionItems.html#bank">bank</a></li><li><a href="lib_Bank.BankActionItems.html#checkBankExists">checkBankExists</a></li><li><a href="lib_Bank.BankActionItems.html#checkBankStatus">checkBankStatus</a></li><li><a href="lib_Bank.BankActionItems.html#checkInstanceStatus">checkInstanceStatus</a></li><li><a href="lib_Bank.BankActionItems.html#checkStatus">checkStatus</a></li><li><a href="lib_Bank.BankActionItems.html#cleanupItems">cleanupItems</a></li><li><a href="lib_Bank.BankActionItems.html#db">db</a></li><li><a href="lib_Bank.BankActionItems.html#deleteInstance">deleteInstance</a></li><li><a href="lib_Bank.BankActionItems.html#deleteItem">deleteItem</a></li><li><a href="lib_Bank.BankActionItems.html#deleteItemByClient">deleteItemByClient</a></li><li><a href="lib_Bank.BankActionItems.html#deviceController">deviceController</a></li><li><a href="lib_Bank.BankActionItems.html#getAll">getAll</a></li><li><a href="lib_Bank.BankActionItems.html#getBank">getBank</a></li><li><a href="lib_Bank.BankActionItems.html#getBankByClient">getBankByClient</a></li><li><a href="lib_Bank.BankActionItems.html#getInstanceItems">getInstanceItems</a></li><li><a href="lib_Bank.BankActionItems.html#getPage">getPage</a></li><li><a href="lib_Bank.BankActionItems.html#graphics">graphics</a></li><li><a href="lib_Bank.BankActionItems.html#importBank">importBank</a></li><li><a href="lib_Bank.BankActionItems.html#instance">instance</a></li><li><a href="lib_Bank.BankActionItems.html#io">io</a></li><li><a href="lib_Bank.BankActionItems.html#log">log</a></li><li><a href="lib_Bank.BankActionItems.html#page">page</a></li><li><a href="lib_Bank.BankActionItems.html#resetBank">resetBank</a></li><li><a href="lib_Bank.BankActionItems.html#save">save</a></li><li><a href="lib_Bank.BankActionItems.html#schedule">schedule</a></li><li><a href="lib_Bank.BankActionItems.html#services">services</a></li><li><a href="lib_Bank.BankActionItems.html#setDefinitions">setDefinitions</a></li><li><a href="lib_Bank.BankActionItems.html#subscribe">subscribe</a></li><li><a href="lib_Bank.BankActionItems.html#subscribeBank">subscribeBank</a></li><li><a href="lib_Bank.BankActionItems.html#unsubscribe">unsubscribe</a></li><li><a href="lib_Bank.BankActionItems.html#unsubscribeBank">unsubscribeBank</a></li><li><a href="lib_Bank.BankActionItems.html#updateItemDelay">updateItemDelay</a></li><li><a href="lib_Bank.BankActionItems.html#updateItemOption">updateItemOption</a></li><li><a href="lib_Bank.BankActionItems.html#updateItemOrder">updateItemOrder</a></li><li><a href="lib_Bank.BankActionItems.html#userconfig">userconfig</a></li></ul></div></li><li><a href="Registry.html">Registry</a><button type="button" class="hidden toggle-subnav btn btn-link">  <span class="glyphicon glyphicon-plus"></span></button><div class="hidden" id="Registry_sub"><div class="member-type">Members</div><ul class="inner"><li><a href="Registry.html#FileVersion">FileVersion</a></li></ul><div class="member-type">Methods</div><ul class="inner"><li><a href="Registry.html#getAppRoot">getAppRoot</a></li><li><a href="Registry.html#getCfgDir">getCfgDir</a></li><li><a href="Registry.html#getFileVersion">getFileVersion</a></li></ul></div></li><li><a href="ScheduleController.html">ScheduleController</a><button type="button" class="hidden toggle-subnav btn btn-link">  <span class="glyphicon glyphicon-plus"></span></button><div class="hidden" id="ScheduleController_sub"><div class="member-type">Methods</div><ul class="inner"><li><a href="ScheduleController.html#action">action</a></li><li><a href="ScheduleController.html#cleanConfig">cleanConfig</a></li><li><a href="ScheduleController.html#eventLoadType">eventLoadType</a></li><li><a href="ScheduleController.html#eventWatch">eventWatch</a></li><li><a href="ScheduleController.html#findEventIndex">findEventIndex</a></li><li><a href="ScheduleController.html#getBankButton">getBankButton</a></li><li><a href="ScheduleController.html#getNextId">getNextId</a></li><li><a href="ScheduleController.html#getPlugin">getPlugin</a></li><li><a href="ScheduleController.html#getSchedule">getSchedule</a></li><li><a href="ScheduleController.html#initConfig">initConfig</a></li><li><a href="ScheduleController.html#loadPlugins">loadPlugins</a></li><li><a href="ScheduleController.html#saveSchedule">saveSchedule</a></li><li><a href="ScheduleController.html#saveToDb">saveToDb</a></li><li><a href="ScheduleController.html#sendPlugins">sendPlugins</a></li><li><a href="ScheduleController.html#startSchedule">startSchedule</a></li><li><a href="ScheduleController.html#updateSchedule">updateSchedule</a></li></ul></div></li><li><a href="SchedulePluginBase.html">SchedulePluginBase</a><button type="button" class="hidden toggle-subnav btn btn-link">  <span class="glyphicon glyphicon-plus"></span></button><div class="hidden" id="SchedulePluginBase_sub"><div class="member-type">Members</div><ul class="inner"><li><a href="SchedulePluginBase.html#multiple">multiple</a></li></ul><div class="member-type">Methods</div><ul class="inner"><li><a href="SchedulePluginBase.html#add">add</a></li><li><a href="SchedulePluginBase.html#configDesc">configDesc</a></li><li><a href="SchedulePluginBase.html#frontEnd">frontEnd</a></li><li><a href="SchedulePluginBase.html#remove">remove</a></li><li><a href="SchedulePluginBase.html#setup">setup</a></li></ul></div></li><li><a href="System.html">System</a><button type="button" class="hidden toggle-subnav btn btn-link">  <span class="glyphicon glyphicon-plus"></span></button><div class="hidden" id="System_sub"><div class="member-type">Events</div><ul class="inner"><li><a href="System.html#~event:config_get">config_get</a></li><li><a href="System.html#~event:config_object">config_object</a></li><li><a href="System.html#~event:config_set">config_set</a></li><li><a href="System.html#~event:get_userconfig">get_userconfig</a></li><li><a href="System.html#~event:set_userconfig_key">set_userconfig_key</a></li></ul><div class="member-type">Typedef</div><ul class="inner"><li><a href="System.html#~config_get-callback">config_get-callback</a></li><li><a href="System.html#~config_object-callback">config_object-callback</a></li><li><a href="System.html#~get_userconfig-callback">get_userconfig-callback</a></li></ul></div></li><li><a href="UserConfig.html">UserConfig</a><button type="button" class="hidden toggle-subnav btn btn-link">  <span class="glyphicon glyphicon-plus"></span></button><div class="hidden" id="UserConfig_sub"><div class="member-type">Members</div><ul class="inner"><li><a href="UserConfig.html#Defaults">Defaults</a></li><li><a href="UserConfig.html#logSource">logSource</a></li><li><a href="UserConfig.html#registry">registry</a></li><li><a href="UserConfig.html#system">system</a></li></ul><div class="member-type">Methods</div><ul class="inner"><li><a href="UserConfig.html#bank">bank</a></li><li><a href="UserConfig.html#db">db</a></li><li><a href="UserConfig.html#deviceController">deviceController</a></li><li><a href="UserConfig.html#get">get</a></li><li><a href="UserConfig.html#getKey">getKey</a></li><li><a href="UserConfig.html#graphics">graphics</a></li><li><a href="UserConfig.html#instance">instance</a></li><li><a href="UserConfig.html#io">io</a></li><li><a href="UserConfig.html#log">log</a></li><li><a href="UserConfig.html#page">page</a></li><li><a href="UserConfig.html#schedule">schedule</a></li><li><a href="UserConfig.html#services">services</a></li><li><a href="UserConfig.html#setKey">setKey</a></li><li><a href="UserConfig.html#userconfig">userconfig</a></li></ul></div></li></ul></div><div class="lnb-api hidden"><h3>Namespaces</h3><ul><li><a href="lib_Bank.html">lib/Bank</a><button type="button" class="hidden toggle-subnav btn btn-link">  <span class="glyphicon glyphicon-plus"></span></button><div class="hidden" id="lib/Bank_sub"></div></li></ul></div><div class="lnb-api hidden"><h3><a href="global.html">Global</a></h3></div>
+</nav>
+<div id="resizer"></div>
+
+<div class="main" id="main">
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>/*
+ * This file is part of the Companion project
+ * Copyright (c) 2021 VICREO BV
+ * Author: Jeffrey Davidsz &lt;jeffrey.davidsz@vicreo.eu>
+ *
+ * This program is free software.
+ * You should have received a copy of the MIT licence as well as the Bitfocus
+ * Individual Contributor License Agreement for companion along with
+ * this program.
+ *
+ * You can be released from the requirements of the license by purchasing
+ * a commercial license. Buying such a license is mandatory as soon as you
+ * develop commercial activities involving the Companion software without
+ * disclosing the source code of your own applications.
+ */
+
+/*
+ * This file is part of the Companion project
+ * Copyright (c) 2021 VICREO BV
+ * Author: Jeffrey Davidsz &lt;jeffrey.davidsz@vicreo.eu>
+ *
+ * This program is free software.
+ * You should have received a copy of the MIT licence as well as the Bitfocus
+ * Individual Contributor License Agreement for companion along with
+ * this program.
+ *
+ * You can be released from the requirements of the license by purchasing
+ * a commercial license. Buying such a license is mandatory as soon as you
+ * develop commercial activities involving the Companion software without
+ * disclosing the source code of your own applications.
+ */
+
+var DeviceBase = require('../Base')
+var debug = require('debug')('lib/Device/Hardware/XKeys')
+const { XKeysModels } = require('../../Resources/XKeysProducts')
+const HID = require('node-hid')
+
+class DeviceHardwareXKeys extends DeviceBase {
+	constructor(system, devicepath) {
+		super()
+		this.system = system
+		this.debug = debug
+
+		this.internal = {
+			label: 'internal',
+		}
+		this.myXkeysPanel
+		this._buttonStates = {}
+		this._analogStates = {}
+		this.map = []
+		this.mapReverse = []
+		this.device_type = 'Xkeys'
+		this.info = {}
+		this.type = this.info.type = 'XKeys device'
+		this.info.device_type = 'XKeys'
+		this.info.config = ['brightness', 'page', 'enable_device']
+		this.info.keysPerRow = 10
+		this.info.keysTotal = 80
+		this.config = {
+			brightness: 10,
+			keysPerRow: 10,
+			keysPerColumn: 8,
+			tbarPosition: 0,
+			jog: 0,
+			shuttle: 0,
+			joystick: 0,
+			page: 1,
+			bits: 8,
+			enable_device: true,
+		}
+		this.info.devicepath = this.devicepath = devicepath
+
+		this.system.on('graphics_set_bank_bg', (page, bank, bgcolor) => {
+			let color = this.decimalToRgb(bgcolor)
+			let buttonNumber = parseInt(page) * 32 - parseInt(this.config.page) * 32 + parseInt(bank)
+			let buttonIndex = parseInt(this.mapReverse[buttonNumber - 1])
+			color.red > 125
+				? this.setBacklight(buttonIndex, true, true, false) &amp;&amp; this.setBacklight(buttonIndex, false, false, false)
+				: this.setBacklight(buttonIndex, false, true, false) &amp;&amp; this.setBacklight(buttonIndex, true, false, false)
+
+			this.log(`graphics_set_bank_bg received in xkeys ${page}, ${bank}, ${color.red}`)
+		})
+
+		this.createXkeysDevice(devicepath)
+	}
+
+	begin() {
+		this.log('xkeys.prototype.begin()')
+
+		this.setBacklightIntensity(this.config.brightness)
+	}
+
+	convertButton(input) {
+		return parseInt(this.map[input])
+	}
+
+	createXkeysDevice(devicepath) {
+		const devices = HID.devices()
+		this.myXkeysPanel = new HID.HID(devicepath)
+		this.myXkeysPanel.deviceType = XKeysModels.models[0]
+		devices.forEach((element) => {
+			if (element.path == devicepath) {
+				let productId = element.productId
+				XKeysModels.models.forEach((model) => {
+					if (model.productId.indexOf(productId) != -1) {
+						this.myXkeysPanel.deviceType = model
+					}
+				})
+			}
+		})
+		this.log('Adding xkeys USB device:', this.myXkeysPanel.deviceType.identifier)
+
+		this.buttonState = []
+		this.info.serialnumber = this.serialnumber = this.myXkeysPanel.deviceType.identifier
+
+		this.config.keysPerRow = this.myXkeysPanel.deviceType.columns
+		this.config.keysPerColumn = this.myXkeysPanel.deviceType.bankSize / this.myXkeysPanel.deviceType.columns
+		if (this.myXkeysPanel.deviceType.productId == '999') {
+			this.system.emit('log', 'Unkown XKEYS model', 'error', 'Please file an issue on github or slack')
+		} else {
+			this.system.emit('log', 'device(' + this.myXkeysPanel.deviceType.identifier + ')', 'info', 'XKeys detected')
+		}
+		// Mapping buttons
+		for (var leftRight = 0; leftRight &lt; this.config.keysPerRow; leftRight++) {
+			for (var topBottom = 0; topBottom &lt; this.config.bits; topBottom++) {
+				this.map.push(topBottom * this.config.keysPerRow + leftRight)
+			}
+		}
+		// Mapping buttons for feedback
+		for (var topBottom = 0; topBottom &lt; this.config.bits; topBottom++) {
+			for (var leftRight = 0; leftRight &lt; this.config.keysPerRow; leftRight++) {
+				this.mapReverse.push(leftRight * this.config.bits + topBottom)
+			}
+		}
+		// How many items we have left to load until we're ready to begin
+		this.loadingItems = 0
+		// disable red lights
+		if (this.config.enable_device) this.setAllBacklights(true, false) &amp;&amp; this.setAllBacklights(false, true)
+
+		this.myXkeysPanel.on('data', (data) => {
+			//Ignore companion presses
+			if (this.config.enable_device == undefined || this.config.enable_device == null) {
+				this.config.enable_device = true
+			} else if (!this.config.enable_device) return
+
+			const buttonStates = {}
+			const analogStates = {}
+
+			// Calculate keys
+			for (let x = 0; x &lt; this.myXkeysPanel.deviceType.columns; x++) {
+				for (let y = 0; y &lt; this.myXkeysPanel.deviceType.rows; y++) {
+					const keyIndex = x * 8 + y
+					const d = data.readUInt32LE(2 + x)
+					const bit = d &amp; (1 &lt;&lt; y) ? true : false
+					buttonStates[keyIndex] = bit
+				}
+			}
+			// Jog
+			if (this.myXkeysPanel.deviceType.hasJog) {
+				const d = data[(this.myXkeysPanel.deviceType.jogByte || 0) - 2] // Jog
+				analogStates.jog = d &lt; 128 ? d : d - 256
+			}
+			// Shuttle
+			if (this.myXkeysPanel.deviceType.hasShuttle) {
+				const d = data[(this.myXkeysPanel.deviceType.shuttleByte || 0) - 2] // Shuttle
+				analogStates.shuttle = d &lt; 128 ? d : d - 256
+			}
+			// Joystick
+			if (this.myXkeysPanel.deviceType.hasJoystick) {
+				let d = data.readUInt32LE(7) // Joystick X
+				analogStates.joystick_x = d &lt; 128 ? d : d - 256
+
+				d = data.readUInt32LE(8) // Joystick Y
+				analogStates.joystick_y = d &lt; 128 ? d : d - 256
+
+				d = data.readUInt32LE(9) // Joystick Z (twist of joystick)
+				analogStates.joystick_z = d &lt; 128 ? d : d - 256
+			}
+			// tbar
+			if (this.myXkeysPanel.deviceType.hasTbar) {
+				let d = data[(this.myXkeysPanel.deviceType.tbarByte || 0) - 2] // T-bar (calibrated)
+				analogStates.tbar = d
+
+				d = data.readUInt16BE((this.myXkeysPanel.deviceType.tbarByteRaw || 0) - 2) // T-bar (uncalibrated)
+				analogStates.tbar_raw = d
+			}
+			// Disabled/nonexisting keys:
+			if (this.myXkeysPanel.deviceType.disableKeys) {
+				this.myXkeysPanel.deviceType.disableKeys.forEach((keyIndex) => {
+					buttonStates[keyIndex] = false
+				})
+			}
+			// Process keypress
+			for (const buttonStateKey in buttonStates) {
+				// compare with previous button states:
+				if ((this._buttonStates[buttonStateKey] || false) !== buttonStates[buttonStateKey]) {
+					if (buttonStates[buttonStateKey]) {
+						// key is pressed
+						// this.system.emit('log', 'device(' + this.myXkeysPanel.deviceType.identifier + ')', 'debug', 'XKeys original press: ' + buttonStateKey);
+						let key = this.convertButton(buttonStateKey)
+						if (key === undefined) {
+							return
+						}
+
+						let newKey = this.setPageKey(key)
+						this.buttonState[key] = true
+						this.system.emit('elgato_click', devicepath, newKey, true, this.buttonState)
+						// Set RED backlight on while pressing
+						this.setBacklight(buttonStateKey, true, false, false)
+						this.setLED(1, true, false)
+					} else {
+						let key = this.convertButton(buttonStateKey)
+						if (key === undefined) {
+							return
+						}
+						let newKey = this.setPageKey(key)
+						this.buttonState[key] = false
+						this.system.emit('elgato_click', devicepath, newKey, false, this.buttonState)
+						this.setBacklight(buttonStateKey, false, false, false)
+						this.setLED(1, false, false)
+					}
+				}
+			}
+			// Process analogStates
+			for (const analogStateKey in analogStates) {
+				// compare with previous states:
+				if ((this._analogStates[analogStateKey] || 0) !== analogStates[analogStateKey]) {
+					if (analogStateKey === 'jog') {
+						this.config.jog = analogStates[analogStateKey]
+						this.system.emit('variable_instance_set', this.internal, 'jog', analogStates[analogStateKey])
+						this.log('Jog position has changed: ' + analogStates[analogStateKey])
+					} else if (analogStateKey === 'shuttle') {
+						this.config.shuttle = analogStates[analogStateKey]
+						this.system.emit('variable_instance_set', this.internal, 'shuttle', analogStates[analogStateKey])
+						this.log('Shuttle position has changed: ' + analogStates[analogStateKey])
+					} else if (analogStateKey === 'tbar_raw') {
+						this.config.tbarPosition = analogStates.tbar
+						this.system.emit('variable_instance_set', this.internal, 't-bar', analogStates.tbar)
+						this.log(
+							'T-bar position has changed: ' +
+								this.config.tbarPosition +
+								' (uncalibrated: ' +
+								analogStates.tbar_raw +
+								')'
+						)
+					} else if (
+						analogStateKey === 'joystick_x' ||
+						analogStateKey === 'joystick_y' ||
+						analogStateKey === 'joystick_z'
+					) {
+						this.config.joystick = analogStates
+						this.system.emit('variable_instance_set', this.internal, 'joystick', analogStates)
+						this.log('Joystick has changed:' + analogStates) // {x, y, z}
+						this.log('joystick', {
+							x: analogStates.joystick_x,
+							y: analogStates.joystick_y,
+							z: analogStates.joystick_z,
+						})
+					} else if (
+						analogStateKey !== 'tbar' // ignore tbar updates because event is emitted on tbar_raw update
+					) {
+						this.system.emit('log', 'Unknown analogStateKey:', 'error', analogStateKey)
+					}
+				}
+			}
+			this._buttonStates = buttonStates
+			this._analogStates = analogStates
+		})
+
+		this.myXkeysPanel.on('error', (error) => {
+			this.log(error)
+			this.system.emit('elgatodm_remove_device', devicepath)
+		})
+	}
+
+	decimalToRgb(decimal) {
+		return {
+			red: (decimal >> 16) &amp; 0xff,
+			green: (decimal >> 8) &amp; 0xff,
+			blue: decimal &amp; 0xff,
+		}
+	}
+
+	getConfig() {
+		return this.config
+	}
+
+	padMessage(message) {
+		const messageLength = 36
+		while (message.length &lt; messageLength) {
+			message.push(0)
+		}
+		return message
+	}
+
+	//TODO
+	quit() {
+		let xkeys = this.myXkeysPanel
+
+		if (xkeys !== undefined) {
+			try {
+				this.clearDeck()
+			} catch (e) {}
+
+			// Find the actual xkeys driver, to talk to the device directly
+			if (xkeys.device === undefined &amp;&amp; this.myXkeysPanel !== undefined) {
+				xkeys = this.myXkeysPanel
+			}
+
+			// If an actual xkeys is connected, disconnect
+			if (xkeys.device !== undefined) {
+				xkeys.device.close()
+			}
+		}
+	}
+
+	/**
+	 * Sets the backlight of all keys
+	 * @param {on} boolean: on or off
+	 * @param {redLight} boolean: if to set the red or blue backlights
+	 * @returns undefined
+	 */
+	setAllBacklights(on, redLight) {
+		const message = this.padMessage([0, 182, redLight ? 1 : 0, on ? 255 : 0])
+		this.write(message)
+	}
+
+	/**
+	 * Sets the backlight of a key
+	 * @param {keyIndex} the key to set the color of
+	 * @param {on} boolean: on or off
+	 * @param {flashing} boolean: flashing or not (if on)
+	 * @returns undefined
+	 */
+	setBacklight(keyIndex, on, redLight, flashing) {
+		if (keyIndex === 'PS') return // PS-button has no backlight
+
+		this.verifyKeyIndex(keyIndex)
+
+		if (redLight) {
+			keyIndex =
+				(typeof keyIndex === 'string' ? parseInt(keyIndex, 10) : keyIndex) +
+				(this.myXkeysPanel.deviceType.bankSize || 0)
+		}
+		const message = this.padMessage([0, 181, keyIndex, on ? (flashing ? 2 : 1) : 0, 1])
+		this.write(message)
+	}
+
+	/**
+	 * Sets the backlightintensity of the device
+	 * @param {intensity} 0-100 (will be converted to 0-255)
+	 */
+	setBacklightIntensity(blueIntensity, redIntensity) {
+		if (redIntensity === undefined) redIntensity = 100
+
+		blueIntensity = Math.max(Math.min(Math.round(blueIntensity * 2.55), 255), 0)
+		redIntensity = Math.max(Math.min(Math.round(redIntensity * 2.55), 255), 0)
+
+		const message =
+			this.myXkeysPanel.deviceType.banks === 2
+				? this.padMessage([0, 187, blueIntensity, redIntensity])
+				: this.padMessage([0, 187, blueIntensity])
+		this.write(message)
+	}
+
+	//TODO
+	setConfig(config) {
+		if (this.config.brightness != config.brightness &amp;&amp; config.brightness !== undefined) {
+			this.setBacklightIntensity(config.brightness, 100)
+		} else {
+			this.setBacklightIntensity(10)
+		}
+
+		if (this.config.page != config.page &amp;&amp; config.page !== undefined) {
+			this.config.page = config.page
+		}
+		if (this.config.enable_device != config.enable_device &amp;&amp; config.enable_device !== undefined) {
+			this.config.enable_device = config.enable_device
+			this.config.enable_device
+				? this.system.emit('log', 'device(' + this.myXkeysPanel.deviceType.identifier + ')', 'info', 'XKeys enabled')
+				: this.system.emit('log', 'device(' + this.myXkeysPanel.deviceType.identifier + ')', 'error', 'XKeys disabled')
+		}
+
+		this.config = config
+	}
+
+	/**
+	 * Sets the LED of a key
+	 * @param {keyIndex} the LED to set the color of (0 = green, 1 = red)
+	 * @param {on} boolean: on or off
+	 * @param {flashing} boolean: flashing or not (if on)
+	 * @returns undefined
+	 */
+	setLED(keyIndex, on, flashing) {
+		let ledIndex = 0
+		if (keyIndex === 0) ledIndex = 6
+		if (keyIndex === 1) ledIndex = 7
+
+		const message = this.padMessage([0, 179, ledIndex, on ? (flashing ? 2 : 1) : 0])
+		this.write(message)
+	}
+
+	setPageKey(key) {
+		if (key > 31) {
+			let pageNumber = parseInt(key / 32) + 1
+			key = key - (pageNumber - 1) * 32
+			pageNumber = pageNumber + this.config.page - 1
+			this.system.emit('device_page_set', this.serialnumber, pageNumber)
+			return key
+		} else {
+			this.system.emit('device_page_set', this.serialnumber, this.config.page)
+			return key
+		}
+	}
+
+	// send xkeys ready message to devices :)
+	setImmediate() {
+		this.system.emit('elgato_ready', devicepath)
+	}
+
+	verifyKeyIndex(keyIndex) {
+		keyIndex = typeof keyIndex === 'string' ? parseInt(keyIndex, 10) : keyIndex
+		if (!(keyIndex >= 0 &amp;&amp; keyIndex &lt; 8 * this.myXkeysPanel.deviceType.columns)) {
+			this.log(`Invalid keyIndex: ${keyIndex}`)
+		}
+	}
+
+	/**
+	 * Writes a Buffer to the X-keys device
+	 *
+	 * @param {Buffer} buffer The buffer written to the device
+	 * @returns undefined
+	 */
+	write(anyArray) {
+		const intArray = []
+		for (const i in anyArray) {
+			const v = anyArray[i]
+			intArray[i] = typeof v === 'string' ? parseInt(v, 10) : v
+		}
+		try {
+			// device.write([0x00, 0x01, 0x01, 0x05, 0xff, 0xff]);
+			this.myXkeysPanel.write(intArray)
+			// return this.device.write(intArray)
+		} catch (e) {
+			this.log('error', e)
+		}
+	}
+}
+
+exports = module.exports = DeviceHardwareXKeys
+</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<footer>
+    <img class="logo" src="https://bitfocus.io/images/topbar-logowhite.png" style="width: 147px; height: 24px">
+    <div class="footer-text"> </div>
+</footer>
+<script>prettyPrint();</script>
+<script src="scripts/jquery.min.js"></script>
+<script src="scripts/tui-doc.js"></script>
+<script src="scripts/linenumber.js"></script>
+
+    <script>
+        var id = '_sub'.replace(/"/g, '_');
+        var selectedApi = document.getElementById(id); // do not use jquery selector
+        var $selectedApi = $(selectedApi);
+
+        $selectedApi.removeClass('hidden');
+        $selectedApi.parent().find('.glyphicon').removeClass('glyphicon-plus').addClass('glyphicon-minus');
+        showLnbApi();
+    </script>
+
+</body>
+</html>
