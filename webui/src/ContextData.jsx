@@ -80,7 +80,7 @@ export function ContextData({ socket, children }) {
 			socket.on('variable_instance_definitions_set', updateVariableDefinitions)
 			socket.on('variable_set', updateVariableValue)
 
-			socket.on('actions', setActions)
+			socket.on('get_actions:result', setActions)
 			socket.emit('get_actions')
 
 			socket.on('feedback_get_definitions:result', setFeedbacks)
@@ -90,7 +90,7 @@ export function ContextData({ socket, children }) {
 				socket.off('instances_get:result', setInstances)
 				socket.off('variable_instance_definitions_set', updateVariableDefinitions)
 				socket.off('variable_set', updateVariableValue)
-				socket.off('actions', setActions)
+				socket.off('get_actions:result', setActions)
 				socket.off('feedback_get_definitions:result', setFeedbacks)
 			}
 		}
