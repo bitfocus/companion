@@ -11,7 +11,7 @@ elgato_plugin               -> Device/Software/ElgatoPlugin
 feedback                    -> Bank/Feedback
 font                        -> Graphics/Font
 graphics                    -> Graphics/Graphics
-help                        -> Interface/HelpHandler
+help                        -> DELETED
 image                       -> Graphics/Image
 instance                    -> Instance/Controller
 io                          -> Interface/Client
