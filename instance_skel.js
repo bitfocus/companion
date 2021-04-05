@@ -16,7 +16,7 @@
  */
 
 var util = require('util')
-var debug = require('debug')('lib/instance_skel')
+var debug = require('debug')('instance_skel')
 var image = require('./lib/image')
 var icons = require('./lib/resources/icons')
 

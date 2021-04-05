@@ -15,7 +15,7 @@
  *
  */
 
-var debug = require('debug')('lib/udp')
+var debug = require('debug')('udp')
 var UDP = require('dgram')
 var util = require('util')
 var EventEmitter = require('events').EventEmitter

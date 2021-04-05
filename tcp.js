@@ -15,7 +15,7 @@
  *
  */
 
-var debug = require('debug')('lib/tcp')
+var debug = require('debug')('tcp')
 var net = require('net')
 var util = require('util')
 var EventEmitter = require('events').EventEmitter

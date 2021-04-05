@@ -11,7 +11,7 @@ elgato_plugin               -> Device/Software/ElgatoPlugin
 feedback                    -> Bank/Feedback
 font                        -> Graphics/Font
 graphics                    -> Graphics/Graphics
-help                        -> DELETED
+help                        -> MERGED with Interface/Server
 image                       -> Graphics/Image
 instance                    -> Instance/Controller
 io                          -> Interface/Client
@@ -22,7 +22,7 @@ page                        -> Page/Page
 preset                      -> Instance/Preset
 preview                     -> Graphics/Preview
 rest                        -> Service/Rest
-rest_poll                   -> ^^MERGED^^
+rest_poll                   -> MERGED with Service/Rest
 rosstalk                    -> Service/Rosstalk
 satellite_device            -> Device/Software/Satellite
 satellite_protocol          -> Resources/SatelliteProtocol

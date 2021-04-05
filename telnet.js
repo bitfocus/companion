@@ -15,7 +15,7 @@
  *
  */
 
-var debug = require('debug')('lib/telnet')
+var debug = require('debug')('telnet')
 var Stream = require('stream')
 var Transform = Stream.Transform
 var EventEmitter = require('events').EventEmitter

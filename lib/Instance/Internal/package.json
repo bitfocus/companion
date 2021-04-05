@@ -1,0 +1,33 @@
+{
+	"name": "bitfocus-companion",
+	"version": "1.1.4",
+	"api_version": "1.0.0",
+	"description": "Internal functions",
+	"keywords": [ ],
+	"manufacturer": "Bitfocus",
+	"product": "companion",
+	"shortname": "companion",
+	"main": "index.js",
+	"scripts": {
+	"test": "echo \"Error: no test specified\" && exit 1"
+	},
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/bitfocus/companion-module-bitfocus-companion.git"
+	},
+	"author": "Håkon Nessjøen <haakon@bitfocus.io>",
+	"license": "MIT",
+	"contributors": [
+		"William Viker <william@trippelm.no>",
+		"Matt Foulks <mfoulks1@gmail.com>",
+		"JeffreyDavidsz <jeffrey.davidsz@vicreo.eu>",
+		"Jeff Martin <dist@dist.dev>",
+		"John A Knight Jr <istnv@ayesti.com>",
+		"Dorian Meid <dnmeid@gmx.net>",
+		"Bjorn Peterson <bjkarl@yahoo.comn>"
+	],
+	"bugs": {
+		"url": "https://github.com/bitfocus/companion-module-bitfous-companion/issues"
+	},
+	"homepage": "https://github.com/bitfocus/companion-module-bitfocus-companion#readme"
+}
