@@ -17,6 +17,34 @@
 		return imageData;
 	}
 
+	function imageResize(img, maxW, maxH, cb) {
+		var canvas = document.createElement('canvas');
+		var width = img.width;
+		var height = img.height;
+
+		canvas.width = maxW;
+		canvas.height = maxH;
+
+		if (width > height) {
+			if (width > maxW) {
+				height *= maxW / width;
+				width = maxW;
+			}
+		} else if (width < height) {
+			if (height > maxH) {
+				width *= maxH / height;
+				height = maxH;
+			}
+		} else {
+			width = maxW;
+			height = maxH;
+		}
+
+		var ctx = canvas.getContext('2d');
+		ctx.drawImage(img, 0, 0, width, height);
+		cb(canvas.toDataURL());
+	}
+
 	function checkImageSize(image, minW, minH, maxW, maxH, cbOK, cbKO) {
 			//check whether browser fully supports all File API
 			if (window.File && window.FileReader && window.FileList && window.Blob) {
@@ -30,7 +58,11 @@
 							var img = new Image;
 
 							img.onload = function() { // image is loaded; sizes are available
-									if(img.width < minW || img.height < minH || img.width > maxW || img.height > maxH){
+									if (img.width === img.height && img.width > maxW) {
+										imageResize(img, maxW, maxH, function(resizedImage) {
+											cbOK(resizedImage);
+										});
+									} else if (img.width < minW || img.height < minH || img.width > maxW || img.height > maxH){
 											cbKO();
 									}else{
 											cbOK(fr.result);
