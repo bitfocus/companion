@@ -15,8 +15,26 @@ export interface CompanionBankPNG {
 	style: 'png'
 	text: string
 	size: 'auto' | '7' | '14' | '18' | '24' | '30' | '44'
-	alignment: 'left:top' | 'center:top' | 'right:top' | 'left:center' | 'center:center' | 'right:center' | 'left:bottom' | 'center:bottom' | 'right:bottom'
-	pngalignment: 'left:top' | 'center:top' | 'right:top' | 'left:center' | 'center:center' | 'right:center' | 'left:bottom' | 'center:bottom' | 'right:bottom'
+	alignment:
+		| 'left:top'
+		| 'center:top'
+		| 'right:top'
+		| 'left:center'
+		| 'center:center'
+		| 'right:center'
+		| 'left:bottom'
+		| 'center:bottom'
+		| 'right:bottom'
+	pngalignment:
+		| 'left:top'
+		| 'center:top'
+		| 'right:top'
+		| 'left:center'
+		| 'center:center'
+		| 'right:center'
+		| 'left:bottom'
+		| 'center:bottom'
+		| 'right:bottom'
 	png64?: string
 	color: number
 	bgcolor: number
