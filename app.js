@@ -22,145 +22,152 @@ if (process.env.DEVELOPER !== undefined) {
 global.MAX_BUTTONS = 32
 global.MAX_BUTTONS_PER_ROW = 8
 
-var EventEmitter = require('events')
+const Config = require('./lib/Data/Config')
+const Registry = require('./lib/registry')
+const EventEmitter = require('events')
+const fs = require('fs')
+const mkdirp = require('mkdirp')
+const stripAnsi = require('strip-ansi')
+
 /**
  * The application's event emitter for core functionality which allows for some point to multi-point calls
  * and `skeleton` to `app` functionality.
- * N.B. This is not the same `system` referenced by instances.  See {@link InstanceSystem}.
- * @class System
  * @extends EventEmitter
  */
-var system = new EventEmitter()
-var fs = require('fs')
-var debug = require('debug')('app')
-var mkdirp = require('mkdirp')
-var stripAnsi = require('strip-ansi')
-var logbuffer = []
-var logwriting = false
+class App extends EventEmitter {
+	buildNumber
+	cfgDir
+	config
+	debug = require('debug')('App')
+	logbuffer = []
+	logwriting = false
+	pkgInfo = require('./package.json')
+	registry
+	skeletonInfo
+	system = new EventEmitter()
 
-const pkgInfo = require('./package.json')
-const buildNumber = fs
-	.readFileSync(__dirname + '/BUILD')
-	.toString()
-	.trim()
-const skeleton_info = {
-	appName: pkgInfo.description,
-	appVersion: pkgInfo.version,
-	appBuild: buildNumber.replace(/-*master-*/, '').replace(/^-/, ''),
-	appStatus: 'Starting',
-}
+	constructor() {
+		super()
 
-var config
-var cfgDir
+		this.buildNumber = fs
+			.readFileSync(__dirname + '/BUILD')
+			.toString()
+			.trim()
 
-// Supress warnings for too many listeners to io_connect. This can be safely increased if the warning comes back at startup
-system.setMaxListeners(20)
+		this.skeletonInfo = {
+			appName: this.pkgInfo.description,
+			appVersion: this.pkgInfo.version,
+			appBuild: this.buildNumber.replace(/-*master-*/, '').replace(/^-/, ''),
+			appStatus: 'Starting',
+		}
+	}
 
-system.on('skeleton-info', function (key, val) {
-	skeleton_info[key] = val
-	if (key == 'configDir') {
-		debug('configuration directory', val)
-		cfgDir = val + '/companion/'
-		mkdirp(cfgDir, function (err) {
-			debug('mkdirp', cfgDir, err)
-			config = new (require('./lib/Data/Config'))(system, cfgDir, {
+	exit() {
+		console.log('somewhere, the system wants to exit. kthxbai')
+
+		if (this.registry !== undefined) {
+			this.registry.quit()
+		}
+
+		setImmediate(() => {
+			process.exit()
+		})
+	}
+
+	getSkeletonInfo() {
+		return this.skeletonInfo
+	}
+
+	launch(logToFile) {
+		if (logToFile) {
+			this.debug('Going into headless mode. Logs will be written to companion.log')
+			this.startLogging()
+		}
+
+		this.debug('launching registry')
+		this.registry = new Registry(this)
+
+		this.system.emit('modules_loaded')
+	}
+
+	restart() {
+		console.log('somewhere, the system wants to restart. kthxbai')
+
+		if (this.registry !== undefined) {
+			this.registry.quit()
+		}
+
+		this.emit('restart')
+	}
+
+	setBindIp(ip) {
+		this.config.setKey('bind_ip', ip)
+
+		if (this.registry !== undefined) {
+			this.registry.server.listenForHttp()
+		}
+	}
+
+	setBindPort(port) {
+		var p = parseInt(port)
+
+		if (p >= 1024 && p <= 65535) {
+			this.config.setKey('http_port', p)
+			if (this.registry !== undefined) {
+				this.registry.server.listenForHttp()
+			}
+		}
+	}
+
+	setConfigDir(dir) {
+		this.skeletonInfo['configDir'] = dir
+
+		this.debug('configuration directory', dir)
+		this.cfgDir = dir + '/companion/'
+
+		mkdirp(this.cfgDir, (err) => {
+			this.debug('mkdirp', this.cfgDir, err)
+
+			this.config = new Config(this.system, this.cfgDir, {
 				http_port: 8888,
 				bind_ip: '127.0.0.1',
 				start_minimised: false,
 			})
+
+			this.emit('skeleton-info', 'configDir', dir)
+			this.emit('skeleton-info', 'appURL', 'Waiting for webserver..')
+			this.emit('skeleton-info', 'startMinimised', this.config.getKey('start_minimised'))
 		})
 	}
-})
 
-system.on('skeleton-info-info', function (cb) {
-	cb(skeleton_info)
-})
-
-system.on('config_loaded', function (config) {
-	system.emit('skeleton-info', 'appURL', 'Waiting for webserver..')
-	system.emit('skeleton-info', 'startMinimised', config.start_minimised)
-})
-
-system.on('exit', function () {
-	console.log('somewhere, the system wants to exit. kthxbai')
-
-	system.emit('instance_getall', function (instances, active) {
-		try {
-			for (var key in active) {
-				if (instances[key].label !== 'internal') {
-					try {
-						active[key].destroy()
-					} catch (e) {
-						console.log('Could not destroy', instances[key].label)
-					}
-				}
-			}
-		} catch (e) {
-			console.log('Could not destroy all instances')
-		}
-	})
-
-	setImmediate(function () {
-		process.exit()
-	})
-})
-
-system.on('skeleton-bind-ip', function (ip) {
-	config.bind_ip = ip
-	system.emit('config_set', 'bind_ip', ip)
-	system.emit('ip_rebind')
-})
-
-system.on('skeleton-bind-port', function (port) {
-	var p = parseInt(port)
-	if (p >= 1024 && p <= 65535) {
-		config.http_port = p
-		system.emit('config_set', 'http_port', p)
-		system.emit('ip_rebind')
+	setStartMinimised(minimised) {
+		this.config.setKey('start_minimised', minimised)
 	}
-})
 
-system.on('skeleton-start-minimised', function (minimised) {
-	config.start_minimised = minimised
-	system.emit('config_set', 'start_minimised', minimised)
-})
-
-system.ready = function (logToFile) {
-	if (logToFile) {
-		debug('Going into headless mode. Logs will be written to companion.log')
-
-		setInterval(function () {
-			if (logbuffer.length > 0 && logwriting == false) {
-				var writestring = logbuffer.join('\n')
-				logbuffer = []
-				logwriting = true
-				fs.appendFile('./companion.log', writestring + '\n', function (err) {
+	startLogging() {
+		setInterval(() => {
+			if (this.logbuffer.length > 0 && this.logwriting == false) {
+				var writestring = this.logbuffer.join('\n')
+				this.logbuffer = []
+				this.logwriting = true
+				fs.appendFile('./companion.log', writestring + '\n', (err) => {
 					if (err) {
 						console.log('log write error', err)
 					}
-					logwriting = false
+					this.logwriting = false
 				})
 			}
 		}, 1000)
 
-		process.stderr.write = function () {
+		process.stderr.write = () => {
 			var arr = []
 			for (var n in arguments) {
 				arr.push(arguments[n])
 			}
 			var line = new Date().toISOString() + ' ' + stripAnsi(arr.join(' ').trim())
-			logbuffer.push(line)
+			this.logbuffer.push(line)
 		}
 	}
-
-	debug('launching registry')
-	var registry = new (require('./lib/registry'))(system, config)
-
-	system.emit('modules_loaded')
-
-	system.on('exit', function () {
-		registry.deviceController.quit()
-	})
 }
 
-exports = module.exports = system
+exports = module.exports = new App()

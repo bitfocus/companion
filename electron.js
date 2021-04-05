@@ -4,7 +4,7 @@ var app = electron.app
 var BrowserWindow = electron.BrowserWindow
 var path = require('path')
 var url = require('url')
-var system = require('./app.js')
+var companion = require('./app.js')
 var fs = require('fs')
 var exec = require('child_process').exec
 const { init, showReportDialog, configureScope } = require('@sentry/electron')
@@ -21,11 +21,7 @@ if (!lock) {
 	return
 }
 
-let skeleton_info = {}
-system.emit('skeleton-info-info', function (info) {
-	// Assume this happens synchronously
-	skeleton_info = info
-})
+let skeleton_info = companion.getSkeletonInfo()
 
 if (process.env.DEVELOPER === undefined) {
 	console.log('Configuring sentry error reporting')
@@ -84,7 +80,7 @@ function createWindow() {
 	})
 
 	ipcMain.on('skeleton-close', function (req, cb) {
-		system.emit('exit')
+		companion.exit()
 	})
 
 	ipcMain.on('skeleton-minimize', function (req, cb) {
@@ -97,21 +93,21 @@ function createWindow() {
 
 	ipcMain.on('skeleton-bind-ip', function (e, msg) {
 		console.log('changed bind ip:', msg)
-		system.emit('skeleton-bind-ip', msg)
+		companion.setBindPort(msg)
 	})
 
 	ipcMain.on('skeleton-bind-port', function (e, msg) {
 		console.log('changed bind port:', msg)
-		system.emit('skeleton-bind-port', msg)
+		companion.setBindPort(msg)
 	})
 
 	ipcMain.on('skeleton-start-minimised', function (e, msg) {
 		console.log('changed start minimized:', msg)
-		system.emit('skeleton-start-minimised', msg)
+		companion.setStartMinimised(msg)
 	})
 
 	ipcMain.once('skeleton-ready', function () {
-		system.ready(!process.env.DEVELOPER)
+		companion.launch(!process.env.DEVELOPER)
 	})
 
 	ipcMain.on('network-interfaces:get', function () {
@@ -133,16 +129,14 @@ function createWindow() {
 		})
 	})
 
-	system.on('skeleton-ip-unavail', function () {})
-
-	system.on('skeleton-info', function (key, val) {
+	companion.on('skeleton-info', function (key, val) {
 		skeleton_info[key] = val
 		if (window) {
 			window.webContents.send('info', skeleton_info)
 		}
 	})
 
-	system.on('restart', function () {
+	companion.on('restart', function () {
 		app.relaunch()
 		app.exit()
 	})
@@ -158,7 +152,7 @@ function createWindow() {
 	})
 
 	try {
-		system.emit('skeleton-info', 'configDir', app.getPath('appData'))
+		companion.setConfigDir(app.getPath('appData'))
 
 		configureScope(function (scope) {
 			var machidFile = app.getPath('appData') + '/companion/machid'
@@ -235,13 +229,13 @@ function trayQuit() {
 		})
 		.then((v) => {
 			if (v.response === 0) {
-				system.emit('exit')
+				companion.exit()
 			}
 		})
 }
 
 function scanUsb() {
-	system.emit('devices_reenumerate')
+	companion.system.emit('devices_reenumerate')
 }
 
 function toggleWindow() {
@@ -262,19 +256,19 @@ app.whenReady().then(function () {
 	createWindow()
 
 	electron.powerMonitor.on('suspend', () => {
-		system.emit('skeleton-power', 'suspend')
+		companion.system.emit('skeleton-power', 'suspend')
 	})
 
 	electron.powerMonitor.on('resume', () => {
-		system.emit('skeleton-power', 'resume')
+		companion.system.emit('skeleton-power', 'resume')
 	})
 
 	electron.powerMonitor.on('on-ac', () => {
-		system.emit('skeleton-power', 'ac')
+		companion.system.emit('skeleton-power', 'ac')
 	})
 
 	electron.powerMonitor.on('on-battery', () => {
-		system.emit('skeleton-power', 'battery')
+		companion.system.emit('skeleton-power', 'battery')
 	})
 })
 

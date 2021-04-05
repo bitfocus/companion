@@ -1,10 +1,8 @@
-
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <title>Source: lib/Schedule/Plugin/Instance.js | Companion</title>
+    <title>Class: App | Companion</title>
 
     <script src="scripts/prettify/prettify.js"> </script>
     <script src="scripts/prettify/lang-css.js"> </script>
@@ -47,99 +45,144 @@
 
 
 
+
+<section>
+
+<header>
     
-    <section>
-        <article>
-            <pre class="prettyprint source linenums"><code>/*
- * This file is part of the Companion project
- * Copyright (c) 2018 Bitfocus AS
- * Authors: William Viker &lt;william@bitfocus.io>, Håkon Nessjøen &lt;haakon@bitfocus.io>
- *
- * This program is free software.
- * You should have received a copy of the MIT licence as well as the Bitfocus
- * Individual Contributor License Agreement for companion along with
- * this program.
- *
- * You can be released from the requirements of the license by purchasing
- * a commercial license. Buying such a license is mandatory as soon as you
- * develop commercial activities involving the Companion software without
- * disclosing the source code of your own applications.
- *
- */
+        <h2><span class="attribs"><span class="type-signature"></span></span>App<span class="signature">()</span><span class="type-signature"></span></h2>
+        
+            <div class="class-description">The application's event emitter for core functionality which allows for some point to multi-point calls
+and `skeleton` to `app` functionality.</div>
+        
+    
+</header>
 
-const SchedulePluginBase = require('./Base')
+<article>
+    
+        <div class="container-overview">
+        
+            
 
-class SchedulePluginInstance extends SchedulePluginBase {
-	setup() {
-		this.system.on('modules_loaded', () => {
-			// Wait to run since some modules need time to connect
-			setTimeout(this.run.bind(this, 'start'), 10000)
-		})
+<dt>
+    
+        <h4 class="name" id="App">
+            
+                new <span class="type-signature"></span>App<span class="signature">()</span><span class="type-signature"></span>
+                
+            
+            <div class="container-source members">
+                <code><a href="app.js.html">app.js</a></code>,
+                <code><a href="app.js.html#line37">line 37</a></code>
+            </div>
+            
+        </h4>
 
-		this.system.on('io_connect', this.run.bind(this, 'io_connect'))
-		this.system.on('bank_pressed', (bank, button, pressStatus, deviceid) => {
-			// If the scheduler is recalling this button, don't start an infinite loop...
-			if (!deviceid || deviceid !== 'scheduler') {
-				this.run(pressStatus ? 'button_press' : 'button_depress')
-			}
-		})
+        
+    
+</dt>
+<dd>
 
-		this.options = [
-			{
-				key: 'run',
-				name: 'Run at',
-				type: 'select',
-				choices: [
-					{
-						id: 'start',
-						label: 'Startup',
-					},
-					{
-						id: 'io_connect',
-						label: 'Webpage Load',
-					},
-					{
-						id: 'button_press',
-						label: 'On any button press',
-					},
-					{
-						id: 'button_depress',
-						label: 'On any button depress',
-					},
-				],
-			},
-		]
-	}
+    
 
-	configDesc(config) {
-		const runConf = this.options[0].choices.find((x) => x.id === config.run)
-		let runTime = !runConf ? 'unknown' : runConf.label
+    
 
-		return runTime
-	}
+    
 
-	get name() {
-		return 'Instance'
-	}
+    
 
-	get type() {
-		return 'instance'
-	}
+    
 
-	/**
-	 * Checks if event needs to run
-	 * @param {string} run Name of run type based on the option choices (ie, start or button_press)
-	 * @access protected
-	 */
-	run(run) {
-		this.watch.filter((x) => x.config.run === run).forEach((x) => this.controller.action(x.id))
-	}
-}
+    
 
-module.exports = SchedulePluginInstance
-</code></pre>
-        </article>
-    </section>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+    
+
+</dd>
+
+        
+        </div>
+    
+
+    
+        <h3 class="subsection-title">Extends</h3>
+
+        
+
+
+    <ul>
+        <li>EventEmitter</li>
+    </ul>
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</article>
+
+</section>
 
 
 
@@ -156,7 +199,7 @@ module.exports = SchedulePluginInstance
 <script src="scripts/linenumber.js"></script>
 
     <script>
-        var id = '_sub'.replace(/"/g, '_');
+        var id = 'App_sub'.replace(/"/g, '_');
         var selectedApi = document.getElementById(id); // do not use jquery selector
         var $selectedApi = $(selectedApi);
 
