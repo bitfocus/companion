@@ -13,7 +13,7 @@ export function PNGInputField({ definition, onSelect, onError }) {
 
 		if (width > height) {
 			if (width > maxWidth) {
-				height *= maxWidth/ width
+				height *= maxWidth / width
 				width = maxWidth
 			}
 		} else if (width < height) {
@@ -58,7 +58,7 @@ export function PNGInputField({ definition, onSelect, onError }) {
 
 					img.onload = () => {
 						// image is loaded; sizes are available
-						if (definition?.max && (img.width === img.height && img.width > definition.max.width)) {
+						if (definition?.max && img.width === img.height && img.width > definition.max.width) {
 							onError(null)
 							onSelect(imageResize(img, definition.max.width, definition.max.height), newFiles[0].name)
 						} else if (definition?.min && (img.width < definition.min.width || img.height < definition.min.height)) {
