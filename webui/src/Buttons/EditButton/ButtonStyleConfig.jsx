@@ -111,7 +111,7 @@ export function ButtonStyleConfig({ page, bank, config, valueChanged }) {
 							<PNGInputField
 								onSelect={setPng}
 								onError={setPngError}
-								definition={{ min: { width: 72, height: 58 }, max: { width: 72, height: 58 } }}
+								definition={{ min: { width: 72, height: 58 }, max: { width: 72, height: 72 } }}
 							/>
 							<CButton color="danger" disabled={!config.png64} onClick={clearPng}>
 								<FontAwesomeIcon icon={faTrash} />
