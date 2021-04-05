@@ -5,6 +5,33 @@ export interface CompanionSystem extends EventEmitter {}
 
 export type InputValue = number | string | boolean
 
+export type CompanionBank = CompanionBankPage | CompanionBankPNG | CompanionBankPreset
+
+export interface CompanionBankPage {
+	style: 'pageup' | 'pagedown' | 'pagenum'
+}
+
+export interface CompanionBankPNG {
+	style: 'png'
+	text: string
+	size: 'auto' | '7' | '14' | '18' | '24' | '30' | '44'
+	alignment: 'left:top' | 'center:top' | 'right:top' | 'left:center' | 'center:center' | 'right:center' | 'left:bottom' | 'center:bottom' | 'right:bottom'
+	pngalignment: 'left:top' | 'center:top' | 'right:top' | 'left:center' | 'center:center' | 'right:center' | 'left:bottom' | 'center:bottom' | 'right:bottom'
+	png64?: string
+	color: number
+	bgcolor: number
+	latch: boolean
+	relative_delay: boolean
+}
+
+export interface CompanionBankPreset {
+	style: 'text'
+	text: string
+	size: 'auto' | '7' | '14' | '18' | '24' | '30' | '44'
+	color: number
+	bgcolor: number
+}
+
 export interface CompanionAction {
 	label: string
 	options: SomeCompanionInputField[]
@@ -120,20 +147,14 @@ export interface CompanionFeedback {
 	label: string
 	description: string
 	options: SomeCompanionInputField[]
-	callback?: (feedback: CompanionFeedbackEvent) => CompanionFeedbackResult
+	callback?: (feedback: CompanionFeedbackEvent, bank: CompanionBankPNG) => CompanionFeedbackResult
 	subscribe?: (feedback: CompanionFeedbackEvent) => void
 	unsubscribe?: (feedback: CompanionFeedbackEvent) => void
 }
 export interface CompanionPreset {
 	category: string
 	label: string
-	bank: {
-		style: 'text'
-		text: string
-		size: 'auto' | '7' | '14' | '18' | '24' | '30' | '44'
-		color: number
-		bgcolor: number
-	}
+	bank: CompanionBankPreset
 	feedbacks: Array<{
 		type: string
 		options: { [key: string]: InputValue | undefined }
