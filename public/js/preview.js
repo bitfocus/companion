@@ -17,7 +17,7 @@
 		return imageData;
 	}
 
-	function imageResize(img, maxW, maxH, cb) {
+	function imageResize(img, maxW, maxH) {
 		var canvas = document.createElement('canvas');
 		var width = img.width;
 		var height = img.height;
@@ -42,7 +42,7 @@
 
 		var ctx = canvas.getContext('2d');
 		ctx.drawImage(img, 0, 0, width, height);
-		cb(canvas.toDataURL());
+		return canvas.toDataURL();
 	}
 
 	function checkImageSize(image, minW, minH, maxW, maxH, cbOK, cbKO) {
@@ -59,9 +59,7 @@
 
 							img.onload = function() { // image is loaded; sizes are available
 									if (img.width === img.height && img.width > maxW) {
-										imageResize(img, maxW, maxH, function(resizedImage) {
-											cbOK(resizedImage);
-										});
+										cbOK(imageResize(img, maxW, maxH));
 									} else if (img.width < minW || img.height < minH || img.width > maxW || img.height > maxH){
 											cbKO();
 									}else{
