@@ -3623,6 +3623,10 @@ commist@^1.0.0:
   version "1.2.1"
   resolved "https://codeload.github.com/bitfocus/companion-module-tslproducts-umd/tar.gz/e81d4a0f393b983bfed5a09adf27d91e11ef09f6"
 
+"companion-module-tvone-corio@github:bitfocus/companion-module-tvone-corio#v1.0.0":
+  version "1.0.0"
+  resolved "https://codeload.github.com/bitfocus/companion-module-tvone-corio/tar.gz/c70aa83095d0a7cc0ded18b4b058232473a3a1c5"
+
 "companion-module-twitch-api@github:bitfocus/companion-module-twitch-api#v1.0.0":
   version "1.0.0"
   resolved "https://codeload.github.com/bitfocus/companion-module-twitch-api/tar.gz/006526e7a0c77997d1c8ebce753c2359424ec607"
