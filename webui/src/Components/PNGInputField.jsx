@@ -11,7 +11,7 @@ export function PNGInputField({ definition, onSelect, onError }) {
 		let width = img.width
 		let height = img.height
 
-		if (width > height) {
+		if (width >= height) {
 			if (width > maxWidth) {
 				height *= maxWidth / width
 				width = maxWidth
@@ -21,9 +21,6 @@ export function PNGInputField({ definition, onSelect, onError }) {
 				width *= maxHeight / height
 				height = maxHeight
 			}
-		} else {
-			width = maxWidth
-			height = maxHeight
 		}
 
 		canvas.width = width

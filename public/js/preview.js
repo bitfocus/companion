@@ -22,7 +22,7 @@
 		var width = img.width;
 		var height = img.height;
 
-		if (width > height) {
+		if (width >= height) {
 			if (width > maxW) {
 				height *= maxW / width;
 				width = maxW;
@@ -32,9 +32,6 @@
 				width *= maxH / height;
 				height = maxH;
 			}
-		} else {
-			width = maxW;
-			height = maxH;
 		}
 
 		canvas.width = width;
