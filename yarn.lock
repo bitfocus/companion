@@ -2605,7 +2605,7 @@ commist@^1.0.0:
   version "1.4.3"
   resolved "https://codeload.github.com/bitfocus/companion-module-vicreo-hotkey/tar.gz/9caca990bc60984fa0c237a182b8d595f8b9b712"
 
-"companion-module-vicreo-tallylistener@github:bitfocus/companion-module-vicreo-variablelistener#v1.0.5":
+"companion-module-vicreo-variablelistener@github:bitfocus/companion-module-vicreo-variablelistener#v1.0.5":
   version "1.0.5"
   resolved "https://codeload.github.com/bitfocus/companion-module-vicreo-variablelistener/tar.gz/8a5f8a8358de56fdd65aca97d423d77fc3b8031d"
 
