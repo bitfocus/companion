@@ -174,10 +174,10 @@
 	url = https://github.com/bitfocus/companion-module-sony-visca.git
 [submodule "lib/module/globalcache-itac-ir"]
 	path = lib/module/globalcache-itac-ir
-	url = https://github.com/bitfocus/companion-module-globalcache-itac-ir
+	url = https://github.com/bitfocus/companion-module-globalcache-itac-ir.git
 [submodule "lib/module/globalcache-itac-cc"]
 	path = lib/module/globalcache-itac-cc
-	url = https://github.com/bitfocus/companion-module-globalcache-itac-cc
+	url = https://github.com/bitfocus/companion-module-globalcache-itac-cc.git
 [submodule "lib/module/analogway-pls300"]
 	path = lib/module/analogway-pls300
 	url = https://github.com/bitfocus/companion-module-analogway-pls300
@@ -243,7 +243,7 @@
 	url = https://github.com/bitfocus/companion-module-vicreo-hotkey.git
 [submodule "lib/module/yamaha-scp"]
 	path = lib/module/yamaha-scp
-	url = https://github.com/bitfocus/companion-module-yamaha-scp
+	url = https://github.com/bitfocus/companion-module-yamaha-scp.git
 [submodule "lib/module/panasonic-ptz"]
 	path = lib/module/panasonic-ptz
 	url = https://github.com/bitfocus/companion-module-panasonic-ptz.git
@@ -573,7 +573,7 @@ url=https://github.com/bitfocus/companion-module-newbluefx-titler.git
 	url = https://github.com/bitfocus/companion-module-sonos-speakers.git
 [submodule "lib/module/homeassistant-server"]
 	path = lib/module/homeassistant-server
-	url = https://github.com/bitfocus/companion-module-homeassistant-server
+	url = https://github.com/bitfocus/companion-module-homeassistant-server.git
 [submodule "lib/module/shure-psm1000"]
 	path = lib/module/shure-psm1000
 	url = https://github.com/bitfocus/companion-module-shure-psm1000.git
@@ -582,7 +582,7 @@ url=https://github.com/bitfocus/companion-module-newbluefx-titler.git
 	url = https://github.com/bitfocus/companion-module-roku-tv.git
 [submodule "lib/module/generic-wakeonlan"]
 	path = lib/module/generic-wakeonlan
-	url = https://github.com/bitfocus/companion-module-generic-wakeonlan
+	url = https://github.com/bitfocus/companion-module-generic-wakeonlan.git
 [submodule "lib/module/figure53-qview"]
 	path = lib/module/figure53-qview
 	url = https://github.com/bitfocus/companion-module-figure53-qview.git
@@ -688,3 +688,76 @@ url=https://github.com/bitfocus/companion-module-newbluefx-titler.git
 [submodule "lib/module/elgato-keylight"]
 	path = lib/module/elgato-keylight
 	url = https://github.com/bitfocus/companion-module-elgato-keylight.git
+[submodule "lib/module/avishop-hdbaset-matrix"]
+	path = lib/module/avishop-hdbaset-matrix
+	url = https://github.com/bitfocus/companion-module-avishop-hdbaset-matrix.git
+[submodule "lib/module/generic-tcp-serial"]
+	path = lib/module/generic-tcp-serial
+	url = https://github.com/bitfocus/companion-module-generic-tcp-serial.git
+[submodule "lib/module/spotify-remote"]
+	path = lib/module/spotify-remote
+	url = https://github.com/bitfocus/companion-module-spotify-remote.git
+[submodule "lib/module/generic-emberplus"]
+	path = lib/module/generic-emberplus
+	url = https://github.com/bitfocus/companion-module-generic-emberplus.git
+	branch = v2.1-stable
+[submodule "lib/module/presentationtools-cuetimer"]
+	path = lib/module/presentationtools-cuetimer
+	url = https://github.com/bitfocus/companion-module-presentationtools-cuetimer.git
+[submodule "lib/module/opensong-api"]
+	path = lib/module/opensong-api
+	url = https://github.com/bitfocus/companion-module-opensong-api.git
+[submodule "lib/module/teracom-tcw181b"]
+	path = lib/module/teracom-tcw181b
+	url = https://github.com/bitfocus/companion-module-teracom-tcw181b.git
+[submodule "lib/module/rationalacoustics-smaart3"]
+	path = lib/module/rationalacoustics-smaart3
+	url = https://github.com/bitfocus/companion-module-rationalacoustics-smaart3.git
+[submodule "lib/module/cisco-cms.git"]
+	path = lib/module/cisco-cms.git
+	url = https://github.com/bitfocus/companion-module-cisco-cms.git
+[submodule "lib/module/datapath-fx4"]
+	path = lib/module/datapath-fx4
+	url = https://github.com/bitfocus/companion-module-datapath-fx4.git
+[submodule "lib/module/allenheath-sq"]
+	path = lib/module/allenheath-sq
+	url = https://github.com/bitfocus/companion-module-allenheath-sq.git
+[submodule "lib/module/gammacontrol-gmaestro"]
+	path = lib/module/gammacontrol-gmaestro
+	url = https://github.com/bitfocus/companion-module-gammacontrol-gmaestro.git
+[submodule "lib/module/dolby-cinemaprocessor"]
+	path = lib/module/dolby-cinemaprocessor
+	url = https://github.com/bitfocus/companion-module-dolby-cinemaprocessor.git
+[submodule "lib/module/birddog-studio"]
+	path = lib/module/birddog-studio
+	url = https://github.com/bitfocus/companion-module-birddog-studio.git
+[submodule "lib/module/lectrosonics-aspen"]
+	path = lib/module/lectrosonics-aspen
+	url = https://github.com/bitfocus/companion-module-lectrosonics-aspen.git
+[submodule "lib/module/allenheath-qu"]
+	path = lib/module/allenheath-qu
+	url = https://github.com/bitfocus/companion-module-allenheath-qu.git
+[submodule "lib/module/softron-ontheairvideo"]
+	path = lib/module/softron-ontheairvideo
+	url = https://github.com/bitfocus/companion-module-softron-ontheairvideo.git
+[submodule "lib/module/orfast-ndi"]
+	path = lib/module/orfast-ndi
+	url = https://github.com/bitfocus/companion-module-orfast-ndi.git
+[submodule "lib/module/prsi-ipower"]
+	path = lib/module/prsi-ipower
+	url = https://github.com/bitfocus/companion-module-prsi-ipower.git
+[submodule "lib/module/roland-v1200hd"]
+	path = lib/module/roland-v1200hd
+	url = https://github.com/bitfocus/companion-module-roland-v1200hd.git
+[submodule "lib/module/middleatlantic-racklink"]
+	path = lib/module/middleatlantic-racklink
+	url = https://github.com/bitfocus/companion-module-middleatlantic-racklink.git
+[submodule "lib/module/shure-dis-ccu"]
+	path = lib/module/shure-dis-ccu
+	url = https://github.com/bitfocus/companion-module-shure-dis-ccu.git
+[submodule "lib/module/sienna-ndimonitor"]
+	path = lib/module/sienna-ndimonitor
+	url = https://github.com/bitfocus/companion-module-sienna-ndimonitor.git
+[submodule "lib/module/protopie-bridge"]
+	path = lib/module/protopie-bridge
+	url = https://github.com/bitfocus/companion-module-protopie-bridge.git
