@@ -52,6 +52,7 @@
 [submodule "lib/module/bmd-atem"]
 	path = lib/module/bmd-atem
 	url = https://github.com/bitfocus/companion-module-bmd-atem.git
+	branch = stable-2.1
 [submodule "lib/module/renewedvision-pvp"]
 	path = lib/module/renewedvision-pvp
 	url = https://github.com/bitfocus/companion-module-renewedvision-pvp.git
@@ -104,6 +105,7 @@
 [submodule "lib/module/behringer-x32"]
 	path = lib/module/behringer-x32
 	url = https://github.com/bitfocus/companion-module-behringer-x32.git
+	branch = stable-2.1
 [submodule "lib/module/chamsys-magicq-osc"]
 	path = lib/module/chamsys-magicq-osc
 	url = https://github.com/bitfocus/companion-module-chamsys-magicq-osc.git
@@ -710,7 +712,7 @@ url=https://github.com/bitfocus/companion-module-newbluefx-titler.git
 	path = lib/module/rationalacoustics-smaart3
 	url = https://github.com/bitfocus/companion-module-rationalacoustics-smaart3.git
 [submodule "lib/module/cisco-cms.git"]
-	path = lib/module/cisco-cms.git
+	path = lib/module/cisco-cms
 	url = https://github.com/bitfocus/companion-module-cisco-cms.git
 [submodule "lib/module/datapath-fx4"]
 	path = lib/module/datapath-fx4
