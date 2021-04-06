@@ -762,6 +762,3 @@ url=https://github.com/bitfocus/companion-module-newbluefx-titler.git
 [submodule "lib/module/behringer-wing"]
 	path = lib/module/behringer-wing
 	url = https://github.com/bitfocus/companion-module-behringer-wing.git
-[submodule "lib/module/linkbox-remote"]
-	path = lib/module/linkbox-remote
-	url = https://github.com/bitfocus/companion-module-linkbox-remote.git
