@@ -1,10 +1,11 @@
-import { forwardRef, useCallback, useContext, useEffect, useImperativeHandle, useRef, useState } from 'react'
-import { CButton, CModal, CModalBody, CModalFooter, CModalHeader } from '@coreui/react'
+import { useCallback, useContext, useEffect, useRef, useState } from 'react'
+import { CButton } from '@coreui/react'
 import { CompanionContext } from '../util'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faDollarSign, faQuestionCircle } from '@fortawesome/free-solid-svg-icons'
 
 import { InstanceVariablesModal } from './InstanceVariablesModal'
+import { GenericConfirmModal } from '../Components/GenericConfirmModal'
 
 export function InstancesList({ showHelp, doConfigureInstance }) {
 	const context = useContext(CompanionContext)
@@ -34,7 +35,7 @@ export function InstancesList({ showHelp, doConfigureInstance }) {
 				how to communicate with whatever you want to control.
 			</p>
 
-			<ConfirmDeleteModal ref={deleteModalRef} />
+			<GenericConfirmModal ref={deleteModalRef} />
 			<InstanceVariablesModal ref={variablesModalRef} />
 
 			<table className="table table-responsive-sm">
@@ -88,8 +89,16 @@ function InstancesTableRow({
 	const isEnabled = instance.enabled === undefined || instance.enabled
 
 	const doDelete = useCallback(() => {
-		deleteModalRef.current.show(id, instance.label)
-	}, [deleteModalRef, id, instance.label])
+		deleteModalRef.current.show(
+			'Delete instance',
+			`Are you sure you want to delete "${instance.label}"?`,
+			'Delete',
+			() => {
+				context.socket.emit('instance_delete', id)
+				configureInstance(null)
+			}
+		)
+	}, [context.socket, deleteModalRef, id, instance.label, configureInstance])
 
 	const doToggleEnabled = useCallback(() => {
 		context.socket.emit('instance_enable', id, !isEnabled)
@@ -199,50 +208,3 @@ function processModuleStatus(status) {
 		className: '',
 	}
 }
-
-const ConfirmDeleteModal = forwardRef(function ConfirmDeleteModal(_props, ref) {
-	const context = useContext(CompanionContext)
-
-	const [data, setData] = useState(null)
-	const [show, setShow] = useState(false)
-
-	const doClose = useCallback(() => setShow(false), [])
-	const onClosed = useCallback(() => setData(null), [])
-	const doDelete = useCallback(() => {
-		setData(null)
-		setShow(false)
-
-		// Perform the delete
-		context.socket.emit('instance_delete', data?.[0])
-	}, [data, context.socket])
-
-	useImperativeHandle(
-		ref,
-		() => ({
-			show(id, name) {
-				setData([id, name])
-				setShow(true)
-			},
-		}),
-		[]
-	)
-
-	return (
-		<CModal show={show} onClose={doClose} onClosed={onClosed}>
-			<CModalHeader closeButton>
-				<h5>Delete instance</h5>
-			</CModalHeader>
-			<CModalBody>
-				<p>Are you sure you want to delete "{data?.[1]}"?</p>
-			</CModalBody>
-			<CModalFooter>
-				<CButton color="secondary" onClick={doClose}>
-					Cancel
-				</CButton>
-				<CButton color="primary" onClick={doDelete}>
-					Delete
-				</CButton>
-			</CModalFooter>
-		</CModal>
-	)
-})
