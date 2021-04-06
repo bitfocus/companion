@@ -1,16 +1,6 @@
 import React, { useCallback, useMemo, useState } from 'react'
-import {
-	CButton,
-	CForm,
-	CFormGroup,
-	CInput,
-	CModal,
-	CModalBody,
-	CModalFooter,
-	CModalHeader,
-	CSelect,
-} from '@coreui/react'
-import { MyErrorBoundary, useMountEffect } from './util'
+import { CButton, CForm, CFormGroup, CInput, CModal, CModalBody, CModalFooter, CModalHeader } from '@coreui/react'
+import { MyErrorBoundary, useMountEffect } from '../util'
 import Select from 'react-select'
 
 function getPluginSpecDefaults(pluginOptions) {
@@ -55,10 +45,11 @@ export function ScheduleEditModal({ doClose, doSave, item, plugins }) {
 
 	const changeType = useCallback(
 		(e) => {
-			const pluginType = typeof e === 'string' ? e : e.target.value
-			const pluginSpec = plugins?.find((p) => p.type === pluginType)?.options || []
+			const pluginType = e.value
+			const pluginSpec = plugins?.find((p) => p.type === pluginType)
+			const pluginOptions = pluginSpec?.options || []
 
-			const innerConfig = getPluginSpecDefaults(pluginSpec)
+			const innerConfig = getPluginSpecDefaults(pluginOptions)
 			const innerConfig2 = pluginSpec?.multiple ? [innerConfig] : innerConfig
 
 			setConfig((oldConfig) => ({
@@ -82,13 +73,17 @@ export function ScheduleEditModal({ doClose, doSave, item, plugins }) {
 				item2.config = [item2.config]
 			}
 			setConfig(item2)
-		} else if (plugins[0]) {
-			changeType(plugins[0].type)
+		} else if (plugins && plugins[0]) {
+			changeType({ value: plugins[0].type })
 		}
 	})
 
+	const pluginChoices = useMemo(() => {
+		return plugins.map((p) => ({ value: p.type, label: p.name }))
+	}, [plugins])
+
 	return (
-		<CModal show={true} onClose={doClose}>
+		<CModal show={true} onClose={doClose} size="lg">
 			<CForm onSubmit={doSaveInner}>
 				<CModalHeader closeButton>
 					<h5>Trigger Editor</h5>
@@ -111,13 +106,14 @@ export function ScheduleEditModal({ doClose, doSave, item, plugins }) {
 					</CFormGroup>
 					<CFormGroup>
 						<label>Type</label>
-						<CSelect required value={config.type} onChange={changeType}>
-							{plugins.map((p) => (
-								<option key={p.type} value={p.type}>
-									{p.name}
-								</option>
-							))}
-						</CSelect>
+						<Select
+							value={pluginChoices.find((c) => c.value === config.type)}
+							onChange={changeType}
+							isSearchable={false}
+							isClearable={false}
+							options={pluginChoices}
+							required
+						/>
 					</CFormGroup>
 
 					{pluginSpec?.options ? (
@@ -174,7 +170,7 @@ function ScheduleEditModalConfig({ pluginSpec, config, updateConfig }) {
 	if (pluginSpec.multiple) {
 		return (
 			<>
-				<table>
+				<table style={{ width: '100%' }}>
 					<thead>
 						<tr>
 							{pluginSpec.options.map((spec) => (
@@ -197,13 +193,9 @@ function ScheduleEditModalConfig({ pluginSpec, config, updateConfig }) {
 									))}
 								</MyErrorBoundary>
 								<td>
-									{config.length > 1 ? (
-										<CButton color="danger" onClick={() => delRow(i)}>
-											X
-										</CButton>
-									) : (
-										''
-									)}
+									<CButton color="danger" onClick={() => delRow(i)} disabled={config.length <= 1}>
+										X
+									</CButton>
 								</td>
 							</tr>
 						))}
@@ -259,6 +251,7 @@ function ScheduleEditModalInput({ spec, value, onChange }) {
 					onChange={(val) => onChange(spec.multi ? val?.map((v) => v.value) : val?.value)}
 					isMulti={!!spec.multi}
 					isClearable={false}
+					isSearchable={typeof spec.minChoicesForSearch === 'number' && spec.minChoicesForSearch <= choices.length}
 					options={choices}
 					required
 				/>
