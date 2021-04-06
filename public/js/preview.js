@@ -58,7 +58,7 @@
 							var img = new Image;
 
 							img.onload = function() { // image is loaded; sizes are available
-									if (img.width === img.height && img.width > maxW) {
+									if (img.height > maxH || img.width > maxW) {
 										cbOK(imageResize(img, maxW, maxH));
 									} else if (img.width < minW || img.height < minH || img.width > maxW || img.height > maxH){
 											cbKO();
