@@ -4,9 +4,9 @@ import {
 	faBug,
 	faComments,
 	faDollarSign,
-	faFire,
 	faGamepad,
 	faInfo,
+	faMousePointer,
 	faTabletAlt,
 	faUsers,
 } from '@fortawesome/free-solid-svg-icons'
@@ -38,9 +38,21 @@ export function MySidebar({ show }) {
 				/>
 				<CSidebarNavItem
 					target="_new"
+					href="/tablet.html"
+					icon={<FontAwesomeIcon className="c-sidebar-nav-icon" icon={faMousePointer} />}
+					name={t('Web buttons')}
+				/>
+				<CSidebarNavItem
+					target="_new"
+					href="/tablet2.html"
+					icon={<FontAwesomeIcon className="c-sidebar-nav-icon" icon={faTabletAlt} />}
+					name={t('Mobile buttons')}
+				/>
+				<CSidebarNavItem
+					target="_new"
 					href="/tablet3"
 					icon={<FontAwesomeIcon className="c-sidebar-nav-icon" icon={faTabletAlt} />}
-					name={t('Web/Mobile buttons')}
+					name={t('New Web/Mobile buttons')}
 				/>
 
 				<CSidebarNavItem
