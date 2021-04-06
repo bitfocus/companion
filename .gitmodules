@@ -61,6 +61,7 @@
 [submodule "lib/module/bmd-hyperdeck"]
 	path = lib/module/bmd-hyperdeck
 	url = https://github.com/bitfocus/companion-module-bmd-hyperdeck.git
+	branch = stable-2.1
 [submodule "lib/module/analogway-livecore"]
 	path = lib/module/analogway-livecore
 	url = https://github.com/bitfocus/companion-module-analogway-livecore.git
@@ -238,6 +239,7 @@
 [submodule "lib/module/thingm-blink1"]
 	path = lib/module/thingm-blink1
 	url = https://github.com/bitfocus/companion-module-thingm-blink1.git
+	branch = stable-2.1
 [submodule "lib/module/vicreo-hotkey"]
 	path = lib/module/vicreo-hotkey
 	url = https://github.com/bitfocus/companion-module-vicreo-hotkey.git
@@ -616,9 +618,6 @@ url=https://github.com/bitfocus/companion-module-newbluefx-titler.git
 [submodule "lib/module/openlp-http"]
 	path = lib/module/openlp-http
 	url = https://github.com/bitfocus/companion-module-openlp-http.git
-[submodule "lib/module/jhlx-wirecast"]
-	path = lib/module/jhlx-wirecast
-	url = https://github.com/bitfocus/companion-module-jhlx-wirecast.git
 [submodule "lib/module/generic-sacn"]
 	path = lib/module/generic-sacn
 	url = https://github.com/bitfocus/companion-module-generic-sacn.git
@@ -694,13 +693,10 @@ url=https://github.com/bitfocus/companion-module-newbluefx-titler.git
 [submodule "lib/module/generic-tcp-serial"]
 	path = lib/module/generic-tcp-serial
 	url = https://github.com/bitfocus/companion-module-generic-tcp-serial.git
-[submodule "lib/module/spotify-remote"]
-	path = lib/module/spotify-remote
-	url = https://github.com/bitfocus/companion-module-spotify-remote.git
 [submodule "lib/module/generic-emberplus"]
 	path = lib/module/generic-emberplus
 	url = https://github.com/bitfocus/companion-module-generic-emberplus.git
-	branch = v2.1-stable
+	branch = stable-2.1
 [submodule "lib/module/presentationtools-cuetimer"]
 	path = lib/module/presentationtools-cuetimer
 	url = https://github.com/bitfocus/companion-module-presentationtools-cuetimer.git
@@ -761,3 +757,9 @@ url=https://github.com/bitfocus/companion-module-newbluefx-titler.git
 [submodule "lib/module/protopie-bridge"]
 	path = lib/module/protopie-bridge
 	url = https://github.com/bitfocus/companion-module-protopie-bridge.git
+[submodule "lib/module/behringer-wing"]
+	path = lib/module/behringer-wing
+	url = https://github.com/bitfocus/companion-module-behringer-wing.git
+[submodule "lib/module/linkbox-remote"]
+	path = lib/module/linkbox-remote
+	url = https://github.com/bitfocus/companion-module-linkbox-remote.git
