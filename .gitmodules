@@ -768,9 +768,6 @@ url=https://github.com/bitfocus/companion-module-newbluefx-titler.git
 [submodule "lib/module/vicreo-variablelistener"]
 	path = lib/module/vicreo-variablelistener
 	url = https://github.com/bitfocus/companion-module-vicreo-variablelistener.git
-[submodule "lib/module/borealsystems-director"]
-	path = lib/module/borealsystems-director
-	url = https://github.com/bitfocus/companion-module-borealsystems-director.git
 [submodule "lib/module/newtek-tricaster"]
 	path = lib/module/newtek-tricaster
 	url = https://github.com/bitfocus/companion-module-newtek-tricaster.git
