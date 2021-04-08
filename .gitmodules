@@ -711,7 +711,7 @@ url=https://github.com/bitfocus/companion-module-newbluefx-titler.git
 [submodule "lib/module/rationalacoustics-smaart3"]
 	path = lib/module/rationalacoustics-smaart3
 	url = https://github.com/bitfocus/companion-module-rationalacoustics-smaart3.git
-[submodule "lib/module/cisco-cms.git"]
+[submodule "lib/module/cisco-cms"]
 	path = lib/module/cisco-cms
 	url = https://github.com/bitfocus/companion-module-cisco-cms.git
 [submodule "lib/module/datapath-fx4"]
@@ -762,3 +762,18 @@ url=https://github.com/bitfocus/companion-module-newbluefx-titler.git
 [submodule "lib/module/behringer-wing"]
 	path = lib/module/behringer-wing
 	url = https://github.com/bitfocus/companion-module-behringer-wing.git
+[submodule "lib/module/visualproductions-bstation2"]
+	path = lib/module/visualproductions-bstation2
+	url = https://github.com/bitfocus/companion-module-visualproductions-bstation2.git
+[submodule "lib/module/vicreo-variablelistener"]
+	path = lib/module/vicreo-variablelistener
+	url = https://github.com/bitfocus/companion-module-vicreo-variablelistener.git
+[submodule "lib/module/borealsystems-director"]
+	path = lib/module/borealsystems-director
+	url = https://github.com/bitfocus/companion-module-borealsystems-director.git
+[submodule "lib/module/newtek-tricaster"]
+	path = lib/module/newtek-tricaster
+	url = https://github.com/bitfocus/companion-module-newtek-tricaster.git
+[submodule "lib/module/lumens-visca"]
+	path = lib/module/lumens-visca
+	url = https://github.com/bitfocus/companion-module-lumens-visca.git
