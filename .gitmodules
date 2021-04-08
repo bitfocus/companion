@@ -350,6 +350,7 @@ url=https://github.com/bitfocus/companion-module-opticis-omm-1000.git
 [submodule "lib/module/audivero-unityintercom"]
 	path = lib/module/audivero-unityintercom
 	url = https://github.com/bitfocus/companion-module-audivero-unityintercom.git
+	branch = stable-2.1
 [submodule "lib/module/draco-tera"]
 	path = lib/module/draco-tera
 	url = https://github.com/bitfocus/companion-module-draco-tera.git
