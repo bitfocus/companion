@@ -2,49 +2,49 @@
 
 This article is an introduction to Companion’s basic principles and user interface.
 
-## Table of Content  
+## Table of Content
 
-* [Getting started](#header-getting-started)
-  + [Before you open Companion](#header-before-you-open-companion)
-  + [Start the server](#header-start-the-server)
-  + [The user interface](#header-the-user-interface)
-* [Sidebar](#header-sidebar)
-  + [Community Links](#header-community-links)
-  + [Emulator](#header-emulator)
-  + [Web buttons](#header-web-buttons)
-  + [Mobile buttons and New Web / Mobile buttons](#header-mobile-buttons-and-new-web--mobile-buttons)
-* [Main admin controls](#header-main-admin-controls)
-  + [1. Connections](#header-1-connections)
-  + [2. Buttons](#header-2-buttons)
+- [Getting started](#header-getting-started)
+  - [Before you open Companion](#header-before-you-open-companion)
+  - [Start the server](#header-start-the-server)
+  - [The user interface](#header-the-user-interface)
+- [Sidebar](#header-sidebar)
+  - [Community Links](#header-community-links)
+  - [Emulator](#header-emulator)
+  - [Web buttons](#header-web-buttons)
+  - [Mobile buttons and New Web / Mobile buttons](#header-mobile-buttons-and-new-web--mobile-buttons)
+- [Main admin controls](#header-main-admin-controls)
+  - [1. Connections](#header-1-connections)
+  - [2. Buttons](#header-2-buttons)
     - [Latch / Toggle](#header-latch--toggle)
     - [Delays](#header-delays)
     - [Key actions](#header-key-actions)
     - [Internal actions](#header-internal-actions)
     - [Instance feedback](#header-instance-feedback)
     - [Button indicators](#header-button-indicators)
-  + [3. Surfaces](#header-3-surfaces)
+  - [3. Surfaces](#header-3-surfaces)
     - [Surface settings](#header-surface-settings)
-  + [4. Triggers](#header-4-triggers)
+  - [4. Triggers](#header-4-triggers)
     - [Trigger Setup](#header-trigger-setup)
     - [Trigger Types](#header-trigger-types)
-  + [5. Settings](#header-5-settings)
-      * [Navigation Buttons](#header-navigation-buttons)
-      * [Devices](#header-devices)
-      * [PIN Lockout](#header-pin-lockout)
-      * [RossTalk](#header-rosstalk)
-      * [Artnet Listener](#header-artnet-listener)
-  + [6. Log](#header-6-log)
-* [Secondary admin controls](#header-secondary-admin-controls)
-  + [1. Presets](#header-1-presets)
-  + [2. Dynamic variables](#header-2-dynamic-variables)
-  + [3. Import / Export](#header-3-import--export)
-* [Remote Control](#header-remote-control)
-  + [TCP / UDP Control](#header-tcp--udp-control)
-  + [HTTP Remote Control](#header-http-remote-control)
-  + [OSC Control](#header-osc-control)
-  + [Artnet / DMX Control](#header-artnet--dmx-control)
-  + [RossTalk Control](#header-rosstalk-control)
-* [Modules](#header-modules)
+  - [5. Settings](#header-5-settings)
+    - [Navigation Buttons](#header-navigation-buttons)
+    - [Devices](#header-devices)
+    - [PIN Lockout](#header-pin-lockout)
+    - [RossTalk](#header-rosstalk)
+    - [Artnet Listener](#header-artnet-listener)
+  - [6. Log](#header-6-log)
+- [Secondary admin controls](#header-secondary-admin-controls)
+  - [1. Presets](#header-1-presets)
+  - [2. Dynamic variables](#header-2-dynamic-variables)
+  - [3. Import / Export](#header-3-import--export)
+- [Remote Control](#header-remote-control)
+  - [TCP / UDP Control](#header-tcp--udp-control)
+  - [HTTP Remote Control](#header-http-remote-control)
+  - [OSC Control](#header-osc-control)
+  - [Artnet / DMX Control](#header-artnet--dmx-control)
+  - [RossTalk Control](#header-rosstalk-control)
+- [Modules](#header-modules)
 
 ## Getting started
 
@@ -274,29 +274,29 @@ The **Release/Off ACTIONS** are performed when the button is released, _or_ when
 
 There are several internal actions you can add to a button in order to control Companion:
 
-| Action                                    | Description                                                                |
-| ----------------------------------------- | -------------------------------------------------------------------------- |
-| Enable or disable instance                | Allows you to enable or disable a specific instance of a module.           |
-| Set surface with s/n to page              | Changes a surface/controller (Stream Deck or emulator) to a specific page. |
+| Action                                    | Description                                                                                                        |
+| ----------------------------------------- | ------------------------------------------------------------------------------------------------------------------ |
+| Enable or disable instance                | Allows you to enable or disable a specific instance of a module.                                                   |
+| Set surface with s/n to page              | Changes a surface/controller (Stream Deck or emulator) to a specific page.                                         |
 | Set surface with index to page            | Changes a surface/controller (Stream Deck or emulator) based on their index in the device list to a specific page. |
-| Trigger a device lockout                  | Locks out selected Stream Decks immediately.                               |
-| Trigger a device unlock                   | Unlocks selected Stream Decks immediately.                                 |
-| Run shell path                            | Runs a shell command locally.                                              |
-| Trigger all devices to unlock immediately | Unlocks all Stream Decks immediately.                                      |
-| Trigger all devices to lock immediately   | Locks all Stream Decks immediately.                                        |
-| Increment page number                     | Increments the page number of a surface.                                   |
-| Decrement page number                     | Decrements the page number of a surface.                                   |
-| Button press and release                  | Simulates a button press in a specific page/button on a controller.        |
-| Button press                              | Simulates holding a button down in a specific page/button on a controller. |
-| Button release                            | Simulates releasing a button in a specific page/button on a controller.    |
-| Button Text                               | Changes the text on a button.                                       |
-| Button Text Color                         | Changes the color of text on a button.                                       |
-| Button Background Color                   | Changes the background color on a button.                                    |
-| Rescan USB for devices                    | Scans for any newly attached Stream Decks.                                 |
-| Abort actions on button                   | Will cancel all delayed actions on a specific button (those not yet started).                   |
-| Abort all delayed actions                 | Will cancel all delayed actions on all buttons (those not yet started).                   |
-| Kill Companion                            | Shuts down Companion when its not responding.                              |
-| Restart Companion                         | Closes and restarts Companion.                                             |
+| Trigger a device lockout                  | Locks out selected Stream Decks immediately.                                                                       |
+| Trigger a device unlock                   | Unlocks selected Stream Decks immediately.                                                                         |
+| Run shell path                            | Runs a shell command locally.                                                                                      |
+| Trigger all devices to unlock immediately | Unlocks all Stream Decks immediately.                                                                              |
+| Trigger all devices to lock immediately   | Locks all Stream Decks immediately.                                                                                |
+| Increment page number                     | Increments the page number of a surface.                                                                           |
+| Decrement page number                     | Decrements the page number of a surface.                                                                           |
+| Button press and release                  | Simulates a button press in a specific page/button on a controller.                                                |
+| Button press                              | Simulates holding a button down in a specific page/button on a controller.                                         |
+| Button release                            | Simulates releasing a button in a specific page/button on a controller.                                            |
+| Button Text                               | Changes the text on a button.                                                                                      |
+| Button Text Color                         | Changes the color of text on a button.                                                                             |
+| Button Background Color                   | Changes the background color on a button.                                                                          |
+| Rescan USB for devices                    | Scans for any newly attached Stream Decks.                                                                         |
+| Abort actions on button                   | Will cancel all delayed actions on a specific button (those not yet started).                                      |
+| Abort all delayed actions                 | Will cancel all delayed actions on all buttons (those not yet started).                                            |
+| Kill Companion                            | Shuts down Companion when its not responding.                                                                      |
+| Restart Companion                         | Closes and restarts Companion.                                                                                     |
 
 #### Instance feedback
 
@@ -310,12 +310,12 @@ The feedbacks can also be reordered by grabbing the sort icon next and dragging 
 
 There are several button indicators you should be familiar with:
 
-| Button                                                                       | Description                                                                         |
-| ---------------------------------------------------------------------------- | ----------------------------------------------------------------------------------- |
-| ![Button latch off](images/button-latch-off-with-topbar.png?raw=true 'Button latch off') | An unpressed button.                                                                |
-| ![Button error](images/button-error.png?raw=true 'Button error')             | One or more instances referenced in this button's actions are in an error state.    |
+| Button                                                                                   | Description                                                                                                                 |
+| ---------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
+| ![Button latch off](images/button-latch-off-with-topbar.png?raw=true 'Button latch off') | An unpressed button.                                                                                                        |
+| ![Button error](images/button-error.png?raw=true 'Button error')                         | One or more instances referenced in this button's actions are in an error state.                                            |
 | ![Button latch on](images/button-latch-on-with-topbar.png?raw=true 'Button latch on')    | The button was pressed (if shown briefly) or button is latched (see [Latch / Toggle](#header-latch--toggle) buttons above). |
-| ![Button delay](images/button-delay.png?raw=true 'Button delay')             | There are delayed actions queued to run for this button (see [Delays](#header-delays) above).                            |
+| ![Button delay](images/button-delay.png?raw=true 'Button delay')                         | There are delayed actions queued to run for this button (see [Delays](#header-delays) above).                               |
 
 ---
 
@@ -328,6 +328,7 @@ If any of your Stream Decks are not showing up, press the **Rescan USB** button.
 **Important: If your devices are showing but they don't show the ID, you need to update your Stream Deck using the Elgato app**. See [Update instructions](https://github.com/bitfocus/companion/blob/master/documentation/Updating%20streamdeck.md).
 
 ![Devices](images/devices.png?raw=true 'Devices')
+
 #### Surface settings
 
 Clicking the **Settings** button next to a device lets you change some things about how the Stream Deck operates:
@@ -403,7 +404,6 @@ In the Settings tab, you can apply some user settings:
 
 ![Settings](images/settings.png?raw=true 'Settings')
 
-
 ##### Navigation Buttons
 
 - **Flip counting direction up/down**  
@@ -460,7 +460,7 @@ _If enabled, Companion will listen for Artnet messages, allowing for external de
 
 The Log section gives status updates of commands going out and coming back to Companion. Different log levels can be filtered.
 
-Use the three buttons to toggle warnings, info and debug on and off. Errors will always be displayed in the log, no matter the settings. Last, of all, you have the option to clear the current log history.  
+Use the three buttons to toggle warnings, info and debug on and off. Errors will always be displayed in the log, no matter the settings. Last, of all, you have the option to clear the current log history.
 
 Be sure to check here if you're running into problems with a module.
 
@@ -477,13 +477,13 @@ Some modules come with pre-made buttons to speed up creating your pages.
 
 Presets works in a folder like structure where you first select the module, then a category, and last, you get a list of pre-made presets ready to be "drag and dropped" onto your pages.
 
-If one of your modules supports presets, it will be listed in this tab for you to select, just like below.  
+If one of your modules supports presets, it will be listed in this tab for you to select, just like below.
 
 ![Preset Modules](images/preset-modules.png?raw=true 'Preset Modules')  
 _An exsample of modules curently loaded with premade presets_
 
 ![Preset Folders](images/preset-folders.png?raw=true 'Preset Folders')  
-_An example of categories of presets you might meet in a single module_  
+_An example of categories of presets you might meet in a single module_
 
 ![Preset Buttons](images/preset-buttons.png?raw=true 'Preset Buttons')  
 _Here is an example of presets made for mix 1 in vMix_
