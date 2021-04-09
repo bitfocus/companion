@@ -1733,9 +1733,9 @@ commist@^1.0.0:
   version "1.0.6"
   resolved "https://codeload.github.com/bitfocus/companion-module-christie-wd/tar.gz/e28f726ce87ef54604482930622fb14f471a2f88"
 
-"companion-module-cisco-cms@github:bitfocus/companion-module-cisco-cms#v1.0.0":
-  version "1.0.0"
-  resolved "https://codeload.github.com/bitfocus/companion-module-cisco-cms/tar.gz/fa015d2488fc0ad1f0d8555de660fc9176b0afb7"
+"companion-module-cisco-cms@github:bitfocus/companion-module-cisco-cms#v1.0.1":
+  version "1.0.1"
+  resolved "https://codeload.github.com/bitfocus/companion-module-cisco-cms/tar.gz/4018eac85861e8f27f391937bf5e14da5c40b2f1"
 
 "companion-module-cockos-reaper@github:bitfocus/companion-module-cockos-reaper#v1.1.0":
   version "1.1.0"
