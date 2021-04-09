@@ -1616,9 +1616,9 @@ commist@^1.0.0:
   dependencies:
     node-rest-client "^3.1.0"
 
-"companion-module-behringer-wing@github:bitfocus/companion-module-behringer-wing#v1.0.0":
-  version "1.0.0"
-  resolved "https://codeload.github.com/bitfocus/companion-module-behringer-wing/tar.gz/c2914f00c429aa12ccb1307aecf7d04dee7f98c3"
+"companion-module-behringer-wing@github:bitfocus/companion-module-behringer-wing#v1.0.1":
+  version "1.0.1"
+  resolved "https://codeload.github.com/bitfocus/companion-module-behringer-wing/tar.gz/64f9beae8e73d44844bbb1b68d3cacbd9ab7cd66"
 
 "companion-module-behringer-x32@github:bitfocus/companion-module-behringer-x32#v2.4.3":
   version "2.4.3"
