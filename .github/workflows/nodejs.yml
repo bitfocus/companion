@@ -71,6 +71,12 @@ jobs:
           yarn config set script-shell bash
 
           yarn update
+
+          # Force a rebuild of @serialport/bindings until https://github.com/serialport/node-serialport/issues/2191 is resolved
+          cd node_modules/@serialport/bindings
+          yarn rebuild
+          cd ../../..
+
           yarn run windist
       - name: rename and upload stuff
         run: node ./tools/build_rename_git.js
