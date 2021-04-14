@@ -16,6 +16,7 @@ import {
 	faCalendarAlt,
 	faClipboardList,
 	faClock,
+	faCloud,
 	faGamepad,
 	faPlug,
 	faUserNinja,
@@ -37,6 +38,7 @@ import { Scheduler } from './Scheduler'
 import { InstancesPage } from './Instances'
 import { ButtonsPage } from './Buttons'
 import { ContextData } from './ContextData'
+import { CloudPage } from './CloudPage'
 
 export default class App extends React.Component {
 	constructor(props) {
@@ -208,6 +210,11 @@ function AppContent({ buttonGridHotPress }) {
 							<FontAwesomeIcon icon={faClipboardList} /> Log
 						</CNavLink>
 					</CNavItem>
+					<CNavItem>
+						<CNavLink data-tab="cloud">
+							<FontAwesomeIcon icon={faCloud} /> Cloud
+						</CNavLink>
+					</CNavItem>
 				</CNav>
 				<CTabContent fade={false}>
 					<CTabPane data-tab="instances">
@@ -238,6 +245,11 @@ function AppContent({ buttonGridHotPress }) {
 					<CTabPane data-tab="log">
 						<MyErrorBoundary>
 							<LogPanel />
+						</MyErrorBoundary>
+					</CTabPane>
+					<CTabPane data-tab="cloud">
+						<MyErrorBoundary>
+							<CloudPage />
 						</MyErrorBoundary>
 					</CTabPane>
 				</CTabContent>
