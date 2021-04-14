@@ -1664,9 +1664,9 @@ commist@^1.0.0:
     "@types/node" "^12.19.14"
     atem-connection "2.3.0-nightly-wip-update-threadedclass-20210313-231347-ec8d035.0"
 
-"companion-module-bmd-hyperdeck@github:bitfocus/companion-module-bmd-hyperdeck#v1.2.0":
-  version "1.2.0"
-  resolved "https://codeload.github.com/bitfocus/companion-module-bmd-hyperdeck/tar.gz/41a2b258cce834eae23cb3443fb398c3f2a63968"
+"companion-module-bmd-hyperdeck@github:bitfocus/companion-module-bmd-hyperdeck#v1.2.1":
+  version "1.2.1"
+  resolved "https://codeload.github.com/bitfocus/companion-module-bmd-hyperdeck/tar.gz/9c97afd7b8cdb46852845d5012193f0bfc03a32f"
   dependencies:
     hyperdeck-connection "0.4.4-nightly-feat-v1-11-support-20210216-214339-7c9f73f.0"
     smpte-timecode "^1.2.3"
