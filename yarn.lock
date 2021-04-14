@@ -2224,6 +2224,10 @@ commist@^1.0.0:
     util "^0.12.3"
     xml2js "^0.4.23"
 
+"companion-module-nexo-nxamp@github:bitfocus/companion-module-nexo-nxamp#v1.0.0":
+  version "1.0.0"
+  resolved "https://codeload.github.com/bitfocus/companion-module-nexo-nxamp/tar.gz/4ce5aee1d599fdfb3c1f86401c0602502864526a"
+
 "companion-module-noismada-octopuslistener@github:bitfocus/companion-module-noismada-octopuslistener#v1.0.2":
   version "1.0.2"
   resolved "https://codeload.github.com/bitfocus/companion-module-noismada-octopuslistener/tar.gz/3d11e1b210f1771f6cd68a253efa30e0122f6f00"

@@ -306,6 +306,7 @@
 		"companion-module-newbluefx-titler": "github:bitfocus/companion-module-newbluefx-titler#v1.0.1",
 		"companion-module-newtek-ndistudiomonitor": "github:bitfocus/companion-module-newtek-ndistudiomonitor#v1.0.1",
 		"companion-module-newtek-tricaster": "github:bitfocus/companion-module-newtek-tricaster#v1.0.8",
+		"companion-module-nexo-nxamp": "github:bitfocus/companion-module-nexo-nxamp#v1.0.0",
 		"companion-module-noismada-octopuslistener": "github:bitfocus/companion-module-noismada-octopuslistener#v1.0.2",
 		"companion-module-noismada-octopusshowcontrol": "github:bitfocus/companion-module-noismada-octopusshowcontrol#v1.2.0",
 		"companion-module-novastar-controller": "github:bitfocus/companion-module-novastar-controller#v1.0.6",
