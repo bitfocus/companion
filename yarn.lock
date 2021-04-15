@@ -2553,9 +2553,9 @@ commist@^1.0.0:
     lodash "^4.17.19"
     xml2js "^0.4.22"
 
-"companion-module-teradek-vidiu@github:bitfocus/companion-module-teradek-vidiu#v1.0.1":
-  version "1.0.1"
-  resolved "https://codeload.github.com/bitfocus/companion-module-teradek-vidiu/tar.gz/feb5129acb67bbd4474ffa61b9dd1d07f4710111"
+"companion-module-teradek-vidiu@github:bitfocus/companion-module-teradek-vidiu#v1.0.2":
+  version "1.0.2"
+  resolved "https://codeload.github.com/bitfocus/companion-module-teradek-vidiu/tar.gz/156c8665aa960e924daa52c89d45e0a7a06937f5"
   dependencies:
     request "^2.88.0"
 
