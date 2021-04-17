@@ -781,3 +781,6 @@ url=https://github.com/bitfocus/companion-module-newbluefx-titler.git
 [submodule "lib/module/liminalet-zoomosc"]
 	path = lib/module/liminalet-zoomosc
 	url = https://github.com/bitfocus/companion-module-liminalet-zoomosc.git
+[submodule "lib/module/audivero-unityintercom-client"]
+	path = lib/module/audivero-unityintercom-client
+	url = https://github.com/bitfocus/companion-module-audivero-unityintercom-client.git
