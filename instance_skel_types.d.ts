@@ -25,7 +25,6 @@ export type CompanionAlignment =
 export type CompanionTextSize = 'auto' | '7' | '14' | '18' | '24' | '30' | '44'
 
 export interface CompanionBankRequiredProps {
-	style: 'png'
 	text: string
 	size: CompanionTextSize
 	color: number
@@ -39,7 +38,9 @@ export interface CompanionBankAdditionalProps {
 	relative_delay: boolean
 }
 
-export interface CompanionBankPNG extends CompanionBankRequiredProps, CompanionBankAdditionalProps {}
+export interface CompanionBankPNG extends CompanionBankRequiredProps, CompanionBankAdditionalProps {
+	style: 'png'
+}
 
 export interface CompanionBankPreset extends CompanionBankRequiredProps, Partial<CompanionBankAdditionalProps> {
 	style: 'png' | 'text' // 'text' for backwards compatability
