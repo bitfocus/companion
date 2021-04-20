@@ -1,7 +1,7 @@
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faInfoCircle } from '@fortawesome/free-solid-svg-icons'
 import React, { Component } from 'react'
-import { CInput, CSwitch, CButton } from '@coreui/react'
+import { CInput, CSwitch, CButton, CCallout } from '@coreui/react'
 import { CloudUserPass } from './UserPass'
 
 // The cloud part is written in old fashioned Class-components
@@ -109,6 +109,7 @@ export class Cloud extends Component {
 						</small>
 					</div>
 				</div>
+
 				{!this.state.authenticated ? (
 					<CloudUserPass onAuth={(user, pass) => this.props.socket.emit('cloud_login', user, pass)} />
 				) : (
@@ -151,6 +152,16 @@ export class Cloud extends Component {
 						</div>
 					</div>
 				)}
+
+				{this.state.error !== null && this.state.error !== '' && (
+					<CCallout
+						style={{ fontSize: 16, fontWeight: 'bold', backgroundColor: 'rgba(255,0,0,0.2)', padding: 10 }}
+						color="danger"
+					>
+						{this.state.error}
+					</CCallout>
+				)}
+
 				<div
 					style={{
 						backgroundColor: 'rgba(100,200,0,0.15)',
