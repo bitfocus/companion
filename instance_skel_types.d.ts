@@ -30,19 +30,27 @@ export interface CompanionBankRequiredProps {
 	color: number
 	bgcolor: number
 }
-export interface CompanionBankAdditionalProps {
+export interface CompanionBankAdditionalStyleProps {
 	alignment: CompanionAlignment
 	pngalignment: CompanionAlignment
 	png64?: string
+}
+export interface CompanionBankAdditionalCoreProps {
 	latch: boolean
 	relative_delay: boolean
 }
 
-export interface CompanionBankPNG extends CompanionBankRequiredProps, CompanionBankAdditionalProps {
+export interface CompanionBankPNG
+	extends CompanionBankRequiredProps,
+		CompanionBankAdditionalStyleProps,
+		CompanionBankAdditionalCoreProps {
 	style: 'png'
 }
 
-export interface CompanionBankPreset extends CompanionBankRequiredProps, Partial<CompanionBankAdditionalProps> {
+export interface CompanionBankPreset
+	extends CompanionBankRequiredProps,
+		Partial<CompanionBankAdditionalStyleProps>,
+		Partial<CompanionBankAdditionalCoreProps> {
 	style: 'png' | 'text' // 'text' for backwards compatability
 }
 
@@ -162,18 +170,25 @@ export interface CompanionVariable {
 	label: string
 	name: string
 }
-export interface CompanionFeedback {
+
+export interface CompanionFeedbackBase<TRes> {
+	type?: 'boolean' | 'advanced'
 	label: string
 	description: string
 	options: SomeCompanionInputField[]
-	callback?: (
-		feedback: CompanionFeedbackEvent,
-		bank: CompanionBankPNG,
-		info: CompanionFeedbackEventInfo
-	) => CompanionFeedbackResult
+	callback?: (feedback: CompanionFeedbackEvent, bank: CompanionBankPNG, info: CompanionFeedbackEventInfo) => TRes
 	subscribe?: (feedback: CompanionFeedbackEvent) => void
 	unsubscribe?: (feedback: CompanionFeedbackEvent) => void
 }
+export interface CompanionFeedbackBoolean extends CompanionFeedbackBase<boolean> {
+	type: 'boolean'
+	style: Partial<CompanionBankRequiredProps & CompanionBankAdditionalStyleProps>
+}
+export interface CompanionFeedbackAdvanced extends CompanionFeedbackBase<CompanionFeedbackResult> {
+	type?: 'advanced'
+}
+export type CompanionFeedback = CompanionFeedbackBoolean | CompanionFeedbackAdvanced
+
 export interface CompanionPreset {
 	category: string
 	label: string
@@ -181,6 +196,7 @@ export interface CompanionPreset {
 	feedbacks: Array<{
 		type: string
 		options: { [key: string]: InputValue | undefined }
+		style?: Partial<CompanionBankRequiredProps & CompanionBankAdditionalStyleProps>
 	}>
 	actions: Array<{
 		action: string
