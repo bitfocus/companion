@@ -374,40 +374,38 @@ function RemoteControlInfo() {
 			<Card className="mb-3">
 				<h5>HTTP</h5>
 				<p>Remote triggering can be done by sending HTTP Requests to the same IP and port Companion is running on.</p>
-				<p>
-					<strong>Commands:</strong>
-					<ul>
-						<li>
-							<code>/press/bank/</code>&lt;page&gt;<code>/</code>&lt;bank&gt;
-							<br />
-							<i>Press and release a button (run both down and up actions)</i>
-						</li>
-						<li>
-							<code>/style/bank/</code>&lt;page&gt;<code>/</code>&lt;bank&gt;
-							<code>?bgcolor=</code>&lt;bgcolor HEX&gt;
-							<br />
-							<i>Change background color of button</i>
-						</li>
-						<li>
-							<code>/style/bank/</code>&lt;page&gt;<code>/</code>&lt;bank&gt;
-							<code>?color=</code>&lt;color HEX&gt;
-							<br />
-							<i>Change color of text on button</i>
-						</li>
-						<li>
-							<code>/style/bank/</code>&lt;page&gt;<code>/</code>&lt;bank&gt;
-							<code>?text=</code>&lt;text&gt;
-							<br />
-							<i>Change text on a button</i>
-						</li>
-						<li>
-							<code>/style/bank/</code>&lt;page&gt;<code>/</code>&lt;bank&gt;
-							<code>?size=</code>&lt;text size&gt;
-							<br />
-							<i>Change text size on a button (between the predefined values)</i>
-						</li>
-					</ul>
-				</p>
+				<strong>Commands:</strong>
+				<ul>
+					<li>
+						<code>/press/bank/</code>&lt;page&gt;<code>/</code>&lt;bank&gt;
+						<br />
+						<i>Press and release a button (run both down and up actions)</i>
+					</li>
+					<li>
+						<code>/style/bank/</code>&lt;page&gt;<code>/</code>&lt;bank&gt;
+						<code>?bgcolor=</code>&lt;bgcolor HEX&gt;
+						<br />
+						<i>Change background color of button</i>
+					</li>
+					<li>
+						<code>/style/bank/</code>&lt;page&gt;<code>/</code>&lt;bank&gt;
+						<code>?color=</code>&lt;color HEX&gt;
+						<br />
+						<i>Change color of text on button</i>
+					</li>
+					<li>
+						<code>/style/bank/</code>&lt;page&gt;<code>/</code>&lt;bank&gt;
+						<code>?text=</code>&lt;text&gt;
+						<br />
+						<i>Change text on a button</i>
+					</li>
+					<li>
+						<code>/style/bank/</code>&lt;page&gt;<code>/</code>&lt;bank&gt;
+						<code>?size=</code>&lt;text size&gt;
+						<br />
+						<i>Change text size on a button (between the predefined values)</i>
+					</li>
+				</ul>
 
 				<p>
 					<strong>Examples</strong>
