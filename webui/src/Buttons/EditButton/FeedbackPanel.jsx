@@ -1,4 +1,4 @@
-import { CAlert, CButton, CForm, CFormGroup, CLabel } from '@coreui/react'
+import { CAlert, CButton, CForm, CFormGroup } from '@coreui/react'
 import { faSort, faTrash } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import React, { useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react'
@@ -300,7 +300,7 @@ function FeedbackManageStyles({ bankFeedbacksChanged, feedbackSpec, feedback, pa
 				<CForm>
 					<MyErrorBoundary>
 						<CFormGroup>
-							<label>Select properties</label>
+							<label>Change style properties</label>
 							<DropdownInputField
 								multiple={true}
 								definition={{ default: ['color', 'bgcolor'], choices: choices }}
