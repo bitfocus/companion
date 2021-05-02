@@ -301,7 +301,7 @@
 		"companion-module-middleatlantic-racklink": "github:bitfocus/companion-module-middleatlantic-racklink#v1.0.0",
 		"companion-module-modelighting-edin": "github:bitfocus/companion-module-modelighting-edin#v1.0.0",
 		"companion-module-modulo": "github:bitfocus/companion-module-modulo#v1.0.1",
-		"companion-module-motu-avb": "github:bitfocus/companion-module-motu-avb#v1.0.1",
+		"companion-module-motu-avb": "github:bitfocus/companion-module-motu-avb#v1.0.2",
 		"companion-module-msc-router": "github:bitfocus/companion-module-msc-router#v1.0.2",
 		"companion-module-multicamsystems-multicamsuite": "github:bitfocus/companion-module-multicamsystems-multicamsuite#v1.0.1",
 		"companion-module-neodarque-stagetimer2": "github:bitfocus/companion-module-neodarque-stagetimer2#v1.2.5",
