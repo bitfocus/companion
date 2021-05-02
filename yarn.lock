@@ -1816,6 +1816,12 @@ commist@^1.0.0:
   version "1.1.0"
   resolved "https://codeload.github.com/bitfocus/companion-module-cockos-reaper/tar.gz/12736ea2d8f67d8bca1d4d68b041bdb0dc3f27eb"
 
+"companion-module-connect-webcaster@github:bitfocus/companion-module-connect-webcaster#v1.0.0":
+  version "1.0.0"
+  resolved "https://codeload.github.com/bitfocus/companion-module-connect-webcaster/tar.gz/ef33a56dc53b7d7fefe65d4bea87bfaf2fd21872"
+  dependencies:
+    axios "^0.21.1"
+
 "companion-module-crystal-scte@github:bitfocus/companion-module-crystal-scte#v1.0.0":
   version "1.0.0"
   resolved "https://codeload.github.com/bitfocus/companion-module-crystal-scte/tar.gz/f141960577fb13394736df6d37dfa320e1459de4"
