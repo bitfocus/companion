@@ -2161,6 +2161,10 @@ commist@^1.0.0:
   version "1.0.0"
   resolved "https://codeload.github.com/bitfocus/companion-module-kramer-vs41h/tar.gz/ed647059bbc42d08605201dc197158efe1a6c7e1"
 
+"companion-module-leafcoders-titler@github:bitfocus/companion-module-leafcoders-titler#v1.0.0":
+  version "1.0.0"
+  resolved "https://codeload.github.com/bitfocus/companion-module-leafcoders-titler/tar.gz/ea96faaab6e08dac4cf956b114dfe57e17b02b49"
+
 "companion-module-lectrosonics-aspen@github:bitfocus/companion-module-lectrosonics-aspen#v1.0.0":
   version "1.0.0"
   resolved "https://codeload.github.com/bitfocus/companion-module-lectrosonics-aspen/tar.gz/84f0286c3818cd2b7269d02c267cdcebf037a633"
