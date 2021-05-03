@@ -1606,9 +1606,9 @@ commist@^1.0.0:
   version "1.0.0"
   resolved "https://codeload.github.com/bitfocus/companion-module-audiostrom-liveprofessor/tar.gz/863f264987520bb23a21c734ae618e31f818f66b"
 
-"companion-module-audivero-unityintercom-client@github:bitfocus/companion-module-audivero-unityintercom-client#v1.0.1":
-  version "1.0.1"
-  resolved "https://codeload.github.com/bitfocus/companion-module-audivero-unityintercom-client/tar.gz/0bb64e60c747591a44bc1d3c2e3139e9fa34bcec"
+"companion-module-audivero-unityintercom-client@github:bitfocus/companion-module-audivero-unityintercom-client#v1.0.2":
+  version "1.0.2"
+  resolved "https://codeload.github.com/bitfocus/companion-module-audivero-unityintercom-client/tar.gz/6a4f3e56bdec7a70df7480f7b0c5e4842350b5c3"
 
 "companion-module-avishop-hdbaset-matrix@github:bitfocus/companion-module-avishop-hdbaset-matrix#v1.0.1":
   version "1.0.1"
@@ -1707,9 +1707,9 @@ commist@^1.0.0:
   version "1.0.3"
   resolved "https://codeload.github.com/bitfocus/companion-module-birddog-visca/tar.gz/355a698b2550c66bffba3b2f19b52b7872435bc8"
 
-"companion-module-bitfocus-companion@github:bitfocus/companion-module-bitfocus-companion#v1.1.6":
-  version "1.1.6"
-  resolved "https://codeload.github.com/bitfocus/companion-module-bitfocus-companion/tar.gz/694a416742300cb0fbb1fb36770c54e4864a6e79"
+"companion-module-bitfocus-companion@github:bitfocus/companion-module-bitfocus-companion#v1.1.7":
+  version "1.1.7"
+  resolved "https://codeload.github.com/bitfocus/companion-module-bitfocus-companion/tar.gz/b9106467402c2797e5ceb01c3b8f50636efb2fd4"
 
 "companion-module-blackbox-boxilla@github:bitfocus/companion-module-blackbox-boxilla#v1.0.2":
   version "1.0.2"
@@ -1816,6 +1816,12 @@ commist@^1.0.0:
   version "1.1.0"
   resolved "https://codeload.github.com/bitfocus/companion-module-cockos-reaper/tar.gz/12736ea2d8f67d8bca1d4d68b041bdb0dc3f27eb"
 
+"companion-module-connect-webcaster@github:bitfocus/companion-module-connect-webcaster#v1.0.0":
+  version "1.0.0"
+  resolved "https://codeload.github.com/bitfocus/companion-module-connect-webcaster/tar.gz/ef33a56dc53b7d7fefe65d4bea87bfaf2fd21872"
+  dependencies:
+    axios "^0.21.1"
+
 "companion-module-crystal-scte@github:bitfocus/companion-module-crystal-scte#v1.0.0":
   version "1.0.0"
   resolved "https://codeload.github.com/bitfocus/companion-module-crystal-scte/tar.gz/f141960577fb13394736df6d37dfa320e1459de4"
@@ -1851,6 +1857,10 @@ commist@^1.0.0:
 "companion-module-datavideo-visca@github:bitfocus/companion-module-datavideo-visca#v1.0.3":
   version "1.0.3"
   resolved "https://codeload.github.com/bitfocus/companion-module-datavideo-visca/tar.gz/9daac733f2d770d499ad7ae19073c1198d0b055b"
+
+"companion-module-dcc-ex-commandstation@github:bitfocus/companion-module-dcc-ex-commandstation#v1.0.0":
+  version "1.0.0"
+  resolved "https://codeload.github.com/bitfocus/companion-module-dcc-ex-commandstation/tar.gz/b739afeecd87a7e92e3347a2476e461e2be7feb0"
 
 "companion-module-denon-dn-500bd-mkii@github:bitfocus/companion-module-denon-dn-500bd-mkii#v1.0.2":
   version "1.0.2"
@@ -1898,9 +1908,9 @@ commist@^1.0.0:
   version "1.1.0"
   resolved "https://codeload.github.com/bitfocus/companion-module-disguise/tar.gz/8a4cebf439d6627ae674dddd09d035bd64ced899"
 
-"companion-module-dolby-cinemaprocessor@github:bitfocus/companion-module-dolby-cinemaprocessor#v1.0.0":
-  version "1.0.0"
-  resolved "https://codeload.github.com/bitfocus/companion-module-dolby-cinemaprocessor/tar.gz/ead9965e1cc6da175596c5b5dfed8d7d7c56373f"
+"companion-module-dolby-cinemaprocessor@github:bitfocus/companion-module-dolby-cinemaprocessor#v1.1.0":
+  version "1.1.0"
+  resolved "https://codeload.github.com/bitfocus/companion-module-dolby-cinemaprocessor/tar.gz/ab1093635116c118616aa17ce6acca1ae9e6a4ce"
 
 "companion-module-draco-tera@github:bitfocus/companion-module-draco-tera#v1.0.4":
   version "1.0.4"
@@ -2263,9 +2273,9 @@ commist@^1.0.0:
   version "1.0.1"
   resolved "https://codeload.github.com/bitfocus/companion-module-modulo/tar.gz/a8cd7dfdb91a37acc4c1ad18cd18287fb4a31766"
 
-"companion-module-motu-avb@github:bitfocus/companion-module-motu-avb#v1.0.1":
-  version "1.0.1"
-  resolved "https://codeload.github.com/bitfocus/companion-module-motu-avb/tar.gz/0f0eba83e4fb71face9d2906348eb46bcdccfeb8"
+"companion-module-motu-avb@github:bitfocus/companion-module-motu-avb#v1.0.2":
+  version "1.0.2"
+  resolved "https://codeload.github.com/bitfocus/companion-module-motu-avb/tar.gz/7c73cf7a1131177f826f97f353d164e7af10abfe"
 
 "companion-module-msc-router@github:bitfocus/companion-module-msc-router#v1.0.2":
   version "1.0.2"
@@ -2326,9 +2336,9 @@ commist@^1.0.0:
   version "1.0.6"
   resolved "https://codeload.github.com/bitfocus/companion-module-novastar-controller/tar.gz/0efb9cfc858ab0d117f67e554ba51821f95225f9"
 
-"companion-module-obs-studio@github:bitfocus/companion-module-obs-studio#v1.0.18":
-  version "1.0.18"
-  resolved "https://codeload.github.com/bitfocus/companion-module-obs-studio/tar.gz/1b566bf528edbc5e4718fde403256cb95e55e58f"
+"companion-module-obs-studio@github:bitfocus/companion-module-obs-studio#v1.0.19":
+  version "1.0.19"
+  resolved "https://codeload.github.com/bitfocus/companion-module-obs-studio/tar.gz/426320b2c2b92c47e78e23c4df4ffacd79ed7562"
   dependencies:
     obs-websocket-js "^4.0.2"
 
@@ -2606,9 +2616,9 @@ commist@^1.0.0:
   dependencies:
     spotify-web-api-node "^5.0.1"
 
-"companion-module-studiocoast-vmix@github:bitfocus/companion-module-studiocoast-vmix#v1.2.18":
-  version "1.2.18"
-  resolved "https://codeload.github.com/bitfocus/companion-module-studiocoast-vmix/tar.gz/3dc1ab5a95c264ac1da84913eea780b37916df8f"
+"companion-module-studiocoast-vmix@github:bitfocus/companion-module-studiocoast-vmix#v1.2.19":
+  version "1.2.19"
+  resolved "https://codeload.github.com/bitfocus/companion-module-studiocoast-vmix/tar.gz/8d4d75b39f2268f44a584ea502efd860b21055a0"
   dependencies:
     lodash "^4.17.19"
     xml2js "^0.4.22"
@@ -2703,9 +2713,9 @@ commist@^1.0.0:
   version "1.0.5"
   resolved "https://codeload.github.com/bitfocus/companion-module-vicreo-variablelistener/tar.gz/8a5f8a8358de56fdd65aca97d423d77fc3b8031d"
 
-"companion-module-videolan-vlc@github:bitfocus/companion-module-videolan-vlc#v1.1.9":
-  version "1.1.9"
-  resolved "https://codeload.github.com/bitfocus/companion-module-videolan-vlc/tar.gz/d4b9fd59fbe6f53c941032d4634a1a607aaa412f"
+"companion-module-videolan-vlc@github:bitfocus/companion-module-videolan-vlc#v1.1.10":
+  version "1.1.10"
+  resolved "https://codeload.github.com/bitfocus/companion-module-videolan-vlc/tar.gz/c408ba1ca054bb5b5039d533ed881954844449ba"
 
 "companion-module-visualproductions-bstation2@github:bitfocus/companion-module-visualproductions-bstation2#v1.0.6":
   version "1.0.6"
