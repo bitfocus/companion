@@ -1,5 +1,10 @@
+/* eslint-disable import/first */
+
 import '@fontsource/roboto'
 import './App.scss'
+
+// polyfills
+require('intersection-observer')
 
 import React from 'react'
 import ReactDOM from 'react-dom'

@@ -38,7 +38,7 @@ export function GettingStarted() {
 	const html = useMemo(() => {
 		if (data) {
 			return {
-				__html: marked(data.markdown, { baseUrl: data.baseUrl, headerPrefix: 'header-' }),
+				__html: marked(data.markdown, { baseUrl: data.baseUrl }),
 			}
 		} else {
 			return null

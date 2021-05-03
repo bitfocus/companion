@@ -1,9 +1,17 @@
 import { CButton, CModal, CModalBody, CModalFooter, CModalHeader } from '@coreui/react'
-import { forwardRef, useCallback, useImperativeHandle, useState } from 'react'
+import { forwardRef, useCallback, useImperativeHandle, useRef, useState } from 'react'
 
 export const GenericConfirmModal = forwardRef(function GenericConfirmModal(_props, ref) {
 	const [data, setData] = useState(null)
 	const [show, setShow] = useState(false)
+
+	const buttonRef = useRef()
+
+	const buttonFocus = () => {
+		if (buttonRef.current) {
+			buttonRef.current.focus()
+		}
+	}
 
 	const doClose = useCallback(() => setShow(false), [])
 	const onClosed = useCallback(() => setData(null), [])
@@ -22,13 +30,16 @@ export const GenericConfirmModal = forwardRef(function GenericConfirmModal(_prop
 			show(title, message, buttonLabel, completeCallback) {
 				setData([title, message, buttonLabel, completeCallback])
 				setShow(true)
+
+				// Focus the button asap. It also gets focused once the open is complete
+				setTimeout(buttonFocus, 50)
 			},
 		}),
 		[]
 	)
 
 	return (
-		<CModal show={show} onClose={doClose} onClosed={onClosed}>
+		<CModal show={show} onClose={doClose} onClosed={onClosed} onOpened={buttonFocus}>
 			<CModalHeader closeButton>
 				<h5>{data?.[0]}</h5>
 			</CModalHeader>
@@ -39,7 +50,7 @@ export const GenericConfirmModal = forwardRef(function GenericConfirmModal(_prop
 				<CButton color="secondary" onClick={doClose}>
 					Cancel
 				</CButton>
-				<CButton color="primary" onClick={doAction}>
+				<CButton innerRef={buttonRef} color="primary" onClick={doAction}>
 					{data?.[2]}
 				</CButton>
 			</CModalFooter>

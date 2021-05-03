@@ -2,6 +2,7 @@ import React, { useCallback, useContext, useEffect, useMemo, useState } from 're
 import { CompanionContext } from '../util'
 import Tribute from 'tributejs'
 import { CInput } from '@coreui/react'
+import { decode } from 'html-entities'
 
 export function TextWithVariablesInputField({ definition, value, setValue }) {
 	const context = useContext(CompanionContext)
@@ -45,8 +46,9 @@ export function TextWithVariablesInputField({ definition, value, setValue }) {
 
 	const doOnChange = useCallback(
 		(e) => {
-			setTmpValue(e.currentTarget.value)
-			setValue(e.currentTarget.value)
+			const newValue = decode(e.currentTarget.value, { scope: 'strict' })
+			setTmpValue(newValue)
+			setValue(newValue)
 		},
 		[setValue]
 	)

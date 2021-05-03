@@ -5,6 +5,47 @@ export interface CompanionSystem extends EventEmitter {}
 
 export type InputValue = number | string | boolean
 
+export type CompanionBank = CompanionBankPage | CompanionBankPNG | CompanionBankPreset
+
+export interface CompanionBankPage {
+	style: 'pageup' | 'pagedown' | 'pagenum'
+}
+
+export type CompanionAlignment =
+	| 'left:top'
+	| 'center:top'
+	| 'right:top'
+	| 'left:center'
+	| 'center:center'
+	| 'right:center'
+	| 'left:bottom'
+	| 'center:bottom'
+	| 'right:bottom'
+
+export type CompanionTextSize = 'auto' | '7' | '14' | '18' | '24' | '30' | '44'
+
+export interface CompanionBankRequiredProps {
+	text: string
+	size: CompanionTextSize
+	color: number
+	bgcolor: number
+}
+export interface CompanionBankAdditionalProps {
+	alignment: CompanionAlignment
+	pngalignment: CompanionAlignment
+	png64?: string
+	latch: boolean
+	relative_delay: boolean
+}
+
+export interface CompanionBankPNG extends CompanionBankRequiredProps, CompanionBankAdditionalProps {
+	style: 'png'
+}
+
+export interface CompanionBankPreset extends CompanionBankRequiredProps, Partial<CompanionBankAdditionalProps> {
+	style: 'png' | 'text' // 'text' for backwards compatability
+}
+
 export interface CompanionAction {
 	label: string
 	options: SomeCompanionInputField[]
@@ -20,6 +61,11 @@ export interface CompanionActionEvent {
 
 export interface CompanionActionEventInfo {
 	deviceId: string | undefined
+	page: number
+	bank: number
+}
+
+export interface CompanionFeedbackEventInfo {
 	page: number
 	bank: number
 }
@@ -120,20 +166,18 @@ export interface CompanionFeedback {
 	label: string
 	description: string
 	options: SomeCompanionInputField[]
-	callback?: (feedback: CompanionFeedbackEvent) => CompanionFeedbackResult
+	callback?: (
+		feedback: CompanionFeedbackEvent,
+		bank: CompanionBankPNG,
+		info: CompanionFeedbackEventInfo
+	) => CompanionFeedbackResult
 	subscribe?: (feedback: CompanionFeedbackEvent) => void
 	unsubscribe?: (feedback: CompanionFeedbackEvent) => void
 }
 export interface CompanionPreset {
 	category: string
 	label: string
-	bank: {
-		style: 'text'
-		text: string
-		size: 'auto' | '7' | '14' | '18' | '24' | '30' | '44'
-		color: number
-		bgcolor: number
-	}
+	bank: CompanionBankPreset
 	feedbacks: Array<{
 		type: string
 		options: { [key: string]: InputValue | undefined }

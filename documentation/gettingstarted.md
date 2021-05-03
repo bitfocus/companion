@@ -4,47 +4,47 @@ This article is an introduction to Companion’s basic principles and user inter
 
 ## Table of Content
 
-- [Getting started](#header-getting-started)
-  - [Before you open Companion](#header-before-you-open-companion)
-  - [Start the server](#header-start-the-server)
-  - [The user interface](#header-the-user-interface)
-- [Sidebar](#header-sidebar)
-  - [Community Links](#header-community-links)
-  - [Emulator](#header-emulator)
-  - [Web buttons](#header-web-buttons)
-  - [Mobile buttons and New Web / Mobile buttons](#header-mobile-buttons-and-new-web--mobile-buttons)
-- [Main admin controls](#header-main-admin-controls)
-  - [1. Connections](#header-1-connections)
-  - [2. Buttons](#header-2-buttons)
-    - [Latch / Toggle](#header-latch--toggle)
-    - [Delays](#header-delays)
-    - [Key actions](#header-key-actions)
-    - [Internal actions](#header-internal-actions)
-    - [Instance feedback](#header-instance-feedback)
-    - [Button indicators](#header-button-indicators)
-  - [3. Surfaces](#header-3-surfaces)
-    - [Surface settings](#header-surface-settings)
-  - [4. Triggers](#header-4-triggers)
-    - [Trigger Setup](#header-trigger-setup)
-    - [Trigger Types](#header-trigger-types)
-  - [5. Settings](#header-5-settings)
-    - [Navigation Buttons](#header-navigation-buttons)
-    - [Devices](#header-devices)
-    - [PIN Lockout](#header-pin-lockout)
-    - [RossTalk](#header-rosstalk)
-    - [Artnet Listener](#header-artnet-listener)
-  - [6. Log](#header-6-log)
-- [Secondary admin controls](#header-secondary-admin-controls)
-  - [1. Presets](#header-1-presets)
-  - [2. Dynamic variables](#header-2-dynamic-variables)
-  - [3. Import / Export](#header-3-import--export)
-- [Remote Control](#header-remote-control)
-  - [TCP / UDP Control](#header-tcp--udp-control)
-  - [HTTP Remote Control](#header-http-remote-control)
-  - [OSC Control](#header-osc-control)
-  - [Artnet / DMX Control](#header-artnet--dmx-control)
-  - [RossTalk Control](#header-rosstalk-control)
-- [Modules](#header-modules)
+- [Getting started](#getting-started)
+  - [Before you open Companion](#before-you-open-companion)
+  - [Start the server](#start-the-server)
+  - [The user interface](#the-user-interface)
+- [Sidebar](#sidebar)
+  - [Community Links](#community-links)
+  - [Emulator](#emulator)
+  - [Web buttons](#web-buttons)
+  - [Mobile buttons and New Web / Mobile buttons](#mobile-buttons-and-new-web--mobile-buttons)
+- [Main admin controls](#main-admin-controls)
+  - [1. Connections](#1-connections)
+  - [2. Buttons](#2-buttons)
+    - [Latch / Toggle](#latch--toggle)
+    - [Delays](#delays)
+    - [Key actions](#key-actions)
+    - [Internal actions](#internal-actions)
+    - [Instance feedback](#instance-feedback)
+    - [Button indicators](#button-indicators)
+  - [3. Surfaces](#3-surfaces)
+    - [Surface settings](#surface-settings)
+  - [4. Triggers](#4-triggers)
+    - [Trigger Setup](#trigger-setup)
+    - [Trigger Types](#trigger-types)
+  - [5. Settings](#5-settings)
+    - [Navigation Buttons](#navigation-buttons)
+    - [Devices](#devices)
+    - [PIN Lockout](#pin-lockout)
+    - [RossTalk](#rosstalk)
+    - [Artnet Listener](#artnet-listener)
+  - [6. Log](#6-log)
+- [Secondary admin controls](#secondary-admin-controls)
+  - [1. Presets](#1-presets)
+  - [2. Dynamic variables](#2-dynamic-variables)
+  - [3. Import / Export](#3-import--export)
+- [Remote Control](#remote-control)
+  - [TCP / UDP Control](#tcp--udp-control)
+  - [HTTP Remote Control](#http-remote-control)
+  - [OSC Control](#osc-control)
+  - [Artnet / DMX Control](#artnet--dmx-control)
+  - [RossTalk Control](#rosstalk-control)
+- [Modules](#modules)
 
 ## Getting started
 
@@ -139,7 +139,7 @@ Each device needs to be a separate instance. If you have two separate Barco E2, 
 
 ![Instance](images/instance.png?raw=true 'Instance')
 
-After an instance has been created and successfully configured, it may provide you with a list of [Dynamic Variables](#header-dynamic-variables) you can use when configuring your button. This will be described below. **Please note** these have moved places since Companion 2.1.2, and they are now located in their own tab under **Buttons**
+After an instance has been created and successfully configured, it may provide you with a list of [Dynamic Variables](#2-dynamic-variables) you can use when configuring your button. This will be described below. **Please note** these have moved places since Companion 2.1.2, and they are now located in their own tab under **Buttons**
 
 If something is missing, please make a support request on the [GitHub page by creating an issue/feature request](https://github.com/bitfocus/companion/issues) describing the feature, use cases, and providing documentation, if needed, for the implementation.
 
@@ -170,7 +170,7 @@ There are also two buttons for resetting the page:
 - **Wipe page**: Erases all buttons on the page and adds the navigation buttons.
 - **Reset page buttons**: Leaves the buttons intact, but adds the navigation buttons.
 
-**Export page** exports just this page's buttons to a download which can later be imported to another page or a different Companion config. See the [Import / Export](#header-import--export) section below.
+**Export page** exports just this page's buttons to a download which can later be imported to another page or a different Companion config. See the [Import / Export](#3-import--export) section below.
 
 **Making buttons**
 
@@ -195,8 +195,8 @@ There are several ways you can make your button stand out, including:
 - Setting the alignment of the PNG image.
 - Changing the text's color.
 - Changing the button's background color.
-- Change whether it's a standard button or a [Latch / Toggle](#header-latch--toggle) button.
-- Change whether to use absolute delays or [Relative Delays](#header-delays).
+- Change whether it's a standard button or a [Latch / Toggle](#latch--toggle) button.
+- Change whether to use absolute delays or [Relative Delays](#delays).
 
 **Creating a button**
 
@@ -214,7 +214,7 @@ You can add multiple actions and set delay times for each action. Delay times ar
 
 **Creating a PNG button**
 
-Make a 72x58px PNG image or use a 72x72px PNG, but it will get cropped to fit 72x58px by the topbar. Unless you disable the bar in the settings tab. See the [Settings](#header-5-settings) section below.
+Make a 72x58px PNG image or use a 72x72px PNG, but it will get cropped to fit 72x58px by the topbar. Unless you disable the bar in the settings tab. See the [Settings](#5-settings) section below.
 
 Click the red **Browse** button and choose the PNG file you want to use. The picture will appear on the top right preview of the button. Text can be applied over the image.
 
@@ -231,7 +231,7 @@ When a button is pressed and is latched, its header will appear solid.
 _Button latch off / on with topbar_
 
 When the topbar is hidden and a button is pressed and is latched, its border will appear solid yellow.
-Again see the [Settings](#header-5-settings) section below to change this.
+Again see the [Settings](#5-settings) section below to change this.
 
 ![Button latch off without topbar](images/button-latch-off-without-topbar.png?raw=true 'Button latch off without topbar') ![Button latch on without topbar](images/button-latch-on-without-topbar.png?raw=true 'Button latch on without topbar')  
 _Button latch off / on without topbar_
@@ -310,12 +310,12 @@ The feedbacks can also be reordered by grabbing the sort icon next and dragging 
 
 There are several button indicators you should be familiar with:
 
-| Button                                                                                   | Description                                                                                                                 |
-| ---------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
-| ![Button latch off](images/button-latch-off-with-topbar.png?raw=true 'Button latch off') | An unpressed button.                                                                                                        |
-| ![Button error](images/button-error.png?raw=true 'Button error')                         | One or more instances referenced in this button's actions are in an error state.                                            |
-| ![Button latch on](images/button-latch-on-with-topbar.png?raw=true 'Button latch on')    | The button was pressed (if shown briefly) or button is latched (see [Latch / Toggle](#header-latch--toggle) buttons above). |
-| ![Button delay](images/button-delay.png?raw=true 'Button delay')                         | There are delayed actions queued to run for this button (see [Delays](#header-delays) above).                               |
+| Button                                                                                   | Description                                                                                                          |
+| ---------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------- |
+| ![Button latch off](images/button-latch-off-with-topbar.png?raw=true 'Button latch off') | An unpressed button.                                                                                                 |
+| ![Button error](images/button-error.png?raw=true 'Button error')                         | One or more instances referenced in this button's actions are in an error state.                                     |
+| ![Button latch on](images/button-latch-on-with-topbar.png?raw=true 'Button latch on')    | The button was pressed (if shown briefly) or button is latched (see [Latch / Toggle](#latch--toggle) buttons above). |
+| ![Button delay](images/button-delay.png?raw=true 'Button delay')                         | There are delayed actions queued to run for this button (see [Delays](#delays) above).                               |
 
 ---
 
@@ -519,7 +519,7 @@ _A line break can be forced by putting `\n` where you want the line break to be.
 
 This tab lets you import or export your configuration to a `.companionconfig` file, which can be used to backup your configuration or move it to a new computer. You can also choose to import just a single page from your file.
 
-If you only want to export a single page, this can be done from the primary [buttons](#header-2-buttons) page via the `Export Page` button.
+If you only want to export a single page, this can be done from the primary [buttons](#2-buttons) page via the `Export Page` button.
 
 You're also able to completely reset your configuration here as well.
 

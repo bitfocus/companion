@@ -74,15 +74,23 @@ export function ColorInputField({ definition, value, setValue, setValid }) {
 				<div style={styles.color} />
 			</div>
 			{displayPicker ? (
-				<div style={styles.popover}>
-					<SketchPicker
-						color={color}
-						onChange={onChange}
-						onChangeComplete={onChangeComplete}
-						disableAlpha={true}
-						presetColors={PICKER_COLORS}
-					/>
-				</div>
+				<>
+					<div style={styles.popover}>
+						<SketchPicker
+							color={color}
+							onChange={onChange}
+							onChangeComplete={onChangeComplete}
+							disableAlpha={true}
+							presetColors={PICKER_COLORS}
+						/>
+					</div>
+					<div style={{ position: 'absolute' }}>
+						<div
+							style={{ position: 'fixed', top: '0', right: '0', bottom: '0', left: '0' }}
+							onClick={handleClick}
+						></div>
+					</div>
+				</>
 			) : null}
 		</div>
 	)
