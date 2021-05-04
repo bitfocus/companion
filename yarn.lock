@@ -2324,6 +2324,10 @@ commist@^1.0.0:
   version "1.0.0"
   resolved "https://codeload.github.com/bitfocus/companion-module-nexo-nxamp/tar.gz/4ce5aee1d599fdfb3c1f86401c0602502864526a"
 
+"companion-module-nobe-omniscope@github:bitfocus/companion-module-nobe-omniscope#v1.0.0":
+  version "1.0.0"
+  resolved "https://codeload.github.com/bitfocus/companion-module-nobe-omniscope/tar.gz/f05ab696fe550052c035cafe6dd1cc254d336656"
+
 "companion-module-noismada-octopuslistener@github:bitfocus/companion-module-noismada-octopuslistener#v1.0.2":
   version "1.0.2"
   resolved "https://codeload.github.com/bitfocus/companion-module-noismada-octopuslistener/tar.gz/3d11e1b210f1771f6cd68a253efa30e0122f6f00"
