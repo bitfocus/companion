@@ -200,7 +200,7 @@
 		"companion-module-christie-spyder": "github:bitfocus/companion-module-christie-spyder#v1.0.0",
 		"companion-module-christie-wd": "github:bitfocus/companion-module-christie-wd#v1.0.6",
 		"companion-module-cisco-cms": "github:bitfocus/companion-module-cisco-cms#v1.0.1",
-		"companion-module-cisco-webex-websocket": "github:bitfocus/companion-module-cisco-webex-websocket#v1.0.0",
+		"companion-module-cisco-webex-websocket": "github:bitfocus/companion-module-cisco-webex-websocket#v1.0.1",
 		"companion-module-cockos-reaper": "github:bitfocus/companion-module-cockos-reaper#v1.1.0",
 		"companion-module-connect-webcaster": "github:bitfocus/companion-module-connect-webcaster#v1.0.0",
 		"companion-module-crystal-scte": "github:bitfocus/companion-module-crystal-scte#v1.0.0",
