@@ -2382,9 +2382,9 @@ commist@^1.0.0:
   version "1.0.0"
   resolved "https://codeload.github.com/bitfocus/companion-module-orfast-ndi/tar.gz/32c28f886b07a7da3aed8a38c6a3a71881c8543e"
 
-"companion-module-panasonic-avhs@github:bitfocus/companion-module-panasonic-avhs#v1.0.1":
-  version "1.0.1"
-  resolved "https://codeload.github.com/bitfocus/companion-module-panasonic-avhs/tar.gz/2134927b5c0a8e3e89b512cd61721bbdb5d8256f"
+"companion-module-panasonic-avhs@github:bitfocus/companion-module-panasonic-avhs#v1.0.2":
+  version "1.0.2"
+  resolved "https://codeload.github.com/bitfocus/companion-module-panasonic-avhs/tar.gz/24a03dd61bf512a5a835cbd16c646f176f45a4fb"
 
 "companion-module-panasonic-camera-controller@github:bitfocus/companion-module-panasonic-camera-controller#v1.0.3":
   version "1.0.3"
