@@ -1760,6 +1760,10 @@ commist@^1.0.0:
   version "1.3.0"
   resolved "https://codeload.github.com/bitfocus/companion-module-bmd-videohub/tar.gz/eacc96e714a9c0211cab2f29a73f923ff9755c29"
 
+"companion-module-bmd-webpresenterhd@github:bitfocus/companion-module-bmd-webpresenterhd#v1.0.0":
+  version "1.0.0"
+  resolved "https://codeload.github.com/bitfocus/companion-module-bmd-webpresenterhd/tar.gz/d96b31ef4fbcb77d54a59951e97f5b619d9fb3e2"
+
 "companion-module-borealsystems-director@github:bitfocus/companion-module-borealsystems-director#v1.0.0":
   version "1.0.0"
   resolved "https://codeload.github.com/bitfocus/companion-module-borealsystems-director/tar.gz/68aa2e20eebd67367c71ea1e30260988508eb854"
