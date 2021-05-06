@@ -2474,9 +2474,9 @@ commist@^1.0.0:
   version "1.0.4"
   resolved "https://codeload.github.com/bitfocus/companion-module-resolume-arena/tar.gz/a1f936ceda071e113b6cf537c8e58d429851326f"
 
-"companion-module-rocosoft-ptzjoy@github:bitfocus/companion-module-rocosoft-ptzjoy#v1.0.0":
-  version "1.0.0"
-  resolved "https://codeload.github.com/bitfocus/companion-module-rocosoft-ptzjoy/tar.gz/b4aded2f5c5d3dcd510dbda623f60122ccaf6a43"
+"companion-module-rocosoft-ptzjoy@github:bitfocus/companion-module-rocosoft-ptzjoy#v1.0.1":
+  version "1.0.1"
+  resolved "https://codeload.github.com/bitfocus/companion-module-rocosoft-ptzjoy/tar.gz/91d8b4741b87fd4f647530eb77e32743bea4edbb"
 
 "companion-module-roku-tv@github:bitfocus/companion-module-roku-tv#v1.0.1":
   version "1.0.1"
