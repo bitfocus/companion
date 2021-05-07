@@ -1637,6 +1637,12 @@ commist@^1.0.0:
   version "1.0.2"
   resolved "https://codeload.github.com/bitfocus/companion-module-avstumpfl-pixera/tar.gz/325859d6596422bdc3be256231964efc4201464f"
 
+"companion-module-axis-ptz@github:bitfocus/companion-module-axis-ptz#v1.0.0":
+  version "1.0.0"
+  resolved "https://codeload.github.com/bitfocus/companion-module-axis-ptz/tar.gz/fa5bca69cd8017d98dfc903c0c853896186a7854"
+  dependencies:
+    request "^2.85.0"
+
 "companion-module-barco-dcs@github:bitfocus/companion-module-barco-dcs#v1.0.4":
   version "1.0.4"
   resolved "https://codeload.github.com/bitfocus/companion-module-barco-dcs/tar.gz/a020f5152e5ec88a4aba091e1c246308e1271d94"
