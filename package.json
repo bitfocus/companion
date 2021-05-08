@@ -121,12 +121,12 @@
 	"license": "MIT",
 	"devDependencies": {
 		"asar": "^3.0.3",
-		"aws-sdk": "^2.783.0",
-		"chai": "^4.2.0",
+		"aws-sdk": "^2.903.0",
+		"chai": "^4.3.4",
 		"chai-fs": "^2.0.0",
 		"cross-env": "^7.0.3",
 		"electron": "^11.3.0",
-		"electron-builder": "^22.10.5",
+		"electron-builder": "^22.11.1",
 		"mocha": "^6.2.3",
 		"nodemon": "^2.0.7",
 		"p-all": "^3.0.0",
@@ -415,7 +415,7 @@
 		"elgato-stream-deck": "^4.0.1",
 		"emberplus-connection": "^0.0.4",
 		"express": "^4.16.3",
-		"find-process": "1.4.3",
+		"find-process": "1.4.4",
 		"fs-extra": "^9.0.1",
 		"infinitton-idisplay": "^1.0.5",
 		"lodash": "^4.17.20",
@@ -429,9 +429,9 @@
 		"pngjs": "^3.3.3",
 		"sharp": "^0.27.2",
 		"shortid": "^2.2.16",
-		"socket.io": "^4.0.0",
+		"socket.io": "^4.0.2",
 		"strip-ansi": "^5.2.0",
-		"websocket": "^1.0.32"
+		"websocket": "^1.0.34"
 	},
 	"collective": {
 		"type": "donorbox",
@@ -442,7 +442,6 @@
 	},
 	"resolutions": {
 		"infinitton-idisplay/node-hid": "^2.1.1",
-		"electron-builder/**/app-builder-bin": "3.5.13",
 		"**/osc/serialport": "^9.0.7"
 	}
 }
