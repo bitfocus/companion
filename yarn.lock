@@ -376,15 +376,10 @@
   resolved "https://registry.yarnpkg.com/@types/node/-/node-14.14.35.tgz#42c953a4e2b18ab931f72477e7012172f4ffa313"
   integrity sha512-Lt+wj8NVPx0zUmUwumiVXapmaLUcAk3yPuHCFVXras9k5VT9TdhJqKqGVUQCD60OTMCl0qxJ57OiTL0Mic3Iag==
 
-"@types/node@^12.0.12", "@types/node@^12.0.4", "@types/node@^12.19.14", "@types/node@^12.19.3":
-  version "12.20.5"
-  resolved "https://registry.yarnpkg.com/@types/node/-/node-12.20.5.tgz#4ca82a766f05c359fd6c77505007e5a272f4bb9b"
-  integrity sha512-5Oy7tYZnu3a4pnJ//d4yVvOImExl4Vtwf0D40iKUlU+XlUsyV9iyFWyCFlwy489b72FMAik/EFwRkNLjjOdSPg==
-
-"@types/node@^12.19.4":
-  version "12.20.10"
-  resolved "https://registry.yarnpkg.com/@types/node/-/node-12.20.10.tgz#4dcb8a85a8f1211acafb88d72fafc7e3d2685583"
-  integrity sha512-TxCmnSSppKBBOzYzPR2BR25YlX5Oay8z2XGwFBInuA/Co0V9xJhLlW4kjbxKtgeNo3NOMbQP1A5Rc03y+XecPw==
+"@types/node@^12.0.12", "@types/node@^12.0.4", "@types/node@^12.19.14", "@types/node@^12.19.3", "@types/node@^12.19.4", "@types/node@^12.20.12":
+  version "12.20.12"
+  resolved "https://registry.yarnpkg.com/@types/node/-/node-12.20.12.tgz#fd9c1c2cfab536a2383ed1ef70f94adea743a226"
+  integrity sha512-KQZ1al2hKOONAs2MFv+yTQP1LkDWMrRJ9YCVRalXltOfXsBmH5IownLxQaiq0lnAHwAViLnh2aTYqrPcRGEbgg==
 
 "@types/node@^7.0.4":
   version "7.10.14"
@@ -425,10 +420,10 @@
   resolved "https://registry.yarnpkg.com/@types/verror/-/verror-1.10.4.tgz#805c0612b3a0c124cf99f517364142946b74ba3b"
   integrity sha512-OjJdqx6QlbyZw9LShPwRW+Kmiegeg3eWNI41MQQKaG3vjdU2L9SRElntM51HmHBY1cu7izxQJ1lMYioQh3XMBg==
 
-"@types/ws@^7.2.9":
-  version "7.4.0"
-  resolved "https://registry.yarnpkg.com/@types/ws/-/ws-7.4.0.tgz#499690ea08736e05a8186113dac37769ab251a0e"
-  integrity sha512-Y29uQ3Uy+58bZrFLhX36hcI3Np37nqWE7ky5tjiDoy1GDZnIwVxS0CgF+s+1bXMzjKBFy+fqaRfb708iNzdinw==
+"@types/ws@^7.4.2":
+  version "7.4.2"
+  resolved "https://registry.yarnpkg.com/@types/ws/-/ws-7.4.2.tgz#bfe739b5f8b3a39742605fbe415ae7e88ee614c8"
+  integrity sha512-PbeN0Eydl7LQl4OIav29YmkO2LxbVuz3nZD/kb19lOS+wLgIkRbWMNmU/QQR7ABpOJ7D7xDOU8co7iohObewrw==
   dependencies:
     "@types/node" "*"
 
@@ -2117,14 +2112,14 @@ commist@^1.0.0:
   dependencies:
     holographics-client-sdk "^1.6.1"
 
-"companion-module-homeassistant-server@github:bitfocus/companion-module-homeassistant-server#v0.3.1":
-  version "0.3.1"
-  resolved "https://codeload.github.com/bitfocus/companion-module-homeassistant-server/tar.gz/6d66821404ef2a5b6f92d2dd77fa007b7193b22f"
+"companion-module-homeassistant-server@github:bitfocus/companion-module-homeassistant-server#v0.4.0":
+  version "0.4.0"
+  resolved "https://codeload.github.com/bitfocus/companion-module-homeassistant-server/tar.gz/3a98b2e21bf3f916100ecd51f0ed44ffb9a02d8b"
   dependencies:
-    "@types/node" "^12.19.3"
-    "@types/ws" "^7.2.9"
-    home-assistant-js-websocket "^5.7.0"
-    ws "^7.3.1"
+    "@types/node" "^12.20.12"
+    "@types/ws" "^7.4.2"
+    home-assistant-js-websocket "^5.9.0"
+    ws "^7.4.5"
 
 "companion-module-ifelseware-avplayback@github:bitfocus/companion-module-ifelseware-avplayback#v1.0.1":
   version "1.0.1"
@@ -2877,15 +2872,10 @@ copy-to@^2.0.1:
   resolved "https://registry.yarnpkg.com/copy-to/-/copy-to-2.0.1.tgz#2680fbb8068a48d08656b6098092bdafc906f4a5"
   integrity sha1-JoD7uAaKSNCGVrYJgJK9r8kG9KU=
 
-core-js@^3.4.8:
+core-js@^3.4.8, core-js@^3.6.5:
   version "3.11.3"
   resolved "https://registry.yarnpkg.com/core-js/-/core-js-3.11.3.tgz#2835b1f4d10f6d0400bf820cfe6fe64ad067dd3f"
   integrity sha512-DFEW9BllWw781Op5KdYGtXfj3s9Cmykzt16bY6elaVuqXHCUwF/5pv0H3IJ7/I3BGjK7OeU+GrjD1ChCkBJPuA==
-
-core-js@^3.6.5:
-  version "3.6.5"
-  resolved "https://registry.yarnpkg.com/core-js/-/core-js-3.6.5.tgz#7395dc273af37fb2e50e9bd3d9fe841285231d1a"
-  integrity sha512-vZVEEwZoIsI+vPEuoF9Iqf5H7/M3eeQqWlQnYa8FSKKePuYTf5MWnxb5SDAzCa60b3JBRS5g9b+Dq7b1y/RCrA==
 
 core-util-is@1.0.2, core-util-is@~1.0.0:
   version "1.0.2"
@@ -4463,7 +4453,7 @@ holographics-client-sdk@^1.6.1:
     socket.io "^2.2.0"
     url-parse "^1.4.4"
 
-home-assistant-js-websocket@^5.7.0:
+home-assistant-js-websocket@^5.9.0:
   version "5.9.0"
   resolved "https://registry.yarnpkg.com/home-assistant-js-websocket/-/home-assistant-js-websocket-5.9.0.tgz#85f73cc7aa23362e93d7e8208026fbcf25934022"
   integrity sha512-HSAhX+s2JgsE77sYKKqcNsukiO6Zm4CcCIwugq17MwHcEyLoecChsbQtgtbvg1dHctUAk+IHxuZ0JBx10B1YGQ==
@@ -5272,12 +5262,7 @@ lodash.padstart@^4.1.0:
   resolved "https://registry.yarnpkg.com/lodash.padstart/-/lodash.padstart-4.6.1.tgz#d2e3eebff0d9d39ad50f5cbd1b52a7bce6bb611b"
   integrity sha1-0uPuv/DZ05rVD1y9G1KnvOa7YRs=
 
-lodash@^4, lodash@^4.17.10, lodash@^4.17.15, lodash@^4.17.20:
-  version "4.17.20"
-  resolved "https://registry.yarnpkg.com/lodash/-/lodash-4.17.20.tgz#b44a9b6297bcb698f1c51a3545a2b3b368d59c52"
-  integrity sha512-PlhdFcillOINfeV7Ni6oF1TAEayyZBoZ8bcshTHqOYJYlrqzRK5hagpagky5o4HfCzzd1TRkXPMFq6cKk9rGmA==
-
-lodash@^4.17.14, lodash@^4.17.19:
+lodash@^4, lodash@^4.17.10, lodash@^4.17.14, lodash@^4.17.15, lodash@^4.17.19, lodash@^4.17.20:
   version "4.17.21"
   resolved "https://registry.yarnpkg.com/lodash/-/lodash-4.17.21.tgz#679591c564c3bffaae8454cf0b3df370c3d6911c"
   integrity sha512-v2kDEe57lecTulaDIuNTPy3Ry4gLGJ6Z1O3vE1krgXZNrsQ+LFTGHVxVjcXPs17LhbZVGedAJv8XZ1tvj5FvSg==
@@ -8121,10 +8106,10 @@ ws@^3.2.0:
     safe-buffer "~5.1.0"
     ultron "~1.1.0"
 
-ws@^7.2.0, ws@^7.3.1, ws@^7.4.1, ws@^7.4.4, ws@~7.4.2:
-  version "7.4.4"
-  resolved "https://registry.yarnpkg.com/ws/-/ws-7.4.4.tgz#383bc9742cb202292c9077ceab6f6047b17f2d59"
-  integrity sha512-Qm8k8ojNQIMx7S+Zp8u/uHOx7Qazv3Yv4q68MiWWWOJhiwG5W3x7iqmRtJo8xxrciZUY4vRxUTJCKuRnF28ZZw==
+ws@^7.2.0, ws@^7.4.1, ws@^7.4.4, ws@^7.4.5, ws@~7.4.2:
+  version "7.4.5"
+  resolved "https://registry.yarnpkg.com/ws/-/ws-7.4.5.tgz#a484dd851e9beb6fdb420027e3885e8ce48986c1"
+  integrity sha512-xzyu3hFvomRfXKH8vOFMU3OguG6oOvhXMo3xsGy3xWExqaM2dxBbVxuD99O7m3ZUFMvvscsZDqxfgMaRr/Nr1g==
 
 ws@~6.1.0:
   version "6.1.4"
