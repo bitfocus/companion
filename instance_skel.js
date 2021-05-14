@@ -196,6 +196,34 @@ instance.prototype.saveConfig = function () {
 	self.system.emit('instance_config_put', self.id, self.config, true)
 }
 
+instance.prototype.addUpgradeToBooleanFeedbackScript = function (upgrade_map) {
+	var self = this
+
+	self.addUpgradeScript(function (config, actions, release_cctions, feedbacks) {
+		for (const feedback of feedbacks) {
+			let upgrade_rules = upgrade_map[feedback.type]
+			if (upgrade_rules === true) {
+				// These are some automated built in rules. They can help make it easier to migrate
+				upgrade_rules = {
+					bg: 'bgcolor',
+					fg: 'color',
+				}
+			}
+
+			if (upgrade_rules) {
+				if (!feedback.style) feedback.style = {}
+
+				for (const [option_key, style_key] of Object.entries(upgrade_rules)) {
+					if (feedback.options[option_key] !== undefined) {
+						feedback.style[style_key] = feedback.options[option_key]
+						delete feedback.options[option_key]
+					}
+				}
+			}
+		}
+	})
+}
+
 instance.prototype.addUpgradeScript = function (cb) {
 	var self = this
 
