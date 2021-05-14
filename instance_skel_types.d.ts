@@ -222,6 +222,16 @@ export type CompanionUpgradeScript<TConfig> = (
 	feedbacks: CompanionMigrationFeedback[]
 ) => boolean
 
+export interface CompanionUpgradeToBooleanFeedbackMap {
+	[feedback_id: string]:
+		| true
+		| {
+				// Option name to style property
+				[option_key: string]: 'text' | 'size' | 'color' | 'bgcolor' | 'alignment' | 'pngalignment' | 'png64'
+		  }
+		| undefined
+}
+
 export interface CompanionCoreInstanceconfig {
 	instance_type: string
 	label: string

@@ -9,6 +9,7 @@ import {
 	CompanionFeedbackEvent,
 	CompanionFeedbackResult,
 	CompanionUpgradeScript,
+	CompanionUpgradeToBooleanFeedbackMap,
 	CompanionActionEventInfo,
 	CompanionFeedbackEventInfo,
 } from './instance_skel_types'
@@ -67,6 +68,12 @@ declare abstract class InstanceSkel<TConfig> {
 	saveConfig(): void
 
 	addUpgradeScript(fcn: CompanionUpgradeScript<TConfig>): void
+	/**
+	 * A helper script to automate the bulk of the process to upgrade feedbacks from 'advanced' to 'boolean'.
+	 * There are some built in rules for properties names based on the most common cases
+	 * @param upgradeMap The feedbacks to upgrade and the properties to convert
+	 */
+	addUpgradeToBooleanFeedbackScript(upgradeMap: CompanionUpgradeToBooleanFeedbackMap): void
 
 	setActions(actions: CompanionActions): void
 	setVariableDefinitions(variables: CompanionVariable[]): void
