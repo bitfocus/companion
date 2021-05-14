@@ -1703,12 +1703,13 @@ commist@^1.0.0:
   version "1.0.0"
   resolved "https://codeload.github.com/bitfocus/companion-module-blackdiamondvideo-phantom800/tar.gz/850a80132d8dba3da7756b743e56c871648cb694"
 
-"companion-module-bmd-atem@github:bitfocus/companion-module-bmd-atem#v2.9.3":
-  version "2.9.3"
-  resolved "https://codeload.github.com/bitfocus/companion-module-bmd-atem/tar.gz/29a58ee9fcab6b57cc824f63d537cb2be9ae5a2b"
+"companion-module-bmd-atem@github:bitfocus/companion-module-bmd-atem#v2.10.0":
+  version "2.10.0"
+  resolved "https://codeload.github.com/bitfocus/companion-module-bmd-atem/tar.gz/961aefd75443d9794ddb7e2283b15619f08b6e31"
   dependencies:
     "@types/node" "^12.19.14"
     atem-connection "2.3.0-nightly-wip-update-threadedclass-20210313-231347-ec8d035.0"
+    type-fest "^1.1.1"
 
 "companion-module-bmd-hyperdeck@github:bitfocus/companion-module-bmd-hyperdeck#v1.2.1":
   version "1.2.1"
