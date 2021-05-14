@@ -5,6 +5,8 @@ lib/Resources/SatelliteProtocol.js
 electron-output/
 webui/package.json
 webui/build/
+webui/public/legacy
 /LICENSE.md
 module-local-dev
 documentation/jsdoc/
+docs/*

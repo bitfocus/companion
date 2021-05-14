@@ -6,6 +6,31 @@ export function PNGInputField({ definition, onSelect, onError }) {
 
 	const apiIsSupported = !!(window.File && window.FileReader && window.FileList && window.Blob)
 
+	const imageResize = (img, maxWidth, maxHeight) => {
+		const canvas = document.createElement('canvas')
+		let width = img.width
+		let height = img.height
+
+		if (width >= height) {
+			if (width > maxWidth) {
+				height *= maxWidth / width
+				width = maxWidth
+			}
+		} else if (width < height) {
+			if (height > maxHeight) {
+				width *= maxHeight / height
+				height = maxHeight
+			}
+		}
+
+		canvas.width = width
+		canvas.height = height
+
+		const ctx = canvas.getContext('2d')
+		ctx.drawImage(img, 0, 0, width, height)
+		return canvas.toDataURL()
+	}
+
 	const onClick = useCallback(() => {
 		onError(null)
 		inputRef.current.click()
@@ -30,7 +55,10 @@ export function PNGInputField({ definition, onSelect, onError }) {
 
 					img.onload = () => {
 						// image is loaded; sizes are available
-						if (definition?.min && (img.width < definition.min.width || img.height < definition.min.height)) {
+						if (definition?.max && (img.height > definition.max.height || img.width > definition.max.width)) {
+							onError(null)
+							onSelect(imageResize(img, definition.max.width, definition.max.height), newFiles[0].name)
+						} else if (definition?.min && (img.width < definition.min.width || img.height < definition.min.height)) {
 							onError(`Image dimensions must be at least ${definition.min.width}x${definition.min.height}`)
 						} else if (definition?.max && (img.width > definition.max.width || img.height > definition.max.height)) {
 							onError(`Image dimensions must be at most ${definition.max.width}x${definition.max.height}`)

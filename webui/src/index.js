@@ -1,9 +1,14 @@
+/* eslint-disable import/first */
+
 import '@fontsource/roboto'
 import './App.scss'
 
+// polyfills
+require('intersection-observer')
+
 import React from 'react'
 import ReactDOM from 'react-dom'
-import { BrowserRouter, Route, Switch } from 'react-router-dom'
+import { BrowserRouter, Redirect, Route, Switch } from 'react-router-dom'
 import App from './App'
 import reportWebVitals from './reportWebVitals'
 
@@ -30,16 +35,43 @@ i18n
 		},
 	})
 
+// function RedirectPreserveQuery(from, to) {
+// 	return (
+// 		<Route
+// 			path={from}
+// 			component={({ location }) => (
+// 				<Redirect
+// 					to={{
+// 						...location,
+// 						pathname: location.pathname.replace(from, to),
+// 					}}
+// 				/>
+// 			)}
+// 		/>
+// 	)
+// }
+
 ReactDOM.render(
 	<React.StrictMode>
 		<BrowserRouter>
 			<Switch>
+				<Redirect from="/help.html" to="/getting-started" />
 				<Route path="/getting-started">
 					<GettingStarted />
 				</Route>
-				<Route path="/emulator2">
+
+				<Route path="/emulator">
 					<Emulator />
 				</Route>
+				<Redirect from="/emulator2" to="/emulator" />
+				<Redirect from="/emulator.html" to="/emulator" />
+
+				{/* TODO this needs some work, to translate the query strings to the new format */}
+				{/* {RedirectPreserveQuery('/tablet.html', '/tablet')} */}
+				{/* <Redirect from="/tablet.html" to="/tablet" />
+				<Redirect from="/tablet2.html" to="/tablet" />
+				<Redirect from="/ipad.html" to="/tablet" />
+				<Redirect from="/tablet34" to="/tablet" /> */}
 				<Route path="/tablet3">
 					<Tablet />
 				</Route>

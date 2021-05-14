@@ -4,9 +4,9 @@ import {
 	faBug,
 	faComments,
 	faDollarSign,
-	faFire,
 	faGamepad,
 	faInfo,
+	faMousePointer,
 	faTabletAlt,
 	faUsers,
 } from '@fortawesome/free-solid-svg-icons'
@@ -21,26 +21,38 @@ export function MySidebar({ show }) {
 			<CSidebarNav>
 				<CSidebarBrand>
 					<div className="c-sidebar-brand-full">
-						<img src="/v2/img/brand/icon.png" height="30" alt="logo" />
+						<img src="/img/brand/icon.png" height="30" alt="logo" />
 						&nbsp; Bitfocus&nbsp;
 						<span style={{ fontWeight: 'bold' }}>Companion</span>
 					</div>
 					<div className="c-sidebar-brand-minimized">
-						<img src="/v2/img/brand/icon.png" height="42px" alt="logo" />
+						<img src="/img/brand/icon.png" height="42px" alt="logo" />
 					</div>
 				</CSidebarBrand>
 
 				<CSidebarNavItem
 					target="_new"
-					href="/emulator2"
+					href="/emulator"
 					icon={<FontAwesomeIcon className="c-sidebar-nav-icon" icon={faGamepad} />}
 					name={t('Emulator')}
 				/>
 				<CSidebarNavItem
 					target="_new"
+					href="/tablet.html"
+					icon={<FontAwesomeIcon className="c-sidebar-nav-icon" icon={faMousePointer} />}
+					name={t('Web buttons')}
+				/>
+				<CSidebarNavItem
+					target="_new"
+					href="/tablet2.html"
+					icon={<FontAwesomeIcon className="c-sidebar-nav-icon" icon={faTabletAlt} />}
+					name={t('Mobile buttons')}
+				/>
+				<CSidebarNavItem
+					target="_new"
 					href="/tablet3"
 					icon={<FontAwesomeIcon className="c-sidebar-nav-icon" icon={faTabletAlt} />}
-					name={t('Web/Mobile buttons')}
+					name={t('New Web/Mobile buttons')}
 				/>
 
 				<CSidebarNavItem
@@ -73,15 +85,6 @@ export function MySidebar({ show }) {
 					href="/getting-started"
 					icon={<FontAwesomeIcon className="c-sidebar-nav-icon" icon={faInfo} />}
 					name={t('Getting Started')}
-				/>
-
-				<CSidebarNavItem>&nbsp;</CSidebarNavItem>
-
-				<CSidebarNavItem
-					target="_new"
-					href="/"
-					icon={<FontAwesomeIcon className="c-sidebar-nav-icon" icon={faFire} />}
-					name={t('Back to the old WebUI')}
 				/>
 			</CSidebarNav>
 			<CSidebarMinimizer />

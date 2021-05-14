@@ -10,6 +10,7 @@ import {
 	CompanionFeedbackResult,
 	CompanionUpgradeScript,
 	CompanionActionEventInfo,
+	CompanionFeedbackEventInfo,
 } from './instance_skel_types'
 
 declare abstract class InstanceSkel<TConfig> {
@@ -58,7 +59,7 @@ declare abstract class InstanceSkel<TConfig> {
 	 * Processes a feedback state.
 	 * @since 1.0.0
 	 */
-	feedback?(feedback: CompanionFeedbackEvent): CompanionFeedbackResult
+	feedback?(feedback: CompanionFeedbackEvent, info: CompanionFeedbackEventInfo): CompanionFeedbackResult
 
 	/**
 	 * Save the current config of the module. Call this if you change any properties on this.config, so that they get persisted

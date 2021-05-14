@@ -1,0 +1,907 @@
+<!--
+This file is part of the Companion project
+Copyright (c) 2018 Bitfocus AS
+Authors: William Viker <william@bitfocus.io>, Håkon Nessjøen <haakon@bitfocus.io>
+
+This program is free software.
+You should have received a copy of the MIT licence as well as the Bitfocus
+Individual Contributor License Agreement for companion along with
+this program.
+
+You can be released from the requirements of the license by purchasing
+a commercial license. Buying such a license is mandatory as soon as you
+develop commercial activities involving the Companion software without
+disclosing the source code of your own applications.
+
+----
+
+This is a major re-write of tablet.html to
+provide a more dynamic interface. The basic code for interacting with 
+the Companion server over websockets has been retained but much of code 
+has been reworked to take advantabe for VueJS 2.
+
+Scaling Buttons:
+-----------------------
+Thanks to Tailwind CSS button scaling is much imporved and I've tried to
+work out sizes for phones and tablets that fit well.
+
+Phones: 6 button decks should work in either orientation. 15 button
+		decks may just fit in landscape
+iPads: 6 and 15 button decks should work in either orientation. The
+		full 32 buttons will work in landscape
+Higher Resolution Tablets: Even the full 32 buttons fit OK on my
+		1280x800 Galaxy Tab A8 in portrait though the buttons are a bit 
+		small. When in landscape they fill the screen nicely.
+
+New Features:
+-----------------------
+You can dynamically change the configuration of your decks through a 
+new settings menu no more needing to discover secret URL parameters.
+- Change the deck size between 6, 15 or 32 buttons to accomodate 
+		varying needs and screen sizes
+- Change which page(s) are displayed if you don't need all 99
+- Control which buttons are your page up/down buttons (these buttons
+		did not work at all in the original tablet.html)
+
+All of these settings can be controlled through URL parameters as well and
+the settings menu provides the appropriate URL to preserve the current
+configuration.
+
+Ability to go "Full Screen" since mobile devices have limited screen
+sizes you'll probably want to take advantage of every pixel and hide
+your bowser's top menu
+
+-->
+<html>
+	<head>
+		<meta name="viewport" content="width=device-width, initial-scale=1.0 , maximum-scale=1.0, user-scalable=0" />
+		<link rel="manifest" href="/manifest.json" />
+		<!-- PWA support -->
+		<meta name="theme-color" content="#000000" />
+		<!-- ios support -->
+		<link rel="apple-touch-icon" sizes="72x72" href="/img/brand/icons-72-square.png" />
+		<link rel="apple-touch-icon" sizes="96x96" href="/img/brand/icons-96-square.png" />
+		<link rel="apple-touch-icon" sizes="128x128" href="/img/brand/icons-128-square.png" />
+		<link rel="apple-touch-icon" sizes="512x512" href="/img/brand/icons-512-square.png" />
+
+		<!-- Tailwind for easier responsive CSS of button grid -->
+		<link rel="stylesheet" type="text/css" href="/legacy/css/tailwind.min.css" />
+
+		<style>
+			body {
+				/* margin: 0;
+        padding: 0; */
+				background-color: black;
+				/* font-size: 2em;
+        font-family: helvetica; */
+			}
+
+			/* .page {
+        padding: 20px;
+      } */
+
+			.page-bank-content canvas {
+				/* width: 72px; */
+				/* margin: 15px; */
+				/* height: 72px; */
+
+				box-shadow: 0px 0px 25px #333;
+				border: 1px solid rgba(255, 255, 255, 0.15);
+			}
+
+			.disable-dbl-tap-zoom {
+				touch-action: manipulation;
+			}
+
+			.button {
+				background-color: rgba(128, 128, 128, 0.2);
+				padding: 5px 10px;
+				border-radius: 4px;
+				display: inline-block;
+			}
+
+			* {
+				touch-action: manipulation;
+			}
+
+			* {
+				-moz-user-select: none;
+				-webkit-user-select: none;
+				-ms-user-select: none;
+				user-select: none;
+				-o-user-select: none;
+				touch-action: pan-y;
+				touch-action: manipulation;
+			}
+
+			canvas {
+				image-rendering: optimizeSpeed;
+				/* Older versions of FF          */
+				image-rendering: -moz-crisp-edges;
+				/* FF 6.0+                       */
+				image-rendering: -webkit-optimize-contrast;
+				/* Safari                        */
+				image-rendering: -o-crisp-edges;
+				/* OS X & Windows Opera (12.02+) */
+				image-rendering: pixelated;
+				/* Awesome future-browsers       */
+				-ms-interpolation-mode: nearest-neighbor;
+				/* IE                            */
+			}
+
+			.unicode-icon {
+				font-size: 1.5em;
+			}
+		</style>
+
+		<title>Companion Tablet Surface</title>
+	</head>
+
+	<body class="disable-dbl-tap-zoom">
+		<script src="legacy/js/jquery.min.js"></script>
+		<script src="socket.io/socket.io.js"></script>
+		<script src="legacy/js/viewport.js"></script>
+		<script src="legacy/js/preview.js"></script>
+		<script src="legacy/js/vue.min.js"></script>
+		<script src="legacy/js/vue-observe-visibility.min.js"></script>
+
+		<div class="container mx-auto" id="companion_app">
+			<div class="menu grid grid-cols-3 my-4">
+				<div class="text-yellow-600 flex-grow-0 mx-2">
+					<span v-if="!fullscreen" @click="requestFullscreen">
+						<span class="button"> Fullscreen </span>
+					</span>
+					<span v-if="fullscreen" @click="leaveFullscreen">
+						<span class="button"> Leave fullscreen </span>
+					</span>
+				</div>
+				<div class="flex-grow-1">
+					<h1 class="hidden sm:visible text-xl md:block md:text-2xl lg:text-4xl text-yellow-600">Bitfocus Companion</h1>
+				</div>
+				<div class="text-yellow-600 text-right flex-grow-0 mx-2">
+					<span v-if="!showSettings" @click="showSettings = !showSettings">
+						<span class="button"> Settings </span>
+					</span>
+					<span v-else @click="showSettings = !showSettings">
+						<span class="button"> Close Settings </span>
+					</span>
+				</div>
+			</div>
+			<div v-if="showSettings" class="flex flex-row text-yellow-600 flex-wrap border border-gray-600">
+				<div class="px-4 py-2 m-2">
+					<fieldset>
+						<label for="pickDeckSize" class="font-bold">Deck Size: </label>
+						<br />
+						<select v-model="settings.deckSize" id="pickDeckSize" class="text-black">
+							<option disabled value="">Please select one</option>
+							<option v-for="option in deckSizeOptions" :value="option.value">{{option.label}}</option>
+						</select>
+					</fieldset>
+				</div>
+				<div class="px-4 py-2 m-2">
+					<fieldset>
+						<label for="pickPage" class="font-bold">Only show certain pages</label>
+						<br />
+						<input
+							type="text"
+							id="pickPage"
+							v-model="settings.pagesPreference"
+							placeholder="ex. 1,3,10"
+							class="text-black"
+						/>
+					</fieldset>
+					<p>Comma separated list of pages to be included. Leave blank for all 99 pages.</p>
+				</div>
+				<div v-if="false" class="px-4 py-2 m-2">
+					<fieldset>
+						<label for="companionIP" class="font-bold"
+							>Companion IP Address (if not same as loaded this page from)</label
+						><br />
+						<input
+							type="text"
+							id="companionIP"
+							v-model="settings.companionIP"
+							placeholder="ex. 192.168.1.123:8000"
+							@blur="updateCompanionIP"
+						/>
+					</fieldset>
+				</div>
+				<div class="px-4 py-2 m-2">
+					<p class="font-bold">Location of Your Page Up &amp; Down Buttons</p>
+					<fieldset>
+						<label for="pageUpButton" class="font-bold m-2"
+							>Page Up Button:
+							<input
+								type="number"
+								min="0"
+								max="32"
+								size="2"
+								id="pageUpButton"
+								v-model="settings.pageUpButton"
+								placeholder="ex.1"
+								class="text-black m-2"
+							/> </label
+						><br />
+						<label for="pageDownButton" class="font-bold m-2"
+							>Page Down Button:
+							<input
+								type="number"
+								min="0"
+								max="32"
+								size="2"
+								id="pageDownButton"
+								v-model="settings.pageDownButton"
+								placeholder="ex.17"
+								class="text-black m-2"
+							/>
+						</label>
+						<p>
+							Specify which buttons you are using for page up/down so they can be made to work as expected in this web
+							interface. They
+							<strong>must</strong> be in the same place on every page! If you don't want to use this feature you may
+							set the values to zero. You may also use the up/down arrows next to the page title to move between pages
+							of buttons.
+						</p>
+						<p v-if="settings.page_direction_flipped">
+							<strong>Page direction is flipped!</strong> Page up/down behavior is being reversed. Clicking the page
+							down button &#8595; will take you from page 1 > 2 > 3.... Clicking the page up button &#8593; will take
+							you from page 3 > 2 > 1 > 99. You may change this behavior through the main Companion Admin screen's
+							setting's tab (and then refresh the mobile buttons).
+						</p>
+						<p v-else>
+							Clicking the page up button &#8593; will take you from page 1 > 2 > 3.... Clicking the page down button
+							&#8595; will take you from page 3 > 2 > 1 > 99. You may change this behavior through the main Companion
+							Admin screen's setting's tab (and then refresh the mobile buttons).
+						</p>
+					</fieldset>
+				</div>
+				<div class="px-4 py-2 m-2">
+					<p class="font-bold">Save Settings</p>
+					<p>
+						Save a bookmarks or make a home screen shortcut to the URL below:<br />
+						<a :href="currentConfigUrl">{{currentConfigUrl}}</a>
+					</p>
+				</div>
+				<div class="px-4 py-2 m-2">
+					<p class="font-bold">Companion Admin</p>
+					<p>
+						<a href="/">
+							<span class="button"> Go to Admin UI </span>
+						</a>
+					</p>
+				</div>
+			</div>
+
+			<div
+				v-for="page in pages"
+				:key="page"
+				:id="'page_'+page"
+				class="page m-4"
+				v-observe-visibility="(isVisible, entry) => lazyLoadPage(isVisible, entry, page)"
+			>
+				<div class="grid grid-cols-2 items-center">
+					<h1 class="text-yellow-600 text-2xl" id="page_title_${page}">{{pageTitle(page)}}</h1>
+
+					<div>
+						<!--extra page up/down buttons-->
+						<div v-if="!settings.page_direction_flipped">
+							<div class="space-x-4">
+								<a
+									v-if="calcUpPageLink(page)"
+									:href="calcUpPageLink(page)"
+									class="bg-black border border-gray-600 hover:bg-yellow-600 text-white font-bold py-2 px-4 sm:px-8 rounded"
+								>
+									<span class="unicode-icon">&#8593;</span>
+								</a>
+								<!--page down (next)-->
+								<a
+									v-else
+									class="bg-black border border-black hover:bg-black text-black font-bold w-8 py-2 px-8 rounded"
+								>
+									<!--this button essentially cloaked and won't do anything because is no next page to go to-->
+									<span class="unicode-icon">&#8593;</span>
+								</a>
+
+								<a
+									v-if="calcDownPageLink(page)"
+									:href="calcDownPageLink(page)"
+									class="bg-black border border-gray-600 hover:bg-yellow-600 text-white font-bold w-8 py-2 px-4 sm:px-8 rounded"
+								>
+									<span class="unicode-icon">&#8595;</span>
+									<!--page up (previous)-->
+								</a>
+								<a
+									v-else
+									class="bg-black border border-black hover:bg-black text-black font-bold w-8 py-2 px-4 sm:px-8 rounded"
+								>
+									<!--this button essentially cloaked and won't do anything because is no previous page to go to-->
+									<span class="unicode-icon">&#8595;</span>
+									<!--page up (previous)-->
+								</a>
+							</div>
+						</div>
+						<div v-else>
+							<!--flipped paging behavior-->
+							<div class="space-x-4">
+								<a
+									v-if="calcDownPageLink(page)"
+									:href="calcDownPageLink(page)"
+									class="bg-black border border-gray-600 hover:bg-yellow-600 text-white font-bold py-2 px-4 sm:px-8 rounded"
+								>
+									<span class="unicode-icon">&#8593;</span>
+								</a>
+								<!--page down (next)-->
+								<a
+									v-else
+									class="bg-black border border-black hover:bg-black text-black font-bold w-8 py-2 px-8 rounded"
+								>
+									<!--this button essentially cloaked and won't do anything because is no next page to go to-->
+									<span class="unicode-icon">&#8593;</span>
+								</a>
+
+								<a
+									v-if="calcUpPageLink(page)"
+									:href="calcUpPageLink(page)"
+									class="bg-black border border-gray-600 hover:bg-yellow-600 text-white font-bold w-8 py-2 px-4 sm:px-8 rounded"
+								>
+									<span class="unicode-icon">&#8595;</span>
+									<!--page up (previous)-->
+								</a>
+								<a
+									v-else
+									class="bg-black border border-black hover:bg-black text-black font-bold w-8 py-2 px-4 sm:px-8 rounded"
+								>
+									<!--this button essentially cloaked and won't do anything because is no previous page to go to-->
+									<span class="unicode-icon">&#8595;</span>
+									<!--page up (previous)-->
+								</a>
+							</div>
+						</div>
+					</div>
+				</div>
+				<!--grid page of buttons will be appended here-->
+				<div
+					v-for="(row, index)  in  buttonRows"
+					:key="'page_'+page+'_row_'+index"
+					class="flex grid gap-4 mx-auto my-auto p-2"
+					:class="deckGridClass"
+					:id="'page_'+page+'_row_'+index"
+				>
+					<!--buttons will be appended here-->
+					<div v-for="button in row" class="page-bank-content" :id="'bank_'+page+'_'+button">
+						<a v-if="isPageUpDownButton(button)" :href="isPageUpDownButton(button, page)">
+							<!--is a page up/down lin so should also serve as actual html link so can navigate pages-->
+							<canvas
+								class="canvases m-3 bg-gray-600 page-bank-content"
+								:class="responsiveButtonSizes"
+								width="72"
+								height="72"
+								:ref="'canvas_'+page+'_'+button"
+							>
+							</canvas>
+						</a>
+						<canvas
+							v-else
+							class="canvases m-3 bg-gray-600 page-bank-content"
+							:class="responsiveButtonSizes"
+							width="72"
+							height="72"
+							:ref="'canvas_'+page+'_'+button"
+							@mousedown="mousedown(page, button)"
+							@mouseup="mouseup(page, button)"
+							@touchstart.prevent="touchstart(page, button)"
+							@touchend.prevent="touchend(page, button)"
+						>
+						</canvas>
+					</div>
+				</div>
+			</div>
+		</div>
+		<script type="text/javascript">
+			// var vue_socket = io();
+			let app = new Vue({
+				el: '#companion_app',
+				data: {
+					buttons: [],
+					deck_data: [],
+					deckSizeOptions: [
+						{
+							value: 6,
+							label: 'Mini (6)',
+						},
+						{
+							value: 15,
+							label: 'Standard (15)',
+						},
+						{
+							value: 32,
+							label: 'XL (32)',
+						},
+					],
+					settings: {
+						deckSize: 32,
+						pageDownButton: 17,
+						pageUpButton: 1,
+						pagesPreference: '',
+						companionIP: '',
+						page_direction_flipped: false,
+					},
+					config: {},
+					cache: {},
+					been_connected: false,
+					pageinfo: {},
+					pages_in_viewport: [],
+					showSettings: false,
+
+					fullscreen: false,
+					activePage: 1,
+				},
+				computed: {
+					pages: function () {
+						//gets the pages the user wants shown
+						if (this.settings.pagesPreference == '' || this.settings.pagesPreference === undefined) {
+							//defaults to all 99
+							return Array.from(
+								{
+									length: 99,
+								},
+								(v, k) => k + 1
+							)
+						} else {
+							//if user has entered a preference into settings then parse
+							//and show only those pages
+							var mypages = this.settings.pagesPreference.split(/,+/).map(function (el) {
+								return parseInt(el)
+							})
+							if (mypages.length) {
+								return mypages
+							} else {
+								return Array.from(
+									{
+										length: 99,
+									},
+									(v, k) => k + 1
+								)
+							}
+						}
+					},
+					keeperButtons: function () {
+						// helper so know which buttons to include based on deck size
+						if (this.settings.deckSize == 6) {
+							return [1, 2, 3, 9, 10, 11]
+						} else if (this.settings.deckSize == 15) {
+							return [1, 2, 3, 4, 5, 9, 10, 11, 12, 13, 17, 18, 19, 20, 21]
+						} else {
+							return Array.from(
+								{
+									length: 32,
+								},
+								(v, k) => k + 1
+							)
+						}
+					},
+					buttonRows: function () {
+						// helper so know which buttons go in which rows and
+						// which rows to include based on deck size
+						if (this.settings.deckSize == 6) {
+							return [
+								[1, 2, 3],
+								[9, 10, 11],
+							]
+						} else if (this.settings.deckSize == 15) {
+							return [
+								[1, 2, 3, 4, 5],
+								[9, 10, 11, 12, 13],
+								[17, 18, 19, 20, 21],
+							]
+						} else {
+							return [
+								[1, 2, 3, 4, 5, 6, 7, 8],
+								[9, 10, 11, 12, 13, 14, 15, 16],
+								[17, 18, 19, 20, 21, 22, 23, 24],
+								[25, 26, 27, 28, 29, 30, 31, 32],
+							]
+						}
+					},
+					deckGridClass: function () {
+						// alters the number of columns in our button grid based on
+						// chosen deck size
+						if (this.settings.deckSize == 6) {
+							return 'grid-cols-3'
+						} else if (this.settings.deckSize == 15) {
+							return 'grid-cols-5'
+						} else {
+							return 'grid-cols-8'
+						}
+					},
+					responsiveButtonSizes: function () {
+						// applies reasonable tailwind css classes based on deck size to
+						// try to get buttons that are responsive and as large as reasonable
+						// for common mobile device screen sizes
+						if (this.settings.deckSize == 6) {
+							return 'w-20 h-20 sm:w-24 sm:h-24 md:w-28 md:h-28 lg:w-32 lg:h-32'
+						} else if (this.settings.deckSize == 15) {
+							return 'w-16 h-16 sm:w-20 sm:h-20 md:w-28 md:h-28 lg:w-32 lg:h-32 sm:m-1'
+						} else {
+							return 'w-16 h-16 md:w-20 md:h-20 lg:w-24 lg:h-24'
+						}
+					},
+					currentConfigUrl: function () {
+						var configUrl = window.location.origin + window.location.pathname + '?deck_size=' + this.settings.deckSize
+						configUrl =
+							configUrl +
+							'&pages=' +
+							this.settings.pagesPreference +
+							'&page_down_button=' +
+							this.settings.pageDownButton
+						return configUrl + '&page_up_button=' + this.settings.pageUpButton
+					},
+				}, //end of Computed
+				watch: {
+					'settings.deckSize': function (new_size, old_size) {
+						//when deck size increases need to request a redraw of
+						// pages else the newly added buttons won't appera
+						if (parseInt(new_size) > parseInt(old_size)) {
+							this.redrawPages()
+						}
+					},
+					'settings.pageDownButton': function (new_button, button) {
+						this.redrawPages()
+					},
+					'settings.pageUpButton': function (new_size, old_size) {
+						this.redrawPages()
+					},
+					pages: function (new_pages, old_pages) {
+						// when user requests to see different pages
+						// should redraw those currently showing to avoid
+						// missing buttons
+						this.redrawPages()
+					},
+				},
+				methods: {
+					updateCompanionIP() {
+						// try to allow changing the companion instance connected to
+						// not actually functional right now.
+						console.log('trying to close current websocket connection')
+						try {
+							this.webSocket.close()
+						} catch (err) {
+							console.error(err)
+						}
+						console.log('trying to connect to Companion instance at ' + this.settings.companionIP)
+						try {
+							this.initializeWebSocket()
+						} catch (err) {
+							console.error(err)
+						}
+						this.redrawPages()
+					},
+					hasPage(thispage) {
+						//If user has requested only certain pages verify this one is one of them
+						thispage = parseInt(thispage)
+
+						if (this.pages.length == 0 || this.pages.indexOf(thispage) !== -1) {
+							return true
+						}
+						return false
+					},
+					drawBank(page, bank, data) {
+						// handles actually drawing the buttons to canvas
+						if (!this.hasPage(page)) {
+							//   console.log("Not showing page " + page);
+							return
+						}
+						// console.log("drawing bank "+bank)
+						// console.log(data)
+
+						if (this.keeperButtons.includes(parseInt(bank))) {
+							var canvas = this.$refs['canvas_' + page + '_' + bank][0]
+
+							if (canvas) {
+								// console.log("redrawing page "+page+" button "+bank)
+
+								var ctx = canvas.getContext('2d')
+								ctx.webkitImageSmoothingEnabled = false
+								var imageData = dataToButtonImage(data.buffer)
+								ctx.clearRect(0, 0, canvas.width, canvas.height)
+								ctx.putImageData(imageData, 0, 0)
+								ctx.drawImage(canvas, 0, 0, canvas.width, canvas.height)
+							}
+						}
+					},
+					initializeCache() {
+						// clears the cache of button data so that will definitely
+						// get current data when next request page from server
+						// helps to avoid missing buttons on settings change
+						for (var i = 1; i < 100; ++i) {
+							this.cache[i] = {}
+						}
+					},
+
+					// Lazy load pages gets fired when pages enter/leave viewport
+					lazyLoadPage(isVisible, entry, page) {
+						// load page's button data from server as become visible on page
+
+						/// when page enters viewport then get its bank button info
+						// also keep record of which pages are currently in viewport
+						// so if change a setting such that show more buttens than
+						// have currently (like 6 -> 15 or 15 -> 32) can redraw
+						if (!isVisible) {
+							// console.log("page "+page+" left viewport")
+							var remove_index = this.pages_in_viewport.indexOf(page)
+							if (remove_index > -1) {
+								// console.log("was index "+remove_index+" in pages_in_viewport")
+								this.pages_in_viewport.splice(remove_index, 1)
+								// console.log("Pages in viewport now "+this.pages_in_viewport)
+							}
+
+							return
+						} else {
+							// console.log("page "+page+" entered viewport")
+							if (this.pages_in_viewport.indexOf(page) == -1) {
+								this.pages_in_viewport.push(page)
+							}
+						}
+						// console.log("Pages in viewport now "+this.pages_in_viewport)
+						// console.log("Lazy Loading page "+page);
+
+						// Not ready
+						if (this.cache[this.pages[0]] === undefined) {
+							return
+						}
+
+						if (this.cache[page][1] !== undefined || this.cache[page].wait == true) {
+							return
+						}
+
+						var cachedata = {}
+						for (var _bank = 1; _bank <= 12; ++_bank) {
+							if (this.cache[page][_bank] !== undefined) {
+								cachedata[_bank] = this.cache[page][_bank].updated
+							}
+						}
+						// ask server for update on page buttons vs what we currently have
+						this.webSocket.emit('web_buttons_page', page, cachedata)
+
+						this.cache[page].wait = true
+					},
+					redrawPages() {
+						// when settings are changed to show diff number of buttons or
+						// diff pages need to redraw or tend to get some missing buttons
+						this.initializeCache() // pretend not to know anything
+						this.pages_in_viewport.forEach(function (page) {
+							//re-request page's button data so can draw any new buttons
+							this.webSocket.emit('web_buttons_page', page, {})
+						})
+					},
+					pageTitle(page) {
+						// Show actual page title when avaiable
+						if (this.pageinfo[page] === undefined) {
+							// console.error("Missing pageinfo for page "+page)
+							return 'Page ' + page //normally just temporary on first load because don't have data yet
+						}
+
+						if (this.pageinfo[page].name != 'PAGE') {
+							return this.pageinfo[page].name
+						} else {
+							return 'Page ' + page
+						}
+					},
+					calcUpPageLink: function (thisPage) {
+						// given current page figure out anchor link for the next page
+						let pageIndex = this.pages.indexOf(thisPage)
+						if (pageIndex + 1 == this.pages.length) {
+							return '#page_' + this.pages[0] //false;//already at last page
+						} else {
+							return '#page_' + this.pages[pageIndex + 1]
+						}
+					},
+					calcDownPageLink: function (thisPage) {
+						// given current page figure out anchor link for the next page
+						let pageIndex = this.pages.indexOf(thisPage)
+						if (pageIndex == 0) {
+							return '#page_' + this.pages[this.pages.length - 1] //false;//already at first page
+						} else {
+							return '#page_' + this.pages[pageIndex - 1]
+						}
+					},
+					isPageUpDownButton(button, page) {
+						// determine if the button we are creating is one of the user's
+						// Page Up/Down buttons and if so return a link that'll go to appropriate
+						// page (the button's won't actually do anything in web interface otherwise)
+						if (parseInt(button) == this.settings.pageDownButton) {
+							if (!this.settings.page_direction_flipped) {
+								return this.calcDownPageLink(page)
+							} else {
+								return this.calcUpPageLink(page)
+							}
+						} else if (parseInt(button) == this.settings.pageUpButton) {
+							if (!this.settings.page_direction_flipped) {
+								return this.calcUpPageLink(page)
+							} else {
+								return this.calcDownPageLink(page)
+							}
+						} else {
+							return false
+						}
+					},
+					mousedown(page, button) {
+						// console.log("mouse down on page "+page+" button "+button)
+						this.webSocket.emit('hot_press', page, button, true)
+						this.activePage = page
+					},
+					mouseup(page, button) {
+						// console.log("mouse up on page "+page+" button "+button)
+						this.webSocket.emit('hot_press', page, button, false)
+						this.activePage = page
+					},
+					touchstart(page, button) {
+						// console.log("touch start on page "+page+" button "+button)
+						this.webSocket.emit('hot_press', page, button, true)
+						this.activePage = page
+					},
+					touchend(page, button) {
+						// console.log("touch end on page "+page+" button "+button)
+						this.webSocket.emit('hot_press', page, button, false)
+						this.activePage = page
+					},
+					initializeWebSocket() {
+						// start the websocket connection back to Companion
+						// and setup listeners to react to received data
+						try {
+							this.webSocket = io(this.settings.companionIP)
+						} catch (err) {
+							alert('Failed to establish websocket connection!', err)
+						}
+
+						this.webSocket.on('set_page', function (page, value) {
+							// console.log("set_page "+page)
+							vue_this.pageinfo[page] = value
+						})
+
+						this.webSocket.on('pages', function (_pageinfo) {
+							// console.log("socket on pages");
+							vue_this.pageinfo = _pageinfo
+						})
+
+						this.webSocket.on('connect', function () {
+							// console.log('websocket connect')
+							if (this.been_connected === true) {
+								window.location.reload(true)
+							}
+						})
+
+						this.been_connected = true
+
+						this.webSocket.on('buttons_page_data', function (page, data) {
+							// console.log("socket buttons_page_data for page "+page)
+							if (!vue_this.hasPage(page)) {
+								return
+							}
+							if (page === undefined || page == null) {
+								return
+							}
+							// console.log('buttons_page_date page '+page)
+							vue_this.cache[page].wait = false
+
+							for (var key in data) {
+								vue_this.cache[page][key] = data[key]
+								vue_this.drawBank(page, key, data[key])
+							}
+						})
+
+						this.webSocket.on('buttons_bank_data', function (page, data) {
+							// console.log("socket buttons_bank_data");
+							if (!vue_this.hasPage(page)) {
+								return
+							}
+							// console.log("buttons_bank_data for page "+page)
+							for (key in data) {
+								// console.log("redraw "+page+"."+key)
+								vue_this.drawBank(page, key, data[key])
+							}
+						})
+
+						this.webSocket.on('get_userconfig_all', function (data) {
+							//console.log("Is page direction flipped? " + data.page_direction_flipped);
+							vue_this.settings.page_direction_flipped = data.page_direction_flipped
+						})
+					},
+					requestFullscreen: function () {
+						// try to go full screen and hide browser's buttons
+						// esp helpful on mobile devices where screen area is limited
+						if (document.documentElement.webkitRequestFullscreen) {
+							/*Chrome, Safari, Opera*/
+							document.documentElement.webkitRequestFullscreen(Element.ALLOW_KEYBOARD_INPUT)
+						} else if (document.documentElement.mozRequestFullScreen) {
+							//firefox
+							document.documentElement.mozRequestFullScreen()
+						} else if (document.documentElement.msRequestFullscreen) {
+							//IE or Edge
+							document.documentElement.msRequestFullscreen()
+						} else if (document.documentElement.requestFullscreen) {
+							document.documentElement.requestFullscreen() // standard
+						}
+
+						this.fullscreen = true
+					},
+					leaveFullscreen: function () {
+						if (document.webkitExitFullscreen) {
+							document.webkitExitFullscreen()
+						} else if (document.mozCancelFullScreen) {
+							document.mozCancelFullScreen()
+						} else if (document.msExitFullscreen) {
+							document.msExitFullscreen()
+						} else if (document.exitFullscreen) {
+							document.exitFullscreen()
+						}
+						this.fullscreen = false
+					},
+				},
+				created() {
+					vue_this = this
+
+					this.initializeCache()
+
+					this.buttons = Array.from(
+						{
+							length: 32,
+						},
+						(v, k) => k + 1
+					)
+
+					let uri = window.location.search.substring(1)
+					let params = new URLSearchParams(uri)
+					if (params.get('pages') != null) {
+						//user requested specific pages only
+						this.settings.pagesPreference = params.get('pages')
+						// this.pages = params.get("pages").split(/,+/).map(function (el) {
+						//     return parseInt(el);
+						// });
+					} else {
+						this.settings.pagesPreference = ''
+					}
+
+					if (params.get('deck_size') != null) {
+						//user requested specific deck size
+						var requested_deck_size = parseInt(params.get('deck_size'))
+						if ([6, 15, 32].includes(requested_deck_size)) {
+							this.settings.deckSize = requested_deck_size
+						} else {
+							//invalid request force 32
+							this.settings.deckSize = 32
+						}
+					}
+
+					if (params.get('page_up_button') != null) {
+						var page_up_button = parseInt(params.get('page_up_button'))
+						if (page_up_button >= 0 && page_up_button <= 32) {
+							this.settings.pageUpButton = page_up_button
+						}
+					}
+					if (params.get('page_down_button') != null) {
+						var page_down_button = parseInt(params.get('page_down_button'))
+						if (page_down_button >= 0 && page_down_button <= 32) {
+							this.settings.pageDownButton = page_down_button
+						}
+					}
+					if (params.get('companion_IP') != null) {
+						this.settings.companionIP = params.get('companion_IP')
+					}
+
+					this.initializeWebSocket()
+					this.webSocket.emit('web_buttons')
+
+					// what's the configuration (so know if need to flip up/down button behavior)
+					this.webSocket.emit('get_userconfig_all')
+
+					// window.addEventListener('scroll', this.scroll);
+
+					// Request first page
+					this.webSocket.emit('web_buttons_page', this.pages[0], {})
+				}, //end created()
+			})
+		</script>
+		<div class="container mx-auto" id="pages"></div>
+	</body>
+</html>

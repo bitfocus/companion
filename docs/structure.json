@@ -1,0 +1,186 @@
+[
+	{
+		"label": "Getting started",
+		"children": [
+			{
+				"label": "Before you open Companion",
+				"file": "1_gettingstarted/1_before_you_open.md"
+			},
+			{
+				"label": "Start the server",
+				"file": "1_gettingstarted/2_start_the_server.md"
+			},
+			{
+				"label": "The user interface",
+				"file": "1_gettingstarted/3_the_user_interface.md"
+			}
+		]
+	},
+
+	{
+		"label": "Sidebar",
+		"file": "2_sidebar.md",
+		"children": [
+			{
+				"label": "Community links",
+				"file": "2_sidebar/1_community_links.md"
+			},
+			{
+				"label": "Emulator",
+				"file": "2_sidebar/2_emulator.md"
+			},
+			{
+				"label": "Web buttons",
+				"file": "2_sidebar/3_web_buttons.md"
+			},
+			{
+				"label": "Mobile buttons",
+				"file": "2_sidebar/4_mobile_buttons.md"
+			}
+		]
+	},
+
+	{
+		"label": "Configuration GUI",
+		"file": "3_config.md",
+		"children": [
+			{
+				"label": "Connections",
+				"file": "3_config/1_connections.md"
+			},
+
+			{
+				"label": "Buttons",
+				"file": "3_config/2_buttons.md",
+				"children": [
+					{
+						"label": "Latch / Toggle",
+						"file": "3_config/2_buttons/1_latch_toggle.md"
+					},
+					{
+						"label": "Delays",
+						"file": "3_config/2_buttons/2_delays.md"
+					},
+					{
+						"label": "Key actions",
+						"file": "3_config/2_buttons/3_key_actions.md"
+					},
+					{
+						"label": "Internal actions",
+						"file": "3_config/2_buttons/4_internal_actions.md"
+					},
+					{
+						"label": "Connection actions",
+						"file": "3_config/2_buttons/5_instance_feedback.md"
+					},
+					{
+						"label": "Button indicators",
+						"file": "3_config/2_buttons/6_button_indicators.md"
+					}
+				]
+			},
+
+			{
+				"label": "Surface",
+				"file": "3_config/3_surface.md"
+			},
+
+			{
+				"label": "Triggers",
+				"file": "3_config/4_triggers.md",
+				"children": [
+					{
+						"label": "Trigger Setup",
+						"file": "3_config/4_triggers/1_trigger_setup.md"
+					},
+					{
+						"label": "Trigger Types",
+						"file": "3_config/4_triggers/2_trigger_types.md"
+					}
+				]
+			},
+
+			{
+				"label": "Settings",
+				"file": "3_config/5_settings.md",
+				"children": [
+					{
+						"label": "Navigation buttons",
+						"file": "3_config/5_settings/1_navigation_buttons.md"
+					},
+					{
+						"label": "Devices",
+						"file": "3_config/5_settings/2_devices.md"
+					},
+					{
+						"label": "PIN lockout",
+						"file": "3_config/5_settings/3_pin_lockout.md"
+					},
+					{
+						"label": "RossTalk",
+						"file": "3_config/5_settings/4_rosstalk.md"
+					},
+					{
+						"label": "Artnet Listener",
+						"file": "3_config/5_settings/5_artnet_listener.md"
+					}
+				]
+			},
+
+			{
+				"label": "Log",
+				"file": "3_config/6_log.md"
+			}
+		]
+	},
+
+	{
+		"label": "Secondary admin controls",
+		"children": [
+			{
+				"label": "Presets",
+				"file": "4_secondary_admin_controls/1_presets.md"
+			},
+			{
+				"label": "Dynamic variables",
+				"file": "4_secondary_admin_controls/2_dynamic_variables.md"
+			},
+			{
+				"label": "Import / Export",
+				"file": "4_secondary_admin_controls/3_import_export.md"
+			}
+		]
+	},
+
+	{
+		"label": "Remote control",
+		"file": "5_remote_control.md",
+		"children": [
+			{
+				"label": "TCP / UDP Control",
+				"file": "5_remote_control/1_tcp_udp.md"
+			},
+			{
+				"label": "HTTP Remote Control",
+				"file": "5_remote_control/2_http_remote_control.md"
+			},
+			{
+				"label": "OSC Control",
+				"file": "5_remote_control/3_osc_control.md"
+			},
+			{
+				"label": "Artnet / DMX Control",
+				"file": "5_remote_control/4_artnet_dmx_control.md"
+			},
+			{
+				"label": "RossTalk Control",
+				"file": "5_remote_control/5_rosstalk_control.md"
+			}
+		]
+	},
+
+	{
+		"label": "Modules",
+		"file": "6_modules.md"
+	}
+]
