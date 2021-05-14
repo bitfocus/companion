@@ -2089,9 +2089,9 @@ commist@^1.0.0:
   dependencies:
     holographics-client-sdk "^1.6.1"
 
-"companion-module-homeassistant-server@github:bitfocus/companion-module-homeassistant-server#v0.5.0":
-  version "0.5.0"
-  resolved "https://codeload.github.com/bitfocus/companion-module-homeassistant-server/tar.gz/8a557cf0ddd394f4e67cd6fb50d3f21add50c46f"
+"companion-module-homeassistant-server@github:bitfocus/companion-module-homeassistant-server#v0.5.1":
+  version "0.5.1"
+  resolved "https://codeload.github.com/bitfocus/companion-module-homeassistant-server/tar.gz/a2b125c143c542e58f523fa53d7d3bd601c962e2"
   dependencies:
     "@types/node" "^12.20.13"
     "@types/ws" "^7.4.4"
