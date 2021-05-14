@@ -376,7 +376,7 @@
   resolved "https://registry.yarnpkg.com/@types/minimatch/-/minimatch-3.0.3.tgz#3dca0e3f33b200fc7d1139c0cd96c1268cadfd9d"
   integrity sha512-tHq6qdbT9U1IRSGf14CL0pUlULksvY9OZ+5eEgl1N7t+OA3tGvNpxJCzuKQlsNgCVwbAs670L1vcVQi8j9HjnA==
 
-"@types/node@*", "@types/node@>=10.0.0", "@types/node@^12.0.12", "@types/node@^12.0.4", "@types/node@^12.19.14", "@types/node@^12.19.3", "@types/node@^12.19.4", "@types/node@^12.20.12", "@types/node@^12.20.13":
+"@types/node@*", "@types/node@>=10.0.0", "@types/node@^12.0.12", "@types/node@^12.0.4", "@types/node@^12.19.14", "@types/node@^12.19.3", "@types/node@^12.19.4", "@types/node@^12.20.13":
   version "12.20.13"
   resolved "https://registry.yarnpkg.com/@types/node/-/node-12.20.13.tgz#e743bae112bd779ac9650f907197dd2caa7f0364"
   integrity sha512-1x8W5OpxPq+T85OUsHRP6BqXeosKmeXRtjoF39STcdf/UWLqUsoehstZKOi0CunhVqHG17AyZgpj20eRVooK6A==
@@ -420,10 +420,10 @@
   resolved "https://registry.yarnpkg.com/@types/verror/-/verror-1.10.4.tgz#805c0612b3a0c124cf99f517364142946b74ba3b"
   integrity sha512-OjJdqx6QlbyZw9LShPwRW+Kmiegeg3eWNI41MQQKaG3vjdU2L9SRElntM51HmHBY1cu7izxQJ1lMYioQh3XMBg==
 
-"@types/ws@^7.4.2":
-  version "7.4.2"
-  resolved "https://registry.yarnpkg.com/@types/ws/-/ws-7.4.2.tgz#bfe739b5f8b3a39742605fbe415ae7e88ee614c8"
-  integrity sha512-PbeN0Eydl7LQl4OIav29YmkO2LxbVuz3nZD/kb19lOS+wLgIkRbWMNmU/QQR7ABpOJ7D7xDOU8co7iohObewrw==
+"@types/ws@^7.4.4":
+  version "7.4.4"
+  resolved "https://registry.yarnpkg.com/@types/ws/-/ws-7.4.4.tgz#93e1e00824c1de2608c30e6de4303ab3b4c0c9bc"
+  integrity sha512-d/7W23JAXPodQNbOZNXvl2K+bqAQrCMwlh/nuQsPSQk6Fq0opHoPrUw43aHsvSbIiQPr8Of2hkFbnz1XBFVyZQ==
   dependencies:
     "@types/node" "*"
 
@@ -2089,13 +2089,14 @@ commist@^1.0.0:
   dependencies:
     holographics-client-sdk "^1.6.1"
 
-"companion-module-homeassistant-server@github:bitfocus/companion-module-homeassistant-server#v0.4.0":
-  version "0.4.0"
-  resolved "https://codeload.github.com/bitfocus/companion-module-homeassistant-server/tar.gz/3a98b2e21bf3f916100ecd51f0ed44ffb9a02d8b"
+"companion-module-homeassistant-server@github:bitfocus/companion-module-homeassistant-server#v0.5.0":
+  version "0.5.0"
+  resolved "https://codeload.github.com/bitfocus/companion-module-homeassistant-server/tar.gz/8a557cf0ddd394f4e67cd6fb50d3f21add50c46f"
   dependencies:
-    "@types/node" "^12.20.12"
-    "@types/ws" "^7.4.2"
-    home-assistant-js-websocket "^5.9.0"
+    "@types/node" "^12.20.13"
+    "@types/ws" "^7.4.4"
+    home-assistant-js-websocket "^5.10.0"
+    type-fest "^1.1.1"
     ws "^7.4.5"
 
 "companion-module-ifelseware-avplayback@github:bitfocus/companion-module-ifelseware-avplayback#v1.0.1":
@@ -4423,10 +4424,10 @@ holographics-client-sdk@^1.6.1:
     socket.io "^2.2.0"
     url-parse "^1.4.4"
 
-home-assistant-js-websocket@^5.9.0:
-  version "5.9.0"
-  resolved "https://registry.yarnpkg.com/home-assistant-js-websocket/-/home-assistant-js-websocket-5.9.0.tgz#85f73cc7aa23362e93d7e8208026fbcf25934022"
-  integrity sha512-HSAhX+s2JgsE77sYKKqcNsukiO6Zm4CcCIwugq17MwHcEyLoecChsbQtgtbvg1dHctUAk+IHxuZ0JBx10B1YGQ==
+home-assistant-js-websocket@^5.10.0:
+  version "5.10.0"
+  resolved "https://registry.yarnpkg.com/home-assistant-js-websocket/-/home-assistant-js-websocket-5.10.0.tgz#b59fd4f20a8295571b1a2589530c995d0d910c49"
+  integrity sha512-QiK26d62wuQCuaXHRZ90yvaMXeHkYbQrSGQvCrF6hqxdibLXEwSXQM2uzWYUgP25Q3iKy3PLQspMBRnuBKczbQ==
 
 hosted-git-info@^3.0.8:
   version "3.0.8"
