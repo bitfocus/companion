@@ -283,7 +283,7 @@ function FeedbackManageStyles({ bankFeedbacksChanged, feedbackSpec, feedback, pa
 		[context.socket, page, bank, feedback.id, bankFeedbacksChanged]
 	)
 
-	if (feedbackSpec.type === 'boolean') {
+	if (feedbackSpec?.type === 'boolean') {
 		const choices = [
 			{ id: 'text', label: 'Text' },
 			{ id: 'size', label: 'Font Size' },
@@ -350,7 +350,7 @@ function FeedbackStyles({ feedbackSpec, feedback, page, bank, bankFeedbacksChang
 		[context.socket, page, bank, feedback.id, bankFeedbacksChanged]
 	)
 
-	if (feedbackSpec.type === 'boolean') {
+	if (feedbackSpec?.type === 'boolean') {
 		const currentStyle = feedback.style || {}
 
 		const FeedbackStyleControlWrapper = (id, props, contents) => {
