@@ -176,7 +176,11 @@ export interface CompanionFeedbackBase<TRes> {
 	label: string
 	description: string
 	options: SomeCompanionInputField[]
-	callback?: (feedback: CompanionFeedbackEvent, bank: CompanionBankPNG, info: CompanionFeedbackEventInfo) => TRes
+	callback?: (
+		feedback: CompanionFeedbackEvent,
+		bank: CompanionBankPNG | null,
+		info: CompanionFeedbackEventInfo | null
+	) => TRes
 	subscribe?: (feedback: CompanionFeedbackEvent) => void
 	unsubscribe?: (feedback: CompanionFeedbackEvent) => void
 }
