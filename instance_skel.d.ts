@@ -12,6 +12,7 @@ import {
 	CompanionUpgradeToBooleanFeedbackMap,
 	CompanionActionEventInfo,
 	CompanionFeedbackEventInfo,
+	CompanionBankPNG,
 } from './instance_skel_types'
 
 declare abstract class InstanceSkel<TConfig> {
@@ -60,7 +61,11 @@ declare abstract class InstanceSkel<TConfig> {
 	 * Processes a feedback state.
 	 * @since 1.0.0
 	 */
-	feedback?(feedback: CompanionFeedbackEvent, info: CompanionFeedbackEventInfo): CompanionFeedbackResult
+	feedback?(
+		feedback: CompanionFeedbackEvent,
+		bank: CompanionBankPNG | null,
+		info: CompanionFeedbackEventInfo | null
+	): CompanionFeedbackResult
 
 	/**
 	 * Save the current config of the module. Call this if you change any properties on this.config, so that they get persisted
@@ -82,7 +87,10 @@ declare abstract class InstanceSkel<TConfig> {
 
 	setVariable(variableId: string, value: string): void
 	getVariable(variableId: string, cb: (value: string) => void): void
-	checkFeedbacks(feedbackId?: string): void
+	/** Recheck all feedbacks of the given types. eg `self.checkFeedbacks('bank_style', 'bank_text')` or `self.checkFeedbacks` */
+	checkFeedbacks(...feedbackTypes: string[]): void
+	/** Recheck all feedbacks of the given ids. eg `self.checkFeedbacksById('vvbta3jtaD', 'Ba_1C3NF3q')` */
+	checkFeedbacksById(...feedbackIds: string[]): void
 
 	/**
 	 * Parse a string to replace any variable references with their values.
