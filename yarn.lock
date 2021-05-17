@@ -1787,9 +1787,9 @@ commist@^1.0.0:
   version "1.0.1"
   resolved "https://codeload.github.com/bitfocus/companion-module-cisco-cms/tar.gz/4018eac85861e8f27f391937bf5e14da5c40b2f1"
 
-"companion-module-cisco-webex-websocket@github:bitfocus/companion-module-cisco-webex-websocket#v1.0.6":
-  version "1.0.6"
-  resolved "https://codeload.github.com/bitfocus/companion-module-cisco-webex-websocket/tar.gz/3380eecca235377e61b5d44bb089f62bc8aa405c"
+"companion-module-cisco-webex-websocket@github:bitfocus/companion-module-cisco-webex-websocket#v1.0.7":
+  version "1.0.7"
+  resolved "https://codeload.github.com/bitfocus/companion-module-cisco-webex-websocket/tar.gz/670a96d76fdb0b9f86bfa25aba74c01576d2b2be"
   dependencies:
     "@types/debug" "^4.1.5"
     "@types/node" "^12.19.4"
