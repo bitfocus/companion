@@ -192,6 +192,7 @@
 		"companion-module-bmd-teranex": "github:bitfocus/companion-module-bmd-teranex#v1.0.4",
 		"companion-module-bmd-videohub": "github:bitfocus/companion-module-bmd-videohub#v1.3.0",
 		"companion-module-bmd-webpresenterhd": "github:bitfocus/companion-module-bmd-webpresenterhd#v1.0.0",
+		"companion-module-boinx-mimolive": "github:bitfocus/companion-module-boinx-mimolive#v1.0.0",
 		"companion-module-borealsystems-director": "github:bitfocus/companion-module-borealsystems-director#v1.0.0",
 		"companion-module-brightsign-player": "github:bitfocus/companion-module-brightsign-player#v1.1.1",
 		"companion-module-casparcg-server": "github:bitfocus/companion-module-casparcg-server#v1.0.2",
