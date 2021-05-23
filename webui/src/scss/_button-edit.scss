@@ -66,6 +66,19 @@ table.feedback-table {
 			grid-row: 1 / 4;
 			grid-column: 2;
 		}
+
+		.cell-styles {
+			grid-row: 5;
+			grid-column: 2;
+
+			.png-browse {
+				display: block;
+			}
+		}
+		.cell-styles-manage {
+			grid-row: 5;
+			grid-column: 1;
+		}
 	}
 
 	// Give a border the bottom of the table. based on the table.td rule from coreui

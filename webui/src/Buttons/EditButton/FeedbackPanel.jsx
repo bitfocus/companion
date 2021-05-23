@@ -1,4 +1,4 @@
-import { CButton, CForm } from '@coreui/react'
+import { CAlert, CButton, CForm, CFormGroup } from '@coreui/react'
 import { faSort, faTrash } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import React, { useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react'
@@ -8,6 +8,8 @@ import Select from 'react-select'
 import { ActionTableRowOption } from './Table'
 import { useDrag, useDrop } from 'react-dnd'
 import { GenericConfirmModal } from '../../Components/GenericConfirmModal'
+import { DropdownInputField } from '../../Components'
+import { ButtonStyleConfigFields } from './ButtonStyleConfig'
 
 export const FeedbacksPanel = function ({
 	page,
@@ -120,11 +122,14 @@ export const FeedbacksPanel = function ({
 						<FeedbackTableRow
 							key={a?.id ?? i}
 							index={i}
+							page={page}
+							bank={bank}
 							feedback={a}
 							setValue={setValue}
 							doDelete={doDelete}
 							dragId={dragId}
 							moveCard={moveCard}
+							bankFeedbacksChanged={setFeedbacks}
 						/>
 					))}
 				</tbody>
@@ -135,7 +140,7 @@ export const FeedbacksPanel = function ({
 	)
 }
 
-function FeedbackTableRow({ feedback, index, dragId, moveCard, setValue, doDelete }) {
+function FeedbackTableRow({ feedback, page, bank, index, dragId, moveCard, setValue, doDelete, bankFeedbacksChanged }) {
 	const context = useContext(CompanionContext)
 
 	const innerDelete = useCallback(() => doDelete(feedback.id), [feedback.id, doDelete])
@@ -242,10 +247,149 @@ function FeedbackTableRow({ feedback, index, dragId, moveCard, setValue, doDelet
 							{options.length === 0 ? 'Nothing to configure' : ''}
 						</CForm>
 					</div>
+					<FeedbackStyles
+						feedbackSpec={feedbackSpec}
+						feedback={feedback}
+						page={page}
+						bank={bank}
+						bankFeedbacksChanged={bankFeedbacksChanged}
+					/>
+					<FeedbackManageStyles
+						feedbackSpec={feedbackSpec}
+						feedback={feedback}
+						page={page}
+						bank={bank}
+						bankFeedbacksChanged={bankFeedbacksChanged}
+					/>
 				</div>
 			</td>
 		</tr>
 	)
+}
+
+function FeedbackManageStyles({ bankFeedbacksChanged, feedbackSpec, feedback, page, bank }) {
+	const context = useContext(CompanionContext)
+
+	const setSelected = useCallback(
+		(selected) => {
+			socketEmit(context.socket, 'bank_update_feedback_style_selection', [page, bank, feedback.id, selected])
+				.then(([_page, _bank, bankFeedbacks]) => {
+					bankFeedbacksChanged(bankFeedbacks)
+				})
+				.catch((e) => {
+					// TODO
+				})
+		},
+		[context.socket, page, bank, feedback.id, bankFeedbacksChanged]
+	)
+
+	if (feedbackSpec?.type === 'boolean') {
+		const choices = [
+			{ id: 'text', label: 'Text' },
+			{ id: 'size', label: 'Font Size' },
+			{ id: 'png64', label: 'PNG' },
+			{ id: 'alignment', label: 'Text Alignment' },
+			{ id: 'pngalignment', label: 'PNG Alignment' },
+			{ id: 'color', label: 'Color' },
+			{ id: 'bgcolor', label: 'Background' },
+		]
+		const currentValue = Object.keys(feedback.style || {})
+
+		return (
+			<div className="cell-styles-manage">
+				<CForm>
+					<MyErrorBoundary>
+						<CFormGroup>
+							<label>Change style properties</label>
+							<DropdownInputField
+								multiple={true}
+								definition={{ default: ['color', 'bgcolor'], choices: choices }}
+								setValue={setSelected}
+								value={currentValue}
+							/>
+						</CFormGroup>
+					</MyErrorBoundary>
+				</CForm>
+			</div>
+		)
+	} else {
+		return ''
+	}
+}
+
+function FeedbackStyles({ feedbackSpec, feedback, page, bank, bankFeedbacksChanged }) {
+	const context = useContext(CompanionContext)
+
+	const setValue = useCallback(
+		(key, value) => {
+			socketEmit(context.socket, 'bank_update_feedback_style_set', [page, bank, feedback.id, key, value])
+				.then(([_page, _bank, bankFeedbacks]) => {
+					bankFeedbacksChanged(bankFeedbacks)
+				})
+				.catch((e) => {
+					console.error('Failed to update feedback style', e)
+				})
+		},
+		[context.socket, page, bank, feedback.id, bankFeedbacksChanged]
+	)
+	const [pngError, setPngError] = useState(null)
+	const clearPngError = useCallback(() => setPngError(null), [])
+	const setPng = useCallback(
+		(data) => {
+			setPngError(null)
+			socketEmit(context.socket, 'bank_update_feedback_style_set_png', [page, bank, feedback.id, data])
+				.then(([_page, _bank, bankFeedbacks]) => {
+					setPngError(null)
+					bankFeedbacksChanged(bankFeedbacks)
+				})
+				.catch((e) => {
+					console.error('Failed to upload png', e)
+					setPngError('Failed to set png')
+				})
+		},
+		[context.socket, page, bank, feedback.id, bankFeedbacksChanged]
+	)
+
+	if (feedbackSpec?.type === 'boolean') {
+		const currentStyle = feedback.style || {}
+
+		const FeedbackStyleControlWrapper = (id, props, contents) => {
+			if (id in currentStyle) {
+				return (
+					<MyErrorBoundary>
+						<CFormGroup>{contents}</CFormGroup>
+					</MyErrorBoundary>
+				)
+			} else {
+				return ''
+			}
+		}
+
+		return (
+			<div className="cell-styles">
+				<CForm>
+					{pngError ? (
+						<CAlert color="warning" closeButton>
+							{pngError}
+						</CAlert>
+					) : (
+						''
+					)}
+
+					<ButtonStyleConfigFields
+						values={currentStyle}
+						setValueInner={setValue}
+						setPng={setPng}
+						setPngError={clearPngError}
+						controlTemplate={FeedbackStyleControlWrapper}
+					/>
+					{Object.keys(currentStyle).length === 0 ? 'Feedback has no effect. Try adding a property to override' : ''}
+				</CForm>
+			</div>
+		)
+	} else {
+		return ''
+	}
 }
 
 function AddFeedbackDropdown({ onSelect }) {

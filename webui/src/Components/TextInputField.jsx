@@ -24,9 +24,11 @@ export function TextInputField({ definition, value, setValue, setValid }) {
 				val = `${val}`
 			}
 
-			// Must match the regex
-			if (regex && (typeof val !== 'string' || !val.match(regex))) {
-				return false
+			// Must match the regex, if required or has a value
+			if (definition.required || val !== '') {
+				if (regex && (typeof val !== 'string' || !val.match(regex))) {
+					return false
+				}
 			}
 
 			// if required, must not be empty

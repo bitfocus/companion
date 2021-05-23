@@ -1,0 +1,3 @@
+- Connect the hardware and software you want to control. Make sure you are on the same network as they are.
+- In the Elgato Stream Deck app, make sure to firmware upgrade the Stream Deck to the latest version available.
+- Close the Elgato Stream Deck app. Companion will not find your device if this is open.

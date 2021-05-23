@@ -5,6 +5,55 @@ export interface CompanionSystem extends EventEmitter {}
 
 export type InputValue = number | string | boolean
 
+export type CompanionBank = CompanionBankPage | CompanionBankPNG | CompanionBankPreset
+
+export interface CompanionBankPage {
+	style: 'pageup' | 'pagedown' | 'pagenum'
+}
+
+export type CompanionAlignment =
+	| 'left:top'
+	| 'center:top'
+	| 'right:top'
+	| 'left:center'
+	| 'center:center'
+	| 'right:center'
+	| 'left:bottom'
+	| 'center:bottom'
+	| 'right:bottom'
+
+export type CompanionTextSize = 'auto' | '7' | '14' | '18' | '24' | '30' | '44'
+
+export interface CompanionBankRequiredProps {
+	text: string
+	size: CompanionTextSize
+	color: number
+	bgcolor: number
+}
+export interface CompanionBankAdditionalStyleProps {
+	alignment: CompanionAlignment
+	pngalignment: CompanionAlignment
+	png64?: string
+}
+export interface CompanionBankAdditionalCoreProps {
+	latch: boolean
+	relative_delay: boolean
+}
+
+export interface CompanionBankPNG
+	extends CompanionBankRequiredProps,
+		CompanionBankAdditionalStyleProps,
+		CompanionBankAdditionalCoreProps {
+	style: 'png'
+}
+
+export interface CompanionBankPreset
+	extends CompanionBankRequiredProps,
+		Partial<CompanionBankAdditionalStyleProps>,
+		Partial<CompanionBankAdditionalCoreProps> {
+	style: 'png' | 'text' // 'text' for backwards compatability
+}
+
 export interface CompanionAction {
 	label: string
 	options: SomeCompanionInputField[]
@@ -20,6 +69,11 @@ export interface CompanionActionEvent {
 
 export interface CompanionActionEventInfo {
 	deviceId: string | undefined
+	page: number
+	bank: number
+}
+
+export interface CompanionFeedbackEventInfo {
 	page: number
 	bank: number
 }
@@ -116,27 +170,33 @@ export interface CompanionVariable {
 	label: string
 	name: string
 }
-export interface CompanionFeedback {
+
+export interface CompanionFeedbackBase<TRes> {
+	type?: 'boolean' | 'advanced'
 	label: string
 	description: string
 	options: SomeCompanionInputField[]
-	callback?: (feedback: CompanionFeedbackEvent) => CompanionFeedbackResult
+	callback?: (feedback: CompanionFeedbackEvent, bank: CompanionBankPNG, info: CompanionFeedbackEventInfo) => TRes
 	subscribe?: (feedback: CompanionFeedbackEvent) => void
 	unsubscribe?: (feedback: CompanionFeedbackEvent) => void
 }
+export interface CompanionFeedbackBoolean extends CompanionFeedbackBase<boolean> {
+	type: 'boolean'
+	style: Partial<CompanionBankRequiredProps & CompanionBankAdditionalStyleProps>
+}
+export interface CompanionFeedbackAdvanced extends CompanionFeedbackBase<CompanionFeedbackResult> {
+	type?: 'advanced'
+}
+export type CompanionFeedback = CompanionFeedbackBoolean | CompanionFeedbackAdvanced
+
 export interface CompanionPreset {
 	category: string
 	label: string
-	bank: {
-		style: 'text'
-		text: string
-		size: 'auto' | '7' | '14' | '18' | '24' | '30' | '44'
-		color: number
-		bgcolor: number
-	}
+	bank: CompanionBankPreset
 	feedbacks: Array<{
 		type: string
 		options: { [key: string]: InputValue | undefined }
+		style?: Partial<CompanionBankRequiredProps & CompanionBankAdditionalStyleProps>
 	}>
 	actions: Array<{
 		action: string
@@ -161,6 +221,16 @@ export type CompanionUpgradeScript<TConfig> = (
 	release_actions: CompanionMigrationAction[],
 	feedbacks: CompanionMigrationFeedback[]
 ) => boolean
+
+export interface CompanionUpgradeToBooleanFeedbackMap {
+	[feedback_id: string]:
+		| true
+		| {
+				// Option name to style property
+				[option_key: string]: 'text' | 'size' | 'color' | 'bgcolor' | 'alignment' | 'pngalignment' | 'png64'
+		  }
+		| undefined
+}
 
 export interface CompanionCoreInstanceconfig {
 	instance_type: string

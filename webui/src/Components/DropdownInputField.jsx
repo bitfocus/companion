@@ -85,14 +85,14 @@ export function DropdownInputField({ definition, multiple, value, setValue, setV
 		[setValue, setValid, multiple, definition.minSelection, definition.maximumSelectionLength, options]
 	)
 
+	const minChoicesForSearch = typeof definition.minChoicesForSearch === 'number' ? definition.minChoicesForSearch : 10
+
 	return (
 		<div className="select-tooltip" title={definition.tooltip}>
 			<Select
 				menuPlacement="auto"
 				isClearable={false}
-				isSearchable={
-					typeof definition.minChoicesForSearch === 'number' && definition.minChoicesForSearch <= options.length
-				}
+				isSearchable={minChoicesForSearch <= options.length}
 				isMulti={isMultiple}
 				options={options}
 				value={isMultiple ? currentValue : currentValue[0]}

@@ -1,5 +1,99 @@
 # Bitfocus Companion
 
+## Companion v2.1.3 - Release Notes
+
+# 🧩 NEW MODULES
+
+- Allen & Heath QU Series
+- Allen & Heath SQ Series
+- Audivero Unity Intercom Client
+- AVIShop HDBaseT Matrix
+- Behringer Wing
+- BirdDog Studio
+- Cisco CMS
+- Datapath FX4
+- Dolby Cinema Processor
+- Gamma Control Gmaestro
+- Generic TCP to Serial
+- Generic Ember+
+- Lectrosonics Aspen
+- Liminal ZoomOSC
+- Lumens VISCA
+- Magewell ProConvert Decoder
+- MiddleAtlantic RackLink PDU
+- NewTek Tricaster
+- Orfast NDI Viewer
+- OpenSong
+- PresentationTools CueTimer
+- ProtoPie Bridge
+- PRSI iPower
+- Rational Acoustics Smaart 3
+- Roland V-1200HD
+- Shure DIS-CCU
+- Sienna NDI Monitor
+- Softron On The Air Video
+- Teracom TCW181B
+- VICREO Variable Listener
+- Visual Productions BStation2
+
+# 👍🏻 MODULE IMPROVEMENTS
+
+- Avolites Titan: refactor to ES6, added legend feedback
+- Barco DCS: option to change port
+- Barco Eventmaster: bug fixes, add arming destinations
+- Behringer X32: bug fixes
+- Behringer XAir: bug fixes and optimizations
+- BMD ATEM: support for Mini Extreme, audio gain fade control
+- BMD Hyperdeck: timecode feedback, bug fixes, optimizations
+- BMD VideoHub: save routing table to file, optimizations
+- Datavideo VISCA: bug fixes
+- Depili clock-8001: added v4 support
+- DiGiCo OSC: additional support
+- Digitial Projection Highlight: added TCP support
+- Elgato Key Light: additional support
+- Epiphan Pearl: bug fixes
+- Extron SMP351: record time remaining update
+- Figure 53 Qlab Advance: additional support and bug fixes
+- Generic HTTP: bug fixes
+- Generic OSC: bug fixes
+- Generic PJLink: bug fix
+- Global Cache iTach IP2IR: bug fix
+- H2R Graphics: bug fixes
+- Imimot Mitti: additional actions and variables
+- Magewell Ultra Stream: additional actions and feedback
+- NewTek NDI Studio Monitor: bug fixes
+- OpenLP: logging fix
+- Panasonic Camera Controller: additional support and features
+- Panasonic Projector: added support for PT-VZ580
+- Panasonic PTZ: additional support and bug fixes
+- piXap piXtimer Pro: additional actions
+- Planning Center Services Live: added default choice to plan list
+- Q-Sys Remote Control: bug fixes
+- Renewed Vision ProPresenter: updates for v7.4.2, additional features
+- Resolume Arena: bug fix
+- Roku TV: better error handling
+- Roland M5000: bug fixes, support for serial devices
+- Ross Video RossTalk: bug fixes
+- Ross Video Xpression: added uncue actions and bug fix
+- Sharp TV: bug fix
+- Singular.live Studio: bug fix
+- Sony VISCA: additional actions
+- Soundcraft UI Consoles: rewritten in TypeScript, many new features
+- TechMinistry Midi Relay: improved error handling
+- TechMinistry TallyArbiter: adds “reassign client” action
+- Teradek VidiU: added current bitrate variable
+- Tesla Smart: expanded support, added feedback
+- TheLightingController: bug fixes
+- ThingM blink(1): various new features
+- Vaddio PTZ Cameras: presets fix
+- VICREO Hotkey: documentation update
+
+## Companion v2.1.2 - Release Notes
+
+# 🐞 BUG FIXES
+
+- VideoLan VLC: apply default hostname
+
 ## Companion v2.1.1 - Release Notes
 
 # 📣 ADDED CORE FEATURES

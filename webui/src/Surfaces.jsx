@@ -14,6 +14,7 @@ import {
 	CForm,
 	CFormGroup,
 	CInput,
+	CInputCheckbox,
 	CLabel,
 	CModal,
 	CModalBody,
@@ -262,37 +263,16 @@ const SurfaceEditModal = forwardRef(function SurfaceEditModal(_props, ref) {
 							''
 						)}
 
-						{deviceInfo.config?.includes('keysPerRow') ? (
+						{deviceInfo.config?.includes('enable_device') ? (
 							<CFormGroup>
-								<CLabel htmlFor="keysPerRow">Keys per row</CLabel>
-								<CInput
-									name="keysPerRow"
-									type="range"
-									min={1}
-									max={99}
-									step={1}
-									value={deviceConfig.keysPerRow}
-									onChange={(e) => updateConfig('keysPerRow', parseInt(e.currentTarget.value))}
+								<CLabel htmlFor="enable_device">Enable Device</CLabel>
+								<CInputCheckbox
+									name="enable_device"
+									type="checkbox"
+									checked={!!deviceConfig.enable_device}
+									value={true}
+									onChange={(e) => updateConfig('enable_device', !!e.currentTarget.checked)}
 								/>
-								<span>{deviceConfig.keysPerRow}</span>
-							</CFormGroup>
-						) : (
-							''
-						)}
-
-						{deviceInfo.config?.includes('keysPerColumn') ? (
-							<CFormGroup>
-								<CLabel htmlFor="keysPerColumn">Keys per column</CLabel>
-								<CInput
-									name="keysPerColumn"
-									type="range"
-									min={1}
-									max={99}
-									step={1}
-									value={deviceConfig.keysPerColumn}
-									onChange={(e) => updateConfig('keysPerColumn', parseInt(e.currentTarget.value))}
-								/>
-								<span>{deviceConfig.keysPerColumn}</span>
 							</CFormGroup>
 						) : (
 							''
