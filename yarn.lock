@@ -2373,9 +2373,9 @@ commist@^1.0.0:
   version "1.0.3"
   resolved "https://codeload.github.com/bitfocus/companion-module-panasonic-avhs/tar.gz/51752e23969dceb25e24bc40db4e94bcca0e153f"
 
-"companion-module-panasonic-camera-controller@github:bitfocus/companion-module-panasonic-camera-controller#v1.0.3":
-  version "1.0.3"
-  resolved "https://codeload.github.com/bitfocus/companion-module-panasonic-camera-controller/tar.gz/4b78e120090fb4117a9a482732a9d93c916f66d1"
+"companion-module-panasonic-camera-controller@github:bitfocus/companion-module-panasonic-camera-controller#v1.0.5":
+  version "1.0.5"
+  resolved "https://codeload.github.com/bitfocus/companion-module-panasonic-camera-controller/tar.gz/70151a18b531e1d3ada80e5a42e9acc49e16db81"
   dependencies:
     got "^6.7.1"
 
@@ -2385,9 +2385,9 @@ commist@^1.0.0:
   dependencies:
     ntcontrol-connection "^0.2.0"
 
-"companion-module-panasonic-ptz@github:bitfocus/companion-module-panasonic-ptz#v1.0.15":
-  version "1.0.15"
-  resolved "https://codeload.github.com/bitfocus/companion-module-panasonic-ptz/tar.gz/f2963e68a1fa051707f8e25f62a66bf068d14e91"
+"companion-module-panasonic-ptz@github:bitfocus/companion-module-panasonic-ptz#v1.0.16":
+  version "1.0.16"
+  resolved "https://codeload.github.com/bitfocus/companion-module-panasonic-ptz/tar.gz/08b4e9901fd7e4ed04fb10f7dac975e931d921da"
 
 "companion-module-panasonic-tv-th@github:bitfocus/companion-module-panasonic-tv-th#v0.0.1":
   version "0.0.1"
@@ -2640,9 +2640,9 @@ commist@^1.0.0:
   dependencies:
     socket.io-client "^2.3.0"
 
-"companion-module-teracom-tcw181b@github:bitfocus/companion-module-teracom-tcw181b#v1.0.0":
-  version "1.0.0"
-  resolved "https://codeload.github.com/bitfocus/companion-module-teracom-tcw181b/tar.gz/540fffa01b86add47123bc5581495066bd412469"
+"companion-module-teracom-tcw181b@github:bitfocus/companion-module-teracom-tcw181b#v1.0.1":
+  version "1.0.1"
+  resolved "https://codeload.github.com/bitfocus/companion-module-teracom-tcw181b/tar.gz/20ba897f5ee5581d2eb83cdbe6b83ca8b2f79f4d"
   dependencies:
     got "^6.7.1"
     lodash "^4.17.19"
