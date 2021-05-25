@@ -32,10 +32,18 @@ var logbuffer = []
 var logwriting = false
 
 const pkgInfo = require('./package.json')
-const buildNumber = fs
-	.readFileSync(__dirname + '/BUILD')
-	.toString()
-	.trim()
+let buildNumber
+try {
+	buildNumber = fs
+		.readFileSync(__dirname + '/BUILD')
+		.toString()
+		.trim()
+} catch (e) {
+	console.error('Companion cannot start as the "BUILD" file is missing')
+	console.error('If you are running from source, you can generate it by running: ./tools/build_writefile.sh')
+	process.exit(1)
+}
+
 const skeleton_info = {
 	appName: pkgInfo.description,
 	appVersion: pkgInfo.version,
