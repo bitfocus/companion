@@ -69,7 +69,7 @@ function VariablesList({ selectedInstanceLabel, setInstance }) {
 	const doBack = useCallback(() => setInstance(null), [setInstance])
 
 	return (
-		<div>
+		<div className="variables-panel">
 			<h5>
 				<CButton color="primary" size="sm" onClick={doBack}>
 					Back
