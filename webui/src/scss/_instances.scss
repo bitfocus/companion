@@ -43,9 +43,14 @@
 	cursor: ns-resize;
 }
 
+.variables-panel {
+	.variables-table {
+		margin-top: 20px;
+	}
+}
+
 .variables-table {
 	word-break: break-all;
-	margin-top: 20px;
 }
 
 .instances-panel {

@@ -51,14 +51,6 @@
 
 		-webkit-user-drag: none;
 	}
-
-	// // For bigger screens, like 1440p and 4K, alow scaling of the buttons
-	// @include media-breakpoint-up('xl') {
-	// 	img {
-	// 		max-width: none;
-	// 		max-height: none;
-	// 	}
-	// }
 }
 
 .button-page-input {
