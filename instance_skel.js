@@ -200,6 +200,8 @@ instance.prototype.addUpgradeToBooleanFeedbackScript = function (upgrade_map) {
 	var self = this
 
 	self.addUpgradeScript(function (config, actions, release_cctions, feedbacks) {
+		let changed = false
+
 		for (const feedback of feedbacks) {
 			let upgrade_rules = upgrade_map[feedback.type]
 			if (upgrade_rules === true) {
@@ -217,10 +219,13 @@ instance.prototype.addUpgradeToBooleanFeedbackScript = function (upgrade_map) {
 					if (feedback.options[option_key] !== undefined) {
 						feedback.style[style_key] = feedback.options[option_key]
 						delete feedback.options[option_key]
+						changed = true
 					}
 				}
 			}
 		}
+
+		return changed
 	})
 }
 
