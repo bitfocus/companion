@@ -125,7 +125,7 @@ instance.prototype.status = function (level, message) {
 	self.system.emit('instance_status_update', self.id, level, message)
 }
 
-instance.prototype.upgradeConfig = function () {
+instance.prototype.upgradeConfig = function (get_scripts) {
 	var self = this
 
 	var idx = self.config._configIdx
@@ -133,13 +133,15 @@ instance.prototype.upgradeConfig = function () {
 		idx = -1
 	}
 
+	var upgrade_scripts = get_scripts ? get_scripts() : self._versionscripts
+
 	var debug = require('debug')('instance:' + self.package_info.name + ':' + self.id)
 
-	if (idx + 1 < self._versionscripts.length) {
-		debug('upgradeConfig(' + self.package_info.name + '): ' + (idx + 1) + ' to ' + self._versionscripts.length)
+	if (idx + 1 < upgrade_scripts.length) {
+		debug('upgradeConfig(' + self.package_info.name + '): ' + (idx + 1) + ' to ' + upgrade_scripts.length)
 	}
 
-	for (var i = idx + 1; i < self._versionscripts.length; ++i) {
+	for (var i = idx + 1; i < upgrade_scripts.length; ++i) {
 		debug('UpgradeConfig: Upgrading to version ' + (i + 1))
 
 		// Fetch instance actions
@@ -158,7 +160,7 @@ instance.prototype.upgradeConfig = function () {
 
 		var result
 		try {
-			result = self._versionscripts[i](self.config, actions, release_actions, feedbacks)
+			result = upgrade_scripts[i](self.config, actions, release_actions, feedbacks)
 		} catch (e) {
 			debug('Upgradescript in ' + self.package_info.name + ' failed', e)
 		}
@@ -180,7 +182,7 @@ instance.prototype.upgradeConfig = function () {
 		}
 	}
 
-	if (idx + 1 < self._versionscripts.length) {
+	if (idx + 1 < upgrade_scripts.length) {
 		// Save the _configIdx change
 		this.saveConfig()
 	}
@@ -196,10 +198,9 @@ instance.prototype.saveConfig = function () {
 	self.system.emit('instance_config_put', self.id, self.config, true)
 }
 
-instance.prototype.addUpgradeToBooleanFeedbackScript = function (upgrade_map) {
-	var self = this
-
-	self.addUpgradeScript(function (config, actions, release_cctions, feedbacks) {
+instance.CreateConvertToBooleanFeedbackUpgradeScript = function (upgrade_map) {
+	// Warning: the unused parameters will often be null
+	return function (_context, _config, _actions, feedbacks) {
 		let changed = false
 
 		for (const feedback of feedbacks) {
@@ -226,13 +227,39 @@ instance.prototype.addUpgradeToBooleanFeedbackScript = function (upgrade_map) {
 		}
 
 		return changed
+	}
+}
+
+/** @deprecated implement the static GetUpgradeScripts instead */
+instance.prototype.addUpgradeToBooleanFeedbackScript = function (upgrade_map) {
+	var self = this
+
+	if (this.disable_instance_scripts) {
+		throw new Error(
+			'addUpgradeToBooleanFeedbackScript is not available as this module is using the static GetUpgradeScripts flow'
+		)
+	}
+
+	var func = instance.CreateConvertToBooleanFeedbackUpgradeScript(upgrade_map)
+
+	self.addUpgradeScript(function (_config, _actions, _release_actions, feedbacks) {
+		return func(null, null, null, feedbacks)
 	})
 }
 
+/** @deprecated implement the static GetUpgradeScripts instead */
 instance.prototype.addUpgradeScript = function (cb) {
 	var self = this
 
+	if (this.disable_instance_scripts) {
+		throw new Error('addUpgradeScript is not available as this module is using the static GetUpgradeScripts flow')
+	}
+
 	self._versionscripts.push(cb)
+}
+
+instance.prototype.disableInstanceUpgradeScripts = function () {
+	this.disable_instance_scripts = true
 }
 
 instance.prototype.setActions = function (actions) {
