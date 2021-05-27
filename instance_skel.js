@@ -141,26 +141,27 @@ instance.prototype.upgradeConfig = function (get_scripts) {
 		debug('upgradeConfig(' + self.package_info.name + '): ' + (idx + 1) + ' to ' + upgrade_scripts.length)
 	}
 
+	// Fetch instance actions
+	var actions = []
+	self.system.emit('actions_for_instance', self.id, function (_actions) {
+		actions = _actions
+	})
+	var release_actions = []
+	self.system.emit('release_actions_for_instance', self.id, function (_release_actions) {
+		release_actions = _release_actions
+	})
+	var feedbacks = []
+	self.system.emit('feedbacks_for_instance', self.id, function (_feedbacks) {
+		feedbacks = _feedbacks
+	})
+
+	let changed = false
 	for (var i = idx + 1; i < upgrade_scripts.length; ++i) {
 		debug('UpgradeConfig: Upgrading to version ' + (i + 1))
 
-		// Fetch instance actions
-		var actions = []
-		self.system.emit('actions_for_instance', self.id, function (_actions) {
-			actions = _actions
-		})
-		var release_actions = []
-		self.system.emit('release_actions_for_instance', self.id, function (_release_actions) {
-			release_actions = _release_actions
-		})
-		var feedbacks = []
-		self.system.emit('feedbacks_for_instance', self.id, function (_feedbacks) {
-			feedbacks = _feedbacks
-		})
-
-		var result
 		try {
-			result = upgrade_scripts[i](self.config, actions, release_actions, feedbacks)
+			const result = upgrade_scripts[i](self.config, actions, release_actions, feedbacks)
+			changed = changed || result
 		} catch (e) {
 			debug('Upgradescript in ' + self.package_info.name + ' failed', e)
 		}
@@ -170,15 +171,8 @@ instance.prototype.upgradeConfig = function (get_scripts) {
 			action.instance = self.id
 			action.label = `${self.id}:${action.action}`
 		}
-
-		// If anything was changed, update system and db
-		if (result) {
-			self.system.emit('config_save')
-			self.system.emit('action_save')
-			self.system.emit('release_action_save')
-			self.system.emit('feedback_save')
-			self.system.emit('instance_save')
-			self.system.emit('db_save')
+		for (const feedback of feedbacks) {
+			feedback.instance_id = self.id
 		}
 	}
 
@@ -187,7 +181,13 @@ instance.prototype.upgradeConfig = function (get_scripts) {
 		this.saveConfig()
 	}
 
-	debug('instance save')
+	// If anything was changed, update system and db
+	if (changed) {
+		self.system.emit('config_save')
+		self.system.emit('action_save')
+		self.system.emit('release_action_save')
+		self.system.emit('feedback_save')
+	}
 	self.system.emit('instance_save')
 }
 

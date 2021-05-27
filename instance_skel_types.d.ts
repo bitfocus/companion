@@ -229,9 +229,9 @@ export interface CompanionUpgradeContext {
 
 export type CompanionStaticUpgradeScript = (
 	context: CompanionUpgradeContext,
-	config: CompanionCoreInstanceconfig & Record<string, any>,
-	actions: CompanionMigrationAction[],
-	feedbacks: CompanionMigrationFeedback[]
+	config: null | (CompanionCoreInstanceconfig & Record<string, any>),
+	affected_actions: CompanionMigrationAction[],
+	affected_feedbacks: CompanionMigrationFeedback[]
 ) => boolean
 
 export interface CompanionUpgradeToBooleanFeedbackMap {
