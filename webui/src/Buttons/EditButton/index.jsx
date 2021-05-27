@@ -162,7 +162,7 @@ export function EditButton({ page, bank, onKeyUp }) {
 
 					{config.style === 'png' ? (
 						<>
-							<h4 className="mt-3">Press/on actions</h4>
+							<h4 className="mt-3">{config.latch ? 'Latch' : 'Press'} actions</h4>
 							<ActionsPanel
 								page={page}
 								bank={bank}
@@ -179,7 +179,7 @@ export function EditButton({ page, bank, onKeyUp }) {
 								reloadToken={reloadTablesToken}
 							/>
 
-							<h4 className="mt-3">Release/off actions</h4>
+							<h4 className="mt-3">{config.latch ? 'Unlatch' : 'Release'} actions</h4>
 							<ActionsPanel
 								page={page}
 								bank={bank}
