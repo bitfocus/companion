@@ -9,6 +9,7 @@ import {
 	CompanionFeedbackEvent,
 	CompanionFeedbackResult,
 	CompanionUpgradeScript,
+	CompanionStaticUpgradeScript,
 	CompanionUpgradeToBooleanFeedbackMap,
 	CompanionActionEventInfo,
 	CompanionFeedbackEventInfo,
@@ -51,6 +52,20 @@ declare abstract class InstanceSkel<TConfig> {
 	abstract config_fields(): CompanionInputField[]
 
 	/**
+	 * Provides the upgrade scripts to companion that are to be used for this module.
+	 * These get run without any awareness of the instance class.
+	 */
+	static GetUpgradeScripts?(): Array<CompanionStaticUpgradeScript>
+	/**
+	 * A helper script to automate the bulk of the process to upgrade feedbacks from 'advanced' to 'boolean'.
+	 * There are some built in rules for properties names based on the most common cases
+	 * @param upgradeMap The feedbacks to upgrade and the properties to convert
+	 */
+	static CreateConvertToBooleanFeedbackUpgradeScript(
+		upgradeMap: CompanionUpgradeToBooleanFeedbackMap
+	): CompanionStaticUpgradeScript
+
+	/**
 	 * Executes the provided action.
 	 * @since 1.0.0
 	 */
@@ -67,8 +82,10 @@ declare abstract class InstanceSkel<TConfig> {
 	 */
 	saveConfig(): void
 
+	/** @deprecated implement the static GetUpgradeScripts instead */
 	addUpgradeScript(fcn: CompanionUpgradeScript<TConfig>): void
 	/**
+	 * @deprecated implement the static GetUpgradeScripts instead
 	 * A helper script to automate the bulk of the process to upgrade feedbacks from 'advanced' to 'boolean'.
 	 * There are some built in rules for properties names based on the most common cases
 	 * @param upgradeMap The feedbacks to upgrade and the properties to convert
