@@ -173,7 +173,6 @@ instance.prototype.upgradeConfig = function () {
 		if (result) {
 			self.system.emit('config_save')
 			self.system.emit('action_save')
-			self.system.emit('release_action_save')
 			self.system.emit('feedback_save')
 			self.system.emit('instance_save')
 			self.system.emit('db_save')
