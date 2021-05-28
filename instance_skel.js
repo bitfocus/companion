@@ -133,6 +133,7 @@ instance.prototype.upgradeConfig = function (get_scripts) {
 		idx = -1
 	}
 
+	// TODO - this wont work as the method signatures are very different
 	var upgrade_scripts = get_scripts ? get_scripts() : self._versionscripts
 
 	var debug = require('debug')('instance:' + self.package_info.name + ':' + self.id)
