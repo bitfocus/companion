@@ -2557,9 +2557,9 @@ commist@^1.0.0:
   dependencies:
     xml2js "^0.4.23"
 
-"companion-module-singularlive-studio@github:bitfocus/companion-module-singularlive-studio#v1.0.4":
-  version "1.0.4"
-  resolved "https://codeload.github.com/bitfocus/companion-module-singularlive-studio/tar.gz/e9565f59fdfcfdfa2f20721cfcbfe6ac282dfc19"
+"companion-module-singularlive-studio@github:bitfocus/companion-module-singularlive-studio#v1.0.5":
+  version "1.0.5"
+  resolved "https://codeload.github.com/bitfocus/companion-module-singularlive-studio/tar.gz/e7476d58402c63d8179224727771ef3bd6c2d97a"
 
 "companion-module-slack-webhooks@github:bitfocus/companion-module-slack-webhooks#v1.0.1":
   version "1.0.1"
