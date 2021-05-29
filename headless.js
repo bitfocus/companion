@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-var companion = require('./app.js')
+var companion = require('./lib/registry.js')
 var os = require('os')
 
 console.log('Starting')
@@ -38,9 +38,9 @@ if (process.argv.length > 2 && process.argv[2].substr(0, 1) == '-') {
 }
 
 if (process.env.COMPANION_CONFIG_BASEDIR !== undefined) {
-	companion.setConfigDir(process.env.COMPANION_CONFIG_BASEDIR)
+	companion.cfgDir = process.env.COMPANION_CONFIG_BASEDIR
 } else {
-	companion.setConfigDir(process.env[process.platform == 'win32' ? 'USERPROFILE' : 'HOME'])
+	companion.cfgDir = process.env[process.platform == 'win32' ? 'USERPROFILE' : 'HOME']
 }
 
 var port = '8000'
@@ -62,8 +62,8 @@ if (process.argv[2] in ifaces) {
 	})
 
 	setTimeout(function () {
-		companion.setBindIp(address)
-		companion.setBindPort(port)
+		companion.bindIp = address
+		companion.bindPort = port
 		companion.launch(!process.env.DEVELOPER)
 		console.log('Started')
 	}, 1000)

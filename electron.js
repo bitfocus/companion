@@ -4,7 +4,7 @@ var app = electron.app
 var BrowserWindow = electron.BrowserWindow
 var path = require('path')
 var url = require('url')
-var companion = require('./app.js')
+var companion = require('./lib/registry.js')
 var fs = require('fs')
 var exec = require('child_process').exec
 const { init, showReportDialog, configureScope } = require('@sentry/electron')
@@ -21,7 +21,7 @@ if (!lock) {
 	return
 }
 
-let skeleton_info = companion.getSkeletonInfo()
+let skeleton_info = companion.skeletonInfo
 
 if (process.env.DEVELOPER === undefined) {
 	console.log('Configuring sentry error reporting')
@@ -93,17 +93,17 @@ function createWindow() {
 
 	ipcMain.on('skeleton-bind-ip', function (e, msg) {
 		console.log('changed bind ip:', msg)
-		companion.setBindPort(msg)
+		companion.bindIp = msg
 	})
 
 	ipcMain.on('skeleton-bind-port', function (e, msg) {
 		console.log('changed bind port:', msg)
-		companion.setBindPort(msg)
+		companion.bindPort = msg
 	})
 
 	ipcMain.on('skeleton-start-minimised', function (e, msg) {
 		console.log('changed start minimized:', msg)
-		companion.setStartMinimised(msg)
+		companion.startMinimised = msg
 	})
 
 	ipcMain.once('skeleton-ready', function () {
@@ -152,7 +152,7 @@ function createWindow() {
 	})
 
 	try {
-		companion.setConfigDir(app.getPath('appData'))
+		companion.cfgDir = app.getPath('appData')
 
 		configureScope(function (scope) {
 			var machidFile = app.getPath('appData') + '/companion/machid'
