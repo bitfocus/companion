@@ -295,11 +295,6 @@ instance.prototype.setFeedbackDefinitions = function (feedbacks) {
 instance.prototype.setPresetDefinitions = function (presets) {
 	var self = this
 
-	// Because RegExp.escape did not become a standard somehow
-	function escape(str) {
-		return str.replace(/[-[\]{}()*+?.,\\/^$|#\s]/g, '\\$&')
-	}
-
 	/*
 	 * Clean up variable references: $(instance:variable)
 	 * since the name of the instance is dynamic. We don't want to
@@ -309,15 +304,14 @@ instance.prototype.setPresetDefinitions = function (presets) {
 		var bank = presets[i].bank
 		var fixtext = bank.text
 		if (bank !== undefined && fixtext !== undefined) {
-			if (fixtext.match(/\$\(/)) {
-				var matches,
-					reg = /\$\(([^:)]+):([^)]+)\)/g
+			if (fixtext.includes('$(')) {
+				let matches
+				const reg = /\$\(([^:)]+):([^)]+)\)/g
 
 				while ((matches = reg.exec(fixtext)) !== null) {
 					if (matches[1] !== undefined) {
 						if (matches[2] !== undefined) {
-							reg2 = new RegExp('\\$\\(' + escape(matches[1]) + ':' + escape(matches[2]) + '\\)')
-							bank.text = bank.text.replace(reg2, '$(' + self.label + ':' + matches[2] + ')')
+							bank.text = bank.text.replace(matches[0], '$(' + self.label + ':' + matches[2] + ')')
 						}
 					}
 				}
