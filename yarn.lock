@@ -1666,14 +1666,14 @@ commist@^1.0.0:
   version "1.0.3"
   resolved "https://codeload.github.com/bitfocus/companion-module-behringer-wing/tar.gz/0587b31eecf532905e1743c1f0f4596461d2cb0b"
 
-"companion-module-behringer-x32@github:bitfocus/companion-module-behringer-x32#v2.5.0":
-  version "2.5.0"
-  resolved "https://codeload.github.com/bitfocus/companion-module-behringer-x32/tar.gz/2b4e6db7e67b9a130727bb14e56250caf1834f92"
+"companion-module-behringer-x32@github:bitfocus/companion-module-behringer-x32#v2.6.0":
+  version "2.6.0"
+  resolved "https://codeload.github.com/bitfocus/companion-module-behringer-x32/tar.gz/33adbb9762c8e74c1338459c2ad996a36e4e76a0"
   dependencies:
     "@types/node" "^12.20.13"
     debounce-fn "https://github.com/Julusian/debounce-fn.git"
     p-queue "^6.6.2"
-    type-fest "^1.1.1"
+    type-fest "^1.1.3"
 
 "companion-module-behringer-xair@github:bitfocus/companion-module-behringer-xair#v1.6.2":
   version "1.6.2"
@@ -1792,9 +1792,9 @@ commist@^1.0.0:
   version "1.0.1"
   resolved "https://codeload.github.com/bitfocus/companion-module-cisco-cms/tar.gz/4018eac85861e8f27f391937bf5e14da5c40b2f1"
 
-"companion-module-cisco-webex-websocket@github:bitfocus/companion-module-cisco-webex-websocket#v1.0.7":
-  version "1.0.7"
-  resolved "https://codeload.github.com/bitfocus/companion-module-cisco-webex-websocket/tar.gz/670a96d76fdb0b9f86bfa25aba74c01576d2b2be"
+"companion-module-cisco-webex-websocket@github:bitfocus/companion-module-cisco-webex-websocket#v1.1.0":
+  version "1.1.0"
+  resolved "https://codeload.github.com/bitfocus/companion-module-cisco-webex-websocket/tar.gz/6a41d714f16cfb44ad24a5506ffd128dc74aa52b"
   dependencies:
     "@types/debug" "^4.1.5"
     "@types/node" "^12.19.4"
@@ -2010,12 +2010,12 @@ commist@^1.0.0:
   dependencies:
     artnet-node haakonnessjoen/artnet-node#ee6273d
 
-"companion-module-generic-emberplus@github:bitfocus/companion-module-generic-emberplus#v1.0.1":
-  version "1.0.1"
-  resolved "https://codeload.github.com/bitfocus/companion-module-generic-emberplus/tar.gz/03791425770c101976dc2ccbadf202256f95bca3"
+"companion-module-generic-emberplus@github:bitfocus/companion-module-generic-emberplus#v1.1.1":
+  version "1.1.1"
+  resolved "https://codeload.github.com/bitfocus/companion-module-generic-emberplus/tar.gz/028ef31b4bcdb8be615656646bd2e7b3abb02d3b"
   dependencies:
     "@types/node" "^12.0.4"
-    utility-types "^3.10.0"
+    type-fest "^1.1.3"
 
 "companion-module-generic-http@github:bitfocus/companion-module-generic-http#v1.0.8":
   version "1.0.8"
@@ -2093,15 +2093,15 @@ commist@^1.0.0:
   dependencies:
     holographics-client-sdk "^1.6.1"
 
-"companion-module-homeassistant-server@github:bitfocus/companion-module-homeassistant-server#v0.5.2":
-  version "0.5.2"
-  resolved "https://codeload.github.com/bitfocus/companion-module-homeassistant-server/tar.gz/7808cfb18ebfee6ddf8c4aa5ef2b195297c1533b"
+"companion-module-homeassistant-server@github:bitfocus/companion-module-homeassistant-server#v0.6.0":
+  version "0.6.0"
+  resolved "https://codeload.github.com/bitfocus/companion-module-homeassistant-server/tar.gz/e8be4db3d24e63717a2641c6dab34fa07535c094"
   dependencies:
     "@types/node" "^12.20.13"
     "@types/ws" "^7.4.4"
     home-assistant-js-websocket "^5.10.0"
-    type-fest "^1.1.1"
-    ws "^7.4.5"
+    type-fest "^1.1.3"
+    ws "^7.4.6"
 
 "companion-module-ifelseware-avplayback@github:bitfocus/companion-module-ifelseware-avplayback#v1.0.1":
   version "1.0.1"
@@ -2557,9 +2557,9 @@ commist@^1.0.0:
   dependencies:
     xml2js "^0.4.23"
 
-"companion-module-singularlive-studio@github:bitfocus/companion-module-singularlive-studio#v1.0.4":
-  version "1.0.4"
-  resolved "https://codeload.github.com/bitfocus/companion-module-singularlive-studio/tar.gz/e9565f59fdfcfdfa2f20721cfcbfe6ac282dfc19"
+"companion-module-singularlive-studio@github:bitfocus/companion-module-singularlive-studio#v1.0.5":
+  version "1.0.5"
+  resolved "https://codeload.github.com/bitfocus/companion-module-singularlive-studio/tar.gz/e7476d58402c63d8179224727771ef3bd6c2d97a"
 
 "companion-module-slack-webhooks@github:bitfocus/companion-module-slack-webhooks#v1.0.1":
   version "1.0.1"
@@ -2577,13 +2577,13 @@ commist@^1.0.0:
   version "1.0.0"
   resolved "https://codeload.github.com/bitfocus/companion-module-sonoran-coyote/tar.gz/bfe159c295d15929f994772419668874fba5e900"
 
-"companion-module-sonos-speakers@github:bitfocus/companion-module-sonos-speakers#v0.1.1":
-  version "0.1.1"
-  resolved "https://codeload.github.com/bitfocus/companion-module-sonos-speakers/tar.gz/4b4b778345a548d8ac280b121dc99b9e6e78daa3"
+"companion-module-sonos-speakers@github:bitfocus/companion-module-sonos-speakers#v0.2.0":
+  version "0.2.0"
+  resolved "https://codeload.github.com/bitfocus/companion-module-sonos-speakers/tar.gz/845424e0f1bea78a9e5009b212651d4301543414"
   dependencies:
     "@svrooij/sonos" "^1.1.4"
     "@types/debug" "^4.1.5"
-    "@types/node" "^12.19.14"
+    "@types/node" "^12.20.13"
 
 "companion-module-sony-bravia@github:bitfocus/companion-module-sony-bravia#v1.0.0":
   version "1.0.0"
@@ -7473,10 +7473,10 @@ type-fest@^0.8.1:
   resolved "https://registry.yarnpkg.com/type-fest/-/type-fest-0.8.1.tgz#09e249ebde851d3b1e48d27c105444667f17b83d"
   integrity sha512-4dbzIzqvjtgiM5rw1k5rEHtBANKmdudhGyBEajN01fEyhaAIhsoKNy6y7+IN93IfpFtwY9iqi7kD+xwKhQsNJA==
 
-type-fest@^1.1.1:
-  version "1.1.1"
-  resolved "https://registry.yarnpkg.com/type-fest/-/type-fest-1.1.1.tgz#210251e7f57357a1457269e6b34837fed067ac2c"
-  integrity sha512-RPDKc5KrIyKTP7Fk75LruUagqG6b+OTgXlCR2Z0aQDJFeIvL4/mhahSEtHmmVzXu4gmA0srkF/8FCH3WOWxTWA==
+type-fest@^1.1.1, type-fest@^1.1.3:
+  version "1.1.3"
+  resolved "https://registry.yarnpkg.com/type-fest/-/type-fest-1.1.3.tgz#ea1a602e98e5a968a56a289886a52f04c686fc81"
+  integrity sha512-CsiQeFMR1jZEq8R+H59qe+bBevnjoV5N2WZTTdlyqxeoODQOOepN2+msQOywcieDq5sBjabKzTn3U+sfHZlMdw==
 
 type-is@~1.6.17, type-is@~1.6.18:
   version "1.6.18"
@@ -7762,11 +7762,6 @@ util@^0.12.3:
     is-typed-array "^1.1.3"
     safe-buffer "^5.1.2"
     which-typed-array "^1.1.2"
-
-utility-types@^3.10.0:
-  version "3.10.0"
-  resolved "https://registry.yarnpkg.com/utility-types/-/utility-types-3.10.0.tgz#ea4148f9a741015f05ed74fd615e1d20e6bed82b"
-  integrity sha512-O11mqxmi7wMKCo6HKFt5AhO4BwY3VV68YU07tgxfz8zJTIxr4BpsezN49Ffwy9j3ZpwwJp4fkRwjRzq3uWE6Rg==
 
 utility@0.1.11:
   version "0.1.11"
@@ -8074,10 +8069,10 @@ ws@^3.2.0:
     safe-buffer "~5.1.0"
     ultron "~1.1.0"
 
-ws@^7.2.0, ws@^7.4.1, ws@^7.4.4, ws@^7.4.5, ws@~7.4.2:
-  version "7.4.5"
-  resolved "https://registry.yarnpkg.com/ws/-/ws-7.4.5.tgz#a484dd851e9beb6fdb420027e3885e8ce48986c1"
-  integrity sha512-xzyu3hFvomRfXKH8vOFMU3OguG6oOvhXMo3xsGy3xWExqaM2dxBbVxuD99O7m3ZUFMvvscsZDqxfgMaRr/Nr1g==
+ws@^7.2.0, ws@^7.4.1, ws@^7.4.4, ws@^7.4.6, ws@~7.4.2:
+  version "7.4.6"
+  resolved "https://registry.yarnpkg.com/ws/-/ws-7.4.6.tgz#5654ca8ecdeee47c33a9a4bf6d28e2be2980377c"
+  integrity sha512-YmhHDO4MzaDLB+M9ym/mDA5z0naX8j7SIlT8f8z+I0VtzsRbekxEutHSme7NPS2qE8StCYQNUnfWdXta/Yu85A==
 
 ws@~6.1.0:
   version "6.1.4"
