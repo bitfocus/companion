@@ -125,21 +125,23 @@ instance.prototype.status = function (level, message) {
 	self.system.emit('instance_status_update', self.id, level, message)
 }
 
-instance.prototype.upgradeConfig = function (get_scripts) {
+instance.prototype.upgradeConfig = function () {
 	var self = this
+
+	if (self.disable_instance_scripts) {
+		// not allowed
+		return
+	}
 
 	var idx = self.config._configIdx
 	if (idx === undefined) {
 		idx = -1
 	}
 
-	// TODO - this wont work as the method signatures are very different
-	var upgrade_scripts = get_scripts ? get_scripts() : self._versionscripts
-
 	var debug = require('debug')('instance:' + self.package_info.name + ':' + self.id)
 
-	if (idx + 1 < upgrade_scripts.length) {
-		debug('upgradeConfig(' + self.package_info.name + '): ' + (idx + 1) + ' to ' + upgrade_scripts.length)
+	if (idx + 1 < self._versionscripts.length) {
+		debug('upgradeConfig(' + self.package_info.name + '): ' + (idx + 1) + ' to ' + self._versionscripts.length)
 	}
 
 	// Fetch instance actions
@@ -157,38 +159,37 @@ instance.prototype.upgradeConfig = function (get_scripts) {
 	})
 
 	let changed = false
-	for (var i = idx + 1; i < upgrade_scripts.length; ++i) {
+	for (var i = idx + 1; i < self._versionscripts.length; ++i) {
 		debug('UpgradeConfig: Upgrading to version ' + (i + 1))
 
 		try {
-			const result = upgrade_scripts[i](self.config, actions, release_actions, feedbacks)
+			const result = self._versionscripts[i](self.config, actions, release_actions, feedbacks)
 			changed = changed || result
 		} catch (e) {
 			debug('Upgradescript in ' + self.package_info.name + ' failed', e)
 		}
 		self.config._configIdx = i
-
-		for (const action of [...actions, release_actions]) {
-			action.instance = self.id
-			action.label = `${self.id}:${action.action}`
-		}
-		for (const feedback of feedbacks) {
-			feedback.instance_id = self.id
-		}
 	}
 
-	if (idx + 1 < upgrade_scripts.length) {
+	for (const action of [...actions, release_actions]) {
+		action.instance = self.id
+		action.label = `${self.id}:${action.action}`
+	}
+	for (const feedback of feedbacks) {
+		feedback.instance_id = self.id
+	}
+
+	if (idx + 1 < self._versionscripts.length) {
 		// Save the _configIdx change
 		this.saveConfig()
 	}
 
 	// If anything was changed, update system and db
 	if (changed) {
-		self.system.emit('config_save')
 		self.system.emit('action_save')
-		self.system.emit('release_action_save')
 		self.system.emit('feedback_save')
 	}
+	debug('instance save')
 	self.system.emit('instance_save')
 }
 
