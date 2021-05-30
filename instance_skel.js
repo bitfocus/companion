@@ -120,9 +120,11 @@ instance.prototype._init = function () {
 instance.prototype.status = function (level, message) {
 	var self = this
 
-	self.currentStatus = level
-	self.currentStatusMessage = message
-	self.system.emit('instance_status_update', self.id, level, message)
+	if (self.currentStatus != level || self.currentStatusMessage != message) {
+		self.currentStatus = level
+		self.currentStatusMessage = message
+		self.system.emit('instance_status_update', self.id, level, message)
+	}
 }
 
 instance.prototype.upgradeConfig = function () {
