@@ -260,6 +260,14 @@ instance.prototype.setVariable = function (variable, value) {
 	self.system.emit('variable_instance_set', self, variable, value)
 }
 
+instance.prototype.setVariables = function (variables) {
+	var self = this
+
+	if (typeof variables === 'object') {
+		self.system.emit('variable_instance_set_many', self, variables)
+	}
+}
+
 instance.prototype.getVariable = function (variable, cb) {
 	var self = this
 

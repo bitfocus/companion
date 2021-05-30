@@ -86,6 +86,7 @@ declare abstract class InstanceSkel<TConfig> {
 	setPresetDefinitions(presets: CompanionPreset[]): void
 
 	setVariable(variableId: string, value: string): void
+	setVariables(variables: { [variableId: string]: string }): void
 	getVariable(variableId: string, cb: (value: string) => void): void
 	/** Recheck all feedbacks of the given types. eg `self.checkFeedbacks('bank_style', 'bank_text')` or `self.checkFeedbacks` */
 	checkFeedbacks(...feedbackTypes: string[]): void
