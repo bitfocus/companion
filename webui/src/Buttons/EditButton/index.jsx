@@ -26,7 +26,7 @@ export function EditButton({ page, bank, onKeyUp }) {
 
 	const loadConfig = useCallback(() => {
 		socketEmit(context.socket, 'get_bank', [page, bank])
-			.then(([page, bank, config, fields]) => {
+			.then(([page, bank, config]) => {
 				setConfig(config)
 				setConfigError(null)
 			})
@@ -127,7 +127,7 @@ export function EditButton({ page, bank, onKeyUp }) {
 						<CDropdown className="mt-2" style={{ display: 'inline-block' }}>
 							<CButtonGroup>
 								{/* This could be simplified to use the split property on CDropdownToggle, but then onClick doesnt work https://github.com/coreui/coreui-react/issues/179 */}
-								<CButton color="success" onClick={() => setButtonType('png')}>
+								<CButton color="success" onClick={() => setButtonType('press')}>
 									Regular button
 								</CButton>
 								<CDropdownToggle
@@ -140,7 +140,8 @@ export function EditButton({ page, bank, onKeyUp }) {
 								</CDropdownToggle>
 							</CButtonGroup>
 							<CDropdownMenu>
-								<CDropdownItem>Regular button</CDropdownItem>
+								<CDropdownItem onClick={() => setButtonType('press')}>Regular button</CDropdownItem>
+								<CDropdownItem onClick={() => setButtonType('step')}>Step/latch</CDropdownItem>
 								<CDropdownItem onClick={() => setButtonType('pageup')}>Page up</CDropdownItem>
 								<CDropdownItem onClick={() => setButtonType('pagenum')}>Page number</CDropdownItem>
 								<CDropdownItem onClick={() => setButtonType('pagedown')}>Page down</CDropdownItem>
@@ -153,7 +154,7 @@ export function EditButton({ page, bank, onKeyUp }) {
 						&nbsp;
 						<CButton
 							color="warning"
-							hidden={config.style !== 'png'}
+							hidden={config.style !== 'press' && config.style !== 'step'}
 							onMouseDown={() => context.socket.emit('hot_press', page, bank, true)}
 							onMouseUp={() => context.socket.emit('hot_press', page, bank, false)}
 						>
@@ -163,9 +164,9 @@ export function EditButton({ page, bank, onKeyUp }) {
 
 					<ButtonStyleConfig config={config} configRef={configRef} page={page} bank={bank} valueChanged={loadConfig} />
 
-					{config.style === 'png' ? (
+					{config.style === 'press' || config.style === 'step' ? (
 						<>
-							<h4 className="mt-3">{config.latch ? 'Latch' : 'Press'} actions</h4>
+							<h4 className="mt-3">{config.style === 'step' ? 'Latch' : 'Press'} actions</h4>
 							<ActionsPanel
 								page={page}
 								bank={bank}
@@ -182,7 +183,7 @@ export function EditButton({ page, bank, onKeyUp }) {
 								reloadToken={reloadTablesToken}
 							/>
 
-							<h4 className="mt-3">{config.latch ? 'Unlatch' : 'Release'} actions</h4>
+							<h4 className="mt-3">{config.style === 'step' ? 'Unlatch' : 'Release'} actions</h4>
 							<ActionsPanel
 								page={page}
 								bank={bank}

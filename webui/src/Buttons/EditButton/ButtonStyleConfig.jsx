@@ -91,16 +91,6 @@ export function ButtonStyleConfig({ page, bank, config, configRef, valueChanged 
 					/>
 
 					<CCol className="fieldtype-checkbox" sm={2} xs={3}>
-						<label>Latch/Toggle</label>
-						<p>
-							<CheckboxInputField
-								definition={{ default: false, id: 'latch' }}
-								setValue={setLatchValue}
-								value={config.latch}
-							/>
-						</p>
-					</CCol>
-					<CCol className="fieldtype-checkbox" sm={2} xs={3}>
 						<CLabel>Relative Delays</CLabel>
 						<p>
 							<CheckboxInputField
