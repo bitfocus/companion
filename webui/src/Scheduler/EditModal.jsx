@@ -4,6 +4,7 @@ import { StaticContext, MyErrorBoundary, socketEmit, useMountEffect } from '../u
 import Select from 'react-select'
 import { AddFeedbackDropdown, FeedbackEditor } from '../Buttons/EditButton/FeedbackPanel'
 import shortid from 'shortid'
+import { ActionsPanelInner } from '../Buttons/EditButton/ActionsPanel'
 
 function getPluginSpecDefaults(pluginOptions) {
 	const config = {}
@@ -41,6 +42,8 @@ function getFeedbackDefaults() {
 }
 
 export function ScheduleEditModal({ doClose, doSave, item, plugins }) {
+	const context = useContext(StaticContext)
+
 	const [config, setConfig] = useState({})
 	const updateConfig = useCallback((id, val) => {
 		setConfig((oldConfig) => ({
@@ -73,7 +76,7 @@ export function ScheduleEditModal({ doClose, doSave, item, plugins }) {
 
 			setConfig((oldConfig) => ({
 				title: '',
-				button: '',
+				actions: [],
 				...oldConfig,
 				type: pluginType,
 				config: pluginType === 'feedback' ? getFeedbackDefaults() : innerConfig2,
@@ -91,6 +94,10 @@ export function ScheduleEditModal({ doClose, doSave, item, plugins }) {
 			if (pluginSpec?.multiple && item2.config && !Array.isArray(item2.config)) {
 				item2.config = [item2.config]
 			}
+
+			// hack
+			if (!item2.actions) item2.actions = []
+
 			setConfig(item2)
 		} else if (plugins) {
 			const defaultPlugin = plugins.find((p) => p.type === 'feedback') ?? plugins[0]
@@ -101,6 +108,25 @@ export function ScheduleEditModal({ doClose, doSave, item, plugins }) {
 	const pluginChoices = useMemo(() => {
 		return plugins.map((p) => ({ value: p.type, label: p.name }))
 	}, [plugins])
+
+	const setActions = useCallback((cb) => {
+		setConfig((oldConfig) => {
+			const newConfig = { ...oldConfig }
+			newConfig.actions = cb(oldConfig.actions || [])
+			return newConfig
+		})
+	})
+
+	const addActionSelect = useCallback(
+		(actionType) => {
+			socketEmit(context.socket, 'action_get_defaults', [actionType]).then(([action]) => {
+				updateConfig('actions', [...config.actions, action])
+			})
+		},
+		[context.socket, config, updateConfig]
+	)
+
+	console.log(config)
 
 	return (
 		<CModal show={true} onClose={doClose} size="lg">
@@ -115,14 +141,12 @@ export function ScheduleEditModal({ doClose, doSave, item, plugins }) {
 					</CFormGroup>
 					<legend>Trigger</legend>
 					<CFormGroup>
-						<label>Button</label>
-						<CInput
-							required
-							value={config.button}
-							onChange={(e) => updateConfig('button', e.target.value)}
-							pattern="([1-9][0-9]?).([1-2][0-9]|[3][0-2]|[1-9])"
-							placeholder="Button number, ex 1.1"
-							title="Must be in format BANK#.BUTTON#, for example 1.1 or 99.32. Bank max is 99, button max is 32."
+						<ActionsPanelInner
+							dragId={'triggerAction'}
+							addPlaceholder="+ Add action"
+							actions={config.actions || []}
+							setActions={setActions}
+							addAction={addActionSelect}
 						/>
 					</CFormGroup>
 					<legend>Condition</legend>
