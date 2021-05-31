@@ -246,13 +246,13 @@ function FeedbackTableRow({ feedback, page, bank, index, dragId, moveCard, setVa
 }
 
 export function FeedbackEditor({ feedback, setValue, innerDelete, setSelectedStyleProps, setStylePropsValue }) {
-	const feedbacks = useContext(FeedbacksContext)
-	const instances = useContext(InstancesContext)
+	const feedbacksContext = useContext(FeedbacksContext)
+	const instancesContext = useContext(InstancesContext)
 
-	const instance = instances[feedback.instance_id]
+	const instance = instancesContext[feedback.instance_id]
 	const instanceLabel = instance?.label ?? feedback.instance_id
 
-	const feedbackSpec = (feedbacks[feedback.instance_id] || {})[feedback.type]
+	const feedbackSpec = (feedbacksContext[feedback.instance_id] || {})[feedback.type]
 	const options = feedbackSpec?.options ?? []
 
 	let name = ''
@@ -403,21 +403,21 @@ function FeedbackStyles({ feedbackSpec, feedback, setStylePropsValue }) {
 }
 
 export function AddFeedbackDropdown({ onSelect, booleanOnly }) {
-	const feedbacks = useContext(FeedbacksContext)
-	const instances = useContext(InstancesContext)
+	const feedbacksContext = useContext(FeedbacksContext)
+	const instancesContext = useContext(InstancesContext)
 
 	const options = useMemo(() => {
 		const options = []
-		for (const [instanceId, instanceFeedbacks] of Object.entries(feedbacks)) {
+		for (const [instanceId, instanceFeedbacks] of Object.entries(feedbacksContext)) {
 			for (const [feedbackId, feedback] of Object.entries(instanceFeedbacks)) {
 				if (!booleanOnly || feedback.type === 'boolean') {
-					const instanceLabel = instances[instanceId]?.label ?? instanceId
+					const instanceLabel = instancesContext[instanceId]?.label ?? instanceId
 					options.push({ value: `${instanceId}:${feedbackId}`, label: `${instanceLabel}: ${feedback.label}` })
 				}
 			}
 		}
 		return options
-	}, [feedbacks, instances, booleanOnly])
+	}, [feedbacksContext, instancesContext, booleanOnly])
 
 	const innerChange = useCallback(
 		(e) => {

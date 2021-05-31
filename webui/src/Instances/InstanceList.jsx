@@ -9,7 +9,7 @@ import { GenericConfirmModal } from '../Components/GenericConfirmModal'
 
 export function InstancesList({ showHelp, doConfigureInstance }) {
 	const context = useContext(StaticContext)
-	const instances = useContext(InstancesContext)
+	const instancesContext = useContext(InstancesContext)
 
 	const [instanceStatus, setInstanceStatus] = useState({})
 
@@ -50,7 +50,7 @@ export function InstancesList({ showHelp, doConfigureInstance }) {
 					</tr>
 				</thead>
 				<tbody>
-					{Object.entries(instances).map(([id, instance]) => {
+					{Object.entries(instancesContext).map(([id, instance]) => {
 						if (instance.instance_type === 'bitfocus-companion') {
 							return null
 						} else {
@@ -84,7 +84,7 @@ function InstancesTableRow({
 	deleteModalRef,
 }) {
 	const context = useContext(StaticContext)
-	const variableDefinitions = useContext(VariableDefinitionsContext)
+	const variableDefinitionsContext = useContext(VariableDefinitionsContext)
 
 	const moduleInfo = context.modules[instance.instance_type]
 
@@ -111,7 +111,7 @@ function InstancesTableRow({
 
 	const doShowVariables = useCallback(() => showVariables(instance.label), [showVariables, instance.label])
 
-	const instanceVariables = variableDefinitions[instance.label]
+	const instanceVariables = variableDefinitionsContext[instance.label]
 
 	return (
 		<tr>

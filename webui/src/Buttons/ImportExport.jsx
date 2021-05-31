@@ -22,7 +22,7 @@ import { GenericConfirmModal } from '../Components/GenericConfirmModal'
 
 export function ImportExport({ pageNumber }) {
 	const context = useContext(StaticContext)
-	const instances = useContext(InstancesContext)
+	const instancesContext = useContext(InstancesContext)
 
 	const confirmModalRef = useRef()
 
@@ -53,7 +53,7 @@ export function ImportExport({ pageNumber }) {
 								setLoadError(err)
 							} else {
 								for (const id in config.instances || {}) {
-									if (instances[id]) {
+									if (instancesContext[id]) {
 										config.instances[id].import_to = id
 									} else {
 										config.instances[id].import_to = 'new'
@@ -75,7 +75,7 @@ export function ImportExport({ pageNumber }) {
 				setLoadError('Companion requires a more modern browser')
 			}
 		},
-		[context.socket, instances, fileApiIsSupported]
+		[context.socket, instancesContext, fileApiIsSupported]
 	)
 
 	const doImport = useCallback(() => {
@@ -193,7 +193,7 @@ export function ImportExport({ pageNumber }) {
 										return ''
 									} else {
 										const snapshotModule = context.modules[instance.instance_type]
-										const currentInstances = Object.entries(instances).filter(
+										const currentInstances = Object.entries(instancesContext).filter(
 											([id, inst]) => inst.instance_type === instance.instance_type
 										)
 

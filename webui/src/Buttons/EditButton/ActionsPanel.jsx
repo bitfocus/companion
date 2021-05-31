@@ -163,8 +163,8 @@ export function ActionsPanel({
 }
 
 function ActionTableRow({ action, index, dragId, setValue, doDelete, doDelay, moveCard }) {
-	const instances = useContext(InstancesContext)
-	const actions = useContext(ActionsContext)
+	const instancesContext = useContext(InstancesContext)
+	const actionsContext = useContext(ActionsContext)
 
 	const innerDelete = useCallback(() => doDelete(action.id), [action.id, doDelete])
 	const innerDelay = useCallback((delay) => doDelay(action.id, delay), [doDelay, action.id])
@@ -227,11 +227,11 @@ function ActionTableRow({ action, index, dragId, setValue, doDelete, doDelay, mo
 		return ''
 	}
 
-	const instance = instances[action.instance]
+	const instance = instancesContext[action.instance]
 	// const module = instance ? context.modules[instance.instance_type] : undefined
 	const instanceLabel = instance?.label ?? action.instance
 
-	const actionSpec = actions[action.label]
+	const actionSpec = actionsContext[action.label]
 	const options = actionSpec?.options ?? []
 
 	let name = ''
@@ -291,16 +291,16 @@ function ActionTableRow({ action, index, dragId, setValue, doDelete, doDelay, mo
 }
 
 function AddActionDropdown({ onSelect, placeholder }) {
-	const instances = useContext(InstancesContext)
-	const actions = useContext(ActionsContext)
+	const instancesContext = useContext(InstancesContext)
+	const actionsContext = useContext(ActionsContext)
 
 	const options = useMemo(() => {
-		return Object.entries(actions || {}).map(([id, act]) => {
+		return Object.entries(actionsContext || {}).map(([id, act]) => {
 			const instanceId = id.split(/:/)[0]
-			const instanceLabel = instances[instanceId]?.label ?? instanceId
+			const instanceLabel = instancesContext[instanceId]?.label ?? instanceId
 			return { value: id, label: `${instanceLabel}: ${act.label}` }
 		})
-	}, [actions, instances])
+	}, [actionsContext, instancesContext])
 
 	const innerChange = useCallback(
 		(e) => {

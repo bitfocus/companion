@@ -7,7 +7,7 @@ import shortid from 'shortid'
 
 export const InstancePresets = function InstancePresets({ resetToken }) {
 	const context = useContext(StaticContext)
-	const instances = useContext(InstancesContext)
+	const instancesContext = useContext(InstancesContext)
 
 	const [instanceAndCategory, setInstanceAndCategory] = useState([null, null])
 	const [presetsMap, setPresetsMap] = useState(null)
@@ -77,7 +77,7 @@ export const InstancePresets = function InstancePresets({ resetToken }) {
 	}
 
 	if (instanceAndCategory[0]) {
-		const instance = instances[instanceAndCategory[0]]
+		const instance = instancesContext[instanceAndCategory[0]]
 		const module = instance ? context.modules[instance.instance_type] : undefined
 
 		const presets = presetsMap[instanceAndCategory[0]] ?? []
@@ -109,10 +109,10 @@ export const InstancePresets = function InstancePresets({ resetToken }) {
 
 function PresetsInstanceList({ presets, setInstanceAndCategory }) {
 	const context = useContext(StaticContext)
-	const instances = useContext(InstancesContext)
+	const instancesContext = useContext(InstancesContext)
 
 	const options = Object.keys(presets).map((id) => {
-		const instance = instances[id]
+		const instance = instancesContext[id]
 		const module = instance ? context.modules[instance.instance_type] : undefined
 
 		return (

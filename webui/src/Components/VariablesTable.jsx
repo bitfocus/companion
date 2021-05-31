@@ -7,11 +7,11 @@ import { faCopy } from '@fortawesome/free-solid-svg-icons'
 
 export function VariablesTable({ label }) {
 	const context = useContext(StaticContext)
-	const variableDefinitions0 = useContext(VariableDefinitionsContext)
-	const variableValues0 = useContext(VariableValuesContext)
+	const variableDefinitionsContext = useContext(VariableDefinitionsContext)
+	const variableValuesContext = useContext(VariableValuesContext)
 
-	const variableDefinitions = variableDefinitions0[label] || []
-	const variableValues = variableValues0 || {}
+	const variableDefinitions = variableDefinitionsContext[label] || []
+	const variableValues = variableValuesContext || {}
 
 	const onCopied = useCallback(() => {
 		context.notifier.current.show(`Copied`, 'Copied to clipboard', 5000)

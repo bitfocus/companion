@@ -4,17 +4,17 @@ import { StaticContext, InstancesContext, VariableDefinitionsContext } from '../
 import { VariablesTable } from '../Components/VariablesTable'
 
 export const InstanceVariables = function InstanceVariables({ resetToken }) {
-	const instances = useContext(InstancesContext)
+	const instancesContext = useContext(InstancesContext)
 
 	const [instanceId, setInstance] = useState(null)
 
 	const instancesLabelMap = useMemo(() => {
 		const labelMap = new Map()
-		for (const [id, instance] of Object.entries(instances)) {
+		for (const [id, instance] of Object.entries(instancesContext)) {
 			labelMap.set(instance.label, id)
 		}
 		return labelMap
-	}, [instances])
+	}, [instancesContext])
 
 	// Reset selection on resetToken change
 	useEffect(() => {
@@ -22,7 +22,7 @@ export const InstanceVariables = function InstanceVariables({ resetToken }) {
 	}, [resetToken])
 
 	if (instanceId) {
-		const instance = instances[instanceId]
+		const instance = instancesContext[instanceId]
 
 		return <VariablesList selectedInstanceLabel={instance?.label} setInstance={setInstance} />
 	} else {
@@ -32,14 +32,14 @@ export const InstanceVariables = function InstanceVariables({ resetToken }) {
 
 function VariablesInstanceList({ setInstance, instancesLabelMap }) {
 	const context = useContext(StaticContext)
-	const instances = useContext(InstancesContext)
-	const variableDefinitions = useContext(VariableDefinitionsContext)
+	const instancesContext = useContext(InstancesContext)
+	const variableDefinitionsContext = useContext(VariableDefinitionsContext)
 
-	const options = Object.entries(variableDefinitions || []).map(([label, defs]) => {
+	const options = Object.entries(variableDefinitionsContext || []).map(([label, defs]) => {
 		if (!defs || defs.length === 0) return ''
 
 		const id = instancesLabelMap.get(label)
-		const instance = id ? instances[id] : undefined
+		const instance = id ? instancesContext[id] : undefined
 		const module = instance ? context.modules[instance.instance_type] : undefined
 
 		return (

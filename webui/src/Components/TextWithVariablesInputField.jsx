@@ -5,7 +5,7 @@ import { CInput } from '@coreui/react'
 import { decode } from 'html-entities'
 
 export function TextWithVariablesInputField({ definition, value, setValue }) {
-	const variableDefinitions = useContext(VariableDefinitionsContext)
+	const variableDefinitionsContext = useContext(VariableDefinitionsContext)
 
 	const [tmpValue, setTmpValue] = useState(null)
 
@@ -18,7 +18,7 @@ export function TextWithVariablesInputField({ definition, value, setValue }) {
 
 	const tribute = useMemo(() => {
 		const suggestions = []
-		for (const [instanceLabel, variables] of Object.entries(variableDefinitions)) {
+		for (const [instanceLabel, variables] of Object.entries(variableDefinitionsContext)) {
 			for (const va of variables) {
 				const variableId = `${instanceLabel}:${va.name}`
 				suggestions.push({
@@ -40,7 +40,7 @@ export function TextWithVariablesInputField({ definition, value, setValue }) {
 			menuItemTemplate: (item) =>
 				`<span class="var-name">${item.original.value}</span><span class="var-label">${item.original.label}</span>`,
 		})
-	}, [variableDefinitions])
+	}, [variableDefinitionsContext])
 
 	const doOnChange = useCallback(
 		(e) => {
