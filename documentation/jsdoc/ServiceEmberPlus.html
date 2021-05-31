@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <title>Class: BankFeedbackItems | Companion</title>
+    <title>Class: ServiceEmberPlus | Companion</title>
 
     <script src="scripts/prettify/prettify.js"> </script>
     <script src="scripts/prettify/lang-css.js"> </script>
@@ -50,9 +50,9 @@
 
 <header>
     
-        <h2><span class="attribs"><span class="type-signature"></span></span>BankFeedbackItems<span class="signature">(registry, controller, logSource, dbKey)</span><span class="type-signature"></span></h2>
+        <h2><span class="attribs"><span class="type-signature"></span></span>ServiceEmberPlus<span class="signature">(registry)</span><span class="type-signature"></span></h2>
         
-            <div class="class-description">Class used by the feedback controller to manage the feedback items</div>
+            <div class="class-description">Class providing the Ember+ api.</div>
         
     
 </header>
@@ -65,14 +65,14 @@
 
 <dt>
     
-        <h4 class="name" id="BankFeedbackItems">
+        <h4 class="name" id="ServiceEmberPlus">
             
-                new <span class="type-signature"></span>BankFeedbackItems<span class="signature">(registry, controller, logSource, dbKey)</span><span class="type-signature"></span>
+                new <span class="type-signature"></span>ServiceEmberPlus<span class="signature">(registry)</span><span class="type-signature"></span>
                 
             
             <div class="container-source members">
-                <code><a href="Bank_FeedbackItems.js.html">Bank/FeedbackItems.js</a></code>,
-                <code><a href="Bank_FeedbackItems.js.html#line30">line 30</a></code>
+                <code><a href="Service_EmberPlus.js.html">Service/EmberPlus.js</a></code>,
+                <code><a href="Service_EmberPlus.js.html#line26">line 26</a></code>
             </div>
             
         </h4>
@@ -84,7 +84,7 @@
 
     
     <div class="description">
-        Creates a feedback items manager
+        Creates a service controller
     </div>
     
 
@@ -140,78 +140,6 @@
         </tr>
 
     
-
-        <tr>
-            
-                <td class="name"><code>controller</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type"><a href="BankActionController.html">BankActionController</a></span>
-|
-
-<span class="param-type"><a href="BankFeedbackController.html">BankFeedbackController</a></span>
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last">the item's parent controller</td>
-        </tr>
-
-    
-
-        <tr>
-            
-                <td class="name"><code>logSource</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">string</span>
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last">module name to be used in logs</td>
-        </tr>
-
-    
-
-        <tr>
-            
-                <td class="name"><code>dbKey</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">string</span>
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last">the key to fetch from the database</td>
-        </tr>
-
-    
     </tbody>
 </table>
 
@@ -239,7 +167,7 @@
 
     
     <dt class="tag-since">Since:</dt>
-    <dd class="tag-since"><ul class="dummy"><li>2.3.0</li></ul></dd>
+    <dd class="tag-since"><ul class="dummy"><li>2.1.1</li></ul></dd>
     
 
     
@@ -258,6 +186,8 @@
     <dt class="tag-author">Author:</dt>
     <dd class="tag-author">
         <ul>
+            <li><a href="mailto:contact@balte.nl">Balte de Wit</a></li>
+        
             <li><a href="mailto:haakon@bitfocus.io">Håkon Nessjøen</a></li>
         
             <li><a href="mailto:keith.rocheck@gmail.com">Keith Rocheck</a></li>
@@ -268,7 +198,21 @@
     
 
     
+    <dt class="tag-copyright">Copyright:</dt>
+    <dd class="tag-copyright"><ul class="dummy"><li>2021 Bitfocus AS</li></ul></dd>
+    
 
+    
+    <dt class="tag-license">License:</dt>
+    <dd class="tag-license"><ul class="dummy"><li>This program is free software.
+You should have received a copy of the MIT licence as well as the Bitfocus
+Individual Contributor License Agreement for Companion along with
+this program.
+
+You can be released from the requirements of the license by purchasing
+a commercial license. Buying such a license is mandatory as soon as you
+develop commercial activities involving the Companion software without
+disclosing the source code of your own applications.</li></ul></dd>
     
 
     
@@ -296,7 +240,7 @@
 
 
     <ul>
-        <li><a href="BankItemsBase.html">BankItemsBase</a></li>
+        <li><a href="ServiceBase.html">ServiceBase</a></li>
     </ul>
 
 
@@ -366,7 +310,7 @@
     
     <dt class="tag-overrides">Overrides:</dt>
     <dd class="tag-overrides"><ul class="dummy"><li>
-        <a href="BankItemsBase.html#bank">BankItemsBase#bank</a>
+        <a href="ServiceBase.html#bank">ServiceBase#bank</a>
     </li></ul></dd>
     
 
@@ -450,7 +394,7 @@
     
     <dt class="tag-overrides">Overrides:</dt>
     <dd class="tag-overrides"><ul class="dummy"><li>
-        <a href="BankItemsBase.html#config">BankItemsBase#config</a>
+        <a href="ServiceBase.html#config">ServiceBase#config</a>
     </li></ul></dd>
     
 
@@ -487,12 +431,12 @@
             
 
 <dt>
-<h4 class="name" id="controller">
-    <span class="type-signature"><span class="icon green">protected</span> </span>controller<span class="type-signature"> :<a href="BankActionController.html">BankActionController</a>|<a href="BankFeedbackController.html">BankFeedbackController</a></span>
+<h4 class="name" id="currentState">
+    <span class="type-signature"><span class="icon green">protected</span> </span>currentState<span class="type-signature"> :boolean</span>
     
     <div class="container-source members">
-        <code><a href="Bank_ItemsBase.js.html">Bank/ItemsBase.js</a></code>,
-        <code><a href="Bank_ItemsBase.js.html#line49">line 49</a></code>
+        <code><a href="Service_Base.js.html">Service/Base.js</a></code>,
+        <code><a href="Service_Base.js.html#line30">line 30</a></code>
     </div>
     
 </h4>
@@ -502,7 +446,7 @@
 <dd>
     
     <div class="description">
-        The parent controller
+        Flag to track if the module is currently enabled
     </div>
     
 
@@ -512,10 +456,7 @@
         <ul>
             <li>
                 
-<span class="param-type"><a href="BankActionController.html">BankActionController</a></span>
-|
-
-<span class="param-type"><a href="BankFeedbackController.html">BankFeedbackController</a></span>
+<span class="param-type">boolean</span>
 
 
             </li>
@@ -537,7 +478,7 @@
     
     <dt class="tag-overrides">Overrides:</dt>
     <dd class="tag-overrides"><ul class="dummy"><li>
-        <a href="BankItemsBase.html#controller">BankItemsBase#controller</a>
+        <a href="ServiceBase.html#currentState">ServiceBase#currentState</a>
     </li></ul></dd>
     
 
@@ -621,91 +562,7 @@
     
     <dt class="tag-overrides">Overrides:</dt>
     <dd class="tag-overrides"><ul class="dummy"><li>
-        <a href="BankItemsBase.html#db">BankItemsBase#db</a>
-    </li></ul></dd>
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-</dl>
-
-
-    
-
-    
-</dd>
-
-        
-            
-
-<dt>
-<h4 class="name" id="dbKey">
-    <span class="type-signature"><span class="icon green">protected</span> </span>dbKey<span class="type-signature"> :string</span>
-    
-    <div class="container-source members">
-        <code><a href="Bank_ItemsBase.js.html">Bank/ItemsBase.js</a></code>,
-        <code><a href="Bank_ItemsBase.js.html#line55">line 55</a></code>
-    </div>
-    
-</h4>
-
-
-</dt>
-<dd>
-    
-    <div class="description">
-        The database to use load/save the items
-    </div>
-    
-
-    <!--
-    
-        <h5>Type:</h5>
-        <ul>
-            <li>
-                
-<span class="param-type">string</span>
-
-
-            </li>
-        </ul>
-    
-    -->
-
-    
-
-
-<dl class="details">
-
-    
-
-    
-
-    
-
-    
-    <dt class="tag-overrides">Overrides:</dt>
-    <dd class="tag-overrides"><ul class="dummy"><li>
-        <a href="BankItemsBase.html#dbKey">BankItemsBase#dbKey</a>
+        <a href="ServiceBase.html#db">ServiceBase#db</a>
     </li></ul></dd>
     
 
@@ -746,8 +603,8 @@
     <span class="type-signature"><span class="icon green">protected</span> </span>debug<span class="type-signature"> :debug.Debugger</span>
     
     <div class="container-source members">
-        <code><a href="Bank_FeedbackItems.js.html">Bank/FeedbackItems.js</a></code>,
-        <code><a href="Bank_FeedbackItems.js.html#line36">line 36</a></code>
+        <code><a href="Service_EmberPlus.js.html">Service/EmberPlus.js</a></code>,
+        <code><a href="Service_EmberPlus.js.html#line32">line 32</a></code>
     </div>
     
 </h4>
@@ -821,12 +678,12 @@
             
 
 <dt>
-<h4 class="name" id="definitions">
-    <span class="type-signature"><span class="icon green">protected</span> </span>definitions<span class="type-signature"> :Object.&lt;string, Array.&lt;<a href="BankItemDefinition.html">BankItemDefinition</a>>></span>
+<h4 class="name" id="defaultItem">
+    <span class="type-signature"><span class="icon green">protected</span> </span>defaultItem<span class="type-signature"> :string</span>
     
     <div class="container-source members">
-        <code><a href="Bank_ItemsBase.js.html">Bank/ItemsBase.js</a></code>,
-        <code><a href="Bank_ItemsBase.js.html#line61">line 61</a></code>
+        <code><a href="Service_Base.js.html">Service/Base.js</a></code>,
+        <code><a href="Service_Base.js.html#line37">line 37</a></code>
     </div>
     
 </h4>
@@ -836,7 +693,7 @@
 <dd>
     
     <div class="description">
-        Nested arrays for the definitions from the instances: <code>[instance_id][item_id]</code>
+        The user config setting to track if the module should be enabled/disabled
     </div>
     
 
@@ -846,7 +703,7 @@
         <ul>
             <li>
                 
-<span class="param-type">Object.&lt;string, Array.&lt;<a href="BankItemDefinition.html">BankItemDefinition</a>>></span>
+<span class="param-type">string</span>
 
 
             </li>
@@ -868,7 +725,7 @@
     
     <dt class="tag-overrides">Overrides:</dt>
     <dd class="tag-overrides"><ul class="dummy"><li>
-        <a href="BankItemsBase.html#definitions">BankItemsBase#definitions</a>
+        <a href="ServiceBase.html#defaultItem">ServiceBase#defaultItem</a>
     </li></ul></dd>
     
 
@@ -952,7 +809,7 @@
     
     <dt class="tag-overrides">Overrides:</dt>
     <dd class="tag-overrides"><ul class="dummy"><li>
-        <a href="BankItemsBase.html#devices">BankItemsBase#devices</a>
+        <a href="ServiceBase.html#devices">ServiceBase#devices</a>
     </li></ul></dd>
     
 
@@ -1036,7 +893,91 @@
     
     <dt class="tag-overrides">Overrides:</dt>
     <dd class="tag-overrides"><ul class="dummy"><li>
-        <a href="BankItemsBase.html#graphics">BankItemsBase#graphics</a>
+        <a href="ServiceBase.html#graphics">ServiceBase#graphics</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+    
+
+    
+</dd>
+
+        
+            
+
+<dt>
+<h4 class="name" id="initialized">
+    <span class="type-signature"><span class="icon green">protected</span> </span>initialized<span class="type-signature"> :boolean</span>
+    
+    <div class="container-source members">
+        <code><a href="Service_Base.js.html">Service/Base.js</a></code>,
+        <code><a href="Service_Base.js.html#line44">line 44</a></code>
+    </div>
+    
+</h4>
+
+
+</dt>
+<dd>
+    
+    <div class="description">
+        Flag to track if the module is setup and ready to be enabled
+    </div>
+    
+
+    <!--
+    
+        <h5>Type:</h5>
+        <ul>
+            <li>
+                
+<span class="param-type">boolean</span>
+
+
+            </li>
+        </ul>
+    
+    -->
+
+    
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-overrides">Overrides:</dt>
+    <dd class="tag-overrides"><ul class="dummy"><li>
+        <a href="ServiceBase.html#initialized">ServiceBase#initialized</a>
     </li></ul></dd>
     
 
@@ -1120,7 +1061,7 @@
     
     <dt class="tag-overrides">Overrides:</dt>
     <dd class="tag-overrides"><ul class="dummy"><li>
-        <a href="BankItemsBase.html#instance">BankItemsBase#instance</a>
+        <a href="ServiceBase.html#instance">ServiceBase#instance</a>
     </li></ul></dd>
     
 
@@ -1204,92 +1145,7 @@
     
     <dt class="tag-overrides">Overrides:</dt>
     <dd class="tag-overrides"><ul class="dummy"><li>
-        <a href="BankItemsBase.html#io">BankItemsBase#io</a>
-    </li></ul></dd>
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-</dl>
-
-
-    
-
-    
-</dd>
-
-        
-            
-
-<dt>
-<h4 class="name" id="items">
-    <span class="type-signature"><span class="icon green">protected</span> </span>items<span class="type-signature"> :Object.&lt;number, Array.&lt;number, Object.&lt;number, <a href="BankItem.html">BankItem</a>>>></span>
-    
-    <div class="container-source members">
-        <code><a href="Bank_ItemsBase.js.html">Bank/ItemsBase.js</a></code>,
-        <code><a href="Bank_ItemsBase.js.html#line68">line 68</a></code>
-    </div>
-    
-</h4>
-
-
-</dt>
-<dd>
-    
-    <div class="description">
-        Nested arrays containing the items in the banks: <code>[page][bank][item]</code>
-Also is the data that is stored to the DB.
-    </div>
-    
-
-    <!--
-    
-        <h5>Type:</h5>
-        <ul>
-            <li>
-                
-<span class="param-type">Object.&lt;number, Array.&lt;number, Object.&lt;number, <a href="BankItem.html">BankItem</a>>>></span>
-
-
-            </li>
-        </ul>
-    
-    -->
-
-    
-
-
-<dl class="details">
-
-    
-
-    
-
-    
-
-    
-    <dt class="tag-overrides">Overrides:</dt>
-    <dd class="tag-overrides"><ul class="dummy"><li>
-        <a href="BankItemsBase.html#items">BankItemsBase#items</a>
+        <a href="ServiceBase.html#io">ServiceBase#io</a>
     </li></ul></dd>
     
 
@@ -1373,7 +1229,7 @@ Also is the data that is stored to the DB.
     
     <dt class="tag-overrides">Overrides:</dt>
     <dd class="tag-overrides"><ul class="dummy"><li>
-        <a href="BankItemsBase.html#logSource">BankItemsBase#logSource</a>
+        <a href="ServiceBase.html#logSource">ServiceBase#logSource</a>
     </li></ul></dd>
     
 
@@ -1457,8 +1313,166 @@ Also is the data that is stored to the DB.
     
     <dt class="tag-overrides">Overrides:</dt>
     <dd class="tag-overrides"><ul class="dummy"><li>
-        <a href="BankItemsBase.html#page">BankItemsBase#page</a>
+        <a href="ServiceBase.html#page">ServiceBase#page</a>
     </li></ul></dd>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+    
+
+    
+</dd>
+
+        
+            
+
+<dt>
+<h4 class="name" id="port">
+    <span class="type-signature"><span class="icon green">protected</span> </span>port<span class="type-signature"> :number</span>
+    
+    <div class="container-source members">
+        <code><a href="Service_EmberPlus.js.html">Service/EmberPlus.js</a></code>,
+        <code><a href="Service_EmberPlus.js.html#line39">line 39</a></code>
+    </div>
+    
+</h4>
+
+
+</dt>
+<dd>
+    
+    <div class="description">
+        The port to open the socket with.  Default: <code>9092</code>
+    </div>
+    
+
+    <!--
+    
+        <h5>Type:</h5>
+        <ul>
+            <li>
+                
+<span class="param-type">number</span>
+
+
+            </li>
+        </ul>
+    
+    -->
+
+    
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+    
+
+    
+</dd>
+
+        
+            
+
+<dt>
+<h4 class="name" id="pushed">
+    <span class="type-signature"><span class="icon green">protected</span> </span>pushed<span class="type-signature"> :Object</span>
+    
+    <div class="container-source members">
+        <code><a href="Service_EmberPlus.js.html">Service/EmberPlus.js</a></code>,
+        <code><a href="Service_EmberPlus.js.html#line46">line 46</a></code>
+    </div>
+    
+</h4>
+
+
+</dt>
+<dd>
+    
+    <div class="description">
+        Bank state array
+    </div>
+    
+
+    <!--
+    
+        <h5>Type:</h5>
+        <ul>
+            <li>
+                
+<span class="param-type">Object</span>
+
+
+            </li>
+        </ul>
+    
+    -->
+
+    
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
     
 
     
@@ -1541,7 +1555,7 @@ Also is the data that is stored to the DB.
     
     <dt class="tag-overrides">Overrides:</dt>
     <dd class="tag-overrides"><ul class="dummy"><li>
-        <a href="BankItemsBase.html#registry">BankItemsBase#registry</a>
+        <a href="ServiceBase.html#registry">ServiceBase#registry</a>
     </li></ul></dd>
     
 
@@ -1625,7 +1639,7 @@ Also is the data that is stored to the DB.
     
     <dt class="tag-overrides">Overrides:</dt>
     <dd class="tag-overrides"><ul class="dummy"><li>
-        <a href="BankItemsBase.html#schedule">BankItemsBase#schedule</a>
+        <a href="ServiceBase.html#schedule">ServiceBase#schedule</a>
     </li></ul></dd>
     
 
@@ -1709,7 +1723,7 @@ Also is the data that is stored to the DB.
     
     <dt class="tag-overrides">Overrides:</dt>
     <dd class="tag-overrides"><ul class="dummy"><li>
-        <a href="BankItemsBase.html#services">BankItemsBase#services</a>
+        <a href="ServiceBase.html#services">ServiceBase#services</a>
     </li></ul></dd>
     
 
@@ -1793,7 +1807,7 @@ Also is the data that is stored to the DB.
     
     <dt class="tag-overrides">Overrides:</dt>
     <dd class="tag-overrides"><ul class="dummy"><li>
-        <a href="BankItemsBase.html#system">BankItemsBase#system</a>
+        <a href="ServiceBase.html#system">ServiceBase#system</a>
     </li></ul></dd>
     
 
@@ -1877,7 +1891,7 @@ Also is the data that is stored to the DB.
     
     <dt class="tag-overrides">Overrides:</dt>
     <dd class="tag-overrides"><ul class="dummy"><li>
-        <a href="BankItemsBase.html#userconfig">BankItemsBase#userconfig</a>
+        <a href="ServiceBase.html#userconfig">ServiceBase#userconfig</a>
     </li></ul></dd>
     
 
@@ -1921,14 +1935,14 @@ Also is the data that is stored to the DB.
 
 <dt>
     
-        <h4 class="name" id="addItem">
+        <h4 class="name" id="disableModule">
             
-                <span class="type-signature"></span>addItem<span class="signature">(page, bank, item)</span><span class="type-signature"></span>
+                <span class="type-signature"><span class="icon green">protected</span> </span>disableModule<span class="signature">()</span><span class="type-signature"></span>
                 
             
             <div class="container-source members">
-                <code><a href="Bank_ItemsBase.js.html">Bank/ItemsBase.js</a></code>,
-                <code><a href="Bank_ItemsBase.js.html#line93">line 93</a></code>
+                <code><a href="Service_Base.js.html">Service/Base.js</a></code>,
+                <code><a href="Service_Base.js.html#line67">line 67</a></code>
             </div>
             
         </h4>
@@ -1940,7 +1954,7 @@ Also is the data that is stored to the DB.
 
     
     <div class="description">
-        Add an item to a bank
+        Kill the socket, if exists.
     </div>
     
 
@@ -1950,102 +1964,6 @@ Also is the data that is stored to the DB.
 
     
 
-    
-    <div class="container-params">
-        <h5>Parameters:</h5>
-        
-<table class="params">
-    <thead>
-    <tr>
-        
-        <th>Name</th>
-        
-
-        <th>Type</th>
-
-        
-
-        
-
-        <th class="last">Description</th>
-    </tr>
-    </thead>
-
-    <tbody>
-    
-
-        <tr>
-            
-                <td class="name"><code>page</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">number</span>
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last">the bank's page</td>
-        </tr>
-
-    
-
-        <tr>
-            
-                <td class="name"><code>bank</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">number</span>
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last">the bank number</td>
-        </tr>
-
-    
-
-        <tr>
-            
-                <td class="name"><code>item</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">string</span>
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last">item information in form: `"instance_id:type"`</td>
-        </tr>
-
-    
-    </tbody>
-</table>
-
-    </div>
     
 
     
@@ -2074,7 +1992,7 @@ Also is the data that is stored to the DB.
     
     <dt class="tag-overrides">Overrides:</dt>
     <dd class="tag-overrides"><ul class="dummy"><li>
-        <a href="BankItemsBase.html#addItem">BankItemsBase#addItem</a>
+        <a href="ServiceBase.html#disableModule">ServiceBase#disableModule</a>
     </li></ul></dd>
     
 
@@ -2111,14 +2029,14 @@ Also is the data that is stored to the DB.
 
 <dt>
     
-        <h4 class="name" id="addItemByClient">
+        <h4 class="name" id="enableModule">
             
-                <span class="type-signature"></span>addItemByClient<span class="signature">(page, bank, item, answer)</span><span class="type-signature"></span>
+                <span class="type-signature"><span class="icon green">protected</span> </span>enableModule<span class="signature">()</span><span class="type-signature"></span>
                 
             
             <div class="container-source members">
-                <code><a href="Bank_ItemsBase.js.html">Bank/ItemsBase.js</a></code>,
-                <code><a href="Bank_ItemsBase.js.html#line133">line 133</a></code>
+                <code><a href="Service_Base.js.html">Service/Base.js</a></code>,
+                <code><a href="Service_Base.js.html#line82">line 82</a></code>
             </div>
             
         </h4>
@@ -2130,7 +2048,7 @@ Also is the data that is stored to the DB.
 
     
     <div class="description">
-        Add item to a bank via a client socket
+        Call to enable the socket if the module is initialized.
     </div>
     
 
@@ -2140,125 +2058,6 @@ Also is the data that is stored to the DB.
 
     
 
-    
-    <div class="container-params">
-        <h5>Parameters:</h5>
-        
-<table class="params">
-    <thead>
-    <tr>
-        
-        <th>Name</th>
-        
-
-        <th>Type</th>
-
-        
-
-        
-
-        <th class="last">Description</th>
-    </tr>
-    </thead>
-
-    <tbody>
-    
-
-        <tr>
-            
-                <td class="name"><code>page</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">number</span>
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last">the bank's page</td>
-        </tr>
-
-    
-
-        <tr>
-            
-                <td class="name"><code>bank</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">number</span>
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last">the bank number</td>
-        </tr>
-
-    
-
-        <tr>
-            
-                <td class="name"><code>item</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">string</span>
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last">item information in form: `"instance_id:type"`</td>
-        </tr>
-
-    
-
-        <tr>
-            
-                <td class="name"><code>answer</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">function</span>
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last">UI callback</td>
-        </tr>
-
-    
-    </tbody>
-</table>
-
-    </div>
     
 
     
@@ -2287,7 +2086,7 @@ Also is the data that is stored to the DB.
     
     <dt class="tag-overrides">Overrides:</dt>
     <dd class="tag-overrides"><ul class="dummy"><li>
-        <a href="BankItemsBase.html#addItemByClient">BankItemsBase#addItemByClient</a>
+        <a href="ServiceBase.html#enableModule">ServiceBase#enableModule</a>
     </li></ul></dd>
     
 
@@ -2324,14 +2123,14 @@ Also is the data that is stored to the DB.
 
 <dt>
     
-        <h4 class="name" id="checkBankExists">
+        <h4 class="name" id="handleSocketError">
             
-                <span class="type-signature"><span class="icon green">protected</span> </span>checkBankExists<span class="signature">(page, bank)</span><span class="type-signature"></span>
+                <span class="type-signature"><span class="icon green">protected</span> </span>handleSocketError<span class="signature">(e)</span><span class="type-signature"></span>
                 
             
             <div class="container-source members">
-                <code><a href="Bank_ItemsBase.js.html">Bank/ItemsBase.js</a></code>,
-                <code><a href="Bank_ItemsBase.js.html#line147">line 147</a></code>
+                <code><a href="Service_Base.js.html">Service/Base.js</a></code>,
+                <code><a href="Service_Base.js.html#line97">line 97</a></code>
             </div>
             
         </h4>
@@ -2343,7 +2142,7 @@ Also is the data that is stored to the DB.
 
     
     <div class="description">
-        Check if a bank exists and initialize it if it doesn't
+        Process a socket error and disable the module.
     </div>
     
 
@@ -2379,13 +2178,13 @@ Also is the data that is stored to the DB.
 
         <tr>
             
-                <td class="name"><code>page</code></td>
+                <td class="name"><code>e</code></td>
             
 
             <td class="type">
             
                 
-<span class="param-type">number</span>
+<span class="param-type">Error</span>
 
 
             
@@ -2395,30 +2194,7 @@ Also is the data that is stored to the DB.
 
             
 
-            <td class="description last">the bank's page</td>
-        </tr>
-
-    
-
-        <tr>
-            
-                <td class="name"><code>bank</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">number</span>
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last">the bank number</td>
+            <td class="description last">the error</td>
         </tr>
 
     
@@ -2454,7 +2230,7 @@ Also is the data that is stored to the DB.
     
     <dt class="tag-overrides">Overrides:</dt>
     <dd class="tag-overrides"><ul class="dummy"><li>
-        <a href="BankItemsBase.html#checkBankExists">BankItemsBase#checkBankExists</a>
+        <a href="ServiceBase.html#handleSocketError">ServiceBase#handleSocketError</a>
     </li></ul></dd>
     
 
@@ -2491,14 +2267,14 @@ Also is the data that is stored to the DB.
 
 <dt>
     
-        <h4 class="name" id="checkBankStatus">
+        <h4 class="name" id="init">
             
-                <span class="type-signature"></span>checkBankStatus<span class="signature">(page, bank)</span><span class="type-signature"></span>
+                <span class="type-signature"><span class="icon green">protected</span> </span>init<span class="signature">()</span><span class="type-signature"></span>
                 
             
             <div class="container-source members">
-                <code><a href="Bank_FeedbackItems.js.html">Bank/FeedbackItems.js</a></code>,
-                <code><a href="Bank_FeedbackItems.js.html#line55">line 55</a></code>
+                <code><a href="Service_Base.js.html">Service/Base.js</a></code>,
+                <code><a href="Service_Base.js.html#line119">line 119</a></code>
             </div>
             
         </h4>
@@ -2510,88 +2286,7 @@ Also is the data that is stored to the DB.
 
     
     <div class="description">
-        Scrub a bank's feedback items to process the current status/style
-    </div>
-    
-
-    
-
-    
-
-    
-
-    
-    <div class="container-params">
-        <h5>Parameters:</h5>
-        
-<table class="params">
-    <thead>
-    <tr>
-        
-        <th>Name</th>
-        
-
-        <th>Type</th>
-
-        
-
-        
-
-        <th class="last">Description</th>
-    </tr>
-    </thead>
-
-    <tbody>
-    
-
-        <tr>
-            
-                <td class="name"><code>page</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">number</span>
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last">the bank's page</td>
-        </tr>
-
-    
-
-        <tr>
-            
-                <td class="name"><code>bank</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">number</span>
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last">the bank number</td>
-        </tr>
-
-    
-    </tbody>
-</table>
-
+        Initialize and enable the socket if defaults allow.
     </div>
     
 
@@ -2609,236 +2304,10 @@ Also is the data that is stored to the DB.
 
     
 
-
-<dl class="details">
-
     
 
     
 
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-</dl>
-
-
-    
-
-</dd>
-
-            
-                
-
-<dt>
-    
-        <h4 class="name" id="checkInstanceStatus">
-            
-                <span class="type-signature"></span>checkInstanceStatus<span class="signature">(id, type, checkQueue<span class="signature-attributes">nullable</span>)</span><span class="type-signature"> &rarr; {Array.&lt;string, boolean>}</span>
-                
-            
-            <div class="container-source members">
-                <code><a href="Bank_ItemsBase.js.html">Bank/ItemsBase.js</a></code>,
-                <code><a href="Bank_ItemsBase.js.html#line165">line 165</a></code>
-            </div>
-            
-        </h4>
-
-        
-    
-</dt>
-<dd>
-
-    
-    <div class="description">
-        Scan the page/bank array to find items for an instance or just specific types and populate an array with the findings
-    </div>
-    
-
-    
-
-    
-
-    
-
-    
-    <div class="container-params">
-        <h5>Parameters:</h5>
-        
-<table class="params">
-    <thead>
-    <tr>
-        
-        <th>Name</th>
-        
-
-        <th>Type</th>
-
-        
-        <th>Attributes</th>
-        
-
-        
-
-        <th class="last">Description</th>
-    </tr>
-    </thead>
-
-    <tbody>
-    
-
-        <tr>
-            
-                <td class="name"><code>id</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">string</span>
-
-
-            
-            </td>
-
-            
-                <td class="attributes">
-                
-
-                
-
-                
-                </td>
-            
-
-            
-
-            <td class="description last">the instance ID to check for</td>
-        </tr>
-
-    
-
-        <tr>
-            
-                <td class="name"><code>type</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">string</span>
-
-
-            
-            </td>
-
-            
-                <td class="attributes">
-                
-
-                
-
-                
-                </td>
-            
-
-            
-
-            <td class="description last">the item type to check for</td>
-        </tr>
-
-    
-
-        <tr>
-            
-                <td class="name"><code>checkQueue</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">Array.&lt;string, boolean></span>
-
-
-            
-            </td>
-
-            
-                <td class="attributes">
-                
-
-                
-                    &lt;nullable><br>
-                
-
-                
-                </td>
-            
-
-            
-
-            <td class="description last">array of flagged banks with keys of `[page_bank]`; empty by default but can have a populated version passed to be added to</td>
-        </tr>
-
-    
-    </tbody>
-</table>
-
-    </div>
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-    <div class="container-returns">
-        <h5>Returns:</h5>
-        
-                
-
-
-
-<span class="param-type">Array.&lt;string, boolean></span>
-
-
-
-
-
-- the populated `checkQueue`
-
-
-
-
-            
-    </div>
     
 
     
@@ -2855,7 +2324,7 @@ Also is the data that is stored to the DB.
     
     <dt class="tag-overrides">Overrides:</dt>
     <dd class="tag-overrides"><ul class="dummy"><li>
-        <a href="BankItemsBase.html#checkInstanceStatus">BankItemsBase#checkInstanceStatus</a>
+        <a href="ServiceBase.html#init">ServiceBase#init</a>
     </li></ul></dd>
     
 
@@ -2892,14 +2361,14 @@ Also is the data that is stored to the DB.
 
 <dt>
     
-        <h4 class="name" id="checkStatus">
+        <h4 class="name" id="listen">
             
-                <span class="type-signature"></span>checkStatus<span class="signature">(page, bank, index)</span><span class="type-signature"></span>
+                <span class="type-signature"><span class="icon green">abstract</span>, <span class="icon green">protected</span> </span>listen<span class="signature">()</span><span class="type-signature"></span>
                 
             
             <div class="container-source members">
-                <code><a href="Bank_FeedbackItems.js.html">Bank/FeedbackItems.js</a></code>,
-                <code><a href="Bank_FeedbackItems.js.html#line70">line 70</a></code>
+                <code><a href="Service_Base.js.html">Service/Base.js</a></code>,
+                <code><a href="Service_Base.js.html#line135">line 135</a></code>
             </div>
             
         </h4>
@@ -2911,197 +2380,7 @@ Also is the data that is stored to the DB.
 
     
     <div class="description">
-        Check an item's status and update its style
-    </div>
-    
-
-    
-
-    
-
-    
-
-    
-    <div class="container-params">
-        <h5>Parameters:</h5>
-        
-<table class="params">
-    <thead>
-    <tr>
-        
-        <th>Name</th>
-        
-
-        <th>Type</th>
-
-        
-
-        
-
-        <th class="last">Description</th>
-    </tr>
-    </thead>
-
-    <tbody>
-    
-
-        <tr>
-            
-                <td class="name"><code>page</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">number</span>
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last">the item's page</td>
-        </tr>
-
-    
-
-        <tr>
-            
-                <td class="name"><code>bank</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">number</span>
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last">the item's bank</td>
-        </tr>
-
-    
-
-        <tr>
-            
-                <td class="name"><code>index</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">number</span>
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last">the item's index</td>
-        </tr>
-
-    
-    </tbody>
-</table>
-
-    </div>
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-
-<dl class="details">
-
-    
-
-    
-
-    
-
-    
-    <dt class="tag-overrides">Overrides:</dt>
-    <dd class="tag-overrides"><ul class="dummy"><li>
-        <a href="BankItemsBase.html#checkStatus">BankItemsBase#checkStatus</a>
-    </li></ul></dd>
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-</dl>
-
-
-    
-
-</dd>
-
-            
-                
-
-<dt>
-    
-        <h4 class="name" id="cleanupItems">
-            
-                <span class="type-signature"><span class="icon green">protected</span> </span>cleanupItems<span class="signature">()</span><span class="type-signature"></span>
-                
-            
-            <div class="container-source members">
-                <code><a href="Bank_ItemsBase.js.html">Bank/ItemsBase.js</a></code>,
-                <code><a href="Bank_ItemsBase.js.html#line198">line 198</a></code>
-            </div>
-            
-        </h4>
-
-        
-    
-</dt>
-<dd>
-
-    
-    <div class="description">
-        Checks all the items to ensure their instances still exist
+        Start the service if it is not already running
     </div>
     
 
@@ -3139,2436 +2418,7 @@ Also is the data that is stored to the DB.
     
     <dt class="tag-overrides">Overrides:</dt>
     <dd class="tag-overrides"><ul class="dummy"><li>
-        <a href="BankItemsBase.html#cleanupItems">BankItemsBase#cleanupItems</a>
-    </li></ul></dd>
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-</dl>
-
-
-    
-
-</dd>
-
-            
-                
-
-<dt>
-    
-        <h4 class="name" id="deleteInstance">
-            
-                <span class="type-signature"></span>deleteInstance<span class="signature">(id, checkQueue<span class="signature-attributes">nullable</span>)</span><span class="type-signature"> &rarr; {Array.&lt;string, boolean>}</span>
-                
-            
-            <div class="container-source members">
-                <code><a href="Bank_ItemsBase.js.html">Bank/ItemsBase.js</a></code>,
-                <code><a href="Bank_ItemsBase.js.html#line228">line 228</a></code>
-            </div>
-            
-        </h4>
-
-        
-    
-</dt>
-<dd>
-
-    
-    <div class="description">
-        Scan the page/bank array for items from an instance and delete them
-    </div>
-    
-
-    
-
-    
-
-    
-
-    
-    <div class="container-params">
-        <h5>Parameters:</h5>
-        
-<table class="params">
-    <thead>
-    <tr>
-        
-        <th>Name</th>
-        
-
-        <th>Type</th>
-
-        
-        <th>Attributes</th>
-        
-
-        
-
-        <th class="last">Description</th>
-    </tr>
-    </thead>
-
-    <tbody>
-    
-
-        <tr>
-            
-                <td class="name"><code>id</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">string</span>
-
-
-            
-            </td>
-
-            
-                <td class="attributes">
-                
-
-                
-
-                
-                </td>
-            
-
-            
-
-            <td class="description last">the instance ID to delete</td>
-        </tr>
-
-    
-
-        <tr>
-            
-                <td class="name"><code>checkQueue</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">Array.&lt;string, boolean></span>
-
-
-            
-            </td>
-
-            
-                <td class="attributes">
-                
-
-                
-                    &lt;nullable><br>
-                
-
-                
-                </td>
-            
-
-            
-
-            <td class="description last">array of changed banks with keys of `[page_bank]`; empty by default but can have a populated version passed to be added to</td>
-        </tr>
-
-    
-    </tbody>
-</table>
-
-    </div>
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-    <div class="container-returns">
-        <h5>Returns:</h5>
-        
-                
-
-
-
-<span class="param-type">Array.&lt;string, boolean></span>
-
-
-
-
-
-- the populated `checkQueue`
-
-
-
-
-            
-    </div>
-    
-
-    
-
-
-<dl class="details">
-
-    
-
-    
-
-    
-
-    
-    <dt class="tag-overrides">Overrides:</dt>
-    <dd class="tag-overrides"><ul class="dummy"><li>
-        <a href="BankItemsBase.html#deleteInstance">BankItemsBase#deleteInstance</a>
-    </li></ul></dd>
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-</dl>
-
-
-    
-
-</dd>
-
-            
-                
-
-<dt>
-    
-        <h4 class="name" id="deleteItem">
-            
-                <span class="type-signature"></span>deleteItem<span class="signature">(page, bank, index)</span><span class="type-signature"></span>
-                
-            
-            <div class="container-source members">
-                <code><a href="Bank_FeedbackItems.js.html">Bank/FeedbackItems.js</a></code>,
-                <code><a href="Bank_FeedbackItems.js.html#line121">line 121</a></code>
-            </div>
-            
-        </h4>
-
-        
-    
-</dt>
-<dd>
-
-    
-    <div class="description">
-        Delete an item
-    </div>
-    
-
-    
-
-    
-
-    
-
-    
-    <div class="container-params">
-        <h5>Parameters:</h5>
-        
-<table class="params">
-    <thead>
-    <tr>
-        
-        <th>Name</th>
-        
-
-        <th>Type</th>
-
-        
-
-        
-
-        <th class="last">Description</th>
-    </tr>
-    </thead>
-
-    <tbody>
-    
-
-        <tr>
-            
-                <td class="name"><code>page</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">number</span>
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last">the item's page</td>
-        </tr>
-
-    
-
-        <tr>
-            
-                <td class="name"><code>bank</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">number</span>
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last">the item's bank</td>
-        </tr>
-
-    
-
-        <tr>
-            
-                <td class="name"><code>index</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">number</span>
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last">the item's index</td>
-        </tr>
-
-    
-    </tbody>
-</table>
-
-    </div>
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-
-<dl class="details">
-
-    
-
-    
-
-    
-
-    
-    <dt class="tag-overrides">Overrides:</dt>
-    <dd class="tag-overrides"><ul class="dummy"><li>
-        <a href="BankItemsBase.html#deleteItem">BankItemsBase#deleteItem</a>
-    </li></ul></dd>
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-</dl>
-
-
-    
-
-</dd>
-
-            
-                
-
-<dt>
-    
-        <h4 class="name" id="deleteItemByClient">
-            
-                <span class="type-signature"></span>deleteItemByClient<span class="signature">(page, bank, index, answer)</span><span class="type-signature"></span>
-                
-            
-            <div class="container-source members">
-                <code><a href="Bank_ItemsBase.js.html">Bank/ItemsBase.js</a></code>,
-                <code><a href="Bank_ItemsBase.js.html#line277">line 277</a></code>
-            </div>
-            
-        </h4>
-
-        
-    
-</dt>
-<dd>
-
-    
-    <div class="description">
-        Delete an item from a bank via a client socket
-    </div>
-    
-
-    
-
-    
-
-    
-
-    
-    <div class="container-params">
-        <h5>Parameters:</h5>
-        
-<table class="params">
-    <thead>
-    <tr>
-        
-        <th>Name</th>
-        
-
-        <th>Type</th>
-
-        
-
-        
-
-        <th class="last">Description</th>
-    </tr>
-    </thead>
-
-    <tbody>
-    
-
-        <tr>
-            
-                <td class="name"><code>page</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">number</span>
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last">the item's page</td>
-        </tr>
-
-    
-
-        <tr>
-            
-                <td class="name"><code>bank</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">number</span>
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last">the item's bank</td>
-        </tr>
-
-    
-
-        <tr>
-            
-                <td class="name"><code>index</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">string</span>
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last">the item's id (`item.id`)</td>
-        </tr>
-
-    
-
-        <tr>
-            
-                <td class="name"><code>answer</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">function</span>
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last">UI callback</td>
-        </tr>
-
-    
-    </tbody>
-</table>
-
-    </div>
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-
-<dl class="details">
-
-    
-
-    
-
-    
-
-    
-    <dt class="tag-overrides">Overrides:</dt>
-    <dd class="tag-overrides"><ul class="dummy"><li>
-        <a href="BankItemsBase.html#deleteItemByClient">BankItemsBase#deleteItemByClient</a>
-    </li></ul></dd>
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-</dl>
-
-
-    
-
-</dd>
-
-            
-                
-
-<dt>
-    
-        <h4 class="name" id="getAll">
-            
-                <span class="type-signature"></span>getAll<span class="signature">(clone<span class="signature-attributes">opt</span>)</span><span class="type-signature"> &rarr; {Object}</span>
-                
-            
-            <div class="container-source members">
-                <code><a href="Bank_ItemsBase.js.html">Bank/ItemsBase.js</a></code>,
-                <code><a href="Bank_ItemsBase.js.html#line298">line 298</a></code>
-            </div>
-            
-        </h4>
-
-        
-    
-</dt>
-<dd>
-
-    
-    <div class="description">
-        Get the entire items array
-    </div>
-    
-
-    
-
-    
-
-    
-
-    
-    <div class="container-params">
-        <h5>Parameters:</h5>
-        
-<table class="params">
-    <thead>
-    <tr>
-        
-        <th>Name</th>
-        
-
-        <th>Type</th>
-
-        
-        <th>Attributes</th>
-        
-
-        
-        <th>Default</th>
-        
-
-        <th class="last">Description</th>
-    </tr>
-    </thead>
-
-    <tbody>
-    
-
-        <tr>
-            
-                <td class="name"><code>clone</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">boolean</span>
-
-
-            
-            </td>
-
-            
-                <td class="attributes">
-                
-                    &lt;optional><br>
-                
-
-                
-
-                
-                </td>
-            
-
-            
-                <td class="default">
-                
-                    false
-                
-                </td>
-            
-
-            <td class="description last"><code>true</code> if a clone is needed instead of a link</td>
-        </tr>
-
-    
-    </tbody>
-</table>
-
-    </div>
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-    <div class="container-returns">
-        <h5>Returns:</h5>
-        
-                
-
-
-
-<span class="param-type">Object</span>
-
-
-
-
-
-- the array in the form `[page][bank][item]`
-
-
-
-
-            
-    </div>
-    
-
-    
-
-
-<dl class="details">
-
-    
-
-    
-
-    
-
-    
-    <dt class="tag-overrides">Overrides:</dt>
-    <dd class="tag-overrides"><ul class="dummy"><li>
-        <a href="BankItemsBase.html#getAll">BankItemsBase#getAll</a>
-    </li></ul></dd>
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-</dl>
-
-
-    
-
-</dd>
-
-            
-                
-
-<dt>
-    
-        <h4 class="name" id="getBank">
-            
-                <span class="type-signature"></span>getBank<span class="signature">(page, bank, clone<span class="signature-attributes">opt</span>)</span><span class="type-signature"> &rarr; {Array.&lt;<a href="BankItem.html">BankItem</a>>}</span>
-                
-            
-            <div class="container-source members">
-                <code><a href="Bank_ItemsBase.js.html">Bank/ItemsBase.js</a></code>,
-                <code><a href="Bank_ItemsBase.js.html#line335">line 335</a></code>
-            </div>
-            
-        </h4>
-
-        
-    
-</dt>
-<dd>
-
-    
-    <div class="description">
-        Get the items in a bank
-    </div>
-    
-
-    
-
-    
-
-    
-
-    
-    <div class="container-params">
-        <h5>Parameters:</h5>
-        
-<table class="params">
-    <thead>
-    <tr>
-        
-        <th>Name</th>
-        
-
-        <th>Type</th>
-
-        
-        <th>Attributes</th>
-        
-
-        
-        <th>Default</th>
-        
-
-        <th class="last">Description</th>
-    </tr>
-    </thead>
-
-    <tbody>
-    
-
-        <tr>
-            
-                <td class="name"><code>page</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">number</span>
-
-
-            
-            </td>
-
-            
-                <td class="attributes">
-                
-
-                
-
-                
-                </td>
-            
-
-            
-                <td class="default">
-                
-                </td>
-            
-
-            <td class="description last">the bank's page</td>
-        </tr>
-
-    
-
-        <tr>
-            
-                <td class="name"><code>bank</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">number</span>
-
-
-            
-            </td>
-
-            
-                <td class="attributes">
-                
-
-                
-
-                
-                </td>
-            
-
-            
-                <td class="default">
-                
-                </td>
-            
-
-            <td class="description last">the bank number</td>
-        </tr>
-
-    
-
-        <tr>
-            
-                <td class="name"><code>clone</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">boolean</span>
-
-
-            
-            </td>
-
-            
-                <td class="attributes">
-                
-                    &lt;optional><br>
-                
-
-                
-
-                
-                </td>
-            
-
-            
-                <td class="default">
-                
-                    false
-                
-                </td>
-            
-
-            <td class="description last"><code>true</code> if a clone is needed instead of a link</td>
-        </tr>
-
-    
-    </tbody>
-</table>
-
-    </div>
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-    <div class="container-returns">
-        <h5>Returns:</h5>
-        
-                
-
-
-
-<span class="param-type">Array.&lt;<a href="BankItem.html">BankItem</a>></span>
-
-
-
-
-
-- the items array
-
-
-
-
-            
-    </div>
-    
-
-    
-
-
-<dl class="details">
-
-    
-
-    
-
-    
-
-    
-    <dt class="tag-overrides">Overrides:</dt>
-    <dd class="tag-overrides"><ul class="dummy"><li>
-        <a href="BankItemsBase.html#getBank">BankItemsBase#getBank</a>
-    </li></ul></dd>
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-</dl>
-
-
-    
-
-</dd>
-
-            
-                
-
-<dt>
-    
-        <h4 class="name" id="getBankByClient">
-            
-                <span class="type-signature"></span>getBankByClient<span class="signature">(client, result, page, bank)</span><span class="type-signature"></span>
-                
-            
-            <div class="container-source members">
-                <code><a href="Bank_FeedbackItems.js.html">Bank/FeedbackItems.js</a></code>,
-                <code><a href="Bank_FeedbackItems.js.html#line143">line 143</a></code>
-            </div>
-            
-        </h4>
-
-        
-    
-</dt>
-<dd>
-
-    
-    <div class="description">
-        Get the items in a bank via a client socket
-    </div>
-    
-
-    
-
-    
-
-    
-
-    
-    <div class="container-params">
-        <h5>Parameters:</h5>
-        
-<table class="params">
-    <thead>
-    <tr>
-        
-        <th>Name</th>
-        
-
-        <th>Type</th>
-
-        
-
-        
-
-        <th class="last">Description</th>
-    </tr>
-    </thead>
-
-    <tbody>
-    
-
-        <tr>
-            
-                <td class="name"><code>client</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">IO.Socket</span>
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last">the client socket sending the request</td>
-        </tr>
-
-    
-
-        <tr>
-            
-                <td class="name"><code>result</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">string</span>
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last">the name of the call to send the results back to the client</td>
-        </tr>
-
-    
-
-        <tr>
-            
-                <td class="name"><code>page</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">number</span>
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last">the bank's page</td>
-        </tr>
-
-    
-
-        <tr>
-            
-                <td class="name"><code>bank</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">number</span>
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last">the bank number</td>
-        </tr>
-
-    
-    </tbody>
-</table>
-
-    </div>
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-
-<dl class="details">
-
-    
-
-    
-
-    
-
-    
-    <dt class="tag-overrides">Overrides:</dt>
-    <dd class="tag-overrides"><ul class="dummy"><li>
-        <a href="BankItemsBase.html#getBankByClient">BankItemsBase#getBankByClient</a>
-    </li></ul></dd>
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-</dl>
-
-
-    
-
-</dd>
-
-            
-                
-
-<dt>
-    
-        <h4 class="name" id="getBankStyles">
-            
-                <span class="type-signature"></span>getBankStyles<span class="signature">(page, bank, clone<span class="signature-attributes">opt</span>)</span><span class="type-signature"> &rarr; {Array.&lt;<a href="BankStyle.html">BankStyle</a>>}</span>
-                
-            
-            <div class="container-source members">
-                <code><a href="Bank_FeedbackItems.js.html">Bank/FeedbackItems.js</a></code>,
-                <code><a href="Bank_FeedbackItems.js.html#line162">line 162</a></code>
-            </div>
-            
-        </h4>
-
-        
-    
-</dt>
-<dd>
-
-    
-    <div class="description">
-        Get the current style for a bank's items
-    </div>
-    
-
-    
-
-    
-
-    
-
-    
-    <div class="container-params">
-        <h5>Parameters:</h5>
-        
-<table class="params">
-    <thead>
-    <tr>
-        
-        <th>Name</th>
-        
-
-        <th>Type</th>
-
-        
-        <th>Attributes</th>
-        
-
-        
-        <th>Default</th>
-        
-
-        <th class="last">Description</th>
-    </tr>
-    </thead>
-
-    <tbody>
-    
-
-        <tr>
-            
-                <td class="name"><code>page</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">number</span>
-
-
-            
-            </td>
-
-            
-                <td class="attributes">
-                
-
-                
-
-                
-                </td>
-            
-
-            
-                <td class="default">
-                
-                </td>
-            
-
-            <td class="description last">the item's page</td>
-        </tr>
-
-    
-
-        <tr>
-            
-                <td class="name"><code>bank</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">number</span>
-
-
-            
-            </td>
-
-            
-                <td class="attributes">
-                
-
-                
-
-                
-                </td>
-            
-
-            
-                <td class="default">
-                
-                </td>
-            
-
-            <td class="description last">the item bank</td>
-        </tr>
-
-    
-
-        <tr>
-            
-                <td class="name"><code>clone</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">boolean</span>
-
-
-            
-            </td>
-
-            
-                <td class="attributes">
-                
-                    &lt;optional><br>
-                
-
-                
-
-                
-                </td>
-            
-
-            
-                <td class="default">
-                
-                    false
-                
-                </td>
-            
-
-            <td class="description last"><code>true</code> if a clone is needed instead of a link</td>
-        </tr>
-
-    
-    </tbody>
-</table>
-
-    </div>
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-    <div class="container-returns">
-        <h5>Returns:</h5>
-        
-                
-
-
-
-<span class="param-type">Array.&lt;<a href="BankStyle.html">BankStyle</a>></span>
-
-
-
-
-
-- the bank array
-
-
-
-
-            
-    </div>
-    
-
-    
-
-
-<dl class="details">
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-</dl>
-
-
-    
-
-</dd>
-
-            
-                
-
-<dt>
-    
-        <h4 class="name" id="getInstanceItems">
-            
-                <span class="type-signature"></span>getInstanceItems<span class="signature">(id, clone<span class="signature-attributes">opt</span>)</span><span class="type-signature"> &rarr; {Object}</span>
-                
-            
-            <div class="container-source members">
-                <code><a href="Bank_FeedbackItems.js.html">Bank/FeedbackItems.js</a></code>,
-                <code><a href="Bank_FeedbackItems.js.html#line183">line 183</a></code>
-            </div>
-            
-        </h4>
-
-        
-    
-</dt>
-<dd>
-
-    
-    <div class="description">
-        Get all the items for a specific instance
-    </div>
-    
-
-    
-
-    
-
-    
-
-    
-    <div class="container-params">
-        <h5>Parameters:</h5>
-        
-<table class="params">
-    <thead>
-    <tr>
-        
-        <th>Name</th>
-        
-
-        <th>Type</th>
-
-        
-        <th>Attributes</th>
-        
-
-        
-        <th>Default</th>
-        
-
-        <th class="last">Description</th>
-    </tr>
-    </thead>
-
-    <tbody>
-    
-
-        <tr>
-            
-                <td class="name"><code>id</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">string</span>
-
-
-            
-            </td>
-
-            
-                <td class="attributes">
-                
-
-                
-
-                
-                </td>
-            
-
-            
-                <td class="default">
-                
-                </td>
-            
-
-            <td class="description last">the instance id</td>
-        </tr>
-
-    
-
-        <tr>
-            
-                <td class="name"><code>clone</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">boolean</span>
-
-
-            
-            </td>
-
-            
-                <td class="attributes">
-                
-                    &lt;optional><br>
-                
-
-                
-
-                
-                </td>
-            
-
-            
-                <td class="default">
-                
-                    false
-                
-                </td>
-            
-
-            <td class="description last"><code>true</code> if a clone is needed instead of a link</td>
-        </tr>
-
-    
-    </tbody>
-</table>
-
-    </div>
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-    <div class="container-returns">
-        <h5>Returns:</h5>
-        
-                
-
-
-
-<span class="param-type">Object</span>
-
-
-
-
-
-- the items array
-
-
-
-
-            
-    </div>
-    
-
-    
-
-
-<dl class="details">
-
-    
-
-    
-
-    
-
-    
-    <dt class="tag-overrides">Overrides:</dt>
-    <dd class="tag-overrides"><ul class="dummy"><li>
-        <a href="BankItemsBase.html#getInstanceItems">BankItemsBase#getInstanceItems</a>
-    </li></ul></dd>
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-</dl>
-
-
-    
-
-</dd>
-
-            
-                
-
-<dt>
-    
-        <h4 class="name" id="getPage">
-            
-                <span class="type-signature"></span>getPage<span class="signature">(page, clone<span class="signature-attributes">opt</span>)</span><span class="type-signature"> &rarr; {Array.&lt;number, Array.&lt;<a href="BankItem.html">BankItem</a>>>}</span>
-                
-            
-            <div class="container-source members">
-                <code><a href="Bank_ItemsBase.js.html">Bank/ItemsBase.js</a></code>,
-                <code><a href="Bank_ItemsBase.js.html#line405">line 405</a></code>
-            </div>
-            
-        </h4>
-
-        
-    
-</dt>
-<dd>
-
-    
-    <div class="description">
-        Get the items on a page
-    </div>
-    
-
-    
-
-    
-
-    
-
-    
-    <div class="container-params">
-        <h5>Parameters:</h5>
-        
-<table class="params">
-    <thead>
-    <tr>
-        
-        <th>Name</th>
-        
-
-        <th>Type</th>
-
-        
-        <th>Attributes</th>
-        
-
-        
-        <th>Default</th>
-        
-
-        <th class="last">Description</th>
-    </tr>
-    </thead>
-
-    <tbody>
-    
-
-        <tr>
-            
-                <td class="name"><code>page</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">number</span>
-
-
-            
-            </td>
-
-            
-                <td class="attributes">
-                
-
-                
-
-                
-                </td>
-            
-
-            
-                <td class="default">
-                
-                </td>
-            
-
-            <td class="description last">the page number</td>
-        </tr>
-
-    
-
-        <tr>
-            
-                <td class="name"><code>clone</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">boolean</span>
-
-
-            
-            </td>
-
-            
-                <td class="attributes">
-                
-                    &lt;optional><br>
-                
-
-                
-
-                
-                </td>
-            
-
-            
-                <td class="default">
-                
-                    false
-                
-                </td>
-            
-
-            <td class="description last"><code>true</code> if a clone is needed instead of a link</td>
-        </tr>
-
-    
-    </tbody>
-</table>
-
-    </div>
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-    <div class="container-returns">
-        <h5>Returns:</h5>
-        
-                
-
-
-
-<span class="param-type">Array.&lt;number, Array.&lt;<a href="BankItem.html">BankItem</a>>></span>
-
-
-
-
-
-- the array in the form `[bank][item]`
-
-
-
-
-            
-    </div>
-    
-
-    
-
-
-<dl class="details">
-
-    
-
-    
-
-    
-
-    
-    <dt class="tag-overrides">Overrides:</dt>
-    <dd class="tag-overrides"><ul class="dummy"><li>
-        <a href="BankItemsBase.html#getPage">BankItemsBase#getPage</a>
-    </li></ul></dd>
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-</dl>
-
-
-    
-
-</dd>
-
-            
-                
-
-<dt>
-    
-        <h4 class="name" id="getStyle">
-            
-                <span class="type-signature"></span>getStyle<span class="signature">(page, bank, index, clone<span class="signature-attributes">opt</span>)</span><span class="type-signature"> &rarr; {<a href="BankStyle.html">BankStyle</a>}</span>
-                
-            
-            <div class="container-source members">
-                <code><a href="Bank_FeedbackItems.js.html">Bank/FeedbackItems.js</a></code>,
-                <code><a href="Bank_FeedbackItems.js.html#line203">line 203</a></code>
-            </div>
-            
-        </h4>
-
-        
-    
-</dt>
-<dd>
-
-    
-    <div class="description">
-        Get the current style for an item
-    </div>
-    
-
-    
-
-    
-
-    
-
-    
-    <div class="container-params">
-        <h5>Parameters:</h5>
-        
-<table class="params">
-    <thead>
-    <tr>
-        
-        <th>Name</th>
-        
-
-        <th>Type</th>
-
-        
-        <th>Attributes</th>
-        
-
-        
-        <th>Default</th>
-        
-
-        <th class="last">Description</th>
-    </tr>
-    </thead>
-
-    <tbody>
-    
-
-        <tr>
-            
-                <td class="name"><code>page</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">number</span>
-
-
-            
-            </td>
-
-            
-                <td class="attributes">
-                
-
-                
-
-                
-                </td>
-            
-
-            
-                <td class="default">
-                
-                </td>
-            
-
-            <td class="description last">the item's page</td>
-        </tr>
-
-    
-
-        <tr>
-            
-                <td class="name"><code>bank</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">number</span>
-
-
-            
-            </td>
-
-            
-                <td class="attributes">
-                
-
-                
-
-                
-                </td>
-            
-
-            
-                <td class="default">
-                
-                </td>
-            
-
-            <td class="description last">the item's bank</td>
-        </tr>
-
-    
-
-        <tr>
-            
-                <td class="name"><code>index</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">number</span>
-
-
-            
-            </td>
-
-            
-                <td class="attributes">
-                
-
-                
-
-                
-                </td>
-            
-
-            
-                <td class="default">
-                
-                </td>
-            
-
-            <td class="description last">the item's index</td>
-        </tr>
-
-    
-
-        <tr>
-            
-                <td class="name"><code>clone</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">boolean</span>
-
-
-            
-            </td>
-
-            
-                <td class="attributes">
-                
-                    &lt;optional><br>
-                
-
-                
-
-                
-                </td>
-            
-
-            
-                <td class="default">
-                
-                    false
-                
-                </td>
-            
-
-            <td class="description last"><code>true</code> if a clone is needed instead of a link</td>
-        </tr>
-
-    
-    </tbody>
-</table>
-
-    </div>
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-    <div class="container-returns">
-        <h5>Returns:</h5>
-        
-                
-
-
-
-<span class="param-type"><a href="BankStyle.html">BankStyle</a></span>
-
-
-
-
-
-- the items array
-
-
-
-
-            
-    </div>
-    
-
-    
-
-
-<dl class="details">
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-</dl>
-
-
-    
-
-</dd>
-
-            
-                
-
-<dt>
-    
-        <h4 class="name" id="importBank">
-            
-                <span class="type-signature"></span>importBank<span class="signature">(page, bank, items)</span><span class="type-signature"></span>
-                
-            
-            <div class="container-source members">
-                <code><a href="Bank_ItemsBase.js.html">Bank/ItemsBase.js</a></code>,
-                <code><a href="Bank_ItemsBase.js.html#line439">line 439</a></code>
-            </div>
-            
-        </h4>
-
-        
-    
-</dt>
-<dd>
-
-    
-    <div class="description">
-        Import and subscribe items to a bank
-    </div>
-    
-
-    
-
-    
-
-    
-
-    
-    <div class="container-params">
-        <h5>Parameters:</h5>
-        
-<table class="params">
-    <thead>
-    <tr>
-        
-        <th>Name</th>
-        
-
-        <th>Type</th>
-
-        
-
-        
-
-        <th class="last">Description</th>
-    </tr>
-    </thead>
-
-    <tbody>
-    
-
-        <tr>
-            
-                <td class="name"><code>page</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">number</span>
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last">the bank's page</td>
-        </tr>
-
-    
-
-        <tr>
-            
-                <td class="name"><code>bank</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">number</span>
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last">the bank number</td>
-        </tr>
-
-    
-
-        <tr>
-            
-                <td class="name"><code>items</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">Array.&lt;<a href="BankItem.html">BankItem</a>></span>
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last">the items to import</td>
-        </tr>
-
-    
-    </tbody>
-</table>
-
-    </div>
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-
-<dl class="details">
-
-    
-
-    
-
-    
-
-    
-    <dt class="tag-overrides">Overrides:</dt>
-    <dd class="tag-overrides"><ul class="dummy"><li>
-        <a href="BankItemsBase.html#importBank">BankItemsBase#importBank</a>
+        <a href="ServiceBase.html#listen">ServiceBase#listen</a>
     </li></ul></dd>
     
 
@@ -5735,7 +2585,7 @@ Also is the data that is stored to the DB.
     
     <dt class="tag-overrides">Overrides:</dt>
     <dd class="tag-overrides"><ul class="dummy"><li>
-        <a href="BankItemsBase.html#log">BankItemsBase#log</a>
+        <a href="ServiceBase.html#log">ServiceBase#log</a>
     </li></ul></dd>
     
 
@@ -5772,14 +2622,14 @@ Also is the data that is stored to the DB.
 
 <dt>
     
-        <h4 class="name" id="resetBank">
+        <h4 class="name" id="setDefaults">
             
-                <span class="type-signature"></span>resetBank<span class="signature">(page, bank)</span><span class="type-signature"></span>
+                <span class="type-signature"><span class="icon green">protected</span> </span>setDefaults<span class="signature">(defaults)</span><span class="type-signature"></span>
                 
             
             <div class="container-source members">
-                <code><a href="Bank_FeedbackItems.js.html">Bank/FeedbackItems.js</a></code>,
-                <code><a href="Bank_FeedbackItems.js.html#line227">line 227</a></code>
+                <code><a href="Service_Base.js.html">Service/Base.js</a></code>,
+                <code><a href="Service_Base.js.html#line142">line 142</a></code>
             </div>
             
         </h4>
@@ -5791,7 +2641,7 @@ Also is the data that is stored to the DB.
 
     
     <div class="description">
-        Unsubscribe, clear a bank, and save
+        Check the userconfig for the module's settings and set the defaults if necessary.
     </div>
     
 
@@ -5827,13 +2677,13 @@ Also is the data that is stored to the DB.
 
         <tr>
             
-                <td class="name"><code>page</code></td>
+                <td class="name"><code>defaults</code></td>
             
 
             <td class="type">
             
                 
-<span class="param-type">number</span>
+<span class="param-type">Object</span>
 
 
             
@@ -5843,30 +2693,7 @@ Also is the data that is stored to the DB.
 
             
 
-            <td class="description last">the bank's page</td>
-        </tr>
-
-    
-
-        <tr>
-            
-                <td class="name"><code>bank</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">number</span>
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last">the bank number</td>
+            <td class="description last">the default key/value userconfig values</td>
         </tr>
 
     
@@ -5902,7 +2729,7 @@ Also is the data that is stored to the DB.
     
     <dt class="tag-overrides">Overrides:</dt>
     <dd class="tag-overrides"><ul class="dummy"><li>
-        <a href="BankItemsBase.html#resetBank">BankItemsBase#resetBank</a>
+        <a href="ServiceBase.html#setDefaults">ServiceBase#setDefaults</a>
     </li></ul></dd>
     
 
@@ -5939,14 +2766,14 @@ Also is the data that is stored to the DB.
 
 <dt>
     
-        <h4 class="name" id="save">
+        <h4 class="name" id="updateUserconfig">
             
-                <span class="type-signature"></span>save<span class="signature">()</span><span class="type-signature"></span>
+                <span class="type-signature"><span class="icon green">protected</span> </span>updateUserconfig<span class="signature">(key, value)</span><span class="type-signature"></span>
                 
             
             <div class="container-source members">
-                <code><a href="Bank_ItemsBase.js.html">Bank/ItemsBase.js</a></code>,
-                <code><a href="Bank_ItemsBase.js.html#line480">line 480</a></code>
+                <code><a href="Service_Base.js.html">Service/Base.js</a></code>,
+                <code><a href="Service_Base.js.html#line160">line 160</a></code>
             </div>
             
         </h4>
@@ -5958,101 +2785,7 @@ Also is the data that is stored to the DB.
 
     
     <div class="description">
-        Flag the database to save
-    </div>
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-
-<dl class="details">
-
-    
-
-    
-
-    
-
-    
-    <dt class="tag-overrides">Overrides:</dt>
-    <dd class="tag-overrides"><ul class="dummy"><li>
-        <a href="BankItemsBase.html#save">BankItemsBase#save</a>
-    </li></ul></dd>
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-</dl>
-
-
-    
-
-</dd>
-
-            
-                
-
-<dt>
-    
-        <h4 class="name" id="setDefinitions">
-            
-                <span class="type-signature"></span>setDefinitions<span class="signature">(definitions)</span><span class="type-signature"></span>
-                
-            
-            <div class="container-source members">
-                <code><a href="Bank_ItemsBase.js.html">Bank/ItemsBase.js</a></code>,
-                <code><a href="Bank_ItemsBase.js.html#line491">line 491</a></code>
-            </div>
-            
-        </h4>
-
-        
-    
-</dt>
-<dd>
-
-    
-    <div class="description">
-        Set a new definitions array
+        Process an update userconfig value and enable/disable the module, if necessary.
     </div>
     
 
@@ -6088,1027 +2821,7 @@ Also is the data that is stored to the DB.
 
         <tr>
             
-                <td class="name"><code>definitions</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">Array.&lt;<a href="BankItemDefinition.html">BankItemDefinition</a>></span>
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last">the new definitions</td>
-        </tr>
-
-    
-    </tbody>
-</table>
-
-    </div>
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-
-<dl class="details">
-
-    
-
-    
-
-    
-
-    
-    <dt class="tag-overrides">Overrides:</dt>
-    <dd class="tag-overrides"><ul class="dummy"><li>
-        <a href="BankItemsBase.html#setDefinitions">BankItemsBase#setDefinitions</a>
-    </li></ul></dd>
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-</dl>
-
-
-    
-
-</dd>
-
-            
-                
-
-<dt>
-    
-        <h4 class="name" id="setStyle">
-            
-                <span class="type-signature"><span class="icon green">protected</span> </span>setStyle<span class="signature">(page, bank, index, style)</span><span class="type-signature"></span>
-                
-            
-            <div class="container-source members">
-                <code><a href="Bank_FeedbackItems.js.html">Bank/FeedbackItems.js</a></code>,
-                <code><a href="Bank_FeedbackItems.js.html#line243">line 243</a></code>
-            </div>
-            
-        </h4>
-
-        
-    
-</dt>
-<dd>
-
-    
-    <div class="description">
-        Save the current return style from a feedback
-    </div>
-    
-
-    
-
-    
-
-    
-
-    
-    <div class="container-params">
-        <h5>Parameters:</h5>
-        
-<table class="params">
-    <thead>
-    <tr>
-        
-        <th>Name</th>
-        
-
-        <th>Type</th>
-
-        
-
-        
-
-        <th class="last">Description</th>
-    </tr>
-    </thead>
-
-    <tbody>
-    
-
-        <tr>
-            
-                <td class="name"><code>page</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">number</span>
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last">the item's page</td>
-        </tr>
-
-    
-
-        <tr>
-            
-                <td class="name"><code>bank</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">number</span>
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last">the item's bank</td>
-        </tr>
-
-    
-
-        <tr>
-            
-                <td class="name"><code>index</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">number</span>
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last">the item's index</td>
-        </tr>
-
-    
-
-        <tr>
-            
-                <td class="name"><code>style</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type"><a href="BankStyle.html">BankStyle</a></span>
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last">the current style</td>
-        </tr>
-
-    
-    </tbody>
-</table>
-
-    </div>
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-
-<dl class="details">
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-</dl>
-
-
-    
-
-</dd>
-
-            
-                
-
-<dt>
-    
-        <h4 class="name" id="subscribe">
-            
-                <span class="type-signature"><span class="icon green">protected</span> </span>subscribe<span class="signature">(item)</span><span class="type-signature"></span>
-                
-            
-            <div class="container-source members">
-                <code><a href="Bank_ItemsBase.js.html">Bank/ItemsBase.js</a></code>,
-                <code><a href="Bank_ItemsBase.js.html#line500">line 500</a></code>
-            </div>
-            
-        </h4>
-
-        
-    
-</dt>
-<dd>
-
-    
-    <div class="description">
-        Find a subscribe function for an item and execute it
-    </div>
-    
-
-    
-
-    
-
-    
-
-    
-    <div class="container-params">
-        <h5>Parameters:</h5>
-        
-<table class="params">
-    <thead>
-    <tr>
-        
-        <th>Name</th>
-        
-
-        <th>Type</th>
-
-        
-
-        
-
-        <th class="last">Description</th>
-    </tr>
-    </thead>
-
-    <tbody>
-    
-
-        <tr>
-            
-                <td class="name"><code>item</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type"><a href="BankItem.html">BankItem</a></span>
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last">the item object</td>
-        </tr>
-
-    
-    </tbody>
-</table>
-
-    </div>
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-
-<dl class="details">
-
-    
-
-    
-
-    
-
-    
-    <dt class="tag-overrides">Overrides:</dt>
-    <dd class="tag-overrides"><ul class="dummy"><li>
-        <a href="BankItemsBase.html#subscribe">BankItemsBase#subscribe</a>
-    </li></ul></dd>
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-</dl>
-
-
-    
-
-</dd>
-
-            
-                
-
-<dt>
-    
-        <h4 class="name" id="subscribeBank">
-            
-                <span class="type-signature"></span>subscribeBank<span class="signature">(page, bank)</span><span class="type-signature"></span>
-                
-            
-            <div class="container-source members">
-                <code><a href="Bank_ItemsBase.js.html">Bank/ItemsBase.js</a></code>,
-                <code><a href="Bank_ItemsBase.js.html#line518">line 518</a></code>
-            </div>
-            
-        </h4>
-
-        
-    
-</dt>
-<dd>
-
-    
-    <div class="description">
-        Execute subscribes for all the items in a bank
-    </div>
-    
-
-    
-
-    
-
-    
-
-    
-    <div class="container-params">
-        <h5>Parameters:</h5>
-        
-<table class="params">
-    <thead>
-    <tr>
-        
-        <th>Name</th>
-        
-
-        <th>Type</th>
-
-        
-
-        
-
-        <th class="last">Description</th>
-    </tr>
-    </thead>
-
-    <tbody>
-    
-
-        <tr>
-            
-                <td class="name"><code>page</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">number</span>
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last">the bank's page</td>
-        </tr>
-
-    
-
-        <tr>
-            
-                <td class="name"><code>bank</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">number</span>
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last">the bank number</td>
-        </tr>
-
-    
-    </tbody>
-</table>
-
-    </div>
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-
-<dl class="details">
-
-    
-
-    
-
-    
-
-    
-    <dt class="tag-overrides">Overrides:</dt>
-    <dd class="tag-overrides"><ul class="dummy"><li>
-        <a href="BankItemsBase.html#subscribeBank">BankItemsBase#subscribeBank</a>
-    </li></ul></dd>
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-</dl>
-
-
-    
-
-</dd>
-
-            
-                
-
-<dt>
-    
-        <h4 class="name" id="unsubscribe">
-            
-                <span class="type-signature"><span class="icon green">protected</span> </span>unsubscribe<span class="signature">(item)</span><span class="type-signature"></span>
-                
-            
-            <div class="container-source members">
-                <code><a href="Bank_ItemsBase.js.html">Bank/ItemsBase.js</a></code>,
-                <code><a href="Bank_ItemsBase.js.html#line532">line 532</a></code>
-            </div>
-            
-        </h4>
-
-        
-    
-</dt>
-<dd>
-
-    
-    <div class="description">
-        Find an unsubscribe function for an item and execute it
-    </div>
-    
-
-    
-
-    
-
-    
-
-    
-    <div class="container-params">
-        <h5>Parameters:</h5>
-        
-<table class="params">
-    <thead>
-    <tr>
-        
-        <th>Name</th>
-        
-
-        <th>Type</th>
-
-        
-
-        
-
-        <th class="last">Description</th>
-    </tr>
-    </thead>
-
-    <tbody>
-    
-
-        <tr>
-            
-                <td class="name"><code>item</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type"><a href="BankItem.html">BankItem</a></span>
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last">the item object</td>
-        </tr>
-
-    
-    </tbody>
-</table>
-
-    </div>
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-
-<dl class="details">
-
-    
-
-    
-
-    
-
-    
-    <dt class="tag-overrides">Overrides:</dt>
-    <dd class="tag-overrides"><ul class="dummy"><li>
-        <a href="BankItemsBase.html#unsubscribe">BankItemsBase#unsubscribe</a>
-    </li></ul></dd>
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-</dl>
-
-
-    
-
-</dd>
-
-            
-                
-
-<dt>
-    
-        <h4 class="name" id="unsubscribeBank">
-            
-                <span class="type-signature"></span>unsubscribeBank<span class="signature">(page, bank)</span><span class="type-signature"></span>
-                
-            
-            <div class="container-source members">
-                <code><a href="Bank_ItemsBase.js.html">Bank/ItemsBase.js</a></code>,
-                <code><a href="Bank_ItemsBase.js.html#line550">line 550</a></code>
-            </div>
-            
-        </h4>
-
-        
-    
-</dt>
-<dd>
-
-    
-    <div class="description">
-        Execute unsubscribes for all the items in a bank
-    </div>
-    
-
-    
-
-    
-
-    
-
-    
-    <div class="container-params">
-        <h5>Parameters:</h5>
-        
-<table class="params">
-    <thead>
-    <tr>
-        
-        <th>Name</th>
-        
-
-        <th>Type</th>
-
-        
-
-        
-
-        <th class="last">Description</th>
-    </tr>
-    </thead>
-
-    <tbody>
-    
-
-        <tr>
-            
-                <td class="name"><code>page</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">number</span>
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last">the bank's page</td>
-        </tr>
-
-    
-
-        <tr>
-            
-                <td class="name"><code>bank</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">number</span>
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last">the bank number</td>
-        </tr>
-
-    
-    </tbody>
-</table>
-
-    </div>
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-
-<dl class="details">
-
-    
-
-    
-
-    
-
-    
-    <dt class="tag-overrides">Overrides:</dt>
-    <dd class="tag-overrides"><ul class="dummy"><li>
-        <a href="BankItemsBase.html#unsubscribeBank">BankItemsBase#unsubscribeBank</a>
-    </li></ul></dd>
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-</dl>
-
-
-    
-
-</dd>
-
-            
-                
-
-<dt>
-    
-        <h4 class="name" id="updateItemOption">
-            
-                <span class="type-signature"></span>updateItemOption<span class="signature">(page, bank, item, option, value)</span><span class="type-signature"></span>
-                
-            
-            <div class="container-source members">
-                <code><a href="Bank_FeedbackItems.js.html">Bank/FeedbackItems.js</a></code>,
-                <code><a href="Bank_FeedbackItems.js.html#line267">line 267</a></code>
-            </div>
-            
-        </h4>
-
-        
-    
-</dt>
-<dd>
-
-    
-    <div class="description">
-        Update an option for an item, subscribe, and save
-    </div>
-    
-
-    
-
-    
-
-    
-
-    
-    <div class="container-params">
-        <h5>Parameters:</h5>
-        
-<table class="params">
-    <thead>
-    <tr>
-        
-        <th>Name</th>
-        
-
-        <th>Type</th>
-
-        
-
-        
-
-        <th class="last">Description</th>
-    </tr>
-    </thead>
-
-    <tbody>
-    
-
-        <tr>
-            
-                <td class="name"><code>page</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">number</span>
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last">the item's page</td>
-        </tr>
-
-    
-
-        <tr>
-            
-                <td class="name"><code>bank</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">number</span>
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last">the item's bank</td>
-        </tr>
-
-    
-
-        <tr>
-            
-                <td class="name"><code>item</code></td>
+                <td class="name"><code>key</code></td>
             
 
             <td class="type">
@@ -7124,30 +2837,7 @@ Also is the data that is stored to the DB.
 
             
 
-            <td class="description last">the item's id (`item.id`)</td>
-        </tr>
-
-    
-
-        <tr>
-            
-                <td class="name"><code>option</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">string</span>
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last">the option id/key</td>
+            <td class="description last">the saved key</td>
         </tr>
 
     
@@ -7160,16 +2850,13 @@ Also is the data that is stored to the DB.
             <td class="type">
             
                 
-<span class="param-type">string</span>
-|
-
-<span class="param-type">Array.&lt;string></span>
-|
-
-<span class="param-type">number</span>
-|
-
 <span class="param-type">boolean</span>
+|
+
+<span class="param-type">number</span>
+|
+
+<span class="param-type">string</span>
 
 
             
@@ -7179,7 +2866,7 @@ Also is the data that is stored to the DB.
 
             
 
-            <td class="description last">the new value</td>
+            <td class="description last">the saved value</td>
         </tr>
 
     
@@ -7215,220 +2902,7 @@ Also is the data that is stored to the DB.
     
     <dt class="tag-overrides">Overrides:</dt>
     <dd class="tag-overrides"><ul class="dummy"><li>
-        <a href="BankItemsBase.html#updateItemOption">BankItemsBase#updateItemOption</a>
-    </li></ul></dd>
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-</dl>
-
-
-    
-
-</dd>
-
-            
-                
-
-<dt>
-    
-        <h4 class="name" id="updateItemOrder">
-            
-                <span class="type-signature"></span>updateItemOrder<span class="signature">(page, bank, oldIndex, newIndex)</span><span class="type-signature"></span>
-                
-            
-            <div class="container-source members">
-                <code><a href="Bank_FeedbackItems.js.html">Bank/FeedbackItems.js</a></code>,
-                <code><a href="Bank_FeedbackItems.js.html#line292">line 292</a></code>
-            </div>
-            
-        </h4>
-
-        
-    
-</dt>
-<dd>
-
-    
-    <div class="description">
-        Update a bank item order by swapping two keys
-    </div>
-    
-
-    
-
-    
-
-    
-
-    
-    <div class="container-params">
-        <h5>Parameters:</h5>
-        
-<table class="params">
-    <thead>
-    <tr>
-        
-        <th>Name</th>
-        
-
-        <th>Type</th>
-
-        
-
-        
-
-        <th class="last">Description</th>
-    </tr>
-    </thead>
-
-    <tbody>
-    
-
-        <tr>
-            
-                <td class="name"><code>page</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">number</span>
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last">the bank's page</td>
-        </tr>
-
-    
-
-        <tr>
-            
-                <td class="name"><code>bank</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">number</span>
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last">the bank number</td>
-        </tr>
-
-    
-
-        <tr>
-            
-                <td class="name"><code>oldIndex</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">number</span>
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last">the moving item's index</td>
-        </tr>
-
-    
-
-        <tr>
-            
-                <td class="name"><code>newIndex</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">number</span>
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last">the other index to swap with</td>
-        </tr>
-
-    
-    </tbody>
-</table>
-
-    </div>
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-
-<dl class="details">
-
-    
-
-    
-
-    
-
-    
-    <dt class="tag-overrides">Overrides:</dt>
-    <dd class="tag-overrides"><ul class="dummy"><li>
-        <a href="BankItemsBase.html#updateItemOrder">BankItemsBase#updateItemOrder</a>
+        <a href="ServiceBase.html#updateUserconfig">ServiceBase#updateUserconfig</a>
     </li></ul></dd>
     
 
@@ -7485,7 +2959,7 @@ Also is the data that is stored to the DB.
 <script src="scripts/linenumber.js"></script>
 
     <script>
-        var id = 'BankFeedbackItems_sub'.replace(/"/g, '_');
+        var id = 'ServiceEmberPlus_sub'.replace(/"/g, '_');
         var selectedApi = document.getElementById(id); // do not use jquery selector
         var $selectedApi = $(selectedApi);
 
