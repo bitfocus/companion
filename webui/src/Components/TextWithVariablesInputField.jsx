@@ -1,11 +1,11 @@
 import React, { useCallback, useContext, useEffect, useMemo, useState } from 'react'
-import { CompanionContext } from '../util'
+import { VariableDefinitionsContext } from '../util'
 import Tribute from 'tributejs'
 import { CInput } from '@coreui/react'
 import { decode } from 'html-entities'
 
 export function TextWithVariablesInputField({ definition, value, setValue }) {
-	const context = useContext(CompanionContext)
+	const variableDefinitions = useContext(VariableDefinitionsContext)
 
 	const [tmpValue, setTmpValue] = useState(null)
 
@@ -16,11 +16,9 @@ export function TextWithVariablesInputField({ definition, value, setValue }) {
 		}
 	}, [definition.default, value, setValue])
 
-	// const elmRef = useRef()
-
 	const tribute = useMemo(() => {
 		const suggestions = []
-		for (const [instanceLabel, variables] of Object.entries(context.variableDefinitions)) {
+		for (const [instanceLabel, variables] of Object.entries(variableDefinitions)) {
 			for (const va of variables) {
 				const variableId = `${instanceLabel}:${va.name}`
 				suggestions.push({
@@ -42,7 +40,7 @@ export function TextWithVariablesInputField({ definition, value, setValue }) {
 			menuItemTemplate: (item) =>
 				`<span class="var-name">${item.original.value}</span><span class="var-label">${item.original.label}</span>`,
 		})
-	}, [context.variableDefinitions])
+	}, [variableDefinitions])
 
 	const doOnChange = useCallback(
 		(e) => {

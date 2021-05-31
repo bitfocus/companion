@@ -1,12 +1,12 @@
 import React, { memo, useCallback, useContext, useEffect, useState } from 'react'
 import { CButton } from '@coreui/react'
-import { CompanionContext, useMountEffect } from '../util'
+import { StaticContext, useMountEffect } from '../util'
 import dayjs from 'dayjs'
 import { BankPreview, dataToButtonImage } from '../Components/BankButton'
 import { ScheduleEditModal } from './EditModal'
 
 export const Scheduler = memo(function Scheduler() {
-	const context = useContext(CompanionContext)
+	const context = useContext(StaticContext)
 
 	const [plugins, setPlugins] = useState(null)
 	const [scheduleList, setScheduleList] = useState(null)
@@ -87,7 +87,7 @@ export const Scheduler = memo(function Scheduler() {
 
 const tableDateFormat = 'MM/DD HH:mm:ss'
 function ScheduleTable({ scheduleList, replaceItem, editItem }) {
-	const context = useContext(CompanionContext)
+	const context = useContext(StaticContext)
 
 	const [previewImages, setPreviewImages] = useState({})
 	const [subscribedImages, setSubscribedImages] = useState([])
@@ -183,7 +183,7 @@ function ScheduleTable({ scheduleList, replaceItem, editItem }) {
 	)
 }
 function ScheduleTableRow({ item, replaceItem, editItem, image }) {
-	const context = useContext(CompanionContext)
+	const context = useContext(StaticContext)
 
 	const doEnableDisable = useCallback(() => {
 		context.socket.emit('schedule_update_item', item.id, { disabled: !item.disabled }, (clean) => {

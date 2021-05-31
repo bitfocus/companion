@@ -3,14 +3,14 @@ import React, { useCallback, useContext, useEffect, useRef, useState } from 'rea
 import shortid from 'shortid'
 import { BankPreview, dataToButtonImage } from '../../Components/BankButton'
 import { GenericConfirmModal } from '../../Components/GenericConfirmModal'
-import { CompanionContext, KeyReceiver, LoadingRetryOrError, socketEmit } from '../../util'
+import { StaticContext, KeyReceiver, LoadingRetryOrError, socketEmit } from '../../util'
 import { ActionsPanel } from './ActionsPanel'
 
 import { ButtonStyleConfig } from './ButtonStyleConfig'
 import { FeedbacksPanel } from './FeedbackPanel'
 
 export function EditButton({ page, bank, onKeyUp }) {
-	const context = useContext(CompanionContext)
+	const context = useContext(StaticContext)
 
 	const resetModalRef = useRef()
 
@@ -230,7 +230,7 @@ export function EditButton({ page, bank, onKeyUp }) {
 }
 
 function ButtonEditPreview({ page, bank }) {
-	const context = useContext(CompanionContext)
+	const context = useContext(StaticContext)
 	const [previewImage, setPreviewImage] = useState(null)
 
 	// On unmount

@@ -2,7 +2,7 @@ import { CAlert, CButton, CForm, CFormGroup } from '@coreui/react'
 import { faSort, faTrash } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import React, { useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react'
-import { CompanionContext, MyErrorBoundary, socketEmit } from '../../util'
+import { StaticContext, FeedbacksContext, InstancesContext, MyErrorBoundary, socketEmit } from '../../util'
 import update from 'immutability-helper'
 import Select from 'react-select'
 import { ActionTableRowOption } from './Table'
@@ -24,7 +24,7 @@ export const FeedbacksPanel = function ({
 	loadStatusKey,
 	reloadToken,
 }) {
-	const context = useContext(CompanionContext)
+	const context = useContext(StaticContext)
 	const [feedbacks, setFeedbacks] = useState([])
 
 	const confirmModal = useRef()
@@ -141,7 +141,7 @@ export const FeedbacksPanel = function ({
 }
 
 function FeedbackTableRow({ feedback, page, bank, index, dragId, moveCard, setValue, doDelete, bankFeedbacksChanged }) {
-	const context = useContext(CompanionContext)
+	const context = useContext(StaticContext)
 
 	const innerDelete = useCallback(() => doDelete(feedback.id), [feedback.id, doDelete])
 
@@ -246,12 +246,13 @@ function FeedbackTableRow({ feedback, page, bank, index, dragId, moveCard, setVa
 }
 
 export function FeedbackEditor({ feedback, setValue, innerDelete, setSelectedStyleProps, setStylePropsValue }) {
-	const context = useContext(CompanionContext)
+	const feedbacks = useContext(FeedbacksContext)
+	const instances = useContext(InstancesContext)
 
-	const instance = context.instances[feedback.instance_id]
+	const instance = instances[feedback.instance_id]
 	const instanceLabel = instance?.label ?? feedback.instance_id
 
-	const feedbackSpec = (context.feedbacks[feedback.instance_id] || {})[feedback.type]
+	const feedbackSpec = (feedbacks[feedback.instance_id] || {})[feedback.type]
 	const options = feedbackSpec?.options ?? []
 
 	let name = ''
@@ -402,20 +403,21 @@ function FeedbackStyles({ feedbackSpec, feedback, setStylePropsValue }) {
 }
 
 export function AddFeedbackDropdown({ onSelect, booleanOnly }) {
-	const context = useContext(CompanionContext)
+	const feedbacks = useContext(FeedbacksContext)
+	const instances = useContext(InstancesContext)
 
 	const options = useMemo(() => {
 		const options = []
-		for (const [instanceId, feedbacks] of Object.entries(context.feedbacks)) {
-			for (const [feedbackId, feedback] of Object.entries(feedbacks)) {
+		for (const [instanceId, instanceFeedbacks] of Object.entries(feedbacks)) {
+			for (const [feedbackId, feedback] of Object.entries(instanceFeedbacks)) {
 				if (!booleanOnly || feedback.type === 'boolean') {
-					const instanceLabel = context.instances[instanceId]?.label ?? instanceId
+					const instanceLabel = instances[instanceId]?.label ?? instanceId
 					options.push({ value: `${instanceId}:${feedbackId}`, label: `${instanceLabel}: ${feedback.label}` })
 				}
 			}
 		}
 		return options
-	}, [context.feedbacks, context.instances, booleanOnly])
+	}, [feedbacks, instances, booleanOnly])
 
 	const innerChange = useCallback(
 		(e) => {

@@ -3,7 +3,7 @@ import { faSort, faTrash } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import React, { useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react'
 import { NumberInputField } from '../../Components'
-import { CompanionContext, MyErrorBoundary, socketEmit } from '../../util'
+import { ActionsContext, StaticContext, InstancesContext, MyErrorBoundary, socketEmit } from '../../util'
 import update from 'immutability-helper'
 import Select from 'react-select'
 import { ActionTableRowOption } from './Table'
@@ -25,7 +25,7 @@ export function ActionsPanel({
 	loadStatusKey,
 	reloadToken,
 }) {
-	const context = useContext(CompanionContext)
+	const context = useContext(StaticContext)
 	const [actions, setActions] = useState([])
 
 	const confirmModal = useRef()
@@ -163,7 +163,8 @@ export function ActionsPanel({
 }
 
 function ActionTableRow({ action, index, dragId, setValue, doDelete, doDelay, moveCard }) {
-	const context = useContext(CompanionContext)
+	const instances = useContext(InstancesContext)
+	const actions = useContext(ActionsContext)
 
 	const innerDelete = useCallback(() => doDelete(action.id), [action.id, doDelete])
 	const innerDelay = useCallback((delay) => doDelay(action.id, delay), [doDelay, action.id])
@@ -226,11 +227,11 @@ function ActionTableRow({ action, index, dragId, setValue, doDelete, doDelay, mo
 		return ''
 	}
 
-	const instance = context.instances[action.instance]
+	const instance = instances[action.instance]
 	// const module = instance ? context.modules[instance.instance_type] : undefined
 	const instanceLabel = instance?.label ?? action.instance
 
-	const actionSpec = context.actions[action.label]
+	const actionSpec = actions[action.label]
 	const options = actionSpec?.options ?? []
 
 	let name = ''
@@ -290,15 +291,16 @@ function ActionTableRow({ action, index, dragId, setValue, doDelete, doDelay, mo
 }
 
 function AddActionDropdown({ onSelect, placeholder }) {
-	const context = useContext(CompanionContext)
+	const instances = useContext(InstancesContext)
+	const actions = useContext(ActionsContext)
 
 	const options = useMemo(() => {
-		return Object.entries(context.actions || {}).map(([id, act]) => {
+		return Object.entries(actions || {}).map(([id, act]) => {
 			const instanceId = id.split(/:/)[0]
-			const instanceLabel = context.instances[instanceId]?.label ?? instanceId
+			const instanceLabel = instances[instanceId]?.label ?? instanceId
 			return { value: id, label: `${instanceLabel}: ${act.label}` }
 		})
-	}, [context.actions, context.instances])
+	}, [actions, instances])
 
 	const innerChange = useCallback(
 		(e) => {

@@ -1,6 +1,6 @@
 import React, { useCallback, useContext, useMemo, useState } from 'react'
 import { CButton, CForm, CFormGroup, CInput, CModal, CModalBody, CModalFooter, CModalHeader } from '@coreui/react'
-import { CompanionContext, MyErrorBoundary, socketEmit, useMountEffect } from '../util'
+import { StaticContext, MyErrorBoundary, socketEmit, useMountEffect } from '../util'
 import Select from 'react-select'
 import { AddFeedbackDropdown, FeedbackEditor } from '../Buttons/EditButton/FeedbackPanel'
 import shortid from 'shortid'
@@ -158,7 +158,7 @@ export function ScheduleEditModal({ doClose, doSave, item, plugins }) {
 }
 
 function ScheduleEditModalConfig({ pluginSpec, config, updateConfig }) {
-	const context = useContext(CompanionContext)
+	const context = useContext(StaticContext)
 
 	const updateInnerConfig = useCallback(
 		(id, val) => {

@@ -1,6 +1,6 @@
 import { useCallback, useContext, useEffect, useRef, useState } from 'react'
 import { CButton } from '@coreui/react'
-import { CompanionContext } from '../util'
+import { StaticContext, InstancesContext, VariableDefinitionsContext } from '../util'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faDollarSign, faQuestionCircle } from '@fortawesome/free-solid-svg-icons'
 
@@ -8,7 +8,9 @@ import { InstanceVariablesModal } from './InstanceVariablesModal'
 import { GenericConfirmModal } from '../Components/GenericConfirmModal'
 
 export function InstancesList({ showHelp, doConfigureInstance }) {
-	const context = useContext(CompanionContext)
+	const context = useContext(StaticContext)
+	const instances = useContext(InstancesContext)
+
 	const [instanceStatus, setInstanceStatus] = useState({})
 
 	const deleteModalRef = useRef()
@@ -48,7 +50,7 @@ export function InstancesList({ showHelp, doConfigureInstance }) {
 					</tr>
 				</thead>
 				<tbody>
-					{Object.entries(context.instances).map(([id, instance]) => {
+					{Object.entries(instances).map(([id, instance]) => {
 						if (instance.instance_type === 'bitfocus-companion') {
 							return null
 						} else {
@@ -81,7 +83,8 @@ function InstancesTableRow({
 	configureInstance,
 	deleteModalRef,
 }) {
-	const context = useContext(CompanionContext)
+	const context = useContext(StaticContext)
+	const variableDefinitions = useContext(VariableDefinitionsContext)
 
 	const moduleInfo = context.modules[instance.instance_type]
 
@@ -108,7 +111,7 @@ function InstancesTableRow({
 
 	const doShowVariables = useCallback(() => showVariables(instance.label), [showVariables, instance.label])
 
-	const instanceVariables = context.variableDefinitions[instance.label]
+	const instanceVariables = variableDefinitions[instance.label]
 
 	return (
 		<tr>

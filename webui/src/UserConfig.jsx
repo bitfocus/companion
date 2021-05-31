@@ -1,6 +1,6 @@
 import React, { memo, useCallback, useContext, useEffect, useState } from 'react'
 import { CAlert, CButton, CCol, CInput, CInputCheckbox, CRow } from '@coreui/react'
-import { CompanionContext, socketEmit } from './util'
+import { StaticContext, socketEmit } from './util'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faFileImport } from '@fortawesome/free-solid-svg-icons'
 import { Card } from './Components'
@@ -23,7 +23,7 @@ export const UserConfig = memo(function UserConfig() {
 })
 
 function UserConfigTable() {
-	const context = useContext(CompanionContext)
+	const context = useContext(StaticContext)
 
 	const [error, setError] = useState(null)
 	const [config, setConfig] = useState(null)

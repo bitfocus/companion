@@ -1,11 +1,11 @@
 import React, { memo, useCallback, useContext, useEffect, useState } from 'react'
 import { CButton, CButtonGroup, CCol, CRow } from '@coreui/react'
-import { CompanionContext } from './util'
+import { StaticContext } from './util'
 import shortid from 'shortid'
 import dayjs from 'dayjs'
 
 export const LogPanel = memo(function LogPanel() {
-	const context = useContext(CompanionContext)
+	const context = useContext(StaticContext)
 	const [config, setConfig] = useState(() => loadConfig())
 	const [history, setHistory] = useState([])
 

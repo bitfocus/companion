@@ -1,6 +1,14 @@
 import { useEffect, useRef, useState } from 'react'
 import debounce from 'debounce-fn'
-import { CompanionContext, socketEmit } from './util'
+import {
+	StaticContext,
+	ActionsContext,
+	FeedbacksContext,
+	socketEmit,
+	InstancesContext,
+	VariableValuesContext,
+	VariableDefinitionsContext,
+} from './util'
 import { NotificationsManager } from './Components/Notifications'
 
 export function ContextData({ socket, children }) {
@@ -101,13 +109,7 @@ export function ContextData({ socket, children }) {
 	const contextValue = {
 		socket: socket,
 		notifier: notifierRef,
-
-		instances: instances,
 		modules: modules,
-		variableDefinitions: variableDefinitions,
-		variableValues: variableValues,
-		actions: actions,
-		feedbacks: feedbacks,
 	}
 
 	const steps = [instances, modules, variableDefinitions, variableValues, actions, feedbacks]
@@ -116,10 +118,20 @@ export function ContextData({ socket, children }) {
 	const progressPercent = (completedSteps.length / steps.length) * 100
 
 	return (
-		<CompanionContext.Provider value={contextValue}>
-			<NotificationsManager ref={notifierRef} />
+		<StaticContext.Provider value={contextValue}>
+			<ActionsContext.Provider value={actions}>
+				<FeedbacksContext.Provider value={feedbacks}>
+					<InstancesContext.Provider value={instances}>
+						<VariableValuesContext.Provider value={variableValues}>
+							<VariableDefinitionsContext.Provider value={variableDefinitions}>
+								<NotificationsManager ref={notifierRef} />
 
-			{children(progressPercent, completedSteps.length === steps.length)}
-		</CompanionContext.Provider>
+								{children(progressPercent, completedSteps.length === steps.length)}
+							</VariableDefinitionsContext.Provider>
+						</VariableValuesContext.Provider>
+					</InstancesContext.Provider>
+				</FeedbacksContext.Provider>
+			</ActionsContext.Provider>
+		</StaticContext.Provider>
 	)
 }

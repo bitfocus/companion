@@ -1,6 +1,6 @@
 import { CButton, CRow, CCol, CButtonGroup, CLabel, CForm, CAlert } from '@coreui/react'
 import React, { useCallback, useContext, useState } from 'react'
-import { CompanionContext, socketEmit } from '../../util'
+import { StaticContext, socketEmit } from '../../util'
 import {
 	AlignmentInputField,
 	CheckboxInputField,
@@ -14,7 +14,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faTrash } from '@fortawesome/free-solid-svg-icons'
 
 export function ButtonStyleConfig({ page, bank, config, valueChanged }) {
-	const context = useContext(CompanionContext)
+	const context = useContext(StaticContext)
 
 	const [pngError, setPngError] = useState(null)
 	const clearPng = useCallback(() => context.socket.emit('bank_clear_png', page, bank), [context.socket, page, bank])

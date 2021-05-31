@@ -1,5 +1,5 @@
 import React, { forwardRef, useCallback, useContext, useEffect, useImperativeHandle, useRef, useState } from 'react'
-import { CompanionContext, socketEmit } from '../util'
+import { StaticContext, InstancesContext, socketEmit } from '../util'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faDownload, faFileImport, faTrashAlt } from '@fortawesome/free-solid-svg-icons'
 import {
@@ -21,7 +21,8 @@ import { ButtonGridHeader } from './ButtonGrid'
 import { GenericConfirmModal } from '../Components/GenericConfirmModal'
 
 export function ImportExport({ pageNumber }) {
-	const context = useContext(CompanionContext)
+	const context = useContext(StaticContext)
+	const instances = useContext(InstancesContext)
 
 	const confirmModalRef = useRef()
 
@@ -52,7 +53,7 @@ export function ImportExport({ pageNumber }) {
 								setLoadError(err)
 							} else {
 								for (const id in config.instances || {}) {
-									if (context.instances[id]) {
+									if (instances[id]) {
 										config.instances[id].import_to = id
 									} else {
 										config.instances[id].import_to = 'new'
@@ -74,7 +75,7 @@ export function ImportExport({ pageNumber }) {
 				setLoadError('Companion requires a more modern browser')
 			}
 		},
-		[context.socket, context.instances, fileApiIsSupported]
+		[context.socket, instances, fileApiIsSupported]
 	)
 
 	const doImport = useCallback(() => {
@@ -192,7 +193,7 @@ export function ImportExport({ pageNumber }) {
 										return ''
 									} else {
 										const snapshotModule = context.modules[instance.instance_type]
-										const currentInstances = Object.entries(context.instances).filter(
+										const currentInstances = Object.entries(instances).filter(
 											([id, inst]) => inst.instance_type === instance.instance_type
 										)
 
@@ -292,7 +293,7 @@ function ButtonImportGrid({ config }) {
 }
 
 function ButtonImportPreview({ config, instanceId, ...childProps }) {
-	const context = useContext(CompanionContext)
+	const context = useContext(StaticContext)
 	const [previewImage, setPreviewImage] = useState(null)
 
 	useEffect(() => {
@@ -347,7 +348,7 @@ function ResetConfiguration() {
 }
 
 const ConfirmFullResetModal = forwardRef(function ConfirmFullResetModal(_props, ref) {
-	const context = useContext(CompanionContext)
+	const context = useContext(StaticContext)
 
 	const [show, setShow] = useState(false)
 
