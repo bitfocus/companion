@@ -75,7 +75,7 @@ declare abstract class InstanceSkel<TConfig> {
 	 * Executes the provided action.
 	 * @since 1.0.0
 	 */
-	action?(action: CompanionActionEvent, info: CompanionActionEventInfo): void
+	action?(action: CompanionActionEvent, info: CompanionActionEventInfo | null): void
 
 	/**
 	 * Processes a feedback state.
