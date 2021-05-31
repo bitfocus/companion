@@ -166,30 +166,34 @@ export function EditButton({ page, bank, onKeyUp }) {
 
 					{config.style === 'press' || config.style === 'step' ? (
 						<>
-							<h4 className="mt-3">{config.style === 'step' ? 'Latch' : 'Press'} actions</h4>
+							// TODO - dynamicify this, and controls to add/remove
+							<h4 className="mt-3">Press actions</h4>
 							<ActionsPanel
 								page={page}
 								bank={bank}
 								set={'down'}
 								dragId={'downAction'}
-								addPlaceholder="+ Add key down/on action"
-								loadStatusKey={'downActions'}
+								addPlaceholder="+ Add key press action"
 								setLoadStatus={addLoadStatus}
 								reloadToken={reloadTablesToken}
 							/>
-
-							<h4 className="mt-3">{config.style === 'step' ? 'Unlatch' : 'Release'} actions</h4>
+							<h4 className="mt-3">Release actions</h4>
 							<ActionsPanel
 								page={page}
 								bank={bank}
 								set={'up'}
 								dragId={'releaseAction'}
-								addPlaceholder="+ Add key up/off action"
-								loadStatusKey={'releaseActions'}
+								addPlaceholder="+ Add key release action"
 								setLoadStatus={addLoadStatus}
 								reloadToken={reloadTablesToken}
 							/>
+						</>
+					) : (
+						''
+					)}
 
+					{config.style === 'press' || config.style === 'step' ? (
+						<>
 							<h4 className="mt-3">Feedback</h4>
 							<FeedbacksPanel
 								page={page}
