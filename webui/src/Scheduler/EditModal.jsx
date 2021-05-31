@@ -1,10 +1,24 @@
 import React, { useCallback, useContext, useMemo, useState } from 'react'
-import { CButton, CForm, CFormGroup, CInput, CModal, CModalBody, CModalFooter, CModalHeader } from '@coreui/react'
+import {
+	CButton,
+	CButtonGroup,
+	CCol,
+	CForm,
+	CFormGroup,
+	CInput,
+	CLabel,
+	CModal,
+	CModalBody,
+	CModalFooter,
+	CModalHeader,
+	CRow,
+} from '@coreui/react'
 import { StaticContext, MyErrorBoundary, socketEmit, useMountEffect } from '../util'
 import Select from 'react-select'
 import { AddFeedbackDropdown, FeedbackEditor } from '../Buttons/EditButton/FeedbackPanel'
 import shortid from 'shortid'
 import { ActionsPanelInner } from '../Buttons/EditButton/ActionsPanel'
+import { CheckboxInputField } from '../Components'
 
 function getPluginSpecDefaults(pluginOptions) {
 	const config = {}
@@ -126,11 +140,9 @@ export function ScheduleEditModal({ doClose, doSave, item, plugins }) {
 		[context.socket, config, updateConfig]
 	)
 
-	console.log(config)
-
 	return (
 		<CModal show={true} onClose={doClose} size="lg">
-			<CForm onSubmit={doSaveInner}>
+			<CForm onSubmit={doSaveInner} className={'edit-button-panel'}>
 				<CModalHeader closeButton>
 					<h5>Trigger Editor</h5>
 				</CModalHeader>
@@ -140,15 +152,37 @@ export function ScheduleEditModal({ doClose, doSave, item, plugins }) {
 						<CInput required value={config.title} onChange={(e) => updateConfig('title', e.target.value)} />
 					</CFormGroup>
 					<legend>Trigger</legend>
-					<CFormGroup>
-						<ActionsPanelInner
-							dragId={'triggerAction'}
-							addPlaceholder="+ Add action"
-							actions={config.actions || []}
-							setActions={setActions}
-							addAction={addActionSelect}
-						/>
-					</CFormGroup>
+					<CRow form className="button-style-form">
+						<CCol className="fieldtype-checkbox" sm={2} xs={3}>
+							<CButton
+								color="warning"
+								onMouseDown={() =>
+									context.socket.emit('schedule_test_actions', config.title, config.actions, config.relative_delays)
+								}
+							>
+								Test actions
+							</CButton>
+						</CCol>
+						<CCol className="fieldtype-checkbox" sm={2} xs={3}>
+							<CLabel>Relative Delays</CLabel>
+							<p>
+								<CheckboxInputField
+									definition={{ default: false }}
+									value={config.relative_delays ?? false}
+									setValue={(e) => updateConfig('relative_delays', e)}
+								/>
+								&nbsp;
+							</p>
+						</CCol>
+					</CRow>
+					<ActionsPanelInner
+						dragId={'triggerAction'}
+						addPlaceholder="+ Add action"
+						actions={config.actions || []}
+						setActions={setActions}
+						addAction={addActionSelect}
+					/>
+					<hr />
 					<legend>Condition</legend>
 					<CFormGroup>
 						<label>Type</label>

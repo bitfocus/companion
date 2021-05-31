@@ -92,7 +92,6 @@ function ScheduleTable({ scheduleList, replaceItem, editItem }) {
 				<tr>
 					<th>Name</th>
 					<th>Trigger</th>
-					<th>Action</th>
 					<th>&nbsp;</th>
 				</tr>
 			</thead>
@@ -138,7 +137,6 @@ function ScheduleTableRow({ item, replaceItem, editItem }) {
 				<br />
 				{item.last_run ? <small>Last run: {dayjs(item.last_run).format(tableDateFormat)}</small> : ''}
 			</td>
-			<td>TODO..</td>
 			<td className="action-buttons">
 				<CButton size="sm" color="ghost-danger" onClick={doDelete}>
 					delete
