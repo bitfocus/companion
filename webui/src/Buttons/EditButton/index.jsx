@@ -170,13 +170,8 @@ export function EditButton({ page, bank, onKeyUp }) {
 							<ActionsPanel
 								page={page}
 								bank={bank}
+								set={'down'}
 								dragId={'downAction'}
-								addCommand="bank_action_add"
-								getCommand="bank_actions_get"
-								updateOption="bank_update_action_option"
-								orderCommand="bank_update_action_option_order"
-								setDelay="bank_update_action_delay"
-								deleteCommand="bank_action_delete"
 								addPlaceholder="+ Add key down/on action"
 								loadStatusKey={'downActions'}
 								setLoadStatus={addLoadStatus}
@@ -187,13 +182,8 @@ export function EditButton({ page, bank, onKeyUp }) {
 							<ActionsPanel
 								page={page}
 								bank={bank}
+								set={'up'}
 								dragId={'releaseAction'}
-								addCommand="bank_addReleaseAction"
-								getCommand="bank_release_actions_get"
-								updateOption="bank_release_action_update_option"
-								orderCommand="bank_release_action_update_option_order"
-								setDelay="bank_update_release_action_delay"
-								deleteCommand="bank_release_action_delete"
 								addPlaceholder="+ Add key up/off action"
 								loadStatusKey={'releaseActions'}
 								setLoadStatus={addLoadStatus}

@@ -49,7 +49,6 @@ export function ButtonStyleConfig({ page, bank, config, configRef, valueChanged 
 		[context.socket, page, bank, valueChanged, configRef]
 	)
 
-	const setLatchValue = useCallback((val) => setValueInner('latch', val), [setValueInner])
 	const setRelativeDelayValue = useCallback((val) => setValueInner('relative_delay', val), [setValueInner])
 
 	switch (config.style) {
