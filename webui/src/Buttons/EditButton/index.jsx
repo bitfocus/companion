@@ -15,6 +15,9 @@ export function EditButton({ page, bank, onKeyUp }) {
 	const resetModalRef = useRef()
 
 	const [config, setConfig] = useState(null)
+	const configRef = useRef()
+	configRef.current = config // update the ref every render
+
 	const [configError, setConfigError] = useState(null)
 	const [tableLoadStatus, setTableLoadStatus] = useState({})
 
@@ -54,7 +57,7 @@ export function EditButton({ page, bank, onKeyUp }) {
 		(newStyle) => {
 			let show_warning = false
 
-			const currentStyle = config?.style
+			const currentStyle = configRef.current?.style
 			if (currentStyle === newStyle) {
 				// No point changing style to itself
 				return
@@ -91,7 +94,7 @@ export function EditButton({ page, bank, onKeyUp }) {
 				doChange()
 			}
 		},
-		[context.socket, page, bank, config?.style]
+		[context.socket, page, bank, configRef]
 	)
 
 	const doRetryLoad = useCallback(() => setReloadConfigToken(shortid()), [])
@@ -158,7 +161,7 @@ export function EditButton({ page, bank, onKeyUp }) {
 						</CButton>
 					</div>
 
-					<ButtonStyleConfig config={config} page={page} bank={bank} valueChanged={loadConfig} />
+					<ButtonStyleConfig config={config} configRef={configRef} page={page} bank={bank} valueChanged={loadConfig} />
 
 					{config.style === 'png' ? (
 						<>
