@@ -1,7 +1,7 @@
 {
 	"source": {
 		"include": ["lib", "package.json", "README.md"],
-		"exclude": ["lib/Graphics/Font.js"],
+		"exclude": ["lib/Resources/Font.js"],
 		"includePattern": ".js$",
 		"excludePattern": "(node_modules/|documentation/)"
 	},
