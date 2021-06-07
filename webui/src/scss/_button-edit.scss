@@ -38,7 +38,7 @@ table.feedback-table {
 	.editor-grid {
 		display: grid;
 		grid-template-columns: 1fr 1fr;
-		grid-template-rows: auto auto 1fr;
+		grid-template-rows: auto auto auto 1fr;
 		column-gap: 10px;
 		row-gap: 5px;
 
@@ -48,8 +48,13 @@ table.feedback-table {
 			grid-column: 1;
 		}
 
-		.cell-delay {
+		.cell-description {
 			grid-row: 2;
+			grid-column: 1;
+		}
+
+		.cell-delay {
+			grid-row: 3;
 			grid-column: 1;
 
 			@include media-breakpoint-up('sm') {
@@ -58,12 +63,12 @@ table.feedback-table {
 		}
 
 		.cell-actions {
-			grid-row: 3;
+			grid-row: 4;
 			grid-column: 1;
 		}
 
 		.cell-option {
-			grid-row: 1 / 4;
+			grid-row: 1 / 5;
 			grid-column: 2;
 		}
 

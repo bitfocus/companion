@@ -266,6 +266,8 @@ export function FeedbackEditor({ feedback, setValue, innerDelete, setSelectedSty
 		<div className="editor-grid">
 			<div className="cell-name">{name}</div>
 
+			<div className="cell-description">{feedbackSpec?.description || ''}</div>
+
 			<div className="cell-actions">
 				<CButton color="danger" size="sm" onClick={innerDelete} title="Remove action">
 					<FontAwesomeIcon icon={faTrash} />

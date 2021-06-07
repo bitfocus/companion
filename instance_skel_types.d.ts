@@ -56,6 +56,7 @@ export interface CompanionBankPreset
 
 export interface CompanionAction {
 	label: string
+	description?: string
 	options: SomeCompanionInputField[]
 	callback?: (action: CompanionActionEvent, info: CompanionActionEventInfo) => void
 	subscribe?: (action: CompanionActionEvent) => void
@@ -179,7 +180,7 @@ export interface CompanionVariable {
 export interface CompanionFeedbackBase<TRes> {
 	type?: 'boolean' | 'advanced'
 	label: string
-	description: string
+	description?: string
 	options: SomeCompanionInputField[]
 	callback?: (
 		feedback: CompanionFeedbackEvent,

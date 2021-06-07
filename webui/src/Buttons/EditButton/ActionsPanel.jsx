@@ -251,6 +251,8 @@ function ActionTableRow({ action, index, dragId, setValue, doDelete, doDelay, mo
 				<div className="editor-grid">
 					<div className="cell-name">{name}</div>
 
+					<div className="cell-description">{actionSpec.description || ''}</div>
+
 					<div className="cell-delay">
 						<CForm>
 							<label>Delay</label>
