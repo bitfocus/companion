@@ -210,7 +210,7 @@ export function EditButton({ page, bank, onKeyUp }) {
 }
 
 function ActionsSection({ style, page, bank, addLoadStatus, reloadTablesToken }) {
-	const context = useContext(CompanionContext)
+	const context = useContext(StaticContext)
 
 	const confirmRef = useRef()
 	const [setIds, setSetIds] = useState([])
