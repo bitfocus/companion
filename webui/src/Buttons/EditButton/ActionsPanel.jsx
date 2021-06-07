@@ -10,7 +10,7 @@ import { ActionTableRowOption } from './Table'
 import { useDrag, useDrop } from 'react-dnd'
 import { GenericConfirmModal } from '../../Components/GenericConfirmModal'
 
-export function ActionsPanel({ page, bank, set, dragId, addPlaceholder, setLoadStatus, loadStatusKey, reloadToken }) {
+export function ActionsPanel({ page, bank, set, dragId, addPlaceholder, setLoadStatus, reloadToken }) {
 	const context = useContext(StaticContext)
 	const [actions, setActions] = useState([])
 
@@ -18,6 +18,7 @@ export function ActionsPanel({ page, bank, set, dragId, addPlaceholder, setLoadS
 
 	// Ensure the correct data is loaded
 	useEffect(() => {
+		const loadStatusKey = `actions:${set}`
 		setLoadStatus(loadStatusKey, false)
 		socketEmit(context.socket, 'bank_action_sets_get', [page, bank, set])
 			.then(([actions]) => {
@@ -28,7 +29,7 @@ export function ActionsPanel({ page, bank, set, dragId, addPlaceholder, setLoadS
 				setLoadStatus(loadStatusKey, `Failed to load ${loadStatusKey}`)
 				console.error('Failed to load bank actions', e)
 			})
-	}, [context.socket, setLoadStatus, loadStatusKey, page, bank, set, reloadToken])
+	}, [context.socket, setLoadStatus, page, bank, set, reloadToken])
 
 	const setValue = useCallback(
 		(actionId, key, val) => {
