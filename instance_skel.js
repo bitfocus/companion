@@ -130,6 +130,11 @@ instance.prototype.status = function (level, message) {
 instance.prototype.upgradeConfig = function () {
 	var self = this
 
+	if (self.disable_instance_scripts) {
+		// not allowed
+		return
+	}
+
 	var idx = self.config._configIdx
 	if (idx === undefined) {
 		idx = -1
@@ -139,10 +144,6 @@ instance.prototype.upgradeConfig = function () {
 
 	if (idx + 1 < self._versionscripts.length) {
 		debug('upgradeConfig(' + self.package_info.name + '): ' + (idx + 1) + ' to ' + self._versionscripts.length)
-	}
-
-	for (var i = idx + 1; i < self._versionscripts.length; ++i) {
-		debug('UpgradeConfig: Upgrading to version ' + (i + 1))
 
 		// Fetch instance actions
 		var actions = []
@@ -158,36 +159,40 @@ instance.prototype.upgradeConfig = function () {
 			feedbacks = _feedbacks
 		})
 
-		var result
-		try {
-			result = self._versionscripts[i](self.config, actions, release_actions, feedbacks)
-		} catch (e) {
-			debug('Upgradescript in ' + self.package_info.name + ' failed', e)
+		let changed = false
+		for (var i = idx + 1; i < self._versionscripts.length; ++i) {
+			debug('UpgradeConfig: Upgrading to version ' + (i + 1))
+
+			try {
+				const result = self._versionscripts[i](self.config, actions, release_actions, feedbacks)
+				changed = changed || result
+			} catch (e) {
+				debug('Upgradescript in ' + self.package_info.name + ' failed', e)
+			}
+			self.config._configIdx = i
 		}
-		self.config._configIdx = i
 
 		for (const action of [...actions, release_actions]) {
 			action.instance = self.id
 			action.label = `${self.id}:${action.action}`
 		}
+		for (const feedback of feedbacks) {
+			feedback.instance_id = self.id
+		}
+
+		if (idx + 1 < self._versionscripts.length) {
+			// Save the _configIdx change
+			this.saveConfig()
+		}
 
 		// If anything was changed, update system and db
-		if (result) {
-			self.system.emit('config_save')
+		if (changed) {
 			self.system.emit('action_save')
 			self.system.emit('feedback_save')
-			self.system.emit('instance_save')
-			self.system.emit('db_save')
 		}
+		debug('instance save')
+		self.system.emit('instance_save')
 	}
-
-	if (idx + 1 < self._versionscripts.length) {
-		// Save the _configIdx change
-		this.saveConfig()
-	}
-
-	debug('instance save')
-	self.system.emit('instance_save')
 }
 
 instance.prototype.saveConfig = function () {
@@ -197,10 +202,9 @@ instance.prototype.saveConfig = function () {
 	self.system.emit('instance_config_put', self.id, self.config, true)
 }
 
-instance.prototype.addUpgradeToBooleanFeedbackScript = function (upgrade_map) {
-	var self = this
-
-	self.addUpgradeScript(function (config, actions, release_cctions, feedbacks) {
+instance.CreateConvertToBooleanFeedbackUpgradeScript = function (upgrade_map) {
+	// Warning: the unused parameters will often be null
+	return function (_context, _config, _actions, feedbacks) {
 		let changed = false
 
 		for (const feedback of feedbacks) {
@@ -227,13 +231,39 @@ instance.prototype.addUpgradeToBooleanFeedbackScript = function (upgrade_map) {
 		}
 
 		return changed
+	}
+}
+
+/** @deprecated implement the static GetUpgradeScripts instead */
+instance.prototype.addUpgradeToBooleanFeedbackScript = function (upgrade_map) {
+	var self = this
+
+	if (this.disable_instance_scripts) {
+		throw new Error(
+			'addUpgradeToBooleanFeedbackScript is not available as this module is using the static GetUpgradeScripts flow'
+		)
+	}
+
+	var func = instance.CreateConvertToBooleanFeedbackUpgradeScript(upgrade_map)
+
+	self.addUpgradeScript(function (_config, _actions, _release_actions, feedbacks) {
+		return func(null, null, null, feedbacks)
 	})
 }
 
+/** @deprecated implement the static GetUpgradeScripts instead */
 instance.prototype.addUpgradeScript = function (cb) {
 	var self = this
 
+	if (this.disable_instance_scripts) {
+		throw new Error('addUpgradeScript is not available as this module is using the static GetUpgradeScripts flow')
+	}
+
 	self._versionscripts.push(cb)
+}
+
+instance.prototype.disableInstanceUpgradeScripts = function () {
+	this.disable_instance_scripts = true
 }
 
 instance.prototype.setActions = function (actions) {

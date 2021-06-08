@@ -231,6 +231,18 @@ export type CompanionUpgradeScript<TConfig> = (
 	feedbacks: CompanionMigrationFeedback[]
 ) => boolean
 
+export interface CompanionUpgradeContext {
+	/** Translate a key index from the old 15 key layout (5x3 grid) to the 32 key layout (8x4 grid) */
+	convert15to32(key: number): number
+}
+
+export type CompanionStaticUpgradeScript = (
+	context: CompanionUpgradeContext,
+	config: null | (CompanionCoreInstanceconfig & Record<string, any>),
+	affected_actions: CompanionMigrationAction[],
+	affected_feedbacks: CompanionMigrationFeedback[]
+) => boolean
+
 export interface CompanionUpgradeToBooleanFeedbackMap {
 	[feedback_id: string]:
 		| true
@@ -244,7 +256,6 @@ export interface CompanionUpgradeToBooleanFeedbackMap {
 export interface CompanionCoreInstanceconfig {
 	instance_type: string
 	label: string
-	enabled: boolean
 }
 
 export interface CompanionMigrationAction {
