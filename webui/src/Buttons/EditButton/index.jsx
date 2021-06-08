@@ -375,7 +375,7 @@ function ActionsSection({ style, page, bank, addLoadStatus, reloadTablesToken })
 							bank={bank}
 							set={k}
 							dragId={`${k}Action`}
-							addPlaceholder="+ Add action to step"
+							addPlaceholder={`+ Add action to step ${i + 1}`}
 							setLoadStatus={addLoadStatus}
 							reloadToken={reloadToken2}
 						/>
