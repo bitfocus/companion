@@ -85,8 +85,11 @@ declare abstract class InstanceSkel<TConfig> {
 	setFeedbackDefinitions(feedbacks: CompanionFeedbacks): void
 	setPresetDefinitions(presets: CompanionPreset[]): void
 
-	setVariable(variableId: string, value: string): void
-	setVariables(variables: { [variableId: string]: string }): void
+	/** Set the value of a variable. Pass undefined to unset it */
+	setVariable(variableId: string, value: string | undefined): void
+	/** Set the value of multiple variable. Use undefined to unset values */
+	setVariables(variables: { [variableId: string]: string | undefined }): void
+	/** Get the value of a variable from this instance */
 	getVariable(variableId: string, cb: (value: string) => void): void
 	/** Recheck all feedbacks of the given types. eg `self.checkFeedbacks('bank_style', 'bank_text')` or `self.checkFeedbacks` */
 	checkFeedbacks(...feedbackTypes: string[]): void
