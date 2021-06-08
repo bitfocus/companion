@@ -125,6 +125,11 @@ export interface CompanionInputFieldTextInput extends CompanionInputField {
 export interface CompanionInputFieldDropdown extends CompanionInputFieldDropdownBase {
 	multiple?: false
 	default: ConfigValue
+
+	/** Allow custom values to be defined */
+	allowCustom?: boolean
+	/** Check custom value against refex */
+	regex?: string
 }
 export interface CompanionInputFieldMultiDropdown extends CompanionInputFieldDropdownBase {
 	multiple: true
