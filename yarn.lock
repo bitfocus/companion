@@ -316,6 +316,13 @@
   resolved "https://registry.yarnpkg.com/@types/debug/-/debug-4.1.5.tgz#b14efa8852b7768d898906613c23f688713e02cd"
   integrity sha512-Q1y515GcOdTHgagaVFhHnIFQ38ygs/kmxdNpvpou+raI9UO3YZcHDngBSYKQklcKlvA7iuQlmIKbzvmxcOE9CQ==
 
+"@types/dns-packet@*":
+  version "5.2.0"
+  resolved "https://registry.yarnpkg.com/@types/dns-packet/-/dns-packet-5.2.0.tgz#a757f85cb5ac2ba0c9e7e9ebf87d0a7ba4716be2"
+  integrity sha512-BIlcbaL1gzAliDx6icW+JYFoTJKNozOHf7D24Ezb0OekM/FlF6oUSdbFNiWhOrXPdQhNZKNYZl33FrkiSp+xRg==
+  dependencies:
+    "@types/node" "*"
+
 "@types/fs-extra@^9.0.7":
   version "9.0.8"
   resolved "https://registry.yarnpkg.com/@types/fs-extra/-/fs-extra-9.0.8.tgz#32c3c07ddf8caa5020f84b5f65a48470519f78ba"
@@ -376,10 +383,18 @@
   resolved "https://registry.yarnpkg.com/@types/minimatch/-/minimatch-3.0.3.tgz#3dca0e3f33b200fc7d1139c0cd96c1268cadfd9d"
   integrity sha512-tHq6qdbT9U1IRSGf14CL0pUlULksvY9OZ+5eEgl1N7t+OA3tGvNpxJCzuKQlsNgCVwbAs670L1vcVQi8j9HjnA==
 
-"@types/node@*", "@types/node@>=10.0.0", "@types/node@^12.0.12", "@types/node@^12.0.4", "@types/node@^12.19.3", "@types/node@^12.19.4", "@types/node@^12.20.13":
-  version "12.20.13"
-  resolved "https://registry.yarnpkg.com/@types/node/-/node-12.20.13.tgz#e743bae112bd779ac9650f907197dd2caa7f0364"
-  integrity sha512-1x8W5OpxPq+T85OUsHRP6BqXeosKmeXRtjoF39STcdf/UWLqUsoehstZKOi0CunhVqHG17AyZgpj20eRVooK6A==
+"@types/multicast-dns@^7.2.0":
+  version "7.2.0"
+  resolved "https://registry.yarnpkg.com/@types/multicast-dns/-/multicast-dns-7.2.0.tgz#394f9cb2bcc77d010dc9255b21bf338ae6c568bc"
+  integrity sha512-yimoB+kC5EAKZdd0stGKglW2M5dZguodNQqY+Ne+mN6jyUWJ+RwrEtycZ/PgmlH3AccW/59Nmh7XPulx+QxXNQ==
+  dependencies:
+    "@types/dns-packet" "*"
+    "@types/node" "*"
+
+"@types/node@*", "@types/node@>=10.0.0", "@types/node@^12.0.12", "@types/node@^12.0.4", "@types/node@^12.19.3", "@types/node@^12.19.4", "@types/node@^12.20.13", "@types/node@^12.20.15":
+  version "12.20.15"
+  resolved "https://registry.yarnpkg.com/@types/node/-/node-12.20.15.tgz#10ee6a6a3f971966fddfa3f6e89ef7a73ec622df"
+  integrity sha512-F6S4Chv4JicJmyrwlDkxUdGNSplsQdGwp1A0AJloEVDirWdZOAiRHhovDlsFkKUrquUXhz1imJhXHsf59auyAg==
 
 "@types/node@^7.0.4":
   version "7.10.14"
@@ -1702,13 +1717,15 @@ commist@^1.0.0:
   version "1.0.0"
   resolved "https://codeload.github.com/bitfocus/companion-module-blackdiamondvideo-phantom800/tar.gz/850a80132d8dba3da7756b743e56c871648cb694"
 
-"companion-module-bmd-atem@github:bitfocus/companion-module-bmd-atem#v2.11.0":
-  version "2.11.0"
-  resolved "https://codeload.github.com/bitfocus/companion-module-bmd-atem/tar.gz/574ba67315882c805b8c682d1f4a10aa21fbfae7"
+"companion-module-bmd-atem@github:bitfocus/companion-module-bmd-atem#v2.12.0":
+  version "2.12.0"
+  resolved "https://codeload.github.com/bitfocus/companion-module-bmd-atem/tar.gz/8bb4109d992d1b19a91253281b4823e81e831ffa"
   dependencies:
-    "@types/node" "^12.20.13"
+    "@types/multicast-dns" "^7.2.0"
+    "@types/node" "^12.20.15"
     atem-connection "3.0.0-nightly-latest-20210530-132658-16c3cdd.0"
-    type-fest "^1.1.3"
+    multicast-dns "^7.2.3"
+    type-fest "^1.2.0"
 
 "companion-module-bmd-hyperdeck@github:bitfocus/companion-module-bmd-hyperdeck#v1.2.1":
   version "1.2.1"
@@ -3165,6 +3182,13 @@ dmg-license@^1.0.8:
     plist "^3.0.1"
     smart-buffer "^4.0.2"
     verror "^1.10.0"
+
+dns-packet@^5.2.2:
+  version "5.2.4"
+  resolved "https://registry.yarnpkg.com/dns-packet/-/dns-packet-5.2.4.tgz#e004f409eadfa8ec861964dcb9eb395884fcf67d"
+  integrity sha512-vgu5Bx5IV8mXmh/9cn1lzn+J7okFlXe1vBRp+kCBJXg1nBED6Z/Q4e+QaDxQRSozMr14p/VQmdXwsf/I2wGjUA==
+  dependencies:
+    ip "^1.1.5"
 
 dot-prop@^5.2.0:
   version "5.3.0"
@@ -5516,6 +5540,14 @@ ms@^2.0.0, ms@^2.1.1:
   resolved "https://registry.yarnpkg.com/ms/-/ms-2.1.3.tgz#574c8138ce1d2b5861f0b44579dbadd60c6615b2"
   integrity sha512-6FlzubTLZG3J2a/NVCAleEhjzq5oxgHyaCU9yYXvcLsvoVaHJq/s5xXI6/XXP6tz7R9xAOtHnSO/tXtF3WRTlA==
 
+multicast-dns@^7.2.3:
+  version "7.2.3"
+  resolved "https://registry.yarnpkg.com/multicast-dns/-/multicast-dns-7.2.3.tgz#cbd07571dda41807b36f71067681f19e85ccc2cd"
+  integrity sha512-TzxgGSLRLB7tqAlzjgd2x2ZE0cDsGFq4rs9W4yE5xp+7hlRXeUQGtXZsTGfGw2FwWB45rfe8DtXMYBpZGMLUng==
+  dependencies:
+    dns-packet "^5.2.2"
+    thunky "^1.0.2"
+
 mz@^2.7.0:
   version "2.7.0"
   resolved "https://registry.yarnpkg.com/mz/-/mz-2.7.0.tgz#95008057a56cafadc2bc63dde7f9ff6955948e32"
@@ -7340,6 +7372,11 @@ through@~2.3:
   resolved "https://registry.yarnpkg.com/through/-/through-2.3.8.tgz#0dd4c9ffaabc357960b1b724115d7e0e86a2e1f5"
   integrity sha1-DdTJ/6q8NXlgsbckEV1+Doai4fU=
 
+thunky@^1.0.2:
+  version "1.1.0"
+  resolved "https://registry.yarnpkg.com/thunky/-/thunky-1.1.0.tgz#5abaf714a9405db0504732bbccd2cedd9ef9537d"
+  integrity sha512-eHY7nBftgThBqOyHGVN+l8gF0BucP09fMo0oO/Lb0w1OF80dJv+lDVpXG60WMQvkcxAkNybKsrEIE3ZtKGmPrA==
+
 timed-out@^4.0.0:
   version "4.0.1"
   resolved "https://registry.yarnpkg.com/timed-out/-/timed-out-4.0.1.tgz#f32eacac5a175bea25d7fab565ab3ed8741ef56f"
@@ -7476,10 +7513,10 @@ type-fest@^0.8.1:
   resolved "https://registry.yarnpkg.com/type-fest/-/type-fest-0.8.1.tgz#09e249ebde851d3b1e48d27c105444667f17b83d"
   integrity sha512-4dbzIzqvjtgiM5rw1k5rEHtBANKmdudhGyBEajN01fEyhaAIhsoKNy6y7+IN93IfpFtwY9iqi7kD+xwKhQsNJA==
 
-type-fest@^1.1.3:
-  version "1.1.3"
-  resolved "https://registry.yarnpkg.com/type-fest/-/type-fest-1.1.3.tgz#ea1a602e98e5a968a56a289886a52f04c686fc81"
-  integrity sha512-CsiQeFMR1jZEq8R+H59qe+bBevnjoV5N2WZTTdlyqxeoODQOOepN2+msQOywcieDq5sBjabKzTn3U+sfHZlMdw==
+type-fest@^1.1.3, type-fest@^1.2.0:
+  version "1.2.0"
+  resolved "https://registry.yarnpkg.com/type-fest/-/type-fest-1.2.0.tgz#4cdf38ef9b047922c26038080cb269752ae359a2"
+  integrity sha512-++0N6KyAj0t2webXst0PE0xuXb4Dv3z1Z+4SGzK+j/epeWBZCfkQbkW/ezscZwpinmBQ5wu/l4TqagKSVcAGCA==
 
 type-is@~1.6.17, type-is@~1.6.18:
   version "1.6.18"
