@@ -2275,6 +2275,10 @@ commist@^1.0.0:
   version "1.0.1"
   resolved "https://codeload.github.com/bitfocus/companion-module-multicamsystems-multicamsuite/tar.gz/2c128ec66d6977b9ecd64e8b3bc70cd5f43970d2"
 
+"companion-module-muxlab-kvm@github:bitfocus/companion-module-muxlab-kvm#v1.0.0":
+  version "1.0.0"
+  resolved "https://codeload.github.com/bitfocus/companion-module-muxlab-kvm/tar.gz/9334f6e8c4ed64ecc8e75f160c216e5955fa5484"
+
 "companion-module-neodarque-stagetimer2@github:bitfocus/companion-module-neodarque-stagetimer2#v1.2.5":
   version "1.2.5"
   resolved "https://codeload.github.com/bitfocus/companion-module-neodarque-stagetimer2/tar.gz/2591b11a17b40588b9935f15e4705993dcf7ae53"
