@@ -127,12 +127,12 @@ declare abstract class InstanceSkel<TConfig> {
 	 * Trigger the subscribe callback on all feedbacks for this instance
 	 * @param feedbackId Feedback type to call for, or undefined for all
 	 */
-	subscribeFeedbacks(feedbackId?: string): void
+	subscribeFeedbacks(type?: string): void
 	/**
 	 * Trigger the unsubscribe callback on all feedbacks for this instance
 	 * @param feedbackId Feedback type to call for, or undefined for all
 	 */
-	unsubscribeFeedbacks(feedbackId?: string): void
+	unsubscribeFeedbacks(type?: string): void
 
 	/**
 	 * Get an array of all the actions and release_actions for this instance
@@ -142,12 +142,12 @@ declare abstract class InstanceSkel<TConfig> {
 	 * Trigger the subscribe callback on all actions and release_actions for this instance
 	 * @param actionId Action type to call for, or undefined for all
 	 */
-	subscribeActions(actionId?: string): void
+	subscribeActions(type?: string): void
 	/**
 	 * Trigger the unsubscribe callback on all actions and release_actions for this instance
 	 * @param actionId Action type to call for, or undefined for all
 	 */
-	unsubscribeActions(actionId?: string): void
+	unsubscribeActions(type?: string): void
 
 	status(level: null | 0 | 1 | 2, message?: string): void
 
