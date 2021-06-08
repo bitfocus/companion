@@ -1532,9 +1532,9 @@ commist@^1.0.0:
   version "1.0.2"
   resolved "https://codeload.github.com/bitfocus/companion-module-aja-helo/tar.gz/d5addc1241d300e28e1f6905bc267698ae2d2584"
 
-"companion-module-aja-kipro@github:bitfocus/companion-module-aja-kipro#v2.0.10":
-  version "2.0.10"
-  resolved "https://codeload.github.com/bitfocus/companion-module-aja-kipro/tar.gz/58642159a2d0b1b6d6f9bc9827f3a3e88e6dbd0d"
+"companion-module-aja-kipro@github:bitfocus/companion-module-aja-kipro#v2.0.11":
+  version "2.0.11"
+  resolved "https://codeload.github.com/bitfocus/companion-module-aja-kipro/tar.gz/9511018462d962e2fe187f434dc9c1deae89cba9"
 
 "companion-module-aja-kumo@github:bitfocus/companion-module-aja-kumo#v1.0.4":
   version "1.0.4"
@@ -1548,9 +1548,9 @@ commist@^1.0.0:
   version "1.0.6"
   resolved "https://codeload.github.com/bitfocus/companion-module-allenheath-qu/tar.gz/358ce765392b13b9ca8779ec21cd4d19fa9e26b8"
 
-"companion-module-allenheath-sq@github:bitfocus/companion-module-allenheath-sq#v1.3.5":
-  version "1.3.5"
-  resolved "https://codeload.github.com/bitfocus/companion-module-allenheath-sq/tar.gz/374943ec29762228b136bcf10dc01c1a98875be2"
+"companion-module-allenheath-sq@github:bitfocus/companion-module-allenheath-sq#v1.3.6":
+  version "1.3.6"
+  resolved "https://codeload.github.com/bitfocus/companion-module-allenheath-sq/tar.gz/6b2153462ae0f1b279d73176d7fc5c439ad9027a"
 
 "companion-module-analogway-eks500@github:bitfocus/companion-module-analogway-eks500#v1.0.1":
   version "1.0.1"
@@ -1742,9 +1742,9 @@ commist@^1.0.0:
   version "1.3.2"
   resolved "https://codeload.github.com/bitfocus/companion-module-bmd-multiview4/tar.gz/9b36c8c7222e5252802cce85e85673636c2a3a29"
 
-"companion-module-bmd-smartview@github:bitfocus/companion-module-bmd-smartview#v1.1.2":
-  version "1.1.2"
-  resolved "https://codeload.github.com/bitfocus/companion-module-bmd-smartview/tar.gz/bfa099701afe71f959879006bc45acfd00c2e6d0"
+"companion-module-bmd-smartview@github:bitfocus/companion-module-bmd-smartview#v1.1.3":
+  version "1.1.3"
+  resolved "https://codeload.github.com/bitfocus/companion-module-bmd-smartview/tar.gz/200ebc7a4a544ae07c742002bc7605e14495a319"
 
 "companion-module-bmd-teranex@github:bitfocus/companion-module-bmd-teranex#v1.0.4":
   version "1.0.4"
@@ -1998,9 +1998,9 @@ commist@^1.0.0:
   version "1.0.2"
   resolved "https://codeload.github.com/bitfocus/companion-module-folivora-btt/tar.gz/5524298aeac542289332bdef4d7259b6f1adfdf3"
 
-"companion-module-fora-hvs@github:bitfocus/companion-module-fora-hvs#v1.2.3":
-  version "1.2.3"
-  resolved "https://codeload.github.com/bitfocus/companion-module-fora-hvs/tar.gz/84bc99f4b5802d35f66eb162f5fe394ba57ae4ed"
+"companion-module-fora-hvs@github:bitfocus/companion-module-fora-hvs#v1.2.4":
+  version "1.2.4"
+  resolved "https://codeload.github.com/bitfocus/companion-module-fora-hvs/tar.gz/950833097490b4ad701dcd609e78056875d4b3ec"
 
 "companion-module-foscam-ptz@github:bitfocus/companion-module-foscam-ptz#v1.0.1":
   version "1.0.1"
@@ -2631,9 +2631,9 @@ commist@^1.0.0:
   dependencies:
     spotify-web-api-node "^5.0.1"
 
-"companion-module-studiocoast-vmix@github:bitfocus/companion-module-studiocoast-vmix#v1.2.20":
-  version "1.2.20"
-  resolved "https://codeload.github.com/bitfocus/companion-module-studiocoast-vmix/tar.gz/1cb749289cf68e86c65511d51be3ac1153769e6d"
+"companion-module-studiocoast-vmix@github:bitfocus/companion-module-studiocoast-vmix#v1.2.21":
+  version "1.2.21"
+  resolved "https://codeload.github.com/bitfocus/companion-module-studiocoast-vmix/tar.gz/4fef1b5c6bea89df26b04bd6ad38014cced3aaff"
   dependencies:
     lodash "^4.17.21"
     xml2js "^0.4.22"
