@@ -136,7 +136,7 @@ export function EditButton({ page, bank, onKeyUp }) {
 									style={{ opacity: 0.8, paddingLeft: 6 }}
 									className="dropdown-toggle dropdown-toggle-split"
 								>
-									<span class="sr-only">Toggle Dropdown</span>
+									<span className="sr-only">Toggle Dropdown</span>
 								</CDropdownToggle>
 							</CButtonGroup>
 							<CDropdownMenu>
