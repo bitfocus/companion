@@ -119,7 +119,7 @@
 	"engines": {
 		"npm": "please-use-yarn",
 		"yarn": "^1.22",
-		"node": "^12.18.3 || ^14"
+		"node": "^12.20 || ^14"
  	},
 	"author": "Bitfocus AS",
 	"license": "MIT",
