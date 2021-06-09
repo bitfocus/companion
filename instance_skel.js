@@ -168,7 +168,9 @@ instance.CreateConvertToBooleanFeedbackUpgradeScript = function (upgrade_map) {
 instance.prototype.addUpgradeScript = function () {
 	var self = this
 
-	throw new Error('addUpgradeScript has been removed and replaced by a new static GetUpgradeScripts flow. Check the wiki for more information')
+	throw new Error(
+		'addUpgradeScript has been removed and replaced by a new static GetUpgradeScripts flow. Check the wiki for more information'
+	)
 }
 
 instance.prototype.setActions = function (actions) {
