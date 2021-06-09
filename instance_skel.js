@@ -29,6 +29,7 @@ function instance(system, id, config) {
 	self.package_info = {}
 	self._feedbackDefinitions = {}
 	self._actionDefinitions = {}
+	self._subscribedUserSettings = []
 
 	// we need this object from instance, and I don't really know how to get it
 	// out of instance.js without adding an argument to instance() for every
@@ -378,6 +379,44 @@ instance.prototype.getAllFeedbacks = function () {
 		result = _result
 	})
 	return result
+}
+
+instance.prototype._userSettingChanged = function (key, value) {
+	var self = this
+
+	try {
+		for (var x in self._subscribedUserSettings) {
+			var y = self._subscribedUserSettings[x]
+
+			if (key == y.id) {
+				y.callback(value)
+			}
+		}
+	} catch (e) {
+		self.debug('Failed to execute user setting subscription: ' + e)
+	}
+}
+
+instance.prototype.subscribeUserSetting = function (key, cb) {
+	var self = this
+
+	if (elf._userSettingChangedMethod === undefined && typeof cb == 'function') {
+		self._userSettingChangedMethod = self._userSettingChanged.bind(self)
+		self.system.on('set_userconfig_key', self._userSettingChangedMethod)
+	}
+
+	if (typeof cb == 'function') {
+		self._subscribedUserSettings.push({ id: key, callback: cb })
+	}
+}
+
+instance.prototype.clearUserSettingSubscriptions = function() {
+	var self = this
+	if (typeof self._userSettingChangedMethod == 'function') {
+		self.system.removeListener(self._userSettingChangedMethod)
+		delete self._userSettingChangedMethod
+		self._subscribedUserSettings.splice(0, self._subscribedUserSettings.length)
+	}
 }
 
 instance.prototype.subscribeFeedbacks = function (type) {
