@@ -304,6 +304,12 @@ instance.prototype.getVariable = function (variable, cb) {
 	self.system.emit('variable_get', self.label, variable, cb)
 }
 
+instance.prototype.getUserSetting = function (key, cb) {
+	var self = this
+
+	self.system.emit('get_userconfig_key', key, cb)
+}
+
 instance.prototype.parseVariables = function (string, cb) {
 	var self = this
 
