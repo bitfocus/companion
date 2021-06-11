@@ -116,7 +116,7 @@ declare abstract class InstanceSkel<TConfig> {
 	/** Get the value of a userconfig setting */
 	getUserSetting(settingId: string, cb: (value: any) => void): void
 	/** Subscribe to changes for a userconfig setting */
-	subscribeUserSetting(key: string, cb: (value: any) => void): void
+	subscribeUserSetting(settingId: string, cb: (value: any) => void): void
 	/** Manually clear/stop all user setting subscriptions */
 	clearUserSettingSubscriptions(): void
 
