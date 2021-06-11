@@ -16,7 +16,6 @@ import {
 import { MyErrorBoundary, StaticContext, socketEmit } from './util'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faFileImport } from '@fortawesome/free-solid-svg-icons'
-import { Card } from './Components'
 import shortid from 'shortid'
 
 export const UserConfig = memo(function UserConfig() {
@@ -307,20 +306,9 @@ function UserConfigTable() {
 }
 
 function RemoteControlInfo() {
-	const [tabResetToken, setTabResetToken] = useState(shortid())
-	const [activeTab, setActiveTab] = useState('tcp-udp')
-	const doChangeTab = useCallback((newTab) => {
-		setActiveTab((oldTab) => {
-			if (oldTab !== newTab) {
-				setTabResetToken(shortid())
-			}
-			return newTab
-		})
-	}, [])
-
 	return (
 		<>
-			<CTabs activeTab={activeTab} onActiveTabChange={doChangeTab}>
+			<CTabs activeTab="tcp-udp">
 				<CNav variant="tabs">
 					<CNavItem>
 						<CNavLink data-tab="tcp-udp">TCP/UDP</CNavLink>
