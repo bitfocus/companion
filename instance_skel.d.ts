@@ -108,12 +108,17 @@ declare abstract class InstanceSkel<TConfig> {
 	setVariables(variables: { [variableId: string]: string | undefined }): void
 	/** Get the value of a variable from this instance */
 	getVariable(variableId: string, cb: (value: string) => void): void
-	/** Get the value of a userconfig setting */
-	getUserSetting(settingId: string, cb: (value: any) => void): void
 	/** Recheck all feedbacks of the given types. eg `self.checkFeedbacks('bank_style', 'bank_text')` or `self.checkFeedbacks` */
 	checkFeedbacks(...feedbackTypes: string[]): void
 	/** Recheck all feedbacks of the given ids. eg `self.checkFeedbacksById('vvbta3jtaD', 'Ba_1C3NF3q')` */
 	checkFeedbacksById(...feedbackIds: string[]): void
+
+	/** Get the value of a userconfig setting */
+	getUserSetting(settingId: string, cb: (value: any) => void): void
+	/** Subscribe to changes for a userconfig setting */
+	subscribeUserSetting(key: string, cb: (value: any) => void): void
+	/** Manually clear/stop all user setting subscriptions */
+	clearUserSettingSubscriptions(): void
 
 	/**
 	 * Parse a string to replace any variable references with their values.

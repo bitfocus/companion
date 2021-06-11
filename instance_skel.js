@@ -98,6 +98,19 @@ instance.prototype.rgb = image.rgb
 
 instance.prototype.rgbRev = image.rgbRev
 
+instance.prototype._destroy = function () {
+	var self = this
+	self.clearUserSettingSubscriptions()
+
+	if (self.destroy !== undefined && typeof self.destroy == 'function') {
+		try {
+			self.destroy()
+		} catch (e) {
+			self.system.emit('log', 'instance(' + this.id + ')', 'debug', 'Error while deleting instance: ' + e.message)
+		}
+	}
+}
+
 instance.prototype._init = function () {
 	var self = this
 
@@ -105,7 +118,7 @@ instance.prototype._init = function () {
 	// as they reference the original constructors static data
 
 	// Debug with module-name prepeded
-	self.debug = require('debug')('instance:' + self.package_info.name + ':' + self.id)
+	self.debug = require('debug')('instance/' + self.package_info.name + '/' + self.id)
 
 	// Log to the skeleton (launcher) log window
 	self.log = function (level, info) {
@@ -400,7 +413,7 @@ instance.prototype._userSettingChanged = function (key, value) {
 instance.prototype.subscribeUserSetting = function (key, cb) {
 	var self = this
 
-	if (elf._userSettingChangedMethod === undefined && typeof cb == 'function') {
+	if (self._userSettingChangedMethod === undefined && typeof cb == 'function') {
 		self._userSettingChangedMethod = self._userSettingChanged.bind(self)
 		self.system.on('set_userconfig_key', self._userSettingChangedMethod)
 	}
@@ -410,12 +423,16 @@ instance.prototype.subscribeUserSetting = function (key, cb) {
 	}
 }
 
-instance.prototype.clearUserSettingSubscriptions = function() {
+instance.prototype.clearUserSettingSubscriptions = function () {
 	var self = this
-	if (typeof self._userSettingChangedMethod == 'function') {
-		self.system.removeListener(self._userSettingChangedMethod)
-		delete self._userSettingChangedMethod
-		self._subscribedUserSettings.splice(0, self._subscribedUserSettings.length)
+	try {
+		if (typeof self._userSettingChangedMethod == 'function') {
+			self.system.removeListener('set_userconfig_key', self._userSettingChangedMethod)
+			delete self._userSettingChangedMethod
+			self._subscribedUserSettings.splice(0, self._subscribedUserSettings.length)
+		}
+	} catch (e) {
+		self.debug('Could clear user setting subscriptions: ' + e)
 	}
 }
 
