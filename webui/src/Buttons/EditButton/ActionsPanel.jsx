@@ -218,15 +218,14 @@ function ActionTableRow({ action, index, dragId, setValue, doDelete, doDelay, mo
 	// const module = instance ? context.modules[instance.instance_type] : undefined
 	const instanceLabel = instance?.label ?? action.instance
 
-	const actionSpec = actionsContext[action.label]
+	const actionSpec = actionsContext[`${action.instance}:${action.action}`]
 	const options = actionSpec?.options ?? []
 
 	let name = ''
 	if (actionSpec) {
 		name = `${instanceLabel}: ${actionSpec.label}`
 	} else {
-		const actionId = action.label.split(/:/)[1]
-		name = `${instanceLabel}: ${actionId} (undefined)`
+		name = `${instanceLabel}: ${action.action} (undefined)`
 	}
 
 	return (
