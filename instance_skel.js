@@ -268,7 +268,9 @@ instance.prototype.checkFeedbacks = function (...types) {
 instance.prototype.checkFeedbacksById = function (...ids) {
 	var self = this
 
-	self.system.emit('feedback_check_all', { instance_id: self.id, feedback_ids: ids })
+	if (ids && ids.length > 0) {
+		self.system.emit('feedback_check_all', { instance_id: self.id, feedback_ids: ids })
+	}
 }
 
 instance.prototype.getAllFeedbacks = function () {

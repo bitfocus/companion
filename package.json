@@ -258,7 +258,7 @@
 		"companion-module-generic-artnet": "github:bitfocus/companion-module-generic-artnet#v1.0.2",
 		"companion-module-generic-emberplus": "github:bitfocus/companion-module-generic-emberplus#v1.1.1",
 		"companion-module-generic-http": "github:bitfocus/companion-module-generic-http#v1.0.8",
-		"companion-module-generic-mqtt": "github:bitfocus/companion-module-generic-mqtt#v1.1.0",
+		"companion-module-generic-mqtt": "github:bitfocus/companion-module-generic-mqtt#v1.2.0",
 		"companion-module-generic-osc": "github:bitfocus/companion-module-generic-osc#v1.0.4",
 		"companion-module-generic-pjlink": "github:bitfocus/companion-module-generic-pjlink#v1.0.5",
 		"companion-module-generic-sacn": "github:bitfocus/companion-module-generic-sacn#v1.0.0",
@@ -345,7 +345,7 @@
 		"companion-module-planningcenter-serviceslive": "github:bitfocus/companion-module-planningcenter-serviceslive#v1.0.5",
 		"companion-module-presentationtools-aps": "github:bitfocus/companion-module-presentationtools-aps#v1.0.0",
 		"companion-module-presentationtools-cuetimer": "github:bitfocus/companion-module-presentationtools-cuetimer#v1.0.0",
-		"companion-module-protopie-bridge": "github:bitfocus/companion-module-protopie-bridge#v1.0.0",
+		"companion-module-protopie-bridge": "github:bitfocus/companion-module-protopie-bridge#v1.0.2",
 		"companion-module-prsi-ipower": "github:bitfocus/companion-module-prsi-ipower#v1.0.2",
 		"companion-module-ptzoptics-visca": "github:bitfocus/companion-module-ptzoptics-visca#v1.1.6",
 		"companion-module-qsys-remote-control": "github:bitfocus/companion-module-qsys-remote-control#v1.0.3",
@@ -448,6 +448,7 @@
 	"resolutions": {
 		"infinitton-idisplay/node-hid": "^2.1.1",
 		"electron-builder/**/app-builder-bin": "3.5.13",
-		"**/osc/serialport": "^9.1.0"
+		"**/osc/serialport": "^9.1.0",
+		"**/osc/ws": "^7.4.6"
 	}
 }
