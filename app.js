@@ -62,13 +62,11 @@ system.on('skeleton-info', function (key, val) {
 	if (key == 'configDir') {
 		debug('configuration directory', val)
 		cfgDir = val + '/companion/'
-		mkdirp(cfgDir, function (err) {
-			debug('mkdirp', cfgDir, err)
-			config = new (require('./lib/config'))(system, cfgDir, {
-				http_port: 8888,
-				bind_ip: '127.0.0.1',
-				start_minimised: false,
-			})
+		mkdirp.sync(cfgDir)
+		config = new (require('./lib/config'))(system, cfgDir, {
+			http_port: 8888,
+			bind_ip: '127.0.0.1',
+			start_minimised: false,
 		})
 	}
 })
