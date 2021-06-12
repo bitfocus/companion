@@ -176,10 +176,10 @@ function PresetsCategoryList({ presets, instance, module, selectedInstanceId, se
 }
 
 function PresetsButtonList({ presets, selectedInstanceId, selectedCategory, setInstanceAndCategory }) {
-	const doBack = useCallback(() => setInstanceAndCategory([selectedInstanceId, null]), [
-		setInstanceAndCategory,
-		selectedInstanceId,
-	])
+	const doBack = useCallback(
+		() => setInstanceAndCategory([selectedInstanceId, null]),
+		[setInstanceAndCategory, selectedInstanceId]
+	)
 
 	const options = presets.filter((p) => p.category === selectedCategory)
 
