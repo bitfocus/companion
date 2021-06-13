@@ -228,6 +228,8 @@ export interface CompanionActions {
 export interface CompanionUpgradeContext {
 	/** Translate a key index from the old 15 key layout (5x3 grid) to the 32 key layout (8x4 grid) */
 	convert15to32(key: number): number
+	rgb(red: number, green: number, blue: number): number
+	rgbRev(color: number): { r: number; g: number; b: number }
 }
 
 export type CompanionStaticUpgradeScript = (
