@@ -34,14 +34,19 @@ export interface CompanionBankAdditionalStyleProps {
 	png64?: string
 }
 export interface CompanionBankAdditionalCoreProps {
-	latch: boolean
 	relative_delay: boolean
+}
+export interface CompanionBankAdditionalPressProps {}
+export interface CompanionBankAdditionalSteppedProps {
+	step_auto_progress: boolean
 }
 
 export interface CompanionBankPNG
 	extends CompanionBankRequiredProps,
 		CompanionBankAdditionalStyleProps,
-		CompanionBankAdditionalCoreProps {
+		CompanionBankAdditionalCoreProps,
+		Partial<CompanionBankAdditionalPressProps>,
+		Partial<CompanionBankAdditionalSteppedProps> {
 	style: string
 }
 
@@ -53,7 +58,7 @@ export interface CompanionBankPresetBase<T extends string>
 }
 
 /** @deprecated */
-export type CompanionBankPreset = CompanionBankPresetBase<'png' | 'text'> // 'text' for backwards compatability
+export type CompanionBankPreset = CompanionBankPresetBase<'png' | 'text'> & { latch?: boolean } // 'text' for backwards compatability
 
 export interface CompanionAction {
 	label: string
@@ -227,7 +232,7 @@ export interface CompanionPreset {
 export interface CompanionPresetPress {
 	category: string
 	label: string
-	bank: CompanionBankPresetBase<'press'>
+	bank: CompanionBankPresetBase<'press'> & Partial<CompanionBankAdditionalPressProps>
 	feedbacks: Array<{
 		type: string
 		options: { [key: string]: InputValue | undefined }
@@ -248,7 +253,7 @@ export interface CompanionPresetPress {
 export interface CompanionPresetStepped {
 	category: string
 	label: string
-	bank: CompanionBankPresetBase<'step'>
+	bank: CompanionBankPresetBase<'step'> & Partial<CompanionBankAdditionalSteppedProps>
 	feedbacks: Array<{
 		type: string
 		options: { [key: string]: InputValue | undefined }
