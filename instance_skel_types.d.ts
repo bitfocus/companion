@@ -5,8 +5,6 @@ export interface CompanionSystem extends EventEmitter {}
 
 export type InputValue = number | string | boolean
 
-export type CompanionBank = CompanionBankPage | CompanionBankPNG | CompanionBankPreset
-
 export interface CompanionBankPage {
 	style: 'pageup' | 'pagedown' | 'pagenum'
 }
@@ -44,15 +42,18 @@ export interface CompanionBankPNG
 	extends CompanionBankRequiredProps,
 		CompanionBankAdditionalStyleProps,
 		CompanionBankAdditionalCoreProps {
-	style: 'png'
+	style: string
 }
 
-export interface CompanionBankPreset
+export interface CompanionBankPresetBase<T extends string>
 	extends CompanionBankRequiredProps,
 		Partial<CompanionBankAdditionalStyleProps>,
 		Partial<CompanionBankAdditionalCoreProps> {
-	style: 'png' | 'text' // 'text' for backwards compatability
+	style: T
 }
+
+/** @deprecated */
+export type CompanionBankPreset = CompanionBankPresetBase<'png' | 'text'> // 'text' for backwards compatability
 
 export interface CompanionAction {
 	label: string
@@ -199,7 +200,10 @@ export interface CompanionFeedbackAdvanced extends CompanionFeedbackBase<Compani
 }
 export type CompanionFeedback = CompanionFeedbackBoolean | CompanionFeedbackAdvanced
 
-export interface CompanionPreset {
+export type CompanionPreset = CompanionPresetLegacy | CompanionPresetPress | CompanionPresetStepped
+
+/** @deprecated */
+export interface CompanionPresetLegacy {
 	category: string
 	label: string
 	bank: CompanionBankPreset
@@ -216,6 +220,44 @@ export interface CompanionPreset {
 		action: string
 		options: { [key: string]: InputValue | undefined }
 	}>
+}
+
+export interface CompanionPresetPress {
+	category: string
+	label: string
+	bank: CompanionBankPresetBase<'press'>
+	feedbacks: Array<{
+		type: string
+		options: { [key: string]: InputValue | undefined }
+		style?: Partial<CompanionBankRequiredProps & CompanionBankAdditionalStyleProps>
+	}>
+	action_sets: {
+		down: Array<{
+			action: string
+			options: { [key: string]: InputValue | undefined }
+		}>
+		up: Array<{
+			action: string
+			options: { [key: string]: InputValue | undefined }
+		}>
+	}
+}
+
+export interface CompanionPresetStepped {
+	category: string
+	label: string
+	bank: CompanionBankPresetBase<'step'>
+	feedbacks: Array<{
+		type: string
+		options: { [key: string]: InputValue | undefined }
+		style?: Partial<CompanionBankRequiredProps & CompanionBankAdditionalStyleProps>
+	}>
+	action_sets: {
+		[step: number]: Array<{
+			action: string
+			options: { [key: string]: InputValue | undefined }
+		}>
+	}
 }
 
 export interface CompanionFeedbacks {
