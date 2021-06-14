@@ -49,6 +49,7 @@ export function ButtonStyleConfig({ page, bank, config, configRef, valueChanged 
 		[context.socket, page, bank, valueChanged, configRef]
 	)
 
+	const setStepAutoProgressValue = useCallback((val) => setValueInner('step_auto_progress', val), [setValueInner])
 	const setRelativeDelayValue = useCallback((val) => setValueInner('relative_delay', val), [setValueInner])
 
 	switch (config.style) {
@@ -99,6 +100,21 @@ export function ButtonStyleConfig({ page, bank, config, configRef, valueChanged 
 							/>
 						</p>
 					</CCol>
+
+					{config.style === 'step' ? (
+						<CCol className="fieldtype-checkbox" sm={2} xs={3}>
+							<label>Auto progress</label>
+							<p>
+								<CheckboxInputField
+									definition={{ default: true, id: 'step_auto_progress' }}
+									setValue={setStepAutoProgressValue}
+									value={config.step_auto_progress}
+								/>
+							</p>
+						</CCol>
+					) : (
+						''
+					)}
 				</CRow>
 			</CForm>
 		</CCol>
