@@ -143,7 +143,11 @@ instance.CreateConvertToBooleanFeedbackUpgradeScript = function (upgrade_map) {
 				// These are some automated built in rules. They can help make it easier to migrate
 				upgrade_rules = {
 					bg: 'bgcolor',
+					bgcolor: 'bgcolor',
 					fg: 'color',
+					color: 'color',
+					png64: 'png64',
+					png: 'png64',
 				}
 			}
 
@@ -232,25 +236,33 @@ instance.prototype.setFeedbackDefinitions = function (feedbacks) {
 instance.prototype.setPresetDefinitions = function (presets) {
 	var self = this
 
+	const variableRegex = /\$\(([^:)]+):([^)]+)\)/g
+	function replaceAllVariables(fixtext) {
+		if (fixtext && fixtext.includes('$(')) {
+			let matches
+			while ((matches = variableRegex.exec(fixtext)) !== null) {
+				if (matches[2] !== undefined) {
+					fixtext = fixtext.replace(matches[0], '$(' + self.label + ':' + matches[2] + ')')
+				}
+			}
+		}
+		return fixtext
+	}
+
 	/*
 	 * Clean up variable references: $(instance:variable)
 	 * since the name of the instance is dynamic. We don't want to
 	 * demand that your presets MUST be dynamically generated.
 	 */
-	for (var i = 0; i < presets.length; ++i) {
-		var bank = presets[i].bank
-		var fixtext = bank.text
-		if (bank !== undefined && fixtext !== undefined) {
-			if (fixtext.includes('$(')) {
-				let matches
-				const reg = /\$\(([^:)]+):([^)]+)\)/g
+	for (let preset of presets) {
+		if (preset.bank) {
+			preset.bank.text = replaceAllVariables(preset.bank.text)
+		}
 
-				while ((matches = reg.exec(fixtext)) !== null) {
-					if (matches[1] !== undefined) {
-						if (matches[2] !== undefined) {
-							bank.text = bank.text.replace(matches[0], '$(' + self.label + ':' + matches[2] + ')')
-						}
-					}
+		if (preset.feedbacks) {
+			for (const feedback of preset.feedbacks) {
+				if (feedback.style && feedback.style.text) {
+					feedback.style.text = replaceAllVariables(feedback.style.text)
 				}
 			}
 		}
