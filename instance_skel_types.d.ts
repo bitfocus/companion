@@ -196,9 +196,13 @@ export interface CompanionFeedbackBoolean extends CompanionFeedbackBase<boolean>
 	style: Partial<CompanionBankRequiredProps & CompanionBankAdditionalStyleProps>
 }
 export interface CompanionFeedbackAdvanced extends CompanionFeedbackBase<CompanionFeedbackResult> {
-	type?: 'advanced'
+	type: 'advanced'
 }
-export type CompanionFeedback = CompanionFeedbackBoolean | CompanionFeedbackAdvanced
+/** @deprecated use CompanionFeedbackAdvanced instead */
+export interface CompanionFeedbackLegacy extends CompanionFeedbackBase<CompanionFeedbackResult> {
+	type?: never
+}
+export type CompanionFeedback = CompanionFeedbackBoolean | CompanionFeedbackAdvanced | CompanionFeedbackLegacy
 
 /** @deprecated */
 export interface CompanionPreset {
