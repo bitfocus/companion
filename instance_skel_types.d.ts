@@ -200,10 +200,8 @@ export interface CompanionFeedbackAdvanced extends CompanionFeedbackBase<Compani
 }
 export type CompanionFeedback = CompanionFeedbackBoolean | CompanionFeedbackAdvanced
 
-export type CompanionPreset = CompanionPresetLegacy | CompanionPresetPress | CompanionPresetStepped
-
 /** @deprecated */
-export interface CompanionPresetLegacy {
+export interface CompanionPreset {
 	category: string
 	label: string
 	bank: CompanionBankPreset
