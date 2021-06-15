@@ -118,6 +118,14 @@ export const SurfacesPage = memo(function SurfacesPage() {
 							</tr>
 						)
 					})}
+
+					{devices.length === 0 ? (
+						<tr>
+							<td colSpan={4}>No control surfaces have been detected</td>
+						</tr>
+					) : (
+						''
+					)}
 				</tbody>
 			</table>
 
