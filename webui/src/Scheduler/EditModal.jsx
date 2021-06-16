@@ -151,7 +151,28 @@ export function ScheduleEditModal({ doClose, doSave, item, plugins }) {
 						<label>Name</label>
 						<CInput required value={config.title} onChange={(e) => updateConfig('title', e.target.value)} />
 					</CFormGroup>
-					<legend>Trigger</legend>
+
+					<legend>Condition</legend>
+					<CFormGroup>
+						<label>Type</label>
+						<Select
+							value={pluginChoices.find((c) => c.value === config.type)}
+							onChange={changeType}
+							isSearchable={false}
+							isClearable={false}
+							options={pluginChoices}
+							required
+						/>
+					</CFormGroup>
+
+					{pluginSpec?.options ? (
+						<ScheduleEditModalConfig pluginSpec={pluginSpec} config={config.config} updateConfig={updateConfig} />
+					) : (
+						'Unknown type selected'
+					)}
+
+					<hr />
+					<legend>Action</legend>
 					<CRow form className="button-style-form">
 						<CCol className="fieldtype-checkbox" sm={2} xs={3}>
 							<CButton
@@ -182,25 +203,6 @@ export function ScheduleEditModal({ doClose, doSave, item, plugins }) {
 						setActions={setActions}
 						addAction={addActionSelect}
 					/>
-					<hr />
-					<legend>Condition</legend>
-					<CFormGroup>
-						<label>Type</label>
-						<Select
-							value={pluginChoices.find((c) => c.value === config.type)}
-							onChange={changeType}
-							isSearchable={false}
-							isClearable={false}
-							options={pluginChoices}
-							required
-						/>
-					</CFormGroup>
-
-					{pluginSpec?.options ? (
-						<ScheduleEditModalConfig pluginSpec={pluginSpec} config={config.config} updateConfig={updateConfig} />
-					) : (
-						'Unknown type selected'
-					)}
 				</CModalBody>
 				<CModalFooter>
 					<CButton color="secondary" onClick={doClose}>
