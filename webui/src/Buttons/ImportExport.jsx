@@ -328,7 +328,7 @@ function ResetConfiguration() {
 	return (
 		<>
 			<h5>Reset all configuration</h5>
-			<p>This will clear all instances and buttons and start over.</p>
+			<p>This will clear all instances, triggers and buttons and start over.</p>
 			<p>
 				<CButton color="danger" style={{ backgroundColor: 'rgba(180,0,0,1)' }} onClick={doReset}>
 					<FontAwesomeIcon icon={faTrashAlt} /> Yes, reset everything
@@ -357,7 +357,7 @@ const ConfirmFullResetModal = forwardRef(function ConfirmFullResetModal(_props, 
 		setShow(false)
 
 		// Perform the reset
-		socketEmit(context.socket, 'reset_all', [])
+		socketEmit(context.socket, 'reset_all', [], 30000)
 			.then(() => {
 				window.location.reload()
 			})
