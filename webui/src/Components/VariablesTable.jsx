@@ -55,7 +55,7 @@ export function VariablesTable({ label }) {
 								<td>{elms}</td>
 								<td>
 									<CopyToClipboard text={`$(${label}:${variable.name})`} onCopy={onCopied}>
-										<CButton>
+										<CButton size="sm">
 											<FontAwesomeIcon icon={faCopy} />
 										</CButton>
 									</CopyToClipboard>

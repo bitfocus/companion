@@ -1,11 +1,12 @@
 import React, { useCallback, useContext, useEffect, useMemo, useState } from 'react'
-import { VariableDefinitionsContext } from '../util'
+import { CustomVariableDefinitionsContext, VariableDefinitionsContext } from '../util'
 import Tribute from 'tributejs'
 import { CInput } from '@coreui/react'
 import { decode } from 'html-entities'
 
 export function TextWithVariablesInputField({ definition, value, setValue }) {
 	const variableDefinitionsContext = useContext(VariableDefinitionsContext)
+	const customVariableDefinitionsContext = useContext(CustomVariableDefinitionsContext)
 
 	const [tmpValue, setTmpValue] = useState(null)
 
@@ -45,8 +46,17 @@ export function TextWithVariablesInputField({ definition, value, setValue }) {
 			}
 		}
 
+		for (const [name, info] of Object.entries(customVariableDefinitionsContext)) {
+			const variableId = `internal:custom_${name}`
+			suggestions.push({
+				key: variableId + ')',
+				value: variableId,
+				label: info.description,
+			})
+		}
+
 		tribute.append(0, suggestions, true)
-	}, [variableDefinitionsContext, tribute])
+	}, [variableDefinitionsContext, customVariableDefinitionsContext, tribute])
 
 	const doOnChange = useCallback(
 		(e) => {
