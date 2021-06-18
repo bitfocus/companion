@@ -19,7 +19,7 @@
 			},
 			"extraFiles": [
 				{
-					"from": "./node_modules/sharp/vendor/8.10.5/lib",
+					"from": "./node_modules/sharp/vendor/8.10.6/lib",
 					"to": "Frameworks",
 					"filter": [
 						"!glib-2.0/**/*"
@@ -58,7 +58,7 @@
 			"target": "dir",
 			"extraFiles": [
 				{
-					"from": "./node_modules/sharp/vendor/8.10.5/lib",
+					"from": "./node_modules/sharp/vendor/8.10.6/lib",
 					"to": ".",
 					"filter": [
 						"libvips*.so.*"
@@ -119,18 +119,18 @@
 	"engines": {
 		"npm": "please-use-yarn",
 		"yarn": "^1.22",
-		"node": "^12.20 || ^14"
+		"node": "^14.16"
 	},
 	"author": "Bitfocus AS",
 	"license": "MIT",
 	"devDependencies": {
 		"asar": "^3.0.3",
-		"aws-sdk": "^2.927.0",
+		"aws-sdk": "^2.931.0",
 		"chai": "^4.3.4",
 		"chai-fs": "^2.0.0",
 		"cross-env": "^7.0.3",
-		"electron": "^11.4.8",
-		"electron-builder": "22.10.5",
+		"electron": "^13.1.2",
+		"electron-builder": "22.11.7",
 		"mocha": "^6.2.3",
 		"nodemon": "^2.0.7",
 		"p-all": "^3.0.0",
@@ -139,7 +139,7 @@
 		"s3-upload-stream": "^1.0.7"
 	},
 	"dependencies": {
-		"@sentry/electron": "^2.4.1",
+		"@sentry/electron": "^2.5.0",
 		"app-root-path": "^3.0.0",
 		"binopsy": "^0.0.0",
 		"check-ip": "^1.1.1",
@@ -433,7 +433,7 @@
 		"node-rest-client": "^3.1.0",
 		"osc": "^2.4.1",
 		"pngjs": "^3.3.3",
-		"sharp": "^0.27.2",
+		"sharp": "^0.28.3",
 		"shortid": "^2.2.16",
 		"socket.io": "^4.1.2",
 		"strip-ansi": "^5.2.0",
@@ -448,7 +448,6 @@
 	},
 	"resolutions": {
 		"infinitton-idisplay/node-hid": "^2.1.1",
-		"electron-builder/**/app-builder-bin": "3.5.13",
 		"**/osc/serialport": "^9.1.0",
 		"**/osc/ws": "^7.4.6"
 	}
