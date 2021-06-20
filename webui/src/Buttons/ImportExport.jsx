@@ -47,7 +47,7 @@ export function ImportExport({ pageNumber }) {
 				var fr = new FileReader()
 				fr.onload = () => {
 					setLoadError(null)
-					socketEmit(context.socket, 'loadsave_import_config', [fr.result])
+					socketEmit(context.socket, 'loadsave_import_config', [fr.result], 20000)
 						.then(([err, config]) => {
 							if (err) {
 								setLoadError(err)

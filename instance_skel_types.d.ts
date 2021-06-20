@@ -5,8 +5,6 @@ export interface CompanionSystem extends EventEmitter {}
 
 export type InputValue = number | string | boolean
 
-export type CompanionBank = CompanionBankPage | CompanionBankPNG | CompanionBankPreset
-
 export interface CompanionBankPage {
 	style: 'pageup' | 'pagedown' | 'pagenum'
 }
@@ -36,23 +34,31 @@ export interface CompanionBankAdditionalStyleProps {
 	png64?: string
 }
 export interface CompanionBankAdditionalCoreProps {
-	latch: boolean
 	relative_delay: boolean
+}
+export interface CompanionBankAdditionalPressProps {}
+export interface CompanionBankAdditionalSteppedProps {
+	step_auto_progress: boolean
 }
 
 export interface CompanionBankPNG
 	extends CompanionBankRequiredProps,
 		CompanionBankAdditionalStyleProps,
-		CompanionBankAdditionalCoreProps {
-	style: 'png'
+		CompanionBankAdditionalCoreProps,
+		Partial<CompanionBankAdditionalPressProps>,
+		Partial<CompanionBankAdditionalSteppedProps> {
+	style: string
 }
 
-export interface CompanionBankPreset
+export interface CompanionBankPresetBase<T extends string>
 	extends CompanionBankRequiredProps,
 		Partial<CompanionBankAdditionalStyleProps>,
 		Partial<CompanionBankAdditionalCoreProps> {
-	style: 'png' | 'text' // 'text' for backwards compatability
+	style: T
 }
+
+/** @deprecated */
+export type CompanionBankPreset = CompanionBankPresetBase<'png' | 'text'> & { latch?: boolean } // 'text' for backwards compatability
 
 export interface CompanionAction {
 	label: string
@@ -195,10 +201,15 @@ export interface CompanionFeedbackBoolean extends CompanionFeedbackBase<boolean>
 	style: Partial<CompanionBankRequiredProps & CompanionBankAdditionalStyleProps>
 }
 export interface CompanionFeedbackAdvanced extends CompanionFeedbackBase<CompanionFeedbackResult> {
-	type?: 'advanced'
+	type: 'advanced'
 }
-export type CompanionFeedback = CompanionFeedbackBoolean | CompanionFeedbackAdvanced
+/** @deprecated use CompanionFeedbackAdvanced instead */
+export interface CompanionFeedbackLegacy extends CompanionFeedbackBase<CompanionFeedbackResult> {
+	type?: never
+}
+export type CompanionFeedback = CompanionFeedbackBoolean | CompanionFeedbackAdvanced | CompanionFeedbackLegacy
 
+/** @deprecated */
 export interface CompanionPreset {
 	category: string
 	label: string
@@ -216,6 +227,44 @@ export interface CompanionPreset {
 		action: string
 		options: { [key: string]: InputValue | undefined }
 	}>
+}
+
+export interface CompanionPresetPress {
+	category: string
+	label: string
+	bank: CompanionBankPresetBase<'press'> & Partial<CompanionBankAdditionalPressProps>
+	feedbacks: Array<{
+		type: string
+		options: { [key: string]: InputValue | undefined }
+		style?: Partial<CompanionBankRequiredProps & CompanionBankAdditionalStyleProps>
+	}>
+	action_sets: {
+		down: Array<{
+			action: string
+			options: { [key: string]: InputValue | undefined }
+		}>
+		up: Array<{
+			action: string
+			options: { [key: string]: InputValue | undefined }
+		}>
+	}
+}
+
+export interface CompanionPresetStepped {
+	category: string
+	label: string
+	bank: CompanionBankPresetBase<'step'> & Partial<CompanionBankAdditionalSteppedProps>
+	feedbacks: Array<{
+		type: string
+		options: { [key: string]: InputValue | undefined }
+		style?: Partial<CompanionBankRequiredProps & CompanionBankAdditionalStyleProps>
+	}>
+	action_sets: {
+		[step: number]: Array<{
+			action: string
+			options: { [key: string]: InputValue | undefined }
+		}>
+	}
 }
 
 export interface CompanionFeedbacks {

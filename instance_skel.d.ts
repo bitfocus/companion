@@ -3,6 +3,8 @@ import {
 	CompanionInputField,
 	CompanionFeedbacks,
 	CompanionPreset,
+	CompanionPresetPress,
+	CompanionPresetStepped,
 	CompanionSystem,
 	CompanionVariable,
 	CompanionActionEvent,
@@ -95,7 +97,7 @@ declare abstract class InstanceSkel<TConfig> {
 	setActions(actions: CompanionActions): void
 	setVariableDefinitions(variables: CompanionVariable[]): void
 	setFeedbackDefinitions(feedbacks: CompanionFeedbacks): void
-	setPresetDefinitions(presets: CompanionPreset[]): void
+	setPresetDefinitions(presets: Array<CompanionPreset | CompanionPresetPress | CompanionPresetStepped>): void
 
 	/** Set the value of a variable. Pass undefined to unset it */
 	setVariable(variableId: string, value: string | undefined): void
