@@ -2,7 +2,7 @@ import React, { memo, useContext, useState } from 'react'
 import { CAlert, CButton, CInput, CInputGroup, CInputGroupAppend } from '@coreui/react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faQuestionCircle, faTimes } from '@fortawesome/free-solid-svg-icons'
-import { CompanionContext, socketEmit } from '../util'
+import { StaticContext, socketEmit } from '../util'
 
 export function AddInstancesPanel({ showHelp, doConfigureInstance }) {
 	return (
@@ -13,7 +13,7 @@ export function AddInstancesPanel({ showHelp, doConfigureInstance }) {
 }
 
 const AddInstancesInner = memo(function AddInstancesInner({ showHelp, configureInstance }) {
-	const context = useContext(CompanionContext)
+	const context = useContext(StaticContext)
 	const [filter, setFilter] = useState('')
 
 	const addInstance = (type, product) => {

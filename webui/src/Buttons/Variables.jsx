@@ -1,20 +1,20 @@
 import React, { useCallback, useContext, useEffect, useMemo, useState } from 'react'
 import { CAlert, CButton } from '@coreui/react'
-import { CompanionContext } from '../util'
+import { StaticContext, InstancesContext, VariableDefinitionsContext } from '../util'
 import { VariablesTable } from '../Components/VariablesTable'
 
 export const InstanceVariables = function InstanceVariables({ resetToken }) {
-	const context = useContext(CompanionContext)
+	const instancesContext = useContext(InstancesContext)
 
 	const [instanceId, setInstance] = useState(null)
 
 	const instancesLabelMap = useMemo(() => {
 		const labelMap = new Map()
-		for (const [id, instance] of Object.entries(context.instances)) {
+		for (const [id, instance] of Object.entries(instancesContext)) {
 			labelMap.set(instance.label, id)
 		}
 		return labelMap
-	}, [context.instances])
+	}, [instancesContext])
 
 	// Reset selection on resetToken change
 	useEffect(() => {
@@ -22,7 +22,7 @@ export const InstanceVariables = function InstanceVariables({ resetToken }) {
 	}, [resetToken])
 
 	if (instanceId) {
-		const instance = context.instances[instanceId]
+		const instance = instancesContext[instanceId]
 
 		return <VariablesList selectedInstanceLabel={instance?.label} setInstance={setInstance} />
 	} else {
@@ -31,13 +31,15 @@ export const InstanceVariables = function InstanceVariables({ resetToken }) {
 }
 
 function VariablesInstanceList({ setInstance, instancesLabelMap }) {
-	const context = useContext(CompanionContext)
+	const context = useContext(StaticContext)
+	const instancesContext = useContext(InstancesContext)
+	const variableDefinitionsContext = useContext(VariableDefinitionsContext)
 
-	const options = Object.entries(context.variableDefinitions || []).map(([label, defs]) => {
+	const options = Object.entries(variableDefinitionsContext || []).map(([label, defs]) => {
 		if (!defs || defs.length === 0) return ''
 
 		const id = instancesLabelMap.get(label)
-		const instance = id ? context.instances[id] : undefined
+		const instance = id ? instancesContext[id] : undefined
 		const module = instance ? context.modules[instance.instance_type] : undefined
 
 		return (
@@ -69,7 +71,7 @@ function VariablesList({ selectedInstanceLabel, setInstance }) {
 	const doBack = useCallback(() => setInstance(null), [setInstance])
 
 	return (
-		<div>
+		<div className="variables-panel">
 			<h5>
 				<CButton color="primary" size="sm" onClick={doBack}>
 					Back

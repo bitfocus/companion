@@ -1,7 +1,9 @@
-import React, { useCallback, useMemo, useState } from 'react'
+import React, { useCallback, useContext, useMemo, useState } from 'react'
 import { CButton, CForm, CFormGroup, CInput, CModal, CModalBody, CModalFooter, CModalHeader } from '@coreui/react'
-import { MyErrorBoundary, useMountEffect } from '../util'
+import { StaticContext, MyErrorBoundary, socketEmit, useMountEffect } from '../util'
 import Select from 'react-select'
+import { AddFeedbackDropdown, FeedbackEditor } from '../Buttons/EditButton/FeedbackPanel'
+import shortid from 'shortid'
 
 function getPluginSpecDefaults(pluginOptions) {
 	const config = {}
@@ -20,6 +22,22 @@ function getPluginSpecDefaults(pluginOptions) {
 	}
 
 	return config
+}
+
+function getFeedbackDefaults() {
+	// This should be somewhere in the backend, but there isnt anywhere appropriate currently
+	return [
+		{
+			id: shortid(),
+			type: 'variable_value',
+			instance_id: 'bitfocus-companion',
+			options: {
+				variable: 'internal:time_hms',
+				op: 'eq',
+				value: '',
+			},
+		},
+	]
 }
 
 export function ScheduleEditModal({ doClose, doSave, item, plugins }) {
@@ -49,6 +67,7 @@ export function ScheduleEditModal({ doClose, doSave, item, plugins }) {
 			const pluginSpec = plugins?.find((p) => p.type === pluginType)
 			const pluginOptions = pluginSpec?.options || []
 
+			console.log('pluginType', pluginType)
 			const innerConfig = getPluginSpecDefaults(pluginOptions)
 			const innerConfig2 = pluginSpec?.multiple ? [innerConfig] : innerConfig
 
@@ -57,7 +76,7 @@ export function ScheduleEditModal({ doClose, doSave, item, plugins }) {
 				button: '',
 				...oldConfig,
 				type: pluginType,
-				config: innerConfig2,
+				config: pluginType === 'feedback' ? getFeedbackDefaults() : innerConfig2,
 			}))
 		},
 		[plugins]
@@ -73,8 +92,9 @@ export function ScheduleEditModal({ doClose, doSave, item, plugins }) {
 				item2.config = [item2.config]
 			}
 			setConfig(item2)
-		} else if (plugins && plugins[0]) {
-			changeType({ value: plugins[0].type })
+		} else if (plugins) {
+			const defaultPlugin = plugins.find((p) => p.type === 'feedback') ?? plugins[0]
+			changeType({ value: defaultPlugin.type })
 		}
 	})
 
@@ -93,6 +113,7 @@ export function ScheduleEditModal({ doClose, doSave, item, plugins }) {
 						<label>Name</label>
 						<CInput required value={config.title} onChange={(e) => updateConfig('title', e.target.value)} />
 					</CFormGroup>
+					<legend>Trigger</legend>
 					<CFormGroup>
 						<label>Button</label>
 						<CInput
@@ -104,6 +125,7 @@ export function ScheduleEditModal({ doClose, doSave, item, plugins }) {
 							title="Must be in format BANK#.BUTTON#, for example 1.1 or 99.32. Bank max is 99, button max is 32."
 						/>
 					</CFormGroup>
+					<legend>Condition</legend>
 					<CFormGroup>
 						<label>Type</label>
 						<Select
@@ -136,6 +158,8 @@ export function ScheduleEditModal({ doClose, doSave, item, plugins }) {
 }
 
 function ScheduleEditModalConfig({ pluginSpec, config, updateConfig }) {
+	const context = useContext(StaticContext)
+
 	const updateInnerConfig = useCallback(
 		(id, val) => {
 			updateConfig('config', {
@@ -156,15 +180,65 @@ function ScheduleEditModalConfig({ pluginSpec, config, updateConfig }) {
 		},
 		[config, updateConfig]
 	)
+	const updateFeedbackOptionConfig = useCallback(
+		(index, id, val) => {
+			const newConfig = [...config]
+			console.log('set', newConfig[index].options, id, val)
+			newConfig[index] = {
+				...newConfig[index],
+				options: {
+					...newConfig[index].options,
+					[id]: val,
+				},
+			}
+			updateConfig('config', newConfig)
+		},
+		[config, updateConfig]
+	)
 
 	const addRow = useCallback(() => {
 		updateConfig('config', [...config, getPluginSpecDefaults(pluginSpec.options)])
 	}, [updateConfig, config, pluginSpec])
+	const addFeedbackSelect = useCallback(
+		(feedbackType) => {
+			socketEmit(context.socket, 'feedback_get_defaults', [feedbackType]).then(([fb]) => {
+				updateConfig('config', [...config, fb])
+			})
+		},
+		[context.socket, config, updateConfig]
+	)
 
 	const delRow = (i) => {
 		const config2 = [...config]
 		config2.splice(i, 1)
 		updateConfig('config', config2)
+	}
+
+	// This is a bit of a hack:
+	if (pluginSpec.type === 'feedback') {
+		return (
+			<>
+				<table className="table feedback-table">
+					<tbody>
+						{config.map((conf, i) => (
+							<tr key={i}>
+								<td>
+									<MyErrorBoundary>
+										<FeedbackEditor
+											feedback={conf}
+											setValue={(id, k, v) => updateFeedbackOptionConfig(i, k, v)}
+											innerDelete={() => delRow(i)}
+										/>
+									</MyErrorBoundary>
+								</td>
+							</tr>
+						))}
+					</tbody>
+				</table>
+
+				<AddFeedbackDropdown onSelect={addFeedbackSelect} booleanOnly />
+			</>
+		)
 	}
 
 	if (pluginSpec.multiple) {

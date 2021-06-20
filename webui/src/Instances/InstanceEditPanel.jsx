@@ -1,5 +1,5 @@
 import React, { memo, useCallback, useContext, useEffect, useState } from 'react'
-import { CompanionContext, LoadingRetryOrError, socketEmit } from '../util'
+import { StaticContext, LoadingRetryOrError, socketEmit } from '../util'
 import { CRow, CCol, CButton } from '@coreui/react'
 import { CheckboxInputField, DropdownInputField, NumberInputField, TextInputField } from '../Components'
 import shortid from 'shortid'
@@ -7,7 +7,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faQuestionCircle } from '@fortawesome/free-solid-svg-icons'
 
 export const InstanceEditPanel = memo(function InstanceEditPanel({ instanceId, doConfigureInstance, showHelp }) {
-	const context = useContext(CompanionContext)
+	const context = useContext(StaticContext)
 
 	const [error, setError] = useState(null)
 	const [reloadToken, setReloadToken] = useState(shortid())

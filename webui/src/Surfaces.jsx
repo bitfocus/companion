@@ -22,13 +22,13 @@ import {
 	CModalHeader,
 	CSelect,
 } from '@coreui/react'
-import { CompanionContext, LoadingRetryOrError, socketEmit } from './util'
+import { StaticContext, LoadingRetryOrError, socketEmit } from './util'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faCog, faSync } from '@fortawesome/free-solid-svg-icons'
 import shortid from 'shortid'
 
 export const SurfacesPage = memo(function SurfacesPage() {
-	const context = useContext(CompanionContext)
+	const context = useContext(StaticContext)
 
 	const editModalRef = useRef()
 
@@ -118,6 +118,14 @@ export const SurfacesPage = memo(function SurfacesPage() {
 							</tr>
 						)
 					})}
+
+					{devices.length === 0 ? (
+						<tr>
+							<td colSpan={4}>No control surfaces have been detected</td>
+						</tr>
+					) : (
+						''
+					)}
 				</tbody>
 			</table>
 
@@ -130,7 +138,7 @@ export const SurfacesPage = memo(function SurfacesPage() {
 })
 
 const SurfaceEditModal = forwardRef(function SurfaceEditModal(_props, ref) {
-	const context = useContext(CompanionContext)
+	const context = useContext(StaticContext)
 
 	const [deviceInfo, setDeviceInfo] = useState(null)
 	const [show, setShow] = useState(false)

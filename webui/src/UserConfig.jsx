@@ -1,9 +1,21 @@
 import React, { memo, useCallback, useContext, useEffect, useState } from 'react'
-import { CAlert, CButton, CCol, CInput, CInputCheckbox, CRow } from '@coreui/react'
-import { CompanionContext, socketEmit } from './util'
+import {
+	CAlert,
+	CButton,
+	CCol,
+	CInput,
+	CInputCheckbox,
+	CNav,
+	CNavItem,
+	CNavLink,
+	CRow,
+	CTabContent,
+	CTabPane,
+	CTabs,
+} from '@coreui/react'
+import { MyErrorBoundary, StaticContext, socketEmit } from './util'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faFileImport } from '@fortawesome/free-solid-svg-icons'
-import { Card } from './Components'
 import shortid from 'shortid'
 
 export const UserConfig = memo(function UserConfig() {
@@ -15,15 +27,19 @@ export const UserConfig = memo(function UserConfig() {
 
 				<UserConfigTable />
 			</CCol>
-			<CCol xl={6}>
-				<RemoteControlInfo />
+			<CCol xs={12} xl={6} className="secondary-panel">
+				<h4>Remote control</h4>
+				<p>Companion can be remote controlled in several ways. Below you'll find how to do it.</p>
+				<div className="secondary-panel-inner">
+					<RemoteControlInfo />
+				</div>
 			</CCol>
 		</CRow>
 	)
 })
 
 function UserConfigTable() {
-	const context = useContext(CompanionContext)
+	const context = useContext(StaticContext)
 
 	const [error, setError] = useState(null)
 	const [config, setConfig] = useState(null)
@@ -292,252 +308,275 @@ function UserConfigTable() {
 function RemoteControlInfo() {
 	return (
 		<>
-			<h4>Remote control</h4>
-			<p>Companion can be remote controlled in several ways. Below you'll find how to do it.</p>
+			<CTabs activeTab="tcp-udp">
+				<CNav variant="tabs">
+					<CNavItem>
+						<CNavLink data-tab="tcp-udp">TCP/UDP</CNavLink>
+					</CNavItem>
+					<CNavItem>
+						<CNavLink data-tab="http">HTTP</CNavLink>
+					</CNavItem>
+					<CNavItem>
+						<CNavLink data-tab="osc">OSC</CNavLink>
+					</CNavItem>
+					<CNavItem>
+						<CNavLink data-tab="artnet">Artnet / DMX</CNavLink>
+					</CNavItem>
+					<CNavItem>
+						<CNavLink data-tab="rosstalk">Rosstalk</CNavLink>
+					</CNavItem>
+				</CNav>
+				<CTabContent fade={false}>
+					<CTabPane data-tab="tcp-udp">
+						<MyErrorBoundary>
+							<p>
+								Remote triggering can be done by sending TCP (port <code>51234</code>) or UDP (port <code>51235</code>)
+								commands.
+							</p>
+							<p>
+								<strong>Commands:</strong>
+							</p>
+							<ul>
+								<li>
+									<code>PAGE-SET</code> &lt;page number&gt; &lt;surface id&gt;
+									<br />
+									<i>Make device go to a specific page</i>
+								</li>
+								<li>
+									<code>PAGE-UP</code> &lt;surface id&gt;
+									<br />
+									<i>Page up on a specific device</i>
+								</li>
+								<li>
+									<code>PAGE-DOWN</code> &lt;surface id&gt;
+									<br />
+									<i>Page down on a specific surface</i>
+								</li>
+								<li>
+									<code>BANK-PRESS</code> &lt;page&gt; &lt;bank&gt;
+									<br />
+									<i>Press and release a button (run both down and up actions)</i>
+								</li>
+								<li>
+									<code>BANK-DOWN</code> &lt;page&gt; &lt;bank&gt;
+									<br />
+									<i>Press the button (run down actions)</i>
+								</li>
+								<li>
+									<code>BANK-UP</code> &lt;page&gt; &lt;bank&gt;
+									<br />
+									<i>Release the button (run up actions)</i>
+								</li>
+								<li>
+									<code>STYLE BANK</code> &lt;page&gt; &lt;bank&gt;<code> TEXT </code>
+									&lt;text&gt;
+									<br />
+									<i>Change text on a button</i>
+								</li>
+								<li>
+									<code>STYLE BANK</code> &lt;page&gt; &lt;bank&gt;
+									<code> COLOR </code>&lt;color HEX&gt;
+									<br />
+									<i>Change text color on a button (#000000)</i>
+								</li>
+								<li>
+									<code>STYLE BANK</code> &lt;page&gt; &lt;bank&gt;
+									<code> BGCOLOR </code>&lt;color HEX&gt;
+									<br />
+									<i>Change background color on a button (#000000)</i>
+								</li>
+							</ul>
 
-			<Card className="mb-3">
-				<h5>TCP/UDP</h5>
-				<p>
-					Remote triggering can be done by sending TCP (port <code>51234</code>) or UDP (port <code>51235</code>)
-					commands.
-				</p>
-				<p>
-					<strong>Commands:</strong>
-				</p>
-				<ul>
-					<li>
-						<code>PAGE-SET</code> &lt;page number&gt; &lt;surface id&gt;
-						<br />
-						<i>Make device go to a specific page</i>
-					</li>
-					<li>
-						<code>PAGE-UP</code> &lt;surface id&gt;
-						<br />
-						<i>Page up on a specific device</i>
-					</li>
-					<li>
-						<code>PAGE-DOWN</code> &lt;surface id&gt;
-						<br />
-						<i>Page down on a specific surface</i>
-					</li>
-					<li>
-						<code>BANK-PRESS</code> &lt;page&gt; &lt;bank&gt;
-						<br />
-						<i>Press and release a button (run both down and up actions)</i>
-					</li>
-					<li>
-						<code>BANK-DOWN</code> &lt;page&gt; &lt;bank&gt;
-						<br />
-						<i>Press the button (run down actions)</i>
-					</li>
-					<li>
-						<code>BANK-UP</code> &lt;page&gt; &lt;bank&gt;
-						<br />
-						<i>Release the button (run up actions)</i>
-					</li>
-					<li>
-						<code>STYLE BANK</code> &lt;page&gt; &lt;bank&gt;<code> TEXT </code>
-						&lt;text&gt;
-						<br />
-						<i>Change text on a button</i>
-					</li>
-					<li>
-						<code>STYLE BANK</code> &lt;page&gt; &lt;bank&gt;
-						<code> COLOR </code>&lt;color HEX&gt;
-						<br />
-						<i>Change text color on a button (#000000)</i>
-					</li>
-					<li>
-						<code>STYLE BANK</code> &lt;page&gt; &lt;bank&gt;
-						<code> BGCOLOR </code>&lt;color HEX&gt;
-						<br />
-						<i>Change background color on a button (#000000)</i>
-					</li>
-				</ul>
+							<p>
+								<strong>Examples</strong>
+							</p>
 
-				<p>
-					<strong>Examples</strong>
-				</p>
+							<p>
+								Set the emulator surface to page 23
+								<br />
+								<code>PAGE-SET 23 emulator</code>
+							</p>
 
-				<p>
-					Set the emulator surface to page 23
-					<br />
-					<code>PAGE-SET 23 emulator</code>
-				</p>
+							<p>
+								Press page 1 bank 2
+								<br />
+								<code>BANK-PRESS 1 2</code>
+							</p>
+						</MyErrorBoundary>
+					</CTabPane>
+					<CTabPane data-tab="http">
+						<MyErrorBoundary>
+							<p>
+								Remote triggering can be done by sending HTTP Requests to the same IP and port Companion is running on.
+							</p>
+							<p>
+								<strong>Commands:</strong>
+								<ul>
+									<li>
+										<code>/press/bank/</code>&lt;page&gt;<code>/</code>&lt;bank&gt;
+										<br />
+										<i>Press and release a button (run both down and up actions)</i>
+									</li>
+									<li>
+										<code>/style/bank/</code>&lt;page&gt;<code>/</code>&lt;bank&gt;
+										<code>?bgcolor=</code>&lt;bgcolor HEX&gt;
+										<br />
+										<i>Change background color of button</i>
+									</li>
+									<li>
+										<code>/style/bank/</code>&lt;page&gt;<code>/</code>&lt;bank&gt;
+										<code>?color=</code>&lt;color HEX&gt;
+										<br />
+										<i>Change color of text on button</i>
+									</li>
+									<li>
+										<code>/style/bank/</code>&lt;page&gt;<code>/</code>&lt;bank&gt;
+										<code>?text=</code>&lt;text&gt;
+										<br />
+										<i>Change text on a button</i>
+									</li>
+									<li>
+										<code>/style/bank/</code>&lt;page&gt;<code>/</code>&lt;bank&gt;
+										<code>?size=</code>&lt;text size&gt;
+										<br />
+										<i>Change text size on a button (between the predefined values)</i>
+									</li>
+								</ul>
+							</p>
 
-				<p>
-					Press page 1 bank 2
-					<br />
-					<code>BANK-PRESS 1 2</code>
-				</p>
-			</Card>
-			<Card className="mb-3">
-				<h5>HTTP</h5>
-				<p>Remote triggering can be done by sending HTTP Requests to the same IP and port Companion is running on.</p>
-				<p>
-					<strong>Commands:</strong>
-					<ul>
-						<li>
-							<code>/press/bank/</code>&lt;page&gt;<code>/</code>&lt;bank&gt;
-							<br />
-							<i>Press and release a button (run both down and up actions)</i>
-						</li>
-						<li>
-							<code>/style/bank/</code>&lt;page&gt;<code>/</code>&lt;bank&gt;
-							<code>?bgcolor=</code>&lt;bgcolor HEX&gt;
-							<br />
-							<i>Change background color of button</i>
-						</li>
-						<li>
-							<code>/style/bank/</code>&lt;page&gt;<code>/</code>&lt;bank&gt;
-							<code>?color=</code>&lt;color HEX&gt;
-							<br />
-							<i>Change color of text on button</i>
-						</li>
-						<li>
-							<code>/style/bank/</code>&lt;page&gt;<code>/</code>&lt;bank&gt;
-							<code>?text=</code>&lt;text&gt;
-							<br />
-							<i>Change text on a button</i>
-						</li>
-						<li>
-							<code>/style/bank/</code>&lt;page&gt;<code>/</code>&lt;bank&gt;
-							<code>?size=</code>&lt;text size&gt;
-							<br />
-							<i>Change text size on a button (between the predefined values)</i>
-						</li>
-					</ul>
-				</p>
+							<p>
+								<strong>Examples</strong>
+							</p>
 
-				<p>
-					<strong>Examples</strong>
-				</p>
+							<p>
+								Press page 1 bank 2
+								<br />
+								<code>/press/bank/1/2</code>
+							</p>
 
-				<p>
-					Press page 1 bank 2
-					<br />
-					<code>/press/bank/1/2</code>
-				</p>
+							<p>
+								Change the text of button 4 on page 2 to TEST
+								<br />
+								<code>/style/bank/2/4/?text=TEST</code>
+							</p>
 
-				<p>
-					Change the text of button 4 on page 2 to TEST
-					<br />
-					<code>/style/bank/2/4/?text=TEST</code>
-				</p>
+							<p>
+								Change the text of button 4 on page 2 to TEST, background color to #ffffff, text color to #000000 and
+								font size to 28px
+								<br />
+								<code>/style/bank/2/4/?text=TEST&bgcolor=%23ffffff&color=%23000000&size=28px</code>
+							</p>
+						</MyErrorBoundary>
+					</CTabPane>
+					<CTabPane data-tab="osc">
+						<MyErrorBoundary>
+							<p>
+								Remote triggering can be done by sending OSC commands to port <code>12321</code>.
+							</p>
+							<p>
+								<strong>Commands:</strong>
+							</p>
+							<ul>
+								<li>
+									<code>/press/bank/</code>&lt;page&gt; &lt;bank&gt;
+									<br />
+									<i>Press and release a button (run both down and up actions)</i>
+								</li>
+								<li>
+									<code>/press/bank/</code> &lt;page&gt; &lt;bank&gt; &lt;1&gt;
+									<br />
+									<i>Press the button (run down actions and hold)</i>
+								</li>
+								<li>
+									<code>/press/bank/</code> &lt;page&gt; &lt;bank&gt; &lt;0&gt;
+									<br />
+									<i>Release the button (run up actions)</i>
+								</li>
+								<li>
+									<code>/style/bgcolor/</code> &lt;page&gt; &lt;bank&gt; &lt;red 0-255&gt; &lt;green 0-255&gt; &lt;blue
+									0-255&gt;
+									<br />
+									<i>Change background color of button</i>
+								</li>
+								<li>
+									<code>/style/color/</code> &lt;page&gt; &lt;bank&gt; &lt;red 0-255&gt; &lt;green 0-255&gt; &lt;blue
+									0-255&gt;
+									<br />
+									<i>Change color of text on button</i>
+								</li>
+								<li>
+									<code>/style/text/</code> &lt;page&gt; &lt;bank&gt; &lt;text&gt;
+									<br />
+									<i>Change text on a button</i>
+								</li>
+							</ul>
 
-				<p>
-					Change the text of button 4 on page 2 to TEST, background color to #ffffff, text color to #000000 and font
-					size to 28px
-					<br />
-					<code>/style/bank/2/4/?text=TEST&bgcolor=%23ffffff&color=%23000000&size=28px</code>
-				</p>
-			</Card>
+							<p>
+								<strong>Examples</strong>
+							</p>
 
-			<Card className="mb-3">
-				<h5>OSC</h5>
-				<p>
-					Remote triggering can be done by sending OSC commands to port <code>12321</code>.
-				</p>
-				<p>
-					<strong>Commands:</strong>
-				</p>
-				<ul>
-					<li>
-						<code>/press/bank/</code>&lt;page&gt; &lt;bank&gt;
-						<br />
-						<i>Press and release a button (run both down and up actions)</i>
-					</li>
-					<li>
-						<code>/press/bank/</code> &lt;page&gt; &lt;bank&gt; &lt;1&gt;
-						<br />
-						<i>Press the button (run down actions and hold)</i>
-					</li>
-					<li>
-						<code>/press/bank/</code> &lt;page&gt; &lt;bank&gt; &lt;0&gt;
-						<br />
-						<i>Release the button (run up actions)</i>
-					</li>
-					<li>
-						<code>/style/bgcolor/</code> &lt;page&gt; &lt;bank&gt; &lt;red 0-255&gt; &lt;green 0-255&gt; &lt;blue
-						0-255&gt;
-						<br />
-						<i>Change background color of button</i>
-					</li>
-					<li>
-						<code>/style/color/</code> &lt;page&gt; &lt;bank&gt; &lt;red 0-255&gt; &lt;green 0-255&gt; &lt;blue
-						0-255&gt;
-						<br />
-						<i>Change color of text on button</i>
-					</li>
-					<li>
-						<code>/style/text/</code> &lt;page&gt; &lt;bank&gt; &lt;text&gt;
-						<br />
-						<i>Change text on a button</i>
-					</li>
-				</ul>
+							<p>
+								Press button 5 on page 1 down and hold
+								<br />
+								<code>/press/bank/1/5 1</code>
+							</p>
 
-				<p>
-					<strong>Examples</strong>
-				</p>
+							<p>
+								Change button background color of button 5 on page 1 to red
+								<br />
+								<code>/style/bgcolor/1/5 255 0 0</code>
+							</p>
 
-				<p>
-					Press button 5 on page 1 down and hold
-					<br />
-					<code>/press/bank/1/5 1</code>
-				</p>
+							<p>
+								Change the text of button 5 on page 1 to ONLINE
+								<br />
+								<code>/style/text/1/5 ONLINE</code>
+							</p>
+						</MyErrorBoundary>
+					</CTabPane>
+					<CTabPane data-tab="artnet">
+						<MyErrorBoundary>
+							<p>
+								<CButton color="success" href="/bitfocus@companion_v2.0@00.xml" target="_new">
+									<FontAwesomeIcon icon={faFileImport} /> Download GrandMA2 Fixture file (v2.0)
+								</CButton>
+							</p>
+							<p>
+								<CButton color="success" href="/Bitfocus Companion Fixture.v3f" target="_new">
+									<FontAwesomeIcon icon={faFileImport} /> Download Vista Fixture file (v2.0)
+								</CButton>
+							</p>
+						</MyErrorBoundary>
+					</CTabPane>
+					<CTabPane data-tab="rosstalk">
+						<MyErrorBoundary>
+							<p>
+								Remote triggering can be done by sending RossTalk commands to port <code>7788</code>.
+							</p>
+							<p>
+								<strong>Commands:</strong>
+							</p>
+							<ul>
+								<li>
+									<code>CC</code> &lt;page&gt;:&lt;button&gt;
+									<br />
+									<i>Press and release button</i>
+								</li>
+							</ul>
 
-				<p>
-					Change button background color of button 5 on page 1 to red
-					<br />
-					<code>/style/bgcolor/1/5 255 0 0</code>
-				</p>
+							<p>
+								<strong>Examples</strong>
+							</p>
 
-				<p>
-					Change the text of button 5 on page 1 to ONLINE
-					<br />
-					<code>/style/text/1/5 ONLINE</code>
-				</p>
-			</Card>
-			<Card className="mb-3">
-				<h5>Artnet / DMX</h5>
-
-				<p>
-					<CButton color="success" href="/bitfocus@companion_v2.0@00.xml" target="_new">
-						<FontAwesomeIcon icon={faFileImport} /> Download GrandMA2 Fixture file (v2.0)
-					</CButton>
-				</p>
-				<p>
-					<CButton color="success" href="/Bitfocus Companion Fixture.v3f" target="_new">
-						<FontAwesomeIcon icon={faFileImport} /> Download Vista Fixture file (v2.0)
-					</CButton>
-				</p>
-			</Card>
-			<Card className="mb-3">
-				<h5>RossTalk</h5>
-				<p>
-					Remote triggering can be done by sending RossTalk commands to port <code>7788</code>.
-				</p>
-				<p>
-					<strong>Commands:</strong>
-				</p>
-				<ul>
-					<li>
-						<code>CC</code> &lt;page&gt;:&lt;button&gt;
-						<br />
-						<i>Press and release button</i>
-					</li>
-				</ul>
-
-				<p>
-					<strong>Examples</strong>
-				</p>
-
-				<p>
-					Press and release button 5 on page 2
-					<br />
-					<code>CC 2:5</code>
-				</p>
-			</Card>
+							<p>
+								Press and release button 5 on page 2
+								<br />
+								<code>CC 2:5</code>
+							</p>
+						</MyErrorBoundary>
+					</CTabPane>
+				</CTabContent>
+			</CTabs>
 		</>
 	)
 }

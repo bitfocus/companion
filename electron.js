@@ -158,10 +158,15 @@ function createWindow() {
 	})
 
 	try {
-		system.emit('skeleton-info', 'configDir', app.getPath('appData'))
+		let configDir = app.getPath('appData')
+		if (process.env.COMPANION_CONFIG_BASEDIR !== undefined) {
+			configDir = process.env.COMPANION_CONFIG_BASEDIR
+		}
+
+		system.emit('skeleton-info', 'configDir', configDir)
 
 		configureScope(function (scope) {
-			var machidFile = app.getPath('appData') + '/companion/machid'
+			var machidFile = path.join(configDir, '/companion/machid')
 			var machid = fs.readFileSync(machidFile).toString().trim()
 			scope.setUser({ id: machid })
 			scope.setExtra('build', skeleton_info.appBuild)

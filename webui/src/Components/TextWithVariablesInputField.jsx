@@ -1,11 +1,11 @@
 import React, { useCallback, useContext, useEffect, useMemo, useState } from 'react'
-import { CompanionContext } from '../util'
+import { VariableDefinitionsContext } from '../util'
 import Tribute from 'tributejs'
 import { CInput } from '@coreui/react'
 import { decode } from 'html-entities'
 
 export function TextWithVariablesInputField({ definition, value, setValue }) {
-	const context = useContext(CompanionContext)
+	const variableDefinitionsContext = useContext(VariableDefinitionsContext)
 
 	const [tmpValue, setTmpValue] = useState(null)
 
@@ -16,11 +16,25 @@ export function TextWithVariablesInputField({ definition, value, setValue }) {
 		}
 	}, [definition.default, value, setValue])
 
-	// const elmRef = useRef()
-
 	const tribute = useMemo(() => {
+		// Create it once, then we attach and detach whenever the ref changes
+		return new Tribute({
+			values: [],
+			trigger: '$(',
+
+			// function called on select that returns the content to insert
+			selectTemplate: (item) => `$(${item.original.value})`,
+
+			// template for displaying item in menu
+			menuItemTemplate: (item) =>
+				`<span class="var-name">${item.original.value}</span><span class="var-label">${item.original.label}</span>`,
+		})
+	}, [])
+
+	useEffect(() => {
+		// Update the suggestions list in tribute whenever anything changes
 		const suggestions = []
-		for (const [instanceLabel, variables] of Object.entries(context.variableDefinitions)) {
+		for (const [instanceLabel, variables] of Object.entries(variableDefinitionsContext)) {
 			for (const va of variables) {
 				const variableId = `${instanceLabel}:${va.name}`
 				suggestions.push({
@@ -31,18 +45,8 @@ export function TextWithVariablesInputField({ definition, value, setValue }) {
 			}
 		}
 
-		return new Tribute({
-			values: suggestions,
-			trigger: '$(',
-
-			// function called on select that returns the content to insert
-			selectTemplate: (item) => `$(${item.original.value})`,
-
-			// template for displaying item in menu
-			menuItemTemplate: (item) =>
-				`<span class="var-name">${item.original.value}</span><span class="var-label">${item.original.label}</span>`,
-		})
-	}, [context.variableDefinitions])
+		tribute.append(0, suggestions, true)
+	}, [variableDefinitionsContext, tribute])
 
 	const doOnChange = useCallback(
 		(e) => {
@@ -53,12 +57,23 @@ export function TextWithVariablesInputField({ definition, value, setValue }) {
 		[setValue]
 	)
 
+	const [, setupTributePrevious] = useState([null, null])
 	const setupTribute = useCallback(
 		(ref) => {
-			if (ref) {
-				tribute.attach(ref)
-				ref.addEventListener('tribute-replaced', doOnChange)
-			}
+			// we need to detach, so need to track the value manually
+			setupTributePrevious(([oldRef, oldDoOnChange]) => {
+				if (oldRef) {
+					tribute.detach(oldRef)
+					if (oldDoOnChange) {
+						oldRef.removeEventListener('tribute-replaced', oldDoOnChange)
+					}
+				}
+				if (ref) {
+					tribute.attach(ref)
+					ref.addEventListener('tribute-replaced', doOnChange)
+				}
+				return [ref, doOnChange]
+			})
 		},
 		[tribute, doOnChange]
 	)

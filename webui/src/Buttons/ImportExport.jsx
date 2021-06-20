@@ -1,5 +1,5 @@
 import React, { forwardRef, useCallback, useContext, useEffect, useImperativeHandle, useRef, useState } from 'react'
-import { CompanionContext, socketEmit } from '../util'
+import { StaticContext, InstancesContext, socketEmit } from '../util'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faDownload, faFileImport, faTrashAlt } from '@fortawesome/free-solid-svg-icons'
 import {
@@ -21,7 +21,8 @@ import { ButtonGridHeader } from './ButtonGrid'
 import { GenericConfirmModal } from '../Components/GenericConfirmModal'
 
 export function ImportExport({ pageNumber }) {
-	const context = useContext(CompanionContext)
+	const context = useContext(StaticContext)
+	const instancesContext = useContext(InstancesContext)
 
 	const confirmModalRef = useRef()
 
@@ -52,7 +53,7 @@ export function ImportExport({ pageNumber }) {
 								setLoadError(err)
 							} else {
 								for (const id in config.instances || {}) {
-									if (context.instances[id]) {
+									if (instancesContext[id]) {
 										config.instances[id].import_to = id
 									} else {
 										config.instances[id].import_to = 'new'
@@ -74,18 +75,18 @@ export function ImportExport({ pageNumber }) {
 				setLoadError('Companion requires a more modern browser')
 			}
 		},
-		[context.socket, context.instances, fileApiIsSupported]
+		[context.socket, instancesContext, fileApiIsSupported]
 	)
 
 	const doImport = useCallback(() => {
-		// setSnapshot(null)
-
-		snapshot.instances['bitfocus-companion'] = {
-			import_to: 'bitfocus-companion',
-			label: 'internal',
-			id: 'bitfocus-companion',
-			instance_type: 'bitfocus-companion',
-		}
+		setSnapshot((oldSnapshot) => {
+			if (oldSnapshot?.type === 'page') {
+				// If we imported a page, we can clear it now
+				return null
+			} else {
+				return oldSnapshot
+			}
+		})
 
 		// No response, we assume it was ok
 		context.socket.emit('loadsave_import_page', pageNumber, importPage, snapshot)
@@ -192,7 +193,7 @@ export function ImportExport({ pageNumber }) {
 										return ''
 									} else {
 										const snapshotModule = context.modules[instance.instance_type]
-										const currentInstances = Object.entries(context.instances).filter(
+										const currentInstances = Object.entries(instancesContext).filter(
 											([id, inst]) => inst.instance_type === instance.instance_type
 										)
 
@@ -292,7 +293,7 @@ function ButtonImportGrid({ config }) {
 }
 
 function ButtonImportPreview({ config, instanceId, ...childProps }) {
-	const context = useContext(CompanionContext)
+	const context = useContext(StaticContext)
 	const [previewImage, setPreviewImage] = useState(null)
 
 	useEffect(() => {
@@ -327,7 +328,7 @@ function ResetConfiguration() {
 	return (
 		<>
 			<h5>Reset all configuration</h5>
-			<p>This will clear all instances and buttons and start over.</p>
+			<p>This will clear all instances, triggers and buttons and start over.</p>
 			<p>
 				<CButton color="danger" style={{ backgroundColor: 'rgba(180,0,0,1)' }} onClick={doReset}>
 					<FontAwesomeIcon icon={faTrashAlt} /> Yes, reset everything
@@ -347,7 +348,7 @@ function ResetConfiguration() {
 }
 
 const ConfirmFullResetModal = forwardRef(function ConfirmFullResetModal(_props, ref) {
-	const context = useContext(CompanionContext)
+	const context = useContext(StaticContext)
 
 	const [show, setShow] = useState(false)
 
@@ -356,7 +357,7 @@ const ConfirmFullResetModal = forwardRef(function ConfirmFullResetModal(_props, 
 		setShow(false)
 
 		// Perform the reset
-		socketEmit(context.socket, 'reset_all', [])
+		socketEmit(context.socket, 'reset_all', [], 30000)
 			.then(() => {
 				window.location.reload()
 			})

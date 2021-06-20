@@ -3,7 +3,7 @@ import { faCalculator, faDollarSign, faFileImport, faGift } from '@fortawesome/f
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import shortid from 'shortid'
 import { InstancePresets } from './Presets'
-import { CompanionContext, MyErrorBoundary } from '../util'
+import { StaticContext, MyErrorBoundary } from '../util'
 import { ButtonsGridPanel } from './ButtonGrid'
 import { EditButton } from './EditButton'
 import { ImportExport } from './ImportExport'
@@ -12,7 +12,7 @@ import { GenericConfirmModal } from '../Components/GenericConfirmModal'
 import { InstanceVariables } from './Variables'
 
 export function ButtonsPage({ hotPress }) {
-	const context = useContext(CompanionContext)
+	const context = useContext(StaticContext)
 
 	const clearModalRef = useRef()
 
