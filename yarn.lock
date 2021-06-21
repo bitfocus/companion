@@ -1950,9 +1950,9 @@ commist@^1.0.0:
   version "1.0.4"
   resolved "https://codeload.github.com/bitfocus/companion-module-extron-smp111/tar.gz/1881129abb9f7925bdfa466005b6b7909d287e13"
 
-"companion-module-extron-smp351@github:bitfocus/companion-module-extron-smp351#v1.1.3":
-  version "1.1.3"
-  resolved "https://codeload.github.com/bitfocus/companion-module-extron-smp351/tar.gz/8e804fe278e08fc5d9e0d13b23244150ffe1c4e1"
+"companion-module-extron-smp351@github:bitfocus/companion-module-extron-smp351#v1.2.0":
+  version "1.2.0"
+  resolved "https://codeload.github.com/bitfocus/companion-module-extron-smp351/tar.gz/1a6bea4583881a67d6435b67807b13c45105ca46"
 
 "companion-module-extron-smx@github:bitfocus/companion-module-extron-smx#v1.0.4":
   version "1.0.4"
