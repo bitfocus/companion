@@ -448,7 +448,7 @@
 	},
 	"resolutions": {
 		"infinitton-idisplay/node-hid": "^2.1.1",
-		"**/osc/serialport": "^9.1.0",
+		"**/osc/serialport": "^9.2.0",
 		"**/osc/ws": "^7.4.6"
 	}
 }
