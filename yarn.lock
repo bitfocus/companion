@@ -1918,9 +1918,9 @@ commist@^1.0.0:
   version "1.0.2"
   resolved "https://codeload.github.com/bitfocus/companion-module-dtvideolabs-playbackproplus/tar.gz/a4b06682c8a9434e2c8d7683b6fb1330814f402d"
 
-"companion-module-elgato-keylight@github:bitfocus/companion-module-elgato-keylight#v1.2.1":
-  version "1.2.1"
-  resolved "https://codeload.github.com/bitfocus/companion-module-elgato-keylight/tar.gz/e7975576aeaa94237e1025248bf20d135b2ef78e"
+"companion-module-elgato-keylight@github:bitfocus/companion-module-elgato-keylight#v1.2.2":
+  version "1.2.2"
+  resolved "https://codeload.github.com/bitfocus/companion-module-elgato-keylight/tar.gz/601a762cb33e0f1b8915c31c3ad9523b649e7c9c"
 
 "companion-module-epiphan-pearl@github:bitfocus/companion-module-epiphan-pearl#v1.0.7":
   version "1.0.7"
