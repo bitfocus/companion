@@ -19,6 +19,7 @@ var util = require('util')
 var debug = require('debug')('lib/instance_skel')
 var image = require('./lib/image')
 var icons = require('./lib/resources/icons')
+var upgrades = require('./lib/upgrades/upgrades')
 
 function instance(system, id, config) {
 	var self = this
@@ -255,6 +256,8 @@ instance.prototype.setPresetDefinitions = function (presets) {
 	 * demand that your presets MUST be dynamically generated.
 	 */
 	for (let preset of presets) {
+		preset = upgrades.upgradePreset(preset)
+
 		if (preset.bank) {
 			preset.bank.text = replaceAllVariables(preset.bank.text)
 		}

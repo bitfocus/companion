@@ -160,6 +160,8 @@ system.ready = function (logToFile) {
 	var io = require('./lib/io')(system, server_http)
 	var log = require('./lib/log')(system, io)
 	var db = require('./lib/db')(system, cfgDir)
+	require('./lib/upgrades/upgrades').startup(db)
+
 	var userconfig = require('./lib/userconfig')(system)
 	var update = require('./lib/update')(system, cfgDir)
 	var page = require('./lib/page')(system)

@@ -80,6 +80,11 @@ export function ImportExport({ pageNumber }) {
 
 	const doImport = useCallback(() => {
 		setSnapshot((oldSnapshot) => {
+			if (oldSnapshot) {
+				// No response, we assume it was ok
+				context.socket.emit('loadsave_import_page', pageNumber, importPage, oldSnapshot)
+			}
+
 			if (oldSnapshot?.type === 'page') {
 				// If we imported a page, we can clear it now
 				return null
@@ -87,10 +92,7 @@ export function ImportExport({ pageNumber }) {
 				return oldSnapshot
 			}
 		})
-
-		// No response, we assume it was ok
-		context.socket.emit('loadsave_import_page', pageNumber, importPage, snapshot)
-	}, [context.socket, pageNumber, snapshot, importPage])
+	}, [context.socket, pageNumber, importPage])
 
 	const changePage = useCallback(
 		(delta) => {
