@@ -1,4 +1,4 @@
-name: Node CI
+name: Build binaries
 on: [push]
 
 jobs:
