@@ -93,24 +93,25 @@ async function run() {
 	let artifact_source
 	let artifact_dest
 
-	if (process.env.TRAVIS_OS_NAME === 'osx') {
+	if (process.env.CI_BUILD_OS === 'osx') {
+		const arch = process.env.CI_BUILD_ARCH
 		artifact_source = list.find((file) => file.match(/\.dmg$/))
-		artifact_dest = `companion-${build}-mac.dmg`
+		artifact_dest = `companion-${build}-mac-${arch}.dmg`
 		console.log('OSX')
-	} else if (process.env.TRAVIS_OS_NAME === 'linux') {
+	} else if (process.env.CI_BUILD_OS === 'linux') {
 		artifact_source = list.find((file) => file.match(/\.gz$/))
 		artifact_dest = `companion-${build}-linux.tar.gz`
 		console.log('LINUX')
-	} else if (process.env.TRAVIS_OS_NAME === 'win64') {
+	} else if (process.env.CI_BUILD_OS === 'win64') {
 		artifact_source = list.find((file) => file.match(/\.exe$/))
 		artifact_dest = `companion-${build}-win64.exe`
 		console.log('WINDOWS')
-	} else if (process.env.TRAVIS_OS_NAME === 'armv7l') {
+	} else if (process.env.CI_BUILD_OS === 'armv7l') {
 		artifact_source = list.find((file) => file.match(/\.z$/))
 		artifact_dest = `companion-${build}-armv7l.tar.gz`
 		console.log('ARM')
 	} else {
-		console.error(`Unknown operating system: ${process.env.TRAVIS_OS_NAME}`)
+		console.error(`Unknown operating system: ${process.env.CI_BUILD_OS}`)
 		process.exit(1)
 	}
 
