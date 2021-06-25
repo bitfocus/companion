@@ -1,4 +1,4 @@
-FROM node:12
+FROM node:14
 # Reference: https://nodejs.org/en/docs/guides/nodejs-docker-webapp/
 
 WORKDIR /root

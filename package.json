@@ -8,6 +8,7 @@
 		"appId": "companion.bitfocus.no",
 		"remoteBuild": false,
 		"dmg": {
+			"artifactName": "companion-mac-${arch}.dmg",
 			"sign": true
 		},
 		"mac": {
@@ -19,7 +20,7 @@
 			},
 			"extraFiles": [
 				{
-					"from": "./node_modules/sharp/vendor/8.10.5/lib",
+					"from": "./node_modules/sharp/vendor/8.10.6/lib",
 					"to": "Frameworks",
 					"filter": [
 						"!glib-2.0/**/*"
@@ -58,7 +59,7 @@
 			"target": "dir",
 			"extraFiles": [
 				{
-					"from": "./node_modules/sharp/vendor/8.10.5/lib",
+					"from": "./node_modules/sharp/vendor/8.10.6/lib",
 					"to": ".",
 					"filter": [
 						"libvips*.so.*"
@@ -95,13 +96,15 @@
 		"dist": "yarn dist:prepare && yarn electron-rebuild && electron-builder",
 		"electron-rebuild": "yarn dist:prepare:sharp && electron-builder install-app-deps",
 		"testprod": "./node_modules/electron/cli.js .",
-		"macdist": "yarn dist:prepare && yarn dist:prepare:mac && electron-builder --publish=never  --x64 --mac",
+		"macdist": "yarn dist:prepare && yarn dist:prepare:mac-x64 && electron-builder --publish=never  --x64 --mac",
+		"macarmdist": "yarn dist:prepare && yarn dist:prepare:mac-arm64 && electron-builder --publish=never  --arm64 --mac",
 		"windist": "yarn dist:prepare && yarn dist:prepare:win && electron-builder --publish=never  --x64 --win",
 		"lindist": "yarn dist:prepare && yarn dist:prepare:linux && electron-builder --publish=never  --x64 --linux",
 		"rpidist": "yarn dist:prepare && yarn dist:prepare:rpi && electron-builder --publish=never  --armv7l --linux",
 		"dist:prepare:sharp": "cd node_modules/sharp && rimraf vendor && node install/libvips && node install/dll-copy",
 		"dist:prepare:win": "cross-env npm_config_platform=win32 npm_config_arch=x64 yarn dist:prepare:sharp",
-		"dist:prepare:mac": "cross-env npm_config_platform=darwin npm_config_arch=x64 yarn dist:prepare:sharp",
+		"dist:prepare:mac-x64": "cross-env npm_config_platform=darwin npm_config_arch=x64 yarn dist:prepare:sharp",
+		"dist:prepare:mac-arm64": "cross-env npm_config_platform=darwin npm_config_arch=arm64 yarn dist:prepare:sharp",
 		"dist:prepare:linux": "cross-env npm_config_platform=linux npm_config_arch=x64 yarn dist:prepare:sharp",
 		"dist:prepare:rpi": "cross-env npm_config_platform=linux npm_config_arch=arm yarn dist:prepare:sharp",
 		"test": "mocha",
@@ -119,18 +122,18 @@
 	"engines": {
 		"npm": "please-use-yarn",
 		"yarn": "^1.22",
-		"node": "^12.20 || ^14"
+		"node": "^14.16"
 	},
 	"author": "Bitfocus AS",
 	"license": "MIT",
 	"devDependencies": {
 		"asar": "^3.0.3",
-		"aws-sdk": "^2.927.0",
+		"aws-sdk": "^2.931.0",
 		"chai": "^4.3.4",
 		"chai-fs": "^2.0.0",
 		"cross-env": "^7.0.3",
-		"electron": "^11.4.8",
-		"electron-builder": "22.10.5",
+		"electron": "^13.1.2",
+		"electron-builder": "22.11.7",
 		"mocha": "^6.2.3",
 		"nodemon": "^2.0.7",
 		"p-all": "^3.0.0",
@@ -139,7 +142,7 @@
 		"s3-upload-stream": "^1.0.7"
 	},
 	"dependencies": {
-		"@sentry/electron": "^2.4.1",
+		"@sentry/electron": "^2.5.0",
 		"app-root-path": "^3.0.0",
 		"binopsy": "^0.0.0",
 		"check-ip": "^1.1.1",
@@ -149,8 +152,8 @@
 		"companion-module-aja-kipro": "github:bitfocus/companion-module-aja-kipro#v2.0.11",
 		"companion-module-aja-kumo": "github:bitfocus/companion-module-aja-kumo#v1.0.4",
 		"companion-module-allenheath-dlive-ilive": "github:bitfocus/companion-module-allenheath-dlive-ilive#v1.3.7",
-		"companion-module-allenheath-qu": "github:bitfocus/companion-module-allenheath-qu#v1.0.6",
-		"companion-module-allenheath-sq": "github:bitfocus/companion-module-allenheath-sq#v1.3.6",
+		"companion-module-allenheath-qu": "github:bitfocus/companion-module-allenheath-qu#v1.0.7",
+		"companion-module-allenheath-sq": "github:bitfocus/companion-module-allenheath-sq#v1.3.7",
 		"companion-module-analogway-eks500": "github:bitfocus/companion-module-analogway-eks500#v1.0.1",
 		"companion-module-analogway-livecore": "github:bitfocus/companion-module-analogway-livecore#v1.1.1",
 		"companion-module-analogway-livepremier": "github:bitfocus/companion-module-analogway-livepremier#v1.0.2",
@@ -186,6 +189,7 @@
 		"companion-module-birddog-studio": "github:bitfocus/companion-module-birddog-studio#v1.0.0",
 		"companion-module-birddog-visca": "github:bitfocus/companion-module-birddog-visca#v1.0.4",
 		"companion-module-bitfocus-companion": "github:bitfocus/companion-module-bitfocus-companion#v1.4.0",
+		"companion-module-bitfocus-snapshot": "github:bitfocus/companion-module-bitfocus-snapshot#v0.0.4",
 		"companion-module-blackbox-boxilla": "github:bitfocus/companion-module-blackbox-boxilla#v1.0.2",
 		"companion-module-blackdiamondvideo-phantom800": "github:bitfocus/companion-module-blackdiamondvideo-phantom800#v1.0.0",
 		"companion-module-bmd-atem": "github:bitfocus/companion-module-bmd-atem#v2.12.1",
@@ -235,14 +239,14 @@
 		"companion-module-dsan-limitimer": "github:bitfocus/companion-module-dsan-limitimer#v1.1.1",
 		"companion-module-dsan-perfectcue": "github:bitfocus/companion-module-dsan-perfectcue#v1.0.0",
 		"companion-module-dtvideolabs-playbackproplus": "github:bitfocus/companion-module-dtvideolabs-playbackproplus#v1.0.2",
-		"companion-module-elgato-keylight": "github:bitfocus/companion-module-elgato-keylight#v1.2.1",
+		"companion-module-elgato-keylight": "github:bitfocus/companion-module-elgato-keylight#v1.2.2",
 		"companion-module-epiphan-pearl": "github:bitfocus/companion-module-epiphan-pearl#v1.0.7",
 		"companion-module-etc-eos": "github:bitfocus/companion-module-etc-eos#v1.2.1",
 		"companion-module-extron-dxp": "github:bitfocus/companion-module-extron-dxp#v1.0.8",
 		"companion-module-extron-in1604": "github:bitfocus/companion-module-extron-in1604#v1.0.3",
 		"companion-module-extron-ipl-t-pcs4": "github:bitfocus/companion-module-extron-ipl-t-pcs4#v1.0.2",
 		"companion-module-extron-smp111": "github:bitfocus/companion-module-extron-smp111#v1.0.4",
-		"companion-module-extron-smp351": "github:bitfocus/companion-module-extron-smp351#v1.1.3",
+		"companion-module-extron-smp351": "github:bitfocus/companion-module-extron-smp351#v1.2.0",
 		"companion-module-extron-smx": "github:bitfocus/companion-module-extron-smx#v1.0.4",
 		"companion-module-faithchapel-videoplayoutserver": "github:bitfocus/companion-module-faithchapel-videoplayoutserver#v1.0.1",
 		"companion-module-figure53-go-button": "github:bitfocus/companion-module-figure53-go-button#v1.2.4",
@@ -293,7 +297,7 @@
 		"companion-module-lectrosonics-aspen": "github:bitfocus/companion-module-lectrosonics-aspen#v1.0.0",
 		"companion-module-lightware-lw2": "github:bitfocus/companion-module-lightware-lw2#v1.0.2",
 		"companion-module-lightware-lw3": "github:bitfocus/companion-module-lightware-lw3#v1.0.1",
-		"companion-module-liminalet-zoomosc": "github:bitfocus/companion-module-liminalet-zoomosc#v1.0.6",
+		"companion-module-liminalet-zoomosc": "github:bitfocus/companion-module-liminalet-zoomosc#v1.0.8",
 		"companion-module-linkbox-remote": "github:bitfocus/companion-module-linkbox-remote#v1.2.1",
 		"companion-module-livingasone-decoders": "github:bitfocus/companion-module-livingasone-decoders#v1.1.2",
 		"companion-module-ltn-schedule": "github:bitfocus/companion-module-ltn-schedule#v1.0.0",
@@ -325,7 +329,7 @@
 		"companion-module-noismada-octopuslistener": "github:bitfocus/companion-module-noismada-octopuslistener#v1.0.2",
 		"companion-module-noismada-octopusshowcontrol": "github:bitfocus/companion-module-noismada-octopusshowcontrol#v1.2.0",
 		"companion-module-novastar-controller": "github:bitfocus/companion-module-novastar-controller#v1.0.6",
-		"companion-module-obs-studio": "github:bitfocus/companion-module-obs-studio#v1.0.20",
+		"companion-module-obs-studio": "github:bitfocus/companion-module-obs-studio#v1.0.21",
 		"companion-module-obsidiancontrol-onyx": "github:bitfocus/companion-module-obsidiancontrol-onyx#v1.0.3",
 		"companion-module-octava-pro-dsx": "github:bitfocus/companion-module-octava-pro-dsx#v0.0.1",
 		"companion-module-openlp-http": "github:bitfocus/companion-module-openlp-http#v0.1.1",
@@ -398,7 +402,7 @@
 		"companion-module-teradek-vidiu": "github:bitfocus/companion-module-teradek-vidiu#v1.0.2",
 		"companion-module-tesla-smart": "github:bitfocus/companion-module-tesla-smart#v1.0.3",
 		"companion-module-thelightingcontroller": "github:bitfocus/companion-module-thelightingcontroller#v1.1.2",
-		"companion-module-thingm-blink1": "github:bitfocus/companion-module-thingm-blink1#v1.2.2",
+		"companion-module-thingm-blink1": "github:bitfocus/companion-module-thingm-blink1#v1.2.3",
 		"companion-module-tplink-kasasmartplug": "github:bitfocus/companion-module-tplink-kasasmartplug#v1.0.1",
 		"companion-module-tslproducts-umd": "github:bitfocus/companion-module-tslproducts-umd#v1.2.1",
 		"companion-module-tvone-corio": "github:bitfocus/companion-module-tvone-corio#v1.0.0",
@@ -406,7 +410,7 @@
 		"companion-module-ubiquiti-unifi": "github:bitfocus/companion-module-ubiquiti-unifi#v1.0.1",
 		"companion-module-vaddio-ptz": "github:bitfocus/companion-module-vaddio-ptz#v1.0.1",
 		"companion-module-vicreo-hotkey": "github:bitfocus/companion-module-vicreo-hotkey#v1.4.4",
-		"companion-module-vicreo-variablelistener": "github:bitfocus/companion-module-vicreo-variablelistener#v1.0.5",
+		"companion-module-vicreo-variablelistener": "github:bitfocus/companion-module-vicreo-variablelistener#v1.0.7",
 		"companion-module-videolan-vlc": "github:bitfocus/companion-module-videolan-vlc#v1.1.11",
 		"companion-module-visualproductions-bstation2": "github:bitfocus/companion-module-visualproductions-bstation2#v1.0.6",
 		"companion-module-vivitek-projector": "github:bitfocus/companion-module-vivitek-projector#v1.0.3",
@@ -432,7 +436,7 @@
 		"node-rest-client": "^3.1.0",
 		"osc": "^2.4.1",
 		"pngjs": "^3.3.3",
-		"sharp": "^0.27.2",
+		"sharp": "^0.28.3",
 		"shortid": "^2.2.16",
 		"socket.io": "^4.1.2",
 		"strip-ansi": "^5.2.0",
@@ -447,8 +451,7 @@
 	},
 	"resolutions": {
 		"infinitton-idisplay/node-hid": "^2.1.1",
-		"electron-builder/**/app-builder-bin": "3.5.13",
-		"**/osc/serialport": "^9.1.0",
+		"**/osc/serialport": "^9.2.0",
 		"**/osc/ws": "^7.4.6"
 	}
 }
