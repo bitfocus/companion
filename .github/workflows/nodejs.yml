@@ -1,4 +1,4 @@
-name: Node CI
+name: Build binaries
 on: [push]
 
 jobs:
@@ -6,7 +6,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        node-version: [12.x]
+        node-version: [14.x]
     steps:
       - uses: actions/checkout@v1
       - name: Use Node.js ${{ matrix.node-version }}
@@ -26,16 +26,16 @@ jobs:
       - name: rename and upload stuff
         run: node ./tools/build_rename_git.js
         env:
-          TRAVIS_OS_NAME: linux
+          CI_BUILD_OS: linux
           BITFOCUS_S3: ${{ secrets.BITFOCUS_S3 }}
           BITFOCUS_KEY: ${{ secrets.BITFOCUS_ACCESS }}
           BITFOCUS_SECRET: ${{ secrets.BITFOCUS_SECRET }}
 
   osx:
-    runs-on: macOS-latest
+    runs-on: macos-latest
     strategy:
       matrix:
-        node-version: [12.x]
+        node-version: [14.x]
     steps:
       - uses: actions/checkout@v1
       - name: Use Node.js ${{ matrix.node-version }}
@@ -49,16 +49,41 @@ jobs:
       - name: rename and upload stuff
         run: node ./tools/build_rename_git.js
         env:
-          TRAVIS_OS_NAME: osx
+          CI_BUILD_OS: osx
+          CI_BUILD_ARCH: x64
           BITFOCUS_S3: ${{ secrets.BITFOCUS_S3 }}
           BITFOCUS_KEY: ${{ secrets.BITFOCUS_ACCESS }}
           BITFOCUS_SECRET: ${{ secrets.BITFOCUS_SECRET }}
+
+  # osx-arm64:
+  #   runs-on: macos-11
+  #   strategy:
+  #     matrix:
+  #       node-version: [14.x]
+  #   steps:
+  #     - uses: actions/checkout@v1
+  #     - name: Use Node.js ${{ matrix.node-version }}
+  #       uses: actions/setup-node@v1
+  #       with:
+  #         node-version: ${{ matrix.node-version }}
+  #     - name: yarn update and macarmdist
+  #       run: |
+  #         yarn update
+  #         yarn run macarmdist
+  #     - name: rename and upload stuff
+  #       run: node ./tools/build_rename_git.js
+  #       env:
+  #         CI_BUILD_OS: osx
+  #         CI_BUILD_ARCH: arm64
+  #         BITFOCUS_S3: ${{ secrets.BITFOCUS_S3 }}
+  #         BITFOCUS_KEY: ${{ secrets.BITFOCUS_ACCESS }}
+  #         BITFOCUS_SECRET: ${{ secrets.BITFOCUS_SECRET }}
 
   win64:
     runs-on: windows-latest
     strategy:
       matrix:
-        node-version: [12.x]
+        node-version: [14.x]
     steps:
       - uses: actions/checkout@v1
       - name: Use Node.js ${{ matrix.node-version }}
@@ -75,7 +100,7 @@ jobs:
       - name: rename and upload stuff
         run: node ./tools/build_rename_git.js
         env:
-          TRAVIS_OS_NAME: win64
+          CI_BUILD_OS: win64
           BITFOCUS_S3: ${{ secrets.BITFOCUS_S3 }}
           BITFOCUS_KEY: ${{ secrets.BITFOCUS_ACCESS }}
           BITFOCUS_SECRET: ${{ secrets.BITFOCUS_SECRET }}
