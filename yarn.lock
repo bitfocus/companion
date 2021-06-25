@@ -2708,9 +2708,9 @@ commist@^1.0.0:
   version "1.4.4"
   resolved "https://codeload.github.com/bitfocus/companion-module-vicreo-hotkey/tar.gz/b19f201587d1eef8e6956d5cc04a8dc130406045"
 
-"companion-module-vicreo-variablelistener@github:bitfocus/companion-module-vicreo-variablelistener#v1.0.5":
-  version "1.0.5"
-  resolved "https://codeload.github.com/bitfocus/companion-module-vicreo-variablelistener/tar.gz/8a5f8a8358de56fdd65aca97d423d77fc3b8031d"
+"companion-module-vicreo-variablelistener@github:bitfocus/companion-module-vicreo-variablelistener#v1.0.6":
+  version "1.0.6"
+  resolved "https://codeload.github.com/bitfocus/companion-module-vicreo-variablelistener/tar.gz/4d1c09d2e99fec72765955f65c53647b0bf67f29"
 
 "companion-module-videolan-vlc@github:bitfocus/companion-module-videolan-vlc#v1.1.11":
   version "1.1.11"
