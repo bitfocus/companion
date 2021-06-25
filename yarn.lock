@@ -2668,9 +2668,9 @@ commist@^1.0.0:
   dependencies:
     xml2js "^0.4.17"
 
-"companion-module-thingm-blink1@github:bitfocus/companion-module-thingm-blink1#v1.2.2":
-  version "1.2.2"
-  resolved "https://codeload.github.com/bitfocus/companion-module-thingm-blink1/tar.gz/8dac92943fa2d66028bd6da4428fadbbb6502838"
+"companion-module-thingm-blink1@github:bitfocus/companion-module-thingm-blink1#v1.2.3":
+  version "1.2.3"
+  resolved "https://codeload.github.com/bitfocus/companion-module-thingm-blink1/tar.gz/728f4c593fff60995be0244b6a25bac53891505f"
   dependencies:
     node-blink1 "^0.5.1"
 
@@ -2708,9 +2708,9 @@ commist@^1.0.0:
   version "1.4.4"
   resolved "https://codeload.github.com/bitfocus/companion-module-vicreo-hotkey/tar.gz/b19f201587d1eef8e6956d5cc04a8dc130406045"
 
-"companion-module-vicreo-variablelistener@github:bitfocus/companion-module-vicreo-variablelistener#v1.0.6":
-  version "1.0.6"
-  resolved "https://codeload.github.com/bitfocus/companion-module-vicreo-variablelistener/tar.gz/4d1c09d2e99fec72765955f65c53647b0bf67f29"
+"companion-module-vicreo-variablelistener@github:bitfocus/companion-module-vicreo-variablelistener#v1.0.7":
+  version "1.0.7"
+  resolved "https://codeload.github.com/bitfocus/companion-module-vicreo-variablelistener/tar.gz/f71becbb6b4d68e5c091cedb434235e9af44d309"
 
 "companion-module-videolan-vlc@github:bitfocus/companion-module-videolan-vlc#v1.1.11":
   version "1.1.11"
