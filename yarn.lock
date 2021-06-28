@@ -1670,9 +1670,9 @@ commist@^1.0.0:
   version "1.1.2"
   resolved "https://codeload.github.com/bitfocus/companion-module-barco-pulse/tar.gz/580d7f1304dc02210a3baa0096a9fc4f649b25c2"
 
-"companion-module-bbc-raven@github:bitfocus/companion-module-bbc-raven#v1.0.0":
-  version "1.0.0"
-  resolved "https://codeload.github.com/bitfocus/companion-module-bbc-raven/tar.gz/534a42e1ff6c8e8e3aa6642b05cc7a8987bdd01c"
+"companion-module-bbc-raven@github:bitfocus/companion-module-bbc-raven#v1.0.1":
+  version "1.0.1"
+  resolved "https://codeload.github.com/bitfocus/companion-module-bbc-raven/tar.gz/0546bca114e11bcea2a9f66cb10e3cada0b14a08"
   dependencies:
     node-rest-client "^3.1.0"
 
@@ -2332,9 +2332,9 @@ commist@^1.0.0:
   dependencies:
     utility "1.16.3"
 
-"companion-module-newtek-tricaster@github:bitfocus/companion-module-newtek-tricaster#v1.1.1":
-  version "1.1.1"
-  resolved "https://codeload.github.com/bitfocus/companion-module-newtek-tricaster/tar.gz/4c56b01f08c3b099fdd319294e7f7c8e0f45ea27"
+"companion-module-newtek-tricaster@github:bitfocus/companion-module-newtek-tricaster#v1.1.4":
+  version "1.1.4"
+  resolved "https://codeload.github.com/bitfocus/companion-module-newtek-tricaster/tar.gz/670fd7385f99e7275c44b9ecd5816f6d86e79985"
   dependencies:
     ping "^0.4.0"
     util "^0.12.3"
