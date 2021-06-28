@@ -44,185 +44,170 @@
  */ -->
 <html>
 
-<head>
-	<meta name="viewport" content="width=device-width, initial-scale=1.0 , maximum-scale=1.0, user-scalable=0" />
-	<link rel="manifest" href="/manifest.json" />
-	<!-- PWA support -->
-	<meta name="theme-color" content="#000000" />
-	<!-- ios support -->
-	<link rel="apple-touch-icon" sizes="72x72" href="/img/brand/icons-72-square.png" />
-	<link rel="apple-touch-icon" sizes="96x96" href="/img/brand/icons-96-square.png" />
-	<link rel="apple-touch-icon" sizes="128x128" href="/img/brand/icons-128-square.png" />
-	<link rel="apple-touch-icon" sizes="512x512" href="/img/brand/icons-512-square.png" />
+.page {
+padding: 20px;
+padding-bottom: 125px;
+}
 
-	<style>
-		body {
-			margin: 0;
-			padding: 0;
-			background-color: black;
-			font-size: 2em;
-			font-family: helvetica;
-		}
+/* .page-bank-content {
+float:left;
+}
 
-		h1 {
-			font-size: 30px;
-			padding-left: 30px;
-			padding-top: 30px;
-		}
+.page-bank-content canvas {
+width: 72px;
+margin: 10px;
+height: 72px;
+box-shadow: 0px 0px 25px #333;
+border: 1px solid rgba(255,255,255,0.15);
+} */
 
-		.page-title {
-			color: rgb(255, 198, 0);
-			clear: both;
-			margin-top: 20px;
-			padding-bottom: 10px;
-			margin-bottom: 0px;
-		}
+.page-bank-content {
+/* float:left; */
+flex-grow: 1;
+}
 
-		.page {
-			padding: 20px;
-			padding-bottom: 125px;
-		}
+@media screen and (max-width: 767px) {
+/* ..This is basic media query for respective device.In to this media query CSS code cover the both view landscape and
+portrait view. */
+}
 
-		/* .page-bank-content {
-                float:left;
-            }
-    
-            .page-bank-content canvas {
-                width: 72px;
-                margin: 10px;
-                height: 72px;
-                box-shadow: 0px 0px 25px #333;
-                border: 1px solid rgba(255,255,255,0.15);
-            } */
+@media screen and (min-width: 320px) and (max-width: 767px) and (orientation: landscape) {
+/* ..This orientation media query. In to this orientation media query you can specify more about CSS code for landscape
+view. */
+}
 
-		.page-bank-content {
-			/* float:left; */
-			flex-grow: 1;
-		}
+@media screen and (max-width: 1024px) {
 
-		@media screen and (max-width: 767px) {
-			/* ..This is basic media query for respective device.In to this media query  CSS code cover the both view landscape and portrait view. */
-		}
+/* This is basic media query for respective device.In to this media query CSS code cover the both view landscape and
+portrait view. */
+.page-bank-content canvas {
+width: 72px;
+margin: 15px;
+height: 72px;
 
-		@media screen and (min-width: 320px) and (max-width: 767px) and (orientation: landscape) {
-			/* ..This orientation media query. In to this orientation media query you can specify more about CSS code for landscape view. */
-		}
+box-shadow: 0px 0px 25px #333;
+border: 1px solid rgba(255, 255, 255, 0.15);
+}
+}
 
-		@media screen and (max-width: 1024px) {
+@media screen and (min-width: 768px) and (max-width: 1024px) and (orientation: landscape) {
 
-			/* This is basic media query for respective device.In to this media query  CSS code cover the both view landscape and portrait view. */
-			.page-bank-content canvas {
-				width: 72px;
-				margin: 15px;
-				height: 72px;
+/* ..This orientation media query. In to this orientation media query you can specify more about CSS code for landscape
+view. */
+.page-bank-content canvas {
+width: 90px;
+margin: 15px;
+height: 90px;
 
-				box-shadow: 0px 0px 25px #333;
-				border: 1px solid rgba(255, 255, 255, 0.15);
-			}
-		}
+box-shadow: 0px 0px 25px #333;
+border: 1px solid rgba(255, 255, 255, 0.15);
+}
+}
 
-		@media screen and (min-width: 768px) and (max-width: 1024px) and (orientation: landscape) {
+@media screen and (min-width: 1024px) and (orientation: landscape) {
 
-			/* ..This orientation media query. In to this orientation media query you can specify more about CSS code for landscape view. */
-			.page-bank-content canvas {
-				width: 90px;
-				margin: 15px;
-				height: 90px;
+.grid-container-8 {
+grid-template-columns: repeat(8, minmax(80px, 1fr));
+}
+.grid-container-3 {
+align-items: flex-end;
+grid-template-columns: repeat(3, 1fr);
+}
 
-				box-shadow: 0px 0px 25px #333;
-				border: 1px solid rgba(255, 255, 255, 0.15);
-			}
-		}
+a:link,
+a:visited {
+/*background-color: rgb(255,198,0);*/
+color: rgb(255, 198, 0);
+padding: 14px 25px;
+text-align: center;
+text-decoration: none;
+display: inline-block;
+/* box-shadow: 0px 0px 25px #333;
+border: 1px solid rgba(255, 255, 255, 0.15); */
+border-radius: 150px;
+}
 
-		@media screen and (min-width: 1024px) and (orientation: landscape) {
+box-shadow: 0px 0px 25px #333;
+border: 1px solid rgba(255, 255, 255, 0.15);
+}
+}
 
-			/* ..This orientation media query. In to this orientation media query you can specify more about CSS code for landscape view. */
-			.page-bank-content canvas {
-				width: 100px;
-				margin: 15px;
-				height: 100px;
+.page-bank-content canvas {
+/* width: 72px; */
+margin: 15px;
+/* height: 72px; */
 
-				box-shadow: 0px 0px 25px #333;
-				border: 1px solid rgba(255, 255, 255, 0.15);
-			}
-		}
+box-shadow: 0px 0px 25px #333;
+border: 1px solid rgba(255, 255, 255, 0.15);
+}
 
-		.page-bank-content canvas {
-			/* width: 72px; */
-			margin: 15px;
-			/* height: 72px; */
+.disable-dbl-tap-zoom {
+touch-action: manipulation;
+}
 
-			box-shadow: 0px 0px 25px #333;
-			border: 1px solid rgba(255, 255, 255, 0.15);
-		}
+* {
+touch-action: manipulation;
+}
 
-		.disable-dbl-tap-zoom {
-			touch-action: manipulation;
-		}
+* {
+-moz-user-select: none;
+-webkit-user-select: none;
+-ms-user-select: none;
+user-select: none;
+-o-user-select: none;
+touch-action: pan-y;
+touch-action: manipulation;
+}
 
-		* {
-			touch-action: manipulation;
-		}
+/* canvas {
+image-rendering: optimizeSpeed; /* Older versions of FF */
+image-rendering: -moz-crisp-edges;
+/* FF 6.0+ */
+image-rendering: -webkit-optimize-contrast;
+/* Safari */
+image-rendering: -o-crisp-edges;
+/* OS X & Windows Opera (12.02+) */
+image-rendering: pixelated;
+/* Awesome future-browsers */
+-ms-interpolation-mode: nearest-neighbor;
+/* IE */
+}
 
-		* {
-			-moz-user-select: none;
-			-webkit-user-select: none;
-			-ms-user-select: none;
-			user-select: none;
-			-o-user-select: none;
-			touch-action: pan-y;
-			touch-action: manipulation;
-		}
+*/ .grid-container {
+display: grid;
+}
 
-		/* canvas {
-				image-rendering: optimizeSpeed; /* Older versions of FF          */
-		image-rendering: -moz-crisp-edges;
-		/* FF 6.0+                       */
-		image-rendering: -webkit-optimize-contrast;
-		/* Safari                        */
-		image-rendering: -o-crisp-edges;
-		/* OS X & Windows Opera (12.02+) */
-		image-rendering: pixelated;
-		/* Awesome future-browsers       */
-		-ms-interpolation-mode: nearest-neighbor;
-		/* IE                            */
-		}
+.grid-container-8 {
+grid-template-columns: repeat(8, minmax(80px, 1fr));
+}
 
-		*/ .grid-container {
-			display: grid;
-		}
+.grid-container-3 {
+align-items: flex-end;
+grid-template-columns: repeat(3, 1fr);
+}
 
-		.grid-container-8 {
-			grid-template-columns: repeat(8, minmax(80px, 1fr));
-		}
+a:link,
+a:visited {
+/*background-color: rgb(255,198,0);*/
+color: rgb(255, 198, 0);
+padding: 14px 25px;
+text-align: center;
+text-decoration: none;
+display: inline-block;
+/* box-shadow: 0px 0px 25px #333;
+border: 1px solid rgba(255, 255, 255, 0.15); */
+border-radius: 150px;
+}
 
-		.grid-container-3 {
-			align-items: flex-end;
-			grid-template-columns: repeat(3, 1fr);
-		}
+a:hover,
+a:active {
+box-shadow: 0px 0px 25px #333;
+border: 2px solid rgba(255, 255, 255, 0.15);
+border-radius: 150px;
+}
+</style>
 
-		a:link,
-		a:visited {
-			/*background-color: rgb(255,198,0);*/
-			color: rgb(255, 198, 0);
-			padding: 14px 25px;
-			text-align: center;
-			text-decoration: none;
-			display: inline-block;
-			/* box-shadow: 0px 0px 25px #333;
-        border: 1px solid rgba(255, 255, 255, 0.15); */
-			border-radius: 150px;
-		}
-
-		a:hover,
-		a:active {
-			box-shadow: 0px 0px 25px #333;
-			border: 2px solid rgba(255, 255, 255, 0.15);
-			border-radius: 150px;
-		}
-	</style>
-
-	<title>Companion Tablet Surface</title>
+<title>Companion Tablet Surface</title>
 </head>
 
 <body class="disable-dbl-tap-zoom">
