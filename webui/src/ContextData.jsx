@@ -9,6 +9,7 @@ import {
 	VariableValuesContext,
 	VariableDefinitionsContext,
 	CustomVariableDefinitionsContext,
+	UserConfigContext,
 } from './util'
 import { NotificationsManager } from './Components/Notifications'
 
@@ -20,6 +21,7 @@ export function ContextData({ socket, children }) {
 	const [variableDefinitions, setVariableDefinitions] = useState(null)
 	const [variableValues, setVariableValues] = useState(null)
 	const [customVariables, setCustomVariables] = useState(null)
+	const [userConfig, setUserConfig] = useState(null)
 
 	useEffect(() => {
 		if (socket) {
@@ -54,6 +56,14 @@ export function ContextData({ socket, children }) {
 				})
 				.catch((e) => {
 					console.error('Failed to load custom values list', e)
+				})
+
+			socketEmit(socket, 'get_userconfig_all', [])
+				.then(([config]) => {
+					setUserConfig(config)
+				})
+				.catch((e) => {
+					console.error('Failed to load user config', e)
 				})
 
 			const updateVariableDefinitions = (label, variables) => {
@@ -96,6 +106,13 @@ export function ContextData({ socket, children }) {
 				persistVariableValues()
 			}
 
+			const updateUserConfigValue = (key, value) => {
+				setUserConfig((oldState) => ({
+					...oldState,
+					[key]: value,
+				}))
+			}
+
 			socket.on('instances_get:result', setInstances)
 			socket.emit('instances_get')
 
@@ -109,6 +126,8 @@ export function ContextData({ socket, children }) {
 			socket.on('feedback_get_definitions:result', setFeedbacks)
 			socket.emit('feedback_get_definitions')
 
+			socket.on('set_userconfig_key', updateUserConfigValue)
+
 			return () => {
 				socket.off('instances_get:result', setInstances)
 				socket.off('variable_instance_definitions_set', updateVariableDefinitions)
@@ -116,6 +135,7 @@ export function ContextData({ socket, children }) {
 				socket.off('custom_variables_get', setCustomVariables)
 				socket.off('actions', setActions)
 				socket.off('feedback_get_definitions:result', setFeedbacks)
+				socket.off('set_userconfig_key', updateUserConfigValue)
 			}
 		}
 	}, [socket])
@@ -141,9 +161,11 @@ export function ContextData({ socket, children }) {
 						<VariableValuesContext.Provider value={variableValues}>
 							<VariableDefinitionsContext.Provider value={variableDefinitions}>
 								<CustomVariableDefinitionsContext.Provider value={customVariables}>
-									<NotificationsManager ref={notifierRef} />
+									<UserConfigContext.Provider value={userConfig}>
+										<NotificationsManager ref={notifierRef} />
 
-									{children(progressPercent, completedSteps.length === steps.length)}
+										{children(progressPercent, completedSteps.length === steps.length)}
+									</UserConfigContext.Provider>
 								</CustomVariableDefinitionsContext.Provider>
 							</VariableDefinitionsContext.Provider>
 						</VariableValuesContext.Provider>
