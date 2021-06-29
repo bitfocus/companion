@@ -1,7 +1,6 @@
 import React, { useCallback, useContext, useMemo, useState } from 'react'
 import {
 	CButton,
-	CButtonGroup,
 	CCol,
 	CForm,
 	CFormGroup,
@@ -129,7 +128,7 @@ export function ScheduleEditModal({ doClose, doSave, item, plugins }) {
 			newConfig.actions = cb(oldConfig.actions || [])
 			return newConfig
 		})
-	})
+	}, [])
 
 	const addActionSelect = useCallback(
 		(actionType) => {
