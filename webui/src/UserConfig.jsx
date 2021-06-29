@@ -1,6 +1,5 @@
-import React, { memo, useCallback, useContext, useEffect, useState } from 'react'
+import React, { memo, useCallback, useContext } from 'react'
 import {
-	CAlert,
 	CButton,
 	CCol,
 	CInput,
@@ -13,10 +12,9 @@ import {
 	CTabPane,
 	CTabs,
 } from '@coreui/react'
-import { MyErrorBoundary, StaticContext, socketEmit } from './util'
+import { MyErrorBoundary, StaticContext, UserConfigContext } from './util'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faFileImport } from '@fortawesome/free-solid-svg-icons'
-import shortid from 'shortid'
 
 export const UserConfig = memo(function UserConfig() {
 	return (
@@ -40,35 +38,7 @@ export const UserConfig = memo(function UserConfig() {
 
 function UserConfigTable() {
 	const context = useContext(StaticContext)
-
-	const [error, setError] = useState(null)
-	const [config, setConfig] = useState(null)
-	const [reloadToken, setReloadToken] = useState(shortid())
-
-	useEffect(() => {
-		const updateConfigValue = (key, value) => {
-			console.log('got key', key, value)
-			setConfig((oldState) => ({
-				...oldState,
-				[key]: value,
-			}))
-		}
-		context.socket.on('set_userconfig_key', updateConfigValue)
-		socketEmit(context.socket, 'get_userconfig_all', [])
-			.then(([config]) => {
-				setConfig(config)
-				setError(null)
-			})
-			.catch((e) => {
-				console.error('Failed to load user config', e)
-				setConfig(null)
-				setError(`Failed to load config: "${e}"`)
-			})
-
-		return () => {
-			context.socket.off('set_userconfig_key', updateConfigValue)
-		}
-	}, [context.socket, reloadToken])
+	const config = useContext(UserConfigContext)
 
 	const setValue = useCallback(
 		(key, value) => {
@@ -78,234 +48,322 @@ function UserConfigTable() {
 		[context.socket]
 	)
 
-	if (error) {
-		return (
-			<CAlert color="danger">
-				<p>Something went wrong:</p>
-				<pre>{error}</pre>
-				<CButton color="primary" size="sm" onClick={() => setReloadToken(shortid())}>
-					Try again
-				</CButton>
-			</CAlert>
-		)
-	} else if (!config) {
-		return <p>Loading</p>
-	} else {
-		return (
-			<table className="table table-responsive-sm">
-				<thead>
-					<tr>
-						<th>Setting</th>
-						<th>Value</th>
-					</tr>
-				</thead>
+	return (
+		<table className="table table-responsive-sm">
+			<thead>
+				<tr>
+					<th>Setting</th>
+					<th>Value</th>
+				</tr>
+			</thead>
 
-				<tbody>
-					<tr>
-						<td colSpan="2" className="settings-category">
-							Navigation Buttons
-						</td>
-					</tr>
+			<tbody>
+				<tr>
+					<td colSpan="2" className="settings-category">
+						Navigation Buttons
+					</td>
+				</tr>
 
-					<tr>
-						<td>Flip counting direction on page up/down</td>
-						<td>
-							<div className="form-check form-check-inline mr-1">
-								<CInputCheckbox
-									id="userconfig_page_direction_flipped"
-									checked={config.page_direction_flipped}
-									onChange={(e) => setValue('page_direction_flipped', e.currentTarget.checked)}
-								/>
-								<label className="form-check-label" htmlFor="userconfig_page_direction_flipped">
-									Enabled
-								</label>
-							</div>
-						</td>
-					</tr>
+				<tr>
+					<td>Flip counting direction on page up/down</td>
+					<td>
+						<div className="form-check form-check-inline mr-1">
+							<CInputCheckbox
+								id="userconfig_page_direction_flipped"
+								checked={config.page_direction_flipped}
+								onChange={(e) => setValue('page_direction_flipped', e.currentTarget.checked)}
+							/>
+							<label className="form-check-label" htmlFor="userconfig_page_direction_flipped">
+								Enabled
+							</label>
+						</div>
+					</td>
+				</tr>
 
-					<tr>
-						<td>Show + and - instead of arrows on page buttons</td>
-						<td>
-							<div className="form-check form-check-inline mr-1">
-								<CInputCheckbox
-									id="userconfig_page_plusminus"
-									checked={config.page_plusminus}
-									onChange={(e) => setValue('page_plusminus', e.currentTarget.checked)}
-								/>
-								<label className="form-check-label" htmlFor="userconfig_page_plusminus">
-									Enabled
-								</label>
-							</div>
-						</td>
-					</tr>
+				<tr>
+					<td>Show + and - instead of arrows on page buttons</td>
+					<td>
+						<div className="form-check form-check-inline mr-1">
+							<CInputCheckbox
+								id="userconfig_page_plusminus"
+								checked={config.page_plusminus}
+								onChange={(e) => setValue('page_plusminus', e.currentTarget.checked)}
+							/>
+							<label className="form-check-label" htmlFor="userconfig_page_plusminus">
+								Enabled
+							</label>
+						</div>
+					</td>
+				</tr>
 
-					<tr>
-						<td>Remove the topbar on each button</td>
-						<td>
-							<div className="form-check form-check-inline mr-1">
-								<CInputCheckbox
-									id="userconfig_remove_topbar"
-									checked={config.remove_topbar}
-									onChange={(e) => setValue('remove_topbar', e.currentTarget.checked)}
-								/>
-								<label className="form-check-label" htmlFor="userconfig_remove_topbar">
-									Enabled
-								</label>
-							</div>
-						</td>
-					</tr>
+				<tr>
+					<td>Remove the topbar on each button</td>
+					<td>
+						<div className="form-check form-check-inline mr-1">
+							<CInputCheckbox
+								id="userconfig_remove_topbar"
+								checked={config.remove_topbar}
+								onChange={(e) => setValue('remove_topbar', e.currentTarget.checked)}
+							/>
+							<label className="form-check-label" htmlFor="userconfig_remove_topbar">
+								Enabled
+							</label>
+						</div>
+					</td>
+				</tr>
 
-					<tr>
-						<td colSpan="2" className="settings-category">
-							Devices
-						</td>
-					</tr>
-					<tr>
-						<td>Enable emulator control for Logitec R400/Mastercue/dSan</td>
-						<td>
-							<div className="form-check form-check-inline mr-1">
-								<CInputCheckbox
-									id="userconfig_emulator_control_enable"
-									checked={config.emulator_control_enable}
-									onChange={(e) => setValue('emulator_control_enable', e.currentTarget.checked)}
-								/>
-								<label className="form-check-label" htmlFor="userconfig_emulator_control_enable">
-									Enabled
-								</label>
-							</div>
-						</td>
-					</tr>
-					<tr>
-						<td colSpan="2" className="settings-category">
-							PIN Lockout
-						</td>
-					</tr>
-					<tr>
-						<td>Enable Pin Codes</td>
-						<td>
-							<div className="form-check form-check-inline mr-1">
-								<CInputCheckbox
-									id="userconfig_pin_enable"
-									checked={config.pin_enable}
-									onChange={(e) => setValue('pin_enable', e.currentTarget.checked)}
-								/>
-								<label className="form-check-label" htmlFor="userconfig_pin_enable">
-									Enabled
-								</label>
-							</div>
-						</td>
-					</tr>
+				<tr>
+					<td colSpan="2" className="settings-category">
+						Devices
+					</td>
+				</tr>
+				<tr>
+					<td>Enable emulator control for Logitec R400/Mastercue/dSan</td>
+					<td>
+						<div className="form-check form-check-inline mr-1">
+							<CInputCheckbox
+								id="userconfig_emulator_control_enable"
+								checked={config.emulator_control_enable}
+								onChange={(e) => setValue('emulator_control_enable', e.currentTarget.checked)}
+							/>
+							<label className="form-check-label" htmlFor="userconfig_emulator_control_enable">
+								Enabled
+							</label>
+						</div>
+					</td>
+				</tr>
+				<tr>
+					<td colSpan="2" className="settings-category">
+						PIN Lockout
+					</td>
+				</tr>
+				<tr>
+					<td>Enable Pin Codes</td>
+					<td>
+						<div className="form-check form-check-inline mr-1">
+							<CInputCheckbox
+								id="userconfig_pin_enable"
+								checked={config.pin_enable}
+								onChange={(e) => setValue('pin_enable', e.currentTarget.checked)}
+							/>
+							<label className="form-check-label" htmlFor="userconfig_pin_enable">
+								Enabled
+							</label>
+						</div>
+					</td>
+				</tr>
 
-					<tr>
-						<td>Link Lockouts</td>
-						<td>
-							<div className="form-check form-check-inline mr-1">
-								<CInputCheckbox
-									id="userconfig_link_lockouts"
-									checked={config.link_lockouts}
-									onChange={(e) => setValue('link_lockouts', e.currentTarget.checked)}
-								/>
-								<label className="form-check-label" htmlFor="userconfig_link_lockouts">
-									Enabled
-								</label>
-							</div>
-						</td>
-					</tr>
+				<tr>
+					<td>Link Lockouts</td>
+					<td>
+						<div className="form-check form-check-inline mr-1">
+							<CInputCheckbox
+								id="userconfig_link_lockouts"
+								checked={config.link_lockouts}
+								onChange={(e) => setValue('link_lockouts', e.currentTarget.checked)}
+							/>
+							<label className="form-check-label" htmlFor="userconfig_link_lockouts">
+								Enabled
+							</label>
+						</div>
+					</td>
+				</tr>
 
-					<tr>
-						<td>Pin Code</td>
-						<td>
-							<div className="form-check form-check-inline mr-1">
-								<CInput type="text" value={config.pin} onChange={(e) => setValue('pin', e.currentTarget.value)} />
-							</div>
-						</td>
-					</tr>
+				<tr>
+					<td>Pin Code</td>
+					<td>
+						<div className="form-check form-check-inline mr-1">
+							<CInput type="text" value={config.pin} onChange={(e) => setValue('pin', e.currentTarget.value)} />
+						</div>
+					</td>
+				</tr>
 
-					<tr>
-						<td>Pin Timeout (seconds, 0 to turn off)</td>
-						<td>
-							<div className="form-check form-check-inline mr-1">
-								<CInput
-									type="number"
-									value={config.pin_timeout}
-									onChange={(e) => setValue('pin_timeout', e.currentTarget.value)}
-								/>
-							</div>
-						</td>
-					</tr>
-					<tr>
-						<td colSpan="2" className="settings-category">
-							RossTalk
-						</td>
-					</tr>
-					<tr>
-						<td>RossTalk Listener</td>
-						<td>
-							<div className="form-check form-check-inline mr-1">
-								<CInputCheckbox
-									id="userconfig_rosstalk_enabled"
-									checked={config.rosstalk_enabled}
-									onChange={(e) => setValue('rosstalk_enabled', e.currentTarget.checked)}
-								/>
-								<label className="form-check-label" htmlFor="userconfig_rosstalk_enabled">
-									Enabled
-								</label>
-							</div>
-						</td>
-					</tr>
-					<tr>
-						<td colSpan="2" className="settings-category">
-							Artnet Listener
-						</td>
-					</tr>
-					<tr>
-						<td>Artnet Listener</td>
-						<td>
-							<div className="form-check form-check-inline mr-1">
-								<CInputCheckbox
-									id="userconfig_artnet_enabled"
-									checked={config.artnet_enabled}
-									onChange={(e) => setValue('artnet_enabled', e.currentTarget.checked)}
-								/>
-								<label className="form-check-label" htmlFor="userconfig_artnet_enabled">
-									Enabled
-								</label>
-							</div>
-						</td>
-					</tr>
+				<tr>
+					<td>Pin Timeout (seconds, 0 to turn off)</td>
+					<td>
+						<div className="form-check form-check-inline mr-1">
+							<CInput
+								type="number"
+								value={config.pin_timeout}
+								onChange={(e) => setValue('pin_timeout', e.currentTarget.value)}
+							/>
+						</div>
+					</td>
+				</tr>
 
-					<tr>
-						<td>Artnet Universe (first is 0)</td>
-						<td>
-							<div className="form-check form-check-inline mr-1">
-								<CInput
-									type="number"
-									value={config.artnet_universe}
-									onChange={(e) => setValue('artnet_universe', e.currentTarget.value)}
-								/>
-							</div>
-						</td>
-					</tr>
+				<tr>
+					<td colSpan="2" className="settings-category">
+						TCP
+					</td>
+				</tr>
+				<tr>
+					<td>TCP Listener</td>
+					<td>
+						<div className="form-check form-check-inline mr-1">
+							<CInputCheckbox
+								id="userconfig_tcp_enabled"
+								checked={config.tcp_enabled}
+								onChange={(e) => setValue('tcp_enabled', e.currentTarget.checked)}
+							/>
+							<label className="form-check-label" htmlFor="userconfig_tcp_enabled">
+								Enabled
+							</label>
+						</div>
+					</td>
+				</tr>
+				<tr>
+					<td>TCP Listen Port</td>
+					<td>
+						<div className="form-check form-check-inline mr-1">
+							<CInput
+								type="number"
+								value={config.tcp_listen_port}
+								onChange={(e) => setValue('tcp_listen_port', e.currentTarget.value)}
+							/>
+						</div>
+					</td>
+				</tr>
 
-					<tr>
-						<td>Artnet Channel</td>
-						<td>
-							<div className="form-check form-check-inline mr-1">
-								<CInput
-									type="number"
-									value={config.artnet_channel}
-									onChange={(e) => setValue('artnet_channel', e.currentTarget.value)}
-								/>
-							</div>
-						</td>
-					</tr>
-				</tbody>
-			</table>
-		)
-	}
+				<tr>
+					<td colSpan="2" className="settings-category">
+						UDP
+					</td>
+				</tr>
+				<tr>
+					<td>UDP Listener</td>
+					<td>
+						<div className="form-check form-check-inline mr-1">
+							<CInputCheckbox
+								id="userconfig_udp_enabled"
+								checked={config.udp_enabled}
+								onChange={(e) => setValue('udp_enabled', e.currentTarget.checked)}
+							/>
+							<label className="form-check-label" htmlFor="userconfig_udp_enabled">
+								Enabled
+							</label>
+						</div>
+					</td>
+				</tr>
+				<tr>
+					<td>UDP Listen Port</td>
+					<td>
+						<div className="form-check form-check-inline mr-1">
+							<CInput
+								type="number"
+								value={config.udp_listen_port}
+								onChange={(e) => setValue('udp_listen_port', e.currentTarget.value)}
+							/>
+						</div>
+					</td>
+				</tr>
+
+				<tr>
+					<td colSpan="2" className="settings-category">
+						OSC
+					</td>
+				</tr>
+				<tr>
+					<td>OSC Listener</td>
+					<td>
+						<div className="form-check form-check-inline mr-1">
+							<CInputCheckbox
+								id="userconfig_osc_enabled"
+								checked={config.osc_enabled}
+								onChange={(e) => setValue('osc_enabled', e.currentTarget.checked)}
+							/>
+							<label className="form-check-label" htmlFor="userconfig_osc_enabled">
+								Enabled
+							</label>
+						</div>
+					</td>
+				</tr>
+				<tr>
+					<td>OSC Listen Port</td>
+					<td>
+						<div className="form-check form-check-inline mr-1">
+							<CInput
+								type="number"
+								value={config.osc_listen_port}
+								onChange={(e) => setValue('osc_listen_port', e.currentTarget.value)}
+							/>
+						</div>
+					</td>
+				</tr>
+
+				<tr>
+					<td colSpan="2" className="settings-category">
+						RossTalk
+					</td>
+				</tr>
+				<tr>
+					<td>RossTalk Listener</td>
+					<td>
+						<div className="form-check form-check-inline mr-1">
+							<CInputCheckbox
+								id="userconfig_rosstalk_enabled"
+								checked={config.rosstalk_enabled}
+								onChange={(e) => setValue('rosstalk_enabled', e.currentTarget.checked)}
+							/>
+							<label className="form-check-label" htmlFor="userconfig_rosstalk_enabled">
+								Enabled
+							</label>
+						</div>
+					</td>
+				</tr>
+				<tr>
+					<td colSpan="2" className="settings-category">
+						Artnet Listener
+					</td>
+				</tr>
+				<tr>
+					<td>Artnet Listener</td>
+					<td>
+						<div className="form-check form-check-inline mr-1">
+							<CInputCheckbox
+								id="userconfig_artnet_enabled"
+								checked={config.artnet_enabled}
+								onChange={(e) => setValue('artnet_enabled', e.currentTarget.checked)}
+							/>
+							<label className="form-check-label" htmlFor="userconfig_artnet_enabled">
+								Enabled
+							</label>
+						</div>
+					</td>
+				</tr>
+
+				<tr>
+					<td>Artnet Universe (first is 0)</td>
+					<td>
+						<div className="form-check form-check-inline mr-1">
+							<CInput
+								type="number"
+								value={config.artnet_universe}
+								onChange={(e) => setValue('artnet_universe', e.currentTarget.value)}
+							/>
+						</div>
+					</td>
+				</tr>
+
+				<tr>
+					<td>Artnet Channel</td>
+					<td>
+						<div className="form-check form-check-inline mr-1">
+							<CInput
+								type="number"
+								value={config.artnet_channel}
+								onChange={(e) => setValue('artnet_channel', e.currentTarget.value)}
+							/>
+						</div>
+					</td>
+				</tr>
+			</tbody>
+		</table>
+	)
 }
 
 function RemoteControlInfo() {
+	const config = useContext(UserConfigContext)
+
 	return (
 		<>
 			<CTabs activeTab="tcp-udp">
@@ -330,8 +388,19 @@ function RemoteControlInfo() {
 					<CTabPane data-tab="tcp-udp">
 						<MyErrorBoundary>
 							<p>
-								Remote triggering can be done by sending TCP (port <code>51234</code>) or UDP (port <code>51235</code>)
-								commands.
+								Remote triggering can be done by sending TCP (port{' '}
+								<code>
+									{config?.tcp_enabled && config?.tcp_listen_port && config?.tcp_listen_port !== '0'
+										? config?.tcp_listen_port
+										: 'disabled'}
+								</code>
+								) or UDP (port{' '}
+								<code>
+									{config?.udp_enabled && config?.udp_listen_port && config?.udp_listen_port !== '0'
+										? config?.udp_listen_port
+										: 'disabled'}
+								</code>
+								) commands.
 							</p>
 							<p>
 								<strong>Commands:</strong>
@@ -471,7 +540,13 @@ function RemoteControlInfo() {
 					<CTabPane data-tab="osc">
 						<MyErrorBoundary>
 							<p>
-								Remote triggering can be done by sending OSC commands to port <code>12321</code>.
+								Remote triggering can be done by sending OSC commands to port{' '}
+								<code>
+									{config?.osc_enabled && config?.osc_listen_port && config?.osc_listen_port !== '0'
+										? config?.osc_listen_port
+										: 'disabled'}
+								</code>
+								.
 							</p>
 							<p>
 								<strong>Commands:</strong>
