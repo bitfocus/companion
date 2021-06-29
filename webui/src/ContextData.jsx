@@ -8,6 +8,7 @@ import {
 	InstancesContext,
 	VariableValuesContext,
 	VariableDefinitionsContext,
+	CustomVariableDefinitionsContext,
 } from './util'
 import { NotificationsManager } from './Components/Notifications'
 
@@ -18,6 +19,7 @@ export function ContextData({ socket, children }) {
 	const [feedbacks, setFeedbacks] = useState(null)
 	const [variableDefinitions, setVariableDefinitions] = useState(null)
 	const [variableValues, setVariableValues] = useState(null)
+	const [customVariables, setCustomVariables] = useState(null)
 
 	useEffect(() => {
 		if (socket) {
@@ -45,6 +47,13 @@ export function ContextData({ socket, children }) {
 				})
 				.catch((e) => {
 					console.error('Failed to load variable values list', e)
+				})
+			socketEmit(socket, 'custom_variables_get', [])
+				.then(([data]) => {
+					setCustomVariables(data || {})
+				})
+				.catch((e) => {
+					console.error('Failed to load custom values list', e)
 				})
 
 			const updateVariableDefinitions = (label, variables) => {
@@ -92,6 +101,7 @@ export function ContextData({ socket, children }) {
 
 			socket.on('variable_instance_definitions_set', updateVariableDefinitions)
 			socket.on('variables_set', updateVariableValue)
+			socket.on('custom_variables_get', setCustomVariables)
 
 			socket.on('actions', setActions)
 			socket.emit('get_actions')
@@ -103,6 +113,7 @@ export function ContextData({ socket, children }) {
 				socket.off('instances_get:result', setInstances)
 				socket.off('variable_instance_definitions_set', updateVariableDefinitions)
 				socket.off('variables_set', updateVariableValue)
+				socket.off('custom_variables_get', setCustomVariables)
 				socket.off('actions', setActions)
 				socket.off('feedback_get_definitions:result', setFeedbacks)
 			}
@@ -117,7 +128,7 @@ export function ContextData({ socket, children }) {
 		modules: modules,
 	}
 
-	const steps = [instances, modules, variableDefinitions, variableValues, actions, feedbacks]
+	const steps = [instances, modules, variableDefinitions, variableValues, actions, feedbacks, customVariables]
 	const completedSteps = steps.filter((s) => s !== null && s !== undefined)
 
 	const progressPercent = (completedSteps.length / steps.length) * 100
@@ -129,9 +140,11 @@ export function ContextData({ socket, children }) {
 					<InstancesContext.Provider value={instances}>
 						<VariableValuesContext.Provider value={variableValues}>
 							<VariableDefinitionsContext.Provider value={variableDefinitions}>
-								<NotificationsManager ref={notifierRef} />
+								<CustomVariableDefinitionsContext.Provider value={customVariables}>
+									<NotificationsManager ref={notifierRef} />
 
-								{children(progressPercent, completedSteps.length === steps.length)}
+									{children(progressPercent, completedSteps.length === steps.length)}
+								</CustomVariableDefinitionsContext.Provider>
 							</VariableDefinitionsContext.Provider>
 						</VariableValuesContext.Provider>
 					</InstancesContext.Provider>

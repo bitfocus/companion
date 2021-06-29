@@ -106,6 +106,7 @@
 			@media screen and (min-width: 320px) and (max-width: 767px) and (orientation: landscape) {
 				/* ..This orientation media query. In to this orientation media query you can specify more about CSS code for landscape view. */
 			}
+
 			@media screen and (max-width: 1024px) {
 				/* This is basic media query for respective device.In to this media query  CSS code cover the both view landscape and portrait view. */
 				.page-bank-content canvas {
@@ -117,6 +118,7 @@
 					border: 1px solid rgba(255, 255, 255, 0.15);
 				}
 			}
+
 			@media screen and (min-width: 768px) and (max-width: 1024px) and (orientation: landscape) {
 				/* ..This orientation media query. In to this orientation media query you can specify more about CSS code for landscape view. */
 				.page-bank-content canvas {
@@ -128,6 +130,7 @@
 					border: 1px solid rgba(255, 255, 255, 0.15);
 				}
 			}
+
 			@media screen and (min-width: 1024px) and (orientation: landscape) {
 				/* ..This orientation media query. In to this orientation media query you can specify more about CSS code for landscape view. */
 				.page-bank-content canvas {
@@ -139,6 +142,7 @@
 					border: 1px solid rgba(255, 255, 255, 0.15);
 				}
 			}
+
 			.page-bank-content canvas {
 				/* width: 72px; */
 				margin: 15px;
@@ -166,15 +170,6 @@
 				touch-action: manipulation;
 			}
 
-			canvas {
-				image-rendering: optimizeSpeed; /* Older versions of FF          */
-				image-rendering: -moz-crisp-edges; /* FF 6.0+                       */
-				image-rendering: -webkit-optimize-contrast; /* Safari                        */
-				image-rendering: -o-crisp-edges; /* OS X & Windows Opera (12.02+) */
-				image-rendering: pixelated; /* Awesome future-browsers       */
-				-ms-interpolation-mode: nearest-neighbor; /* IE                            */
-			}
-
 			.grid-container {
 				display: grid;
 			}
@@ -182,6 +177,7 @@
 			.grid-container-8 {
 				grid-template-columns: repeat(8, minmax(80px, 1fr));
 			}
+
 			.grid-container-3 {
 				align-items: flex-end;
 				grid-template-columns: repeat(3, 1fr);
@@ -210,6 +206,7 @@
 
 		<title>Companion Tablet Surface</title>
 	</head>
+
 	<body class="disable-dbl-tap-zoom">
 		<script src="legacy/js/jquery.min.js"></script>
 		<script src="socket.io/socket.io.js"></script>
@@ -264,11 +261,17 @@
 					pages = mypages
 				}
 			}
+
 			function getDeckSettings() {
 				var query = parseQuery(window.location.search)
 				var deckSettings = {
 					//default 32 buttons
-					keeperButtons: Array.from({ length: 32 }, (v, k) => k + 1),
+					keeperButtons: Array.from(
+						{
+							length: 32,
+						},
+						(v, k) => k + 1
+					),
 					rowStartingButtons: [1, 9, 17, 25],
 				}
 				if (query.deck_size !== undefined) {
@@ -495,7 +498,9 @@
 				}
 
 				$('.page')
-					.isInViewport({ tolerance: window.innerHeight / 2 })
+					.isInViewport({
+						tolerance: window.innerHeight / 2,
+					})
 					.each(function () {
 						var page = $(this).attr('pageid')
 

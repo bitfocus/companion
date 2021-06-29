@@ -234,7 +234,7 @@ export interface CompanionUpgradeContext {
 
 export type CompanionStaticUpgradeScript = (
 	context: CompanionUpgradeContext,
-	config: null | (CompanionCoreInstanceconfig & Record<string, any>),
+	config: CompanionCoreInstanceconfig & Record<string, any>,
 	affected_actions: CompanionMigrationAction[],
 	affected_feedbacks: CompanionMigrationFeedback[]
 ) => boolean

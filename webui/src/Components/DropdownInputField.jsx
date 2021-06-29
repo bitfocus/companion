@@ -143,7 +143,17 @@ export function DropdownInputField({ definition, multiple, value, setValue, setV
 			})}
 			title={definition.tooltip}
 		>
-			{definition.allowCustom ? <CreatableSelect {...selectProps} isSearchable={true} /> : <Select {...selectProps} />}
+			{definition.allowCustom ? (
+				<CreatableSelect
+					{...selectProps}
+					isSearchable={true}
+					noOptionsMessage={() => 'Begin typing to use a custom value'}
+					createOptionPosition="first"
+					formatCreateLabel={(v) => `Use "${v}"`}
+				/>
+			) : (
+				<Select {...selectProps} />
+			)}
 		</div>
 	)
 }

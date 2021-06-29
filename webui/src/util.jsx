@@ -15,6 +15,7 @@ export const FeedbacksContext = React.createContext(null)
 export const InstancesContext = React.createContext(null)
 export const VariableDefinitionsContext = React.createContext(null)
 export const VariableValuesContext = React.createContext(null)
+export const CustomVariableDefinitionsContext = React.createContext(null)
 
 export function socketEmit(socket, name, args, timeout, timeoutMessage) {
 	const p = new Promise((resolve, reject) => {

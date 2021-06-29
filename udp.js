@@ -72,7 +72,7 @@ function udp(host, port, options) {
 		self.socket.setMulticastTTL(self.options.multicast_ttl)
 	}
 
-	self.socket.on('error', function (err) {
+	self.socket.on('error', function (error) {
 		// status levels: null = unknown, 0 = ok, 1 = warning, 2 = error
 		new_status(self, STATUS_ERROR, error.message)
 		self.emit.apply(self, ['error'].concat(Array.from(arguments)))

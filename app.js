@@ -183,7 +183,6 @@ system.ready = function (logToFile) {
 	var rest_poll = require('./lib/rest_poll')(system)
 	var loadsave = require('./lib/loadsave')(system)
 	var preset = require('./lib/preset')(system)
-	var tablet = require('./lib/tablet')(system)
 	var satellite = require('./lib/satellite_server')(system)
 	var ws_api = require('./lib/ws_api')(system)
 	var help = require('./lib/help')(system)
