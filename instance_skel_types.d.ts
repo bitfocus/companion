@@ -58,7 +58,7 @@ export interface CompanionAction {
 	label: string
 	description?: string
 	options: SomeCompanionInputField[]
-	callback?: (action: CompanionActionEvent, info: CompanionActionEventInfo) => void
+	callback?: (action: CompanionActionEvent, info: CompanionActionEventInfo | null) => void
 	subscribe?: (action: CompanionActionEvent) => void
 	unsubscribe?: (action: CompanionActionEvent) => void
 }

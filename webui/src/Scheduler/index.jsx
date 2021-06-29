@@ -1,8 +1,7 @@
 import React, { memo, useCallback, useContext, useEffect, useState } from 'react'
 import { CButton } from '@coreui/react'
-import { StaticContext, useMountEffect } from '../util'
+import { StaticContext } from '../util'
 import dayjs from 'dayjs'
-import { BankPreview, dataToButtonImage } from '../Components/BankButton'
 import { ScheduleEditModal } from './EditModal'
 
 export const Scheduler = memo(function Scheduler() {
@@ -63,7 +62,7 @@ export const Scheduler = memo(function Scheduler() {
 	return (
 		<div>
 			<h4>Triggers and schedules</h4>
-			<p>This allows you to recall buttons based on variables or time-based events.</p>
+			<p>This allows you to run actions based on instance or time events.</p>
 
 			{editItem[0] ? (
 				<ScheduleEditModal
@@ -87,91 +86,19 @@ export const Scheduler = memo(function Scheduler() {
 
 const tableDateFormat = 'MM/DD HH:mm:ss'
 function ScheduleTable({ scheduleList, replaceItem, editItem }) {
-	const context = useContext(StaticContext)
-
-	const [previewImages, setPreviewImages] = useState({})
-	const [subscribedImages, setSubscribedImages] = useState([])
-
-	useMountEffect(() => {
-		const updateImage = (p, b, img) => {
-			const id = `${p}.${b}`
-			setPreviewImages((oldImages) => ({
-				...oldImages,
-				[id]: dataToButtonImage(img),
-			}))
-		}
-		context.socket.on('schedule_preview_data', updateImage)
-
-		return () => {
-			context.socket.off('schedule_preview_data', updateImage)
-
-			// unsubscribe all
-			for (const id of subscribedImages) {
-				const [page, bank] = id.split('.')
-				context.socket.emit('scheduler_bank_preview', page, bank, true)
-			}
-		}
-	})
-
-	useEffect(() => {
-		setSubscribedImages((oldSubs) => {
-			const currentSubs = new Set(oldSubs)
-			const newSubs = new Set()
-
-			for (const item of scheduleList ?? []) {
-				// Subscribe if new
-				if (!currentSubs.has(item.button) && !newSubs.has(item.button)) {
-					const [page, bank] = item.button.split('.')
-					context.socket.emit('scheduler_bank_preview', page, bank)
-				}
-
-				newSubs.add(item.button)
-			}
-
-			// Unsubscribe old
-			for (const oldSub of Array.from(currentSubs)) {
-				if (!newSubs.has(oldSub)) {
-					const [page, bank] = oldSub.split('.')
-					context.socket.emit('scheduler_bank_preview', page, bank, true)
-				}
-			}
-
-			return Array.from(newSubs)
-		})
-	}, [context.socket, scheduleList])
-
-	useEffect(() => {
-		setPreviewImages((oldImages) => {
-			const newImages = {}
-
-			for (const sub of subscribedImages) {
-				newImages[sub] = oldImages[sub]
-			}
-
-			return newImages
-		})
-	}, [subscribedImages])
-
 	return (
 		<table className="table table-responsive-sm">
 			<thead>
 				<tr>
 					<th>Name</th>
 					<th>Trigger</th>
-					<th>Button</th>
-					<th>Actions</th>
+					<th>&nbsp;</th>
 				</tr>
 			</thead>
 			<tbody>
 				{scheduleList && scheduleList.length > 0 ? (
 					scheduleList.map((item) => (
-						<ScheduleTableRow
-							key={item.id}
-							item={item}
-							replaceItem={replaceItem}
-							editItem={editItem}
-							image={previewImages[item.button]}
-						/>
+						<ScheduleTableRow key={item.id} item={item} replaceItem={replaceItem} editItem={editItem} />
 					))
 				) : (
 					<tr>
@@ -182,7 +109,7 @@ function ScheduleTable({ scheduleList, replaceItem, editItem }) {
 		</table>
 	)
 }
-function ScheduleTableRow({ item, replaceItem, editItem, image }) {
+function ScheduleTableRow({ item, replaceItem, editItem }) {
 	const context = useContext(StaticContext)
 
 	const doEnableDisable = useCallback(() => {
@@ -209,9 +136,6 @@ function ScheduleTableRow({ item, replaceItem, editItem, image }) {
 				<div dangerouslySetInnerHTML={{ __html: item.config_desc }} />
 				<br />
 				{item.last_run ? <small>Last run: {dayjs(item.last_run).format(tableDateFormat)}</small> : ''}
-			</td>
-			<td>
-				<BankPreview fixedSize preview={image} />
 			</td>
 			<td className="action-buttons">
 				<CButton size="sm" color="ghost-danger" onClick={doDelete}>

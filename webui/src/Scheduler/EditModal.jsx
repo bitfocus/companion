@@ -1,9 +1,23 @@
 import React, { useCallback, useContext, useMemo, useState } from 'react'
-import { CButton, CForm, CFormGroup, CInput, CModal, CModalBody, CModalFooter, CModalHeader } from '@coreui/react'
+import {
+	CButton,
+	CCol,
+	CForm,
+	CFormGroup,
+	CInput,
+	CLabel,
+	CModal,
+	CModalBody,
+	CModalFooter,
+	CModalHeader,
+	CRow,
+} from '@coreui/react'
 import { StaticContext, MyErrorBoundary, socketEmit, useMountEffect } from '../util'
 import Select from 'react-select'
 import { AddFeedbackDropdown, FeedbackEditor } from '../Buttons/EditButton/FeedbackPanel'
 import shortid from 'shortid'
+import { ActionsPanelInner } from '../Buttons/EditButton/ActionsPanel'
+import { CheckboxInputField } from '../Components'
 
 function getPluginSpecDefaults(pluginOptions) {
 	const config = {}
@@ -41,6 +55,8 @@ function getFeedbackDefaults() {
 }
 
 export function ScheduleEditModal({ doClose, doSave, item, plugins }) {
+	const context = useContext(StaticContext)
+
 	const [config, setConfig] = useState({})
 	const updateConfig = useCallback((id, val) => {
 		setConfig((oldConfig) => ({
@@ -73,7 +89,7 @@ export function ScheduleEditModal({ doClose, doSave, item, plugins }) {
 
 			setConfig((oldConfig) => ({
 				title: '',
-				button: '',
+				actions: [],
 				...oldConfig,
 				type: pluginType,
 				config: pluginType === 'feedback' ? getFeedbackDefaults() : innerConfig2,
@@ -91,6 +107,10 @@ export function ScheduleEditModal({ doClose, doSave, item, plugins }) {
 			if (pluginSpec?.multiple && item2.config && !Array.isArray(item2.config)) {
 				item2.config = [item2.config]
 			}
+
+			// hack
+			if (!item2.actions) item2.actions = []
+
 			setConfig(item2)
 		} else if (plugins) {
 			const defaultPlugin = plugins.find((p) => p.type === 'feedback') ?? plugins[0]
@@ -102,9 +122,26 @@ export function ScheduleEditModal({ doClose, doSave, item, plugins }) {
 		return plugins.map((p) => ({ value: p.type, label: p.name }))
 	}, [plugins])
 
+	const setActions = useCallback((cb) => {
+		setConfig((oldConfig) => {
+			const newConfig = { ...oldConfig }
+			newConfig.actions = cb(oldConfig.actions || [])
+			return newConfig
+		})
+	}, [])
+
+	const addActionSelect = useCallback(
+		(actionType) => {
+			socketEmit(context.socket, 'action_get_defaults', [actionType]).then(([action]) => {
+				updateConfig('actions', [...config.actions, action])
+			})
+		},
+		[context.socket, config, updateConfig]
+	)
+
 	return (
 		<CModal show={true} onClose={doClose} size="lg">
-			<CForm onSubmit={doSaveInner}>
+			<CForm onSubmit={doSaveInner} className={'edit-button-panel'}>
 				<CModalHeader closeButton>
 					<h5>Trigger Editor</h5>
 				</CModalHeader>
@@ -113,18 +150,7 @@ export function ScheduleEditModal({ doClose, doSave, item, plugins }) {
 						<label>Name</label>
 						<CInput required value={config.title} onChange={(e) => updateConfig('title', e.target.value)} />
 					</CFormGroup>
-					<legend>Trigger</legend>
-					<CFormGroup>
-						<label>Button</label>
-						<CInput
-							required
-							value={config.button}
-							onChange={(e) => updateConfig('button', e.target.value)}
-							pattern="([1-9][0-9]?).([1-2][0-9]|[3][0-2]|[1-9])"
-							placeholder="Button number, ex 1.1"
-							title="Must be in format BANK#.BUTTON#, for example 1.1 or 99.32. Bank max is 99, button max is 32."
-						/>
-					</CFormGroup>
+
 					<legend>Condition</legend>
 					<CFormGroup>
 						<label>Type</label>
@@ -143,6 +169,39 @@ export function ScheduleEditModal({ doClose, doSave, item, plugins }) {
 					) : (
 						'Unknown type selected'
 					)}
+
+					<hr />
+					<legend>Action</legend>
+					<CRow form className="button-style-form">
+						<CCol className="fieldtype-checkbox" sm={2} xs={3}>
+							<CButton
+								color="warning"
+								onMouseDown={() =>
+									context.socket.emit('schedule_test_actions', config.title, config.actions, config.relative_delays)
+								}
+							>
+								Test actions
+							</CButton>
+						</CCol>
+						<CCol className="fieldtype-checkbox" sm={2} xs={3}>
+							<CLabel>Relative Delays</CLabel>
+							<p>
+								<CheckboxInputField
+									definition={{ default: false }}
+									value={config.relative_delays ?? false}
+									setValue={(e) => updateConfig('relative_delays', e)}
+								/>
+								&nbsp;
+							</p>
+						</CCol>
+					</CRow>
+					<ActionsPanelInner
+						dragId={'triggerAction'}
+						addPlaceholder="+ Add action"
+						actions={config.actions || []}
+						setActions={setActions}
+						addAction={addActionSelect}
+					/>
 				</CModalBody>
 				<CModalFooter>
 					<CButton color="secondary" onClick={doClose}>
