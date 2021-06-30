@@ -1707,9 +1707,9 @@ commist@^1.0.0:
   version "1.0.4"
   resolved "https://codeload.github.com/bitfocus/companion-module-birddog-visca/tar.gz/fb156bf173c92bcef03e19a4771b44064c27eb33"
 
-"companion-module-bitfocus-companion@github:bitfocus/companion-module-bitfocus-companion#v1.5.2":
-  version "1.5.2"
-  resolved "https://codeload.github.com/bitfocus/companion-module-bitfocus-companion/tar.gz/3a4122ebeb59ae783362876f8bec98a356432765"
+"companion-module-bitfocus-companion@github:bitfocus/companion-module-bitfocus-companion#v1.5.3":
+  version "1.5.3"
+  resolved "https://codeload.github.com/bitfocus/companion-module-bitfocus-companion/tar.gz/1da72c0471769d015e80440dac4361b839317308"
 
 "companion-module-bitfocus-snapshot@github:bitfocus/companion-module-bitfocus-snapshot#v0.0.4":
   version "0.0.4"
