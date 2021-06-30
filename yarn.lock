@@ -2414,9 +2414,9 @@ commist@^1.0.0:
   dependencies:
     ntcontrol-connection "^0.2.0"
 
-"companion-module-panasonic-ptz@github:bitfocus/companion-module-panasonic-ptz#v1.0.18":
-  version "1.0.18"
-  resolved "https://codeload.github.com/bitfocus/companion-module-panasonic-ptz/tar.gz/e5e31663625f9c85b349b3ac5073236bc88fb200"
+"companion-module-panasonic-ptz@github:bitfocus/companion-module-panasonic-ptz#v1.0.19":
+  version "1.0.19"
+  resolved "https://codeload.github.com/bitfocus/companion-module-panasonic-ptz/tar.gz/c714cecdb8abb27b3a8c9c80880dfab5a6fde9e6"
 
 "companion-module-panasonic-tv-th@github:bitfocus/companion-module-panasonic-tv-th#v0.0.1":
   version "0.0.1"
