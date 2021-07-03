@@ -184,6 +184,7 @@ system.ready = function (logToFile) {
 	var loadsave = require('./lib/loadsave')(system)
 	var preset = require('./lib/preset')(system)
 	var satellite = require('./lib/satellite_server')(system)
+	var satellitev2 = require('./lib/satellite/satellite_server_v2')(system)
 	var ws_api = require('./lib/ws_api')(system)
 	var help = require('./lib/help')(system)
 
