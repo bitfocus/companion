@@ -22,6 +22,14 @@ function heading() {
 	echo -e "\033[1m$1\033[m"
 }
 
+if [ "$MANAGE_NODE_VERSION" ]; then 
+	# if enabled, then setup n and ensure that the correct version is in use
+	TARGET_VERSION=$(node -p -e "require('./package.json').managed_node_version")
+
+	n install $TARGET_VERSION
+	n prune
+fi
+
 heading "Check Node version"
 NODE_VERSION=$(node -v)
 REQUIRED_VERSION=$(node -p -e "require('./package.json').engines.node")
