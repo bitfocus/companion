@@ -234,6 +234,30 @@ const SurfaceEditModal = forwardRef(function SurfaceEditModal(_props, ref) {
 				<LoadingRetryOrError error={deviceConfigError} dataReady={deviceConfig} doRetry={doRetryConfigLoad} />
 				{deviceConfig && deviceInfo ? (
 					<CForm>
+						TODO
+						{/* <CFormGroup>
+									<CLabel htmlFor="enable_device">Use Last Page At Startup</CLabel>
+									<CInputCheckbox
+										name="enable_device"
+										type="checkbox"
+										checked={!!deviceConfig.enable_device}
+										value={true}
+										onChange={(e) => updateConfig('enable_device', !!e.currentTarget.checked)}
+									/>
+								</CFormGroup> */}
+						<CFormGroup>
+							<CLabel htmlFor="page">Startup Page</CLabel>
+							<CInput
+								name="page"
+								type="range"
+								min={1}
+								max={99}
+								step={1}
+								value={deviceConfig.page}
+								onChange={(e) => updateConfig('page', parseInt(e.currentTarget.value))}
+							/>
+							<span>{deviceConfig.page}</span>
+						</CFormGroup>
 						{deviceInfo.config?.includes('brightness') ? (
 							<CFormGroup>
 								<CLabel htmlFor="brightness">Brightness</CLabel>
@@ -250,7 +274,6 @@ const SurfaceEditModal = forwardRef(function SurfaceEditModal(_props, ref) {
 						) : (
 							''
 						)}
-
 						{deviceInfo.config?.includes('orientation') ? (
 							<CFormGroup>
 								<CLabel htmlFor="orientation">Button rotation</CLabel>
@@ -268,25 +291,6 @@ const SurfaceEditModal = forwardRef(function SurfaceEditModal(_props, ref) {
 						) : (
 							''
 						)}
-
-						{deviceInfo.config?.includes('page') ? (
-							<CFormGroup>
-								<CLabel htmlFor="page">Page</CLabel>
-								<CInput
-									name="page"
-									type="range"
-									min={1}
-									max={99}
-									step={1}
-									value={deviceConfig.page}
-									onChange={(e) => updateConfig('page', parseInt(e.currentTarget.value))}
-								/>
-								<span>{deviceConfig.page}</span>
-							</CFormGroup>
-						) : (
-							''
-						)}
-
 						{deviceInfo.config?.includes('enable_device') ? (
 							<CFormGroup>
 								<CLabel htmlFor="enable_device">Enable Device</CLabel>
