@@ -2652,9 +2652,9 @@ commist@^1.0.0:
   version "1.0.0"
   resolved "https://codeload.github.com/bitfocus/companion-module-sounddevices-pixnet/tar.gz/ded91efc401513f33b2bb8a42ccd11cb3b73e419"
 
-"companion-module-spotify-remote@github:bitfocus/companion-module-spotify-remote#v1.0.4":
-  version "1.0.4"
-  resolved "https://codeload.github.com/bitfocus/companion-module-spotify-remote/tar.gz/c2e1d2e0ce84658143d2043d11fb68e493242478"
+"companion-module-spotify-remote@github:bitfocus/companion-module-spotify-remote#v1.0.5":
+  version "1.0.5"
+  resolved "https://codeload.github.com/bitfocus/companion-module-spotify-remote/tar.gz/546c65e57320ef8e017445e7655fd7193b26799e"
   dependencies:
     spotify-web-api-node "^5.0.1"
 
