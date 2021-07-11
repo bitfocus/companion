@@ -2568,9 +2568,9 @@ commist@^1.0.0:
   version "1.0.0"
   resolved "https://codeload.github.com/bitfocus/companion-module-sain-smart-relay/tar.gz/93fb898fe631a9a940b269f94b90644e4163982b"
 
-"companion-module-seervision-suite@github:bitfocus/companion-module-seervision-suite#v1.0.1":
-  version "1.0.1"
-  resolved "https://codeload.github.com/bitfocus/companion-module-seervision-suite/tar.gz/b8e9b4c90943df7482ffe1aa66c487f77be717a0"
+"companion-module-seervision-suite@github:bitfocus/companion-module-seervision-suite#v1.0.2":
+  version "1.0.2"
+  resolved "https://codeload.github.com/bitfocus/companion-module-seervision-suite/tar.gz/2f90f0c02c801f58664191955b3c4017d590f447"
   dependencies:
     ws "^7.4.5"
 
