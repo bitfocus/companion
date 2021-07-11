@@ -19,6 +19,7 @@ declare abstract class InstanceSkel<TConfig> {
 	protected system: CompanionSystem
 	public id: string
 	public config: TConfig
+	public label: string
 
 	/**
 	 * Create an instance of the module.
