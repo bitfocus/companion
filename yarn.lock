@@ -2665,6 +2665,10 @@ commist@^1.0.0:
     lodash "^4.17.21"
     xml2js "^0.4.22"
 
+"companion-module-tallyma-wirelesstally @github:bitfocus/companion-module-tallyma-wirelesstally#v1.0.0":
+  version "1.0.0"
+  resolved "https://codeload.github.com/bitfocus/companion-module-tallyma-wirelesstally/tar.gz/7ef3c02bff43909f69c553f497172573533c04d5"
+
 "companion-module-tascam-bdmp1@github:bitfocus/companion-module-tascam-bdmp1#v0.1.5":
   version "0.1.5"
   resolved "https://codeload.github.com/bitfocus/companion-module-tascam-bdmp1/tar.gz/8bfa1ce2aceb7011c2dfa3e33310ef611cb46d33"
