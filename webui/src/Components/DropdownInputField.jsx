@@ -1,5 +1,7 @@
+import classNames from 'classnames'
 import { useMemo, useEffect, useCallback } from 'react'
 import Select from 'react-select'
+import CreatableSelect from 'react-select/creatable'
 
 export function DropdownInputField({ definition, multiple, value, setValue, setValid }) {
 	const options = useMemo(() => {
@@ -26,35 +28,73 @@ export function DropdownInputField({ definition, multiple, value, setValue, setV
 			if (entry) {
 				res.push(entry)
 			} else {
-				res.push({ value: val, label: `?? (${val})` })
+				res.push({ value: val, label: definition.allowCustom ? val : `?? (${val})` })
 			}
 		}
 		return res
-	}, [value, options])
+	}, [value, options, definition.allowCustom])
+
+	// Compile the regex (and cache)
+	const regex = useMemo(() => {
+		if (definition.regex) {
+			// Compile the regex string
+			const match = definition.regex.match(/^\/(.*)\/(.*)$/)
+			if (match) {
+				return new RegExp(match[1], match[2])
+			}
+		}
+		return null
+	}, [definition.regex])
+
+	const isValueValid = useCallback(
+		(newValue) => {
+			if (isMultiple) {
+				for (const val of newValue) {
+					// Require the selected choices to be valid
+					if (
+						!options.find((c) => c.value === val) &&
+						definition.allowCustom &&
+						regex &&
+						(typeof val !== 'string' || !val.match(regex))
+					) {
+						return false
+					}
+				}
+			} else {
+				// Require the selected choice to be valid
+				if (
+					!options.find((c) => c.value === newValue) &&
+					definition.allowCustom &&
+					regex &&
+					(typeof newValue !== 'string' || !newValue.match(regex))
+				) {
+					return false
+				}
+			}
+
+			return true
+		},
+		[definition.allowCustom, regex, options, isMultiple]
+	)
 
 	// If the value is undefined, populate with the default. Also inform the parent about the validity
 	useEffect(() => {
 		if (value === undefined && definition.default !== undefined) {
 			setValue(definition.default)
+			setValid?.(isValueValid(definition.default))
+		} else {
+			setValid?.(isValueValid(value))
 		}
-		setValid?.(true)
-	}, [definition.default, value, setValue, setValid])
+	}, [definition.default, value, setValue, setValid, isValueValid])
 
 	const onChange = useCallback(
 		(e) => {
 			const isMultiple = !!multiple
 			const newValue = isMultiple ? e?.map((v) => v.value) ?? [] : e?.value
 
-			let isValid = true
+			const isValid = isValueValid(newValue)
 
 			if (isMultiple) {
-				for (const val of newValue) {
-					// Require the selected choices to be valid
-					if (!options.find((c) => c.value === val)) {
-						isValid = false
-					}
-				}
-
 				if (
 					typeof definition.minSelection === 'number' &&
 					newValue.length < definition.minSelection &&
@@ -72,32 +112,48 @@ export function DropdownInputField({ definition, multiple, value, setValue, setV
 					// Block change if too many are selected
 					return
 				}
-			} else {
-				// Require the selected choice to be valid
-				if (!options.find((c) => c.value === newValue)) {
-					isValid = false
-				}
 			}
 
 			setValue(newValue)
 			setValid?.(isValid)
 		},
-		[setValue, setValid, multiple, definition.minSelection, definition.maximumSelectionLength, options]
+		[setValue, setValid, multiple, definition.minSelection, definition.maximumSelectionLength, isValueValid]
 	)
 
 	const minChoicesForSearch = typeof definition.minChoicesForSearch === 'number' ? definition.minChoicesForSearch : 10
 
+	const selectProps = {
+		classNamePrefix: 'select-control',
+		menuPlacement: 'auto',
+		isClearable: false,
+		isSearchable: minChoicesForSearch <= options.length,
+		isMulti: isMultiple,
+		options: options,
+		value: isMultiple ? currentValue : currentValue[0],
+		onChange: onChange,
+	}
+
 	return (
-		<div className="select-tooltip" title={definition.tooltip}>
-			<Select
-				menuPlacement="auto"
-				isClearable={false}
-				isSearchable={minChoicesForSearch <= options.length}
-				isMulti={isMultiple}
-				options={options}
-				value={isMultiple ? currentValue : currentValue[0]}
-				onChange={onChange}
-			/>
+		<div
+			className={classNames({
+				'select-tooltip': true,
+				'select-invalid': !isValueValid(
+					isMultiple && currentValue ? currentValue.map((v) => v.value) ?? [] : currentValue[0]?.value
+				),
+			})}
+			title={definition.tooltip}
+		>
+			{definition.allowCustom ? (
+				<CreatableSelect
+					{...selectProps}
+					isSearchable={true}
+					noOptionsMessage={() => 'Begin typing to use a custom value'}
+					createOptionPosition="first"
+					formatCreateLabel={(v) => `Use "${v}"`}
+				/>
+			) : (
+				<Select {...selectProps} />
+			)}
 		</div>
 	)
 }

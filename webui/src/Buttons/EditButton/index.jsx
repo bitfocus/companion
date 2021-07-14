@@ -3,18 +3,22 @@ import React, { useCallback, useContext, useEffect, useRef, useState } from 'rea
 import shortid from 'shortid'
 import { BankPreview, dataToButtonImage } from '../../Components/BankButton'
 import { GenericConfirmModal } from '../../Components/GenericConfirmModal'
-import { CompanionContext, KeyReceiver, LoadingRetryOrError, socketEmit } from '../../util'
+import { StaticContext, KeyReceiver, LoadingRetryOrError, socketEmit, UserConfigContext } from '../../util'
 import { ActionsPanel } from './ActionsPanel'
 
 import { ButtonStyleConfig } from './ButtonStyleConfig'
 import { FeedbacksPanel } from './FeedbackPanel'
 
 export function EditButton({ page, bank, onKeyUp }) {
-	const context = useContext(CompanionContext)
+	const context = useContext(StaticContext)
+	const userConfig = useContext(UserConfigContext)
 
 	const resetModalRef = useRef()
 
 	const [config, setConfig] = useState(null)
+	const configRef = useRef()
+	configRef.current = config // update the ref every render
+
 	const [configError, setConfigError] = useState(null)
 	const [tableLoadStatus, setTableLoadStatus] = useState({})
 
@@ -54,7 +58,7 @@ export function EditButton({ page, bank, onKeyUp }) {
 		(newStyle) => {
 			let show_warning = false
 
-			const currentStyle = config?.style
+			const currentStyle = configRef.current?.style
 			if (currentStyle === newStyle) {
 				// No point changing style to itself
 				return
@@ -91,7 +95,7 @@ export function EditButton({ page, bank, onKeyUp }) {
 				doChange()
 			}
 		},
-		[context.socket, page, bank, config?.style]
+		[context.socket, page, bank, configRef]
 	)
 
 	const doRetryLoad = useCallback(() => setReloadConfigToken(shortid()), [])
@@ -133,7 +137,7 @@ export function EditButton({ page, bank, onKeyUp }) {
 									style={{ opacity: 0.8, paddingLeft: 6 }}
 									className="dropdown-toggle dropdown-toggle-split"
 								>
-									<span class="sr-only">Toggle Dropdown</span>
+									<span className="sr-only">Toggle Dropdown</span>
 								</CDropdownToggle>
 							</CButtonGroup>
 							<CDropdownMenu>
@@ -158,11 +162,11 @@ export function EditButton({ page, bank, onKeyUp }) {
 						</CButton>
 					</div>
 
-					<ButtonStyleConfig config={config} page={page} bank={bank} valueChanged={loadConfig} />
+					<ButtonStyleConfig config={config} configRef={configRef} page={page} bank={bank} valueChanged={loadConfig} />
 
 					{config.style === 'png' ? (
 						<>
-							<h4 className="mt-3">Press/on actions</h4>
+							<h4 className="mt-3">{config.latch ? 'Latch' : 'Press'} actions</h4>
 							<ActionsPanel
 								page={page}
 								bank={bank}
@@ -179,7 +183,7 @@ export function EditButton({ page, bank, onKeyUp }) {
 								reloadToken={reloadTablesToken}
 							/>
 
-							<h4 className="mt-3">Release/off actions</h4>
+							<h4 className="mt-3">{config.latch ? 'Unlatch' : 'Release'} actions</h4>
 							<ActionsPanel
 								page={page}
 								bank={bank}
@@ -219,7 +223,13 @@ export function EditButton({ page, bank, onKeyUp }) {
 
 					<p>
 						<b>Hint:</b> Control buttons with OSC or HTTP: /press/bank/{page}/{bank} to press this button remotely. OSC
-						port 12321!
+						port{' '}
+						<code>
+							{userConfig?.osc_enabled && userConfig?.osc_listen_port && userConfig?.osc_listen_port !== '0'
+								? userConfig?.osc_listen_port
+								: 'disabled'}
+						</code>
+						!
 					</p>
 				</div>
 			) : (
@@ -230,7 +240,7 @@ export function EditButton({ page, bank, onKeyUp }) {
 }
 
 function ButtonEditPreview({ page, bank }) {
-	const context = useContext(CompanionContext)
+	const context = useContext(StaticContext)
 	const [previewImage, setPreviewImage] = useState(null)
 
 	// On unmount

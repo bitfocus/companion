@@ -1,9 +1,9 @@
 import React, { useContext, useEffect, useState } from 'react'
 import { CHeader, CHeaderBrand, CHeaderNavItem, CHeaderNav, CHeaderNavLink, CToggler } from '@coreui/react'
-import { CompanionContext } from '../util'
+import { StaticContext } from '../util'
 
 export function MyHeader({ toggleSidebar }) {
-	const context = useContext(CompanionContext)
+	const context = useContext(StaticContext)
 
 	const [versionInfo, setVersionInfo] = useState(null)
 	const [updateData, setUpdateData] = useState(null)

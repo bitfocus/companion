@@ -30,26 +30,35 @@ export interface CompanionBankRequiredProps {
 	color: number
 	bgcolor: number
 }
-export interface CompanionBankAdditionalProps {
+export interface CompanionBankAdditionalStyleProps {
 	alignment: CompanionAlignment
 	pngalignment: CompanionAlignment
 	png64?: string
+}
+export interface CompanionBankAdditionalCoreProps {
 	latch: boolean
 	relative_delay: boolean
 }
 
-export interface CompanionBankPNG extends CompanionBankRequiredProps, CompanionBankAdditionalProps {
+export interface CompanionBankPNG
+	extends CompanionBankRequiredProps,
+		CompanionBankAdditionalStyleProps,
+		CompanionBankAdditionalCoreProps {
 	style: 'png'
 }
 
-export interface CompanionBankPreset extends CompanionBankRequiredProps, Partial<CompanionBankAdditionalProps> {
+export interface CompanionBankPreset
+	extends CompanionBankRequiredProps,
+		Partial<CompanionBankAdditionalStyleProps>,
+		Partial<CompanionBankAdditionalCoreProps> {
 	style: 'png' | 'text' // 'text' for backwards compatability
 }
 
 export interface CompanionAction {
 	label: string
+	description?: string
 	options: SomeCompanionInputField[]
-	callback?: (action: CompanionActionEvent, info: CompanionActionEventInfo) => void
+	callback?: (action: CompanionActionEvent, info: CompanionActionEventInfo | null) => void
 	subscribe?: (action: CompanionActionEvent) => void
 	unsubscribe?: (action: CompanionActionEvent) => void
 }
@@ -117,6 +126,11 @@ export interface CompanionInputFieldTextInput extends CompanionInputField {
 export interface CompanionInputFieldDropdown extends CompanionInputFieldDropdownBase {
 	multiple?: false
 	default: ConfigValue
+
+	/** Allow custom values to be defined */
+	allowCustom?: boolean
+	/** Check custom value against refex */
+	regex?: string
 }
 export interface CompanionInputFieldMultiDropdown extends CompanionInputFieldDropdownBase {
 	multiple: true
@@ -162,18 +176,29 @@ export interface CompanionVariable {
 	label: string
 	name: string
 }
-export interface CompanionFeedback {
+
+export interface CompanionFeedbackBase<TRes> {
+	type?: 'boolean' | 'advanced'
 	label: string
-	description: string
+	description?: string
 	options: SomeCompanionInputField[]
 	callback?: (
 		feedback: CompanionFeedbackEvent,
-		bank: CompanionBankPNG,
-		info: CompanionFeedbackEventInfo
-	) => CompanionFeedbackResult
+		bank: CompanionBankPNG | null,
+		info: CompanionFeedbackEventInfo | null
+	) => TRes
 	subscribe?: (feedback: CompanionFeedbackEvent) => void
 	unsubscribe?: (feedback: CompanionFeedbackEvent) => void
 }
+export interface CompanionFeedbackBoolean extends CompanionFeedbackBase<boolean> {
+	type: 'boolean'
+	style: Partial<CompanionBankRequiredProps & CompanionBankAdditionalStyleProps>
+}
+export interface CompanionFeedbackAdvanced extends CompanionFeedbackBase<CompanionFeedbackResult> {
+	type?: 'advanced'
+}
+export type CompanionFeedback = CompanionFeedbackBoolean | CompanionFeedbackAdvanced
+
 export interface CompanionPreset {
 	category: string
 	label: string
@@ -181,6 +206,7 @@ export interface CompanionPreset {
 	feedbacks: Array<{
 		type: string
 		options: { [key: string]: InputValue | undefined }
+		style?: Partial<CompanionBankRequiredProps & CompanionBankAdditionalStyleProps>
 	}>
 	actions: Array<{
 		action: string
@@ -199,17 +225,33 @@ export interface CompanionActions {
 	[id: string]: CompanionAction | undefined
 }
 
-export type CompanionUpgradeScript<TConfig> = (
-	config: CompanionCoreInstanceconfig & TConfig,
-	actions: CompanionMigrationAction[],
-	release_actions: CompanionMigrationAction[],
-	feedbacks: CompanionMigrationFeedback[]
+export interface CompanionUpgradeContext {
+	/** Translate a key index from the old 15 key layout (5x3 grid) to the 32 key layout (8x4 grid) */
+	convert15to32(key: number): number
+	rgb(red: number, green: number, blue: number): number
+	rgbRev(color: number): { r: number; g: number; b: number }
+}
+
+export type CompanionStaticUpgradeScript = (
+	context: CompanionUpgradeContext,
+	config: CompanionCoreInstanceconfig & Record<string, any>,
+	affected_actions: CompanionMigrationAction[],
+	affected_feedbacks: CompanionMigrationFeedback[]
 ) => boolean
+
+export interface CompanionUpgradeToBooleanFeedbackMap {
+	[feedback_id: string]:
+		| true
+		| {
+				// Option name to style property
+				[option_key: string]: 'text' | 'size' | 'color' | 'bgcolor' | 'alignment' | 'pngalignment' | 'png64'
+		  }
+		| undefined
+}
 
 export interface CompanionCoreInstanceconfig {
 	instance_type: string
 	label: string
-	enabled: boolean
 }
 
 export interface CompanionMigrationAction {

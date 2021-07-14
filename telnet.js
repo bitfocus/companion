@@ -293,7 +293,7 @@ telnetStream.prototype._handleByte = function (byte) {
 	}
 }
 
-telnetStream.prototype._getData = function (arguments) {
+telnetStream.prototype._getData = function () {
 	var self = this
 	var buff = self.buffer
 

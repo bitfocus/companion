@@ -1,12 +1,13 @@
 import React, { useCallback, useContext, useEffect, useState } from 'react'
 import { CAlert, CButton, CRow } from '@coreui/react'
-import { CompanionContext, LoadingRetryOrError, socketEmit } from '../util'
+import { StaticContext, InstancesContext, LoadingRetryOrError, socketEmit } from '../util'
 import { useDrag } from 'react-dnd'
 import { BankPreview, dataToButtonImage, RedImage } from '../Components/BankButton'
 import shortid from 'shortid'
 
 export const InstancePresets = function InstancePresets({ resetToken }) {
-	const context = useContext(CompanionContext)
+	const context = useContext(StaticContext)
+	const instancesContext = useContext(InstancesContext)
 
 	const [instanceAndCategory, setInstanceAndCategory] = useState([null, null])
 	const [presetsMap, setPresetsMap] = useState(null)
@@ -76,7 +77,7 @@ export const InstancePresets = function InstancePresets({ resetToken }) {
 	}
 
 	if (instanceAndCategory[0]) {
-		const instance = context.instances[instanceAndCategory[0]]
+		const instance = instancesContext[instanceAndCategory[0]]
 		const module = instance ? context.modules[instance.instance_type] : undefined
 
 		const presets = presetsMap[instanceAndCategory[0]] ?? []
@@ -107,10 +108,11 @@ export const InstancePresets = function InstancePresets({ resetToken }) {
 }
 
 function PresetsInstanceList({ presets, setInstanceAndCategory }) {
-	const context = useContext(CompanionContext)
+	const context = useContext(StaticContext)
+	const instancesContext = useContext(InstancesContext)
 
 	const options = Object.keys(presets).map((id) => {
-		const instance = context.instances[id]
+		const instance = instancesContext[id]
 		const module = instance ? context.modules[instance.instance_type] : undefined
 
 		return (
@@ -174,10 +176,10 @@ function PresetsCategoryList({ presets, instance, module, selectedInstanceId, se
 }
 
 function PresetsButtonList({ presets, selectedInstanceId, selectedCategory, setInstanceAndCategory }) {
-	const doBack = useCallback(() => setInstanceAndCategory([selectedInstanceId, null]), [
-		setInstanceAndCategory,
-		selectedInstanceId,
-	])
+	const doBack = useCallback(
+		() => setInstanceAndCategory([selectedInstanceId, null]),
+		[setInstanceAndCategory, selectedInstanceId]
+	)
 
 	const options = presets.filter((p) => p.category === selectedCategory)
 
@@ -209,7 +211,7 @@ function PresetsButtonList({ presets, selectedInstanceId, selectedCategory, setI
 }
 
 function PresetIconPreview({ preset, instanceId, ...childProps }) {
-	const context = useContext(CompanionContext)
+	const context = useContext(StaticContext)
 	const [previewImage, setPreviewImage] = useState(null)
 	const [previewError, setPreviewError] = useState(false)
 	const [retryToken, setRetryToken] = useState(shortid())

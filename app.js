@@ -32,10 +32,18 @@ var logbuffer = []
 var logwriting = false
 
 const pkgInfo = require('./package.json')
-const buildNumber = fs
-	.readFileSync(__dirname + '/BUILD')
-	.toString()
-	.trim()
+let buildNumber
+try {
+	buildNumber = fs
+		.readFileSync(__dirname + '/BUILD')
+		.toString()
+		.trim()
+} catch (e) {
+	console.error('Companion cannot start as the "BUILD" file is missing')
+	console.error('If you are running from source, you can generate it by running: ./tools/build_writefile.sh')
+	process.exit(1)
+}
+
 const skeleton_info = {
 	appName: pkgInfo.description,
 	appVersion: pkgInfo.version,
@@ -54,13 +62,11 @@ system.on('skeleton-info', function (key, val) {
 	if (key == 'configDir') {
 		debug('configuration directory', val)
 		cfgDir = val + '/companion/'
-		mkdirp(cfgDir, function (err) {
-			debug('mkdirp', cfgDir, err)
-			config = new (require('./lib/config'))(system, cfgDir, {
-				http_port: 8888,
-				bind_ip: '127.0.0.1',
-				start_minimised: false,
-			})
+		mkdirp.sync(cfgDir)
+		config = new (require('./lib/config'))(system, cfgDir, {
+			http_port: 8888,
+			bind_ip: '127.0.0.1',
+			start_minimised: false,
 		})
 	}
 })
@@ -166,7 +172,7 @@ system.ready = function (logToFile) {
 	var elgatoDM = require('./lib/elgato_dm')(system)
 	var preview = require('./lib/preview')(system)
 	var instance = require('./lib/instance')(system)
-	var osc = require('./lib/osc')(system)
+	var osc = require('./lib/server_osc')(system)
 	var server_api = require('./lib/server_api')(system)
 	var server_tcp = require('./lib/server_tcp')(system)
 	var server_udp = require('./lib/server_udp')(system)
@@ -177,7 +183,6 @@ system.ready = function (logToFile) {
 	var rest_poll = require('./lib/rest_poll')(system)
 	var loadsave = require('./lib/loadsave')(system)
 	var preset = require('./lib/preset')(system)
-	var tablet = require('./lib/tablet')(system)
 	var satellite = require('./lib/satellite_server')(system)
 	var ws_api = require('./lib/ws_api')(system)
 	var help = require('./lib/help')(system)

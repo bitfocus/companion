@@ -1,6 +1,16 @@
 import { useEffect, useRef, useState } from 'react'
 import debounce from 'debounce-fn'
-import { CompanionContext, socketEmit } from './util'
+import {
+	StaticContext,
+	ActionsContext,
+	FeedbacksContext,
+	socketEmit,
+	InstancesContext,
+	VariableValuesContext,
+	VariableDefinitionsContext,
+	CustomVariableDefinitionsContext,
+	UserConfigContext,
+} from './util'
 import { NotificationsManager } from './Components/Notifications'
 
 export function ContextData({ socket, children }) {
@@ -10,6 +20,8 @@ export function ContextData({ socket, children }) {
 	const [feedbacks, setFeedbacks] = useState(null)
 	const [variableDefinitions, setVariableDefinitions] = useState(null)
 	const [variableValues, setVariableValues] = useState(null)
+	const [customVariables, setCustomVariables] = useState(null)
+	const [userConfig, setUserConfig] = useState(null)
 
 	useEffect(() => {
 		if (socket) {
@@ -37,6 +49,21 @@ export function ContextData({ socket, children }) {
 				})
 				.catch((e) => {
 					console.error('Failed to load variable values list', e)
+				})
+			socketEmit(socket, 'custom_variables_get', [])
+				.then(([data]) => {
+					setCustomVariables(data || {})
+				})
+				.catch((e) => {
+					console.error('Failed to load custom values list', e)
+				})
+
+			socketEmit(socket, 'get_userconfig_all', [])
+				.then(([config]) => {
+					setUserConfig(config)
+				})
+				.catch((e) => {
+					console.error('Failed to load user config', e)
 				})
 
 			const updateVariableDefinitions = (label, variables) => {
@@ -68,17 +95,30 @@ export function ContextData({ socket, children }) {
 					wait: 500,
 				}
 			)
-			const updateVariableValue = (key, value) => {
+			const updateVariableValue = (changed_variables, removed_variables) => {
 				// Don't commit to state immediately, run through a debounce to rate limit the renders
-				variablesQueue[key] = value
+				for (const [key, value] of Object.entries(changed_variables)) {
+					variablesQueue[key] = value
+				}
+				for (const variable of removed_variables) {
+					variablesQueue[variable] = undefined
+				}
 				persistVariableValues()
+			}
+
+			const updateUserConfigValue = (key, value) => {
+				setUserConfig((oldState) => ({
+					...oldState,
+					[key]: value,
+				}))
 			}
 
 			socket.on('instances_get:result', setInstances)
 			socket.emit('instances_get')
 
 			socket.on('variable_instance_definitions_set', updateVariableDefinitions)
-			socket.on('variable_set', updateVariableValue)
+			socket.on('variables_set', updateVariableValue)
+			socket.on('custom_variables_get', setCustomVariables)
 
 			socket.on('actions', setActions)
 			socket.emit('get_actions')
@@ -86,12 +126,16 @@ export function ContextData({ socket, children }) {
 			socket.on('feedback_get_definitions:result', setFeedbacks)
 			socket.emit('feedback_get_definitions')
 
+			socket.on('set_userconfig_key', updateUserConfigValue)
+
 			return () => {
 				socket.off('instances_get:result', setInstances)
 				socket.off('variable_instance_definitions_set', updateVariableDefinitions)
-				socket.off('variable_set', updateVariableValue)
+				socket.off('variables_set', updateVariableValue)
+				socket.off('custom_variables_get', setCustomVariables)
 				socket.off('actions', setActions)
 				socket.off('feedback_get_definitions:result', setFeedbacks)
+				socket.off('set_userconfig_key', updateUserConfigValue)
 			}
 		}
 	}, [socket])
@@ -101,25 +145,33 @@ export function ContextData({ socket, children }) {
 	const contextValue = {
 		socket: socket,
 		notifier: notifierRef,
-
-		instances: instances,
 		modules: modules,
-		variableDefinitions: variableDefinitions,
-		variableValues: variableValues,
-		actions: actions,
-		feedbacks: feedbacks,
 	}
 
-	const steps = [instances, modules, variableDefinitions, variableValues, actions, feedbacks]
+	const steps = [instances, modules, variableDefinitions, variableValues, actions, feedbacks, customVariables]
 	const completedSteps = steps.filter((s) => s !== null && s !== undefined)
 
 	const progressPercent = (completedSteps.length / steps.length) * 100
 
 	return (
-		<CompanionContext.Provider value={contextValue}>
-			<NotificationsManager ref={notifierRef} />
+		<StaticContext.Provider value={contextValue}>
+			<ActionsContext.Provider value={actions}>
+				<FeedbacksContext.Provider value={feedbacks}>
+					<InstancesContext.Provider value={instances}>
+						<VariableValuesContext.Provider value={variableValues}>
+							<VariableDefinitionsContext.Provider value={variableDefinitions}>
+								<CustomVariableDefinitionsContext.Provider value={customVariables}>
+									<UserConfigContext.Provider value={userConfig}>
+										<NotificationsManager ref={notifierRef} />
 
-			{children(progressPercent, completedSteps.length === steps.length)}
-		</CompanionContext.Provider>
+										{children(progressPercent, completedSteps.length === steps.length)}
+									</UserConfigContext.Provider>
+								</CustomVariableDefinitionsContext.Provider>
+							</VariableDefinitionsContext.Provider>
+						</VariableValuesContext.Provider>
+					</InstancesContext.Provider>
+				</FeedbacksContext.Provider>
+			</ActionsContext.Provider>
+		</StaticContext.Provider>
 	)
 }

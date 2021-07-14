@@ -14,6 +14,7 @@ import {
 	CForm,
 	CFormGroup,
 	CInput,
+	CInputCheckbox,
 	CLabel,
 	CModal,
 	CModalBody,
@@ -21,13 +22,14 @@ import {
 	CModalHeader,
 	CSelect,
 } from '@coreui/react'
-import { CompanionContext, LoadingRetryOrError, socketEmit } from './util'
+import { StaticContext, LoadingRetryOrError, socketEmit } from './util'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faCog, faSync } from '@fortawesome/free-solid-svg-icons'
 import shortid from 'shortid'
+import { TextInputField } from './Components/TextInputField'
 
 export const SurfacesPage = memo(function SurfacesPage() {
-	const context = useContext(CompanionContext)
+	const context = useContext(StaticContext)
 
 	const editModalRef = useRef()
 
@@ -71,6 +73,13 @@ export const SurfacesPage = memo(function SurfacesPage() {
 		editModalRef.current.show(device)
 	}, [])
 
+	const updateName = useCallback(
+		(serialnumber, name) => {
+			context.socket.emit('device_set_name', serialnumber, name)
+		},
+		[context.socket]
+	)
+
 	return (
 		<div>
 			<h4>Surfaces</h4>
@@ -94,6 +103,7 @@ export const SurfacesPage = memo(function SurfacesPage() {
 					<tr>
 						<th>NO</th>
 						<th>ID</th>
+						<th>Name</th>
 						<th>Type</th>
 						<th>&nbsp;</th>
 					</tr>
@@ -104,6 +114,13 @@ export const SurfacesPage = memo(function SurfacesPage() {
 							<tr key={dev.id}>
 								<td>#{i}</td>
 								<td>{dev.serialnumber}</td>
+								<td>
+									<TextInputField
+										definition={{}}
+										value={dev.name}
+										setValue={(val) => updateName(dev.serialnumber, val)}
+									/>
+								</td>
 								<td>{dev.type}</td>
 								<td>
 									{dev?.config && dev.config.length > 0 ? (
@@ -117,6 +134,14 @@ export const SurfacesPage = memo(function SurfacesPage() {
 							</tr>
 						)
 					})}
+
+					{devices.length === 0 ? (
+						<tr>
+							<td colSpan={4}>No control surfaces have been detected</td>
+						</tr>
+					) : (
+						''
+					)}
 				</tbody>
 			</table>
 
@@ -129,7 +154,7 @@ export const SurfacesPage = memo(function SurfacesPage() {
 })
 
 const SurfaceEditModal = forwardRef(function SurfaceEditModal(_props, ref) {
-	const context = useContext(CompanionContext)
+	const context = useContext(StaticContext)
 
 	const [deviceInfo, setDeviceInfo] = useState(null)
 	const [show, setShow] = useState(false)
@@ -262,37 +287,16 @@ const SurfaceEditModal = forwardRef(function SurfaceEditModal(_props, ref) {
 							''
 						)}
 
-						{deviceInfo.config?.includes('keysPerRow') ? (
+						{deviceInfo.config?.includes('enable_device') ? (
 							<CFormGroup>
-								<CLabel htmlFor="keysPerRow">Keys per row</CLabel>
-								<CInput
-									name="keysPerRow"
-									type="range"
-									min={1}
-									max={99}
-									step={1}
-									value={deviceConfig.keysPerRow}
-									onChange={(e) => updateConfig('keysPerRow', parseInt(e.currentTarget.value))}
+								<CLabel htmlFor="enable_device">Enable Device</CLabel>
+								<CInputCheckbox
+									name="enable_device"
+									type="checkbox"
+									checked={!!deviceConfig.enable_device}
+									value={true}
+									onChange={(e) => updateConfig('enable_device', !!e.currentTarget.checked)}
 								/>
-								<span>{deviceConfig.keysPerRow}</span>
-							</CFormGroup>
-						) : (
-							''
-						)}
-
-						{deviceInfo.config?.includes('keysPerColumn') ? (
-							<CFormGroup>
-								<CLabel htmlFor="keysPerColumn">Keys per column</CLabel>
-								<CInput
-									name="keysPerColumn"
-									type="range"
-									min={1}
-									max={99}
-									step={1}
-									value={deviceConfig.keysPerColumn}
-									onChange={(e) => updateConfig('keysPerColumn', parseInt(e.currentTarget.value))}
-								/>
-								<span>{deviceConfig.keysPerColumn}</span>
 							</CFormGroup>
 						) : (
 							''

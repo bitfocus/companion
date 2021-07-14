@@ -114,21 +114,6 @@ your bowser's top menu
 				touch-action: manipulation;
 			}
 
-			canvas {
-				image-rendering: optimizeSpeed;
-				/* Older versions of FF          */
-				image-rendering: -moz-crisp-edges;
-				/* FF 6.0+                       */
-				image-rendering: -webkit-optimize-contrast;
-				/* Safari                        */
-				image-rendering: -o-crisp-edges;
-				/* OS X & Windows Opera (12.02+) */
-				image-rendering: pixelated;
-				/* Awesome future-browsers       */
-				-ms-interpolation-mode: nearest-neighbor;
-				/* IE                            */
-			}
-
 			.unicode-icon {
 				font-size: 1.5em;
 			}
@@ -289,7 +274,17 @@ your bowser's top menu
 								<a
 									v-if="calcUpPageLink(page)"
 									:href="calcUpPageLink(page)"
-									class="bg-black border border-gray-600 hover:bg-yellow-600 text-white font-bold py-2 px-4 sm:px-8 rounded"
+									class="
+										bg-black
+										border border-gray-600
+										hover:bg-yellow-600
+										text-white
+										font-bold
+										py-2
+										px-4
+										sm:px-8
+										rounded
+									"
 								>
 									<span class="unicode-icon">&#8593;</span>
 								</a>
@@ -305,7 +300,18 @@ your bowser's top menu
 								<a
 									v-if="calcDownPageLink(page)"
 									:href="calcDownPageLink(page)"
-									class="bg-black border border-gray-600 hover:bg-yellow-600 text-white font-bold w-8 py-2 px-4 sm:px-8 rounded"
+									class="
+										bg-black
+										border border-gray-600
+										hover:bg-yellow-600
+										text-white
+										font-bold
+										w-8
+										py-2
+										px-4
+										sm:px-8
+										rounded
+									"
 								>
 									<span class="unicode-icon">&#8595;</span>
 									<!--page up (previous)-->
@@ -326,7 +332,17 @@ your bowser's top menu
 								<a
 									v-if="calcDownPageLink(page)"
 									:href="calcDownPageLink(page)"
-									class="bg-black border border-gray-600 hover:bg-yellow-600 text-white font-bold py-2 px-4 sm:px-8 rounded"
+									class="
+										bg-black
+										border border-gray-600
+										hover:bg-yellow-600
+										text-white
+										font-bold
+										py-2
+										px-4
+										sm:px-8
+										rounded
+									"
 								>
 									<span class="unicode-icon">&#8593;</span>
 								</a>
@@ -342,7 +358,18 @@ your bowser's top menu
 								<a
 									v-if="calcUpPageLink(page)"
 									:href="calcUpPageLink(page)"
-									class="bg-black border border-gray-600 hover:bg-yellow-600 text-white font-bold w-8 py-2 px-4 sm:px-8 rounded"
+									class="
+										bg-black
+										border border-gray-600
+										hover:bg-yellow-600
+										text-white
+										font-bold
+										w-8
+										py-2
+										px-4
+										sm:px-8
+										rounded
+									"
 								>
 									<span class="unicode-icon">&#8595;</span>
 									<!--page up (previous)-->

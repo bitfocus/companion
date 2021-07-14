@@ -9,7 +9,7 @@ import React, {
 	useRef,
 	useState,
 } from 'react'
-import { CompanionContext, KeyReceiver, LoadingRetryOrError, socketEmit } from '../util'
+import { StaticContext, KeyReceiver, LoadingRetryOrError, socketEmit } from '../util'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import {
 	faArrowsAlt,
@@ -36,7 +36,7 @@ export const ButtonsGridPanel = memo(function ButtonsPage({
 	selectedButton,
 	clearSelectedButton,
 }) {
-	const context = useContext(CompanionContext)
+	const context = useContext(StaticContext)
 
 	const actionsRef = useRef()
 
@@ -198,7 +198,7 @@ export const ButtonsGridPanel = memo(function ButtonsPage({
 })
 
 const ButtonGridActions = forwardRef(function ButtonGridActions({ isHot, pageNumber, clearSelectedButton }, ref) {
-	const context = useContext(CompanionContext)
+	const context = useContext(StaticContext)
 
 	const resetRef = useRef()
 
@@ -439,7 +439,7 @@ export function ButtonGridHeader({ pageNumber, pageName, onNameChange, onNameBlu
 }
 
 function ButtonGrid({ bankClick, pageNumber, selectedButton }) {
-	const context = useContext(CompanionContext)
+	const context = useContext(StaticContext)
 
 	const [imageCache, setImageCache] = useState({})
 
@@ -519,7 +519,7 @@ function ButtonGrid({ bankClick, pageNumber, selectedButton }) {
 }
 
 function ButtonGridIcon(props) {
-	const context = useContext(CompanionContext)
+	const context = useContext(StaticContext)
 	const [{ isOver, canDrop }, drop] = useDrop({
 		accept: 'preset',
 		drop: (dropData) => {
