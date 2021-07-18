@@ -123,13 +123,9 @@ export const SurfacesPage = memo(function SurfacesPage() {
 								</td>
 								<td>{dev.type}</td>
 								<td>
-									{dev?.config && dev.config.length > 0 ? (
-										<CButton color="success" onClick={() => configureDevice(dev)}>
-											<FontAwesomeIcon icon={faCog} /> Settings
-										</CButton>
-									) : (
-										''
-									)}
+									<CButton color="success" onClick={() => configureDevice(dev)}>
+										<FontAwesomeIcon icon={faCog} /> Settings
+									</CButton>
 								</td>
 							</tr>
 						)
@@ -217,7 +213,17 @@ const SurfaceEditModal = forwardRef(function SurfaceEditModal(_props, ref) {
 						[key]: value,
 					}
 
-					context.socket.emit('device_config_set', deviceInfo.id, newConfig)
+					socketEmit(context.socket, 'device_config_set', [deviceInfo.id, newConfig])
+						.then(([err, newConfig]) => {
+							if (err) {
+								console.log('Config update failed', err)
+							} else {
+								setDeviceConfig(newConfig)
+							}
+						})
+						.catch((e) => {
+							console.log('Config update failed', e)
+						})
 					return newConfig
 				})
 			}
@@ -234,6 +240,30 @@ const SurfaceEditModal = forwardRef(function SurfaceEditModal(_props, ref) {
 				<LoadingRetryOrError error={deviceConfigError} dataReady={deviceConfig} doRetry={doRetryConfigLoad} />
 				{deviceConfig && deviceInfo ? (
 					<CForm>
+						<CFormGroup>
+							<CLabel htmlFor="use_last_page">Use Last Page At Startup</CLabel>
+							<CInputCheckbox
+								name="use_last_page"
+								type="checkbox"
+								checked={!!deviceConfig.use_last_page}
+								value={true}
+								onChange={(e) => updateConfig('use_last_page', !!e.currentTarget.checked)}
+							/>
+						</CFormGroup>
+						<CFormGroup>
+							<CLabel htmlFor="page">Startup Page</CLabel>
+							<CInput
+								disabled={!!deviceConfig.use_last_page}
+								name="page"
+								type="range"
+								min={1}
+								max={99}
+								step={1}
+								value={deviceConfig.page}
+								onChange={(e) => updateConfig('page', parseInt(e.currentTarget.value))}
+							/>
+							<span>{deviceConfig.page}</span>
+						</CFormGroup>
 						{deviceInfo.config?.includes('brightness') ? (
 							<CFormGroup>
 								<CLabel htmlFor="brightness">Brightness</CLabel>
@@ -250,7 +280,6 @@ const SurfaceEditModal = forwardRef(function SurfaceEditModal(_props, ref) {
 						) : (
 							''
 						)}
-
 						{deviceInfo.config?.includes('orientation') ? (
 							<CFormGroup>
 								<CLabel htmlFor="orientation">Button rotation</CLabel>
@@ -268,25 +297,6 @@ const SurfaceEditModal = forwardRef(function SurfaceEditModal(_props, ref) {
 						) : (
 							''
 						)}
-
-						{deviceInfo.config?.includes('page') ? (
-							<CFormGroup>
-								<CLabel htmlFor="page">Page</CLabel>
-								<CInput
-									name="page"
-									type="range"
-									min={1}
-									max={99}
-									step={1}
-									value={deviceConfig.page}
-									onChange={(e) => updateConfig('page', parseInt(e.currentTarget.value))}
-								/>
-								<span>{deviceConfig.page}</span>
-							</CFormGroup>
-						) : (
-							''
-						)}
-
 						{deviceInfo.config?.includes('enable_device') ? (
 							<CFormGroup>
 								<CLabel htmlFor="enable_device">Enable Device</CLabel>
