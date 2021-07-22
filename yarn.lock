@@ -64,10 +64,10 @@
     "@types/yargs" "^15.0.0"
     chalk "^3.0.0"
 
-"@julusian/jpeg-turbo@^1.1.0":
-  version "1.1.0"
-  resolved "https://registry.yarnpkg.com/@julusian/jpeg-turbo/-/jpeg-turbo-1.1.0.tgz#d10ad9f12d90bd85c1201de33b48a7593b4b93d1"
-  integrity sha512-LrwqDRkOqOzBrpSNn80UnESc8369AEoJmv8oihXpU7oq/1vFMYQdAWFb7/LhuxWHFhrpKz1ZtL6OV7w+LVA5XQ==
+"@julusian/jpeg-turbo@^1.1.1":
+  version "1.1.1"
+  resolved "https://registry.yarnpkg.com/@julusian/jpeg-turbo/-/jpeg-turbo-1.1.1.tgz#9337e4d3b3fa360c93df2e4b21134f9a9f4a35b4"
+  integrity sha512-IO1KqXbR+Taded0BgAvIj/IPTXvSip8MhkZ0PDpHqxIi2YNGeQ8TodxAAW2MB8DThO4opHKq4Ngx2ybZWzGZQw==
   dependencies:
     bindings "^1.5.0"
     cmake-js "^6.2.1"
