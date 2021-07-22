@@ -455,7 +455,7 @@
 		"url": "https://donorbox.org/bitfocus-opensource"
 	},
 	"optionalDependencies": {
-		"@julusian/jpeg-turbo": "^1.0.1"
+		"@julusian/jpeg-turbo": "^1.1.0"
 	},
 	"resolutions": {
 		"infinitton-idisplay/node-hid": "^2.1.1",
