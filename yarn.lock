@@ -2153,9 +2153,9 @@ commist@^1.0.0:
   version "1.0.1"
   resolved "https://codeload.github.com/bitfocus/companion-module-ifelseware-avkey/tar.gz/1b81a6ee71af8f69c833ddd454cfc4a508535599"
 
-"companion-module-ifelseware-avplayback@github:bitfocus/companion-module-ifelseware-avplayback#v1.0.1":
-  version "1.0.1"
-  resolved "https://codeload.github.com/bitfocus/companion-module-ifelseware-avplayback/tar.gz/cf2f1e817e23d55eba5bb43df18e803930636964"
+"companion-module-ifelseware-avplayback@github:bitfocus/companion-module-ifelseware-avplayback#v1.0.2":
+  version "1.0.2"
+  resolved "https://codeload.github.com/bitfocus/companion-module-ifelseware-avplayback/tar.gz/00b14afe3c9d7b88588652f1c64e635daa89ace7"
 
 "companion-module-imimot-mitti@github:bitfocus/companion-module-imimot-mitti#v1.0.8":
   version "1.0.8"
