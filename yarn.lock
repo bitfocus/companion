@@ -2252,9 +2252,9 @@ commist@^1.0.0:
     got "^11.8.2"
     ws "^7.4.4"
 
-"companion-module-lumens-visca@github:bitfocus/companion-module-lumens-visca#v1.0.1":
-  version "1.0.1"
-  resolved "https://codeload.github.com/bitfocus/companion-module-lumens-visca/tar.gz/51d4accce615e0adf5e51466cecf658c8745b105"
+"companion-module-lumens-visca@github:bitfocus/companion-module-lumens-visca#v1.0.2":
+  version "1.0.2"
+  resolved "https://codeload.github.com/bitfocus/companion-module-lumens-visca/tar.gz/baeea7f514c73805b1b16f0ffb5b1d93ec13e40a"
 
 "companion-module-lyntec-rpc-breaker@github:bitfocus/companion-module-lyntec-rpc-breaker#v1.0.3":
   version "1.0.3"
