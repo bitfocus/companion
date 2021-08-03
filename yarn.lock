@@ -2252,6 +2252,10 @@ commist@^1.0.0:
     got "^11.8.2"
     ws "^7.4.4"
 
+"companion-module-lumens-mediaprocessor@github:bitfocus/companion-module-lumens-mediaprocessor#v1.0.0":
+  version "1.0.1"
+  resolved "https://codeload.github.com/bitfocus/companion-module-lumens-mediaprocessor/tar.gz/5898e6b9a5ab0501d8869c3c2d6efe294dbb696e"
+
 "companion-module-lumens-visca@github:bitfocus/companion-module-lumens-visca#v1.0.2":
   version "1.0.2"
   resolved "https://codeload.github.com/bitfocus/companion-module-lumens-visca/tar.gz/baeea7f514c73805b1b16f0ffb5b1d93ec13e40a"
