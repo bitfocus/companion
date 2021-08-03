@@ -1592,6 +1592,10 @@ commist@^1.0.0:
   version "1.0.6"
   resolved "https://codeload.github.com/bitfocus/companion-module-anomes-millumin/tar.gz/121d069e6c292521c71ba812f1bf605b40c46b0e"
 
+"companion-module-arkaos-mediamaster@github:bitfocus/companion-module-arkaos-mediamaster#v1.0.0":
+  version "1.0.0"
+  resolved "https://codeload.github.com/bitfocus/companion-module-arkaos-mediamaster/tar.gz/3a42b0563097409d1a2c676a481f2b169c4f1c13"
+
 "companion-module-aten-matrix@github:bitfocus/companion-module-aten-matrix#v1.0.0":
   version "1.0.0"
   resolved "https://codeload.github.com/bitfocus/companion-module-aten-matrix/tar.gz/5f71055fd1c5d788662f8422153bb82abe09257c"
