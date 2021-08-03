@@ -421,7 +421,7 @@
 		"companion-module-vaddio-ptz": "github:bitfocus/companion-module-vaddio-ptz#v1.0.1",
 		"companion-module-vicreo-hotkey": "github:bitfocus/companion-module-vicreo-hotkey#v2.0.4",
 		"companion-module-vicreo-variablelistener": "github:bitfocus/companion-module-vicreo-variablelistener#v1.0.7",
-		"companion-module-videolan-vlc": "github:bitfocus/companion-module-videolan-vlc#v1.1.11",
+		"companion-module-videolan-vlc": "github:bitfocus/companion-module-videolan-vlc#v1.1.12",
 		"companion-module-visualproductions-bstation2": "github:bitfocus/companion-module-visualproductions-bstation2#v1.0.6",
 		"companion-module-vivitek-projector": "github:bitfocus/companion-module-vivitek-projector#v1.0.3",
 		"companion-module-vizio-smartcast": "github:bitfocus/companion-module-vizio-smartcast#v1.1.4",
