@@ -2792,9 +2792,9 @@ commist@^1.0.0:
   version "1.0.1"
   resolved "https://codeload.github.com/bitfocus/companion-module-vaddio-ptz/tar.gz/16bf099f3c35aa231c74b10b6b2cb60f93ef63a1"
 
-"companion-module-vicreo-hotkey@github:bitfocus/companion-module-vicreo-hotkey#v2.0.4":
-  version "2.0.4"
-  resolved "https://codeload.github.com/bitfocus/companion-module-vicreo-hotkey/tar.gz/c260d5d03f40b41e8c1a806ee120841966020c9f"
+"companion-module-vicreo-hotkey@github:bitfocus/companion-module-vicreo-hotkey#v2.0.5":
+  version "2.0.5"
+  resolved "https://codeload.github.com/bitfocus/companion-module-vicreo-hotkey/tar.gz/f010e5598a42ea094f38f3f9d9c536f1c50a7e01"
   dependencies:
     md5 "^2.3.0"
 
