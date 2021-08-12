@@ -389,10 +389,10 @@
   resolved "https://registry.yarnpkg.com/@types/minimatch/-/minimatch-3.0.4.tgz#f0ec25dbf2f0e4b18647313ac031134ca5b24b21"
   integrity sha512-1z8k4wzFnNjVK/tlxvrWuK5WMt6mydWWP7+zvH5eFep4oj+UkrfiJTRtjCeBXNpwaA/FYqqtb4/QS4ianFpIRA==
 
-"@types/multicast-dns@^7.2.0":
-  version "7.2.0"
-  resolved "https://registry.yarnpkg.com/@types/multicast-dns/-/multicast-dns-7.2.0.tgz#394f9cb2bcc77d010dc9255b21bf338ae6c568bc"
-  integrity sha512-yimoB+kC5EAKZdd0stGKglW2M5dZguodNQqY+Ne+mN6jyUWJ+RwrEtycZ/PgmlH3AccW/59Nmh7XPulx+QxXNQ==
+"@types/multicast-dns@^7.2.1":
+  version "7.2.1"
+  resolved "https://registry.yarnpkg.com/@types/multicast-dns/-/multicast-dns-7.2.1.tgz#6527b28ce62bcdc08a38f6a329a3d23145c99d95"
+  integrity sha512-A2PmB8MRcNVEkw6wzGT5rtBHqyHOVjiRMkJH+zpJKXipSi+GGkHg6JjNFApDiYK9WefJqkVG0taln1VMl4TGfw==
   dependencies:
     "@types/dns-packet" "*"
     "@types/node" "*"
@@ -402,10 +402,10 @@
   resolved "https://registry.yarnpkg.com/@types/node/-/node-15.12.2.tgz#1f2b42c4be7156ff4a6f914b2fb03d05fa84e38d"
   integrity sha512-zjQ69G564OCIWIOHSXyQEEDpdpGl+G348RAKY0XXy9Z5kU9Vzv1GMNnkar/ZJ8dzXB3COzD9Mo9NtRZ4xfgUww==
 
-"@types/node@^12.0.4", "@types/node@^12.19.3", "@types/node@^12.19.4", "@types/node@^12.20.13", "@types/node@^12.20.15":
-  version "12.20.15"
-  resolved "https://registry.yarnpkg.com/@types/node/-/node-12.20.15.tgz#10ee6a6a3f971966fddfa3f6e89ef7a73ec622df"
-  integrity sha512-F6S4Chv4JicJmyrwlDkxUdGNSplsQdGwp1A0AJloEVDirWdZOAiRHhovDlsFkKUrquUXhz1imJhXHsf59auyAg==
+"@types/node@^12.0.4", "@types/node@^12.19.3", "@types/node@^12.19.4", "@types/node@^12.20.13", "@types/node@^12.20.19":
+  version "12.20.19"
+  resolved "https://registry.yarnpkg.com/@types/node/-/node-12.20.19.tgz#538e61fc220f77ae4a4663c3d8c3cb391365c209"
+  integrity sha512-niAuZrwrjKck4+XhoCw6AAVQBENHftpXw9F4ryk66fTgYaKQ53R4FI7c9vUGGw5vQis1HKBHDR1gcYI/Bq1xvw==
 
 "@types/node@^14.6.2":
   version "14.17.3"
@@ -1739,15 +1739,15 @@ commist@^1.0.0:
   version "1.0.0"
   resolved "https://codeload.github.com/bitfocus/companion-module-blackdiamondvideo-phantom800/tar.gz/850a80132d8dba3da7756b743e56c871648cb694"
 
-"companion-module-bmd-atem@github:bitfocus/companion-module-bmd-atem#v2.12.1":
-  version "2.12.1"
-  resolved "https://codeload.github.com/bitfocus/companion-module-bmd-atem/tar.gz/2cd146fd707ca60b09d45ad2b579040fb181a0fd"
+"companion-module-bmd-atem@github:bitfocus/companion-module-bmd-atem#v2.13.0":
+  version "2.13.0"
+  resolved "https://codeload.github.com/bitfocus/companion-module-bmd-atem/tar.gz/9711fcd43b0458c92d0c140e27213dc29837eb5e"
   dependencies:
-    "@types/multicast-dns" "^7.2.0"
-    "@types/node" "^12.20.15"
+    "@types/multicast-dns" "^7.2.1"
+    "@types/node" "^12.20.19"
     atem-connection "3.0.0-nightly-latest-20210530-132658-16c3cdd.0"
     multicast-dns "^7.2.3"
-    type-fest "^1.2.0"
+    type-fest "^1.4.0"
 
 "companion-module-bmd-audiomonitor@github:bitfocus/companion-module-bmd-audiomonitor#v1.0.0":
   version "1.0.0"
@@ -7453,10 +7453,10 @@ type-fest@^0.8.1:
   resolved "https://registry.yarnpkg.com/type-fest/-/type-fest-0.8.1.tgz#09e249ebde851d3b1e48d27c105444667f17b83d"
   integrity sha512-4dbzIzqvjtgiM5rw1k5rEHtBANKmdudhGyBEajN01fEyhaAIhsoKNy6y7+IN93IfpFtwY9iqi7kD+xwKhQsNJA==
 
-type-fest@^1.1.3, type-fest@^1.2.0:
-  version "1.2.0"
-  resolved "https://registry.yarnpkg.com/type-fest/-/type-fest-1.2.0.tgz#4cdf38ef9b047922c26038080cb269752ae359a2"
-  integrity sha512-++0N6KyAj0t2webXst0PE0xuXb4Dv3z1Z+4SGzK+j/epeWBZCfkQbkW/ezscZwpinmBQ5wu/l4TqagKSVcAGCA==
+type-fest@^1.1.3, type-fest@^1.4.0:
+  version "1.4.0"
+  resolved "https://registry.yarnpkg.com/type-fest/-/type-fest-1.4.0.tgz#e9fb813fe3bf1744ec359d55d1affefa76f14be1"
+  integrity sha512-yGSza74xk0UG8k+pLh5oeoYirvIiWo5t0/o3zHHAO2tRDiZcxWP7fywNlXhqb6/r6sWvwi+RsyQMWhVLe4BVuA==
 
 type-is@~1.6.17, type-is@~1.6.18:
   version "1.6.18"
@@ -7978,12 +7978,12 @@ write-file-atomic@^3.0.0:
     signal-exit "^3.0.2"
     typedarray-to-buffer "^3.1.5"
 
-ws@7.2.1, ws@^7.2.0, ws@^7.3.1, ws@^7.4.1, ws@^7.4.3, ws@^7.4.4, ws@^7.4.6, ws@~7.4.2:
+ws@7.2.1, ws@~7.4.2:
   version "7.4.6"
   resolved "https://registry.yarnpkg.com/ws/-/ws-7.4.6.tgz#5654ca8ecdeee47c33a9a4bf6d28e2be2980377c"
   integrity sha512-YmhHDO4MzaDLB+M9ym/mDA5z0naX8j7SIlT8f8z+I0VtzsRbekxEutHSme7NPS2qE8StCYQNUnfWdXta/Yu85A==
 
-ws@^7.4.5:
+ws@^7.2.0, ws@^7.3.1, ws@^7.4.1, ws@^7.4.3, ws@^7.4.4, ws@^7.4.5, ws@^7.4.6:
   version "7.5.1"
   resolved "https://registry.yarnpkg.com/ws/-/ws-7.5.1.tgz#44fc000d87edb1d9c53e51fbc69a0ac1f6871d66"
   integrity sha512-2c6faOUH/nhoQN6abwMloF7Iyl0ZS2E9HGtsiLrWn0zOOMWlhtDmdf/uihDt6jnuCxgtwGBNy6Onsoy2s2O2Ow==
