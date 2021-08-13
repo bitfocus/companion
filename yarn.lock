@@ -851,6 +851,13 @@ axios@^0.19.0:
   dependencies:
     follow-redirects "1.5.10"
 
+axios@^0.20.0:
+  version "0.20.0"
+  resolved "https://registry.yarnpkg.com/axios/-/axios-0.20.0.tgz#057ba30f04884694993a8cd07fa394cff11c50bd"
+  integrity sha512-ANA4rr2BDcmmAQLOKft2fufrtuvlqR+cXNNinUmvfeSNCOF98PZL+7M/v1zIdGo7OLjEA9J2gXJL+j4zGsl0bA==
+  dependencies:
+    follow-redirects "^1.10.0"
+
 axios@^0.21.1:
   version "0.21.1"
   resolved "https://registry.yarnpkg.com/axios/-/axios-0.21.1.tgz#22563481962f4d6bde9a76d516ef0e5d3c09b2b8"
@@ -2205,6 +2212,12 @@ commist@^1.0.0:
   dependencies:
     bluebird "^3.7.2"
     urllib "^2.34.2"
+
+"companion-module-kiloview-ndi@github:bitfocus/companion-module-kiloview-ndi#v1.0.0":
+  version "1.0.0"
+  resolved "https://codeload.github.com/bitfocus/companion-module-kiloview-ndi/tar.gz/b5003fad378fdf22008f8c509e3d275e1ed181b1"
+  dependencies:
+    kiloview-ndi "^1.0.1"
 
 "companion-module-kramer-matrix@github:bitfocus/companion-module-kramer-matrix#v1.2.1":
   version "1.2.1"
@@ -5187,6 +5200,13 @@ keyv@^4.0.0:
   integrity sha512-zdGa2TOpSZPq5mU6iowDARnMBZgtCqJ11dJROFi6tg6kTn4nuUdU09lFyLFSaHrWqpIJ+EBq4E8/Dc0Vx5vLdA==
   dependencies:
     json-buffer "3.0.1"
+
+kiloview-ndi@^1.0.1:
+  version "1.0.1"
+  resolved "https://registry.yarnpkg.com/kiloview-ndi/-/kiloview-ndi-1.0.1.tgz#c58312c5fa407aee400b613eb9c9c7b634ce1c66"
+  integrity sha512-C1SrA8vGn+JjGIs+69eJgnDpWbIJcClSMQrqN0jGjbXSLjFkb88c/GpZL98yk1or6MRmyfsxo7rLsGAqkazA4g==
+  dependencies:
+    axios "^0.20.0"
 
 latest-version@^5.0.0, latest-version@^5.1.0:
   version "5.1.0"

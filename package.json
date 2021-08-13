@@ -297,6 +297,7 @@
 		"companion-module-joy-playdeck": "github:bitfocus/companion-module-joy-playdeck#v1.0.1",
 		"companion-module-justmacros-lua": "github:bitfocus/companion-module-justmacros-lua#v1.0.1",
 		"companion-module-jvc-ptz": "github:bitfocus/companion-module-jvc-ptz#v1.0.9",
+		"companion-module-kiloview-ndi": "github:bitfocus/companion-module-kiloview-ndi#v1.0.0",
 		"companion-module-kramer-matrix": "github:bitfocus/companion-module-kramer-matrix#v1.2.1",
 		"companion-module-kramer-vp727": "github:bitfocus/companion-module-kramer-vp727#v1.0.1",
 		"companion-module-kramer-vp734": "github:bitfocus/companion-module-kramer-vp734#v1.0.0",
