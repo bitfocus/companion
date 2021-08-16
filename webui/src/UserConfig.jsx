@@ -133,6 +133,21 @@ function UserConfigTable() {
 					</td>
 				</tr>
 				<tr>
+					<td>Enable connected xkeys (Companion restart required)</td>
+					<td>
+						<div className="form-check form-check-inline mr-1">
+							<CInputCheckbox
+								id="userconfig_xkeys_enable"
+								checked={config.xkeys_enable}
+								onChange={(e) => setValue('xkeys_enable', e.currentTarget.checked)}
+							/>
+							<label className="form-check-label" htmlFor="userconfig_xkeys_enable">
+								Enabled
+							</label>
+						</div>
+					</td>
+				</tr>
+				<tr>
 					<td colSpan="2" className="settings-category">
 						PIN Lockout
 					</td>
