@@ -2368,9 +2368,9 @@ commist@^1.0.0:
   version "1.0.0"
   resolved "https://codeload.github.com/bitfocus/companion-module-muxlab-kvm/tar.gz/9334f6e8c4ed64ecc8e75f160c216e5955fa5484"
 
-"companion-module-neodarque-stagetimer2@github:bitfocus/companion-module-neodarque-stagetimer2#v1.2.5":
-  version "1.2.5"
-  resolved "https://codeload.github.com/bitfocus/companion-module-neodarque-stagetimer2/tar.gz/2591b11a17b40588b9935f15e4705993dcf7ae53"
+"companion-module-neodarque-stagetimer2@github:bitfocus/companion-module-neodarque-stagetimer2#v1.2.6":
+  version "1.2.6"
+  resolved "https://codeload.github.com/bitfocus/companion-module-neodarque-stagetimer2/tar.gz/ff54136179e073b5f625075166e0fe1bc8cf60c7"
   dependencies:
     xml2js "^0.4.23"
 
