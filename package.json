@@ -402,7 +402,7 @@
 		"companion-module-sonos-speakers": "github:bitfocus/companion-module-sonos-speakers#v0.2.0",
 		"companion-module-sony-bravia": "github:bitfocus/companion-module-sony-bravia#v1.0.0",
 		"companion-module-sony-visca": "github:bitfocus/companion-module-sony-visca#v1.2.8",
-		"companion-module-soundcraft-ui": "github:bitfocus/companion-module-soundcraft-ui#v2.0.2",
+		"companion-module-soundcraft-ui": "github:bitfocus/companion-module-soundcraft-ui#v2.0.3",
 		"companion-module-sounddevices-pixnet": "github:bitfocus/companion-module-sounddevices-pixnet#v1.0.0",
 		"companion-module-spotify-remote": "github:bitfocus/companion-module-spotify-remote#v1.0.6",
 		"companion-module-studiocoast-vmix": "github:bitfocus/companion-module-studiocoast-vmix#v1.2.21",
