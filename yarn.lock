@@ -2416,9 +2416,9 @@ commist@^1.0.0:
   version "1.0.6"
   resolved "https://codeload.github.com/bitfocus/companion-module-novastar-controller/tar.gz/0efb9cfc858ab0d117f67e554ba51821f95225f9"
 
-"companion-module-obs-studio@github:bitfocus/companion-module-obs-studio#v1.0.23":
-  version "1.0.23"
-  resolved "https://codeload.github.com/bitfocus/companion-module-obs-studio/tar.gz/72bd598ff525c3bbb89a838e004c49cd67e31dd5"
+"companion-module-obs-studio@github:bitfocus/companion-module-obs-studio#v1.0.24":
+  version "1.0.24"
+  resolved "https://codeload.github.com/bitfocus/companion-module-obs-studio/tar.gz/50252fea7a0cc890ea2db64d9ad4125cd1119d2b"
   dependencies:
     obs-websocket-js "^4.0.2"
 
