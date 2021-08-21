@@ -2715,6 +2715,10 @@ commist@^1.0.0:
   dependencies:
     spotify-web-api-node "^5.0.1"
 
+"companion-module-spx-gc@github:bitfocus/companion-module-spx-gc#v1.0.0":
+  version "1.0.0"
+  resolved "https://codeload.github.com/bitfocus/companion-module-spx-gc/tar.gz/5f9b848394b270f6e6db8fa0fea3f7d98d420f3e"
+
 "companion-module-studiocoast-vmix@github:bitfocus/companion-module-studiocoast-vmix#v1.2.21":
   version "1.2.21"
   resolved "https://codeload.github.com/bitfocus/companion-module-studiocoast-vmix/tar.gz/4fef1b5c6bea89df26b04bd6ad38014cced3aaff"
