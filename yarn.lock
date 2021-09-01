@@ -2017,6 +2017,10 @@ commist@^1.0.0:
   version "1.0.4"
   resolved "https://codeload.github.com/bitfocus/companion-module-extron-smx/tar.gz/d86f28cea84ce0fe38e8073706520b8077dc7a1e"
 
+"companion-module-extron-xtp-3200@github:bitfocus/companion-module-extron-xtp-3200#v1.0.0":
+  version "1.0.0"
+  resolved "https://codeload.github.com/bitfocus/companion-module-extron-xtp-3200/tar.gz/a4e8a838b43a165ed8e7152903a971025a6d1f56"
+
 "companion-module-faithchapel-videoplayoutserver@github:bitfocus/companion-module-faithchapel-videoplayoutserver#v1.0.1":
   version "1.0.1"
   resolved "https://codeload.github.com/bitfocus/companion-module-faithchapel-videoplayoutserver/tar.gz/fc6a89e2f054598ed39685ba17546ec110215046"
