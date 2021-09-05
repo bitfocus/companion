@@ -54,11 +54,11 @@ export function ImportExport({ pageNumber }) {
 							} else {
 								for (const id in config.instances || {}) {
 									const instance_type = config.instances[id]?.instance_type
-									if (!context.modules[instance_type]) {
+									if (instancesContext[id]) {
+										config.instances[id].import_to = id
+									} else if (!context.modules[instance_type] && !context.moduleRedirects[instance_type]) {
 										// Ignore unknown modules
 										config.instances[id].import_to = null
-									} else if (instancesContext[id]) {
-										config.instances[id].import_to = id
 									} else {
 										config.instances[id].import_to = 'new'
 									}
@@ -79,7 +79,7 @@ export function ImportExport({ pageNumber }) {
 				setLoadError('Companion requires a more modern browser')
 			}
 		},
-		[context.socket, instancesContext, fileApiIsSupported]
+		[context.socket, context.modules, context.moduleRedirects, instancesContext, fileApiIsSupported]
 	)
 
 	const doImport = useCallback(() => {
@@ -196,9 +196,10 @@ export function ImportExport({ pageNumber }) {
 									if (key === 'companion-bitfocus' || instance.instance_type === 'bitfocus-companion') {
 										return ''
 									} else {
-										const snapshotModule = context.modules[instance.instance_type]
+										const instance_type = context.moduleRedirects[instance.instance_type] ?? instance.instance_type
+										const snapshotModule = context.modules[instance_type]
 										const currentInstances = Object.entries(instancesContext).filter(
-											([id, inst]) => inst.instance_type === instance.instance_type
+											([id, inst]) => inst.instance_type === instance_type
 										)
 
 										return (
