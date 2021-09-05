@@ -53,7 +53,11 @@ export function ImportExport({ pageNumber }) {
 								setLoadError(err)
 							} else {
 								for (const id in config.instances || {}) {
-									if (instancesContext[id]) {
+									const instance_type = config.instances[id]?.instance_type
+									if (!context.modules[instance_type]) {
+										// Ignore unknown modules
+										config.instances[id].import_to = null
+									} else if (instancesContext[id]) {
 										config.instances[id].import_to = id
 									} else {
 										config.instances[id].import_to = 'new'
@@ -200,27 +204,31 @@ export function ImportExport({ pageNumber }) {
 										return (
 											<tr>
 												<td>
-													<CSelect
-														value={instance.import_to ?? 'new'}
-														onChange={(e) => {
-															setSnapshot((snapshot) =>
-																update(snapshot, {
-																	instances: {
-																		[key]: {
-																			import_to: { $set: e.target.value },
+													{snapshotModule ? (
+														<CSelect
+															value={instance.import_to ?? 'new'}
+															onChange={(e) => {
+																setSnapshot((snapshot) =>
+																	update(snapshot, {
+																		instances: {
+																			[key]: {
+																				import_to: { $set: e.target.value },
+																			},
 																		},
-																	},
-																})
-															)
-														}}
-													>
-														<option value="new">[ Create new instance ]</option>
-														{currentInstances.map(([id, inst]) => (
-															<option value={id}>{inst.label}</option>
-														))}
-													</CSelect>
+																	})
+																)
+															}}
+														>
+															<option value="new">[ Create new instance ]</option>
+															{currentInstances.map(([id, inst]) => (
+																<option value={id}>{inst.label}</option>
+															))}
+														</CSelect>
+													) : (
+														'Ignored'
+													)}
 												</td>
-												<td>{snapshotModule?.label ?? 'Unknown module'}</td>
+												<td>{snapshotModule ? snapshotModule.label : 'Unknown module'}</td>
 												<td>{instance.label}</td>
 											</tr>
 										)
