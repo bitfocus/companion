@@ -2672,9 +2672,9 @@ commist@^1.0.0:
   version "1.0.1"
   resolved "https://codeload.github.com/bitfocus/companion-module-slack-webhooks/tar.gz/d18447b43281d069308876aa2980c57688035710"
 
-"companion-module-softron-movierecorder@github:bitfocus/companion-module-softron-movierecorder#v1.0.2":
-  version "1.0.2"
-  resolved "https://codeload.github.com/bitfocus/companion-module-softron-movierecorder/tar.gz/f41b90ec9f5631f8cfcc50210a0e531cc36d2e3a"
+"companion-module-softron-movierecorder@github:bitfocus/companion-module-softron-movierecorder#v1.0.3":
+  version "1.0.3"
+  resolved "https://codeload.github.com/bitfocus/companion-module-softron-movierecorder/tar.gz/e2ca7d10aa1a6df1c109de856f266b77eedb9610"
   dependencies:
     node-fetch "^2.6.1"
 
