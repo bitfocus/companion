@@ -412,7 +412,7 @@
 		"companion-module-spx-gc": "github:bitfocus/companion-module-spx-gc#v1.0.2",
 		"companion-module-studiocoast-vmix": "github:bitfocus/companion-module-studiocoast-vmix#v1.2.23",
 		"companion-module-symetrix-dsp": "github:bitfocus/companion-module-symetrix-dsp#v1.3.0",
-		"companion-module-tallyma-wirelesstally": "github:bitfocus/companion-module-tallyma-wirelesstally#v1.0.1",
+		"companion-module-tallyma-wirelesstally": "github:bitfocus/companion-module-tallyma-wirelesstally#v1.0.3",
 		"companion-module-tascam-bdmp1": "github:bitfocus/companion-module-tascam-bdmp1#v0.1.5",
 		"companion-module-tascam-cd": "github:bitfocus/companion-module-tascam-cd#v1.0.2",
 		"companion-module-techministry-midirelay": "github:bitfocus/companion-module-techministry-midirelay#v2.0.4",

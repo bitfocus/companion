@@ -2739,9 +2739,9 @@ commist@^1.0.0:
   version "1.0.0"
   resolved "https://codeload.github.com/bitfocus/companion-module-symetrix-dsp/tar.gz/aacfa6072d27a794e547a2257e5539fbc093f639"
 
-"companion-module-tallyma-wirelesstally@github:bitfocus/companion-module-tallyma-wirelesstally#v1.0.1":
-  version "1.0.1"
-  resolved "https://codeload.github.com/bitfocus/companion-module-tallyma-wirelesstally/tar.gz/d0cc693d22d484bdb18a810634f4f02910fdc6fe"
+"companion-module-tallyma-wirelesstally@github:bitfocus/companion-module-tallyma-wirelesstally#v1.0.3":
+  version "1.0.3"
+  resolved "https://codeload.github.com/bitfocus/companion-module-tallyma-wirelesstally/tar.gz/e2b9b78ca17d939ce5f88955571aeb0050f85235"
 
 "companion-module-tascam-bdmp1@github:bitfocus/companion-module-tascam-bdmp1#v0.1.5":
   version "0.1.5"
