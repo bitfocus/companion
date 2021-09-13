@@ -2795,6 +2795,10 @@ commist@^1.0.0:
   dependencies:
     node-blink1 "^0.5.1"
 
+"companion-module-tow-mixeffect@github:bitfocus/companion-module-tow-mixeffect#v1.0.0":
+  version "1.0.0"
+  resolved "https://codeload.github.com/bitfocus/companion-module-tow-mixeffect/tar.gz/452dabd0f679a9981ad2b59f72eb7949f96cecd4"
+
 "companion-module-tplink-kasasmartplug@github:bitfocus/companion-module-tplink-kasasmartplug#v1.0.1":
   version "1.0.1"
   resolved "https://codeload.github.com/bitfocus/companion-module-tplink-kasasmartplug/tar.gz/5610184a3251a35d636e0bf44057a4f40fa028ac"
