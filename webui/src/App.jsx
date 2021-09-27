@@ -166,7 +166,11 @@ function AppLoading({ progress, connected }) {
 }
 
 function AppContent({ buttonGridHotPress }) {
-	const [activeRootTab, setActiveRootTab] = useState('buttons')
+	let currentPage = 'buttons'
+	if (window.location.pathname != '/') {
+		currentPage = window.location.pathname.replace(/^\/+/, '')
+	}
+	const [activeRootTab, setActiveRootTab] = useState(currentPage)
 	// const [activeRootTabToken, setActiveRootTabToken] = useState(shortid())
 
 	const changeTab = useCallback((tab) => {
@@ -179,32 +183,32 @@ function AppContent({ buttonGridHotPress }) {
 			<CTabs activeTab={activeRootTab} onActiveTabChange={changeTab}>
 				<CNav variant="tabs">
 					<CNavItem>
-						<CNavLink data-tab="instances">
+						<CNavLink data-tab="instances" to="/instances">
 							<FontAwesomeIcon icon={faPlug} /> Connections
 						</CNavLink>
 					</CNavItem>
 					<CNavItem>
-						<CNavLink data-tab="buttons">
+						<CNavLink data-tab="buttons" to="/buttons">
 							<FontAwesomeIcon icon={faCalendarAlt} /> Buttons
 						</CNavLink>
 					</CNavItem>
 					<CNavItem>
-						<CNavLink data-tab="surfaces">
+						<CNavLink data-tab="surfaces" to="/surfaces">
 							<FontAwesomeIcon icon={faGamepad} /> Surfaces
 						</CNavLink>
 					</CNavItem>
 					<CNavItem>
-						<CNavLink data-tab="triggers">
+						<CNavLink data-tab="triggers" to="/triggers">
 							<FontAwesomeIcon icon={faClock} /> Triggers
 						</CNavLink>
 					</CNavItem>
 					<CNavItem>
-						<CNavLink data-tab="userconfig">
+						<CNavLink data-tab="userconfig" to="/userconfig">
 							<FontAwesomeIcon icon={faUserNinja} /> Settings
 						</CNavLink>
 					</CNavItem>
 					<CNavItem>
-						<CNavLink data-tab="log">
+						<CNavLink data-tab="log" to="/log">
 							<FontAwesomeIcon icon={faClipboardList} /> Log
 						</CNavLink>
 					</CNavItem>
