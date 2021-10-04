@@ -159,7 +159,16 @@ export function ContextData({ socket, children }) {
 		moduleRedirects: moduleRedirects,
 	}
 
-	const steps = [instances, modules, variableDefinitions, variableValues, actions, feedbacks, customVariables]
+	const steps = [
+		instances,
+		modules,
+		variableDefinitions,
+		variableValues,
+		actions,
+		feedbacks,
+		customVariables,
+		userConfig,
+	]
 	const completedSteps = steps.filter((s) => s !== null && s !== undefined)
 
 	const progressPercent = (completedSteps.length / steps.length) * 100
