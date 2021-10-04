@@ -2280,10 +2280,6 @@ commist@^1.0.0:
     graphql-tag "2.11.0"
     linkbox-sdk "1.1.1"
 
-"companion-module-livingasone-decoders@github:bitfocus/companion-module-livingasone-decoders#v1.1.2":
-  version "1.1.2"
-  resolved "https://codeload.github.com/bitfocus/companion-module-livingasone-decoders/tar.gz/cb8539e8aad002cab9c27b6298f786d4e1a4c6ac"
-
 "companion-module-ltn-schedule@github:bitfocus/companion-module-ltn-schedule#v1.0.0":
   version "1.0.0"
   resolved "https://codeload.github.com/bitfocus/companion-module-ltn-schedule/tar.gz/d0b0b825323e1fb24f7faf929af8998edafcca9d"
@@ -2557,6 +2553,10 @@ commist@^1.0.0:
 "companion-module-renewedvision-pvp@github:bitfocus/companion-module-renewedvision-pvp#v1.0.7":
   version "1.0.7"
   resolved "https://codeload.github.com/bitfocus/companion-module-renewedvision-pvp/tar.gz/fc08f0c024c627d3192736888fcbb7ef3dc96a74"
+
+"companion-module-resi-decoders@github:bitfocus/companion-module-resi-decoders#v1.1.3":
+  version "1.1.3"
+  resolved "https://codeload.github.com/bitfocus/companion-module-resi-decoders/tar.gz/b434bc57fe2ba2e81515fbb0e94a1f77aad72aa8"
 
 "companion-module-resolume-arena@github:bitfocus/companion-module-resolume-arena#v1.0.5":
   version "1.0.5"
