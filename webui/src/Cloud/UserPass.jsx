@@ -11,8 +11,8 @@ export class CloudUserPass extends Component {
 		super(props)
 
 		this.state = {
-			username: '',
-			password: '',
+			username: 'haakon@trippelm.no',
+			password: '.whrxuec9KWLVJhDXQ@o',
 		}
 	}
 
