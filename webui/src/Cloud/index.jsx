@@ -57,39 +57,38 @@ export class Cloud extends Component {
 	}
 
 	render() {
+		const styleText = {
+			marginLeft: 6,
+			marginTop: -10,
+			display: 'inline-block',
+			height: 20,
+			paddingTop: 19,
+		}
+
+		const styleSwitch = { display: 'inline-block', paddingTop: 5, float: 'left' }
+
+		const styleWrap = { clear: 'both', }
+
 		return (
 			<div
 				style={{
 					maxWidth: 600,
 				}}
 			>
-				<div className="clearfix">
-					<span
-						style={{
-							float: 'left',
-							marginTop: 11,
-							marginLeft: 10,
-						}}
-					>
-						<h4>Companion Cloud</h4>
-					</span>
-				</div>
+				<h4>Companion Cloud</h4>
 				<p>
 					Access the companion GUI from your Bitfocus Cloud account, or create a sofisticated network of companions that
 					work together over the internet for all your remote production needs.
 				</p>
 				<div
 					style={{
-						fontWeight: 'bold',
 						marginBottom: 16,
 					}}
 				>
 					<div>
-						<small>
-							When enabled, companion will make two persistent HTTPS connections to Bitfocus Cloud. Learn more about the
-							service, the service provider and the safety of your data{' '}
-							<a href="http://bitfocus.io/companion-cloud-info">here</a>.
-						</small>
+						When enabled, companion will make several persistent HTTPS connections to diffent Bitfocus Cloud regions for redundancy. Learn more about the
+						service, the service provider and the safety of your data{' '}
+						<a href="http://bitfocus.io/companion-cloud-info">here</a>.
 					</div>
 				</div>
 
@@ -97,9 +96,6 @@ export class Cloud extends Component {
 					<CloudUserPass onAuth={(user, pass) => this.props.socket.emit('cloud_login', user, pass)} />
 				) : (
 					<div>
-						<CButton color="success" onClick={() => this.props.socket.emit('cloud_logout')}>
-							Log out
-						</CButton>
 						<div
 							style={{
 								fontWeight: 'bold',
@@ -147,31 +143,47 @@ export class Cloud extends Component {
 
 				{this.state.authenticated && (
 					<div>
-						<CSwitch
-							variant="3d"
-							color="success"
-							checked={!!this.state.stockholmEnabled}
-							onChange={(e) => this.cloudSetState({ stockholmEnabled: e.target.checked })}
-							labelOff={'Off'}
-							labelOn={'On'}
-							width={100}
-						/> Europe - Stockholm<br />
-						<CSwitch
-							variant="3d"
-							color="success"
-							checked={!!this.state.virginiaEnabled}
-							onChange={(e) => this.cloudSetState({ virginiaEnabled: e.target.checked })}
-							labelOff={'Off'}
-							labelOn={'On'}
-							width={100}
-						/> USA - Virginia<br />
+						<div style={{ marginBottom: 20, float:'left' }}>
+							<CButton color="success" onClick={() => this.props.socket.emit('cloud_logout')}>
+								Log out
+							</CButton>
+						</div>
+
+						<div style={styleWrap}>
+							<span style={styleSwitch}>
+								<CSwitch
+									variant="3d"
+									color="success"
+									checked={!!this.state.stockholmEnabled}
+									onChange={(e) => this.cloudSetState({ stockholmEnabled: e.target.checked })}
+									labelOff={'Off'}
+									labelOn={'On'}
+									width={100}
+								/>{' '}
+							</span>
+							<span style={styleText}>Europe</span>
+						</div>
+						<div style={styleWrap}>
+							<span style={styleSwitch}>
+								<CSwitch
+									variant="3d"
+									color="success"
+									checked={!!this.state.virginiaEnabled}
+									onChange={(e) => this.cloudSetState({ virginiaEnabled: e.target.checked })}
+									labelOff={'Off'}
+									labelOn={'On'}
+									width={100}
+								/>
+							</span>
+							<span style={styleText}>Virginia</span>
+						</div>
 					</div>
 				)}
 
 				<div
 					style={{
 						backgroundColor: 'rgba(100,200,0,0.15)',
-						display: 'inline-block',
+						display: 'block',
 						borderRadius: 4,
 						padding: '10px 15px',
 						marginTop: 40,
