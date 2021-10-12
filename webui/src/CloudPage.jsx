@@ -1,11 +1,11 @@
 import React, {  } from 'react'
 import { Cloud } from './Cloud'
-import { CompanionContext } from './util'
+import { StaticContext } from './util'
 
 export function CloudPage() {
 	return (
 		<>
-			<CompanionContext.Consumer>{({ socket }) => <Cloud socket={socket} />}</CompanionContext.Consumer>
+			<StaticContext.Consumer>{({ socket }) => <Cloud socket={socket} />}</StaticContext.Consumer>
 		</>
 	)
 }

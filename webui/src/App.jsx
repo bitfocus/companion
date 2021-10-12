@@ -213,6 +213,11 @@ function AppContent({ buttonGridHotPress }) {
 						<FontAwesomeIcon icon={faClipboardList} /> Log
 					</CNavLink>
 				</CNavItem>
+				<CNavItem>
+					<CNavLink to="/cloud">
+						<FontAwesomeIcon icon={faCloud} /> Cloud
+					</CNavLink>
+				</CNavItem>
 			</CNav>
 			<CTabContent fade={false}>
 				<CTabPane className={getClassForPane('/connections')}>
@@ -243,6 +248,11 @@ function AppContent({ buttonGridHotPress }) {
 				<CTabPane className={getClassForPane('/log')}>
 					<MyErrorBoundary>
 						<LogPanel />
+					</MyErrorBoundary>
+				</CTabPane>
+				<CTabPane className={getClassForPane('/cloud')}>
+					<MyErrorBoundary>
+						<CloudPage />
 					</MyErrorBoundary>
 				</CTabPane>
 				{!hasMatchedPane ? (
