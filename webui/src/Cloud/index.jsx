@@ -4,8 +4,8 @@ import React, { Component } from 'react'
 import { CInput, CSwitch, CButton, CCallout } from '@coreui/react'
 import { CloudUserPass } from './UserPass'
 
-// The cloud part is written in old fashioned Class-components
-// because even if the hipsters say it's slow and retarted, i think it's prettier.
+// The cloud part is written in old fashioned Class-components because I am most
+// familiar with it
 
 export class Cloud extends Component {
 	constructor(props) {
@@ -64,23 +64,6 @@ export class Cloud extends Component {
 				}}
 			>
 				<div className="clearfix">
-					<div
-						style={{
-							marginTop: 10,
-							float: 'left',
-						}}
-					>
-						<CSwitch
-							variant="3d"
-							color="success"
-							checked={!!this.state.enabled}
-							onChange={(e) => this.cloudSetState({ enabled: e.target.checked })}
-							label="Enable cloud"
-							labelOff={'Off'}
-							labelOn={'On'}
-							width={100}
-						/>
-					</div>
 					<span
 						style={{
 							float: 'left',
@@ -160,6 +143,29 @@ export class Cloud extends Component {
 					>
 						{this.state.error}
 					</CCallout>
+				)}
+
+				{this.state.authenticated && (
+					<div>
+						<CSwitch
+							variant="3d"
+							color="success"
+							checked={!!this.state.stockholmEnabled}
+							onChange={(e) => this.cloudSetState({ stockholmEnabled: e.target.checked })}
+							labelOff={'Off'}
+							labelOn={'On'}
+							width={100}
+						/> Europe - Stockholm<br />
+						<CSwitch
+							variant="3d"
+							color="success"
+							checked={!!this.state.virginiaEnabled}
+							onChange={(e) => this.cloudSetState({ virginiaEnabled: e.target.checked })}
+							labelOff={'Off'}
+							labelOn={'On'}
+							width={100}
+						/> USA - Virginia<br />
+					</div>
 				)}
 
 				<div
