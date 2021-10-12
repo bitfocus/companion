@@ -7,9 +7,16 @@ import { BarLoader } from 'react-spinners'
 
 export const SERVER_URL = window.SERVER_URL === '%REACT_APP_SERVER_URL%' ? undefined : window.SERVER_URL
 
-export const CompanionContext = React.createContext({
+export const StaticContext = React.createContext({
 	socket: undefined,
 })
+export const ActionsContext = React.createContext(null)
+export const FeedbacksContext = React.createContext(null)
+export const InstancesContext = React.createContext(null)
+export const VariableDefinitionsContext = React.createContext(null)
+export const VariableValuesContext = React.createContext(null)
+export const CustomVariableDefinitionsContext = React.createContext(null)
+export const UserConfigContext = React.createContext(null)
 
 export function socketEmit(socket, name, args, timeout, timeoutMessage) {
 	const p = new Promise((resolve, reject) => {

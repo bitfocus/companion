@@ -1,7 +1,7 @@
 import { CCol, CRow, CTabs, CTabContent, CTabPane, CNavItem, CNavLink, CNav } from '@coreui/react'
 import { memo, useCallback, useContext, useRef, useState } from 'react'
 import { HelpModal } from './HelpModal'
-import { CompanionContext, MyErrorBoundary, socketEmit } from '../util'
+import { StaticContext, MyErrorBoundary, socketEmit } from '../util'
 import { InstancesList } from './InstanceList'
 import { AddInstancesPanel } from './AddInstance'
 import { InstanceEditPanel } from './InstanceEditPanel'
@@ -10,7 +10,7 @@ import shortid from 'shortid'
 import { faCog, faPlus } from '@fortawesome/free-solid-svg-icons'
 
 export const InstancesPage = memo(function InstancesPage() {
-	const context = useContext(CompanionContext)
+	const context = useContext(StaticContext)
 
 	const helpModalRef = useRef()
 

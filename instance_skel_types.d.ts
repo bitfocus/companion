@@ -56,8 +56,9 @@ export interface CompanionBankPreset
 
 export interface CompanionAction {
 	label: string
+	description?: string
 	options: SomeCompanionInputField[]
-	callback?: (action: CompanionActionEvent, info: CompanionActionEventInfo) => void
+	callback?: (action: CompanionActionEvent, info: CompanionActionEventInfo | null) => void
 	subscribe?: (action: CompanionActionEvent) => void
 	unsubscribe?: (action: CompanionActionEvent) => void
 }
@@ -125,6 +126,11 @@ export interface CompanionInputFieldTextInput extends CompanionInputField {
 export interface CompanionInputFieldDropdown extends CompanionInputFieldDropdownBase {
 	multiple?: false
 	default: ConfigValue
+
+	/** Allow custom values to be defined */
+	allowCustom?: boolean
+	/** Check custom value against refex */
+	regex?: string
 }
 export interface CompanionInputFieldMultiDropdown extends CompanionInputFieldDropdownBase {
 	multiple: true
@@ -174,9 +180,13 @@ export interface CompanionVariable {
 export interface CompanionFeedbackBase<TRes> {
 	type?: 'boolean' | 'advanced'
 	label: string
-	description: string
+	description?: string
 	options: SomeCompanionInputField[]
-	callback?: (feedback: CompanionFeedbackEvent, bank: CompanionBankPNG, info: CompanionFeedbackEventInfo) => TRes
+	callback?: (
+		feedback: CompanionFeedbackEvent,
+		bank: CompanionBankPNG | null,
+		info: CompanionFeedbackEventInfo | null
+	) => TRes
 	subscribe?: (feedback: CompanionFeedbackEvent) => void
 	unsubscribe?: (feedback: CompanionFeedbackEvent) => void
 }
@@ -215,11 +225,18 @@ export interface CompanionActions {
 	[id: string]: CompanionAction | undefined
 }
 
-export type CompanionUpgradeScript<TConfig> = (
-	config: CompanionCoreInstanceconfig & TConfig,
-	actions: CompanionMigrationAction[],
-	release_actions: CompanionMigrationAction[],
-	feedbacks: CompanionMigrationFeedback[]
+export interface CompanionUpgradeContext {
+	/** Translate a key index from the old 15 key layout (5x3 grid) to the 32 key layout (8x4 grid) */
+	convert15to32(key: number): number
+	rgb(red: number, green: number, blue: number): number
+	rgbRev(color: number): { r: number; g: number; b: number }
+}
+
+export type CompanionStaticUpgradeScript = (
+	context: CompanionUpgradeContext,
+	config: CompanionCoreInstanceconfig & Record<string, any>,
+	affected_actions: CompanionMigrationAction[],
+	affected_feedbacks: CompanionMigrationFeedback[]
 ) => boolean
 
 export interface CompanionUpgradeToBooleanFeedbackMap {
@@ -235,7 +252,6 @@ export interface CompanionUpgradeToBooleanFeedbackMap {
 export interface CompanionCoreInstanceconfig {
 	instance_type: string
 	label: string
-	enabled: boolean
 }
 
 export interface CompanionMigrationAction {

@@ -1,7 +1,6 @@
-import React, { Suspense, useCallback, useState } from 'react'
+import React, { Suspense } from 'react'
 import {
 	CContainer,
-	CTabs,
 	CTabContent,
 	CTabPane,
 	CNav,
@@ -39,6 +38,7 @@ import { InstancesPage } from './Instances'
 import { ButtonsPage } from './Buttons'
 import { ContextData } from './ContextData'
 import { CloudPage } from './CloudPage'
+import { Redirect, useLocation } from 'react-router-dom'
 
 export default class App extends React.Component {
 	constructor(props) {
@@ -168,92 +168,94 @@ function AppLoading({ progress, connected }) {
 }
 
 function AppContent({ buttonGridHotPress }) {
-	const [activeRootTab, setActiveRootTab] = useState('buttons')
-	// const [activeRootTabToken, setActiveRootTabToken] = useState(shortid())
-
-	const changeTab = useCallback((tab) => {
-		setActiveRootTab(tab)
-		// setActiveRootTabToken(shortid())
-	}, [])
+	const routerLocation = useLocation()
+	let hasMatchedPane = false
+	const getClassForPane = (prefix) => {
+		// Require the path to be the same, or to be a prefix with a sub-route
+		if (routerLocation.pathname.startsWith(prefix + '/') || routerLocation.pathname === prefix) {
+			hasMatchedPane = true
+			return 'active show'
+		} else {
+			return ''
+		}
+	}
 
 	return (
 		<CContainer fluid className="fadeIn">
-			<CTabs activeTab={activeRootTab} onActiveTabChange={changeTab}>
-				<CNav variant="tabs">
-					<CNavItem>
-						<CNavLink data-tab="instances">
-							<FontAwesomeIcon icon={faPlug} /> Connections
-						</CNavLink>
-					</CNavItem>
-					<CNavItem>
-						<CNavLink data-tab="buttons">
-							<FontAwesomeIcon icon={faCalendarAlt} /> Buttons
-						</CNavLink>
-					</CNavItem>
-					<CNavItem>
-						<CNavLink data-tab="surfaces">
-							<FontAwesomeIcon icon={faGamepad} /> Surfaces
-						</CNavLink>
-					</CNavItem>
-					<CNavItem>
-						<CNavLink data-tab="triggers">
-							<FontAwesomeIcon icon={faClock} /> Triggers
-						</CNavLink>
-					</CNavItem>
-					<CNavItem>
-						<CNavLink data-tab="userconfig">
-							<FontAwesomeIcon icon={faUserNinja} /> Settings
-						</CNavLink>
-					</CNavItem>
-					<CNavItem>
-						<CNavLink data-tab="log">
-							<FontAwesomeIcon icon={faClipboardList} /> Log
-						</CNavLink>
-					</CNavItem>
-					<CNavItem>
-						<CNavLink data-tab="cloud">
-							<FontAwesomeIcon icon={faCloud} /> Cloud
-						</CNavLink>
-					</CNavItem>
-				</CNav>
-				<CTabContent fade={false}>
-					<CTabPane data-tab="instances">
-						<MyErrorBoundary>
-							<InstancesPage />
-						</MyErrorBoundary>
-					</CTabPane>
-					<CTabPane data-tab="buttons">
-						<MyErrorBoundary>
-							<ButtonsPage hotPress={buttonGridHotPress} />
-						</MyErrorBoundary>
-					</CTabPane>
-					<CTabPane data-tab="surfaces">
-						<MyErrorBoundary>
-							<SurfacesPage />
-						</MyErrorBoundary>
-					</CTabPane>
-					<CTabPane data-tab="triggers">
-						<MyErrorBoundary>
-							<Scheduler />
-						</MyErrorBoundary>
-					</CTabPane>
-					<CTabPane data-tab="userconfig">
-						<MyErrorBoundary>
-							<UserConfig />
-						</MyErrorBoundary>
-					</CTabPane>
-					<CTabPane data-tab="log">
-						<MyErrorBoundary>
-							<LogPanel />
-						</MyErrorBoundary>
-					</CTabPane>
-					<CTabPane data-tab="cloud">
-						<MyErrorBoundary>
-							<CloudPage />
-						</MyErrorBoundary>
-					</CTabPane>
-				</CTabContent>
-			</CTabs>
+			<CNav variant="tabs">
+				<CNavItem>
+					<CNavLink to="/connections">
+						<FontAwesomeIcon icon={faPlug} /> Connections
+					</CNavLink>
+				</CNavItem>
+				<CNavItem>
+					<CNavLink to="/buttons">
+						<FontAwesomeIcon icon={faCalendarAlt} /> Buttons
+					</CNavLink>
+				</CNavItem>
+				<CNavItem>
+					<CNavLink to="/surfaces">
+						<FontAwesomeIcon icon={faGamepad} /> Surfaces
+					</CNavLink>
+				</CNavItem>
+				<CNavItem>
+					<CNavLink to="/triggers">
+						<FontAwesomeIcon icon={faClock} /> Triggers
+					</CNavLink>
+				</CNavItem>
+				<CNavItem>
+					<CNavLink to="/settings">
+						<FontAwesomeIcon icon={faUserNinja} /> Settings
+					</CNavLink>
+				</CNavItem>
+				<CNavItem>
+					<CNavLink to="/log">
+						<FontAwesomeIcon icon={faClipboardList} /> Log
+					</CNavLink>
+				</CNavItem>
+			</CNav>
+			<CTabContent fade={false}>
+				<CTabPane className={getClassForPane('/connections')}>
+					<MyErrorBoundary>
+						<InstancesPage />
+					</MyErrorBoundary>
+				</CTabPane>
+				<CTabPane className={getClassForPane('/buttons')}>
+					<MyErrorBoundary>
+						<ButtonsPage hotPress={buttonGridHotPress} />
+					</MyErrorBoundary>
+				</CTabPane>
+				<CTabPane className={getClassForPane('/surfaces')}>
+					<MyErrorBoundary>
+						<SurfacesPage />
+					</MyErrorBoundary>
+				</CTabPane>
+				<CTabPane className={getClassForPane('/triggers')}>
+					<MyErrorBoundary>
+						<Scheduler />
+					</MyErrorBoundary>
+				</CTabPane>
+				<CTabPane className={getClassForPane('/settings')}>
+					<MyErrorBoundary>
+						<UserConfig />
+					</MyErrorBoundary>
+				</CTabPane>
+				<CTabPane className={getClassForPane('/log')}>
+					<MyErrorBoundary>
+						<LogPanel />
+					</MyErrorBoundary>
+				</CTabPane>
+				{!hasMatchedPane ? (
+					// If no pane was matched, then redirect to the default
+					<Redirect
+						to={{
+							pathname: '/connections',
+						}}
+					/>
+				) : (
+					''
+				)}
+			</CTabContent>
 		</CContainer>
 	)
 }

@@ -2,7 +2,7 @@ import { CAlert, CButton, CForm, CFormGroup } from '@coreui/react'
 import { faSort, faTrash } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import React, { useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react'
-import { CompanionContext, MyErrorBoundary, socketEmit } from '../../util'
+import { StaticContext, FeedbacksContext, InstancesContext, MyErrorBoundary, socketEmit } from '../../util'
 import update from 'immutability-helper'
 import Select from 'react-select'
 import { ActionTableRowOption } from './Table'
@@ -24,7 +24,7 @@ export const FeedbacksPanel = function ({
 	loadStatusKey,
 	reloadToken,
 }) {
-	const context = useContext(CompanionContext)
+	const context = useContext(StaticContext)
 	const [feedbacks, setFeedbacks] = useState([])
 
 	const confirmModal = useRef()
@@ -141,7 +141,7 @@ export const FeedbacksPanel = function ({
 }
 
 function FeedbackTableRow({ feedback, page, bank, index, dragId, moveCard, setValue, doDelete, bankFeedbacksChanged }) {
-	const context = useContext(CompanionContext)
+	const context = useContext(StaticContext)
 
 	const innerDelete = useCallback(() => doDelete(feedback.id), [feedback.id, doDelete])
 
@@ -198,79 +198,7 @@ function FeedbackTableRow({ feedback, page, bank, index, dragId, moveCard, setVa
 	})
 	preview(drop(ref))
 
-	if (!feedback) {
-		// Invalid feedback, so skip
-		return ''
-	}
-
-	const instance = context.instances[feedback.instance_id]
-	// const module = instance ? context.modules[instance.instance_type] : undefined
-	const instanceLabel = instance?.label ?? feedback.instance_id
-
-	const feedbackSpec = (context.feedbacks[feedback.instance_id] || {})[feedback.type]
-	const options = feedbackSpec?.options ?? []
-
-	let name = ''
-	if (feedbackSpec) {
-		name = `${instanceLabel}: ${feedbackSpec.label}`
-	} else {
-		name = `${instanceLabel}: ${feedback.type} (undefined)`
-	}
-
-	return (
-		<tr ref={ref} className={isDragging ? 'feedbacklist-dragging' : ''}>
-			<td ref={drag} className="td-reorder">
-				<FontAwesomeIcon icon={faSort} />
-			</td>
-			<td>
-				<div className="editor-grid">
-					<div className="cell-name">{name}</div>
-
-					<div className="cell-actions">
-						<CButton color="danger" size="sm" onClick={innerDelete} title="Remove action">
-							<FontAwesomeIcon icon={faTrash} />
-						</CButton>
-					</div>
-
-					<div className="cell-option">
-						<CForm>
-							{options.map((opt, i) => (
-								<MyErrorBoundary key={i}>
-									<ActionTableRowOption
-										option={opt}
-										actionId={feedback.id}
-										value={(feedback.options || {})[opt.id]}
-										setValue={setValue}
-									/>
-								</MyErrorBoundary>
-							))}
-							{options.length === 0 ? 'Nothing to configure' : ''}
-						</CForm>
-					</div>
-					<FeedbackStyles
-						feedbackSpec={feedbackSpec}
-						feedback={feedback}
-						page={page}
-						bank={bank}
-						bankFeedbacksChanged={bankFeedbacksChanged}
-					/>
-					<FeedbackManageStyles
-						feedbackSpec={feedbackSpec}
-						feedback={feedback}
-						page={page}
-						bank={bank}
-						bankFeedbacksChanged={bankFeedbacksChanged}
-					/>
-				</div>
-			</td>
-		</tr>
-	)
-}
-
-function FeedbackManageStyles({ bankFeedbacksChanged, feedbackSpec, feedback, page, bank }) {
-	const context = useContext(CompanionContext)
-
-	const setSelected = useCallback(
+	const setSelectedStyleProps = useCallback(
 		(selected) => {
 			socketEmit(context.socket, 'bank_update_feedback_style_selection', [page, bank, feedback.id, selected])
 				.then(([_page, _bank, bankFeedbacks]) => {
@@ -283,6 +211,101 @@ function FeedbackManageStyles({ bankFeedbacksChanged, feedbackSpec, feedback, pa
 		[context.socket, page, bank, feedback.id, bankFeedbacksChanged]
 	)
 
+	const setStylePropsValue = useCallback(
+		(key, value) => {
+			return socketEmit(context.socket, 'bank_update_feedback_style_set', [page, bank, feedback.id, key, value]).then(
+				([_page, _bank, bankFeedbacks]) => {
+					bankFeedbacksChanged(bankFeedbacks)
+				}
+			)
+		},
+		[context.socket, page, bank, feedback.id, bankFeedbacksChanged]
+	)
+
+	if (!feedback) {
+		// Invalid feedback, so skip
+		return ''
+	}
+
+	return (
+		<tr ref={ref} className={isDragging ? 'feedbacklist-dragging' : ''}>
+			<td ref={drag} className="td-reorder">
+				<FontAwesomeIcon icon={faSort} />
+			</td>
+			<td>
+				<FeedbackEditor
+					feedback={feedback}
+					setValue={setValue}
+					innerDelete={innerDelete}
+					setSelectedStyleProps={setSelectedStyleProps}
+					setStylePropsValue={setStylePropsValue}
+				/>
+			</td>
+		</tr>
+	)
+}
+
+export function FeedbackEditor({ feedback, setValue, innerDelete, setSelectedStyleProps, setStylePropsValue }) {
+	const feedbacksContext = useContext(FeedbacksContext)
+	const instancesContext = useContext(InstancesContext)
+
+	const instance = instancesContext[feedback.instance_id]
+	const instanceLabel = instance?.label ?? feedback.instance_id
+
+	const feedbackSpec = (feedbacksContext[feedback.instance_id] || {})[feedback.type]
+	const options = feedbackSpec?.options ?? []
+
+	let name = ''
+	if (feedbackSpec) {
+		name = `${instanceLabel}: ${feedbackSpec.label}`
+	} else {
+		name = `${instanceLabel}: ${feedback.type} (undefined)`
+	}
+
+	return (
+		<div className="editor-grid">
+			<div className="cell-name">{name}</div>
+
+			<div className="cell-description">{feedbackSpec?.description || ''}</div>
+
+			<div className="cell-actions">
+				<CButton color="danger" size="sm" onClick={innerDelete} title="Remove action">
+					<FontAwesomeIcon icon={faTrash} />
+				</CButton>
+			</div>
+
+			<div className="cell-option">
+				<CForm>
+					{options.map((opt, i) => (
+						<MyErrorBoundary key={i}>
+							<ActionTableRowOption
+								option={opt}
+								actionId={feedback.id}
+								value={(feedback.options || {})[opt.id]}
+								setValue={setValue}
+							/>
+						</MyErrorBoundary>
+					))}
+					{options.length === 0 ? 'Nothing to configure' : ''}
+				</CForm>
+			</div>
+			{setSelectedStyleProps || setStylePropsValue ? (
+				<>
+					<FeedbackStyles feedbackSpec={feedbackSpec} feedback={feedback} setStylePropsValue={setStylePropsValue} />
+					<FeedbackManageStyles
+						feedbackSpec={feedbackSpec}
+						feedback={feedback}
+						setSelectedStyleProps={setSelectedStyleProps}
+					/>
+				</>
+			) : (
+				''
+			)}
+		</div>
+	)
+}
+
+function FeedbackManageStyles({ feedbackSpec, feedback, setSelectedStyleProps }) {
 	if (feedbackSpec?.type === 'boolean') {
 		const choices = [
 			{ id: 'text', label: 'Text' },
@@ -304,7 +327,7 @@ function FeedbackManageStyles({ bankFeedbacksChanged, feedbackSpec, feedback, pa
 							<DropdownInputField
 								multiple={true}
 								definition={{ default: ['color', 'bgcolor'], choices: choices }}
-								setValue={setSelected}
+								setValue={setSelectedStyleProps}
 								value={currentValue}
 							/>
 						</CFormGroup>
@@ -317,37 +340,26 @@ function FeedbackManageStyles({ bankFeedbacksChanged, feedbackSpec, feedback, pa
 	}
 }
 
-function FeedbackStyles({ feedbackSpec, feedback, page, bank, bankFeedbacksChanged }) {
-	const context = useContext(CompanionContext)
-
+function FeedbackStyles({ feedbackSpec, feedback, setStylePropsValue }) {
 	const setValue = useCallback(
 		(key, value) => {
-			socketEmit(context.socket, 'bank_update_feedback_style_set', [page, bank, feedback.id, key, value])
-				.then(([_page, _bank, bankFeedbacks]) => {
-					bankFeedbacksChanged(bankFeedbacks)
-				})
-				.catch((e) => {
-					console.error('Failed to update feedback style', e)
-				})
+			setStylePropsValue(key, value).catch((e) => {
+				console.error('Failed to update feedback style', e)
+			})
 		},
-		[context.socket, page, bank, feedback.id, bankFeedbacksChanged]
+		[setStylePropsValue]
 	)
 	const [pngError, setPngError] = useState(null)
 	const clearPngError = useCallback(() => setPngError(null), [])
 	const setPng = useCallback(
 		(data) => {
 			setPngError(null)
-			socketEmit(context.socket, 'bank_update_feedback_style_set_png', [page, bank, feedback.id, data])
-				.then(([_page, _bank, bankFeedbacks]) => {
-					setPngError(null)
-					bankFeedbacksChanged(bankFeedbacks)
-				})
-				.catch((e) => {
-					console.error('Failed to upload png', e)
-					setPngError('Failed to set png')
-				})
+			setStylePropsValue('png64', data).catch((e) => {
+				console.error('Failed to upload png', e)
+				setPngError('Failed to set png')
+			})
 		},
-		[context.socket, page, bank, feedback.id, bankFeedbacksChanged]
+		[setStylePropsValue]
 	)
 
 	if (feedbackSpec?.type === 'boolean') {
@@ -392,19 +404,22 @@ function FeedbackStyles({ feedbackSpec, feedback, page, bank, bankFeedbacksChang
 	}
 }
 
-function AddFeedbackDropdown({ onSelect }) {
-	const context = useContext(CompanionContext)
+export function AddFeedbackDropdown({ onSelect, booleanOnly }) {
+	const feedbacksContext = useContext(FeedbacksContext)
+	const instancesContext = useContext(InstancesContext)
 
 	const options = useMemo(() => {
 		const options = []
-		for (const [instanceId, feedbacks] of Object.entries(context.feedbacks)) {
-			for (const [feedbackId, feedback] of Object.entries(feedbacks)) {
-				const instanceLabel = context.instances[instanceId]?.label ?? instanceId
-				options.push({ value: `${instanceId}:${feedbackId}`, label: `${instanceLabel}: ${feedback.label}` })
+		for (const [instanceId, instanceFeedbacks] of Object.entries(feedbacksContext)) {
+			for (const [feedbackId, feedback] of Object.entries(instanceFeedbacks)) {
+				if (!booleanOnly || feedback.type === 'boolean') {
+					const instanceLabel = instancesContext[instanceId]?.label ?? instanceId
+					options.push({ value: `${instanceId}:${feedbackId}`, label: `${instanceLabel}: ${feedback.label}` })
+				}
 			}
 		}
 		return options
-	}, [context.feedbacks, context.instances])
+	}, [feedbacksContext, instancesContext, booleanOnly])
 
 	const innerChange = useCallback(
 		(e) => {

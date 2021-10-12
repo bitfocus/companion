@@ -8,16 +8,18 @@ import {
 	CompanionActionEvent,
 	CompanionFeedbackEvent,
 	CompanionFeedbackResult,
-	CompanionUpgradeScript,
+	CompanionStaticUpgradeScript,
 	CompanionUpgradeToBooleanFeedbackMap,
 	CompanionActionEventInfo,
 	CompanionFeedbackEventInfo,
+	CompanionBankPNG,
 } from './instance_skel_types'
 
 declare abstract class InstanceSkel<TConfig> {
 	protected system: CompanionSystem
 	public id: string
 	public config: TConfig
+	public label: string
 
 	/**
 	 * Create an instance of the module.
@@ -51,38 +53,61 @@ declare abstract class InstanceSkel<TConfig> {
 	abstract config_fields(): CompanionInputField[]
 
 	/**
+	 * Provides the upgrade scripts to companion that are to be used for this module.
+	 * These get run without any awareness of the instance class.
+	 */
+	static GetUpgradeScripts?(): Array<CompanionStaticUpgradeScript>
+	/**
+	 * Force running upgrade script from an earlier point, as specified by the value
+	 * Only works when DEVELOPER=1.
+	 * eg, 0 = runs the first script onwards
+	 */
+	static DEVELOPER_forceStartupUpgradeScript?: number
+	/**
+	 * A helper script to automate the bulk of the process to upgrade feedbacks from 'advanced' to 'boolean'.
+	 * There are some built in rules for properties names based on the most common cases
+	 * @param upgradeMap The feedbacks to upgrade and the properties to convert
+	 */
+	static CreateConvertToBooleanFeedbackUpgradeScript(
+		upgradeMap: CompanionUpgradeToBooleanFeedbackMap
+	): CompanionStaticUpgradeScript
+
+	/**
 	 * Executes the provided action.
 	 * @since 1.0.0
 	 */
-	action?(action: CompanionActionEvent, info: CompanionActionEventInfo): void
+	action?(action: CompanionActionEvent, info: CompanionActionEventInfo | null): void
 
 	/**
 	 * Processes a feedback state.
 	 * @since 1.0.0
 	 */
-	feedback?(feedback: CompanionFeedbackEvent, info: CompanionFeedbackEventInfo): CompanionFeedbackResult
+	feedback?(
+		feedback: CompanionFeedbackEvent,
+		bank: CompanionBankPNG | null,
+		info: CompanionFeedbackEventInfo | null
+	): CompanionFeedbackResult
 
 	/**
 	 * Save the current config of the module. Call this if you change any properties on this.config, so that they get persisted
 	 */
 	saveConfig(): void
 
-	addUpgradeScript(fcn: CompanionUpgradeScript<TConfig>): void
-	/**
-	 * A helper script to automate the bulk of the process to upgrade feedbacks from 'advanced' to 'boolean'.
-	 * There are some built in rules for properties names based on the most common cases
-	 * @param upgradeMap The feedbacks to upgrade and the properties to convert
-	 */
-	addUpgradeToBooleanFeedbackScript(upgradeMap: CompanionUpgradeToBooleanFeedbackMap): void
-
 	setActions(actions: CompanionActions): void
 	setVariableDefinitions(variables: CompanionVariable[]): void
 	setFeedbackDefinitions(feedbacks: CompanionFeedbacks): void
 	setPresetDefinitions(presets: CompanionPreset[]): void
 
-	setVariable(variableId: string, value: string): void
+	/** Set the value of a variable. Pass undefined to unset it */
+	setVariable(variableId: string, value: string | undefined): void
+	/** Set the value of multiple variable. Use undefined to unset values */
+	setVariables(variables: { [variableId: string]: string | undefined }): void
+	/** Get the value of a variable from this instance */
 	getVariable(variableId: string, cb: (value: string) => void): void
-	checkFeedbacks(feedbackId?: string): void
+	/** Recheck all feedbacks of the given types. eg `self.checkFeedbacks('bank_style', 'bank_text')` or `self.checkFeedbacks` */
+	checkFeedbacks(...feedbackTypes: string[]): void
+	/** Recheck all feedbacks of the given ids. eg `self.checkFeedbacksById('vvbta3jtaD', 'Ba_1C3NF3q')` */
+	checkFeedbacksById(...feedbackIds: string[]): void
 
 	/**
 	 * Parse a string to replace any variable references with their values.
@@ -98,12 +123,12 @@ declare abstract class InstanceSkel<TConfig> {
 	 * Trigger the subscribe callback on all feedbacks for this instance
 	 * @param feedbackId Feedback type to call for, or undefined for all
 	 */
-	subscribeFeedbacks(feedbackId?: string): void
+	subscribeFeedbacks(type?: string): void
 	/**
 	 * Trigger the unsubscribe callback on all feedbacks for this instance
 	 * @param feedbackId Feedback type to call for, or undefined for all
 	 */
-	unsubscribeFeedbacks(feedbackId?: string): void
+	unsubscribeFeedbacks(type?: string): void
 
 	/**
 	 * Get an array of all the actions and release_actions for this instance
@@ -113,12 +138,12 @@ declare abstract class InstanceSkel<TConfig> {
 	 * Trigger the subscribe callback on all actions and release_actions for this instance
 	 * @param actionId Action type to call for, or undefined for all
 	 */
-	subscribeActions(actionId?: string): void
+	subscribeActions(type?: string): void
 	/**
 	 * Trigger the unsubscribe callback on all actions and release_actions for this instance
 	 * @param actionId Action type to call for, or undefined for all
 	 */
-	unsubscribeActions(actionId?: string): void
+	unsubscribeActions(type?: string): void
 
 	status(level: null | 0 | 1 | 2, message?: string): void
 

@@ -1,6 +1,6 @@
 import { CButton, CRow, CCol, CButtonGroup, CLabel, CForm, CAlert } from '@coreui/react'
 import React, { useCallback, useContext, useState } from 'react'
-import { CompanionContext, socketEmit } from '../../util'
+import { StaticContext, socketEmit } from '../../util'
 import {
 	AlignmentInputField,
 	CheckboxInputField,
@@ -13,8 +13,8 @@ import { FONT_SIZES } from '../../Constants'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faTrash } from '@fortawesome/free-solid-svg-icons'
 
-export function ButtonStyleConfig({ page, bank, config, valueChanged }) {
-	const context = useContext(CompanionContext)
+export function ButtonStyleConfig({ page, bank, config, configRef, valueChanged }) {
+	const context = useContext(StaticContext)
 
 	const [pngError, setPngError] = useState(null)
 	const clearPng = useCallback(() => context.socket.emit('bank_clear_png', page, bank), [context.socket, page, bank])
@@ -41,12 +41,12 @@ export function ButtonStyleConfig({ page, bank, config, valueChanged }) {
 	const setValueInner = useCallback(
 		(key, value) => {
 			console.log('set', page, bank, key, value)
-			if (!config || value !== config[key]) {
+			if (!configRef.current || value !== configRef.current[key]) {
 				context.socket.emit('bank_changefield', page, bank, key, value)
 				valueChanged()
 			}
 		},
-		[context.socket, page, bank, valueChanged, config]
+		[context.socket, page, bank, valueChanged, configRef]
 	)
 
 	const setLatchValue = useCallback((val) => setValueInner('latch', val), [setValueInner])

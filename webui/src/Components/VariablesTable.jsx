@@ -1,14 +1,17 @@
 import React, { useCallback, useContext } from 'react'
 import { CButton } from '@coreui/react'
-import { CompanionContext } from '../util'
+import { StaticContext, VariableDefinitionsContext, VariableValuesContext } from '../util'
 import { CopyToClipboard } from 'react-copy-to-clipboard'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faCopy } from '@fortawesome/free-solid-svg-icons'
 
 export function VariablesTable({ label }) {
-	const context = useContext(CompanionContext)
-	const variableDefinitions = context.variableDefinitions[label] || []
-	const variableValues = context.variableValues || {}
+	const context = useContext(StaticContext)
+	const variableDefinitionsContext = useContext(VariableDefinitionsContext)
+	const variableValuesContext = useContext(VariableValuesContext)
+
+	const variableDefinitions = variableDefinitionsContext[label] || []
+	const variableValues = variableValuesContext || {}
 
 	const onCopied = useCallback(() => {
 		context.notifier.current.show(`Copied`, 'Copied to clipboard', 5000)
@@ -52,7 +55,7 @@ export function VariablesTable({ label }) {
 								<td>{elms}</td>
 								<td>
 									<CopyToClipboard text={`$(${label}:${variable.name})`} onCopy={onCopied}>
-										<CButton>
+										<CButton size="sm">
 											<FontAwesomeIcon icon={faCopy} />
 										</CButton>
 									</CopyToClipboard>

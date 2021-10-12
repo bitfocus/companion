@@ -62,7 +62,7 @@ body {
 		position: relative;
 	}
 
-	max-width: 1500px;
+	max-width: 1900px;
 	min-height: 300px;
 	max-height: 100%;
 }
@@ -133,6 +133,27 @@ body {
 					overflow-y: scroll;
 				}
 			}
+		}
+	}
+}
+
+// For bigger screens, like 1440p and 4K, alow scaling
+@media only screen and (min-width: 2000px) {
+	.tab-content {
+		max-width: 100%;
+	}
+
+	.col-xl-6 {
+		max-width: 100%;
+	}
+
+	.split-panels {
+		> .primary-panel {
+			flex: 0 0 40%;
+		}
+
+		> .secondary-panel {
+			flex: 0 0 60%;
 		}
 	}
 }
