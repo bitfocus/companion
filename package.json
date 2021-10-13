@@ -454,6 +454,7 @@
 		"moment": "^2.29.1",
 		"network": "^0.4.1",
 		"node-fetch": "^2.6.1",
+		"node-machine-id": "^1.1.12",
 		"node-rest-client": "^3.1.0",
 		"osc": "^2.4.2",
 		"pngjs": "^3.3.3",
@@ -461,8 +462,8 @@
 		"shortid": "^2.2.16",
 		"socket.io": "^4.2.0",
 		"socketcluster-client": "^16.0.2",
-		"uuid": "^8.3.2",
 		"strip-ansi": "^5.2.0",
+		"uuid": "^8.3.2",
 		"websocket": "^1.0.34"
 	},
 	"collective": {
