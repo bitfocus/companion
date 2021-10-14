@@ -17,6 +17,7 @@ export class Cloud extends Component {
 			authenticated: false,
 			secret: '',
 			gui: '',
+			uuid: ''
 		}
 
 		this.cloudStateDidUpdate = this.cloudStateDidUpdate.bind(this)
@@ -76,6 +77,9 @@ export class Cloud extends Component {
 				}}
 			>
 				<h4>Companion Cloud</h4>
+				<p>
+					Use this it to connect to this companion instance when Companion Cloud is activated blablabla: <b>{this.state.uuid}</b>
+				</p>
 				<p>
 					Access the companion GUI from your Bitfocus Cloud account, or create a sofisticated network of companions that
 					work together over the internet for all your remote production needs.
