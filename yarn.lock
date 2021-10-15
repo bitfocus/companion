@@ -2878,9 +2878,9 @@ commist@^1.0.0:
   version "1.6.0"
   resolved "https://codeload.github.com/bitfocus/companion-module-yamaha-rcp/tar.gz/12305273d4aee2f53a1b77debd55c4facb49a003"
 
-"companion-module-youtube-live@github:bitfocus/companion-module-youtube-live#v1.1.2":
-  version "1.1.2"
-  resolved "https://codeload.github.com/bitfocus/companion-module-youtube-live/tar.gz/b36298a53f0aa89832642aa106f6ec53fd6cc228"
+"companion-module-youtube-live@github:bitfocus/companion-module-youtube-live#v1.1.3":
+  version "1.1.3"
+  resolved "https://codeload.github.com/bitfocus/companion-module-youtube-live/tar.gz/bc54d89cee7ad55858d4dbf478719fdc501b643c"
   dependencies:
     "@types/jest" "^25.2.3"
     "@types/node" "^12.19.3"
