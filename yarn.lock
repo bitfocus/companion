@@ -2553,9 +2553,9 @@ commist@^1.0.0:
   version "1.0.7"
   resolved "https://codeload.github.com/bitfocus/companion-module-renewedvision-pvp/tar.gz/fc08f0c024c627d3192736888fcbb7ef3dc96a74"
 
-"companion-module-resi-decoders@github:bitfocus/companion-module-resi-decoders#v1.1.3":
-  version "1.1.3"
-  resolved "https://codeload.github.com/bitfocus/companion-module-resi-decoders/tar.gz/b434bc57fe2ba2e81515fbb0e94a1f77aad72aa8"
+"companion-module-resi-decoders@github:bitfocus/companion-module-resi-decoders#v1.1.4":
+  version "1.1.4"
+  resolved "https://codeload.github.com/bitfocus/companion-module-resi-decoders/tar.gz/ee7df4784b246efd8931ef3d1c336f33cfe557b1"
 
 "companion-module-resolume-arena@github:bitfocus/companion-module-resolume-arena#v1.0.5":
   version "1.0.5"
