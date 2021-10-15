@@ -408,7 +408,7 @@
 		"companion-module-sony-visca": "github:bitfocus/companion-module-sony-visca#v1.2.8",
 		"companion-module-soundcraft-ui": "github:bitfocus/companion-module-soundcraft-ui#v2.0.3",
 		"companion-module-sounddevices-pixnet": "github:bitfocus/companion-module-sounddevices-pixnet#v1.0.0",
-		"companion-module-spotify-remote": "github:bitfocus/companion-module-spotify-remote#v1.0.7",
+		"companion-module-spotify-remote": "github:bitfocus/companion-module-spotify-remote#v1.0.8",
 		"companion-module-spx-gc": "github:bitfocus/companion-module-spx-gc#v1.0.2",
 		"companion-module-studiocoast-vmix": "github:bitfocus/companion-module-studiocoast-vmix#v1.2.23",
 		"companion-module-symetrix-dsp": "github:bitfocus/companion-module-symetrix-dsp#v1.3.0",
