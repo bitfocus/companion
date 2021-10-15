@@ -346,7 +346,7 @@
 		"companion-module-obs-studio": "github:bitfocus/companion-module-obs-studio#v1.0.25",
 		"companion-module-obsidiancontrol-onyx": "github:bitfocus/companion-module-obsidiancontrol-onyx#v1.0.3",
 		"companion-module-octava-pro-dsx": "github:bitfocus/companion-module-octava-pro-dsx#v0.0.1",
-		"companion-module-openlp-http": "github:bitfocus/companion-module-openlp-http#v0.1.1",
+		"companion-module-openlp-http": "github:bitfocus/companion-module-openlp-http#v0.1.2",
 		"companion-module-opensong-api": "github:bitfocus/companion-module-opensong-api#v1.0.1",
 		"companion-module-openweather-rest": "github:bitfocus/companion-module-openweather-rest#v1.0.2",
 		"companion-module-opticis-omm-1000": "github:bitfocus/companion-module-opticis-omm-1000#v1.0.2",
