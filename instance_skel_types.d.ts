@@ -99,13 +99,14 @@ export type SomeCompanionInputField =
 	| CompanionInputFieldText
 	| CompanionInputFieldColor
 	| CompanionInputFieldTextInput
+	| CompanionInputFieldTextWithVariablesInput
 	| CompanionInputFieldDropdown
 	| CompanionInputFieldMultiDropdown
 	| CompanionInputFieldNumber
 	| CompanionInputFieldCheckbox
 export interface CompanionInputField {
 	id: string
-	type: 'text' | 'textinput' | 'dropdown' | 'colorpicker' | 'number' | 'checkbox'
+	type: 'text' | 'textinput' | 'textwithvariables' | 'dropdown' | 'colorpicker' | 'number' | 'checkbox'
 	label: string
 	tooltip?: string
 }
@@ -122,6 +123,10 @@ export interface CompanionInputFieldTextInput extends CompanionInputField {
 	regex?: string
 	default?: string
 	required?: boolean
+}
+export interface CompanionInputFieldTextWithVariablesInput extends CompanionInputField {
+	type: 'textwithvariables'
+	default?: string
 }
 export interface CompanionInputFieldDropdown extends CompanionInputFieldDropdownBase {
 	multiple?: false
