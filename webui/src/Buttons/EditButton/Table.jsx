@@ -6,6 +6,7 @@ import {
 	DropdownInputField,
 	NumberInputField,
 	TextInputField,
+	TextWithVariablesInputField,
 } from '../../Components'
 
 export function ActionTableRowOption({ actionId, option, value, setValue }) {
@@ -19,6 +20,10 @@ export function ActionTableRowOption({ actionId, option, value, setValue }) {
 	switch (option.type) {
 		case 'textinput': {
 			control = <TextInputField value={value} definition={option} setValue={setValue2} />
+			break
+		}
+		case 'textwithvariables': {
+			control = <TextWithVariablesInputField value={value} definition={option} setValue={setValue2} />
 			break
 		}
 		case 'dropdown': {
