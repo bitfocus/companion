@@ -2386,9 +2386,9 @@ commist@^1.0.0:
   version "2.0.2"
   resolved "https://codeload.github.com/bitfocus/companion-module-nevion-mrp/tar.gz/f4c7e323592ce59d965f2fb99cbcca213e7afce4"
 
-"companion-module-newbluefx-titler@github:bitfocus/companion-module-newbluefx-titler#v2.0.4":
-  version "2.0.4"
-  resolved "https://codeload.github.com/bitfocus/companion-module-newbluefx-titler/tar.gz/7243c7f50541e9962793c222ab3d5651a4bee9a5"
+"companion-module-newbluefx-titler@github:bitfocus/companion-module-newbluefx-titler#v2.0.5":
+  version "2.0.5"
+  resolved "https://codeload.github.com/bitfocus/companion-module-newbluefx-titler/tar.gz/90794a5e67b229428d580294c58704de376ec30c"
   dependencies:
     qwebchannel "^5.9.0"
     ws "^7.4.6"
