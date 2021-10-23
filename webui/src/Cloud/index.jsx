@@ -27,9 +27,13 @@ export class Cloud extends Component {
 	componentDidMount() {
 		this.props.socket.on('cloud_state', this.cloudStateDidUpdate)
 		this.props.socket.emit('cloud_state_get')
+		console.log("Mounted CLOUD");
+		this.cloudSetState({ ping: true })
 	}
 
 	componentWillUnmount() {
+		this.cloudSetState({ ping: false })
+		console.log("Unmounted CLOUD");
 		this.props.socket.off('cloud_state', this.cloudStateDidUpdate)
 	}
 
@@ -40,12 +44,12 @@ export class Cloud extends Component {
 
 	cloudSetState(newState) {
 		this.props.socket.emit('cloud_state_set', newState)
-		let localDraft = { ...this.state, ...newState }
+/*		let localDraft = { ...this.state, ...newState }
 		const a = JSON.stringify(localDraft)
 		const b = JSON.stringify(this.state)
 		if (a !== b) {
 			this.setState({ ...newState })
-		}
+		}*/
 	}
 
 	shouldComponentUpdate(_nextProps, nextState) {
@@ -165,7 +169,7 @@ export class Cloud extends Component {
 									width={100}
 								/>{' '}
 							</span>
-							<span style={styleText}>Europe</span>
+							<span style={styleText}>Stockholm {this.state.pingResults?.stockholm > -1 ? `(${this.state.pingResults?.stockholm}ms)` : '' }</span>
 						</div>
 						<div style={styleWrap}>
 							<span style={styleSwitch}>
@@ -179,7 +183,7 @@ export class Cloud extends Component {
 									width={100}
 								/>
 							</span>
-							<span style={styleText}>Virginia</span>
+							<span style={styleText}>Virginia {this.state.pingResults?.virginia > -1 ? `(${this.state.pingResults?.virginia}ms)` : '' }</span>
 						</div>
 					</div>
 				)}

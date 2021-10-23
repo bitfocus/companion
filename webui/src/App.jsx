@@ -250,11 +250,14 @@ function AppContent({ buttonGridHotPress }) {
 						<LogPanel />
 					</MyErrorBoundary>
 				</CTabPane>
-				<CTabPane className={getClassForPane('/cloud')}>
-					<MyErrorBoundary>
-						<CloudPage />
-					</MyErrorBoundary>
-				</CTabPane>
+				{getClassForPane('/cloud') !== '' && (
+					// We want the cloud panel to only load when it it needs to
+					<CTabPane className={getClassForPane('/cloud')}>
+						<MyErrorBoundary>
+							<CloudPage />
+						</MyErrorBoundary>
+					</CTabPane>
+				)}
 				{!hasMatchedPane ? (
 					// If no pane was matched, then redirect to the default
 					<Redirect
