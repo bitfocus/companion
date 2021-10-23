@@ -7,6 +7,9 @@ import { CloudUserPass } from './UserPass'
 // The cloud part is written in old fashioned Class-components because I am most
 // familiar with it
 
+
+const onlineServerStyle = { color: 'green' };
+
 export class Cloud extends Component {
 	constructor(props) {
 		super(props)
@@ -169,7 +172,7 @@ export class Cloud extends Component {
 									width={100}
 								/>{' '}
 							</span>
-							<span style={styleText}>Stockholm {this.state.pingResults?.stockholm > -1 ? `(${this.state.pingResults?.stockholm}ms)` : '' }</span>
+							<span style={{...styleText, ...(this.state.connected?.stockholm ? onlineServerStyle : {})}}>Stockholm {this.state.pingResults?.stockholm > -1 ? `(${this.state.pingResults?.stockholm}ms)` : '' }</span>
 						</div>
 						<div style={styleWrap}>
 							<span style={styleSwitch}>
@@ -183,7 +186,7 @@ export class Cloud extends Component {
 									width={100}
 								/>
 							</span>
-							<span style={styleText}>Virginia {this.state.pingResults?.virginia > -1 ? `(${this.state.pingResults?.virginia}ms)` : '' }</span>
+							<span style={{...styleText, ...(this.state.connected?.virginia ? onlineServerStyle : {})}}>Virginia {this.state.pingResults?.virginia > -1 ? `(${this.state.pingResults?.virginia}ms)` : '' }</span>
 						</div>
 					</div>
 				)}
