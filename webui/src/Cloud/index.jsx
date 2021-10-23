@@ -113,33 +113,58 @@ export class Cloud extends Component {
 								marginBottom: 16,
 							}}
 						>
-							<label>Cloud Secret</label>
+							<label>Logged in as</label>
 							<CInput
 								readOnly
 								type="text"
 								style={{
 									width: 500,
 								}}
-								value="lol"
+								value={this.state.authenticatedAs}
 							/>
 						</div>
 
-						<div
-							style={{
-								fontWeight: 'bold',
-								marginBottom: 16,
-							}}
-						>
-							<label>Cloud GUI URL</label>
-							<CInput
-								readOnly
-								type="text"
-								style={{
-									width: 500,
-								}}
-								value="lol"
-							/>
+						{this.state.authenticated && (
+							<div>
+								<div style={styleWrap}>
+									<span style={styleSwitch}>
+										<CSwitch
+											variant="3d"
+											color="success"
+											checked={!!this.state.stockholmEnabled}
+											onChange={(e) => this.cloudSetState({ stockholmEnabled: e.target.checked })}
+											labelOff={'Off'}
+											labelOn={'On'}
+											width={100}
+										/>{' '}
+									</span>
+									<span style={{...styleText, ...(this.state.connected?.stockholm ? onlineServerStyle : {})}}>Stockholm {this.state.pingResults?.stockholm > -1 ? `(${this.state.pingResults?.stockholm}ms)` : '' }</span>
+								</div>
+
+								<div style={styleWrap}>
+									<span style={styleSwitch}>
+										<CSwitch
+											variant="3d"
+											color="success"
+											checked={!!this.state.virginiaEnabled}
+											onChange={(e) => this.cloudSetState({ virginiaEnabled: e.target.checked })}
+											labelOff={'Off'}
+											labelOn={'On'}
+											width={100}
+										/>
+									</span>
+									<span style={{...styleText, ...(this.state.connected?.virginia ? onlineServerStyle : {})}}>Virginia {this.state.pingResults?.virginia > -1 ? `(${this.state.pingResults?.virginia}ms)` : '' }</span>
+								</div>
+
+							</div>
+						)}
+
+						<div style={{ marginTop: 20 }}>
+							<CButton color="success" onClick={() => this.props.socket.emit('cloud_logout')}>
+								Log out
+							</CButton>
 						</div>
+
 					</div>
 				)}
 
@@ -150,45 +175,6 @@ export class Cloud extends Component {
 					>
 						{this.state.error}
 					</CCallout>
-				)}
-
-				{this.state.authenticated && (
-					<div>
-						<div style={{ marginBottom: 20, float:'left' }}>
-							<CButton color="success" onClick={() => this.props.socket.emit('cloud_logout')}>
-								Log out
-							</CButton>
-						</div>
-
-						<div style={styleWrap}>
-							<span style={styleSwitch}>
-								<CSwitch
-									variant="3d"
-									color="success"
-									checked={!!this.state.stockholmEnabled}
-									onChange={(e) => this.cloudSetState({ stockholmEnabled: e.target.checked })}
-									labelOff={'Off'}
-									labelOn={'On'}
-									width={100}
-								/>{' '}
-							</span>
-							<span style={{...styleText, ...(this.state.connected?.stockholm ? onlineServerStyle : {})}}>Stockholm {this.state.pingResults?.stockholm > -1 ? `(${this.state.pingResults?.stockholm}ms)` : '' }</span>
-						</div>
-						<div style={styleWrap}>
-							<span style={styleSwitch}>
-								<CSwitch
-									variant="3d"
-									color="success"
-									checked={!!this.state.virginiaEnabled}
-									onChange={(e) => this.cloudSetState({ virginiaEnabled: e.target.checked })}
-									labelOff={'Off'}
-									labelOn={'On'}
-									width={100}
-								/>
-							</span>
-							<span style={{...styleText, ...(this.state.connected?.virginia ? onlineServerStyle : {})}}>Virginia {this.state.pingResults?.virginia > -1 ? `(${this.state.pingResults?.virginia}ms)` : '' }</span>
-						</div>
-					</div>
 				)}
 
 				<div
