@@ -1585,9 +1585,9 @@ commist@^1.0.0:
   version "1.0.7"
   resolved "https://codeload.github.com/bitfocus/companion-module-allenheath-qu/tar.gz/8f8b20b9642f5ea840bceb8439155fca39587e17"
 
-"companion-module-allenheath-sq@github:bitfocus/companion-module-allenheath-sq#v1.3.8":
-  version "1.3.8"
-  resolved "https://codeload.github.com/bitfocus/companion-module-allenheath-sq/tar.gz/bcb380c5aa6c7ebbde8540d8774c65e02f70c331"
+"companion-module-allenheath-sq@github:bitfocus/companion-module-allenheath-sq#v1.3.9":
+  version "1.3.9"
+  resolved "https://codeload.github.com/bitfocus/companion-module-allenheath-sq/tar.gz/0c65f0635c5d645f21a64c40cff8f211cb016791"
 
 "companion-module-analogway-eks500@github:bitfocus/companion-module-analogway-eks500#v1.0.1":
   version "1.0.1"
@@ -1625,9 +1625,9 @@ commist@^1.0.0:
   version "1.0.6"
   resolved "https://codeload.github.com/bitfocus/companion-module-anomes-millumin/tar.gz/121d069e6c292521c71ba812f1bf605b40c46b0e"
 
-"companion-module-arkaos-mediamaster@github:bitfocus/companion-module-arkaos-mediamaster#v1.0.1":
-  version "1.0.0"
-  resolved "https://codeload.github.com/bitfocus/companion-module-arkaos-mediamaster/tar.gz/05428b2b8e116cc31a779777de8a0cde97b85a65"
+"companion-module-arkaos-mediamaster@github:bitfocus/companion-module-arkaos-mediamaster#v1.0.2":
+  version "1.0.2"
+  resolved "https://codeload.github.com/bitfocus/companion-module-arkaos-mediamaster/tar.gz/d5094fb5e4bf48991a3a4d34d2ca2b4355a8a1ee"
 
 "companion-module-aten-matrix@github:bitfocus/companion-module-aten-matrix#v1.0.0":
   version "1.0.0"
@@ -2416,9 +2416,9 @@ commist@^1.0.0:
   version "2.0.2"
   resolved "https://codeload.github.com/bitfocus/companion-module-nevion-mrp/tar.gz/f4c7e323592ce59d965f2fb99cbcca213e7afce4"
 
-"companion-module-newbluefx-titler@github:bitfocus/companion-module-newbluefx-titler#v2.0.1":
-  version "2.0.1"
-  resolved "https://codeload.github.com/bitfocus/companion-module-newbluefx-titler/tar.gz/4956e194dfef3e5b6d9e2d907761d15054e33f82"
+"companion-module-newbluefx-titler@github:bitfocus/companion-module-newbluefx-titler#v2.0.5":
+  version "2.0.5"
+  resolved "https://codeload.github.com/bitfocus/companion-module-newbluefx-titler/tar.gz/90794a5e67b229428d580294c58704de376ec30c"
   dependencies:
     qwebchannel "^5.9.0"
     ws "^7.4.6"
@@ -2471,9 +2471,9 @@ commist@^1.0.0:
   version "0.0.1"
   resolved "https://codeload.github.com/bitfocus/companion-module-octava-pro-dsx/tar.gz/0e7bac9aae64ccf23d61f46b4c3133fa82ba2aaf"
 
-"companion-module-openlp-http@github:bitfocus/companion-module-openlp-http#v0.1.1":
-  version "0.1.1"
-  resolved "https://codeload.github.com/bitfocus/companion-module-openlp-http/tar.gz/f69ee134fed777721fa6ec9d7a5dfbef9f3ab4db"
+"companion-module-openlp-http@github:bitfocus/companion-module-openlp-http#v0.1.2":
+  version "0.1.2"
+  resolved "https://codeload.github.com/bitfocus/companion-module-openlp-http/tar.gz/b1d25060671a977ec4b3f43565a5e7224a03274c"
 
 "companion-module-opensong-api@github:bitfocus/companion-module-opensong-api#v1.0.1":
   version "1.0.1"
@@ -2583,9 +2583,9 @@ commist@^1.0.0:
   version "1.0.7"
   resolved "https://codeload.github.com/bitfocus/companion-module-renewedvision-pvp/tar.gz/fc08f0c024c627d3192736888fcbb7ef3dc96a74"
 
-"companion-module-resi-decoders@github:bitfocus/companion-module-resi-decoders#v1.1.3":
-  version "1.1.3"
-  resolved "https://codeload.github.com/bitfocus/companion-module-resi-decoders/tar.gz/b434bc57fe2ba2e81515fbb0e94a1f77aad72aa8"
+"companion-module-resi-decoders@github:bitfocus/companion-module-resi-decoders#v1.1.4":
+  version "1.1.4"
+  resolved "https://codeload.github.com/bitfocus/companion-module-resi-decoders/tar.gz/ee7df4784b246efd8931ef3d1c336f33cfe557b1"
 
 "companion-module-resolume-arena@github:bitfocus/companion-module-resolume-arena#v1.0.5":
   version "1.0.5"
@@ -2693,9 +2693,9 @@ commist@^1.0.0:
   dependencies:
     xml2js "^0.4.23"
 
-"companion-module-singularlive-studio@github:bitfocus/companion-module-singularlive-studio#v1.0.8":
-  version "1.0.8"
-  resolved "https://codeload.github.com/bitfocus/companion-module-singularlive-studio/tar.gz/60025bb4fb4aadcbd2ef0638dc2da1105547b4f0"
+"companion-module-singularlive-studio@github:bitfocus/companion-module-singularlive-studio#v1.0.9":
+  version "1.0.9"
+  resolved "https://codeload.github.com/bitfocus/companion-module-singularlive-studio/tar.gz/832791f2a7b3bed96fca4b832a385d1811ab6c4b"
 
 "companion-module-slack-webhooks@github:bitfocus/companion-module-slack-webhooks#v1.0.1":
   version "1.0.1"
@@ -2747,9 +2747,9 @@ commist@^1.0.0:
   version "1.0.0"
   resolved "https://codeload.github.com/bitfocus/companion-module-sounddevices-pixnet/tar.gz/ded91efc401513f33b2bb8a42ccd11cb3b73e419"
 
-"companion-module-spotify-remote@github:bitfocus/companion-module-spotify-remote#v1.0.7":
-  version "1.0.7"
-  resolved "https://codeload.github.com/bitfocus/companion-module-spotify-remote/tar.gz/3d451b9d4814d46c6909965b1d7f10203ad82421"
+"companion-module-spotify-remote@github:bitfocus/companion-module-spotify-remote#v1.0.8":
+  version "1.0.8"
+  resolved "https://codeload.github.com/bitfocus/companion-module-spotify-remote/tar.gz/294be0e15269d35fa31c7203748416795eafe18d"
   dependencies:
     spotify-web-api-node "^5.0.1"
 
@@ -2858,6 +2858,12 @@ commist@^1.0.0:
   version "1.0.1"
   resolved "https://codeload.github.com/bitfocus/companion-module-vaddio-ptz/tar.gz/16bf099f3c35aa231c74b10b6b2cb60f93ef63a1"
 
+"companion-module-vdo-ninja@github:bitfocus/companion-module-vdo-ninja#v1.0.0":
+  version "1.0.0"
+  resolved "https://codeload.github.com/bitfocus/companion-module-vdo-ninja/tar.gz/69a200b11847c1ec4f0bfde649239e36e78aaf3f"
+  dependencies:
+    ws "^7.2.1"
+
 "companion-module-vicreo-hotkey@github:bitfocus/companion-module-vicreo-hotkey#v2.0.6":
   version "2.0.6"
   resolved "https://codeload.github.com/bitfocus/companion-module-vicreo-hotkey/tar.gz/5d8defa810d9a4d3a3e0d3be31e9d0735ef6f786"
@@ -2902,9 +2908,9 @@ commist@^1.0.0:
   version "1.6.0"
   resolved "https://codeload.github.com/bitfocus/companion-module-yamaha-rcp/tar.gz/12305273d4aee2f53a1b77debd55c4facb49a003"
 
-"companion-module-youtube-live@github:bitfocus/companion-module-youtube-live#v1.1.2":
-  version "1.1.2"
-  resolved "https://codeload.github.com/bitfocus/companion-module-youtube-live/tar.gz/b36298a53f0aa89832642aa106f6ec53fd6cc228"
+"companion-module-youtube-live@github:bitfocus/companion-module-youtube-live#v1.1.3":
+  version "1.1.3"
+  resolved "https://codeload.github.com/bitfocus/companion-module-youtube-live/tar.gz/bc54d89cee7ad55858d4dbf478719fdc501b643c"
   dependencies:
     "@types/jest" "^25.2.3"
     "@types/node" "^12.19.3"
