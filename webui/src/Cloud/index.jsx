@@ -131,6 +131,21 @@ export class Cloud extends Component {
 										<CSwitch
 											variant="3d"
 											color="success"
+											checked={!!this.state['oal-clusterEnabled']}
+											onChange={(e) => this.cloudSetState({ 'oal-clusterEnabled': e.target.checked })}
+											labelOff={'Off'}
+											labelOn={'On'}
+											width={100}
+										/>{' '}
+									</span>
+									<span style={{...styleText, ...(this.state.connected['oal-cluster'] ? onlineServerStyle : {})}}>Beta server {this.state.pingResults['oal-cluster'] > -1 ? `(${this.state.pingResults['oal-cluster']}ms)` : '' }</span>
+								</div>
+
+								<div style={styleWrap}>
+									<span style={styleSwitch}>
+										<CSwitch
+											variant="3d"
+											color="success"
 											checked={!!this.state.stockholmEnabled}
 											onChange={(e) => this.cloudSetState({ stockholmEnabled: e.target.checked })}
 											labelOff={'Off'}
