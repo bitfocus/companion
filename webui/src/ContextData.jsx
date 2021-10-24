@@ -16,6 +16,7 @@ import { NotificationsManager } from './Components/Notifications'
 export function ContextData({ socket, children }) {
 	const [instances, setInstances] = useState(null)
 	const [modules, setModules] = useState(null)
+	const [moduleRedirects, setModuleRedirects] = useState(null)
 	const [actions, setActions] = useState(null)
 	const [feedbacks, setFeedbacks] = useState(null)
 	const [variableDefinitions, setVariableDefinitions] = useState(null)
@@ -28,10 +29,19 @@ export function ContextData({ socket, children }) {
 			socketEmit(socket, 'modules_get', [])
 				.then(([res]) => {
 					const modulesObj = {}
+					const redirectsObj = {}
 					for (const mod of res.modules) {
 						modulesObj[mod.name] = mod
+
+						// Add legacy names to the redirect list
+						if (mod.legacy && Array.isArray(mod.legacy)) {
+							for (const from of mod.legacy) {
+								redirectsObj[from] = mod.name
+							}
+						}
 					}
 					setModules(modulesObj)
+					setModuleRedirects(redirectsObj)
 				})
 				.catch((e) => {
 					console.error('Failed to load modules list', e)
@@ -146,9 +156,19 @@ export function ContextData({ socket, children }) {
 		socket: socket,
 		notifier: notifierRef,
 		modules: modules,
+		moduleRedirects: moduleRedirects,
 	}
 
-	const steps = [instances, modules, variableDefinitions, variableValues, actions, feedbacks, customVariables]
+	const steps = [
+		instances,
+		modules,
+		variableDefinitions,
+		variableValues,
+		actions,
+		feedbacks,
+		customVariables,
+		userConfig,
+	]
 	const completedSteps = steps.filter((s) => s !== null && s !== undefined)
 
 	const progressPercent = (completedSteps.length / steps.length) * 100
