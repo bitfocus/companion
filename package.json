@@ -143,6 +143,7 @@
 		"s3-upload-stream": "^1.0.7"
 	},
 	"dependencies": {
+		"@estilles/expression-parser": "^1.0.0",
 		"@sentry/electron": "^2.5.3",
 		"app-root-path": "^3.0.0",
 		"binopsy": "^0.0.0",
