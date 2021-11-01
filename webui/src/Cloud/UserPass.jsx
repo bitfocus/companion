@@ -24,9 +24,13 @@ export class CloudUserPass extends Component {
 		return (
 			<form
 				onSubmit={(e) => {
+					e.preventDefault()
+					if (this.props.onClearError) {
+						console.log("onClearError")
+						this.props.onClearError();
+					}
 					if (this.state.username === '' || this.state.password === '') return
 					this.props.onAuth(this.state.username, this.state.password)
-					e.preventDefault()
 				}}
 			>
 				<div
