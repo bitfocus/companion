@@ -7,8 +7,7 @@ import { CloudUserPass } from './UserPass'
 // The cloud part is written in old fashioned Class-components because I am most
 // familiar with it
 
-
-const onlineServerStyle = { color: 'green' };
+const onlineServerStyle = { color: 'green' }
 
 export class Cloud extends Component {
 	constructor(props) {
@@ -20,7 +19,7 @@ export class Cloud extends Component {
 			authenticated: false,
 			secret: '',
 			gui: '',
-			uuid: ''
+			uuid: '',
 		}
 
 		this.cloudStateDidUpdate = this.cloudStateDidUpdate.bind(this)
@@ -30,13 +29,13 @@ export class Cloud extends Component {
 	componentDidMount() {
 		this.props.socket.on('cloud_state', this.cloudStateDidUpdate)
 		this.props.socket.emit('cloud_state_get')
-		console.log("Mounted CLOUD");
+		console.log('Mounted CLOUD')
 		this.cloudSetState({ ping: true })
 	}
 
 	componentWillUnmount() {
 		this.cloudSetState({ ping: false })
-		console.log("Unmounted CLOUD");
+		console.log('Unmounted CLOUD')
 		this.props.socket.off('cloud_state', this.cloudStateDidUpdate)
 	}
 
@@ -47,7 +46,7 @@ export class Cloud extends Component {
 
 	cloudSetState(newState) {
 		this.props.socket.emit('cloud_state_set', newState)
-/*		let localDraft = { ...this.state, ...newState }
+		/*		let localDraft = { ...this.state, ...newState }
 		const a = JSON.stringify(localDraft)
 		const b = JSON.stringify(this.state)
 		if (a !== b) {
@@ -72,10 +71,17 @@ export class Cloud extends Component {
 			height: 20,
 			paddingTop: 19,
 		}
+		const errorTagStyle = {
+			backgroundColor: 'red',
+			color: 'white',
+			padding: '0.2em 0.5em',
+			borderRadius: '0.25em',
+			margin: '0.5em',
+		}
 
 		const styleSwitch = { display: 'inline-block', paddingTop: 5, float: 'left' }
 
-		const styleWrap = { clear: 'both', }
+		const styleWrap = { clear: 'both' }
 
 		return (
 			<div
@@ -84,9 +90,6 @@ export class Cloud extends Component {
 				}}
 			>
 				<h4>Companion Cloud</h4>
-				<p>
-					Use this it to connect to this companion instance when Companion Cloud is activated blablabla: <b>{this.state.uuid}</b>
-				</p>
 				<p>
 					Access the companion GUI from your Bitfocus Cloud account, or create a sofisticated network of companions that
 					work together over the internet for all your remote production needs.
@@ -97,14 +100,31 @@ export class Cloud extends Component {
 					}}
 				>
 					<div>
-						When enabled, companion will make several persistent HTTPS connections to diffent Bitfocus Cloud regions for redundancy. Learn more about the
-						service, the service provider and the safety of your data{' '}
-						<a href="http://bitfocus.io/companion-cloud-info">here</a>.
+						When enabled, companion will make several persistent HTTPS connections to diffent Bitfocus Cloud regions for
+						redundancy. Learn more about the service, the service provider and the safety of your data{' '}
+						<a href="https://cloud.bitfocus.io/product/companion-cloud">here</a>.
 					</div>
 				</div>
 
 				{!this.state.authenticated ? (
-					<CloudUserPass onAuth={(user, pass) => this.props.socket.emit('cloud_login', user, pass)} />
+					<div>
+						<CloudUserPass onAuth={(user, pass) => this.props.socket.emit('cloud_login', user, pass)} />
+						<div
+							style={{
+								backgroundColor: 'rgba(100,200,0,0.15)',
+								display: 'block',
+								borderRadius: 4,
+								padding: '10px 15px',
+								marginTop: 40,
+								fontSize: 15,
+								fontWeight: 'bold',
+								marginBottom: 16,
+							}}
+						>
+							<FontAwesomeIcon icon={faInfoCircle} /> &nbsp;Companion Cloud is a premium service. Learn more and sign up{' '}
+							<a href="http://bitfocus.io/companion-cloud">here</a>.
+						</div>
+					</div>
 				) : (
 					<div>
 						<div
@@ -130,7 +150,7 @@ export class Cloud extends Component {
 									<span style={styleSwitch}>
 										<CSwitch
 											variant="3d"
-											color="success"
+											color={this.state.connected['oal-cluster'] ? 'success' : 'danger'}
 											checked={!!this.state['oal-clusterEnabled']}
 											onChange={(e) => this.cloudSetState({ 'oal-clusterEnabled': e.target.checked })}
 											labelOff={'Off'}
@@ -138,14 +158,18 @@ export class Cloud extends Component {
 											width={100}
 										/>{' '}
 									</span>
-									<span style={{...styleText, ...(this.state.connected['oal-cluster'] ? onlineServerStyle : {})}}>Beta server {this.state.pingResults['oal-cluster'] > -1 ? `(${this.state.pingResults['oal-cluster']}ms)` : '' }</span>
+									<span style={{ ...styleText, ...(this.state.connected['oal-cluster'] ? onlineServerStyle : {}) }}>
+										Testing{' '}
+										{this.state.pingResults['oal-cluster'] > -1 ? `(${this.state.pingResults['oal-cluster']}ms)` : ''}
+									</span>
+									<span style={errorTagStyle}>Error errortext if error</span>
 								</div>
 
 								<div style={styleWrap}>
 									<span style={styleSwitch}>
 										<CSwitch
 											variant="3d"
-											color="success"
+											color={this.state.connected['stockholm'] ? 'success' : 'danger'}
 											checked={!!this.state.stockholmEnabled}
 											onChange={(e) => this.cloudSetState({ stockholmEnabled: e.target.checked })}
 											labelOff={'Off'}
@@ -153,14 +177,16 @@ export class Cloud extends Component {
 											width={100}
 										/>{' '}
 									</span>
-									<span style={{...styleText, ...(this.state.connected?.stockholm ? onlineServerStyle : {})}}>Stockholm {this.state.pingResults?.stockholm > -1 ? `(${this.state.pingResults?.stockholm}ms)` : '' }</span>
+									<span style={{ ...styleText, ...(this.state.connected?.stockholm ? onlineServerStyle : {}) }}>
+										Europe {this.state.pingResults?.stockholm > -1 ? `(${this.state.pingResults?.stockholm}ms)` : ''}
+									</span>
 								</div>
 
 								<div style={styleWrap}>
 									<span style={styleSwitch}>
 										<CSwitch
 											variant="3d"
-											color="success"
+											color={this.state.connected['virginia'] ? 'success' : 'danger'}
 											checked={!!this.state.virginiaEnabled}
 											onChange={(e) => this.cloudSetState({ virginiaEnabled: e.target.checked })}
 											labelOff={'Off'}
@@ -168,9 +194,10 @@ export class Cloud extends Component {
 											width={100}
 										/>
 									</span>
-									<span style={{...styleText, ...(this.state.connected?.virginia ? onlineServerStyle : {})}}>Virginia {this.state.pingResults?.virginia > -1 ? `(${this.state.pingResults?.virginia}ms)` : '' }</span>
+									<span style={{ ...styleText, ...(this.state.connected?.virginia ? onlineServerStyle : {}) }}>
+										US {this.state.pingResults?.virginia > -1 ? `(${this.state.pingResults?.virginia}ms)` : ''}
+									</span>
 								</div>
-
 							</div>
 						)}
 
@@ -179,7 +206,25 @@ export class Cloud extends Component {
 								Log out
 							</CButton>
 						</div>
-
+						<div style={{ marginTop: 15 }}>
+							<div style={{ fontWeight:'bold', fontSize: 16, marginBottom: 4 }}>Super secret key</div>
+							<div
+								style={{
+									color: 'rgba(50,100,50,0.9)',
+									backgroundColor: 'rgba(0,200,0,0.1)',
+									display: 'inline-block',
+									padding: '4px 8px',
+									fontFamily: 'monospace',
+									fontWeight: 'bold',
+									fontSize: 17,
+									border: '1px solid rgba(0,200,0,0.3)',
+									borderRadius: 5,
+								}}
+							>
+								{this.state.uuid}
+							</div>
+							<div style={{marginTop:5}}>This key should now be online and reachable for companion cloud instances. Go to the connections tab in another companion and search for "companion cloud", and add it with the key above to start controlling this companion via internet.</div>
+						</div>
 					</div>
 				)}
 
@@ -192,21 +237,7 @@ export class Cloud extends Component {
 					</CCallout>
 				)}
 
-				<div
-					style={{
-						backgroundColor: 'rgba(100,200,0,0.15)',
-						display: 'block',
-						borderRadius: 4,
-						padding: '10px 15px',
-						marginTop: 40,
-						fontSize: 15,
-						fontWeight: 'bold',
-						marginBottom: 16,
-					}}
-				>
-					<FontAwesomeIcon icon={faInfoCircle} /> &nbsp;Companion Cloud is a premium service. Learn more and sign up{' '}
-					<a href="http://bitfocus.io/companion-cloud">here</a>.
-				</div>
+
 			</div>
 		)
 	}
