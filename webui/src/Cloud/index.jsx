@@ -108,7 +108,14 @@ export class Cloud extends Component {
 
 				{!this.state.authenticated ? (
 					<div>
-						<CloudUserPass onAuth={(user, pass) => this.props.socket.emit('cloud_login', user, pass)} />
+						<CloudUserPass
+							onAuth={(user, pass) => {
+								this.props.socket.emit('cloud_login', user, pass)
+							}}
+							onClearError={() => {
+								this.setState({ error: null })
+							}}
+						/>
 						<div
 							style={{
 								backgroundColor: 'rgba(100,200,0,0.15)',
@@ -145,7 +152,7 @@ export class Cloud extends Component {
 						</div>
 
 						{this.state.authenticated && (
-							<div>
+							<div>								
 								<div style={styleWrap}>
 									<span style={styleSwitch}>
 										<CSwitch
@@ -202,29 +209,41 @@ export class Cloud extends Component {
 						)}
 
 						<div style={{ marginTop: 20 }}>
-							<CButton color="success" onClick={() => this.props.socket.emit('cloud_logout')}>
+							<CButton
+								color="success"
+								onClick={() => {
+									this.setState({ error: null })
+									this.props.socket.emit('cloud_logout')
+								}}
+							>
 								Log out
 							</CButton>
 						</div>
-						<div style={{ marginTop: 15 }}>
-							<div style={{ fontWeight:'bold', fontSize: 16, marginBottom: 4 }}>Super secret key</div>
-							<div
-								style={{
-									color: 'rgba(50,100,50,0.9)',
-									backgroundColor: 'rgba(0,200,0,0.1)',
-									display: 'inline-block',
-									padding: '4px 8px',
-									fontFamily: 'monospace',
-									fontWeight: 'bold',
-									fontSize: 17,
-									border: '1px solid rgba(0,200,0,0.3)',
-									borderRadius: 5,
-								}}
-							>
-								{this.state.uuid}
+						{Object.keys(this.state.connected)?.find((cluster) => this.state.connected[cluster] === true)?.length && (
+							<div style={{ marginTop: 15 }}>
+								<div style={{ fontWeight: 'bold', fontSize: 16, marginBottom: 4 }}>Super secret key</div>
+								<div
+									style={{
+										color: 'rgba(50,100,50,0.9)',
+										backgroundColor: 'rgba(0,200,0,0.1)',
+										display: 'inline-block',
+										padding: '4px 8px',
+										fontFamily: 'monospace',
+										fontWeight: 'bold',
+										fontSize: 17,
+										border: '1px solid rgba(0,200,0,0.3)',
+										borderRadius: 5,
+									}}
+								>
+									{this.state.uuid}
+								</div>
+								<div style={{ marginTop: 5 }}>
+									This key should now be online and reachable for companion cloud instances. Go to the connections tab
+									in another companion and search for "companion cloud", and add it with the key above to start
+									controlling this companion via internet.
+								</div>
 							</div>
-							<div style={{marginTop:5}}>This key should now be online and reachable for companion cloud instances. Go to the connections tab in another companion and search for "companion cloud", and add it with the key above to start controlling this companion via internet.</div>
-						</div>
+						)}
 					</div>
 				)}
 
@@ -236,8 +255,6 @@ export class Cloud extends Component {
 						{this.state.error}
 					</CCallout>
 				)}
-
-
 			</div>
 		)
 	}
