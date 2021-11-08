@@ -44,6 +44,9 @@ jobs:
           node-version: ${{ matrix.node-version }}
       - name: yarn update and macdist
         run: |
+          # try and avoid timeout errors
+          yarn config set network-timeout 100000 -g
+
           yarn update
           yarn run macdist
       - name: rename and upload stuff
