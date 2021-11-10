@@ -156,6 +156,7 @@ const SurfaceEditModal = forwardRef(function SurfaceEditModal(_props, ref) {
 	const [show, setShow] = useState(false)
 
 	const [deviceConfig, setDeviceConfig] = useState(null)
+	const [deviceConfigInfo, setDeviceConfigInfo] = useState(null)
 	const [deviceConfigError, setDeviceConfigError] = useState(null)
 	const [reloadToken, setReloadToken] = useState(shortid())
 
@@ -174,8 +175,10 @@ const SurfaceEditModal = forwardRef(function SurfaceEditModal(_props, ref) {
 
 		if (deviceInfo?.id) {
 			socketEmit(context.socket, 'device_config_get', [deviceInfo.id])
-				.then(([err, config]) => {
+				.then(([err, config, info]) => {
+					console.log(err, config, info)
 					setDeviceConfig(config)
+					setDeviceConfigInfo(info)
 				})
 				.catch((err) => {
 					console.error('Failed to load device config')
@@ -237,8 +240,12 @@ const SurfaceEditModal = forwardRef(function SurfaceEditModal(_props, ref) {
 				<h5>Settings for {deviceInfo?.type}</h5>
 			</CModalHeader>
 			<CModalBody>
-				<LoadingRetryOrError error={deviceConfigError} dataReady={deviceConfig} doRetry={doRetryConfigLoad} />
-				{deviceConfig && deviceInfo ? (
+				<LoadingRetryOrError
+					error={deviceConfigError}
+					dataReady={deviceConfig && deviceConfigInfo}
+					doRetry={doRetryConfigLoad}
+				/>
+				{deviceConfig && deviceInfo && deviceConfigInfo ? (
 					<CForm>
 						<CFormGroup>
 							<CLabel htmlFor="use_last_page">Use Last Page At Startup</CLabel>
@@ -264,6 +271,40 @@ const SurfaceEditModal = forwardRef(function SurfaceEditModal(_props, ref) {
 							/>
 							<span>{deviceConfig.page}</span>
 						</CFormGroup>
+						{deviceConfigInfo.xOffsetMax > 0 ? (
+							<CFormGroup>
+								<CLabel htmlFor="page">X Offset in grid</CLabel>
+								<CInput
+									name="page"
+									type="range"
+									min={0}
+									max={deviceConfigInfo.xOffsetMax}
+									step={1}
+									value={deviceConfig.xOffset}
+									onChange={(e) => updateConfig('xOffset', parseInt(e.currentTarget.value))}
+								/>
+								<span>{deviceConfig.xOffset}</span>
+							</CFormGroup>
+						) : (
+							''
+						)}
+						{deviceConfigInfo.yOffsetMax > 0 ? (
+							<CFormGroup>
+								<CLabel htmlFor="page">Y Offset in grid</CLabel>
+								<CInput
+									name="page"
+									type="range"
+									min={0}
+									max={deviceConfigInfo.yOffsetMax}
+									step={1}
+									value={deviceConfig.yOffset}
+									onChange={(e) => updateConfig('yOffset', parseInt(e.currentTarget.value))}
+								/>
+								<span>{deviceConfig.yOffset}</span>
+							</CFormGroup>
+						) : (
+							''
+						)}
 						{deviceInfo.config?.includes('brightness') ? (
 							<CFormGroup>
 								<CLabel htmlFor="brightness">Brightness</CLabel>
