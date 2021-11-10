@@ -54,6 +54,11 @@
     dir-compare "^2.4.0"
     fs-extra "^9.0.1"
 
+"@estilles/expression-parser@^1.0.0":
+  version "1.0.0"
+  resolved "https://registry.yarnpkg.com/@estilles/expression-parser/-/expression-parser-1.0.0.tgz#227a182309051f4e371e1b5c652351b84213eddc"
+  integrity sha512-Pidcwrp+YgjWjzXtt2IacpBkBcWCtMMcc21Jic/taXaPOX7efdcdYR5w65K7DWyOGyFXzaQAfvwEqBvDbyM9+w==
+
 "@jest/types@^25.5.0":
   version "25.5.0"
   resolved "https://registry.yarnpkg.com/@jest/types/-/types-25.5.0.tgz#4d6a4793f7b9599fc3680877b856a97dbccf2a9d"
