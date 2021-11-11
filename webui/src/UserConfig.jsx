@@ -327,6 +327,26 @@ function UserConfigTable() {
 				</tr>
 				<tr>
 					<td colSpan="2" className="settings-category">
+						Ember+
+					</td>
+				</tr>
+				<tr>
+					<td>Ember+ Listener</td>
+					<td>
+						<div className="form-check form-check-inline mr-1">
+							<CInputCheckbox
+								id="userconfig_emberplus_enabled"
+								checked={config.emberplus_enabled}
+								onChange={(e) => setValue('emberplus_enabled', e.currentTarget.checked)}
+							/>
+							<label className="form-check-label" htmlFor="userconfig_emberplus_enabled">
+								Enabled
+							</label>
+						</div>
+					</td>
+				</tr>
+				<tr>
+					<td colSpan="2" className="settings-category">
 						Artnet Listener
 					</td>
 				</tr>
