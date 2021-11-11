@@ -394,7 +394,7 @@
 		"companion-module-sharp-tv": "github:bitfocus/companion-module-sharp-tv#v1.0.0",
 		"companion-module-showcuesystems-scs": "github:bitfocus/companion-module-showcuesystems-scs#v1.0.1",
 		"companion-module-shure-dis-ccu": "github:bitfocus/companion-module-shure-dis-ccu#v1.0.1",
-		"companion-module-shure-psm1000": "github:bitfocus/companion-module-shure-psm1000#v1.0.0",
+		"companion-module-shure-psm1000": "github:bitfocus/companion-module-shure-psm1000#v1.1.0",
 		"companion-module-shure-scm820": "github:bitfocus/companion-module-shure-scm820#v1.0.0",
 		"companion-module-shure-wireless": "github:bitfocus/companion-module-shure-wireless#v1.2.3",
 		"companion-module-sienna-ndimonitor": "github:bitfocus/companion-module-sienna-ndimonitor#v1.0.0",
