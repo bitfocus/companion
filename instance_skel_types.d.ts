@@ -77,6 +77,8 @@ export interface CompanionActionEventInfo {
 export interface CompanionFeedbackEventInfo {
 	page: number
 	bank: number
+	width: number
+	height: number
 }
 
 export interface CompanionFeedbackEvent {
