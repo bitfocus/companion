@@ -2658,9 +2658,9 @@ commist@^1.0.0:
   version "1.0.0"
   resolved "https://codeload.github.com/bitfocus/companion-module-shure-scm820/tar.gz/37780c1672c9a2ddd29dd141f745fc71df7d989a"
 
-"companion-module-shure-wireless@github:bitfocus/companion-module-shure-wireless#v1.2.0":
-  version "1.2.0"
-  resolved "https://codeload.github.com/bitfocus/companion-module-shure-wireless/tar.gz/ee38e990550aebb241936454282b3d1f812bfbe8"
+"companion-module-shure-wireless@github:bitfocus/companion-module-shure-wireless#v1.2.3":
+  version "1.2.3"
+  resolved "https://codeload.github.com/bitfocus/companion-module-shure-wireless/tar.gz/9062983e6c4b1ab93645f9e8096da4a7ed16b864"
 
 "companion-module-sienna-ndimonitor@github:bitfocus/companion-module-sienna-ndimonitor#v1.0.0":
   version "1.0.0"
