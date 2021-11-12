@@ -15,7 +15,7 @@
  *
  */
 
-if (process.env.DEVELOPER !== undefined) {
+if (process.env.DEVELOPER !== undefined && process.env.DEBUG === undefined) {
 	process.env['DEBUG'] = '*,-websocket*,-express*,-engine*,-socket.io*,-send*,-db,-NRC*,-follow-redirects'
 }
 
