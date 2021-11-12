@@ -2823,9 +2823,9 @@ commist@^1.0.0:
     open "^7.0.0"
     tmi.js "^1.5.0"
 
-"companion-module-ubiquiti-unifi@github:bitfocus/companion-module-ubiquiti-unifi#v1.0.1":
-  version "1.0.1"
-  resolved "https://codeload.github.com/bitfocus/companion-module-ubiquiti-unifi/tar.gz/a2afb925f30ab9baf64a01de8649e4c14415b0fe"
+"companion-module-ubiquiti-unifi@github:bitfocus/companion-module-ubiquiti-unifi#v1.0.2":
+  version "1.0.2"
+  resolved "https://codeload.github.com/bitfocus/companion-module-ubiquiti-unifi/tar.gz/22963738c49b0c20c88850c4978f82e5d429c4b3"
   dependencies:
     node-unifi "^1.3.6"
 
