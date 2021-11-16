@@ -2162,6 +2162,12 @@ commist@^1.0.0:
   version "1.0.0"
   resolved "https://codeload.github.com/bitfocus/companion-module-haivision-kbencoder/tar.gz/125f76e7dd1839d341d7beae5c040a171c5b7546"
 
+"companion-module-hermann-stagetimerio@github:bitfocus/companion-module-hermann-stagetimerio#v1.0.0":
+  version "1.0.0"
+  resolved "https://codeload.github.com/bitfocus/companion-module-hermann-stagetimerio/tar.gz/2badfb5085d838debc862c3ed2d6eb30ec051373"
+  dependencies:
+    needle "^3.0.0"
+
 "companion-module-highend-hog4@github:bitfocus/companion-module-highend-hog4#v1.1.0":
   version "1.1.0"
   resolved "https://codeload.github.com/bitfocus/companion-module-highend-hog4/tar.gz/c0bd9f50c77746875f2ae969b9152b996964a74a"
@@ -2857,9 +2863,9 @@ commist@^1.0.0:
   version "1.0.6"
   resolved "https://codeload.github.com/bitfocus/companion-module-visualproductions-bstation2/tar.gz/6ccb8cef1ccebed26dc1a47f16c959bb55a74732"
 
-"companion-module-visualproductions-cuety@github:bitfocus/companion-module-visualproductions-cuety#v1.0.1":
-  version "1.0.1"
-  resolved "https://codeload.github.com/bitfocus/companion-module-visualproductions-cuety/tar.gz/4d61677c3db0fea2416a2dc7cfb5d38014b9b71b"
+"companion-module-visualproductions-cuety@github:bitfocus/companion-module-visualproductions-cuety#v1.0.2":
+  version "1.0.2"
+  resolved "https://codeload.github.com/bitfocus/companion-module-visualproductions-cuety/tar.gz/631651dcc76fa81350789ef3a2fb795c30cd800c"
 
 "companion-module-vivitek-projector@github:bitfocus/companion-module-vivitek-projector#v1.0.3":
   version "1.0.3"
@@ -5643,6 +5649,15 @@ needle@1.1.2:
   dependencies:
     debug "^2.1.2"
     iconv-lite "^0.4.4"
+
+needle@^3.0.0:
+  version "3.0.0"
+  resolved "https://registry.yarnpkg.com/needle/-/needle-3.0.0.tgz#5808f20246d69ffd7ebd42109eb58d1442b98e6e"
+  integrity sha512-eGr0qnfHxAjr+Eptl1zr2lgUQUPC1SZfTkg2kFi0kxr1ChJonHUVYobkug8siBKMlyUVVp56MSkp6CSeXH/jgw==
+  dependencies:
+    debug "^3.2.6"
+    iconv-lite "^0.4.4"
+    sax "^1.2.4"
 
 negotiator@0.6.2:
   version "0.6.2"
