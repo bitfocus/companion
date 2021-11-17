@@ -1812,6 +1812,12 @@ commist@^1.0.0:
   version "1.0.0"
   resolved "https://codeload.github.com/bitfocus/companion-module-brompton-tessera/tar.gz/f8d4b454731a01e6efa4f58f6f57e801458f7313"
 
+"companion-module-bytehive-playoutbee@github:bitfocus/companion-module-bytehive-playoutbee#v1.0.0":
+  version "1.0.0"
+  resolved "https://codeload.github.com/bitfocus/companion-module-bytehive-playoutbee/tar.gz/4426897965365947810187658e751ee97e8bc033"
+  dependencies:
+    needle "^3.0.0"
+
 "companion-module-canon-xf@github:bitfocus/companion-module-canon-xf#v1.0.0":
   version "1.0.0"
   resolved "https://codeload.github.com/bitfocus/companion-module-canon-xf/tar.gz/714a2b174f026b82fbd8c27a1d987dd4b2a7139d"
