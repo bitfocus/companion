@@ -2718,6 +2718,10 @@ commist@^1.0.0:
   version "1.0.0"
   resolved "https://codeload.github.com/bitfocus/companion-module-sony-bravia/tar.gz/c464edba830c93e668d3ec64044530c126648f70"
 
+"companion-module-sony-broadcastmonitor@github:bitfocus/companion-module-sony-broadcastmonitor#v1.0.0":
+  version "1.0.0"
+  resolved "https://codeload.github.com/bitfocus/companion-module-sony-broadcastmonitor/tar.gz/1007d469c9aca87e1f0f7c19200d71398d2f2f6c"
+
 "companion-module-sony-visca@github:bitfocus/companion-module-sony-visca#v1.2.8":
   version "1.2.8"
   resolved "https://codeload.github.com/bitfocus/companion-module-sony-visca/tar.gz/e95ec2025d6647cb95b29bdb0dbfc23790b86922"

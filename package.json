@@ -408,6 +408,7 @@
 		"companion-module-sonoran-coyote": "github:bitfocus/companion-module-sonoran-coyote#v1.0.0",
 		"companion-module-sonos-speakers": "github:bitfocus/companion-module-sonos-speakers#v0.2.0",
 		"companion-module-sony-bravia": "github:bitfocus/companion-module-sony-bravia#v1.0.0",
+		"companion-module-sony-broadcastmonitor": "github:bitfocus/companion-module-sony-broadcastmonitor#v1.0.0",
 		"companion-module-sony-visca": "github:bitfocus/companion-module-sony-visca#v1.2.8",
 		"companion-module-soundcraft-ui": "github:bitfocus/companion-module-soundcraft-ui#v2.0.3",
 		"companion-module-sounddevices-pixnet": "github:bitfocus/companion-module-sounddevices-pixnet#v1.0.0",
