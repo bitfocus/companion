@@ -926,9 +926,9 @@ balanced-match@^1.0.0:
   resolved "https://registry.yarnpkg.com/balanced-match/-/balanced-match-1.0.2.tgz#e83e3a7e3f300b34cb9d87f615fa0cbf357690ee"
   integrity sha512-3oSeUO0TMV67hN1AmbXsK4yaqU7tjiHlbxRDZOpH0KW9+CeX4bRAaX0Anxt0tx2MrpRpWwQaPwIlISEJhYU5Pw==
 
-"barco-eventmaster@git://github.com/willosof/node-barco-eventmaster":
+"barco-eventmaster@github:willosof/node-barco-eventmaster":
   version "8.0.1"
-  resolved "git://github.com/willosof/node-barco-eventmaster#b6c6586ec02b674b9c3051e0bc79b35d04b80748"
+  resolved "https://codeload.github.com/willosof/node-barco-eventmaster/tar.gz/b6c6586ec02b674b9c3051e0bc79b35d04b80748"
   dependencies:
     node-rest-client "^3.1.0"
 
@@ -1711,11 +1711,11 @@ commist@^1.0.0:
   version "1.2.4"
   resolved "https://codeload.github.com/bitfocus/companion-module-barco-eventmaster-xml/tar.gz/09dc986cac1c18648bfd1eae2200054e43ef49ac"
 
-"companion-module-barco-eventmaster@github:bitfocus/companion-module-barco-eventmaster#v2.0.0":
-  version "2.0.0"
-  resolved "https://codeload.github.com/bitfocus/companion-module-barco-eventmaster/tar.gz/e3436f525539b1ee2f210e80cfd11c6c14a9f66b"
+"companion-module-barco-eventmaster@github:bitfocus/companion-module-barco-eventmaster#v2.0.1":
+  version "2.0.1"
+  resolved "https://codeload.github.com/bitfocus/companion-module-barco-eventmaster/tar.gz/2dc807c2e2e63b7baffadf734ac5ffeaef4731b4"
   dependencies:
-    barco-eventmaster "git://github.com/willosof/node-barco-eventmaster"
+    barco-eventmaster "github:willosof/node-barco-eventmaster"
     ping "^0.4.1"
 
 "companion-module-barco-hdx@github:bitfocus/companion-module-barco-hdx#v1.1.5":
