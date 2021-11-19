@@ -1919,6 +1919,10 @@ commist@^1.0.0:
     jsxapi "^5.0.3"
     rimraf "^3.0.2"
 
+"companion-module-classx-liveboard@github:bitfocus/companion-module-classx-liveboard#v1.0.0":
+  version "1.0.0"
+  resolved "https://codeload.github.com/bitfocus/companion-module-classx-liveboard/tar.gz/38d6d9395031ebda8e6a4425c50aa77f0f5d7e6a"
+
 "companion-module-cockos-reaper@github:bitfocus/companion-module-cockos-reaper#v1.1.0":
   version "1.1.0"
   resolved "https://codeload.github.com/bitfocus/companion-module-cockos-reaper/tar.gz/12736ea2d8f67d8bca1d4d68b041bdb0dc3f27eb"
