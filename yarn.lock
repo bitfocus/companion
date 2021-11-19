@@ -1788,6 +1788,12 @@ commist@^1.0.0:
     md5-typescript "^1.0.5"
     socket.io-client "^4.1.2"
 
+"companion-module-blackbird-hdmimatrix@github:bitfocus/companion-module-blackbird-hdmimatrix#v1.0.1":
+  version "1.0.1"
+  resolved "https://codeload.github.com/bitfocus/companion-module-blackbird-hdmimatrix/tar.gz/87f82cfc31f01c984f962812d7c0c40d84a889f4"
+  dependencies:
+    needle "^3.0.0"
+
 "companion-module-blackbox-boxilla@github:bitfocus/companion-module-blackbox-boxilla#v1.0.2":
   version "1.0.2"
   resolved "https://codeload.github.com/bitfocus/companion-module-blackbox-boxilla/tar.gz/5a0fdf5f0c79f7fec8cf932d9f91942d095bfbf2"
