@@ -2253,6 +2253,10 @@ commist@^1.0.0:
   version "1.0.2"
   resolved "https://codeload.github.com/bitfocus/companion-module-ifelseware-avplayback/tar.gz/00b14afe3c9d7b88588652f1c64e635daa89ace7"
 
+"companion-module-imagine-lrc@github:bitfocus/companion-module-imagine-lrc#v1.0.0":
+  version "1.0.0"
+  resolved "https://codeload.github.com/bitfocus/companion-module-imagine-lrc/tar.gz/60566ff0cc6de61748568da7ffa47e67e96ee0dc"
+
 "companion-module-imimot-mitti@github:bitfocus/companion-module-imimot-mitti#v1.0.8":
   version "1.0.8"
   resolved "https://codeload.github.com/bitfocus/companion-module-imimot-mitti/tar.gz/a65b5be341a8fa431992fd92f6af137e056d53fa"
