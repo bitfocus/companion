@@ -141,7 +141,7 @@ export function EditButton({ page, bank, onKeyUp }) {
 								</CDropdownToggle>
 							</CButtonGroup>
 							<CDropdownMenu>
-								<CDropdownItem>Regular button</CDropdownItem>
+								<CDropdownItem onClick={() => setButtonType('png')}>Regular button</CDropdownItem>
 								<CDropdownItem onClick={() => setButtonType('pageup')}>Page up</CDropdownItem>
 								<CDropdownItem onClick={() => setButtonType('pagenum')}>Page number</CDropdownItem>
 								<CDropdownItem onClick={() => setButtonType('pagedown')}>Page down</CDropdownItem>
