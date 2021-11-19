@@ -2361,9 +2361,9 @@ commist@^1.0.0:
     graphql-tag "2.11.0"
     linkbox-sdk "1.1.1"
 
-"companion-module-ltn-schedule@github:bitfocus/companion-module-ltn-schedule#v1.0.0":
-  version "1.0.0"
-  resolved "https://codeload.github.com/bitfocus/companion-module-ltn-schedule/tar.gz/d0b0b825323e1fb24f7faf929af8998edafcca9d"
+"companion-module-ltn-schedule@github:bitfocus/companion-module-ltn-schedule#v1.1.0":
+  version "1.1.0"
+  resolved "https://codeload.github.com/bitfocus/companion-module-ltn-schedule/tar.gz/8a7e64d3c1b12738300d46cf00198a29251528cf"
   dependencies:
     got "^11.8.2"
     ws "^7.4.4"
