@@ -17,8 +17,6 @@ export class Cloud extends Component {
 			enabled: false,
 			error: null,
 			authenticated: false,
-			secret: '',
-			gui: '',
 			uuid: '',
 		}
 
@@ -46,12 +44,6 @@ export class Cloud extends Component {
 
 	cloudSetState(newState) {
 		this.props.socket.emit('cloud_state_set', newState)
-		/*		let localDraft = { ...this.state, ...newState }
-		const a = JSON.stringify(localDraft)
-		const b = JSON.stringify(this.state)
-		if (a !== b) {
-			this.setState({ ...newState })
-		}*/
 	}
 
 	shouldComponentUpdate(_nextProps, nextState) {

@@ -1,5 +1,3 @@
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faInfoCircle } from '@fortawesome/free-solid-svg-icons'
 import React, { Component } from 'react'
 import { CButton, CInput } from '@coreui/react'
 
@@ -11,8 +9,8 @@ export class CloudUserPass extends Component {
 		super(props)
 
 		this.state = {
-			username: 'haakon@trippelm.no',
-			password: '.whrxuec9KWLVJhDXQ@o',
+			username: '',
+			password: '',
 		}
 	}
 
