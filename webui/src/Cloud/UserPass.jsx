@@ -11,8 +11,8 @@ export class CloudUserPass extends Component {
 		super(props)
 
 		this.state = {
-			username: 'haakon@trippelm.no',
-			password: '.whrxuec9KWLVJhDXQ@o',
+			username: '',
+			password: '',
 		}
 	}
 
@@ -26,8 +26,8 @@ export class CloudUserPass extends Component {
 				onSubmit={(e) => {
 					e.preventDefault()
 					if (this.props.onClearError) {
-						console.log("onClearError")
-						this.props.onClearError();
+						console.log('onClearError')
+						this.props.onClearError()
 					}
 					if (this.state.username === '' || this.state.password === '') return
 					this.props.onAuth(this.state.username, this.state.password)
