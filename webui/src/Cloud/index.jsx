@@ -100,8 +100,8 @@ export class Cloud extends Component {
 					}}
 				>
 					<div>
-						When enabled, companion will make several persistent HTTPS connections to diffent Bitfocus Cloud regions for
-						redundancy. Learn more about the service, the service provider and the safety of your data{' '}
+						When enabled, companion will make several persistent secure connections to diffent Bitfocus Cloud regions
+						for redundancy. Learn more about the service, the service provider and the safety of your data{' '}
 						<a href="https://cloud.bitfocus.io/product/companion-cloud">here</a>.
 					</div>
 				</div>
@@ -152,7 +152,7 @@ export class Cloud extends Component {
 						</div>
 
 						{this.state.authenticated && (
-							<div>								
+							<div>
 								<div style={styleWrap}>
 									<span style={styleSwitch}>
 										<CSwitch
