@@ -99,7 +99,7 @@ export const InstanceEditPanel = memo(function InstanceEditPanel({ instanceId, d
 	}, [])
 
 	useEffect(() => {
-		socketEmit(context.socket,'instance_check_visibility', [instanceId, instanceConfig]).then(([visibility]) => {
+		socketEmit(context.socket, 'instance_check_visibility', [instanceId, instanceConfig]).then(([visibility]) => {
 			setFieldVisibility(visibility)
 		})
 	}, [context.socket, instanceId, instanceConfig])
