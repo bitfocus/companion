@@ -16,6 +16,8 @@ export const InstanceEditPanel = memo(function InstanceEditPanel({ instanceId, d
 	const [instanceConfig, setInstanceConfig] = useState(null)
 	const [validFields, setValidFields] = useState(null)
 
+	const [fieldVisibility, setFieldVisibility] = useState({})
+
 	const doCancel = useCallback(() => {
 		doConfigureInstance(null)
 		setConfigFields([])
@@ -96,6 +98,12 @@ export const InstanceEditPanel = memo(function InstanceEditPanel({ instanceId, d
 		}))
 	}, [])
 
+	useEffect(() => {
+		socketEmit(context.socket,'instance_check_visibility', [instanceId, instanceConfig]).then(([visibility]) => {
+			setFieldVisibility(visibility)
+		})
+	}, [context.socket, instanceId, instanceConfig])
+
 	const moduleInfo = context.modules[instanceConfig?.instance_type] ?? {}
 	const dataReady = instanceConfig && configFields && validFields
 	return (
@@ -115,7 +123,12 @@ export const InstanceEditPanel = memo(function InstanceEditPanel({ instanceId, d
 				{instanceId && dataReady
 					? configFields.map((field, i) => {
 							return (
-								<CCol key={i} className={`fieldtype-${field.type}`} sm={field.width}>
+								<CCol
+									key={i}
+									className={`fieldtype-${field.type}`}
+									sm={field.width}
+									style={{ display: fieldVisibility[field.id] === false ? 'none' : null }}
+								>
 									<label>{field.label}</label>
 									<ConfigField
 										definition={field}
