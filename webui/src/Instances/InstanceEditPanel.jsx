@@ -1,5 +1,5 @@
 import React, { memo, useCallback, useContext, useEffect, useState } from 'react'
-import { StaticContext, LoadingRetryOrError, socketEmit } from '../util'
+import { StaticContext, LoadingRetryOrError, socketEmit, sandbox } from '../util'
 import { CRow, CCol, CButton } from '@coreui/react'
 import { CheckboxInputField, DropdownInputField, NumberInputField, TextInputField } from '../Components'
 import shortid from 'shortid'
@@ -60,6 +60,11 @@ export const InstanceEditPanel = memo(function InstanceEditPanel({ instanceId, d
 					for (const field of _configFields) {
 						// Real validation status gets generated when the editor components first mount
 						validFields[field.id] = true
+
+						// deserialize `isVisible` with a sandbox/proxy version
+						if (typeof field.isVisible === 'string') {
+							field.isVisible = sandbox(field.isVisible)
+						}
 					}
 
 					setConfigFields(_configFields)
@@ -99,10 +104,20 @@ export const InstanceEditPanel = memo(function InstanceEditPanel({ instanceId, d
 	}, [])
 
 	useEffect(() => {
-		socketEmit(context.socket, 'instance_check_visibility', [instanceId, instanceConfig]).then(([visibility]) => {
-			setFieldVisibility(visibility)
-		})
-	}, [context.socket, instanceId, instanceConfig])
+		const visibility = {}
+
+		console.log(configFields, instanceConfig)
+		if (configFields === null || instanceConfig === null) {
+			return
+		}
+		for (const field of configFields) {
+			if (typeof field.isVisible === 'function') {
+				visibility[field.id] = field.isVisible(instanceConfig)
+			}
+		}
+
+		setFieldVisibility(visibility)
+	}, [configFields, instanceConfig])
 
 	const moduleInfo = context.modules[instanceConfig?.instance_type] ?? {}
 	const dataReady = instanceConfig && configFields && validFields

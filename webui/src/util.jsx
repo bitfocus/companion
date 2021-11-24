@@ -29,6 +29,32 @@ export function socketEmit(socket, name, args, timeout, timeoutMessage) {
 	return pTimeout(p, timeout, timeoutMessage ?? `Timed out after ${timeout / 1000}s`)
 }
 
+export function sandbox(serializedFn) {
+	// proxy handlers for config proxy
+	const proxyHandlers = {
+		has: () => true,
+		get: (obj, prop) => (prop === Symbol.unscopables ? undefined : obj[prop]),
+	}
+
+	// wrap function in a with to limit the scope
+	const src = `
+		with (context) {
+			const fn = ${serializedFn}
+			return fn(config)
+		}
+	`
+
+	// eslint-disable-next-line no-new-func
+	const scopedFn = new Function('context', src)
+
+	return function (config) {
+		// create a sandboxed/proxy version of the context passed to the function
+		const configProxy = new Proxy(config, proxyHandlers)
+		// call scoped function with context that only includes config
+		return scopedFn({ config: configProxy })
+	}
+}
+
 function ErrorFallback({ error, resetErrorBoundary }) {
 	return (
 		<CAlert color="danger">
