@@ -49,9 +49,9 @@ export function sandbox(serializedFn) {
 
 	return function (config) {
 		// create a sandboxed/proxy version of the context passed to the function
-		const configProxy = new Proxy(config, proxyHandlers)
+		const configProxy = new Proxy({ config }, proxyHandlers)
 		// call scoped function with context that only includes config
-		return scopedFn({ config: configProxy })
+		return scopedFn(configProxy)
 	}
 }
 
