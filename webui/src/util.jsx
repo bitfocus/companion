@@ -46,16 +46,6 @@ const freezePrototypes = () => {
 	Object.freeze(Symbol.prototype)
 
 	// prevent constructors of async/generator functions to bypass sandbox
-	const blockedProperty = {
-		value: null,
-		configurable: false,
-		writable: false,
-	}
-
-	Object.defineProperty(async function () {}.constructor.prototype, 'constructor', blockedProperty)
-	Object.defineProperty(async function* () {}.constructor.prototype, 'constructor', blockedProperty)
-	Object.defineProperty(function* () {}.constructor.prototype, 'constructor', blockedProperty)
-
 	Object.freeze(async function () {}.__proto__)
 	Object.freeze(async function* () {}.__proto__)
 	Object.freeze(function* () {}.__proto__)
