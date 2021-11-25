@@ -1,4 +1,4 @@
-import React, {  } from 'react'
+import React from 'react'
 import { Cloud } from './Cloud'
 import { StaticContext } from './util'
 

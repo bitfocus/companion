@@ -1,24 +1,26 @@
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faInfoCircle } from '@fortawesome/free-solid-svg-icons'
 import React, { Component } from 'react'
-import { CInput, CSwitch, CButton, CCallout } from '@coreui/react'
+import { CInput, CButton, CCallout } from '@coreui/react'
+import { CloudRegionPanel } from './RegionPanel'
 import { CloudUserPass } from './UserPass'
 
 // The cloud part is written in old fashioned Class-components because I am most
 // familiar with it
-
-const onlineServerStyle = { color: 'green' }
 
 export class Cloud extends Component {
 	constructor(props) {
 		super(props)
 
 		this.state = {
+			connected: false,
 			enabled: false,
 			error: null,
 			authenticated: false,
 			uuid: '',
 		}
+
+		this.regions = {}
 
 		this.cloudStateDidUpdate = this.cloudStateDidUpdate.bind(this)
 		this.cloudSetState = this.cloudSetState.bind(this)
@@ -56,25 +58,12 @@ export class Cloud extends Component {
 	}
 
 	render() {
-		const styleText = {
-			marginLeft: 6,
-			marginTop: -10,
-			display: 'inline-block',
-			height: 20,
-			paddingTop: 19,
+		const regions = []
+		for (let id in this.state.regions) {
+			let region = this.state.regions[id]
+
+			regions.push(<CloudRegionPanel key={id} id={region} socket={this.props.socket} />)
 		}
-		const errorTagStyle = {
-			backgroundColor: 'red',
-			color: 'white',
-			padding: '0.2em 0.5em',
-			borderRadius: '0.25em',
-			margin: '0.5em',
-		}
-
-		const styleSwitch = { display: 'inline-block', paddingTop: 5, float: 'left' }
-
-		const styleWrap = { clear: 'both' }
-
 		return (
 			<div
 				style={{
@@ -143,62 +132,7 @@ export class Cloud extends Component {
 							/>
 						</div>
 
-						{this.state.authenticated && (
-							<div>								
-								<div style={styleWrap}>
-									<span style={styleSwitch}>
-										<CSwitch
-											variant="3d"
-											color={this.state.connected['oal-cluster'] ? 'success' : 'danger'}
-											checked={!!this.state['oal-clusterEnabled']}
-											onChange={(e) => this.cloudSetState({ 'oal-clusterEnabled': e.target.checked })}
-											labelOff={'Off'}
-											labelOn={'On'}
-											width={100}
-										/>{' '}
-									</span>
-									<span style={{ ...styleText, ...(this.state.connected['oal-cluster'] ? onlineServerStyle : {}) }}>
-										Testing{' '}
-										{this.state.pingResults['oal-cluster'] > -1 ? `(${this.state.pingResults['oal-cluster']}ms)` : ''}
-									</span>
-									<span style={errorTagStyle}>Error errortext if error</span>
-								</div>
-
-								<div style={styleWrap}>
-									<span style={styleSwitch}>
-										<CSwitch
-											variant="3d"
-											color={this.state.connected['stockholm'] ? 'success' : 'danger'}
-											checked={!!this.state.stockholmEnabled}
-											onChange={(e) => this.cloudSetState({ stockholmEnabled: e.target.checked })}
-											labelOff={'Off'}
-											labelOn={'On'}
-											width={100}
-										/>{' '}
-									</span>
-									<span style={{ ...styleText, ...(this.state.connected?.stockholm ? onlineServerStyle : {}) }}>
-										Europe {this.state.pingResults?.stockholm > -1 ? `(${this.state.pingResults?.stockholm}ms)` : ''}
-									</span>
-								</div>
-
-								<div style={styleWrap}>
-									<span style={styleSwitch}>
-										<CSwitch
-											variant="3d"
-											color={this.state.connected['virginia'] ? 'success' : 'danger'}
-											checked={!!this.state.virginiaEnabled}
-											onChange={(e) => this.cloudSetState({ virginiaEnabled: e.target.checked })}
-											labelOff={'Off'}
-											labelOn={'On'}
-											width={100}
-										/>
-									</span>
-									<span style={{ ...styleText, ...(this.state.connected?.virginia ? onlineServerStyle : {}) }}>
-										US {this.state.pingResults?.virginia > -1 ? `(${this.state.pingResults?.virginia}ms)` : ''}
-									</span>
-								</div>
-							</div>
-						)}
+						{this.state.authenticated && <div>{regions}</div>}
 
 						<div style={{ marginTop: 20 }}>
 							<CButton
@@ -211,7 +145,7 @@ export class Cloud extends Component {
 								Log out
 							</CButton>
 						</div>
-						{Object.keys(this.state.connected)?.find((cluster) => this.state.connected[cluster] === true)?.length && (
+						{this.state.connected && (
 							<div style={{ marginTop: 15 }}>
 								<div style={{ fontWeight: 'bold', fontSize: 16, marginBottom: 4 }}>Super secret key</div>
 								<div
