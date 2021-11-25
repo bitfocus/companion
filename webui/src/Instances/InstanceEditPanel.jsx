@@ -117,6 +117,10 @@ export const InstanceEditPanel = memo(function InstanceEditPanel({ instanceId, d
 		}
 
 		setFieldVisibility(visibility)
+
+		return () => {
+			setFieldVisibility({})
+		}
 	}, [configFields, instanceConfig])
 
 	const moduleInfo = context.modules[instanceConfig?.instance_type] ?? {}
