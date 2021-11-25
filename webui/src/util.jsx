@@ -29,29 +29,88 @@ export function socketEmit(socket, name, args, timeout, timeoutMessage) {
 	return pTimeout(p, timeout, timeoutMessage ?? `Timed out after ${timeout / 1000}s`)
 }
 
-export function sandbox(serializedFn) {
-	// proxy handlers for config proxy
-	const proxyHandlers = {
-		has: () => true,
-		get: (obj, prop) => (prop === Symbol.unscopables ? undefined : obj[prop]),
+const freezePrototypes = () => {
+	if (Object.isFrozen(console)) {
+		return
 	}
 
-	// wrap function in a with to limit the scope
+	// freeze global objects that can be used within the sandbox
+	Object.freeze(console)
+	Object.freeze(Array.prototype)
+	Object.freeze(Function.prototype)
+	Object.freeze(Math.prototype)
+	Object.freeze(Number.prototype)
+	Object.freeze(Object.prototype)
+	Object.freeze(RegExp.prototype)
+	Object.freeze(String.prototype)
+	Object.freeze(Symbol.prototype)
+
+	// prevent constructors of async/generator functions to bypass sandbox
+	const blockedProperty = {
+		value: null,
+		configurable: false,
+		writable: false,
+	}
+
+	Object.defineProperty(async function () {}.constructor.prototype, 'constructor', blockedProperty)
+	Object.defineProperty(async function* () {}.constructor.prototype, 'constructor', blockedProperty)
+	Object.defineProperty(function* () {}.constructor.prototype, 'constructor', blockedProperty)
+
+	Object.freeze(async function () {}.__proto__)
+	Object.freeze(async function* () {}.__proto__)
+	Object.freeze(function* () {}.__proto__)
+	Object.freeze(function* () {}.__proto__.prototype)
+	Object.freeze(async function* () {}.__proto__.prototype)
+}
+
+export function sandbox(serializedFn) {
+	// proxy handler
+	const proxyHandler = {
+		has: () => true,
+		get: (obj, prop) => Reflect.get(obj, prop),
+	}
+
+	// global objects that will be allowed within the sandbox
+	const allowList = {
+		__proto__: null,
+		console,
+		Array,
+		Math,
+		Number,
+		Object,
+		RegExp,
+		String,
+		Symbol,
+	}
+
+	// limit scope and prevent `window` leak
 	const src = `
-		with (context) {
-			const fn = ${serializedFn}
-			return fn(config)
+		with (catchAllProxy) {
+			with (configProxy) {
+				return (() => {
+					"use strict"
+					const fn = ${serializedFn}
+					return fn(config)
+				})()
+			}
 		}
 	`
 
-	// eslint-disable-next-line no-new-func
-	const scopedFn = new Function('context', src)
+	try {
+		// eslint-disable-next-line no-new-func
+		const scopedFn = new Function('catchAllProxy', src)
 
-	return function (config) {
-		// create a sandboxed/proxy version of the context passed to the function
-		const configProxy = new Proxy({ config }, proxyHandlers)
-		// call scoped function with context that only includes config
-		return scopedFn(configProxy)
+		return (config) => {
+			// create a sandboxed/proxy version of the context passed to the function
+			const configProxy = new Proxy({ ...allowList, config }, proxyHandler)
+			const catchAllProxy = new Proxy({ __proto__: null, configProxy }, proxyHandler)
+			// call scoped function with context that only includes config
+			return scopedFn(catchAllProxy)
+		}
+	} catch (error) {
+		// log error and gracefully exit
+		console.log(`Sandbox: ${error}`)
+		return () => true
 	}
 }
 
