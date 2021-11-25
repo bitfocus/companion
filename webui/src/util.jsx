@@ -96,6 +96,8 @@ export function sandbox(serializedFn) {
 		}
 	`
 
+	freezePrototypes()
+
 	try {
 		// eslint-disable-next-line no-new-func
 		const scopedFn = new Function('catchAllProxy', src)
