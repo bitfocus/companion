@@ -111,6 +111,7 @@ export interface CompanionInputField {
 	type: 'text' | 'textinput' | 'textwithvariables' | 'dropdown' | 'colorpicker' | 'number' | 'checkbox'
 	label: string
 	tooltip?: string
+	isVisible?: (config: { [id: string]: InputValue }) => boolean
 }
 export interface CompanionInputFieldText extends CompanionInputField {
 	type: 'text'
