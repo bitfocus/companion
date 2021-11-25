@@ -106,7 +106,6 @@ export const InstanceEditPanel = memo(function InstanceEditPanel({ instanceId, d
 	useEffect(() => {
 		const visibility = {}
 
-		console.log(configFields, instanceConfig)
 		if (configFields === null || instanceConfig === null) {
 			return
 		}
