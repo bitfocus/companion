@@ -2874,9 +2874,9 @@ commist@^1.0.0:
   version "1.0.3"
   resolved "https://codeload.github.com/bitfocus/companion-module-tesla-smart/tar.gz/2f19dbedc1d69285eaf0c9388ba141841ef5424a"
 
-"companion-module-tesmart-hdmimatrix@github:bitfocus/companion-module-tesmart-hdmimatrix#v1.0.0":
+"companion-module-tesmart-hdmimatrix@github:bitfocus/companion-module-tesmart-hdmimatrix#v1.0.1":
   version "1.0.0"
-  resolved "https://codeload.github.com/bitfocus/companion-module-tesmart-hdmimatrix/tar.gz/96b661e0462ffa922592cbb2f06021636bd58fed"
+  resolved "https://codeload.github.com/bitfocus/companion-module-tesmart-hdmimatrix/tar.gz/db7d7015f72b1541794aa0249032c000c5787399"
 
 "companion-module-thelightingcontroller@github:bitfocus/companion-module-thelightingcontroller#v1.1.2":
   version "1.1.2"
