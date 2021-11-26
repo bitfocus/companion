@@ -1,6 +1,6 @@
 {
-  "name": "companion",
-  "version": "0.1.0",
+  "name": "companion-webui",
+  "version": "0.0.0",
   "private": true,
   "dependencies": {
     "@coreui/coreui": "^3.4.0",
