@@ -246,6 +246,25 @@ instance.prototype.setFeedbackDefinitions = function (feedbacks) {
 	if (feedbacks === undefined) {
 		self._feedbackDefinitions = {}
 	} else {
+		feedbacks = Object.fromEntries(
+			Object.entries(feedbacks).map(([id, feedback]) => {
+				feedback.options = feedback.options?.map((option) => {
+					if ('isVisible' in option) {
+						if (typeof option.isVisible === 'function') {
+							return {
+								...option,
+								isVisibleFn: option.isVisible.toString(),
+							}
+						}
+					}
+					// ignore any existing `isVisibleFn` to avoid code injection
+					delete option.isVisibleFn
+					return option
+				})
+				return [id, feedback]
+			})
+		)
+
 		self._feedbackDefinitions = feedbacks
 	}
 

@@ -197,6 +197,7 @@ export interface CompanionFeedbackBase<TRes> {
 	) => TRes
 	subscribe?: (feedback: CompanionFeedbackEvent) => void
 	unsubscribe?: (feedback: CompanionFeedbackEvent) => void
+	isVisible?: (config: { [id: string]: InputValue }) => boolean
 }
 export interface CompanionFeedbackBoolean extends CompanionFeedbackBase<boolean> {
 	type: 'boolean'
