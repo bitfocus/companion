@@ -9,7 +9,7 @@ import {
 	TextWithVariablesInputField,
 } from '../../Components'
 
-export function ActionTableRowOption({ actionId, option, value, setValue }) {
+export function ActionTableRowOption({ actionId, option, value, setValue, visibility }) {
 	const setValue2 = useCallback((val) => setValue(actionId, option.id, val), [actionId, option.id, setValue])
 
 	if (!option) {
@@ -58,7 +58,7 @@ export function ActionTableRowOption({ actionId, option, value, setValue }) {
 	}
 
 	return (
-		<CFormGroup>
+		<CFormGroup style={{ display: visibility }}>
 			<CLabel>{option.label}</CLabel>
 			{control}
 		</CFormGroup>
