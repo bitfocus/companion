@@ -180,28 +180,28 @@ instance.prototype.addUpgradeScript = function () {
 instance.prototype.setActions = function (actions) {
 	var self = this
 
-	actions = Object.fromEntries(
-		Object.entries(actions).map(([id, action]) => {
-			action.options = action.options?.map((option) => {
-				if ('isVisible' in option) {
-					if (typeof option.isVisible === 'function') {
-						return {
-							...option,
-							isVisibleFn: option.isVisible.toString(),
-						}
-					}
-				}
-				// ignore any existing `isVisibleFn` to avoid code injection
-				delete option.isVisibleFn
-				return option
-			})
-			return [id, action]
-		})
-	)
-
 	if (actions === undefined) {
 		self._actionDefinitions = {}
 	} else {
+		actions = Object.fromEntries(
+			Object.entries(actions).map(([id, action]) => {
+				action.options = action.options?.map((option) => {
+					if ('isVisible' in option) {
+						if (typeof option.isVisible === 'function') {
+							return {
+								...option,
+								isVisibleFn: option.isVisible.toString(),
+							}
+						}
+					}
+					// ignore any existing `isVisibleFn` to avoid code injection
+					delete option.isVisibleFn
+					return option
+				})
+				return [id, action]
+			})
+		)
+
 		self._actionDefinitions = actions
 	}
 
