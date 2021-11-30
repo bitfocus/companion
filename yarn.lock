@@ -2733,6 +2733,10 @@ commist@^1.0.0:
   version "1.0.1"
   resolved "https://codeload.github.com/bitfocus/companion-module-shure-dis-ccu/tar.gz/99997a3c2a5616b457cd0abec419a914ad87465c"
 
+"companion-module-shure-mxa910@github:bitfocus/companion-module-shure-mxa910#v1.0.0":
+  version "1.0.0"
+  resolved "https://codeload.github.com/bitfocus/companion-module-shure-mxa910/tar.gz/76c098891181f9bcc698eb1cd2348beddd9bf137"
+
 "companion-module-shure-psm1000@github:bitfocus/companion-module-shure-psm1000#v1.1.1":
   version "1.1.1"
   resolved "https://codeload.github.com/bitfocus/companion-module-shure-psm1000/tar.gz/97899a0ccbc95bbdc73ae21bd6353945cb16b1f5"
