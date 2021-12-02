@@ -185,7 +185,13 @@ system.ready = function (logToFile) {
 	var preset = require('./lib/preset')(system)
 	var satelliteLegacy = require('./lib/satellite/satellite_server_legacy')(system)
 	var satellite = require('./lib/satellite/satellite_server')(system)
-	var ws_api = require('./lib/ws_api')(system)
+	var elgato_plugin_server
+	system.emit('get_userconfig_key', 'elgato_plugin_enable', function(enabled) {
+		if (enabled) {
+			// Only enable if box was ticked at startup
+			elgato_plugin_server = require('./lib/elgato_plugin_server')(system)
+		}
+	})
 	var help = require('./lib/help')(system)
 	var metrics = require('./lib/metrics')(system)
 
