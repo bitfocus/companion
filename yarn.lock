@@ -2444,9 +2444,9 @@ commist@^1.0.0:
   version "1.0.1"
   resolved "https://codeload.github.com/bitfocus/companion-module-modulo/tar.gz/a8cd7dfdb91a37acc4c1ad18cd18287fb4a31766"
 
-"companion-module-motu-avb@github:bitfocus/companion-module-motu-avb#v1.0.2":
-  version "1.0.2"
-  resolved "https://codeload.github.com/bitfocus/companion-module-motu-avb/tar.gz/7c73cf7a1131177f826f97f353d164e7af10abfe"
+"companion-module-motu-avb@github:bitfocus/companion-module-motu-avb#v1.0.3":
+  version "1.0.3"
+  resolved "https://codeload.github.com/bitfocus/companion-module-motu-avb/tar.gz/7359a889767e3a2a8a6bc8489bf4fb70c37de0b3"
 
 "companion-module-msc-router@github:bitfocus/companion-module-msc-router#v1.0.2":
   version "1.0.2"
