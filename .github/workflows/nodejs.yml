@@ -121,6 +121,10 @@ jobs:
 
           # verify that every module is runnable
           node tools/verify-module-build.mjs electron-output/win-unpacked/resources/app.asar
+        env:
+          CI_BUILD_OS: win64
+          CSC_LINK: ${{ secrets.CSC_LINK }}
+          CSC_KEY_PASSWORD: ${{ secrets.CSC_KEY_PASSWORD }}
       - name: rename and upload stuff
         run: node ./tools/build_rename_git.js
         env:
