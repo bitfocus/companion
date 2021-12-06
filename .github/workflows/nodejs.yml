@@ -122,7 +122,7 @@ jobs:
           # verify that every module is runnable
           node tools/verify-module-build.mjs electron-output/win-unpacked/resources/app.asar
       - name: Sign Windows Binary
-        uses: jonfriesen/windows-signer-action@v1.0.0
+        uses: jonfriesen/windows-signer-action@v0.0.1
         env:
           NAME: Bitfocus
           DOMAIN: https://bitfocus.io
