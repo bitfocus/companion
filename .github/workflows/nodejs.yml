@@ -121,14 +121,13 @@ jobs:
 
           # verify that every module is runnable
           node tools/verify-module-build.mjs electron-output/win-unpacked/resources/app.asar
-      - name: Sign Windows Binary
-        uses: jonfriesen/windows-signer-action@v0.0.1
-        env:
-          NAME: Bitfocus
-          DOMAIN: https://bitfocus.io
-          BINARY: electron-output/companion-win64.exe
-          WINDOWS_CERT: ${{ secrets.WINDOWS_CERT }}
-          WINDOWS_KEY: ${{ secrets.WINDOWS_KEY }}
+      - name: Code sign a file
+        uses: dlemstra/code-sign-action@v1
+        with:
+          # The base64 encoded certificate.
+          certificate: ${{ secrets.WINDOWS_CERT }}
+          # The folder that contains the files to sign.
+          folder: electron-output
       - name: rename and upload stuff
         run: node ./tools/build_rename_git.js
         env:
