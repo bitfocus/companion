@@ -30,7 +30,7 @@
 		},
 		"win": {
 			"target": "nsis",
-			"publisherName": "Bitfocus",
+			"publisherName": "Bitfocus AS",
 			"extraFiles": [
 				{
 					"from": "./node_modules/sharp/build/Release",
