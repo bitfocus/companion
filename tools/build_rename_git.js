@@ -19,19 +19,17 @@ const { spawn } = require('child_process');
 
 function exec(command, args) {
 	let data = '';
-	let errdata = '';
-
 	return new Promise((resolve, reject) => {
 		const child = spawn(command, args);
 		child.stdout.on('data',  output => {
 			data += output;
 		});
 		child.stderr.on('data',  output => {
-			errdata += output;
+			console.log(output)
 		});
 		child.on('exit', (code, signal) => {
 			if (code !== 0) {
-				return reject(`Command ${command} exited with code ${code}: ${errdata}`);
+				return reject(`Command ${command} exited with code ${code}: ${data}`);
 			}
 
 			resolve(data);
