@@ -61,13 +61,13 @@ jobs:
           yarn update
           yarn run windist
         env:
-          CI_BUILD_OS: win64
+          TRAVIS_OS_NAME: win64
           CSC_LINK: ${{ secrets.CSC_LINK }}
           CSC_KEY_PASSWORD: ${{ secrets.CSC_KEY_PASSWORD }}
       - name: rename and upload stuff
         run: node ./tools/build_rename_git.js
         env:
-          CI_BUILD_OS: win64
+          TRAVIS_OS_NAME: win64
           BITFOCUS_S3: ${{ secrets.BITFOCUS_S3 }}
           BITFOCUS_KEY: ${{ secrets.BITFOCUS_ACCESS }}
           BITFOCUS_SECRET: ${{ secrets.BITFOCUS_SECRET }}
