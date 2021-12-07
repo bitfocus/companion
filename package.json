@@ -30,7 +30,7 @@
 		},
 		"win": {
 			"target": "nsis",
-			"rfc3161TimeStampServer": "http://sha256timestamp.ws.symantec.com/sha256/timestamp"
+			"timeStampServer": "http://timestamp.sectigo.com"
 		},
 		"nsis": {
 			"artifactName": "companion-win64.exe",
