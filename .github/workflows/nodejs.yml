@@ -7,44 +7,44 @@ jobs:
       matrix:
         node-version: [8.12]
     steps:
-    - uses: actions/checkout@v1
-    - name: Use Node.js ${{ matrix.node-version }}
-      uses: actions/setup-node@v1
-      with:
-        node-version: ${{ matrix.node-version }}
-    - name: yarn update and lindist
-      run: |
-        yarn update
-        yarn run lindist
-    - name: rename and upload stuff
-      run: node ./tools/build_rename_git.js
-      env:
-        TRAVIS_OS_NAME: linux
-        BITFOCUS_S3: ${{ secrets.BITFOCUS_S3 }}
-        BITFOCUS_KEY: ${{ secrets.BITFOCUS_ACCESS }}
-        BITFOCUS_SECRET: ${{ secrets.BITFOCUS_SECRET }}
+      - uses: actions/checkout@v1
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v1
+        with:
+          node-version: ${{ matrix.node-version }}
+      - name: yarn update and lindist
+        run: |
+          yarn update
+          yarn run lindist
+      - name: rename and upload stuff
+        run: node ./tools/build_rename_git.js
+        env:
+          TRAVIS_OS_NAME: linux
+          BITFOCUS_S3: ${{ secrets.BITFOCUS_S3 }}
+          BITFOCUS_KEY: ${{ secrets.BITFOCUS_ACCESS }}
+          BITFOCUS_SECRET: ${{ secrets.BITFOCUS_SECRET }}
   osx:
     runs-on: macOS-latest
     strategy:
       matrix:
         node-version: [8.12]
     steps:
-    - uses: actions/checkout@v1
-    - name: Use Node.js ${{ matrix.node-version }}
-      uses: actions/setup-node@v1
-      with:
-        node-version: ${{ matrix.node-version }}
-    - name: npm install, build, and test
-      run: |
-        yarn update
-        yarn run macdist
-    - name: rename and upload stuff
-      run: node ./tools/build_rename_git.js
-      env:
-        TRAVIS_OS_NAME: osx
-        BITFOCUS_S3: ${{ secrets.BITFOCUS_S3 }}
-        BITFOCUS_KEY: ${{ secrets.BITFOCUS_ACCESS }}
-        BITFOCUS_SECRET: ${{ secrets.BITFOCUS_SECRET }}
+      - uses: actions/checkout@v1
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v1
+        with:
+          node-version: ${{ matrix.node-version }}
+      - name: npm install, build, and test
+        run: |
+          yarn update
+          yarn run macdist
+      - name: rename and upload stuff
+        run: node ./tools/build_rename_git.js
+        env:
+          TRAVIS_OS_NAME: osx
+          BITFOCUS_S3: ${{ secrets.BITFOCUS_S3 }}
+          BITFOCUS_KEY: ${{ secrets.BITFOCUS_ACCESS }}
+          BITFOCUS_SECRET: ${{ secrets.BITFOCUS_SECRET }}
   win64:
     runs-on: windows-latest
     strategy:
@@ -56,10 +56,8 @@ jobs:
         uses: actions/setup-node@v1
         with:
           node-version: ${{ matrix.node-version }}
-      - name: yarn update and windist
+      - name: npm install, build, and test
         run: |
-          # This fixes it somehow, and without it we get no logs from any shell scripts which are run
-          yarn config set script-shell bash
           yarn update
           yarn run windist
         env:
