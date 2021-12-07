@@ -61,8 +61,6 @@ jobs:
           # This fixes it somehow, and without it we get no logs from any shell scripts which are run
           yarn config set script-shell bash
           yarn update
-          # verify that every module is runnable
-          node tools/verify-module-build.mjs .
           yarn run windist
           # verify that every module is runnable
           node tools/verify-module-build.mjs electron-output/win-unpacked/resources/app.asar
