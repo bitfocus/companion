@@ -70,7 +70,7 @@
 		"dist": "rm -rf electron-output && electron-builder",
 		"testprod": "./node_modules/electron/cli.js .",
 		"macdist": "./tools/build_writefile.sh ; rm -rf electron-output && electron-builder --mac",
-		"windist": "./tools/build_writefile.sh ; rm -rf electron-output && electron-builder --win",
+		"windist": "bash ./tools/build_writefile.sh ; rm -rf electron-output && electron-builder --win",
 		"lindist": "./tools/build_writefile.sh ; rm -rf electron-output && electron-builder --linux tar.gz",
 		"rpidist": "./tools/build_writefile.sh ; rm -rf electron-output && electron-builder --armv7l --linux tar.gz",
 		"start": "yarn run",
