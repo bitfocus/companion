@@ -29,7 +29,8 @@
 			]
 		},
 		"win": {
-			"target": "nsis"
+			"target": "nsis",
+			"rfc3161TimeStampServer": "http://sha256timestamp.ws.symantec.com/sha256/timestamp"
 		},
 		"nsis": {
 			"artifactName": "companion-win64.exe",
@@ -69,7 +70,7 @@
 		"dist": "rm -rf electron-output && electron-builder",
 		"testprod": "./node_modules/electron/cli.js .",
 		"macdist": "./tools/build_writefile.sh ; rm -rf electron-output && electron-builder --mac",
-		"windist": "bash ./tools/build_writefile.sh ; rm -rf electron-output && electron-builder --win",
+		"windist": "./tools/build_writefile.sh ; rm -rf electron-output && electron-builder --win",
 		"lindist": "./tools/build_writefile.sh ; rm -rf electron-output && electron-builder --linux tar.gz",
 		"rpidist": "./tools/build_writefile.sh ; rm -rf electron-output && electron-builder --armv7l --linux tar.gz",
 		"start": "yarn run",
