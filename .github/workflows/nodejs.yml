@@ -23,6 +23,12 @@ jobs:
           BITFOCUS_S3: ${{ secrets.BITFOCUS_S3 }}
           BITFOCUS_KEY: ${{ secrets.BITFOCUS_ACCESS }}
           BITFOCUS_SECRET: ${{ secrets.BITFOCUS_SECRET }}
+      - name: Upload production artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: windows
+          path: |
+            electron-output/*.tar.gz
   osx:
     runs-on: macOS-latest
     strategy:
@@ -45,6 +51,12 @@ jobs:
           BITFOCUS_S3: ${{ secrets.BITFOCUS_S3 }}
           BITFOCUS_KEY: ${{ secrets.BITFOCUS_ACCESS }}
           BITFOCUS_SECRET: ${{ secrets.BITFOCUS_SECRET }}
+      - name: Upload production artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: windows
+          path: |
+            electron-output/*.zip
   win64:
     runs-on: windows-latest
     strategy:
@@ -71,3 +83,9 @@ jobs:
           BITFOCUS_S3: ${{ secrets.BITFOCUS_S3 }}
           BITFOCUS_KEY: ${{ secrets.BITFOCUS_ACCESS }}
           BITFOCUS_SECRET: ${{ secrets.BITFOCUS_SECRET }}
+      - name: Upload production artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: windows
+          path: |
+            electron-output/*.exe
