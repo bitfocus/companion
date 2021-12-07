@@ -25,7 +25,7 @@ function exec(command, args) {
 			data += output;
 		});
 		child.stderr.on('data',  output => {
-			console.log(output)
+			console.error(output.toString())
 		});
 		child.on('exit', (code, signal) => {
 			if (code !== 0) {
