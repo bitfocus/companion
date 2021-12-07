@@ -62,8 +62,6 @@ jobs:
           yarn config set script-shell bash
           yarn update
           yarn run windist
-          # verify that every module is runnable
-          node tools/verify-module-build.mjs electron-output/win-unpacked/resources/app.asar
         env:
           CI_BUILD_OS: win64
           CSC_LINK: ${{ secrets.CSC_LINK }}
