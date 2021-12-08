@@ -32,7 +32,7 @@
 			"entitlements": "entitlements.mac.plist",
 			"entitlementsInherit": "entitlements.mac.plist"
 		},
-		"afterSign": "lib/notarize.js",
+		"afterSign": "tools/notarize.js",
 		"win": {
 			"target": "nsis",
 			"extraFiles": [

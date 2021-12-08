@@ -79,29 +79,46 @@ jobs:
           BITFOCUS_KEY: ${{ secrets.BITFOCUS_ACCESS }}
           BITFOCUS_SECRET: ${{ secrets.BITFOCUS_SECRET }}
 
-  # osx-arm64:
-  #   runs-on: macos-11
-  #   strategy:
-  #     matrix:
-  #       node-version: [14.x]
-  #   steps:
-  #     - uses: actions/checkout@v1
-  #     - name: Use Node.js ${{ matrix.node-version }}
-  #       uses: actions/setup-node@v1
-  #       with:
-  #         node-version: ${{ matrix.node-version }}
-  #     - name: yarn update and macarmdist
-  #       run: |
-  #         yarn update
-  #         yarn run macarmdist
-  #     - name: rename and upload stuff
-  #       run: node ./tools/build_rename_git.js
-  #       env:
-  #         CI_BUILD_OS: osx
-  #         CI_BUILD_ARCH: arm64
-  #         BITFOCUS_S3: ${{ secrets.BITFOCUS_S3 }}
-  #         BITFOCUS_KEY: ${{ secrets.BITFOCUS_ACCESS }}
-  #         BITFOCUS_SECRET: ${{ secrets.BITFOCUS_SECRET }}
+  osx-arm64:
+    runs-on: macos-11
+    strategy:
+      matrix:
+        node-version: [14.x]
+    steps:
+      - uses: actions/checkout@v1
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v1
+        with:
+          node-version: ${{ matrix.node-version }}
+      - name: yarn update and macarmdist
+        run: |
+          # try and avoid timeout errors
+          yarn config set network-timeout 100000 -g
+
+          yarn update
+
+          # verify that every module is runnable
+          node tools/verify-module-build.mjs .
+
+          yarn run macarmdist
+
+          # verify that every module is runnable
+          node tools/verify-module-build.mjs "electron-output/mac-arm64/Companion.app/Contents/Resources/app.asar"
+        env:
+          CI_BUILD_OS: osx
+          CI_BUILD_ARCH: arm64
+          CSC_LINK: ${{ secrets.OSX_CSC_LINK }}
+          CSC_KEY_PASSWORD: ${{ secrets.OSX_CSC_KEY_PASSWORD }}
+          APPLEID: ${{ secrets.APPLEID }}
+          APPLEIDPASS: ${{ secrets.APPLEIDPASS }}
+      - name: rename and upload stuff
+        run: node ./tools/build_rename_git.js
+        env:
+          CI_BUILD_OS: osx
+          CI_BUILD_ARCH: arm64
+          BITFOCUS_S3: ${{ secrets.BITFOCUS_S3 }}
+          BITFOCUS_KEY: ${{ secrets.BITFOCUS_ACCESS }}
+          BITFOCUS_SECRET: ${{ secrets.BITFOCUS_SECRET }}
 
   win64:
     runs-on: windows-latest
