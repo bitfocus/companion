@@ -20,7 +20,6 @@
 			},
 			"entitlements": "build/entitlements.mac.plist",
 			"entitlementsInherit": "build/entitlements.mac.plist",
-			"afterSign": "lib/notarize.js",
 			"extraFiles": [
 				{
 					"from": "./node_modules/sharp/vendor/8.10.6/lib",
@@ -31,6 +30,7 @@
 				}
 			]
 		},
+		"afterSign": "lib/notarize.js",
 		"win": {
 			"target": "nsis",
 			"extraFiles": [
