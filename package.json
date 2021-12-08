@@ -82,7 +82,8 @@
 			"!font/*",
 			"!tools/*",
 			"!*.md",
-			"!node_modules/sharp/vendor/lib"
+			"!node_modules/sharp/vendor/lib",
+			"!node_modules/cpu-features/deps"
 		],
 		"extraResources": [
 			{
