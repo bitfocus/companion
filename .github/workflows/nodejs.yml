@@ -68,6 +68,8 @@ jobs:
           CI_BUILD_ARCH: x64
           CSC_LINK: ${{ secrets.OSX_CSC_LINK }}
           CSC_KEY_PASSWORD: ${{ secrets.OSX_CSC_KEY_PASSWORD }}
+          APPLEID: ${{ secrets.APPLEID }}
+          APPLEIDPASS: ${{ secrets.APPLEIDPASS }}
       - name: rename and upload stuff
         run: node ./tools/build_rename_git.js
         env:
