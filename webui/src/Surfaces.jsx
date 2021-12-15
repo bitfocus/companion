@@ -145,6 +145,16 @@ export const SurfacesPage = memo(function SurfacesPage() {
 				<FontAwesomeIcon icon={faSync} spin={scanning} />
 				{scanning ? ' Checking for new devices...' : ' Rescan USB'}
 			</CButton>
+			<p>&nbsp;</p>
+			<CAlert color="info">
+				<p>
+					Did you know, you can connect a Streamdeck from another computer or Raspberry Pi with{' '}
+					<a target="_blank" rel="noreferrer" href="https://github.com/bitfocus/companion-satellite">
+						Companion Satellite
+					</a>
+					?
+				</p>
+			</CAlert>
 		</div>
 	)
 })
