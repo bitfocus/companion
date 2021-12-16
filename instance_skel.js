@@ -177,6 +177,26 @@ instance.prototype.addUpgradeScript = function () {
 	)
 }
 
+instance.prototype.serializeIsVisibleFn = function (options = []) {
+	return options.map((option) => {
+		if ('isVisible' in option) {
+			if (typeof option.isVisible === 'function') {
+				return {
+					...option,
+					isVisibleFn: option.isVisible.toString(),
+					isVisible: undefined,
+				}
+			}
+		}
+
+		// ignore any existing `isVisibleFn` to avoid code injection
+		return {
+			...option,
+			isVisibleFn: undefined,
+		}
+	})
+}
+
 instance.prototype.setActions = function (actions) {
 	var self = this
 
@@ -185,19 +205,7 @@ instance.prototype.setActions = function (actions) {
 	} else {
 		actions = Object.fromEntries(
 			Object.entries(actions).map(([id, action]) => {
-				action.options = action.options?.map((option) => {
-					if ('isVisible' in option) {
-						if (typeof option.isVisible === 'function') {
-							return {
-								...option,
-								isVisibleFn: option.isVisible.toString(),
-							}
-						}
-					}
-					// ignore any existing `isVisibleFn` to avoid code injection
-					delete option.isVisibleFn
-					return option
-				})
+				action.options = self.serializeIsVisibleFn(action.options)
 				return [id, action]
 			})
 		)
@@ -248,19 +256,7 @@ instance.prototype.setFeedbackDefinitions = function (feedbacks) {
 	} else {
 		feedbacks = Object.fromEntries(
 			Object.entries(feedbacks).map(([id, feedback]) => {
-				feedback.options = feedback.options?.map((option) => {
-					if ('isVisible' in option) {
-						if (typeof option.isVisible === 'function') {
-							return {
-								...option,
-								isVisibleFn: option.isVisible.toString(),
-							}
-						}
-					}
-					// ignore any existing `isVisibleFn` to avoid code injection
-					delete option.isVisibleFn
-					return option
-				})
+				feedback.options = self.serializeIsVisibleFn(feedback.options)
 				return [id, feedback]
 			})
 		)

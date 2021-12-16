@@ -240,6 +240,8 @@ function ActionTableRow({ action, index, dragId, setValue, doDelete, doDelay, mo
 
 	const [optionVisibility, setOptionVisibility] = useState({})
 
+	const actionSpec = actionsContext[action.label]
+
 	const ref = useRef(null)
 	const [, drop] = useDrop({
 		accept: dragId,
@@ -294,19 +296,17 @@ function ActionTableRow({ action, index, dragId, setValue, doDelete, doDelay, mo
 	preview(drop(ref))
 
 	useEffect(() => {
-		const actionSpec = actionsContext[action.label]
 		const options = actionSpec?.options ?? []
 
 		for (const option of options) {
-			if (typeof option.isVisibleFn === 'string') {
+			if (typeof option.isVisibleFn === 'string' && typeof option.isVisible !== 'function') {
 				option.isVisible = sandbox(option.isVisibleFn)
 			}
 		}
-	}, [actionsContext, action])
+	}, [actionSpec])
 
 	useEffect(() => {
 		const visibility = {}
-		const actionSpec = actionsContext[action.label]
 		const options = actionSpec?.options ?? []
 
 		if (options === null || action === null) {
@@ -324,7 +324,7 @@ function ActionTableRow({ action, index, dragId, setValue, doDelete, doDelay, mo
 		return () => {
 			setOptionVisibility({})
 		}
-	}, [actionsContext, action])
+	}, [actionSpec, action])
 
 	if (!action) {
 		// Invalid action, so skip
@@ -335,7 +335,6 @@ function ActionTableRow({ action, index, dragId, setValue, doDelete, doDelay, mo
 	// const module = instance ? context.modules[instance.instance_type] : undefined
 	const instanceLabel = instance?.label ?? action.instance
 
-	const actionSpec = actionsContext[action.label]
 	const options = actionSpec?.options ?? []
 
 	let name = ''

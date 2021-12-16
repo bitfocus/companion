@@ -111,7 +111,7 @@ export interface CompanionInputField {
 	type: 'text' | 'textinput' | 'textwithvariables' | 'dropdown' | 'colorpicker' | 'number' | 'checkbox'
 	label: string
 	tooltip?: string
-	isVisible?: (config: { [id: string]: InputValue }) => boolean
+	isVisible?: (options: { [key: string]: InputValue | undefined }) => boolean
 }
 export interface CompanionInputFieldText extends CompanionInputField {
 	type: 'text'
@@ -197,7 +197,6 @@ export interface CompanionFeedbackBase<TRes> {
 	) => TRes
 	subscribe?: (feedback: CompanionFeedbackEvent) => void
 	unsubscribe?: (feedback: CompanionFeedbackEvent) => void
-	isVisible?: (config: { [id: string]: InputValue }) => boolean
 }
 export interface CompanionFeedbackBoolean extends CompanionFeedbackBase<boolean> {
 	type: 'boolean'

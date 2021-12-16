@@ -260,14 +260,12 @@ export function FeedbackEditor({ feedback, setValue, innerDelete, setSelectedSty
 	useEffect(() => {
 		const options = feedbackSpec?.options ?? []
 
-		console.log({ options })
-
 		for (const option of options) {
 			if (typeof option.isVisibleFn === 'string') {
 				option.isVisible = sandbox(option.isVisibleFn)
 			}
 		}
-	}, [feedbackSpec, feedback])
+	}, [feedbackSpec])
 
 	useEffect(() => {
 		const visibility = {}
