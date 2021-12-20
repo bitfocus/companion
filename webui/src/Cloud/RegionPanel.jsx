@@ -78,7 +78,7 @@ export class CloudRegionPanel extends Component {
 				<span style={{ ...styleText, ...(this.state.connected ? onlineServerStyle : {}) }}>
 					{this.state.name} {this.state.pingResults > -1 ? `(${this.state.pingResults}ms)` : ''}
 				</span>
-				{this.state.error != '' && (
+				{this.state.error !== '' && (
 					<span
 						style={{
 							backgroundColor: 'red',

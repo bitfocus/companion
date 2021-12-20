@@ -145,7 +145,7 @@ export class Cloud extends Component {
 								Log out
 							</CButton>
 						</div>
-						{this.state.connected && (
+						{this.state.authenticated && (
 							<div style={{ marginTop: 15 }}>
 								<div style={{ fontWeight: 'bold', fontSize: 16, marginBottom: 4 }}>Super secret key</div>
 								<div
