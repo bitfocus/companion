@@ -18,6 +18,7 @@ export class Cloud extends Component {
 			error: null,
 			authenticated: false,
 			uuid: '',
+			authenticating: false
 		}
 
 		this.regions = {}
@@ -46,6 +47,10 @@ export class Cloud extends Component {
 
 	cloudSetState(newState) {
 		this.props.socket.emit('cloud_state_set', newState)
+	}
+
+	cloudLogin(user, pass) {
+		this.props.socket.emit('cloud_login', user, pass)
 	}
 
 	shouldComponentUpdate(_nextProps, nextState) {
@@ -90,8 +95,9 @@ export class Cloud extends Component {
 				{!this.state.authenticated ? (
 					<div>
 						<CloudUserPass
+							working={this.state.authenticating}
 							onAuth={(user, pass) => {
-								this.props.socket.emit('cloud_login', user, pass)
+								this.cloudLogin(user, pass)
 							}}
 							onClearError={() => {
 								this.setState({ error: null })
