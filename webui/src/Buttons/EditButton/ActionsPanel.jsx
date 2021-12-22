@@ -383,7 +383,7 @@ function ActionTableRow({ action, index, dragId, setValue, doDelete, doDelay, mo
 										actionId={action.id}
 										value={(action.options || {})[opt.id]}
 										setValue={setValue}
-										visibility={optionVisibility[opt.id] === false ? 'none' : null}
+										visibility={optionVisibility[opt.id]}
 									/>
 								</MyErrorBoundary>
 							))}

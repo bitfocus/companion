@@ -316,7 +316,7 @@ export function FeedbackEditor({ feedback, setValue, innerDelete, setSelectedSty
 								actionId={feedback.id}
 								value={(feedback.options || {})[opt.id]}
 								setValue={setValue}
-								visibility={optionVisibility[opt.id] === false ? 'none' : null}
+								visibility={optionVisibility[opt.id]}
 							/>
 						</MyErrorBoundary>
 					))}

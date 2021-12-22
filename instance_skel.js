@@ -177,6 +177,7 @@ instance.prototype.addUpgradeScript = function () {
 	)
 }
 
+// NOTE: *** This is a internal method. DO NOT call or override. ***
 instance.prototype.serializeIsVisibleFn = function (options = []) {
 	return options.map((option) => {
 		if ('isVisible' in option) {
