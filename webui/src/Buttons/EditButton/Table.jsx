@@ -58,7 +58,7 @@ export function ActionTableRowOption({ actionId, option, value, setValue, visibi
 	}
 
 	return (
-		<CFormGroup style={{ display: visibility === false ?  'none' : null }}>
+		<CFormGroup style={{ display: visibility === false ? 'none' : null }}>
 			<CLabel>{option.label}</CLabel>
 			{control}
 		</CFormGroup>
