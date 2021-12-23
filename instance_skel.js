@@ -19,6 +19,7 @@ var util = require('util')
 var debug = require('debug')('lib/instance_skel')
 var image = require('./lib/image')
 var icons = require('./lib/resources/icons')
+var { serializeIsVisibleFn } = require('./lib/resources/util')
 
 function instance(system, id, config) {
 	var self = this
@@ -177,27 +178,6 @@ instance.prototype.addUpgradeScript = function () {
 	)
 }
 
-// NOTE: *** This is a internal method. DO NOT call or override. ***
-instance.prototype.serializeIsVisibleFn = function (options = []) {
-	return options.map((option) => {
-		if ('isVisible' in option) {
-			if (typeof option.isVisible === 'function') {
-				return {
-					...option,
-					isVisibleFn: option.isVisible.toString(),
-					isVisible: undefined,
-				}
-			}
-		}
-
-		// ignore any existing `isVisibleFn` to avoid code injection
-		return {
-			...option,
-			isVisibleFn: undefined,
-		}
-	})
-}
-
 instance.prototype.setActions = function (actions) {
 	var self = this
 
@@ -206,7 +186,7 @@ instance.prototype.setActions = function (actions) {
 	} else {
 		actions = Object.fromEntries(
 			Object.entries(actions).map(([id, action]) => {
-				action.options = self.serializeIsVisibleFn(action.options)
+				action.options = serializeIsVisibleFn(action.options)
 				return [id, action]
 			})
 		)
@@ -257,7 +237,7 @@ instance.prototype.setFeedbackDefinitions = function (feedbacks) {
 	} else {
 		feedbacks = Object.fromEntries(
 			Object.entries(feedbacks).map(([id, feedback]) => {
-				feedback.options = self.serializeIsVisibleFn(feedback.options)
+				feedback.options = serializeIsVisibleFn(feedback.options)
 				return [id, feedback]
 			})
 		)
