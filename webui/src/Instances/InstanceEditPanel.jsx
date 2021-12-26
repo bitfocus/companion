@@ -62,8 +62,8 @@ export const InstanceEditPanel = memo(function InstanceEditPanel({ instanceId, d
 						validFields[field.id] = true
 
 						// deserialize `isVisible` with a sandbox/proxy version
-						if (typeof field.isVisible === 'string') {
-							field.isVisible = sandbox(field.isVisible)
+						if (typeof field.isVisibleFn === 'string') {
+							field.isVisible = sandbox(field.isVisibleFn)
 						}
 					}
 

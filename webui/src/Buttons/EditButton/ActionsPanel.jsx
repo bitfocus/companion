@@ -3,7 +3,7 @@ import { faSort, faTrash } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import React, { useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react'
 import { NumberInputField } from '../../Components'
-import { ActionsContext, StaticContext, InstancesContext, MyErrorBoundary, socketEmit } from '../../util'
+import { ActionsContext, StaticContext, InstancesContext, MyErrorBoundary, socketEmit, sandbox } from '../../util'
 import update from 'immutability-helper'
 import Select from 'react-select'
 import { ActionTableRowOption } from './Table'
@@ -238,6 +238,10 @@ function ActionTableRow({ action, index, dragId, setValue, doDelete, doDelay, mo
 	const innerDelete = useCallback(() => doDelete(action.id), [action.id, doDelete])
 	const innerDelay = useCallback((delay) => doDelay(action.id, delay), [doDelay, action.id])
 
+	const [optionVisibility, setOptionVisibility] = useState({})
+
+	const actionSpec = actionsContext[action.label]
+
 	const ref = useRef(null)
 	const [, drop] = useDrop({
 		accept: dragId,
@@ -291,6 +295,37 @@ function ActionTableRow({ action, index, dragId, setValue, doDelete, doDelay, mo
 	})
 	preview(drop(ref))
 
+	useEffect(() => {
+		const options = actionSpec?.options ?? []
+
+		for (const option of options) {
+			if (typeof option.isVisibleFn === 'string' && typeof option.isVisible !== 'function') {
+				option.isVisible = sandbox(option.isVisibleFn)
+			}
+		}
+	}, [actionSpec])
+
+	useEffect(() => {
+		const visibility = {}
+		const options = actionSpec?.options ?? []
+
+		if (options === null || action === null) {
+			return
+		}
+
+		for (const option of options) {
+			if (typeof option.isVisible === 'function') {
+				visibility[option.id] = option.isVisible(action)
+			}
+		}
+
+		setOptionVisibility(visibility)
+
+		return () => {
+			setOptionVisibility({})
+		}
+	}, [actionSpec, action])
+
 	if (!action) {
 		// Invalid action, so skip
 		return ''
@@ -300,7 +335,6 @@ function ActionTableRow({ action, index, dragId, setValue, doDelete, doDelay, mo
 	// const module = instance ? context.modules[instance.instance_type] : undefined
 	const instanceLabel = instance?.label ?? action.instance
 
-	const actionSpec = actionsContext[action.label]
 	const options = actionSpec?.options ?? []
 
 	let name = ''
@@ -349,6 +383,7 @@ function ActionTableRow({ action, index, dragId, setValue, doDelete, doDelay, mo
 										actionId={action.id}
 										value={(action.options || {})[opt.id]}
 										setValue={setValue}
+										visibility={optionVisibility[opt.id]}
 									/>
 								</MyErrorBoundary>
 							))}

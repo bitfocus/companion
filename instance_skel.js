@@ -19,6 +19,7 @@ var util = require('util')
 var debug = require('debug')('lib/instance_skel')
 var image = require('./lib/image')
 var icons = require('./lib/resources/icons')
+var { serializeIsVisibleFn } = require('./lib/resources/util')
 
 function instance(system, id, config) {
 	var self = this
@@ -183,6 +184,13 @@ instance.prototype.setActions = function (actions) {
 	if (actions === undefined) {
 		self._actionDefinitions = {}
 	} else {
+		actions = Object.fromEntries(
+			Object.entries(actions).map(([id, action]) => {
+				action.options = serializeIsVisibleFn(action.options)
+				return [id, action]
+			})
+		)
+
 		self._actionDefinitions = actions
 	}
 
@@ -227,6 +235,13 @@ instance.prototype.setFeedbackDefinitions = function (feedbacks) {
 	if (feedbacks === undefined) {
 		self._feedbackDefinitions = {}
 	} else {
+		feedbacks = Object.fromEntries(
+			Object.entries(feedbacks).map(([id, feedback]) => {
+				feedback.options = serializeIsVisibleFn(feedback.options)
+				return [id, feedback]
+			})
+		)
+
 		self._feedbackDefinitions = feedbacks
 	}
 
