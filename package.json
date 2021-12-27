@@ -335,6 +335,7 @@
 		"companion-module-magewell-proconvert-decoder": "github:bitfocus/companion-module-magewell-proconvert-decoder#v1.0.0",
 		"companion-module-magewell-ultrastream": "github:bitfocus/companion-module-magewell-ultrastream#v0.0.3",
 		"companion-module-magicsoft-recorder": "github:bitfocus/companion-module-magicsoft-recorder#v1.0.0",
+		"companion-module-makeprox-glue": "github:bitfocus/companion-module-makeprox-glue#v1.0.0",
 		"companion-module-malighting-grandma2": "github:bitfocus/companion-module-malighting-grandma2#v1.0.10",
 		"companion-module-malighting-msc": "github:bitfocus/companion-module-malighting-msc#v0.2.1",
 		"companion-module-matrox-monarch": "github:bitfocus/companion-module-matrox-monarch#v1.0.0",
