@@ -186,7 +186,9 @@ instance.prototype.setActions = function (actions) {
 	} else {
 		actions = Object.fromEntries(
 			Object.entries(actions).map(([id, action]) => {
-				action.options = serializeIsVisibleFn(action.options)
+				if (action && action.options) {
+					action.options = serializeIsVisibleFn(action.options)
+				}
 				return [id, action]
 			})
 		)
@@ -237,7 +239,9 @@ instance.prototype.setFeedbackDefinitions = function (feedbacks) {
 	} else {
 		feedbacks = Object.fromEntries(
 			Object.entries(feedbacks).map(([id, feedback]) => {
-				feedback.options = serializeIsVisibleFn(feedback.options)
+				if (feedback && feedback.options) {
+					feedback.options = serializeIsVisibleFn(feedback.options)
+				}
 				return [id, feedback]
 			})
 		)
