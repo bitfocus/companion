@@ -2180,9 +2180,9 @@ commist@^1.0.0:
     mqtt "^4.2.6"
     object-path "^0.11.5"
 
-"companion-module-generic-osc@github:bitfocus/companion-module-generic-osc#v1.0.4":
-  version "1.0.4"
-  resolved "https://codeload.github.com/bitfocus/companion-module-generic-osc/tar.gz/4c73da866ac2b2adcd5690728febe7620ab95b29"
+"companion-module-generic-osc@github:bitfocus/companion-module-generic-osc#v1.1.0":
+  version "1.1.0"
+  resolved "https://codeload.github.com/bitfocus/companion-module-generic-osc/tar.gz/e5549f9e05d347c5bef05fa385d52df47c65ea1d"
 
 "companion-module-generic-pjlink@github:bitfocus/companion-module-generic-pjlink#v1.0.5":
   version "1.0.5"
