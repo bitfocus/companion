@@ -7,7 +7,7 @@ exports.default = async function notarizing(context) {
 	if (electronPlatformName !== 'darwin') {
 		return
 	}
-	
+
 	if (!process.env.APPLEID || !process.env.APPLEIDPASS) {
 		console.log('Skipping notarizing, due to missing APPLEID or APPLEIDPASS environment variables')
 		return
