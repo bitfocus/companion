@@ -1991,9 +1991,9 @@ commist@^1.0.0:
   version "1.0.0"
   resolved "https://codeload.github.com/bitfocus/companion-module-datapath-fx4/tar.gz/3cd19f7f1e57a0fd89df7a17aa99c3d7df404227"
 
-"companion-module-dataton-watchout@github:bitfocus/companion-module-dataton-watchout#v1.2.0":
-  version "1.2.0"
-  resolved "https://codeload.github.com/bitfocus/companion-module-dataton-watchout/tar.gz/ec11829da1612b8e2bfe8b7ad61fe4c006e4e4f7"
+"companion-module-dataton-watchout@github:bitfocus/companion-module-dataton-watchout#v1.2.1":
+  version "1.2.1"
+  resolved "https://codeload.github.com/bitfocus/companion-module-dataton-watchout/tar.gz/e583d58494dd456c3be07f2286de835d0fad7236"
 
 "companion-module-datavideo-dvip@github:bitfocus/companion-module-datavideo-dvip#v1.0.0":
   version "1.0.0"
