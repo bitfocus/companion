@@ -69,7 +69,7 @@ export function MySidebar({ show }) {
 				/>
 				<CSidebarNavItem
 					target="_new"
-					href="https://join.slack.com/t/bitfocusio/shared_invite/enQtODk4NTYzNTkzMjU1LTMzZDY1Njc2MmE3MzVlNmJhMTBkMzFjNTQ2NzZlYzQyZWIzZTJkZWIyNmJlY2U0NzM1NGEzNzNlZWY3OWJlNGE"
+					href="https://join.slack.com/t/bitfocusio/shared_invite/zt-o1i0mohx-p_m5I7fUEUJ1BBu_KrDN2Q"
 					icon={<FontAwesomeIcon className="c-sidebar-nav-icon" icon={faComments} />}
 					name={t('Slack Chat')}
 				/>
