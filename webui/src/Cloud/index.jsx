@@ -13,7 +13,6 @@ export class Cloud extends Component {
 		super(props)
 
 		this.state = {
-			connected: false,
 			enabled: false,
 			error: null,
 			authenticated: false,
@@ -41,7 +40,7 @@ export class Cloud extends Component {
 	}
 
 	cloudStateDidUpdate(newState) {
-		console.log('cloud state did update to:', newState)
+		console.log('cloud state did update to:', { ...this.state, ...newState })
 		this.setState({ ...newState })
 	}
 
@@ -69,6 +68,7 @@ export class Cloud extends Component {
 
 			regions.push(<CloudRegionPanel key={id} id={region} socket={this.props.socket} />)
 		}
+		console.log("Render: state:", this.state);
 		return (
 			<div
 				style={{
@@ -96,6 +96,7 @@ export class Cloud extends Component {
 					<div>
 						<CloudUserPass
 							working={this.state.authenticating}
+							user={this.state.user}
 							onAuth={(user, pass) => {
 								this.cloudLogin(user, pass)
 							}}

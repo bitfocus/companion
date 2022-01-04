@@ -9,7 +9,7 @@ export class CloudUserPass extends Component {
 		super(props)
 
 		this.state = {
-			username: '',
+			username: props.username || '',
 			password: '',
 		}
 	}
