@@ -296,7 +296,7 @@
 		"companion-module-globalcache-itac-sl": "github:bitfocus/companion-module-globalcache-itac-sl#v1.0.3",
 		"companion-module-grassvalley-amp": "github:bitfocus/companion-module-grassvalley-amp#v1.1.3",
 		"companion-module-greenhippo-hippotizer": "github:bitfocus/companion-module-greenhippo-hippotizer#v1.0.2",
-		"companion-module-h2r-graphics": "github:bitfocus/companion-module-h2r-graphics#v1.1.3",
+		"companion-module-h2r-graphics": "github:bitfocus/companion-module-h2r-graphics#v2.0.0",
 		"companion-module-haivision-connectdvr": "github:bitfocus/companion-module-haivision-connectdvr#v1.1.1",
 		"companion-module-haivision-kbencoder": "github:bitfocus/companion-module-haivision-kbencoder#v1.0.0",
 		"companion-module-hermann-stagetimerio": "github:bitfocus/companion-module-hermann-stagetimerio#v1.0.0",
