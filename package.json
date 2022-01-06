@@ -360,6 +360,7 @@
 		"companion-module-noismada-octopuslistener": "github:bitfocus/companion-module-noismada-octopuslistener#v1.0.2",
 		"companion-module-noismada-octopusshowcontrol": "github:bitfocus/companion-module-noismada-octopusshowcontrol#v1.2.0",
 		"companion-module-novastar-controller": "github:bitfocus/companion-module-novastar-controller#v1.0.6",
+		"companion-module-novastar-h-series": "github:bitfocus/companion-module-novastar-h-series#v1.0.0",
 		"companion-module-obs-studio": "github:bitfocus/companion-module-obs-studio#v1.0.28",
 		"companion-module-obsidiancontrol-onyx": "github:bitfocus/companion-module-obsidiancontrol-onyx#v1.0.3",
 		"companion-module-octava-pro-dsx": "github:bitfocus/companion-module-octava-pro-dsx#v0.0.1",

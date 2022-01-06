@@ -2543,6 +2543,10 @@ commist@^1.0.0:
   version "1.0.6"
   resolved "https://codeload.github.com/bitfocus/companion-module-novastar-controller/tar.gz/0efb9cfc858ab0d117f67e554ba51821f95225f9"
 
+"companion-module-novastar-h-series@github:bitfocus/companion-module-novastar-h-series#v1.0.0":
+  version "1.0.0"
+  resolved "https://codeload.github.com/bitfocus/companion-module-novastar-h-series/tar.gz/3273a2b993bcb8be7881ccf5b92f16efc541d1e5"
+
 "companion-module-obs-studio@github:bitfocus/companion-module-obs-studio#v1.0.28":
   version "1.0.28"
   resolved "https://codeload.github.com/bitfocus/companion-module-obs-studio/tar.gz/edcaeab211763200841b9e877d2cc09c760fe0be"
