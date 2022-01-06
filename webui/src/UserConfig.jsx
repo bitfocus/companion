@@ -2,6 +2,10 @@ import React, { memo, useCallback, useContext } from 'react'
 import {
 	CButton,
 	CCol,
+	CDropdown,
+	CDropdownItem,
+	CDropdownMenu,
+	CDropdownToggle,
 	CInput,
 	CInputCheckbox,
 	CNav,
@@ -14,7 +18,7 @@ import {
 } from '@coreui/react'
 import { MyErrorBoundary, StaticContext, UserConfigContext } from './util'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faFileImport } from '@fortawesome/free-solid-svg-icons'
+import { faFileImport, faSync, faTrash, faUndo } from '@fortawesome/free-solid-svg-icons'
 
 export const UserConfig = memo(function UserConfig() {
 	return (
@@ -47,6 +51,29 @@ function UserConfigTable() {
 		},
 		[context.socket]
 	)
+
+	const resetValue = useCallback(
+		(key) => {
+			console.log('reset ', key)
+			context.socket.emit('reset_userconfig_key', key)
+		},
+		[context.socket]
+	)
+
+	const createSslCertificate = useCallback(() => {
+		console.log('create SSL certificate')
+		context.socket.emit('ssl_certificate_create')
+	}, [context.socket])
+
+	const deleteSslCertificate = useCallback(() => {
+		console.log('delete SSL certificate')
+		context.socket.emit('ssl_certificate_delete')
+	}, [context.socket])
+
+	const renewSslCertificate = useCallback(() => {
+		console.log('renew SSL certificate')
+		context.socket.emit('ssl_certificate_renew')
+	}, [context.socket])
 
 	return (
 		<table className="table table-responsive-sm">
@@ -391,6 +418,219 @@ function UserConfigTable() {
 						</div>
 					</td>
 				</tr>
+				<tr>
+					<td colSpan="2" className="settings-category">
+						HTTPS Web Server
+					</td>
+				</tr>
+				<tr>
+					<td colSpan="2">
+						An HTTPS server can be enabled for the Companion web interfaces should your deployment require it. It is
+						never recommended to expose the Companion interface to the Internet and HTTPS does not provide any
+						additional security for that configuration.
+					</td>
+				</tr>
+				<tr>
+					<td>HTTPS Web Server</td>
+					<td>
+						<div className="form-check form-check-inline mr-1">
+							<CInputCheckbox
+								id="userconfig_https_enabled"
+								checked={config.https_enabled}
+								onChange={(e) => setValue('https_enabled', e.currentTarget.checked)}
+							/>
+							<label className="form-check-label" htmlFor="userconfig_https_enabled">
+								Enabled
+							</label>
+						</div>
+					</td>
+				</tr>
+
+				<tr>
+					<td>HTTPS Port</td>
+					<td>
+						<div className="form-check form-check-inline mr-1">
+							<CInput
+								type="number"
+								value={config.https_port}
+								onChange={(e) => setValue('https_port', e.currentTarget.value)}
+							/>
+						</div>
+					</td>
+				</tr>
+
+				<tr>
+					<td>Certificate Type</td>
+					<td>
+						<div className="form-check form-check-inline mr-1">
+							<CDropdown className="mt-2" style={{ display: 'inline-block' }}>
+								<CDropdownToggle>{config.https_cert_type === 'external' ? 'External' : 'Self Signed'}</CDropdownToggle>
+								<CDropdownMenu>
+									<CDropdownItem onClick={() => setValue('https_cert_type', 'self')}>Self Signed</CDropdownItem>
+									<CDropdownItem onClick={() => setValue('https_cert_type', 'external')}>External</CDropdownItem>
+								</CDropdownMenu>
+							</CDropdown>
+						</div>
+					</td>
+				</tr>
+
+				{config.https_cert_type === 'self' && (
+					<tr>
+						<td colSpan="2">
+							<table className="table table-responsive-sm">
+								<tbody>
+									<tr>
+										<td colSpan="2">This tool will help create a self-signed certificate for the server to use.</td>
+									</tr>
+
+									<tr>
+										<td>Common Name (Domain Name)</td>
+										<td>
+											<div className="form-check form-check-inline mr-1">
+												<CInput
+													type="text"
+													value={config.https_self_cn}
+													onChange={(e) => setValue('https_self_cn', e.currentTarget.value)}
+												/>
+												<CButton onClick={() => resetValue('https_self_cn')}>
+													<FontAwesomeIcon icon={faUndo} />
+												</CButton>
+											</div>
+										</td>
+									</tr>
+									<tr>
+										<td>Certificate Expiry Days</td>
+										<td>
+											<div className="form-check form-check-inline mr-1">
+												<CInput
+													type="number"
+													value={config.https_self_expiry}
+													onChange={(e) => setValue('https_self_expiry', e.currentTarget.value)}
+												/>
+												<CButton onClick={() => resetValue('https_self_expiry')}>
+													<FontAwesomeIcon icon={faUndo} />
+												</CButton>
+											</div>
+										</td>
+									</tr>
+
+									{(!config.https_self_cert || config.https_self_cert.length === 0) && (
+										<tr>
+											<td>
+												Certificate Details
+												<br />
+												{(!config.https_self_cert || config.https_self_cert.length === 0) && (
+													<ul>
+														<li>No certificate available</li>
+													</ul>
+												)}
+											</td>
+											<td>
+												<CButton onClick={() => createSslCertificate()}>
+													<FontAwesomeIcon icon={faSync} />
+													Generate
+												</CButton>
+											</td>
+										</tr>
+									)}
+									{config.https_self_cert && config.https_self_cert.length > 0 && (
+										<tr>
+											<td>
+												Certificate Details
+												<br />
+												{config.https_self_cert && config.https_self_cert.length > 0 && (
+													<ul>
+														<li>Common Name: {config.https_self_cert_cn}</li>
+														<li>Created: {config.https_self_cert_created}</li>
+														<li>Expiry Period: {config.https_self_cert_expiry}</li>
+													</ul>
+												)}
+											</td>
+											<td>
+												<CButton onClick={() => renewSslCertificate()}>
+													<FontAwesomeIcon icon={faSync} />
+													Renew
+												</CButton>
+												<br />
+												<CButton onClick={() => deleteSslCertificate()}>
+													<FontAwesomeIcon icon={faTrash} />
+													Delete
+												</CButton>
+											</td>
+										</tr>
+									)}
+								</tbody>
+							</table>
+						</td>
+					</tr>
+				)}
+
+				{config.https_cert_type === 'external' && (
+					<tr>
+						<td colSpan="2">
+							<table className="table table-responsive-sm">
+								<tbody>
+									<tr>
+										<td colSpan="2">
+											This requires you to generate your own self-signed certificate or go through a certificate
+											authority. A properly signed certificate will work.
+										</td>
+									</tr>
+
+									<tr>
+										<td colSpan="2" style={{ backgroundColor: 'rgb(229, 158, 8)', color: 'rgb(79, 93, 115)' }}>
+											This option is provided as-is. Support will not be provided for this feature. <br />
+											DO NOT POST GITHUB ISSUES IF THIS DOES NOT WORK.
+										</td>
+									</tr>
+
+									<tr>
+										<td>Private Key File (full path)</td>
+										<td>
+											<div className="form-check form-check-inline mr-1">
+												<CInput
+													type="text"
+													value={config.https_ext_private_key}
+													onChange={(e) => setValue('https_ext_private_key', e.currentTarget.value)}
+												/>
+											</div>
+										</td>
+									</tr>
+
+									<tr>
+										<td>Certificate File (full path)</td>
+										<td>
+											<div className="form-check form-check-inline mr-1">
+												<CInput
+													type="text"
+													value={config.https_ext_certificate}
+													onChange={(e) => setValue('https_ext_certificate', e.currentTarget.value)}
+												/>
+											</div>
+										</td>
+									</tr>
+
+									<tr>
+										<td>
+											Chain File (full path)
+											<br />
+											*Optional
+										</td>
+										<td>
+											<div className="form-check form-check-inline mr-1">
+												<CInput
+													type="text"
+													value={config.https_ext_chain}
+													onChange={(e) => setValue('https_ext_chain', e.currentTarget.value)}
+												/>
+											</div>
+										</td>
+									</tr>
+								</tbody>
+							</table>
+						</td>
+					</tr>
+				)}
 			</tbody>
 		</table>
 	)
