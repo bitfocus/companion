@@ -147,6 +147,46 @@ function UserConfigTable() {
 						</div>
 					</td>
 				</tr>
+
+				<tr>
+					<td colSpan="2">
+						Below you can enable "Periodic USB Rescan" to automatically find new or recover existing USB devices. A USB
+						rescan is a blocking action and, hardware depdendant, can interrupt precise delay timing of banks. If your
+						environment requires this, use caution:
+						<ul>
+							<li>Stress test complex banks during rescans</li>
+							<li>Use the longest reasonable interval</li>
+						</ul>
+					</td>
+				</tr>
+				<tr>
+					<td>Periodic USB Rescan</td>
+					<td>
+						<div className="form-check form-check-inline mr-1">
+							<CInputCheckbox
+								id="userconfig_rescan_enabled"
+								checked={config.rescan_enabled}
+								onChange={(e) => setValue('rescan_enabled', e.currentTarget.checked)}
+							/>
+							<label className="form-check-label" htmlFor="userconfig_rescan_enabled">
+								Enabled
+							</label>
+						</div>
+					</td>
+				</tr>
+				<tr>
+					<td>Rescan Interval (in seconds)</td>
+					<td>
+						<div className="form-check form-check-inline mr-1">
+							<CInput
+								type="number"
+								min="5"
+								value={config.rescan_interval}
+								onChange={(e) => setValue('rescan_interval', e.currentTarget.value)}
+							/>
+						</div>
+					</td>
+				</tr>
 				<tr>
 					<td colSpan="2" className="settings-category">
 						PIN Lockout
