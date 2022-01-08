@@ -1963,6 +1963,10 @@ commist@^1.0.0:
   version "1.0.0"
   resolved "https://codeload.github.com/bitfocus/companion-module-crystal-scte/tar.gz/f141960577fb13394736df6d37dfa320e1459de4"
 
+"companion-module-ctpsystems-dio8008r@github:bitfocus/companion-module-ctpsystems-dio8008r#v1.0.0":
+  version "1.0.0"
+  resolved "https://codeload.github.com/bitfocus/companion-module-ctpsystems-dio8008r/tar.gz/bd3b3380a99b4835d6000b4e0b309095a7a32957"
+
 "companion-module-dahuasecurity-ptz@github:bitfocus/companion-module-dahuasecurity-ptz#v1.0.1":
   version "1.0.1"
   resolved "https://codeload.github.com/bitfocus/companion-module-dahuasecurity-ptz/tar.gz/96dc82021eaa516957515f6fb8a942ed545192fd"
