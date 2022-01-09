@@ -169,6 +169,7 @@ system.ready = function (logToFile) {
 	var feedback = require('./lib/feedback')(system)
 	var action = require('./lib/action')(system)
 	var bank = require('./lib/bank')(system)
+	var graphics = require('./lib/graphics')(system)
 	var elgatoDM = require('./lib/elgato_dm')(system)
 	var preview = require('./lib/preview')(system)
 	var instance = require('./lib/instance')(system)
