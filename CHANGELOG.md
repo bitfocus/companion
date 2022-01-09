@@ -1,5 +1,9 @@
 # Bitfocus Companion
 
+## Companion v2.1.4 - Release Notes
+- Support for the mk2 standard stream deck
+- Fixed broken Hyperdeck module
+
 ## Companion v2.1.3 - Release Notes
 
 # 🧩 NEW MODULES
