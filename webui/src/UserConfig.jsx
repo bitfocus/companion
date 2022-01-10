@@ -550,15 +550,18 @@ function UserConfigTable() {
 												)}
 											</td>
 											<td>
-												<CButton onClick={() => renewSslCertificate()} color="success">
-													<FontAwesomeIcon icon={faSync} />
-													&nbsp;Renew
-												</CButton>
-												<br />
-												<CButton onClick={() => deleteSslCertificate()} color="danger">
-													<FontAwesomeIcon icon={faTrash} />
-													&nbsp;Delete
-												</CButton>
+												<p>
+													<CButton onClick={() => renewSslCertificate()} color="success">
+														<FontAwesomeIcon icon={faSync} />
+														&nbsp;Renew
+													</CButton>
+												</p>
+												<p>
+													<CButton onClick={() => deleteSslCertificate()} color="danger">
+														<FontAwesomeIcon icon={faTrash} />
+														&nbsp;Delete
+													</CButton>
+												</p>
 											</td>
 										</tr>
 									)}
