@@ -23,16 +23,18 @@ import { faFileImport, faSync, faTrash, faUndo } from '@fortawesome/free-solid-s
 
 export const UserConfig = memo(function UserConfig() {
 	return (
-		<CRow>
-			<CCol xl={6}>
+		<CRow className="split-panels">
+			<CCol xl={6} className="primary-panel">
 				<h4>Settings</h4>
 				<p>Settings applies instantaneously, don't worry about it!</p>
 
 				<UserConfigTable />
 			</CCol>
 			<CCol xs={12} xl={6} className="secondary-panel">
-				<h4>Remote control</h4>
-				<p>Companion can be remote controlled in several ways. Below you'll find how to do it.</p>
+				<div className="secondary-panel-header">
+					<h4>Remote control</h4>
+					<p>Companion can be remote controlled in several ways. Below you'll find how to do it.</p>
+				</div>
 				<div className="secondary-panel-inner">
 					<RemoteControlInfo />
 				</div>
