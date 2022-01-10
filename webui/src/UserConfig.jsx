@@ -1,5 +1,6 @@
 import React, { memo, useCallback, useContext } from 'react'
 import {
+	CAlert,
 	CButton,
 	CCol,
 	CDropdown,
@@ -492,7 +493,7 @@ function UserConfigTable() {
 													value={config.https_self_cn}
 													onChange={(e) => setValue('https_self_cn', e.currentTarget.value)}
 												/>
-												<CButton onClick={() => resetValue('https_self_cn')}>
+												<CButton onClick={() => resetValue('https_self_cn')} title="Reset">
 													<FontAwesomeIcon icon={faUndo} />
 												</CButton>
 											</div>
@@ -507,7 +508,7 @@ function UserConfigTable() {
 													value={config.https_self_expiry}
 													onChange={(e) => setValue('https_self_expiry', e.currentTarget.value)}
 												/>
-												<CButton onClick={() => resetValue('https_self_expiry')}>
+												<CButton onClick={() => resetValue('https_self_expiry')} title="Reset">
 													<FontAwesomeIcon icon={faUndo} />
 												</CButton>
 											</div>
@@ -526,9 +527,9 @@ function UserConfigTable() {
 												)}
 											</td>
 											<td>
-												<CButton onClick={() => createSslCertificate()}>
+												<CButton onClick={() => createSslCertificate()} color="success">
 													<FontAwesomeIcon icon={faSync} />
-													Generate
+													&nbsp;Generate
 												</CButton>
 											</td>
 										</tr>
@@ -547,14 +548,14 @@ function UserConfigTable() {
 												)}
 											</td>
 											<td>
-												<CButton onClick={() => renewSslCertificate()}>
+												<CButton onClick={() => renewSslCertificate()} color="success">
 													<FontAwesomeIcon icon={faSync} />
-													Renew
+													&nbsp;Renew
 												</CButton>
 												<br />
-												<CButton onClick={() => deleteSslCertificate()}>
+												<CButton onClick={() => deleteSslCertificate()} color="danger">
 													<FontAwesomeIcon icon={faTrash} />
-													Delete
+													&nbsp;Delete
 												</CButton>
 											</td>
 										</tr>
@@ -572,15 +573,14 @@ function UserConfigTable() {
 								<tbody>
 									<tr>
 										<td colSpan="2">
-											This requires you to generate your own self-signed certificate or go through a certificate
-											authority. A properly signed certificate will work.
-										</td>
-									</tr>
-
-									<tr>
-										<td colSpan="2" style={{ backgroundColor: 'rgb(229, 158, 8)', color: 'rgb(79, 93, 115)' }}>
-											This option is provided as-is. Support will not be provided for this feature. <br />
-											DO NOT POST GITHUB ISSUES IF THIS DOES NOT WORK.
+											<p>
+												This requires you to generate your own self-signed certificate or go through a certificate
+												authority. A properly signed certificate will work.
+											</p>
+											<CAlert color="danger">
+												This option is provided as-is. Support will not be provided for this feature. <br />
+												DO NOT POST GITHUB ISSUES IF THIS DOES NOT WORK.
+											</CAlert>
 										</td>
 									</tr>
 
