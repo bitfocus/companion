@@ -12,6 +12,9 @@ Remote triggering can be done by sending `HTTP` Requests to the same IP and port
   _Change text on a button_
 - `/style/bank/<page>/<bank>?size=<text size>`  
   _Change text size on a button (between the predefined values)_
+- `/rescan`  
+  _Make Companion rescan for newly attached USB surfaces_
+
 
 **Examples**  
 Press page 1 bank 2:  
