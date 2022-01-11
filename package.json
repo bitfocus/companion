@@ -484,6 +484,7 @@
 		"node-rest-client": "^3.1.0",
 		"osc": "^2.4.2",
 		"pngjs": "^3.3.3",
+		"selfsigned": "^1.10.11",
 		"sharp": "^0.28.3",
 		"shortid": "^2.2.16",
 		"socket.io": "^4.2.0",
