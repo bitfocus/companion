@@ -163,7 +163,22 @@ function UserConfigTable() {
 					</td>
 				</tr>
 				<tr>
-					<td>Enable connected xkeys (Companion restart required)</td>
+					<td>Use Elgato Plugin for StreamDeck access (Requires Companion restart)</td>
+					<td>
+						<div className="form-check form-check-inline mr-1">
+							<CInputCheckbox
+								id="userconfig_elgato_plugin_enable"
+								checked={config.elgato_plugin_enable}
+								onChange={(e) => setValue('elgato_plugin_enable', e.currentTarget.checked)}
+							/>
+							<label className="form-check-label" htmlFor="userconfig_elgato_plugin_enable">
+								Enabled
+							</label>
+						</div>
+					</td>
+				</tr>
+				<tr>
+					<td>Enable connected xkeys (Requires Companion restart)</td>
 					<td>
 						<div className="form-check form-check-inline mr-1">
 							<CInputCheckbox
@@ -428,11 +443,9 @@ function UserConfigTable() {
 				</tr>
 				<tr>
 					<td colSpan="2">
-						<p>An HTTPS server can be enabled for the Companion web interfaces should your deployment require it.</p>
-						<CAlert color="danger">
-							It is never recommended to expose the Companion interface to the Internet and HTTPS does not provide any
-							additional security for that configuration.
-						</CAlert>
+						An HTTPS server can be enabled for the Companion web interfaces should your deployment require it. It is
+						never recommended to expose the Companion interface to the Internet and HTTPS does not provide any
+						additional security for that configuration.
 					</td>
 				</tr>
 				<tr>
