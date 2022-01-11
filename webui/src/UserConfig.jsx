@@ -443,9 +443,11 @@ function UserConfigTable() {
 				</tr>
 				<tr>
 					<td colSpan="2">
-						An HTTPS server can be enabled for the Companion web interfaces should your deployment require it. It is
-						never recommended to expose the Companion interface to the Internet and HTTPS does not provide any
-						additional security for that configuration.
+						<p>An HTTPS server can be enabled for the Companion web interfaces should your deployment require it.</p>
+						<CAlert color="danger">
+							It is never recommended to expose the Companion interface to the Internet and HTTPS does not provide any
+							additional security for that configuration.
+						</CAlert>
 					</td>
 				</tr>
 				<tr>
