@@ -1697,9 +1697,9 @@ commist@^1.0.0:
   dependencies:
     artnet-node haakonnessjoen/artnet-node#ee6273d
 
-"companion-module-avolites-titan@github:bitfocus/companion-module-avolites-titan#v1.1.0":
-  version "1.1.0"
-  resolved "https://codeload.github.com/bitfocus/companion-module-avolites-titan/tar.gz/de9fc5ee082bf0373ddb0a7fdcf2c18f8015e4ed"
+"companion-module-avolites-titan@github:bitfocus/companion-module-avolites-titan#v1.2.0":
+  version "1.2.0"
+  resolved "https://codeload.github.com/bitfocus/companion-module-avolites-titan/tar.gz/06aa630677bff42f93001143fbbea3fc9dc43a22"
 
 "companion-module-avproconnect-acmx1616-auhd@github:bitfocus/companion-module-avproconnect-acmx1616-auhd#v1.0.0":
   version "1.0.0"
