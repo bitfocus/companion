@@ -20,6 +20,9 @@ Remote triggering can be done by sending TCP (port `51234`) or UDP (port `51235`
   _Change text color on a button (#000000)_
 - `STYLE BANK <page> <bank> BGCOLOR <color HEX>`  
   _Change background color on a button (#000000)_
+- `RESCAN`
+  _Make Companion rescan for newly attached USB surfaces_
+
 
 **Examples**  
 Set the emulator surface to page 23:  

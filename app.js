@@ -156,11 +156,13 @@ system.ready = function (logToFile) {
 		}
 	}
 
-	var server_http = require('./lib/server_http')(system)
+	var server_express = require('./lib/server_express')(system)
+	var server_http = require('./lib/server_http')(system, server_express)
 	var io = require('./lib/io')(system, server_http)
 	var log = require('./lib/log')(system, io)
 	var db = require('./lib/db')(system, cfgDir)
 	var userconfig = require('./lib/userconfig')(system)
+	var server_https = require('./lib/server_https')(system, server_express, io)
 	var update = require('./lib/update')(system, cfgDir)
 	var page = require('./lib/page')(system)
 	var appRoot = require('app-root-path')
@@ -186,7 +188,7 @@ system.ready = function (logToFile) {
 	var preset = require('./lib/preset')(system)
 	var satelliteLegacy = require('./lib/satellite/satellite_server_legacy')(system)
 	var satellite = require('./lib/satellite/satellite_server')(system)
-	var ws_api = require('./lib/ws_api')(system)
+	var elgato_plugin_server = require('./lib/elgato_plugin_server')(system)
 	var help = require('./lib/help')(system)
 	var metrics = require('./lib/metrics')(system)
 

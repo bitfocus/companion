@@ -1869,9 +1869,9 @@ commist@^1.0.0:
   version "1.0.1"
   resolved "https://codeload.github.com/bitfocus/companion-module-bmd-webpresenterhd/tar.gz/9433fd81bd197fbe652344b8b9c6e7b8b63f0b60"
 
-"companion-module-boinx-mimolive@github:bitfocus/companion-module-boinx-mimolive#v1.0.1":
-  version "1.0.1"
-  resolved "https://codeload.github.com/bitfocus/companion-module-boinx-mimolive/tar.gz/f5b5ff67c08c5f430649c7d68a2734c1e9f391ea"
+"companion-module-boinx-mimolive@github:bitfocus/companion-module-boinx-mimolive#v1.0.2":
+  version "1.0.2"
+  resolved "https://codeload.github.com/bitfocus/companion-module-boinx-mimolive/tar.gz/ba93bab803bc80d5f1a6908597481a35ba170a2c"
 
 "companion-module-borealsystems-director@github:bitfocus/companion-module-borealsystems-director#v1.0.0":
   version "1.0.0"
@@ -2975,9 +2975,9 @@ commist@^1.0.0:
   version "1.0.1"
   resolved "https://codeload.github.com/bitfocus/companion-module-vaddio-ptz/tar.gz/16bf099f3c35aa231c74b10b6b2cb60f93ef63a1"
 
-"companion-module-vdo-ninja@github:bitfocus/companion-module-vdo-ninja#v1.0.0":
-  version "1.0.0"
-  resolved "https://codeload.github.com/bitfocus/companion-module-vdo-ninja/tar.gz/69a200b11847c1ec4f0bfde649239e36e78aaf3f"
+"companion-module-vdo-ninja@github:bitfocus/companion-module-vdo-ninja#v1.0.1":
+  version "1.0.1"
+  resolved "https://codeload.github.com/bitfocus/companion-module-vdo-ninja/tar.gz/550af2d54212fa419d2306d5380c90a62a8c9ff0"
   dependencies:
     ws "^7.2.1"
 
@@ -7068,6 +7068,13 @@ sax@>=0.6.0, sax@^1.2.2, sax@^1.2.4:
   version "1.2.4"
   resolved "https://registry.yarnpkg.com/sax/-/sax-1.2.4.tgz#2816234e2378bddc4e5354fab5caa895df7100d9"
   integrity sha512-NqVDv9TpANUjFm0N8uM5GxL36UgKi9/atZw+x7YFnQ8ckwFGKrl4xX4yWtrey3UJm5nP1kUbnYgLopqWNSRhWw==
+
+selfsigned@^1.10.11:
+  version "1.10.11"
+  resolved "https://registry.yarnpkg.com/selfsigned/-/selfsigned-1.10.11.tgz#24929cd906fe0f44b6d01fb23999a739537acbe9"
+  integrity sha512-aVmbPOfViZqOZPgRBT0+3u4yZFHpmnIghLMlAcb5/xhp5ZtB/RVnKhz5vl2M32CLXAqR4kha9zfhNg0Lf/sxKA==
+  dependencies:
+    node-forge "^0.10.0"
 
 semver-compare@^1.0.0:
   version "1.0.0"
