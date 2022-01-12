@@ -123,6 +123,10 @@
 					{
 						"label": "Artnet Listener",
 						"file": "3_config/5_settings/5_artnet_listener.md"
+					},
+					{
+						"label": "HTTPS Web Server",
+						"file": "3_config/5_settings/6_https_web_server.md"
 					}
 				]
 			},
