@@ -26,6 +26,7 @@ import { StaticContext, LoadingRetryOrError, socketEmit } from './util'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faCog, faSync } from '@fortawesome/free-solid-svg-icons'
 import shortid from 'shortid'
+import { TextInputField } from './Components/TextInputField'
 
 export const SurfacesPage = memo(function SurfacesPage() {
 	const context = useContext(StaticContext)
@@ -72,6 +73,13 @@ export const SurfacesPage = memo(function SurfacesPage() {
 		editModalRef.current.show(device)
 	}, [])
 
+	const updateName = useCallback(
+		(serialnumber, name) => {
+			context.socket.emit('device_set_name', serialnumber, name)
+		},
+		[context.socket]
+	)
+
 	return (
 		<div>
 			<h4>Surfaces</h4>
@@ -95,6 +103,7 @@ export const SurfacesPage = memo(function SurfacesPage() {
 					<tr>
 						<th>NO</th>
 						<th>ID</th>
+						<th>Name</th>
 						<th>Type</th>
 						<th>&nbsp;</th>
 					</tr>
@@ -105,19 +114,30 @@ export const SurfacesPage = memo(function SurfacesPage() {
 							<tr key={dev.id}>
 								<td>#{i}</td>
 								<td>{dev.serialnumber}</td>
+								<td>
+									<TextInputField
+										definition={{}}
+										value={dev.name}
+										setValue={(val) => updateName(dev.serialnumber, val)}
+									/>
+								</td>
 								<td>{dev.type}</td>
 								<td>
-									{dev?.config && dev.config.length > 0 ? (
-										<CButton color="success" onClick={() => configureDevice(dev)}>
-											<FontAwesomeIcon icon={faCog} /> Settings
-										</CButton>
-									) : (
-										''
-									)}
+									<CButton color="success" onClick={() => configureDevice(dev)}>
+										<FontAwesomeIcon icon={faCog} /> Settings
+									</CButton>
 								</td>
 							</tr>
 						)
 					})}
+
+					{devices.length === 0 ? (
+						<tr>
+							<td colSpan={4}>No control surfaces have been detected</td>
+						</tr>
+					) : (
+						''
+					)}
 				</tbody>
 			</table>
 
@@ -125,6 +145,16 @@ export const SurfacesPage = memo(function SurfacesPage() {
 				<FontAwesomeIcon icon={faSync} spin={scanning} />
 				{scanning ? ' Checking for new devices...' : ' Rescan USB'}
 			</CButton>
+			<p>&nbsp;</p>
+			<CAlert color="info">
+				<p>
+					Did you know, you can connect a Streamdeck from another computer or Raspberry Pi with{' '}
+					<a target="_blank" rel="noreferrer" href="https://github.com/bitfocus/companion-satellite">
+						Companion Satellite
+					</a>
+					?
+				</p>
+			</CAlert>
 		</div>
 	)
 })
@@ -136,6 +166,7 @@ const SurfaceEditModal = forwardRef(function SurfaceEditModal(_props, ref) {
 	const [show, setShow] = useState(false)
 
 	const [deviceConfig, setDeviceConfig] = useState(null)
+	const [deviceConfigInfo, setDeviceConfigInfo] = useState(null)
 	const [deviceConfigError, setDeviceConfigError] = useState(null)
 	const [reloadToken, setReloadToken] = useState(shortid())
 
@@ -154,8 +185,10 @@ const SurfaceEditModal = forwardRef(function SurfaceEditModal(_props, ref) {
 
 		if (deviceInfo?.id) {
 			socketEmit(context.socket, 'device_config_get', [deviceInfo.id])
-				.then(([err, config]) => {
+				.then(([err, config, info]) => {
+					console.log(err, config, info)
 					setDeviceConfig(config)
+					setDeviceConfigInfo(info)
 				})
 				.catch((err) => {
 					console.error('Failed to load device config')
@@ -193,7 +226,17 @@ const SurfaceEditModal = forwardRef(function SurfaceEditModal(_props, ref) {
 						[key]: value,
 					}
 
-					context.socket.emit('device_config_set', deviceInfo.id, newConfig)
+					socketEmit(context.socket, 'device_config_set', [deviceInfo.id, newConfig])
+						.then(([err, newConfig]) => {
+							if (err) {
+								console.log('Config update failed', err)
+							} else {
+								setDeviceConfig(newConfig)
+							}
+						})
+						.catch((e) => {
+							console.log('Config update failed', e)
+						})
 					return newConfig
 				})
 			}
@@ -207,9 +250,71 @@ const SurfaceEditModal = forwardRef(function SurfaceEditModal(_props, ref) {
 				<h5>Settings for {deviceInfo?.type}</h5>
 			</CModalHeader>
 			<CModalBody>
-				<LoadingRetryOrError error={deviceConfigError} dataReady={deviceConfig} doRetry={doRetryConfigLoad} />
-				{deviceConfig && deviceInfo ? (
+				<LoadingRetryOrError
+					error={deviceConfigError}
+					dataReady={deviceConfig && deviceConfigInfo}
+					doRetry={doRetryConfigLoad}
+				/>
+				{deviceConfig && deviceInfo && deviceConfigInfo ? (
 					<CForm>
+						<CFormGroup>
+							<CLabel htmlFor="use_last_page">Use Last Page At Startup</CLabel>
+							<CInputCheckbox
+								name="use_last_page"
+								type="checkbox"
+								checked={!!deviceConfig.use_last_page}
+								value={true}
+								onChange={(e) => updateConfig('use_last_page', !!e.currentTarget.checked)}
+							/>
+						</CFormGroup>
+						<CFormGroup>
+							<CLabel htmlFor="page">Startup Page</CLabel>
+							<CInput
+								disabled={!!deviceConfig.use_last_page}
+								name="page"
+								type="range"
+								min={1}
+								max={99}
+								step={1}
+								value={deviceConfig.page}
+								onChange={(e) => updateConfig('page', parseInt(e.currentTarget.value))}
+							/>
+							<span>{deviceConfig.page}</span>
+						</CFormGroup>
+						{deviceConfigInfo.xOffsetMax > 0 ? (
+							<CFormGroup>
+								<CLabel htmlFor="page">X Offset in grid</CLabel>
+								<CInput
+									name="page"
+									type="range"
+									min={0}
+									max={deviceConfigInfo.xOffsetMax}
+									step={1}
+									value={deviceConfig.xOffset}
+									onChange={(e) => updateConfig('xOffset', parseInt(e.currentTarget.value))}
+								/>
+								<span>{deviceConfig.xOffset}</span>
+							</CFormGroup>
+						) : (
+							''
+						)}
+						{deviceConfigInfo.yOffsetMax > 0 ? (
+							<CFormGroup>
+								<CLabel htmlFor="page">Y Offset in grid</CLabel>
+								<CInput
+									name="page"
+									type="range"
+									min={0}
+									max={deviceConfigInfo.yOffsetMax}
+									step={1}
+									value={deviceConfig.yOffset}
+									onChange={(e) => updateConfig('yOffset', parseInt(e.currentTarget.value))}
+								/>
+								<span>{deviceConfig.yOffset}</span>
+							</CFormGroup>
+						) : (
+							''
+						)}
 						{deviceInfo.config?.includes('brightness') ? (
 							<CFormGroup>
 								<CLabel htmlFor="brightness">Brightness</CLabel>
@@ -226,7 +331,6 @@ const SurfaceEditModal = forwardRef(function SurfaceEditModal(_props, ref) {
 						) : (
 							''
 						)}
-
 						{deviceInfo.config?.includes('orientation') ? (
 							<CFormGroup>
 								<CLabel htmlFor="orientation">Button rotation</CLabel>
@@ -244,25 +348,6 @@ const SurfaceEditModal = forwardRef(function SurfaceEditModal(_props, ref) {
 						) : (
 							''
 						)}
-
-						{deviceInfo.config?.includes('page') ? (
-							<CFormGroup>
-								<CLabel htmlFor="page">Page</CLabel>
-								<CInput
-									name="page"
-									type="range"
-									min={1}
-									max={99}
-									step={1}
-									value={deviceConfig.page}
-									onChange={(e) => updateConfig('page', parseInt(e.currentTarget.value))}
-								/>
-								<span>{deviceConfig.page}</span>
-							</CFormGroup>
-						) : (
-							''
-						)}
-
 						{deviceInfo.config?.includes('enable_device') ? (
 							<CFormGroup>
 								<CLabel htmlFor="enable_device">Enable Device</CLabel>

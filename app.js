@@ -15,7 +15,7 @@
  *
  */
 
-if (process.env.DEVELOPER !== undefined) {
+if (process.env.DEVELOPER !== undefined && process.env.DEBUG === undefined) {
 	process.env['DEBUG'] = '*,-websocket*,-express*,-engine*,-socket.io*,-send*,-db,-NRC*,-follow-redirects'
 }
 
@@ -156,13 +156,15 @@ system.ready = function (logToFile) {
 		}
 	}
 
-	var server_http = require('./lib/server_http')(system)
+	var server_express = require('./lib/server_express')(system)
+	var server_http = require('./lib/server_http')(system, server_express)
 	var io = require('./lib/io')(system, server_http)
 	var log = require('./lib/log')(system, io)
 	var db = require('./lib/db')(system, cfgDir)
 	require('./lib/upgrades/upgrades').startup(db)
 
 	var userconfig = require('./lib/userconfig')(system)
+	var server_https = require('./lib/server_https')(system, server_express, io)
 	var update = require('./lib/update')(system, cfgDir)
 	var page = require('./lib/page')(system)
 	var appRoot = require('app-root-path')
@@ -174,7 +176,7 @@ system.ready = function (logToFile) {
 	var elgatoDM = require('./lib/elgato_dm')(system)
 	var preview = require('./lib/preview')(system)
 	var instance = require('./lib/instance')(system)
-	var osc = require('./lib/osc')(system)
+	var osc = require('./lib/server_osc')(system)
 	var server_api = require('./lib/server_api')(system)
 	var server_tcp = require('./lib/server_tcp')(system)
 	var server_udp = require('./lib/server_udp')(system)
@@ -185,10 +187,11 @@ system.ready = function (logToFile) {
 	var rest_poll = require('./lib/rest_poll')(system)
 	var loadsave = require('./lib/loadsave')(system)
 	var preset = require('./lib/preset')(system)
-	var tablet = require('./lib/tablet')(system)
-	var satellite = require('./lib/satellite_server')(system)
-	var ws_api = require('./lib/ws_api')(system)
+	var satelliteLegacy = require('./lib/satellite/satellite_server_legacy')(system)
+	var satellite = require('./lib/satellite/satellite_server')(system)
+	var elgato_plugin_server = require('./lib/elgato_plugin_server')(system)
 	var help = require('./lib/help')(system)
+	var metrics = require('./lib/metrics')(system)
 
 	system.emit('modules_loaded')
 

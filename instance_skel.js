@@ -20,6 +20,7 @@ var debug = require('debug')('lib/instance_skel')
 var image = require('./lib/image')
 var icons = require('./lib/resources/icons')
 var upgrades = require('./lib/upgrades/upgrades')
+var { serializeIsVisibleFn } = require('./lib/resources/util')
 
 function instance(system, id, config) {
 	var self = this
@@ -184,6 +185,15 @@ instance.prototype.setActions = function (actions) {
 	if (actions === undefined) {
 		self._actionDefinitions = {}
 	} else {
+		actions = Object.fromEntries(
+			Object.entries(actions).map(([id, action]) => {
+				if (action && action.options) {
+					action.options = serializeIsVisibleFn(action.options)
+				}
+				return [id, action]
+			})
+		)
+
 		self._actionDefinitions = actions
 	}
 
@@ -228,6 +238,15 @@ instance.prototype.setFeedbackDefinitions = function (feedbacks) {
 	if (feedbacks === undefined) {
 		self._feedbackDefinitions = {}
 	} else {
+		feedbacks = Object.fromEntries(
+			Object.entries(feedbacks).map(([id, feedback]) => {
+				if (feedback && feedback.options) {
+					feedback.options = serializeIsVisibleFn(feedback.options)
+				}
+				return [id, feedback]
+			})
+		)
+
 		self._feedbackDefinitions = feedbacks
 	}
 
@@ -310,7 +329,13 @@ instance.prototype.subscribeFeedbacks = function (type) {
 				continue
 			}
 
-			self.subscribeFeedback(feedback)
+			if (feedback.type !== undefined && self._feedbackDefinitions[feedback.type] !== undefined) {
+				let definition = self._feedbackDefinitions[feedback.type]
+				// Run the subscribe function if needed
+				if (definition.subscribe !== undefined && typeof definition.subscribe == 'function') {
+					definition.subscribe(feedback)
+				}
+			}
 		}
 	}
 }
@@ -327,31 +352,13 @@ instance.prototype.unsubscribeFeedbacks = function (type) {
 				continue
 			}
 
-			self.unsubscribeFeedback(feedback)
-		}
-	}
-}
-
-instance.prototype.subscribeFeedback = function (feedback) {
-	var self = this
-
-	if (feedback.type !== undefined && self._feedbackDefinitions[feedback.type] !== undefined) {
-		let definition = self._feedbackDefinitions[feedback.type]
-		// Run the subscribe function if needed
-		if (definition.subscribe !== undefined && typeof definition.subscribe == 'function') {
-			definition.subscribe(feedback)
-		}
-	}
-}
-
-instance.prototype.unsubscribeFeedback = function (feedback) {
-	var self = this
-
-	if (feedback.type !== undefined && self._feedbackDefinitions[feedback.type] !== undefined) {
-		let definition = self._feedbackDefinitions[feedback.type]
-		// Run the unsubscribe function if needed
-		if (definition.unsubscribe !== undefined && typeof definition.unsubscribe == 'function') {
-			definition.unsubscribe(feedback)
+			if (feedback.type !== undefined && self._feedbackDefinitions[feedback.type] !== undefined) {
+				let definition = self._feedbackDefinitions[feedback.type]
+				// Run the unsubscribe function if needed
+				if (definition.unsubscribe !== undefined && typeof definition.unsubscribe == 'function') {
+					definition.unsubscribe(feedback)
+				}
+			}
 		}
 	}
 }
@@ -379,7 +386,13 @@ instance.prototype.subscribeActions = function (type) {
 				continue
 			}
 
-			self.subscribeAction(action)
+			if (action.action !== undefined && self._actionDefinitions[action.action] !== undefined) {
+				let definition = self._actionDefinitions[action.action]
+				// Run the subscribe function if needed
+				if (definition.subscribe !== undefined && typeof definition.subscribe == 'function') {
+					definition.subscribe(action)
+				}
+			}
 		}
 	}
 }
@@ -396,31 +409,13 @@ instance.prototype.unsubscribeActions = function (type) {
 				continue
 			}
 
-			self.unsubscribeAction(action)
-		}
-	}
-}
-
-instance.prototype.subscribeAction = function (action) {
-	var self = this
-
-	if (action.action !== undefined && self._actionDefinitions[action.action] !== undefined) {
-		let definition = self._actionDefinitions[action.action]
-		// Run the subscribe function if needed
-		if (definition.subscribe !== undefined && typeof definition.subscribe == 'function') {
-			definition.subscribe(action)
-		}
-	}
-}
-
-instance.prototype.unsubscribeAction = function (action) {
-	var self = this
-
-	if (action.action !== undefined && self._actionDefinitions[action.action] !== undefined) {
-		let definition = self._actionDefinitions[action.action]
-		// Run the unsubscribe function if needed
-		if (definition.unsubscribe !== undefined && typeof definition.unsubscribe == 'function') {
-			definition.unsubscribe(action)
+			if (action.action !== undefined && self._actionDefinitions[action.action] !== undefined) {
+				let definition = self._actionDefinitions[action.action]
+				// Run the unsubscribe function if needed
+				if (definition.unsubscribe !== undefined && typeof definition.unsubscribe == 'function') {
+					definition.unsubscribe(action)
+				}
+			}
 		}
 	}
 }

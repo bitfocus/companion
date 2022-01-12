@@ -1,4 +1,4 @@
-name: Node CI
+name: Build binaries
 on: [push]
 
 jobs:
@@ -6,7 +6,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        node-version: [12.x]
+        node-version: [14.x]
     steps:
       - uses: actions/checkout@v1
       - name: Use Node.js ${{ matrix.node-version }}
@@ -16,7 +16,14 @@ jobs:
       - name: yarn update and lindist
         run: |
           yarn update
+
+          # verify that every module is runnable
+          node tools/verify-module-build.mjs .
+
           yarn run lindist
+
+          # verify that every module is runnable
+          node tools/verify-module-build.mjs electron-output/linux-unpacked/resources/app.asar
 
           # manually tar it, to preserve the symlinks
           cd electron-output
@@ -26,16 +33,16 @@ jobs:
       - name: rename and upload stuff
         run: node ./tools/build_rename_git.js
         env:
-          TRAVIS_OS_NAME: linux
+          CI_BUILD_OS: linux
           BITFOCUS_S3: ${{ secrets.BITFOCUS_S3 }}
           BITFOCUS_KEY: ${{ secrets.BITFOCUS_ACCESS }}
           BITFOCUS_SECRET: ${{ secrets.BITFOCUS_SECRET }}
 
   osx:
-    runs-on: macOS-latest
+    runs-on: macos-latest
     strategy:
       matrix:
-        node-version: [12.x]
+        node-version: [14.x]
     steps:
       - uses: actions/checkout@v1
       - name: Use Node.js ${{ matrix.node-version }}
@@ -44,12 +51,71 @@ jobs:
           node-version: ${{ matrix.node-version }}
       - name: yarn update and macdist
         run: |
+          # try and avoid timeout errors
+          yarn config set network-timeout 100000 -g
+
           yarn update
+
+          # verify that every module is runnable
+          node tools/verify-module-build.mjs .
+
           yarn run macdist
+
+          # verify that every module is runnable
+          node tools/verify-module-build.mjs "electron-output/mac/Companion.app/Contents/Resources/app.asar"
+        env:
+          CI_BUILD_OS: osx
+          CI_BUILD_ARCH: x64
+          CSC_LINK: ${{ secrets.OSX_CSC_LINK }}
+          CSC_KEY_PASSWORD: ${{ secrets.OSX_CSC_KEY_PASSWORD }}
+          APPLEID: ${{ secrets.APPLEID }}
+          APPLEIDPASS: ${{ secrets.APPLEIDPASS }}
       - name: rename and upload stuff
         run: node ./tools/build_rename_git.js
         env:
-          TRAVIS_OS_NAME: osx
+          CI_BUILD_OS: osx
+          CI_BUILD_ARCH: x64
+          BITFOCUS_S3: ${{ secrets.BITFOCUS_S3 }}
+          BITFOCUS_KEY: ${{ secrets.BITFOCUS_ACCESS }}
+          BITFOCUS_SECRET: ${{ secrets.BITFOCUS_SECRET }}
+
+  osx-arm64:
+    runs-on: macos-11
+    strategy:
+      matrix:
+        node-version: [14.x]
+    steps:
+      - uses: actions/checkout@v1
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v1
+        with:
+          node-version: ${{ matrix.node-version }}
+      - name: yarn update and macarmdist
+        run: |
+          # try and avoid timeout errors
+          yarn config set network-timeout 100000 -g
+
+          yarn update
+
+          # verify that every module is runnable
+          node tools/verify-module-build.mjs .
+
+          yarn run macarmdist
+
+          # verify that every module is runnable
+          node tools/verify-module-build.mjs "electron-output/mac-arm64/Companion.app/Contents/Resources/app.asar"
+        env:
+          CI_BUILD_OS: osx
+          CI_BUILD_ARCH: arm64
+          CSC_LINK: ${{ secrets.OSX_CSC_LINK }}
+          CSC_KEY_PASSWORD: ${{ secrets.OSX_CSC_KEY_PASSWORD }}
+          APPLEID: ${{ secrets.APPLEID }}
+          APPLEIDPASS: ${{ secrets.APPLEIDPASS }}
+      - name: rename and upload stuff
+        run: node ./tools/build_rename_git.js
+        env:
+          CI_BUILD_OS: osx
+          CI_BUILD_ARCH: arm64
           BITFOCUS_S3: ${{ secrets.BITFOCUS_S3 }}
           BITFOCUS_KEY: ${{ secrets.BITFOCUS_ACCESS }}
           BITFOCUS_SECRET: ${{ secrets.BITFOCUS_SECRET }}
@@ -58,7 +124,7 @@ jobs:
     runs-on: windows-latest
     strategy:
       matrix:
-        node-version: [12.x]
+        node-version: [14.x]
     steps:
       - uses: actions/checkout@v1
       - name: Use Node.js ${{ matrix.node-version }}
@@ -71,11 +137,22 @@ jobs:
           yarn config set script-shell bash
 
           yarn update
+
+          # verify that every module is runnable
+          node tools/verify-module-build.mjs .
+
           yarn run windist
+
+          # verify that every module is runnable
+          node tools/verify-module-build.mjs electron-output/win-unpacked/resources/app.asar
+        env:
+          CI_BUILD_OS: win64
+          CSC_LINK: ${{ secrets.CSC_LINK }}
+          CSC_KEY_PASSWORD: ${{ secrets.CSC_KEY_PASSWORD }}
       - name: rename and upload stuff
         run: node ./tools/build_rename_git.js
         env:
-          TRAVIS_OS_NAME: win64
+          CI_BUILD_OS: win64
           BITFOCUS_S3: ${{ secrets.BITFOCUS_S3 }}
           BITFOCUS_KEY: ${{ secrets.BITFOCUS_ACCESS }}
           BITFOCUS_SECRET: ${{ secrets.BITFOCUS_SECRET }}

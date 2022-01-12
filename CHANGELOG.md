@@ -1,5 +1,15 @@
 # Bitfocus Companion
 
+## Companion v2.1.4 - Release Notes
+
+# ⭐️ ADDED CORE FEATURES
+
+- Support for Stream Deck MK.2
+
+# 🐞 BUG FIXES
+
+- Blackmagic Hyperdeck: fix for timecode variable regex
+
 ## Companion v2.1.3 - Release Notes
 
 # 🧩 NEW MODULES

@@ -33,11 +33,13 @@ This article is an introduction to Companion’s basic principles and user inter
     - [PIN Lockout](#pin-lockout)
     - [RossTalk](#rosstalk)
     - [Artnet Listener](#artnet-listener)
+    - [HTTPS Web Server](#https-web-server)
   - [6. Log](#6-log)
 - [Secondary admin controls](#secondary-admin-controls)
   - [1. Presets](#1-presets)
   - [2. Dynamic variables](#2-dynamic-variables)
-  - [3. Import / Export](#3-import--export)
+  - [3. Custom variables](#3-custom-variables)
+  - [4. Import / Export](#4-import--export)
 - [Remote Control](#remote-control)
   - [TCP / UDP Control](#tcp--udp-control)
   - [HTTP Remote Control](#http-remote-control)
@@ -454,6 +456,34 @@ _If enabled, Companion will listen for Artnet messages, allowing for external de
 - **Artnet Channel**  
   The starting channel on the universe Companion listens to.
 
+  ##### HTTPS Web Server
+
+_An HTTPS server can be enabled for the Companion web interfaces should your deployment require it. It is never recommended to expose the Companion interface to the Internet and HTTPS does not provide any additional security for that configuration._
+
+- **HTTPS Web Server**  
+  Check to enable the HTTPS web server.
+
+- **HTTPS Port**  
+  The port number HTTPS is served on.
+
+- **Certificate Type**  
+  Select from "Self Signed" to use the native certificate generator or "External" to link to certificate files on the file system.
+
+  **Common Name (Domain Name)**
+  Enter the "Common Name" (typically a domain name or hostname) that the self signed certificate should be issued for.
+
+  **Certificate Expiry Day**
+  Select the number of days the self signed certificate should be issued for (365 days is the default)
+
+  **Private Key File (full path)**
+  The full file path for an external private key file.
+
+  **Certificate File (full path)**
+  The full file path for an external certificate file.
+
+  **Chain File (full path)**
+  Option field to provide the full file path for an external chain file.
+
 ---
 
 ### 6. Log
@@ -515,7 +545,113 @@ _A line break can be forced by putting `\n` where you want the line break to be.
 
 ---
 
-### 3. Import / Export
+### 3. Custom variables
+
+The variables tab also includes an section for custom variables. The button labeled `Custom Variables`, which appears along with the other modules that expose dynamic variables, takes you to the **Custom Variables** view.
+
+![Custom Variables Button](images/custom-variables-1.png?raw=true 'Custom Variables Button')
+
+Within the **Custom Variables** view you can:
+
+- Create new custom variables,
+- Edit the "Current" and "Startup" values for each custom variable, and
+- Delete existing custom variables
+
+All custom variables will appear with `internal` as the instance name, and their names begin with a `custom_` prefix.
+
+```
+                           +------- custom prefix
+                           |
+instance name ------+      |       +--------------variable name
+                    |      |       |
+                    v      v       v
+            $(internal:custom_counter)
+```
+
+![Custom Variables View](images/custom-variables-2.png?raw=true 'Custom Variables View')
+
+#### Custom Variable Usage
+
+**Custom Variables** behave just like dynamic variables. They can be used
+within **Button text** and some modules allow their use within the options of their actions. Please check the module documentation for availability.
+
+![Custom Variables in Button Text](images/custom-variables-3.png?raw=true 'Custom Variables in Button Text')
+
+#### Setting Custom Variable Value
+
+You can dynamically set the value of a custom variable by using the **Set custom variable value** action.
+
+![Set custom variable value](images/custom-variables-4.png?raw=true 'Custom Set custom variable value')
+
+#### Setting Custom Variable Value to Another Variable
+
+You can set the value of a custom variable to that of any other variable by using the **Store variable value to custom variable** action.
+
+![Store variable value to custom variable](images/custom-variables-5.png?raw=true 'Store variable value to custom variable')
+
+#### Setting Custom Variable Value to an Expression
+
+You can also calculate the value of a custom variable by using the **Set custom variable to expression** action.
+
+![Store variable value to custom variable](images/custom-variables-6.png?raw=true 'Store variable value to custom variable')
+
+The **Set custom variable to expression** accepts basic arithmetic expressions such as:
+
+```
+$(internal:custom_counter) - 1
+$(internal:custom_score) + 10
+$(internal:custom_seconds) / 60
+( 32 − $(internal:custom_fahrenheit) ) * 5 / 9
+```
+
+> **Note:** All whitespace is ignored. They're only included here for clarity.
+
+#### Valid Expressions
+
+Expressions can contain _number literals_, _custom variables_, _dynamic varibles_ and _operators_.
+
+##### Number Literals
+
+Number literals can be integer or floating point numbers. For example:
+
+- 1
+- 1234
+- 1234.5678
+
+##### Dynamic and Custom Variables
+
+You can use any variable within an expression, so long as it contains a valid integer or floating point number.
+
+##### Operators
+
+Supported operators include:
+
+- Binary operators:
+  - Addition: `a + b`
+  - Subtraction: `a - b`
+  - Multiplication: `a * b`
+  - Division: `a / b`
+  - Modulous: `a % b`
+  - Exponentiation: `a ^ b`
+- Unary operators:
+  - Unary Negataion: `-a`
+- Expression grouping:
+  - Parenthesis: `(a + b) * c`
+
+> **Note:** In the examples able `a` and `b` correspond to custom variables, dynamic variables or number literals. They are only used here for brevity.
+
+#### Invalid Expressions
+
+If the expression contains an error it will be considered invalid, the variable will not be set and an error message will be logged indicating the problem found. Any of the following conditions will render the expression invalid:
+
+1. A variable used within the expression does not exist
+2. A variable used within the expression doesn't contain a valid number literal
+3. The expression is missing operands
+4. The expression is missing operators (including unpaired parenthesis)
+
+---
+
+### 4. Import / Export
 
 This tab lets you import or export your configuration to a `.companionconfig` file, which can be used to backup your configuration or move it to a new computer. You can also choose to import just a single page from your file.
 

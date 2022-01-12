@@ -68,6 +68,17 @@ export function InstancesList({ showHelp, doConfigureInstance }) {
 							)
 						}
 					})}
+					{Object.keys(instancesContext).length <= 1 ? (
+						<tr>
+							<td colSpan={4}>
+								You haven't setup any connections yet. <br />
+								Try adding something from the list <span className="d-xl-none">below</span>
+								<span className="d-none d-xl-inline">to the right</span>.
+							</td>
+						</tr>
+					) : (
+						''
+					)}
 				</tbody>
 			</table>
 		</div>

@@ -6,9 +6,10 @@ import {
 	DropdownInputField,
 	NumberInputField,
 	TextInputField,
+	TextWithVariablesInputField,
 } from '../../Components'
 
-export function ActionTableRowOption({ actionId, option, value, setValue }) {
+export function ActionTableRowOption({ actionId, option, value, setValue, visibility }) {
 	const setValue2 = useCallback((val) => setValue(actionId, option.id, val), [actionId, option.id, setValue])
 
 	if (!option) {
@@ -19,6 +20,10 @@ export function ActionTableRowOption({ actionId, option, value, setValue }) {
 	switch (option.type) {
 		case 'textinput': {
 			control = <TextInputField value={value} definition={option} setValue={setValue2} />
+			break
+		}
+		case 'textwithvariables': {
+			control = <TextWithVariablesInputField value={value} definition={option} setValue={setValue2} />
 			break
 		}
 		case 'dropdown': {
@@ -53,7 +58,7 @@ export function ActionTableRowOption({ actionId, option, value, setValue }) {
 	}
 
 	return (
-		<CFormGroup>
+		<CFormGroup style={{ display: visibility === false ? 'none' : null }}>
 			<CLabel>{option.label}</CLabel>
 			{control}
 		</CFormGroup>

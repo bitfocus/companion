@@ -22,32 +22,6 @@
 		background-color: rgba(255, 0, 0, 0.5);
 	}
 
-	&.with-markings .pagebank-row {
-		// Streamdeck markings
-		&:nth-child(1) > .bank:nth-child(1),
-		&:nth-child(2) > .bank:nth-child(1),
-		&:nth-child(3) > .bank:nth-child(1),
-		&:nth-child(1) > .bank:nth-child(5),
-		&:nth-child(2) > .bank:nth-child(5),
-		&:nth-child(3) > .bank:nth-child(5),
-		&:nth-child(3) > .bank:nth-child(2),
-		&:nth-child(3) > .bank:nth-child(3),
-		&:nth-child(3) > .bank:nth-child(4) {
-			background-color: #404040;
-		}
-
-		// Streamdeck mini markings
-		&:nth-child(1) > .bank:nth-child(2),
-		&:nth-child(1) > .bank:nth-child(3),
-		&:nth-child(1) > .bank:nth-child(4),
-		&:nth-child(2) > .bank:nth-child(2),
-		&:nth-child(2) > .bank:nth-child(3),
-		&:nth-child(2) > .bank:nth-child(4) {
-			/* currently not in use.. dummy rule below */
-			display: inherit;
-		}
-	}
-
 	.pagebank-row {
 		display: grid;
 		grid-auto-flow: column;

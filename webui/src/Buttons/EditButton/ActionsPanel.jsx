@@ -3,7 +3,7 @@ import { faSort, faTrash } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import React, { useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react'
 import { NumberInputField } from '../../Components'
-import { ActionsContext, StaticContext, InstancesContext, MyErrorBoundary, socketEmit } from '../../util'
+import { ActionsContext, StaticContext, InstancesContext, MyErrorBoundary, socketEmit, sandbox } from '../../util'
 import update from 'immutability-helper'
 import Select from 'react-select'
 import { ActionTableRowOption } from './Table'
@@ -12,9 +12,10 @@ import { GenericConfirmModal } from '../../Components/GenericConfirmModal'
 
 export function ActionsPanel({ page, bank, set, dragId, addPlaceholder, setLoadStatus, reloadToken }) {
 	const context = useContext(StaticContext)
-	const [actions, setActions] = useState([])
 
 	const confirmModal = useRef()
+
+	const [actions, setActions] = useState([])
 
 	// Ensure the correct data is loaded
 	useEffect(() => {
@@ -31,6 +32,77 @@ export function ActionsPanel({ page, bank, set, dragId, addPlaceholder, setLoadS
 			})
 	}, [context.socket, setLoadStatus, page, bank, set, reloadToken])
 
+	const emitUpdateOption = useCallback(
+		(actionId, key, val) => {
+			context.socket.emit(updateOption, page, bank, set, actionId, key, val)
+		},
+		[context.socket, updateOption, page, bank, set]
+	)
+	const emitSetDelay = useCallback(
+		(actionId, delay) => {
+			context.socket.emit(setDelay, page, bank, set, actionId, delay)
+		},
+		[context.socket, setDelay, page, bank, set]
+	)
+
+	const emitDelete = useCallback(
+		(actionId) => {
+			context.socket.emit(deleteCommand, page, bank, set, actionId)
+		},
+		[context.socket, deleteCommand, page, bank, set]
+	)
+
+	const emitOrder = useCallback(
+		(dragIndex, hoverIndex) => {
+			context.socket.emit(orderCommand, page, bank, set, dragIndex, hoverIndex)
+		},
+		[context.socket, orderCommand, page, bank, set]
+	)
+
+	const addAction = useCallback(
+		(actionType) => {
+			socketEmit(context.socket, addCommand, [page, bank, set, actionType])
+				.then(([page, bank, actions]) => {
+					setActions(actions || [])
+				})
+				.catch((e) => {
+					console.error('Failed to add bank action', e)
+				})
+		},
+		[context.socket, addCommand, page, bank, set]
+	)
+
+	return (
+		<>
+			<GenericConfirmModal ref={confirmModal} />
+			<ActionsPanelInner
+				dragId={dragId}
+				addPlaceholder={addPlaceholder}
+				confirmModal={confirmModal}
+				actions={actions}
+				setActions={setActions}
+				emitUpdateOption={emitUpdateOption}
+				emitSetDelay={emitSetDelay}
+				emitDelete={emitDelete}
+				emitOrder={emitOrder}
+				addAction={addAction}
+			/>
+		</>
+	)
+}
+
+export function ActionsPanelInner({
+	dragId,
+	addPlaceholder,
+	confirmModal,
+	actions,
+	setActions,
+	emitUpdateOption,
+	emitSetDelay,
+	emitDelete,
+	emitOrder,
+	addAction,
+}) {
 	const setValue = useCallback(
 		(actionId, key, val) => {
 			// The server doesn't repond to our change, so we assume it was ok
@@ -39,7 +111,9 @@ export function ActionsPanel({ page, bank, set, dragId, addPlaceholder, setLoadS
 
 				const oldValue = (oldActions[actionIndex].options || {})[key]
 				if (oldValue !== val) {
-					context.socket.emit('bank_update_action_option', page, bank, set, actionId, key, val)
+					if (emitUpdateOption) {
+						emitUpdateOption(actionId, key, val)
+					}
 
 					return update(oldActions, {
 						[actionIndex]: {
@@ -53,7 +127,7 @@ export function ActionsPanel({ page, bank, set, dragId, addPlaceholder, setLoadS
 				}
 			})
 		},
-		[context.socket, page, bank, set]
+		[emitUpdateOption, setActions]
 	)
 
 	const doDelay = useCallback(
@@ -64,7 +138,9 @@ export function ActionsPanel({ page, bank, set, dragId, addPlaceholder, setLoadS
 
 				const oldValue = oldActions[actionIndex].options?.delay
 				if (oldValue !== delay) {
-					context.socket.emit('bank_update_action_delay', page, bank, set, actionId, delay)
+					if (emitSetDelay) {
+						emitSetDelay(actionId, delay)
+					}
 
 					return update(oldActions, {
 						[actionIndex]: {
@@ -76,39 +152,34 @@ export function ActionsPanel({ page, bank, set, dragId, addPlaceholder, setLoadS
 				}
 			})
 		},
-		[context.socket, page, bank, set]
+		[emitSetDelay, setActions]
 	)
 
-	const deleteAction = useCallback((actionId) => {
-		setActions((oldActions) => oldActions.filter((a) => a.id !== actionId))
-	}, [])
 	const doDelete = useCallback(
 		(actionId) => {
-			confirmModal.current.show('Delete action', 'Delete action?', 'Delete', () => {
-				context.socket.emit('bank_action_delete', page, bank, set, actionId)
-				deleteAction(actionId)
-			})
-		},
-		[context.socket, page, bank, set, deleteAction]
-	)
-
-	const addAction = useCallback(
-		(actionType) => {
-			socketEmit(context.socket, 'bank_action_add', [page, bank, set, actionType])
-				.then(([actions]) => {
-					setActions(actions || [])
+			if (confirmModal) {
+				confirmModal.current.show('Delete action', 'Delete action?', 'Delete', () => {
+					if (emitDelete) {
+						emitDelete(actionId)
+					}
+					setActions((oldActions) => oldActions.filter((a) => a.id !== actionId))
 				})
-				.catch((e) => {
-					console.error('Failed to add bank action', e)
-				})
+			} else {
+				if (emitDelete) {
+					emitDelete(actionId)
+				}
+				setActions((oldActions) => oldActions.filter((a) => a.id !== actionId))
+			}
 		},
-		[context.socket, bank, page, set]
+		[emitDelete, setActions, confirmModal]
 	)
 
 	const moveCard = useCallback(
 		(dragIndex, hoverIndex) => {
 			// The server doesn't repond to our change, so we assume it was ok
-			context.socket.emit('bank_update_action_option_order', page, bank, set, dragIndex, hoverIndex)
+			if (emitOrder) {
+				emitOrder(dragIndex, hoverIndex)
+			}
 
 			setActions((actions) => {
 				const dragCard = actions[dragIndex]
@@ -120,13 +191,11 @@ export function ActionsPanel({ page, bank, set, dragId, addPlaceholder, setLoadS
 				})
 			})
 		},
-		[context.socket, page, bank, set]
+		[emitOrder, setActions]
 	)
 
 	return (
 		<>
-			<GenericConfirmModal ref={confirmModal} />
-
 			<table className="table action-table">
 				<tbody>
 					{actions.map((a, i) => (
@@ -155,6 +224,10 @@ function ActionTableRow({ action, index, dragId, setValue, doDelete, doDelay, mo
 
 	const innerDelete = useCallback(() => doDelete(action.id), [action.id, doDelete])
 	const innerDelay = useCallback((delay) => doDelay(action.id, delay), [doDelay, action.id])
+
+	const [optionVisibility, setOptionVisibility] = useState({})
+
+	const actionSpec = actionsContext[action.label]
 
 	const ref = useRef(null)
 	const [, drop] = useDrop({
@@ -209,6 +282,37 @@ function ActionTableRow({ action, index, dragId, setValue, doDelete, doDelay, mo
 	})
 	preview(drop(ref))
 
+	useEffect(() => {
+		const options = actionSpec?.options ?? []
+
+		for (const option of options) {
+			if (typeof option.isVisibleFn === 'string' && typeof option.isVisible !== 'function') {
+				option.isVisible = sandbox(option.isVisibleFn)
+			}
+		}
+	}, [actionSpec])
+
+	useEffect(() => {
+		const visibility = {}
+		const options = actionSpec?.options ?? []
+
+		if (options === null || action === null) {
+			return
+		}
+
+		for (const option of options) {
+			if (typeof option.isVisible === 'function') {
+				visibility[option.id] = option.isVisible(action)
+			}
+		}
+
+		setOptionVisibility(visibility)
+
+		return () => {
+			setOptionVisibility({})
+		}
+	}, [actionSpec, action])
+
 	if (!action) {
 		// Invalid action, so skip
 		return ''
@@ -218,7 +322,6 @@ function ActionTableRow({ action, index, dragId, setValue, doDelete, doDelay, mo
 	// const module = instance ? context.modules[instance.instance_type] : undefined
 	const instanceLabel = instance?.label ?? action.instance
 
-	const actionSpec = actionsContext[`${action.instance}:${action.action}`]
 	const options = actionSpec?.options ?? []
 
 	let name = ''
@@ -266,6 +369,7 @@ function ActionTableRow({ action, index, dragId, setValue, doDelete, doDelay, mo
 										actionId={action.id}
 										value={(action.options || {})[opt.id]}
 										setValue={setValue}
+										visibility={optionVisibility[opt.id]}
 									/>
 								</MyErrorBoundary>
 							))}

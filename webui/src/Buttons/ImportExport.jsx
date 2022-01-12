@@ -53,8 +53,12 @@ export function ImportExport({ pageNumber }) {
 								setLoadError(err)
 							} else {
 								for (const id in config.instances || {}) {
+									const instance_type = config.instances[id]?.instance_type
 									if (instancesContext[id]) {
 										config.instances[id].import_to = id
+									} else if (!context.modules[instance_type] && !context.moduleRedirects[instance_type]) {
+										// Ignore unknown modules
+										config.instances[id].import_to = null
 									} else {
 										config.instances[id].import_to = 'new'
 									}
@@ -75,7 +79,7 @@ export function ImportExport({ pageNumber }) {
 				setLoadError('Companion requires a more modern browser')
 			}
 		},
-		[context.socket, instancesContext, fileApiIsSupported]
+		[context.socket, context.modules, context.moduleRedirects, instancesContext, fileApiIsSupported]
 	)
 
 	const doImport = useCallback(() => {
@@ -194,35 +198,40 @@ export function ImportExport({ pageNumber }) {
 									if (key === 'companion-bitfocus' || instance.instance_type === 'bitfocus-companion') {
 										return ''
 									} else {
-										const snapshotModule = context.modules[instance.instance_type]
+										const instance_type = context.moduleRedirects[instance.instance_type] ?? instance.instance_type
+										const snapshotModule = context.modules[instance_type]
 										const currentInstances = Object.entries(instancesContext).filter(
-											([id, inst]) => inst.instance_type === instance.instance_type
+											([id, inst]) => inst.instance_type === instance_type
 										)
 
 										return (
 											<tr>
 												<td>
-													<CSelect
-														value={instance.import_to ?? 'new'}
-														onChange={(e) => {
-															setSnapshot((snapshot) =>
-																update(snapshot, {
-																	instances: {
-																		[key]: {
-																			import_to: { $set: e.target.value },
+													{snapshotModule ? (
+														<CSelect
+															value={instance.import_to ?? 'new'}
+															onChange={(e) => {
+																setSnapshot((snapshot) =>
+																	update(snapshot, {
+																		instances: {
+																			[key]: {
+																				import_to: { $set: e.target.value },
+																			},
 																		},
-																	},
-																})
-															)
-														}}
-													>
-														<option value="new">[ Create new instance ]</option>
-														{currentInstances.map(([id, inst]) => (
-															<option value={id}>{inst.label}</option>
-														))}
-													</CSelect>
+																	})
+																)
+															}}
+														>
+															<option value="new">[ Create new instance ]</option>
+															{currentInstances.map(([id, inst]) => (
+																<option value={id}>{inst.label}</option>
+															))}
+														</CSelect>
+													) : (
+														'Ignored'
+													)}
 												</td>
-												<td>{snapshotModule?.label ?? 'Unknown module'}</td>
+												<td>{snapshotModule ? snapshotModule.label : 'Unknown module'}</td>
 												<td>{instance.label}</td>
 											</tr>
 										)
@@ -330,7 +339,7 @@ function ResetConfiguration() {
 	return (
 		<>
 			<h5>Reset all configuration</h5>
-			<p>This will clear all instances and buttons and start over.</p>
+			<p>This will clear all instances, triggers and buttons and start over.</p>
 			<p>
 				<CButton color="danger" style={{ backgroundColor: 'rgba(180,0,0,1)' }} onClick={doReset}>
 					<FontAwesomeIcon icon={faTrashAlt} /> Yes, reset everything
@@ -359,7 +368,7 @@ const ConfirmFullResetModal = forwardRef(function ConfirmFullResetModal(_props, 
 		setShow(false)
 
 		// Perform the reset
-		socketEmit(context.socket, 'reset_all', [])
+		socketEmit(context.socket, 'reset_all', [], 30000)
 			.then(() => {
 				window.location.reload()
 			})

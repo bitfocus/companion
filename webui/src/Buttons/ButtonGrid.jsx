@@ -175,7 +175,7 @@ export const ButtonsGridPanel = memo(function ButtonsPage({
 					</CCol>
 				</CRow>
 
-				<CRow className={classnames({ 'bank-armed': isHot, bankgrid: true, 'with-markings': true })}>
+				<CRow className={classnames({ 'bank-armed': isHot, bankgrid: true })}>
 					<ButtonGrid pageNumber={pageNumber} bankClick={bankClick} selectedButton={selectedButton} />
 				</CRow>
 
@@ -191,6 +191,11 @@ export const ButtonsGridPanel = memo(function ButtonsPage({
 				<CAlert color="info">
 					You can navigate between pages using the arrow buttons, or by clicking the page number, typing in a number,
 					and pressing 'Enter' on your keyboard.
+				</CAlert>
+
+				<CAlert color="info">
+					You can use common key commands such as copy, paste, and cut to move buttons around. You can also press the
+					delete or backspace key with any button highlighted to delete it.
 				</CAlert>
 			</div>
 		</KeyReceiver>

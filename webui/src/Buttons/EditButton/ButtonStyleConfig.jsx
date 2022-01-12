@@ -170,7 +170,7 @@ export function ButtonStyleConfigFields({ values, setValueInner, setPng, setPngE
 						<PNGInputField
 							onSelect={setPng}
 							onError={setPngError}
-							definition={{ min: { width: 72, height: 58 }, max: { width: 72, height: 58 } }}
+							definition={{ min: { width: 36, height: 36 }, max: { width: 72, height: 58 } }}
 						/>
 						{clearPng ? (
 							<CButton color="danger" disabled={!values.png64} onClick={clearPng}>

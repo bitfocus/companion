@@ -1,7 +1,13 @@
 import React, { memo, useCallback, useContext, useEffect, useState } from 'react'
-import { StaticContext, LoadingRetryOrError, socketEmit } from '../util'
+import { StaticContext, LoadingRetryOrError, socketEmit, sandbox } from '../util'
 import { CRow, CCol, CButton } from '@coreui/react'
-import { CheckboxInputField, DropdownInputField, NumberInputField, TextInputField } from '../Components'
+import {
+	CheckboxInputField,
+	ColorInputField,
+	DropdownInputField,
+	NumberInputField,
+	TextInputField,
+} from '../Components'
 import shortid from 'shortid'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faQuestionCircle } from '@fortawesome/free-solid-svg-icons'
@@ -15,6 +21,8 @@ export const InstanceEditPanel = memo(function InstanceEditPanel({ instanceId, d
 	const [configFields, setConfigFields] = useState(null)
 	const [instanceConfig, setInstanceConfig] = useState(null)
 	const [validFields, setValidFields] = useState(null)
+
+	const [fieldVisibility, setFieldVisibility] = useState({})
 
 	const doCancel = useCallback(() => {
 		doConfigureInstance(null)
@@ -58,6 +66,11 @@ export const InstanceEditPanel = memo(function InstanceEditPanel({ instanceId, d
 					for (const field of _configFields) {
 						// Real validation status gets generated when the editor components first mount
 						validFields[field.id] = true
+
+						// deserialize `isVisible` with a sandbox/proxy version
+						if (typeof field.isVisibleFn === 'string') {
+							field.isVisible = sandbox(field.isVisibleFn)
+						}
 					}
 
 					setConfigFields(_configFields)
@@ -96,6 +109,25 @@ export const InstanceEditPanel = memo(function InstanceEditPanel({ instanceId, d
 		}))
 	}, [])
 
+	useEffect(() => {
+		const visibility = {}
+
+		if (configFields === null || instanceConfig === null) {
+			return
+		}
+		for (const field of configFields) {
+			if (typeof field.isVisible === 'function') {
+				visibility[field.id] = field.isVisible(instanceConfig)
+			}
+		}
+
+		setFieldVisibility(visibility)
+
+		return () => {
+			setFieldVisibility({})
+		}
+	}, [configFields, instanceConfig])
+
 	const moduleInfo = context.modules[instanceConfig?.instance_type] ?? {}
 	const dataReady = instanceConfig && configFields && validFields
 	return (
@@ -115,7 +147,12 @@ export const InstanceEditPanel = memo(function InstanceEditPanel({ instanceId, d
 				{instanceId && dataReady
 					? configFields.map((field, i) => {
 							return (
-								<CCol key={i} className={`fieldtype-${field.type}`} sm={field.width}>
+								<CCol
+									key={i}
+									className={`fieldtype-${field.type}`}
+									sm={field.width}
+									style={{ display: fieldVisibility[field.id] === false ? 'none' : null }}
+								>
 									<label>{field.label}</label>
 									<ConfigField
 										definition={field}
@@ -170,6 +207,8 @@ function ConfigField({ setValue, setValid, ...props }) {
 			return <CheckboxInputField {...props} setValue={setValue2} setValid={setValid2} />
 		case 'dropdown':
 			return <DropdownInputField {...props} setValue={setValue2} setValid={setValid2} />
+		case 'colorpicker':
+			return <ColorInputField {...props} setValue={setValue2} setValid={setValid2} />
 		default:
 			return <p>Unknown field "{definition.type}"</p>
 	}

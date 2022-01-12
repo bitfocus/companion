@@ -64,7 +64,7 @@ export interface CompanionAction {
 	label: string
 	description?: string
 	options: SomeCompanionInputField[]
-	callback?: (action: CompanionActionEvent, info: CompanionActionEventInfo) => void
+	callback?: (action: CompanionActionEvent, info: CompanionActionEventInfo | null) => void
 	subscribe?: (action: CompanionActionEvent) => void
 	unsubscribe?: (action: CompanionActionEvent) => void
 }
@@ -83,6 +83,8 @@ export interface CompanionActionEventInfo {
 export interface CompanionFeedbackEventInfo {
 	page: number
 	bank: number
+	width: number
+	height: number
 }
 
 export interface CompanionFeedbackEvent {
@@ -105,15 +107,17 @@ export type SomeCompanionInputField =
 	| CompanionInputFieldText
 	| CompanionInputFieldColor
 	| CompanionInputFieldTextInput
+	| CompanionInputFieldTextWithVariablesInput
 	| CompanionInputFieldDropdown
 	| CompanionInputFieldMultiDropdown
 	| CompanionInputFieldNumber
 	| CompanionInputFieldCheckbox
 export interface CompanionInputField {
 	id: string
-	type: 'text' | 'textinput' | 'dropdown' | 'colorpicker' | 'number' | 'checkbox'
+	type: 'text' | 'textinput' | 'textwithvariables' | 'dropdown' | 'colorpicker' | 'number' | 'checkbox'
 	label: string
 	tooltip?: string
+	isVisible?: (options: { [key: string]: InputValue | undefined }) => boolean
 }
 export interface CompanionInputFieldText extends CompanionInputField {
 	type: 'text'
@@ -128,6 +132,10 @@ export interface CompanionInputFieldTextInput extends CompanionInputField {
 	regex?: string
 	default?: string
 	required?: boolean
+}
+export interface CompanionInputFieldTextWithVariablesInput extends CompanionInputField {
+	type: 'textwithvariables'
+	default?: string
 }
 export interface CompanionInputFieldDropdown extends CompanionInputFieldDropdownBase {
 	multiple?: false
@@ -283,7 +291,7 @@ export interface CompanionUpgradeContext {
 
 export type CompanionStaticUpgradeScript = (
 	context: CompanionUpgradeContext,
-	config: null | (CompanionCoreInstanceconfig & Record<string, any>),
+	config: CompanionCoreInstanceconfig & Record<string, any>,
 	affected_actions: CompanionMigrationAction[],
 	affected_feedbacks: CompanionMigrationFeedback[]
 ) => boolean
