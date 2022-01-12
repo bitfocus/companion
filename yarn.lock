@@ -2617,11 +2617,11 @@ commist@^1.0.0:
   version "1.0.2"
   resolved "https://codeload.github.com/bitfocus/companion-module-pangolin-beyond/tar.gz/28065ebafad177328c4ae5a16e334f9213a56fad"
 
-"companion-module-phillips-hue@github:bitfocus/companion-module-phillips-hue#v0.0.4":
-  version "0.0.4"
-  resolved "https://codeload.github.com/bitfocus/companion-module-phillips-hue/tar.gz/670a541a220c9ff42ee6438b038772fe188d8b97"
+"companion-module-phillips-hue@github:bitfocus/companion-module-phillips-hue#v0.0.6":
+  version "0.0.6"
+  resolved "https://codeload.github.com/bitfocus/companion-module-phillips-hue/tar.gz/49bdc2bdcbb28962175d7f458eafaa42ad926236"
   dependencies:
-    node-hue-api "^4.0.9"
+    node-hue-api "^4.0.11"
 
 "companion-module-pixap-pixtimerpro@github:bitfocus/companion-module-pixap-pixtimerpro#v1.0.6":
   version "1.0.6"
@@ -6092,10 +6092,10 @@ node-hid@^0.7.9, node-hid@^2.1.1, node-hid@~2.1.0:
     node-addon-api "^3.0.2"
     prebuild-install "^6.0.0"
 
-node-hue-api@^4.0.9:
-  version "4.0.10"
-  resolved "https://registry.yarnpkg.com/node-hue-api/-/node-hue-api-4.0.10.tgz#739b0c0f24a29887f3ff1a42037f4f37bc5c2327"
-  integrity sha512-s+UvFttQfNXFadk8p6N9q9A5hteY2Q48W/mVze9nFPR5gwPH374cdA61ezKOx1WgBrN4btHj1z81veznhEZZAA==
+node-hue-api@^4.0.11:
+  version "4.0.11"
+  resolved "https://registry.yarnpkg.com/node-hue-api/-/node-hue-api-4.0.11.tgz#7bc594ac5f8f80a7e77900a81ed6402941772836"
+  integrity sha512-lpnDdMjLTmm00JRsU70Mtm0Ix03cf7PRjKQAJbSg/Y0ChiIKQs+oDbSUpW2aDhEbor+wKpyfLYLGLTrjlG24pQ==
   dependencies:
     axios "^0.21.1"
     bottleneck "^2.19.5"
