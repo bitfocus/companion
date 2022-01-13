@@ -421,6 +421,7 @@
 		"companion-module-sienna-ndimonitor": "github:bitfocus/companion-module-sienna-ndimonitor#v1.0.0",
 		"companion-module-singularlive-studio": "github:bitfocus/companion-module-singularlive-studio#v1.0.9",
 		"companion-module-slack-webhooks": "github:bitfocus/companion-module-slack-webhooks#v1.0.1",
+		"companion-module-softouch-easyworship": "github:bitfocus/companion-module-softouch-easyworship#v1.1.0",
 		"companion-module-softron-movierecorder": "github:bitfocus/companion-module-softron-movierecorder#v1.0.4",
 		"companion-module-softron-ontheairvideo": "github:bitfocus/companion-module-softron-ontheairvideo#v1.0.0",
 		"companion-module-sononum-horae": "github:bitfocus/companion-module-sononum-horae#v1.0.1",
