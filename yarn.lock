@@ -2204,9 +2204,9 @@ commist@^1.0.0:
   version "1.0.2"
   resolved "https://codeload.github.com/bitfocus/companion-module-generic-tcp-serial/tar.gz/ef8a8cd5653895daa069cf0cee2b1baf6665d524"
 
-"companion-module-generic-tcp-udp@github:bitfocus/companion-module-generic-tcp-udp#v1.0.8":
-  version "1.0.8"
-  resolved "https://codeload.github.com/bitfocus/companion-module-generic-tcp-udp/tar.gz/e591b0eb7742637685db9019a37b7f0b802ea94c"
+"companion-module-generic-tcp-udp@github:bitfocus/companion-module-generic-tcp-udp#v1.0.9":
+  version "1.0.9"
+  resolved "https://codeload.github.com/bitfocus/companion-module-generic-tcp-udp/tar.gz/8941fe363eeacec5492a5226da970ba551cb0a51"
 
 "companion-module-generic-wakeonlan@github:bitfocus/companion-module-generic-wakeonlan#v1.0.4":
   version "1.0.4"
