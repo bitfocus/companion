@@ -10,7 +10,7 @@ import { ActionTableRowOption } from './Table'
 import { useDrag, useDrop } from 'react-dnd'
 import { GenericConfirmModal } from '../../Components/GenericConfirmModal'
 
-export function ActionsPanel({ page, bank, set, dragId, addPlaceholder, setLoadStatus, reloadToken }) {
+export function ActionsPanel({ page, bank, set, dragId, addPlaceholder, setLoadStatus, loadStatusKey, reloadToken }) {
 	const context = useContext(StaticContext)
 
 	const confirmModal = useRef()
@@ -30,46 +30,46 @@ export function ActionsPanel({ page, bank, set, dragId, addPlaceholder, setLoadS
 				setLoadStatus(loadStatusKey, `Failed to load ${loadStatusKey}`)
 				console.error('Failed to load bank actions', e)
 			})
-	}, [context.socket, setLoadStatus, page, bank, set, reloadToken])
+	}, [context.socket, setLoadStatus, loadStatusKey, page, bank, set, reloadToken])
 
 	const emitUpdateOption = useCallback(
 		(actionId, key, val) => {
-			context.socket.emit(updateOption, page, bank, set, actionId, key, val)
+			context.socket.emit('bank_update_action_option', page, bank, set, actionId, key, val)
 		},
-		[context.socket, updateOption, page, bank, set]
+		[context.socket, page, bank, set]
 	)
 	const emitSetDelay = useCallback(
 		(actionId, delay) => {
-			context.socket.emit(setDelay, page, bank, set, actionId, delay)
+			context.socket.emit('bank_update_action_delay', page, bank, set, actionId, delay)
 		},
-		[context.socket, setDelay, page, bank, set]
+		[context.socket, page, bank, set]
 	)
 
 	const emitDelete = useCallback(
 		(actionId) => {
-			context.socket.emit(deleteCommand, page, bank, set, actionId)
+			context.socket.emit('bank_action_delete', page, bank, set, actionId)
 		},
-		[context.socket, deleteCommand, page, bank, set]
+		[context.socket, page, bank, set]
 	)
 
 	const emitOrder = useCallback(
 		(dragIndex, hoverIndex) => {
-			context.socket.emit(orderCommand, page, bank, set, dragIndex, hoverIndex)
+			context.socket.emit('bank_update_action_option_order', page, bank, set, dragIndex, hoverIndex)
 		},
-		[context.socket, orderCommand, page, bank, set]
+		[context.socket, page, bank, set]
 	)
 
 	const addAction = useCallback(
 		(actionType) => {
-			socketEmit(context.socket, addCommand, [page, bank, set, actionType])
-				.then(([page, bank, actions]) => {
+			socketEmit(context.socket, 'bank_action_add', [page, bank, set, actionType])
+				.then(([actions]) => {
 					setActions(actions || [])
 				})
 				.catch((e) => {
 					console.error('Failed to add bank action', e)
 				})
 		},
-		[context.socket, addCommand, page, bank, set]
+		[context.socket, page, bank, set]
 	)
 
 	return (
