@@ -12,7 +12,8 @@ import {
 	CompanionUpgradeToBooleanFeedbackMap,
 	CompanionActionEventInfo,
 	CompanionFeedbackEventInfo,
-	CompanionBankPNG, OSCSomeArguments,
+	CompanionBankPNG,
+	OSCSomeArguments,
 } from './instance_skel_types'
 
 declare abstract class InstanceSkel<TConfig> {
