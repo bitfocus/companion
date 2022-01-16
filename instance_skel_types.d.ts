@@ -1,5 +1,5 @@
 /// <reference types="node" />
-import { value EventEmitter } from 'events'
+import { EventEmitter } from 'events'
 
 export interface CompanionSystem extends EventEmitter {}
 
