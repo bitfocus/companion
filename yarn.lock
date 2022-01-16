@@ -2265,9 +2265,9 @@ commist@^1.0.0:
   version "1.0.6"
   resolved "https://codeload.github.com/bitfocus/companion-module-anomes-millumin/tar.gz/121d069e6c292521c71ba812f1bf605b40c46b0e"
 
-"companion-module-arkaos-mediamaster@github:bitfocus/companion-module-arkaos-mediamaster#v1.0.2":
-  version "1.0.2"
-  resolved "https://codeload.github.com/bitfocus/companion-module-arkaos-mediamaster/tar.gz/d5094fb5e4bf48991a3a4d34d2ca2b4355a8a1ee"
+"companion-module-arkaos-mediamaster@github:bitfocus/companion-module-arkaos-mediamaster#v1.0.3":
+  version "1.0.3"
+  resolved "https://codeload.github.com/bitfocus/companion-module-arkaos-mediamaster/tar.gz/98f9a2c8f48359966b98ca8f852502d07a3b0d0f"
 
 "companion-module-aten-matrix@github:bitfocus/companion-module-aten-matrix#v1.0.0":
   version "1.0.0"
@@ -2553,9 +2553,9 @@ commist@^1.0.0:
   dependencies:
     axios "^0.21.1"
 
-"companion-module-crystal-scte@github:bitfocus/companion-module-crystal-scte#v1.0.0":
-  version "1.0.0"
-  resolved "https://codeload.github.com/bitfocus/companion-module-crystal-scte/tar.gz/f141960577fb13394736df6d37dfa320e1459de4"
+"companion-module-crystal-scte@github:bitfocus/companion-module-crystal-scte#v1.0.1":
+  version "1.0.1"
+  resolved "https://codeload.github.com/bitfocus/companion-module-crystal-scte/tar.gz/59623f74548e6cf215c041e29802f9990ba2e517"
 
 "companion-module-ctpsystems-dio8008r@github:bitfocus/companion-module-ctpsystems-dio8008r#v1.0.0":
   version "1.0.0"
@@ -2968,9 +2968,9 @@ commist@^1.0.0:
   version "1.0.1"
   resolved "https://codeload.github.com/bitfocus/companion-module-lightware-lw3/tar.gz/7d9dbe947cf68dafb710f02079550405bbaa8a0e"
 
-"companion-module-liminalet-zoomosc@github:bitfocus/companion-module-liminalet-zoomosc#v1.0.8":
-  version "1.0.8"
-  resolved "https://codeload.github.com/bitfocus/companion-module-liminalet-zoomosc/tar.gz/a353c62fce799d1ec8f96f4bc10434b2403a4cba"
+"companion-module-liminalet-zoomosc@github:bitfocus/companion-module-liminalet-zoomosc#v1.0.9":
+  version "1.0.9"
+  resolved "https://codeload.github.com/bitfocus/companion-module-liminalet-zoomosc/tar.gz/b99c55d6c87d13dc0c2cbf6a21d0d8fe8864d9a9"
 
 "companion-module-linkbox-remote@github:bitfocus/companion-module-linkbox-remote#v1.2.1":
   version "1.2.1"
@@ -3125,9 +3125,9 @@ commist@^1.0.0:
   version "1.0.0"
   resolved "https://codeload.github.com/bitfocus/companion-module-nexo-nxamp/tar.gz/4ce5aee1d599fdfb3c1f86401c0602502864526a"
 
-"companion-module-nobe-omniscope@github:bitfocus/companion-module-nobe-omniscope#v1.0.0":
-  version "1.0.0"
-  resolved "https://codeload.github.com/bitfocus/companion-module-nobe-omniscope/tar.gz/f05ab696fe550052c035cafe6dd1cc254d336656"
+"companion-module-nobe-omniscope@github:bitfocus/companion-module-nobe-omniscope#v1.0.1":
+  version "1.0.1"
+  resolved "https://codeload.github.com/bitfocus/companion-module-nobe-omniscope/tar.gz/6bbb05b1c20c8428c08aa02db5106a1829711b39"
 
 "companion-module-noismada-octopuslistener@github:bitfocus/companion-module-noismada-octopuslistener#v1.0.2":
   version "1.0.2"
