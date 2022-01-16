@@ -77,7 +77,7 @@ export function GettingStarted() {
 		const fetchData = async () => {
 			try {
 				try {
-					const response = await fetch(`${SERVER_URL}/docs/structure.json`)
+					const response = await fetch(`${SERVER_URL || ''}/docs/structure.json`)
 					const structure = await response.json()
 					setStructure(structure)
 				} catch (e) {
@@ -157,7 +157,7 @@ export function GettingStarted() {
 			</div>
 			<div style={style.menuWrapper}>
 				{error ? (
-					error
+					<div style={{ backgroundColor: 'white' }}>{error}</div>
 				) : (
 					<>
 						<div style={style.menuStructure}>
