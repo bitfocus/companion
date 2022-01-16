@@ -1,5 +1,7 @@
-import { useState } from 'react'
+import { Fragment, useRef, useState, useEffect } from 'react'
+import { useHash } from 'react-use'
 import { SERVER_URL } from './util'
+import ReactMarkdown from 'react-markdown'
 
 const style = {
 	header: {
@@ -82,7 +84,7 @@ export function GettingStarted() {
 					setError(e)
 				}
 
-				if (loading) setLoading(false)
+				setLoading(false)
 			} catch (err) {
 				setError(err)
 			}
