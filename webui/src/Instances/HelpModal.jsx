@@ -1,7 +1,7 @@
 import React, { forwardRef, memo, useCallback, useImperativeHandle, useState } from 'react'
 import { CModal, CModalBody, CModalHeader, CModalFooter, CButton } from '@coreui/react'
 import sanitizeHtml from 'sanitize-html'
-import marked from 'marked'
+import { marked } from 'marked'
 
 export const HelpModal = memo(
 	forwardRef(function HelpModal(_props, ref) {

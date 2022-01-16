@@ -1,8 +1,5 @@
-import { Fragment, useRef, useState } from 'react'
-import { useHash } from 'react-use'
+import { useState } from 'react'
 import { SERVER_URL } from './util'
-import ReactMarkdown from 'react-markdown'
-import { useEffect } from 'react'
 
 const style = {
 	header: {
