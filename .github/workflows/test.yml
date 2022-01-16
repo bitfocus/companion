@@ -1,4 +1,4 @@
-name: Format check
+name: Unit tests
 on: [push, pull_request]
 
 jobs:
