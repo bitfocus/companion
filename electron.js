@@ -120,7 +120,7 @@ function createWindow() {
 
 			for (const obj of list) {
 				if (obj.ip4 && !obj.internal) {
-					let label = `${obj.ifaceName}: ${obj.ip4}`
+					let label = `${obj.iface}: ${obj.ip4}`
 					if (obj.type && obj.type !== 'unknown') label += ` (${obj.type})`
 
 					interfaces.push({
