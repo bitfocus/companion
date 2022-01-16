@@ -22,17 +22,17 @@ describe('package.json main script exists', function () {
 	}
 })
 
-describe('Module loads', function () {
-	for (const [moduleName, folderPath] of moduleList) {
-		test(
-			moduleName,
-			function () {
-				require(folderPath)
-			},
-			10000
-		)
-	}
-})
+// describe('Module loads', function () {
+// 	for (const [moduleName, folderPath] of moduleList) {
+// 		test(
+// 			moduleName,
+// 			function () {
+// 				require(folderPath)
+// 			},
+// 			10000
+// 		)
+// 	}
+// })
 
 describe('package.json has all fields', function () {
 	for (const [moduleName, folderPath] of moduleList) {
