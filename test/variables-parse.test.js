@@ -61,24 +61,24 @@ describe('variable parsing', () => {
 		expect(parseVariablesInString('$(another:str) $(abc:v2) $(another:str2)', variables)).toBe('val1 val3 val2 val2')
 	})
 
-	test.skip('self referencing variable', () => {
+	test('self referencing variable', () => {
 		const variables = {
 			abc: {
 				def: '$(abc:def) + 1',
 			},
 		}
-		expect(parseVariablesInString('$(abc:def)', variables)).toBe('$(abc:def) + 1')
+		expect(parseVariablesInString('$(abc:def)', variables)).toBe('$RE + 1')
 	})
 
-	test.skip('infinite referencing variable', () => {
+	test('infinite referencing variable', () => {
 		const variables = {
 			abc: {
 				def: '$(abc:second)_1',
 				second: '$(abc:def)_2',
 			},
 		}
-		expect(parseVariablesInString('$(abc:def)', variables)).toBe('$(abc:second)_1')
-		expect(parseVariablesInString('$(abc:second)', variables)).toBe('$(abc:def)_2')
+		expect(parseVariablesInString('$(abc:def)', variables)).toBe('$RE_2_1')
+		expect(parseVariablesInString('$(abc:second)', variables)).toBe('$RE_1_2')
 	})
 
 	test('variable name from variable name', () => {
