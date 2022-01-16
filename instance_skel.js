@@ -419,6 +419,11 @@ instance.prototype.unsubscribeActions = function (type) {
 	}
 }
 
+instance.prototype.oscSend = function (host, port, path, args) {
+	var self = this
+	self.system.emit('osc_send', host, port, path, args)
+}
+
 instance.extendedBy = function (module) {
 	util.inherits(module, instance)
 }
