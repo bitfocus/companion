@@ -433,7 +433,7 @@
 		"companion-module-soundcraft-ui": "github:bitfocus/companion-module-soundcraft-ui#v2.0.3",
 		"companion-module-sounddevices-pixnet": "github:bitfocus/companion-module-sounddevices-pixnet#v1.0.0",
 		"companion-module-spotify-remote": "github:bitfocus/companion-module-spotify-remote#v1.0.9",
-		"companion-module-spx-gc": "github:bitfocus/companion-module-spx-gc#v1.0.3",
+		"companion-module-spx-gc": "github:bitfocus/companion-module-spx-gc#v1.0.4",
 		"companion-module-studiocoast-vmix": "github:bitfocus/companion-module-studiocoast-vmix#v1.2.23",
 		"companion-module-symetrix-dsp": "github:bitfocus/companion-module-symetrix-dsp#v1.3.0",
 		"companion-module-tallyma-wirelesstally": "github:bitfocus/companion-module-tallyma-wirelesstally#v1.0.4",
