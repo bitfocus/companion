@@ -2845,9 +2845,9 @@ commist@^1.0.0:
   version "1.1.1"
   resolved "https://codeload.github.com/bitfocus/companion-module-haivision-connectdvr/tar.gz/6787b84b48138db7066f71178aabd7b2dbf84f5a"
 
-"companion-module-haivision-kbencoder@github:bitfocus/companion-module-haivision-kbencoder#v1.0.0":
-  version "1.0.0"
-  resolved "https://codeload.github.com/bitfocus/companion-module-haivision-kbencoder/tar.gz/125f76e7dd1839d341d7beae5c040a171c5b7546"
+"companion-module-haivision-kbencoder@github:bitfocus/companion-module-haivision-kbencoder#v1.0.1":
+  version "1.0.1"
+  resolved "https://codeload.github.com/bitfocus/companion-module-haivision-kbencoder/tar.gz/28c9836bbc0783f7adae3da7fb03d01ad5f1cb5e"
 
 "companion-module-hermann-stagetimerio@github:bitfocus/companion-module-hermann-stagetimerio#v1.0.0":
   version "1.0.0"
