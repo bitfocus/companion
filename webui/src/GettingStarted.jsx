@@ -277,7 +277,3 @@ function useOnScreen(ref) {
 
 	return isIntersecting
 }
-
-function getRootUrl(url) {
-	return url.toString().replace(/^(.*\/\/[^\/?#]*).*$/, '$1')
-}
