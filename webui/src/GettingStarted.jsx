@@ -239,7 +239,7 @@ function LoadContent({ file }) {
 			) : (
 				<ReactMarkdown
 					transformImageUri={(src, alt, title) => {
-						return `${SERVER_URL}/docs/${baseUrl}${src}`
+						return `${SERVER_URL || ''}/docs/${baseUrl}${src}`
 					}}
 					children={content}
 				/>
