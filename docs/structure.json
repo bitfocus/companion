@@ -16,7 +16,6 @@
 			}
 		]
 	},
-
 	{
 		"label": "Sidebar",
 		"file": "2_sidebar.md",
@@ -39,7 +38,6 @@
 			}
 		]
 	},
-
 	{
 		"label": "Configuration GUI",
 		"file": "3_config.md",
@@ -48,7 +46,6 @@
 				"label": "Connections",
 				"file": "3_config/1_connections.md"
 			},
-
 			{
 				"label": "Buttons",
 				"file": "3_config/2_buttons.md",
@@ -79,12 +76,10 @@
 					}
 				]
 			},
-
 			{
 				"label": "Surface",
 				"file": "3_config/3_surface.md"
 			},
-
 			{
 				"label": "Triggers",
 				"file": "3_config/4_triggers.md",
@@ -99,7 +94,6 @@
 					}
 				]
 			},
-
 			{
 				"label": "Settings",
 				"file": "3_config/5_settings.md",
@@ -130,14 +124,12 @@
 					}
 				]
 			},
-
 			{
 				"label": "Log",
 				"file": "3_config/6_log.md"
 			}
 		]
 	},
-
 	{
 		"label": "Secondary admin controls",
 		"children": [
@@ -150,12 +142,49 @@
 				"file": "4_secondary_admin_controls/2_dynamic_variables.md"
 			},
 			{
-				"label": "Import / Export",
-				"file": "4_secondary_admin_controls/3_import_export.md"
+				"label": "Custom variables",
+				"file": "4_secondary_admin_controls/custom_variables/custom_variables.md",
+				"children": [
+					{
+						"label": "Custom variable usage",
+						"file": "4_secondary_admin_controls/custom_variables/custom_variable_usage.md"
+					},
+					{
+						"label": "Setting custom variable value",
+						"file": "4_secondary_admin_controls/custom_variables/setting_custom_variable_value.md"
+					},
+					{
+						"label": "Setting custom variable value to another variable",
+						"file": "4_secondary_admin_controls/custom_variables/setting_custom_variable_value_to_variable.md"
+					},
+					{
+						"label": "Setting Custom Variable Value to an Expression",
+						"file": "4_secondary_admin_controls/custom_variables/setting_custom_variable_value_to_expression.md"
+					},
+					{
+						"label": "Valid Expressions",
+						"file": "4_secondary_admin_controls/custom_variables/valid_expressions.md"
+					},
+					{
+						"label": "Number Literals",
+						"file": "4_secondary_admin_controls/custom_variables/number_literals.md"
+					},
+					{
+						"label": "Dynamic and Custom Variables",
+						"file": "4_secondary_admin_controls/custom_variables/dynamic_and_custom_variables.md"
+					},
+					{
+						"label": "Operators",
+						"file": "4_secondary_admin_controls/custom_variables/operators.md"
+					},
+					{
+						"label": "Invalid Expressions",
+						"file": "4_secondary_admin_controls/custom_variables/invalid_expressions.md"
+					}
+				]
 			}
 		]
 	},
-
 	{
 		"label": "Remote control",
 		"file": "5_remote_control.md",
@@ -182,7 +211,6 @@
 			}
 		]
 	},
-
 	{
 		"label": "Modules",
 		"file": "6_modules.md"
