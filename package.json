@@ -490,6 +490,7 @@
 		"shortid": "^2.2.16",
 		"socket.io": "^4.2.0",
 		"strip-ansi": "^5.2.0",
+		"ts-mixer": "^6.0.0",
 		"websocket": "^1.0.34"
 	},
 	"collective": {
