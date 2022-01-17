@@ -221,7 +221,7 @@ function LoadContent({ file }) {
 
 	useEffect(() => {
 		const fetchContent = async () => {
-			const response = await fetch(`${SERVER_URL}/docs/${file}`)
+			const response = await fetch(`${SERVER_URL || ''}/docs/${file}`)
 			const text = await response.text()
 			setContent(text)
 			setLoading(false)
@@ -274,4 +274,8 @@ function useOnScreen(ref) {
 	}, [])
 
 	return isIntersecting
+}
+
+function getRootUrl(url) {
+	return url.toString().replace(/^(.*\/\/[^\/?#]*).*$/, '$1')
 }
