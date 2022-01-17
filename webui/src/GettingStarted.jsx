@@ -180,7 +180,7 @@ function RenderSubsection({ subsect, path, depth, setVisibleFiles, visibleFiles 
 	return (
 		<Fragment key={subsect.label}>
 			{subsect.file && (
-				<div style={{ marginBottom: 50 }}>
+				<div style={{ marginBottom: 30, paddingBottom: 20, borderBottom: '1px solid #eee' }}>
 					<OnScreenReporter
 						onChange={(visible) => {
 							let updatedVisible
@@ -194,7 +194,9 @@ function RenderSubsection({ subsect, path, depth, setVisibleFiles, visibleFiles 
 							}
 						}}
 					>
-						<h4 anchor={'#' + subsect.file}>{subsect.label}</h4>
+						<h4 style={{ marginBottom: 15, paddingTop: 10 }} anchor={'#' + subsect.file}>
+							{subsect.label}
+						</h4>
 						<a
 							href={`https://github.com/bitfocus/companion/blob/master/docs/${subsect.file}`}
 							target="_new"
