@@ -1,188 +1,217 @@
 [
-	{
+	{	
 		"label": "Getting started",
+		"file": "1_welcome.md",
 		"children": [
 			{
 				"label": "Before you open Companion",
-				"file": "1_gettingstarted/1_before_you_open.md"
+				"file": "1_gettingstarted/before_you_open.md"
 			},
 			{
 				"label": "Start the server",
-				"file": "1_gettingstarted/2_start_the_server.md"
+				"file": "1_gettingstarted/start_the_server.md"
 			},
 			{
 				"label": "The user interface",
-				"file": "1_gettingstarted/3_the_user_interface.md"
+				"file": "1_gettingstarted/the_user_interface.md"
 			}
 		]
 	},
-
 	{
 		"label": "Sidebar",
 		"file": "2_sidebar.md",
 		"children": [
 			{
 				"label": "Community links",
-				"file": "2_sidebar/1_community_links.md"
+				"file": "2_sidebar/community_links.md"
 			},
 			{
 				"label": "Emulator",
-				"file": "2_sidebar/2_emulator.md"
+				"file": "2_sidebar/emulator.md"
 			},
 			{
 				"label": "Web buttons",
-				"file": "2_sidebar/3_web_buttons.md"
+				"file": "2_sidebar/web_buttons.md"
 			},
 			{
 				"label": "Mobile buttons",
-				"file": "2_sidebar/4_mobile_buttons.md"
+				"file": "2_sidebar/mobile_buttons.md"
 			}
 		]
 	},
-
 	{
 		"label": "Configuration GUI",
 		"file": "3_config.md",
 		"children": [
 			{
 				"label": "Connections",
-				"file": "3_config/1_connections.md"
+				"file": "3_config/connections.md"
 			},
-
 			{
 				"label": "Buttons",
-				"file": "3_config/2_buttons.md",
+				"file": "3_config/buttons.md",
 				"children": [
 					{
 						"label": "Latch / Toggle",
-						"file": "3_config/2_buttons/1_latch_toggle.md"
+						"file": "3_config/buttons/latch_toggle.md"
 					},
 					{
 						"label": "Delays",
-						"file": "3_config/2_buttons/2_delays.md"
+						"file": "3_config/buttons/delays.md"
 					},
 					{
 						"label": "Key actions",
-						"file": "3_config/2_buttons/3_key_actions.md"
+						"file": "3_config/buttons/key_actions.md"
 					},
 					{
 						"label": "Internal actions",
-						"file": "3_config/2_buttons/4_internal_actions.md"
+						"file": "3_config/buttons/internal_actions.md"
 					},
 					{
 						"label": "Connection actions",
-						"file": "3_config/2_buttons/5_instance_feedback.md"
+						"file": "3_config/buttons/instance_feedback.md"
 					},
 					{
 						"label": "Button indicators",
-						"file": "3_config/2_buttons/6_button_indicators.md"
+						"file": "3_config/buttons/button_indicators.md"
 					}
 				]
 			},
-
 			{
 				"label": "Surface",
-				"file": "3_config/3_surface.md"
+				"file": "3_config/surface.md"
 			},
-
 			{
 				"label": "Triggers",
-				"file": "3_config/4_triggers.md",
+				"file": "3_config/triggers.md",
 				"children": [
 					{
 						"label": "Trigger Setup",
-						"file": "3_config/4_triggers/1_trigger_setup.md"
+						"file": "3_config/triggers/trigger_setup.md"
 					},
 					{
 						"label": "Trigger Types",
-						"file": "3_config/4_triggers/2_trigger_types.md"
+						"file": "3_config/triggers/trigger_types.md"
 					}
 				]
 			},
-
 			{
 				"label": "Settings",
-				"file": "3_config/5_settings.md",
+				"file": "3_config/settings.md",
 				"children": [
 					{
 						"label": "Navigation buttons",
-						"file": "3_config/5_settings/1_navigation_buttons.md"
+						"file": "3_config/settings/navigation_buttons.md"
 					},
 					{
 						"label": "Devices",
-						"file": "3_config/5_settings/2_devices.md"
+						"file": "3_config/settings/devices.md"
 					},
 					{
 						"label": "PIN lockout",
-						"file": "3_config/5_settings/3_pin_lockout.md"
+						"file": "3_config/settings/pin_lockout.md"
 					},
 					{
 						"label": "RossTalk",
-						"file": "3_config/5_settings/4_rosstalk.md"
+						"file": "3_config/settings/rosstalk.md"
 					},
 					{
 						"label": "Artnet Listener",
-						"file": "3_config/5_settings/5_artnet_listener.md"
+						"file": "3_config/settings/artnet_listener.md"
 					},
 					{
 						"label": "HTTPS Web Server",
-						"file": "3_config/5_settings/6_https_web_server.md"
+						"file": "3_config/settings/https_web_server.md"
 					}
 				]
 			},
-
 			{
 				"label": "Log",
-				"file": "3_config/6_log.md"
+				"file": "3_config/log.md"
 			}
 		]
 	},
-
 	{
 		"label": "Secondary admin controls",
 		"children": [
 			{
 				"label": "Presets",
-				"file": "4_secondary_admin_controls/1_presets.md"
+				"file": "4_secondary_admin_controls/presets.md"
 			},
 			{
 				"label": "Dynamic variables",
-				"file": "4_secondary_admin_controls/2_dynamic_variables.md"
+				"file": "4_secondary_admin_controls/dynamic_variables.md"
 			},
 			{
-				"label": "Import / Export",
-				"file": "4_secondary_admin_controls/3_import_export.md"
+				"label": "Custom variables",
+				"file": "4_secondary_admin_controls/custom_variables/custom_variables.md",
+				"children": [
+					{
+						"label": "Custom variable usage",
+						"file": "4_secondary_admin_controls/custom_variables/custom_variable_usage.md"
+					},
+					{
+						"label": "Setting custom variable value",
+						"file": "4_secondary_admin_controls/custom_variables/setting_custom_variable_value.md"
+					},
+					{
+						"label": "Setting custom variable value to another variable",
+						"file": "4_secondary_admin_controls/custom_variables/setting_custom_variable_value_to_variable.md"
+					},
+					{
+						"label": "Setting Custom Variable Value to an Expression",
+						"file": "4_secondary_admin_controls/custom_variables/setting_custom_variable_value_to_expression.md"
+					},
+					{
+						"label": "Valid Expressions",
+						"file": "4_secondary_admin_controls/custom_variables/valid_expressions.md"
+					},
+					{
+						"label": "Number Literals",
+						"file": "4_secondary_admin_controls/custom_variables/number_literals.md"
+					},
+					{
+						"label": "Dynamic and Custom Variables",
+						"file": "4_secondary_admin_controls/custom_variables/dynamic_and_custom_variables.md"
+					},
+					{
+						"label": "Operators",
+						"file": "4_secondary_admin_controls/custom_variables/operators.md"
+					},
+					{
+						"label": "Invalid Expressions",
+						"file": "4_secondary_admin_controls/custom_variables/invalid_expressions.md"
+					}
+				]
 			}
 		]
 	},
-
 	{
 		"label": "Remote control",
 		"file": "5_remote_control.md",
 		"children": [
 			{
 				"label": "TCP / UDP Control",
-				"file": "5_remote_control/1_tcp_udp.md"
+				"file": "5_remote_control/tcp_udp.md"
 			},
 			{
 				"label": "HTTP Remote Control",
-				"file": "5_remote_control/2_http_remote_control.md"
+				"file": "5_remote_control/http_remote_control.md"
 			},
 			{
 				"label": "OSC Control",
-				"file": "5_remote_control/3_osc_control.md"
+				"file": "5_remote_control/osc_control.md"
 			},
 			{
 				"label": "Artnet / DMX Control",
-				"file": "5_remote_control/4_artnet_dmx_control.md"
+				"file": "5_remote_control/artnet_dmx_control.md"
 			},
 			{
 				"label": "RossTalk Control",
-				"file": "5_remote_control/5_rosstalk_control.md"
+				"file": "5_remote_control/rosstalk_control.md"
 			}
 		]
 	},
-
 	{
 		"label": "Modules",
 		"file": "6_modules.md"
