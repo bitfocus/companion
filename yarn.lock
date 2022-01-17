@@ -3058,9 +3058,9 @@ commist@^1.0.0:
   dependencies:
     node-rest-client "^3.1.0"
 
-"companion-module-middlethings-middlecontrol@github:bitfocus/companion-module-middlethings-middlecontrol#v1.0.2":
-  version "1.0.2"
-  resolved "https://codeload.github.com/bitfocus/companion-module-middlethings-middlecontrol/tar.gz/560b228f308fb501b4de49cc5aa41ef08e31c7ef"
+"companion-module-middlethings-middlecontrol@github:bitfocus/companion-module-middlethings-middlecontrol#v1.1.1":
+  version "1.1.1"
+  resolved "https://codeload.github.com/bitfocus/companion-module-middlethings-middlecontrol/tar.gz/3ad3d6e8babc28f5c637893a7d9c5346050fd8e2"
 
 "companion-module-modelighting-edin@github:bitfocus/companion-module-modelighting-edin#v1.0.0":
   version "1.0.0"
