@@ -2501,9 +2501,9 @@ commist@^1.0.0:
   dependencies:
     xml2js "^0.4.19"
 
-"companion-module-chamsys-magicq-osc@github:bitfocus/companion-module-chamsys-magicq-osc#v1.0.1":
-  version "1.0.1"
-  resolved "https://codeload.github.com/bitfocus/companion-module-chamsys-magicq-osc/tar.gz/f63b96900e569a79c1430d13726652c9bd9b9a6f"
+"companion-module-chamsys-magicq-osc@github:bitfocus/companion-module-chamsys-magicq-osc#v1.0.2":
+  version "1.0.2"
+  resolved "https://codeload.github.com/bitfocus/companion-module-chamsys-magicq-osc/tar.gz/1b3579cb45192f8e3e58643e181c02f86e21f5ce"
 
 "companion-module-chamsys-magicq-udp@github:bitfocus/companion-module-chamsys-magicq-udp#v1.0.2":
   version "1.0.2"
