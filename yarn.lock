@@ -2428,9 +2428,9 @@ commist@^1.0.0:
     multicast-dns "^7.2.3"
     type-fest "^2.9.0"
 
-"companion-module-bmd-audiomonitor@github:bitfocus/companion-module-bmd-audiomonitor#v1.0.0":
-  version "1.0.0"
-  resolved "https://codeload.github.com/bitfocus/companion-module-bmd-audiomonitor/tar.gz/99da63978df4770532677ce71587966d9ba1d098"
+"companion-module-bmd-audiomonitor@github:bitfocus/companion-module-bmd-audiomonitor#v1.0.1":
+  version "1.0.1"
+  resolved "https://codeload.github.com/bitfocus/companion-module-bmd-audiomonitor/tar.gz/7a8767a3673f5daea2282e4db4d418ba91ef5026"
 
 "companion-module-bmd-hyperdeck@github:bitfocus/companion-module-bmd-hyperdeck#v1.2.2":
   version "1.2.2"
