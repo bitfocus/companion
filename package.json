@@ -186,7 +186,7 @@
 		"companion-module-barco-dcs": "github:bitfocus/companion-module-barco-dcs#v1.0.4",
 		"companion-module-barco-dp": "github:bitfocus/companion-module-barco-dp#v1.1.2",
 		"companion-module-barco-encore": "github:bitfocus/companion-module-barco-encore#v1.0.1",
-		"companion-module-barco-eventmaster": "github:bitfocus/companion-module-barco-eventmaster#v2.0.4",
+		"companion-module-barco-eventmaster": "github:bitfocus/companion-module-barco-eventmaster#v2.0.5",
 		"companion-module-barco-eventmaster-xml": "github:bitfocus/companion-module-barco-eventmaster-xml#v1.2.4",
 		"companion-module-barco-hdx": "github:bitfocus/companion-module-barco-hdx#v1.1.5",
 		"companion-module-barco-imagepro": "github:bitfocus/companion-module-barco-imagepro#v1.0.1",
