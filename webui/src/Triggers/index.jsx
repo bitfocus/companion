@@ -85,7 +85,7 @@ export const Triggers = memo(function Triggers() {
 })
 
 const tableDateFormat = 'MM/DD HH:mm:ss'
-function TriggersTable({ scheduleList: triggersList, replaceItem, editItem }) {
+function TriggersTable({ triggersList, replaceItem, editItem }) {
 	return (
 		<table className="table table-responsive-sm">
 			<thead>
@@ -127,6 +127,12 @@ function TriggersTableRow({ item, replaceItem, editItem }) {
 	const doEdit = useCallback(() => {
 		editItem(item.id)
 	}, [editItem, item.id])
+	const doClone = useCallback(() => {
+		context.socket.emit('schedule_clone_item', item.id, (newItem) => {
+			console.log('completed clone', item.id, newItem.id)
+			replaceItem(newItem.id, newItem)
+		})
+	}, [context.socket, replaceItem, item.id])
 
 	return (
 		<tr>
@@ -152,6 +158,9 @@ function TriggersTableRow({ item, replaceItem, editItem }) {
 				)}
 				<CButton size="sm" color="primary" onClick={doEdit}>
 					edit
+				</CButton>
+				<CButton size="sm" color="warning" onClick={doClone}>
+					clone
 				</CButton>
 			</td>
 		</tr>
