@@ -1648,7 +1648,7 @@ bluebird-lst@^1.0.9:
   dependencies:
     bluebird "^3.5.5"
 
-bluebird@^3.5.1, bluebird@^3.5.5, bluebird@^3.7.2:
+bluebird@^3.5.1, bluebird@^3.5.5:
   version "3.7.2"
   resolved "https://registry.yarnpkg.com/bluebird/-/bluebird-3.7.2.tgz#9f229c15be272454ffa973ace0dbee79a1b0c36f"
   integrity sha512-XpNj6GDQzdfW+r2Wnn7xiSAd7TM3jzkxGXBGTtWKuSXv1xUV+azxAm8jdWZN06QTQk+2N2XB9jRDkvbmQmcRtg==
@@ -2932,11 +2932,10 @@ commist@^1.0.0:
   version "1.0.1"
   resolved "https://codeload.github.com/bitfocus/companion-module-justmacros-lua/tar.gz/991f2e7d3ce3421d54a210624e3d36a9e08978ad"
 
-"companion-module-jvc-ptz@github:bitfocus/companion-module-jvc-ptz#v1.0.10":
-  version "1.0.10"
-  resolved "https://codeload.github.com/bitfocus/companion-module-jvc-ptz/tar.gz/30a863afb45b9fa2de76304fb442d50714c22b86"
+"companion-module-jvc-ptz@github:bitfocus/companion-module-jvc-ptz#v1.0.12":
+  version "1.0.12"
+  resolved "https://codeload.github.com/bitfocus/companion-module-jvc-ptz/tar.gz/fdef8c0cceac4c8568f04eedfa02b8fb4f7155ba"
   dependencies:
-    bluebird "^3.7.2"
     urllib "^2.34.2"
 
 "companion-module-kiloview-ndi@github:bitfocus/companion-module-kiloview-ndi#v1.0.0":
@@ -3484,9 +3483,9 @@ commist@^1.0.0:
   version "1.0.4"
   resolved "https://codeload.github.com/bitfocus/companion-module-spx-gc/tar.gz/22c2206b872859dcc7ed76a072ea0d6a955a4386"
 
-"companion-module-studiocoast-vmix@github:bitfocus/companion-module-studiocoast-vmix#v1.2.24":
-  version "1.2.24"
-  resolved "https://codeload.github.com/bitfocus/companion-module-studiocoast-vmix/tar.gz/5965cc2c6924023b3064b3187a89ca27ed29b3b8"
+"companion-module-studiocoast-vmix@github:bitfocus/companion-module-studiocoast-vmix#v1.2.26":
+  version "1.2.26"
+  resolved "https://codeload.github.com/bitfocus/companion-module-studiocoast-vmix/tar.gz/0e4039c267199e0c78102ec4fcbf8330c286ba3e"
   dependencies:
     lodash "^4.17.21"
     xml2js "^0.4.22"
