@@ -1,7 +1,5 @@
 # Bitfocus Companion
 
-Complete up until e0c9cd714ca96dcb40ebed253681ae0c39c95662
-
 ## Companion v2.2.0 - Release Notes (unreleased)
 
 ### BREAKING CHANGES
