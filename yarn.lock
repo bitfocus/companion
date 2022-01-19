@@ -3483,9 +3483,9 @@ commist@^1.0.0:
   version "1.0.4"
   resolved "https://codeload.github.com/bitfocus/companion-module-spx-gc/tar.gz/22c2206b872859dcc7ed76a072ea0d6a955a4386"
 
-"companion-module-studiocoast-vmix@github:bitfocus/companion-module-studiocoast-vmix#v1.2.23":
-  version "1.2.23"
-  resolved "https://codeload.github.com/bitfocus/companion-module-studiocoast-vmix/tar.gz/6e96cf41e83298c8abb39efbb0a0f16ced31d1b1"
+"companion-module-studiocoast-vmix@github:bitfocus/companion-module-studiocoast-vmix#v1.2.24":
+  version "1.2.24"
+  resolved "https://codeload.github.com/bitfocus/companion-module-studiocoast-vmix/tar.gz/5965cc2c6924023b3064b3187a89ca27ed29b3b8"
   dependencies:
     lodash "^4.17.21"
     xml2js "^0.4.22"
