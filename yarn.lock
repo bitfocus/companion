@@ -966,10 +966,10 @@
     "@types/dns-packet" "*"
     "@types/node" "*"
 
-"@types/node@*", "@types/node@>=10.0.0", "@types/node@^14.18.3", "@types/node@^14.18.4", "@types/node@^14.6.2":
-  version "14.18.5"
-  resolved "https://registry.yarnpkg.com/@types/node/-/node-14.18.5.tgz#0dd636fe7b2c6055cbed0d4ca3b7fb540f130a96"
-  integrity sha512-LMy+vDDcQR48EZdEx5wRX1q/sEl6NdGuHXPnfeL8ixkwCOSZ2qnIyIZmcCbdX0MeRqHhAcHmX+haCbrS8Run+A==
+"@types/node@*", "@types/node@>=10.0.0", "@types/node@^14.18.3", "@types/node@^14.18.4", "@types/node@^14.18.9", "@types/node@^14.6.2":
+  version "14.18.9"
+  resolved "https://registry.yarnpkg.com/@types/node/-/node-14.18.9.tgz#0e5944eefe2b287391279a19b407aa98bd14436d"
+  integrity sha512-j11XSuRuAlft6vLDEX4RvhqC0KxNxx6QIyMXNb0vHHSNPXTPeiy3algESWmOOIzEtiEL0qiowPU3ewW9hHVa7Q==
 
 "@types/node@^12.0.4", "@types/node@^12.19.3", "@types/node@^12.19.4", "@types/node@^12.20.13":
   version "12.20.41"
@@ -2378,14 +2378,15 @@ commist@^1.0.0:
   version "1.0.5"
   resolved "https://codeload.github.com/bitfocus/companion-module-behringer-wing/tar.gz/322fb2e32bd8a4b39592817b6472581084c5f8fa"
 
-"companion-module-behringer-x32@github:bitfocus/companion-module-behringer-x32#v2.7.0":
-  version "2.7.0"
-  resolved "https://codeload.github.com/bitfocus/companion-module-behringer-x32/tar.gz/9f5105503152247a721666309721feb9eaa81961"
+"companion-module-behringer-x32@github:bitfocus/companion-module-behringer-x32#v2.8.0":
+  version "2.8.0"
+  resolved "https://codeload.github.com/bitfocus/companion-module-behringer-x32/tar.gz/b64ec6de891ffbdc4c42492f1afeb952af985555"
   dependencies:
-    "@types/node" "^12.20.13"
-    debounce-fn "https://github.com/Julusian/debounce-fn.git"
+    "@types/node" "^14.18.9"
+    debounce-fn "github:julusian/debounce-fn#4.0.0-maxWaithack.0"
+    moment "^2.29.1"
     p-queue "^6.6.2"
-    type-fest "^1.1.3"
+    type-fest "^2.9.0"
 
 "companion-module-behringer-xair@github:bitfocus/companion-module-behringer-xair#v1.6.7":
   version "1.6.7"
@@ -3901,9 +3902,9 @@ debounce-fn@^3.0.0:
   dependencies:
     mimic-fn "^2.1.0"
 
-"debounce-fn@https://github.com/Julusian/debounce-fn.git":
+"debounce-fn@github:julusian/debounce-fn#4.0.0-maxWaithack.0":
   version "4.0.0-maxWaithack.0"
-  resolved "https://github.com/Julusian/debounce-fn.git#3ca54d1526c19f541fe6f103abbceda31554caa9"
+  resolved "https://codeload.github.com/julusian/debounce-fn/tar.gz/3ca54d1526c19f541fe6f103abbceda31554caa9"
   dependencies:
     mimic-fn "^3.0.0"
 
