@@ -54,7 +54,7 @@ function getFeedbackDefaults() {
 	]
 }
 
-export function ScheduleEditModal({ doClose, doSave, item, plugins }) {
+export function TriggerEditModal({ doClose, doSave, item, plugins }) {
 	const context = useContext(StaticContext)
 
 	const [config, setConfig] = useState({})
@@ -165,7 +165,7 @@ export function ScheduleEditModal({ doClose, doSave, item, plugins }) {
 					</CFormGroup>
 
 					{pluginSpec?.options ? (
-						<ScheduleEditModalConfig pluginSpec={pluginSpec} config={config.config} updateConfig={updateConfig} />
+						<TriggerEditModalConfig pluginSpec={pluginSpec} config={config.config} updateConfig={updateConfig} />
 					) : (
 						'Unknown type selected'
 					)}
@@ -216,7 +216,7 @@ export function ScheduleEditModal({ doClose, doSave, item, plugins }) {
 	)
 }
 
-function ScheduleEditModalConfig({ pluginSpec, config, updateConfig }) {
+function TriggerEditModalConfig({ pluginSpec, config, updateConfig }) {
 	const context = useContext(StaticContext)
 
 	const updateInnerConfig = useCallback(
@@ -317,7 +317,7 @@ function ScheduleEditModalConfig({ pluginSpec, config, updateConfig }) {
 								<MyErrorBoundary>
 									{pluginSpec.options.map((spec) => (
 										<td key={spec.key}>
-											<ScheduleEditModalInput
+											<TriggerEditModalInput
 												spec={spec}
 												value={conf[spec.key]}
 												onChange={(val) => updateArrayConfig(i, spec.key, val)}
@@ -346,7 +346,7 @@ function ScheduleEditModalConfig({ pluginSpec, config, updateConfig }) {
 				{pluginSpec.options.map((spec) => (
 					<CFormGroup key={spec.key}>
 						<MyErrorBoundary>
-							<ScheduleEditModalInput
+							<TriggerEditModalInput
 								spec={spec}
 								value={config[spec.key]}
 								onChange={(val) => updateInnerConfig(spec.key, val)}
@@ -359,7 +359,7 @@ function ScheduleEditModalConfig({ pluginSpec, config, updateConfig }) {
 	}
 }
 
-function ScheduleEditModalInput({ spec, value, onChange }) {
+function TriggerEditModalInput({ spec, value, onChange }) {
 	const choices = useMemo(() => {
 		return spec?.choices?.map((ch) => ({ value: ch.id, label: ch.label })) ?? []
 	}, [spec?.choices])

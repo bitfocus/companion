@@ -32,7 +32,7 @@ import { DndProvider } from 'react-dnd'
 import { HTML5Backend } from 'react-dnd-html5-backend'
 import { MySidebar } from './Layout/Sidebar'
 import { MyHeader } from './Layout/Header'
-import { Scheduler } from './Scheduler'
+import { Triggers } from './Triggers'
 import { InstancesPage } from './Instances'
 import { ButtonsPage } from './Buttons'
 import { ContextData } from './ContextData'
@@ -230,7 +230,7 @@ function AppContent({ buttonGridHotPress }) {
 				</CTabPane>
 				<CTabPane className={getClassForPane('/triggers')}>
 					<MyErrorBoundary>
-						<Scheduler />
+						<Triggers />
 					</MyErrorBoundary>
 				</CTabPane>
 				<CTabPane className={getClassForPane('/settings')}>
