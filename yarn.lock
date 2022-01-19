@@ -2406,9 +2406,11 @@ commist@^1.0.0:
   version "1.0.4"
   resolved "https://codeload.github.com/bitfocus/companion-module-birddog-visca/tar.gz/fb156bf173c92bcef03e19a4771b44064c27eb33"
 
-"companion-module-bitfocus-companion@github:bitfocus/companion-module-bitfocus-companion#v1.7.1":
-  version "1.7.1"
-  resolved "https://codeload.github.com/bitfocus/companion-module-bitfocus-companion/tar.gz/8b208d91afab6ef95d87ba66709a11cc83383303"
+"companion-module-bitfocus-companion@github:bitfocus/companion-module-bitfocus-companion#v1.7.2":
+  version "1.7.2"
+  resolved "https://codeload.github.com/bitfocus/companion-module-bitfocus-companion/tar.gz/2635305fe3ae7158c972475336cc1b32141430bf"
+  dependencies:
+    underscore "^1.13.2"
 
 "companion-module-bitfocus-snapshot@github:bitfocus/companion-module-bitfocus-snapshot#v0.0.4":
   version "0.0.4"
@@ -9332,7 +9334,7 @@ underscore-deep-extend@^1.1.5:
   resolved "https://registry.yarnpkg.com/underscore-deep-extend/-/underscore-deep-extend-1.1.5.tgz#962ba1f8b3bb2e2afd182ed86f2e5275543c52bd"
   integrity sha1-liuh+LO7Lir9GC7Yby5SdVQ8Ur0=
 
-underscore@^1.12.0, underscore@^1.9.1:
+underscore@^1.12.0, underscore@^1.13.2, underscore@^1.9.1:
   version "1.13.2"
   resolved "https://registry.yarnpkg.com/underscore/-/underscore-1.13.2.tgz#276cea1e8b9722a8dbed0100a407dda572125881"
   integrity sha512-ekY1NhRzq0B08g4bGuX4wd2jZx5GnKz6mKSqFL4nqBlfyMGiG10gDFhDTMEfYmDL6Jy0FUIZp7wiRB+0BP7J2g==
