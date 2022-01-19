@@ -2775,9 +2775,9 @@ commist@^1.0.0:
   dependencies:
     artnet-node haakonnessjoen/artnet-node#ee6273d
 
-"companion-module-generic-emberplus@github:bitfocus/companion-module-generic-emberplus#v1.1.2":
-  version "1.1.2"
-  resolved "https://codeload.github.com/bitfocus/companion-module-generic-emberplus/tar.gz/9446eb6bce184b68d9f007d4305126db4975144c"
+"companion-module-generic-emberplus@github:bitfocus/companion-module-generic-emberplus#v1.1.3":
+  version "1.1.3"
+  resolved "https://codeload.github.com/bitfocus/companion-module-generic-emberplus/tar.gz/927e67834f3d5be93898ccd7ba2cfda4959f8f2d"
   dependencies:
     "@types/node" "^12.0.4"
     type-fest "^1.1.3"
