@@ -1,5 +1,177 @@
 # Bitfocus Companion
 
+Complete up until e0c9cd714ca96dcb40ebed253681ae0c39c95662
+
+## Companion v2.2.0 - Release Notes (unreleased)
+
+### BREAKING CHANGES
+
+- Elgato Plugin must be enabled in companion before it can be used
+
+### 📣 CORE FEATURES AND IMPROVEMENTS
+
+- MacOS builds are signed and notarized, windows builds are signed
+- MacOS M1 (arm64) native builds
+- New UI written in React
+- Rewritten Getting Started documentation
+- Add Scheduler/Trigger management
+- Re-add Ember+ server
+- Additional draw functions in Image
+- Option to remove the top bar on all buttons
+- Context menu added to tray icon for quick access to core functions like rescan for USB devices
+- Instances are now called Connections
+- Support for xkeys devices (disabled by default on upgrades)
+- Ability to clear the png image used on a button
+- Don’t load all modules at startup, to reduce startup times
+- Streamdecks can be positioned inside the 8x4 grid, not always the top left corner
+- Streamdecks can be named for easier identification
+  Serve the webui over https. Note: This does not mean it should be exposed to the internet, and is intended to allow - for embedding in iframes within other applications
+  The elgato plugin is opt-in, and doing so disables accessing local streamdecks (to avoid them fighting over the - panels)
+- USB rescan can be triggered over the remote protocols
+- New satellite api implementation. Simpler to implement on clients and wont have breaking changes in future releases.
+- TCP/HTTP/OSC/UDP apis are all opt-in (enabled for existing installations), and can be run on custom ports
+- Custom variables, allow you to create your own variables to track state and pass into actions or triggers
+- Specify path of companion config directory, with the COMPANION_CONFIG_BASEDIR environment variable
+
+### 🐞 BUG FIXES
+
+- MacOS: UI breaking after companion has been running for many days
+- Added try-catch blocking for some instance calls
+- Allow PWA (Progressive Web App) for all pages
+- Add some additional characters to the 7px text font
+- Variable parsing can no longer get stuck in infinite loops
+- MacOS: Allow binding the webui to vlan/vpn interfaces
+- Various other fixes
+
+### 🧩 NEW MODULES
+
+- TODO: Some that were added pre 2.1.3 but dropped from 2.1.3
+- Arkaos Mediamaster
+- Allen & Heath AHM
+- Axis PTZ
+- Biamp Audia
+- Bitfocus Snapshot
+- Blackmagic WebPresenter HD
+- Blackbird HDMI Matrix
+- Boinx Mimolive
+- Brompton Tessera
+- ByteHive PlayoutBee
+- Canon XF
+- ClassX Liveboard
+- Connect Webcaster
+- Ctpsystems dio8008r
+- Dcc Ex Command Station
+- Generic Websocket
+- Generic SWP08
+- Haivision KBencoder
+- Hermann StageTimerIO
+- Ifelseware avkey
+- Imagine LRC
+- Kiloview NDI
+- LeadLED Clockotron
+- Leafcoders Titler
+- Livemind Recorder
+- Ltn Schedule
+- Lumens Media processor
+- Makeprox Glue
+- Middlethings Middlecontrol
+- Muxlab KVM
+- Nexo NXAMP
+- Nobe Omniscope
+- Novastar H-Series
+- Rocosoft PtzJoy
+- Seervision Suite
+- Shure MXA910
+- Shure MXN5
+- Shure P300
+- Softon Movie Recorder
+- Sony Broadcast Monitor
+- Spotify Remote
+- SPX GC
+- Symetrix DSP
+- Tallyma Wireless Tally
+- Tesmart HDMI Matrix
+- Tow MixEffect
+- Visual productions Cuety
+
+### 👍🏻 MODULE IMPROVEMENTS
+
+- Allean & Heath QU
+- Allean & Heath SQ
+- AJA Kipro
+- AJA Kumo
+- Audivero Unity Intercom Client
+- Avolites Titan
+- Barco Eventmaster
+- Behringer X32/M32
+- Behringer XAir
+- Behringer Wing
+- Birddog VISCA
+- Bitfocus Companion
+- Blackmagic ATEM
+- Blackmagic AudioMonitor
+- Blackmagic Hyperdeck
+- Chamsys MagicQ OSC
+- Cisco CMS
+- Cisco WebEx (Websocket)
+- Dataton Watchout
+- Dolby Cinema Processor
+- Elgato Keylight
+- Epiphan Pearl
+- Extron SMP351
+- Extron XTP-3200
+- Figure53 Go Button
+- Figure53 QLab Advanced
+- Generic Artnet
+- Generic EmberPlus
+- Generic HTTP
+- Generic TCP/UDP
+- Generic MQTT
+- Generic OSC
+- Haivision Connect DVR
+- H2R Graphics
+- Homeassistant
+- Ifelseware avplayback
+- Imimot Mitti
+- JVC PTZ
+- Liminalet ZoomOSC
+- Lumens VISCA
+- Motu AVB
+- Neodarque StageTimer2
+- Newbluefx titler
+- Newtek Tricaster
+- OBS Studio
+- OpenLP HTTP
+- Panasonic AVHS
+- Panasonic Projector
+- Panasonic PTZ
+- Phillips Hue
+- Presentation tools APS
+- Presentation tools Cuetimer
+- Prsi iPower
+- Resolume Arena
+- Renewed Vision PVP
+- Roku TV
+- Roland M5000
+- Roland V60HD
+- Roland V1200HD
+- Rossvideo Expression
+- Shure PSM1000
+- Shure SCM820
+- Shure wireless
+- Singular Live Studio
+- Soundcraft UI
+- Studiocoast Vmix
+- Teradek Vidiu
+- ThingM Blink(1)
+- Ubiquiti Unifi
+- Vdo Ninja
+- Vicreo Hotkey
+- Vicreo Variable Listener
+- Videolan VLC
+- Vizio smartcast
+- Youtube Live
+
 ## Companion v2.1.4 - Release Notes
 
 # ⭐️ ADDED CORE FEATURES
