@@ -338,19 +338,19 @@
     dir-compare "^2.4.0"
     fs-extra "^9.0.1"
 
-"@elgato-stream-deck/core@5.1.2":
-  version "5.1.2"
-  resolved "https://registry.yarnpkg.com/@elgato-stream-deck/core/-/core-5.1.2.tgz#a21ac822e11a6f979663d32f4a741713ad5f2003"
-  integrity sha512-OjBhHOrBcJkjOdGQUiQ6HeVFdr7hmtxSiA5+mVHjiHGIgtOiiooY1hgAXw+lph/IDKg2aSRgEMWQm/sfZpoC/A==
+"@elgato-stream-deck/core@5.2.0-alpha.1":
+  version "5.2.0-alpha.1"
+  resolved "https://registry.yarnpkg.com/@elgato-stream-deck/core/-/core-5.2.0-alpha.1.tgz#4be6dedd93dadd61bee131a14c21aa0d31587358"
+  integrity sha512-w1oDx44lK7UhuC9fFr+rI84fIUgXoHHYRAwKMPKrX+lInkXM2MgCCPHFZCMruL6DvIxk1VVTLKe1MQqoFSBJsw==
   dependencies:
     eventemitter3 "^4.0.7"
 
-"@elgato-stream-deck/node@^5.1.2":
-  version "5.1.2"
-  resolved "https://registry.yarnpkg.com/@elgato-stream-deck/node/-/node-5.1.2.tgz#6986c15143b30210154effa8d3a2d9dbe03d8ca6"
-  integrity sha512-Lr/KYpp2Ec8G/etXnG8wJUjSiJceDDhbxRfh/dA4+81VTYHR2p4NnlxfuH7YFDZ8nB5cIpTpQSZLfLey08fXQA==
+"@elgato-stream-deck/node@^5.2.0-alpha.1":
+  version "5.2.0-alpha.1"
+  resolved "https://registry.yarnpkg.com/@elgato-stream-deck/node/-/node-5.2.0-alpha.1.tgz#74d52bc24004df26842d7d3bc3cc8417d1bb4f38"
+  integrity sha512-jykbAruZ/mTRIpvaEhPKtkSZ5zKHAfM/Crmk8NKtcYmp4J3dYIMhH29Rcr5sUxvHuJ2cqe5ye9dIXemfLrnzwg==
   dependencies:
-    "@elgato-stream-deck/core" "5.1.2"
+    "@elgato-stream-deck/core" "5.2.0-alpha.1"
     jpeg-js "^0.4.2"
     node-hid "^2.1.1"
 
