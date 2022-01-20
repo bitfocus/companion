@@ -3610,9 +3610,9 @@ commist@^1.0.0:
   version "1.1.12"
   resolved "https://codeload.github.com/bitfocus/companion-module-videolan-vlc/tar.gz/0c84f58892cb92900182dd56c6cb8bbbcf640368"
 
-"companion-module-vistream-online@github:bitfocus/companion-module-vistream-online#v1.0.1":
-  version "1.0.1"
-  resolved "https://codeload.github.com/bitfocus/companion-module-vistream-online/tar.gz/fae74bedf8f871fb147dfe0d6f9c9ab9631377b4"
+"companion-module-vistream-online@github:bitfocus/companion-module-vistream-online#v1.0.2":
+  version "1.0.2"
+  resolved "https://codeload.github.com/bitfocus/companion-module-vistream-online/tar.gz/498c5b2c82cdc3e40d002e491b116d941b236d4f"
   dependencies:
     secure-json-logic "0.9.11"
     socket.io-client "3.1.0"
