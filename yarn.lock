@@ -3610,6 +3610,14 @@ commist@^1.0.0:
   version "1.1.12"
   resolved "https://codeload.github.com/bitfocus/companion-module-videolan-vlc/tar.gz/0c84f58892cb92900182dd56c6cb8bbbcf640368"
 
+"companion-module-vistream-online@github:bitfocus/companion-module-vistream-online#v1.0.1":
+  version "1.0.1"
+  resolved "https://codeload.github.com/bitfocus/companion-module-vistream-online/tar.gz/fae74bedf8f871fb147dfe0d6f9c9ab9631377b4"
+  dependencies:
+    secure-json-logic "0.9.11"
+    socket.io-client "3.1.0"
+    zlibjs "0.3.1"
+
 "companion-module-visualproductions-bstation2@github:bitfocus/companion-module-visualproductions-bstation2#v1.0.6":
   version "1.0.6"
   resolved "https://codeload.github.com/bitfocus/companion-module-visualproductions-bstation2/tar.gz/6ccb8cef1ccebed26dc1a47f16c959bb55a74732"
@@ -4386,6 +4394,22 @@ engine.io-client@~3.5.0:
     xmlhttprequest-ssl "~1.6.2"
     yeast "0.1.2"
 
+engine.io-client@~4.1.0:
+  version "4.1.4"
+  resolved "https://registry.yarnpkg.com/engine.io-client/-/engine.io-client-4.1.4.tgz#0bda5ba4bd87bced2ad00b93c67e133d0fb981ba"
+  integrity sha512-843fqAdKeUMFqKi1sSjnR11tJ4wi8sIefu6+JC1OzkkJBmjtc/gM/rZ53tJfu5Iae/3gApm5veoS+v+gtT0+Fg==
+  dependencies:
+    base64-arraybuffer "0.1.4"
+    component-emitter "~1.3.0"
+    debug "~4.3.1"
+    engine.io-parser "~4.0.1"
+    has-cors "1.1.0"
+    parseqs "0.0.6"
+    parseuri "0.0.6"
+    ws "~7.4.2"
+    xmlhttprequest-ssl "~1.6.2"
+    yeast "0.1.2"
+
 engine.io-client@~6.1.1:
   version "6.1.1"
   resolved "https://registry.yarnpkg.com/engine.io-client/-/engine.io-client-6.1.1.tgz#800d4b9db5487d169686729e5bd887afa78d36b0"
@@ -4411,6 +4435,13 @@ engine.io-parser@~2.2.0:
     base64-arraybuffer "0.1.4"
     blob "0.0.5"
     has-binary2 "~1.0.2"
+
+engine.io-parser@~4.0.1:
+  version "4.0.3"
+  resolved "https://registry.yarnpkg.com/engine.io-parser/-/engine.io-parser-4.0.3.tgz#83d3a17acfd4226f19e721bb22a1ee8f7662d2f6"
+  integrity sha512-xEAAY0msNnESNPc00e19y5heTPX4y/TJ36gr8t1voOaNmTojP9b3oK3BbJLFufW2XFPQaaijpFewm2g2Um3uqA==
+  dependencies:
+    base64-arraybuffer "0.1.4"
 
 engine.io-parser@~5.0.0:
   version "5.0.2"
@@ -8301,6 +8332,13 @@ saxes@^5.0.1:
   dependencies:
     xmlchars "^2.2.0"
 
+secure-json-logic@0.9.11:
+  version "0.9.11"
+  resolved "https://registry.yarnpkg.com/secure-json-logic/-/secure-json-logic-0.9.11.tgz#bfe0e4fc3f297e5b4367165b5aeb9ea056965e66"
+  integrity sha1-v+Dk/D8pfltDZxZbWuueoFaWXmY=
+  dependencies:
+    url "^0.11.0"
+
 selfsigned@^1.10.14:
   version "1.10.14"
   resolved "https://registry.yarnpkg.com/selfsigned/-/selfsigned-1.10.14.tgz#ee51d84d9dcecc61e07e4aba34f229ab525c1574"
@@ -8553,6 +8591,19 @@ socket.io-client@2.4.0, socket.io-client@^2.3.0:
     parseuri "0.0.6"
     socket.io-parser "~3.3.0"
     to-array "0.1.4"
+
+socket.io-client@3.1.0:
+  version "3.1.0"
+  resolved "https://registry.yarnpkg.com/socket.io-client/-/socket.io-client-3.1.0.tgz#da3902c80a02a16cf57769c5e3f9d4cb278b6e56"
+  integrity sha512-T4qPOL80KnoBwkdR70zMpiR6aH6zv3ZqLNriofHqsO9wvQllNTOez0mpV4GdVqo1Y55Z+h8YOlBo7c8pOxDlHw==
+  dependencies:
+    "@types/component-emitter" "^1.2.10"
+    backo2 "~1.0.2"
+    component-emitter "~1.3.0"
+    debug "~4.3.1"
+    engine.io-client "~4.1.0"
+    parseuri "0.0.6"
+    socket.io-parser "~4.0.4"
 
 socket.io-client@^4.1.2, socket.io-client@^4.4.0:
   version "4.4.1"
@@ -9479,6 +9530,14 @@ url@0.10.3:
     punycode "1.3.2"
     querystring "0.2.0"
 
+url@^0.11.0:
+  version "0.11.0"
+  resolved "https://registry.yarnpkg.com/url/-/url-0.11.0.tgz#3838e97cfc60521eb73c525a8e55bfdd9e2e28f1"
+  integrity sha1-ODjpfPxgUh63PFJajlW/3Z4uKPE=
+  dependencies:
+    punycode "1.3.2"
+    querystring "0.2.0"
+
 urllib@^2.34.2:
   version "2.38.0"
   resolved "https://registry.yarnpkg.com/urllib/-/urllib-2.38.0.tgz#5c0088f42091ef1cef07bb2547677487170414f5"
@@ -10039,3 +10098,8 @@ yocto-queue@^0.1.0:
   version "0.1.0"
   resolved "https://registry.yarnpkg.com/yocto-queue/-/yocto-queue-0.1.0.tgz#0294eb3dee05028d31ee1a5fa2c556a6aaf10a1b"
   integrity sha512-rVksvsnNCdJ/ohGc6xgPwyN8eheCxsiLM8mxuE/t/mOVqJewPuO1miLpTHQiRgTKCLexL4MeAFVagts7HmNZ2Q==
+
+zlibjs@0.3.1:
+  version "0.3.1"
+  resolved "https://registry.yarnpkg.com/zlibjs/-/zlibjs-0.3.1.tgz#50197edb28a1c42ca659cc8b4e6a9ddd6d444554"
+  integrity sha1-UBl+2yihxCymWcyLTmqd3W1ERVQ=
