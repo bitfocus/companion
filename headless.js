@@ -75,6 +75,13 @@ if (process.argv[2] in ifaces) {
 		system.ready(!process.env.DEVELOPER)
 		console.log('Started')
 	}, 1000)
+} else if (process.argv[2] == '0.0.0.0') {
+	setTimeout(function () {
+		system.emit('skeleton-bind-ip', '0.0.0.0')
+		system.emit('skeleton-bind-port', port)
+		system.ready(!process.env.DEVELOPER)
+		console.log('Started')
+	}, 1000)
 } else {
 	console.log('Interface not found!')
 	process.exit(1)
