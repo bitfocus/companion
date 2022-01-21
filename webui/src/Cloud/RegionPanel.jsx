@@ -25,17 +25,17 @@ export class CloudRegionPanel extends Component {
 	componentDidMount() {
 		this.props.socket.on('cloud_region_state', this.cloudStateDidUpdate)
 		this.props.socket.emit('cloud_region_state_get', this.props.id)
-		console.log('Mounted CLOUD')
+		console.log(`Mounted CLOUD REGION ${this.props.id}`)
 	}
 
 	componentWillUnmount() {
-		console.log('Unmounted CLOUD')
+		console.log(`Unmounted CLOUD REGION ${this.props.id}`)
 		this.props.socket.off('cloud_region_state', this.cloudStateDidUpdate)
 	}
 
 	cloudStateDidUpdate(id, newState) {
-		if (id === this.props.id) {
-			console.log('cloud state did update to:', newState)
+		if (id == this.props.id) {
+			console.log(`cloud region ${id} state did update to:`, newState)
 			this.setState({ ...newState })
 		}
 	}
