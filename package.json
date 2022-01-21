@@ -309,6 +309,7 @@
 		"companion-module-imagine-lrc": "github:bitfocus/companion-module-imagine-lrc#v1.0.0",
 		"companion-module-imimot-mitti": "github:bitfocus/companion-module-imimot-mitti#v1.0.9",
 		"companion-module-interactivetechnologies-cueserver": "github:bitfocus/companion-module-interactivetechnologies-cueserver#v1.0.1",
+		"companion-module-ipl-ocp": "github:bitfocus/companion-module-ipl-ocp#v1.0.0",
 		"companion-module-irisdown-countdowntimer": "github:bitfocus/companion-module-irisdown-countdowntimer#v1.1.3",
 		"companion-module-irisdown-remoteshowcontrol": "github:bitfocus/companion-module-irisdown-remoteshowcontrol#v1.0.2",
 		"companion-module-jamesholt-x32tc": "github:bitfocus/companion-module-jamesholt-x32tc#v1.0.6",
