@@ -116,7 +116,10 @@ function createWindow() {
 
 	ipcMain.on('network-interfaces:get', function () {
 		systeminformation.networkInterfaces().then(function (list) {
-			const interfaces = [{ id: '0.0.0.0', label: 'All Interfaces: 0.0.0.0' }, { id: '127.0.0.1', label: 'localhost: 127.0.0.1' }]
+			const interfaces = [
+				{ id: '0.0.0.0', label: 'All Interfaces: 0.0.0.0' },
+				{ id: '127.0.0.1', label: 'localhost: 127.0.0.1' },
+			]
 
 			for (const obj of list) {
 				if (obj.ip4 && !obj.internal) {
