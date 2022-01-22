@@ -483,7 +483,7 @@
 		"lodash": "^4.17.20",
 		"mkdirp": "^1.0.4",
 		"moment": "^2.29.1",
-		"node-fetch": "^2.6.7",
+		"node-fetch": "^3.1.1",
 		"node-rest-client": "^3.1.0",
 		"osc": "^2.4.2",
 		"pngjs": "^3.3.3",
