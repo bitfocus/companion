@@ -1,5 +1,5 @@
 import { useCallback, useContext, useEffect, useRef, useState } from 'react'
-import { CButton, CLink } from '@coreui/react'
+import { CButton } from '@coreui/react'
 import { StaticContext, InstancesContext, VariableDefinitionsContext } from '../util'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faDollarSign, faQuestionCircle, faBug } from '@fortawesome/free-solid-svg-icons'
