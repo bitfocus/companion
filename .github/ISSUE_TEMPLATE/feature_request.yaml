@@ -1,0 +1,36 @@
+name: Feature Request
+description: Request a new feature within Companion. (NOT device/specific software support).
+labels:
+  - enhancement
+body:
+  - type: markdown
+    attributes:
+      value: |
+        **USE THE FOLLOWING PAGE IF YOU WANT SUPPORT FOR A NEW DEVICE OR SOFTWARE PROGRAM**
+        https://github.com/bitfocus/companion-module-requests/issues/new
+  - type: checkboxes
+    attributes:
+      label: Is this a feature relevant to comapnion itself, and not a module?
+      description: If you wish to request a feature in a module, please do so against the correct repository found at https://github.com/bitfocus?type=source
+      options:
+        - label: I believe this to be a feature for companion, not a module
+          required: true
+  - type: checkboxes
+    attributes:
+      label: Is there an existing issue for this?
+      description: Please search to see if an issue already exists for the feature.
+      options:
+        - label: I have searched the existing issues
+          required: true
+  - type: textarea
+    attributes:
+      label: Describe the feature
+      description: A clear and concise description of what the feature does. Mocked up screenshots (no matter how rough) are always helpful to understand.
+    validations:
+      required: false
+  - type: textarea
+    attributes:
+      label: Usecases
+      description: Add a couple of usecases for why this should be implemented and when/why to use it.
+    validations:
+      required: false
