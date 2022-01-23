@@ -5670,12 +5670,12 @@ indexof@0.0.1:
   resolved "https://registry.yarnpkg.com/indexof/-/indexof-0.0.1.tgz#82dc336d232b9062179d05ab3293a66059fd435d"
   integrity sha1-gtwzbSMrkGIXnQWrMpOmYFn9Q10=
 
-infinitton-idisplay@^1.0.5:
-  version "1.0.5"
-  resolved "https://registry.yarnpkg.com/infinitton-idisplay/-/infinitton-idisplay-1.0.5.tgz#a9abad91d7f8e69f738b81a8b966bfac9f502a46"
-  integrity sha512-oSKzge8Gc/EYkf23gm+Sbd6vtkVBD6Hd5OdTK/wRuPoyzTA1mki6LqooQra5vvQ76pT7qOZRKuV2OjlCO9AeGw==
+infinitton-idisplay@^1.1.0:
+  version "1.1.0"
+  resolved "https://registry.yarnpkg.com/infinitton-idisplay/-/infinitton-idisplay-1.1.0.tgz#c55cf78a1e9543d892f6883a6ff615106a4a45b8"
+  integrity sha512-B3QmYD2/Op+L2I1aoqKmMmfnUUcrOKW7aXwb6+Ccakc8Xzab/CSKHiBM6HeHI9gg/OPMPcGZkxI3c8NYnq34zw==
   dependencies:
-    node-hid "^0.7.9"
+    node-hid "^2.1.1"
 
 inflight@^1.0.4:
   version "1.0.6"
@@ -7288,7 +7288,7 @@ node-gyp-build@^4.3.0:
   resolved "https://registry.yarnpkg.com/node-gyp-build/-/node-gyp-build-4.3.0.tgz#9f256b03e5826150be39c764bf51e993946d71a3"
   integrity sha512-iWjXZvmboq0ja1pUGULQBexmxq8CV4xBhX7VDOTbL7ZR4FOowwY/VOtRxBN/yKxmdGoIp4j5ysNT4u3S2pDQ3Q==
 
-node-hid@^0.7.9, node-hid@^2.1.1, node-hid@~2.1.0:
+node-hid@^2.1.1, node-hid@~2.1.0:
   version "2.1.1"
   resolved "https://registry.yarnpkg.com/node-hid/-/node-hid-2.1.1.tgz#f83c8aa0bb4e6758b5f7383542477da93f67359d"
   integrity sha512-Skzhqow7hyLZU93eIPthM9yjot9lszg9xrKxESleEs05V2NcbUptZc5HFqzjOkSmL0sFlZFr3kmvaYebx06wrw==

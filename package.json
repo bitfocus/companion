@@ -479,7 +479,7 @@
 		"find-process": "1.4.7",
 		"fs-extra": "^10.0.0",
 		"husky": "^7.0.4",
-		"infinitton-idisplay": "^1.0.5",
+		"infinitton-idisplay": "^1.1.0",
 		"lodash": "^4.17.20",
 		"mkdirp": "^1.0.4",
 		"moment": "^2.29.1",
@@ -503,7 +503,6 @@
 		"@julusian/jpeg-turbo": "^1.1.1"
 	},
 	"resolutions": {
-		"infinitton-idisplay/node-hid": "^2.1.1",
 		"**/osc/serialport": "9.2.1",
 		"**/osc/ws": "^7.5.4"
 	}
