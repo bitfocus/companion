@@ -1,22 +1,46 @@
 FROM node:14
-# Reference: https://nodejs.org/en/docs/guides/nodejs-docker-webapp/
 
-WORKDIR /root
-ENV APPDIR=/root
-ENV ELECTRON_CACHE=$HOME/.cache/electron
-ENV ELECTRON_BUILDER_CACHE=$HOME/.cache/electron-builder
+# User variable, define where to store the application config
+ENV COMPANION_CONFIG_BASEDIR=/config
 
-COPY . /root/
+WORKDIR /app
+COPY . /app/
 
-# Clone repository and set as workdir
-RUN cd /root && \
-    # Installation Prep
-    apt-get update && apt-get install -y --no-install-recommends apt-utils \
-    cmake \
+# Installation Prep
+RUN apt-get update && apt-get install -y \
+    libusb-1.0-0-dev \
     libudev-dev \
-    libgusb-dev && \
-    $APPDIR/tools/yarn.sh && \
-    $APPDIR/tools/build_writefile.sh
+    unzip \
+    cmake \
+    && rm -rf /var/lib/apt/lists/*
 
+# Generate version number file
+RUN ./tools/build_writefile.sh
+
+# Install dependencies
+RUN ./tools/yarn.sh
+
+# strip back unnecessary dependencies
+RUN yarn --frozen-lockfile --prod
+
+# Delete the webui source
+RUN mv webui/build webui-build \
+    && rm -R webui \
+    && mkdir webui \
+    && mv webui-build webui/build
+
+# TODO - module-local-dev dependencies
+
+# cleanup up some stuff that shouldnt be preserved
+RUN rm -R .git
+
+# make the production image
+FROM node:14-slim
+
+WORKDIR /app
+COPY --from=0 /app/	/app/
+
+# Bind to 0.0.0.0, as access should be scoped down by how the port is exposed from docker
+USER node
 EXPOSE 8000
-ENTRYPOINT ["./headless.js", "eth0"]
+ENTRYPOINT ["./headless_ip.js", "0.0.0.0"]
