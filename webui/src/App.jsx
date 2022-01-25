@@ -241,6 +241,13 @@ function IdleTimerWrapper({ setLocked, timeoutMinutes }) {
 
 	useMountEffect(() => {
 		return () => {
+			setIdleTimeout((v) => {
+				if (v) {
+					clearTimeout(v)
+				}
+				return null
+			})
+
 			// close toast
 			if (context.notifier.current) {
 				context.notifier.current.close(TOAST_ID)
