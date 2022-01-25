@@ -2513,9 +2513,9 @@ commist@^1.0.0:
   dependencies:
     got "^11.8.3"
 
-"companion-module-canon-ptz@github:bitfocus/companion-module-canon-ptz#v1.0.1":
-  version "1.0.1"
-  resolved "https://codeload.github.com/bitfocus/companion-module-canon-ptz/tar.gz/aedb29a12fcb9a45a673a6a99d5ac46dec865a46"
+"companion-module-canon-ptz@github:bitfocus/companion-module-canon-ptz#v1.0.2":
+  version "1.0.2"
+  resolved "https://codeload.github.com/bitfocus/companion-module-canon-ptz/tar.gz/0288da1842dc5586b97cb59f4f5b28675e4bf061"
 
 "companion-module-canon-xf@github:bitfocus/companion-module-canon-xf#v1.0.0":
   version "1.0.0"
