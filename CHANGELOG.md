@@ -2,34 +2,33 @@
 
 ## Companion v2.2.0 - Release Notes (unreleased)
 
-### BREAKING CHANGES
-
-- Elgato Plugin must be enabled in companion before it can be used
-
 ### 📣 CORE FEATURES AND IMPROVEMENTS
 
-- MacOS builds are signed and notarized, windows builds are signed
-- MacOS M1 (arm64) native builds
+- MacOS builds are now signed and notarized, and Windows builds are signed
+- Native builds for MacOS M1 (arm64)
 - New UI written in React
-- Rewritten Getting Started documentation
-- Add Scheduler/Trigger management
-- Re-add Ember+ server
+- "Getting Started" Documentation Updated and Revised
+- Add Scheduler/Trigger Management
+- Custom variables, allow you to create your own variables to track state and pass into actions or triggers
+- Re-added Ember+ server
 - Additional draw functions in Image
 - Option to remove the top bar on all buttons
 - Context menu added to tray icon for quick access to core functions like rescan for USB devices
 - Instances are now called Connections
-- Support for xkeys devices (disabled by default on upgrades)
+- Support for X-Keys devices (disabled by default on upgrades)
 - Ability to clear the png image used on a button
-- Don’t load all modules at startup, to reduce startup times
+- Modules no longer loaded at launch to reduce startup time
 - Streamdecks can be positioned inside the 8x4 grid, not always the top left corner
 - Streamdecks can be named for easier identification
-  Serve the webui over https. Note: This does not mean it should be exposed to the internet, and is intended to allow - for embedding in iframes within other applications
-  The elgato plugin is opt-in, and doing so disables accessing local streamdecks (to avoid them fighting over the - panels)
-- USB rescan can be triggered over the remote protocols
-- New satellite api implementation. Simpler to implement on clients and wont have breaking changes in future releases.
-- TCP/HTTP/OSC/UDP apis are all opt-in (enabled for existing installations), and can be run on custom ports
-- Custom variables, allow you to create your own variables to track state and pass into actions or triggers
-- Specify path of companion config directory, with the COMPANION_CONFIG_BASEDIR environment variable
+- Serve the webui over https. Note: This does not mean it should be exposed to the internet, and is intended to allow - for embedding in iframes within other applications
+- USB rescan can now be triggered over the remote API protocols
+- New Satellite API implementation. Simpler to implement on clients, and won't have breaking changes in future releases.
+- TCP/HTTP/OSC/UDP APIs are now all opt-in (automatically enabled for existing installations), and can be run on custom ports
+- Path of Companion config directory can now be specified with the COMPANION_CONFIG_BASEDIR environment variable
+
+### BREAKING CHANGES
+
+- The Elgato plugin (to allow you to use both Companion and the Elgato Stream Deck software at the same time) is now opt-in within Companion and disabled by default, in order to avoid conflicts between both sets of software. It must be enabled in Companion before it can be used.
 
 ### 🐞 BUG FIXES
 
@@ -54,6 +53,7 @@
 - Boinx Mimolive
 - Brompton Tessera
 - ByteHive PlayoutBee
+- Canon PTZ
 - Canon XF
 - ClassX Liveboard
 - Connect Webcaster
@@ -87,16 +87,18 @@
 - Spotify Remote
 - SPX GC
 - Symetrix DSP
-- Tallyma Wireless Tally
+- Tally-MA Wireless Tally
 - Tesmart HDMI Matrix
 - Tow MixEffect
-- Visual productions Cuety
+- Visual Productions Cuety
 
 ### 👍🏻 MODULE IMPROVEMENTS
 
+Many of our modules have had various new features and bugfixes since our last public release of Companion.
+
 - Allean & Heath QU
 - Allean & Heath SQ
-- AJA Kipro
+- AJA Ki Pro
 - AJA Kumo
 - Audivero Unity Intercom Client
 - Avolites Titan
