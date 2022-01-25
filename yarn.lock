@@ -3222,9 +3222,9 @@ commist@^1.0.0:
   version "1.0.4"
   resolved "https://codeload.github.com/bitfocus/companion-module-panasonic-avhs/tar.gz/ef0d20caf0cce1ed11236b5e1c9cbd9894ff8c5a"
 
-"companion-module-panasonic-camera-controller@github:bitfocus/companion-module-panasonic-camera-controller#v1.0.6":
-  version "1.0.6"
-  resolved "https://codeload.github.com/bitfocus/companion-module-panasonic-camera-controller/tar.gz/7f0838496d1e232a32fdcdb529dc9f98484f3f6c"
+"companion-module-panasonic-camera-controller@github:bitfocus/companion-module-panasonic-camera-controller#v1.0.7":
+  version "1.0.7"
+  resolved "https://codeload.github.com/bitfocus/companion-module-panasonic-camera-controller/tar.gz/da5543bd297eda8861c52900a5de41dac934ad5d"
   dependencies:
     got "^6.7.1"
 
