@@ -436,6 +436,46 @@ function UserConfigTable() {
 						</div>
 					</td>
 				</tr>
+
+				<tr>
+					<td colSpan="2" className="settings-category">
+						Admin UI Password
+					</td>
+				</tr>
+				<tr>
+					<td colSpan="2">
+						<CAlert color="danger">
+							This does not make an installation secure!
+							<br /> This is intended to keep normal users from stumbling upon the settings and changing things. It will
+							not keep out someone determined to bypass it
+						</CAlert>
+					</td>
+				</tr>
+				<tr>
+					<td>Session Timeout (minutes)</td>
+					<td>
+						<div className="form-check form-check-inline mr-1">
+							<CInput
+								type="number"
+								value={config.admin_lockout}
+								onChange={(e) => setValue('admin_lockout', e.currentTarget.value)}
+							/>
+						</div>
+					</td>
+				</tr>
+				<tr>
+					<td>Password</td>
+					<td>
+						<div className="form-check form-check-inline mr-1">
+							<CInput
+								type="text"
+								value={config.admin_password}
+								onChange={(e) => setValue('admin_password', e.currentTarget.value)}
+							/>
+						</div>
+					</td>
+				</tr>
+
 				<tr>
 					<td colSpan="2" className="settings-category">
 						HTTPS Web Server
