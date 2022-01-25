@@ -8,12 +8,15 @@ export const NotificationsManager = forwardRef(function NotificationsManager(_pr
 	const doPruneToastIdInner = useCallback((id) => {
 		setToasts((oldToasts) => oldToasts.filter((t) => t.id !== id))
 	}, [])
-	const doPruneToastId = useCallback((id, duration) => {
-		setTimeout(() => {
-			// now prune them
-			doPruneToastIdInner(id)
-		}, 3000 + duration)
-	}, [])
+	const doPruneToastId = useCallback(
+		(id, duration) => {
+			setTimeout(() => {
+				// now prune them
+				doPruneToastIdInner(id)
+			}, 3000 + duration)
+		},
+		[doPruneToastIdInner]
+	)
 	const doDisposeToastId = useCallback(
 		(id) => {
 			// hide them
@@ -21,7 +24,7 @@ export const NotificationsManager = forwardRef(function NotificationsManager(_pr
 
 			doPruneToastIdInner(id)
 		},
-		[doPruneToastId]
+		[doPruneToastIdInner]
 	)
 
 	// Expose reload to the parent

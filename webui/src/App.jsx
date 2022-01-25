@@ -65,7 +65,7 @@ export default function App() {
 			})
 		})
 		return sock
-	})
+	}, [])
 
 	const handleWindowBlur = useCallback(() => {
 		setButtonGridHotPress(false)
@@ -75,12 +75,12 @@ export default function App() {
 		if (e.key === 'Shift') {
 			setButtonGridHotPress(true)
 		}
-	})
+	}, [])
 	const handleKeyUp = useCallback((e) => {
 		if (e.key === 'Shift') {
 			setButtonGridHotPress(false)
 		}
-	})
+	}, [])
 
 	useMountEffect(() => {
 		document.addEventListener('keydown', handleKeyDown)
@@ -138,8 +138,8 @@ function AppMain({ connected, loadingComplete, loadingProgress, buttonGridHotPre
 
 	const toggleSidebar = useCallback(() => {
 		setShowSidebar((oldVal) => !oldVal)
-	})
-	const canLock = !!config?.admin_lockout && config?.admin_lockout != '0'
+	}, [])
+	const canLock = !!config?.admin_lockout && config?.admin_lockout !== '0'
 	const setLocked = useCallback(() => {
 		if (canLock) {
 			setUnlocked(false)
@@ -152,10 +152,10 @@ function AppMain({ connected, loadingComplete, loadingProgress, buttonGridHotPre
 
 	// If lockout is disabled, then we are logged in
 	useEffect(() => {
-		if ((config && !config?.admin_lockout) || config?.admin_lockout == '0') {
+		if ((config && !config?.admin_lockout) || config?.admin_lockout === '0') {
 			setUnlocked(true)
 		}
-	}, [config?.admin_lockout])
+	}, [config])
 
 	return (
 		<div className="c-app">
@@ -183,7 +183,7 @@ function AppMain({ connected, loadingComplete, loadingProgress, buttonGridHotPre
 function IdleTimerWrapper({ setLocked, timeoutMinutes }) {
 	const context = useContext(StaticContext)
 
-	const [_idleTimeout, setIdleTimeout] = useState(null)
+	const [, setIdleTimeout] = useState(null)
 
 	const TOAST_ID = 'SESSION_TIMEOUT_TOAST'
 	const TOAST_DURATION = 45 * 1000
@@ -291,7 +291,7 @@ function AppAuthWrapper({ setUnlocked }) {
 			e.preventDefault()
 
 			setPassword((currentPassword) => {
-				if (currentPassword == config.admin_password) {
+				if (currentPassword === config.admin_password) {
 					setShowError(false)
 					setUnlocked()
 					return ''
@@ -304,7 +304,7 @@ function AppAuthWrapper({ setUnlocked }) {
 
 			return false
 		},
-		[config.admin_password]
+		[config.admin_password, setUnlocked]
 	)
 
 	return (
