@@ -3480,13 +3480,13 @@ commist@^1.0.0:
   version "1.2.8"
   resolved "https://codeload.github.com/bitfocus/companion-module-sony-visca/tar.gz/e95ec2025d6647cb95b29bdb0dbfc23790b86922"
 
-"companion-module-soundcraft-ui@github:bitfocus/companion-module-soundcraft-ui#v2.0.3":
-  version "2.0.3"
-  resolved "https://codeload.github.com/bitfocus/companion-module-soundcraft-ui/tar.gz/0805c986d9b3853ce9a7e95063bef6655944f57a"
+"companion-module-soundcraft-ui@github:bitfocus/companion-module-soundcraft-ui#v2.0.4":
+  version "2.0.4"
+  resolved "https://codeload.github.com/bitfocus/companion-module-soundcraft-ui/tar.gz/a9035cdd787ebd2c2867b4f99773b12229ed2b3a"
   dependencies:
     "@types/node" "^12.0.4"
     rxjs "^6.6.3"
-    soundcraft-ui-connection "0.10.1"
+    soundcraft-ui-connection "^0.11.0"
 
 "companion-module-sounddevices-pixnet@github:bitfocus/companion-module-sounddevices-pixnet#v1.0.0":
   version "1.0.0"
@@ -8727,10 +8727,10 @@ socks@^2.3.3:
     ip "^1.1.5"
     smart-buffer "^4.1.0"
 
-soundcraft-ui-connection@0.10.1:
-  version "0.10.1"
-  resolved "https://registry.yarnpkg.com/soundcraft-ui-connection/-/soundcraft-ui-connection-0.10.1.tgz#507ad2eca98c9f574ec240a38a8eda500cab8ed9"
-  integrity sha512-ML88xppl6MfyElP9N8dzmNODMV8Z1atEbY4WHQX7bMNn1kzfBshsmnqN0SI7fOU00UmqXYJTXu5sL6aoT8bQYQ==
+soundcraft-ui-connection@^0.11.0:
+  version "0.11.0"
+  resolved "https://registry.yarnpkg.com/soundcraft-ui-connection/-/soundcraft-ui-connection-0.11.0.tgz#784dd67e4ffe2b06891bf5fcc42715584af909a0"
+  integrity sha512-Oby9Uj3JvXi0wvNaCSWWAIC1/KMZe86hhfx5KKckxSAdkm/7bfkSOEMk5PCPtNOoCSVasQJLsjC6e8J30d6jHA==
   dependencies:
     isomorphic-ws "^4.0.1"
     rxjs "^6.6.3"
