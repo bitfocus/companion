@@ -458,6 +458,8 @@ function UserConfigTable() {
 							<CInput
 								type="number"
 								value={config.admin_lockout}
+								min={0}
+								step={1}
 								onChange={(e) => setValue('admin_lockout', e.currentTarget.value)}
 							/>
 						</div>
