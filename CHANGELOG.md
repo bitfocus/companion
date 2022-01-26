@@ -4,22 +4,22 @@
 
 ### 📣 CORE FEATURES AND IMPROVEMENTS
 
+- New UI: Written in React, designed to be much faster and more responsive
 - MacOS builds are now signed and notarized, and Windows builds are signed
-- Native builds for MacOS M1 (arm64)
-- New UI written in React
+- Native builds for MacOS M1 processors (arm64)
 - "Getting Started" Documentation Updated and Revised
-- Add Scheduler/Trigger Management
-- Custom variables, allow you to create your own variables to track state and pass into actions or triggers
+- Scheduler/Trigger Management: Now you can schedule button presses based on variable values or time of day. Automate anything with Companion!
+- Custom variables: Create your own variables independent of modules/connections. You can then pass these into actions or triggers.
 - Re-added Ember+ server
 - Additional draw functions in Image
 - Option to remove the top bar on all buttons
-- Context menu added to tray icon for quick access to core functions like rescan for USB devices
+- Context menu added to tray icon for quick access to core functions, like rescanning for USB devices
 - Instances are now called Connections
-- Support for X-Keys devices (disabled by default on upgrades)
+- Support for X-Keys surfaces/devices (disabled by default on upgrades)
 - Ability to clear the png image used on a button
 - Modules no longer loaded at launch to reduce startup time
 - Streamdecks can be positioned inside the 8x4 grid, not always the top left corner
-- Streamdecks can be named for easier identification
+- Streamdecks can now be named in the UI for easier identification
 - Serve the webui over https. Note: This does not mean it should be exposed to the internet, and is intended to allow - for embedding in iframes within other applications
 - USB rescan can now be triggered over the remote API protocols
 - New Satellite API implementation. Simpler to implement on clients, and won't have breaking changes in future releases.
@@ -38,59 +38,72 @@
 - Add some additional characters to the 7px text font
 - Variable parsing can no longer get stuck in infinite loops
 - MacOS: Allow binding the webui to vlan/vpn interfaces
-- Various other fixes
+- Various other fixes and improvements
 
 ### 🧩 NEW MODULES
 
-- TODO: Some that were added pre 2.1.3 but dropped from 2.1.3
 - Arkaos Mediamaster
 - Allen & Heath AHM
+- Allen & Heath Avantis?
 - Axis PTZ
 - Biamp Audia
 - Bitfocus Snapshot
+- Blackmagic Audio Monitor
 - Blackmagic WebPresenter HD
 - Blackbird HDMI Matrix
+- Blackbox Boxilla
 - Boinx Mimolive
+- Boreal Systems Director
 - Brompton Tessera
 - ByteHive PlayoutBee
 - Canon PTZ
 - Canon XF
+- Cisco WebEx (Websocket)
 - ClassX Liveboard
 - Connect Webcaster
 - Ctpsystems dio8008r
 - Dcc Ex Command Station
+- Extron XTP 3200
 - Generic Websocket
 - Generic SWP08
 - Haivision KBencoder
 - Hermann StageTimerIO
 - Ifelseware avkey
+- IPL OCP
 - Imagine LRC
 - Kiloview NDI
 - LeadLED Clockotron
 - Leafcoders Titler
+- Linkbox Remote
 - Livemind Recorder
 - Ltn Schedule
 - Lumens Media processor
-- Makeprox Glue
+- Makepro-x Glue
 - Middlethings Middlecontrol
 - Muxlab KVM
 - Nexo NXAMP
 - Nobe Omniscope
 - Novastar H-Series
+- Phillips Hue
 - Rocosoft PtzJoy
 - Seervision Suite
 - Shure MXA910
 - Shure MXN5
 - Shure P300
+- Shure SCM820
 - Softon Movie Recorder
+- Softouch EasyWorship
 - Sony Broadcast Monitor
 - Spotify Remote
 - SPX GC
 - Symetrix DSP
 - Tally-MA Wireless Tally
 - Tesmart HDMI Matrix
+- TVOne Corio
 - Tow MixEffect
 - Visual Productions Cuety
+- VDO Ninja
+- Vistream Online
 
 ### 👍🏻 MODULE IMPROVEMENTS
 
@@ -109,17 +122,14 @@ Many of our modules have had various new features and bugfixes since our last pu
 - Birddog VISCA
 - Bitfocus Companion
 - Blackmagic ATEM
-- Blackmagic AudioMonitor
 - Blackmagic Hyperdeck
 - Chamsys MagicQ OSC
 - Cisco CMS
-- Cisco WebEx (Websocket)
 - Dataton Watchout
 - Dolby Cinema Processor
 - Elgato Keylight
 - Epiphan Pearl
 - Extron SMP351
-- Extron XTP-3200
 - Figure53 Go Button
 - Figure53 QLab Advanced
 - Generic Artnet
@@ -145,7 +155,6 @@ Many of our modules have had various new features and bugfixes since our last pu
 - Panasonic AVHS
 - Panasonic Projector
 - Panasonic PTZ
-- Phillips Hue
 - Presentation tools APS
 - Presentation tools Cuetimer
 - Prsi iPower
@@ -155,17 +164,15 @@ Many of our modules have had various new features and bugfixes since our last pu
 - Roland M5000
 - Roland V60HD
 - Roland V1200HD
-- Rossvideo Expression
+- Rossvideo Xpression
 - Shure PSM1000
-- Shure SCM820
-- Shure wireless
+- Shure Wireless
 - Singular Live Studio
 - Soundcraft UI
 - Studiocoast Vmix
 - Teradek Vidiu
 - ThingM Blink(1)
 - Ubiquiti Unifi
-- Vdo Ninja
 - Vicreo Hotkey
 - Vicreo Variable Listener
 - Videolan VLC
