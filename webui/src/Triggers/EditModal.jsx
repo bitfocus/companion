@@ -54,7 +54,7 @@ function getFeedbackDefaults() {
 	]
 }
 
-export function ScheduleEditModal({ doClose, doSave, item, plugins }) {
+export function TriggerEditModal({ doClose, doSave, item, plugins }) {
 	const context = useContext(StaticContext)
 
 	const [config, setConfig] = useState({})
@@ -85,14 +85,13 @@ export function ScheduleEditModal({ doClose, doSave, item, plugins }) {
 
 			console.log('pluginType', pluginType)
 			const innerConfig = getPluginSpecDefaults(pluginOptions)
-			const innerConfig2 = pluginSpec?.multiple ? [innerConfig] : innerConfig
 
 			setConfig((oldConfig) => ({
 				title: '',
 				actions: [],
 				...oldConfig,
 				type: pluginType,
-				config: pluginType === 'feedback' ? getFeedbackDefaults() : innerConfig2,
+				config: pluginType === 'feedback' ? getFeedbackDefaults() : innerConfig,
 			}))
 		},
 		[plugins]
@@ -100,18 +99,10 @@ export function ScheduleEditModal({ doClose, doSave, item, plugins }) {
 
 	useMountEffect(() => {
 		if (item) {
-			const pluginSpec = plugins?.find((p) => p.type === item.type)
-
-			// Fixup the config to be an array to make the logic simpler
-			const item2 = { ...item }
-			if (pluginSpec?.multiple && item2.config && !Array.isArray(item2.config)) {
-				item2.config = [item2.config]
-			}
-
 			// hack
-			if (!item2.actions) item2.actions = []
+			if (!item.actions) item.actions = []
 
-			setConfig(item2)
+			setConfig(item)
 		} else if (plugins) {
 			const defaultPlugin = plugins.find((p) => p.type === 'feedback') ?? plugins[0]
 			changeType({ value: defaultPlugin.type })
@@ -165,7 +156,7 @@ export function ScheduleEditModal({ doClose, doSave, item, plugins }) {
 					</CFormGroup>
 
 					{pluginSpec?.options ? (
-						<ScheduleEditModalConfig pluginSpec={pluginSpec} config={config.config} updateConfig={updateConfig} />
+						<TriggerEditModalConfig pluginSpec={pluginSpec} config={config.config} updateConfig={updateConfig} />
 					) : (
 						'Unknown type selected'
 					)}
@@ -216,7 +207,7 @@ export function ScheduleEditModal({ doClose, doSave, item, plugins }) {
 	)
 }
 
-function ScheduleEditModalConfig({ pluginSpec, config, updateConfig }) {
+function TriggerEditModalConfig({ pluginSpec, config, updateConfig }) {
 	const context = useContext(StaticContext)
 
 	const updateInnerConfig = useCallback(
@@ -225,17 +216,6 @@ function ScheduleEditModalConfig({ pluginSpec, config, updateConfig }) {
 				...config,
 				[id]: val,
 			})
-		},
-		[config, updateConfig]
-	)
-	const updateArrayConfig = useCallback(
-		(index, id, val) => {
-			const newConfig = [...config]
-			newConfig[index] = {
-				...newConfig[index],
-				[id]: val,
-			}
-			updateConfig('config', newConfig)
 		},
 		[config, updateConfig]
 	)
@@ -255,9 +235,6 @@ function ScheduleEditModalConfig({ pluginSpec, config, updateConfig }) {
 		[config, updateConfig]
 	)
 
-	const addRow = useCallback(() => {
-		updateConfig('config', [...config, getPluginSpecDefaults(pluginSpec.options)])
-	}, [updateConfig, config, pluginSpec])
 	const addFeedbackSelect = useCallback(
 		(feedbackType) => {
 			socketEmit(context.socket, 'feedback_get_defaults', [feedbackType]).then(([fb]) => {
@@ -275,11 +252,12 @@ function ScheduleEditModalConfig({ pluginSpec, config, updateConfig }) {
 
 	// This is a bit of a hack:
 	if (pluginSpec.type === 'feedback') {
+		const config2 = Array.isArray(config) ? config : [config]
 		return (
 			<>
 				<table className="table feedback-table">
 					<tbody>
-						{config.map((conf, i) => (
+						{config2.map((conf, i) => (
 							<tr key={i}>
 								<td>
 									<MyErrorBoundary>
@@ -300,66 +278,24 @@ function ScheduleEditModalConfig({ pluginSpec, config, updateConfig }) {
 		)
 	}
 
-	if (pluginSpec.multiple) {
-		return (
-			<>
-				<table style={{ width: '100%' }}>
-					<thead>
-						<tr>
-							{pluginSpec.options.map((spec) => (
-								<th key={spec.key}>{spec.name}</th>
-							))}
-						</tr>
-					</thead>
-					<tbody>
-						{config.map((conf, i) => (
-							<tr key={i}>
-								<MyErrorBoundary>
-									{pluginSpec.options.map((spec) => (
-										<td key={spec.key}>
-											<ScheduleEditModalInput
-												spec={spec}
-												value={conf[spec.key]}
-												onChange={(val) => updateArrayConfig(i, spec.key, val)}
-											/>
-										</td>
-									))}
-								</MyErrorBoundary>
-								<td>
-									<CButton color="danger" onClick={() => delRow(i)} disabled={config.length <= 1}>
-										X
-									</CButton>
-								</td>
-							</tr>
-						))}
-					</tbody>
-				</table>
-
-				<CButton color="ghost-primary" onClick={addRow}>
-					Add Additional Condition
-				</CButton>
-			</>
-		)
-	} else {
-		return (
-			<>
-				{pluginSpec.options.map((spec) => (
-					<CFormGroup key={spec.key}>
-						<MyErrorBoundary>
-							<ScheduleEditModalInput
-								spec={spec}
-								value={config[spec.key]}
-								onChange={(val) => updateInnerConfig(spec.key, val)}
-							/>
-						</MyErrorBoundary>
-					</CFormGroup>
-				))}
-			</>
-		)
-	}
+	return (
+		<>
+			{pluginSpec.options.map((spec) => (
+				<CFormGroup key={spec.key}>
+					<MyErrorBoundary>
+						<TriggerEditModalInput
+							spec={spec}
+							value={config[spec.key]}
+							onChange={(val) => updateInnerConfig(spec.key, val)}
+						/>
+					</MyErrorBoundary>
+				</CFormGroup>
+			))}
+		</>
+	)
 }
 
-function ScheduleEditModalInput({ spec, value, onChange }) {
+function TriggerEditModalInput({ spec, value, onChange }) {
 	const choices = useMemo(() => {
 		return spec?.choices?.map((ch) => ({ value: ch.id, label: ch.label })) ?? []
 	}, [spec?.choices])

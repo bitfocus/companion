@@ -2,21 +2,23 @@ import React, { memo, useCallback, useContext, useEffect, useState } from 'react
 import { CButton } from '@coreui/react'
 import { StaticContext } from '../util'
 import dayjs from 'dayjs'
-import { ScheduleEditModal } from './EditModal'
+import { TriggerEditModal } from './EditModal'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faFileExport } from '@fortawesome/free-solid-svg-icons'
 
-export const Scheduler = memo(function Scheduler() {
+export const Triggers = memo(function Triggers() {
 	const context = useContext(StaticContext)
 
 	const [plugins, setPlugins] = useState(null)
-	const [scheduleList, setScheduleList] = useState(null)
+	const [triggersList, setTriggersList] = useState(null)
 	const [editItem, setEditItem] = useState([false, null])
 
-	const loadSchedule = useCallback((list) => {
-		setScheduleList(list)
+	const loadTriggersList = useCallback((list) => {
+		setTriggersList(list)
 	}, [])
 
 	const replaceItem = useCallback((itemId, item) => {
-		setScheduleList((list) => {
+		setTriggersList((list) => {
 			const newList = [...list]
 			const index = newList.findIndex((i) => i.id === itemId)
 			if (index !== -1) {
@@ -51,13 +53,13 @@ export const Scheduler = memo(function Scheduler() {
 		context.socket.emit('schedule_plugins', (newPlugins) => {
 			setPlugins(newPlugins)
 		})
-		context.socket.emit('schedule_get', loadSchedule)
-		context.socket.on('schedule_refresh', loadSchedule)
+		context.socket.emit('schedule_get', loadTriggersList)
+		context.socket.on('schedule_refresh', loadTriggersList)
 
 		return () => {
-			context.socket.off('schedule_refresh', loadSchedule)
+			context.socket.off('schedule_refresh', loadTriggersList)
 		}
-	}, [context.socket, loadSchedule])
+	}, [context.socket, loadTriggersList])
 
 	return (
 		<div>
@@ -65,8 +67,8 @@ export const Scheduler = memo(function Scheduler() {
 			<p>This allows you to run actions based on instance or time events.</p>
 
 			{editItem[0] ? (
-				<ScheduleEditModal
-					item={editItem[1] !== null ? scheduleList.find((i) => i.id === editItem[1]) : undefined}
+				<TriggerEditModal
+					item={editItem[1] !== null ? triggersList.find((i) => i.id === editItem[1]) : undefined}
 					doClose={doCloseModal}
 					plugins={plugins}
 					doSave={doSave}
@@ -75,17 +77,28 @@ export const Scheduler = memo(function Scheduler() {
 				''
 			)}
 
-			<ScheduleTable scheduleList={scheduleList} replaceItem={replaceItem} editItem={doEditItem} />
+			<TriggersTable triggersList={triggersList} replaceItem={replaceItem} editItem={doEditItem} />
 
 			<CButton color="primary" onClick={doAddNew}>
 				Add New Trigger
+			</CButton>
+
+			<CButton
+				color="light"
+				style={{
+					marginLeft: 10,
+				}}
+				href={`/int/trigger_export_all`}
+				target="_new"
+			>
+				<FontAwesomeIcon icon={faFileExport} /> Export all
 			</CButton>
 		</div>
 	)
 })
 
 const tableDateFormat = 'MM/DD HH:mm:ss'
-function ScheduleTable({ scheduleList, replaceItem, editItem }) {
+function TriggersTable({ triggersList, replaceItem, editItem }) {
 	return (
 		<table className="table table-responsive-sm">
 			<thead>
@@ -96,20 +109,20 @@ function ScheduleTable({ scheduleList, replaceItem, editItem }) {
 				</tr>
 			</thead>
 			<tbody>
-				{scheduleList && scheduleList.length > 0 ? (
-					scheduleList.map((item) => (
-						<ScheduleTableRow key={item.id} item={item} replaceItem={replaceItem} editItem={editItem} />
+				{triggersList && triggersList.length > 0 ? (
+					triggersList.map((item) => (
+						<TriggersTableRow key={item.id} item={item} replaceItem={replaceItem} editItem={editItem} />
 					))
 				) : (
 					<tr>
-						<td colSpan="4">There currently are no events scheduled.</td>
+						<td colSpan="4">There currently are no triggers or scheduled tasks.</td>
 					</tr>
 				)}
 			</tbody>
 		</table>
 	)
 }
-function ScheduleTableRow({ item, replaceItem, editItem }) {
+function TriggersTableRow({ item, replaceItem, editItem }) {
 	const context = useContext(StaticContext)
 
 	const doEnableDisable = useCallback(() => {
@@ -127,6 +140,12 @@ function ScheduleTableRow({ item, replaceItem, editItem }) {
 	const doEdit = useCallback(() => {
 		editItem(item.id)
 	}, [editItem, item.id])
+	const doClone = useCallback(() => {
+		context.socket.emit('schedule_clone_item', item.id, (newItem) => {
+			console.log('completed clone', item.id, newItem.id)
+			replaceItem(newItem.id, newItem)
+		})
+	}, [context.socket, replaceItem, item.id])
 
 	return (
 		<tr>
@@ -152,6 +171,12 @@ function ScheduleTableRow({ item, replaceItem, editItem }) {
 				)}
 				<CButton size="sm" color="primary" onClick={doEdit}>
 					edit
+				</CButton>
+				<CButton size="sm" color="warning" onClick={doClone}>
+					clone
+				</CButton>
+				<CButton size="sm" color="light" href={`/int/trigger_export/${item.id}`} target="_new">
+					export
 				</CButton>
 			</td>
 		</tr>
