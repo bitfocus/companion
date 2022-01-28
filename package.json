@@ -93,12 +93,12 @@
 		]
 	},
 	"scripts": {
-		"prod": "./tools/build_writefile.sh && electron .",
-		"dev": "./tools/build_writefile.sh && cross-env DEVELOPER=1 electron .",
+		"prod": "yarn build:writefile && electron .",
+		"dev": "yarn build:writefile && cross-env DEVELOPER=1 electron .",
 		"update": "./tools/update.sh",
 		"pack": "electron-builder --dir",
 		"dist:webui": "yarn --cwd webui build",
-		"dist:prepare": "./tools/build_writefile.sh ; rm -rf electron-output && yarn dist:webui",
+		"dist:prepare": "yarn build:writefile ; rm -rf electron-output && yarn dist:webui",
 		"dist": "yarn dist:prepare && yarn electron-rebuild && electron-builder",
 		"electron-rebuild": "yarn dist:prepare:sharp && electron-builder install-app-deps",
 		"testprod": "./node_modules/electron/cli.js .",
@@ -114,11 +114,13 @@
 		"dist:prepare:linux": "cross-env npm_config_platform=linux npm_config_arch=x64 yarn dist:prepare:sharp",
 		"dist:prepare:rpi": "cross-env npm_config_platform=linux npm_config_arch=arm yarn dist:prepare:sharp",
 		"test": "jest",
-		"postinstall": "./tools/build_writefile.sh",
+		"postinstall": "yarn build:writefile",
 		"headless": "nodemon --ignore './webui/' headless.js",
-		"dev-headless": "./tools/build_writefile.sh && cross-env DEVELOPER=1 nodemon --ignore './webui/' headless.js",
+		"dev-headless": "yarn build:writefile && cross-env DEVELOPER=1 nodemon --ignore './webui/' headless.js",
 		"dev-webui": "yarn --cwd webui dev",
-		"format": "prettier --write ."
+		"format": "prettier --write .",
+		"build:writefile": "zx ./tools/build_writefile.mjs",
+		"build:rename_upload": "zx ./tools/build_rename_upload.mjs"
 	},
 	"repository": "https://github.com/bitfocus/companion",
 	"keywords": [
@@ -494,7 +496,8 @@
 		"socket.io": "^4.4.1",
 		"strip-ansi": "^5.2.0",
 		"systeminformation": "^5.10.0",
-		"websocket": "^1.0.34"
+		"websocket": "^1.0.34",
+		"zx": "^4.3.0"
 	},
 	"collective": {
 		"type": "donorbox",

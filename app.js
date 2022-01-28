@@ -40,7 +40,7 @@ try {
 		.trim()
 } catch (e) {
 	console.error('Companion cannot start as the "BUILD" file is missing')
-	console.error('If you are running from source, you can generate it by running: ./tools/build_writefile.sh')
+	console.error('If you are running from source, you can generate it by running: yarn build:writefile')
 	process.exit(1)
 }
 

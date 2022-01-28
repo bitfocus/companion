@@ -31,7 +31,7 @@ jobs:
           mv linux-unpacked companion-$VERSION
           tar -cvzf companion-$VERSION.tar.gz companion-$VERSION
       - name: rename and upload stuff
-        run: node ./tools/build_rename_git.js
+        run: yarn build:rename_upload
         env:
           CI_BUILD_OS: linux
           BITFOCUS_S3: ${{ secrets.BITFOCUS_S3 }}
@@ -64,14 +64,12 @@ jobs:
           # verify that every module is runnable
           node tools/verify-module-build.mjs "electron-output/mac/Companion.app/Contents/Resources/app.asar"
         env:
-          CI_BUILD_OS: osx
-          CI_BUILD_ARCH: x64
           CSC_LINK: ${{ secrets.OSX_CSC_LINK }}
           CSC_KEY_PASSWORD: ${{ secrets.OSX_CSC_KEY_PASSWORD }}
           APPLEID: ${{ secrets.APPLEID }}
           APPLEIDPASS: ${{ secrets.APPLEIDPASS }}
       - name: rename and upload stuff
-        run: node ./tools/build_rename_git.js
+        run: yarn build:rename_upload
         env:
           CI_BUILD_OS: osx
           CI_BUILD_ARCH: x64
@@ -105,14 +103,12 @@ jobs:
           # verify that every module is runnable
           node tools/verify-module-build.mjs "electron-output/mac-arm64/Companion.app/Contents/Resources/app.asar"
         env:
-          CI_BUILD_OS: osx
-          CI_BUILD_ARCH: arm64
           CSC_LINK: ${{ secrets.OSX_CSC_LINK }}
           CSC_KEY_PASSWORD: ${{ secrets.OSX_CSC_KEY_PASSWORD }}
           APPLEID: ${{ secrets.APPLEID }}
           APPLEIDPASS: ${{ secrets.APPLEIDPASS }}
       - name: rename and upload stuff
-        run: node ./tools/build_rename_git.js
+        run: yarn build:rename_upload
         env:
           CI_BUILD_OS: osx
           CI_BUILD_ARCH: arm64
@@ -146,11 +142,10 @@ jobs:
           # verify that every module is runnable
           node tools/verify-module-build.mjs electron-output/win-unpacked/resources/app.asar
         env:
-          CI_BUILD_OS: win64
           CSC_LINK: ${{ secrets.CSC_LINK }}
           CSC_KEY_PASSWORD: ${{ secrets.CSC_KEY_PASSWORD }}
       - name: rename and upload stuff
-        run: node ./tools/build_rename_git.js
+        run: yarn build:rename_upload
         env:
           CI_BUILD_OS: win64
           BITFOCUS_S3: ${{ secrets.BITFOCUS_S3 }}
