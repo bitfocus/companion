@@ -17,9 +17,9 @@
 
 var util = require('util')
 var debug = require('debug')('lib/instance_skel')
-var image = require('./lib/image')
-var icons = require('./lib/resources/icons')
-var { serializeIsVisibleFn } = require('./lib/resources/util')
+var image = require('./lib/Graphics/Image')
+var icons = require('./lib/Resources/Icons')
+var { serializeIsVisibleFn } = require('./lib/Resources/Util')
 
 function instance(system, id, config) {
 	var self = this
