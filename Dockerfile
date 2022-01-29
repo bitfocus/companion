@@ -14,11 +14,11 @@ RUN apt-get update && apt-get install -y \
     cmake \
     && rm -rf /var/lib/apt/lists/*
 
-# Generate version number file
-RUN ./tools/build_writefile.sh
-
 # Install dependencies
 RUN ./tools/yarn.sh
+
+# Generate version number file
+RUN yarn build:writefile
 
 # strip back unnecessary dependencies
 RUN yarn --frozen-lockfile --prod

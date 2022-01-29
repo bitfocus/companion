@@ -16,27 +16,6 @@
 # disclosing the source code of your own applications.
 #
 
-function parse_git_dirty() {
-	git diff --quiet --ignore-submodules HEAD 2>/dev/null; [ $? -eq 1 ] && echo ""
-}
+echo "This script is deprecated, please use \`yarn build:writefile\` instead"
 
-function get_git_branch() {
-	git status|grep 'On branch'|awk '{print $3}'
-}
-
-# get last commit hash prepended with @ (i.e. @8a323d0)
-function parse_git_hash() {
-	git rev-parse --short HEAD 2> /dev/null | sed "s/\(.*\)/\1/" | cut -d'-' -f2
-}
-
-function parse_git_count() {
-	git log|egrep "^commit"|wc -l|awk '{print $1}'
-}
-
-function release() {
-	cat package.json |grep \"version\"|cut -f4 -d\"
-}
-
-GIT_BRANCH=$(release)-$(parse_git_hash)-$(parse_git_count)
-
-echo -n ${GIT_BRANCH} > ./BUILD
+yarn build:writefile
