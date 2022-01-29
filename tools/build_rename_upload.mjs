@@ -30,13 +30,13 @@ if (process.env.CI_BUILD_OS === 'osx') {
 	artifact_dest = `companion-${build}-mac-${arch}.dmg`
 } else if (process.env.CI_BUILD_OS === 'linux') {
 	artifact_source = list.find((file) => file.match(/\.gz$/))
-	artifact_dest = `companion-${build}-linux.tar.gz`
+	artifact_dest = `companion-${build}-linux-x64.tar.gz`
 } else if (process.env.CI_BUILD_OS === 'win64') {
 	artifact_source = list.find((file) => file.match(/\.exe$/))
 	artifact_dest = `companion-${build}-win64.exe`
 } else if (process.env.CI_BUILD_OS === 'armv7l') {
 	artifact_source = list.find((file) => file.match(/\.z$/))
-	artifact_dest = `companion-${build}-armv7l.tar.gz`
+	artifact_dest = `companion-${build}-linux-armv7l.tar.gz`
 } else {
 	console.error(`Unknown operating system: ${process.env.CI_BUILD_OS}`)
 	process.exit(1)
