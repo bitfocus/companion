@@ -116,7 +116,10 @@ function createWindow() {
 
 	ipcMain.on('network-interfaces:get', function () {
 		systeminformation.networkInterfaces().then(function (list) {
-			const interfaces = [{ id: '127.0.0.1', label: 'localhost / 127.0.0.1' }]
+			const interfaces = [
+				{ id: '0.0.0.0', label: 'All Interfaces: 0.0.0.0' },
+				{ id: '127.0.0.1', label: 'localhost: 127.0.0.1' },
+			]
 
 			for (const obj of list) {
 				if (obj.ip4 && !obj.internal) {
@@ -223,13 +226,13 @@ function launchUI() {
 	var isMac = process.platform == 'darwin'
 	var isLinux = process.platform == 'linux'
 
-	if (skeleton_info.appURL.match(/http/)) {
+	if (skeleton_info.appLaunch.match(/http/)) {
 		if (isWin) {
-			exec('start ' + skeleton_info.appURL, function callback(error, stdout, stderr) {})
+			exec('start ' + skeleton_info.appLaunch, function callback(error, stdout, stderr) {})
 		} else if (isMac) {
-			exec('open ' + skeleton_info.appURL, function callback(error, stdout, stderr) {})
+			exec('open ' + skeleton_info.appLaunch, function callback(error, stdout, stderr) {})
 		} else if (isLinux) {
-			exec('xdg-open ' + skeleton_info.appURL, function callback(error, stdout, stderr) {})
+			exec('xdg-open ' + skeleton_info.appLaunch, function callback(error, stdout, stderr) {})
 		}
 	}
 }

@@ -1,5 +1,8 @@
 blank_issues_enabled: false
 contact_links:
+  - name: BUG IN A DEVICE MODULE?
+    url: https://github.com/bitfocus?type=source
+    about: Report it against the module itself, to get the relevant people notified.
   - name: NEW DEVICE OR SOFTWARE SUPPORT
     url: https://github.com/bitfocus/companion-module-requests/issues
     about: Please request new device integrations here.
