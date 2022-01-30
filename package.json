@@ -485,7 +485,6 @@
 		"husky": "^7.0.4",
 		"infinitton-idisplay": "^1.1.0",
 		"lodash": "^4.17.20",
-		"mkdirp": "^1.0.4",
 		"moment": "^2.29.1",
 		"node-fetch": "^2.6.7",
 		"node-rest-client": "^3.1.0",

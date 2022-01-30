@@ -24,9 +24,8 @@ global.MAX_BUTTONS_PER_ROW = 8
 
 var EventEmitter = require('events')
 var system = new EventEmitter()
-var fs = require('fs')
+var fs = require('fs-extra')
 var debug = require('debug')('app')
-var mkdirp = require('mkdirp')
 var stripAnsi = require('strip-ansi')
 var logbuffer = []
 var logwriting = false
@@ -62,7 +61,7 @@ system.on('skeleton-info', function (key, val) {
 	if (key == 'configDir') {
 		debug('configuration directory', val)
 		cfgDir = val + '/companion/'
-		mkdirp.sync(cfgDir)
+		fs.ensureDirSync(cfgDir)
 		config = new (require('./lib/Config'))(system, cfgDir, {
 			http_port: 8888,
 			bind_ip: '127.0.0.1',
