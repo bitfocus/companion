@@ -46,6 +46,9 @@ for (const folder of possibleModuleFolders) {
 
 			if (!pkgJson.main) throw new Error(`Missing main in package.json`)
 
+			if (folder !== `companion-module-${pkgJson.name}`)
+				throw new Error(`Name in package.json (${pkgJson.name}) doesn't match folder name`)
+
 			const mainPath = path.join(appPath, 'node_modules', folder, pkgJson.main)
 			if (!fs.existsSync(mainPath)) throw new Error('Missing entrypoint')
 

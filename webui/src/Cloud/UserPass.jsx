@@ -1,5 +1,3 @@
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faInfoCircle } from '@fortawesome/free-solid-svg-icons'
 import React, { Component } from 'react'
 import { CButton, CInput } from '@coreui/react'
 
@@ -11,7 +9,7 @@ export class CloudUserPass extends Component {
 		super(props)
 
 		this.state = {
-			username: '',
+			username: props.username || '',
 			password: '',
 		}
 	}
@@ -65,7 +63,7 @@ export class CloudUserPass extends Component {
 						}}
 					/>
 				</div>
-				<CButton color="success" type="submit" disabled={this.state.username === '' || this.state.password === ''}>
+				<CButton color="success" type="submit" loading={this.props.working} disabled={this.props.working || this.state.username === '' || this.state.password === ''}>
 					Log in
 				</CButton>
 			</form>

@@ -1,5 +1,6 @@
 var AWS = require('aws-sdk')
 var fs = require('fs')
+var request = require('request')
 
 if (process.argv[2] === undefined) {
 	console.error('Missing source filename to upload as first argument')
@@ -47,7 +48,24 @@ up.on('error', function (error) {
 })
 
 up.on('uploaded', function (details) {
-	console.log('UPP Uploaded')
+	console.log('File uploaded to S3')
+
+	var options = {
+		method: 'POST',
+		url: 'https://api.bitfocus.io/v1/webhooks/builds',
+		headers: {
+			Secret: process.env.BITFOCUS_SECRET,
+			'Content-Type': 'application/json',
+		},
+		body: JSON.stringify({ product: 'companion', filename: process.argv[3] }),
+	}
+	console.log('Notifying API server')
+	request(options, function (error, response) {
+		if (error) throw new Error(error)
+		else {
+			console.log('API Server notified.')
+		}
+	})
 })
 
 res.pipe(up)

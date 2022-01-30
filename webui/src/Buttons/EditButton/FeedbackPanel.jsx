@@ -2,7 +2,7 @@ import { CAlert, CButton, CForm, CFormGroup } from '@coreui/react'
 import { faSort, faTrash } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import React, { useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react'
-import { StaticContext, FeedbacksContext, InstancesContext, MyErrorBoundary, socketEmit } from '../../util'
+import { StaticContext, FeedbacksContext, InstancesContext, MyErrorBoundary, socketEmit, sandbox } from '../../util'
 import update from 'immutability-helper'
 import Select from 'react-select'
 import { ActionTableRowOption } from './Table'
@@ -255,6 +255,39 @@ export function FeedbackEditor({ feedback, setValue, innerDelete, setSelectedSty
 	const feedbackSpec = (feedbacksContext[feedback.instance_id] || {})[feedback.type]
 	const options = feedbackSpec?.options ?? []
 
+	const [optionVisibility, setOptionVisibility] = useState({})
+
+	useEffect(() => {
+		const options = feedbackSpec?.options ?? []
+
+		for (const option of options) {
+			if (typeof option.isVisibleFn === 'string') {
+				option.isVisible = sandbox(option.isVisibleFn)
+			}
+		}
+	}, [feedbackSpec])
+
+	useEffect(() => {
+		const visibility = {}
+		const options = feedbackSpec?.options ?? []
+
+		if (options === null || feedback === null) {
+			return
+		}
+
+		for (const option of options) {
+			if (typeof option.isVisible === 'function') {
+				visibility[option.id] = option.isVisible(feedback)
+			}
+		}
+
+		setOptionVisibility(visibility)
+
+		return () => {
+			setOptionVisibility({})
+		}
+	}, [feedbackSpec, feedback])
+
 	let name = ''
 	if (feedbackSpec) {
 		name = `${instanceLabel}: ${feedbackSpec.label}`
@@ -283,6 +316,7 @@ export function FeedbackEditor({ feedback, setValue, innerDelete, setSelectedSty
 								actionId={feedback.id}
 								value={(feedback.options || {})[opt.id]}
 								setValue={setValue}
+								visibility={optionVisibility[opt.id]}
 							/>
 						</MyErrorBoundary>
 					))}
