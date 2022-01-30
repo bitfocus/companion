@@ -5,8 +5,7 @@ var BrowserWindow = electron.BrowserWindow
 var path = require('path')
 var url = require('url')
 var App = require('./app.js')
-var fs = require('fs')
-var exec = require('child_process').exec
+var fs = require('fs-extra')
 const { init, showReportDialog, configureScope } = require('@sentry/electron')
 const systeminformation = require('systeminformation')
 const Store = require('electron-store')
@@ -28,18 +27,34 @@ if (process.env.COMPANION_CONFIG_BASEDIR !== undefined) {
 	configDir = process.env.COMPANION_CONFIG_BASEDIR
 }
 
-;(async () => {
-	const uiConfig = new Store({
-		cwd: configDir + '/companion/',
-		clearInvalidConfig: true,
-		defaults: {
-			http_port: 8000,
-			bind_ip: '127.0.0.1',
-			start_minimised: false,
-		},
-	})
+const configDefaults = {
+	http_port: 8000,
+	bind_ip: '127.0.0.1',
+	start_minimised: false,
+}
 
-	// TODO - import old config if it exists
+;(async () => {
+	const fullConfigDir = path.join(configDir, '/companion/')
+
+	try {
+		const oldConfigPath = path.join(fullConfigDir, 'config')
+		if (await fs.pathExists(oldConfigPath)) {
+			// Pre 3.0 config file exists, lets import the values
+			const contentsBuf = await fs.readFile(oldConfigPath)
+			if (contentsBuf) {
+				Object.assign(configDefaults, JSON.parse(contentsBuf.toString()))
+			}
+			await fs.unlink(oldConfigPath)
+		}
+	} catch (e) {
+		// Ignore the failure, its not worth trying to handle
+	}
+
+	const uiConfig = new Store({
+		cwd: fullConfigDir,
+		clearInvalidConfig: true,
+		defaults: configDefaults,
+	})
 
 	const system = await App.create(configDir)
 
@@ -257,18 +272,10 @@ if (process.env.COMPANION_CONFIG_BASEDIR !== undefined) {
 	}
 
 	function launchUI() {
-		var isWin = process.platform == 'win32'
-		var isMac = process.platform == 'darwin'
-		var isLinux = process.platform == 'linux'
-
 		if (appInfo.appLaunch && appInfo.appLaunch.match(/http/)) {
-			if (isWin) {
-				exec('start ' + appInfo.appLaunch, function callback(error, stdout, stderr) {})
-			} else if (isMac) {
-				exec('open ' + appInfo.appLaunch, function callback(error, stdout, stderr) {})
-			} else if (isLinux) {
-				exec('xdg-open ' + appInfo.appLaunch, function callback(error, stdout, stderr) {})
-			}
+			electron.shell.openExternal(appInfo.appLaunch).catch((e) => {
+				// Ignore
+			})
 		}
 	}
 
