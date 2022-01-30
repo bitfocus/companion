@@ -154,6 +154,7 @@
 		"typescript": "~4.5"
 	},
 	"dependencies": {
+		"@elgato-stream-deck/node": "^5.2.0-alpha.1",
 		"@estilles/expression-parser": "^1.0.0",
 		"@sentry/electron": "^2.5.4",
 		"app-root-path": "^3.0.0",
@@ -477,7 +478,6 @@
 		"companion-module-youtube-live": "github:bitfocus/companion-module-youtube-live#v1.1.4",
 		"companion-module-zenvideo-ndirouter": "github:bitfocus/companion-module-zenvideo-ndirouter#v1.0.1",
 		"debug": "^4.3.3",
-		"elgato-stream-deck": "^4.1.0",
 		"emberplus-connection": "^0.0.4",
 		"express": "^4.17.2",
 		"find-process": "1.4.7",
