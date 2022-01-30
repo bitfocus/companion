@@ -74,16 +74,12 @@ if (process.env.COMPANION_CONFIG_BASEDIR !== undefined) {
 		})
 
 		setTimeout(function () {
-			system.emit('skeleton-bind-ip', address)
-			system.emit('skeleton-bind-port', port)
-			system.ready(!process.env.DEVELOPER)
+			system.ready(address, port, !process.env.DEVELOPER)
 			console.log('Started')
 		}, 1000)
 	} else if (process.argv[2] == '0.0.0.0') {
 		setTimeout(function () {
-			system.emit('skeleton-bind-ip', '0.0.0.0')
-			system.emit('skeleton-bind-port', port)
-			system.ready(!process.env.DEVELOPER)
+			system.ready('0.0.0.0', port, !process.env.DEVELOPER)
 			console.log('Started')
 		}, 1000)
 	} else {

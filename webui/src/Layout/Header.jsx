@@ -10,12 +10,12 @@ export function MyHeader({ toggleSidebar }) {
 
 	useEffect(() => {
 		if (context.socket) {
-			context.socket.on('skeleton-info', setVersionInfo)
+			context.socket.on('app-version-info', setVersionInfo)
 			context.socket.on('update_data', setUpdateData)
 			context.socket.emit('update_data')
 
 			return () => {
-				context.socket.off('skeleton-info', setVersionInfo)
+				context.socket.off('app-version-info', setVersionInfo)
 				context.socket.off('update_data', setUpdateData)
 			}
 		}

@@ -23,7 +23,6 @@ global.MAX_BUTTONS = 32
 global.MAX_BUTTONS_PER_ROW = 8
 
 var EventEmitter = require('events')
-var system = new EventEmitter()
 var fs = require('fs-extra')
 var debug = require('debug')('app')
 var stripAnsi = require('strip-ansi')
@@ -46,15 +45,11 @@ try {
 	process.exit(1)
 }
 
-const skeleton_info = {
-	appName: pkgInfo.description,
-	appVersion: pkgInfo.version,
-	appBuild: buildNumber.replace(/-*master-*/, '').replace(/^-/, ''),
-	appStatus: 'Starting',
-}
-
 class App extends EventEmitter {
-	static async create(/** @type {string} */ configDirPrefix) {
+	/**
+	 * @param {string} configDirPrefix
+	 */
+	static async create(configDirPrefix) {
 		debug('configuration directory', configDirPrefix)
 		const configDir = configDirPrefix + '/companion/'
 		await fs.ensureDir(configDir)
@@ -68,7 +63,7 @@ class App extends EventEmitter {
 				text = await fs.readFile(machineIdPath)
 				if (text) {
 					machineId = text.toString()
-					debug('read machid', uuid)
+					debug('read machid', machineId)
 				}
 			} catch (e) {
 				debug('error reading uuid-file', e)
@@ -80,13 +75,7 @@ class App extends EventEmitter {
 			})
 		}
 
-		const config = new (require('./lib/Config'))(system, configDir, {
-			http_port: 8888,
-			bind_ip: '127.0.0.1',
-			start_minimised: false,
-		})
-
-		return new App(config, configDir, machineId)
+		return new App(configDir, machineId)
 	}
 
 	/**
@@ -95,34 +84,21 @@ class App extends EventEmitter {
 	 * @param {string} configDir
 	 * @param {string} machineId
 	 */
-	constructor(config, configDir, machineId) {
+	constructor(configDir, machineId) {
 		super()
 
-		this.config = config
 		this.configDir = configDir
 		this.machineId = machineId
+		this.appVersion = pkgInfo.version
+		this.appBuild = buildNumber.replace(/-*master-*/, '').replace(/^-/, '')
 
 		// Supress warnings for too many listeners to io_connect. This can be safely increased if the warning comes back at startup
 		this.setMaxListeners(20)
 
-		const system = this
-		system.on('skeleton-info', function (key, val) {
-			skeleton_info[key] = val
-		})
-
-		system.on('skeleton-info-info', function (cb) {
-			cb(skeleton_info)
-		})
-
-		system.on('config_loaded', function (config) {
-			system.emit('skeleton-info', 'appURL', 'Waiting for webserver..')
-			system.emit('skeleton-info', 'startMinimised', config.start_minimised)
-		})
-
-		system.on('exit', function () {
+		this.on('exit', () => {
 			console.log('somewhere, the system wants to exit. kthxbai')
 
-			system.emit('instance_getall', function (instances, active) {
+			this.emit('instance_getall', function (instances, active) {
 				try {
 					for (var key in active) {
 						if (instances[key].label !== 'internal') {
@@ -142,29 +118,28 @@ class App extends EventEmitter {
 				process.exit()
 			})
 		})
-
-		system.on('skeleton-bind-ip', function (ip) {
-			config.bind_ip = ip
-			system.emit('config_set', 'bind_ip', ip)
-			system.emit('ip_rebind')
-		})
-
-		system.on('skeleton-bind-port', function (port) {
-			var p = parseInt(port)
-			if (p >= 1024 && p <= 65535) {
-				config.http_port = p
-				system.emit('config_set', 'http_port', p)
-				system.emit('ip_rebind')
-			}
-		})
-
-		system.on('skeleton-start-minimised', function (minimised) {
-			config.start_minimised = minimised
-			system.emit('config_set', 'start_minimised', minimised)
-		})
 	}
 
-	ready(logToFile) {
+	/**
+	 * Rebind the http server to an ip and port (https will update to the same ip if running)
+	 * @param {string} bind_ip
+	 * @param {number} http_port
+	 */
+	rebindHttp(bind_ip, http_port) {
+		// ensure the port looks reasonable
+		if (http_port < 1024 || http_port > 65535) {
+			http_port = 8000
+		}
+
+		this.emit('http_rebind', bind_ip, http_port)
+	}
+
+	/**
+	 * Startup the application, and bind the http server to an ip and port
+	 * @param {string} bind_ip
+	 * @param {number} http_port
+	 */
+	ready(bind_ip, http_port, logToFile) {
 		if (logToFile) {
 			debug('Going into headless mode. Logs will be written to companion.log')
 
@@ -204,6 +179,8 @@ class App extends EventEmitter {
 		var service = require('./lib/Service')(this, io)
 
 		this.emit('modules_loaded')
+
+		this.rebindHttp(bind_ip, http_port)
 
 		this.on('exit', function () {
 			elgatoDM.quit()

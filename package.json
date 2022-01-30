@@ -478,6 +478,7 @@
 		"companion-module-youtube-live": "github:bitfocus/companion-module-youtube-live#v1.1.4",
 		"companion-module-zenvideo-ndirouter": "github:bitfocus/companion-module-zenvideo-ndirouter#v1.0.1",
 		"debug": "^4.3.3",
+		"electron-store": "^8.0.1",
 		"emberplus-connection": "^0.0.4",
 		"express": "^4.17.2",
 		"find-process": "1.4.7",
@@ -495,8 +496,8 @@
 		"shortid": "^2.2.16",
 		"socket.io": "^4.4.1",
 		"strip-ansi": "^5.2.0",
-		"ts-mixer": "^6.0.0",
 		"systeminformation": "^5.10.0",
+		"ts-mixer": "^6.0.0",
 		"websocket": "^1.0.34",
 		"zx": "^4.3.0"
 	},
