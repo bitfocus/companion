@@ -2,7 +2,7 @@ import React, { useContext, useEffect, useState } from 'react'
 import { CHeader, CHeaderBrand, CHeaderNavItem, CHeaderNav, CHeaderNavLink, CToggler } from '@coreui/react'
 import { StaticContext } from '../util'
 
-export function MyHeader({ toggleSidebar }) {
+export function MyHeader({ toggleSidebar, canLock, setLocked }) {
 	const context = useContext(StaticContext)
 
 	const [versionInfo, setVersionInfo] = useState(null)
@@ -43,6 +43,16 @@ export function MyHeader({ toggleSidebar }) {
 					</CHeaderNavLink>
 				</CHeaderNavItem>
 			</CHeaderNav>
+
+			{canLock ? (
+				<CHeaderNav className="ml-auto header-right">
+					<CHeaderNavItem>
+						<CHeaderNavLink onClick={setLocked}>Lock</CHeaderNavLink>
+					</CHeaderNavItem>
+				</CHeaderNav>
+			) : (
+				''
+			)}
 		</CHeader>
 	)
 }

@@ -44,10 +44,19 @@ body {
 	font-size: 1.3em;
 	margin: 0 auto;
 }
+.header-right {
+	margin-right: 5px;
+}
 
 .choose_instance {
 	width: 45%;
 	float: left;
+}
+
+.login-form {
+	display: grid;
+	grid-auto-flow: column;
+	grid-template-columns: 1fr auto;
 }
 
 .tab-content {
