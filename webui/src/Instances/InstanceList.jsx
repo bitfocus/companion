@@ -2,7 +2,7 @@ import { useCallback, useContext, useEffect, useRef, useState } from 'react'
 import { CButton } from '@coreui/react'
 import { StaticContext, InstancesContext, VariableDefinitionsContext } from '../util'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faDollarSign, faQuestionCircle } from '@fortawesome/free-solid-svg-icons'
+import { faDollarSign, faQuestionCircle, faBug } from '@fortawesome/free-solid-svg-icons'
 
 import { InstanceVariablesModal } from './InstanceVariablesModal'
 import { GenericConfirmModal } from '../Components/GenericConfirmModal'
@@ -136,6 +136,14 @@ function InstancesTableRow({
 						) : (
 							''
 						)}
+						{moduleInfo?.bug_url ? (
+							<a className="instance_bug" href={moduleInfo.bug_url} target="_new" title="Report Bug">
+								<FontAwesomeIcon icon={faBug} />
+							</a>
+						) : (
+							''
+						)}
+
 						<b>{moduleInfo?.shortname ?? ''}</b>
 						<br />
 						{moduleInfo?.manufacturer ?? ''}

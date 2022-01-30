@@ -1,6 +1,6 @@
 package.json
 lib/module/*
-lib/font.js
+lib/resources/font.js
 lib/satellite_protocol.js
 electron-output/
 webui/package.json
