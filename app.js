@@ -63,7 +63,7 @@ system.on('skeleton-info', function (key, val) {
 		debug('configuration directory', val)
 		cfgDir = val + '/companion/'
 		mkdirp.sync(cfgDir)
-		config = new (require('./lib/config'))(system, cfgDir, {
+		config = new (require('./lib/Config'))(system, cfgDir, {
 			http_port: 8888,
 			bind_ip: '127.0.0.1',
 			start_minimised: false,
