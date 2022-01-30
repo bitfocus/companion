@@ -68,7 +68,7 @@ class App extends EventEmitter {
 				text = await fs.readFile(machineIdPath)
 				if (text) {
 					machineId = text.toString()
-					debug('read machid', uuid)
+					debug('read machid', machineId)
 				}
 			} catch (e) {
 				debug('error reading uuid-file', e)
