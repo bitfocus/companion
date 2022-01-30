@@ -63,7 +63,12 @@ export class CloudUserPass extends Component {
 						}}
 					/>
 				</div>
-				<CButton color="success" type="submit" loading={this.props.working} disabled={this.props.working || this.state.username === '' || this.state.password === ''}>
+				<CButton
+					color="success"
+					type="submit"
+					loading={this.props.working}
+					disabled={this.props.working || this.state.username === '' || this.state.password === ''}
+				>
 					Log in
 				</CButton>
 			</form>

@@ -17,7 +17,7 @@ export class Cloud extends Component {
 			error: null,
 			authenticated: false,
 			uuid: '',
-			authenticating: false
+			authenticating: false,
 		}
 
 		this.regions = {}
@@ -68,7 +68,7 @@ export class Cloud extends Component {
 
 			regions.push(<CloudRegionPanel key={id} id={region} socket={this.props.socket} />)
 		}
-		console.log("Render: state:", this.state);
+		console.log('Render: state:', this.state)
 		return (
 			<div
 				style={{
