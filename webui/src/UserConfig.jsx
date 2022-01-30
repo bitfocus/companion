@@ -463,7 +463,7 @@ function UserConfigTable() {
 					</td>
 				</tr>
 				<tr>
-					<td>Session Timeout (minutes)</td>
+					<td>Session Timeout (minutes, 0 for no timeout)</td>
 					<td>
 						<div className="form-check form-check-inline mr-1">
 							<CInput
