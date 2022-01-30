@@ -120,7 +120,8 @@
 		"dev-webui": "yarn --cwd webui dev",
 		"format": "prettier --write .",
 		"build:writefile": "zx ./tools/build_writefile.mjs",
-		"build:rename_upload": "zx ./tools/build_rename_upload.mjs"
+		"build:rename_upload": "zx ./tools/build_rename_upload.mjs",
+		"build:rebuild_modules": "zx ./tools/build_modules.mjs"
 	},
 	"repository": "https://github.com/bitfocus/companion",
 	"keywords": [
@@ -495,6 +496,7 @@
 		"shortid": "^2.2.16",
 		"socket.io": "^4.4.1",
 		"strip-ansi": "^5.2.0",
+		"ts-mixer": "^6.0.0",
 		"systeminformation": "^5.10.0",
 		"websocket": "^1.0.34",
 		"zx": "^4.3.0"

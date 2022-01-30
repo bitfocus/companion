@@ -9446,6 +9446,11 @@ ts-md5@^1.2.7:
   resolved "https://registry.yarnpkg.com/ts-md5/-/ts-md5-1.2.10.tgz#65c9208697a2478269e5e4f45518090fe46dcdcb"
   integrity sha512-ZpBxcZRHSqVMWU4lE6pTMM6PTxSNZM6ziLwasimxxE/SiItgdalL8bKproawJ+6cPR4M2mSD4+cAgt90VYzjUQ==
 
+ts-mixer@^6.0.0:
+  version "6.0.0"
+  resolved "https://registry.yarnpkg.com/ts-mixer/-/ts-mixer-6.0.0.tgz#4e631d3a36e3fa9521b973b132e8353bc7267f9f"
+  integrity sha512-nXIb1fvdY5CBSrDIblLn73NW0qRDk5yJ0Sk1qPBF560OdJfQp9jhl+0tzcY09OZ9U+6GpeoI9RjwoIKFIoB9MQ==
+
 tsl-umd-v5@^1.0.5:
   version "1.0.5"
   resolved "https://registry.yarnpkg.com/tsl-umd-v5/-/tsl-umd-v5-1.0.5.tgz#f5f0ed82df7f558bb31ea75e88f004c645e31a04"
