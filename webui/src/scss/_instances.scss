@@ -1,8 +1,18 @@
 .instance_help,
+.instance_bug,
 .instance_variables {
 	float: right;
 	cursor: pointer;
 	cursor: hand;
+}
+
+.instance_bug {
+	margin-right: 4px;
+
+	color: inherit;
+	&:hover {
+		color: inherit;
+	}
 }
 
 .instance-status-ok {

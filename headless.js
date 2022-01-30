@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-var system = require('./app.js')
+var App = require('./app.js')
 var os = require('os')
 
 console.log('Starting')
@@ -37,37 +37,53 @@ if (process.argv.length > 2 && process.argv[2].substr(0, 1) == '-') {
 	})
 }
 
+let configDir
 if (process.env.COMPANION_CONFIG_BASEDIR !== undefined) {
-	system.emit('skeleton-info', 'configDir', process.env.COMPANION_CONFIG_BASEDIR)
+	configDir = process.env.COMPANION_CONFIG_BASEDIR
 } else {
-	system.emit('skeleton-info', 'configDir', process.env[process.platform == 'win32' ? 'USERPROFILE' : 'HOME'])
+	configDir = process.env[process.platform == 'win32' ? 'USERPROFILE' : 'HOME']
 }
 
-var port = '8000'
+;(async () => {
+	const system = await App.create(configDir)
 
-if (process.argv[3] != null) {
-	port = process.argv[3]
-}
+	var port = '8000'
 
-if (process.argv[2] in ifaces) {
-	var address
-	var iface = ifaces[process.argv[2]]
+	if (process.argv[3] != null) {
+		port = process.argv[3]
+	}
 
-	iface.forEach(function (ipv) {
-		if ('IPv4' !== ipv.family) {
-			// skip over non-ipv4 addresses for now
-			return
+	if (process.argv[2] === 'list') {
+		console.log('Found interfaces:')
+		for (var k in ifaces) {
+			console.log(k)
 		}
-		address = ipv.address
-	})
+		process.exit(0)
+	}
 
-	setTimeout(function () {
-		system.emit('skeleton-bind-ip', address)
-		system.emit('skeleton-bind-port', port)
-		system.ready(!process.env.DEVELOPER)
-		console.log('Started')
-	}, 1000)
-} else {
-	console.log('Interface not found!')
-	process.exit(1)
-}
+	if (process.argv[2] in ifaces) {
+		var address
+		var iface = ifaces[process.argv[2]]
+
+		iface.forEach(function (ipv) {
+			if ('IPv4' !== ipv.family) {
+				// skip over non-ipv4 addresses for now
+				return
+			}
+			address = ipv.address
+		})
+
+		setTimeout(function () {
+			system.ready(address, port, !process.env.DEVELOPER)
+			console.log('Started')
+		}, 1000)
+	} else if (process.argv[2] == '0.0.0.0') {
+		setTimeout(function () {
+			system.ready('0.0.0.0', port, !process.env.DEVELOPER)
+			console.log('Started')
+		}, 1000)
+	} else {
+		console.log('Interface not found!')
+		process.exit(1)
+	}
+})()

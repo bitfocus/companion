@@ -23,11 +23,12 @@ global.MAX_BUTTONS = 32
 global.MAX_BUTTONS_PER_ROW = 8
 
 var EventEmitter = require('events')
-var system = new EventEmitter()
-var fs = require('fs')
+var fs = require('fs-extra')
 var debug = require('debug')('app')
-var mkdirp = require('mkdirp')
 var stripAnsi = require('strip-ansi')
+var shortid = require('shortid')
+var path = require('path')
+
 var logbuffer = []
 var logwriting = false
 
@@ -40,161 +41,152 @@ try {
 		.trim()
 } catch (e) {
 	console.error('Companion cannot start as the "BUILD" file is missing')
-	console.error('If you are running from source, you can generate it by running: ./tools/build_writefile.sh')
+	console.error('If you are running from source, you can generate it by running: yarn build:writefile')
 	process.exit(1)
 }
 
-const skeleton_info = {
-	appName: pkgInfo.description,
-	appVersion: pkgInfo.version,
-	appBuild: buildNumber.replace(/-*master-*/, '').replace(/^-/, ''),
-	appStatus: 'Starting',
-}
+class App extends EventEmitter {
+	/**
+	 * @param {string} configDirPrefix
+	 */
+	static async create(configDirPrefix) {
+		debug('configuration directory', configDirPrefix)
+		const configDir = configDirPrefix + '/companion/'
+		await fs.ensureDir(configDir)
 
-var config
-var cfgDir
+		// load the machine id
+		let machineId = shortid.generate()
+		const machineIdPath = path.join(configDir, 'machid')
+		if (await fs.pathExists(machineIdPath)) {
+			let text = ''
+			try {
+				text = await fs.readFile(machineIdPath)
+				if (text) {
+					machineId = text.toString()
+					debug('read machid', machineId)
+				}
+			} catch (e) {
+				debug('error reading uuid-file', e)
+			}
+		} else {
+			debug('creating uuid file')
+			await fs.writeFile(machineIdPath, umachineIduid).catch((e) => {
+				debug(`failed to write uuid file`, e)
+			})
+		}
 
-// Supress warnings for too many listeners to io_connect. This can be safely increased if the warning comes back at startup
-system.setMaxListeners(20)
+		return new App(configDir, machineId)
+	}
 
-system.on('skeleton-info', function (key, val) {
-	skeleton_info[key] = val
-	if (key == 'configDir') {
-		debug('configuration directory', val)
-		cfgDir = val + '/companion/'
-		mkdirp.sync(cfgDir)
-		config = new (require('./lib/config'))(system, cfgDir, {
-			http_port: 8888,
-			bind_ip: '127.0.0.1',
-			start_minimised: false,
+	/**
+	 * @access private
+	 * @param {Object} config
+	 * @param {string} configDir
+	 * @param {string} machineId
+	 */
+	constructor(configDir, machineId) {
+		super()
+
+		this.configDir = configDir
+		this.machineId = machineId
+		this.appVersion = pkgInfo.version
+		this.appBuild = buildNumber.replace(/-*master-*/, '').replace(/^-/, '')
+
+		// Supress warnings for too many listeners to io_connect. This can be safely increased if the warning comes back at startup
+		this.setMaxListeners(20)
+
+		this.on('exit', () => {
+			console.log('somewhere, the system wants to exit. kthxbai')
+
+			this.emit('instance_getall', function (instances, active) {
+				try {
+					for (var key in active) {
+						if (instances[key].label !== 'internal') {
+							try {
+								active[key].destroy()
+							} catch (e) {
+								console.log('Could not destroy', instances[key].label)
+							}
+						}
+					}
+				} catch (e) {
+					console.log('Could not destroy all instances')
+				}
+			})
+
+			setImmediate(function () {
+				process.exit()
+			})
 		})
 	}
-})
 
-system.on('configdir_get', function (cb) {
-	cb(cfgDir)
-})
+	/**
+	 * Rebind the http server to an ip and port (https will update to the same ip if running)
+	 * @param {string} bind_ip
+	 * @param {number} http_port
+	 */
+	rebindHttp(bind_ip, http_port) {
+		// ensure the port looks reasonable
+		if (http_port < 1024 || http_port > 65535) {
+			http_port = 8000
+		}
 
-system.on('skeleton-info-info', function (cb) {
-	cb(skeleton_info)
-})
+		this.emit('http_rebind', bind_ip, http_port)
+	}
 
-system.on('config_loaded', function (config) {
-	system.emit('skeleton-info', 'appURL', 'Waiting for webserver..')
-	system.emit('skeleton-info', 'startMinimised', config.start_minimised)
-})
+	/**
+	 * Startup the application, and bind the http server to an ip and port
+	 * @param {string} bind_ip
+	 * @param {number} http_port
+	 */
+	ready(bind_ip, http_port, logToFile) {
+		if (logToFile) {
+			debug('Going into headless mode. Logs will be written to companion.log')
 
-system.on('exit', function () {
-	console.log('somewhere, the system wants to exit. kthxbai')
-
-	system.emit('instance_getall', function (instances, active) {
-		try {
-			for (var key in active) {
-				if (instances[key].label !== 'internal') {
-					try {
-						active[key].destroy()
-					} catch (e) {
-						console.log('Could not destroy', instances[key].label)
-					}
+			setInterval(function () {
+				if (logbuffer.length > 0 && logwriting == false) {
+					var writestring = logbuffer.join('\n')
+					logbuffer = []
+					logwriting = true
+					fs.appendFile('./companion.log', writestring + '\n', function (err) {
+						if (err) {
+							console.log('log write error', err)
+						}
+						logwriting = false
+					})
 				}
+			}, 1000)
+
+			process.stderr.write = function () {
+				var arr = []
+				for (var n in arguments) {
+					arr.push(arguments[n])
+				}
+				var line = new Date().toISOString() + ' ' + stripAnsi(arr.join(' ').trim())
+				logbuffer.push(line)
 			}
-		} catch (e) {
-			console.log('Could not destroy all instances')
 		}
-	})
 
-	setImmediate(function () {
-		process.exit()
-	})
-})
+		var io = require('./lib/Interface')(this)
+		var db = require('./lib/Database')(this)
+		var data = require('./lib/Data')(this)
+		var page = require('./lib/Page')(this)
+		var schedule = require('./lib/Trigger')(this)
+		var bank = require('./lib/Bank')(this)
+		var graphics = require('./lib/Graphics')(this)
+		var elgatoDM = require('./lib/Surface')(this)
+		var instance = require('./lib/Instance')(this)
+		var service = require('./lib/Service')(this, io)
+		var cloud = require('./lib/Cloud')(this)
 
-system.on('skeleton-bind-ip', function (ip) {
-	config.bind_ip = ip
-	system.emit('config_set', 'bind_ip', ip)
-	system.emit('ip_rebind')
-})
+		this.emit('modules_loaded')
 
-system.on('skeleton-bind-port', function (port) {
-	var p = parseInt(port)
-	if (p >= 1024 && p <= 65535) {
-		config.http_port = p
-		system.emit('config_set', 'http_port', p)
-		system.emit('ip_rebind')
+		this.rebindHttp(bind_ip, http_port)
+
+		this.on('exit', function () {
+			elgatoDM.quit()
+		})
 	}
-})
-
-system.on('skeleton-start-minimised', function (minimised) {
-	config.start_minimised = minimised
-	system.emit('config_set', 'start_minimised', minimised)
-})
-
-system.ready = function (logToFile) {
-	if (logToFile) {
-		debug('Going into headless mode. Logs will be written to companion.log')
-
-		setInterval(function () {
-			if (logbuffer.length > 0 && logwriting == false) {
-				var writestring = logbuffer.join('\n')
-				logbuffer = []
-				logwriting = true
-				fs.appendFile('./companion.log', writestring + '\n', function (err) {
-					if (err) {
-						console.log('log write error', err)
-					}
-					logwriting = false
-				})
-			}
-		}, 1000)
-
-		process.stderr.write = function () {
-			var arr = []
-			for (var n in arguments) {
-				arr.push(arguments[n])
-			}
-			var line = new Date().toISOString() + ' ' + stripAnsi(arr.join(' ').trim())
-			logbuffer.push(line)
-		}
-	}
-
-	var server_http = require('./lib/server_http')(system)
-	var io = require('./lib/io')(system, server_http)
-	var log = require('./lib/log')(system, io)
-	var db = require('./lib/db')(system, cfgDir)
-	var userconfig = require('./lib/userconfig')(system)
-	var update = require('./lib/update')(system, cfgDir)
-	var page = require('./lib/page')(system)
-	var appRoot = require('app-root-path')
-	var variable = require('./lib/variable')(system)
-	var schedule = require('./lib/schedule')(system)
-	var feedback = require('./lib/feedback')(system)
-	var action = require('./lib/action')(system)
-	var bank = require('./lib/bank')(system)
-	var elgatoDM = require('./lib/elgato_dm')(system)
-	var preview = require('./lib/preview')(system)
-	var instance = require('./lib/instance')(system)
-	var osc = require('./lib/server_osc')(system)
-	var server_api = require('./lib/server_api')(system)
-	var server_tcp = require('./lib/server_tcp')(system)
-	var server_udp = require('./lib/server_udp')(system)
-	var server_emberplus = require('./lib/server_emberplus')(system)
-	var artnet = require('./lib/artnet')(system)
-	var rosstalk = require('./lib/rosstalk')(system)
-	var rest = require('./lib/rest')(system)
-	var rest_poll = require('./lib/rest_poll')(system)
-	var loadsave = require('./lib/loadsave')(system)
-	var preset = require('./lib/preset')(system)
-	var satelliteLegacy = require('./lib/satellite/satellite_server_legacy')(system)
-	var satellite = require('./lib/satellite/satellite_server')(system)
-	var ws_api = require('./lib/ws_api')(system)
-	var help = require('./lib/help')(system)
-	var metrics = require('./lib/metrics')(system)
-	var cloud = require('./lib/cloud')(system)
-
-	system.emit('modules_loaded')
-
-	system.on('exit', function () {
-		elgatoDM.quit()
-	})
 }
 
-exports = module.exports = system
+exports = module.exports = App

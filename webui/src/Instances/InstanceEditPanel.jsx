@@ -1,7 +1,13 @@
 import React, { memo, useCallback, useContext, useEffect, useState } from 'react'
 import { StaticContext, LoadingRetryOrError, socketEmit, sandbox } from '../util'
 import { CRow, CCol, CButton } from '@coreui/react'
-import { CheckboxInputField, DropdownInputField, NumberInputField, TextInputField } from '../Components'
+import {
+	CheckboxInputField,
+	ColorInputField,
+	DropdownInputField,
+	NumberInputField,
+	TextInputField,
+} from '../Components'
 import shortid from 'shortid'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faQuestionCircle } from '@fortawesome/free-solid-svg-icons'
@@ -201,6 +207,8 @@ function ConfigField({ setValue, setValid, ...props }) {
 			return <CheckboxInputField {...props} setValue={setValue2} setValid={setValid2} />
 		case 'dropdown':
 			return <DropdownInputField {...props} setValue={setValue2} setValid={setValid2} />
+		case 'colorpicker':
+			return <ColorInputField {...props} setValue={setValue2} setValid={setValid2} />
 		default:
 			return <p>Unknown field "{definition.type}"</p>
 	}

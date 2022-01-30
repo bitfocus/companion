@@ -1,6 +1,7 @@
 import React from 'react'
 import classnames from 'classnames'
 import { PREVIEW_BMP_HEADER } from '../Constants'
+import { Buffer } from 'buffer'
 
 export function dataToButtonImage(data) {
 	const sourceData = Buffer.from(data)

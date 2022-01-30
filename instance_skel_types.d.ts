@@ -276,3 +276,10 @@ export interface CompanionMigrationFeedback {
 	type: string
 	options: { [key: string]: InputValue | undefined }
 }
+
+export type OSCArgument = number | string | Uint8Array
+export type OSCMetaArgument =
+	| { type: 'i' | 'f'; value: number }
+	| { type: 's'; value: string }
+	| { type: 'b'; value: Uint8Array }
+export type OSCSomeArguments = OSCArgument | Array<OSCArgument> | OSCMetaArgument | Array<OSCMetaArgument>

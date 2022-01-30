@@ -4,11 +4,12 @@ var app = electron.app
 var BrowserWindow = electron.BrowserWindow
 var path = require('path')
 var url = require('url')
-var system = require('./app.js')
-var fs = require('fs')
-var exec = require('child_process').exec
+var App = require('./app.js')
+var fs = require('fs-extra')
 const { init, showReportDialog, configureScope } = require('@sentry/electron')
-var network = require('network')
+const systeminformation = require('systeminformation')
+const Store = require('electron-store')
+const pkgInfo = require('./package.json')
 
 // Ensure there isn't another instance of companion running already
 var lock = app.requestSingleInstanceLock()
@@ -21,274 +22,322 @@ if (!lock) {
 	return
 }
 
-let skeleton_info = {}
-system.emit('skeleton-info-info', function (info) {
-	// Assume this happens synchronously
-	skeleton_info = info
-})
-
-if (process.env.DEVELOPER === undefined) {
-	console.log('Configuring sentry error reporting')
-	init({
-		dsn: 'https://535745b2e446442ab024d1c93a349154@sentry.bitfocus.io/8',
-		release: `companion@${skeleton_info.appBuild || skeleton_info.appVersion}`,
-		beforeSend(event) {
-			if (event.exception) {
-				showReportDialog()
-			}
-			return event
-		},
-	})
-} else {
-	console.log('Sentry error reporting is disabled')
+let configDir = app.getPath('appData')
+if (process.env.COMPANION_CONFIG_BASEDIR !== undefined) {
+	configDir = process.env.COMPANION_CONFIG_BASEDIR
 }
 
-var window
-var tray = null
+const configDefaults = {
+	http_port: 8000,
+	bind_ip: '127.0.0.1',
+	start_minimised: false,
+}
 
-function createWindow() {
-	window = new BrowserWindow({
-		show: false,
-		width: 400,
-		height: 470,
-		minHeight: 600,
-		minWidth: 440,
-		maxHeight: 380,
-		frame: false,
-		resizable: false,
-		icon: path.join(__dirname, 'assets/icon.png'),
-		webPreferences: {
-			pageVisibility: true,
-			nodeIntegration: true,
-			contextIsolation: true,
-			preload: path.join(__dirname, 'window-preload.js'),
-		},
-	})
-
-	window
-		.loadURL(
-			url.format({
-				pathname: path.join(__dirname, 'window.html'),
-				protocol: 'file:',
-				slashes: true,
-			})
-		)
-		.then(() => {
-			window.webContents.setBackgroundThrottling(false)
-		})
-
-	ipcMain.on('info', function () {
-		if (window) {
-			window.webContents.send('info', skeleton_info)
-		}
-	})
-
-	ipcMain.on('skeleton-close', function (req, cb) {
-		system.emit('exit')
-	})
-
-	ipcMain.on('skeleton-minimize', function (req, cb) {
-		window.hide()
-	})
-
-	ipcMain.on('skeleton-launch-gui', function () {
-		launchUI()
-	})
-
-	ipcMain.on('skeleton-bind-ip', function (e, msg) {
-		console.log('changed bind ip:', msg)
-		system.emit('skeleton-bind-ip', msg)
-	})
-
-	ipcMain.on('skeleton-bind-port', function (e, msg) {
-		console.log('changed bind port:', msg)
-		system.emit('skeleton-bind-port', msg)
-	})
-
-	ipcMain.on('skeleton-start-minimised', function (e, msg) {
-		console.log('changed start minimized:', msg)
-		system.emit('skeleton-start-minimised', msg)
-	})
-
-	ipcMain.once('skeleton-ready', function () {
-		system.ready(!process.env.DEVELOPER)
-	})
-
-	ipcMain.on('network-interfaces:get', function () {
-		network.get_interfaces_list(function (err, list) {
-			const interfaces = [{ id: '127.0.0.1', label: 'localhost / 127.0.0.1' }]
-
-			for (const obj of list) {
-				if (obj.ip_address !== null) {
-					interfaces.push({
-						id: obj.ip_address,
-						label: `${obj.name}: ${obj.ip_address} (${obj.type})`,
-					})
-				}
-			}
-
-			if (window) {
-				window.webContents.send('network-interfaces:get', interfaces)
-			}
-		})
-	})
-
-	system.on('skeleton-ip-unavail', function () {})
-
-	system.on('skeleton-info', function (key, val) {
-		skeleton_info[key] = val
-		if (window) {
-			window.webContents.send('info', skeleton_info)
-		}
-	})
-
-	system.on('restart', function () {
-		app.relaunch()
-		app.exit()
-	})
-
-	window.on('closed', function () {
-		window = null
-	})
-
-	window.on('ready-to-show', function () {
-		if (!skeleton_info.startMinimised) {
-			showWindow()
-		}
-	})
+;(async () => {
+	const fullConfigDir = path.join(configDir, '/companion/')
 
 	try {
-		let configDir = app.getPath('appData')
-		if (process.env.COMPANION_CONFIG_BASEDIR !== undefined) {
-			configDir = process.env.COMPANION_CONFIG_BASEDIR
+		const oldConfigPath = path.join(fullConfigDir, 'config')
+		if (await fs.pathExists(oldConfigPath)) {
+			// Pre 3.0 config file exists, lets import the values
+			const contentsBuf = await fs.readFile(oldConfigPath)
+			if (contentsBuf) {
+				Object.assign(configDefaults, JSON.parse(contentsBuf.toString()))
+			}
+			await fs.unlink(oldConfigPath)
 		}
-
-		system.emit('skeleton-info', 'configDir', configDir)
-
-		configureScope(function (scope) {
-			var machidFile = path.join(configDir, '/companion/machid')
-			var machid = fs.readFileSync(machidFile).toString().trim()
-			scope.setUser({ id: machid })
-			scope.setExtra('build', skeleton_info.appBuild)
-		})
 	} catch (e) {
-		console.log('Error reading BUILD and/or package info: ', e)
-	}
-}
-
-function createTray() {
-	tray = new electron.Tray(
-		process.platform == 'darwin'
-			? path.join(__dirname, 'assets', 'trayTemplate.png')
-			: path.join(__dirname, 'assets', 'icon.png')
-	)
-	tray.setIgnoreDoubleClickEvents(true)
-	if (process.platform !== 'darwin') {
-		tray.on('click', toggleWindow)
+		// Ignore the failure, its not worth trying to handle
 	}
 
-	const menu = new electron.Menu()
-	menu.append(
-		new electron.MenuItem({
-			label: 'Show/Hide window',
-			click: toggleWindow,
-		})
-	)
-	menu.append(
-		new electron.MenuItem({
-			label: 'Launch GUI',
-			click: launchUI,
-		})
-	)
-	menu.append(
-		new electron.MenuItem({
-			label: 'Scan USB Devices',
-			click: scanUsb,
-		})
-	)
-	menu.append(
-		new electron.MenuItem({
-			label: 'Quit',
-			click: trayQuit,
-		})
-	)
-	tray.setContextMenu(menu)
-}
+	const uiConfig = new Store({
+		cwd: fullConfigDir,
+		clearInvalidConfig: true,
+		defaults: configDefaults,
+	})
 
-function launchUI() {
-	var isWin = process.platform == 'win32'
-	var isMac = process.platform == 'darwin'
-	var isLinux = process.platform == 'linux'
+	const system = await App.create(configDir)
 
-	if (skeleton_info.appURL.match(/http/)) {
-		if (isWin) {
-			exec('start ' + skeleton_info.appURL, function callback(error, stdout, stderr) {})
-		} else if (isMac) {
-			exec('open ' + skeleton_info.appURL, function callback(error, stdout, stderr) {})
-		} else if (isLinux) {
-			exec('xdg-open ' + skeleton_info.appURL, function callback(error, stdout, stderr) {})
+	let appInfo = {
+		appVersion: system.appVersion,
+		appBuild: system.appBuild,
+		appName: pkgInfo.description,
+
+		appStatus: 'Unknown',
+		appURL: 'Waiting for webserver..',
+		appLaunch: null,
+	}
+
+	function sendAppInfo() {
+		if (window) {
+			window.webContents.send('info', uiConfig.store, appInfo)
 		}
 	}
-}
 
-function trayQuit() {
-	electron.dialog
-		.showMessageBox(undefined, {
-			title: 'Companion',
-			message: 'Are you sure you want to quit Companion?',
-			buttons: ['Quit', 'Cancel'],
+	system.on('http-bind-status', (status) => {
+		appInfo = {
+			...appInfo,
+			...status,
+		}
+
+		sendAppInfo()
+	})
+
+	if (process.env.DEVELOPER === undefined) {
+		console.log('Configuring sentry error reporting')
+		init({
+			dsn: 'https://535745b2e446442ab024d1c93a349154@sentry.bitfocus.io/8',
+			release: `companion@${system.appBuild || system.appVersion}`,
+			beforeSend(event) {
+				if (event.exception) {
+					showReportDialog()
+				}
+				return event
+			},
 		})
-		.then((v) => {
-			if (v.response === 0) {
-				system.emit('exit')
+	} else {
+		console.log('Sentry error reporting is disabled')
+	}
+
+	function rebindHttp() {
+		const ip = uiConfig.get('bind_ip')
+		const port = uiConfig.get('http_port')
+
+		system.rebindHttp(ip, port)
+	}
+
+	var window
+	var tray = null
+
+	function createWindow() {
+		window = new BrowserWindow({
+			show: false,
+			width: 400,
+			height: 470,
+			minHeight: 600,
+			minWidth: 440,
+			maxHeight: 380,
+			frame: false,
+			resizable: false,
+			icon: path.join(__dirname, 'assets/icon.png'),
+			webPreferences: {
+				pageVisibility: true,
+				nodeIntegration: true,
+				contextIsolation: true,
+				preload: path.join(__dirname, 'window-preload.js'),
+			},
+		})
+
+		window
+			.loadURL(
+				url.format({
+					pathname: path.join(__dirname, 'window.html'),
+					protocol: 'file:',
+					slashes: true,
+				})
+			)
+			.then(() => {
+				window.webContents.setBackgroundThrottling(false)
+			})
+
+		ipcMain.on('info', function () {
+			sendAppInfo()
+		})
+
+		ipcMain.on('launcher-close', function (req, cb) {
+			system.emit('exit')
+		})
+
+		ipcMain.on('launcher-minimize', function (req, cb) {
+			window.hide()
+		})
+
+		ipcMain.on('launcher-open-gui', function () {
+			launchUI()
+		})
+
+		ipcMain.on('launcher-set-bind-ip', function (e, msg) {
+			console.log('changed bind ip:', msg)
+			uiConfig.set('bind_ip', msg)
+
+			rebindHttp()
+		})
+
+		ipcMain.on('launcher-set-http-port', function (e, msg) {
+			console.log('changed bind port:', msg)
+			uiConfig.set('http_port', msg)
+
+			rebindHttp()
+		})
+
+		ipcMain.on('launcher-set-start-minimised', function (e, msg) {
+			console.log('changed start minimized:', msg)
+			uiConfig.set('start_minimised', msg)
+		})
+
+		ipcMain.once('launcher-ready', function () {
+			const ip = uiConfig.get('bind_ip')
+			const port = uiConfig.get('http_port')
+
+			system.ready(ip, port, !process.env.DEVELOPER)
+		})
+
+		ipcMain.on('network-interfaces:get', function () {
+			systeminformation.networkInterfaces().then(function (list) {
+				const interfaces = [
+					{ id: '0.0.0.0', label: 'All Interfaces: 0.0.0.0' },
+					{ id: '127.0.0.1', label: 'localhost: 127.0.0.1' },
+				]
+
+				for (const obj of list) {
+					if (obj.ip4 && !obj.internal) {
+						let label = `${obj.iface}: ${obj.ip4}`
+						if (obj.type && obj.type !== 'unknown') label += ` (${obj.type})`
+
+						interfaces.push({
+							id: obj.ip4,
+							label: label,
+						})
+					}
+				}
+
+				if (window) {
+					window.webContents.send('network-interfaces:get', interfaces)
+				}
+			})
+		})
+
+		system.on('restart', function () {
+			app.relaunch()
+			app.exit()
+		})
+
+		window.on('closed', function () {
+			window = null
+		})
+
+		window.on('ready-to-show', function () {
+			if (!uiConfig.get('start_minimised')) {
+				showWindow()
 			}
 		})
-}
 
-function scanUsb() {
-	system.emit('devices_reenumerate')
-}
-
-function toggleWindow() {
-	if (window.isVisible()) {
-		window.hide()
-	} else {
-		showWindow()
+		try {
+			configureScope(function (scope) {
+				scope.setUser({ id: system.machineId })
+				scope.setExtra('build', system.appBuild)
+			})
+		} catch (e) {
+			console.log('Error reading BUILD and/or package info: ', e)
+		}
 	}
-}
 
-function showWindow() {
-	window.show()
-	window.focus()
-}
+	function createTray() {
+		tray = new electron.Tray(
+			process.platform == 'darwin'
+				? path.join(__dirname, 'assets', 'trayTemplate.png')
+				: path.join(__dirname, 'assets', 'icon.png')
+		)
+		tray.setIgnoreDoubleClickEvents(true)
+		if (process.platform !== 'darwin') {
+			tray.on('click', toggleWindow)
+		}
 
-app.whenReady().then(function () {
-	createTray()
-	createWindow()
+		const menu = new electron.Menu()
+		menu.append(
+			new electron.MenuItem({
+				label: 'Show/Hide window',
+				click: toggleWindow,
+			})
+		)
+		menu.append(
+			new electron.MenuItem({
+				label: 'Launch GUI',
+				click: launchUI,
+			})
+		)
+		menu.append(
+			new electron.MenuItem({
+				label: 'Scan USB Devices',
+				click: scanUsb,
+			})
+		)
+		menu.append(
+			new electron.MenuItem({
+				label: 'Quit',
+				click: trayQuit,
+			})
+		)
+		tray.setContextMenu(menu)
+	}
 
-	electron.powerMonitor.on('suspend', () => {
-		system.emit('skeleton-power', 'suspend')
-	})
+	function launchUI() {
+		if (appInfo.appLaunch && appInfo.appLaunch.match(/http/)) {
+			electron.shell.openExternal(appInfo.appLaunch).catch((e) => {
+				// Ignore
+			})
+		}
+	}
 
-	electron.powerMonitor.on('resume', () => {
-		system.emit('skeleton-power', 'resume')
-	})
+	function trayQuit() {
+		electron.dialog
+			.showMessageBox(undefined, {
+				title: 'Companion',
+				message: 'Are you sure you want to quit Companion?',
+				buttons: ['Quit', 'Cancel'],
+			})
+			.then((v) => {
+				if (v.response === 0) {
+					system.emit('exit')
+				}
+			})
+	}
 
-	electron.powerMonitor.on('on-ac', () => {
-		system.emit('skeleton-power', 'ac')
-	})
+	function scanUsb() {
+		system.emit('devices_reenumerate')
+	}
 
-	electron.powerMonitor.on('on-battery', () => {
-		system.emit('skeleton-power', 'battery')
-	})
-})
+	function toggleWindow() {
+		if (window.isVisible()) {
+			window.hide()
+		} else {
+			showWindow()
+		}
+	}
 
-app.on('window-all-closed', function () {
-	app.quit()
-})
+	function showWindow() {
+		window.show()
+		window.focus()
+	}
 
-app.on('activate', function () {
-	if (window === null) {
+	app.whenReady().then(function () {
+		createTray()
 		createWindow()
-	}
-})
+
+		electron.powerMonitor.on('suspend', () => {
+			system.emit('launcher-power-status', 'suspend')
+		})
+
+		electron.powerMonitor.on('resume', () => {
+			system.emit('launcher-power-status', 'resume')
+		})
+
+		electron.powerMonitor.on('on-ac', () => {
+			system.emit('launcher-power-status', 'ac')
+		})
+
+		electron.powerMonitor.on('on-battery', () => {
+			system.emit('launcher-power-status', 'battery')
+		})
+	})
+
+	app.on('window-all-closed', function () {
+		app.quit()
+	})
+
+	app.on('activate', function () {
+		if (window === null) {
+			createWindow()
+		}
+	})
+})()

@@ -13,6 +13,7 @@ import {
 	CompanionActionEventInfo,
 	CompanionFeedbackEventInfo,
 	CompanionBankPNG,
+	OSCSomeArguments,
 } from './instance_skel_types'
 
 declare abstract class InstanceSkel<TConfig> {
@@ -144,6 +145,15 @@ declare abstract class InstanceSkel<TConfig> {
 	 * @param actionId Action type to call for, or undefined for all
 	 */
 	unsubscribeActions(type?: string): void
+
+	/**
+	 * Send an osc message from the system osc sender
+	 * @param host destination ip address
+	 * @param port destination port number
+	 * @param path message path
+	 * @param args mesage arguments
+	 */
+	oscSend(host: string, port: number, path: string, args: OSCSomeArguments): void
 
 	status(level: null | 0 | 1 | 2, message?: string): void
 
