@@ -139,7 +139,7 @@ function AppMain({ connected, loadingComplete, loadingProgress, buttonGridHotPre
 	const toggleSidebar = useCallback(() => {
 		setShowSidebar((oldVal) => !oldVal)
 	}, [])
-	const canLock = !!config?.admin_lockout && config?.admin_lockout !== '0'
+	const canLock = !!config?.admin_lockout
 	const setLocked = useCallback(() => {
 		if (canLock) {
 			setUnlocked(false)
@@ -152,14 +152,18 @@ function AppMain({ connected, loadingComplete, loadingProgress, buttonGridHotPre
 
 	// If lockout is disabled, then we are logged in
 	useEffect(() => {
-		if ((config && !config?.admin_lockout) || config?.admin_lockout === '0') {
+		if (config && !config?.admin_lockout) {
 			setUnlocked(true)
 		}
 	}, [config])
 
 	return (
 		<div className="c-app">
-			{canLock && unlocked ? <IdleTimerWrapper setLocked={setLocked} timeoutMinutes={config.admin_lockout ?? 1} /> : ''}
+			{canLock && unlocked && (config.admin_timeout ?? 0) > 0 ? (
+				<IdleTimerWrapper setLocked={setLocked} timeoutMinutes={config.admin_timeout} />
+			) : (
+				''
+			)}
 			<MySidebar show={showSidebar} />
 			<div className="c-wrapper">
 				<MyHeader toggleSidebar={toggleSidebar} setLocked={setLocked} canLock={canLock && unlocked} />

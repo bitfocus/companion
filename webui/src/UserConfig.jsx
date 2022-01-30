@@ -452,15 +452,26 @@ function UserConfigTable() {
 					</td>
 				</tr>
 				<tr>
+					<td>Enable Locking</td>
+					<td>
+						<div className="form-check form-check-inline mr-1">
+							<CInputCheckbox
+								checked={config.admin_lockout}
+								onChange={(e) => setValue('admin_lockout', e.currentTarget.checked)}
+							/>
+						</div>
+					</td>
+				</tr>
+				<tr>
 					<td>Session Timeout (minutes)</td>
 					<td>
 						<div className="form-check form-check-inline mr-1">
 							<CInput
 								type="number"
-								value={config.admin_lockout}
+								value={config.admin_timeout}
 								min={0}
 								step={1}
-								onChange={(e) => setValue('admin_lockout', e.currentTarget.value)}
+								onChange={(e) => setValue('admin_timeout', e.currentTarget.value)}
 							/>
 						</div>
 					</td>
