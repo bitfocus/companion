@@ -16,6 +16,7 @@ jobs:
       - name: yarn update and lindist
         run: |
           yarn update
+          yarn build:rebuild_modules
 
           # verify that every module is runnable
           node tools/verify-module-build.mjs .
@@ -55,6 +56,7 @@ jobs:
           yarn config set network-timeout 100000 -g
 
           yarn update
+          yarn build:rebuild_modules
 
           # verify that every module is runnable
           node tools/verify-module-build.mjs .
@@ -94,6 +96,7 @@ jobs:
           yarn config set network-timeout 100000 -g
 
           yarn update
+          yarn build:rebuild_modules
 
           # verify that every module is runnable
           node tools/verify-module-build.mjs .
@@ -133,6 +136,7 @@ jobs:
           yarn config set script-shell bash
 
           yarn update
+          yarn build:rebuild_modules
 
           # verify that every module is runnable
           node tools/verify-module-build.mjs .
