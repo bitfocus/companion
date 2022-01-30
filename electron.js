@@ -9,6 +9,8 @@ var fs = require('fs')
 var exec = require('child_process').exec
 const { init, showReportDialog, configureScope } = require('@sentry/electron')
 const systeminformation = require('systeminformation')
+const Store = require('electron-store')
+const pkgInfo = require('./package.json')
 
 // Ensure there isn't another instance of companion running already
 var lock = app.requestSingleInstanceLock()
@@ -27,19 +29,50 @@ if (process.env.COMPANION_CONFIG_BASEDIR !== undefined) {
 }
 
 ;(async () => {
+	const uiConfig = new Store({
+		cwd: configDir + '/companion/',
+		clearInvalidConfig: true,
+		defaults: {
+			http_port: 8000,
+			bind_ip: '127.0.0.1',
+			start_minimised: false,
+		},
+	})
+
+	// TODO - import old config if it exists
+
 	const system = await App.create(configDir)
 
-	let skeleton_info = {}
-	system.emit('skeleton-info-info', function (info) {
-		// Assume this happens synchronously
-		skeleton_info = info
+	let appInfo = {
+		appVersion: system.appVersion,
+		appBuild: system.appBuild,
+		appName: pkgInfo.description,
+
+		appStatus: 'Unknown',
+		appURL: 'Waiting for webserver..',
+		appLaunch: null,
+	}
+
+	function sendAppInfo() {
+		if (window) {
+			window.webContents.send('info', uiConfig.store, appInfo)
+		}
+	}
+
+	system.on('http-bind-status', (status) => {
+		appInfo = {
+			...appInfo,
+			...status,
+		}
+
+		sendAppInfo()
 	})
 
 	if (process.env.DEVELOPER === undefined) {
 		console.log('Configuring sentry error reporting')
 		init({
 			dsn: 'https://535745b2e446442ab024d1c93a349154@sentry.bitfocus.io/8',
-			release: `companion@${skeleton_info.appBuild || skeleton_info.appVersion}`,
+			release: `companion@${system.appBuild || system.appVersion}`,
 			beforeSend(event) {
 				if (event.exception) {
 					showReportDialog()
@@ -49,6 +82,13 @@ if (process.env.COMPANION_CONFIG_BASEDIR !== undefined) {
 		})
 	} else {
 		console.log('Sentry error reporting is disabled')
+	}
+
+	function rebindHttp() {
+		const ip = uiConfig.get('bind_ip')
+		const port = uiConfig.get('http_port')
+
+		system.rebindHttp(ip, port)
 	}
 
 	var window
@@ -86,40 +126,45 @@ if (process.env.COMPANION_CONFIG_BASEDIR !== undefined) {
 			})
 
 		ipcMain.on('info', function () {
-			if (window) {
-				window.webContents.send('info', skeleton_info)
-			}
+			sendAppInfo()
 		})
 
-		ipcMain.on('skeleton-close', function (req, cb) {
+		ipcMain.on('launcher-close', function (req, cb) {
 			system.emit('exit')
 		})
 
-		ipcMain.on('skeleton-minimize', function (req, cb) {
+		ipcMain.on('launcher-minimize', function (req, cb) {
 			window.hide()
 		})
 
-		ipcMain.on('skeleton-launch-gui', function () {
+		ipcMain.on('launcher-open-gui', function () {
 			launchUI()
 		})
 
-		ipcMain.on('skeleton-bind-ip', function (e, msg) {
+		ipcMain.on('launcher-set-bind-ip', function (e, msg) {
 			console.log('changed bind ip:', msg)
-			system.emit('skeleton-bind-ip', msg)
+			uiConfig.set('bind_ip', msg)
+
+			rebindHttp()
 		})
 
-		ipcMain.on('skeleton-bind-port', function (e, msg) {
+		ipcMain.on('launcher-set-http-port', function (e, msg) {
 			console.log('changed bind port:', msg)
-			system.emit('skeleton-bind-port', msg)
+			uiConfig.set('http_port', msg)
+
+			rebindHttp()
 		})
 
-		ipcMain.on('skeleton-start-minimised', function (e, msg) {
+		ipcMain.on('launcher-set-start-minimised', function (e, msg) {
 			console.log('changed start minimized:', msg)
-			system.emit('skeleton-start-minimised', msg)
+			uiConfig.set('start_minimised', msg)
 		})
 
-		ipcMain.once('skeleton-ready', function () {
-			system.ready(!process.env.DEVELOPER)
+		ipcMain.once('launcher-ready', function () {
+			const ip = uiConfig.get('bind_ip')
+			const port = uiConfig.get('http_port')
+
+			system.ready(ip, port, !process.env.DEVELOPER)
 		})
 
 		ipcMain.on('network-interfaces:get', function () {
@@ -147,15 +192,6 @@ if (process.env.COMPANION_CONFIG_BASEDIR !== undefined) {
 			})
 		})
 
-		system.on('skeleton-ip-unavail', function () {})
-
-		system.on('skeleton-info', function (key, val) {
-			skeleton_info[key] = val
-			if (window) {
-				window.webContents.send('info', skeleton_info)
-			}
-		})
-
 		system.on('restart', function () {
 			app.relaunch()
 			app.exit()
@@ -166,7 +202,7 @@ if (process.env.COMPANION_CONFIG_BASEDIR !== undefined) {
 		})
 
 		window.on('ready-to-show', function () {
-			if (!skeleton_info.startMinimised) {
+			if (!uiConfig.get('start_minimised')) {
 				showWindow()
 			}
 		})
@@ -174,7 +210,7 @@ if (process.env.COMPANION_CONFIG_BASEDIR !== undefined) {
 		try {
 			configureScope(function (scope) {
 				scope.setUser({ id: system.machineId })
-				scope.setExtra('build', skeleton_info.appBuild)
+				scope.setExtra('build', system.appBuild)
 			})
 		} catch (e) {
 			console.log('Error reading BUILD and/or package info: ', e)
@@ -225,13 +261,13 @@ if (process.env.COMPANION_CONFIG_BASEDIR !== undefined) {
 		var isMac = process.platform == 'darwin'
 		var isLinux = process.platform == 'linux'
 
-		if (skeleton_info.appLaunch.match(/http/)) {
+		if (appInfo.appLaunch && appInfo.appLaunch.match(/http/)) {
 			if (isWin) {
-				exec('start ' + skeleton_info.appLaunch, function callback(error, stdout, stderr) {})
+				exec('start ' + appInfo.appLaunch, function callback(error, stdout, stderr) {})
 			} else if (isMac) {
-				exec('open ' + skeleton_info.appLaunch, function callback(error, stdout, stderr) {})
+				exec('open ' + appInfo.appLaunch, function callback(error, stdout, stderr) {})
 			} else if (isLinux) {
-				exec('xdg-open ' + skeleton_info.appLaunch, function callback(error, stdout, stderr) {})
+				exec('xdg-open ' + appInfo.appLaunch, function callback(error, stdout, stderr) {})
 			}
 		}
 	}
@@ -272,19 +308,19 @@ if (process.env.COMPANION_CONFIG_BASEDIR !== undefined) {
 		createWindow()
 
 		electron.powerMonitor.on('suspend', () => {
-			system.emit('skeleton-power', 'suspend')
+			system.emit('launcher-power-status', 'suspend')
 		})
 
 		electron.powerMonitor.on('resume', () => {
-			system.emit('skeleton-power', 'resume')
+			system.emit('launcher-power-status', 'resume')
 		})
 
 		electron.powerMonitor.on('on-ac', () => {
-			system.emit('skeleton-power', 'ac')
+			system.emit('launcher-power-status', 'ac')
 		})
 
 		electron.powerMonitor.on('on-battery', () => {
-			system.emit('skeleton-power', 'battery')
+			system.emit('launcher-power-status', 'battery')
 		})
 	})
 

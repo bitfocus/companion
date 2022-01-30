@@ -22,13 +22,11 @@ if (process.env.COMPANION_CONFIG_BASEDIR !== undefined) {
 
 	var port = '8000'
 	if (process.argv[3] != null) {
-		port = process.argv[3]
+		port = Number(process.argv[3])
 	}
 
 	setTimeout(function () {
-		system.emit('skeleton-bind-ip', process.argv[2])
-		system.emit('skeleton-bind-port', port)
-		system.ready(!process.env.DEVELOPER)
+		system.ready(process.argv[2], port, !process.env.DEVELOPER)
 		console.log('Started')
 	}, 1000)
 })()

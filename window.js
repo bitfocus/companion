@@ -1,32 +1,34 @@
 document.getElementById('launch').addEventListener('click', function () {
-	api.send('skeleton-launch-gui')
+	api.send('launcher-open-gui')
 })
 
 document.getElementById('hide').addEventListener('click', function () {
-	api.send('skeleton-minimize')
+	api.send('launcher-minimize')
 })
 
 document.getElementById('close').addEventListener('click', function () {
-	api.send('skeleton-close')
+	api.send('launcher-close')
 })
 
-api.receive('info', function (info) {
+api.receive('info', function (config, info) {
 	document.getElementById('status').innerHTML = info.appStatus
 	document.getElementById('url').innerHTML = info.appURL
 	document.getElementById('model').innerHTML = `${info.appName} v${info.appVersion} (${info.appBuild})`
-	document.getElementById('ift').checked = info.startMinimised
+
+	document.getElementById('ift').checked = config.start_minimised
+	document.getElementById('ifp').value = config.http_port
 	document.title = info.appName
 })
 api.send('info')
 
 document.getElementById('ifpb').addEventListener('click', function () {
 	var e = document.getElementById('ifp')
-	api.send('skeleton-bind-port', e.value)
+	api.send('launcher-set-http-port', e.value)
 })
 
 document.getElementById('ift').addEventListener('click', function () {
 	var e = document.getElementById('ift')
-	api.send('skeleton-start-minimised', e.checked)
+	api.send('launcher-set-start-minimised', e.checked)
 })
 
 api.receive('network-interfaces:get', function (interfaces) {
@@ -41,9 +43,9 @@ api.receive('network-interfaces:get', function (interfaces) {
 document.getElementById('ifs').addEventListener('change', function () {
 	var e = document.getElementById('ifs')
 	var value = e.options[e.selectedIndex].value
-	api.send('skeleton-bind-ip', value)
+	api.send('launcher-set-bind-ip', value)
 })
 
 api.send('network-interfaces:get')
 
-api.send('skeleton-ready')
+api.send('launcher-ready')
