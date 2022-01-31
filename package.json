@@ -483,7 +483,7 @@
 		"express": "^4.17.2",
 		"find-process": "1.4.7",
 		"fs-extra": "^10.0.0",
-		"husky": "^7.0.4",
+		"got": "^11.8.3",
 		"infinitton-idisplay": "^1.1.0",
 		"lodash": "^4.17.20",
 		"moment": "^2.29.1",

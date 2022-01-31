@@ -92,7 +92,7 @@ class App extends EventEmitter {
 		this.configDir = configDir
 		this.machineId = machineId
 		this.appVersion = pkgInfo.version
-		this.appBuild = buildNumber.replace(/-*master-*/, '').replace(/^-/, '')
+		this.appBuild = buildNumber.replace(/^-/, '')
 
 		// Supress warnings for too many listeners to io_connect. This can be safely increased if the warning comes back at startup
 		this.setMaxListeners(20)
