@@ -47,11 +47,11 @@ export async function goSilent(fcn) {
 }
 
 export function $withoutEscaping(pieces, ...args) {
-    const origQuote = $.quote
-    try {
-        $.quote = unescapedCmd => unescapedCmd
-        return $(pieces, args)
-    } finally {
-        $.quote = origQuote
-    }
+	const origQuote = $.quote
+	try {
+		$.quote = (unescapedCmd) => unescapedCmd
+		return $(pieces, args)
+	} finally {
+		$.quote = origQuote
+	}
 }

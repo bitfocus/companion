@@ -6,7 +6,7 @@ import path from 'path'
 console.log(`Rebuilding modules`)
 console.log('')
 
-cd("node_modules")
+cd('node_modules')
 const possibleModuleFolders = fs.readdirSync('.')
 for (const folder of possibleModuleFolders) {
 	if (folder.match(/companion-module-/)) {

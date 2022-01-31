@@ -1,6 +1,6 @@
 #!/usr/bin/env zx
 
-import { generateVersionString,generateMiniVersionString, $withoutEscaping } from './lib.mjs'
+import { generateVersionString, generateMiniVersionString, $withoutEscaping } from './lib.mjs'
 
 const platform = argv._[1]
 
@@ -15,11 +15,9 @@ await fs.writeFile(new URL('../BUILD', import.meta.url), buildString)
 if (!platform) {
 	console.log('No platform specified, building for current')
 
-	if ((process.platform === 'darwin')) {
-
+	if (process.platform === 'darwin') {
 		electronBuilderArgs.push(`-c.buildVersion="${buildString}"`)
 	} else if (process.platform === 'win32') {
-
 		const miniBuildString = await generateMiniVersionString()
 		electronBuilderArgs.push(`-c.buildVersion="${miniBuildString}"`)
 	}
