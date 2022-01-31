@@ -169,7 +169,7 @@ class App extends EventEmitter {
 
 		var io = require('./lib/Interface')(this)
 		var db = require('./lib/Database')(this)
-		var data = require('./lib/Data')(this)
+		var data = require('./lib/Data')(this, db)
 		var page = require('./lib/Page')(this)
 		var schedule = require('./lib/Trigger')(this)
 		var bank = require('./lib/Bank')(this)
