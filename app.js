@@ -29,6 +29,8 @@ var stripAnsi = require('strip-ansi')
 var shortid = require('shortid')
 var path = require('path')
 
+const Registry = require('./lib/Registry')
+
 var logbuffer = []
 var logwriting = false
 
@@ -167,23 +169,19 @@ class App extends EventEmitter {
 			}
 		}
 
-		var io = require('./lib/Interface')(this)
-		var db = require('./lib/Database')(this)
-		var data = require('./lib/Data')(this)
-		var page = require('./lib/Page')(this)
-		var schedule = require('./lib/Trigger')(this)
-		var bank = require('./lib/Bank')(this)
-		var graphics = require('./lib/Graphics')(this)
-		var elgatoDM = require('./lib/Surface')(this)
-		var instance = require('./lib/Instance')(this)
-		var service = require('./lib/Service')(this, io)
+		var registry = new Registry()
+		registry.launch(this)
 
 		this.emit('modules_loaded')
 
 		this.rebindHttp(bind_ip, http_port)
 
 		this.on('exit', function () {
-			elgatoDM.quit()
+			try {
+				registry.surfaces.quit()
+			} catch (e) {
+				//do nothing
+			}
 		})
 	}
 }
