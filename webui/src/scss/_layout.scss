@@ -57,7 +57,7 @@ body {
 	display: grid;
 	grid-auto-flow: column;
 	grid-template-columns: 1fr auto;
-	column-gap: .5rem;
+	column-gap: 0.5rem;
 }
 
 .tab-content {
