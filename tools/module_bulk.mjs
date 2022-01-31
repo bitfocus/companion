@@ -65,13 +65,14 @@ if (argv._[1] === 'clone') {
 			const range = `${taggedVersion}...HEAD`
 			const changes = await $`git -C ${fullDir} log --pretty=oneline ${range}`
 			output.push(changes, '')
+			countWithChanges++
 		}
 	}
 
 	console.log(output.join('\n'))
 
 	console.log()
-	console.log(`${countWithChanges} modules have changes`)
+	console.log(`${countWithChanges} modules have untagged commits`)
 } else if (argv._[1] === 'find-changes') {
 	let countWithChanges = 0
 
@@ -83,8 +84,8 @@ if (argv._[1] === 'clone') {
 		if (changes.stdout.trim().length > 0) {
 			countWithChanges++
 
-			console.log(changes.stdout)
-			console.log()
+			// console.log(changes.stdout)
+			// console.log()
 		}
 	}
 
@@ -101,17 +102,16 @@ if (argv._[1] === 'clone') {
 	for (const folder of folders) {
 		const fullDir = `${modulesDir}/${folder}`
 
-		const p = $`git -C ${fullDir} commit -a --porcelain -m ${message}`
-		ps.push(
-			p.then((changes) => {
-				if (changes.stdout.trim().length > 0) {
-					countChanged++
+		try {
+			const changes = await $`git -C ${fullDir} commit -a -m ${message}`
+			if (changes.stdout.trim().length > 0) {
+				countChanged++
 
-					console.log(changes.stdout)
-					console.log()
-				}
-			})
-		)
+				console.log()
+			}
+		}catch(e) {
+			console.error(e)
+		}
 	}
 
 	await Promise.allSettled(ps)
@@ -128,6 +128,22 @@ if (argv._[1] === 'clone') {
 		const fullDir = `${modulesDir}/${folder}`
 
 		ps.push($`git -C ${fullDir} push`)
+	}
+
+	await Promise.allSettled(ps)
+
+	console.log()
+	console.log(`${countChanged} modules were changed`)
+} else if (argv._[1] === 'pull-all') {
+	let countChanged = 0
+
+	const ps = []
+
+	const folders = await fs.readdir(modulesDir)
+	for (const folder of folders) {
+		const fullDir = `${modulesDir}/${folder}`
+
+		ps.push($`git -C ${fullDir} pull --rebase`)
 	}
 
 	await Promise.allSettled(ps)
@@ -156,7 +172,7 @@ if (argv._[1] === 'clone') {
 		} catch (e) {
 			try {
 				await $`yarn --cwd ${fullDir} version ${versionArg}`
-				// await $`git -C ${fullDir} push --tags`
+				await $`git -C ${fullDir} push --tags`
 
 				const tagNameRaw = await $`git -C ${fullDir} describe --exact-match --tags HEAD`
 				const tagName = tagNameRaw.stdout.trim()
