@@ -2628,6 +2628,10 @@ commist@^1.0.0:
   version "1.0.0"
   resolved "https://codeload.github.com/bitfocus/companion-module-ctpsystems-dio8008r/tar.gz/bd3b3380a99b4835d6000b4e0b309095a7a32957"
 
+"companion-module-cyp-matrix@github:bitfocus/companion-module-cyp-matrix#v1.0.0":
+  version "1.0.0"
+  resolved "https://codeload.github.com/bitfocus/companion-module-cyp-matrix/tar.gz/4955e501a7916c59dfce72f16add1f1414fb6f6e"
+
 "companion-module-dahuasecurity-ptz@github:bitfocus/companion-module-dahuasecurity-ptz#v1.0.1":
   version "1.0.1"
   resolved "https://codeload.github.com/bitfocus/companion-module-dahuasecurity-ptz/tar.gz/96dc82021eaa516957515f6fb8a942ed545192fd"
