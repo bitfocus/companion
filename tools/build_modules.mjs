@@ -1,22 +1,25 @@
+#!/usr/bin/env zx
+
 import fs from 'fs'
 import path from 'path'
-
-const appPath = '.'
 
 console.log(`Rebuilding modules`)
 console.log('')
 
-const possibleModuleFolders = fs.readdirSync(path.join(appPath, 'node_modules'))
+cd("node_modules")
+const possibleModuleFolders = fs.readdirSync('.')
 for (const folder of possibleModuleFolders) {
 	if (folder.match(/companion-module-/)) {
 		try {
-			const pkgBuffer = fs.readFileSync(path.join(appPath, 'node_modules', folder, 'package.json'))
+			const pkgBuffer = fs.readFileSync(path.join(folder, 'package.json'))
 			const pkgJson = JSON.parse(pkgBuffer.toString())
 
 			if (pkgJson.scripts && pkgJson.scripts.build) {
 				console.log(`Building module "${folder}"`)
 
-				await $`cd ${path.join(appPath, 'node_modules', folder)} && yarn build`
+				cd(folder)
+				await $`yarn build`
+				cd('..')
 
 				console.log()
 			}

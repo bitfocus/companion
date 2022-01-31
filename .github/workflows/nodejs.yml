@@ -131,6 +131,7 @@ jobs:
         with:
           node-version: ${{ matrix.node-version }}
       - name: yarn update and windist
+        shell: bash
         run: |
           # This fixes it somehow, and without it we get no logs from any shell scripts which are run
           yarn config set script-shell bash
