@@ -1,7 +1,8 @@
 import React, { useContext, useEffect, useState } from 'react'
 import { CHeader, CHeaderBrand, CHeaderNavItem, CHeaderNav, CHeaderNavLink, CToggler } from '@coreui/react'
 import { StaticContext } from '../util'
-
+import { faLock } from '@fortawesome/free-solid-svg-icons'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 export function MyHeader({ toggleSidebar, canLock, setLocked }) {
 	const context = useContext(StaticContext)
 
@@ -47,7 +48,9 @@ export function MyHeader({ toggleSidebar, canLock, setLocked }) {
 			{canLock ? (
 				<CHeaderNav className="ml-auto header-right">
 					<CHeaderNavItem>
-						<CHeaderNavLink onClick={setLocked}>Lock</CHeaderNavLink>
+						<CHeaderNavLink onClick={setLocked} title="Lock Admin UI">
+							<FontAwesomeIcon icon={faLock} />
+						</CHeaderNavLink>
 					</CHeaderNavItem>
 				</CHeaderNav>
 			) : (
