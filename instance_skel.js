@@ -19,6 +19,7 @@ var util = require('util')
 var debug = require('debug')('lib/instance_skel')
 var image = require('./lib/Graphics/Image')
 var icons = require('./lib/Resources/Icons')
+var upgrades = require('./lib/Data/Upgrade')
 var { serializeIsVisibleFn } = require('./lib/Resources/Util')
 
 function instance(system, id, config) {
@@ -274,6 +275,8 @@ instance.prototype.setPresetDefinitions = function (presets) {
 	 * demand that your presets MUST be dynamically generated.
 	 */
 	for (let preset of presets) {
+		preset = upgrades.upgradePreset(preset)
+
 		if (preset.bank) {
 			preset.bank.text = replaceAllVariables(preset.bank.text)
 		}
@@ -367,9 +370,7 @@ instance.prototype.getAllActions = function () {
 	self.system.emit('actions_for_instance', self.id, function (_result) {
 		result = _result
 	})
-	self.system.emit('release_actions_for_instance', self.id, function (_result) {
-		result.push(..._result)
-	})
+
 	return result
 }
 
