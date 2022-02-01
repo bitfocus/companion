@@ -16,7 +16,7 @@
  */
 
 if (process.env.DEVELOPER !== undefined && process.env.DEBUG === undefined) {
-	process.env['DEBUG'] = '*,-lib/variable,-websocket*,-express*,-engine*,-socket.io*,-send*,-db,-NRC*,-follow-redirects'
+	process.env['DEBUG'] = '*,-websocket*,-express*,-engine*,-socket.io*,-send*,-db,-NRC*,-follow-redirects'
 }
 
 global.MAX_BUTTONS = 32

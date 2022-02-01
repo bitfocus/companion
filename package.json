@@ -131,7 +131,7 @@
 	"engines": {
 		"npm": "please-use-yarn",
 		"yarn": "^1.22",
-		"node": "^14.16"
+		"node": "^16.9"
 	},
 	"managed_node_version": "14",
 	"author": "Bitfocus AS",
@@ -205,7 +205,6 @@
 		"companion-module-biamp-audia": "github:bitfocus/companion-module-biamp-audia#v1.0.1",
 		"companion-module-birddog-studio": "github:bitfocus/companion-module-birddog-studio#v1.0.0",
 		"companion-module-birddog-visca": "github:bitfocus/companion-module-birddog-visca#v1.0.4",
-		"companion-module-bitfocus-cloud": "github:bitfocusas/companion-module-bitfocus-cloud",
 		"companion-module-bitfocus-companion": "github:bitfocus/companion-module-bitfocus-companion#v1.7.3",
 		"companion-module-bitfocus-snapshot": "github:bitfocus/companion-module-bitfocus-snapshot#v0.0.4",
 		"companion-module-blackbird-hdmimatrix": "github:bitfocus/companion-module-blackbird-hdmimatrix#v1.0.2",
