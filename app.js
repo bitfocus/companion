@@ -29,6 +29,8 @@ var stripAnsi = require('strip-ansi')
 var shortid = require('shortid')
 var path = require('path')
 
+const Registry = require('./lib/Registry')
+
 var logbuffer = []
 var logwriting = false
 
@@ -90,7 +92,7 @@ class App extends EventEmitter {
 		this.configDir = configDir
 		this.machineId = machineId
 		this.appVersion = pkgInfo.version
-		this.appBuild = buildNumber.replace(/-*master-*/, '').replace(/^-/, '')
+		this.appBuild = buildNumber.replace(/^-/, '')
 
 		// Supress warnings for too many listeners to io_connect. This can be safely increased if the warning comes back at startup
 		this.setMaxListeners(20)
@@ -167,24 +169,19 @@ class App extends EventEmitter {
 			}
 		}
 
-		var io = require('./lib/Interface')(this)
-		var db = require('./lib/Database')(this)
-		var data = require('./lib/Data')(this, db)
-		var page = require('./lib/Page')(this)
-		var schedule = require('./lib/Trigger')(this)
-		var bank = require('./lib/Bank')(this)
-		var graphics = require('./lib/Graphics')(this)
-		var elgatoDM = require('./lib/Surface')(this)
-		var instance = require('./lib/Instance')(this)
-		var service = require('./lib/Service')(this, io)
-		var cloud = require('./lib/Cloud')(this)
+		var registry = new Registry()
+		registry.launch(this)
 
 		this.emit('modules_loaded')
 
 		this.rebindHttp(bind_ip, http_port)
 
 		this.on('exit', function () {
-			elgatoDM.quit()
+			try {
+				registry.surfaces.quit()
+			} catch (e) {
+				//do nothing
+			}
 		})
 	}
 }
