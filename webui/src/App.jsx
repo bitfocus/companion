@@ -15,6 +15,7 @@ import {
 	faCalendarAlt,
 	faClipboardList,
 	faClock,
+	faCloud,
 	faGamepad,
 	faPlug,
 	faUserNinja,
@@ -36,6 +37,7 @@ import { Triggers } from './Triggers'
 import { InstancesPage } from './Instances'
 import { ButtonsPage } from './Buttons'
 import { ContextData } from './ContextData'
+import { CloudPage } from './CloudPage'
 import { Redirect, useLocation } from 'react-router-dom'
 
 export default class App extends React.Component {
@@ -211,6 +213,11 @@ function AppContent({ buttonGridHotPress }) {
 						<FontAwesomeIcon icon={faClipboardList} /> Log
 					</CNavLink>
 				</CNavItem>
+				<CNavItem>
+					<CNavLink to="/cloud">
+						<FontAwesomeIcon icon={faCloud} /> Cloud
+					</CNavLink>
+				</CNavItem>
 			</CNav>
 			<CTabContent fade={false}>
 				<CTabPane className={getClassForPane('/connections')}>
@@ -243,6 +250,14 @@ function AppContent({ buttonGridHotPress }) {
 						<LogPanel />
 					</MyErrorBoundary>
 				</CTabPane>
+				{getClassForPane('/cloud') !== '' && (
+					// We want the cloud panel to only load when it it needs to
+					<CTabPane className={getClassForPane('/cloud')}>
+						<MyErrorBoundary>
+							<CloudPage />
+						</MyErrorBoundary>
+					</CTabPane>
+				)}
 				{!hasMatchedPane ? (
 					// If no pane was matched, then redirect to the default
 					<Redirect
