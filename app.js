@@ -72,7 +72,7 @@ class App extends EventEmitter {
 			}
 		} else {
 			debug('creating uuid file')
-			await fs.writeFile(machineIdPath, umachineIduid).catch((e) => {
+			await fs.writeFile(machineIdPath, machineId).catch((e) => {
 				debug(`failed to write uuid file`, e)
 			})
 		}
