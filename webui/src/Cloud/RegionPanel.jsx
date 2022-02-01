@@ -34,7 +34,7 @@ export class CloudRegionPanel extends Component {
 	}
 
 	cloudStateDidUpdate(id, newState) {
-		if (id == this.props.id) {
+		if (id === this.props.id) {
 			console.log(`cloud region ${id} state did update to:`, newState)
 			this.setState({ ...newState })
 		}
