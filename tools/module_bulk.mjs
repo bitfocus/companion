@@ -172,6 +172,7 @@ if (argv._[1] === 'clone') {
 		} catch (e) {
 			try {
 				await $`yarn --cwd ${fullDir} version ${versionArg}`
+				await $`git -C ${fullDir} push`
 				await $`git -C ${fullDir} push --tags`
 
 				const tagNameRaw = await $`git -C ${fullDir} describe --exact-match --tags HEAD`
