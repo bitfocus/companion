@@ -2219,6 +2219,11 @@ colors@1.0.3, colors@1.0.x:
   resolved "https://registry.yarnpkg.com/colors/-/colors-1.0.3.tgz#0433f44d809680fdeb60ed260f1b0c262e82a40b"
   integrity sha1-BDP0TYCWgP3rYO0mDxsMJi6CpAs=
 
+colorsys@^1.0.22:
+  version "1.0.22"
+  resolved "https://registry.yarnpkg.com/colorsys/-/colorsys-1.0.22.tgz#e08459b297de7d4da4a53c26c3555f5a9609ad88"
+  integrity sha512-KCqF23oqkOD0IUCTLCl0obwGIMyeGFlNWuJ4oRRVKmawvKQeb3x5UvajVeH9AShZWU9hNaIhjXeTGw3iPNtl/Q==
+
 combined-stream@^1.0.6, combined-stream@^1.0.8, combined-stream@~1.0.6:
   version "1.0.8"
   resolved "https://registry.yarnpkg.com/combined-stream/-/combined-stream-1.0.8.tgz#c3d45a8b34fd730631a110a8a2520682b31d5a7f"
@@ -3625,6 +3630,12 @@ commist@^1.0.0:
 "companion-module-tow-mixeffect@github:bitfocus/companion-module-tow-mixeffect#v1.1.3":
   version "1.1.3"
   resolved "https://codeload.github.com/bitfocus/companion-module-tow-mixeffect/tar.gz/a5d4e189db15b8a0006e07a95d59ab3a183e8d75"
+
+"companion-module-tplink-kasasmartbulb@github:bitfocus/companion-module-tplink-kasasmartbulb#v1.0.0":
+  version "1.0.0"
+  resolved "https://codeload.github.com/bitfocus/companion-module-tplink-kasasmartbulb/tar.gz/bbe717f93f63642368a07d78f056a0d286bda83b"
+  dependencies:
+    colorsys "^1.0.22"
 
 "companion-module-tplink-kasasmartplug@github:bitfocus/companion-module-tplink-kasasmartplug#v1.0.1":
   version "1.0.1"
