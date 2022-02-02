@@ -2685,9 +2685,9 @@ commist@^1.0.0:
   version "1.0.1"
   resolved "https://codeload.github.com/bitfocus/companion-module-denon-recorder/tar.gz/0474a787c65d169010b4f99190a78fd680f13f34"
 
-"companion-module-depili-clock-8001@github:bitfocus/companion-module-depili-clock-8001#v5.1.1":
-  version "5.1.1"
-  resolved "https://codeload.github.com/bitfocus/companion-module-depili-clock-8001/tar.gz/e9f105a3cacf0529b1865b6a2403e4b4ee8ed0b6"
+"companion-module-depili-clock-8001@github:bitfocus/companion-module-depili-clock-8001#v5.2.2":
+  version "5.2.2"
+  resolved "https://codeload.github.com/bitfocus/companion-module-depili-clock-8001/tar.gz/c4aa4d64edb029f94ba52adc26c733d11a4c27ed"
   dependencies:
     osc "^2.4.1"
 
