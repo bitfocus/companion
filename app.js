@@ -96,30 +96,6 @@ class App extends EventEmitter {
 
 		// Supress warnings for too many listeners to io_connect. This can be safely increased if the warning comes back at startup
 		this.setMaxListeners(20)
-
-		this.on('exit', () => {
-			console.log('somewhere, the system wants to exit. kthxbai')
-
-			this.emit('instance_getall', function (instances, active) {
-				try {
-					for (var key in active) {
-						if (instances[key].label !== 'internal') {
-							try {
-								active[key].destroy()
-							} catch (e) {
-								console.log('Could not destroy', instances[key].label)
-							}
-						}
-					}
-				} catch (e) {
-					console.log('Could not destroy all instances')
-				}
-			})
-
-			setImmediate(function () {
-				process.exit()
-			})
-		})
 	}
 
 	/**
@@ -177,11 +153,19 @@ class App extends EventEmitter {
 		this.rebindHttp(bind_ip, http_port)
 
 		this.on('exit', function () {
+			console.log('somewhere, the system wants to exit. kthxbai')
+
 			try {
 				registry.surfaces.quit()
 			} catch (e) {
 				//do nothing
 			}
+
+			registry.instance.destroyAllInstances()
+
+			setImmediate(function () {
+				process.exit()
+			})
 		})
 	}
 }

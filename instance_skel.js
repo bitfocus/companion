@@ -28,15 +28,15 @@ function instance(system, id, config) {
 	self.system = system
 	self.id = id
 	self.config = config
-	self.package_info = {}
+	self.package_info = {} // Note: this is used by 3 modules. They want the name and version, but dont need our help to do it
 	self._feedbackDefinitions = {}
 	self._actionDefinitions = {}
 
 	// we need this object from instance, and I don't really know how to get it
 	// out of instance.js without adding an argument to instance() for every
 	// single module? TODO: håkon: look over this, please.
-	system.emit('instance_get_package_info', function (obj) {
-		self.package_info = obj[self.config.instance_type]
+	system.emit('instance_get_package_info', self.config.instance_type, function (obj) {
+		self.package_info = obj
 	})
 
 	for (var key in icons) {
