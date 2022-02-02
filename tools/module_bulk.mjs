@@ -109,7 +109,7 @@ if (argv._[1] === 'clone') {
 
 				console.log()
 			}
-		}catch(e) {
+		} catch (e) {
 			console.error(e)
 		}
 	}
