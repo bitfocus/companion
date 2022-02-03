@@ -2629,9 +2629,9 @@ commist@^1.0.0:
   version "1.0.2"
   resolved "https://codeload.github.com/bitfocus/companion-module-crystal-scte/tar.gz/4a28e785a9c5a07b3b791356edb33b66ea9e919e"
 
-"companion-module-ctpsystems-dio8008r@github:bitfocus/companion-module-ctpsystems-dio8008r#v1.0.2":
-  version "1.0.2"
-  resolved "https://codeload.github.com/bitfocus/companion-module-ctpsystems-dio8008r/tar.gz/d991bc614eb75946c7b36051a171cfabf5618980"
+"companion-module-ctpsystems-dio8008r@github:bitfocus/companion-module-ctpsystems-dio8008r#v1.0.3":
+  version "1.0.3"
+  resolved "https://codeload.github.com/bitfocus/companion-module-ctpsystems-dio8008r/tar.gz/a59d616e9dcccf2ddac99d9d59dfaab2f2697d36"
 
 "companion-module-cyp-matrix@github:bitfocus/companion-module-cyp-matrix#v1.0.1":
   version "1.0.1"
