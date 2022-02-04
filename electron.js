@@ -4,7 +4,7 @@ var app = electron.app
 var BrowserWindow = electron.BrowserWindow
 var path = require('path')
 var url = require('url')
-var App = require('./app.js')
+var Registry = require('./lib/Registry.js')
 var fs = require('fs-extra')
 const { init, showReportDialog, configureScope } = require('@sentry/electron')
 const systeminformation = require('systeminformation')
@@ -56,11 +56,11 @@ const configDefaults = {
 		defaults: configDefaults,
 	})
 
-	const system = await App.create(configDir)
+	const registry = await Registry.create(configDir)
 
 	let appInfo = {
-		appVersion: system.appVersion,
-		appBuild: system.appBuild,
+		appVersion: registry.appVersion,
+		appBuild: registry.appBuild,
 		appName: pkgInfo.description,
 
 		appStatus: 'Unknown',
@@ -74,7 +74,7 @@ const configDefaults = {
 		}
 	}
 
-	system.on('http-bind-status', (status) => {
+	registry.system.on('http-bind-status', (status) => {
 		appInfo = {
 			...appInfo,
 			...status,
@@ -87,7 +87,7 @@ const configDefaults = {
 		console.log('Configuring sentry error reporting')
 		init({
 			dsn: 'https://535745b2e446442ab024d1c93a349154@sentry.bitfocus.io/8',
-			release: `companion@${system.appBuild || system.appVersion}`,
+			release: `companion@${registry.appBuild || registry.appVersion}`,
 			beforeSend(event) {
 				if (event.exception) {
 					showReportDialog()
@@ -103,7 +103,7 @@ const configDefaults = {
 		const ip = uiConfig.get('bind_ip')
 		const port = uiConfig.get('http_port')
 
-		system.rebindHttp(ip, port)
+		registry.rebindHttp(ip, port)
 	}
 
 	var window
@@ -145,7 +145,7 @@ const configDefaults = {
 		})
 
 		ipcMain.on('launcher-close', function (req, cb) {
-			system.emit('exit')
+			registry.emit('exit')
 		})
 
 		ipcMain.on('launcher-minimize', function (req, cb) {
@@ -179,7 +179,7 @@ const configDefaults = {
 			const ip = uiConfig.get('bind_ip')
 			const port = uiConfig.get('http_port')
 
-			system.ready(ip, port, !process.env.DEVELOPER)
+			registry.ready(ip, port, !process.env.DEVELOPER)
 		})
 
 		ipcMain.on('network-interfaces:get', function () {
@@ -207,7 +207,7 @@ const configDefaults = {
 			})
 		})
 
-		system.on('restart', function () {
+		registry.on('restart', function () {
 			app.relaunch()
 			app.exit()
 		})
@@ -224,8 +224,8 @@ const configDefaults = {
 
 		try {
 			configureScope(function (scope) {
-				scope.setUser({ id: system.machineId })
-				scope.setExtra('build', system.appBuild)
+				scope.setUser({ id: registry.machineId })
+				scope.setExtra('build', registry.appBuild)
 			})
 		} catch (e) {
 			console.log('Error reading BUILD and/or package info: ', e)
@@ -288,13 +288,13 @@ const configDefaults = {
 			})
 			.then((v) => {
 				if (v.response === 0) {
-					system.emit('exit')
+					registry.emit('exit')
 				}
 			})
 	}
 
 	function scanUsb() {
-		system.emit('devices_reenumerate')
+		registry.system.emit('devices_reenumerate')
 	}
 
 	function toggleWindow() {
@@ -315,19 +315,19 @@ const configDefaults = {
 		createWindow()
 
 		electron.powerMonitor.on('suspend', () => {
-			system.emit('launcher-power-status', 'suspend')
+			registry.system.emit('launcher-power-status', 'suspend')
 		})
 
 		electron.powerMonitor.on('resume', () => {
-			system.emit('launcher-power-status', 'resume')
+			registry.system.emit('launcher-power-status', 'resume')
 		})
 
 		electron.powerMonitor.on('on-ac', () => {
-			system.emit('launcher-power-status', 'ac')
+			registry.system.emit('launcher-power-status', 'ac')
 		})
 
 		electron.powerMonitor.on('on-battery', () => {
-			system.emit('launcher-power-status', 'battery')
+			registry.system.emit('launcher-power-status', 'battery')
 		})
 	})
 
