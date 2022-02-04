@@ -2866,9 +2866,9 @@ commist@^1.0.0:
   version "1.0.2"
   resolved "https://codeload.github.com/bitfocus/companion-module-generic-sacn/tar.gz/9e0244ba7f8291823341beea60112c05329e59ba"
 
-"companion-module-generic-swp08@github:bitfocus/companion-module-generic-swp08#v1.0.3":
-  version "1.0.3"
-  resolved "https://codeload.github.com/bitfocus/companion-module-generic-swp08/tar.gz/d9e1d1bfd3a0ca5964de19f492c51b97a65d3767"
+"companion-module-generic-swp08@github:bitfocus/companion-module-generic-swp08#v1.0.4":
+  version "1.0.4"
+  resolved "https://codeload.github.com/bitfocus/companion-module-generic-swp08/tar.gz/81294ec4e557ef8a9c119e8d36c051760b53fbdf"
 
 "companion-module-generic-tcp-serial@github:bitfocus/companion-module-generic-tcp-serial#v1.0.4":
   version "1.0.4"
