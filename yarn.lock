@@ -2967,9 +2967,9 @@ commist@^1.0.0:
   version "1.0.12"
   resolved "https://codeload.github.com/bitfocus/companion-module-imimot-mitti/tar.gz/92a4e0160d493dae52be6e06a8592b88dcc455de"
 
-"companion-module-intelix-matrix@github:bitfocus/companion-module-intelix-matrix#v1.0.2":
-  version "1.0.2"
-  resolved "https://codeload.github.com/bitfocus/companion-module-intelix-matrix/tar.gz/b3e2063c039c5b75d361430a792d4c28b4ae9550"
+"companion-module-intelix-matrix@github:bitfocus/companion-module-intelix-matrix#v1.0.3":
+  version "1.0.3"
+  resolved "https://codeload.github.com/bitfocus/companion-module-intelix-matrix/tar.gz/752b41bff732c856d6167392ea849cfce3d11f87"
   dependencies:
     node-fetch "^2.6.7"
 
