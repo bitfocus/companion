@@ -8,6 +8,7 @@ out/
 config
 db
 /module-tmp
+/bundle-*.zip
 
 # Visual Studio 2015/2017 cache/options directory
 .vs/
