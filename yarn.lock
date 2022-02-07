@@ -2312,7 +2312,7 @@ commist@^1.0.0:
   version "1.0.6"
   resolved "https://codeload.github.com/bitfocus/companion-module-aja-kumo/tar.gz/5abb49dff68da32b726bbbbcd3ec6709dbefc682"
 
-"companion-module-allenheath-ahm@github:bitfocus/companion-module-allenheath-ahm#v1.0.2":
+"companion-module-allenheath-ahm@github:bitfocus/companion-module-allenheath-ahm#v1.0.3":
   version "1.0.2"
   resolved "https://codeload.github.com/bitfocus/companion-module-allenheath-ahm/tar.gz/c15fd1e16bbf116d40026b73d73fa9a79cbcd55e"
 
