@@ -79,6 +79,7 @@
 			"assets/trayTemplate.png",
 			"assets/trayTemplate@2x.png",
 			"!webui/**/*",
+			"!docs/**/*",
 			"!font/*",
 			"!tools/*",
 			"!*.md",
@@ -87,8 +88,12 @@
 		],
 		"extraResources": [
 			{
-				"from": "webui/build",
-				"to": "static"
+				"from": "bundle-webui.zip",
+				"to": "webui.zip"
+			},
+			{
+				"from": "bundle-docs.zip",
+				"to": "docs.zip"
 			}
 		]
 	},
@@ -151,6 +156,7 @@
 		"@estilles/expression-parser": "^1.0.0",
 		"@sentry/electron": "^2.5.4",
 		"app-root-path": "^3.0.0",
+		"archiver": "^5.3.0",
 		"binopsy": "^0.0.0",
 		"check-ip": "^1.1.1",
 		"companion-module-7thsensedesign-delta": "github:bitfocus/companion-module-7thsensedesign-delta#v1.0.3",

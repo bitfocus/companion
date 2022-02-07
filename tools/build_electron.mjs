@@ -1,6 +1,27 @@
 #!/usr/bin/env zx
 
 import { generateVersionString, generateMiniVersionString, $withoutEscaping } from './lib.mjs'
+import archiver from 'archiver'
+
+/**
+ * @param {String} sourceDir: /some/folder/to/compress
+ * @param {String} outPath: /path/to/created.zip
+ * @returns {Promise}
+ */
+function zipDirectory(sourceDir, outPath) {
+	const archive = archiver('zip', { zlib: { level: 9 } })
+	const stream = fs.createWriteStream(outPath)
+
+	return new Promise((resolve, reject) => {
+		archive
+			.directory(sourceDir, false)
+			.on('error', (err) => reject(err))
+			.pipe(stream)
+
+		stream.on('close', () => resolve())
+		archive.finalize()
+	})
+}
 
 const platform = argv._[1]
 
@@ -58,6 +79,10 @@ if (!platform) {
 }
 
 await $`yarn --cwd webui build`
+
+// generat the 'static' zip files to serve
+await zipDirectory('./webui/build', 'bundle-webui.zip')
+await zipDirectory('./docs', 'bundle-docs.zip')
 
 // Ensure we have the correct sharp libs
 let sharpArgs = []
