@@ -1,0 +1,19 @@
+{
+	"extends": "@tsconfig/node14/tsconfig.json",
+	"compilerOptions": {
+		"module": "es2020",
+		"moduleResolution": "node",
+		"sourceMap": true,
+		"paths": {
+			"*": ["../node_modules/*"]
+		},
+		"declaration": true,
+		"importHelpers": true,
+		"listFiles": false,
+		"traceResolution": false,
+		"pretty": true,
+		"types": ["node"],
+		"forceConsistentCasingInFileNames": true
+	},
+	"compileOnSave": false
+}

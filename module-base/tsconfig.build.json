@@ -1,0 +1,17 @@
+{
+	"extends": "./tsconfig-base.json",
+	"include": ["src/**/*.ts"],
+	"exclude": ["node_modules/**", "src/**/*spec.ts", "src/**/__tests__/*", "src/**/__mocks__/*"],
+	"compilerOptions": {
+		"outDir": "./dist",
+		"baseUrl": "./",
+		// "importHelpers": false,
+		"paths": {
+			"*": ["./node_modules/*"],
+			"@companion/core-shared": ["../shared/src"]
+		},
+		"types": ["node"],
+		"declaration": true,
+		"declarationMap": true
+	}
+}
