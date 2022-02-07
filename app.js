@@ -188,7 +188,6 @@ system.ready = function (logToFile) {
 	var satelliteLegacy = require('./lib/satellite/satellite_server_legacy')(system)
 	var satellite = require('./lib/satellite/satellite_server')(system)
 	var elgato_plugin_server = require('./lib/elgato_plugin_server')(system)
-	var help = require('./lib/help')(system)
 	var metrics = require('./lib/metrics')(system)
 
 	system.emit('modules_loaded')
