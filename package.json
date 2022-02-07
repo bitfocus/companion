@@ -479,6 +479,7 @@
 		"elgato-stream-deck": "^4.1.0",
 		"emberplus-connection": "^0.0.4",
 		"express": "^4.17.2",
+		"express-serve-zip": "^1.0.0",
 		"find-process": "1.4.7",
 		"fs-extra": "^10.0.0",
 		"husky": "^7.0.4",
