@@ -22,6 +22,8 @@ export interface ModuleManifest {
 	id: string
 	/** Name of the module */
 	name: string
+
+	shortname: string
 	/** Description of the module */
 	description: string
 	/** Current version of the module */

@@ -153,8 +153,8 @@
 		"prettier": "^2.5.1",
 		"rimraf": "^3.0.2",
 		"s3-upload-stream": "^1.0.7",
-		"typescript": "~4.5",
-		"tui-jsdoc-template": "^1.2.2"
+		"tui-jsdoc-template": "^1.2.2",
+		"typescript": "~4.5"
 	},
 	"dependencies": {
 		"@elgato-stream-deck/node": "^5.2.0",
@@ -486,6 +486,7 @@
 		"express": "^4.17.2",
 		"find-process": "1.4.7",
 		"fs-extra": "^10.0.0",
+		"get-port": "^5.1.1",
 		"got": "^11.8.3",
 		"infinitton-idisplay": "^1.1.0",
 		"lodash": "^4.17.20",
@@ -496,6 +497,7 @@
 		"node-rest-client": "^3.1.0",
 		"osc": "^2.4.2",
 		"pngjs": "^3.3.3",
+		"respawn": "^2.6.0",
 		"selfsigned": "^1.10.14",
 		"sharp": "^0.28.3",
 		"shortid": "^2.2.16",

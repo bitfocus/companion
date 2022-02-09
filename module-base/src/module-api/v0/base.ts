@@ -71,7 +71,6 @@ function callFeedbackOnDefinition(definition: CompanionFeedback, feedback: Feedb
 export abstract class InstanceBaseV0<TConfig> implements InstanceBaseShared<TConfig> {
 	readonly #socket: SocketIOClient.Socket
 	public readonly id: string
-	public readonly label: string
 
 	readonly #lifecycleQueue: PQueue = new PQueue({ concurrency: 1 })
 	#initialized: boolean = false
@@ -87,7 +86,7 @@ export abstract class InstanceBaseV0<TConfig> implements InstanceBaseShared<TCon
 	/**
 	 * Create an instance of the module.
 	 */
-	constructor(internal: unknown, id: string, label: string) {
+	constructor(internal: unknown, id: string) {
 		const socket = internal as SocketIOClient.Socket // TODO - can this be safer?
 		if (!socket.connected || typeof id !== 'string')
 			throw new Error(
@@ -96,7 +95,6 @@ export abstract class InstanceBaseV0<TConfig> implements InstanceBaseShared<TCon
 
 		this.#socket = socket
 		this.id = id
-		this.label = label
 
 		// subscribe to socket events from host
 		listenToEvents<HostToModuleEventsV0>(socket, {
