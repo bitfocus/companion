@@ -1,3 +1,4 @@
+import { OSCSomeArguments } from '../common/osc.js'
 import {
 	CompanionFeedbackButtonStyleResult,
 	InputValue,
@@ -15,6 +16,7 @@ export interface ModuleToHostEventsV0 {
 	setVariableValues: (msg: SetVariableValuesMessage) => void
 	updateFeedbackValues: (msg: UpdateFeedbackValuesMessage) => void
 	saveConfig: (msg: SaveConfigMessage) => void
+	'send-osc': (msg: SendOscMessage) => void
 }
 
 export interface HostToModuleEventsV0 {
@@ -87,6 +89,20 @@ export interface FeedbackInstance {
 	controlId: string
 	feedbackId: string // aka 'type'
 	options: { [key: string]: InputValue | undefined }
+
+	/** If control supports an imageBuffer, the dimensions the buffer must be */
+	image?: {
+		width: number
+		height: number
+	}
+
+	/** @deprecated */
+	page: number
+	/** @deprecated */
+	bank: number
+
+	/** @deprecated */
+	rawBank: any
 }
 
 export interface UpdateFeedbackInstancesMessage {
@@ -116,4 +132,11 @@ export interface UpdateActionInstancesMessage {
 
 export interface SaveConfigMessage {
 	config: unknown
+}
+
+export interface SendOscMessage {
+	host: string
+	port: number
+	path: string
+	args: OSCSomeArguments
 }

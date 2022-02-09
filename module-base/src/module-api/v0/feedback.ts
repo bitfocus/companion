@@ -6,13 +6,13 @@ export interface CompanionFeedbackEvent {
 	feedbackId: string
 	controlId: string
 	options: { [key: string]: InputValue | undefined }
-
-	/** @deprecated */
-	rawBank: any
 }
 
 export interface CompanionFeedbackBooleanEvent extends CompanionFeedbackEvent {
 	type: 'boolean'
+
+	/** @deprecated */
+	rawBank: any
 }
 export interface CompanionFeedbackAdvancedEvent extends CompanionFeedbackEvent {
 	type: 'advanced'
@@ -26,6 +26,9 @@ export interface CompanionFeedbackAdvancedEvent extends CompanionFeedbackEvent {
 	page: number
 	/** @deprecated */
 	bank: number
+
+	/** @deprecated */
+	rawBank: any
 }
 
 export interface CompanionFeedbackButtonStyleResult {

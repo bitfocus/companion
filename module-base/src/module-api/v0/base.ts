@@ -1,8 +1,15 @@
 import * as SocketIOClient from 'socket.io-client'
 import { CompanionInputField } from './input.js'
 import { CompanionAction, CompanionActions } from './action.js'
-import { CompanionFeedbacks, CompanionFeedback, CompanionFeedbackButtonStyleResult } from './feedback.js'
-import { CompanionPreset } from './preset.js'
+import {
+	CompanionFeedbacks,
+	CompanionFeedback,
+	CompanionFeedbackButtonStyleResult,
+	CompanionFeedbackEvent,
+	CompanionFeedbackBooleanEvent,
+	CompanionFeedbackAdvancedEvent,
+} from './feedback.js'
+import { SomeCompanionPreset } from './preset.js'
 import { InstanceStatus, LogLevel } from './enums.js'
 import {
 	ActionInstance,
@@ -11,6 +18,7 @@ import {
 	HostToModuleEventsV0,
 	LogMessageMessage,
 	ModuleToHostEventsV0,
+	SendOscMessage,
 	SetActionDefinitionsMessage,
 	SetFeedbackDefinitionsMessage,
 	SetStatusMessage,
@@ -25,63 +33,40 @@ import { InstanceBaseShared } from '../../instance-base.js'
 import { ResultCallback } from '../../host-api/versions.js'
 import PQueue from 'p-queue'
 import { CompanionVariable, CompanionVariableValue, CompanionVariableValue2 } from './variable.js'
-import { OSCSomeArguments } from './osc.js'
+import { OSCSomeArguments } from '../../common/osc.js'
+import { listenToEvents } from '../lib.js'
 
-/**
- * Signature for the handler functions
- */
-type HandlerFunction<T extends (...args: any) => any> = (
-	// socket: SocketIOClient.Socket,
-	// logger: winston.Logger,
-	// socketContext: SocketContext,
-	data: Parameters<T>[0]
-) => Promise<ReturnType<T>>
-
-type HandlerFunctionOrNever<T> = T extends (...args: any) => any ? HandlerFunction<T> : never
-
-/** Map of handler functions */
-export type EventHandlers<T extends object> = {
-	[K in keyof T]: HandlerFunctionOrNever<T[K]>
-}
-
-/** Subscribe to all the events defined in the handlers, and wrap with safety and logging */
-export function listenToEvents<T extends object>(
-	// self: InstanceBaseV0<any>,
-	socket: SocketIOClient.Socket<T>,
-	// core: ICore,
-	// connectionId: string,
-	handlers: EventHandlers<T>
-): void {
-	// const logger = createChildLogger(`module/${connectionId}`);
-
-	for (const [event, handler] of Object.entries(handlers)) {
-		socket.on(event as any, async (msg: any, cb: ResultCallback<any>) => {
-			if (!msg || typeof msg !== 'object') {
-				console.warn(`Received malformed message object "${event}"`)
-				return // Ignore messages without correct structure
-			}
-			if (cb && typeof cb !== 'function') {
-				console.warn(`Received malformed callback "${event}"`)
-				return // Ignore messages without correct structure
-			}
-
-			try {
-				// Run it
-				const handler2 = handler as HandlerFunction<(msg: any) => any>
-				const result = await handler2(msg)
-
-				if (cb) cb(null, result)
-			} catch (e: any) {
-				console.error(`Command failed: ${e}`)
-				if (cb) cb(e?.toString() ?? JSON.stringify(e), undefined)
-			}
-		})
+function convertFeedbackInstanceToEvent(
+	type: 'boolean' | 'advanced',
+	feedback: FeedbackInstance
+): CompanionFeedbackEvent {
+	return {
+		type: type,
+		id: feedback.id,
+		feedbackId: feedback.feedbackId,
+		controlId: feedback.controlId,
+		options: feedback.options,
 	}
 }
 
-// function convertFeedbackInstanceToEvent(feedback: FeedbackInstance): CompanionFeedbackEvent {
-
-// }
+function callFeedbackOnDefinition(definition: CompanionFeedback, feedback: FeedbackInstance) {
+	if (definition.type === 'boolean') {
+		return definition.callback({
+			...convertFeedbackInstanceToEvent('boolean', feedback),
+			type: 'boolean',
+			rawBank: feedback.rawBank,
+		})
+	} else {
+		return definition.callback({
+			...convertFeedbackInstanceToEvent('advanced', feedback),
+			type: 'advanced',
+			image: feedback.image,
+			page: feedback.page,
+			bank: feedback.bank,
+			rawBank: feedback.rawBank,
+		})
+	}
+}
 
 export abstract class InstanceBaseV0<TConfig> implements InstanceBaseShared<TConfig> {
 	readonly #socket: SocketIOClient.Socket
@@ -193,7 +178,7 @@ export abstract class InstanceBaseV0<TConfig> implements InstanceBaseShared<TCon
 				// Call unsubscribe
 				if (definition?.unsubscribe) {
 					try {
-						definition.unsubscribe(existing)
+						definition.unsubscribe(convertFeedbackInstanceToEvent(definition.type, existing))
 					} catch (e) {
 						// TODO
 					}
@@ -210,7 +195,7 @@ export abstract class InstanceBaseV0<TConfig> implements InstanceBaseShared<TCon
 				// Inserted or updated
 				if (definition?.subscribe) {
 					try {
-						definition.subscribe(feedback)
+						definition.subscribe(convertFeedbackInstanceToEvent(definition.type, feedback))
 					} catch (e) {
 						// TODO
 					}
@@ -220,7 +205,7 @@ export abstract class InstanceBaseV0<TConfig> implements InstanceBaseShared<TCon
 				if (definition) {
 					let value: boolean | Partial<CompanionFeedbackButtonStyleResult> | undefined
 					try {
-						value = definition.callback(feedback)
+						value = callFeedbackOnDefinition(definition, feedback)
 					} catch (e) {
 						// TODO
 					}
@@ -299,16 +284,6 @@ export abstract class InstanceBaseV0<TConfig> implements InstanceBaseShared<TCon
 	 */
 	abstract getConfigFields(): CompanionInputField[]
 
-	// /**
-	//  * Executes the provided action.
-	//  */
-	// abstract executeAction(event: CompanionActionEvent): void;
-
-	// /**
-	//  * Processes a feedback state.
-	//  */
-	// abstract executeFeedback(event: CompanionFeedbackEvent): CompanionFeedbackResult;
-
 	setActionDefinitions(actions: CompanionActions): Promise<void> {
 		const hostActions: SetActionDefinitionsMessage['actions'] = []
 
@@ -330,6 +305,7 @@ export abstract class InstanceBaseV0<TConfig> implements InstanceBaseShared<TCon
 
 		return this._socketEmit('setActionDefinitions', { actions: hostActions })
 	}
+
 	setFeedbackDefinitions(feedbacks: CompanionFeedbacks): Promise<void> {
 		const hostFeedbacks: SetFeedbackDefinitionsMessage['feedbacks'] = []
 
@@ -353,10 +329,12 @@ export abstract class InstanceBaseV0<TConfig> implements InstanceBaseShared<TCon
 
 		return this._socketEmit('setFeedbackDefinitions', { feedbacks: hostFeedbacks })
 	}
-	setPresetDefinitions(_presets: CompanionPreset[]): Promise<void> {
+
+	setPresetDefinitions(_presets: SomeCompanionPreset[]): Promise<void> {
 		// return this.system.setPresetDefinitions(presets);
 		return Promise.resolve()
 	}
+
 	setVariableDefinitions(variables: CompanionVariable[]): Promise<void> {
 		const hostVariables: SetVariableDefinitionsMessage['variables'] = []
 
@@ -404,6 +382,7 @@ export abstract class InstanceBaseV0<TConfig> implements InstanceBaseShared<TCon
 
 		return this._socketEmit('setVariableValues', { newValues: hostValues })
 	}
+
 	getVariableValue(variableId: string): string | undefined {
 		return this.#variableValues.get(variableId)
 	}
@@ -423,7 +402,7 @@ export abstract class InstanceBaseV0<TConfig> implements InstanceBaseShared<TCon
 				// Calculate the new value for the feedback
 				let value: boolean | Partial<CompanionFeedbackButtonStyleResult> | undefined
 				try {
-					value = definition.callback(feedback)
+					value = callFeedbackOnDefinition(definition, feedback)
 				} catch (e) {
 					// TODO
 				}
@@ -442,6 +421,7 @@ export abstract class InstanceBaseV0<TConfig> implements InstanceBaseShared<TCon
 			})
 		}
 	}
+
 	async checkFeedbacksById(...feedbackIds: string[]): Promise<void> {
 		const newValues: UpdateFeedbackValuesMessage['values'] = []
 
@@ -452,7 +432,7 @@ export abstract class InstanceBaseV0<TConfig> implements InstanceBaseShared<TCon
 				// Calculate the new value for the feedback
 				let value: boolean | Partial<CompanionFeedbackButtonStyleResult> | undefined
 				try {
-					value = definition.callback(feedback)
+					value = callFeedbackOnDefinition(definition, feedback)
 				} catch (e) {
 					// TODO
 				}
@@ -524,12 +504,11 @@ export abstract class InstanceBaseV0<TConfig> implements InstanceBaseShared<TCon
 			const def = this.#feedbackDefinitions.get(fb.feedbackId)
 			if (def && def.subscribe) {
 				def.subscribe({
+					type: def.type,
 					id: fb.id,
 					feedbackId: fb.feedbackId,
 					controlId: fb.controlId,
 					options: fb.options,
-
-					rawBank: null, // TODO
 				})
 			}
 		}
@@ -543,12 +522,11 @@ export abstract class InstanceBaseV0<TConfig> implements InstanceBaseShared<TCon
 			const def = this.#feedbackDefinitions.get(fb.feedbackId)
 			if (def && def.unsubscribe) {
 				def.unsubscribe({
+					type: def.type,
 					id: fb.id,
 					feedbackId: fb.feedbackId,
 					controlId: fb.controlId,
 					options: fb.options,
-
-					rawBank: null, // TODO
 				})
 			}
 		}
