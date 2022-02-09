@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-var App = require('./app.js')
+var Registry = require('./lib/Registry.js')
 var os = require('os')
 
 console.log('Starting')
@@ -45,7 +45,7 @@ if (process.env.COMPANION_CONFIG_BASEDIR !== undefined) {
 }
 
 ;(async () => {
-	const system = await App.create(configDir)
+	const registry = await Registry.create(configDir)
 
 	var port = '8000'
 
@@ -74,12 +74,12 @@ if (process.env.COMPANION_CONFIG_BASEDIR !== undefined) {
 		})
 
 		setTimeout(function () {
-			system.ready(address, port, !process.env.DEVELOPER)
+			registry.ready(address, port, !process.env.DEVELOPER)
 			console.log('Started')
 		}, 1000)
 	} else if (process.argv[2] == '0.0.0.0') {
 		setTimeout(function () {
-			system.ready('0.0.0.0', port, !process.env.DEVELOPER)
+			registry.ready('0.0.0.0', port, !process.env.DEVELOPER)
 			console.log('Started')
 		}, 1000)
 	} else {
