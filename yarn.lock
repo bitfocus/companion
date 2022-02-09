@@ -3046,9 +3046,9 @@ commist@^1.0.0:
   version "1.0.3"
   resolved "https://codeload.github.com/bitfocus/companion-module-justmacros-lua/tar.gz/913bf406333ba9a1bfba0f843b8adafd5e931dd4"
 
-"companion-module-jvc-ptz@github:bitfocus/companion-module-jvc-ptz#v1.0.14":
-  version "1.0.14"
-  resolved "https://codeload.github.com/bitfocus/companion-module-jvc-ptz/tar.gz/8ea11f7821fff50de5a6c481562051d4aba974ac"
+"companion-module-jvc-ptz@github:bitfocus/companion-module-jvc-ptz#v1.0.15":
+  version "1.0.15"
+  resolved "https://codeload.github.com/bitfocus/companion-module-jvc-ptz/tar.gz/97a4e198ee049303cd398cf21510fb936f48e66a"
   dependencies:
     urllib "^2.38.0"
 
