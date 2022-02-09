@@ -27,7 +27,7 @@ import {
 	UpdateActionInstancesMessage,
 	UpdateFeedbackInstancesMessage,
 	UpdateFeedbackValuesMessage,
-} from '../../host-api/v0.js'
+} from '../../host-api/api.js'
 import { literal } from '../../util.js'
 import { InstanceBaseShared } from '../../instance-base.js'
 import { ResultCallback } from '../../host-api/versions.js'
