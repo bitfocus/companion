@@ -231,7 +231,7 @@ export function ImportExport({ pageNumber }) {
 														'Ignored'
 													)}
 												</td>
-												<td>{snapshotModule ? snapshotModule.label : 'Unknown module'}</td>
+												<td>{snapshotModule ? snapshotModule.name : 'Unknown module'}</td>
 												<td>{instance.label}</td>
 											</tr>
 										)

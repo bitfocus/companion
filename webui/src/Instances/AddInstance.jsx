@@ -37,7 +37,7 @@ const AddInstancesInner = memo(function AddInstancesInner({ showHelp, configureI
 		for (const [id, module] of Object.entries(context.modules)) {
 			if (id === 'bitfocus-companion') continue
 
-			const products = new Set(Array.isArray(module.product) ? module.product : [module.product])
+			const products = new Set(module.products)
 			for (const subprod of products) {
 				const name = `${module.manufacturer} ${subprod}`
 				const keywords = module.keywords || []
@@ -50,7 +50,7 @@ const AddInstancesInner = memo(function AddInstancesInner({ showHelp, configureI
 							</CButton>
 							&nbsp;
 							{name}
-							{module.help ? (
+							{module.hasHelp ? (
 								<div className="instance_help" onClick={() => showHelp(id)}>
 									<FontAwesomeIcon icon={faQuestionCircle} />
 								</div>

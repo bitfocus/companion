@@ -31,7 +31,7 @@ export function ContextData({ socket, children }) {
 					const modulesObj = {}
 					const redirectsObj = {}
 					for (const mod of res.modules) {
-						modulesObj[mod.name] = mod
+						modulesObj[mod.id] = mod
 
 						// Add legacy names to the redirect list
 						if (mod.legacy && Array.isArray(mod.legacy)) {

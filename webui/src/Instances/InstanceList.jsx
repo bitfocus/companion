@@ -129,14 +129,14 @@ function InstancesTableRow({
 			<td>
 				{moduleInfo ? (
 					<>
-						{moduleInfo?.help ? (
+						{moduleInfo?.hasHelp ? (
 							<div className="instance_help" onClick={doShowHelp} title="Help">
 								<FontAwesomeIcon icon={faQuestionCircle} />
 							</div>
 						) : (
 							''
 						)}
-						{moduleInfo?.bug_url ? (
+						{moduleInfo?.bugUrl ? (
 							<a className="instance_bug" href={moduleInfo.bug_url} target="_new" title="Report Bug">
 								<FontAwesomeIcon icon={faBug} />
 							</a>

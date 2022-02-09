@@ -118,7 +118,7 @@ function PresetsInstanceList({ presets, setInstanceAndCategory }) {
 		return (
 			<div key={id}>
 				<CButton color="info" className="choose_instance mr-2 mb-2" onClick={() => setInstanceAndCategory([id, null])}>
-					{module?.label ?? '?'} ({instance?.label ?? id})
+					{module?.name ?? '?'} ({instance?.label ?? id})
 				</CButton>
 			</div>
 		)
@@ -163,7 +163,7 @@ function PresetsCategoryList({ presets, instance, module, selectedInstanceId, se
 				<CButton color="primary" size="sm" onClick={doBack}>
 					Back
 				</CButton>
-				{module?.label ?? '?'} ({instance?.label ?? selectedInstanceId})
+				{module?.name ?? '?'} ({instance?.label ?? selectedInstanceId})
 			</h5>
 
 			{buttons.length === 0 ? (

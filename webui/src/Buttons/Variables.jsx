@@ -66,7 +66,7 @@ function VariablesInstanceList({ setInstance, setShowCustom, instancesLabelMap }
 		return (
 			<div key={id}>
 				<CButton color="info" className="choose_instance mb-3 mr-2" onClick={() => setInstance(id)}>
-					{module?.label ?? module?.name ?? '?'} ({label ?? id})
+					{module?.name ?? module?.name ?? '?'} ({label ?? id})
 				</CButton>
 			</div>
 		)
