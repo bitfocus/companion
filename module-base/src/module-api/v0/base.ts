@@ -375,6 +375,12 @@ export abstract class InstanceBaseV0<TConfig> implements InstanceBaseShared<TCon
 					id: value.variableId,
 					value: value.value || '',
 				})
+			} else {
+				// tell companion to delete the value
+				hostValues.push({
+					id: value.variableId,
+					value: undefined,
+				})
 			}
 		}
 

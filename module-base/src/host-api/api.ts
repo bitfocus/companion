@@ -68,7 +68,7 @@ export interface SetVariableDefinitionsMessage {
 export interface SetVariableValuesMessage {
 	newValues: Array<{
 		id: string
-		value: string
+		value: string | undefined
 	}>
 }
 
