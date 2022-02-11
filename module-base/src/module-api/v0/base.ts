@@ -161,7 +161,7 @@ export abstract class InstanceBaseV0<TConfig> implements InstanceBaseShared<TCon
 			controlId: msg.action.controlId,
 			options: msg.action.options,
 
-			deviceId: msg.action.deviceId,
+			deviceId: msg.deviceId,
 			page: msg.action.page,
 			bank: msg.action.bank,
 		})

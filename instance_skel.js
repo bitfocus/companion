@@ -77,15 +77,4 @@ instance.prototype.checkFeedbacksById = function (...ids) {
 	}
 }
 
-instance.prototype.getAllActions = function () {
-	var self = this
-	var result = []
-
-	self.system.emit('actions_for_instance', self.id, function (_result) {
-		result = _result
-	})
-
-	return result
-}
-
 module.exports = instance

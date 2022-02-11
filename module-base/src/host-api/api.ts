@@ -74,6 +74,9 @@ export interface SetVariableValuesMessage {
 
 export interface ExecuteActionMessage {
 	action: ActionInstance
+
+	/** @deprecated */
+	deviceId: string | undefined
 }
 
 export interface UpdateFeedbackValuesMessage {
@@ -118,8 +121,6 @@ export interface ActionInstance {
 
 	// TODO more over time
 
-	/** @deprecated */
-	deviceId: string | undefined
 	/** @deprecated */
 	page: number
 	/** @deprecated */
