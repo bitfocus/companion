@@ -15,6 +15,8 @@ import {
 	ActionInstance,
 	ExecuteActionMessage,
 	FeedbackInstance,
+	GetConfigFieldsMessage,
+	GetConfigFieldsResponseMessage,
 	HostToModuleEventsV0,
 	LogMessageMessage,
 	ModuleToHostEventsV0,
@@ -35,6 +37,7 @@ import PQueue from 'p-queue'
 import { CompanionVariable, CompanionVariableValue, CompanionVariableValue2 } from './variable.js'
 import { OSCSomeArguments } from '../../common/osc.js'
 import { listenToEvents } from '../lib.js'
+import { CompanionConfigField } from './config.js'
 
 function convertFeedbackInstanceToEvent(
 	type: 'boolean' | 'advanced',
@@ -104,6 +107,7 @@ export abstract class InstanceBaseV0<TConfig> implements InstanceBaseShared<TCon
 			executeAction: this._handleExecuteAction.bind(this),
 			updateFeedbacks: this._handleUpdateFeedbacks.bind(this),
 			updateActions: this._handleUpdateActions.bind(this),
+			getConfigFields: this._handleGetConfigFields.bind(this),
 		})
 
 		this.updateStatus(null, 'Initializing')
@@ -153,7 +157,7 @@ export abstract class InstanceBaseV0<TConfig> implements InstanceBaseShared<TCon
 	}
 	private async _handleExecuteAction(msg: ExecuteActionMessage): Promise<void> {
 		const actionDefinition = this.#actionDefinitions.get(msg.action.actionId)
-		if (!actionDefinition) throw new Error(`Unknown action`)
+		if (!actionDefinition) throw new Error(`Unknown action: ${msg.action.actionId}`)
 
 		await actionDefinition.callback({
 			id: msg.action.id,
@@ -257,6 +261,12 @@ export abstract class InstanceBaseV0<TConfig> implements InstanceBaseShared<TCon
 		}
 	}
 
+	private async _handleGetConfigFields(_msg: GetConfigFieldsMessage): Promise<GetConfigFieldsResponseMessage> {
+		return {
+			fields: this.getConfigFields(),
+		}
+	}
+
 	/**
 	 * Main initialization function called once the module
 	 * is OK to start doing things.
@@ -280,7 +290,7 @@ export abstract class InstanceBaseV0<TConfig> implements InstanceBaseShared<TCon
 	/**
 	 * Creates the configuration fields for web config.
 	 */
-	abstract getConfigFields(): CompanionInputField[]
+	abstract getConfigFields(): CompanionConfigField[]
 
 	setActionDefinitions(actions: CompanionActions): Promise<void> {
 		const hostActions: SetActionDefinitionsMessage['actions'] = []

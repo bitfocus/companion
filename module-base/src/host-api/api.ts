@@ -1,5 +1,6 @@
 import { OSCSomeArguments } from '../common/osc.js'
 import {
+	CompanionConfigField,
 	CompanionFeedbackButtonStyleResult,
 	InputValue,
 	InstanceStatus,
@@ -26,8 +27,13 @@ export interface HostToModuleEventsV0 {
 	updateFeedbacks: (msg: UpdateFeedbackInstancesMessage) => void
 	updateActions: (msg: UpdateActionInstancesMessage) => void
 	executeAction: (msg: ExecuteActionMessage) => void
+	getConfigFields: (msg: GetConfigFieldsMessage) => GetConfigFieldsResponseMessage
 }
 
+export type GetConfigFieldsMessage = Record<string, never>
+export interface GetConfigFieldsResponseMessage {
+	fields: CompanionConfigField[]
+}
 export interface LogMessageMessage {
 	level: LogLevel
 	message: string
