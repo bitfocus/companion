@@ -163,6 +163,49 @@
 		"app-root-path": "^3.0.0",
 		"binopsy": "^0.0.0",
 		"check-ip": "^1.1.1",
+		"debug": "^4.3.3",
+		"electron-store": "^8.0.1",
+		"emberplus-connection": "^0.0.4",
+		"express": "^4.17.2",
+		"find-process": "1.4.7",
+		"fs-extra": "^10.0.0",
+		"get-port": "^5.1.1",
+		"got": "^11.8.3",
+		"infinitton-idisplay": "^1.1.0",
+		"lodash": "^4.17.20",
+		"moment": "^2.29.1",
+		"network": "^0.4.1",
+		"node-fetch": "^2.6.7",
+		"node-machine-id": "^1.1.12",
+		"node-rest-client": "^3.1.0",
+		"osc": "^2.4.2",
+		"p-timeout": "^4.1.0",
+		"pngjs": "^3.3.3",
+		"respawn": "^2.6.0",
+		"selfsigned": "^1.10.14",
+		"semver": "^7.3.5",
+		"sharp": "^0.28.3",
+		"shortid": "^2.2.16",
+		"socket.io": "^4.4.1",
+		"socketcluster-client": "^16.0.2",
+		"strip-ansi": "^5.2.0",
+		"systeminformation": "^5.10.0",
+		"uuid": "^8.3.2",
+		"websocket": "^1.0.34",
+		"zx": "^4.3.0"
+	},
+	"collective": {
+		"type": "donorbox",
+		"url": "https://donorbox.org/bitfocus-opensource"
+	},
+	"optionalDependencies": {
+		"@julusian/jpeg-turbo": "^1.1.1"
+	},
+	"resolutions": {
+		"**/osc/serialport": "9.2.1",
+		"**/osc/ws": "^7.5.4"
+	},
+	"tmp-old-modules": {
 		"companion-module-7thsensedesign-delta": "github:bitfocus/companion-module-7thsensedesign-delta#v1.0.1",
 		"companion-module-agf-characterworks": "github:bitfocus/companion-module-agf-characterworks#v1.0.3",
 		"companion-module-aja-helo": "github:bitfocus/companion-module-aja-helo#v1.0.2",
@@ -479,47 +522,6 @@
 		"companion-module-xiamen-sprolink-vd-series": "github:bitfocus/companion-module-xiamen-sprolink-vd-series#v1.0.1",
 		"companion-module-yamaha-rcp": "github:bitfocus/companion-module-yamaha-rcp#v1.6.1",
 		"companion-module-youtube-live": "github:bitfocus/companion-module-youtube-live#v1.1.4",
-		"companion-module-zenvideo-ndirouter": "github:bitfocus/companion-module-zenvideo-ndirouter#v1.0.1",
-		"debug": "^4.3.3",
-		"electron-store": "^8.0.1",
-		"emberplus-connection": "^0.0.4",
-		"express": "^4.17.2",
-		"find-process": "1.4.7",
-		"fs-extra": "^10.0.0",
-		"get-port": "^5.1.1",
-		"got": "^11.8.3",
-		"infinitton-idisplay": "^1.1.0",
-		"lodash": "^4.17.20",
-		"moment": "^2.29.1",
-		"network": "^0.4.1",
-		"node-fetch": "^2.6.7",
-		"node-machine-id": "^1.1.12",
-		"node-rest-client": "^3.1.0",
-		"osc": "^2.4.2",
-		"p-timeout": "^4.1.0",
-		"pngjs": "^3.3.3",
-		"respawn": "^2.6.0",
-		"selfsigned": "^1.10.14",
-		"semver": "^7.3.5",
-		"sharp": "^0.28.3",
-		"shortid": "^2.2.16",
-		"socket.io": "^4.4.1",
-		"socketcluster-client": "^16.0.2",
-		"strip-ansi": "^5.2.0",
-		"systeminformation": "^5.10.0",
-		"uuid": "^8.3.2",
-		"websocket": "^1.0.34",
-		"zx": "^4.3.0"
-	},
-	"collective": {
-		"type": "donorbox",
-		"url": "https://donorbox.org/bitfocus-opensource"
-	},
-	"optionalDependencies": {
-		"@julusian/jpeg-turbo": "^1.1.1"
-	},
-	"resolutions": {
-		"**/osc/serialport": "9.2.1",
-		"**/osc/ws": "^7.5.4"
+		"companion-module-zenvideo-ndirouter": "github:bitfocus/companion-module-zenvideo-ndirouter#v1.0.1"
 	}
 }
