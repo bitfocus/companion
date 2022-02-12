@@ -63,18 +63,4 @@ instance.prototype.setPresetDefinitions = function (presets) {
 	self.system.emit('preset_instance_definitions_set', self, presets)
 }
 
-instance.prototype.checkFeedbacks = function (...types) {
-	var self = this
-
-	self.system.emit('feedback_check_all', { instance_id: self.id, feedback_types: types })
-}
-
-instance.prototype.checkFeedbacksById = function (...ids) {
-	var self = this
-
-	if (ids && ids.length > 0) {
-		self.system.emit('feedback_check_all', { instance_id: self.id, feedback_ids: ids })
-	}
-}
-
 module.exports = instance
