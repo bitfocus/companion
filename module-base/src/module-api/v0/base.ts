@@ -173,9 +173,12 @@ export abstract class InstanceBaseV0<TConfig> implements InstanceBaseShared<TCon
 	private async _handleUpdateFeedbacks(msg: UpdateFeedbackInstancesMessage): Promise<void> {
 		const newValues: UpdateFeedbackValuesMessage['values'] = []
 
+		console.log('received sub', msg)
+
 		for (const [id, feedback] of Object.entries(msg.feedbacks)) {
 			const existing = this.#feedbackInstances.get(id)
-			const definition = existing && this.#feedbackDefinitions.get(existing.feedbackId)
+			const feedbackId = existing?.feedbackId ?? feedback?.feedbackId
+			const definition = feedbackId ? this.#feedbackDefinitions.get(feedbackId) : null
 			if (existing) {
 				// Call unsubscribe
 				if (definition?.unsubscribe) {
@@ -203,6 +206,8 @@ export abstract class InstanceBaseV0<TConfig> implements InstanceBaseShared<TCon
 					}
 				}
 
+				console.log(feedback, definition)
+
 				// Calculate the new value for the feedback
 				if (definition) {
 					let value: boolean | Partial<CompanionFeedbackButtonStyleResult> | undefined
@@ -220,6 +225,7 @@ export abstract class InstanceBaseV0<TConfig> implements InstanceBaseShared<TCon
 			}
 		}
 
+		console.log('calculated new values', newValues)
 		// Send the new values back
 		if (Object.keys(newValues).length > 0) {
 			await this._socketEmit('updateFeedbackValues', {
@@ -428,6 +434,7 @@ export abstract class InstanceBaseV0<TConfig> implements InstanceBaseShared<TCon
 			}
 		}
 
+		console.log('got new values', feedbackTypes, newValues)
 		// Send the new values back
 		if (Object.keys(newValues).length > 0) {
 			await this._socketEmit('updateFeedbackValues', {
@@ -458,6 +465,7 @@ export abstract class InstanceBaseV0<TConfig> implements InstanceBaseShared<TCon
 			}
 		}
 
+		console.log('got new values', feedbackIds, newValues)
 		// Send the new values back
 		if (Object.keys(newValues).length > 0) {
 			await this._socketEmit('updateFeedbackValues', {
