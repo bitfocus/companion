@@ -6,6 +6,7 @@ import {
 	InstanceStatus,
 	LogLevel,
 	SomeCompanionInputField,
+	SomeCompanionPreset,
 } from '../module-api/v0/index.js'
 
 export interface ModuleToHostEventsV0 {
@@ -14,6 +15,7 @@ export interface ModuleToHostEventsV0 {
 	setActionDefinitions: (msg: SetActionDefinitionsMessage) => void
 	setFeedbackDefinitions: (msg: SetFeedbackDefinitionsMessage) => void
 	setVariableDefinitions: (msg: SetVariableDefinitionsMessage) => void
+	setPresetDefinitions: (msg: SetPresetDefinitionsMessage) => void
 	setVariableValues: (msg: SetVariableValuesMessage) => void
 	updateFeedbackValues: (msg: UpdateFeedbackValuesMessage) => void
 	saveConfig: (msg: SaveConfigMessage) => void
@@ -69,6 +71,10 @@ export interface SetVariableDefinitionsMessage {
 		id: string
 		name: string
 	}>
+}
+
+export interface SetPresetDefinitionsMessage {
+	presets: Array<SomeCompanionPreset>
 }
 
 export interface SetVariableValuesMessage {

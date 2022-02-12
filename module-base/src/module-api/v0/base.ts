@@ -23,6 +23,7 @@ import {
 	SendOscMessage,
 	SetActionDefinitionsMessage,
 	SetFeedbackDefinitionsMessage,
+	SetPresetDefinitionsMessage,
 	SetStatusMessage,
 	SetVariableDefinitionsMessage,
 	SetVariableValuesMessage,
@@ -339,9 +340,16 @@ export abstract class InstanceBaseV0<TConfig> implements InstanceBaseShared<TCon
 		return this._socketEmit('setFeedbackDefinitions', { feedbacks: hostFeedbacks })
 	}
 
-	setPresetDefinitions(_presets: SomeCompanionPreset[]): Promise<void> {
-		// return this.system.setPresetDefinitions(presets);
-		return Promise.resolve()
+	setPresetDefinitions(presets: SomeCompanionPreset[]): Promise<void> {
+		// const hostPresets: SetPresetDefinitionsMessage['presets'] = []
+
+		// for (const preset of presets) {
+		// 	hostPresets.push({
+		// 		//
+		// 	})
+		// }
+
+		return this._socketEmit('setPresetDefinitions', { presets: presets })
 	}
 
 	setVariableDefinitions(variables: CompanionVariable[]): Promise<void> {

@@ -23,44 +23,4 @@ instance.prototype.parseVariables = function (string, cb) {
 	self.system.emit('variable_parse', string, cb)
 }
 
-instance.prototype.setPresetDefinitions = function (presets) {
-	var self = this
-
-	const variableRegex = /\$\(([^:)]+):([^)]+)\)/g
-	function replaceAllVariables(fixtext) {
-		if (fixtext && fixtext.includes('$(')) {
-			let matches
-			while ((matches = variableRegex.exec(fixtext)) !== null) {
-				if (matches[2] !== undefined) {
-					fixtext = fixtext.replace(matches[0], '$(' + self.label + ':' + matches[2] + ')')
-				}
-			}
-		}
-		return fixtext
-	}
-
-	/*
-	 * Clean up variable references: $(instance:variable)
-	 * since the name of the instance is dynamic. We don't want to
-	 * demand that your presets MUST be dynamically generated.
-	 */
-	for (let preset of presets) {
-		preset = upgrades.upgradePreset(preset)
-
-		if (preset.bank) {
-			preset.bank.text = replaceAllVariables(preset.bank.text)
-		}
-
-		if (preset.feedbacks) {
-			for (const feedback of preset.feedbacks) {
-				if (feedback.style && feedback.style.text) {
-					feedback.style.text = replaceAllVariables(feedback.style.text)
-				}
-			}
-		}
-	}
-
-	self.system.emit('preset_instance_definitions_set', self, presets)
-}
-
 module.exports = instance
