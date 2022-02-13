@@ -161,7 +161,6 @@
 		"@estilles/expression-parser": "^1.0.0",
 		"@sentry/electron": "^2.5.4",
 		"app-root-path": "^3.0.0",
-		"binopsy": "^0.0.0",
 		"check-ip": "^1.1.1",
 		"companion-module-7thsensedesign-delta": "github:bitfocus/companion-module-7thsensedesign-delta#v1.0.1",
 		"companion-module-agf-characterworks": "github:bitfocus/companion-module-agf-characterworks#v1.0.3",
