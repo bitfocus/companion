@@ -1,4 +1,9 @@
-export * as ModuleApiV0 from './v0/index.js';
-
-// HACK - temporary typings fix
-export * from './v0/index.js';
+export * from './action.js'
+export * from './base.js'
+export * from './config.js'
+export * from './enums.js'
+export * from './feedback.js'
+export * from './input.js'
+export * from './preset.js'
+export * from './upgrade.js'
+export * from './variable.js'

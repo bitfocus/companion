@@ -1,7 +1,6 @@
 import * as SocketIOClient from 'socket.io-client'
-import { literal } from '../util'
-import { ResultCallback } from '../host-api/versions'
-import { EncodeIsVisible, SomeCompanionInputField } from './v0'
+import { ResultCallback } from '../host-api/versions.js'
+import { EncodeIsVisible, SomeCompanionInputField } from './input.js'
 
 /**
  * Signature for the handler functions

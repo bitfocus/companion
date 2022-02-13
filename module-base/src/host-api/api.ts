@@ -7,7 +7,7 @@ import {
 	SomeCompanionPreset,
 	SomeEncodedCompanionConfigField,
 	SomeEncodedCompanionInputField,
-} from '../module-api/v0/index.js'
+} from '../module-api/index.js'
 
 export interface ModuleToHostEventsV0 {
 	'log-message': (msg: LogMessageMessage) => void

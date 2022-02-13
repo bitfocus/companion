@@ -26,14 +26,14 @@ import {
 	UpdateActionInstancesMessage,
 	UpdateFeedbackInstancesMessage,
 	UpdateFeedbackValuesMessage,
-} from '../../host-api/api.js'
-import { literal } from '../../util.js'
-import { InstanceBaseShared } from '../../instance-base.js'
-import { ResultCallback } from '../../host-api/versions.js'
+} from '../host-api/api.js'
+import { literal } from '../util.js'
+import { InstanceBaseShared } from '../instance-base.js'
+import { ResultCallback } from '../host-api/versions.js'
 import PQueue from 'p-queue'
 import { CompanionVariable, CompanionVariableValue, CompanionVariableValue2 } from './variable.js'
-import { OSCSomeArguments } from '../../common/osc.js'
-import { listenToEvents, serializeIsVisibleFn } from '../lib.js'
+import { OSCSomeArguments } from '../common/osc.js'
+import { listenToEvents, serializeIsVisibleFn } from './lib.js'
 import { SomeCompanionConfigField } from './config.js'
 
 function convertFeedbackInstanceToEvent(
@@ -68,7 +68,7 @@ function callFeedbackOnDefinition(definition: CompanionFeedback, feedback: Feedb
 	}
 }
 
-export abstract class InstanceBaseV0<TConfig> implements InstanceBaseShared<TConfig> {
+export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfig> {
 	readonly #socket: SocketIOClient.Socket
 	public readonly id: string
 
