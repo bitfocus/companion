@@ -86,3 +86,8 @@ export interface CompanionInputFieldNumber extends CompanionInputField {
 	required?: boolean
 	default: number
 }
+
+export type EncodeIsVisible<T extends SomeCompanionInputField> = Omit<T, 'isVisible'> & {
+	isVisibleFn?: string
+}
+export type SomeEncodedCompanionInputField = EncodeIsVisible<SomeCompanionInputField>

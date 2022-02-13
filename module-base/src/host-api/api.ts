@@ -1,12 +1,12 @@
 import { OSCSomeArguments } from '../common/osc.js'
 import {
-	CompanionConfigField,
 	CompanionFeedbackButtonStyleResult,
 	InputValue,
 	InstanceStatus,
 	LogLevel,
-	SomeCompanionInputField,
 	SomeCompanionPreset,
+	SomeEncodedCompanionConfigField,
+	SomeEncodedCompanionInputField,
 } from '../module-api/v0/index.js'
 
 export interface ModuleToHostEventsV0 {
@@ -34,7 +34,7 @@ export interface HostToModuleEventsV0 {
 
 export type GetConfigFieldsMessage = Record<string, never>
 export interface GetConfigFieldsResponseMessage {
-	fields: CompanionConfigField[]
+	fields: SomeEncodedCompanionConfigField[]
 }
 export interface LogMessageMessage {
 	level: LogLevel
@@ -51,7 +51,7 @@ export interface SetActionDefinitionsMessage {
 		id: string
 		name: string
 		description?: string
-		options: SomeCompanionInputField[] // TODO - versioned types?
+		options: SomeEncodedCompanionInputField[] // TODO - versioned types?
 	}>
 }
 
@@ -60,7 +60,7 @@ export interface SetFeedbackDefinitionsMessage {
 		id: string
 		name: string
 		description?: string
-		options: SomeCompanionInputField[] // TODO - versioned types?
+		options: SomeEncodedCompanionInputField[] // TODO - versioned types?
 		type: 'boolean' | 'advanced'
 		defaultStyle?: Partial<CompanionFeedbackButtonStyleResult> // TODO - better
 	}>

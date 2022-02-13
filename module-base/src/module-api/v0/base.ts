@@ -1,13 +1,10 @@
 import * as SocketIOClient from 'socket.io-client'
-import { CompanionInputField } from './input.js'
 import { CompanionAction, CompanionActions } from './action.js'
 import {
 	CompanionFeedbacks,
 	CompanionFeedback,
 	CompanionFeedbackButtonStyleResult,
 	CompanionFeedbackEvent,
-	CompanionFeedbackBooleanEvent,
-	CompanionFeedbackAdvancedEvent,
 } from './feedback.js'
 import { SomeCompanionPreset } from './preset.js'
 import { InstanceStatus, LogLevel } from './enums.js'
@@ -23,7 +20,6 @@ import {
 	SendOscMessage,
 	SetActionDefinitionsMessage,
 	SetFeedbackDefinitionsMessage,
-	SetPresetDefinitionsMessage,
 	SetStatusMessage,
 	SetVariableDefinitionsMessage,
 	SetVariableValuesMessage,
@@ -37,8 +33,8 @@ import { ResultCallback } from '../../host-api/versions.js'
 import PQueue from 'p-queue'
 import { CompanionVariable, CompanionVariableValue, CompanionVariableValue2 } from './variable.js'
 import { OSCSomeArguments } from '../../common/osc.js'
-import { listenToEvents } from '../lib.js'
-import { CompanionConfigField } from './config.js'
+import { listenToEvents, serializeIsVisibleFn } from '../lib.js'
+import { SomeCompanionConfigField } from './config.js'
 
 function convertFeedbackInstanceToEvent(
 	type: 'boolean' | 'advanced',
@@ -265,7 +261,7 @@ export abstract class InstanceBaseV0<TConfig> implements InstanceBaseShared<TCon
 
 	private async _handleGetConfigFields(_msg: GetConfigFieldsMessage): Promise<GetConfigFieldsResponseMessage> {
 		return {
-			fields: this.getConfigFields(),
+			fields: serializeIsVisibleFn(this.getConfigFields()),
 		}
 	}
 
@@ -292,7 +288,7 @@ export abstract class InstanceBaseV0<TConfig> implements InstanceBaseShared<TCon
 	/**
 	 * Creates the configuration fields for web config.
 	 */
-	abstract getConfigFields(): CompanionConfigField[]
+	abstract getConfigFields(): SomeCompanionConfigField[]
 
 	setActionDefinitions(actions: CompanionActions): Promise<void> {
 		const hostActions: SetActionDefinitionsMessage['actions'] = []
@@ -305,7 +301,7 @@ export abstract class InstanceBaseV0<TConfig> implements InstanceBaseShared<TCon
 					id: actionId,
 					name: action.name,
 					description: action.description,
-					options: action.options,
+					options: serializeIsVisibleFn(action.options),
 				})
 
 				// Remember the definition locally
@@ -327,7 +323,7 @@ export abstract class InstanceBaseV0<TConfig> implements InstanceBaseShared<TCon
 					id: feedbackId,
 					name: feedback.name,
 					description: feedback.description,
-					options: feedback.options,
+					options: serializeIsVisibleFn(feedback.options),
 					type: feedback.type,
 					defaultStyle: 'defaultStyle' in feedback ? feedback.defaultStyle : undefined,
 				})
