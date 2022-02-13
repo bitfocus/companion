@@ -3764,9 +3764,9 @@ commist@^1.0.0:
   version "1.0.1"
   resolved "https://codeload.github.com/bitfocus/companion-module-tvone-corio/tar.gz/0f1adbe3241f177d5b97c78286561b6a87ddb9fc"
 
-"companion-module-twitch-api@github:bitfocus/companion-module-twitch-api#v2.0.3":
-  version "2.0.3"
-  resolved "https://codeload.github.com/bitfocus/companion-module-twitch-api/tar.gz/0154bfc874259cb96372c60f08236f94518a9ede"
+"companion-module-twitch-api@github:bitfocus/companion-module-twitch-api#v2.0.4":
+  version "2.0.4"
+  resolved "https://codeload.github.com/bitfocus/companion-module-twitch-api/tar.gz/9702edc237d05c96e17e2803c7a272bca0924756"
   dependencies:
     "@types/tmi.js" "^1.8.1"
     got-cjs "^12.0.1"
