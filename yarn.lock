@@ -3432,9 +3432,9 @@ commist@^1.0.0:
   version "0.0.3"
   resolved "https://codeload.github.com/bitfocus/companion-module-octava-pro-dsx/tar.gz/b2cc9628236093242ff7235d2c9a9b6d3f963312"
 
-"companion-module-openlp-http@github:bitfocus/companion-module-openlp-http#v0.1.6":
-  version "0.1.6"
-  resolved "https://codeload.github.com/bitfocus/companion-module-openlp-http/tar.gz/59da7de10f32a51346efcdee8ac37afe1358e98f"
+"companion-module-openlp-http@github:bitfocus/companion-module-openlp-http#v0.1.7":
+  version "0.1.7"
+  resolved "https://codeload.github.com/bitfocus/companion-module-openlp-http/tar.gz/282bd0638ce4596985a39219c76e29574f987c82"
 
 "companion-module-opensong-api@github:bitfocus/companion-module-opensong-api#v1.0.2":
   version "1.0.2"
