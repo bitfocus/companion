@@ -20,6 +20,7 @@ export interface ModuleToHostEventsV0 {
 	updateFeedbackValues: (msg: UpdateFeedbackValuesMessage) => void
 	saveConfig: (msg: SaveConfigMessage) => void
 	'send-osc': (msg: SendOscMessage) => void
+	parseVariablesInString: (msg: ParseVariablesInStringMessage) => ParseVariablesInStringResponseMessage
 }
 
 export interface HostToModuleEventsV0 {
@@ -152,4 +153,11 @@ export interface SendOscMessage {
 	port: number
 	path: string
 	args: OSCSomeArguments
+}
+
+export interface ParseVariablesInStringMessage {
+	text: string
+}
+export interface ParseVariablesInStringResponseMessage {
+	text: string
 }

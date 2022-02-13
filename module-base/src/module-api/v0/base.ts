@@ -406,6 +406,11 @@ export abstract class InstanceBaseV0<TConfig> implements InstanceBaseShared<TCon
 		return this.#variableValues.get(variableId)
 	}
 
+	async parseVariablesInString(text: string): Promise<string> {
+		const res = await this._socketEmit('parseVariablesInString', { text: text })
+		return res.text
+	}
+
 	async checkFeedbacks(...feedbackTypes: string[]): Promise<void> {
 		const newValues: UpdateFeedbackValuesMessage['values'] = []
 

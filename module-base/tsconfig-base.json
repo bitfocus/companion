@@ -9,11 +9,8 @@
 		},
 		"declaration": true,
 		"importHelpers": true,
-		"listFiles": false,
-		"traceResolution": false,
 		"pretty": true,
-		"types": ["node"],
-		"forceConsistentCasingInFileNames": true
+		"types": ["node"]
 	},
 	"compileOnSave": false
 }
