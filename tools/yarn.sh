@@ -54,4 +54,8 @@ yarn --frozen-lockfile --cwd webui
 yarn --cwd webui build
 echo
 
+heading "Modules"
+yarn update-modules
+echo
+
 exit 0
