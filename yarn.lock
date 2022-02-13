@@ -1318,20 +1318,10 @@ async-stream-emitter@^4.0.0:
   dependencies:
     stream-demux "^8.0.0"
 
-async@:
-  version "3.2.3"
-  resolved "https://registry.yarnpkg.com/async/-/async-3.2.3.tgz#ac53dafd3f4720ee9e8a160628f18ea91df196c9"
-  integrity sha512-spZRyzKL5l5BZQrr/6m/SqFdBN0q3OCI0f9rjfBzCMBIP4p75P620rR3gTmaksNOhmzgdxcaxdNfMy6anrbM0g==
-
 async@0.9.x:
   version "0.9.2"
   resolved "https://registry.yarnpkg.com/async/-/async-0.9.2.tgz#aea74d5e61c1f899613bf64bda66d4c78f2fd17d"
   integrity sha1-rqdNXmHB+JlhO/ZL2mbUx48v0X0=
-
-async@^1.5.2:
-  version "1.5.2"
-  resolved "https://registry.yarnpkg.com/async/-/async-1.5.2.tgz#ec6a61ae56480c0c3cb241c95618e20892f9672a"
-  integrity sha1-7GphrlZIDAw8skHJVhjiCJL5Zyo=
 
 async@~1.0.0:
   version "1.0.0"
@@ -1461,13 +1451,6 @@ binary-extensions@^2.0.0:
   resolved "https://registry.yarnpkg.com/binary-extensions/-/binary-extensions-2.2.0.tgz#75f502eeaf9ffde42fc98829645be4ea76bd9e2d"
   integrity sha512-jDctJ/IVQbZoJykoeHbhXpOlNBqGNcwXJKJog42E5HDPUwQTSdjCHdihjj0DlnheQ7blbT6dHOafNAiS8ooQKA==
 
-binary-parser@^1.1.5:
-  version "1.9.2"
-  resolved "https://registry.yarnpkg.com/binary-parser/-/binary-parser-1.9.2.tgz#6474e30eb2ddee85ab042135e2d011fa80d11438"
-  integrity sha512-aQvTapiRIV/x7bAaR2KT3Ptyjff4R8i1zxljgw/Je2kUt0babNPUdtuo7AKN4CWklyzPK4u5e99Z9/3Ib03u9w==
-  dependencies:
-    fast-text-encoding "^1.0.3"
-
 binary@~0.3.0:
   version "0.3.0"
   resolved "https://registry.yarnpkg.com/binary/-/binary-0.3.0.tgz#9f60553bc5ce8c3386f3b553cff47462adecaa79"
@@ -1482,13 +1465,6 @@ bindings@^1.5.0:
   integrity sha512-p2q/t/mhvuOj/UeLlV6566GD/guowlr0hHxClI0W9m7MWYkL1F0hLo+0Aexs9HSPCtR1SXQ0TD3MMKrXZajbiQ==
   dependencies:
     file-uri-to-path "1.0.0"
-
-binopsy@^0.0.0:
-  version "0.0.0"
-  resolved "https://registry.yarnpkg.com/binopsy/-/binopsy-0.0.0.tgz#080dc47d704090015df71e1c905e90dbd9e76f24"
-  integrity sha1-CA3EfXBAkAFd9x4ckF6Q29nnbyQ=
-  dependencies:
-    binary-parser "^1.1.5"
 
 bl@^4.0.3:
   version "4.1.0"
@@ -1812,13 +1788,6 @@ char-regex@^1.0.2:
   version "1.0.2"
   resolved "https://registry.yarnpkg.com/char-regex/-/char-regex-1.0.2.tgz#d744358226217f981ed58f479b1d6bcc29545dcf"
   integrity sha512-kWWXztvZ5SBQV+eRgKFeh8q5sLuZY2+8WUIzlxWVTg+oGwY14qylx1KbKzHd8P6ZYkAg0xyIDU9JMHhyJMZ1jw==
-
-check-ip@^1.1.1:
-  version "1.1.1"
-  resolved "https://registry.yarnpkg.com/check-ip/-/check-ip-1.1.1.tgz#77270efaa69a7853fec3709f143036a8e20e7ea6"
-  integrity sha1-dycO+qaaeFP+w3CfFDA2qOIOfqY=
-  dependencies:
-    ip-range-check "^0.0.2"
 
 cheerio@^0.22.0:
   version "0.22.0"
@@ -2236,7 +2205,7 @@ debounce-fn@^4.0.0:
   dependencies:
     mimic-fn "^3.0.0"
 
-debug@2.6.9, debug@^2.1.2, debug@^2.2.0, debug@^2.6.9:
+debug@2.6.9, debug@^2.2.0, debug@^2.6.9:
   version "2.6.9"
   resolved "https://registry.yarnpkg.com/debug/-/debug-2.6.9.tgz#5d128515df134ff327e90a4c93f4e077a536341f"
   integrity sha512-bC7ElrdJaJnPbAP+1EotYvqZsb3ecl5wi6Bfi6BJTUcNowp6cvspg0jXznRTKDjm/E7AdgFBVeAPVMNcKGsHMA==
@@ -2924,11 +2893,6 @@ fast-levenshtein@~2.0.6:
   resolved "https://registry.yarnpkg.com/fast-levenshtein/-/fast-levenshtein-2.0.6.tgz#3d8a5c66883a16a30ca8643e851f19baa7797917"
   integrity sha1-PYpcZog6FqMMqGQ+hR8Zuqd5eRc=
 
-fast-text-encoding@^1.0.3:
-  version "1.0.3"
-  resolved "https://registry.yarnpkg.com/fast-text-encoding/-/fast-text-encoding-1.0.3.tgz#ec02ac8e01ab8a319af182dae2681213cfe9ce53"
-  integrity sha512-dtm4QZH9nZtcDt8qJiOH9fcQd1NAgi+K1O2DbE6GG1PPCK/BWfOH3idCTRQ4ImXRUOyopDEgDEnVEE7Y/2Wrig==
-
 fastq@^1.6.0:
   version "1.13.0"
   resolved "https://registry.yarnpkg.com/fastq/-/fastq-1.13.0.tgz#616760f88a7526bdfc596b7cab8c18938c36b98c"
@@ -3426,7 +3390,7 @@ iconv-corefoundation@^1.1.7:
     cli-truncate "^2.1.0"
     node-addon-api "^1.6.3"
 
-iconv-lite@0.4.24, iconv-lite@^0.4.13, iconv-lite@^0.4.4:
+iconv-lite@0.4.24:
   version "0.4.24"
   resolved "https://registry.yarnpkg.com/iconv-lite/-/iconv-lite-0.4.24.tgz#2022b4b25fbddc21d2f524974a474aafe733908b"
   integrity sha512-v3MXnZAcvnywkTUEZomIActle7RXXeedOR31wwl7VlyoXO4Qi9arvSenNQWne1TcRwhCL1HwLI21bEqdpj8/rA==
@@ -3528,14 +3492,7 @@ invert-kv@^1.0.0:
   resolved "https://registry.yarnpkg.com/invert-kv/-/invert-kv-1.0.0.tgz#104a8e4aaca6d3d8cd157a8ef8bfab2d7a3ffdb6"
   integrity sha1-EEqOSqym09jNFXqO+L+rLXo//bY=
 
-ip-range-check@^0.0.2:
-  version "0.0.2"
-  resolved "https://registry.yarnpkg.com/ip-range-check/-/ip-range-check-0.0.2.tgz#605c859687aa4f18463918d46190d8b3699a293c"
-  integrity sha1-YFyFloeqTxhGORjUYZDYs2maKTw=
-  dependencies:
-    ipaddr.js "^1.0.1"
-
-ipaddr.js@1.9.1, ipaddr.js@^1.0.1:
+ipaddr.js@1.9.1:
   version "1.9.1"
   resolved "https://registry.yarnpkg.com/ipaddr.js/-/ipaddr.js-1.9.1.tgz#bff38543eeb8984825079ff3a2a8e6cbd46781b3"
   integrity sha512-0KI/607xoxSToH7GjN1FfSbLoU0+btTicjsQSWQlh/hZykN8KpmMf7uYwPW3R+akZ6R/w18ZlXSHBYXiYUPO3g==
@@ -4812,28 +4769,10 @@ natural-compare@^1.4.0:
   resolved "https://registry.yarnpkg.com/natural-compare/-/natural-compare-1.4.0.tgz#4abebfeed7541f2c27acfb29bdbbd15c8d5ba4f7"
   integrity sha1-Sr6/7tdUHywnrPspvbvRXI1bpPc=
 
-needle@1.1.2:
-  version "1.1.2"
-  resolved "https://registry.yarnpkg.com/needle/-/needle-1.1.2.tgz#d2841a125bfd74fefb30c0344104369061c3e13a"
-  integrity sha1-0oQaElv9dP77MMA0QQQ2kGHD4To=
-  dependencies:
-    debug "^2.1.2"
-    iconv-lite "^0.4.4"
-
 negotiator@0.6.2:
   version "0.6.2"
   resolved "https://registry.yarnpkg.com/negotiator/-/negotiator-0.6.2.tgz#feacf7ccf525a77ae9634436a64883ffeca346fb"
   integrity sha512-hZXc7K2e+PgeI1eDBe/10Ard4ekbfrrqG8Ep+8Jmf4JID2bNg7NvCPOZN+kfF574pFQI7mum2AUqDidoKqcTOw==
-
-network@^0.4.1:
-  version "0.4.1"
-  resolved "https://registry.yarnpkg.com/network/-/network-0.4.1.tgz#30bb4d41b624072a4da990431f77513612c45cc0"
-  integrity sha1-MLtNQbYkBypNqZBDH3dRNhLEXMA=
-  dependencies:
-    async "^1.5.2"
-    commander "2.9.0"
-    needle "1.1.2"
-    wmic "^0.1.0"
 
 next-tick@~1.0.0:
   version "1.0.0"
@@ -6801,14 +6740,6 @@ winston@^2.1.1:
     eyes "0.1.x"
     isstream "0.1.x"
     stack-trace "0.0.x"
-
-wmic@^0.1.0:
-  version "0.1.0"
-  resolved "https://registry.yarnpkg.com/wmic/-/wmic-0.1.0.tgz#78b41ab11d154cb812819e1291674dad55d8e1d7"
-  integrity sha1-eLQasR0VTLgSgZ4SkWdNrVXY4dc=
-  dependencies:
-    async ""
-    iconv-lite "^0.4.13"
 
 wolfy87-eventemitter@5.2.9:
   version "5.2.9"
