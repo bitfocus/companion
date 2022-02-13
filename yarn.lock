@@ -2605,9 +2605,9 @@ commist@^1.0.0:
   version "1.0.7"
   resolved "https://codeload.github.com/bitfocus/companion-module-behringer-wing/tar.gz/8bbc62553da8a60f7c0a99edec2e3c97dbf4fc50"
 
-"companion-module-behringer-x32@github:bitfocus/companion-module-behringer-x32#v2.9.0":
-  version "2.9.0"
-  resolved "https://codeload.github.com/bitfocus/companion-module-behringer-x32/tar.gz/4477969f7013e8e2d49857f5012cc4fa99070fbf"
+"companion-module-behringer-x32@github:bitfocus/companion-module-behringer-x32#v2.9.1":
+  version "2.9.1"
+  resolved "https://codeload.github.com/bitfocus/companion-module-behringer-x32/tar.gz/9a6737a8fa04148e93cc80ce998f312e5b73a9b3"
   dependencies:
     "@types/node" "^14.18.9"
     debounce-fn "github:julusian/debounce-fn#4.0.0-maxWaithack.0"
