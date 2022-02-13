@@ -5177,10 +5177,10 @@ expect@^27.4.6:
     jest-matcher-utils "^27.4.6"
     jest-message-util "^27.4.6"
 
-express-serve-zip@^1.0.0:
-  version "1.0.0"
-  resolved "https://registry.yarnpkg.com/express-serve-zip/-/express-serve-zip-1.0.0.tgz#eec3edce4f4359439cc04d24c6e7807c12d786d3"
-  integrity sha512-YofBB58eLx4CQ+TffRz3Ywifc1eLfG/kvVxurAQ8qUdbt8hqFEwdIy8qib/ywT4QEJUzh+P3FL2caLwsg5MYUQ==
+express-serve-zip@^1.0.1:
+  version "1.0.1"
+  resolved "https://registry.yarnpkg.com/express-serve-zip/-/express-serve-zip-1.0.1.tgz#731d1ca453e5ea219b803b15286da80c437a59da"
+  integrity sha512-VmoEkQ73qqzCwqLPuPR0svWYCck+UPV+ZFeGts1Z9CbnT/mAihq79uDbLs34JcgFsz26ciKR2jUBO2ph8ropLA==
   dependencies:
     "@yarnpkg/fslib" "^2.6.1-rc.9"
     "@yarnpkg/libzip" "^2.2.3-rc.9"
