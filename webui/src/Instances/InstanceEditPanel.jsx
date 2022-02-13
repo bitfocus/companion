@@ -196,7 +196,8 @@ function ConfigField({ setValue, setValid, ...props }) {
 		case 'text':
 			return (
 				<p title={definition.tooltip}>
-					<div dangerouslySetInnerHTML={{ __html: definition.value }} />
+					{/* We used to use dangerouslySetInnerHTML, but that is a security problem once we allow dynamic modules */}
+					{definition.value}
 				</p>
 			)
 		case 'textinput':

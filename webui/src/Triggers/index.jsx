@@ -151,8 +151,8 @@ function TriggersTableRow({ item, replaceItem, editItem }) {
 		<tr>
 			<td>{item.title}</td>
 			<td>
-				{/* TODO - can we remove the dangerous html markup here? */}
-				<div dangerouslySetInnerHTML={{ __html: item.config_desc }} />
+				{/* We used to use dangerouslySetInnerHTML, but that is a security problem once we allow dynamic modules */}
+				{item.config_desc}
 				<br />
 				{item.last_run ? <small>Last run: {dayjs(item.last_run).format(tableDateFormat)}</small> : ''}
 			</td>
