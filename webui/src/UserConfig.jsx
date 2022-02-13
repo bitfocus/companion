@@ -148,7 +148,7 @@ function UserConfigTable() {
 					</td>
 				</tr>
 				<tr>
-					<td>Enable emulator control for Logitec R400/Mastercue/dSan</td>
+					<td>Enable emulator control for Logitech R400/Mastercue/DSan</td>
 					<td>
 						<div className="form-check form-check-inline mr-1">
 							<CInputCheckbox
