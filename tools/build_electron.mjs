@@ -69,7 +69,7 @@ if (!platform) {
 		sharpPlatform = 'linux'
 		sharpArch = 'x64'
 	} else if (platform === 'linux-arm7') {
-		electronBuilderArgs.push('--armv7l', '--rpi')
+		electronBuilderArgs.push('--armv7l', '--linux')
 		sharpPlatform = 'linux'
 		sharpArch = 'arm'
 	} else {
