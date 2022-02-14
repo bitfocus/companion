@@ -1,0 +1,11 @@
+image:
+  file: .gitpod.Dockerfile
+
+tasks:
+  - init: |
+      ./tools/update.sh
+      ./tools/build_writefile.sh
+    command: yarn dev
+vscode:
+  extensions:
+    - dbaeumer.vscode-eslint
