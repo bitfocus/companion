@@ -37,11 +37,11 @@ for (const folder of dirs) {
 			license: pkgJson.license,
 			repository: pkgJson.repository?.url ?? `https://github.com/bitfocus/companion-module-${pkgJson.name}.git`,
 			maintainers: maintainers,
+			legacyIds: [pkgJson.name],
 
 			runtime: {
 				type: 'node14',
 				api: 'socket.io',
-				apiVersion: '1.0.0',
 
 				entrypoint: '../../dist/index.js',
 				// universal: boolean

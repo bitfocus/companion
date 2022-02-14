@@ -17,11 +17,13 @@ interface RestPoll {
 }
 
 export class ServiceRest {
-	readonly debug = debug('legacy/rest')
+	readonly debug: debug.Debugger
 
 	#running = new Map<string, RestPoll>()
 
-	constructor(fakeSystem: EventEmitter) {
+	constructor(fakeSystem: EventEmitter, moduleName: string) {
+		this.debug = debug(`legacy/${moduleName}/rest`)
+
 		fakeSystem.on('rest_get', (url, cb, extra_headers, extra_args) => {
 			this.debug('making request:', url)
 

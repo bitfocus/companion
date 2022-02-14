@@ -11,6 +11,7 @@ import type {
 import type InstanceSkel = require('../instance_skel')
 import { assertNever, literal, LogLevel } from '@companion-module/base'
 import { ServiceRest } from './rest.js'
+import debug from 'debug'
 
 /**
  * Make all optional properties be required and `| undefined`
@@ -53,12 +54,14 @@ function wrapFeedbackSubscriptionCallback(
 }
 
 export class FakeSystem extends EventEmitter {
+	readonly #debug: debug.Debugger
 	#rest: ServiceRest
 
-	constructor(public readonly parent: ModuleApi.InstanceBase<any>) {
+	constructor(public readonly parent: ModuleApi.InstanceBase<any>, moduleName: string) {
 		super()
 
-		this.#rest = new ServiceRest(this)
+		this.#debug = debug(`legacy/${moduleName}/system`)
+		this.#rest = new ServiceRest(this, moduleName)
 	}
 
 	destroy() {
@@ -131,8 +134,8 @@ export class FakeSystem extends EventEmitter {
 	}
 
 	oscSend: InstanceSkel<any>['oscSend'] = (host, port, path, args) => {
-		this.parent.oscSend(host, port, path, args).catch(() => {
-			// Ignore for now
+		this.parent.oscSend(host, port, path, args).catch((e) => {
+			this.#debug(`oscSend failed: ${e?.message ?? e}`)
 		})
 	}
 
@@ -171,8 +174,8 @@ export class FakeSystem extends EventEmitter {
 			}
 		}
 
-		this.parent.setActionDefinitions(newActions).catch(() => {
-			// Ignore for now
+		this.parent.setActionDefinitions(newActions).catch((e) => {
+			this.#debug(`setActionDefinitions failed: ${e?.message ?? e}`)
 		})
 	}
 
@@ -256,8 +259,8 @@ export class FakeSystem extends EventEmitter {
 			}
 		}
 
-		this.parent.setFeedbackDefinitions(newFeedbacks).catch(() => {
-			// Ignore for now
+		this.parent.setFeedbackDefinitions(newFeedbacks).catch((e) => {
+			this.#debug(`setFeedbackDefinitions failed: ${e?.message ?? e}`)
 		})
 	}
 
@@ -343,8 +346,8 @@ export class FakeSystem extends EventEmitter {
 	}
 
 	saveConfig = (config: any) => {
-		this.parent.saveConfig(config).catch(() => {
-			// Ignore for now
+		this.parent.saveConfig(config).catch((e) => {
+			this.#debug(`saveConfig failed: ${e?.message ?? e}`)
 		})
 	}
 
@@ -358,8 +361,8 @@ export class FakeSystem extends EventEmitter {
 			})
 		}
 
-		this.parent.setVariableDefinitions(newVariables).catch(() => {
-			// Ignore for now
+		this.parent.setVariableDefinitions(newVariables).catch((e) => {
+			this.#debug(`setVariableDefinitions failed: ${e?.message ?? e}`)
 		})
 	}
 
@@ -390,7 +393,7 @@ export class FakeSystem extends EventEmitter {
 			.parseVariablesInString(text)
 			.then((res) => cb(res))
 			.catch((e) => {
-				console.error(`Call to parseVariables failed: ${e.message}`)
+				this.#debug(`parseVariables failed: ${e?.message ?? e}`)
 			})
 	}
 }

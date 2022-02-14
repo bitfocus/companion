@@ -20,7 +20,7 @@ export default class MockModule extends InstanceBase<MockConfig> {
 	constructor(internal: unknown, id: string) {
 		super(internal, id)
 
-		this.#system = new FakeSystem(this)
+		this.#system = new FakeSystem(this, manifest.name)
 	}
 
 	async init(config: MockConfig): Promise<void> {

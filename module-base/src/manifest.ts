@@ -9,8 +9,6 @@ export interface ModuleManifestRuntime {
 	type: string
 	/** Which host-api does it use. Must be socket.io */
 	api: string
-	/** Minimum supported version number for the host-api */
-	apiVersion: string
 
 	/** Entrypoint to pass to the runtime. eg index.js */
 	entrypoint: string
@@ -34,8 +32,8 @@ export interface ModuleManifest {
 	repository: string
 	/** List of active maintiners */
 	maintainers: ModuleManifestMaintainer[]
-	// /** If the module had a different unique identifier previously, then specify it here */
-	// legacyIds?: string[]
+	/** If the module had a different unique identifier previously, then specify it here */
+	legacyIds?: string[]
 
 	/** Information on how to execute the module */
 	runtime: ModuleManifestRuntime
