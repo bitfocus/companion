@@ -1,6 +1,10 @@
 image:
   file: .gitpod.Dockerfile
 
+ports:
+  - port: 8888
+    onOpen: open-preview
+
 tasks:
   - init: |
       ./tools/update.sh
