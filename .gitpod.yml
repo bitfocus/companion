@@ -2,14 +2,14 @@ image:
   file: .gitpod.Dockerfile
 
 ports:
-  - port: 8888
+  - port: 8000
     onOpen: open-preview
 
 tasks:
   - init: |
       ./tools/update.sh
       ./tools/build_writefile.sh
-    command: yarn dev
+    command: node headless.js
 vscode:
   extensions:
     - dbaeumer.vscode-eslint
