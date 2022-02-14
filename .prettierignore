@@ -8,3 +8,4 @@ webui/build/
 webui/public/legacy
 /LICENSE.md
 docs/*
+module-legacy/image/Font.js
