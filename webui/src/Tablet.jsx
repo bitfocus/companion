@@ -454,7 +454,7 @@ function CyclePages({ socket, pages, imageCache, orderedPages, updateQueryUrl, q
 					</div>
 					<div>
 						<ButtonGrid
-							key={currentPage}
+							// No key, we want to reuse the grid as the page changes
 							socket={socket}
 							imageCache={imageCache}
 							number={currentPage}
@@ -511,6 +511,9 @@ function ButtonGrid({ socket, imageCache, number, cols, rows, goFirstPage, goNex
 
 	// load existing images from the cache at mount
 	const [images, setImages] = useState(() => imageCache.getPage(number))
+	useEffect(() => {
+		setImages(imageCache.getPage(number))
+	}, [imageCache, number])
 
 	// Ensure the page is loaded when it comes into view
 	useEffect(() => {
