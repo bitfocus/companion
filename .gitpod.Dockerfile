@@ -1,7 +1,7 @@
 FROM gitpod/workspace-node
 
 # Installation Prep
-RUN apt-get update && apt-get install -y \
+RUN sudo apt-get update && sudo apt-get install -y \
     libusb-1.0-0-dev \
     libudev-dev \
     unzip \
