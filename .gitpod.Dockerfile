@@ -5,6 +5,13 @@ ENV NODE_VERSION=14.19.0
 # Installation Prep
 RUN sudo apt-get update && sudo apt-get install -y \
     libusb-1.0-0-dev \
+    libxshmfence1 \
+    libglu1 \
+    libgtk-3-dev \
+    libgconf2-dev \
+    libxss1 \
+    libnss3-dev \
+    libasound2 \
     libudev-dev \
     unzip \
     cmake
