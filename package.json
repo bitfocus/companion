@@ -93,8 +93,9 @@
 		]
 	},
 	"scripts": {
-		"prod": "yarn build:writefile && electron .",
-		"dev": "yarn build:writefile && cross-env DEVELOPER=1 electron .",
+		"dev": "yarn build:writefile && cross-env DEVELOPER=1 nodemon --ignore './webui/' headless.js",
+		"dev-headless": "yarn dev",
+		"dev-electron": "yarn build:writefile && cross-env DEVELOPER=1 electron .",
 		"update": "./tools/update.sh",
 		"pack": "electron-builder --dir",
 		"dist:webui": "yarn --cwd webui build",
@@ -116,7 +117,6 @@
 		"test": "jest",
 		"postinstall": "yarn build:writefile",
 		"headless": "nodemon --ignore './webui/' headless.js",
-		"dev-headless": "yarn build:writefile && cross-env DEVELOPER=1 nodemon --ignore './webui/' headless.js",
 		"dev-webui": "yarn --cwd webui dev",
 		"format": "prettier --write .",
 		"jsdoc": "jsdoc -c jsdoc.json",
