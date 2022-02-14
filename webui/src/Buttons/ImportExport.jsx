@@ -195,7 +195,11 @@ export function ImportExport({ pageNumber }) {
 							</thead>
 							<tbody>
 								{Object.entries(snapshot.instances || {}).map(([key, instance]) => {
-									if (key === 'companion-bitfocus' || instance.instance_type === 'bitfocus-companion') {
+									if (
+										key === 'companion-bitfocus' ||
+										instance.instance_type === 'bitfocus-companion' ||
+										instance.instance_type === 'bitfocus.bitfocus-companion'
+									) {
 										return ''
 									} else {
 										const instance_type = context.moduleRedirects[instance.instance_type] ?? instance.instance_type

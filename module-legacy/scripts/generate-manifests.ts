@@ -31,9 +31,9 @@ for (const folder of dirs) {
 		const manifest: ModuleManifest = {
 			id: `bitfocus.${pkgJson.name}`,
 			name: pkgJson.name,
-			shortname: pkgJson.shortname,
-			description: pkgJson.description,
-			version: pkgJson.version,
+			shortname: pkgJson.shortname ?? pkgJson.name,
+			description: pkgJson.description ?? pkgJson.name,
+			version: pkgJson.version ?? '0.0.0',
 			license: pkgJson.license,
 			repository: pkgJson.repository?.url ?? `https://github.com/bitfocus/companion-module-${pkgJson.name}.git`,
 			maintainers: maintainers,
@@ -47,7 +47,7 @@ for (const folder of dirs) {
 				// universal: boolean
 			},
 
-			manufacturer: pkgJson.manufacturer,
+			manufacturer: pkgJson.manufacturer ?? '',
 			products: pkgJson.products ?? (pkgJson.product ? [pkgJson.product] : []),
 			keywords: pkgJson.keywords || [],
 		}

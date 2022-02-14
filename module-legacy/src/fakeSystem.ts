@@ -166,7 +166,7 @@ export class FakeSystem extends EventEmitter {
 				newActions[id] = literal<Complete<ModuleApi.CompanionAction>>({
 					name: action.label,
 					description: action.description,
-					options: action.options, // TODO - serialize isVisible
+					options: action.options,
 					callback: cb,
 					subscribe: wrapActionSubscriptionCallback(id, action.subscribe),
 					unsubscribe: wrapActionSubscriptionCallback(id, action.unsubscribe),
@@ -211,7 +211,7 @@ export class FakeSystem extends EventEmitter {
 							type: 'boolean',
 							name: feedback.label,
 							description: feedback.description,
-							options: feedback.options, // TODO - serialize isVisible
+							options: feedback.options,
 							defaultStyle: feedback.style,
 							callback: cb,
 							subscribe: wrapFeedbackSubscriptionCallback(id, feedback.subscribe),
@@ -248,7 +248,7 @@ export class FakeSystem extends EventEmitter {
 							type: 'advanced',
 							name: feedback.label,
 							description: feedback.description,
-							options: feedback.options, // TODO - serialize isVisible
+							options: feedback.options,
 							callback: cb,
 							subscribe: wrapFeedbackSubscriptionCallback(id, feedback.subscribe),
 							unsubscribe: wrapFeedbackSubscriptionCallback(id, feedback.unsubscribe),

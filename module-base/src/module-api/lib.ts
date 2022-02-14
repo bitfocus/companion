@@ -36,7 +36,7 @@ export function listenToEvents<T extends object>(socket: SocketIOClient.Socket<T
 
 				if (cb) cb(null, result)
 			} catch (e: any) {
-				console.error(`Command failed: ${e}`)
+				console.error(`Command failed: ${e}`, e.stack)
 				if (cb) cb(e?.toString() ?? JSON.stringify(e), undefined)
 			}
 		})

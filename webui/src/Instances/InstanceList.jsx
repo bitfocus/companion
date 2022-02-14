@@ -51,7 +51,10 @@ export function InstancesList({ showHelp, doConfigureInstance }) {
 				</thead>
 				<tbody>
 					{Object.entries(instancesContext).map(([id, instance]) => {
-						if (instance.instance_type === 'bitfocus-companion') {
+						if (
+							instance.instance_type === 'bitfocus-companion' ||
+							instance.instance_type === 'bitfocus.bitfocus-companion'
+						) {
 							return null
 						} else {
 							return (
@@ -137,7 +140,7 @@ function InstancesTableRow({
 							''
 						)}
 						{moduleInfo?.bugUrl ? (
-							<a className="instance_bug" href={moduleInfo.bug_url} target="_new" title="Report Bug">
+							<a className="instance_bug" href={moduleInfo.bugUrl} target="_new" title="Report Bug">
 								<FontAwesomeIcon icon={faBug} />
 							</a>
 						) : (

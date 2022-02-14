@@ -132,8 +132,6 @@ export interface ActionInstance {
 	actionId: string // aka 'type'
 	options: { [key: string]: InputValue | undefined }
 
-	// TODO more over time
-
 	/** @deprecated */
 	page: number
 	/** @deprecated */
