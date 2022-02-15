@@ -15,11 +15,16 @@ declare class TCPClient extends EventEmitter {
 	constructor(
 		host: string,
 		port: number,
+		connected: boolean,
+		status: null | 0 | 1 | 2,
 		options?: {
 			/** default 2000 */
 			reconnect_interval?: number
 			/** default true */
 			reconnect?: boolean
+		},
+		socket?: {
+			connecting: boolean
 		}
 	)
 
