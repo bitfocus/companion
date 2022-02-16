@@ -17,7 +17,7 @@ export function ContextData({ socket, children }) {
 	const [instances, setInstances] = useState(null)
 	const [modules, setModules] = useState(null)
 	const [moduleRedirects, setModuleRedirects] = useState(null)
-	const [actions, setActions] = useState(null)
+	const [actionDefinitions, setActionDefinitions] = useState(null)
 	const [feedbackDefinitions, setFeedbackDefinitions] = useState(null)
 	const [variableDefinitions, setVariableDefinitions] = useState(null)
 	const [variableValues, setVariableValues] = useState(null)
@@ -45,6 +45,13 @@ export function ContextData({ socket, children }) {
 				})
 				.catch((e) => {
 					console.error('Failed to load modules list', e)
+				})
+			socketEmit(socket, 'action_instance_definitions_get', [])
+				.then(([data]) => {
+					setActionDefinitions(data || {})
+				})
+				.catch((e) => {
+					console.error('Failed to load variable definitions list', e)
 				})
 			socketEmit(socket, 'feedback_instance_definitions_get', [])
 				.then(([data]) => {
@@ -95,6 +102,12 @@ export function ContextData({ socket, children }) {
 					[id]: feedbacks,
 				}))
 			}
+			const updateActionDefinitions = (id, actions) => {
+				setFeedbackDefinitions((oldDefinitions) => ({
+					...oldDefinitions,
+					[id]: actions,
+				}))
+			}
 
 			let variablesQueue = {}
 			const persistVariableValues = debounce(
@@ -143,8 +156,7 @@ export function ContextData({ socket, children }) {
 			socket.on('variables_set', updateVariableValue)
 			socket.on('custom_variables_get', setCustomVariables)
 
-			socket.on('actions', setActions)
-			socket.emit('get_actions')
+			socket.on('action_instance_definitions_set', updateActionDefinitions)
 
 			socket.on('feedback_instance_definitions_set', updateFeedbackDefinitions)
 
@@ -155,7 +167,7 @@ export function ContextData({ socket, children }) {
 				socket.off('variable_instance_definitions_set', updateVariableDefinitions)
 				socket.off('variables_set', updateVariableValue)
 				socket.off('custom_variables_get', setCustomVariables)
-				socket.off('actions', setActions)
+				socket.off('action_instance_definitions_set', updateActionDefinitions)
 				socket.off('feedback_instance_definitions_set', updateFeedbackDefinitions)
 				socket.off('set_userconfig_key', updateUserConfigValue)
 			}
@@ -176,7 +188,7 @@ export function ContextData({ socket, children }) {
 		modules,
 		variableDefinitions,
 		variableValues,
-		actions,
+		actionDefinitions,
 		feedbackDefinitions,
 		customVariables,
 		userConfig,
@@ -187,7 +199,7 @@ export function ContextData({ socket, children }) {
 
 	return (
 		<StaticContext.Provider value={contextValue}>
-			<ActionsContext.Provider value={actions}>
+			<ActionsContext.Provider value={actionDefinitions}>
 				<FeedbacksContext.Provider value={feedbackDefinitions}>
 					<InstancesContext.Provider value={instances}>
 						<VariableValuesContext.Provider value={variableValues}>
