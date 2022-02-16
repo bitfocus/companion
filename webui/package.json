@@ -14,7 +14,6 @@
     "buffer": "^6.0.3",
     "classnames": "^2.3.1",
     "dayjs": "^1.10.7",
-    "debounce-fn": "^5.1.0",
     "eventemitter3": "^4.0.7",
     "html-entities": "^2.3.2",
     "i18next": "^19.9.2",

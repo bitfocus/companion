@@ -1,5 +1,4 @@
 import { useEffect, useRef, useState } from 'react'
-import debounce from 'debounce-fn'
 import {
 	StaticContext,
 	ActionsContext,
