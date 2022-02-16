@@ -1,5 +1,5 @@
 import React, { useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react'
-import { CAlert, CButton, CForm, CFormGroup, CInput, CLabel } from '@coreui/react'
+import { CButton, CForm, CFormGroup, CInput, CLabel } from '@coreui/react'
 import {
 	StaticContext,
 	InstancesContext,
@@ -80,6 +80,7 @@ function VariablesInstanceList({ setInstance, setShowCustom, instancesLabelMap }
 					Custom Variables
 				</CButton>
 			</div>
+			{options}
 		</div>
 	)
 }
