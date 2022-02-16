@@ -6,7 +6,6 @@ import {
 	FeedbacksContext,
 	socketEmit,
 	InstancesContext,
-	VariableValuesContext,
 	VariableDefinitionsContext,
 	CustomVariableDefinitionsContext,
 	UserConfigContext,
@@ -20,7 +19,6 @@ export function ContextData({ socket, children }) {
 	const [actionDefinitions, setActionDefinitions] = useState(null)
 	const [feedbackDefinitions, setFeedbackDefinitions] = useState(null)
 	const [variableDefinitions, setVariableDefinitions] = useState(null)
-	const [variableValues, setVariableValues] = useState(null)
 	const [customVariables, setCustomVariables] = useState(null)
 	const [userConfig, setUserConfig] = useState(null)
 
@@ -67,13 +65,6 @@ export function ContextData({ socket, children }) {
 				.catch((e) => {
 					console.error('Failed to load variable definitions list', e)
 				})
-			socketEmit(socket, 'variables_get', [])
-				.then(([data]) => {
-					setVariableValues(data || {})
-				})
-				.catch((e) => {
-					console.error('Failed to load variable values list', e)
-				})
 			socketEmit(socket, 'custom_variables_get', [])
 				.then(([data]) => {
 					setCustomVariables(data || {})
@@ -109,39 +100,6 @@ export function ContextData({ socket, children }) {
 				}))
 			}
 
-			let variablesQueue = {}
-			const persistVariableValues = debounce(
-				() => {
-					setVariableValues((oldValues) => {
-						const newValues = { ...oldValues }
-						for (const [key, value] of Object.entries(variablesQueue)) {
-							if (value === null) {
-								delete newValues[key]
-							} else {
-								newValues[key] = value
-							}
-						}
-						variablesQueue = {}
-						return newValues
-					})
-				},
-				{
-					after: true,
-					maxWait: 2000,
-					wait: 500,
-				}
-			)
-			const updateVariableValue = (changed_variables, removed_variables) => {
-				// Don't commit to state immediately, run through a debounce to rate limit the renders
-				for (const [key, value] of Object.entries(changed_variables)) {
-					variablesQueue[key] = value
-				}
-				for (const variable of removed_variables) {
-					variablesQueue[variable] = undefined
-				}
-				persistVariableValues()
-			}
-
 			const updateUserConfigValue = (key, value) => {
 				setUserConfig((oldState) => ({
 					...oldState,
@@ -153,7 +111,6 @@ export function ContextData({ socket, children }) {
 			socket.emit('instances_get')
 
 			socket.on('variable_instance_definitions_set', updateVariableDefinitions)
-			socket.on('variables_set', updateVariableValue)
 			socket.on('custom_variables_get', setCustomVariables)
 
 			socket.on('action_instance_definitions_set', updateActionDefinitions)
@@ -165,7 +122,6 @@ export function ContextData({ socket, children }) {
 			return () => {
 				socket.off('instances_get:result', setInstances)
 				socket.off('variable_instance_definitions_set', updateVariableDefinitions)
-				socket.off('variables_set', updateVariableValue)
 				socket.off('custom_variables_get', setCustomVariables)
 				socket.off('action_instance_definitions_set', updateActionDefinitions)
 				socket.off('feedback_instance_definitions_set', updateFeedbackDefinitions)
@@ -187,7 +143,6 @@ export function ContextData({ socket, children }) {
 		instances,
 		modules,
 		variableDefinitions,
-		variableValues,
 		actionDefinitions,
 		feedbackDefinitions,
 		customVariables,
@@ -202,17 +157,15 @@ export function ContextData({ socket, children }) {
 			<ActionsContext.Provider value={actionDefinitions}>
 				<FeedbacksContext.Provider value={feedbackDefinitions}>
 					<InstancesContext.Provider value={instances}>
-						<VariableValuesContext.Provider value={variableValues}>
-							<VariableDefinitionsContext.Provider value={variableDefinitions}>
-								<CustomVariableDefinitionsContext.Provider value={customVariables}>
-									<UserConfigContext.Provider value={userConfig}>
-										<NotificationsManager ref={notifierRef} />
+						<VariableDefinitionsContext.Provider value={variableDefinitions}>
+							<CustomVariableDefinitionsContext.Provider value={customVariables}>
+								<UserConfigContext.Provider value={userConfig}>
+									<NotificationsManager ref={notifierRef} />
 
-										{children(progressPercent, completedSteps.length === steps.length)}
-									</UserConfigContext.Provider>
-								</CustomVariableDefinitionsContext.Provider>
-							</VariableDefinitionsContext.Provider>
-						</VariableValuesContext.Provider>
+									{children(progressPercent, completedSteps.length === steps.length)}
+								</UserConfigContext.Provider>
+							</CustomVariableDefinitionsContext.Provider>
+						</VariableDefinitionsContext.Provider>
 					</InstancesContext.Provider>
 				</FeedbacksContext.Provider>
 			</ActionsContext.Provider>

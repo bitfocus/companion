@@ -5,7 +5,6 @@ import {
 	InstancesContext,
 	VariableDefinitionsContext,
 	CustomVariableDefinitionsContext,
-	VariableValuesContext,
 	socketEmit,
 } from '../util'
 import { VariablesTable } from '../Components/VariablesTable'
@@ -117,9 +116,29 @@ function CustomVariablesList({ setShowCustom }) {
 
 	const context = useContext(StaticContext)
 	const customVariableContext = useContext(CustomVariableDefinitionsContext)
-	const variableValuesContext = useContext(VariableValuesContext)
 
-	const variableValues = variableValuesContext || {}
+	const [variableValues, setVariableValues] = useState({})
+
+	useEffect(() => {
+		const doPoll = () => {
+			socketEmit(context.socket, 'variable_values_for_instance', ['internal'])
+				.then(([values]) => {
+					setVariableValues(values || {})
+				})
+				.catch((e) => {
+					setVariableValues({})
+					console.log('Failed to fetch variable values: ', e)
+				})
+		}
+
+		doPoll()
+		const interval = setInterval(doPoll, 1000)
+
+		return () => {
+			setVariableValues({})
+			clearInterval(interval)
+		}
+	}, [context.socket])
 
 	const onCopied = useCallback(() => {
 		context.notifier.current.show(`Copied`, 'Copied to clipboard', 5000)
@@ -206,7 +225,8 @@ function CustomVariablesList({ setShowCustom }) {
 				</thead>
 				<tbody>
 					{Object.entries(customVariableContext).map(([name, info]) => {
-						const fullname = `internal:custom_${name}`
+						const shortname = `custom_${name}`
+						const fullname = `internal:${shortname}`
 						return (
 							<tr key={name}>
 								<td>$({fullname})</td>
@@ -217,7 +237,7 @@ function CustomVariablesList({ setShowCustom }) {
 											<CLabel htmlFor="current_value">Current value: </CLabel>
 											<TextInputField
 												definition={{}}
-												value={variableValues[fullname] || ''}
+												value={variableValues[shortname] || ''}
 												setValue={(val) => setCurrentValue(name, val)}
 											/>
 										</CFormGroup>
