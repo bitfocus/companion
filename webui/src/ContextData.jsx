@@ -93,7 +93,7 @@ export function ContextData({ socket, children }) {
 				}))
 			}
 			const updateActionDefinitions = (id, actions) => {
-				setFeedbackDefinitions((oldDefinitions) => ({
+				setActionDefinitions((oldDefinitions) => ({
 					...oldDefinitions,
 					[id]: actions,
 				}))

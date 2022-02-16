@@ -80,14 +80,6 @@ function VariablesInstanceList({ setInstance, setShowCustom, instancesLabelMap }
 					Custom Variables
 				</CButton>
 			</div>
-			{options.length === 0 ? (
-				<CAlert color="primary">
-					You have no connections that support variables at the moment. More modules will support variables in the
-					future.
-				</CAlert>
-			) : (
-				options
-			)}
 		</div>
 	)
 }
