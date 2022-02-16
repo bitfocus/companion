@@ -18,7 +18,7 @@ export function ContextData({ socket, children }) {
 	const [modules, setModules] = useState(null)
 	const [moduleRedirects, setModuleRedirects] = useState(null)
 	const [actions, setActions] = useState(null)
-	const [feedbacks, setFeedbacks] = useState(null)
+	const [feedbackDefinitions, setFeedbackDefinitions] = useState(null)
 	const [variableDefinitions, setVariableDefinitions] = useState(null)
 	const [variableValues, setVariableValues] = useState(null)
 	const [customVariables, setCustomVariables] = useState(null)
@@ -45,6 +45,13 @@ export function ContextData({ socket, children }) {
 				})
 				.catch((e) => {
 					console.error('Failed to load modules list', e)
+				})
+			socketEmit(socket, 'feedback_instance_definitions_get', [])
+				.then(([data]) => {
+					setFeedbackDefinitions(data || {})
+				})
+				.catch((e) => {
+					console.error('Failed to load variable definitions list', e)
 				})
 			socketEmit(socket, 'variable_instance_definitions_get', [])
 				.then(([data]) => {
@@ -80,6 +87,12 @@ export function ContextData({ socket, children }) {
 				setVariableDefinitions((oldDefinitions) => ({
 					...oldDefinitions,
 					[label]: variables,
+				}))
+			}
+			const updateFeedbackDefinitions = (id, feedbacks) => {
+				setFeedbackDefinitions((oldDefinitions) => ({
+					...oldDefinitions,
+					[id]: feedbacks,
 				}))
 			}
 
@@ -133,8 +146,7 @@ export function ContextData({ socket, children }) {
 			socket.on('actions', setActions)
 			socket.emit('get_actions')
 
-			socket.on('feedback_get_definitions:result', setFeedbacks)
-			socket.emit('feedback_get_definitions')
+			socket.on('feedback_instance_definitions_set', updateFeedbackDefinitions)
 
 			socket.on('set_userconfig_key', updateUserConfigValue)
 
@@ -144,7 +156,7 @@ export function ContextData({ socket, children }) {
 				socket.off('variables_set', updateVariableValue)
 				socket.off('custom_variables_get', setCustomVariables)
 				socket.off('actions', setActions)
-				socket.off('feedback_get_definitions:result', setFeedbacks)
+				socket.off('feedback_instance_definitions_set', updateFeedbackDefinitions)
 				socket.off('set_userconfig_key', updateUserConfigValue)
 			}
 		}
@@ -165,7 +177,7 @@ export function ContextData({ socket, children }) {
 		variableDefinitions,
 		variableValues,
 		actions,
-		feedbacks,
+		feedbackDefinitions,
 		customVariables,
 		userConfig,
 	]
@@ -176,7 +188,7 @@ export function ContextData({ socket, children }) {
 	return (
 		<StaticContext.Provider value={contextValue}>
 			<ActionsContext.Provider value={actions}>
-				<FeedbacksContext.Provider value={feedbacks}>
+				<FeedbacksContext.Provider value={feedbackDefinitions}>
 					<InstancesContext.Provider value={instances}>
 						<VariableValuesContext.Provider value={variableValues}>
 							<VariableDefinitionsContext.Provider value={variableDefinitions}>
