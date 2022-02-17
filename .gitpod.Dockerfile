@@ -22,7 +22,7 @@ RUN curl -fsSL https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.0/install.sh |
     && bash -c ". .nvm/nvm.sh \
         && nvm install v${NODE_VERSION} \
         && nvm alias default v${NODE_VERSION} \
-        && npm install -g typescript yarn pnpm node-gyp" \
+        && npm install -g typescript yarn node-gyp" \
     && echo "Node and Yarn installed"
 
 ENV PATH=/home/gitpod/.nvm/versions/node/v${NODE_VERSION}/bin:$PATH
