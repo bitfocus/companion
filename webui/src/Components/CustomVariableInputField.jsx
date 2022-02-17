@@ -8,11 +8,19 @@ export function CustomVariableInputField({ definition, multiple, value, setValue
 	const customVariableContext = useContext(CustomVariableDefinitionsContext)
 
 	const options = useMemo(() => {
-		return Object.entries(customVariableContext).map(([name, info]) => ({
+		const choices = Object.entries(customVariableContext).map(([name, info]) => ({
 			value: name,
 			label: name,
 		}))
-	}, [customVariableContext])
+
+		if (definition.allowNone) {
+			choices.unshift({
+				value: null,
+				label: '<NONE>',
+			})
+		}
+		return choices
+	}, [definition.allowNone, customVariableContext])
 	const defaultVal = options[0]?.value
 
 	const currentValue = useMemo(() => {

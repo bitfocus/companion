@@ -185,6 +185,11 @@ export interface CompanionInputFieldNumber extends CompanionInputField {
 }
 export interface CompanionInputFieldCustomVariable extends CompanionInputField {
 	type: 'custom-variable'
+	// Default needs to exist to avoid upsetting some modules...
+	default?: never
+
+	// Allow selecting null/<NONE> as an option
+	allowNone?: boolean
 }
 
 export interface CompanionConfigField extends CompanionInputField {
