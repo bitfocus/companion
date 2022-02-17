@@ -3168,9 +3168,9 @@ commist@^1.0.0:
   version "1.0.2"
   resolved "https://codeload.github.com/bitfocus/companion-module-interactivetechnologies-cueserver/tar.gz/3be8fa4b29de57c471f2f6fdcb4555d434981846"
 
-"companion-module-ioversal-vertex@github:bitfocus/companion-module-ioversal-vertex#v0.0.1":
-  version "0.0.1"
-  resolved "https://codeload.github.com/bitfocus/companion-module-ioversal-vertex/tar.gz/c27354fa9a1bd4c5d37b04e6af781a109283eb3b"
+"companion-module-ioversal-vertex@github:bitfocus/companion-module-ioversal-vertex#v0.0.2":
+  version "0.0.2"
+  resolved "https://codeload.github.com/bitfocus/companion-module-ioversal-vertex/tar.gz/df3b4a965b98d33679d6e78d9e128ab2dd35eab9"
 
 "companion-module-ipl-ocp@github:bitfocus/companion-module-ipl-ocp#v1.0.2":
   version "1.0.2"
