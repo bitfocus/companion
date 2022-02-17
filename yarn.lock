@@ -2679,11 +2679,11 @@ commist@^1.0.0:
   version "1.0.3"
   resolved "https://codeload.github.com/bitfocus/companion-module-bmd-audiomonitor/tar.gz/d61fef16a8a059d18ea648a5b2a477ee14b83209"
 
-"companion-module-bmd-hyperdeck@github:bitfocus/companion-module-bmd-hyperdeck#v1.2.6":
-  version "1.2.6"
-  resolved "https://codeload.github.com/bitfocus/companion-module-bmd-hyperdeck/tar.gz/8f6e0153ea875f452967f511013e7640835ec05d"
+"companion-module-bmd-hyperdeck@github:bitfocus/companion-module-bmd-hyperdeck#v1.2.7":
+  version "1.2.7"
+  resolved "https://codeload.github.com/bitfocus/companion-module-bmd-hyperdeck/tar.gz/2fb682f1cc189a653fb677df3c3de887db0c5732"
   dependencies:
-    hyperdeck-connection "^0.5.0-nightly-latest-20220108-075415-9ca29b9.0"
+    hyperdeck-connection "^0.5.0-nightly-latest-20220216-192753-87348bf.0"
     smpte-timecode "^1.2.3"
 
 "companion-module-bmd-multiview16@github:bitfocus/companion-module-bmd-multiview16#v1.0.1":
@@ -6232,12 +6232,12 @@ husky@^7.0.4:
   resolved "https://registry.yarnpkg.com/husky/-/husky-7.0.4.tgz#242048245dc49c8fb1bf0cc7cfb98dd722531535"
   integrity sha512-vbaCKN2QLtP/vD4yvs6iz6hBEo6wkSzs8HpRah1Z6aGmF2KW5PdYuAd7uX5a+OyBZHBhd+TFLqgjUgytQr4RvQ==
 
-hyperdeck-connection@^0.5.0-nightly-latest-20220108-075415-9ca29b9.0:
-  version "0.5.0-nightly-latest-20220108-075415-9ca29b9.0"
-  resolved "https://registry.yarnpkg.com/hyperdeck-connection/-/hyperdeck-connection-0.5.0-nightly-latest-20220108-075415-9ca29b9.0.tgz#1350e840107d93f5b74ae4b2bb3363ddf765d68a"
-  integrity sha512-skh0XPQG7MDidGR1TPuofty8zvLIv0cnJ4MyeUdc3Jw4BELkODriS7m48XpGz1cj4YXULgHuOfM48Fq0nny5LA==
+hyperdeck-connection@^0.5.0-nightly-latest-20220216-192753-87348bf.0:
+  version "0.5.0-nightly-latest-20220216-192753-87348bf.0"
+  resolved "https://registry.yarnpkg.com/hyperdeck-connection/-/hyperdeck-connection-0.5.0-nightly-latest-20220216-192753-87348bf.0.tgz#2c2cdad5f6146975af4e4ccb8da3381ae0841f97"
+  integrity sha512-krc36PLCVcwuYV4c2EbWA8FsgV1DI7QZrFx0z6SUdsIJv6WAStUH5Vr44H/guDvZI/e1cZ04akfIkitwY5sPBQ==
   dependencies:
-    tslib "^2.0.3"
+    tslib "^2.3.1"
 
 iconv-corefoundation@^1.1.7:
   version "1.1.7"
@@ -10249,7 +10249,7 @@ tslib@^1.13.0, tslib@^1.14.1, tslib@^1.8.1, tslib@^1.9.0, tslib@^1.9.3:
   resolved "https://registry.yarnpkg.com/tslib/-/tslib-1.14.1.tgz#cf2d38bdc34a134bcaf1091c41f6619e2f672d00"
   integrity sha512-Xni35NKzjgMrwevysHTCArtLDpPvye8zV/0E4EyYn43P7/7qvQwPh9BGkHewbMulVntbigmcT7rdX3BNo9wRJg==
 
-tslib@^2.0.1, tslib@^2.0.3, tslib@^2.2.0:
+tslib@^2.0.1, tslib@^2.2.0, tslib@^2.3.1:
   version "2.3.1"
   resolved "https://registry.yarnpkg.com/tslib/-/tslib-2.3.1.tgz#e8a335add5ceae51aa261d32a490158ef042ef01"
   integrity sha512-77EbyPPpMz+FRFRuAFlWMtmgUWGe9UOG2Z25NqCwiIjRhOf5iKGuzSe5P2w1laq+FkRy4p+PCuVkJSGkzTEKVw==
