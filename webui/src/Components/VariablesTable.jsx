@@ -1,17 +1,40 @@
-import React, { useCallback, useContext } from 'react'
+import React, { useCallback, useContext, useState } from 'react'
 import { CButton } from '@coreui/react'
-import { StaticContext, VariableDefinitionsContext, VariableValuesContext } from '../util'
+import { socketEmit, StaticContext, VariableDefinitionsContext } from '../util'
 import { CopyToClipboard } from 'react-copy-to-clipboard'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faCopy } from '@fortawesome/free-solid-svg-icons'
+import { useEffect } from 'react'
 
 export function VariablesTable({ label }) {
 	const context = useContext(StaticContext)
 	const variableDefinitionsContext = useContext(VariableDefinitionsContext)
-	const variableValuesContext = useContext(VariableValuesContext)
 
 	const variableDefinitions = variableDefinitionsContext[label] || []
-	const variableValues = variableValuesContext || {}
+	const [variableValues, setVariableValues] = useState({})
+
+	useEffect(() => {
+		if (label) {
+			const doPoll = () => {
+				socketEmit(context.socket, 'variable_values_for_instance', [label])
+					.then(([values]) => {
+						setVariableValues(values || {})
+					})
+					.catch((e) => {
+						setVariableValues({})
+						console.log('Failed to fetch variable values: ', e)
+					})
+			}
+
+			doPoll()
+			const interval = setInterval(doPoll, 1000)
+
+			return () => {
+				setVariableValues({})
+				clearInterval(interval)
+			}
+		}
+	}, [context.socket, label])
 
 	const onCopied = useCallback(() => {
 		context.notifier.current.show(`Copied`, 'Copied to clipboard', 5000)
@@ -30,7 +53,7 @@ export function VariablesTable({ label }) {
 				</thead>
 				<tbody>
 					{variableDefinitions.map((variable) => {
-						let value = variableValues[label + ':' + variable.name]
+						let value = variableValues[variable.name]
 						if (typeof value !== 'string') {
 							value += ''
 						}

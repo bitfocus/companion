@@ -14,7 +14,6 @@ export const ActionsContext = React.createContext(null)
 export const FeedbacksContext = React.createContext(null)
 export const InstancesContext = React.createContext(null)
 export const VariableDefinitionsContext = React.createContext(null)
-export const VariableValuesContext = React.createContext(null)
 export const CustomVariableDefinitionsContext = React.createContext(null)
 export const UserConfigContext = React.createContext(null)
 
