@@ -24,6 +24,6 @@ RUN NODE_VERSION=$(cat /home/gitpod/.nvmrc) \
         && nvm install v$NODE_VERSION \
         && nvm alias default v${NODE_VERSION} \
         && npm install -g typescript yarn node-gyp \
-        && echo 'export PATH=/home/gitpod/.nvm/versions/node/v${NODE_VERSION}/bin:$PATH' >> /home/gitpod/.bashrc \
     " \
+    && printf 'export PATH=/home/gitpod/.nvm/versions/node/v${NODE_VERSION}/bin:$PATH' >> /home/gitpod/.bashrc \
     && echo "Node and Yarn installed"
