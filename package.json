@@ -132,7 +132,6 @@
 		"yarn": "^1.22",
 		"node": "^14.17"
 	},
-	"managed_node_version": "14",
 	"author": "Bitfocus AS",
 	"license": "MIT",
 	"devDependencies": {
