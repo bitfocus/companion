@@ -3,6 +3,7 @@ import React, { useCallback } from 'react'
 import {
 	CheckboxInputField,
 	ColorInputField,
+	CustomVariableInputField,
 	DropdownInputField,
 	NumberInputField,
 	TextInputField,
@@ -50,6 +51,10 @@ export function ActionTableRowOption({ actionId, option, value, setValue, visibi
 		case 'text': {
 			// Just the label is wanted
 			control = ''
+			break
+		}
+		case 'custom-variable': {
+			control = <CustomVariableInputField value={value} definition={option} setValue={setValue2} />
 			break
 		}
 		default:

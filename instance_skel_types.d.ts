@@ -106,9 +106,18 @@ export type SomeCompanionInputField =
 	| CompanionInputFieldMultiDropdown
 	| CompanionInputFieldNumber
 	| CompanionInputFieldCheckbox
+	| CompanionInputFieldCustomVariable
 export interface CompanionInputField {
 	id: string
-	type: 'text' | 'textinput' | 'textwithvariables' | 'dropdown' | 'colorpicker' | 'number' | 'checkbox'
+	type:
+		| 'text'
+		| 'textinput'
+		| 'textwithvariables'
+		| 'dropdown'
+		| 'colorpicker'
+		| 'number'
+		| 'checkbox'
+		| 'custom-variable'
 	label: string
 	tooltip?: string
 	isVisible?: (options: { [key: string]: InputValue | undefined }) => boolean
@@ -173,6 +182,9 @@ export interface CompanionInputFieldNumber extends CompanionInputField {
 	range?: boolean
 	required?: boolean
 	default: number
+}
+export interface CompanionInputFieldCustomVariable extends CompanionInputField {
+	type: 'custom-variable'
 }
 
 export interface CompanionConfigField extends CompanionInputField {

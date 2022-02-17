@@ -424,6 +424,17 @@ instance.prototype.oscSend = function (host, port, path, args) {
 	self.system.emit('osc_send', host, port, path, args)
 }
 
+instance.prototype.getCustomVariableValue = function (name, cb) {
+	var self = this
+
+	self.parseVariables(`$(internal:custom_${name})`, cb)
+}
+instance.prototype.setCustomVariableValue = function (name, value) {
+	var self = this
+
+	self.system.emit('custom_variable_set_value', name, value)
+}
+
 instance.extendedBy = function (module) {
 	util.inherits(module, instance)
 }
