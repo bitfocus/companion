@@ -240,7 +240,7 @@ function ActionTableRow({ action, index, dragId, setValue, doDelete, doDelay, mo
 
 	const [optionVisibility, setOptionVisibility] = useState({})
 
-	const actionSpec = actionsContext[action.label]
+	const actionSpec = (actionsContext[action.instance] || {})[action.action]
 
 	const ref = useRef(null)
 	const [, drop] = useDrop({
@@ -401,11 +401,14 @@ function AddActionDropdown({ onSelect, placeholder }) {
 	const actionsContext = useContext(ActionsContext)
 
 	const options = useMemo(() => {
-		return Object.entries(actionsContext || {}).map(([id, act]) => {
-			const instanceId = id.split(/:/)[0]
-			const instanceLabel = instancesContext[instanceId]?.label ?? instanceId
-			return { value: id, label: `${instanceLabel}: ${act.label}` }
-		})
+		const options = []
+		for (const [instanceId, instanceActions] of Object.entries(actionsContext)) {
+			for (const [actionId, action] of Object.entries(instanceActions || {})) {
+				const instanceLabel = instancesContext[instanceId]?.label ?? instanceId
+				options.push({ value: `${instanceId}:${actionId}`, label: `${instanceLabel}: ${action.label}` })
+			}
+		}
+		return options
 	}, [actionsContext, instancesContext])
 
 	const innerChange = useCallback(
