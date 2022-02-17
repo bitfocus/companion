@@ -3,13 +3,13 @@ image:
 
 ports:
   - port: 8000
-    onOpen: open-preview
+    onOpen: notify
 
 tasks:
   - init: |
-      ./tools/update.sh
+      yarn update
       ./tools/build_writefile.sh
-    command: node headless.js
+    command: yarn dev-headless
 vscode:
   extensions:
     - dbaeumer.vscode-eslint
