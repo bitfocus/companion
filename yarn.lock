@@ -2891,6 +2891,12 @@ commist@^1.0.0:
   version "1.0.4"
   resolved "https://codeload.github.com/bitfocus/companion-module-digico-osc/tar.gz/08bbda528adaf43beb381679b5313e0786af00be"
 
+"companion-module-digitalloggers-powercontroller@github:bitfocus/companion-module-digitalloggers-powercontroller#v1.0.0":
+  version "1.0.0"
+  resolved "https://codeload.github.com/bitfocus/companion-module-digitalloggers-powercontroller/tar.gz/dc3e25ee3f6e0b10427e36482a040f3a8bca2d02"
+  dependencies:
+    urllib "^2.38.0"
+
 "companion-module-digitalprojection-highlight@github:bitfocus/companion-module-digitalprojection-highlight#v1.0.4":
   version "1.0.4"
   resolved "https://codeload.github.com/bitfocus/companion-module-digitalprojection-highlight/tar.gz/758784edf593a9c3525efbfc37bec1d3a7970f98"
