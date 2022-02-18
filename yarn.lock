@@ -3150,6 +3150,13 @@ commist@^1.0.0:
   version "1.0.4"
   resolved "https://codeload.github.com/bitfocus/companion-module-ifelseware-avplayback/tar.gz/537a64980c7857907691f7187be29cd4584e2cff"
 
+"companion-module-iiyama-prolite@github:bitfocus/companion-module-iiyama-prolite#v1.0.0":
+  version "1.0.0"
+  resolved "https://codeload.github.com/bitfocus/companion-module-iiyama-prolite/tar.gz/849b57735aa83b953a65f5a652bc370a593d162d"
+  dependencies:
+    promise-socket "^7.0.0"
+    queue-promise "^2.2.1"
+
 "companion-module-imagine-lrc@github:bitfocus/companion-module-imagine-lrc#v1.0.2":
   version "1.0.2"
   resolved "https://codeload.github.com/bitfocus/companion-module-imagine-lrc/tar.gz/3b5d0138c55b62a406bd8ccccdff0155bd2c14af"
@@ -4086,10 +4093,10 @@ copy-to@^2.0.1:
   resolved "https://registry.yarnpkg.com/copy-to/-/copy-to-2.0.1.tgz#2680fbb8068a48d08656b6098092bdafc906f4a5"
   integrity sha1-JoD7uAaKSNCGVrYJgJK9r8kG9KU=
 
-core-js@^3.14.0:
-  version "3.20.3"
-  resolved "https://registry.yarnpkg.com/core-js/-/core-js-3.20.3.tgz#c710d0a676e684522f3db4ee84e5e18a9d11d69a"
-  integrity sha512-vVl8j8ph6tRS3B8qir40H7yw7voy17xL0piAjlbBUsH7WIfzoedL/ZOr1OV9FyZQLWXsayOJyV4tnRyXR85/ag==
+core-js@^3.14.0, core-js@^3.6.5:
+  version "3.21.1"
+  resolved "https://registry.yarnpkg.com/core-js/-/core-js-3.21.1.tgz#f2e0ddc1fc43da6f904706e8e955bc19d06a0d94"
+  integrity sha512-FRq5b/VMrWlrmCzwRrpDYNxyHP9BcAZC+xHJaqTgIE5091ZV1NTmyh0sGOg5XqpnHvR0svdy0sv1gWA1zmhxig==
 
 core-util-is@1.0.2:
   version "1.0.2"
@@ -8693,6 +8700,35 @@ progress@^2.0.0, progress@^2.0.3:
   resolved "https://registry.yarnpkg.com/progress/-/progress-2.0.3.tgz#7e8cf8d8f5b8f239c1bc68beb4eb78567d572ef8"
   integrity sha512-7PiHtLll5LdnKIMw100I+8xJXR5gW2QwWYkT6iJva0bXitZKa/XMrSbdmg3r2Xnaidz9Qumd0VPaMrZlF9V9sA==
 
+promise-duplex@^6.0.0:
+  version "6.0.0"
+  resolved "https://registry.yarnpkg.com/promise-duplex/-/promise-duplex-6.0.0.tgz#9d9d13383ac0f70701b9f095ffd486f106c2232e"
+  integrity sha512-ZL7rquzjTFzInDBeWYcsT+qddolNvzigahk6MI6qLSbQvlyRRCJkU3JztgaVunzvkH28smRa2Qu/cY9RXtSkgA==
+  dependencies:
+    core-js "^3.6.5"
+    promise-readable "^6.0.0"
+    promise-writable "^6.0.0"
+
+promise-readable@^6.0.0:
+  version "6.0.0"
+  resolved "https://registry.yarnpkg.com/promise-readable/-/promise-readable-6.0.0.tgz#ab1ec1a3daa53ed8764b61902fb7f3de3242025a"
+  integrity sha512-5NxtmUswijvX5cAM0zPSy6yiCXH/eKBpiiBq6JfAUrmngMquMbzcBhF2qA+ocs4rYYKdvAfv3cOvZxADLtL1CA==
+  dependencies:
+    core-js "^3.6.5"
+
+promise-socket@^7.0.0:
+  version "7.0.0"
+  resolved "https://registry.yarnpkg.com/promise-socket/-/promise-socket-7.0.0.tgz#20c147c417033a50fe7e1d1236a46ff59d4280b3"
+  integrity sha512-Oic9BrxmcHOPEnzKp2Js+ehFyvsbd0WxsE5khweCTHuRvdzbXjHUZmSDT6F9TW8SIkAJ0lCzoHjMYnb0WQJPiw==
+  dependencies:
+    promise-duplex "^6.0.0"
+    tslib "^2.0.1"
+
+promise-writable@^6.0.0:
+  version "6.0.0"
+  resolved "https://registry.yarnpkg.com/promise-writable/-/promise-writable-6.0.0.tgz#4d703e75873a4e755a39bdb926a37f41538e507f"
+  integrity sha512-b81zre/itgJFS7dwWzIdKNVVqvLiUxYRS/wolUB0H1YY/tAaS146XGKa4Q/5wCbsnXLyn0MCeV6f8HHe4iUHLg==
+
 prompts@^2.0.1:
   version "2.4.2"
   resolved "https://registry.yarnpkg.com/prompts/-/prompts-2.4.2.tgz#7b57e73b3a48029ad10ebd44f74b01722a4cb069"
@@ -8811,6 +8847,11 @@ queue-microtask@^1.2.2:
   version "1.2.3"
   resolved "https://registry.yarnpkg.com/queue-microtask/-/queue-microtask-1.2.3.tgz#4929228bbc724dfac43e0efb058caf7b6cfb6243"
   integrity sha512-NuaNSa6flKT5JaSYQzJok04JzTL1CA6aGhv5rfLW3PgqA+M2ChpZQnAC8h8i4ZFkBS8X5RqkDBHA7r4hej3K9A==
+
+queue-promise@^2.2.1:
+  version "2.2.1"
+  resolved "https://registry.yarnpkg.com/queue-promise/-/queue-promise-2.2.1.tgz#8de03fb79ba458efcb5ebf76368ab029d2669752"
+  integrity sha512-C3eyRwLF9m6dPV4MtqMVFX+Xmc7keZ9Ievm3jJ/wWM5t3uVbFnGsJXwpYzZ4LaIEcX9bss/mdaKzyrO6xheRuA==
 
 quick-lru@^5.1.1:
   version "5.1.1"
