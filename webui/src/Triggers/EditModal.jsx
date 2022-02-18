@@ -210,6 +210,8 @@ export function TriggerEditModal({ doClose, doSave, item, plugins }) {
 function TriggerEditModalConfig({ pluginSpec, config, updateConfig }) {
 	const context = useContext(StaticContext)
 
+	if (!Array.isArray(config)) config = [config]
+
 	const updateInnerConfig = useCallback(
 		(id, val) => {
 			updateConfig('config', {
