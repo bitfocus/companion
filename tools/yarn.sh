@@ -54,6 +54,10 @@ yarn --frozen-lockfile --cwd webui
 yarn --cwd webui build
 echo
 
+heading "Temporary Module-base"
+yarn --frozen-lockfile --cwd module-base
+yarn --cwd module-base build
+
 heading "Legacy Modules"
 yarn --frozen-lockfile --cwd module-legacy
 yarn --cwd module-legacy build

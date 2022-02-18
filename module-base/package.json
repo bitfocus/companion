@@ -11,8 +11,7 @@
 	},
 	"license": "MIT",
 	"scripts": {
-		"watch": "tsc-watch --onSuccess \"yarn pack -f bundle.tar.gz\"",
-		"bundle": "tsc && yarn pack -f bundle.tar.gz"
+		"build": "tsc"
 	},
 	"files": [
 		"README.md",
@@ -28,7 +27,6 @@
 	},
 	"devDependencies": {
 		"@tsconfig/node14": "^1.0.1",
-		"tsc-watch": "^4.6.0",
 		"typescript": "~4.5"
 	}
 }
