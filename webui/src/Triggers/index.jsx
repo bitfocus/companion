@@ -3,8 +3,6 @@ import { CButton } from '@coreui/react'
 import { StaticContext } from '../util'
 import dayjs from 'dayjs'
 import { TriggerEditModal } from './EditModal'
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faFileExport } from '@fortawesome/free-solid-svg-icons'
 
 export const Triggers = memo(function Triggers() {
 	const context = useContext(StaticContext)
