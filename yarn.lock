@@ -3742,6 +3742,12 @@ commist@^1.0.0:
   dependencies:
     request "^2.88.0"
 
+"companion-module-teradek-vidiux@github:bitfocus/companion-module-teradek-vidiux#v1.0.0":
+  version "1.0.0"
+  resolved "https://codeload.github.com/bitfocus/companion-module-teradek-vidiux/tar.gz/512410461154024b4ed5fd3482d6223b56dc8b76"
+  dependencies:
+    mqtt "^4.3.5"
+
 "companion-module-tesla-smart@github:bitfocus/companion-module-tesla-smart#v1.0.5":
   version "1.0.5"
   resolved "https://codeload.github.com/bitfocus/companion-module-tesla-smart/tar.gz/9a8187d53ee3e40556f066350776071234486d4a"
@@ -7553,6 +7559,29 @@ mqtt@^4.2.6:
   version "4.3.4"
   resolved "https://registry.yarnpkg.com/mqtt/-/mqtt-4.3.4.tgz#147b64192ef03f716628a8fe103092e26ebd2169"
   integrity sha512-yAVDfVHz3Cjn6K68z54mf7fTni/AWsPhiEsRwZSvet2wO47R6NFUn2psWxYIph2JxWtL3ZKa/da8pjJKSaXPdQ==
+  dependencies:
+    commist "^1.0.0"
+    concat-stream "^2.0.0"
+    debug "^4.1.1"
+    duplexify "^4.1.1"
+    help-me "^3.0.0"
+    inherits "^2.0.3"
+    lru-cache "^6.0.0"
+    minimist "^1.2.5"
+    mqtt-packet "^6.8.0"
+    number-allocator "^1.0.9"
+    pump "^3.0.0"
+    readable-stream "^3.6.0"
+    reinterval "^1.1.0"
+    rfdc "^1.3.0"
+    split2 "^3.1.0"
+    ws "^7.5.5"
+    xtend "^4.0.2"
+
+mqtt@^4.3.5:
+  version "4.3.6"
+  resolved "https://registry.yarnpkg.com/mqtt/-/mqtt-4.3.6.tgz#4d4aa66a09058ca0b764299b96b636d8da832d75"
+  integrity sha512-1dgQbkbh1Bba9iAGDNIrhSZ4nLDjbhmNHjOEvsmKI1Bb+2orj0gHwjqUKJ5CKUMKBYbkQYRM1fy+N1/2iZOj5w==
   dependencies:
     commist "^1.0.0"
     concat-stream "^2.0.0"
