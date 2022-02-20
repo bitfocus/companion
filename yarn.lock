@@ -3467,9 +3467,9 @@ commist@^1.0.0:
   version "1.0.4"
   resolved "https://codeload.github.com/bitfocus/companion-module-rationalacoustics-smaart3/tar.gz/108bd54a40617eeab63e2723d7ddcfbe3539aba8"
 
-"companion-module-renewedvision-propresenter@github:bitfocus/companion-module-renewedvision-propresenter#v2.5.1":
-  version "2.5.1"
-  resolved "https://codeload.github.com/bitfocus/companion-module-renewedvision-propresenter/tar.gz/5206f4ec25fbfeb40b6d0336b09c3fe356d94420"
+"companion-module-renewedvision-propresenter@github:bitfocus/companion-module-renewedvision-propresenter#v2.5.2":
+  version "2.5.2"
+  resolved "https://codeload.github.com/bitfocus/companion-module-renewedvision-propresenter/tar.gz/513dd650f339d20bdbbc694b36436d8ff6febea0"
   dependencies:
     websocket "^1.0.26"
 
