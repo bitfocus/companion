@@ -1277,7 +1277,7 @@ asar-node@^2.3.0:
   resolved "https://registry.yarnpkg.com/asar-node/-/asar-node-2.3.0.tgz#677bd17f246b697cc818f7941a1b172cb687080f"
   integrity sha512-LXku0buY70np5tXVpx9i1gw2l9U5GXq5JGZ6d/26DPaR7hUdsDPVQtnohkJ6wb0GOAnpRet7hHlqW9kQGeeLhg==
 
-asar@^3.0.3, asar@^3.1.0:
+asar@^3.0.3:
   version "3.1.0"
   resolved "https://registry.yarnpkg.com/asar/-/asar-3.1.0.tgz#70b0509449fe3daccc63beb4d3c7d2e24d3c6473"
   integrity sha512-vyxPxP5arcAqN4F/ebHd/HhwnAiZtwhglvdmc7BR2f0ywbVNTOpSeyhLDbGXtE/y58hv1oC75TaNIXutnsOZsQ==

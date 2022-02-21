@@ -52,7 +52,7 @@ export interface SetActionDefinitionsMessage {
 		id: string
 		name: string
 		description?: string
-		options: SomeEncodedCompanionInputField[] // TODO - versioned types?
+		options: SomeEncodedCompanionInputField[] // TODO module-lib - versioned types?
 	}>
 }
 
@@ -61,9 +61,9 @@ export interface SetFeedbackDefinitionsMessage {
 		id: string
 		name: string
 		description?: string
-		options: SomeEncodedCompanionInputField[] // TODO - versioned types?
+		options: SomeEncodedCompanionInputField[] // TODO module-lib - versioned types?
 		type: 'boolean' | 'advanced'
-		defaultStyle?: Partial<CompanionFeedbackButtonStyleResult> // TODO - better
+		defaultStyle?: Partial<CompanionFeedbackButtonStyleResult>
 	}>
 }
 

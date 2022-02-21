@@ -139,7 +139,6 @@
 	"author": "Bitfocus AS",
 	"license": "MIT",
 	"devDependencies": {
-		"asar": "^3.1.0",
 		"asar-node": "^2.3.0",
 		"aws-sdk": "^2.1058.0",
 		"cross-env": "^7.0.3",

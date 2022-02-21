@@ -87,8 +87,8 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 	 * Create an instance of the module.
 	 */
 	constructor(internal: unknown, id: string) {
-		const socket = internal as SocketIOClient.Socket // TODO - can this be safer?
-		if (!socket.connected || typeof id !== 'string')
+		const socket = internal as SocketIOClient.Socket
+		if (!(socket instanceof SocketIOClient.Socket) || !socket.connected || typeof id !== 'string')
 			throw new Error(
 				`Module instance is being constructed incorrectly. Make sure you aren't trying to do this manually`
 			)
@@ -179,8 +179,8 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 				if (definition?.unsubscribe) {
 					try {
 						definition.unsubscribe(convertFeedbackInstanceToEvent(definition.type, existing))
-					} catch (e) {
-						// TODO
+					} catch (e: any) {
+						console.error(`Feedback unsubscribe failed: ${JSON.stringify(existing)} - ${e?.message ?? e} ${e?.stack}`)
 					}
 				}
 			}
@@ -189,15 +189,15 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 				// Deleted
 				this.#feedbackInstances.delete(id)
 			} else {
-				// TODO - deep freeze the feedback to avoid mutation
+				// TODO module-lib - deep freeze the feedback to avoid mutation?
 				this.#feedbackInstances.set(id, feedback)
 
 				// Inserted or updated
 				if (definition?.subscribe) {
 					try {
 						definition.subscribe(convertFeedbackInstanceToEvent(definition.type, feedback))
-					} catch (e) {
-						// TODO
+					} catch (e: any) {
+						console.error(`Feedback subscribe failed: ${JSON.stringify(feedback)} - ${e?.message ?? e} ${e?.stack}`)
 					}
 				}
 
@@ -206,8 +206,8 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 					let value: boolean | Partial<CompanionFeedbackButtonStyleResult> | undefined
 					try {
 						value = callFeedbackOnDefinition(definition, feedback)
-					} catch (e) {
-						// TODO
+					} catch (e: any) {
+						console.error(`Feedback check failed: ${JSON.stringify(feedback)} - ${e?.message ?? e} ${e?.stack}`)
 					}
 					newValues.push({
 						id: id,
@@ -234,8 +234,8 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 				if (definition?.unsubscribe) {
 					try {
 						definition.unsubscribe(existing)
-					} catch (e) {
-						// TODO
+					} catch (e: any) {
+						console.error(`Action unsubscribe failed: ${JSON.stringify(existing)} - ${e?.message ?? e} ${e?.stack}`)
 					}
 				}
 			}
@@ -244,15 +244,15 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 				// Deleted
 				this.#actionInstances.delete(id)
 			} else {
-				// TODO - deep freeze the feedback to avoid mutation
+				// TODO module-lib - deep freeze the action to avoid mutation?
 				this.#actionInstances.set(id, action)
 
 				// Inserted or updated
 				if (definition?.subscribe) {
 					try {
 						definition.subscribe(action)
-					} catch (e) {
-						// TODO
+					} catch (e: any) {
+						console.error(`Action subscribe failed: ${JSON.stringify(action)} - ${e?.message ?? e} ${e?.stack}`)
 					}
 				}
 			}
@@ -423,18 +423,16 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 					continue
 				}
 
-				// Calculate the new value for the feedback
-				let value: boolean | Partial<CompanionFeedbackButtonStyleResult> | undefined
 				try {
-					value = callFeedbackOnDefinition(definition, feedback)
-				} catch (e) {
-					// TODO
+					// Calculate the new value for the feedback
+					newValues.push({
+						id: id,
+						controlId: feedback.controlId,
+						value: callFeedbackOnDefinition(definition, feedback),
+					})
+				} catch (e: any) {
+					console.error(`Feedback check failed: ${JSON.stringify(feedback)} - ${e?.message ?? e} ${e?.stack}`)
 				}
-				newValues.push({
-					id: id,
-					controlId: feedback.controlId,
-					value: value,
-				})
 			}
 		}
 
@@ -453,18 +451,16 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 			const feedback = this.#feedbackInstances.get(id)
 			const definition = feedback && this.#feedbackDefinitions.get(feedback.feedbackId)
 			if (feedback && definition) {
-				// Calculate the new value for the feedback
-				let value: boolean | Partial<CompanionFeedbackButtonStyleResult> | undefined
 				try {
-					value = callFeedbackOnDefinition(definition, feedback)
-				} catch (e) {
-					// TODO
+					// Calculate the new value for the feedback
+					newValues.push({
+						id: id,
+						controlId: feedback.controlId,
+						value: callFeedbackOnDefinition(definition, feedback),
+					})
+				} catch (e: any) {
+					console.error(`Feedback check failed: ${JSON.stringify(feedback)} - ${e?.message ?? e} ${e?.stack}`)
 				}
-				newValues.push({
-					id: id,
-					controlId: feedback.controlId,
-					value: value,
-				})
 			}
 		}
 

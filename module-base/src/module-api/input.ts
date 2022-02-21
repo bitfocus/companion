@@ -49,14 +49,12 @@ export interface CompanionInputFieldDropdown extends CompanionInputFieldDropdown
 
 	/** Allow custom values to be defined */
 	allowCustom?: boolean
-	/** Check custom value against refex */
+	/** Check custom value against regex */
 	regex?: string
 }
 export interface CompanionInputFieldMultiDropdown extends CompanionInputFieldDropdownBase {
 	multiple: true
 	default: ConfigValue[]
-
-	required?: boolean
 
 	/** The minimum number of selected values */
 	minSelection?: number

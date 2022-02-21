@@ -85,7 +85,7 @@ try {
 	if (!modulePath) throw new Error('Module initialise is missing MODULE_FILE')
 
 	const mod = await import(modulePath)
-	// TODO - support commonjs?
+	// TODO module-lib - support commonjs?
 
 	if (typeof mod === 'function') {
 		await runEntrypointInner(mod, pkgJson)

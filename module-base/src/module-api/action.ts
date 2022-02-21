@@ -16,7 +16,7 @@ export interface CompanionActionInfo {
 }
 
 export interface CompanionActionEvent extends CompanionActionInfo {
-	// TODO - the contents of this should be re-evaluated in v1
+	// Future: the contents of this should be re-evaluated in v1
 	/** @deprecated */
 	deviceId: string | undefined
 	/** @deprecated */

@@ -45,5 +45,5 @@ export interface ModuleManifest {
 
 /** Validate that a manifest looks correctly populated */
 export function validateManifest(manifest: ModuleManifest): void {
-	// TODO
+	// TODO module-lib
 }
