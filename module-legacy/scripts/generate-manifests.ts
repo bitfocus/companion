@@ -1,4 +1,5 @@
 import { fs, path } from 'zx'
+import parseAuthor from 'parse-author'
 
 import type { ModuleManifest, ModuleManifestMaintainer } from '@companion-module/base'
 
@@ -26,7 +27,30 @@ for (const folder of dirs) {
 		const pkgJsonStr = await fs.readFile(path.join(moduleDir, 'package.json'))
 		const pkgJson = JSON.parse(pkgJsonStr.toString())
 
-		const maintainers: ModuleManifestMaintainer[] = [] // TODO
+		const maintainers: ModuleManifestMaintainer[] = []
+
+		function tryParsePerson(person: any) {
+			try {
+				if (person) {
+					const rawAuthor = typeof person === 'string' ? parseAuthor(person) : person
+					if (rawAuthor.name) {
+						maintainers.push({
+							name: rawAuthor.name,
+							email: rawAuthor.email,
+						})
+					}
+				}
+			} catch (e) {
+				// Ignore
+			}
+		}
+
+		tryParsePerson(pkgJson.author)
+		if (Array.isArray(pkgJson.contributors)) {
+			for (const person of pkgJson.contributors) {
+				tryParsePerson(person)
+			}
+		}
 
 		const manifest: ModuleManifest = {
 			id: `bitfocus.${pkgJson.name}`,
