@@ -157,7 +157,7 @@
 		"tui-jsdoc-template": "^1.2.2"
 	},
 	"dependencies": {
-		"@elgato-stream-deck/node": "^5.2.0",
+		"@elgato-stream-deck/node": "^5.3.1",
 		"@estilles/expression-parser": "^1.0.0",
 		"@sentry/electron": "^2.5.4",
 		"app-root-path": "^3.0.0",
@@ -511,7 +511,7 @@
 		"url": "https://donorbox.org/bitfocus-opensource"
 	},
 	"optionalDependencies": {
-		"@julusian/jpeg-turbo": "^1.1.1"
+		"@julusian/jpeg-turbo": "^1.1.2"
 	},
 	"resolutions": {
 		"**/osc/serialport": "9.2.1",
