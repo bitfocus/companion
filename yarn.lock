@@ -338,10 +338,10 @@
   dependencies:
     eventemitter3 "^4.0.7"
 
-"@elgato-stream-deck/node@^5.2.0":
-  version "5.2.0"
-  resolved "https://registry.yarnpkg.com/@elgato-stream-deck/node/-/node-5.2.0.tgz#a3b474fbf571506a5eb7eb20945c68c0a6fdd1c1"
-  integrity sha512-+zROv19WvWNbeSOfluPXxo8c/Ej/cm6WEKo0vzpBVKRFjH60Q9Izwxa7366HtV8dvNJemyw7qxzlU41a/uA0yQ==
+"@elgato-stream-deck/node@^5.3.1":
+  version "5.3.1"
+  resolved "https://registry.yarnpkg.com/@elgato-stream-deck/node/-/node-5.3.1.tgz#62271471f56f7005720457662d32a1d51f6b4656"
+  integrity sha512-xcdI+NYcMKtV1WOjx7p1VezUChTubYjdb9nYeCpjCN2EqhbhPHfwGltW5nHiLpoz+aU6SHZnzAxGetUAX75dfw==
   dependencies:
     "@elgato-stream-deck/core" "5.2.0"
     jpeg-js "^0.4.2"
@@ -537,15 +537,15 @@
     "@types/yargs" "^16.0.0"
     chalk "^4.0.0"
 
-"@julusian/jpeg-turbo@^1.1.1":
-  version "1.1.1"
-  resolved "https://registry.yarnpkg.com/@julusian/jpeg-turbo/-/jpeg-turbo-1.1.1.tgz#9337e4d3b3fa360c93df2e4b21134f9a9f4a35b4"
-  integrity sha512-IO1KqXbR+Taded0BgAvIj/IPTXvSip8MhkZ0PDpHqxIi2YNGeQ8TodxAAW2MB8DThO4opHKq4Ngx2ybZWzGZQw==
+"@julusian/jpeg-turbo@^1.1.2":
+  version "1.1.2"
+  resolved "https://registry.yarnpkg.com/@julusian/jpeg-turbo/-/jpeg-turbo-1.1.2.tgz#1600cbad38aae420f6f63bc1d3e4f7208474a8a8"
+  integrity sha512-UrHKyNEJPyjVfvNg7Y6UbmkRKdTOVCPnXYBVF3A/F2wZT9f5NpS/uuuwxmSFvLvbsBWnyLTqE9GS8IkE21ue/Q==
   dependencies:
     bindings "^1.5.0"
-    cmake-js "^6.2.1"
+    cmake-js "^6.3.0"
     node-addon-api "^3.2.1"
-    prebuild-install "^6.1.3"
+    prebuild-install "^7.0.1"
 
 "@malept/cross-spawn-promise@^1.1.0":
   version "1.1.1"
@@ -1903,7 +1903,7 @@ clone-response@^1.0.2:
   dependencies:
     mimic-response "^1.0.0"
 
-cmake-js@^6.2.1:
+cmake-js@^6.3.0:
   version "6.3.0"
   resolved "https://registry.yarnpkg.com/cmake-js/-/cmake-js-6.3.0.tgz#ea9b5fd6789bf18dd02bdfec900bccc3fbe72af6"
   integrity sha512-1uqTOmFt6BIqKlrX+39/aewU/JVhyZWDqwAL+6psToUwxj3yWPJiwxiZFmV0XdcoWmqGs7peZTxTbJtAcH8hxw==
@@ -2331,6 +2331,11 @@ detect-libc@^1.0.3:
   version "1.0.3"
   resolved "https://registry.yarnpkg.com/detect-libc/-/detect-libc-1.0.3.tgz#fa137c4bd698edf55cd5cd02ac559f91a4c4ba9b"
   integrity sha1-+hN8S9aY7fVc1c0CrFWfkaTEups=
+
+detect-libc@^2.0.0:
+  version "2.0.1"
+  resolved "https://registry.yarnpkg.com/detect-libc/-/detect-libc-2.0.1.tgz#e1897aa88fa6ad197862937fbc0441ef352ee0cd"
+  integrity sha512-463v3ZeIrcWtdgIg6vI6XUncguvr2TnGl4SzDXinkt9mSLpBJKXT3mW6xT3VQdDN11+WVs29pgvivTc4Lp8v+w==
 
 detect-newline@^3.0.0:
   version "3.1.0"
@@ -4786,6 +4791,13 @@ node-abi@^2.21.0:
   dependencies:
     semver "^5.4.1"
 
+node-abi@^3.3.0:
+  version "3.8.0"
+  resolved "https://registry.yarnpkg.com/node-abi/-/node-abi-3.8.0.tgz#679957dc8e7aa47b0a02589dbfde4f77b29ccb32"
+  integrity sha512-tzua9qWWi7iW4I42vUPKM+SfaF0vQSLAm4yO5J83mSwB7GeoWrDKC/K+8YCnYNwqP5duwazbw2X9l4m8SC2cUw==
+  dependencies:
+    semver "^7.3.5"
+
 node-addon-api@^1.6.3:
   version "1.7.2"
   resolved "https://registry.yarnpkg.com/node-addon-api/-/node-addon-api-1.7.2.tgz#3df30b95720b53c24e59948b49532b662444f54d"
@@ -5211,7 +5223,7 @@ pngjs@^3.3.3:
   resolved "https://registry.yarnpkg.com/pngjs/-/pngjs-3.4.0.tgz#99ca7d725965fb655814eaf65f38f12bbdbf555f"
   integrity sha512-NCrCHhWmnQklfH4MtJMRjZ2a8c80qXeMlQMv2uVp9ISJMTt562SbGd6n2oq0PaPgKm7Z6pL9E2UlLIhC+SHL3w==
 
-prebuild-install@^6.0.0, prebuild-install@^6.0.1, prebuild-install@^6.1.2, prebuild-install@^6.1.3:
+prebuild-install@^6.0.0, prebuild-install@^6.0.1, prebuild-install@^6.1.2:
   version "6.1.4"
   resolved "https://registry.yarnpkg.com/prebuild-install/-/prebuild-install-6.1.4.tgz#ae3c0142ad611d58570b89af4986088a4937e00f"
   integrity sha512-Z4vpywnK1lBg+zdPCVCsKq0xO66eEV9rWo2zrROGGiRS4JtueBOdlB1FnY8lcy7JsUud/Q3ijUxyWN26Ika0vQ==
@@ -5227,6 +5239,25 @@ prebuild-install@^6.0.0, prebuild-install@^6.0.1, prebuild-install@^6.1.2, prebu
     pump "^3.0.0"
     rc "^1.2.7"
     simple-get "^3.0.3"
+    tar-fs "^2.0.0"
+    tunnel-agent "^0.6.0"
+
+prebuild-install@^7.0.1:
+  version "7.0.1"
+  resolved "https://registry.yarnpkg.com/prebuild-install/-/prebuild-install-7.0.1.tgz#c10075727c318efe72412f333e0ef625beaf3870"
+  integrity sha512-QBSab31WqkyxpnMWQxubYAHR5S9B2+r81ucocew34Fkl98FhvKIF50jIJnNOBmAZfyNV7vE5T6gd3hTVWgY6tg==
+  dependencies:
+    detect-libc "^2.0.0"
+    expand-template "^2.0.3"
+    github-from-package "0.0.0"
+    minimist "^1.2.3"
+    mkdirp-classic "^0.5.3"
+    napi-build-utils "^1.0.1"
+    node-abi "^3.3.0"
+    npmlog "^4.0.1"
+    pump "^3.0.0"
+    rc "^1.2.7"
+    simple-get "^4.0.0"
     tar-fs "^2.0.0"
     tunnel-agent "^0.6.0"
 
@@ -5813,6 +5844,15 @@ simple-get@^3.0.3, simple-get@^3.1.0:
   integrity sha512-bCR6cP+aTdScaQCnQKbPKtJOKDp/hj9EDLJo3Nw4y1QksqaovlW/bnptB6/c1e+qmNIDHRK+oXFDdEqBT8WzUA==
   dependencies:
     decompress-response "^4.2.0"
+    once "^1.3.1"
+    simple-concat "^1.0.0"
+
+simple-get@^4.0.0:
+  version "4.0.1"
+  resolved "https://registry.yarnpkg.com/simple-get/-/simple-get-4.0.1.tgz#4a39db549287c979d352112fa03fd99fd6bc3543"
+  integrity sha512-brv7p5WgH0jmQJr1ZDDfKDOSeWWg+OVypG99A/5vYGPqJ6pxiaHLy8nxtFjBA7oMa01ebA9gfh1uMCFqOuXxvA==
+  dependencies:
+    decompress-response "^6.0.0"
     once "^1.3.1"
     simple-concat "^1.0.0"
 

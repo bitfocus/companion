@@ -93,8 +93,9 @@
 		]
 	},
 	"scripts": {
-		"prod": "yarn build:writefile && electron .",
-		"dev": "yarn build:writefile && cross-env DEVELOPER=1 electron .",
+		"dev": "yarn build:writefile && cross-env DEVELOPER=1 nodemon --ignore './webui/' headless.js",
+		"dev-headless": "yarn dev",
+		"dev-electron": "yarn build:writefile && cross-env DEVELOPER=1 electron .",
 		"update": "./tools/update.sh",
 		"pack": "electron-builder --dir",
 		"dist:webui": "yarn --cwd webui build",
@@ -116,7 +117,6 @@
 		"test": "jest",
 		"postinstall": "yarn build:writefile",
 		"headless": "nodemon --ignore './webui/' headless.js",
-		"dev-headless": "yarn build:writefile && cross-env DEVELOPER=1 nodemon --ignore './webui/' headless.js",
 		"dev-webui": "yarn --cwd webui dev",
 		"format": "prettier --write .",
 		"jsdoc": "jsdoc -c jsdoc.json",
@@ -157,7 +157,7 @@
 		"typescript": "~4.5"
 	},
 	"dependencies": {
-		"@elgato-stream-deck/node": "^5.2.0",
+		"@elgato-stream-deck/node": "^5.3.1",
 		"@estilles/expression-parser": "^1.0.0",
 		"@sentry/electron": "^2.5.4",
 		"app-root-path": "^3.0.0",
@@ -196,7 +196,7 @@
 		"url": "https://donorbox.org/bitfocus-opensource"
 	},
 	"optionalDependencies": {
-		"@julusian/jpeg-turbo": "^1.1.1"
+		"@julusian/jpeg-turbo": "^1.1.2"
 	},
 	"resolutions": {
 		"**/osc/serialport": "9.2.1",
