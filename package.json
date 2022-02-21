@@ -488,7 +488,7 @@
 		"companion-module-zenvideo-ndirouter": "github:bitfocus/companion-module-zenvideo-ndirouter#v1.0.2",
 		"debug": "^4.3.3",
 		"elgato-stream-deck": "^4.1.0",
-		"emberplus-connection": "^0.0.4",
+		"emberplus-connection": "^0.1.2",
 		"express": "^4.17.2",
 		"express-serve-zip": "^1.0.1",
 		"find-process": "1.4.7",
