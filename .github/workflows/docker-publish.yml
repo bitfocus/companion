@@ -43,6 +43,8 @@ jobs:
 
           # Use Docker `latest` tag convention
           [ "$VERSION" == "master" ] && VERSION=latest
+          [ "$VERSION" == "beta" ] && VERSION=beta
+          [ "$VERSION" == "develop" ] && VERSION=develop
 
           IMAGES=
           IMAGES="$IMAGE_ID:$VERSION"$'\n'$IMAGES
