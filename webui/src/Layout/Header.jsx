@@ -1,8 +1,9 @@
 import React, { useContext, useEffect, useState } from 'react'
 import { CHeader, CHeaderBrand, CHeaderNavItem, CHeaderNav, CHeaderNavLink, CToggler } from '@coreui/react'
 import { StaticContext } from '../util'
-
-export function MyHeader({ toggleSidebar }) {
+import { faLock } from '@fortawesome/free-solid-svg-icons'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+export function MyHeader({ toggleSidebar, canLock, setLocked }) {
 	const context = useContext(StaticContext)
 
 	const [versionInfo, setVersionInfo] = useState(null)
@@ -43,6 +44,18 @@ export function MyHeader({ toggleSidebar }) {
 					</CHeaderNavLink>
 				</CHeaderNavItem>
 			</CHeaderNav>
+
+			{canLock ? (
+				<CHeaderNav className="ml-auto header-right">
+					<CHeaderNavItem>
+						<CHeaderNavLink onClick={setLocked} title="Lock Admin UI">
+							<FontAwesomeIcon icon={faLock} />
+						</CHeaderNavLink>
+					</CHeaderNavItem>
+				</CHeaderNav>
+			) : (
+				''
+			)}
 		</CHeader>
 	)
 }

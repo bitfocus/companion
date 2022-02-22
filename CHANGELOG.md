@@ -44,8 +44,9 @@
 
 - Arkaos Mediamaster
 - Allen & Heath AHM
-- Allen & Heath Avantis?
+- Allen & Heath Avantis
 - Axis PTZ
+- Barco Clickshare
 - Biamp Audia
 - Bitfocus Snapshot
 - Blackmagic Audio Monitor
@@ -62,13 +63,19 @@
 - ClassX Liveboard
 - Connect Webcaster
 - Ctpsystems dio8008r
+- Cyp HDMI Matrix
+- Dataprobe iBoot PDU
 - Dcc Ex Command Station
+- Digital Loggers Power Controller
 - Extron XTP 3200
 - Generic Websocket
 - Generic SWP08
 - Haivision KBencoder
 - Hermann StageTimerIO
 - Ifelseware avkey
+- Iiyama Prolite
+- Intelix INT-HDX
+- ioversal Vertex
 - IPL OCP
 - Imagine LRC
 - Kiloview NDI
@@ -86,24 +93,29 @@
 - Novastar H-Series
 - Phillips Hue
 - Rocosoft PtzJoy
+- RossVideo Video Server
 - Seervision Suite
 - Shure MXA910
 - Shure MXN5
 - Shure P300
 - Shure SCM820
-- Softon Movie Recorder
+- Skaarhoj Raw Panel
 - Softouch EasyWorship
+- Softron MovieRecorder
 - Sony Broadcast Monitor
 - Spotify Remote
 - SPX GC
 - Symetrix DSP
 - Tally-MA Wireless Tally
+- Teradek VidiU X
 - Tesmart HDMI Matrix
+- TPLink Kasa Smart Blub
 - TVOne Corio
 - Tow MixEffect
 - Visual Productions Cuety
 - VDO Ninja
 - Vistream Online
+- vystem Platform
 
 ### 👍🏻 MODULE IMPROVEMENTS
 
@@ -113,19 +125,23 @@ Many of our modules have had various new features and bugfixes since our last pu
 - Allean & Heath SQ
 - AJA Ki Pro
 - AJA Kumo
+- Analog Way Aquilon Line
 - Audivero Unity Intercom Client
 - Avolites Titan
 - Barco Eventmaster
 - Behringer X32/M32
 - Behringer XAir
 - Behringer Wing
+- Birddog Studio
 - Birddog VISCA
 - Bitfocus Companion
 - Blackmagic ATEM
 - Blackmagic Hyperdeck
 - Chamsys MagicQ OSC
+- Christie Projector
 - Cisco CMS
 - Dataton Watchout
+- Depili Clock-8001
 - Dolby Cinema Processor
 - Elgato Keylight
 - Epiphan Pearl
@@ -153,12 +169,14 @@ Many of our modules have had various new features and bugfixes since our last pu
 - OBS Studio
 - OpenLP HTTP
 - Panasonic AVHS
+- Panasonic Camera Controller
 - Panasonic Projector
 - Panasonic PTZ
 - Presentation tools APS
 - Presentation tools Cuetimer
 - Prsi iPower
 - Resolume Arena
+- Renewed Vision ProPresenter
 - Renewed Vision PVP
 - Roku TV
 - Roland M5000
@@ -169,14 +187,18 @@ Many of our modules have had various new features and bugfixes since our last pu
 - Shure Wireless
 - Singular Live Studio
 - Soundcraft UI
-- Studiocoast Vmix
+- Studiocoast vMix
+- Tech Ministry Tally Arbiter
 - Teradek Vidiu
 - ThingM Blink(1)
+- TSL Products UMD
+- Twitch API
 - Ubiquiti Unifi
 - Vicreo Hotkey
 - Vicreo Variable Listener
 - Videolan VLC
 - Vizio smartcast
+- Yamaha RCP
 - Youtube Live
 
 ## Companion v2.1.4 - Release Notes

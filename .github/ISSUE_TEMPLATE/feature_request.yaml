@@ -10,7 +10,7 @@ body:
         https://github.com/bitfocus/companion-module-requests/issues/new
   - type: checkboxes
     attributes:
-      label: Is this a feature relevant to comapnion itself, and not a module?
+      label: Is this a feature relevant to companion itself, and not a module?
       description: If you wish to request a feature in a module, please do so against the correct repository found at https://github.com/bitfocus?type=source
       options:
         - label: I believe this to be a feature for companion, not a module

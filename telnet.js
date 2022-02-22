@@ -187,10 +187,9 @@ telnetStreamer.prototype.write = telnetStreamer.prototype.send = function (messa
 	}
 }
 
-telnetStreamer.prototype.connect = function (port, host, options) {
+telnetStreamer.prototype.connect = function () {
 	var self = this
 
-	options = options || {}
 	if (self.trying) {
 		return
 	}

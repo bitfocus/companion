@@ -4,15 +4,12 @@ on: [push]
 jobs:
   linux64:
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        node-version: [14.x]
     steps:
       - uses: actions/checkout@v1
-      - name: Use Node.js ${{ matrix.node-version }}
-        uses: actions/setup-node@v1
+      - name: Use Node.js
+        uses: actions/setup-node@v2
         with:
-          node-version: ${{ matrix.node-version }}
+          node-version-file: '.node-version'
       - name: yarn update and lindist
         run: |
           yarn update
@@ -41,19 +38,19 @@ jobs:
 
   osx:
     runs-on: macos-latest
-    strategy:
-      matrix:
-        node-version: [14.x]
     steps:
       - uses: actions/checkout@v1
-      - name: Use Node.js ${{ matrix.node-version }}
-        uses: actions/setup-node@v1
+      - name: Use Node.js
+        uses: actions/setup-node@v2
         with:
-          node-version: ${{ matrix.node-version }}
+          node-version-file: '.node-version'
       - name: yarn update and macdist
         run: |
           # try and avoid timeout errors
           yarn config set network-timeout 100000 -g
+
+          # these files upset electron-builder
+          rm .node-version .nvmrc
 
           yarn update
           yarn build:rebuild_modules
@@ -81,19 +78,19 @@ jobs:
 
   osx-arm64:
     runs-on: macos-11
-    strategy:
-      matrix:
-        node-version: [14.x]
     steps:
       - uses: actions/checkout@v1
-      - name: Use Node.js ${{ matrix.node-version }}
-        uses: actions/setup-node@v1
+      - name: Use Node.js
+        uses: actions/setup-node@v2
         with:
-          node-version: ${{ matrix.node-version }}
+          node-version-file: '.node-version'
       - name: yarn update and macarmdist
         run: |
           # try and avoid timeout errors
           yarn config set network-timeout 100000 -g
+
+          # these files upset electron-builder
+          rm .node-version .nvmrc
 
           yarn update
           yarn build:rebuild_modules
@@ -121,16 +118,14 @@ jobs:
 
   win64:
     runs-on: windows-latest
-    strategy:
-      matrix:
-        node-version: [14.x]
     steps:
       - uses: actions/checkout@v1
-      - name: Use Node.js ${{ matrix.node-version }}
-        uses: actions/setup-node@v1
+      - name: Use Node.js
+        uses: actions/setup-node@v2
         with:
-          node-version: ${{ matrix.node-version }}
+          node-version-file: '.node-version'
       - name: yarn update and windist
+        shell: bash
         run: |
           # This fixes it somehow, and without it we get no logs from any shell scripts which are run
           yarn config set script-shell bash

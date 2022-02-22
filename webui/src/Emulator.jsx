@@ -108,7 +108,7 @@ export function Emulator() {
 		}
 	})
 
-	const [wasDown, setWasDown] = useState(null)
+	const [keyDown, setKeyDown] = useState(null)
 
 	// Register mousedown handler
 	useEffect(() => {
@@ -122,8 +122,7 @@ export function Emulator() {
 						e.offsetY < canvasButtonPositions[key][1] + 72
 					) {
 						e.preventDefault()
-						socket.emit('emul_down', key)
-						setWasDown(key)
+						setKeyDown(key)
 					}
 				}
 			}
@@ -133,19 +132,21 @@ export function Emulator() {
 				ref.removeEventListener('mousedown', onMouseDown)
 			}
 		}
-	}, [ref, socket])
+	}, [ref])
 
 	// Register key handlers
 	useEffect(() => {
 		const onKeyDown = (e) => {
 			if (keymap[e.keyCode] !== undefined) {
 				socket.emit('emul_down', keymap[e.keyCode])
+				console.log('emul_down', keymap[e.keyCode])
 			}
 		}
 
 		const onKeyUp = (e) => {
 			if (keymap[e.keyCode] !== undefined) {
 				socket.emit('emul_up', keymap[e.keyCode])
+				console.log('emul_up', keymap[e.keyCode])
 			}
 		}
 
@@ -159,19 +160,31 @@ export function Emulator() {
 	}, [socket, keymap])
 
 	useEffect(() => {
-		const onMouseUp = (e) => {
-			if (wasDown !== null) {
-				socket.emit('emul_up', wasDown)
-				console.log('wasDown', wasDown)
+		// handle changes to keyDown, as it isnt safe to do inside setState
+		if (keyDown) {
+			socket.emit('emul_down', keyDown)
+			console.log('emul_down', keyDown)
+
+			return () => {
+				socket.emit('emul_up', keyDown)
+				console.log('emul_up', keyDown)
 			}
+		}
+	}, [socket, keyDown])
+
+	useEffect(() => {
+		const onMouseUp = (e) => {
+			e.preventDefault()
+			setKeyDown(null)
 		}
 
 		document.body.addEventListener('mouseup', onMouseUp)
 
 		return () => {
 			document.body.removeEventListener('mouseup', onMouseUp)
+			setKeyDown(null)
 		}
-	}, [socket, wasDown])
+	}, [])
 
 	const onRefChange = useCallback(
 		(node) => {
@@ -207,7 +220,7 @@ export function Emulator() {
 								Use <b>1 2 3 4 5 6 7 8</b>, <b>Q W E R T Y U I</b>, <b>A S D F G H J K</b> <b>Z X C V B N M ,</b> to
 								control this surface with your keyboard!
 								<br />
-								A logitec R400/Mastercue/dSan will send a button press to button; 2 (Back), 3 (forward), 4 (black) and
+								A Logitech R400/Mastercue/DSan will send a button press to button; 2 (Back), 3 (forward), 4 (black) and
 								for logitec: 10/11 (Start and stop) on each page.
 								<br />
 								You need to enable these extra options in the Settings tab first!

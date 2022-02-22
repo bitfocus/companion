@@ -445,7 +445,7 @@ export function AddFeedbackDropdown({ onSelect, booleanOnly }) {
 	const options = useMemo(() => {
 		const options = []
 		for (const [instanceId, instanceFeedbacks] of Object.entries(feedbacksContext)) {
-			for (const [feedbackId, feedback] of Object.entries(instanceFeedbacks)) {
+			for (const [feedbackId, feedback] of Object.entries(instanceFeedbacks || {})) {
 				if (!booleanOnly || feedback.type === 'boolean') {
 					const instanceLabel = instancesContext[instanceId]?.label ?? instanceId
 					options.push({ value: `${instanceId}:${feedbackId}`, label: `${instanceLabel}: ${feedback.label}` })
