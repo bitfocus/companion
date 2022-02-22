@@ -18,7 +18,7 @@ jobs:
           # verify that every module is runnable
           node tools/verify-module-build.mjs .
 
-          node tools/build_sentry.mjs
+          yarn build:sentry
 
           yarn run lindist
 
@@ -62,7 +62,7 @@ jobs:
           # verify that every module is runnable
           node tools/verify-module-build.mjs .
 
-          node tools/build_sentry.mjs
+          yarn build:sentry
 
           yarn run macdist
 
@@ -105,7 +105,7 @@ jobs:
           # verify that every module is runnable
           node tools/verify-module-build.mjs .
 
-          node tools/build_sentry.mjs
+          yarn build:sentry
 
           yarn run macarmdist
 
@@ -146,7 +146,7 @@ jobs:
           # verify that every module is runnable
           node tools/verify-module-build.mjs .
 
-          node tools/build_sentry.mjs
+          yarn build:sentry
 
           yarn run windist
 
