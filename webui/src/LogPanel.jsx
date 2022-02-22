@@ -3,6 +3,8 @@ import { CButton, CButtonGroup, CCol, CRow } from '@coreui/react'
 import { StaticContext } from './util'
 import shortid from 'shortid'
 import dayjs from 'dayjs'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faFileExport } from '@fortawesome/free-solid-svg-icons'
 
 export const LogPanel = memo(function LogPanel() {
 	const context = useContext(StaticContext)
@@ -70,15 +72,22 @@ export const LogPanel = memo(function LogPanel() {
 						</CButton>
 					</CButtonGroup>
 
-					<CButton
-						color="danger"
-						size="sm"
-						className="float-right"
-						onClick={doClearLog}
-						style={{ opacity: history.length > 0 ? 1 : 0.2 }}
-					>
-						Clear log
-					</CButton>
+					<div className="float-right">
+						<CButton color="danger" size="sm" onClick={doClearLog} style={{ opacity: history.length > 0 ? 1 : 0.2 }}>
+							Clear log
+						</CButton>
+						<CButton
+							color="light"
+							style={{
+								marginLeft: 10,
+							}}
+							size="sm"
+							href={`/int/log_export`}
+							target="_new"
+						>
+							<FontAwesomeIcon icon={faFileExport} /> Export log
+						</CButton>
+					</div>
 				</CCol>
 			</CRow>
 

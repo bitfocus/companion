@@ -24,9 +24,7 @@ function heading() {
 
 if [ "$MANAGE_NODE_VERSION" ]; then 
 	# if enabled, then setup n and ensure that the correct version is in use
-	TARGET_VERSION=$(node -p -e "require('./package.json').managed_node_version")
-
-	n install $TARGET_VERSION
+	n install auto
 	n prune
 fi
 

@@ -79,6 +79,7 @@
 			"assets/trayTemplate.png",
 			"assets/trayTemplate@2x.png",
 			"!webui/**/*",
+			"!docs/**/*",
 			"!font/*",
 			"!tools/*",
 			"!*.md",
@@ -87,8 +88,12 @@
 		],
 		"extraResources": [
 			{
-				"from": "webui/build",
-				"to": "static"
+				"from": "bundle-webui.zip",
+				"to": "webui.zip"
+			},
+			{
+				"from": "bundle-docs.zip",
+				"to": "docs.zip"
 			}
 		]
 	},
@@ -99,23 +104,15 @@
 		"update": "./tools/update.sh",
 		"pack": "electron-builder --dir",
 		"dist:webui": "yarn --cwd webui build",
-		"dist:prepare": "yarn build:writefile ; rm -rf electron-output && yarn dist:webui",
-		"dist": "yarn dist:prepare && yarn electron-rebuild && electron-builder",
+		"dist": "zx ./tools/build_electron.mjs",
 		"electron-rebuild": "yarn dist:prepare:sharp && electron-builder install-app-deps",
-		"testprod": "./node_modules/electron/cli.js .",
-		"macdist": "yarn dist:prepare && yarn dist:prepare:mac-x64 && electron-builder --publish=never  --x64 --mac",
-		"macarmdist": "yarn dist:prepare && yarn dist:prepare:mac-arm64 && electron-builder --publish=never  --arm64 --mac",
-		"windist": "yarn dist:prepare && yarn dist:prepare:win && electron-builder --publish=never  --x64 --win",
-		"lindist": "yarn dist:prepare && yarn dist:prepare:linux && electron-builder --publish=never  --x64 --linux",
-		"rpidist": "yarn dist:prepare && yarn dist:prepare:rpi && electron-builder --publish=never  --armv7l --linux",
+		"macdist": "yarn dist mac-x64",
+		"macarmdist": "yarn dist mac-arm64",
+		"windist": "yarn dist win-x64",
+		"lindist": "yarn dist linux-x64",
+		"rpidist": "yarn dist linux-arm7",
 		"dist:prepare:sharp": "cd node_modules/sharp && rimraf vendor && node install/libvips && node install/dll-copy",
-		"dist:prepare:win": "cross-env npm_config_platform=win32 npm_config_arch=x64 yarn dist:prepare:sharp",
-		"dist:prepare:mac-x64": "cross-env npm_config_platform=darwin npm_config_arch=x64 yarn dist:prepare:sharp",
-		"dist:prepare:mac-arm64": "cross-env npm_config_platform=darwin npm_config_arch=arm64 yarn dist:prepare:sharp",
-		"dist:prepare:linux": "cross-env npm_config_platform=linux npm_config_arch=x64 yarn dist:prepare:sharp",
-		"dist:prepare:rpi": "cross-env npm_config_platform=linux npm_config_arch=arm yarn dist:prepare:sharp",
 		"test": "jest",
-		"postinstall": "yarn build:writefile",
 		"headless": "nodemon --ignore './webui/' headless.js",
 		"dev-webui": "yarn --cwd webui dev",
 		"format": "prettier --write .",
@@ -123,7 +120,7 @@
 		"build:writefile": "zx ./tools/build_writefile.mjs",
 		"build:rename_upload": "zx ./tools/build_rename_upload.mjs",
 		"build:rebuild_modules": "zx ./tools/build_modules.mjs",
-		"update-modules": "zx ./tools/update_modules.mjs"
+		"module:bulk": "zx ./tools/module_bulk.mjs"
 	},
 	"repository": "https://github.com/bitfocus/companion",
 	"keywords": [
@@ -133,9 +130,8 @@
 	"engines": {
 		"npm": "please-use-yarn",
 		"yarn": "^1.22",
-		"node": "^14.16"
+		"node": "^14.17"
 	},
-	"managed_node_version": "14",
 	"author": "Bitfocus AS",
 	"license": "MIT",
 	"devDependencies": {
@@ -161,10 +157,12 @@
 		"@estilles/expression-parser": "^1.0.0",
 		"@sentry/electron": "^2.5.4",
 		"app-root-path": "^3.0.0",
+		"archiver": "^5.3.0",
 		"debug": "^4.3.3",
 		"electron-store": "^8.0.1",
 		"emberplus-connection": "^0.0.4",
 		"express": "^4.17.2",
+		"express-serve-zip": "^1.0.1",
 		"find-process": "1.4.7",
 		"fs-extra": "^10.0.0",
 		"get-port": "^5.1.1",

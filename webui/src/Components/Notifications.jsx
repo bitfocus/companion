@@ -5,28 +5,34 @@ import shortid from 'shortid'
 export const NotificationsManager = forwardRef(function NotificationsManager(_props, ref) {
 	const [toasts, setToasts] = useState([])
 
-	const doPruneToastId = useCallback((id, duration) => {
-		setTimeout(() => {
-			// now prune them
-			setToasts((oldToasts) => oldToasts.filter((t) => t.id !== id))
-		}, 3000 + duration)
+	const doPruneToastIdInner = useCallback((id) => {
+		setToasts((oldToasts) => oldToasts.filter((t) => t.id !== id))
 	}, [])
+	const doPruneToastId = useCallback(
+		(id, duration) => {
+			setTimeout(() => {
+				// now prune them
+				doPruneToastIdInner(id)
+			}, 3000 + duration)
+		},
+		[doPruneToastIdInner]
+	)
 	const doDisposeToastId = useCallback(
 		(id) => {
 			// hide them
 			setToasts((oldToasts) => oldToasts.map((t) => (t.id === id ? { ...t, autohide: 1 } : t)))
 
-			doPruneToastId(id, 0)
+			doPruneToastIdInner(id)
 		},
-		[doPruneToastId]
+		[doPruneToastIdInner]
 	)
 
 	// Expose reload to the parent
 	useImperativeHandle(
 		ref,
 		() => ({
-			show(title, message, duration) {
-				const id = shortid()
+			show(title, message, duration, stickyId) {
+				const id = stickyId ?? shortid()
 
 				const autohide = duration === null ? undefined : duration ?? 10000
 				if (typeof autohide === 'number') {
@@ -34,7 +40,7 @@ export const NotificationsManager = forwardRef(function NotificationsManager(_pr
 				}
 
 				setToasts((oldToasts) => [
-					...oldToasts,
+					...oldToasts.filter((t) => t.id !== id),
 					{
 						id: id,
 						message: message ?? title,

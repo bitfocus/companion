@@ -3,8 +3,6 @@ import { CButton } from '@coreui/react'
 import { StaticContext } from '../util'
 import dayjs from 'dayjs'
 import { TriggerEditModal } from './EditModal'
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faFileExport } from '@fortawesome/free-solid-svg-icons'
 
 export const Triggers = memo(function Triggers() {
 	const context = useContext(StaticContext)
@@ -83,7 +81,7 @@ export const Triggers = memo(function Triggers() {
 				Add New Trigger
 			</CButton>
 
-			<CButton
+			{/* <CButton
 				color="light"
 				style={{
 					marginLeft: 10,
@@ -92,7 +90,7 @@ export const Triggers = memo(function Triggers() {
 				target="_new"
 			>
 				<FontAwesomeIcon icon={faFileExport} /> Export all
-			</CButton>
+			</CButton> */}
 		</div>
 	)
 })
@@ -175,9 +173,9 @@ function TriggersTableRow({ item, replaceItem, editItem }) {
 				<CButton size="sm" color="warning" onClick={doClone}>
 					clone
 				</CButton>
-				<CButton size="sm" color="light" href={`/int/trigger_export/${item.id}`} target="_new">
+				{/* <CButton size="sm" color="light" href={`/int/trigger_export/${item.id}`} target="_new">
 					export
-				</CButton>
+				</CButton> */}
 			</td>
 		</tr>
 	)
