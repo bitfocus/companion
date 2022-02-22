@@ -15,6 +15,7 @@ RUN apt-get update && apt-get install -y \
     && rm -rf /var/lib/apt/lists/*
 
 # Install dependencies
+RUN yarn config set network-timeout 100000 -g
 RUN ./tools/yarn.sh
 
 # Generate version number file
