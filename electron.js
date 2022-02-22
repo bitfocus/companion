@@ -34,7 +34,7 @@ try {
 		.toString()
 		.trim()
 } catch (e) {
-	console.log('Sentry DSN not located.  Error reporting is disabled.')
+	console.log('Sentry DSN not located')
 }
 
 if (process.env.DEVELOPER === undefined && sentryDsn) {
