@@ -6,7 +6,6 @@ on:
       - master
       - beta
       - develop
-      - wip/docker-test
     tags:
       - v*
 
@@ -38,8 +37,6 @@ jobs:
           # Use Docker `latest` tag convention
           [ "$VERSION" == "master" ] && VERSION=latest
           
-          VERSION=test
-
           IMAGES=
           IMAGES="$IMAGE_ID:$VERSION"$'\n'$IMAGES
 
