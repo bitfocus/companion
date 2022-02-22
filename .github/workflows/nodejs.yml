@@ -15,6 +15,8 @@ jobs:
           yarn update
           yarn build:rebuild_modules
 
+          node tools/build_sentry.mjs
+
           # verify that every module is runnable
           node tools/verify-module-build.mjs .
 
@@ -28,6 +30,8 @@ jobs:
           VERSION=$(node -e "console.log(require('../package.json').version)")
           mv linux-unpacked companion-$VERSION
           tar -cvzf companion-$VERSION.tar.gz companion-$VERSION
+        env:
+          SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
       - name: rename and upload stuff
         run: yarn build:rename_upload
         env:
@@ -55,6 +59,8 @@ jobs:
           yarn update
           yarn build:rebuild_modules
 
+          node tools/build_sentry.mjs
+
           # verify that every module is runnable
           node tools/verify-module-build.mjs .
 
@@ -67,6 +73,7 @@ jobs:
           CSC_KEY_PASSWORD: ${{ secrets.OSX_CSC_KEY_PASSWORD }}
           APPLEID: ${{ secrets.APPLEID }}
           APPLEIDPASS: ${{ secrets.APPLEIDPASS }}
+          SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
       - name: rename and upload stuff
         run: yarn build:rename_upload
         env:
@@ -95,6 +102,8 @@ jobs:
           yarn update
           yarn build:rebuild_modules
 
+          node tools/build_sentry.mjs
+
           # verify that every module is runnable
           node tools/verify-module-build.mjs .
 
@@ -107,6 +116,7 @@ jobs:
           CSC_KEY_PASSWORD: ${{ secrets.OSX_CSC_KEY_PASSWORD }}
           APPLEID: ${{ secrets.APPLEID }}
           APPLEIDPASS: ${{ secrets.APPLEIDPASS }}
+          SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
       - name: rename and upload stuff
         run: yarn build:rename_upload
         env:
@@ -133,6 +143,8 @@ jobs:
           yarn update
           yarn build:rebuild_modules
 
+          node tools/build_sentry.mjs
+
           # verify that every module is runnable
           node tools/verify-module-build.mjs .
 
@@ -143,6 +155,7 @@ jobs:
         env:
           CSC_LINK: ${{ secrets.CSC_LINK }}
           CSC_KEY_PASSWORD: ${{ secrets.CSC_KEY_PASSWORD }}
+          SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
       - name: rename and upload stuff
         run: yarn build:rename_upload
         env:
