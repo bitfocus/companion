@@ -15,10 +15,10 @@ jobs:
           yarn update
           yarn build:rebuild_modules
 
-          node tools/build_sentry.mjs
-
           # verify that every module is runnable
           node tools/verify-module-build.mjs .
+
+          node tools/build_sentry.mjs
 
           yarn run lindist
 
@@ -59,10 +59,10 @@ jobs:
           yarn update
           yarn build:rebuild_modules
 
-          node tools/build_sentry.mjs
-
           # verify that every module is runnable
           node tools/verify-module-build.mjs .
+
+          node tools/build_sentry.mjs
 
           yarn run macdist
 
@@ -102,10 +102,10 @@ jobs:
           yarn update
           yarn build:rebuild_modules
 
-          node tools/build_sentry.mjs
-
           # verify that every module is runnable
           node tools/verify-module-build.mjs .
+
+          node tools/build_sentry.mjs
 
           yarn run macarmdist
 
@@ -143,10 +143,10 @@ jobs:
           yarn update
           yarn build:rebuild_modules
 
-          node tools/build_sentry.mjs
-
           # verify that every module is runnable
           node tools/verify-module-build.mjs .
+
+          node tools/build_sentry.mjs
 
           yarn run windist
 
