@@ -3741,9 +3741,9 @@ commist@^1.0.0:
   dependencies:
     request "^2.88.0"
 
-"companion-module-teradek-vidiux@github:bitfocus/companion-module-teradek-vidiux#v1.0.0":
-  version "1.0.0"
-  resolved "https://codeload.github.com/bitfocus/companion-module-teradek-vidiux/tar.gz/512410461154024b4ed5fd3482d6223b56dc8b76"
+"companion-module-teradek-vidiux@github:bitfocus/companion-module-teradek-vidiux#v1.0.1":
+  version "1.0.1"
+  resolved "https://codeload.github.com/bitfocus/companion-module-teradek-vidiux/tar.gz/abb7e68aac7f0914f2802deddf78beb21e108b90"
   dependencies:
     mqtt "^4.3.5"
 
