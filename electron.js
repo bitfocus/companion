@@ -37,7 +37,7 @@ try {
 	console.log('Sentry DSN not located.  Error reporting is disabled.')
 }
 
-if (process.env.DEVELOPER === undefined && sentryDsn !== '') {
+if (process.env.DEVELOPER === undefined && sentryDsn) {
 	console.log('Configuring sentry error reporting')
 	init({
 		dsn: sentryDsn,
