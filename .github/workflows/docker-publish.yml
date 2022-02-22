@@ -6,6 +6,7 @@ on:
       - master
       - beta
       - develop
+      - '*'
     tags:
       - v*
 
@@ -19,13 +20,6 @@ jobs:
 
     steps:
       - uses: actions/checkout@v2
-
-      - name: Login to registry
-        uses: docker/login-action@v1
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Determine target image name
         id: image-name
@@ -43,8 +37,8 @@ jobs:
 
           # Use Docker `latest` tag convention
           [ "$VERSION" == "master" ] && VERSION=latest
-          [ "$VERSION" == "beta" ] && VERSION=beta
-          [ "$VERSION" == "develop" ] && VERSION=develop
+          
+          VERSION=test
 
           IMAGES=
           IMAGES="$IMAGE_ID:$VERSION"$'\n'$IMAGES
@@ -52,6 +46,22 @@ jobs:
           # debug output
           echo images $IMAGES
           echo ::set-output name=images::"$IMAGES"
+
+      - name: Set up QEMU
+        if: ${{ steps.image-name.outputs.images }}
+        uses: docker/setup-qemu-action@v1
+        
+      - name: Set up Docker Buildx
+        if: ${{ steps.image-name.outputs.images }}
+        uses: docker/setup-buildx-action@v1
+
+      - name: Login to registry
+        if: ${{ steps.image-name.outputs.images }}
+        uses: docker/login-action@v1
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build and push
         uses: docker/build-push-action@v2
