@@ -37,7 +37,7 @@ try {
 	console.log('Sentry DSN not located')
 }
 
-if (process.env.DEVELOPER === undefined && sentryDsn) {
+if (process.env.DEVELOPER === undefined && sentryDsn && sentryDsn.substring(0,8) == 'https://') {
 	console.log('Configuring sentry error reporting')
 	init({
 		dsn: sentryDsn,
