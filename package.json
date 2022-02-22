@@ -324,6 +324,7 @@
 		"companion-module-irisdown-remoteshowcontrol": "github:bitfocus/companion-module-irisdown-remoteshowcontrol#v1.0.4",
 		"companion-module-jamesholt-x32tc": "github:bitfocus/companion-module-jamesholt-x32tc#v1.0.8",
 		"companion-module-joy-playdeck": "github:bitfocus/companion-module-joy-playdeck#v1.0.2",
+		"companion-module-jozeemedia-jcounter": "github:bitfocus/companion-module-jozeemedia-jcounter#v1.0.0",
 		"companion-module-justmacros-lua": "github:bitfocus/companion-module-justmacros-lua#v1.0.3",
 		"companion-module-jvc-ptz": "github:bitfocus/companion-module-jvc-ptz#v1.0.17",
 		"companion-module-kiloview-ndi": "github:bitfocus/companion-module-kiloview-ndi#v1.0.1",
