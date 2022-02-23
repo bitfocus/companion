@@ -210,7 +210,7 @@ export function TriggerEditModal({ doClose, doSave, item, plugins }) {
 function TriggerEditModalConfig({ pluginSpec, config, updateConfig }) {
 	const context = useContext(StaticContext)
 
-	if (!Array.isArray(config)) config = [config]
+	if (pluginSpec.type === 'feedback' && !Array.isArray(config)) config = [config]
 
 	const updateInnerConfig = useCallback(
 		(id, val) => {
@@ -254,12 +254,11 @@ function TriggerEditModalConfig({ pluginSpec, config, updateConfig }) {
 
 	// This is a bit of a hack:
 	if (pluginSpec.type === 'feedback') {
-		const config2 = Array.isArray(config) ? config : [config]
 		return (
 			<>
 				<table className="table feedback-table">
 					<tbody>
-						{config2.map((conf, i) => (
+						{config.map((conf, i) => (
 							<tr key={i}>
 								<td>
 									<MyErrorBoundary>

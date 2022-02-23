@@ -27,10 +27,20 @@ system.emit('skeleton-info-info', function (info) {
 	skeleton_info = info
 })
 
-if (process.env.DEVELOPER === undefined) {
+let sentryDsn
+try {
+	sentryDsn = fs
+		.readFileSync(__dirname + '/SENTRY')
+		.toString()
+		.trim()
+} catch (e) {
+	console.log('Sentry DSN not located')
+}
+
+if (process.env.DEVELOPER === undefined && sentryDsn && sentryDsn.substring(0, 8) == 'https://') {
 	console.log('Configuring sentry error reporting')
 	init({
-		dsn: 'https://535745b2e446442ab024d1c93a349154@sentry.bitfocus.io/8',
+		dsn: sentryDsn,
 		release: `companion@${skeleton_info.appBuild || skeleton_info.appVersion}`,
 		beforeSend(event) {
 			if (event.exception) {

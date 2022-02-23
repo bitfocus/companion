@@ -48,6 +48,7 @@ const skeleton_info = {
 	appName: pkgInfo.description,
 	appVersion: pkgInfo.version,
 	appBuild: buildNumber.replace(/-*master/, '').replace(/^-/, ''),
+	appLaunch: '',
 	appStatus: 'Starting',
 }
 
