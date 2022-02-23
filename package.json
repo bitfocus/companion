@@ -429,7 +429,7 @@
 		"companion-module-shure-mxa910": "github:bitfocus/companion-module-shure-mxa910#v1.0.1",
 		"companion-module-shure-mxn5": "github:bitfocus/companion-module-shure-mxn5#v1.0.1",
 		"companion-module-shure-p300": "github:bitfocus/companion-module-shure-p300#v1.0.1",
-		"companion-module-shure-psm1000": "github:bitfocus/companion-module-shure-psm1000#v1.1.2",
+		"companion-module-shure-psm1000": "github:bitfocus/companion-module-shure-psm1000#v1.1.3",
 		"companion-module-shure-scm820": "github:bitfocus/companion-module-shure-scm820#v1.1.1",
 		"companion-module-shure-wireless": "github:bitfocus/companion-module-shure-wireless#v1.2.4",
 		"companion-module-sienna-ndimonitor": "github:bitfocus/companion-module-sienna-ndimonitor#v1.0.1",
