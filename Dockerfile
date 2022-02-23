@@ -1,7 +1,4 @@
-FROM node:14-bullseye
-
-# User variable, define where to store the application config
-ENV COMPANION_CONFIG_BASEDIR=/config
+FROM node:14-bullseye as companion-builder
 
 WORKDIR /app
 COPY . /app/
@@ -39,9 +36,14 @@ RUN rm -R .git
 FROM node:14-bullseye-slim
 
 WORKDIR /app
-COPY --from=0 /app/	/app/
+COPY --from=companion-builder /app/	/app/
 
-# Bind to 0.0.0.0, as access should be scoped down by how the port is exposed from docker
+# Create config directory and set correct permissions
+# Once docker mounts the volume, the directory will be owned by node:node
+ENV COMPANION_CONFIG_BASEDIR /companion
+RUN mkdir $COMPANION_CONFIG_BASEDIR && chown node:node $COMPANION_CONFIG_BASEDIR
 USER node
 EXPOSE 8000
+
+# Bind to 0.0.0.0, as access should be scoped down by how the port is exposed from docker
 ENTRYPOINT ["./headless_ip.js", "0.0.0.0"]
