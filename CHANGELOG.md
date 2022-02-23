@@ -78,6 +78,7 @@
 - ioversal Vertex
 - IPL OCP
 - Imagine LRC
+- Jozee Media J-Counter
 - Kiloview NDI
 - LeadLED Clockotron
 - Leafcoders Titler
@@ -155,6 +156,7 @@ Many of our modules have had various new features and bugfixes since our last pu
 - Generic MQTT
 - Generic OSC
 - Haivision Connect DVR
+- Haivision KB Encoder
 - H2R Graphics
 - Homeassistant
 - Ifelseware avplayback
