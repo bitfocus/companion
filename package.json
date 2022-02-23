@@ -118,6 +118,7 @@
 		"dev-webui": "yarn --cwd webui dev",
 		"format": "prettier --write .",
 		"build:writefile": "zx ./tools/build_writefile.mjs",
+		"build:sentry": "zx ./tools/build_sentry.mjs",
 		"build:rename_upload": "zx ./tools/build_rename_upload.mjs",
 		"build:rebuild_modules": "zx ./tools/build_modules.mjs",
 		"module:bulk": "zx ./tools/module_bulk.mjs"
