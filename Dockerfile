@@ -1,4 +1,4 @@
-FROM node:14
+FROM node:14-bullseye
 
 # User variable, define where to store the application config
 ENV COMPANION_CONFIG_BASEDIR=/config
@@ -36,7 +36,7 @@ RUN mv webui/build webui-build \
 RUN rm -R .git
 
 # make the production image
-FROM node:14-slim
+FROM node:14-bullseye-slim
 
 WORKDIR /app
 COPY --from=0 /app/	/app/
