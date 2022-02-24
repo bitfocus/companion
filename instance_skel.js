@@ -48,7 +48,7 @@ function instance(system, id, config) {
 	)
 	self.defineConst(
 		'REGEX_HOSTNAME',
-		'/^(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9-]*[a-zA-Z0-9]).)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9-]*[A-Za-z0-9])$/'
+		'/^(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9-]*[a-zA-Z0-9])\\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9-]*[A-Za-z0-9])$/'
 	)
 	self.defineConst('REGEX_BOOLEAN', '/^(true|false|0|1)$/i')
 	self.defineConst(
