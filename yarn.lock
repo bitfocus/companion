@@ -2334,6 +2334,11 @@ commander@^7.2.0:
   resolved "https://registry.yarnpkg.com/commander/-/commander-7.2.0.tgz#a36cb57d0b501ce108e4d20559a150a391d97ab7"
   integrity sha512-QrWXB+ZQSVPmIWIhtEO9H+gwHaMGYiF5ChvoJ+K9ZGHG/sVsa6yiesAD1GC/x46sET00Xlwo1u49RVVVzvcSkw==
 
+commander@^9.0.0:
+  version "9.0.0"
+  resolved "https://registry.yarnpkg.com/commander/-/commander-9.0.0.tgz#86d58f24ee98126568936bd1d3574e0308a99a40"
+  integrity sha512-JJfP2saEKbQqvW+FI93OYUB4ByV5cizMpFMiiJI8xDbBvQvSkIk0VvQdn1CZ8mqAO8Loq2h0gYTYtDFUZUeERw==
+
 commist@^1.0.0:
   version "1.1.0"
   resolved "https://registry.yarnpkg.com/commist/-/commist-1.1.0.tgz#17811ec6978f6c15ee4de80c45c9beb77cee35d5"
@@ -3780,6 +3785,12 @@ commist@^1.0.0:
   resolved "https://codeload.github.com/bitfocus/companion-module-tplink-kasasmartbulb/tar.gz/71c7c9ee35d85081635a858db2fdf34b485bbef6"
   dependencies:
     colorsys "^1.0.22"
+
+"companion-module-tplink-kasasmartdimmer@github:bitfocus/companion-module-tplink-kasasmartdimmer#v1.0.0":
+  version "1.0.0"
+  resolved "https://codeload.github.com/bitfocus/companion-module-tplink-kasasmartdimmer/tar.gz/e96366aee76ef7d23fee719847dc351b31eeb353"
+  dependencies:
+    tplink-smarthome-api "^4.2.0"
 
 "companion-module-tplink-kasasmartplug@github:bitfocus/companion-module-tplink-kasasmartplug#v1.0.1":
   version "1.0.1"
@@ -7213,10 +7224,25 @@ locate-path@^6.0.0:
   dependencies:
     p-locate "^5.0.0"
 
+lodash.castarray@^4.4.0:
+  version "4.4.0"
+  resolved "https://registry.yarnpkg.com/lodash.castarray/-/lodash.castarray-4.4.0.tgz#c02513515e309daddd4c24c60cfddcf5976d9115"
+  integrity sha1-wCUTUV4wna3dTCTGDP3c9ZdtkRU=
+
+lodash.clone@^4.5.0:
+  version "4.5.0"
+  resolved "https://registry.yarnpkg.com/lodash.clone/-/lodash.clone-4.5.0.tgz#195870450f5a13192478df4bc3d23d2dea1907b6"
+  integrity sha1-GVhwRQ9aExkkeN9Lw9I9LeoZB7Y=
+
 lodash.defaults@^4.2.0:
   version "4.2.0"
   resolved "https://registry.yarnpkg.com/lodash.defaults/-/lodash.defaults-4.2.0.tgz#d09178716ffea4dde9e5fb7b37f6f0802274580c"
   integrity sha1-0JF4cW/+pN3p5ft7N/bwgCJ0WAw=
+
+lodash.defaultto@^4.14.0:
+  version "4.14.0"
+  resolved "https://registry.yarnpkg.com/lodash.defaultto/-/lodash.defaultto-4.14.0.tgz#38bd3d425acee733e0e2bbbd4e4b29711cc2ee11"
+  integrity sha1-OL09QlrO5zPg4ru9TkspcRzC7hE=
 
 lodash.difference@^4.5.0:
   version "4.5.0"
@@ -7227,6 +7253,21 @@ lodash.flatten@^4.4.0:
   version "4.4.0"
   resolved "https://registry.yarnpkg.com/lodash.flatten/-/lodash.flatten-4.4.0.tgz#f31c22225a9632d2bbf8e4addbef240aa765a61f"
   integrity sha1-8xwiIlqWMtK7+OSt2+8kCqdlph8=
+
+lodash.get@^4.4.2:
+  version "4.4.2"
+  resolved "https://registry.yarnpkg.com/lodash.get/-/lodash.get-4.4.2.tgz#2d177f652fa31e939b4438d5341499dfa3825e99"
+  integrity sha1-LRd/ZS+jHpObRDjVNBSZ36OCXpk=
+
+lodash.groupby@^4.6.0:
+  version "4.6.0"
+  resolved "https://registry.yarnpkg.com/lodash.groupby/-/lodash.groupby-4.6.0.tgz#0b08a1dcf68397c397855c3239783832df7403d1"
+  integrity sha1-Cwih3PaDl8OXhVwyOXg4Mt90A9E=
+
+lodash.isequal@^4.5.0:
+  version "4.5.0"
+  resolved "https://registry.yarnpkg.com/lodash.isequal/-/lodash.isequal-4.5.0.tgz#415c4478f2bcc30120c22ce10ed3226f7d3e18e0"
+  integrity sha1-QVxEePK8wwEgwizhDtMib30+GOA=
 
 lodash.isplainobject@^4.0.6:
   version "4.0.6"
@@ -7258,7 +7299,7 @@ lodash@^4, lodash@^4.17.10, lodash@^4.17.14, lodash@^4.17.15, lodash@^4.17.19, l
   resolved "https://registry.yarnpkg.com/lodash/-/lodash-4.17.21.tgz#679591c564c3bffaae8454cf0b3df370c3d6911c"
   integrity sha512-v2kDEe57lecTulaDIuNTPy3Ry4gLGJ6Z1O3vE1krgXZNrsQ+LFTGHVxVjcXPs17LhbZVGedAJv8XZ1tvj5FvSg==
 
-loglevel@^1.7.1:
+loglevel@^1.7.1, loglevel@^1.8.0:
   version "1.8.0"
   resolved "https://registry.yarnpkg.com/loglevel/-/loglevel-1.8.0.tgz#e7ec73a57e1e7b419cb6c6ac06bf050b67356114"
   integrity sha512-G6A/nJLRgWOuuwdNuA6koovfEV1YpqqAG4pRUlFaz3jj2QNZ8M4vBqnVA+HBTmU/AMNUtlOsMmSpF6NyOjztbA==
@@ -8379,6 +8420,11 @@ promise-duplex@^6.0.0:
     core-js "^3.6.5"
     promise-readable "^6.0.0"
     promise-writable "^6.0.0"
+
+promise-queue@^2.2.5:
+  version "2.2.5"
+  resolved "https://registry.yarnpkg.com/promise-queue/-/promise-queue-2.2.5.tgz#2f6f5f7c0f6d08109e967659c79b88a9ed5e93b4"
+  integrity sha1-L29ffA9tCBCelnZZx5uIqe1ek7Q=
 
 promise-readable@^6.0.0:
   version "6.0.0"
@@ -9810,6 +9856,27 @@ tough-cookie@^4.0.0:
     psl "^1.1.33"
     punycode "^2.1.1"
     universalify "^0.1.2"
+
+tplink-smarthome-api@^4.2.0:
+  version "4.2.0"
+  resolved "https://registry.yarnpkg.com/tplink-smarthome-api/-/tplink-smarthome-api-4.2.0.tgz#0d87bca34c8c2cb0a6642ae89b2d7c9541cb0a70"
+  integrity sha512-hCYXLshcRy+OiMvnSPDXTLC62SmwA9wdtmBN+uBHdgjJqIQi6v6QpNMcvCiGMWpFdyP3KS+XmI73R0mlblS6/Q==
+  dependencies:
+    commander "^9.0.0"
+    lodash.castarray "^4.4.0"
+    lodash.clone "^4.5.0"
+    lodash.defaultto "^4.14.0"
+    lodash.get "^4.4.2"
+    lodash.groupby "^4.6.0"
+    lodash.isequal "^4.5.0"
+    loglevel "^1.8.0"
+    promise-queue "^2.2.5"
+    tplink-smarthome-crypto "^3.0.0"
+
+tplink-smarthome-crypto@^3.0.0:
+  version "3.0.0"
+  resolved "https://registry.yarnpkg.com/tplink-smarthome-crypto/-/tplink-smarthome-crypto-3.0.0.tgz#d078829111118093b3e8e4e028cd448fe2e8328f"
+  integrity sha512-LxRfcrFVeWNSNyLdVKl52x7jQmwvYengSXCpvEi7M5S8+N/FvVYP25+ol5QdGWKBac6fOklDdz30p+TkC6nydA==
 
 tr46@^2.1.0:
   version "2.1.0"
