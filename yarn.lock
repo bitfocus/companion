@@ -3137,9 +3137,9 @@ commist@^1.0.0:
   dependencies:
     urllib "^2.38.0"
 
-"companion-module-kiloview-ndi@github:bitfocus/companion-module-kiloview-ndi#v1.0.1":
-  version "1.0.1"
-  resolved "https://codeload.github.com/bitfocus/companion-module-kiloview-ndi/tar.gz/f9b718fd540bc2c7b7b05d39bfbbdbbdef3237d7"
+"companion-module-kiloview-ndi@github:bitfocus/companion-module-kiloview-ndi#v1.0.2":
+  version "1.0.2"
+  resolved "https://codeload.github.com/bitfocus/companion-module-kiloview-ndi/tar.gz/b5b8a2bd505fa17d66a675c2f8d7fa2313d750b0"
   dependencies:
     kiloview-ndi "^1.0.1"
 
