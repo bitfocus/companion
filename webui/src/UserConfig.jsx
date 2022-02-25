@@ -26,7 +26,7 @@ export const UserConfig = memo(function UserConfig() {
 		<CRow className="split-panels">
 			<CCol xl={6} className="primary-panel">
 				<h4>Settings</h4>
-				<p>Settings applies instantaneously, don't worry about it!</p>
+				<p>Settings apply instantaneously, don't worry about it!</p>
 
 				<UserConfigTable />
 			</CCol>
@@ -447,7 +447,7 @@ function UserConfigTable() {
 						<CAlert color="danger">
 							This does not make an installation secure!
 							<br /> This is intended to keep normal users from stumbling upon the settings and changing things. It will
-							not keep out someone determined to bypass it
+							not keep out someone determined to bypass it.
 						</CAlert>
 					</td>
 				</tr>
@@ -817,7 +817,7 @@ function RemoteControlInfo() {
 							</p>
 
 							<p>
-								Press page 1 bank 2
+								Press page 1 button 2
 								<br />
 								<code>BANK-PRESS 1 2</code>
 							</p>
@@ -868,7 +868,7 @@ function RemoteControlInfo() {
 							</p>
 
 							<p>
-								Press page 1 bank 2
+								Press page 1 button 2
 								<br />
 								<code>/press/bank/1/2</code>
 							</p>
