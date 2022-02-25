@@ -341,7 +341,7 @@
 		"companion-module-liminalet-zoomosc": "github:bitfocus/companion-module-liminalet-zoomosc#v1.0.11",
 		"companion-module-linkbox-remote": "github:bitfocus/companion-module-linkbox-remote#v1.2.1",
 		"companion-module-livemind-recorder": "github:bitfocus/companion-module-livemind-recorder",
-		"companion-module-ltn-schedule": "github:bitfocus/companion-module-ltn-schedule#v1.1.1",
+		"companion-module-ltn-schedule": "github:bitfocus/companion-module-ltn-schedule#v1.2.0",
 		"companion-module-lumens-mediaprocessor": "github:bitfocus/companion-module-lumens-mediaprocessor#v1.0.3",
 		"companion-module-lumens-visca": "github:bitfocus/companion-module-lumens-visca#v1.0.4",
 		"companion-module-lyntec-rpc-breaker": "github:bitfocus/companion-module-lyntec-rpc-breaker#v1.0.5",
