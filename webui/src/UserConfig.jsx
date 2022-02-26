@@ -903,34 +903,34 @@ function RemoteControlInfo() {
 							</p>
 							<ul>
 								<li>
-									<code>/press/bank/</code>&lt;page&gt; &lt;bank&gt;
+									<code>/press/bank/</code>&lt;page&gt;<code>/</code>&lt;bank&gt;
 									<br />
 									<i>Press and release a button (run both down and up actions)</i>
 								</li>
 								<li>
-									<code>/press/bank/</code> &lt;page&gt; &lt;bank&gt; &lt;1&gt;
+									<code>/press/bank/</code>&lt;page&gt;<code>/</code>&lt;bank&gt; &lt;1&gt;
 									<br />
 									<i>Press the button (run down actions and hold)</i>
 								</li>
 								<li>
-									<code>/press/bank/</code> &lt;page&gt; &lt;bank&gt; &lt;0&gt;
+									<code>/press/bank/</code>&lt;page&gt;<code>/</code>&lt;bank&gt; &lt;0&gt;
 									<br />
 									<i>Release the button (run up actions)</i>
 								</li>
 								<li>
-									<code>/style/bgcolor/</code> &lt;page&gt; &lt;bank&gt; &lt;red 0-255&gt; &lt;green 0-255&gt; &lt;blue
-									0-255&gt;
+									<code>/style/bgcolor/</code>&lt;page&gt;<code>/</code>&lt;bank&gt; &lt;red 0-255&gt; &lt;green
+									0-255&gt; &lt;blue 0-255&gt;
 									<br />
 									<i>Change background color of button</i>
 								</li>
 								<li>
-									<code>/style/color/</code> &lt;page&gt; &lt;bank&gt; &lt;red 0-255&gt; &lt;green 0-255&gt; &lt;blue
-									0-255&gt;
+									<code>/style/color/</code>&lt;page&gt;<code>/</code>&lt;bank&gt; &lt;red 0-255&gt; &lt;green 0-255&gt;
+									&lt;blue 0-255&gt;
 									<br />
 									<i>Change color of text on button</i>
 								</li>
 								<li>
-									<code>/style/text/</code> &lt;page&gt; &lt;bank&gt; &lt;text&gt;
+									<code>/style/text/</code>&lt;page&gt;<code>/</code>&lt;bank&gt; &lt;text&gt;
 									<br />
 									<i>Change text on a button</i>
 								</li>
