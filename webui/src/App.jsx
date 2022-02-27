@@ -147,17 +147,17 @@ function AppMain({ connected, loadingComplete, loadingProgress, buttonGridHotPre
 		}
 	}, [canLock])
 
+	const wizardModal = useRef()
+	const showWizard = useCallback(() => {
+		wizardModal.current.show()
+	}, [])
+
 	const setUnlockedInner = useCallback(() => {
 		setUnlocked(true)
 		if (config && !config?.v22_wizard) {
 			showWizard()
 		}
 	}, [config, showWizard])
-
-	const wizardModal = useRef()
-	const showWizard = useCallback(() => {
-		wizardModal.current.show()
-	}, [])
 
 	// If lockout is disabled, then we are logged in
 	useEffect(() => {
