@@ -149,7 +149,10 @@ function AppMain({ connected, loadingComplete, loadingProgress, buttonGridHotPre
 
 	const setUnlockedInner = useCallback(() => {
 		setUnlocked(true)
-	}, [])
+		if (config && !config?.v22_wizard) {
+			showWizard()
+		}
+	}, [config, showWizard])
 
 	const wizardModal = useRef()
 	const showWizard = useCallback(() => {
@@ -160,9 +163,9 @@ function AppMain({ connected, loadingComplete, loadingProgress, buttonGridHotPre
 	useEffect(() => {
 		if (config && !config?.admin_lockout) {
 			setUnlocked(true)
-		}
-		if (config && !config?.v22_wizard) {
-			showWizard()
+			if (!config?.v22_wizard) {
+				showWizard()
+			}
 		}
 	}, [config, showWizard])
 
