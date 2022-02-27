@@ -5,8 +5,8 @@ export function SurfacesStep({ config, setValue }) {
 	return (
 		<div>
 			<h5>USB Surface Detection Configuration</h5>
-			<p className='indent3'>Stream Deck USB Hardware</p>
-			<div className='indent3'>
+			<p className="indent3">Stream Deck USB Hardware</p>
+			<div className="indent3">
 				<div className="form-check form-check-inline mr-1">
 					<CInputRadio
 						id="userconfig_elgato_plugin_disable"
@@ -18,7 +18,7 @@ export function SurfacesStep({ config, setValue }) {
 					</CLabel>
 				</div>
 			</div>
-			<div className='indent3'>
+			<div className="indent3">
 				<div className="form-check form-check-inline mr-1">
 					<CInputRadio
 						id="userconfig_elgato_plugin_enable"
@@ -29,8 +29,8 @@ export function SurfacesStep({ config, setValue }) {
 				</div>
 			</div>
 
-			<p className='indent3'>X-keys USB Keypads</p>
-			<div className='indent3'>
+			<p className="indent3">X-keys USB Keypads</p>
+			<div className="indent3">
 				<div className="form-check form-check-inline mr-1">
 					<CInputCheckbox
 						id="userconfig_xkeys_enable"

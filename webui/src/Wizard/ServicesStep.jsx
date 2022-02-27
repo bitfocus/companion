@@ -7,7 +7,8 @@ export function ServicesStep({ config, setValue }) {
 			<h5>Remote Control Services</h5>
 			<p>
 				In addition to USB hardware, Companion is able to be controlled over the network by various different methods.
-				Since these expose Companion to control via your network, it is only recommended to enable the services you need.
+				Since these expose Companion to control via your network, it is only recommended to enable the services you
+				need.
 			</p>
 			<div className="indent3">
 				<div className="form-check form-check-inline mr-1">
