@@ -149,8 +149,10 @@ function AppMain({ connected, loadingComplete, loadingProgress, buttonGridHotPre
 
 	const wizardModal = useRef()
 	const showWizard = useCallback(() => {
-		wizardModal.current.show()
-	}, [])
+		if (unlocked) {
+			wizardModal.current.show()
+		}
+	}, [unlocked])
 
 	const setUnlockedInner = useCallback(() => {
 		setUnlocked(true)
