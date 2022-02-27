@@ -20,9 +20,9 @@ export function ApplyStep({ oldConfig, newConfig }) {
 	if (!oldConfig.v22_wizard || oldConfig.xkeys_enable !== newConfig.xkeys_enable) {
 		changes.push(
 			newConfig.xkeys_enable ? (
-				<li>X-keys hardware will {oldConfig.v22_wizard ? 'no longer' : 'not'} be detected by Companion.</li>
-			) : (
 				<li>X-keys hardware will be detected by Companion.</li>
+			) : (
+				<li>X-keys hardware will {oldConfig.v22_wizard ? 'no longer' : 'not'} be detected by Companion.</li>
 			)
 		)
 	}
