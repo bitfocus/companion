@@ -11,7 +11,7 @@ export function ApplyStep({ oldConfig, newConfig }) {
 				<li>
 					Stream Deck hardware will be detected by Companion natively.
 					<br />
-					The Stream Deck software must be closed for this to work.
+					<span style={{ color: 'red' }}>The Stream Deck software must be closed for this to work.</span>
 				</li>
 			)
 		)
