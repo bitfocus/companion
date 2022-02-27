@@ -158,7 +158,7 @@ export function ApplyStep({ oldConfig, newConfig }) {
 		oldConfig.v22_wizard
 			? changes.push(
 					<li>
-						Change admin password from {oldConfig.admin_password == '' ? '(none)' : `'${oldConfig.admin_password}'`} to{' '}
+						Change admin password from {oldConfig.admin_password === '' ? '(none)' : `'${oldConfig.admin_password}'`} to{' '}
 						'{newConfig.admin_password}'.
 					</li>
 			  )
