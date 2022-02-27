@@ -1,4 +1,4 @@
-import React, { Suspense, useCallback, useContext, useEffect, useMemo, useState } from 'react'
+import React, { Suspense, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react'
 import {
 	CContainer,
 	CTabContent,
@@ -37,6 +37,7 @@ import { Triggers } from './Triggers'
 import { InstancesPage } from './Instances'
 import { ButtonsPage } from './Buttons'
 import { ContextData } from './ContextData'
+import { WizardModal } from './Wizard'
 import { Redirect, useLocation } from 'react-router-dom'
 import { useIdleTimer } from 'react-idle-timer'
 
@@ -150,12 +151,20 @@ function AppMain({ connected, loadingComplete, loadingProgress, buttonGridHotPre
 		setUnlocked(true)
 	}, [])
 
+	const wizardModal = useRef()
+	const showWizard = useCallback(() => {
+		wizardModal.current.show()
+	}, [])
+
 	// If lockout is disabled, then we are logged in
 	useEffect(() => {
 		if (config && !config?.admin_lockout) {
 			setUnlocked(true)
 		}
-	}, [config])
+		if (config && !config?.v22_wizard) {
+			showWizard()
+		}
+	}, [config, showWizard])
 
 	return (
 		<div className="c-app">
@@ -164,7 +173,8 @@ function AppMain({ connected, loadingComplete, loadingProgress, buttonGridHotPre
 			) : (
 				''
 			)}
-			<MySidebar show={showSidebar} />
+			<WizardModal ref={wizardModal} />
+			<MySidebar show={showSidebar} showWizard={showWizard} />
 			<div className="c-wrapper">
 				<MyHeader toggleSidebar={toggleSidebar} setLocked={setLocked} canLock={canLock && unlocked} />
 				<div className="c-body">
