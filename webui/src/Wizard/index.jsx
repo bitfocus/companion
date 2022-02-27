@@ -17,6 +17,7 @@ export const WizardModal = forwardRef(function WizardModal(_props, ref) {
 	const [oldConfig, setOldConfig] = useState(null)
 	const [newConfig, setNewConfig] = useState(null)
 	const [error, setError] = useState(null)
+	const [clear, setClear] = useState(true)
 
 	const getConfig = useCallback(() => {
 		socketEmit(context.socket, 'get_userconfig_all', [])
@@ -36,6 +37,7 @@ export const WizardModal = forwardRef(function WizardModal(_props, ref) {
 	const doClose = useCallback(() => {
 		context.socket.emit('set_userconfig_key', 'v22_wizard', true)
 		setShow(false)
+		setClear(true)
 	}, [context.socket])
 
 	const doNextStep = useCallback(() => {
@@ -93,12 +95,15 @@ export const WizardModal = forwardRef(function WizardModal(_props, ref) {
 		ref,
 		() => ({
 			show() {
-				getConfig()
-				setCurrentStep(1)
+				if (clear) {
+					getConfig()
+					setCurrentStep(1)
+				}
 				setShow(true)
+				setClear(false)
 			},
 		}),
-		[getConfig]
+		[getConfig, clear]
 	)
 
 	let nextButton
