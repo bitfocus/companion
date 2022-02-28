@@ -347,6 +347,7 @@
 		"companion-module-lyntec-rpc-breaker": "github:bitfocus/companion-module-lyntec-rpc-breaker#v1.0.5",
 		"companion-module-magewell-proconvert-decoder": "github:bitfocus/companion-module-magewell-proconvert-decoder#v1.0.0",
 		"companion-module-magewell-ultrastream": "github:bitfocus/companion-module-magewell-ultrastream#v0.0.4",
+		"companion-module-magichome-bulb": "github:bitfocus/companion-module-magichome-bulb#v1.0.1",
 		"companion-module-magicsoft-recorder": "github:bitfocus/companion-module-magicsoft-recorder#v1.0.1",
 		"companion-module-makeprox-glue": "github:bitfocus/companion-module-makeprox-glue#v1.0.1",
 		"companion-module-malighting-grandma2": "github:bitfocus/companion-module-malighting-grandma2#v1.0.12",
