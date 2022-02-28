@@ -2666,9 +2666,9 @@ commist@^1.0.0:
   dependencies:
     request "^2.88.0"
 
-"companion-module-casparcg-server@github:bitfocus/companion-module-casparcg-server#v1.0.4":
-  version "1.0.4"
-  resolved "https://codeload.github.com/bitfocus/companion-module-casparcg-server/tar.gz/f529a0745426675009141d9330d625c95c29a077"
+"companion-module-casparcg-server@github:bitfocus/companion-module-casparcg-server#v1.0.5":
+  version "1.0.5"
+  resolved "https://codeload.github.com/bitfocus/companion-module-casparcg-server/tar.gz/80d16cdf7de0f2b7cad0dd8723d7fc0aa9dfe828"
   dependencies:
     xml2js "^0.4.19"
 

@@ -225,7 +225,7 @@
 		"companion-module-bytehive-playoutbee": "github:bitfocus/companion-module-bytehive-playoutbee#v1.0.5",
 		"companion-module-canon-ptz": "github:bitfocus/companion-module-canon-ptz#v1.0.7",
 		"companion-module-canon-xf": "github:bitfocus/companion-module-canon-xf#v1.0.2",
-		"companion-module-casparcg-server": "github:bitfocus/companion-module-casparcg-server#v1.0.4",
+		"companion-module-casparcg-server": "github:bitfocus/companion-module-casparcg-server#v1.0.5",
 		"companion-module-chamsys-magicq-osc": "github:bitfocus/companion-module-chamsys-magicq-osc#v1.0.3",
 		"companion-module-chamsys-magicq-udp": "github:bitfocus/companion-module-chamsys-magicq-udp#v1.0.4",
 		"companion-module-christie-pandorasbox": "github:bitfocus/companion-module-christie-pandorasbox#v2.0.3",
