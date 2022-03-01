@@ -132,6 +132,7 @@ export default function App() {
 }
 
 function AppMain({ connected, loadingComplete, loadingProgress, buttonGridHotPress }) {
+	const context = useContext(StaticContext)
 	const config = useContext(UserConfigContext)
 
 	const [showSidebar, setShowSidebar] = useState(true)
@@ -156,20 +157,20 @@ function AppMain({ connected, loadingComplete, loadingProgress, buttonGridHotPre
 
 	const setUnlockedInner = useCallback(() => {
 		setUnlocked(true)
-		if (config && !config?.v22_wizard) {
+		if (config && config?.setup_wizard < context.currentVersion) {
 			showWizard()
 		}
-	}, [config, showWizard])
+	}, [config, context.currentVersion, showWizard])
 
 	// If lockout is disabled, then we are logged in
 	useEffect(() => {
 		if (config && !config?.admin_lockout) {
 			setUnlocked(true)
-			if (!config?.v22_wizard) {
+			if (config?.setup_wizard < context.currentVersion) {
 				showWizard()
 			}
 		}
-	}, [config, showWizard])
+	}, [config, context.currentVersion, showWizard])
 
 	return (
 		<div className="c-app">
@@ -178,7 +179,7 @@ function AppMain({ connected, loadingComplete, loadingProgress, buttonGridHotPre
 			) : (
 				''
 			)}
-			<WizardModal ref={wizardModal} />
+			<WizardModal ref={wizardModal} currentVerson={context.currentVersion} />
 			<MySidebar show={showSidebar} showWizard={showWizard} />
 			<div className="c-wrapper">
 				<MyHeader toggleSidebar={toggleSidebar} setLocked={setLocked} canLock={canLock && unlocked} />

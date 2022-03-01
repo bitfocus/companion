@@ -12,7 +12,7 @@ export function FinishStep({ oldConfig, newConfig }) {
 			</p>
 			<ol>
 				<li>
-					Review the 'Surfaces' tab and ensure the USB devices you have plugged in are detected for use.&nbsp;
+					Review the 'Surfaces' tab and ensure the USB devices you have plugged in are detected for use.{' '}
 					{newConfig.elgato_plugin_enable
 						? 'Please note that Stream Deck devices will not appear since they are configured for the Stream Deck software.'
 						: ''}
