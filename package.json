@@ -434,7 +434,7 @@
 		"companion-module-shure-wireless": "github:bitfocus/companion-module-shure-wireless#v1.2.4",
 		"companion-module-sienna-ndimonitor": "github:bitfocus/companion-module-sienna-ndimonitor#v1.0.1",
 		"companion-module-singularlive-studio": "github:bitfocus/companion-module-singularlive-studio#v1.0.11",
-		"companion-module-skaarhoj-rawpanel": "github:bitfocus/companion-module-skaarhoj-rawpanel#v1.0.0",
+		"companion-module-skaarhoj-rawpanel": "github:bitfocus/companion-module-skaarhoj-rawpanel#v1.0.1",
 		"companion-module-slack-webhooks": "github:bitfocus/companion-module-slack-webhooks#v1.0.1",
 		"companion-module-snapav-wattbox": "github:bitfocus/companion-module-snapav-wattbox#v1.0.1",
 		"companion-module-softouch-easyworship": "github:bitfocus/companion-module-softouch-easyworship#v1.1.2",
