@@ -2375,9 +2375,9 @@ commist@^1.0.0:
   version "1.0.4"
   resolved "https://codeload.github.com/bitfocus/companion-module-aja-helo/tar.gz/e9a3da3e16c1a3176c1ef911cf2cde3fba94187f"
 
-"companion-module-aja-kipro@github:bitfocus/companion-module-aja-kipro#v2.0.13":
-  version "2.0.13"
-  resolved "https://codeload.github.com/bitfocus/companion-module-aja-kipro/tar.gz/104070750168a36e4515c889ed65430f2cff431e"
+"companion-module-aja-kipro@github:bitfocus/companion-module-aja-kipro#v2.0.14":
+  version "2.0.14"
+  resolved "https://codeload.github.com/bitfocus/companion-module-aja-kipro/tar.gz/3e30e73288902d76e8347a00049be3b161af51e9"
 
 "companion-module-aja-kumo@github:bitfocus/companion-module-aja-kumo#v1.0.6":
   version "1.0.6"
