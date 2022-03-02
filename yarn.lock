@@ -3819,9 +3819,11 @@ commist@^1.0.0:
   dependencies:
     tplink-smarthome-api "^4.2.0"
 
-"companion-module-tplink-kasasmartplug@github:bitfocus/companion-module-tplink-kasasmartplug#v1.0.1":
-  version "1.0.1"
-  resolved "https://codeload.github.com/bitfocus/companion-module-tplink-kasasmartplug/tar.gz/5610184a3251a35d636e0bf44057a4f40fa028ac"
+"companion-module-tplink-kasasmartplug@github:bitfocus/companion-module-tplink-kasasmartplug#v1.1.1":
+  version "1.1.1"
+  resolved "https://codeload.github.com/bitfocus/companion-module-tplink-kasasmartplug/tar.gz/4776e5d40e20a8e28d22882cc9613015d109a59d"
+  dependencies:
+    tplink-smarthome-api "^4.2.0"
 
 "companion-module-tslproducts-umd@github:bitfocus/companion-module-tslproducts-umd#v1.2.3":
   version "1.2.3"
