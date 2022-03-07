@@ -3401,6 +3401,13 @@ commist@^1.0.0:
   version "0.0.3"
   resolved "https://codeload.github.com/bitfocus/companion-module-octava-pro-dsx/tar.gz/b2cc9628236093242ff7235d2c9a9b6d3f963312"
 
+"companion-module-olzzon-ndicontroller@github:bitfocus/companion-module-olzzon-ndicontroller#v1.0.0":
+  version "1.0.0"
+  resolved "https://codeload.github.com/bitfocus/companion-module-olzzon-ndicontroller/tar.gz/301ccffb634858b32ff8ca6ec3d6727ee3f9899d"
+  dependencies:
+    axios "^0.25.0"
+    type-fest "^2.11.2"
+
 "companion-module-openlp-http@github:bitfocus/companion-module-openlp-http#v0.1.7":
   version "0.1.7"
   resolved "https://codeload.github.com/bitfocus/companion-module-openlp-http/tar.gz/282bd0638ce4596985a39219c76e29574f987c82"
@@ -10048,6 +10055,11 @@ type-fest@^2.11.0, type-fest@^2.8.0, type-fest@^2.9.0:
   version "2.11.1"
   resolved "https://registry.yarnpkg.com/type-fest/-/type-fest-2.11.1.tgz#04ddf5c0dbbd403fb8270d98ad1b4857e7ff7b24"
   integrity sha512-fPcV5KLAqFfmhHobtAUwEpbpfYhVF7wSLVgbG/7mIGe/Pete7ky/bPAPRkzbWdrj0/EkswFAAR2feJCgigkUKg==
+
+type-fest@^2.11.2:
+  version "2.12.0"
+  resolved "https://registry.yarnpkg.com/type-fest/-/type-fest-2.12.0.tgz#ce342f58cab9114912f54b493d60ab39c3fc82b6"
+  integrity sha512-Qe5GRT+n/4GoqCNGGVp5Snapg1Omq3V7irBJB3EaKsp7HWDo5Gv2d/67gfNyV+d5EXD+x/RF5l1h4yJ7qNkcGA==
 
 type-is@~1.6.18:
   version "1.6.18"
