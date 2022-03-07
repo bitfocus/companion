@@ -379,6 +379,7 @@
 		"companion-module-obs-studio": "github:bitfocus/companion-module-obs-studio#v1.0.31",
 		"companion-module-obsidiancontrol-onyx": "github:bitfocus/companion-module-obsidiancontrol-onyx#v1.0.4",
 		"companion-module-octava-pro-dsx": "github:bitfocus/companion-module-octava-pro-dsx#v0.0.3",
+		"companion-module-olzzon-ndicontroller": "github:bitfocus/companion-module-olzzon-ndicontroller#v1.0.0",
 		"companion-module-openlp-http": "github:bitfocus/companion-module-openlp-http#v0.1.7",
 		"companion-module-opensong-api": "github:bitfocus/companion-module-opensong-api#v1.0.2",
 		"companion-module-openweather-rest": "github:bitfocus/companion-module-openweather-rest#v1.0.3",
