@@ -3280,11 +3280,11 @@ commist@^1.0.0:
   dependencies:
     mamsc "1.0.1"
 
-"companion-module-matrox-monarch@github:bitfocus/companion-module-matrox-monarch#v1.0.2":
-  version "1.0.2"
-  resolved "https://codeload.github.com/bitfocus/companion-module-matrox-monarch/tar.gz/124d629a3f1ffbb35009c36a3ba0e0649b7fc979"
+"companion-module-matrox-monarch@github:bitfocus/companion-module-matrox-monarch#v2.0.0":
+  version "2.0.0"
+  resolved "https://codeload.github.com/bitfocus/companion-module-matrox-monarch/tar.gz/f73c726865a60c883bb371e0a926990414e661e4"
   dependencies:
-    request "^2.88.0"
+    node-fetch "^2.6.0"
 
 "companion-module-media-player-classic@github:bitfocus/companion-module-media-player-classic#v1.0.1":
   version "1.0.1"
