@@ -196,7 +196,7 @@
 		"companion-module-barco-imagepro": "github:bitfocus/companion-module-barco-imagepro#v1.0.3",
 		"companion-module-barco-matrixpro": "github:bitfocus/companion-module-barco-matrixpro#v1.1.1",
 		"companion-module-barco-pds": "github:bitfocus/companion-module-barco-pds#v1.1.7",
-		"companion-module-barco-pulse": "github:bitfocus/companion-module-barco-pulse#v1.1.2",
+		"companion-module-barco-pulse": "github:bitfocus/companion-module-barco-pulse#v1.1.3",
 		"companion-module-bbc-raven": "github:bitfocus/companion-module-bbc-raven#v1.0.3",
 		"companion-module-behringer-wing": "github:bitfocus/companion-module-behringer-wing#v1.0.7",
 		"companion-module-behringer-x32": "github:bitfocus/companion-module-behringer-x32#v2.9.1",
