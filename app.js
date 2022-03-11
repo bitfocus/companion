@@ -196,6 +196,10 @@ system.ready = function (logToFile) {
 	system.on('exit', function () {
 		elgatoDM.quit()
 	})
+
+	setTimeout(function () {
+		system.emit('ip_rebind')
+	}, 2000)
 }
 
 exports = module.exports = system

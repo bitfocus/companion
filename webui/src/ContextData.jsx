@@ -136,6 +136,7 @@ export function ContextData({ socket, children }) {
 		notifier: notifierRef,
 		modules: modules,
 		moduleRedirects: moduleRedirects,
+		currentVersion: 22,
 	}
 
 	const steps = [
