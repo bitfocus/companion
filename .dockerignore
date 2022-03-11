@@ -1,7 +1,7 @@
+.dockerignore
 node_modules
 */node_modules
-module-local-dev/*/node_modules
-module-local-dev/*/.git
+module-local-dev
 *.log
 electron-output
 webui/build

@@ -38,12 +38,19 @@ FROM node:14-bullseye-slim
 WORKDIR /app
 COPY --from=companion-builder /app/	/app/
 
+# Install curl for the health check
+RUN apt update && apt install -y curl && \
+    rm -rf /var/lib/apt/lists/*
+
 # Create config directory and set correct permissions
 # Once docker mounts the volume, the directory will be owned by node:node
 ENV COMPANION_CONFIG_BASEDIR /companion
 RUN mkdir $COMPANION_CONFIG_BASEDIR && chown node:node $COMPANION_CONFIG_BASEDIR
 USER node
-EXPOSE 8000
+# Export both web and Satellite API ports
+EXPOSE 8000 16622
+
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 CMD [ "curl", "-fSsq", "http://localhost:8000/" ]
 
 # Bind to 0.0.0.0, as access should be scoped down by how the port is exposed from docker
 ENTRYPOINT ["./headless_ip.js", "0.0.0.0"]
