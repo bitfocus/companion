@@ -47,6 +47,8 @@ RUN apt update && apt install -y curl && \
 ENV COMPANION_CONFIG_BASEDIR /companion
 RUN mkdir $COMPANION_CONFIG_BASEDIR && chown node:node $COMPANION_CONFIG_BASEDIR
 USER node
+# Export both web and Satellite API ports
+EXPOSE 8000 16622
 
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 CMD [ "curl", "-fSsq", "http://localhost:8000/" ]
 
