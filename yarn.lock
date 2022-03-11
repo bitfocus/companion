@@ -2562,9 +2562,11 @@ commist@^1.0.0:
   dependencies:
     node-fetch "^2.6.7"
 
-"companion-module-birddog-visca@github:bitfocus/companion-module-birddog-visca#v1.0.5":
-  version "1.0.5"
-  resolved "https://codeload.github.com/bitfocus/companion-module-birddog-visca/tar.gz/cee57872a57e4dabf25343e1a26fdf61e661acb7"
+"companion-module-birddog-visca@github:bitfocus/companion-module-birddog-visca#v2.0.0":
+  version "2.0.0"
+  resolved "https://codeload.github.com/bitfocus/companion-module-birddog-visca/tar.gz/c6425a5901a5780722cce5555d53600a21da86c0"
+  dependencies:
+    node-fetch "^2.6.7"
 
 "companion-module-bitfocus-companion@github:bitfocus/companion-module-bitfocus-companion#v1.7.6":
   version "1.7.6"
