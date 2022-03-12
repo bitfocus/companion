@@ -419,6 +419,32 @@ instance.prototype.unsubscribeActions = function (type) {
 	}
 }
 
+instance.prototype.custom_variable_set_value = function (name, value) {
+	var self = this
+	self.system.emit('custom_variable_set_value', name, value)
+}
+
+instance.prototype.getCustomVariable = function (name, cb) {
+	var self = this
+	self.system.emit('getCustomVariable', name, cb)
+}
+
+instance.prototype.custom_variable_set_expression = function (name, expression) {
+	var self = this
+	self.system.emit('custom_variable_set_expression', name, expression)
+}
+
+instance.prototype.custom_variable_store_variable = function (name, variable) {
+	var self = this
+	self.system.emit('custom_variable_store_variable', name, variable)
+}
+
+
+instance.prototype.custom_variable_set_via_jsonpath = function (name, jsonResultDataVariable, jsonPath) {
+	var self = this
+	self.system.emit('custom_variable_set_via_jsonpath', name, jsonResultDataVariable, jsonPath)
+}
+
 instance.prototype.oscSend = function (host, port, path, args) {
 	var self = this
 	self.system.emit('osc_send', host, port, path, args)

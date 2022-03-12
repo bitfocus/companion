@@ -110,6 +110,15 @@ declare abstract class InstanceSkel<TConfig> {
 	/** Recheck all feedbacks of the given ids. eg `self.checkFeedbacksById('vvbta3jtaD', 'Ba_1C3NF3q')` */
 	checkFeedbacksById(...feedbackIds: string[]): void
 
+	/** Set the value of a custom variable */
+	custom_variable_set_value(variableName: string, value: string): void
+	custom_variable_set_expression(variableName: string, value: string): void
+	custom_variable_store_variable(variableName: string, variable: string): void
+	custom_variable_set_via_jsonpath(variableName: string, jsonResultDataVariable: string , jsonPath: string): void
+
+	/** Get the value of a custome variable*/
+	getCustomVariable(variableName: string, cb: (value: string | undefined) => void):  void
+
 	/**
 	 * Parse a string to replace any variable references with their values.
 	 * This will parse variables from any module instance, and expects the same syntax as the ui
