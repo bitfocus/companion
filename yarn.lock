@@ -2625,9 +2625,9 @@ commist@^1.0.0:
   version "1.0.1"
   resolved "https://codeload.github.com/bitfocus/companion-module-bmd-multiview16/tar.gz/7b40bc40202779e0ff83a7f36912815da0f2fe35"
 
-"companion-module-bmd-multiview4@github:bitfocus/companion-module-bmd-multiview4#v1.3.4":
-  version "1.3.4"
-  resolved "https://codeload.github.com/bitfocus/companion-module-bmd-multiview4/tar.gz/ee97c82bddc6651d4fc8a09258f2b1cb8ee4a21c"
+"companion-module-bmd-multiview4@github:bitfocus/companion-module-bmd-multiview4#v1.3.5":
+  version "1.3.5"
+  resolved "https://codeload.github.com/bitfocus/companion-module-bmd-multiview4/tar.gz/0267e183560f8917374e6cd7943893f508867c5c"
 
 "companion-module-bmd-smartview@github:bitfocus/companion-module-bmd-smartview#v1.1.3":
   version "1.1.3"
