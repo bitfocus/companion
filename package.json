@@ -1,6 +1,6 @@
 {
 	"name": "companion",
-	"version": "2.2.0-rc2",
+	"version": "2.2.0",
 	"description": "Companion",
 	"main": "electron.js",
 	"build": {
