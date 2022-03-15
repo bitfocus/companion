@@ -84,7 +84,7 @@ for (const folder of dirs) {
 
 			// guess at what images might be needed by the help
 			if (await fs.pathExists(path.join(moduleDir, 'images')))
-				await fs.copy(path.join(moduleDir, 'images'), path.join(manifestDir, 'image'))
+				await fs.copy(path.join(moduleDir, 'images'), path.join(manifestDir, 'images'))
 			if (await fs.pathExists(path.join(moduleDir, 'documentation')))
 				await fs.copy(path.join(moduleDir, 'documentation'), path.join(manifestDir, 'documentation'))
 		}
