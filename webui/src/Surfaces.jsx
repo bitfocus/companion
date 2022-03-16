@@ -311,7 +311,7 @@ const SurfaceEditModal = forwardRef(function SurfaceEditModal(_props, ref) {
 						) : (
 							''
 						)}
-						{deviceInfo.config?.includes('brightness') ? (
+						{deviceInfo.configFields?.includes('brightness') ? (
 							<CFormGroup>
 								<CLabel htmlFor="brightness">Brightness</CLabel>
 								<CInput
@@ -327,7 +327,7 @@ const SurfaceEditModal = forwardRef(function SurfaceEditModal(_props, ref) {
 						) : (
 							''
 						)}
-						{deviceInfo.config?.includes('rotation') ? (
+						{deviceInfo.configFields?.includes('rotation') ? (
 							<CFormGroup>
 								<CLabel htmlFor="rotation">Button rotation</CLabel>
 								<CSelect
@@ -344,7 +344,7 @@ const SurfaceEditModal = forwardRef(function SurfaceEditModal(_props, ref) {
 						) : (
 							''
 						)}
-						{deviceInfo.config?.includes('enable_device') ? (
+						{deviceInfo.configFields?.includes('enable_device') ? (
 							<CFormGroup>
 								<CLabel htmlFor="enable_device">Enable Device</CLabel>
 								<CInputCheckbox
