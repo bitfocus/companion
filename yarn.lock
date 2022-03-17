@@ -2413,6 +2413,10 @@ commist@^1.0.0:
   version "1.0.3"
   resolved "https://codeload.github.com/bitfocus/companion-module-7thsensedesign-delta/tar.gz/0346d0ae1448775b0593e59407ae90cabfefacea"
 
+"companion-module-adder-xdip@github:bitfocus/companion-module-adder-xdip#v1.0.0":
+  version "1.0.0"
+  resolved "https://codeload.github.com/bitfocus/companion-module-adder-xdip/tar.gz/cc55c78aaaed3eeda71c7da7a7783fbbb5bb97f0"
+
 "companion-module-agf-characterworks@github:bitfocus/companion-module-agf-characterworks#v1.0.5":
   version "1.0.5"
   resolved "https://codeload.github.com/bitfocus/companion-module-agf-characterworks/tar.gz/c894f73b803e8662468888604be990d575a4f0d0"
