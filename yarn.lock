@@ -3291,9 +3291,9 @@ commist@^1.0.0:
   version "1.0.5"
   resolved "https://codeload.github.com/bitfocus/companion-module-lyntec-rpc-breaker/tar.gz/44bf739bebd3fa89c395329fb0b182e64875acf0"
 
-"companion-module-magewell-proconvert-decoder@github:bitfocus/companion-module-magewell-proconvert-decoder#v1.0.5":
-  version "1.0.5"
-  resolved "https://codeload.github.com/bitfocus/companion-module-magewell-proconvert-decoder/tar.gz/615831f2df209af1a1b13682ee7a500f09ba2121"
+"companion-module-magewell-proconvert-decoder@github:bitfocus/companion-module-magewell-proconvert-decoder#v1.0.6":
+  version "1.0.6"
+  resolved "https://codeload.github.com/bitfocus/companion-module-magewell-proconvert-decoder/tar.gz/d796e54da598cd13c752dbe0917417e85bf6215f"
 
 "companion-module-magewell-ultrastream@github:bitfocus/companion-module-magewell-ultrastream#v0.0.4":
   version "0.0.4"

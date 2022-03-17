@@ -347,7 +347,7 @@
 		"companion-module-lumens-mediaprocessor": "github:bitfocus/companion-module-lumens-mediaprocessor#v1.0.3",
 		"companion-module-lumens-visca": "github:bitfocus/companion-module-lumens-visca#v1.0.4",
 		"companion-module-lyntec-rpc-breaker": "github:bitfocus/companion-module-lyntec-rpc-breaker#v1.0.5",
-		"companion-module-magewell-proconvert-decoder": "github:bitfocus/companion-module-magewell-proconvert-decoder#v1.0.5",
+		"companion-module-magewell-proconvert-decoder": "github:bitfocus/companion-module-magewell-proconvert-decoder#v1.0.6",
 		"companion-module-magewell-ultrastream": "github:bitfocus/companion-module-magewell-ultrastream#v0.0.4",
 		"companion-module-magichome-bulb": "github:bitfocus/companion-module-magichome-bulb#v1.0.1",
 		"companion-module-magicsoft-recorder": "github:bitfocus/companion-module-magicsoft-recorder#v1.0.1",
