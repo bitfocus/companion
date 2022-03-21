@@ -291,7 +291,7 @@
 		"companion-module-gefen-dvimatrix": "github:bitfocus/companion-module-gefen-dvimatrix#v1.0.2",
 		"companion-module-generic-artnet": "github:bitfocus/companion-module-generic-artnet#v1.1.1",
 		"companion-module-generic-emberplus": "github:bitfocus/companion-module-generic-emberplus#v1.1.4",
-		"companion-module-generic-http": "github:bitfocus/companion-module-generic-http#v1.2.2",
+		"companion-module-generic-http": "github:bitfocus/companion-module-generic-http#v1.2.3",
 		"companion-module-generic-mqtt": "github:bitfocus/companion-module-generic-mqtt#v1.2.2",
 		"companion-module-generic-osc": "github:bitfocus/companion-module-generic-osc#v1.1.2",
 		"companion-module-generic-pjlink": "github:bitfocus/companion-module-generic-pjlink#v1.0.7",
