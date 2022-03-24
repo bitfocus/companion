@@ -3343,6 +3343,10 @@ commist@^1.0.0:
   version "1.0.1"
   resolved "https://codeload.github.com/bitfocus/companion-module-muxlab-kvm/tar.gz/8e0c7547f86a912493a5bc98a53f7fbb16355144"
 
+"companion-module-mvr-helios@github:bitfocus/companion-module-mvr-helios#v1.0.0":
+  version "1.0.0"
+  resolved "https://codeload.github.com/bitfocus/companion-module-mvr-helios/tar.gz/f07bec59c31b2d11e09efc131cf603455e50d3cc"
+
 "companion-module-neodarque-stagetimer2@github:bitfocus/companion-module-neodarque-stagetimer2#v1.2.8":
   version "1.2.8"
   resolved "https://codeload.github.com/bitfocus/companion-module-neodarque-stagetimer2/tar.gz/5aedfaa3e8e783fe12c630fd5e1574cf373752ad"

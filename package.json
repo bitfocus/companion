@@ -366,6 +366,7 @@
 		"companion-module-msc-router": "github:bitfocus/companion-module-msc-router#v1.0.3",
 		"companion-module-multicamsystems-multicamsuite": "github:bitfocus/companion-module-multicamsystems-multicamsuite#v1.0.2",
 		"companion-module-muxlab-kvm": "github:bitfocus/companion-module-muxlab-kvm#v1.0.1",
+		"companion-module-mvr-helios": "github:bitfocus/companion-module-mvr-helios#v1.0.0",
 		"companion-module-neodarque-stagetimer2": "github:bitfocus/companion-module-neodarque-stagetimer2#v1.2.8",
 		"companion-module-netio-powerbox": "github:bitfocus/companion-module-netio-powerbox#v1.0.0",
 		"companion-module-nevion-mrp": "github:bitfocus/companion-module-nevion-mrp#v2.0.3",
