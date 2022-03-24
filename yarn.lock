@@ -2439,6 +2439,10 @@ commist@^1.0.0:
   version "1.0.2"
   resolved "https://codeload.github.com/bitfocus/companion-module-allenheath-ahm/tar.gz/c15fd1e16bbf116d40026b73d73fa9a79cbcd55e"
 
+"companion-module-allenheath-avantis@github:bitfocus/companion-module-allenheath-avantis#v1.0.0":
+  version "1.0.0"
+  resolved "https://codeload.github.com/bitfocus/companion-module-allenheath-avantis/tar.gz/1dfb4814f09cd6c4436a3c3702ec62bc96a10e59"
+
 "companion-module-allenheath-dlive-ilive@github:bitfocus/companion-module-allenheath-dlive-ilive#v1.3.8":
   version "1.3.8"
   resolved "https://codeload.github.com/bitfocus/companion-module-allenheath-dlive-ilive/tar.gz/83d51603542935d1b37f0ce2ce0388ab7d56787d"
