@@ -3727,9 +3727,9 @@ commist@^1.0.0:
   version "1.0.1"
   resolved "https://codeload.github.com/bitfocus/companion-module-slack-webhooks/tar.gz/d18447b43281d069308876aa2980c57688035710"
 
-"companion-module-snapav-wattbox@github:bitfocus/companion-module-snapav-wattbox#v1.0.1":
+"companion-module-snapav-wattbox@github:bitfocus/companion-module-snapav-wattbox#v1.0.2":
   version "1.0.1"
-  resolved "https://codeload.github.com/bitfocus/companion-module-snapav-wattbox/tar.gz/c8a1408ce49d3095ce1d626e1f3103b17181829f"
+  resolved "https://codeload.github.com/bitfocus/companion-module-snapav-wattbox/tar.gz/ee45a88f78dd7255127c39e09b206e4e6f3688b0"
 
 "companion-module-softouch-easyworship@github:bitfocus/companion-module-softouch-easyworship#v1.1.2":
   version "1.1.2"
