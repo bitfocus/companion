@@ -165,6 +165,7 @@
 		"companion-module-aja-kipro": "github:bitfocus/companion-module-aja-kipro#v2.0.14",
 		"companion-module-aja-kumo": "github:bitfocus/companion-module-aja-kumo#v1.1.0",
 		"companion-module-allenheath-ahm": "github:bitfocus/companion-module-allenheath-ahm#v1.0.3",
+		"companion-module-allenheath-avantis": "github:bitfocus/companion-module-allenheath-avantis#v1.0.0",
 		"companion-module-allenheath-dlive-ilive": "github:bitfocus/companion-module-allenheath-dlive-ilive#v1.3.8",
 		"companion-module-allenheath-qu": "github:bitfocus/companion-module-allenheath-qu#v1.0.8",
 		"companion-module-allenheath-sq": "github:bitfocus/companion-module-allenheath-sq#v1.3.11",
