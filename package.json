@@ -419,7 +419,7 @@
 		"companion-module-roland-vr50hd-mk2": "github:bitfocus/companion-module-roland-vr50hd-mk2#v1.0.2",
 		"companion-module-roland-xs42h": "github:bitfocus/companion-module-roland-xs42h#v1.0.2",
 		"companion-module-roland-xs62s": "github:bitfocus/companion-module-roland-xs62s#v1.0.3",
-		"companion-module-roland-xs84h": "github:bitfocus/companion-module-roland-xs84h#v2.0.2",
+		"companion-module-roland-xs84h": "github:bitfocus/companion-module-roland-xs84h#v2.0.3",
 		"companion-module-rossvideo-caprica": "github:bitfocus/companion-module-rossvideo-caprica#v1.0.1",
 		"companion-module-rossvideo-nkrouter": "github:bitfocus/companion-module-rossvideo-nkrouter#v1.0.3",
 		"companion-module-rossvideo-rosstalk": "github:bitfocus/companion-module-rossvideo-rosstalk#v1.2.11",
