@@ -3628,9 +3628,9 @@ commist@^1.0.0:
   version "1.0.3"
   resolved "https://codeload.github.com/bitfocus/companion-module-roland-xs62s/tar.gz/0ea97de49144368ba64f5b2fac5ee1d832847313"
 
-"companion-module-roland-xs84h@github:bitfocus/companion-module-roland-xs84h#v2.0.1":
-  version "2.0.1"
-  resolved "https://codeload.github.com/bitfocus/companion-module-roland-xs84h/tar.gz/298b4b396ca4d000a1f83e74e325c1f16936f50d"
+"companion-module-roland-xs84h@github:bitfocus/companion-module-roland-xs84h#v2.0.2":
+  version "2.0.2"
+  resolved "https://codeload.github.com/bitfocus/companion-module-roland-xs84h/tar.gz/270576d2e134e2e5fd967bcf718bf2a02720d638"
 
 "companion-module-rossvideo-caprica@github:bitfocus/companion-module-rossvideo-caprica#v1.0.1":
   version "1.0.1"
