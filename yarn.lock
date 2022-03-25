@@ -3678,9 +3678,9 @@ commist@^1.0.0:
   version "1.0.2"
   resolved "https://codeload.github.com/bitfocus/companion-module-sharp-tv/tar.gz/6d5cd827ebec2fed9f6939203579d9476dcd46f4"
 
-"companion-module-showcuesystems-scs@github:bitfocus/companion-module-showcuesystems-scs#v1.0.3":
-  version "1.0.3"
-  resolved "https://codeload.github.com/bitfocus/companion-module-showcuesystems-scs/tar.gz/2f154d0ea256f2e96e0a7fa8b6b777633289709d"
+"companion-module-showcuesystems-scs@github:bitfocus/companion-module-showcuesystems-scs#v1.0.4":
+  version "1.0.4"
+  resolved "https://codeload.github.com/bitfocus/companion-module-showcuesystems-scs/tar.gz/f7525fb3fde53b40d5b7db8746037a209484c7a3"
 
 "companion-module-shure-dis-ccu@github:bitfocus/companion-module-shure-dis-ccu#v1.0.2":
   version "1.0.2"
