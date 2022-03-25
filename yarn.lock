@@ -3198,6 +3198,10 @@ commist@^1.0.0:
   version "1.0.1"
   resolved "https://codeload.github.com/bitfocus/companion-module-kramer-vs41h/tar.gz/7d66ba1a6545dac1f7f5d0a664d53f5e371419e3"
 
+"companion-module-lea-amplifier@github:bitfocus/companion-module-lea-amplifier#v1.0.0":
+  version "1.0.0"
+  resolved "https://codeload.github.com/bitfocus/companion-module-lea-amplifier/tar.gz/762f48d16f8a592a71530aefe09cea6772f8cd9f"
+
 "companion-module-leadled-clockotron@github:bitfocus/companion-module-leadled-clockotron#v1.0.3":
   version "1.0.3"
   resolved "https://codeload.github.com/bitfocus/companion-module-leadled-clockotron/tar.gz/a739944141be9485b20a9c6da137aee16e01cd9f"
