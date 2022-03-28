@@ -138,16 +138,16 @@
 	"devDependencies": {
 		"asar": "^3.1.0",
 		"asar-node": "^2.3.0",
-		"aws-sdk": "^2.1058.0",
+		"aws-sdk": "^2.1102.0",
 		"cross-env": "^7.0.3",
-		"electron": "13.5.1",
+		"electron": "13.6.6",
 		"electron-builder": "22.11.7",
 		"electron-notarize": "1.1.1",
-		"jest": "^27.4.7",
+		"jest": "^27.5.1",
 		"meow": "^10.1.2",
 		"nodemon": "2.0.7",
 		"p-all": "^3.0.0",
-		"prettier": "^2.5.1",
+		"prettier": "^2.6.1",
 		"s3-upload-stream": "^1.0.7",
 		"typescript": "~4.5"
 	},
@@ -316,7 +316,7 @@
 		"companion-module-homeassistant-server": "github:bitfocus/companion-module-homeassistant-server#v0.8.0",
 		"companion-module-ifelseware-avkey": "github:bitfocus/companion-module-ifelseware-avkey#v1.0.3",
 		"companion-module-ifelseware-avplayback": "github:bitfocus/companion-module-ifelseware-avplayback#v1.0.4",
-		"companion-module-iiyama-prolite":"github:bitfocus/companion-module-iiyama-prolite#v1.1.0",
+		"companion-module-iiyama-prolite": "github:bitfocus/companion-module-iiyama-prolite#v1.1.0",
 		"companion-module-imagine-lrc": "github:bitfocus/companion-module-imagine-lrc#v1.0.2",
 		"companion-module-imimot-mitti": "github:bitfocus/companion-module-imimot-mitti#v1.0.12",
 		"companion-module-intelix-matrix": "github:bitfocus/companion-module-intelix-matrix#v1.0.3",
@@ -426,8 +426,8 @@
 		"companion-module-rossvideo-caprica": "github:bitfocus/companion-module-rossvideo-caprica#v1.0.1",
 		"companion-module-rossvideo-nkrouter": "github:bitfocus/companion-module-rossvideo-nkrouter#v1.0.3",
 		"companion-module-rossvideo-rosstalk": "github:bitfocus/companion-module-rossvideo-rosstalk#v1.2.11",
-		"companion-module-rossvideo-xpression": "github:bitfocus/companion-module-rossvideo-xpression#v1.0.3",
 		"companion-module-rossvideo-videoserver": "github:bitfocus/companion-module-rossvideo-videoserver#v1.0.0",
+		"companion-module-rossvideo-xpression": "github:bitfocus/companion-module-rossvideo-xpression#v1.0.3",
 		"companion-module-sain-smart-relay": "github:bitfocus/companion-module-sain-smart-relay#v1.0.2",
 		"companion-module-seervision-suite": "github:bitfocus/companion-module-seervision-suite#v1.2.1",
 		"companion-module-sharp-tv": "github:bitfocus/companion-module-sharp-tv#v1.0.2",
@@ -501,20 +501,20 @@
 		"companion-module-yamaha-rcp": "github:bitfocus/companion-module-yamaha-rcp#v1.6.4",
 		"companion-module-youtube-live": "github:bitfocus/companion-module-youtube-live#v1.1.5",
 		"companion-module-zenvideo-ndirouter": "github:bitfocus/companion-module-zenvideo-ndirouter#v1.0.2",
-		"debug": "^4.3.3",
+		"debug": "^4.3.4",
 		"elgato-stream-deck": "^4.1.0",
 		"emberplus-connection": "^0.1.2",
-		"express": "^4.17.2",
+		"express": "^4.17.3",
 		"express-serve-zip": "^1.0.1",
 		"find-process": "1.4.7",
-		"fs-extra": "^10.0.0",
+		"fs-extra": "^10.0.1",
 		"husky": "^7.0.4",
-		"infinitton-idisplay": "^1.1.0",
+		"infinitton-idisplay": "^1.1.2",
 		"lodash": "^4.17.20",
 		"mkdirp": "^1.0.4",
 		"moment": "^2.29.1",
 		"node-fetch": "^2.6.7",
-		"node-rest-client": "^3.1.0",
+		"node-rest-client": "^3.1.1",
 		"osc": "^2.4.2",
 		"pngjs": "^3.3.3",
 		"rimraf": "^3.0.2",
@@ -523,7 +523,7 @@
 		"shortid": "^2.2.16",
 		"socket.io": "^4.4.1",
 		"strip-ansi": "^5.2.0",
-		"systeminformation": "^5.10.0",
+		"systeminformation": "^5.11.9",
 		"websocket": "^1.0.34",
 		"zx": "^4.3.0"
 	},
@@ -532,10 +532,10 @@
 		"url": "https://donorbox.org/bitfocus-opensource"
 	},
 	"optionalDependencies": {
-		"@julusian/jpeg-turbo": "^1.1.1"
+		"@julusian/jpeg-turbo": "^1.1.2"
 	},
 	"resolutions": {
 		"**/osc/serialport": "9.2.1",
-		"**/osc/ws": "^7.5.4"
+		"**/osc/ws": "^7.5.7"
 	}
 }
