@@ -486,7 +486,7 @@
 		"companion-module-ubiquiti-unifi": "github:bitfocus/companion-module-ubiquiti-unifi#v1.0.3",
 		"companion-module-vaddio-ptz": "github:bitfocus/companion-module-vaddio-ptz#v1.0.2",
 		"companion-module-vdo-ninja": "github:bitfocus/companion-module-vdo-ninja#v1.0.2",
-		"companion-module-vicreo-hotkey": "github:bitfocus/companion-module-vicreo-hotkey#v2.0.9",
+		"companion-module-vicreo-hotkey": "github:bitfocus/companion-module-vicreo-hotkey#v2.0.11",
 		"companion-module-vicreo-variablelistener": "github:bitfocus/companion-module-vicreo-variablelistener#v1.0.8",
 		"companion-module-videolan-vlc": "github:bitfocus/companion-module-videolan-vlc#v1.1.13",
 		"companion-module-vimeo-livestreamstudio6": "github:bitfocus/companion-module-vimeo-livestreamstudio6#v1.0.0",
