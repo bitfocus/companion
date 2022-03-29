@@ -3,6 +3,7 @@
 	"version": "2.3.0",
 	"description": "Companion",
 	"main": "electron.js",
+	"type": "module",
 	"build": {
 		"productName": "Companion",
 		"appId": "companion.bitfocus.no",
@@ -168,7 +169,7 @@
 		"get-port": "^5.1.1",
 		"got": "^11.8.3",
 		"infinitton-idisplay": "^1.1.0",
-		"lodash": "^4.17.20",
+		"lodash-es": "^4.17.21",
 		"moment": "^2.29.1",
 		"node-fetch": "^2.6.7",
 		"node-machine-id": "^1.1.12",

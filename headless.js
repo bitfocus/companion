@@ -1,6 +1,6 @@
 #!/usr/bin/env node
-var Registry = require('./lib/Registry.js')
-var os = require('os')
+import Registry from './lib/Registry.js'
+import os from 'os'
 
 console.log('Starting')
 

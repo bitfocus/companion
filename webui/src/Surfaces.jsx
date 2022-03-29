@@ -113,13 +113,9 @@ export const SurfacesPage = memo(function SurfacesPage() {
 						return (
 							<tr key={dev.id}>
 								<td>#{i}</td>
-								<td>{dev.serialnumber}</td>
+								<td>{dev.id}</td>
 								<td>
-									<TextInputField
-										definition={{}}
-										value={dev.name}
-										setValue={(val) => updateName(dev.serialnumber, val)}
-									/>
+									<TextInputField definition={{}} value={dev.name} setValue={(val) => updateName(dev.id, val)} />
 								</td>
 								<td>{dev.type}</td>
 								<td>
@@ -315,7 +311,7 @@ const SurfaceEditModal = forwardRef(function SurfaceEditModal(_props, ref) {
 						) : (
 							''
 						)}
-						{deviceInfo.config?.includes('brightness') ? (
+						{deviceInfo.configFields?.includes('brightness') ? (
 							<CFormGroup>
 								<CLabel htmlFor="brightness">Brightness</CLabel>
 								<CInput
@@ -331,11 +327,11 @@ const SurfaceEditModal = forwardRef(function SurfaceEditModal(_props, ref) {
 						) : (
 							''
 						)}
-						{deviceInfo.config?.includes('orientation') ? (
+						{deviceInfo.configFields?.includes('rotation') ? (
 							<CFormGroup>
-								<CLabel htmlFor="orientation">Button rotation</CLabel>
+								<CLabel htmlFor="rotation">Button rotation</CLabel>
 								<CSelect
-									name="orientation"
+									name="rotation"
 									value={deviceConfig.rotation}
 									onChange={(e) => updateConfig('rotation', parseInt(e.currentTarget.value))}
 								>
@@ -348,7 +344,7 @@ const SurfaceEditModal = forwardRef(function SurfaceEditModal(_props, ref) {
 						) : (
 							''
 						)}
-						{deviceInfo.config?.includes('enable_device') ? (
+						{deviceInfo.configFields?.includes('enable_device') ? (
 							<CFormGroup>
 								<CLabel htmlFor="enable_device">Enable Device</CLabel>
 								<CInputCheckbox
