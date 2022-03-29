@@ -10,6 +10,8 @@ var exec = require('child_process').exec
 const { init, showReportDialog, configureScope } = require('@sentry/electron')
 const systeminformation = require('systeminformation')
 
+let configDir
+
 // Ensure there isn't another instance of companion running already
 var lock = app.requestSingleInstanceLock()
 if (!lock) {
@@ -174,7 +176,7 @@ function createWindow() {
 	})
 
 	try {
-		let configDir = app.getPath('appData')
+		configDir = app.getPath('appData')
 		if (process.env.COMPANION_CONFIG_BASEDIR !== undefined) {
 			configDir = process.env.COMPANION_CONFIG_BASEDIR
 		}
@@ -224,6 +226,12 @@ function createTray() {
 	)
 	menu.append(
 		new electron.MenuItem({
+			label: 'Show config folder',
+			click: showConfigFolder,
+		})
+	)
+	menu.append(
+		new electron.MenuItem({
 			label: 'Quit',
 			click: trayQuit,
 		})
@@ -263,6 +271,14 @@ function trayQuit() {
 
 function scanUsb() {
 	system.emit('devices_reenumerate')
+}
+
+function showConfigFolder() {
+	try {
+		electron.shell.showItemInFolder(path.join(configDir, 'companion', 'db'))
+	} catch (e) {
+		electron.dialog.showErrorBox('File Error', 'Could not open config directory.')
+	}
 }
 
 function toggleWindow() {

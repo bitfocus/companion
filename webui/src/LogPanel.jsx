@@ -87,6 +87,17 @@ export const LogPanel = memo(function LogPanel() {
 						>
 							<FontAwesomeIcon icon={faFileExport} /> Export log
 						</CButton>
+						<CButton
+							color="light"
+							style={{
+								marginLeft: 10,
+							}}
+							size="sm"
+							href={`/int/support_export`}
+							target="_new"
+						>
+							<FontAwesomeIcon icon={faFileExport} /> Export support bundle
+						</CButton>
 					</div>
 				</CCol>
 			</CRow>

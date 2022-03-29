@@ -25,6 +25,7 @@ global.MAX_BUTTONS_PER_ROW = 8
 var EventEmitter = require('events')
 var system = new EventEmitter()
 var fs = require('fs')
+var path = require('path')
 var debug = require('debug')('app')
 var mkdirp = require('mkdirp')
 var stripAnsi = require('strip-ansi')
@@ -138,7 +139,7 @@ system.ready = function (logToFile) {
 				var writestring = logbuffer.join('\n')
 				logbuffer = []
 				logwriting = true
-				fs.appendFile('./companion.log', writestring + '\n', function (err) {
+				fs.appendFile(path.join(cfgDir, 'companion.log'), writestring + '\n', function (err) {
 					if (err) {
 						console.log('log write error', err)
 					}
