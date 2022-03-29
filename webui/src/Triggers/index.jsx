@@ -62,7 +62,7 @@ export const Triggers = memo(function Triggers() {
 	return (
 		<div>
 			<h4>Triggers and schedules</h4>
-			<p>This allows you to run actions based on instance or time events.</p>
+			<p>This allows you to run actions based on Companion, feedback or time events.</p>
 
 			{editItem[0] ? (
 				<TriggerEditModal

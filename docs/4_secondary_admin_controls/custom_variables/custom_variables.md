@@ -8,12 +8,12 @@ Within the **Custom Variables** view you can:
 - Edit the "Current" and "Startup" values for each custom variable, and
 - Delete existing custom variables
 
-All custom variables will appear with `internal` as the instance name, and their names begin with a `custom_` prefix.
+All custom variables will appear with `internal` as the connection label, and their names begin with a `custom_` prefix.
 
 ```
                            +------- custom prefix
                            |
-instance name ------+      |       +--------------variable name
+connection label----+      |       +--------------variable name
                     |      |       |
                     v      v       v
             $(internal:custom_counter)
