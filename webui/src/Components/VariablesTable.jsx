@@ -90,6 +90,6 @@ export function VariablesTable({ label }) {
 			</table>
 		)
 	} else {
-		return <p>Instance has no variables</p>
+		return <p>Connection has no variables</p>
 	}
 }

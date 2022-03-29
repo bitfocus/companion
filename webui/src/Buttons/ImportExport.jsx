@@ -181,14 +181,14 @@ export function ImportExport({ pageNumber }) {
 
 				{importMode === 'page' ? (
 					<div id="import_resolve">
-						<h5>Link config instances with local instances</h5>
+						<h5>Link config connections with local connections</h5>
 
 						<table className="table table-responsive-sm">
 							<thead>
 								<tr>
-									<th>Select instance</th>
-									<th>Config instance type</th>
-									<th>Config instance name</th>
+									<th>Select connection</th>
+									<th>Config connection type</th>
+									<th>Config connection name</th>
 								</tr>
 							</thead>
 							<tbody>
@@ -220,7 +220,7 @@ export function ImportExport({ pageNumber }) {
 																)
 															}}
 														>
-															<option value="new">[ Create new instance ]</option>
+															<option value="new">[ Create new connection ]</option>
 															{currentInstances.map(([id, inst]) => (
 																<option value={id}>{inst.label}</option>
 															))}
@@ -322,7 +322,7 @@ function FullExport() {
 	return (
 		<>
 			<h5>Export full configuration</h5>
-			<p>Download a file containing all instances and button pages.</p>
+			<p>Download a file containing all connections and button pages.</p>
 			<CButton color="success" href="/int/full_export" target="_new">
 				<FontAwesomeIcon icon={faDownload} /> Export
 			</CButton>
@@ -337,7 +337,7 @@ function ResetConfiguration() {
 	return (
 		<>
 			<h5>Reset all configuration</h5>
-			<p>This will clear all instances, triggers and buttons and start over.</p>
+			<p>This will clear all connections, triggers and buttons and start over.</p>
 			<p>
 				<CButton color="danger" style={{ backgroundColor: 'rgba(180,0,0,1)' }} onClick={doReset}>
 					<FontAwesomeIcon icon={faTrashAlt} /> Yes, reset everything
