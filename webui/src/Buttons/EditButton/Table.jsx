@@ -8,16 +8,17 @@ import {
 	TextInputField,
 	TextWithVariablesInputField,
 } from '../../Components'
+import { MAX_BUTTONS } from '../../Constants'
 import { InstancesContext } from '../../util'
 
-export function ActionTableRowOption({ instanceId, actionId, option, value, setValue, visibility }) {
+export function ActionTableRowOption({ instanceId, isOnBank, actionId, option, value, setValue, visibility }) {
 	const setValue2 = useCallback((val) => setValue(actionId, option.id, val), [actionId, option.id, setValue])
 
 	if (!option) {
 		return <p>Bad option</p>
 	}
 
-	let control = ''
+	let control = undefined
 	switch (option.type) {
 		case 'textinput': {
 			control = <TextInputField value={value} definition={option} setValue={setValue2} />
@@ -60,6 +61,12 @@ export function ActionTableRowOption({ instanceId, actionId, option, value, setV
 					case 'internal:instance_id':
 						control = <InternalInstanceIdDropdown value={value} setValue={setValue2} />
 						break
+					case 'internal:page':
+						control = <InternalPageDropdown isOnBank={isOnBank} value={value} setValue={setValue2} />
+						break
+					case 'internal:bank':
+						control = <InternalBankDropdown isOnBank={isOnBank} value={value} setValue={setValue2} />
+						break
 					default:
 						// Use default below
 						break
@@ -98,6 +105,58 @@ function InternalInstanceIdDropdown({ value, setValue }) {
 			definition={{
 				choices: choices,
 				default: 'all',
+			}}
+			multiple={false}
+			setValue={setValue}
+		/>
+	)
+}
+
+function InternalPageDropdown({ isOnBank, value, setValue }) {
+	const choices = useMemo(() => {
+		const choices = []
+		if (isOnBank) {
+			choices.push({ id: 0, label: 'This page' })
+		}
+
+		for (let i = 1; i <= 99; i++) {
+			choices.push({ id: i, label: `${i}` })
+		}
+		return choices
+	}, [isOnBank])
+
+	return (
+		<DropdownInputField
+			value={value}
+			definition={{
+				choices: choices,
+				default: choices[0]?.id,
+			}}
+			multiple={false}
+			setValue={setValue}
+		/>
+	)
+}
+
+function InternalBankDropdown({ isOnBank, value, setValue }) {
+	const choices = useMemo(() => {
+		const choices = []
+		if (isOnBank) {
+			choices.push({ id: 0, label: 'This bank' })
+		}
+
+		for (let i = 1; i <= MAX_BUTTONS; i++) {
+			choices.push({ id: i, label: `${i}` })
+		}
+		return choices
+	}, [isOnBank])
+
+	return (
+		<DropdownInputField
+			value={value}
+			definition={{
+				choices: choices,
+				default: choices[0]?.id,
 			}}
 			multiple={false}
 			setValue={setValue}

@@ -234,6 +234,7 @@ function FeedbackTableRow({ feedback, page, bank, index, dragId, moveCard, setVa
 			</td>
 			<td>
 				<FeedbackEditor
+					isOnBank={true}
 					feedback={feedback}
 					setValue={setValue}
 					innerDelete={innerDelete}
@@ -245,7 +246,14 @@ function FeedbackTableRow({ feedback, page, bank, index, dragId, moveCard, setVa
 	)
 }
 
-export function FeedbackEditor({ feedback, setValue, innerDelete, setSelectedStyleProps, setStylePropsValue }) {
+export function FeedbackEditor({
+	feedback,
+	isOnBank,
+	setValue,
+	innerDelete,
+	setSelectedStyleProps,
+	setStylePropsValue,
+}) {
 	const feedbacksContext = useContext(FeedbacksContext)
 	const instancesContext = useContext(InstancesContext)
 
@@ -312,6 +320,7 @@ export function FeedbackEditor({ feedback, setValue, innerDelete, setSelectedSty
 					{options.map((opt, i) => (
 						<MyErrorBoundary key={i}>
 							<ActionTableRowOption
+								isOnBank={isOnBank}
 								instanceId={feedback.instance_id}
 								option={opt}
 								actionId={feedback.id}
