@@ -120,7 +120,7 @@ jobs:
           s3-secret-key: ${{ secrets.S3_SECRET }}
 
           api-product: companion
-          api-target: 'mac-x64'
+          api-target: 'mac-intel'
           api-secret: ${{ secrets.BITFOCUS_API_PROJECT_SECRET }}
 
   osx-arm64:
@@ -183,7 +183,7 @@ jobs:
           s3-secret-key: ${{ secrets.S3_SECRET }}
 
           api-product: companion
-          api-target: 'mac-arm64'
+          api-target: 'mac-arm'
           api-secret: ${{ secrets.BITFOCUS_API_PROJECT_SECRET }}
 
   win64:
