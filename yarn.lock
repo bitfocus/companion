@@ -2901,6 +2901,10 @@ commist@^1.0.0:
   version "1.0.4"
   resolved "https://codeload.github.com/bitfocus/companion-module-disguise-mtc/tar.gz/7c3dd40f6cbefff4daf22dd9e604640fbd16c9ca"
 
+"companion-module-disguise-smc@github:bitfocus/companion-module-disguise-smc#v1.0.0":
+  version "1.0.0"
+  resolved "https://codeload.github.com/bitfocus/companion-module-disguise-smc/tar.gz/7a7d93aa61bb8173452ffafb07901ea7e9893a7f"
+
 "companion-module-disguise@github:bitfocus/companion-module-disguise#v1.1.2":
   version "1.1.2"
   resolved "https://codeload.github.com/bitfocus/companion-module-disguise/tar.gz/4f65d23e9fcc4bad01e79a3687e887e1ecde72ac"
