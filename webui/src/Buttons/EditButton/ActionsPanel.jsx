@@ -365,6 +365,7 @@ function ActionTableRow({ action, index, dragId, setValue, doDelete, doDelay, mo
 							{options.map((opt, i) => (
 								<MyErrorBoundary key={i}>
 									<ActionTableRowOption
+										instanceId={action.instance_id}
 										option={opt}
 										actionId={action.id}
 										value={(action.options || {})[opt.id]}

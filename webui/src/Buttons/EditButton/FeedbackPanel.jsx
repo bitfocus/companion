@@ -312,6 +312,7 @@ export function FeedbackEditor({ feedback, setValue, innerDelete, setSelectedSty
 					{options.map((opt, i) => (
 						<MyErrorBoundary key={i}>
 							<ActionTableRowOption
+								instanceId={feedback.instance_id}
 								option={opt}
 								actionId={feedback.id}
 								value={(feedback.options || {})[opt.id]}

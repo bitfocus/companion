@@ -1,5 +1,5 @@
 import { CFormGroup, CInputGroupText, CLabel } from '@coreui/react'
-import React, { useCallback } from 'react'
+import React, { useCallback, useContext, useMemo } from 'react'
 import {
 	CheckboxInputField,
 	ColorInputField,
@@ -8,8 +8,9 @@ import {
 	TextInputField,
 	TextWithVariablesInputField,
 } from '../../Components'
+import { InstancesContext } from '../../util'
 
-export function ActionTableRowOption({ actionId, option, value, setValue, visibility }) {
+export function ActionTableRowOption({ instanceId, actionId, option, value, setValue, visibility }) {
 	const setValue2 = useCallback((val) => setValue(actionId, option.id, val), [actionId, option.id, setValue])
 
 	if (!option) {
@@ -53,8 +54,23 @@ export function ActionTableRowOption({ actionId, option, value, setValue, visibi
 			break
 		}
 		default:
-			control = <CInputGroupText>Unknown type "{option.type}"</CInputGroupText>
+			// The 'internal instance' is allowed to use some special input fields, to minimise when it reacts to changes elsewhere in the system
+			if (instanceId === 'internal') {
+				switch (option.type) {
+					case 'internal:instance_id':
+						control = <InternalInstanceIdDropdown value={value} setValue={setValue2} />
+						break
+					default:
+						// Use default below
+						break
+				}
+			}
+			// Use default below
 			break
+	}
+
+	if (control === undefined) {
+		control = <CInputGroupText>Unknown type "{option.type}"</CInputGroupText>
 	}
 
 	return (
@@ -62,5 +78,29 @@ export function ActionTableRowOption({ actionId, option, value, setValue, visibi
 			<CLabel>{option.label}</CLabel>
 			{control}
 		</CFormGroup>
+	)
+}
+
+function InternalInstanceIdDropdown({ value, setValue }) {
+	const context = useContext(InstancesContext)
+
+	const choices = useMemo(() => {
+		const instance_choices = [{ id: 'all', label: 'All Instances' }]
+		for (const [id, config] of Object.entries(context)) {
+			instance_choices.push({ id, label: config.label ?? id })
+		}
+		return instance_choices
+	}, [context])
+
+	return (
+		<DropdownInputField
+			value={value}
+			definition={{
+				choices: choices,
+				default: 'all',
+			}}
+			multiple={false}
+			setValue={setValue}
+		/>
 	)
 }
