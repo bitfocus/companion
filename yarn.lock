@@ -3141,9 +3141,9 @@ commist@^1.0.0:
   version "1.0.4"
   resolved "https://codeload.github.com/bitfocus/companion-module-ifelseware-avplayback/tar.gz/537a64980c7857907691f7187be29cd4584e2cff"
 
-"companion-module-iiyama-prolite@github:bitfocus/companion-module-iiyama-prolite#v1.1.0":
-  version "1.1.0"
-  resolved "https://codeload.github.com/bitfocus/companion-module-iiyama-prolite/tar.gz/89524a64b135b8325444cb6c9e772a3fe5b131b2"
+"companion-module-iiyama-prolite@github:bitfocus/companion-module-iiyama-prolite#v1.1.3":
+  version "1.1.3"
+  resolved "https://codeload.github.com/bitfocus/companion-module-iiyama-prolite/tar.gz/779c700f3bad2f528d93602ff4820b05cfa8a362"
   dependencies:
     arpscan "^1.0.2"
     node-arp "^1.0.6"
