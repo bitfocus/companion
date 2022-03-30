@@ -3508,6 +3508,15 @@ commist@^1.0.0:
   dependencies:
     got "^6.7.1"
 
+"companion-module-panasonic-kairos@github:bitfocus/companion-module-panasonic-kairos#v1.0.0":
+  version "0.0.2"
+  resolved "https://codeload.github.com/bitfocus/companion-module-panasonic-kairos/tar.gz/313dabdbd4d814f758e4e46a189ba5ddb4da42d8"
+  dependencies:
+    "@types/lodash" "^4.14.178"
+    "@types/xml2js" "^0.4.9"
+    lodash "^4.17.21"
+    xml2js "^0.4.23"
+
 "companion-module-panasonic-lumix@github:bitfocus/companion-module-panasonic-lumix#v1.0.0":
   version "1.0.0"
   resolved "https://codeload.github.com/bitfocus/companion-module-panasonic-lumix/tar.gz/e740905246e3c97f6ecceb73f2b52a1ec46f34a1"
