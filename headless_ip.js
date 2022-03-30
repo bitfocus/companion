@@ -17,16 +17,12 @@ if (process.env.COMPANION_CONFIG_BASEDIR !== undefined) {
 	configDir = process.env[process.platform == 'win32' ? 'USERPROFILE' : 'HOME']
 }
 
-;(async () => {
-	const registry = await Registry.create(configDir)
+const registry = await Registry.create(configDir)
 
-	var port = '8000'
-	if (process.argv[3] != null) {
-		port = Number(process.argv[3])
-	}
+var port = '8000'
+if (process.argv[3] != null) {
+	port = Number(process.argv[3])
+}
 
-	setTimeout(function () {
-		registry.ready(process.argv[2], port, !process.env.DEVELOPER)
-		console.log('Started')
-	}, 1000)
-})()
+await registry.ready(process.argv[2], port, !process.env.DEVELOPER)
+console.log('Started')

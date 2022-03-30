@@ -44,46 +44,40 @@ if (process.env.COMPANION_CONFIG_BASEDIR !== undefined) {
 	configDir = process.env[process.platform == 'win32' ? 'USERPROFILE' : 'HOME']
 }
 
-;(async () => {
-	const registry = await Registry.create(configDir)
+const registry = await Registry.create(configDir)
 
-	var port = '8000'
+var port = '8000'
 
-	if (process.argv[3] != null) {
-		port = process.argv[3]
+if (process.argv[3] != null) {
+	port = process.argv[3]
+}
+
+if (process.argv[2] === 'list') {
+	console.log('Found interfaces:')
+	for (var k in ifaces) {
+		console.log(k)
 	}
+	process.exit(0)
+}
 
-	if (process.argv[2] === 'list') {
-		console.log('Found interfaces:')
-		for (var k in ifaces) {
-			console.log(k)
+if (process.argv[2] in ifaces) {
+	var address
+	var iface = ifaces[process.argv[2]]
+
+	iface.forEach(function (ipv) {
+		if ('IPv4' !== ipv.family) {
+			// skip over non-ipv4 addresses for now
+			return
 		}
-		process.exit(0)
-	}
+		address = ipv.address
+	})
 
-	if (process.argv[2] in ifaces) {
-		var address
-		var iface = ifaces[process.argv[2]]
-
-		iface.forEach(function (ipv) {
-			if ('IPv4' !== ipv.family) {
-				// skip over non-ipv4 addresses for now
-				return
-			}
-			address = ipv.address
-		})
-
-		setTimeout(function () {
-			registry.ready(address, port, !process.env.DEVELOPER)
-			console.log('Started')
-		}, 1000)
-	} else if (process.argv[2] == '0.0.0.0') {
-		setTimeout(function () {
-			registry.ready('0.0.0.0', port, !process.env.DEVELOPER)
-			console.log('Started')
-		}, 1000)
-	} else {
-		console.log('Interface not found!')
-		process.exit(1)
-	}
-})()
+	await registry.ready(address, port, !process.env.DEVELOPER)
+	console.log('Started')
+} else if (process.argv[2] == '0.0.0.0') {
+	await registry.ready('0.0.0.0', port, !process.env.DEVELOPER)
+	console.log('Started')
+} else {
+	console.log('Interface not found!')
+	process.exit(1)
+}
