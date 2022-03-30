@@ -179,7 +179,10 @@ const configDefaults = {
 			const ip = uiConfig.get('bind_ip')
 			const port = uiConfig.get('http_port')
 
-			registry.ready(ip, port, !process.env.DEVELOPER)
+			registry.ready(ip, port, !process.env.DEVELOPER).catch((e) => {
+				console.log('Failed to init')
+				process.exit(1)
+			})
 		})
 
 		ipcMain.on('network-interfaces:get', function () {
