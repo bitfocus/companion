@@ -369,7 +369,7 @@ function ActionTableRow({ action, isOnBank, index, dragId, setValue, doDelete, d
 								<MyErrorBoundary key={i}>
 									<ActionTableRowOption
 										isOnBank={isOnBank}
-										instanceId={action.instance_id}
+										instanceId={action.instance}
 										option={opt}
 										actionId={action.id}
 										value={(action.options || {})[opt.id]}

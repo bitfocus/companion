@@ -9,7 +9,7 @@ import {
 	TextWithVariablesInputField,
 } from '../../Components'
 import { MAX_BUTTONS } from '../../Constants'
-import { InstancesContext } from '../../util'
+import { InstancesContext, CustomVariableDefinitionsContext, VariableDefinitionsContext } from '../../util'
 
 export function ActionTableRowOption({ instanceId, isOnBank, actionId, option, value, setValue, visibility }) {
 	const setValue2 = useCallback((val) => setValue(actionId, option.id, val), [actionId, option.id, setValue])
@@ -66,6 +66,12 @@ export function ActionTableRowOption({ instanceId, isOnBank, actionId, option, v
 						break
 					case 'internal:bank':
 						control = <InternalBankDropdown isOnBank={isOnBank} value={value} setValue={setValue2} />
+						break
+					case 'internal:custom_variable':
+						control = <InternalCustomVariableDropdown value={value} setValue={setValue2} />
+						break
+					case 'internal:variable':
+						control = <InternalVariableDropdown value={value} setValue={setValue2} defaultVal={option.default} />
 						break
 					default:
 						// Use default below
@@ -157,6 +163,67 @@ function InternalBankDropdown({ isOnBank, value, setValue }) {
 			definition={{
 				choices: choices,
 				default: choices[0]?.id,
+			}}
+			multiple={false}
+			setValue={setValue}
+		/>
+	)
+}
+
+function InternalCustomVariableDropdown({ value, setValue }) {
+	const context = useContext(CustomVariableDefinitionsContext)
+	const choices = useMemo(() => {
+		const choices = []
+
+		for (const [id, info] of Object.entries(context)) {
+			choices.push({
+				id,
+				label: `${info.description} (${id})`,
+			})
+		}
+
+		return choices
+	}, [context])
+
+	return (
+		<DropdownInputField
+			value={value}
+			definition={{
+				choices: choices,
+				default: '',
+			}}
+			multiple={false}
+			setValue={setValue}
+		/>
+	)
+}
+
+function InternalVariableDropdown({ value, setValue, defaultVal }) {
+	const context = useContext(VariableDefinitionsContext)
+	const choices = useMemo(() => {
+		const choices = []
+
+		console.log(context)
+
+		for (const [instanceLabel, variables] of Object.entries(context)) {
+			for (const variable of variables) {
+				const id = `${instanceLabel}:${variable.name}`
+				choices.push({
+					id,
+					label: `${variable.label} (${id})`,
+				})
+			}
+		}
+
+		return choices
+	}, [context])
+
+	return (
+		<DropdownInputField
+			value={value}
+			definition={{
+				choices: choices,
+				default: defaultVal ?? choices[0]?.id ?? '',
 			}}
 			multiple={false}
 			setValue={setValue}
