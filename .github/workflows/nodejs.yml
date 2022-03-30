@@ -102,7 +102,7 @@ jobs:
           VERSION=$(cat ./BUILD)
 
           echo ::set-output name=sourcename::"electron-output/companion-mac-x64.dmg"
-          echo ::set-output name=targetname::"companion-mac-x64-${COUNT}-${HASH}.dmg"
+          echo ::set-output name=targetname::"companion-mac-x64-${VERSION}.dmg"
           echo ::set-output name=longversion::"${VERSION}"
 
       - name: Upload build
@@ -165,7 +165,7 @@ jobs:
           VERSION=$(cat ./BUILD)
 
           echo ::set-output name=sourcename::"electron-output/companion-mac-arm64.dmg"
-          echo ::set-output name=targetname::"companion-mac-arm64-${COUNT}-${HASH}.dmg"
+          echo ::set-output name=targetname::"companion-mac-arm64-${VERSION}.dmg"
           echo ::set-output name=longversion::"${VERSION}"
 
       - name: Upload build
