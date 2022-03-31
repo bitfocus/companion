@@ -9,7 +9,13 @@ import {
 	TextWithVariablesInputField,
 } from '../../Components'
 import { MAX_BUTTONS } from '../../Constants'
-import { InstancesContext, CustomVariableDefinitionsContext, VariableDefinitionsContext } from '../../util'
+import {
+	InstancesContext,
+	CustomVariableDefinitionsContext,
+	VariableDefinitionsContext,
+	SurfacesContext,
+	PagesContext,
+} from '../../util'
 
 export function ActionTableRowOption({ instanceId, isOnBank, actionId, option, value, setValue, visibility }) {
 	const setValue2 = useCallback((val) => setValue(actionId, option.id, val), [actionId, option.id, setValue])
@@ -62,10 +68,20 @@ export function ActionTableRowOption({ instanceId, isOnBank, actionId, option, v
 						control = <InternalInstanceIdDropdown value={value} setValue={setValue2} />
 						break
 					case 'internal:page':
-						control = <InternalPageDropdown isOnBank={isOnBank} value={value} setValue={setValue2} />
+						control = (
+							<InternalPageDropdown
+								isOnBank={isOnBank}
+								includeDirection={option.includeDirection}
+								value={value}
+								setValue={setValue2}
+							/>
+						)
 						break
 					case 'internal:bank':
 						control = <InternalBankDropdown isOnBank={isOnBank} value={value} setValue={setValue2} />
+						break
+					case 'internal:surface_serial':
+						control = <InternalSurfaceBySerialDropdown isOnBank={isOnBank} value={value} setValue={setValue2} />
 						break
 					case 'internal:custom_variable':
 						control = <InternalCustomVariableDropdown value={value} setValue={setValue2} />
@@ -118,18 +134,24 @@ function InternalInstanceIdDropdown({ value, setValue }) {
 	)
 }
 
-function InternalPageDropdown({ isOnBank, value, setValue }) {
+function InternalPageDropdown({ isOnBank, includeDirection, value, setValue }) {
+	const pages = useContext(PagesContext)
+
 	const choices = useMemo(() => {
 		const choices = []
 		if (isOnBank) {
 			choices.push({ id: 0, label: 'This page' })
 		}
+		if (includeDirection) {
+			choices.push({ id: 'back', label: 'Back' }, { id: 'forward', label: 'Forward' })
+		}
 
 		for (let i = 1; i <= 99; i++) {
-			choices.push({ id: i, label: `${i}` })
+			const name = pages[i]
+			choices.push({ id: i, label: `${i}` + (name ? ` (${name.name || ''})` : '') })
 		}
 		return choices
-	}, [isOnBank])
+	}, [pages, isOnBank, includeDirection])
 
 	return (
 		<DropdownInputField
@@ -156,6 +178,37 @@ function InternalBankDropdown({ isOnBank, value, setValue }) {
 		}
 		return choices
 	}, [isOnBank])
+
+	return (
+		<DropdownInputField
+			value={value}
+			definition={{
+				choices: choices,
+				default: choices[0]?.id,
+			}}
+			multiple={false}
+			setValue={setValue}
+		/>
+	)
+}
+
+function InternalSurfaceBySerialDropdown({ isOnBank, value, setValue }) {
+	const context = useContext(SurfacesContext)
+
+	const choices = useMemo(() => {
+		const choices = []
+		if (isOnBank) {
+			choices.push({ id: 'self', label: 'Current surface' })
+		}
+
+		for (const surface of context) {
+			choices.push({
+				label: `${surface.name || surface.type} (${surface.id})`,
+				id: surface.id,
+			})
+		}
+		return choices
+	}, [context, isOnBank])
 
 	return (
 		<DropdownInputField
@@ -202,8 +255,6 @@ function InternalVariableDropdown({ value, setValue, defaultVal }) {
 	const context = useContext(VariableDefinitionsContext)
 	const choices = useMemo(() => {
 		const choices = []
-
-		console.log(context)
 
 		for (const [instanceLabel, variables] of Object.entries(context)) {
 			for (const variable of variables) {
