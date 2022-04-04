@@ -3075,9 +3075,9 @@ commist@^1.0.0:
   dependencies:
     socket.io-client "^4.4.0"
 
-"companion-module-haivision-connectdvr@github:bitfocus/companion-module-haivision-connectdvr#v1.1.4":
-  version "1.1.4"
-  resolved "https://codeload.github.com/bitfocus/companion-module-haivision-connectdvr/tar.gz/de1f90a03c49061c199aff51eee14157db3f6bce"
+"companion-module-haivision-connectdvr@github:bitfocus/companion-module-haivision-connectdvr#v1.1.5":
+  version "1.1.5"
+  resolved "https://codeload.github.com/bitfocus/companion-module-haivision-connectdvr/tar.gz/925ac9a4423e0b017c65c5c7b5491f5cd284ca0d"
 
 "companion-module-haivision-kbencoder@github:bitfocus/companion-module-haivision-kbencoder#v1.0.3":
   version "1.0.3"
