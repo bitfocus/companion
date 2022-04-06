@@ -1,15 +1,13 @@
-var electron = require('electron')
-const { ipcMain } = require('electron')
-var app = electron.app
-var BrowserWindow = electron.BrowserWindow
-var path = require('path')
-var url = require('url')
-var Registry = require('./lib/Registry.js')
-var fs = require('fs-extra')
-const { init, showReportDialog, configureScope } = require('@sentry/electron')
-const systeminformation = require('systeminformation')
-const Store = require('electron-store')
-const pkgInfo = require('./package.json')
+import path from 'path'
+import url from 'url'
+import Registry from './lib/Registry.js'
+import  fs from 'fs-extra'
+import { init, showReportDialog, configureScope } from '@sentry/electron'
+import systeminformation from 'systeminformation'
+import Store from 'electron-store'
+import { fileURLToPath } from 'url'
+
+const {ipcMain, app, BrowserWindow} = electron
 
 // Ensure there isn't another instance of companion running already
 var lock = app.requestSingleInstanceLock()
@@ -19,21 +17,18 @@ if (!lock) {
 		'Another instance is already running. Please close the other instance first.'
 	)
 	app.quit()
-	return
-}
+} else {
+	let configDir = app.getPath('appData')
+	if (process.env.COMPANION_CONFIG_BASEDIR !== undefined) {
+		configDir = process.env.COMPANION_CONFIG_BASEDIR
+	}
 
-let configDir = app.getPath('appData')
-if (process.env.COMPANION_CONFIG_BASEDIR !== undefined) {
-	configDir = process.env.COMPANION_CONFIG_BASEDIR
-}
+	const configDefaults = {
+		http_port: 8000,
+		bind_ip: '127.0.0.1',
+		start_minimised: false,
+	}
 
-const configDefaults = {
-	http_port: 8000,
-	bind_ip: '127.0.0.1',
-	start_minimised: false,
-}
-
-;(async () => {
 	const fullConfigDir = path.join(configDir, '/companion/')
 
 	try {
@@ -61,7 +56,7 @@ const configDefaults = {
 	let appInfo = {
 		appVersion: registry.appVersion,
 		appBuild: registry.appBuild,
-		appName: pkgInfo.description,
+		appName: registry.pkgInfo.description,
 
 		appStatus: 'Unknown',
 		appURL: 'Waiting for webserver..',
@@ -119,19 +114,19 @@ const configDefaults = {
 			maxHeight: 380,
 			frame: false,
 			resizable: false,
-			icon: path.join(__dirname, 'assets/icon.png'),
+			icon: fileURLToPath(new URL('assets/icon.png', import.meta.url)),
 			webPreferences: {
 				pageVisibility: true,
 				nodeIntegration: true,
 				contextIsolation: true,
-				preload: path.join(__dirname, 'window-preload.js'),
+				preload: fileURLToPath(new URL('window-preload.js', import.meta.url)),
 			},
 		})
 
 		window
 			.loadURL(
 				url.format({
-					pathname: path.join(__dirname, 'window.html'),
+					pathname: fileURLToPath(new URL('window.html', import.meta.url)),
 					protocol: 'file:',
 					slashes: true,
 				})
@@ -238,8 +233,8 @@ const configDefaults = {
 	function createTray() {
 		tray = new electron.Tray(
 			process.platform == 'darwin'
-				? path.join(__dirname, 'assets', 'trayTemplate.png')
-				: path.join(__dirname, 'assets', 'icon.png')
+				? fileURLToPath(new URL('assets/trayTemplate.png', import.meta.url))
+				: fileURLToPath(new URL('assets/icon.png', import.meta.url)),
 		)
 		tray.setIgnoreDoubleClickEvents(true)
 		if (process.platform !== 'darwin') {
@@ -313,7 +308,7 @@ const configDefaults = {
 		window.focus()
 	}
 
-	app.whenReady().then(function () {
+	app.whenReady().then(async function () {
 		createTray()
 		createWindow()
 
@@ -332,6 +327,8 @@ const configDefaults = {
 		electron.powerMonitor.on('on-battery', () => {
 			registry.system.emit('launcher-power-status', 'battery')
 		})
+
+		await registry.ready(uiConfig.get('bind_ip'), uiConfig.get('bind_port'), !process.env.DEVELOPER)
 	})
 
 	app.on('window-all-closed', function () {
@@ -343,4 +340,4 @@ const configDefaults = {
 			createWindow()
 		}
 	})
-})()
+}

@@ -2,7 +2,7 @@
 	"name": "companion",
 	"version": "2.3.0",
 	"description": "Companion",
-	"main": "electron.js",
+	"main": "electron_entrypoint.cjs",
 	"type": "module",
 	"build": {
 		"productName": "Companion",
