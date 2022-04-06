@@ -212,7 +212,7 @@
 		"companion-module-blackbird-hdmimatrix": "github:bitfocus/companion-module-blackbird-hdmimatrix#v1.0.3",
 		"companion-module-blackbox-boxilla": "github:bitfocus/companion-module-blackbox-boxilla#v1.0.4",
 		"companion-module-blackdiamondvideo-phantom800": "github:bitfocus/companion-module-blackdiamondvideo-phantom800#v1.0.1",
-		"companion-module-bmd-atem": "github:bitfocus/companion-module-bmd-atem#v2.13.3",
+		"companion-module-bmd-atem": "github:bitfocus/companion-module-bmd-atem#v2.14.0",
 		"companion-module-bmd-audiomonitor": "github:bitfocus/companion-module-bmd-audiomonitor#v1.0.3",
 		"companion-module-bmd-hyperdeck": "github:bitfocus/companion-module-bmd-hyperdeck#v1.2.8",
 		"companion-module-bmd-multiview16": "github:bitfocus/companion-module-bmd-multiview16#v1.0.1",
