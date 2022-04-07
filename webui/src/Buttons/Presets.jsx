@@ -133,7 +133,7 @@ function PresetsInstanceList({ presets, setInstanceAndCategory }) {
 				layout.
 			</p>
 			{options.length === 0 ? (
-				<CAlert color="info">You have no instances that support presets at the moment.</CAlert>
+				<CAlert color="info">You have no connections that support presets at the moment.</CAlert>
 			) : (
 				options
 			)}
@@ -167,7 +167,7 @@ function PresetsCategoryList({ presets, instance, module, selectedInstanceId, se
 			</h5>
 
 			{buttons.length === 0 ? (
-				<CAlert color="primary">Instance has no presets.</CAlert>
+				<CAlert color="primary">Connection has no presets.</CAlert>
 			) : (
 				<div className="preset-category-grid">{buttons}</div>
 			)}

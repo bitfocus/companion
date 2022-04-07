@@ -169,6 +169,7 @@ declare abstract class InstanceSkel<TConfig> {
 	STATUS_ERROR: 2
 
 	REGEX_IP: string
+	REGEX_HOSTNAME: string
 	REGEX_BOOLEAN: string
 	REGEX_PORT: string
 	REGEX_PERCENT: string

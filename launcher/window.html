@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="UTF-8" />
+		<title>Companion</title>
+
+		<link rel="stylesheet" type="text/css" href="./window.css" />
+	</head>
+
+	<body>
+		<div id="wrap">
+			<div id="topwrap">
+				<img id="logo" src="./assets/bitfocus-logo.png" alt="BitFocus" />
+				<div id="model">model_text (version_etc)</div>
+				<button id="developer_settings" title="Developer settings">&#9881;</button>
+			</div>
+			<div id="http_status">
+				<h1 id="status">Status</h1>
+				<div id="url">URL</div>
+			</div>
+			<div id="actions">
+				<div id="guitext">GUI Interface</div>
+				<select id="ifs"></select>
+				<p>
+					<input type="text" maxlength="5" id="http_port" value="8000" /><input
+						type="button"
+						id="http_port_button"
+						class="input_button"
+						value="Change"
+					/>
+				</p>
+				<p>
+					<input type="checkbox" id="start_minimized" />
+					<label for="start_minimized" style="font-size: 12px">Start minimized</label>
+				</p>
+
+				<div id="developer_settings_panel">
+					<p>
+						<span id="guitext">Developer modules path</span>
+						<input type="text" id="dev_modules_path" readonly placeholder="Select directory" /><input
+							type="button"
+							id="dev_modules_path_pick"
+							class="input_button input_button_middle"
+							value="Select"
+						/><input type="button" id="dev_modules_path_clear" class="input_button" value="Clear" />
+					</p>
+				</div>
+
+				<div id="bottombuttons">
+					<input type="button" class="dobutton" value="Launch GUI" id="launch" />
+					<input type="button" class="dobutton" value="Hide" id="hide" />
+					<input type="button" class="dobutton" value="Quit" id="close" />
+				</div>
+			</div>
+		</div>
+		<script type="text/javascript" src="./window.js"></script>
+	</body>
+</html>

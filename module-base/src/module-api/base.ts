@@ -108,7 +108,7 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 		})
 
 		this.updateStatus(null, 'Initializing')
-		this.userLog(LogLevel.DEBUG, 'Initializing')
+		this.userLog('debug', 'Initializing')
 	}
 
 	private async _socketEmit<T extends keyof ModuleToHostEventsV0>(
@@ -131,7 +131,12 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 		await this.#lifecycleQueue.add(async () => {
 			if (this.#initialized) throw new Error('Already initialized')
 
-			await this.init(config as TConfig)
+			try {
+				await this.init(config as TConfig)
+			} catch (e) {
+				console.trace(`Init failed: ${e}`)
+				throw e
+			}
 
 			this.#initialized = true
 		})

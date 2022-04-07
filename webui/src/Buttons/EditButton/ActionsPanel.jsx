@@ -76,6 +76,7 @@ export function ActionsPanel({ page, bank, set, dragId, addPlaceholder, setLoadS
 		<>
 			<GenericConfirmModal ref={confirmModal} />
 			<ActionsPanelInner
+				isOnBank={true}
 				dragId={dragId}
 				addPlaceholder={addPlaceholder}
 				confirmModal={confirmModal}
@@ -92,6 +93,7 @@ export function ActionsPanel({ page, bank, set, dragId, addPlaceholder, setLoadS
 }
 
 export function ActionsPanelInner({
+	isOnBank,
 	dragId,
 	addPlaceholder,
 	confirmModal,
@@ -201,6 +203,7 @@ export function ActionsPanelInner({
 					{actions.map((a, i) => (
 						<ActionTableRow
 							key={a?.id ?? i}
+							isOnBank={isOnBank}
 							action={a}
 							index={i}
 							dragId={dragId}
@@ -218,7 +221,7 @@ export function ActionsPanelInner({
 	)
 }
 
-function ActionTableRow({ action, index, dragId, setValue, doDelete, doDelay, moveCard }) {
+function ActionTableRow({ action, isOnBank, index, dragId, setValue, doDelete, doDelay, moveCard }) {
 	const instancesContext = useContext(InstancesContext)
 	const actionsContext = useContext(ActionsContext)
 
@@ -365,6 +368,8 @@ function ActionTableRow({ action, index, dragId, setValue, doDelete, doDelay, mo
 							{options.map((opt, i) => (
 								<MyErrorBoundary key={i}>
 									<ActionTableRowOption
+										isOnBank={isOnBank}
+										instanceId={action.instance}
 										option={opt}
 										actionId={action.id}
 										value={(action.options || {})[opt.id]}

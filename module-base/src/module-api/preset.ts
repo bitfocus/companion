@@ -62,7 +62,6 @@ export interface CompanionPresetPress {
 	}
 }
 
-
 export interface CompanionPresetStepped {
 	category: string
 	label: string

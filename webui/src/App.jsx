@@ -1,4 +1,4 @@
-import React, { Suspense, useCallback, useContext, useEffect, useMemo, useState } from 'react'
+import React, { Suspense, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react'
 import {
 	CContainer,
 	CTabContent,
@@ -39,6 +39,7 @@ import { InstancesPage } from './Instances'
 import { ButtonsPage } from './Buttons'
 import { ContextData } from './ContextData'
 import { CloudPage } from './CloudPage'
+import { WizardModal } from './Wizard'
 import { Redirect, useLocation } from 'react-router-dom'
 import { useIdleTimer } from 'react-idle-timer'
 
@@ -59,7 +60,11 @@ export default function App() {
 				return wasConnected0
 			})
 		})
-		// sock.on('event', function(data){console.log('event', data)});
+		if (window.location.hash && window.location.hash.includes('debug_socket')) {
+			sock.onAny(function (name, ...data) {
+				console.log('received event', name, data)
+			})
+		}
 		sock.on('disconnect', () => {
 			setConnected((val) => {
 				setWasConnected(val)
@@ -133,6 +138,7 @@ export default function App() {
 }
 
 function AppMain({ connected, loadingComplete, loadingProgress, buttonGridHotPress }) {
+	const context = useContext(StaticContext)
 	const config = useContext(UserConfigContext)
 
 	const [showSidebar, setShowSidebar] = useState(true)
@@ -148,16 +154,29 @@ function AppMain({ connected, loadingComplete, loadingProgress, buttonGridHotPre
 		}
 	}, [canLock])
 
+	const wizardModal = useRef()
+	const showWizard = useCallback(() => {
+		if (unlocked) {
+			wizardModal.current.show()
+		}
+	}, [unlocked])
+
 	const setUnlockedInner = useCallback(() => {
 		setUnlocked(true)
-	}, [])
+		if (config && config?.setup_wizard < context.currentVersion) {
+			showWizard()
+		}
+	}, [config, context.currentVersion, showWizard])
 
 	// If lockout is disabled, then we are logged in
 	useEffect(() => {
 		if (config && !config?.admin_lockout) {
 			setUnlocked(true)
+			if (config?.setup_wizard < context.currentVersion) {
+				showWizard()
+			}
 		}
-	}, [config])
+	}, [config, context.currentVersion, showWizard])
 
 	return (
 		<div className="c-app">
@@ -166,7 +185,8 @@ function AppMain({ connected, loadingComplete, loadingProgress, buttonGridHotPre
 			) : (
 				''
 			)}
-			<MySidebar show={showSidebar} />
+			<WizardModal ref={wizardModal} currentVerson={context.currentVersion} />
+			<MySidebar show={showSidebar} showWizard={showWizard} />
 			<div className="c-wrapper">
 				<MyHeader toggleSidebar={toggleSidebar} setLocked={setLocked} canLock={canLock && unlocked} />
 				<div className="c-body">

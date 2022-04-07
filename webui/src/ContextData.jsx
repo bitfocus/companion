@@ -8,6 +8,9 @@ import {
 	VariableDefinitionsContext,
 	CustomVariableDefinitionsContext,
 	UserConfigContext,
+	SurfacesContext,
+	PagesContext,
+	TriggersContext,
 } from './util'
 import { NotificationsManager } from './Components/Notifications'
 
@@ -20,8 +23,31 @@ export function ContextData({ socket, children }) {
 	const [variableDefinitions, setVariableDefinitions] = useState(null)
 	const [customVariables, setCustomVariables] = useState(null)
 	const [userConfig, setUserConfig] = useState(null)
+	const [surfaces, setSurfaces] = useState(null)
+	const [pages, setPages] = useState(null)
+	const [triggers, setTriggers] = useState(null)
 
 	useEffect(() => {
+		const setCustomVariablesAndUpdateVariables = (data) => {
+			setCustomVariables(data || {})
+			setVariableDefinitions((oldVars) => {
+				const newVars = { ...oldVars }
+				newVars.internal = compileCustomVariableVariables(newVars.internal || [], data || {})
+				return newVars
+			})
+		}
+		const compileCustomVariableVariables = (oldInternalVars, customVariables) => {
+			const newVars = [...oldInternalVars.filter((v) => !v.name.startsWith('custom_'))]
+
+			for (const [id, info] of Object.entries(customVariables)) {
+				newVars.push({
+					name: `custom_${id}`,
+					label: info.description,
+				})
+			}
+
+			return newVars
+		}
 		if (socket) {
 			socketEmit(socket, 'modules_get', [])
 				.then(([res]) => {
@@ -59,14 +85,20 @@ export function ContextData({ socket, children }) {
 				})
 			socketEmit(socket, 'variable_instance_definitions_get', [])
 				.then(([data]) => {
-					setVariableDefinitions(data || {})
+					setCustomVariables((oldCustomVars) => {
+						const fullData = data || {}
+						fullData.internal = compileCustomVariableVariables(fullData.internal || [], oldCustomVars || {})
+						setVariableDefinitions(fullData)
+
+						return oldCustomVars
+					})
 				})
 				.catch((e) => {
 					console.error('Failed to load variable definitions list', e)
 				})
 			socketEmit(socket, 'custom_variables_get', [])
 				.then(([data]) => {
-					setCustomVariables(data || {})
+					setCustomVariablesAndUpdateVariables(data || {})
 				})
 				.catch((e) => {
 					console.error('Failed to load custom values list', e)
@@ -81,10 +113,23 @@ export function ContextData({ socket, children }) {
 				})
 
 			const updateVariableDefinitions = (label, variables) => {
-				setVariableDefinitions((oldDefinitions) => ({
-					...oldDefinitions,
-					[label]: variables,
-				}))
+				if (label === 'internal') {
+					setCustomVariables((oldCustomVars) => {
+						const internalVariables = compileCustomVariableVariables(variables, oldCustomVars || {})
+
+						setVariableDefinitions((oldDefinitions) => ({
+							...oldDefinitions,
+							[label]: internalVariables,
+						}))
+
+						return oldCustomVars
+					})
+				} else {
+					setVariableDefinitions((oldDefinitions) => ({
+						...oldDefinitions,
+						[label]: variables,
+					}))
+				}
 			}
 			const updateFeedbackDefinitions = (id, feedbacks) => {
 				setFeedbackDefinitions((oldDefinitions) => ({
@@ -110,7 +155,7 @@ export function ContextData({ socket, children }) {
 			socket.emit('instances_get')
 
 			socket.on('variable_instance_definitions_set', updateVariableDefinitions)
-			socket.on('custom_variables_get', setCustomVariables)
+			socket.on('custom_variables_get', setCustomVariablesAndUpdateVariables)
 
 			socket.on('action_instance_definitions_set', updateActionDefinitions)
 
@@ -118,13 +163,68 @@ export function ContextData({ socket, children }) {
 
 			socket.on('set_userconfig_key', updateUserConfigValue)
 
+			socket.on('devices_list', setSurfaces)
+			socket.emit('devices_list_get')
+
+			socketEmit(socket, 'get_page_all', [])
+				.then(([pages]) => {
+					// setLoadError(null)
+					setPages(pages)
+				})
+				.catch((e) => {
+					console.error('Failed to load pages list:', e)
+					// setLoadError(`Failed to load pages list`)
+					setPages(null)
+				})
+
+			const updatePageInfo = (page, info) => {
+				setPages((oldPages) => {
+					if (oldPages) {
+						return {
+							...oldPages,
+							[page]: info,
+						}
+					} else {
+						return null
+					}
+				})
+			}
+
+			socket.on('set_page', updatePageInfo)
+
+			const updateTriggerLastRun = (id, time) => {
+				setTriggers((list) => {
+					if (!list) return list
+
+					return list.map((l) => {
+						if (l.id === id) {
+							return {
+								...l,
+								last_run: time,
+							}
+						} else {
+							return l
+						}
+					})
+				})
+			}
+
+			socket.emit('schedule_get', setTriggers)
+			socket.on('schedule_refresh', setTriggers)
+			socket.on('schedule_last_run', updateTriggerLastRun)
+
 			return () => {
 				socket.off('instances_get:result', setInstances)
 				socket.off('variable_instance_definitions_set', updateVariableDefinitions)
-				socket.off('custom_variables_get', setCustomVariables)
+				socket.off('custom_variables_get', setCustomVariablesAndUpdateVariables)
 				socket.off('action_instance_definitions_set', updateActionDefinitions)
 				socket.off('feedback_instance_definitions_set', updateFeedbackDefinitions)
 				socket.off('set_userconfig_key', updateUserConfigValue)
+				socket.off('devices_list', setSurfaces)
+				socket.off('set_page', updatePageInfo)
+
+				socket.off('schedule_refresh', setTriggers)
+				socket.off('schedule_last_run', updateTriggerLastRun)
 			}
 		}
 	}, [socket])
@@ -136,6 +236,7 @@ export function ContextData({ socket, children }) {
 		notifier: notifierRef,
 		modules: modules,
 		moduleRedirects: moduleRedirects,
+		currentVersion: 22,
 	}
 
 	const steps = [
@@ -146,6 +247,9 @@ export function ContextData({ socket, children }) {
 		feedbackDefinitions,
 		customVariables,
 		userConfig,
+		surfaces,
+		pages,
+		triggers,
 	]
 	const completedSteps = steps.filter((s) => s !== null && s !== undefined)
 
@@ -159,9 +263,15 @@ export function ContextData({ socket, children }) {
 						<VariableDefinitionsContext.Provider value={variableDefinitions}>
 							<CustomVariableDefinitionsContext.Provider value={customVariables}>
 								<UserConfigContext.Provider value={userConfig}>
-									<NotificationsManager ref={notifierRef} />
+									<SurfacesContext.Provider value={surfaces}>
+										<PagesContext.Provider value={pages}>
+											<TriggersContext.Provider value={triggers}>
+												<NotificationsManager ref={notifierRef} />
 
-									{children(progressPercent, completedSteps.length === steps.length)}
+												{children(progressPercent, completedSteps.length === steps.length)}
+											</TriggersContext.Provider>
+										</PagesContext.Provider>
+									</SurfacesContext.Provider>
 								</UserConfigContext.Provider>
 							</CustomVariableDefinitionsContext.Provider>
 						</VariableDefinitionsContext.Provider>

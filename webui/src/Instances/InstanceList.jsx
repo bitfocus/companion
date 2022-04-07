@@ -71,7 +71,7 @@ export function InstancesList({ showHelp, doConfigureInstance }) {
 							)
 						}
 					})}
-					{Object.keys(instancesContext).length <= 1 ? (
+					{Object.keys(instancesContext).length === 0 ? (
 						<tr>
 							<td colSpan={4}>
 								You haven't setup any connections yet. <br />
@@ -107,7 +107,7 @@ function InstancesTableRow({
 
 	const doDelete = useCallback(() => {
 		deleteModalRef.current.show(
-			'Delete instance',
+			'Delete connection',
 			`Are you sure you want to delete "${instance.label}"?`,
 			'Delete',
 			() => {

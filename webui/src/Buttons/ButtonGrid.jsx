@@ -9,7 +9,7 @@ import React, {
 	useRef,
 	useState,
 } from 'react'
-import { StaticContext, KeyReceiver, LoadingRetryOrError, socketEmit } from '../util'
+import { StaticContext, KeyReceiver, PagesContext } from '../util'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import {
 	faArrowsAlt,
@@ -24,7 +24,6 @@ import classnames from 'classnames'
 import { MAX_COLS, MAX_ROWS, MAX_BUTTONS } from '../Constants'
 import { useDrop } from 'react-dnd'
 import { BankPreview, dataToButtonImage } from '../Components/BankButton'
-import shortid from 'shortid'
 import { GenericConfirmModal } from '../Components/GenericConfirmModal'
 
 export const ButtonsGridPanel = memo(function ButtonsPage({
@@ -37,11 +36,9 @@ export const ButtonsGridPanel = memo(function ButtonsPage({
 	clearSelectedButton,
 }) {
 	const context = useContext(StaticContext)
+	const pages = useContext(PagesContext)
 
 	const actionsRef = useRef()
-
-	const [pages, setPages] = useState(null)
-	const [loadError, setLoadError] = useState(null)
 
 	const bankClick = useCallback(
 		(index, isDown) => {
@@ -98,47 +95,6 @@ export const ButtonsGridPanel = memo(function ButtonsPage({
 		},
 		[context.socket, pageNumber, pageInfo]
 	)
-
-	const [retryToken, setRetryToken] = useState(shortid())
-	const doRetryLoad = useCallback(() => setRetryToken(shortid()), [])
-	useEffect(() => {
-		setLoadError(null)
-		setPages(null)
-
-		socketEmit(context.socket, 'get_page_all', [])
-			.then(([pages]) => {
-				setLoadError(null)
-				setPages(pages)
-			})
-			.catch((e) => {
-				console.error('Failed to load pages list:', e)
-				setLoadError(`Failed to load pages list`)
-				setPages(null)
-			})
-
-		const updatePageInfo = (page, info) => {
-			setPages((oldPages) => {
-				if (oldPages) {
-					return {
-						...oldPages,
-						[page]: info,
-					}
-				} else {
-					return null
-				}
-			})
-		}
-
-		context.socket.on('set_page', updatePageInfo)
-
-		return () => {
-			context.socket.off('set_page', updatePageInfo)
-		}
-	}, [context.socket, retryToken])
-
-	if (!pages) {
-		return <LoadingRetryOrError error={loadError} dataReady={pages} doRetry={doRetryLoad} />
-	}
 
 	const pageName = pageInfo?.name ?? 'PAGE'
 

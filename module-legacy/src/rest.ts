@@ -1,4 +1,4 @@
-import debug from 'debug'
+import createDebug from 'debug'
 import EventEmitter from 'events'
 import shortid from 'shortid'
 // @ts-ignore
@@ -17,12 +17,12 @@ interface RestPoll {
 }
 
 export class ServiceRest {
-	readonly debug: debug.Debugger
+	readonly debug: createDebug.Debugger
 
 	#running = new Map<string, RestPoll>()
 
 	constructor(fakeSystem: EventEmitter, moduleName: string) {
-		this.debug = debug(`legacy/${moduleName}/rest`)
+		this.debug = createDebug(`legacy/${moduleName}/rest`)
 
 		fakeSystem.on('rest_get', (url, cb, extra_headers, extra_args) => {
 			this.debug('making request:', url)

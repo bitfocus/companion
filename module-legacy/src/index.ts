@@ -1,14 +1,13 @@
-import { InstanceBase, SomeCompanionConfigField } from '@companion-module/base'
-import { createRequire } from 'module'
+import { InstanceBase, runEntrypoint, SomeCompanionConfigField } from '@companion-module/base'
 import type InstanceSkel = require('../instance_skel')
 import { FakeSystem } from './fakeSystem.js'
 
-const require = createRequire(import.meta.url)
-
-if (!process.env.MODULE_MANIFEST) throw new Error('Missing manifest variable')
-const manifest = require(process.env.MODULE_MANIFEST)
 // @ts-ignore
-const LegacyModule = require(`companion-module-${manifest.name}`)
+const modName = global.moduleName
+// @ts-ignore
+const LegacyModule = global.moduleFactory
+
+if (!modName || !LegacyModule) throw new Error('Missing globals!')
 
 // eslint-disable-next-line @typescript-eslint/no-empty-interface
 export interface MockConfig {}
@@ -20,7 +19,7 @@ export default class MockModule extends InstanceBase<MockConfig> {
 	constructor(internal: unknown, id: string) {
 		super(internal, id)
 
-		this.#system = new FakeSystem(this, manifest.name)
+		this.#system = new FakeSystem(this, modName)
 	}
 
 	async init(config: MockConfig): Promise<void> {
@@ -50,3 +49,5 @@ export default class MockModule extends InstanceBase<MockConfig> {
 		return this.#legacy.config_fields() as SomeCompanionConfigField[]
 	}
 }
+
+runEntrypoint(MockModule)

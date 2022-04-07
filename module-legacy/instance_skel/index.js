@@ -16,14 +16,11 @@
  */
 
 const util = require('util')
-const debug = require('debug')('lib/instance_skel')
+// const debug = require('debug')('lib/instance_skel')
 var icons = require('../icons.cjs')
-var image = require('../../lib/Graphics/Image') // This is hacky, but good enough for now
 
-if (!process.env.MODULE_MANIFEST) throw new Error('Missing manifest variable')
-
-const manifest = require(process.env.MODULE_MANIFEST)
-const pkgJson = require(`companion-module-${manifest.name}/package.json`)
+const pkgJson = global.modulePkg
+if (!pkgJson) throw new Error('Missing module package.json data')
 
 function instance(system, id, config) {
 	var self = this
@@ -33,10 +30,19 @@ function instance(system, id, config) {
 	self.config = config
 	self.package_info = pkgJson
 
+	self.Image = self.system.Image
+
 	self.label = config.label
 
 	// Debug with module-name prepeded
-	self.debug = require('debug')('instance:' + self.package_info.name + ':' + self.id)
+	self.defineConst('debug', require('debug')('instance:' + self.package_info.name + ':' + self.id))
+
+	// Update instance health, levels: null = unknown, 0 = ok, 1 = warning, 2 = error
+	self.defineConst('log', function (level, info) {
+		var self = this
+
+		self.system.sendLog(level, info)
+	})
 
 	for (var key in icons) {
 		self.defineConst(key, icons[key])
@@ -45,6 +51,10 @@ function instance(system, id, config) {
 	self.defineConst(
 		'REGEX_IP',
 		'/^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/'
+	)
+	self.defineConst(
+		'REGEX_HOSTNAME',
+		'/^(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9-]*[a-zA-Z0-9])\\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9-]*[A-Za-z0-9])$/'
 	)
 	self.defineConst('REGEX_BOOLEAN', '/^(true|false|0|1)$/i')
 	self.defineConst(
@@ -103,10 +113,9 @@ instance.prototype.defineConst = function (name, value) {
 	Object.defineProperty(this, name, {
 		value: value,
 		enumerable: true,
+		writable: false,
 	})
 }
-
-instance.prototype.Image = image
 
 instance.prototype.rgb = (r, g, b, base = 10) => {
 	r = parseInt(r, base)
@@ -125,13 +134,6 @@ instance.prototype.rgbRev = (dec) => {
 		g: (dec & 0x00ff00) >> 8,
 		b: dec & 0x0000ff,
 	}
-}
-
-// Update instance health, levels: null = unknown, 0 = ok, 1 = warning, 2 = error
-instance.prototype.log = function (level, info) {
-	var self = this
-
-	self.system.sendLog(level, info)
 }
 
 // Update instance health, levels: null = unknown, 0 = ok, 1 = warning, 2 = error

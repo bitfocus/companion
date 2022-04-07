@@ -2,125 +2,26 @@
 	"name": "companion",
 	"version": "2.3.0",
 	"description": "Companion",
-	"main": "electron.js",
+	"main": "main.js",
 	"type": "module",
-	"build": {
-		"productName": "Companion",
-		"appId": "companion.bitfocus.no",
-		"remoteBuild": false,
-		"dmg": {
-			"artifactName": "companion-mac-${arch}.dmg",
-			"sign": true
-		},
-		"mac": {
-			"target": "dmg",
-			"category": "no.bitfocus.companion",
-			"extendInfo": {
-				"LSBackgroundOnly": 1,
-				"LSUIElement": 1
-			},
-			"extraFiles": [
-				{
-					"from": "./node_modules/sharp/vendor/8.10.6/lib",
-					"to": "Frameworks",
-					"filter": [
-						"!glib-2.0/**/*"
-					]
-				}
-			],
-			"hardenedRuntime": "true",
-			"gatekeeperAssess": "false",
-			"entitlements": "entitlements.mac.plist",
-			"entitlementsInherit": "entitlements.mac.plist"
-		},
-		"afterSign": "tools/notarize.js",
-		"win": {
-			"target": "nsis",
-			"extraFiles": [
-				{
-					"from": "./node_modules/sharp/build/Release",
-					"to": ".",
-					"filter": [
-						"lib*.dll"
-					]
-				}
-			]
-		},
-		"nsis": {
-			"artifactName": "companion-win64.exe",
-			"createStartMenuShortcut": true,
-			"perMachine": true,
-			"oneClick": false,
-			"allowElevation": true,
-			"allowToChangeInstallationDirectory": true,
-			"installerIcon": "icon.ico",
-			"installerSidebar": "compinst.bmp",
-			"uninstallerSidebar": "compinst.bmp"
-		},
-		"directories": {
-			"buildResources": "assets/",
-			"output": "electron-output/"
-		},
-		"linux": {
-			"target": "dir",
-			"extraFiles": [
-				{
-					"from": "./node_modules/sharp/vendor/8.10.6/lib",
-					"to": ".",
-					"filter": [
-						"libvips*.so.*"
-					]
-				}
-			]
-		},
-		"files": [
-			"**/*",
-			"assets/icon.png",
-			"assets/bitfocus-logo.png",
-			"assets/trayTemplate.png",
-			"assets/trayTemplate@2x.png",
-			"!webui/**/*",
-			"!docs/**/*",
-			"!font/*",
-			"!tools/*",
-			"!*.md",
-			"!node_modules/sharp/vendor/lib",
-			"!node_modules/cpu-features/deps"
-		],
-		"extraResources": [
-			{
-				"from": "bundle-webui.zip",
-				"to": "webui.zip"
-			},
-			{
-				"from": "bundle-docs.zip",
-				"to": "docs.zip"
-			}
-		]
-	},
+	"private": true,
 	"scripts": {
-		"dev": "yarn build:writefile && cross-env DEVELOPER=1 nodemon --ignore './webui/' headless.js",
-		"dev-headless": "yarn dev",
-		"dev-electron": "yarn build:writefile && cross-env DEVELOPER=1 electron .",
+		"dev": "yarn build:writefile && cross-env DEVELOPER=1 nodemon --ignore './webui/' --ignore './launcher/' --ignore './dist/' -- main.js --bind-address 127.0.0.1 --extra-module-path=./module-local-dev",
 		"update": "./tools/update.sh",
-		"pack": "electron-builder --dir",
 		"dist:webui": "yarn --cwd webui build",
-		"dist": "zx ./tools/build_electron.mjs",
-		"electron-rebuild": "yarn dist:prepare:sharp && electron-builder install-app-deps",
+		"dist": "zx ./tools/build_dist.mjs",
 		"macdist": "yarn dist mac-x64",
 		"macarmdist": "yarn dist mac-arm64",
 		"windist": "yarn dist win-x64",
 		"lindist": "yarn dist linux-x64",
 		"rpidist": "yarn dist linux-arm7",
-		"dist:prepare:sharp": "cd node_modules/sharp && rimraf vendor && node install/libvips && node install/dll-copy",
-		"test": "jest",
-		"headless": "nodemon --ignore './webui/' headless.js",
+		"dist:prepare": "zx tools/build_prepare.mjs",
+		"test": "node --experimental-vm-modules node_modules/jest/bin/jest.js",
 		"dev-webui": "yarn --cwd webui dev",
 		"format": "prettier --write .",
 		"jsdoc": "jsdoc -c jsdoc.json",
 		"build:writefile": "zx ./tools/build_writefile.mjs",
-		"build:rename_upload": "zx ./tools/build_rename_upload.mjs",
-		"build:rebuild_modules": "zx ./tools/build_modules.mjs",
+		"build:sentry": "zx ./tools/build_sentry.mjs",
 		"module:bulk": "zx ./tools/module_bulk.mjs"
 	},
 	"repository": "https://github.com/bitfocus/companion",
@@ -136,72 +37,63 @@
 	"author": "Bitfocus AS",
 	"license": "MIT",
 	"devDependencies": {
-		"asar-node": "^2.3.0",
-		"aws-sdk": "^2.1058.0",
 		"cross-env": "^7.0.3",
-		"electron": "13.5.1",
-		"electron-builder": "22.11.7",
-		"electron-notarize": "1.1.1",
-		"jest": "^27.4.7",
+		"jest": "^28.0.3",
 		"jsdoc": "github:bitfocus/jsdoc#3.6.6-patch",
-		"meow": "^10.1.2",
 		"nodemon": "2.0.7",
-		"p-all": "^3.0.0",
-		"prettier": "^2.5.1",
-		"rimraf": "^3.0.2",
-		"s3-upload-stream": "^1.0.7",
+		"prettier": "^2.6.1",
 		"tui-jsdoc-template": "^1.2.2",
-		"typescript": "~4.5"
+		"typescript": "~4.5",
+		"webpack": "^5.68.0",
+		"webpack-cli": "^4.9.2",
+		"zx": "^4.3.0"
 	},
 	"dependencies": {
 		"@elgato-stream-deck/node": "^5.3.1",
 		"@estilles/expression-parser": "^1.0.0",
+		"@julusian/jpeg-turbo": "^1.1.2",
 		"@sentry/electron": "^2.5.4",
 		"@sentry/node": "^6.19.4",
 		"@sentry/tracing": "^6.19.4",
-		"app-root-path": "^3.0.0",
-		"archiver": "^5.3.0",
-		"debug": "^4.3.3",
-		"electron-store": "^8.0.1",
-		"emberplus-connection": "^0.0.4",
-		"express": "^4.17.2",
+		"archiver": "^5.3.1",
+		"debug": "^4.3.4",
+		"emberplus-connection": "^0.1.2",
+		"env-paths": "^3.0.0",
+		"express": "^4.17.3",
 		"express-serve-zip": "^1.0.1",
 		"file-stream-rotator": "^0.6.1",
 		"find-process": "1.4.7",
-		"fs-extra": "^10.0.0",
-		"get-port": "^5.1.1",
-		"got": "^11.8.3",
-		"infinitton-idisplay": "^1.1.0",
+		"fs-extra": "^10.0.1",
+		"get-port": "^6.1.2",
+		"got": "^12.0.4",
+		"infinitton-idisplay": "^1.1.2",
+		"jsonpath-plus": "^6.0.1",
 		"lodash-es": "^4.17.21",
-		"moment": "^2.29.1",
+		"meow": "^10.1.2",
+		"moment": "^2.29.3",
 		"node-fetch": "^2.6.7",
 		"node-machine-id": "^1.1.12",
-		"osc": "^2.4.2",
-		"p-queue": "^6.6.2",
-		"p-timeout": "^4.1.0",
+		"osc": "^2.4.3",
+		"p-queue": "^7.1.0",
+		"p-timeout": "^5.0.2",
 		"pngjs": "^3.3.3",
-		"respawn": "^2.6.0",
+		"respawn": "link:./vendor/respawn",
 		"selfsigned": "^1.10.14",
 		"semver": "^7.3.5",
-		"sharp": "^0.28.3",
+		"sharp": "^0.30.3",
 		"shortid": "^2.2.16",
-		"socket.io": "^4.4.1",
+		"socket.io": "^4.5.0",
 		"socketcluster-client": "^16.0.2",
-		"strip-ansi": "^5.2.0",
-		"systeminformation": "^5.10.0",
+		"systeminformation": "^5.11.9",
 		"uuid": "^8.3.2",
 		"websocket": "^1.0.34",
-		"zx": "^4.3.0"
+		"xkeys": "^2.3.3"
 	},
 	"collective": {
 		"type": "donorbox",
 		"url": "https://donorbox.org/bitfocus-opensource"
 	},
-	"optionalDependencies": {
-		"@julusian/jpeg-turbo": "^1.1.2"
-	},
 	"resolutions": {
-		"**/osc/serialport": "9.2.1",
-		"**/osc/ws": "^7.5.4"
+		"node-gyp-build": "github:julusian/node-gyp-build#v4.4.1-julusian.0"
 	}
 }

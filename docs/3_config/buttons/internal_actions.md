@@ -2,7 +2,7 @@ There are several internal actions you can add to a button in order to control C
 
 | Action                                    | Description                                                                                                        |
 | ----------------------------------------- | ------------------------------------------------------------------------------------------------------------------ |
-| Enable or disable instance                | Allows you to enable or disable a specific instance of a module.                                                   |
+| Enable or disable connection                | Allows you to enable or disable a specific connection of a module.                                                   |
 | Set surface with s/n to page              | Changes a surface/controller (Stream Deck or emulator) to a specific page.                                         |
 | Set surface with index to page            | Changes a surface/controller (Stream Deck or emulator) based on their index in the device list to a specific page. |
 | Trigger a device lockout                  | Locks out selected Stream Decks immediately.                                                                       |

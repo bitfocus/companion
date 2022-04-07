@@ -8,15 +8,16 @@ import {
 	TextInputField,
 	TextWithVariablesInputField,
 } from '../../Components'
+import { InternalInstanceField } from './InternalInstanceFields'
 
-export function ActionTableRowOption({ actionId, option, value, setValue, visibility }) {
+export function ActionTableRowOption({ instanceId, isOnBank, actionId, option, value, setValue, visibility }) {
 	const setValue2 = useCallback((val) => setValue(actionId, option.id, val), [actionId, option.id, setValue])
 
 	if (!option) {
 		return <p>Bad option</p>
 	}
 
-	let control = ''
+	let control = undefined
 	switch (option.type) {
 		case 'textinput': {
 			control = <TextInputField value={value} definition={option} setValue={setValue2} />
@@ -53,8 +54,16 @@ export function ActionTableRowOption({ actionId, option, value, setValue, visibi
 			break
 		}
 		default:
-			control = <CInputGroupText>Unknown type "{option.type}"</CInputGroupText>
+			// The 'internal instance' is allowed to use some special input fields, to minimise when it reacts to changes elsewhere in the system
+			if (instanceId === 'internal') {
+				control = InternalInstanceField(option, isOnBank, value, setValue2)
+			}
+			// Use default below
 			break
+	}
+
+	if (control === undefined) {
+		control = <CInputGroupText>Unknown type "{option.type}"</CInputGroupText>
 	}
 
 	return (

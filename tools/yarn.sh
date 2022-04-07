@@ -23,6 +23,7 @@ function heading() {
 }
 
 if [ "$MANAGE_NODE_VERSION" ]; then 
+	# This is for older companion-pi installations to manage their node versions
 	# if enabled, then setup n and ensure that the correct version is in use
 	n install auto
 	n prune
@@ -49,6 +50,7 @@ echo
 
 heading "UI"
 yarn --frozen-lockfile --cwd webui
+echo "Warning: This next step can take many minutes to run"
 yarn --cwd webui build
 echo
 
@@ -58,7 +60,7 @@ yarn --cwd module-base build
 
 heading "Legacy Modules"
 yarn --frozen-lockfile --cwd module-legacy
-yarn --cwd module-legacy build
+echo "Warning: This next step can take many minutes to run"
 yarn --cwd module-legacy generate-manifests
 echo
 

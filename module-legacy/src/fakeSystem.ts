@@ -11,7 +11,10 @@ import type {
 import type InstanceSkel = require('../instance_skel')
 import { assertNever, literal, LogLevel } from '@companion-module/base'
 import { ServiceRest } from './rest.js'
-import debug from 'debug'
+import createDebug from 'debug'
+
+// @ts-expect-error Not typescript
+import Image from '../../lib/Graphics/Image.js'
 
 /**
  * Make all optional properties be required and `| undefined`
@@ -30,7 +33,7 @@ function wrapActionSubscriptionCallback(
 			cb({
 				id: event.actionId,
 				action: id,
-				options: event.options,
+				options: event.options ?? {},
 			})
 	} else {
 		return undefined
@@ -46,7 +49,7 @@ function wrapFeedbackSubscriptionCallback(
 			cb({
 				id: event.feedbackId,
 				type: id,
-				options: event.options,
+				options: event.options ?? {},
 			})
 	} else {
 		return undefined
@@ -54,13 +57,15 @@ function wrapFeedbackSubscriptionCallback(
 }
 
 export class FakeSystem extends EventEmitter {
-	readonly #debug: debug.Debugger
+	readonly #debug: createDebug.Debugger
 	#rest: ServiceRest
+
+	readonly Image = Image
 
 	constructor(public readonly parent: ModuleApi.InstanceBase<any>, moduleName: string) {
 		super()
 
-		this.#debug = debug(`legacy/${moduleName}/system`)
+		this.#debug = createDebug(`legacy/${moduleName}/system`)
 		this.#rest = new ServiceRest(this, moduleName)
 	}
 
@@ -75,19 +80,13 @@ export class FakeSystem extends EventEmitter {
 	sendLog: InstanceSkel<any>['log'] = (level, info) => {
 		switch (level) {
 			case 'debug':
-				this.parent.userLog(LogLevel.DEBUG, info)
-				break
 			case 'info':
-				this.parent.userLog(LogLevel.INFO, info)
-				break
 			case 'warn':
-				this.parent.userLog(LogLevel.WARN, info)
-				break
 			case 'error':
-				this.parent.userLog(LogLevel.ERROR, info)
+				this.parent.userLog(level, info)
 				break
 			default:
-				this.parent.userLog(LogLevel.INFO, info)
+				this.parent.userLog('info', info)
 				assertNever(level)
 				break
 		}
@@ -152,7 +151,7 @@ export class FakeSystem extends EventEmitter {
 							{
 								id: event.actionId,
 								action: id,
-								options: event.options,
+								options: event.options ?? {},
 							},
 							{
 								deviceId: event.deviceId,
@@ -166,7 +165,7 @@ export class FakeSystem extends EventEmitter {
 				newActions[id] = literal<Complete<ModuleApi.CompanionAction>>({
 					name: action.label,
 					description: action.description,
-					options: action.options,
+					options: action.options ?? [],
 					callback: cb,
 					subscribe: wrapActionSubscriptionCallback(id, action.subscribe),
 					unsubscribe: wrapActionSubscriptionCallback(id, action.unsubscribe),
@@ -197,7 +196,7 @@ export class FakeSystem extends EventEmitter {
 									{
 										id: event.feedbackId,
 										type: id,
-										options: event.options,
+										options: event.options ?? {},
 									},
 									event.rawBank,
 									null
@@ -211,7 +210,7 @@ export class FakeSystem extends EventEmitter {
 							type: 'boolean',
 							name: feedback.label,
 							description: feedback.description,
-							options: feedback.options,
+							options: feedback.options ?? [],
 							defaultStyle: feedback.style,
 							callback: cb,
 							subscribe: wrapFeedbackSubscriptionCallback(id, feedback.subscribe),
@@ -229,7 +228,7 @@ export class FakeSystem extends EventEmitter {
 									{
 										id: event.feedbackId,
 										type: id,
-										options: event.options,
+										options: event.options ?? {},
 									},
 									event.rawBank,
 									{
@@ -248,7 +247,7 @@ export class FakeSystem extends EventEmitter {
 							type: 'advanced',
 							name: feedback.label,
 							description: feedback.description,
-							options: feedback.options,
+							options: feedback.options ?? [],
 							callback: cb,
 							subscribe: wrapFeedbackSubscriptionCallback(id, feedback.subscribe),
 							unsubscribe: wrapFeedbackSubscriptionCallback(id, feedback.unsubscribe),
@@ -270,7 +269,7 @@ export class FakeSystem extends EventEmitter {
 		function convertPresetAction(action: CompanionPreset['actions'][0]): Complete<ModuleApi.CompanionPresetAction> {
 			return {
 				actionId: action.action,
-				options: action.options,
+				options: action.options ?? {},
 			}
 		}
 		function convertPresetFeedback(
@@ -278,7 +277,7 @@ export class FakeSystem extends EventEmitter {
 		): Complete<ModuleApi.CompanionPresetFeedback> {
 			return {
 				feedbackId: feedback.type,
-				options: feedback.options,
+				options: feedback.options ?? {},
 				style: feedback.style,
 			}
 		}
@@ -319,9 +318,9 @@ export class FakeSystem extends EventEmitter {
 							...convertPresetBank('step', preset.bank),
 							step_auto_progress: true,
 						},
-						feedbacks: preset.feedbacks.map(convertPresetFeedback),
+						feedbacks: preset.feedbacks?.map(convertPresetFeedback) ?? [],
 						action_sets: {
-							[0]: preset.actions.map(convertPresetAction),
+							[0]: preset.actions?.map(convertPresetAction) ?? [],
 							[1]: preset.release_actions?.map(convertPresetAction) ?? [],
 						},
 					})
@@ -332,9 +331,9 @@ export class FakeSystem extends EventEmitter {
 						category: preset.category,
 						label: preset.label,
 						bank: convertPresetBank('press', preset.bank),
-						feedbacks: preset.feedbacks.map(convertPresetFeedback),
+						feedbacks: preset.feedbacks?.map(convertPresetFeedback) ?? [],
 						action_sets: {
-							down: preset.actions.map(convertPresetAction),
+							down: preset.actions?.map(convertPresetAction) ?? [],
 							up: preset.release_actions?.map(convertPresetAction) ?? [],
 						},
 					})

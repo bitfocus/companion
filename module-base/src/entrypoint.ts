@@ -4,14 +4,12 @@ import { HostApiSocketIo, HostToModuleEventsInit, ModuleToHostEventsInit } from 
 import { InstanceBaseShared } from './instance-base.js'
 import fs from 'fs/promises'
 import { ModuleManifest } from './manifest.js'
-import { readPackage, NormalizedPackageJson } from 'read-pkg'
 
 let hasEntrypoint = false
 
-async function runEntrypointInner(
-	factory: new (internal: unknown, id: string) => InstanceBaseShared<any>,
-	libPkgJson: NormalizedPackageJson
-): Promise<void> {
+export type InstanceConstructor = new (internal: unknown, id: string) => InstanceBaseShared<any>
+
+async function runEntrypointInner(factory: InstanceConstructor, pkgVersion: string): Promise<void> {
 	// Ensure only called once per module
 	if (hasEntrypoint) throw new Error(`runEntrypoint can only be called once`)
 	hasEntrypoint = true
@@ -47,7 +45,7 @@ async function runEntrypointInner(
 	socket.on('connect', () => {
 		console.log(`Connected to module-host: ${socket.id}`)
 
-		socket.emit('register', libPkgJson.version, connectionId, socketIoToken, () => {
+		socket.emit('register', pkgVersion, connectionId, socketIoToken, () => {
 			console.log(`Module-host accepted registration`)
 
 			module = new factory(socket, connectionId)
@@ -76,26 +74,20 @@ async function runEntrypointInner(
 	})
 }
 
-try {
-	const pkgJson = await readPackage({ cwd: new URL('..', import.meta.url) })
-	if (!pkgJson || pkgJson.name !== '@companion-module/base')
-		throw new Error('Failed to find the package.json for @companion-module/base')
+export function runEntrypoint(factory: InstanceConstructor): void {
+	Promise.resolve().then(async () => {
+		try {
+			const pkgJsonStr = await fs.readFile(new URL('../package.json', import.meta.url))
+			const pkgJson = JSON.parse(pkgJsonStr.toString())
+			if (!pkgJson || pkgJson.name !== '@companion-module/base')
+				throw new Error('Failed to find the package.json for @companion-module/base')
+			if (!pkgJson.version) throw new Error('Missing version field in the package.json for @companion-module/base')
 
-	const modulePath = process.env.MODULE_FILE
-	if (!modulePath) throw new Error('Module initialise is missing MODULE_FILE')
-
-	const mod = await import(modulePath)
-	// TODO module-lib - support commonjs?
-
-	if (typeof mod === 'function') {
-		await runEntrypointInner(mod, pkgJson)
-	} else if (typeof mod.default === 'function') {
-		await runEntrypointInner(mod.default, pkgJson)
-	} else {
-		throw new Error(`Module entrypoint is missing class export`)
-	}
-} catch (e: any) {
-	console.error(`Failed to startup module:`)
-	console.error(e.stack || e.message)
-	process.exit(1)
+			await runEntrypointInner(factory, pkgJson.version)
+		} catch (e: any) {
+			console.error(`Failed to startup module:`)
+			console.error(e.stack || e.message)
+			process.exit(1)
+		}
+	})
 }

@@ -5,6 +5,7 @@ import {
 	faComments,
 	faDollarSign,
 	faGamepad,
+	faHatWizard,
 	faInfo,
 	faMousePointer,
 	faTabletAlt,
@@ -13,7 +14,7 @@ import {
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { useTranslation } from 'react-i18next'
 
-export function MySidebar({ show }) {
+export function MySidebar({ show, showWizard }) {
 	const { t } = useTranslation()
 
 	return (
@@ -30,6 +31,11 @@ export function MySidebar({ show }) {
 					</div>
 				</CSidebarBrand>
 
+				<CSidebarNavItem
+					icon={<FontAwesomeIcon className="c-sidebar-nav-icon" icon={faHatWizard} />}
+					name={t('Configuration Wizard')}
+					onClick={showWizard}
+				/>
 				<CSidebarNavItem
 					target="_new"
 					href="/emulator"

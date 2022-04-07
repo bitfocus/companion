@@ -43,10 +43,10 @@ export const InstanceEditPanel = memo(function InstanceEditPanel({ instanceId, d
 				if (err) {
 					if (err === 'duplicate label') {
 						setError(
-							`The label "${instanceConfig.label}" is already in use. Please use a unique name for this module instance`
+							`The label "${instanceConfig.label}" is already in use. Please use a unique label for this connection`
 						)
 					} else {
-						setError(`Unable to save instance config: "${err}"`)
+						setError(`Unable to save connection config: "${err}"`)
 					}
 				} else {
 					// Done
@@ -54,7 +54,7 @@ export const InstanceEditPanel = memo(function InstanceEditPanel({ instanceId, d
 				}
 			})
 			.catch((e) => {
-				setError(`Failed to save instance config: ${e}`)
+				setError(`Failed to save connection config: ${e}`)
 			})
 	}, [context.socket, instanceId, validFields, instanceConfig, doCancel])
 
@@ -62,23 +62,27 @@ export const InstanceEditPanel = memo(function InstanceEditPanel({ instanceId, d
 		if (instanceId) {
 			socketEmit(context.socket, 'instance_edit', [instanceId])
 				.then(([_instanceId, _configFields, _instanceConfig]) => {
-					const validFields = {}
-					for (const field of _configFields) {
-						// Real validation status gets generated when the editor components first mount
-						validFields[field.id] = true
+					if (_instanceId) {
+						const validFields = {}
+						for (const field of _configFields) {
+							// Real validation status gets generated when the editor components first mount
+							validFields[field.id] = true
 
-						// deserialize `isVisible` with a sandbox/proxy version
-						if (typeof field.isVisibleFn === 'string') {
-							field.isVisible = sandbox(field.isVisibleFn)
+							// deserialize `isVisible` with a sandbox/proxy version
+							if (typeof field.isVisibleFn === 'string') {
+								field.isVisible = sandbox(field.isVisibleFn)
+							}
 						}
-					}
 
-					setConfigFields(_configFields)
-					setInstanceConfig(_instanceConfig)
-					setValidFields(validFields)
+						setConfigFields(_configFields)
+						setInstanceConfig(_instanceConfig)
+						setValidFields(validFields)
+					} else {
+						setError(`Connection config unavailable`)
+					}
 				})
 				.catch((e) => {
-					setError(`Failed to load instance edit info: "${e}"`)
+					setError(`Failed to load connection info: "${e}"`)
 				})
 		}
 

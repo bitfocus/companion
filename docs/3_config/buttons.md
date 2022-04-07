@@ -8,7 +8,7 @@ If you hold down the SHIFT key on your keyboard, you can trigger a button direct
 
 **Note** that the light grey outline shows the layout for the 15 buttons Streamdeck, and the six dark buttons in the middle match up with the nano Streamdeck.
 
-![Instance](images/buttons.png?raw=true 'Buttons')
+![Buttons](images/buttons.png?raw=true 'Buttons')
 
 Several actions exist for rearranging your buttons, **Copy**, **Move**, or **Delete**.
 
@@ -23,7 +23,7 @@ There are also two buttons for resetting the page:
 
 **Making buttons**
 
-1. Make at least one instance.
+1. Make at least one connection.
 2. Click on the button space you want the button to be located on.
 3. Set the button's type:
    1. **Regular button**: Can trigger one or more actions.
@@ -32,7 +32,7 @@ There are also two buttons for resetting the page:
       1. Pressing this button will return to page 1.
    4. **Page down**: Can move down to the previous page set of buttons.
 4. Give the button a name, and optionally style it further.
-5. Add Actions or Instance Feedbacks to the button.
+5. Add Actions or Feedbacks to the button.
 
 **Button styling**
 

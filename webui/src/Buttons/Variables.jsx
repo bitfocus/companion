@@ -36,9 +36,10 @@ export const InstanceVariables = function InstanceVariables({ resetToken }) {
 	if (showCustom) {
 		return <CustomVariablesList setShowCustom={setShowCustom} />
 	} else if (instanceId) {
-		const instance = instancesContext[instanceId]
+		let instanceLabel = instancesContext[instanceId]?.label
+		if (instanceId === 'internal') instanceLabel = 'internal'
 
-		return <VariablesList selectedInstanceLabel={instance?.label} setInstance={setInstance} />
+		return <VariablesList selectedInstanceLabel={instanceLabel} setInstance={setInstance} />
 	} else {
 		return (
 			<VariablesInstanceList
@@ -57,6 +58,16 @@ function VariablesInstanceList({ setInstance, setShowCustom, instancesLabelMap }
 
 	const options = Object.entries(variableDefinitionsContext || []).map(([label, defs]) => {
 		if (!defs || defs.length === 0) return ''
+
+		if (label === 'internal') {
+			return (
+				<div key={label}>
+					<CButton color="info" className="choose_instance mb-3 mr-2" onClick={() => setInstance('internal')}>
+						Internal
+					</CButton>
+				</div>
+			)
+		}
 
 		const id = instancesLabelMap.get(label)
 		const instance = id ? instancesContext[id] : undefined

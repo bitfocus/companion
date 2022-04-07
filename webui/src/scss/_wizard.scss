@@ -1,0 +1,59 @@
+.wizard div.col-left {
+	width: 30%;
+	display: inline-block;
+	font-size: 0.85em;
+	font-weight: 700;
+}
+
+.wizard div.col-right {
+	width: 40%;
+	display: inline-block;
+	margin: 0.25em 0;
+}
+
+.wizard div.group {
+	margin: 0 0 0.5em 0.25em;
+}
+
+.wizard div.indent1 {
+	margin-left: 0.5em;
+}
+
+.wizard div.indent2 {
+	margin-left: 1em;
+}
+
+.wizard div.indent3 {
+	margin-left: 1.5em;
+}
+
+.wizard p.indent3 {
+	margin-left: 1.5em;
+	font-weight: bold;
+}
+
+.wizard h2 {
+	margin: 0;
+}
+
+.wizard h2 img {
+	padding-right: 0.5em;
+	margin-top: -0.1em;
+}
+
+.wizard h4 {
+	margin: 0 0 0.5rem 0;
+}
+
+.wizard h5 {
+	margin: 0;
+}
+
+.wizard p {
+	margin-top: 1rem;
+	margin-bottom: 0.5rem;
+}
+
+.wizard li {
+	font-size: 1em;
+}
