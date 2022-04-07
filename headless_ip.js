@@ -24,5 +24,5 @@ if (process.argv[3] != null) {
 	port = Number(process.argv[3])
 }
 
-await registry.ready(process.argv[2], port, !process.env.DEVELOPER)
+await registry.ready(process.argv[2], port)
 console.log('Started')

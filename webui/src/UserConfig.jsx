@@ -1,4 +1,4 @@
-import React, { memo, useCallback, useContext } from 'react'
+import React, { memo, useCallback, useContext, useState } from 'react'
 import {
 	CAlert,
 	CButton,
@@ -17,7 +17,7 @@ import {
 	CTabPane,
 	CTabs,
 } from '@coreui/react'
-import { MyErrorBoundary, StaticContext, UserConfigContext } from './util'
+import { MyErrorBoundary, StaticContext, UserConfigContext, socketEmit } from './util'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faFileImport, faSync, faTrash, faUndo } from '@fortawesome/free-solid-svg-icons'
 
@@ -46,6 +46,7 @@ export const UserConfig = memo(function UserConfig() {
 function UserConfigTable() {
 	const context = useContext(StaticContext)
 	const config = useContext(UserConfigContext)
+	const [dev, setDev] = useState(false)
 
 	const setValue = useCallback(
 		(key, value) => {
@@ -54,6 +55,16 @@ function UserConfigTable() {
 		},
 		[context.socket]
 	)
+
+	const getDev = useCallback(() => {
+		socketEmit(context.socket, 'get_dev', [])
+			.then(([dev]) => {
+				setDev(dev)
+			})
+			.catch((e) => {
+				console.error('Failed to get DEVELOPER env', e)
+			})
+	}, [context.socket])
 
 	const resetValue = useCallback(
 		(key) => {
@@ -77,6 +88,8 @@ function UserConfigTable() {
 		console.log('renew SSL certificate')
 		context.socket.emit('ssl_certificate_renew')
 	}, [context.socket])
+
+	getDev()
 
 	return (
 		<table className="table table-responsive-sm">
@@ -138,6 +151,34 @@ function UserConfigTable() {
 							<label className="form-check-label" htmlFor="userconfig_remove_topbar">
 								Enabled
 							</label>
+						</div>
+					</td>
+				</tr>
+
+				<tr>
+					<td colSpan="2" className="settings-category">
+						Logging
+					</td>
+				</tr>
+				<tr>
+					<td>Log Level</td>
+					<td>
+						<div className="form-check form-check-inline mr-1">
+							{dev ? (
+								<div style={{ display: 'inline-block' }}>
+									Environment is 'DEVELOPER'.
+									<br />
+									Logging is defaulted to 'Debug'.
+								</div>
+							) : (
+								<CDropdown className="mt-2" style={{ display: 'inline-block' }}>
+									<CDropdownToggle>{config.log_level === 'debug' ? 'Debug' : 'Production'}</CDropdownToggle>
+									<CDropdownMenu>
+										<CDropdownItem onClick={() => setValue('log_level', 'prod')}>Production</CDropdownItem>
+										<CDropdownItem onClick={() => setValue('log_level', 'debug')}>Debug</CDropdownItem>
+									</CDropdownMenu>
+								</CDropdown>
+							)}
 						</div>
 					</td>
 				</tr>

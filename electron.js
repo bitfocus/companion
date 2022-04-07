@@ -83,22 +83,6 @@ const configDefaults = {
 		sendAppInfo()
 	})
 
-	if (process.env.DEVELOPER === undefined) {
-		console.log('Configuring sentry error reporting')
-		init({
-			dsn: 'https://535745b2e446442ab024d1c93a349154@sentry.bitfocus.io/8',
-			release: `companion@${registry.appBuild || registry.appVersion}`,
-			beforeSend(event) {
-				if (event.exception) {
-					showReportDialog()
-				}
-				return event
-			},
-		})
-	} else {
-		console.log('Sentry error reporting is disabled')
-	}
-
 	function rebindHttp() {
 		const ip = uiConfig.get('bind_ip')
 		const port = uiConfig.get('http_port')
@@ -179,7 +163,7 @@ const configDefaults = {
 			const ip = uiConfig.get('bind_ip')
 			const port = uiConfig.get('http_port')
 
-			registry.ready(ip, port, !process.env.DEVELOPER).catch((e) => {
+			registry.ready(ip, port).catch((e) => {
 				console.log('Failed to init')
 				process.exit(1)
 			})
@@ -224,15 +208,6 @@ const configDefaults = {
 				showWindow()
 			}
 		})
-
-		try {
-			configureScope(function (scope) {
-				scope.setUser({ id: registry.machineId })
-				scope.setExtra('build', registry.appBuild)
-			})
-		} catch (e) {
-			console.log('Error reading BUILD and/or package info: ', e)
-		}
 	}
 
 	function createTray() {

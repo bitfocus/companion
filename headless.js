@@ -72,10 +72,10 @@ if (process.argv[2] in ifaces) {
 		address = ipv.address
 	})
 
-	await registry.ready(address, port, !process.env.DEVELOPER)
+	await registry.ready(address, port)
 	console.log('Started')
 } else if (process.argv[2] == '0.0.0.0') {
-	await registry.ready('0.0.0.0', port, !process.env.DEVELOPER)
+	await registry.ready('0.0.0.0', port)
 	console.log('Started')
 } else {
 	console.log('Interface not found!')
