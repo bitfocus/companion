@@ -2759,9 +2759,9 @@ commist@^1.0.0:
   version "2.0.3"
   resolved "https://codeload.github.com/bitfocus/companion-module-christie-pandorasbox/tar.gz/cd76d317ac5f612afdc863007b87e003b4baa10a"
 
-"companion-module-christie-projector@github:bitfocus/companion-module-christie-projector#v2.0.6":
-  version "2.0.6"
-  resolved "https://codeload.github.com/bitfocus/companion-module-christie-projector/tar.gz/85c68e8c388a1e0d459a1cbebf2c97ea7de319db"
+"companion-module-christie-projector@github:bitfocus/companion-module-christie-projector#v3.0.0":
+  version "3.0.0"
+  resolved "https://codeload.github.com/bitfocus/companion-module-christie-projector/tar.gz/2fcafa6e95c0f7b6b1011f5a410c1ee6f03a08ef"
 
 "companion-module-christie-spyder@github:bitfocus/companion-module-christie-spyder#v1.0.2":
   version "1.0.2"

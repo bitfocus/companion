@@ -232,7 +232,7 @@
 		"companion-module-chamsys-magicq-osc": "github:bitfocus/companion-module-chamsys-magicq-osc#v1.0.3",
 		"companion-module-chamsys-magicq-udp": "github:bitfocus/companion-module-chamsys-magicq-udp#v1.0.4",
 		"companion-module-christie-pandorasbox": "github:bitfocus/companion-module-christie-pandorasbox#v2.0.3",
-		"companion-module-christie-projector": "github:bitfocus/companion-module-christie-projector#v2.0.6",
+		"companion-module-christie-projector": "github:bitfocus/companion-module-christie-projector#v3.0.0",
 		"companion-module-christie-spyder": "github:bitfocus/companion-module-christie-spyder#v1.0.2",
 		"companion-module-christie-wd": "github:bitfocus/companion-module-christie-wd#v1.0.8",
 		"companion-module-cisco-cms": "github:bitfocus/companion-module-cisco-cms#v1.0.2",
