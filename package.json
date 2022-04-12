@@ -152,6 +152,7 @@
 		"typescript": "~4.5"
 	},
 	"dependencies": {
+		"@elgato-stream-deck/node": "^5.4.0-alpha.0",
 		"@estilles/expression-parser": "^1.0.0",
 		"@sentry/electron": "^2.5.4",
 		"app-root-path": "^3.0.0",
