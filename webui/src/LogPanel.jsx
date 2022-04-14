@@ -1,6 +1,6 @@
 import React, { memo, useCallback, useContext, useEffect, useRef, useState } from 'react'
 import { CButton, CButtonGroup, CCol, CRow } from '@coreui/react'
-import { StaticContext } from './util'
+import { socketEmit, StaticContext } from './util'
 import shortid from 'shortid'
 import dayjs from 'dayjs'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
@@ -28,7 +28,23 @@ export const LogPanel = memo(function LogPanel() {
 			setHistory((history) => [item, ...history].slice(0, 500))
 		}
 
-		context.socket.emit('log_catchup')
+		socketEmit(context.socket, 'log_catchup', [])
+			.then(([lines]) => {
+				const items = lines.map(([time, source, level, message]) => ({
+					id: shortid(),
+					time,
+					source,
+					level,
+					message,
+				}))
+
+				setHistory(items)
+			})
+			.catch((e) => {
+				console.error('log catchup error', e)
+			})
+
+		// context.socket.emit('log_catchup')
 		context.socket.on('log', logRecv)
 		context.socket.on('log_clear', getClearLog)
 
