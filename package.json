@@ -312,7 +312,7 @@
 		"companion-module-hermann-stagetimerio": "github:bitfocus/companion-module-hermann-stagetimerio#v1.0.0",
 		"companion-module-highend-hog4": "github:bitfocus/companion-module-highend-hog4#v1.1.2",
 		"companion-module-hologfx-holographics": "github:bitfocus/companion-module-hologfx-holographics#v1.0.2",
-		"companion-module-homeassistant-server": "github:bitfocus/companion-module-homeassistant-server#v0.8.0",
+		"companion-module-homeassistant-server": "github:bitfocus/companion-module-homeassistant-server#v0.8.1",
 		"companion-module-ifelseware-avkey": "github:bitfocus/companion-module-ifelseware-avkey#v1.0.3",
 		"companion-module-ifelseware-avplayback": "github:bitfocus/companion-module-ifelseware-avplayback#v1.0.4",
 		"companion-module-iiyama-prolite": "github:bitfocus/companion-module-iiyama-prolite#v1.1.3",
