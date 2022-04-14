@@ -3135,14 +3135,14 @@ commist@^1.0.0:
   dependencies:
     holographics-client-sdk "^1.6.1"
 
-"companion-module-homeassistant-server@github:bitfocus/companion-module-homeassistant-server#v0.8.0":
-  version "0.8.0"
-  resolved "https://codeload.github.com/bitfocus/companion-module-homeassistant-server/tar.gz/71b3e03f2b44fbd463071299166f53c2d7647f1f"
+"companion-module-homeassistant-server@github:bitfocus/companion-module-homeassistant-server#v0.8.1":
+  version "0.8.1"
+  resolved "https://codeload.github.com/bitfocus/companion-module-homeassistant-server/tar.gz/95f8d24d14c18b55728292a077391b3ffadd9ee1"
   dependencies:
     "@types/node" "^14.18.12"
     "@types/ws" "^8.5.3"
-    home-assistant-js-websocket "^7.0.1"
-    type-fest "^2.12.1"
+    home-assistant-js-websocket "^7.0.2"
+    type-fest "^2.12.2"
     ws "^8.5.0"
 
 "companion-module-ifelseware-avkey@github:bitfocus/companion-module-ifelseware-avkey#v1.0.3":
@@ -6043,10 +6043,10 @@ holographics-client-sdk@^1.6.1:
     socket.io "^2.2.0"
     url-parse "^1.4.4"
 
-home-assistant-js-websocket@^7.0.1:
-  version "7.0.1"
-  resolved "https://registry.yarnpkg.com/home-assistant-js-websocket/-/home-assistant-js-websocket-7.0.1.tgz#adc8807871cf843273ad439de1e13255dcfde984"
-  integrity sha512-M2cjAIPkQ4/G1IfcLwUsOMN7s5zvShcSCpznHXqmsA2N9CXDH7C9JFVwN7cPw3ugnToqs/CskBvnX6cESgxQpg==
+home-assistant-js-websocket@^7.0.2:
+  version "7.0.2"
+  resolved "https://registry.yarnpkg.com/home-assistant-js-websocket/-/home-assistant-js-websocket-7.0.2.tgz#7bb3cacdddf78e8112dbbad0f0b7b3860f22f54e"
+  integrity sha512-4/Z67UXayxnCMKQoA4rP8+1p/THS3o59I5+iFIAYO2dc0fS0Heigj3XaNp3WLh7PeIlBXuXy5NJ5PLKHCZ9X2w==
 
 hosted-git-info@^4.0.1, hosted-git-info@^4.0.2:
   version "4.1.0"
@@ -10273,10 +10273,10 @@ type-fest@^1.0.1, type-fest@^1.1.3, type-fest@^1.2.1, type-fest@^1.2.2:
   resolved "https://registry.yarnpkg.com/type-fest/-/type-fest-1.4.0.tgz#e9fb813fe3bf1744ec359d55d1affefa76f14be1"
   integrity sha512-yGSza74xk0UG8k+pLh5oeoYirvIiWo5t0/o3zHHAO2tRDiZcxWP7fywNlXhqb6/r6sWvwi+RsyQMWhVLe4BVuA==
 
-type-fest@^2.11.2, type-fest@^2.12.1, type-fest@^2.9.0:
-  version "2.12.1"
-  resolved "https://registry.yarnpkg.com/type-fest/-/type-fest-2.12.1.tgz#d2be8f50bf5f8f0a5fd916d29bf3e98c17e960be"
-  integrity sha512-AiknQSEqKVGDDjtZqeKrUoTlcj7FKhupmnVUgz6KoOKtvMwRGE6hUNJ/nVear+h7fnUPO1q/htSkYKb1pyntkQ==
+type-fest@^2.11.2, type-fest@^2.12.1, type-fest@^2.12.2, type-fest@^2.9.0:
+  version "2.12.2"
+  resolved "https://registry.yarnpkg.com/type-fest/-/type-fest-2.12.2.tgz#80a53614e6b9b475eb9077472fb7498dc7aa51d0"
+  integrity sha512-qt6ylCGpLjZ7AaODxbpyBZSs9fCI9SkL3Z9q2oxMBQhs/uyY+VD8jHA8ULCGmWQJlBgqvO3EJeAngOHD8zQCrQ==
 
 type-is@~1.6.18:
   version "1.6.18"
