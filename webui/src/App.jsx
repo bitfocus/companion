@@ -58,7 +58,9 @@ export default function App() {
 				return wasConnected0
 			})
 		})
-		// sock.on('event', function(data){console.log('event', data)});
+		// sock.onAny(function (name, ...data) {
+		// 	console.log('event', name, data)
+		// })
 		sock.on('disconnect', () => {
 			setConnected((val) => {
 				setWasConnected(val)
