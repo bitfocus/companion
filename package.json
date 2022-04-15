@@ -108,13 +108,13 @@
 		"pack": "electron-builder --dir",
 		"dist:webui": "yarn --cwd webui build",
 		"dist": "zx ./tools/build_electron.mjs",
-		"electron-rebuild": "yarn dist:prepare:sharp && electron-builder install-app-deps",
+		"electron-rebuild": "yarn dist:prepare && electron-builder install-app-deps",
 		"macdist": "yarn dist mac-x64",
 		"macarmdist": "yarn dist mac-arm64",
 		"windist": "yarn dist win-x64",
 		"lindist": "yarn dist linux-x64",
 		"rpidist": "yarn dist linux-arm7",
-		"dist:prepare:sharp": "cd node_modules/sharp && rimraf vendor && node install/libvips && node install/dll-copy",
+		"dist:prepare": "zx tools/build_prepare.mjs",
 		"test": "jest",
 		"headless": "nodemon --ignore './webui/' headless.js",
 		"dev-headless": "yarn build:writefile && cross-env DEVELOPER=1 nodemon --ignore './webui/' headless.js",
@@ -531,6 +531,7 @@
 	},
 	"resolutions": {
 		"**/osc/serialport": "9.2.1",
-		"**/osc/ws": "^7.5.7"
+		"**/osc/ws": "^7.5.7",
+		"node-gyp-build": "github:julusian/node-gyp-build#v4.4.1-julusian.0"
 	}
 }

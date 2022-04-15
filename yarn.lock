@@ -7868,10 +7868,9 @@ node-forge@^0.10.0:
   resolved "https://registry.yarnpkg.com/node-forge/-/node-forge-0.10.0.tgz#32dea2afb3e9926f02ee5ce8794902691a676bf3"
   integrity sha512-PPmu8eEeG9saEUvI97fm4OYxXVB6bFvyNTyiUOBichBpFG8A1Ljw3bY62+5oOjDEMHRnd0Y7HQ+x7uzxOzC6JA==
 
-node-gyp-build@^4.3.0:
-  version "4.3.0"
-  resolved "https://registry.yarnpkg.com/node-gyp-build/-/node-gyp-build-4.3.0.tgz#9f256b03e5826150be39c764bf51e993946d71a3"
-  integrity sha512-iWjXZvmboq0ja1pUGULQBexmxq8CV4xBhX7VDOTbL7ZR4FOowwY/VOtRxBN/yKxmdGoIp4j5ysNT4u3S2pDQ3Q==
+node-gyp-build@^4.2.3, node-gyp-build@^4.3.0, "node-gyp-build@github:julusian/node-gyp-build#v4.4.1-julusian.0":
+  version "4.4.1-julusian.0"
+  resolved "https://codeload.github.com/julusian/node-gyp-build/tar.gz/24d075561741025e9003a9c0f747ee5770a2c162"
 
 node-hid@^2.1.1, node-hid@~2.1.0:
   version "2.1.1"
