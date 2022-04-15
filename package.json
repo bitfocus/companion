@@ -20,7 +20,7 @@
 			},
 			"extraFiles": [
 				{
-					"from": "./node_modules/sharp/vendor/8.12.2/${env.VIPS_VENDOR}/lib",
+					"from": "./node_modules/sharp/vendor/${env.VIPS_VENDOR}/lib",
 					"to": "Frameworks",
 					"filter": [
 						"libvips*.dylib"
@@ -65,7 +65,7 @@
 			"artifactName": "companion-x64",
 			"extraFiles": [
 				{
-					"from": "./node_modules/sharp/vendor/8.12.2/${env.VIPS_VENDOR}/lib",
+					"from": "./node_modules/sharp/vendor/${env.VIPS_VENDOR}/lib",
 					"to": ".",
 					"filter": [
 						"libvips*.so.*"

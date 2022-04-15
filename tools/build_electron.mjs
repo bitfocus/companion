@@ -2,6 +2,7 @@
 
 import { generateVersionString, generateMiniVersionString, $withoutEscaping } from './lib.mjs'
 import archiver from 'archiver'
+import { fs } from 'zx'
 
 /**
  * @param {String} sourceDir: /some/folder/to/compress
@@ -28,7 +29,6 @@ const platform = argv._[1]
 let electronBuilderArgs = []
 let sharpPlatform = null
 let sharpArch = null
-let vipsVendorName = null
 
 const buildString = await generateVersionString()
 console.log('Writing:', buildString)
@@ -50,14 +50,12 @@ if (!platform) {
 		electronBuilderArgs.push('--x64', '--mac')
 		sharpPlatform = 'darwin'
 		sharpArch = 'x64'
-		vipsVendorName = 'darwin-x64'
 
 		electronBuilderArgs.push(`-c.buildVersion="${buildString}"`)
 	} else if (platform === 'mac-arm64') {
 		electronBuilderArgs.push('--arm64', '--mac')
 		sharpPlatform = 'darwin'
 		sharpArch = 'arm64'
-		vipsVendorName = 'darwin-arm64v8'
 
 		electronBuilderArgs.push(`-c.buildVersion="${buildString}"`)
 	} else if (platform === 'win-x64') {
@@ -71,12 +69,10 @@ if (!platform) {
 		electronBuilderArgs.push('--x64', '--linux')
 		sharpPlatform = 'linux'
 		sharpArch = 'x64'
-		vipsVendorName = 'linux-x64'
 	} else if (platform === 'linux-arm7') {
 		electronBuilderArgs.push('--armv7l', '--linux')
 		sharpPlatform = 'linux'
 		sharpArch = 'arm'
-		vipsVendorName = 'linux-armv6'
 	} else {
 		console.error('Unknwon platform')
 		process.exit(1)
@@ -95,12 +91,26 @@ if (sharpPlatform) sharpArgs.push(`npm_config_platform=${sharpPlatform}`)
 if (sharpArch) sharpArgs.push(`npm_config_arch=${sharpArch}`)
 await $`cross-env ${sharpArgs} yarn dist:prepare:sharp`
 
+const sharpVendorDir = './node_modules/sharp/vendor/'
+const sharpVersionDirs = await fs.readdir(sharpVendorDir)
+if (sharpVersionDirs.length !== 1) {
+	console.error(`Failed to determine sharp lib version`)
+	process.exit(1)
+}
+
+const sharpPlatformDirs = await fs.readdir(path.join(sharpVendorDir, sharpVersionDirs[0]))
+if (sharpPlatformDirs.length !== 1) {
+	console.error(`Failed to determine sharp lib platform`)
+	process.exit(1)
+}
+
+const vipsVendorName = path.join(sharpVersionDirs[0], sharpPlatformDirs[0])
+process.env.VIPS_VENDOR = vipsVendorName
+
 if (!platform) {
 	// If for our own platform, make sure the correct deps are installed
 	await $`electron-builder install-app-deps`
 }
-
-if (vipsVendorName) process.env.VIPS_VENDOR = vipsVendorName
 
 // perform the electron build
 await fs.remove('./electron-output')
