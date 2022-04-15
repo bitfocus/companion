@@ -65,6 +65,6 @@ jobs:
         if: ${{ steps.image-name.outputs.images }}
         with:
           context: .
-          platforms: linux/amd64
+          platforms: linux/amd64,linux/arm/v7,linux/arm64
           push: true
           tags: ${{ steps.image-name.outputs.images }}
