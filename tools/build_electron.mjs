@@ -73,6 +73,10 @@ if (!platform) {
 		electronBuilderArgs.push('--armv7l', '--linux')
 		sharpPlatform = 'linux'
 		sharpArch = 'arm'
+	} else if (platform === 'linux-arm64') {
+		electronBuilderArgs.push('--arm64', '--linux')
+		sharpPlatform = 'linux'
+		sharpArch = 'arm64'
 	} else {
 		console.error('Unknwon platform')
 		process.exit(1)
@@ -89,7 +93,7 @@ await zipDirectory('./docs', 'bundle-docs.zip')
 let sharpArgs = []
 if (sharpPlatform) sharpArgs.push(`npm_config_platform=${sharpPlatform}`)
 if (sharpArch) sharpArgs.push(`npm_config_arch=${sharpArch}`)
-await $`cross-env ${sharpArgs} yarn dist:prepare:sharp`
+await $`cross-env ${sharpArgs} yarn dist:prepare`
 
 const sharpVendorDir = './node_modules/sharp/vendor/'
 const sharpVersionDirs = await fs.readdir(sharpVendorDir)
