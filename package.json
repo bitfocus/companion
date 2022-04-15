@@ -20,10 +20,10 @@
 			},
 			"extraFiles": [
 				{
-					"from": "./node_modules/sharp/vendor/8.10.6/lib",
+					"from": "./node_modules/sharp/vendor/8.12.2/${env.VIPS_VENDOR}/lib",
 					"to": "Frameworks",
 					"filter": [
-						"!glib-2.0/**/*"
+						"libvips*.dylib"
 					]
 				}
 			],
@@ -65,7 +65,7 @@
 			"artifactName": "companion-x64",
 			"extraFiles": [
 				{
-					"from": "./node_modules/sharp/vendor/8.10.6/lib",
+					"from": "./node_modules/sharp/vendor/8.12.2/${env.VIPS_VENDOR}/lib",
 					"to": ".",
 					"filter": [
 						"libvips*.so.*"
@@ -512,7 +512,7 @@
 		"pngjs": "^3.3.3",
 		"rimraf": "^3.0.2",
 		"selfsigned": "^1.10.14",
-		"sharp": "^0.28.3",
+		"sharp": "^0.30.3",
 		"shortid": "^2.2.16",
 		"socket.io": "^4.4.1",
 		"strip-ansi": "^5.2.0",
