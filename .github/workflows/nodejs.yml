@@ -73,9 +73,6 @@ jobs:
           # try and avoid timeout errors
           yarn config set network-timeout 100000 -g
 
-          # these files upset electron-builder
-          rm .node-version .nvmrc
-
           yarn update
           yarn build:rebuild_modules
 
@@ -135,9 +132,6 @@ jobs:
         run: |
           # try and avoid timeout errors
           yarn config set network-timeout 100000 -g
-
-          # these files upset electron-builder
-          rm .node-version .nvmrc
 
           yarn update
           yarn build:rebuild_modules

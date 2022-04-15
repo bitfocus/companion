@@ -83,6 +83,8 @@
 			"!docs/**/*",
 			"!font/*",
 			"!tools/*",
+			"!.nvmrc",
+			"!.node-version",
 			"!*.md",
 			"!node_modules/sharp/vendor/lib",
 			"!node_modules/cpu-features/deps"
