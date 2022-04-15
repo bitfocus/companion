@@ -1,0 +1,176 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Fixture Name="Companion v2.0" ShortName="Companion" Company="Bitfocus" Version="9">
+  <Copyright Notice="© Avolites Ltd. 2022" />
+  <History Date="15-04-22" Author="AVC.SH" Comment="Created" Version="1" />
+  <Manual Filename="" Summary="" />
+  <Control>
+    <Attribute ID="PageSel" Name="Page Selection" Description="" Group="S">
+      <Locate Locate="1" PowerOn="1" />
+      <Function ID="1" Name="No Page" Display="'No Page'" Dmx="0~0" />
+      <Function ID="2" Name="Page 1" Display="'Page 1'" Dmx="1~1" />
+      <Function ID="3" Name="Page 2" Display="'Page 2'" Dmx="2~2" />
+      <Function ID="4" Name="Page 3" Display="'Page 3'" Dmx="3~3" />
+      <Function ID="5" Name="Page 4" Display="'Page 4'" Dmx="4~4" />
+      <Function ID="6" Name="Page 5" Display="'Page 5'" Dmx="5~5" />
+      <Function ID="7" Name="Page 6" Display="'Page 6'" Dmx="6~6" />
+      <Function ID="8" Name="Page 7" Display="'Page 7'" Dmx="7~7" />
+      <Function ID="9" Name="Page 8" Display="'Page 8'" Dmx="8~8" />
+      <Function ID="10" Name="Page 9" Display="'Page 9'" Dmx="9~9" />
+      <Function ID="11" Name="Page 10" Display="'Page 10'" Dmx="10~10" />
+      <Function ID="12" Name="Page 11" Display="'Page 11'" Dmx="11~11" />
+      <Function ID="13" Name="Page 12" Display="'Page 12'" Dmx="12~12" />
+      <Function ID="14" Name="Page 13" Display="'Page 13'" Dmx="13~13" />
+      <Function ID="15" Name="Page 14" Display="'Page 14'" Dmx="14~14" />
+      <Function ID="16" Name="Page 15" Display="'Page 15'" Dmx="15~15" />
+      <Function ID="17" Name="Page 16" Display="'Page 16'" Dmx="16~16" />
+      <Function ID="18" Name="Page 17" Display="'Page 17'" Dmx="17~17" />
+      <Function ID="19" Name="Page 18" Display="'Page 18'" Dmx="18~18" />
+      <Function ID="20" Name="Page 19" Display="'Page 19'" Dmx="19~19" />
+      <Function ID="21" Name="Page 20" Display="'Page 20'" Dmx="20~20" />
+      <Function ID="22" Name="Page 21" Display="'Page 21'" Dmx="21~21" />
+      <Function ID="23" Name="Page 22" Display="'Page 22'" Dmx="22~22" />
+      <Function ID="24" Name="Page 23" Display="'Page 23'" Dmx="23~23" />
+      <Function ID="25" Name="Page 24" Display="'Page 24'" Dmx="24~24" />
+      <Function ID="26" Name="Page 25" Display="'Page 25'" Dmx="25~25" />
+      <Function ID="27" Name="Page 26" Display="'Page 26'" Dmx="26~26" />
+      <Function ID="28" Name="Page 27" Display="'Page 27'" Dmx="27~27" />
+      <Function ID="29" Name="Page 28" Display="'Page 28'" Dmx="28~28" />
+      <Function ID="30" Name="Page 29" Display="'Page 29'" Dmx="29~29" />
+      <Function ID="31" Name="Page 30" Display="'Page 30'" Dmx="30~30" />
+      <Function ID="32" Name="Page 31" Display="'Page 31'" Dmx="31~31" />
+      <Function ID="33" Name="Page 32" Display="'Page 32'" Dmx="32~32" />
+      <Function ID="34" Name="Page 33" Display="'Page 33'" Dmx="33~33" />
+      <Function ID="35" Name="Page 34" Display="'Page 34'" Dmx="34~34" />
+      <Function ID="36" Name="Page 35" Display="'Page 35'" Dmx="35~35" />
+      <Function ID="37" Name="Page 36" Display="'Page 36'" Dmx="36~36" />
+      <Function ID="38" Name="Page 37" Display="'Page 37'" Dmx="37~37" />
+      <Function ID="39" Name="Page 38" Display="'Page 38'" Dmx="38~38" />
+      <Function ID="40" Name="Page 39" Display="'Page 39'" Dmx="39~39" />
+      <Function ID="41" Name="Page 40" Display="'Page 40'" Dmx="40~40" />
+      <Function ID="42" Name="Page 41" Display="'Page 41'" Dmx="41~41" />
+      <Function ID="43" Name="Page 42" Display="'Page 42'" Dmx="42~42" />
+      <Function ID="44" Name="Page 43" Display="'Page 43'" Dmx="43~43" />
+      <Function ID="45" Name="Page 44" Display="'Page 44'" Dmx="44~44" />
+      <Function ID="46" Name="Page 45" Display="'Page 45'" Dmx="45~45" />
+      <Function ID="47" Name="Page 46" Display="'Page 46'" Dmx="46~46" />
+      <Function ID="48" Name="Page 47" Display="'Page 47'" Dmx="47~47" />
+      <Function ID="49" Name="Page 48" Display="'Page 48'" Dmx="48~48" />
+      <Function ID="50" Name="Page 49" Display="'Page 49'" Dmx="49~49" />
+      <Function ID="51" Name="Page 50" Display="'Page 50'" Dmx="50~50" />
+      <Function ID="52" Name="Page 51" Display="'Page 51'" Dmx="51~51" />
+      <Function ID="53" Name="Page 52" Display="'Page 52'" Dmx="52~52" />
+      <Function ID="54" Name="Page 53" Display="'Page 53'" Dmx="53~53" />
+      <Function ID="55" Name="Page 54" Display="'Page 54'" Dmx="54~54" />
+      <Function ID="56" Name="Page 55" Display="'Page 55'" Dmx="55~55" />
+      <Function ID="57" Name="Page 56" Display="'Page 56'" Dmx="56~56" />
+      <Function ID="58" Name="Page 57" Display="'Page 57'" Dmx="57~57" />
+      <Function ID="59" Name="Page 58" Display="'Page 58'" Dmx="58~58" />
+      <Function ID="60" Name="Page 59" Display="'Page 59'" Dmx="59~59" />
+      <Function ID="61" Name="Page 60" Display="'Page 60'" Dmx="60~60" />
+      <Function ID="62" Name="Page 61" Display="'Page 61'" Dmx="61~61" />
+      <Function ID="63" Name="Page 62" Display="'Page 62'" Dmx="62~62" />
+      <Function ID="64" Name="Page 63" Display="'Page 63'" Dmx="63~63" />
+      <Function ID="65" Name="Page 64" Display="'Page 64'" Dmx="64~64" />
+      <Function ID="66" Name="Page 65" Display="'Page 65'" Dmx="65~65" />
+      <Function ID="67" Name="Page 66" Display="'Page 66'" Dmx="66~66" />
+      <Function ID="68" Name="Page 67" Display="'Page 67'" Dmx="67~67" />
+      <Function ID="69" Name="Page 68" Display="'Page 68'" Dmx="68~68" />
+      <Function ID="70" Name="Page 69" Display="'Page 69'" Dmx="69~69" />
+      <Function ID="71" Name="Page 70" Display="'Page 70'" Dmx="70~70" />
+      <Function ID="72" Name="Page 71" Display="'Page 71'" Dmx="71~71" />
+      <Function ID="73" Name="Page 72" Display="'Page 72'" Dmx="72~72" />
+      <Function ID="74" Name="Page 73" Display="'Page 73'" Dmx="73~73" />
+      <Function ID="75" Name="Page 74" Display="'Page 74'" Dmx="74~74" />
+      <Function ID="76" Name="Page 75" Display="'Page 75'" Dmx="75~75" />
+      <Function ID="77" Name="Page 76" Display="'Page 76'" Dmx="76~76" />
+      <Function ID="78" Name="Page 77" Display="'Page 77'" Dmx="77~77" />
+      <Function ID="79" Name="Page 78" Display="'Page 78'" Dmx="78~78" />
+      <Function ID="80" Name="Page 79" Display="'Page 79'" Dmx="79~79" />
+      <Function ID="81" Name="Page 80" Display="'Page 80'" Dmx="80~80" />
+      <Function ID="82" Name="Page 81" Display="'Page 81'" Dmx="81~81" />
+      <Function ID="83" Name="Page 82" Display="'Page 82'" Dmx="82~82" />
+      <Function ID="84" Name="Page 83" Display="'Page 83'" Dmx="83~83" />
+      <Function ID="85" Name="Page 84" Display="'Page 84'" Dmx="84~84" />
+      <Function ID="86" Name="Page 85" Display="'Page 85'" Dmx="85~85" />
+      <Function ID="87" Name="Page 86" Display="'Page 86'" Dmx="86~86" />
+      <Function ID="88" Name="Page 87" Display="'Page 87'" Dmx="87~87" />
+      <Function ID="89" Name="Page 88" Display="'Page 88'" Dmx="88~88" />
+      <Function ID="90" Name="Page 89" Display="'Page 89'" Dmx="89~89" />
+      <Function ID="91" Name="Page 90" Display="'Page 90'" Dmx="90~90" />
+      <Function ID="92" Name="Page 91" Display="'Page 91'" Dmx="91~91" />
+      <Function ID="93" Name="Page 92" Display="'Page 92'" Dmx="92~92" />
+      <Function ID="94" Name="Page 93" Display="'Page 93'" Dmx="93~93" />
+      <Function ID="95" Name="Page 94" Display="'Page 94'" Dmx="94~94" />
+      <Function ID="96" Name="Page 95" Display="'Page 95'" Dmx="95~95" />
+      <Function ID="97" Name="Page 96" Display="'Page 96'" Dmx="96~96" />
+      <Function ID="98" Name="Page 97" Display="'Page 97'" Dmx="97~97" />
+      <Function ID="99" Name="Page 98" Display="'Page 98'" Dmx="98~98" />
+      <Function ID="100" Name="Page 99" Display="'Page 99'" Dmx="99~99" />
+      <Function ID="101" Name="No Function" Display="'No Function'" Dmx="100~255" />
+    </Attribute>
+    <Attribute ID="ButtonSel" Name="Button Selection" Description="" Group="S">
+      <Locate Locate="1" PowerOn="1" />
+      <Function ID="1" Name="No Button" Display="'No Button'" Dmx="0~0" />
+      <Function ID="2" Name="Button 1" Display="'Button 1'" Dmx="1~1" />
+      <Function ID="3" Name="Button 2" Display="'Button 2'" Dmx="2~2" />
+      <Function ID="4" Name="Button 3" Display="'Button 3'" Dmx="3~3" />
+      <Function ID="5" Name="Button 4" Display="'Button 4'" Dmx="4~4" />
+      <Function ID="6" Name="Button 5" Display="'Button 5'" Dmx="5~5" />
+      <Function ID="7" Name="Button 6" Display="'Button 6'" Dmx="6~6" />
+      <Function ID="8" Name="Button 7" Display="'Button 7'" Dmx="7~7" />
+      <Function ID="9" Name="Button 8" Display="'Button 8'" Dmx="8~8" />
+      <Function ID="10" Name="Button 9" Display="'Button 9'" Dmx="9~9" />
+      <Function ID="11" Name="Button 10" Display="'Button 10'" Dmx="10~10" />
+      <Function ID="12" Name="Button 11" Display="'Button 11'" Dmx="11~11" />
+      <Function ID="13" Name="Button 12" Display="'Button 12'" Dmx="12~12" />
+      <Function ID="14" Name="Button 13" Display="'Button 13'" Dmx="13~13" />
+      <Function ID="15" Name="Button 14" Display="'Button 14'" Dmx="14~14" />
+      <Function ID="16" Name="Button 15" Display="'Button 15'" Dmx="15~15" />
+      <Function ID="17" Name="Button 16" Display="'Button 16'" Dmx="16~16" />
+      <Function ID="18" Name="Button 17" Display="'Button 17'" Dmx="17~17" />
+      <Function ID="19" Name="Button 18" Display="'Button 18'" Dmx="18~18" />
+      <Function ID="20" Name="Button 19" Display="'Button 19'" Dmx="19~19" />
+      <Function ID="21" Name="Button 20" Display="'Button 20'" Dmx="20~20" />
+      <Function ID="22" Name="Button 21" Display="'Button 21'" Dmx="21~21" />
+      <Function ID="23" Name="Button 22" Display="'Button 22'" Dmx="22~22" />
+      <Function ID="24" Name="Button 23" Display="'Button 23'" Dmx="23~23" />
+      <Function ID="25" Name="Button 24" Display="'Button 24'" Dmx="24~24" />
+      <Function ID="26" Name="Button 25" Display="'Button 25'" Dmx="25~25" />
+      <Function ID="27" Name="Button 26" Display="'Button 26'" Dmx="26~26" />
+      <Function ID="28" Name="Button 27" Display="'Button 27'" Dmx="27~27" />
+      <Function ID="29" Name="Button 28" Display="'Button 28'" Dmx="28~28" />
+      <Function ID="30" Name="Button 29" Display="'Button 29'" Dmx="29~29" />
+      <Function ID="31" Name="Button 30" Display="'Button 30'" Dmx="30~30" />
+      <Function ID="32" Name="Button 31" Display="'Button 31'" Dmx="31~31" />
+      <Function ID="33" Name="Button 32" Display="'Button 32'" Dmx="32~32" />
+      <Function ID="34" Name="No Function" Display="'No Function'" Dmx="33~255" />
+    </Attribute>
+    <Attribute ID="Button" Name="Button" Description="" Group="S">
+      <Locate Locate="1" PowerOn="1" />
+      <Function ID="1" Name="No Action" Display="'No Action'" Dmx="0~10" />
+      <Function ID="2" Name="Button Press" Display="'Button Press'" Dmx="11~128" />
+      <Function ID="3" Name="Button Release" Display="'Button Release'" Dmx="129~255" />
+    </Attribute>
+  </Control>
+  <Mode Name="Fixture 1 " Channels="3">
+    <Import PearlRef="" DiamondRef="" WysiwygRef="" />
+    <Physical>
+      <Bulb Type="" Lumens="" ColourTemp="" />
+      <Lens Name="" Degrees="" />
+      <Weight Kg="" />
+      <Size Height="" Width="" Depth="" />
+      <Focus Type="Fixed" PanMax="0" TiltMax="0" PanMaxSpeed="0" TiltMaxSpeed="0" />
+    </Physical>
+    <Include>
+      <Attribute ID="PageSel" ChannelOffset="1" Wheel="28" />
+      <Attribute ID="ButtonSel" ChannelOffset="2" Wheel="30" />
+      <Attribute ID="Button" ChannelOffset="3" Wheel="29" />
+    </Include>
+  </Mode>
+  <Macro>
+    <Macro Name="Button Click">
+      <Set Channel="Button:2:0" Delay="0" />
+      <Set Channel="Button:3:100" Delay="0" />
+    </Macro>
+  </Macro>
+</Fixture>
