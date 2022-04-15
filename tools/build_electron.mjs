@@ -28,6 +28,7 @@ const platform = argv._[1]
 let electronBuilderArgs = []
 let sharpPlatform = null
 let sharpArch = null
+let vipsVendorName = null
 
 const buildString = await generateVersionString()
 console.log('Writing:', buildString)
@@ -49,12 +50,14 @@ if (!platform) {
 		electronBuilderArgs.push('--x64', '--mac')
 		sharpPlatform = 'darwin'
 		sharpArch = 'x64'
+		vipsVendorName = 'darwin-x64'
 
 		electronBuilderArgs.push(`-c.buildVersion="${buildString}"`)
 	} else if (platform === 'mac-arm64') {
 		electronBuilderArgs.push('--arm64', '--mac')
 		sharpPlatform = 'darwin'
 		sharpArch = 'arm64'
+		vipsVendorName = 'darwin-arm64v8'
 
 		electronBuilderArgs.push(`-c.buildVersion="${buildString}"`)
 	} else if (platform === 'win-x64') {
@@ -68,10 +71,12 @@ if (!platform) {
 		electronBuilderArgs.push('--x64', '--linux')
 		sharpPlatform = 'linux'
 		sharpArch = 'x64'
+		vipsVendorName = 'linux-x64'
 	} else if (platform === 'linux-arm7') {
 		electronBuilderArgs.push('--armv7l', '--linux')
 		sharpPlatform = 'linux'
 		sharpArch = 'arm'
+		vipsVendorName = 'linux-armv6'
 	} else {
 		console.error('Unknwon platform')
 		process.exit(1)
@@ -95,6 +100,8 @@ if (!platform) {
 	await $`electron-builder install-app-deps`
 }
 
+if (vipsVendorName) process.env.VIPS_VENDOR = vipsVendorName
+
 // perform the electron build
 await fs.remove('./electron-output')
-await $withoutEscaping`electron-builder --publish=never ${electronBuilderArgs.join(' ')} `
+await $withoutEscaping` electron-builder --publish=never ${electronBuilderArgs.join(' ')} `
