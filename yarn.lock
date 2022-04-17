@@ -3968,9 +3968,9 @@ commist@^1.0.0:
   dependencies:
     ws "^7.2.1"
 
-"companion-module-vicreo-hotkey@github:bitfocus/companion-module-vicreo-hotkey#v2.0.12":
-  version "2.0.12"
-  resolved "https://codeload.github.com/bitfocus/companion-module-vicreo-hotkey/tar.gz/e9d212ed434012a60c8aa03397014ef41c70345d"
+"companion-module-vicreo-hotkey@github:bitfocus/companion-module-vicreo-hotkey#v2.0.13":
+  version "2.0.13"
+  resolved "https://codeload.github.com/bitfocus/companion-module-vicreo-hotkey/tar.gz/28a81fb49d3da1872aa93bb699964e426406a490"
   dependencies:
     md5 "^2.3.0"
 
