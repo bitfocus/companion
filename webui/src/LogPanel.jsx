@@ -38,7 +38,7 @@ export const LogPanel = memo(function LogPanel() {
 					message,
 				}))
 
-				setHistory(items)
+				setHistory(items.reverse())
 			})
 			.catch((e) => {
 				console.error('log catchup error', e)
