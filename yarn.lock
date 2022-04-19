@@ -3023,9 +3023,9 @@ commist@^1.0.0:
   version "1.0.2"
   resolved "https://codeload.github.com/bitfocus/companion-module-gefen-dvimatrix/tar.gz/dd4d006dc5c33c897355acf4f4ee170621abe94d"
 
-"companion-module-generic-artnet@github:bitfocus/companion-module-generic-artnet#v1.1.1":
-  version "1.1.1"
-  resolved "https://codeload.github.com/bitfocus/companion-module-generic-artnet/tar.gz/81fde873fbc0356309864e8efef340b4f23b5a87"
+"companion-module-generic-artnet@github:bitfocus/companion-module-generic-artnet#v1.2.0":
+  version "1.2.0"
+  resolved "https://codeload.github.com/bitfocus/companion-module-generic-artnet/tar.gz/c86c2ce0e4447a85af4df20c969e7c0484228796"
   dependencies:
     artnet-node haakonnessjoen/artnet-node#ee6273d
 
