@@ -3445,9 +3445,9 @@ commist@^1.0.0:
   version "1.0.2"
   resolved "https://codeload.github.com/bitfocus/companion-module-nobe-omniscope/tar.gz/892bb77728847cab79fcbb00fecdd9b818ffcbfd"
 
-"companion-module-noismada-octopuslistener@github:bitfocus/companion-module-noismada-octopuslistener#v1.0.4":
-  version "1.0.4"
-  resolved "https://codeload.github.com/bitfocus/companion-module-noismada-octopuslistener/tar.gz/597592b135dc8601448a5fd8791335f2af03dc8e"
+"companion-module-noismada-octopuslistener@github:bitfocus/companion-module-noismada-octopuslistener#v1.0.5":
+  version "1.0.5"
+  resolved "https://codeload.github.com/bitfocus/companion-module-noismada-octopuslistener/tar.gz/305b68b1d28c190392ddd3d6e0442bc88e548ef2"
 
 "companion-module-noismada-octopusshowcontrol@github:bitfocus/companion-module-noismada-octopusshowcontrol#v1.2.1":
   version "1.2.1"
