@@ -355,7 +355,7 @@
 		"companion-module-magewell-ultrastream": "github:bitfocus/companion-module-magewell-ultrastream#v0.0.4",
 		"companion-module-magichome-bulb": "github:bitfocus/companion-module-magichome-bulb#v1.0.1",
 		"companion-module-magicsoft-recorder": "github:bitfocus/companion-module-magicsoft-recorder#v1.0.1",
-		"companion-module-makeprox-glue": "github:bitfocus/companion-module-makeprox-glue#v1.0.1",
+		"companion-module-makeprox-glue": "github:bitfocus/companion-module-makeprox-glue#v1.0.2",
 		"companion-module-malighting-grandma2": "github:bitfocus/companion-module-malighting-grandma2#v1.0.12",
 		"companion-module-malighting-msc": "github:bitfocus/companion-module-malighting-msc#v0.2.3",
 		"companion-module-matrox-monarch": "github:bitfocus/companion-module-matrox-monarch#v2.0.0",

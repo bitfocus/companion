@@ -3334,9 +3334,9 @@ commist@^1.0.0:
   version "1.0.1"
   resolved "https://codeload.github.com/bitfocus/companion-module-magicsoft-recorder/tar.gz/9b54ae43ab58b4d762a4c133c6e6ba6161cd773e"
 
-"companion-module-makeprox-glue@github:bitfocus/companion-module-makeprox-glue#v1.0.1":
-  version "1.0.1"
-  resolved "https://codeload.github.com/bitfocus/companion-module-makeprox-glue/tar.gz/bffc453a5a6dddb79dc2b9f89d25baf46f485223"
+"companion-module-makeprox-glue@github:bitfocus/companion-module-makeprox-glue#v1.0.2":
+  version "1.0.2"
+  resolved "https://codeload.github.com/bitfocus/companion-module-makeprox-glue/tar.gz/77bc9d597e8c5304bfddfb34948216512fa3a9e0"
   dependencies:
     socket.io-client "^4.4.0"
 
