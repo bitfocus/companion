@@ -2616,15 +2616,15 @@ commist@^1.0.0:
   version "1.0.2"
   resolved "https://codeload.github.com/bitfocus/companion-module-biamp-audia/tar.gz/0082201462f94251b4f55c2c851f053d82ef701d"
 
-"companion-module-birddog-studio@github:bitfocus/companion-module-birddog-studio#v1.0.3":
-  version "1.0.3"
-  resolved "https://codeload.github.com/bitfocus/companion-module-birddog-studio/tar.gz/8c9db4dd2264e1544271676db0d16193a7db80c0"
+"companion-module-birddog-ptz@github:bitfocus/companion-module-birddog-ptz#v2.0.1":
+  version "2.0.1"
+  resolved "https://codeload.github.com/bitfocus/companion-module-birddog-ptz/tar.gz/75bececc2c11f0c86d5b0e65da08ffc366eabd8b"
   dependencies:
     node-fetch "^2.6.7"
 
-"companion-module-birddog-visca@github:bitfocus/companion-module-birddog-visca#v2.0.0":
-  version "2.0.0"
-  resolved "https://codeload.github.com/bitfocus/companion-module-birddog-visca/tar.gz/c6425a5901a5780722cce5555d53600a21da86c0"
+"companion-module-birddog-studio@github:bitfocus/companion-module-birddog-studio#v1.0.3":
+  version "1.0.3"
+  resolved "https://codeload.github.com/bitfocus/companion-module-birddog-studio/tar.gz/8c9db4dd2264e1544271676db0d16193a7db80c0"
   dependencies:
     node-fetch "^2.6.7"
 
