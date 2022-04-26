@@ -71,6 +71,7 @@ function telnetStreamer(host, port, options) {
 	var self = this
 	if (!(this instanceof telnetStreamer)) return new telnetStreamer(options)
 
+	self.destroyed = false
 	self._options = options = options || {}
 	self.ts = new telnetStream(options)
 	self.status = undefined
@@ -154,6 +155,15 @@ function telnetStreamer(host, port, options) {
 	// Let caller install event handlers first
 	setImmediate(self.connect.bind(self))
 
+	if (process.env.DEVELOPER) {
+		setTimeout(() => {
+			if (!self.destroyed && self.listenerCount('error')) {
+				// The socket is active and has no listeners. Log an error for the module devs!
+				console.error(`Danger: Telnet client for ${self.host}:${self.port} is missing an error handler!`)
+			}
+		}, 5000)
+	}
+
 	return self
 }
 inherits(telnetStreamer, EventEmitter)
@@ -205,6 +215,8 @@ telnetStreamer.prototype.connect = function () {
 
 telnetStreamer.prototype.destroy = function () {
 	var self = this
+
+	self.destroyed = true
 
 	if (self.try_timer !== undefined) {
 		clearTimeout(self.try_timer)
