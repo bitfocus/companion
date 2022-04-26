@@ -303,7 +303,7 @@
 		"companion-module-generic-tcp-serial": "github:bitfocus/companion-module-generic-tcp-serial#v1.0.4",
 		"companion-module-generic-tcp-udp": "github:bitfocus/companion-module-generic-tcp-udp#v1.0.10",
 		"companion-module-generic-wakeonlan": "github:bitfocus/companion-module-generic-wakeonlan#v1.0.5",
-		"companion-module-generic-websocket": "github:bitfocus/companion-module-generic-websocket#v1.0.1",
+		"companion-module-generic-websocket": "github:bitfocus/companion-module-generic-websocket#v1.0.2",
 		"companion-module-globalcache-itac-cc": "github:bitfocus/companion-module-globalcache-itac-cc#v1.0.3",
 		"companion-module-globalcache-itac-ir": "github:bitfocus/companion-module-globalcache-itac-ir#v1.0.7",
 		"companion-module-globalcache-itac-sl": "github:bitfocus/companion-module-globalcache-itac-sl#v1.0.5",

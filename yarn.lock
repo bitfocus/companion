@@ -3078,9 +3078,9 @@ commist@^1.0.0:
   dependencies:
     wake_on_lan "^1.0.0"
 
-"companion-module-generic-websocket@github:bitfocus/companion-module-generic-websocket#v1.0.1":
-  version "1.0.1"
-  resolved "https://codeload.github.com/bitfocus/companion-module-generic-websocket/tar.gz/7081cc22a2a6f5bb003eaaa96a133626e1c777c2"
+"companion-module-generic-websocket@github:bitfocus/companion-module-generic-websocket#v1.0.2":
+  version "1.0.2"
+  resolved "https://codeload.github.com/bitfocus/companion-module-generic-websocket/tar.gz/5d1dcfaf6bc31704d3b2e4d7d2a0a061f64fe0ae"
   dependencies:
     object-path "^0.11.4"
     ws "^7.2.1"
