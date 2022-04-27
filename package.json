@@ -482,7 +482,7 @@
 		"companion-module-tplink-kasasmartbulb": "github:bitfocus/companion-module-tplink-kasasmartbulb#v1.0.1",
 		"companion-module-tplink-kasasmartdimmer": "github:bitfocus/companion-module-tplink-kasasmartdimmer#v1.0.0",
 		"companion-module-tplink-kasasmartplug": "github:bitfocus/companion-module-tplink-kasasmartplug#v1.1.1",
-		"companion-module-tplink-taposmartplug": "github:bitfocus/companion-module-tplink-taposmartplug#v1.0.1",
+		"companion-module-tplink-taposmartplug": "github:bitfocus/companion-module-tplink-taposmartplug#v1.0.2",
 		"companion-module-tslproducts-umd": "github:bitfocus/companion-module-tslproducts-umd#v1.2.3",
 		"companion-module-tvone-corio": "github:bitfocus/companion-module-tvone-corio#v1.0.1",
 		"companion-module-twitch-api": "github:bitfocus/companion-module-twitch-api#v2.0.4",
