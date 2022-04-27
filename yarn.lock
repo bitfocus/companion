@@ -3946,9 +3946,9 @@ commist@^1.0.0:
   dependencies:
     tplink-smarthome-api "^4.2.0"
 
-"companion-module-tplink-taposmartplug@github:bitfocus/companion-module-tplink-taposmartplug#v1.0.1":
-  version "1.0.1"
-  resolved "https://codeload.github.com/bitfocus/companion-module-tplink-taposmartplug/tar.gz/175d82c111e8b7894d8a0dc1d62dca7fa7222fe8"
+"companion-module-tplink-taposmartplug@github:bitfocus/companion-module-tplink-taposmartplug#v1.0.2":
+  version "1.0.2"
+  resolved "https://codeload.github.com/bitfocus/companion-module-tplink-taposmartplug/tar.gz/fc7e1e609b1daa9c58ae3af0cb78a2d9e2ac293b"
   dependencies:
     tp-link-tapo-connect "^1.0.6"
 
