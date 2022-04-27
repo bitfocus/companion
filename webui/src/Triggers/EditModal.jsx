@@ -187,6 +187,7 @@ export function TriggerEditModal({ doClose, doSave, item, plugins }) {
 						</CCol>
 					</CRow>
 					<ActionsPanelInner
+						isOnBank={false}
 						dragId={'triggerAction'}
 						addPlaceholder="+ Add action"
 						actions={config.actions || []}
@@ -263,6 +264,7 @@ function TriggerEditModalConfig({ pluginSpec, config, updateConfig }) {
 								<td>
 									<MyErrorBoundary>
 										<FeedbackEditor
+											isOnBank={false}
 											feedback={conf}
 											setValue={(id, k, v) => updateFeedbackOptionConfig(i, k, v)}
 											innerDelete={() => delRow(i)}
