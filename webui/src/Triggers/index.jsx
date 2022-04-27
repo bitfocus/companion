@@ -11,10 +11,6 @@ export const Triggers = memo(function Triggers() {
 	const [triggersList, setTriggersList] = useState(null)
 	const [editItem, setEditItem] = useState([false, null])
 
-	const loadTriggersList = useCallback((list) => {
-		setTriggersList(list)
-	}, [])
-
 	const replaceItem = useCallback((itemId, item) => {
 		setTriggersList((list) => {
 			const newList = [...list]
@@ -48,16 +44,35 @@ export const Triggers = memo(function Triggers() {
 
 	// on mount, load the plugins
 	useEffect(() => {
+		const updateLastRun = (id, time) => {
+			setTriggersList((list) => {
+				if (!list) return list
+
+				return list.map((l) => {
+					if (l.id === id) {
+						return {
+							...l,
+							last_run: time,
+						}
+					} else {
+						return l
+					}
+				})
+			})
+		}
+
 		context.socket.emit('schedule_plugins', (newPlugins) => {
 			setPlugins(newPlugins)
 		})
-		context.socket.emit('schedule_get', loadTriggersList)
-		context.socket.on('schedule_refresh', loadTriggersList)
+		context.socket.emit('schedule_get', setTriggersList)
+		context.socket.on('schedule_refresh', setTriggersList)
+		context.socket.on('schedule_last_run', updateLastRun)
 
 		return () => {
-			context.socket.off('schedule_refresh', loadTriggersList)
+			context.socket.off('schedule_refresh', setTriggersList)
+			context.socket.off('schedule_last_run', updateLastRun)
 		}
-	}, [context.socket, loadTriggersList])
+	}, [context.socket, setTriggersList])
 
 	return (
 		<div>
