@@ -3097,9 +3097,9 @@ commist@^1.0.0:
   version "1.0.5"
   resolved "https://codeload.github.com/bitfocus/companion-module-globalcache-itac-sl/tar.gz/95f9cf486006f06b6269f7ace4494c6abcea398a"
 
-"companion-module-grassvalley-amp@github:bitfocus/companion-module-grassvalley-amp#v1.1.5":
-  version "1.1.5"
-  resolved "https://codeload.github.com/bitfocus/companion-module-grassvalley-amp/tar.gz/6e58cd9edaf4a6da876246b1db120734007e967f"
+"companion-module-grassvalley-amp@github:bitfocus/companion-module-grassvalley-amp#v1.1.6":
+  version "1.1.6"
+  resolved "https://codeload.github.com/bitfocus/companion-module-grassvalley-amp/tar.gz/4c1bf56f1b05b054d7542569eb315765c8ef41c8"
 
 "companion-module-greenhippo-hippotizer@github:bitfocus/companion-module-greenhippo-hippotizer#v1.0.4":
   version "1.0.4"
