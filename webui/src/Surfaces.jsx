@@ -22,7 +22,7 @@ import {
 	CModalHeader,
 	CSelect,
 } from '@coreui/react'
-import { StaticContext, LoadingRetryOrError, socketEmit } from './util'
+import { StaticContext, LoadingRetryOrError, socketEmit, SurfacesContext } from './util'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faCog, faSync } from '@fortawesome/free-solid-svg-icons'
 import shortid from 'shortid'
@@ -30,21 +30,12 @@ import { TextInputField } from './Components/TextInputField'
 
 export const SurfacesPage = memo(function SurfacesPage() {
 	const context = useContext(StaticContext)
+	const devices = useContext(SurfacesContext)
 
 	const editModalRef = useRef()
 
 	const [scanning, setScanning] = useState(false)
 	const [scanError, setScanError] = useState(null)
-	const [devices, setDevices] = useState([])
-
-	useEffect(() => {
-		context.socket.on('devices_list', setDevices)
-		context.socket.emit('devices_list_get')
-
-		return () => {
-			context.socket.off('devices_list', setDevices)
-		}
-	}, [context.socket])
 
 	useEffect(() => {
 		// If device disappears, hide the edit modal

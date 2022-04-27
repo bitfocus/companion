@@ -8,6 +8,8 @@ import {
 	VariableDefinitionsContext,
 	CustomVariableDefinitionsContext,
 	UserConfigContext,
+	SurfacesContext,
+	PagesContext,
 } from './util'
 import { NotificationsManager } from './Components/Notifications'
 
@@ -20,6 +22,8 @@ export function ContextData({ socket, children }) {
 	const [variableDefinitions, setVariableDefinitions] = useState(null)
 	const [customVariables, setCustomVariables] = useState(null)
 	const [userConfig, setUserConfig] = useState(null)
+	const [surfaces, setSurfaces] = useState(null)
+	const [pages, setPages] = useState(null)
 
 	useEffect(() => {
 		if (socket) {
@@ -118,6 +122,35 @@ export function ContextData({ socket, children }) {
 
 			socket.on('set_userconfig_key', updateUserConfigValue)
 
+			socket.on('devices_list', setSurfaces)
+			socket.emit('devices_list_get')
+
+			socketEmit(socket, 'get_page_all', [])
+				.then(([pages]) => {
+					// setLoadError(null)
+					setPages(pages)
+				})
+				.catch((e) => {
+					console.error('Failed to load pages list:', e)
+					// setLoadError(`Failed to load pages list`)
+					setPages(null)
+				})
+
+			const updatePageInfo = (page, info) => {
+				setPages((oldPages) => {
+					if (oldPages) {
+						return {
+							...oldPages,
+							[page]: info,
+						}
+					} else {
+						return null
+					}
+				})
+			}
+
+			socket.on('set_page', updatePageInfo)
+
 			return () => {
 				socket.off('instances_get:result', setInstances)
 				socket.off('variable_instance_definitions_set', updateVariableDefinitions)
@@ -125,6 +158,8 @@ export function ContextData({ socket, children }) {
 				socket.off('action_instance_definitions_set', updateActionDefinitions)
 				socket.off('feedback_instance_definitions_set', updateFeedbackDefinitions)
 				socket.off('set_userconfig_key', updateUserConfigValue)
+				socket.off('devices_list', setSurfaces)
+				socket.off('set_page', updatePageInfo)
 			}
 		}
 	}, [socket])
@@ -147,6 +182,8 @@ export function ContextData({ socket, children }) {
 		feedbackDefinitions,
 		customVariables,
 		userConfig,
+		surfaces,
+		pages,
 	]
 	const completedSteps = steps.filter((s) => s !== null && s !== undefined)
 
@@ -160,9 +197,13 @@ export function ContextData({ socket, children }) {
 						<VariableDefinitionsContext.Provider value={variableDefinitions}>
 							<CustomVariableDefinitionsContext.Provider value={customVariables}>
 								<UserConfigContext.Provider value={userConfig}>
-									<NotificationsManager ref={notifierRef} />
+									<SurfacesContext.Provider value={surfaces}>
+										<PagesContext.Provider value={pages}>
+											<NotificationsManager ref={notifierRef} />
 
-									{children(progressPercent, completedSteps.length === steps.length)}
+											{children(progressPercent, completedSteps.length === steps.length)}
+										</PagesContext.Provider>
+									</SurfacesContext.Provider>
 								</UserConfigContext.Provider>
 							</CustomVariableDefinitionsContext.Provider>
 						</VariableDefinitionsContext.Provider>
