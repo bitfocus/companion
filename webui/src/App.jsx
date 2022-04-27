@@ -58,9 +58,11 @@ export default function App() {
 				return wasConnected0
 			})
 		})
-		// sock.onAny(function (name, ...data) {
-		// 	console.log('event', name, data)
-		// })
+		if (window.location.hash && window.location.hash.includes('debug_socket')) {
+			sock.onAny(function (name, ...data) {
+				console.log('received event', name, data)
+			})
+		}
 		sock.on('disconnect', () => {
 			setConnected((val) => {
 				setWasConnected(val)
