@@ -2960,9 +2960,9 @@ commist@^1.0.0:
   dependencies:
     request "^2.88.0"
 
-"companion-module-esphome-api@github:bitfocus/companion-module-esphome-api#v1.0.1":
-  version "1.0.1"
-  resolved "https://codeload.github.com/bitfocus/companion-module-esphome-api/tar.gz/b52192bacee841e72383bc5932d9233e391d3d4a"
+"companion-module-esphome-api@github:bitfocus/companion-module-esphome-api#v1.0.2":
+  version "1.0.2"
+  resolved "https://codeload.github.com/bitfocus/companion-module-esphome-api/tar.gz/ae1df9ada087c3e2dfbd8863d6c6074f2ed35eda"
   dependencies:
     "@protobuf-ts/runtime" "^2.4.0"
     "@protobuf-ts/runtime-rpc" "^2.4.0"
