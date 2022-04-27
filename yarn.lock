@@ -3737,9 +3737,9 @@ commist@^1.0.0:
   version "1.0.11"
   resolved "https://codeload.github.com/bitfocus/companion-module-singularlive-studio/tar.gz/5068cefa416f6ec3acdd4554471e5c3673c79e30"
 
-"companion-module-skaarhoj-rawpanel@github:bitfocus/companion-module-skaarhoj-rawpanel#v1.0.1":
-  version "1.0.1"
-  resolved "https://codeload.github.com/bitfocus/companion-module-skaarhoj-rawpanel/tar.gz/6908bbe898830a9bc87dca83c944290b1ffaf143"
+"companion-module-skaarhoj-rawpanel@github:bitfocus/companion-module-skaarhoj-rawpanel#v1.0.2":
+  version "1.0.2"
+  resolved "https://codeload.github.com/bitfocus/companion-module-skaarhoj-rawpanel/tar.gz/a494898622cc1ce390ddf9bea9a693b5356c3bf0"
   dependencies:
     got "^12.0.1"
     lodash "^4.17.21"
