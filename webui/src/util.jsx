@@ -18,6 +18,7 @@ export const CustomVariableDefinitionsContext = React.createContext(null)
 export const UserConfigContext = React.createContext(null)
 export const SurfacesContext = React.createContext(null)
 export const PagesContext = React.createContext(null)
+export const TriggersContext = React.createContext(null)
 
 export function socketEmit(socket, name, args, timeout, timeoutMessage) {
 	const p = new Promise((resolve, reject) => {

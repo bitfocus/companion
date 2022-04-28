@@ -10,6 +10,7 @@ import {
 	UserConfigContext,
 	SurfacesContext,
 	PagesContext,
+	TriggersContext,
 } from './util'
 import { NotificationsManager } from './Components/Notifications'
 
@@ -24,6 +25,7 @@ export function ContextData({ socket, children }) {
 	const [userConfig, setUserConfig] = useState(null)
 	const [surfaces, setSurfaces] = useState(null)
 	const [pages, setPages] = useState(null)
+	const [triggers, setTriggers] = useState(null)
 
 	useEffect(() => {
 		if (socket) {
@@ -151,6 +153,27 @@ export function ContextData({ socket, children }) {
 
 			socket.on('set_page', updatePageInfo)
 
+			const updateTriggerLastRun = (id, time) => {
+				setTriggers((list) => {
+					if (!list) return list
+
+					return list.map((l) => {
+						if (l.id === id) {
+							return {
+								...l,
+								last_run: time,
+							}
+						} else {
+							return l
+						}
+					})
+				})
+			}
+
+			socket.emit('schedule_get', setTriggers)
+			socket.on('schedule_refresh', setTriggers)
+			socket.on('schedule_last_run', updateTriggerLastRun)
+
 			return () => {
 				socket.off('instances_get:result', setInstances)
 				socket.off('variable_instance_definitions_set', updateVariableDefinitions)
@@ -160,6 +183,9 @@ export function ContextData({ socket, children }) {
 				socket.off('set_userconfig_key', updateUserConfigValue)
 				socket.off('devices_list', setSurfaces)
 				socket.off('set_page', updatePageInfo)
+
+				socket.off('schedule_refresh', setTriggers)
+				socket.off('schedule_last_run', updateTriggerLastRun)
 			}
 		}
 	}, [socket])
@@ -184,6 +210,7 @@ export function ContextData({ socket, children }) {
 		userConfig,
 		surfaces,
 		pages,
+		triggers,
 	]
 	const completedSteps = steps.filter((s) => s !== null && s !== undefined)
 
@@ -199,9 +226,11 @@ export function ContextData({ socket, children }) {
 								<UserConfigContext.Provider value={userConfig}>
 									<SurfacesContext.Provider value={surfaces}>
 										<PagesContext.Provider value={pages}>
-											<NotificationsManager ref={notifierRef} />
+											<TriggersContext.Provider value={triggers}>
+												<NotificationsManager ref={notifierRef} />
 
-											{children(progressPercent, completedSteps.length === steps.length)}
+												{children(progressPercent, completedSteps.length === steps.length)}
+											</TriggersContext.Provider>
 										</PagesContext.Provider>
 									</SurfacesContext.Provider>
 								</UserConfigContext.Provider>
