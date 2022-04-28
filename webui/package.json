@@ -15,6 +15,7 @@
     "classnames": "^2.3.1",
     "dayjs": "^1.11.0",
     "eventemitter3": "^4.0.7",
+    "fast-json-patch": "^3.1.1",
     "html-entities": "^2.3.3",
     "i18next": "^19.9.2",
     "i18next-browser-languagedetector": "^6.1.4",

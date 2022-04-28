@@ -4,6 +4,8 @@ import { CAlert, CButton, CCol } from '@coreui/react'
 import { ErrorBoundary } from 'react-error-boundary'
 import { PRIMARY_COLOR } from './Constants'
 import { BarLoader } from 'react-spinners'
+import { applyPatch } from 'fast-json-patch'
+import _ from 'lodash'
 
 export const SERVER_URL = window.SERVER_URL === '%REACT_APP_SERVER_URL%' ? undefined : window.SERVER_URL
 
@@ -176,4 +178,25 @@ export function LoadingRetryOrError({ error, dataReady, doRetry }) {
 			)}
 		</>
 	)
+}
+
+export function myApplyPatch(oldDefinitions, key, patch) {
+	if (oldDefinitions) {
+		const oldEntry = oldDefinitions[key] ?? {}
+
+		const newDefinitions = { ...oldDefinitions }
+		if (!patch) {
+			delete newDefinitions[key]
+		} else if (Array.isArray(patch)) {
+			// If its an array we assume it is a patch
+			newDefinitions[key] = applyPatch(_.cloneDeep(oldEntry), patch).newDocument
+		} else {
+			// If its any other type, then its not a patch and is likely a complete value
+			newDefinitions[key] = patch
+		}
+
+		return newDefinitions
+	} else {
+		return oldDefinitions
+	}
 }

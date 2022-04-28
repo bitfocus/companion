@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import {
+	myApplyPatch,
 	StaticContext,
 	ActionsContext,
 	FeedbacksContext,
@@ -86,23 +87,14 @@ export function ContextData({ socket, children }) {
 					console.error('Failed to load user config', e)
 				})
 
-			const updateVariableDefinitions = (label, variables) => {
-				setVariableDefinitions((oldDefinitions) => ({
-					...oldDefinitions,
-					[label]: variables,
-				}))
+			const updateVariableDefinitions = (label, patch) => {
+				setVariableDefinitions((oldDefinitions) => myApplyPatch(oldDefinitions, label, patch))
 			}
-			const updateFeedbackDefinitions = (id, feedbacks) => {
-				setFeedbackDefinitions((oldDefinitions) => ({
-					...oldDefinitions,
-					[id]: feedbacks,
-				}))
+			const updateFeedbackDefinitions = (id, patch) => {
+				setFeedbackDefinitions((oldDefinitions) => myApplyPatch(oldDefinitions, id, patch))
 			}
-			const updateActionDefinitions = (id, actions) => {
-				setActionDefinitions((oldDefinitions) => ({
-					...oldDefinitions,
-					[id]: actions,
-				}))
+			const updateActionDefinitions = (id, patch) => {
+				setActionDefinitions((oldDefinitions) => myApplyPatch(oldDefinitions, id, patch))
 			}
 
 			const updateUserConfigValue = (key, value) => {
@@ -115,12 +107,12 @@ export function ContextData({ socket, children }) {
 			socket.on('instances_get:result', setInstances)
 			socket.emit('instances_get')
 
-			socket.on('variable_instance_definitions_set', updateVariableDefinitions)
+			socket.on('variable_instance_definitions_patch', updateVariableDefinitions)
 			socket.on('custom_variables_get', setCustomVariables)
 
-			socket.on('action_instance_definitions_set', updateActionDefinitions)
+			socket.on('action_instance_definitions_patch', updateActionDefinitions)
 
-			socket.on('feedback_instance_definitions_set', updateFeedbackDefinitions)
+			socket.on('feedback_instance_definitions_patch', updateFeedbackDefinitions)
 
 			socket.on('set_userconfig_key', updateUserConfigValue)
 
@@ -176,10 +168,10 @@ export function ContextData({ socket, children }) {
 
 			return () => {
 				socket.off('instances_get:result', setInstances)
-				socket.off('variable_instance_definitions_set', updateVariableDefinitions)
+				socket.off('variable_instance_definitions_patch', updateVariableDefinitions)
 				socket.off('custom_variables_get', setCustomVariables)
-				socket.off('action_instance_definitions_set', updateActionDefinitions)
-				socket.off('feedback_instance_definitions_set', updateFeedbackDefinitions)
+				socket.off('action_instance_definitions_patch', updateActionDefinitions)
+				socket.off('feedback_instance_definitions_patch', updateFeedbackDefinitions)
 				socket.off('set_userconfig_key', updateUserConfigValue)
 				socket.off('devices_list', setSurfaces)
 				socket.off('set_page', updatePageInfo)

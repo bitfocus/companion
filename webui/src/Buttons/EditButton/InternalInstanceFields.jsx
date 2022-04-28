@@ -168,8 +168,8 @@ function InternalVariableDropdown({ value, setValue, defaultVal }) {
 		const choices = []
 
 		for (const [instanceLabel, variables] of Object.entries(context)) {
-			for (const variable of variables) {
-				const id = `${instanceLabel}:${variable.name}`
+			for (const [name, variable] of Object.entries(variables || {})) {
+				const id = `${instanceLabel}:${name}`
 				choices.push({
 					id,
 					label: `${variable.label} (${id})`,
