@@ -6,6 +6,7 @@ import {
 	InstancesContext,
 	PagesContext,
 	SurfacesContext,
+	TriggersContext,
 	VariableDefinitionsContext,
 } from '../../util'
 
@@ -30,6 +31,8 @@ export function InternalInstanceField(option, isOnBank, value, setValue) {
 			return <InternalVariableDropdown value={value} setValue={setValue} defaultVal={option.default} />
 		case 'internal:surface_serial':
 			return <InternalSurfaceBySerialDropdown isOnBank={isOnBank} value={value} setValue={setValue} />
+		case 'internal:trigger':
+			return <InternalTriggerDropdown value={value} setValue={setValue} />
 		default:
 			// Use fallback
 			return undefined
@@ -200,6 +203,33 @@ function InternalSurfaceBySerialDropdown({ isOnBank, value, setValue }) {
 		}
 		return choices
 	}, [context, isOnBank])
+
+	return (
+		<DropdownInputField
+			value={value}
+			definition={{
+				choices: choices,
+				default: choices[0]?.id,
+			}}
+			multiple={false}
+			setValue={setValue}
+		/>
+	)
+}
+
+function InternalTriggerDropdown({ value, setValue }) {
+	const context = useContext(TriggersContext)
+
+	const choices = useMemo(() => {
+		const choices = []
+		for (const trigger of context) {
+			choices.push({
+				id: trigger.id,
+				label: trigger.title || `Trigger #${trigger.id}`,
+			})
+		}
+		return choices
+	}, [context])
 
 	return (
 		<DropdownInputField

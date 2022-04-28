@@ -1,32 +1,15 @@
 import React, { memo, useCallback, useContext, useEffect, useState } from 'react'
 import { CButton } from '@coreui/react'
-import { StaticContext } from '../util'
+import { StaticContext, TriggersContext } from '../util'
 import dayjs from 'dayjs'
 import { TriggerEditModal } from './EditModal'
 
 export const Triggers = memo(function Triggers() {
 	const context = useContext(StaticContext)
+	const triggersList = useContext(TriggersContext)
 
 	const [plugins, setPlugins] = useState(null)
-	const [triggersList, setTriggersList] = useState(null)
 	const [editItem, setEditItem] = useState([false, null])
-
-	const replaceItem = useCallback((itemId, item) => {
-		setTriggersList((list) => {
-			const newList = [...list]
-			const index = newList.findIndex((i) => i.id === itemId)
-			if (index !== -1) {
-				if (item) {
-					newList[index] = item
-				} else {
-					newList.splice(index, 1)
-				}
-			} else if (item) {
-				newList.push(item)
-			}
-			return newList
-		})
-	}, [])
 
 	const doEditItem = useCallback((itemId) => setEditItem([true, itemId]), [])
 	const doAddNew = useCallback(() => setEditItem([true, null]), [])
@@ -35,44 +18,17 @@ export const Triggers = memo(function Triggers() {
 	const doSave = useCallback(
 		(newConfig) => {
 			console.log('save item', newConfig)
-			context.socket.emit('schedule_save_item', newConfig, (clean) => {
-				replaceItem(clean.id, clean)
-			})
+			context.socket.emit('schedule_save_item', newConfig)
 		},
-		[context.socket, replaceItem]
+		[context.socket]
 	)
 
 	// on mount, load the plugins
 	useEffect(() => {
-		const updateLastRun = (id, time) => {
-			setTriggersList((list) => {
-				if (!list) return list
-
-				return list.map((l) => {
-					if (l.id === id) {
-						return {
-							...l,
-							last_run: time,
-						}
-					} else {
-						return l
-					}
-				})
-			})
-		}
-
 		context.socket.emit('schedule_plugins', (newPlugins) => {
 			setPlugins(newPlugins)
 		})
-		context.socket.emit('schedule_get', setTriggersList)
-		context.socket.on('schedule_refresh', setTriggersList)
-		context.socket.on('schedule_last_run', updateLastRun)
-
-		return () => {
-			context.socket.off('schedule_refresh', setTriggersList)
-			context.socket.off('schedule_last_run', updateLastRun)
-		}
-	}, [context.socket, setTriggersList])
+	}, [context.socket])
 
 	return (
 		<div>
@@ -90,7 +46,7 @@ export const Triggers = memo(function Triggers() {
 				''
 			)}
 
-			<TriggersTable triggersList={triggersList} replaceItem={replaceItem} editItem={doEditItem} />
+			<TriggersTable triggersList={triggersList} editItem={doEditItem} />
 
 			<CButton color="primary" onClick={doAddNew}>
 				Add New Trigger
@@ -111,7 +67,7 @@ export const Triggers = memo(function Triggers() {
 })
 
 const tableDateFormat = 'MM/DD HH:mm:ss'
-function TriggersTable({ triggersList, replaceItem, editItem }) {
+function TriggersTable({ triggersList, editItem }) {
 	return (
 		<table className="table table-responsive-sm">
 			<thead>
@@ -123,9 +79,7 @@ function TriggersTable({ triggersList, replaceItem, editItem }) {
 			</thead>
 			<tbody>
 				{triggersList && triggersList.length > 0 ? (
-					triggersList.map((item) => (
-						<TriggersTableRow key={item.id} item={item} replaceItem={replaceItem} editItem={editItem} />
-					))
+					triggersList.map((item) => <TriggersTableRow key={item.id} item={item} editItem={editItem} />)
 				) : (
 					<tr>
 						<td colSpan="4">There currently are no triggers or scheduled tasks.</td>
@@ -135,30 +89,21 @@ function TriggersTable({ triggersList, replaceItem, editItem }) {
 		</table>
 	)
 }
-function TriggersTableRow({ item, replaceItem, editItem }) {
+function TriggersTableRow({ item, editItem }) {
 	const context = useContext(StaticContext)
 
 	const doEnableDisable = useCallback(() => {
-		context.socket.emit('schedule_update_item', item.id, { disabled: !item.disabled }, (clean) => {
-			console.log('completed disable', clean)
-			replaceItem(clean.id, clean)
-		})
-	}, [context.socket, replaceItem, item.id, item.disabled])
+		context.socket.emit('schedule_update_item', item.id, { disabled: !item.disabled })
+	}, [context.socket, item.id, item.disabled])
 	const doDelete = useCallback(() => {
-		context.socket.emit('schedule_update_item', item.id, { deleted: true }, () => {
-			console.log('completed delete', item.id)
-			replaceItem(item.id, null)
-		})
-	}, [context.socket, replaceItem, item.id])
+		context.socket.emit('schedule_update_item', item.id, { deleted: true })
+	}, [context.socket, item.id])
 	const doEdit = useCallback(() => {
 		editItem(item.id)
 	}, [editItem, item.id])
 	const doClone = useCallback(() => {
-		context.socket.emit('schedule_clone_item', item.id, (newItem) => {
-			console.log('completed clone', item.id, newItem.id)
-			replaceItem(newItem.id, newItem)
-		})
-	}, [context.socket, replaceItem, item.id])
+		context.socket.emit('schedule_clone_item', item.id)
+	}, [context.socket, item.id])
 
 	return (
 		<tr>
