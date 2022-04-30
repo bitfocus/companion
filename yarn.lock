@@ -2908,9 +2908,9 @@ commist@^1.0.0:
   version "1.0.4"
   resolved "https://codeload.github.com/bitfocus/companion-module-digico-osc/tar.gz/08bbda528adaf43beb381679b5313e0786af00be"
 
-"companion-module-digitalloggers-powercontroller@github:bitfocus/companion-module-digitalloggers-powercontroller#v1.0.1":
-  version "1.0.1"
-  resolved "https://codeload.github.com/bitfocus/companion-module-digitalloggers-powercontroller/tar.gz/44ef1df33b7a803b8fc971bf6317e201d82201fa"
+"companion-module-digitalloggers-powercontroller@github:bitfocus/companion-module-digitalloggers-powercontroller#v1.0.2":
+  version "1.0.2"
+  resolved "https://codeload.github.com/bitfocus/companion-module-digitalloggers-powercontroller/tar.gz/9c18b4c748af1f52357026e4bd631400f10448d8"
   dependencies:
     urllib "^2.38.0"
 
