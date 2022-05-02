@@ -4,6 +4,6 @@ If you only want to export a single page, this can be done from the primary [but
 
 You're also able to completely reset your configuration here as well.
 
-_**Note:** if you experience problems with importing a setup or a page, please try creating the required instances manually before importing. This has been known to fix imports with certain modules._
+_**Note:** if you experience problems with importing a setup or a page, please try creating the required connections manually before importing. This has been known to fix imports with certain modules._
 
 ![Import](images/import.png?raw=true 'import')

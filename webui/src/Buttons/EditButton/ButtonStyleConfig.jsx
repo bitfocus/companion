@@ -49,6 +49,7 @@ export function ButtonStyleConfig({ page, bank, config, configRef, valueChanged 
 		[context.socket, page, bank, valueChanged, configRef]
 	)
 
+	const setShowTopBar = useCallback((val) => setValueInner('show_topbar', val), [setValueInner])
 	const setStepAutoProgressValue = useCallback((val) => setValueInner('step_auto_progress', val), [setValueInner])
 	const setRelativeDelayValue = useCallback((val) => setValueInner('relative_delay', val), [setValueInner])
 
@@ -89,6 +90,25 @@ export function ButtonStyleConfig({ page, bank, config, configRef, valueChanged 
 						clearPng={clearPng}
 						controlTemplate={ControlWrapper}
 					/>
+
+					<CCol className="fieldtype-checkbox" sm={3} xs={6}>
+						<label>Show Topbar</label>
+						<p>
+							<DropdownInputField
+								definition={{
+									default: 'default',
+									id: 'show_topbar',
+									choices: [
+										{ id: 'default', label: 'Follow Default' },
+										{ id: true, label: 'Show' },
+										{ id: false, label: 'Hide' },
+									],
+								}}
+								setValue={setShowTopBar}
+								value={config.show_topbar}
+							/>
+						</p>
+					</CCol>
 
 					<CCol className="fieldtype-checkbox" sm={2} xs={3}>
 						<CLabel>Relative Delays</CLabel>

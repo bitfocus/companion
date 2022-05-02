@@ -107,7 +107,7 @@ function InstancesTableRow({
 
 	const doDelete = useCallback(() => {
 		deleteModalRef.current.show(
-			'Delete instance',
+			'Delete connection',
 			`Are you sure you want to delete "${instance.label}"?`,
 			'Delete',
 			() => {

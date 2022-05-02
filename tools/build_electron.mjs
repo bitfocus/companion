@@ -2,6 +2,7 @@
 
 import { generateVersionString, generateMiniVersionString, $withoutEscaping } from './lib.mjs'
 import archiver from 'archiver'
+import { fs } from 'zx'
 
 /**
  * @param {String} sourceDir: /some/folder/to/compress
@@ -72,6 +73,10 @@ if (!platform) {
 		electronBuilderArgs.push('--armv7l', '--linux')
 		sharpPlatform = 'linux'
 		sharpArch = 'arm'
+	} else if (platform === 'linux-arm64') {
+		electronBuilderArgs.push('--arm64', '--linux')
+		sharpPlatform = 'linux'
+		sharpArch = 'arm64'
 	} else {
 		console.error('Unknwon platform')
 		process.exit(1)
@@ -88,7 +93,23 @@ await zipDirectory('./docs', 'bundle-docs.zip')
 let sharpArgs = []
 if (sharpPlatform) sharpArgs.push(`npm_config_platform=${sharpPlatform}`)
 if (sharpArch) sharpArgs.push(`npm_config_arch=${sharpArch}`)
-await $`cross-env ${sharpArgs} yarn dist:prepare:sharp`
+await $`cross-env ${sharpArgs} yarn dist:prepare`
+
+const sharpVendorDir = './node_modules/sharp/vendor/'
+const sharpVersionDirs = await fs.readdir(sharpVendorDir)
+if (sharpVersionDirs.length !== 1) {
+	console.error(`Failed to determine sharp lib version`)
+	process.exit(1)
+}
+
+const sharpPlatformDirs = await fs.readdir(path.join(sharpVendorDir, sharpVersionDirs[0]))
+if (sharpPlatformDirs.length !== 1) {
+	console.error(`Failed to determine sharp lib platform`)
+	process.exit(1)
+}
+
+const vipsVendorName = path.join(sharpVersionDirs[0], sharpPlatformDirs[0])
+process.env.VIPS_VENDOR = vipsVendorName
 
 if (!platform) {
 	// If for our own platform, make sure the correct deps are installed
@@ -97,4 +118,4 @@ if (!platform) {
 
 // perform the electron build
 await fs.remove('./electron-output')
-await $withoutEscaping`electron-builder --publish=never ${electronBuilderArgs.join(' ')} `
+await $withoutEscaping` electron-builder --publish=never ${electronBuilderArgs.join(' ')} `

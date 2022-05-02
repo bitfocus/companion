@@ -18,6 +18,8 @@ jobs:
           # verify that every module is runnable
           node tools/verify-module-build.mjs .
 
+          yarn build:sentry
+
           yarn run lindist
 
           # verify that every module is runnable
@@ -25,16 +27,38 @@ jobs:
 
           # manually tar it, to preserve the symlinks
           cd electron-output
-          VERSION=$(node -e "console.log(require('../package.json').version)")
-          mv linux-unpacked companion-$VERSION
-          tar -cvzf companion-$VERSION.tar.gz companion-$VERSION
-      - name: rename and upload stuff
-        run: yarn build:rename_upload
+          mv linux-unpacked companion-x64
+          tar -cvzf companion-x64.tar.gz companion-x64
         env:
-          CI_BUILD_OS: linux
-          BITFOCUS_S3: ${{ secrets.BITFOCUS_S3 }}
-          BITFOCUS_KEY: ${{ secrets.BITFOCUS_ACCESS }}
-          BITFOCUS_SECRET: ${{ secrets.BITFOCUS_SECRET }}
+          SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
+
+      - name: Determine files to upload
+        id: filenames
+        shell: bash
+        run: |
+          VERSION=$(cat ./BUILD)
+
+          echo ::set-output name=sourcename::"electron-output/companion-x64.tar.gz"
+          echo ::set-output name=targetname::"companion-x64-${VERSION}.tar.gz"
+          echo ::set-output name=longversion::"${VERSION}"
+
+      - name: Upload build
+        uses: bitfocus/actions/upload-and-notify@main
+        with:
+          long-version: ${{ steps.filenames.outputs.longversion }}
+          beta-branch: beta
+          dev-branch: develop
+
+          source-filename: ${{ steps.filenames.outputs.sourcename }}
+          destination-filename: ${{ steps.filenames.outputs.targetname }}
+          s3-host: ${{ secrets.S3_HOST }}
+          s3-bucket: ${{ secrets.S3_BUCKET }}/companion
+          s3-access-key: ${{ secrets.S3_KEY }}
+          s3-secret-key: ${{ secrets.S3_SECRET }}
+
+          api-product: companion
+          api-target: 'linux-tgz'
+          api-secret: ${{ secrets.BITFOCUS_API_PROJECT_SECRET }}
 
   osx:
     runs-on: macos-latest
@@ -49,14 +73,13 @@ jobs:
           # try and avoid timeout errors
           yarn config set network-timeout 100000 -g
 
-          # these files upset electron-builder
-          rm .node-version .nvmrc
-
           yarn update
           yarn build:rebuild_modules
 
           # verify that every module is runnable
           node tools/verify-module-build.mjs .
+
+          yarn build:sentry
 
           yarn run macdist
 
@@ -67,14 +90,35 @@ jobs:
           CSC_KEY_PASSWORD: ${{ secrets.OSX_CSC_KEY_PASSWORD }}
           APPLEID: ${{ secrets.APPLEID }}
           APPLEIDPASS: ${{ secrets.APPLEIDPASS }}
-      - name: rename and upload stuff
-        run: yarn build:rename_upload
-        env:
-          CI_BUILD_OS: osx
-          CI_BUILD_ARCH: x64
-          BITFOCUS_S3: ${{ secrets.BITFOCUS_S3 }}
-          BITFOCUS_KEY: ${{ secrets.BITFOCUS_ACCESS }}
-          BITFOCUS_SECRET: ${{ secrets.BITFOCUS_SECRET }}
+          SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
+
+      - name: Determine files to upload
+        id: filenames
+        shell: bash
+        run: |
+          VERSION=$(cat ./BUILD)
+
+          echo ::set-output name=sourcename::"electron-output/companion-mac-x64.dmg"
+          echo ::set-output name=targetname::"companion-mac-x64-${VERSION}.dmg"
+          echo ::set-output name=longversion::"${VERSION}"
+
+      - name: Upload build
+        uses: bitfocus/actions/upload-and-notify@main
+        with:
+          long-version: ${{ steps.filenames.outputs.longversion }}
+          beta-branch: beta
+          dev-branch: develop
+
+          source-filename: ${{ steps.filenames.outputs.sourcename }}
+          destination-filename: ${{ steps.filenames.outputs.targetname }}
+          s3-host: ${{ secrets.S3_HOST }}
+          s3-bucket: ${{ secrets.S3_BUCKET }}/companion
+          s3-access-key: ${{ secrets.S3_KEY }}
+          s3-secret-key: ${{ secrets.S3_SECRET }}
+
+          api-product: companion
+          api-target: 'mac-intel'
+          api-secret: ${{ secrets.BITFOCUS_API_PROJECT_SECRET }}
 
   osx-arm64:
     runs-on: macos-11
@@ -89,14 +133,13 @@ jobs:
           # try and avoid timeout errors
           yarn config set network-timeout 100000 -g
 
-          # these files upset electron-builder
-          rm .node-version .nvmrc
-
           yarn update
           yarn build:rebuild_modules
 
           # verify that every module is runnable
           node tools/verify-module-build.mjs .
+
+          yarn build:sentry
 
           yarn run macarmdist
 
@@ -107,14 +150,35 @@ jobs:
           CSC_KEY_PASSWORD: ${{ secrets.OSX_CSC_KEY_PASSWORD }}
           APPLEID: ${{ secrets.APPLEID }}
           APPLEIDPASS: ${{ secrets.APPLEIDPASS }}
-      - name: rename and upload stuff
-        run: yarn build:rename_upload
-        env:
-          CI_BUILD_OS: osx
-          CI_BUILD_ARCH: arm64
-          BITFOCUS_S3: ${{ secrets.BITFOCUS_S3 }}
-          BITFOCUS_KEY: ${{ secrets.BITFOCUS_ACCESS }}
-          BITFOCUS_SECRET: ${{ secrets.BITFOCUS_SECRET }}
+          SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
+
+      - name: Determine files to upload
+        id: filenames
+        shell: bash
+        run: |
+          VERSION=$(cat ./BUILD)
+
+          echo ::set-output name=sourcename::"electron-output/companion-mac-arm64.dmg"
+          echo ::set-output name=targetname::"companion-mac-arm64-${VERSION}.dmg"
+          echo ::set-output name=longversion::"${VERSION}"
+
+      - name: Upload build
+        uses: bitfocus/actions/upload-and-notify@main
+        with:
+          long-version: ${{ steps.filenames.outputs.longversion }}
+          beta-branch: beta
+          dev-branch: develop
+
+          source-filename: ${{ steps.filenames.outputs.sourcename }}
+          destination-filename: ${{ steps.filenames.outputs.targetname }}
+          s3-host: ${{ secrets.S3_HOST }}
+          s3-bucket: ${{ secrets.S3_BUCKET }}/companion
+          s3-access-key: ${{ secrets.S3_KEY }}
+          s3-secret-key: ${{ secrets.S3_SECRET }}
+
+          api-product: companion
+          api-target: 'mac-arm'
+          api-secret: ${{ secrets.BITFOCUS_API_PROJECT_SECRET }}
 
   win64:
     runs-on: windows-latest
@@ -136,6 +200,8 @@ jobs:
           # verify that every module is runnable
           node tools/verify-module-build.mjs .
 
+          yarn build:sentry
+
           yarn run windist
 
           # verify that every module is runnable
@@ -143,10 +209,32 @@ jobs:
         env:
           CSC_LINK: ${{ secrets.CSC_LINK }}
           CSC_KEY_PASSWORD: ${{ secrets.CSC_KEY_PASSWORD }}
-      - name: rename and upload stuff
-        run: yarn build:rename_upload
-        env:
-          CI_BUILD_OS: win64
-          BITFOCUS_S3: ${{ secrets.BITFOCUS_S3 }}
-          BITFOCUS_KEY: ${{ secrets.BITFOCUS_ACCESS }}
-          BITFOCUS_SECRET: ${{ secrets.BITFOCUS_SECRET }}
+          SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
+
+      - name: Determine files to upload
+        id: filenames
+        shell: bash
+        run: |
+          VERSION=$(cat ./BUILD)
+
+          echo ::set-output name=sourcename::"electron-output/companion-win64.exe"
+          echo ::set-output name=targetname::"companion-win64-${VERSION}.exe"
+          echo ::set-output name=longversion::"${VERSION}"
+
+      - name: Upload build
+        uses: bitfocus/actions/upload-and-notify@main
+        with:
+          long-version: ${{ steps.filenames.outputs.longversion }}
+          beta-branch: beta
+          dev-branch: develop
+
+          source-filename: ${{ steps.filenames.outputs.sourcename }}
+          destination-filename: ${{ steps.filenames.outputs.targetname }}
+          s3-host: ${{ secrets.S3_HOST }}
+          s3-bucket: ${{ secrets.S3_BUCKET }}/companion
+          s3-access-key: ${{ secrets.S3_KEY }}
+          s3-secret-key: ${{ secrets.S3_SECRET }}
+
+          api-product: companion
+          api-target: 'win-x64'
+          api-secret: ${{ secrets.BITFOCUS_API_PROJECT_SECRET }}

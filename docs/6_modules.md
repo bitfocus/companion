@@ -1,4 +1,4 @@
-All the instances in Companion are modules, and a module is what's used to control an external device or piece of software. Modules can't be upgraded by the user after a release. Any update to a module will need a new build of Companion. Please look at the Beta builds to test newer versions of specific modules.
+All the connections in Companion are modules, and a module is what's used to control an external device or piece of software. Modules can't be upgraded by the user after a release. Any update to a module will need a new build of Companion. Please look at the Beta builds to test newer versions of specific modules.
 
 Modules are being added and updated all the time. A complete list of supported devices/modules can be found on the [Support List](https://bitfocus.io/support) page.
 

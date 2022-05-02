@@ -26,7 +26,7 @@ export const UserConfig = memo(function UserConfig() {
 		<CRow className="split-panels">
 			<CCol xl={6} className="primary-panel">
 				<h4>Settings</h4>
-				<p>Settings applies instantaneously, don't worry about it!</p>
+				<p>Settings apply instantaneously, don't worry about it!</p>
 
 				<UserConfigTable />
 			</CCol>
@@ -90,12 +90,12 @@ function UserConfigTable() {
 			<tbody>
 				<tr>
 					<td colSpan="2" className="settings-category">
-						Navigation Buttons
+						Buttons
 					</td>
 				</tr>
 
 				<tr>
-					<td>Flip counting direction on page up/down</td>
+					<td>Flip counting direction on page up/down buttons</td>
 					<td>
 						<div className="form-check form-check-inline mr-1">
 							<CInputCheckbox
@@ -111,7 +111,7 @@ function UserConfigTable() {
 				</tr>
 
 				<tr>
-					<td>Show + and - instead of arrows on page buttons</td>
+					<td>Show + and - instead of arrows on page up/down buttons</td>
 					<td>
 						<div className="form-check form-check-inline mr-1">
 							<CInputCheckbox
@@ -127,13 +127,13 @@ function UserConfigTable() {
 				</tr>
 
 				<tr>
-					<td>Remove the topbar on each button</td>
+					<td>Show the topbar on each button. This can be overridden per-button</td>
 					<td>
 						<div className="form-check form-check-inline mr-1">
 							<CInputCheckbox
 								id="userconfig_remove_topbar"
-								checked={config.remove_topbar}
-								onChange={(e) => setValue('remove_topbar', e.currentTarget.checked)}
+								checked={!config.remove_topbar}
+								onChange={(e) => setValue('remove_topbar', !e.currentTarget.checked)}
 							/>
 							<label className="form-check-label" htmlFor="userconfig_remove_topbar">
 								Enabled
@@ -447,7 +447,7 @@ function UserConfigTable() {
 						<CAlert color="danger">
 							This does not make an installation secure!
 							<br /> This is intended to keep normal users from stumbling upon the settings and changing things. It will
-							not keep out someone determined to bypass it
+							not keep out someone determined to bypass it.
 						</CAlert>
 					</td>
 				</tr>
@@ -817,7 +817,7 @@ function RemoteControlInfo() {
 							</p>
 
 							<p>
-								Press page 1 bank 2
+								Press page 1 button 2
 								<br />
 								<code>BANK-PRESS 1 2</code>
 							</p>
@@ -868,7 +868,7 @@ function RemoteControlInfo() {
 							</p>
 
 							<p>
-								Press page 1 bank 2
+								Press page 1 button 2
 								<br />
 								<code>/press/bank/1/2</code>
 							</p>
@@ -903,34 +903,34 @@ function RemoteControlInfo() {
 							</p>
 							<ul>
 								<li>
-									<code>/press/bank/</code>&lt;page&gt; &lt;bank&gt;
+									<code>/press/bank/</code>&lt;page&gt;<code>/</code>&lt;bank&gt;
 									<br />
 									<i>Press and release a button (run both down and up actions)</i>
 								</li>
 								<li>
-									<code>/press/bank/</code> &lt;page&gt; &lt;bank&gt; &lt;1&gt;
+									<code>/press/bank/</code>&lt;page&gt;<code>/</code>&lt;bank&gt; &lt;1&gt;
 									<br />
 									<i>Press the button (run down actions and hold)</i>
 								</li>
 								<li>
-									<code>/press/bank/</code> &lt;page&gt; &lt;bank&gt; &lt;0&gt;
+									<code>/press/bank/</code>&lt;page&gt;<code>/</code>&lt;bank&gt; &lt;0&gt;
 									<br />
 									<i>Release the button (run up actions)</i>
 								</li>
 								<li>
-									<code>/style/bgcolor/</code> &lt;page&gt; &lt;bank&gt; &lt;red 0-255&gt; &lt;green 0-255&gt; &lt;blue
-									0-255&gt;
+									<code>/style/bgcolor/</code>&lt;page&gt;<code>/</code>&lt;bank&gt; &lt;red 0-255&gt; &lt;green
+									0-255&gt; &lt;blue 0-255&gt;
 									<br />
 									<i>Change background color of button</i>
 								</li>
 								<li>
-									<code>/style/color/</code> &lt;page&gt; &lt;bank&gt; &lt;red 0-255&gt; &lt;green 0-255&gt; &lt;blue
-									0-255&gt;
+									<code>/style/color/</code>&lt;page&gt;<code>/</code>&lt;bank&gt; &lt;red 0-255&gt; &lt;green 0-255&gt;
+									&lt;blue 0-255&gt;
 									<br />
 									<i>Change color of text on button</i>
 								</li>
 								<li>
-									<code>/style/text/</code> &lt;page&gt; &lt;bank&gt; &lt;text&gt;
+									<code>/style/text/</code>&lt;page&gt;<code>/</code>&lt;bank&gt; &lt;text&gt;
 									<br />
 									<i>Change text on a button</i>
 								</li>
@@ -961,6 +961,11 @@ function RemoteControlInfo() {
 					</CTabPane>
 					<CTabPane data-tab="artnet">
 						<MyErrorBoundary>
+							<p>
+								<CButton color="success" href="/Bitfocus_Companion_v20.d4" target="_new">
+									<FontAwesomeIcon icon={faFileImport} /> Download Avolites Fixture file (v2.0)
+								</CButton>
+							</p>
 							<p>
 								<CButton color="success" href="/bitfocus@companion_v2.0@00.xml" target="_new">
 									<FontAwesomeIcon icon={faFileImport} /> Download GrandMA2 Fixture file (v2.0)

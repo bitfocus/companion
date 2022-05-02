@@ -1,7 +1,4 @@
-FROM node:14
-
-# User variable, define where to store the application config
-ENV COMPANION_CONFIG_BASEDIR=/config
+FROM node:14-bullseye as companion-builder
 
 WORKDIR /app
 COPY . /app/
@@ -15,6 +12,7 @@ RUN apt-get update && apt-get install -y \
     && rm -rf /var/lib/apt/lists/*
 
 # Install dependencies
+RUN yarn config set network-timeout 100000 -g
 RUN ./tools/yarn.sh
 
 # Generate version number file
@@ -35,12 +33,24 @@ RUN mv webui/build webui-build \
 RUN rm -R .git
 
 # make the production image
-FROM node:14-slim
+FROM node:14-bullseye-slim
 
 WORKDIR /app
-COPY --from=0 /app/	/app/
+COPY --from=companion-builder /app/	/app/
+
+# Install curl for the health check
+RUN apt update && apt install -y curl && \
+    rm -rf /var/lib/apt/lists/*
+
+# Create config directory and set correct permissions
+# Once docker mounts the volume, the directory will be owned by node:node
+ENV COMPANION_CONFIG_BASEDIR /companion
+RUN mkdir $COMPANION_CONFIG_BASEDIR && chown node:node $COMPANION_CONFIG_BASEDIR
+USER node
+# Export both web and Satellite API ports
+EXPOSE 8000 16622
+
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 CMD [ "curl", "-fSsq", "http://localhost:8000/" ]
 
 # Bind to 0.0.0.0, as access should be scoped down by how the port is exposed from docker
-USER node
-EXPOSE 8000
 ENTRYPOINT ["./headless_ip.js", "0.0.0.0"]

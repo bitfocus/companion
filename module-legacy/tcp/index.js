@@ -90,7 +90,7 @@ function tcp(host, port, options) {
 		self.emit.apply(self, ['error'].concat(Array.from(arguments)))
 	})
 
-	self.socket.on('connect', function () {
+	self.socket.on('ready', function () {
 		self.failed_attempts = 0
 		self.connected = true
 		self.trying = false
@@ -141,7 +141,7 @@ tcp.prototype.connect = function () {
 tcp.prototype.write = tcp.prototype.send = function (message, cb) {
 	var self = this
 
-	if (self.connected) {
+	if (self.connected && self.socket && !self.socket.destroyed) {
 		debug('sending ' + (message !== undefined ? message.length : 'undefined') + ' bytes to', self.host, self.port)
 
 		try {

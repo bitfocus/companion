@@ -43,10 +43,10 @@ export const InstanceEditPanel = memo(function InstanceEditPanel({ instanceId, d
 				if (err) {
 					if (err === 'duplicate label') {
 						setError(
-							`The label "${instanceConfig.label}" is already in use. Please use a unique name for this module instance`
+							`The label "${instanceConfig.label}" is already in use. Please use a unique label for this connection`
 						)
 					} else {
-						setError(`Unable to save instance config: "${err}"`)
+						setError(`Unable to save connection config: "${err}"`)
 					}
 				} else {
 					// Done
@@ -54,7 +54,7 @@ export const InstanceEditPanel = memo(function InstanceEditPanel({ instanceId, d
 				}
 			})
 			.catch((e) => {
-				setError(`Failed to save instance config: ${e}`)
+				setError(`Failed to save connection config: ${e}`)
 			})
 	}, [context.socket, instanceId, validFields, instanceConfig, doCancel])
 
@@ -78,7 +78,7 @@ export const InstanceEditPanel = memo(function InstanceEditPanel({ instanceId, d
 					setValidFields(validFields)
 				})
 				.catch((e) => {
-					setError(`Failed to load instance edit info: "${e}"`)
+					setError(`Failed to load connection info: "${e}"`)
 				})
 		}
 

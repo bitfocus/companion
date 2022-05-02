@@ -57,7 +57,8 @@ if (!lock) {
 		appVersion: registry.appVersion,
 		appBuild: registry.appBuild,
 		appName: registry.pkgInfo.description,
-
+		
+		appLaunch: '',
 		appStatus: 'Unknown',
 		appURL: 'Waiting for webserver..',
 		appLaunch: null,
@@ -78,10 +79,20 @@ if (!lock) {
 		sendAppInfo()
 	})
 
-	if (process.env.DEVELOPER === undefined) {
+	let sentryDsn
+	try {
+		sentryDsn = fs
+			.readFileSync(__dirname + '/SENTRY')
+			.toString()
+			.trim()
+	} catch (e) {
+		console.log('Sentry DSN not located')
+	}
+
+	if (process.env.DEVELOPER === undefined && sentryDsn && sentryDsn.substring(0, 8) == 'https://') {
 		console.log('Configuring sentry error reporting')
 		init({
-			dsn: 'https://535745b2e446442ab024d1c93a349154@sentry.bitfocus.io/8',
+			dsn: sentryDsn,
 			release: `companion@${registry.appBuild || registry.appVersion}`,
 			beforeSend(event) {
 				if (event.exception) {
@@ -260,6 +271,12 @@ if (!lock) {
 				click: scanUsb,
 			})
 		)
+	menu.append(
+			new electron.MenuItem({
+				label: 'Show config folder',
+				click: showConfigFolder,
+			})
+		)
 		menu.append(
 			new electron.MenuItem({
 				label: 'Quit',
@@ -294,6 +311,15 @@ if (!lock) {
 	function scanUsb() {
 		registry.system.emit('devices_reenumerate')
 	}
+
+	function showConfigFolder() {
+		try {
+			electron.shell.showItemInFolder(path.join(configDir, 'companion', 'db'))
+		} catch (e) {
+			electron.dialog.showErrorBox('File Error', 'Could not open config directory.')
+		}
+	}
+
 
 	function toggleWindow() {
 		if (window.isVisible()) {

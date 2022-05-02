@@ -21,10 +21,10 @@
 			},
 			"extraFiles": [
 				{
-					"from": "./node_modules/sharp/vendor/8.10.6/lib",
+					"from": "./node_modules/sharp/vendor/${env.VIPS_VENDOR}/lib",
 					"to": "Frameworks",
 					"filter": [
-						"!glib-2.0/**/*"
+						"libvips*.dylib"
 					]
 				}
 			],
@@ -63,9 +63,10 @@
 		},
 		"linux": {
 			"target": "dir",
+			"artifactName": "companion-x64",
 			"extraFiles": [
 				{
-					"from": "./node_modules/sharp/vendor/8.10.6/lib",
+					"from": "./node_modules/sharp/vendor/${env.VIPS_VENDOR}/lib",
 					"to": ".",
 					"filter": [
 						"libvips*.so.*"
@@ -83,6 +84,8 @@
 			"!docs/**/*",
 			"!font/*",
 			"!tools/*",
+			"!.nvmrc",
+			"!.node-version",
 			"!*.md",
 			"!node_modules/sharp/vendor/lib",
 			"!node_modules/cpu-features/deps"
@@ -106,20 +109,20 @@
 		"pack": "electron-builder --dir",
 		"dist:webui": "yarn --cwd webui build",
 		"dist": "zx ./tools/build_electron.mjs",
-		"electron-rebuild": "yarn dist:prepare:sharp && electron-builder install-app-deps",
+		"electron-rebuild": "yarn dist:prepare && electron-builder install-app-deps",
 		"macdist": "yarn dist mac-x64",
 		"macarmdist": "yarn dist mac-arm64",
 		"windist": "yarn dist win-x64",
 		"lindist": "yarn dist linux-x64",
 		"rpidist": "yarn dist linux-arm7",
-		"dist:prepare:sharp": "cd node_modules/sharp && rimraf vendor && node install/libvips && node install/dll-copy",
+		"dist:prepare": "zx tools/build_prepare.mjs",
 		"test": "jest",
 		"headless": "nodemon --ignore './webui/' headless.js",
 		"dev-webui": "yarn --cwd webui dev",
 		"format": "prettier --write .",
 		"jsdoc": "jsdoc -c jsdoc.json",
 		"build:writefile": "zx ./tools/build_writefile.mjs",
-		"build:rename_upload": "zx ./tools/build_rename_upload.mjs",
+		"build:sentry": "zx ./tools/build_sentry.mjs",
 		"build:rebuild_modules": "zx ./tools/build_modules.mjs",
 		"module:bulk": "zx ./tools/module_bulk.mjs"
 	},
@@ -137,9 +140,8 @@
 	"license": "MIT",
 	"devDependencies": {
 		"asar-node": "^2.3.0",
-		"aws-sdk": "^2.1058.0",
 		"cross-env": "^7.0.3",
-		"electron": "13.5.1",
+		"electron": "13.6.6",
 		"electron-builder": "22.11.7",
 		"electron-notarize": "1.1.1",
 		"jest": "^27.4.7",
@@ -188,6 +190,7 @@
 		"systeminformation": "^5.10.0",
 		"uuid": "^8.3.2",
 		"websocket": "^1.0.34",
+		"xkeys": "^2.3.3",
 		"zx": "^4.3.0"
 	},
 	"collective": {
@@ -199,6 +202,7 @@
 	},
 	"resolutions": {
 		"**/osc/serialport": "9.2.1",
-		"**/osc/ws": "^7.5.4"
+		"**/osc/ws": "^7.5.7",
+		"node-gyp-build": "github:julusian/node-gyp-build#v4.4.1-julusian.0"
 	}
 }
