@@ -33,7 +33,7 @@
 			"entitlements": "entitlements.mac.plist",
 			"entitlementsInherit": "entitlements.mac.plist"
 		},
-		"afterSign": "tools/notarize.js",
+		"afterSign": "tools/notarize.cjs",
 		"win": {
 			"target": "nsis",
 			"extraFiles": [
@@ -143,7 +143,7 @@
 		"cross-env": "^7.0.3",
 		"electron": "13.6.6",
 		"electron-builder": "22.11.7",
-		"electron-notarize": "1.1.1",
+		"electron-notarize": "^1.2.1",
 		"jest": "^28.0.3",
 		"jsdoc": "github:bitfocus/jsdoc#3.6.6-patch",
 		"meow": "^10.1.2",
