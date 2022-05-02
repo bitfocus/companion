@@ -28,6 +28,26 @@ export function ContextData({ socket, children }) {
 	const [triggers, setTriggers] = useState(null)
 
 	useEffect(() => {
+		const setCustomVariablesAndUpdateVariables = (data) => {
+			setCustomVariables(data)
+			setVariableDefinitions((oldVars) => {
+				const newVars = { ...oldVars }
+				newVars.internal = compileCustomVariableVariables(newVars.internal || [], data)
+				return newVars
+			})
+		}
+		const compileCustomVariableVariables = (oldInternalVars, customVariables) => {
+			const newVars = [...oldInternalVars.filter((v) => !v.name.startsWith('custom_'))]
+
+			for (const [id, info] of Object.entries(customVariables)) {
+				newVars.push({
+					name: `custom_${id}`,
+					label: info.description,
+				})
+			}
+
+			return newVars
+		}
 		if (socket) {
 			socketEmit(socket, 'modules_get', [])
 				.then(([res]) => {
@@ -65,14 +85,20 @@ export function ContextData({ socket, children }) {
 				})
 			socketEmit(socket, 'variable_instance_definitions_get', [])
 				.then(([data]) => {
-					setVariableDefinitions(data || {})
+					setCustomVariables((oldCustomVars) => {
+						const fullData = data || {}
+						fullData.internal = compileCustomVariableVariables(fullData.internal || [], oldCustomVars)
+						setVariableDefinitions(fullData)
+
+						return oldCustomVars
+					})
 				})
 				.catch((e) => {
 					console.error('Failed to load variable definitions list', e)
 				})
 			socketEmit(socket, 'custom_variables_get', [])
 				.then(([data]) => {
-					setCustomVariables(data || {})
+					setCustomVariablesAndUpdateVariables(data || {})
 				})
 				.catch((e) => {
 					console.error('Failed to load custom values list', e)
@@ -87,10 +113,23 @@ export function ContextData({ socket, children }) {
 				})
 
 			const updateVariableDefinitions = (label, variables) => {
-				setVariableDefinitions((oldDefinitions) => ({
-					...oldDefinitions,
-					[label]: variables,
-				}))
+				if (label === 'internal') {
+					setCustomVariables((oldCustomVars) => {
+						const internalVariables = compileCustomVariableVariables(variables, oldCustomVars)
+
+						setVariableDefinitions((oldDefinitions) => ({
+							...oldDefinitions,
+							[label]: internalVariables,
+						}))
+
+						return oldCustomVars
+					})
+				} else {
+					setVariableDefinitions((oldDefinitions) => ({
+						...oldDefinitions,
+						[label]: variables,
+					}))
+				}
 			}
 			const updateFeedbackDefinitions = (id, feedbacks) => {
 				setFeedbackDefinitions((oldDefinitions) => ({
@@ -116,7 +155,7 @@ export function ContextData({ socket, children }) {
 			socket.emit('instances_get')
 
 			socket.on('variable_instance_definitions_set', updateVariableDefinitions)
-			socket.on('custom_variables_get', setCustomVariables)
+			socket.on('custom_variables_get', setCustomVariablesAndUpdateVariables)
 
 			socket.on('action_instance_definitions_set', updateActionDefinitions)
 
@@ -177,7 +216,7 @@ export function ContextData({ socket, children }) {
 			return () => {
 				socket.off('instances_get:result', setInstances)
 				socket.off('variable_instance_definitions_set', updateVariableDefinitions)
-				socket.off('custom_variables_get', setCustomVariables)
+				socket.off('custom_variables_get', setCustomVariablesAndUpdateVariables)
 				socket.off('action_instance_definitions_set', updateActionDefinitions)
 				socket.off('feedback_instance_definitions_set', updateFeedbackDefinitions)
 				socket.off('set_userconfig_key', updateUserConfigValue)

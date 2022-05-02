@@ -5,12 +5,20 @@ import { CopyToClipboard } from 'react-copy-to-clipboard'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faCopy } from '@fortawesome/free-solid-svg-icons'
 import { useEffect } from 'react'
+import { useMemo } from 'react'
 
 export function VariablesTable({ label }) {
 	const context = useContext(StaticContext)
 	const variableDefinitionsContext = useContext(VariableDefinitionsContext)
 
-	const variableDefinitions = variableDefinitionsContext[label] || []
+	const variableDefinitions = useMemo(() => {
+		const defs = variableDefinitionsContext[label] || []
+		const defs2 = [...defs]
+
+		defs2.sort((a, b) => a.name.localeCompare(b.name))
+
+		return defs2
+	}, [variableDefinitionsContext, label])
 	const [variableValues, setVariableValues] = useState({})
 
 	useEffect(() => {

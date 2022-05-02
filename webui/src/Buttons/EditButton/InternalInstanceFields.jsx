@@ -170,6 +170,8 @@ function InternalVariableDropdown({ value, setValue, defaultVal }) {
 			}
 		}
 
+		choices.sort((a, b) => a.id.localeCompare(b.id))
+
 		return choices
 	}, [context])
 
