@@ -309,7 +309,9 @@ if (!lock) {
 	}
 
 	function scanUsb() {
-		registry.system.emit('devices_reenumerate')
+		registry.surfaces.refreshDevices().catch((e) => {
+			electron.dialog.showErrorBox('Scan Error', 'Failed to scan for USB devices.')
+		})
 	}
 
 	function showConfigFolder() {
