@@ -70,7 +70,7 @@ if (!lock) {
 		}
 	}
 
-	registry.system.on('http-bind-status', (status) => {
+	registry.ui.server.on('http-bind-status', (status) => {
 		appInfo = {
 			...appInfo,
 			...status,
@@ -340,19 +340,19 @@ if (!lock) {
 		createWindow()
 
 		electron.powerMonitor.on('suspend', () => {
-			registry.system.emit('launcher-power-status', 'suspend')
+			registry.instance.powerStatusChange('suspend')
 		})
 
 		electron.powerMonitor.on('resume', () => {
-			registry.system.emit('launcher-power-status', 'resume')
+			registry.instance.powerStatusChange('resume')
 		})
 
 		electron.powerMonitor.on('on-ac', () => {
-			registry.system.emit('launcher-power-status', 'ac')
+			registry.instance.powerStatusChange('ac')
 		})
 
 		electron.powerMonitor.on('on-battery', () => {
-			registry.system.emit('launcher-power-status', 'battery')
+			registry.instance.powerStatusChange('battery')
 		})
 
 		await registry.ready(uiConfig.get('bind_ip'), uiConfig.get('bind_port'), !process.env.DEVELOPER)
