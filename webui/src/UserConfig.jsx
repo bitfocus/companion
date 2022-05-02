@@ -90,12 +90,12 @@ function UserConfigTable() {
 			<tbody>
 				<tr>
 					<td colSpan="2" className="settings-category">
-						Navigation Buttons
+						Buttons
 					</td>
 				</tr>
 
 				<tr>
-					<td>Flip counting direction on page up/down</td>
+					<td>Flip counting direction on page up/down buttons</td>
 					<td>
 						<div className="form-check form-check-inline mr-1">
 							<CInputCheckbox
@@ -111,7 +111,7 @@ function UserConfigTable() {
 				</tr>
 
 				<tr>
-					<td>Show + and - instead of arrows on page buttons</td>
+					<td>Show + and - instead of arrows on page up/down buttons</td>
 					<td>
 						<div className="form-check form-check-inline mr-1">
 							<CInputCheckbox
@@ -127,13 +127,13 @@ function UserConfigTable() {
 				</tr>
 
 				<tr>
-					<td>Remove the topbar on each button</td>
+					<td>Show the topbar on each button. This can be overridden per-button</td>
 					<td>
 						<div className="form-check form-check-inline mr-1">
 							<CInputCheckbox
 								id="userconfig_remove_topbar"
-								checked={config.remove_topbar}
-								onChange={(e) => setValue('remove_topbar', e.currentTarget.checked)}
+								checked={!config.remove_topbar}
+								onChange={(e) => setValue('remove_topbar', !e.currentTarget.checked)}
 							/>
 							<label className="form-check-label" htmlFor="userconfig_remove_topbar">
 								Enabled
