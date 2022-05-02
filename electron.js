@@ -1,13 +1,13 @@
 import path from 'path'
 import url from 'url'
 import Registry from './lib/Registry.js'
-import  fs from 'fs-extra'
+import fs from 'fs-extra'
 import { init, showReportDialog, configureScope } from '@sentry/electron'
 import systeminformation from 'systeminformation'
 import Store from 'electron-store'
 import { fileURLToPath } from 'url'
 
-const {ipcMain, app, BrowserWindow} = electron
+const { ipcMain, app, BrowserWindow } = electron
 
 // Ensure there isn't another instance of companion running already
 var lock = app.requestSingleInstanceLock()
@@ -57,7 +57,7 @@ if (!lock) {
 		appVersion: registry.appVersion,
 		appBuild: registry.appBuild,
 		appName: registry.pkgInfo.description,
-		
+
 		appLaunch: '',
 		appStatus: 'Unknown',
 		appURL: 'Waiting for webserver..',
@@ -245,7 +245,7 @@ if (!lock) {
 		tray = new electron.Tray(
 			process.platform == 'darwin'
 				? fileURLToPath(new URL('assets/trayTemplate.png', import.meta.url))
-				: fileURLToPath(new URL('assets/icon.png', import.meta.url)),
+				: fileURLToPath(new URL('assets/icon.png', import.meta.url))
 		)
 		tray.setIgnoreDoubleClickEvents(true)
 		if (process.platform !== 'darwin') {
@@ -271,7 +271,7 @@ if (!lock) {
 				click: scanUsb,
 			})
 		)
-	menu.append(
+		menu.append(
 			new electron.MenuItem({
 				label: 'Show config folder',
 				click: showConfigFolder,
@@ -319,7 +319,6 @@ if (!lock) {
 			electron.dialog.showErrorBox('File Error', 'Could not open config directory.')
 		}
 	}
-
 
 	function toggleWindow() {
 		if (window.isVisible()) {
