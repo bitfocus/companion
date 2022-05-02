@@ -29,10 +29,10 @@ export function ContextData({ socket, children }) {
 
 	useEffect(() => {
 		const setCustomVariablesAndUpdateVariables = (data) => {
-			setCustomVariables(data)
+			setCustomVariables(data || {})
 			setVariableDefinitions((oldVars) => {
 				const newVars = { ...oldVars }
-				newVars.internal = compileCustomVariableVariables(newVars.internal || [], data)
+				newVars.internal = compileCustomVariableVariables(newVars.internal || [], data || {})
 				return newVars
 			})
 		}
@@ -87,7 +87,7 @@ export function ContextData({ socket, children }) {
 				.then(([data]) => {
 					setCustomVariables((oldCustomVars) => {
 						const fullData = data || {}
-						fullData.internal = compileCustomVariableVariables(fullData.internal || [], oldCustomVars)
+						fullData.internal = compileCustomVariableVariables(fullData.internal || [], oldCustomVars || {})
 						setVariableDefinitions(fullData)
 
 						return oldCustomVars
@@ -115,7 +115,7 @@ export function ContextData({ socket, children }) {
 			const updateVariableDefinitions = (label, variables) => {
 				if (label === 'internal') {
 					setCustomVariables((oldCustomVars) => {
-						const internalVariables = compileCustomVariableVariables(variables, oldCustomVars)
+						const internalVariables = compileCustomVariableVariables(variables, oldCustomVars || {})
 
 						setVariableDefinitions((oldDefinitions) => ({
 							...oldDefinitions,
