@@ -13,6 +13,9 @@ import { assertNever, literal, LogLevel } from '@companion-module/base'
 import { ServiceRest } from './rest.js'
 import debug from 'debug'
 
+// @ts-expect-error Not typescript
+import Image from '../../lib/Graphics/Image.js'
+
 /**
  * Make all optional properties be required and `| undefined`
  * This is useful to ensure that no property is missed, when manually converting between types, but allowing fields to be undefined
@@ -56,6 +59,8 @@ function wrapFeedbackSubscriptionCallback(
 export class FakeSystem extends EventEmitter {
 	readonly #debug: debug.Debugger
 	#rest: ServiceRest
+
+	readonly Image = Image
 
 	constructor(public readonly parent: ModuleApi.InstanceBase<any>, moduleName: string) {
 		super()

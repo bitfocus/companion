@@ -18,7 +18,6 @@
 const util = require('util')
 const debug = require('debug')('lib/instance_skel')
 var icons = require('../icons.cjs')
-var image = require('../../lib/Graphics/Image') // This is hacky, but good enough for now
 
 if (!process.env.MODULE_MANIFEST) throw new Error('Missing manifest variable')
 
@@ -32,6 +31,8 @@ function instance(system, id, config) {
 	self.id = id
 	self.config = config
 	self.package_info = pkgJson
+
+	self.Image = self.system.Image
 
 	self.label = config.label
 
@@ -109,8 +110,6 @@ instance.prototype.defineConst = function (name, value) {
 		enumerable: true,
 	})
 }
-
-instance.prototype.Image = image
 
 instance.prototype.rgb = (r, g, b, base = 10) => {
 	r = parseInt(r, base)

@@ -62,20 +62,24 @@ export const InstanceEditPanel = memo(function InstanceEditPanel({ instanceId, d
 		if (instanceId) {
 			socketEmit(context.socket, 'instance_edit', [instanceId])
 				.then(([_instanceId, _configFields, _instanceConfig]) => {
-					const validFields = {}
-					for (const field of _configFields) {
-						// Real validation status gets generated when the editor components first mount
-						validFields[field.id] = true
+					if (_instanceId) {
+						const validFields = {}
+						for (const field of _configFields) {
+							// Real validation status gets generated when the editor components first mount
+							validFields[field.id] = true
 
-						// deserialize `isVisible` with a sandbox/proxy version
-						if (typeof field.isVisibleFn === 'string') {
-							field.isVisible = sandbox(field.isVisibleFn)
+							// deserialize `isVisible` with a sandbox/proxy version
+							if (typeof field.isVisibleFn === 'string') {
+								field.isVisible = sandbox(field.isVisibleFn)
+							}
 						}
-					}
 
-					setConfigFields(_configFields)
-					setInstanceConfig(_instanceConfig)
-					setValidFields(validFields)
+						setConfigFields(_configFields)
+						setInstanceConfig(_instanceConfig)
+						setValidFields(validFields)
+					} else {
+						setError(`Connection config unavailable`)
+					}
 				})
 				.catch((e) => {
 					setError(`Failed to load connection info: "${e}"`)
