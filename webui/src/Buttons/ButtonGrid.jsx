@@ -9,7 +9,7 @@ import React, {
 	useRef,
 	useState,
 } from 'react'
-import { StaticContext, KeyReceiver, LoadingRetryOrError, PagesContext } from '../util'
+import { StaticContext, KeyReceiver, PagesContext } from '../util'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import {
 	faArrowsAlt,
@@ -95,10 +95,6 @@ export const ButtonsGridPanel = memo(function ButtonsPage({
 		},
 		[context.socket, pageNumber, pageInfo]
 	)
-
-	if (!pages) {
-		return <LoadingRetryOrError dataReady={pages} />
-	}
 
 	const pageName = pageInfo?.name ?? 'PAGE'
 

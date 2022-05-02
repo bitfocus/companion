@@ -55,7 +55,7 @@ export function ActionTableRowOption({ instanceId, isOnBank, actionId, option, v
 		}
 		default:
 			// The 'internal instance' is allowed to use some special input fields, to minimise when it reacts to changes elsewhere in the system
-			if (instanceId === 'bitfocus-companion') {
+			if (instanceId === 'internal') {
 				control = InternalInstanceField(option, isOnBank, value, setValue2)
 			}
 			// Use default below
