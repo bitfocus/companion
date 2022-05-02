@@ -31,7 +31,10 @@ module.exports = {
 	// 	},
 	// },
 	externals: {
-		// 'node-hid': 'commonjs2 node-hid',
+		'node-hid': 'commonjs2 node-hid',
 		sharp: 'commonjs2 sharp',
+	},
+	experiments: {
+		topLevelAwait: true,
 	},
 }
