@@ -171,7 +171,7 @@
 		"get-port": "^6.1.2",
 		"got": "^12.0.4",
 		"infinitton-idisplay": "^1.1.2",
-		"jsonpath": "^1.1.1",
+		"jsonpath-plus": "^6.0.1",
 		"lodash-es": "^4.17.21",
 		"moment": "^2.29.3",
 		"node-fetch": "^2.6.7",
