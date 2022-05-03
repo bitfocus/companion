@@ -1,12 +1,13 @@
 const path = require('path')
 const url = require('url')
-// import Registry from './lib/Registry.js'
 const fs = require('fs-extra')
 const { init, showReportDialog, configureScope } = require('@sentry/electron')
 const systeminformation = require('systeminformation')
 const Store = require('electron-store')
 const { ipcMain, app, BrowserWindow } = require('electron')
 const electron = require('electron')
+const { nanoid } = require('nanoid')
+const readPackage = require('read-pkg')
 
 // Ensure there isn't another instance of companion running already
 var lock = app.requestSingleInstanceLock()
@@ -17,9 +18,30 @@ if (!lock) {
 	)
 	app.quit()
 } else {
-	let configDir = app.getPath('appData')
+	let configDir = path.join(app.getPath('appData'), '/companion/')
 	if (process.env.COMPANION_CONFIG_BASEDIR !== undefined) {
 		configDir = process.env.COMPANION_CONFIG_BASEDIR
+	}
+
+	// Use stored value
+	let machineId = nanoid()
+	const machineIdPath = path.join(configDir, 'machid')
+	if (fs.pathExistsSync(machineIdPath)) {
+		let text = ''
+		try {
+			text = fs.readFileSync(machineIdPath)
+			if (text) {
+				machineId = text.toString()
+			}
+		} catch (e) {
+			console.warn(`Error reading uuid-file: ${e}`)
+		}
+	} else {
+		try {
+			fs.writeFileSync(machineIdPath, machineId)
+		} catch (e) {
+			console.warn(`Error writing uuid-file: ${e}`)
+		}
 	}
 
 	const configDefaults = {
@@ -28,10 +50,8 @@ if (!lock) {
 		start_minimised: false,
 	}
 
-	const fullConfigDir = path.join(configDir, '/companion/')
-
 	try {
-		const oldConfigPath = path.join(fullConfigDir, 'config')
+		const oldConfigPath = path.join(configDir, 'config')
 		if (fs.pathExistsSync(oldConfigPath)) {
 			// Pre 3.0 config file exists, lets import the values
 			const contentsBuf = fs.readFileSync(oldConfigPath)
@@ -45,21 +65,76 @@ if (!lock) {
 	}
 
 	const uiConfig = new Store({
-		cwd: fullConfigDir,
+		cwd: configDir,
 		clearInvalidConfig: true,
 		defaults: configDefaults,
 	})
 
 	// const registry = await Registry.create(configDir)
 
+	let sentryDsn
+	try {
+		sentryDsn = fs
+			.readFileSync(__dirname + '/SENTRY')
+			.toString()
+			.trim()
+	} catch (e) {
+		console.log('Sentry DSN not located')
+	}
+
+	let companionRootPath = process.resourcesPath
+	if (!app.isPackaged) {
+		// Try the dist folder above
+		companionRootPath = path.join(__dirname, '../dist')
+		if (!fs.pathExistsSync(path.join(companionRootPath, 'BUILD'))) {
+			// Finally, use the unbuilt parent
+			companionRootPath = path.join(__dirname, '..')
+		}
+	}
+
+	let appBuild
+	try {
+		appBuild = fs.readFileSync(path.join(companionRootPath, 'BUILD')).toString().trim()
+	} catch (e) {
+		electron.dialog.showErrorBox('Missing files', 'The companion installation is corrupt. Please reinstall')
+		app.exit(1)
+	}
+
+	const pkgInfo = readPackage.sync()
+
 	let appInfo = {
-		appVersion: '', // registry.appVersion,
-		appBuild: '', //registry.appBuild,
+		appVersion: pkgInfo.version,
+		appBuild: appBuild,
 
 		appLaunch: '',
 		appStatus: 'Unknown',
 		appURL: 'Waiting for webserver..',
 		appLaunch: null,
+	}
+
+	if (process.env.DEVELOPER === undefined && sentryDsn && sentryDsn.substring(0, 8) == 'https://') {
+		console.log('Configuring sentry error reporting')
+		init({
+			dsn: sentryDsn,
+			release: `companion@${appInfo.appBuild || appInfo.appVersion}`,
+			beforeSend(event) {
+				if (event.exception) {
+					showReportDialog()
+				}
+				return event
+			},
+		})
+
+		try {
+			configureScope((scope) => {
+				scope.setUser({ id: machineId })
+				scope.setExtra('build', appInfo.appBuild)
+			})
+		} catch (e) {
+			console.log('Error setting up sentry info: ', e)
+		}
+	} else {
+		console.log('Sentry error reporting is disabled')
 	}
 
 	function sendAppInfo() {
@@ -76,32 +151,6 @@ if (!lock) {
 
 	// 	sendAppInfo()
 	// })
-
-	let sentryDsn
-	try {
-		sentryDsn = fs
-			.readFileSync(__dirname + '/SENTRY')
-			.toString()
-			.trim()
-	} catch (e) {
-		console.log('Sentry DSN not located')
-	}
-
-	if (process.env.DEVELOPER === undefined && sentryDsn && sentryDsn.substring(0, 8) == 'https://') {
-		console.log('Configuring sentry error reporting')
-		init({
-			dsn: sentryDsn,
-			release: 'nope', // `companion@${registry.appBuild || registry.appVersion}`,
-			beforeSend(event) {
-				if (event.exception) {
-					showReportDialog()
-				}
-				return event
-			},
-		})
-	} else {
-		console.log('Sentry error reporting is disabled')
-	}
 
 	function rebindHttp() {
 		const ip = uiConfig.get('bind_ip')
@@ -144,42 +193,42 @@ if (!lock) {
 				window.webContents.setBackgroundThrottling(false)
 			})
 
-		ipcMain.on('info', function () {
+		ipcMain.on('info', () => {
 			sendAppInfo()
 		})
 
-		ipcMain.on('launcher-close', function (req, cb) {
+		ipcMain.on('launcher-close', () => {
 			// registry.emit('exit')
 		})
 
-		ipcMain.on('launcher-minimize', function (req, cb) {
+		ipcMain.on('launcher-minimize', () => {
 			window.hide()
 		})
 
-		ipcMain.on('launcher-open-gui', function () {
+		ipcMain.on('launcher-open-gui', () => {
 			launchUI()
 		})
 
-		ipcMain.on('launcher-set-bind-ip', function (e, msg) {
+		ipcMain.on('launcher-set-bind-ip', (e, msg) => {
 			console.log('changed bind ip:', msg)
 			uiConfig.set('bind_ip', msg)
 
 			rebindHttp()
 		})
 
-		ipcMain.on('launcher-set-http-port', function (e, msg) {
+		ipcMain.on('launcher-set-http-port', (e, msg) => {
 			console.log('changed bind port:', msg)
 			uiConfig.set('http_port', msg)
 
 			rebindHttp()
 		})
 
-		ipcMain.on('launcher-set-start-minimised', function (e, msg) {
+		ipcMain.on('launcher-set-start-minimised', (e, msg) => {
 			console.log('changed start minimized:', msg)
 			uiConfig.set('start_minimised', msg)
 		})
 
-		ipcMain.once('launcher-ready', function () {
+		ipcMain.once('launcher-ready', () => {
 			const ip = uiConfig.get('bind_ip')
 			const port = uiConfig.get('http_port')
 
@@ -189,8 +238,8 @@ if (!lock) {
 			// })
 		})
 
-		ipcMain.on('network-interfaces:get', function () {
-			systeminformation.networkInterfaces().then(function (list) {
+		ipcMain.on('network-interfaces:get', () => {
+			systeminformation.networkInterfaces().then((list) => {
 				const interfaces = [
 					{ id: '0.0.0.0', label: 'All Interfaces: 0.0.0.0' },
 					{ id: '127.0.0.1', label: 'localhost: 127.0.0.1' },
@@ -214,29 +263,20 @@ if (!lock) {
 			})
 		})
 
-		// registry.on('restart', function () {
+		// registry.on('restart',  ()=> {
 		// 	app.relaunch()
 		// 	app.exit()
 		// })
 
-		window.on('closed', function () {
+		window.on('closed', () => {
 			window = null
 		})
 
-		window.on('ready-to-show', function () {
+		window.on('ready-to-show', () => {
 			if (!uiConfig.get('start_minimised')) {
 				showWindow()
 			}
 		})
-
-		try {
-			// configureScope(function (scope) {
-			// 	scope.setUser({ id: registry.machineId })
-			// 	scope.setExtra('build', registry.appBuild)
-			// })
-		} catch (e) {
-			console.log('Error reading BUILD and/or package info: ', e)
-		}
 	}
 
 	function createTray() {
@@ -333,7 +373,7 @@ if (!lock) {
 		window.focus()
 	}
 
-	app.whenReady().then(async function () {
+	app.whenReady().then(async () => {
 		createTray()
 		createWindow()
 
@@ -356,11 +396,11 @@ if (!lock) {
 		// await registry.ready(uiConfig.get('bind_ip'), uiConfig.get('bind_port'), !process.env.DEVELOPER)
 	})
 
-	app.on('window-all-closed', function () {
+	app.on('window-all-closed', () => {
 		app.quit()
 	})
 
-	app.on('activate', function () {
+	app.on('activate', () => {
 		if (window === null) {
 			createWindow()
 		}

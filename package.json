@@ -103,7 +103,7 @@
 		]
 	},
 	"scripts": {
-		"dev": "yarn build:writefile && cross-env DEVELOPER=1 nodemon --ignore './webui/' -- main.js --bind-address 127.0.0.1",
+		"dev": "yarn build:writefile && cross-env DEVELOPER=1 nodemon --ignore './webui/' --ignore './launcher/' --ignore './dist/' -- main.js --bind-address 127.0.0.1",
 		"dev-electron": "yarn build:writefile && cross-env DEVELOPER=1 electron .",
 		"update": "./tools/update.sh",
 		"pack": "electron-builder --dir",

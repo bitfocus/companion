@@ -19,7 +19,7 @@ const cli = meow(
 	  TODO 
 `,
 	{
-		importMeta: import.meta,
+		importMeta: { url: import.meta.url },
 		flags: {
 			listInterfaces: {
 				type: 'boolean',
