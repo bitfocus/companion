@@ -9,7 +9,7 @@
 		"dev": "yarn build:writefile && cross-env DEVELOPER=1 nodemon --ignore './webui/' --ignore './launcher/' --ignore './dist/' -- main.js --bind-address 127.0.0.1",
 		"update": "./tools/update.sh",
 		"dist:webui": "yarn --cwd webui build",
-		"dist": "zx ./tools/build_electron.mjs",
+		"dist": "zx ./tools/build_dist.mjs",
 		"macdist": "yarn dist mac-x64",
 		"macarmdist": "yarn dist mac-arm64",
 		"windist": "yarn dist win-x64",
@@ -22,7 +22,6 @@
 		"jsdoc": "jsdoc -c jsdoc.json",
 		"build:writefile": "zx ./tools/build_writefile.mjs",
 		"build:sentry": "zx ./tools/build_sentry.mjs",
-		"build:rebuild_modules": "zx ./tools/build_modules.mjs",
 		"module:bulk": "zx ./tools/module_bulk.mjs"
 	},
 	"repository": "https://github.com/bitfocus/companion",

@@ -13,17 +13,10 @@ jobs:
       - name: yarn update and lindist
         run: |
           yarn update
-          yarn build:rebuild_modules
-
-          # verify that every module is runnable
-          node tools/verify-module-build.mjs .
 
           yarn build:sentry
 
           yarn run lindist
-
-          # verify that every module is runnable
-          node tools/verify-module-build.mjs electron-output/linux-unpacked/resources/app.asar
 
           # manually tar it, to preserve the symlinks
           cd electron-output
@@ -74,17 +67,10 @@ jobs:
           yarn config set network-timeout 100000 -g
 
           yarn update
-          yarn build:rebuild_modules
-
-          # verify that every module is runnable
-          node tools/verify-module-build.mjs .
 
           yarn build:sentry
 
           yarn run macdist
-
-          # verify that every module is runnable
-          node tools/verify-module-build.mjs "electron-output/mac/Companion.app/Contents/Resources/app.asar"
         env:
           CSC_LINK: ${{ secrets.OSX_CSC_LINK }}
           CSC_KEY_PASSWORD: ${{ secrets.OSX_CSC_KEY_PASSWORD }}
@@ -134,17 +120,10 @@ jobs:
           yarn config set network-timeout 100000 -g
 
           yarn update
-          yarn build:rebuild_modules
-
-          # verify that every module is runnable
-          node tools/verify-module-build.mjs .
 
           yarn build:sentry
 
           yarn run macarmdist
-
-          # verify that every module is runnable
-          node tools/verify-module-build.mjs "electron-output/mac-arm64/Companion.app/Contents/Resources/app.asar"
         env:
           CSC_LINK: ${{ secrets.OSX_CSC_LINK }}
           CSC_KEY_PASSWORD: ${{ secrets.OSX_CSC_KEY_PASSWORD }}
@@ -195,17 +174,10 @@ jobs:
           yarn config set script-shell bash
 
           yarn update
-          yarn build:rebuild_modules
-
-          # verify that every module is runnable
-          node tools/verify-module-build.mjs .
 
           yarn build:sentry
 
           yarn run windist
-
-          # verify that every module is runnable
-          node tools/verify-module-build.mjs electron-output/win-unpacked/resources/app.asar
         env:
           CSC_LINK: ${{ secrets.CSC_LINK }}
           CSC_KEY_PASSWORD: ${{ secrets.CSC_KEY_PASSWORD }}

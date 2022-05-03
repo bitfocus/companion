@@ -178,6 +178,7 @@ await $`yarn --cwd dist install`
 // 	await $`electron-builder install-app-deps`
 // }
 
+// TODO - make optional from flag
 // perform the electron build
 await fs.remove('./electron-output')
 await $`yarn --cwd launcher electron-builder --publish=never `
