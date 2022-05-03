@@ -5,6 +5,7 @@ import os from 'os'
 import path from 'path'
 import fs from 'fs-extra'
 import envPaths from 'env-paths'
+import shortid from 'shortid'
 
 const cli = meow(
 	`
@@ -40,6 +41,9 @@ const cli = meow(
 				// isRequired: (flags) => {
 				// 	return !flags.listInterfaces
 				// },
+			},
+			machineId: {
+				type: 'string',
 			},
 		},
 	}
@@ -107,7 +111,38 @@ if (!configDir) {
 	}
 }
 
-const registry = await Registry.create(configDir)
+try {
+	fs.ensureDirSync(configDir)
+} catch (e) {
+	console.error(`Failed to create config directory. Do you have the correct permissions?`)
+	process.exit(1)
+}
+
+let machineId = cli.flags.machineId
+if (!machineId) {
+	// Use stored value
+	const machineIdPath = path.join(configDir, 'machid')
+	if (fs.pathExistsSync(machineIdPath)) {
+		let text = ''
+		try {
+			text = fs.readFileSync(machineIdPath)
+			if (text) {
+				machineId = text.toString()
+			}
+		} catch (e) {
+			console.warn(`Error reading uuid-file: ${e}`)
+		}
+	} else {
+		machineId = shortid.generate()
+		try {
+			fs.writeFileSync(machineIdPath, machineId)
+		} catch (e) {
+			console.warn(`Error writing uuid-file: ${e}`)
+		}
+	}
+}
+
+const registry = new Registry(configDir, machineId)
 
 await registry.ready(adminIp, cli.flags.adminPort, !process.env.DEVELOPER)
 console.log('Started')
