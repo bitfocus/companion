@@ -4,6 +4,7 @@
   "main": "index.js",
   "license": "MIT",
   "dependencies": {
+		"@julusian/jpeg-turbo": "^1.1.2",
     "node-hid": "^2.1.1",
     "sharp": "^0.30.4"
   }

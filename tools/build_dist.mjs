@@ -140,9 +140,11 @@ if (!(await fs.pathExists(tarPath))) {
 const runtimeDir = 'dist/node-runtime/'
 await fs.remove(runtimeDir)
 await fs.mkdirp(runtimeDir)
+// TODO - can this be simplified and combined into one step?
 await $`tar -xvzf ${tarPath} --strip-components=1 -C ${runtimeDir}`
 await fs.remove(path.join(runtimeDir, 'share'))
 await fs.remove(path.join(runtimeDir, 'include'))
+await fs.remove(path.join(runtimeDir, 'lib/node_modules/npm'))
 
 // if (!platform) {
 // 	// If for our own platform, make sure the correct deps are installed
