@@ -46,5 +46,3 @@ document.getElementById('ifs').addEventListener('change', function () {
 })
 
 api.send('network-interfaces:get')
-
-api.send('launcher-ready')

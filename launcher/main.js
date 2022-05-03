@@ -7,7 +7,6 @@ const Store = require('electron-store')
 const { ipcMain, app, BrowserWindow } = require('electron')
 const electron = require('electron')
 const { nanoid } = require('nanoid')
-const readPackage = require('read-pkg')
 const respawn = require('respawn')
 
 // Ensure there isn't another instance of companion running already
@@ -99,7 +98,7 @@ if (!lock) {
 		app.exit(1)
 	}
 
-	const pkgInfo = readPackage.sync()
+	const pkgInfo = require('./package.json')
 
 	let appInfo = {
 		appVersion: pkgInfo.version,
@@ -228,85 +227,6 @@ if (!lock) {
 		ipcMain.on('launcher-set-start-minimised', (e, msg) => {
 			console.log('changed start minimized:', msg)
 			uiConfig.set('start_minimised', msg)
-		})
-
-		ipcMain.once('launcher-ready', () => {
-			const ip = uiConfig.get('bind_ip')
-			const port = uiConfig.get('http_port')
-
-			const nodeBinPath = path.join(companionRootPath, 'node-runtime/bin/node')
-			const nodeBin = app.isPackaged || fs.pathExistsSync(nodeBinPath) ? nodeBinPath : 'node'
-			child = respawn(
-				[
-					nodeBin,
-					path.join(companionRootPath, 'main.js'),
-					`--machineId="${machineId}"`,
-					`--config-dir="${configDir}"`,
-					`--admin-port=${port}`,
-					`--admin-addrss=${ip}`,
-				],
-				{
-					name: `Companion process`,
-					env: {
-						COMPANION_IPC_PARENT: 1,
-					},
-					maxRestarts: -1,
-					sleep: 1000,
-					kill: 5000,
-					cwd: companionRootPath,
-					stdio: [null, null, null, 'ipc'],
-				}
-			)
-			child.on('start', () => {
-				console.log(`Companion process started`)
-			})
-			child.on('stop', () => {
-				console.log(`Companion process stopped`)
-
-				appInfo = {
-					...appInfo,
-
-					appStatus: 'Unknown',
-					appURL: 'Waiting for webserver..',
-					appLaunch: null,
-				}
-				sendAppInfo()
-
-				if (!child || !child.shouldRestart) {
-					app.exit()
-				} else {
-					child.start()
-				}
-			})
-			child.on('stdout', (data) => {
-				console.log(`Companion process stdout: ${data.toString()}`)
-			})
-			child.on('stderr', (data) => {
-				console.log(`Companion process stderr: ${data.toString()}`)
-			})
-			child.on('message', (data) => {
-				console.log('Received IPC message', data)
-				if (data.messageType === 'show-error') {
-					electron.dialog.showErrorBox(data.title, data.body)
-				} else if (data.messageType === 'http-bind-status') {
-					appInfo = {
-						...appInfo,
-						...data,
-					}
-					delete appInfo.messageType
-
-					sendAppInfo()
-				} else if (data.messageType === 'exit') {
-					if (data.restart) {
-						// Do nothing, autorestart will kick in
-						if (child) child.shouldRestart = true
-					} else {
-						// Exit
-						if (child) child.shouldRestart = false
-					}
-				}
-			})
-			child.start()
 		})
 
 		ipcMain.on('network-interfaces:get', () => {
@@ -487,6 +407,83 @@ if (!lock) {
 				})
 			}
 		})
+
+		const ip = uiConfig.get('bind_ip')
+		const port = uiConfig.get('http_port')
+
+		const nodeBinPath = path.join(companionRootPath, 'node-runtime/bin/node')
+		const nodeBin = app.isPackaged || fs.pathExistsSync(nodeBinPath) ? nodeBinPath : 'node'
+		child = respawn(
+			[
+				nodeBin,
+				path.join(companionRootPath, 'main.js'),
+				`--machineId="${machineId}"`,
+				`--config-dir="${configDir}"`,
+				`--admin-port=${port}`,
+				`--admin-addrss=${ip}`,
+			],
+			{
+				name: `Companion process`,
+				env: {
+					COMPANION_IPC_PARENT: 1,
+				},
+				maxRestarts: -1,
+				sleep: 1000,
+				kill: 5000,
+				cwd: companionRootPath,
+				stdio: [null, null, null, 'ipc'],
+			}
+		)
+		child.on('start', () => {
+			console.log(`Companion process started`)
+		})
+		child.on('stop', () => {
+			console.log(`Companion process stopped`)
+
+			appInfo = {
+				...appInfo,
+
+				appStatus: 'Unknown',
+				appURL: 'Waiting for webserver..',
+				appLaunch: null,
+			}
+			sendAppInfo()
+
+			if (!child || !child.shouldRestart) {
+				app.exit()
+			} else {
+				child.start()
+			}
+		})
+		child.on('stdout', (data) => {
+			console.log(`Companion process stdout: ${data.toString()}`)
+		})
+		child.on('stderr', (data) => {
+			console.log(`Companion process stderr: ${data.toString()}`)
+		})
+		child.on('message', (data) => {
+			console.log('Received IPC message', data)
+			if (data.messageType === 'show-error') {
+				electron.dialog.showErrorBox(data.title, data.body)
+			} else if (data.messageType === 'http-bind-status') {
+				appInfo = {
+					...appInfo,
+					...data,
+				}
+				delete appInfo.messageType
+
+				sendAppInfo()
+			} else if (data.messageType === 'exit') {
+				if (data.restart) {
+					// Do nothing, autorestart will kick in
+					if (child) child.shouldRestart = true
+				} else {
+					// Exit
+					if (child) child.shouldRestart = false
+				}
+			}
+		})
+		child.start()
 	})
 
 	app.on('window-all-closed', () => {

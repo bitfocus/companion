@@ -5,111 +5,11 @@
 	"main": "main.js",
 	"type": "module",
 	"private": true,
-	"build": {
-		"productName": "Companion",
-		"appId": "companion.bitfocus.no",
-		"remoteBuild": false,
-		"dmg": {
-			"artifactName": "companion-mac-${arch}.dmg",
-			"sign": true
-		},
-		"mac": {
-			"target": "dmg",
-			"category": "no.bitfocus.companion",
-			"extendInfo": {
-				"LSBackgroundOnly": 1,
-				"LSUIElement": 1
-			},
-			"extraFiles": [
-				{
-					"from": "./node_modules/sharp/vendor/${env.VIPS_VENDOR}/lib",
-					"to": "Frameworks",
-					"filter": [
-						"libvips*.dylib"
-					]
-				}
-			],
-			"hardenedRuntime": "true",
-			"gatekeeperAssess": "false",
-			"entitlements": "entitlements.mac.plist",
-			"entitlementsInherit": "entitlements.mac.plist"
-		},
-		"afterSign": "tools/notarize.cjs",
-		"win": {
-			"target": "nsis",
-			"extraFiles": [
-				{
-					"from": "./node_modules/sharp/build/Release",
-					"to": ".",
-					"filter": [
-						"lib*.dll"
-					]
-				}
-			]
-		},
-		"nsis": {
-			"artifactName": "companion-win64.exe",
-			"createStartMenuShortcut": true,
-			"perMachine": true,
-			"oneClick": false,
-			"allowElevation": true,
-			"allowToChangeInstallationDirectory": true,
-			"installerIcon": "icon.ico",
-			"installerSidebar": "compinst.bmp",
-			"uninstallerSidebar": "compinst.bmp"
-		},
-		"directories": {
-			"buildResources": "assets/",
-			"output": "electron-output/"
-		},
-		"linux": {
-			"target": "dir",
-			"artifactName": "companion-x64",
-			"extraFiles": [
-				{
-					"from": "./node_modules/sharp/vendor/${env.VIPS_VENDOR}/lib",
-					"to": ".",
-					"filter": [
-						"libvips*.so.*"
-					]
-				}
-			]
-		},
-		"files": [
-			"**/*",
-			"assets/icon.png",
-			"assets/bitfocus-logo.png",
-			"assets/trayTemplate.png",
-			"assets/trayTemplate@2x.png",
-			"!webui/**/*",
-			"!docs/**/*",
-			"!font/*",
-			"!tools/*",
-			"!.nvmrc",
-			"!.node-version",
-			"!*.md",
-			"!node_modules/sharp/vendor/lib",
-			"!node_modules/cpu-features/deps"
-		],
-		"extraResources": [
-			{
-				"from": "bundle-webui.zip",
-				"to": "webui.zip"
-			},
-			{
-				"from": "bundle-docs.zip",
-				"to": "docs.zip"
-			}
-		]
-	},
 	"scripts": {
 		"dev": "yarn build:writefile && cross-env DEVELOPER=1 nodemon --ignore './webui/' --ignore './launcher/' --ignore './dist/' -- main.js --bind-address 127.0.0.1",
-		"dev-electron": "yarn build:writefile && cross-env DEVELOPER=1 electron .",
 		"update": "./tools/update.sh",
-		"pack": "electron-builder --dir",
 		"dist:webui": "yarn --cwd webui build",
 		"dist": "zx ./tools/build_electron.mjs",
-		"electron-rebuild": "yarn dist:prepare && electron-builder install-app-deps",
 		"macdist": "yarn dist mac-x64",
 		"macarmdist": "yarn dist mac-arm64",
 		"windist": "yarn dist win-x64",

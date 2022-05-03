@@ -94,6 +94,10 @@ if (!platform) {
 	}
 }
 
+// Build application
+await $`yarn webpack`
+
+// Build webui
 // await $`yarn --cwd webui build`
 
 // generat the 'static' zip files to serve
@@ -151,6 +155,6 @@ await fs.remove(path.join(runtimeDir, 'lib/node_modules/npm'))
 // 	await $`electron-builder install-app-deps`
 // }
 
-// // perform the electron build
-// await fs.remove('./electron-output')
-// await $withoutEscaping` electron-builder --publish=never ${electronBuilderArgs.join(' ')} `
+// perform the electron build
+await fs.remove('./electron-output')
+await $`yarn --cwd launcher electron-builder --publish=never `

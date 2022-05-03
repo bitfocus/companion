@@ -1,5 +1,6 @@
 {
   "name": "companion-launcher",
+	"description": "Companion",
   "version": "0.0.1",
   "main": "main.js",
   "license": "MIT",
@@ -10,14 +11,69 @@
   },
   "dependencies": {
     "@sentry/electron": "^3.0.7",
-    "electron": "^18.2.0",
-    "electron-builder": "^23.0.3",
-    "electron-notarize": "^1.2.1",
     "electron-store": "^8.0.1",
     "fs-extra": "^10.1.0",
     "nanoid": "^3.3.4",
-    "read-pkg": "^5.2.0",
 		"respawn": "link:../vendor/respawn",
     "systeminformation": "^5.11.14"
-  }
+  },
+  "devDependencies": {
+    "electron": "^18.2.0",
+    "electron-builder": "^23.0.3",
+    "electron-notarize": "^1.2.1"
+  },
+	"build": {
+		"productName": "Companion",
+		"appId": "companion.bitfocus.no",
+		"remoteBuild": false,
+		"dmg": {
+			"artifactName": "companion-mac-${arch}.dmg",
+			"sign": true
+		},
+		"mac": {
+			"target": "dmg",
+			"category": "no.bitfocus.companion",
+			"extendInfo": {
+				"LSBackgroundOnly": 1,
+				"LSUIElement": 1
+			},
+			"hardenedRuntime": "true",
+			"gatekeeperAssess": "false",
+			"entitlements": "entitlements.mac.plist",
+			"entitlementsInherit": "entitlements.mac.plist"
+		},
+		"afterSign": "notarize.cjs",
+		"win": {
+			"target": "nsis"
+		},
+		"nsis": {
+			"artifactName": "companion-win64.exe",
+			"createStartMenuShortcut": true,
+			"perMachine": true,
+			"oneClick": false,
+			"allowElevation": true,
+			"allowToChangeInstallationDirectory": true,
+			"installerIcon": "icon.ico",
+			"installerSidebar": "compinst.bmp",
+			"uninstallerSidebar": "compinst.bmp"
+		},
+		"directories": {
+			"buildResources": "assets/",
+			"output": "../electron-output/"
+		},
+		"linux": {
+			"target": "dir",
+			"artifactName": "companion-x64"
+		},
+    "files": [
+      "**/*",
+      "assets/*"
+    ],
+		"extraResources": [
+			{
+				"from": "../dist",
+				"to": "."
+			}
+		]
+	}
 }
