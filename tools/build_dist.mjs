@@ -94,6 +94,9 @@ if (!platform) {
 	}
 }
 
+// Trash old
+await fs.remove('dist')
+
 // Build application
 await $`yarn webpack`
 
@@ -109,23 +112,22 @@ let sharpArgs = []
 if (sharpPlatform) sharpArgs.push(`npm_config_platform=${sharpPlatform}`)
 if (sharpArch) sharpArgs.push(`npm_config_arch=${nodeArch}`)
 // await $`cross-env ${sharpArgs} yarn dist:prepare`
-await $`yarn --cwd dist install`
 
-const sharpVendorDir = './dist/node_modules/sharp/vendor/'
-const sharpVersionDirs = await fs.readdir(sharpVendorDir)
-if (sharpVersionDirs.length !== 1) {
-	console.error(`Failed to determine sharp lib version`)
-	process.exit(1)
-}
+// const sharpVendorDir = './dist/node_modules/sharp/vendor/'
+// const sharpVersionDirs = await fs.readdir(sharpVendorDir)
+// if (sharpVersionDirs.length !== 1) {
+// 	console.error(`Failed to determine sharp lib version`)
+// 	process.exit(1)
+// }
 
-const sharpPlatformDirs = await fs.readdir(path.join(sharpVendorDir, sharpVersionDirs[0]))
-if (sharpPlatformDirs.length !== 1) {
-	console.error(`Failed to determine sharp lib platform`)
-	process.exit(1)
-}
+// const sharpPlatformDirs = await fs.readdir(path.join(sharpVendorDir, sharpVersionDirs[0]))
+// if (sharpPlatformDirs.length !== 1) {
+// 	console.error(`Failed to determine sharp lib platform`)
+// 	process.exit(1)
+// }
 
-const vipsVendorName = path.join(sharpVersionDirs[0], sharpPlatformDirs[0])
-process.env.VIPS_VENDOR = vipsVendorName
+// const vipsVendorName = path.join(sharpVersionDirs[0], sharpPlatformDirs[0])
+// process.env.VIPS_VENDOR = vipsVendorName
 
 const nodeVersion = '14.19.0'
 
@@ -142,13 +144,34 @@ if (!(await fs.pathExists(tarPath))) {
 
 // Extract nodejs and discard 'junk'
 const runtimeDir = 'dist/node-runtime/'
-await fs.remove(runtimeDir)
 await fs.mkdirp(runtimeDir)
 // TODO - can this be simplified and combined into one step?
 await $`tar -xvzf ${tarPath} --strip-components=1 -C ${runtimeDir}`
 await fs.remove(path.join(runtimeDir, 'share'))
 await fs.remove(path.join(runtimeDir, 'include'))
 await fs.remove(path.join(runtimeDir, 'lib/node_modules/npm'))
+
+await fs.writeFile(
+	'dist/package.json',
+	JSON.stringify(
+		{
+			name: 'companion-dist',
+			version: buildString,
+			license: 'MIT',
+			main: 'main.js',
+			dependencies: {
+				// TODO - make this list be generated properly
+				'@julusian/jpeg-turbo': '^1.1.2',
+				'node-hid': '^2.1.1',
+				sharp: '^0.30.4',
+			},
+		},
+		undefined,
+		2
+	)
+)
+await fs.copyFile('yarn.lock', 'dist/yarn.lock') // use the same yarn.lock file, to keep deps as similar as possible
+await $`yarn --cwd dist install`
 
 // if (!platform) {
 // 	// If for our own platform, make sure the correct deps are installed
