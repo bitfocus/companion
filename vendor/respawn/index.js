@@ -56,6 +56,7 @@ class Monitor extends EventEmitter {
 		this.sleep = typeof opts.sleep === 'function' ? opts.sleep : defaultSleep(opts.sleep)
 		this.maxRestarts = opts.maxRestarts === 0 ? 0 : opts.maxRestarts || -1
 		this.kill = opts.kill === false ? false : opts.kill || 30000
+		this.shouldRestart = true
 
 		this.child = null
 		this.started = null
@@ -168,6 +169,7 @@ class Monitor extends EventEmitter {
 				}
 
 				if (++restarts > this.maxRestarts && this.maxRestarts !== -1) return this.#crashed()
+				if (!this.shouldRestart) return this.#stopped()
 
 				this.status = 'sleeping'
 				this.emit('sleep')

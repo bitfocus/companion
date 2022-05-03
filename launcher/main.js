@@ -105,7 +105,6 @@ if (!lock) {
 		appVersion: pkgInfo.version,
 		appBuild: appBuild,
 
-		appLaunch: '',
 		appStatus: 'Unknown',
 		appURL: 'Waiting for webserver..',
 		appLaunch: null,
@@ -197,6 +196,7 @@ if (!lock) {
 
 		ipcMain.on('launcher-close', () => {
 			if (child) {
+				child.shouldRestart = false
 				child.child.send({
 					messageType: 'exit',
 				})
@@ -249,14 +249,9 @@ if (!lock) {
 					name: `Companion process`,
 					env: {
 						COMPANION_IPC_PARENT: 1,
-						// CONNECTION_ID: connectionId,
-						// SOCKETIO_URL: `ws://localhost:${this.socketPort}`,
-						// SOCKETIO_TOKEN: child.authToken,
-						// MODULE_FILE: path.join(moduleInfo.basePath, moduleInfo.manifest.runtime.entrypoint),
-						// MODULE_MANIFEST: path.join(moduleInfo.basePath, 'companion/manifest.json'),
 					},
-					maxRestarts: 0,
-					sleep: 60000, // Don't auto-restart
+					maxRestarts: -1,
+					sleep: 1000,
 					kill: 5000,
 					cwd: companionRootPath,
 					stdio: [null, null, null, 'ipc'],
@@ -267,9 +262,21 @@ if (!lock) {
 			})
 			child.on('stop', () => {
 				console.log(`Companion process stopped`)
-			})
-			child.on('crash', () => {
-				console.log(`Companion process crashed`)
+
+				appInfo = {
+					...appInfo,
+
+					appStatus: 'Unknown',
+					appURL: 'Waiting for webserver..',
+					appLaunch: null,
+				}
+				sendAppInfo()
+
+				if (!child || !child.shouldRestart) {
+					app.exit()
+				} else {
+					child.start()
+				}
 			})
 			child.on('stdout', (data) => {
 				console.log(`Companion process stdout: ${data.toString()}`)
@@ -292,8 +299,10 @@ if (!lock) {
 				} else if (data.messageType === 'exit') {
 					if (data.restart) {
 						// Do nothing, autorestart will kick in
+						if (child) child.shouldRestart = true
 					} else {
-						// TODO registry
+						// Exit
+						if (child) child.shouldRestart = false
 					}
 				}
 			})
@@ -399,6 +408,7 @@ if (!lock) {
 			.then((v) => {
 				if (v.response === 0) {
 					if (child) {
+						child.shouldRestart = false
 						child.child.send({
 							messageType: 'exit',
 							ip,
@@ -419,7 +429,7 @@ if (!lock) {
 
 	function showConfigFolder() {
 		try {
-			electron.shell.showItemInFolder(path.join(configDir, 'companion', 'db'))
+			electron.shell.showItemInFolder(path.join(configDir, 'db'))
 		} catch (e) {
 			electron.dialog.showErrorBox('File Error', 'Could not open config directory.')
 		}
