@@ -2,7 +2,7 @@ const path = require('path')
 
 module.exports = {
 	entry: {
-		main: './headless.js',
+		main: './main.js',
 		Handler: './lib/Surface/USB/Handler.js',
 	},
 	mode: 'development',

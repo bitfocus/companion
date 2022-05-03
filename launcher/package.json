@@ -1,0 +1,18 @@
+{
+  "name": "companion-launcher",
+  "version": "0.0.1",
+  "main": "index.js",
+  "license": "MIT",
+  "private": true,
+  "type": "commonjs",
+  "scripts": {
+    "start": "electron index.js"
+  },
+  "dependencies": {
+    "@sentry/electron": "^3.0.7",
+    "electron": "^18.2.0",
+    "electron-notarize": "^1.2.1",
+    "electron-store": "^8.0.1",
+    "systeminformation": "^5.11.14"
+  }
+}

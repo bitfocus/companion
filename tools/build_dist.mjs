@@ -2,7 +2,11 @@
 
 import { generateVersionString, generateMiniVersionString, $withoutEscaping } from './lib.mjs'
 import archiver from 'archiver'
-import { fs } from 'zx'
+import { fetch, fs } from 'zx'
+import { createWriteStream } from 'node:fs'
+import { pipeline } from 'node:stream'
+import { promisify } from 'node:util'
+const streamPipeline = promisify(pipeline)
 
 /**
  * @param {String} sourceDir: /some/folder/to/compress
@@ -121,13 +125,24 @@ process.env.VIPS_VENDOR = vipsVendorName
 
 const nodeVersion = '14.19.0'
 
-await $`rm -R dist/node-runtime || true`
-await $`mkdir dist/node-runtime`
-await $`mkdir dist/tmp || true`
-const url = `https://nodejs.org/download/release/v${nodeVersion}/node-v${nodeVersion}-${sharpPlatform}-${nodeArch}.tar.gz`
-await $`wget ${url} -O dist/tmp/node.tar.gz`
-await $`tar -xvzf dist/tmp/node.tar.gz --strip-components=1 -C dist/node-runtime/`
-await $`rm -R dist/node-runtime/share dist/node-runtime/include dist/tmp`
+// Download and cache build of nodejs
+const cacheDir = '.cache/node'
+await fs.mkdirp(cacheDir)
+const tarFilename = `node-v${nodeVersion}-${sharpPlatform}-${nodeArch}.tar.gz`
+const tarPath = path.join(cacheDir, tarFilename)
+if (!(await fs.pathExists(tarPath))) {
+	const response = await fetch(`https://nodejs.org/download/release/v${nodeVersion}/${tarFilename}`)
+	if (!response.ok) throw new Error(`unexpected response ${response.statusText}`)
+	await streamPipeline(response.body, createWriteStream(tarPath))
+}
+
+// Extract nodejs and discard 'junk'
+const runtimeDir = 'dist/node-runtime/'
+await fs.remove(runtimeDir)
+await fs.mkdirp(runtimeDir)
+await $`tar -xvzf ${tarPath} --strip-components=1 -C ${runtimeDir}`
+await fs.remove(path.join(runtimeDir, 'share'))
+await fs.remove(path.join(runtimeDir, 'include'))
 
 // if (!platform) {
 // 	// If for our own platform, make sure the correct deps are installed

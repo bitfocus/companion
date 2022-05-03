@@ -1,13 +1,12 @@
-import path from 'path'
-import url from 'url'
-import Registry from './lib/Registry.js'
-import fs from 'fs-extra'
-import { init, showReportDialog, configureScope } from '@sentry/electron'
-import systeminformation from 'systeminformation'
-import Store from 'electron-store'
-import { fileURLToPath } from 'url'
-
-const { ipcMain, app, BrowserWindow } = electron
+const path = require('path')
+const url = require('url')
+// import Registry from './lib/Registry.js'
+const fs = require('fs-extra')
+const { init, showReportDialog, configureScope } = require('@sentry/electron')
+const systeminformation = require('systeminformation')
+const Store = require('electron-store')
+const { ipcMain, app, BrowserWindow } = require('electron')
+const electron = require('electron')
 
 // Ensure there isn't another instance of companion running already
 var lock = app.requestSingleInstanceLock()
@@ -33,13 +32,13 @@ if (!lock) {
 
 	try {
 		const oldConfigPath = path.join(fullConfigDir, 'config')
-		if (await fs.pathExists(oldConfigPath)) {
+		if (fs.pathExistsSync(oldConfigPath)) {
 			// Pre 3.0 config file exists, lets import the values
-			const contentsBuf = await fs.readFile(oldConfigPath)
+			const contentsBuf = fs.readFileSync(oldConfigPath)
 			if (contentsBuf) {
 				Object.assign(configDefaults, JSON.parse(contentsBuf.toString()))
 			}
-			await fs.unlink(oldConfigPath)
+			fs.unlinkSync(oldConfigPath)
 		}
 	} catch (e) {
 		// Ignore the failure, its not worth trying to handle
@@ -51,12 +50,11 @@ if (!lock) {
 		defaults: configDefaults,
 	})
 
-	const registry = await Registry.create(configDir)
+	// const registry = await Registry.create(configDir)
 
 	let appInfo = {
-		appVersion: registry.appVersion,
-		appBuild: registry.appBuild,
-		appName: registry.pkgInfo.description,
+		appVersion: '', // registry.appVersion,
+		appBuild: '', //registry.appBuild,
 
 		appLaunch: '',
 		appStatus: 'Unknown',
@@ -70,14 +68,14 @@ if (!lock) {
 		}
 	}
 
-	registry.ui.server.on('http-bind-status', (status) => {
-		appInfo = {
-			...appInfo,
-			...status,
-		}
+	// registry.ui.server.on('http-bind-status', (status) => {
+	// 	appInfo = {
+	// 		...appInfo,
+	// 		...status,
+	// 	}
 
-		sendAppInfo()
-	})
+	// 	sendAppInfo()
+	// })
 
 	let sentryDsn
 	try {
@@ -93,7 +91,7 @@ if (!lock) {
 		console.log('Configuring sentry error reporting')
 		init({
 			dsn: sentryDsn,
-			release: `companion@${registry.appBuild || registry.appVersion}`,
+			release: 'nope', // `companion@${registry.appBuild || registry.appVersion}`,
 			beforeSend(event) {
 				if (event.exception) {
 					showReportDialog()
@@ -109,7 +107,7 @@ if (!lock) {
 		const ip = uiConfig.get('bind_ip')
 		const port = uiConfig.get('http_port')
 
-		registry.rebindHttp(ip, port)
+		// registry.rebindHttp(ip, port)
 	}
 
 	var window
@@ -125,19 +123,19 @@ if (!lock) {
 			maxHeight: 380,
 			frame: false,
 			resizable: false,
-			icon: fileURLToPath(new URL('assets/icon.png', import.meta.url)),
+			icon: path.join(__dirname, './assets/icon.png'),
 			webPreferences: {
 				pageVisibility: true,
 				nodeIntegration: true,
 				contextIsolation: true,
-				preload: fileURLToPath(new URL('window-preload.js', import.meta.url)),
+				preload: path.join(__dirname, './window-preload.js'),
 			},
 		})
 
 		window
 			.loadURL(
 				url.format({
-					pathname: fileURLToPath(new URL('window.html', import.meta.url)),
+					pathname: path.join(__dirname, './window.html'),
 					protocol: 'file:',
 					slashes: true,
 				})
@@ -151,7 +149,7 @@ if (!lock) {
 		})
 
 		ipcMain.on('launcher-close', function (req, cb) {
-			registry.emit('exit')
+			// registry.emit('exit')
 		})
 
 		ipcMain.on('launcher-minimize', function (req, cb) {
@@ -185,10 +183,10 @@ if (!lock) {
 			const ip = uiConfig.get('bind_ip')
 			const port = uiConfig.get('http_port')
 
-			registry.ready(ip, port, !process.env.DEVELOPER).catch((e) => {
-				console.log('Failed to init')
-				process.exit(1)
-			})
+			// registry.ready(ip, port, !process.env.DEVELOPER).catch((e) => {
+			// 	console.log('Failed to init')
+			// 	process.exit(1)
+			// })
 		})
 
 		ipcMain.on('network-interfaces:get', function () {
@@ -216,10 +214,10 @@ if (!lock) {
 			})
 		})
 
-		registry.on('restart', function () {
-			app.relaunch()
-			app.exit()
-		})
+		// registry.on('restart', function () {
+		// 	app.relaunch()
+		// 	app.exit()
+		// })
 
 		window.on('closed', function () {
 			window = null
@@ -232,10 +230,10 @@ if (!lock) {
 		})
 
 		try {
-			configureScope(function (scope) {
-				scope.setUser({ id: registry.machineId })
-				scope.setExtra('build', registry.appBuild)
-			})
+			// configureScope(function (scope) {
+			// 	scope.setUser({ id: registry.machineId })
+			// 	scope.setExtra('build', registry.appBuild)
+			// })
 		} catch (e) {
 			console.log('Error reading BUILD and/or package info: ', e)
 		}
@@ -244,8 +242,8 @@ if (!lock) {
 	function createTray() {
 		tray = new electron.Tray(
 			process.platform == 'darwin'
-				? fileURLToPath(new URL('assets/trayTemplate.png', import.meta.url))
-				: fileURLToPath(new URL('assets/icon.png', import.meta.url))
+				? path.join(__dirname, 'assets/trayTemplate.png')
+				: path.join(__dirname, 'assets/icon.png')
 		)
 		tray.setIgnoreDoubleClickEvents(true)
 		if (process.platform !== 'darwin') {
@@ -303,15 +301,15 @@ if (!lock) {
 			})
 			.then((v) => {
 				if (v.response === 0) {
-					registry.emit('exit')
+					// registry.emit('exit')
 				}
 			})
 	}
 
 	function scanUsb() {
-		registry.surfaces.refreshDevices().catch((e) => {
-			electron.dialog.showErrorBox('Scan Error', 'Failed to scan for USB devices.')
-		})
+		// registry.surfaces.refreshDevices().catch((e) => {
+		// 	electron.dialog.showErrorBox('Scan Error', 'Failed to scan for USB devices.')
+		// })
 	}
 
 	function showConfigFolder() {
@@ -340,22 +338,22 @@ if (!lock) {
 		createWindow()
 
 		electron.powerMonitor.on('suspend', () => {
-			registry.instance.powerStatusChange('suspend')
+			// registry.instance.powerStatusChange('suspend')
 		})
 
 		electron.powerMonitor.on('resume', () => {
-			registry.instance.powerStatusChange('resume')
+			// registry.instance.powerStatusChange('resume')
 		})
 
 		electron.powerMonitor.on('on-ac', () => {
-			registry.instance.powerStatusChange('ac')
+			// registry.instance.powerStatusChange('ac')
 		})
 
 		electron.powerMonitor.on('on-battery', () => {
-			registry.instance.powerStatusChange('battery')
+			// registry.instance.powerStatusChange('battery')
 		})
 
-		await registry.ready(uiConfig.get('bind_ip'), uiConfig.get('bind_port'), !process.env.DEVELOPER)
+		// await registry.ready(uiConfig.get('bind_ip'), uiConfig.get('bind_port'), !process.env.DEVELOPER)
 	})
 
 	app.on('window-all-closed', function () {

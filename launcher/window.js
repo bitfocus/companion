@@ -13,11 +13,10 @@ document.getElementById('close').addEventListener('click', function () {
 api.receive('info', function (config, info) {
 	document.getElementById('status').innerHTML = info.appStatus
 	document.getElementById('url').innerHTML = info.appURL
-	document.getElementById('model').innerHTML = `${info.appName} v${info.appVersion} (${info.appBuild})`
+	document.getElementById('model').innerHTML = `Companion v${info.appVersion} (${info.appBuild})`
 
 	document.getElementById('ift').checked = config.start_minimised
 	document.getElementById('ifp').value = config.http_port
-	document.title = info.appName
 })
 api.send('info')
 
