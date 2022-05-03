@@ -175,7 +175,7 @@
 		"p-queue": "^7.1.0",
 		"p-timeout": "^5.0.2",
 		"pngjs": "^3.3.3",
-		"respawn": "^2.6.0",
+		"respawn": "link:./vendor/respawn",
 		"selfsigned": "^1.10.14",
 		"semver": "^7.3.5",
 		"sharp": "^0.30.3",

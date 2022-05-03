@@ -8,6 +8,7 @@ const { ipcMain, app, BrowserWindow } = require('electron')
 const electron = require('electron')
 const { nanoid } = require('nanoid')
 const readPackage = require('read-pkg')
+const respawn = require('respawn')
 
 // Ensure there isn't another instance of companion running already
 var lock = app.requestSingleInstanceLock()
@@ -70,8 +71,6 @@ if (!lock) {
 		defaults: configDefaults,
 	})
 
-	// const registry = await Registry.create(configDir)
-
 	let sentryDsn
 	try {
 		sentryDsn = fs
@@ -84,12 +83,12 @@ if (!lock) {
 
 	let companionRootPath = process.resourcesPath
 	if (!app.isPackaged) {
-		// Try the dist folder above
-		companionRootPath = path.join(__dirname, '../dist')
-		if (!fs.pathExistsSync(path.join(companionRootPath, 'BUILD'))) {
-			// Finally, use the unbuilt parent
-			companionRootPath = path.join(__dirname, '..')
-		}
+		// // Try the dist folder above
+		// companionRootPath = path.join(__dirname, '../dist')
+		// if (!fs.pathExistsSync(path.join(companionRootPath, 'BUILD'))) {
+		// Finally, use the unbuilt parent
+		companionRootPath = path.join(__dirname, '..')
+		// }
 	}
 
 	let appBuild
@@ -143,20 +142,19 @@ if (!lock) {
 		}
 	}
 
-	// registry.ui.server.on('http-bind-status', (status) => {
-	// 	appInfo = {
-	// 		...appInfo,
-	// 		...status,
-	// 	}
-
-	// 	sendAppInfo()
-	// })
+	let child
 
 	function rebindHttp() {
 		const ip = uiConfig.get('bind_ip')
 		const port = uiConfig.get('http_port')
 
-		// registry.rebindHttp(ip, port)
+		if (child) {
+			child.child.send({
+				messageType: 'http-rebind',
+				ip,
+				port,
+			})
+		}
 	}
 
 	var window
@@ -198,7 +196,11 @@ if (!lock) {
 		})
 
 		ipcMain.on('launcher-close', () => {
-			// registry.emit('exit')
+			if (child) {
+				child.child.send({
+					messageType: 'exit',
+				})
+			}
 		})
 
 		ipcMain.on('launcher-minimize', () => {
@@ -232,10 +234,70 @@ if (!lock) {
 			const ip = uiConfig.get('bind_ip')
 			const port = uiConfig.get('http_port')
 
-			// registry.ready(ip, port, !process.env.DEVELOPER).catch((e) => {
-			// 	console.log('Failed to init')
-			// 	process.exit(1)
-			// })
+			const nodeBinPath = path.join(companionRootPath, 'node-runtime/bin/node')
+			const nodeBin = app.isPackaged || fs.pathExistsSync(nodeBinPath) ? nodeBinPath : 'node'
+			child = respawn(
+				[
+					nodeBin,
+					path.join(companionRootPath, 'main.js'),
+					`--machineId="${machineId}"`,
+					`--config-dir="${configDir}"`,
+					`--admin-port=${port}`,
+					`--admin-addrss=${ip}`,
+				],
+				{
+					name: `Companion process`,
+					env: {
+						COMPANION_IPC_PARENT: 1,
+						// CONNECTION_ID: connectionId,
+						// SOCKETIO_URL: `ws://localhost:${this.socketPort}`,
+						// SOCKETIO_TOKEN: child.authToken,
+						// MODULE_FILE: path.join(moduleInfo.basePath, moduleInfo.manifest.runtime.entrypoint),
+						// MODULE_MANIFEST: path.join(moduleInfo.basePath, 'companion/manifest.json'),
+					},
+					maxRestarts: 0,
+					sleep: 60000, // Don't auto-restart
+					kill: 5000,
+					cwd: companionRootPath,
+					stdio: [null, null, null, 'ipc'],
+				}
+			)
+			child.on('start', () => {
+				console.log(`Companion process started`)
+			})
+			child.on('stop', () => {
+				console.log(`Companion process stopped`)
+			})
+			child.on('crash', () => {
+				console.log(`Companion process crashed`)
+			})
+			child.on('stdout', (data) => {
+				console.log(`Companion process stdout: ${data.toString()}`)
+			})
+			child.on('stderr', (data) => {
+				console.log(`Companion process stderr: ${data.toString()}`)
+			})
+			child.on('message', (data) => {
+				console.log('Received IPC message', data)
+				if (data.messageType === 'show-error') {
+					electron.dialog.showErrorBox(data.title, data.body)
+				} else if (data.messageType === 'http-bind-status') {
+					appInfo = {
+						...appInfo,
+						...data,
+					}
+					delete appInfo.messageType
+
+					sendAppInfo()
+				} else if (data.messageType === 'exit') {
+					if (data.restart) {
+						// Do nothing, autorestart will kick in
+					} else {
+						// TODO registry
+					}
+				}
+			})
+			child.start()
 		})
 
 		ipcMain.on('network-interfaces:get', () => {
@@ -262,11 +324,6 @@ if (!lock) {
 				}
 			})
 		})
-
-		// registry.on('restart',  ()=> {
-		// 	app.relaunch()
-		// 	app.exit()
-		// })
 
 		window.on('closed', () => {
 			window = null
@@ -341,15 +398,23 @@ if (!lock) {
 			})
 			.then((v) => {
 				if (v.response === 0) {
-					// registry.emit('exit')
+					if (child) {
+						child.child.send({
+							messageType: 'exit',
+							ip,
+							port,
+						})
+					}
 				}
 			})
 	}
 
 	function scanUsb() {
-		// registry.surfaces.refreshDevices().catch((e) => {
-		// 	electron.dialog.showErrorBox('Scan Error', 'Failed to scan for USB devices.')
-		// })
+		if (child) {
+			child.child.send({
+				messageType: 'scan-usb',
+			})
+		}
 	}
 
 	function showConfigFolder() {
@@ -378,22 +443,40 @@ if (!lock) {
 		createWindow()
 
 		electron.powerMonitor.on('suspend', () => {
-			// registry.instance.powerStatusChange('suspend')
+			if (child) {
+				child.child.send({
+					messageType: 'power-status',
+					status: 'suspend',
+				})
+			}
 		})
 
 		electron.powerMonitor.on('resume', () => {
-			// registry.instance.powerStatusChange('resume')
+			if (child) {
+				child.child.send({
+					messageType: 'power-status',
+					status: 'resume',
+				})
+			}
 		})
 
 		electron.powerMonitor.on('on-ac', () => {
-			// registry.instance.powerStatusChange('ac')
+			if (child) {
+				child.child.send({
+					messageType: 'power-status',
+					status: 'ac',
+				})
+			}
 		})
 
 		electron.powerMonitor.on('on-battery', () => {
-			// registry.instance.powerStatusChange('battery')
+			if (child) {
+				child.child.send({
+					messageType: 'power-status',
+					status: 'battery',
+				})
+			}
 		})
-
-		// await registry.ready(uiConfig.get('bind_ip'), uiConfig.get('bind_port'), !process.env.DEVELOPER)
 	})
 
 	app.on('window-all-closed', () => {

@@ -5052,13 +5052,9 @@ resolve@^1.20.0, resolve@^1.9.0:
     path-parse "^1.0.7"
     supports-preserve-symlinks-flag "^1.0.0"
 
-respawn@^2.6.0:
-  version "2.6.0"
-  resolved "https://registry.yarnpkg.com/respawn/-/respawn-2.6.0.tgz#6e310a2c8aebcfea87629f613c00ee73ddfcbf66"
-  integrity sha512-4fs4W4GD6+zTHvhzOMaeJ56zdmgr35550SgC08WsjdQVGl8d+cp/SZOwlJQKaTQeZTR2iKOMbHIAecWCeLe+Tg==
-  dependencies:
-    ps-tree "^1.2.0"
-    xtend "^4.0.1"
+"respawn@link:./vendor/respawn":
+  version "0.0.0"
+  uid ""
 
 responselike@^1.0.2:
   version "1.0.2"
@@ -6219,11 +6215,6 @@ xmlcreate@^2.0.4:
   version "2.0.4"
   resolved "https://registry.yarnpkg.com/xmlcreate/-/xmlcreate-2.0.4.tgz#0c5ab0f99cdd02a81065fa9cd8f8ae87624889be"
   integrity sha512-nquOebG4sngPmGPICTS5EnxqhKbCmz5Ox5hsszI2T6U5qdrJizBc+0ilYSEjTSzU0yZcmvppztXe/5Al5fUwdg==
-
-xtend@^4.0.1:
-  version "4.0.2"
-  resolved "https://registry.yarnpkg.com/xtend/-/xtend-4.0.2.tgz#bb72779f5fa465186b1f438f674fa347fdb5db54"
-  integrity sha512-LKYU1iAXJXUgAXn9URjiu+MWhyUXHsvfp7mcuYm9dSUKK0/CjtrUwFAxD82/mCWbtLsGjFIad0wIsod4zrTAEQ==
 
 y18n@^3.2.0:
   version "3.2.2"
