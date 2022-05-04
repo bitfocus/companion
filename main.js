@@ -10,13 +10,14 @@ import shortid from 'shortid'
 const cli = meow(
 	`
 	Usage
-	  $ ./main.js 
+	  $ ./main.js --admin-port 8000
 
-	Examples
-	  $ foo .
-	  $ foo --admin-port 8000
-
-	  TODO 
+	Options
+	  --list-interfaces       List the available network interfaces that can be passed to --admin-interface
+	  --admin-port            Set the port the admin ui should bind to (default: 8000)
+	  --admin-interface       Set the interface the admin ui should bind to. The first ip on this interface will be used (default: '')
+	  --admin-address         Set the ip address the admin ui should bind to (default: 0.0.0.0)
+	  --config-dir            Use the specified directory for storing configuration. The default path varies by system, and is different to 2.2 (the old path will be used if existing config is found)
 `,
 	{
 		importMeta: { url: import.meta.url },
@@ -38,11 +39,9 @@ const cli = meow(
 			},
 			configDir: {
 				type: 'string',
-				// isRequired: (flags) => {
-				// 	return !flags.listInterfaces
-				// },
 			},
 			machineId: {
+				// Note: intentionally omitted from the docs, as it should only be set by electron
 				type: 'string',
 			},
 		},
@@ -144,5 +143,5 @@ if (!machineId) {
 
 const registry = new Registry(configDir, machineId)
 
-await registry.ready(adminIp, cli.flags.adminPort, !process.env.DEVELOPER)
+await registry.ready(adminIp, cli.flags.adminPort)
 console.log('Started')

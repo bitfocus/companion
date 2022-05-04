@@ -8,6 +8,7 @@ const { ipcMain, app, BrowserWindow } = require('electron')
 const electron = require('electron')
 const { nanoid } = require('nanoid')
 const respawn = require('respawn')
+const stripAnsi = require('strip-ansi')
 
 // Ensure there isn't another instance of companion running already
 var lock = app.requestSingleInstanceLock()
@@ -22,6 +23,24 @@ if (!lock) {
 	if (process.env.COMPANION_CONFIG_BASEDIR !== undefined) {
 		configDir = process.env.COMPANION_CONFIG_BASEDIR
 	}
+
+	// Setup a simple logging method
+	// TODO - this will loose some lines when exiting
+	let logwriting = false
+	let logbuffer = []
+	setInterval(() => {
+		if (logbuffer.length > 0 && !logwriting) {
+			const writestring = logbuffer.join('\n')
+			logbuffer = []
+			logwriting = true
+			fs.appendFile(path.join(configDir, 'companion.log'), writestring + '\n', function (err) {
+				if (err) {
+					console.log('log write error', err)
+				}
+				logwriting = false
+			})
+		}
+	}, 1000)
 
 	// Use stored value
 	let machineId = nanoid()
@@ -455,11 +474,16 @@ if (!lock) {
 				child.start()
 			}
 		})
+
 		child.on('stdout', (data) => {
+			const line = `${new Date().toISOString()} ${stripAnsi(data.toString().trim())}`
+			logbuffer.push(line)
 			console.log(`Companion process stdout: ${data.toString()}`)
 		})
 		child.on('stderr', (data) => {
 			console.log(`Companion process stderr: ${data.toString()}`)
+			const line = `${new Date().toISOString()} ${stripAnsi(data.toString().trim())}`
+			logbuffer.push(line)
 		})
 		child.on('message', (data) => {
 			console.log('Received IPC message', data)
