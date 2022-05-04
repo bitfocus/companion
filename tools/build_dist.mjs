@@ -146,7 +146,7 @@ if (!(await fs.pathExists(tarPath))) {
 const runtimeDir = 'dist/node-runtime/'
 await fs.mkdirp(runtimeDir)
 // TODO - can this be simplified and combined into one step?
-await $`tar -xvzf ${tarPath} --strip-components=1 -C ${runtimeDir}`
+await $`tar -xzf ${tarPath} --strip-components=1 -C ${runtimeDir}`
 await fs.remove(path.join(runtimeDir, 'share'))
 await fs.remove(path.join(runtimeDir, 'include'))
 await fs.remove(path.join(runtimeDir, 'lib/node_modules/npm'))
@@ -181,4 +181,5 @@ await $`yarn --cwd dist install`
 // TODO - make optional from flag
 // perform the electron build
 await fs.remove('./electron-output')
+await $`yarn --cwd launcher install`
 await $`yarn --cwd launcher electron-builder --publish=never `
