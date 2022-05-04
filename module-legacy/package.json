@@ -14,6 +14,7 @@
     "@companion-module/base": "link:../module-base/",
     "@tsconfig/node14": "^1.0.1",
     "@types/debug": "^4.1.7",
+    "app-root-path": "^3.0.0",
     "check-ip": "^1.1.1",
     "companion-module-7thsensedesign-delta": "github:bitfocus/companion-module-7thsensedesign-delta#v1.0.3",
     "companion-module-adder-xdip": "github:bitfocus/companion-module-adder-xdip#v1.0.0",
@@ -61,8 +62,8 @@
     "companion-module-behringer-x32": "github:bitfocus/companion-module-behringer-x32#v2.9.1",
     "companion-module-behringer-xair": "github:bitfocus/companion-module-behringer-xair#v1.6.9",
     "companion-module-biamp-audia": "github:bitfocus/companion-module-biamp-audia#v1.0.2",
-    "companion-module-birddog-studio": "github:bitfocus/companion-module-birddog-studio#v1.0.3",
     "companion-module-birddog-ptz": "github:bitfocus/companion-module-birddog-ptz#v2.0.1",
+    "companion-module-birddog-studio": "github:bitfocus/companion-module-birddog-studio#v1.0.3",
     "companion-module-bitfocus-snapshot": "github:bitfocus/companion-module-bitfocus-snapshot#v0.0.5",
     "companion-module-blackbird-hdmimatrix": "github:bitfocus/companion-module-blackbird-hdmimatrix#v1.0.3",
     "companion-module-blackbox-boxilla": "github:bitfocus/companion-module-blackbox-boxilla#v1.0.4",
@@ -369,6 +370,7 @@
     "tslib": "^2.3.1"
   },
   "devDependencies": {
+    "@companion-module/tools": "link:../module-tools/",
     "@types/node": "^14",
     "@types/parse-author": "^2.0.1",
     "@types/shortid": "^0.0.29",

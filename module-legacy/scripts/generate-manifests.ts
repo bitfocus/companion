@@ -1,7 +1,11 @@
-import { fs, path } from 'zx'
+#!/usr/bin/env zx
+
+import { fs, path, $ } from 'zx'
 import parseAuthor from 'parse-author'
 
 import type { ModuleManifest, ModuleManifestMaintainer } from '@companion-module/base'
+
+await $`yarn build`
 
 // remove old manifests
 const outerManifest = './manifests'
@@ -10,12 +14,21 @@ await fs.rm(outerManifest, {
 	force: true,
 })
 
+// remove old entrypoints
+const outerEntrypoints = './entrypoints'
+await fs.rm(outerEntrypoints, {
+	recursive: true,
+	force: true,
+})
+await fs.mkdir(outerEntrypoints)
+
 const outerDir = './node_modules'
 const dirs = await fs.readdir(outerDir)
 
 const ignoreNames: string[] = [
 	// Add any modules which are broken here, so that they are ignored, and not available
 	// 'companion-module-something'
+	'companion-module-figure53-go-button', // Uses ../../lib/resources/icons.js
 ]
 
 for (const folder of dirs) {
@@ -60,7 +73,7 @@ for (const folder of dirs) {
 			version: pkgJson.version ?? '0.0.0',
 			license: pkgJson.license,
 			repository: pkgJson.repository?.url ?? `https://github.com/bitfocus/companion-module-${pkgJson.name}.git`,
-			//bugs: '', // TODO
+			bugs: pkgJson.bugs?.url ?? `https://github.com/bitfocus/companion-module-${pkgJson.name}/issues`,
 			maintainers: maintainers,
 			legacyIds: [...(pkgJson.legacy || []), pkgJson.name],
 
@@ -68,7 +81,8 @@ for (const folder of dirs) {
 				type: 'node14',
 				api: 'socket.io',
 
-				entrypoint: '../../dist/index.js',
+				// entrypoint: '../../dist/index.js',
+				entrypoint: '../index.js',
 				// universal: boolean
 			},
 
@@ -89,8 +103,21 @@ for (const folder of dirs) {
 			if (await fs.pathExists(path.join(moduleDir, 'documentation')))
 				await fs.copy(path.join(moduleDir, 'documentation'), path.join(manifestDir, 'documentation'))
 		}
+
+		await fs.writeFile(
+			path.join(outerEntrypoints, `${pkgJson.name}.cjs`),
+			`
+global.modulePkg = require('companion-module-${pkgJson.name}/package.json')
+global.moduleFactory = require('companion-module-${pkgJson.name}')
+global.moduleName = "${pkgJson.name}"
+import('../../dist/index.js')
+			`
+		)
 	}
 }
 
-const useDir = await fs.pathExists('./module/legacy')
-const baseDir = useDir ? './module/legacy' : './node_modules/companion-wrapped-module'
+console.log('Bundling code. This will take a couple of minutes')
+await $`yarn webpack`
+
+// const useDir = await fs.pathExists('./module/legacy')
+// const baseDir = useDir ? './module/legacy' : './node_modules/companion-wrapped-module'

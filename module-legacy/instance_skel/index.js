@@ -16,13 +16,11 @@
  */
 
 const util = require('util')
-const debug = require('debug')('lib/instance_skel')
+// const debug = require('debug')('lib/instance_skel')
 var icons = require('../icons.cjs')
 
-if (!process.env.MODULE_MANIFEST) throw new Error('Missing manifest variable')
-
-const manifest = require(process.env.MODULE_MANIFEST)
-const pkgJson = require(`companion-module-${manifest.name}/package.json`)
+const pkgJson = global.modulePkg
+if (!pkgJson) throw new Error('Missing module package.json data')
 
 function instance(system, id, config) {
 	var self = this
