@@ -1,4 +1,4 @@
-import { InstanceBase, SomeCompanionConfigField } from '@companion-module/base'
+import { InstanceBase, runEntrypoint, SomeCompanionConfigField } from '@companion-module/base'
 import { createRequire } from 'module'
 import type InstanceSkel = require('../instance_skel')
 import { FakeSystem } from './fakeSystem.js'
@@ -50,3 +50,5 @@ export default class MockModule extends InstanceBase<MockConfig> {
 		return this.#legacy.config_fields() as SomeCompanionConfigField[]
 	}
 }
+
+runEntrypoint(MockModule)

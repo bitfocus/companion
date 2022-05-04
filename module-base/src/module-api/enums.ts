@@ -4,12 +4,13 @@ export enum InstanceStatus {
 	ERROR = 2,
 }
 
-export enum LogLevel {
-	INFO = 'info',
-	WARN = 'warn',
-	ERROR = 'error',
-	DEBUG = 'debug',
-}
+export type LogLevel = 'info' | 'warn' | 'error' | 'debug'
+// export enum LogLevel {
+// 	INFO = 'info',
+// 	WARN = 'warn',
+// 	ERROR = 'error',
+// 	DEBUG = 'debug',
+// }
 
 export namespace Regex {
 	export const IP = ''

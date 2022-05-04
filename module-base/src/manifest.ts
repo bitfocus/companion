@@ -30,6 +30,8 @@ export interface ModuleManifest {
 	license: string
 	/** URL to the source repository */
 	repository: string
+	/** URL to bug tracker */
+	bugs: string
 	/** List of active maintiners */
 	maintainers: ModuleManifestMaintainer[]
 	/** If the module had a different unique identifier previously, then specify it here */

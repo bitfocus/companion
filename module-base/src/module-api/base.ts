@@ -108,7 +108,7 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 		})
 
 		this.updateStatus(null, 'Initializing')
-		this.userLog(LogLevel.DEBUG, 'Initializing')
+		this.userLog('debug', 'Initializing')
 	}
 
 	private async _socketEmit<T extends keyof ModuleToHostEventsV0>(

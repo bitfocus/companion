@@ -1,0 +1,29 @@
+{
+	"compilerOptions": {
+		"module": "es2020",
+		"target": "es2018",
+		"noImplicitAny": true,
+		"moduleResolution": "node",
+		"sourceMap": true,
+		"paths": {
+			"*": ["../node_modules/*"]
+		},
+		"declaration": false,
+		"importHelpers": true,
+		"listFiles": false,
+		"traceResolution": false,
+		"pretty": true,
+		"lib": ["es2018"],
+		"types": ["node"],
+		"strict": true,
+		"alwaysStrict": false,
+		"forceConsistentCasingInFileNames": true,
+		"noFallthroughCasesInSwitch": true,
+		"noImplicitReturns": true,
+		"noUnusedLocals": true,
+		"noUnusedParameters": true,
+		"skipLibCheck": true,
+		"allowSyntheticDefaultImports": true
+	},
+	"compileOnSave": false
+}

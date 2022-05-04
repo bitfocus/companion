@@ -80,19 +80,13 @@ export class FakeSystem extends EventEmitter {
 	sendLog: InstanceSkel<any>['log'] = (level, info) => {
 		switch (level) {
 			case 'debug':
-				this.parent.userLog(LogLevel.DEBUG, info)
-				break
 			case 'info':
-				this.parent.userLog(LogLevel.INFO, info)
-				break
 			case 'warn':
-				this.parent.userLog(LogLevel.WARN, info)
-				break
 			case 'error':
-				this.parent.userLog(LogLevel.ERROR, info)
+				this.parent.userLog(level, info)
 				break
 			default:
-				this.parent.userLog(LogLevel.INFO, info)
+				this.parent.userLog('info', info)
 				assertNever(level)
 				break
 		}

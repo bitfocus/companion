@@ -60,8 +60,9 @@ for (const folder of dirs) {
 			version: pkgJson.version ?? '0.0.0',
 			license: pkgJson.license,
 			repository: pkgJson.repository?.url ?? `https://github.com/bitfocus/companion-module-${pkgJson.name}.git`,
+			//bugs: '', // TODO
 			maintainers: maintainers,
-			legacyIds: [pkgJson.name],
+			legacyIds: [...(pkgJson.legacy || []), pkgJson.name],
 
 			runtime: {
 				type: 'node14',
