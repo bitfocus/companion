@@ -57,22 +57,22 @@ if (!platform) {
 		sharpPlatform = 'darwin'
 		sharpArch = 'x64'
 
-		electronBuilderArgs.push(`-c.buildVersion="${buildString}"`)
+		// electronBuilderArgs.push(`-c.buildVersion="${buildString}"`)
 	} else if (platform === 'mac-arm64') {
 		// electronBuilderArgs.push('--arm64', '--mac')
 		nodeArch = 'arm64'
 		sharpPlatform = 'darwin'
 		sharpArch = 'arm64'
 
-		electronBuilderArgs.push(`-c.buildVersion="${buildString}"`)
+		// electronBuilderArgs.push(`-c.buildVersion="${buildString}"`)
 	} else if (platform === 'win-x64') {
 		// electronBuilderArgs.push('--x64', '--win')
 		nodeArch = 'x64'
 		sharpPlatform = 'win32'
 		sharpArch = 'x64'
 
-		const miniBuildString = await generateMiniVersionString()
-		electronBuilderArgs.push(`-c.buildVersion="${miniBuildString}"`)
+		// const miniBuildString = await generateMiniVersionString()
+		// electronBuilderArgs.push(`-c.buildVersion="${miniBuildString}"`)
 	} else if (platform === 'linux-x64') {
 		// electronBuilderArgs.push('--x64', '--linux')
 		nodeArch = 'x64'
