@@ -3479,9 +3479,9 @@ commist@^1.0.0:
   version "1.2.1"
   resolved "https://codeload.github.com/bitfocus/companion-module-noismada-octopusshowcontrol/tar.gz/7434eb00233bde285562d7be4ff57117c0b5aa0d"
 
-"companion-module-novastar-controller@github:bitfocus/companion-module-novastar-controller#v1.0.7":
-  version "1.0.7"
-  resolved "https://codeload.github.com/bitfocus/companion-module-novastar-controller/tar.gz/af15ceb7a0b4e21723feb71f671f3103a5cd5e57"
+"companion-module-novastar-controller@github:bitfocus/companion-module-novastar-controller#v1.0.8":
+  version "1.0.8"
+  resolved "https://codeload.github.com/bitfocus/companion-module-novastar-controller/tar.gz/425870f219bc866dd6d510bd7f6924ab350fbd27"
 
 "companion-module-novastar-h-series@github:bitfocus/companion-module-novastar-h-series#v1.0.2":
   version "1.0.2"
