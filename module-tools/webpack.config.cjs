@@ -24,19 +24,19 @@ module.exports = {
 	experiments: {
 		topLevelAwait: true,
 	},
-	// module: {
-	// 	rules: [
-	// 		// {
-	// 		// 	test: /\.json/,
-	// 		// 	type: 'asset/inline',
-	// 		// },
-	// 		{
-	// 			test: /BUILD$/,
-	// 			type: 'asset/resource',
-	// 			generator: {
-	// 				filename: 'BUILD',
-	// 			},
-	// 		},
-	// 	],
-	// },
+	module: {
+		rules: [
+			{
+				test: /\.json$/,
+				type: 'asset/inline',
+			},
+			// {
+			// 	test: /BUILD$/,
+			// 	type: 'asset/resource',
+			// 	generator: {
+			// 		filename: 'BUILD',
+			// 	},
+			// },
+		],
+	},
 }
