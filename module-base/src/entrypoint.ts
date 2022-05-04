@@ -4,13 +4,12 @@ import { HostApiSocketIo, HostToModuleEventsInit, ModuleToHostEventsInit } from 
 import { InstanceBaseShared } from './instance-base.js'
 import fs from 'fs/promises'
 import { ModuleManifest } from './manifest.js'
-import { readPackage, NormalizedPackageJson } from 'read-pkg'
 
 let hasEntrypoint = false
 
 export type InstanceConstructor = new (internal: unknown, id: string) => InstanceBaseShared<any>
 
-async function runEntrypointInner(factory: InstanceConstructor, libPkgJson: NormalizedPackageJson): Promise<void> {
+async function runEntrypointInner(factory: InstanceConstructor, pkgVersion: string): Promise<void> {
 	// Ensure only called once per module
 	if (hasEntrypoint) throw new Error(`runEntrypoint can only be called once`)
 	hasEntrypoint = true
@@ -46,7 +45,7 @@ async function runEntrypointInner(factory: InstanceConstructor, libPkgJson: Norm
 	socket.on('connect', () => {
 		console.log(`Connected to module-host: ${socket.id}`)
 
-		socket.emit('register', libPkgJson.version, connectionId, socketIoToken, () => {
+		socket.emit('register', pkgVersion, connectionId, socketIoToken, () => {
 			console.log(`Module-host accepted registration`)
 
 			module = new factory(socket, connectionId)
@@ -78,14 +77,16 @@ async function runEntrypointInner(factory: InstanceConstructor, libPkgJson: Norm
 export function runEntrypoint(factory: InstanceConstructor): void {
 	Promise.resolve().then(async () => {
 		try {
-			const pkgJson = await readPackage({ cwd: new URL('..', import.meta.url) })
+			const pkgJsonStr = await fs.readFile(new URL('../package.json', import.meta.url))
+			const pkgJson = JSON.parse(pkgJsonStr.toString())
 			if (!pkgJson || pkgJson.name !== '@companion-module/base')
 				throw new Error('Failed to find the package.json for @companion-module/base')
+			if (!pkgJson.version) throw new Error('Missing version field in the package.json for @companion-module/base')
 
 			const modulePath = process.env.MODULE_FILE
 			if (!modulePath) throw new Error('Module initialise is missing MODULE_FILE')
 
-			await runEntrypointInner(factory, pkgJson)
+			await runEntrypointInner(factory, pkgJson.version)
 		} catch (e: any) {
 			console.error(`Failed to startup module:`)
 			console.error(e.stack || e.message)

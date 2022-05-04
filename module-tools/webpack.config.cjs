@@ -10,7 +10,7 @@ module.exports = {
 		main: './' + pkgJson.main, // path.join(frameworkDir, 'dist/entrypoint.js'),
 		// Handler: './lib/Surface/USB/Handler.js',
 	},
-	mode: 'development',
+	mode: 'production',
 	output: {
 		// filename: 'main.js',
 		path: path.resolve(process.cwd(), 'pkg'),
