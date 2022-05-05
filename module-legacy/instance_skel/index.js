@@ -35,7 +35,14 @@ function instance(system, id, config) {
 	self.label = config.label
 
 	// Debug with module-name prepeded
-	self.debug = require('debug')('instance:' + self.package_info.name + ':' + self.id)
+	self.defineConst('debug', require('debug')('instance:' + self.package_info.name + ':' + self.id))
+
+	// Update instance health, levels: null = unknown, 0 = ok, 1 = warning, 2 = error
+	self.defineConst('log', function (level, info) {
+		var self = this
+
+		self.system.sendLog(level, info)
+	})
 
 	for (var key in icons) {
 		self.defineConst(key, icons[key])
@@ -106,6 +113,7 @@ instance.prototype.defineConst = function (name, value) {
 	Object.defineProperty(this, name, {
 		value: value,
 		enumerable: true,
+		writable: false,
 	})
 }
 
@@ -126,13 +134,6 @@ instance.prototype.rgbRev = (dec) => {
 		g: (dec & 0x00ff00) >> 8,
 		b: dec & 0x0000ff,
 	}
-}
-
-// Update instance health, levels: null = unknown, 0 = ok, 1 = warning, 2 = error
-instance.prototype.log = function (level, info) {
-	var self = this
-
-	self.system.sendLog(level, info)
 }
 
 // Update instance health, levels: null = unknown, 0 = ok, 1 = warning, 2 = error

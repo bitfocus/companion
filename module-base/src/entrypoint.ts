@@ -83,9 +83,6 @@ export function runEntrypoint(factory: InstanceConstructor): void {
 				throw new Error('Failed to find the package.json for @companion-module/base')
 			if (!pkgJson.version) throw new Error('Missing version field in the package.json for @companion-module/base')
 
-			const modulePath = process.env.MODULE_FILE
-			if (!modulePath) throw new Error('Module initialise is missing MODULE_FILE')
-
 			await runEntrypointInner(factory, pkgJson.version)
 		} catch (e: any) {
 			console.error(`Failed to startup module:`)

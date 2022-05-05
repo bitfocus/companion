@@ -30,16 +30,17 @@ module.exports = {
 		ssh2: 'commonjs2 ssh2',
 		'cpu-features': 'commonjs2 cpu-features',
 		'node-ssdp': 'commonjs2 node-ssdp',
+		serialport: 'commonjs2 fake-module-this-isnt-real',
 	},
 	// experiments: {
 	// 	topLevelAwait: true,
 	// },
 	module: {
 		rules: [
-			{
-				test: /\.json$/,
-				type: 'asset/inline',
-			},
+			// {
+			// 	test: /\.json$/,
+			// 	type: 'asset/inline',
+			// },
 			// {
 			// 	test: /BUILD$/,
 			// 	type: 'asset/resource',

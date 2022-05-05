@@ -33,7 +33,7 @@ function wrapActionSubscriptionCallback(
 			cb({
 				id: event.actionId,
 				action: id,
-				options: event.options,
+				options: event.options ?? {},
 			})
 	} else {
 		return undefined
@@ -49,7 +49,7 @@ function wrapFeedbackSubscriptionCallback(
 			cb({
 				id: event.feedbackId,
 				type: id,
-				options: event.options,
+				options: event.options ?? {},
 			})
 	} else {
 		return undefined
@@ -151,7 +151,7 @@ export class FakeSystem extends EventEmitter {
 							{
 								id: event.actionId,
 								action: id,
-								options: event.options,
+								options: event.options ?? {},
 							},
 							{
 								deviceId: event.deviceId,
@@ -165,7 +165,7 @@ export class FakeSystem extends EventEmitter {
 				newActions[id] = literal<Complete<ModuleApi.CompanionAction>>({
 					name: action.label,
 					description: action.description,
-					options: action.options,
+					options: action.options ?? [],
 					callback: cb,
 					subscribe: wrapActionSubscriptionCallback(id, action.subscribe),
 					unsubscribe: wrapActionSubscriptionCallback(id, action.unsubscribe),
@@ -196,7 +196,7 @@ export class FakeSystem extends EventEmitter {
 									{
 										id: event.feedbackId,
 										type: id,
-										options: event.options,
+										options: event.options ?? {},
 									},
 									event.rawBank,
 									null
@@ -210,7 +210,7 @@ export class FakeSystem extends EventEmitter {
 							type: 'boolean',
 							name: feedback.label,
 							description: feedback.description,
-							options: feedback.options,
+							options: feedback.options ?? [],
 							defaultStyle: feedback.style,
 							callback: cb,
 							subscribe: wrapFeedbackSubscriptionCallback(id, feedback.subscribe),
@@ -228,7 +228,7 @@ export class FakeSystem extends EventEmitter {
 									{
 										id: event.feedbackId,
 										type: id,
-										options: event.options,
+										options: event.options ?? {},
 									},
 									event.rawBank,
 									{
@@ -247,7 +247,7 @@ export class FakeSystem extends EventEmitter {
 							type: 'advanced',
 							name: feedback.label,
 							description: feedback.description,
-							options: feedback.options,
+							options: feedback.options ?? [],
 							callback: cb,
 							subscribe: wrapFeedbackSubscriptionCallback(id, feedback.subscribe),
 							unsubscribe: wrapFeedbackSubscriptionCallback(id, feedback.unsubscribe),
@@ -269,7 +269,7 @@ export class FakeSystem extends EventEmitter {
 		function convertPresetAction(action: CompanionPreset['actions'][0]): Complete<ModuleApi.CompanionPresetAction> {
 			return {
 				actionId: action.action,
-				options: action.options,
+				options: action.options ?? {},
 			}
 		}
 		function convertPresetFeedback(
@@ -277,7 +277,7 @@ export class FakeSystem extends EventEmitter {
 		): Complete<ModuleApi.CompanionPresetFeedback> {
 			return {
 				feedbackId: feedback.type,
-				options: feedback.options,
+				options: feedback.options ?? {},
 				style: feedback.style,
 			}
 		}
@@ -318,9 +318,9 @@ export class FakeSystem extends EventEmitter {
 							...convertPresetBank('step', preset.bank),
 							step_auto_progress: true,
 						},
-						feedbacks: preset.feedbacks.map(convertPresetFeedback),
+						feedbacks: preset.feedbacks?.map(convertPresetFeedback) ?? [],
 						action_sets: {
-							[0]: preset.actions.map(convertPresetAction),
+							[0]: preset.actions?.map(convertPresetAction) ?? [],
 							[1]: preset.release_actions?.map(convertPresetAction) ?? [],
 						},
 					})
@@ -331,9 +331,9 @@ export class FakeSystem extends EventEmitter {
 						category: preset.category,
 						label: preset.label,
 						bank: convertPresetBank('press', preset.bank),
-						feedbacks: preset.feedbacks.map(convertPresetFeedback),
+						feedbacks: preset.feedbacks?.map(convertPresetFeedback) ?? [],
 						action_sets: {
-							down: preset.actions.map(convertPresetAction),
+							down: preset.actions?.map(convertPresetAction) ?? [],
 							up: preset.release_actions?.map(convertPresetAction) ?? [],
 						},
 					})
