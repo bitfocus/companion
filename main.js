@@ -147,5 +147,12 @@ if (!machineId) {
 
 const registry = new Registry(configDir, machineId)
 
-await registry.ready(cli.flags.extraModulePath, adminIp, cli.flags.adminPort)
-console.log('Started')
+registry
+	.ready(cli.flags.extraModulePath, adminIp, cli.flags.adminPort)
+	.then(() => {
+		console.log('Started')
+	})
+	.catch((e) => {
+		console.error(`Startup failed: ${e}`)
+		process.exit(1)
+	})
