@@ -4,6 +4,7 @@ package.json
 lib/module/*
 lib/resources/font.js
 electron-output/
+dist/
 webui/build/
 webui/public/legacy
 /LICENSE.md
@@ -12,6 +13,7 @@ docs/*
 module-legacy/image/Font.js
 module-legacy/manifests
 module-legacy/dist
+module-legacy/entrypoints
 
 module-base/dist
 module-local-dev
