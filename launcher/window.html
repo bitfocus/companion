@@ -15,22 +15,27 @@
 			}
 
 			body {
-				background-color: rgba(35, 35, 35, 1);
 				color: white;
 				font-family: 'Helvetica';
 				overflow: hidden;
+				background-color: #d40215;
 			}
 
 			#wrap {
 				width: 100%;
-				margin-top: 20px;
-				display: block;
 				text-align: center;
+				display: grid;
+				grid-auto-flow: row;
+				grid-template-rows: auto auto auto;
+			}
+
+			#topwrap {
+				background-color: rgba(35, 35, 35, 1);
+				padding: 30px 20px;
 			}
 
 			#logo {
 				width: 100px;
-				padding-top: 20px;
 				padding-bottom: 10px;
 				text-align: center;
 				user-select: none;
@@ -116,7 +121,7 @@
 
 			#meh {
 				background-color: #b00013;
-				margin-top: 30px;
+				/* margin-top: 30px; */
 				padding-bottom: 10px;
 			}
 
@@ -134,7 +139,7 @@
 				-webkit-app-region: no-drag !important;
 			}
 
-			#ifp {
+			#http_port {
 				width: 50px;
 				text-align: center;
 				border-bottom-left-radius: 3px;
@@ -148,7 +153,7 @@
 				border-right-width: 1px;
 			}
 
-			#ifpb {
+			#http_port_button {
 				cursor: pointer;
 				border: 1px solid #ccc;
 				background-color: #b00013;
@@ -162,11 +167,11 @@
 				font-size: 13px;
 			}
 
-			#ifpb:hover {
+			#http_port_button:hover {
 				background-color: #666;
 			}
 
-			#ift {
+			input[type="checkbox"] {
 				color: white;
 				-webkit-appearance: checkbox;
 				cursor: pointer;
@@ -187,9 +192,6 @@
 				padding-bottom: 2px;
 			}
 
-			#bottombuttons {
-				padding-bottom: 100px;
-			}
 		</style>
 		<div id="wrap">
 			<div id="topwrap">
@@ -203,10 +205,10 @@
 			<div id="actions">
 				<div id="guitext">GUI Interface</div>
 				<select id="ifs"></select>
-				<p><input type="text" maxlength="5" id="ifp" value="8000" /><input type="button" id="ifpb" value="Change" /></p>
+				<p><input type="text" maxlength="5" id="http_port" value="8000" /><input type="button" id="http_port_button" value="Change" /></p>
 				<p>
-					<input type="checkbox" id="ift" />
-					<label for="ift" style="font-size: 12px">Start minimized</label>
+					<input type="checkbox" id="start_minimized" />
+					<label for="start_minimized" style="font-size: 12px">Start minimized</label>
 				</p>
 				<div id="bottombuttons">
 					<input type="button" class="dobutton" value="Launch GUI" id="launch" />

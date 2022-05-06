@@ -181,10 +181,10 @@ if (!lock) {
 		window = new BrowserWindow({
 			show: false,
 			width: 400,
-			height: 470,
+			height: 600,
 			minHeight: 600,
 			minWidth: 440,
-			maxHeight: 380,
+			// maxHeight: 380,
 			frame: false,
 			resizable: false,
 			icon: path.join(__dirname, './assets/icon.png'),
@@ -195,6 +195,8 @@ if (!lock) {
 				preload: path.join(__dirname, './window-preload.js'),
 			},
 		})
+
+		window.webContents.openDevTools()
 
 		window
 			.loadURL(
@@ -207,6 +209,13 @@ if (!lock) {
 			.then(() => {
 				window.webContents.setBackgroundThrottling(false)
 			})
+
+		ipcMain.on('setHeight', (e, height) => {
+			console.log('height', height)
+			const oldSize = window.getSize()
+			// window.setSize(oldSize[0], height, false)
+			window.setBounds({ width: oldSize[0], height: height })
+		})
 
 		ipcMain.on('info', () => {
 			sendAppInfo()

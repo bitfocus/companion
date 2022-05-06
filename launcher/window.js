@@ -15,18 +15,18 @@ api.receive('info', function (config, info) {
 	document.getElementById('url').innerHTML = info.appURL
 	document.getElementById('model').innerHTML = `Companion v${info.appVersion} (${info.appBuild})`
 
-	document.getElementById('ift').checked = config.start_minimised
-	document.getElementById('ifp').value = config.http_port
+	document.getElementById('start_minimized').checked = config.start_minimised
+	document.getElementById('http_port').value = config.http_port
 })
 api.send('info')
 
-document.getElementById('ifpb').addEventListener('click', function () {
-	var e = document.getElementById('ifp')
+document.getElementById('http_port_button').addEventListener('click', function () {
+	var e = document.getElementById('http_port')
 	api.send('launcher-set-http-port', e.value)
 })
 
-document.getElementById('ift').addEventListener('click', function () {
-	var e = document.getElementById('ift')
+document.getElementById('start_minimized').addEventListener('click', function () {
+	var e = document.getElementById('start_minimized')
 	api.send('launcher-set-start-minimised', e.checked)
 })
 
@@ -46,3 +46,12 @@ document.getElementById('ifs').addEventListener('change', function () {
 })
 
 api.send('network-interfaces:get')
+
+function handleResize() {
+	api.send('setHeight', document.querySelector('#wrap').offsetHeight)
+}
+
+// Listen to the window contents resizing, and update the window to match
+const resizeObserver = new ResizeObserver(() => handleResize())
+resizeObserver.observe(document.querySelector('#wrap'))
+handleResize()
