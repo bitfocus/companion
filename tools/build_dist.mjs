@@ -173,6 +173,9 @@ await fs.writeFile(
 await fs.copyFile('yarn.lock', 'dist/yarn.lock') // use the same yarn.lock file, to keep deps as similar as possible
 await $`yarn --cwd dist install`
 
+// Build legacy modules
+await $`yarn --cwd module-legacy build`
+
 // if (!platform) {
 // 	// If for our own platform, make sure the correct deps are installed
 // 	await $`electron-builder install-app-deps`
