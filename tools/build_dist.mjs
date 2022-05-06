@@ -174,7 +174,7 @@ await fs.copyFile('yarn.lock', 'dist/yarn.lock') // use the same yarn.lock file,
 await $`yarn --cwd dist install`
 
 // Build legacy modules
-await $`yarn --cwd module-legacy build`
+await $`yarn --cwd module-legacy generate-manifests`
 
 // if (!platform) {
 // 	// If for our own platform, make sure the correct deps are installed

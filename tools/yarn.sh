@@ -60,7 +60,6 @@ yarn --cwd module-base build
 
 heading "Legacy Modules"
 yarn --frozen-lockfile --cwd module-legacy
-yarn --cwd module-legacy build
 echo "Warning: This next step can take many minutes to run"
 yarn --cwd module-legacy generate-manifests
 echo
