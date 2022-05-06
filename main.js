@@ -18,6 +18,7 @@ const cli = meow(
 	  --admin-interface       Set the interface the admin ui should bind to. The first ip on this interface will be used (default: '')
 	  --admin-address         Set the ip address the admin ui should bind to (default: 0.0.0.0)
 	  --config-dir            Use the specified directory for storing configuration. The default path varies by system, and is different to 2.2 (the old path will be used if existing config is found)
+	  --extra-module-path     Search an extra directory for modules to load
 `,
 	{
 		importMeta: { url: import.meta.url },
@@ -42,6 +43,9 @@ const cli = meow(
 			},
 			machineId: {
 				// Note: intentionally omitted from the docs, as it should only be set by electron
+				type: 'string',
+			},
+			extraModulePath: {
 				type: 'string',
 			},
 		},
@@ -143,5 +147,5 @@ if (!machineId) {
 
 const registry = new Registry(configDir, machineId)
 
-await registry.ready(adminIp, cli.flags.adminPort)
+await registry.ready(cli.flags.extraModulePath, adminIp, cli.flags.adminPort)
 console.log('Started')
