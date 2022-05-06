@@ -66,6 +66,8 @@ jobs:
           # try and avoid timeout errors
           yarn config set network-timeout 100000 -g
 
+          rm '.node-version' .nvmrc
+
           yarn update
 
           yarn build:sentry
@@ -118,6 +120,8 @@ jobs:
         run: |
           # try and avoid timeout errors
           yarn config set network-timeout 100000 -g
+
+          rm '.node-version' .nvmrc
 
           yarn update
 
