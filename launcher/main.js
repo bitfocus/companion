@@ -9,6 +9,8 @@ const electron = require('electron')
 const { nanoid } = require('nanoid')
 const respawn = require('respawn')
 const stripAnsi = require('strip-ansi')
+const chokidar = require('chokidar')
+const debounceFn = require('debounce-fn')
 
 // Ensure there isn't another instance of companion running already
 var lock = app.requestSingleInstanceLock()
@@ -67,6 +69,9 @@ if (!lock) {
 		http_port: 8000,
 		bind_ip: '127.0.0.1',
 		start_minimised: false,
+
+		enable_developer: false,
+		dev_modules_path: '',
 	}
 
 	try {
@@ -174,8 +179,56 @@ if (!lock) {
 		}
 	}
 
-	var window
-	var tray = null
+	let window
+	let tray = null
+
+	const triggerRestart = debounceFn(
+		() => {
+			console.log('trigger companion restart')
+
+			child?.stop(() => child?.start())
+		},
+		{
+			wait: 500,
+			before: false,
+			after: true,
+		}
+	)
+
+	let watcher = null
+	let pendingWatcher = null
+	function restartWatcher() {
+		if (pendingWatcher) return
+
+		Promise.resolve().then(async () => {
+			try {
+				pendingWatcher = true
+				try {
+					// Stop the existing watcher
+					await watcher?.close()
+				} catch (e) {
+					console.log(`Failed to stop watcher: ${e}`)
+				}
+
+				// Check developer mode is enabled
+				if (!uiConfig.get('enable_developer')) return
+
+				const newPath = uiConfig.get('dev_modules_path')
+				if (newPath && (await fs.pathExists(newPath))) {
+					watcher = chokidar.watch(newPath, {
+						ignoreInitial: true,
+					})
+
+					watcher.on('all', triggerRestart)
+				}
+			} catch (e) {
+				console.log(`Failed to restart watcher: ${e}`)
+			} finally {
+				pendingWatcher = false
+			}
+		})
+	}
+	restartWatcher()
 
 	function createWindow() {
 		window = new BrowserWindow({
@@ -196,7 +249,7 @@ if (!lock) {
 			},
 		})
 
-		window.webContents.openDevTools()
+		// window.webContents.openDevTools()
 
 		window
 			.loadURL(
@@ -211,7 +264,7 @@ if (!lock) {
 			})
 
 		ipcMain.on('setHeight', (e, height) => {
-			console.log('height', height)
+			// console.log('height', height)
 			const oldSize = window.getSize()
 			// window.setSize(oldSize[0], height, false)
 			window.setBounds({ width: oldSize[0], height: height })
@@ -223,6 +276,8 @@ if (!lock) {
 
 		ipcMain.on('launcher-close', () => {
 			if (child) {
+				if (watcher) watcher.close().catch(() => console.error('Failed to stop'))
+
 				child.shouldRestart = false
 				child.child.send({
 					messageType: 'exit',
@@ -255,6 +310,40 @@ if (!lock) {
 		ipcMain.on('launcher-set-start-minimised', (e, msg) => {
 			console.log('changed start minimized:', msg)
 			uiConfig.set('start_minimised', msg)
+		})
+
+		ipcMain.on('toggle-developer-settings', (e, msg) => {
+			console.log('toggle developer settings')
+			uiConfig.set('enable_developer', !uiConfig.get('enable_developer'))
+
+			sendAppInfo()
+			triggerRestart()
+			restartWatcher()
+		})
+
+		ipcMain.on('pick-developer-modules-path', () => {
+			console.log('pick dev modules path')
+			electron.dialog
+				.showOpenDialog(window, {
+					properties: ['openDirectory'],
+				})
+				.then((r) => {
+					if (!r.canceled && r.filePaths.length > 0) {
+						uiConfig.set('dev_modules_path', r.filePaths[0])
+
+						sendAppInfo()
+						triggerRestart()
+						restartWatcher()
+					}
+				})
+		})
+		ipcMain.on('clear-developer-modules-path', () => {
+			console.log('clear dev modules path')
+			uiConfig.set('dev_modules_path', '')
+
+			sendAppInfo()
+
+			restartWatcher()
 		})
 
 		ipcMain.on('network-interfaces:get', () => {
@@ -355,12 +444,12 @@ if (!lock) {
 			})
 			.then((v) => {
 				if (v.response === 0) {
+					if (watcher) watcher.close().catch(() => console.error('Failed to stop'))
+
 					if (child) {
 						child.shouldRestart = false
 						child.child.send({
 							messageType: 'exit',
-							ip,
-							port,
 						})
 					}
 				}
@@ -436,19 +525,18 @@ if (!lock) {
 			}
 		})
 
-		const ip = uiConfig.get('bind_ip')
-		const port = uiConfig.get('http_port')
-
 		const nodeBinPath = path.join(companionRootPath, 'node-runtime/bin/node')
 		const nodeBin = app.isPackaged || fs.pathExistsSync(nodeBinPath) ? nodeBinPath : 'node'
 		child = respawn(
-			[
+			() => [
+				// Build a new command string for each start
 				nodeBin,
 				path.join(companionRootPath, 'main.js'),
 				`--machineId="${machineId}"`,
 				`--config-dir="${configDir}"`,
-				`--admin-port=${port}`,
-				`--admin-addrss=${ip}`,
+				`--admin-port=${uiConfig.get('http_port')}`,
+				`--admin-address=${uiConfig.get('bind_ip')}`,
+				uiConfig.get('enable_developer') ? `--extra-module-path="${uiConfig.get('dev_modules_path')}"` : undefined,
 			],
 			{
 				name: `Companion process`,
@@ -478,6 +566,8 @@ if (!lock) {
 			sendAppInfo()
 
 			if (!child || !child.shouldRestart) {
+				if (watcher) watcher.close().catch(() => console.error('Failed to stop'))
+
 				app.exit()
 			} else {
 				child.start()
@@ -507,6 +597,8 @@ if (!lock) {
 
 				sendAppInfo()
 			} else if (data.messageType === 'exit') {
+				if (watcher) watcher.close().catch(() => console.error('Failed to stop'))
+
 				if (data.restart) {
 					// Do nothing, autorestart will kick in
 					if (child) child.shouldRestart = true
