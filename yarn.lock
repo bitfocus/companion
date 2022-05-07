@@ -1619,10 +1619,10 @@ at-least-node@^1.0.0:
   resolved "https://registry.yarnpkg.com/at-least-node/-/at-least-node-1.0.0.tgz#602cd4b46e844ad4effc92a8011a3c46e0238dc2"
   integrity sha512-+q/t7Ekv1EDY2l6Gda6LLiX14rU9TV20Wa3ofeQmwPFZbOMo9DXrLbOjFaaclkXKWidIaopwAObQDqwWtGUjqg==
 
-atem-connection@3.0.0-nightly-latest-20220406-175751-daa0a0e.0:
-  version "3.0.0-nightly-latest-20220406-175751-daa0a0e.0"
-  resolved "https://registry.yarnpkg.com/atem-connection/-/atem-connection-3.0.0-nightly-latest-20220406-175751-daa0a0e.0.tgz#32c6214fe30a7affd25734972f19aefac4595cbd"
-  integrity sha512-sgLeSPXhw1abRNzCCp59ZMl3Z+W85Chx59U7tEtSm/6bI50TnBc2Z+kUvNu3+2eMlydQjvxRP6mlIVvYy2C1Uw==
+atem-connection@3.0.0-nightly-latest-20220507-145153-f8145aa.0:
+  version "3.0.0-nightly-latest-20220507-145153-f8145aa.0"
+  resolved "https://registry.yarnpkg.com/atem-connection/-/atem-connection-3.0.0-nightly-latest-20220507-145153-f8145aa.0.tgz#ab3f7e72d7cb1a081624e0c2e31c4948a49cccd6"
+  integrity sha512-Hn1yvV4QiCmAM7kPl0Z3r0QbYovGewONgtNaoXvbI1Y6zaTxvUzDqeG/ZwA03+J+3ejOEJa0m+hhn01ZXZELkQ==
   dependencies:
     debug "^4.3.4"
     eventemitter3 "^4.0.7"
@@ -2684,13 +2684,13 @@ commist@^1.0.0:
   version "1.0.1"
   resolved "https://codeload.github.com/bitfocus/companion-module-blackdiamondvideo-phantom800/tar.gz/5c7a51b8be2edfa24d2ed755249cec1e0a3b357d"
 
-"companion-module-bmd-atem@github:bitfocus/companion-module-bmd-atem#v2.14.0":
-  version "2.14.0"
-  resolved "https://codeload.github.com/bitfocus/companion-module-bmd-atem/tar.gz/fb79693add599b14cde29e4cf3302ed5df523a2e"
+"companion-module-bmd-atem@github:bitfocus/companion-module-bmd-atem#v2.15.0":
+  version "2.15.0"
+  resolved "https://codeload.github.com/bitfocus/companion-module-bmd-atem/tar.gz/6b9660a12146d1e0951547095519102a4abc5efe"
   dependencies:
     "@types/multicast-dns" "^7.2.1"
     "@types/node" "^14.18.12"
-    atem-connection "3.0.0-nightly-latest-20220406-175751-daa0a0e.0"
+    atem-connection "3.0.0-nightly-latest-20220507-145153-f8145aa.0"
     multicast-dns "^7.2.3"
     type-fest "^2.12.1"
 
