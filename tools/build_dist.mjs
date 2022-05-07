@@ -8,13 +8,6 @@ import { pipeline } from 'node:stream'
 import { promisify } from 'node:util'
 const streamPipeline = promisify(pipeline)
 
-if (!$.shell) {
-	// We need a bash shell, on windows, it can commonly be found at:
-	if (process.platform === 'win32') {
-		$.shell = 'C:\\Program Files\\Git\\git-bash.exe'
-	}
-}
-
 /**
  * @param {String} sourceDir: /some/folder/to/compress
  * @param {String} outPath: /path/to/created.zip
