@@ -11,7 +11,7 @@ import type {
 import type InstanceSkel = require('../instance_skel')
 import { assertNever, literal, LogLevel } from '@companion-module/base'
 import { ServiceRest } from './rest.js'
-import debug from 'debug'
+import createDebug from 'debug'
 
 // @ts-expect-error Not typescript
 import Image from '../../lib/Graphics/Image.js'
@@ -57,7 +57,7 @@ function wrapFeedbackSubscriptionCallback(
 }
 
 export class FakeSystem extends EventEmitter {
-	readonly #debug: debug.Debugger
+	readonly #debug: createDebug.Debugger
 	#rest: ServiceRest
 
 	readonly Image = Image
@@ -65,7 +65,7 @@ export class FakeSystem extends EventEmitter {
 	constructor(public readonly parent: ModuleApi.InstanceBase<any>, moduleName: string) {
 		super()
 
-		this.#debug = debug(`legacy/${moduleName}/system`)
+		this.#debug = createDebug(`legacy/${moduleName}/system`)
 		this.#rest = new ServiceRest(this, moduleName)
 	}
 
