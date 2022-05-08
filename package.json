@@ -84,6 +84,7 @@
 		"shortid": "^2.2.16",
 		"socket.io": "^4.5.0",
 		"socketcluster-client": "^16.0.2",
+		"supports-color": "^9.2.2",
 		"systeminformation": "^5.11.9",
 		"uuid": "^8.3.2",
 		"websocket": "^1.0.34",
