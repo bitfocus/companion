@@ -1,4 +1,8 @@
 #!/usr/bin/env node
+// Setup logging before anything else runs
+import Logging from './lib/Log/Controller.js'
+
+// Now we can think about startup
 import meow from 'meow'
 import Registry from './lib/Registry.js'
 import os from 'os'
@@ -48,6 +52,9 @@ const cli = meow(
 			extraModulePath: {
 				type: 'string',
 			},
+			logToFile: {
+				type: 'string',
+			},
 		},
 	}
 )
@@ -66,6 +73,10 @@ if (cli.flags.listInterfaces) {
 	}
 
 	process.exit(0)
+}
+
+if (cli.flags.logToFile) {
+	Logging.setupLogToFile(cli.flags.logToFile)
 }
 
 if (isNaN(cli.flags.adminPort)) {
@@ -153,6 +164,6 @@ registry
 		console.log('Started')
 	})
 	.catch((e) => {
-		console.error(`Startup failed: ${e}`)
+		console.error(`Startup failed: ${e} ${e.stack}`)
 		process.exit(1)
 	})

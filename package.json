@@ -87,6 +87,7 @@
 		"systeminformation": "^5.11.9",
 		"uuid": "^8.3.2",
 		"websocket": "^1.0.34",
+		"winston": "^3.7.2",
 		"xkeys": "^2.3.3"
 	},
 	"collective": {
