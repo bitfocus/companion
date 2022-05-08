@@ -1161,6 +1161,13 @@
   resolved "https://registry.yarnpkg.com/@types/verror/-/verror-1.10.5.tgz#2a1413aded46e67a1fe2386800e291123ed75eb1"
   integrity sha512-9UjMCHK5GPgQRoNbqdLIAvAy0EInuiqbW0PBMtVP6B5B2HQJlvoJHM+KodPZMEjOa5VkSc+5LH7xy+cUzQdmHw==
 
+"@types/websocket@^1.0.5":
+  version "1.0.5"
+  resolved "https://registry.yarnpkg.com/@types/websocket/-/websocket-1.0.5.tgz#3fb80ed8e07f88e51961211cd3682a3a4a81569c"
+  integrity sha512-NbsqiNX9CnEfC1Z0Vf4mE1SgAJ07JnRYcNex7AJ9zAVzmiGHmjKFEk7O4TJIsgv2B1sLEb6owKFZrACwdYngsQ==
+  dependencies:
+    "@types/node" "*"
+
 "@types/ws@^8.5.3":
   version "8.5.3"
   resolved "https://registry.yarnpkg.com/@types/ws/-/ws-8.5.3.tgz#7d25a1ffbecd3c4f2d35068d0b283c037003274d"
@@ -3993,6 +4000,14 @@ commist@^1.0.0:
   resolved "https://codeload.github.com/bitfocus/companion-module-vdo-ninja/tar.gz/ca187652d15fd4deff42a794aa8f6c372591c489"
   dependencies:
     ws "^7.2.1"
+
+"companion-module-ventuz-director@github:bitfocus/companion-module-ventuz-director#v1.0.0":
+  version "1.0.0"
+  resolved "https://codeload.github.com/bitfocus/companion-module-ventuz-director/tar.gz/dfbcda1dd44389c673d310965f1c1c984069d51f"
+  dependencies:
+    "@types/websocket" "^1.0.5"
+    typescript "~4.5"
+    websocket "^1.0.34"
 
 "companion-module-vicreo-hotkey@github:bitfocus/companion-module-vicreo-hotkey#v2.0.14":
   version "2.0.14"
