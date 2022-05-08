@@ -56,7 +56,6 @@
 		"@sentry/node": "^6.19.4",
 		"@sentry/tracing": "^6.19.4",
 		"archiver": "^5.3.1",
-		"debug": "^4.3.4",
 		"emberplus-connection": "^0.1.2",
 		"env-paths": "^3.0.0",
 		"express": "^4.17.3",

@@ -9,9 +9,8 @@ import type {
 	CompanionPreset,
 } from '../instance_skel_types'
 import type InstanceSkel = require('../instance_skel')
-import { assertNever, literal, LogLevel } from '@companion-module/base'
+import { assertNever, literal } from '@companion-module/base'
 import { ServiceRest } from './rest.js'
-import createDebug from 'debug'
 
 // @ts-expect-error Not typescript
 import Image from '../../lib/Graphics/Image.js'
@@ -57,7 +56,6 @@ function wrapFeedbackSubscriptionCallback(
 }
 
 export class FakeSystem extends EventEmitter {
-	readonly #debug: createDebug.Debugger
 	#rest: ServiceRest
 
 	readonly Image = Image
@@ -65,7 +63,6 @@ export class FakeSystem extends EventEmitter {
 	constructor(public readonly parent: ModuleApi.InstanceBase<any>, moduleName: string) {
 		super()
 
-		this.#debug = createDebug(`legacy/${moduleName}/system`)
 		this.#rest = new ServiceRest(this, moduleName)
 	}
 
@@ -83,10 +80,10 @@ export class FakeSystem extends EventEmitter {
 			case 'info':
 			case 'warn':
 			case 'error':
-				this.parent.userLog(level, info)
+				this.parent.log(level, info)
 				break
 			default:
-				this.parent.userLog('info', info)
+				this.parent.log('info', info)
 				assertNever(level)
 				break
 		}
@@ -134,7 +131,7 @@ export class FakeSystem extends EventEmitter {
 
 	oscSend: InstanceSkel<any>['oscSend'] = (host, port, path, args) => {
 		this.parent.oscSend(host, port, path, args).catch((e) => {
-			this.#debug(`oscSend failed: ${e?.message ?? e}`)
+			this.parent.log('debug', `oscSend failed: ${e?.message ?? e}`)
 		})
 	}
 
@@ -174,7 +171,7 @@ export class FakeSystem extends EventEmitter {
 		}
 
 		this.parent.setActionDefinitions(newActions).catch((e) => {
-			this.#debug(`setActionDefinitions failed: ${e?.message ?? e}`)
+			this.parent.log('warn', `setActionDefinitions failed: ${e?.message ?? e}`)
 		})
 	}
 
@@ -259,7 +256,7 @@ export class FakeSystem extends EventEmitter {
 		}
 
 		this.parent.setFeedbackDefinitions(newFeedbacks).catch((e) => {
-			this.#debug(`setFeedbackDefinitions failed: ${e?.message ?? e}`)
+			this.parent.log('warn', `setFeedbackDefinitions failed: ${e?.message ?? e}`)
 		})
 	}
 
@@ -346,7 +343,7 @@ export class FakeSystem extends EventEmitter {
 
 	saveConfig = (config: any) => {
 		this.parent.saveConfig(config).catch((e) => {
-			this.#debug(`saveConfig failed: ${e?.message ?? e}`)
+			this.parent.log('warn', `saveConfig failed: ${e?.message ?? e}`)
 		})
 	}
 
@@ -361,7 +358,7 @@ export class FakeSystem extends EventEmitter {
 		}
 
 		this.parent.setVariableDefinitions(newVariables).catch((e) => {
-			this.#debug(`setVariableDefinitions failed: ${e?.message ?? e}`)
+			this.parent.log('warn', `setVariableDefinitions failed: ${e?.message ?? e}`)
 		})
 	}
 
@@ -392,7 +389,7 @@ export class FakeSystem extends EventEmitter {
 			.parseVariablesInString(text)
 			.then((res) => cb(res))
 			.catch((e) => {
-				this.#debug(`parseVariables failed: ${e?.message ?? e}`)
+				this.parent.log('warn', `parseVariables failed: ${e?.message ?? e}`)
 			})
 	}
 }
