@@ -60,7 +60,6 @@
 		"env-paths": "^3.0.0",
 		"express": "^4.17.3",
 		"express-serve-zip": "^1.0.1",
-		"file-stream-rotator": "^0.6.1",
 		"find-process": "1.4.7",
 		"fs-extra": "^10.0.1",
 		"get-port": "^6.1.2",
@@ -88,6 +87,7 @@
 		"uuid": "^8.3.2",
 		"websocket": "^1.0.34",
 		"winston": "^3.7.2",
+		"winston-daily-rotate-file": "^4.6.1",
 		"xkeys": "^2.3.3"
 	},
 	"collective": {

@@ -53,7 +53,7 @@ const cli = meow(
 				type: 'string',
 			},
 			logToFile: {
-				type: 'string',
+				type: 'boolean',
 			},
 		},
 	}
@@ -73,10 +73,6 @@ if (cli.flags.listInterfaces) {
 	}
 
 	process.exit(0)
-}
-
-if (cli.flags.logToFile) {
-	Logging.setupLogToFile(cli.flags.logToFile)
 }
 
 if (isNaN(cli.flags.adminPort)) {
@@ -130,6 +126,10 @@ try {
 } catch (e) {
 	console.error(`Failed to create config directory. Do you have the correct permissions?`)
 	process.exit(1)
+}
+
+if (cli.flags.logToFile) {
+	Logging.setupLogToFile(configDir)
 }
 
 let machineId = cli.flags.machineId

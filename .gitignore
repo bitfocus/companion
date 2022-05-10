@@ -1,4 +1,5 @@
 BUILD
+SENTRY
 .DS_Store
 *-x64/*
 package-lock.json
