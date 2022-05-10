@@ -26,7 +26,7 @@ export function InternalInstanceField(option, isOnBank, value, setValue) {
 		case 'internal:bank':
 			return <InternalBankDropdown isOnBank={isOnBank} value={value} setValue={setValue} />
 		case 'internal:custom_variable':
-			return <InternalCustomVariableDropdown value={value} setValue={setValue} />
+			return <InternalCustomVariableDropdown value={value} setValue={setValue} includeNone={option.includeNone} />
 		case 'internal:variable':
 			return <InternalVariableDropdown value={value} setValue={setValue} defaultVal={option.default} />
 		case 'internal:surface_serial':
@@ -127,10 +127,17 @@ function InternalBankDropdown({ isOnBank, value, setValue }) {
 	)
 }
 
-function InternalCustomVariableDropdown({ value, setValue }) {
+function InternalCustomVariableDropdown({ value, setValue, includeNone }) {
 	const context = useContext(CustomVariableDefinitionsContext)
 	const choices = useMemo(() => {
 		const choices = []
+
+		if (includeNone) {
+			choices.push({
+				id: '',
+				label: 'None',
+			})
+		}
 
 		for (const [id, info] of Object.entries(context)) {
 			choices.push({
@@ -140,7 +147,7 @@ function InternalCustomVariableDropdown({ value, setValue }) {
 		}
 
 		return choices
-	}, [context])
+	}, [context, includeNone])
 
 	return (
 		<DropdownInputField
