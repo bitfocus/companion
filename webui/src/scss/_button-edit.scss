@@ -95,3 +95,46 @@ table.feedback-table {
 		}
 	}
 }
+
+.add-dropdown-wrapper {
+	display: grid;
+	grid-auto-flow: column;
+	grid-template-columns: 1fr auto;
+}
+
+.add-browse-card {
+	.card-header {
+		cursor: pointer;
+		font-weight: bold;
+		// background-color: #ccc;
+
+		&:hover {
+			text-decoration: underline;
+		}
+	}
+
+	.card-body {
+		padding: 0;
+	}
+
+	.table {
+		margin-bottom: 0;
+
+		td {
+			vertical-align: middle;
+		}
+
+		.add-count {
+			width: 7rem;
+		}
+
+		.item-label {
+			font-weight: bold;
+		}
+	}
+
+	p.no-entries {
+		padding: 0.75rem;
+		margin: 0;
+	}
+}

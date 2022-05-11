@@ -9,6 +9,7 @@ import Select from 'react-select'
 import { ActionTableRowOption } from './Table'
 import { useDrag, useDrop } from 'react-dnd'
 import { GenericConfirmModal } from '../../Components/GenericConfirmModal'
+import { AddActionsModal } from './AddModal'
 
 export function ActionsPanel({
 	page,
@@ -118,6 +119,13 @@ export function ActionsPanelInner({
 	emitOrder,
 	addAction,
 }) {
+	const addActionsRef = useRef(null)
+	const showAddModal = useCallback(() => {
+		if (addActionsRef.current) {
+			addActionsRef.current.show()
+		}
+	}, [])
+
 	const setValue = useCallback(
 		(actionId, key, val) => {
 			// The server doesn't repond to our change, so we assume it was ok
@@ -211,6 +219,7 @@ export function ActionsPanelInner({
 
 	return (
 		<>
+			<AddActionsModal ref={addActionsRef} addAction={addAction} />
 			<table className="table action-table">
 				<tbody>
 					{actions.map((a, i) => (
@@ -229,7 +238,12 @@ export function ActionsPanelInner({
 				</tbody>
 			</table>
 
-			<AddActionDropdown onSelect={addAction} placeholder={addPlaceholder} />
+			<div className="add-dropdown-wrapper">
+				<AddActionDropdown onSelect={addAction} placeholder={addPlaceholder} />
+				<CButton color="primary" variant="outline" onClick={showAddModal}>
+					Browse
+				</CButton>
+			</div>
 		</>
 	)
 }
@@ -434,6 +448,7 @@ function AddActionDropdown({ onSelect, placeholder }) {
 			placeholder={placeholder}
 			value={null}
 			onChange={innerChange}
+			// components={{ Option: CustomOption }}
 		/>
 	)
 }

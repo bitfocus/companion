@@ -10,6 +10,7 @@ import { useDrag, useDrop } from 'react-dnd'
 import { GenericConfirmModal } from '../../Components/GenericConfirmModal'
 import { DropdownInputField } from '../../Components'
 import { ButtonStyleConfigFields } from './ButtonStyleConfig'
+import { AddFeedbacksModal } from './AddModal'
 
 export const FeedbacksPanel = function ({
 	page,
@@ -28,6 +29,13 @@ export const FeedbacksPanel = function ({
 	const [feedbacks, setFeedbacks] = useState([])
 
 	const confirmModal = useRef()
+
+	const addFeedbacksRef = useRef(null)
+	const showAddModal = useCallback(() => {
+		if (addFeedbacksRef.current) {
+			addFeedbacksRef.current.show()
+		}
+	}, [])
 
 	// Ensure the correct data is loaded
 	useEffect(() => {
@@ -116,6 +124,8 @@ export const FeedbacksPanel = function ({
 		<>
 			<GenericConfirmModal ref={confirmModal} />
 
+			<AddFeedbacksModal ref={addFeedbacksRef} addFeedback={addFeedback} />
+
 			<table className="table feedback-table">
 				<tbody>
 					{feedbacks.map((a, i) => (
@@ -135,7 +145,12 @@ export const FeedbacksPanel = function ({
 				</tbody>
 			</table>
 
-			<AddFeedbackDropdown onSelect={addFeedback} />
+			<div className="add-dropdown-wrapper">
+				<AddFeedbackDropdown onSelect={addFeedback} />
+				<CButton color="primary" variant="outline" onClick={showAddModal}>
+					Browse
+				</CButton>
+			</div>
 		</>
 	)
 }
