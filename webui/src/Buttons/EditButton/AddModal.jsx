@@ -18,30 +18,19 @@ export const AddActionsModal = forwardRef(function AddActionsModal({ addAction }
 	const actions = useContext(ActionsContext)
 	const instances = useContext(InstancesContext)
 
-	const [selected, setSelected] = useState({})
 	const [show, setShow] = useState(false)
 
 	const doClose = useCallback(() => setShow(false), [])
 	const onClosed = useCallback(() => {
-		setSelected({})
 		setFilter('')
 	}, [])
-	const doAdd = useCallback(() => {
-		for (const [id, count] of Object.entries(selected)) {
-			for (let i = 0; i < count; i++) {
-				addAction(id, i)
-			}
-		}
-
-		setShow(false)
-	}, [selected, addAction])
 
 	useImperativeHandle(
 		ref,
 		() => ({
 			show() {
 				setShow(true)
-				setSelected({})
+				setFilter('')
 			},
 		}),
 		[]
@@ -57,20 +46,6 @@ export const AddActionsModal = forwardRef(function AddActionsModal({ addAction }
 		})
 	}, [])
 	const [filter, setFilter] = useState('')
-
-	const setSelected2 = useCallback(
-		(id, val) => {
-			setSelected((oldVal) => ({
-				...oldVal,
-				[id]: val,
-			}))
-		},
-		[setSelected]
-	)
-
-	const addEnabled = useMemo(() => {
-		return !!Object.values(selected).find((v) => typeof v === 'number' && v > 0)
-	}, [selected])
 
 	return (
 		<CModal show={show} onClose={doClose} onClosed={onClosed} size="lg" scrollable={true}>
@@ -96,17 +71,13 @@ export const AddActionsModal = forwardRef(function AddActionsModal({ addAction }
 						expanded={!!filter || expanded[instanceId]}
 						filter={filter}
 						doToggle={toggle}
-						selected={selected}
-						setSelected={setSelected2}
+						doAdd={addAction}
 					/>
 				))}
 			</CModalBody>
 			<CModalFooter>
 				<CButton color="secondary" onClick={doClose}>
-					Cancel
-				</CButton>
-				<CButton color="primary" onClick={doAdd} disabled={!addEnabled}>
-					Add
+					Done
 				</CButton>
 			</CModalFooter>
 		</CModal>
@@ -117,30 +88,19 @@ export const AddFeedbacksModal = forwardRef(function AddFeedbacksModal({ addFeed
 	const feedbacks = useContext(FeedbacksContext)
 	const instances = useContext(InstancesContext)
 
-	const [selected, setSelected] = useState({})
 	const [show, setShow] = useState(false)
 
 	const doClose = useCallback(() => setShow(false), [])
 	const onClosed = useCallback(() => {
-		setSelected({})
 		setFilter('')
 	}, [])
-	const doAdd = useCallback(() => {
-		for (const [id, count] of Object.entries(selected)) {
-			for (let i = 0; i < count; i++) {
-				addFeedback(id, i)
-			}
-		}
-
-		setShow(false)
-	}, [selected, addFeedback])
 
 	useImperativeHandle(
 		ref,
 		() => ({
 			show() {
 				setShow(true)
-				setSelected({})
+				setFilter('')
 			},
 		}),
 		[]
@@ -156,20 +116,6 @@ export const AddFeedbacksModal = forwardRef(function AddFeedbacksModal({ addFeed
 		})
 	}, [])
 	const [filter, setFilter] = useState('')
-
-	const setSelected2 = useCallback(
-		(id, val) => {
-			setSelected((oldVal) => ({
-				...oldVal,
-				[id]: val,
-			}))
-		},
-		[setSelected]
-	)
-
-	const addEnabled = useMemo(() => {
-		return !!Object.values(selected).find((v) => typeof v === 'number' && v > 0)
-	}, [selected])
 
 	return (
 		<CModal show={show} onClose={doClose} onClosed={onClosed} size="lg" scrollable={true}>
@@ -195,34 +141,20 @@ export const AddFeedbacksModal = forwardRef(function AddFeedbacksModal({ addFeed
 						expanded={!!filter || expanded[instanceId]}
 						filter={filter}
 						doToggle={toggle}
-						selected={selected}
-						setSelected={setSelected2}
+						doAdd={addFeedback}
 					/>
 				))}
 			</CModalBody>
 			<CModalFooter>
 				<CButton color="secondary" onClick={doClose}>
-					Cancel
-				</CButton>
-				<CButton color="primary" onClick={doAdd} disabled={!addEnabled}>
-					Add
+					Done
 				</CButton>
 			</CModalFooter>
 		</CModal>
 	)
 })
 
-function InstanceCollapse({
-	instanceId,
-	instanceInfo,
-	items,
-	itemName,
-	expanded,
-	filter,
-	doToggle,
-	selected,
-	setSelected,
-}) {
+function InstanceCollapse({ instanceId, instanceInfo, items, itemName, expanded, filter, doToggle, doAdd }) {
 	const doToggle2 = useCallback(() => doToggle(instanceId), [doToggle, instanceId])
 
 	const candidates = useMemo(() => {
@@ -266,13 +198,7 @@ function InstanceCollapse({
 						{candidates.length > 0 ? (
 							<table class="table">
 								{candidates.map((info) => (
-									<AddRow
-										key={info.fullId}
-										info={info}
-										id={info.fullId}
-										selected={selected[info.fullId]}
-										setSelected={setSelected}
-									/>
+									<AddRow key={info.fullId} info={info} id={info.fullId} doAdd={doAdd} />
 								))}
 							</table>
 						) : (
@@ -285,13 +211,9 @@ function InstanceCollapse({
 	}
 }
 
-function AddRow({ info, selected, id, setSelected }) {
-	const setSelected2 = useCallback(
-		(e) => {
-			setSelected(id, Number(e.currentTarget.value))
-		},
-		[setSelected, id]
-	)
+function AddRow({ info, id, doAdd }) {
+	const doAdd2 = useCallback(() => doAdd(id), [doAdd, id])
+
 	return (
 		<tr>
 			{/* <p>{id}</p> */}
@@ -300,8 +222,10 @@ function AddRow({ info, selected, id, setSelected }) {
 				<br />
 				{info.description || ''}
 			</td>
-			<td className="add-count">
-				<CInput type="number" min={0} step={1} value={selected ?? 0} onChange={setSelected2} />
+			<td>
+				<CButton color="primary" onClick={doAdd2}>
+					Add
+				</CButton>
 			</td>
 		</tr>
 	)
