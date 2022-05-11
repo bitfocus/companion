@@ -392,6 +392,7 @@
 		"companion-module-openweather-rest": "github:bitfocus/companion-module-openweather-rest#v1.0.3",
 		"companion-module-opticis-omm-1000": "github:bitfocus/companion-module-opticis-omm-1000#v1.0.3",
 		"companion-module-optoma-z28s": "github:bitfocus/companion-module-optoma-z28s#v1.0.3",
+		"companion-module-orei-matrix": "github:bitfocus/companion-module-orei-matrix#v1.0.0",
 		"companion-module-orfast-ndi": "github:bitfocus/companion-module-orfast-ndi#v1.0.1",
 		"companion-module-panasonic-avhs": "github:bitfocus/companion-module-panasonic-avhs#v1.0.6",
 		"companion-module-panasonic-camera-controller": "github:bitfocus/companion-module-panasonic-camera-controller#v1.0.9",
