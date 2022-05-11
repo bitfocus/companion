@@ -100,7 +100,7 @@ export const FeedbacksPanel = function ({
 	const addFeedback = useCallback(
 		(feedbackType) => {
 			setRecentFeedbacks((existing) => {
-				const newActions = [feedbackType, ...existing.filter((v) => v !== feedbackType)]
+				const newActions = [feedbackType, ...existing.filter((v) => v !== feedbackType)].slice(0, 20)
 
 				window.localStorage.setItem('recent_feedbacks', JSON.stringify(newActions))
 

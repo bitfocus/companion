@@ -241,7 +241,7 @@ export function ActionsPanelInner({
 	const addAction2 = useCallback(
 		(actionType) => {
 			setRecentActions((existing) => {
-				const newActions = [actionType, ...existing.filter((v) => v !== actionType)]
+				const newActions = [actionType, ...existing.filter((v) => v !== actionType)].slice(0, 20)
 
 				window.localStorage.setItem('recent_actions', JSON.stringify(newActions))
 
