@@ -3,9 +3,17 @@ import { faSort, faTrash } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import React, { useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react'
 import { NumberInputField } from '../../Components'
-import { ActionsContext, StaticContext, InstancesContext, MyErrorBoundary, socketEmit, sandbox } from '../../util'
+import {
+	ActionsContext,
+	StaticContext,
+	InstancesContext,
+	MyErrorBoundary,
+	socketEmit,
+	sandbox,
+	useMountEffect,
+} from '../../util'
 import update from 'immutability-helper'
-import Select from 'react-select'
+import Select, { createFilter } from 'react-select'
 import { ActionTableRowOption } from './Table'
 import { useDrag, useDrop } from 'react-dnd'
 import { GenericConfirmModal } from '../../Components/GenericConfirmModal'
@@ -217,9 +225,38 @@ export function ActionsPanelInner({
 		[emitOrder, setActions]
 	)
 
+	const [recentActions, setRecentActions] = useState([])
+	useMountEffect(() => {
+		try {
+			// Load from localStorage at startup
+			const recent = JSON.parse(window.localStorage.getItem('recent_actions') || '[]')
+			if (Array.isArray(recent)) {
+				setRecentActions(recent)
+			}
+		} catch (e) {
+			setRecentActions([])
+		}
+	})
+
+	const addAction2 = useCallback(
+		(actionType) => {
+			setRecentActions((existing) => {
+				const newActions = [actionType, ...existing.filter((v) => v !== actionType)]
+
+				window.localStorage.setItem('recent_actions', JSON.stringify(newActions))
+
+				return newActions
+			})
+
+			addAction(actionType)
+		},
+		[addAction]
+	)
+
 	return (
 		<>
-			<AddActionsModal ref={addActionsRef} addAction={addAction} />
+			<AddActionsModal ref={addActionsRef} addAction={addAction2} />
+
 			<table className="table action-table">
 				<tbody>
 					{actions.map((a, i) => (
@@ -239,7 +276,7 @@ export function ActionsPanelInner({
 			</table>
 
 			<div className="add-dropdown-wrapper">
-				<AddActionDropdown onSelect={addAction} placeholder={addPlaceholder} />
+				<AddActionDropdown onSelect={addAction2} placeholder={addPlaceholder} recentActions={recentActions} />
 				<CButton color="primary" variant="outline" onClick={showAddModal}>
 					Browse
 				</CButton>
@@ -415,7 +452,24 @@ function ActionTableRow({ action, isOnBank, index, dragId, setValue, doDelete, d
 	)
 }
 
-function AddActionDropdown({ onSelect, placeholder }) {
+const baseFilter = createFilter()
+const filterOptions = (candidate, input) => {
+	if (input) {
+		return !candidate.data.isRecent && baseFilter(candidate, input)
+	} else {
+		return candidate.data.isRecent
+	}
+}
+
+const noOptionsMessage = ({ inputValue }) => {
+	if (inputValue) {
+		return 'No actions found'
+	} else {
+		return 'No recently used actions'
+	}
+}
+
+function AddActionDropdown({ onSelect, placeholder, recentActions }) {
 	const instancesContext = useContext(InstancesContext)
 	const actionsContext = useContext(ActionsContext)
 
@@ -424,11 +478,34 @@ function AddActionDropdown({ onSelect, placeholder }) {
 		for (const [instanceId, instanceActions] of Object.entries(actionsContext)) {
 			for (const [actionId, action] of Object.entries(instanceActions || {})) {
 				const instanceLabel = instancesContext[instanceId]?.label ?? instanceId
-				options.push({ value: `${instanceId}:${actionId}`, label: `${instanceLabel}: ${action.label}` })
+				options.push({
+					isRecent: false,
+					value: `${instanceId}:${actionId}`,
+					label: `${instanceLabel}: ${action.label}`,
+				})
 			}
 		}
+
+		const recents = []
+		for (const actionType of recentActions) {
+			const [instanceId, actionId] = actionType.split(':', 2)
+			const actionInfo = actionsContext[instanceId]?.[actionId]
+			if (actionInfo) {
+				const instanceLabel = instancesContext[instanceId]?.label ?? instanceId
+				recents.push({
+					isRecent: true,
+					value: `${instanceId}:${actionId}`,
+					label: `${instanceLabel}: ${actionInfo.label}`,
+				})
+			}
+		}
+		options.push({
+			label: 'Recently Used',
+			options: recents,
+		})
+
 		return options
-	}, [actionsContext, instancesContext])
+	}, [actionsContext, instancesContext, recentActions])
 
 	const innerChange = useCallback(
 		(e) => {
@@ -448,7 +525,8 @@ function AddActionDropdown({ onSelect, placeholder }) {
 			placeholder={placeholder}
 			value={null}
 			onChange={innerChange}
-			// components={{ Option: CustomOption }}
+			filterOption={filterOptions}
+			noOptionsMessage={noOptionsMessage}
 		/>
 	)
 }

@@ -238,8 +238,29 @@ function TriggerEditModalConfig({ pluginSpec, config, updateConfig }) {
 		[config, updateConfig]
 	)
 
+	const [recentFeedbacks, setRecentFeedbacks] = useState([])
+	useMountEffect(() => {
+		try {
+			// Load from localStorage at startup
+			const recent = JSON.parse(window.localStorage.getItem('recent_feedbacks') || '[]')
+			if (Array.isArray(recent)) {
+				setRecentFeedbacks(recent)
+			}
+		} catch (e) {
+			setRecentFeedbacks([])
+		}
+	})
+
 	const addFeedbackSelect = useCallback(
 		(feedbackType) => {
+			setRecentFeedbacks((existing) => {
+				const newActions = [feedbackType, ...existing.filter((v) => v !== feedbackType)]
+
+				window.localStorage.setItem('recent_feedbacks', JSON.stringify(newActions))
+
+				return newActions
+			})
+
 			socketEmit(context.socket, 'feedback_get_defaults', [feedbackType]).then(([fb]) => {
 				updateConfig('config', [...config, fb])
 			})
@@ -276,7 +297,7 @@ function TriggerEditModalConfig({ pluginSpec, config, updateConfig }) {
 					</tbody>
 				</table>
 
-				<AddFeedbackDropdown onSelect={addFeedbackSelect} booleanOnly />
+				<AddFeedbackDropdown onSelect={addFeedbackSelect} booleanOnly recentFeedbacks={recentFeedbacks} />
 			</>
 		)
 	}

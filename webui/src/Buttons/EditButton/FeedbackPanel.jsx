@@ -2,9 +2,17 @@ import { CAlert, CButton, CForm, CFormGroup } from '@coreui/react'
 import { faSort, faTrash } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import React, { useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react'
-import { StaticContext, FeedbacksContext, InstancesContext, MyErrorBoundary, socketEmit, sandbox } from '../../util'
+import {
+	StaticContext,
+	FeedbacksContext,
+	InstancesContext,
+	MyErrorBoundary,
+	socketEmit,
+	sandbox,
+	useMountEffect,
+} from '../../util'
 import update from 'immutability-helper'
-import Select from 'react-select'
+import Select, { createFilter } from 'react-select'
 import { ActionTableRowOption } from './Table'
 import { useDrag, useDrop } from 'react-dnd'
 import { GenericConfirmModal } from '../../Components/GenericConfirmModal'
@@ -90,8 +98,16 @@ export const FeedbacksPanel = function ({
 	)
 
 	const addFeedback = useCallback(
-		(feedackTypr) => {
-			socketEmit(context.socket, addCommand, [page, bank, feedackTypr])
+		(feedbackType) => {
+			setRecentFeedbacks((existing) => {
+				const newActions = [feedbackType, ...existing.filter((v) => v !== feedbackType)]
+
+				window.localStorage.setItem('recent_feedbacks', JSON.stringify(newActions))
+
+				return newActions
+			})
+
+			socketEmit(context.socket, addCommand, [page, bank, feedbackType])
 				.then(([page, bank, feedbacks]) => {
 					setFeedbacks(feedbacks || [])
 				})
@@ -120,6 +136,19 @@ export const FeedbacksPanel = function ({
 		[context.socket, page, bank, orderCommand]
 	)
 
+	const [recentFeedbacks, setRecentFeedbacks] = useState([])
+	useMountEffect(() => {
+		try {
+			// Load from localStorage at startup
+			const recent = JSON.parse(window.localStorage.getItem('recent_feedbacks') || '[]')
+			if (Array.isArray(recent)) {
+				setRecentFeedbacks(recent)
+			}
+		} catch (e) {
+			setRecentFeedbacks([])
+		}
+	})
+
 	return (
 		<>
 			<GenericConfirmModal ref={confirmModal} />
@@ -146,7 +175,7 @@ export const FeedbacksPanel = function ({
 			</table>
 
 			<div className="add-dropdown-wrapper">
-				<AddFeedbackDropdown onSelect={addFeedback} />
+				<AddFeedbackDropdown onSelect={addFeedback} recentFeedbacks={recentFeedbacks} />
 				<CButton color="primary" variant="outline" onClick={showAddModal}>
 					Browse
 				</CButton>
@@ -463,7 +492,24 @@ function FeedbackStyles({ feedbackSpec, feedback, setStylePropsValue }) {
 	}
 }
 
-export function AddFeedbackDropdown({ onSelect, booleanOnly }) {
+const baseFilter = createFilter()
+const filterOptions = (candidate, input) => {
+	if (input) {
+		return !candidate.data.isRecent && baseFilter(candidate, input)
+	} else {
+		return candidate.data.isRecent
+	}
+}
+
+const noOptionsMessage = ({ inputValue }) => {
+	if (inputValue) {
+		return 'No feedbacks found'
+	} else {
+		return 'No recently used feedbacks'
+	}
+}
+
+export function AddFeedbackDropdown({ onSelect, booleanOnly, recentFeedbacks }) {
 	const feedbacksContext = useContext(FeedbacksContext)
 	const instancesContext = useContext(InstancesContext)
 
@@ -473,12 +519,35 @@ export function AddFeedbackDropdown({ onSelect, booleanOnly }) {
 			for (const [feedbackId, feedback] of Object.entries(instanceFeedbacks || {})) {
 				if (!booleanOnly || feedback.type === 'boolean') {
 					const instanceLabel = instancesContext[instanceId]?.label ?? instanceId
-					options.push({ value: `${instanceId}:${feedbackId}`, label: `${instanceLabel}: ${feedback.label}` })
+					options.push({
+						isRecent: false,
+						value: `${instanceId}:${feedbackId}`,
+						label: `${instanceLabel}: ${feedback.label}`,
+					})
 				}
 			}
 		}
+
+		const recents = []
+		for (const actionType of recentFeedbacks || []) {
+			const [instanceId, actionId] = actionType.split(':', 2)
+			const actionInfo = feedbacksContext[instanceId]?.[actionId]
+			if (actionInfo) {
+				const instanceLabel = instancesContext[instanceId]?.label ?? instanceId
+				recents.push({
+					isRecent: true,
+					value: `${instanceId}:${actionId}`,
+					label: `${instanceLabel}: ${actionInfo.label}`,
+				})
+			}
+		}
+		options.push({
+			label: 'Recently Used',
+			options: recents,
+		})
+
 		return options
-	}, [feedbacksContext, instancesContext, booleanOnly])
+	}, [feedbacksContext, instancesContext, booleanOnly, recentFeedbacks])
 
 	const innerChange = useCallback(
 		(e) => {
@@ -499,6 +568,8 @@ export function AddFeedbackDropdown({ onSelect, booleanOnly }) {
 			placeholder="+ Add feedback"
 			value={null}
 			onChange={innerChange}
+			filterOption={filterOptions}
+			noOptionsMessage={noOptionsMessage}
 		/>
 	)
 }
