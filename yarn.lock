@@ -883,6 +883,16 @@
   dependencies:
     defer-to-connect "^2.0.1"
 
+"@theatrixx/xpresscue-connect@1.0.0":
+  version "1.0.0"
+  resolved "https://registry.yarnpkg.com/@theatrixx/xpresscue-connect/-/xpresscue-connect-1.0.0.tgz#2f271cdfb97784d290505dfb865e33d84a26b5ba"
+  integrity sha512-XqvmjfxfMye0p5N2NsG5KucytiPBGGLyGiWrHhBlml7N9clNCx+hY39re/txlkKUURYItvX8npwzAdLS7S5D/w==
+  dependencies:
+    axios "^0.24.0"
+    lodash "^4.17.21"
+    rxjs "6"
+    socket.io-client "^2.2.0"
+
 "@tootallnate/once@1":
   version "1.1.2"
   resolved "https://registry.yarnpkg.com/@tootallnate/once/-/once-1.1.2.tgz#ccb91445360179a04e7fe6aff78c00ffc1eeaf82"
@@ -1663,6 +1673,13 @@ axios@^0.21.1, axios@^0.21.4:
   integrity sha512-ut5vewkiu8jjGBdqpM44XxjuCjq9LAKeHVmoVfHVzy8eHgxxq8SbAVQNovDA8mVi05kP0Ea/n/UzcSHcTJQfNg==
   dependencies:
     follow-redirects "^1.14.0"
+
+axios@^0.24.0:
+  version "0.24.0"
+  resolved "https://registry.yarnpkg.com/axios/-/axios-0.24.0.tgz#804e6fa1e4b9c5288501dd9dff56a7a0940d20d6"
+  integrity sha512-Q6cWsys88HoPgAaFAVUb0WpPk0O8iTeisR9IMqy9G8AbO4NlpVknrnQS03zzF9PGAWgO3cgletO3VjV/P7VztA==
+  dependencies:
+    follow-redirects "^1.14.4"
 
 axios@^0.25.0:
   version "0.25.0"
@@ -3922,6 +3939,13 @@ commist@^1.0.0:
   version "1.0.3"
   resolved "https://codeload.github.com/bitfocus/companion-module-tesmart-hdmimatrix/tar.gz/4d107bd374aa29f405e0a234f69c7dc0931e1a5f"
 
+"companion-module-theatrixx-xpresscue@github:bitfocus/companion-module-theatrixx-xpresscue#v1.0.0":
+  version "1.0.0"
+  resolved "https://codeload.github.com/bitfocus/companion-module-theatrixx-xpresscue/tar.gz/22092ef9a439100c3e2967869f7a518dbe979247"
+  dependencies:
+    "@theatrixx/xpresscue-connect" "1.0.0"
+    rxjs "6"
+
 "companion-module-thelightingcontroller@github:bitfocus/companion-module-thelightingcontroller#v1.1.4":
   version "1.1.4"
   resolved "https://codeload.github.com/bitfocus/companion-module-thelightingcontroller/tar.gz/cbc6569ef6ca46ed86e44a4ae7d18e340ec810bd"
@@ -5437,10 +5461,10 @@ follow-redirects@1.5.10:
   dependencies:
     debug "=3.1.0"
 
-follow-redirects@>=1.14.7, follow-redirects@^1.14.0, follow-redirects@^1.14.7:
-  version "1.14.9"
-  resolved "https://registry.yarnpkg.com/follow-redirects/-/follow-redirects-1.14.9.tgz#dd4ea157de7bfaf9ea9b3fbd85aa16951f78d8d7"
-  integrity sha512-MQDfihBQYMcyy5dhRDJUHcw7lb2Pv/TuE6xP1vyraLukNDHKbDxDNaOE3NbCAdKQApno+GPRyo1YAp89yCjK4w==
+follow-redirects@>=1.14.7, follow-redirects@^1.14.0, follow-redirects@^1.14.4, follow-redirects@^1.14.7:
+  version "1.15.0"
+  resolved "https://registry.yarnpkg.com/follow-redirects/-/follow-redirects-1.15.0.tgz#06441868281c86d0dda4ad8bdaead2d02dca89d4"
+  integrity sha512-aExlJShTV4qOUOL7yF1U5tvLCB0xQuudbf6toyYA0E/acBNw71mvjFTnLaRp50aQaYocMR0a/RMMBIHeZnGyjQ==
 
 foreach@^2.0.5:
   version "2.0.5"
@@ -9206,7 +9230,7 @@ run-parallel@^1.1.9:
   dependencies:
     queue-microtask "^1.2.2"
 
-rxjs@^6.6.3:
+rxjs@6, rxjs@^6.6.3:
   version "6.6.7"
   resolved "https://registry.yarnpkg.com/rxjs/-/rxjs-6.6.7.tgz#90ac018acabf491bf65044235d5863c4dab804c9"
   integrity sha512-hTdwr+7yYNIT5n4AMYp85KA6yw2Va0FLa3Rguvbpa4W3I5xynaBZo41cM3XM+4Q6fRMj3sBYIR1VAmZMXYJvRQ==
@@ -9504,7 +9528,7 @@ socket.io-adapter@~2.3.3:
   resolved "https://registry.yarnpkg.com/socket.io-adapter/-/socket.io-adapter-2.3.3.tgz#4d6111e4d42e9f7646e365b4f578269821f13486"
   integrity sha512-Qd/iwn3VskrpNO60BeRyCyr8ZWw9CPZyitW4AQwmRZ8zCiyDiL+znRnWX6tDHXnWn1sJrM1+b6Mn6wEDJJ4aYQ==
 
-socket.io-client@2.4.0, socket.io-client@^2.3.0, socket.io-client@^2.4.0:
+socket.io-client@2.4.0, socket.io-client@^2.2.0, socket.io-client@^2.3.0, socket.io-client@^2.4.0:
   version "2.4.0"
   resolved "https://registry.yarnpkg.com/socket.io-client/-/socket.io-client-2.4.0.tgz#aafb5d594a3c55a34355562fc8aea22ed9119a35"
   integrity sha512-M6xhnKQHuuZd4Ba9vltCLT9oa+YvTsP8j9NcEiLElfIg8KeYPyhWOes6x4t+LTAC8enQbE/995AdTem2uNyKKQ==
