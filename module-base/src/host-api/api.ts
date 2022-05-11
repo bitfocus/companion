@@ -43,7 +43,7 @@ export interface LogMessageMessage {
 }
 
 export interface SetStatusMessage {
-	status: InstanceStatus | null
+	status: InstanceStatus
 	message: string | null
 }
 

@@ -107,7 +107,6 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 			getConfigFields: this._handleGetConfigFields.bind(this),
 		})
 
-		this.updateStatus(null, 'Initializing')
 		this.log('debug', 'Initializing')
 	}
 
@@ -576,7 +575,7 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 		)
 	}
 
-	updateStatus(status: InstanceStatus | null, message?: string | null): void {
+	updateStatus(status: InstanceStatus, message?: string | null): void {
 		this._socketEmit(
 			'set-status',
 			literal<SetStatusMessage>({

@@ -165,8 +165,9 @@ function InstancesTableRow({
 				)}
 				{instance.label}
 			</td>
-			<td className={status.className} title={status.title}>
-				{status.text}
+			<td className={status.className}>
+				<p>{status.text}</p>
+				<p>{status.message}</p>
 			</td>
 			<td className="action-buttons">
 				<CButton onClick={doDelete} variant="ghost" color="danger" size="sm">
@@ -191,39 +192,38 @@ function InstancesTableRow({
 
 function processModuleStatus(status) {
 	if (status) {
-		switch (status[0]) {
+		switch (status.category) {
 			case -1:
 				return {
-					title: '',
+					message: '',
 					text: 'Disabled',
 					className: 'instance-status-disabled',
 				}
-			case 0:
+			case 'good':
 				return {
-					title: status[1] ?? '',
-					text: 'OK',
+					message: status.message || '',
+					text: status.level || 'OK',
 					className: 'instance-status-ok',
 				}
-			case 1:
+			case 'warning':
 				return {
-					title: status[1] ?? '',
-					text: status[1] ?? '',
+					message: status.message || '',
+					text: status.level || 'Warning',
 					className: 'instance-status-warn',
 				}
-			case 2:
+			case 'error':
 				return {
-					title: status[1] ?? '',
-					text: 'ERROR',
+					message: status.message || '',
+					text: status.level || 'ERROR',
 					className: 'instance-status-error',
 				}
 			case null:
+			default:
 				return {
-					title: status[1] ?? '',
-					text: status[1] ?? '',
+					message: status.message || '',
+					text: 'Unknown' || '',
 					className: '',
 				}
-			default:
-				break
 		}
 	}
 
