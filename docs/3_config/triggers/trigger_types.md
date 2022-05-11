@@ -13,13 +13,11 @@
   ![Trigger Time Of Day](images/trigger_edit_time_of_day_crop.png?raw=true 'Trigger Time Of Day')  
   Creates a Trigger that will get triggered every `X` day at `Y` time. in this trigger, you will need to specify what time of day in the format, `HH:MM:SS` and you can choose at what day of the week it'll be active.
 
-- **Variable value**
+- **Feedback**
 
-  ![Trigger Variable](images/trigger_edit_variable_crop.png?raw=true 'Trigger Variable')  
-  Creates a Trigger that will get triggered every time a selected variable matches the condition or multiple conditions specified.
+  ![Trigger Feedback](images/trigger_edit_feedback_crop.png?raw=true 'Trigger Feedback')  
+  Creates a Trigger that will get triggered every time a set of feedbacks evaluate to true.
 
-  To find the variable you want to use, go to the connection page and click edit on the module you want a variable from. Copy the variable and paste it into the text field. The variable will look something like this when you copy it `$(vmix:fullscreen_active)`, please remove `$( )`, and it should now look like in the picture.
+  This supports any 'boolean' type feedback. Not all feedbacks are written this way, it is a pretty new way of writing feedbacks. You can try and ask the module developers on the module github page to look at converting existing feedbacks across.
 
-  For each variable you add, you can perform some basic functions `=`, `!=`, `<` or `>`.
-
-  And last, you need to specify what value to check for, so for my example, I would type in `True` or `False` based if it's on or off. You might want to specify a value based on a specific state, like what input is currently on program. To find the values do as before and copy the variables page's value to ensure it matches up correctly.
+  The 'internal' instance has some feedbacks which can be used to compare variables against other variables or fixed values.
