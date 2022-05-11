@@ -1,4 +1,4 @@
-import React, { useCallback, useContext, useMemo, useState } from 'react'
+import React, { useCallback, useContext, useMemo, useRef, useState } from 'react'
 import {
 	CButton,
 	CCol,
@@ -18,6 +18,7 @@ import { AddFeedbackDropdown, FeedbackEditor } from '../Buttons/EditButton/Feedb
 import shortid from 'shortid'
 import { ActionsPanelInner } from '../Buttons/EditButton/ActionsPanel'
 import { CheckboxInputField } from '../Components'
+import { AddFeedbacksModal } from '../Buttons/EditButton/AddModal'
 
 function getPluginSpecDefaults(pluginOptions) {
 	const config = {}
@@ -211,6 +212,13 @@ export function TriggerEditModal({ doClose, doSave, item, plugins }) {
 function TriggerEditModalConfig({ pluginSpec, config, updateConfig }) {
 	const context = useContext(StaticContext)
 
+	const addFeedbacksRef = useRef(null)
+	const showAddModal = useCallback(() => {
+		if (addFeedbacksRef.current) {
+			addFeedbacksRef.current.show()
+		}
+	}, [])
+
 	if (pluginSpec.type === 'feedback' && !Array.isArray(config)) config = [config]
 
 	const updateInnerConfig = useCallback(
@@ -297,7 +305,14 @@ function TriggerEditModalConfig({ pluginSpec, config, updateConfig }) {
 					</tbody>
 				</table>
 
-				<AddFeedbackDropdown onSelect={addFeedbackSelect} booleanOnly recentFeedbacks={recentFeedbacks} />
+				<AddFeedbacksModal ref={addFeedbacksRef} addFeedback={addFeedbackSelect} />
+
+				<div className="add-dropdown-wrapper">
+					<AddFeedbackDropdown onSelect={addFeedbackSelect} booleanOnly recentFeedbacks={recentFeedbacks} />
+					<CButton color="primary" variant="outline" onClick={showAddModal}>
+						Browse
+					</CButton>
+				</div>
 			</>
 		)
 	}
