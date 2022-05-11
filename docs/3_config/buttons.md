@@ -46,6 +46,7 @@ There are several ways you can make your button stand out, including:
 - Changing the button's background color.
 - Change whether it's a standard button or a [Latch / Toggle](#header-latch--toggle) button.
 - Change whether to use absolute delays or [Relative Delays](#header-delays).
+- Change whether the topbar is shown on the button. This can be changed per button, or globally in the settings.
 
 **Creating a button**
 
