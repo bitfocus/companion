@@ -3535,6 +3535,10 @@ commist@^1.0.0:
   version "1.0.3"
   resolved "https://codeload.github.com/bitfocus/companion-module-optoma-z28s/tar.gz/5bdc8678c5fead2df7cc95cfaf51227428e4881d"
 
+"companion-module-orei-matrix@github:bitfocus/companion-module-orei-matrix#v1.0.0":
+  version "1.0.0"
+  resolved "https://codeload.github.com/bitfocus/companion-module-orei-matrix/tar.gz/5304a6486b73dd8dccc4a7aee3d8bb4c356fc4d8"
+
 "companion-module-orfast-ndi@github:bitfocus/companion-module-orfast-ndi#v1.0.1":
   version "1.0.1"
   resolved "https://codeload.github.com/bitfocus/companion-module-orfast-ndi/tar.gz/b79ffb6c95b49443b5afa61a24732f51a3452565"
