@@ -9,7 +9,7 @@ import os from 'os'
 import path from 'path'
 import fs from 'fs-extra'
 import envPaths from 'env-paths'
-import shortid from 'shortid'
+import { nanoid } from 'nanoid'
 
 const cli = meow(
 	`
@@ -147,7 +147,7 @@ if (!machineId) {
 			console.warn(`Error reading uuid-file: ${e}`)
 		}
 	} else {
-		machineId = shortid.generate()
+		machineId = nanoid()
 		try {
 			fs.writeFileSync(machineIdPath, machineId)
 		} catch (e) {

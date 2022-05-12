@@ -6,7 +6,7 @@ import { InstancesList } from './InstanceList'
 import { AddInstancesPanel } from './AddInstance'
 import { InstanceEditPanel } from './InstanceEditPanel'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import shortid from 'shortid'
+import { nanoid } from 'nanoid'
 import { faCog, faPlus } from '@fortawesome/free-solid-svg-icons'
 
 export const InstancesPage = memo(function InstancesPage() {
@@ -14,14 +14,14 @@ export const InstancesPage = memo(function InstancesPage() {
 
 	const helpModalRef = useRef()
 
-	const [tabResetToken, setTabResetToken] = useState(shortid())
+	const [tabResetToken, setTabResetToken] = useState(nanoid())
 	const [activeTab, setActiveTab] = useState('add')
 	const [selectedInstanceId, setSelectedInstanceId] = useState(null)
 	const doChangeTab = useCallback((newTab) => {
 		setActiveTab((oldTab) => {
 			if (oldTab !== newTab) {
 				setSelectedInstanceId(null)
-				setTabResetToken(shortid())
+				setTabResetToken(nanoid())
 			}
 			return newTab
 		})
@@ -44,7 +44,7 @@ export const InstancesPage = memo(function InstancesPage() {
 
 	const doConfigureInstance = useCallback((id) => {
 		setSelectedInstanceId(id)
-		setTabResetToken(shortid())
+		setTabResetToken(nanoid())
 		setActiveTab(id ? 'edit' : 'add')
 	}, [])
 

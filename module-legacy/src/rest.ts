@@ -1,6 +1,6 @@
 import createDebug from 'debug'
 import EventEmitter from 'events'
-import shortid from 'shortid'
+import { nanoid } from 'nanoid'
 // @ts-ignore
 import { Client } from 'node-rest-client'
 
@@ -139,7 +139,7 @@ export class ServiceRest {
 		})
 
 		fakeSystem.on('rest_poll', (instance_id, interval, url, data, poll_obj_cb, result_cb) => {
-			const poll_id = shortid.generate()
+			const poll_id = nanoid()
 
 			const timer = setInterval(() => {
 				const obj = this.#running.get(poll_id)
@@ -174,7 +174,7 @@ export class ServiceRest {
 		})
 
 		fakeSystem.on('rest_poll_get', (instance_id, interval, url, poll_obj_cb, result_cb) => {
-			const poll_id = shortid.generate()
+			const poll_id = nanoid()
 
 			const timer = setInterval(() => {
 				const obj = this.#running.get(poll_id)

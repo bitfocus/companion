@@ -25,7 +25,7 @@ import {
 import { StaticContext, LoadingRetryOrError, socketEmit, SurfacesContext } from './util'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faCog, faSync } from '@fortawesome/free-solid-svg-icons'
-import shortid from 'shortid'
+import { nanoid } from 'nanoid'
 import { TextInputField } from './Components/TextInputField'
 
 export const SurfacesPage = memo(function SurfacesPage() {
@@ -155,7 +155,7 @@ const SurfaceEditModal = forwardRef(function SurfaceEditModal(_props, ref) {
 	const [deviceConfig, setDeviceConfig] = useState(null)
 	const [deviceConfigInfo, setDeviceConfigInfo] = useState(null)
 	const [deviceConfigError, setDeviceConfigError] = useState(null)
-	const [reloadToken, setReloadToken] = useState(shortid())
+	const [reloadToken, setReloadToken] = useState(nanoid())
 
 	const doClose = useCallback(() => setShow(false), [])
 	const onClosed = useCallback(() => {
@@ -164,7 +164,7 @@ const SurfaceEditModal = forwardRef(function SurfaceEditModal(_props, ref) {
 		setDeviceConfigError(null)
 	}, [])
 
-	const doRetryConfigLoad = useCallback(() => setReloadToken(shortid()), [])
+	const doRetryConfigLoad = useCallback(() => setReloadToken(nanoid()), [])
 
 	useEffect(() => {
 		setDeviceConfigError(null)

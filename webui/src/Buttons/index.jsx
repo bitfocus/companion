@@ -1,7 +1,7 @@
 import { CCol, CNav, CNavItem, CNavLink, CRow, CTabContent, CTabPane, CTabs } from '@coreui/react'
 import { faCalculator, faDollarSign, faFileImport, faGift } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import shortid from 'shortid'
+import { nanoid } from 'nanoid'
 import { InstancePresets } from './Presets'
 import { StaticContext, MyErrorBoundary } from '../util'
 import { ButtonsGridPanel } from './ButtonGrid'
@@ -16,7 +16,7 @@ export function ButtonsPage({ hotPress }) {
 
 	const clearModalRef = useRef()
 
-	const [tabResetToken, setTabResetToken] = useState(shortid())
+	const [tabResetToken, setTabResetToken] = useState(nanoid())
 	const [activeTab, setActiveTab] = useState('presets')
 	const [selectedButton, setSelectedButton] = useState(null)
 	const [pageNumber, setPageNumber] = useState(1)
@@ -27,7 +27,7 @@ export function ButtonsPage({ hotPress }) {
 			const preserveButtonsTab = newTab === 'variables' && oldTab === 'edit'
 			if (newTab !== 'edit' && oldTab !== newTab && !preserveButtonsTab) {
 				setSelectedButton(null)
-				setTabResetToken(shortid())
+				setTabResetToken(nanoid())
 			}
 			return newTab
 		})
@@ -40,7 +40,7 @@ export function ButtonsPage({ hotPress }) {
 			} else if (isDown) {
 				setActiveTab('edit')
 				setSelectedButton([page, bank])
-				setTabResetToken(shortid())
+				setTabResetToken(nanoid())
 			}
 		},
 		[context.socket, hotPress]
@@ -63,7 +63,7 @@ export function ButtonsPage({ hotPress }) {
 							() => {
 								context.socket.emit('bank_reset', selectedButton[0], selectedButton[1])
 								// Invalidate the ui component to cause a reload
-								setTabResetToken(shortid())
+								setTabResetToken(nanoid())
 							}
 						)
 					}
@@ -86,7 +86,7 @@ export function ButtonsPage({ hotPress }) {
 								selectedButton[0],
 								selectedButton[1]
 							)
-							setTabResetToken(shortid())
+							setTabResetToken(nanoid())
 						} else if (copyFromButton[2] === 'cut') {
 							context.socket.emit(
 								'bank_move',
@@ -96,7 +96,7 @@ export function ButtonsPage({ hotPress }) {
 								selectedButton[1]
 							)
 							setCopyFromButton(null)
-							setTabResetToken(shortid())
+							setTabResetToken(nanoid())
 						} else {
 							console.error('unknown paste operation:', copyFromButton[2])
 						}

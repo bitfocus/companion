@@ -3,7 +3,7 @@ import { CAlert, CButton, CRow } from '@coreui/react'
 import { StaticContext, InstancesContext, LoadingRetryOrError, socketEmit } from '../util'
 import { useDrag } from 'react-dnd'
 import { BankPreview, dataToButtonImage, RedImage } from '../Components/BankButton'
-import shortid from 'shortid'
+import { nanoid } from 'nanoid'
 
 export const InstancePresets = function InstancePresets({ resetToken }) {
 	const context = useContext(StaticContext)
@@ -12,9 +12,9 @@ export const InstancePresets = function InstancePresets({ resetToken }) {
 	const [instanceAndCategory, setInstanceAndCategory] = useState([null, null])
 	const [presetsMap, setPresetsMap] = useState(null)
 	const [presetsError, setPresetError] = useState(null)
-	const [reloadToken, setReloadToken] = useState(shortid())
+	const [reloadToken, setReloadToken] = useState(nanoid())
 
-	const doRetryPresetsLoad = useCallback(() => setReloadToken(shortid()), [])
+	const doRetryPresetsLoad = useCallback(() => setReloadToken(nanoid()), [])
 
 	// Reset selection on resetToken change
 	useEffect(() => {
@@ -214,7 +214,7 @@ function PresetIconPreview({ preset, instanceId, ...childProps }) {
 	const context = useContext(StaticContext)
 	const [previewImage, setPreviewImage] = useState(null)
 	const [previewError, setPreviewError] = useState(false)
-	const [retryToken, setRetryToken] = useState(shortid())
+	const [retryToken, setRetryToken] = useState(nanoid())
 
 	const [, drag] = useDrag({
 		item: {
@@ -237,7 +237,7 @@ function PresetIconPreview({ preset, instanceId, ...childProps }) {
 			})
 	}, [preset.bank, context.socket, retryToken])
 
-	const onClick = useCallback((i, isDown) => isDown && setRetryToken(shortid()), [])
+	const onClick = useCallback((i, isDown) => isDown && setRetryToken(nanoid()), [])
 
 	return (
 		<BankPreview

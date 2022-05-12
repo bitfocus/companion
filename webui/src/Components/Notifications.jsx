@@ -1,6 +1,6 @@
 import { CToast, CToastBody, CToaster, CToastHeader } from '@coreui/react'
 import { forwardRef, useCallback, useImperativeHandle, useState } from 'react'
-import shortid from 'shortid'
+import { nanoid } from 'nanoid'
 
 export const NotificationsManager = forwardRef(function NotificationsManager(_props, ref) {
 	const [toasts, setToasts] = useState([])
@@ -32,7 +32,7 @@ export const NotificationsManager = forwardRef(function NotificationsManager(_pr
 		ref,
 		() => ({
 			show(title, message, duration, stickyId) {
-				const id = stickyId ?? shortid()
+				const id = stickyId ?? nanoid()
 
 				const autohide = duration === null ? undefined : duration ?? 10000
 				if (typeof autohide === 'number') {

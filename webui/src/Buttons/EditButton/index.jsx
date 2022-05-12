@@ -2,7 +2,7 @@ import { CDropdown, CDropdownToggle, CDropdownItem, CDropdownMenu, CButton, CBut
 import { faArrowDown, faArrowUp, faPlus, faTrash } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import React, { useCallback, useContext, useEffect, useRef, useState } from 'react'
-import shortid from 'shortid'
+import { nanoid } from 'nanoid'
 import { BankPreview, dataToButtonImage } from '../../Components/BankButton'
 import { GenericConfirmModal } from '../../Components/GenericConfirmModal'
 import { StaticContext, KeyReceiver, LoadingRetryOrError, socketEmit, UserConfigContext } from '../../util'
@@ -24,8 +24,8 @@ export function EditButton({ page, bank, onKeyUp }) {
 	const [configError, setConfigError] = useState(null)
 	const [tableLoadStatus, setTableLoadStatus] = useState({})
 
-	const [reloadConfigToken, setReloadConfigToken] = useState(shortid())
-	const [reloadTablesToken, setReloadTablesToken] = useState(shortid())
+	const [reloadConfigToken, setReloadConfigToken] = useState(nanoid())
+	const [reloadTablesToken, setReloadTablesToken] = useState(nanoid())
 
 	const loadConfig = useCallback(() => {
 		socketEmit(context.socket, 'get_bank', [page, bank])
@@ -49,7 +49,7 @@ export function EditButton({ page, bank, onKeyUp }) {
 
 		// reload tables too
 		setTableLoadStatus({})
-		setReloadTablesToken(shortid())
+		setReloadTablesToken(nanoid())
 	}, [loadConfig, reloadConfigToken])
 
 	const addLoadStatus = useCallback((key, value) => {
@@ -77,7 +77,7 @@ export function EditButton({ page, bank, onKeyUp }) {
 					.then(([p, b, config]) => {
 						setConfig(config)
 						setTableLoadStatus({})
-						setReloadTablesToken(shortid())
+						setReloadTablesToken(nanoid())
 					})
 					.catch((e) => {
 						console.error('Failed to set bank style', e)
@@ -100,7 +100,7 @@ export function EditButton({ page, bank, onKeyUp }) {
 		[context.socket, page, bank, configRef]
 	)
 
-	const doRetryLoad = useCallback(() => setReloadConfigToken(shortid()), [])
+	const doRetryLoad = useCallback(() => setReloadConfigToken(nanoid()), [])
 	const resetBank = useCallback(() => {
 		resetModalRef.current.show(
 			`Clear button ${page}.${bank}`,
@@ -108,7 +108,7 @@ export function EditButton({ page, bank, onKeyUp }) {
 			'Clear',
 			() => {
 				context.socket.emit('bank_reset', page, bank)
-				setReloadConfigToken(shortid())
+				setReloadConfigToken(nanoid())
 			}
 		)
 	}, [context.socket, page, bank])
@@ -258,7 +258,7 @@ function ActionsSection({ style, page, bank, addLoadStatus, reloadTablesToken })
 			}
 		}
 
-		const forceReload = () => setReloadToken2(shortid())
+		const forceReload = () => setReloadToken2(nanoid())
 
 		// listen for updates
 		context.socket.on('bank_action_sets_list', updateSetsList)

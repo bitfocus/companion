@@ -8,7 +8,7 @@ import {
 	NumberInputField,
 	TextInputField,
 } from '../Components'
-import shortid from 'shortid'
+import { nanoid } from 'nanoid'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faQuestionCircle } from '@fortawesome/free-solid-svg-icons'
 
@@ -16,7 +16,7 @@ export const InstanceEditPanel = memo(function InstanceEditPanel({ instanceId, d
 	const context = useContext(StaticContext)
 
 	const [error, setError] = useState(null)
-	const [reloadToken, setReloadToken] = useState(shortid())
+	const [reloadToken, setReloadToken] = useState(nanoid())
 
 	const [configFields, setConfigFields] = useState(null)
 	const [instanceConfig, setInstanceConfig] = useState(null)
@@ -94,7 +94,7 @@ export const InstanceEditPanel = memo(function InstanceEditPanel({ instanceId, d
 		}
 	}, [context.socket, instanceId, reloadToken])
 
-	const doRetryConfigLoad = useCallback(() => setReloadToken(shortid()), [])
+	const doRetryConfigLoad = useCallback(() => setReloadToken(nanoid()), [])
 
 	const setValue = useCallback((key, value) => {
 		console.log('set value', key, value)

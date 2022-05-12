@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { LoadingRetryOrError, MyErrorBoundary, SERVER_URL, socketEmit, useMountEffect } from './util'
 import io from 'socket.io-client'
 import { CButton, CCol, CContainer, CForm, CFormGroup, CInput, CInputCheckbox, CRow, CSelect } from '@coreui/react'
-import shortid from 'shortid'
+import { nanoid } from 'nanoid'
 import { MAX_BUTTONS, MAX_COLS, MAX_ROWS } from './Constants'
 import { BankPreview, dataToButtonImage } from './Components/BankButton'
 import { useInView } from 'react-intersection-observer'
@@ -118,8 +118,8 @@ export function Tablet() {
 		return [rawSocket, new ImageCache(rawSocket)]
 	}, [])
 
-	const [retryToken, setRetryToken] = useState(shortid())
-	const doRetryLoad = useCallback(() => setRetryToken(shortid()), [])
+	const [retryToken, setRetryToken] = useState(nanoid())
+	const doRetryLoad = useCallback(() => setRetryToken(nanoid()), [])
 	useEffect(() => {
 		setLoadError(null)
 		setPages(null)
@@ -161,7 +161,7 @@ export function Tablet() {
 
 	useMountEffect(() => {
 		const onConnect = () => {
-			setRetryToken(shortid())
+			setRetryToken(nanoid())
 		}
 		socket.on('connect', onConnect)
 		return () => {

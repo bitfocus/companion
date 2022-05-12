@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { LoadingRetryOrError, SERVER_URL, useMountEffect } from './util'
 import io from 'socket.io-client'
 import { CAlert, CCol, CContainer, CRow } from '@coreui/react'
-import shortid from 'shortid'
+import { nanoid } from 'nanoid'
 
 function dataToButtonImage(data) {
 	const sourceData = new Uint8Array(data)
@@ -33,8 +33,8 @@ export function Emulator() {
 
 	const socket = useMemo(() => new io(SERVER_URL), [])
 
-	const [retryToken, setRetryToken] = useState(shortid())
-	const doRetryLoad = useCallback(() => setRetryToken(shortid()), [])
+	const [retryToken, setRetryToken] = useState(nanoid())
+	const doRetryLoad = useCallback(() => setRetryToken(nanoid()), [])
 	useEffect(() => {
 		setLoadError(null)
 		setKeymap(null)
@@ -100,7 +100,7 @@ export function Emulator() {
 
 	useMountEffect(() => {
 		const onConnect = () => {
-			setRetryToken(shortid())
+			setRetryToken(nanoid())
 		}
 		socket.on('connect', onConnect)
 		return () => {

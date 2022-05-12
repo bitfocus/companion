@@ -1,7 +1,7 @@
 import React, { memo, useCallback, useContext, useEffect, useRef, useState } from 'react'
 import { CButton, CButtonGroup, CCol, CRow } from '@coreui/react'
 import { socketEmit, StaticContext } from './util'
-import shortid from 'shortid'
+import { nanoid } from 'nanoid'
 import dayjs from 'dayjs'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faFileExport } from '@fortawesome/free-solid-svg-icons'
@@ -18,7 +18,7 @@ export const LogPanel = memo(function LogPanel() {
 		const getClearLog = () => setHistory([])
 		const logRecv = (time, source, level, message) => {
 			const item = {
-				id: shortid(),
+				id: nanoid(),
 				time,
 				source,
 				level,
@@ -31,7 +31,7 @@ export const LogPanel = memo(function LogPanel() {
 		socketEmit(context.socket, 'log_catchup', [])
 			.then(([lines]) => {
 				const items = lines.map(([time, source, level, message]) => ({
-					id: shortid(),
+					id: nanoid(),
 					time,
 					source,
 					level,

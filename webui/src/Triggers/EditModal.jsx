@@ -15,7 +15,7 @@ import {
 import { StaticContext, MyErrorBoundary, socketEmit, useMountEffect } from '../util'
 import Select from 'react-select'
 import { AddFeedbackDropdown, FeedbackEditor } from '../Buttons/EditButton/FeedbackPanel'
-import shortid from 'shortid'
+import { nanoid } from 'nanoid'
 import { ActionsPanelInner } from '../Buttons/EditButton/ActionsPanel'
 import { CheckboxInputField } from '../Components'
 
@@ -42,7 +42,7 @@ function getFeedbackDefaults() {
 	// This should be somewhere in the backend, but there isnt anywhere appropriate currently
 	return [
 		{
-			id: shortid(),
+			id: nanoid(),
 			type: 'variable_value',
 			instance_id: 'bitfocus-companion',
 			options: {
