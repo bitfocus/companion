@@ -71,7 +71,25 @@ export class FakeSystem extends EventEmitter {
 	}
 
 	sendStatus: InstanceSkel<any>['status'] = (level, message) => {
-		this.parent.updateStatus(level, message)
+		switch (level) {
+			case 0:
+				this.parent.updateStatus('ok', message)
+				break
+			case 1:
+				this.parent.updateStatus('ok', message)
+				break
+			case 2:
+				this.parent.updateStatus('ok', message)
+				break
+			case null:
+			case 0:
+				this.parent.updateStatus('unknown_warning', message)
+				break
+			default:
+				assertNever(level)
+				this.parent.updateStatus('unknown_warning', message)
+				break
+		}
 	}
 
 	sendLog: InstanceSkel<any>['log'] = (level, info) => {
