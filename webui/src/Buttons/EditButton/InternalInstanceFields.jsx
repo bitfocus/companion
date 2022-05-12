@@ -49,9 +49,7 @@ function InternalInstanceIdDropdown({ includeAll, value, setValue }) {
 		}
 
 		for (const [id, config] of Object.entries(context)) {
-			if (id !== 'bitfocus-companion') {
-				instance_choices.push({ id, label: config.label ?? id })
-			}
+			instance_choices.push({ id, label: config.label ?? id })
 		}
 		return instance_choices
 	}, [context, includeAll])

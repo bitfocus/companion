@@ -51,25 +51,18 @@ export function InstancesList({ showHelp, doConfigureInstance }) {
 				</thead>
 				<tbody>
 					{Object.entries(instancesContext).map(([id, instance]) => {
-						if (
-							instance.instance_type === 'bitfocus-companion' ||
-							instance.instance_type === 'bitfocus.bitfocus-companion'
-						) {
-							return null
-						} else {
-							return (
-								<InstancesTableRow
-									key={id}
-									id={id}
-									instance={instance}
-									instanceStatus={instanceStatus[id]}
-									showHelp={showHelp}
-									showVariables={doShowVariables}
-									deleteModalRef={deleteModalRef}
-									configureInstance={doConfigureInstance}
-								/>
-							)
-						}
+						return (
+							<InstancesTableRow
+								key={id}
+								id={id}
+								instance={instance}
+								instanceStatus={instanceStatus[id]}
+								showHelp={showHelp}
+								showVariables={doShowVariables}
+								deleteModalRef={deleteModalRef}
+								configureInstance={doConfigureInstance}
+							/>
+						)
 					})}
 					{Object.keys(instancesContext).length === 0 ? (
 						<tr>

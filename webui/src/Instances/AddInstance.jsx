@@ -35,8 +35,6 @@ const AddInstancesInner = memo(function AddInstancesInner({ showHelp, configureI
 
 		const candidatesObj = {}
 		for (const [id, module] of Object.entries(context.modules)) {
-			if (id === 'bitfocus-companion' || id === 'bitfocus.bitfocus-companion') continue
-
 			const products = new Set(module.products)
 			for (const subprod of products) {
 				const name = `${module.manufacturer} ${subprod}`
