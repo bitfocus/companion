@@ -3143,9 +3143,9 @@ commist@^1.0.0:
   version "1.0.7"
   resolved "https://codeload.github.com/bitfocus/companion-module-globalcache-itac-ir/tar.gz/ca25859306d887cfe8a8b88f910f3f2f61019e80"
 
-"companion-module-globalcache-itac-sl@github:bitfocus/companion-module-globalcache-itac-sl#v1.0.5":
-  version "1.0.5"
-  resolved "https://codeload.github.com/bitfocus/companion-module-globalcache-itac-sl/tar.gz/95f9cf486006f06b6269f7ace4494c6abcea398a"
+"companion-module-globalcache-itac-sl@github:bitfocus/companion-module-globalcache-itac-sl#v1.0.6":
+  version "1.0.6"
+  resolved "https://codeload.github.com/bitfocus/companion-module-globalcache-itac-sl/tar.gz/9481a73496b8b94c09aec818d62b940e96e95d22"
 
 "companion-module-grassvalley-amp@github:bitfocus/companion-module-grassvalley-amp#v1.1.6":
   version "1.1.6"
