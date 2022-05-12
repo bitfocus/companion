@@ -53,4 +53,4 @@ EXPOSE 8000 16622
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 CMD [ "curl", "-fSsq", "http://localhost:8000/" ]
 
 # Bind to 0.0.0.0, as access should be scoped down by how the port is exposed from docker
-ENTRYPOINT ["./headless_ip.js", "0.0.0.0"]
+ENTRYPOINT ["./main.js", "--admin-address", "0.0.0.0", "--admin-port", "8000", "--config-dir", "\$COMPANION_CONFIG_BASEDIR"]
