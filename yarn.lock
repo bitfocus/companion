@@ -2734,9 +2734,9 @@ commist@^1.0.0:
   version "1.1.3"
   resolved "https://codeload.github.com/bitfocus/companion-module-bmd-smartview/tar.gz/200ebc7a4a544ae07c742002bc7605e14495a319"
 
-"companion-module-bmd-teranex@github:bitfocus/companion-module-bmd-teranex#v1.0.8":
-  version "1.0.8"
-  resolved "https://codeload.github.com/bitfocus/companion-module-bmd-teranex/tar.gz/84e2e7f4f5450f220e03f35645c87dca0a000b0e"
+"companion-module-bmd-teranex@github:bitfocus/companion-module-bmd-teranex#v1.0.9":
+  version "1.0.9"
+  resolved "https://codeload.github.com/bitfocus/companion-module-bmd-teranex/tar.gz/2390f1c3f76ae82fdcc47e25ae05d0520af5e485"
 
 "companion-module-bmd-videohub@github:bitfocus/companion-module-bmd-videohub#v1.3.3":
   version "1.3.3"
