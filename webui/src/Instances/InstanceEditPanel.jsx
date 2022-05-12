@@ -20,6 +20,7 @@ export const InstanceEditPanel = memo(function InstanceEditPanel({ instanceId, d
 
 	const [configFields, setConfigFields] = useState(null)
 	const [instanceConfig, setInstanceConfig] = useState(null)
+	const [instanceLabel, setInstanceLabel] = useState(null)
 	const [validFields, setValidFields] = useState(null)
 
 	const [fieldVisibility, setFieldVisibility] = useState({})
@@ -33,12 +34,12 @@ export const InstanceEditPanel = memo(function InstanceEditPanel({ instanceId, d
 		setError(null)
 
 		const isInvalid = Object.entries(validFields).filter(([k, v]) => !v)
-		if (isInvalid.length > 0) {
+		if (!instanceLabel?.trim() || isInvalid.length > 0) {
 			setError(`Some config fields are not valid: ${isInvalid.map(([k]) => k).join(', ')}`)
 			return
 		}
 
-		socketEmit(context.socket, 'instance_config_put', [instanceId, instanceConfig])
+		socketEmit(context.socket, 'instance_config_put', [instanceId, instanceLabel, instanceConfig])
 			.then(([err, ok]) => {
 				if (err) {
 					if (err === 'duplicate label') {
@@ -56,15 +57,15 @@ export const InstanceEditPanel = memo(function InstanceEditPanel({ instanceId, d
 			.catch((e) => {
 				setError(`Failed to save connection config: ${e}`)
 			})
-	}, [context.socket, instanceId, validFields, instanceConfig, doCancel])
+	}, [context.socket, instanceId, validFields, instanceLabel, instanceConfig, doCancel])
 
 	useEffect(() => {
 		if (instanceId) {
 			socketEmit(context.socket, 'instance_edit', [instanceId])
-				.then(([_instanceId, _configFields, _instanceConfig]) => {
-					if (_instanceId) {
+				.then(([instanceId, configFields, instanceLabel, instanceConfig]) => {
+					if (instanceId) {
 						const validFields = {}
-						for (const field of _configFields) {
+						for (const field of configFields) {
 							// Real validation status gets generated when the editor components first mount
 							validFields[field.id] = true
 
@@ -74,8 +75,9 @@ export const InstanceEditPanel = memo(function InstanceEditPanel({ instanceId, d
 							}
 						}
 
-						setConfigFields(_configFields)
-						setInstanceConfig(_instanceConfig)
+						setConfigFields(configFields)
+						setInstanceLabel(instanceLabel)
+						setInstanceConfig(instanceConfig)
 						setValidFields(validFields)
 					} else {
 						setError(`Connection config unavailable`)
@@ -89,6 +91,7 @@ export const InstanceEditPanel = memo(function InstanceEditPanel({ instanceId, d
 		return () => {
 			setError(null)
 			setConfigFields(null)
+			setInstanceLabel(null)
 			setInstanceConfig(null)
 			setValidFields(null)
 		}
@@ -148,8 +151,14 @@ export const InstanceEditPanel = memo(function InstanceEditPanel({ instanceId, d
 			</h5>
 			<CRow className="edit-instance">
 				<LoadingRetryOrError error={error} dataReady={dataReady} doRetry={doRetryConfigLoad} />
-				{instanceId && dataReady
-					? configFields.map((field, i) => {
+				{instanceId && dataReady ? (
+					<>
+						<CCol className={`fieldtype-textinput`} sm={12}>
+							<label>Label</label>
+							<TextInputField definition={{}} value={instanceLabel} setValue={setInstanceLabel} />
+						</CCol>
+
+						{configFields.map((field, i) => {
 							return (
 								<CCol
 									key={i}
@@ -167,8 +176,11 @@ export const InstanceEditPanel = memo(function InstanceEditPanel({ instanceId, d
 									/>
 								</CCol>
 							)
-					  })
-					: ''}
+						})}
+					</>
+				) : (
+					''
+				)}
 			</CRow>
 
 			<CRow>

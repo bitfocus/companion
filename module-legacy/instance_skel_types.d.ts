@@ -258,7 +258,7 @@ export interface CompanionUpgradeToBooleanFeedbackMap {
 }
 
 export interface CompanionCoreInstanceconfig {
-	instance_type: string
+	// instance_type: string
 	label: string
 }
 

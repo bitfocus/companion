@@ -35,6 +35,7 @@ import { CompanionVariable, CompanionVariableValue, CompanionVariableValue2 } fr
 import { OSCSomeArguments } from '../common/osc.js'
 import { listenToEvents, serializeIsVisibleFn } from './lib.js'
 import { SomeCompanionConfigField } from './config.js'
+import { CompanionStaticUpgradeScript, CompanionUpgradeToBooleanFeedbackMap } from './upgrade.js'
 
 function convertFeedbackInstanceToEvent(
 	type: 'boolean' | 'advanced',
@@ -293,6 +294,62 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 	 * Creates the configuration fields for web config.
 	 */
 	abstract getConfigFields(): SomeCompanionConfigField[]
+
+	/**
+	 * Provides the upgrade scripts to companion that are to be used for this module.
+	 * These get run without any awareness of the instance class.
+	 */
+	static GetUpgradeScripts?(): Array<CompanionStaticUpgradeScript<unknown>>
+
+	// /**
+	//  * Force running upgrade script from an earlier point, as specified by the value
+	//  * Only works when DEVELOPER=1.
+	//  * eg, 0 = runs the first script onwards
+	//  */
+	// static DEVELOPER_forceStartupUpgradeScript?: number
+
+	/**
+	 * A helper script to automate the bulk of the process to upgrade feedbacks from 'advanced' to 'boolean'.
+	 * There are some built in rules for properties names based on the most common cases
+	 * @param upgradeMap The feedbacks to upgrade and the properties to convert
+	 */
+	static CreateConvertToBooleanFeedbackUpgradeScript(
+		upgradeMap: CompanionUpgradeToBooleanFeedbackMap
+	): CompanionStaticUpgradeScript<unknown> {
+		// Warning: the unused parameters will often be null
+		return (_context, _config, _actions, feedbacks) => {
+			let changed = false
+
+			for (const feedback of feedbacks) {
+				let upgrade_rules = upgradeMap[feedback.type]
+				if (upgrade_rules === true) {
+					// These are some automated built in rules. They can help make it easier to migrate
+					upgrade_rules = {
+						bg: 'bgcolor',
+						bgcolor: 'bgcolor',
+						fg: 'color',
+						color: 'color',
+						png64: 'png64',
+						png: 'png64',
+					}
+				}
+
+				if (upgrade_rules) {
+					if (!feedback.style) feedback.style = {}
+
+					for (const [option_key, style_key] of Object.entries(upgrade_rules)) {
+						if (feedback.options[option_key] !== undefined) {
+							feedback.style[style_key] = feedback.options[option_key]
+							delete feedback.options[option_key]
+							changed = true
+						}
+					}
+				}
+			}
+
+			return changed
+		}
+	}
 
 	setActionDefinitions(actions: CompanionActions): Promise<void> {
 		const hostActions: SetActionDefinitionsMessage['actions'] = []
