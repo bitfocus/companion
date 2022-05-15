@@ -2869,6 +2869,12 @@ commist@^1.0.0:
   version "1.0.3"
   resolved "https://codeload.github.com/bitfocus/companion-module-ctpsystems-dio8008r/tar.gz/a59d616e9dcccf2ddac99d9d59dfaab2f2697d36"
 
+"companion-module-cvmeventi-countdown@github:bitfocus/companion-module-cvmeventi-countdown#v1.0.0":
+  version "1.0.0"
+  resolved "https://codeload.github.com/bitfocus/companion-module-cvmeventi-countdown/tar.gz/3d91004b4449222276ade7d87af5105d9e2f2f52"
+  dependencies:
+    ws "^7.2.1"
+
 "companion-module-cyp-matrix@github:bitfocus/companion-module-cyp-matrix#v1.0.1":
   version "1.0.1"
   resolved "https://codeload.github.com/bitfocus/companion-module-cyp-matrix/tar.gz/0a11399e10aa00f91a0d81416a44e812387cb8ef"

@@ -242,6 +242,7 @@
 		"companion-module-connect-webcaster": "github:bitfocus/companion-module-connect-webcaster#v1.0.1",
 		"companion-module-crystal-scte": "github:bitfocus/companion-module-crystal-scte#v1.0.2",
 		"companion-module-ctpsystems-dio8008r": "github:bitfocus/companion-module-ctpsystems-dio8008r#v1.0.3",
+		"companion-module-cvmeventi-countdown": "github:bitfocus/companion-module-cvmeventi-countdown#v1.0.0",
 		"companion-module-cyp-matrix": "github:bitfocus/companion-module-cyp-matrix#v1.0.1",
 		"companion-module-dahuasecurity-ptz": "github:bitfocus/companion-module-dahuasecurity-ptz#v1.0.3",
 		"companion-module-dalite-scb": "github:bitfocus/companion-module-dalite-scb#v1.0.2",
