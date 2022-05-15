@@ -2665,9 +2665,9 @@ commist@^1.0.0:
   version "1.0.2"
   resolved "https://codeload.github.com/bitfocus/companion-module-biamp-audia/tar.gz/0082201462f94251b4f55c2c851f053d82ef701d"
 
-"companion-module-birddog-ptz@github:bitfocus/companion-module-birddog-ptz#v2.0.2":
-  version "2.0.2"
-  resolved "https://codeload.github.com/bitfocus/companion-module-birddog-ptz/tar.gz/90a77aebb1b370316fb37536668d6b976e380a3c"
+"companion-module-birddog-ptz@github:bitfocus/companion-module-birddog-ptz#v2.1.0":
+  version "2.1.0"
+  resolved "https://codeload.github.com/bitfocus/companion-module-birddog-ptz/tar.gz/201ba4c86ff76b90aeb0c5c122b4863e53c6bf63"
   dependencies:
     node-fetch "^2.6.7"
 
