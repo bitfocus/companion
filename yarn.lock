@@ -2087,6 +2087,14 @@ builder-util@22.11.7:
     stat-mode "^1.0.0"
     temp-file "^3.4.0"
 
+buttjs@^0.1.0:
+  version "0.1.0"
+  resolved "https://registry.yarnpkg.com/buttjs/-/buttjs-0.1.0.tgz#de58629edb758ac9236e4e3fc2c6375243d9b7fe"
+  integrity sha512-dzuynURwKv+5RB0mTJska0iPNzM+8oZlwitGiqDSTHm6x4S9qOx94xEiSzBS0SgHi6JzqhEh2x8A7WS27RohtQ==
+  dependencies:
+    commander "^9.2.0"
+    debug "^4.3.4"
+
 byte-data@^16.0.3:
   version "16.0.3"
   resolved "https://registry.yarnpkg.com/byte-data/-/byte-data-16.0.3.tgz#8abb3e212c9b026790a28c2d6c22fdc0515fd49d"
@@ -2453,6 +2461,11 @@ commander@^9.0.0:
   version "9.1.0"
   resolved "https://registry.yarnpkg.com/commander/-/commander-9.1.0.tgz#a6b263b2327f2e188c6402c42623327909f2dbec"
   integrity sha512-i0/MaqBtdbnJ4XQs4Pmyb+oFQl+q0lsAmokVUH92SlSw4fkeAcG3bVon+Qt7hmtF+u3Het6o4VgrcY3qAoEB6w==
+
+commander@^9.2.0:
+  version "9.2.0"
+  resolved "https://registry.yarnpkg.com/commander/-/commander-9.2.0.tgz#6e21014b2ed90d8b7c9647230d8b7a94a4a419a9"
+  integrity sha512-e2i4wANQiSXgnrBlIatyHtP1odfUp0BbV5Y5nEGbxtIrStkEOAAzCUirvLBNXHLr7kwLvJl6V+4V3XV9x7Wd9w==
 
 commist@^1.0.0:
   version "1.1.0"
@@ -2870,9 +2883,11 @@ commist@^1.0.0:
   version "1.0.2"
   resolved "https://codeload.github.com/bitfocus/companion-module-dalite-scb/tar.gz/1cc30c234f7ef44a0785c8a37b4c465f78fadd50"
 
-"companion-module-danielnoethen-butt@github:bitfocus/companion-module-danielnoethen-butt#v1.1.1":
-  version "1.1.1"
-  resolved "https://codeload.github.com/bitfocus/companion-module-danielnoethen-butt/tar.gz/7acf45724eb554a26d6930afa48def82e88f0b56"
+"companion-module-danielnoethen-butt@github:bitfocus/companion-module-danielnoethen-butt#v1.2.0":
+  version "1.2.0"
+  resolved "https://codeload.github.com/bitfocus/companion-module-danielnoethen-butt/tar.gz/81fc8300daca0d5599aefb472b2a17d8bde39531"
+  dependencies:
+    buttjs "^0.1.0"
 
 "companion-module-dashare-multiplay@github:bitfocus/companion-module-dashare-multiplay#v1.0.2":
   version "1.0.2"
