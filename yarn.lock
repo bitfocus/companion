@@ -2987,9 +2987,9 @@ commist@^1.0.0:
   version "1.1.1"
   resolved "https://codeload.github.com/bitfocus/companion-module-dolby-cinemaprocessor/tar.gz/6a02dad1cbfd737d041a9b5fa3b2485e297a6421"
 
-"companion-module-draco-tera@github:bitfocus/companion-module-draco-tera#v1.0.5":
-  version "1.0.5"
-  resolved "https://codeload.github.com/bitfocus/companion-module-draco-tera/tar.gz/79e0484b230837a7db2bfb95a511290a175f9c3c"
+"companion-module-draco-tera@github:bitfocus/companion-module-draco-tera#v1.0.6":
+  version "1.0.6"
+  resolved "https://codeload.github.com/bitfocus/companion-module-draco-tera/tar.gz/5523fdf4936ce492067af7547f7a65024668808a"
 
 "companion-module-dsan-limitimer@github:bitfocus/companion-module-dsan-limitimer#v1.1.2":
   version "1.1.2"
