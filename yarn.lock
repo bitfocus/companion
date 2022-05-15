@@ -4113,9 +4113,9 @@ commist@^1.0.0:
   version "1.0.3"
   resolved "https://codeload.github.com/bitfocus/companion-module-xiamen-sprolink-vd-series/tar.gz/165183eb0c56cdbfc17f24a1920cbb384c192efc"
 
-"companion-module-yamaha-rcp@github:bitfocus/companion-module-yamaha-rcp#v1.6.4":
-  version "1.6.4"
-  resolved "https://codeload.github.com/bitfocus/companion-module-yamaha-rcp/tar.gz/f86e5689235a9e605b9c1fcb95913e886d201ff3"
+"companion-module-yamaha-rcp@github:bitfocus/companion-module-yamaha-rcp#v1.6.5":
+  version "1.6.5"
+  resolved "https://codeload.github.com/bitfocus/companion-module-yamaha-rcp/tar.gz/49014be1bef9480318fce3a650d96c606f697d75"
 
 "companion-module-youtube-live@github:bitfocus/companion-module-youtube-live#v1.1.5":
   version "1.1.5"
