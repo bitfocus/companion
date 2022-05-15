@@ -3686,6 +3686,10 @@ commist@^1.0.0:
   version "1.0.4"
   resolved "https://codeload.github.com/bitfocus/companion-module-rationalacoustics-smaart3/tar.gz/108bd54a40617eeab63e2723d7ddcfbe3539aba8"
 
+"companion-module-reddotlogics-hdmimatrix@github:bitfocus/companion-module-reddotlogics-hdmimatrix#v1.0.1":
+  version "1.0.1"
+  resolved "https://codeload.github.com/bitfocus/companion-module-reddotlogics-hdmimatrix/tar.gz/bc477246f54092342cc5de4eeea8057b95d7b7c8"
+
 "companion-module-renewedvision-propresenter@github:bitfocus/companion-module-renewedvision-propresenter#v2.5.2":
   version "2.5.2"
   resolved "https://codeload.github.com/bitfocus/companion-module-renewedvision-propresenter/tar.gz/513dd650f339d20bdbbc694b36436d8ff6febea0"
