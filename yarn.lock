@@ -2736,12 +2736,12 @@ commist@^1.0.0:
   version "1.0.3"
   resolved "https://codeload.github.com/bitfocus/companion-module-bmd-audiomonitor/tar.gz/d61fef16a8a059d18ea648a5b2a477ee14b83209"
 
-"companion-module-bmd-hyperdeck@github:bitfocus/companion-module-bmd-hyperdeck#v1.2.8":
-  version "1.2.8"
-  resolved "https://codeload.github.com/bitfocus/companion-module-bmd-hyperdeck/tar.gz/4770d7ddb1918bdbcb3c44c6cc834e52dc883d6a"
+"companion-module-bmd-hyperdeck@github:bitfocus/companion-module-bmd-hyperdeck#v1.3.0":
+  version "1.3.0"
+  resolved "https://codeload.github.com/bitfocus/companion-module-bmd-hyperdeck/tar.gz/644a95add23bd9b1d14898c03e89be61ebaf9397"
   dependencies:
-    hyperdeck-connection "^0.5.0-nightly-latest-20220216-192753-87348bf.0"
-    smpte-timecode "^1.2.3"
+    hyperdeck-connection "0.5.0-nightly-latest-20220422-103424-8749727.0"
+    smpte-timecode "1.2.3"
 
 "companion-module-bmd-multiview16@github:bitfocus/companion-module-bmd-multiview16#v1.0.1":
   version "1.0.1"
@@ -6274,10 +6274,10 @@ husky@^7.0.4:
   resolved "https://registry.yarnpkg.com/husky/-/husky-7.0.4.tgz#242048245dc49c8fb1bf0cc7cfb98dd722531535"
   integrity sha512-vbaCKN2QLtP/vD4yvs6iz6hBEo6wkSzs8HpRah1Z6aGmF2KW5PdYuAd7uX5a+OyBZHBhd+TFLqgjUgytQr4RvQ==
 
-hyperdeck-connection@^0.5.0-nightly-latest-20220216-192753-87348bf.0:
-  version "0.5.0-nightly-latest-20220216-192753-87348bf.0"
-  resolved "https://registry.yarnpkg.com/hyperdeck-connection/-/hyperdeck-connection-0.5.0-nightly-latest-20220216-192753-87348bf.0.tgz#2c2cdad5f6146975af4e4ccb8da3381ae0841f97"
-  integrity sha512-krc36PLCVcwuYV4c2EbWA8FsgV1DI7QZrFx0z6SUdsIJv6WAStUH5Vr44H/guDvZI/e1cZ04akfIkitwY5sPBQ==
+hyperdeck-connection@0.5.0-nightly-latest-20220422-103424-8749727.0:
+  version "0.5.0-nightly-latest-20220422-103424-8749727.0"
+  resolved "https://registry.yarnpkg.com/hyperdeck-connection/-/hyperdeck-connection-0.5.0-nightly-latest-20220422-103424-8749727.0.tgz#868c3e33b8f068f8b653d820af1dae846592d136"
+  integrity sha512-fMOJKCqL3R/R2Tp0kZar1LaEzk8fAw3aq8McWec8a9VH9vQlC1xgL3TyrPiX+WJ1hjFe/A7IyVGGWlyG0X55Jw==
   dependencies:
     tslib "^2.3.1"
 
@@ -9565,7 +9565,7 @@ smart-buffer@^4.0.2, smart-buffer@^4.1.0, smart-buffer@^4.2.0:
   resolved "https://registry.yarnpkg.com/smart-buffer/-/smart-buffer-4.2.0.tgz#6e1d71fa4f18c05f7d0ff216dd16a481d0e8d9ae"
   integrity sha512-94hK0Hh8rPqQl2xXc3HsaBoOXKV20MToPkcXvwbISWLEs+64sBq5kFgn2kJDHb1Pry9yrP0dxrCI9RRci7RXKg==
 
-smpte-timecode@^1.2.3:
+smpte-timecode@1.2.3:
   version "1.2.3"
   resolved "https://registry.yarnpkg.com/smpte-timecode/-/smpte-timecode-1.2.3.tgz#272ac8826724ce793d956109cfd3982b2f6b1893"
   integrity sha512-6U+vdStmprzmpzEWS+9pw8GfiChBcMmJOdJxBjaXlGJhB9U/jcQhvh0buxJzEfhuX8E0OfYJy4hayBgAO92dBg==
