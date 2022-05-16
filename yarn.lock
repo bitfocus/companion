@@ -4134,6 +4134,10 @@ commist@^1.0.0:
   version "1.0.6"
   resolved "https://codeload.github.com/bitfocus/companion-module-vyv-photon/tar.gz/bb372905dbca4c60ccd7fbd215eb7a3513e1e489"
 
+"companion-module-workflownetwork-livetime@github:bitfocus/companion-module-workflownetwork-livetime#v1.0.0":
+  version "1.0.0"
+  resolved "https://codeload.github.com/bitfocus/companion-module-workflownetwork-livetime/tar.gz/b9093da5146c628d944bcccbba559e00d102de42"
+
 "companion-module-wyrestorm-sw0402mv@github:bitfocus/companion-module-wyrestorm-sw0402mv#v1.0.3":
   version "1.0.3"
   resolved "https://codeload.github.com/bitfocus/companion-module-wyrestorm-sw0402mv/tar.gz/1a7da047002202a88211cf42bf7710b018814cbf"
