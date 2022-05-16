@@ -3184,6 +3184,10 @@ commist@^1.0.0:
   version "1.0.4"
   resolved "https://codeload.github.com/bitfocus/companion-module-greenhippo-hippotizer/tar.gz/d9bcdfaa8bbeef4001d83fe8685cf181471d89ad"
 
+"companion-module-groupme-webhooks@github:bitfocus/companion-module-groupme-webhooks#v1.0.0":
+  version "1.0.0"
+  resolved "https://codeload.github.com/bitfocus/companion-module-groupme-webhooks/tar.gz/f0042a0af7cd22f5eb53b2955acbe910e92d23ae"
+
 "companion-module-h2r-graphics@github:bitfocus/companion-module-h2r-graphics#v2.0.1":
   version "2.0.1"
   resolved "https://codeload.github.com/bitfocus/companion-module-h2r-graphics/tar.gz/5bf1ea2d41f98f3485cfe1dd6ecea9c6d337d427"
