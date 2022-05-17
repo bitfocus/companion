@@ -21,16 +21,39 @@ export interface ModuleToHostEventsV0 {
 	saveConfig: (msg: SaveConfigMessage) => void
 	'send-osc': (msg: SendOscMessage) => void
 	parseVariablesInString: (msg: ParseVariablesInStringMessage) => ParseVariablesInStringResponseMessage
+	upgradedItems: (msg: UpgradedDataResponseMessage) => void
 }
 
 export interface HostToModuleEventsV0 {
-	init: (config: unknown) => void
+	init: (msg: InitMessage) => InitResponseMessage
 	destroy: (msg: Record<string, never>) => void
 	updateConfig: (config: unknown) => void
 	updateFeedbacks: (msg: UpdateFeedbackInstancesMessage) => void
 	updateActions: (msg: UpdateActionInstancesMessage) => void
 	executeAction: (msg: ExecuteActionMessage) => void
 	getConfigFields: (msg: GetConfigFieldsMessage) => GetConfigFieldsResponseMessage
+}
+
+export interface InitMessage {
+	label: string
+	config: unknown
+
+	lastUpgradeIndex: number
+
+	feedbacks: { [id: string]: FeedbackInstance | undefined }
+	actions: { [id: string]: ActionInstance | undefined }
+}
+export interface InitResponseMessage {
+	newUpgradeIndex: number
+
+	updatedConfig: unknown | undefined
+}
+
+export interface UpgradedDataResponseMessage {
+	updatedFeedbacks: {
+		[id: string]: (FeedbackInstanceBase & { style?: Partial<CompanionFeedbackButtonStyleResult> }) | undefined
+	}
+	updatedActions: { [id: string]: ActionInstanceBase | undefined }
 }
 
 export type GetConfigFieldsMessage = Record<string, never>
@@ -100,11 +123,18 @@ export interface UpdateFeedbackValuesMessage {
 	}>
 }
 
-export interface FeedbackInstance {
+export interface FeedbackInstanceBase {
 	id: string
-	controlId: string
+
+	// If this is pending being run through upgrade scripts, the version it needs upgraded from is tracked here
+	upgradeIndex: number | null
+
 	feedbackId: string // aka 'type'
 	options: { [key: string]: InputValue | undefined }
+}
+
+export interface FeedbackInstance extends FeedbackInstanceBase {
+	controlId: string
 
 	/** If control supports an imageBuffer, the dimensions the buffer must be */
 	image?: {
@@ -125,12 +155,17 @@ export interface UpdateFeedbackInstancesMessage {
 	feedbacks: { [id: string]: FeedbackInstance | null | undefined }
 }
 
-export interface ActionInstance {
+export interface ActionInstanceBase {
 	id: string
-	controlId: string
+
+	// If this is pending being run through upgrade scripts, the version it needs upgraded from is tracked here
+	upgradeIndex: number | null
 
 	actionId: string // aka 'type'
 	options: { [key: string]: InputValue | undefined }
+}
+export interface ActionInstance extends ActionInstanceBase {
+	controlId: string
 
 	/** @deprecated */
 	page: number

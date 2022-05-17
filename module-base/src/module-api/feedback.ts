@@ -1,4 +1,5 @@
 import { SomeCompanionInputField, InputValue } from './input.js'
+import { CompanionAlignment, CompanionTextSize } from './preset.js'
 
 export interface CompanionFeedbackEvent {
 	type: 'boolean' | 'advanced'
@@ -37,6 +38,10 @@ export interface CompanionFeedbackButtonStyleResult {
 	bgcolor?: number
 	text?: string
 	imageBuffer?: Buffer
+	size?: CompanionTextSize
+	alignment?: CompanionAlignment
+	pngalignment?: CompanionAlignment
+	png64?: string
 }
 
 export interface CompanionFeedbackBase {

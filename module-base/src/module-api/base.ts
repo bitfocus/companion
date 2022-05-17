@@ -15,6 +15,8 @@ import {
 	GetConfigFieldsMessage,
 	GetConfigFieldsResponseMessage,
 	HostToModuleEventsV0,
+	InitMessage,
+	InitResponseMessage,
 	LogMessageMessage,
 	ModuleToHostEventsV0,
 	SendOscMessage,
@@ -26,6 +28,7 @@ import {
 	UpdateActionInstancesMessage,
 	UpdateFeedbackInstancesMessage,
 	UpdateFeedbackValuesMessage,
+	UpgradedDataResponseMessage,
 } from '../host-api/api.js'
 import { literal } from '../util.js'
 import { InstanceBaseShared } from '../instance-base.js'
@@ -36,6 +39,7 @@ import { OSCSomeArguments } from '../common/osc.js'
 import { listenToEvents, serializeIsVisibleFn } from './lib.js'
 import { SomeCompanionConfigField } from './config.js'
 import { CompanionStaticUpgradeScript, CompanionUpgradeToBooleanFeedbackMap } from './upgrade.js'
+import { isInstanceBaseProps, runThroughUpgradeScripts } from './internal.js'
 
 function convertFeedbackInstanceToEvent(
 	type: 'boolean' | 'advanced',
@@ -71,6 +75,7 @@ function callFeedbackOnDefinition(definition: CompanionFeedback, feedback: Feedb
 
 export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfig> {
 	readonly #socket: SocketIOClient.Socket
+	readonly #upgradeScripts: CompanionStaticUpgradeScript<TConfig>[]
 	public readonly id: string
 
 	readonly #lifecycleQueue: PQueue = new PQueue({ concurrency: 1 })
@@ -87,18 +92,18 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 	/**
 	 * Create an instance of the module.
 	 */
-	constructor(internal: unknown, id: string) {
-		const socket = internal as SocketIOClient.Socket
-		if (!(socket instanceof SocketIOClient.Socket) || !socket.connected || typeof id !== 'string')
+	constructor(internal: unknown) {
+		if (!isInstanceBaseProps<TConfig>(internal) || !internal.socket.connected)
 			throw new Error(
 				`Module instance is being constructed incorrectly. Make sure you aren't trying to do this manually`
 			)
 
-		this.#socket = socket
-		this.id = id
+		this.#socket = internal.socket
+		this.#upgradeScripts = internal.upgradeScripts
+		this.id = internal.id
 
 		// subscribe to socket events from host
-		listenToEvents<HostToModuleEventsV0>(socket, {
+		listenToEvents<HostToModuleEventsV0>(this.#socket, {
 			init: this._handleInit.bind(this),
 			destroy: this._handleDestroy.bind(this),
 			updateConfig: this._handleConfigUpdate.bind(this),
@@ -127,18 +132,55 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 		})
 	}
 
-	private async _handleInit(config: unknown): Promise<void> {
-		await this.#lifecycleQueue.add(async () => {
+	private async _handleInit(msg: InitMessage): Promise<InitResponseMessage> {
+		return this.#lifecycleQueue.add(async () => {
 			if (this.#initialized) throw new Error('Already initialized')
 
+			const actions = msg.actions
+			const feedbacks = msg.feedbacks
+
+			/**
+			 * Performing upgrades during init requires a fair chunk of work.
+			 * Some actions/feedbacks will be using the upgradeIndex of the instance, but some may have their own upgradeIndex on themselves if they are from an import.
+			 */
+			const { updatedActions, updatedFeedbacks, updatedConfig } = runThroughUpgradeScripts(
+				actions,
+				feedbacks,
+				msg.lastUpgradeIndex,
+				this.#upgradeScripts,
+				msg.config
+			)
+			const config = (updatedConfig ?? msg.config) as TConfig
+
+			// Send the upgraded data back to companion now. Just so that if the init crashes, this doesnt have to be repeated
+			const pSendUpgrade = this._socketEmit('upgradedItems', {
+				updatedActions,
+				updatedFeedbacks,
+			})
+
+			// Now we can initialise the module
 			try {
-				await this.init(config as TConfig)
+				await this.init(config)
+
+				this.#initialized = true
 			} catch (e) {
 				console.trace(`Init failed: ${e}`)
 				throw e
+			} finally {
+				// Only now do we need to await the upgrade
+				await pSendUpgrade
 			}
 
-			this.#initialized = true
+			setImmediate(() => {
+				// Subscribe all of the actions and feedbacks
+				this._handleUpdateActions({ actions }, true)
+				this._handleUpdateFeedbacks({ feedbacks }, true)
+			})
+
+			return {
+				newUpgradeIndex: this.#upgradeScripts.length,
+				updatedConfig: config,
+			}
 		})
 	}
 	private async _handleDestroy(): Promise<void> {
@@ -172,8 +214,13 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 			bank: msg.action.bank,
 		})
 	}
-	private async _handleUpdateFeedbacks(msg: UpdateFeedbackInstancesMessage): Promise<void> {
+	private async _handleUpdateFeedbacks(msg: UpdateFeedbackInstancesMessage, skipUpgrades?: boolean): Promise<void> {
 		const newValues: UpdateFeedbackValuesMessage['values'] = []
+
+		// Run through upgrade scripts if needed
+		if (!skipUpgrades) {
+			runThroughUpgradeScripts({}, msg.feedbacks, null, this.#upgradeScripts, undefined)
+		}
 
 		for (const [id, feedback] of Object.entries(msg.feedbacks)) {
 			const existing = this.#feedbackInstances.get(id)
@@ -230,7 +277,16 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 			})
 		}
 	}
-	private async _handleUpdateActions(msg: UpdateActionInstancesMessage): Promise<void> {
+	private async _handleUpdateActions(msg: UpdateActionInstancesMessage, skipUpgrades?: boolean): Promise<void> {
+		// Run through upgrade scripts if needed
+		if (!skipUpgrades) {
+			// const pendingUpgrades = Object.values(msg.actions).filter((act) => typeof act?.upgradeIndex === 'number')
+			// if (pendingUpgrades.length > 0) {
+			// 	//
+			// }
+			runThroughUpgradeScripts(msg.actions, {}, null, this.#upgradeScripts, undefined)
+		}
+
 		for (const [id, action] of Object.entries(msg.actions)) {
 			const existing = this.#actionInstances.get(id)
 			const definition = existing && this.#actionDefinitions.get(existing.actionId)
@@ -295,11 +351,11 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 	 */
 	abstract getConfigFields(): SomeCompanionConfigField[]
 
-	/**
-	 * Provides the upgrade scripts to companion that are to be used for this module.
-	 * These get run without any awareness of the instance class.
-	 */
-	static GetUpgradeScripts?(): Array<CompanionStaticUpgradeScript<unknown>>
+	// /**
+	//  * Provides the upgrade scripts to companion that are to be used for this module.
+	//  * These get run before init is called, so should not rely on the class being fully initialized.
+	//  */
+	// GetUpgradeScripts?(): Array<CompanionStaticUpgradeScript<any>>
 
 	// /**
 	//  * Force running upgrade script from an earlier point, as specified by the value
@@ -307,49 +363,6 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 	//  * eg, 0 = runs the first script onwards
 	//  */
 	// static DEVELOPER_forceStartupUpgradeScript?: number
-
-	/**
-	 * A helper script to automate the bulk of the process to upgrade feedbacks from 'advanced' to 'boolean'.
-	 * There are some built in rules for properties names based on the most common cases
-	 * @param upgradeMap The feedbacks to upgrade and the properties to convert
-	 */
-	static CreateConvertToBooleanFeedbackUpgradeScript(
-		upgradeMap: CompanionUpgradeToBooleanFeedbackMap
-	): CompanionStaticUpgradeScript<unknown> {
-		// Warning: the unused parameters will often be null
-		return (_context, _config, _actions, feedbacks) => {
-			let changed = false
-
-			for (const feedback of feedbacks) {
-				let upgrade_rules = upgradeMap[feedback.type]
-				if (upgrade_rules === true) {
-					// These are some automated built in rules. They can help make it easier to migrate
-					upgrade_rules = {
-						bg: 'bgcolor',
-						bgcolor: 'bgcolor',
-						fg: 'color',
-						color: 'color',
-						png64: 'png64',
-						png: 'png64',
-					}
-				}
-
-				if (upgrade_rules) {
-					if (!feedback.style) feedback.style = {}
-
-					for (const [option_key, style_key] of Object.entries(upgrade_rules)) {
-						if (feedback.options[option_key] !== undefined) {
-							feedback.style[style_key] = feedback.options[option_key]
-							delete feedback.options[option_key]
-							changed = true
-						}
-					}
-				}
-			}
-
-			return changed
-		}
-	}
 
 	setActionDefinitions(actions: CompanionActions): Promise<void> {
 		const hostActions: SetActionDefinitionsMessage['actions'] = []
