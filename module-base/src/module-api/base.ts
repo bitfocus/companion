@@ -28,7 +28,6 @@ import {
 	UpdateActionInstancesMessage,
 	UpdateFeedbackInstancesMessage,
 	UpdateFeedbackValuesMessage,
-	UpgradedDataResponseMessage,
 } from '../host-api/api.js'
 import { literal } from '../util.js'
 import { InstanceBaseShared } from '../instance-base.js'
