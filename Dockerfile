@@ -27,8 +27,6 @@ RUN mv webui/build webui-build \
     && mkdir webui \
     && mv webui-build webui/build
 
-# TODO - module-local-dev dependencies
-
 # cleanup up some stuff that shouldnt be preserved
 RUN rm -R .git
 
@@ -52,5 +50,9 @@ EXPOSE 8000 16622
 
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 CMD [ "curl", "-fSsq", "http://localhost:8000/" ]
 
+# module-local-dev dependencies
+# Dependencies will be installed and cached once the container is started
+ENTRYPOINT [ "/app/module-dev-docker-entrypoint.sh" ]
+
 # Bind to 0.0.0.0, as access should be scoped down by how the port is exposed from docker
-ENTRYPOINT ["./headless_ip.js", "0.0.0.0"]
+CMD ["./headless_ip.js", "0.0.0.0"]
