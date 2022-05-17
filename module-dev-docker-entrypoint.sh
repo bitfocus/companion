@@ -11,7 +11,7 @@ if [ -d /app/module-local-dev ]; then
       echo "Skipping installation of module $module dependencies, to force, remove its node_modules directory"
     else
       echo "Installing dependencies for module $module"
-      npm install
+      yarn install --prod
     fi
   done
 fi
