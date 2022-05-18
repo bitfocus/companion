@@ -366,7 +366,7 @@
 		"companion-module-media-player-classic": "github:bitfocus/companion-module-media-player-classic#v1.0.1",
 		"companion-module-metus-ingest": "github:bitfocus/companion-module-metus-ingest#v1.2.2",
 		"companion-module-middleatlantic-racklink": "github:bitfocus/companion-module-middleatlantic-racklink#v1.0.1",
-		"companion-module-middlethings-middlecontrol": "github:bitfocus/companion-module-middlethings-middlecontrol#v1.1.8",
+		"companion-module-middlethings-middlecontrol": "github:bitfocus/companion-module-middlethings-middlecontrol#v1.1.9",
 		"companion-module-modelighting-edin": "github:bitfocus/companion-module-modelighting-edin#v1.0.1",
 		"companion-module-modulo": "github:bitfocus/companion-module-modulo#v1.0.3",
 		"companion-module-motu-avb": "github:bitfocus/companion-module-motu-avb#v1.0.6",
