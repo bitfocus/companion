@@ -81,19 +81,28 @@ if (LegacyModule.GetUpgradeScripts) {
 
 			// TODO - translate config
 
-			const actions2: CompanionMigrationActionOld[] = props.actions.map((act) => ({
-				id: act.id,
-				action: act.actionId,
-				instance: tmpContext.instanceId,
-				label: `${tmpContext.instanceId}:${act.actionId}`,
-				options: act.options,
-			}))
-			const feedbacks2: CompanionMigrationFeedbackOld[] = props.feedbacks.map((fb) => ({
-				id: fb.id,
-				type: fb.feedbackId,
-				instance_id: tmpContext.instanceId,
-				options: fb.options,
-			}))
+			const actionControlIds = new Map<string, string>()
+			const feedbackControlIds = new Map<string, string>()
+
+			const actions2: CompanionMigrationActionOld[] = props.actions.map((act) => {
+				actionControlIds.set(act.id, act.controlId)
+				return {
+					id: act.id,
+					action: act.actionId,
+					instance: tmpContext.instanceId,
+					label: `${tmpContext.instanceId}:${act.actionId}`,
+					options: act.options,
+				}
+			})
+			const feedbacks2: CompanionMigrationFeedbackOld[] = props.feedbacks.map((fb) => {
+				feedbackControlIds.set(fb.id, fb.controlId)
+				return {
+					id: fb.id,
+					type: fb.feedbackId,
+					instance_id: tmpContext.instanceId,
+					options: fb.options,
+				}
+			})
 
 			const changed = fcn(context, props.config, actions2, feedbacks2)
 
@@ -102,13 +111,13 @@ if (LegacyModule.GetUpgradeScripts) {
 					updatedConfig: props.config,
 					updatedActions: actions2.map((act) => ({
 						id: act.id,
-						controlId: '',
+						controlId: actionControlIds.get(act.id) || '',
 						actionId: act.action,
 						options: act.options,
 					})),
 					updatedFeedbacks: feedbacks2.map((fb) => ({
 						id: fb.id,
-						controlId: '',
+						controlId: feedbackControlIds.get(fb.id) || '',
 						feedbackId: fb.type,
 						options: fb.options,
 					})),
