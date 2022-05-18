@@ -58,7 +58,7 @@ export function runThroughUpgradeScripts(
 
 		// Perform the upgrades. We start on the first batch/instance, and work our way up to the last
 		const targetCount = upgradeScripts.length
-		for (let i = firstUpgradeGroup; i <= targetCount; i++) {
+		for (let i = firstUpgradeGroup; i < targetCount; i++) {
 			const group = pendingUpgradesGrouped.get(i - 1)
 			if (group) {
 				// Update the list of objects that need upgrading
