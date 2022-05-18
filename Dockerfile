@@ -1,8 +1,5 @@
 FROM node:14-bullseye as companion-builder
 
-WORKDIR /app
-COPY . /app/
-
 # Installation Prep
 RUN apt-get update && apt-get install -y \
     libusb-1.0-0-dev \
@@ -11,32 +8,39 @@ RUN apt-get update && apt-get install -y \
     cmake \
     && rm -rf /var/lib/apt/lists/*
 
-# Install dependencies
 RUN yarn config set network-timeout 100000 -g
+
+WORKDIR /app
+COPY . /app/
+
+# Install dependencies
 RUN ./tools/yarn.sh
 
 # Generate version number file
 RUN yarn build:writefile
 
-# strip back unnecessary dependencies
-RUN yarn --frozen-lockfile --prod
+# build webpacked server
+RUN yarn webpack
 
-# Delete the webui source
-RUN mv webui/build webui-build \
-    && rm -R webui \
-    && mkdir webui \
-    && mv webui-build webui/build
+# # Delete the webui source
+# RUN mv webui/build webui-build \
+#     && rm -R webui \
+#     && mkdir webui \
+#     && mv webui-build webui/build
 
-# TODO - module-local-dev dependencies
+# # TODO - module-local-dev dependencies
 
-# cleanup up some stuff that shouldnt be preserved
-RUN rm -R .git
+# # cleanup up some stuff that shouldnt be preserved
+# RUN rm -R .git
 
 # make the production image
 FROM node:14-bullseye-slim
 
 WORKDIR /app
-COPY --from=companion-builder /app/	/app/
+COPY --from=companion-builder /app/dist	/app/dist
+COPY --from=companion-builder /app/docs	/app/docs
+COPY --from=companion-builder /app/webui/build	/app/webui/build
+COPY --from=companion-builder /app/module-legacy/manifests	/app/module-legacy/manifests
 
 # Install curl for the health check
 RUN apt update && apt install -y curl && \

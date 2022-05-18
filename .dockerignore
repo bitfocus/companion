@@ -8,3 +8,7 @@ webui/build
 .github
 Dockerfile
 .prettier*
+dist
+*/dist
+module-legacy/entrypoints
+module-legacy/manifests

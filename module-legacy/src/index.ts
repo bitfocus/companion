@@ -7,7 +7,7 @@ import {
 	SomeCompanionConfigField,
 	splitRgb,
 } from '@companion-module/base'
-import { from15to32Keys, literal } from '@companion-module/base/dist/util'
+import { from15to32Keys, literal } from '@companion-module/base/dist/util.js'
 import type InstanceSkel = require('../instance_skel')
 import type {
 	CompanionStaticUpgradeScript as CompanionStaticUpgradeScriptOld,
