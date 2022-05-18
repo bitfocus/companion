@@ -70,7 +70,7 @@ export function runEntrypoint<TConfig>(
 						literal<InstanceBaseProps<TConfig>>({
 							id: connectionId,
 							socket,
-							upgradeScripts
+							upgradeScripts,
 						})
 					)
 				})
