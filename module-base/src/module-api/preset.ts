@@ -52,6 +52,7 @@ export interface CompanionPresetAction {
 }
 
 export interface CompanionPresetPress {
+	id: string
 	category: string
 	label: string
 	bank: CompanionBankPresetBase<'press'> & Partial<CompanionBankAdditionalPressProps>
@@ -63,6 +64,7 @@ export interface CompanionPresetPress {
 }
 
 export interface CompanionPresetStepped {
+	id: string
 	category: string
 	label: string
 	bank: CompanionBankPresetBase<'step'> & Partial<CompanionBankAdditionalSteppedProps>

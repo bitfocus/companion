@@ -14,6 +14,7 @@ import { ServiceRest } from './rest.js'
 
 // @ts-expect-error Not typescript
 import Image from '../../lib/Graphics/Image.js'
+import { nanoid } from 'nanoid'
 
 /**
  * Make all optional properties be required and `| undefined`
@@ -327,6 +328,7 @@ export class FakeSystem extends EventEmitter {
 			if (preset.bank.latch) {
 				newPresets.push(
 					literal<ModuleApi.CompanionPresetStepped>({
+						id: nanoid(), // Temporary
 						category: preset.category,
 						label: preset.label,
 						bank: {
@@ -343,6 +345,7 @@ export class FakeSystem extends EventEmitter {
 			} else {
 				newPresets.push(
 					literal<ModuleApi.CompanionPresetPress>({
+						id: nanoid(), // Temporary
 						category: preset.category,
 						label: preset.label,
 						bank: convertPresetBank('press', preset.bank),

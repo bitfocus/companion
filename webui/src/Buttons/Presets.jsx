@@ -25,7 +25,7 @@ export const InstancePresets = function InstancePresets({ resetToken }) {
 		setPresetsMap(null)
 		setPresetError(null)
 
-		socketEmit(context.socket, 'get_presets', [])
+		socketEmit(context.socket, 'presets:subscribe', [])
 			.then(([data]) => {
 				setPresetsMap(data)
 			})
@@ -58,12 +58,14 @@ export const InstancePresets = function InstancePresets({ resetToken }) {
 			})
 		}
 
-		context.socket.on('presets_update', updatePresets)
-		context.socket.on('presets_delete', removePresets)
+		context.socket.on('presets:update', updatePresets)
+		context.socket.on('presets:delete', removePresets)
 
 		return () => {
-			context.socket.off('presets_update', updatePresets)
-			context.socket.off('presets_delete', removePresets)
+			context.socket.emit('presets:unsubscribe')
+
+			context.socket.off('presets:update', updatePresets)
+			context.socket.off('presets:delete', removePresets)
 		}
 	}, [context.socket, reloadToken])
 
@@ -220,22 +222,22 @@ function PresetIconPreview({ preset, instanceId, ...childProps }) {
 		item: {
 			type: 'preset',
 			instanceId: instanceId,
-			preset: preset,
+			presetId: preset.id,
 		},
 	})
 
 	useEffect(() => {
 		setPreviewError(false)
 
-		socketEmit(context.socket, 'graphics_preview_generate', [preset.bank])
+		socketEmit(context.socket, 'presets:preview_render', [instanceId, preset.id])
 			.then(([img]) => {
-				setPreviewImage(dataToButtonImage(img))
+				setPreviewImage(img ? dataToButtonImage(img) : null)
 			})
 			.catch((e) => {
 				console.error('Failed to preview bank')
 				setPreviewError(true)
 			})
-	}, [preset.bank, context.socket, retryToken])
+	}, [preset.id, context.socket, instanceId, retryToken])
 
 	const onClick = useCallback((i, isDown) => isDown && setRetryToken(nanoid()), [])
 

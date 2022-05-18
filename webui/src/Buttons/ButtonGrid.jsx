@@ -485,7 +485,7 @@ function ButtonGridIcon(props) {
 		accept: 'preset',
 		drop: (dropData) => {
 			console.log('preset drop', dropData)
-			context.socket.emit('preset_drop', dropData.instanceId, dropData.preset, props.page, props.index)
+			context.socket.emit('presets:import_to_bank', dropData.instanceId, dropData.presetId, props.page, props.index)
 		},
 		collect: (monitor) => ({
 			isOver: !!monitor.isOver(),
