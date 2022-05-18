@@ -472,7 +472,7 @@
 		"companion-module-tallyma-wirelesstally": "github:bitfocus/companion-module-tallyma-wirelesstally#v1.0.5",
 		"companion-module-tascam-bdmp1": "github:bitfocus/companion-module-tascam-bdmp1#v0.1.8",
 		"companion-module-tascam-cd": "github:bitfocus/companion-module-tascam-cd#v1.0.4",
-		"companion-module-techministry-midirelay": "github:bitfocus/companion-module-techministry-midirelay#v2.0.4",
+		"companion-module-techministry-midirelay": "github:bitfocus/companion-module-techministry-midirelay#v2.0.5",
 		"companion-module-techministry-protally": "github:bitfocus/companion-module-techministry-protally#v1.0.1",
 		"companion-module-techministry-tallyarbiter": "github:bitfocus/companion-module-techministry-tallyarbiter#v1.0.5",
 		"companion-module-teracom-tcw181b": "github:bitfocus/companion-module-teracom-tcw181b#v1.0.4",
