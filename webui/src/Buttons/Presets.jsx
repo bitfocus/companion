@@ -1,6 +1,6 @@
 import React, { useCallback, useContext, useEffect, useState } from 'react'
 import { CAlert, CButton, CRow } from '@coreui/react'
-import { StaticContext, InstancesContext, LoadingRetryOrError, socketEmit } from '../util'
+import { StaticContext, InstancesContext, LoadingRetryOrError, socketEmit, socketEmit2 } from '../util'
 import { useDrag } from 'react-dnd'
 import { BankPreview, dataToButtonImage, RedImage } from '../Components/BankButton'
 import { nanoid } from 'nanoid'
@@ -25,8 +25,8 @@ export const InstancePresets = function InstancePresets({ resetToken }) {
 		setPresetsMap(null)
 		setPresetError(null)
 
-		socketEmit(context.socket, 'presets:subscribe', [])
-			.then(([data]) => {
+		socketEmit2(context.socket, 'presets:subscribe', [])
+			.then((data) => {
 				setPresetsMap(data)
 			})
 			.catch((e) => {
@@ -50,9 +50,11 @@ export const InstancePresets = function InstancePresets({ resetToken }) {
 		context.socket.on('presets:update', updatePresets)
 
 		return () => {
-			context.socket.emit('presets:unsubscribe')
-
 			context.socket.off('presets:update', updatePresets)
+
+			socketEmit2(context.socket, 'presets:unsubscribe', []).catch((e) => {
+				console.error('Failed to unsubscribe to presets')
+			})
 		}
 	}, [context.socket, reloadToken])
 
@@ -216,8 +218,8 @@ function PresetIconPreview({ preset, instanceId, ...childProps }) {
 	useEffect(() => {
 		setPreviewError(false)
 
-		socketEmit(context.socket, 'presets:preview_render', [instanceId, preset.id])
-			.then(([img]) => {
+		socketEmit2(context.socket, 'presets:preview_render', [instanceId, preset.id])
+			.then((img) => {
 				setPreviewImage(img ? dataToButtonImage(img) : null)
 			})
 			.catch((e) => {

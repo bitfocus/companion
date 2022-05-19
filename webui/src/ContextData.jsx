@@ -11,6 +11,7 @@ import {
 	SurfacesContext,
 	PagesContext,
 	TriggersContext,
+	socketEmit2,
 } from './util'
 import { NotificationsManager } from './Components/Notifications'
 
@@ -69,19 +70,19 @@ export function ContextData({ socket, children }) {
 				.catch((e) => {
 					console.error('Failed to load modules list', e)
 				})
-			socketEmit(socket, 'action-definitions:subscribe', [])
-				.then(([data]) => {
+			socketEmit2(socket, 'action-definitions:subscribe', [])
+				.then((data) => {
 					setActionDefinitions(data || {})
 				})
 				.catch((e) => {
-					console.error('Failed to load variable definitions list', e)
+					console.error('Failed to load action definitions list', e)
 				})
-			socketEmit(socket, 'feedback-definitions:subscribe', [])
-				.then(([data]) => {
+			socketEmit2(socket, 'feedback-definitions:subscribe', [])
+				.then((data) => {
 					setFeedbackDefinitions(data || {})
 				})
 				.catch((e) => {
-					console.error('Failed to load variable definitions list', e)
+					console.error('Failed to load feedback definitions list', e)
 				})
 			socketEmit(socket, 'variable_instance_definitions_get', [])
 				.then(([data]) => {
@@ -225,8 +226,12 @@ export function ContextData({ socket, children }) {
 				socket.off('schedule_refresh', setTriggers)
 				socket.off('schedule_last_run', updateTriggerLastRun)
 
-				socket.emit('action-definitions:unsubscribe')
-				socket.emit('feedback-definitions:unsubscribe')
+				socketEmit2(socket, 'action-definitions:unsubscribe', []).catch((e) => {
+					console.error('Failed to unsubscribe to action definitions list', e)
+				})
+				socketEmit2(socket, 'feedback-definitions:unsubscribe', []).catch((e) => {
+					console.error('Failed to unsubscribe to action definitions list', e)
+				})
 			}
 		}
 	}, [socket])

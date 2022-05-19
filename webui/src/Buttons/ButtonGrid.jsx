@@ -9,7 +9,7 @@ import React, {
 	useRef,
 	useState,
 } from 'react'
-import { StaticContext, KeyReceiver, PagesContext } from '../util'
+import { StaticContext, KeyReceiver, PagesContext, socketEmit2 } from '../util'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import {
 	faArrowsAlt,
@@ -485,7 +485,14 @@ function ButtonGridIcon(props) {
 		accept: 'preset',
 		drop: (dropData) => {
 			console.log('preset drop', dropData)
-			context.socket.emit('presets:import_to_bank', dropData.instanceId, dropData.presetId, props.page, props.index)
+			socketEmit2(context.socket, 'presets:import_to_bank', [
+				dropData.instanceId,
+				dropData.presetId,
+				props.page,
+				props.index,
+			]).catch((e) => {
+				console.error('Preset import failed')
+			})
 		},
 		collect: (monitor) => ({
 			isOver: !!monitor.isOver(),

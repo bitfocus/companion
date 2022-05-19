@@ -31,6 +31,20 @@ export function socketEmit(socket, name, args, timeout, timeoutMessage) {
 	return pTimeout(p, timeout, timeoutMessage ?? `Timed out after ${timeout / 1000}s`)
 }
 
+export function socketEmit2(socket, name, args, timeout, timeoutMessage) {
+	const p = new Promise((resolve, reject) => {
+		console.log('send', name, ...args)
+
+		socket.emit(name, ...args, (err, res) => {
+			if (err) reject(err)
+			else resolve(res)
+		})
+	})
+
+	timeout = timeout ?? 5000
+	return pTimeout(p, timeout, timeoutMessage ?? `Timed out after ${timeout / 1000}s`)
+}
+
 const freezePrototypes = () => {
 	if (Object.isFrozen(console)) {
 		return
