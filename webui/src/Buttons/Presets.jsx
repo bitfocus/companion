@@ -46,26 +46,13 @@ export const InstancePresets = function InstancePresets({ resetToken }) {
 				}
 			})
 		}
-		const removePresets = (id) => {
-			setPresetsMap((oldPresets) => {
-				if (oldPresets) {
-					const newPresets = { ...oldPresets }
-					delete newPresets[id]
-					return newPresets
-				} else {
-					return oldPresets
-				}
-			})
-		}
 
 		context.socket.on('presets:update', updatePresets)
-		context.socket.on('presets:delete', removePresets)
 
 		return () => {
 			context.socket.emit('presets:unsubscribe')
 
 			context.socket.off('presets:update', updatePresets)
-			context.socket.off('presets:delete', removePresets)
 		}
 	}, [context.socket, reloadToken])
 

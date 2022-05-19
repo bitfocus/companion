@@ -69,14 +69,14 @@ export function ContextData({ socket, children }) {
 				.catch((e) => {
 					console.error('Failed to load modules list', e)
 				})
-			socketEmit(socket, 'action_instance_definitions_get', [])
+			socketEmit(socket, 'action-definitions:subscribe', [])
 				.then(([data]) => {
 					setActionDefinitions(data || {})
 				})
 				.catch((e) => {
 					console.error('Failed to load variable definitions list', e)
 				})
-			socketEmit(socket, 'feedback_instance_definitions_get', [])
+			socketEmit(socket, 'feedback-definitions:subscribe', [])
 				.then(([data]) => {
 					setFeedbackDefinitions(data || {})
 				})
@@ -157,9 +157,8 @@ export function ContextData({ socket, children }) {
 			socket.on('variable_instance_definitions_set', updateVariableDefinitions)
 			socket.on('custom_variables_get', setCustomVariablesAndUpdateVariables)
 
-			socket.on('action_instance_definitions_set', updateActionDefinitions)
-
-			socket.on('feedback_instance_definitions_set', updateFeedbackDefinitions)
+			socket.on('action-definitions:update', updateActionDefinitions)
+			socket.on('feedback-definitions:update', updateFeedbackDefinitions)
 
 			socket.on('set_userconfig_key', updateUserConfigValue)
 
@@ -217,14 +216,17 @@ export function ContextData({ socket, children }) {
 				socket.off('instances_get:result', setInstances)
 				socket.off('variable_instance_definitions_set', updateVariableDefinitions)
 				socket.off('custom_variables_get', setCustomVariablesAndUpdateVariables)
-				socket.off('action_instance_definitions_set', updateActionDefinitions)
-				socket.off('feedback_instance_definitions_set', updateFeedbackDefinitions)
+				socket.off('action-definitions:update', updateActionDefinitions)
+				socket.off('feedback-definitions:update', updateFeedbackDefinitions)
 				socket.off('set_userconfig_key', updateUserConfigValue)
 				socket.off('devices_list', setSurfaces)
 				socket.off('set_page', updatePageInfo)
 
 				socket.off('schedule_refresh', setTriggers)
 				socket.off('schedule_last_run', updateTriggerLastRun)
+
+				socket.emit('action-definitions:unsubscribe')
+				socket.emit('feedback-definitions:unsubscribe')
 			}
 		}
 	}, [socket])
