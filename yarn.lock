@@ -3782,9 +3782,9 @@ commist@^1.0.0:
   version "1.0.2"
   resolved "https://codeload.github.com/bitfocus/companion-module-sain-smart-relay/tar.gz/9b7274d9bb0f9b7d8dbca91e5d046d5d676daf6d"
 
-"companion-module-samsung-display@github:bitfocus/companion-module-samsung-display#v1.0.2":
-  version "1.0.2"
-  resolved "https://codeload.github.com/bitfocus/companion-module-samsung-display/tar.gz/35c3a9facebfec89d34324bf73e5b5ef52ec7599"
+"companion-module-samsung-display@github:bitfocus/companion-module-samsung-display#v1.0.3":
+  version "1.0.3"
+  resolved "https://codeload.github.com/bitfocus/companion-module-samsung-display/tar.gz/e5e24bd8ebcbdff1f72c3bbf53e4000786dacee3"
 
 "companion-module-seervision-suite@github:bitfocus/companion-module-seervision-suite#v1.2.1":
   version "1.2.1"
