@@ -243,7 +243,9 @@ const ButtonGridActions = forwardRef(function ButtonGridActions({ isHot, pageNum
 					switch (activeFunction) {
 						case 'delete':
 							resetRef.current.show('Clear bank', `Clear style and actions for this button?`, 'Clear', () => {
-								context.socket.emit('bank_reset', pageNumber, index)
+								socketEmit2(context.socket, 'controls:reset', [pageNumber, index]).catch((e) => {
+									console.error(`Reset failed: ${e}`)
+								})
 							})
 
 							stopFunction()

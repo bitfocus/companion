@@ -45,7 +45,13 @@ export function EditButton({ page, bank, onKeyUp }) {
 			})
 
 		const patchConfig = (patch) => {
-			setConfig((oldConfig) => jsonPatch.applyPatch(cloneDeep(oldConfig) || {}, patch).newDocument)
+			setConfig((oldConfig) => {
+				if (patch === false) {
+					return false
+				} else {
+					return jsonPatch.applyPatch(cloneDeep(oldConfig) || {}, patch).newDocument
+				}
+			})
 		}
 
 		const controlId = `bank:${page}-${bank}` // TODO - use lib
@@ -85,15 +91,9 @@ export function EditButton({ page, bank, onKeyUp }) {
 			}
 
 			const doChange = () => {
-				socketEmit(context.socket, 'bank_style', [page, bank, newStyle])
-					.then(([p, b, config]) => {
-						setConfig(config)
-						setTableLoadStatus({})
-						setReloadTablesToken(nanoid())
-					})
-					.catch((e) => {
-						console.error('Failed to set bank style', e)
-					})
+				socketEmit2(context.socket, 'controls:reset', [page, bank, newStyle]).catch((e) => {
+					console.error(`Set type failed: ${e}`)
+				})
 			}
 
 			if (show_warning) {
@@ -119,8 +119,9 @@ export function EditButton({ page, bank, onKeyUp }) {
 			`This will clear the style, feedbacks and all actions`,
 			'Clear',
 			() => {
-				context.socket.emit('bank_reset', page, bank)
-				setReloadConfigToken(nanoid())
+				socketEmit2(context.socket, 'controls:reset', [page, bank]).catch((e) => {
+					console.error(`Reset failed: ${e}`)
+				})
 			}
 		)
 	}, [context.socket, page, bank])

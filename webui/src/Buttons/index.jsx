@@ -3,7 +3,7 @@ import { faCalculator, faDollarSign, faFileImport, faGift } from '@fortawesome/f
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { nanoid } from 'nanoid'
 import { InstancePresets } from './Presets'
-import { StaticContext, MyErrorBoundary } from '../util'
+import { StaticContext, MyErrorBoundary, socketEmit2 } from '../util'
 import { ButtonsGridPanel } from './ButtonGrid'
 import { EditButton } from './EditButton'
 import { ImportExport } from './ImportExport'
@@ -61,9 +61,9 @@ export function ButtonsPage({ hotPress }) {
 							`This will clear the style, feedbacks and all actions`,
 							'Clear',
 							() => {
-								context.socket.emit('bank_reset', selectedButton[0], selectedButton[1])
-								// Invalidate the ui component to cause a reload
-								setTabResetToken(nanoid())
+								socketEmit2(context.socket, 'controls:reset', [selectedButton[0], selectedButton[1]]).catch((e) => {
+									console.error(`Reset failed: ${e}`)
+								})
 							}
 						)
 					}
