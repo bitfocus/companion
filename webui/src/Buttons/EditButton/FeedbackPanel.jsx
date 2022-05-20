@@ -14,34 +14,20 @@ import { ButtonStyleConfigFields } from './ButtonStyleConfig'
 export const FeedbacksPanel = function ({
 	page,
 	bank,
+	feedbacks,
 	dragId,
 	addCommand,
-	getCommand,
 	updateOption,
 	orderCommand,
 	deleteCommand,
-	setLoadStatus,
-	loadStatusKey,
-	reloadToken,
 }) {
 	const context = useContext(StaticContext)
-	const [feedbacks, setFeedbacks] = useState([])
+	// const [feedbacks, setFeedbacks] = useState([])
+	const setFeedbacks = useCallback(() => {
+		//TODO - remove this!
+	}, [])
 
 	const confirmModal = useRef()
-
-	// Ensure the correct data is loaded
-	useEffect(() => {
-		setLoadStatus(loadStatusKey, false)
-		socketEmit(context.socket, getCommand, [page, bank])
-			.then(([page, bank, feedbacks]) => {
-				setFeedbacks(feedbacks || [])
-				setLoadStatus(loadStatusKey, true)
-			})
-			.catch((e) => {
-				setLoadStatus(loadStatusKey, 'Failed to load feedbacks')
-				console.error('Failed to load bank feedbacks', e)
-			})
-	}, [context.socket, getCommand, setLoadStatus, loadStatusKey, page, bank, reloadToken])
 
 	const setValue = useCallback(
 		(feedbackId, key, val) => {

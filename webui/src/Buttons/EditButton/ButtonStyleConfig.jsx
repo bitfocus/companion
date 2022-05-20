@@ -1,6 +1,6 @@
 import { CButton, CRow, CCol, CButtonGroup, CLabel, CForm, CAlert } from '@coreui/react'
 import React, { useCallback, useContext, useState } from 'react'
-import { StaticContext, socketEmit } from '../../util'
+import { StaticContext, socketEmit, socketEmit2 } from '../../util'
 import {
 	AlignmentInputField,
 	CheckboxInputField,
@@ -13,27 +13,23 @@ import { FONT_SIZES } from '../../Constants'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faTrash } from '@fortawesome/free-solid-svg-icons'
 
-export function ButtonStyleConfig({ page, bank, config, configRef, valueChanged }) {
+export function ButtonStyleConfig({ page, bank, controlType, config, configRef }) {
 	const context = useContext(StaticContext)
 
 	const [pngError, setPngError] = useState(null)
-	const clearPng = useCallback(() => context.socket.emit('bank_clear_png', page, bank), [context.socket, page, bank])
 	const setPng = useCallback(
 		(data) => {
 			setPngError(null)
-			socketEmit(context.socket, 'bank_set_png', [page, bank, data])
-				.then(([res]) => {
-					if (res !== 'ok') {
-						setPngError('An error occured while uploading image')
-					} else {
-						setPngError(null)
-						// bank_preview_page(p);
-					}
-				})
-				.catch((e) => {
-					console.error('Failed to upload png', e)
-					setPngError('Failed to set png')
-				})
+			socketEmit(context.socket, 'controls:setConfigFields', [
+				page,
+				bank,
+				{
+					png64: data,
+				},
+			]).catch((e) => {
+				console.error('Failed to upload png', e)
+				setPngError('Failed to set png')
+			})
 		},
 		[context.socket, page, bank]
 	)
@@ -41,19 +37,27 @@ export function ButtonStyleConfig({ page, bank, config, configRef, valueChanged 
 	const setValueInner = useCallback(
 		(key, value) => {
 			console.log('set', page, bank, key, value)
-			if (!configRef.current || value !== configRef.current[key]) {
-				context.socket.emit('bank_changefield', page, bank, key, value)
-				valueChanged()
+			if (configRef.current === undefined || value !== configRef.current[key]) {
+				socketEmit2(context.socket, 'controls:setConfigFields', [
+					page,
+					bank,
+					{
+						[key]: value,
+					},
+				]).catch((e) => {
+					console.error(`Set field failed: ${e}`)
+				})
 			}
 		},
-		[context.socket, page, bank, valueChanged, configRef]
+		[context.socket, page, bank, configRef]
 	)
+	const clearPng = useCallback(() => setValueInner('png64', null), [setValueInner])
 
 	const setShowTopBar = useCallback((val) => setValueInner('show_topbar', val), [setValueInner])
 	const setStepAutoProgressValue = useCallback((val) => setValueInner('step_auto_progress', val), [setValueInner])
 	const setRelativeDelayValue = useCallback((val) => setValueInner('relative_delay', val), [setValueInner])
 
-	switch (config.style) {
+	switch (controlType) {
 		case undefined:
 			return (
 				<CAlert color="dark" className="mt-5">
@@ -121,7 +125,7 @@ export function ButtonStyleConfig({ page, bank, config, configRef, valueChanged 
 						</p>
 					</CCol>
 
-					{config.style === 'step' ? (
+					{controlType === 'step' ? (
 						<CCol className="fieldtype-checkbox" sm={2} xs={3}>
 							<label>Auto progress</label>
 							<p>

@@ -5,11 +5,13 @@ import React, { useCallback, useContext, useEffect, useRef, useState } from 'rea
 import { nanoid } from 'nanoid'
 import { BankPreview, dataToButtonImage } from '../../Components/BankButton'
 import { GenericConfirmModal } from '../../Components/GenericConfirmModal'
-import { StaticContext, KeyReceiver, LoadingRetryOrError, socketEmit, UserConfigContext } from '../../util'
+import { StaticContext, KeyReceiver, LoadingRetryOrError, socketEmit, UserConfigContext, socketEmit2 } from '../../util'
 import { ActionsPanel } from './ActionsPanel'
+import jsonPatch from 'fast-json-patch'
 
 import { ButtonStyleConfig } from './ButtonStyleConfig'
 import { FeedbacksPanel } from './FeedbackPanel'
+import { cloneDeep } from 'lodash-es'
 
 export function EditButton({ page, bank, onKeyUp }) {
 	const context = useContext(StaticContext)
@@ -19,7 +21,7 @@ export function EditButton({ page, bank, onKeyUp }) {
 
 	const [config, setConfig] = useState(null)
 	const configRef = useRef()
-	configRef.current = config // update the ref every render
+	configRef.current = config?.config // update the ref every render
 
 	const [configError, setConfigError] = useState(null)
 	const [tableLoadStatus, setTableLoadStatus] = useState({})
@@ -27,10 +29,13 @@ export function EditButton({ page, bank, onKeyUp }) {
 	const [reloadConfigToken, setReloadConfigToken] = useState(nanoid())
 	const [reloadTablesToken, setReloadTablesToken] = useState(nanoid())
 
-	const loadConfig = useCallback(() => {
-		socketEmit(context.socket, 'get_bank', [page, bank])
-			.then(([page, bank, config]) => {
-				setConfig(config)
+	useEffect(() => {
+		setConfig(null)
+		setConfigError(null)
+
+		socketEmit2(context.socket, 'controls:subscribe', [page, bank])
+			.then((config) => {
+				setConfig(config ?? false)
 				setConfigError(null)
 			})
 			.catch((e) => {
@@ -38,19 +43,26 @@ export function EditButton({ page, bank, onKeyUp }) {
 				setConfig(null)
 				setConfigError('Failed to load bank config')
 			})
-	}, [context.socket, page, bank])
 
-	// Keep config loaded
-	useEffect(() => {
-		setConfig(null)
-		setConfigError(null)
+		const patchConfig = (patch) => {
+			setConfig((oldConfig) => jsonPatch.applyPatch(cloneDeep(oldConfig) || {}, patch).newDocument)
+		}
 
-		loadConfig()
+		const controlId = `bank:${page}-${bank}` // TODO - use lib
+		context.socket.on(`controls:${controlId}`, patchConfig)
 
 		// reload tables too
 		setTableLoadStatus({})
 		setReloadTablesToken(nanoid())
-	}, [loadConfig, reloadConfigToken])
+
+		return () => {
+			context.socket.off(`controls:${controlId}`, patchConfig)
+
+			socketEmit2(context.socket, 'controls:unsubscribe', [page, bank]).catch((e) => {
+				console.error('Failed to unsubscribe bank config', e)
+			})
+		}
+	}, [context.socket, page, bank, reloadConfigToken])
 
 	const addLoadStatus = useCallback((key, value) => {
 		setTableLoadStatus((oldStatus) => ({ ...oldStatus, [key]: value }))
@@ -116,14 +128,15 @@ export function EditButton({ page, bank, onKeyUp }) {
 	const errors = Object.values(tableLoadStatus).filter((s) => typeof s === 'string')
 	if (configError) errors.push(configError)
 	const loadError = errors.length > 0 ? errors.join(', ') : null
-	const dataReady = !loadError && !!config && Object.values(tableLoadStatus).filter((s) => s !== true).length === 0
+	const hasConfig = config || config === false
+	const dataReady = !loadError && hasConfig && Object.values(tableLoadStatus).filter((s) => s !== true).length === 0
 
 	return (
 		<KeyReceiver onKeyUp={onKeyUp} tabIndex={0} className="edit-button-panel">
 			<GenericConfirmModal ref={resetModalRef} />
 
 			<LoadingRetryOrError dataReady={dataReady} error={loadError} doRetry={doRetryLoad} />
-			{config ? (
+			{hasConfig ? (
 				<div style={{ display: dataReady ? '' : 'none' }}>
 					<div>
 						<ButtonEditPreview page={page} bank={bank} />
@@ -151,13 +164,13 @@ export function EditButton({ page, bank, onKeyUp }) {
 							</CDropdownMenu>
 						</CDropdown>
 						&nbsp;
-						<CButton color="danger" hidden={!config.style} onClick={resetBank}>
+						<CButton color="danger" hidden={!config} onClick={resetBank}>
 							Erase
 						</CButton>
 						&nbsp;
 						<CButton
 							color="warning"
-							hidden={config.style !== 'press' && config.style !== 'step'}
+							hidden={!config || (config.type !== 'press' && config.type !== 'step')}
 							onMouseDown={() => context.socket.emit('hot_press', page, bank, true)}
 							onMouseUp={() => context.socket.emit('hot_press', page, bank, false)}
 						>
@@ -165,32 +178,46 @@ export function EditButton({ page, bank, onKeyUp }) {
 						</CButton>
 					</div>
 
-					<ButtonStyleConfig config={config} configRef={configRef} page={page} bank={bank} valueChanged={loadConfig} />
-
-					<ActionsSection
-						style={config.style}
+					<ButtonStyleConfig
+						controlType={config.type}
+						config={config.config}
+						configRef={configRef}
 						page={page}
 						bank={bank}
-						addLoadStatus={addLoadStatus}
-						reloadTablesToken={reloadTablesToken}
 					/>
 
-					{config.style === 'press' || config.style === 'step' ? (
+					{config ? (
 						<>
-							<h4 className="mt-3">Feedback</h4>
-							<FeedbacksPanel
-								page={page}
-								bank={bank}
-								dragId={'feedback'}
-								addCommand="bank_addFeedback"
-								getCommand="bank_get_feedbacks"
-								updateOption="bank_update_feedback_option"
-								orderCommand="bank_update_feedback_order"
-								deleteCommand="bank_delFeedback"
-								loadStatusKey={'downActions'}
-								setLoadStatus={addLoadStatus}
-								reloadToken={reloadTablesToken}
-							/>
+							{/* {config.action_sets ? (
+								<ActionsSection
+									style={config.type}
+									page={page}
+									bank={bank}
+									action_sets={config.action_sets}
+									addLoadStatus={addLoadStatus}
+									reloadTablesToken={reloadTablesToken}
+								/>
+							) : (
+								''
+							)} */}
+
+							{config.feedbacks ? (
+								<>
+									<h4 className="mt-3">Feedback</h4>
+									<FeedbacksPanel
+										page={page}
+										bank={bank}
+										feedbacks={config.feedbacks}
+										dragId={'feedback'}
+										addCommand="bank_addFeedback"
+										updateOption="bank_update_feedback_option"
+										orderCommand="bank_update_feedback_order"
+										deleteCommand="bank_delFeedback"
+									/>
+								</>
+							) : (
+								''
+							)}
 						</>
 					) : (
 						''
@@ -216,7 +243,7 @@ export function EditButton({ page, bank, onKeyUp }) {
 	)
 }
 
-function ActionsSection({ style, page, bank, addLoadStatus, reloadTablesToken }) {
+function ActionsSection({ style, page, bank, action_sets, addLoadStatus, reloadTablesToken }) {
 	const context = useContext(StaticContext)
 
 	const confirmRef = useRef()
