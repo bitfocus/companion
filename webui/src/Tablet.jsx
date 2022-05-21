@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { LoadingRetryOrError, MyErrorBoundary, SERVER_URL, socketEmit, useMountEffect } from './util'
+import { LoadingRetryOrError, MyErrorBoundary, SERVER_URL, socketEmit, socketEmit2, useMountEffect } from './util'
 import io from 'socket.io-client'
 import { CButton, CCol, CContainer, CForm, CFormGroup, CInput, CInputCheckbox, CRow, CSelect } from '@coreui/react'
 import { nanoid } from 'nanoid'
@@ -537,7 +537,9 @@ function ButtonGrid({ socket, imageCache, number, cols, rows, goFirstPage, goNex
 			} else if (goFirstPage && pressed && pageInfo && pageInfo.pagenum && pageInfo.pagenum.includes(bank)) {
 				goFirstPage()
 			} else {
-				socket.emit('hot_press', number, bank, pressed)
+				socketEmit2(socket, 'controls:hot-press', [number, bank, pressed]).catch((e) =>
+					console.error(`Hot press failed: ${e}`)
+				)
 			}
 		},
 		[socket, number, pageInfo, goNextPage, goPrevPage, goFirstPage]

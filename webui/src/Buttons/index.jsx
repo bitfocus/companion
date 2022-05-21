@@ -36,7 +36,9 @@ export function ButtonsPage({ hotPress }) {
 	const doButtonGridClick = useCallback(
 		(page, bank, isDown) => {
 			if (hotPress) {
-				context.socket.emit('hot_press', page, bank, isDown)
+				socketEmit2(context.socket, 'controls:hot-press', [page, bank, isDown]).catch((e) =>
+					console.error(`Hot press failed: ${e}`)
+				)
 			} else if (isDown) {
 				setActiveTab('edit')
 				setSelectedButton([page, bank])

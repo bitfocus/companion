@@ -126,6 +126,17 @@ export function EditButton({ page, bank, onKeyUp }) {
 		)
 	}, [context.socket, page, bank])
 
+	const hotPressDown = useCallback(() => {
+		socketEmit2(context.socket, 'controls:hot-press', [page, bank, true]).catch((e) =>
+			console.error(`Hot press failed: ${e}`)
+		)
+	}, [context.socket, page, bank])
+	const hotPressUp = useCallback(() => {
+		socketEmit2(context.socket, 'controls:hot-press', [page, bank, false]).catch((e) =>
+			console.error(`Hot press failed: ${e}`)
+		)
+	}, [context.socket, page, bank])
+
 	const errors = Object.values(tableLoadStatus).filter((s) => typeof s === 'string')
 	if (configError) errors.push(configError)
 	const loadError = errors.length > 0 ? errors.join(', ') : null
@@ -172,8 +183,8 @@ export function EditButton({ page, bank, onKeyUp }) {
 						<CButton
 							color="warning"
 							hidden={!config || (config.type !== 'press' && config.type !== 'step')}
-							onMouseDown={() => context.socket.emit('hot_press', page, bank, true)}
-							onMouseUp={() => context.socket.emit('hot_press', page, bank, false)}
+							onMouseDown={hotPressDown}
+							onMouseUp={hotPressUp}
 						>
 							Test actions
 						</CButton>
