@@ -12,7 +12,7 @@ import {
 	CModalHeader,
 	CRow,
 } from '@coreui/react'
-import { StaticContext, MyErrorBoundary, socketEmit, useMountEffect } from '../util'
+import { StaticContext, MyErrorBoundary, socketEmit, useMountEffect, socketEmit2 } from '../util'
 import Select from 'react-select'
 import { AddFeedbackDropdown, FeedbackEditor } from '../Buttons/EditButton/FeedbackPanel'
 import { nanoid } from 'nanoid'
@@ -240,8 +240,9 @@ function TriggerEditModalConfig({ pluginSpec, config, updateConfig }) {
 
 	const addFeedbackSelect = useCallback(
 		(feedbackType) => {
-			socketEmit(context.socket, 'feedback_get_defaults', [feedbackType]).then(([fb]) => {
-				updateConfig('config', [...config, fb])
+			const [instanceId, feedbackId] = feedbackType.split(':', 2)
+			socketEmit2(context.socket, 'feedback-definitions:create-item', [instanceId, feedbackId]).then((fb) => {
+				if (fb) updateConfig('config', [...config, fb])
 			})
 		},
 		[context.socket, config, updateConfig]

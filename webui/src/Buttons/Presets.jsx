@@ -1,6 +1,6 @@
 import React, { useCallback, useContext, useEffect, useState } from 'react'
 import { CAlert, CButton, CRow } from '@coreui/react'
-import { StaticContext, InstancesContext, LoadingRetryOrError, socketEmit, socketEmit2 } from '../util'
+import { StaticContext, InstancesContext, LoadingRetryOrError, socketEmit2 } from '../util'
 import { useDrag } from 'react-dnd'
 import { BankPreview, dataToButtonImage, RedImage } from '../Components/BankButton'
 import { nanoid } from 'nanoid'

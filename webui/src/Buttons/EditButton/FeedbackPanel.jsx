@@ -2,8 +2,7 @@ import { CAlert, CButton, CForm, CFormGroup } from '@coreui/react'
 import { faSort, faTrash } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import React, { useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react'
-import { StaticContext, FeedbacksContext, InstancesContext, MyErrorBoundary, socketEmit, sandbox } from '../../util'
-import update from 'immutability-helper'
+import { StaticContext, FeedbacksContext, InstancesContext, MyErrorBoundary, sandbox, socketEmit2 } from '../../util'
 import Select from 'react-select'
 import { ActionTableRowOption } from './Table'
 import { useDrag, useDrop } from 'react-dnd'
@@ -11,91 +10,54 @@ import { GenericConfirmModal } from '../../Components/GenericConfirmModal'
 import { DropdownInputField } from '../../Components'
 import { ButtonStyleConfigFields } from './ButtonStyleConfig'
 
-export const FeedbacksPanel = function ({
-	page,
-	bank,
-	feedbacks,
-	dragId,
-	addCommand,
-	updateOption,
-	orderCommand,
-	deleteCommand,
-}) {
+export const FeedbacksPanel = function ({ page, bank, feedbacks, dragId }) {
 	const context = useContext(StaticContext)
-	// const [feedbacks, setFeedbacks] = useState([])
-	const setFeedbacks = useCallback(() => {
-		//TODO - remove this!
-	}, [])
 
 	const confirmModal = useRef()
 
+	const feedbacksRef = useRef()
+	feedbacksRef.current = feedbacks
+
 	const setValue = useCallback(
 		(feedbackId, key, val) => {
-			// The server doesn't repond to our change, so we assume it was ok
-			setFeedbacks((oldFeedbacks) => {
-				const feedbackIndex = oldFeedbacks.findIndex((a) => a.id === feedbackId)
-
-				const oldValue = (oldFeedbacks[feedbackIndex].options || {})[key]
-				if (oldValue !== val) {
-					context.socket.emit(updateOption, page, bank, feedbackId, key, val)
-
-					return update(oldFeedbacks, {
-						[feedbackIndex]: {
-							options: {
-								[key]: { $set: val },
-							},
-						},
-					})
-				} else {
-					return oldFeedbacks
-				}
-			})
+			const currentFeedback = feedbacksRef.current?.find((fb) => fb.id === feedbackId)
+			if (!currentFeedback?.options || currentFeedback.options[key] !== val) {
+				socketEmit2(context.socket, 'controls:feedback:set-option', [page, bank, feedbackId, key, val]).catch((e) => {
+					console.error(`Set-option failed: ${e}`)
+				})
+			}
 		},
-		[context.socket, page, bank, updateOption]
+		[context.socket, page, bank]
 	)
 
-	const deleteFeedback = useCallback((feedbackId) => {
-		setFeedbacks((oldFeedbacks) => oldFeedbacks.filter((a) => a.id !== feedbackId))
-	}, [])
 	const doDelete = useCallback(
 		(feedbackId) => {
 			confirmModal.current.show('Delete feedback', 'Delete feedback?', 'Delete', () => {
-				context.socket.emit(deleteCommand, page, bank, feedbackId)
-				deleteFeedback(feedbackId)
+				socketEmit2(context.socket, 'controls:feedback:remove', [page, bank, feedbackId]).catch((e) => {
+					console.error(`Failed to delete feedback: ${e}`)
+				})
 			})
 		},
-		[context.socket, page, bank, deleteCommand, deleteFeedback]
+		[context.socket, page, bank]
 	)
 
 	const addFeedback = useCallback(
-		(feedackTypr) => {
-			socketEmit(context.socket, addCommand, [page, bank, feedackTypr])
-				.then(([page, bank, feedbacks]) => {
-					setFeedbacks(feedbacks || [])
-				})
-				.catch((e) => {
-					console.error('Failed to add bank feedback', e)
-				})
+		(feedackType) => {
+			const [instanceId, feedbackId] = feedackType.split(':', 2)
+			socketEmit2(context.socket, 'controls:feedback:add', [page, bank, instanceId, feedbackId]).catch((e) => {
+				console.error('Failed to add bank feedback', e)
+			})
 		},
-		[context.socket, addCommand, bank, page]
+		[context.socket, bank, page]
 	)
 
 	const moveCard = useCallback(
 		(dragIndex, hoverIndex) => {
-			// The server doesn't repond to our change, so we assume it was ok
-			context.socket.emit(orderCommand, page, bank, dragIndex, hoverIndex)
-
-			setFeedbacks((feedbacks) => {
-				const dragCard = feedbacks[dragIndex]
-				return update(feedbacks, {
-					$splice: [
-						[dragIndex, 1],
-						[hoverIndex, 0, dragCard],
-					],
-				})
+			socketEmit2(context.socket, 'controls:feedback:reorder', [page, bank, dragIndex, hoverIndex]).catch((e) => {
+				console.error(`Move failed: ${e}`)
 			})
 		},
-		[context.socket, page, bank, orderCommand]
+		[context.socket, page, bank]
 	)
 
 	return (
@@ -115,7 +77,6 @@ export const FeedbacksPanel = function ({
 							doDelete={doDelete}
 							dragId={dragId}
 							moveCard={moveCard}
-							bankFeedbacksChanged={setFeedbacks}
 						/>
 					))}
 				</tbody>
@@ -126,7 +87,7 @@ export const FeedbacksPanel = function ({
 	)
 }
 
-function FeedbackTableRow({ feedback, page, bank, index, dragId, moveCard, setValue, doDelete, bankFeedbacksChanged }) {
+function FeedbackTableRow({ feedback, page, bank, index, dragId, moveCard, setValue, doDelete }) {
 	const context = useContext(StaticContext)
 
 	const innerDelete = useCallback(() => doDelete(feedback.id), [feedback.id, doDelete])
@@ -186,26 +147,24 @@ function FeedbackTableRow({ feedback, page, bank, index, dragId, moveCard, setVa
 
 	const setSelectedStyleProps = useCallback(
 		(selected) => {
-			socketEmit(context.socket, 'bank_update_feedback_style_selection', [page, bank, feedback.id, selected])
-				.then(([_page, _bank, bankFeedbacks]) => {
-					bankFeedbacksChanged(bankFeedbacks)
-				})
-				.catch((e) => {
+			socketEmit2(context.socket, 'controls:feedback:set-style-selection', [page, bank, feedback.id, selected]).catch(
+				(e) => {
 					// TODO
-				})
+				}
+			)
 		},
-		[context.socket, page, bank, feedback.id, bankFeedbacksChanged]
+		[context.socket, page, bank, feedback.id]
 	)
 
 	const setStylePropsValue = useCallback(
 		(key, value) => {
-			return socketEmit(context.socket, 'bank_update_feedback_style_set', [page, bank, feedback.id, key, value]).then(
-				([_page, _bank, bankFeedbacks]) => {
-					bankFeedbacksChanged(bankFeedbacks)
+			socketEmit2(context.socket, 'controls:feedback:set-style-value', [page, bank, feedback.id, key, value]).catch(
+				(e) => {
+					console.error(`Failed: ${e}`)
 				}
 			)
 		},
-		[context.socket, page, bank, feedback.id, bankFeedbacksChanged]
+		[context.socket, page, bank, feedback.id]
 	)
 
 	if (!feedback) {

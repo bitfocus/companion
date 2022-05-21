@@ -205,16 +205,7 @@ export function EditButton({ page, bank, onKeyUp }) {
 							{config.feedbacks ? (
 								<>
 									<h4 className="mt-3">Feedback</h4>
-									<FeedbacksPanel
-										page={page}
-										bank={bank}
-										feedbacks={config.feedbacks}
-										dragId={'feedback'}
-										addCommand="bank_addFeedback"
-										updateOption="bank_update_feedback_option"
-										orderCommand="bank_update_feedback_order"
-										deleteCommand="bank_delFeedback"
-									/>
+									<FeedbacksPanel page={page} bank={bank} feedbacks={config.feedbacks} dragId={'feedback'} />
 								</>
 							) : (
 								''
