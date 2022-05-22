@@ -138,15 +138,15 @@ export function Emulator() {
 	useEffect(() => {
 		const onKeyDown = (e) => {
 			if (keymap[e.keyCode] !== undefined) {
-				socket.emit('emul_down', keymap[e.keyCode])
-				console.log('emul_down', keymap[e.keyCode])
+				socket.emit('emulator:press', keymap[e.keyCode])
+				console.log('emulator:press', keymap[e.keyCode])
 			}
 		}
 
 		const onKeyUp = (e) => {
 			if (keymap[e.keyCode] !== undefined) {
-				socket.emit('emul_up', keymap[e.keyCode])
-				console.log('emul_up', keymap[e.keyCode])
+				socket.emit('emulator:release', keymap[e.keyCode])
+				console.log('emulator:release', keymap[e.keyCode])
 			}
 		}
 
@@ -162,12 +162,12 @@ export function Emulator() {
 	useEffect(() => {
 		// handle changes to keyDown, as it isnt safe to do inside setState
 		if (keyDown) {
-			socket.emit('emul_down', keyDown)
-			console.log('emul_down', keyDown)
+			socket.emit('emulator:press', keyDown)
+			console.log('emulator:press', keyDown)
 
 			return () => {
-				socket.emit('emul_up', keyDown)
-				console.log('emul_up', keyDown)
+				socket.emit('emulator:release', keyDown)
+				console.log('emulator:release', keyDown)
 			}
 		}
 	}, [socket, keyDown])
