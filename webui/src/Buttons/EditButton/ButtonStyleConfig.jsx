@@ -1,6 +1,6 @@
 import { CButton, CRow, CCol, CButtonGroup, CLabel, CForm, CAlert } from '@coreui/react'
 import React, { useCallback, useContext, useState } from 'react'
-import { StaticContext, socketEmit, socketEmit2 } from '../../util'
+import { StaticContext, socketEmit2 } from '../../util'
 import {
 	AlignmentInputField,
 	CheckboxInputField,

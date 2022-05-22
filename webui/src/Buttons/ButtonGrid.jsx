@@ -254,7 +254,12 @@ const ButtonGridActions = forwardRef(function ButtonGridActions({ isHot, pageNum
 						case 'copy':
 							if (activeFunctionBank) {
 								const fromInfo = activeFunctionBank
-								context.socket.emit('bank_copy', fromInfo.page, fromInfo.bank, pageNumber, index)
+								socketEmit2(context.socket, 'controls:copy', [
+									CreateBankControlId(fromInfo.page, fromInfo.bank),
+									CreateBankControlId(pageNumber, index),
+								]).catch((e) => {
+									console.error(`copy failed: ${e}`)
+								})
 								stopFunction()
 							} else {
 								setActiveFunctionBank({
@@ -266,7 +271,12 @@ const ButtonGridActions = forwardRef(function ButtonGridActions({ isHot, pageNum
 						case 'move':
 							if (activeFunctionBank) {
 								const fromInfo = activeFunctionBank
-								context.socket.emit('bank_move', fromInfo.page, fromInfo.bank, pageNumber, index)
+								socketEmit2(context.socket, 'controls:move', [
+									CreateBankControlId(fromInfo.page, fromInfo.bank),
+									CreateBankControlId(pageNumber, index),
+								]).catch((e) => {
+									console.error(`move failed: ${e}`)
+								})
 								stopFunction()
 							} else {
 								setActiveFunctionBank({

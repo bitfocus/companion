@@ -83,22 +83,20 @@ export function ButtonsPage({ hotPress }) {
 						console.log('do paste', copyFromButton, selectedButton)
 
 						if (copyFromButton[2] === 'copy') {
-							context.socket.emit(
-								'bank_copy',
-								copyFromButton[0],
-								copyFromButton[1],
-								selectedButton[0],
-								selectedButton[1]
-							)
+							socketEmit2(context.socket, 'controls:copy', [
+								CreateBankControlId(copyFromButton[0], copyFromButton[1]),
+								CreateBankControlId(selectedButton[0], selectedButton[1]),
+							]).catch((e) => {
+								console.error(`copy failed: ${e}`)
+							})
 							setTabResetToken(nanoid())
 						} else if (copyFromButton[2] === 'cut') {
-							context.socket.emit(
-								'bank_move',
-								copyFromButton[0],
-								copyFromButton[1],
-								selectedButton[0],
-								selectedButton[1]
-							)
+							socketEmit2(context.socket, 'controls:move', [
+								CreateBankControlId(copyFromButton[0], copyFromButton[1]),
+								CreateBankControlId(selectedButton[0], selectedButton[1]),
+							]).catch((e) => {
+								console.error(`move failed: ${e}`)
+							})
 							setCopyFromButton(null)
 							setTabResetToken(nanoid())
 						} else {
