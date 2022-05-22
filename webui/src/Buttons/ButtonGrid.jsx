@@ -9,7 +9,7 @@ import React, {
 	useRef,
 	useState,
 } from 'react'
-import { StaticContext, KeyReceiver, PagesContext, socketEmit2 } from '../util'
+import { StaticContext, KeyReceiver, PagesContext, socketEmit2, CreateBankControlId } from '../util'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import {
 	faArrowsAlt,
@@ -243,7 +243,8 @@ const ButtonGridActions = forwardRef(function ButtonGridActions({ isHot, pageNum
 					switch (activeFunction) {
 						case 'delete':
 							resetRef.current.show('Clear bank', `Clear style and actions for this button?`, 'Clear', () => {
-								socketEmit2(context.socket, 'controls:reset', [pageNumber, index]).catch((e) => {
+								const controlId = CreateBankControlId(pageNumber, index)
+								socketEmit2(context.socket, 'controls:reset', [controlId]).catch((e) => {
 									console.error(`Reset failed: ${e}`)
 								})
 							})

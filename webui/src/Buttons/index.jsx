@@ -3,7 +3,7 @@ import { faCalculator, faDollarSign, faFileImport, faGift } from '@fortawesome/f
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { nanoid } from 'nanoid'
 import { InstancePresets } from './Presets'
-import { StaticContext, MyErrorBoundary, socketEmit2 } from '../util'
+import { StaticContext, MyErrorBoundary, socketEmit2, CreateBankControlId } from '../util'
 import { ButtonsGridPanel } from './ButtonGrid'
 import { EditButton } from './EditButton'
 import { ImportExport } from './ImportExport'
@@ -36,7 +36,8 @@ export function ButtonsPage({ hotPress }) {
 	const doButtonGridClick = useCallback(
 		(page, bank, isDown) => {
 			if (hotPress) {
-				socketEmit2(context.socket, 'controls:hot-press', [page, bank, isDown]).catch((e) =>
+				const controlId = CreateBankControlId(page, bank)
+				socketEmit2(context.socket, 'controls:hot-press', [controlId, isDown]).catch((e) =>
 					console.error(`Hot press failed: ${e}`)
 				)
 			} else if (isDown) {
@@ -63,7 +64,8 @@ export function ButtonsPage({ hotPress }) {
 							`This will clear the style, feedbacks and all actions`,
 							'Clear',
 							() => {
-								socketEmit2(context.socket, 'controls:reset', [selectedButton[0], selectedButton[1]]).catch((e) => {
+								const controlId = CreateBankControlId(selectedButton[0], selectedButton[1])
+								socketEmit2(context.socket, 'controls:reset', [controlId]).catch((e) => {
 									console.error(`Reset failed: ${e}`)
 								})
 							}
@@ -159,8 +161,7 @@ export function ButtonsPage({ hotPress }) {
 									{selectedButton ? (
 										<EditButton
 											key={`${selectedButton[0]}.${selectedButton[1]}.${tabResetToken}`}
-											page={selectedButton[0]}
-											bank={selectedButton[1]}
+											controlId={CreateBankControlId(selectedButton[0], selectedButton[1])}
 											onKeyUp={handleKeyDownInButtons}
 										/>
 									) : (

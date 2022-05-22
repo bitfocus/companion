@@ -13,16 +13,15 @@ import { FONT_SIZES } from '../../Constants'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faTrash } from '@fortawesome/free-solid-svg-icons'
 
-export function ButtonStyleConfig({ page, bank, controlType, config, configRef }) {
+export function ButtonStyleConfig({ controlId, controlType, config, configRef }) {
 	const context = useContext(StaticContext)
 
 	const [pngError, setPngError] = useState(null)
 	const setPng = useCallback(
 		(data) => {
 			setPngError(null)
-			socketEmit(context.socket, 'controls:set-config-fields', [
-				page,
-				bank,
+			socketEmit2(context.socket, 'controls:set-config-fields', [
+				controlId,
 				{
 					png64: data,
 				},
@@ -31,16 +30,15 @@ export function ButtonStyleConfig({ page, bank, controlType, config, configRef }
 				setPngError('Failed to set png')
 			})
 		},
-		[context.socket, page, bank]
+		[context.socket, controlId]
 	)
 
 	const setValueInner = useCallback(
 		(key, value) => {
-			console.log('set', page, bank, key, value)
+			console.log('set', controlId, key, value)
 			if (configRef.current === undefined || value !== configRef.current[key]) {
 				socketEmit2(context.socket, 'controls:set-config-fields', [
-					page,
-					bank,
+					controlId,
 					{
 						[key]: value,
 					},
@@ -49,7 +47,7 @@ export function ButtonStyleConfig({ page, bank, controlType, config, configRef }
 				})
 			}
 		},
-		[context.socket, page, bank, configRef]
+		[context.socket, controlId, configRef]
 	)
 	const clearPng = useCallback(() => setValueInner('png64', null), [setValueInner])
 

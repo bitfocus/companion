@@ -5,7 +5,14 @@ import React, { useCallback, useContext, useEffect, useRef, useState } from 'rea
 import { nanoid } from 'nanoid'
 import { BankPreview, dataToButtonImage } from '../../Components/BankButton'
 import { GenericConfirmModal } from '../../Components/GenericConfirmModal'
-import { StaticContext, KeyReceiver, LoadingRetryOrError, UserConfigContext, socketEmit2 } from '../../util'
+import {
+	StaticContext,
+	KeyReceiver,
+	LoadingRetryOrError,
+	UserConfigContext,
+	socketEmit2,
+	ParseControlId,
+} from '../../util'
 import { ActionsPanel } from './ActionsPanel'
 import jsonPatch from 'fast-json-patch'
 
@@ -13,7 +20,7 @@ import { ButtonStyleConfig } from './ButtonStyleConfig'
 import { FeedbacksPanel } from './FeedbackPanel'
 import { cloneDeep } from 'lodash-es'
 
-export function EditButton({ page, bank, onKeyUp }) {
+export function EditButton({ controlId, onKeyUp }) {
 	const context = useContext(StaticContext)
 	const userConfig = useContext(UserConfigContext)
 
@@ -36,7 +43,7 @@ export function EditButton({ page, bank, onKeyUp }) {
 		setPreviewImage(null)
 		setRuntimeProps(null)
 
-		socketEmit2(context.socket, 'controls:subscribe', [page, bank])
+		socketEmit2(context.socket, 'controls:subscribe', [controlId])
 			.then((config) => {
 				setConfig(config?.config ?? false)
 				setRuntimeProps(config?.runtime ?? false)
@@ -68,7 +75,6 @@ export function EditButton({ page, bank, onKeyUp }) {
 			})
 		}
 
-		const controlId = `bank:${page}-${bank}` // TODO - use lib
 		context.socket.on(`controls:config-${controlId}`, patchConfig)
 		context.socket.on(`controls:runtime-${controlId}`, patchRuntimeProps)
 
@@ -82,11 +88,11 @@ export function EditButton({ page, bank, onKeyUp }) {
 			context.socket.off(`controls:runtime-${controlId}`, patchRuntimeProps)
 			context.socket.off(`controls:preview-${controlId}`, updateImage)
 
-			socketEmit2(context.socket, 'controls:unsubscribe', [page, bank]).catch((e) => {
+			socketEmit2(context.socket, 'controls:unsubscribe', [controlId]).catch((e) => {
 				console.error('Failed to unsubscribe bank config', e)
 			})
 		}
-	}, [context.socket, page, bank, reloadConfigToken])
+	}, [context.socket, controlId, reloadConfigToken])
 
 	const setButtonType = useCallback(
 		(newStyle) => {
@@ -105,7 +111,7 @@ export function EditButton({ page, bank, onKeyUp }) {
 			}
 
 			const doChange = () => {
-				socketEmit2(context.socket, 'controls:reset', [page, bank, newStyle]).catch((e) => {
+				socketEmit2(context.socket, 'controls:reset', [controlId, newStyle]).catch((e) => {
 					console.error(`Set type failed: ${e}`)
 				})
 			}
@@ -123,33 +129,34 @@ export function EditButton({ page, bank, onKeyUp }) {
 				doChange()
 			}
 		},
-		[context.socket, page, bank, configRef]
+		[context.socket, controlId, configRef]
 	)
 
 	const doRetryLoad = useCallback(() => setReloadConfigToken(nanoid()), [])
 	const resetBank = useCallback(() => {
+		const parsedId = ParseControlId(controlId) // TODO
 		resetModalRef.current.show(
-			`Clear button ${page}.${bank}`,
+			`Clear button ${parsedId?.page}.${parsedId?.bank}`,
 			`This will clear the style, feedbacks and all actions`,
 			'Clear',
 			() => {
-				socketEmit2(context.socket, 'controls:reset', [page, bank]).catch((e) => {
+				socketEmit2(context.socket, 'controls:reset', [controlId]).catch((e) => {
 					console.error(`Reset failed: ${e}`)
 				})
 			}
 		)
-	}, [context.socket, page, bank])
+	}, [context.socket, controlId])
 
 	const hotPressDown = useCallback(() => {
-		socketEmit2(context.socket, 'controls:hot-press', [page, bank, true]).catch((e) =>
+		socketEmit2(context.socket, 'controls:hot-press', [controlId, true]).catch((e) =>
 			console.error(`Hot press failed: ${e}`)
 		)
-	}, [context.socket, page, bank])
+	}, [context.socket, controlId])
 	const hotPressUp = useCallback(() => {
-		socketEmit2(context.socket, 'controls:hot-press', [page, bank, false]).catch((e) =>
+		socketEmit2(context.socket, 'controls:hot-press', [controlId, false]).catch((e) =>
 			console.error(`Hot press failed: ${e}`)
 		)
-	}, [context.socket, page, bank])
+	}, [context.socket, controlId])
 
 	const errors = []
 	if (configError) errors.push(configError)
@@ -157,6 +164,8 @@ export function EditButton({ page, bank, onKeyUp }) {
 	const hasConfig = config || config === false
 	const hasRuntimeProps = runtimeProps || runtimeProps === false
 	const dataReady = !loadError && hasConfig && hasRuntimeProps
+
+	const parsedId = ParseControlId(controlId)
 
 	return (
 		<KeyReceiver onKeyUp={onKeyUp} tabIndex={0} className="edit-button-panel">
@@ -209,8 +218,7 @@ export function EditButton({ page, bank, onKeyUp }) {
 						controlType={config.type}
 						config={config.config}
 						configRef={configRef}
-						page={page}
-						bank={bank}
+						controlId={controlId}
 					/>
 
 					{config && runtimeProps ? (
@@ -218,8 +226,7 @@ export function EditButton({ page, bank, onKeyUp }) {
 							{config.action_sets ? (
 								<ActionsSection
 									style={config.type}
-									page={page}
-									bank={bank}
+									controlId={controlId}
 									action_sets={config.action_sets}
 									runtimeProps={runtimeProps}
 								/>
@@ -230,7 +237,7 @@ export function EditButton({ page, bank, onKeyUp }) {
 							{config.feedbacks ? (
 								<>
 									<h4 className="mt-3">Feedback</h4>
-									<FeedbacksPanel page={page} bank={bank} feedbacks={config.feedbacks} dragId={'feedback'} />
+									<FeedbacksPanel controlId={controlId} feedbacks={config.feedbacks} dragId={'feedback'} />
 								</>
 							) : (
 								''
@@ -242,16 +249,20 @@ export function EditButton({ page, bank, onKeyUp }) {
 
 					<hr />
 
-					<p>
-						<b>Hint:</b> Control buttons with OSC or HTTP: /press/bank/{page}/{bank} to press this button remotely. OSC
-						port{' '}
-						<code>
-							{userConfig?.osc_enabled && userConfig?.osc_listen_port && userConfig?.osc_listen_port !== '0'
-								? userConfig?.osc_listen_port
-								: 'disabled'}
-						</code>
-						!
-					</p>
+					{parsedId?.page && parsedId?.bank ? (
+						<p>
+							<b>Hint:</b> Control buttons with OSC or HTTP: /press/bank/{parsedId.page}/{parsedId.bank} to press this
+							button remotely. OSC port{' '}
+							<code>
+								{userConfig?.osc_enabled && userConfig?.osc_listen_port && userConfig?.osc_listen_port !== '0'
+									? userConfig?.osc_listen_port
+									: 'disabled'}
+							</code>
+							!
+						</p>
+					) : (
+						''
+					)}
 				</div>
 			) : (
 				''
@@ -260,41 +271,41 @@ export function EditButton({ page, bank, onKeyUp }) {
 	)
 }
 
-function ActionsSection({ style, page, bank, action_sets, runtimeProps }) {
+function ActionsSection({ style, controlId, action_sets, runtimeProps }) {
 	const context = useContext(StaticContext)
 
 	const confirmRef = useRef()
 
 	const appendStep = useCallback(() => {
-		socketEmit2(context.socket, 'controls:action-set:add', [page, bank]).catch((e) => {
+		socketEmit2(context.socket, 'controls:action-set:add', [controlId]).catch((e) => {
 			console.error('Failed to append set:', e)
 		})
-	}, [context.socket, page, bank])
+	}, [context.socket, controlId])
 	const removeStep = useCallback(
 		(id) => {
 			confirmRef.current.show('Remove step', 'Are you sure you wish to remove this step?', 'Remove', () => {
-				socketEmit2(context.socket, 'controls:action-set:remove', [page, bank, id]).catch((e) => {
+				socketEmit2(context.socket, 'controls:action-set:remove', [controlId, id]).catch((e) => {
 					console.error('Failed to delete set:', e)
 				})
 			})
 		},
-		[context.socket, page, bank]
+		[context.socket, controlId]
 	)
 	const swapSteps = useCallback(
 		(id1, id2) => {
-			socketEmit2(context.socket, 'controls:action-set:swap', [page, bank, id1, id2]).catch((e) => {
+			socketEmit2(context.socket, 'controls:action-set:swap', [controlId, id1, id2]).catch((e) => {
 				console.error('Failed to swap sets:', e)
 			})
 		},
-		[context.socket, page, bank]
+		[context.socket, controlId]
 	)
 	const setNextStep = useCallback(
 		(id) => {
-			socketEmit2(context.socket, 'controls:action-set:set-next', [page, bank, id]).catch((e) => {
+			socketEmit2(context.socket, 'controls:action-set:set-next', [controlId, id]).catch((e) => {
 				console.error('Failed to set next set:', e)
 			})
 		},
-		[context.socket, page, bank]
+		[context.socket, controlId]
 	)
 
 	if (style === 'press') {
@@ -302,8 +313,7 @@ function ActionsSection({ style, page, bank, action_sets, runtimeProps }) {
 			<>
 				<h4 className="mt-3">Press actions</h4>
 				<ActionsPanel
-					page={page}
-					bank={bank}
+					controlId={controlId}
 					set={'down'}
 					dragId={'downAction'}
 					addPlaceholder="+ Add key press action"
@@ -311,8 +321,7 @@ function ActionsSection({ style, page, bank, action_sets, runtimeProps }) {
 				/>
 				<h4 className="mt-3">Release actions</h4>
 				<ActionsPanel
-					page={page}
-					bank={bank}
+					controlId={controlId}
 					set={'up'}
 					dragId={'releaseAction'}
 					addPlaceholder="+ Add key release action"
@@ -369,8 +378,7 @@ function ActionsSection({ style, page, bank, action_sets, runtimeProps }) {
 						</h4>
 						<ActionsPanel
 							key={`panel_${k}`}
-							page={page}
-							bank={bank}
+							controlId={controlId}
 							set={k}
 							dragId={`${k}Action`}
 							addPlaceholder={`+ Add action to step ${i + 1}`}

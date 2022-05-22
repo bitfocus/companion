@@ -10,7 +10,7 @@ import { GenericConfirmModal } from '../../Components/GenericConfirmModal'
 import { DropdownInputField } from '../../Components'
 import { ButtonStyleConfigFields } from './ButtonStyleConfig'
 
-export const FeedbacksPanel = function ({ page, bank, feedbacks, dragId }) {
+export const FeedbacksPanel = function ({ controlId, feedbacks, dragId }) {
 	const context = useContext(StaticContext)
 
 	const confirmModal = useRef()
@@ -22,42 +22,42 @@ export const FeedbacksPanel = function ({ page, bank, feedbacks, dragId }) {
 		(feedbackId, key, val) => {
 			const currentFeedback = feedbacksRef.current?.find((fb) => fb.id === feedbackId)
 			if (!currentFeedback?.options || currentFeedback.options[key] !== val) {
-				socketEmit2(context.socket, 'controls:feedback:set-option', [page, bank, feedbackId, key, val]).catch((e) => {
+				socketEmit2(context.socket, 'controls:feedback:set-option', [controlId, feedbackId, key, val]).catch((e) => {
 					console.error(`Set-option failed: ${e}`)
 				})
 			}
 		},
-		[context.socket, page, bank]
+		[context.socket, controlId]
 	)
 
 	const doDelete = useCallback(
 		(feedbackId) => {
 			confirmModal.current.show('Delete feedback', 'Delete feedback?', 'Delete', () => {
-				socketEmit2(context.socket, 'controls:feedback:remove', [page, bank, feedbackId]).catch((e) => {
+				socketEmit2(context.socket, 'controls:feedback:remove', [controlId, feedbackId]).catch((e) => {
 					console.error(`Failed to delete feedback: ${e}`)
 				})
 			})
 		},
-		[context.socket, page, bank]
+		[context.socket, controlId]
 	)
 
 	const addFeedback = useCallback(
 		(feedackType) => {
 			const [instanceId, feedbackId] = feedackType.split(':', 2)
-			socketEmit2(context.socket, 'controls:feedback:add', [page, bank, instanceId, feedbackId]).catch((e) => {
+			socketEmit2(context.socket, 'controls:feedback:add', [controlId, instanceId, feedbackId]).catch((e) => {
 				console.error('Failed to add bank feedback', e)
 			})
 		},
-		[context.socket, bank, page]
+		[context.socket, controlId]
 	)
 
 	const moveCard = useCallback(
 		(dragIndex, hoverIndex) => {
-			socketEmit2(context.socket, 'controls:feedback:reorder', [page, bank, dragIndex, hoverIndex]).catch((e) => {
+			socketEmit2(context.socket, 'controls:feedback:reorder', [controlId, dragIndex, hoverIndex]).catch((e) => {
 				console.error(`Move failed: ${e}`)
 			})
 		},
-		[context.socket, page, bank]
+		[context.socket, controlId]
 	)
 
 	return (
@@ -70,8 +70,7 @@ export const FeedbacksPanel = function ({ page, bank, feedbacks, dragId }) {
 						<FeedbackTableRow
 							key={a?.id ?? i}
 							index={i}
-							page={page}
-							bank={bank}
+							controlId={controlId}
 							feedback={a}
 							setValue={setValue}
 							doDelete={doDelete}
@@ -87,7 +86,7 @@ export const FeedbacksPanel = function ({ page, bank, feedbacks, dragId }) {
 	)
 }
 
-function FeedbackTableRow({ feedback, page, bank, index, dragId, moveCard, setValue, doDelete }) {
+function FeedbackTableRow({ feedback, controlId, index, dragId, moveCard, setValue, doDelete }) {
 	const context = useContext(StaticContext)
 
 	const innerDelete = useCallback(() => doDelete(feedback.id), [feedback.id, doDelete])
@@ -147,24 +146,24 @@ function FeedbackTableRow({ feedback, page, bank, index, dragId, moveCard, setVa
 
 	const setSelectedStyleProps = useCallback(
 		(selected) => {
-			socketEmit2(context.socket, 'controls:feedback:set-style-selection', [page, bank, feedback.id, selected]).catch(
+			socketEmit2(context.socket, 'controls:feedback:set-style-selection', [controlId, feedback.id, selected]).catch(
 				(e) => {
 					// TODO
 				}
 			)
 		},
-		[context.socket, page, bank, feedback.id]
+		[context.socket, controlId, feedback.id]
 	)
 
 	const setStylePropsValue = useCallback(
 		(key, value) => {
-			socketEmit2(context.socket, 'controls:feedback:set-style-value', [page, bank, feedback.id, key, value]).catch(
+			socketEmit2(context.socket, 'controls:feedback:set-style-value', [controlId, feedback.id, key, value]).catch(
 				(e) => {
 					console.error(`Failed: ${e}`)
 				}
 			)
 		},
-		[context.socket, page, bank, feedback.id]
+		[context.socket, controlId, feedback.id]
 	)
 
 	if (!feedback) {

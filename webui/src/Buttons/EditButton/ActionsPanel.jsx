@@ -9,54 +9,54 @@ import { ActionTableRowOption } from './Table'
 import { useDrag, useDrop } from 'react-dnd'
 import { GenericConfirmModal } from '../../Components/GenericConfirmModal'
 
-export function ActionsPanel({ page, bank, set, actions, dragId, addPlaceholder }) {
+export function ActionsPanel({ controlId, page, bank, set, actions, dragId, addPlaceholder }) {
 	const context = useContext(StaticContext)
 
 	const confirmModal = useRef()
 
 	const emitUpdateOption = useCallback(
 		(actionId, key, val) => {
-			socketEmit2(context.socket, 'controls:action:set-option', [page, bank, set, actionId, key, val]).catch((e) => {
+			socketEmit2(context.socket, 'controls:action:set-option', [controlId, set, actionId, key, val]).catch((e) => {
 				console.error('Failed to set bank action option', e)
 			})
 		},
-		[context.socket, page, bank, set]
+		[context.socket, controlId, set]
 	)
 	const emitSetDelay = useCallback(
 		(actionId, delay) => {
-			socketEmit2(context.socket, 'controls:action:set-delay', [page, bank, set, actionId, delay]).catch((e) => {
+			socketEmit2(context.socket, 'controls:action:set-delay', [controlId, set, actionId, delay]).catch((e) => {
 				console.error('Failed to set bank action delay', e)
 			})
 		},
-		[context.socket, page, bank, set]
+		[context.socket, controlId, set]
 	)
 
 	const emitDelete = useCallback(
 		(actionId) => {
-			socketEmit2(context.socket, 'controls:action:remove', [page, bank, set, actionId]).catch((e) => {
+			socketEmit2(context.socket, 'controls:action:remove', [controlId, set, actionId]).catch((e) => {
 				console.error('Failed to remove bank action', e)
 			})
 		},
-		[context.socket, page, bank, set]
+		[context.socket, controlId, set]
 	)
 
 	const emitOrder = useCallback(
 		(dragIndex, hoverIndex) => {
-			socketEmit2(context.socket, 'controls:action:reorder', [page, bank, set, dragIndex, hoverIndex]).catch((e) => {
+			socketEmit2(context.socket, 'controls:action:reorder', [controlId, set, dragIndex, hoverIndex]).catch((e) => {
 				console.error('Failed to reorder bank actions', e)
 			})
 		},
-		[context.socket, page, bank, set]
+		[context.socket, controlId, set]
 	)
 
 	const addAction = useCallback(
 		(actionType) => {
 			const [instanceId, actionId] = actionType.split(':', 2)
-			socketEmit2(context.socket, 'controls:action:add', [page, bank, set, instanceId, actionId]).catch((e) => {
+			socketEmit2(context.socket, 'controls:action:add', [controlId, set, instanceId, actionId]).catch((e) => {
 				console.error('Failed to add bank action', e)
 			})
 		},
-		[context.socket, page, bank, set]
+		[context.socket, controlId, set]
 	)
 
 	return (
