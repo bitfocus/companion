@@ -12,12 +12,13 @@ import {
 	CModalHeader,
 	CRow,
 } from '@coreui/react'
-import { StaticContext, MyErrorBoundary, socketEmit, useMountEffect, socketEmit2 } from '../util'
+import { StaticContext, MyErrorBoundary, useMountEffect, socketEmit2 } from '../util'
 import Select from 'react-select'
 import { AddFeedbackDropdown, FeedbackEditor } from '../Buttons/EditButton/FeedbackPanel'
 import { nanoid } from 'nanoid'
 import { ActionsPanelInner } from '../Buttons/EditButton/ActionsPanel'
 import { CheckboxInputField } from '../Components'
+import update from 'immutability-helper'
 
 function getPluginSpecDefaults(pluginOptions) {
 	const config = {}
@@ -123,11 +124,72 @@ export function TriggerEditModal({ doClose, doSave, item, plugins }) {
 
 	const addActionSelect = useCallback(
 		(actionType) => {
-			socketEmit(context.socket, 'action_get_defaults', [actionType]).then(([action]) => {
-				updateConfig('actions', [...config.actions, action])
+			const [instanceId, actionId] = actionType.split(':', 2)
+			socketEmit2(context.socket, 'action-definitions:create-item', [instanceId, actionId]).then((action) => {
+				if (action) updateConfig('actions', [...config.actions, action])
 			})
 		},
 		[context.socket, config, updateConfig]
+	)
+
+	const actionDelete = useCallback(
+		(actionId) => {
+			setActions((oldActions) => oldActions.filter((a) => a.id !== actionId))
+		},
+		[setActions]
+	)
+	const actionSetDelay = useCallback(
+		(actionId, delay) => {
+			setActions((oldActions) => {
+				const actionIndex = oldActions.findIndex((a) => a.id === actionId)
+				const oldValue = oldActions[actionIndex]?.options?.delay
+				if (oldValue !== delay) {
+					return update(oldActions, {
+						[actionIndex]: {
+							delay: { $set: delay },
+						},
+					})
+				} else {
+					return oldActions
+				}
+			})
+		},
+		[setActions]
+	)
+	const actionReorder = useCallback(
+		(dragIndex, hoverIndex) => {
+			setActions((actions) => {
+				const dragCard = actions[dragIndex]
+				return update(actions, {
+					$splice: [
+						[dragIndex, 1],
+						[hoverIndex, 0, dragCard],
+					],
+				})
+			})
+		},
+		[setActions]
+	)
+
+	const actionSetValue = useCallback(
+		(actionId, key, val) => {
+			setActions((oldActions) => {
+				const actionIndex = oldActions.findIndex((a) => a.id === actionId)
+				const oldValue = (oldActions[actionIndex].options || {})[key]
+				if (oldValue !== val) {
+					return update(oldActions, {
+						[actionIndex]: {
+							options: {
+								[key]: { $set: val },
+							},
+						},
+					})
+				} else {
+					return oldActions
+				}
+			})
+		},
+		[setActions]
 	)
 
 	return (
@@ -193,6 +255,10 @@ export function TriggerEditModal({ doClose, doSave, item, plugins }) {
 						actions={config.actions || []}
 						setActions={setActions}
 						addAction={addActionSelect}
+						doDelete={actionDelete}
+						doSetDelay={actionSetDelay}
+						doReorder={actionReorder}
+						doSetValue={actionSetValue}
 					/>
 				</CModalBody>
 				<CModalFooter>

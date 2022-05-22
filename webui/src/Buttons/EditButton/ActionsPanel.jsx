@@ -3,71 +3,58 @@ import { faSort, faTrash } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import React, { useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react'
 import { NumberInputField } from '../../Components'
-import { ActionsContext, StaticContext, InstancesContext, MyErrorBoundary, socketEmit, sandbox } from '../../util'
-import update from 'immutability-helper'
+import { ActionsContext, StaticContext, InstancesContext, MyErrorBoundary, sandbox, socketEmit2 } from '../../util'
 import Select from 'react-select'
 import { ActionTableRowOption } from './Table'
 import { useDrag, useDrop } from 'react-dnd'
 import { GenericConfirmModal } from '../../Components/GenericConfirmModal'
 
-export function ActionsPanel({ page, bank, set, dragId, addPlaceholder, setLoadStatus, loadStatusKey, reloadToken }) {
+export function ActionsPanel({ page, bank, set, actions, dragId, addPlaceholder }) {
 	const context = useContext(StaticContext)
 
 	const confirmModal = useRef()
 
-	const [actions, setActions] = useState([])
-
-	// Ensure the correct data is loaded
-	useEffect(() => {
-		const loadStatusKey = `actions:${set}`
-		setLoadStatus(loadStatusKey, false)
-		socketEmit(context.socket, 'bank_action_sets_get', [page, bank, set])
-			.then(([actions]) => {
-				setActions(actions || [])
-				setLoadStatus(loadStatusKey, true)
-			})
-			.catch((e) => {
-				setLoadStatus(loadStatusKey, `Failed to load ${loadStatusKey}`)
-				console.error('Failed to load bank actions', e)
-			})
-	}, [context.socket, setLoadStatus, loadStatusKey, page, bank, set, reloadToken])
-
 	const emitUpdateOption = useCallback(
 		(actionId, key, val) => {
-			context.socket.emit('bank_update_action_option', page, bank, set, actionId, key, val)
+			socketEmit2(context.socket, 'controls:action:set-option', [page, bank, set, actionId, key, val]).catch((e) => {
+				console.error('Failed to set bank action option', e)
+			})
 		},
 		[context.socket, page, bank, set]
 	)
 	const emitSetDelay = useCallback(
 		(actionId, delay) => {
-			context.socket.emit('bank_update_action_delay', page, bank, set, actionId, delay)
+			socketEmit2(context.socket, 'controls:action:set-delay', [page, bank, set, actionId, delay]).catch((e) => {
+				console.error('Failed to set bank action delay', e)
+			})
 		},
 		[context.socket, page, bank, set]
 	)
 
 	const emitDelete = useCallback(
 		(actionId) => {
-			context.socket.emit('bank_action_delete', page, bank, set, actionId)
+			socketEmit2(context.socket, 'controls:action:remove', [page, bank, set, actionId]).catch((e) => {
+				console.error('Failed to remove bank action', e)
+			})
 		},
 		[context.socket, page, bank, set]
 	)
 
 	const emitOrder = useCallback(
 		(dragIndex, hoverIndex) => {
-			context.socket.emit('bank_update_action_option_order', page, bank, set, dragIndex, hoverIndex)
+			socketEmit2(context.socket, 'controls:action:reorder', [page, bank, set, dragIndex, hoverIndex]).catch((e) => {
+				console.error('Failed to reorder bank actions', e)
+			})
 		},
 		[context.socket, page, bank, set]
 	)
 
 	const addAction = useCallback(
 		(actionType) => {
-			socketEmit(context.socket, 'bank_action_add', [page, bank, set, actionType])
-				.then(([actions]) => {
-					setActions(actions || [])
-				})
-				.catch((e) => {
-					console.error('Failed to add bank action', e)
-				})
+			const [instanceId, actionId] = actionType.split(':', 2)
+			socketEmit2(context.socket, 'controls:action:add', [page, bank, set, instanceId, actionId]).catch((e) => {
+				console.error('Failed to add bank action', e)
+			})
 		},
 		[context.socket, page, bank, set]
 	)
@@ -81,11 +68,10 @@ export function ActionsPanel({ page, bank, set, dragId, addPlaceholder, setLoadS
 				addPlaceholder={addPlaceholder}
 				confirmModal={confirmModal}
 				actions={actions}
-				setActions={setActions}
-				emitUpdateOption={emitUpdateOption}
-				emitSetDelay={emitSetDelay}
-				emitDelete={emitDelete}
-				emitOrder={emitOrder}
+				doSetValue={emitUpdateOption}
+				doSetDelay={emitSetDelay}
+				doDelete={emitDelete}
+				doReorder={emitOrder}
 				addAction={addAction}
 			/>
 		</>
@@ -98,102 +84,23 @@ export function ActionsPanelInner({
 	addPlaceholder,
 	confirmModal,
 	actions,
-	setActions,
-	emitUpdateOption,
-	emitSetDelay,
-	emitDelete,
-	emitOrder,
+	doSetValue,
+	doSetDelay,
+	doDelete,
+	doReorder,
 	addAction,
 }) {
-	const setValue = useCallback(
-		(actionId, key, val) => {
-			// The server doesn't repond to our change, so we assume it was ok
-			setActions((oldActions) => {
-				const actionIndex = oldActions.findIndex((a) => a.id === actionId)
-
-				const oldValue = (oldActions[actionIndex].options || {})[key]
-				if (oldValue !== val) {
-					if (emitUpdateOption) {
-						emitUpdateOption(actionId, key, val)
-					}
-
-					return update(oldActions, {
-						[actionIndex]: {
-							options: {
-								[key]: { $set: val },
-							},
-						},
-					})
-				} else {
-					return oldActions
-				}
-			})
-		},
-		[emitUpdateOption, setActions]
-	)
-
-	const doDelay = useCallback(
-		(actionId, delay) => {
-			// The server doesn't repond to our change, so we assume it was ok
-			setActions((oldActions) => {
-				const actionIndex = oldActions.findIndex((a) => a.id === actionId)
-
-				const oldValue = oldActions[actionIndex].options?.delay
-				if (oldValue !== delay) {
-					if (emitSetDelay) {
-						emitSetDelay(actionId, delay)
-					}
-
-					return update(oldActions, {
-						[actionIndex]: {
-							delay: { $set: delay },
-						},
-					})
-				} else {
-					return oldActions
-				}
-			})
-		},
-		[emitSetDelay, setActions]
-	)
-
-	const doDelete = useCallback(
+	const doDelete2 = useCallback(
 		(actionId) => {
 			if (confirmModal) {
 				confirmModal.current.show('Delete action', 'Delete action?', 'Delete', () => {
-					if (emitDelete) {
-						emitDelete(actionId)
-					}
-					setActions((oldActions) => oldActions.filter((a) => a.id !== actionId))
+					doDelete(actionId)
 				})
 			} else {
-				if (emitDelete) {
-					emitDelete(actionId)
-				}
-				setActions((oldActions) => oldActions.filter((a) => a.id !== actionId))
+				doDelete(actionId)
 			}
 		},
-		[emitDelete, setActions, confirmModal]
-	)
-
-	const moveCard = useCallback(
-		(dragIndex, hoverIndex) => {
-			// The server doesn't repond to our change, so we assume it was ok
-			if (emitOrder) {
-				emitOrder(dragIndex, hoverIndex)
-			}
-
-			setActions((actions) => {
-				const dragCard = actions[dragIndex]
-				return update(actions, {
-					$splice: [
-						[dragIndex, 1],
-						[hoverIndex, 0, dragCard],
-					],
-				})
-			})
-		},
-		[emitOrder, setActions]
+		[doDelete, confirmModal]
 	)
 
 	return (
@@ -207,10 +114,10 @@ export function ActionsPanelInner({
 							action={a}
 							index={i}
 							dragId={dragId}
-							setValue={setValue}
-							doDelete={doDelete}
-							doDelay={doDelay}
-							moveCard={moveCard}
+							setValue={doSetValue}
+							doDelete={doDelete2}
+							doDelay={doSetDelay}
+							moveCard={doReorder}
 						/>
 					))}
 				</tbody>

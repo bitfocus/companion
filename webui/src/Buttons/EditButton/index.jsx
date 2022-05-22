@@ -24,10 +24,8 @@ export function EditButton({ page, bank, onKeyUp }) {
 	configRef.current = config?.config // update the ref every render
 
 	const [configError, setConfigError] = useState(null)
-	const [tableLoadStatus, setTableLoadStatus] = useState({})
 
 	const [reloadConfigToken, setReloadConfigToken] = useState(nanoid())
-	const [reloadTablesToken, setReloadTablesToken] = useState(nanoid())
 
 	useEffect(() => {
 		setConfig(null)
@@ -57,10 +55,6 @@ export function EditButton({ page, bank, onKeyUp }) {
 		const controlId = `bank:${page}-${bank}` // TODO - use lib
 		context.socket.on(`controls:${controlId}`, patchConfig)
 
-		// reload tables too
-		setTableLoadStatus({})
-		setReloadTablesToken(nanoid())
-
 		return () => {
 			context.socket.off(`controls:${controlId}`, patchConfig)
 
@@ -69,10 +63,6 @@ export function EditButton({ page, bank, onKeyUp }) {
 			})
 		}
 	}, [context.socket, page, bank, reloadConfigToken])
-
-	const addLoadStatus = useCallback((key, value) => {
-		setTableLoadStatus((oldStatus) => ({ ...oldStatus, [key]: value }))
-	}, [])
 
 	const setButtonType = useCallback(
 		(newStyle) => {
@@ -137,11 +127,11 @@ export function EditButton({ page, bank, onKeyUp }) {
 		)
 	}, [context.socket, page, bank])
 
-	const errors = Object.values(tableLoadStatus).filter((s) => typeof s === 'string')
+	const errors = []
 	if (configError) errors.push(configError)
 	const loadError = errors.length > 0 ? errors.join(', ') : null
 	const hasConfig = config || config === false
-	const dataReady = !loadError && hasConfig && Object.values(tableLoadStatus).filter((s) => s !== true).length === 0
+	const dataReady = !loadError && hasConfig
 
 	return (
 		<KeyReceiver onKeyUp={onKeyUp} tabIndex={0} className="edit-button-panel">
@@ -200,18 +190,11 @@ export function EditButton({ page, bank, onKeyUp }) {
 
 					{config ? (
 						<>
-							{/* {config.action_sets ? (
-								<ActionsSection
-									style={config.type}
-									page={page}
-									bank={bank}
-									action_sets={config.action_sets}
-									addLoadStatus={addLoadStatus}
-									reloadTablesToken={reloadTablesToken}
-								/>
+							{config.action_sets ? (
+								<ActionsSection style={config.type} page={page} bank={bank} action_sets={config.action_sets} />
 							) : (
 								''
-							)} */}
+							)}
 
 							{config.feedbacks ? (
 								<>
@@ -246,29 +229,13 @@ export function EditButton({ page, bank, onKeyUp }) {
 	)
 }
 
-function ActionsSection({ style, page, bank, action_sets, addLoadStatus, reloadTablesToken }) {
+function ActionsSection({ style, page, bank, action_sets }) {
 	const context = useContext(StaticContext)
 
 	const confirmRef = useRef()
-	const [setIds, setSetIds] = useState([])
 	const [nextStepId, setNextStepId] = useState('0')
 
-	const [reloadToken2, setReloadToken2] = useState(null)
 	useEffect(() => {
-		// update when upstream changes
-		setReloadToken2(reloadTablesToken)
-	}, [reloadTablesToken])
-
-	useEffect(() => {
-		setSetIds([])
-
-		socketEmit(context.socket, 'bank_action_sets_list', [page, bank])
-			.then(([newIds]) => {
-				setSetIds(newIds)
-			})
-			.catch((e) => {
-				console.error('Failed to load set list:', e)
-			})
 		socketEmit(context.socket, 'bank_action_sets_step', [page, bank])
 			.then(([nextStep]) => {
 				setNextStepId(nextStep)
@@ -277,40 +244,35 @@ function ActionsSection({ style, page, bank, action_sets, addLoadStatus, reloadT
 				console.error('Failed to load next step:', e)
 			})
 
-		const updateSetsList = (page2, bank2, ids) => {
-			if (page2 === page && bank2 === bank) {
-				setSetIds(ids)
-			}
-		}
 		const updateNextStep = (page2, bank2, id) => {
 			if (page2 === page && bank2 === bank) {
 				setNextStepId(id)
 			}
 		}
 
-		const forceReload = () => setReloadToken2(nanoid())
+		// const forceReload = () => setReloadToken2(nanoid())
 
 		// listen for updates
-		context.socket.on('bank_action_sets_list', updateSetsList)
-		context.socket.on('bank_action_sets_reload', forceReload)
+		// context.socket.on('bank_action_sets_list', updateSetsList)
+		// context.socket.on('bank_action_sets_reload', forceReload)
 		context.socket.on('bank_action_sets_step', updateNextStep)
 
 		return () => {
-			context.socket.off('bank_action_sets_list', updateSetsList)
-			context.socket.off('bank_action_sets_reload', forceReload)
+			// context.socket.off('bank_action_sets_list', updateSetsList)
+			// context.socket.off('bank_action_sets_reload', forceReload)
 			context.socket.off('bank_action_sets_step', updateNextStep)
 		}
 	}, [context.socket, page, bank])
 
 	const appendStep = useCallback(() => {
-		socketEmit(context.socket, 'bank_action_sets_append', [page, bank]).catch((e) => {
+		socketEmit2(context.socket, 'controls:action-set:add', [page, bank]).catch((e) => {
 			console.error('Failed to append set:', e)
 		})
 	}, [context.socket, page, bank])
 	const removeStep = useCallback(
 		(id) => {
 			confirmRef.current.show('Remove step', 'Are you sure you wish to remove this step?', 'Remove', () => {
-				socketEmit(context.socket, 'bank_action_sets_remove', [page, bank, id]).catch((e) => {
+				socketEmit2(context.socket, 'controls:action-set:remove', [page, bank, id]).catch((e) => {
 					console.error('Failed to delete set:', e)
 				})
 			})
@@ -344,8 +306,7 @@ function ActionsSection({ style, page, bank, action_sets, addLoadStatus, reloadT
 					set={'down'}
 					dragId={'downAction'}
 					addPlaceholder="+ Add key press action"
-					setLoadStatus={addLoadStatus}
-					reloadToken={reloadToken2}
+					actions={action_sets['down']}
 				/>
 				<h4 className="mt-3">Release actions</h4>
 				<ActionsPanel
@@ -354,13 +315,12 @@ function ActionsSection({ style, page, bank, action_sets, addLoadStatus, reloadT
 					set={'up'}
 					dragId={'releaseAction'}
 					addPlaceholder="+ Add key release action"
-					setLoadStatus={addLoadStatus}
-					reloadToken={reloadToken2}
+					actions={action_sets['up']}
 				/>
 			</>
 		)
 	} else if (style === 'step') {
-		const keys = [...setIds].sort()
+		const keys = Object.keys(action_sets).sort()
 		return (
 			<>
 				<GenericConfirmModal ref={confirmRef} />
@@ -413,8 +373,7 @@ function ActionsSection({ style, page, bank, action_sets, addLoadStatus, reloadT
 							set={k}
 							dragId={`${k}Action`}
 							addPlaceholder={`+ Add action to step ${i + 1}`}
-							setLoadStatus={addLoadStatus}
-							reloadToken={reloadToken2}
+							actions={action_sets[k]}
 						/>
 					</>
 				))}
