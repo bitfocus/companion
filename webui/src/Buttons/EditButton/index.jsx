@@ -19,6 +19,7 @@ export function EditButton({ page, bank, onKeyUp }) {
 
 	const resetModalRef = useRef()
 
+	const [previewImage, setPreviewImage] = useState(null)
 	const [config, setConfig] = useState(null)
 	const configRef = useRef()
 	configRef.current = config?.config // update the ref every render
@@ -30,6 +31,7 @@ export function EditButton({ page, bank, onKeyUp }) {
 	useEffect(() => {
 		setConfig(null)
 		setConfigError(null)
+		setPreviewImage(null)
 
 		socketEmit2(context.socket, 'controls:subscribe', [page, bank])
 			.then((config) => {
@@ -55,8 +57,14 @@ export function EditButton({ page, bank, onKeyUp }) {
 		const controlId = `bank:${page}-${bank}` // TODO - use lib
 		context.socket.on(`controls:${controlId}`, patchConfig)
 
+		const updateImage = (img) => {
+			setPreviewImage(dataToButtonImage(img))
+		}
+		context.socket.on(`controls:preview-${controlId}`, updateImage)
+
 		return () => {
 			context.socket.off(`controls:${controlId}`, patchConfig)
+			context.socket.off(`controls:preview-${controlId}`, updateImage)
 
 			socketEmit2(context.socket, 'controls:unsubscribe', [page, bank]).catch((e) => {
 				console.error('Failed to unsubscribe bank config', e)
@@ -141,7 +149,7 @@ export function EditButton({ page, bank, onKeyUp }) {
 			{hasConfig ? (
 				<div style={{ display: dataReady ? '' : 'none' }}>
 					<div>
-						<ButtonEditPreview page={page} bank={bank} />
+						<BankPreview fixedSize preview={previewImage} right={true} />
 						<CDropdown className="mt-2" style={{ display: 'inline-block' }}>
 							<CButtonGroup>
 								{/* This could be simplified to use the split property on CDropdownToggle, but then onClick doesnt work https://github.com/coreui/coreui-react/issues/179 */}
@@ -388,35 +396,4 @@ function ActionsSection({ style, page, bank, action_sets }) {
 	} else {
 		return ''
 	}
-}
-
-function ButtonEditPreview({ page, bank }) {
-	const context = useContext(StaticContext)
-	const [previewImage, setPreviewImage] = useState(null)
-
-	// On unmount
-	useEffect(() => {
-		return () => {
-			context.socket.emit('bank_preview', false)
-		}
-	}, [context.socket])
-
-	// on bank change
-	useEffect(() => {
-		context.socket.emit('bank_preview', page, bank)
-
-		const cb = (p, b, img) => {
-			// eslint-disable-next-line eqeqeq
-			if (p == page && b == bank) {
-				setPreviewImage(dataToButtonImage(img))
-			}
-		}
-		context.socket.on('preview_bank_data', cb)
-
-		return () => {
-			context.socket.off('preview_bank_data', cb)
-		}
-	}, [context.socket, page, bank])
-
-	return <BankPreview fixedSize preview={previewImage} right={true} />
 }
