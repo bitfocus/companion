@@ -346,6 +346,7 @@
 		"companion-module-leadled-clockotron": "github:bitfocus/companion-module-leadled-clockotron#v1.0.3",
 		"companion-module-leafcoders-titler": "github:bitfocus/companion-module-leafcoders-titler#v1.0.1",
 		"companion-module-lectrosonics-aspen": "github:bitfocus/companion-module-lectrosonics-aspen#v1.0.1",
+		"companion-module-lgtv-display": "github:bitfocus/companion-module-lgtv-display#v1.0.0",
 		"companion-module-lightware-lw2": "github:bitfocus/companion-module-lightware-lw2#v1.0.4",
 		"companion-module-lightware-lw3": "github:bitfocus/companion-module-lightware-lw3#v1.0.3",
 		"companion-module-liminalet-zoomosc": "github:bitfocus/companion-module-liminalet-zoomosc#v1.0.11",
