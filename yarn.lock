@@ -3354,6 +3354,12 @@ commist@^1.0.0:
   version "1.0.1"
   resolved "https://codeload.github.com/bitfocus/companion-module-lectrosonics-aspen/tar.gz/bc369f7bd4416ca10c6234e7c1bca995973b79c3"
 
+"companion-module-lgtv-display@github:bitfocus/companion-module-lgtv-display#v1.0.0":
+  version "1.0.1"
+  resolved "https://codeload.github.com/bitfocus/companion-module-lgtv-display/tar.gz/69fdbde0a66f2d7c94c7fcd07951fdbb3645dd00"
+  dependencies:
+    lgtv-ip-control "^1.2.0"
+
 "companion-module-lightware-lw2@github:bitfocus/companion-module-lightware-lw2#v1.0.4":
   version "1.0.4"
   resolved "https://codeload.github.com/bitfocus/companion-module-lightware-lw2/tar.gz/8789d544893aa58aee8a4383a9f219ff7f071000"
@@ -7515,6 +7521,11 @@ levn@~0.3.0:
   dependencies:
     prelude-ls "~1.1.2"
     type-check "~0.3.2"
+
+lgtv-ip-control@^1.2.0:
+  version "1.2.0"
+  resolved "https://registry.yarnpkg.com/lgtv-ip-control/-/lgtv-ip-control-1.2.0.tgz#f5d590c5e0fe66ebd06a11c4217b8a9a3db5a489"
+  integrity sha512-FLWAmPijq6Xtnl5zf9dLfa15nVHzenoonpQGb2jTGZtFqpDmm6jllW0IjtzuNzGuttCve4tUq4iv5QBcwauNHg==
 
 lines-and-columns@^1.1.6:
   version "1.2.4"
