@@ -1,5 +1,5 @@
 import React, { forwardRef, useCallback, useContext, useEffect, useImperativeHandle, useRef, useState } from 'react'
-import { StaticContext, InstancesContext, socketEmit, socketEmit2 } from '../util'
+import { StaticContext, InstancesContext, socketEmit, socketEmit2, CreateBankControlId } from '../util'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faDownload, faFileImport, faTrashAlt } from '@fortawesome/free-solid-svg-icons'
 import {
@@ -47,7 +47,7 @@ export function ImportExport({ pageNumber }) {
 				var fr = new FileReader()
 				fr.onload = () => {
 					setLoadError(null)
-					socketEmit(context.socket, 'loadsave_import_config', [fr.result], 20000)
+					socketEmit2(context.socket, 'loadsave:prepare-import', [fr.result], 20000)
 						.then(([err, config]) => {
 							if (err) {
 								setLoadError(err)
@@ -100,7 +100,7 @@ export function ImportExport({ pageNumber }) {
 
 	const changePage = useCallback(
 		(delta) => {
-			const pageNumbers = Object.keys(snapshot?.config ?? {})
+			const pageNumbers = Object.keys(snapshot?.pages ?? {})
 			const currentIndex = pageNumbers.findIndex((p) => p === importPage + '')
 			let newPage = pageNumbers[0]
 			if (currentIndex !== -1) {
@@ -115,7 +115,7 @@ export function ImportExport({ pageNumber }) {
 				setImportPage(newPage)
 			}
 		},
-		[importPage, snapshot?.config]
+		[importPage, snapshot?.pages]
 	)
 	const setPage = useCallback(
 		(newPage) => {
@@ -157,12 +157,15 @@ export function ImportExport({ pageNumber }) {
 
 				<ButtonGridHeader
 					pageNumber={importPage}
-					pageName={isSinglePage ? snapshot.page.name : snapshot.page[importPage].name}
+					pageName={isSinglePage ? snapshot.page.name : snapshot.pages[importPage]?.name}
 					changePage={isSinglePage ? null : changePage}
 					setPage={isSinglePage ? null : setPage}
 				/>
 				<CRow className="bankgrid">
-					<ButtonImportGrid config={isSinglePage ? snapshot.config : snapshot.config[importPage]} />
+					<ButtonImportGrid
+						page={isSinglePage ? null : importPage}
+						// config={isSinglePage ? snapshot.config : snapshot.config[importPage]}
+					/>
 				</CRow>
 
 				{!importMode ? (
@@ -286,7 +289,7 @@ export function ImportExport({ pageNumber }) {
 	)
 }
 
-function ButtonImportGrid({ config }) {
+function ButtonImportGrid({ page }) {
 	return (
 		<>
 			{Array(MAX_ROWS)
@@ -298,7 +301,9 @@ function ButtonImportGrid({ config }) {
 								.fill(0)
 								.map((_, x) => {
 									const index = y * MAX_COLS + x + 1
-									return <ButtonImportPreview key={x} config={config[index]} alt={`Bank ${index}`} />
+									return (
+										<ButtonImportPreview key={x} controlId={CreateBankControlId(page, index)} alt={`Bank ${index}`} />
+									)
 								})}
 						</CCol>
 					)
@@ -307,19 +312,21 @@ function ButtonImportGrid({ config }) {
 	)
 }
 
-function ButtonImportPreview({ config, instanceId, ...childProps }) {
+function ButtonImportPreview({ controlId, instanceId, ...childProps }) {
 	const context = useContext(StaticContext)
 	const [previewImage, setPreviewImage] = useState(null)
 
 	useEffect(() => {
-		socketEmit2(context.socket, 'graphics_preview_generate', [config])
+		setPreviewImage(null)
+
+		socketEmit2(context.socket, 'loadsave:control-preview', [controlId])
 			.then((img) => {
-				setPreviewImage(dataToButtonImage(img))
+				setPreviewImage(img ? dataToButtonImage(img) : null)
 			})
 			.catch((e) => {
-				console.error('Failed to preview bank')
+				console.error(`Failed to preview bank: ${e}`)
 			})
-	}, [config, context.socket])
+	}, [controlId, context.socket])
 
 	return <BankPreview {...childProps} preview={previewImage} />
 }
