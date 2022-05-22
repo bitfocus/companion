@@ -1,5 +1,5 @@
 import React, { forwardRef, useCallback, useContext, useEffect, useImperativeHandle, useRef, useState } from 'react'
-import { StaticContext, InstancesContext, socketEmit } from '../util'
+import { StaticContext, InstancesContext, socketEmit, socketEmit2 } from '../util'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faDownload, faFileImport, faTrashAlt } from '@fortawesome/free-solid-svg-icons'
 import {
@@ -312,8 +312,8 @@ function ButtonImportPreview({ config, instanceId, ...childProps }) {
 	const [previewImage, setPreviewImage] = useState(null)
 
 	useEffect(() => {
-		socketEmit(context.socket, 'graphics_preview_generate', [config])
-			.then(([img]) => {
+		socketEmit2(context.socket, 'graphics_preview_generate', [config])
+			.then((img) => {
 				setPreviewImage(dataToButtonImage(img))
 			})
 			.catch((e) => {
@@ -372,7 +372,7 @@ const ConfirmFullResetModal = forwardRef(function ConfirmFullResetModal(_props, 
 		setShow(false)
 
 		// Perform the reset
-		socketEmit(context.socket, 'reset_all', [], 30000)
+		socketEmit2(context.socket, 'loadsave:reset-full', [], 30000)
 			.then(() => {
 				window.location.reload()
 			})

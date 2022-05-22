@@ -218,7 +218,9 @@ const ButtonGridActions = forwardRef(function ButtonGridActions({ isHot, pageNum
 			`Are you sure you want to clear all buttons on page ${pageNumber}?\nThere's no going back from this.`,
 			'Reset',
 			() => {
-				context.socket.emit('loadsave_reset_page_all', pageNumber)
+				socketEmit2(context.socket, 'loadsave:reset-page-clear', [pageNumber]).catch((e) => {
+					console.error(`Clear page failed: ${e}`)
+				})
 			}
 		)
 	}, [context.socket, pageNumber, clearSelectedButton])
@@ -230,7 +232,9 @@ const ButtonGridActions = forwardRef(function ButtonGridActions({ isHot, pageNum
 			`Are you sure you want to reset navigation buttons? This will completely erase bank ${pageNumber}.1, ${pageNumber}.9 and ${pageNumber}.17`,
 			'Reset',
 			() => {
-				context.socket.emit('loadsave_reset_page_nav', pageNumber)
+				socketEmit2(context.socket, 'loadsave:reset-page-nav', [pageNumber]).catch((e) => {
+					console.error(`Reset nav failed: ${e}`)
+				})
 			}
 		)
 	}, [context.socket, pageNumber, clearSelectedButton])
