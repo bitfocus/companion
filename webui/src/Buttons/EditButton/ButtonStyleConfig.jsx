@@ -20,7 +20,7 @@ export function ButtonStyleConfig({ page, bank, controlType, config, configRef }
 	const setPng = useCallback(
 		(data) => {
 			setPngError(null)
-			socketEmit(context.socket, 'controls:setConfigFields', [
+			socketEmit(context.socket, 'controls:set-config-fields', [
 				page,
 				bank,
 				{
@@ -38,7 +38,7 @@ export function ButtonStyleConfig({ page, bank, controlType, config, configRef }
 		(key, value) => {
 			console.log('set', page, bank, key, value)
 			if (configRef.current === undefined || value !== configRef.current[key]) {
-				socketEmit2(context.socket, 'controls:setConfigFields', [
+				socketEmit2(context.socket, 'controls:set-config-fields', [
 					page,
 					bank,
 					{
