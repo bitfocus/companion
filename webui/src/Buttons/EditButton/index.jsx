@@ -5,7 +5,7 @@ import React, { useCallback, useContext, useEffect, useRef, useState } from 'rea
 import { nanoid } from 'nanoid'
 import { BankPreview, dataToButtonImage } from '../../Components/BankButton'
 import { GenericConfirmModal } from '../../Components/GenericConfirmModal'
-import { StaticContext, KeyReceiver, LoadingRetryOrError, socketEmit, UserConfigContext, socketEmit2 } from '../../util'
+import { StaticContext, KeyReceiver, LoadingRetryOrError, UserConfigContext, socketEmit2 } from '../../util'
 import { ActionsPanel } from './ActionsPanel'
 import jsonPatch from 'fast-json-patch'
 
@@ -21,6 +21,8 @@ export function EditButton({ page, bank, onKeyUp }) {
 
 	const [previewImage, setPreviewImage] = useState(null)
 	const [config, setConfig] = useState(null)
+	const [runtimeProps, setRuntimeProps] = useState(null)
+
 	const configRef = useRef()
 	configRef.current = config?.config // update the ref every render
 
@@ -32,10 +34,12 @@ export function EditButton({ page, bank, onKeyUp }) {
 		setConfig(null)
 		setConfigError(null)
 		setPreviewImage(null)
+		setRuntimeProps(null)
 
 		socketEmit2(context.socket, 'controls:subscribe', [page, bank])
 			.then((config) => {
-				setConfig(config ?? false)
+				setConfig(config?.config ?? false)
+				setRuntimeProps(config?.runtime ?? false)
 				setConfigError(null)
 			})
 			.catch((e) => {
@@ -54,8 +58,19 @@ export function EditButton({ page, bank, onKeyUp }) {
 			})
 		}
 
+		const patchRuntimeProps = (patch) => {
+			setRuntimeProps((oldProps) => {
+				if (patch === false) {
+					return false
+				} else {
+					return jsonPatch.applyPatch(cloneDeep(oldProps) || {}, patch).newDocument
+				}
+			})
+		}
+
 		const controlId = `bank:${page}-${bank}` // TODO - use lib
-		context.socket.on(`controls:${controlId}`, patchConfig)
+		context.socket.on(`controls:config-${controlId}`, patchConfig)
+		context.socket.on(`controls:runtime-${controlId}`, patchRuntimeProps)
 
 		const updateImage = (img) => {
 			setPreviewImage(dataToButtonImage(img))
@@ -63,7 +78,8 @@ export function EditButton({ page, bank, onKeyUp }) {
 		context.socket.on(`controls:preview-${controlId}`, updateImage)
 
 		return () => {
-			context.socket.off(`controls:${controlId}`, patchConfig)
+			context.socket.off(`controls:config-${controlId}`, patchConfig)
+			context.socket.off(`controls:runtime-${controlId}`, patchRuntimeProps)
 			context.socket.off(`controls:preview-${controlId}`, updateImage)
 
 			socketEmit2(context.socket, 'controls:unsubscribe', [page, bank]).catch((e) => {
@@ -139,7 +155,8 @@ export function EditButton({ page, bank, onKeyUp }) {
 	if (configError) errors.push(configError)
 	const loadError = errors.length > 0 ? errors.join(', ') : null
 	const hasConfig = config || config === false
-	const dataReady = !loadError && hasConfig
+	const hasRuntimeProps = runtimeProps || runtimeProps === false
+	const dataReady = !loadError && hasConfig && hasRuntimeProps
 
 	return (
 		<KeyReceiver onKeyUp={onKeyUp} tabIndex={0} className="edit-button-panel">
@@ -196,10 +213,16 @@ export function EditButton({ page, bank, onKeyUp }) {
 						bank={bank}
 					/>
 
-					{config ? (
+					{config && runtimeProps ? (
 						<>
 							{config.action_sets ? (
-								<ActionsSection style={config.type} page={page} bank={bank} action_sets={config.action_sets} />
+								<ActionsSection
+									style={config.type}
+									page={page}
+									bank={bank}
+									action_sets={config.action_sets}
+									runtimeProps={runtimeProps}
+								/>
 							) : (
 								''
 							)}
@@ -237,40 +260,10 @@ export function EditButton({ page, bank, onKeyUp }) {
 	)
 }
 
-function ActionsSection({ style, page, bank, action_sets }) {
+function ActionsSection({ style, page, bank, action_sets, runtimeProps }) {
 	const context = useContext(StaticContext)
 
 	const confirmRef = useRef()
-	const [nextStepId, setNextStepId] = useState('0')
-
-	useEffect(() => {
-		socketEmit(context.socket, 'bank_action_sets_step', [page, bank])
-			.then(([nextStep]) => {
-				setNextStepId(nextStep)
-			})
-			.catch((e) => {
-				console.error('Failed to load next step:', e)
-			})
-
-		const updateNextStep = (page2, bank2, id) => {
-			if (page2 === page && bank2 === bank) {
-				setNextStepId(id)
-			}
-		}
-
-		// const forceReload = () => setReloadToken2(nanoid())
-
-		// listen for updates
-		// context.socket.on('bank_action_sets_list', updateSetsList)
-		// context.socket.on('bank_action_sets_reload', forceReload)
-		context.socket.on('bank_action_sets_step', updateNextStep)
-
-		return () => {
-			// context.socket.off('bank_action_sets_list', updateSetsList)
-			// context.socket.off('bank_action_sets_reload', forceReload)
-			context.socket.off('bank_action_sets_step', updateNextStep)
-		}
-	}, [context.socket, page, bank])
 
 	const appendStep = useCallback(() => {
 		socketEmit2(context.socket, 'controls:action-set:add', [page, bank]).catch((e) => {
@@ -289,7 +282,7 @@ function ActionsSection({ style, page, bank, action_sets }) {
 	)
 	const swapSteps = useCallback(
 		(id1, id2) => {
-			socketEmit(context.socket, 'bank_action_sets_swap', [page, bank, id1, id2]).catch((e) => {
+			socketEmit2(context.socket, 'controls:action-set:swap', [page, bank, id1, id2]).catch((e) => {
 				console.error('Failed to swap sets:', e)
 			})
 		},
@@ -297,7 +290,7 @@ function ActionsSection({ style, page, bank, action_sets }) {
 	)
 	const setNextStep = useCallback(
 		(id) => {
-			socketEmit(context.socket, 'bank_action_sets_step_set', [page, bank, id]).catch((e) => {
+			socketEmit2(context.socket, 'controls:action-set:set-next', [page, bank, id]).catch((e) => {
 				console.error('Failed to set next set:', e)
 			})
 		},
@@ -338,9 +331,9 @@ function ActionsSection({ style, page, bank, action_sets }) {
 							Step {i + 1} actions
 							<CButtonGroup className="right">
 								<CButton
-									color={nextStepId === k ? 'success' : 'primary'}
+									color={runtimeProps.current_step_id === k ? 'success' : 'primary'}
 									size="sm"
-									disabled={nextStepId === k}
+									disabled={runtimeProps.current_step_id === k}
 									onClick={() => setNextStep(k)}
 								>
 									Set Next
