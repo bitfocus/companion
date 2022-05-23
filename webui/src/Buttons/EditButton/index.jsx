@@ -46,7 +46,7 @@ export function EditButton({ controlId, onKeyUp }) {
 		socketEmit2(context.socket, 'controls:subscribe', [controlId])
 			.then((config) => {
 				setConfig(config?.config ?? false)
-				setRuntimeProps(config?.runtime ?? false)
+				setRuntimeProps(config?.runtime ?? {})
 				setConfigError(null)
 			})
 			.catch((e) => {
@@ -68,7 +68,7 @@ export function EditButton({ controlId, onKeyUp }) {
 		const patchRuntimeProps = (patch) => {
 			setRuntimeProps((oldProps) => {
 				if (patch === false) {
-					return false
+					return {}
 				} else {
 					return jsonPatch.applyPatch(cloneDeep(oldProps) || {}, patch).newDocument
 				}

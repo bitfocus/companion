@@ -77,8 +77,8 @@ export class Cloud extends Component {
 			>
 				<h4>Companion Cloud</h4>
 				<p>
-					Access the companion GUI from your Bitfocus Cloud account, or create a sofisticated network of companions that
-					work together over the internet for all your remote production needs.
+					Access the Companion GUI from your Bitfocus Cloud account, or create a sophisticated network of Companion
+					installations that work together over the internet for all your remote production needs.
 				</p>
 				<div
 					style={{
@@ -86,9 +86,12 @@ export class Cloud extends Component {
 					}}
 				>
 					<div>
-						When enabled, companion will make several persistent secure connections to diffent Bitfocus Cloud regions
-						for redundancy. Learn more about the service, the service provider and the safety of your data{' '}
-						<a href="https://cloud.bitfocus.io/product/companion-cloud">here</a>.
+						When enabled, Companion will make several persistent secure connections to different Bitfocus Cloud regions
+						for redundancy. You can learn more about the service, the service provider and the safety of your data{' '}
+						<a target="_new" href="https://cloud.bitfocus.io/product/companion-cloud">
+							here
+						</a>
+						.
 					</div>
 				</div>
 
@@ -117,7 +120,10 @@ export class Cloud extends Component {
 							}}
 						>
 							<FontAwesomeIcon icon={faInfoCircle} /> &nbsp;Companion Cloud is a premium service. Learn more and sign up{' '}
-							<a href="http://bitfocus.io/companion-cloud">here</a>.
+							<a target="_new" href="http://bitfocus.io/companion-cloud">
+								here
+							</a>
+							.
 						</div>
 					</div>
 				) : (
