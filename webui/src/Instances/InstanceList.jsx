@@ -1,6 +1,6 @@
 import { useCallback, useContext, useEffect, useRef, useState } from 'react'
 import { CButton } from '@coreui/react'
-import { StaticContext, InstancesContext, VariableDefinitionsContext } from '../util'
+import { StaticContext, InstancesContext, VariableDefinitionsContext, socketEmit2 } from '../util'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faDollarSign, faQuestionCircle, faBug } from '@fortawesome/free-solid-svg-icons'
 
@@ -104,14 +104,18 @@ function InstancesTableRow({
 			`Are you sure you want to delete "${instance.label}"?`,
 			'Delete',
 			() => {
-				context.socket.emit('instance_delete', id)
+				socketEmit2(context.socket, 'instances:delete', [id]).catch((e) => {
+					console.error('Delete failed', e)
+				})
 				configureInstance(null)
 			}
 		)
 	}, [context.socket, deleteModalRef, id, instance.label, configureInstance])
 
 	const doToggleEnabled = useCallback(() => {
-		context.socket.emit('instance_enable', id, !isEnabled)
+		socketEmit2(context.socket, 'instances:set-enabled', [id, !isEnabled]).catch((e) => {
+			console.error('Set enabled failed', e)
+		})
 	}, [context.socket, id, isEnabled])
 
 	const doShowHelp = useCallback(() => showHelp(instance.instance_type), [showHelp, instance.instance_type])

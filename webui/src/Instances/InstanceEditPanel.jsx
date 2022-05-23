@@ -1,5 +1,5 @@
 import React, { memo, useCallback, useContext, useEffect, useState } from 'react'
-import { StaticContext, LoadingRetryOrError, socketEmit, sandbox } from '../util'
+import { StaticContext, LoadingRetryOrError, socketEmit, sandbox, socketEmit2 } from '../util'
 import { CRow, CCol, CButton } from '@coreui/react'
 import {
 	CheckboxInputField,
@@ -39,8 +39,8 @@ export const InstanceEditPanel = memo(function InstanceEditPanel({ instanceId, d
 			return
 		}
 
-		socketEmit(context.socket, 'instance_config_put', [instanceId, instanceLabel, instanceConfig])
-			.then(([err, ok]) => {
+		socketEmit2(context.socket, 'instances:set-config', [instanceId, instanceLabel, instanceConfig])
+			.then((err) => {
 				if (err) {
 					if (err === 'duplicate label') {
 						setError(

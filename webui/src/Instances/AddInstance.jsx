@@ -2,7 +2,7 @@ import React, { memo, useContext, useState } from 'react'
 import { CAlert, CButton, CInput, CInputGroup, CInputGroupAppend } from '@coreui/react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faQuestionCircle, faTimes } from '@fortawesome/free-solid-svg-icons'
-import { StaticContext, socketEmit } from '../util'
+import { StaticContext, socketEmit2 } from '../util'
 
 export function AddInstancesPanel({ showHelp, doConfigureInstance }) {
 	return (
@@ -17,8 +17,8 @@ const AddInstancesInner = memo(function AddInstancesInner({ showHelp, configureI
 	const [filter, setFilter] = useState('')
 
 	const addInstance = (type, product) => {
-		socketEmit(context.socket, 'instance_add', [{ type: type, product: product }])
-			.then(([id]) => {
+		socketEmit2(context.socket, 'instances:add', [{ type: type, product: product }])
+			.then((id) => {
 				setFilter('')
 				console.log('NEW INSTANCE', id)
 				configureInstance(id)

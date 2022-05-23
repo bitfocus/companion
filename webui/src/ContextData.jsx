@@ -14,6 +14,8 @@ import {
 	socketEmit2,
 } from './util'
 import { NotificationsManager } from './Components/Notifications'
+import { cloneDeep } from 'lodash-es'
+import jsonPatch from 'fast-json-patch'
 
 export function ContextData({ socket, children }) {
 	const [instances, setInstances] = useState(null)
@@ -50,11 +52,11 @@ export function ContextData({ socket, children }) {
 			return newVars
 		}
 		if (socket) {
-			socketEmit(socket, 'modules_get', [])
-				.then(([res]) => {
+			socketEmit2(socket, 'modules:get', [])
+				.then((modules) => {
 					const modulesObj = {}
 					const redirectsObj = {}
-					for (const mod of res.modules) {
+					for (const mod of modules) {
 						modulesObj[mod.id] = mod
 
 						// Add legacy names to the redirect list
@@ -152,8 +154,25 @@ export function ContextData({ socket, children }) {
 				}))
 			}
 
-			socket.on('instances_get:result', setInstances)
-			socket.emit('instances_get')
+			socketEmit2(socket, 'instances:subscribe', [])
+				.then((instances) => {
+					setInstances(instances)
+				})
+				.catch((e) => {
+					console.error('Failed to load instances list:', e)
+					setInstances(null)
+				})
+
+			const patchInstances = (patch) => {
+				setInstances((oldInstances) => {
+					if (patch === false) {
+						return false
+					} else {
+						return jsonPatch.applyPatch(cloneDeep(oldInstances) || {}, patch).newDocument
+					}
+				})
+			}
+			socket.on('instances:patch', patchInstances)
 
 			socket.on('variable_instance_definitions_set', updateVariableDefinitions)
 			socket.on('custom_variables_get', setCustomVariablesAndUpdateVariables)
@@ -214,7 +233,6 @@ export function ContextData({ socket, children }) {
 			socket.on('schedule_last_run', updateTriggerLastRun)
 
 			return () => {
-				socket.off('instances_get:result', setInstances)
 				socket.off('variable_instance_definitions_set', updateVariableDefinitions)
 				socket.off('custom_variables_get', setCustomVariablesAndUpdateVariables)
 				socket.off('action-definitions:update', updateActionDefinitions)
@@ -226,11 +244,16 @@ export function ContextData({ socket, children }) {
 				socket.off('schedule_refresh', setTriggers)
 				socket.off('schedule_last_run', updateTriggerLastRun)
 
+				socket.off('instances:patch', patchInstances)
+
 				socketEmit2(socket, 'action-definitions:unsubscribe', []).catch((e) => {
 					console.error('Failed to unsubscribe to action definitions list', e)
 				})
 				socketEmit2(socket, 'feedback-definitions:unsubscribe', []).catch((e) => {
 					console.error('Failed to unsubscribe to action definitions list', e)
+				})
+				socketEmit2(socket, 'instances:unsubscribe', []).catch((e) => {
+					console.error('Failed to unsubscribe from instances list:', e)
 				})
 			}
 		}

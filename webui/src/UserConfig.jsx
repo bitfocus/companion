@@ -1,4 +1,4 @@
-import React, { memo, useCallback, useContext, useState } from 'react'
+import React, { memo, useCallback, useContext, useState, useEffect } from 'react'
 import {
 	CAlert,
 	CButton,
@@ -56,7 +56,7 @@ function UserConfigTable() {
 		[context.socket]
 	)
 
-	const getDev = useCallback(() => {
+	useEffect(() => {
 		socketEmit(context.socket, 'get_dev', [])
 			.then(([dev]) => {
 				setDev(dev)
@@ -88,8 +88,6 @@ function UserConfigTable() {
 		console.log('renew SSL certificate')
 		context.socket.emit('ssl_certificate_renew')
 	}, [context.socket])
-
-	getDev()
 
 	return (
 		<table className="table table-responsive-sm">

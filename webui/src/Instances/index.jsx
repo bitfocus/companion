@@ -1,7 +1,7 @@
 import { CCol, CRow, CTabs, CTabContent, CTabPane, CNavItem, CNavLink, CNav } from '@coreui/react'
 import { memo, useCallback, useContext, useRef, useState } from 'react'
 import { HelpModal } from './HelpModal'
-import { StaticContext, MyErrorBoundary, socketEmit } from '../util'
+import { StaticContext, MyErrorBoundary, socketEmit2 } from '../util'
 import { InstancesList } from './InstanceList'
 import { AddInstancesPanel } from './AddInstance'
 import { InstanceEditPanel } from './InstanceEditPanel'
@@ -29,7 +29,7 @@ export const InstancesPage = memo(function InstancesPage() {
 
 	const showHelp = useCallback(
 		(id) => {
-			socketEmit(context.socket, 'instance_get_help_md', [id]).then(([err, result]) => {
+			socketEmit2(context.socket, 'instances:get-help', [id]).then(([err, result]) => {
 				if (err) {
 					context.notifier.current.show('Instance help', `Failed to get help text: ${err}`)
 					return
