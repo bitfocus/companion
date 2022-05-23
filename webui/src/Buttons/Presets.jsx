@@ -102,7 +102,9 @@ function PresetsInstanceList({ presets, setInstanceAndCategory }) {
 	const context = useContext(StaticContext)
 	const instancesContext = useContext(InstancesContext)
 
-	const options = Object.keys(presets).map((id) => {
+	const options = Object.entries(presets).map(([id, vals]) => {
+		if (!vals || vals.length === 0) return ''
+
 		const instance = instancesContext[id]
 		const module = instance ? context.modules[instance.instance_type] : undefined
 

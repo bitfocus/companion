@@ -1,5 +1,5 @@
 import React, { forwardRef, useCallback, useContext, useEffect, useImperativeHandle, useRef, useState } from 'react'
-import { StaticContext, InstancesContext, socketEmit, socketEmit2, CreateBankControlId } from '../util'
+import { StaticContext, InstancesContext, socketEmit2, CreateBankControlId } from '../util'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faDownload, faFileImport, faTrashAlt } from '@fortawesome/free-solid-svg-icons'
 import {
@@ -153,7 +153,8 @@ export function ImportExport({ pageNumber }) {
 
 	const doFullImport = useCallback(() => {
 		confirmModalRef.current.show('Replace config', 'Are you sure you wish to replace the config?', 'Import', () => {
-			socketEmit(context.socket, 'loadsave_import_full', [snapshot])
+			setIsRunning(true)
+			socketEmit2(context.socket, 'loadsave:import-full', [snapshot])
 				.then(() => {
 					window.location.reload()
 				})
@@ -178,7 +179,7 @@ export function ImportExport({ pageNumber }) {
 			<>
 				<h4>
 					Import Configuration
-					<CButton color="danger" size="sm" onClick={clearSnapshot}>
+					<CButton color="danger" size="sm" onClick={clearSnapshot} disabled={isRunning}>
 						Cancel
 					</CButton>
 				</h4>
@@ -202,10 +203,10 @@ export function ImportExport({ pageNumber }) {
 					<div>
 						<h5>What to do</h5>
 						<CButtonGroup>
-							<CButton color="primary" onClick={() => setImportMode('page')}>
+							<CButton color="primary" onClick={() => setImportMode('page')} disabled={isRunning}>
 								Import individual pages
 							</CButton>
-							<CButton color="warning" onClick={doFullImport}>
+							<CButton color="warning" onClick={doFullImport} disabled={isRunning}>
 								Replace current configuration
 							</CButton>
 						</CButtonGroup>
