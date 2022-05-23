@@ -86,8 +86,8 @@ export function ContextData({ socket, children }) {
 				.catch((e) => {
 					console.error('Failed to load feedback definitions list', e)
 				})
-			socketEmit(socket, 'variable_instance_definitions_get', [])
-				.then(([data]) => {
+			socketEmit2(socket, 'variable-definitions:subscribe', [])
+				.then((data) => {
 					setCustomVariables((oldCustomVars) => {
 						const fullData = data || {}
 						fullData.internal = compileCustomVariableVariables(fullData.internal || [], oldCustomVars || {})
@@ -174,7 +174,7 @@ export function ContextData({ socket, children }) {
 			}
 			socket.on('instances:patch', patchInstances)
 
-			socket.on('variable_instance_definitions_set', updateVariableDefinitions)
+			socket.on('variable-definitions:update', updateVariableDefinitions)
 			socket.on('custom_variables_get', setCustomVariablesAndUpdateVariables)
 
 			socket.on('action-definitions:update', updateActionDefinitions)
@@ -233,7 +233,7 @@ export function ContextData({ socket, children }) {
 			socket.on('schedule_last_run', updateTriggerLastRun)
 
 			return () => {
-				socket.off('variable_instance_definitions_set', updateVariableDefinitions)
+				socket.off('variable-definitions:update', updateVariableDefinitions)
 				socket.off('custom_variables_get', setCustomVariablesAndUpdateVariables)
 				socket.off('action-definitions:update', updateActionDefinitions)
 				socket.off('feedback-definitions:update', updateFeedbackDefinitions)
@@ -250,7 +250,10 @@ export function ContextData({ socket, children }) {
 					console.error('Failed to unsubscribe to action definitions list', e)
 				})
 				socketEmit2(socket, 'feedback-definitions:unsubscribe', []).catch((e) => {
-					console.error('Failed to unsubscribe to action definitions list', e)
+					console.error('Failed to unsubscribe to feedback definitions list', e)
+				})
+				socketEmit2(socket, 'variable-definitions:unsubscribe', []).catch((e) => {
+					console.error('Failed to unsubscribe to variable definitions list', e)
 				})
 				socketEmit2(socket, 'instances:unsubscribe', []).catch((e) => {
 					console.error('Failed to unsubscribe from instances list:', e)

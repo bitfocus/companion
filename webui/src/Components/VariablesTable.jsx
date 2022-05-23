@@ -1,6 +1,6 @@
 import React, { useCallback, useContext, useState } from 'react'
 import { CButton } from '@coreui/react'
-import { socketEmit, StaticContext, VariableDefinitionsContext } from '../util'
+import { socketEmit2, StaticContext, VariableDefinitionsContext } from '../util'
 import { CopyToClipboard } from 'react-copy-to-clipboard'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faCopy } from '@fortawesome/free-solid-svg-icons'
@@ -24,8 +24,8 @@ export function VariablesTable({ label }) {
 	useEffect(() => {
 		if (label) {
 			const doPoll = () => {
-				socketEmit(context.socket, 'variable_values_for_instance', [label])
-					.then(([values]) => {
+				socketEmit2(context.socket, 'variables:instance-values', [label])
+					.then((values) => {
 						setVariableValues(values || {})
 					})
 					.catch((e) => {

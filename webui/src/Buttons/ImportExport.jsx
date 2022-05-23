@@ -33,7 +33,10 @@ export function ImportExport({ pageNumber }) {
 	const fileApiIsSupported = !!(window.File && window.FileReader && window.FileList && window.Blob)
 
 	const [loadError, setLoadError] = useState(null)
-	const clearSnapshot = useCallback(() => setSnapshot(null), [])
+	const clearSnapshot = useCallback(() => {
+		setSnapshot(null)
+		socketEmit2(context.socket, 'loadsave:abort', [])
+	}, [context.socket])
 	const loadSnapshot = useCallback(
 		(e) => {
 			const newFiles = e.currentTarget.files

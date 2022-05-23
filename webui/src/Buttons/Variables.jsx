@@ -6,6 +6,7 @@ import {
 	VariableDefinitionsContext,
 	CustomVariableDefinitionsContext,
 	socketEmit,
+	socketEmit2,
 } from '../util'
 import { VariablesTable } from '../Components/VariablesTable'
 import { CopyToClipboard } from 'react-copy-to-clipboard'
@@ -125,8 +126,8 @@ function CustomVariablesList({ setShowCustom }) {
 
 	useEffect(() => {
 		const doPoll = () => {
-			socketEmit(context.socket, 'variable_values_for_instance', ['internal'])
-				.then(([values]) => {
+			socketEmit2(context.socket, 'variables:instance-values', ['internal'])
+				.then((values) => {
 					setVariableValues(values || {})
 				})
 				.catch((e) => {
