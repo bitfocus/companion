@@ -194,7 +194,7 @@ export function ImportExport({ pageNumber }) {
 				/>
 				<CRow className="bankgrid">
 					<ButtonImportGrid
-						page={isSinglePage ? null : importPage}
+						page={isSinglePage ? snapshot.oldPageNumber : importPage}
 						// config={isSinglePage ? snapshot.config : snapshot.config[importPage]}
 					/>
 				</CRow>
@@ -254,7 +254,7 @@ export function ImportExport({ pageNumber }) {
 													'Ignored'
 												)}
 											</td>
-											<td>{snapshotModule ? snapshotModule.name : 'Unknown module'}</td>
+											<td>{snapshotModule ? snapshotModule.name : `Unknown module (${instance.instance_type})`}</td>
 											<td>{instance.label}</td>
 										</tr>
 									)
