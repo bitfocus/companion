@@ -20,7 +20,6 @@ import jsonPatch from 'fast-json-patch'
 export function ContextData({ socket, children }) {
 	const [instances, setInstances] = useState(null)
 	const [modules, setModules] = useState(null)
-	const [moduleRedirects, setModuleRedirects] = useState(null)
 	const [actionDefinitions, setActionDefinitions] = useState(null)
 	const [feedbackDefinitions, setFeedbackDefinitions] = useState(null)
 	const [variableDefinitions, setVariableDefinitions] = useState(null)
@@ -55,19 +54,10 @@ export function ContextData({ socket, children }) {
 			socketEmit2(socket, 'modules:get', [])
 				.then((modules) => {
 					const modulesObj = {}
-					const redirectsObj = {}
 					for (const mod of modules) {
 						modulesObj[mod.id] = mod
-
-						// Add legacy names to the redirect list
-						if (mod.legacy && Array.isArray(mod.legacy)) {
-							for (const from of mod.legacy) {
-								redirectsObj[from] = mod.name
-							}
-						}
 					}
 					setModules(modulesObj)
-					setModuleRedirects(redirectsObj)
 				})
 				.catch((e) => {
 					console.error('Failed to load modules list', e)
@@ -268,7 +258,6 @@ export function ContextData({ socket, children }) {
 		socket: socket,
 		notifier: notifierRef,
 		modules: modules,
-		moduleRedirects: moduleRedirects,
 		currentVersion: 22,
 	}
 

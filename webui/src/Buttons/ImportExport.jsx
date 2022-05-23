@@ -14,7 +14,6 @@ import {
 	CCol,
 	CRow,
 } from '@coreui/react'
-import update from 'immutability-helper'
 import { BankPreview, dataToButtonImage } from '../Components/BankButton'
 import { MAX_COLS, MAX_ROWS } from '../Constants'
 import { ButtonGridHeader } from './ButtonGrid'
@@ -29,6 +28,8 @@ export function ImportExport({ pageNumber }) {
 	const [snapshot, setSnapshot] = useState(null)
 	const [importPage, setImportPage] = useState(1)
 	const [importMode, setImportMode] = useState(null)
+	const [instanceRemap, setInstanceRemap] = useState({})
+	const [isRunning, setIsRunning] = useState(false)
 
 	const fileApiIsSupported = !!(window.File && window.FileReader && window.FileList && window.Blob)
 
@@ -55,19 +56,31 @@ export function ImportExport({ pageNumber }) {
 							if (err) {
 								setLoadError(err)
 							} else {
-								for (const id in config.instances || {}) {
-									const instance_type = config.instances[id]?.instance_type
-									if (instancesContext[id]) {
-										config.instances[id].import_to = id
-									} else if (!context.modules[instance_type] && !context.moduleRedirects[instance_type]) {
-										// Ignore unknown modules
-										config.instances[id].import_to = null
+								const initialRemap = {}
+
+								// Figure out some initial mappings. Look for matching type and hopefully label
+								for (const [id, obj] of Object.entries(config.instances)) {
+									const candidateIds = []
+									let matchingLabelId = ''
+
+									for (const [otherId, otherObj] of Object.entries(instancesContext)) {
+										if (otherObj.instance_type === obj.instance_type) {
+											candidateIds.push(otherId)
+											if (otherObj.label === obj.label) {
+												matchingLabelId = otherId
+											}
+										}
+									}
+
+									if (matchingLabelId) {
+										initialRemap[id] = matchingLabelId
 									} else {
-										config.instances[id].import_to = 'new'
+										initialRemap[id] = candidateIds[0] || ''
 									}
 								}
 
 								setLoadError(null)
+								setInstanceRemap(initialRemap)
 								setSnapshot(config)
 								setImportMode(config.type === 'page' ? 'page' : null)
 							}
@@ -82,24 +95,31 @@ export function ImportExport({ pageNumber }) {
 				setLoadError('Companion requires a more modern browser')
 			}
 		},
-		[context.socket, context.modules, context.moduleRedirects, instancesContext, fileApiIsSupported]
+		[context.socket, instancesContext, fileApiIsSupported]
 	)
 
 	const doImport = useCallback(() => {
-		setSnapshot((oldSnapshot) => {
-			if (oldSnapshot) {
-				// No response, we assume it was ok
-				context.socket.emit('loadsave_import_page', pageNumber, importPage, oldSnapshot)
-			}
+		setIsRunning(true)
+		socketEmit2(context.socket, 'loadsave:import-page', [pageNumber, importPage, instanceRemap])
+			.then((instanceRemap2) => {
+				if (instanceRemap2) setInstanceRemap(instanceRemap2)
 
-			if (oldSnapshot?.type === 'page') {
-				// If we imported a page, we can clear it now
-				return null
-			} else {
-				return oldSnapshot
-			}
-		})
-	}, [context.socket, pageNumber, importPage])
+				setSnapshot((oldSnapshot) => {
+					if (oldSnapshot?.type === 'page') {
+						// If we imported a page, we can clear it now
+						return null
+					} else {
+						return oldSnapshot
+					}
+				})
+			})
+			.catch((e) => {
+				console.error(`Import failed: ${e}`)
+			})
+			.finally(() => {
+				setIsRunning(false)
+			})
+	}, [context.socket, pageNumber, importPage, instanceRemap])
 
 	const changePage = useCallback(
 		(delta) => {
@@ -143,6 +163,13 @@ export function ImportExport({ pageNumber }) {
 				})
 		})
 	}, [context.socket, snapshot])
+
+	const setInstanceRemap2 = useCallback((fromId, toId) => {
+		setInstanceRemap((oldRemap) => ({
+			...oldRemap,
+			[fromId]: toId,
+		}))
+	}, [])
 
 	if (snapshot) {
 		const isSinglePage = snapshot.type === 'page'
@@ -201,57 +228,41 @@ export function ImportExport({ pageNumber }) {
 							</thead>
 							<tbody>
 								{Object.entries(snapshot.instances || {}).map(([key, instance]) => {
-									if (
-										key === 'companion-bitfocus' ||
-										instance.instance_type === 'bitfocus-companion' ||
-										instance.instance_type === 'bitfocus.bitfocus-companion'
-									) {
-										return ''
-									} else {
-										const instance_type = context.moduleRedirects[instance.instance_type] ?? instance.instance_type
-										const snapshotModule = context.modules[instance_type]
-										const currentInstances = Object.entries(instancesContext).filter(
-											([id, inst]) => inst.instance_type === instance_type
-										)
+									const snapshotModule = context.modules[instance.instance_type]
+									const currentInstances = Object.entries(instancesContext).filter(
+										([id, inst]) => inst.instance_type === instance.instance_type
+									)
 
-										return (
-											<tr>
-												<td>
-													{snapshotModule ? (
-														<CSelect
-															value={instance.import_to ?? 'new'}
-															onChange={(e) => {
-																setSnapshot((snapshot) =>
-																	update(snapshot, {
-																		instances: {
-																			[key]: {
-																				import_to: { $set: e.target.value },
-																			},
-																		},
-																	})
-																)
-															}}
-														>
-															<option value="new">[ Create new connection ]</option>
-															{currentInstances.map(([id, inst]) => (
-																<option value={id}>{inst.label}</option>
-															))}
-														</CSelect>
-													) : (
-														'Ignored'
-													)}
-												</td>
-												<td>{snapshotModule ? snapshotModule.name : 'Unknown module'}</td>
-												<td>{instance.label}</td>
-											</tr>
-										)
-									}
+									return (
+										<tr>
+											<td>
+												{snapshotModule ? (
+													<CSelect
+														disabled={isRunning}
+														value={instanceRemap[key] ?? ''}
+														onChange={(e) => setInstanceRemap2(key, e.target.value)}
+													>
+														<option value="">[ Create new connection ]</option>
+														{currentInstances.map(([id, inst]) => (
+															<option key={id} value={id}>
+																{inst.label}
+															</option>
+														))}
+													</CSelect>
+												) : (
+													'Ignored'
+												)}
+											</td>
+											<td>{snapshotModule ? snapshotModule.name : 'Unknown module'}</td>
+											<td>{instance.label}</td>
+										</tr>
+									)
 								})}
 							</tbody>
 						</table>
 
 						<p>
-							<CButton color="warning" onClick={doImport}>
+							<CButton color="warning" onClick={doImport} disabled={isRunning}>
 								Import to page {pageNumber}
 							</CButton>
 						</p>
