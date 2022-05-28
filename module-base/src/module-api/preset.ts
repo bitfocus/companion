@@ -67,7 +67,7 @@ export interface CompanionPressButtonPresetDefinition {
 	/** The base style of this preset */
 	style: CompanionPresetStyle
 	/** Options for this preset */
-	options?: CompanionPresetOptions
+	options?: CompanionPressPresetOptions
 	/** The feedbacks on the button */
 	feedbacks: CompanionPresetFeedback[]
 	actions: {
@@ -93,7 +93,7 @@ export interface CompanionSteppedButtonPresetDefinition {
 	/** The base style of this preset */
 	style: CompanionPresetStyle
 	/** Options for this preset */
-	options?: CompanionPresetOptions
+	options?: CompanionSteppedPresetOptions
 	/** The feedbacks on the button */
 	feedbacks: CompanionPresetFeedback[]
 	/** The steps of this button, and their actions */

@@ -1,7 +1,7 @@
 export type InputValue = number | string | boolean
 
 export type SomeCompanionInputField =
-	| CompanionInputFieldText
+	| CompanionInputFieldStaticText
 	| CompanionInputFieldColor
 	| CompanionInputFieldTextInput
 	| CompanionInputFieldDropdown
@@ -16,7 +16,7 @@ export interface CompanionInputFieldBase {
 	/** The unique id of this input field */
 	id: string
 	/** The type of this input field */
-	type: 'text' | 'textinput' | 'dropdown' | 'multidropdown' | 'colorpicker' | 'number' | 'checkbox'
+	type: 'static-text' | 'textinput' | 'dropdown' | 'multidropdown' | 'colorpicker' | 'number' | 'checkbox'
 	/** The label of the field */
 	label: string
 	/** A hover tooltop for this field */
@@ -28,8 +28,8 @@ export interface CompanionInputFieldBase {
 /**
  * A static un-editable line of text
  */
-export interface CompanionInputFieldText extends CompanionInputFieldBase {
-	type: 'text'
+export interface CompanionInputFieldStaticText extends CompanionInputFieldBase {
+	type: 'static-text'
 	/** The text to show */
 	value: string
 }
@@ -67,6 +67,7 @@ export interface CompanionInputFieldTextInput extends CompanionInputFieldBase {
 	/**
 	 * Whether to suggest variables to the user
 	 * TODO: If enabled, the value will have variables parsed before execution
+	 * TODO: Is this sensible, because of regex?
 	 */
 	useVariables?: boolean
 }

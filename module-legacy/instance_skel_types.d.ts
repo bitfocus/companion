@@ -218,6 +218,7 @@ export interface CompanionPreset {
 	}>
 	actions: Array<{
 		action: string
+		delay?: number
 		options: { [key: string]: InputValue | undefined }
 	}>
 	release_actions?: Array<{

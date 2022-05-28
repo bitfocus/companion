@@ -4,8 +4,8 @@ import {
 	CompanionStaticUpgradeScript,
 	InstanceBase,
 	runEntrypoint,
-	SomeCompanionConfigField,
 	splitRgb,
+	SomeCompanionConfigField,
 } from '@companion-module/base'
 import { from15to32Keys, literal } from '@companion-module/base/dist/util.js'
 import type InstanceSkel = require('../instance_skel')
@@ -14,8 +14,9 @@ import type {
 	CompanionUpgradeContext as CompanionUpgradeContextOld,
 	CompanionMigrationAction as CompanionMigrationActionOld,
 	CompanionMigrationFeedback as CompanionMigrationFeedbackOld,
+	SomeCompanionConfigField as SomeCompanionConfigFieldOld,
 } from '../instance_skel_types'
-import { FakeSystem } from './fakeSystem.js'
+import { convertInputField, FakeSystem } from './fakeSystem.js'
 
 // @ts-ignore
 const modName = global.moduleName
@@ -61,7 +62,15 @@ export default class MockModule extends InstanceBase<MockConfig> {
 	}
 	getConfigFields(): SomeCompanionConfigField[] {
 		if (!this.#legacy) throw new Error('Not yet initialized')
-		return this.#legacy.config_fields() as SomeCompanionConfigField[]
+		const rawFields = this.#legacy.config_fields()
+
+		return rawFields.map((input) => {
+			const input2 = input as SomeCompanionConfigFieldOld
+			return {
+				...convertInputField(input2),
+				width: input2.width,
+			}
+		})
 	}
 }
 

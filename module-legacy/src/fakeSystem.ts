@@ -6,7 +6,9 @@ import type {
 	CompanionFeedbackAdvanced,
 	CompanionFeedbackBoolean,
 	CompanionFeedbackEvent,
+	CompanionInputField,
 	CompanionPreset,
+	SomeCompanionInputField,
 } from '../instance_skel_types'
 import type InstanceSkel = require('../instance_skel')
 import { assertNever, literal } from '@companion-module/base'
@@ -22,6 +24,133 @@ import { nanoid } from 'nanoid'
  */
 type Complete<T> = {
 	[P in keyof Required<T>]: Pick<T, P> extends Required<Pick<T, P>> ? T[P] : T[P] | undefined
+}
+
+function convertPresetAction(action: CompanionPreset['actions'][0]): Complete<ModuleApi.CompanionPresetAction> {
+	return {
+		actionId: action.action,
+		delay: action.delay,
+		options: action.options ?? {},
+	}
+}
+function convertPresetFeedback(feedback: CompanionPreset['feedbacks'][0]): Complete<ModuleApi.CompanionPresetFeedback> {
+	return {
+		feedbackId: feedback.type,
+		options: feedback.options ?? {},
+		style: feedback.style,
+	}
+}
+function convertPresetBank(bank: CompanionBankPreset): Complete<ModuleApi.CompanionPresetStyle> {
+	const res: Complete<ModuleApi.CompanionPresetStyle> = {
+		text: bank.text,
+		size: bank.size,
+		color: bank.color,
+		bgcolor: bank.bgcolor,
+		alignment: bank.alignment,
+		png64: bank.png64,
+		pngalignment: bank.pngalignment,
+		// relative_delay: bank.relative_delay, // TODO
+	}
+
+	// Fix up some pre 2.0 styles
+	const legacyStyle = bank.style as string
+	if (legacyStyle == 'bigtext') {
+		res.size = '14'
+	} else if (legacyStyle == 'smalltext') {
+		res.size = '7'
+	}
+
+	return res
+}
+function convertInputFieldBase(input: CompanionInputField): Complete<Omit<ModuleApi.CompanionInputFieldBase, 'type'>> {
+	return {
+		id: input.id,
+		label: input.label,
+		tooltip: input.tooltip,
+		isVisible: input.isVisible,
+	}
+}
+
+export function convertInputField(input: SomeCompanionInputField): Complete<ModuleApi.SomeCompanionInputField> {
+	const inputType = input.type
+	switch (input.type) {
+		case 'text':
+			return {
+				...convertInputFieldBase(input),
+				type: 'static-text',
+				value: input.value,
+			}
+		case 'textinput':
+			return {
+				...convertInputFieldBase(input),
+				type: 'textinput',
+				default: input.default,
+				required: input.required,
+				regex: input.regex,
+				useVariables: false,
+			}
+		case 'textwithvariables':
+			return {
+				...convertInputFieldBase(input),
+				type: 'textinput',
+				default: input.default,
+				required: undefined,
+				regex: undefined,
+				useVariables: false,
+			}
+		case 'number':
+			return {
+				...convertInputFieldBase(input),
+				type: 'number',
+				default: input.default,
+				min: input.min,
+				max: input.max,
+				step: input.step,
+				range: input.range,
+				required: input.required,
+			}
+		case 'colorpicker':
+			return {
+				...convertInputFieldBase(input),
+				type: 'colorpicker',
+				default: input.default,
+			}
+		case 'checkbox':
+			return {
+				...convertInputFieldBase(input),
+				type: 'checkbox',
+				default: input.default,
+			}
+		case 'dropdown':
+			if (input.multiple) {
+				return {
+					...convertInputFieldBase(input),
+					type: 'multidropdown',
+					choices: input.choices,
+					default: input.default,
+					minChoicesForSearch: input.minChoicesForSearch,
+					minSelection: input.minSelection,
+					maximumSelectionLength: input.maximumSelectionLength,
+				}
+			} else {
+				return {
+					...convertInputFieldBase(input),
+					type: 'dropdown',
+					choices: input.choices,
+					default: input.default,
+					minChoicesForSearch: input.minChoicesForSearch,
+					allowCustom: input.allowCustom,
+					regex: input.regex,
+				}
+			}
+		default:
+			assertNever(input)
+			return {
+				...convertInputFieldBase(input),
+				type: 'static-text',
+				value: `Unknown input field type "${inputType}"`,
+			}
+	}
 }
 
 function wrapActionSubscriptionCallback(
@@ -43,7 +172,7 @@ function wrapActionSubscriptionCallback(
 function wrapFeedbackSubscriptionCallback(
 	id: string,
 	cb: ((event: CompanionFeedbackEvent) => void) | undefined
-): ((action: ModuleApi.CompanionFeedbackEvent) => void) | undefined {
+): ((feedback: ModuleApi.CompanionFeedbackInfo) => void) | undefined {
 	if (cb) {
 		return (event) =>
 			cb({
@@ -161,7 +290,7 @@ export class FakeSystem extends EventEmitter {
 		for (const [id, action] of Object.entries(actions)) {
 			if (action) {
 				const rawCb = action.callback ?? defaultHandler
-				const cb: ModuleApi.CompanionAction['callback'] = (event) => {
+				const cb: ModuleApi.CompanionActionDefinition['callback'] = (event) => {
 					if (rawCb) {
 						rawCb(
 							{
@@ -178,10 +307,10 @@ export class FakeSystem extends EventEmitter {
 					}
 				}
 
-				newActions[id] = literal<Complete<ModuleApi.CompanionAction>>({
+				newActions[id] = literal<Complete<ModuleApi.CompanionActionDefinition>>({
 					name: action.label,
 					description: action.description,
-					options: action.options ?? [],
+					options: (action.options ?? []).map(convertInputField),
 					callback: cb,
 					subscribe: wrapActionSubscriptionCallback(id, action.subscribe),
 					unsubscribe: wrapActionSubscriptionCallback(id, action.unsubscribe),
@@ -199,14 +328,14 @@ export class FakeSystem extends EventEmitter {
 		feedbacks: Parameters<InstanceSkel<any>['setFeedbackDefinitions']>[0],
 		defaultHandler: any
 	) => {
-		const newFeedbacks: ModuleApi.CompanionFeedbacks = {}
+		const newFeedbacks: ModuleApi.CompanionFeedbackDefinitions = {}
 
 		for (const [id, feedback] of Object.entries(feedbacks)) {
 			if (feedback) {
 				switch (feedback.type) {
 					case 'boolean': {
 						const rawCb = (feedback.callback ?? defaultHandler) as CompanionFeedbackBoolean['callback']
-						const cb: ModuleApi.CompanionFeedbackBoolean['callback'] = (event) => {
+						const cb: ModuleApi.CompanionBooleanFeedbackDefinition['callback'] = (event) => {
 							if (rawCb) {
 								return rawCb(
 									{
@@ -222,11 +351,11 @@ export class FakeSystem extends EventEmitter {
 							}
 						}
 
-						newFeedbacks[id] = literal<Complete<ModuleApi.CompanionFeedbackBoolean>>({
+						newFeedbacks[id] = literal<Complete<ModuleApi.CompanionBooleanFeedbackDefinition>>({
 							type: 'boolean',
 							name: feedback.label,
 							description: feedback.description,
-							options: feedback.options ?? [],
+							options: (feedback.options ?? []).map(convertInputField),
 							defaultStyle: feedback.style,
 							callback: cb,
 							subscribe: wrapFeedbackSubscriptionCallback(id, feedback.subscribe),
@@ -238,7 +367,7 @@ export class FakeSystem extends EventEmitter {
 					case undefined:
 					default: {
 						const rawCb = (feedback.callback ?? defaultHandler) as CompanionFeedbackAdvanced['callback']
-						const cb: ModuleApi.CompanionFeedbackAdvanced['callback'] = (event) => {
+						const cb: ModuleApi.CompanionAdvancedFeedbackDefinition['callback'] = (event) => {
 							if (rawCb) {
 								return rawCb(
 									{
@@ -259,11 +388,11 @@ export class FakeSystem extends EventEmitter {
 							}
 						}
 
-						newFeedbacks[id] = literal<Complete<ModuleApi.CompanionFeedbackAdvanced>>({
+						newFeedbacks[id] = literal<Complete<ModuleApi.CompanionAdvancedFeedbackDefinition>>({
 							type: 'advanced',
 							name: feedback.label,
 							description: feedback.description,
-							options: feedback.options ?? [],
+							options: (feedback.options ?? []).map(convertInputField),
 							callback: cb,
 							subscribe: wrapFeedbackSubscriptionCallback(id, feedback.subscribe),
 							unsubscribe: wrapFeedbackSubscriptionCallback(id, feedback.unsubscribe),
@@ -280,63 +409,23 @@ export class FakeSystem extends EventEmitter {
 	}
 
 	setPresetDefinitions: InstanceSkel<any>['setPresetDefinitions'] = (presets) => {
-		const newPresets: ModuleApi.SomeCompanionPreset[] = []
-
-		function convertPresetAction(action: CompanionPreset['actions'][0]): Complete<ModuleApi.CompanionPresetAction> {
-			return {
-				actionId: action.action,
-				options: action.options ?? {},
-			}
-		}
-		function convertPresetFeedback(
-			feedback: CompanionPreset['feedbacks'][0]
-		): Complete<ModuleApi.CompanionPresetFeedback> {
-			return {
-				feedbackId: feedback.type,
-				options: feedback.options ?? {},
-				style: feedback.style,
-			}
-		}
-		function convertPresetBank<T extends string>(
-			t: T,
-			bank: CompanionBankPreset
-		): Complete<ModuleApi.CompanionBankPresetBase<T>> {
-			const res = {
-				style: t,
-				text: bank.text,
-				size: bank.size,
-				color: bank.color,
-				bgcolor: bank.bgcolor,
-				alignment: bank.alignment,
-				png64: bank.png64,
-				pngalignment: bank.pngalignment,
-				relative_delay: bank.relative_delay,
-			}
-
-			// Fix up some pre 2.0 styles
-			const legacyStyle = bank.style as string
-			if (legacyStyle == 'bigtext') {
-				res.size = '14'
-			} else if (legacyStyle == 'smalltext') {
-				res.size = '7'
-			}
-
-			return res
-		}
+		const newPresets: ModuleApi.SomeCompanionPresetDefinition[] = []
 
 		for (const preset of presets) {
 			if (preset.bank.latch) {
 				newPresets.push(
-					literal<ModuleApi.CompanionPresetStepped>({
+					literal<ModuleApi.CompanionSteppedButtonPresetDefinition>({
 						id: nanoid(), // Temporary
 						category: preset.category,
-						label: preset.label,
-						bank: {
-							...convertPresetBank('step', preset.bank),
-							step_auto_progress: true,
+						name: preset.label,
+						type: 'step',
+						style: convertPresetBank(preset.bank),
+						options: {
+							relativeDelay: preset.bank.relative_delay,
+							stepAutoProgress: true,
 						},
 						feedbacks: preset.feedbacks?.map(convertPresetFeedback) ?? [],
-						action_sets: {
+						actions: {
 							[0]: preset.actions?.map(convertPresetAction) ?? [],
 							[1]: preset.release_actions?.map(convertPresetAction) ?? [],
 						},
@@ -344,13 +433,17 @@ export class FakeSystem extends EventEmitter {
 				)
 			} else {
 				newPresets.push(
-					literal<ModuleApi.CompanionPresetPress>({
+					literal<ModuleApi.CompanionPressButtonPresetDefinition>({
 						id: nanoid(), // Temporary
 						category: preset.category,
-						label: preset.label,
-						bank: convertPresetBank('press', preset.bank),
+						name: preset.label,
+						type: 'press',
+						style: convertPresetBank(preset.bank),
+						options: {
+							relativeDelay: preset.bank.relative_delay,
+						},
 						feedbacks: preset.feedbacks?.map(convertPresetFeedback) ?? [],
-						action_sets: {
+						actions: {
 							down: preset.actions?.map(convertPresetAction) ?? [],
 							up: preset.release_actions?.map(convertPresetAction) ?? [],
 						},
@@ -369,7 +462,7 @@ export class FakeSystem extends EventEmitter {
 	}
 
 	setVariableDefinitions: InstanceSkel<any>['setVariableDefinitions'] = (variables) => {
-		const newVariables: ModuleApi.CompanionVariable[] = []
+		const newVariables: ModuleApi.CompanionVariableDefinition[] = []
 
 		for (const variable of variables) {
 			newVariables.push({
@@ -387,21 +480,14 @@ export class FakeSystem extends EventEmitter {
 		this.setVariables({ [variableId]: value })
 	}
 	setVariables: InstanceSkel<any>['setVariables'] = (variables) => {
-		const newValues: ModuleApi.CompanionVariableValue2[] = []
-
-		for (const [id, value] of Object.entries(variables)) {
-			newValues.push({
-				variableId: id,
-				value: value,
-			})
-		}
-
-		this.parent.setVariableValues(newValues)
+		this.parent.setVariableValues(variables).catch((e) => {
+			this.parent.log('warn', `setVariableValues failed: ${e?.message ?? e}`)
+		})
 	}
 
 	getVariable: InstanceSkel<any>['getVariable'] = (variableId, cb) => {
 		const value = this.parent.getVariableValue(variableId)
-		cb(value)
+		cb(value as any)
 	}
 
 	parseVariables: InstanceSkel<any>['parseVariables'] = (text, cb) => {
