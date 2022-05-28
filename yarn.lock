@@ -1629,10 +1629,10 @@ at-least-node@^1.0.0:
   resolved "https://registry.yarnpkg.com/at-least-node/-/at-least-node-1.0.0.tgz#602cd4b46e844ad4effc92a8011a3c46e0238dc2"
   integrity sha512-+q/t7Ekv1EDY2l6Gda6LLiX14rU9TV20Wa3ofeQmwPFZbOMo9DXrLbOjFaaclkXKWidIaopwAObQDqwWtGUjqg==
 
-atem-connection@3.0.0-nightly-latest-20220507-145153-f8145aa.0:
-  version "3.0.0-nightly-latest-20220507-145153-f8145aa.0"
-  resolved "https://registry.yarnpkg.com/atem-connection/-/atem-connection-3.0.0-nightly-latest-20220507-145153-f8145aa.0.tgz#ab3f7e72d7cb1a081624e0c2e31c4948a49cccd6"
-  integrity sha512-Hn1yvV4QiCmAM7kPl0Z3r0QbYovGewONgtNaoXvbI1Y6zaTxvUzDqeG/ZwA03+J+3ejOEJa0m+hhn01ZXZELkQ==
+atem-connection@3.0.0-nightly-latest-20220528-143522-2337013.0:
+  version "3.0.0-nightly-latest-20220528-143522-2337013.0"
+  resolved "https://registry.yarnpkg.com/atem-connection/-/atem-connection-3.0.0-nightly-latest-20220528-143522-2337013.0.tgz#06b0d54535118febb7abe7d2525935abf314d9b6"
+  integrity sha512-qX4MbP6/0h3mC/g48L3QjaYYhArQ/+k3vKIHyYZX/d5M4A1Lo85+vzp8DgY9FyKiiWUP45emiZwdhd1HD8nR/A==
   dependencies:
     debug "^4.3.4"
     eventemitter3 "^4.0.7"
@@ -2722,13 +2722,14 @@ commist@^1.0.0:
   version "1.0.1"
   resolved "https://codeload.github.com/bitfocus/companion-module-blackdiamondvideo-phantom800/tar.gz/5c7a51b8be2edfa24d2ed755249cec1e0a3b357d"
 
-"companion-module-bmd-atem@github:bitfocus/companion-module-bmd-atem#v2.15.0":
-  version "2.15.0"
-  resolved "https://codeload.github.com/bitfocus/companion-module-bmd-atem/tar.gz/6b9660a12146d1e0951547095519102a4abc5efe"
+"companion-module-bmd-atem@github:bitfocus/companion-module-bmd-atem#v2.15.2":
+  version "2.15.2"
+  resolved "https://codeload.github.com/bitfocus/companion-module-bmd-atem/tar.gz/83021c00591c9a5eb0b7b00debab1f055637328a"
   dependencies:
     "@types/multicast-dns" "^7.2.1"
     "@types/node" "^14.18.12"
-    atem-connection "3.0.0-nightly-latest-20220507-145153-f8145aa.0"
+    atem-connection "3.0.0-nightly-latest-20220528-143522-2337013.0"
+    debounce-fn "github:julusian/debounce-fn#4.0.0-maxWaithack.0"
     multicast-dns "^7.2.3"
     type-fest "^2.12.1"
 
