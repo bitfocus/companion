@@ -1,6 +1,6 @@
 # Bitfocus Companion
 
-## Companion v2.2.1 - Release Notes (unreleased)
+## Companion v2.2.1 - Release Notes
 
 ### 📣 CORE FEATURES AND IMPROVEMENTS
 
