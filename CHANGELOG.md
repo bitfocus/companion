@@ -94,9 +94,6 @@
 - vystem-api
 - yamaha-rcp
 
-Removed:
-birddog-visca - v2.0.0
-
 ## Companion v2.2.0 - Release Notes
 
 ### 📣 CORE FEATURES AND IMPROVEMENTS
