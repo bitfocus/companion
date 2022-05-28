@@ -1,7 +1,15 @@
 import React, { useEffect, useCallback, useState } from 'react'
-import { CCol, CInput, CRow } from '@coreui/react'
+import { CButton, CCol, CInput, CInputGroup, CInputGroupAppend, CRow } from '@coreui/react'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faHashtag, faDollarSign } from '@fortawesome/free-solid-svg-icons'
+import { parse } from '@estilles/expression-parser'
+import { InputWithVariables } from './TextWithVariablesInputField'
+
+const variablePattern = /^\$\(((?:[^:$)]+):(?:[^)$]+))\)/
 
 export function NumberInputField({ definition, value, setValue, setValid }) {
+	const isExpression = typeof value === 'string' && definition.allowExpression
+	const [expressionMode, setExpressionMode] = useState(!!isExpression)
 	const [tmpValue, setTmpValue] = useState(null)
 
 	// Check if the value is valid
@@ -13,23 +21,33 @@ export function NumberInputField({ definition, value, setValue, setValid }) {
 					return false
 				}
 			} else {
-				// If has a value, it must be a number
-				if (isNaN(val)) {
-					return false
-				}
+				if (expressionMode) {
+					try {
+						// Make sure it can parse
+						parse(val, variablePattern)
+					} catch (e) {
+						// Clearly not valid
+						return false
+					}
+				} else {
+					// If has a value, it must be a number
+					if (isNaN(val)) {
+						return false
+					}
 
-				// Verify the value range
-				if (definition.min !== undefined && val < definition.min) {
-					return false
-				}
-				if (definition.max !== undefined && val > definition.max) {
-					return false
+					// Verify the value range
+					if (definition.min !== undefined && val < definition.min) {
+						return false
+					}
+					if (definition.max !== undefined && val > definition.max) {
+						return false
+					}
 				}
 			}
 
 			return true
 		},
-		[definition.required, definition.min, definition.max]
+		[definition.required, definition.min, definition.max, expressionMode]
 	)
 
 	// If the value is undefined, populate with the default. Also inform the parent about the validity
@@ -44,17 +62,25 @@ export function NumberInputField({ definition, value, setValue, setValid }) {
 
 	const onChange = useCallback(
 		(e) => {
-			const parsedValue = parseFloat(e.currentTarget.value)
-			const processedValue = isNaN(parsedValue) ? e.currentTarget.value : parsedValue
+			let processedValue = e.currentTarget.value
+			if (!expressionMode) {
+				const parsedValue = parseFloat(processedValue)
+				processedValue = isNaN(parsedValue) ? processedValue : parsedValue
+			}
+
 			setTmpValue(processedValue)
 			setValue(processedValue)
 			setValid?.(isValueValid(processedValue))
 		},
-		[setValue, setValid, isValueValid]
+		[setValue, setValid, isValueValid, expressionMode]
 	)
 
+	const toggleExpression = useCallback(() => {
+		setExpressionMode((old) => !old)
+	}, [])
+
 	// Render the input
-	const input = (
+	let input = (
 		<CInput
 			type="number"
 			value={tmpValue ?? value ?? 0}
@@ -69,7 +95,36 @@ export function NumberInputField({ definition, value, setValue, setValid }) {
 		/>
 	)
 
-	if (definition.range) {
+	if (definition.allowExpression) {
+		input = (
+			<CInputGroup>
+				{expressionMode ? (
+					<InputWithVariables
+						style={{ color: !isValueValid(tmpValue ?? value) ? 'red' : undefined }}
+						value={tmpValue ?? value ?? ''}
+						title={definition.tooltip}
+						onChange={onChange}
+						onFocus={() => setTmpValue(value ?? '')}
+						onBlur={() => setTmpValue(null)}
+					/>
+				) : (
+					input
+				)}
+				<CInputGroupAppend>
+					<CButton
+						color="info"
+						variant="outline"
+						onClick={toggleExpression}
+						title={expressionMode ? 'Switch to number mode' : 'Switch to expression mode'}
+					>
+						<FontAwesomeIcon icon={expressionMode ? faHashtag : faDollarSign} />
+					</CButton>
+				</CInputGroupAppend>
+			</CInputGroup>
+		)
+	}
+
+	if (definition.range && !expressionMode) {
 		return (
 			<CRow>
 				<CCol sm={12}>{input}</CCol>

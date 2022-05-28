@@ -5,8 +5,6 @@ import { CInput } from '@coreui/react'
 import { decode } from 'html-entities'
 
 export function TextWithVariablesInputField({ definition, value, setValue }) {
-	const variableDefinitionsContext = useContext(VariableDefinitionsContext)
-
 	const [tmpValue, setTmpValue] = useState(null)
 
 	// If the value is undefined, populate with the default. Also inform the parent about the validity
@@ -15,6 +13,30 @@ export function TextWithVariablesInputField({ definition, value, setValue }) {
 			setValue(definition.default)
 		}
 	}, [definition.default, value, setValue])
+
+	const doOnChange = useCallback(
+		(e) => {
+			const newValue = decode(e.currentTarget.value, { scope: 'strict' })
+			setTmpValue(newValue)
+			setValue(newValue)
+		},
+		[setValue]
+	)
+
+	return (
+		<InputWithVariables
+			className="input-text-with-variables"
+			value={tmpValue ?? value ?? ''}
+			title={definition.tooltip}
+			onChange={doOnChange}
+			onFocus={() => setTmpValue(value ?? '')}
+			onBlur={() => setTmpValue(null)}
+		/>
+	)
+}
+
+export function InputWithVariables(props) {
+	const variableDefinitionsContext = useContext(VariableDefinitionsContext)
 
 	const tribute = useMemo(() => {
 		// Create it once, then we attach and detach whenever the ref changes
@@ -48,15 +70,6 @@ export function TextWithVariablesInputField({ definition, value, setValue }) {
 		tribute.append(0, suggestions, true)
 	}, [variableDefinitionsContext, tribute])
 
-	const doOnChange = useCallback(
-		(e) => {
-			const newValue = decode(e.currentTarget.value, { scope: 'strict' })
-			setTmpValue(newValue)
-			setValue(newValue)
-		},
-		[setValue]
-	)
-
 	const [, setupTributePrevious] = useState([null, null])
 	const setupTribute = useCallback(
 		(ref) => {
@@ -70,24 +83,13 @@ export function TextWithVariablesInputField({ definition, value, setValue }) {
 				}
 				if (ref) {
 					tribute.attach(ref)
-					ref.addEventListener('tribute-replaced', doOnChange)
+					ref.addEventListener('tribute-replaced', props.onChange)
 				}
-				return [ref, doOnChange]
+				return [ref, props.onChange]
 			})
 		},
-		[tribute, doOnChange]
+		[tribute, props.onChange]
 	)
 
-	return (
-		<CInput
-			innerRef={setupTribute}
-			className="input-text-with-variables"
-			type="text"
-			value={tmpValue ?? value ?? ''}
-			title={definition.tooltip}
-			onChange={doOnChange}
-			onFocus={() => setTmpValue(value ?? '')}
-			onBlur={() => setTmpValue(null)}
-		/>
-	)
+	return <CInput innerRef={setupTribute} type="text" {...props} />
 }

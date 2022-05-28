@@ -1271,6 +1271,11 @@
     minimatch "^3.0.4"
     strip-json-comments "^3.1.1"
 
+"@estilles/expression-parser@^1.0.0":
+  version "1.0.0"
+  resolved "https://registry.yarnpkg.com/@estilles/expression-parser/-/expression-parser-1.0.0.tgz#227a182309051f4e371e1b5c652351b84213eddc"
+  integrity sha512-Pidcwrp+YgjWjzXtt2IacpBkBcWCtMMcc21Jic/taXaPOX7efdcdYR5w65K7DWyOGyFXzaQAfvwEqBvDbyM9+w==
+
 "@fontsource/fira-code@^4.5.8":
   version "4.5.8"
   resolved "https://registry.yarnpkg.com/@fontsource/fira-code/-/fira-code-4.5.8.tgz#968e281e81f9be32655d7e1991c0e076da8d6b01"

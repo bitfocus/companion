@@ -173,6 +173,13 @@ export interface CompanionInputFieldNumber extends CompanionInputField {
 	range?: boolean
 	required?: boolean
 	default: number
+
+	/**
+	 * Whether to allow an 'expression' parsing mode
+	 * This value will be pre-evaluated for you when executing the action/feedback, with NaN being passed if it failed to resolve to evaluate or was not a number
+	 * In the subscribe/unsubscribe callbacks, the raw string will be provided
+	 */
+	allowExpression?: boolean
 }
 
 export interface CompanionConfigField extends CompanionInputField {
