@@ -1,12 +1,12 @@
 import * as SocketIOClient from 'socket.io-client'
-import { CompanionAction, CompanionActions } from './action.js'
+import { CompanionActionDefinition, CompanionActionDefinitions } from './action.js'
 import {
-	CompanionFeedbacks,
-	CompanionFeedback,
+	CompanionFeedbackDefinitions,
+	CompanionFeedbackDefinition,
 	CompanionFeedbackButtonStyleResult,
-	CompanionFeedbackEvent,
+	CompanionFeedbackInfo,
 } from './feedback.js'
-import { SomeCompanionPreset } from './preset.js'
+import { SomeCompanionPresetDefinition } from './preset.js'
 import { InstanceStatus, LogLevel } from './enums.js'
 import {
 	ActionInstance,
@@ -33,44 +33,13 @@ import { literal } from '../util.js'
 import { InstanceBaseShared } from '../instance-base.js'
 import { ResultCallback } from '../host-api/versions.js'
 import PQueue from 'p-queue'
-import { CompanionVariable, CompanionVariableValue, CompanionVariableValue2 } from './variable.js'
+import { CompanionVariableDefinition, CompanionVariableValue, CompanionVariableValues } from './variable.js'
 import { OSCSomeArguments } from '../common/osc.js'
-import { listenToEvents, serializeIsVisibleFn } from './lib.js'
 import { SomeCompanionConfigField } from './config.js'
-import { CompanionStaticUpgradeScript, CompanionUpgradeToBooleanFeedbackMap } from './upgrade.js'
-import { isInstanceBaseProps, runThroughUpgradeScripts } from './internal.js'
-
-function convertFeedbackInstanceToEvent(
-	type: 'boolean' | 'advanced',
-	feedback: FeedbackInstance
-): CompanionFeedbackEvent {
-	return {
-		type: type,
-		id: feedback.id,
-		feedbackId: feedback.feedbackId,
-		controlId: feedback.controlId,
-		options: feedback.options,
-	}
-}
-
-function callFeedbackOnDefinition(definition: CompanionFeedback, feedback: FeedbackInstance) {
-	if (definition.type === 'boolean') {
-		return definition.callback({
-			...convertFeedbackInstanceToEvent('boolean', feedback),
-			type: 'boolean',
-			rawBank: feedback.rawBank,
-		})
-	} else {
-		return definition.callback({
-			...convertFeedbackInstanceToEvent('advanced', feedback),
-			type: 'advanced',
-			image: feedback.image,
-			page: feedback.page,
-			bank: feedback.bank,
-			rawBank: feedback.rawBank,
-		})
-	}
-}
+import { CompanionStaticUpgradeScript } from './upgrade.js'
+import { isInstanceBaseProps, listenToEvents, serializeIsVisibleFn } from '../internal/base.js'
+import { runThroughUpgradeScripts } from '../internal/upgrade.js'
+import { convertFeedbackInstanceToEvent, callFeedbackOnDefinition } from '../internal/feedback.js'
 
 export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfig> {
 	readonly #socket: SocketIOClient.Socket
@@ -80,9 +49,9 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 	readonly #lifecycleQueue: PQueue = new PQueue({ concurrency: 1 })
 	#initialized: boolean = false
 
-	readonly #actionDefinitions = new Map<string, CompanionAction>()
-	readonly #feedbackDefinitions = new Map<string, CompanionFeedback>()
-	readonly #variableDefinitions = new Map<string, CompanionVariable>()
+	readonly #actionDefinitions = new Map<string, CompanionActionDefinition>()
+	readonly #feedbackDefinitions = new Map<string, CompanionFeedbackDefinition>()
+	readonly #variableDefinitions = new Map<string, CompanionVariableDefinition>()
 
 	readonly #feedbackInstances = new Map<string, FeedbackInstance>()
 	readonly #actionInstances = new Map<string, ActionInstance>()
@@ -337,10 +306,15 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 	abstract destroy(): void | Promise<void>
 
 	/**
-	 * Process an updated configuration array.
+	 * Called when the configuration is updated.
+	 * @param config The new config object
 	 */
 	abstract configUpdated(config: TConfig): void | Promise<void>
 
+	/**
+	 * Save an updated configuration object
+	 * @param newConfig The new config object
+	 */
 	async saveConfig(newConfig: TConfig): Promise<void> {
 		return this._socketEmit('saveConfig', { config: newConfig })
 	}
@@ -350,20 +324,11 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 	 */
 	abstract getConfigFields(): SomeCompanionConfigField[]
 
-	// /**
-	//  * Provides the upgrade scripts to companion that are to be used for this module.
-	//  * These get run before init is called, so should not rely on the class being fully initialized.
-	//  */
-	// GetUpgradeScripts?(): Array<CompanionStaticUpgradeScript<any>>
-
-	// /**
-	//  * Force running upgrade script from an earlier point, as specified by the value
-	//  * Only works when DEVELOPER=1.
-	//  * eg, 0 = runs the first script onwards
-	//  */
-	// static DEVELOPER_forceStartupUpgradeScript?: number
-
-	setActionDefinitions(actions: CompanionActions): Promise<void> {
+	/**
+	 * Set the action definitions for this instance
+	 * @param actions The action definitions
+	 */
+	setActionDefinitions(actions: CompanionActionDefinitions): Promise<void> {
 		const hostActions: SetActionDefinitionsMessage['actions'] = []
 
 		this.#actionDefinitions.clear()
@@ -385,7 +350,11 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 		return this._socketEmit('setActionDefinitions', { actions: hostActions })
 	}
 
-	setFeedbackDefinitions(feedbacks: CompanionFeedbacks): Promise<void> {
+	/**
+	 * Set the feedback definitions for this instance
+	 * @param feedbacks The feedback definitions
+	 */
+	setFeedbackDefinitions(feedbacks: CompanionFeedbackDefinitions): Promise<void> {
 		const hostFeedbacks: SetFeedbackDefinitionsMessage['feedbacks'] = []
 
 		this.#feedbackDefinitions.clear()
@@ -409,7 +378,11 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 		return this._socketEmit('setFeedbackDefinitions', { feedbacks: hostFeedbacks })
 	}
 
-	setPresetDefinitions(presets: SomeCompanionPreset[]): Promise<void> {
+	/**
+	 * Set the peset definitions for this instance
+	 * @param presets The preset definitions
+	 */
+	setPresetDefinitions(presets: SomeCompanionPresetDefinition[]): Promise<void> {
 		// const hostPresets: SetPresetDefinitionsMessage['presets'] = []
 
 		// for (const preset of presets) {
@@ -421,7 +394,11 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 		return this._socketEmit('setPresetDefinitions', { presets: presets })
 	}
 
-	setVariableDefinitions(variables: CompanionVariable[]): Promise<void> {
+	/**
+	 * Set the variable definitions for this instance
+	 * @param variables The variable definitions
+	 */
+	setVariableDefinitions(variables: CompanionVariableDefinition[]): Promise<void> {
 		const hostVariables: SetVariableDefinitionsMessage['variables'] = []
 
 		this.#variableDefinitions.clear()
@@ -451,22 +428,26 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 		return this._socketEmit('setVariableDefinitions', { variables: hostVariables })
 	}
 
-	setVariableValues(values: CompanionVariableValue2[]): Promise<void> {
+	/**
+	 * Set the values of some variables
+	 * @param values The new values for the variables
+	 */
+	setVariableValues(values: CompanionVariableValues): Promise<void> {
 		const hostValues: SetVariableValuesMessage['newValues'] = []
 
-		for (const value of values) {
-			if (this.#variableDefinitions.has(value.variableId)) {
+		for (const [variableId, value] of Object.entries(values)) {
+			if (this.#variableDefinitions.has(variableId)) {
 				// update the cached value
-				this.#variableValues.set(value.variableId, value.value || '')
+				this.#variableValues.set(variableId, value ?? '')
 
 				hostValues.push({
-					id: value.variableId,
-					value: value.value || '',
+					id: variableId,
+					value: value ?? '',
 				})
 			} else {
 				// tell companion to delete the value
 				hostValues.push({
-					id: value.variableId,
+					id: variableId,
 					value: undefined,
 				})
 			}
@@ -475,15 +456,29 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 		return this._socketEmit('setVariableValues', { newValues: hostValues })
 	}
 
-	getVariableValue(variableId: string): string | undefined {
+	/**
+	 * Get the last set value of a variable from this connection
+	 * @param variableId id of the variable
+	 * @returns The value
+	 */
+	getVariableValue(variableId: string): CompanionVariableValue | undefined {
 		return this.#variableValues.get(variableId)
 	}
 
+	/**
+	 * Parse and replace all the variables in a string
+	 * @param text The text to parse
+	 * @returns The string with variables replaced with their values
+	 */
 	async parseVariablesInString(text: string): Promise<string> {
 		const res = await this._socketEmit('parseVariablesInString', { text: text })
 		return res.text
 	}
 
+	/**
+	 * Request all feedbacks of the specified types to be checked for changes
+	 * @param feedbackTypes The feedback types to check
+	 */
 	async checkFeedbacks(...feedbackTypes: string[]): Promise<void> {
 		const newValues: UpdateFeedbackValuesMessage['values'] = []
 
@@ -517,6 +512,10 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 		}
 	}
 
+	/**
+	 * Request the specified feedback instances to be checked for changes
+	 * @param feedbackIds The ids of the feedback instances to check
+	 */
 	async checkFeedbacksById(...feedbackIds: string[]): Promise<void> {
 		const newValues: UpdateFeedbackValuesMessage['values'] = []
 
@@ -644,18 +643,26 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 		)
 	}
 
-	updateStatus(status: InstanceStatus, message?: string | null): void {
+	/**
+	 * Update the status of this connection
+	 * @param status The status level
+	 * @param message Additional information about the status
+	 */
+	async updateStatus(status: InstanceStatus, message?: string | null): Promise<void> {
 		this._socketEmit(
 			'set-status',
 			literal<SetStatusMessage>({
 				status,
 				message: message ?? null,
 			})
-		).catch((e) => {
-			console.error(`updateStatus failed: ${e}`)
-		})
+		)
 	}
 
+	/**
+	 * Write a line to the log
+	 * @param level The level of the message
+	 * @param message The message text to write
+	 */
 	log(level: LogLevel, message: string): void {
 		this._socketEmit(
 			'log-message',

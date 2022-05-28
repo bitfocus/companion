@@ -156,7 +156,7 @@ export class FakeSystem extends EventEmitter {
 
 	// setActions: InstanceSkel<any>['setActions'] = (actions) => {
 	setActions = (actions: Parameters<InstanceSkel<any>['setActions']>[0], defaultHandler: any) => {
-		const newActions: ModuleApi.CompanionActions = {}
+		const newActions: ModuleApi.CompanionActionDefinitions = {}
 
 		for (const [id, action] of Object.entries(actions)) {
 			if (action) {

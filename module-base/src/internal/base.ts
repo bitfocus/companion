@@ -1,6 +1,8 @@
 import * as SocketIOClient from 'socket.io-client'
+import { CompanionStaticUpgradeScript } from '../module-api/upgrade'
+import { EncodeIsVisible } from '../host-api/api.js'
 import { ResultCallback } from '../host-api/versions.js'
-import { EncodeIsVisible, SomeCompanionInputField } from './input.js'
+import { SomeCompanionInputField } from '../module-api/input'
 
 /**
  * Signature for the handler functions
@@ -61,4 +63,15 @@ export function serializeIsVisibleFn<T extends SomeCompanionInputField>(options:
 			isVisibleFn: undefined,
 		}
 	})
+}
+
+export interface InstanceBaseProps<TConfig> {
+	id: string
+	socket: SocketIOClient.Socket
+	upgradeScripts: CompanionStaticUpgradeScript<TConfig>[]
+}
+
+export function isInstanceBaseProps<TConfig>(obj: unknown): obj is InstanceBaseProps<TConfig> {
+	const obj2 = obj as InstanceBaseProps<TConfig>
+	return typeof obj2 === 'object' && typeof obj2.id === 'string' && typeof obj2.socket === 'object'
 }

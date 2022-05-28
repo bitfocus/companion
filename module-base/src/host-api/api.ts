@@ -4,9 +4,9 @@ import {
 	InputValue,
 	InstanceStatus,
 	LogLevel,
-	SomeCompanionPreset,
-	SomeEncodedCompanionConfigField,
-	SomeEncodedCompanionInputField,
+	SomeCompanionConfigField,
+	SomeCompanionInputField,
+	SomeCompanionPresetDefinition,
 } from '../module-api/index.js'
 
 export interface ModuleToHostEventsV0 {
@@ -34,6 +34,10 @@ export interface HostToModuleEventsV0 {
 	getConfigFields: (msg: GetConfigFieldsMessage) => GetConfigFieldsResponseMessage
 }
 
+export type EncodeIsVisible<T extends SomeCompanionInputField> = Omit<T, 'isVisible'> & {
+	isVisibleFn?: string
+}
+
 export interface InitMessage {
 	label: string
 	config: unknown
@@ -57,6 +61,7 @@ export interface UpgradedDataResponseMessage {
 }
 
 export type GetConfigFieldsMessage = Record<string, never>
+export type SomeEncodedCompanionConfigField = EncodeIsVisible<SomeCompanionConfigField>
 export interface GetConfigFieldsResponseMessage {
 	fields: SomeEncodedCompanionConfigField[]
 }
@@ -69,6 +74,8 @@ export interface SetStatusMessage {
 	status: InstanceStatus
 	message: string | null
 }
+
+export type SomeEncodedCompanionInputField = EncodeIsVisible<SomeCompanionInputField>
 
 export interface SetActionDefinitionsMessage {
 	actions: Array<{
@@ -98,13 +105,13 @@ export interface SetVariableDefinitionsMessage {
 }
 
 export interface SetPresetDefinitionsMessage {
-	presets: Array<SomeCompanionPreset>
+	presets: Array<SomeCompanionPresetDefinition>
 }
 
 export interface SetVariableValuesMessage {
 	newValues: Array<{
 		id: string
-		value: string | undefined
+		value: string | number | boolean | undefined
 	}>
 }
 

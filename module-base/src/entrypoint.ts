@@ -6,12 +6,18 @@ import { ModuleManifest } from './manifest.js'
 import { CompanionStaticUpgradeScript } from './module-api/upgrade.js'
 import { InstanceBase } from './module-api/base.js'
 import { literal } from './util.js'
-import { InstanceBaseProps } from './module-api/internal.js'
+import { InstanceBaseProps } from './internal/base.js'
 
 let hasEntrypoint = false
 
 export type InstanceConstructor<TConfig> = new (internal: unknown) => InstanceBase<TConfig>
 
+/**
+ * Setup the module for execution
+ * This should be called once per-module, to register the class that should be executed
+ * @param factory The class for the module
+ * @param upgradeScripts Upgrade scripts
+ */
 export function runEntrypoint<TConfig>(
 	factory: InstanceConstructor<TConfig>,
 	upgradeScripts: CompanionStaticUpgradeScript<TConfig>[]

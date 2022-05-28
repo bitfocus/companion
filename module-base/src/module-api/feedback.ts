@@ -1,69 +1,116 @@
 import { SomeCompanionInputField, InputValue } from './input.js'
-import { CompanionAlignment, CompanionTextSize } from './preset.js'
+import { CompanionAdditionalStyleProps, CompanionRequiredStyleProps } from './style.js'
 
-export interface CompanionFeedbackEvent {
-	type: 'boolean' | 'advanced'
-	id: string
-	feedbackId: string
-	controlId: string
-	options: { [key: string]: InputValue | undefined }
+/**
+ * Basic information about an instance of an feedback
+ */
+export interface CompanionFeedbackInfo {
+	/** The type of the feedback */
+	readonly type: 'boolean' | 'advanced'
+	/** The unique id for this feedback */
+	readonly id: string
+	/** The unique id for the location of this feedback */
+	readonly controlId: string
+	/** The id of the feedback definition */
+	readonly feedbackId: string
+	/** The user selected options for the feedback */
+	readonly options: { [key: string]: InputValue | undefined }
 }
 
-export interface CompanionFeedbackBooleanEvent extends CompanionFeedbackEvent {
-	type: 'boolean'
+/**
+ * Extended information for execution of a boolean feedback
+ */
+export interface CompanionFeedbackBooleanEvent extends CompanionFeedbackInfo {
+	readonly type: 'boolean'
 
 	/** @deprecated */
-	rawBank: any
+	readonly rawBank: any
 }
-export interface CompanionFeedbackAdvancedEvent extends CompanionFeedbackEvent {
-	type: 'advanced'
+
+/**
+ * Extended information for execution of an advanced feedback
+ */
+export interface CompanionFeedbackAdvancedEvent extends CompanionFeedbackInfo {
+	readonly type: 'advanced'
+
 	/** If control supports an imageBuffer, the dimensions the buffer must be */
-	image?: {
-		width: number
-		height: number
+	readonly image?: {
+		readonly width: number
+		readonly height: number
 	}
 
 	/** @deprecated */
-	page: number
+	readonly page: number
 	/** @deprecated */
-	bank: number
+	readonly bank: number
 
 	/** @deprecated */
-	rawBank: any
+	readonly rawBank: any
 }
 
-export interface CompanionFeedbackButtonStyleResult {
-	// TODO - more props
-	color?: number
-	bgcolor?: number
-	text?: string
+/**
+ * The resulting style of a boolean feedback
+ */
+export type CompanionFeedbackButtonStyleResult = Partial<CompanionRequiredStyleProps & CompanionAdditionalStyleProps>
+
+/** The resulting style of an advanced feedback */
+export interface CompanionAdvancedFeedbackResult extends CompanionFeedbackButtonStyleResult {
 	imageBuffer?: Buffer
-	size?: CompanionTextSize
-	alignment?: CompanionAlignment
-	pngalignment?: CompanionAlignment
-	png64?: string
 }
 
-export interface CompanionFeedbackBase {
+/**
+ * The common definition of a feedback
+ */
+export interface CompanionFeedbackDefinitionBase {
 	type: 'boolean' | 'advanced'
+	/** Name to show in the feedbacks list */
 	name: string
+	/** Additional description of the feedback */
 	description?: string
+	/** The input fields for the feedback */
 	options: SomeCompanionInputField[]
-	subscribe?: (feedback: CompanionFeedbackEvent) => void
-	unsubscribe?: (feedback: CompanionFeedbackEvent) => void
+	/**
+	 * Called to report the existence of an feedback
+	 * Useful to ensure necessary data is loaded
+	 */
+	subscribe?: (feedback: CompanionFeedbackInfo) => void
+	/**
+	 * Called to report an feedback has been edited/removed
+	 * Useful to cleanup subscriptions setup in subscribe
+	 */
+	unsubscribe?: (feedback: CompanionFeedbackInfo) => void
 }
-export interface CompanionFeedbackBoolean extends CompanionFeedbackBase {
+
+/**
+ * The definition of a boolean feedback
+ */
+export interface CompanionBooleanFeedbackDefinition extends CompanionFeedbackDefinitionBase {
+	/** The type of the feedback */
 	type: 'boolean'
+	/** The default style properties for this feedback */
 	defaultStyle: Partial<CompanionFeedbackButtonStyleResult>
+	/** Called to get the feedback value */
 	callback: (feedback: CompanionFeedbackBooleanEvent) => boolean
 }
-export interface CompanionFeedbackAdvanced extends CompanionFeedbackBase {
+
+/**
+ * The definition of an advanced feedback
+ */
+export interface CompanionAdvancedFeedbackDefinition extends CompanionFeedbackDefinitionBase {
+	/** The type of the feedback */
 	type: 'advanced'
-	callback: (feedback: CompanionFeedbackAdvancedEvent) => CompanionFeedbackButtonStyleResult
+	/** Called to get the feedback value */
+	callback: (feedback: CompanionFeedbackAdvancedEvent) => CompanionAdvancedFeedbackResult
 }
 
-export type CompanionFeedback = CompanionFeedbackBoolean | CompanionFeedbackAdvanced
+/**
+ * The definition of some feedback
+ */
+export type CompanionFeedbackDefinition = CompanionBooleanFeedbackDefinition | CompanionAdvancedFeedbackDefinition
 
-export interface CompanionFeedbacks {
-	[id: string]: CompanionFeedback | undefined
+/**
+ * The definitions of a group of feedbacks
+ */
+export interface CompanionFeedbackDefinitions {
+	[id: string]: CompanionFeedbackDefinition | undefined
 }

@@ -1,11 +1,19 @@
-export interface CompanionVariable {
+/**
+ * The definition of a variable
+ */
+export interface CompanionVariableDefinition {
 	variableId: string
 	name: string
 }
 
-export interface CompanionVariableValue2 {
-	variableId: string
-	value: CompanionVariableValue | undefined
+/**
+ * A set of values of some variables
+ */
+export interface CompanionVariableValues {
+	[variableId: string]: CompanionVariableValue | undefined
 }
 
-export type CompanionVariableValue = string
+/**
+ * The value of a variable
+ */
+export type CompanionVariableValue = string | number | boolean

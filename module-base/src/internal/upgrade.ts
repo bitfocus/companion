@@ -1,17 +1,5 @@
-import * as SocketIOClient from 'socket.io-client'
-import { FeedbackInstance, ActionInstance, UpgradedDataResponseMessage } from '../host-api/api'
-import { CompanionStaticUpgradeScript } from './upgrade'
-
-export interface InstanceBaseProps<TConfig> {
-	id: string
-	socket: SocketIOClient.Socket
-	upgradeScripts: CompanionStaticUpgradeScript<TConfig>[]
-}
-
-export function isInstanceBaseProps<TConfig>(obj: unknown): obj is InstanceBaseProps<TConfig> {
-	const obj2 = obj as InstanceBaseProps<TConfig>
-	return typeof obj2 === 'object' && typeof obj2.id === 'string' && typeof obj2.socket === 'object'
-}
+import { CompanionStaticUpgradeScript } from '../module-api/upgrade.js'
+import { FeedbackInstance, ActionInstance, UpgradedDataResponseMessage } from '../host-api/api.js'
 
 export function runThroughUpgradeScripts(
 	allActions: { [id: string]: ActionInstance | undefined | null },

@@ -1,10 +1,13 @@
-import { CompanionInputField, EncodeIsVisible, SomeCompanionInputField } from './input.js'
+import { CompanionInputFieldBase, SomeCompanionInputField } from './input.js'
 
-export type ConfigValue = string | number
-
-export interface CompanionConfigField extends CompanionInputField {
+/**
+ * A configuration input field
+ */
+export interface CompanionConfigField extends CompanionInputFieldBase {
 	width: number
 }
-export type SomeCompanionConfigField = SomeCompanionInputField & CompanionConfigField
 
-export type SomeEncodedCompanionConfigField = EncodeIsVisible<SomeCompanionConfigField>
+/**
+ * Some configuration input field
+ */
+export type SomeCompanionConfigField = SomeCompanionInputField & CompanionConfigField

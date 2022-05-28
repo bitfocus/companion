@@ -1,76 +1,110 @@
+import { CompanionFeedbackButtonStyleResult } from './feedback.js'
 import { InputValue } from './input.js'
+import { CompanionAdditionalStyleProps, CompanionRequiredStyleProps } from './style.js'
 
-export type CompanionAlignment =
-	| 'left:top'
-	| 'center:top'
-	| 'right:top'
-	| 'left:center'
-	| 'center:center'
-	| 'right:center'
-	| 'left:bottom'
-	| 'center:bottom'
-	| 'right:bottom'
-
-export type CompanionTextSize = 'auto' | '7' | '14' | '18' | '24' | '30' | '44'
-
-export interface CompanionBankRequiredProps {
-	text: string
-	size: CompanionTextSize
-	color: number
-	bgcolor: number
+/**
+ * The base options for a preset
+ */
+export interface CompanionPresetOptions {
+	relativeDelay?: boolean
 }
 
-export interface CompanionBankAdditionalStyleProps {
-	alignment: CompanionAlignment
-	pngalignment: CompanionAlignment
-	png64?: string
+/**
+ * The options for a press button preset
+ */
+export type CompanionPressPresetOptions = CompanionPresetOptions
+
+/**
+ * The options for a stepped button preset
+ */
+export interface CompanionSteppedPresetOptions extends CompanionPresetOptions {
+	stepAutoProgress?: boolean
 }
 
-export interface CompanionBankAdditionalCoreProps {
-	relative_delay: boolean
-}
-export interface CompanionBankAdditionalPressProps {}
-export interface CompanionBankAdditionalSteppedProps {
-	step_auto_progress: boolean
-}
+/**
+ * The style properties for a preset
+ */
+export type CompanionPresetStyle = CompanionRequiredStyleProps & Partial<CompanionAdditionalStyleProps>
 
-export interface CompanionBankPresetBase<T extends string>
-	extends CompanionBankRequiredProps,
-		Partial<CompanionBankAdditionalStyleProps>,
-		Partial<CompanionBankAdditionalCoreProps> {
-	style: T
-}
-
+/**
+ * The configuration of an feedback in a preset
+ */
 export interface CompanionPresetFeedback {
+	/** The id of the feedback definition */
 	feedbackId: string
+	/** The option values for the action */
 	options: { [key: string]: InputValue | undefined }
-	style?: Partial<CompanionBankRequiredProps & CompanionBankAdditionalStyleProps>
+	/**
+	 * If a boolean feedback, the style effect of the feedback
+	 */
+	style?: CompanionFeedbackButtonStyleResult
 }
+
+/**
+ * The configuration of an action in a preset
+ */
 export interface CompanionPresetAction {
+	/** The id of the action definition */
 	actionId: string
+	/** The execution delay of the action */
+	delay?: number
+	/** The option values for the action */
 	options: { [key: string]: InputValue | undefined }
 }
 
-export interface CompanionPresetPress {
+/**
+ * The definition of a press button preset
+ */
+export interface CompanionPressButtonPresetDefinition {
+	/** The type of this preset */
+	type: 'press'
+	/** A unique id for this preset */
 	id: string
+	/** The category of this preset, for grouping */
 	category: string
-	label: string
-	bank: CompanionBankPresetBase<'press'> & Partial<CompanionBankAdditionalPressProps>
+	/** The name of this preset */
+	name: string
+	/** The base style of this preset */
+	style: CompanionPresetStyle
+	/** Options for this preset */
+	options?: CompanionPresetOptions
+	/** The feedbacks on the button */
 	feedbacks: CompanionPresetFeedback[]
-	action_sets: {
+	actions: {
+		/** The button down actions */
 		down: CompanionPresetAction[]
+		/** The button up actions */
 		up: CompanionPresetAction[]
 	}
 }
 
-export interface CompanionPresetStepped {
+/**
+ * The definition of a stepped button preset
+ */
+export interface CompanionSteppedButtonPresetDefinition {
+	/** The type of this preset */
+	type: 'step'
+	/** A unique id for this preset */
 	id: string
+	/** The category of this preset, for grouping */
 	category: string
-	label: string
-	bank: CompanionBankPresetBase<'step'> & Partial<CompanionBankAdditionalSteppedProps>
+	/** The name of this preset */
+	name: string
+	/** The base style of this preset */
+	style: CompanionPresetStyle
+	/** Options for this preset */
+	options?: CompanionPresetOptions
+	/** The feedbacks on the button */
 	feedbacks: CompanionPresetFeedback[]
-	action_sets: {
+	/** The steps of this button, and their actions */
+	actions: {
 		[step: number]: CompanionPresetAction[]
 	}
 }
-export type SomeCompanionPreset = CompanionPresetStepped | CompanionPresetPress
+
+/**
+ * The definition of some preset
+ */
+export type SomeCompanionPresetDefinition =
+	| CompanionSteppedButtonPresetDefinition
+	| CompanionPressButtonPresetDefinition
