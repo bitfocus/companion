@@ -22,15 +22,40 @@ import {
 	CModalHeader,
 	CSelect,
 } from '@coreui/react'
-import { StaticContext, LoadingRetryOrError, socketEmit, SurfacesContext } from './util'
+import { StaticContext, LoadingRetryOrError, socketEmit, SurfacesContext, socketEmit2 } from './util'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faCog, faSync } from '@fortawesome/free-solid-svg-icons'
 import { nanoid } from 'nanoid'
 import { TextInputField } from './Components/TextInputField'
+import { useMemo } from 'react'
 
 export const SurfacesPage = memo(function SurfacesPage() {
 	const context = useContext(StaticContext)
 	const devices = useContext(SurfacesContext)
+
+	const devicesList = useMemo(() => {
+		const ary = Object.values(devices)
+
+		ary.sort((a, b) => {
+			// emulator must be first
+			if (a.id === 'emulator') {
+				return -1
+			} else if (b.id === 'emulator') {
+				return 1
+			}
+
+			// sort by type first
+			const type = a.type.localeCompare(b.type)
+			if (type !== 0) {
+				return type
+			}
+
+			// then by serial
+			return a.serialnumber.localeCompare(b.serialnumber)
+		})
+
+		return ary
+	}, [devices])
 
 	const editModalRef = useRef()
 
@@ -40,7 +65,7 @@ export const SurfacesPage = memo(function SurfacesPage() {
 	useEffect(() => {
 		// If device disappears, hide the edit modal
 		if (editModalRef.current) {
-			editModalRef.current.ensureIdIsValid(devices.map((d) => d.id))
+			editModalRef.current.ensureIdIsValid(Object.keys(devices))
 		}
 	}, [devices])
 
@@ -48,8 +73,8 @@ export const SurfacesPage = memo(function SurfacesPage() {
 		setScanning(true)
 		setScanError(null)
 
-		socketEmit(context.socket, 'devices_reenumerate', [], 30000)
-			.then(([errorMsg]) => {
+		socketEmit2(context.socket, 'surfaces:rescan', [], 30000)
+			.then((errorMsg) => {
 				setScanError(errorMsg || null)
 				setScanning(false)
 			})
@@ -100,7 +125,7 @@ export const SurfacesPage = memo(function SurfacesPage() {
 					</tr>
 				</thead>
 				<tbody>
-					{devices.map((dev, i) => {
+					{devicesList.map((dev, i) => {
 						return (
 							<tr key={dev.id}>
 								<td>#{i}</td>
@@ -118,7 +143,7 @@ export const SurfacesPage = memo(function SurfacesPage() {
 						)
 					})}
 
-					{devices.length === 0 ? (
+					{devicesList.length === 0 ? (
 						<tr>
 							<td colSpan={4}>No control surfaces have been detected</td>
 						</tr>

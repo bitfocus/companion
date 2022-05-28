@@ -172,8 +172,20 @@ export function ContextData({ socket, children }) {
 
 			socket.on('set_userconfig_key', updateUserConfigValue)
 
-			socket.on('devices_list', setSurfaces)
-			socket.emit('devices_list_get')
+			socketEmit2(socket, 'surfaces:subscribe', [])
+				.then((surfaces) => {
+					setSurfaces(surfaces)
+				})
+				.catch((e) => {
+					console.error('Failed to load surfaces', e)
+				})
+
+			const patchSurfaces = (patch) => {
+				setSurfaces((oldSurfaces) => {
+					return jsonPatch.applyPatch(cloneDeep(oldSurfaces) || {}, patch).newDocument
+				})
+			}
+			socket.on('surfaces:patch', patchSurfaces)
 
 			socketEmit(socket, 'get_page_all', [])
 				.then(([pages]) => {
@@ -228,7 +240,7 @@ export function ContextData({ socket, children }) {
 				socket.off('action-definitions:update', updateActionDefinitions)
 				socket.off('feedback-definitions:update', updateFeedbackDefinitions)
 				socket.off('set_userconfig_key', updateUserConfigValue)
-				socket.off('devices_list', setSurfaces)
+				socket.off('surfaces:patch', patchSurfaces)
 				socket.off('set_page', updatePageInfo)
 
 				socket.off('schedule_refresh', setTriggers)
@@ -247,6 +259,9 @@ export function ContextData({ socket, children }) {
 				})
 				socketEmit2(socket, 'instances:unsubscribe', []).catch((e) => {
 					console.error('Failed to unsubscribe from instances list:', e)
+				})
+				socketEmit2(socket, 'surfaces:unsubscribe', []).catch((e) => {
+					console.error('Failed to unsubscribe from surfaces', e)
 				})
 			}
 		}
