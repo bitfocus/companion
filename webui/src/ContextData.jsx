@@ -12,6 +12,7 @@ import {
 	SurfacesContext,
 	PagesContext,
 	TriggersContext,
+	myApplyPatch2,
 } from './util'
 import { NotificationsManager } from './Components/Notifications'
 
@@ -103,6 +104,9 @@ export function ContextData({ socket, children }) {
 					[key]: value,
 				}))
 			}
+			const updateSurfaces = (patch) => {
+				setSurfaces((oldSurfaces) => myApplyPatch2(oldSurfaces, patch))
+			}
 
 			socket.on('instances_get:result', setInstances)
 			socket.emit('instances_get')
@@ -116,7 +120,7 @@ export function ContextData({ socket, children }) {
 
 			socket.on('set_userconfig_key', updateUserConfigValue)
 
-			socket.on('devices_list', setSurfaces)
+			socket.on('devices_list', updateSurfaces)
 			socket.emit('devices_list_get')
 
 			socketEmit(socket, 'get_page_all', [])
@@ -173,7 +177,7 @@ export function ContextData({ socket, children }) {
 				socket.off('action_instance_definitions_patch', updateActionDefinitions)
 				socket.off('feedback_instance_definitions_patch', updateFeedbackDefinitions)
 				socket.off('set_userconfig_key', updateUserConfigValue)
-				socket.off('devices_list', setSurfaces)
+				socket.off('devices_list', updateSurfaces)
 				socket.off('set_page', updatePageInfo)
 
 				socket.off('schedule_refresh', setTriggers)
