@@ -1,5 +1,102 @@
 # Bitfocus Companion
 
+## Companion v2.2.1 - Release Notes (unreleased)
+
+### 📣 CORE FEATURES AND IMPROVEMENTS
+
+- Support for the new Elgato Pedal
+- Better support for custom modules when using Docker
+- Action & Feedback browser
+- Option to remove the top-bar per button
+- Performance improvements of the admin UI
+- Improvements to the Satellite API
+
+### 🐞 BUG FIXES
+
+- Fix support for Windows 7
+- Some fixes when importing pages/exports
+- Better XKeys support
+- Some crash fixes
+
+### 🧩 NEW MODULES
+
+- adder-xdip
+- allenheath-avantis
+- birddog-ptz
+- cvmeventi-countdown
+- disguise-smc
+- esphome-api
+- groupme-webhooks
+- kiloview-encoder
+- lea-amplifier
+- lgtv-display
+- mvr-helios
+- orei-matrix
+- panasonic-kairos
+- reddotlogics-hdmimatrix
+- samsung-display
+- sennheiser-evolutionwireless
+- theatrixx-xpresscue
+- tplink-taposmartplug
+- ventuz-director
+- workflownetwork-livetime
+
+### 👍🏻 MODULE IMPROVEMENTS
+
+- aja-helo
+- aja-kumo
+- barco-eventmaster
+- birddog-ptz
+- bitfocus-companion
+- bmd-atem
+- bmd-hyperdeck
+- bmd-teranex
+- bmd-videohub
+- bmd-webpresenterhd
+- canon-ptz
+- christie-projector
+- danielnoethen-butt
+- digitalloggers-powercontroller
+- draco-tera
+- generic-artnet
+- generic-http
+- generic-osc
+- generic-pjlink
+- generic-swp08
+- generic-websocket
+- globalcache-itac-sl
+- grassvalley-amp
+- haivision-connectdvr
+- homeassistant-server
+- iiyama-prolite
+- imagine-lrc
+- imimot-mitti
+- ltn-schedule
+- magewell-proconvert-decoder
+- makeprox-glue
+- middlethings-middlecontrol
+- newtek-tricaster
+- noismada-octopuslistener
+- novastar-controller
+- obs-studio
+- pixap-pixtimerpro
+- roland-v600uhd
+- roland-xs84h
+- showcuesystems-scs
+- skaarhoj-rawpanel
+- snapav-wattbox
+- softron-ontheairvideo
+- spotify-remote
+- studiocoast-vmix
+- techministry-midirelay
+- tow-mixeffect
+- vicreo-hotkey
+- vystem-api
+- yamaha-rcp
+
+Removed:
+birddog-visca - v2.0.0
+
 ## Companion v2.2.0 - Release Notes
 
 ### 📣 CORE FEATURES AND IMPROVEMENTS
