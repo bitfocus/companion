@@ -22,7 +22,7 @@ import {
 	CModalHeader,
 	CSelect,
 } from '@coreui/react'
-import { StaticContext, LoadingRetryOrError, socketEmit, SurfacesContext, socketEmit2 } from './util'
+import { StaticContext, LoadingRetryOrError, SurfacesContext, socketEmit2 } from './util'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faCog, faSync } from '@fortawesome/free-solid-svg-icons'
 import { nanoid } from 'nanoid'
@@ -91,7 +91,9 @@ export const SurfacesPage = memo(function SurfacesPage() {
 
 	const updateName = useCallback(
 		(serialnumber, name) => {
-			context.socket.emit('device_set_name', serialnumber, name)
+			socketEmit2(context.socket, 'surfaces:set-name', serialnumber, name).catch((err) => {
+				console.error('Update name failed', err)
+			})
 		},
 		[context.socket]
 	)
@@ -196,9 +198,9 @@ const SurfaceEditModal = forwardRef(function SurfaceEditModal(_props, ref) {
 		setDeviceConfig(null)
 
 		if (deviceInfo?.id) {
-			socketEmit(context.socket, 'device_config_get', [deviceInfo.id])
-				.then(([err, config, info]) => {
-					console.log(err, config, info)
+			socketEmit2(context.socket, 'surfaces:config-get', [deviceInfo.id])
+				.then(([config, info]) => {
+					console.log(config, info)
 					setDeviceConfig(config)
 					setDeviceConfigInfo(info)
 				})
@@ -238,10 +240,10 @@ const SurfaceEditModal = forwardRef(function SurfaceEditModal(_props, ref) {
 						[key]: value,
 					}
 
-					socketEmit(context.socket, 'device_config_set', [deviceInfo.id, newConfig])
-						.then(([err, newConfig]) => {
-							if (err) {
-								console.log('Config update failed', err)
+					socketEmit2(context.socket, 'surfaces:config-set', [deviceInfo.id, newConfig])
+						.then((newConfig) => {
+							if (typeof newConfig === 'string') {
+								console.log('Config update failed', newConfig)
 							} else {
 								setDeviceConfig(newConfig)
 							}
