@@ -229,7 +229,7 @@ function InternalTriggerDropdown({ value, setValue }) {
 
 	const choices = useMemo(() => {
 		const choices = []
-		for (const trigger of context) {
+		for (const trigger of Object.values(context)) {
 			choices.push({
 				id: trigger.id,
 				label: trigger.title || `Trigger #${trigger.id}`,

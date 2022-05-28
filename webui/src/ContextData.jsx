@@ -111,6 +111,9 @@ export function ContextData({ socket, children }) {
 			const updateCustomVariables = (patch) => {
 				setCustomVariables((oldVariables) => myApplyPatch2(oldVariables, patch))
 			}
+			const updateTriggers = (patch) => {
+				setTriggers((oldVariables) => myApplyPatch2(oldVariables, patch))
+			}
 
 			socket.on('instances_get:result', setInstances)
 			socket.emit('instances_get')
@@ -126,16 +129,6 @@ export function ContextData({ socket, children }) {
 
 			socket.on('devices_list', updateSurfaces)
 			socket.emit('devices_list_get')
-
-			// socketEmit('devices_list_get', [])
-			// 	.then(([surfaces]) => {
-			// 		setSurfaces(surfaces)
-			// 	})
-			// 	.catch((e) => {
-			// 		console.error('Failed to load surfaces list:', e)
-			// 		// setLoadError(`Failed to load pages list`)
-			// 		setSurfaces(null)
-			// 	})
 
 			socketEmit(socket, 'get_page_all', [])
 				.then(([pages]) => {
@@ -167,21 +160,17 @@ export function ContextData({ socket, children }) {
 				setTriggers((list) => {
 					if (!list) return list
 
-					return list.map((l) => {
-						if (l.id === id) {
-							return {
-								...l,
-								last_run: time,
-							}
-						} else {
-							return l
-						}
-					})
+					const res = { ...list }
+					if (res[id]) {
+						res[id] = { ...res[id], last_run: time }
+					}
+
+					return res
 				})
 			}
 
 			socket.emit('schedule_get', setTriggers)
-			socket.on('schedule_refresh', setTriggers)
+			socket.on('schedule_refresh', updateTriggers)
 			socket.on('schedule_last_run', updateTriggerLastRun)
 
 			return () => {
@@ -194,7 +183,7 @@ export function ContextData({ socket, children }) {
 				socket.off('devices_list', updateSurfaces)
 				socket.off('set_page', updatePageInfo)
 
-				socket.off('schedule_refresh', setTriggers)
+				socket.off('schedule_refresh', updateTriggers)
 				socket.off('schedule_last_run', updateTriggerLastRun)
 			}
 		}
