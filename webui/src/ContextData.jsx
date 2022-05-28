@@ -105,14 +105,18 @@ export function ContextData({ socket, children }) {
 				}))
 			}
 			const updateSurfaces = (patch) => {
+				console.log('surfaces', patch)
 				setSurfaces((oldSurfaces) => myApplyPatch2(oldSurfaces, patch))
+			}
+			const updateCustomVariables = (patch) => {
+				setCustomVariables((oldVariables) => myApplyPatch2(oldVariables, patch))
 			}
 
 			socket.on('instances_get:result', setInstances)
 			socket.emit('instances_get')
 
 			socket.on('variable_instance_definitions_patch', updateVariableDefinitions)
-			socket.on('custom_variables_get', setCustomVariables)
+			socket.on('custom_variables_get', updateCustomVariables)
 
 			socket.on('action_instance_definitions_patch', updateActionDefinitions)
 
@@ -122,6 +126,16 @@ export function ContextData({ socket, children }) {
 
 			socket.on('devices_list', updateSurfaces)
 			socket.emit('devices_list_get')
+
+			// socketEmit('devices_list_get', [])
+			// 	.then(([surfaces]) => {
+			// 		setSurfaces(surfaces)
+			// 	})
+			// 	.catch((e) => {
+			// 		console.error('Failed to load surfaces list:', e)
+			// 		// setLoadError(`Failed to load pages list`)
+			// 		setSurfaces(null)
+			// 	})
 
 			socketEmit(socket, 'get_page_all', [])
 				.then(([pages]) => {
@@ -173,7 +187,7 @@ export function ContextData({ socket, children }) {
 			return () => {
 				socket.off('instances_get:result', setInstances)
 				socket.off('variable_instance_definitions_patch', updateVariableDefinitions)
-				socket.off('custom_variables_get', setCustomVariables)
+				socket.off('custom_variables_get', updateCustomVariables)
 				socket.off('action_instance_definitions_patch', updateActionDefinitions)
 				socket.off('feedback_instance_definitions_patch', updateFeedbackDefinitions)
 				socket.off('set_userconfig_key', updateUserConfigValue)

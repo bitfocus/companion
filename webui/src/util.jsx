@@ -201,17 +201,13 @@ export function myApplyPatch(oldDefinitions, key, patch) {
 	}
 }
 export function myApplyPatch2(oldObj, patch) {
-	if (oldObj) {
-		const oldEntry = oldObj ?? {}
+	const oldEntry = oldObj ?? {}
 
-		if (Array.isArray(patch)) {
-			// If its an array we assume it is a patch
-			return applyPatch(_.cloneDeep(oldEntry), patch).newDocument
-		} else {
-			// If its any other type, then its not a patch and is likely a complete value
-			return patch
-		}
+	if (Array.isArray(patch)) {
+		// If its an array we assume it is a patch
+		return applyPatch(_.cloneDeep(oldEntry), patch).newDocument
 	} else {
-		return oldObj
+		// If its any other type, then its not a patch and is likely a complete value
+		return patch
 	}
 }
