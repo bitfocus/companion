@@ -33,7 +33,7 @@ function zipDirectory(sourceDir, outPath) {
 
 const platform = argv._[1]
 
-// let electronBuilderArgs = []
+let electronBuilderArgs = []
 let nodeArch = process.arch
 let sharpPlatform = process.platform
 let sharpArch = process.arch
@@ -44,50 +44,36 @@ const buildString = await generateVersionString()
 
 if (!platform) {
 	console.log('No platform specified, building for current')
-
-	// if (process.platform === 'darwin') {
-	// 	electronBuilderArgs.push(`-c.buildVersion="${buildString}"`)
-	// } else if (process.platform === 'win32') {
-	// 	const miniBuildString = await generateMiniVersionString()
-	// 	electronBuilderArgs.push(`-c.buildVersion="${miniBuildString}"`)
-	// }
 } else {
 	console.log(`Building for platform: ${platform}`)
 
 	if (platform === 'mac-x64') {
-		// electronBuilderArgs.push('--x64', '--mac')
+		electronBuilderArgs.push('--x64', '--mac')
 		nodeArch = 'x64'
 		sharpPlatform = 'darwin'
 		sharpArch = 'x64'
-
-		// electronBuilderArgs.push(`-c.buildVersion="${buildString}"`)
 	} else if (platform === 'mac-arm64') {
-		// electronBuilderArgs.push('--arm64', '--mac')
+		electronBuilderArgs.push('--arm64', '--mac')
 		nodeArch = 'arm64'
 		sharpPlatform = 'darwin'
 		sharpArch = 'arm64'
-
-		// electronBuilderArgs.push(`-c.buildVersion="${buildString}"`)
 	} else if (platform === 'win-x64') {
-		// electronBuilderArgs.push('--x64', '--win')
+		electronBuilderArgs.push('--x64', '--win')
 		nodeArch = 'x64'
 		sharpPlatform = 'win32'
 		sharpArch = 'x64'
-
-		// const miniBuildString = await generateMiniVersionString()
-		// electronBuilderArgs.push(`-c.buildVersion="${miniBuildString}"`)
 	} else if (platform === 'linux-x64') {
-		// electronBuilderArgs.push('--x64', '--linux')
+		electronBuilderArgs.push('--x64', '--linux')
 		nodeArch = 'x64'
 		sharpPlatform = 'linux'
 		sharpArch = 'x64'
 	} else if (platform === 'linux-arm7') {
-		// electronBuilderArgs.push('--armv7l', '--linux')
+		electronBuilderArgs.push('--armv7l', '--linux')
 		nodeArch = 'armv7l'
 		sharpPlatform = 'linux'
 		sharpArch = 'arm'
 	} else if (platform === 'linux-arm64') {
-		// electronBuilderArgs.push('--arm64', '--linux')
+		electronBuilderArgs.push('--arm64', '--linux')
 		nodeArch = 'arm64'
 		sharpPlatform = 'linux'
 		sharpArch = 'arm64'
@@ -203,7 +189,11 @@ await $`yarn --cwd module-legacy generate-manifests`
 // }
 
 // TODO - make optional from flag
-// perform the electron build
-await fs.remove('./electron-output')
-await $`yarn --cwd launcher install`
-await $`yarn --cwd launcher electron-builder --publish=never `
+if (process.env.ELECTRON !== '0') {
+	// perform the electron build
+	await fs.remove('./electron-output')
+	await $`yarn --cwd launcher install`
+	await $`yarn --cwd launcher electron-builder --publish=never ${electronBuilderArgs}`
+} else {
+	// TODO - populate dist with the rest of the bits
+}
