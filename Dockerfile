@@ -14,49 +14,43 @@ WORKDIR /app
 COPY . /app/
 
 # Install dependencies
-RUN ./tools/yarn.sh
+RUN CI=1 ./tools/yarn.sh
 
 # Generate version number file
 RUN yarn build:writefile
 
-# build webpacked server
-RUN yarn webpack
-
-# # Delete the webui source
-# RUN mv webui/build webui-build \
-#     && rm -R webui \
-#     && mkdir webui \
-#     && mv webui-build webui/build
-
-# # cleanup up some stuff that shouldnt be preserved
-# RUN rm -R .git
+# build the application
+RUN ELECTRON=0 yarn dist
 
 # make the production image
-FROM node:14-bullseye-slim
+FROM debian:bullseye-slim
 
 WORKDIR /app
-COPY --from=companion-builder /app/dist	/app/dist
-COPY --from=companion-builder /app/docs	/app/docs
-COPY --from=companion-builder /app/webui/build	/app/webui/build
+COPY --from=companion-builder /app/dist	/app/
+COPY --from=companion-builder /app/docker-entrypoint.sh /docker-entrypoint.sh
 COPY --from=companion-builder /app/module-legacy/manifests	/app/module-legacy/manifests
 
 # Install curl for the health check
-RUN apt update && apt install -y curl && \
+RUN apt update && apt install -y curl libusb-1.0-0 libudev1 && \
     rm -rf /var/lib/apt/lists/*
+
+# Don't run as root
+RUN useradd -ms /bin/bash companion
 
 # Create config directory and set correct permissions
 # Once docker mounts the volume, the directory will be owned by node:node
 ENV COMPANION_CONFIG_BASEDIR /companion
-RUN mkdir $COMPANION_CONFIG_BASEDIR && chown node:node $COMPANION_CONFIG_BASEDIR
-USER node
+RUN mkdir $COMPANION_CONFIG_BASEDIR && chown companion:companion $COMPANION_CONFIG_BASEDIR
+
 # Export both web and Satellite API ports
+USER companion
 EXPOSE 8000 16622
 
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 CMD [ "curl", "-fSsq", "http://localhost:8000/" ]
 
 # module-local-dev dependencies
 # Dependencies will be installed and cached once the container is started
-ENTRYPOINT [ "/app/module-dev-docker-entrypoint.sh" ]
+ENTRYPOINT [ "/docker-entrypoint.sh" ]
 
 # Bind to 0.0.0.0, as access should be scoped down by how the port is exposed from docker
-CMD ["./main.js", "--admin-address", "0.0.0.0", "--admin-port", "8000", "--config-dir", "\$COMPANION_CONFIG_BASEDIR"]
+CMD ["sh", "-c", "./node-runtime/bin/node ./main.js --admin-address 0.0.0.0 --admin-port 8000 --config-dir $COMPANION_CONFIG_BASEDIR --extra-module-path /app/module-local-dev"]
