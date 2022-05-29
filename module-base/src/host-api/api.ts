@@ -1,13 +1,16 @@
+/**
+ * Warning: these types are intentionally semi-isolated from the module-api folder.
+ * While it causes a lot of duplicate typings and requires us to do translation of types,
+ * it allows for us to be selective as to whether a change impacts the module api or the host api.
+ * This will allow for cleaner and more stable apis which can both evolve at different rates
+ */
+
+import { CompanionFeedbackButtonStyleResult } from '../module-api/feedback.js'
 import { OSCSomeArguments } from '../common/osc.js'
-import {
-	CompanionFeedbackButtonStyleResult,
-	InputValue,
-	InstanceStatus,
-	LogLevel,
-	SomeCompanionConfigField,
-	SomeCompanionInputField,
-	SomeCompanionPresetDefinition,
-} from '../module-api/index.js'
+import { SomeCompanionConfigField } from '../module-api/config.js'
+import { LogLevel, InstanceStatus } from '../module-api/enums.js'
+import { SomeCompanionInputField, InputValue } from '../module-api/input.js'
+import { SomeCompanionPresetDefinition } from '../module-api/preset.js'
 
 export interface ModuleToHostEventsV0 {
 	'log-message': (msg: LogMessageMessage) => void
@@ -105,7 +108,19 @@ export interface SetVariableDefinitionsMessage {
 }
 
 export interface SetPresetDefinitionsMessage {
-	presets: Array<SomeCompanionPresetDefinition>
+	presets: Array<
+		SomeCompanionPresetDefinition & {
+			id: string
+			// name: string
+			// category: string
+			// type: string
+			// style:
+			// feedbacks: CompanionPresetFeedback[]
+			// actions: {
+			// 	[key: string]: CompanionPresetAction[]
+			// }
+		}
+	>
 }
 
 export interface SetVariableValuesMessage {

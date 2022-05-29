@@ -103,7 +103,7 @@ function PresetsInstanceList({ presets, setInstanceAndCategory }) {
 	const instancesContext = useContext(InstancesContext)
 
 	const options = Object.entries(presets).map(([id, vals]) => {
-		if (!vals || vals.length === 0) return ''
+		if (!vals || Object.values(vals).length === 0) return ''
 
 		const instance = instancesContext[id]
 		const module = instance ? context.modules[instance.instance_type] : undefined
@@ -136,7 +136,7 @@ function PresetsInstanceList({ presets, setInstanceAndCategory }) {
 
 function PresetsCategoryList({ presets, instance, module, selectedInstanceId, setInstanceAndCategory }) {
 	const categories = new Set()
-	for (const preset of presets) {
+	for (const preset of Object.values(presets)) {
 		categories.add(preset.category)
 	}
 
@@ -174,7 +174,7 @@ function PresetsButtonList({ presets, selectedInstanceId, selectedCategory, setI
 		[setInstanceAndCategory, selectedInstanceId]
 	)
 
-	const options = presets.filter((p) => p.category === selectedCategory)
+	const options = Object.values(presets).filter((p) => p.category === selectedCategory)
 
 	return (
 		<div>

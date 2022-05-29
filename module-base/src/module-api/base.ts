@@ -4,9 +4,8 @@ import {
 	CompanionFeedbackDefinitions,
 	CompanionFeedbackDefinition,
 	CompanionFeedbackButtonStyleResult,
-	CompanionFeedbackInfo,
 } from './feedback.js'
-import { SomeCompanionPresetDefinition } from './preset.js'
+import { CompanionPresetDefinitions, SomeCompanionPresetDefinition } from './preset.js'
 import { InstanceStatus, LogLevel } from './enums.js'
 import {
 	ActionInstance,
@@ -22,6 +21,7 @@ import {
 	SendOscMessage,
 	SetActionDefinitionsMessage,
 	SetFeedbackDefinitionsMessage,
+	SetPresetDefinitionsMessage,
 	SetStatusMessage,
 	SetVariableDefinitionsMessage,
 	SetVariableValuesMessage,
@@ -382,16 +382,19 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 	 * Set the peset definitions for this instance
 	 * @param presets The preset definitions
 	 */
-	setPresetDefinitions(presets: SomeCompanionPresetDefinition[]): Promise<void> {
-		// const hostPresets: SetPresetDefinitionsMessage['presets'] = []
+	setPresetDefinitions(presets: CompanionPresetDefinitions): Promise<void> {
+		const hostPresets: SetPresetDefinitionsMessage['presets'] = []
 
-		// for (const preset of presets) {
-		// 	hostPresets.push({
-		// 		//
-		// 	})
-		// }
+		for (const [id, preset] of Object.entries(presets)) {
+			if (preset) {
+				hostPresets.push({
+					...preset,
+					id,
+				})
+			}
+		}
 
-		return this._socketEmit('setPresetDefinitions', { presets: presets })
+		return this._socketEmit('setPresetDefinitions', { presets: hostPresets })
 	}
 
 	/**

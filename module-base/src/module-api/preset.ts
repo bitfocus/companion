@@ -58,8 +58,6 @@ export interface CompanionPresetAction {
 export interface CompanionPressButtonPresetDefinition {
 	/** The type of this preset */
 	type: 'press'
-	/** A unique id for this preset */
-	id: string
 	/** The category of this preset, for grouping */
 	category: string
 	/** The name of this preset */
@@ -84,8 +82,6 @@ export interface CompanionPressButtonPresetDefinition {
 export interface CompanionSteppedButtonPresetDefinition {
 	/** The type of this preset */
 	type: 'step'
-	/** A unique id for this preset */
-	id: string
 	/** The category of this preset, for grouping */
 	category: string
 	/** The name of this preset */
@@ -108,3 +104,10 @@ export interface CompanionSteppedButtonPresetDefinition {
 export type SomeCompanionPresetDefinition =
 	| CompanionSteppedButtonPresetDefinition
 	| CompanionPressButtonPresetDefinition
+
+/**
+ * The definitions of a group of feedbacks
+ */
+export interface CompanionPresetDefinitions {
+	[id: string]: SomeCompanionPresetDefinition | undefined
+}

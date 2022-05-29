@@ -49,7 +49,6 @@ function convertPresetBank(bank: CompanionBankPreset): Complete<ModuleApi.Compan
 		alignment: bank.alignment,
 		png64: bank.png64,
 		pngalignment: bank.pngalignment,
-		// relative_delay: bank.relative_delay, // TODO
 	}
 
 	// Fix up some pre 2.0 styles
@@ -409,48 +408,42 @@ export class FakeSystem extends EventEmitter {
 	}
 
 	setPresetDefinitions: InstanceSkel<any>['setPresetDefinitions'] = (presets) => {
-		const newPresets: ModuleApi.SomeCompanionPresetDefinition[] = []
+		const newPresets: ModuleApi.CompanionPresetDefinitions = {}
 
-		for (const preset of presets) {
+		presets.forEach((preset, index) => {
 			if (preset.bank.latch) {
-				newPresets.push(
-					literal<ModuleApi.CompanionSteppedButtonPresetDefinition>({
-						id: nanoid(), // Temporary
-						category: preset.category,
-						name: preset.label,
-						type: 'step',
-						style: convertPresetBank(preset.bank),
-						options: {
-							relativeDelay: preset.bank.relative_delay,
-							stepAutoProgress: true,
-						},
-						feedbacks: preset.feedbacks?.map(convertPresetFeedback) ?? [],
-						actions: {
-							[0]: preset.actions?.map(convertPresetAction) ?? [],
-							[1]: preset.release_actions?.map(convertPresetAction) ?? [],
-						},
-					})
-				)
+				newPresets[index] = literal<ModuleApi.CompanionSteppedButtonPresetDefinition>({
+					category: preset.category,
+					name: preset.label,
+					type: 'step',
+					style: convertPresetBank(preset.bank),
+					options: {
+						relativeDelay: preset.bank.relative_delay,
+						stepAutoProgress: true,
+					},
+					feedbacks: preset.feedbacks?.map(convertPresetFeedback) ?? [],
+					actions: {
+						[0]: preset.actions?.map(convertPresetAction) ?? [],
+						[1]: preset.release_actions?.map(convertPresetAction) ?? [],
+					},
+				})
 			} else {
-				newPresets.push(
-					literal<ModuleApi.CompanionPressButtonPresetDefinition>({
-						id: nanoid(), // Temporary
-						category: preset.category,
-						name: preset.label,
-						type: 'press',
-						style: convertPresetBank(preset.bank),
-						options: {
-							relativeDelay: preset.bank.relative_delay,
-						},
-						feedbacks: preset.feedbacks?.map(convertPresetFeedback) ?? [],
-						actions: {
-							down: preset.actions?.map(convertPresetAction) ?? [],
-							up: preset.release_actions?.map(convertPresetAction) ?? [],
-						},
-					})
-				)
+				newPresets[index] = literal<ModuleApi.CompanionPressButtonPresetDefinition>({
+					category: preset.category,
+					name: preset.label,
+					type: 'press',
+					style: convertPresetBank(preset.bank),
+					options: {
+						relativeDelay: preset.bank.relative_delay,
+					},
+					feedbacks: preset.feedbacks?.map(convertPresetFeedback) ?? [],
+					actions: {
+						down: preset.actions?.map(convertPresetAction) ?? [],
+						up: preset.release_actions?.map(convertPresetAction) ?? [],
+					},
+				})
 			}
-		}
+		})
 
 		this.parent.setPresetDefinitions(newPresets)
 	}
