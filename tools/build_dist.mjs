@@ -36,9 +36,7 @@ let nodeArch = process.arch
 let sharpPlatform = process.platform
 let sharpArch = process.arch
 
-const buildString = await generateVersionString()
-console.log('Writing BUILD:', buildString)
-await fs.writeFile(new URL('../BUILD', import.meta.url), buildString)
+await $`zx tools/build_writefile.mjs`
 
 if (!platform) {
 	console.log('No platform specified, building for current')
