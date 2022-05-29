@@ -171,8 +171,8 @@ export function ContextData({ socket, children }) {
 			}
 			socket.on('surfaces:patch', patchSurfaces)
 
-			socketEmit(socket, 'get_page_all', [])
-				.then(([pages]) => {
+			socketEmit2(socket, 'pages:subscribe', [])
+				.then((pages) => {
 					// setLoadError(null)
 					setPages(pages)
 				})
@@ -195,7 +195,7 @@ export function ContextData({ socket, children }) {
 				})
 			}
 
-			socket.on('set_page', updatePageInfo)
+			socket.on('pages:update', updatePageInfo)
 
 			const updateTriggerLastRun = (id, time) => {
 				setTriggers((list) => {
@@ -221,7 +221,7 @@ export function ContextData({ socket, children }) {
 				socket.off('feedback-definitions:update', updateFeedbackDefinitions)
 				socket.off('set_userconfig_key', updateUserConfigValue)
 				socket.off('surfaces:patch', patchSurfaces)
-				socket.off('set_page', updatePageInfo)
+				socket.off('pages:update', updatePageInfo)
 
 				socket.off('schedule:update', updateTriggers)
 				socket.off('schedule_last_run', updateTriggerLastRun)
@@ -245,6 +245,9 @@ export function ContextData({ socket, children }) {
 				})
 				socketEmit2(socket, 'custom-variables:unsubscribe', []).catch((e) => {
 					console.error('Failed to unsubscribe from custom variables', e)
+				})
+				socketEmit2(socket, 'pages:unsubscribe', []).catch((e) => {
+					console.error('Failed to unsubscribe pages list:', e)
 				})
 			}
 		}

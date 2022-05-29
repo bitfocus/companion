@@ -7,7 +7,6 @@ import {
 	faGamepad,
 	faHatWizard,
 	faInfo,
-	faMousePointer,
 	faTabletAlt,
 	faUsers,
 } from '@fortawesome/free-solid-svg-icons'
@@ -42,23 +41,12 @@ export function MySidebar({ show, showWizard }) {
 					icon={<FontAwesomeIcon className="c-sidebar-nav-icon" icon={faGamepad} />}
 					name={t('Emulator')}
 				/>
-				<CSidebarNavItem
-					target="_new"
-					href="/tablet.html"
-					icon={<FontAwesomeIcon className="c-sidebar-nav-icon" icon={faMousePointer} />}
-					name={t('Web buttons')}
-				/>
-				<CSidebarNavItem
-					target="_new"
-					href="/tablet2.html"
-					icon={<FontAwesomeIcon className="c-sidebar-nav-icon" icon={faTabletAlt} />}
-					name={t('Mobile buttons')}
-				/>
+
 				<CSidebarNavItem
 					target="_new"
 					href="/tablet3"
 					icon={<FontAwesomeIcon className="c-sidebar-nav-icon" icon={faTabletAlt} />}
-					name={t('New Web/Mobile buttons')}
+					name={t('Web buttons')}
 				/>
 
 				<CSidebarNavItem

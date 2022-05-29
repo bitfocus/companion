@@ -1,5 +1,5 @@
 import React, { memo, useCallback, useContext, useEffect, useState } from 'react'
-import { StaticContext, LoadingRetryOrError, socketEmit, sandbox, socketEmit2 } from '../util'
+import { StaticContext, LoadingRetryOrError, sandbox, socketEmit2 } from '../util'
 import { CRow, CCol, CButton } from '@coreui/react'
 import {
 	CheckboxInputField,
@@ -61,11 +61,11 @@ export const InstanceEditPanel = memo(function InstanceEditPanel({ instanceId, d
 
 	useEffect(() => {
 		if (instanceId) {
-			socketEmit(context.socket, 'instance_edit', [instanceId])
-				.then(([instanceId, configFields, instanceLabel, instanceConfig]) => {
-					if (instanceId) {
+			socketEmit2(context.socket, 'instances:edit', [instanceId])
+				.then((res) => {
+					if (res) {
 						const validFields = {}
-						for (const field of configFields) {
+						for (const field of res.fields) {
 							// Real validation status gets generated when the editor components first mount
 							validFields[field.id] = true
 
@@ -75,9 +75,9 @@ export const InstanceEditPanel = memo(function InstanceEditPanel({ instanceId, d
 							}
 						}
 
-						setConfigFields(configFields)
-						setInstanceLabel(instanceLabel)
-						setInstanceConfig(instanceConfig)
+						setConfigFields(res.fields)
+						setInstanceLabel(res.label)
+						setInstanceConfig(res.config)
 						setValidFields(validFields)
 					} else {
 						setError(`Connection config unavailable`)
