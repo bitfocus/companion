@@ -21,7 +21,6 @@
 		"format": "prettier --write .",
 		"jsdoc": "jsdoc -c jsdoc.json",
 		"build:writefile": "zx ./tools/build_writefile.mjs",
-		"build:sentry": "zx ./tools/build_sentry.mjs",
 		"module:bulk": "zx ./tools/module_bulk.mjs"
 	},
 	"repository": "https://github.com/bitfocus/companion",

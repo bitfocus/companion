@@ -6,6 +6,7 @@ import { fetch, fs } from 'zx'
 import { createWriteStream } from 'node:fs'
 import { pipeline } from 'node:stream'
 import { promisify } from 'node:util'
+import { createRequire } from 'node:module'
 const streamPipeline = promisify(pipeline)
 
 /**
@@ -36,7 +37,7 @@ let sharpPlatform = process.platform
 let sharpArch = process.arch
 
 const buildString = await generateVersionString()
-console.log('Writing:', buildString)
+console.log('Writing BUILD:', buildString)
 await fs.writeFile(new URL('../BUILD', import.meta.url), buildString)
 
 if (!platform) {
@@ -101,7 +102,7 @@ await fs.remove('dist')
 await $`yarn webpack`
 
 // Build webui
-// await $`yarn --cwd webui build`
+await $`yarn --cwd webui build`
 
 // generat the 'static' zip files to serve
 await zipDirectory('./webui/build', 'dist/webui.zip')
@@ -151,6 +152,14 @@ await fs.remove(path.join(runtimeDir, 'share'))
 await fs.remove(path.join(runtimeDir, 'include'))
 await fs.remove(path.join(runtimeDir, 'lib/node_modules/npm'))
 
+const require = createRequire(import.meta.url)
+const dependencies = {}
+const neededDependnecies = ['@julusian/jpeg-turbo', 'node-hid', 'sharp']
+for (const name of neededDependnecies) {
+	const pkgJson = require(`${name}/package.json`)
+	dependencies[name] = pkgJson.version
+}
+
 await fs.writeFile(
 	'dist/package.json',
 	JSON.stringify(
@@ -159,12 +168,7 @@ await fs.writeFile(
 			version: buildString,
 			license: 'MIT',
 			main: 'main.js',
-			dependencies: {
-				// TODO - make this list be generated properly
-				'@julusian/jpeg-turbo': '^1.1.2',
-				'node-hid': '^2.1.1',
-				sharp: '^0.30.4',
-			},
+			dependencies: dependencies,
 		},
 		undefined,
 		2

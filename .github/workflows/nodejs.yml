@@ -14,8 +14,6 @@ jobs:
         run: |
           yarn update
 
-          yarn build:sentry
-
           yarn run lindist
 
           # manually tar it, to preserve the symlinks
@@ -70,8 +68,6 @@ jobs:
 
           yarn update
 
-          yarn build:sentry
-
           yarn run macdist
         env:
           CSC_LINK: ${{ secrets.OSX_CSC_LINK }}
@@ -125,8 +121,6 @@ jobs:
 
           yarn update
 
-          yarn build:sentry
-
           yarn run macarmdist
         env:
           CSC_LINK: ${{ secrets.OSX_CSC_LINK }}
@@ -178,8 +172,6 @@ jobs:
           yarn config set script-shell bash
 
           yarn update
-
-          yarn build:sentry
 
           yarn run windist
         env:
