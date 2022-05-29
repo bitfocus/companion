@@ -153,7 +153,7 @@ function InstancesTableRow({
 				)}
 			</td>
 			<td>
-				{instanceVariables && instanceVariables.length > 0 ? (
+				{instanceVariables && Object.keys(instanceVariables).length > 0 ? (
 					<div className="instance_variables" onClick={doShowVariables} title="Variables">
 						<FontAwesomeIcon icon={faDollarSign} />
 					</div>

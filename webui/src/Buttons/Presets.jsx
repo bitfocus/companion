@@ -1,6 +1,6 @@
 import React, { useCallback, useContext, useEffect, useState } from 'react'
 import { CAlert, CButton, CRow } from '@coreui/react'
-import { StaticContext, InstancesContext, LoadingRetryOrError, socketEmit2 } from '../util'
+import { StaticContext, InstancesContext, LoadingRetryOrError, socketEmit2, myApplyPatch } from '../util'
 import { useDrag } from 'react-dnd'
 import { BankPreview, dataToButtonImage, RedImage } from '../Components/BankButton'
 import { nanoid } from 'nanoid'
@@ -34,17 +34,8 @@ export const InstancePresets = function InstancePresets({ resetToken }) {
 				setPresetError('Failed to load presets')
 			})
 
-		const updatePresets = (id, presets) => {
-			setPresetsMap((oldPresets) => {
-				if (oldPresets) {
-					return {
-						...oldPresets,
-						[id]: presets,
-					}
-				} else {
-					return oldPresets
-				}
-			})
+		const updatePresets = (id, patch) => {
+			setPresetsMap((oldPresets) => myApplyPatch(oldPresets, id, patch))
 		}
 
 		context.socket.on('presets:update', updatePresets)

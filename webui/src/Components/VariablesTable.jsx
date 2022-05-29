@@ -48,7 +48,7 @@ export function VariablesTable({ label }) {
 		context.notifier.current.show(`Copied`, 'Copied to clipboard', 5000)
 	}, [context.notifier])
 
-	if (variableDefinitions.length > 0) {
+	if (Object.keys(variableDefinitions).length > 0) {
 		return (
 			<table className="table table-responsive-sm variables-table">
 				<thead>
@@ -60,7 +60,7 @@ export function VariablesTable({ label }) {
 					</tr>
 				</thead>
 				<tbody>
-					{variableDefinitions.map((variable) => {
+					{variableDefinitions.map(([variable]) => {
 						let value = variableValues[variable.name]
 						if (typeof value !== 'string') {
 							value += ''

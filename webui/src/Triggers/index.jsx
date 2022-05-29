@@ -37,7 +37,7 @@ export const Triggers = memo(function Triggers() {
 
 			{editItem[0] ? (
 				<TriggerEditModal
-					item={editItem[1] !== null ? triggersList.find((i) => i.id === editItem[1]) : undefined}
+					item={editItem[1] !== null ? triggersList[editItem[1]] : undefined}
 					doClose={doCloseModal}
 					plugins={plugins}
 					doSave={doSave}
@@ -78,8 +78,8 @@ function TriggersTable({ triggersList, editItem }) {
 				</tr>
 			</thead>
 			<tbody>
-				{triggersList && triggersList.length > 0 ? (
-					triggersList.map((item) => <TriggersTableRow key={item.id} item={item} editItem={editItem} />)
+				{triggersList && Object.keys(triggersList).length > 0 ? (
+					Object.values(triggersList).map((item) => <TriggersTableRow key={item.id} item={item} editItem={editItem} />)
 				) : (
 					<tr>
 						<td colSpan="4">There currently are no triggers or scheduled tasks.</td>

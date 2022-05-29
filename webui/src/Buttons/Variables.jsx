@@ -58,7 +58,7 @@ function VariablesInstanceList({ setInstance, setShowCustom, instancesLabelMap }
 	const variableDefinitionsContext = useContext(VariableDefinitionsContext)
 
 	const options = Object.entries(variableDefinitionsContext || []).map(([label, defs]) => {
-		if (!defs || defs.length === 0) return ''
+		if (!defs || Object.keys(defs).length === 0) return ''
 
 		if (label === 'internal') {
 			return (

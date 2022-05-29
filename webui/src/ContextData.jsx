@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import {
+	myApplyPatch,
 	StaticContext,
 	ActionsContext,
 	FeedbacksContext,
@@ -12,6 +13,7 @@ import {
 	PagesContext,
 	TriggersContext,
 	socketEmit2,
+	myApplyPatch2,
 } from './util'
 import { NotificationsManager } from './Components/Notifications'
 import { cloneDeep } from 'lodash-es'
@@ -105,36 +107,32 @@ export function ContextData({ socket, children }) {
 					console.error('Failed to load user config', e)
 				})
 
-			const updateVariableDefinitions = (label, variables) => {
-				if (label === 'internal') {
-					setCustomVariables((oldCustomVars) => {
-						const internalVariables = compileCustomVariableVariables(variables, oldCustomVars || {})
+			// const updateVariableDefinitions = (label, variables) => {
+			// 	if (label === 'internal') {
+			// 		setCustomVariables((oldCustomVars) => {
+			// 			const internalVariables = compileCustomVariableVariables(variables, oldCustomVars || {})
 
-						setVariableDefinitions((oldDefinitions) => ({
-							...oldDefinitions,
-							[label]: internalVariables,
-						}))
+			// 			setVariableDefinitions((oldDefinitions) => ({
+			// 				...oldDefinitions,
+			// 				[label]: internalVariables,
+			// 			}))
 
-						return oldCustomVars
-					})
-				} else {
-					setVariableDefinitions((oldDefinitions) => ({
-						...oldDefinitions,
-						[label]: variables,
-					}))
-				}
+			// 			return oldCustomVars
+			// 		})
+			// 	} else {
+			// 		setVariableDefinitions((oldDefinitions) => ({
+			// 			...oldDefinitions,
+			// 			[label]: variables,
+			// 		}))
+			// 	}
+			const updateVariableDefinitions = (label, patch) => {
+				setVariableDefinitions((oldDefinitions) => myApplyPatch(oldDefinitions, label, patch))
 			}
-			const updateFeedbackDefinitions = (id, feedbacks) => {
-				setFeedbackDefinitions((oldDefinitions) => ({
-					...oldDefinitions,
-					[id]: feedbacks,
-				}))
+			const updateFeedbackDefinitions = (id, patch) => {
+				setFeedbackDefinitions((oldDefinitions) => myApplyPatch(oldDefinitions, id, patch))
 			}
-			const updateActionDefinitions = (id, actions) => {
-				setActionDefinitions((oldDefinitions) => ({
-					...oldDefinitions,
-					[id]: actions,
-				}))
+			const updateActionDefinitions = (id, patch) => {
+				setActionDefinitions((oldDefinitions) => myApplyPatch(oldDefinitions, id, patch))
 			}
 
 			const updateUserConfigValue = (key, value) => {
@@ -142,6 +140,13 @@ export function ContextData({ socket, children }) {
 					...oldState,
 					[key]: value,
 				}))
+			}
+
+			const updateCustomVariables = (patch) => {
+				setCustomVariables((oldVariables) => myApplyPatch2(oldVariables, patch))
+			}
+			const updateTriggers = (patch) => {
+				setTriggers((oldVariables) => myApplyPatch2(oldVariables, patch))
 			}
 
 			socketEmit2(socket, 'instances:subscribe', [])
@@ -165,7 +170,7 @@ export function ContextData({ socket, children }) {
 			socket.on('instances:patch', patchInstances)
 
 			socket.on('variable-definitions:update', updateVariableDefinitions)
-			socket.on('custom_variables_get', setCustomVariablesAndUpdateVariables)
+			socket.on('custom_variables_get', updateCustomVariables)
 
 			socket.on('action-definitions:update', updateActionDefinitions)
 			socket.on('feedback-definitions:update', updateFeedbackDefinitions)
@@ -217,33 +222,29 @@ export function ContextData({ socket, children }) {
 				setTriggers((list) => {
 					if (!list) return list
 
-					return list.map((l) => {
-						if (l.id === id) {
-							return {
-								...l,
-								last_run: time,
-							}
-						} else {
-							return l
-						}
-					})
+					const res = { ...list }
+					if (res[id]) {
+						res[id] = { ...res[id], last_run: time }
+					}
+
+					return res
 				})
 			}
 
 			socket.emit('schedule_get', setTriggers)
-			socket.on('schedule_refresh', setTriggers)
+			socket.on('schedule_refresh', updateTriggers)
 			socket.on('schedule_last_run', updateTriggerLastRun)
 
 			return () => {
 				socket.off('variable-definitions:update', updateVariableDefinitions)
-				socket.off('custom_variables_get', setCustomVariablesAndUpdateVariables)
+				socket.off('custom_variables_get', updateCustomVariables)
 				socket.off('action-definitions:update', updateActionDefinitions)
 				socket.off('feedback-definitions:update', updateFeedbackDefinitions)
 				socket.off('set_userconfig_key', updateUserConfigValue)
 				socket.off('surfaces:patch', patchSurfaces)
 				socket.off('set_page', updatePageInfo)
 
-				socket.off('schedule_refresh', setTriggers)
+				socket.off('schedule_refresh', updateTriggers)
 				socket.off('schedule_last_run', updateTriggerLastRun)
 
 				socket.off('instances:patch', patchInstances)
