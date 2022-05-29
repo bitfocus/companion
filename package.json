@@ -274,7 +274,7 @@
 		"companion-module-dtvideolabs-playbackproplus": "github:bitfocus/companion-module-dtvideolabs-playbackproplus#v1.0.4",
 		"companion-module-elgato-keylight": "github:bitfocus/companion-module-elgato-keylight#v1.2.4",
 		"companion-module-epiphan-pearl": "github:bitfocus/companion-module-epiphan-pearl#v1.0.8",
-		"companion-module-equipson-lightshark": "github:bitfocus/companion-module-equipson-lightshark#v1.0.0",
+		"companion-module-equipson-lightshark": "github:bitfocus/companion-module-equipson-lightshark#v1.0.1",
 		"companion-module-esphome-api": "github:bitfocus/companion-module-esphome-api#v1.0.3",
 		"companion-module-etc-eos": "github:bitfocus/companion-module-etc-eos#v1.3.0",
 		"companion-module-extron-dxp": "github:bitfocus/companion-module-extron-dxp#v1.0.9",
