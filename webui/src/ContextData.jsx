@@ -88,8 +88,8 @@ export function ContextData({ socket, children }) {
 				.catch((e) => {
 					console.error('Failed to load variable definitions list', e)
 				})
-			socketEmit(socket, 'custom_variables_get', [])
-				.then(([data]) => {
+			socketEmit2(socket, 'custom-variables:subscribe', [])
+				.then((data) => {
 					setCustomVariables(data || {})
 				})
 				.catch((e) => {
@@ -149,7 +149,7 @@ export function ContextData({ socket, children }) {
 			socket.on('instances:patch', patchInstances)
 
 			socket.on('variable-definitions:update', updateVariableDefinitions)
-			socket.on('custom_variables_get', updateCustomVariables)
+			socket.on('custom-variables:update', updateCustomVariables)
 
 			socket.on('action-definitions:update', updateActionDefinitions)
 			socket.on('feedback-definitions:update', updateFeedbackDefinitions)
@@ -216,7 +216,7 @@ export function ContextData({ socket, children }) {
 
 			return () => {
 				socket.off('variable-definitions:update', updateVariableDefinitions)
-				socket.off('custom_variables_get', updateCustomVariables)
+				socket.off('custom-variables:update', updateCustomVariables)
 				socket.off('action-definitions:update', updateActionDefinitions)
 				socket.off('feedback-definitions:update', updateFeedbackDefinitions)
 				socket.off('set_userconfig_key', updateUserConfigValue)
@@ -242,6 +242,9 @@ export function ContextData({ socket, children }) {
 				})
 				socketEmit2(socket, 'surfaces:unsubscribe', []).catch((e) => {
 					console.error('Failed to unsubscribe from surfaces', e)
+				})
+				socketEmit2(socket, 'custom-variables:unsubscribe', []).catch((e) => {
+					console.error('Failed to unsubscribe from custom variables', e)
 				})
 			}
 		}
