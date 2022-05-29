@@ -78,12 +78,10 @@ export function Emulator() {
 			}
 		}
 
-		socket.on('emul_fillImage', updateImage)
-		socket.on('emul_clearKey', updateImage)
+		socket.on('emulator:image', updateImage)
 
 		return () => {
-			socket.off('emul_fillImage', updateImage)
-			socket.off('emul_clearKey', updateImage)
+			socket.off('emulator:image', updateImage)
 		}
 	}, [socket, ref, imageCache])
 

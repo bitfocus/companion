@@ -1,4 +1,4 @@
-import React, { memo, useCallback, useContext, useState, useEffect } from 'react'
+import React, { memo, useCallback, useContext } from 'react'
 import {
 	CAlert,
 	CButton,
@@ -17,7 +17,7 @@ import {
 	CTabPane,
 	CTabs,
 } from '@coreui/react'
-import { MyErrorBoundary, StaticContext, UserConfigContext, socketEmit } from './util'
+import { MyErrorBoundary, StaticContext, UserConfigContext } from './util'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faFileImport, faSync, faTrash, faUndo } from '@fortawesome/free-solid-svg-icons'
 

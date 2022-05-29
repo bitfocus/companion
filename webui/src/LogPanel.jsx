@@ -1,6 +1,6 @@
 import React, { memo, useCallback, useContext, useEffect, useRef, useState } from 'react'
 import { CButton, CButtonGroup, CCol, CRow } from '@coreui/react'
-import { socketEmit, StaticContext } from './util'
+import { socketEmit2, StaticContext } from './util'
 import { nanoid } from 'nanoid'
 import dayjs from 'dayjs'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
@@ -16,41 +16,38 @@ export const LogPanel = memo(function LogPanel() {
 	// on 'Mount' setup
 	useEffect(() => {
 		const getClearLog = () => setHistory([])
-		const logRecv = (time, source, level, message) => {
+		const logRecv = (rawItem) => {
 			const item = {
+				...rawItem,
 				id: nanoid(),
-				time,
-				source,
-				level,
-				message,
 			}
 
 			setHistory((history) => [item, ...history].slice(0, 500))
 		}
 
-		socketEmit(context.socket, 'log_catchup', [])
-			.then(([lines]) => {
-				const items = lines.map(([time, source, level, message]) => ({
+		socketEmit2(context.socket, 'logs:subscribe', [])
+			.then((lines) => {
+				const items = lines.map((item) => ({
+					...item,
 					id: nanoid(),
-					time,
-					source,
-					level,
-					message,
 				}))
 
 				setHistory(items.reverse())
 			})
 			.catch((e) => {
-				console.error('log catchup error', e)
+				console.error('log subscibe error', e)
 			})
 
-		// context.socket.emit('log_catchup')
-		context.socket.on('log', logRecv)
-		context.socket.on('log_clear', getClearLog)
+		context.socket.on('logs:line', logRecv)
+		context.socket.on('logs:clear', getClearLog)
 
 		return () => {
-			context.socket.off('log', logRecv)
-			context.socket.off('log_clear', getClearLog)
+			context.socket.off('logs:line', logRecv)
+			context.socket.off('logs:clear', getClearLog)
+
+			socketEmit2(context.socket, 'logs:unsubscribe', []).catch((e) => {
+				console.error('log unsubscibe error', e)
+			})
 		}
 	}, [context.socket])
 
@@ -60,8 +57,9 @@ export const LogPanel = memo(function LogPanel() {
 	}, [config])
 
 	const doClearLog = useCallback(() => {
-		context.socket.emit('log_clear')
-		setHistory([])
+		socketEmit2(context.socket, 'logs:clear', []).catch((e) => {
+			console.error('Log clear failed', e)
+		})
 	}, [context.socket])
 
 	const doToggleConfig = useCallback((key) => {
