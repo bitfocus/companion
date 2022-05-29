@@ -13,7 +13,73 @@ import { FONT_SIZES } from '../../Constants'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faTrash } from '@fortawesome/free-solid-svg-icons'
 
-export function ButtonStyleConfig({ controlId, controlType, config, configRef }) {
+export function ButtonOptionsConfig({ controlId, controlType, options, configRef }) {
+	const context = useContext(StaticContext)
+
+	const setValueInner = useCallback(
+		(key, value) => {
+			console.log('set', controlId, key, value)
+			if (configRef.current === undefined || value !== configRef.current.options[key]) {
+				socketEmit2(context.socket, 'controls:set-options-field', [controlId, key, value]).catch((e) => {
+					console.error(`Set field failed: ${e}`)
+				})
+			}
+		},
+		[context.socket, controlId, configRef]
+	)
+
+	const setStepAutoProgressValue = useCallback((val) => setValueInner('stepAutoProgress', val), [setValueInner])
+	const setRelativeDelayValue = useCallback((val) => setValueInner('relativeDelay', val), [setValueInner])
+
+	switch (controlType) {
+		case undefined:
+			return ''
+		case 'pageup':
+			return ''
+		case 'pagenum':
+			return ''
+		case 'pagedown':
+			return ''
+		default:
+		// See below
+	}
+
+	return (
+		<CCol sm={12} className="p-0 mt-5">
+			<CForm inline>
+				<CRow form className="button-style-form">
+					<CCol className="fieldtype-checkbox" sm={2} xs={3}>
+						<CLabel>Relative Delays</CLabel>
+						<p>
+							<CheckboxInputField
+								definition={{ default: false }}
+								setValue={setRelativeDelayValue}
+								value={options.relativeDelay}
+							/>
+						</p>
+					</CCol>
+
+					{controlType === 'step' ? (
+						<CCol className="fieldtype-checkbox" sm={2} xs={3}>
+							<label>Auto progress</label>
+							<p>
+								<CheckboxInputField
+									definition={{ default: true, id: 'stepAutoProgress' }}
+									setValue={setStepAutoProgressValue}
+									value={options.stepAutoProgress}
+								/>
+							</p>
+						</CCol>
+					) : (
+						''
+					)}
+				</CRow>
+			</CForm>
+		</CCol>
+	)
+}
+
+export function ButtonStyleConfig({ controlId, controlType, style, configRef }) {
 	const context = useContext(StaticContext)
 
 	const [pngError, setPngError] = useState(null)
@@ -36,7 +102,7 @@ export function ButtonStyleConfig({ controlId, controlType, config, configRef })
 	const setValueInner = useCallback(
 		(key, value) => {
 			console.log('set', controlId, key, value)
-			if (configRef.current === undefined || value !== configRef.current[key]) {
+			if (configRef.current === undefined || value !== configRef.current.style[key]) {
 				socketEmit2(context.socket, 'controls:set-config-fields', [
 					controlId,
 					{
@@ -52,8 +118,6 @@ export function ButtonStyleConfig({ controlId, controlType, config, configRef })
 	const clearPng = useCallback(() => setValueInner('png64', null), [setValueInner])
 
 	const setShowTopBar = useCallback((val) => setValueInner('show_topbar', val), [setValueInner])
-	const setStepAutoProgressValue = useCallback((val) => setValueInner('step_auto_progress', val), [setValueInner])
-	const setRelativeDelayValue = useCallback((val) => setValueInner('relative_delay', val), [setValueInner])
 
 	switch (controlType) {
 		case undefined:
@@ -85,7 +149,7 @@ export function ButtonStyleConfig({ controlId, controlType, config, configRef })
 			<CForm inline>
 				<CRow form className="button-style-form">
 					<ButtonStyleConfigFields
-						values={config}
+						values={style}
 						setValueInner={setValueInner}
 						setPng={setPng}
 						setPngError={setPngError}
@@ -107,36 +171,10 @@ export function ButtonStyleConfig({ controlId, controlType, config, configRef })
 									],
 								}}
 								setValue={setShowTopBar}
-								value={config.show_topbar}
+								value={style.show_topbar}
 							/>
 						</p>
 					</CCol>
-
-					<CCol className="fieldtype-checkbox" sm={2} xs={3}>
-						<CLabel>Relative Delays</CLabel>
-						<p>
-							<CheckboxInputField
-								definition={{ default: false }}
-								setValue={setRelativeDelayValue}
-								value={config.relative_delay}
-							/>
-						</p>
-					</CCol>
-
-					{controlType === 'step' ? (
-						<CCol className="fieldtype-checkbox" sm={2} xs={3}>
-							<label>Auto progress</label>
-							<p>
-								<CheckboxInputField
-									definition={{ default: true, id: 'step_auto_progress' }}
-									setValue={setStepAutoProgressValue}
-									value={config.step_auto_progress}
-								/>
-							</p>
-						</CCol>
-					) : (
-						''
-					)}
 				</CRow>
 			</CForm>
 		</CCol>

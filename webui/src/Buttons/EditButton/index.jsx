@@ -16,7 +16,7 @@ import {
 import { ActionsPanel } from './ActionsPanel'
 import jsonPatch from 'fast-json-patch'
 
-import { ButtonStyleConfig } from './ButtonStyleConfig'
+import { ButtonOptionsConfig, ButtonStyleConfig } from './ButtonStyleConfig'
 import { FeedbacksPanel } from './FeedbackPanel'
 import { cloneDeep } from 'lodash-es'
 
@@ -31,7 +31,7 @@ export function EditButton({ controlId, onKeyUp }) {
 	const [runtimeProps, setRuntimeProps] = useState(null)
 
 	const configRef = useRef()
-	configRef.current = config?.config // update the ref every render
+	configRef.current = config // update the ref every render
 
 	const [configError, setConfigError] = useState(null)
 
@@ -95,23 +95,23 @@ export function EditButton({ controlId, onKeyUp }) {
 	}, [context.socket, controlId, reloadConfigToken])
 
 	const setButtonType = useCallback(
-		(newStyle) => {
+		(newType) => {
 			let show_warning = false
 
-			const currentStyle = configRef.current?.style
-			if (currentStyle === newStyle) {
+			const currentType = configRef.current?.type
+			if (currentType === newType) {
 				// No point changing style to itself
 				return
 			}
 
-			if (currentStyle && currentStyle !== 'pageup' && currentStyle !== 'pagedown' && currentStyle !== 'pagenum') {
-				if (newStyle === 'pageup' || newStyle === 'pagedown' || newStyle === 'pagenum') {
+			if (currentType && currentType !== 'pageup' && currentType !== 'pagedown' && currentType !== 'pagenum') {
+				if (newType === 'pageup' || newType === 'pagedown' || newType === 'pagenum') {
 					show_warning = true
 				}
 			}
 
 			const doChange = () => {
-				socketEmit2(context.socket, 'controls:reset', [controlId, newStyle]).catch((e) => {
+				socketEmit2(context.socket, 'controls:reset', [controlId, newType]).catch((e) => {
 					console.error(`Set type failed: ${e}`)
 				})
 			}
@@ -216,7 +216,14 @@ export function EditButton({ controlId, onKeyUp }) {
 
 					<ButtonStyleConfig
 						controlType={config.type}
-						config={config.config}
+						style={config.style}
+						configRef={configRef}
+						controlId={controlId}
+					/>
+
+					<ButtonOptionsConfig
+						controlType={config.type}
+						options={config.options}
 						configRef={configRef}
 						controlId={controlId}
 					/>
