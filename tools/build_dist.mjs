@@ -131,11 +131,13 @@ if (sharpArch) sharpArgs.push(`npm_config_arch=${nodeArch}`)
 // process.env.VIPS_VENDOR = vipsVendorName
 
 const nodeVersion = await fs.readFile('./.node-version')
+const runtimePlatform = sharpPlatform === 'win32' ? 'win' : sharpPlatform
+const isZip = runtimePlatform === 'win'
 
 // Download and cache build of nodejs
 const cacheDir = '.cache/node'
 await fs.mkdirp(cacheDir)
-const tarFilename = `node-v${nodeVersion}-${sharpPlatform}-${nodeArch}.tar.gz`
+const tarFilename = `node-v${nodeVersion}-${runtimePlatform}-${nodeArch}.${isZip ? 'zip' : 'tar.gz'}`
 const tarPath = path.join(cacheDir, tarFilename)
 if (!(await fs.pathExists(tarPath))) {
 	const tarUrl =
@@ -150,9 +152,15 @@ if (!(await fs.pathExists(tarPath))) {
 
 // Extract nodejs and discard 'junk'
 const runtimeDir = 'dist/node-runtime/'
-await fs.mkdirp(runtimeDir)
-// TODO - can this be simplified and combined into one step?
-await $`tar -xzf ${tarPath} --strip-components=1 -C ${runtimeDir}`
+if (isZip) {
+	await $`unzip ${toPosix(tarPath)} -d dist`
+	await fs.remove(runtimeDir)
+	await fs.move(`dist/node-v${nodeVersion}-${runtimePlatform}-${nodeArch}`, runtimeDir)
+} else {
+	await fs.mkdirp(runtimeDir)
+	await $`tar -xzf ${tarPath} --strip-components=1 -C ${runtimeDir}`
+}
+// TODO - can this be simplified and combined into the extract step?
 await fs.remove(path.join(runtimeDir, 'share'))
 await fs.remove(path.join(runtimeDir, 'include'))
 await fs.remove(path.join(runtimeDir, 'lib/node_modules/npm'))
