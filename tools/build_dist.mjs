@@ -130,7 +130,7 @@ if (sharpArch) sharpArgs.push(`npm_config_arch=${nodeArch}`)
 // const vipsVendorName = path.join(sharpVersionDirs[0], sharpPlatformDirs[0])
 // process.env.VIPS_VENDOR = vipsVendorName
 
-const nodeVersion = '14.19.0'
+const nodeVersion = await fs.readFile('./.node-version')
 
 // Download and cache build of nodejs
 const cacheDir = '.cache/node'
@@ -151,6 +151,8 @@ await $`tar -xzf ${tarPath} --strip-components=1 -C ${runtimeDir}`
 await fs.remove(path.join(runtimeDir, 'share'))
 await fs.remove(path.join(runtimeDir, 'include'))
 await fs.remove(path.join(runtimeDir, 'lib/node_modules/npm'))
+await fs.remove(path.join(runtimeDir, 'bin/npm'))
+await fs.remove(path.join(runtimeDir, 'bin/npx'))
 
 const require = createRequire(import.meta.url)
 const dependencies = {}
