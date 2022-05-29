@@ -1,6 +1,6 @@
 #!/usr/bin/env zx
 
-import { generateVersionString, generateMiniVersionString, $withoutEscaping } from './lib.mjs'
+import { generateVersionString } from './lib.mjs'
 import archiver from 'archiver'
 import { fetch, fs } from 'zx'
 import { createWriteStream } from 'node:fs'
@@ -37,6 +37,8 @@ let sharpPlatform = process.platform
 let sharpArch = process.arch
 
 await $`zx tools/build_writefile.mjs`
+
+const buildString = await generateVersionString()
 
 if (!platform) {
 	console.log('No platform specified, building for current')
