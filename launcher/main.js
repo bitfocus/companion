@@ -55,13 +55,13 @@ if (!lock) {
 				machineId = text.toString()
 			}
 		} catch (e) {
-			console.warn(`Error reading uuid-file: ${e}`)
+			console.warn(`Error reading machid file: ${e}`)
 		}
 	} else {
 		try {
 			fs.writeFileSync(machineIdPath, machineId)
 		} catch (e) {
-			console.warn(`Error writing uuid-file: ${e}`)
+			console.warn(`Error writing machid file: ${e}`)
 		}
 	}
 
