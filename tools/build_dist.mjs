@@ -9,6 +9,8 @@ import { promisify } from 'node:util'
 import { createRequire } from 'node:module'
 const streamPipeline = promisify(pipeline)
 
+const toPosix = (str) => str.split(path.sep).join(path.posix.sep)
+
 /**
  * @param {String} sourceDir: /some/folder/to/compress
  * @param {String} outPath: /path/to/created.zip
