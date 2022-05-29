@@ -17,7 +17,7 @@
 
 const util = require('util')
 // const debug = require('debug')('lib/instance_skel')
-var icons = require('../icons.cjs')
+var icons = require('../lib/resources/icons')
 
 const pkgJson = global.modulePkg
 if (!pkgJson) throw new Error('Missing module package.json data')
