@@ -112,12 +112,32 @@
 						"file": "3_config/settings/pin_lockout.md"
 					},
 					{
+						"label": "TCP",
+						"file": "3_config/settings/tcp_listener.md"
+					},
+					{
+						"label": "UDP",
+						"file": "3_config/settings/udp_listener.md"
+					},
+					{
+						"label": "OSC",
+						"file": "3_config/settings/osc_listener.md"
+					},
+					{
 						"label": "RossTalk",
 						"file": "3_config/settings/rosstalk.md"
 					},
 					{
+						"label": "Ember+",
+						"file": "3_config/settings/emberplus.md"
+					},
+					{
 						"label": "Artnet Listener",
 						"file": "3_config/settings/artnet_listener.md"
+					},
+					{
+						"label": "Admin UI Password",
+						"file": "3_config/settings/admin_password.md"
 					},
 					{
 						"label": "HTTPS Web Server",

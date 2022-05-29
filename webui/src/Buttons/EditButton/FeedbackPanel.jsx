@@ -2,13 +2,22 @@ import { CAlert, CButton, CForm, CFormGroup } from '@coreui/react'
 import { faSort, faTrash } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import React, { useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react'
-import { StaticContext, FeedbacksContext, InstancesContext, MyErrorBoundary, sandbox, socketEmit2 } from '../../util'
-import Select from 'react-select'
+import {
+	StaticContext,
+	FeedbacksContext,
+	InstancesContext,
+	MyErrorBoundary,
+	socketEmit2,
+	sandbox,
+	useMountEffect,
+} from '../../util'
+import Select, { createFilter } from 'react-select'
 import { ActionTableRowOption } from './Table'
 import { useDrag, useDrop } from 'react-dnd'
 import { GenericConfirmModal } from '../../Components/GenericConfirmModal'
 import { DropdownInputField } from '../../Components'
 import { ButtonStyleConfigFields } from './ButtonStyleConfig'
+import { AddFeedbacksModal } from './AddModal'
 
 export const FeedbacksPanel = function ({ controlId, feedbacks, dragId }) {
 	const context = useContext(StaticContext)
@@ -17,6 +26,13 @@ export const FeedbacksPanel = function ({ controlId, feedbacks, dragId }) {
 
 	const feedbacksRef = useRef()
 	feedbacksRef.current = feedbacks
+
+	const addFeedbacksRef = useRef(null)
+	const showAddModal = useCallback(() => {
+		if (addFeedbacksRef.current) {
+			addFeedbacksRef.current.show()
+		}
+	}, [])
 
 	const setValue = useCallback(
 		(feedbackId, key, val) => {
@@ -42,8 +58,16 @@ export const FeedbacksPanel = function ({ controlId, feedbacks, dragId }) {
 	)
 
 	const addFeedback = useCallback(
-		(feedackType) => {
-			const [instanceId, feedbackId] = feedackType.split(':', 2)
+		(feedbackType) => {
+			setRecentFeedbacks((existing) => {
+				const newActions = [feedbackType, ...existing.filter((v) => v !== feedbackType)].slice(0, 20)
+
+				window.localStorage.setItem('recent_feedbacks', JSON.stringify(newActions))
+
+				return newActions
+			})
+
+			const [instanceId, feedbackId] = feedbackType.split(':', 2)
 			socketEmit2(context.socket, 'controls:feedback:add', [controlId, instanceId, feedbackId]).catch((e) => {
 				console.error('Failed to add bank feedback', e)
 			})
@@ -60,9 +84,24 @@ export const FeedbacksPanel = function ({ controlId, feedbacks, dragId }) {
 		[context.socket, controlId]
 	)
 
+	const [recentFeedbacks, setRecentFeedbacks] = useState([])
+	useMountEffect(() => {
+		try {
+			// Load from localStorage at startup
+			const recent = JSON.parse(window.localStorage.getItem('recent_feedbacks') || '[]')
+			if (Array.isArray(recent)) {
+				setRecentFeedbacks(recent)
+			}
+		} catch (e) {
+			setRecentFeedbacks([])
+		}
+	})
+
 	return (
 		<>
 			<GenericConfirmModal ref={confirmModal} />
+
+			<AddFeedbacksModal ref={addFeedbacksRef} addFeedback={addFeedback} />
 
 			<table className="table feedback-table">
 				<tbody>
@@ -81,7 +120,12 @@ export const FeedbacksPanel = function ({ controlId, feedbacks, dragId }) {
 				</tbody>
 			</table>
 
-			<AddFeedbackDropdown onSelect={addFeedback} />
+			<div className="add-dropdown-wrapper">
+				<AddFeedbackDropdown onSelect={addFeedback} recentFeedbacks={recentFeedbacks} />
+				<CButton color="primary" variant="outline" onClick={showAddModal}>
+					Browse
+				</CButton>
+			</div>
 		</>
 	)
 }
@@ -392,7 +436,24 @@ function FeedbackStyles({ feedbackSpec, feedback, setStylePropsValue }) {
 	}
 }
 
-export function AddFeedbackDropdown({ onSelect, booleanOnly }) {
+const baseFilter = createFilter()
+const filterOptions = (candidate, input) => {
+	if (input) {
+		return !candidate.data.isRecent && baseFilter(candidate, input)
+	} else {
+		return candidate.data.isRecent
+	}
+}
+
+const noOptionsMessage = ({ inputValue }) => {
+	if (inputValue) {
+		return 'No feedbacks found'
+	} else {
+		return 'No recently used feedbacks'
+	}
+}
+
+export function AddFeedbackDropdown({ onSelect, booleanOnly, recentFeedbacks }) {
 	const feedbacksContext = useContext(FeedbacksContext)
 	const instancesContext = useContext(InstancesContext)
 
@@ -402,12 +463,35 @@ export function AddFeedbackDropdown({ onSelect, booleanOnly }) {
 			for (const [feedbackId, feedback] of Object.entries(instanceFeedbacks || {})) {
 				if (!booleanOnly || feedback.type === 'boolean') {
 					const instanceLabel = instancesContext[instanceId]?.label ?? instanceId
-					options.push({ value: `${instanceId}:${feedbackId}`, label: `${instanceLabel}: ${feedback.label}` })
+					options.push({
+						isRecent: false,
+						value: `${instanceId}:${feedbackId}`,
+						label: `${instanceLabel}: ${feedback.label}`,
+					})
 				}
 			}
 		}
+
+		const recents = []
+		for (const actionType of recentFeedbacks || []) {
+			const [instanceId, actionId] = actionType.split(':', 2)
+			const actionInfo = feedbacksContext[instanceId]?.[actionId]
+			if (actionInfo) {
+				const instanceLabel = instancesContext[instanceId]?.label ?? instanceId
+				recents.push({
+					isRecent: true,
+					value: `${instanceId}:${actionId}`,
+					label: `${instanceLabel}: ${actionInfo.label}`,
+				})
+			}
+		}
+		options.push({
+			label: 'Recently Used',
+			options: recents,
+		})
+
 		return options
-	}, [feedbacksContext, instancesContext, booleanOnly])
+	}, [feedbacksContext, instancesContext, booleanOnly, recentFeedbacks])
 
 	const innerChange = useCallback(
 		(e) => {
@@ -428,6 +512,8 @@ export function AddFeedbackDropdown({ onSelect, booleanOnly }) {
 			placeholder="+ Add feedback"
 			value={null}
 			onChange={innerChange}
+			filterOption={filterOptions}
+			noOptionsMessage={noOptionsMessage}
 		/>
 	)
 }
