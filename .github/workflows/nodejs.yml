@@ -21,6 +21,7 @@ jobs:
           mv linux-unpacked companion-x64
           tar -cvzf companion-x64.tar.gz companion-x64
         env:
+          CI: 1
           SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
 
       - name: Determine files to upload
@@ -70,6 +71,7 @@ jobs:
 
           yarn run macdist
         env:
+          CI: 1
           CSC_LINK: ${{ secrets.OSX_CSC_LINK }}
           CSC_KEY_PASSWORD: ${{ secrets.OSX_CSC_KEY_PASSWORD }}
           APPLEID: ${{ secrets.APPLEID }}
@@ -123,6 +125,7 @@ jobs:
 
           yarn run macarmdist
         env:
+          CI: 1
           CSC_LINK: ${{ secrets.OSX_CSC_LINK }}
           CSC_KEY_PASSWORD: ${{ secrets.OSX_CSC_KEY_PASSWORD }}
           APPLEID: ${{ secrets.APPLEID }}
@@ -175,6 +178,7 @@ jobs:
 
           yarn run windist
         env:
+          CI: 1
           CSC_LINK: ${{ secrets.CSC_LINK }}
           CSC_KEY_PASSWORD: ${{ secrets.CSC_KEY_PASSWORD }}
           SENTRY_DSN: ${{ secrets.SENTRY_DSN }}

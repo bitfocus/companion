@@ -52,6 +52,13 @@ module.exports = {
 					filename: 'BUILD',
 				},
 			},
+			{
+				test: /SENTRY$/,
+				type: 'asset/resource',
+				generator: {
+					filename: 'SENTRY',
+				},
+			},
 		],
 	},
 }

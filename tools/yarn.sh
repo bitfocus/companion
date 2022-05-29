@@ -43,8 +43,10 @@ echo
 
 heading "UI"
 yarn --frozen-lockfile --cwd webui
-echo "Warning: This next step can take many minutes to run"
-yarn --cwd webui build
+if [ -z "$CI" ]; then
+  echo "Warning: This next step can take many minutes to run"
+  yarn --cwd webui build
+fi 
 echo
 
 heading "Temporary Module-base"
@@ -53,8 +55,10 @@ yarn --cwd module-base build
 
 heading "Legacy Modules"
 yarn --frozen-lockfile --cwd module-legacy
-echo "Warning: This next step can take many minutes to run"
-yarn --cwd module-legacy generate-manifests
+if [ -z "$CI" ]; then
+  echo "Warning: This next step can take many minutes to run"
+  yarn --cwd module-legacy generate-manifests
+fi 
 echo
 
 exit 0
