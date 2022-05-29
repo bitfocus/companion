@@ -46,7 +46,6 @@ export const UserConfig = memo(function UserConfig() {
 function UserConfigTable() {
 	const context = useContext(StaticContext)
 	const config = useContext(UserConfigContext)
-	const [dev, setDev] = useState(false)
 
 	const setValue = useCallback(
 		(key, value) => {
@@ -55,16 +54,6 @@ function UserConfigTable() {
 		},
 		[context.socket]
 	)
-
-	useEffect(() => {
-		socketEmit(context.socket, 'get_dev', [])
-			.then(([dev]) => {
-				setDev(dev)
-			})
-			.catch((e) => {
-				console.error('Failed to get DEVELOPER env', e)
-			})
-	}, [context.socket])
 
 	const resetValue = useCallback(
 		(key) => {
@@ -156,28 +145,6 @@ function UserConfigTable() {
 				<tr>
 					<td colSpan="2" className="settings-category">
 						Logging
-					</td>
-				</tr>
-				<tr>
-					<td>Log Level</td>
-					<td>
-						<div className="form-check form-check-inline mr-1">
-							{dev ? (
-								<div style={{ display: 'inline-block' }}>
-									Environment is 'DEVELOPER'.
-									<br />
-									Logging is defaulted to 'Debug'.
-								</div>
-							) : (
-								<CDropdown className="mt-2" style={{ display: 'inline-block' }}>
-									<CDropdownToggle>{config.log_level === 'debug' ? 'Debug' : 'Production'}</CDropdownToggle>
-									<CDropdownMenu>
-										<CDropdownItem onClick={() => setValue('log_level', 'prod')}>Production</CDropdownItem>
-										<CDropdownItem onClick={() => setValue('log_level', 'debug')}>Debug</CDropdownItem>
-									</CDropdownMenu>
-								</CDropdown>
-							)}
-						</div>
 					</td>
 				</tr>
 

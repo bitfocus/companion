@@ -36,7 +36,7 @@ export function ContextData({ socket, children }) {
 		if (variableDefinitions) {
 			// Generate definitions for all the custom variables
 			const customVariableDefinitions = {}
-			for (const [id, info] of Object.entries(customVariables)) {
+			for (const [id, info] of Object.entries(customVariables || {})) {
 				customVariableDefinitions[`custom_${id}`] = {
 					label: info.description,
 				}
