@@ -138,7 +138,12 @@ await fs.mkdirp(cacheDir)
 const tarFilename = `node-v${nodeVersion}-${sharpPlatform}-${nodeArch}.tar.gz`
 const tarPath = path.join(cacheDir, tarFilename)
 if (!(await fs.pathExists(tarPath))) {
-	const response = await fetch(`https://nodejs.org/download/release/v${nodeVersion}/${tarFilename}`)
+	const tarUrl =
+		sharpPlatform === 'darwin' && nodeArch === 'arm64'
+			? `https://builds.julusian.dev/nodejs/${tarFilename}`
+			: `https://nodejs.org/download/release/v${nodeVersion}/${tarFilename}`
+
+	const response = await fetch(tarUrl)
 	if (!response.ok) throw new Error(`unexpected response ${response.statusText}`)
 	await streamPipeline(response.body, createWriteStream(tarPath))
 }
