@@ -168,9 +168,12 @@ jobs:
         shell: bash
         run: |
           # This fixes it somehow, and without it we get no logs from any shell scripts which are run
-          # yarn config set script-shell bash
+          yarn config set script-shell bash
 
           yarn update
+
+          # now unset it, as it messes with zx
+          yarn config set script-shell ''
 
           yarn run windist
         env:
