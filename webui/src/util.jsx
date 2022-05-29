@@ -238,6 +238,8 @@ export function myApplyPatch(oldDefinitions, key, patch) {
 	if (oldDefinitions) {
 		const oldEntry = oldDefinitions[key] ?? {}
 
+		console.log('apply patch', oldDefinitions, patch, key)
+
 		const newDefinitions = { ...oldDefinitions }
 		if (!patch) {
 			delete newDefinitions[key]

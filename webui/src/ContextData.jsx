@@ -18,6 +18,7 @@ import {
 import { NotificationsManager } from './Components/Notifications'
 import { cloneDeep } from 'lodash-es'
 import jsonPatch from 'fast-json-patch'
+import { useMemo } from 'react'
 
 export function ContextData({ socket, children }) {
 	const [instances, setInstances] = useState(null)
@@ -31,27 +32,29 @@ export function ContextData({ socket, children }) {
 	const [pages, setPages] = useState(null)
 	const [triggers, setTriggers] = useState(null)
 
-	useEffect(() => {
-		const setCustomVariablesAndUpdateVariables = (data) => {
-			setCustomVariables(data || {})
-			setVariableDefinitions((oldVars) => {
-				const newVars = { ...oldVars }
-				newVars.internal = compileCustomVariableVariables(newVars.internal || [], data || {})
-				return newVars
-			})
-		}
-		const compileCustomVariableVariables = (oldInternalVars, customVariables) => {
-			const newVars = [...oldInternalVars.filter((v) => !v.name.startsWith('custom_'))]
-
+	const completeVariableDefinitions = useMemo(() => {
+		if (variableDefinitions) {
+			// Generate definitions for all the custom variables
+			const customVariableDefinitions = {}
 			for (const [id, info] of Object.entries(customVariables)) {
-				newVars.push({
-					name: `custom_${id}`,
+				customVariableDefinitions[`custom_${id}`] = {
 					label: info.description,
-				})
+				}
 			}
 
-			return newVars
+			return {
+				...variableDefinitions,
+				internal: {
+					...variableDefinitions.internal,
+					...customVariableDefinitions,
+				},
+			}
+		} else {
+			return null
 		}
+	}, [customVariables, variableDefinitions])
+
+	useEffect(() => {
 		if (socket) {
 			socketEmit2(socket, 'modules:get', [])
 				.then((modules) => {
@@ -80,20 +83,14 @@ export function ContextData({ socket, children }) {
 				})
 			socketEmit2(socket, 'variable-definitions:subscribe', [])
 				.then((data) => {
-					setCustomVariables((oldCustomVars) => {
-						const fullData = data || {}
-						fullData.internal = compileCustomVariableVariables(fullData.internal || [], oldCustomVars || {})
-						setVariableDefinitions(fullData)
-
-						return oldCustomVars
-					})
+					setVariableDefinitions(data || {})
 				})
 				.catch((e) => {
 					console.error('Failed to load variable definitions list', e)
 				})
 			socketEmit(socket, 'custom_variables_get', [])
 				.then(([data]) => {
-					setCustomVariablesAndUpdateVariables(data || {})
+					setCustomVariables(data || {})
 				})
 				.catch((e) => {
 					console.error('Failed to load custom values list', e)
@@ -107,24 +104,6 @@ export function ContextData({ socket, children }) {
 					console.error('Failed to load user config', e)
 				})
 
-			// const updateVariableDefinitions = (label, variables) => {
-			// 	if (label === 'internal') {
-			// 		setCustomVariables((oldCustomVars) => {
-			// 			const internalVariables = compileCustomVariableVariables(variables, oldCustomVars || {})
-
-			// 			setVariableDefinitions((oldDefinitions) => ({
-			// 				...oldDefinitions,
-			// 				[label]: internalVariables,
-			// 			}))
-
-			// 			return oldCustomVars
-			// 		})
-			// 	} else {
-			// 		setVariableDefinitions((oldDefinitions) => ({
-			// 			...oldDefinitions,
-			// 			[label]: variables,
-			// 		}))
-			// 	}
 			const updateVariableDefinitions = (label, patch) => {
 				setVariableDefinitions((oldDefinitions) => myApplyPatch(oldDefinitions, label, patch))
 			}
@@ -232,7 +211,7 @@ export function ContextData({ socket, children }) {
 			}
 
 			socket.emit('schedule_get', setTriggers)
-			socket.on('schedule_refresh', updateTriggers)
+			socket.on('schedule:update', updateTriggers)
 			socket.on('schedule_last_run', updateTriggerLastRun)
 
 			return () => {
@@ -244,7 +223,7 @@ export function ContextData({ socket, children }) {
 				socket.off('surfaces:patch', patchSurfaces)
 				socket.off('set_page', updatePageInfo)
 
-				socket.off('schedule_refresh', updateTriggers)
+				socket.off('schedule:update', updateTriggers)
 				socket.off('schedule_last_run', updateTriggerLastRun)
 
 				socket.off('instances:patch', patchInstances)
@@ -281,6 +260,7 @@ export function ContextData({ socket, children }) {
 		instances,
 		modules,
 		variableDefinitions,
+		completeVariableDefinitions,
 		actionDefinitions,
 		feedbackDefinitions,
 		customVariables,
@@ -298,7 +278,7 @@ export function ContextData({ socket, children }) {
 			<ActionsContext.Provider value={actionDefinitions}>
 				<FeedbacksContext.Provider value={feedbackDefinitions}>
 					<InstancesContext.Provider value={instances}>
-						<VariableDefinitionsContext.Provider value={variableDefinitions}>
+						<VariableDefinitionsContext.Provider value={completeVariableDefinitions}>
 							<CustomVariableDefinitionsContext.Provider value={customVariables}>
 								<UserConfigContext.Provider value={userConfig}>
 									<SurfacesContext.Provider value={surfaces}>

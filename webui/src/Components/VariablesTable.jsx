@@ -12,12 +12,17 @@ export function VariablesTable({ label }) {
 	const variableDefinitionsContext = useContext(VariableDefinitionsContext)
 
 	const variableDefinitions = useMemo(() => {
-		const defs = variableDefinitionsContext[label] || []
-		const defs2 = [...defs]
+		const defs = []
+		for (const [name, variable] of Object.entries(variableDefinitionsContext[label] || {})) {
+			defs.push({
+				...variable,
+				name,
+			})
+		}
 
-		defs2.sort((a, b) => a.name.localeCompare(b.name))
+		defs.sort((a, b) => a.name.localeCompare(b.name))
 
-		return defs2
+		return defs
 	}, [variableDefinitionsContext, label])
 	const [variableValues, setVariableValues] = useState({})
 
@@ -60,7 +65,7 @@ export function VariablesTable({ label }) {
 					</tr>
 				</thead>
 				<tbody>
-					{variableDefinitions.map(([variable]) => {
+					{variableDefinitions.map((variable) => {
 						let value = variableValues[variable.name]
 						if (typeof value !== 'string') {
 							value += ''
