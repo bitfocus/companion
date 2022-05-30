@@ -43,6 +43,7 @@ jobs:
         uses: actions/download-artifact@v3
         with:
           name: shared-package
+          path: dist
 
       - name: package
         run: |
@@ -100,6 +101,7 @@ jobs:
         uses: actions/download-artifact@v3
         with:
           name: shared-package
+          path: dist
 
       - name: yarn update and macdist
         run: |
@@ -159,6 +161,7 @@ jobs:
         uses: actions/download-artifact@v3
         with:
           name: shared-package
+          path: dist
 
       - name: yarn update and macarmdist
         run: |
@@ -218,6 +221,7 @@ jobs:
         uses: actions/download-artifact@v3
         with:
           name: shared-package
+          path: dist
 
       - name: yarn update and windist
         shell: bash
