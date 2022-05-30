@@ -36,7 +36,7 @@ await fs.remove('dist')
 await $`yarn webpack`
 
 // Build webui
-// await $`yarn --cwd webui build`
+await $`yarn --cwd webui build`
 
 // generate the 'static' zip files to serve
 await zipDirectory('./webui/build', 'dist/webui.zip')
@@ -69,6 +69,6 @@ await fs.copyFile('yarn.lock', 'dist/yarn.lock') // use the same yarn.lock file,
 await fs.copyFile('.node-version', 'dist/.node-version')
 
 // Build legacy modules
-// await $`yarn --cwd module-legacy generate-manifests`
+await $`yarn --cwd module-legacy generate-manifests`
 await fs.mkdir('dist/module-legacy')
 await fs.copy('module-legacy/manifests', 'dist/module-legacy/manifests')
