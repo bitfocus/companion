@@ -27,7 +27,7 @@ export function determinePlatformInfo(platform) {
 			nodePlatform: 'darwin',
 			nodeArch: 'arm64',
 		})
-	} else if (platform === 'win-x64') {
+	} else if (platform === 'win-x64' || platform === 'win32-x64') {
 		return expandMissing({
 			electronBuilderArgs: ['--x64', '--win'],
 			nodePlatform: 'win32',
