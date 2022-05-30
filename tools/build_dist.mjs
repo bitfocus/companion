@@ -119,7 +119,9 @@ if (sharpArch) sharpArgs.push(`npm_config_arch=${nodeArch}`)
 // process.env.VIPS_VENDOR = vipsVendorName
 
 const nodeVersion = await fs.readFile('./.node-version')
-const runtimePlatform = sharpPlatform === 'win32' ? 'win' : sharpPlatform
+let runtimePlatform = sharpPlatform
+if (runtimePlatform === 'win32') runtimePlatform = 'win'
+if (runtimePlatform === 'arm') runtimePlatform = 'armv7l'
 const isZip = runtimePlatform === 'win'
 
 // Download and cache build of nodejs
