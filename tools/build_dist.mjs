@@ -144,16 +144,20 @@ if (isZip) {
 	await $`unzip ${toPosix(tarPath)} -d dist`
 	await fs.remove(runtimeDir)
 	await fs.move(`dist/node-v${nodeVersion}-${runtimePlatform}-${nodeArch}`, runtimeDir)
+	// TODO - can this be simplified and combined into the extract step?
+	await fs.remove(path.join(runtimeDir, 'node_modules/npm'))
+	await fs.remove(path.join(runtimeDir, 'npm'))
+	await fs.remove(path.join(runtimeDir, 'npx'))
 } else {
 	await fs.mkdirp(runtimeDir)
 	await $`tar -xzf ${tarPath} --strip-components=1 -C ${runtimeDir}`
+	// TODO - can this be simplified and combined into the extract step?
+	await fs.remove(path.join(runtimeDir, 'lib/node_modules/npm'))
+	await fs.remove(path.join(runtimeDir, 'bin/npm'))
+	await fs.remove(path.join(runtimeDir, 'bin/npx'))
 }
-// TODO - can this be simplified and combined into the extract step?
 await fs.remove(path.join(runtimeDir, 'share'))
 await fs.remove(path.join(runtimeDir, 'include'))
-await fs.remove(path.join(runtimeDir, 'lib/node_modules/npm'))
-await fs.remove(path.join(runtimeDir, 'bin/npm'))
-await fs.remove(path.join(runtimeDir, 'bin/npx'))
 
 const require = createRequire(import.meta.url)
 const dependencies = {}

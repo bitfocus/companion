@@ -528,8 +528,25 @@ if (!lock) {
 		let crashCounter = 0
 		let crashTimeout = null
 
-		const nodeBinPath = path.join(companionRootPath, 'node-runtime/bin/node')
-		const nodeBin = app.isPackaged || fs.pathExistsSync(nodeBinPath) ? nodeBinPath : 'node'
+		// Find the node binary
+		const nodeBinPath = [
+			path.join(companionRootPath, 'node-runtime/bin/node'),
+			path.join(companionRootPath, 'node-runtime/node'),
+		]
+		let nodeBin = null
+		for (const p of nodeBinPath) {
+			if (fs.pathExistsSync(p)) {
+				nodeBin = p
+				break
+			}
+		}
+		if (!app.isPackaged && !nodeBin) nodeBin = 'node'
+
+		if (!nodeBin) {
+			dialog.showErrorBox('Unable to start', 'Failed to find binary to run')
+			app.exit(11)
+		}
+
 		child = respawn(
 			() => [
 				// Build a new command string for each start
