@@ -553,7 +553,7 @@ if (!lock) {
 				// Build a new command string for each start
 				nodeBin,
 				path.join(companionRootPath, 'main.js'),
-				`--machineId="${machineId}"`,
+				`--machine-id="${machineId}"`,
 				`--config-dir="${configDir}"`,
 				`--admin-port=${uiConfig.get('http_port')}`,
 				`--admin-address=${uiConfig.get('bind_ip')}`,

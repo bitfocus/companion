@@ -54,6 +54,6 @@ export function determinePlatformInfo(platform) {
 			nodeArch: 'arm64',
 		})
 	} else {
-		throw new Error('Unknown platform')
+		throw new Error(`Unknown platform "${platform}"`)
 	}
 }
