@@ -4,7 +4,7 @@ const fs = require('fs-extra')
 const { init, showReportDialog, configureScope } = require('@sentry/electron')
 const systeminformation = require('systeminformation')
 const Store = require('electron-store')
-const { ipcMain, app, BrowserWindow } = require('electron')
+const { ipcMain, app, BrowserWindow, dialog } = require('electron')
 const electron = require('electron')
 const { nanoid } = require('nanoid')
 const respawn = require('respawn')
@@ -525,6 +525,9 @@ if (!lock) {
 			}
 		})
 
+		let crashCounter = 0
+		let crashTimeout = null
+
 		const nodeBinPath = path.join(companionRootPath, 'node-runtime/bin/node')
 		const nodeBin = app.isPackaged || fs.pathExistsSync(nodeBinPath) ? nodeBinPath : 'node'
 		child = respawn(
@@ -571,6 +574,30 @@ if (!lock) {
 				app.exit()
 			} else {
 				child.start()
+			}
+		})
+
+		child.on('spawn', () => {
+			if (crashTimeout) clearTimeout(crashTimeout)
+			crashTimeout = setTimeout(() => {
+				crashTimeout = null
+				console.log('Companion looks to be stable')
+				crashCounter = 0
+			}, 5000)
+		})
+
+		child.on('exit', (code) => {
+			if (code === 0) return
+
+			crashCounter++
+			clearTimeout(crashTimeout)
+			crashTimeout = null
+
+			console.log(`Crashes: ${crashCounter}`)
+			if (crashCounter > 3) {
+				child.stop()
+				dialog.showErrorBox('Unable to start', 'Companion is unable to start')
+				app.exit(1)
 			}
 		})
 
