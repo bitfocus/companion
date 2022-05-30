@@ -2,7 +2,7 @@ name: Build binaries
 on: [push]
 
 jobs:
-  linux64:
+  build-shared:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v1
@@ -10,11 +10,45 @@ jobs:
         uses: actions/setup-node@v2
         with:
           node-version-file: '.node-version'
-      - name: yarn update and lindist
+      - name: yarn update
         run: |
           yarn update
+        env:
+          CI: 1
+      - name: build shared package
+        run: |
+          yarn zx tools/build/dist.mjs
+        env:
+          SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
 
-          yarn run lindist
+      - name: Upload artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: shared-package
+          retention-days: 1
+          path: |
+            dist
+
+  linux64:
+    runs-on: ubuntu-latest
+    needs: build-shared
+    steps:
+      - uses: actions/checkout@v1
+      - name: Use Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version-file: '.node-version'
+
+      - name: Download artifact
+        uses: actions/download-artifact@v3
+        with:
+          name: shared-package
+
+      - name: package
+        run: |
+          yarn install
+
+          yarn zx tools/build/package.mjs
 
           # manually tar it, to preserve the symlinks
           cd electron-output
@@ -54,20 +88,27 @@ jobs:
 
   osx:
     runs-on: macos-latest
+    needs: build-shared
     steps:
       - uses: actions/checkout@v1
       - name: Use Node.js
         uses: actions/setup-node@v2
         with:
           node-version-file: '.node-version'
+
+      - name: Download artifact
+        uses: actions/download-artifact@v3
+        with:
+          name: shared-package
+
       - name: yarn update and macdist
         run: |
           # try and avoid timeout errors
           yarn config set network-timeout 100000 -g
 
-          yarn update
+          yarn install
 
-          yarn run macdist
+          yarn zx tools/build/package.mjs
         env:
           CI: 1
           CSC_LINK: ${{ secrets.OSX_CSC_LINK }}
@@ -106,20 +147,27 @@ jobs:
 
   osx-arm64:
     runs-on: macos-11
+    needs: build-shared
     steps:
       - uses: actions/checkout@v1
       - name: Use Node.js
         uses: actions/setup-node@v2
         with:
           node-version-file: '.node-version'
+
+      - name: Download artifact
+        uses: actions/download-artifact@v3
+        with:
+          name: shared-package
+
       - name: yarn update and macarmdist
         run: |
           # try and avoid timeout errors
           yarn config set network-timeout 100000 -g
 
-          yarn update
+          yarn install
 
-          yarn run macarmdist
+          yarn zx tools/build/package.mjs darwin-arm64
         env:
           CI: 1
           CSC_LINK: ${{ secrets.OSX_CSC_LINK }}
@@ -158,24 +206,25 @@ jobs:
 
   win64:
     runs-on: windows-latest
+    needs: build-shared
     steps:
       - uses: actions/checkout@v1
       - name: Use Node.js
         uses: actions/setup-node@v2
         with:
           node-version-file: '.node-version'
+
+      - name: Download artifact
+        uses: actions/download-artifact@v3
+        with:
+          name: shared-package
+
       - name: yarn update and windist
         shell: bash
         run: |
-          # This fixes it somehow, and without it we get no logs from any shell scripts which are run
-          yarn config set script-shell bash
+          yarn install
 
-          yarn update
-
-          # now unset it, as it messes with zx
-          yarn config set script-shell ''
-
-          yarn run windist
+          yarn zx tools/build/package.mjs
         env:
           CI: 1
           CSC_LINK: ${{ secrets.CSC_LINK }}
