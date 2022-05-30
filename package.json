@@ -9,7 +9,7 @@
 		"dev": "yarn build:writefile && cross-env DEVELOPER=1 nodemon --ignore './webui/' --ignore './launcher/' --ignore './dist/' -- main.js --bind-address 127.0.0.1 --extra-module-path=./module-local-dev",
 		"update": "./tools/update.sh",
 		"dist:webui": "yarn --cwd webui build",
-		"dist": "zx ./tools/build_dist.mjs",
+		"dist": "zx ./tools/build/complete.mjs",
 		"macdist": "yarn dist mac-x64",
 		"macarmdist": "yarn dist mac-arm64",
 		"windist": "yarn dist win-x64",

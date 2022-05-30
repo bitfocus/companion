@@ -532,6 +532,7 @@ if (!lock) {
 		const nodeBinPath = [
 			path.join(companionRootPath, 'node-runtime/bin/node'),
 			path.join(companionRootPath, 'node-runtime/node'),
+			path.join(companionRootPath, 'node-runtime/node.exe'),
 		]
 		let nodeBin = null
 		for (const p of nodeBinPath) {

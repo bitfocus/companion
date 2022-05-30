@@ -4,7 +4,7 @@ SENTRY
 *-x64/*
 package-lock.json
 .cache
-build/
+/build/
 out/
 config
 db
