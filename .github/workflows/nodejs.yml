@@ -219,7 +219,7 @@ jobs:
       - name: build & package
         shell: bash
         run: |
-          yarn install
+          yarn update
 
           yarn zx tools/build/complete.mjs
         env:
