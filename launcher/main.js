@@ -553,8 +553,8 @@ if (!lock) {
 				// Build a new command string for each start
 				nodeBin,
 				path.join(companionRootPath, 'main.js'),
-				`--machine-id="${machineId}"`,
-				`--config-dir="${configDir}"`,
+				`--machine-id=${machineId}`,
+				`--config-dir=${configDir}`,
 				`--admin-port=${uiConfig.get('http_port')}`,
 				`--admin-address=${uiConfig.get('bind_ip')}`,
 				uiConfig.get('enable_developer') ? `--extra-module-path="${uiConfig.get('dev_modules_path')}"` : undefined,
