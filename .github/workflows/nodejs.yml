@@ -209,7 +209,6 @@ jobs:
 
   win64:
     runs-on: windows-latest
-    needs: build-shared
     steps:
       - uses: actions/checkout@v1
       - name: Use Node.js
@@ -217,18 +216,12 @@ jobs:
         with:
           node-version-file: '.node-version'
 
-      - name: Download artifact
-        uses: actions/download-artifact@v3
-        with:
-          name: shared-package
-          path: dist
-
-      - name: package
+      - name: build & package
         shell: bash
         run: |
           yarn install
 
-          yarn zx tools/build/package.mjs
+          yarn zx tools/build/complete.mjs
         env:
           CI: 1
           CSC_LINK: ${{ secrets.CSC_LINK }}
