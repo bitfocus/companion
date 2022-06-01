@@ -3345,9 +3345,9 @@ commist@^1.0.0:
   version "1.0.1"
   resolved "https://codeload.github.com/bitfocus/companion-module-lectrosonics-aspen/tar.gz/bc369f7bd4416ca10c6234e7c1bca995973b79c3"
 
-"companion-module-lgtv-display@github:bitfocus/companion-module-lgtv-display#v1.0.0":
-  version "1.0.1"
-  resolved "https://codeload.github.com/bitfocus/companion-module-lgtv-display/tar.gz/69fdbde0a66f2d7c94c7fcd07951fdbb3645dd00"
+"companion-module-lgtv-display@github:bitfocus/companion-module-lgtv-display#v1.0.2":
+  version "1.0.2"
+  resolved "https://codeload.github.com/bitfocus/companion-module-lgtv-display/tar.gz/1a693ae44de9997056a3d1cb3d7def428d399ac1"
   dependencies:
     lgtv-ip-control "^1.2.0"
 
