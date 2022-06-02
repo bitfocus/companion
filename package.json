@@ -264,6 +264,7 @@
 		"companion-module-digico-osc": "github:bitfocus/companion-module-digico-osc#v1.0.4",
 		"companion-module-digitalloggers-powercontroller": "github:bitfocus/companion-module-digitalloggers-powercontroller#v1.0.2",
 		"companion-module-digitalprojection-highlight": "github:bitfocus/companion-module-digitalprojection-highlight#v1.0.4",
+		"companion-module-discord-api": "github:bitfocus/companion-module-discord-api#v0.1.0",
 		"companion-module-disguise": "github:bitfocus/companion-module-disguise#v1.1.2",
 		"companion-module-disguise-mtc": "github:bitfocus/companion-module-disguise-mtc#v1.0.4",
 		"companion-module-disguise-smc": "github:bitfocus/companion-module-disguise-smc#v1.0.0",
