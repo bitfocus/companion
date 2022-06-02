@@ -3799,9 +3799,9 @@ commist@^1.0.0:
   dependencies:
     ws "^7.4.5"
 
-"companion-module-sennheiser-evolutionwireless@github:bitfocus/companion-module-sennheiser-evolutionwireless#v1.0.1":
-  version "1.0.1"
-  resolved "https://codeload.github.com/bitfocus/companion-module-sennheiser-evolutionwireless/tar.gz/19ad94028fdabc8a82ce25a3ea886f51e3d64351"
+"companion-module-sennheiser-evolutionwireless@github:bitfocus/companion-module-sennheiser-evolutionwireless#v1.0.2":
+  version "1.0.2"
+  resolved "https://codeload.github.com/bitfocus/companion-module-sennheiser-evolutionwireless/tar.gz/5af7ca22032d493d5bae196af878e4bdde6a695e"
 
 "companion-module-sharp-tv@github:bitfocus/companion-module-sharp-tv#v1.0.2":
   version "1.0.2"
