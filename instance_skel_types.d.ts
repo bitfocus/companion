@@ -287,6 +287,7 @@ export type OSCSomeArguments = OSCArgument | Array<OSCArgument> | OSCMetaArgumen
 export interface CompanionInstanceHTTPRequest {
 	baseURL: string
 	body?: string
+	headers: Record<string, string>
 	hostname: string
 	ip: string
 	method: string
