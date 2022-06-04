@@ -432,8 +432,4 @@ instance.extendedBy = function (module) {
 	util.inherits(module, instance)
 }
 
-instance.handleHttpRequest = function () {
-	return { status: 404, body: 'Not Found' }
-}
-
 module.exports = instance
