@@ -169,7 +169,7 @@ declare abstract class InstanceSkel<TConfig> {
 	 * Handle HTTP requests from Companion
 	 * @param request partial request object from Express
 	 */
-	abstract handleHttpRequest?(request: CompanionInstanceHTTPRequest): CompanionInstanceHTTPResponse | Promise<CompanionInstanceHTTPResponse>
+	handleHttpRequest?(request: CompanionInstanceHTTPRequest): CompanionInstanceHTTPResponse | Promise<CompanionInstanceHTTPResponse>
 
 	STATUS_UNKNOWN: null
 	STATUS_OK: 0
