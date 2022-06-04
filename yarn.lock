@@ -2962,6 +2962,12 @@ commist@^1.0.0:
   version "1.0.4"
   resolved "https://codeload.github.com/bitfocus/companion-module-digitalprojection-highlight/tar.gz/758784edf593a9c3525efbfc37bec1d3a7970f98"
 
+"companion-module-discord-api@github:bitfocus/companion-module-discord-api#v0.1.0":
+  version "0.1.0"
+  resolved "https://codeload.github.com/bitfocus/companion-module-discord-api/tar.gz/5301a90833e15d44d6e679cf1401ae8e1c3d11fa"
+  dependencies:
+    got-cjs "^12.0.1"
+
 "companion-module-disguise-mtc@github:bitfocus/companion-module-disguise-mtc#v1.0.4":
   version "1.0.4"
   resolved "https://codeload.github.com/bitfocus/companion-module-disguise-mtc/tar.gz/7c3dd40f6cbefff4daf22dd9e604640fbd16c9ca"
@@ -3017,9 +3023,9 @@ commist@^1.0.0:
     "@tsconfig/node14" "^1.0.1"
     "@types/node" "^14.18.3"
 
-"companion-module-etc-eos@github:bitfocus/companion-module-etc-eos#v1.3.0":
-  version "1.3.0"
-  resolved "https://codeload.github.com/bitfocus/companion-module-etc-eos/tar.gz/804dc489fe11b7bd245a2063c8039031fae7c20a"
+"companion-module-etc-eos@github:bitfocus/companion-module-etc-eos#v1.3.1":
+  version "1.3.1"
+  resolved "https://codeload.github.com/bitfocus/companion-module-etc-eos/tar.gz/94dc2c86935179e7d86cf41d20b8339e61b9ce7c"
   dependencies:
     osc "^2.4.0"
 
@@ -3126,9 +3132,9 @@ commist@^1.0.0:
   version "1.1.3"
   resolved "https://codeload.github.com/bitfocus/companion-module-generic-osc/tar.gz/87e7c0e44e52c1abf336d926d985e8a2be48b263"
 
-"companion-module-generic-pjlink@github:bitfocus/companion-module-generic-pjlink#v1.1.0":
-  version "1.1.0"
-  resolved "https://codeload.github.com/bitfocus/companion-module-generic-pjlink/tar.gz/623c8c4c06f0f7c3183e7527e6c3b681e664ef15"
+"companion-module-generic-pjlink@github:bitfocus/companion-module-generic-pjlink#v1.1.1":
+  version "1.1.1"
+  resolved "https://codeload.github.com/bitfocus/companion-module-generic-pjlink/tar.gz/9e8a8c0a5177b33ad4758459574f201e17ff18c4"
 
 "companion-module-generic-sacn@github:bitfocus/companion-module-generic-sacn#v1.0.2":
   version "1.0.2"
@@ -3349,9 +3355,9 @@ commist@^1.0.0:
   version "1.0.1"
   resolved "https://codeload.github.com/bitfocus/companion-module-lectrosonics-aspen/tar.gz/bc369f7bd4416ca10c6234e7c1bca995973b79c3"
 
-"companion-module-lgtv-display@github:bitfocus/companion-module-lgtv-display#v1.0.0":
-  version "1.0.1"
-  resolved "https://codeload.github.com/bitfocus/companion-module-lgtv-display/tar.gz/69fdbde0a66f2d7c94c7fcd07951fdbb3645dd00"
+"companion-module-lgtv-display@github:bitfocus/companion-module-lgtv-display#v1.0.2":
+  version "1.0.2"
+  resolved "https://codeload.github.com/bitfocus/companion-module-lgtv-display/tar.gz/1a693ae44de9997056a3d1cb3d7def428d399ac1"
   dependencies:
     lgtv-ip-control "^1.2.0"
 
@@ -3731,9 +3737,9 @@ commist@^1.0.0:
   version "1.0.3"
   resolved "https://codeload.github.com/bitfocus/companion-module-roland-v1200hd/tar.gz/fe08f010a549f09480dfa0a673e30030c00e08bf"
 
-"companion-module-roland-v600uhd@github:bitfocus/companion-module-roland-v600uhd#v1.0.4":
-  version "1.0.4"
-  resolved "https://codeload.github.com/bitfocus/companion-module-roland-v600uhd/tar.gz/166998b990addaf85b0fd0fde72861170458bbdf"
+"companion-module-roland-v600uhd@github:bitfocus/companion-module-roland-v600uhd#v1.0.5":
+  version "1.0.5"
+  resolved "https://codeload.github.com/bitfocus/companion-module-roland-v600uhd/tar.gz/d36dab8da0c22d476f472946084b7b46158b86af"
 
 "companion-module-roland-v60hd@github:bitfocus/companion-module-roland-v60hd#v1.0.12":
   version "1.0.12"
@@ -3793,9 +3799,9 @@ commist@^1.0.0:
   dependencies:
     ws "^7.4.5"
 
-"companion-module-sennheiser-evolutionwireless@github:bitfocus/companion-module-sennheiser-evolutionwireless#v1.0.1":
-  version "1.0.1"
-  resolved "https://codeload.github.com/bitfocus/companion-module-sennheiser-evolutionwireless/tar.gz/19ad94028fdabc8a82ce25a3ea886f51e3d64351"
+"companion-module-sennheiser-evolutionwireless@github:bitfocus/companion-module-sennheiser-evolutionwireless#v1.0.2":
+  version "1.0.2"
+  resolved "https://codeload.github.com/bitfocus/companion-module-sennheiser-evolutionwireless/tar.gz/5af7ca22032d493d5bae196af878e4bdde6a695e"
 
 "companion-module-sharp-tv@github:bitfocus/companion-module-sharp-tv#v1.0.2":
   version "1.0.2"
