@@ -13,6 +13,8 @@ import {
 	CompanionActionEventInfo,
 	CompanionFeedbackEventInfo,
 	CompanionBankPNG,
+	CompanionInstanceHTTPRequest,
+	CompanionInstanceHTTPResponse,
 	OSCSomeArguments,
 } from './instance_skel_types'
 
@@ -162,6 +164,12 @@ declare abstract class InstanceSkel<TConfig> {
 
 	rgb(red: number, green: number, blue: number): number
 	rgbRev(color: number): { r: number; g: number; b: number }
+
+	/**
+	 * 
+	 * @param request partial request object from Express
+	 */
+	abstract handleHttpRequest(request: CompanionInstanceHTTPRequest): CompanionInstanceHTTPResponse | Promise<CompanionInstanceHTTPResponse>
 
 	STATUS_UNKNOWN: null
 	STATUS_OK: 0
