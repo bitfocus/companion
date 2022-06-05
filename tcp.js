@@ -126,14 +126,12 @@ function tcp(host, port, options) {
 	// Let caller install event handlers first
 	setImmediate(self.connect.bind(self))
 
-	if (process.env.DEVELOPER) {
-		setTimeout(() => {
-			if (!self.destroyed && self.listenerCount('error')) {
-				// The socket is active and has no listeners. Log an error for the module devs!
-				console.error(`Danger: TCP client for ${self.host}:${self.port} is missing an error handler!`)
-			}
-		}, 5000)
-	}
+	setTimeout(() => {
+		if (!self.destroyed && self.listenerCount('error')) {
+			// The socket is active and has no listeners. Log an error for the module devs!
+			console.error(`Danger: TCP client for ${self.host}:${self.port} is missing an error handler!`)
+		}
+	}, 5000)
 
 	return self
 }

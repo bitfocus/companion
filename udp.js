@@ -101,14 +101,12 @@ function udp(host, port, options) {
 	udp_sockets.push(self.socket)
 	debug(udp_sockets.length + ' UDP sockets in use (+1)')
 
-	if (process.env.DEVELOPER) {
-		setTimeout(() => {
-			if (!self.destroyed && self.listenerCount('error')) {
-				// The socket is active and has no listeners. Log an error for the module devs!
-				console.error(`Danger: UDP socket for ${self.host}:${self.port} is missing an error handler!`)
-			}
-		}, 5000)
-	}
+	setTimeout(() => {
+		if (!self.destroyed && self.listenerCount('error')) {
+			// The socket is active and has no listeners. Log an error for the module devs!
+			console.error(`Danger: UDP socket for ${self.host}:${self.port} is missing an error handler!`)
+		}
+	}, 5000)
 
 	return self
 }
