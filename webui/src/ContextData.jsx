@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import {
+	myApplyPatch,
 	StaticContext,
 	ActionsContext,
 	FeedbacksContext,
@@ -11,6 +12,7 @@ import {
 	SurfacesContext,
 	PagesContext,
 	TriggersContext,
+	myApplyPatch2,
 } from './util'
 import { NotificationsManager } from './Components/Notifications'
 
@@ -86,23 +88,14 @@ export function ContextData({ socket, children }) {
 					console.error('Failed to load user config', e)
 				})
 
-			const updateVariableDefinitions = (label, variables) => {
-				setVariableDefinitions((oldDefinitions) => ({
-					...oldDefinitions,
-					[label]: variables,
-				}))
+			const updateVariableDefinitions = (label, patch) => {
+				setVariableDefinitions((oldDefinitions) => myApplyPatch(oldDefinitions, label, patch))
 			}
-			const updateFeedbackDefinitions = (id, feedbacks) => {
-				setFeedbackDefinitions((oldDefinitions) => ({
-					...oldDefinitions,
-					[id]: feedbacks,
-				}))
+			const updateFeedbackDefinitions = (id, patch) => {
+				setFeedbackDefinitions((oldDefinitions) => myApplyPatch(oldDefinitions, id, patch))
 			}
-			const updateActionDefinitions = (id, actions) => {
-				setActionDefinitions((oldDefinitions) => ({
-					...oldDefinitions,
-					[id]: actions,
-				}))
+			const updateActionDefinitions = (id, patch) => {
+				setActionDefinitions((oldDefinitions) => myApplyPatch(oldDefinitions, id, patch))
 			}
 
 			const updateUserConfigValue = (key, value) => {
@@ -111,20 +104,30 @@ export function ContextData({ socket, children }) {
 					[key]: value,
 				}))
 			}
+			const updateSurfaces = (patch) => {
+				console.log('surfaces', patch)
+				setSurfaces((oldSurfaces) => myApplyPatch2(oldSurfaces, patch))
+			}
+			const updateCustomVariables = (patch) => {
+				setCustomVariables((oldVariables) => myApplyPatch2(oldVariables, patch))
+			}
+			const updateTriggers = (patch) => {
+				setTriggers((oldVariables) => myApplyPatch2(oldVariables, patch))
+			}
 
 			socket.on('instances_get:result', setInstances)
 			socket.emit('instances_get')
 
-			socket.on('variable_instance_definitions_set', updateVariableDefinitions)
-			socket.on('custom_variables_get', setCustomVariables)
+			socket.on('variable_instance_definitions_patch', updateVariableDefinitions)
+			socket.on('custom_variables_get', updateCustomVariables)
 
-			socket.on('action_instance_definitions_set', updateActionDefinitions)
+			socket.on('action_instance_definitions_patch', updateActionDefinitions)
 
-			socket.on('feedback_instance_definitions_set', updateFeedbackDefinitions)
+			socket.on('feedback_instance_definitions_patch', updateFeedbackDefinitions)
 
 			socket.on('set_userconfig_key', updateUserConfigValue)
 
-			socket.on('devices_list', setSurfaces)
+			socket.on('devices_list', updateSurfaces)
 			socket.emit('devices_list_get')
 
 			socketEmit(socket, 'get_page_all', [])
@@ -157,34 +160,30 @@ export function ContextData({ socket, children }) {
 				setTriggers((list) => {
 					if (!list) return list
 
-					return list.map((l) => {
-						if (l.id === id) {
-							return {
-								...l,
-								last_run: time,
-							}
-						} else {
-							return l
-						}
-					})
+					const res = { ...list }
+					if (res[id]) {
+						res[id] = { ...res[id], last_run: time }
+					}
+
+					return res
 				})
 			}
 
 			socket.emit('schedule_get', setTriggers)
-			socket.on('schedule_refresh', setTriggers)
+			socket.on('schedule_refresh', updateTriggers)
 			socket.on('schedule_last_run', updateTriggerLastRun)
 
 			return () => {
 				socket.off('instances_get:result', setInstances)
-				socket.off('variable_instance_definitions_set', updateVariableDefinitions)
-				socket.off('custom_variables_get', setCustomVariables)
-				socket.off('action_instance_definitions_set', updateActionDefinitions)
-				socket.off('feedback_instance_definitions_set', updateFeedbackDefinitions)
+				socket.off('variable_instance_definitions_patch', updateVariableDefinitions)
+				socket.off('custom_variables_get', updateCustomVariables)
+				socket.off('action_instance_definitions_patch', updateActionDefinitions)
+				socket.off('feedback_instance_definitions_patch', updateFeedbackDefinitions)
 				socket.off('set_userconfig_key', updateUserConfigValue)
-				socket.off('devices_list', setSurfaces)
+				socket.off('devices_list', updateSurfaces)
 				socket.off('set_page', updatePageInfo)
 
-				socket.off('schedule_refresh', setTriggers)
+				socket.off('schedule_refresh', updateTriggers)
 				socket.off('schedule_last_run', updateTriggerLastRun)
 			}
 		}

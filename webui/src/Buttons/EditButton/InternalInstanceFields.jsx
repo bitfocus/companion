@@ -168,8 +168,8 @@ function InternalVariableDropdown({ value, setValue, defaultVal }) {
 		const choices = []
 
 		for (const [instanceLabel, variables] of Object.entries(context)) {
-			for (const variable of variables) {
-				const id = `${instanceLabel}:${variable.name}`
+			for (const [name, variable] of Object.entries(variables || {})) {
+				const id = `${instanceLabel}:${name}`
 				choices.push({
 					id,
 					label: `${variable.label} (${id})`,
@@ -202,7 +202,7 @@ function InternalSurfaceBySerialDropdown({ isOnBank, value, setValue }) {
 			choices.push({ id: 'self', label: 'Current surface' })
 		}
 
-		for (const surface of context) {
+		for (const surface of Object.values(context)) {
 			choices.push({
 				label: `${surface.name || surface.type} (${surface.id})`,
 				id: surface.id,
@@ -229,7 +229,7 @@ function InternalTriggerDropdown({ value, setValue }) {
 
 	const choices = useMemo(() => {
 		const choices = []
-		for (const trigger of context) {
+		for (const trigger of Object.values(context)) {
 			choices.push({
 				id: trigger.id,
 				label: trigger.title || `Trigger #${trigger.id}`,
