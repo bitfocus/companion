@@ -558,6 +558,7 @@
 	"resolutions": {
 		"**/osc/serialport": "9.2.1",
 		"**/osc/ws": "^7.5.7",
-		"node-gyp-build": "github:julusian/node-gyp-build#v4.4.1-julusian.0"
+		"node-gyp-build": "github:julusian/node-gyp-build#v4.4.1-julusian.0",
+		"freetype2": "npm:@julusian/freetype2#^1.0.0"
 	}
 }

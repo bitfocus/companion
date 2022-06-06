@@ -5620,14 +5620,13 @@ forwarded@0.2.0:
   resolved "https://registry.yarnpkg.com/forwarded/-/forwarded-0.2.0.tgz#2269936428aad4c15c7ebe9779a84bf0b2a81811"
   integrity sha512-buRG0fpBtRHSTCOASe6hD258tEubFoRLb4ZNA6NxMVHNw2gOcwHo9wyablzMzOA5z9xA9L1KNjk/Nt6MT9aYow==
 
-freetype2@^1.0.6:
-  version "1.0.6"
-  resolved "https://registry.yarnpkg.com/freetype2/-/freetype2-1.0.6.tgz#ca4cd8e3da2638142dfb33605c972d08721bea24"
-  integrity sha512-jfVNUD9fecnST+bNIIfdtsAwy9aQwMGYgkHJVaxDg/P0mgiZCJauASiBAdRUQFDeh9flbG8W/ogyCe51VYCchA==
+freetype2@^1.0.6, "freetype2@npm:@julusian/freetype2#^1.0.0":
+  version "1.0.0"
+  resolved "https://registry.yarnpkg.com/@julusian/freetype2/-/freetype2-1.0.0.tgz#eddbf878c63f175e441a7aeb655ac37cb0bd1270"
+  integrity sha512-vdwnk1OrBLGgglqEdAZHkUCQXN2casoVhMQmEz4BVF7eABwR2sF8dd1QctTl3wBkSqPa2WV9fo+1ko6ughzhKQ==
   dependencies:
-    bindings "^1.5.0"
-    node-addon-api "^3.0.2"
-    node-gyp-build "^4.2.3"
+    node-addon-api "^4.3.0"
+    node-gyp-build "^4.4.0"
 
 fresh@0.5.2:
   version "0.5.2"
@@ -8190,7 +8189,7 @@ node-forge@^0.10.0:
   resolved "https://registry.yarnpkg.com/node-forge/-/node-forge-0.10.0.tgz#32dea2afb3e9926f02ee5ce8794902691a676bf3"
   integrity sha512-PPmu8eEeG9saEUvI97fm4OYxXVB6bFvyNTyiUOBichBpFG8A1Ljw3bY62+5oOjDEMHRnd0Y7HQ+x7uzxOzC6JA==
 
-node-gyp-build@^4.2.3, node-gyp-build@^4.3.0, "node-gyp-build@github:julusian/node-gyp-build#v4.4.1-julusian.0":
+node-gyp-build@^4.3.0, node-gyp-build@^4.4.0, "node-gyp-build@github:julusian/node-gyp-build#v4.4.1-julusian.0":
   version "4.4.1-julusian.0"
   resolved "https://codeload.github.com/julusian/node-gyp-build/tar.gz/24d075561741025e9003a9c0f747ee5770a2c162"
 
