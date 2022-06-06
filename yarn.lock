@@ -4198,6 +4198,14 @@ commist@^1.0.0:
   version "1.0.2"
   resolved "https://codeload.github.com/bitfocus/companion-module-zenvideo-ndirouter/tar.gz/0e0a57e7b2da97f609cc779fff21ff87d47183ba"
 
+"companion-module-zoom-osc-iso@github:bitfocus/companion-module-zoom-osc-iso#v0.0.1":
+  version "1.0.0"
+  resolved "https://codeload.github.com/bitfocus/companion-module-zoom-osc-iso/tar.gz/32121c1a4b798e0bffd9d1e37ff643689e73c61b"
+  dependencies:
+    "@types/lodash" "^4.14.178"
+    lodash "^4.17.21"
+    osc "^2.4.3"
+
 component-bind@1.0.0:
   version "1.0.0"
   resolved "https://registry.yarnpkg.com/component-bind/-/component-bind-1.0.0.tgz#00c608ab7dcd93897c0009651b1d3a8e1e73bbd1"
@@ -8486,6 +8494,18 @@ osc@^2.4.0, osc@^2.4.1, osc@^2.4.2:
   optionalDependencies:
     serialport "9.2.0"
 
+osc@^2.4.3:
+  version "2.4.3"
+  resolved "https://registry.yarnpkg.com/osc/-/osc-2.4.3.tgz#4a2d1aafe3168e35580ebb6257911d113ab082d0"
+  integrity sha512-6FrgHg7DbL+e0YYOhqIa0mT4+2y4uG4K3PGFdhf75oSj1Zp2O93sgbw/T/O6bXNY3QCA3Skiy2OOdszSi45nGQ==
+  dependencies:
+    long "4.0.0"
+    slip "1.0.2"
+    wolfy87-eventemitter "5.2.9"
+    ws "8.5.0"
+  optionalDependencies:
+    serialport "10.4.0"
+
 osx-release@^1.0.0:
   version "1.1.0"
   resolved "https://registry.yarnpkg.com/osx-release/-/osx-release-1.1.0.tgz#f217911a28136949af1bf9308b241e2737d3cd6c"
@@ -9446,7 +9466,7 @@ serialize-error@^7.0.1:
   dependencies:
     type-fest "^0.13.1"
 
-serialport@9.2.0, serialport@9.2.1:
+serialport@10.4.0, serialport@9.2.0, serialport@9.2.1:
   version "9.2.1"
   resolved "https://registry.yarnpkg.com/serialport/-/serialport-9.2.1.tgz#9da02f6657ee9e2c8bd7642ff6c5c59a6a65d17e"
   integrity sha512-zX18SVSNRZvMrkxNvSnhqqag46MLQH517EaLSVv8PKSVnTFMzemRCfBdXbOY2XhtUqzpQq6ep2mR1t+AMhJssg==
@@ -11025,7 +11045,7 @@ write-file-atomic@^3.0.0:
     signal-exit "^3.0.2"
     typedarray-to-buffer "^3.1.5"
 
-ws@7.5.3, ws@^7.2.0, ws@^7.2.1, ws@^7.4.1, ws@^7.4.4, ws@^7.4.5, ws@^7.4.6, ws@^7.5.5, ws@^7.5.7:
+ws@7.5.3, ws@8.5.0, ws@^7.2.0, ws@^7.2.1, ws@^7.4.1, ws@^7.4.4, ws@^7.4.5, ws@^7.4.6, ws@^7.5.5, ws@^7.5.7:
   version "7.5.7"
   resolved "https://registry.yarnpkg.com/ws/-/ws-7.5.7.tgz#9e0ac77ee50af70d58326ecff7e85eb3fa375e67"
   integrity sha512-KMvVuFzpKBuiIXW3E4u3mySRO2/mCHSyZDJQM5NQ9Q9KHWHWh0NHgfbRMLLrceUK5qAL4ytALJbpRMjixFZh8A==
