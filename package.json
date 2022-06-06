@@ -275,7 +275,7 @@
 		"companion-module-elgato-keylight": "github:bitfocus/companion-module-elgato-keylight#v1.2.4",
 		"companion-module-epiphan-pearl": "github:bitfocus/companion-module-epiphan-pearl#v1.0.8",
 		"companion-module-esphome-api": "github:bitfocus/companion-module-esphome-api#v1.0.3",
-		"companion-module-etc-eos": "github:bitfocus/companion-module-etc-eos#v1.3.1",
+		"companion-module-etc-eos": "github:bitfocus/companion-module-etc-eos#v1.3.2",
 		"companion-module-extron-dxp": "github:bitfocus/companion-module-extron-dxp#v1.0.9",
 		"companion-module-extron-in1604": "github:bitfocus/companion-module-extron-in1604#v1.0.4",
 		"companion-module-extron-ipl-t-pcs4": "github:bitfocus/companion-module-extron-ipl-t-pcs4#v1.0.3",
