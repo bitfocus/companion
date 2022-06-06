@@ -283,3 +283,21 @@ export type OSCMetaArgument =
 	| { type: 's'; value: string }
 	| { type: 'b'; value: Uint8Array }
 export type OSCSomeArguments = OSCArgument | Array<OSCArgument> | OSCMetaArgument | Array<OSCMetaArgument>
+
+export interface CompanionInstanceHTTPRequest {
+	baseURL: string
+	body?: string
+	headers: Record<string, string>
+	hostname: string
+	ip: string
+	method: string
+	originalURL: string
+	path: string
+	query: Record<string, string>
+}
+
+export interface CompanionInstanceHTTPResponse {
+	status?: number
+	headers?: Record<string, any>
+	body?: string
+}
