@@ -3727,9 +3727,9 @@ commist@^1.0.0:
   version "1.0.3"
   resolved "https://codeload.github.com/bitfocus/companion-module-roland-v1200hd/tar.gz/fe08f010a549f09480dfa0a673e30030c00e08bf"
 
-"companion-module-roland-v600uhd@github:bitfocus/companion-module-roland-v600uhd#v1.0.5":
-  version "1.0.5"
-  resolved "https://codeload.github.com/bitfocus/companion-module-roland-v600uhd/tar.gz/d36dab8da0c22d476f472946084b7b46158b86af"
+"companion-module-roland-v600uhd@github:bitfocus/companion-module-roland-v600uhd#v1.0.6":
+  version "1.0.6"
+  resolved "https://codeload.github.com/bitfocus/companion-module-roland-v600uhd/tar.gz/4536a61a8c3b361947d0d31ed66f94dfbcaf1b4c"
 
 "companion-module-roland-v60hd@github:bitfocus/companion-module-roland-v60hd#v1.0.12":
   version "1.0.12"
