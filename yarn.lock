@@ -3567,6 +3567,10 @@ commist@^1.0.0:
   version "1.2.1"
   resolved "https://codeload.github.com/bitfocus/companion-module-noismada-octopusshowcontrol/tar.gz/7434eb00233bde285562d7be4ff57117c0b5aa0d"
 
+"companion-module-notion-timestamp@github:bitfocus/companion-module-notion-timestamp#v1.0.0":
+  version "1.0.0"
+  resolved "https://codeload.github.com/bitfocus/companion-module-notion-timestamp/tar.gz/df80f3a69a5d853bb6e70269552133cfc9dbb5ed"
+
 "companion-module-novastar-controller@github:bitfocus/companion-module-novastar-controller#v1.0.8":
   version "1.0.8"
   resolved "https://codeload.github.com/bitfocus/companion-module-novastar-controller/tar.gz/425870f219bc866dd6d510bd7f6924ab350fbd27"
