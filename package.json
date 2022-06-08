@@ -314,7 +314,7 @@
 		"companion-module-globalcache-itac-sl": "github:bitfocus/companion-module-globalcache-itac-sl#v1.0.6",
 		"companion-module-grassvalley-amp": "github:bitfocus/companion-module-grassvalley-amp#v1.1.6",
 		"companion-module-greenhippo-hippotizer": "github:bitfocus/companion-module-greenhippo-hippotizer#v1.0.4",
-		"companion-module-groupme-webhooks": "github:bitfocus/companion-module-groupme-webhooks#v1.0.0",
+		"companion-module-groupme-webhooks": "github:bitfocus/companion-module-groupme-webhooks#v1.0.1",
 		"companion-module-h2r-graphics": "github:bitfocus/companion-module-h2r-graphics#v2.0.1",
 		"companion-module-haivision-connectdvr": "github:bitfocus/companion-module-haivision-connectdvr#v1.1.6",
 		"companion-module-haivision-kbencoder": "github:bitfocus/companion-module-haivision-kbencoder#v1.0.3",
