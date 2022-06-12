@@ -2986,9 +2986,9 @@ commist@^1.0.0:
   version "1.0.4"
   resolved "https://codeload.github.com/bitfocus/companion-module-digitalprojection-highlight/tar.gz/758784edf593a9c3525efbfc37bec1d3a7970f98"
 
-"companion-module-discord-api@github:bitfocus/companion-module-discord-api#v0.1.0":
-  version "0.1.0"
-  resolved "https://codeload.github.com/bitfocus/companion-module-discord-api/tar.gz/5301a90833e15d44d6e679cf1401ae8e1c3d11fa"
+"companion-module-discord-api@github:bitfocus/companion-module-discord-api#v0.1.1":
+  version "0.1.1"
+  resolved "https://codeload.github.com/bitfocus/companion-module-discord-api/tar.gz/ab25979432b2488dd2405bab0422bbd288c295bb"
   dependencies:
     got-cjs "^12.0.1"
 
