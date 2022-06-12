@@ -251,7 +251,7 @@
 		"companion-module-dashare-multiplay": "github:bitfocus/companion-module-dashare-multiplay#v1.0.2",
 		"companion-module-datapath-fx4": "github:bitfocus/companion-module-datapath-fx4#v1.0.1",
 		"companion-module-dataprobe-iboot-pdu": "github:bitfocus/companion-module-dataprobe-iboot-pdu#v1.0.0",
-		"companion-module-dataton-watchout": "github:bitfocus/companion-module-dataton-watchout#v1.2.4",
+		"companion-module-dataton-watchout": "github:bitfocus/companion-module-dataton-watchout#v1.3.0",
 		"companion-module-datavideo-dvip": "github:bitfocus/companion-module-datavideo-dvip#v1.0.0",
 		"companion-module-datavideo-visca": "github:bitfocus/companion-module-datavideo-visca#v1.0.5",
 		"companion-module-dcc-ex-commandstation": "github:bitfocus/companion-module-dcc-ex-commandstation#v1.0.0",

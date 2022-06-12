@@ -2924,9 +2924,9 @@ commist@^1.0.0:
   dependencies:
     axios "^0.25.0"
 
-"companion-module-dataton-watchout@github:bitfocus/companion-module-dataton-watchout#v1.2.4":
-  version "1.2.4"
-  resolved "https://codeload.github.com/bitfocus/companion-module-dataton-watchout/tar.gz/07365727c376d5cd45e6e192b7c22f3e78035233"
+"companion-module-dataton-watchout@github:bitfocus/companion-module-dataton-watchout#v1.3.0":
+  version "1.3.0"
+  resolved "https://codeload.github.com/bitfocus/companion-module-dataton-watchout/tar.gz/af9a154b611d3df84b5a0feab1754076058e567b"
 
 "companion-module-datavideo-dvip@github:bitfocus/companion-module-datavideo-dvip#v1.0.0":
   version "1.0.0"
