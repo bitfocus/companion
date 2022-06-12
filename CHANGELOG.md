@@ -1,5 +1,17 @@
 # Bitfocus Companion
 
+## Companion v2.2.2 - Release Notes
+
+### 🐞 MODULE FIXES
+
+- etc-eos
+- generic-pjlink
+- groupme-webhooks
+- lgtv-display
+- panasonic-projector
+- roland-v600uhd
+- studiocoast-vmix
+
 ## Companion v2.2.1 - Release Notes
 
 ### 📣 CORE FEATURES AND IMPROVEMENTS
