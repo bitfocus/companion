@@ -3619,9 +3619,9 @@ commist@^1.0.0:
   version "1.0.0"
   resolved "https://codeload.github.com/bitfocus/companion-module-panasonic-lumix/tar.gz/e740905246e3c97f6ecceb73f2b52a1ec46f34a1"
 
-"companion-module-panasonic-projector@github:bitfocus/companion-module-panasonic-projector#v1.0.3":
-  version "1.0.3"
-  resolved "https://codeload.github.com/bitfocus/companion-module-panasonic-projector/tar.gz/51635bfee2f5a8448640da424cf509681c14f24f"
+"companion-module-panasonic-projector@github:bitfocus/companion-module-panasonic-projector#v1.0.4":
+  version "1.0.4"
+  resolved "https://codeload.github.com/bitfocus/companion-module-panasonic-projector/tar.gz/df4300e4a820fa1df84a40db34dc892afcaec299"
   dependencies:
     ntcontrol-connection "^0.2.0"
 
