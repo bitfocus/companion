@@ -3679,9 +3679,9 @@ commist@^1.0.0:
   version "1.0.4"
   resolved "https://codeload.github.com/bitfocus/companion-module-pangolin-beyond/tar.gz/d29771f61951553842c0ced62ac7ee57e2b64cc2"
 
-"companion-module-phillips-hue@github:bitfocus/companion-module-phillips-hue#v0.0.6":
-  version "0.0.6"
-  resolved "https://codeload.github.com/bitfocus/companion-module-phillips-hue/tar.gz/49bdc2bdcbb28962175d7f458eafaa42ad926236"
+"companion-module-phillips-hue@github:bitfocus/companion-module-phillips-hue#v0.1.0":
+  version "0.1.0"
+  resolved "https://codeload.github.com/bitfocus/companion-module-phillips-hue/tar.gz/94e1f5eb6a142ef6e5d6b9be7ed698da1b0dbd62"
   dependencies:
     node-hue-api "^4.0.11"
 
