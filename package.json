@@ -475,7 +475,7 @@
 		"companion-module-sounddevices-pixnet": "github:bitfocus/companion-module-sounddevices-pixnet#v1.0.1",
 		"companion-module-spotify-remote": "github:bitfocus/companion-module-spotify-remote#v1.0.11",
 		"companion-module-spx-gc": "github:bitfocus/companion-module-spx-gc#v1.0.5",
-		"companion-module-studiocoast-vmix": "github:bitfocus/companion-module-studiocoast-vmix#v2.0.14",
+		"companion-module-studiocoast-vmix": "github:bitfocus/companion-module-studiocoast-vmix#v2.0.15",
 		"companion-module-symetrix-dsp": "github:bitfocus/companion-module-symetrix-dsp#v1.5.1",
 		"companion-module-tallyma-wirelesstally": "github:bitfocus/companion-module-tallyma-wirelesstally#v1.0.5",
 		"companion-module-tascam-bdmp1": "github:bitfocus/companion-module-tascam-bdmp1#v0.1.8",
