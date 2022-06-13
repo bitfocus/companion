@@ -4,7 +4,6 @@ const rimraf = require('rimraf')
 const util = require('util')
 const { exec } = require('child_process')
 const fs = require('fs')
-const pall = require('p-all')
 
 const exec2 = util.promisify(exec)
 const copy2 = util.promisify(fs.copyFile)
@@ -55,17 +54,10 @@ module.exports = async function (context) {
 
 	console.log('installing')
 
-	await pall(
-		[
-			...modules.map((m) => async () => {
-				// TODO - if a dir and has package.json?
-				await runForDir(moduleDir, srcModuleDir, m)
-			}),
-		],
-		{
-			concurrency: 1, // Higher values cause cache errors
-		}
-	)
+	for (const m of modules) {
+		// TODO - if a dir and has package.json?
+		await runForDir(moduleDir, srcModuleDir, m)
+	}
 
 	console.log('repacking')
 	await asar.createPackage(tmpApp, appAsar)
