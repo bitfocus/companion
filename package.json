@@ -521,7 +521,7 @@
 		"companion-module-yamaha-rcp": "github:bitfocus/companion-module-yamaha-rcp#v1.6.5",
 		"companion-module-youtube-live": "github:bitfocus/companion-module-youtube-live#v1.1.5",
 		"companion-module-zenvideo-ndirouter": "github:bitfocus/companion-module-zenvideo-ndirouter#v1.0.2",
-		"companion-module-zoom-osc-iso": "github:bitfocus/companion-module-zoom-osc-iso#v0.0.1",
+		"companion-module-zoom-osc-iso": "github:bitfocus/companion-module-zoom-osc-iso#v0.0.3",
 		"debug": "^4.3.4",
 		"elgato-stream-deck": "^4.1.0",
 		"emberplus-connection": "^0.1.2",
