@@ -891,10 +891,10 @@
   dependencies:
     defer-to-connect "^2.0.1"
 
-"@theatrixx/xpresscue-connect@1.0.0":
-  version "1.0.0"
-  resolved "https://registry.yarnpkg.com/@theatrixx/xpresscue-connect/-/xpresscue-connect-1.0.0.tgz#2f271cdfb97784d290505dfb865e33d84a26b5ba"
-  integrity sha512-XqvmjfxfMye0p5N2NsG5KucytiPBGGLyGiWrHhBlml7N9clNCx+hY39re/txlkKUURYItvX8npwzAdLS7S5D/w==
+"@theatrixx/xpresscue-connect@1.1.0":
+  version "1.1.0"
+  resolved "https://registry.yarnpkg.com/@theatrixx/xpresscue-connect/-/xpresscue-connect-1.1.0.tgz#aec2c42c2962fbb389ba0fc521709a8e52634837"
+  integrity sha512-hyhvNC7sxq35X3dGcm7a25+05yZbbqqAp7mRfSgCE2i8/L3fZ/iCSXYmQ5z5pyyO/rH+ZjkvC2WxllIH8xUiew==
   dependencies:
     axios "^0.24.0"
     lodash "^4.17.21"
@@ -4004,11 +4004,11 @@ commist@^1.0.0:
   version "1.0.3"
   resolved "https://codeload.github.com/bitfocus/companion-module-tesmart-hdmimatrix/tar.gz/4d107bd374aa29f405e0a234f69c7dc0931e1a5f"
 
-"companion-module-theatrixx-xpresscue@github:bitfocus/companion-module-theatrixx-xpresscue#v1.0.0":
-  version "1.0.0"
-  resolved "https://codeload.github.com/bitfocus/companion-module-theatrixx-xpresscue/tar.gz/22092ef9a439100c3e2967869f7a518dbe979247"
+"companion-module-theatrixx-xpresscue@github:bitfocus/companion-module-theatrixx-xpresscue#v1.1.1":
+  version "1.1.1"
+  resolved "https://codeload.github.com/bitfocus/companion-module-theatrixx-xpresscue/tar.gz/43172af9cd22b5085298350f6311f0b92ac76bf5"
   dependencies:
-    "@theatrixx/xpresscue-connect" "1.0.0"
+    "@theatrixx/xpresscue-connect" "1.1.0"
     rxjs "6"
 
 "companion-module-thelightingcontroller@github:bitfocus/companion-module-thelightingcontroller#v1.1.4":
