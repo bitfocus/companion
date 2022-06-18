@@ -177,6 +177,7 @@ export function EditButton({ page, bank, onKeyUp }) {
 								orderCommand="bank_update_action_option_order"
 								setDelay="bank_update_action_delay"
 								deleteCommand="bank_action_delete"
+								learnCommand="bank_action_learn"
 								addPlaceholder="+ Add key down/on action"
 								loadStatusKey={'downActions'}
 								setLoadStatus={addLoadStatus}
@@ -194,6 +195,7 @@ export function EditButton({ page, bank, onKeyUp }) {
 								orderCommand="bank_release_action_update_option_order"
 								setDelay="bank_update_release_action_delay"
 								deleteCommand="bank_release_action_delete"
+								learnCommand="bank_release_action_learn"
 								addPlaceholder="+ Add key up/off action"
 								loadStatusKey={'releaseActions'}
 								setLoadStatus={addLoadStatus}

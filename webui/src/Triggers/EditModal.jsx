@@ -19,6 +19,7 @@ import shortid from 'shortid'
 import { ActionsPanelInner } from '../Buttons/EditButton/ActionsPanel'
 import { CheckboxInputField } from '../Components'
 import { AddFeedbacksModal } from '../Buttons/EditButton/AddModal'
+import { useEffect } from 'react'
 
 function getPluginSpecDefaults(pluginOptions) {
 	const config = {}
@@ -58,6 +59,8 @@ function getFeedbackDefaults() {
 export function TriggerEditModal({ doClose, doSave, item, plugins }) {
 	const context = useContext(StaticContext)
 
+	const actionsRef = useRef()
+
 	const [config, setConfig] = useState({})
 	const updateConfig = useCallback((id, val) => {
 		setConfig((oldConfig) => ({
@@ -65,6 +68,10 @@ export function TriggerEditModal({ doClose, doSave, item, plugins }) {
 			[id]: val,
 		}))
 	}, [])
+
+	useEffect(() => {
+		actionsRef.current = config.actions
+	}, [config.actions])
 
 	const pluginSpec = plugins?.find((p) => p.type === config.type)
 
@@ -131,6 +138,38 @@ export function TriggerEditModal({ doClose, doSave, item, plugins }) {
 		[context.socket, config, updateConfig]
 	)
 
+	const doLearn = useCallback(
+		(actionId) => {
+			if (actionsRef.current) {
+				const action = actionsRef.current.find((a) => a.id === actionId)
+				if (action) {
+					socketEmit(context.socket, 'action_learn_single', [action])
+						.then(([newOptions]) => {
+							setActions((oldActions) => {
+								const index = oldActions.findIndex((a) => a.id === actionId)
+								if (index === -1) {
+									return oldActions
+								} else {
+									const newActions = [...oldActions]
+									newActions[index] = {
+										...newActions[index],
+										options: newOptions,
+									}
+									return newActions
+								}
+							})
+						})
+						.catch((e) => {
+							console.error('Learn failed', e)
+						})
+				} else {
+					console.error('Not found')
+				}
+			}
+		},
+		[context.socket]
+	)
+
 	return (
 		<CModal show={true} onClose={doClose} size="lg">
 			<CForm onSubmit={doSaveInner} className={'edit-button-panel'}>
@@ -194,6 +233,7 @@ export function TriggerEditModal({ doClose, doSave, item, plugins }) {
 						actions={config.actions || []}
 						setActions={setActions}
 						addAction={addActionSelect}
+						emitLearn={doLearn}
 					/>
 				</CModalBody>
 				<CModalFooter>

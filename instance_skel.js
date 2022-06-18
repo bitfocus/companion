@@ -193,6 +193,7 @@ instance.prototype.setActions = function (actions) {
 				if (action && action.options) {
 					action.options = serializeIsVisibleFn(action.options)
 				}
+				if (action?.learn) action.hasLearn = true
 				return [id, action]
 			})
 		)

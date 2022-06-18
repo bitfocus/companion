@@ -29,6 +29,7 @@ export function ActionsPanel({
 	orderCommand,
 	setDelay,
 	deleteCommand,
+	learnCommand,
 	addPlaceholder,
 	setLoadStatus,
 	loadStatusKey,
@@ -52,7 +53,29 @@ export function ActionsPanel({
 				setLoadStatus(loadStatusKey, `Failed to load ${loadStatusKey}`)
 				console.error('Failed to load bank actions', e)
 			})
-	}, [context.socket, getCommand, setLoadStatus, loadStatusKey, page, bank, reloadToken])
+
+		const learnHandler = (actionId, actionOptions) => {
+			setActions((oldActions) => {
+				const index = oldActions.findIndex((a) => a.id === actionId)
+				if (index === -1) {
+					return oldActions
+				} else {
+					const newActions = [...oldActions]
+					newActions[index] = {
+						...newActions[index],
+						options: actionOptions,
+					}
+					return newActions
+				}
+			})
+		}
+
+		context.socket.on(`${learnCommand}:result`, learnHandler)
+
+		return () => {
+			context.socket.off(`${learnCommand}:result`, learnHandler)
+		}
+	}, [context.socket, getCommand, setLoadStatus, loadStatusKey, page, bank, reloadToken, learnCommand])
 
 	const emitUpdateOption = useCallback(
 		(actionId, key, val) => {
@@ -72,6 +95,13 @@ export function ActionsPanel({
 			context.socket.emit(deleteCommand, page, bank, actionId)
 		},
 		[context.socket, deleteCommand, page, bank]
+	)
+
+	const emitLearn = useCallback(
+		(actionId) => {
+			context.socket.emit(learnCommand, page, bank, actionId)
+		},
+		[context.socket, learnCommand, page, bank]
 	)
 
 	const emitOrder = useCallback(
@@ -108,6 +138,7 @@ export function ActionsPanel({
 				emitSetDelay={emitSetDelay}
 				emitDelete={emitDelete}
 				emitOrder={emitOrder}
+				emitLearn={emitLearn}
 				addAction={addAction}
 			/>
 		</>
@@ -125,6 +156,7 @@ export function ActionsPanelInner({
 	emitSetDelay,
 	emitDelete,
 	emitOrder,
+	emitLearn,
 	addAction,
 }) {
 	const addActionsRef = useRef(null)
@@ -270,6 +302,7 @@ export function ActionsPanelInner({
 							doDelete={doDelete}
 							doDelay={doDelay}
 							moveCard={moveCard}
+							doLearn={emitLearn}
 						/>
 					))}
 				</tbody>
@@ -285,12 +318,13 @@ export function ActionsPanelInner({
 	)
 }
 
-function ActionTableRow({ action, isOnBank, index, dragId, setValue, doDelete, doDelay, moveCard }) {
+function ActionTableRow({ action, isOnBank, index, dragId, setValue, doDelete, doDelay, moveCard, doLearn }) {
 	const instancesContext = useContext(InstancesContext)
 	const actionsContext = useContext(ActionsContext)
 
 	const innerDelete = useCallback(() => doDelete(action.id), [action.id, doDelete])
 	const innerDelay = useCallback((delay) => doDelay(action.id, delay), [doDelay, action.id])
+	const innerLearn = useCallback(() => doLearn(action.id), [doLearn, action.id])
 
 	const [optionVisibility, setOptionVisibility] = useState({})
 
@@ -426,6 +460,14 @@ function ActionTableRow({ action, isOnBank, index, dragId, setValue, doDelete, d
 						<CButton color="danger" size="sm" onClick={innerDelete} title="Remove action">
 							<FontAwesomeIcon icon={faTrash} />
 						</CButton>
+						&nbsp;
+						{actionSpec?.hasLearn ? (
+							<CButton color="info" size="sm" onClick={innerLearn} title="Capture the current values from the device">
+								Learn
+							</CButton>
+						) : (
+							''
+						)}
 					</div>
 
 					<div className="cell-option">

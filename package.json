@@ -537,6 +537,7 @@
 		"node-fetch": "^2.6.7",
 		"node-rest-client": "^3.1.1",
 		"osc": "^2.4.2",
+		"p-timeout": "^4.1.0",
 		"pngjs": "^3.3.3",
 		"rimraf": "^3.0.2",
 		"selfsigned": "^2.0.1",
