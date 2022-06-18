@@ -68,7 +68,6 @@ export interface CompanionAction {
 
 	/**
 	 * The user requested to 'learn' the values for this action.
-	 *
 	 */
 	learn?: (
 		action: CompanionActionEvent
@@ -209,6 +208,13 @@ export interface CompanionFeedbackBase<TRes> {
 	) => TRes
 	subscribe?: (feedback: CompanionFeedbackEvent) => void
 	unsubscribe?: (feedback: CompanionFeedbackEvent) => void
+
+	/**
+	 * The user requested to 'learn' the values for this feedback.
+	 */
+	learn?: (
+		feedback: CompanionFeedbackEvent
+	) => CompanionOptionValues | undefined | Promise<CompanionOptionValues | undefined>
 }
 export interface CompanionFeedbackBoolean extends CompanionFeedbackBase<boolean> {
 	type: 'boolean'

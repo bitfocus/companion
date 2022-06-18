@@ -55,19 +55,21 @@ export function ActionsPanel({
 			})
 
 		const learnHandler = (actionId, actionOptions) => {
-			setActions((oldActions) => {
-				const index = oldActions.findIndex((a) => a.id === actionId)
-				if (index === -1) {
-					return oldActions
-				} else {
-					const newActions = [...oldActions]
-					newActions[index] = {
-						...newActions[index],
-						options: actionOptions,
+			if (actionId && actionOptions) {
+				setActions((oldActions) => {
+					const index = oldActions.findIndex((a) => a.id === actionId)
+					if (index === -1) {
+						return oldActions
+					} else {
+						const newActions = [...oldActions]
+						newActions[index] = {
+							...newActions[index],
+							options: actionOptions,
+						}
+						return newActions
 					}
-					return newActions
-				}
-			})
+				})
+			}
 		}
 
 		context.socket.on(`${learnCommand}:result`, learnHandler)

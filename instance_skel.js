@@ -247,6 +247,7 @@ instance.prototype.setFeedbackDefinitions = function (feedbacks) {
 				if (feedback && feedback.options) {
 					feedback.options = serializeIsVisibleFn(feedback.options)
 				}
+				if (feedback?.learn) feedback.hasLearn = true
 				return [id, feedback]
 			})
 		)
