@@ -143,7 +143,7 @@
 		"cross-env": "^7.0.3",
 		"electron": "13.6.6",
 		"electron-builder": "22.11.7",
-		"electron-notarize": "1.1.1",
+		"electron-notarize": "1.2.1",
 		"jest": "^27.5.1",
 		"meow": "^10.1.2",
 		"nodemon": "2.0.7",
@@ -544,7 +544,7 @@
 		"shortid": "^2.2.16",
 		"socket.io": "^4.5.1",
 		"strip-ansi": "^5.2.0",
-		"systeminformation": "^5.11.16",
+		"systeminformation": "^5.11.21",
 		"websocket": "^1.0.34",
 		"xkeys": "^2.3.4",
 		"zx": "^4.3.0"
