@@ -18,7 +18,7 @@ import { useDrag, useDrop } from 'react-dnd'
 import { GenericConfirmModal } from '../../Components/GenericConfirmModal'
 import { AddActionsModal } from './AddModal'
 
-export function ActionsPanel({ controlId, page, bank, set, actions, dragId, addPlaceholder }) {
+export function ActionsPanel({ controlId, set, actions, dragId, addPlaceholder }) {
 	const context = useContext(StaticContext)
 
 	const confirmModal = useRef()
