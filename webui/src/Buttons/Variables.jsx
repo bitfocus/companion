@@ -176,7 +176,7 @@ function CustomVariablesList({ setShowCustom }) {
 	)
 	const setCurrentValue = useCallback(
 		(name, value) => {
-			socketEmit2(context.socket, 'custom-variables::set-', [name, value]).catch((e) => {
+			socketEmit2(context.socket, 'custom-variables::set-current', [name, value]).catch((e) => {
 				console.error('Failed to update variable')
 			})
 		},
