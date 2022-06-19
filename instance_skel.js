@@ -193,6 +193,7 @@ instance.prototype.setActions = function (actions) {
 				if (action && action.options) {
 					action.options = serializeIsVisibleFn(action.options)
 				}
+				if (action?.learn) action.hasLearn = true
 				return [id, action]
 			})
 		)
@@ -246,6 +247,7 @@ instance.prototype.setFeedbackDefinitions = function (feedbacks) {
 				if (feedback && feedback.options) {
 					feedback.options = serializeIsVisibleFn(feedback.options)
 				}
+				if (feedback?.learn) feedback.hasLearn = true
 				return [id, feedback]
 			})
 		)

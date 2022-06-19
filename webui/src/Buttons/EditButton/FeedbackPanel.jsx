@@ -57,6 +57,30 @@ export const FeedbacksPanel = function ({
 				setLoadStatus(loadStatusKey, 'Failed to load feedbacks')
 				console.error('Failed to load bank feedbacks', e)
 			})
+
+		const learnHandler = (feedbackId, feedbackOptions) => {
+			if (feedbackId && feedbackOptions) {
+				setFeedbacks((oldFeedbacks) => {
+					const index = oldFeedbacks.findIndex((a) => a.id === feedbackId)
+					if (index === -1) {
+						return oldFeedbacks
+					} else {
+						const newFeedbacks = [...oldFeedbacks]
+						newFeedbacks[index] = {
+							...newFeedbacks[index],
+							options: feedbackOptions,
+						}
+						return newFeedbacks
+					}
+				})
+			}
+		}
+
+		context.socket.on(`bank_feedback_learn:result`, learnHandler)
+
+		return () => {
+			context.socket.off(`bank_feedback_learn:result`, learnHandler)
+		}
 	}, [context.socket, getCommand, setLoadStatus, loadStatusKey, page, bank, reloadToken])
 
 	const setValue = useCallback(
@@ -95,6 +119,13 @@ export const FeedbacksPanel = function ({
 			})
 		},
 		[context.socket, page, bank, deleteCommand, deleteFeedback]
+	)
+
+	const doLearn = useCallback(
+		(feedbackId) => {
+			context.socket.emit('bank_feedback_learn', page, bank, feedbackId)
+		},
+		[context.socket, page, bank]
 	)
 
 	const addFeedback = useCallback(
@@ -166,6 +197,7 @@ export const FeedbacksPanel = function ({
 							feedback={a}
 							setValue={setValue}
 							doDelete={doDelete}
+							doLearn={doLearn}
 							dragId={dragId}
 							moveCard={moveCard}
 							bankFeedbacksChanged={setFeedbacks}
@@ -184,10 +216,22 @@ export const FeedbacksPanel = function ({
 	)
 }
 
-function FeedbackTableRow({ feedback, page, bank, index, dragId, moveCard, setValue, doDelete, bankFeedbacksChanged }) {
+function FeedbackTableRow({
+	feedback,
+	page,
+	bank,
+	index,
+	dragId,
+	moveCard,
+	setValue,
+	doDelete,
+	doLearn,
+	bankFeedbacksChanged,
+}) {
 	const context = useContext(StaticContext)
 
 	const innerDelete = useCallback(() => doDelete(feedback.id), [feedback.id, doDelete])
+	const innerLearn = useCallback(() => doLearn(feedback.id), [doLearn, feedback.id])
 
 	const ref = useRef(null)
 	const [, drop] = useDrop({
@@ -282,6 +326,7 @@ function FeedbackTableRow({ feedback, page, bank, index, dragId, moveCard, setVa
 					feedback={feedback}
 					setValue={setValue}
 					innerDelete={innerDelete}
+					innerLearn={innerLearn}
 					setSelectedStyleProps={setSelectedStyleProps}
 					setStylePropsValue={setStylePropsValue}
 				/>
@@ -295,6 +340,7 @@ export function FeedbackEditor({
 	isOnBank,
 	setValue,
 	innerDelete,
+	innerLearn,
 	setSelectedStyleProps,
 	setStylePropsValue,
 }) {
@@ -357,6 +403,14 @@ export function FeedbackEditor({
 				<CButton color="danger" size="sm" onClick={innerDelete} title="Remove action">
 					<FontAwesomeIcon icon={faTrash} />
 				</CButton>
+				&nbsp;
+				{feedbackSpec?.hasLearn ? (
+					<CButton color="info" size="sm" onClick={innerLearn} title="Capture the current values from the device">
+						Learn
+					</CButton>
+				) : (
+					''
+				)}
 			</div>
 
 			<div className="cell-option">
