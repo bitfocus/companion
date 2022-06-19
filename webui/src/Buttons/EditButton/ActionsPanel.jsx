@@ -389,8 +389,12 @@ function ActionTableRow({ action, isOnBank, index, dragId, setValue, doDelete, d
 		const options = actionSpec?.options ?? []
 
 		for (const option of options) {
-			if (typeof option.isVisibleFn === 'string' && typeof option.isVisible !== 'function') {
-				option.isVisible = sandbox(option.isVisibleFn)
+			try {
+				if (typeof option.isVisibleFn === 'string' && typeof option.isVisible !== 'function') {
+					option.isVisible = sandbox(option.isVisibleFn)
+				}
+			} catch (e) {
+				console.error('Failed to process isVisibleFn', e)
 			}
 		}
 	}, [actionSpec])
@@ -404,8 +408,12 @@ function ActionTableRow({ action, isOnBank, index, dragId, setValue, doDelete, d
 		}
 
 		for (const option of options) {
-			if (typeof option.isVisible === 'function') {
-				visibility[option.id] = option.isVisible(action)
+			try {
+				if (typeof option.isVisible === 'function') {
+					visibility[option.id] = option.isVisible(action)
+				}
+			} catch (e) {
+				console.error('Failed to check visibility', e)
 			}
 		}
 
