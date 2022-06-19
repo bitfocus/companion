@@ -3,7 +3,7 @@ import { EventEmitter } from 'events'
 
 export interface CompanionSystem extends EventEmitter {}
 
-export type InputValue = number | string | boolean
+export type InputValue = number | string | boolean | Array<string | number>
 
 export type CompanionBank = CompanionBankPage | CompanionBankPNG | CompanionBankPreset
 

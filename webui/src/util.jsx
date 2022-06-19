@@ -112,7 +112,7 @@ function ErrorFallback({ error, resetErrorBoundary }) {
 	return (
 		<CAlert color="danger">
 			<p>Something went wrong:</p>
-			<pre>{error.message}</pre>
+			<pre>{error?.message ?? ''}</pre>
 			<CButton color="primary" size="sm" onClick={resetErrorBoundary}>
 				Try again
 			</CButton>
