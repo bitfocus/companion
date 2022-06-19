@@ -3,9 +3,11 @@ import { CButton } from '@coreui/react'
 import { StaticContext, InstancesContext, VariableDefinitionsContext, socketEmit2 } from '../util'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faDollarSign, faQuestionCircle, faBug } from '@fortawesome/free-solid-svg-icons'
+import jsonPatch from 'fast-json-patch'
 
 import { InstanceVariablesModal } from './InstanceVariablesModal'
 import { GenericConfirmModal } from '../Components/GenericConfirmModal'
+import { cloneDeep } from 'lodash-es'
 
 export function InstancesList({ showHelp, doConfigureInstance }) {
 	const context = useContext(StaticContext)
@@ -17,11 +19,23 @@ export function InstancesList({ showHelp, doConfigureInstance }) {
 	const variablesModalRef = useRef()
 
 	useEffect(() => {
-		context.socket.on('instance_status', setInstanceStatus)
-		context.socket.emit('instance_status_get')
+		socketEmit2(context.socket, 'instance_status:get', [])
+			.then((statuses) => {
+				setInstanceStatus(statuses)
+			})
+			.catch((e) => {
+				console.error(`Failed to load instance statuses`, e)
+			})
+
+		const patchStatuses = (patch) => {
+			setInstanceStatus((oldStatuses) => {
+				return jsonPatch.applyPatch(cloneDeep(oldStatuses) || {}, patch).newDocument
+			})
+		}
+		context.socket.on('instance_status:patch', patchStatuses)
 
 		return () => {
-			context.socket.off('instance_status', setInstanceStatus)
+			context.socket.off('instance_status:patch', patchStatuses)
 		}
 	}, [context.socket])
 

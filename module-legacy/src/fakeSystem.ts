@@ -86,7 +86,7 @@ export function convertInputField(input: SomeCompanionInputField): Complete<Modu
 				default: input.default,
 				required: input.required,
 				regex: input.regex,
-				useVariables: false,
+				// useVariables: false,
 			}
 		case 'textwithvariables':
 			return {
@@ -95,7 +95,7 @@ export function convertInputField(input: SomeCompanionInputField): Complete<Modu
 				default: input.default,
 				required: undefined,
 				regex: undefined,
-				useVariables: false,
+				// useVariables: false,
 			}
 		case 'number':
 			return {
