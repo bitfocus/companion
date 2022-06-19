@@ -144,12 +144,6 @@ function UserConfigTable() {
 
 				<tr>
 					<td colSpan="2" className="settings-category">
-						Logging
-					</td>
-				</tr>
-
-				<tr>
-					<td colSpan="2" className="settings-category">
 						Devices
 					</td>
 				</tr>

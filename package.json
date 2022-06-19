@@ -6,7 +6,7 @@
 	"type": "module",
 	"private": true,
 	"scripts": {
-		"dev": "yarn build:writefile && cross-env DEVELOPER=1 nodemon --ignore './webui/' --ignore './launcher/' --ignore './dist/' -- main.js --bind-address 127.0.0.1 --extra-module-path=./module-local-dev",
+		"dev": "yarn build:writefile && cross-env DEVELOPER=1 nodemon --ignore './webui/' --ignore './launcher/' --ignore './dist/' -- main.js --admin-address 127.0.0.1 --extra-module-path=./module-local-dev",
 		"update": "./tools/update.sh",
 		"dist:webui": "yarn --cwd webui build",
 		"dist": "zx ./tools/build/complete.mjs",
@@ -68,7 +68,6 @@
 		"lodash-es": "^4.17.21",
 		"moment": "^2.29.3",
 		"nanoid": "^4.0.0",
-		"node-fetch": "^2.6.7",
 		"node-machine-id": "^1.1.12",
 		"osc": "^2.4.3",
 		"p-queue": "^7.1.0",

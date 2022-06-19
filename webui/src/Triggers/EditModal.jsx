@@ -46,7 +46,7 @@ function getFeedbackDefaults() {
 		{
 			id: nanoid(),
 			type: 'variable_value',
-			instance_id: 'bitfocus-companion',
+			instance_id: 'internal',
 			options: {
 				variable: 'internal:time_hms',
 				op: 'eq',

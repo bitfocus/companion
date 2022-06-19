@@ -758,11 +758,6 @@
     "@serialport/bindings-interface" "1.2.1"
     debug "^4.3.2"
 
-"@silvia-odwyer/photon-node@^0.3.1":
-  version "0.3.1"
-  resolved "https://registry.yarnpkg.com/@silvia-odwyer/photon-node/-/photon-node-0.3.1.tgz#d82c6af528e902d4bd7a899fb22b24c1edd45bce"
-  integrity sha512-Q4SRhdupqOiDQKZZbQy4P5GqePUcS+Zv6SB3YD5ZTQVKZ9BLXasSG76dPccK3wZ9aU0vEUEypCalLy41Q7sVDA==
-
 "@sinclair/typebox@^0.23.3":
   version "0.23.5"
   resolved "https://registry.yarnpkg.com/@sinclair/typebox/-/typebox-0.23.5.tgz#93f7b9f4e3285a7a9ade7557d9a8d36809cbc47d"
@@ -4227,7 +4222,7 @@ node-api-headers@^0.0.1:
   resolved "https://registry.yarnpkg.com/node-api-headers/-/node-api-headers-0.0.1.tgz#e49821048943e50d5b93bc12ada0dd072d2b0769"
   integrity sha512-eRxckUSXMRQRV69h+ksfleQzR3BdRwkJuc/Y65KFFwhibC5G1y6wgytYW2WWTB/oG1bt+pf2RwjZDYC0xKqgqQ==
 
-node-fetch@^2.6.1, node-fetch@^2.6.7:
+node-fetch@^2.6.1:
   version "2.6.7"
   resolved "https://registry.yarnpkg.com/node-fetch/-/node-fetch-2.6.7.tgz#24de9fba827e3b4ae44dc8b20256a379160052ad"
   integrity sha512-ZjMPFEfVx5j+y2yF35Kzx5sF7kDzxuDj6ziH4FFbOp87zKDZNx8yExJIb05OGF4Nlt9IHFIMBkRl41VdvcNdbQ==

@@ -66,11 +66,11 @@ ReactDOM.render(
 
 				{/* TODO this needs some work, to translate the query strings to the new format */}
 				{/* {RedirectPreserveQuery('/tablet.html', '/tablet')} */}
-				{/* <Redirect from="/tablet.html" to="/tablet" />
+				<Redirect from="/tablet.html" to="/tablet" />
 				<Redirect from="/tablet2.html" to="/tablet" />
 				<Redirect from="/ipad.html" to="/tablet" />
-				<Redirect from="/tablet34" to="/tablet" /> */}
-				<Route path="/tablet3">
+				<Redirect from="/tablet3" to="/tablet" />
+				<Route path="/tablet">
 					<Tablet />
 				</Route>
 				<Route>
