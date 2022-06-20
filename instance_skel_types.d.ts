@@ -303,13 +303,13 @@ export type OSCMetaArgument =
 export type OSCSomeArguments = OSCArgument | Array<OSCArgument> | OSCMetaArgument | Array<OSCMetaArgument>
 
 export interface CompanionInstanceHTTPRequest {
-	baseURL: string
+	baseUrl: string
 	body?: string
 	headers: Record<string, string>
 	hostname: string
 	ip: string
 	method: string
-	originalURL: string
+	originalUrl: string
 	path: string
 	query: Record<string, string>
 }
