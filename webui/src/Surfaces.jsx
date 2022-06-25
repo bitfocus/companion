@@ -37,20 +37,11 @@ export const SurfacesPage = memo(function SurfacesPage() {
 		const ary = Object.values(devices)
 
 		ary.sort((a, b) => {
-			// emulator must be first
-			if (a.id === 'emulator') {
-				return -1
-			} else if (b.id === 'emulator') {
-				return 1
+			if (a.index !== b.index) {
+				return a.index - b.index
 			}
 
-			// sort by type first
-			const type = a.type.localeCompare(b.type)
-			if (type !== 0) {
-				return type
-			}
-
-			// then by serial
+			// fallback to serial
 			return a.serialnumber.localeCompare(b.serialnumber)
 		})
 
@@ -127,10 +118,10 @@ export const SurfacesPage = memo(function SurfacesPage() {
 					</tr>
 				</thead>
 				<tbody>
-					{devicesList.map((dev, i) => {
+					{devicesList.map((dev) => {
 						return (
 							<tr key={dev.id}>
-								<td>#{i}</td>
+								<td>#{dev.index}</td>
 								<td>{dev.id}</td>
 								<td>
 									<TextInputField definition={{}} value={dev.name} setValue={(val) => updateName(dev.id, val)} />
