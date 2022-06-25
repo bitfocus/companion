@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { memo } from 'react'
 import { CSidebar, CSidebarNav, CSidebarNavItem, CSidebarBrand, CSidebarMinimizer } from '@coreui/react'
 import {
 	faBug,
@@ -13,7 +13,7 @@ import {
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { useTranslation } from 'react-i18next'
 
-export function MySidebar({ show, showWizard }) {
+export const MySidebar = memo(function MySidebar({ show, showWizard }) {
 	const { t } = useTranslation()
 
 	return (
@@ -84,4 +84,4 @@ export function MySidebar({ show, showWizard }) {
 			<CSidebarMinimizer />
 		</CSidebar>
 	)
-}
+})

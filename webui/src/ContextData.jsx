@@ -255,12 +255,15 @@ export function ContextData({ socket, children }) {
 
 	const notifierRef = useRef()
 
-	const contextValue = {
-		socket: socket,
-		notifier: notifierRef,
-		modules: modules,
-		currentVersion: 22,
-	}
+	const contextValue = useMemo(
+		() => ({
+			socket: socket,
+			notifier: notifierRef,
+			modules: modules,
+			currentVersion: 22,
+		}),
+		[socket, notifierRef, modules]
+	)
 
 	const steps = [
 		instances,

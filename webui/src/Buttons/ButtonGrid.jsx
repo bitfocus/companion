@@ -9,7 +9,7 @@ import React, {
 	useRef,
 	useState,
 } from 'react'
-import { StaticContext, KeyReceiver, PagesContext, socketEmit2, CreateBankControlId } from '../util'
+import { StaticContext, KeyReceiver, PagesContext, socketEmit2, CreateBankControlId, socketEmit } from '../util'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import {
 	faArrowsAlt,
@@ -37,6 +37,12 @@ export const ButtonsGridPanel = memo(function ButtonsPage({
 }) {
 	const context = useContext(StaticContext)
 	const pages = useContext(PagesContext)
+	const pagesRef = useRef()
+
+	useEffect(() => {
+		// Avoid binding into callbacks
+		pagesRef.current = pages
+	}, [pages])
 
 	const actionsRef = useRef()
 
@@ -52,18 +58,18 @@ export const ButtonsGridPanel = memo(function ButtonsPage({
 
 	const setPage = useCallback(
 		(newPage) => {
-			const pageNumbers = Object.keys(pages)
+			const pageNumbers = Object.keys(pagesRef.current || {})
 			const newIndex = pageNumbers.findIndex((p) => p === newPage + '')
 			if (newIndex !== -1) {
 				changePage(newPage)
 			}
 		},
-		[changePage, pages]
+		[changePage]
 	)
 
 	const changePage2 = useCallback(
 		(delta) => {
-			const pageNumbers = Object.keys(pages)
+			const pageNumbers = Object.keys(pagesRef.current || {})
 			const currentIndex = pageNumbers.findIndex((p) => p === pageNumber + '')
 			let newPage = pageNumbers[0]
 			if (currentIndex !== -1) {
@@ -78,7 +84,7 @@ export const ButtonsGridPanel = memo(function ButtonsPage({
 				changePage(newPage)
 			}
 		},
-		[changePage, pages, pageNumber]
+		[changePage, pageNumber]
 	)
 
 	const pageInfo = pages?.[pageNumber]
@@ -87,13 +93,12 @@ export const ButtonsGridPanel = memo(function ButtonsPage({
 	const clearNewPageName = useCallback(() => setNewPageName(null), [])
 	const changeNewPageName = useCallback(
 		(e) => {
-			context.socket.emit('set_page', pageNumber, {
-				...pageInfo,
-				name: e.currentTarget.value,
+			socketEmit(context.socket, 'pages:set-name', [pageNumber, e.currentTarget.value]).catch((e) => {
+				console.error('Failed to set name', e)
 			})
 			setNewPageName(e.currentTarget.value)
 		},
-		[context.socket, pageNumber, pageInfo]
+		[context.socket, pageNumber]
 	)
 
 	const pageName = pageInfo?.name ?? 'PAGE'
@@ -341,7 +346,14 @@ const ButtonGridActions = forwardRef(function ButtonGridActions({ isHot, pageNum
 	)
 })
 
-export function ButtonGridHeader({ pageNumber, pageName, onNameChange, onNameBlur, changePage, setPage }) {
+export const ButtonGridHeader = memo(function ButtonGridHeader({
+	pageNumber,
+	pageName,
+	onNameChange,
+	onNameBlur,
+	changePage,
+	setPage,
+}) {
 	const [tmpText, setTmpText] = useState(null)
 
 	const inputChange = useCallback(
@@ -414,7 +426,7 @@ export function ButtonGridHeader({ pageNumber, pageName, onNameChange, onNameBlu
 			/>
 		</div>
 	)
-}
+})
 
 function ButtonGrid({ bankClick, pageNumber, selectedButton }) {
 	const context = useContext(StaticContext)
@@ -496,7 +508,7 @@ function ButtonGrid({ bankClick, pageNumber, selectedButton }) {
 	)
 }
 
-function ButtonGridIcon(props) {
+const ButtonGridIcon = memo(function ButtonGridIcon(props) {
 	const context = useContext(StaticContext)
 	const [{ isOver, canDrop }, drop] = useDrop({
 		accept: 'preset',
@@ -519,4 +531,4 @@ function ButtonGridIcon(props) {
 
 	const title = `${props.page}.${props.index}`
 	return <BankPreview {...props} dropRef={drop} dropHover={isOver} canDrop={canDrop} alt={title} title={title} />
-}
+})
