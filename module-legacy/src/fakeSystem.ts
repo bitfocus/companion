@@ -205,10 +205,10 @@ export class FakeSystem extends EventEmitter {
 				this.parent.updateStatus('ok', message)
 				break
 			case 1:
-				this.parent.updateStatus('ok', message)
+				this.parent.updateStatus('unknown_warning', message)
 				break
 			case 2:
-				this.parent.updateStatus('ok', message)
+				this.parent.updateStatus('unknown_error', message)
 				break
 			case null:
 			case 0:
