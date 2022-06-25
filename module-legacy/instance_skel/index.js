@@ -107,6 +107,10 @@ function instance(system, id, config) {
 	system.on('osc_send', function (host, port, path, args) {
 		self.oscSend(host, port, path, args)
 	})
+
+	system.on('log', function (source, level, message) {
+		self.sendLog(level, message)
+	})
 }
 
 instance.prototype.defineConst = function (name, value) {
