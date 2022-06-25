@@ -29,6 +29,7 @@ const ignoreNames: string[] = [
 	// Add any modules which are broken here, so that they are ignored, and not available
 	// 'companion-module-something'
 	'companion-module-figure53-go-button', // Uses ../../lib/resources/icons.js
+	'companion-module-bmd-atem', // Needs a secondary entrypoint for the worker_thread
 ]
 
 for (const folder of dirs) {
