@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import {
 	myApplyPatch,
 	StaticContext,
@@ -191,13 +191,16 @@ export function ContextData({ socket, children }) {
 
 	const notifierRef = useRef()
 
-	const contextValue = {
-		socket: socket,
-		notifier: notifierRef,
-		modules: modules,
-		moduleRedirects: moduleRedirects,
-		currentVersion: 22,
-	}
+	const contextValue = useMemo(
+		() => ({
+			socket: socket,
+			notifier: notifierRef,
+			modules: modules,
+			moduleRedirects: moduleRedirects,
+			currentVersion: 22,
+		}),
+		[socket, notifierRef, modules, moduleRedirects]
+	)
 
 	const steps = [
 		instances,
