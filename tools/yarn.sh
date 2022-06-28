@@ -39,6 +39,7 @@ set -e
 
 heading "Core"
 yarn --frozen-lockfile
+yarn build:writefile
 echo
 
 heading "UI"
