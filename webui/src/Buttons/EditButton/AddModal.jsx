@@ -64,6 +64,7 @@ export const AddActionsModal = forwardRef(function AddActionsModal({ addAction }
 			<CModalBody>
 				{Object.entries(actions).map(([instanceId, items]) => (
 					<InstanceCollapse
+						key={instanceId}
 						instanceId={instanceId}
 						instanceInfo={instances[instanceId]}
 						items={items}
@@ -134,6 +135,7 @@ export const AddFeedbacksModal = forwardRef(function AddFeedbacksModal({ addFeed
 			<CModalBody>
 				{Object.entries(feedbacks).map(([instanceId, items]) => (
 					<InstanceCollapse
+						key={instanceId}
 						instanceId={instanceId}
 						instanceInfo={instances[instanceId]}
 						items={items}
@@ -196,7 +198,7 @@ function InstanceCollapse({ instanceId, instanceInfo, items, itemName, expanded,
 				<CCollapse show={expanded}>
 					<CCardBody>
 						{candidates.length > 0 ? (
-							<table class="table">
+							<table className="table">
 								{candidates.map((info) => (
 									<AddRow key={info.fullId} info={info} id={info.fullId} doAdd={doAdd} />
 								))}

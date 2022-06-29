@@ -1,5 +1,5 @@
 import { CompanionFeedbackButtonStyleResult } from './feedback.js'
-import { InputValue } from './input.js'
+import { CompanionOptionValues } from './input.js'
 import { CompanionAdditionalStyleProps, CompanionRequiredStyleProps } from './style.js'
 
 /**
@@ -33,7 +33,7 @@ export interface CompanionPresetFeedback {
 	/** The id of the feedback definition */
 	feedbackId: string
 	/** The option values for the action */
-	options: { [key: string]: InputValue | undefined }
+	options: CompanionOptionValues
 	/**
 	 * If a boolean feedback, the style effect of the feedback
 	 */
@@ -49,7 +49,7 @@ export interface CompanionPresetAction {
 	/** The execution delay of the action */
 	delay?: number
 	/** The option values for the action */
-	options: { [key: string]: InputValue | undefined }
+	options: CompanionOptionValues
 }
 
 /**

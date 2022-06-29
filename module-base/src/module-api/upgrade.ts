@@ -1,5 +1,5 @@
 import { CompanionFeedbackButtonStyleResult } from './feedback.js'
-import { InputValue } from './input.js'
+import { CompanionOptionValues } from './input.js'
 
 /** For future use */
 export type CompanionUpgradeContext = unknown
@@ -62,7 +62,7 @@ export interface CompanionMigrationAction {
 	/** The execution delay of the action */
 	delay?: number
 	/** The user selected options for the action */
-	options: { [key: string]: InputValue | undefined }
+	options: CompanionOptionValues
 }
 
 /**
@@ -77,7 +77,7 @@ export interface CompanionMigrationFeedback {
 	/** The id of the feedback definition */
 	feedbackId: string
 	/** The user selected options for the feedback */
-	options: { [key: string]: InputValue | undefined }
+	options: CompanionOptionValues
 
 	/**
 	 * If the feedback is being converted to a boolean feedback, the style can be set here.

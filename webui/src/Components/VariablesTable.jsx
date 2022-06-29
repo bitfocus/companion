@@ -65,8 +65,8 @@ export function VariablesTable({ label }) {
 					</tr>
 				</thead>
 				<tbody>
-					{variableDefinitions.map((variable) => {
-						let value = variableValues[variable.name]
+					{Object.entries(variableDefinitions).map(([name, variable]) => {
+						let value = variableValues[name]
 						if (typeof value !== 'string') {
 							value += ''
 						}
@@ -83,14 +83,14 @@ export function VariablesTable({ label }) {
 						}
 
 						return (
-							<tr key={variable.name}>
+							<tr key={name}>
 								<td>
-									$({label}:{variable.name})
+									$({label}:{name})
 								</td>
 								<td>{variable.label}</td>
 								<td>{elms}</td>
 								<td>
-									<CopyToClipboard text={`$(${label}:${variable.name})`} onCopy={onCopied}>
+									<CopyToClipboard text={`$(${label}:${name})`} onCopy={onCopied}>
 										<CButton size="sm">
 											<FontAwesomeIcon icon={faCopy} />
 										</CButton>

@@ -51,6 +51,7 @@ export interface InitMessage {
 	actions: { [id: string]: ActionInstance | undefined }
 }
 export interface InitResponseMessage {
+	hasHttpHandler: boolean
 	newUpgradeIndex: number
 
 	updatedConfig: unknown | undefined
@@ -86,6 +87,7 @@ export interface SetActionDefinitionsMessage {
 		name: string
 		description?: string
 		options: SomeEncodedCompanionInputField[] // TODO module-lib - versioned types?
+		hasLearn: boolean
 	}>
 }
 
@@ -97,6 +99,7 @@ export interface SetFeedbackDefinitionsMessage {
 		options: SomeEncodedCompanionInputField[] // TODO module-lib - versioned types?
 		type: 'boolean' | 'advanced'
 		defaultStyle?: Partial<CompanionFeedbackButtonStyleResult>
+		hasLearn: boolean
 	}>
 }
 

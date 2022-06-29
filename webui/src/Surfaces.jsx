@@ -42,7 +42,7 @@ export const SurfacesPage = memo(function SurfacesPage() {
 			}
 
 			// fallback to serial
-			return a.serialnumber.localeCompare(b.serialnumber)
+			return a.id.localeCompare(b.id)
 		})
 
 		return ary

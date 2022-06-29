@@ -1,4 +1,8 @@
-export type InputValue = number | string | boolean
+export type InputValue = number | string | boolean | Array<string | number>
+
+export interface CompanionOptionValues {
+	[key: string]: InputValue | undefined
+}
 
 export type SomeCompanionInputField =
 	| CompanionInputFieldStaticText
@@ -22,7 +26,7 @@ export interface CompanionInputFieldBase {
 	/** A hover tooltop for this field */
 	tooltip?: string
 	/** A function called to check whether this input should be visible, based on the current options selections */
-	isVisible?: (options: { [key: string]: InputValue | undefined }) => boolean
+	isVisible?: (options: CompanionOptionValues) => boolean
 }
 
 /**

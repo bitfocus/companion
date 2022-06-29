@@ -40,6 +40,7 @@ import { CompanionStaticUpgradeScript } from './upgrade.js'
 import { isInstanceBaseProps, listenToEvents, serializeIsVisibleFn } from '../internal/base.js'
 import { runThroughUpgradeScripts } from '../internal/upgrade.js'
 import { convertFeedbackInstanceToEvent, callFeedbackOnDefinition } from '../internal/feedback.js'
+import { CompanionHTTPRequest, CompanionHTTPResponse } from './http.js'
 
 export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfig> {
 	readonly #socket: SocketIOClient.Socket
@@ -146,6 +147,7 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 			})
 
 			return {
+				hasHttpHandler: typeof this.handleHttpRequest === 'function',
 				newUpgradeIndex: this.#upgradeScripts.length,
 				updatedConfig: config,
 			}
@@ -325,6 +327,12 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 	abstract getConfigFields(): SomeCompanionConfigField[]
 
 	/**
+	 * Handle HTTP requests from Companion
+	 * @param request partial request object from Express
+	 */
+	handleHttpRequest?(request: CompanionHTTPRequest): CompanionHTTPResponse | Promise<CompanionHTTPResponse>
+
+	/**
 	 * Set the action definitions for this instance
 	 * @param actions The action definitions
 	 */
@@ -340,6 +348,7 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 					name: action.name,
 					description: action.description,
 					options: serializeIsVisibleFn(action.options),
+					hasLearn: !!action.learn,
 				})
 
 				// Remember the definition locally
@@ -368,6 +377,7 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 					options: serializeIsVisibleFn(feedback.options),
 					type: feedback.type,
 					defaultStyle: 'defaultStyle' in feedback ? feedback.defaultStyle : undefined,
+					hasLearn: !!feedback.learn,
 				})
 
 				// Remember the definition locally

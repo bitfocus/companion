@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import {
 	myApplyPatch,
 	StaticContext,
@@ -18,7 +18,6 @@ import {
 import { NotificationsManager } from './Components/Notifications'
 import { cloneDeep } from 'lodash-es'
 import jsonPatch from 'fast-json-patch'
-import { useMemo } from 'react'
 
 export function ContextData({ socket, children }) {
 	const [instances, setInstances] = useState(null)
@@ -120,7 +119,6 @@ export function ContextData({ socket, children }) {
 					[key]: value,
 				}))
 			}
-
 			const updateCustomVariables = (patch) => {
 				setCustomVariables((oldVariables) => myApplyPatch2(oldVariables, patch))
 			}

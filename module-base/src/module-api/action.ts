@@ -1,4 +1,4 @@
-import { SomeCompanionInputField, InputValue } from './input.js'
+import { SomeCompanionInputField, CompanionOptionValues } from './input.js'
 
 /**
  * The definition of an action
@@ -22,6 +22,13 @@ export interface CompanionActionDefinition {
 	 * Useful to cleanup subscriptions setup in subscribe
 	 */
 	unsubscribe?: (action: CompanionActionInfo) => Promise<void> | void
+
+	/**
+	 * The user requested to 'learn' the values for this action.
+	 */
+	learn?: (
+		action: CompanionActionEvent
+	) => CompanionOptionValues | undefined | Promise<CompanionOptionValues | undefined>
 }
 
 /**
@@ -42,7 +49,7 @@ export interface CompanionActionInfo {
 	/** The id of the action definition */
 	readonly actionId: string
 	/** The user selected options for the action */
-	readonly options: { [key: string]: InputValue | undefined }
+	readonly options: CompanionOptionValues
 }
 
 /**

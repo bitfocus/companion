@@ -57,6 +57,15 @@ export const FeedbacksPanel = function ({ controlId, feedbacks, dragId }) {
 		[context.socket, controlId]
 	)
 
+	const doLearn = useCallback(
+		(feedbackId) => {
+			socketEmit2(context.socket, 'controls:feedback:learn', [controlId, feedbackId]).catch((e) => {
+				console.error(`Failed to learn feedback values: ${e}`)
+			})
+		},
+		[context.socket, controlId]
+	)
+
 	const addFeedback = useCallback(
 		(feedbackType) => {
 			setRecentFeedbacks((existing) => {
@@ -113,6 +122,7 @@ export const FeedbacksPanel = function ({ controlId, feedbacks, dragId }) {
 							feedback={a}
 							setValue={setValue}
 							doDelete={doDelete}
+							doLearn={doLearn}
 							dragId={dragId}
 							moveCard={moveCard}
 						/>
@@ -130,10 +140,11 @@ export const FeedbacksPanel = function ({ controlId, feedbacks, dragId }) {
 	)
 }
 
-function FeedbackTableRow({ feedback, controlId, index, dragId, moveCard, setValue, doDelete }) {
+function FeedbackTableRow({ feedback, controlId, index, dragId, moveCard, setValue, doDelete, doLearn }) {
 	const context = useContext(StaticContext)
 
 	const innerDelete = useCallback(() => doDelete(feedback.id), [feedback.id, doDelete])
+	const innerLearn = useCallback(() => doLearn(feedback.id), [doLearn, feedback.id])
 
 	const ref = useRef(null)
 	const [, drop] = useDrop({
@@ -226,6 +237,7 @@ function FeedbackTableRow({ feedback, controlId, index, dragId, moveCard, setVal
 					feedback={feedback}
 					setValue={setValue}
 					innerDelete={innerDelete}
+					innerLearn={innerLearn}
 					setSelectedStyleProps={setSelectedStyleProps}
 					setStylePropsValue={setStylePropsValue}
 				/>
@@ -239,6 +251,7 @@ export function FeedbackEditor({
 	isOnBank,
 	setValue,
 	innerDelete,
+	innerLearn,
 	setSelectedStyleProps,
 	setStylePropsValue,
 }) {
@@ -301,6 +314,14 @@ export function FeedbackEditor({
 				<CButton color="danger" size="sm" onClick={innerDelete} title="Remove action">
 					<FontAwesomeIcon icon={faTrash} />
 				</CButton>
+				&nbsp;
+				{feedbackSpec?.hasLearn ? (
+					<CButton color="info" size="sm" onClick={innerLearn} title="Capture the current values from the device">
+						Learn
+					</CButton>
+				) : (
+					''
+				)}
 			</div>
 
 			<div className="cell-option">

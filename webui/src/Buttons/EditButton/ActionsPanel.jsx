@@ -49,6 +49,15 @@ export function ActionsPanel({ controlId, set, actions, dragId, addPlaceholder }
 		[context.socket, controlId, set]
 	)
 
+	const emitLearn = useCallback(
+		(actionId) => {
+			socketEmit2(context.socket, 'controls:action:learn', [controlId, set, actionId]).catch((e) => {
+				console.error('Failed to learn bank action values', e)
+			})
+		},
+		[context.socket, controlId, set]
+	)
+
 	const emitOrder = useCallback(
 		(dragIndex, hoverIndex) => {
 			socketEmit2(context.socket, 'controls:action:reorder', [controlId, set, dragIndex, hoverIndex]).catch((e) => {
@@ -81,6 +90,7 @@ export function ActionsPanel({ controlId, set, actions, dragId, addPlaceholder }
 				doSetDelay={emitSetDelay}
 				doDelete={emitDelete}
 				doReorder={emitOrder}
+				emitLearn={emitLearn}
 				addAction={addAction}
 			/>
 		</>
@@ -97,6 +107,7 @@ export function ActionsPanelInner({
 	doSetDelay,
 	doDelete,
 	doReorder,
+	emitLearn,
 	addAction,
 }) {
 	const addActionsRef = useRef(null)
@@ -164,6 +175,7 @@ export function ActionsPanelInner({
 							doDelete={doDelete2}
 							doDelay={doSetDelay}
 							moveCard={doReorder}
+							doLearn={emitLearn}
 						/>
 					))}
 				</tbody>
@@ -179,12 +191,13 @@ export function ActionsPanelInner({
 	)
 }
 
-function ActionTableRow({ action, isOnBank, index, dragId, setValue, doDelete, doDelay, moveCard }) {
+function ActionTableRow({ action, isOnBank, index, dragId, setValue, doDelete, doDelay, moveCard, doLearn }) {
 	const instancesContext = useContext(InstancesContext)
 	const actionsContext = useContext(ActionsContext)
 
 	const innerDelete = useCallback(() => doDelete(action.id), [action.id, doDelete])
 	const innerDelay = useCallback((delay) => doDelay(action.id, delay), [doDelay, action.id])
+	const innerLearn = useCallback(() => doLearn(action.id), [doLearn, action.id])
 
 	const [optionVisibility, setOptionVisibility] = useState({})
 
@@ -247,8 +260,12 @@ function ActionTableRow({ action, isOnBank, index, dragId, setValue, doDelete, d
 		const options = actionSpec?.options ?? []
 
 		for (const option of options) {
-			if (typeof option.isVisibleFn === 'string' && typeof option.isVisible !== 'function') {
-				option.isVisible = sandbox(option.isVisibleFn)
+			try {
+				if (typeof option.isVisibleFn === 'string' && typeof option.isVisible !== 'function') {
+					option.isVisible = sandbox(option.isVisibleFn)
+				}
+			} catch (e) {
+				console.error('Failed to process isVisibleFn', e)
 			}
 		}
 	}, [actionSpec])
@@ -262,8 +279,12 @@ function ActionTableRow({ action, isOnBank, index, dragId, setValue, doDelete, d
 		}
 
 		for (const option of options) {
-			if (typeof option.isVisible === 'function') {
-				visibility[option.id] = option.isVisible(action)
+			try {
+				if (typeof option.isVisible === 'function') {
+					visibility[option.id] = option.isVisible(action)
+				}
+			} catch (e) {
+				console.error('Failed to check visibility', e)
 			}
 		}
 
@@ -319,6 +340,14 @@ function ActionTableRow({ action, isOnBank, index, dragId, setValue, doDelete, d
 						<CButton color="danger" size="sm" onClick={innerDelete} title="Remove action">
 							<FontAwesomeIcon icon={faTrash} />
 						</CButton>
+						&nbsp;
+						{actionSpec?.hasLearn ? (
+							<CButton color="info" size="sm" onClick={innerLearn} title="Capture the current values from the device">
+								Learn
+							</CButton>
+						) : (
+							''
+						)}
 					</div>
 
 					<div className="cell-option">

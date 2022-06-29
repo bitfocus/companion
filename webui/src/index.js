@@ -3,6 +3,13 @@
 import '@fontsource/roboto'
 import './App.scss'
 
+if (process.env.NODE_ENV === 'development') {
+	const defineProperties = Object.defineProperties
+	Object.defineProperties = function (o, props) {
+		return o === console ? o : defineProperties(o, props)
+	}
+}
+
 // polyfills
 require('intersection-observer')
 

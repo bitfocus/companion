@@ -1,4 +1,4 @@
-import { SomeCompanionInputField, InputValue } from './input.js'
+import { SomeCompanionInputField, CompanionOptionValues } from './input.js'
 import { CompanionAdditionalStyleProps, CompanionRequiredStyleProps } from './style.js'
 
 /**
@@ -14,7 +14,7 @@ export interface CompanionFeedbackInfo {
 	/** The id of the feedback definition */
 	readonly feedbackId: string
 	/** The user selected options for the feedback */
-	readonly options: { [key: string]: InputValue | undefined }
+	readonly options: CompanionOptionValues
 }
 
 /**
@@ -79,6 +79,13 @@ export interface CompanionFeedbackDefinitionBase {
 	 * Useful to cleanup subscriptions setup in subscribe
 	 */
 	unsubscribe?: (feedback: CompanionFeedbackInfo) => void
+
+	/**
+	 * The user requested to 'learn' the values for this feedback.
+	 */
+	learn?: (
+		action: CompanionFeedbackInfo
+	) => CompanionOptionValues | undefined | Promise<CompanionOptionValues | undefined>
 }
 
 /**
