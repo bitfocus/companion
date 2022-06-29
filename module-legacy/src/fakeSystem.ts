@@ -152,10 +152,10 @@ export function convertInputField(input: SomeCompanionInputField): Complete<Modu
 	}
 }
 
-function wrapActionSubscriptionCallback(
+function wrapActionSubscriptionCallback<T>(
 	id: string,
-	cb: ((event: CompanionActionEvent) => void) | undefined
-): ((action: ModuleApi.CompanionActionInfo) => void) | undefined {
+	cb: ((event: CompanionActionEvent) => T) | undefined
+): ((action: ModuleApi.CompanionActionInfo) => T) | undefined {
 	if (cb) {
 		return (event) =>
 			cb({
@@ -168,10 +168,10 @@ function wrapActionSubscriptionCallback(
 	}
 }
 
-function wrapFeedbackSubscriptionCallback(
+function wrapFeedbackSubscriptionCallback<T>(
 	id: string,
-	cb: ((event: CompanionFeedbackEvent) => void) | undefined
-): ((feedback: ModuleApi.CompanionFeedbackInfo) => void) | undefined {
+	cb: ((event: CompanionFeedbackEvent) => T) | undefined
+): ((feedback: ModuleApi.CompanionFeedbackInfo) => T) | undefined {
 	if (cb) {
 		return (event) =>
 			cb({
@@ -313,6 +313,7 @@ export class FakeSystem extends EventEmitter {
 					callback: cb,
 					subscribe: wrapActionSubscriptionCallback(id, action.subscribe),
 					unsubscribe: wrapActionSubscriptionCallback(id, action.unsubscribe),
+					learn: wrapActionSubscriptionCallback(id, action.learn),
 				})
 			}
 		}
@@ -359,6 +360,7 @@ export class FakeSystem extends EventEmitter {
 							callback: cb,
 							subscribe: wrapFeedbackSubscriptionCallback(id, feedback.subscribe),
 							unsubscribe: wrapFeedbackSubscriptionCallback(id, feedback.unsubscribe),
+							learn: wrapFeedbackSubscriptionCallback(id, feedback.learn),
 						})
 						break
 					}
@@ -395,6 +397,7 @@ export class FakeSystem extends EventEmitter {
 							callback: cb,
 							subscribe: wrapFeedbackSubscriptionCallback(id, feedback.subscribe),
 							unsubscribe: wrapFeedbackSubscriptionCallback(id, feedback.unsubscribe),
+							learn: wrapFeedbackSubscriptionCallback(id, feedback.learn),
 						})
 						break
 					}

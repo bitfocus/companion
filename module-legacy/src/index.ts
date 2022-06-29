@@ -7,6 +7,7 @@ import {
 	splitRgb,
 	SomeCompanionConfigField,
 } from '@companion-module/base'
+import { CompanionHTTPRequest, CompanionHTTPResponse } from '@companion-module/base/dist/module-api/http'
 import { from15to32Keys, literal } from '@companion-module/base/dist/util.js'
 import type InstanceSkel = require('../instance_skel')
 import type {
@@ -38,11 +39,21 @@ export default class MockModule extends InstanceBase<MockConfig> {
 		this.#system = new FakeSystem(this, modName)
 	}
 
+	async handleHttpRequest2(req: CompanionHTTPRequest): Promise<CompanionHTTPResponse> {
+		if (!this.#legacy?.handleHttpRequest) throw new Error('handleHttpRequest has disappeared!')
+		return this.#legacy.handleHttpRequest(req)
+	}
+
 	async init(config: MockConfig): Promise<void> {
 		if (this.#legacy) throw new Error('Already initialized')
 
 		this.#legacy = new LegacyModule(this.#system, this.id, config)
 		if (!this.#legacy) throw new Error('Failed to initialize')
+
+		if (this.#legacy.handleHttpRequest) {
+			// Setup the http request handler, if it is implemented
+			this.handleHttpRequest = this.handleHttpRequest2.bind(this)
+		}
 
 		if (typeof this.#legacy.init == 'function') {
 			this.#legacy.init()

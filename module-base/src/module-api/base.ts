@@ -13,9 +13,15 @@ import {
 	FeedbackInstance,
 	GetConfigFieldsMessage,
 	GetConfigFieldsResponseMessage,
+	HandleHttpRequestMessage,
+	HandleHttpRequestResponseMessage,
 	HostToModuleEventsV0,
 	InitMessage,
 	InitResponseMessage,
+	LearnActionMessage,
+	LearnActionResponseMessage,
+	LearnFeedbackMessage,
+	LearnFeedbackResponseMessage,
 	LogMessageMessage,
 	ModuleToHostEventsV0,
 	SendOscMessage,
@@ -80,6 +86,9 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 			updateFeedbacks: this._handleUpdateFeedbacks.bind(this),
 			updateActions: this._handleUpdateActions.bind(this),
 			getConfigFields: this._handleGetConfigFields.bind(this),
+			handleHttpRequest: this._handleHttpRequest.bind(this),
+			learnAction: this._handleLearnAction.bind(this),
+			learnFeedback: this._handleLearnFeedback.bind(this),
 		})
 
 		this.log('debug', 'Initializing')
@@ -293,6 +302,59 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 	private async _handleGetConfigFields(_msg: GetConfigFieldsMessage): Promise<GetConfigFieldsResponseMessage> {
 		return {
 			fields: serializeIsVisibleFn(this.getConfigFields()),
+		}
+	}
+
+	private async _handleHttpRequest(msg: HandleHttpRequestMessage): Promise<HandleHttpRequestResponseMessage> {
+		if (!this.handleHttpRequest) throw new Error(`handleHttpRequest is not supported!`)
+
+		const res = await this.handleHttpRequest(msg.request)
+
+		return { response: res }
+	}
+	private async _handleLearnAction(msg: LearnActionMessage): Promise<LearnActionResponseMessage> {
+		const definition = this.#actionDefinitions.get(msg.action.actionId)
+		if (definition && definition.learn) {
+			const newOptions = await definition.learn({
+				id: msg.action.id,
+				actionId: msg.action.actionId,
+				controlId: msg.action.controlId,
+				options: msg.action.options,
+
+				deviceId: undefined,
+				page: msg.action.page,
+				bank: msg.action.bank,
+			})
+
+			return {
+				options: newOptions,
+			}
+		} else {
+			// Not supported
+			return {
+				options: undefined,
+			}
+		}
+	}
+	private async _handleLearnFeedback(msg: LearnFeedbackMessage): Promise<LearnFeedbackResponseMessage> {
+		const definition = this.#feedbackDefinitions.get(msg.feedback.feedbackId)
+		if (definition && definition.learn) {
+			const newOptions = await definition.learn({
+				id: msg.feedback.id,
+				feedbackId: msg.feedback.feedbackId,
+				controlId: msg.feedback.controlId,
+				options: msg.feedback.options,
+				type: definition.type,
+			})
+
+			return {
+				options: newOptions,
+			}
+		} else {
+			// Not supported
+			return {
+				options: undefined,
+			}
 		}
 	}
 

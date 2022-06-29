@@ -9,8 +9,9 @@ import { CompanionFeedbackButtonStyleResult } from '../module-api/feedback.js'
 import { OSCSomeArguments } from '../common/osc.js'
 import { SomeCompanionConfigField } from '../module-api/config.js'
 import { LogLevel, InstanceStatus } from '../module-api/enums.js'
-import { SomeCompanionInputField, InputValue } from '../module-api/input.js'
+import { SomeCompanionInputField, InputValue, CompanionOptionValues } from '../module-api/input.js'
 import { SomeCompanionPresetDefinition } from '../module-api/preset.js'
+import { CompanionHTTPRequest, CompanionHTTPResponse } from '../module-api/http.js'
 
 export interface ModuleToHostEventsV0 {
 	'log-message': (msg: LogMessageMessage) => void
@@ -35,6 +36,9 @@ export interface HostToModuleEventsV0 {
 	updateActions: (msg: UpdateActionInstancesMessage) => void
 	executeAction: (msg: ExecuteActionMessage) => void
 	getConfigFields: (msg: GetConfigFieldsMessage) => GetConfigFieldsResponseMessage
+	handleHttpRequest: (msg: HandleHttpRequestMessage) => HandleHttpRequestResponseMessage
+	learnAction: (msg: LearnActionMessage) => LearnActionResponseMessage
+	learnFeedback: (msg: LearnFeedbackMessage) => LearnFeedbackResponseMessage
 }
 
 export type EncodeIsVisible<T extends SomeCompanionInputField> = Omit<T, 'isVisible'> & {
@@ -218,4 +222,25 @@ export interface ParseVariablesInStringMessage {
 }
 export interface ParseVariablesInStringResponseMessage {
 	text: string
+}
+
+export interface HandleHttpRequestMessage {
+	request: CompanionHTTPRequest
+}
+export interface HandleHttpRequestResponseMessage {
+	response: CompanionHTTPResponse
+}
+
+export interface LearnActionMessage {
+	action: ActionInstance
+}
+export interface LearnActionResponseMessage {
+	options: CompanionOptionValues | undefined
+}
+
+export interface LearnFeedbackMessage {
+	feedback: FeedbackInstance
+}
+export interface LearnFeedbackResponseMessage {
+	options: CompanionOptionValues | undefined
 }
