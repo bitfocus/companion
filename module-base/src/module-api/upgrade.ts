@@ -114,9 +114,9 @@ export interface CompanionUpgradeToBooleanFeedbackMap {
  * There are some built in rules for properties names based on the most common cases
  * @param upgradeMap The feedbacks to upgrade and the properties to convert
  */
-export function CreateConvertToBooleanFeedbackUpgradeScript(
+export function CreateConvertToBooleanFeedbackUpgradeScript<TConfig = unknown>(
 	upgradeMap: CompanionUpgradeToBooleanFeedbackMap
-): CompanionStaticUpgradeScript<unknown> {
+): CompanionStaticUpgradeScript<TConfig> {
 	// Warning: the unused parameters will often be null
 	return (_context, props) => {
 		const changedFeedbacks: CompanionStaticUpgradeResult<unknown>['updatedFeedbacks'] = []

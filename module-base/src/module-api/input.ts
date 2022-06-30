@@ -26,7 +26,7 @@ export interface CompanionInputFieldBase {
 	/** A hover tooltop for this field */
 	tooltip?: string
 	/** A function called to check whether this input should be visible, based on the current options selections */
-	isVisible?: (options: CompanionOptionValues) => boolean
+	isVisible?: (options: any /*CompanionActionEvent | CompanionFeedbackEvent*/) => boolean // TODO - this varies based on where it is used, and in this current structure is not possible to type without breaking every module
 }
 
 /**
