@@ -3511,11 +3511,11 @@ commist@^1.0.0:
   version "2.0.3"
   resolved "https://codeload.github.com/bitfocus/companion-module-nevion-mrp/tar.gz/e65d5aaa88d7cd5b27a8a439351bf0bf65444d65"
 
-"companion-module-newbluefx-titler@github:bitfocus/companion-module-newbluefx-titler#v2.0.5":
-  version "2.0.5"
-  resolved "https://codeload.github.com/bitfocus/companion-module-newbluefx-titler/tar.gz/90794a5e67b229428d580294c58704de376ec30c"
+"companion-module-newbluefx-titler@github:bitfocus/companion-module-newbluefx-titler#v3.0.0":
+  version "3.0.0"
+  resolved "https://codeload.github.com/bitfocus/companion-module-newbluefx-titler/tar.gz/13edf174922736a1e2b76faae3cca314839b9af5"
   dependencies:
-    qwebchannel "^5.9.0"
+    qwebchannel "5.9.0"
     ws "^7.4.6"
 
 "companion-module-newtek-ndistudiomonitor@github:bitfocus/companion-module-newtek-ndistudiomonitor#v1.0.1":
@@ -9013,10 +9013,10 @@ quick-lru@^5.1.1:
   resolved "https://registry.yarnpkg.com/quick-lru/-/quick-lru-5.1.1.tgz#366493e6b3e42a3a6885e2e99d18f80fb7a8c932"
   integrity sha512-WuyALRjWPDGtt/wzJiadO5AXY+8hZ80hVpe6MyivgraREW751X3SbhRvG3eLKOYN+8VEvqLcf3wdnt44Z4S4SA==
 
-qwebchannel@^5.9.0:
-  version "5.15.0"
-  resolved "https://registry.yarnpkg.com/qwebchannel/-/qwebchannel-5.15.0.tgz#723e3551348e196816ecf09f3ae6f841f8839d33"
-  integrity sha512-MHuIGX3nAKgJZiL8rL2CDjvtGw6Et6K3If0LRwQ6W3g5oMc49iqlYrP6pVjB0uDW1+6xT/SpvhzMCqQqvj3aZQ==
+qwebchannel@5.9.0:
+  version "5.9.0"
+  resolved "https://registry.yarnpkg.com/qwebchannel/-/qwebchannel-5.9.0.tgz#e7354bae6d1a156fd1211ae52a6e808b520e66d4"
+  integrity sha512-bSdtido58+pn1NTuaGSXETd0mvifAlFVl8PaxZS/ogeayXkOHru5xK8oqKPNrRGzeJ6y2G89e8IXf55oEWNu6A==
 
 range-parser@~1.2.1:
   version "1.2.1"
