@@ -483,6 +483,7 @@
 		"companion-module-techministry-protally": "github:bitfocus/companion-module-techministry-protally#v1.0.1",
 		"companion-module-techministry-tallyarbiter": "github:bitfocus/companion-module-techministry-tallyarbiter#v1.0.5",
 		"companion-module-teracom-tcw181b": "github:bitfocus/companion-module-teracom-tcw181b#v1.0.4",
+		"companion-module-teradek-prismflex": "github:bitfocus/companion-module-teradek-prismflex#v1.0.0",
 		"companion-module-teradek-vidiu": "github:bitfocus/companion-module-teradek-vidiu#v1.0.5",
 		"companion-module-teradek-vidiux": "github:bitfocus/companion-module-teradek-vidiux#v1.0.1",
 		"companion-module-tesla-smart": "github:bitfocus/companion-module-tesla-smart#v1.0.5",
