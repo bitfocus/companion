@@ -30,6 +30,7 @@ const ignoreNames: string[] = [
 	// 'companion-module-something'
 	'companion-module-figure53-go-button', // Uses ../../lib/resources/icons.js
 	'companion-module-bmd-atem', // Needs a secondary entrypoint for the worker_thread
+	'companion-module-discord-api', // Currently broken https://github.com/bitfocus/companion-module-discord-api/issues/4
 ]
 
 for (const folder of dirs) {
