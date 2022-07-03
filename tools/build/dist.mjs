@@ -4,6 +4,12 @@ import { generateVersionString } from '../lib.mjs'
 import archiver from 'archiver'
 import { fs } from 'zx'
 import { createRequire } from 'node:module'
+import { pipeline } from 'node:stream'
+import { promisify } from 'node:util'
+import path from 'node:path'
+import tar from 'tar'
+
+const streamPipeline = promisify(pipeline)
 
 /**
  * @param {String} sourceDir: /some/folder/to/compress
@@ -72,3 +78,35 @@ await fs.copyFile('.node-version', 'dist/.node-version')
 await $`yarn --cwd module-legacy generate-manifests`
 await fs.mkdir('dist/module-legacy')
 await fs.copy('module-legacy/manifests', 'dist/module-legacy/manifests')
+
+// Bundle in modules
+const modulesPath = 'dist/bundled-modules'
+// const moduleTmp = 'dist/module-tmp'
+await fs.mkdir(modulesPath)
+const bundleJson = JSON.parse(await fs.readFile('./bundled-modules.json'))
+
+// Download them all
+for (const [id, url] of Object.entries(bundleJson)) {
+	console.log('url', url)
+	if (url) {
+		// Download and extract to tmp dir
+		const response = await fetch(url)
+		if (!response.ok) throw new Error(`unexpected response ${response.statusText}`)
+
+		const moduleDir = path.join(modulesPath, id)
+		await fs.mkdir(moduleDir)
+		await streamPipeline(
+			response.body,
+			tar.x({
+				strip: 1,
+				C: moduleDir,
+			})
+		)
+
+		// const modJson = JSON.parse(await fs.readFile(path.join(moduleTmp, 'companion/manifest.json')))
+
+		// const targetDir = path.join(modulesPath, id)
+		// // await fs.rmdir()
+		// await fs.move(moduleTmp, targetDir)
+	}
+}

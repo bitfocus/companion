@@ -21,7 +21,11 @@ await $`yarn webpack -c ${webpackConfig}`
 // copy in the metadata
 await fs.copy('companion', 'pkg/companion')
 
+const manifestJson = JSON.parse(await fs.readFile(path.resolve('./companion/manifest.json')))
+
 const packageJson = {
+	name: manifestJson.name,
+	version: manifestJson.version,
 	// Minimal content
 	type: 'commonjs',
 	dependencies: {},
@@ -49,3 +53,6 @@ if (fs.existsSync(webpackExtPath)) {
 
 // Write the package.json
 await fs.writeFile('pkg/package.json', JSON.stringify(packageJson))
+
+// Create tgz of the build
+await $`yarn --cwd pkg pack --filename pkg/package.tgz`
