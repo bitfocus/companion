@@ -5,20 +5,36 @@ const pkgJson = require(path.join(process.cwd(), 'package.json'))
 
 if (!pkgJson.main) throw new Error(`Missing main in package.json`)
 
+let webpackExt = {}
+try {
+	webpackExt = require(path.join(process.cwd(), 'webpack-ext.cjs'))
+
+	console.log('Found additional webpack configuration')
+} catch (e) {
+	// Ignore
+}
+
+let externalsExt = []
+if (Array.isArray(webpackExt.externals)) externalsExt = webpackExt.externals
+else if (webpackExt.externals) externalsExt = [webpackExt.externals]
+
 module.exports = {
 	entry: {
 		main: './' + pkgJson.main, // path.join(frameworkDir, 'dist/entrypoint.js'),
-		// TODO - any other entrypoints will be needed here
+		// Allow for custom entrypoints
+		...webpackExt.entry,
 	},
 	mode: 'production',
+	// mode: 'development',
 	output: {
 		path: path.resolve(process.cwd(), 'pkg'),
 	},
 	context: path.resolve(process.cwd(), '.'),
 	target: 'node',
-	// externals: {
-	// TODO - any native libs will need to be here
-	// },
+	externals: [
+		// Allow for custom externals
+		...externalsExt,
+	],
 	experiments: {
 		topLevelAwait: true,
 	},
