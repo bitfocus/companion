@@ -1,4 +1,4 @@
 {
 	"behringer-x32": "https://builds.julusian.dev/companion-module-test/behringer-x32-0.tgz",
-	"bmd-atem": ""
+	"bmd-atem": "https://builds.julusian.dev/companion-module-test/bmd-atem-0.tgz"
 }

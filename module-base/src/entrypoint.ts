@@ -12,6 +12,19 @@ let hasEntrypoint = false
 
 export type InstanceConstructor<TConfig> = new (internal: unknown) => InstanceBase<TConfig>
 
+async function readFileUrl(url: URL): Promise<string> {
+	// Hack to make json files be loadable after being inlined by webpack
+	const prefix = 'application/json;base64,'
+	if (url.pathname.startsWith(prefix)) {
+		const base64 = url.pathname.substring(prefix.length)
+		return Buffer.from(base64, 'base64').toString()
+	}
+
+	// Fallback to reading from disk
+	const buf = await fs.readFile(url)
+	return buf.toString()
+}
+
 /**
  * Setup the module for execution
  * This should be called once per-module, to register the class that should be executed
@@ -24,8 +37,8 @@ export function runEntrypoint<TConfig>(
 ): void {
 	Promise.resolve().then(async () => {
 		try {
-			const pkgJsonStr = await fs.readFile(new URL('../package.json', import.meta.url))
-			const pkgJson = JSON.parse(pkgJsonStr.toString())
+			const pkgJsonStr = await readFileUrl(new URL('../package.json', import.meta.url))
+			const pkgJson = JSON.parse(pkgJsonStr)
 			if (!pkgJson || pkgJson.name !== '@companion-module/base')
 				throw new Error('Failed to find the package.json for @companion-module/base')
 			if (!pkgJson.version) throw new Error('Missing version field in the package.json for @companion-module/base')
