@@ -47,7 +47,7 @@ export function ActionTableRowOption({ instanceId, isOnBank, actionId, option, v
 			control = <NumberInputField value={value} definition={option} setValue={setValue2} />
 			break
 		}
-		case 'text': {
+		case 'static-text': {
 			// Just the label is wanted
 			control = ''
 			break

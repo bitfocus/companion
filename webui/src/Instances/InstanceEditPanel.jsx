@@ -209,7 +209,7 @@ function ConfigField({ setValue, setValid, ...props }) {
 
 	const { definition } = props
 	switch (definition.type) {
-		case 'text':
+		case 'static-text':
 			return (
 				<p title={definition.tooltip}>
 					{/* We used to use dangerouslySetInnerHTML, but that is a security problem once we allow dynamic modules */}
