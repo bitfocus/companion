@@ -5,6 +5,8 @@ function compact(arr) {
 }
 
 module.exports = {
+	enableJest,
+
 	commonPlugins: compact(['prettier', enableJest ? 'jest' : null]),
 	tsPlugins: compact(['@typescript-eslint', 'prettier', enableJest ? 'jest' : null]),
 

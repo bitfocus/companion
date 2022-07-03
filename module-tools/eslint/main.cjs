@@ -6,7 +6,20 @@ const {
 	commonRules,
 	tsRules,
 	tsParser,
+	enableJest,
 } = require('./fragments.cjs')
+
+const disableJest = enableJest
+	? {
+			'jest/globals': false, // Block jest from this
+	  }
+	: {}
+const allowJest = enableJest
+	? {
+			'jest/globals': true,
+			jest: true,
+	  }
+	: {}
 
 module.exports = {
 	extends: commonExtends,
@@ -24,7 +37,7 @@ module.exports = {
 			plugins: tsPlugins,
 			...tsParser,
 			env: {
-				'jest/globals': false, // Block jest from this
+				...disableJest,
 			},
 			rules: {
 				...commonRules,
@@ -39,7 +52,7 @@ module.exports = {
 				},
 			},
 			env: {
-				'jest/globals': false, // Block jest from this
+				...disableJest,
 			},
 			rules: {
 				...commonRules,
@@ -51,8 +64,7 @@ module.exports = {
 			plugins: tsPlugins,
 			...tsParser,
 			env: {
-				'jest/globals': true,
-				jest: true,
+				...allowJest,
 			},
 			rules: {
 				...commonRules,
@@ -67,7 +79,7 @@ module.exports = {
 			plugins: tsPlugins,
 			...tsParser,
 			env: {
-				'jest/globals': false, // Block jest from this
+				...disableJest,
 			},
 			rules: {
 				...commonRules,
