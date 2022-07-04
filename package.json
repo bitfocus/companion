@@ -502,7 +502,7 @@
 		"companion-module-tslproducts-umd": "github:bitfocus/companion-module-tslproducts-umd#v1.2.3",
 		"companion-module-tvone-corio": "github:bitfocus/companion-module-tvone-corio#v1.0.1",
 		"companion-module-twitch-api": "github:bitfocus/companion-module-twitch-api#v2.0.4",
-		"companion-module-ubiquiti-unifi": "github:bitfocus/companion-module-ubiquiti-unifi#v1.0.3",
+		"companion-module-ubiquiti-unifi": "github:bitfocus/companion-module-ubiquiti-unifi#v1.0.4",
 		"companion-module-vaddio-ptz": "github:bitfocus/companion-module-vaddio-ptz#v1.0.2",
 		"companion-module-vdo-ninja": "github:bitfocus/companion-module-vdo-ninja#v1.0.2",
 		"companion-module-ventuz-director": "github:bitfocus/companion-module-ventuz-director#v1.0.1",

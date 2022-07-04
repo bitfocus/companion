@@ -4091,11 +4091,11 @@ commist@^1.0.0:
     open "^8.4.0"
     tmi.js "^1.8.5"
 
-"companion-module-ubiquiti-unifi@github:bitfocus/companion-module-ubiquiti-unifi#v1.0.3":
-  version "1.0.3"
-  resolved "https://codeload.github.com/bitfocus/companion-module-ubiquiti-unifi/tar.gz/b56f737b8ea25edb1287f0f26adf24db82311c0d"
+"companion-module-ubiquiti-unifi@github:bitfocus/companion-module-ubiquiti-unifi#v1.0.4":
+  version "1.0.4"
+  resolved "https://codeload.github.com/bitfocus/companion-module-ubiquiti-unifi/tar.gz/afcd258bb18a4fb237628ecb9dd54e7fd028c469"
   dependencies:
-    node-unifi "^1.3.6"
+    node-unifi "https://github.com/starsolutions/node-unifi#1.4.4"
 
 "companion-module-vaddio-ptz@github:bitfocus/companion-module-vaddio-ptz#v1.0.2":
   version "1.0.2"
@@ -8255,10 +8255,9 @@ node-ssdp@^3.2.1:
     extend "^3.0.1"
     ip "^1.1.5"
 
-node-unifi@^1.3.6:
-  version "1.4.3"
-  resolved "https://registry.yarnpkg.com/node-unifi/-/node-unifi-1.4.3.tgz#bfe6d8d930e06afa2beb2719212424260836faac"
-  integrity sha512-VJfWwgB0Gi/ngqO/gQBWfcqPRepQpD8MrfwcP+qPllXyMF5ZoKjtUPUFQ3TiVKY/zcHbXpywlT03NLMuqwscRQ==
+"node-unifi@https://github.com/starsolutions/node-unifi#1.4.4":
+  version "1.4.4"
+  resolved "https://github.com/starsolutions/node-unifi#74d63b491493e258ae7959ea358b2024ea651585"
   dependencies:
     async "^3.2.0"
     request "^2.88.2"
