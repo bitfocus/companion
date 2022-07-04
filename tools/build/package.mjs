@@ -9,12 +9,12 @@ const streamPipeline = promisify(pipeline)
 
 const toPosix = (str) => str.split(path.sep).join(path.posix.sep)
 
+// Determine some environment info
 const platformInfo = determinePlatformInfo(argv._[1])
+if (platformInfo.nodePlatform) process.env.npm_config_platform = platformInfo.nodePlatform
+if (platformInfo.nodeArch) process.env.npm_config_arch = platformInfo.nodeArch
 
 // Ensure we have the correct sharp libs
-let sharpArgs = []
-if (platformInfo.sharpPlatform) sharpArgs.push(`npm_config_platform=${platformInfo.sharpPlatform}`)
-if (platformInfo.sharpArch) sharpArgs.push(`npm_config_arch=${platformInfo.sharpArch}`)
 // await $`cross-env ${sharpArgs} yarn dist:prepare`
 
 // const sharpVendorDir = './dist/node_modules/sharp/vendor/'
