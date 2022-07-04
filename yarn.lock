@@ -3176,6 +3176,13 @@ commist@^1.0.0:
   version "1.0.6"
   resolved "https://codeload.github.com/bitfocus/companion-module-globalcache-itac-sl/tar.gz/9481a73496b8b94c09aec818d62b940e96e95d22"
 
+"companion-module-google-sheets@github:bitfocus/companion-module-google-sheets#v0.1.0":
+  version "0.1.0"
+  resolved "https://codeload.github.com/bitfocus/companion-module-google-sheets/tar.gz/68aa69884d4891bcac16b5f647b601490de97905"
+  dependencies:
+    got-cjs "^12.0.1"
+    open "^8.4.0"
+
 "companion-module-grassvalley-amp@github:bitfocus/companion-module-grassvalley-amp#v1.1.6":
   version "1.1.6"
   resolved "https://codeload.github.com/bitfocus/companion-module-grassvalley-amp/tar.gz/4c1bf56f1b05b054d7542569eb315765c8ef41c8"
