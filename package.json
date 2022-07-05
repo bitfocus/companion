@@ -512,7 +512,7 @@
 		"companion-module-videolan-vlc": "github:bitfocus/companion-module-videolan-vlc#v1.1.13",
 		"companion-module-vimeo-livestreamstudio6": "github:bitfocus/companion-module-vimeo-livestreamstudio6#v1.0.0",
 		"companion-module-vistream-online": "github:bitfocus/companion-module-vistream-online#v1.0.8",
-		"companion-module-visualproductions-bstation2": "github:bitfocus/companion-module-visualproductions-bstation2#v1.0.7",
+		"companion-module-visualproductions-bstation2": "github:bitfocus/companion-module-visualproductions-bstation2#v1.0.8",
 		"companion-module-visualproductions-cuety": "github:bitfocus/companion-module-visualproductions-cuety#v1.0.3",
 		"companion-module-vivitek-projector": "github:bitfocus/companion-module-vivitek-projector#v1.0.5",
 		"companion-module-vizio-smartcast": "github:bitfocus/companion-module-vizio-smartcast#v1.1.9",
