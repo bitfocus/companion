@@ -45,7 +45,7 @@ const tarFilename = `node-v${nodeVersion}-${platformInfo.runtimePlatform}-${plat
 const tarPath = path.join(cacheDir, tarFilename)
 if (!(await fs.pathExists(tarPath))) {
 	const tarUrl =
-		platformInfo.nodePlatform === 'darwin' && platformInfo.nodeArch === 'arm64'
+		platformInfo.runtimePlatform === 'darwin' && platformInfo.runtimeArch === 'arm64'
 			? `https://builds.julusian.dev/nodejs/${tarFilename}`
 			: `https://nodejs.org/download/release/v${nodeVersion}/${tarFilename}`
 
