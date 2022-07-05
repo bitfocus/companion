@@ -7,6 +7,8 @@ import { CompanionStaticUpgradeScript } from './module-api/upgrade.js'
 import { InstanceBase } from './module-api/base.js'
 import { literal } from './util.js'
 import { InstanceBaseProps } from './internal/base.js'
+import { init, configureScope } from '@sentry/node'
+import '@sentry/tracing'
 
 let hasEntrypoint = false
 
@@ -68,6 +70,32 @@ export function runEntrypoint<TConfig>(
 			const socketIoToken = process.env.SOCKETIO_TOKEN
 			if (typeof socketIoToken !== 'string' || !socketIoToken)
 				throw new Error('Module initialise is missing SOCKETIO_TOKEN')
+
+			// Allow the DSN to be provided as an env variable
+			const sentryDsn = process.env.SENTRY_DSN
+			const sentryUserId = process.env.SENTRY_USERID
+			const sentryCompanionVersion = process.env.SENTRY_COMPANION_VERSION
+			if (sentryDsn && sentryUserId && sentryDsn.substring(0, 8) == 'https://') {
+				console.log('Sentry enabled')
+
+				init({
+					dsn: sentryDsn,
+					release: `${pkgJson.name}@${pkgJson.version}`,
+					beforeSend(event) {
+						if (event.exception) {
+							console.log('sentry', 'error', event.exception)
+						}
+						return event
+					},
+				})
+
+				configureScope((scope) => {
+					scope.setUser({ id: sentryUserId })
+					scope.setTag('companion', sentryCompanionVersion)
+				})
+			} else {
+				console.log('Sentry disabled')
+			}
 
 			let module: InstanceBase<any> | undefined
 

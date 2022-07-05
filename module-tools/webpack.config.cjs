@@ -25,6 +25,7 @@ module.exports = {
 		...webpackExt.entry,
 	},
 	mode: 'production',
+	// devtool: 'source-map', // TODO - this would be nice, but I think the files have to be uploaded directly to sentry which is problematic...
 	// mode: 'development',
 	output: {
 		path: path.resolve(process.cwd(), 'pkg'),

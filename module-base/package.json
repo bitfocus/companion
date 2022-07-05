@@ -18,6 +18,8 @@
 		"dist"
 	],
 	"dependencies": {
+		"@sentry/node": "^7.2.0",
+		"@sentry/tracing": "^7.2.0",
 		"p-queue": "^7.1.0",
 		"p-timeout": "^5.1.0",
 		"socket.io-client": "^4.5.1",
