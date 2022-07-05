@@ -4098,9 +4098,9 @@ commist@^1.0.0:
     socket.io-client "3.1.0"
     zlibjs "0.3.1"
 
-"companion-module-visualproductions-bstation2@github:bitfocus/companion-module-visualproductions-bstation2#v1.0.7":
-  version "1.0.7"
-  resolved "https://codeload.github.com/bitfocus/companion-module-visualproductions-bstation2/tar.gz/57238944975cbaf7e5b130d216a7f5820f3c8eb8"
+"companion-module-visualproductions-bstation2@github:bitfocus/companion-module-visualproductions-bstation2#v1.0.8":
+  version "1.0.8"
+  resolved "https://codeload.github.com/bitfocus/companion-module-visualproductions-bstation2/tar.gz/5be0da16bba512adf820678c8b54f45176c95853"
 
 "companion-module-visualproductions-cuety@github:bitfocus/companion-module-visualproductions-cuety#v1.0.3":
   version "1.0.3"
