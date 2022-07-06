@@ -19,7 +19,7 @@ import rangeParser from 'parse-numeric-range'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faArrowLeft, faArrowRight, faCog, faExpand } from '@fortawesome/free-solid-svg-icons'
 import EventEmitter from 'eventemitter3'
-import { useHistory } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 
 /** Cache of images across grid components */
 class ImageCache extends EventEmitter {
@@ -177,7 +177,7 @@ export function Tablet() {
 		}
 	})
 
-	const history = useHistory()
+	const navigate = useNavigate()
 	const updateQueryUrl = useCallback(
 		(key, value) => {
 			setQueryUrl((oldUrl) => {
@@ -191,11 +191,11 @@ export function Tablet() {
 				}
 
 				const newStr = queryString.stringify(newQuery).replaceAll('%2C', ',') // replace commas to make it readable
-				history.push(`?${newStr}`)
+				navigate(`?${newStr}`)
 				return newStr
 			})
 		},
-		[setQueryUrl, history]
+		[setQueryUrl, navigate]
 	)
 
 	// Compile the list of pages we will be showing

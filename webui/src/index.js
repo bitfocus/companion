@@ -15,7 +15,7 @@ require('intersection-observer')
 
 import React from 'react'
 import ReactDOM from 'react-dom'
-import { BrowserRouter, Redirect, Route, Switch } from 'react-router-dom'
+import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
 import App from './App'
 import reportWebVitals from './reportWebVitals'
 
@@ -59,31 +59,24 @@ import { Emulator } from './Emulator'
 ReactDOM.render(
 	<React.StrictMode>
 		<BrowserRouter>
-			<Switch>
-				<Redirect from="/help.html" to="/getting-started" />
-				<Route path="/getting-started">
-					<GettingStarted />
-				</Route>
+			<Routes>
+				<Route path="/help.html" element={<Navigate to="/getting-started" replace />} />
+				<Route path="/getting-started" element={<GettingStarted />} />
 
-				<Route path="/emulator">
-					<Emulator />
-				</Route>
-				<Redirect from="/emulator2" to="/emulator" />
-				<Redirect from="/emulator.html" to="/emulator" />
+				<Route path="/emulator" element={<Emulator />} />
+				<Route path="/emulator2" element={<Navigate to="/emulator" replace />} />
+				<Route path="/emulator.html" element={<Navigate to="/emulator" replace />} />
 
 				{/* TODO this needs some work, to translate the query strings to the new format */}
 				{/* {RedirectPreserveQuery('/tablet.html', '/tablet')} */}
-				<Redirect from="/tablet.html" to="/tablet" />
-				<Redirect from="/tablet2.html" to="/tablet" />
-				<Redirect from="/ipad.html" to="/tablet" />
-				<Redirect from="/tablet3" to="/tablet" />
-				<Route path="/tablet">
-					<Tablet />
-				</Route>
-				<Route>
-					<App />
-				</Route>
-			</Switch>
+				<Route path="/tablet.html" element={<Navigate to="/tablet" replace />} />
+				<Route path="/tablet2.html" element={<Navigate to="/tablet" replace />} />
+				<Route path="/ipad.html" element={<Navigate to="/tablet" replace />} />
+				<Route path="/tablet3" element={<Navigate to="/tablet" replace />} />
+
+				<Route path="/tablet" element={<Tablet />} />
+				<Route element={<App />} />
+			</Routes>
 		</BrowserRouter>
 	</React.StrictMode>,
 	document.getElementById('root')

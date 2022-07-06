@@ -40,7 +40,7 @@ import { ButtonsPage } from './Buttons'
 import { ContextData } from './ContextData'
 import { CloudPage } from './CloudPage'
 import { WizardModal } from './Wizard'
-import { Redirect, useLocation } from 'react-router-dom'
+import { Navigate, useLocation } from 'react-router-dom'
 import { useIdleTimer } from 'react-idle-timer'
 
 export default function App() {
@@ -451,10 +451,11 @@ function AppContent({ buttonGridHotPress }) {
 				)}
 				{!hasMatchedPane ? (
 					// If no pane was matched, then redirect to the default
-					<Redirect
+					<Navigate
 						to={{
 							pathname: '/connections',
 						}}
+						replace
 					/>
 				) : (
 					''
