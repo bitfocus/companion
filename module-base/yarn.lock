@@ -2,60 +2,60 @@
 # yarn lockfile v1
 
 
-"@sentry/core@7.5.0":
-  version "7.5.0"
-  resolved "https://registry.yarnpkg.com/@sentry/core/-/core-7.5.0.tgz#4ccc2312017fc6158cc379f5828dc6bbe2cdf1f7"
-  integrity sha512-2KO2hVUki3WgvPlB0qj9+yea56CmsK2b1XtBSyAnqbs+JiXWgerF4qshVsH52kS/1h2B0CisyeIv64/WfuGvQQ==
+"@sentry/core@7.5.1":
+  version "7.5.1"
+  resolved "https://registry.yarnpkg.com/@sentry/core/-/core-7.5.1.tgz#6ad186e671d0398dfa4552a2e5686bff6c1938d3"
+  integrity sha512-1ac5eaJi9LBIpCaert+IrttyaL8rnrK5fcdB6tyqDf8jNV5s9O32PyqjvjpWCrGOvZ4kmp+6UXB9bw/NNtvpkQ==
   dependencies:
-    "@sentry/hub" "7.5.0"
-    "@sentry/types" "7.5.0"
-    "@sentry/utils" "7.5.0"
+    "@sentry/hub" "7.5.1"
+    "@sentry/types" "7.5.1"
+    "@sentry/utils" "7.5.1"
     tslib "^1.9.3"
 
-"@sentry/hub@7.5.0":
-  version "7.5.0"
-  resolved "https://registry.yarnpkg.com/@sentry/hub/-/hub-7.5.0.tgz#30801accb9475cc3f155802a3fefd218d66fbfda"
-  integrity sha512-R3jGEOtRtZaYCswSNs/7SmjOj/Pp8BhRyXk4q0a5GXghbuVAdzZvlJH0XnD/6jOJAF0iSXFuyGSLqVUmjkY9Ow==
+"@sentry/hub@7.5.1":
+  version "7.5.1"
+  resolved "https://registry.yarnpkg.com/@sentry/hub/-/hub-7.5.1.tgz#15817d30aec9e4c1b1bbf7ded6735813f8613e66"
+  integrity sha512-q14zzf5GlE4xvwFP7lZaAI4UnuqWMc3nD62Md5XBptY35bm42CGzawx9aDQ8cegZoQ5bHyX1GPzFju4lDO3O6g==
   dependencies:
-    "@sentry/types" "7.5.0"
-    "@sentry/utils" "7.5.0"
+    "@sentry/types" "7.5.1"
+    "@sentry/utils" "7.5.1"
     tslib "^1.9.3"
 
-"@sentry/node@^7.2.0":
-  version "7.5.0"
-  resolved "https://registry.yarnpkg.com/@sentry/node/-/node-7.5.0.tgz#e22b27cfb19157aea5019daf6241615887e64321"
-  integrity sha512-lcHIgzcOjKnBeXf9CPbHOwFTuRf+huYMwhF3IVz5Ewbpm4eZn3LPk838ypqtspD7UtFbAdaTGXs/w3Y9P3Zi4g==
+"@sentry/node@^7.5.1":
+  version "7.5.1"
+  resolved "https://registry.yarnpkg.com/@sentry/node/-/node-7.5.1.tgz#b0c94ed4bc24891c51809e75199e6d1f8de284f2"
+  integrity sha512-XSpNbxBVIpcklLpk9NtQSkTZM0/mEj0TYMnzQmE2UR7UChpGhZyc19nbQWceSsaLMrrAgOX4Zzo28ENk/QY5FA==
   dependencies:
-    "@sentry/core" "7.5.0"
-    "@sentry/hub" "7.5.0"
-    "@sentry/types" "7.5.0"
-    "@sentry/utils" "7.5.0"
+    "@sentry/core" "7.5.1"
+    "@sentry/hub" "7.5.1"
+    "@sentry/types" "7.5.1"
+    "@sentry/utils" "7.5.1"
     cookie "^0.4.1"
     https-proxy-agent "^5.0.0"
     lru_map "^0.3.3"
     tslib "^1.9.3"
 
-"@sentry/tracing@^7.2.0":
-  version "7.5.0"
-  resolved "https://registry.yarnpkg.com/@sentry/tracing/-/tracing-7.5.0.tgz#ad6da27563246e9d754c36a2a3d398cfb979117e"
-  integrity sha512-tSVnCJNImsWms4tBhJ2Xr+HI1i9zKg4eZ0dImi93/H3sf5hmK9r2E11Xs/8rTxqpGWzB8axVi2tcmqmfqXKGTg==
+"@sentry/tracing@^7.5.1":
+  version "7.5.1"
+  resolved "https://registry.yarnpkg.com/@sentry/tracing/-/tracing-7.5.1.tgz#86aca47db8de2c940ca587fb771acd2a88bff815"
+  integrity sha512-fOmzTk3/mTKF5d1P43yZ29lc5z/1wyL2+qX+N5rLluIeR6dEYISyjFistK8z1esMCCvJu8/x3u0imbrrFDNx0Q==
   dependencies:
-    "@sentry/hub" "7.5.0"
-    "@sentry/types" "7.5.0"
-    "@sentry/utils" "7.5.0"
+    "@sentry/hub" "7.5.1"
+    "@sentry/types" "7.5.1"
+    "@sentry/utils" "7.5.1"
     tslib "^1.9.3"
 
-"@sentry/types@7.5.0":
-  version "7.5.0"
-  resolved "https://registry.yarnpkg.com/@sentry/types/-/types-7.5.0.tgz#610f14c1219ba461ca84a3c89e06de8c0cf357bc"
-  integrity sha512-VPQ/53mLo5N8NQUB4k6R2GQBWoW8otFyhhPnC75gYXeBTItVCzJAylVyWy8b+gGqGst+pQN3wb2dl9xhrd69YQ==
+"@sentry/types@7.5.1":
+  version "7.5.1"
+  resolved "https://registry.yarnpkg.com/@sentry/types/-/types-7.5.1.tgz#3dd647973fee256588f92d3d74d8ce560b73758b"
+  integrity sha512-+OHxQL4lXCEsUA31qlhcPABOjxtbuL+VTpgamXJjxEpQQDPUPyPK0pu7c+uTc7x4Re96Ss3pwUYE9tl3WW3xIg==
 
-"@sentry/utils@7.5.0":
-  version "7.5.0"
-  resolved "https://registry.yarnpkg.com/@sentry/utils/-/utils-7.5.0.tgz#64435ea094aa7d79d1dfe7586d2d5a2bff9e3839"
-  integrity sha512-DgHrkGgHplVMgMbU9hGBfGBV6LcOwNBrhHiVaFwo2NHiXnGwMkaILi5XTRjKm9Iu/m2choAFABA80HEtPKmjtA==
+"@sentry/utils@7.5.1":
+  version "7.5.1"
+  resolved "https://registry.yarnpkg.com/@sentry/utils/-/utils-7.5.1.tgz#10877a19372040ebf5bc0342fed69b8147a8d269"
+  integrity sha512-5w5dEDilAkH/4x5h8VMlfFcGKdDQ8tbSEfxnMOheD3/bwk18lTVTgp6kk+VxmugGdvxsTLiPEoORsuofufWvGQ==
   dependencies:
-    "@sentry/types" "7.5.0"
+    "@sentry/types" "7.5.1"
     tslib "^1.9.3"
 
 "@socket.io/component-emitter@~3.1.0":
@@ -155,9 +155,9 @@ socket.io-client@^4.5.1:
     socket.io-parser "~4.2.0"
 
 socket.io-parser@~4.2.0:
-  version "4.2.0"
-  resolved "https://registry.yarnpkg.com/socket.io-parser/-/socket.io-parser-4.2.0.tgz#3f01e5bc525d94aa52a97ed5cbc12e229bbc4d6b"
-  integrity sha512-tLfmEwcEwnlQTxFB7jibL/q2+q8dlVQzj4JdRLJ/W/G1+Fu9VSxCx1Lo+n1HvXxKnM//dUuD0xgiA7tQf57Vng==
+  version "4.2.1"
+  resolved "https://registry.yarnpkg.com/socket.io-parser/-/socket.io-parser-4.2.1.tgz#01c96efa11ded938dcb21cbe590c26af5eff65e5"
+  integrity sha512-V4GrkLy+HeF1F/en3SpUaM+7XxYXpuMUWLGde1kSSh5nQMN4hLrbPIkD+otwh6q9R6NOQBN4AMaOZ2zVjui82g==
   dependencies:
     "@socket.io/component-emitter" "~3.1.0"
     debug "~4.3.1"

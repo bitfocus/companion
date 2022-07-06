@@ -381,7 +381,7 @@
     "nanoid": "^3.3.4",
     "network": "^0.4.1",
     "node-fetch": "^2.6.7",
-    "node-rest-client": "^3.1.0",
+    "node-rest-client": "^3.1.1",
     "osc": "^2.4.2",
     "shortid": "^2.2.16",
     "tslib": "^2.3.1"

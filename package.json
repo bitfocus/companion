@@ -37,9 +37,9 @@
 	"license": "MIT",
 	"devDependencies": {
 		"cross-env": "^7.0.3",
-		"jest": "^28.1.1",
+		"jest": "^28.1.2",
 		"jsdoc": "github:bitfocus/jsdoc#3.6.6-patch",
-		"nodemon": "^2.0.16",
+		"nodemon": "^2.0.19",
 		"prettier": "^2.7.1",
 		"tar": "^6.1.11",
 		"tui-jsdoc-template": "^1.2.2",
@@ -51,8 +51,8 @@
 		"@elgato-stream-deck/node": "^5.4.0",
 		"@estilles/expression-parser": "^1.0.0",
 		"@julusian/jpeg-turbo": "^2.0.0-1",
-		"@sentry/node": "^7.2.0",
-		"@sentry/tracing": "^7.2.0",
+		"@sentry/node": "^7.5.1",
+		"@sentry/tracing": "^7.5.1",
 		"archiver": "^5.3.1",
 		"body-parser": "^1.20.0",
 		"commander": "^9.3.0",
@@ -68,7 +68,7 @@
 		"infinitton-idisplay": "^1.1.2",
 		"jsonpath-plus": "^7.0.0",
 		"lodash-es": "^4.17.21",
-		"moment": "^2.29.3",
+		"moment": "^2.29.4",
 		"nanoid": "^4.0.0",
 		"node-machine-id": "^1.1.12",
 		"osc": "^2.4.3",
@@ -78,22 +78,18 @@
 		"respawn": "link:./vendor/respawn",
 		"selfsigned": "^2.0.1",
 		"semver": "^7.3.5",
-		"sharp": "^0.30.6",
+		"sharp": "^0.30.7",
 		"socket.io": "^4.5.1",
 		"socketcluster-client": "^16.1.1",
 		"supports-color": "^9.2.2",
-		"systeminformation": "^5.11.21",
+		"systeminformation": "^5.11.22",
 		"websocket": "^1.0.34",
-		"winston": "^3.7.2",
+		"winston": "^3.8.1",
 		"winston-daily-rotate-file": "^4.7.1",
 		"xkeys": "^2.3.4"
 	},
 	"collective": {
 		"type": "donorbox",
 		"url": "https://donorbox.org/bitfocus-opensource"
-	},
-	"resolutions": {
-		"node-gyp-build": "github:julusian/node-gyp-build#v4.4.1-julusian.0",
-		"freetype2": "npm:@julusian/freetype2#^1.0.0"
 	}
 }
