@@ -157,7 +157,7 @@ export function LoadingBar(props) {
 			loading={true}
 			height={4}
 			width="50%"
-			css={{ margin: '0 auto', display: 'inherit' }}
+			cssOverride={{ margin: '0 auto', display: 'inherit' }}
 			color={PRIMARY_COLOR}
 			{...props}
 		/>
