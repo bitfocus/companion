@@ -74,7 +74,7 @@ ReactDOM.render(
 				<Route path="/tablet3" element={<Navigate to="/tablet" replace />} />
 
 				<Route path="/tablet" element={<Tablet />} />
-				<Route element={<App />} />
+				<Route path="/*" element={<App />} />
 			</Routes>
 		</BrowserRouter>
 	</React.StrictMode>,
