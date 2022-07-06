@@ -24,17 +24,18 @@ import {
 } from '@coreui/react'
 import { LoadingRetryOrError, SurfacesContext, socketEmitPromise, SocketContext } from './util'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faCog, faSync } from '@fortawesome/free-solid-svg-icons'
+import { faCog, faSync, faTrash } from '@fortawesome/free-solid-svg-icons'
 import { nanoid } from 'nanoid'
 import { TextInputField } from './Components/TextInputField'
 import { useMemo } from 'react'
+import { GenericConfirmModal } from './Components/GenericConfirmModal'
 
 export const SurfacesPage = memo(function SurfacesPage() {
 	const socket = useContext(SocketContext)
 	const devices = useContext(SurfacesContext)
 
 	const devicesList = useMemo(() => {
-		const ary = Object.values(devices)
+		const ary = Object.values(devices.available)
 
 		ary.sort((a, b) => {
 			if (a.index !== b.index) {
@@ -46,9 +47,24 @@ export const SurfacesPage = memo(function SurfacesPage() {
 		})
 
 		return ary
-	}, [devices])
+	}, [devices.available])
+	const offlineDevicesList = useMemo(() => {
+		const ary = Object.values(devices.offline)
+
+		ary.sort((a, b) => {
+			if (a.index !== b.index) {
+				return a.index - b.index
+			}
+
+			// fallback to serial
+			return a.id.localeCompare(b.id)
+		})
+
+		return ary
+	}, [devices.offline])
 
 	const editModalRef = useRef()
+	const confirmModalRef = useRef(null)
 
 	const [scanning, setScanning] = useState(false)
 	const [scanError, setScanError] = useState(null)
@@ -80,6 +96,22 @@ export const SurfacesPage = memo(function SurfacesPage() {
 		editModalRef.current.show(device)
 	}, [])
 
+	const forgetDevice = useCallback(
+		(device) => {
+			confirmModalRef.current.show(
+				'Forget Surface',
+				'Are you sure you want to forget this surface? Any settings will be lost',
+				'Forget',
+				() => {
+					socketEmitPromise(socket, 'surfaces:forget', [device.id]).catch((err) => {
+						console.error('fotget failed', err)
+					})
+				}
+			)
+		},
+		[socket]
+	)
+
 	const updateName = useCallback(
 		(serialnumber, name) => {
 			socketEmitPromise(socket, 'surfaces:set-name', [serialnumber, name]).catch((err) => {
@@ -106,6 +138,9 @@ export const SurfacesPage = memo(function SurfacesPage() {
 			</CAlert>
 
 			<SurfaceEditModal ref={editModalRef} />
+			<GenericConfirmModal ref={confirmModalRef} />
+
+			<h5>Connected</h5>
 
 			<table className="table table-responsive-sm">
 				<thead>
@@ -139,6 +174,45 @@ export const SurfacesPage = memo(function SurfacesPage() {
 					{devicesList.length === 0 ? (
 						<tr>
 							<td colSpan={4}>No control surfaces have been detected</td>
+						</tr>
+					) : (
+						''
+					)}
+				</tbody>
+			</table>
+
+			<h5>Disconnected</h5>
+
+			<table className="table table-responsive-sm">
+				<thead>
+					<tr>
+						<th>ID</th>
+						<th>Name</th>
+						<th>Type</th>
+						<th>&nbsp;</th>
+					</tr>
+				</thead>
+				<tbody>
+					{offlineDevicesList.map((dev) => {
+						return (
+							<tr key={dev.id}>
+								<td>{dev.id}</td>
+								<td>
+									<TextInputField definition={{}} value={dev.name} setValue={(val) => updateName(dev.id, val)} />
+								</td>
+								<td>{dev.type}</td>
+								<td>
+									<CButton color="danger" onClick={() => forgetDevice(dev)}>
+										<FontAwesomeIcon icon={faTrash} /> Forget
+									</CButton>
+								</td>
+							</tr>
+						)
+					})}
+
+					{offlineDevicesList.length === 0 ? (
+						<tr>
+							<td colSpan={4}>No items</td>
 						</tr>
 					) : (
 						''
