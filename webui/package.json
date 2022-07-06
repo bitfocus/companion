@@ -38,7 +38,7 @@
     "react-markdown": "^8.0.3",
     "react-router-dom": "^5.3.0",
     "react-scripts": "5.0.1",
-    "react-select": "^4.3.1",
+    "react-select": "^5.4.0",
     "react-spinners": "^0.13.3",
     "react-use": "^17.4.0",
     "sanitize-html": "^2.7.0",
