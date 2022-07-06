@@ -43,8 +43,7 @@
     "react-use": "^17.4.0",
     "sanitize-html": "^2.7.0",
     "socket.io-client": "^4.5.1",
-    "tributejs": "^5.1.3",
-    "web-vitals": "^0.2.4"
+    "tributejs": "^5.1.3"
   },
   "scripts": {
     "start": "react-scripts start",
