@@ -188,8 +188,8 @@ function FeedbackTableRow({ feedback, controlId, index, dragId, moveCard, setVal
 		},
 	})
 	const [{ isDragging }, drag, preview] = useDrag({
+		type: dragId,
 		item: {
-			type: dragId,
 			actionId: feedback.id,
 			index: index,
 		},

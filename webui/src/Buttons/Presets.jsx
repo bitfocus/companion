@@ -201,8 +201,8 @@ function PresetIconPreview({ preset, instanceId, ...childProps }) {
 	const [retryToken, setRetryToken] = useState(nanoid())
 
 	const [, drag] = useDrag({
+		type: 'preset',
 		item: {
-			type: 'preset',
 			instanceId: instanceId,
 			presetId: preset.id,
 		},

@@ -245,8 +245,8 @@ function ActionTableRow({ action, isOnBank, index, dragId, setValue, doDelete, d
 		},
 	})
 	const [{ isDragging }, drag, preview] = useDrag({
+		type: dragId,
 		item: {
-			type: dragId,
 			actionId: action.id,
 			index: index,
 		},
