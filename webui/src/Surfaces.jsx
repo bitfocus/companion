@@ -367,6 +367,20 @@ const SurfaceEditModal = forwardRef(function SurfaceEditModal(_props, ref) {
 						) : (
 							''
 						)}
+						{deviceInfo.configFields?.includes('emulator_control_enable') ? (
+							<CFormGroup>
+								<CLabel htmlFor="emulator_control_enable">Enable support for Logitech R400/Mastercue/DSan</CLabel>
+								<CInputCheckbox
+									name="emulator_control_enable"
+									type="checkbox"
+									checked={!!deviceConfig.emulator_control_enable}
+									value={true}
+									onChange={(e) => updateConfig('emulator_control_enable', !!e.currentTarget.checked)}
+								/>
+							</CFormGroup>
+						) : (
+							''
+						)}
 					</CForm>
 				) : (
 					''

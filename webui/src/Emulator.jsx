@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { LoadingRetryOrError, SERVER_URL, useMountEffect } from './util'
+import { LoadingRetryOrError, myApplyPatch2, SERVER_URL, socketEmit2, useMountEffect } from './util'
 import io from 'socket.io-client'
 import { CAlert, CCol, CContainer, CRow } from '@coreui/react'
 import { nanoid } from 'nanoid'
@@ -23,7 +23,7 @@ function dataToButtonImage(data) {
 }
 
 export function Emulator() {
-	const [keymap, setKeymap] = useState(null)
+	const [config, setConfig] = useState({})
 	const [loadError, setLoadError] = useState(null)
 
 	const [ref, setRef] = useState(null)
@@ -37,25 +37,34 @@ export function Emulator() {
 	const doRetryLoad = useCallback(() => setRetryToken(nanoid()), [])
 	useEffect(() => {
 		setLoadError(null)
-		setKeymap(null)
 
-		socket.emit('emul_startup')
+		socketEmit2(socket, 'emulator:startup', [])
+			.then((config) => {
+				console.log('config', config)
+				setConfig(config)
+			})
+			.catch((e) => {
+				setLoadError(`Failed: ${e}`)
+			})
 
-		const updateKeymap = (additionalControllers) => {
-			setLoadError(null)
-			if (additionalControllers) {
-				setKeymap({ ...keyboardKeymap, ...logitecKeymap, ...dsanMastercueKeymap })
-			} else {
-				setKeymap(keyboardKeymap)
-			}
+		const updateConfig = (patch) => {
+			setConfig((oldConfig) => myApplyPatch2(oldConfig, patch))
 		}
 
-		socket.on('emul_controlkeys', updateKeymap)
+		socket.on('emulator:config', updateConfig)
 
 		return () => {
-			socket.off('emul_controlkeys', updateKeymap)
+			socket.off('emulator:config', updateConfig)
 		}
 	}, [retryToken, socket])
+
+	const keymap = useMemo(() => {
+		if (config.emulator_control_enable) {
+			return { ...keyboardKeymap, ...logitecKeymap, ...dsanMastercueKeymap }
+		} else {
+			return keyboardKeymap
+		}
+	}, [config.emulator_control_enable])
 
 	useEffect(() => {
 		const updateImage = (keyIndex, data) => {
@@ -215,13 +224,17 @@ export function Emulator() {
 							<canvas ref={onRefChange} width={956} height={600}></canvas>
 
 							<CAlert color="info" closeButton>
-								Use <b>1 2 3 4 5 6 7 8</b>, <b>Q W E R T Y U I</b>, <b>A S D F G H J K</b> <b>Z X C V B N M ,</b> to
+								Use <b>1 2 3 4 5 6 7 8</b>, <b>Q W E R T Y U I</b>, <b>A S D F G H J K</b>, <b>Z X C V B N M ,</b> to
 								control this surface with your keyboard!
 								<br />
-								A Logitech R400/Mastercue/DSan will send a button press to button; 2 (Back), 3 (forward), 4 (black) and
-								for logitec: 10/11 (Start and stop) on each page.
-								<br />
-								You need to enable these extra options in the Settings tab first!
+								{config.emulator_control_enable ? (
+									<>
+										A Logitech R400/Mastercue/DSan will send a button press to button; 2 (Back), 3 (forward), 4 (black)
+										and for logitech: 10/11 (Start and stop) on each page.
+									</>
+								) : (
+									<>You can enable support for some controllers in the Surface Settings!</>
+								)}
 							</CAlert>
 						</CCol>
 					) : (

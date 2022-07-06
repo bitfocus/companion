@@ -148,21 +148,6 @@ function UserConfigTable() {
 					</td>
 				</tr>
 				<tr>
-					<td>Enable emulator control for Logitech R400/Mastercue/DSan</td>
-					<td>
-						<div className="form-check form-check-inline mr-1">
-							<CInputCheckbox
-								id="userconfig_emulator_control_enable"
-								checked={config.emulator_control_enable}
-								onChange={(e) => setValue('emulator_control_enable', e.currentTarget.checked)}
-							/>
-							<label className="form-check-label" htmlFor="userconfig_emulator_control_enable">
-								Enabled
-							</label>
-						</div>
-					</td>
-				</tr>
-				<tr>
 					<td>Use Elgato Plugin for StreamDeck access (Requires Companion restart)</td>
 					<td>
 						<div className="form-check form-check-inline mr-1">
