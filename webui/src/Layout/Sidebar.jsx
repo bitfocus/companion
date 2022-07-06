@@ -11,11 +11,8 @@ import {
 	faUsers,
 } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { useTranslation } from 'react-i18next'
 
 export const MySidebar = memo(function MySidebar({ show, showWizard }) {
-	const { t } = useTranslation()
-
 	return (
 		<CSidebar show={show}>
 			<CSidebarNav>
@@ -32,53 +29,53 @@ export const MySidebar = memo(function MySidebar({ show, showWizard }) {
 
 				<CSidebarNavItem
 					icon={<FontAwesomeIcon className="c-sidebar-nav-icon" icon={faHatWizard} />}
-					name={t('Configuration Wizard')}
+					name={'Configuration Wizard'}
 					onClick={showWizard}
 				/>
 				<CSidebarNavItem
 					target="_new"
 					href="/emulator"
 					icon={<FontAwesomeIcon className="c-sidebar-nav-icon" icon={faGamepad} />}
-					name={t('Emulator')}
+					name={'Emulator'}
 				/>
 
 				<CSidebarNavItem
 					target="_new"
 					href="/tablet3"
 					icon={<FontAwesomeIcon className="c-sidebar-nav-icon" icon={faTabletAlt} />}
-					name={t('Web buttons')}
+					name={'Web buttons'}
 				/>
 
 				<CSidebarNavItem
 					target="_new"
 					href="https://github.com/bitfocus/companion/issues"
 					icon={<FontAwesomeIcon className="c-sidebar-nav-icon" icon={faBug} />}
-					name={t('Bugs & Features')}
+					name={'Bugs & Features'}
 				/>
 				<CSidebarNavItem
 					target="_new"
 					href="https://www.facebook.com/groups/companion/"
 					icon={<FontAwesomeIcon className="c-sidebar-nav-icon" icon={faUsers} />}
-					name={t('Facebook')}
+					name={'Facebook'}
 				/>
 				<CSidebarNavItem
 					target="_new"
 					href="https://join.slack.com/t/bitfocusio/shared_invite/zt-o1i0mohx-p_m5I7fUEUJ1BBu_KrDN2Q"
 					icon={<FontAwesomeIcon className="c-sidebar-nav-icon" icon={faComments} />}
-					name={t('Slack Chat')}
+					name={'Slack Chat'}
 				/>
 				<CSidebarNavItem
 					target="_new"
 					href="https://donorbox.org/bitfocus-opensource"
 					icon={<FontAwesomeIcon className="c-sidebar-nav-icon" icon={faDollarSign} />}
-					name={t('Donate')}
+					name={'Donate'}
 				/>
 
 				<CSidebarNavItem
 					target="_new"
 					href="/getting-started"
 					icon={<FontAwesomeIcon className="c-sidebar-nav-icon" icon={faInfo} />}
-					name={t('Getting Started')}
+					name={'Getting Started'}
 				/>
 			</CSidebarNav>
 			<CSidebarMinimizer />
