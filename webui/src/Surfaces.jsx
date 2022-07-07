@@ -182,13 +182,16 @@ export const SurfacesPage = memo(function SurfacesPage() {
 				</tbody>
 			</table>
 
-			<CButton color="warning" onClick={refreshUSB}>
-				<FontAwesomeIcon icon={faSync} spin={scanning} />
-				{scanning ? ' Checking for new devices...' : ' Rescan USB'}
-			</CButton>
-			<CButton color="warning" onClick={addEmulator}>
-				<FontAwesomeIcon icon={faAdd} /> Add Emulator
-			</CButton>
+			<CButtonGroup>
+				<CButton color="warning" onClick={refreshUSB}>
+					<FontAwesomeIcon icon={faSync} spin={scanning} />
+					{scanning ? ' Checking for new devices...' : ' Rescan USB'}
+				</CButton>
+				<CButton color="success" onClick={addEmulator}>
+					<FontAwesomeIcon icon={faAdd} /> Add Emulator
+				</CButton>
+			</CButtonGroup>
+
 			<p>&nbsp;</p>
 			<CAlert color="info">
 				<p>
