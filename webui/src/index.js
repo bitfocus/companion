@@ -28,6 +28,7 @@ import { SERVER_URL, SocketContext } from './util'
 import { GettingStarted } from './GettingStarted'
 import { Tablet } from './Tablet'
 import { Emulator } from './Emulator/Emulator'
+import { EmulatorList } from './Emulator/List'
 
 // i18n
 // 	.use(Backend)
@@ -74,6 +75,7 @@ ReactDOM.render(
 					<Route path="/getting-started" element={<GettingStarted />} />
 
 					<Route path="/emulator/:id" element={<Emulator />} />
+					<Route path="/emulators" element={<EmulatorList />} />
 					<Route path="/emulator" element={<Navigate to="/emulator/emulator" replace />} />
 					<Route path="/emulator2" element={<Navigate to="/emulator/emulator" replace />} />
 					<Route path="/emulator.html" element={<Navigate to="/emulator/emulator" replace />} />

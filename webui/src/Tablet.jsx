@@ -171,7 +171,7 @@ export function Tablet() {
 		}
 	}, [retryToken, socket])
 
-	useMountEffect(() => {
+	useEffect(() => {
 		const onConnect = () => {
 			setRetryToken(nanoid())
 		}
@@ -179,7 +179,7 @@ export function Tablet() {
 		return () => {
 			socket.off('connect', onConnect)
 		}
-	})
+	}, [socket])
 
 	const navigate = useNavigate()
 	const updateQueryUrl = useCallback(

@@ -5,7 +5,6 @@ import {
 	MyErrorBoundary,
 	SocketContext,
 	socketEmitPromise,
-	useMountEffect,
 } from '../util'
 import { CAlert, CCol, CContainer, CRow } from '@coreui/react'
 import { nanoid } from 'nanoid'
@@ -79,7 +78,7 @@ export function Emulator() {
 		}
 	}, [socket, imageCache])
 
-	useMountEffect(() => {
+	useEffect(() => {
 		const onConnect = () => {
 			setRetryToken(nanoid())
 		}
@@ -87,7 +86,7 @@ export function Emulator() {
 		return () => {
 			socket.off('connect', onConnect)
 		}
-	})
+	}, [socket])
 
 	const [keyDown, setKeyDown] = useState(null)
 
