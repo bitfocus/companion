@@ -9,7 +9,7 @@ import {
 	useMountEffect,
 } from './util'
 import io from 'socket.io-client'
-import { CButton, CCol, CContainer, CForm, CFormGroup, CInput, CInputCheckbox, CRow, CSelect } from '@coreui/react'
+import { CButton, CCol, CContainer, CForm, CFormGroup, CInput, CInputCheckbox, CRow } from '@coreui/react'
 import { nanoid } from 'nanoid'
 import { MAX_BUTTONS, MAX_COLS, MAX_ROWS } from './Constants'
 import { BankPreview, dataToButtonImage } from './Components/BankButton'
@@ -17,7 +17,7 @@ import { useInView } from 'react-intersection-observer'
 import * as queryString from 'query-string'
 import rangeParser from 'parse-numeric-range'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faArrowLeft, faArrowRight, faCog, faExpand } from '@fortawesome/free-solid-svg-icons'
+import { faCog, faExpand } from '@fortawesome/free-solid-svg-icons'
 import EventEmitter from 'eventemitter3'
 import { useNavigate } from 'react-router-dom'
 
@@ -125,6 +125,13 @@ export function Tablet() {
 		const rawSocket = new io(SERVER_URL)
 		return [rawSocket, new ImageCache(rawSocket)]
 	}, [])
+	useEffect(() => {
+		// Close the old socket when recreating
+		const socket2 = socket
+		return () => {
+			socket2.close()
+		}
+	}, [socket])
 
 	const [retryToken, setRetryToken] = useState(nanoid())
 	const doRetryLoad = useCallback(() => setRetryToken(nanoid()), [])
@@ -207,7 +214,6 @@ export function Tablet() {
 	let rows = Number(parsedQuery['rows'])
 	if (isNaN(rows) || rows <= 0) rows = MAX_ROWS
 
-	const layout = parsedQuery['layout']
 	return (
 		<div className="page-tablet">
 			<div className="scroller">
@@ -215,28 +221,16 @@ export function Tablet() {
 					{pages ? (
 						<>
 							<ConfigurePanel updateQueryUrl={updateQueryUrl} query={parsedQuery} orderedPages={orderedPages} />
-							{layout === 'cycle' ? (
-								<CyclePages
-									socket={socket}
-									pages={pages}
-									imageCache={imageCache}
-									orderedPages={validPages}
-									updateQueryUrl={updateQueryUrl}
-									query={parsedQuery}
-									cols={cols}
-									rows={rows}
-								/>
-							) : (
-								<InfinitePages
-									socket={socket}
-									pages={pages}
-									imageCache={imageCache}
-									orderedPages={validPages}
-									query={parsedQuery}
-									cols={cols}
-									rows={rows}
-								/>
-							)}
+
+							<InfinitePages
+								socket={socket}
+								pages={pages}
+								imageCache={imageCache}
+								orderedPages={validPages}
+								query={parsedQuery}
+								cols={cols}
+								rows={rows}
+							/>
 						</>
 					) : (
 						<CRow className="flex-grow-1">
@@ -276,7 +270,7 @@ function ConfigurePanel({ updateQueryUrl, query, orderedPages }) {
 				</h3>
 				<CForm>
 					<CRow>
-						<CCol md={4} sm={6} xs={12}>
+						<CCol sm={6} xs={12}>
 							<legend>Basic</legend>
 							<CFormGroup>
 								<label>Pages</label>
@@ -308,18 +302,8 @@ function ConfigurePanel({ updateQueryUrl, query, orderedPages }) {
 								/>
 							</CFormGroup>
 						</CCol>
-						<CCol md={4} sm={6} xs={12}>
+						<CCol sm={6} xs={12}>
 							<legend>Layout</legend>
-							<CFormGroup>
-								<label>Layout</label>
-								<CSelect
-									value={query['layout'] || 'infinite'}
-									onChange={(e) => updateQueryUrl('layout', e.currentTarget.value)}
-								>
-									<option value="cycle">Cycle</option>
-									<option value="infinite">Infinite</option>
-								</CSelect>
-							</CFormGroup>
 							<CFormGroup>
 								<label>Hide configure button</label>
 								<CInputCheckbox
@@ -338,39 +322,17 @@ function ConfigurePanel({ updateQueryUrl, query, orderedPages }) {
 									onChange={(e) => updateQueryUrl('nofullscreen', !!e.currentTarget.checked)}
 								/>
 							</CFormGroup>
-						</CCol>
 
-						{query['layout'] === 'cycle' ? (
-							<>
-								<CCol md={4} sm={6} xs={12}>
-									<legend>Cycle</legend>
-									<CFormGroup>
-										<label>Loop pages</label>
-										<CInputCheckbox
-											type="checkbox"
-											checked={!!query['loop']}
-											value={true}
-											onChange={(e) => updateQueryUrl('loop', !!e.currentTarget.checked)}
-										/>
-									</CFormGroup>
-								</CCol>
-							</>
-						) : (
-							<>
-								<CCol md={4} sm={6} xs={12}>
-									<legend>Infinite</legend>
-									<CFormGroup>
-										<label>Hide page headings</label>
-										<CInputCheckbox
-											type="checkbox"
-											checked={!!query['noheadings']}
-											value={true}
-											onChange={(e) => updateQueryUrl('noheadings', !!e.currentTarget.checked)}
-										/>
-									</CFormGroup>
-								</CCol>
-							</>
-						)}
+							<CFormGroup>
+								<label>Hide page headings</label>
+								<CInputCheckbox
+									type="checkbox"
+									checked={!!query['noheadings']}
+									value={true}
+									onChange={(e) => updateQueryUrl('noheadings', !!e.currentTarget.checked)}
+								/>
+							</CFormGroup>
+						</CCol>
 					</CRow>
 				</CForm>
 			</CCol>
@@ -393,89 +355,6 @@ function ConfigurePanel({ updateQueryUrl, query, orderedPages }) {
 					''
 				)}
 			</CCol>
-		</CRow>
-	)
-}
-
-function clamp(val, max) {
-	return Math.min(Math.max(0, val), max)
-}
-
-function CyclePages({ socket, pages, imageCache, orderedPages, updateQueryUrl, query, cols, rows }) {
-	const rawIndex = Number(query['index'])
-	const loop = query['loop']
-	const currentIndex = isNaN(rawIndex) ? 0 : clamp(rawIndex, orderedPages.length - 1)
-	const currentPage = orderedPages[currentIndex]
-
-	const setCurrentIndex = useCallback((newIndex) => updateQueryUrl('index', newIndex), [updateQueryUrl])
-
-	{
-		// Ensure next and prev pages are preloaded for more seamless cycling
-		const prevPage = orderedPages[currentIndex - 1]
-		if (prevPage !== undefined) imageCache.loadPage(prevPage)
-		const nextPage = orderedPages[currentIndex + 1]
-		if (nextPage !== undefined) imageCache.loadPage(nextPage)
-	}
-
-	const goPrevPage = useCallback(() => {
-		if (currentIndex <= 0) {
-			if (loop) {
-				setCurrentIndex(orderedPages.length - 1)
-			}
-		} else {
-			setCurrentIndex(currentIndex - 1)
-		}
-	}, [orderedPages, setCurrentIndex, currentIndex, loop])
-	const goNextPage = useCallback(() => {
-		if (currentIndex >= orderedPages.length - 1) {
-			if (loop) {
-				setCurrentIndex(0)
-			}
-		} else {
-			setCurrentIndex(currentIndex + 1)
-		}
-	}, [orderedPages, setCurrentIndex, currentIndex, loop])
-	const goFirstPage = useCallback(() => setCurrentIndex(0), [setCurrentIndex])
-
-	return (
-		<CRow className="flex-grow-1">
-			<div className="cycle-layout">
-				<MyErrorBoundary>
-					{/* <div></div> */}
-					<div className="cycle-heading">
-						<h1 id={`page_${currentPage}`}>
-							{pages[currentPage]?.name || ' '}
-
-							{orderedPages.length > 1 ? (
-								<>
-									<CButton onClick={goNextPage} disabled={!loop && currentIndex === orderedPages.length - 1} size="lg">
-										<FontAwesomeIcon icon={faArrowRight} />
-									</CButton>
-									<CButton onClick={goPrevPage} disabled={!loop && currentIndex === 0} size="lg">
-										<FontAwesomeIcon icon={faArrowLeft} />
-									</CButton>
-								</>
-							) : (
-								''
-							)}
-						</h1>
-					</div>
-					<div>
-						<ButtonGrid
-							// No key, we want to reuse the grid as the page changes
-							socket={socket}
-							imageCache={imageCache}
-							number={currentPage}
-							cols={cols}
-							rows={rows}
-							pageInfo={pages[currentPage]}
-							goFirstPage={goFirstPage}
-							goNextPage={goNextPage}
-							goPrevPage={goPrevPage}
-						/>
-					</div>
-				</MyErrorBoundary>
-			</div>
 		</CRow>
 	)
 }

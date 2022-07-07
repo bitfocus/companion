@@ -24,7 +24,7 @@ import App from './App'
 // import { initReactI18next } from 'react-i18next'
 import { GettingStarted } from './GettingStarted'
 import { Tablet } from './Tablet'
-import { Emulator } from './Emulator'
+import { Emulator } from './Emulator/Emulator'
 
 // i18n
 // 	.use(Backend)
@@ -62,9 +62,10 @@ ReactDOM.render(
 				<Route path="/help.html" element={<Navigate to="/getting-started" replace />} />
 				<Route path="/getting-started" element={<GettingStarted />} />
 
-				<Route path="/emulator" element={<Emulator />} />
-				<Route path="/emulator2" element={<Navigate to="/emulator" replace />} />
-				<Route path="/emulator.html" element={<Navigate to="/emulator" replace />} />
+				<Route path="/emulator/:id" element={<Emulator />} />
+				<Route path="/emulator" element={<Navigate to="/emulator/emulator" replace />} />
+				<Route path="/emulator2" element={<Navigate to="/emulator/emulator" replace />} />
+				<Route path="/emulator.html" element={<Navigate to="/emulator/emulator" replace />} />
 
 				{/* TODO this needs some work, to translate the query strings to the new format */}
 				{/* {RedirectPreserveQuery('/tablet.html', '/tablet')} */}

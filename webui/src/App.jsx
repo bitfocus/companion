@@ -73,6 +73,13 @@ export default function App() {
 		})
 		return sock
 	}, [])
+	useEffect(() => {
+		// Close the old socket when recreating
+		const socket2 = socket
+		return () => {
+			socket2.close()
+		}
+	}, [socket])
 
 	const handleWindowBlur = useCallback(() => {
 		setButtonGridHotPress(false)

@@ -11,6 +11,7 @@ import React, {
 import {
 	CAlert,
 	CButton,
+	CButtonGroup,
 	CForm,
 	CFormGroup,
 	CInput,
@@ -24,7 +25,7 @@ import {
 } from '@coreui/react'
 import { StaticContext, LoadingRetryOrError, SurfacesContext, socketEmit2 } from './util'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faCog, faSync } from '@fortawesome/free-solid-svg-icons'
+import { faAdd, faCog, faFolderOpen, faSync, faTrash } from '@fortawesome/free-solid-svg-icons'
 import { nanoid } from 'nanoid'
 import { TextInputField } from './Components/TextInputField'
 import { useMemo } from 'react'
@@ -75,6 +76,21 @@ export const SurfacesPage = memo(function SurfacesPage() {
 				setScanning(false)
 			})
 	}, [context.socket])
+
+	const addEmulator = useCallback(() => {
+		socketEmit2(context.socket, 'surfaces:emulator-add', []).catch((err) => {
+			console.error('Emulator add failed', err)
+		})
+	}, [context.socket])
+
+	const deleteEmulator = useCallback(
+		(dev) => {
+			socketEmit2(context.socket, 'surfaces:emulator-remove', [dev.id]).catch((err) => {
+				console.error('Emulator remove failed', err)
+			})
+		},
+		[context.socket]
+	)
 
 	const configureDevice = useCallback((device) => {
 		editModalRef.current.show(device)
@@ -128,9 +144,29 @@ export const SurfacesPage = memo(function SurfacesPage() {
 								</td>
 								<td>{dev.type}</td>
 								<td>
-									<CButton color="success" onClick={() => configureDevice(dev)}>
-										<FontAwesomeIcon icon={faCog} /> Settings
-									</CButton>
+									<CButtonGroup>
+										<CButton color="success" onClick={() => configureDevice(dev)} title="Configure">
+											<FontAwesomeIcon icon={faCog} /> Settings
+										</CButton>
+
+										{dev.integrationType === 'emulator' ? (
+											<>
+												<CButton
+													color="info"
+													href={`/emulator/${dev.id.substring(9)}`}
+													target="_blank"
+													title="Open Emulator"
+												>
+													<FontAwesomeIcon icon={faFolderOpen} />
+												</CButton>
+												<CButton color="danger" onClick={() => deleteEmulator(dev)} title="Delete Emulator">
+													<FontAwesomeIcon icon={faTrash} />
+												</CButton>
+											</>
+										) : (
+											''
+										)}
+									</CButtonGroup>
 								</td>
 							</tr>
 						)
@@ -149,6 +185,9 @@ export const SurfacesPage = memo(function SurfacesPage() {
 			<CButton color="warning" onClick={refreshUSB}>
 				<FontAwesomeIcon icon={faSync} spin={scanning} />
 				{scanning ? ' Checking for new devices...' : ' Rescan USB'}
+			</CButton>
+			<CButton color="warning" onClick={addEmulator}>
+				<FontAwesomeIcon icon={faAdd} /> Add Emulator
 			</CButton>
 			<p>&nbsp;</p>
 			<CAlert color="info">
