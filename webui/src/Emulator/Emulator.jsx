@@ -157,7 +157,7 @@ export function Emulator() {
 				<CRow>
 					{config ? (
 						<CCol xs={12}>
-							<CyclePages socket={socket} emulatorId={emulatorId} imageCache={imageCache} />
+							<CyclePages emulatorId={emulatorId} imageCache={imageCache} />
 
 							<CAlert color="info" closeButton>
 								Use <b>1 2 3 4 5 6 7 8</b>, <b>Q W E R T Y U I</b>, <b>A S D F G H J K</b>, <b>Z X C V B N M ,</b> to
@@ -186,7 +186,8 @@ export function Emulator() {
 // 	return Math.min(Math.max(0, val), max)
 // }
 
-function CyclePages({ socket, emulatorId, imageCache }) {
+function CyclePages({ emulatorId, imageCache }) {
+	const socket = useContext(SocketContext)
 	// const goPrevPage = useCallback(() => {
 	// 	// if (currentIndex <= 0) {
 	// 	// 	if (loop) {

@@ -1,6 +1,6 @@
 import { CButton, CRow, CCol, CButtonGroup, CLabel, CForm, CAlert } from '@coreui/react'
 import React, { useCallback, useContext, useState } from 'react'
-import { StaticContext, socketEmit2 } from '../../util'
+import { socketEmit2, SocketContext } from '../../util'
 import {
 	AlignmentInputField,
 	CheckboxInputField,
@@ -14,18 +14,18 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faTrash } from '@fortawesome/free-solid-svg-icons'
 
 export function ButtonOptionsConfig({ controlId, controlType, options, configRef }) {
-	const context = useContext(StaticContext)
+	const socket = useContext(SocketContext)
 
 	const setValueInner = useCallback(
 		(key, value) => {
 			console.log('set', controlId, key, value)
 			if (configRef.current === undefined || value !== configRef.current.options[key]) {
-				socketEmit2(context.socket, 'controls:set-options-field', [controlId, key, value]).catch((e) => {
+				socketEmit2(socket, 'controls:set-options-field', [controlId, key, value]).catch((e) => {
 					console.error(`Set field failed: ${e}`)
 				})
 			}
 		},
-		[context.socket, controlId, configRef]
+		[socket, controlId, configRef]
 	)
 
 	const setStepAutoProgressValue = useCallback((val) => setValueInner('stepAutoProgress', val), [setValueInner])
@@ -80,13 +80,13 @@ export function ButtonOptionsConfig({ controlId, controlType, options, configRef
 }
 
 export function ButtonStyleConfig({ controlId, controlType, style, configRef }) {
-	const context = useContext(StaticContext)
+	const socket = useContext(SocketContext)
 
 	const [pngError, setPngError] = useState(null)
 	const setPng = useCallback(
 		(data) => {
 			setPngError(null)
-			socketEmit2(context.socket, 'controls:set-config-fields', [
+			socketEmit2(socket, 'controls:set-config-fields', [
 				controlId,
 				{
 					png64: data,
@@ -96,14 +96,14 @@ export function ButtonStyleConfig({ controlId, controlType, style, configRef }) 
 				setPngError('Failed to set png')
 			})
 		},
-		[context.socket, controlId]
+		[socket, controlId]
 	)
 
 	const setValueInner = useCallback(
 		(key, value) => {
 			console.log('set', controlId, key, value)
 			if (configRef.current === undefined || value !== configRef.current.style[key]) {
-				socketEmit2(context.socket, 'controls:set-config-fields', [
+				socketEmit2(socket, 'controls:set-config-fields', [
 					controlId,
 					{
 						[key]: value,
@@ -113,7 +113,7 @@ export function ButtonStyleConfig({ controlId, controlType, style, configRef }) 
 				})
 			}
 		},
-		[context.socket, controlId, configRef]
+		[socket, controlId, configRef]
 	)
 	const clearPng = useCallback(() => setValueInner('png64', null), [setValueInner])
 

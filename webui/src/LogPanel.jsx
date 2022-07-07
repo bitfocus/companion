@@ -1,6 +1,6 @@
 import React, { memo, useCallback, useContext, useEffect, useRef, useState } from 'react'
 import { CButton, CButtonGroup, CCol, CRow } from '@coreui/react'
-import { socketEmit2, StaticContext } from './util'
+import { socketEmit2, SocketContext } from './util'
 import { nanoid } from 'nanoid'
 import dayjs from 'dayjs'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
@@ -8,7 +8,7 @@ import { faFileExport } from '@fortawesome/free-solid-svg-icons'
 import { GenericConfirmModal } from './Components/GenericConfirmModal'
 
 export const LogPanel = memo(function LogPanel() {
-	const context = useContext(StaticContext)
+	const socket = useContext(SocketContext)
 	const [config, setConfig] = useState(() => loadConfig())
 	const [history, setHistory] = useState([])
 	const exportRef = useRef()
@@ -25,7 +25,7 @@ export const LogPanel = memo(function LogPanel() {
 			setHistory((history) => [item, ...history].slice(0, 500))
 		}
 
-		socketEmit2(context.socket, 'logs:subscribe', [])
+		socketEmit2(socket, 'logs:subscribe', [])
 			.then((lines) => {
 				const items = lines.map((item) => ({
 					...item,
@@ -38,18 +38,18 @@ export const LogPanel = memo(function LogPanel() {
 				console.error('log subscibe error', e)
 			})
 
-		context.socket.on('logs:line', logRecv)
-		context.socket.on('logs:clear', getClearLog)
+		socket.on('logs:line', logRecv)
+		socket.on('logs:clear', getClearLog)
 
 		return () => {
-			context.socket.off('logs:line', logRecv)
-			context.socket.off('logs:clear', getClearLog)
+			socket.off('logs:line', logRecv)
+			socket.off('logs:clear', getClearLog)
 
-			socketEmit2(context.socket, 'logs:unsubscribe', []).catch((e) => {
+			socketEmit2(socket, 'logs:unsubscribe', []).catch((e) => {
 				console.error('log unsubscibe error', e)
 			})
 		}
-	}, [context.socket])
+	}, [socket])
 
 	// Save the config when it changes
 	useEffect(() => {
@@ -57,10 +57,10 @@ export const LogPanel = memo(function LogPanel() {
 	}, [config])
 
 	const doClearLog = useCallback(() => {
-		socketEmit2(context.socket, 'logs:clear', []).catch((e) => {
+		socketEmit2(socket, 'logs:clear', []).catch((e) => {
 			console.error('Log clear failed', e)
 		})
-	}, [context.socket])
+	}, [socket])
 
 	const doToggleConfig = useCallback((key) => {
 		setConfig((oldConfig) => ({

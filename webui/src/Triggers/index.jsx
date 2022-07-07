@@ -1,11 +1,12 @@
 import React, { memo, useCallback, useContext, useEffect, useState } from 'react'
 import { CButton } from '@coreui/react'
-import { StaticContext, TriggersContext } from '../util'
+import { SocketContext, TriggersContext } from '../util'
 import dayjs from 'dayjs'
 import { TriggerEditModal } from './EditModal'
 
 export const Triggers = memo(function Triggers() {
-	const context = useContext(StaticContext)
+	const socket = useContext(SocketContext)
+
 	const triggersList = useContext(TriggersContext)
 
 	const [plugins, setPlugins] = useState(null)
@@ -18,17 +19,17 @@ export const Triggers = memo(function Triggers() {
 	const doSave = useCallback(
 		(newConfig) => {
 			console.log('save item', newConfig)
-			context.socket.emit('schedule_save_item', newConfig)
+			socket.emit('schedule_save_item', newConfig)
 		},
-		[context.socket]
+		[socket]
 	)
 
 	// on mount, load the plugins
 	useEffect(() => {
-		context.socket.emit('schedule_plugins', (newPlugins) => {
+		socket.emit('schedule_plugins', (newPlugins) => {
 			setPlugins(newPlugins)
 		})
-	}, [context.socket])
+	}, [socket])
 
 	return (
 		<div>
@@ -90,20 +91,20 @@ function TriggersTable({ triggersList, editItem }) {
 	)
 }
 function TriggersTableRow({ item, editItem }) {
-	const context = useContext(StaticContext)
+	const socket = useContext(SocketContext)
 
 	const doEnableDisable = useCallback(() => {
-		context.socket.emit('schedule_update_item', item.id, { disabled: !item.disabled })
-	}, [context.socket, item.id, item.disabled])
+		socket.emit('schedule_update_item', item.id, { disabled: !item.disabled })
+	}, [socket, item.id, item.disabled])
 	const doDelete = useCallback(() => {
-		context.socket.emit('schedule_update_item', item.id, { deleted: true })
-	}, [context.socket, item.id])
+		socket.emit('schedule_update_item', item.id, { deleted: true })
+	}, [socket, item.id])
 	const doEdit = useCallback(() => {
 		editItem(item.id)
 	}, [editItem, item.id])
 	const doClone = useCallback(() => {
-		context.socket.emit('schedule_clone_item', item.id)
-	}, [context.socket, item.id])
+		socket.emit('schedule_clone_item', item.id)
+	}, [socket, item.id])
 
 	return (
 		<tr>

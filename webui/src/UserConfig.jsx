@@ -17,7 +17,7 @@ import {
 	CTabPane,
 	CTabs,
 } from '@coreui/react'
-import { MyErrorBoundary, StaticContext, UserConfigContext } from './util'
+import { MyErrorBoundary, SocketContext, UserConfigContext } from './util'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faFileImport, faSync, faTrash, faUndo } from '@fortawesome/free-solid-svg-icons'
 
@@ -44,39 +44,39 @@ export const UserConfig = memo(function UserConfig() {
 })
 
 function UserConfigTable() {
-	const context = useContext(StaticContext)
+	const socket = useContext(SocketContext)
 	const config = useContext(UserConfigContext)
 
 	const setValue = useCallback(
 		(key, value) => {
 			console.log('set ', key, value)
-			context.socket.emit('set_userconfig_key', key, value)
+			socket.emit('set_userconfig_key', key, value)
 		},
-		[context.socket]
+		[socket]
 	)
 
 	const resetValue = useCallback(
 		(key) => {
 			console.log('reset ', key)
-			context.socket.emit('reset_userconfig_key', key)
+			socket.emit('reset_userconfig_key', key)
 		},
-		[context.socket]
+		[socket]
 	)
 
 	const createSslCertificate = useCallback(() => {
 		console.log('create SSL certificate')
-		context.socket.emit('ssl_certificate_create')
-	}, [context.socket])
+		socket.emit('ssl_certificate_create')
+	}, [socket])
 
 	const deleteSslCertificate = useCallback(() => {
 		console.log('delete SSL certificate')
-		context.socket.emit('ssl_certificate_delete')
-	}, [context.socket])
+		socket.emit('ssl_certificate_delete')
+	}, [socket])
 
 	const renewSslCertificate = useCallback(() => {
 		console.log('renew SSL certificate')
-		context.socket.emit('ssl_certificate_renew')
-	}, [context.socket])
+		socket.emit('ssl_certificate_renew')
+	}, [socket])
 
 	return (
 		<table className="table table-responsive-sm">

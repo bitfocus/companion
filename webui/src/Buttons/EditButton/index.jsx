@@ -6,12 +6,12 @@ import { nanoid } from 'nanoid'
 import { BankPreview, dataToButtonImage } from '../../Components/BankButton'
 import { GenericConfirmModal } from '../../Components/GenericConfirmModal'
 import {
-	StaticContext,
 	KeyReceiver,
 	LoadingRetryOrError,
 	UserConfigContext,
 	socketEmit2,
 	ParseControlId,
+	SocketContext,
 } from '../../util'
 import { ActionsPanel } from './ActionsPanel'
 import jsonPatch from 'fast-json-patch'
@@ -21,7 +21,7 @@ import { FeedbacksPanel } from './FeedbackPanel'
 import { cloneDeep } from 'lodash-es'
 
 export function EditButton({ controlId, onKeyUp }) {
-	const context = useContext(StaticContext)
+	const socket = useContext(SocketContext)
 	const userConfig = useContext(UserConfigContext)
 
 	const resetModalRef = useRef()
@@ -43,7 +43,7 @@ export function EditButton({ controlId, onKeyUp }) {
 		setPreviewImage(null)
 		setRuntimeProps(null)
 
-		socketEmit2(context.socket, 'controls:subscribe', [controlId])
+		socketEmit2(socket, 'controls:subscribe', [controlId])
 			.then((config) => {
 				setConfig(config?.config ?? false)
 				setRuntimeProps(config?.runtime ?? {})
@@ -75,24 +75,24 @@ export function EditButton({ controlId, onKeyUp }) {
 			})
 		}
 
-		context.socket.on(`controls:config-${controlId}`, patchConfig)
-		context.socket.on(`controls:runtime-${controlId}`, patchRuntimeProps)
+		socket.on(`controls:config-${controlId}`, patchConfig)
+		socket.on(`controls:runtime-${controlId}`, patchRuntimeProps)
 
 		const updateImage = (img) => {
 			setPreviewImage(dataToButtonImage(img))
 		}
-		context.socket.on(`controls:preview-${controlId}`, updateImage)
+		socket.on(`controls:preview-${controlId}`, updateImage)
 
 		return () => {
-			context.socket.off(`controls:config-${controlId}`, patchConfig)
-			context.socket.off(`controls:runtime-${controlId}`, patchRuntimeProps)
-			context.socket.off(`controls:preview-${controlId}`, updateImage)
+			socket.off(`controls:config-${controlId}`, patchConfig)
+			socket.off(`controls:runtime-${controlId}`, patchRuntimeProps)
+			socket.off(`controls:preview-${controlId}`, updateImage)
 
-			socketEmit2(context.socket, 'controls:unsubscribe', [controlId]).catch((e) => {
+			socketEmit2(socket, 'controls:unsubscribe', [controlId]).catch((e) => {
 				console.error('Failed to unsubscribe bank config', e)
 			})
 		}
-	}, [context.socket, controlId, reloadConfigToken])
+	}, [socket, controlId, reloadConfigToken])
 
 	const setButtonType = useCallback(
 		(newType) => {
@@ -111,7 +111,7 @@ export function EditButton({ controlId, onKeyUp }) {
 			}
 
 			const doChange = () => {
-				socketEmit2(context.socket, 'controls:reset', [controlId, newType]).catch((e) => {
+				socketEmit2(socket, 'controls:reset', [controlId, newType]).catch((e) => {
 					console.error(`Set type failed: ${e}`)
 				})
 			}
@@ -129,7 +129,7 @@ export function EditButton({ controlId, onKeyUp }) {
 				doChange()
 			}
 		},
-		[context.socket, controlId, configRef]
+		[socket, controlId, configRef]
 	)
 
 	const doRetryLoad = useCallback(() => setReloadConfigToken(nanoid()), [])
@@ -140,23 +140,19 @@ export function EditButton({ controlId, onKeyUp }) {
 			`This will clear the style, feedbacks and all actions`,
 			'Clear',
 			() => {
-				socketEmit2(context.socket, 'controls:reset', [controlId]).catch((e) => {
+				socketEmit2(socket, 'controls:reset', [controlId]).catch((e) => {
 					console.error(`Reset failed: ${e}`)
 				})
 			}
 		)
-	}, [context.socket, controlId])
+	}, [socket, controlId])
 
 	const hotPressDown = useCallback(() => {
-		socketEmit2(context.socket, 'controls:hot-press', [controlId, true]).catch((e) =>
-			console.error(`Hot press failed: ${e}`)
-		)
-	}, [context.socket, controlId])
+		socketEmit2(socket, 'controls:hot-press', [controlId, true]).catch((e) => console.error(`Hot press failed: ${e}`))
+	}, [socket, controlId])
 	const hotPressUp = useCallback(() => {
-		socketEmit2(context.socket, 'controls:hot-press', [controlId, false]).catch((e) =>
-			console.error(`Hot press failed: ${e}`)
-		)
-	}, [context.socket, controlId])
+		socketEmit2(socket, 'controls:hot-press', [controlId, false]).catch((e) => console.error(`Hot press failed: ${e}`))
+	}, [socket, controlId])
 
 	const errors = []
 	if (configError) errors.push(configError)
@@ -279,40 +275,40 @@ export function EditButton({ controlId, onKeyUp }) {
 }
 
 function ActionsSection({ style, controlId, action_sets, runtimeProps }) {
-	const context = useContext(StaticContext)
+	const socket = useContext(SocketContext)
 
 	const confirmRef = useRef()
 
 	const appendStep = useCallback(() => {
-		socketEmit2(context.socket, 'controls:action-set:add', [controlId]).catch((e) => {
+		socketEmit2(socket, 'controls:action-set:add', [controlId]).catch((e) => {
 			console.error('Failed to append set:', e)
 		})
-	}, [context.socket, controlId])
+	}, [socket, controlId])
 	const removeStep = useCallback(
 		(id) => {
 			confirmRef.current.show('Remove step', 'Are you sure you wish to remove this step?', 'Remove', () => {
-				socketEmit2(context.socket, 'controls:action-set:remove', [controlId, id]).catch((e) => {
+				socketEmit2(socket, 'controls:action-set:remove', [controlId, id]).catch((e) => {
 					console.error('Failed to delete set:', e)
 				})
 			})
 		},
-		[context.socket, controlId]
+		[socket, controlId]
 	)
 	const swapSteps = useCallback(
 		(id1, id2) => {
-			socketEmit2(context.socket, 'controls:action-set:swap', [controlId, id1, id2]).catch((e) => {
+			socketEmit2(socket, 'controls:action-set:swap', [controlId, id1, id2]).catch((e) => {
 				console.error('Failed to swap sets:', e)
 			})
 		},
-		[context.socket, controlId]
+		[socket, controlId]
 	)
 	const setNextStep = useCallback(
 		(id) => {
-			socketEmit2(context.socket, 'controls:action-set:set-next', [controlId, id]).catch((e) => {
+			socketEmit2(socket, 'controls:action-set:set-next', [controlId, id]).catch((e) => {
 				console.error('Failed to set next set:', e)
 			})
 		},
-		[context.socket, controlId]
+		[socket, controlId]
 	)
 
 	if (style === 'press') {

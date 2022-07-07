@@ -1,11 +1,13 @@
 import React, { useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react'
 import { CButton, CForm, CFormGroup, CInput, CLabel } from '@coreui/react'
 import {
-	StaticContext,
 	InstancesContext,
 	VariableDefinitionsContext,
 	CustomVariableDefinitionsContext,
 	socketEmit2,
+	SocketContext,
+	NotifierContext,
+	ModulesContext,
 } from '../util'
 import { VariablesTable } from '../Components/VariablesTable'
 import { CopyToClipboard } from 'react-copy-to-clipboard'
@@ -52,7 +54,7 @@ export const InstanceVariables = function InstanceVariables({ resetToken }) {
 }
 
 function VariablesInstanceList({ setInstance, setShowCustom, instancesLabelMap }) {
-	const context = useContext(StaticContext)
+	const modules = useContext(ModulesContext)
 	const instancesContext = useContext(InstancesContext)
 	const variableDefinitionsContext = useContext(VariableDefinitionsContext)
 
@@ -71,7 +73,7 @@ function VariablesInstanceList({ setInstance, setShowCustom, instancesLabelMap }
 
 		const id = instancesLabelMap.get(label)
 		const instance = id ? instancesContext[id] : undefined
-		const module = instance ? context.modules[instance.instance_type] : undefined
+		const module = instance ? modules[instance.instance_type] : undefined
 
 		return (
 			<div key={id}>
@@ -118,14 +120,15 @@ function VariablesList({ selectedInstanceLabel, setInstance }) {
 function CustomVariablesList({ setShowCustom }) {
 	const doBack = useCallback(() => setShowCustom(false), [setShowCustom])
 
-	const context = useContext(StaticContext)
+	const socket = useContext(SocketContext)
+	const notifier = useContext(NotifierContext)
 	const customVariableContext = useContext(CustomVariableDefinitionsContext)
 
 	const [variableValues, setVariableValues] = useState({})
 
 	useEffect(() => {
 		const doPoll = () => {
-			socketEmit2(context.socket, 'variables:instance-values', ['internal'])
+			socketEmit2(socket, 'variables:instance-values', ['internal'])
 				.then((values) => {
 					setVariableValues(values || {})
 				})
@@ -142,17 +145,17 @@ function CustomVariablesList({ setShowCustom }) {
 			setVariableValues({})
 			clearInterval(interval)
 		}
-	}, [context.socket])
+	}, [socket])
 
 	const onCopied = useCallback(() => {
-		context.notifier.current.show(`Copied`, 'Copied to clipboard', 5000)
-	}, [context.notifier])
+		notifier.current.show(`Copied`, 'Copied to clipboard', 5000)
+	}, [notifier])
 
 	const [newName, setNewName] = useState('')
 
 	const doCreateNew = useCallback(() => {
 		setNewName((newName) => {
-			socketEmit2(context.socket, 'custom-variables::create', [newName, ''])
+			socketEmit2(socket, 'custom-variables::create', [newName, ''])
 				.then((res) => {
 					// TODO
 					console.log('done with', res)
@@ -164,23 +167,23 @@ function CustomVariablesList({ setShowCustom }) {
 			// clear value
 			return ''
 		})
-	}, [context.socket])
+	}, [socket])
 
 	const setStartupValue = useCallback(
 		(name, value) => {
-			socketEmit2(context.socket, 'custom-variables::set-default', [name, value]).catch((e) => {
+			socketEmit2(socket, 'custom-variables::set-default', [name, value]).catch((e) => {
 				console.error('Failed to update variable')
 			})
 		},
-		[context.socket]
+		[socket]
 	)
 	const setCurrentValue = useCallback(
 		(name, value) => {
-			socketEmit2(context.socket, 'custom-variables::set-current', [name, value]).catch((e) => {
+			socketEmit2(socket, 'custom-variables::set-current', [name, value]).catch((e) => {
 				console.error('Failed to update variable')
 			})
 		},
-		[context.socket]
+		[socket]
 	)
 
 	const confirmRef = useRef(null)
@@ -191,13 +194,13 @@ function CustomVariablesList({ setShowCustom }) {
 				`Are you sure you want to delete the custom variable "${name}"?`,
 				'Delete',
 				() => {
-					socketEmit2(context.socket, 'custom-variables::delete', [name]).catch((e) => {
+					socketEmit2(socket, 'custom-variables::delete', [name]).catch((e) => {
 						console.error('Failed to delete variable')
 					})
 				}
 			)
 		},
-		[context.socket]
+		[socket]
 	)
 
 	return (

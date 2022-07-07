@@ -1,5 +1,5 @@
 import React, { memo, useCallback, useContext, useEffect, useState } from 'react'
-import { StaticContext, LoadingRetryOrError, sandbox, socketEmit2 } from '../util'
+import { LoadingRetryOrError, sandbox, socketEmit2, SocketContext, ModulesContext } from '../util'
 import { CRow, CCol, CButton } from '@coreui/react'
 import {
 	CheckboxInputField,
@@ -13,7 +13,8 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faQuestionCircle } from '@fortawesome/free-solid-svg-icons'
 
 export const InstanceEditPanel = memo(function InstanceEditPanel({ instanceId, doConfigureInstance, showHelp }) {
-	const context = useContext(StaticContext)
+	const socket = useContext(SocketContext)
+	const modules = useContext(ModulesContext)
 
 	const [error, setError] = useState(null)
 	const [reloadToken, setReloadToken] = useState(nanoid())
@@ -39,7 +40,7 @@ export const InstanceEditPanel = memo(function InstanceEditPanel({ instanceId, d
 			return
 		}
 
-		socketEmit2(context.socket, 'instances:set-config', [instanceId, instanceLabel, instanceConfig])
+		socketEmit2(socket, 'instances:set-config', [instanceId, instanceLabel, instanceConfig])
 			.then((err) => {
 				if (err) {
 					if (err === 'duplicate label') {
@@ -57,11 +58,11 @@ export const InstanceEditPanel = memo(function InstanceEditPanel({ instanceId, d
 			.catch((e) => {
 				setError(`Failed to save connection config: ${e}`)
 			})
-	}, [context.socket, instanceId, validFields, instanceLabel, instanceConfig, doCancel])
+	}, [socket, instanceId, validFields, instanceLabel, instanceConfig, doCancel])
 
 	useEffect(() => {
 		if (instanceId) {
-			socketEmit2(context.socket, 'instances:edit', [instanceId])
+			socketEmit2(socket, 'instances:edit', [instanceId])
 				.then((res) => {
 					if (res) {
 						const validFields = {}
@@ -95,7 +96,7 @@ export const InstanceEditPanel = memo(function InstanceEditPanel({ instanceId, d
 			setInstanceConfig(null)
 			setValidFields(null)
 		}
-	}, [context.socket, instanceId, reloadToken])
+	}, [socket, instanceId, reloadToken])
 
 	const doRetryConfigLoad = useCallback(() => setReloadToken(nanoid()), [])
 
@@ -135,7 +136,7 @@ export const InstanceEditPanel = memo(function InstanceEditPanel({ instanceId, d
 		}
 	}, [configFields, instanceConfig])
 
-	const moduleInfo = context.modules[instanceConfig?.instance_type] ?? {}
+	const moduleInfo = modules[instanceConfig?.instance_type] ?? {}
 	const dataReady = instanceConfig && configFields && validFields
 	return (
 		<div>

@@ -25,7 +25,7 @@ import {
 } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import '@fontsource/fira-code'
-import { MyErrorBoundary, useMountEffect, UserConfigContext, StaticContext, SocketContext } from './util'
+import { MyErrorBoundary, useMountEffect, UserConfigContext, SocketContext, NotifierContext } from './util'
 import { SurfacesPage } from './Surfaces'
 import { UserConfig } from './UserConfig'
 import { LogPanel } from './LogPanel'
@@ -38,7 +38,7 @@ import { InstancesPage } from './Instances'
 import { ButtonsPage } from './Buttons'
 import { ContextData } from './ContextData'
 import { CloudPage } from './CloudPage'
-import { WizardModal } from './Wizard'
+import { WizardModal, WIZARD_CURRENT_VERSION } from './Wizard'
 import { Navigate, useLocation } from 'react-router-dom'
 import { useIdleTimer } from 'react-idle-timer'
 
@@ -140,7 +140,6 @@ export default function App() {
 }
 
 function AppMain({ connected, loadingComplete, loadingProgress, buttonGridHotPress }) {
-	const context = useContext(StaticContext)
 	const config = useContext(UserConfigContext)
 
 	const [showSidebar, setShowSidebar] = useState(true)
@@ -165,20 +164,20 @@ function AppMain({ connected, loadingComplete, loadingProgress, buttonGridHotPre
 
 	const setUnlockedInner = useCallback(() => {
 		setUnlocked(true)
-		if (config && config?.setup_wizard < context.currentVersion) {
+		if (config && config?.setup_wizard < WIZARD_CURRENT_VERSION) {
 			showWizard()
 		}
-	}, [config, context.currentVersion, showWizard])
+	}, [config, showWizard])
 
 	// If lockout is disabled, then we are logged in
 	useEffect(() => {
 		if (config && !config?.admin_lockout) {
 			setUnlocked(true)
-			if (config?.setup_wizard < context.currentVersion) {
+			if (config?.setup_wizard < WIZARD_CURRENT_VERSION) {
 				showWizard()
 			}
 		}
-	}, [config, context.currentVersion, showWizard])
+	}, [config, showWizard])
 
 	return (
 		<div className="c-app">
@@ -187,7 +186,7 @@ function AppMain({ connected, loadingComplete, loadingProgress, buttonGridHotPre
 			) : (
 				''
 			)}
-			<WizardModal ref={wizardModal} currentVerson={context.currentVersion} />
+			<WizardModal ref={wizardModal} />
 			<MySidebar show={showSidebar} showWizard={showWizard} />
 			<div className="c-wrapper">
 				<MyHeader toggleSidebar={toggleSidebar} setLocked={setLocked} canLock={canLock && unlocked} />
@@ -209,7 +208,7 @@ function AppMain({ connected, loadingComplete, loadingProgress, buttonGridHotPre
 
 /** Wrap the idle timer in its own component, as it invalidates every second */
 function IdleTimerWrapper({ setLocked, timeoutMinutes }) {
-	const context = useContext(StaticContext)
+	const notifier = useContext(NotifierContext)
 
 	const [, setIdleTimeout] = useState(null)
 
@@ -224,8 +223,8 @@ function IdleTimerWrapper({ setLocked, timeoutMinutes }) {
 			}
 
 			// close toast
-			if (context.notifier.current) {
-				context.notifier.current.close(TOAST_ID)
+			if (notifier.current) {
+				notifier.current.close(TOAST_ID)
 			}
 
 			return null
@@ -236,7 +235,7 @@ function IdleTimerWrapper({ setLocked, timeoutMinutes }) {
 	}
 
 	const handleIdle = () => {
-		context.notifier.current.show(
+		notifier.current.show(
 			'Session timeout',
 			'Your session is about to timeout, and Companion will be locked',
 			null,
@@ -247,8 +246,8 @@ function IdleTimerWrapper({ setLocked, timeoutMinutes }) {
 			if (!v) {
 				return setTimeout(() => {
 					// close toast
-					if (context.notifier.current) {
-						context.notifier.current.close(TOAST_ID)
+					if (notifier.current) {
+						notifier.current.close(TOAST_ID)
 					}
 
 					setLocked()
@@ -277,8 +276,8 @@ function IdleTimerWrapper({ setLocked, timeoutMinutes }) {
 			})
 
 			// close toast
-			if (context.notifier.current) {
-				context.notifier.current.close(TOAST_ID)
+			if (notifier.current) {
+				notifier.current.close(TOAST_ID)
 			}
 		}
 	})

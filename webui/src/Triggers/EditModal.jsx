@@ -12,7 +12,7 @@ import {
 	CModalHeader,
 	CRow,
 } from '@coreui/react'
-import { StaticContext, MyErrorBoundary, useMountEffect, socketEmit2 } from '../util'
+import { MyErrorBoundary, useMountEffect, socketEmit2, SocketContext } from '../util'
 import Select from 'react-select'
 import { AddFeedbackDropdown, FeedbackEditor } from '../Buttons/EditButton/FeedbackPanel'
 import { nanoid } from 'nanoid'
@@ -58,7 +58,7 @@ function getFeedbackDefaults() {
 }
 
 export function TriggerEditModal({ doClose, doSave, item, plugins }) {
-	const context = useContext(StaticContext)
+	const socket = useContext(SocketContext)
 
 	const actionsRef = useRef()
 
@@ -129,7 +129,7 @@ export function TriggerEditModal({ doClose, doSave, item, plugins }) {
 	const addActionSelect = useCallback(
 		(actionType) => {
 			const [instanceId, actionId] = actionType.split(':', 2)
-			socketEmit2(context.socket, 'action-definitions:create-item', [instanceId, actionId]).then((action) => {
+			socketEmit2(socket, 'action-definitions:create-item', [instanceId, actionId]).then((action) => {
 				if (action) {
 					setConfig((oldConfig) => ({
 						...oldConfig,
@@ -138,7 +138,7 @@ export function TriggerEditModal({ doClose, doSave, item, plugins }) {
 				}
 			})
 		},
-		[context.socket]
+		[socket]
 	)
 
 	const actionDelete = useCallback(
@@ -205,7 +205,7 @@ export function TriggerEditModal({ doClose, doSave, item, plugins }) {
 			if (actionsRef.current) {
 				const action = actionsRef.current.find((a) => a.id === actionId)
 				if (action) {
-					socketEmit2(context.socket, 'action-definitions:learn-single', [action])
+					socketEmit2(socket, 'action-definitions:learn-single', [action])
 						.then(([newOptions]) => {
 							setActions((oldActions) => {
 								const index = oldActions.findIndex((a) => a.id === actionId)
@@ -229,7 +229,7 @@ export function TriggerEditModal({ doClose, doSave, item, plugins }) {
 				}
 			}
 		},
-		[context.socket, setActions]
+		[socket, setActions]
 	)
 
 	const setTitle = useCallback((e) => {
@@ -284,7 +284,7 @@ export function TriggerEditModal({ doClose, doSave, item, plugins }) {
 							<CButton
 								color="warning"
 								onMouseDown={() =>
-									context.socket.emit('schedule_test_actions', config.title, config.actions, config.relative_delays)
+									socket.emit('schedule_test_actions', config.title, config.actions, config.relative_delays)
 								}
 							>
 								Test actions
@@ -329,7 +329,7 @@ export function TriggerEditModal({ doClose, doSave, item, plugins }) {
 }
 
 function TriggerEditModalConfig({ pluginSpec, config, setConfig }) {
-	const context = useContext(StaticContext)
+	const socket = useContext(SocketContext)
 
 	const feedbacksRef = useRef(null)
 	useEffect(() => {
@@ -404,7 +404,7 @@ function TriggerEditModalConfig({ pluginSpec, config, setConfig }) {
 			})
 
 			const [instanceId, feedbackId] = feedbackType.split(':', 2)
-			socketEmit2(context.socket, 'feedback-definitions:create-item', [instanceId, feedbackId]).then((fb) => {
+			socketEmit2(socket, 'feedback-definitions:create-item', [instanceId, feedbackId]).then((fb) => {
 				if (fb) {
 					setConfig((oldConfig) => ({
 						...oldConfig,
@@ -413,7 +413,7 @@ function TriggerEditModalConfig({ pluginSpec, config, setConfig }) {
 				}
 			})
 		},
-		[context.socket, setConfig]
+		[socket, setConfig]
 	)
 
 	const delRow = useCallback(
@@ -435,7 +435,7 @@ function TriggerEditModalConfig({ pluginSpec, config, setConfig }) {
 			if (feedbacksRef.current) {
 				const oldFeedback = feedbacksRef.current.find((fb) => fb.id === feedbackId)
 				if (oldFeedback) {
-					socketEmit2(context.socket, 'feedback-definitions:learn-single', [oldFeedback])
+					socketEmit2(socket, 'feedback-definitions:learn-single', [oldFeedback])
 						.then(([newOptions]) => {
 							if (newOptions) {
 								setConfig((oldConfig) => {
@@ -462,7 +462,7 @@ function TriggerEditModalConfig({ pluginSpec, config, setConfig }) {
 				}
 			}
 		},
-		[context.socket, setConfig]
+		[socket, setConfig]
 	)
 
 	// This is a bit of a hack:

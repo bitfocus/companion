@@ -1,7 +1,7 @@
 import { CCol, CRow, CTabs, CTabContent, CTabPane, CNavItem, CNavLink, CNav } from '@coreui/react'
 import { memo, useCallback, useContext, useRef, useState } from 'react'
 import { HelpModal } from './HelpModal'
-import { StaticContext, MyErrorBoundary, socketEmit2 } from '../util'
+import { NotifierContext, MyErrorBoundary, socketEmit2, SocketContext } from '../util'
 import { InstancesList } from './InstanceList'
 import { AddInstancesPanel } from './AddInstance'
 import { InstanceEditPanel } from './InstanceEditPanel'
@@ -10,7 +10,8 @@ import { nanoid } from 'nanoid'
 import { faCog, faPlus } from '@fortawesome/free-solid-svg-icons'
 
 export const InstancesPage = memo(function InstancesPage() {
-	const context = useContext(StaticContext)
+	const socket = useContext(SocketContext)
+	const notifier = useContext(NotifierContext)
 
 	const helpModalRef = useRef()
 
@@ -29,9 +30,9 @@ export const InstancesPage = memo(function InstancesPage() {
 
 	const showHelp = useCallback(
 		(id) => {
-			socketEmit2(context.socket, 'instances:get-help', [id]).then(([err, result]) => {
+			socketEmit2(socket, 'instances:get-help', [id]).then(([err, result]) => {
 				if (err) {
-					context.notifier.current.show('Instance help', `Failed to get help text: ${err}`)
+					notifier.current.show('Instance help', `Failed to get help text: ${err}`)
 					return
 				}
 				if (result) {
@@ -39,7 +40,7 @@ export const InstancesPage = memo(function InstancesPage() {
 				}
 			})
 		},
-		[context.socket, context.notifier]
+		[socket, notifier]
 	)
 
 	const doConfigureInstance = useCallback((id) => {

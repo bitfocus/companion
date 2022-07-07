@@ -1,6 +1,6 @@
 import React, { useCallback, useContext, useState } from 'react'
 import { CButton } from '@coreui/react'
-import { socketEmit2, StaticContext, VariableDefinitionsContext } from '../util'
+import { SocketContext, socketEmit2, NotifierContext, VariableDefinitionsContext } from '../util'
 import { CopyToClipboard } from 'react-copy-to-clipboard'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faCopy } from '@fortawesome/free-solid-svg-icons'
@@ -8,7 +8,8 @@ import { useEffect } from 'react'
 import { useMemo } from 'react'
 
 export function VariablesTable({ label }) {
-	const context = useContext(StaticContext)
+	const socket = useContext(SocketContext)
+	const notifier = useContext(NotifierContext)
 	const variableDefinitionsContext = useContext(VariableDefinitionsContext)
 
 	const variableDefinitions = useMemo(() => {
@@ -29,7 +30,7 @@ export function VariablesTable({ label }) {
 	useEffect(() => {
 		if (label) {
 			const doPoll = () => {
-				socketEmit2(context.socket, 'variables:instance-values', [label])
+				socketEmit2(socket, 'variables:instance-values', [label])
 					.then((values) => {
 						setVariableValues(values || {})
 					})
@@ -47,11 +48,11 @@ export function VariablesTable({ label }) {
 				clearInterval(interval)
 			}
 		}
-	}, [context.socket, label])
+	}, [socket, label])
 
 	const onCopied = useCallback(() => {
-		context.notifier.current.show(`Copied`, 'Copied to clipboard', 5000)
-	}, [context.notifier])
+		notifier.current.show(`Copied`, 'Copied to clipboard', 5000)
+	}, [notifier])
 
 	if (Object.keys(variableDefinitions).length > 0) {
 		return (

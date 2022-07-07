@@ -1,12 +1,20 @@
 import React, { useCallback, useContext, useEffect, useState } from 'react'
 import { CAlert, CButton, CRow } from '@coreui/react'
-import { StaticContext, InstancesContext, LoadingRetryOrError, socketEmit2, myApplyPatch } from '../util'
+import {
+	InstancesContext,
+	LoadingRetryOrError,
+	socketEmit2,
+	myApplyPatch,
+	SocketContext,
+	ModulesContext,
+} from '../util'
 import { useDrag } from 'react-dnd'
 import { BankPreview, dataToButtonImage, RedImage } from '../Components/BankButton'
 import { nanoid } from 'nanoid'
 
 export const InstancePresets = function InstancePresets({ resetToken }) {
-	const context = useContext(StaticContext)
+	const socket = useContext(SocketContext)
+	const modules = useContext(ModulesContext)
 	const instancesContext = useContext(InstancesContext)
 
 	const [instanceAndCategory, setInstanceAndCategory] = useState([null, null])
@@ -25,7 +33,7 @@ export const InstancePresets = function InstancePresets({ resetToken }) {
 		setPresetsMap(null)
 		setPresetError(null)
 
-		socketEmit2(context.socket, 'presets:subscribe', [])
+		socketEmit2(socket, 'presets:subscribe', [])
 			.then((data) => {
 				setPresetsMap(data)
 			})
@@ -38,16 +46,16 @@ export const InstancePresets = function InstancePresets({ resetToken }) {
 			setPresetsMap((oldPresets) => myApplyPatch(oldPresets, id, patch))
 		}
 
-		context.socket.on('presets:update', updatePresets)
+		socket.on('presets:update', updatePresets)
 
 		return () => {
-			context.socket.off('presets:update', updatePresets)
+			socket.off('presets:update', updatePresets)
 
-			socketEmit2(context.socket, 'presets:unsubscribe', []).catch((e) => {
+			socketEmit2(socket, 'presets:unsubscribe', []).catch((e) => {
 				console.error('Failed to unsubscribe to presets')
 			})
 		}
-	}, [context.socket, reloadToken])
+	}, [socket, reloadToken])
 
 	if (!presetsMap) {
 		// Show loading or an error
@@ -60,7 +68,7 @@ export const InstancePresets = function InstancePresets({ resetToken }) {
 
 	if (instanceAndCategory[0]) {
 		const instance = instancesContext[instanceAndCategory[0]]
-		const module = instance ? context.modules[instance.instance_type] : undefined
+		const module = instance ? modules[instance.instance_type] : undefined
 
 		const presets = presetsMap[instanceAndCategory[0]] ?? []
 
@@ -90,14 +98,14 @@ export const InstancePresets = function InstancePresets({ resetToken }) {
 }
 
 function PresetsInstanceList({ presets, setInstanceAndCategory }) {
-	const context = useContext(StaticContext)
+	const modules = useContext(ModulesContext)
 	const instancesContext = useContext(InstancesContext)
 
 	const options = Object.entries(presets).map(([id, vals]) => {
 		if (!vals || Object.values(vals).length === 0) return ''
 
 		const instance = instancesContext[id]
-		const module = instance ? context.modules[instance.instance_type] : undefined
+		const module = instance ? modules[instance.instance_type] : undefined
 
 		return (
 			<div key={id}>
@@ -195,7 +203,7 @@ function PresetsButtonList({ presets, selectedInstanceId, selectedCategory, setI
 }
 
 function PresetIconPreview({ preset, instanceId, ...childProps }) {
-	const context = useContext(StaticContext)
+	const socket = useContext(SocketContext)
 	const [previewImage, setPreviewImage] = useState(null)
 	const [previewError, setPreviewError] = useState(false)
 	const [retryToken, setRetryToken] = useState(nanoid())
@@ -211,7 +219,7 @@ function PresetIconPreview({ preset, instanceId, ...childProps }) {
 	useEffect(() => {
 		setPreviewError(false)
 
-		socketEmit2(context.socket, 'presets:preview_render', [instanceId, preset.id])
+		socketEmit2(socket, 'presets:preview_render', [instanceId, preset.id])
 			.then((img) => {
 				setPreviewImage(img ? dataToButtonImage(img) : null)
 			})
@@ -219,7 +227,7 @@ function PresetIconPreview({ preset, instanceId, ...childProps }) {
 				console.error('Failed to preview bank')
 				setPreviewError(true)
 			})
-	}, [preset.id, context.socket, instanceId, retryToken])
+	}, [preset.id, socket, instanceId, retryToken])
 
 	const onClick = useCallback((i, isDown) => isDown && setRetryToken(nanoid()), [])
 

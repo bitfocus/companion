@@ -221,7 +221,6 @@ export function Tablet() {
 							<ConfigurePanel updateQueryUrl={updateQueryUrl} query={parsedQuery} orderedPages={orderedPages} />
 
 							<InfinitePages
-								socket={socket}
 								pages={pages}
 								imageCache={imageCache}
 								orderedPages={validPages}
@@ -357,7 +356,7 @@ function ConfigurePanel({ updateQueryUrl, query, orderedPages }) {
 	)
 }
 
-function InfinitePages({ socket, pages, imageCache, orderedPages, query, cols, rows }) {
+function InfinitePages({ pages, imageCache, orderedPages, query, cols, rows }) {
 	const noHeadings = query['noheadings']
 
 	const pageElements = orderedPages.map((number, i) => (
@@ -371,14 +370,7 @@ function InfinitePages({ socket, pages, imageCache, orderedPages, query, cols, r
 					''
 				)}
 				<CRow>
-					<ButtonGrid
-						socket={socket}
-						imageCache={imageCache}
-						number={number}
-						cols={cols}
-						rows={rows}
-						pageInfo={pages[number]}
-					/>
+					<ButtonGrid imageCache={imageCache} number={number} cols={cols} rows={rows} pageInfo={pages[number]} />
 				</CRow>
 			</div>
 		</MyErrorBoundary>
@@ -387,7 +379,9 @@ function InfinitePages({ socket, pages, imageCache, orderedPages, query, cols, r
 	return <>{pageElements}</>
 }
 
-function ButtonGrid({ socket, imageCache, number, cols, rows, goFirstPage, goNextPage, goPrevPage, pageInfo }) {
+function ButtonGrid({ imageCache, number, cols, rows, goFirstPage, goNextPage, goPrevPage, pageInfo }) {
+	const socket = useContext(SocketContext)
+
 	const { ref, inView } = useInView({
 		rootMargin: '50%',
 		/* Optional options */

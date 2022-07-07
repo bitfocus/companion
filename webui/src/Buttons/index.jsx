@@ -3,7 +3,7 @@ import { faCalculator, faDollarSign, faFileImport, faGift } from '@fortawesome/f
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { nanoid } from 'nanoid'
 import { InstancePresets } from './Presets'
-import { StaticContext, MyErrorBoundary, socketEmit2, CreateBankControlId } from '../util'
+import { SocketContext, MyErrorBoundary, socketEmit2, CreateBankControlId } from '../util'
 import { ButtonsGridPanel } from './ButtonGrid'
 import { EditButton } from './EditButton'
 import { ImportExport } from './ImportExport'
@@ -12,7 +12,7 @@ import { GenericConfirmModal } from '../Components/GenericConfirmModal'
 import { InstanceVariables } from './Variables'
 
 export const ButtonsPage = memo(function ButtonsPage({ hotPress }) {
-	const context = useContext(StaticContext)
+	const socket = useContext(SocketContext)
 
 	const clearModalRef = useRef()
 
@@ -37,7 +37,7 @@ export const ButtonsPage = memo(function ButtonsPage({ hotPress }) {
 		(page, bank, isDown) => {
 			if (hotPress) {
 				const controlId = CreateBankControlId(page, bank)
-				socketEmit2(context.socket, 'controls:hot-press', [controlId, isDown]).catch((e) =>
+				socketEmit2(socket, 'controls:hot-press', [controlId, isDown]).catch((e) =>
 					console.error(`Hot press failed: ${e}`)
 				)
 			} else if (isDown) {
@@ -46,7 +46,7 @@ export const ButtonsPage = memo(function ButtonsPage({ hotPress }) {
 				setTabResetToken(nanoid())
 			}
 		},
-		[context.socket, hotPress]
+		[socket, hotPress]
 	)
 	const clearSelectedButton = useCallback(() => {
 		doChangeTab('presets')
@@ -65,7 +65,7 @@ export const ButtonsPage = memo(function ButtonsPage({ hotPress }) {
 							'Clear',
 							() => {
 								const controlId = CreateBankControlId(selectedButton[0], selectedButton[1])
-								socketEmit2(context.socket, 'controls:reset', [controlId]).catch((e) => {
+								socketEmit2(socket, 'controls:reset', [controlId]).catch((e) => {
 									console.error(`Reset failed: ${e}`)
 								})
 							}
@@ -83,7 +83,7 @@ export const ButtonsPage = memo(function ButtonsPage({ hotPress }) {
 						console.log('do paste', copyFromButton, selectedButton)
 
 						if (copyFromButton[2] === 'copy') {
-							socketEmit2(context.socket, 'controls:copy', [
+							socketEmit2(socket, 'controls:copy', [
 								CreateBankControlId(copyFromButton[0], copyFromButton[1]),
 								CreateBankControlId(selectedButton[0], selectedButton[1]),
 							]).catch((e) => {
@@ -91,7 +91,7 @@ export const ButtonsPage = memo(function ButtonsPage({ hotPress }) {
 							})
 							setTabResetToken(nanoid())
 						} else if (copyFromButton[2] === 'cut') {
-							socketEmit2(context.socket, 'controls:move', [
+							socketEmit2(socket, 'controls:move', [
 								CreateBankControlId(copyFromButton[0], copyFromButton[1]),
 								CreateBankControlId(selectedButton[0], selectedButton[1]),
 							]).catch((e) => {
@@ -106,7 +106,7 @@ export const ButtonsPage = memo(function ButtonsPage({ hotPress }) {
 				}
 			}
 		},
-		[context.socket, selectedButton, copyFromButton]
+		[socket, selectedButton, copyFromButton]
 	)
 
 	return (

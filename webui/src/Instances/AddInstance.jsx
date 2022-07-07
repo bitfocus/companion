@@ -2,7 +2,8 @@ import React, { memo, useContext, useState } from 'react'
 import { CAlert, CButton, CInput, CInputGroup, CInputGroupAppend } from '@coreui/react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faQuestionCircle, faTimes } from '@fortawesome/free-solid-svg-icons'
-import { StaticContext, socketEmit2 } from '../util'
+import { socketEmit2, SocketContext, NotifierContext, ModulesContext } from '../util'
+import { useCallback } from 'react'
 
 export function AddInstancesPanel({ showHelp, doConfigureInstance }) {
 	return (
@@ -13,28 +14,33 @@ export function AddInstancesPanel({ showHelp, doConfigureInstance }) {
 }
 
 const AddInstancesInner = memo(function AddInstancesInner({ showHelp, configureInstance }) {
-	const context = useContext(StaticContext)
+	const socket = useContext(SocketContext)
+	const notifier = useContext(NotifierContext)
+	const modules = useContext(ModulesContext)
 	const [filter, setFilter] = useState('')
 
-	const addInstance = (type, product) => {
-		socketEmit2(context.socket, 'instances:add', [{ type: type, product: product }])
-			.then((id) => {
-				setFilter('')
-				console.log('NEW INSTANCE', id)
-				configureInstance(id)
-			})
-			.catch((e) => {
-				context.notifier.current.show(`Failed to create connection`, `Failed: ${e}`)
-				console.error('Failed to create connection:', e)
-			})
-	}
+	const addInstance = useCallback(
+		(type, product) => {
+			socketEmit2(socket, 'instances:add', [{ type: type, product: product }])
+				.then((id) => {
+					setFilter('')
+					console.log('NEW INSTANCE', id)
+					configureInstance(id)
+				})
+				.catch((e) => {
+					notifier.current.show(`Failed to create connection`, `Failed: ${e}`)
+					console.error('Failed to create connection:', e)
+				})
+		},
+		[socket, notifier, configureInstance]
+	)
 
 	let candidates = []
 	try {
 		const regexp = new RegExp(filter, 'i')
 
 		const candidatesObj = {}
-		for (const [id, module] of Object.entries(context.modules)) {
+		for (const [id, module] of Object.entries(modules)) {
 			const products = new Set(module.products)
 			for (const subprod of products) {
 				const name = `${module.manufacturer} ${subprod}`
@@ -87,8 +93,8 @@ const AddInstancesInner = memo(function AddInstancesInner({ showHelp, configureI
 		<div style={{ clear: 'both' }}>
 			<h4>Add connection</h4>
 			<p>
-				Companion currently supports {Object.keys(context.modules).length} different things, and the list grows every
-				day. If you can't find the device you're looking for, please{' '}
+				Companion currently supports {Object.keys(modules).length} different things, and the list grows every day. If
+				you can't find the device you're looking for, please{' '}
 				<a target="_new" href="https://github.com/bitfocus/companion-module-requests">
 					add a request
 				</a>{' '}
