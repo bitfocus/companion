@@ -22,18 +22,7 @@ export const SurfacesContext = React.createContext(null)
 export const PagesContext = React.createContext(null)
 export const TriggersContext = React.createContext(null)
 
-export function socketEmit(socket, name, args, timeout, timeoutMessage) {
-	const p = new Promise((resolve, reject) => {
-		console.log('send', name, ...args)
-
-		socket.emit(name, ...args, (...res) => resolve(res))
-	})
-
-	timeout = timeout ?? 5000
-	return pTimeout(p, timeout, timeoutMessage ?? `Timed out after ${timeout / 1000}s`)
-}
-
-export function socketEmit2(socket, name, args, timeout, timeoutMessage) {
+export function socketEmitPromise(socket, name, args, timeout, timeoutMessage) {
 	const p = new Promise((resolve, reject) => {
 		console.log('send', name, ...args)
 

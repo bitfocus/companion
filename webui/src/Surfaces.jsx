@@ -23,7 +23,7 @@ import {
 	CModalHeader,
 	CSelect,
 } from '@coreui/react'
-import { LoadingRetryOrError, SurfacesContext, socketEmit2, SocketContext } from './util'
+import { LoadingRetryOrError, SurfacesContext, socketEmitPromise, SocketContext } from './util'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faAdd, faCog, faFolderOpen, faSync, faTrash } from '@fortawesome/free-solid-svg-icons'
 import { nanoid } from 'nanoid'
@@ -65,7 +65,7 @@ export const SurfacesPage = memo(function SurfacesPage() {
 		setScanning(true)
 		setScanError(null)
 
-		socketEmit2(socket, 'surfaces:rescan', [], 30000)
+		socketEmitPromise(socket, 'surfaces:rescan', [], 30000)
 			.then((errorMsg) => {
 				setScanError(errorMsg || null)
 				setScanning(false)
@@ -78,14 +78,14 @@ export const SurfacesPage = memo(function SurfacesPage() {
 	}, [socket])
 
 	const addEmulator = useCallback(() => {
-		socketEmit2(socket, 'surfaces:emulator-add', []).catch((err) => {
+		socketEmitPromise(socket, 'surfaces:emulator-add', []).catch((err) => {
 			console.error('Emulator add failed', err)
 		})
 	}, [socket])
 
 	const deleteEmulator = useCallback(
 		(dev) => {
-			socketEmit2(socket, 'surfaces:emulator-remove', [dev.id]).catch((err) => {
+			socketEmitPromise(socket, 'surfaces:emulator-remove', [dev.id]).catch((err) => {
 				console.error('Emulator remove failed', err)
 			})
 		},
@@ -98,7 +98,7 @@ export const SurfacesPage = memo(function SurfacesPage() {
 
 	const updateName = useCallback(
 		(serialnumber, name) => {
-			socketEmit2(socket, 'surfaces:set-name', [serialnumber, name]).catch((err) => {
+			socketEmitPromise(socket, 'surfaces:set-name', [serialnumber, name]).catch((err) => {
 				console.error('Update name failed', err)
 			})
 		},
@@ -228,7 +228,7 @@ const SurfaceEditModal = forwardRef(function SurfaceEditModal(_props, ref) {
 		setDeviceConfig(null)
 
 		if (deviceInfo?.id) {
-			socketEmit2(socket, 'surfaces:config-get', [deviceInfo.id])
+			socketEmitPromise(socket, 'surfaces:config-get', [deviceInfo.id])
 				.then(([config, info]) => {
 					console.log(config, info)
 					setDeviceConfig(config)
@@ -270,7 +270,7 @@ const SurfaceEditModal = forwardRef(function SurfaceEditModal(_props, ref) {
 						[key]: value,
 					}
 
-					socketEmit2(socket, 'surfaces:config-set', [deviceInfo.id, newConfig])
+					socketEmitPromise(socket, 'surfaces:config-set', [deviceInfo.id, newConfig])
 						.then((newConfig) => {
 							if (typeof newConfig === 'string') {
 								console.log('Config update failed', newConfig)

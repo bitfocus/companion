@@ -4,7 +4,7 @@ import {
 	applyPatchOrReplaceObject,
 	MyErrorBoundary,
 	SocketContext,
-	socketEmit2,
+	socketEmitPromise,
 	useMountEffect,
 } from '../util'
 import { CAlert, CCol, CContainer, CRow } from '@coreui/react'
@@ -34,7 +34,7 @@ export function Emulator() {
 		setConfig(null)
 		setLoadError(null)
 
-		socketEmit2(socket, 'emulator:startup', [emulatorId])
+		socketEmitPromise(socket, 'emulator:startup', [emulatorId])
 			.then((config) => {
 				setConfig(config)
 			})
@@ -95,7 +95,7 @@ export function Emulator() {
 	useEffect(() => {
 		const onKeyDown = (e) => {
 			if (keymap[e.keyCode] !== undefined) {
-				socketEmit2(socket, 'emulator:press', [emulatorId, keymap[e.keyCode]]).catch((e) => {
+				socketEmitPromise(socket, 'emulator:press', [emulatorId, keymap[e.keyCode]]).catch((e) => {
 					console.error('press failed', e)
 				})
 				console.log('emulator:press', emulatorId, keymap[e.keyCode])
@@ -104,7 +104,7 @@ export function Emulator() {
 
 		const onKeyUp = (e) => {
 			if (keymap[e.keyCode] !== undefined) {
-				socketEmit2(socket, 'emulator:release', [emulatorId, keymap[e.keyCode]]).catch((e) => {
+				socketEmitPromise(socket, 'emulator:release', [emulatorId, keymap[e.keyCode]]).catch((e) => {
 					console.error('release failed', e)
 				})
 				console.log('emulator:release', emulatorId, keymap[e.keyCode])
@@ -123,13 +123,13 @@ export function Emulator() {
 	useEffect(() => {
 		// handle changes to keyDown, as it isnt safe to do inside setState
 		if (keyDown) {
-			socketEmit2(socket, 'emulator:press', [emulatorId, keyDown]).catch((e) => {
+			socketEmitPromise(socket, 'emulator:press', [emulatorId, keyDown]).catch((e) => {
 				console.error('press failed', e)
 			})
 			console.log('emulator:press', emulatorId, keyDown)
 
 			return () => {
-				socketEmit2(socket, 'emulator:release', [emulatorId, keyDown]).catch((e) => {
+				socketEmitPromise(socket, 'emulator:release', [emulatorId, keyDown]).catch((e) => {
 					console.error('release failed', e)
 				})
 				console.log('emulator:release', emulatorId, keyDown)
@@ -221,11 +221,11 @@ function CyclePages({ emulatorId, imageCache }) {
 			// 	goFirstPage()
 			// } else {
 			// 	const controlId = CreateBankControlId(number, bank)
-			// 	socketEmit2(socket, 'controls:hot-press', [controlId, pressed]).catch((e) =>
+			// 	socketEmitPromise(socket, 'controls:hot-press', [controlId, pressed]).catch((e) =>
 			// 		console.error(`Hot press failed: ${e}`)
 			// 	)
 			// }
-			socketEmit2(socket, command, [emulatorId, bank]).catch((e) => {
+			socketEmitPromise(socket, command, [emulatorId, bank]).catch((e) => {
 				console.error(`${command} failed`, e)
 			})
 			console.log(command, emulatorId, bank)

@@ -1,6 +1,6 @@
 import { CButton, CRow, CCol, CButtonGroup, CLabel, CForm, CAlert } from '@coreui/react'
 import React, { useCallback, useContext, useState } from 'react'
-import { socketEmit2, SocketContext } from '../../util'
+import { socketEmitPromise, SocketContext } from '../../util'
 import {
 	AlignmentInputField,
 	CheckboxInputField,
@@ -20,7 +20,7 @@ export function ButtonOptionsConfig({ controlId, controlType, options, configRef
 		(key, value) => {
 			console.log('set', controlId, key, value)
 			if (configRef.current === undefined || value !== configRef.current.options[key]) {
-				socketEmit2(socket, 'controls:set-options-field', [controlId, key, value]).catch((e) => {
+				socketEmitPromise(socket, 'controls:set-options-field', [controlId, key, value]).catch((e) => {
 					console.error(`Set field failed: ${e}`)
 				})
 			}
@@ -86,7 +86,7 @@ export function ButtonStyleConfig({ controlId, controlType, style, configRef }) 
 	const setPng = useCallback(
 		(data) => {
 			setPngError(null)
-			socketEmit2(socket, 'controls:set-config-fields', [
+			socketEmitPromise(socket, 'controls:set-config-fields', [
 				controlId,
 				{
 					png64: data,
@@ -103,7 +103,7 @@ export function ButtonStyleConfig({ controlId, controlType, style, configRef }) 
 		(key, value) => {
 			console.log('set', controlId, key, value)
 			if (configRef.current === undefined || value !== configRef.current.style[key]) {
-				socketEmit2(socket, 'controls:set-config-fields', [
+				socketEmitPromise(socket, 'controls:set-config-fields', [
 					controlId,
 					{
 						[key]: value,

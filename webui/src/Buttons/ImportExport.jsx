@@ -1,7 +1,7 @@
 import React, { forwardRef, useCallback, useContext, useEffect, useImperativeHandle, useRef, useState } from 'react'
 import {
 	InstancesContext,
-	socketEmit2,
+	socketEmitPromise,
 	CreateBankControlId,
 	SocketContext,
 	NotifierContext,
@@ -44,7 +44,7 @@ export function ImportExport({ pageNumber }) {
 	const [loadError, setLoadError] = useState(null)
 	const clearSnapshot = useCallback(() => {
 		setSnapshot(null)
-		socketEmit2(socket, 'loadsave:abort', [])
+		socketEmitPromise(socket, 'loadsave:abort', [])
 	}, [socket])
 	const loadSnapshot = useCallback(
 		(e) => {
@@ -59,7 +59,7 @@ export function ImportExport({ pageNumber }) {
 				var fr = new FileReader()
 				fr.onload = () => {
 					setLoadError(null)
-					socketEmit2(socket, 'loadsave:prepare-import', [fr.result], 20000)
+					socketEmitPromise(socket, 'loadsave:prepare-import', [fr.result], 20000)
 						.then(([err, config]) => {
 							if (err) {
 								setLoadError(err)
@@ -108,7 +108,7 @@ export function ImportExport({ pageNumber }) {
 
 	const doImport = useCallback(() => {
 		setIsRunning(true)
-		socketEmit2(socket, 'loadsave:import-page', [pageNumber, importPage, instanceRemap])
+		socketEmitPromise(socket, 'loadsave:import-page', [pageNumber, importPage, instanceRemap])
 			.then((instanceRemap2) => {
 				if (instanceRemap2) setInstanceRemap(instanceRemap2)
 
@@ -162,7 +162,7 @@ export function ImportExport({ pageNumber }) {
 	const doFullImport = useCallback(() => {
 		confirmModalRef.current.show('Replace config', 'Are you sure you wish to replace the config?', 'Import', () => {
 			setIsRunning(true)
-			socketEmit2(socket, 'loadsave:import-full', [snapshot])
+			socketEmitPromise(socket, 'loadsave:import-full', [snapshot])
 				.then(() => {
 					window.location.reload()
 				})
@@ -342,7 +342,7 @@ function ButtonImportPreview({ controlId, instanceId, ...childProps }) {
 	useEffect(() => {
 		setPreviewImage(null)
 
-		socketEmit2(socket, 'loadsave:control-preview', [controlId])
+		socketEmitPromise(socket, 'loadsave:control-preview', [controlId])
 			.then((img) => {
 				setPreviewImage(img ? dataToButtonImage(img) : null)
 			})
@@ -403,7 +403,7 @@ const ConfirmFullResetModal = forwardRef(function ConfirmFullResetModal(_props, 
 		setShow(false)
 
 		// Perform the reset
-		socketEmit2(socket, 'loadsave:reset-full', [], 30000)
+		socketEmitPromise(socket, 'loadsave:reset-full', [], 30000)
 			.then(() => {
 				window.location.reload()
 			})

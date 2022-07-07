@@ -3,7 +3,6 @@ import {
 	applyPatchOrReplaceSubObject,
 	ActionsContext,
 	FeedbacksContext,
-	socketEmit,
 	InstancesContext,
 	VariableDefinitionsContext,
 	CustomVariableDefinitionsContext,
@@ -11,7 +10,7 @@ import {
 	SurfacesContext,
 	PagesContext,
 	TriggersContext,
-	socketEmit2,
+	socketEmitPromise,
 	applyPatchOrReplaceObject,
 	SocketContext,
 	NotifierContext,
@@ -59,7 +58,7 @@ export function ContextData({ children }) {
 
 	useEffect(() => {
 		if (socket) {
-			socketEmit2(socket, 'modules:get', [])
+			socketEmitPromise(socket, 'modules:get', [])
 				.then((modules) => {
 					const modulesObj = {}
 					for (const mod of modules) {
@@ -70,28 +69,28 @@ export function ContextData({ children }) {
 				.catch((e) => {
 					console.error('Failed to load modules list', e)
 				})
-			socketEmit2(socket, 'action-definitions:subscribe', [])
+			socketEmitPromise(socket, 'action-definitions:subscribe', [])
 				.then((data) => {
 					setActionDefinitions(data || {})
 				})
 				.catch((e) => {
 					console.error('Failed to load action definitions list', e)
 				})
-			socketEmit2(socket, 'feedback-definitions:subscribe', [])
+			socketEmitPromise(socket, 'feedback-definitions:subscribe', [])
 				.then((data) => {
 					setFeedbackDefinitions(data || {})
 				})
 				.catch((e) => {
 					console.error('Failed to load feedback definitions list', e)
 				})
-			socketEmit2(socket, 'variable-definitions:subscribe', [])
+			socketEmitPromise(socket, 'variable-definitions:subscribe', [])
 				.then((data) => {
 					setVariableDefinitions(data || {})
 				})
 				.catch((e) => {
 					console.error('Failed to load variable definitions list', e)
 				})
-			socketEmit2(socket, 'custom-variables:subscribe', [])
+			socketEmitPromise(socket, 'custom-variables:subscribe', [])
 				.then((data) => {
 					setCustomVariables(data || {})
 				})
@@ -99,8 +98,8 @@ export function ContextData({ children }) {
 					console.error('Failed to load custom values list', e)
 				})
 
-			socketEmit(socket, 'get_userconfig_all', [])
-				.then(([config]) => {
+			socketEmitPromise(socket, 'userconfig:get-all', [])
+				.then((config) => {
 					setUserConfig(config)
 				})
 				.catch((e) => {
@@ -130,7 +129,7 @@ export function ContextData({ children }) {
 				setTriggers((oldVariables) => applyPatchOrReplaceObject(oldVariables, patch))
 			}
 
-			socketEmit2(socket, 'instances:subscribe', [])
+			socketEmitPromise(socket, 'instances:subscribe', [])
 				.then((instances) => {
 					setInstances(instances)
 				})
@@ -158,7 +157,7 @@ export function ContextData({ children }) {
 
 			socket.on('set_userconfig_key', updateUserConfigValue)
 
-			socketEmit2(socket, 'surfaces:subscribe', [])
+			socketEmitPromise(socket, 'surfaces:subscribe', [])
 				.then((surfaces) => {
 					setSurfaces(surfaces)
 				})
@@ -173,7 +172,7 @@ export function ContextData({ children }) {
 			}
 			socket.on('surfaces:patch', patchSurfaces)
 
-			socketEmit2(socket, 'pages:subscribe', [])
+			socketEmitPromise(socket, 'pages:subscribe', [])
 				.then((pages) => {
 					// setLoadError(null)
 					setPages(pages)
@@ -230,25 +229,25 @@ export function ContextData({ children }) {
 
 				socket.off('instances:patch', patchInstances)
 
-				socketEmit2(socket, 'action-definitions:unsubscribe', []).catch((e) => {
+				socketEmitPromise(socket, 'action-definitions:unsubscribe', []).catch((e) => {
 					console.error('Failed to unsubscribe to action definitions list', e)
 				})
-				socketEmit2(socket, 'feedback-definitions:unsubscribe', []).catch((e) => {
+				socketEmitPromise(socket, 'feedback-definitions:unsubscribe', []).catch((e) => {
 					console.error('Failed to unsubscribe to feedback definitions list', e)
 				})
-				socketEmit2(socket, 'variable-definitions:unsubscribe', []).catch((e) => {
+				socketEmitPromise(socket, 'variable-definitions:unsubscribe', []).catch((e) => {
 					console.error('Failed to unsubscribe to variable definitions list', e)
 				})
-				socketEmit2(socket, 'instances:unsubscribe', []).catch((e) => {
+				socketEmitPromise(socket, 'instances:unsubscribe', []).catch((e) => {
 					console.error('Failed to unsubscribe from instances list:', e)
 				})
-				socketEmit2(socket, 'surfaces:unsubscribe', []).catch((e) => {
+				socketEmitPromise(socket, 'surfaces:unsubscribe', []).catch((e) => {
 					console.error('Failed to unsubscribe from surfaces', e)
 				})
-				socketEmit2(socket, 'custom-variables:unsubscribe', []).catch((e) => {
+				socketEmitPromise(socket, 'custom-variables:unsubscribe', []).catch((e) => {
 					console.error('Failed to unsubscribe from custom variables', e)
 				})
-				socketEmit2(socket, 'pages:unsubscribe', []).catch((e) => {
+				socketEmitPromise(socket, 'pages:unsubscribe', []).catch((e) => {
 					console.error('Failed to unsubscribe pages list:', e)
 				})
 			}

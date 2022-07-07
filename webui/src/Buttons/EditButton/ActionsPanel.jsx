@@ -7,7 +7,7 @@ import {
 	ActionsContext,
 	InstancesContext,
 	MyErrorBoundary,
-	socketEmit2,
+	socketEmitPromise,
 	sandbox,
 	useMountEffect,
 	SocketContext,
@@ -25,7 +25,7 @@ export function ActionsPanel({ controlId, set, actions, dragId, addPlaceholder }
 
 	const emitUpdateOption = useCallback(
 		(actionId, key, val) => {
-			socketEmit2(socket, 'controls:action:set-option', [controlId, set, actionId, key, val]).catch((e) => {
+			socketEmitPromise(socket, 'controls:action:set-option', [controlId, set, actionId, key, val]).catch((e) => {
 				console.error('Failed to set bank action option', e)
 			})
 		},
@@ -33,7 +33,7 @@ export function ActionsPanel({ controlId, set, actions, dragId, addPlaceholder }
 	)
 	const emitSetDelay = useCallback(
 		(actionId, delay) => {
-			socketEmit2(socket, 'controls:action:set-delay', [controlId, set, actionId, delay]).catch((e) => {
+			socketEmitPromise(socket, 'controls:action:set-delay', [controlId, set, actionId, delay]).catch((e) => {
 				console.error('Failed to set bank action delay', e)
 			})
 		},
@@ -42,7 +42,7 @@ export function ActionsPanel({ controlId, set, actions, dragId, addPlaceholder }
 
 	const emitDelete = useCallback(
 		(actionId) => {
-			socketEmit2(socket, 'controls:action:remove', [controlId, set, actionId]).catch((e) => {
+			socketEmitPromise(socket, 'controls:action:remove', [controlId, set, actionId]).catch((e) => {
 				console.error('Failed to remove bank action', e)
 			})
 		},
@@ -51,7 +51,7 @@ export function ActionsPanel({ controlId, set, actions, dragId, addPlaceholder }
 
 	const emitLearn = useCallback(
 		(actionId) => {
-			socketEmit2(socket, 'controls:action:learn', [controlId, set, actionId]).catch((e) => {
+			socketEmitPromise(socket, 'controls:action:learn', [controlId, set, actionId]).catch((e) => {
 				console.error('Failed to learn bank action values', e)
 			})
 		},
@@ -60,7 +60,7 @@ export function ActionsPanel({ controlId, set, actions, dragId, addPlaceholder }
 
 	const emitOrder = useCallback(
 		(dragIndex, hoverIndex) => {
-			socketEmit2(socket, 'controls:action:reorder', [controlId, set, dragIndex, hoverIndex]).catch((e) => {
+			socketEmitPromise(socket, 'controls:action:reorder', [controlId, set, dragIndex, hoverIndex]).catch((e) => {
 				console.error('Failed to reorder bank actions', e)
 			})
 		},
@@ -70,7 +70,7 @@ export function ActionsPanel({ controlId, set, actions, dragId, addPlaceholder }
 	const addAction = useCallback(
 		(actionType) => {
 			const [instanceId, actionId] = actionType.split(':', 2)
-			socketEmit2(socket, 'controls:action:add', [controlId, set, instanceId, actionId]).catch((e) => {
+			socketEmitPromise(socket, 'controls:action:add', [controlId, set, instanceId, actionId]).catch((e) => {
 				console.error('Failed to add bank action', e)
 			})
 		},

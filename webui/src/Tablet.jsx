@@ -4,8 +4,7 @@ import {
 	LoadingRetryOrError,
 	MyErrorBoundary,
 	SocketContext,
-	socketEmit,
-	socketEmit2,
+	socketEmitPromise,
 	useMountEffect,
 } from './util'
 import { CButton, CCol, CContainer, CForm, CFormGroup, CInput, CInputCheckbox, CRow } from '@coreui/react'
@@ -53,9 +52,9 @@ class ImageCache extends EventEmitter {
 
 	_doSubscribe(page) {
 		const lastUpdated = {} // We won't ever have an existing data
-		socketEmit(this.socket, 'web_buttons_page', [page, lastUpdated])
-			.then(([n, data]) => {
-				this._updateImages(n, data)
+		socketEmitPromise(this.socket, 'web_buttons_page', [page, lastUpdated])
+			.then((data) => {
+				this._updateImages(page, data)
 			})
 			.catch((e) => {
 				// TODO - report to user
@@ -137,8 +136,8 @@ export function Tablet() {
 		setLoadError(null)
 		setPages(null)
 
-		socketEmit(socket, 'web_buttons', [])
-			.then(([newPages]) => {
+		socketEmitPromise(socket, 'web_buttons', [])
+			.then((newPages) => {
 				setLoadError(null)
 				const newPages2 = {}
 				for (const [id, info] of Object.entries(newPages)) {
@@ -417,7 +416,7 @@ function ButtonGrid({ imageCache, number, cols, rows, goFirstPage, goNextPage, g
 				goFirstPage()
 			} else {
 				const controlId = CreateBankControlId(number, bank)
-				socketEmit2(socket, 'controls:hot-press', [controlId, pressed]).catch((e) =>
+				socketEmitPromise(socket, 'controls:hot-press', [controlId, pressed]).catch((e) =>
 					console.error(`Hot press failed: ${e}`)
 				)
 			}

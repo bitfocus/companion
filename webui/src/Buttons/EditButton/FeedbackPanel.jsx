@@ -6,7 +6,7 @@ import {
 	FeedbacksContext,
 	InstancesContext,
 	MyErrorBoundary,
-	socketEmit2,
+	socketEmitPromise,
 	sandbox,
 	useMountEffect,
 	SocketContext,
@@ -38,7 +38,7 @@ export const FeedbacksPanel = function ({ controlId, feedbacks, dragId }) {
 		(feedbackId, key, val) => {
 			const currentFeedback = feedbacksRef.current?.find((fb) => fb.id === feedbackId)
 			if (!currentFeedback?.options || currentFeedback.options[key] !== val) {
-				socketEmit2(socket, 'controls:feedback:set-option', [controlId, feedbackId, key, val]).catch((e) => {
+				socketEmitPromise(socket, 'controls:feedback:set-option', [controlId, feedbackId, key, val]).catch((e) => {
 					console.error(`Set-option failed: ${e}`)
 				})
 			}
@@ -49,7 +49,7 @@ export const FeedbacksPanel = function ({ controlId, feedbacks, dragId }) {
 	const doDelete = useCallback(
 		(feedbackId) => {
 			confirmModal.current.show('Delete feedback', 'Delete feedback?', 'Delete', () => {
-				socketEmit2(socket, 'controls:feedback:remove', [controlId, feedbackId]).catch((e) => {
+				socketEmitPromise(socket, 'controls:feedback:remove', [controlId, feedbackId]).catch((e) => {
 					console.error(`Failed to delete feedback: ${e}`)
 				})
 			})
@@ -59,7 +59,7 @@ export const FeedbacksPanel = function ({ controlId, feedbacks, dragId }) {
 
 	const doLearn = useCallback(
 		(feedbackId) => {
-			socketEmit2(socket, 'controls:feedback:learn', [controlId, feedbackId]).catch((e) => {
+			socketEmitPromise(socket, 'controls:feedback:learn', [controlId, feedbackId]).catch((e) => {
 				console.error(`Failed to learn feedback values: ${e}`)
 			})
 		},
@@ -77,7 +77,7 @@ export const FeedbacksPanel = function ({ controlId, feedbacks, dragId }) {
 			})
 
 			const [instanceId, feedbackId] = feedbackType.split(':', 2)
-			socketEmit2(socket, 'controls:feedback:add', [controlId, instanceId, feedbackId]).catch((e) => {
+			socketEmitPromise(socket, 'controls:feedback:add', [controlId, instanceId, feedbackId]).catch((e) => {
 				console.error('Failed to add bank feedback', e)
 			})
 		},
@@ -86,7 +86,7 @@ export const FeedbacksPanel = function ({ controlId, feedbacks, dragId }) {
 
 	const moveCard = useCallback(
 		(dragIndex, hoverIndex) => {
-			socketEmit2(socket, 'controls:feedback:reorder', [controlId, dragIndex, hoverIndex]).catch((e) => {
+			socketEmitPromise(socket, 'controls:feedback:reorder', [controlId, dragIndex, hoverIndex]).catch((e) => {
 				console.error(`Move failed: ${e}`)
 			})
 		},
@@ -201,18 +201,22 @@ function FeedbackTableRow({ feedback, controlId, index, dragId, moveCard, setVal
 
 	const setSelectedStyleProps = useCallback(
 		(selected) => {
-			socketEmit2(socket, 'controls:feedback:set-style-selection', [controlId, feedback.id, selected]).catch((e) => {
-				// TODO
-			})
+			socketEmitPromise(socket, 'controls:feedback:set-style-selection', [controlId, feedback.id, selected]).catch(
+				(e) => {
+					// TODO
+				}
+			)
 		},
 		[socket, controlId, feedback.id]
 	)
 
 	const setStylePropsValue = useCallback(
 		(key, value) => {
-			socketEmit2(socket, 'controls:feedback:set-style-value', [controlId, feedback.id, key, value]).catch((e) => {
-				console.error(`Failed: ${e}`)
-			})
+			socketEmitPromise(socket, 'controls:feedback:set-style-value', [controlId, feedback.id, key, value]).catch(
+				(e) => {
+					console.error(`Failed: ${e}`)
+				}
+			)
 		},
 		[socket, controlId, feedback.id]
 	)

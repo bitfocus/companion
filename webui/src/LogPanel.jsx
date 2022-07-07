@@ -1,6 +1,6 @@
 import React, { memo, useCallback, useContext, useEffect, useRef, useState } from 'react'
 import { CButton, CButtonGroup, CCol, CRow } from '@coreui/react'
-import { socketEmit2, SocketContext } from './util'
+import { socketEmitPromise, SocketContext } from './util'
 import { nanoid } from 'nanoid'
 import dayjs from 'dayjs'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
@@ -25,7 +25,7 @@ export const LogPanel = memo(function LogPanel() {
 			setHistory((history) => [item, ...history].slice(0, 500))
 		}
 
-		socketEmit2(socket, 'logs:subscribe', [])
+		socketEmitPromise(socket, 'logs:subscribe', [])
 			.then((lines) => {
 				const items = lines.map((item) => ({
 					...item,
@@ -45,7 +45,7 @@ export const LogPanel = memo(function LogPanel() {
 			socket.off('logs:line', logRecv)
 			socket.off('logs:clear', getClearLog)
 
-			socketEmit2(socket, 'logs:unsubscribe', []).catch((e) => {
+			socketEmitPromise(socket, 'logs:unsubscribe', []).catch((e) => {
 				console.error('log unsubscibe error', e)
 			})
 		}
@@ -57,7 +57,7 @@ export const LogPanel = memo(function LogPanel() {
 	}, [config])
 
 	const doClearLog = useCallback(() => {
-		socketEmit2(socket, 'logs:clear', []).catch((e) => {
+		socketEmitPromise(socket, 'logs:clear', []).catch((e) => {
 			console.error('Log clear failed', e)
 		})
 	}, [socket])
