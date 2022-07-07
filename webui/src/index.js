@@ -16,7 +16,10 @@ require('intersection-observer')
 import React from 'react'
 import ReactDOM from 'react-dom'
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
+import io from 'socket.io-client'
+
 import App from './App'
+import { SERVER_URL, SocketContext } from './util'
 
 // import i18n from 'i18next'
 // import Backend from 'i18next-http-backend'
@@ -55,28 +58,37 @@ import { Emulator } from './Emulator'
 // 	)
 // }
 
+const socket = new io(SERVER_URL)
+if (window.location.hash && window.location.hash.includes('debug_socket')) {
+	socket.onAny(function (name, ...data) {
+		console.log('received event', name, data)
+	})
+}
+
 ReactDOM.render(
 	<React.StrictMode>
-		<BrowserRouter>
-			<Routes>
-				<Route path="/help.html" element={<Navigate to="/getting-started" replace />} />
-				<Route path="/getting-started" element={<GettingStarted />} />
+		<SocketContext.Provider value={socket}>
+			<BrowserRouter>
+				<Routes>
+					<Route path="/help.html" element={<Navigate to="/getting-started" replace />} />
+					<Route path="/getting-started" element={<GettingStarted />} />
 
-				<Route path="/emulator" element={<Emulator />} />
-				<Route path="/emulator2" element={<Navigate to="/emulator" replace />} />
-				<Route path="/emulator.html" element={<Navigate to="/emulator" replace />} />
+					<Route path="/emulator" element={<Emulator />} />
+					<Route path="/emulator2" element={<Navigate to="/emulator" replace />} />
+					<Route path="/emulator.html" element={<Navigate to="/emulator" replace />} />
 
-				{/* TODO this needs some work, to translate the query strings to the new format */}
-				{/* {RedirectPreserveQuery('/tablet.html', '/tablet')} */}
-				<Route path="/tablet.html" element={<Navigate to="/tablet" replace />} />
-				<Route path="/tablet2.html" element={<Navigate to="/tablet" replace />} />
-				<Route path="/ipad.html" element={<Navigate to="/tablet" replace />} />
-				<Route path="/tablet3" element={<Navigate to="/tablet" replace />} />
+					{/* TODO this needs some work, to translate the query strings to the new format */}
+					{/* {RedirectPreserveQuery('/tablet.html', '/tablet')} */}
+					<Route path="/tablet.html" element={<Navigate to="/tablet" replace />} />
+					<Route path="/tablet2.html" element={<Navigate to="/tablet" replace />} />
+					<Route path="/ipad.html" element={<Navigate to="/tablet" replace />} />
+					<Route path="/tablet3" element={<Navigate to="/tablet" replace />} />
 
-				<Route path="/tablet" element={<Tablet />} />
-				<Route path="/*" element={<App />} />
-			</Routes>
-		</BrowserRouter>
+					<Route path="/tablet" element={<Tablet />} />
+					<Route path="/*" element={<App />} />
+				</Routes>
+			</BrowserRouter>
+		</SocketContext.Provider>
 	</React.StrictMode>,
 	document.getElementById('root')
 )

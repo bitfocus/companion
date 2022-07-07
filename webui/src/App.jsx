@@ -1,4 +1,4 @@
-import React, { Suspense, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react'
+import React, { Suspense, useCallback, useContext, useEffect, useRef, useState } from 'react'
 import {
 	CContainer,
 	CTabContent,
@@ -24,9 +24,8 @@ import {
 	faUserNinja,
 } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import io from 'socket.io-client'
 import '@fontsource/fira-code'
-import { MyErrorBoundary, SERVER_URL, useMountEffect, UserConfigContext, StaticContext } from './util'
+import { MyErrorBoundary, useMountEffect, UserConfigContext, StaticContext, SocketContext } from './util'
 import { SurfacesPage } from './Surfaces'
 import { UserConfig } from './UserConfig'
 import { LogPanel } from './LogPanel'
@@ -44,13 +43,13 @@ import { Navigate, useLocation } from 'react-router-dom'
 import { useIdleTimer } from 'react-idle-timer'
 
 export default function App() {
+	const socket = useContext(SocketContext)
 	const [connected, setConnected] = useState(false)
 	const [wasConnected, setWasConnected] = useState(false)
 	const [buttonGridHotPress, setButtonGridHotPress] = useState(false)
 
-	const socket = useMemo(() => {
-		const sock = new io(SERVER_URL)
-		sock.on('connect', () => {
+	useEffect(() => {
+		const onConnected = () => {
 			setWasConnected((wasConnected0) => {
 				if (wasConnected0) {
 					window.location.reload(true)
@@ -59,20 +58,23 @@ export default function App() {
 				}
 				return wasConnected0
 			})
-		})
-		if (window.location.hash && window.location.hash.includes('debug_socket')) {
-			sock.onAny(function (name, ...data) {
-				console.log('received event', name, data)
-			})
 		}
-		sock.on('disconnect', () => {
+		const onDisconnected = () => {
 			setConnected((val) => {
 				setWasConnected(val)
 				return false
 			})
-		})
-		return sock
-	}, [])
+		}
+		socket.on('connect', onConnected)
+		socket.on('disconnect', onDisconnected)
+
+		if (socket.connected) onConnected()
+
+		return () => {
+			socket.off('connect', onConnected)
+			socket.off('disconnect', onDisconnected)
+		}
+	}, [socket])
 
 	const handleWindowBlur = useCallback(() => {
 		setButtonGridHotPress(false)
@@ -104,7 +106,7 @@ export default function App() {
 	})
 
 	return (
-		<ContextData socket={socket}>
+		<ContextData>
 			{(loadingProgress, loadingComplete) => (
 				<>
 					<div id="error-container" className={wasConnected ? 'show-error' : ''}>

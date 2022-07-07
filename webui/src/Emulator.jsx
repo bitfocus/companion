@@ -1,6 +1,5 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
-import { LoadingRetryOrError, myApplyPatch2, SERVER_URL, socketEmit2, useMountEffect } from './util'
-import io from 'socket.io-client'
+import { useCallback, useContext, useEffect, useMemo, useState } from 'react'
+import { LoadingRetryOrError, myApplyPatch2, SocketContext, socketEmit2, useMountEffect } from './util'
 import { CAlert, CCol, CContainer, CRow } from '@coreui/react'
 import { nanoid } from 'nanoid'
 
@@ -23,6 +22,8 @@ function dataToButtonImage(data) {
 }
 
 export function Emulator() {
+	const socket = useContext(SocketContext)
+
 	const [config, setConfig] = useState({})
 	const [loadError, setLoadError] = useState(null)
 
@@ -30,8 +31,6 @@ export function Emulator() {
 
 	// A persistent object that doesnt trigger a render
 	const imageCache = useMemo(() => ({}), [])
-
-	const socket = useMemo(() => new io(SERVER_URL), [])
 
 	const [retryToken, setRetryToken] = useState(nanoid())
 	const doRetryLoad = useCallback(() => setRetryToken(nanoid()), [])

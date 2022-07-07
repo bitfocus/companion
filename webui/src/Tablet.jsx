@@ -1,14 +1,13 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useContext, useEffect, useMemo, useState } from 'react'
 import {
 	CreateBankControlId,
 	LoadingRetryOrError,
 	MyErrorBoundary,
-	SERVER_URL,
+	SocketContext,
 	socketEmit,
 	socketEmit2,
 	useMountEffect,
 } from './util'
-import io from 'socket.io-client'
 import { CButton, CCol, CContainer, CForm, CFormGroup, CInput, CInputCheckbox, CRow, CSelect } from '@coreui/react'
 import { nanoid } from 'nanoid'
 import { MAX_BUTTONS, MAX_COLS, MAX_ROWS } from './Constants'
@@ -106,6 +105,8 @@ function sanitisePageInfo(info) {
 }
 
 export function Tablet() {
+	const socket = useContext(SocketContext)
+
 	const [pages, setPages] = useState(null)
 	const [loadError, setLoadError] = useState(null)
 
@@ -121,10 +122,7 @@ export function Tablet() {
 		}
 	}, [queryUrl])
 
-	const [socket, imageCache] = useMemo(() => {
-		const rawSocket = new io(SERVER_URL)
-		return [rawSocket, new ImageCache(rawSocket)]
-	}, [])
+	const imageCache = useMemo(() => new ImageCache(socket), [socket]) // TODO - this isnt the safest
 
 	const [retryToken, setRetryToken] = useState(nanoid())
 	const doRetryLoad = useCallback(() => setRetryToken(nanoid()), [])

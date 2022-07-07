@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useContext, useEffect, useMemo, useRef, useState } from 'react'
 import {
 	myApplyPatch,
 	StaticContext,
@@ -14,12 +14,15 @@ import {
 	TriggersContext,
 	socketEmit2,
 	myApplyPatch2,
+	SocketContext,
 } from './util'
 import { NotificationsManager } from './Components/Notifications'
 import { cloneDeep } from 'lodash-es'
 import jsonPatch from 'fast-json-patch'
 
-export function ContextData({ socket, children }) {
+export function ContextData({ children }) {
+	const socket = useContext(SocketContext)
+
 	const [instances, setInstances] = useState(null)
 	const [modules, setModules] = useState(null)
 	const [actionDefinitions, setActionDefinitions] = useState(null)
