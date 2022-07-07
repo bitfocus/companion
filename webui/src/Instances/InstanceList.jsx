@@ -1,6 +1,6 @@
 import { useCallback, useContext, useEffect, useRef, useState } from 'react'
 import { CButton } from '@coreui/react'
-import { InstancesContext, VariableDefinitionsContext, socketEmit2, SocketContext, ModulesContext } from '../util'
+import { InstancesContext, VariableDefinitionsContext, socketEmitPromise, SocketContext, ModulesContext } from '../util'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faDollarSign, faQuestionCircle, faBug } from '@fortawesome/free-solid-svg-icons'
 import jsonPatch from 'fast-json-patch'
@@ -19,7 +19,7 @@ export function InstancesList({ showHelp, doConfigureInstance }) {
 	const variablesModalRef = useRef()
 
 	useEffect(() => {
-		socketEmit2(socket, 'instance_status:get', [])
+		socketEmitPromise(socket, 'instance_status:get', [])
 			.then((statuses) => {
 				setInstanceStatus(statuses)
 			})
@@ -119,7 +119,7 @@ function InstancesTableRow({
 			`Are you sure you want to delete "${instance.label}"?`,
 			'Delete',
 			() => {
-				socketEmit2(socket, 'instances:delete', [id]).catch((e) => {
+				socketEmitPromise(socket, 'instances:delete', [id]).catch((e) => {
 					console.error('Delete failed', e)
 				})
 				configureInstance(null)
@@ -128,7 +128,7 @@ function InstancesTableRow({
 	}, [socket, deleteModalRef, id, instance.label, configureInstance])
 
 	const doToggleEnabled = useCallback(() => {
-		socketEmit2(socket, 'instances:set-enabled', [id, !isEnabled]).catch((e) => {
+		socketEmitPromise(socket, 'instances:set-enabled', [id, !isEnabled]).catch((e) => {
 			console.error('Set enabled failed', e)
 		})
 	}, [socket, id, isEnabled])

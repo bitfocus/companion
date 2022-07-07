@@ -3,7 +3,7 @@ import { CAlert, CButton, CRow } from '@coreui/react'
 import {
 	InstancesContext,
 	LoadingRetryOrError,
-	socketEmit2,
+	socketEmitPromise,
 	applyPatchOrReplaceSubObject,
 	SocketContext,
 	ModulesContext,
@@ -33,7 +33,7 @@ export const InstancePresets = function InstancePresets({ resetToken }) {
 		setPresetsMap(null)
 		setPresetError(null)
 
-		socketEmit2(socket, 'presets:subscribe', [])
+		socketEmitPromise(socket, 'presets:subscribe', [])
 			.then((data) => {
 				setPresetsMap(data)
 			})
@@ -51,7 +51,7 @@ export const InstancePresets = function InstancePresets({ resetToken }) {
 		return () => {
 			socket.off('presets:update', updatePresets)
 
-			socketEmit2(socket, 'presets:unsubscribe', []).catch((e) => {
+			socketEmitPromise(socket, 'presets:unsubscribe', []).catch((e) => {
 				console.error('Failed to unsubscribe to presets')
 			})
 		}
@@ -219,7 +219,7 @@ function PresetIconPreview({ preset, instanceId, ...childProps }) {
 	useEffect(() => {
 		setPreviewError(false)
 
-		socketEmit2(socket, 'presets:preview_render', [instanceId, preset.id])
+		socketEmitPromise(socket, 'presets:preview_render', [instanceId, preset.id])
 			.then((img) => {
 				setPreviewImage(img ? dataToButtonImage(img) : null)
 			})

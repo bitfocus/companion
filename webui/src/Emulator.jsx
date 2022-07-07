@@ -1,5 +1,11 @@
 import { useCallback, useContext, useEffect, useMemo, useState } from 'react'
-import { LoadingRetryOrError, applyPatchOrReplaceObject, SocketContext, socketEmit2, useMountEffect } from './util'
+import {
+	LoadingRetryOrError,
+	applyPatchOrReplaceObject,
+	SocketContext,
+	socketEmitPromise,
+	useMountEffect,
+} from './util'
 import { CAlert, CCol, CContainer, CRow } from '@coreui/react'
 import { nanoid } from 'nanoid'
 
@@ -37,7 +43,7 @@ export function Emulator() {
 	useEffect(() => {
 		setLoadError(null)
 
-		socketEmit2(socket, 'emulator:startup', [])
+		socketEmitPromise(socket, 'emulator:startup', [])
 			.then((config) => {
 				console.log('config', config)
 				setConfig(config)

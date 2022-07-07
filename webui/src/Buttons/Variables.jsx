@@ -4,7 +4,7 @@ import {
 	InstancesContext,
 	VariableDefinitionsContext,
 	CustomVariableDefinitionsContext,
-	socketEmit2,
+	socketEmitPromise,
 	SocketContext,
 	NotifierContext,
 	ModulesContext,
@@ -128,7 +128,7 @@ function CustomVariablesList({ setShowCustom }) {
 
 	useEffect(() => {
 		const doPoll = () => {
-			socketEmit2(socket, 'variables:instance-values', ['internal'])
+			socketEmitPromise(socket, 'variables:instance-values', ['internal'])
 				.then((values) => {
 					setVariableValues(values || {})
 				})
@@ -155,7 +155,7 @@ function CustomVariablesList({ setShowCustom }) {
 
 	const doCreateNew = useCallback(() => {
 		setNewName((newName) => {
-			socketEmit2(socket, 'custom-variables::create', [newName, ''])
+			socketEmitPromise(socket, 'custom-variables::create', [newName, ''])
 				.then((res) => {
 					// TODO
 					console.log('done with', res)
@@ -171,7 +171,7 @@ function CustomVariablesList({ setShowCustom }) {
 
 	const setStartupValue = useCallback(
 		(name, value) => {
-			socketEmit2(socket, 'custom-variables::set-default', [name, value]).catch((e) => {
+			socketEmitPromise(socket, 'custom-variables::set-default', [name, value]).catch((e) => {
 				console.error('Failed to update variable')
 			})
 		},
@@ -179,7 +179,7 @@ function CustomVariablesList({ setShowCustom }) {
 	)
 	const setCurrentValue = useCallback(
 		(name, value) => {
-			socketEmit2(socket, 'custom-variables::set-current', [name, value]).catch((e) => {
+			socketEmitPromise(socket, 'custom-variables::set-current', [name, value]).catch((e) => {
 				console.error('Failed to update variable')
 			})
 		},
@@ -194,7 +194,7 @@ function CustomVariablesList({ setShowCustom }) {
 				`Are you sure you want to delete the custom variable "${name}"?`,
 				'Delete',
 				() => {
-					socketEmit2(socket, 'custom-variables::delete', [name]).catch((e) => {
+					socketEmitPromise(socket, 'custom-variables::delete', [name]).catch((e) => {
 						console.error('Failed to delete variable')
 					})
 				}

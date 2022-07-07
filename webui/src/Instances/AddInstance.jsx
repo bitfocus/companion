@@ -2,7 +2,7 @@ import React, { memo, useContext, useState } from 'react'
 import { CAlert, CButton, CInput, CInputGroup, CInputGroupAppend } from '@coreui/react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faQuestionCircle, faTimes } from '@fortawesome/free-solid-svg-icons'
-import { socketEmit2, SocketContext, NotifierContext, ModulesContext } from '../util'
+import { socketEmitPromise, SocketContext, NotifierContext, ModulesContext } from '../util'
 import { useCallback } from 'react'
 
 export function AddInstancesPanel({ showHelp, doConfigureInstance }) {
@@ -21,7 +21,7 @@ const AddInstancesInner = memo(function AddInstancesInner({ showHelp, configureI
 
 	const addInstance = useCallback(
 		(type, product) => {
-			socketEmit2(socket, 'instances:add', [{ type: type, product: product }])
+			socketEmitPromise(socket, 'instances:add', [{ type: type, product: product }])
 				.then((id) => {
 					setFilter('')
 					console.log('NEW INSTANCE', id)

@@ -9,7 +9,7 @@ import React, {
 	useRef,
 	useState,
 } from 'react'
-import { KeyReceiver, PagesContext, socketEmit2, CreateBankControlId, SocketContext } from '../util'
+import { KeyReceiver, PagesContext, socketEmitPromise, CreateBankControlId, SocketContext } from '../util'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import {
 	faArrowsAlt,
@@ -93,7 +93,7 @@ export const ButtonsGridPanel = memo(function ButtonsPage({
 	const clearNewPageName = useCallback(() => setNewPageName(null), [])
 	const changeNewPageName = useCallback(
 		(e) => {
-			socketEmit2(socket, 'pages:set-name', [pageNumber, e.currentTarget.value]).catch((e) => {
+			socketEmitPromise(socket, 'pages:set-name', [pageNumber, e.currentTarget.value]).catch((e) => {
 				console.error('Failed to set name', e)
 			})
 			setNewPageName(e.currentTarget.value)
@@ -223,7 +223,7 @@ const ButtonGridActions = forwardRef(function ButtonGridActions({ isHot, pageNum
 			`Are you sure you want to clear all buttons on page ${pageNumber}?\nThere's no going back from this.`,
 			'Reset',
 			() => {
-				socketEmit2(socket, 'loadsave:reset-page-clear', [pageNumber]).catch((e) => {
+				socketEmitPromise(socket, 'loadsave:reset-page-clear', [pageNumber]).catch((e) => {
 					console.error(`Clear page failed: ${e}`)
 				})
 			}
@@ -237,7 +237,7 @@ const ButtonGridActions = forwardRef(function ButtonGridActions({ isHot, pageNum
 			`Are you sure you want to reset navigation buttons? This will completely erase bank ${pageNumber}.1, ${pageNumber}.9 and ${pageNumber}.17`,
 			'Reset',
 			() => {
-				socketEmit2(socket, 'loadsave:reset-page-nav', [pageNumber]).catch((e) => {
+				socketEmitPromise(socket, 'loadsave:reset-page-nav', [pageNumber]).catch((e) => {
 					console.error(`Reset nav failed: ${e}`)
 				})
 			}
@@ -253,7 +253,7 @@ const ButtonGridActions = forwardRef(function ButtonGridActions({ isHot, pageNum
 						case 'delete':
 							resetRef.current.show('Clear bank', `Clear style and actions for this button?`, 'Clear', () => {
 								const controlId = CreateBankControlId(pageNumber, index)
-								socketEmit2(socket, 'controls:reset', [controlId]).catch((e) => {
+								socketEmitPromise(socket, 'controls:reset', [controlId]).catch((e) => {
 									console.error(`Reset failed: ${e}`)
 								})
 							})
@@ -263,7 +263,7 @@ const ButtonGridActions = forwardRef(function ButtonGridActions({ isHot, pageNum
 						case 'copy':
 							if (activeFunctionBank) {
 								const fromInfo = activeFunctionBank
-								socketEmit2(socket, 'controls:copy', [
+								socketEmitPromise(socket, 'controls:copy', [
 									CreateBankControlId(fromInfo.page, fromInfo.bank),
 									CreateBankControlId(pageNumber, index),
 								]).catch((e) => {
@@ -280,7 +280,7 @@ const ButtonGridActions = forwardRef(function ButtonGridActions({ isHot, pageNum
 						case 'move':
 							if (activeFunctionBank) {
 								const fromInfo = activeFunctionBank
-								socketEmit2(socket, 'controls:move', [
+								socketEmitPromise(socket, 'controls:move', [
 									CreateBankControlId(fromInfo.page, fromInfo.bank),
 									CreateBankControlId(pageNumber, index),
 								]).catch((e) => {
@@ -515,7 +515,7 @@ const ButtonGridIcon = memo(function ButtonGridIcon(props) {
 		accept: 'preset',
 		drop: (dropData) => {
 			console.log('preset drop', dropData)
-			socketEmit2(socket, 'presets:import_to_bank', [
+			socketEmitPromise(socket, 'presets:import_to_bank', [
 				dropData.instanceId,
 				dropData.presetId,
 				props.page,

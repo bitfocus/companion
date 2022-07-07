@@ -9,7 +9,7 @@ import {
 	KeyReceiver,
 	LoadingRetryOrError,
 	UserConfigContext,
-	socketEmit2,
+	socketEmitPromise,
 	ParseControlId,
 	SocketContext,
 } from '../../util'
@@ -43,7 +43,7 @@ export function EditButton({ controlId, onKeyUp }) {
 		setPreviewImage(null)
 		setRuntimeProps(null)
 
-		socketEmit2(socket, 'controls:subscribe', [controlId])
+		socketEmitPromise(socket, 'controls:subscribe', [controlId])
 			.then((config) => {
 				setConfig(config?.config ?? false)
 				setRuntimeProps(config?.runtime ?? {})
@@ -88,7 +88,7 @@ export function EditButton({ controlId, onKeyUp }) {
 			socket.off(`controls:runtime-${controlId}`, patchRuntimeProps)
 			socket.off(`controls:preview-${controlId}`, updateImage)
 
-			socketEmit2(socket, 'controls:unsubscribe', [controlId]).catch((e) => {
+			socketEmitPromise(socket, 'controls:unsubscribe', [controlId]).catch((e) => {
 				console.error('Failed to unsubscribe bank config', e)
 			})
 		}
@@ -111,7 +111,7 @@ export function EditButton({ controlId, onKeyUp }) {
 			}
 
 			const doChange = () => {
-				socketEmit2(socket, 'controls:reset', [controlId, newType]).catch((e) => {
+				socketEmitPromise(socket, 'controls:reset', [controlId, newType]).catch((e) => {
 					console.error(`Set type failed: ${e}`)
 				})
 			}
@@ -140,7 +140,7 @@ export function EditButton({ controlId, onKeyUp }) {
 			`This will clear the style, feedbacks and all actions`,
 			'Clear',
 			() => {
-				socketEmit2(socket, 'controls:reset', [controlId]).catch((e) => {
+				socketEmitPromise(socket, 'controls:reset', [controlId]).catch((e) => {
 					console.error(`Reset failed: ${e}`)
 				})
 			}
@@ -148,10 +148,14 @@ export function EditButton({ controlId, onKeyUp }) {
 	}, [socket, controlId])
 
 	const hotPressDown = useCallback(() => {
-		socketEmit2(socket, 'controls:hot-press', [controlId, true]).catch((e) => console.error(`Hot press failed: ${e}`))
+		socketEmitPromise(socket, 'controls:hot-press', [controlId, true]).catch((e) =>
+			console.error(`Hot press failed: ${e}`)
+		)
 	}, [socket, controlId])
 	const hotPressUp = useCallback(() => {
-		socketEmit2(socket, 'controls:hot-press', [controlId, false]).catch((e) => console.error(`Hot press failed: ${e}`))
+		socketEmitPromise(socket, 'controls:hot-press', [controlId, false]).catch((e) =>
+			console.error(`Hot press failed: ${e}`)
+		)
 	}, [socket, controlId])
 
 	const errors = []
@@ -280,14 +284,14 @@ function ActionsSection({ style, controlId, action_sets, runtimeProps }) {
 	const confirmRef = useRef()
 
 	const appendStep = useCallback(() => {
-		socketEmit2(socket, 'controls:action-set:add', [controlId]).catch((e) => {
+		socketEmitPromise(socket, 'controls:action-set:add', [controlId]).catch((e) => {
 			console.error('Failed to append set:', e)
 		})
 	}, [socket, controlId])
 	const removeStep = useCallback(
 		(id) => {
 			confirmRef.current.show('Remove step', 'Are you sure you wish to remove this step?', 'Remove', () => {
-				socketEmit2(socket, 'controls:action-set:remove', [controlId, id]).catch((e) => {
+				socketEmitPromise(socket, 'controls:action-set:remove', [controlId, id]).catch((e) => {
 					console.error('Failed to delete set:', e)
 				})
 			})
@@ -296,7 +300,7 @@ function ActionsSection({ style, controlId, action_sets, runtimeProps }) {
 	)
 	const swapSteps = useCallback(
 		(id1, id2) => {
-			socketEmit2(socket, 'controls:action-set:swap', [controlId, id1, id2]).catch((e) => {
+			socketEmitPromise(socket, 'controls:action-set:swap', [controlId, id1, id2]).catch((e) => {
 				console.error('Failed to swap sets:', e)
 			})
 		},
@@ -304,7 +308,7 @@ function ActionsSection({ style, controlId, action_sets, runtimeProps }) {
 	)
 	const setNextStep = useCallback(
 		(id) => {
-			socketEmit2(socket, 'controls:action-set:set-next', [controlId, id]).catch((e) => {
+			socketEmitPromise(socket, 'controls:action-set:set-next', [controlId, id]).catch((e) => {
 				console.error('Failed to set next set:', e)
 			})
 		},

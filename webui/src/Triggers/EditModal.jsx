@@ -12,7 +12,7 @@ import {
 	CModalHeader,
 	CRow,
 } from '@coreui/react'
-import { MyErrorBoundary, useMountEffect, socketEmit2, SocketContext } from '../util'
+import { MyErrorBoundary, useMountEffect, socketEmitPromise, SocketContext } from '../util'
 import Select from 'react-select'
 import { AddFeedbackDropdown, FeedbackEditor } from '../Buttons/EditButton/FeedbackPanel'
 import { nanoid } from 'nanoid'
@@ -129,7 +129,7 @@ export function TriggerEditModal({ doClose, doSave, item, plugins }) {
 	const addActionSelect = useCallback(
 		(actionType) => {
 			const [instanceId, actionId] = actionType.split(':', 2)
-			socketEmit2(socket, 'action-definitions:create-item', [instanceId, actionId]).then((action) => {
+			socketEmitPromise(socket, 'action-definitions:create-item', [instanceId, actionId]).then((action) => {
 				if (action) {
 					setConfig((oldConfig) => ({
 						...oldConfig,
@@ -205,7 +205,7 @@ export function TriggerEditModal({ doClose, doSave, item, plugins }) {
 			if (actionsRef.current) {
 				const action = actionsRef.current.find((a) => a.id === actionId)
 				if (action) {
-					socketEmit2(socket, 'action-definitions:learn-single', [action])
+					socketEmitPromise(socket, 'action-definitions:learn-single', [action])
 						.then(([newOptions]) => {
 							setActions((oldActions) => {
 								const index = oldActions.findIndex((a) => a.id === actionId)
@@ -404,7 +404,7 @@ function TriggerEditModalConfig({ pluginSpec, config, setConfig }) {
 			})
 
 			const [instanceId, feedbackId] = feedbackType.split(':', 2)
-			socketEmit2(socket, 'feedback-definitions:create-item', [instanceId, feedbackId]).then((fb) => {
+			socketEmitPromise(socket, 'feedback-definitions:create-item', [instanceId, feedbackId]).then((fb) => {
 				if (fb) {
 					setConfig((oldConfig) => ({
 						...oldConfig,
@@ -435,7 +435,7 @@ function TriggerEditModalConfig({ pluginSpec, config, setConfig }) {
 			if (feedbacksRef.current) {
 				const oldFeedback = feedbacksRef.current.find((fb) => fb.id === feedbackId)
 				if (oldFeedback) {
-					socketEmit2(socket, 'feedback-definitions:learn-single', [oldFeedback])
+					socketEmitPromise(socket, 'feedback-definitions:learn-single', [oldFeedback])
 						.then(([newOptions]) => {
 							if (newOptions) {
 								setConfig((oldConfig) => {

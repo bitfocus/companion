@@ -1,6 +1,6 @@
 import React, { forwardRef, useCallback, useContext, useImperativeHandle, useState } from 'react'
 import { CAlert, CButton, CForm, CModal, CModalBody, CModalFooter, CModalHeader } from '@coreui/react'
-import { socketEmit, SocketContext } from '../util'
+import { SocketContext, socketEmitPromise } from '../util'
 import { BeginStep } from './BeginStep'
 import { SurfacesStep } from './SurfacesStep'
 import { ServicesStep } from './ServicesStep'
@@ -22,8 +22,8 @@ export const WizardModal = forwardRef(function WizardModal(_props, ref) {
 	const [clear, setClear] = useState(true)
 
 	const getConfig = useCallback(() => {
-		socketEmit(socket, 'get_userconfig_all', [])
-			.then(([config]) => {
+		socketEmitPromise(socket, 'userconfig:get-all', [])
+			.then((config) => {
 				setStartConfig(config)
 				setOldConfig(config)
 				setNewConfig(config)
