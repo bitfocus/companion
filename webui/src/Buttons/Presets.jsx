@@ -4,7 +4,7 @@ import {
 	InstancesContext,
 	LoadingRetryOrError,
 	socketEmit2,
-	myApplyPatch,
+	applyPatchOrReplaceSubObject,
 	SocketContext,
 	ModulesContext,
 } from '../util'
@@ -43,7 +43,7 @@ export const InstancePresets = function InstancePresets({ resetToken }) {
 			})
 
 		const updatePresets = (id, patch) => {
-			setPresetsMap((oldPresets) => myApplyPatch(oldPresets, id, patch))
+			setPresetsMap((oldPresets) => applyPatchOrReplaceSubObject(oldPresets, id, patch))
 		}
 
 		socket.on('presets:update', updatePresets)

@@ -1,5 +1,5 @@
 import { useCallback, useContext, useEffect, useMemo, useState } from 'react'
-import { LoadingRetryOrError, myApplyPatch2, SocketContext, socketEmit2, useMountEffect } from './util'
+import { LoadingRetryOrError, applyPatchOrReplaceObject, SocketContext, socketEmit2, useMountEffect } from './util'
 import { CAlert, CCol, CContainer, CRow } from '@coreui/react'
 import { nanoid } from 'nanoid'
 
@@ -47,7 +47,7 @@ export function Emulator() {
 			})
 
 		const updateConfig = (patch) => {
-			setConfig((oldConfig) => myApplyPatch2(oldConfig, patch))
+			setConfig((oldConfig) => applyPatchOrReplaceObject(oldConfig, patch))
 		}
 
 		socket.on('emulator:config', updateConfig)
