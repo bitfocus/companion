@@ -1,6 +1,12 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
-import { LoadingRetryOrError, myApplyPatch2, MyErrorBoundary, SERVER_URL, socketEmit2, useMountEffect } from '../util'
-import io from 'socket.io-client'
+import { useCallback, useEffect, useMemo, useState, useContext } from 'react'
+import {
+	LoadingRetryOrError,
+	myApplyPatch2,
+	MyErrorBoundary,
+	SocketContext,
+	socketEmit2,
+	useMountEffect,
+} from '../util'
 import { CAlert, CCol, CContainer, CRow } from '@coreui/react'
 import { nanoid } from 'nanoid'
 import { useParams } from 'react-router-dom'
@@ -9,6 +15,8 @@ import { BankPreview, dataToButtonImage } from '../Components/BankButton'
 import { MAX_COLS, MAX_ROWS } from '../Constants'
 
 export function Emulator() {
+	const socket = useContext(SocketContext)
+
 	const [config, setConfig] = useState(null)
 	const [loadError, setLoadError] = useState(null)
 
@@ -19,15 +27,6 @@ export function Emulator() {
 		// Clear the images on id change
 		setImageCache({})
 	}, [emulatorId])
-
-	const socket = useMemo(() => new io(SERVER_URL), [])
-	useEffect(() => {
-		// Close the old socket when recreating
-		const socket2 = socket
-		return () => {
-			socket2.close()
-		}
-	}, [socket])
 
 	const [retryToken, setRetryToken] = useState(nanoid())
 	const doRetryLoad = useCallback(() => setRetryToken(nanoid()), [])
