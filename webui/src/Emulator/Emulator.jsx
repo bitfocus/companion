@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState, useContext } from 'react'
 import {
 	LoadingRetryOrError,
-	myApplyPatch2,
+	applyPatchOrReplaceObject,
 	MyErrorBoundary,
 	SocketContext,
 	socketEmit2,
@@ -44,7 +44,7 @@ export function Emulator() {
 			})
 
 		const updateConfig = (patch) => {
-			setConfig((oldConfig) => myApplyPatch2(oldConfig, patch))
+			setConfig((oldConfig) => applyPatchOrReplaceObject(oldConfig, patch))
 		}
 
 		socket.on('emulator:config', updateConfig)

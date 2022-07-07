@@ -1,6 +1,6 @@
 import { useContext, useEffect, useMemo, useRef, useState } from 'react'
 import {
-	myApplyPatch,
+	applyPatchOrReplaceSubObject,
 	ActionsContext,
 	FeedbacksContext,
 	socketEmit,
@@ -12,7 +12,7 @@ import {
 	PagesContext,
 	TriggersContext,
 	socketEmit2,
-	myApplyPatch2,
+	applyPatchOrReplaceObject,
 	SocketContext,
 	NotifierContext,
 	ModulesContext,
@@ -108,13 +108,13 @@ export function ContextData({ children }) {
 				})
 
 			const updateVariableDefinitions = (label, patch) => {
-				setVariableDefinitions((oldDefinitions) => myApplyPatch(oldDefinitions, label, patch))
+				setVariableDefinitions((oldDefinitions) => applyPatchOrReplaceSubObject(oldDefinitions, label, patch))
 			}
 			const updateFeedbackDefinitions = (id, patch) => {
-				setFeedbackDefinitions((oldDefinitions) => myApplyPatch(oldDefinitions, id, patch))
+				setFeedbackDefinitions((oldDefinitions) => applyPatchOrReplaceSubObject(oldDefinitions, id, patch))
 			}
 			const updateActionDefinitions = (id, patch) => {
-				setActionDefinitions((oldDefinitions) => myApplyPatch(oldDefinitions, id, patch))
+				setActionDefinitions((oldDefinitions) => applyPatchOrReplaceSubObject(oldDefinitions, id, patch))
 			}
 
 			const updateUserConfigValue = (key, value) => {
@@ -124,10 +124,10 @@ export function ContextData({ children }) {
 				}))
 			}
 			const updateCustomVariables = (patch) => {
-				setCustomVariables((oldVariables) => myApplyPatch2(oldVariables, patch))
+				setCustomVariables((oldVariables) => applyPatchOrReplaceObject(oldVariables, patch))
 			}
 			const updateTriggers = (patch) => {
-				setTriggers((oldVariables) => myApplyPatch2(oldVariables, patch))
+				setTriggers((oldVariables) => applyPatchOrReplaceObject(oldVariables, patch))
 			}
 
 			socketEmit2(socket, 'instances:subscribe', [])
@@ -256,15 +256,6 @@ export function ContextData({ children }) {
 	}, [socket])
 
 	const notifierRef = useRef()
-
-	const contextValue = useMemo(
-		() => ({
-			socket: socket,
-			notifier: notifierRef,
-			modules: modules,
-		}),
-		[socket, notifierRef, modules]
-	)
 
 	const steps = [
 		instances,

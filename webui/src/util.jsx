@@ -234,7 +234,7 @@ export function ParseControlId(controlId) {
 	return undefined
 }
 
-export function myApplyPatch(oldDefinitions, key, patch) {
+export function applyPatchOrReplaceSubObject(oldDefinitions, key, patch) {
 	if (oldDefinitions) {
 		const oldEntry = oldDefinitions[key] ?? {}
 
@@ -254,7 +254,7 @@ export function myApplyPatch(oldDefinitions, key, patch) {
 		return oldDefinitions
 	}
 }
-export function myApplyPatch2(oldObj, patch) {
+export function applyPatchOrReplaceObject(oldObj, patch) {
 	const oldEntry = oldObj ?? {}
 
 	if (Array.isArray(patch)) {
