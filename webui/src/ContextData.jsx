@@ -1,7 +1,6 @@
 import { useContext, useEffect, useMemo, useRef, useState } from 'react'
 import {
 	myApplyPatch,
-	StaticContext,
 	ActionsContext,
 	FeedbacksContext,
 	socketEmit,
@@ -15,6 +14,8 @@ import {
 	socketEmit2,
 	myApplyPatch2,
 	SocketContext,
+	NotifierContext,
+	ModulesContext,
 } from './util'
 import { NotificationsManager } from './Components/Notifications'
 import { cloneDeep } from 'lodash-es'
@@ -261,7 +262,6 @@ export function ContextData({ children }) {
 			socket: socket,
 			notifier: notifierRef,
 			modules: modules,
-			currentVersion: 22,
 		}),
 		[socket, notifierRef, modules]
 	)
@@ -284,28 +284,30 @@ export function ContextData({ children }) {
 	const progressPercent = (completedSteps.length / steps.length) * 100
 
 	return (
-		<StaticContext.Provider value={contextValue}>
-			<ActionsContext.Provider value={actionDefinitions}>
-				<FeedbacksContext.Provider value={feedbackDefinitions}>
-					<InstancesContext.Provider value={instances}>
-						<VariableDefinitionsContext.Provider value={completeVariableDefinitions}>
-							<CustomVariableDefinitionsContext.Provider value={customVariables}>
-								<UserConfigContext.Provider value={userConfig}>
-									<SurfacesContext.Provider value={surfaces}>
-										<PagesContext.Provider value={pages}>
-											<TriggersContext.Provider value={triggers}>
-												<NotificationsManager ref={notifierRef} />
+		<NotifierContext.Provider value={notifierRef}>
+			<ModulesContext.Provider value={modules}>
+				<ActionsContext.Provider value={actionDefinitions}>
+					<FeedbacksContext.Provider value={feedbackDefinitions}>
+						<InstancesContext.Provider value={instances}>
+							<VariableDefinitionsContext.Provider value={completeVariableDefinitions}>
+								<CustomVariableDefinitionsContext.Provider value={customVariables}>
+									<UserConfigContext.Provider value={userConfig}>
+										<SurfacesContext.Provider value={surfaces}>
+											<PagesContext.Provider value={pages}>
+												<TriggersContext.Provider value={triggers}>
+													<NotificationsManager ref={notifierRef} />
 
-												{children(progressPercent, completedSteps.length === steps.length)}
-											</TriggersContext.Provider>
-										</PagesContext.Provider>
-									</SurfacesContext.Provider>
-								</UserConfigContext.Provider>
-							</CustomVariableDefinitionsContext.Provider>
-						</VariableDefinitionsContext.Provider>
-					</InstancesContext.Provider>
-				</FeedbacksContext.Provider>
-			</ActionsContext.Provider>
-		</StaticContext.Provider>
+													{children(progressPercent, completedSteps.length === steps.length)}
+												</TriggersContext.Provider>
+											</PagesContext.Provider>
+										</SurfacesContext.Provider>
+									</UserConfigContext.Provider>
+								</CustomVariableDefinitionsContext.Provider>
+							</VariableDefinitionsContext.Provider>
+						</InstancesContext.Provider>
+					</FeedbacksContext.Provider>
+				</ActionsContext.Provider>
+			</ModulesContext.Provider>
+		</NotifierContext.Provider>
 	)
 }

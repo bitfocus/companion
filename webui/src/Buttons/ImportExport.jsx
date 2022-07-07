@@ -1,5 +1,12 @@
 import React, { forwardRef, useCallback, useContext, useEffect, useImperativeHandle, useRef, useState } from 'react'
-import { StaticContext, InstancesContext, socketEmit2, CreateBankControlId } from '../util'
+import {
+	InstancesContext,
+	socketEmit2,
+	CreateBankControlId,
+	SocketContext,
+	NotifierContext,
+	ModulesContext,
+} from '../util'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faDownload, faFileImport, faTrashAlt } from '@fortawesome/free-solid-svg-icons'
 import {
@@ -20,7 +27,8 @@ import { ButtonGridHeader } from './ButtonGrid'
 import { GenericConfirmModal } from '../Components/GenericConfirmModal'
 
 export function ImportExport({ pageNumber }) {
-	const context = useContext(StaticContext)
+	const socket = useContext(SocketContext)
+	const modules = useContext(ModulesContext)
 	const instancesContext = useContext(InstancesContext)
 
 	const confirmModalRef = useRef()
@@ -36,8 +44,8 @@ export function ImportExport({ pageNumber }) {
 	const [loadError, setLoadError] = useState(null)
 	const clearSnapshot = useCallback(() => {
 		setSnapshot(null)
-		socketEmit2(context.socket, 'loadsave:abort', [])
-	}, [context.socket])
+		socketEmit2(socket, 'loadsave:abort', [])
+	}, [socket])
 	const loadSnapshot = useCallback(
 		(e) => {
 			const newFiles = e.currentTarget.files
@@ -51,7 +59,7 @@ export function ImportExport({ pageNumber }) {
 				var fr = new FileReader()
 				fr.onload = () => {
 					setLoadError(null)
-					socketEmit2(context.socket, 'loadsave:prepare-import', [fr.result], 20000)
+					socketEmit2(socket, 'loadsave:prepare-import', [fr.result], 20000)
 						.then(([err, config]) => {
 							if (err) {
 								setLoadError(err)
@@ -95,12 +103,12 @@ export function ImportExport({ pageNumber }) {
 				setLoadError('Companion requires a more modern browser')
 			}
 		},
-		[context.socket, instancesContext, fileApiIsSupported]
+		[socket, instancesContext, fileApiIsSupported]
 	)
 
 	const doImport = useCallback(() => {
 		setIsRunning(true)
-		socketEmit2(context.socket, 'loadsave:import-page', [pageNumber, importPage, instanceRemap])
+		socketEmit2(socket, 'loadsave:import-page', [pageNumber, importPage, instanceRemap])
 			.then((instanceRemap2) => {
 				if (instanceRemap2) setInstanceRemap(instanceRemap2)
 
@@ -119,7 +127,7 @@ export function ImportExport({ pageNumber }) {
 			.finally(() => {
 				setIsRunning(false)
 			})
-	}, [context.socket, pageNumber, importPage, instanceRemap])
+	}, [socket, pageNumber, importPage, instanceRemap])
 
 	const changePage = useCallback(
 		(delta) => {
@@ -154,7 +162,7 @@ export function ImportExport({ pageNumber }) {
 	const doFullImport = useCallback(() => {
 		confirmModalRef.current.show('Replace config', 'Are you sure you wish to replace the config?', 'Import', () => {
 			setIsRunning(true)
-			socketEmit2(context.socket, 'loadsave:import-full', [snapshot])
+			socketEmit2(socket, 'loadsave:import-full', [snapshot])
 				.then(() => {
 					window.location.reload()
 				})
@@ -163,7 +171,7 @@ export function ImportExport({ pageNumber }) {
 					window.location.reload()
 				})
 		})
-	}, [context.socket, snapshot])
+	}, [socket, snapshot])
 
 	const setInstanceRemap2 = useCallback((fromId, toId) => {
 		setInstanceRemap((oldRemap) => ({
@@ -229,7 +237,7 @@ export function ImportExport({ pageNumber }) {
 							</thead>
 							<tbody>
 								{Object.entries(snapshot.instances || {}).map(([key, instance]) => {
-									const snapshotModule = context.modules[instance.instance_type]
+									const snapshotModule = modules[instance.instance_type]
 									const currentInstances = Object.entries(instancesContext).filter(
 										([id, inst]) => inst.instance_type === instance.instance_type
 									)
@@ -328,20 +336,20 @@ function ButtonImportGrid({ page }) {
 }
 
 function ButtonImportPreview({ controlId, instanceId, ...childProps }) {
-	const context = useContext(StaticContext)
+	const socket = useContext(SocketContext)
 	const [previewImage, setPreviewImage] = useState(null)
 
 	useEffect(() => {
 		setPreviewImage(null)
 
-		socketEmit2(context.socket, 'loadsave:control-preview', [controlId])
+		socketEmit2(socket, 'loadsave:control-preview', [controlId])
 			.then((img) => {
 				setPreviewImage(img ? dataToButtonImage(img) : null)
 			})
 			.catch((e) => {
 				console.error(`Failed to preview bank: ${e}`)
 			})
-	}, [controlId, context.socket])
+	}, [controlId, socket])
 
 	return <BankPreview {...childProps} preview={previewImage} />
 }
@@ -385,7 +393,8 @@ function ResetConfiguration() {
 }
 
 const ConfirmFullResetModal = forwardRef(function ConfirmFullResetModal(_props, ref) {
-	const context = useContext(StaticContext)
+	const socket = useContext(SocketContext)
+	const notifier = useContext(NotifierContext)
 
 	const [show, setShow] = useState(false)
 
@@ -394,15 +403,15 @@ const ConfirmFullResetModal = forwardRef(function ConfirmFullResetModal(_props, 
 		setShow(false)
 
 		// Perform the reset
-		socketEmit2(context.socket, 'loadsave:reset-full', [], 30000)
+		socketEmit2(socket, 'loadsave:reset-full', [], 30000)
 			.then(() => {
 				window.location.reload()
 			})
 			.catch((e) => {
-				context.notifier.current.show('Reset configuration', `Failed to reset configuration: ${e}`)
+				notifier.current.show('Reset configuration', `Failed to reset configuration: ${e}`)
 				console.error('Failed to reset configuration:', e)
 			})
-	}, [context.socket, context.notifier])
+	}, [socket, notifier])
 
 	useImperativeHandle(
 		ref,

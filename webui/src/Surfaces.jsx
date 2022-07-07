@@ -22,7 +22,7 @@ import {
 	CModalHeader,
 	CSelect,
 } from '@coreui/react'
-import { StaticContext, LoadingRetryOrError, SurfacesContext, socketEmit2 } from './util'
+import { LoadingRetryOrError, SurfacesContext, socketEmit2, SocketContext } from './util'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faCog, faSync } from '@fortawesome/free-solid-svg-icons'
 import { nanoid } from 'nanoid'
@@ -30,7 +30,7 @@ import { TextInputField } from './Components/TextInputField'
 import { useMemo } from 'react'
 
 export const SurfacesPage = memo(function SurfacesPage() {
-	const context = useContext(StaticContext)
+	const socket = useContext(SocketContext)
 	const devices = useContext(SurfacesContext)
 
 	const devicesList = useMemo(() => {
@@ -64,7 +64,7 @@ export const SurfacesPage = memo(function SurfacesPage() {
 		setScanning(true)
 		setScanError(null)
 
-		socketEmit2(context.socket, 'surfaces:rescan', [], 30000)
+		socketEmit2(socket, 'surfaces:rescan', [], 30000)
 			.then((errorMsg) => {
 				setScanError(errorMsg || null)
 				setScanning(false)
@@ -74,7 +74,7 @@ export const SurfacesPage = memo(function SurfacesPage() {
 
 				setScanning(false)
 			})
-	}, [context.socket])
+	}, [socket])
 
 	const configureDevice = useCallback((device) => {
 		editModalRef.current.show(device)
@@ -82,11 +82,11 @@ export const SurfacesPage = memo(function SurfacesPage() {
 
 	const updateName = useCallback(
 		(serialnumber, name) => {
-			socketEmit2(context.socket, 'surfaces:set-name', [serialnumber, name]).catch((err) => {
+			socketEmit2(socket, 'surfaces:set-name', [serialnumber, name]).catch((err) => {
 				console.error('Update name failed', err)
 			})
 		},
-		[context.socket]
+		[socket]
 	)
 
 	return (
@@ -165,7 +165,7 @@ export const SurfacesPage = memo(function SurfacesPage() {
 })
 
 const SurfaceEditModal = forwardRef(function SurfaceEditModal(_props, ref) {
-	const context = useContext(StaticContext)
+	const socket = useContext(SocketContext)
 
 	const [deviceInfo, setDeviceInfo] = useState(null)
 	const [show, setShow] = useState(false)
@@ -189,7 +189,7 @@ const SurfaceEditModal = forwardRef(function SurfaceEditModal(_props, ref) {
 		setDeviceConfig(null)
 
 		if (deviceInfo?.id) {
-			socketEmit2(context.socket, 'surfaces:config-get', [deviceInfo.id])
+			socketEmit2(socket, 'surfaces:config-get', [deviceInfo.id])
 				.then(([config, info]) => {
 					console.log(config, info)
 					setDeviceConfig(config)
@@ -200,7 +200,7 @@ const SurfaceEditModal = forwardRef(function SurfaceEditModal(_props, ref) {
 					setDeviceConfigError(`Failed to load device config`)
 				})
 		}
-	}, [context.socket, deviceInfo?.id, reloadToken])
+	}, [socket, deviceInfo?.id, reloadToken])
 
 	useImperativeHandle(
 		ref,
@@ -231,7 +231,7 @@ const SurfaceEditModal = forwardRef(function SurfaceEditModal(_props, ref) {
 						[key]: value,
 					}
 
-					socketEmit2(context.socket, 'surfaces:config-set', [deviceInfo.id, newConfig])
+					socketEmit2(socket, 'surfaces:config-set', [deviceInfo.id, newConfig])
 						.then((newConfig) => {
 							if (typeof newConfig === 'string') {
 								console.log('Config update failed', newConfig)
@@ -246,7 +246,7 @@ const SurfaceEditModal = forwardRef(function SurfaceEditModal(_props, ref) {
 				})
 			}
 		},
-		[context.socket, deviceInfo?.id]
+		[socket, deviceInfo?.id]
 	)
 
 	return (

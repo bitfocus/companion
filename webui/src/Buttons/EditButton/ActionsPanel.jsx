@@ -5,12 +5,12 @@ import React, { useCallback, useContext, useEffect, useMemo, useRef, useState } 
 import { NumberInputField } from '../../Components'
 import {
 	ActionsContext,
-	StaticContext,
 	InstancesContext,
 	MyErrorBoundary,
 	socketEmit2,
 	sandbox,
 	useMountEffect,
+	SocketContext,
 } from '../../util'
 import Select, { createFilter } from 'react-select'
 import { ActionTableRowOption } from './Table'
@@ -19,62 +19,62 @@ import { GenericConfirmModal } from '../../Components/GenericConfirmModal'
 import { AddActionsModal } from './AddModal'
 
 export function ActionsPanel({ controlId, set, actions, dragId, addPlaceholder }) {
-	const context = useContext(StaticContext)
+	const socket = useContext(SocketContext)
 
 	const confirmModal = useRef()
 
 	const emitUpdateOption = useCallback(
 		(actionId, key, val) => {
-			socketEmit2(context.socket, 'controls:action:set-option', [controlId, set, actionId, key, val]).catch((e) => {
+			socketEmit2(socket, 'controls:action:set-option', [controlId, set, actionId, key, val]).catch((e) => {
 				console.error('Failed to set bank action option', e)
 			})
 		},
-		[context.socket, controlId, set]
+		[socket, controlId, set]
 	)
 	const emitSetDelay = useCallback(
 		(actionId, delay) => {
-			socketEmit2(context.socket, 'controls:action:set-delay', [controlId, set, actionId, delay]).catch((e) => {
+			socketEmit2(socket, 'controls:action:set-delay', [controlId, set, actionId, delay]).catch((e) => {
 				console.error('Failed to set bank action delay', e)
 			})
 		},
-		[context.socket, controlId, set]
+		[socket, controlId, set]
 	)
 
 	const emitDelete = useCallback(
 		(actionId) => {
-			socketEmit2(context.socket, 'controls:action:remove', [controlId, set, actionId]).catch((e) => {
+			socketEmit2(socket, 'controls:action:remove', [controlId, set, actionId]).catch((e) => {
 				console.error('Failed to remove bank action', e)
 			})
 		},
-		[context.socket, controlId, set]
+		[socket, controlId, set]
 	)
 
 	const emitLearn = useCallback(
 		(actionId) => {
-			socketEmit2(context.socket, 'controls:action:learn', [controlId, set, actionId]).catch((e) => {
+			socketEmit2(socket, 'controls:action:learn', [controlId, set, actionId]).catch((e) => {
 				console.error('Failed to learn bank action values', e)
 			})
 		},
-		[context.socket, controlId, set]
+		[socket, controlId, set]
 	)
 
 	const emitOrder = useCallback(
 		(dragIndex, hoverIndex) => {
-			socketEmit2(context.socket, 'controls:action:reorder', [controlId, set, dragIndex, hoverIndex]).catch((e) => {
+			socketEmit2(socket, 'controls:action:reorder', [controlId, set, dragIndex, hoverIndex]).catch((e) => {
 				console.error('Failed to reorder bank actions', e)
 			})
 		},
-		[context.socket, controlId, set]
+		[socket, controlId, set]
 	)
 
 	const addAction = useCallback(
 		(actionType) => {
 			const [instanceId, actionId] = actionType.split(':', 2)
-			socketEmit2(context.socket, 'controls:action:add', [controlId, set, instanceId, actionId]).catch((e) => {
+			socketEmit2(socket, 'controls:action:add', [controlId, set, instanceId, actionId]).catch((e) => {
 				console.error('Failed to add bank action', e)
 			})
 		},
-		[context.socket, controlId, set]
+		[socket, controlId, set]
 	)
 
 	return (
@@ -301,7 +301,7 @@ function ActionTableRow({ action, isOnBank, index, dragId, setValue, doDelete, d
 	}
 
 	const instance = instancesContext[action.instance]
-	// const module = instance ? context.modules[instance.instance_type] : undefined
+	// const module = instance ? modules[instance.instance_type] : undefined
 	const instanceLabel = instance?.label ?? action.instance
 
 	const options = actionSpec?.options ?? []

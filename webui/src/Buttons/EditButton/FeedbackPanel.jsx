@@ -3,13 +3,13 @@ import { faSort, faTrash } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import React, { useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react'
 import {
-	StaticContext,
 	FeedbacksContext,
 	InstancesContext,
 	MyErrorBoundary,
 	socketEmit2,
 	sandbox,
 	useMountEffect,
+	SocketContext,
 } from '../../util'
 import Select, { createFilter } from 'react-select'
 import { ActionTableRowOption } from './Table'
@@ -20,7 +20,7 @@ import { ButtonStyleConfigFields } from './ButtonStyleConfig'
 import { AddFeedbacksModal } from './AddModal'
 
 export const FeedbacksPanel = function ({ controlId, feedbacks, dragId }) {
-	const context = useContext(StaticContext)
+	const socket = useContext(SocketContext)
 
 	const confirmModal = useRef()
 
@@ -38,32 +38,32 @@ export const FeedbacksPanel = function ({ controlId, feedbacks, dragId }) {
 		(feedbackId, key, val) => {
 			const currentFeedback = feedbacksRef.current?.find((fb) => fb.id === feedbackId)
 			if (!currentFeedback?.options || currentFeedback.options[key] !== val) {
-				socketEmit2(context.socket, 'controls:feedback:set-option', [controlId, feedbackId, key, val]).catch((e) => {
+				socketEmit2(socket, 'controls:feedback:set-option', [controlId, feedbackId, key, val]).catch((e) => {
 					console.error(`Set-option failed: ${e}`)
 				})
 			}
 		},
-		[context.socket, controlId]
+		[socket, controlId]
 	)
 
 	const doDelete = useCallback(
 		(feedbackId) => {
 			confirmModal.current.show('Delete feedback', 'Delete feedback?', 'Delete', () => {
-				socketEmit2(context.socket, 'controls:feedback:remove', [controlId, feedbackId]).catch((e) => {
+				socketEmit2(socket, 'controls:feedback:remove', [controlId, feedbackId]).catch((e) => {
 					console.error(`Failed to delete feedback: ${e}`)
 				})
 			})
 		},
-		[context.socket, controlId]
+		[socket, controlId]
 	)
 
 	const doLearn = useCallback(
 		(feedbackId) => {
-			socketEmit2(context.socket, 'controls:feedback:learn', [controlId, feedbackId]).catch((e) => {
+			socketEmit2(socket, 'controls:feedback:learn', [controlId, feedbackId]).catch((e) => {
 				console.error(`Failed to learn feedback values: ${e}`)
 			})
 		},
-		[context.socket, controlId]
+		[socket, controlId]
 	)
 
 	const addFeedback = useCallback(
@@ -77,20 +77,20 @@ export const FeedbacksPanel = function ({ controlId, feedbacks, dragId }) {
 			})
 
 			const [instanceId, feedbackId] = feedbackType.split(':', 2)
-			socketEmit2(context.socket, 'controls:feedback:add', [controlId, instanceId, feedbackId]).catch((e) => {
+			socketEmit2(socket, 'controls:feedback:add', [controlId, instanceId, feedbackId]).catch((e) => {
 				console.error('Failed to add bank feedback', e)
 			})
 		},
-		[context.socket, controlId]
+		[socket, controlId]
 	)
 
 	const moveCard = useCallback(
 		(dragIndex, hoverIndex) => {
-			socketEmit2(context.socket, 'controls:feedback:reorder', [controlId, dragIndex, hoverIndex]).catch((e) => {
+			socketEmit2(socket, 'controls:feedback:reorder', [controlId, dragIndex, hoverIndex]).catch((e) => {
 				console.error(`Move failed: ${e}`)
 			})
 		},
-		[context.socket, controlId]
+		[socket, controlId]
 	)
 
 	const [recentFeedbacks, setRecentFeedbacks] = useState([])
@@ -141,7 +141,7 @@ export const FeedbacksPanel = function ({ controlId, feedbacks, dragId }) {
 }
 
 function FeedbackTableRow({ feedback, controlId, index, dragId, moveCard, setValue, doDelete, doLearn }) {
-	const context = useContext(StaticContext)
+	const socket = useContext(SocketContext)
 
 	const innerDelete = useCallback(() => doDelete(feedback.id), [feedback.id, doDelete])
 	const innerLearn = useCallback(() => doLearn(feedback.id), [doLearn, feedback.id])
@@ -201,24 +201,20 @@ function FeedbackTableRow({ feedback, controlId, index, dragId, moveCard, setVal
 
 	const setSelectedStyleProps = useCallback(
 		(selected) => {
-			socketEmit2(context.socket, 'controls:feedback:set-style-selection', [controlId, feedback.id, selected]).catch(
-				(e) => {
-					// TODO
-				}
-			)
+			socketEmit2(socket, 'controls:feedback:set-style-selection', [controlId, feedback.id, selected]).catch((e) => {
+				// TODO
+			})
 		},
-		[context.socket, controlId, feedback.id]
+		[socket, controlId, feedback.id]
 	)
 
 	const setStylePropsValue = useCallback(
 		(key, value) => {
-			socketEmit2(context.socket, 'controls:feedback:set-style-value', [controlId, feedback.id, key, value]).catch(
-				(e) => {
-					console.error(`Failed: ${e}`)
-				}
-			)
+			socketEmit2(socket, 'controls:feedback:set-style-value', [controlId, feedback.id, key, value]).catch((e) => {
+				console.error(`Failed: ${e}`)
+			})
 		},
-		[context.socket, controlId, feedback.id]
+		[socket, controlId, feedback.id]
 	)
 
 	if (!feedback) {

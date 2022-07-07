@@ -1,6 +1,6 @@
 import { useCallback, useContext, useEffect, useRef, useState } from 'react'
 import { CButton } from '@coreui/react'
-import { StaticContext, InstancesContext, VariableDefinitionsContext, socketEmit2 } from '../util'
+import { InstancesContext, VariableDefinitionsContext, socketEmit2, SocketContext, ModulesContext } from '../util'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faDollarSign, faQuestionCircle, faBug } from '@fortawesome/free-solid-svg-icons'
 import jsonPatch from 'fast-json-patch'
@@ -10,7 +10,7 @@ import { GenericConfirmModal } from '../Components/GenericConfirmModal'
 import { cloneDeep } from 'lodash-es'
 
 export function InstancesList({ showHelp, doConfigureInstance }) {
-	const context = useContext(StaticContext)
+	const socket = useContext(SocketContext)
 	const instancesContext = useContext(InstancesContext)
 
 	const [instanceStatus, setInstanceStatus] = useState({})
@@ -19,7 +19,7 @@ export function InstancesList({ showHelp, doConfigureInstance }) {
 	const variablesModalRef = useRef()
 
 	useEffect(() => {
-		socketEmit2(context.socket, 'instance_status:get', [])
+		socketEmit2(socket, 'instance_status:get', [])
 			.then((statuses) => {
 				setInstanceStatus(statuses)
 			})
@@ -32,12 +32,12 @@ export function InstancesList({ showHelp, doConfigureInstance }) {
 				return jsonPatch.applyPatch(cloneDeep(oldStatuses) || {}, patch).newDocument
 			})
 		}
-		context.socket.on('instance_status:patch', patchStatuses)
+		socket.on('instance_status:patch', patchStatuses)
 
 		return () => {
-			context.socket.off('instance_status:patch', patchStatuses)
+			socket.off('instance_status:patch', patchStatuses)
 		}
-	}, [context.socket])
+	}, [socket])
 
 	const doShowVariables = useCallback((instanceId) => {
 		variablesModalRef.current.show(instanceId)
@@ -104,10 +104,11 @@ function InstancesTableRow({
 	configureInstance,
 	deleteModalRef,
 }) {
-	const context = useContext(StaticContext)
+	const socket = useContext(SocketContext)
+	const modules = useContext(ModulesContext)
 	const variableDefinitionsContext = useContext(VariableDefinitionsContext)
 
-	const moduleInfo = context.modules[instance.instance_type]
+	const moduleInfo = modules[instance.instance_type]
 
 	const status = processModuleStatus(instanceStatus)
 	const isEnabled = instance.enabled === undefined || instance.enabled
@@ -118,19 +119,19 @@ function InstancesTableRow({
 			`Are you sure you want to delete "${instance.label}"?`,
 			'Delete',
 			() => {
-				socketEmit2(context.socket, 'instances:delete', [id]).catch((e) => {
+				socketEmit2(socket, 'instances:delete', [id]).catch((e) => {
 					console.error('Delete failed', e)
 				})
 				configureInstance(null)
 			}
 		)
-	}, [context.socket, deleteModalRef, id, instance.label, configureInstance])
+	}, [socket, deleteModalRef, id, instance.label, configureInstance])
 
 	const doToggleEnabled = useCallback(() => {
-		socketEmit2(context.socket, 'instances:set-enabled', [id, !isEnabled]).catch((e) => {
+		socketEmit2(socket, 'instances:set-enabled', [id, !isEnabled]).catch((e) => {
 			console.error('Set enabled failed', e)
 		})
-	}, [context.socket, id, isEnabled])
+	}, [socket, id, isEnabled])
 
 	const doShowHelp = useCallback(() => showHelp(instance.instance_type), [showHelp, instance.instance_type])
 

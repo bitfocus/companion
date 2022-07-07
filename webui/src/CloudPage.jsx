@@ -1,11 +1,8 @@
-import React from 'react'
+import React, { useContext } from 'react'
 import { Cloud } from './Cloud'
-import { StaticContext } from './util'
+import { SocketContext } from './util'
 
 export function CloudPage() {
-	return (
-		<>
-			<StaticContext.Consumer>{({ socket }) => <Cloud socket={socket} />}</StaticContext.Consumer>
-		</>
-	)
+	const socket = useContext(SocketContext)
+	return <Cloud socket={socket} />
 }

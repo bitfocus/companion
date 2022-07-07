@@ -215,7 +215,6 @@ export function Tablet() {
 							<ConfigurePanel updateQueryUrl={updateQueryUrl} query={parsedQuery} orderedPages={orderedPages} />
 							{layout === 'cycle' ? (
 								<CyclePages
-									socket={socket}
 									pages={pages}
 									imageCache={imageCache}
 									orderedPages={validPages}
@@ -226,7 +225,6 @@ export function Tablet() {
 								/>
 							) : (
 								<InfinitePages
-									socket={socket}
 									pages={pages}
 									imageCache={imageCache}
 									orderedPages={validPages}
@@ -399,7 +397,7 @@ function clamp(val, max) {
 	return Math.min(Math.max(0, val), max)
 }
 
-function CyclePages({ socket, pages, imageCache, orderedPages, updateQueryUrl, query, cols, rows }) {
+function CyclePages({ pages, imageCache, orderedPages, updateQueryUrl, query, cols, rows }) {
 	const rawIndex = Number(query['index'])
 	const loop = query['loop']
 	const currentIndex = isNaN(rawIndex) ? 0 : clamp(rawIndex, orderedPages.length - 1)
@@ -461,7 +459,6 @@ function CyclePages({ socket, pages, imageCache, orderedPages, updateQueryUrl, q
 					<div>
 						<ButtonGrid
 							// No key, we want to reuse the grid as the page changes
-							socket={socket}
 							imageCache={imageCache}
 							number={currentPage}
 							cols={cols}
@@ -478,7 +475,7 @@ function CyclePages({ socket, pages, imageCache, orderedPages, updateQueryUrl, q
 	)
 }
 
-function InfinitePages({ socket, pages, imageCache, orderedPages, query, cols, rows }) {
+function InfinitePages({ pages, imageCache, orderedPages, query, cols, rows }) {
 	const noHeadings = query['noheadings']
 
 	const pageElements = orderedPages.map((number, i) => (
@@ -492,14 +489,7 @@ function InfinitePages({ socket, pages, imageCache, orderedPages, query, cols, r
 					''
 				)}
 				<CRow>
-					<ButtonGrid
-						socket={socket}
-						imageCache={imageCache}
-						number={number}
-						cols={cols}
-						rows={rows}
-						pageInfo={pages[number]}
-					/>
+					<ButtonGrid imageCache={imageCache} number={number} cols={cols} rows={rows} pageInfo={pages[number]} />
 				</CRow>
 			</div>
 		</MyErrorBoundary>
@@ -508,7 +498,9 @@ function InfinitePages({ socket, pages, imageCache, orderedPages, query, cols, r
 	return <>{pageElements}</>
 }
 
-function ButtonGrid({ socket, imageCache, number, cols, rows, goFirstPage, goNextPage, goPrevPage, pageInfo }) {
+function ButtonGrid({ imageCache, number, cols, rows, goFirstPage, goNextPage, goPrevPage, pageInfo }) {
+	const socket = useContext(SocketContext)
+
 	const { ref, inView } = useInView({
 		rootMargin: '50%',
 		/* Optional options */

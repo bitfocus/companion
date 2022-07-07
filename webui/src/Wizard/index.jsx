@@ -1,6 +1,6 @@
 import React, { forwardRef, useCallback, useContext, useImperativeHandle, useState } from 'react'
 import { CAlert, CButton, CForm, CModal, CModalBody, CModalFooter, CModalHeader } from '@coreui/react'
-import { StaticContext, socketEmit } from '../util'
+import { socketEmit, SocketContext } from '../util'
 import { BeginStep } from './BeginStep'
 import { SurfacesStep } from './SurfacesStep'
 import { ServicesStep } from './ServicesStep'
@@ -8,8 +8,10 @@ import { PasswordStep } from './PasswordStep'
 import { ApplyStep } from './ApplyStep'
 import { FinishStep } from './FinishStep'
 
+export const WIZARD_CURRENT_VERSION = 22
+
 export const WizardModal = forwardRef(function WizardModal(_props, ref) {
-	const context = useContext(StaticContext)
+	const socket = useContext(SocketContext)
 	const [currentStep, setCurrentStep] = useState(1)
 	const maxSteps = 6 // can use useState in the future if the number of steps needs to be dynamic
 	const applyStep = 5 // can use useState in the future if the number of steps needs to be dynamic
@@ -20,7 +22,7 @@ export const WizardModal = forwardRef(function WizardModal(_props, ref) {
 	const [clear, setClear] = useState(true)
 
 	const getConfig = useCallback(() => {
-		socketEmit(context.socket, 'get_userconfig_all', [])
+		socketEmit(socket, 'get_userconfig_all', [])
 			.then(([config]) => {
 				setStartConfig(config)
 				setOldConfig(config)
@@ -30,15 +32,15 @@ export const WizardModal = forwardRef(function WizardModal(_props, ref) {
 				setError('Could not load configuration for wizard.  Please close and try again.')
 				console.error('Failed to load user config', e)
 			})
-	}, [context.socket])
+	}, [socket])
 
 	const [show, setShow] = useState(false)
 
 	const doClose = useCallback(() => {
-		context.socket.emit('set_userconfig_key', 'setup_wizard', context.currentVersion)
+		socket.emit('set_userconfig_key', 'setup_wizard', WIZARD_CURRENT_VERSION)
 		setShow(false)
 		setClear(true)
-	}, [context])
+	}, [socket])
 
 	const doNextStep = useCallback(() => {
 		let newStep = currentStep
@@ -75,13 +77,13 @@ export const WizardModal = forwardRef(function WizardModal(_props, ref) {
 				}
 			}
 
-			context.socket.emit('set_userconfig_keys', saveConfig)
+			socket.emit('set_userconfig_keys', saveConfig)
 
 			setOldConfig(newConfig)
 
 			doNextStep()
 		},
-		[context.socket, newConfig, oldConfig, doNextStep]
+		[socket, newConfig, oldConfig, doNextStep]
 	)
 
 	const setValue = (key, value) => {
