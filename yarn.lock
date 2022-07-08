@@ -4922,10 +4922,10 @@ electron@13.6.6:
     "@types/node" "^14.6.2"
     extract-zip "^1.0.3"
 
-elgato-stream-deck@^4.1.0:
-  version "4.1.0"
-  resolved "https://registry.yarnpkg.com/elgato-stream-deck/-/elgato-stream-deck-4.1.0.tgz#2a6cdac09faa39cb450cf87ec2f0a73c13d823b7"
-  integrity sha512-TH9oBJTxs32QpK/XzjGWV82OFYf8+A3Yb/DGLQEzpJDvTdCfcpl3vtBchJ+n76x7GqlSFaHqLtJlIc4HzOmUvw==
+elgato-stream-deck@^4.2.0:
+  version "4.2.0"
+  resolved "https://registry.yarnpkg.com/elgato-stream-deck/-/elgato-stream-deck-4.2.0.tgz#12fb6b039b48028515d4d8d3d64032aa14123548"
+  integrity sha512-5FAgxKLKUYp4pw5UO6SPcYYun2Mj71QwSQ5g/tLRea/9M8O9LjsUoGpfcf0uiulPUNIkAfIazUFoiKg4zCGWow==
   dependencies:
     exit-hook "^2.2.0"
     jpeg-js "^0.4.2"

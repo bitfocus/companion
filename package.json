@@ -526,7 +526,7 @@
 		"companion-module-zenvideo-ndirouter": "github:bitfocus/companion-module-zenvideo-ndirouter#v1.0.2",
 		"companion-module-zoom-osc-iso": "github:bitfocus/companion-module-zoom-osc-iso#v0.0.5",
 		"debug": "^4.3.4",
-		"elgato-stream-deck": "^4.1.0",
+		"elgato-stream-deck": "^4.2.0",
 		"emberplus-connection": "^0.1.2",
 		"express": "^4.18.1",
 		"express-serve-zip": "^1.0.1",
