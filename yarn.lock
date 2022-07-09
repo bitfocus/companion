@@ -3345,6 +3345,10 @@ commist@^1.0.0:
   dependencies:
     osc "github:julusian/osc.js#companion-etc-eos"
 
+"companion-module-evertz-quartz@github:bitfocus/companion-module-evertz-quartz#v1.0.0":
+  version "1.0.0"
+  resolved "https://codeload.github.com/bitfocus/companion-module-evertz-quartz/tar.gz/68ca502deadcda38b251db1c57e1a8febcad818d"
+
 "companion-module-extron-dxp@github:bitfocus/companion-module-extron-dxp#v1.0.9":
   version "1.0.9"
   resolved "https://codeload.github.com/bitfocus/companion-module-extron-dxp/tar.gz/bd828bb24dfcff5883af0dd2e40e1e059246d71f"
