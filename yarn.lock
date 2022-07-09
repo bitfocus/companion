@@ -3248,6 +3248,10 @@ commist@^1.0.0:
   dependencies:
     osc "^2.4.1"
 
+"companion-module-devantech-ds@github:bitfocus/companion-module-devantech-ds#v1.0.0":
+  version "1.0.0"
+  resolved "https://codeload.github.com/bitfocus/companion-module-devantech-ds/tar.gz/3996429e26ce04338c3e4f8717818dc70ea28467"
+
 "companion-module-dexon-dimax@github:bitfocus/companion-module-dexon-dimax#v1.0.4":
   version "1.0.4"
   resolved "https://codeload.github.com/bitfocus/companion-module-dexon-dimax/tar.gz/53564abfcdbc464fc55a8e48996b4a48c0d7836b"
