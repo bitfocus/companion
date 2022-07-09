@@ -4239,6 +4239,10 @@ commist@^1.0.0:
   version "1.0.2"
   resolved "https://codeload.github.com/bitfocus/companion-module-sony-broadcastmonitor/tar.gz/29a4f119b2ba137b2a09db431eb6931dbad15e4c"
 
+"companion-module-sony-cled@github:bitfocus/companion-module-sony-cled#v1.0.0":
+  version "1.0.0"
+  resolved "https://codeload.github.com/bitfocus/companion-module-sony-cled/tar.gz/095cd983f5ab6fe5cd8ee869112f0499240763a4"
+
 "companion-module-sony-visca@github:bitfocus/companion-module-sony-visca#v1.2.10":
   version "1.2.10"
   resolved "https://codeload.github.com/bitfocus/companion-module-sony-visca/tar.gz/cb91a70a4f0fcf71fb7e83c8f40ef37dbe200a34"

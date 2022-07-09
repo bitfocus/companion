@@ -471,6 +471,7 @@
 		"companion-module-sonos-speakers": "github:bitfocus/companion-module-sonos-speakers#v0.2.1",
 		"companion-module-sony-bravia": "github:bitfocus/companion-module-sony-bravia#v1.0.1",
 		"companion-module-sony-broadcastmonitor": "github:bitfocus/companion-module-sony-broadcastmonitor#v1.0.2",
+		"companion-module-sony-cled": "github:bitfocus/companion-module-sony-cled#v1.0.0",
 		"companion-module-sony-visca": "github:bitfocus/companion-module-sony-visca#v1.2.10",
 		"companion-module-soundcraft-ui": "github:bitfocus/companion-module-soundcraft-ui#v2.0.6",
 		"companion-module-sounddevices-pixnet": "github:bitfocus/companion-module-sounddevices-pixnet#v1.0.1",
