@@ -362,18 +362,18 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 	 * Main initialization function called once the module
 	 * is OK to start doing things.
 	 */
-	abstract init(config: TConfig): void | Promise<void>
+	abstract init(config: TConfig): Promise<void>
 
 	/**
 	 * Clean up the instance before it is destroyed.
 	 */
-	abstract destroy(): void | Promise<void>
+	abstract destroy(): Promise<void>
 
 	/**
 	 * Called when the configuration is updated.
 	 * @param config The new config object
 	 */
-	abstract configUpdated(config: TConfig): void | Promise<void>
+	abstract configUpdated(config: TConfig): Promise<void>
 
 	/**
 	 * Save an updated configuration object
@@ -620,12 +620,12 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 	}
 
 	/** @deprecated ? */
-	getAllActions() {
+	_getAllActions() {
 		return Array.from(this.#actionInstances.values())
 	}
 	/** @deprecated ? */
-	subscribeActions(actionId?: string): void {
-		let actions = this.getAllActions()
+	_subscribeActions(actionId?: string): void {
+		let actions = this._getAllActions()
 		if (actionId) actions = actions.filter((fb) => fb.actionId === actionId)
 
 		for (const act of actions) {
@@ -641,8 +641,8 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 		}
 	}
 	/** @deprecated ? */
-	unsubscribeActions(actionId?: string): void {
-		let actions = this.getAllActions()
+	_unsubscribeActions(actionId?: string): void {
+		let actions = this._getAllActions()
 		if (actionId) actions = actions.filter((fb) => fb.actionId === actionId)
 
 		for (const act of actions) {
@@ -659,12 +659,12 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 	}
 
 	/** @deprecated ? */
-	getAllFeedbacks() {
+	_getAllFeedbacks() {
 		return Array.from(this.#feedbackInstances.values())
 	}
 	/** @deprecated ? */
-	subscribeFeedbacks(feedbackId?: string): void {
-		let feedbacks = this.getAllFeedbacks()
+	_subscribeFeedbacks(feedbackId?: string): void {
+		let feedbacks = this._getAllFeedbacks()
 		if (feedbackId) feedbacks = feedbacks.filter((fb) => fb.feedbackId === feedbackId)
 
 		for (const fb of feedbacks) {
@@ -681,8 +681,8 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 		}
 	}
 	/** @deprecated ? */
-	unsubscribeFeedbacks(feedbackId?: string): void {
-		let feedbacks = this.getAllFeedbacks()
+	_unsubscribeFeedbacks(feedbackId?: string): void {
+		let feedbacks = this._getAllFeedbacks()
 		if (feedbackId) feedbacks = feedbacks.filter((fb) => fb.feedbackId === feedbackId)
 
 		for (const fb of feedbacks) {
