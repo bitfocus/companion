@@ -14,18 +14,18 @@ let hasEntrypoint = false
 
 export type InstanceConstructor<TConfig> = new (internal: unknown) => InstanceBase<TConfig>
 
-async function readFileUrl(url: URL): Promise<string> {
-	// Hack to make json files be loadable after being inlined by webpack
-	const prefix = 'application/json;base64,'
-	if (url.pathname.startsWith(prefix)) {
-		const base64 = url.pathname.substring(prefix.length)
-		return Buffer.from(base64, 'base64').toString()
-	}
+// async function readFileUrl(url: URL): Promise<string> {
+// 	// Hack to make json files be loadable after being inlined by webpack
+// 	const prefix = 'application/json;base64,'
+// 	if (url.pathname.startsWith(prefix)) {
+// 		const base64 = url.pathname.substring(prefix.length)
+// 		return Buffer.from(base64, 'base64').toString()
+// 	}
 
-	// Fallback to reading from disk
-	const buf = await fs.readFile(url)
-	return buf.toString()
-}
+// 	// Fallback to reading from disk
+// 	const buf = await fs.readFile(url)
+// 	return buf.toString()
+// }
 
 /**
  * Setup the module for execution
@@ -39,7 +39,7 @@ export function runEntrypoint<TConfig>(
 ): void {
 	Promise.resolve().then(async () => {
 		try {
-			const pkgJsonStr = await readFileUrl(new URL('../package.json', import.meta.url))
+			const pkgJsonStr = (await fs.readFile('../package.json')).toString()
 			const pkgJson = JSON.parse(pkgJsonStr)
 			if (!pkgJson || pkgJson.name !== '@companion-module/base')
 				throw new Error('Failed to find the package.json for @companion-module/base')

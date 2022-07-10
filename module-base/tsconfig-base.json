@@ -1,7 +1,7 @@
 {
 	"extends": "@tsconfig/node14/tsconfig.json",
 	"compilerOptions": {
-		"module": "es2022",
+		"module": "CommonJS",
 		"moduleResolution": "node",
 		"sourceMap": true,
 		"paths": {

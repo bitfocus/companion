@@ -19,16 +19,16 @@ export function callFeedbackOnDefinition(definition: CompanionFeedbackDefinition
 		return definition.callback({
 			...convertFeedbackInstanceToEvent('boolean', feedback),
 			type: 'boolean',
-			rawBank: feedback.rawBank,
+			_rawBank: feedback.rawBank,
 		})
 	} else {
 		return definition.callback({
 			...convertFeedbackInstanceToEvent('advanced', feedback),
 			type: 'advanced',
 			image: feedback.image,
-			page: feedback.page,
-			bank: feedback.bank,
-			rawBank: feedback.rawBank,
+			_page: feedback.page,
+			_bank: feedback.bank,
+			_rawBank: feedback.rawBank,
 		})
 	}
 }

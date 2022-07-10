@@ -21,17 +21,17 @@ export interface CompanionFeedbackInfo {
  * Extended information for execution of a boolean feedback
  */
 export interface CompanionFeedbackBooleanEvent extends CompanionFeedbackInfo {
-	readonly type: 'boolean'
+	// readonly type: 'boolean'
 
 	/** @deprecated */
-	readonly rawBank: any
+	readonly _rawBank: any
 }
 
 /**
  * Extended information for execution of an advanced feedback
  */
 export interface CompanionFeedbackAdvancedEvent extends CompanionFeedbackInfo {
-	readonly type: 'advanced'
+	// readonly type: 'advanced'
 
 	/** If control supports an imageBuffer, the dimensions the buffer must be */
 	readonly image?: {
@@ -40,12 +40,12 @@ export interface CompanionFeedbackAdvancedEvent extends CompanionFeedbackInfo {
 	}
 
 	/** @deprecated */
-	readonly page: number
+	readonly _page: number
 	/** @deprecated */
-	readonly bank: number
+	readonly _bank: number
 
 	/** @deprecated */
-	readonly rawBank: any
+	readonly _rawBank: any
 }
 
 /**

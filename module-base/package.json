@@ -1,7 +1,7 @@
 {
 	"name": "@companion-module/base",
 	"version": "0.1.0",
-	"type": "module",
+	"type": "commonjs",
 	"main": "dist/index.js",
 	"typings": "dist/index.d.ts",
 	"exports2": {

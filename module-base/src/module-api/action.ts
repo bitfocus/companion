@@ -59,9 +59,9 @@ export interface CompanionActionEvent extends CompanionActionInfo {
 	// Future: the contents of this should be re-evaluated in v1
 
 	/** @deprecated */
-	readonly deviceId: string | undefined
+	readonly _deviceId: string | undefined
 	/** @deprecated */
-	readonly page: number
+	readonly _page: number
 	/** @deprecated */
-	readonly bank: number
+	readonly _bank: number
 }
