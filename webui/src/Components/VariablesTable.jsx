@@ -53,7 +53,7 @@ export function VariablesTable({ label }) {
 		context.notifier.current.show(`Copied`, 'Copied to clipboard', 5000)
 	}, [context.notifier])
 
-	if (Object.keys(variableDefinitions).length > 0) {
+	if (variableDefinitions.length > 0) {
 		return (
 			<table className="table table-responsive-sm variables-table">
 				<thead>
@@ -65,8 +65,8 @@ export function VariablesTable({ label }) {
 					</tr>
 				</thead>
 				<tbody>
-					{Object.entries(variableDefinitions).map(([name, variable]) => {
-						let value = variableValues[name]
+					{variableDefinitions.map((variable) => {
+						let value = variableValues[variable.name]
 						if (typeof value !== 'string') {
 							value += ''
 						}
@@ -83,14 +83,14 @@ export function VariablesTable({ label }) {
 						}
 
 						return (
-							<tr key={name}>
+							<tr key={variable.name}>
 								<td>
-									$({label}:{name})
+									$({label}:{variable.name})
 								</td>
 								<td>{variable.label}</td>
 								<td>{elms}</td>
 								<td>
-									<CopyToClipboard text={`$(${label}:${name})`} onCopy={onCopied}>
+									<CopyToClipboard text={`$(${label}:${variable.name})`} onCopy={onCopied}>
 										<CButton size="sm">
 											<FontAwesomeIcon icon={faCopy} />
 										</CButton>
