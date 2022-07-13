@@ -4312,6 +4312,10 @@ commist@^1.0.0:
   dependencies:
     socket.io-client "^2.3.0"
 
+"companion-module-televic-dcerno@github:bitfocus/companion-module-televic-dcerno#v1.0.0":
+  version "1.0.0"
+  resolved "https://codeload.github.com/bitfocus/companion-module-televic-dcerno/tar.gz/7a71cd53146ae86f8987712f5efa1a58d3011207"
+
 "companion-module-teracom-tcw181b@github:bitfocus/companion-module-teracom-tcw181b#v1.0.4":
   version "1.0.4"
   resolved "https://codeload.github.com/bitfocus/companion-module-teracom-tcw181b/tar.gz/601e08a71a9f4410c9babc2fef6e50f1dd683d20"
