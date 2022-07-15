@@ -2867,9 +2867,9 @@ commist@^1.0.0:
   version "1.0.1"
   resolved "https://codeload.github.com/bitfocus/companion-module-aten-matrix/tar.gz/6c66b5375c554062ec382cea010a0a39c9e26fee"
 
-"companion-module-audiostrom-liveprofessor@github:bitfocus/companion-module-audiostrom-liveprofessor#v1.0.2":
-  version "1.0.2"
-  resolved "https://codeload.github.com/bitfocus/companion-module-audiostrom-liveprofessor/tar.gz/9e95222bab63605d9a90b0daed874ef8b8057bd1"
+"companion-module-audiostrom-liveprofessor@github:bitfocus/companion-module-audiostrom-liveprofessor#v1.0.3":
+  version "1.0.3"
+  resolved "https://codeload.github.com/bitfocus/companion-module-audiostrom-liveprofessor/tar.gz/e0bb33619f0f009d1544f83e48c6ef8426fefc0c"
 
 "companion-module-audivero-unityintercom-client@github:bitfocus/companion-module-audivero-unityintercom-client#v1.0.3":
   version "1.0.3"
