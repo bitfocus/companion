@@ -4374,9 +4374,9 @@ commist@^1.0.0:
   version "1.0.2"
   resolved "https://codeload.github.com/bitfocus/companion-module-timemachines-clock/tar.gz/b05dfb374fa737a384194245020cd0995255ffa4"
 
-"companion-module-toggl-track@github:bitfocus/companion-module-toggl-track#v1.0.1":
-  version "1.0.1"
-  resolved "https://codeload.github.com/bitfocus/companion-module-toggl-track/tar.gz/d2e16d91aa5b71ed024a9c3c029cf05b06619fb2"
+"companion-module-toggl-track@github:bitfocus/companion-module-toggl-track#v1.0.2":
+  version "1.0.2"
+  resolved "https://codeload.github.com/bitfocus/companion-module-toggl-track/tar.gz/9d82ca25630e7e07ad81985f0075c7686ba622bd"
 
 "companion-module-tow-mixeffect@github:bitfocus/companion-module-tow-mixeffect#v1.1.8":
   version "1.1.8"
