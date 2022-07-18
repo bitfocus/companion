@@ -407,7 +407,7 @@
 		"companion-module-orfast-ndi": "github:bitfocus/companion-module-orfast-ndi#v1.0.1",
 		"companion-module-panasonic-avhs": "github:bitfocus/companion-module-panasonic-avhs#v1.0.6",
 		"companion-module-panasonic-camera-controller": "github:bitfocus/companion-module-panasonic-camera-controller#v1.0.9",
-		"companion-module-panasonic-kairos": "github:bitfocus/companion-module-panasonic-kairos#v1.0.1",
+		"companion-module-panasonic-kairos": "github:bitfocus/companion-module-panasonic-kairos#v1.1.0",
 		"companion-module-panasonic-lumix": "github:bitfocus/companion-module-panasonic-lumix#v1.0.0",
 		"companion-module-panasonic-projector": "github:bitfocus/companion-module-panasonic-projector#v1.0.4",
 		"companion-module-panasonic-ptz": "github:bitfocus/companion-module-panasonic-ptz#v1.0.20",
