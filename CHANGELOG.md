@@ -1,5 +1,22 @@
 # Bitfocus Companion
 
+## Companion v2.2.3 - Release Notes
+
+### 🐞 BUG FIXES
+
+- Fixed surface picker id property
+- Mitigated corrupt db fatal crashes
+- Minor UI fixes for action/feedback options
+
+### 🐞 MODULE FIXES
+
+- birddog-ptz
+- bitfocus-companion
+- figure53-qlab-advance
+- generic-pjlink
+- ubiquiti-unifi
+- visualproductions-bstation2
+
 ## Companion v2.2.2 - Release Notes
 
 ### 🐞 MODULE FIXES
