@@ -245,7 +245,7 @@ export class FakeSystem extends EventEmitter {
 	}
 
 	getAllFeedbacks: InstanceSkel<any>['getAllFeedbacks'] = () => {
-		return this.parent.getAllFeedbacks().map((fb) => ({
+		return this.parent._getAllFeedbacks().map((fb) => ({
 			id: fb.id,
 			type: fb.feedbackId,
 			options: fb.options,
@@ -253,15 +253,17 @@ export class FakeSystem extends EventEmitter {
 	}
 
 	subscribeFeedbacks: InstanceSkel<any>['subscribeFeedbacks'] = (type) => {
-		this.parent.subscribeFeedbacks(type)
+		const args = type ? [type] : []
+		this.parent.subscribeFeedbacks(...args)
 	}
 
 	unsubscribeFeedbacks: InstanceSkel<any>['unsubscribeFeedbacks'] = (type) => {
-		this.parent.unsubscribeFeedbacks(type)
+		const args = type ? [type] : []
+		this.parent.unsubscribeFeedbacks(...args)
 	}
 
 	getAllActions: InstanceSkel<any>['getAllActions'] = () => {
-		return this.parent.getAllActions().map((act) => ({
+		return this.parent._getAllActions().map((act) => ({
 			id: act.id,
 			action: act.actionId,
 			options: act.options,
@@ -269,17 +271,17 @@ export class FakeSystem extends EventEmitter {
 	}
 
 	subscribeActions: InstanceSkel<any>['subscribeActions'] = (type) => {
-		this.parent.subscribeActions(type)
+		const args = type ? [type] : []
+		this.parent.subscribeActions(...args)
 	}
 
 	unsubscribeActions: InstanceSkel<any>['unsubscribeActions'] = (type) => {
-		this.parent.unsubscribeActions(type)
+		const args = type ? [type] : []
+		this.parent.unsubscribeActions(...args)
 	}
 
 	oscSend: InstanceSkel<any>['oscSend'] = (host, port, path, args) => {
-		this.parent.oscSend(host, port, path, args).catch((e) => {
-			this.parent.log('debug', `oscSend failed: ${e?.message ?? e}`)
-		})
+		this.parent.oscSend(host, port, path, args)
 	}
 
 	// setActions: InstanceSkel<any>['setActions'] = (actions) => {
@@ -298,9 +300,9 @@ export class FakeSystem extends EventEmitter {
 								options: event.options ?? {},
 							},
 							{
-								deviceId: event.deviceId,
-								page: event.page,
-								bank: event.bank,
+								deviceId: event._deviceId,
+								page: event._page,
+								bank: event._bank,
 							}
 						)
 					}
@@ -318,9 +320,7 @@ export class FakeSystem extends EventEmitter {
 			}
 		}
 
-		this.parent.setActionDefinitions(newActions).catch((e) => {
-			this.parent.log('warn', `setActionDefinitions failed: ${e?.message ?? e}`)
-		})
+		this.parent.setActionDefinitions(newActions)
 	}
 
 	// setFeedbackDefinitions: InstanceSkel<any>['setFeedbackDefinitions'] = (feedbacks) => {
@@ -343,7 +343,7 @@ export class FakeSystem extends EventEmitter {
 										type: id,
 										options: event.options ?? {},
 									},
-									event.rawBank,
+									event._rawBank,
 									null
 								)
 							} else {
@@ -376,10 +376,10 @@ export class FakeSystem extends EventEmitter {
 										type: id,
 										options: event.options ?? {},
 									},
-									event.rawBank,
+									event._rawBank,
 									{
-										page: event.page,
-										bank: event.bank,
+										page: event._page,
+										bank: event._bank,
 										width: event.image?.width ?? 72,
 										height: event.image?.height ?? 72,
 									}
@@ -405,9 +405,7 @@ export class FakeSystem extends EventEmitter {
 			}
 		}
 
-		this.parent.setFeedbackDefinitions(newFeedbacks).catch((e) => {
-			this.parent.log('warn', `setFeedbackDefinitions failed: ${e?.message ?? e}`)
-		})
+		this.parent.setFeedbackDefinitions(newFeedbacks)
 	}
 
 	setPresetDefinitions: InstanceSkel<any>['setPresetDefinitions'] = (presets) => {
@@ -452,9 +450,7 @@ export class FakeSystem extends EventEmitter {
 	}
 
 	saveConfig = (config: any) => {
-		this.parent.saveConfig(config).catch((e) => {
-			this.parent.log('warn', `saveConfig failed: ${e?.message ?? e}`)
-		})
+		this.parent.saveConfig(config)
 	}
 
 	setVariableDefinitions: InstanceSkel<any>['setVariableDefinitions'] = (variables) => {
@@ -467,18 +463,14 @@ export class FakeSystem extends EventEmitter {
 			})
 		}
 
-		this.parent.setVariableDefinitions(newVariables).catch((e) => {
-			this.parent.log('warn', `setVariableDefinitions failed: ${e?.message ?? e}`)
-		})
+		this.parent.setVariableDefinitions(newVariables)
 	}
 
 	setVariable: InstanceSkel<any>['setVariable'] = (variableId, value) => {
 		this.setVariables({ [variableId]: value })
 	}
 	setVariables: InstanceSkel<any>['setVariables'] = (variables) => {
-		this.parent.setVariableValues(variables).catch((e) => {
-			this.parent.log('warn', `setVariableValues failed: ${e?.message ?? e}`)
-		})
+		this.parent.setVariableValues(variables)
 	}
 
 	getVariable: InstanceSkel<any>['getVariable'] = (variableId, cb) => {

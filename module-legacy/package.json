@@ -11,7 +11,7 @@
     "generate-manifests": "node --loader ts-node/esm scripts/generate-manifests.ts"
   },
   "dependencies": {
-    "@companion-module/base": "^0.0.3",
+    "@companion-module/base": "~0.1.2",
     "@tsconfig/node14": "^1.0.1",
     "@types/debug": "^4.1.7",
     "app-root-path": "^3.0.0",
@@ -387,7 +387,7 @@
     "tslib": "^2.3.1"
   },
   "devDependencies": {
-    "@companion-module/tools": "^0.0.2",
+    "@companion-module/tools": "^0.1.1",
     "@types/node": "^14",
     "@types/parse-author": "^2.0.1",
     "@types/shortid": "^0.0.29",
