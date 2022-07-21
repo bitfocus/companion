@@ -82,6 +82,7 @@ for (const folder of dirs) {
 			runtime: {
 				type: 'node14',
 				api: 'socket.io',
+				apiVersion: '0.0.0',
 
 				// entrypoint: '../../dist/index.js',
 				entrypoint: '../index.js',
