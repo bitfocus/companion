@@ -4488,6 +4488,14 @@ commist@^1.0.0:
   version "1.0.8"
   resolved "https://codeload.github.com/bitfocus/companion-module-vicreo-variablelistener/tar.gz/3bf5c455bd7ad71d6ea4bacac79e30d5d1f2a0a1"
 
+"companion-module-videocom-zoom-bridge@github:bitfocus/companion-module-videocom-zoom-bridge#v1.0.0":
+  version "1.0.0"
+  resolved "https://codeload.github.com/bitfocus/companion-module-videocom-zoom-bridge/tar.gz/c91b570903e7aa4f625a63d453e36471977a0801"
+  dependencies:
+    "@types/lodash" "^4.14.178"
+    lodash "^4.17.21"
+    urllib "^3.0.4"
+
 "companion-module-videolan-vlc@github:bitfocus/companion-module-videolan-vlc#v1.1.13":
   version "1.1.13"
   resolved "https://codeload.github.com/bitfocus/companion-module-videolan-vlc/tar.gz/8aed936d23c77ff1c3e2c8efdc61d7e22ce8cb9e"
@@ -5960,6 +5968,11 @@ form-data-encoder@1.7.1:
   resolved "https://registry.yarnpkg.com/form-data-encoder/-/form-data-encoder-1.7.1.tgz#ac80660e4f87ee0d3d3c3638b7da8278ddb8ec96"
   integrity sha512-EFRDrsMm/kyqbTQocNvRXMLjc7Es2Vk+IQFx/YW7hkUH1eBl4J1fqiP34l74Yt0pFLCNpc06fkbVk00008mzjg==
 
+form-data-encoder@^1.7.2:
+  version "1.7.2"
+  resolved "https://registry.yarnpkg.com/form-data-encoder/-/form-data-encoder-1.7.2.tgz#1f1ae3dccf58ed4690b86d87e4f57c654fbab040"
+  integrity sha512-qfqtYan3rxrnCk1VYaA4H+Ms9xdpPqvLZa6xmMgFvhO32x7/3J/ExcTd6qpxM0vH2GdMI+poehyBZvqfMTto8A==
+
 form-data@^3.0.0:
   version "3.0.1"
   resolved "https://registry.yarnpkg.com/form-data/-/form-data-3.0.1.tgz#ebd53791b78356a99af9a300d4282c4d5eb9755f"
@@ -5986,6 +5999,14 @@ form-data@~2.3.2:
     asynckit "^0.4.0"
     combined-stream "^1.0.6"
     mime-types "^2.1.12"
+
+formdata-node@^4.3.3:
+  version "4.3.3"
+  resolved "https://registry.yarnpkg.com/formdata-node/-/formdata-node-4.3.3.tgz#21415225be66e2c87a917bfc0fedab30a119c23c"
+  integrity sha512-coTew7WODO2vF+XhpUdmYz4UBvlsiTMSNaFYZlrXIqYbFd4W7bMwnoALNLE6uvNgzTg2j1JDF0ZImEfF06VPAA==
+  dependencies:
+    node-domexception "1.0.0"
+    web-streams-polyfill "4.0.0-beta.1"
 
 formidable@^1.2.2:
   version "1.2.6"
@@ -8324,7 +8345,7 @@ mime-db@1.52.0:
   resolved "https://registry.yarnpkg.com/mime-db/-/mime-db-1.52.0.tgz#bbabcdc02859f4987301c856e3387ce5ec43bf70"
   integrity sha512-sPU4uV7dYlvtWJxwwxHD0PuihVNiE7TyAbQ5SWxDCB9mUYvOgroQOwYQQOKPJ8CIbE+1ETVlOoK1UC2nU3gYvg==
 
-mime-types@^2.1.12, mime-types@~2.1.19, mime-types@~2.1.24, mime-types@~2.1.34:
+mime-types@^2.1.12, mime-types@^2.1.35, mime-types@~2.1.19, mime-types@~2.1.24, mime-types@~2.1.34:
   version "2.1.35"
   resolved "https://registry.yarnpkg.com/mime-types/-/mime-types-2.1.35.tgz#381a871b62a734450660ae3deee44813f70d959a"
   integrity sha512-ZDY+bPm5zTTF+YpCrAU9nK0UgICYPT0QtT1NZWFv4s++TNkcgVaT0g6+4R2uI4MjQjzysHB1zxuWL50hzaeXiw==
@@ -8627,6 +8648,11 @@ node-blink1@^0.5.1:
   integrity sha512-jsbZXvlMy627h15QWKLOgaDZcLXDZtGkYCnP6guR0ExMnvf/SgHjclKr3hasV2kPxqt9zoFXU/HrX1iQ8EITdQ==
   dependencies:
     node-hid "~2.1.0"
+
+node-domexception@1.0.0:
+  version "1.0.0"
+  resolved "https://registry.yarnpkg.com/node-domexception/-/node-domexception-1.0.0.tgz#6888db46a1f71c0b76b3f7555016b63fe64766e5"
+  integrity sha512-/jKZoMpw0F8GRwl4/eLROPA3cfcXtLApP0QzLmUT/HuPCZWyB7IY9ZrMeKw2O/nFIqPQB3PVM9aYm0F312AXDQ==
 
 node-fetch@2.6.7, node-fetch@^2.0.0, node-fetch@^2.3.0, node-fetch@^2.6.0, node-fetch@^2.6.1, node-fetch@^2.6.7:
   version "2.6.7"
@@ -11042,6 +11068,11 @@ underscore@^1.12.0, underscore@^1.13.2:
   resolved "https://registry.yarnpkg.com/underscore/-/underscore-1.13.2.tgz#276cea1e8b9722a8dbed0100a407dda572125881"
   integrity sha512-ekY1NhRzq0B08g4bGuX4wd2jZx5GnKz6mKSqFL4nqBlfyMGiG10gDFhDTMEfYmDL6Jy0FUIZp7wiRB+0BP7J2g==
 
+undici@^5.6.0:
+  version "5.8.0"
+  resolved "https://registry.yarnpkg.com/undici/-/undici-5.8.0.tgz#dec9a8ccd90e5a1d81d43c0eab6503146d649a4f"
+  integrity sha512-1F7Vtcez5w/LwH2G2tGnFIihuWUlc58YidwLiCv+jR2Z50x0tNXpRRw7eOIJ+GvqCqIkg9SB7NWAJ/T9TLfv8Q==
+
 unescape@^1.0.1:
   version "1.0.1"
   resolved "https://registry.yarnpkg.com/unescape/-/unescape-1.0.1.tgz#956e430f61cad8a4d57d82c518f5e6cc5d0dda96"
@@ -11202,6 +11233,20 @@ urllib@^2.38.0:
     qs "^6.4.0"
     statuses "^1.3.1"
     utility "^1.16.1"
+
+urllib@^3.0.4:
+  version "3.0.4"
+  resolved "https://registry.yarnpkg.com/urllib/-/urllib-3.0.4.tgz#636bb30c6720bb63cce74a9bd191237a07556753"
+  integrity sha512-mYVOtm7zILGiI4opGv3/e3FrKHquyJGm8haHZmxw1wAlunQRcNmjO/XQ9/weHVxH9gtFOutIz88SltBSxge3lQ==
+  dependencies:
+    default-user-agent "^1.0.0"
+    digest-header "^0.0.1"
+    form-data-encoder "^1.7.2"
+    formdata-node "^4.3.3"
+    mime-types "^2.1.35"
+    pump "^3.0.0"
+    tslib "^2.4.0"
+    undici "^5.6.0"
 
 usb-detection@^4.14.1:
   version "4.14.1"
@@ -11394,6 +11439,11 @@ wavefile@^8.4.4:
     bitdepth "^7.0.2"
     byte-data "^16.0.3"
     imaadpcm "^4.1.2"
+
+web-streams-polyfill@4.0.0-beta.1:
+  version "4.0.0-beta.1"
+  resolved "https://registry.yarnpkg.com/web-streams-polyfill/-/web-streams-polyfill-4.0.0-beta.1.tgz#3b19b9817374b7cee06d374ba7eeb3aeb80e8c95"
+  integrity sha512-3ux37gEX670UUphBF9AMCq8XM6iQ8Ac6A+DSRRjDoRBm1ufCkaCDdNVbaqq60PsEkdNlLKrGtv/YBP4EJXqNtQ==
 
 webidl-conversions@^3.0.0:
   version "3.0.1"

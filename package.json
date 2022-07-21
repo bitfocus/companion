@@ -513,6 +513,7 @@
 		"companion-module-ventuz-director": "github:bitfocus/companion-module-ventuz-director#v1.0.1",
 		"companion-module-vicreo-hotkey": "github:bitfocus/companion-module-vicreo-hotkey#v3.0.3",
 		"companion-module-vicreo-variablelistener": "github:bitfocus/companion-module-vicreo-variablelistener#v1.0.8",
+		"companion-module-videocom-zoom-bridge": "github:bitfocus/companion-module-videocom-zoom-bridge#v1.0.0",
 		"companion-module-videolan-vlc": "github:bitfocus/companion-module-videolan-vlc#v1.1.13",
 		"companion-module-vimeo-livestreamstudio6": "github:bitfocus/companion-module-vimeo-livestreamstudio6#v1.0.0",
 		"companion-module-vistream-online": "github:bitfocus/companion-module-vistream-online#v1.0.8",
