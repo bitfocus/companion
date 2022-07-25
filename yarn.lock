@@ -289,10 +289,10 @@
   resolved "https://registry.yarnpkg.com/@colors/colors/-/colors-1.5.0.tgz#bb504579c1cae923e6576a4f5da43d25f97bdbd9"
   integrity sha512-ooWCrlZP11i8GImSjTHYHLkvFDP48nS4+204nGb1RiX/WXYHmJA2III9/e2DWVabCESdW7hBAEzHRqUn9OUVvQ==
 
-"@companion-module/base@^0.0.3":
-  version "0.0.3"
-  resolved "https://registry.yarnpkg.com/@companion-module/base/-/base-0.0.3.tgz#48b90fb7d44d561bfcd1ce95adeccb02c697fab9"
-  integrity sha512-nEBj9XfBLalYBv3vjKix5U91oI2Cd0SJqZquvRKoyR0n5eOL9iYYdjPVS+gGUsejYup8A+s5JVscTmXJsh+r9g==
+"@companion-module/base@^0.1.1":
+  version "0.1.2"
+  resolved "https://registry.yarnpkg.com/@companion-module/base/-/base-0.1.2.tgz#68d86c5120d0b484b12782f1f49db665d9c57d8f"
+  integrity sha512-CgrT3s+5bWPlXz+6f+yQR2xSYkdnT1H/Ul26AOPboBSttd++c8Duk/XFuaEqiaq0fCLdDBtZfXkNK1zMG773Dg==
   dependencies:
     "@sentry/node" "^7.5.1"
     "@sentry/tracing" "^7.5.1"
@@ -315,20 +315,20 @@
   resolved "https://registry.yarnpkg.com/@discoveryjs/json-ext/-/json-ext-0.5.7.tgz#1d572bfbbe14b7704e0ba0f39b74815b84870d70"
   integrity sha512-dBVuXR082gk3jsFp7Rd/JI4kytwGHecnCoTtXFb7DB6CNHp4rg5k1bhg0nWdLGLnOV71lmDzGQaLMy8iPLY0pw==
 
-"@elgato-stream-deck/core@5.4.0":
-  version "5.4.0"
-  resolved "https://registry.yarnpkg.com/@elgato-stream-deck/core/-/core-5.4.0.tgz#5875b2a7f6cbdbd51b5e2e73767d4f3fc2b3a6df"
-  integrity sha512-SKGSy5bMM49Xmpkq2H6Dc5INDU2Hlsas2Acxa++C+cuvdxNkjZA+nxQeYTyOKjctht3Fs3OPOJNs6UN+xj7G+w==
+"@elgato-stream-deck/core@5.5.0":
+  version "5.5.0"
+  resolved "https://registry.yarnpkg.com/@elgato-stream-deck/core/-/core-5.5.0.tgz#97689d73d56bf8f0f948f48997a27f5bca629664"
+  integrity sha512-WcybmRfV/XInPUj+oTI9hPljqYr1lLDDfItXlNNlaQVezP4103sdCvCCNRh+InvhtAMbprMnIDhlCxCTjE0hCw==
   dependencies:
     eventemitter3 "^4.0.7"
     tslib "^2.4.0"
 
-"@elgato-stream-deck/node@^5.4.0":
-  version "5.4.0"
-  resolved "https://registry.yarnpkg.com/@elgato-stream-deck/node/-/node-5.4.0.tgz#ccef87d4afca8cb64f3fc2031f1840f3fec0bfc7"
-  integrity sha512-98tYohcNeuIzQsmB4Rw0MHeryQxoFp4W+yodaRKbuPc1AaGJitlbLzhMa7cTjzEXuy+ARduS8XQ00RDeN+Q2wg==
+"@elgato-stream-deck/node@^5.5.0":
+  version "5.5.0"
+  resolved "https://registry.yarnpkg.com/@elgato-stream-deck/node/-/node-5.5.0.tgz#478746324d485661d088b7e49139e62bb3724dcc"
+  integrity sha512-2nlhSTNtNFJCJHAcRYodxoCLBO3aylVqCMS5U15S/EJqnr4+HsReSYRaHsDhDXtdqPBoE7C1126IwWp5sJphyQ==
   dependencies:
-    "@elgato-stream-deck/core" "5.4.0"
+    "@elgato-stream-deck/core" "5.5.0"
     jpeg-js "^0.4.2"
     node-hid "^2.1.1"
     tslib "^2.4.0"
@@ -595,14 +595,14 @@
     "@jridgewell/resolve-uri" "^3.0.3"
     "@jridgewell/sourcemap-codec" "^1.4.10"
 
-"@julusian/jpeg-turbo@^2.0.0-1":
-  version "2.0.0-1"
-  resolved "https://registry.yarnpkg.com/@julusian/jpeg-turbo/-/jpeg-turbo-2.0.0-1.tgz#62b6d93a4ef0ba384a9a9fb086978ee2ab16aae9"
-  integrity sha512-YfwkfARW+4Ua1Sjwm5aw+LY9/ULGFbV6rIJJxSMJGCfv3nIh7iPkObOOF+Dyobsz7UeadCb99HzWo1JqLHUIjg==
+"@julusian/jpeg-turbo@^2.0.0":
+  version "2.0.0"
+  resolved "https://registry.yarnpkg.com/@julusian/jpeg-turbo/-/jpeg-turbo-2.0.0.tgz#53d313d409e7ccbcfb505931c4282affa6e9c528"
+  integrity sha512-POmnPuLIyUVUbOJvz7Qb55fCPZIsQFMB4aDQ40cc/1+R5W+lokEmrjP7FiNdaRvBv/UdTKgnWEsB0lQK5TRNlw==
   dependencies:
     cmake-js "7.0.0-3"
     node-addon-api "^5.0.0"
-    pkg-prebuilds "^0.0.2"
+    pkg-prebuilds "~0.1.0"
 
 "@nodelib/fs.scandir@2.1.5":
   version "2.1.5"
@@ -4386,10 +4386,12 @@ pkg-dir@^4.2.0:
   dependencies:
     find-up "^4.0.0"
 
-pkg-prebuilds@^0.0.2:
-  version "0.0.2"
-  resolved "https://registry.yarnpkg.com/pkg-prebuilds/-/pkg-prebuilds-0.0.2.tgz#1f4f5dc26a3043c7dcf39fc7aa79fff4389df97a"
-  integrity sha512-gsjn9BkOCZtAyCgC96zkGkODgTEy9+31zNGL7Tk2ODx5w2O+fc90rDzX9PWEbGNy6iRRzK3opLKmfZhwQN5uOQ==
+pkg-prebuilds@~0.1.0:
+  version "0.1.0"
+  resolved "https://registry.yarnpkg.com/pkg-prebuilds/-/pkg-prebuilds-0.1.0.tgz#7ac38674146708e763a4581a0759d5e8594f61b6"
+  integrity sha512-ALsGSiwO6EDvjrrFRiv7Q6HZPrqCgTpNxQMFs3P4Ic25cP94DmLy0iGvZDlJmQBbq2IS8xkZrifwkoOHIetY9Q==
+  dependencies:
+    yargs "^17.5.1"
 
 pngjs@^3.3.3:
   version "3.4.0"
@@ -5711,7 +5713,7 @@ yargs-parser@^21.0.0:
   resolved "https://registry.yarnpkg.com/yargs-parser/-/yargs-parser-21.0.1.tgz#0267f286c877a4f0f728fceb6f8a3e4cb95c6e35"
   integrity sha512-9BK1jFpLzJROCI5TzwZL/TU4gqjK5xiHV/RfWLOahrjAko/e4DJkRDZQXfvqAsiZzzYhgAzbgz6lg48jcm4GLg==
 
-yargs@^17.3.1, yargs@^17.4.1:
+yargs@^17.3.1, yargs@^17.4.1, yargs@^17.5.1:
   version "17.5.1"
   resolved "https://registry.yarnpkg.com/yargs/-/yargs-17.5.1.tgz#e109900cab6fcb7fd44b1d8249166feb0b36e58e"
   integrity sha512-t6YAJcxDkNX7NFYiVtKvWUz8l+PaKTLiL63mJYWR2GnHq2gjEWISzsLp9wg3aY36dY1j+gfIEL3pIF+XlJJfbA==

@@ -48,10 +48,10 @@
 		"zx": "^4.3.0"
 	},
 	"dependencies": {
-		"@companion-module/base": "^0.0.3",
-		"@elgato-stream-deck/node": "^5.4.0",
+		"@companion-module/base": "^0.1.1",
+		"@elgato-stream-deck/node": "^5.5.0",
 		"@estilles/expression-parser": "^1.0.0",
-		"@julusian/jpeg-turbo": "^2.0.0-1",
+		"@julusian/jpeg-turbo": "^2.0.0",
 		"@sentry/node": "^7.5.1",
 		"@sentry/tracing": "^7.5.1",
 		"archiver": "^5.3.1",
