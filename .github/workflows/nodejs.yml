@@ -66,7 +66,7 @@ jobs:
           VERSION=$(cat ./dist/BUILD)
 
           echo ::set-output name=sourcename::"electron-output/companion-x64.tar.gz"
-          echo ::set-output name=targetname::"companion-x64-${VERSION}.tar.gz"
+          echo ::set-output name=targetname::"companion-linux-x64-${VERSION}.tar.gz"
           echo ::set-output name=longversion::"${VERSION}"
 
       - name: Upload build
