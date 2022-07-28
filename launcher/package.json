@@ -29,7 +29,7 @@
 	},
 	"build": {
 		"productName": "Companion",
-		"appId": "companion.bitfocus.no",
+		"appId": "test-companion.bitfocus.no",
 		"remoteBuild": false,
 		"dmg": {
 			"artifactName": "companion-mac-${arch}.dmg",
