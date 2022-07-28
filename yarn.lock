@@ -1267,7 +1267,7 @@
   resolved "https://registry.yarnpkg.com/@types/cors/-/cors-2.8.12.tgz#6b2c510a7ad7039e98e7b8d3d6598f4359e5c080"
   integrity sha512-vt+kDhq/M2ayberEtJcIN/hxXy1Pk+59g2FV/ZQceeaTyCtCucjL2Q7FXlFjtWn4n15KCr1NE2lNNFhp0lEThw==
 
-"@types/debug@^4.1.5":
+"@types/debug@^4.1.5", "@types/debug@^4.1.7":
   version "4.1.7"
   resolved "https://registry.yarnpkg.com/@types/debug/-/debug-4.1.7.tgz#7cc0ea761509124709b8b2d1090d8f6c17aadb82"
   integrity sha512-9AonUzyTjXXhEOa0DnqpzZi6VHlqKMswga9EXjpXnnqxwLtdvPPtlO8evrI5D9S6asFRCQ6v+wpiUKbw+vKqyg==
@@ -3035,14 +3035,14 @@ commist@^1.0.0:
     jsonpath "^1.1.1"
     underscore "^1.13.2"
 
-"companion-module-bitfocus-snapshot@github:bitfocus/companion-module-bitfocus-snapshot#v0.0.5":
-  version "0.0.5"
-  resolved "https://codeload.github.com/bitfocus/companion-module-bitfocus-snapshot/tar.gz/831764c2c761b372185230efd0f29596ef3c71e9"
+"companion-module-bitfocus-snapshot@github:bitfocus/companion-module-bitfocus-snapshot#v0.0.6":
+  version "0.0.6"
+  resolved "https://codeload.github.com/bitfocus/companion-module-bitfocus-snapshot/tar.gz/b75b2763030683f4b40d33d48ded7a35dd11578a"
   dependencies:
-    "@types/debug" "^4.1.5"
-    "@types/node" "^12.20.13"
+    "@types/debug" "^4.1.7"
+    "@types/node" "^14.18.22"
     md5-typescript "^1.0.5"
-    socket.io-client "^4.1.2"
+    socket.io-client "^4.5.1"
 
 "companion-module-blackbird-hdmimatrix@github:bitfocus/companion-module-blackbird-hdmimatrix#v1.0.3":
   version "1.0.3"
@@ -10222,7 +10222,7 @@ socket.io-client@3.1.0:
     parseuri "0.0.6"
     socket.io-parser "~4.0.4"
 
-socket.io-client@^4.1.2, socket.io-client@^4.4.0, socket.io-client@^4.5.1:
+socket.io-client@^4.4.0, socket.io-client@^4.5.1:
   version "4.5.1"
   resolved "https://registry.yarnpkg.com/socket.io-client/-/socket.io-client-4.5.1.tgz#cab8da71976a300d3090414e28c2203a47884d84"
   integrity sha512-e6nLVgiRYatS+AHXnOnGi4ocOpubvOUCGhyWw8v+/FxW8saHkinG6Dfhi9TU0Kt/8mwJIAASxvw6eujQmjdZVA==
