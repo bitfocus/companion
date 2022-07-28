@@ -3877,9 +3877,9 @@ commist@^1.0.0:
     qwebchannel "5.9.0"
     ws "^7.4.6"
 
-"companion-module-newtek-ndistudiomonitor@github:bitfocus/companion-module-newtek-ndistudiomonitor#v1.0.1":
-  version "1.0.1"
-  resolved "https://codeload.github.com/bitfocus/companion-module-newtek-ndistudiomonitor/tar.gz/8b7434fc1f3157ee90ce36ebfbc2daa353621fde"
+"companion-module-newtek-ndistudiomonitor@github:bitfocus/companion-module-newtek-ndistudiomonitor#v1.0.3":
+  version "1.0.3"
+  resolved "https://codeload.github.com/bitfocus/companion-module-newtek-ndistudiomonitor/tar.gz/5b1cfe1504a9c07e2a81e2720a0eaf9e3a535cb1"
   dependencies:
     utility "1.16.3"
 
