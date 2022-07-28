@@ -12,7 +12,7 @@ Remote triggering can be done by sending `HTTP` Requests to the same IP and port
   _Change text on a button_
 - `/style/bank/<page>/<bank>?size=<text size>`  
   _Change text size on a button (between the predefined values)_
-- `/set/custom-variable/?name=<name>&value=<value>`  
+- `/set/custom-variable/<name>?value=<value>`  
   _Change custom variable value_
 - `/rescan`  
   _Make Companion rescan for newly attached USB surfaces_
@@ -29,4 +29,4 @@ Change the text of button 4 on page 2 to TEST, background color to #ffffff, text
 `/style/bank/2/4/?text=TEST&bgcolor=%23ffffff&color=%23000000&size=28px`
 
 Change custom variable "cue" to value "intro":  
-`/set/custom-variable/?name=cue&value=intro`
+`/set/custom-variable/cue?value=intro`
