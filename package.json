@@ -299,6 +299,7 @@
 		"companion-module-gallery-virtualvtrpro": "github:bitfocus/companion-module-gallery-virtualvtrpro#v1.0.3",
 		"companion-module-gammacontrol-gmaestro": "github:bitfocus/companion-module-gammacontrol-gmaestro#v1.0.2",
 		"companion-module-gefen-dvimatrix": "github:bitfocus/companion-module-gefen-dvimatrix#v1.0.2",
+		"companion-module-getontime-ontime": "github:bitfocus/companion-module-getontime-ontime#v1.0.0",
 		"companion-module-generic-artnet": "github:bitfocus/companion-module-generic-artnet#v1.2.0",
 		"companion-module-generic-emberplus": "github:bitfocus/companion-module-generic-emberplus#v1.1.4",
 		"companion-module-generic-http": "github:bitfocus/companion-module-generic-http#v1.2.5",
