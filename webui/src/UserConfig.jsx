@@ -805,7 +805,7 @@ function RemoteControlInfo() {
 									<i>Change background color on a button (#000000)</i>
 								</li>
 								<li>
-									<code>SET-CUSTOM-VARIABLE</code> &quot;&lt;name&gt;&quot; &quot;&lt;value&gt;&quot;
+									<code>CUSTOM-VARIABLE</code> &lt;name&gt; <code>SET-VALUE</code> &lt;value&gt;
 									<br />
 									<i>Change custom variable value</i>
 								</li>
@@ -835,7 +835,7 @@ function RemoteControlInfo() {
 							<p>
 								Change custom variable &quot;cue&quot; to value &quot;intro&quot;
 								<br />
-								<code>SET-CUSTOM-VARIABLE &quot;cue&quot; &quot;intro&quot;</code>
+								<code>CUSTOM-VARIABLE cue SET-VALUE intro</code>
 							</p>
 						</MyErrorBoundary>
 					</CTabPane>
@@ -877,7 +877,7 @@ function RemoteControlInfo() {
 										<i>Change text size on a button (between the predefined values)</i>
 									</li>
 									<li>
-										<code>/set/custom-variable/?name=</code>&lt;name&gt;<code>&amp;value=</code>&lt;value&gt;
+										<code>/api/custom-variable/</code>&lt;name&gt;<code>?value=</code>&lt;value&gt;
 										<br />
 										<i>Change custom variable value</i>
 									</li>
@@ -915,7 +915,7 @@ function RemoteControlInfo() {
 							<p>
 								Change custom variable &quot;cue&quot; to value &quot;intro&quot;
 								<br />
-								<code>/set/custom-variable/?name=cue&amp;value=intro</code>
+								<code>/api/custom-variable/cue?value=intro</code>
 							</p>
 						</MyErrorBoundary>
 					</CTabPane>
@@ -967,7 +967,7 @@ function RemoteControlInfo() {
 									<i>Change text on a button</i>
 								</li>
 								<li>
-									<code>/set/custom-variable/</code>&lt;name&gt; &lt;value&gt;
+									<code>/custom-variable/</code>&lt;name&gt;<code>/value</code> &lt;value&gt;
 									<br />
 									<i>Change custom variable value</i>
 								</li>
@@ -1003,7 +1003,7 @@ function RemoteControlInfo() {
 							<p>
 								Change custom variable &quot;cue&quot; to value &quot;intro&quot;
 								<br />
-								<code>/set/custom-variable/cue intro</code>
+								<code>/custom-variable/cue/value intro</code>
 							</p>
 						</MyErrorBoundary>
 					</CTabPane>
