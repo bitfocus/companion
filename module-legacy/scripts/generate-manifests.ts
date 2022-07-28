@@ -29,8 +29,11 @@ const ignoreNames: string[] = [
 	// Add any modules which are broken here, so that they are ignored, and not available
 	// 'companion-module-something'
 	'companion-module-figure53-go-button', // Uses ../../lib/resources/icons.js
-	'companion-module-bmd-atem', // Needs a secondary entrypoint for the worker_thread
 	'companion-module-discord-api', // Currently broken https://github.com/bitfocus/companion-module-discord-api/issues/4
+	'companion-module-bmd-atem', // New-api alternative
+	'companion-module-behringer-x32', // New-api alternative
+	'companion-module-homeassistant-server', // New-api alternative
+	'companion-module-generic-osc', // New-api alternative
 ]
 
 for (const folder of dirs) {
