@@ -205,6 +205,7 @@
 		"companion-module-behringer-x32": "github:bitfocus/companion-module-behringer-x32#v2.9.1",
 		"companion-module-behringer-xair": "github:bitfocus/companion-module-behringer-xair#v1.6.9",
 		"companion-module-biamp-audia": "github:bitfocus/companion-module-biamp-audia#v1.0.2",
+		"companion-module-biamp-tesira": "github:bitfocus/companion-module-biamp-tesira#v1.0.0",
 		"companion-module-birddog-ptz": "github:bitfocus/companion-module-birddog-ptz#v2.1.3",
 		"companion-module-birddog-studio": "github:bitfocus/companion-module-birddog-studio#v1.0.3",
 		"companion-module-bitfocus-companion": "github:bitfocus/companion-module-bitfocus-companion#v1.9.3",
