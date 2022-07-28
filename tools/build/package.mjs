@@ -75,6 +75,10 @@ if (isZip) {
 await fs.remove(path.join(runtimeDir, 'share'))
 await fs.remove(path.join(runtimeDir, 'include'))
 
+// Prune out any prebuilds from other platforms
+// TODO
+
+// Install dependencies
 await $`yarn --cwd dist install`
 
 // if (!platform) {
