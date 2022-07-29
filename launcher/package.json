@@ -19,10 +19,10 @@
 		"nanoid": "^3.3.4",
 		"respawn": "link:../vendor/respawn",
 		"strip-ansi": "^6.0.0",
-		"systeminformation": "^5.11.22"
+		"systeminformation": "^5.12.1"
 	},
 	"devDependencies": {
-		"electron": "^19.0.7",
+		"electron": "^19.0.10",
 		"electron-builder": "^23.1.0",
 		"electron-notarize": "^1.2.1",
 		"electron-reloader": "^1.2.3"
