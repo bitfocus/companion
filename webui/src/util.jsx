@@ -22,6 +22,7 @@ export const SurfacesContext = React.createContext(null)
 export const PagesContext = React.createContext(null)
 export const TriggersContext = React.createContext(null)
 
+/** @deprecated everything should be being migrated across to `socketEmit2` and `client.onPromise` on the backend  */
 export function socketEmit(socket, name, args, timeout, timeoutMessage) {
 	const p = new Promise((resolve, reject) => {
 		console.log('send', name, ...args)

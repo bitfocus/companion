@@ -3,6 +3,7 @@ import { CHeader, CHeaderBrand, CHeaderNavItem, CHeaderNav, CHeaderNavLink, CTog
 import { StaticContext } from '../util'
 import { faLock } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+
 export function MyHeader({ toggleSidebar, canLock, setLocked }) {
 	const context = useContext(StaticContext)
 

@@ -9,7 +9,7 @@ import React, {
 	useRef,
 	useState,
 } from 'react'
-import { StaticContext, KeyReceiver, PagesContext, socketEmit2, CreateBankControlId, socketEmit } from '../util'
+import { StaticContext, KeyReceiver, PagesContext, socketEmit2, CreateBankControlId } from '../util'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import {
 	faArrowsAlt,
@@ -93,7 +93,7 @@ export const ButtonsGridPanel = memo(function ButtonsPage({
 	const clearNewPageName = useCallback(() => setNewPageName(null), [])
 	const changeNewPageName = useCallback(
 		(e) => {
-			socketEmit(context.socket, 'pages:set-name', [pageNumber, e.currentTarget.value]).catch((e) => {
+			socketEmit2(context.socket, 'pages:set-name', [pageNumber, e.currentTarget.value]).catch((e) => {
 				console.error('Failed to set name', e)
 			})
 			setNewPageName(e.currentTarget.value)
