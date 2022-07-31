@@ -33,7 +33,10 @@ export function socketEmitPromise(socket, name, args, timeout, timeoutMessage) {
 	})
 
 	timeout = timeout ?? 5000
-	return pTimeout(p, timeout, timeoutMessage ?? `Timed out after ${timeout / 1000}s`)
+	return pTimeout(p, {
+		milliseconds: timeout,
+		message: timeoutMessage ?? `Timed out after ${timeout / 1000}s`,
+	})
 }
 
 const freezePrototypes = () => {

@@ -122,13 +122,6 @@ export function Tablet() {
 	}, [queryUrl])
 
 	const imageCache = useMemo(() => new ImageCache(socket), [socket]) // TODO - this isnt the safest
-	useEffect(() => {
-		// Close the old socket when recreating
-		const socket2 = socket
-		return () => {
-			socket2.close()
-		}
-	}, [socket])
 
 	const [retryToken, setRetryToken] = useState(nanoid())
 	const doRetryLoad = useCallback(() => setRetryToken(nanoid()), [])

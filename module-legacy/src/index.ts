@@ -59,14 +59,14 @@ export default class MockModule extends InstanceBase<MockConfig> {
 			this.#legacy.init()
 		}
 	}
-	destroy(): void | Promise<void> {
+	async destroy(): Promise<void> {
 		if (!this.#legacy) throw new Error('Not yet initialized')
 
 		this.#legacy.destroy()
 
 		this.#system.destroy()
 	}
-	configUpdated(config: MockConfig): void | Promise<void> {
+	async configUpdated(config: MockConfig): Promise<void> {
 		if (!this.#legacy) throw new Error('Not yet initialized')
 
 		this.#legacy.updateConfig(config)

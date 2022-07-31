@@ -29,8 +29,11 @@ const ignoreNames: string[] = [
 	// Add any modules which are broken here, so that they are ignored, and not available
 	// 'companion-module-something'
 	'companion-module-figure53-go-button', // Uses ../../lib/resources/icons.js
-	'companion-module-bmd-atem', // Needs a secondary entrypoint for the worker_thread
 	'companion-module-discord-api', // Currently broken https://github.com/bitfocus/companion-module-discord-api/issues/4
+	'companion-module-bmd-atem', // New-api alternative
+	'companion-module-behringer-x32', // New-api alternative
+	'companion-module-homeassistant-server', // New-api alternative
+	'companion-module-generic-osc', // New-api alternative
 ]
 
 for (const folder of dirs) {
@@ -68,7 +71,7 @@ for (const folder of dirs) {
 		}
 
 		const manifest: ModuleManifest = {
-			id: `bitfocus.${pkgJson.name}`,
+			id: pkgJson.name,
 			name: pkgJson.name,
 			shortname: pkgJson.shortname ?? pkgJson.name,
 			description: pkgJson.description ?? pkgJson.name,
@@ -77,11 +80,12 @@ for (const folder of dirs) {
 			repository: pkgJson.repository?.url ?? `https://github.com/bitfocus/companion-module-${pkgJson.name}.git`,
 			bugs: pkgJson.bugs?.url ?? `https://github.com/bitfocus/companion-module-${pkgJson.name}/issues`,
 			maintainers: maintainers,
-			legacyIds: [...(pkgJson.legacy || []), pkgJson.name],
+			legacyIds: [...(pkgJson.legacy || [])],
 
 			runtime: {
 				type: 'node14',
 				api: 'socket.io',
+				apiVersion: '0.0.0',
 
 				// entrypoint: '../../dist/index.js',
 				entrypoint: '../index.js',

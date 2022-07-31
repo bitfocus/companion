@@ -50,10 +50,6 @@ if [ -z "$CI" ]; then
 fi 
 echo
 
-heading "Temporary Module-base"
-yarn --frozen-lockfile --cwd module-base
-yarn --cwd module-base build
-
 heading "Legacy Modules"
 yarn --frozen-lockfile --cwd module-legacy
 if [ -z "$CI" ]; then

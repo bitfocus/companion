@@ -15,5 +15,4 @@ module-legacy/manifests
 module-legacy/dist
 module-legacy/entrypoints
 
-module-base/dist
 module-local-dev

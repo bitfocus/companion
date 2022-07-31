@@ -90,11 +90,11 @@ if (!configDir) {
 	// Check the old location first
 	configDir = path.join(
 		process.env[process.platform == 'win32' ? 'USERPROFILE' : 'HOME'],
-		'companion-REMOVE-THIS-SUFFIX-BEFORE-ITS-BETA'
+		'companion-REMOVE-THIS-SUFFIX-BEFORE-ITS-BETA' // HACK: temporary testing path
 	)
 	if (!fs.pathExistsSync(configDir)) {
 		// Creating a new folder, so use the proper place
-		const paths = envPaths('companion')
+		const paths = envPaths('companion3-test') // HACK: temporary testing path
 		configDir = paths.config
 	}
 }

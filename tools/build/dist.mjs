@@ -51,8 +51,8 @@ await zipDirectory('./docs', 'dist/docs.zip')
 // generate a package.json for the required native dependencies
 const require = createRequire(import.meta.url)
 const dependencies = {}
-const neededDependnecies = ['@julusian/jpeg-turbo', 'node-hid', 'sharp']
-for (const name of neededDependnecies) {
+const neededDependencies = ['node-hid', 'sharp']
+for (const name of neededDependencies) {
 	const pkgJson = require(`${name}/package.json`)
 	dependencies[name] = pkgJson.version
 }
@@ -73,6 +73,13 @@ await fs.writeFile(
 )
 await fs.copyFile('yarn.lock', 'dist/yarn.lock') // use the same yarn.lock file, to keep deps as similar as possible
 await fs.copyFile('.node-version', 'dist/.node-version')
+
+// Copy prebuilds
+const copyPrebuildsFromDependencies = ['@julusian/jpeg-turbo']
+for (const name of copyPrebuildsFromDependencies) {
+	await fs.mkdirp('dist/prebuilds')
+	await fs.copy(path.join('node_modules', name, 'prebuilds'), 'dist/prebuilds')
+}
 
 // Build legacy modules
 await $`yarn --cwd module-legacy generate-manifests`

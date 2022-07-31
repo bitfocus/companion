@@ -21,7 +21,7 @@ if (!lock) {
 	)
 	app.quit()
 } else {
-	let configDir = path.join(app.getPath('appData'), '/companion/')
+	let configDir = path.join(app.getPath('appData'), '/companion3-test/') // HACK: temporary testing path
 	if (process.env.COMPANION_CONFIG_BASEDIR !== undefined) {
 		configDir = process.env.COMPANION_CONFIG_BASEDIR
 	}
