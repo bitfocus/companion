@@ -29,10 +29,13 @@ import { faAdd, faCog, faFolderOpen, faSync, faTrash } from '@fortawesome/free-s
 import { nanoid } from 'nanoid'
 import { TextInputField } from './Components/TextInputField'
 import { useMemo } from 'react'
+import { GenericConfirmModal } from './Components/GenericConfirmModal'
 
 export const SurfacesPage = memo(function SurfacesPage() {
 	const socket = useContext(SocketContext)
 	const devices = useContext(SurfacesContext)
+
+	const confirmRef = useRef(null)
 
 	const devicesList = useMemo(() => {
 		const ary = Object.values(devices)
@@ -85,8 +88,10 @@ export const SurfacesPage = memo(function SurfacesPage() {
 
 	const deleteEmulator = useCallback(
 		(dev) => {
-			socketEmitPromise(socket, 'surfaces:emulator-remove', [dev.id]).catch((err) => {
-				console.error('Emulator remove failed', err)
+			confirmRef?.current?.show('Remove Emulator', 'Are you sure?', 'Remove', () => {
+				socketEmitPromise(socket, 'surfaces:emulator-remove', [dev.id]).catch((err) => {
+					console.error('Emulator remove failed', err)
+				})
 			})
 		},
 		[socket]
@@ -107,6 +112,8 @@ export const SurfacesPage = memo(function SurfacesPage() {
 
 	return (
 		<div>
+			<GenericConfirmModal ref={confirmRef} />
+
 			<h4>Surfaces</h4>
 			<p>
 				These are the surfaces currently connected to companion. If your streamdeck is missing from this list, you might
@@ -418,6 +425,20 @@ const SurfaceEditModal = forwardRef(function SurfaceEditModal(_props, ref) {
 									checked={!!deviceConfig.emulator_control_enable}
 									value={true}
 									onChange={(e) => updateConfig('emulator_control_enable', !!e.currentTarget.checked)}
+								/>
+							</CFormGroup>
+						) : (
+							''
+						)}
+						{deviceInfo.configFields?.includes('emulator_prompt_fullscreen') ? (
+							<CFormGroup>
+								<CLabel htmlFor="emulator_prompt_fullscreen">Prompt to enter fullscreen</CLabel>
+								<CInputCheckbox
+									name="emulator_prompt_fullscreen"
+									type="checkbox"
+									checked={!!deviceConfig.emulator_prompt_fullscreen}
+									value={true}
+									onChange={(e) => updateConfig('emulator_prompt_fullscreen', !!e.currentTarget.checked)}
 								/>
 							</CFormGroup>
 						) : (

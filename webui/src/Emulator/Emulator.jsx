@@ -5,13 +5,16 @@ import {
 	MyErrorBoundary,
 	SocketContext,
 	socketEmitPromise,
+	useMountEffect,
 } from '../util'
-import { CAlert, CCol, CContainer, CRow } from '@coreui/react'
+import { CAlert, CButton, CCol, CContainer, CForm, CRow } from '@coreui/react'
 import { nanoid } from 'nanoid'
 import { useParams } from 'react-router-dom'
 import { dsanMastercueKeymap, keyboardKeymap, logitecKeymap } from './Keymaps'
 import { BankPreview, dataToButtonImage } from '../Components/BankButton'
 import { MAX_COLS, MAX_ROWS } from '../Constants'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faCancel, faExpand } from '@fortawesome/free-solid-svg-icons'
 
 export function Emulator() {
 	const socket = useContext(SocketContext)
@@ -62,19 +65,20 @@ export function Emulator() {
 	}, [config?.emulator_control_enable])
 
 	useEffect(() => {
-		const updateImage = (keyIndex, data) => {
+		const updateImages = (newImages) => {
 			setImageCache((old) => {
-				return {
-					...old,
-					[keyIndex]: data ? dataToButtonImage(data) : undefined,
+				const res = { ...old }
+				for (const [key, data] of Object.entries(newImages)) {
+					res[key] = data ? dataToButtonImage(data) : undefined
 				}
+				return res
 			})
 		}
 
-		socket.on('emulator:image', updateImage)
+		socket.on('emulator:images', updateImages)
 
 		return () => {
-			socket.off('emulator:image', updateImage)
+			socket.off('emulator:images', updateImages)
 		}
 	}, [socket, imageCache])
 
@@ -153,31 +157,78 @@ export function Emulator() {
 	return (
 		<div className="page-tablet">
 			<CContainer fluid className="d-flex flex-column">
-				<CRow>
-					{config ? (
-						<CCol xs={12}>
-							<CyclePages emulatorId={emulatorId} imageCache={imageCache} />
+				{config ? (
+					<>
+						<ConfigurePanel config={config} />
 
-							<CAlert color="info" closeButton>
-								Use <b>1 2 3 4 5 6 7 8</b>, <b>Q W E R T Y U I</b>, <b>A S D F G H J K</b>, <b>Z X C V B N M ,</b> to
-								control this surface with your keyboard!
-								<br />
-								{config.emulator_control_enable ? (
-									<>
-										A Logitech R400/Mastercue/DSan will send a button press to button; 2 (Back), 3 (forward), 4 (black)
-										and for logitech: 10/11 (Start and stop) on each page.
-									</>
-								) : (
-									<>You can enable support for some controllers in the Surface Settings!</>
-								)}
-							</CAlert>
-						</CCol>
-					) : (
+						<CyclePages emulatorId={emulatorId} imageCache={imageCache} />
+
+						<CAlert color="info" closeButton>
+							Use <b>1 2 3 4 5 6 7 8</b>, <b>Q W E R T Y U I</b>, <b>A S D F G H J K</b>, <b>Z X C V B N M ,</b> to
+							control this surface with your keyboard!
+							<br />
+							{config.emulator_control_enable ? (
+								<>
+									A Logitech R400/Mastercue/DSan will send a button press to button; 2 (Back), 3 (forward), 4 (black)
+									and for logitech: 10/11 (Start and stop) on each page.
+								</>
+							) : (
+								<>You can enable support for some controllers in the Surface Settings!</>
+							)}
+						</CAlert>
+					</>
+				) : (
+					<CRow>
 						<LoadingRetryOrError dataReady={false} error={loadError} doRetry={doRetryLoad} />
-					)}
-				</CRow>
+					</CRow>
+				)}
 			</CContainer>
 		</div>
+	)
+}
+
+function ConfigurePanel({ config }) {
+	const [show, setShow] = useState(true)
+	const [fullscreen, setFullscreen] = useState(document.fullscreenElement !== null)
+
+	useMountEffect(() => {
+		const handleChange = () => {
+			console.log('fullscreen change')
+			setFullscreen(document.fullscreenElement !== null)
+		}
+
+		document.addEventListener('fullscreenchange', handleChange)
+		return () => {
+			document.removeEventListener('fullscreenchange', handleChange)
+		}
+	})
+
+	const doRequestFullscreen = useCallback(() => {
+		document.documentElement.requestFullscreen()
+	}, [])
+	const doDismiss = useCallback(() => {
+		setShow(false)
+	}, [])
+
+	return show && config.emulator_prompt_fullscreen && !fullscreen ? (
+		<CRow className="configure">
+			<CCol sm={12}>
+				<CForm>
+					<CRow>
+						<CCol xs={12}>
+							<CButton onClick={doRequestFullscreen} title="Fullscreen">
+								<FontAwesomeIcon icon={faExpand} /> Fullscreen
+							</CButton>
+							<CButton onClick={doDismiss} title="Dismiss">
+								<FontAwesomeIcon icon={faCancel} /> Dismiss
+							</CButton>
+						</CCol>
+					</CRow>
+				</CForm>
+			</CCol>
+		</CRow>
+	) : (
+		''
 	)
 }
 
