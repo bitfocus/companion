@@ -29,14 +29,20 @@ class ImageCache extends EventEmitter {
 		this.loadedPages = new Set()
 		this.imageCache = new Map()
 
-		this.socket.on('connect', () => {
-			// resubscribe on reconnect
-			for (const k of this.loadedPages.values()) {
-				this._doSubscribe(k)
-			}
-		})
+		this.socket.on('connect', this._onConnect)
+		this.socket.on('web-buttons:bank-data', this._updateImage)
+	}
 
-		this.socket.on('buttons_bank_data', this._updateImages)
+	_onConnect = () => {
+		// resubscribe on reconnect
+		for (const k of this.loadedPages.values()) {
+			this._doSubscribe(k)
+		}
+	}
+
+	destroy() {
+		this.socket.off('connect', this._onConnect)
+		this.socket.off('web-buttons:bank-data', this._updateImage)
 	}
 
 	loadPage(page) {
@@ -51,8 +57,7 @@ class ImageCache extends EventEmitter {
 	}
 
 	_doSubscribe(page) {
-		const lastUpdated = {} // We won't ever have an existing data
-		socketEmitPromise(this.socket, 'web_buttons_page', [page, lastUpdated])
+		socketEmitPromise(this.socket, 'web-buttons:load-page', [page])
 			.then((data) => {
 				this._updateImages(page, data)
 			})
@@ -60,6 +65,10 @@ class ImageCache extends EventEmitter {
 				// TODO - report to user
 				console.error(`Failed to load page data: ${e}`)
 			})
+	}
+
+	_updateImage = (page, bank, image) => {
+		this._updateImages(page, { [bank]: image })
 	}
 
 	_updateImages = (page0, data) => {
@@ -104,7 +113,16 @@ export function Tablet() {
 		}
 	}, [queryUrl])
 
-	const imageCache = useMemo(() => new ImageCache(socket), [socket]) // TODO - this isnt the safest
+	const [imageCache, setImageCache] = useState(null)
+	useEffect(() => {
+		const newImageCache = new ImageCache(socket)
+		setImageCache(newImageCache)
+
+		// Cleanup handlers
+		return () => {
+			newImageCache.destroy()
+		}
+	}, [socket])
 
 	const [retryToken, setRetryToken] = useState(nanoid())
 	const doRetryLoad = useCallback(() => setRetryToken(nanoid()), [])
@@ -112,7 +130,7 @@ export function Tablet() {
 		setLoadError(null)
 		setPages(null)
 
-		socketEmitPromise(socket, 'web_buttons', [])
+		socketEmitPromise(socket, 'web-buttons:subscribe', [])
 			.then((newPages) => {
 				setLoadError(null)
 				setPages(newPages)
@@ -136,10 +154,14 @@ export function Tablet() {
 			})
 		}
 
-		socket.on('page_update_ext', updatePageInfo)
+		socket.on('web-buttons:page-info', updatePageInfo)
 
 		return () => {
-			socket.off('page_update_ext', updatePageInfo)
+			socket.off('web-buttons:page-info', updatePageInfo)
+
+			socketEmitPromise(socket, 'web-buttons:unsubscribe', []).catch((e) => {
+				console.error('Failed to cleanup web-buttons:', e)
+			})
 		}
 	}, [retryToken, socket])
 
@@ -193,7 +215,7 @@ export function Tablet() {
 		<div className="page-tablet">
 			<div className="scroller">
 				<CContainer fluid className="d-flex flex-column">
-					{pages ? (
+					{pages && imageCache ? (
 						<>
 							<ConfigurePanel updateQueryUrl={updateQueryUrl} query={parsedQuery} />
 
