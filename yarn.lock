@@ -4437,9 +4437,9 @@ commist@^1.0.0:
   version "1.0.2"
   resolved "https://codeload.github.com/bitfocus/companion-module-toggl-track/tar.gz/9d82ca25630e7e07ad81985f0075c7686ba622bd"
 
-"companion-module-tow-mixeffect@github:bitfocus/companion-module-tow-mixeffect#v1.1.8":
-  version "1.1.8"
-  resolved "https://codeload.github.com/bitfocus/companion-module-tow-mixeffect/tar.gz/5a8be3ab2ccd64c7ed52ff166785c95aa79200f8"
+"companion-module-tow-mixeffect@github:bitfocus/companion-module-tow-mixeffect#v1.1.9":
+  version "1.1.9"
+  resolved "https://codeload.github.com/bitfocus/companion-module-tow-mixeffect/tar.gz/6b78fe5e43fa3d2843a912105c8f277433b420be"
 
 "companion-module-tplink-kasasmartbulb@github:bitfocus/companion-module-tplink-kasasmartbulb#v1.0.1":
   version "1.0.1"
