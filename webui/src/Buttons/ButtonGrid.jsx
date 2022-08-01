@@ -434,36 +434,48 @@ function ButtonGrid({ bankClick, pageNumber, selectedButton }) {
 	const [imageCache, setImageCache] = useState({})
 
 	useEffect(() => {
-		const updatePreviewImages = (images) => {
-			setImageCache((oldImages) => {
-				const newImages = { ...oldImages }
-				for (let key = 1; key <= MAX_BUTTONS; ++key) {
-					if (images[key] !== undefined) {
-						newImages[key] = {
-							image: dataToButtonImage(images[key].buffer),
-							updated: images[key].updated,
-						}
+		setImageCache({})
+
+		const updatePreviewImage = (page, bank, render) => {
+			if (page === pageNumber) {
+				console.log(bank, render)
+				setImageCache((oldImages) => {
+					return {
+						...oldImages,
+						[bank]: {
+							image: dataToButtonImage(render.buffer),
+							updated: render.updated,
+						},
 					}
-				}
-				return newImages
-			})
+				})
+			}
 		}
 
-		socket.on('preview_page_data', updatePreviewImages)
+		socket.on('page-preview:bank-data', updatePreviewImage)
 
-		// Inform server of our new page, and last updated, so it can skip unchanged previews
-		setImageCache((imageCache) => {
-			// don't want to change imageCache, but this avoids the dependency
-			const lastUpdated = {}
-			for (const [id, data] of Object.entries(imageCache)) {
-				lastUpdated[id] = { updated: data.updated }
-			}
-			socket.emit('bank_preview_page', pageNumber, lastUpdated)
-			return imageCache
-		})
+		// Subscribe to images for the new page
+		socketEmitPromise(socket, 'page-preview:subscribe', [pageNumber])
+			.then((images) => {
+				const newImages = {}
+
+				for (const [key, image] of Object.entries(images)) {
+					newImages[key] = {
+						image: dataToButtonImage(image.buffer),
+						updated: image.updated,
+					}
+				}
+				setImageCache(newImages)
+			})
+			.catch((e) => {
+				console.error(`Failed to subscribe page preview`)
+			})
 
 		return () => {
-			socket.off('preview_page_data', updatePreviewImages)
+			socket.off('page-preview:bank-data', updatePreviewImage)
+
+			socketEmitPromise(socket, 'page-preview:unsubscribe', [pageNumber]).catch((e) => {
+				console.error(`Failed to unsubscribe page preview`)
+			})
 		}
 	}, [socket, pageNumber])
 
