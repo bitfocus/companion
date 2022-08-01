@@ -86,23 +86,6 @@ class ImageCache extends EventEmitter {
 	}
 }
 
-function sanitisePageInfo(info) {
-	const toNumArray = (raw) => {
-		if (Array.isArray(raw)) {
-			return raw.map((v) => Number(v))
-		} else {
-			return []
-		}
-	}
-
-	return {
-		...info,
-		pageup: toNumArray(info.pageup),
-		pagenum: toNumArray(info.pagenum),
-		pagedown: toNumArray(info.pagedown),
-	}
-}
-
 export function Tablet() {
 	const socket = useContext(SocketContext)
 
@@ -132,11 +115,7 @@ export function Tablet() {
 		socketEmitPromise(socket, 'web_buttons', [])
 			.then((newPages) => {
 				setLoadError(null)
-				const newPages2 = {}
-				for (const [id, info] of Object.entries(newPages)) {
-					newPages2[id] = sanitisePageInfo(info)
-				}
-				setPages(newPages2)
+				setPages(newPages)
 			})
 			.catch((e) => {
 				console.error('Failed to load pages list:', e)
@@ -149,7 +128,7 @@ export function Tablet() {
 				if (oldPages) {
 					return {
 						...oldPages,
-						[page]: sanitisePageInfo(info),
+						[page]: info,
 					}
 				} else {
 					return null
@@ -230,13 +209,7 @@ export function Tablet() {
 												) : (
 													''
 												)}
-												<ButtonsFromPage
-													imageCache={imageCache}
-													number={number}
-													cols={cols}
-													rows={rows}
-													pageInfo={pages[number]}
-												/>
+												<ButtonsFromPage imageCache={imageCache} number={number} cols={cols} rows={rows} />
 											</MyErrorBoundary>
 										))}
 									</CCol>
@@ -379,7 +352,7 @@ function ConfigurePanel({ updateQueryUrl, query }) {
 	)
 }
 
-function ButtonsFromPage({ imageCache, number, cols, rows, goFirstPage, goNextPage, goPrevPage, pageInfo }) {
+function ButtonsFromPage({ imageCache, number, cols, rows }) {
 	const socket = useContext(SocketContext)
 
 	const [buttonsInView, setButtonsInView] = useState({})
@@ -407,20 +380,12 @@ function ButtonsFromPage({ imageCache, number, cols, rows, goFirstPage, goNextPa
 
 	const bankClick = useCallback(
 		(bank, pressed) => {
-			if (goNextPage && pressed && pageInfo && pageInfo.pageup && pageInfo.pageup.includes(bank)) {
-				goNextPage()
-			} else if (goPrevPage && pressed && pageInfo && pageInfo.pagedown && pageInfo.pagedown.includes(bank)) {
-				goPrevPage()
-			} else if (goFirstPage && pressed && pageInfo && pageInfo.pagenum && pageInfo.pagenum.includes(bank)) {
-				goFirstPage()
-			} else {
-				const controlId = CreateBankControlId(number, bank)
-				socketEmitPromise(socket, 'controls:hot-press', [controlId, pressed]).catch((e) =>
-					console.error(`Hot press failed: ${e}`)
-				)
-			}
+			const controlId = CreateBankControlId(number, bank)
+			socketEmitPromise(socket, 'controls:hot-press', [controlId, pressed]).catch((e) =>
+				console.error(`Hot press failed: ${e}`)
+			)
 		},
-		[socket, number, pageInfo, goNextPage, goPrevPage, goFirstPage]
+		[socket, number]
 	)
 
 	const setInView = useCallback((index, inView) => {

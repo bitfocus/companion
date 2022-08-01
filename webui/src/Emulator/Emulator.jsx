@@ -263,18 +263,6 @@ function CyclePages({ emulatorId, imageCache }) {
 	const bankClick = useCallback(
 		(bank, pressed) => {
 			const command = pressed ? 'emulator:press' : 'emulator:release'
-			// if (goNextPage && pressed && pageInfo && pageInfo.pageup && pageInfo.pageup.includes(bank)) {
-			// 	goNextPage()
-			// } else if (goPrevPage && pressed && pageInfo && pageInfo.pagedown && pageInfo.pagedown.includes(bank)) {
-			// 	goPrevPage()
-			// } else if (goFirstPage && pressed && pageInfo && pageInfo.pagenum && pageInfo.pagenum.includes(bank)) {
-			// 	goFirstPage()
-			// } else {
-			// 	const controlId = CreateBankControlId(number, bank)
-			// 	socketEmitPromise(socket, 'controls:hot-press', [controlId, pressed]).catch((e) =>
-			// 		console.error(`Hot press failed: ${e}`)
-			// 	)
-			// }
 			socketEmitPromise(socket, command, [emulatorId, bank]).catch((e) => {
 				console.error(`${command} failed`, e)
 			})
