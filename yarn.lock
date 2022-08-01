@@ -3441,9 +3441,9 @@ commist@^1.0.0:
   version "1.0.3"
   resolved "https://codeload.github.com/bitfocus/companion-module-folivora-btt/tar.gz/5227bdacc73ca7af76c3675cfffec357171e867e"
 
-"companion-module-fora-hvs@github:bitfocus/companion-module-fora-hvs#v1.2.5":
-  version "1.2.5"
-  resolved "https://codeload.github.com/bitfocus/companion-module-fora-hvs/tar.gz/38c6b80d8f6d41b9bc729e126aea02016b373a75"
+"companion-module-fora-hvs@github:bitfocus/companion-module-fora-hvs#v1.2.6":
+  version "1.2.6"
+  resolved "https://codeload.github.com/bitfocus/companion-module-fora-hvs/tar.gz/4c9b5c7221ac7db9f816306c2e603aafdc6fe5cd"
 
 "companion-module-foscam-ptz@github:bitfocus/companion-module-foscam-ptz#v1.0.3":
   version "1.0.3"
