@@ -438,14 +438,10 @@ function ButtonGrid({ bankClick, pageNumber, selectedButton }) {
 
 		const updatePreviewImage = (page, bank, render) => {
 			if (page === pageNumber) {
-				console.log(bank, render)
 				setImageCache((oldImages) => {
 					return {
 						...oldImages,
-						[bank]: {
-							image: dataToButtonImage(render.buffer),
-							updated: render.updated,
-						},
+						[bank]: dataToButtonImage(render),
 					}
 				})
 			}
@@ -457,12 +453,8 @@ function ButtonGrid({ bankClick, pageNumber, selectedButton }) {
 		socketEmitPromise(socket, 'page-preview:subscribe', [pageNumber])
 			.then((images) => {
 				const newImages = {}
-
 				for (const [key, image] of Object.entries(images)) {
-					newImages[key] = {
-						image: dataToButtonImage(image.buffer),
-						updated: image.updated,
-					}
+					newImages[key] = dataToButtonImage(image)
 				}
 				setImageCache(newImages)
 			})
@@ -506,7 +498,7 @@ function ButtonGrid({ bankClick, pageNumber, selectedButton }) {
 											key={x}
 											page={pageNumber}
 											index={index}
-											preview={imageCache[index]?.image}
+											preview={imageCache[index]}
 											onClick={bankClick}
 											alt={`Bank ${index}`}
 											selected={selectedPage === pageNumber && selectedBank === index}

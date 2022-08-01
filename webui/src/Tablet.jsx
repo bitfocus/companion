@@ -80,10 +80,7 @@ class ImageCache extends EventEmitter {
 			for (let key = 1; key <= MAX_BUTTONS; ++key) {
 				if (data[key] !== undefined) {
 					changed = true
-					newImages[key] = {
-						image: dataToButtonImage(data[key].buffer),
-						updated: data[key].updated,
-					}
+					newImages[key] = dataToButtonImage(data[key])
 				}
 			}
 
@@ -430,7 +427,7 @@ function ButtonsFromPage({ imageCache, number, cols, rows }) {
 							key={x}
 							page={number}
 							index={index}
-							image={images[index]?.image}
+							image={images[index]}
 							bankClick={bankClick}
 							setInView={setInView}
 						/>
