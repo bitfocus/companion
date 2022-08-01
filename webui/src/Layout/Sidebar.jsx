@@ -41,7 +41,7 @@ export const MySidebar = memo(function MySidebar({ show, showWizard }) {
 
 				<CSidebarNavItem
 					target="_new"
-					href="/tablet3"
+					href="/tablet"
 					icon={<FontAwesomeIcon className="c-sidebar-nav-icon" icon={faTabletAlt} />}
 					name={'Web buttons'}
 				/>

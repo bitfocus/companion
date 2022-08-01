@@ -204,22 +204,44 @@ export function Tablet() {
 	let rows = Number(parsedQuery['rows'])
 	if (isNaN(rows) || rows <= 0) rows = MAX_ROWS
 
+	const showPageHeadings = parsedQuery['showpages']
+
+	let displayColumns = Number(parsedQuery['display_cols'])
+	if (displayColumns === 0 || isNaN(displayColumns)) displayColumns = cols
+	const gridStyle = { gridTemplateColumns: `repeat(auto-fill, minmax(calc(100% / ${displayColumns}), 1fr))` }
+
 	return (
 		<div className="page-tablet">
 			<div className="scroller">
 				<CContainer fluid className="d-flex flex-column">
 					{pages ? (
 						<>
-							<ConfigurePanel updateQueryUrl={updateQueryUrl} query={parsedQuery} orderedPages={orderedPages} />
+							<ConfigurePanel updateQueryUrl={updateQueryUrl} query={parsedQuery} />
 
-							<InfinitePages
-								pages={pages}
-								imageCache={imageCache}
-								orderedPages={validPages}
-								query={parsedQuery}
-								cols={cols}
-								rows={rows}
-							/>
+							<div className="button-zone">
+								<CRow>
+									<CCol sm={12} className="pagebank-row" style={gridStyle}>
+										{validPages.map((number, i) => (
+											<MyErrorBoundary key={i}>
+												{showPageHeadings ? (
+													<div className="page-heading">
+														<h1>{pages[number]?.name}</h1>
+													</div>
+												) : (
+													''
+												)}
+												<ButtonsFromPage
+													imageCache={imageCache}
+													number={number}
+													cols={cols}
+													rows={rows}
+													pageInfo={pages[number]}
+												/>
+											</MyErrorBoundary>
+										))}
+									</CCol>
+								</CRow>
+							</div>
 						</>
 					) : (
 						<CRow className="flex-grow-1">
@@ -235,7 +257,7 @@ export function Tablet() {
 	)
 }
 
-function ConfigurePanel({ updateQueryUrl, query, orderedPages }) {
+function ConfigurePanel({ updateQueryUrl, query }) {
 	const [show, setShow] = useState(false)
 	const [fullscreen, setFullscreen] = useState(document.fullscreenElement !== null)
 
@@ -313,12 +335,21 @@ function ConfigurePanel({ updateQueryUrl, query, orderedPages }) {
 							</CFormGroup>
 
 							<CFormGroup>
-								<label>Hide page headings</label>
+								<label>Show page headings</label>
 								<CInputCheckbox
 									type="checkbox"
-									checked={!!query['noheadings']}
+									checked={!!query['showpages']}
 									value={true}
-									onChange={(e) => updateQueryUrl('noheadings', !!e.currentTarget.checked)}
+									onChange={(e) => updateQueryUrl('showpages', !!e.currentTarget.checked)}
+								/>
+							</CFormGroup>
+							<CFormGroup>
+								<label>Max Columns (0 for dynamic)</label>
+								<CInput
+									type="number"
+									min={0}
+									value={query['display_cols'] || '0'}
+									onChange={(e) => updateQueryUrl('display_cols', e.currentTarget.value)}
 								/>
 							</CFormGroup>
 						</CCol>
@@ -348,37 +379,10 @@ function ConfigurePanel({ updateQueryUrl, query, orderedPages }) {
 	)
 }
 
-function InfinitePages({ pages, imageCache, orderedPages, query, cols, rows }) {
-	const noHeadings = query['noheadings']
-
-	const pageElements = orderedPages.map((number, i) => (
-		<MyErrorBoundary key={i}>
-			<div id={`index_${number}`}>
-				{!noHeadings ? (
-					<CRow>
-						<h1>{pages[number]?.name}</h1>
-					</CRow>
-				) : (
-					''
-				)}
-				<CRow>
-					<ButtonGrid imageCache={imageCache} number={number} cols={cols} rows={rows} pageInfo={pages[number]} />
-				</CRow>
-			</div>
-		</MyErrorBoundary>
-	))
-
-	return <>{pageElements}</>
-}
-
-function ButtonGrid({ imageCache, number, cols, rows, goFirstPage, goNextPage, goPrevPage, pageInfo }) {
+function ButtonsFromPage({ imageCache, number, cols, rows, goFirstPage, goNextPage, goPrevPage, pageInfo }) {
 	const socket = useContext(SocketContext)
 
-	const { ref, inView } = useInView({
-		rootMargin: '50%',
-		/* Optional options */
-		threshold: 0,
-	})
+	const [buttonsInView, setButtonsInView] = useState({})
 
 	// load existing images from the cache at mount
 	const [images, setImages] = useState(() => imageCache.getPage(number))
@@ -388,7 +392,9 @@ function ButtonGrid({ imageCache, number, cols, rows, goFirstPage, goNextPage, g
 
 	// Ensure the page is loaded when it comes into view
 	useEffect(() => {
-		if (inView) {
+		const anyVisible = Object.values(buttonsInView).find((v) => !!v)
+
+		if (anyVisible) {
 			setImages(imageCache.getPage(number))
 			imageCache.on(`${number}`, setImages)
 			imageCache.loadPage(number)
@@ -397,7 +403,7 @@ function ButtonGrid({ imageCache, number, cols, rows, goFirstPage, goNextPage, g
 				imageCache.off(`${number}`, setImages)
 			}
 		}
-	}, [imageCache, number, inView])
+	}, [imageCache, number, buttonsInView])
 
 	const bankClick = useCallback(
 		(bank, pressed) => {
@@ -417,33 +423,56 @@ function ButtonGrid({ imageCache, number, cols, rows, goFirstPage, goNextPage, g
 		[socket, number, pageInfo, goNextPage, goPrevPage, goFirstPage]
 	)
 
-	return (
-		<div ref={ref} className="bankgrid">
-			{' '}
-			{Array(Math.min(MAX_ROWS, rows))
+	const setInView = useCallback((index, inView) => {
+		setButtonsInView((old) => ({
+			...old,
+			[index]: inView,
+		}))
+	}, [])
+
+	// <div ref={ref} className="button-zone">
+	return Array(Math.min(MAX_ROWS, rows))
+		.fill(0)
+		.map((_, y) => {
+			return Array(Math.min(MAX_COLS, cols))
 				.fill(0)
-				.map((_, y) => {
+				.map((_2, x) => {
+					const index = y * MAX_COLS + x + 1
 					return (
-						<CCol key={y} sm={12} className="pagebank-row">
-							{Array(Math.min(MAX_COLS, cols))
-								.fill(0)
-								.map((_2, x) => {
-									const index = y * MAX_COLS + x + 1
-									return (
-										<BankPreview
-											key={x}
-											page={number}
-											index={index}
-											preview={images[index]?.image}
-											onClick={bankClick}
-											alt={`Bank ${index}`}
-											selected={false}
-										/>
-									)
-								})}
-						</CCol>
+						<ButtonWrapper
+							key={x}
+							page={number}
+							index={index}
+							image={images[index]?.image}
+							bankClick={bankClick}
+							setInView={setInView}
+						/>
 					)
-				})}
-		</div>
+				})
+		})
+	// </div>
+}
+
+function ButtonWrapper({ page, index, image, bankClick, setInView }) {
+	const { ref, inView } = useInView({
+		rootMargin: '50%',
+		/* Optional options */
+		threshold: 0,
+	})
+
+	useEffect(() => {
+		setInView(index, inView)
+	}, [setInView, index, inView])
+
+	return (
+		<BankPreview
+			dropRef={ref}
+			page={page}
+			index={index}
+			preview={image}
+			onClick={bankClick}
+			alt={`Bank ${index}`}
+			selected={false}
+		/>
 	)
 }
