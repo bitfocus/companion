@@ -1,5 +1,75 @@
 # Bitfocus Companion
 
+## Companion v2.3.0 - Release Notes (Unreleased)
+
+### 📣 CORE FEATURES AND IMPROVEMENTS
+
+- Set custom variables with the remote protocols (HTTP, UDP, TCP & OSC)
+- Support the new revision of the Streamdeck Mini
+- Optimise data sending to the browser, to make usage smoother over a VPN
+- Add 'learn' button for actions and feedbacks to populate with the current values (not implemented in many modules)
+- Modules can handle some http requests, allowing for simpler workflows
+
+### 🐞 BUG FIXES
+
+- Better error handling in the UI
+- Improve UI performance
+- Sanitise filename of exports for unusual characters
+- Add connection filter box crash with certain strings
+- Time interval triggers could get into an infinite loop
+
+### 🧩 NEW MODULES
+
+- biamp-tesira
+- devantech-ds
+- discord-api
+- epson-businesspj
+- equipson-lightshark
+- evertz-quartz
+- getontime-ontime
+- google-sheets
+- notion-timestamp
+- pnh-opencountdown
+- roland-v160hd
+- sony-cled
+- techministry-spotifycontroller
+- televic-dcerno
+- teradek-prismflex
+- tplink-kasasmartstrip
+- videocom-zoom-bridge
+- zoom-osc-iso
+
+### 👍🏻 MODULE IMPROVEMENTS
+
+- audiostrom-liveprofessor
+- birddog-ptz
+- bitfocus-companion
+- bitfocus-snapshot
+- bmd-atem
+- bmd-hyperdeck
+- bmd-videohub
+- bmd-webpresenterhd
+- dataton-watchout
+- draco-tera
+- figure53-qlab-advance
+- generic-pjlink
+- haivision-kbencoder
+- ipl-ocp
+- kramer-vp727
+- lgtv-display
+- newbluefx-titler
+- newtek-ndistudiomonitor
+- panasonic-kairos
+- phillips-hue
+- sennheiser-evolutionwireless
+- studiocoast-vmix
+- teradek-vidiu
+- theatrixx-xpresscue
+- timemachines-clock
+- toggl-track
+- vicreo-hotkey
+- videolan-vlc
+
 ## Companion v2.2.3 - Release Notes
 
 ### 🐞 BUG FIXES

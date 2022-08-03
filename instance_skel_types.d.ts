@@ -54,6 +54,10 @@ export interface CompanionBankPreset
 	style: 'png' | 'text' // 'text' for backwards compatability
 }
 
+export interface CompanionOptionValues {
+	[key: string]: InputValue | undefined
+}
+
 export interface CompanionAction {
 	label: string
 	description?: string
@@ -61,11 +65,18 @@ export interface CompanionAction {
 	callback?: (action: CompanionActionEvent, info: CompanionActionEventInfo | null) => void
 	subscribe?: (action: CompanionActionEvent) => void
 	unsubscribe?: (action: CompanionActionEvent) => void
+
+	/**
+	 * The user requested to 'learn' the values for this action.
+	 */
+	learn?: (
+		action: CompanionActionEvent
+	) => CompanionOptionValues | undefined | Promise<CompanionOptionValues | undefined>
 }
 export interface CompanionActionEvent {
 	id: string
 	action: string
-	options: { [key: string]: InputValue | undefined }
+	options: CompanionOptionValues
 }
 
 export interface CompanionActionEventInfo {
@@ -84,7 +95,7 @@ export interface CompanionFeedbackEventInfo {
 export interface CompanionFeedbackEvent {
 	id: string
 	type: string
-	options: { [key: string]: InputValue | undefined }
+	options: CompanionOptionValues
 }
 export interface CompanionFeedbackResult {
 	color?: number
@@ -197,6 +208,13 @@ export interface CompanionFeedbackBase<TRes> {
 	) => TRes
 	subscribe?: (feedback: CompanionFeedbackEvent) => void
 	unsubscribe?: (feedback: CompanionFeedbackEvent) => void
+
+	/**
+	 * The user requested to 'learn' the values for this feedback.
+	 */
+	learn?: (
+		feedback: CompanionFeedbackEvent
+	) => CompanionOptionValues | undefined | Promise<CompanionOptionValues | undefined>
 }
 export interface CompanionFeedbackBoolean extends CompanionFeedbackBase<boolean> {
 	type: 'boolean'
@@ -213,16 +231,16 @@ export interface CompanionPreset {
 	bank: CompanionBankPreset
 	feedbacks: Array<{
 		type: string
-		options: { [key: string]: InputValue | undefined }
+		options: CompanionOptionValues
 		style?: Partial<CompanionBankRequiredProps & CompanionBankAdditionalStyleProps>
 	}>
 	actions: Array<{
 		action: string
-		options: { [key: string]: InputValue | undefined }
+		options: CompanionOptionValues
 	}>
 	release_actions?: Array<{
 		action: string
-		options: { [key: string]: InputValue | undefined }
+		options: CompanionOptionValues
 	}>
 }
 
@@ -267,14 +285,14 @@ export interface CompanionMigrationAction {
 	readonly instance: string
 	label: string
 	action: string
-	options: { [key: string]: InputValue | undefined }
+	options: CompanionOptionValues
 }
 
 export interface CompanionMigrationFeedback {
 	readonly id: string
 	readonly instance_id: string
 	type: string
-	options: { [key: string]: InputValue | undefined }
+	options: CompanionOptionValues
 }
 
 export type OSCArgument = number | string | Uint8Array
@@ -283,3 +301,21 @@ export type OSCMetaArgument =
 	| { type: 's'; value: string }
 	| { type: 'b'; value: Uint8Array }
 export type OSCSomeArguments = OSCArgument | Array<OSCArgument> | OSCMetaArgument | Array<OSCMetaArgument>
+
+export interface CompanionInstanceHTTPRequest {
+	baseUrl: string
+	body?: string
+	headers: Record<string, string>
+	hostname: string
+	ip: string
+	method: string
+	originalUrl: string
+	path: string
+	query: Record<string, string>
+}
+
+export interface CompanionInstanceHTTPResponse {
+	status?: number
+	headers?: Record<string, any>
+	body?: string
+}

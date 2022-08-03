@@ -10,7 +10,7 @@ export function VariablesTable({ label }) {
 	const context = useContext(StaticContext)
 	const variableDefinitionsContext = useContext(VariableDefinitionsContext)
 
-	const variableDefinitions = variableDefinitionsContext[label] || []
+	const variableDefinitions = variableDefinitionsContext[label] || {}
 	const [variableValues, setVariableValues] = useState({})
 
 	useEffect(() => {
@@ -40,7 +40,7 @@ export function VariablesTable({ label }) {
 		context.notifier.current.show(`Copied`, 'Copied to clipboard', 5000)
 	}, [context.notifier])
 
-	if (variableDefinitions.length > 0) {
+	if (Object.keys(variableDefinitions).length > 0) {
 		return (
 			<table className="table table-responsive-sm variables-table">
 				<thead>
@@ -52,8 +52,8 @@ export function VariablesTable({ label }) {
 					</tr>
 				</thead>
 				<tbody>
-					{variableDefinitions.map((variable) => {
-						let value = variableValues[variable.name]
+					{Object.entries(variableDefinitions).map(([name, variable]) => {
+						let value = variableValues[name]
 						if (typeof value !== 'string') {
 							value += ''
 						}
@@ -70,14 +70,14 @@ export function VariablesTable({ label }) {
 						}
 
 						return (
-							<tr key={variable.name}>
+							<tr key={name}>
 								<td>
-									$({label}:{variable.name})
+									$({label}:{name})
 								</td>
 								<td>{variable.label}</td>
 								<td>{elms}</td>
 								<td>
-									<CopyToClipboard text={`$(${label}:${variable.name})`} onCopy={onCopied}>
+									<CopyToClipboard text={`$(${label}:${name})`} onCopy={onCopied}>
 										<CButton size="sm">
 											<FontAwesomeIcon icon={faCopy} />
 										</CButton>
