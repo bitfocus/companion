@@ -3314,12 +3314,6 @@ commist@^1.0.0:
   version "1.0.4"
   resolved "https://codeload.github.com/bitfocus/companion-module-digitalprojection-highlight/tar.gz/758784edf593a9c3525efbfc37bec1d3a7970f98"
 
-"companion-module-discord-api@github:bitfocus/companion-module-discord-api#v0.1.2":
-  version "0.1.2"
-  resolved "https://codeload.github.com/bitfocus/companion-module-discord-api/tar.gz/fc7e2acbab95cebb4bba2c9b5ec9de373f58ad71"
-  dependencies:
-    got-cjs "^12.0.1"
-
 "companion-module-disguise-mtc@github:bitfocus/companion-module-disguise-mtc#v1.0.4":
   version "1.0.4"
   resolved "https://codeload.github.com/bitfocus/companion-module-disguise-mtc/tar.gz/7c3dd40f6cbefff4daf22dd9e604640fbd16c9ca"
@@ -3542,13 +3536,6 @@ commist@^1.0.0:
 "companion-module-globalcache-itac-sl@github:bitfocus/companion-module-globalcache-itac-sl#v1.0.6":
   version "1.0.6"
   resolved "https://codeload.github.com/bitfocus/companion-module-globalcache-itac-sl/tar.gz/9481a73496b8b94c09aec818d62b940e96e95d22"
-
-"companion-module-google-sheets@github:bitfocus/companion-module-google-sheets#v0.1.0":
-  version "0.1.0"
-  resolved "https://codeload.github.com/bitfocus/companion-module-google-sheets/tar.gz/68aa69884d4891bcac16b5f647b601490de97905"
-  dependencies:
-    got-cjs "^12.0.1"
-    open "^8.4.0"
 
 "companion-module-grassvalley-amp@github:bitfocus/companion-module-grassvalley-amp#v1.1.6":
   version "1.1.6"
@@ -4125,10 +4112,6 @@ commist@^1.0.0:
   version "1.0.3"
   resolved "https://codeload.github.com/bitfocus/companion-module-roland-v1200hd/tar.gz/fe08f010a549f09480dfa0a673e30030c00e08bf"
 
-"companion-module-roland-v160hd@github:bitfocus/companion-module-roland-v160hd#v1.0.2":
-  version "1.0.2"
-  resolved "https://codeload.github.com/bitfocus/companion-module-roland-v160hd/tar.gz/caa18226644485bd96bf63f1f945cd53ba7378a4"
-
 "companion-module-roland-v600uhd@github:bitfocus/companion-module-roland-v600uhd#v1.0.6":
   version "1.0.6"
   resolved "https://codeload.github.com/bitfocus/companion-module-roland-v600uhd/tar.gz/4536a61a8c3b361947d0d31ed66f94dfbcaf1b4c"
@@ -4371,10 +4354,6 @@ commist@^1.0.0:
   dependencies:
     socket.io-client "^2.3.0"
 
-"companion-module-televic-dcerno@github:bitfocus/companion-module-televic-dcerno#v1.0.0":
-  version "1.0.0"
-  resolved "https://codeload.github.com/bitfocus/companion-module-televic-dcerno/tar.gz/7a71cd53146ae86f8987712f5efa1a58d3011207"
-
 "companion-module-teracom-tcw181b@github:bitfocus/companion-module-teracom-tcw181b#v1.0.4":
   version "1.0.4"
   resolved "https://codeload.github.com/bitfocus/companion-module-teracom-tcw181b/tar.gz/601e08a71a9f4410c9babc2fef6e50f1dd683d20"
@@ -4457,13 +4436,6 @@ commist@^1.0.0:
   version "1.1.1"
   resolved "https://codeload.github.com/bitfocus/companion-module-tplink-kasasmartplug/tar.gz/4776e5d40e20a8e28d22882cc9613015d109a59d"
   dependencies:
-    tplink-smarthome-api "^4.2.0"
-
-"companion-module-tplink-kasasmartstrip@github:bitfocus/companion-module-tplink-kasasmartstrip#v1.0.0":
-  version "1.0.0"
-  resolved "https://codeload.github.com/bitfocus/companion-module-tplink-kasasmartstrip/tar.gz/2fafdc8fc13ef75e1c1dac44282444ddfc74c119"
-  dependencies:
-    colorsys "^1.0.22"
     tplink-smarthome-api "^4.2.0"
 
 "companion-module-tplink-taposmartplug@github:bitfocus/companion-module-tplink-taposmartplug#v1.0.2":

@@ -22,25 +22,21 @@
 
 - biamp-tesira
 - devantech-ds
-- discord-api
 - epson-businesspj
 - equipson-lightshark
 - evertz-quartz
 - getontime-ontime
-- google-sheets
 - notion-timestamp
 - pnh-opencountdown
-- roland-v160hd
 - sony-cled
 - techministry-spotifycontroller
-- televic-dcerno
 - teradek-prismflex
-- tplink-kasasmartstrip
 - videocom-zoom-bridge
 - zoom-osc-iso
 
 ### 👍🏻 MODULE IMPROVEMENTS
 
+- aja-kumo
 - audiostrom-liveprofessor
 - birddog-ptz
 - bitfocus-companion
@@ -52,6 +48,7 @@
 - dataton-watchout
 - draco-tera
 - figure53-qlab-advance
+- fora-hvs
 - generic-pjlink
 - haivision-kbencoder
 - ipl-ocp
@@ -67,6 +64,7 @@
 - theatrixx-xpresscue
 - timemachines-clock
 - toggl-track
+- tow-mixeffect
 - vicreo-hotkey
 - videolan-vlc
 
