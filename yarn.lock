@@ -4405,9 +4405,9 @@ commist@^1.0.0:
   version "1.0.5"
   resolved "https://codeload.github.com/bitfocus/companion-module-tesla-smart/tar.gz/9a8187d53ee3e40556f066350776071234486d4a"
 
-"companion-module-tesmart-hdmimatrix@github:bitfocus/companion-module-tesmart-hdmimatrix#v1.0.3":
-  version "1.0.3"
-  resolved "https://codeload.github.com/bitfocus/companion-module-tesmart-hdmimatrix/tar.gz/4d107bd374aa29f405e0a234f69c7dc0931e1a5f"
+"companion-module-tesmart-hdmimatrix@github:bitfocus/companion-module-tesmart-hdmimatrix#v1.0.4":
+  version "1.0.4"
+  resolved "https://codeload.github.com/bitfocus/companion-module-tesmart-hdmimatrix/tar.gz/8873ef7b745ac7800866bcdd9e2662a54d7607ea"
 
 "companion-module-theatrixx-xpresscue@github:bitfocus/companion-module-theatrixx-xpresscue#v1.2.0":
   version "1.2.0"
