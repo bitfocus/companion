@@ -16,15 +16,9 @@ jobs:
           yarn update
         env:
           CI: 1
-      - name: build shared package
+      - name: build & package
         run: |
-          yarn zx tools/build/dist.mjs
-        env:
-          SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
-
-      - name: package
-        run: |
-          yarn zx tools/build/package.mjs
+          yarn zx tools/build/complete.mjs
 
           # manually tar it, to preserve the symlinks
           cd electron-output
@@ -79,15 +73,9 @@ jobs:
           yarn update
         env:
           CI: 1
-      - name: build shared package
+      - name: build & package
         run: |
-          yarn zx tools/build/dist.mjs
-        env:
-          SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
-
-      - name: package
-        run: |
-          yarn zx tools/build/package.mjs
+          yarn zx tools/build/complete.mjs
         env:
           CI: 1
           CSC_LINK: ${{ secrets.OSX_CSC_LINK }}
@@ -141,15 +129,9 @@ jobs:
           yarn update
         env:
           CI: 1
-      - name: build shared package
+      - name: build & package
         run: |
-          yarn zx tools/build/dist.mjs
-        env:
-          SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
-
-      - name: package
-        run: |
-          yarn zx tools/build/package.mjs darwin-arm64
+          yarn zx tools/build/complete.mjs darwin-arm64
         env:
           CI: 1
           CSC_LINK: ${{ secrets.OSX_CSC_LINK }}
