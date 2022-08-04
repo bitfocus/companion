@@ -148,6 +148,21 @@ function UserConfigTable() {
 					</td>
 				</tr>
 				<tr>
+					<td>Watch for new USB Devices</td>
+					<td>
+						<div className="form-check form-check-inline mr-1">
+							<CInputCheckbox
+								id="userconfig_usb_hotplug"
+								checked={config.usb_hotplug}
+								onChange={(e) => setValue('usb_hotplug', e.currentTarget.checked)}
+							/>
+							<label className="form-check-label" htmlFor="userconfig_usb_hotplug">
+								Enabled
+							</label>
+						</div>
+					</td>
+				</tr>
+				<tr>
 					<td>Use Elgato Plugin for StreamDeck access (Requires Companion restart)</td>
 					<td>
 						<div className="form-check form-check-inline mr-1">
