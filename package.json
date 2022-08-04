@@ -256,7 +256,7 @@
 		"companion-module-datavideo-visca": "github:bitfocus/companion-module-datavideo-visca#v1.0.5",
 		"companion-module-dcc-ex-commandstation": "github:bitfocus/companion-module-dcc-ex-commandstation#v1.0.0",
 		"companion-module-denon-dn-500bd-mkii": "github:bitfocus/companion-module-denon-dn-500bd-mkii#v1.0.3",
-		"companion-module-denon-receiver": "github:bitfocus/companion-module-denon-receiver#v1.0.2",
+		"companion-module-denon-receiver": "github:bitfocus/companion-module-denon-receiver#v1.0.3",
 		"companion-module-denon-recorder": "github:bitfocus/companion-module-denon-recorder#v1.0.2",
 		"companion-module-depili-clock-8001": "github:bitfocus/companion-module-depili-clock-8001#v5.2.4",
 		"companion-module-devantech-ds": "github:bitfocus/companion-module-devantech-ds#v1.0.0",

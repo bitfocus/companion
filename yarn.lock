@@ -3270,9 +3270,9 @@ commist@^1.0.0:
   version "1.0.3"
   resolved "https://codeload.github.com/bitfocus/companion-module-denon-dn-500bd-mkii/tar.gz/0e9356231f0050f3ed77603795cb4b4b2f3e4566"
 
-"companion-module-denon-receiver@github:bitfocus/companion-module-denon-receiver#v1.0.2":
-  version "1.0.2"
-  resolved "https://codeload.github.com/bitfocus/companion-module-denon-receiver/tar.gz/685d9711beeda6da9b72663190d1c95e59444a5e"
+"companion-module-denon-receiver@github:bitfocus/companion-module-denon-receiver#v1.0.3":
+  version "1.0.3"
+  resolved "https://codeload.github.com/bitfocus/companion-module-denon-receiver/tar.gz/8a07af87fe88ffd141fddf6cae8f0b3cc0719325"
 
 "companion-module-denon-recorder@github:bitfocus/companion-module-denon-recorder#v1.0.2":
   version "1.0.2"
