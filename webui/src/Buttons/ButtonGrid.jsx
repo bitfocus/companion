@@ -21,7 +21,7 @@ import {
 	faTrash,
 } from '@fortawesome/free-solid-svg-icons'
 import classnames from 'classnames'
-import { MAX_COLS, MAX_ROWS, MAX_BUTTONS } from '../Constants'
+import { MAX_COLS, MAX_ROWS } from '../Constants'
 import { useDrop } from 'react-dnd'
 import { BankPreview, dataToButtonImage } from '../Components/BankButton'
 import { GenericConfirmModal } from '../Components/GenericConfirmModal'
