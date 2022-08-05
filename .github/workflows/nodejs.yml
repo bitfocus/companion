@@ -11,13 +11,10 @@ jobs:
         with:
           node-version-file: '.node-version'
 
-      - name: yarn update
-        run: |
-          yarn update
-        env:
-          CI: 1
       - name: build & package
         run: |
+          yarn update
+          
           yarn zx tools/build/complete.mjs
 
           # manually tar it, to preserve the symlinks
@@ -27,6 +24,7 @@ jobs:
         env:
           CI: 1
           SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
+          USE_HARD_LINKS: false
 
       - name: Determine files to upload
         id: filenames
@@ -65,16 +63,13 @@ jobs:
         with:
           node-version-file: '.node-version'
 
-      - name: yarn update
+      - name: build & package
         run: |
           # try and avoid timeout errors
           yarn config set network-timeout 100000 -g
 
           yarn update
-        env:
-          CI: 1
-      - name: build & package
-        run: |
+          
           yarn zx tools/build/complete.mjs
         env:
           CI: 1
@@ -83,6 +78,7 @@ jobs:
           APPLEID: ${{ secrets.APPLEID }}
           APPLEIDPASS: ${{ secrets.APPLEIDPASS }}
           SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
+          USE_HARD_LINKS: false
 
       - name: Determine files to upload
         id: filenames
@@ -139,6 +135,7 @@ jobs:
           APPLEID: ${{ secrets.APPLEID }}
           APPLEIDPASS: ${{ secrets.APPLEIDPASS }}
           SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
+          USE_HARD_LINKS: false
 
       - name: Determine files to upload
         id: filenames
