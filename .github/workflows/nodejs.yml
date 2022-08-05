@@ -14,7 +14,7 @@ jobs:
       - name: build & package
         run: |
           yarn update
-          
+
           yarn zx tools/build/complete.mjs
 
           # manually tar it, to preserve the symlinks
@@ -69,7 +69,7 @@ jobs:
           yarn config set network-timeout 100000 -g
 
           yarn update
-          
+
           yarn zx tools/build/complete.mjs
         env:
           CI: 1
