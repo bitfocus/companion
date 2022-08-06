@@ -7,11 +7,11 @@ import { StaticContext, MyErrorBoundary } from '../util'
 import { ButtonsGridPanel } from './ButtonGrid'
 import { EditButton } from './EditButton'
 import { ImportExport } from './ImportExport'
-import { useCallback, useContext, useRef, useState } from 'react'
+import { memo, useCallback, useContext, useRef, useState } from 'react'
 import { GenericConfirmModal } from '../Components/GenericConfirmModal'
 import { InstanceVariables } from './Variables'
 
-export function ButtonsPage({ hotPress }) {
+export const ButtonsPage = memo(function ButtonsPage({ hotPress }) {
 	const context = useContext(StaticContext)
 
 	const clearModalRef = useRef()
@@ -187,4 +187,4 @@ export function ButtonsPage({ hotPress }) {
 			</CCol>
 		</CRow>
 	)
-}
+})

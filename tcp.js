@@ -50,6 +50,7 @@ function tcp(host, port, options) {
 
 	EventEmitter.call(this)
 
+	self.destroyed = false
 	self.status = undefined
 	self.host = host
 	self.port = port
@@ -125,6 +126,13 @@ function tcp(host, port, options) {
 	// Let caller install event handlers first
 	setImmediate(self.connect.bind(self))
 
+	setTimeout(() => {
+		if (!self.destroyed && !self.listenerCount('error')) {
+			// The socket is active and has no listeners. Log an error for the module devs!
+			console.error(`Danger: TCP client for ${self.host}:${self.port} is missing an error handler!`)
+		}
+	}, 5000)
+
 	return self
 }
 util.inherits(tcp, EventEmitter)
@@ -177,6 +185,8 @@ tcp.prototype.write = tcp.prototype.send = function (message, cb) {
 
 tcp.prototype.destroy = function () {
 	var self = this
+
+	self.destroyed = true
 
 	if (self.try_timer !== undefined) {
 		clearTimeout(self.try_timer)
