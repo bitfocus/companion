@@ -706,6 +706,31 @@ function UserConfigTable() {
 						</td>
 					</tr>
 				)}
+				<tr>
+					<td colSpan="2" className="settings-category">
+						Experiments
+					</td>
+				</tr>
+				<tr>
+					<td colSpan="2">
+						<CAlert color="danger">Do not touch these settings unless you know what you are doing!</CAlert>
+					</td>
+				</tr>
+				<tr>
+					<td>Use TouchBackend for Drag and Drop</td>
+					<td>
+						<div className="form-check form-check-inline mr-1">
+							<CInputCheckbox
+								checked={window.localStorage.getItem('test_touch_backend') === '1'}
+								onChange={(e) => {
+									window.localStorage.setItem('test_touch_backend', e.currentTarget.checked ? '1' : '0')
+									window.location.reload()
+								}}
+							/>
+							<label className="form-check-label">Enabled</label>
+						</div>
+					</td>
+				</tr>
 			</tbody>
 		</table>
 	)
