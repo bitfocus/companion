@@ -1242,6 +1242,13 @@
   dependencies:
     "@babel/types" "^7.3.0"
 
+"@types/bonjour@^3.5.10":
+  version "3.5.10"
+  resolved "https://registry.yarnpkg.com/@types/bonjour/-/bonjour-3.5.10.tgz#0f6aadfe00ea414edc86f5d106357cda9701e275"
+  integrity sha512-p7ienRMiS41Nu2/igbJxxLDWrSZ0WxM8UQgCeO9KhoVF7cOVFkrKsiDr1EsJIla8vV3oEEjGcz11jc5yimhzZw==
+  dependencies:
+    "@types/node" "*"
+
 "@types/cacheable-request@^6.0.1", "@types/cacheable-request@^6.0.2":
   version "6.0.2"
   resolved "https://registry.yarnpkg.com/@types/cacheable-request/-/cacheable-request-6.0.2.tgz#c324da0197de0a98a2312156536ae262429ff6b9"
@@ -3351,6 +3358,16 @@ commist@^1.0.0:
 "companion-module-dtvideolabs-playbackproplus@github:bitfocus/companion-module-dtvideolabs-playbackproplus#v1.0.4":
   version "1.0.4"
   resolved "https://codeload.github.com/bitfocus/companion-module-dtvideolabs-playbackproplus/tar.gz/3ca832d512de04045dcc31c3b5e0c22291972df1"
+
+"companion-module-ecamm-live@github:bitfocus/companion-module-ecamm-live#v1.0.0":
+  version "1.0.0"
+  resolved "https://codeload.github.com/bitfocus/companion-module-ecamm-live/tar.gz/ab4a6d88fc16d00fffbca4085a2793a0c7e8de85"
+  dependencies:
+    "@types/bonjour" "^3.5.10"
+    "@types/lodash" "^4.14.178"
+    bonjour "^3.5.0"
+    lodash "^4.17.21"
+    urllib "^3.0.4"
 
 "companion-module-elgato-keylight@github:bitfocus/companion-module-elgato-keylight#v1.2.4":
   version "1.2.4"
