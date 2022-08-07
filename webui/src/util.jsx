@@ -180,9 +180,9 @@ export function LoadingRetryOrError({ error, dataReady, doRetry }) {
 	)
 }
 
-export function myApplyPatch(oldDefinitions, key, patch) {
+export function myApplyPatch(oldDefinitions, key, patch, defVal = {}) {
 	if (oldDefinitions) {
-		const oldEntry = oldDefinitions[key] ?? {}
+		const oldEntry = oldDefinitions[key] ?? defVal
 
 		const newDefinitions = { ...oldDefinitions }
 		if (!patch) {
