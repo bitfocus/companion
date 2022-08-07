@@ -3359,9 +3359,9 @@ commist@^1.0.0:
   version "1.0.4"
   resolved "https://codeload.github.com/bitfocus/companion-module-dtvideolabs-playbackproplus/tar.gz/3ca832d512de04045dcc31c3b5e0c22291972df1"
 
-"companion-module-ecamm-live@github:bitfocus/companion-module-ecamm-live#v1.0.0":
+"companion-module-ecamm-live@github:bitfocus/companion-module-ecamm-live#v1.0.1":
   version "1.0.0"
-  resolved "https://codeload.github.com/bitfocus/companion-module-ecamm-live/tar.gz/ab4a6d88fc16d00fffbca4085a2793a0c7e8de85"
+  resolved "https://codeload.github.com/bitfocus/companion-module-ecamm-live/tar.gz/533f65cbe46970e7aae5b6771ed5f4a2eed0feb6"
   dependencies:
     "@types/bonjour" "^3.5.10"
     "@types/lodash" "^4.14.178"
