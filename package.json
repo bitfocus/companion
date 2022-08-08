@@ -489,7 +489,7 @@
 		"companion-module-tascam-cd": "github:bitfocus/companion-module-tascam-cd#v1.0.4",
 		"companion-module-techministry-midirelay": "github:bitfocus/companion-module-techministry-midirelay#v2.0.5",
 		"companion-module-techministry-protally": "github:bitfocus/companion-module-techministry-protally#v1.0.1",
-		"companion-module-techministry-spotifycontroller": "github:bitfocus/companion-module-techministry-spotifycontroller#v1.0.1",
+		"companion-module-techministry-spotifycontroller": "github:bitfocus/companion-module-techministry-spotifycontroller#v1.0.2",
 		"companion-module-techministry-tallyarbiter": "github:bitfocus/companion-module-techministry-tallyarbiter#v1.0.5",
 		"companion-module-televic-dcerno": "github:bitfocus/companion-module-televic-dcerno#v1.0.1",
 		"companion-module-teracom-tcw181b": "github:bitfocus/companion-module-teracom-tcw181b#v1.0.4",
