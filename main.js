@@ -28,7 +28,6 @@ program
 		'Use the specified directory for storing configuration. The default path varies by system, and is different to 2.2 (the old path will be used if existing config is found)'
 	)
 	.option('--extra-module-path <string>', 'Search an extra directory for modules to load')
-	.option('--log-to-file', 'Write the log to a file inside the config directory')
 	.option('--machine-id <string>', 'Unique id for this installation')
 
 program.parse()
@@ -104,10 +103,6 @@ try {
 } catch (e) {
 	console.error(`Failed to create config directory. Do you have the correct permissions?`)
 	process.exit(1)
-}
-
-if (options.logToFile) {
-	Logging.setupLogToFile(configDir)
 }
 
 let machineId = options.machineId

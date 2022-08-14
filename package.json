@@ -88,7 +88,6 @@
 		"usb": "^2.5.0",
 		"websocket": "^1.0.34",
 		"winston": "^3.8.1",
-		"winston-daily-rotate-file": "^4.7.1",
 		"xkeys": "^2.3.4"
 	},
 	"collective": {
