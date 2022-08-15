@@ -6,7 +6,9 @@
 	"type": "module",
 	"private": true,
 	"scripts": {
-		"dev": "yarn build:writefile && cross-env DEVELOPER=1 nodemon --ignore './webui/' --ignore './launcher/' --ignore './dist/' -- main.js --admin-address 127.0.0.1 --extra-module-path=./module-local-dev",
+		"dev": "yarn dev:inner --log-level debug",
+		"dev:inner": "yarn build:writefile && nodemon --ignore './webui/' --ignore './launcher/' --ignore './dist/' -- main.js --admin-address 127.0.0.1 --extra-module-path=./module-local-dev",
+		"dev:debug": "yarn dev:inner --log-level silly",
 		"update": "./tools/update.sh",
 		"dist:webui": "yarn --cwd webui build",
 		"dist": "zx ./tools/build/complete.mjs",

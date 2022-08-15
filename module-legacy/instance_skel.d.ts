@@ -60,12 +60,11 @@ declare abstract class InstanceSkel<TConfig> {
 	 * These get run without any awareness of the instance class.
 	 */
 	static GetUpgradeScripts?(): Array<CompanionStaticUpgradeScript>
-	/**
-	 * Force running upgrade script from an earlier point, as specified by the value
-	 * Only works when DEVELOPER=1.
-	 * eg, 0 = runs the first script onwards
-	 */
-	static DEVELOPER_forceStartupUpgradeScript?: number
+	// /**
+	//  * Force running upgrade script from an earlier point, as specified by the value
+	//  * eg, 0 = runs the first script onwards
+	//  */
+	// static DEVELOPER_forceStartupUpgradeScript?: number
 	/**
 	 * A helper script to automate the bulk of the process to upgrade feedbacks from 'advanced' to 'boolean'.
 	 * There are some built in rules for properties names based on the most common cases

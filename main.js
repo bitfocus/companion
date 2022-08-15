@@ -12,6 +12,7 @@ import fs from 'fs-extra'
 import envPaths from 'env-paths'
 import { nanoid } from 'nanoid'
 import logger from './lib/Log/Controller.js'
+import { config } from 'process'
 
 const program = new Command()
 
@@ -29,6 +30,7 @@ program
 	)
 	.option('--extra-module-path <string>', 'Search an extra directory for modules to load')
 	.option('--machine-id <string>', 'Unique id for this installation')
+	.option('--log-level <string>', 'Log level to output to console')
 
 program.parse()
 
@@ -103,6 +105,10 @@ try {
 } catch (e) {
 	console.error(`Failed to create config directory. Do you have the correct permissions?`)
 	process.exit(1)
+}
+
+if (options.logLevel) {
+	logger.setLogLevel(options.logLevel)
 }
 
 let machineId = options.machineId
