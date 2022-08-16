@@ -4496,9 +4496,9 @@ commist@^1.0.0:
   dependencies:
     tp-link-tapo-connect "^1.0.6"
 
-"companion-module-tslproducts-umd@github:bitfocus/companion-module-tslproducts-umd#v1.2.3":
-  version "1.2.3"
-  resolved "https://codeload.github.com/bitfocus/companion-module-tslproducts-umd/tar.gz/c8ed64650c578758b24e68f2c14db5f26d1b6b89"
+"companion-module-tslproducts-umd@github:bitfocus/companion-module-tslproducts-umd#v1.2.4":
+  version "1.2.4"
+  resolved "https://codeload.github.com/bitfocus/companion-module-tslproducts-umd/tar.gz/b16703184bbc10414a63a77b5ca4928371b2a754"
   dependencies:
     tsl-umd-v5 "^1.0.5"
 
