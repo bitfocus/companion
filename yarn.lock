@@ -4585,9 +4585,9 @@ commist@^1.0.0:
   version "1.0.5"
   resolved "https://codeload.github.com/bitfocus/companion-module-vivitek-projector/tar.gz/3dbacfc91aff5b135ca139abdea57db4218fa35a"
 
-"companion-module-vizio-smartcast@github:bitfocus/companion-module-vizio-smartcast#v1.2.0":
-  version "1.2.0"
-  resolved "https://codeload.github.com/bitfocus/companion-module-vizio-smartcast/tar.gz/8e5c5f2bf988fc0e6cb9b5037fe02d5c93403264"
+"companion-module-vizio-smartcast@github:bitfocus/companion-module-vizio-smartcast#v1.2.1":
+  version "1.2.1"
+  resolved "https://codeload.github.com/bitfocus/companion-module-vizio-smartcast/tar.gz/1f9ca324c5a5532a5d8187e34682b70673a08293"
   dependencies:
     vizio-smart-cast "^1.3.0"
 
