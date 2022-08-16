@@ -4487,9 +4487,9 @@ commist@^1.0.0:
     typescript "~4.5"
     websocket "^1.0.34"
 
-"companion-module-vicreo-hotkey@github:bitfocus/companion-module-vicreo-hotkey#v3.0.3":
-  version "3.0.3"
-  resolved "https://codeload.github.com/bitfocus/companion-module-vicreo-hotkey/tar.gz/afc12818323e5946898d4227b432147eb61ef8e9"
+"companion-module-vicreo-hotkey@github:bitfocus/companion-module-vicreo-hotkey#v3.0.4":
+  version "3.0.4"
+  resolved "https://codeload.github.com/bitfocus/companion-module-vicreo-hotkey/tar.gz/0b0e81a220457f586ca14287da2f6d44d8c844df"
   dependencies:
     md5 "^2.3.0"
 
