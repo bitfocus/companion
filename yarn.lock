@@ -3771,10 +3771,6 @@ commist@^1.0.0:
   version "1.0.3"
   resolved "https://codeload.github.com/bitfocus/companion-module-lightware-lw3/tar.gz/5623ce51d0fc6f0b3a61ccd827ff04647806a6c5"
 
-"companion-module-liminalet-zoomosc@github:bitfocus/companion-module-liminalet-zoomosc#v1.0.11":
-  version "1.0.11"
-  resolved "https://codeload.github.com/bitfocus/companion-module-liminalet-zoomosc/tar.gz/d9b5435ca6673c733b1ade68e793f0da88d68b9f"
-
 "companion-module-linkbox-remote@github:bitfocus/companion-module-linkbox-remote#v1.2.1":
   version "1.2.1"
   resolved "https://codeload.github.com/bitfocus/companion-module-linkbox-remote/tar.gz/37ddd22da970c6e83d5f3333ac4be9906fe545a9"
