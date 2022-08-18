@@ -3116,9 +3116,9 @@ commist@^1.0.0:
   version "1.4.0"
   resolved "https://codeload.github.com/bitfocus/companion-module-bmd-videohub/tar.gz/320bff5967fde7f279d2bd0e78c464e2b2b21603"
 
-"companion-module-bmd-webpresenterhd@github:bitfocus/companion-module-bmd-webpresenterhd#v1.0.5":
-  version "1.0.5"
-  resolved "https://codeload.github.com/bitfocus/companion-module-bmd-webpresenterhd/tar.gz/75c8284ac991731561dca75a293c886e0478003f"
+"companion-module-bmd-webpresenterhd@github:bitfocus/companion-module-bmd-webpresenterhd#v1.0.6":
+  version "1.0.6"
+  resolved "https://codeload.github.com/bitfocus/companion-module-bmd-webpresenterhd/tar.gz/63d870459c11bd0e5d2310de84fb5fd9f45e3d79"
 
 "companion-module-boinx-mimolive@github:bitfocus/companion-module-boinx-mimolive#v1.0.3":
   version "1.0.3"
