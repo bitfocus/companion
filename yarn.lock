@@ -4379,9 +4379,9 @@ commist@^1.0.0:
   version "1.0.1"
   resolved "https://codeload.github.com/bitfocus/companion-module-techministry-protally/tar.gz/28b8bb7f96e95acb5e08015fbeaab1c38f502a81"
 
-"companion-module-techministry-spotifycontroller@github:bitfocus/companion-module-techministry-spotifycontroller#v1.0.2":
-  version "1.0.2"
-  resolved "https://codeload.github.com/bitfocus/companion-module-techministry-spotifycontroller/tar.gz/380847c95bb08ef9e7b943f263f7d6420434683f"
+"companion-module-techministry-spotifycontroller@github:bitfocus/companion-module-techministry-spotifycontroller#v1.0.3":
+  version "1.0.3"
+  resolved "https://codeload.github.com/bitfocus/companion-module-techministry-spotifycontroller/tar.gz/44de70634ce2cb12132396c70af7c2a237716cd7"
   dependencies:
     socket.io-client "^4.5.1"
 
