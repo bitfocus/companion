@@ -3498,9 +3498,9 @@ commist@^1.0.0:
   version "1.0.5"
   resolved "https://codeload.github.com/bitfocus/companion-module-generic-swp08/tar.gz/6f8bd9aeea1d8ca50da24fa3d993e4d2ed822f0d"
 
-"companion-module-generic-tcp-serial@github:bitfocus/companion-module-generic-tcp-serial#v1.0.4":
-  version "1.0.4"
-  resolved "https://codeload.github.com/bitfocus/companion-module-generic-tcp-serial/tar.gz/098f5d127d6bac0b79ccaac86c76026332875cda"
+"companion-module-generic-tcp-serial@github:bitfocus/companion-module-generic-tcp-serial#v1.0.5":
+  version "1.0.5"
+  resolved "https://codeload.github.com/bitfocus/companion-module-generic-tcp-serial/tar.gz/a92f76c522831590d7c3789f4cb8167aa6c14533"
 
 "companion-module-generic-tcp-udp@github:bitfocus/companion-module-generic-tcp-udp#v1.0.10":
   version "1.0.10"
