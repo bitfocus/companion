@@ -3721,9 +3721,9 @@ commist@^1.0.0:
   dependencies:
     kiloview-ndi "^1.0.1"
 
-"companion-module-kramer-matrix@github:bitfocus/companion-module-kramer-matrix#v1.2.2":
-  version "1.2.2"
-  resolved "https://codeload.github.com/bitfocus/companion-module-kramer-matrix/tar.gz/a3fbe6cc2503922b169188ea5ee005eb4b1d8d86"
+"companion-module-kramer-matrix@github:bitfocus/companion-module-kramer-matrix#v1.2.3":
+  version "1.2.3"
+  resolved "https://codeload.github.com/bitfocus/companion-module-kramer-matrix/tar.gz/1e27e5c22993abdb1c8662f6bdb50a107796669d"
 
 "companion-module-kramer-vp727@github:bitfocus/companion-module-kramer-vp727#v1.0.4":
   version "1.0.4"
