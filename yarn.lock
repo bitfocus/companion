@@ -4539,9 +4539,9 @@ commist@^1.0.0:
   dependencies:
     vizio-smart-cast "^1.3.0"
 
-"companion-module-vystem-api@github:bitfocus/companion-module-vystem-api#v1.0.4":
-  version "1.0.4"
-  resolved "https://codeload.github.com/bitfocus/companion-module-vystem-api/tar.gz/0cace93b885450b35ec4cb539bd975e52d9c15be"
+"companion-module-vystem-api@github:bitfocus/companion-module-vystem-api#v1.0.5":
+  version "1.0.5"
+  resolved "https://codeload.github.com/bitfocus/companion-module-vystem-api/tar.gz/60ec6248ab055e0acfe697638f54a84cb7f58129"
   dependencies:
     axios "^0.25.0"
 
