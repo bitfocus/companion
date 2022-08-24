@@ -4026,9 +4026,9 @@ commist@^1.0.0:
   version "1.0.7"
   resolved "https://codeload.github.com/bitfocus/companion-module-pixap-pixtimerpro/tar.gz/ad68158b54129cc1e9769742c09779066a1f201c"
 
-"companion-module-planningcenter-serviceslive@github:bitfocus/companion-module-planningcenter-serviceslive#v1.0.6":
-  version "1.0.6"
-  resolved "https://codeload.github.com/bitfocus/companion-module-planningcenter-serviceslive/tar.gz/d99cece7b786d5988fd1eb5f61cff04d5687928e"
+"companion-module-planningcenter-serviceslive@github:bitfocus/companion-module-planningcenter-serviceslive#v1.0.7":
+  version "1.0.7"
+  resolved "https://codeload.github.com/bitfocus/companion-module-planningcenter-serviceslive/tar.gz/7591e8362f50edf941d098d4dc886bc501165e1a"
 
 "companion-module-pnh-opencountdown@github:bitfocus/companion-module-pnh-opencountdown#v1.0.2":
   version "1.0.0"
