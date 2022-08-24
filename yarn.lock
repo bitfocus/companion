@@ -4290,9 +4290,9 @@ commist@^1.0.0:
   dependencies:
     bonjour "^3.5.0"
 
-"companion-module-softron-movierecorder@github:bitfocus/companion-module-softron-movierecorder#v1.0.6":
-  version "1.0.6"
-  resolved "https://codeload.github.com/bitfocus/companion-module-softron-movierecorder/tar.gz/788bf0252b18bcf4bfe60b61009f91e491a8eebd"
+"companion-module-softron-movierecorder@github:bitfocus/companion-module-softron-movierecorder#v1.0.7":
+  version "1.0.7"
+  resolved "https://codeload.github.com/bitfocus/companion-module-softron-movierecorder/tar.gz/60c23e1a0de12398fd81b8bdb96e1ada68d68287"
   dependencies:
     node-fetch "^2.6.7"
 

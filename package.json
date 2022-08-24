@@ -470,7 +470,7 @@
 		"companion-module-slack-webhooks": "github:bitfocus/companion-module-slack-webhooks#v1.0.1",
 		"companion-module-snapav-wattbox": "github:bitfocus/companion-module-snapav-wattbox#v1.0.2",
 		"companion-module-softouch-easyworship": "github:bitfocus/companion-module-softouch-easyworship#v1.1.2",
-		"companion-module-softron-movierecorder": "github:bitfocus/companion-module-softron-movierecorder#v1.0.6",
+		"companion-module-softron-movierecorder": "github:bitfocus/companion-module-softron-movierecorder#v1.0.7",
 		"companion-module-softron-ontheairvideo": "github:bitfocus/companion-module-softron-ontheairvideo#v1.0.3",
 		"companion-module-sononum-horae": "github:bitfocus/companion-module-sononum-horae#v1.0.3",
 		"companion-module-sonoran-coyote": "github:bitfocus/companion-module-sonoran-coyote#v1.0.2",
