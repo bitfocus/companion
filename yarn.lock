@@ -3845,9 +3845,9 @@ commist@^1.0.0:
   dependencies:
     socket.io-client "^4.4.0"
 
-"companion-module-malighting-grandma2@github:bitfocus/companion-module-malighting-grandma2#v1.0.12":
-  version "1.0.12"
-  resolved "https://codeload.github.com/bitfocus/companion-module-malighting-grandma2/tar.gz/4e45b2b5e2ac97f78d6afb21d058dd7b2cd71516"
+"companion-module-malighting-grandma2@github:bitfocus/companion-module-malighting-grandma2#v1.0.13":
+  version "1.0.13"
+  resolved "https://codeload.github.com/bitfocus/companion-module-malighting-grandma2/tar.gz/b516931af3374c465ca05c2e7cda649a595ddb2e"
 
 "companion-module-malighting-msc@github:bitfocus/companion-module-malighting-msc#v0.2.3":
   version "0.2.3"
