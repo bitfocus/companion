@@ -2835,9 +2835,9 @@ commist@^1.0.0:
   dependencies:
     request "^2.88.0"
 
-"companion-module-aja-helo@github:bitfocus/companion-module-aja-helo#v1.0.9":
-  version "1.0.9"
-  resolved "https://codeload.github.com/bitfocus/companion-module-aja-helo/tar.gz/a934952c0d055395f1730b6a4ed3135e62c70b03"
+"companion-module-aja-helo@github:bitfocus/companion-module-aja-helo#v1.0.10":
+  version "1.0.10"
+  resolved "https://codeload.github.com/bitfocus/companion-module-aja-helo/tar.gz/90876654e69d25bd97f5ad3efc5c999ef59f7b1b"
   dependencies:
     node-fetch "^2.6.0"
 
