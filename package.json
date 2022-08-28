@@ -270,7 +270,7 @@
 		"companion-module-disguise": "github:bitfocus/companion-module-disguise#v1.1.2",
 		"companion-module-disguise-mtc": "github:bitfocus/companion-module-disguise-mtc#v1.0.4",
 		"companion-module-disguise-smc": "github:bitfocus/companion-module-disguise-smc#v1.0.0",
-		"companion-module-djsoft-radiobos": "github:bitfocus/companion-module-djsoft-radioboss#v1.0.0",
+		"companion-module-djsoft-radioboss": "github:bitfocus/companion-module-djsoft-radioboss#v1.0.0",
 		"companion-module-dolby-cinemaprocessor": "github:bitfocus/companion-module-dolby-cinemaprocessor#v1.1.1",
 		"companion-module-draco-tera": "github:bitfocus/companion-module-draco-tera#v1.0.7",
 		"companion-module-dsan-limitimer": "github:bitfocus/companion-module-dsan-limitimer#v1.1.2",
