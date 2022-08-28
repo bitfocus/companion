@@ -4138,9 +4138,9 @@ commist@^1.0.0:
   version "1.0.7"
   resolved "https://codeload.github.com/bitfocus/companion-module-resolume-arena/tar.gz/f907c87ff01d8805cce628effaf9cd034e5c892f"
 
-"companion-module-rgblink-mini@github:bitfocus/companion-module-rgblink-mini#v1.0.0":
-  version "1.0.0"
-  resolved "https://codeload.github.com/bitfocus/companion-module-rgblink-mini/tar.gz/2196e8e4ba7f017f5f2359baf872d49f3550e9b7"
+"companion-module-rgblink-mini@github:bitfocus/companion-module-rgblink-mini#v1.0.1":
+  version "1.0.1"
+  resolved "https://codeload.github.com/bitfocus/companion-module-rgblink-mini/tar.gz/69975ae1d77b20573f146c4d650c82892ec93f47"
 
 "companion-module-rocosoft-ptzjoy@github:bitfocus/companion-module-rocosoft-ptzjoy#v1.0.2":
   version "1.0.2"
