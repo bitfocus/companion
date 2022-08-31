@@ -3346,9 +3346,9 @@ commist@^1.0.0:
   version "1.1.2"
   resolved "https://codeload.github.com/bitfocus/companion-module-disguise/tar.gz/4f65d23e9fcc4bad01e79a3687e887e1ecde72ac"
 
-"companion-module-djsoft-radioboss@github:bitfocus/companion-module-djsoft-radioboss#v1.0.1":
-  version "1.0.1"
-  resolved "https://codeload.github.com/bitfocus/companion-module-djsoft-radioboss/tar.gz/1f63c6eff86ba4049eef40abd9e09d2c94c45fac"
+"companion-module-djsoft-radioboss@github:bitfocus/companion-module-djsoft-radioboss#v1.0.2":
+  version "1.0.2"
+  resolved "https://codeload.github.com/bitfocus/companion-module-djsoft-radioboss/tar.gz/11156d93a6296c2e214b1b37c15bcfeb52c26eef"
   dependencies:
     node-fetch "2.6.0"
     xml2js "^0.4.23"
@@ -3816,9 +3816,9 @@ commist@^1.0.0:
   version "1.0.5"
   resolved "https://codeload.github.com/bitfocus/companion-module-lyntec-rpc-breaker/tar.gz/44bf739bebd3fa89c395329fb0b182e64875acf0"
 
-"companion-module-magewell-proconvert-decoder@github:bitfocus/companion-module-magewell-proconvert-decoder#v1.0.6":
-  version "1.0.6"
-  resolved "https://codeload.github.com/bitfocus/companion-module-magewell-proconvert-decoder/tar.gz/d796e54da598cd13c752dbe0917417e85bf6215f"
+"companion-module-magewell-proconvert-decoder@github:bitfocus/companion-module-magewell-proconvert-decoder#v2.0.0":
+  version "2.0.0"
+  resolved "https://codeload.github.com/bitfocus/companion-module-magewell-proconvert-decoder/tar.gz/7e8155d6a530c1effc5c89ef69baee1503c6dc81"
 
 "companion-module-magewell-ultrastream@github:bitfocus/companion-module-magewell-ultrastream#v0.0.4":
   version "0.0.4"
