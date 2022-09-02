@@ -110,22 +110,26 @@ export const FeedbacksPanel = function ({ controlId, feedbacks, dragId }) {
 		<>
 			<GenericConfirmModal ref={confirmModal} />
 
-			<AddFeedbacksModal ref={addFeedbacksRef} addFeedback={addFeedback} />
+			<MyErrorBoundary>
+				<AddFeedbacksModal ref={addFeedbacksRef} addFeedback={addFeedback} />
+			</MyErrorBoundary>
 
 			<table className="table feedback-table">
 				<tbody>
 					{feedbacks.map((a, i) => (
-						<FeedbackTableRow
-							key={a?.id ?? i}
-							index={i}
-							controlId={controlId}
-							feedback={a}
-							setValue={setValue}
-							doDelete={doDelete}
-							doLearn={doLearn}
-							dragId={dragId}
-							moveCard={moveCard}
-						/>
+						<MyErrorBoundary>
+							<FeedbackTableRow
+								key={a?.id ?? i}
+								index={i}
+								controlId={controlId}
+								feedback={a}
+								setValue={setValue}
+								doDelete={doDelete}
+								doLearn={doLearn}
+								dragId={dragId}
+								moveCard={moveCard}
+							/>
+						</MyErrorBoundary>
 					))}
 				</tbody>
 			</table>

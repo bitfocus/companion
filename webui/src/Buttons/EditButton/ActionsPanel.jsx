@@ -160,23 +160,27 @@ export function ActionsPanelInner({
 
 	return (
 		<>
-			<AddActionsModal ref={addActionsRef} addAction={addAction2} />
+			<MyErrorBoundary>
+				<AddActionsModal ref={addActionsRef} addAction={addAction2} />
+			</MyErrorBoundary>
 
 			<table className="table action-table">
 				<tbody>
 					{actions.map((a, i) => (
-						<ActionTableRow
-							key={a?.id ?? i}
-							isOnBank={isOnBank}
-							action={a}
-							index={i}
-							dragId={dragId}
-							setValue={doSetValue}
-							doDelete={doDelete2}
-							doDelay={doSetDelay}
-							moveCard={doReorder}
-							doLearn={emitLearn}
-						/>
+						<MyErrorBoundary>
+							<ActionTableRow
+								key={a?.id ?? i}
+								isOnBank={isOnBank}
+								action={a}
+								index={i}
+								dragId={dragId}
+								setValue={doSetValue}
+								doDelete={doDelete2}
+								doDelay={doSetDelay}
+								moveCard={doReorder}
+								doLearn={emitLearn}
+							/>
+						</MyErrorBoundary>
 					))}
 				</tbody>
 			</table>
