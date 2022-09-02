@@ -277,6 +277,7 @@
 		"companion-module-dsan-perfectcue": "github:bitfocus/companion-module-dsan-perfectcue#v1.0.1",
 		"companion-module-dtvideolabs-playbackproplus": "github:bitfocus/companion-module-dtvideolabs-playbackproplus#v1.0.4",
 		"companion-module-ecamm-live": "github:bitfocus/companion-module-ecamm-live#v1.0.1",
+		"companion-module-eiki-wspprojector": "github:bitfocus/companion-module-eiki-wspprojector#v1.0.0",
 		"companion-module-elgato-keylight": "github:bitfocus/companion-module-elgato-keylight#v1.2.4",
 		"companion-module-epiphan-pearl": "github:bitfocus/companion-module-epiphan-pearl#v1.0.8",
 		"companion-module-epson-businesspj": "github:bitfocus/companion-module-epson-businesspj#v1.0.0",

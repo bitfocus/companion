@@ -3383,6 +3383,12 @@ commist@^1.0.0:
     lodash "^4.17.21"
     urllib "^3.0.4"
 
+"companion-module-eiki-wspprojector@github:bitfocus/companion-module-eiki-wspprojector#v1.0.0":
+  version "1.0.0"
+  resolved "https://codeload.github.com/bitfocus/companion-module-eiki-wspprojector/tar.gz/2c04bb788c9d858b3ff626665d1c53a208be6ecd"
+  dependencies:
+    node-fetch "2.6.0"
+
 "companion-module-elgato-keylight@github:bitfocus/companion-module-elgato-keylight#v1.2.4":
   version "1.2.4"
   resolved "https://codeload.github.com/bitfocus/companion-module-elgato-keylight/tar.gz/4e0fe4f628ce39d69d69917df0d25ac00da0cd20"
