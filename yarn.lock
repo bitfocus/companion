@@ -3422,9 +3422,9 @@ commist@^1.0.0:
   dependencies:
     osc "github:julusian/osc.js#companion-etc-eos"
 
-"companion-module-evertz-quartz@github:bitfocus/companion-module-evertz-quartz#v1.0.1":
-  version "1.0.0"
-  resolved "https://codeload.github.com/bitfocus/companion-module-evertz-quartz/tar.gz/64efa43d41e17fd8c58e539fae282b4dd3a46d64"
+"companion-module-evertz-quartz@github:bitfocus/companion-module-evertz-quartz#v1.0.2":
+  version "1.0.2"
+  resolved "https://codeload.github.com/bitfocus/companion-module-evertz-quartz/tar.gz/9631ccd7595b64aa3abb9e46e87a655e3b71c878"
 
 "companion-module-extron-dxp@github:bitfocus/companion-module-extron-dxp#v1.0.9":
   version "1.0.9"
@@ -4144,9 +4144,9 @@ commist@^1.0.0:
   version "1.0.7"
   resolved "https://codeload.github.com/bitfocus/companion-module-resolume-arena/tar.gz/f907c87ff01d8805cce628effaf9cd034e5c892f"
 
-"companion-module-rgblink-mini@github:bitfocus/companion-module-rgblink-mini#v1.0.1":
-  version "1.0.1"
-  resolved "https://codeload.github.com/bitfocus/companion-module-rgblink-mini/tar.gz/69975ae1d77b20573f146c4d650c82892ec93f47"
+"companion-module-rgblink-mini@github:bitfocus/companion-module-rgblink-mini#v1.0.2":
+  version "1.0.2"
+  resolved "https://codeload.github.com/bitfocus/companion-module-rgblink-mini/tar.gz/4be592113a37cae549868a9e0a4687c4978b4bd3"
 
 "companion-module-rocosoft-ptzjoy@github:bitfocus/companion-module-rocosoft-ptzjoy#v1.0.2":
   version "1.0.2"
@@ -4337,9 +4337,9 @@ commist@^1.0.0:
   version "1.0.2"
   resolved "https://codeload.github.com/bitfocus/companion-module-sony-broadcastmonitor/tar.gz/29a4f119b2ba137b2a09db431eb6931dbad15e4c"
 
-"companion-module-sony-cled@github:bitfocus/companion-module-sony-cled#v1.0.1":
-  version "1.0.0"
-  resolved "https://codeload.github.com/bitfocus/companion-module-sony-cled/tar.gz/993e385dac2b9d7c7f9457c3369132fff522f4ac"
+"companion-module-sony-cled@github:bitfocus/companion-module-sony-cled#v1.0.2":
+  version "1.0.2"
+  resolved "https://codeload.github.com/bitfocus/companion-module-sony-cled/tar.gz/d95479e67dd54a82415b8748f03fceeca82a9abe"
 
 "companion-module-sony-visca@github:bitfocus/companion-module-sony-visca#v1.2.12":
   version "1.2.12"
