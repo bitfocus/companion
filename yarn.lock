@@ -3379,9 +3379,9 @@ commist@^1.0.0:
   dependencies:
     osc "github:julusian/osc.js#companion-etc-eos"
 
-"companion-module-evertz-quartz@github:bitfocus/companion-module-evertz-quartz#v1.0.1":
-  version "1.0.0"
-  resolved "https://codeload.github.com/bitfocus/companion-module-evertz-quartz/tar.gz/64efa43d41e17fd8c58e539fae282b4dd3a46d64"
+"companion-module-evertz-quartz@github:bitfocus/companion-module-evertz-quartz#v1.0.2":
+  version "1.0.2"
+  resolved "https://codeload.github.com/bitfocus/companion-module-evertz-quartz/tar.gz/9631ccd7595b64aa3abb9e46e87a655e3b71c878"
 
 "companion-module-extron-dxp@github:bitfocus/companion-module-extron-dxp#v1.0.9":
   version "1.0.9"
@@ -4279,9 +4279,9 @@ commist@^1.0.0:
   version "1.0.2"
   resolved "https://codeload.github.com/bitfocus/companion-module-sony-broadcastmonitor/tar.gz/29a4f119b2ba137b2a09db431eb6931dbad15e4c"
 
-"companion-module-sony-cled@github:bitfocus/companion-module-sony-cled#v1.0.1":
-  version "1.0.0"
-  resolved "https://codeload.github.com/bitfocus/companion-module-sony-cled/tar.gz/993e385dac2b9d7c7f9457c3369132fff522f4ac"
+"companion-module-sony-cled@github:bitfocus/companion-module-sony-cled#v1.0.2":
+  version "1.0.2"
+  resolved "https://codeload.github.com/bitfocus/companion-module-sony-cled/tar.gz/d95479e67dd54a82415b8748f03fceeca82a9abe"
 
 "companion-module-sony-visca@github:bitfocus/companion-module-sony-visca#v1.2.10":
   version "1.2.10"
@@ -8976,15 +8976,6 @@ osc@^2.4.1, osc@^2.4.2, osc@^2.4.3:
     ws "8.5.0"
   optionalDependencies:
     serialport "10.4.0"
-
-"osc@github:julusian/osc.js#companion-etc-eos":
-  version "2.4.3-etc-eos.0"
-  resolved "https://codeload.github.com/julusian/osc.js/tar.gz/30a709a772585b881ed22781aca5fe0e31202374"
-  dependencies:
-    long "4.0.0"
-    slip "1.0.2"
-    wolfy87-eventemitter "5.2.9"
-    ws "8.5.0"
 
 "osc@github:julusian/osc.js#companion-etc-eos":
   version "2.4.3-etc-eos.0"
