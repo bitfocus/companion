@@ -3074,9 +3074,9 @@ commist@^1.0.0:
   version "1.0.1"
   resolved "https://codeload.github.com/bitfocus/companion-module-blackdiamondvideo-phantom800/tar.gz/5c7a51b8be2edfa24d2ed755249cec1e0a3b357d"
 
-"companion-module-bmd-atem@github:bitfocus/companion-module-bmd-atem#v2.17.1":
-  version "2.17.1"
-  resolved "https://codeload.github.com/bitfocus/companion-module-bmd-atem/tar.gz/617174113bc9e2b3762517d4b308998500b4c97a"
+"companion-module-bmd-atem@github:bitfocus/companion-module-bmd-atem#v2.17.2":
+  version "2.17.2"
+  resolved "https://codeload.github.com/bitfocus/companion-module-bmd-atem/tar.gz/7386a72faa97e026958e2fddc41bd8c79081b45c"
   dependencies:
     "@types/multicast-dns" "^7.2.1"
     "@types/node" "^14.18.22"
