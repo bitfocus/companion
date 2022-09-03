@@ -1947,10 +1947,10 @@ at-least-node@^1.0.0:
   resolved "https://registry.yarnpkg.com/at-least-node/-/at-least-node-1.0.0.tgz#602cd4b46e844ad4effc92a8011a3c46e0238dc2"
   integrity sha512-+q/t7Ekv1EDY2l6Gda6LLiX14rU9TV20Wa3ofeQmwPFZbOMo9DXrLbOjFaaclkXKWidIaopwAObQDqwWtGUjqg==
 
-atem-connection@^3.0.0:
-  version "3.0.0"
-  resolved "https://registry.yarnpkg.com/atem-connection/-/atem-connection-3.0.0.tgz#0eb99e1abc0e149fca5af06e7792e4259748a8ad"
-  integrity sha512-jzblesqzIX/NQl+LLsmsCXlwIw7CbvNErPQgGAApt/jtYV+53d+Wl2F4nB6DJTIIX2vhhUvqlDqQbo2k9E6atA==
+atem-connection@^3.0.1:
+  version "3.0.1"
+  resolved "https://registry.yarnpkg.com/atem-connection/-/atem-connection-3.0.1.tgz#2fba408ab7d4ebd9c9ee7b87a64285e1c5a8d2e7"
+  integrity sha512-WZYXBa4P3AF+LsEDyOto77gLdYrk8ibB+/zm09pN00adQy1GwTHIma+8b5ee9qOuIujz5X/gAhvd/iMfQsSXJw==
   dependencies:
     "@julusian/freetype2" "^1.0.0"
     debug "^4.3.4"
@@ -3060,13 +3060,13 @@ commist@^1.0.0:
   version "1.0.1"
   resolved "https://codeload.github.com/bitfocus/companion-module-blackdiamondvideo-phantom800/tar.gz/5c7a51b8be2edfa24d2ed755249cec1e0a3b357d"
 
-"companion-module-bmd-atem@github:bitfocus/companion-module-bmd-atem#v2.17.0":
-  version "2.17.0"
-  resolved "https://codeload.github.com/bitfocus/companion-module-bmd-atem/tar.gz/9cf87557af7a52551887cee95b3e042a5898db7e"
+"companion-module-bmd-atem@github:bitfocus/companion-module-bmd-atem#v2.17.1":
+  version "2.17.1"
+  resolved "https://codeload.github.com/bitfocus/companion-module-bmd-atem/tar.gz/617174113bc9e2b3762517d4b308998500b4c97a"
   dependencies:
     "@types/multicast-dns" "^7.2.1"
     "@types/node" "^14.18.22"
-    atem-connection "^3.0.0"
+    atem-connection "^3.0.1"
     debounce-fn "github:julusian/debounce-fn#4.0.0-maxWaithack.0"
     multicast-dns "^7.2.5"
     type-fest "^2.17.0"
