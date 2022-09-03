@@ -3803,9 +3803,9 @@ commist@^1.0.0:
   dependencies:
     fast-xml-parser "^3.19.0"
 
-"companion-module-ltn-schedule@github:bitfocus/companion-module-ltn-schedule#v1.2.1":
-  version "1.2.1"
-  resolved "https://codeload.github.com/bitfocus/companion-module-ltn-schedule/tar.gz/61e52a7f557ad5791a786e7b2906b71bbb97a116"
+"companion-module-ltn-schedule@github:bitfocus/companion-module-ltn-schedule#v1.2.2":
+  version "1.2.2"
+  resolved "https://codeload.github.com/bitfocus/companion-module-ltn-schedule/tar.gz/233b72195046d58bb753ab42d4d73404b2bb5094"
   dependencies:
     got "^11.8.2"
     ws "^7.4.4"
