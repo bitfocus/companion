@@ -226,7 +226,7 @@
 		"companion-module-borealsystems-director": "github:bitfocus/companion-module-borealsystems-director#v1.0.1",
 		"companion-module-brightsign-player": "github:bitfocus/companion-module-brightsign-player#v1.1.2",
 		"companion-module-brompton-tessera": "github:bitfocus/companion-module-brompton-tessera#v1.0.5",
-		"companion-module-bytehive-playoutbee": "github:bitfocus/companion-module-bytehive-playoutbee#v1.0.6",
+		"companion-module-bytehive-playoutbee": "github:bitfocus/companion-module-bytehive-playoutbee#v1.0.7",
 		"companion-module-canon-ptz": "github:bitfocus/companion-module-canon-ptz#v1.0.11",
 		"companion-module-canon-xf": "github:bitfocus/companion-module-canon-xf#v1.0.2",
 		"companion-module-casparcg-server": "github:bitfocus/companion-module-casparcg-server#v1.0.5",
