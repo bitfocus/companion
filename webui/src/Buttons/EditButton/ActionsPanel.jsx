@@ -285,7 +285,7 @@ function ActionTableRow({ action, isOnBank, index, dragId, setValue, doDelete, d
 		for (const option of options) {
 			try {
 				if (typeof option.isVisible === 'function') {
-					visibility[option.id] = option.isVisible(action)
+					visibility[option.id] = option.isVisible(action.options)
 				}
 			} catch (e) {
 				console.error('Failed to check visibility', e)

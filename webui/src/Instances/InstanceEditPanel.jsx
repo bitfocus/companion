@@ -224,7 +224,9 @@ function ConfigField({ setValue, setValid, ...props }) {
 		case 'checkbox':
 			return <CheckboxInputField {...props} setValue={setValue2} setValid={setValid2} />
 		case 'dropdown':
-			return <DropdownInputField {...props} setValue={setValue2} setValid={setValid2} />
+			return <DropdownInputField {...props} setValue={setValue2} setValid={setValid2} multiple={false} />
+		case 'multidropdown':
+			return <DropdownInputField {...props} setValue={setValue2} setValid={setValid2} multiple={true} />
 		case 'colorpicker':
 			return <ColorInputField {...props} setValue={setValue2} setValid={setValid2} />
 		default:

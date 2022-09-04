@@ -290,7 +290,7 @@ export function FeedbackEditor({
 
 		for (const option of options) {
 			if (typeof option.isVisible === 'function') {
-				visibility[option.id] = option.isVisible(feedback)
+				visibility[option.id] = option.isVisible(feedback.options)
 			}
 		}
 
