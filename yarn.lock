@@ -3140,9 +3140,9 @@ commist@^1.0.0:
   version "1.0.5"
   resolved "https://codeload.github.com/bitfocus/companion-module-brompton-tessera/tar.gz/dac073af26d871493fa645fec076d9684fef1df8"
 
-"companion-module-bytehive-playoutbee@github:bitfocus/companion-module-bytehive-playoutbee#v1.0.6":
-  version "1.0.6"
-  resolved "https://codeload.github.com/bitfocus/companion-module-bytehive-playoutbee/tar.gz/f8c62643c374b4a43fa773e2ddd9275323c4621c"
+"companion-module-bytehive-playoutbee@github:bitfocus/companion-module-bytehive-playoutbee#v1.0.7":
+  version "1.0.7"
+  resolved "https://codeload.github.com/bitfocus/companion-module-bytehive-playoutbee/tar.gz/e684da8d7363159a42dc80f6298f51b6ac89a0a7"
   dependencies:
     got "^11.8.3"
 
