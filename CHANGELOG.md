@@ -1,6 +1,36 @@
 # Bitfocus Companion
 
-## Companion v2.3.0 - Release Notes (Unreleased)
+## Companion v2.3.1 - Release Notes
+
+### 🐞 BUG FIXES
+
+- Presets panel sometimes erroring after adding an instance
+- Dockerfile install `iputils-ping` (#2084)
+- Detect satellite sockets going stale and close them
+- Calls to child.send for disconnected usb devices fail
+- Clone cached actions/feedbacks/presets so that UI can reliably get changes
+- "Failed to build list of modules" due to module keyword issues (#2111)
+- Unable to enable/disable triggers via action (#2082)
+
+### 🐞 MODULE FIXES
+
+bitfocus-companion
+bmd-atem
+bytehive-playoutbee
+evertz-quartz
+generic-tcp-serial
+haivision-connectdvr
+homeassistant-server
+planningcenter-serviceslive
+pnh-opencountdown
+sony-cled
+techministry-spotifycontroller
+tslproducts-umd
+vicreo-hotkey
+vystem-api
+zoom-osc-iso
+
+## Companion v2.3.0 - Release Notes
 
 ### 📣 CORE FEATURES AND IMPROVEMENTS
 
