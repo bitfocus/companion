@@ -14,21 +14,21 @@
 
 ### 🐞 MODULE FIXES
 
-bitfocus-companion
-bmd-atem
-bytehive-playoutbee
-evertz-quartz
-generic-tcp-serial
-haivision-connectdvr
-homeassistant-server
-planningcenter-serviceslive
-pnh-opencountdown
-sony-cled
-techministry-spotifycontroller
-tslproducts-umd
-vicreo-hotkey
-vystem-api
-zoom-osc-iso
+- bitfocus-companion
+- bmd-atem
+- bytehive-playoutbee
+- evertz-quartz
+- generic-tcp-serial
+- haivision-connectdvr
+- homeassistant-server
+- planningcenter-serviceslive
+- pnh-opencountdown
+- sony-cled
+- techministry-spotifycontroller
+- tslproducts-umd
+- vicreo-hotkey
+- vystem-api
+- zoom-osc-iso
 
 ## Companion v2.3.0 - Release Notes
 
