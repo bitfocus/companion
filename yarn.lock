@@ -3074,6 +3074,10 @@ commist@^1.0.0:
   version "1.0.1"
   resolved "https://codeload.github.com/bitfocus/companion-module-blackdiamondvideo-phantom800/tar.gz/5c7a51b8be2edfa24d2ed755249cec1e0a3b357d"
 
+"companion-module-blustream-hdmimatrix@github:bitfocus/companion-module-blustream-hdmimatrix#v1.0.0":
+  version "1.0.0"
+  resolved "https://codeload.github.com/bitfocus/companion-module-blustream-hdmimatrix/tar.gz/664030bc1d7a121727cbe69b735df69e840cfd75"
+
 "companion-module-bmd-atem@github:bitfocus/companion-module-bmd-atem#v2.17.2":
   version "2.17.2"
   resolved "https://codeload.github.com/bitfocus/companion-module-bmd-atem/tar.gz/7386a72faa97e026958e2fddc41bd8c79081b45c"
