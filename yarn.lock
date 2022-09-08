@@ -4154,6 +4154,10 @@ commist@^1.0.0:
   version "1.0.2"
   resolved "https://codeload.github.com/bitfocus/companion-module-rgblink-mini/tar.gz/4be592113a37cae549868a9e0a4687c4978b4bd3"
 
+"companion-module-rgblink-x3@github:bitfocus/companion-module-rgblink-x3#v1.0.0":
+  version "1.0.0"
+  resolved "https://codeload.github.com/bitfocus/companion-module-rgblink-x3/tar.gz/a1911ba2895eb3854b97c974e0fcdcffbbcf265b"
+
 "companion-module-rocosoft-ptzjoy@github:bitfocus/companion-module-rocosoft-ptzjoy#v1.0.2":
   version "1.0.2"
   resolved "https://codeload.github.com/bitfocus/companion-module-rocosoft-ptzjoy/tar.gz/6569e22cecb38fd694a719c78d4ee8bd91e89a96"
