@@ -3388,9 +3388,9 @@ commist@^1.0.0:
     lodash "^4.17.21"
     urllib "^3.0.4"
 
-"companion-module-eiki-wspprojector@github:bitfocus/companion-module-eiki-wspprojector#v1.0.1":
-  version "1.0.1"
-  resolved "https://codeload.github.com/bitfocus/companion-module-eiki-wspprojector/tar.gz/2547bcb791d2ccfcfa102e4ef90aa0313a42b341"
+"companion-module-eiki-wspprojector@github:bitfocus/companion-module-eiki-wspprojector#v1.0.2":
+  version "1.0.2"
+  resolved "https://codeload.github.com/bitfocus/companion-module-eiki-wspprojector/tar.gz/1ffc8bf8ca47893defd0a8901557c2c40b52bd2b"
   dependencies:
     node-fetch "2.6.0"
 
