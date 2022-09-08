@@ -3346,9 +3346,9 @@ commist@^1.0.0:
   version "1.1.2"
   resolved "https://codeload.github.com/bitfocus/companion-module-disguise/tar.gz/4f65d23e9fcc4bad01e79a3687e887e1ecde72ac"
 
-"companion-module-djsoft-radioboss@github:bitfocus/companion-module-djsoft-radioboss#v1.0.3":
-  version "1.0.3"
-  resolved "https://codeload.github.com/bitfocus/companion-module-djsoft-radioboss/tar.gz/a3ecc4a233e08bd745cff95a1af293b689b11620"
+"companion-module-djsoft-radioboss@github:bitfocus/companion-module-djsoft-radioboss#v1.0.4":
+  version "1.0.4"
+  resolved "https://codeload.github.com/bitfocus/companion-module-djsoft-radioboss/tar.gz/8cbc39c91108e55c0d52c485c5b68f01c2ab3058"
   dependencies:
     node-fetch "2.6.0"
     xml2js "^0.4.23"
