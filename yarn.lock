@@ -3078,9 +3078,9 @@ commist@^1.0.0:
   version "1.0.0"
   resolved "https://codeload.github.com/bitfocus/companion-module-blustream-hdmimatrix/tar.gz/664030bc1d7a121727cbe69b735df69e840cfd75"
 
-"companion-module-bmd-atem@github:bitfocus/companion-module-bmd-atem#v2.17.2":
-  version "2.17.2"
-  resolved "https://codeload.github.com/bitfocus/companion-module-bmd-atem/tar.gz/7386a72faa97e026958e2fddc41bd8c79081b45c"
+"companion-module-bmd-atem@github:bitfocus/companion-module-bmd-atem#v2.17.3":
+  version "2.17.3"
+  resolved "https://codeload.github.com/bitfocus/companion-module-bmd-atem/tar.gz/4e5d71191e3f70f60e911184c4eda192f1103c63"
   dependencies:
     "@types/multicast-dns" "^7.2.1"
     "@types/node" "^14.18.22"
