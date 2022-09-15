@@ -109,6 +109,7 @@ export function ActionsPanelInner({
 	doReorder,
 	emitLearn,
 	addAction,
+	readonly,
 }) {
 	const addActionsRef = useRef(null)
 	const showAddModal = useCallback(() => {
@@ -179,6 +180,7 @@ export function ActionsPanelInner({
 								doDelay={doSetDelay}
 								moveCard={doReorder}
 								doLearn={emitLearn}
+								readonly={readonly ?? false}
 							/>
 						</MyErrorBoundary>
 					))}
@@ -195,7 +197,7 @@ export function ActionsPanelInner({
 	)
 }
 
-function ActionTableRow({ action, isOnBank, index, dragId, setValue, doDelete, doDelay, moveCard, doLearn }) {
+function ActionTableRow({ action, isOnBank, index, dragId, setValue, doDelete, doDelay, moveCard, doLearn, readonly }) {
 	const instancesContext = useContext(InstancesContext)
 	const actionsContext = useContext(ActionsContext)
 
@@ -250,6 +252,7 @@ function ActionTableRow({ action, isOnBank, index, dragId, setValue, doDelete, d
 	})
 	const [{ isDragging }, drag, preview] = useDrag({
 		type: dragId,
+		canDrag: !readonly,
 		item: {
 			actionId: action.id,
 			index: index,
@@ -332,7 +335,12 @@ function ActionTableRow({ action, isOnBank, index, dragId, setValue, doDelete, d
 						<CForm>
 							<label>Delay</label>
 							<CInputGroup>
-								<NumberInputField definition={{ default: 0 }} value={action.delay} setValue={innerDelay} />
+								<NumberInputField
+									definition={{ default: 0 }}
+									disabled={readonly}
+									value={action.delay}
+									setValue={innerDelay}
+								/>
 								<CInputGroupAppend>
 									<CInputGroupText>ms</CInputGroupText>
 								</CInputGroupAppend>
@@ -341,12 +349,18 @@ function ActionTableRow({ action, isOnBank, index, dragId, setValue, doDelete, d
 					</div>
 
 					<div className="cell-actions">
-						<CButton color="danger" size="sm" onClick={innerDelete} title="Remove action">
+						<CButton disabled={readonly} color="danger" size="sm" onClick={innerDelete} title="Remove action">
 							<FontAwesomeIcon icon={faTrash} />
 						</CButton>
 						&nbsp;
-						{actionSpec?.hasLearn ? (
-							<CButton color="info" size="sm" onClick={innerLearn} title="Capture the current values from the device">
+						{actionSpec?.hasLearn && doLearn ? (
+							<CButton
+								disabled={readonly}
+								color="info"
+								size="sm"
+								onClick={innerLearn}
+								title="Capture the current values from the device"
+							>
 								Learn
 							</CButton>
 						) : (
@@ -366,6 +380,7 @@ function ActionTableRow({ action, isOnBank, index, dragId, setValue, doDelete, d
 										value={(action.options || {})[opt.id]}
 										setValue={setValue}
 										visibility={optionVisibility[opt.id]}
+										readonly={readonly}
 									/>
 								</MyErrorBoundary>
 							))}

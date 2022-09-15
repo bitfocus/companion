@@ -34,6 +34,7 @@ import { GenericConfirmModal } from '../Components/GenericConfirmModal'
 import { useMemo } from 'react'
 import { DropdownInputField } from '../Components'
 import { applyPatch } from 'fast-json-patch'
+import { ActionsPanelInner } from './EditButton/ActionsPanel'
 
 export function ActionRecorder({}) {
 	const socket = useContext(SocketContext)
@@ -189,6 +190,19 @@ function RecorderSession({ sessionId }) {
 			</h3>
 			{/* <CButtonGroup>{sessionInfo.isRunning ? <CButton>Pause</CButton> : <CButton>Record</CButton>}</CButtonGroup> */}
 			<p>There are {sessionInfo.actions.length} actions</p>
+
+			<ActionsPanelInner
+				isOnBank={false}
+				dragId={'triggerAction'}
+				addPlaceholder="+ Add action"
+				actions={sessionInfo.actions || []}
+				readonly={!!sessionInfo.isRunning}
+				addAction={() => {}}
+				doDelete={() => {}}
+				doSetDelay={() => {}}
+				doReorder={() => {}}
+				doSetValue={() => {}}
+			/>
 
 			<div>
 				<CButtonGroup>
