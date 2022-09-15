@@ -1,42 +1,17 @@
-import React, { forwardRef, useCallback, useContext, useEffect, useImperativeHandle, useRef, useState } from 'react'
+import React, { useCallback, useContext, useEffect, useState } from 'react'
 import {
 	InstancesContext,
 	socketEmitPromise,
-	CreateBankControlId,
 	SocketContext,
-	NotifierContext,
-	ModulesContext,
 	LoadingRetryOrError,
 	applyPatchOrReplaceObject,
 } from '../util'
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faDownload, faFileImport, faTrashAlt } from '@fortawesome/free-solid-svg-icons'
-import {
-	CButton,
-	CAlert,
-	CSelect,
-	CButtonGroup,
-	CModal,
-	CModalHeader,
-	CModalBody,
-	CModalFooter,
-	CCol,
-	CRow,
-	CForm,
-	CFormGroup,
-	CLabel,
-	CSwitch,
-} from '@coreui/react'
-import { BankPreview, dataToButtonImage } from '../Components/BankButton'
-import { MAX_COLS, MAX_ROWS } from '../Constants'
-import { ButtonGridHeader } from './ButtonGrid'
-import { GenericConfirmModal } from '../Components/GenericConfirmModal'
+import { CButton, CAlert, CButtonGroup, CSwitch } from '@coreui/react'
 import { useMemo } from 'react'
 import { DropdownInputField } from '../Components'
-import { applyPatch } from 'fast-json-patch'
 import { ActionsPanelInner } from './EditButton/ActionsPanel'
 
-export function ActionRecorder({}) {
+export function ActionRecorder() {
 	const socket = useContext(SocketContext)
 
 	const [sessions, setSessions] = useState(null)
@@ -123,8 +98,6 @@ function RecorderSession({ sessionId }) {
 
 			socket.off(`action-recorder:session:update:${sessionId}`, updateSessionInfo)
 		}
-
-		// TODO
 	}, [socket, sessionId])
 
 	const changeRecording = useCallback(
@@ -172,7 +145,44 @@ function RecorderSession({ sessionId }) {
 		})
 	}, [socket, sessionId])
 
-	if (!sessionInfo) return <LoadingRetryOrError dataReady={false} />
+	const doActionDelete = useCallback(
+		(actionId) => {
+			socketEmitPromise(socket, 'action-recorder:session:action-delete', [sessionId, actionId]).catch((e) => {
+				console.error(e)
+			})
+		},
+		[socket, sessionId]
+	)
+	const doActionDelay = useCallback(
+		(actionId, delay) => {
+			socketEmitPromise(socket, 'action-recorder:session:action-delay', [sessionId, actionId, delay]).catch((e) => {
+				console.error(e)
+			})
+		},
+		[socket, sessionId]
+	)
+	const doActionSetValue = useCallback(
+		(actionId, key, value) => {
+			socketEmitPromise(socket, 'action-recorder:session:action-set-value', [sessionId, actionId, key, value]).catch(
+				(e) => {
+					console.error(e)
+				}
+			)
+		},
+		[socket, sessionId]
+	)
+	const doActionReorder = useCallback(
+		(dragIndex, hoverIndex) => {
+			socketEmitPromise(socket, 'action-recorder:session:action-reorder', [sessionId, dragIndex, hoverIndex]).catch(
+				(e) => {
+					console.error(e)
+				}
+			)
+		},
+		[socket, sessionId]
+	)
+
+	if (!sessionInfo || !sessionInfo.actions) return <LoadingRetryOrError dataReady={false} />
 
 	return (
 		<>
@@ -195,11 +205,11 @@ function RecorderSession({ sessionId }) {
 				isOnBank={false}
 				dragId={'triggerAction'}
 				actions={sessionInfo.actions || []}
-				readonly={!!sessionInfo.isRunning || true}
-				doDelete={() => {}}
-				doSetDelay={() => {}}
-				doReorder={() => {}}
-				doSetValue={() => {}}
+				readonly={!!sessionInfo.isRunning}
+				doDelete={doActionDelete}
+				doSetDelay={doActionDelay}
+				doReorder={doActionReorder}
+				doSetValue={doActionSetValue}
 			/>
 
 			<div>
