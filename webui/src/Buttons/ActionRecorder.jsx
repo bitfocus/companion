@@ -194,10 +194,8 @@ function RecorderSession({ sessionId }) {
 			<ActionsPanelInner
 				isOnBank={false}
 				dragId={'triggerAction'}
-				addPlaceholder="+ Add action"
 				actions={sessionInfo.actions || []}
-				readonly={!!sessionInfo.isRunning}
-				addAction={() => {}}
+				readonly={!!sessionInfo.isRunning || true}
 				doDelete={() => {}}
 				doSetDelay={() => {}}
 				doReorder={() => {}}

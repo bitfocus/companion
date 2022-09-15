@@ -83,7 +83,6 @@ export function ActionsPanel({ controlId, set, actions, dragId, addPlaceholder }
 			<ActionsPanelInner
 				isOnBank={true}
 				dragId={dragId}
-				addPlaceholder={addPlaceholder}
 				confirmModal={confirmModal}
 				actions={actions}
 				doSetValue={emitUpdateOption}
@@ -91,45 +90,19 @@ export function ActionsPanel({ controlId, set, actions, dragId, addPlaceholder }
 				doDelete={emitDelete}
 				doReorder={emitOrder}
 				emitLearn={emitLearn}
-				addAction={addAction}
 			/>
+			<AddActionsPanel addPlaceholder={addPlaceholder} addAction={addAction} />
 		</>
 	)
 }
 
-export function ActionsPanelInner({
-	isOnBank,
-	dragId,
-	addPlaceholder,
-	confirmModal,
-	actions,
-	doSetValue,
-	doSetDelay,
-	doDelete,
-	doReorder,
-	emitLearn,
-	addAction,
-	readonly,
-}) {
+export function AddActionsPanel({ addPlaceholder, addAction }) {
 	const addActionsRef = useRef(null)
 	const showAddModal = useCallback(() => {
 		if (addActionsRef.current) {
 			addActionsRef.current.show()
 		}
 	}, [])
-
-	const doDelete2 = useCallback(
-		(actionId) => {
-			if (confirmModal) {
-				confirmModal.current.show('Delete action', 'Delete action?', 'Delete', () => {
-					doDelete(actionId)
-				})
-			} else {
-				doDelete(actionId)
-			}
-		},
-		[doDelete, confirmModal]
-	)
 
 	const [recentActions, setRecentActions] = useState([])
 	useMountEffect(() => {
@@ -160,40 +133,66 @@ export function ActionsPanelInner({
 	)
 
 	return (
-		<>
+		<div className="add-dropdown-wrapper">
 			<MyErrorBoundary>
 				<AddActionsModal ref={addActionsRef} addAction={addAction2} />
 			</MyErrorBoundary>
 
-			<table className="table action-table">
-				<tbody>
-					{actions.map((a, i) => (
-						<MyErrorBoundary>
-							<ActionTableRow
-								key={a?.id ?? i}
-								isOnBank={isOnBank}
-								action={a}
-								index={i}
-								dragId={dragId}
-								setValue={doSetValue}
-								doDelete={doDelete2}
-								doDelay={doSetDelay}
-								moveCard={doReorder}
-								doLearn={emitLearn}
-								readonly={readonly ?? false}
-							/>
-						</MyErrorBoundary>
-					))}
-				</tbody>
-			</table>
+			<AddActionDropdown onSelect={addAction2} placeholder={addPlaceholder} recentActions={recentActions} />
+			<CButton color="primary" variant="outline" onClick={showAddModal}>
+				Browse
+			</CButton>
+		</div>
+	)
+}
 
-			<div className="add-dropdown-wrapper">
-				<AddActionDropdown onSelect={addAction2} placeholder={addPlaceholder} recentActions={recentActions} />
-				<CButton color="primary" variant="outline" onClick={showAddModal}>
-					Browse
-				</CButton>
-			</div>
-		</>
+export function ActionsPanelInner({
+	isOnBank,
+	dragId,
+	confirmModal,
+	actions,
+	doSetValue,
+	doSetDelay,
+	doDelete,
+	doReorder,
+	emitLearn,
+	readonly,
+}) {
+	const doDelete2 = useCallback(
+		(actionId) => {
+			if (confirmModal) {
+				confirmModal.current.show('Delete action', 'Delete action?', 'Delete', () => {
+					doDelete(actionId)
+				})
+			} else {
+				doDelete(actionId)
+			}
+		},
+		[doDelete, confirmModal]
+	)
+
+	return (
+		<table className="table action-table">
+			<tbody>
+				{actions.map((a, i) => (
+					<MyErrorBoundary>
+						<ActionTableRow
+							key={a?.id ?? i}
+							isOnBank={isOnBank}
+							action={a}
+							index={i}
+							dragId={dragId}
+							setValue={doSetValue}
+							doDelete={doDelete2}
+							doDelay={doSetDelay}
+							moveCard={doReorder}
+							doLearn={emitLearn}
+							readonly={readonly ?? false}
+						/>
+					</MyErrorBoundary>
+				))}
+			</tbody>
+		</table>
 	)
 }
 
