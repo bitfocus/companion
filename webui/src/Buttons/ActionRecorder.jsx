@@ -110,7 +110,6 @@ function RecorderSession({ sessionId }) {
 			})
 
 		const updateSessionInfo = (patch) => {
-			console.log(patch)
 			setSessionInfo((oldInfo) => applyPatchOrReplaceObject(oldInfo, patch))
 		}
 
