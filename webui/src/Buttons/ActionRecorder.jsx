@@ -6,7 +6,7 @@ import {
 	LoadingRetryOrError,
 	applyPatchOrReplaceObject,
 } from '../util'
-import { CButton, CAlert, CButtonGroup, CSwitch } from '@coreui/react'
+import { CButton, CAlert, CButtonGroup, CSwitch, CCol, CRow, CForm, CLabel } from '@coreui/react'
 import { useMemo } from 'react'
 import { DropdownInputField } from '../Components'
 import { ActionsPanelInner } from './EditButton/ActionsPanel'
@@ -52,19 +52,21 @@ export function ActionRecorder() {
 	}, [sessions])
 
 	return (
-		<>
-			<h5>Action Recorder</h5>
-			<p>
-				You can use this panel to record actions as you make changes directly on a configured device. <br />
-				Only a few modules support this, and they don't support it for every action.
-			</p>
+		<CRow>
+			<CCol xs={12}>
+				<h5>Action Recorder</h5>
+				<p>
+					You can use this panel to record actions as you make changes directly on a configured device. <br />
+					Only a few modules support this, and they don't support it for every action.
+				</p>
+			</CCol>
 
 			{selectedSessionId ? (
 				<RecorderSession sessionId={selectedSessionId} />
 			) : (
 				<CAlert color="danger">There is no session, this looks like a bug!</CAlert>
 			)}
-		</>
+		</CRow>
 	)
 }
 
@@ -122,7 +124,7 @@ function RecorderSession({ sessionId }) {
 		const result = []
 
 		for (const [id, info] of Object.entries(instances)) {
-			if (info.hasRecordActionsHandler || true) {
+			if (info.hasRecordActionsHandler) {
 				result.push({
 					id,
 					label: info.label,
@@ -186,42 +188,53 @@ function RecorderSession({ sessionId }) {
 
 	return (
 		<>
-			<h3>
-				Record: <CSwitch color="primary" checked={!!sessionInfo.isRunning} onChange={changeRecording} />
-			</h3>
-			<h3>
-				Instances:
-				<DropdownInputField
-					value={sessionInfo.instanceIds}
-					setValue={changeInstanceIds}
-					multiple={true}
-					definition={{ choices: instancesWhichCanRecord, default: [] }}
+			<CCol xs={12}>
+				<CForm className="edit-button-panel">
+					<CRow form>
+						<CCol className="fieldtype-checkbox" sm={10} xs={9}>
+							<CLabel>Connections</CLabel>
+							<DropdownInputField
+								value={sessionInfo.instanceIds}
+								setValue={changeInstanceIds}
+								multiple={true}
+								definition={{ choices: instancesWhichCanRecord, default: [] }}
+							/>
+						</CCol>
+
+						<CCol className="fieldtype-checkbox" sm={2} xs={3}>
+							<CLabel>Recording</CLabel>
+							<p>
+								<CSwitch color="primary" size="lg" checked={!!sessionInfo.isRunning} onChange={changeRecording} />
+							</p>
+						</CCol>
+					</CRow>
+				</CForm>
+			</CCol>
+			<CCol xs={12}>
+				<p>There are {sessionInfo.actions.length} actions</p>
+
+				<ActionsPanelInner
+					isOnBank={false}
+					dragId={'triggerAction'}
+					actions={sessionInfo.actions || []}
+					readonly={!!sessionInfo.isRunning}
+					doDelete={doActionDelete}
+					doSetDelay={doActionDelay}
+					doReorder={doActionReorder}
+					doSetValue={doActionSetValue}
 				/>
-			</h3>
-			{/* <CButtonGroup>{sessionInfo.isRunning ? <CButton>Pause</CButton> : <CButton>Record</CButton>}</CButtonGroup> */}
-			<p>There are {sessionInfo.actions.length} actions</p>
 
-			<ActionsPanelInner
-				isOnBank={false}
-				dragId={'triggerAction'}
-				actions={sessionInfo.actions || []}
-				readonly={!!sessionInfo.isRunning}
-				doDelete={doActionDelete}
-				doSetDelay={doActionDelay}
-				doReorder={doActionReorder}
-				doSetValue={doActionSetValue}
-			/>
-
-			<div>
-				<CButtonGroup>
-					<CButton onClick={doClearActions} color="warning">
-						Clear Actions
-					</CButton>
-					<CButton onClick={doAbort} color="danger">
-						Reset
-					</CButton>
-				</CButtonGroup>
-			</div>
+				<div>
+					<CButtonGroup>
+						<CButton onClick={doClearActions} color="warning">
+							Clear Actions
+						</CButton>
+						<CButton onClick={doAbort} color="danger">
+							Reset
+						</CButton>
+					</CButtonGroup>
+				</div>
+			</CCol>
 		</>
 	)
 }
