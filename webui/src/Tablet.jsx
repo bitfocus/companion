@@ -9,82 +9,15 @@ import {
 } from './util'
 import { CButton, CCol, CContainer, CForm, CFormGroup, CInput, CInputCheckbox, CRow, CSelect } from '@coreui/react'
 import { nanoid } from 'nanoid'
-import { MAX_BUTTONS, MAX_COLS, MAX_ROWS } from './Constants'
-import { BankPreview, dataToButtonImage } from './Components/BankButton'
+import { MAX_COLS, MAX_ROWS } from './Constants'
+import { BankPreview } from './Components/BankButton'
 import { useInView } from 'react-intersection-observer'
 import * as queryString from 'query-string'
 import rangeParser from 'parse-numeric-range'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faArrowLeft, faArrowRight, faCog, faExpand } from '@fortawesome/free-solid-svg-icons'
-import EventEmitter from 'eventemitter3'
 import { useNavigate } from 'react-router-dom'
-
-/** Cache of images across grid components */
-class ImageCache extends EventEmitter {
-	constructor(socket) {
-		super()
-
-		this.socket = socket
-
-		this.loadedPages = new Set()
-		this.imageCache = new Map()
-
-		this.socket.on('connect', () => {
-			// resubscribe on reconnect
-			for (const k of this.loadedPages.values()) {
-				this._doSubscribe(k)
-			}
-		})
-
-		this.socket.on('buttons_bank_data', this._updateImages)
-	}
-
-	loadPage(page) {
-		if (!this.loadedPages.has(page)) {
-			this.loadedPages.add(page)
-			this._doSubscribe(page)
-		}
-	}
-
-	getPage(page) {
-		return this.imageCache.get(page) || {}
-	}
-
-	_doSubscribe(page) {
-		const lastUpdated = {} // We won't ever have an existing data
-		socketEmitPromise(this.socket, 'web_buttons_page', [page, lastUpdated])
-			.then((data) => {
-				this._updateImages(page, data)
-			})
-			.catch((e) => {
-				// TODO - report to user
-				console.error(`Failed to load page data: ${e}`)
-			})
-	}
-
-	_updateImages = (page0, data) => {
-		const page = Number(page0)
-		if (this.loadedPages.has(page)) {
-			const newImages = { ...this.imageCache.get(page) }
-
-			let changed = false
-			for (let key = 1; key <= MAX_BUTTONS; ++key) {
-				if (data[key] !== undefined) {
-					changed = true
-					newImages[key] = {
-						image: dataToButtonImage(data[key].buffer),
-						updated: data[key].updated,
-					}
-				}
-			}
-
-			if (changed) {
-				this.emit(`${page}`, newImages)
-			}
-			this.imageCache.set(page, newImages)
-		}
-	}
-}
+import { ButtonRenderCache, useSharedRenderCache } from './ButtonRenderCache'
 
 function sanitisePageInfo(info) {
 	const toNumArray = (raw) => {
@@ -121,7 +54,7 @@ export function Tablet() {
 		}
 	}, [queryUrl])
 
-	const imageCache = useMemo(() => new ImageCache(socket), [socket]) // TODO - this isnt the safest
+	const imageCache = useMemo(() => new ButtonRenderCache(socket), [socket]) // TODO - this isnt the safest
 
 	const [retryToken, setRetryToken] = useState(nanoid())
 	const doRetryLoad = useCallback(() => setRetryToken(nanoid()), [])
@@ -407,9 +340,9 @@ function CyclePages({ pages, imageCache, orderedPages, updateQueryUrl, query, co
 	{
 		// Ensure next and prev pages are preloaded for more seamless cycling
 		const prevPage = orderedPages[currentIndex - 1]
-		if (prevPage !== undefined) imageCache.loadPage(prevPage)
+		useSharedRenderCache(imageCache, 'tablet:preload:prevPage', prevPage)
 		const nextPage = orderedPages[currentIndex + 1]
-		if (nextPage !== undefined) imageCache.loadPage(nextPage)
+		useSharedRenderCache(imageCache, 'tablet:preload:nextPage', nextPage)
 	}
 
 	const goPrevPage = useCallback(() => {
@@ -506,24 +439,7 @@ function ButtonGrid({ imageCache, number, cols, rows, goFirstPage, goNextPage, g
 		threshold: 0,
 	})
 
-	// load existing images from the cache at mount
-	const [images, setImages] = useState(() => imageCache.getPage(number))
-	useEffect(() => {
-		setImages(imageCache.getPage(number))
-	}, [imageCache, number])
-
-	// Ensure the page is loaded when it comes into view
-	useEffect(() => {
-		if (inView) {
-			setImages(imageCache.getPage(number))
-			imageCache.on(`${number}`, setImages)
-			imageCache.loadPage(number)
-
-			return () => {
-				imageCache.off(`${number}`, setImages)
-			}
-		}
-	}, [imageCache, number, inView])
+	const images = useSharedRenderCache(imageCache, 'tablet', number, !inView)
 
 	const bankClick = useCallback(
 		(bank, pressed) => {
@@ -560,7 +476,7 @@ function ButtonGrid({ imageCache, number, cols, rows, goFirstPage, goNextPage, g
 											key={x}
 											page={number}
 											index={index}
-											preview={images[index]?.image}
+											preview={images[index]}
 											onClick={bankClick}
 											alt={`Bank ${index}`}
 											selected={false}

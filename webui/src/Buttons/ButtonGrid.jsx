@@ -8,8 +8,16 @@ import React, {
 	useImperativeHandle,
 	useRef,
 	useState,
+	useMemo,
 } from 'react'
-import { KeyReceiver, PagesContext, socketEmitPromise, CreateBankControlId, SocketContext } from '../util'
+import {
+	KeyReceiver,
+	PagesContext,
+	socketEmitPromise,
+	CreateBankControlId,
+	SocketContext,
+	ButtonRenderCacheContext,
+} from '../util'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import {
 	faArrowsAlt,
@@ -21,10 +29,12 @@ import {
 	faTrash,
 } from '@fortawesome/free-solid-svg-icons'
 import classnames from 'classnames'
-import { MAX_COLS, MAX_ROWS, MAX_BUTTONS } from '../Constants'
+import { MAX_COLS, MAX_ROWS } from '../Constants'
 import { useDrop } from 'react-dnd'
-import { BankPreview, dataToButtonImage } from '../Components/BankButton'
+import { BankPreview } from '../Components/BankButton'
 import { GenericConfirmModal } from '../Components/GenericConfirmModal'
+import { nanoid } from 'nanoid'
+import { useSharedRenderCache } from '../ButtonRenderCache'
 
 export const ButtonsGridPanel = memo(function ButtonsPage({
 	pageNumber,
@@ -436,43 +446,10 @@ export const ButtonGridHeader = memo(function ButtonGridHeader({
 })
 
 export function ButtonGrid({ bankClick, pageNumber, selectedButton }) {
-	const socket = useContext(SocketContext)
+	const buttonCache = useContext(ButtonRenderCacheContext)
 
-	const [imageCache, setImageCache] = useState({})
-
-	useEffect(() => {
-		const updatePreviewImages = (images) => {
-			setImageCache((oldImages) => {
-				const newImages = { ...oldImages }
-				for (let key = 1; key <= MAX_BUTTONS; ++key) {
-					if (images[key] !== undefined) {
-						newImages[key] = {
-							image: dataToButtonImage(images[key].buffer),
-							updated: images[key].updated,
-						}
-					}
-				}
-				return newImages
-			})
-		}
-
-		socket.on('preview_page_data', updatePreviewImages)
-
-		// Inform server of our new page, and last updated, so it can skip unchanged previews
-		setImageCache((imageCache) => {
-			// don't want to change imageCache, but this avoids the dependency
-			const lastUpdated = {}
-			for (const [id, data] of Object.entries(imageCache)) {
-				lastUpdated[id] = { updated: data.updated }
-			}
-			socket.emit('bank_preview_page', pageNumber, lastUpdated)
-			return imageCache
-		})
-
-		return () => {
-			socket.off('preview_page_data', updatePreviewImages)
-		}
-	}, [socket, pageNumber])
+	const gridId = useMemo(() => nanoid(), [])
+	const pageImages = useSharedRenderCache(buttonCache, gridId, pageNumber)
 
 	return (
 		<div
@@ -499,7 +476,7 @@ export function ButtonGrid({ bankClick, pageNumber, selectedButton }) {
 											key={x}
 											page={pageNumber}
 											index={index}
-											preview={imageCache[index]?.image}
+											preview={pageImages[index]}
 											onClick={bankClick}
 											alt={`Bank ${index}`}
 											selected={selectedButton === controlId}
