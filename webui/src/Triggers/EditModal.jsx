@@ -11,7 +11,10 @@ import {
 	CModalFooter,
 	CModalHeader,
 	CRow,
+	CButtonGroup,
 } from '@coreui/react'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faExpandArrowsAlt, faCompressArrowsAlt } from '@fortawesome/free-solid-svg-icons'
 import { MyErrorBoundary, useMountEffect, socketEmitPromise, SocketContext } from '../util'
 import Select from 'react-select'
 import { AddFeedbackDropdown, FeedbackEditor } from '../Buttons/EditButton/FeedbackPanel'
@@ -21,6 +24,8 @@ import { CheckboxInputField } from '../Components'
 import update from 'immutability-helper'
 import { AddFeedbacksModal } from '../Buttons/EditButton/AddModal'
 import { useEffect } from 'react'
+import { cloneDeep } from 'lodash-es'
+import { usePanelCollapseHelper } from '../Buttons/EditButton/CollapseHelper'
 
 function getPluginSpecDefaults(pluginOptions) {
 	const config = {}
@@ -147,6 +152,23 @@ export function TriggerEditModal({ doClose, doSave, item, plugins }) {
 		},
 		[setActions]
 	)
+	const actionDuplicate = useCallback((actionId) => {
+		setActions((oldActions) => {
+			const oldIndex = oldActions.findIndex((act) => act.id === actionId)
+			if (oldIndex !== -1) {
+				const newActions = [...oldActions]
+
+				newActions.splice(oldIndex + 1, 0, {
+					...cloneDeep(oldActions[oldIndex]),
+					id: nanoid(),
+				})
+
+				return newActions
+			}
+
+			return oldActions
+		})
+	}, setActions)
 	const actionSetDelay = useCallback(
 		(actionId, delay) => {
 			setActions((oldActions) => {
@@ -246,6 +268,12 @@ export function TriggerEditModal({ doClose, doSave, item, plugins }) {
 		}))
 	}, [])
 
+	const actionIds = useMemo(() => (config.actions || []).map((act) => act.id), [config.actions])
+	const { collapsed, setPanelCollapsed, setAllCollapsed, setAllExpanded } = usePanelCollapseHelper(
+		`trigger_actions_${item.id}`,
+		actionIds
+	)
+
 	return (
 		<CModal show={true} onClose={doClose} size="lg">
 			<CForm onSubmit={doSaveInner} className={'edit-button-panel'}>
@@ -278,7 +306,31 @@ export function TriggerEditModal({ doClose, doSave, item, plugins }) {
 					)}
 
 					<hr />
-					<legend>Action</legend>
+					<legend>
+						Action
+						<CButtonGroup className="right">
+							<CButtonGroup>
+								<CButton
+									color="info"
+									size="sm"
+									onClick={setAllExpanded}
+									title="Expand all actions"
+									disabled={!collapsed.defaultCollapsed && Object.values(collapsed.ids || {}).every((v) => !v)}
+								>
+									<FontAwesomeIcon icon={faExpandArrowsAlt} />
+								</CButton>{' '}
+								<CButton
+									color="info"
+									size="sm"
+									onClick={setAllCollapsed}
+									title="Collapse all actions"
+									disabled={collapsed.defaultCollapsed && Object.values(collapsed.ids || {}).every((v) => v)}
+								>
+									<FontAwesomeIcon icon={faCompressArrowsAlt} />
+								</CButton>
+							</CButtonGroup>
+						</CButtonGroup>
+					</legend>
 					<CRow form className="button-style-form">
 						<CCol className="fieldtype-checkbox" sm={2} xs={3}>
 							<CButton
@@ -309,10 +361,13 @@ export function TriggerEditModal({ doClose, doSave, item, plugins }) {
 						actions={config.actions || []}
 						addAction={addActionSelect}
 						doDelete={actionDelete}
+						doDuplicate={actionDuplicate}
 						doSetDelay={actionSetDelay}
 						doReorder={actionReorder}
 						doSetValue={actionSetValue}
 						emitLearn={doLearn}
+						collapsed={collapsed}
+						setActionCollapsed={setPanelCollapsed}
 					/>
 				</CModalBody>
 				<CModalFooter>
