@@ -3030,9 +3030,9 @@ commist@^1.0.0:
   version "1.0.0"
   resolved "https://codeload.github.com/bitfocus/companion-module-biamp-tesira/tar.gz/c8a46fdd19d18169980a8ffc24e63d6b1f68ccf2"
 
-"companion-module-birddog-ptz@github:bitfocus/companion-module-birddog-ptz#v2.2.1":
-  version "2.2.1"
-  resolved "https://codeload.github.com/bitfocus/companion-module-birddog-ptz/tar.gz/acc4922cd2ea536976232319e80de7d59cc7106a"
+"companion-module-birddog-ptz@github:bitfocus/companion-module-birddog-ptz#v2.3.0":
+  version "2.3.0"
+  resolved "https://codeload.github.com/bitfocus/companion-module-birddog-ptz/tar.gz/eaab861ffba4f4c09bdb9e878b6df77a3d71e500"
   dependencies:
     node-fetch "^2.6.7"
 
