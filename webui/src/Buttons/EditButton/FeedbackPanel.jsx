@@ -1,5 +1,5 @@
 import { CAlert, CButton, CForm, CFormGroup, CButtonGroup } from '@coreui/react'
-import { faSort, faTrash, faCompressArrowsAlt, faExpandArrowsAlt } from '@fortawesome/free-solid-svg-icons'
+import { faSort, faTrash, faCompressArrowsAlt, faExpandArrowsAlt, faCopy } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import React, { useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react'
 import {
@@ -53,6 +53,15 @@ export const FeedbacksPanel = function ({ controlId, feedbacks, dragId, heading 
 				socketEmitPromise(socket, 'controls:feedback:remove', [controlId, feedbackId]).catch((e) => {
 					console.error(`Failed to delete feedback: ${e}`)
 				})
+			})
+		},
+		[socket, controlId]
+	)
+
+	const doDuplicate = useCallback(
+		(feedbackId) => {
+			socketEmitPromise(socket, 'controls:feedback:duplicate', [controlId, feedbackId]).catch((e) => {
+				console.error(`Failed to duplicate feedback: ${e}`)
 			})
 		},
 		[socket, controlId]
@@ -158,6 +167,7 @@ export const FeedbacksPanel = function ({ controlId, feedbacks, dragId, heading 
 								feedback={a}
 								setValue={setValue}
 								doDelete={doDelete}
+								doDuplicate={doDuplicate}
 								doLearn={doLearn}
 								dragId={dragId}
 								moveCard={moveCard}
@@ -187,6 +197,7 @@ function FeedbackTableRow({
 	moveCard,
 	setValue,
 	doDelete,
+	doDuplicate,
 	doLearn,
 	collapsed,
 	setCollapsed,
@@ -194,6 +205,7 @@ function FeedbackTableRow({
 	const socket = useContext(SocketContext)
 
 	const innerDelete = useCallback(() => doDelete(feedback.id), [feedback.id, doDelete])
+	const innerDuplicate = useCallback(() => doDuplicate(feedback.id), [feedback.id, doDuplicate])
 	const innerLearn = useCallback(() => doLearn(feedback.id), [doLearn, feedback.id])
 
 	const ref = useRef(null)
@@ -294,6 +306,7 @@ function FeedbackTableRow({
 					feedback={feedback}
 					setValue={setValue}
 					innerDelete={innerDelete}
+					innerDuplicate={innerDuplicate}
 					innerLearn={innerLearn}
 					setSelectedStyleProps={setSelectedStyleProps}
 					setStylePropsValue={setStylePropsValue}
@@ -311,6 +324,7 @@ export function FeedbackEditor({
 	isOnBank,
 	setValue,
 	innerDelete,
+	innerDuplicate,
 	innerLearn,
 	setSelectedStyleProps,
 	setStylePropsValue,
@@ -374,18 +388,18 @@ export function FeedbackEditor({
 			<div className="cell-controls">
 				<CButtonGroup>
 					{collapsed ? (
-						<CButton color="info" size="sm" onClick={doExpand} title="Expand action view">
+						<CButton color="info" size="sm" onClick={doExpand} title="Expand feedback view">
 							<FontAwesomeIcon icon={faExpandArrowsAlt} />
 						</CButton>
 					) : (
-						<CButton color="info" size="sm" onClick={doCollapse} title="Collapse action view">
+						<CButton color="info" size="sm" onClick={doCollapse} title="Collapse feedback view">
 							<FontAwesomeIcon icon={faCompressArrowsAlt} />
 						</CButton>
 					)}
-					{/* <CButton color="warning" size="sm" onClick={innerDuplicate} title="Duplicate action">
+					<CButton color="warning" size="sm" onClick={innerDuplicate} title="Duplicate feedback">
 						<FontAwesomeIcon icon={faCopy} />
-					</CButton> */}
-					<CButton color="danger" size="sm" onClick={innerDelete} title="Remove action">
+					</CButton>
+					<CButton color="danger" size="sm" onClick={innerDelete} title="Remove feedback">
 						<FontAwesomeIcon icon={faTrash} />
 					</CButton>
 				</CButtonGroup>

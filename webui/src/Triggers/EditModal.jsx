@@ -540,6 +540,29 @@ function TriggerEditModalConfig({ pluginSpec, config, setConfig, collapsed, setP
 		},
 		[setConfig]
 	)
+	const duplicateRow = useCallback(
+		(feedbackId) => {
+			setConfig((oldConfig) => {
+				const oldIndex = oldConfig.config.findIndex((fb) => fb.id === feedbackId)
+				if (oldIndex !== -1) {
+					const newFeedbacks = [...oldConfig.config]
+
+					newFeedbacks.splice(oldIndex + 1, 0, {
+						...cloneDeep(oldConfig.config[oldIndex]),
+						id: nanoid(),
+					})
+
+					return {
+						...oldConfig,
+						config: newFeedbacks,
+					}
+				}
+
+				return oldConfig
+			})
+		},
+		[setConfig]
+	)
 
 	const learnRow = useCallback(
 		(feedbackId) => {
@@ -590,6 +613,7 @@ function TriggerEditModalConfig({ pluginSpec, config, setConfig, collapsed, setP
 											feedback={conf}
 											updateFeedbackOptionConfig={updateFeedbackOptionConfig}
 											delRow={delRow}
+											duplicateRow={duplicateRow}
 											learnRow={learnRow}
 											setCollapsed={setPanelCollapsed}
 											collapsed={collapsed?.ids?.[conf.id] ?? collapsed.defaultCollapsed}
@@ -630,10 +654,21 @@ function TriggerEditModalConfig({ pluginSpec, config, setConfig, collapsed, setP
 	)
 }
 
-function FeedbackEditorRow({ feedback, updateFeedbackOptionConfig, delRow, learnRow, collapsed, setCollapsed }) {
+function FeedbackEditorRow({
+	feedback,
+	updateFeedbackOptionConfig,
+	delRow,
+	duplicateRow,
+	learnRow,
+	collapsed,
+	setCollapsed,
+}) {
 	const innerDelete = useCallback(() => {
 		delRow(feedback.id)
 	}, [feedback.id, delRow])
+	const innerDuplicate = useCallback(() => {
+		duplicateRow(feedback.id)
+	}, [feedback.id, duplicateRow])
 	const innerLearn = useCallback(() => {
 		learnRow(feedback.id)
 	}, [feedback.id, learnRow])
@@ -651,6 +686,7 @@ function FeedbackEditorRow({ feedback, updateFeedbackOptionConfig, delRow, learn
 			feedback={feedback}
 			setValue={updateFeedbackOptionConfig}
 			innerDelete={innerDelete}
+			innerDuplicate={innerDuplicate}
 			innerLearn={innerLearn}
 			collapsed={collapsed}
 			doCollapse={doCollapse}
