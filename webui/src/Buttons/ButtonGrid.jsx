@@ -474,9 +474,6 @@ export function ButtonGrid({ bankClick, pageNumber, selectedButton }) {
 		}
 	}, [socket, pageNumber])
 
-	const selectedPage = selectedButton ? selectedButton[0] : null
-	const selectedBank = selectedButton ? selectedButton[1] : null
-
 	return (
 		<div
 			style={{
@@ -496,6 +493,7 @@ export function ButtonGrid({ bankClick, pageNumber, selectedButton }) {
 								.fill(0)
 								.map((_, x) => {
 									const index = y * MAX_COLS + x + 1
+									const controlId = CreateBankControlId(pageNumber, index)
 									return (
 										<ButtonGridIcon
 											key={x}
@@ -504,7 +502,7 @@ export function ButtonGrid({ bankClick, pageNumber, selectedButton }) {
 											preview={imageCache[index]?.image}
 											onClick={bankClick}
 											alt={`Bank ${index}`}
-											selected={selectedPage === pageNumber && selectedBank === index}
+											selected={selectedButton === controlId}
 										/>
 									)
 								})}

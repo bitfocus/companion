@@ -43,7 +43,7 @@ export const ButtonsPage = memo(function ButtonsPage({ hotPress }) {
 				)
 			} else if (isDown) {
 				setActiveTab('edit')
-				setSelectedButton([page, bank])
+				setSelectedButton(CreateBankControlId(page, bank))
 				setTabResetToken(nanoid())
 			}
 		},
@@ -61,12 +61,11 @@ export const ButtonsPage = memo(function ButtonsPage({ hotPress }) {
 
 					if (!e.ctrlKey && !e.metaKey && !e.altKey && (e.key === 'Backspace' || e.key === 'Delete')) {
 						clearModalRef.current.show(
-							`Clear button ${selectedButton[0]}.${selectedButton[1]}`,
+							`Clear button ${selectedButton}`,
 							`This will clear the style, feedbacks and all actions`,
 							'Clear',
 							() => {
-								const controlId = CreateBankControlId(selectedButton[0], selectedButton[1])
-								socketEmitPromise(socket, 'controls:reset', [controlId]).catch((e) => {
+								socketEmitPromise(socket, 'controls:reset', [selectedButton]).catch((e) => {
 									console.error(`Reset failed: ${e}`)
 								})
 							}
@@ -74,34 +73,28 @@ export const ButtonsPage = memo(function ButtonsPage({ hotPress }) {
 					}
 					if ((e.ctrlKey || e.metaKey) && !e.altKey && e.key === 'c') {
 						console.log('prepare copy', selectedButton)
-						setCopyFromButton([...selectedButton, 'copy'])
+						setCopyFromButton([selectedButton, 'copy'])
 					}
 					if ((e.ctrlKey || e.metaKey) && !e.altKey && e.key === 'x') {
 						console.log('prepare cut', selectedButton)
-						setCopyFromButton([...selectedButton, 'cut'])
+						setCopyFromButton([selectedButton, 'cut'])
 					}
 					if ((e.ctrlKey || e.metaKey) && !e.altKey && e.key === 'v' && copyFromButton) {
 						console.log('do paste', copyFromButton, selectedButton)
 
-						if (copyFromButton[2] === 'copy') {
-							socketEmitPromise(socket, 'controls:copy', [
-								CreateBankControlId(copyFromButton[0], copyFromButton[1]),
-								CreateBankControlId(selectedButton[0], selectedButton[1]),
-							]).catch((e) => {
+						if (copyFromButton[1] === 'copy') {
+							socketEmitPromise(socket, 'controls:copy', [copyFromButton[0], selectedButton]).catch((e) => {
 								console.error(`copy failed: ${e}`)
 							})
 							setTabResetToken(nanoid())
-						} else if (copyFromButton[2] === 'cut') {
-							socketEmitPromise(socket, 'controls:move', [
-								CreateBankControlId(copyFromButton[0], copyFromButton[1]),
-								CreateBankControlId(selectedButton[0], selectedButton[1]),
-							]).catch((e) => {
+						} else if (copyFromButton[1] === 'cut') {
+							socketEmitPromise(socket, 'controls:move', [copyFromButton[0], selectedButton]).catch((e) => {
 								console.error(`move failed: ${e}`)
 							})
 							setCopyFromButton(null)
 							setTabResetToken(nanoid())
 						} else {
-							console.error('unknown paste operation:', copyFromButton[2])
+							console.error('unknown paste operation:', copyFromButton[1])
 						}
 					}
 				}
@@ -134,8 +127,7 @@ export const ButtonsPage = memo(function ButtonsPage({ hotPress }) {
 						<CNav variant="tabs">
 							<CNavItem hidden={!selectedButton}>
 								<CNavLink data-tab="edit">
-									<FontAwesomeIcon icon={faCalculator} /> Edit Button{' '}
-									{selectedButton ? `${selectedButton[0]}.${selectedButton[1]}` : '?'}
+									<FontAwesomeIcon icon={faCalculator} /> Edit Button {selectedButton ? `${selectedButton}` : '?'}
 								</CNavLink>
 							</CNavItem>
 							<CNavItem>
@@ -164,8 +156,8 @@ export const ButtonsPage = memo(function ButtonsPage({ hotPress }) {
 								<MyErrorBoundary>
 									{selectedButton ? (
 										<EditButton
-											key={`${selectedButton[0]}.${selectedButton[1]}.${tabResetToken}`}
-											controlId={CreateBankControlId(selectedButton[0], selectedButton[1])}
+											key={`${selectedButton}.${tabResetToken}`}
+											controlId={selectedButton}
 											onKeyUp={handleKeyDownInButtons}
 										/>
 									) : (
