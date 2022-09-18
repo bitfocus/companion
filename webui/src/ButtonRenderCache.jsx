@@ -96,7 +96,7 @@ export function useSharedRenderCache(cacheContext, sessionId, page, disable = fa
 		const page2 = Number(page)
 		if (!isNaN(page2) && !disable) {
 			const updateImages = (page2, images) => {
-				if (page2 === page2) setImagesState(images)
+				if (page === page2) setImagesState(images)
 			}
 
 			cacheContext.on('page', updateImages)
