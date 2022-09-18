@@ -167,6 +167,10 @@ body {
 
 				.tab-content {
 					overflow-y: scroll;
+
+					&.default-scroll {
+						overflow: inherit;
+					}
 				}
 			}
 		}

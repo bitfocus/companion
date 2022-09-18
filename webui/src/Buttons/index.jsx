@@ -1,5 +1,5 @@
 import { CCol, CNav, CNavItem, CNavLink, CRow, CTabContent, CTabPane, CTabs } from '@coreui/react'
-import { faCalculator, faDollarSign, faFileImport, faGift, faRecordVinyl } from '@fortawesome/free-solid-svg-icons'
+import { faCalculator, faDollarSign, faFileImport, faGift, faVideoCamera } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { nanoid } from 'nanoid'
 import { InstancePresets } from './Presets'
@@ -147,7 +147,7 @@ export const ButtonsPage = memo(function ButtonsPage({ hotPress }) {
 							</CNavItem>
 							<CNavItem>
 								<CNavLink data-tab="action-recorder">
-									<FontAwesomeIcon icon={faRecordVinyl} /> Action Recorder
+									<FontAwesomeIcon icon={faVideoCamera} /> Action Recorder
 								</CNavLink>
 							</CNavItem>
 						</CNav>

@@ -8,6 +8,7 @@ import {
 	PagesContext,
 	TriggersContext,
 	CreateTriggerControlId,
+	CreateBankControlId,
 } from '../util'
 import {
 	CButton,
@@ -36,6 +37,8 @@ import { DropdownInputField } from '../Components'
 import { ActionsPanelInner } from './EditButton/ActionsPanel'
 import { GenericConfirmModal } from '../Components/GenericConfirmModal'
 import { ButtonGrid, ButtonGridHeader } from './ButtonGrid'
+import { cloneDeep } from 'lodash-es'
+import jsonPatch from 'fast-json-patch'
 
 export function ActionRecorder() {
 	const socket = useContext(SocketContext)
@@ -155,13 +158,6 @@ export function ActionRecorder() {
 
 function RecorderSessionFinishModal({ doClose, sessionId }) {
 	const socket = useContext(SocketContext)
-	const pages = useContext(PagesContext)
-	const pagesRef = useRef()
-
-	useEffect(() => {
-		// Avoid binding into callbacks
-		pagesRef.current = pages
-	}, [pages])
 
 	const blockAction = useCallback((e) => {
 		e.preventDefault()
@@ -169,7 +165,7 @@ function RecorderSessionFinishModal({ doClose, sessionId }) {
 
 	const doSave = useCallback(
 		(controlId, setId, mode) => {
-			socketEmitPromise(socket, 'action-recorder:session:save-to-control', [sessionId, controlId, mode])
+			socketEmitPromise(socket, 'action-recorder:session:save-to-control', [sessionId, controlId, setId, mode])
 				.then(() => {
 					doClose()
 				})
@@ -179,24 +175,6 @@ function RecorderSessionFinishModal({ doClose, sessionId }) {
 		},
 		[socket, sessionId, doClose]
 	)
-
-	const [pageNumber, setPageNumber] = useState(1)
-	const changePage = useCallback((delta) => {
-		setPageNumber((pageNumber) => {
-			const pageNumbers = Object.keys(pagesRef.current || {})
-			const currentIndex = pageNumbers.findIndex((p) => p === pageNumber + '')
-			let newPage = pageNumbers[0]
-			if (currentIndex !== -1) {
-				let newIndex = currentIndex + delta
-				if (newIndex < 0) newIndex += pageNumbers.length
-				if (newIndex >= pageNumbers.length) newIndex -= pageNumbers.length
-
-				newPage = pageNumbers[newIndex]
-			}
-
-			return newPage ?? pageNumber
-		})
-	}, [])
 
 	return (
 		<CModal show={true} onClose={doClose} size="lg">
@@ -218,21 +196,9 @@ function RecorderSessionFinishModal({ doClose, sessionId }) {
 								</CNavLink>
 							</CNavItem>
 						</CNav>
-						<CTabContent fade={false}>
+						<CTabContent fade={false} className="default-scroll">
 							<CTabPane data-tab="buttons">
-								<CRow>
-									<CCol sm={12}>
-										<ButtonGridHeader
-											pageNumber={pageNumber}
-											pageName={pages[pageNumber]?.name ?? 'PAGE'}
-											changePage={changePage}
-											setPage={setPageNumber}
-										/>
-									</CCol>
-								</CRow>
-								<CRow className="bankgrid">
-									<ButtonGrid bankClick={() => {}} pageNumber={pageNumber} selectedButton={null} />
-								</CRow>
+								<BankPicker selectBank={doSave} />
 							</CTabPane>
 							<CTabPane data-tab="triggers">
 								<CRow>
@@ -254,6 +220,182 @@ function RecorderSessionFinishModal({ doClose, sessionId }) {
 	)
 }
 
+function BankPicker({ selectBank }) {
+	const socket = useContext(SocketContext)
+	const pages = useContext(PagesContext)
+	const pagesRef = useRef()
+
+	useEffect(() => {
+		// Avoid binding into callbacks
+		pagesRef.current = pages
+	}, [pages])
+
+	const [pageNumber, setPageNumber] = useState(1)
+	const [selectedControl, setSelectedControl] = useState(null)
+	const [selectedSet, setSelectedSet] = useState(null)
+
+	const changePage = useCallback((delta) => {
+		setPageNumber((pageNumber) => {
+			const pageNumbers = Object.keys(pagesRef.current || {})
+			const currentIndex = pageNumbers.findIndex((p) => p === pageNumber + '')
+			let newPage = pageNumbers[0]
+			if (currentIndex !== -1) {
+				let newIndex = currentIndex + delta
+				if (newIndex < 0) newIndex += pageNumbers.length
+				if (newIndex >= pageNumbers.length) newIndex -= pageNumbers.length
+
+				newPage = pageNumbers[newIndex]
+			}
+
+			return newPage ?? pageNumber
+		})
+	}, [])
+
+	const bankClick = useCallback(
+		(bank, pressed) => {
+			if (pressed) {
+				setSelectedControl(CreateBankControlId(pageNumber, bank))
+				setSelectedSet(null)
+			}
+		},
+		[pageNumber]
+	)
+
+	const replaceActions = useCallback(() => {
+		selectBank(selectedControl, selectedSet, 'replace')
+	}, [selectedControl, selectedSet, selectBank])
+	const appendActions = useCallback(() => {
+		selectBank(selectedControl, selectedSet, 'append')
+	}, [selectedControl, selectedSet, selectBank])
+
+	const [controlInfo, setControlInfo] = useState(null)
+	useEffect(() => {
+		setControlInfo(null)
+
+		if (selectedControl) {
+			socketEmitPromise(socket, 'controls:subscribe', [selectedControl])
+				.then((config) => {
+					console.log(config)
+					setControlInfo(config?.config ?? false)
+				})
+				.catch((e) => {
+					console.error('Failed to load bank config', e)
+					setControlInfo(null)
+				})
+
+			const patchConfig = (patch) => {
+				setControlInfo((oldConfig) => {
+					if (patch === false) {
+						return false
+					} else {
+						return jsonPatch.applyPatch(cloneDeep(oldConfig) || {}, patch).newDocument
+					}
+				})
+			}
+
+			socket.on(`controls:config-${selectedControl}`, patchConfig)
+
+			return () => {
+				socket.off(`controls:config-${selectedControl}`, patchConfig)
+
+				socketEmitPromise(socket, 'controls:unsubscribe', [selectedControl]).catch((e) => {
+					console.error('Failed to unsubscribe bank config', e)
+				})
+			}
+		}
+	}, [socket, selectedControl])
+
+	const actionSetOptions = useMemo(() => {
+		switch (controlInfo?.type) {
+			case 'press':
+				return [
+					{
+						id: 'down',
+						label: 'Down',
+					},
+					{
+						id: 'up',
+						label: 'Up',
+					},
+				]
+			case 'step':
+				return Object.keys(controlInfo.action_sets || {}).map((setId) => ({
+					id: setId,
+					label: `Set ${Number(setId) + 1}`,
+				}))
+			default:
+				return []
+		}
+	}, [controlInfo?.type, controlInfo?.action_sets])
+
+	useEffect(() => {
+		setSelectedSet((oldSet) => {
+			if (actionSetOptions.find((opt) => opt.id === oldSet)) {
+				return oldSet
+			} else {
+				return actionSetOptions[0]?.id
+			}
+		})
+	}, [actionSetOptions])
+
+	return (
+		<>
+			<CRow>
+				<CCol sm={12}>
+					<ButtonGridHeader
+						pageNumber={pageNumber}
+						pageName={pages[pageNumber]?.name ?? 'PAGE'}
+						changePage={changePage}
+						setPage={setPageNumber}
+					/>
+				</CCol>
+				<div className="bankgrid">
+					<ButtonGrid bankClick={bankClick} pageNumber={pageNumber} selectedButton={selectedControl} />
+				</div>
+			</CRow>
+			<CRow>
+				<CCol sm={12}>
+					<CForm className="edit-button-panel">
+						<CRow form>
+							<CCol className="fieldtype-checkbox" sm={10} xs={9}>
+								<CLabel>Action Set</CLabel>
+
+								<DropdownInputField
+									definition={{
+										choices: actionSetOptions,
+									}}
+									multiple={false}
+									value={selectedSet}
+									setValue={setSelectedSet}
+									disabled={!controlInfo}
+								/>
+								<CButtonGroup>
+									<CButton
+										color="primary"
+										title="Replace all the actions on the trigger"
+										disabled={!selectedControl || !selectedSet}
+										onClick={replaceActions}
+									>
+										Replace
+									</CButton>
+									<CButton
+										color="info"
+										title="Append to the existing actions"
+										disabled={!selectedControl || !selectedSet}
+										onClick={appendActions}
+									>
+										Append
+									</CButton>
+								</CButtonGroup>
+							</CCol>
+						</CRow>
+					</CForm>
+				</CCol>
+			</CRow>
+		</>
+	)
+}
+
 function TriggerPickerRow({ trigger, selectTrigger }) {
 	const replaceActions = useCallback(() => {
 		selectTrigger(trigger.id, 'replace')
@@ -263,7 +405,7 @@ function TriggerPickerRow({ trigger, selectTrigger }) {
 	}, [trigger.id, selectTrigger])
 
 	return (
-		<tr key={trigger.id}>
+		<tr>
 			<td>{trigger.title}</td>
 			<td>
 				<CButtonGroup>
@@ -297,7 +439,9 @@ function TriggerPicker({ selectControl }) {
 				</thead>
 				<tbody>
 					{triggersList && Object.keys(triggersList).length > 0 ? (
-						Object.values(triggersList).map((item) => <TriggerPickerRow trigger={item} selectTrigger={selectTrigger} />)
+						Object.values(triggersList).map((item) => (
+							<TriggerPickerRow key={item.id} trigger={item} selectTrigger={selectTrigger} />
+						))
 					) : (
 						<tr>
 							<td colSpan="2">There currently are no triggers or scheduled tasks.</td>
