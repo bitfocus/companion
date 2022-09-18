@@ -1,4 +1,4 @@
-import React, { useCallback, useContext, useEffect, useState } from 'react'
+import React, { useCallback, useContext, useEffect, useState, useRef } from 'react'
 import {
 	InstancesContext,
 	socketEmitPromise,
@@ -10,9 +10,12 @@ import { CButton, CAlert, CButtonGroup, CSwitch, CCol, CRow, CForm, CLabel } fro
 import { useMemo } from 'react'
 import { DropdownInputField } from '../Components'
 import { ActionsPanelInner } from './EditButton/ActionsPanel'
+import { GenericConfirmModal } from '../Components/GenericConfirmModal'
 
 export function ActionRecorder() {
 	const socket = useContext(SocketContext)
+
+	const confirmRef = useRef(null)
 
 	const [sessions, setSessions] = useState(null)
 	const [selectedSessionId, setSelectedSessionId] = useState(null)
@@ -51,18 +54,53 @@ export function ActionRecorder() {
 		})
 	}, [sessions])
 
+	const [sessionInfo, setSessionInfo] = useState(null)
+
+	useEffect(() => {
+		setSessionInfo(null)
+
+		if (selectedSessionId) {
+			socketEmitPromise(socket, 'action-recorder:session:subscribe', [selectedSessionId])
+				.then((info) => {
+					setSessionInfo(info)
+				})
+				.catch((e) => {
+					console.error('Action record session subscribe', e)
+				})
+
+			const updateSessionInfo = (patch) => {
+				setSessionInfo((oldInfo) => applyPatchOrReplaceObject(oldInfo, patch))
+			}
+
+			socket.on(`action-recorder:session:update:${selectedSessionId}`, updateSessionInfo)
+
+			return () => {
+				socketEmitPromise(socket, 'action-recorder:session:unsubscribe', [selectedSessionId]).catch((e) => {
+					console.error('Action record subscribe', e)
+				})
+
+				socket.off(`action-recorder:session:update:${selectedSessionId}`, updateSessionInfo)
+			}
+		}
+	}, [socket, selectedSessionId])
+
 	return (
-		<CRow>
-			<CCol xs={12}>
+		<CRow className="action-recorder-panel">
+			<GenericConfirmModal ref={confirmRef} />
+
+			<CCol xs={12} className={'row-heading'}>
 				<h5>Action Recorder</h5>
 				<p>
 					You can use this panel to record actions as you make changes directly on a configured device. <br />
 					Only a few modules support this, and they don't support it for every action.
 				</p>
-			</CCol>
 
+				<RecorderSessionHeading confirmRef={confirmRef} sessionId={selectedSessionId} sessionInfo={sessionInfo} />
+
+				<hr className="slim" />
+			</CCol>
 			{selectedSessionId ? (
-				<RecorderSession sessionId={selectedSessionId} />
+				<RecorderSession sessionId={selectedSessionId} sessionInfo={sessionInfo} />
 			) : (
 				<CAlert color="danger">There is no session, this looks like a bug!</CAlert>
 			)}
@@ -70,35 +108,28 @@ export function ActionRecorder() {
 	)
 }
 
-function RecorderSession({ sessionId }) {
+function RecorderSessionHeading({ confirmRef, sessionId, sessionInfo }) {
 	const socket = useContext(SocketContext)
 	const instances = useContext(InstancesContext)
 
-	const [sessionInfo, setSessionInfo] = useState(null)
+	const doClearActions = useCallback(() => {
+		socketEmitPromise(socket, 'action-recorder:session:discard-actions', [sessionId]).catch((e) => {
+			console.error(e)
+		})
+	}, [socket, sessionId])
 
-	useEffect(() => {
-		setSessionInfo(null)
-
-		socketEmitPromise(socket, 'action-recorder:session:subscribe', [sessionId])
-			.then((info) => {
-				setSessionInfo(info)
-			})
-			.catch((e) => {
-				console.error('Action record session subscribe', e)
-			})
-
-		const updateSessionInfo = (patch) => {
-			setSessionInfo((oldInfo) => applyPatchOrReplaceObject(oldInfo, patch))
-		}
-
-		socket.on(`action-recorder:session:update:${sessionId}`, updateSessionInfo)
-
-		return () => {
-			socketEmitPromise(socket, 'action-recorder:session:unsubscribe', [sessionId]).catch((e) => {
-				console.error('Action record subscribe', e)
-			})
-
-			socket.off(`action-recorder:session:update:${sessionId}`, updateSessionInfo)
+	const doAbort = useCallback(() => {
+		if (confirmRef.current) {
+			confirmRef.current.show(
+				'Discard session',
+				'Are you sure you wish to discard the current session?',
+				'Discard',
+				() => {
+					socketEmitPromise(socket, 'action-recorder:session:abort', [sessionId]).catch((e) => {
+						console.error(e)
+					})
+				}
+			)
 		}
 	}, [socket, sessionId])
 
@@ -135,17 +166,44 @@ function RecorderSession({ sessionId }) {
 		return result
 	}, [instances])
 
-	const doClearActions = useCallback(() => {
-		socketEmitPromise(socket, 'action-recorder:session:discard-actions', [sessionId]).catch((e) => {
-			console.error(e)
-		})
-	}, [socket, sessionId])
+	if (!sessionInfo) return <></>
 
-	const doAbort = useCallback(() => {
-		socketEmitPromise(socket, 'action-recorder:session:abort', [sessionId]).catch((e) => {
-			console.error(e)
-		})
-	}, [socket, sessionId])
+	return (
+		<>
+			<CForm className="edit-button-panel">
+				<CRow form>
+					<CCol className="fieldtype-checkbox" sm={10} xs={9}>
+						<CLabel>Connections</CLabel>
+						<DropdownInputField
+							value={sessionInfo.instanceIds}
+							setValue={changeInstanceIds}
+							multiple={true}
+							definition={{ choices: instancesWhichCanRecord, default: [] }}
+						/>
+					</CCol>
+
+					<CCol className="fieldtype-checkbox" sm={2} xs={3}>
+						<CLabel>Recording</CLabel>
+						<p>
+							<CSwitch color="primary" size="lg" checked={!!sessionInfo.isRunning} onChange={changeRecording} />
+						</p>
+					</CCol>
+				</CRow>
+			</CForm>
+			<CButtonGroup className={'margin-bottom'}>
+				<CButton onClick={doClearActions} color="warning">
+					Clear Actions
+				</CButton>
+				<CButton onClick={doAbort} color="danger">
+					Discard
+				</CButton>
+			</CButtonGroup>
+		</>
+	)
+}
+
+function RecorderSession({ sessionId, sessionInfo }) {
+	const socket = useContext(SocketContext)
 
 	const doActionDelete = useCallback(
 		(actionId) => {
@@ -187,54 +245,18 @@ function RecorderSession({ sessionId }) {
 	if (!sessionInfo || !sessionInfo.actions) return <LoadingRetryOrError dataReady={false} />
 
 	return (
-		<>
-			<CCol xs={12}>
-				<CForm className="edit-button-panel">
-					<CRow form>
-						<CCol className="fieldtype-checkbox" sm={10} xs={9}>
-							<CLabel>Connections</CLabel>
-							<DropdownInputField
-								value={sessionInfo.instanceIds}
-								setValue={changeInstanceIds}
-								multiple={true}
-								definition={{ choices: instancesWhichCanRecord, default: [] }}
-							/>
-						</CCol>
-
-						<CCol className="fieldtype-checkbox" sm={2} xs={3}>
-							<CLabel>Recording</CLabel>
-							<p>
-								<CSwitch color="primary" size="lg" checked={!!sessionInfo.isRunning} onChange={changeRecording} />
-							</p>
-						</CCol>
-					</CRow>
-				</CForm>
-			</CCol>
-			<CCol xs={12}>
-				<p>There are {sessionInfo.actions.length} actions</p>
-
-				<ActionsPanelInner
-					isOnBank={false}
-					dragId={'triggerAction'}
-					actions={sessionInfo.actions || []}
-					readonly={!!sessionInfo.isRunning}
-					doDelete={doActionDelete}
-					doSetDelay={doActionDelay}
-					doReorder={doActionReorder}
-					doSetValue={doActionSetValue}
-				/>
-
-				<div>
-					<CButtonGroup>
-						<CButton onClick={doClearActions} color="warning">
-							Clear Actions
-						</CButton>
-						<CButton onClick={doAbort} color="danger">
-							Reset
-						</CButton>
-					</CButtonGroup>
-				</div>
-			</CCol>
-		</>
+		<CCol xs={12}>
+			<ActionsPanelInner
+				isOnBank={false}
+				dragId={'triggerAction'}
+				actions={sessionInfo.actions}
+				readonly={!!sessionInfo.isRunning}
+				doDelete={doActionDelete}
+				doSetDelay={doActionDelay}
+				doReorder={doActionReorder}
+				doSetValue={doActionSetValue}
+			/>
+			{sessionInfo.actions.length === 0 ? <CAlert color="info">No actions have been recorded</CAlert> : ''}
+		</CCol>
 	)
 }

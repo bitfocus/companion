@@ -20,6 +20,12 @@ h5 {
 	}
 }
 
+.btn-group {
+	&.margin-bottom {
+		margin-bottom: 1rem;
+	}
+}
+
 h5 {
 	font-weight: bold;
 }
