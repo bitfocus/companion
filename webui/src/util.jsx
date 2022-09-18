@@ -200,6 +200,17 @@ export function CreateBankControlId(page, bank) {
 /**
  * TODO
  * Copied from backend
+ * @param {*} page
+ * @param {*} bank
+ * @returns
+ */
+export function CreateTriggerControlId(triggerId) {
+	return `trigger:${triggerId}`
+}
+
+/**
+ * TODO
+ * Copied from backend
  * @param {*} controlId
  * @returns
  */

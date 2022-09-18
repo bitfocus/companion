@@ -390,11 +390,18 @@ export const ButtonGridHeader = memo(function ButtonGridHeader({
 		setTimeout(event.target.select.bind(event.target), 20)
 	}
 
+	const nextPage = useCallback(() => {
+		changePage(1)
+	}, [changePage])
+	const prevPage = useCallback(() => {
+		changePage(-1)
+	}, [changePage])
+
 	return (
 		<div className="button-grid-header">
 			<CInputGroup>
 				<CInputGroupPrepend>
-					<CButton color="dark" hidden={!changePage} onClick={() => changePage(-1)}>
+					<CButton color="dark" hidden={!changePage} onClick={prevPage}>
 						<FontAwesomeIcon icon={faChevronLeft} />
 					</CButton>
 				</CInputGroupPrepend>
@@ -410,7 +417,7 @@ export const ButtonGridHeader = memo(function ButtonGridHeader({
 					className="button-page-input"
 				/>
 				<CInputGroupAppend>
-					<CButton color="dark" hidden={!changePage} onClick={() => changePage(1)}>
+					<CButton color="dark" hidden={!changePage} onClick={nextPage}>
 						<FontAwesomeIcon icon={faChevronRight} />
 					</CButton>
 				</CInputGroupAppend>
@@ -428,7 +435,7 @@ export const ButtonGridHeader = memo(function ButtonGridHeader({
 	)
 })
 
-function ButtonGrid({ bankClick, pageNumber, selectedButton }) {
+export function ButtonGrid({ bankClick, pageNumber, selectedButton }) {
 	const socket = useContext(SocketContext)
 
 	const [imageCache, setImageCache] = useState({})
