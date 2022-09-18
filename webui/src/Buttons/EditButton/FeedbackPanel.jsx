@@ -1,5 +1,5 @@
-import { CAlert, CButton, CForm, CFormGroup } from '@coreui/react'
-import { faSort, faTrash } from '@fortawesome/free-solid-svg-icons'
+import { CAlert, CButton, CForm, CFormGroup, CButtonGroup } from '@coreui/react'
+import { faSort, faTrash, faCompressArrowsAlt, faExpandArrowsAlt } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import React, { useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react'
 import {
@@ -18,8 +18,9 @@ import { GenericConfirmModal } from '../../Components/GenericConfirmModal'
 import { DropdownInputField } from '../../Components'
 import { ButtonStyleConfigFields } from './ButtonStyleConfig'
 import { AddFeedbacksModal } from './AddModal'
+import { usePanelCollapseHelper } from './CollapseHelper'
 
-export const FeedbacksPanel = function ({ controlId, feedbacks, dragId }) {
+export const FeedbacksPanel = function ({ controlId, feedbacks, dragId, heading }) {
 	const socket = useContext(SocketContext)
 
 	const confirmModal = useRef()
@@ -106,6 +107,12 @@ export const FeedbacksPanel = function ({ controlId, feedbacks, dragId }) {
 		}
 	})
 
+	const feedbackIds = useMemo(() => feedbacks.map((fb) => fb.id), [feedbacks])
+	const { collapsed, setPanelCollapsed, setAllCollapsed, setAllExpanded } = usePanelCollapseHelper(
+		`feedbacks_${controlId}`,
+		feedbackIds
+	)
+
 	return (
 		<>
 			<GenericConfirmModal ref={confirmModal} />
@@ -113,6 +120,32 @@ export const FeedbacksPanel = function ({ controlId, feedbacks, dragId }) {
 			<MyErrorBoundary>
 				<AddFeedbacksModal ref={addFeedbacksRef} addFeedback={addFeedback} />
 			</MyErrorBoundary>
+
+			<h4 className="mt-3">
+				{heading}
+				<CButtonGroup className="right">
+					<CButtonGroup>
+						<CButton
+							color="info"
+							size="sm"
+							onClick={setAllExpanded}
+							title="Expand all feedbacks"
+							disabled={!collapsed.defaultCollapsed && Object.values(collapsed.ids || {}).every((v) => !v)}
+						>
+							<FontAwesomeIcon icon={faExpandArrowsAlt} />
+						</CButton>{' '}
+						<CButton
+							color="info"
+							size="sm"
+							onClick={setAllCollapsed}
+							title="Collapse all feedbacks"
+							disabled={collapsed.defaultCollapsed && Object.values(collapsed.ids || {}).every((v) => v)}
+						>
+							<FontAwesomeIcon icon={faCompressArrowsAlt} />
+						</CButton>
+					</CButtonGroup>
+				</CButtonGroup>
+			</h4>
 
 			<table className="table feedback-table">
 				<tbody>
@@ -128,6 +161,8 @@ export const FeedbacksPanel = function ({ controlId, feedbacks, dragId }) {
 								doLearn={doLearn}
 								dragId={dragId}
 								moveCard={moveCard}
+								setCollapsed={setPanelCollapsed}
+								collapsed={collapsed?.ids?.[a.id] ?? collapsed.defaultCollapsed}
 							/>
 						</MyErrorBoundary>
 					))}
@@ -144,7 +179,18 @@ export const FeedbacksPanel = function ({ controlId, feedbacks, dragId }) {
 	)
 }
 
-function FeedbackTableRow({ feedback, controlId, index, dragId, moveCard, setValue, doDelete, doLearn }) {
+function FeedbackTableRow({
+	feedback,
+	controlId,
+	index,
+	dragId,
+	moveCard,
+	setValue,
+	doDelete,
+	doLearn,
+	collapsed,
+	setCollapsed,
+}) {
 	const socket = useContext(SocketContext)
 
 	const innerDelete = useCallback(() => doDelete(feedback.id), [feedback.id, doDelete])
@@ -225,6 +271,13 @@ function FeedbackTableRow({ feedback, controlId, index, dragId, moveCard, setVal
 		[socket, controlId, feedback.id]
 	)
 
+	const doCollapse = useCallback(() => {
+		setCollapsed(feedback.id, true)
+	}, [setCollapsed, feedback.id])
+	const doExpand = useCallback(() => {
+		setCollapsed(feedback.id, false)
+	}, [setCollapsed, feedback.id])
+
 	if (!feedback) {
 		// Invalid feedback, so skip
 		return ''
@@ -244,6 +297,9 @@ function FeedbackTableRow({ feedback, controlId, index, dragId, moveCard, setVal
 					innerLearn={innerLearn}
 					setSelectedStyleProps={setSelectedStyleProps}
 					setStylePropsValue={setStylePropsValue}
+					collapsed={collapsed}
+					doCollapse={doCollapse}
+					doExpand={doExpand}
 				/>
 			</td>
 		</tr>
@@ -258,6 +314,9 @@ export function FeedbackEditor({
 	innerLearn,
 	setSelectedStyleProps,
 	setStylePropsValue,
+	collapsed,
+	doCollapse,
+	doExpand,
 }) {
 	const feedbacksContext = useContext(FeedbacksContext)
 	const instancesContext = useContext(InstancesContext)
@@ -312,48 +371,70 @@ export function FeedbackEditor({
 		<div className="editor-grid">
 			<div className="cell-name">{name}</div>
 
-			<div className="cell-description">{feedbackSpec?.description || ''}</div>
-
-			<div className="cell-actions">
-				<CButton color="danger" size="sm" onClick={innerDelete} title="Remove action">
-					<FontAwesomeIcon icon={faTrash} />
-				</CButton>
-				&nbsp;
-				{feedbackSpec?.hasLearn ? (
-					<CButton color="info" size="sm" onClick={innerLearn} title="Capture the current values from the device">
-						Learn
+			<div className="cell-controls">
+				<CButtonGroup>
+					{collapsed ? (
+						<CButton color="info" size="sm" onClick={doExpand} title="Expand action view">
+							<FontAwesomeIcon icon={faExpandArrowsAlt} />
+						</CButton>
+					) : (
+						<CButton color="info" size="sm" onClick={doCollapse} title="Collapse action view">
+							<FontAwesomeIcon icon={faCompressArrowsAlt} />
+						</CButton>
+					)}
+					{/* <CButton color="warning" size="sm" onClick={innerDuplicate} title="Duplicate action">
+						<FontAwesomeIcon icon={faCopy} />
+					</CButton> */}
+					<CButton color="danger" size="sm" onClick={innerDelete} title="Remove action">
+						<FontAwesomeIcon icon={faTrash} />
 					</CButton>
-				) : (
-					''
-				)}
+				</CButtonGroup>
 			</div>
 
-			<div className="cell-option">
-				<CForm>
-					{options.map((opt, i) => (
-						<MyErrorBoundary key={i}>
-							<ActionTableRowOption
-								isOnBank={isOnBank}
-								instanceId={feedback.instance_id}
-								option={opt}
-								actionId={feedback.id}
-								value={(feedback.options || {})[opt.id]}
-								setValue={setValue}
-								visibility={optionVisibility[opt.id]}
-							/>
-						</MyErrorBoundary>
-					))}
-					{options.length === 0 ? 'Nothing to configure' : ''}
-				</CForm>
-			</div>
-			{setSelectedStyleProps || setStylePropsValue ? (
+			{!collapsed ? (
 				<>
-					<FeedbackStyles feedbackSpec={feedbackSpec} feedback={feedback} setStylePropsValue={setStylePropsValue} />
-					<FeedbackManageStyles
-						feedbackSpec={feedbackSpec}
-						feedback={feedback}
-						setSelectedStyleProps={setSelectedStyleProps}
-					/>
+					<div className="cell-description">{feedbackSpec?.description || ''}</div>
+
+					<div className="cell-actions">
+						{feedbackSpec?.hasLearn ? (
+							<CButton color="info" size="sm" onClick={innerLearn} title="Capture the current values from the device">
+								Learn
+							</CButton>
+						) : (
+							''
+						)}
+					</div>
+
+					<div className="cell-option">
+						<CForm>
+							{options.map((opt, i) => (
+								<MyErrorBoundary key={i}>
+									<ActionTableRowOption
+										isOnBank={isOnBank}
+										instanceId={feedback.instance_id}
+										option={opt}
+										actionId={feedback.id}
+										value={(feedback.options || {})[opt.id]}
+										setValue={setValue}
+										visibility={optionVisibility[opt.id]}
+									/>
+								</MyErrorBoundary>
+							))}
+							{options.length === 0 ? 'Nothing to configure' : ''}
+						</CForm>
+					</div>
+					{setSelectedStyleProps || setStylePropsValue ? (
+						<>
+							<FeedbackStyles feedbackSpec={feedbackSpec} feedback={feedback} setStylePropsValue={setStylePropsValue} />
+							<FeedbackManageStyles
+								feedbackSpec={feedbackSpec}
+								feedback={feedback}
+								setSelectedStyleProps={setSelectedStyleProps}
+							/>
+						</>
+					) : (
+						''
+					)}
 				</>
 			) : (
 				''
