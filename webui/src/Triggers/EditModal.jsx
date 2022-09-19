@@ -191,7 +191,7 @@ export function TriggerEditModal({ doClose, doSave, item, plugins }) {
 		[setActions]
 	)
 	const actionReorder = useCallback(
-		(dragIndex, hoverIndex) => {
+		(_dragSetId, dragIndex, _dropSetId, hoverIndex) => {
 			setActions((actions) => {
 				const dragCard = actions[dragIndex]
 				return update(actions, {
@@ -415,6 +415,7 @@ export function TriggerEditModal({ doClose, doSave, item, plugins }) {
 					<ActionsPanelInner
 						isOnBank={false}
 						dragId={'triggerAction'}
+						setId={0}
 						addPlaceholder="+ Add action"
 						actions={config.actions || []}
 						addAction={addActionSelect}

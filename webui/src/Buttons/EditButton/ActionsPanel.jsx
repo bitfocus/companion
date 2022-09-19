@@ -68,12 +68,18 @@ export function ActionsPanel({ controlId, set, actions, dragId, addPlaceholder, 
 	)
 
 	const emitOrder = useCallback(
-		(dragIndex, hoverIndex) => {
-			socketEmitPromise(socket, 'controls:action:reorder', [controlId, set, dragIndex, hoverIndex]).catch((e) => {
+		(dragSetId, dragIndex, dropSetId, dropIndex) => {
+			socketEmitPromise(socket, 'controls:action:reorder', [
+				controlId,
+				dragSetId,
+				dragIndex,
+				dropSetId,
+				dropIndex,
+			]).catch((e) => {
 				console.error('Failed to reorder bank actions', e)
 			})
 		},
-		[socket, controlId, set]
+		[socket, controlId]
 	)
 
 	const addAction = useCallback(
@@ -122,7 +128,8 @@ export function ActionsPanel({ controlId, set, actions, dragId, addPlaceholder, 
 			<GenericConfirmModal ref={confirmModal} />
 			<ActionsPanelInner
 				isOnBank={true}
-				dragId={dragId}
+				dragId={`${controlId}_actions`}
+				setId={set}
 				addPlaceholder={addPlaceholder}
 				confirmModal={confirmModal}
 				actions={actions}
@@ -143,6 +150,7 @@ export function ActionsPanel({ controlId, set, actions, dragId, addPlaceholder, 
 export function ActionsPanelInner({
 	isOnBank,
 	dragId,
+	setId,
 	addPlaceholder,
 	confirmModal,
 	actions,
@@ -219,6 +227,7 @@ export function ActionsPanelInner({
 								isOnBank={isOnBank}
 								action={a}
 								index={i}
+								setId={setId}
 								dragId={dragId}
 								setValue={doSetValue}
 								doDelete={doDelete2}
@@ -231,6 +240,7 @@ export function ActionsPanelInner({
 							/>
 						</MyErrorBoundary>
 					))}
+					<ActionRowDropPlaceholder dragId={dragId} actionCount={actions.length} setId={setId} moveCard={doReorder} />
 				</tbody>
 			</table>
 
@@ -244,8 +254,33 @@ export function ActionsPanelInner({
 	)
 }
 
+function ActionRowDropPlaceholder({ dragId, setId, actionCount, moveCard }) {
+	const [isDragging, drop] = useDrop({
+		accept: dragId,
+		collect: (monitor) => {
+			return monitor.canDrop()
+		},
+		hover(item, monitor) {
+			console.log('hover', item)
+
+			moveCard(item.setId, item.index, setId, 0)
+		},
+	})
+
+	if (!isDragging || actionCount > 0) return ''
+
+	return (
+		<tr ref={drop} className={'actionlist-dropzone'}>
+			<td colSpan={3}>
+				<p>Drop action here</p>
+			</td>
+		</tr>
+	)
+}
+
 function ActionTableRow({
 	action,
+	setId,
 	isOnBank,
 	index,
 	dragId,
@@ -280,42 +315,28 @@ function ActionTableRow({
 			const dragIndex = item.index
 			const hoverIndex = index
 			// Don't replace items with themselves
-			if (dragIndex === hoverIndex) {
+			if (dragIndex === hoverIndex && item.setId === setId) {
 				return
 			}
-			// Determine rectangle on screen
-			const hoverBoundingRect = ref.current?.getBoundingClientRect()
-			// Get vertical middle
-			const hoverMiddleY = (hoverBoundingRect.bottom - hoverBoundingRect.top) / 2
-			// Determine mouse position
-			const clientOffset = monitor.getClientOffset()
-			// Get pixels to the top
-			const hoverClientY = clientOffset.y - hoverBoundingRect.top
-			// Only perform the move when the mouse has crossed half of the items height
-			// When dragging downwards, only move when the cursor is below 50%
-			// When dragging upwards, only move when the cursor is above 50%
-			// Dragging downwards
-			if (dragIndex < hoverIndex && hoverClientY < hoverMiddleY) {
-				return
-			}
-			// Dragging upwards
-			if (dragIndex > hoverIndex && hoverClientY > hoverMiddleY) {
-				return
-			}
+
 			// Time to actually perform the action
-			moveCard(dragIndex, hoverIndex)
+			moveCard(item.setId, item.index, setId, index)
+
 			// Note: we're mutating the monitor item here!
 			// Generally it's better to avoid mutations,
 			// but it's good here for the sake of performance
 			// to avoid expensive index searches.
 			item.index = hoverIndex
+			item.setId = setId
 		},
 	})
 	const [{ isDragging }, drag, preview] = useDrag({
 		type: dragId,
 		item: {
 			actionId: action.id,
+			setId: setId,
 			index: index,
+			// ref: ref,
 		},
 		collect: (monitor) => ({
 			isDragging: monitor.isDragging(),
