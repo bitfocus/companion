@@ -87,10 +87,8 @@ export function ActionsPanel({ controlId, set, actions, dragId, addPlaceholder, 
 	)
 
 	const actionIds = useMemo(() => actions.map((act) => act.id), [actions])
-	const { collapsed, setPanelCollapsed, setAllCollapsed, setAllExpanded } = usePanelCollapseHelper(
-		`actions_${controlId}_${set}`,
-		actionIds
-	)
+	const { setPanelCollapsed, isPanelCollapsed, setAllCollapsed, setAllExpanded, canExpandAll, canCollapseAll } =
+		usePanelCollapseHelper(`actions_${controlId}_${set}`, actionIds)
 
 	return (
 		<>
@@ -103,7 +101,7 @@ export function ActionsPanel({ controlId, set, actions, dragId, addPlaceholder, 
 							size="sm"
 							onClick={setAllExpanded}
 							title="Expand all actions"
-							disabled={!collapsed.defaultCollapsed && Object.values(collapsed.ids || {}).every((v) => !v)}
+							disabled={!canExpandAll}
 						>
 							<FontAwesomeIcon icon={faExpandArrowsAlt} />
 						</CButton>{' '}
@@ -112,7 +110,7 @@ export function ActionsPanel({ controlId, set, actions, dragId, addPlaceholder, 
 							size="sm"
 							onClick={setAllCollapsed}
 							title="Collapse all actions"
-							disabled={collapsed.defaultCollapsed && Object.values(collapsed.ids || {}).every((v) => v)}
+							disabled={!canCollapseAll}
 						>
 							<FontAwesomeIcon icon={faCompressArrowsAlt} />
 						</CButton>
@@ -135,8 +133,8 @@ export function ActionsPanel({ controlId, set, actions, dragId, addPlaceholder, 
 				doReorder={emitOrder}
 				emitLearn={emitLearn}
 				addAction={addAction}
-				setActionCollapsed={setPanelCollapsed}
-				collapsed={collapsed}
+				setPanelCollapsed={setPanelCollapsed}
+				isPanelCollapsed={isPanelCollapsed}
 			/>
 		</>
 	)
@@ -155,8 +153,8 @@ export function ActionsPanelInner({
 	doReorder,
 	emitLearn,
 	addAction,
-	setActionCollapsed,
-	collapsed,
+	setPanelCollapsed,
+	isPanelCollapsed,
 }) {
 	const addActionsRef = useRef(null)
 	const showAddModal = useCallback(() => {
@@ -228,8 +226,8 @@ export function ActionsPanelInner({
 								doDelay={doSetDelay}
 								moveCard={doReorder}
 								doLearn={emitLearn}
-								setCollapsed={setActionCollapsed}
-								collapsed={collapsed?.ids?.[a.id] ?? collapsed.defaultCollapsed}
+								setCollapsed={setPanelCollapsed}
+								isCollapsed={isPanelCollapsed(a.id)}
 							/>
 						</MyErrorBoundary>
 					))}
@@ -257,7 +255,7 @@ function ActionTableRow({
 	doDelay,
 	moveCard,
 	doLearn,
-	collapsed,
+	isCollapsed,
 	setCollapsed,
 }) {
 	const instancesContext = useContext(InstancesContext)
@@ -400,7 +398,7 @@ function ActionTableRow({
 
 					<div className="cell-controls">
 						<CButtonGroup>
-							{collapsed ? (
+							{isCollapsed ? (
 								<CButton color="info" size="sm" onClick={doExpand} title="Expand action view">
 									<FontAwesomeIcon icon={faExpandArrowsAlt} />
 								</CButton>
@@ -418,7 +416,7 @@ function ActionTableRow({
 						</CButtonGroup>
 					</div>
 
-					{!collapsed ? (
+					{!isCollapsed ? (
 						<>
 							<div className="cell-description">{actionSpec?.description || ''}</div>
 
