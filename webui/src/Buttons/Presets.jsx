@@ -43,7 +43,7 @@ export const InstancePresets = function InstancePresets({ resetToken }) {
 			})
 
 		const updatePresets = (id, patch) => {
-			setPresetsMap((oldPresets) => applyPatchOrReplaceSubObject(oldPresets, id, patch))
+			setPresetsMap((oldPresets) => applyPatchOrReplaceSubObject(oldPresets, id, patch, []))
 		}
 
 		socket.on('presets:update', updatePresets)

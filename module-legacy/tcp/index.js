@@ -127,7 +127,7 @@ function tcp(host, port, options) {
 	setImmediate(self.connect.bind(self))
 
 	setTimeout(() => {
-		if (!self.destroyed && self.listenerCount('error')) {
+		if (!self.destroyed && !self.listenerCount('error')) {
 			// The socket is active and has no listeners. Log an error for the module devs!
 			console.error(`Danger: TCP client for ${self.host}:${self.port} is missing an error handler!`)
 		}

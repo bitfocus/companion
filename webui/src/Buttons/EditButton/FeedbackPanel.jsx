@@ -574,16 +574,18 @@ export function AddFeedbackDropdown({ onSelect, booleanOnly, recentFeedbacks }) 
 		}
 
 		const recents = []
-		for (const actionType of recentFeedbacks || []) {
-			const [instanceId, actionId] = actionType.split(':', 2)
-			const actionInfo = feedbacksContext[instanceId]?.[actionId]
-			if (actionInfo) {
-				const instanceLabel = instancesContext[instanceId]?.label ?? instanceId
-				recents.push({
-					isRecent: true,
-					value: `${instanceId}:${actionId}`,
-					label: `${instanceLabel}: ${actionInfo.label}`,
-				})
+		for (const feedbackType of recentFeedbacks || []) {
+			if (feedbackType) {
+				const [instanceId, feedbackId] = feedbackType.split(':', 2)
+				const feedbackInfo = feedbacksContext[instanceId]?.[feedbackId]
+				if (feedbackInfo) {
+					const instanceLabel = instancesContext[instanceId]?.label ?? instanceId
+					recents.push({
+						isRecent: true,
+						value: `${instanceId}:${feedbackId}`,
+						label: `${instanceLabel}: ${feedbackInfo.label}`,
+					})
+				}
 			}
 		}
 		options.push({

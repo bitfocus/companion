@@ -532,15 +532,17 @@ function AddActionDropdown({ onSelect, placeholder, recentActions }) {
 
 		const recents = []
 		for (const actionType of recentActions) {
-			const [instanceId, actionId] = actionType.split(':', 2)
-			const actionInfo = actionsContext[instanceId]?.[actionId]
-			if (actionInfo) {
-				const instanceLabel = instancesContext[instanceId]?.label ?? instanceId
-				recents.push({
-					isRecent: true,
-					value: `${instanceId}:${actionId}`,
-					label: `${instanceLabel}: ${actionInfo.label}`,
-				})
+			if (actionType) {
+				const [instanceId, actionId] = actionType.split(':', 2)
+				const actionInfo = actionsContext[instanceId]?.[actionId]
+				if (actionInfo) {
+					const instanceLabel = instancesContext[instanceId]?.label ?? instanceId
+					recents.push({
+						isRecent: true,
+						value: `${instanceId}:${actionId}`,
+						label: `${instanceLabel}: ${actionInfo.label}`,
+					})
+				}
 			}
 		}
 		options.push({

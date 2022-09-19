@@ -5,5 +5,5 @@
   Whether to enable support for the Elgato Plugin for connecting to StreamDecks.  
   When this is enabled Companion will not directly try to connect to a StreamDeck
 
-- **Enable connected xkeys (Requires Companion restart)	**
-  Whether to enable support for the Elgato Plugin for connecting to XKeys.  
+- **Enable connected xkeys (Requires Companion restart)**
+  Whether to enable support for connecting to XKeys devices.  

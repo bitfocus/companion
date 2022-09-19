@@ -31,8 +31,12 @@ COPY --from=companion-builder /app/docker-entrypoint.sh /docker-entrypoint.sh
 COPY --from=companion-builder /app/module-legacy/manifests	/app/module-legacy/manifests
 
 # Install curl for the health check
-RUN apt update && apt install -y curl libusb-1.0-0 libudev1 && \
-    rm -rf /var/lib/apt/lists/*
+RUN apt update && apt install -y \
+    curl \
+    libusb-1.0-0 \
+    libudev1 \
+    iputils-ping \
+    && rm -rf /var/lib/apt/lists/*
 
 # Don't run as root
 RUN useradd -ms /bin/bash companion
