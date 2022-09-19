@@ -16,7 +16,7 @@ export function usePanelCollapseHelper(storageId, panelIds) {
 			})
 		}
 	}, [collapseStorageId])
-	// const panelIds = useMemo(() => panelIds.map((a) => a.id), [panelIds])
+
 	const setPanelCollapsed = useCallback(
 		(panelId, collapsed) => {
 			setCollapsed((oldState) => {
@@ -74,10 +74,22 @@ export function usePanelCollapseHelper(storageId, panelIds) {
 		})
 	}, [collapseStorageId, panelIds])
 
+	const isPanelCollapsed = useCallback(
+		(panelId) => {
+			return collapsed?.ids?.[panelId] ?? collapsed?.defaultCollapsed
+		},
+		[collapsed]
+	)
+
+	const canExpandAll = collapsed.defaultCollapsed || !Object.values(collapsed.ids || {}).every((v) => !v)
+	const canCollapseAll = !collapsed.defaultCollapsed || !Object.values(collapsed.ids || {}).every((v) => v)
+
 	return {
-		collapsed,
 		setAllCollapsed,
 		setAllExpanded,
+		canExpandAll,
+		canCollapseAll,
 		setPanelCollapsed,
+		isPanelCollapsed,
 	}
 }

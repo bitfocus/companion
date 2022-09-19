@@ -117,10 +117,8 @@ export const FeedbacksPanel = function ({ controlId, feedbacks, dragId, heading 
 	})
 
 	const feedbackIds = useMemo(() => feedbacks.map((fb) => fb.id), [feedbacks])
-	const { collapsed, setPanelCollapsed, setAllCollapsed, setAllExpanded } = usePanelCollapseHelper(
-		`feedbacks_${controlId}`,
-		feedbackIds
-	)
+	const { setPanelCollapsed, isPanelCollapsed, setAllCollapsed, setAllExpanded, canExpandAll, canCollapseAll } =
+		usePanelCollapseHelper(`feedbacks_${controlId}`, feedbackIds)
 
 	return (
 		<>
@@ -139,7 +137,7 @@ export const FeedbacksPanel = function ({ controlId, feedbacks, dragId, heading 
 							size="sm"
 							onClick={setAllExpanded}
 							title="Expand all feedbacks"
-							disabled={!collapsed.defaultCollapsed && Object.values(collapsed.ids || {}).every((v) => !v)}
+							disabled={!canExpandAll}
 						>
 							<FontAwesomeIcon icon={faExpandArrowsAlt} />
 						</CButton>{' '}
@@ -148,7 +146,7 @@ export const FeedbacksPanel = function ({ controlId, feedbacks, dragId, heading 
 							size="sm"
 							onClick={setAllCollapsed}
 							title="Collapse all feedbacks"
-							disabled={collapsed.defaultCollapsed && Object.values(collapsed.ids || {}).every((v) => v)}
+							disabled={!canCollapseAll}
 						>
 							<FontAwesomeIcon icon={faCompressArrowsAlt} />
 						</CButton>
@@ -172,7 +170,7 @@ export const FeedbacksPanel = function ({ controlId, feedbacks, dragId, heading 
 								dragId={dragId}
 								moveCard={moveCard}
 								setCollapsed={setPanelCollapsed}
-								collapsed={collapsed?.ids?.[a.id] ?? collapsed.defaultCollapsed}
+								isCollapsed={isPanelCollapsed(a.id)}
 							/>
 						</MyErrorBoundary>
 					))}
@@ -199,7 +197,7 @@ function FeedbackTableRow({
 	doDelete,
 	doDuplicate,
 	doLearn,
-	collapsed,
+	isCollapsed,
 	setCollapsed,
 }) {
 	const socket = useContext(SocketContext)
@@ -310,7 +308,7 @@ function FeedbackTableRow({
 					innerLearn={innerLearn}
 					setSelectedStyleProps={setSelectedStyleProps}
 					setStylePropsValue={setStylePropsValue}
-					collapsed={collapsed}
+					isCollapsed={isCollapsed}
 					doCollapse={doCollapse}
 					doExpand={doExpand}
 				/>
@@ -328,7 +326,7 @@ export function FeedbackEditor({
 	innerLearn,
 	setSelectedStyleProps,
 	setStylePropsValue,
-	collapsed,
+	isCollapsed,
 	doCollapse,
 	doExpand,
 }) {
@@ -387,7 +385,7 @@ export function FeedbackEditor({
 
 			<div className="cell-controls">
 				<CButtonGroup>
-					{collapsed ? (
+					{isCollapsed ? (
 						<CButton color="info" size="sm" onClick={doExpand} title="Expand feedback view">
 							<FontAwesomeIcon icon={faExpandArrowsAlt} />
 						</CButton>
@@ -405,7 +403,7 @@ export function FeedbackEditor({
 				</CButtonGroup>
 			</div>
 
-			{!collapsed ? (
+			{!isCollapsed ? (
 				<>
 					<div className="cell-description">{feedbackSpec?.description || ''}</div>
 
