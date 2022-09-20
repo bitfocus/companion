@@ -1,5 +1,45 @@
 # Bitfocus Companion
 
+## Companion v3.0.0 - Unreleased
+
+Documented up to 3aaf64b2f88d2d0c7ea16269675d0496c3a3ff9c
+
+### BREAKING CHANGES
+
+-
+
+### 📣 CORE FEATURES AND IMPROVEMENTS
+
+- Modernisation of large restructuring of codebase
+
+- step button type to replace latching (https://github.com/bitfocus/companion/pull/1630)
+
+- Support Bitfocus cloud https://github.com/bitfocus/companion/pull/1884
+
+- Modules run in child processes. This ensures that module crashes cannot crash the whole of Companion
+
+- Use hidraw usb backend on linux, this will improve usb performance on linux or companion-pi
+
+- Split launcher and Companion main process
+
+- Support module development against release builds of Companion ()
+
+- Rework ui data flow, to reduce amount of data sent to the ui
+
+- Rework ui data flow, to make ui more reactive as changes are made
+
+- Remove old tablet/web-buttons pages
+
+- Watch for usb devices being connected
+
+- Show inactive surfaces in the ui
+
+- https://github.com/bitfocus/companion/pull/2127
+
+### 🐞 BUG FIXES
+
+-
+
 ## Companion v2.3.1 - Release Notes
 
 ### 🐞 BUG FIXES
