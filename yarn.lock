@@ -3930,6 +3930,12 @@ commist@^1.0.0:
   version "1.0.0"
   resolved "https://codeload.github.com/bitfocus/companion-module-netio-powerbox/tar.gz/c28e57da9784c77c8ec22554bf0c7d80f97d20bd"
 
+"companion-module-neumannmueller-stageflow@github:bitfocus/companion-module-neumannmueller-stageflow#v1.0.0":
+  version "1.0.0"
+  resolved "https://codeload.github.com/bitfocus/companion-module-neumannmueller-stageflow/tar.gz/d8c98c4a6b05cd61fc08f5d2041affcef89a0828"
+  dependencies:
+    socket.io-client "^4.5.1"
+
 "companion-module-nevion-mrp@github:bitfocus/companion-module-nevion-mrp#v2.0.3":
   version "2.0.3"
   resolved "https://codeload.github.com/bitfocus/companion-module-nevion-mrp/tar.gz/e65d5aaa88d7cd5b27a8a439351bf0bf65444d65"
