@@ -61,9 +61,10 @@ export class ButtonRenderCache extends EventEmitter {
 				.catch((e) => {
 					console.error(e)
 				})
+			return undefined
+		} else {
+			return this.#renders[page]
 		}
-
-		return this.#renders[page] ?? {}
 	}
 
 	unsubscribe(gridId, page) {
@@ -71,13 +72,14 @@ export class ButtonRenderCache extends EventEmitter {
 		if (subsForPage && subsForPage.size > 0) {
 			subsForPage.delete(gridId)
 
-			socketEmitPromise(this.#socket, 'preview:page:unsubscribe', [page]).catch((e) => {
-				console.error(e)
-			})
-		}
+			if (subsForPage.size === 0) {
+				socketEmitPromise(this.#socket, 'preview:page:unsubscribe', [page]).catch((e) => {
+					console.error(e)
+				})
 
-		delete this.#renders[page]
-		this.emit('page', page, {})
+				delete this.#renders[page]
+			}
+		}
 	}
 }
 
@@ -86,7 +88,7 @@ export class ButtonRenderCache extends EventEmitter {
  * @param {ButtonRenderCache} cacheContext The cache to use
  * @param {string} sessionId Unique id of this accessor
  * @param {number | undefined} page Page number to load and retrieve
- * @param {voolean | undefined} disable Disable loading of this page
+ * @param {boolean | undefined} disable Disable loading of this page
  * @returns
  */
 export function useSharedRenderCache(cacheContext, sessionId, page, disable = false) {
@@ -95,13 +97,14 @@ export function useSharedRenderCache(cacheContext, sessionId, page, disable = fa
 	useEffect(() => {
 		const page2 = Number(page)
 		if (!isNaN(page2) && !disable) {
-			const updateImages = (page2, images) => {
-				if (page === page2) setImagesState(images)
+			const updateImages = (page3, images) => {
+				if (page3 === page2) setImagesState(images)
 			}
 
 			cacheContext.on('page', updateImages)
 
-			cacheContext.subscribe(sessionId, page2)
+			const initialImages = cacheContext.subscribe(sessionId, page2)
+			if (initialImages) setImagesState(initialImages)
 
 			return () => {
 				cacheContext.off('page', updateImages)
