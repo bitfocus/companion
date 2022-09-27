@@ -517,7 +517,7 @@
 		"companion-module-tslproducts-umd": "github:bitfocus/companion-module-tslproducts-umd#v1.2.5",
 		"companion-module-tvone-corio": "github:bitfocus/companion-module-tvone-corio#v1.0.1",
 		"companion-module-twitch-api": "github:bitfocus/companion-module-twitch-api#v2.0.4",
-		"companion-module-utahscientific-bpspanel": "github:bitfocus/companion-module-utahscientific-bpspanel#v1.0.0",
+		"companion-module-utahscientific-bpspanel": "github:bitfocus/companion-module-utahscientific-bpspanel#v1.0.1",
 		"companion-module-ubiquiti-unifi": "github:bitfocus/companion-module-ubiquiti-unifi#v1.0.4",
 		"companion-module-vaddio-ptz": "github:bitfocus/companion-module-vaddio-ptz#v1.0.2",
 		"companion-module-vdo-ninja": "github:bitfocus/companion-module-vdo-ninja#v1.0.2",

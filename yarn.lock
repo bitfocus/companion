@@ -4549,9 +4549,9 @@ commist@^1.0.0:
   dependencies:
     node-unifi "https://github.com/starsolutions/node-unifi#1.4.4"
 
-"companion-module-utahscientific-bpspanel@github:bitfocus/companion-module-utahscientific-bpspanel#v1.0.0":
+"companion-module-utahscientific-bpspanel@github:bitfocus/companion-module-utahscientific-bpspanel#v1.0.1":
   version "1.0.0"
-  resolved "https://codeload.github.com/bitfocus/companion-module-utahscientific-bpspanel/tar.gz/08c433b17cd8b1a4399e834d46354aa8babc6b93"
+  resolved "https://codeload.github.com/bitfocus/companion-module-utahscientific-bpspanel/tar.gz/2bea3366aed9448b489af28a262f065bdfcd81d3"
 
 "companion-module-vaddio-ptz@github:bitfocus/companion-module-vaddio-ptz#v1.0.2":
   version "1.0.2"
