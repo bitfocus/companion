@@ -51,7 +51,8 @@ await zipDirectory('./docs', 'dist/docs.zip')
 // generate a package.json for the required native dependencies
 const require = createRequire(import.meta.url)
 const dependencies = {}
-const neededDependencies = ['node-hid', 'sharp']
+const webpackConfig = require('../../webpack.config.cjs')
+const neededDependencies = Object.keys(webpackConfig.externals)
 for (const name of neededDependencies) {
 	const pkgJson = require(`${name}/package.json`)
 	dependencies[name] = pkgJson.version

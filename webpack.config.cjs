@@ -35,6 +35,7 @@ module.exports = {
 		// Native libs that are needed
 		'node-hid': 'commonjs2 node-hid',
 		sharp: 'commonjs2 sharp',
+		usb: 'commonjs2 usb',
 	},
 	experiments: {
 		topLevelAwait: true,
