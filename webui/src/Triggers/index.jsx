@@ -1,8 +1,9 @@
-import React, { memo, useCallback, useContext, useEffect, useState } from 'react'
+import React, { memo, useCallback, useContext, useEffect, useState, useMemo } from 'react'
 import { CButton } from '@coreui/react'
 import { SocketContext, TriggersContext } from '../util'
 import dayjs from 'dayjs'
 import { TriggerEditModal } from './EditModal'
+import sanitizeHtml from 'sanitize-html'
 
 export const Triggers = memo(function Triggers() {
 	const socket = useContext(SocketContext)
@@ -106,12 +107,21 @@ function TriggersTableRow({ item, editItem }) {
 		socket.emit('schedule_clone_item', item.id)
 	}, [socket, item.id])
 
+	const descriptionHtml = useMemo(
+		() => ({
+			__html: sanitizeHtml(item.config_desc, {
+				allowedTags: sanitizeHtml.defaults.allowedTags.concat(['img']),
+				disallowedTagsMode: 'escape',
+			}),
+		}),
+		[item.config_desc]
+	)
+
 	return (
 		<tr>
 			<td>{item.title}</td>
 			<td>
-				{/* We used to use dangerouslySetInnerHTML, but that is a security problem once we allow dynamic modules */}
-				{item.config_desc}
+				<span dangerouslySetInnerHTML={descriptionHtml} />
 				<br />
 				{item.last_run ? <small>Last run: {dayjs(item.last_run).format(tableDateFormat)}</small> : ''}
 			</td>
