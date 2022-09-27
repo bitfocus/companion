@@ -12,9 +12,14 @@ import fs from 'fs-extra'
 import envPaths from 'env-paths'
 import { nanoid } from 'nanoid'
 import logger from './lib/Log/Controller.js'
-import { config } from 'process'
 
 const program = new Command()
+
+program.command('check-launches', { hidden: true }).action(() => {
+	// This is a 'test' command used to make sure builds are able to run
+	console.log('It launches!')
+	process.exit(89)
+})
 
 program
 	.option('--list-interfaces', 'List the available network interfaces that can be passed to --admin-interface')
@@ -32,117 +37,119 @@ program
 	.option('--machine-id <string>', 'Unique id for this installation')
 	.option('--log-level <string>', 'Log level to output to console')
 
+program.command('start', { isDefault: true, hidden: true }).action(() => {
+	const options = program.opts()
+
+	if (options.listInterfaces) {
+		console.error('Available Interfaces:')
+
+		const interfaces = os.networkInterfaces()
+		for (const [ifname, ifgroup] of Object.entries(interfaces)) {
+			for (const ifAddr of ifgroup) {
+				// onlt show non-ipv4 addresses for now
+				if ('IPv4' === ifAddr.family) {
+					console.error(ifname, ifAddr.address)
+				}
+			}
+		}
+
+		process.exit(0)
+	}
+
+	logger.logger.info('Application starting')
+
+	if (isNaN(options.adminPort)) {
+		console.error(`Port number is not valid`)
+		process.exit(1)
+	}
+
+	if (options.adminAddress && options.adminInterface) {
+		console.error(`Only one of admin-interface and admin-address can be specified`)
+		process.exit(1)
+	}
+
+	let adminIp = options.adminAddress || '0.0.0.0' // default to admin global
+
+	if (options.adminInterface) {
+		adminIp = null
+
+		const interfaceInfo = os.networkInterfaces()[options.adminInterface]
+		if (interfaceInfo) {
+			for (const ifAddr of interfaceInfo) {
+				// only show non-ipv4 addresses for now
+				if ('IPv4' === ifAddr.family) {
+					adminIp = ifAddr.address
+					break
+				}
+			}
+		}
+
+		if (!adminIp) {
+			console.error(`Invalid interface name "${options.adminInterface}"`)
+			process.exit(1)
+		}
+	}
+
+	let configDir = options.configDir
+	if (!configDir) {
+		// Check the old location first
+		configDir = path.join(
+			process.env[process.platform == 'win32' ? 'USERPROFILE' : 'HOME'],
+			'companion-REMOVE-THIS-SUFFIX-BEFORE-ITS-BETA' // HACK: temporary testing path
+		)
+		if (!fs.pathExistsSync(configDir)) {
+			// Creating a new folder, so use the proper place
+			const paths = envPaths('companion3-test') // HACK: temporary testing path
+			configDir = paths.config
+		}
+	}
+
+	try {
+		fs.ensureDirSync(configDir)
+	} catch (e) {
+		console.error(`Failed to create config directory. Do you have the correct permissions?`)
+		process.exit(1)
+	}
+
+	if (options.logLevel) {
+		logger.setLogLevel(options.logLevel)
+	}
+
+	let machineId = options.machineId
+	if (!machineId) {
+		// Use stored value
+		const machineIdPath = path.join(configDir, 'machid')
+		if (fs.pathExistsSync(machineIdPath)) {
+			let text = ''
+			try {
+				text = fs.readFileSync(machineIdPath)
+				if (text) {
+					machineId = text.toString()
+				}
+			} catch (e) {
+				console.warn(`Error reading machid file: ${e}`)
+			}
+		} else {
+			machineId = nanoid()
+			try {
+				fs.writeFileSync(machineIdPath, machineId)
+			} catch (e) {
+				console.warn(`Error writing machid file: ${e}`)
+			}
+		}
+	}
+
+	const registry = new Registry(configDir, machineId)
+
+	registry
+		.ready(options.extraModulePath, adminIp, options.adminPort)
+		.then(() => {
+			console.log('Started')
+		})
+		.catch((e) => {
+			console.error(`Startup failed: ${e} ${e.stack}`)
+			process.exit(1)
+		})
+})
+
 program.parse()
-
-const options = program.opts()
-
-if (options.listInterfaces) {
-	console.error('Available Interfaces:')
-
-	const interfaces = os.networkInterfaces()
-	for (const [ifname, ifgroup] of Object.entries(interfaces)) {
-		for (const ifAddr of ifgroup) {
-			// onlt show non-ipv4 addresses for now
-			if ('IPv4' === ifAddr.family) {
-				console.error(ifname, ifAddr.address)
-			}
-		}
-	}
-
-	process.exit(0)
-}
-
-logger.logger.info('Application starting')
-
-if (isNaN(options.adminPort)) {
-	console.error(`Port number is not valid`)
-	process.exit(1)
-}
-
-if (options.adminAddress && options.adminInterface) {
-	console.error(`Only one of admin-interface and admin-address can be specified`)
-	process.exit(1)
-}
-
-let adminIp = options.adminAddress || '0.0.0.0' // default to admin global
-
-if (options.adminInterface) {
-	adminIp = null
-
-	const interfaceInfo = os.networkInterfaces()[options.adminInterface]
-	if (interfaceInfo) {
-		for (const ifAddr of interfaceInfo) {
-			// only show non-ipv4 addresses for now
-			if ('IPv4' === ifAddr.family) {
-				adminIp = ifAddr.address
-				break
-			}
-		}
-	}
-
-	if (!adminIp) {
-		console.error(`Invalid interface name "${options.adminInterface}"`)
-		process.exit(1)
-	}
-}
-
-let configDir = options.configDir
-if (!configDir) {
-	// Check the old location first
-	configDir = path.join(
-		process.env[process.platform == 'win32' ? 'USERPROFILE' : 'HOME'],
-		'companion-REMOVE-THIS-SUFFIX-BEFORE-ITS-BETA' // HACK: temporary testing path
-	)
-	if (!fs.pathExistsSync(configDir)) {
-		// Creating a new folder, so use the proper place
-		const paths = envPaths('companion3-test') // HACK: temporary testing path
-		configDir = paths.config
-	}
-}
-
-try {
-	fs.ensureDirSync(configDir)
-} catch (e) {
-	console.error(`Failed to create config directory. Do you have the correct permissions?`)
-	process.exit(1)
-}
-
-if (options.logLevel) {
-	logger.setLogLevel(options.logLevel)
-}
-
-let machineId = options.machineId
-if (!machineId) {
-	// Use stored value
-	const machineIdPath = path.join(configDir, 'machid')
-	if (fs.pathExistsSync(machineIdPath)) {
-		let text = ''
-		try {
-			text = fs.readFileSync(machineIdPath)
-			if (text) {
-				machineId = text.toString()
-			}
-		} catch (e) {
-			console.warn(`Error reading machid file: ${e}`)
-		}
-	} else {
-		machineId = nanoid()
-		try {
-			fs.writeFileSync(machineIdPath, machineId)
-		} catch (e) {
-			console.warn(`Error writing machid file: ${e}`)
-		}
-	}
-}
-
-const registry = new Registry(configDir, machineId)
-
-registry
-	.ready(options.extraModulePath, adminIp, options.adminPort)
-	.then(() => {
-		console.log('Started')
-	})
-	.catch((e) => {
-		console.error(`Startup failed: ${e} ${e.stack}`)
-		process.exit(1)
-	})
