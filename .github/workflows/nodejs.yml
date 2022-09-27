@@ -139,6 +139,7 @@ jobs:
           APPLEIDPASS: ${{ secrets.APPLEIDPASS }}
           SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
           USE_HARD_LINKS: false
+          SKIP_LAUNCH_CHECK: true
 
       - name: Determine files to upload
         id: filenames

@@ -81,8 +81,10 @@ await fs.remove(path.join(runtimeDir, 'include'))
 // Install dependencies
 await $`yarn --cwd dist install`
 
-const launchCheck = await $`node dist/main.js check-launches`.exitCode
-if (launchCheck !== 89) throw new Error("Launch check failed. Build looks like it won't launch!")
+if (!process.env.SKIP_LAUNCH_CHECK) {
+	const launchCheck = await $`node dist/main.js check-launches`.exitCode
+	if (launchCheck !== 89) throw new Error("Launch check failed. Build looks like it won't launch!")
+}
 
 // if (!platform) {
 // 	// If for our own platform, make sure the correct deps are installed
