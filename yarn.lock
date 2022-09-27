@@ -4237,9 +4237,9 @@ commist@^1.0.0:
   version "1.0.5"
   resolved "https://codeload.github.com/bitfocus/companion-module-samsung-display/tar.gz/26f83ee031b7f9d1e34893bc9334ec6fb2982572"
 
-"companion-module-seervision-suite@github:bitfocus/companion-module-seervision-suite#v1.2.1":
-  version "1.2.1"
-  resolved "https://codeload.github.com/bitfocus/companion-module-seervision-suite/tar.gz/de509fc8fbbf1bc3ede812dfb40936bbe0079014"
+"companion-module-seervision-suite@github:bitfocus/companion-module-seervision-suite#v1.3.0":
+  version "1.3.0"
+  resolved "https://codeload.github.com/bitfocus/companion-module-seervision-suite/tar.gz/0970c023e5b7251a3136bfab5a4315ce70c0e887"
   dependencies:
     ws "^7.4.5"
 
