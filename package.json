@@ -521,6 +521,7 @@
 		"companion-module-utahscientific-bpspanel": "github:bitfocus/companion-module-utahscientific-bpspanel#v1.0.1",
 		"companion-module-vaddio-ptz": "github:bitfocus/companion-module-vaddio-ptz#v1.0.2",
 		"companion-module-vdo-ninja": "github:bitfocus/companion-module-vdo-ninja#v1.0.2",
+		"companion-module-vdwall-lvp615": "github:bitfocus/companion-module-vdwall-lvp615#v1.0.0",
 		"companion-module-ventuz-director": "github:bitfocus/companion-module-ventuz-director#v1.0.1",
 		"companion-module-vicreo-hotkey": "github:bitfocus/companion-module-vicreo-hotkey#v3.0.4",
 		"companion-module-vicreo-variablelistener": "github:bitfocus/companion-module-vicreo-variablelistener#v1.0.8",
@@ -532,6 +533,7 @@
 		"companion-module-visualproductions-cuety": "github:bitfocus/companion-module-visualproductions-cuety#v1.0.3",
 		"companion-module-vivitek-projector": "github:bitfocus/companion-module-vivitek-projector#v1.0.5",
 		"companion-module-vizio-smartcast": "github:bitfocus/companion-module-vizio-smartcast#v1.2.2",
+		"companion-module-vizrt-tcp-engine-trio": "github:bitfocus/companion-module-vizrt-tcp-engine-trio#v1.0.0",
 		"companion-module-vystem-api": "github:bitfocus/companion-module-vystem-api#v1.0.5",
 		"companion-module-vyv-photon": "github:bitfocus/companion-module-vyv-photon#v1.0.6",
 		"companion-module-workflownetwork-livetime": "github:bitfocus/companion-module-workflownetwork-livetime#v1.0.0",
@@ -565,7 +567,6 @@
 		"socket.io": "^4.5.1",
 		"strip-ansi": "^5.2.0",
 		"systeminformation": "^5.11.21",
-		"vdwall-lvp615": "github:bitfocus/companion-module-vdwall-lvp615#v1.0.0",
 		"websocket": "^1.0.34",
 		"xkeys": "^2.3.4",
 		"zx": "^4.3.0"
