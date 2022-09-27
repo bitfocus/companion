@@ -87,8 +87,8 @@
 		"socketcluster-client": "^16.1.1",
 		"supports-color": "^9.2.3",
 		"usb": "^2.5.1",
-		"websocket": "^1.0.34",
 		"winston": "^3.8.2",
+		"ws": "^8.9.0",
 		"xkeys": "^2.3.4"
 	},
 	"collective": {
