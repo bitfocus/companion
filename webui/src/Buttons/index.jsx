@@ -3,7 +3,7 @@ import { faCalculator, faDollarSign, faFileImport, faGift, faVideoCamera } from 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { nanoid } from 'nanoid'
 import { InstancePresets } from './Presets'
-import { SocketContext, MyErrorBoundary, socketEmitPromise, CreateBankControlId } from '../util'
+import { SocketContext, MyErrorBoundary, socketEmitPromise, CreateBankControlId, FormatButtonControlId } from '../util'
 import { ButtonsGridPanel } from './ButtonGrid'
 import { EditButton } from './EditButton'
 import { ImportExport } from './ImportExport'
@@ -61,7 +61,7 @@ export const ButtonsPage = memo(function ButtonsPage({ hotPress }) {
 
 					if (!e.ctrlKey && !e.metaKey && !e.altKey && (e.key === 'Backspace' || e.key === 'Delete')) {
 						clearModalRef.current.show(
-							`Clear button ${selectedButton}`,
+							`Clear button ${FormatButtonControlId(selectedButton)}`,
 							`This will clear the style, feedbacks and all actions`,
 							'Clear',
 							() => {
@@ -127,7 +127,8 @@ export const ButtonsPage = memo(function ButtonsPage({ hotPress }) {
 						<CNav variant="tabs">
 							<CNavItem hidden={!selectedButton}>
 								<CNavLink data-tab="edit">
-									<FontAwesomeIcon icon={faCalculator} /> Edit Button {selectedButton ? `${selectedButton}` : '?'}
+									<FontAwesomeIcon icon={faCalculator} /> Edit Button{' '}
+									{selectedButton ? `${FormatButtonControlId(selectedButton)}` : '?'}
 								</CNavLink>
 							</CNavItem>
 							<CNavItem>

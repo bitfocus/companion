@@ -238,6 +238,16 @@ export function ParseControlId(controlId) {
 	return undefined
 }
 
+export function FormatButtonControlId(controlId) {
+	const parsed = ParseControlId(controlId)
+
+	if (parsed && parsed.type === 'bank') {
+		return `${parsed.page}.${parsed.bank}`
+	} else {
+		return controlId
+	}
+}
+
 export function applyPatchOrReplaceSubObject(oldDefinitions, key, patch, defVal = {}) {
 	if (oldDefinitions) {
 		const oldEntry = oldDefinitions[key] ?? defVal
