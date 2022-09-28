@@ -75,6 +75,18 @@ body {
 	max-width: 1900px;
 	min-height: 300px;
 	max-height: 100%;
+
+	.row-heading {
+		position: sticky;
+		padding-top: 1rem;
+		margin-top: -1rem;
+		top: 0;
+		left: 0;
+		float: left;
+
+		background-color: #fff;
+		z-index: 2;
+	}
 }
 
 .nav.nav-tabs {
@@ -155,6 +167,10 @@ body {
 
 				.tab-content {
 					overflow-y: scroll;
+
+					&.default-scroll {
+						overflow: inherit;
+					}
 				}
 			}
 		}
@@ -189,4 +205,8 @@ code {
 
 .img-max-width img {
 	max-width: 100%;
+}
+
+hr.slim {
+	margin: 0;
 }

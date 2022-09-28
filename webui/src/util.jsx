@@ -21,6 +21,7 @@ export const UserConfigContext = React.createContext(null)
 export const SurfacesContext = React.createContext(null)
 export const PagesContext = React.createContext(null)
 export const TriggersContext = React.createContext(null)
+export const ButtonRenderCacheContext = React.createContext(null)
 
 export function socketEmitPromise(socket, name, args, timeout, timeoutMessage) {
 	const p = new Promise((resolve, reject) => {
@@ -200,6 +201,17 @@ export function CreateBankControlId(page, bank) {
 /**
  * TODO
  * Copied from backend
+ * @param {*} page
+ * @param {*} bank
+ * @returns
+ */
+export function CreateTriggerControlId(triggerId) {
+	return `trigger:${triggerId}`
+}
+
+/**
+ * TODO
+ * Copied from backend
  * @param {*} controlId
  * @returns
  */
@@ -224,6 +236,16 @@ export function ParseControlId(controlId) {
 	}
 
 	return undefined
+}
+
+export function FormatButtonControlId(controlId) {
+	const parsed = ParseControlId(controlId)
+
+	if (parsed && parsed.type === 'bank') {
+		return `${parsed.page}.${parsed.bank}`
+	} else {
+		return controlId
+	}
 }
 
 export function applyPatchOrReplaceSubObject(oldDefinitions, key, patch, defVal = {}) {

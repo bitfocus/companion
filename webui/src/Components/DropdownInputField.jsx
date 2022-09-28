@@ -3,7 +3,7 @@ import { useMemo, useEffect, useCallback } from 'react'
 import Select from 'react-select'
 import CreatableSelect from 'react-select/creatable'
 
-export function DropdownInputField({ definition, multiple, value, setValue, setValid }) {
+export function DropdownInputField({ definition, multiple, value, setValue, setValid, disabled }) {
 	const options = useMemo(() => {
 		let choices = []
 		if (definition.choices) {
@@ -123,6 +123,7 @@ export function DropdownInputField({ definition, multiple, value, setValue, setV
 	const minChoicesForSearch = typeof definition.minChoicesForSearch === 'number' ? definition.minChoicesForSearch : 10
 
 	const selectProps = {
+		isDisabled: disabled,
 		classNamePrefix: 'select-control',
 		menuPlacement: 'auto',
 		isClearable: false,

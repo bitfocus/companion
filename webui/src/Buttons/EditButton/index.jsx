@@ -13,6 +13,7 @@ import {
 	ParseControlId,
 	SocketContext,
 	MyErrorBoundary,
+	FormatButtonControlId,
 } from '../../util'
 import { ActionsPanel } from './ActionsPanel'
 import jsonPatch from 'fast-json-patch'
@@ -135,9 +136,8 @@ export function EditButton({ controlId, onKeyUp }) {
 
 	const doRetryLoad = useCallback(() => setReloadConfigToken(nanoid()), [])
 	const resetBank = useCallback(() => {
-		const parsedId = ParseControlId(controlId) // TODO
 		resetModalRef.current.show(
-			`Clear button ${parsedId?.page}.${parsedId?.bank}`,
+			`Clear button ${FormatButtonControlId(controlId)}`,
 			`This will clear the style, feedbacks and all actions`,
 			'Clear',
 			() => {

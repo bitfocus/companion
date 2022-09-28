@@ -4,7 +4,7 @@ import Tribute from 'tributejs'
 import { CInput } from '@coreui/react'
 import { decode } from 'html-entities'
 
-export function TextWithVariablesInputField({ definition, value, setValue }) {
+export function TextWithVariablesInputField({ definition, value, setValue, disabled }) {
 	const variableDefinitionsContext = useContext(VariableDefinitionsContext)
 
 	const [tmpValue, setTmpValue] = useState(null)
@@ -81,6 +81,7 @@ export function TextWithVariablesInputField({ definition, value, setValue }) {
 	return (
 		<CInput
 			innerRef={setupTribute}
+			disabled={disabled}
 			className="input-text-with-variables"
 			type="text"
 			value={tmpValue ?? value ?? ''}

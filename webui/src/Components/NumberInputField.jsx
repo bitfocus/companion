@@ -1,7 +1,7 @@
 import React, { useEffect, useCallback, useState } from 'react'
 import { CCol, CInput, CRow } from '@coreui/react'
 
-export function NumberInputField({ definition, value, setValue, setValid }) {
+export function NumberInputField({ definition, value, setValue, setValid, disabled }) {
 	const [tmpValue, setTmpValue] = useState(null)
 
 	// Check if the value is valid
@@ -57,6 +57,7 @@ export function NumberInputField({ definition, value, setValue, setValid }) {
 	const input = (
 		<CInput
 			type="number"
+			disabled={disabled}
 			value={tmpValue ?? value ?? 0}
 			min={definition.min}
 			max={definition.max}
@@ -76,6 +77,7 @@ export function NumberInputField({ definition, value, setValue, setValid }) {
 				<CCol sm={12}>
 					<CInput
 						type="range"
+						disabled={disabled}
 						value={tmpValue ?? value ?? 0}
 						min={definition.min}
 						max={definition.max}

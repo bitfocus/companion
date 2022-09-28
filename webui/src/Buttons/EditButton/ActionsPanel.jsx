@@ -130,7 +130,6 @@ export function ActionsPanel({ controlId, set, actions, dragId, addPlaceholder, 
 				isOnBank={true}
 				dragId={`${controlId}_actions`}
 				setId={set}
-				addPlaceholder={addPlaceholder}
 				confirmModal={confirmModal}
 				actions={actions}
 				doSetValue={emitUpdateOption}
@@ -139,50 +138,21 @@ export function ActionsPanel({ controlId, set, actions, dragId, addPlaceholder, 
 				doDuplicate={emitDuplicate}
 				doReorder={emitOrder}
 				emitLearn={emitLearn}
-				addAction={addAction}
 				setPanelCollapsed={setPanelCollapsed}
 				isPanelCollapsed={isPanelCollapsed}
 			/>
+			<AddActionsPanel addPlaceholder={addPlaceholder} addAction={addAction} />
 		</>
 	)
 }
 
-export function ActionsPanelInner({
-	isOnBank,
-	dragId,
-	setId,
-	addPlaceholder,
-	confirmModal,
-	actions,
-	doSetValue,
-	doSetDelay,
-	doDelete,
-	doDuplicate,
-	doReorder,
-	emitLearn,
-	addAction,
-	setPanelCollapsed,
-	isPanelCollapsed,
-}) {
+export function AddActionsPanel({ addPlaceholder, addAction }) {
 	const addActionsRef = useRef(null)
 	const showAddModal = useCallback(() => {
 		if (addActionsRef.current) {
 			addActionsRef.current.show()
 		}
 	}, [])
-
-	const doDelete2 = useCallback(
-		(actionId) => {
-			if (confirmModal) {
-				confirmModal.current.show('Delete action', 'Delete action?', 'Delete', () => {
-					doDelete(actionId)
-				})
-			} else {
-				doDelete(actionId)
-			}
-		},
-		[doDelete, confirmModal]
-	)
 
 	const [recentActions, setRecentActions] = useState([])
 	useMountEffect(() => {
@@ -213,44 +183,74 @@ export function ActionsPanelInner({
 	)
 
 	return (
-		<>
+		<div className="add-dropdown-wrapper">
 			<MyErrorBoundary>
 				<AddActionsModal ref={addActionsRef} addAction={addAction2} />
 			</MyErrorBoundary>
+			<AddActionDropdown onSelect={addAction2} placeholder={addPlaceholder} recentActions={recentActions} />
+			<CButton color="primary" variant="outline" onClick={showAddModal}>
+				Browse
+			</CButton>
+		</div>
+	)
+}
 
-			<table className="table action-table">
-				<tbody>
-					{actions.map((a, i) => (
-						<MyErrorBoundary>
-							<ActionTableRow
-								key={a?.id ?? i}
-								isOnBank={isOnBank}
-								action={a}
-								index={i}
-								setId={setId}
-								dragId={dragId}
-								setValue={doSetValue}
-								doDelete={doDelete2}
-								doDuplicate={doDuplicate}
-								doDelay={doSetDelay}
-								moveCard={doReorder}
-								doLearn={emitLearn}
-								setCollapsed={setPanelCollapsed}
-								isCollapsed={isPanelCollapsed(a.id)}
-							/>
-						</MyErrorBoundary>
-					))}
-					<ActionRowDropPlaceholder dragId={dragId} actionCount={actions.length} setId={setId} moveCard={doReorder} />
-				</tbody>
-			</table>
+export function ActionsPanelInner({
+	isOnBank,
+	dragId,
+	setId,
+	confirmModal,
+	actions,
+	doSetValue,
+	doSetDelay,
+	doDelete,
+	doDuplicate,
+	doReorder,
+	emitLearn,
+	readonly,
+	setPanelCollapsed,
+	isPanelCollapsed,
+}) {
+	const doDelete2 = useCallback(
+		(actionId) => {
+			if (confirmModal) {
+				confirmModal.current.show('Delete action', 'Delete action?', 'Delete', () => {
+					doDelete(actionId)
+				})
+			} else {
+				doDelete(actionId)
+			}
+		},
+		[doDelete, confirmModal]
+	)
 
-			<div className="add-dropdown-wrapper">
-				<AddActionDropdown onSelect={addAction2} placeholder={addPlaceholder} recentActions={recentActions} />
-				<CButton color="primary" variant="outline" onClick={showAddModal}>
-					Browse
-				</CButton>
-			</div>
-		</>
+	return (
+		<table className="table action-table">
+			<tbody>
+				{actions.map((a, i) => (
+					<MyErrorBoundary>
+						<ActionTableRow
+							key={a?.id ?? i}
+							isOnBank={isOnBank}
+							action={a}
+							index={i}
+							setId={setId}
+							dragId={dragId}
+							setValue={doSetValue}
+							doDelete={doDelete2}
+							doDuplicate={doDuplicate}
+							doDelay={doSetDelay}
+							moveCard={doReorder}
+							doLearn={emitLearn}
+							readonly={readonly ?? false}
+							setCollapsed={setPanelCollapsed}
+							isCollapsed={isPanelCollapsed(a.id)}
+						/>
+					</MyErrorBoundary>
+				))}
+				<ActionRowDropPlaceholder dragId={dragId} actionCount={actions.length} setId={setId} moveCard={doReorder} />
+			</tbody>
+		</table>
 	)
 }
 
@@ -290,6 +290,7 @@ function ActionTableRow({
 	doDelay,
 	moveCard,
 	doLearn,
+	readonly,
 	isCollapsed,
 	setCollapsed,
 }) {
@@ -332,6 +333,7 @@ function ActionTableRow({
 	})
 	const [{ isDragging }, drag, preview] = useDrag({
 		type: dragId,
+		canDrag: !readonly,
 		item: {
 			actionId: action.id,
 			setId: setId,
@@ -428,10 +430,10 @@ function ActionTableRow({
 									<FontAwesomeIcon icon={faCompressArrowsAlt} />
 								</CButton>
 							)}
-							<CButton color="warning" size="sm" onClick={innerDuplicate} title="Duplicate action">
+							<CButton disabled={readonly} color="warning" size="sm" onClick={innerDuplicate} title="Duplicate action">
 								<FontAwesomeIcon icon={faCopy} />
 							</CButton>
-							<CButton color="danger" size="sm" onClick={innerDelete} title="Remove action">
+							<CButton disabled={readonly} color="danger" size="sm" onClick={innerDelete} title="Remove action">
 								<FontAwesomeIcon icon={faTrash} />
 							</CButton>
 						</CButtonGroup>
@@ -445,7 +447,12 @@ function ActionTableRow({
 								<CForm>
 									<label>Delay</label>
 									<CInputGroup>
-										<NumberInputField definition={{ default: 0 }} value={action.delay} setValue={innerDelay} />
+										<NumberInputField
+											definition={{ default: 0 }}
+											disabled={readonly}
+											value={action.delay}
+											setValue={innerDelay}
+										/>
 										<CInputGroupAppend>
 											<CInputGroupText>ms</CInputGroupText>
 										</CInputGroupAppend>
@@ -456,6 +463,7 @@ function ActionTableRow({
 							<div className="cell-actions">
 								{actionSpec?.hasLearn ? (
 									<CButton
+										disabled={readonly}
 										color="info"
 										size="sm"
 										onClick={innerLearn}
@@ -480,6 +488,7 @@ function ActionTableRow({
 												value={(action.options || {})[opt.id]}
 												setValue={setValue}
 												visibility={optionVisibility[opt.id]}
+												readonly={readonly}
 											/>
 										</MyErrorBoundary>
 									))}

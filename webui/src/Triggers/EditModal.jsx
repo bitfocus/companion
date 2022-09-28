@@ -19,7 +19,7 @@ import { MyErrorBoundary, useMountEffect, socketEmitPromise, SocketContext } fro
 import Select from 'react-select'
 import { AddFeedbackDropdown, FeedbackEditor } from '../Buttons/EditButton/FeedbackPanel'
 import { nanoid } from 'nanoid'
-import { ActionsPanelInner } from '../Buttons/EditButton/ActionsPanel'
+import { ActionsPanelInner, AddActionsPanel } from '../Buttons/EditButton/ActionsPanel'
 import { CheckboxInputField } from '../Components'
 import update from 'immutability-helper'
 import { AddFeedbacksModal } from '../Buttons/EditButton/AddModal'
@@ -416,9 +416,7 @@ export function TriggerEditModal({ doClose, doSave, item, plugins }) {
 						isOnBank={false}
 						dragId={'triggerAction'}
 						setId={0}
-						addPlaceholder="+ Add action"
 						actions={config.actions || []}
-						addAction={addActionSelect}
 						doDelete={actionDelete}
 						doDuplicate={actionDuplicate}
 						doSetDelay={actionSetDelay}
@@ -428,6 +426,7 @@ export function TriggerEditModal({ doClose, doSave, item, plugins }) {
 						isPanelCollapsed={isActionPanelCollapsed}
 						setPanelCollapsed={setActionPanelCollapsed}
 					/>
+					<AddActionsPanel addPlaceholder="+ Add action" addAction={addActionSelect} />
 				</CModalBody>
 				<CModalFooter>
 					<CButton color="secondary" onClick={doClose}>

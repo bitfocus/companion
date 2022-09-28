@@ -10,13 +10,21 @@ import {
 	VariableDefinitionsContext,
 } from '../../util'
 
-export function InternalInstanceField(option, isOnBank, value, setValue) {
+export function InternalInstanceField(option, isOnBank, readonly, value, setValue) {
 	switch (option.type) {
 		case 'internal:instance_id':
-			return <InternalInstanceIdDropdown value={value} includeAll={option.includeAll} setValue={setValue} />
+			return (
+				<InternalInstanceIdDropdown
+					disabled={readonly}
+					value={value}
+					includeAll={option.includeAll}
+					setValue={setValue}
+				/>
+			)
 		case 'internal:page':
 			return (
 				<InternalPageDropdown
+					disabled={readonly}
 					isOnBank={isOnBank}
 					includeDirection={option.includeDirection}
 					value={value}
@@ -24,22 +32,33 @@ export function InternalInstanceField(option, isOnBank, value, setValue) {
 				/>
 			)
 		case 'internal:bank':
-			return <InternalBankDropdown isOnBank={isOnBank} value={value} setValue={setValue} />
+			return <InternalBankDropdown disabled={readonly} isOnBank={isOnBank} value={value} setValue={setValue} />
 		case 'internal:custom_variable':
-			return <InternalCustomVariableDropdown value={value} setValue={setValue} includeNone={option.includeNone} />
+			return (
+				<InternalCustomVariableDropdown
+					disabled={readonly}
+					value={value}
+					setValue={setValue}
+					includeNone={option.includeNone}
+				/>
+			)
 		case 'internal:variable':
-			return <InternalVariableDropdown value={value} setValue={setValue} defaultVal={option.default} />
+			return (
+				<InternalVariableDropdown disabled={readonly} value={value} setValue={setValue} defaultVal={option.default} />
+			)
 		case 'internal:surface_serial':
-			return <InternalSurfaceBySerialDropdown isOnBank={isOnBank} value={value} setValue={setValue} />
+			return (
+				<InternalSurfaceBySerialDropdown disabled={readonly} isOnBank={isOnBank} value={value} setValue={setValue} />
+			)
 		case 'internal:trigger':
-			return <InternalTriggerDropdown value={value} setValue={setValue} />
+			return <InternalTriggerDropdown disabled={readonly} value={value} setValue={setValue} />
 		default:
 			// Use fallback
 			return undefined
 	}
 }
 
-function InternalInstanceIdDropdown({ includeAll, value, setValue }) {
+function InternalInstanceIdDropdown({ includeAll, value, setValue, disabled }) {
 	const context = useContext(InstancesContext)
 
 	const choices = useMemo(() => {
@@ -56,6 +75,7 @@ function InternalInstanceIdDropdown({ includeAll, value, setValue }) {
 
 	return (
 		<DropdownInputField
+			disabled={disabled}
 			value={value}
 			definition={{
 				choices: choices,
@@ -67,7 +87,7 @@ function InternalInstanceIdDropdown({ includeAll, value, setValue }) {
 	)
 }
 
-function InternalPageDropdown({ isOnBank, includeDirection, value, setValue }) {
+function InternalPageDropdown({ isOnBank, includeDirection, value, setValue, disabled }) {
 	const pages = useContext(PagesContext)
 
 	const choices = useMemo(() => {
@@ -88,6 +108,7 @@ function InternalPageDropdown({ isOnBank, includeDirection, value, setValue }) {
 
 	return (
 		<DropdownInputField
+			disabled={disabled}
 			value={value}
 			definition={{
 				choices: choices,
@@ -99,7 +120,7 @@ function InternalPageDropdown({ isOnBank, includeDirection, value, setValue }) {
 	)
 }
 
-function InternalBankDropdown({ isOnBank, value, setValue }) {
+function InternalBankDropdown({ isOnBank, value, setValue, disabled }) {
 	const choices = useMemo(() => {
 		const choices = []
 		if (isOnBank) {
@@ -114,6 +135,7 @@ function InternalBankDropdown({ isOnBank, value, setValue }) {
 
 	return (
 		<DropdownInputField
+			disabled={disabled}
 			value={value}
 			definition={{
 				choices: choices,
@@ -125,7 +147,7 @@ function InternalBankDropdown({ isOnBank, value, setValue }) {
 	)
 }
 
-function InternalCustomVariableDropdown({ value, setValue, includeNone }) {
+function InternalCustomVariableDropdown({ value, setValue, includeNone, disabled }) {
 	const context = useContext(CustomVariableDefinitionsContext)
 	const choices = useMemo(() => {
 		const choices = []
@@ -149,6 +171,7 @@ function InternalCustomVariableDropdown({ value, setValue, includeNone }) {
 
 	return (
 		<DropdownInputField
+			disabled={disabled}
 			value={value}
 			definition={{
 				choices: choices,
@@ -160,7 +183,7 @@ function InternalCustomVariableDropdown({ value, setValue, includeNone }) {
 	)
 }
 
-function InternalVariableDropdown({ value, setValue, defaultVal }) {
+function InternalVariableDropdown({ value, setValue, defaultVal, disabled }) {
 	const context = useContext(VariableDefinitionsContext)
 	const choices = useMemo(() => {
 		const choices = []
@@ -182,6 +205,7 @@ function InternalVariableDropdown({ value, setValue, defaultVal }) {
 
 	return (
 		<DropdownInputField
+			disabled={disabled}
 			value={value}
 			definition={{
 				choices: choices,
@@ -193,7 +217,7 @@ function InternalVariableDropdown({ value, setValue, defaultVal }) {
 	)
 }
 
-function InternalSurfaceBySerialDropdown({ isOnBank, value, setValue }) {
+function InternalSurfaceBySerialDropdown({ isOnBank, value, setValue, disabled }) {
 	const context = useContext(SurfacesContext)
 
 	const choices = useMemo(() => {
@@ -213,6 +237,7 @@ function InternalSurfaceBySerialDropdown({ isOnBank, value, setValue }) {
 
 	return (
 		<DropdownInputField
+			disabled={disabled}
 			value={value}
 			definition={{
 				choices: choices,
@@ -224,7 +249,7 @@ function InternalSurfaceBySerialDropdown({ isOnBank, value, setValue }) {
 	)
 }
 
-function InternalTriggerDropdown({ value, setValue }) {
+function InternalTriggerDropdown({ value, setValue, disabled }) {
 	const context = useContext(TriggersContext)
 
 	const choices = useMemo(() => {
@@ -240,6 +265,7 @@ function InternalTriggerDropdown({ value, setValue }) {
 
 	return (
 		<DropdownInputField
+			disabled={disabled}
 			value={value}
 			definition={{
 				choices: choices,
