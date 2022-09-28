@@ -39,6 +39,7 @@ import { GenericConfirmModal } from '../Components/GenericConfirmModal'
 import { ButtonGrid, ButtonGridHeader } from './ButtonGrid'
 import { cloneDeep } from 'lodash-es'
 import jsonPatch from 'fast-json-patch'
+import { usePanelCollapseHelper } from './EditButton/CollapseHelper'
 
 export function ActionRecorder() {
 	const socket = useContext(SocketContext)
@@ -570,6 +571,14 @@ function RecorderSession({ sessionId, sessionInfo }) {
 		},
 		[socket, sessionId]
 	)
+	const doActionDuplicate = useCallback(
+		(actionId) => {
+			socketEmitPromise(socket, 'action-recorder:session:action-duplicate', [sessionId, actionId]).catch((e) => {
+				console.error(e)
+			})
+		},
+		[socket, sessionId]
+	)
 	const doActionDelay = useCallback(
 		(actionId, delay) => {
 			socketEmitPromise(socket, 'action-recorder:session:action-delay', [sessionId, actionId, delay]).catch((e) => {
@@ -599,6 +608,11 @@ function RecorderSession({ sessionId, sessionInfo }) {
 		[socket, sessionId]
 	)
 
+	const { setPanelCollapsed, isPanelCollapsed } = usePanelCollapseHelper(
+		`action_recorder`,
+		sessionInfo?.actions?.map((a) => a.id) ?? []
+	)
+
 	if (!sessionInfo || !sessionInfo.actions) return <LoadingRetryOrError dataReady={false} />
 
 	return (
@@ -609,9 +623,12 @@ function RecorderSession({ sessionId, sessionInfo }) {
 				actions={sessionInfo.actions}
 				readonly={!!sessionInfo.isRunning}
 				doDelete={doActionDelete}
+				doDuplicate={doActionDuplicate}
 				doSetDelay={doActionDelay}
 				doReorder={doActionReorder}
 				doSetValue={doActionSetValue}
+				setPanelCollapsed={setPanelCollapsed}
+				isPanelCollapsed={isPanelCollapsed}
 			/>
 			{sessionInfo.actions.length === 0 ? <CAlert color="info">No actions have been recorded</CAlert> : ''}
 		</CCol>
