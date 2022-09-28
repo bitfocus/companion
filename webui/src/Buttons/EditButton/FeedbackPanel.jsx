@@ -1,5 +1,5 @@
-import { CAlert, CButton, CForm, CFormGroup } from '@coreui/react'
-import { faSort, faTrash } from '@fortawesome/free-solid-svg-icons'
+import { CAlert, CButton, CForm, CFormGroup, CButtonGroup } from '@coreui/react'
+import { faSort, faTrash, faCompressArrowsAlt, faExpandArrowsAlt, faCopy } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import React, { useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react'
 import {
@@ -18,8 +18,9 @@ import { GenericConfirmModal } from '../../Components/GenericConfirmModal'
 import { DropdownInputField } from '../../Components'
 import { ButtonStyleConfigFields } from './ButtonStyleConfig'
 import { AddFeedbacksModal } from './AddModal'
+import { usePanelCollapseHelper } from './CollapseHelper'
 
-export const FeedbacksPanel = function ({ controlId, feedbacks, dragId }) {
+export const FeedbacksPanel = function ({ controlId, feedbacks, dragId, heading }) {
 	const socket = useContext(SocketContext)
 
 	const confirmModal = useRef()
@@ -52,6 +53,15 @@ export const FeedbacksPanel = function ({ controlId, feedbacks, dragId }) {
 				socketEmitPromise(socket, 'controls:feedback:remove', [controlId, feedbackId]).catch((e) => {
 					console.error(`Failed to delete feedback: ${e}`)
 				})
+			})
+		},
+		[socket, controlId]
+	)
+
+	const doDuplicate = useCallback(
+		(feedbackId) => {
+			socketEmitPromise(socket, 'controls:feedback:duplicate', [controlId, feedbackId]).catch((e) => {
+				console.error(`Failed to duplicate feedback: ${e}`)
 			})
 		},
 		[socket, controlId]
@@ -106,6 +116,10 @@ export const FeedbacksPanel = function ({ controlId, feedbacks, dragId }) {
 		}
 	})
 
+	const feedbackIds = useMemo(() => feedbacks.map((fb) => fb.id), [feedbacks])
+	const { setPanelCollapsed, isPanelCollapsed, setAllCollapsed, setAllExpanded, canExpandAll, canCollapseAll } =
+		usePanelCollapseHelper(`feedbacks_${controlId}`, feedbackIds)
+
 	return (
 		<>
 			<GenericConfirmModal ref={confirmModal} />
@@ -113,6 +127,32 @@ export const FeedbacksPanel = function ({ controlId, feedbacks, dragId }) {
 			<MyErrorBoundary>
 				<AddFeedbacksModal ref={addFeedbacksRef} addFeedback={addFeedback} />
 			</MyErrorBoundary>
+
+			<h4 className="mt-3">
+				{heading}
+				<CButtonGroup className="right">
+					<CButtonGroup>
+						<CButton
+							color="info"
+							size="sm"
+							onClick={setAllExpanded}
+							title="Expand all feedbacks"
+							disabled={!canExpandAll}
+						>
+							<FontAwesomeIcon icon={faExpandArrowsAlt} />
+						</CButton>{' '}
+						<CButton
+							color="info"
+							size="sm"
+							onClick={setAllCollapsed}
+							title="Collapse all feedbacks"
+							disabled={!canCollapseAll}
+						>
+							<FontAwesomeIcon icon={faCompressArrowsAlt} />
+						</CButton>
+					</CButtonGroup>
+				</CButtonGroup>
+			</h4>
 
 			<table className="table feedback-table">
 				<tbody>
@@ -125,9 +165,12 @@ export const FeedbacksPanel = function ({ controlId, feedbacks, dragId }) {
 								feedback={a}
 								setValue={setValue}
 								doDelete={doDelete}
+								doDuplicate={doDuplicate}
 								doLearn={doLearn}
 								dragId={dragId}
 								moveCard={moveCard}
+								setCollapsed={setPanelCollapsed}
+								isCollapsed={isPanelCollapsed(a.id)}
 							/>
 						</MyErrorBoundary>
 					))}
@@ -144,10 +187,23 @@ export const FeedbacksPanel = function ({ controlId, feedbacks, dragId }) {
 	)
 }
 
-function FeedbackTableRow({ feedback, controlId, index, dragId, moveCard, setValue, doDelete, doLearn }) {
+function FeedbackTableRow({
+	feedback,
+	controlId,
+	index,
+	dragId,
+	moveCard,
+	setValue,
+	doDelete,
+	doDuplicate,
+	doLearn,
+	isCollapsed,
+	setCollapsed,
+}) {
 	const socket = useContext(SocketContext)
 
 	const innerDelete = useCallback(() => doDelete(feedback.id), [feedback.id, doDelete])
+	const innerDuplicate = useCallback(() => doDuplicate(feedback.id), [feedback.id, doDuplicate])
 	const innerLearn = useCallback(() => doLearn(feedback.id), [doLearn, feedback.id])
 
 	const ref = useRef(null)
@@ -163,27 +219,10 @@ function FeedbackTableRow({ feedback, controlId, index, dragId, moveCard, setVal
 			if (dragIndex === hoverIndex) {
 				return
 			}
-			// Determine rectangle on screen
-			const hoverBoundingRect = ref.current?.getBoundingClientRect()
-			// Get vertical middle
-			const hoverMiddleY = (hoverBoundingRect.bottom - hoverBoundingRect.top) / 2
-			// Determine mouse position
-			const clientOffset = monitor.getClientOffset()
-			// Get pixels to the top
-			const hoverClientY = clientOffset.y - hoverBoundingRect.top
-			// Only perform the move when the mouse has crossed half of the items height
-			// When dragging downwards, only move when the cursor is below 50%
-			// When dragging upwards, only move when the cursor is above 50%
-			// Dragging downwards
-			if (dragIndex < hoverIndex && hoverClientY < hoverMiddleY) {
-				return
-			}
-			// Dragging upwards
-			if (dragIndex > hoverIndex && hoverClientY > hoverMiddleY) {
-				return
-			}
+
 			// Time to actually perform the action
 			moveCard(dragIndex, hoverIndex)
+
 			// Note: we're mutating the monitor item here!
 			// Generally it's better to avoid mutations,
 			// but it's good here for the sake of performance
@@ -225,6 +264,13 @@ function FeedbackTableRow({ feedback, controlId, index, dragId, moveCard, setVal
 		[socket, controlId, feedback.id]
 	)
 
+	const doCollapse = useCallback(() => {
+		setCollapsed(feedback.id, true)
+	}, [setCollapsed, feedback.id])
+	const doExpand = useCallback(() => {
+		setCollapsed(feedback.id, false)
+	}, [setCollapsed, feedback.id])
+
 	if (!feedback) {
 		// Invalid feedback, so skip
 		return ''
@@ -241,9 +287,13 @@ function FeedbackTableRow({ feedback, controlId, index, dragId, moveCard, setVal
 					feedback={feedback}
 					setValue={setValue}
 					innerDelete={innerDelete}
+					innerDuplicate={innerDuplicate}
 					innerLearn={innerLearn}
 					setSelectedStyleProps={setSelectedStyleProps}
 					setStylePropsValue={setStylePropsValue}
+					isCollapsed={isCollapsed}
+					doCollapse={doCollapse}
+					doExpand={doExpand}
 				/>
 			</td>
 		</tr>
@@ -255,9 +305,13 @@ export function FeedbackEditor({
 	isOnBank,
 	setValue,
 	innerDelete,
+	innerDuplicate,
 	innerLearn,
 	setSelectedStyleProps,
 	setStylePropsValue,
+	isCollapsed,
+	doCollapse,
+	doExpand,
 }) {
 	const feedbacksContext = useContext(FeedbacksContext)
 	const instancesContext = useContext(InstancesContext)
@@ -312,48 +366,70 @@ export function FeedbackEditor({
 		<div className="editor-grid">
 			<div className="cell-name">{name}</div>
 
-			<div className="cell-description">{feedbackSpec?.description || ''}</div>
-
-			<div className="cell-actions">
-				<CButton color="danger" size="sm" onClick={innerDelete} title="Remove action">
-					<FontAwesomeIcon icon={faTrash} />
-				</CButton>
-				&nbsp;
-				{feedbackSpec?.hasLearn ? (
-					<CButton color="info" size="sm" onClick={innerLearn} title="Capture the current values from the device">
-						Learn
+			<div className="cell-controls">
+				<CButtonGroup>
+					{isCollapsed ? (
+						<CButton color="info" size="sm" onClick={doExpand} title="Expand feedback view">
+							<FontAwesomeIcon icon={faExpandArrowsAlt} />
+						</CButton>
+					) : (
+						<CButton color="info" size="sm" onClick={doCollapse} title="Collapse feedback view">
+							<FontAwesomeIcon icon={faCompressArrowsAlt} />
+						</CButton>
+					)}
+					<CButton color="warning" size="sm" onClick={innerDuplicate} title="Duplicate feedback">
+						<FontAwesomeIcon icon={faCopy} />
 					</CButton>
-				) : (
-					''
-				)}
+					<CButton color="danger" size="sm" onClick={innerDelete} title="Remove feedback">
+						<FontAwesomeIcon icon={faTrash} />
+					</CButton>
+				</CButtonGroup>
 			</div>
 
-			<div className="cell-option">
-				<CForm>
-					{options.map((opt, i) => (
-						<MyErrorBoundary key={i}>
-							<ActionTableRowOption
-								isOnBank={isOnBank}
-								instanceId={feedback.instance_id}
-								option={opt}
-								actionId={feedback.id}
-								value={(feedback.options || {})[opt.id]}
-								setValue={setValue}
-								visibility={optionVisibility[opt.id]}
-							/>
-						</MyErrorBoundary>
-					))}
-					{options.length === 0 ? 'Nothing to configure' : ''}
-				</CForm>
-			</div>
-			{setSelectedStyleProps || setStylePropsValue ? (
+			{!isCollapsed ? (
 				<>
-					<FeedbackStyles feedbackSpec={feedbackSpec} feedback={feedback} setStylePropsValue={setStylePropsValue} />
-					<FeedbackManageStyles
-						feedbackSpec={feedbackSpec}
-						feedback={feedback}
-						setSelectedStyleProps={setSelectedStyleProps}
-					/>
+					<div className="cell-description">{feedbackSpec?.description || ''}</div>
+
+					<div className="cell-actions">
+						{feedbackSpec?.hasLearn ? (
+							<CButton color="info" size="sm" onClick={innerLearn} title="Capture the current values from the device">
+								Learn
+							</CButton>
+						) : (
+							''
+						)}
+					</div>
+
+					<div className="cell-option">
+						<CForm>
+							{options.map((opt, i) => (
+								<MyErrorBoundary key={i}>
+									<ActionTableRowOption
+										isOnBank={isOnBank}
+										instanceId={feedback.instance_id}
+										option={opt}
+										actionId={feedback.id}
+										value={(feedback.options || {})[opt.id]}
+										setValue={setValue}
+										visibility={optionVisibility[opt.id]}
+									/>
+								</MyErrorBoundary>
+							))}
+							{options.length === 0 ? 'Nothing to configure' : ''}
+						</CForm>
+					</div>
+					{setSelectedStyleProps || setStylePropsValue ? (
+						<>
+							<FeedbackStyles feedbackSpec={feedbackSpec} feedback={feedback} setStylePropsValue={setStylePropsValue} />
+							<FeedbackManageStyles
+								feedbackSpec={feedbackSpec}
+								feedback={feedback}
+								setSelectedStyleProps={setSelectedStyleProps}
+							/>
+						</>
+					) : (
+						''
+					)}
 				</>
 			) : (
 				''
@@ -498,16 +574,18 @@ export function AddFeedbackDropdown({ onSelect, booleanOnly, recentFeedbacks }) 
 		}
 
 		const recents = []
-		for (const actionType of recentFeedbacks || []) {
-			const [instanceId, actionId] = actionType.split(':', 2)
-			const actionInfo = feedbacksContext[instanceId]?.[actionId]
-			if (actionInfo) {
-				const instanceLabel = instancesContext[instanceId]?.label ?? instanceId
-				recents.push({
-					isRecent: true,
-					value: `${instanceId}:${actionId}`,
-					label: `${instanceLabel}: ${actionInfo.label}`,
-				})
+		for (const feedbackType of recentFeedbacks || []) {
+			if (feedbackType) {
+				const [instanceId, feedbackId] = feedbackType.split(':', 2)
+				const feedbackInfo = feedbacksContext[instanceId]?.[feedbackId]
+				if (feedbackInfo) {
+					const instanceLabel = instancesContext[instanceId]?.label ?? instanceId
+					recents.push({
+						isRecent: true,
+						value: `${instanceId}:${feedbackId}`,
+						label: `${instanceLabel}: ${feedbackInfo.label}`,
+					})
+				}
 			}
 		}
 		options.push({

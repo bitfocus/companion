@@ -1,5 +1,5 @@
-import { CButton, CForm, CInputGroup, CInputGroupAppend, CInputGroupText } from '@coreui/react'
-import { faSort, faTrash } from '@fortawesome/free-solid-svg-icons'
+import { CButton, CForm, CInputGroup, CInputGroupAppend, CInputGroupText, CButtonGroup } from '@coreui/react'
+import { faSort, faTrash, faExpandArrowsAlt, faCompressArrowsAlt, faCopy } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import React, { useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react'
 import { NumberInputField } from '../../Components'
@@ -17,8 +17,9 @@ import { ActionTableRowOption } from './Table'
 import { useDrag, useDrop } from 'react-dnd'
 import { GenericConfirmModal } from '../../Components/GenericConfirmModal'
 import { AddActionsModal } from './AddModal'
+import { usePanelCollapseHelper } from './CollapseHelper'
 
-export function ActionsPanel({ controlId, set, actions, dragId, addPlaceholder }) {
+export function ActionsPanel({ controlId, set, actions, dragId, addPlaceholder, heading, headingActions }) {
 	const socket = useContext(SocketContext)
 
 	const confirmModal = useRef()
@@ -48,6 +49,14 @@ export function ActionsPanel({ controlId, set, actions, dragId, addPlaceholder }
 		},
 		[socket, controlId, set]
 	)
+	const emitDuplicate = useCallback(
+		(actionId) => {
+			socketEmitPromise(socket, 'controls:action:duplicate', [controlId, set, actionId]).catch((e) => {
+				console.error('Failed to duplicate bank action', e)
+			})
+		},
+		[socket, controlId, set]
+	)
 
 	const emitLearn = useCallback(
 		(actionId) => {
@@ -59,12 +68,18 @@ export function ActionsPanel({ controlId, set, actions, dragId, addPlaceholder }
 	)
 
 	const emitOrder = useCallback(
-		(dragIndex, hoverIndex) => {
-			socketEmitPromise(socket, 'controls:action:reorder', [controlId, set, dragIndex, hoverIndex]).catch((e) => {
+		(dragSetId, dragIndex, dropSetId, dropIndex) => {
+			socketEmitPromise(socket, 'controls:action:reorder', [
+				controlId,
+				dragSetId,
+				dragIndex,
+				dropSetId,
+				dropIndex,
+			]).catch((e) => {
 				console.error('Failed to reorder bank actions', e)
 			})
 		},
-		[socket, controlId, set]
+		[socket, controlId]
 	)
 
 	const addAction = useCallback(
@@ -77,19 +92,54 @@ export function ActionsPanel({ controlId, set, actions, dragId, addPlaceholder }
 		[socket, controlId, set]
 	)
 
+	const actionIds = useMemo(() => actions.map((act) => act.id), [actions])
+	const { setPanelCollapsed, isPanelCollapsed, setAllCollapsed, setAllExpanded, canExpandAll, canCollapseAll } =
+		usePanelCollapseHelper(`actions_${controlId}_${set}`, actionIds)
+
 	return (
 		<>
+			<h4 className="mt-3">
+				{heading}
+				<CButtonGroup className="right">
+					<CButtonGroup>
+						<CButton
+							color="info"
+							size="sm"
+							onClick={setAllExpanded}
+							title="Expand all actions"
+							disabled={!canExpandAll}
+						>
+							<FontAwesomeIcon icon={faExpandArrowsAlt} />
+						</CButton>{' '}
+						<CButton
+							color="info"
+							size="sm"
+							onClick={setAllCollapsed}
+							title="Collapse all actions"
+							disabled={!canCollapseAll}
+						>
+							<FontAwesomeIcon icon={faCompressArrowsAlt} />
+						</CButton>
+					</CButtonGroup>
+
+					{headingActions || ''}
+				</CButtonGroup>
+			</h4>
 			<GenericConfirmModal ref={confirmModal} />
 			<ActionsPanelInner
 				isOnBank={true}
-				dragId={dragId}
+				dragId={`${controlId}_actions`}
+				setId={set}
 				confirmModal={confirmModal}
 				actions={actions}
 				doSetValue={emitUpdateOption}
 				doSetDelay={emitSetDelay}
 				doDelete={emitDelete}
+				doDuplicate={emitDuplicate}
 				doReorder={emitOrder}
 				emitLearn={emitLearn}
+				setPanelCollapsed={setPanelCollapsed}
+				isPanelCollapsed={isPanelCollapsed}
 			/>
 			<AddActionsPanel addPlaceholder={addPlaceholder} addAction={addAction} />
 		</>
@@ -137,7 +187,6 @@ export function AddActionsPanel({ addPlaceholder, addAction }) {
 			<MyErrorBoundary>
 				<AddActionsModal ref={addActionsRef} addAction={addAction2} />
 			</MyErrorBoundary>
-
 			<AddActionDropdown onSelect={addAction2} placeholder={addPlaceholder} recentActions={recentActions} />
 			<CButton color="primary" variant="outline" onClick={showAddModal}>
 				Browse
@@ -149,14 +198,18 @@ export function AddActionsPanel({ addPlaceholder, addAction }) {
 export function ActionsPanelInner({
 	isOnBank,
 	dragId,
+	setId,
 	confirmModal,
 	actions,
 	doSetValue,
 	doSetDelay,
 	doDelete,
+	doDuplicate,
 	doReorder,
 	emitLearn,
 	readonly,
+	setPanelCollapsed,
+	isPanelCollapsed,
 }) {
 	const doDelete2 = useCallback(
 		(actionId) => {
@@ -181,26 +234,71 @@ export function ActionsPanelInner({
 							isOnBank={isOnBank}
 							action={a}
 							index={i}
+							setId={setId}
 							dragId={dragId}
 							setValue={doSetValue}
 							doDelete={doDelete2}
+							doDuplicate={doDuplicate}
 							doDelay={doSetDelay}
 							moveCard={doReorder}
 							doLearn={emitLearn}
 							readonly={readonly ?? false}
+							setCollapsed={setPanelCollapsed}
+							isCollapsed={isPanelCollapsed(a.id)}
 						/>
 					</MyErrorBoundary>
 				))}
+				<ActionRowDropPlaceholder dragId={dragId} actionCount={actions.length} setId={setId} moveCard={doReorder} />
 			</tbody>
 		</table>
 	)
 }
 
-function ActionTableRow({ action, isOnBank, index, dragId, setValue, doDelete, doDelay, moveCard, doLearn, readonly }) {
+function ActionRowDropPlaceholder({ dragId, setId, actionCount, moveCard }) {
+	const [isDragging, drop] = useDrop({
+		accept: dragId,
+		collect: (monitor) => {
+			return monitor.canDrop()
+		},
+		hover(item, monitor) {
+			console.log('hover', item)
+
+			moveCard(item.setId, item.index, setId, 0)
+		},
+	})
+
+	if (!isDragging || actionCount > 0) return ''
+
+	return (
+		<tr ref={drop} className={'actionlist-dropzone'}>
+			<td colSpan={3}>
+				<p>Drop action here</p>
+			</td>
+		</tr>
+	)
+}
+
+function ActionTableRow({
+	action,
+	setId,
+	isOnBank,
+	index,
+	dragId,
+	setValue,
+	doDelete,
+	doDuplicate,
+	doDelay,
+	moveCard,
+	doLearn,
+	readonly,
+	isCollapsed,
+	setCollapsed,
+}) {
 	const instancesContext = useContext(InstancesContext)
 	const actionsContext = useContext(ActionsContext)
 
 	const innerDelete = useCallback(() => doDelete(action.id), [action.id, doDelete])
+	const innerDuplicate = useCallback(() => doDuplicate(action.id), [action.id, doDuplicate])
 	const innerDelay = useCallback((delay) => doDelay(action.id, delay), [doDelay, action.id])
 	const innerLearn = useCallback(() => doLearn(action.id), [doLearn, action.id])
 
@@ -218,35 +316,19 @@ function ActionTableRow({ action, isOnBank, index, dragId, setValue, doDelete, d
 			const dragIndex = item.index
 			const hoverIndex = index
 			// Don't replace items with themselves
-			if (dragIndex === hoverIndex) {
+			if (dragIndex === hoverIndex && item.setId === setId) {
 				return
 			}
-			// Determine rectangle on screen
-			const hoverBoundingRect = ref.current?.getBoundingClientRect()
-			// Get vertical middle
-			const hoverMiddleY = (hoverBoundingRect.bottom - hoverBoundingRect.top) / 2
-			// Determine mouse position
-			const clientOffset = monitor.getClientOffset()
-			// Get pixels to the top
-			const hoverClientY = clientOffset.y - hoverBoundingRect.top
-			// Only perform the move when the mouse has crossed half of the items height
-			// When dragging downwards, only move when the cursor is below 50%
-			// When dragging upwards, only move when the cursor is above 50%
-			// Dragging downwards
-			if (dragIndex < hoverIndex && hoverClientY < hoverMiddleY) {
-				return
-			}
-			// Dragging upwards
-			if (dragIndex > hoverIndex && hoverClientY > hoverMiddleY) {
-				return
-			}
+
 			// Time to actually perform the action
-			moveCard(dragIndex, hoverIndex)
+			moveCard(item.setId, item.index, setId, index)
+
 			// Note: we're mutating the monitor item here!
 			// Generally it's better to avoid mutations,
 			// but it's good here for the sake of performance
 			// to avoid expensive index searches.
 			item.index = hoverIndex
+			item.setId = setId
 		},
 	})
 	const [{ isDragging }, drag, preview] = useDrag({
@@ -254,7 +336,9 @@ function ActionTableRow({ action, isOnBank, index, dragId, setValue, doDelete, d
 		canDrag: !readonly,
 		item: {
 			actionId: action.id,
+			setId: setId,
 			index: index,
+			// ref: ref,
 		},
 		collect: (monitor) => ({
 			isDragging: monitor.isDragging(),
@@ -301,6 +385,13 @@ function ActionTableRow({ action, isOnBank, index, dragId, setValue, doDelete, d
 		}
 	}, [actionSpec, action])
 
+	const doCollapse = useCallback(() => {
+		setCollapsed(action.id, true)
+	}, [setCollapsed, action.id])
+	const doExpand = useCallback(() => {
+		setCollapsed(action.id, false)
+	}, [setCollapsed, action.id])
+
 	if (!action) {
 		// Invalid action, so skip
 		return ''
@@ -328,64 +419,86 @@ function ActionTableRow({ action, isOnBank, index, dragId, setValue, doDelete, d
 				<div className="editor-grid">
 					<div className="cell-name">{name}</div>
 
-					<div className="cell-description">{actionSpec?.description || ''}</div>
-
-					<div className="cell-delay">
-						<CForm>
-							<label>Delay</label>
-							<CInputGroup>
-								<NumberInputField
-									definition={{ default: 0 }}
-									disabled={readonly}
-									value={action.delay}
-									setValue={innerDelay}
-								/>
-								<CInputGroupAppend>
-									<CInputGroupText>ms</CInputGroupText>
-								</CInputGroupAppend>
-							</CInputGroup>
-						</CForm>
-					</div>
-
-					<div className="cell-actions">
-						<CButton disabled={readonly} color="danger" size="sm" onClick={innerDelete} title="Remove action">
-							<FontAwesomeIcon icon={faTrash} />
-						</CButton>
-						&nbsp;
-						{actionSpec?.hasLearn && doLearn ? (
-							<CButton
-								disabled={readonly}
-								color="info"
-								size="sm"
-								onClick={innerLearn}
-								title="Capture the current values from the device"
-							>
-								Learn
+					<div className="cell-controls">
+						<CButtonGroup>
+							{isCollapsed ? (
+								<CButton color="info" size="sm" onClick={doExpand} title="Expand action view">
+									<FontAwesomeIcon icon={faExpandArrowsAlt} />
+								</CButton>
+							) : (
+								<CButton color="info" size="sm" onClick={doCollapse} title="Collapse action view">
+									<FontAwesomeIcon icon={faCompressArrowsAlt} />
+								</CButton>
+							)}
+							<CButton disabled={readonly} color="warning" size="sm" onClick={innerDuplicate} title="Duplicate action">
+								<FontAwesomeIcon icon={faCopy} />
 							</CButton>
-						) : (
-							''
-						)}
+							<CButton disabled={readonly} color="danger" size="sm" onClick={innerDelete} title="Remove action">
+								<FontAwesomeIcon icon={faTrash} />
+							</CButton>
+						</CButtonGroup>
 					</div>
 
-					<div className="cell-option">
-						<CForm>
-							{options.map((opt, i) => (
-								<MyErrorBoundary key={i}>
-									<ActionTableRowOption
-										isOnBank={isOnBank}
-										instanceId={action.instance}
-										option={opt}
-										actionId={action.id}
-										value={(action.options || {})[opt.id]}
-										setValue={setValue}
-										visibility={optionVisibility[opt.id]}
-										readonly={readonly}
-									/>
-								</MyErrorBoundary>
-							))}
-							{options.length === 0 ? 'Nothing to configure' : ''}
-						</CForm>
-					</div>
+					{!isCollapsed ? (
+						<>
+							<div className="cell-description">{actionSpec?.description || ''}</div>
+
+							<div className="cell-delay">
+								<CForm>
+									<label>Delay</label>
+									<CInputGroup>
+										<NumberInputField
+											definition={{ default: 0 }}
+											disabled={readonly}
+											value={action.delay}
+											setValue={innerDelay}
+										/>
+										<CInputGroupAppend>
+											<CInputGroupText>ms</CInputGroupText>
+										</CInputGroupAppend>
+									</CInputGroup>
+								</CForm>
+							</div>
+
+							<div className="cell-actions">
+								{actionSpec?.hasLearn ? (
+									<CButton
+										disabled={readonly}
+										color="info"
+										size="sm"
+										onClick={innerLearn}
+										title="Capture the current values from the device"
+									>
+										Learn
+									</CButton>
+								) : (
+									''
+								)}
+							</div>
+
+							<div className="cell-option">
+								<CForm>
+									{options.map((opt, i) => (
+										<MyErrorBoundary key={i}>
+											<ActionTableRowOption
+												isOnBank={isOnBank}
+												instanceId={action.instance}
+												option={opt}
+												actionId={action.id}
+												value={(action.options || {})[opt.id]}
+												setValue={setValue}
+												visibility={optionVisibility[opt.id]}
+												readonly={readonly}
+											/>
+										</MyErrorBoundary>
+									))}
+									{options.length === 0 ? 'Nothing to configure' : ''}
+								</CForm>
+							</div>
+						</>
+					) : (
+						''
+					)}
 				</div>
 			</td>
 		</tr>
@@ -428,15 +541,17 @@ function AddActionDropdown({ onSelect, placeholder, recentActions }) {
 
 		const recents = []
 		for (const actionType of recentActions) {
-			const [instanceId, actionId] = actionType.split(':', 2)
-			const actionInfo = actionsContext[instanceId]?.[actionId]
-			if (actionInfo) {
-				const instanceLabel = instancesContext[instanceId]?.label ?? instanceId
-				recents.push({
-					isRecent: true,
-					value: `${instanceId}:${actionId}`,
-					label: `${instanceLabel}: ${actionInfo.label}`,
-				})
+			if (actionType) {
+				const [instanceId, actionId] = actionType.split(':', 2)
+				const actionInfo = actionsContext[instanceId]?.[actionId]
+				if (actionInfo) {
+					const instanceLabel = instancesContext[instanceId]?.label ?? instanceId
+					recents.push({
+						isRecent: true,
+						value: `${instanceId}:${actionId}`,
+						label: `${instanceLabel}: ${actionInfo.label}`,
+					})
+				}
 			}
 		}
 		options.push({

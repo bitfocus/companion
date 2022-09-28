@@ -20,6 +20,8 @@ Remote triggering can be done by sending TCP (port `51234`) or UDP (port `51235`
   _Change text color on a button (#000000)_
 - `STYLE BANK <page> <bank> BGCOLOR <color HEX>`  
   _Change background color on a button (#000000)_
+- `CUSTOM-VARIABLE <name> SET-VALUE <value>`  
+  _Change custom variable value_
 - `RESCAN`
   _Make Companion rescan for newly attached USB surfaces_
 
@@ -30,3 +32,6 @@ Set the emulator surface to page 23:
 
 Press page 1 bank 2:  
 `BANK-PRESS 1 2`
+
+Change custom variable "cue" to value "intro":  
+`CUSTOM-VARIABLE cue SET-VALUE intro`

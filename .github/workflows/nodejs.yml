@@ -13,6 +13,9 @@ jobs:
 
       - name: build & package
         run: |
+          # try and avoid timeout errors
+          yarn config set network-timeout 100000 -g
+
           yarn update
 
           yarn zx tools/build/complete.mjs
@@ -136,6 +139,7 @@ jobs:
           APPLEIDPASS: ${{ secrets.APPLEIDPASS }}
           SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
           USE_HARD_LINKS: false
+          SKIP_LAUNCH_CHECK: true
 
       - name: Determine files to upload
         id: filenames
@@ -177,6 +181,9 @@ jobs:
       - name: build & package
         shell: bash
         run: |
+          # try and avoid timeout errors
+          yarn config set network-timeout 100000 -g
+
           # This fixes it somehow, and without it we get no logs from any shell scripts which are run
           yarn config set script-shell bash
 

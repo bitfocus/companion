@@ -238,9 +238,9 @@ export function ParseControlId(controlId) {
 	return undefined
 }
 
-export function applyPatchOrReplaceSubObject(oldDefinitions, key, patch) {
+export function applyPatchOrReplaceSubObject(oldDefinitions, key, patch, defVal = {}) {
 	if (oldDefinitions) {
-		const oldEntry = oldDefinitions[key] ?? {}
+		const oldEntry = oldDefinitions[key] ?? defVal
 
 		const newDefinitions = { ...oldDefinitions }
 		if (!patch) {

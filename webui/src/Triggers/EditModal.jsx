@@ -11,7 +11,10 @@ import {
 	CModalFooter,
 	CModalHeader,
 	CRow,
+	CButtonGroup,
 } from '@coreui/react'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faExpandArrowsAlt, faCompressArrowsAlt } from '@fortawesome/free-solid-svg-icons'
 import { MyErrorBoundary, useMountEffect, socketEmitPromise, SocketContext } from '../util'
 import Select from 'react-select'
 import { AddFeedbackDropdown, FeedbackEditor } from '../Buttons/EditButton/FeedbackPanel'
@@ -21,6 +24,8 @@ import { CheckboxInputField } from '../Components'
 import update from 'immutability-helper'
 import { AddFeedbacksModal } from '../Buttons/EditButton/AddModal'
 import { useEffect } from 'react'
+import { cloneDeep } from 'lodash-es'
+import { usePanelCollapseHelper } from '../Buttons/EditButton/CollapseHelper'
 
 function getPluginSpecDefaults(pluginOptions) {
 	const config = {}
@@ -147,6 +152,26 @@ export function TriggerEditModal({ doClose, doSave, item, plugins }) {
 		},
 		[setActions]
 	)
+	const actionDuplicate = useCallback(
+		(actionId) => {
+			setActions((oldActions) => {
+				const oldIndex = oldActions.findIndex((act) => act.id === actionId)
+				if (oldIndex !== -1) {
+					const newActions = [...oldActions]
+
+					newActions.splice(oldIndex + 1, 0, {
+						...cloneDeep(oldActions[oldIndex]),
+						id: nanoid(),
+					})
+
+					return newActions
+				}
+
+				return oldActions
+			})
+		},
+		[setActions]
+	)
 	const actionSetDelay = useCallback(
 		(actionId, delay) => {
 			setActions((oldActions) => {
@@ -166,7 +191,7 @@ export function TriggerEditModal({ doClose, doSave, item, plugins }) {
 		[setActions]
 	)
 	const actionReorder = useCallback(
-		(dragIndex, hoverIndex) => {
+		(_dragSetId, dragIndex, _dropSetId, hoverIndex) => {
 			setActions((actions) => {
 				const dragCard = actions[dragIndex]
 				return update(actions, {
@@ -246,6 +271,33 @@ export function TriggerEditModal({ doClose, doSave, item, plugins }) {
 		}))
 	}, [])
 
+	const actionIds = useMemo(() => (config.actions || []).map((act) => act.id), [config.actions])
+	const {
+		setPanelCollapsed: setActionPanelCollapsed,
+		isPanelCollapsed: isActionPanelCollapsed,
+		setAllCollapsed: setAllActionCollapsed,
+		setAllExpanded: setAllActionExpanded,
+		canExpandAll: canExpandAllAction,
+		canCollapseAll: canCollapseAllAction,
+	} = usePanelCollapseHelper(`trigger_actions_${item.id}`, actionIds)
+
+	const isFeedbackBased = pluginSpec?.type === 'feedback'
+	const feedbackIds = useMemo(() => {
+		if (isFeedbackBased) {
+			return config.config.map((fb) => fb.id)
+		} else {
+			return []
+		}
+	}, [config.config, isFeedbackBased])
+	const {
+		setPanelCollapsed: setFeedbackPanelCollapsed,
+		isPanelCollapsed: isFeedbackPanelCollapsed,
+		setAllCollapsed: setAllFeedbackCollapsed,
+		setAllExpanded: setAllFeedbackExpanded,
+		canExpandAll: canExpandAllFeedback,
+		canCollapseAll: canCollapseAllFeedback,
+	} = usePanelCollapseHelper(`feedbacks_${item.id}`, feedbackIds)
+
 	return (
 		<CModal show={true} onClose={doClose} size="lg">
 			<CForm onSubmit={doSaveInner} className={'edit-button-panel'}>
@@ -258,7 +310,35 @@ export function TriggerEditModal({ doClose, doSave, item, plugins }) {
 						<CInput required value={config.title} onChange={setTitle} />
 					</CFormGroup>
 
-					<legend>Condition</legend>
+					<legend>
+						Condition
+						{isFeedbackBased ? (
+							<CButtonGroup className="right">
+								<CButtonGroup>
+									<CButton
+										color="info"
+										size="sm"
+										onClick={setAllFeedbackExpanded}
+										title="Expand all feedbacks"
+										disabled={!canExpandAllFeedback}
+									>
+										<FontAwesomeIcon icon={faExpandArrowsAlt} />
+									</CButton>{' '}
+									<CButton
+										color="info"
+										size="sm"
+										onClick={setAllFeedbackCollapsed}
+										title="Collapse all feedbacks"
+										disabled={!canCollapseAllFeedback}
+									>
+										<FontAwesomeIcon icon={faCompressArrowsAlt} />
+									</CButton>
+								</CButtonGroup>
+							</CButtonGroup>
+						) : (
+							''
+						)}
+					</legend>
 					<CFormGroup>
 						<label>Type</label>
 						<Select
@@ -272,13 +352,43 @@ export function TriggerEditModal({ doClose, doSave, item, plugins }) {
 					</CFormGroup>
 
 					{pluginSpec?.options ? (
-						<TriggerEditModalConfig pluginSpec={pluginSpec} config={config.config} setConfig={setConfig} />
+						<TriggerEditModalConfig
+							pluginSpec={pluginSpec}
+							config={config.config}
+							setConfig={setConfig}
+							isPanelCollapsed={isFeedbackPanelCollapsed}
+							setPanelCollapsed={setFeedbackPanelCollapsed}
+						/>
 					) : (
 						'Unknown type selected'
 					)}
 
 					<hr />
-					<legend>Action</legend>
+					<legend>
+						Action
+						<CButtonGroup className="right">
+							<CButtonGroup>
+								<CButton
+									color="info"
+									size="sm"
+									onClick={setAllActionExpanded}
+									title="Expand all actions"
+									disabled={!canExpandAllAction}
+								>
+									<FontAwesomeIcon icon={faExpandArrowsAlt} />
+								</CButton>{' '}
+								<CButton
+									color="info"
+									size="sm"
+									onClick={setAllActionCollapsed}
+									title="Collapse all actions"
+									disabled={!canCollapseAllAction}
+								>
+									<FontAwesomeIcon icon={faCompressArrowsAlt} />
+								</CButton>
+							</CButtonGroup>
+						</CButtonGroup>
+					</legend>
 					<CRow form className="button-style-form">
 						<CCol className="fieldtype-checkbox" sm={2} xs={3}>
 							<CButton
@@ -305,12 +415,16 @@ export function TriggerEditModal({ doClose, doSave, item, plugins }) {
 					<ActionsPanelInner
 						isOnBank={false}
 						dragId={'triggerAction'}
+						setId={0}
 						actions={config.actions || []}
 						doDelete={actionDelete}
+						doDuplicate={actionDuplicate}
 						doSetDelay={actionSetDelay}
 						doReorder={actionReorder}
 						doSetValue={actionSetValue}
 						emitLearn={doLearn}
+						isPanelCollapsed={isActionPanelCollapsed}
+						setPanelCollapsed={setActionPanelCollapsed}
 					/>
 					<AddActionsPanel addPlaceholder="+ Add action" addAction={addActionSelect} />
 				</CModalBody>
@@ -327,7 +441,7 @@ export function TriggerEditModal({ doClose, doSave, item, plugins }) {
 	)
 }
 
-function TriggerEditModalConfig({ pluginSpec, config, setConfig }) {
+function TriggerEditModalConfig({ pluginSpec, config, setConfig, isPanelCollapsed, setPanelCollapsed }) {
 	const socket = useContext(SocketContext)
 
 	const feedbacksRef = useRef(null)
@@ -428,6 +542,29 @@ function TriggerEditModalConfig({ pluginSpec, config, setConfig }) {
 		},
 		[setConfig]
 	)
+	const duplicateRow = useCallback(
+		(feedbackId) => {
+			setConfig((oldConfig) => {
+				const oldIndex = oldConfig.config.findIndex((fb) => fb.id === feedbackId)
+				if (oldIndex !== -1) {
+					const newFeedbacks = [...oldConfig.config]
+
+					newFeedbacks.splice(oldIndex + 1, 0, {
+						...cloneDeep(oldConfig.config[oldIndex]),
+						id: nanoid(),
+					})
+
+					return {
+						...oldConfig,
+						config: newFeedbacks,
+					}
+				}
+
+				return oldConfig
+			})
+		},
+		[setConfig]
+	)
 
 	const learnRow = useCallback(
 		(feedbackId) => {
@@ -478,7 +615,10 @@ function TriggerEditModalConfig({ pluginSpec, config, setConfig }) {
 											feedback={conf}
 											updateFeedbackOptionConfig={updateFeedbackOptionConfig}
 											delRow={delRow}
+											duplicateRow={duplicateRow}
 											learnRow={learnRow}
+											setCollapsed={setPanelCollapsed}
+											isCollapsed={isPanelCollapsed(conf.id)}
 										/>
 									</MyErrorBoundary>
 								</td>
@@ -516,13 +656,31 @@ function TriggerEditModalConfig({ pluginSpec, config, setConfig }) {
 	)
 }
 
-function FeedbackEditorRow({ feedback, updateFeedbackOptionConfig, delRow, learnRow }) {
+function FeedbackEditorRow({
+	feedback,
+	updateFeedbackOptionConfig,
+	delRow,
+	duplicateRow,
+	learnRow,
+	isCollapsed,
+	setCollapsed,
+}) {
 	const innerDelete = useCallback(() => {
 		delRow(feedback.id)
 	}, [feedback.id, delRow])
+	const innerDuplicate = useCallback(() => {
+		duplicateRow(feedback.id)
+	}, [feedback.id, duplicateRow])
 	const innerLearn = useCallback(() => {
 		learnRow(feedback.id)
 	}, [feedback.id, learnRow])
+
+	const doCollapse = useCallback(() => {
+		setCollapsed(feedback.id, true)
+	}, [setCollapsed, feedback.id])
+	const doExpand = useCallback(() => {
+		setCollapsed(feedback.id, false)
+	}, [setCollapsed, feedback.id])
 
 	return (
 		<FeedbackEditor
@@ -530,7 +688,11 @@ function FeedbackEditorRow({ feedback, updateFeedbackOptionConfig, delRow, learn
 			feedback={feedback}
 			setValue={updateFeedbackOptionConfig}
 			innerDelete={innerDelete}
+			innerDuplicate={innerDuplicate}
 			innerLearn={innerLearn}
+			isCollapsed={isCollapsed}
+			doCollapse={doCollapse}
+			doExpand={doExpand}
 		/>
 	)
 }

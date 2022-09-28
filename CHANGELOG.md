@@ -1,5 +1,162 @@
 # Bitfocus Companion
 
+## Companion v3.0.0 - Unreleased
+
+Documented up to 3aaf64b2f88d2d0c7ea16269675d0496c3a3ff9c
+
+### BREAKING CHANGES
+
+-
+
+### 📣 CORE FEATURES AND IMPROVEMENTS
+
+- Modernisation of large restructuring of codebase
+
+- step button type to replace latching (https://github.com/bitfocus/companion/pull/1630)
+
+- Support Bitfocus cloud https://github.com/bitfocus/companion/pull/1884
+
+- Modules run in child processes. This ensures that module crashes cannot crash the whole of Companion
+
+- Use hidraw usb backend on linux, this will improve usb performance on linux or companion-pi
+
+- Split launcher and Companion main process
+
+- Support module development against release builds of Companion ()
+
+- Rework ui data flow, to reduce amount of data sent to the ui
+
+- Rework ui data flow, to make ui more reactive as changes are made
+
+- Remove old tablet/web-buttons pages
+
+- Watch for usb devices being connected
+
+- Show inactive surfaces in the ui
+
+- https://github.com/bitfocus/companion/pull/2127
+
+### 🐞 BUG FIXES
+
+-
+
+## Companion v2.3.1 - Release Notes
+
+### 🐞 BUG FIXES
+
+- Presets panel sometimes erroring after adding an instance
+- Dockerfile install `iputils-ping` (#2084)
+- Detect satellite sockets going stale and close them
+- Calls to child.send for disconnected usb devices fail
+- Clone cached actions/feedbacks/presets so that UI can reliably get changes
+- "Failed to build list of modules" due to module keyword issues (#2111)
+- Unable to enable/disable triggers via action (#2082)
+
+### 🐞 MODULE FIXES
+
+- bitfocus-companion
+- bmd-atem
+- bytehive-playoutbee
+- evertz-quartz
+- generic-tcp-serial
+- haivision-connectdvr
+- homeassistant-server
+- planningcenter-serviceslive
+- pnh-opencountdown
+- sony-cled
+- techministry-spotifycontroller
+- tslproducts-umd
+- vicreo-hotkey
+- vystem-api
+- zoom-osc-iso
+
+## Companion v2.3.0 - Release Notes
+
+### 📣 CORE FEATURES AND IMPROVEMENTS
+
+- Set custom variables with the remote protocols (HTTP, UDP, TCP & OSC)
+- Support the new revision of the Streamdeck Mini
+- Optimise data sending to the browser, to make usage smoother over a VPN
+- Add 'learn' button for actions and feedbacks to populate with the current values (not implemented in many modules)
+- Modules can handle some http requests, allowing for simpler workflows
+
+### 🐞 BUG FIXES
+
+- Better error handling in the UI
+- Improve UI performance
+- Sanitise filename of exports for unusual characters
+- Add connection filter box crash with certain strings
+- Time interval triggers could get into an infinite loop
+
+### 🧩 NEW MODULES
+
+- biamp-tesira
+- devantech-ds
+- discord-api
+- epson-businesspj
+- equipson-lightshark
+- evertz-quartz
+- getontime-ontime
+- google-sheets
+- notion-timestamp
+- pnh-opencountdown
+- roland-v160hd
+- sony-cled
+- techministry-spotifycontroller
+- televic-dcerno
+- teradek-prismflex
+- tplink-kasasmartstrip
+- videocom-zoom-bridge
+- zoom-osc-iso
+
+### 👍🏻 MODULE IMPROVEMENTS
+
+- audiostrom-liveprofessor
+- birddog-ptz
+- bitfocus-companion
+- bitfocus-snapshot
+- bmd-atem
+- bmd-hyperdeck
+- bmd-videohub
+- bmd-webpresenterhd
+- dataton-watchout
+- draco-tera
+- figure53-qlab-advance
+- generic-pjlink
+- haivision-kbencoder
+- ipl-ocp
+- kramer-vp727
+- lgtv-display
+- newbluefx-titler
+- newtek-ndistudiomonitor
+- panasonic-kairos
+- phillips-hue
+- sennheiser-evolutionwireless
+- studiocoast-vmix
+- teradek-vidiu
+- theatrixx-xpresscue
+- timemachines-clock
+- toggl-track
+- vicreo-hotkey
+- videolan-vlc
+
+## Companion v2.2.3 - Release Notes
+
+### 🐞 BUG FIXES
+
+- Fixed surface picker id property
+- Mitigated corrupt db fatal crashes
+- Minor UI fixes for action/feedback options
+
+### 🐞 MODULE FIXES
+
+- birddog-ptz
+- bitfocus-companion
+- figure53-qlab-advance
+- generic-pjlink
+- ubiquiti-unifi
+- visualproductions-bstation2
+
 ## Companion v2.2.2 - Release Notes
 
 ### 🐞 MODULE FIXES

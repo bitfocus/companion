@@ -11,6 +11,7 @@ import {
 import { nanoid } from 'nanoid'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faQuestionCircle } from '@fortawesome/free-solid-svg-icons'
+import sanitizeHtml from 'sanitize-html'
 
 export const InstanceEditPanel = memo(function InstanceEditPanel({ instanceId, doConfigureInstance, showHelp }) {
 	const socket = useContext(SocketContext)
@@ -210,13 +211,16 @@ function ConfigField({ setValue, setValid, ...props }) {
 
 	const { definition } = props
 	switch (definition.type) {
-		case 'static-text':
-			return (
-				<p title={definition.tooltip}>
-					{/* We used to use dangerouslySetInnerHTML, but that is a security problem once we allow dynamic modules */}
-					{definition.value}
-				</p>
-			)
+		case 'static-text': {
+			const descriptionHtml = {
+				__html: sanitizeHtml(definition.value ?? '', {
+					allowedTags: sanitizeHtml.defaults.allowedTags.concat(['img']),
+					disallowedTagsMode: 'escape',
+				}),
+			}
+
+			return <p title={definition.tooltip} dangerouslySetInnerHTML={descriptionHtml}></p>
+		}
 		case 'textinput':
 			return <TextInputField {...props} setValue={setValue2} setValid={setValid2} />
 		case 'number':

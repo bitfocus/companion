@@ -250,9 +250,13 @@ export function EditButton({ controlId, onKeyUp }) {
 
 							{config.feedbacks ? (
 								<>
-									<h4 className="mt-3">Feedback</h4>
 									<MyErrorBoundary>
-										<FeedbacksPanel controlId={controlId} feedbacks={config.feedbacks} dragId={'feedback'} />
+										<FeedbacksPanel
+											heading={'Feedback'}
+											controlId={controlId}
+											feedbacks={config.feedbacks}
+											dragId={'feedback'}
+										/>
 									</MyErrorBoundary>
 								</>
 							) : (
@@ -327,9 +331,9 @@ function ActionsSection({ style, controlId, action_sets, runtimeProps }) {
 	if (style === 'press') {
 		return (
 			<>
-				<h4 className="mt-3">Press actions</h4>
 				<MyErrorBoundary>
 					<ActionsPanel
+						heading="Press actions"
 						controlId={controlId}
 						set={'down'}
 						dragId={'downAction'}
@@ -337,9 +341,9 @@ function ActionsSection({ style, controlId, action_sets, runtimeProps }) {
 						actions={action_sets['down']}
 					/>
 				</MyErrorBoundary>
-				<h4 className="mt-3">Release actions</h4>
 				<MyErrorBoundary>
 					<ActionsPanel
+						heading="Release actions"
 						controlId={controlId}
 						set={'up'}
 						dragId={'releaseAction'}
@@ -355,19 +359,21 @@ function ActionsSection({ style, controlId, action_sets, runtimeProps }) {
 			<>
 				<GenericConfirmModal ref={confirmRef} />
 				{keys.map((k, i) => (
-					<>
-						<h4 key={`heading_${k}`} className="mt-3">
-							Step {i + 1} actions
-							<CButtonGroup className="right">
+					<MyErrorBoundary>
+						<ActionsPanel
+							heading={`Step ${i + 1} actions`}
+							headingActions={[
 								<CButton
+									key="set-next"
 									color={runtimeProps.current_step_id === k ? 'success' : 'primary'}
 									size="sm"
 									disabled={runtimeProps.current_step_id === k}
 									onClick={() => setNextStep(k)}
 								>
 									Set Next
-								</CButton>
+								</CButton>,
 								<CButton
+									key="move-up"
 									color="warning"
 									title="Move step up"
 									size="sm"
@@ -375,8 +381,9 @@ function ActionsSection({ style, controlId, action_sets, runtimeProps }) {
 									onClick={() => swapSteps(k, keys[i - 1])}
 								>
 									<FontAwesomeIcon icon={faArrowUp} />
-								</CButton>
+								</CButton>,
 								<CButton
+									key="move-down"
 									color="warning"
 									title="Move step down"
 									size="sm"
@@ -384,8 +391,9 @@ function ActionsSection({ style, controlId, action_sets, runtimeProps }) {
 									onClick={() => swapSteps(k, keys[i + 1])}
 								>
 									<FontAwesomeIcon icon={faArrowDown} />
-								</CButton>
+								</CButton>,
 								<CButton
+									key="delete"
 									color="danger"
 									title="Delete step"
 									size="sm"
@@ -393,20 +401,16 @@ function ActionsSection({ style, controlId, action_sets, runtimeProps }) {
 									onClick={() => removeStep(k)}
 								>
 									<FontAwesomeIcon icon={faTrash} />
-								</CButton>
-							</CButtonGroup>
-						</h4>
-						<MyErrorBoundary>
-							<ActionsPanel
-								key={`panel_${k}`}
-								controlId={controlId}
-								set={k}
-								dragId={`${k}Action`}
-								addPlaceholder={`+ Add action to step ${i + 1}`}
-								actions={action_sets[k]}
-							/>
-						</MyErrorBoundary>
-					</>
+								</CButton>,
+							]}
+							key={`panel_${k}`}
+							controlId={controlId}
+							set={k}
+							dragId={`${k}Action`}
+							addPlaceholder={`+ Add action to step ${i + 1}`}
+							actions={action_sets[k]}
+						/>
+					</MyErrorBoundary>
 				))}
 				<br />
 				<p>
