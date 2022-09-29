@@ -482,6 +482,7 @@ function ActionTableRow({
 										<MyErrorBoundary key={i}>
 											<ActionTableRowOption
 												isOnBank={isOnBank}
+												isAction={true}
 												instanceId={action.instance}
 												option={opt}
 												actionId={action.id}

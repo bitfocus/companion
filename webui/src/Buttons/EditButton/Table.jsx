@@ -8,11 +8,12 @@ import {
 	TextInputField,
 	TextWithVariablesInputField,
 } from '../../Components'
-import { InternalInstanceField } from './InternalInstanceFields'
+import { InternalCustomVariableDropdown, InternalInstanceField } from './InternalInstanceFields'
 
 export function ActionTableRowOption({
 	instanceId,
 	isOnBank,
+	isAction,
 	actionId,
 	option,
 	value,
@@ -77,6 +78,20 @@ export function ActionTableRowOption({
 		case 'static-text': {
 			// Just the label is wanted
 			control = ''
+			break
+		}
+		case 'custom-variable': {
+			if (isAction) {
+				//isAction
+				control = (
+					<InternalCustomVariableDropdown
+						disabled={readonly}
+						value={value}
+						setValue={setValue2}
+						includeNone={option.includeNone}
+					/>
+				)
+			}
 			break
 		}
 		default:

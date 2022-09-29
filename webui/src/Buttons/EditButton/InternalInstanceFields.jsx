@@ -147,7 +147,7 @@ function InternalBankDropdown({ isOnBank, value, setValue, disabled }) {
 	)
 }
 
-function InternalCustomVariableDropdown({ value, setValue, includeNone, disabled }) {
+export function InternalCustomVariableDropdown({ value, setValue, includeNone, disabled }) {
 	const context = useContext(CustomVariableDefinitionsContext)
 	const choices = useMemo(() => {
 		const choices = []
