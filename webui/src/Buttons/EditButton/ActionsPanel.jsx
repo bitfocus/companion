@@ -11,6 +11,8 @@ import {
 	sandbox,
 	useMountEffect,
 	SocketContext,
+	ParseControlId,
+	ButtonRenderCacheContext,
 } from '../../util'
 import Select, { createFilter } from 'react-select'
 import { ActionTableRowOption } from './Table'
@@ -18,6 +20,9 @@ import { useDrag, useDrop } from 'react-dnd'
 import { GenericConfirmModal } from '../../Components/GenericConfirmModal'
 import { AddActionsModal } from './AddModal'
 import { usePanelCollapseHelper } from './CollapseHelper'
+import { BankPreview } from '../../Components/BankButton'
+import { useSharedBankRenderCache } from '../../ButtonRenderCache'
+import { nanoid } from 'nanoid'
 
 export function ActionsPanel({ controlId, set, actions, dragId, addPlaceholder, heading, headingActions }) {
 	const socket = useContext(SocketContext)
@@ -128,6 +133,7 @@ export function ActionsPanel({ controlId, set, actions, dragId, addPlaceholder, 
 			<GenericConfirmModal ref={confirmModal} />
 			<ActionsPanelInner
 				isOnBank={true}
+				controlId={controlId}
 				dragId={`${controlId}_actions`}
 				setId={set}
 				confirmModal={confirmModal}
@@ -184,19 +190,21 @@ export function AddActionsPanel({ addPlaceholder, addAction }) {
 
 	return (
 		<div className="add-dropdown-wrapper">
-			<MyErrorBoundary>
-				<AddActionsModal ref={addActionsRef} addAction={addAction2} />
-			</MyErrorBoundary>
 			<AddActionDropdown onSelect={addAction2} placeholder={addPlaceholder} recentActions={recentActions} />
 			<CButton color="primary" variant="outline" onClick={showAddModal}>
 				Browse
 			</CButton>
+
+			<MyErrorBoundary>
+				<AddActionsModal ref={addActionsRef} addAction={addAction2} />
+			</MyErrorBoundary>
 		</div>
 	)
 }
 
 export function ActionsPanelInner({
 	isOnBank,
+	controlId,
 	dragId,
 	setId,
 	confirmModal,
@@ -235,6 +243,7 @@ export function ActionsPanelInner({
 							action={a}
 							index={i}
 							setId={setId}
+							controlId={controlId}
 							dragId={dragId}
 							setValue={doSetValue}
 							doDelete={doDelete2}
@@ -284,6 +293,7 @@ function ActionTableRow({
 	isOnBank,
 	index,
 	dragId,
+	controlId,
 	setValue,
 	doDelete,
 	doDuplicate,
@@ -443,6 +453,16 @@ function ActionTableRow({
 						<>
 							<div className="cell-description">{actionSpec?.description || ''}</div>
 
+							{action.instance === 'internal' &&
+							Array.isArray(actionSpec.previewBank) &&
+							actionSpec.previewBank.length === 2 ? (
+								<div className="cell-bank-preview">
+									<ActionBankPreview fields={actionSpec.previewBank} options={action.options} controlId={controlId} />
+								</div>
+							) : (
+								''
+							)}
+
 							<div className="cell-delay">
 								<CForm>
 									<label>Delay</label>
@@ -504,6 +524,24 @@ function ActionTableRow({
 			</td>
 		</tr>
 	)
+}
+
+export function ActionBankPreview({ fields, options, controlId }) {
+	const buttonCache = useContext(ButtonRenderCacheContext)
+
+	let page = options[fields[0]]
+	let bank = options[fields[1]]
+
+	const parsedControlId = ParseControlId(controlId)
+	if (parsedControlId && parsedControlId.type === 'bank') {
+		page = page || parsedControlId.page
+		bank = bank || parsedControlId.bank
+	}
+
+	const id = useMemo(() => nanoid(), [])
+	const image = useSharedBankRenderCache(buttonCache, id, page, bank)
+
+	return <BankPreview fixedSize noPad preview={image} />
 }
 
 const baseFilter = createFilter()

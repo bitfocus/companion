@@ -34,7 +34,7 @@ import { useDrop } from 'react-dnd'
 import { BankPreview } from '../Components/BankButton'
 import { GenericConfirmModal } from '../Components/GenericConfirmModal'
 import { nanoid } from 'nanoid'
-import { useSharedRenderCache } from '../ButtonRenderCache'
+import { useSharedPageRenderCache } from '../ButtonRenderCache'
 
 export const ButtonsGridPanel = memo(function ButtonsPage({
 	pageNumber,
@@ -449,7 +449,7 @@ export function ButtonGrid({ bankClick, pageNumber, selectedButton }) {
 	const buttonCache = useContext(ButtonRenderCacheContext)
 
 	const gridId = useMemo(() => nanoid(), [])
-	const pageImages = useSharedRenderCache(buttonCache, gridId, pageNumber)
+	const pageImages = useSharedPageRenderCache(buttonCache, gridId, pageNumber)
 
 	return (
 		<div

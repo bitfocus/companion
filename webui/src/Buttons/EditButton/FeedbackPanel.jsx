@@ -19,6 +19,7 @@ import { DropdownInputField } from '../../Components'
 import { ButtonStyleConfigFields } from './ButtonStyleConfig'
 import { AddFeedbacksModal } from './AddModal'
 import { usePanelCollapseHelper } from './CollapseHelper'
+import { ActionBankPreview } from './ActionsPanel'
 
 export const FeedbacksPanel = function ({ controlId, feedbacks, dragId, heading }) {
 	const socket = useContext(SocketContext)
@@ -284,6 +285,7 @@ function FeedbackTableRow({
 			<td>
 				<FeedbackEditor
 					isOnBank={true}
+					controlId={controlId}
 					feedback={feedback}
 					setValue={setValue}
 					innerDelete={innerDelete}
@@ -303,6 +305,7 @@ function FeedbackTableRow({
 export function FeedbackEditor({
 	feedback,
 	isOnBank,
+	controlId,
 	setValue,
 	innerDelete,
 	innerDuplicate,
@@ -389,6 +392,16 @@ export function FeedbackEditor({
 			{!isCollapsed ? (
 				<>
 					<div className="cell-description">{feedbackSpec?.description || ''}</div>
+
+					{feedback.instance_id === 'internal' &&
+					Array.isArray(feedbackSpec.previewBank) &&
+					feedbackSpec.previewBank.length === 2 ? (
+						<div className="cell-bank-preview">
+							<ActionBankPreview fields={feedbackSpec.previewBank} options={feedback.options} controlId={controlId} />
+						</div>
+					) : (
+						''
+					)}
 
 					<div className="cell-actions">
 						{feedbackSpec?.hasLearn ? (

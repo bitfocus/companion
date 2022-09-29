@@ -17,7 +17,7 @@ import rangeParser from 'parse-numeric-range'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faArrowLeft, faArrowRight, faCog, faExpand } from '@fortawesome/free-solid-svg-icons'
 import { useNavigate } from 'react-router-dom'
-import { ButtonRenderCache, useSharedRenderCache } from './ButtonRenderCache'
+import { ButtonRenderCache, useSharedPageRenderCache } from './ButtonRenderCache'
 
 function sanitisePageInfo(info) {
 	const toNumArray = (raw) => {
@@ -340,9 +340,9 @@ function CyclePages({ pages, imageCache, orderedPages, updateQueryUrl, query, co
 	{
 		// Ensure next and prev pages are preloaded for more seamless cycling
 		const prevPage = orderedPages[currentIndex - 1]
-		useSharedRenderCache(imageCache, 'tablet:preload:prevPage', prevPage)
+		useSharedPageRenderCache(imageCache, 'tablet:preload:prevPage', prevPage)
 		const nextPage = orderedPages[currentIndex + 1]
-		useSharedRenderCache(imageCache, 'tablet:preload:nextPage', nextPage)
+		useSharedPageRenderCache(imageCache, 'tablet:preload:nextPage', nextPage)
 	}
 
 	const goPrevPage = useCallback(() => {
@@ -439,7 +439,7 @@ function ButtonGrid({ imageCache, number, cols, rows, goFirstPage, goNextPage, g
 		threshold: 0,
 	})
 
-	const images = useSharedRenderCache(imageCache, 'tablet', number, !inView)
+	const images = useSharedPageRenderCache(imageCache, 'tablet', number, !inView)
 
 	const bankClick = useCallback(
 		(bank, pressed) => {
