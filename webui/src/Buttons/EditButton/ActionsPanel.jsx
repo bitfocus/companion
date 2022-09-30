@@ -23,6 +23,7 @@ import { usePanelCollapseHelper } from './CollapseHelper'
 import { BankPreview } from '../../Components/BankButton'
 import { useSharedBankRenderCache } from '../../ButtonRenderCache'
 import { nanoid } from 'nanoid'
+import CSwitch from '../../CSwitch'
 
 export function ActionsPanel({ controlId, set, actions, dragId, addPlaceholder, heading, headingActions }) {
 	const socket = useContext(SocketContext)
@@ -87,6 +88,15 @@ export function ActionsPanel({ controlId, set, actions, dragId, addPlaceholder, 
 		[socket, controlId]
 	)
 
+	const emitEnabled = useCallback(
+		(actionId, enabled) => {
+			socketEmitPromise(socket, 'controls:action:enabled', [controlId, set, actionId, enabled]).catch((e) => {
+				console.error('Failed to enable/disable action', e)
+			})
+		},
+		[socket, controlId, set]
+	)
+
 	const addAction = useCallback(
 		(actionType) => {
 			const [instanceId, actionId] = actionType.split(':', 2)
@@ -143,6 +153,7 @@ export function ActionsPanel({ controlId, set, actions, dragId, addPlaceholder, 
 				doDelete={emitDelete}
 				doDuplicate={emitDuplicate}
 				doReorder={emitOrder}
+				doEnabled={emitEnabled}
 				emitLearn={emitLearn}
 				setPanelCollapsed={setPanelCollapsed}
 				isPanelCollapsed={isPanelCollapsed}
@@ -213,6 +224,7 @@ export function ActionsPanelInner({
 	doSetDelay,
 	doDelete,
 	doDuplicate,
+	doEnabled,
 	doReorder,
 	emitLearn,
 	readonly,
@@ -249,6 +261,7 @@ export function ActionsPanelInner({
 							doDelete={doDelete2}
 							doDuplicate={doDuplicate}
 							doDelay={doSetDelay}
+							doEnabled={doEnabled}
 							moveCard={doReorder}
 							doLearn={emitLearn}
 							readonly={readonly ?? false}
@@ -300,6 +313,7 @@ function ActionTableRow({
 	doDelay,
 	moveCard,
 	doLearn,
+	doEnabled,
 	readonly,
 	isCollapsed,
 	setCollapsed,
@@ -311,6 +325,7 @@ function ActionTableRow({
 	const innerDuplicate = useCallback(() => doDuplicate(action.id), [action.id, doDuplicate])
 	const innerDelay = useCallback((delay) => doDelay(action.id, delay), [doDelay, action.id])
 	const innerLearn = useCallback(() => doLearn(action.id), [doLearn, action.id])
+	const innerSetEnabled = useCallback((e) => doEnabled(action.id, e.target.checked), [doEnabled, action.id])
 
 	const [optionVisibility, setOptionVisibility] = useState({})
 
@@ -431,6 +446,15 @@ function ActionTableRow({
 
 					<div className="cell-controls">
 						<CButtonGroup>
+							{doEnabled && (
+								<CSwitch
+									color="info"
+									checked={!action.disabled}
+									title={action.disabled ? 'Enable action' : 'Disable action'}
+									onChange={innerSetEnabled}
+								/>
+							)}
+							&nbsp;
 							{isCollapsed ? (
 								<CButton color="info" size="sm" onClick={doExpand} title="Expand action view">
 									<FontAwesomeIcon icon={faExpandArrowsAlt} />

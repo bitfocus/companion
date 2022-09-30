@@ -1,4 +1,4 @@
-import { CAlert, CButton, CForm, CFormGroup, CButtonGroup } from '@coreui/react'
+import { CAlert, CButton, CForm, CFormGroup, CButtonGroup, CSwitch } from '@coreui/react'
 import { faSort, faTrash, faCompressArrowsAlt, faExpandArrowsAlt, faCopy } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import React, { useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react'
@@ -104,6 +104,15 @@ export const FeedbacksPanel = function ({ controlId, feedbacks, dragId, heading 
 		[socket, controlId]
 	)
 
+	const emitEnabled = useCallback(
+		(feedbackId, enabled) => {
+			socketEmitPromise(socket, 'controls:feedback:enabled', [controlId, feedbackId, enabled]).catch((e) => {
+				console.error('Failed to enable/disable feedback', e)
+			})
+		},
+		[socket, controlId]
+	)
+
 	const [recentFeedbacks, setRecentFeedbacks] = useState([])
 	useMountEffect(() => {
 		try {
@@ -168,6 +177,7 @@ export const FeedbacksPanel = function ({ controlId, feedbacks, dragId, heading 
 								doDelete={doDelete}
 								doDuplicate={doDuplicate}
 								doLearn={doLearn}
+								doEnabled={emitEnabled}
 								dragId={dragId}
 								moveCard={moveCard}
 								setCollapsed={setPanelCollapsed}
@@ -198,6 +208,7 @@ function FeedbackTableRow({
 	doDelete,
 	doDuplicate,
 	doLearn,
+	doEnabled,
 	isCollapsed,
 	setCollapsed,
 }) {
@@ -296,6 +307,7 @@ function FeedbackTableRow({
 					isCollapsed={isCollapsed}
 					doCollapse={doCollapse}
 					doExpand={doExpand}
+					doEnabled={doEnabled}
 				/>
 			</td>
 		</tr>
@@ -315,6 +327,7 @@ export function FeedbackEditor({
 	isCollapsed,
 	doCollapse,
 	doExpand,
+	doEnabled,
 }) {
 	const feedbacksContext = useContext(FeedbacksContext)
 	const instancesContext = useContext(InstancesContext)
@@ -326,6 +339,8 @@ export function FeedbackEditor({
 	const options = feedbackSpec?.options ?? []
 
 	const [optionVisibility, setOptionVisibility] = useState({})
+
+	const innerSetEnabled = useCallback((e) => doEnabled(feedback.id, e.target.checked), [doEnabled, feedback.id])
 
 	useEffect(() => {
 		const options = feedbackSpec?.options ?? []
@@ -371,6 +386,15 @@ export function FeedbackEditor({
 
 			<div className="cell-controls">
 				<CButtonGroup>
+					{doEnabled && (
+						<CSwitch
+							color="info"
+							checked={!feedback.disabled}
+							title={feedback.disabled ? 'Enable feedback' : 'Disable feedback'}
+							onChange={innerSetEnabled}
+						/>
+					)}
+					&nbsp;
 					{isCollapsed ? (
 						<CButton color="info" size="sm" onClick={doExpand} title="Expand feedback view">
 							<FontAwesomeIcon icon={faExpandArrowsAlt} />

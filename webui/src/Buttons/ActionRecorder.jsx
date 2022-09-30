@@ -14,7 +14,6 @@ import {
 	CButton,
 	CAlert,
 	CButtonGroup,
-	CSwitch,
 	CCol,
 	CRow,
 	CForm,
@@ -40,6 +39,7 @@ import { ButtonGrid, ButtonGridHeader } from './ButtonGrid'
 import { cloneDeep } from 'lodash-es'
 import jsonPatch from 'fast-json-patch'
 import { usePanelCollapseHelper } from './EditButton/CollapseHelper'
+import CSwitch from '../CSwitch'
 
 export function ActionRecorder() {
 	const socket = useContext(SocketContext)
