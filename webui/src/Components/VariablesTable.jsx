@@ -1,16 +1,16 @@
-import React, { useCallback, useContext, useState } from 'react'
-import { CButton } from '@coreui/react'
+import React, { useCallback, useContext, useState, useMemo, useEffect, memo } from 'react'
+import { CAlert, CButton, CInput, CInputGroup, CInputGroupAppend } from '@coreui/react'
 import { SocketContext, socketEmitPromise, NotifierContext, VariableDefinitionsContext } from '../util'
 import { CopyToClipboard } from 'react-copy-to-clipboard'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faCopy } from '@fortawesome/free-solid-svg-icons'
-import { useEffect } from 'react'
-import { useMemo } from 'react'
+import { faCopy, faTimes } from '@fortawesome/free-solid-svg-icons'
 
 export function VariablesTable({ label }) {
 	const socket = useContext(SocketContext)
 	const notifier = useContext(NotifierContext)
 	const variableDefinitionsContext = useContext(VariableDefinitionsContext)
+
+	const [filter, setFilter] = useState('')
 
 	const variableDefinitions = useMemo(() => {
 		const defs = []
@@ -54,8 +54,50 @@ export function VariablesTable({ label }) {
 		notifier.current.show(`Copied`, 'Copied to clipboard', 5000)
 	}, [notifier])
 
-	if (variableDefinitions.length > 0) {
+	const [candidates, errorMsg] = useMemo(() => {
+		let candidates = []
+		try {
+			if (!filter) {
+				candidates = variableDefinitions
+			} else {
+				const regexp = new RegExp(filter, 'i')
+
+				candidates = variableDefinitions.filter(
+					(variable) => variable.name.match(regexp) || variable.label.match(regexp)
+				)
+			}
+			return [candidates, null]
+		} catch (e) {
+			console.error('Failed to compile candidates list:', e)
+
+			return [null, e?.toString() || 'Unknown error']
+		}
+	}, [variableDefinitions, filter])
+
+	if (variableDefinitions.length === 0) {
 		return (
+			<CAlert color="warning" role="alert">
+				Connection has no variables
+			</CAlert>
+		)
+	}
+
+	return (
+		<>
+			<CInputGroup className="variables-table-filter">
+				<CInput
+					type="text"
+					placeholder="Filter ..."
+					onChange={(e) => setFilter(e.currentTarget.value)}
+					value={filter}
+					style={{ fontSize: '1.2em' }}
+				/>
+				<CInputGroupAppend>
+					<CButton color="danger" onClick={() => setFilter('')}>
+						<FontAwesomeIcon icon={faTimes} />
+					</CButton>
+				</CInputGroupAppend>
+			</CInputGroup>
 			<table className="table table-responsive-sm variables-table">
 				<thead>
 					<tr>
@@ -66,44 +108,63 @@ export function VariablesTable({ label }) {
 					</tr>
 				</thead>
 				<tbody>
-					{variableDefinitions.map((variable) => {
-						let value = variableValues[variable.name]
-						if (typeof value !== 'string') {
-							value += ''
-						}
-
-						// Split into the lines
-						const elms = []
-						const lines = value.split('\\n')
-						for (const i in lines) {
-							const l = lines[i]
-							elms.push(l)
-							if (i <= lines.length - 1) {
-								elms.push(<br key={i} />)
-							}
-						}
-
-						return (
-							<tr key={variable.name}>
-								<td>
-									$({label}:{variable.name})
-								</td>
-								<td>{variable.label}</td>
-								<td>{elms}</td>
-								<td>
-									<CopyToClipboard text={`$(${label}:${variable.name})`} onCopy={onCopied}>
-										<CButton size="sm">
-											<FontAwesomeIcon icon={faCopy} />
-										</CButton>
-									</CopyToClipboard>
-								</td>
-							</tr>
-						)
-					})}
+					{errorMsg && (
+						<tr>
+							<td colSpan={4}>
+								<CAlert color="warning" role="alert">
+									Failed to build list of variables:
+									<br />
+									{errorMsg}
+								</CAlert>
+							</td>
+						</tr>
+					)}
+					{candidates &&
+						candidates.map((variable) => (
+							<VariablesTableRow
+								key={variable.name}
+								variable={variable}
+								value={variableValues[variable.name]}
+								label={label}
+								onCopied={onCopied}
+							/>
+						))}
 				</tbody>
 			</table>
-		)
-	} else {
-		return <p>Connection has no variables</p>
-	}
+		</>
+	)
 }
+
+const VariablesTableRow = memo(function VariablesTableRow({ variable, value, label, onCopied }) {
+	if (typeof value !== 'string') {
+		value += ''
+	}
+
+	// Split into the lines
+	const elms = []
+	const lines = value.split('\\n')
+	for (const i in lines) {
+		const l = lines[i]
+		elms.push(l)
+		if (i <= lines.length - 1) {
+			elms.push(<br key={i} />)
+		}
+	}
+
+	return (
+		<tr>
+			<td>
+				$({label}:{variable.name})
+			</td>
+			<td>{variable.label}</td>
+			<td>{elms}</td>
+			<td>
+				<CopyToClipboard text={`$(${label}:${variable.name})`} onCopy={onCopied}>
+					<CButton size="sm">
+						<FontAwesomeIcon icon={faCopy} />
+					</CButton>
+				</CopyToClipboard>
+			</td>
+		</tr>
+	)
+})
