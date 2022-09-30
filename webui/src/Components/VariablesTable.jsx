@@ -74,6 +74,9 @@ export function VariablesTable({ label }) {
 		}
 	}, [variableDefinitions, filter])
 
+	const clearFilter = useCallback(() => setFilter(''), [])
+	const updateFilter = useCallback((e) => setFilter(e.currentTarget.value), [])
+
 	if (variableDefinitions.length === 0) {
 		return (
 			<CAlert color="warning" role="alert">
@@ -88,12 +91,12 @@ export function VariablesTable({ label }) {
 				<CInput
 					type="text"
 					placeholder="Filter ..."
-					onChange={(e) => setFilter(e.currentTarget.value)}
+					onChange={updateFilter}
 					value={filter}
 					style={{ fontSize: '1.2em' }}
 				/>
 				<CInputGroupAppend>
-					<CButton color="danger" onClick={() => setFilter('')}>
+					<CButton color="danger" onClick={clearFilter}>
 						<FontAwesomeIcon icon={faTimes} />
 					</CButton>
 				</CInputGroupAppend>
