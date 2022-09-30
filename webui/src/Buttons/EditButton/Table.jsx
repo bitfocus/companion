@@ -84,12 +84,7 @@ export function ActionTableRowOption({
 			if (isAction) {
 				//isAction
 				control = (
-					<InternalCustomVariableDropdown
-						disabled={readonly}
-						value={value}
-						setValue={setValue2}
-						includeNone={option.includeNone}
-					/>
+					<InternalCustomVariableDropdown disabled={readonly} value={value} setValue={setValue2} includeNone={true} />
 				)
 			}
 			break

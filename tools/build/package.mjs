@@ -94,7 +94,6 @@ if (!process.env.SKIP_LAUNCH_CHECK) {
 // TODO - make optional from flag
 if (process.env.ELECTRON !== '0') {
 	// perform the electron build
-	await fs.remove('./electron-output')
 	await $`yarn --cwd launcher install`
 	await $`yarn --cwd launcher electron-builder --publish=never ${platformInfo.electronBuilderArgs}`
 } else {
