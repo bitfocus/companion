@@ -5,6 +5,9 @@ h4 {
 .action-buttons {
 	text-align: center;
 
+	// make compact
+	width: 0;
+
 	.btn {
 		text-transform: uppercase;
 	}
