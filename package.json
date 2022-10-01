@@ -77,7 +77,6 @@
 		"osc": "^2.4.3",
 		"p-debounce": "^4.0.0",
 		"p-queue": "^7.3.0",
-		"p-timeout": "^6.0.0",
 		"path-to-regexp": "^6.2.1",
 		"pngjs": "^3.3.3",
 		"respawn": "link:./vendor/respawn",
