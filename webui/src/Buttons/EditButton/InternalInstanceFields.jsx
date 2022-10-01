@@ -18,7 +18,9 @@ export function InternalInstanceField(option, isOnBank, readonly, value, setValu
 					disabled={readonly}
 					value={value}
 					includeAll={option.includeAll}
+					multiple={option.multiple}
 					setValue={setValue}
+					filterActionsRecorder={option.filterActionsRecorder}
 				/>
 			)
 		case 'internal:page':
@@ -58,7 +60,7 @@ export function InternalInstanceField(option, isOnBank, readonly, value, setValu
 	}
 }
 
-function InternalInstanceIdDropdown({ includeAll, value, setValue, disabled }) {
+function InternalInstanceIdDropdown({ includeAll, value, setValue, disabled, multiple, filterActionsRecorder }) {
 	const context = useContext(InstancesContext)
 
 	const choices = useMemo(() => {
@@ -68,10 +70,12 @@ function InternalInstanceIdDropdown({ includeAll, value, setValue, disabled }) {
 		}
 
 		for (const [id, config] of Object.entries(context)) {
+			if (filterActionsRecorder && !config.hasRecordActionsHandler) continue
+
 			instance_choices.push({ id, label: config.label ?? id })
 		}
 		return instance_choices
-	}, [context, includeAll])
+	}, [context, includeAll, filterActionsRecorder])
 
 	return (
 		<DropdownInputField
@@ -79,9 +83,9 @@ function InternalInstanceIdDropdown({ includeAll, value, setValue, disabled }) {
 			value={value}
 			definition={{
 				choices: choices,
-				default: choices[0]?.id,
+				default: multiple ? [] : choices[0]?.id,
 			}}
-			multiple={false}
+			multiple={!!multiple}
 			setValue={setValue}
 		/>
 	)

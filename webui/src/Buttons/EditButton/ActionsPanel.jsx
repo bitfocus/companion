@@ -478,7 +478,7 @@ function ActionTableRow({
 							<div className="cell-description">{actionSpec?.description || ''}</div>
 
 							{action.instance === 'internal' &&
-							Array.isArray(actionSpec.previewBank) &&
+							Array.isArray(actionSpec?.previewBank) &&
 							actionSpec.previewBank.length === 2 ? (
 								<div className="cell-bank-preview">
 									<ActionBankPreview fields={actionSpec.previewBank} options={action.options} controlId={controlId} />

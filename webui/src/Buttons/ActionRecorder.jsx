@@ -533,7 +533,7 @@ function RecorderSessionHeading({ confirmRef, sessionId, sessionInfo, doFinish }
 							value={sessionInfo.instanceIds}
 							setValue={changeInstanceIds}
 							multiple={true}
-							definition={{ choices: instancesWhichCanRecord, default: [] }}
+							definition={{ choices: instancesWhichCanRecord }}
 						/>
 					</CCol>
 

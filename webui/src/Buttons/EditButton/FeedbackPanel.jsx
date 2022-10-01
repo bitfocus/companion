@@ -418,7 +418,7 @@ export function FeedbackEditor({
 					<div className="cell-description">{feedbackSpec?.description || ''}</div>
 
 					{feedback.instance_id === 'internal' &&
-					Array.isArray(feedbackSpec.previewBank) &&
+					Array.isArray(feedbackSpec?.previewBank) &&
 					feedbackSpec.previewBank.length === 2 ? (
 						<div className="cell-bank-preview">
 							<ActionBankPreview fields={feedbackSpec.previewBank} options={feedback.options} controlId={controlId} />
