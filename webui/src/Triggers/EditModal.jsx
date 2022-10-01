@@ -279,7 +279,7 @@ export function TriggerEditModal({ doClose, doSave, item, plugins }) {
 		setAllExpanded: setAllActionExpanded,
 		canExpandAll: canExpandAllAction,
 		canCollapseAll: canCollapseAllAction,
-	} = usePanelCollapseHelper(`trigger_actions_${item.id}`, actionIds)
+	} = usePanelCollapseHelper(`trigger_actions_${item?.id}`, actionIds)
 
 	const isFeedbackBased = pluginSpec?.type === 'feedback'
 	const feedbackIds = useMemo(() => {
@@ -296,7 +296,7 @@ export function TriggerEditModal({ doClose, doSave, item, plugins }) {
 		setAllExpanded: setAllFeedbackExpanded,
 		canExpandAll: canExpandAllFeedback,
 		canCollapseAll: canCollapseAllFeedback,
-	} = usePanelCollapseHelper(`feedbacks_${item.id}`, feedbackIds)
+	} = usePanelCollapseHelper(`feedbacks_${item?.id}`, feedbackIds)
 
 	return (
 		<CModal show={true} onClose={doClose} size="lg">

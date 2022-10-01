@@ -248,7 +248,7 @@ export function ActionsPanelInner({
 		<table className="table action-table">
 			<tbody>
 				{actions.map((a, i) => (
-					<MyErrorBoundary>
+					<MyErrorBoundary key={a?.id ?? i}>
 						<ActionTableRow
 							key={a?.id ?? i}
 							isOnBank={isOnBank}
