@@ -70,6 +70,9 @@ for (const folder of dirs) {
 			}
 		}
 
+		let products = pkgJson.products || pkgJson.product || []
+		if (typeof products === 'string') products = [products]
+
 		const manifest: ModuleManifest = {
 			id: pkgJson.name,
 			name: pkgJson.name,
@@ -84,7 +87,7 @@ for (const folder of dirs) {
 
 			runtime: {
 				type: 'node14',
-				api: 'socket.io',
+				api: 'nodejs-ipc',
 				apiVersion: '0.0.0',
 
 				// entrypoint: '../../dist/index.js',
@@ -93,7 +96,7 @@ for (const folder of dirs) {
 			},
 
 			manufacturer: pkgJson.manufacturer ?? '',
-			products: pkgJson.products ?? (pkgJson.product ? [pkgJson.product] : []),
+			products: products,
 			keywords: pkgJson.keywords || [],
 		}
 
