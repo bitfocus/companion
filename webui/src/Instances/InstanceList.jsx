@@ -1,13 +1,13 @@
 import { useCallback, useContext, useEffect, useRef, useState } from 'react'
-import { CButton } from '@coreui/react'
+import { CButton, CButtonGroup } from '@coreui/react'
 import { InstancesContext, VariableDefinitionsContext, socketEmitPromise, SocketContext, ModulesContext } from '../util'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faDollarSign, faQuestionCircle, faBug } from '@fortawesome/free-solid-svg-icons'
 import jsonPatch from 'fast-json-patch'
-
 import { InstanceVariablesModal } from './InstanceVariablesModal'
 import { GenericConfirmModal } from '../Components/GenericConfirmModal'
 import { cloneDeep } from 'lodash-es'
+import CSwitch from '../CSwitch'
 
 export function InstancesList({ showHelp, doConfigureInstance }) {
 	const socket = useContext(SocketContext)
@@ -60,7 +60,7 @@ export function InstancesList({ showHelp, doConfigureInstance }) {
 						<th>Module</th>
 						<th>Label</th>
 						<th>Status</th>
-						<th>Actions</th>
+						<th>&nbsp;</th>
 					</tr>
 				</thead>
 				<tbody>
@@ -178,25 +178,31 @@ function InstancesTableRow({
 				{instance.label}
 			</td>
 			<td className={status.className}>
-				<p>{status.text}</p>
-				<p>{typeof status.message === 'string' ? status.message : JSON.stringify(status.message)}</p>
+				{isEnabled ? (
+					<>
+						<p>{status.text}</p>
+						<p>{typeof status.message === 'string' ? status.message : JSON.stringify(status.message)}</p>
+					</>
+				) : (
+					<p>Disabled</p>
+				)}
 			</td>
 			<td className="action-buttons">
-				<CButton onClick={doDelete} variant="ghost" color="danger" size="sm">
-					delete
-				</CButton>
-				{isEnabled ? (
-					<CButton onClick={doToggleEnabled} variant="ghost" color="warning" size="sm" disabled={!moduleInfo}>
-						disable
+				<CSwitch
+					color="info"
+					checked={isEnabled}
+					onChange={doToggleEnabled}
+					title={isEnabled ? 'Disable connection' : 'Enable connection'}
+				/>
+				&nbsp;
+				<CButtonGroup>
+					<CButton onClick={() => configureInstance(id)} color="info" size="sm" disabled={!moduleInfo || !isEnabled}>
+						edit
 					</CButton>
-				) : (
-					<CButton onClick={doToggleEnabled} variant="ghost" color="success" size="sm" disabled={!moduleInfo}>
-						enable
+					<CButton onClick={doDelete} color="danger" size="sm">
+						delete
 					</CButton>
-				)}
-				<CButton onClick={() => configureInstance(id)} color="primary" size="sm" disabled={!moduleInfo || !isEnabled}>
-					edit
-				</CButton>
+				</CButtonGroup>
 			</td>
 		</tr>
 	)

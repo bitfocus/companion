@@ -9,7 +9,7 @@ function splitColors(number) {
 	}
 }
 
-export function ColorInputField({ definition, value, setValue, setValid }) {
+export function ColorInputField({ definition, value, setValue, setValid, disabled }) {
 	const [currentColor, setCurrentColor] = useState(null)
 	const [displayPicker, setDisplayPicker] = useState(false)
 
@@ -77,6 +77,7 @@ export function ColorInputField({ definition, value, setValue, setValid }) {
 				<>
 					<div style={styles.popover}>
 						<SketchPicker
+							disabled={disabled}
 							color={color}
 							onChange={onChange}
 							onChangeComplete={onChangeComplete}

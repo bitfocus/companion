@@ -8,8 +8,16 @@ import React, {
 	useImperativeHandle,
 	useRef,
 	useState,
+	useMemo,
 } from 'react'
-import { KeyReceiver, PagesContext, socketEmitPromise, CreateBankControlId, SocketContext } from '../util'
+import {
+	KeyReceiver,
+	PagesContext,
+	socketEmitPromise,
+	CreateBankControlId,
+	SocketContext,
+	ButtonRenderCacheContext,
+} from '../util'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import {
 	faArrowsAlt,
@@ -23,8 +31,10 @@ import {
 import classnames from 'classnames'
 import { MAX_COLS, MAX_ROWS } from '../Constants'
 import { useDrop } from 'react-dnd'
-import { BankPreview, dataToButtonImage } from '../Components/BankButton'
+import { BankPreview } from '../Components/BankButton'
 import { GenericConfirmModal } from '../Components/GenericConfirmModal'
+import { nanoid } from 'nanoid'
+import { useSharedPageRenderCache } from '../ButtonRenderCache'
 
 export const ButtonsGridPanel = memo(function ButtonsPage({
 	pageNumber,
@@ -390,11 +400,18 @@ export const ButtonGridHeader = memo(function ButtonGridHeader({
 		setTimeout(event.target.select.bind(event.target), 20)
 	}
 
+	const nextPage = useCallback(() => {
+		changePage(1)
+	}, [changePage])
+	const prevPage = useCallback(() => {
+		changePage(-1)
+	}, [changePage])
+
 	return (
 		<div className="button-grid-header">
 			<CInputGroup>
 				<CInputGroupPrepend>
-					<CButton color="dark" hidden={!changePage} onClick={() => changePage(-1)}>
+					<CButton color="dark" hidden={!changePage} onClick={prevPage}>
 						<FontAwesomeIcon icon={faChevronLeft} />
 					</CButton>
 				</CInputGroupPrepend>
@@ -410,7 +427,7 @@ export const ButtonGridHeader = memo(function ButtonGridHeader({
 					className="button-page-input"
 				/>
 				<CInputGroupAppend>
-					<CButton color="dark" hidden={!changePage} onClick={() => changePage(1)}>
+					<CButton color="dark" hidden={!changePage} onClick={nextPage}>
 						<FontAwesomeIcon icon={faChevronRight} />
 					</CButton>
 				</CInputGroupAppend>
@@ -428,51 +445,11 @@ export const ButtonGridHeader = memo(function ButtonGridHeader({
 	)
 })
 
-function ButtonGrid({ bankClick, pageNumber, selectedButton }) {
-	const socket = useContext(SocketContext)
+export function ButtonGrid({ bankClick, pageNumber, selectedButton }) {
+	const buttonCache = useContext(ButtonRenderCacheContext)
 
-	const [imageCache, setImageCache] = useState({})
-
-	useEffect(() => {
-		setImageCache({})
-
-		const updatePreviewImage = (page, bank, render) => {
-			if (page === pageNumber) {
-				setImageCache((oldImages) => {
-					return {
-						...oldImages,
-						[bank]: dataToButtonImage(render),
-					}
-				})
-			}
-		}
-
-		socket.on('page-preview:bank-data', updatePreviewImage)
-
-		// Subscribe to images for the new page
-		socketEmitPromise(socket, 'page-preview:subscribe', [pageNumber])
-			.then((images) => {
-				const newImages = {}
-				for (const [key, image] of Object.entries(images)) {
-					newImages[key] = dataToButtonImage(image)
-				}
-				setImageCache(newImages)
-			})
-			.catch((e) => {
-				console.error(`Failed to subscribe page preview`)
-			})
-
-		return () => {
-			socket.off('page-preview:bank-data', updatePreviewImage)
-
-			socketEmitPromise(socket, 'page-preview:unsubscribe', [pageNumber]).catch((e) => {
-				console.error(`Failed to unsubscribe page preview`)
-			})
-		}
-	}, [socket, pageNumber])
-
-	const selectedPage = selectedButton ? selectedButton[0] : null
-	const selectedBank = selectedButton ? selectedButton[1] : null
+	const gridId = useMemo(() => nanoid(), [])
+	const pageImages = useSharedPageRenderCache(buttonCache, gridId, pageNumber)
 
 	return (
 		<div
@@ -493,15 +470,16 @@ function ButtonGrid({ bankClick, pageNumber, selectedButton }) {
 								.fill(0)
 								.map((_, x) => {
 									const index = y * MAX_COLS + x + 1
+									const controlId = CreateBankControlId(pageNumber, index)
 									return (
 										<ButtonGridIcon
 											key={x}
 											page={pageNumber}
 											index={index}
-											preview={imageCache[index]}
+											preview={pageImages[index]}
 											onClick={bankClick}
 											alt={`Bank ${index}`}
-											selected={selectedPage === pageNumber && selectedBank === index}
+											selected={selectedButton === controlId}
 										/>
 									)
 								})}

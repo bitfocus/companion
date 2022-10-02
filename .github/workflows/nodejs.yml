@@ -2,36 +2,8 @@ name: Build binaries
 on: [push]
 
 jobs:
-  build-shared:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v1
-      - name: Use Node.js
-        uses: actions/setup-node@v2
-        with:
-          node-version-file: '.node-version'
-      - name: yarn update
-        run: |
-          yarn update
-        env:
-          CI: 1
-      - name: build shared package
-        run: |
-          yarn zx tools/build/dist.mjs
-        env:
-          SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
-
-      - name: Upload artifact
-        uses: actions/upload-artifact@v3
-        with:
-          name: shared-package
-          retention-days: 1
-          path: |
-            dist
-
   linux64:
     runs-on: ubuntu-latest
-    needs: build-shared
     steps:
       - uses: actions/checkout@v1
       - name: Use Node.js
@@ -39,17 +11,14 @@ jobs:
         with:
           node-version-file: '.node-version'
 
-      - name: Download artifact
-        uses: actions/download-artifact@v3
-        with:
-          name: shared-package
-          path: dist
-
-      - name: package
+      - name: build & package
         run: |
-          yarn install
+          # try and avoid timeout errors
+          yarn config set network-timeout 100000 -g
 
-          yarn zx tools/build/package.mjs
+          yarn update
+
+          yarn zx tools/build/complete.mjs
 
           # manually tar it, to preserve the symlinks
           cd electron-output
@@ -58,6 +27,7 @@ jobs:
         env:
           CI: 1
           SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
+          USE_HARD_LINKS: false
 
       - name: Determine files to upload
         id: filenames
@@ -89,7 +59,6 @@ jobs:
 
   osx:
     runs-on: macos-latest
-    needs: build-shared
     steps:
       - uses: actions/checkout@v1
       - name: Use Node.js
@@ -97,20 +66,14 @@ jobs:
         with:
           node-version-file: '.node-version'
 
-      - name: Download artifact
-        uses: actions/download-artifact@v3
-        with:
-          name: shared-package
-          path: dist
-
-      - name: package
+      - name: build & package
         run: |
           # try and avoid timeout errors
           yarn config set network-timeout 100000 -g
 
-          yarn install
+          yarn update
 
-          yarn zx tools/build/package.mjs
+          yarn zx tools/build/complete.mjs
         env:
           CI: 1
           CSC_LINK: ${{ secrets.OSX_CSC_LINK }}
@@ -118,6 +81,7 @@ jobs:
           APPLEID: ${{ secrets.APPLEID }}
           APPLEIDPASS: ${{ secrets.APPLEIDPASS }}
           SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
+          USE_HARD_LINKS: false
 
       - name: Determine files to upload
         id: filenames
@@ -149,7 +113,6 @@ jobs:
 
   osx-arm64:
     runs-on: macos-11
-    needs: build-shared
     steps:
       - uses: actions/checkout@v1
       - name: Use Node.js
@@ -157,20 +120,17 @@ jobs:
         with:
           node-version-file: '.node-version'
 
-      - name: Download artifact
-        uses: actions/download-artifact@v3
-        with:
-          name: shared-package
-          path: dist
-
-      - name: package
+      - name: yarn update
         run: |
           # try and avoid timeout errors
           yarn config set network-timeout 100000 -g
 
-          yarn install
-
-          yarn zx tools/build/package.mjs darwin-arm64
+          yarn update
+        env:
+          CI: 1
+      - name: build & package
+        run: |
+          yarn zx tools/build/complete.mjs darwin-arm64
         env:
           CI: 1
           CSC_LINK: ${{ secrets.OSX_CSC_LINK }}
@@ -178,6 +138,8 @@ jobs:
           APPLEID: ${{ secrets.APPLEID }}
           APPLEIDPASS: ${{ secrets.APPLEIDPASS }}
           SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
+          USE_HARD_LINKS: false
+          SKIP_LAUNCH_CHECK: true
 
       - name: Determine files to upload
         id: filenames
@@ -219,6 +181,9 @@ jobs:
       - name: build & package
         shell: bash
         run: |
+          # try and avoid timeout errors
+          yarn config set network-timeout 100000 -g
+
           # This fixes it somehow, and without it we get no logs from any shell scripts which are run
           yarn config set script-shell bash
 

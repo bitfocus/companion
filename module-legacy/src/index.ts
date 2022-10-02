@@ -78,7 +78,7 @@ export default class MockModule extends InstanceBase<MockConfig> {
 		return rawFields.map((input) => {
 			const input2 = input as SomeCompanionConfigFieldOld
 			return {
-				...convertInputField(input2),
+				...(convertInputField(input2) as SomeCompanionConfigField),
 				width: input2.width,
 			}
 		})

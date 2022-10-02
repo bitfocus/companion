@@ -12,6 +12,8 @@ import {
 	socketEmitPromise,
 	ParseControlId,
 	SocketContext,
+	MyErrorBoundary,
+	FormatButtonControlId,
 } from '../../util'
 import { ActionsPanel } from './ActionsPanel'
 import jsonPatch from 'fast-json-patch'
@@ -134,9 +136,8 @@ export function EditButton({ controlId, onKeyUp }) {
 
 	const doRetryLoad = useCallback(() => setReloadConfigToken(nanoid()), [])
 	const resetBank = useCallback(() => {
-		const parsedId = ParseControlId(controlId) // TODO
 		resetModalRef.current.show(
-			`Clear button ${parsedId?.page}.${parsedId?.bank}`,
+			`Clear button ${FormatButtonControlId(controlId)}`,
 			`This will clear the style, feedbacks and all actions`,
 			'Clear',
 			() => {
@@ -174,77 +175,89 @@ export function EditButton({ controlId, onKeyUp }) {
 			<LoadingRetryOrError dataReady={dataReady} error={loadError} doRetry={doRetryLoad} />
 			{hasConfig ? (
 				<div style={{ display: dataReady ? '' : 'none' }}>
-					<div>
-						<BankPreview fixedSize preview={previewImage} right={true} />
-						<CDropdown className="mt-2" style={{ display: 'inline-block' }}>
-							<CButtonGroup>
-								{/* This could be simplified to use the split property on CDropdownToggle, but then onClick doesnt work https://github.com/coreui/coreui-react/issues/179 */}
-								<CButton color="success" onClick={() => setButtonType('press')}>
-									Regular button
-								</CButton>
-								<CDropdownToggle
-									caret
-									color="success"
-									style={{ opacity: 0.8, paddingLeft: 6 }}
-									className="dropdown-toggle dropdown-toggle-split"
-								>
-									<span className="sr-only">Toggle Dropdown</span>
-								</CDropdownToggle>
-							</CButtonGroup>
-							<CDropdownMenu>
-								<CDropdownItem onClick={() => setButtonType('press')}>Regular button</CDropdownItem>
-								<CDropdownItem onClick={() => setButtonType('step')}>Step/latch</CDropdownItem>
-								<CDropdownItem onClick={() => setButtonType('pageup')}>Page up</CDropdownItem>
-								<CDropdownItem onClick={() => setButtonType('pagenum')}>Page number</CDropdownItem>
-								<CDropdownItem onClick={() => setButtonType('pagedown')}>Page down</CDropdownItem>
-							</CDropdownMenu>
-						</CDropdown>
-						&nbsp;
-						<CButton color="danger" hidden={!config} onClick={resetBank}>
-							Erase
-						</CButton>
-						&nbsp;
-						<CButton
-							color="warning"
-							hidden={!config || (config.type !== 'press' && config.type !== 'step')}
-							onMouseDown={hotPressDown}
-							onMouseUp={hotPressUp}
-						>
-							Test actions
-						</CButton>
-					</div>
+					<MyErrorBoundary>
+						<div>
+							<BankPreview fixedSize preview={previewImage} right={true} />
+							<CDropdown className="mt-2" style={{ display: 'inline-block' }}>
+								<CButtonGroup>
+									{/* This could be simplified to use the split property on CDropdownToggle, but then onClick doesnt work https://github.com/coreui/coreui-react/issues/179 */}
+									<CButton color="success" onClick={() => setButtonType('press')}>
+										Regular button
+									</CButton>
+									<CDropdownToggle
+										caret
+										color="success"
+										style={{ opacity: 0.8, paddingLeft: 6 }}
+										className="dropdown-toggle dropdown-toggle-split"
+									>
+										<span className="sr-only">Toggle Dropdown</span>
+									</CDropdownToggle>
+								</CButtonGroup>
+								<CDropdownMenu>
+									<CDropdownItem onClick={() => setButtonType('press')}>Regular button</CDropdownItem>
+									<CDropdownItem onClick={() => setButtonType('step')}>Step/latch</CDropdownItem>
+									<CDropdownItem onClick={() => setButtonType('pageup')}>Page up</CDropdownItem>
+									<CDropdownItem onClick={() => setButtonType('pagenum')}>Page number</CDropdownItem>
+									<CDropdownItem onClick={() => setButtonType('pagedown')}>Page down</CDropdownItem>
+								</CDropdownMenu>
+							</CDropdown>
+							&nbsp;
+							<CButton color="danger" hidden={!config} onClick={resetBank}>
+								Erase
+							</CButton>
+							&nbsp;
+							<CButton
+								color="warning"
+								hidden={!config || (config.type !== 'press' && config.type !== 'step')}
+								onMouseDown={hotPressDown}
+								onMouseUp={hotPressUp}
+							>
+								Test actions
+							</CButton>
+						</div>
+					</MyErrorBoundary>
 
-					<ButtonStyleConfig
-						controlType={config.type}
-						style={config.style}
-						configRef={configRef}
-						controlId={controlId}
-					/>
+					<MyErrorBoundary>
+						<ButtonStyleConfig
+							controlType={config.type}
+							style={config.style}
+							configRef={configRef}
+							controlId={controlId}
+						/>
 
-					<ButtonOptionsConfig
-						controlType={config.type}
-						options={config.options}
-						configRef={configRef}
-						controlId={controlId}
-					/>
+						<ButtonOptionsConfig
+							controlType={config.type}
+							options={config.options}
+							configRef={configRef}
+							controlId={controlId}
+						/>
+					</MyErrorBoundary>
 
 					{config && runtimeProps ? (
 						<>
 							{config.action_sets ? (
-								<ActionsSection
-									style={config.type}
-									controlId={controlId}
-									action_sets={config.action_sets}
-									runtimeProps={runtimeProps}
-								/>
+								<MyErrorBoundary>
+									<ActionsSection
+										style={config.type}
+										controlId={controlId}
+										action_sets={config.action_sets}
+										runtimeProps={runtimeProps}
+									/>
+								</MyErrorBoundary>
 							) : (
 								''
 							)}
 
 							{config.feedbacks ? (
 								<>
-									<h4 className="mt-3">Feedback</h4>
-									<FeedbacksPanel controlId={controlId} feedbacks={config.feedbacks} dragId={'feedback'} />
+									<MyErrorBoundary>
+										<FeedbacksPanel
+											heading={'Feedback'}
+											controlId={controlId}
+											feedbacks={config.feedbacks}
+											dragId={'feedback'}
+										/>
+									</MyErrorBoundary>
 								</>
 							) : (
 								''
@@ -318,22 +331,26 @@ function ActionsSection({ style, controlId, action_sets, runtimeProps }) {
 	if (style === 'press') {
 		return (
 			<>
-				<h4 className="mt-3">Press actions</h4>
-				<ActionsPanel
-					controlId={controlId}
-					set={'down'}
-					dragId={'downAction'}
-					addPlaceholder="+ Add key press action"
-					actions={action_sets['down']}
-				/>
-				<h4 className="mt-3">Release actions</h4>
-				<ActionsPanel
-					controlId={controlId}
-					set={'up'}
-					dragId={'releaseAction'}
-					addPlaceholder="+ Add key release action"
-					actions={action_sets['up']}
-				/>
+				<MyErrorBoundary>
+					<ActionsPanel
+						heading="Press actions"
+						controlId={controlId}
+						set={'down'}
+						dragId={'downAction'}
+						addPlaceholder="+ Add key press action"
+						actions={action_sets['down']}
+					/>
+				</MyErrorBoundary>
+				<MyErrorBoundary>
+					<ActionsPanel
+						heading="Release actions"
+						controlId={controlId}
+						set={'up'}
+						dragId={'releaseAction'}
+						addPlaceholder="+ Add key release action"
+						actions={action_sets['up']}
+					/>
+				</MyErrorBoundary>
 			</>
 		)
 	} else if (style === 'step') {
@@ -342,19 +359,21 @@ function ActionsSection({ style, controlId, action_sets, runtimeProps }) {
 			<>
 				<GenericConfirmModal ref={confirmRef} />
 				{keys.map((k, i) => (
-					<>
-						<h4 key={`heading_${k}`} className="mt-3">
-							Step {i + 1} actions
-							<CButtonGroup className="right">
+					<MyErrorBoundary>
+						<ActionsPanel
+							heading={`Step ${i + 1} actions`}
+							headingActions={[
 								<CButton
+									key="set-next"
 									color={runtimeProps.current_step_id === k ? 'success' : 'primary'}
 									size="sm"
 									disabled={runtimeProps.current_step_id === k}
 									onClick={() => setNextStep(k)}
 								>
 									Set Next
-								</CButton>
+								</CButton>,
 								<CButton
+									key="move-up"
 									color="warning"
 									title="Move step up"
 									size="sm"
@@ -362,8 +381,9 @@ function ActionsSection({ style, controlId, action_sets, runtimeProps }) {
 									onClick={() => swapSteps(k, keys[i - 1])}
 								>
 									<FontAwesomeIcon icon={faArrowUp} />
-								</CButton>
+								</CButton>,
 								<CButton
+									key="move-down"
 									color="warning"
 									title="Move step down"
 									size="sm"
@@ -371,8 +391,9 @@ function ActionsSection({ style, controlId, action_sets, runtimeProps }) {
 									onClick={() => swapSteps(k, keys[i + 1])}
 								>
 									<FontAwesomeIcon icon={faArrowDown} />
-								</CButton>
+								</CButton>,
 								<CButton
+									key="delete"
 									color="danger"
 									title="Delete step"
 									size="sm"
@@ -380,10 +401,8 @@ function ActionsSection({ style, controlId, action_sets, runtimeProps }) {
 									onClick={() => removeStep(k)}
 								>
 									<FontAwesomeIcon icon={faTrash} />
-								</CButton>
-							</CButtonGroup>
-						</h4>
-						<ActionsPanel
+								</CButton>,
+							]}
 							key={`panel_${k}`}
 							controlId={controlId}
 							set={k}
@@ -391,7 +410,7 @@ function ActionsSection({ style, controlId, action_sets, runtimeProps }) {
 							addPlaceholder={`+ Add action to step ${i + 1}`}
 							actions={action_sets[k]}
 						/>
-					</>
+					</MyErrorBoundary>
 				))}
 				<br />
 				<p>

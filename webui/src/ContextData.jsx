@@ -15,10 +15,12 @@ import {
 	SocketContext,
 	NotifierContext,
 	ModulesContext,
+	ButtonRenderCacheContext,
 } from './util'
 import { NotificationsManager } from './Components/Notifications'
 import { cloneDeep } from 'lodash-es'
 import jsonPatch from 'fast-json-patch'
+import { ButtonRenderCache } from './ButtonRenderCache'
 
 export function ContextData({ children }) {
 	const socket = useContext(SocketContext)
@@ -33,6 +35,10 @@ export function ContextData({ children }) {
 	const [surfaces, setSurfaces] = useState(null)
 	const [pages, setPages] = useState(null)
 	const [triggers, setTriggers] = useState(null)
+
+	const buttonCache = useMemo(() => {
+		return new ButtonRenderCache(socket)
+	}, [socket])
 
 	const completeVariableDefinitions = useMemo(() => {
 		if (variableDefinitions) {
@@ -275,29 +281,31 @@ export function ContextData({ children }) {
 
 	return (
 		<NotifierContext.Provider value={notifierRef}>
-			<ModulesContext.Provider value={modules}>
-				<ActionsContext.Provider value={actionDefinitions}>
-					<FeedbacksContext.Provider value={feedbackDefinitions}>
-						<InstancesContext.Provider value={instances}>
-							<VariableDefinitionsContext.Provider value={completeVariableDefinitions}>
-								<CustomVariableDefinitionsContext.Provider value={customVariables}>
-									<UserConfigContext.Provider value={userConfig}>
-										<SurfacesContext.Provider value={surfaces}>
-											<PagesContext.Provider value={pages}>
-												<TriggersContext.Provider value={triggers}>
-													<NotificationsManager ref={notifierRef} />
+			<ButtonRenderCacheContext.Provider value={buttonCache}>
+				<ModulesContext.Provider value={modules}>
+					<ActionsContext.Provider value={actionDefinitions}>
+						<FeedbacksContext.Provider value={feedbackDefinitions}>
+							<InstancesContext.Provider value={instances}>
+								<VariableDefinitionsContext.Provider value={completeVariableDefinitions}>
+									<CustomVariableDefinitionsContext.Provider value={customVariables}>
+										<UserConfigContext.Provider value={userConfig}>
+											<SurfacesContext.Provider value={surfaces}>
+												<PagesContext.Provider value={pages}>
+													<TriggersContext.Provider value={triggers}>
+														<NotificationsManager ref={notifierRef} />
 
-													{children(progressPercent, completedSteps.length === steps.length)}
-												</TriggersContext.Provider>
-											</PagesContext.Provider>
-										</SurfacesContext.Provider>
-									</UserConfigContext.Provider>
-								</CustomVariableDefinitionsContext.Provider>
-							</VariableDefinitionsContext.Provider>
-						</InstancesContext.Provider>
-					</FeedbacksContext.Provider>
-				</ActionsContext.Provider>
-			</ModulesContext.Provider>
+														{children(progressPercent, completedSteps.length === steps.length)}
+													</TriggersContext.Provider>
+												</PagesContext.Provider>
+											</SurfacesContext.Provider>
+										</UserConfigContext.Provider>
+									</CustomVariableDefinitionsContext.Provider>
+								</VariableDefinitionsContext.Provider>
+							</InstancesContext.Provider>
+						</FeedbacksContext.Provider>
+					</ActionsContext.Provider>
+				</ModulesContext.Provider>
+			</ButtonRenderCacheContext.Provider>
 		</NotifierContext.Provider>
 	)
 }

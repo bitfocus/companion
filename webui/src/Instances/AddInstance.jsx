@@ -84,7 +84,7 @@ const AddInstancesInner = memo(function AddInstancesInner({ showHelp, configureI
 			<CAlert color="warning" role="alert">
 				Failed to build list of modules:
 				<br />
-				{e}
+				{e?.toString()}
 			</CAlert>
 		)
 	}

@@ -81,6 +81,11 @@ await fs.remove(path.join(runtimeDir, 'include'))
 // Install dependencies
 await $`yarn --cwd dist install`
 
+if (!process.env.SKIP_LAUNCH_CHECK) {
+	const launchCheck = await $`node dist/main.js check-launches`.exitCode
+	if (launchCheck !== 89) throw new Error("Launch check failed. Build looks like it won't launch!")
+}
+
 // if (!platform) {
 // 	// If for our own platform, make sure the correct deps are installed
 // 	await $`electron-builder install-app-deps`
@@ -89,7 +94,6 @@ await $`yarn --cwd dist install`
 // TODO - make optional from flag
 if (process.env.ELECTRON !== '0') {
 	// perform the electron build
-	await fs.remove('./electron-output')
 	await $`yarn --cwd launcher install`
 	await $`yarn --cwd launcher electron-builder --publish=never ${platformInfo.electronBuilderArgs}`
 } else {

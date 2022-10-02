@@ -1,8 +1,10 @@
-import React, { memo, useCallback, useContext, useEffect, useState } from 'react'
-import { CButton } from '@coreui/react'
+import React, { memo, useCallback, useContext, useEffect, useState, useMemo } from 'react'
+import { CButton, CButtonGroup } from '@coreui/react'
 import { SocketContext, TriggersContext } from '../util'
 import dayjs from 'dayjs'
 import { TriggerEditModal } from './EditModal'
+import sanitizeHtml from 'sanitize-html'
+import CSwitch from '../CSwitch'
 
 export const Triggers = memo(function Triggers() {
 	const socket = useContext(SocketContext)
@@ -70,7 +72,7 @@ export const Triggers = memo(function Triggers() {
 const tableDateFormat = 'MM/DD HH:mm:ss'
 function TriggersTable({ triggersList, editItem }) {
 	return (
-		<table className="table table-responsive-sm">
+		<table className="table table-responsive-sm ">
 			<thead>
 				<tr>
 					<th>Name</th>
@@ -106,37 +108,46 @@ function TriggersTableRow({ item, editItem }) {
 		socket.emit('schedule_clone_item', item.id)
 	}, [socket, item.id])
 
+	const descriptionHtml = useMemo(
+		() => ({
+			__html: sanitizeHtml(item.config_desc, {
+				allowedTags: sanitizeHtml.defaults.allowedTags.concat(['img']),
+				disallowedTagsMode: 'escape',
+			}),
+		}),
+		[item.config_desc]
+	)
+
 	return (
 		<tr>
 			<td>{item.title}</td>
 			<td>
-				{/* We used to use dangerouslySetInnerHTML, but that is a security problem once we allow dynamic modules */}
-				{item.config_desc}
+				<span dangerouslySetInnerHTML={descriptionHtml} />
 				<br />
 				{item.last_run ? <small>Last run: {dayjs(item.last_run).format(tableDateFormat)}</small> : ''}
 			</td>
 			<td className="action-buttons">
-				<CButton size="sm" color="ghost-danger" onClick={doDelete}>
-					delete
-				</CButton>
-				{item.disabled ? (
-					<CButton size="sm" color="ghost-success" onClick={doEnableDisable}>
-						enable
+				<CSwitch
+					color="info"
+					checked={!item.disabled}
+					onChange={doEnableDisable}
+					title={!item.disabled ? 'Disable trigger' : 'Enable trigger'}
+				/>
+				&nbsp;
+				<CButtonGroup>
+					<CButton size="sm" color="info" onClick={doEdit}>
+						edit
 					</CButton>
-				) : (
-					<CButton size="sm" color="ghost-warning" onClick={doEnableDisable}>
-						disable
+					<CButton size="sm" color="warning" onClick={doClone}>
+						clone
 					</CButton>
-				)}
-				<CButton size="sm" color="primary" onClick={doEdit}>
-					edit
-				</CButton>
-				<CButton size="sm" color="warning" onClick={doClone}>
-					clone
-				</CButton>
-				{/* <CButton size="sm" color="light" href={`/int/trigger_export/${item.id}`} target="_new">
+					<CButton size="sm" color="danger" onClick={doDelete}>
+						delete
+					</CButton>
+					{/* <CButton size="sm" color="light" href={`/int/trigger_export/${item.id}`} target="_new">
 					export
 				</CButton> */}
+				</CButtonGroup>
 			</td>
 		</tr>
 	)

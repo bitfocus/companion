@@ -9,88 +9,15 @@ import {
 } from './util'
 import { CButton, CCol, CContainer, CForm, CFormGroup, CInput, CInputCheckbox, CRow } from '@coreui/react'
 import { nanoid } from 'nanoid'
-import { MAX_BUTTONS, MAX_COLS, MAX_ROWS } from './Constants'
-import { BankPreview, dataToButtonImage } from './Components/BankButton'
+import { MAX_COLS, MAX_ROWS } from './Constants'
+import { BankPreview } from './Components/BankButton'
 import { useInView } from 'react-intersection-observer'
 import * as queryString from 'query-string'
 import rangeParser from 'parse-numeric-range'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faCog, faExpand } from '@fortawesome/free-solid-svg-icons'
-import EventEmitter from 'eventemitter3'
 import { useNavigate } from 'react-router-dom'
-
-/** Cache of images across grid components */
-class ImageCache extends EventEmitter {
-	constructor(socket) {
-		super()
-
-		this.socket = socket
-
-		this.loadedPages = new Set()
-		this.imageCache = new Map()
-
-		this.socket.on('connect', this._onConnect)
-		this.socket.on('web-buttons:bank-data', this._updateImage)
-	}
-
-	_onConnect = () => {
-		// resubscribe on reconnect
-		for (const k of this.loadedPages.values()) {
-			this._doSubscribe(k)
-		}
-	}
-
-	destroy() {
-		this.socket.off('connect', this._onConnect)
-		this.socket.off('web-buttons:bank-data', this._updateImage)
-	}
-
-	loadPage(page) {
-		if (!this.loadedPages.has(page)) {
-			this.loadedPages.add(page)
-			this._doSubscribe(page)
-		}
-	}
-
-	getPage(page) {
-		return this.imageCache.get(page) || {}
-	}
-
-	_doSubscribe(page) {
-		socketEmitPromise(this.socket, 'web-buttons:load-page', [page])
-			.then((data) => {
-				this._updateImages(page, data)
-			})
-			.catch((e) => {
-				// TODO - report to user
-				console.error(`Failed to load page data: ${e}`)
-			})
-	}
-
-	_updateImage = (page, bank, image) => {
-		this._updateImages(page, { [bank]: image })
-	}
-
-	_updateImages = (page0, data) => {
-		const page = Number(page0)
-		if (this.loadedPages.has(page)) {
-			const newImages = { ...this.imageCache.get(page) }
-
-			let changed = false
-			for (let key = 1; key <= MAX_BUTTONS; ++key) {
-				if (data[key] !== undefined) {
-					changed = true
-					newImages[key] = dataToButtonImage(data[key])
-				}
-			}
-
-			if (changed) {
-				this.emit(`${page}`, newImages)
-			}
-			this.imageCache.set(page, newImages)
-		}
-	}
-}
+import { ButtonRenderCache, useSharedPageRenderCache } from './ButtonRenderCache'
 
 export function Tablet() {
 	const socket = useContext(SocketContext)
@@ -110,16 +37,7 @@ export function Tablet() {
 		}
 	}, [queryUrl])
 
-	const [imageCache, setImageCache] = useState(null)
-	useEffect(() => {
-		const newImageCache = new ImageCache(socket)
-		setImageCache(newImageCache)
-
-		// Cleanup handlers
-		return () => {
-			newImageCache.destroy()
-		}
-	}, [socket])
+	const imageCache = useMemo(() => new ButtonRenderCache(socket), [socket]) // TODO - this isnt the safest
 
 	const [retryToken, setRetryToken] = useState(nanoid())
 	const doRetryLoad = useCallback(() => setRetryToken(nanoid()), [])
@@ -376,26 +294,8 @@ function ButtonsFromPage({ imageCache, number, cols, rows }) {
 
 	const [buttonsInView, setButtonsInView] = useState({})
 
-	// load existing images from the cache at mount
-	const [images, setImages] = useState(() => imageCache.getPage(number))
-	useEffect(() => {
-		setImages(imageCache.getPage(number))
-	}, [imageCache, number])
-
-	// Ensure the page is loaded when it comes into view
-	useEffect(() => {
-		const anyVisible = Object.values(buttonsInView).find((v) => !!v)
-
-		if (anyVisible) {
-			setImages(imageCache.getPage(number))
-			imageCache.on(`${number}`, setImages)
-			imageCache.loadPage(number)
-
-			return () => {
-				imageCache.off(`${number}`, setImages)
-			}
-		}
-	}, [imageCache, number, buttonsInView])
+	const anyVisible = !!Object.values(buttonsInView).find((v) => !!v)
+	const images = useSharedPageRenderCache(imageCache, 'tablet', number, !anyVisible)
 
 	const bankClick = useCallback(
 		(bank, pressed) => {
