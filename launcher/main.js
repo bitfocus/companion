@@ -557,7 +557,7 @@ if (!lock) {
 				`--config-dir=${configDir}`,
 				`--admin-port=${uiConfig.get('http_port')}`,
 				`--admin-address=${uiConfig.get('bind_ip')}`,
-				uiConfig.get('enable_developer') ? `--extra-module-path="${uiConfig.get('dev_modules_path')}"` : undefined,
+				uiConfig.get('enable_developer') ? `--extra-module-path=${uiConfig.get('dev_modules_path')}` : undefined,
 			],
 			{
 				name: `Companion process`,
