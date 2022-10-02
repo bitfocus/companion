@@ -11,7 +11,7 @@ import type {
 	SomeCompanionInputField,
 } from '../instance_skel_types'
 import type InstanceSkel = require('../instance_skel')
-import { assertNever, literal } from '@companion-module/base'
+import { assertNever, literal, InstanceStatus } from '@companion-module/base'
 import { ServiceRest } from './rest.js'
 
 // @ts-expect-error Not typescript
@@ -70,35 +70,35 @@ function convertInputFieldBase(input: CompanionInputField): Complete<Omit<Module
 	}
 }
 
-export function convertInputField(input: SomeCompanionInputField): Complete<ModuleApi.SomeCompanionInputField> {
+export function convertInputField(input: SomeCompanionInputField): Complete<ModuleApi.CompanionInputFieldBase> {
 	const inputType = input.type
 	switch (input.type) {
 		case 'text':
-			return {
+			return literal<Complete<ModuleApi.CompanionInputFieldStaticText>>({
 				...convertInputFieldBase(input),
 				type: 'static-text',
 				value: input.value,
-			}
+			})
 		case 'textinput':
-			return {
+			return literal<Complete<ModuleApi.CompanionInputFieldTextInput>>({
 				...convertInputFieldBase(input),
 				type: 'textinput',
 				default: input.default,
 				required: input.required,
 				regex: input.regex,
 				// useVariables: false,
-			}
+			})
 		case 'textwithvariables':
-			return {
+			return literal<Complete<ModuleApi.CompanionInputFieldTextInput>>({
 				...convertInputFieldBase(input),
 				type: 'textinput',
 				default: input.default,
 				required: undefined,
 				regex: undefined,
 				// useVariables: false,
-			}
+			})
 		case 'number':
-			return {
+			return literal<Complete<ModuleApi.CompanionInputFieldNumber>>({
 				...convertInputFieldBase(input),
 				type: 'number',
 				default: input.default,
@@ -107,22 +107,22 @@ export function convertInputField(input: SomeCompanionInputField): Complete<Modu
 				step: input.step,
 				range: input.range,
 				required: input.required,
-			}
+			})
 		case 'colorpicker':
-			return {
+			return literal<Complete<ModuleApi.CompanionInputFieldColor>>({
 				...convertInputFieldBase(input),
 				type: 'colorpicker',
 				default: input.default,
-			}
+			})
 		case 'checkbox':
-			return {
+			return literal<Complete<ModuleApi.CompanionInputFieldCheckbox>>({
 				...convertInputFieldBase(input),
 				type: 'checkbox',
 				default: input.default,
-			}
+			})
 		case 'dropdown':
 			if (input.multiple) {
-				return {
+				return literal<Complete<ModuleApi.CompanionInputFieldMultiDropdown>>({
 					...convertInputFieldBase(input),
 					type: 'multidropdown',
 					choices: input.choices,
@@ -130,9 +130,9 @@ export function convertInputField(input: SomeCompanionInputField): Complete<Modu
 					minChoicesForSearch: input.minChoicesForSearch,
 					minSelection: input.minSelection,
 					maximumSelectionLength: input.maximumSelectionLength,
-				}
+				})
 			} else {
-				return {
+				return literal<Complete<ModuleApi.CompanionInputFieldDropdown>>({
 					...convertInputFieldBase(input),
 					type: 'dropdown',
 					choices: input.choices,
@@ -140,15 +140,15 @@ export function convertInputField(input: SomeCompanionInputField): Complete<Modu
 					minChoicesForSearch: input.minChoicesForSearch,
 					allowCustom: input.allowCustom,
 					regex: input.regex,
-				}
+				})
 			}
 		default:
 			assertNever(input)
-			return {
+			return literal<Complete<ModuleApi.CompanionInputFieldStaticText>>({
 				...convertInputFieldBase(input),
 				type: 'static-text',
 				value: `Unknown input field type "${inputType}"`,
-			}
+			})
 	}
 }
 
@@ -202,21 +202,21 @@ export class FakeSystem extends EventEmitter {
 	sendStatus: InstanceSkel<any>['status'] = (level, message) => {
 		switch (level) {
 			case 0:
-				this.parent.updateStatus('ok', message)
+				this.parent.updateStatus(InstanceStatus.Ok, message)
 				break
 			case 1:
-				this.parent.updateStatus('unknown_warning', message)
+				this.parent.updateStatus(InstanceStatus.UnknwownWarning, message)
 				break
 			case 2:
-				this.parent.updateStatus('unknown_error', message)
+				this.parent.updateStatus(InstanceStatus.UnknownError, message)
 				break
 			case null:
 			case 0:
-				this.parent.updateStatus('unknown_warning', message)
+				this.parent.updateStatus(InstanceStatus.UnknwownWarning, message)
 				break
 			default:
 				assertNever(level)
-				this.parent.updateStatus('unknown_warning', message)
+				this.parent.updateStatus(InstanceStatus.UnknwownWarning, message)
 				break
 		}
 	}
@@ -311,7 +311,7 @@ export class FakeSystem extends EventEmitter {
 				newActions[id] = literal<Complete<ModuleApi.CompanionActionDefinition>>({
 					name: action.label,
 					description: action.description,
-					options: (action.options ?? []).map(convertInputField),
+					options: (action.options ?? []).map(convertInputField) as ModuleApi.SomeCompanionActionInputField[],
 					callback: cb,
 					subscribe: wrapActionSubscriptionCallback(id, action.subscribe),
 					unsubscribe: wrapActionSubscriptionCallback(id, action.unsubscribe),
@@ -355,7 +355,7 @@ export class FakeSystem extends EventEmitter {
 							type: 'boolean',
 							name: feedback.label,
 							description: feedback.description,
-							options: (feedback.options ?? []).map(convertInputField),
+							options: (feedback.options ?? []).map(convertInputField) as ModuleApi.SomeCompanionFeedbackInputField[],
 							defaultStyle: feedback.style,
 							callback: cb,
 							subscribe: wrapFeedbackSubscriptionCallback(id, feedback.subscribe),
@@ -393,7 +393,7 @@ export class FakeSystem extends EventEmitter {
 							type: 'advanced',
 							name: feedback.label,
 							description: feedback.description,
-							options: (feedback.options ?? []).map(convertInputField),
+							options: (feedback.options ?? []).map(convertInputField) as ModuleApi.SomeCompanionFeedbackInputField[],
 							callback: cb,
 							subscribe: wrapFeedbackSubscriptionCallback(id, feedback.subscribe),
 							unsubscribe: wrapFeedbackSubscriptionCallback(id, feedback.unsubscribe),
