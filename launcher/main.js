@@ -342,7 +342,7 @@ if (!lock) {
 			uiConfig.set('dev_modules_path', '')
 
 			sendAppInfo()
-
+			triggerRestart()
 			restartWatcher()
 		})
 
