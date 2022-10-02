@@ -189,6 +189,7 @@ function InstancesTableRow({
 			</td>
 			<td className="action-buttons">
 				<CSwitch
+					disabled={!moduleInfo}
 					color="info"
 					checked={isEnabled}
 					onChange={doToggleEnabled}
