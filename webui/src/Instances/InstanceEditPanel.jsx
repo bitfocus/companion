@@ -176,7 +176,7 @@ const InstanceEditPanelInner = memo(function InstanceEditPanel({ instanceId, doC
 					<>
 						<CCol className={`fieldtype-textinput`} sm={12}>
 							<label>Label</label>
-							<TextInputField definition={{}} value={instanceLabel} setValue={setInstanceLabel} />
+							<TextInputField value={instanceLabel} setValue={setInstanceLabel} />
 						</CCol>
 
 						{configFields.map((field, i) => {
@@ -223,12 +223,11 @@ const InstanceEditPanelInner = memo(function InstanceEditPanel({ instanceId, doC
 	)
 })
 
-function ConfigField({ setValue, setValid, ...props }) {
-	const id = props.definition.id
+function ConfigField({ setValue, setValid, definition, value }) {
+	const id = definition.id
 	const setValue2 = useCallback((val) => setValue(id, val), [setValue, id])
 	const setValid2 = useCallback((valid) => setValid(id, valid), [setValid, id])
 
-	const { definition } = props
 	switch (definition.type) {
 		case 'static-text': {
 			const descriptionHtml = {
@@ -241,17 +240,66 @@ function ConfigField({ setValue, setValid, ...props }) {
 			return <p title={definition.tooltip} dangerouslySetInnerHTML={descriptionHtml}></p>
 		}
 		case 'textinput':
-			return <TextInputField {...props} setValue={setValue2} setValid={setValid2} />
+			return (
+				<TextInputField
+					value={value}
+					regex={definition.regex}
+					required={definition.required}
+					tooltip={definition.tooltip}
+					setValue={setValue2}
+					setValid={setValid2}
+				/>
+			)
 		case 'number':
-			return <NumberInputField {...props} setValue={setValue2} setValid={setValid2} />
+			return (
+				<NumberInputField
+					required={definition.required}
+					min={definition.min}
+					max={definition.max}
+					step={definition.step}
+					tooltip={definition.tooltip}
+					range={definition.range}
+					value={value}
+					setValue={setValue2}
+					setValid={setValid2}
+				/>
+			)
 		case 'checkbox':
-			return <CheckboxInputField {...props} setValue={setValue2} setValid={setValid2} />
+			return <CheckboxInputField value={value} tooltip={definition.tooltip} setValue={setValue2} setValid={setValid2} />
 		case 'dropdown':
-			return <DropdownInputField {...props} setValue={setValue2} setValid={setValid2} multiple={false} />
+			return (
+				<DropdownInputField
+					choices={definition.choices}
+					allowCustom={definition.allowCustom}
+					minSelection={definition.minSelection}
+					minChoicesForSearch={definition.minChoicesForSearch}
+					maximumSelectionLength={definition.maximumSelectionLength}
+					tooltip={definition.tooltip}
+					regex={definition.regex}
+					value={value}
+					setValue={setValue2}
+					setValid={setValid2}
+					multiple={false}
+				/>
+			)
 		case 'multidropdown':
-			return <DropdownInputField {...props} setValue={setValue2} setValid={setValid2} multiple={true} />
+			return (
+				<DropdownInputField
+					choices={definition.choices}
+					allowCustom={definition.allowCustom}
+					minSelection={definition.minSelection}
+					minChoicesForSearch={definition.minChoicesForSearch}
+					maximumSelectionLength={definition.maximumSelectionLength}
+					tooltip={definition.tooltip}
+					regex={definition.regex}
+					value={value}
+					setValue={setValue2}
+					setValid={setValid2}
+					multiple={true}
+				/>
+			)
 		case 'colorpicker':
-			return <ColorInputField {...props} setValue={setValue2} setValid={setValid2} />
+			return <ColorInputField value={value} setValue={setValue2} setValid={setValid2} />
 		default:
 			return <p>Unknown field "{definition.type}"</p>
 	}

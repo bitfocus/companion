@@ -76,15 +76,7 @@ function InternalInstanceIdDropdown({ includeAll, value, setValue, disabled, mul
 	}, [context, includeAll, filterActionsRecorder])
 
 	return (
-		<DropdownInputField
-			disabled={disabled}
-			value={value}
-			definition={{
-				choices: choices,
-			}}
-			multiple={!!multiple}
-			setValue={setValue}
-		/>
+		<DropdownInputField disabled={disabled} value={value} choices={choices} multiple={!!multiple} setValue={setValue} />
 	)
 }
 
@@ -107,17 +99,7 @@ function InternalPageDropdown({ isOnBank, includeDirection, value, setValue, dis
 		return choices
 	}, [pages, isOnBank, includeDirection])
 
-	return (
-		<DropdownInputField
-			disabled={disabled}
-			value={value}
-			definition={{
-				choices: choices,
-			}}
-			multiple={false}
-			setValue={setValue}
-		/>
-	)
+	return <DropdownInputField disabled={disabled} value={value} choices={choices} multiple={false} setValue={setValue} />
 }
 
 function InternalBankDropdown({ isOnBank, value, setValue, disabled }) {
@@ -133,17 +115,7 @@ function InternalBankDropdown({ isOnBank, value, setValue, disabled }) {
 		return choices
 	}, [isOnBank])
 
-	return (
-		<DropdownInputField
-			disabled={disabled}
-			value={value}
-			definition={{
-				choices: choices,
-			}}
-			multiple={false}
-			setValue={setValue}
-		/>
-	)
+	return <DropdownInputField disabled={disabled} value={value} choices={choices} multiple={false} setValue={setValue} />
 }
 
 export function InternalCustomVariableDropdown({ value, setValue, includeNone, disabled }) {
@@ -168,17 +140,7 @@ export function InternalCustomVariableDropdown({ value, setValue, includeNone, d
 		return choices
 	}, [context, includeNone])
 
-	return (
-		<DropdownInputField
-			disabled={disabled}
-			value={value}
-			definition={{
-				choices: choices,
-			}}
-			multiple={false}
-			setValue={setValue}
-		/>
-	)
+	return <DropdownInputField disabled={disabled} value={value} choices={choices} multiple={false} setValue={setValue} />
 }
 
 function InternalVariableDropdown({ value, setValue, disabled }) {
@@ -201,17 +163,7 @@ function InternalVariableDropdown({ value, setValue, disabled }) {
 		return choices
 	}, [context])
 
-	return (
-		<DropdownInputField
-			disabled={disabled}
-			value={value}
-			definition={{
-				choices: choices,
-			}}
-			multiple={false}
-			setValue={setValue}
-		/>
-	)
+	return <DropdownInputField disabled={disabled} value={value} choices={choices} multiple={false} setValue={setValue} />
 }
 
 function InternalSurfaceBySerialDropdown({ isOnBank, value, setValue, disabled }) {
@@ -232,17 +184,7 @@ function InternalSurfaceBySerialDropdown({ isOnBank, value, setValue, disabled }
 		return choices
 	}, [context, isOnBank])
 
-	return (
-		<DropdownInputField
-			disabled={disabled}
-			value={value}
-			definition={{
-				choices: choices,
-			}}
-			multiple={false}
-			setValue={setValue}
-		/>
-	)
+	return <DropdownInputField disabled={disabled} value={value} choices={choices} multiple={false} setValue={setValue} />
 }
 
 function InternalTriggerDropdown({ value, setValue, disabled }) {
@@ -259,15 +201,5 @@ function InternalTriggerDropdown({ value, setValue, disabled }) {
 		return choices
 	}, [context])
 
-	return (
-		<DropdownInputField
-			disabled={disabled}
-			value={value}
-			definition={{
-				choices: choices,
-			}}
-			multiple={false}
-			setValue={setValue}
-		/>
-	)
+	return <DropdownInputField disabled={disabled} value={value} choices={choices} multiple={false} setValue={setValue} />
 }

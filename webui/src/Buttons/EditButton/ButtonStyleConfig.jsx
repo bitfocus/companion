@@ -51,7 +51,7 @@ export function ButtonOptionsConfig({ controlId, controlType, options, configRef
 					<CCol className="fieldtype-checkbox" sm={2} xs={3}>
 						<CLabel>Relative Delays</CLabel>
 						<p>
-							<CheckboxInputField definition={{}} setValue={setRelativeDelayValue} value={options.relativeDelay} />
+							<CheckboxInputField setValue={setRelativeDelayValue} value={options.relativeDelay} />
 						</p>
 					</CCol>
 
@@ -59,11 +59,7 @@ export function ButtonOptionsConfig({ controlId, controlType, options, configRef
 						<CCol className="fieldtype-checkbox" sm={2} xs={3}>
 							<label>Auto progress</label>
 							<p>
-								<CheckboxInputField
-									definition={{ id: 'stepAutoProgress' }}
-									setValue={setStepAutoProgressValue}
-									value={options.stepAutoProgress}
-								/>
+								<CheckboxInputField setValue={setStepAutoProgressValue} value={options.stepAutoProgress} />
 							</p>
 						</CCol>
 					) : (
@@ -157,14 +153,11 @@ export function ButtonStyleConfig({ controlId, controlType, style, configRef }) 
 						<label>Show Topbar</label>
 						<p>
 							<DropdownInputField
-								definition={{
-									id: 'show_topbar',
-									choices: [
-										{ id: 'default', label: 'Follow Default' },
-										{ id: true, label: 'Show' },
-										{ id: false, label: 'Hide' },
-									],
-								}}
+								choices={[
+									{ id: 'default', label: 'Follow Default' },
+									{ id: true, label: 'Show' },
+									{ id: false, label: 'Hide' },
+								]}
 								setValue={setShowTopBar}
 								value={style.show_topbar}
 							/>
@@ -195,11 +188,7 @@ export function ButtonStyleConfigFields({ values, setValueInner, setPng, setPngE
 				{ sm: 6 },
 				<>
 					<label>Button text</label>
-					<TextWithVariablesInputField
-						definition={{ tooltip: 'Button text' }}
-						setValue={setTextValue}
-						value={values.text}
-					/>
+					<TextWithVariablesInputField tooltip={'Button text'} setValue={setTextValue} value={values.text} />
 				</>
 			)}
 
@@ -208,7 +197,7 @@ export function ButtonStyleConfigFields({ values, setValueInner, setPng, setPngE
 				{ sm: 3, xs: 6 },
 				<>
 					<label>Font size</label>
-					<DropdownInputField definition={{ choices: FONT_SIZES }} setValue={setSizeValue} value={values.size} />
+					<DropdownInputField choices={FONT_SIZES} setValue={setSizeValue} value={values.size} />
 				</>
 			)}
 
@@ -221,7 +210,8 @@ export function ButtonStyleConfigFields({ values, setValueInner, setPng, setPngE
 						<PNGInputField
 							onSelect={setPng}
 							onError={setPngError}
-							definition={{ min: { width: 36, height: 36 }, max: { width: 72, height: 58 } }}
+							min={{ width: 36, height: 36 }}
+							max={{ width: 72, height: 58 }}
 						/>
 						{clearPng ? (
 							<CButton color="danger" disabled={!values.png64} onClick={clearPng}>
@@ -238,7 +228,7 @@ export function ButtonStyleConfigFields({ values, setValueInner, setPng, setPngE
 				{ sm: 2, xs: 3 },
 				<>
 					<label>Text Alignment</label>
-					<AlignmentInputField definition={{}} setValue={setAlignmentValue} value={values.alignment} />
+					<AlignmentInputField setValue={setAlignmentValue} value={values.alignment} />
 				</>
 			)}
 			{controlTemplate(
@@ -246,7 +236,7 @@ export function ButtonStyleConfigFields({ values, setValueInner, setPng, setPngE
 				{ sm: 2, xs: 3 },
 				<>
 					<label>PNG Alignment</label>
-					<AlignmentInputField definition={{}} setValue={setPngAlignmentValue} value={values.pngalignment} />
+					<AlignmentInputField setValue={setPngAlignmentValue} value={values.pngalignment} />
 				</>
 			)}
 
@@ -255,7 +245,7 @@ export function ButtonStyleConfigFields({ values, setValueInner, setPng, setPngE
 				{ sm: 2, xs: 3 },
 				<>
 					<label>Color</label>
-					<ColorInputField definition={{}} setValue={setColorValue} value={values.color} />
+					<ColorInputField setValue={setColorValue} value={values.color} />
 				</>
 			)}
 			{controlTemplate(
@@ -263,7 +253,7 @@ export function ButtonStyleConfigFields({ values, setValueInner, setPng, setPngE
 				{ sm: 2, xs: 3 },
 				<>
 					<label>Background</label>
-					<ColorInputField definition={{}} setValue={setBackgroundColorValue} value={values.bgcolor} />
+					<ColorInputField setValue={setBackgroundColorValue} value={values.bgcolor} />
 				</>
 			)}
 		</>

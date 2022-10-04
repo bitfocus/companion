@@ -1,7 +1,7 @@
 import React, { useCallback, useRef } from 'react'
 import { CButton, CInputFile } from '@coreui/react'
 
-export function PNGInputField({ definition, onSelect, onError }) {
+export function PNGInputField({ min, max, onSelect, onError }) {
 	const inputRef = useRef()
 
 	const apiIsSupported = !!(window.File && window.FileReader && window.FileList && window.Blob)
@@ -55,13 +55,13 @@ export function PNGInputField({ definition, onSelect, onError }) {
 
 					img.onload = () => {
 						// image is loaded; sizes are available
-						if (definition?.max && (img.height > definition.max.height || img.width > definition.max.width)) {
+						if (max && (img.height > max.height || img.width > max.width)) {
 							onError(null)
-							onSelect(imageResize(img, definition.max.width, definition.max.height), newFiles[0].name)
-						} else if (definition?.min && (img.width < definition.min.width || img.height < definition.min.height)) {
-							onError(`Image dimensions must be at least ${definition.min.width}x${definition.min.height}`)
-						} else if (definition?.max && (img.width > definition.max.width || img.height > definition.max.height)) {
-							onError(`Image dimensions must be at most ${definition.max.width}x${definition.max.height}`)
+							onSelect(imageResize(img, max.width, max.height), newFiles[0].name)
+						} else if (min && (img.width < min.width || img.height < min.height)) {
+							onError(`Image dimensions must be at least ${min.width}x${min.height}`)
+						} else if (max && (img.width > max.width || img.height > max.height)) {
+							onError(`Image dimensions must be at most ${max.width}x${max.height}`)
 						} else {
 							onError(null)
 							onSelect(fr.result, newFiles[0].name)
@@ -75,7 +75,7 @@ export function PNGInputField({ definition, onSelect, onError }) {
 				onError('Companion requires a newer browser')
 			}
 		},
-		[definition, apiIsSupported, onSelect, onError]
+		[min, max, apiIsSupported, onSelect, onError]
 	)
 
 	return (

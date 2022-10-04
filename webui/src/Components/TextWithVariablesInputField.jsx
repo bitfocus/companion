@@ -4,11 +4,10 @@ import Tribute from 'tributejs'
 import { CInput } from '@coreui/react'
 import { decode } from 'html-entities'
 
-export function TextWithVariablesInputField({ definition, value, setValue, disabled }) {
+export function TextWithVariablesInputField({ tooltip, value, setValue, disabled }) {
 	const variableDefinitionsContext = useContext(VariableDefinitionsContext)
 
 	const [tmpValue, setTmpValue] = useState(null)
-
 
 	const tribute = useMemo(() => {
 		// Create it once, then we attach and detach whenever the ref changes
@@ -79,7 +78,7 @@ export function TextWithVariablesInputField({ definition, value, setValue, disab
 			className="input-text-with-variables"
 			type="text"
 			value={tmpValue ?? value ?? ''}
-			title={definition.tooltip}
+			title={tooltip}
 			onChange={doOnChange}
 			onFocus={() => setTmpValue(value ?? '')}
 			onBlur={() => setTmpValue(null)}

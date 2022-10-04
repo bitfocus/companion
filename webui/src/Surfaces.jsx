@@ -159,7 +159,7 @@ export const SurfacesPage = memo(function SurfacesPage() {
 								<td>#{dev.index}</td>
 								<td>{dev.id}</td>
 								<td>
-									<TextInputField definition={{}} value={dev.name} setValue={(val) => updateName(dev.id, val)} />
+									<TextInputField value={dev.name} setValue={(val) => updateName(dev.id, val)} />
 								</td>
 								<td>{dev.type}</td>
 								<td>
@@ -198,7 +198,7 @@ export const SurfacesPage = memo(function SurfacesPage() {
 							<tr key={dev.id}>
 								<td>{dev.id}</td>
 								<td>
-									<TextInputField definition={{}} value={dev.name} setValue={(val) => updateName(dev.id, val)} />
+									<TextInputField value={dev.name} setValue={(val) => updateName(dev.id, val)} />
 								</td>
 								<td>{dev.type}</td>
 								<td>

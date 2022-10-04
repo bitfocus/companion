@@ -362,9 +362,7 @@ function BankPicker({ selectBank }) {
 								<CLabel>Action Set</CLabel>
 
 								<DropdownInputField
-									definition={{
-										choices: actionSetOptions,
-									}}
+									choices={actionSetOptions}
 									multiple={false}
 									value={selectedSet}
 									setValue={setSelectedSet}
@@ -533,7 +531,7 @@ function RecorderSessionHeading({ confirmRef, sessionId, sessionInfo, doFinish }
 							value={sessionInfo.instanceIds}
 							setValue={changeInstanceIds}
 							multiple={true}
-							definition={{ choices: instancesWhichCanRecord }}
+							choices={instancesWhichCanRecord}
 						/>
 					</CCol>
 

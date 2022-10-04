@@ -13,16 +13,12 @@ const ALIGMENT_OPTIONS = [
 	'right:bottom',
 ]
 
-export function AlignmentInputField({ definition, value, setValue }) {
+export function AlignmentInputField({ value, setValue }) {
 	return (
 		<div className="alignmentinput">
 			{ALIGMENT_OPTIONS.map((align) => {
 				return (
-					<div
-						key={align}
-						className={classnames({ selected: align === value  })}
-						onClick={() => setValue(align)}
-					>
+					<div key={align} className={classnames({ selected: align === value })} onClick={() => setValue(align)}>
 						&nbsp;
 					</div>
 				)
