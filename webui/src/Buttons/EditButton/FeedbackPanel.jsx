@@ -496,7 +496,7 @@ function FeedbackManageStyles({ feedbackSpec, feedback, setSelectedStyleProps })
 							<label>Change style properties</label>
 							<DropdownInputField
 								multiple={true}
-								definition={{ default: ['color', 'bgcolor'], choices: choices }}
+								definition={{ choices: choices }}
 								setValue={setSelectedStyleProps}
 								value={currentValue}
 							/>

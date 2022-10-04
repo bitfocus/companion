@@ -3,45 +3,74 @@ import { CButton, CButtonGroup } from '@coreui/react'
 import { InstancesContext, VariableDefinitionsContext, socketEmitPromise, SocketContext, ModulesContext } from '../util'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faDollarSign, faQuestionCircle, faBug } from '@fortawesome/free-solid-svg-icons'
-import jsonPatch from 'fast-json-patch'
 import { InstanceVariablesModal } from './InstanceVariablesModal'
 import { GenericConfirmModal } from '../Components/GenericConfirmModal'
-import { cloneDeep } from 'lodash-es'
 import CSwitch from '../CSwitch'
 
-export function InstancesList({ showHelp, doConfigureInstance }) {
-	const socket = useContext(SocketContext)
+export function InstancesList({ showHelp, doConfigureInstance, instanceStatus }) {
 	const instancesContext = useContext(InstancesContext)
-
-	const [instanceStatus, setInstanceStatus] = useState({})
 
 	const deleteModalRef = useRef()
 	const variablesModalRef = useRef()
 
-	useEffect(() => {
-		socketEmitPromise(socket, 'instance_status:get', [])
-			.then((statuses) => {
-				setInstanceStatus(statuses)
-			})
-			.catch((e) => {
-				console.error(`Failed to load instance statuses`, e)
-			})
-
-		const patchStatuses = (patch) => {
-			setInstanceStatus((oldStatuses) => {
-				return jsonPatch.applyPatch(cloneDeep(oldStatuses) || {}, patch).newDocument
-			})
-		}
-		socket.on('instance_status:patch', patchStatuses)
-
-		return () => {
-			socket.off('instance_status:patch', patchStatuses)
-		}
-	}, [socket])
-
 	const doShowVariables = useCallback((instanceId) => {
 		variablesModalRef.current.show(instanceId)
 	}, [])
+
+	const [visibleConnections, setVisibleConnections] = useState(() => loadVisibility())
+
+	// Save the config when it changes
+	useEffect(() => {
+		window.localStorage.setItem('connections_visible', JSON.stringify(visibleConnections))
+	}, [visibleConnections])
+
+	const doToggleVisibility = useCallback((key) => {
+		setVisibleConnections((oldConfig) => ({
+			...oldConfig,
+			[key]: !oldConfig[key],
+		}))
+	}, [])
+
+	const doToggleDisabled = useCallback(() => doToggleVisibility('disabled'), [doToggleVisibility])
+	const doToggleOk = useCallback(() => doToggleVisibility('ok'), [doToggleVisibility])
+	const doToggleWarning = useCallback(() => doToggleVisibility('warning'), [doToggleVisibility])
+	const doToggleError = useCallback(() => doToggleVisibility('error'), [doToggleVisibility])
+
+	const visibleConnectionsData = Object.entries(instancesContext).filter(([id, instance]) => {
+		const status = instanceStatus[id]
+
+		if (!visibleConnections.disabled && (!status || !status.category)) {
+			return false
+		} else if (status) {
+			if (!visibleConnections.ok && status.category === 'good') {
+				return false
+			} else if (!visibleConnections.warning && status.category === 'warning') {
+				return false
+			} else if (!visibleConnections.error && status.category === 'error') {
+				return false
+			}
+		}
+
+		return true
+	})
+
+	const rows = visibleConnectionsData.map(([id, instance]) => {
+		return (
+			<InstancesTableRow
+				key={id}
+				id={id}
+				instance={instance}
+				instanceStatus={instanceStatus[id]}
+				showHelp={showHelp}
+				showVariables={doShowVariables}
+				deleteModalRef={deleteModalRef}
+				configureInstance={doConfigureInstance}
+			/>
+		)
+	})
+	const hiddenCount = Object.keys(instancesContext).length - rows.length
+
+	console.log(rows)
 
 	return (
 		<div>
@@ -54,6 +83,39 @@ export function InstancesList({ showHelp, doConfigureInstance }) {
 			<GenericConfirmModal ref={deleteModalRef} />
 			<InstanceVariablesModal ref={variablesModalRef} />
 
+			<p>
+				Show:
+				<CButtonGroup>
+					<CButton
+						size="sm"
+						color="light"
+						style={{ opacity: visibleConnections.disabled ? 1 : 0.2 }}
+						onClick={doToggleDisabled}
+					>
+						Disabled
+					</CButton>
+					<CButton size="sm" color="success" style={{ opacity: visibleConnections.ok ? 1 : 0.2 }} onClick={doToggleOk}>
+						OK
+					</CButton>
+					<CButton
+						size="sm"
+						color="warning"
+						style={{ opacity: visibleConnections.warning ? 1 : 0.2 }}
+						onClick={doToggleWarning}
+					>
+						Warning
+					</CButton>
+					<CButton
+						size="sm"
+						color="danger"
+						style={{ opacity: visibleConnections.error ? 1 : 0.2 }}
+						onClick={doToggleError}
+					>
+						Error
+					</CButton>
+				</CButtonGroup>
+			</p>
+
 			<table className="table table-responsive-sm">
 				<thead>
 					<tr>
@@ -64,20 +126,14 @@ export function InstancesList({ showHelp, doConfigureInstance }) {
 					</tr>
 				</thead>
 				<tbody>
-					{Object.entries(instancesContext).map(([id, instance]) => {
-						return (
-							<InstancesTableRow
-								key={id}
-								id={id}
-								instance={instance}
-								instanceStatus={instanceStatus[id]}
-								showHelp={showHelp}
-								showVariables={doShowVariables}
-								deleteModalRef={deleteModalRef}
-								configureInstance={doConfigureInstance}
-							/>
-						)
-					})}
+					{rows}
+					{hiddenCount > 0 ? (
+						<tr>
+							<td colSpan={4}>{hiddenCount} Connections are hidden</td>
+						</tr>
+					) : (
+						''
+					)}
 					{Object.keys(instancesContext).length === 0 ? (
 						<tr>
 							<td colSpan={4}>
@@ -93,6 +149,25 @@ export function InstancesList({ showHelp, doConfigureInstance }) {
 			</table>
 		</div>
 	)
+}
+
+function loadVisibility() {
+	try {
+		const rawConfig = window.localStorage.getItem('connections_visible')
+		return JSON.parse(rawConfig) ?? {}
+	} catch (e) {
+		// setup defaults
+		const config = {
+			disabled: true,
+			ok: true,
+			warning: true,
+			error: true,
+		}
+
+		window.localStorage.setItem('connections_visible', JSON.stringify(config))
+
+		return config
+	}
 }
 
 function InstancesTableRow({

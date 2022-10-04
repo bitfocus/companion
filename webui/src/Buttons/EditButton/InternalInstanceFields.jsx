@@ -45,9 +45,7 @@ export function InternalInstanceField(option, isOnBank, readonly, value, setValu
 				/>
 			)
 		case 'internal:variable':
-			return (
-				<InternalVariableDropdown disabled={readonly} value={value} setValue={setValue} defaultVal={option.default} />
-			)
+			return <InternalVariableDropdown disabled={readonly} value={value} setValue={setValue} />
 		case 'internal:surface_serial':
 			return (
 				<InternalSurfaceBySerialDropdown disabled={readonly} isOnBank={isOnBank} value={value} setValue={setValue} />
@@ -83,7 +81,6 @@ function InternalInstanceIdDropdown({ includeAll, value, setValue, disabled, mul
 			value={value}
 			definition={{
 				choices: choices,
-				default: multiple ? [] : choices[0]?.id,
 			}}
 			multiple={!!multiple}
 			setValue={setValue}
@@ -116,7 +113,6 @@ function InternalPageDropdown({ isOnBank, includeDirection, value, setValue, dis
 			value={value}
 			definition={{
 				choices: choices,
-				default: choices[0]?.id,
 			}}
 			multiple={false}
 			setValue={setValue}
@@ -143,7 +139,6 @@ function InternalBankDropdown({ isOnBank, value, setValue, disabled }) {
 			value={value}
 			definition={{
 				choices: choices,
-				default: choices[0]?.id,
 			}}
 			multiple={false}
 			setValue={setValue}
@@ -179,7 +174,6 @@ export function InternalCustomVariableDropdown({ value, setValue, includeNone, d
 			value={value}
 			definition={{
 				choices: choices,
-				default: '',
 			}}
 			multiple={false}
 			setValue={setValue}
@@ -187,7 +181,7 @@ export function InternalCustomVariableDropdown({ value, setValue, includeNone, d
 	)
 }
 
-function InternalVariableDropdown({ value, setValue, defaultVal, disabled }) {
+function InternalVariableDropdown({ value, setValue, disabled }) {
 	const context = useContext(VariableDefinitionsContext)
 	const choices = useMemo(() => {
 		const choices = []
@@ -213,7 +207,6 @@ function InternalVariableDropdown({ value, setValue, defaultVal, disabled }) {
 			value={value}
 			definition={{
 				choices: choices,
-				default: defaultVal ?? choices[0]?.id ?? '',
 			}}
 			multiple={false}
 			setValue={setValue}
@@ -245,7 +238,6 @@ function InternalSurfaceBySerialDropdown({ isOnBank, value, setValue, disabled }
 			value={value}
 			definition={{
 				choices: choices,
-				default: choices[0]?.id,
 			}}
 			multiple={false}
 			setValue={setValue}
@@ -273,7 +265,6 @@ function InternalTriggerDropdown({ value, setValue, disabled }) {
 			value={value}
 			definition={{
 				choices: choices,
-				default: choices[0]?.id,
 			}}
 			multiple={false}
 			setValue={setValue}

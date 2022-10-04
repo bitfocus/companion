@@ -43,13 +43,8 @@ export function TextInputField({ definition, value, setValue, setValid, disabled
 
 	// If the value is undefined, populate with the default. Also inform the parent about the validity
 	useEffect(() => {
-		if (value === undefined && definition.default !== undefined) {
-			setValue(definition.default)
-			setValid?.(isValueValid(definition.default))
-		} else {
-			setValid?.(isValueValid(value))
-		}
-	}, [isValueValid, definition.default, value, setValue, setValid])
+		setValid?.(isValueValid(value))
+	}, [isValueValid, value, setValid])
 
 	// Render the input
 	return (

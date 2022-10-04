@@ -9,12 +9,6 @@ export function TextWithVariablesInputField({ definition, value, setValue, disab
 
 	const [tmpValue, setTmpValue] = useState(null)
 
-	// If the value is undefined, populate with the default. Also inform the parent about the validity
-	useEffect(() => {
-		if (value === undefined && definition.default !== undefined) {
-			setValue(definition.default)
-		}
-	}, [definition.default, value, setValue])
 
 	const tribute = useMemo(() => {
 		// Create it once, then we attach and detach whenever the ref changes

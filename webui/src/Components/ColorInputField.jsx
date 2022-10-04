@@ -15,11 +15,8 @@ export function ColorInputField({ definition, value, setValue, setValid, disable
 
 	// If the value is undefined, populate with the default. Also inform the parent about the validity
 	useEffect(() => {
-		if (value === undefined && definition.default !== undefined) {
-			setValue(definition.default)
-		}
 		setValid?.(true)
-	}, [definition.default, value, setValue, setValid])
+	}, [setValid])
 
 	const handleClick = useCallback(() => setDisplayPicker((d) => !d), [])
 

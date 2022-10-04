@@ -51,11 +51,7 @@ export function ButtonOptionsConfig({ controlId, controlType, options, configRef
 					<CCol className="fieldtype-checkbox" sm={2} xs={3}>
 						<CLabel>Relative Delays</CLabel>
 						<p>
-							<CheckboxInputField
-								definition={{ default: false }}
-								setValue={setRelativeDelayValue}
-								value={options.relativeDelay}
-							/>
+							<CheckboxInputField definition={{}} setValue={setRelativeDelayValue} value={options.relativeDelay} />
 						</p>
 					</CCol>
 
@@ -64,7 +60,7 @@ export function ButtonOptionsConfig({ controlId, controlType, options, configRef
 							<label>Auto progress</label>
 							<p>
 								<CheckboxInputField
-									definition={{ default: true, id: 'stepAutoProgress' }}
+									definition={{ id: 'stepAutoProgress' }}
 									setValue={setStepAutoProgressValue}
 									value={options.stepAutoProgress}
 								/>
@@ -162,7 +158,6 @@ export function ButtonStyleConfig({ controlId, controlType, style, configRef }) 
 						<p>
 							<DropdownInputField
 								definition={{
-									default: 'default',
 									id: 'show_topbar',
 									choices: [
 										{ id: 'default', label: 'Follow Default' },
@@ -201,7 +196,7 @@ export function ButtonStyleConfigFields({ values, setValueInner, setPng, setPngE
 				<>
 					<label>Button text</label>
 					<TextWithVariablesInputField
-						definition={{ default: '', tooltip: 'Button text' }}
+						definition={{ tooltip: 'Button text' }}
 						setValue={setTextValue}
 						value={values.text}
 					/>
@@ -213,11 +208,7 @@ export function ButtonStyleConfigFields({ values, setValueInner, setPng, setPngE
 				{ sm: 3, xs: 6 },
 				<>
 					<label>Font size</label>
-					<DropdownInputField
-						definition={{ default: 'auto', choices: FONT_SIZES }}
-						setValue={setSizeValue}
-						value={values.size}
-					/>
+					<DropdownInputField definition={{ choices: FONT_SIZES }} setValue={setSizeValue} value={values.size} />
 				</>
 			)}
 
@@ -247,11 +238,7 @@ export function ButtonStyleConfigFields({ values, setValueInner, setPng, setPngE
 				{ sm: 2, xs: 3 },
 				<>
 					<label>Text Alignment</label>
-					<AlignmentInputField
-						definition={{ default: 'center:center' }}
-						setValue={setAlignmentValue}
-						value={values.alignment}
-					/>
+					<AlignmentInputField definition={{}} setValue={setAlignmentValue} value={values.alignment} />
 				</>
 			)}
 			{controlTemplate(
@@ -259,11 +246,7 @@ export function ButtonStyleConfigFields({ values, setValueInner, setPng, setPngE
 				{ sm: 2, xs: 3 },
 				<>
 					<label>PNG Alignment</label>
-					<AlignmentInputField
-						definition={{ default: 'center:center' }}
-						setValue={setPngAlignmentValue}
-						value={values.pngalignment}
-					/>
+					<AlignmentInputField definition={{}} setValue={setPngAlignmentValue} value={values.pngalignment} />
 				</>
 			)}
 
@@ -272,7 +255,7 @@ export function ButtonStyleConfigFields({ values, setValueInner, setPng, setPngE
 				{ sm: 2, xs: 3 },
 				<>
 					<label>Color</label>
-					<ColorInputField definition={{ default: 0xffffff }} setValue={setColorValue} value={values.color} />
+					<ColorInputField definition={{}} setValue={setColorValue} value={values.color} />
 				</>
 			)}
 			{controlTemplate(
@@ -280,11 +263,7 @@ export function ButtonStyleConfigFields({ values, setValueInner, setPng, setPngE
 				{ sm: 2, xs: 3 },
 				<>
 					<label>Background</label>
-					<ColorInputField
-						definition={{ default: 0x000000 }}
-						setValue={setBackgroundColorValue}
-						value={values.bgcolor}
-					/>
+					<ColorInputField definition={{}} setValue={setBackgroundColorValue} value={values.bgcolor} />
 				</>
 			)}
 		</>

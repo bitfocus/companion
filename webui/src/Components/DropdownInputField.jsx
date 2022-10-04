@@ -79,13 +79,8 @@ export function DropdownInputField({ definition, multiple, value, setValue, setV
 
 	// If the value is undefined, populate with the default. Also inform the parent about the validity
 	useEffect(() => {
-		if (value === undefined && definition.default !== undefined) {
-			setValue(definition.default)
-			setValid?.(isValueValid(definition.default))
-		} else {
-			setValid?.(isValueValid(value))
-		}
-	}, [definition.default, value, setValue, setValid, isValueValid])
+		setValid?.(isValueValid(value))
+	}, [value, setValid, isValueValid])
 
 	const onChange = useCallback(
 		(e) => {

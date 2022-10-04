@@ -13,7 +13,26 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faQuestionCircle } from '@fortawesome/free-solid-svg-icons'
 import sanitizeHtml from 'sanitize-html'
 
-export const InstanceEditPanel = memo(function InstanceEditPanel({ instanceId, doConfigureInstance, showHelp }) {
+export function InstanceEditPanel({ instanceId, instanceStatus, doConfigureInstance, showHelp }) {
+	console.log('status', instanceStatus)
+
+	if (!instanceStatus) {
+		return (
+			<CRow className="edit-instance">
+				<CCol xs={12}>
+					<p>Waiting for connection to start...</p>
+				</CCol>
+				<LoadingRetryOrError dataReady={false} />
+			</CRow>
+		)
+	}
+
+	return (
+		<InstanceEditPanelInner instanceId={instanceId} doConfigureInstance={doConfigureInstance} showHelp={showHelp} />
+	)
+}
+
+const InstanceEditPanelInner = memo(function InstanceEditPanel({ instanceId, doConfigureInstance, showHelp }) {
 	const socket = useContext(SocketContext)
 	const modules = useContext(ModulesContext)
 
