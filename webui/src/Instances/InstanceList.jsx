@@ -154,20 +154,22 @@ export function InstancesList({ showHelp, doConfigureInstance, instanceStatus })
 function loadVisibility() {
 	try {
 		const rawConfig = window.localStorage.getItem('connections_visible')
-		return JSON.parse(rawConfig) ?? {}
-	} catch (e) {
-		// setup defaults
-		const config = {
-			disabled: true,
-			ok: true,
-			warning: true,
-			error: true,
+		if (rawConfig !== null) {
+			return JSON.parse(rawConfig) ?? {}
 		}
+	} catch (e) {}
 
-		window.localStorage.setItem('connections_visible', JSON.stringify(config))
-
-		return config
+	// setup defaults
+	const config = {
+		disabled: true,
+		ok: true,
+		warning: true,
+		error: true,
 	}
+
+	window.localStorage.setItem('connections_visible', JSON.stringify(config))
+
+	return config
 }
 
 function InstancesTableRow({
