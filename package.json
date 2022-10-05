@@ -88,7 +88,6 @@
 		"socket.io": "^4.5.2",
 		"socketcluster-client": "^16.1.1",
 		"supports-color": "^9.2.3",
-		"systeminformation": "^5.12.6",
 		"usb": "^2.5.2",
 		"utf-8-validate": "^5.0.9",
 		"winston": "^3.8.2",
