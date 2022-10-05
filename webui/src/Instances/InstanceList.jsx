@@ -2,13 +2,20 @@ import { useCallback, useContext, useEffect, useRef, useState } from 'react'
 import { CButton, CButtonGroup } from '@coreui/react'
 import { InstancesContext, VariableDefinitionsContext, socketEmitPromise, SocketContext, ModulesContext } from '../util'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faDollarSign, faQuestionCircle, faBug } from '@fortawesome/free-solid-svg-icons'
+import { faDollarSign, faQuestionCircle, faBug, faSort } from '@fortawesome/free-solid-svg-icons'
 import { InstanceVariablesModal } from './InstanceVariablesModal'
 import { GenericConfirmModal } from '../Components/GenericConfirmModal'
 import CSwitch from '../CSwitch'
+import { useDrag, useDrop } from 'react-dnd'
 
 export function InstancesList({ showHelp, doConfigureInstance, instanceStatus }) {
+	const socket = useContext(SocketContext)
 	const instancesContext = useContext(InstancesContext)
+
+	const instancesRef = useRef(null)
+	useEffect(() => {
+		instancesRef.current = instancesContext
+	}, [instancesContext])
 
 	const deleteModalRef = useRef()
 	const variablesModalRef = useRef()
@@ -36,41 +43,64 @@ export function InstancesList({ showHelp, doConfigureInstance, instanceStatus })
 	const doToggleWarning = useCallback(() => doToggleVisibility('warning'), [doToggleVisibility])
 	const doToggleError = useCallback(() => doToggleVisibility('error'), [doToggleVisibility])
 
-	const visibleConnectionsData = Object.entries(instancesContext).filter(([id, instance]) => {
-		const status = instanceStatus[id]
+	const moveRow = useCallback(
+		(itemId, targetId) => {
+			if (instancesRef.current) {
+				const rawIds = Object.entries(instancesRef.current)
+					.sort(([, a], [, b]) => a.sortOrder - b.sortOrder)
+					.map(([id]) => id)
 
-		if (!visibleConnections.disabled && instance.enabled === false) {
-			return false
-		} else if (status) {
-			if (!visibleConnections.ok && status.category === 'good') {
-				return false
-			} else if (!visibleConnections.warning && status.category === 'warning') {
-				return false
-			} else if (!visibleConnections.error && status.category === 'error') {
-				return false
+				const itemIndex = rawIds.indexOf(itemId)
+				const targetIndex = rawIds.indexOf(targetId)
+				if (itemIndex === -1 || targetIndex === -1) return
+
+				const newIds = rawIds.filter((id) => id !== itemId)
+				newIds.splice(targetIndex, 0, itemId)
+
+				socketEmitPromise(socket, 'instances:set-order', [newIds]).catch((e) => {
+					console.error('Reorder failed', e)
+				})
 			}
-		}
+		},
+		[socket]
+	)
 
-		return true
-	})
+	let visibleCount = 0
 
-	const rows = visibleConnectionsData.map(([id, instance]) => {
-		return (
-			<InstancesTableRow
-				key={id}
-				id={id}
-				instance={instance}
-				instanceStatus={instanceStatus[id]}
-				showHelp={showHelp}
-				showVariables={doShowVariables}
-				deleteModalRef={deleteModalRef}
-				configureInstance={doConfigureInstance}
-			/>
-		)
-	})
-	const hiddenCount = Object.keys(instancesContext).length - rows.length
+	const rows = Object.entries(instancesContext)
+		.sort(([, a], [, b]) => a.sortOrder - b.sortOrder)
+		.map(([id, instance]) => {
+			const status = instanceStatus[id]
 
-	console.log(rows)
+			if (!visibleConnections.disabled && instance.enabled === false) {
+				return undefined
+			} else if (status) {
+				if (!visibleConnections.ok && status.category === 'good') {
+					return undefined
+				} else if (!visibleConnections.warning && status.category === 'warning') {
+					return undefined
+				} else if (!visibleConnections.error && status.category === 'error') {
+					return undefined
+				}
+			}
+
+			visibleCount++
+
+			return (
+				<InstancesTableRow
+					key={id}
+					id={id}
+					instance={instance}
+					instanceStatus={status}
+					showHelp={showHelp}
+					showVariables={doShowVariables}
+					deleteModalRef={deleteModalRef}
+					configureInstance={doConfigureInstance}
+					moveRow={moveRow}
+				/>
+			)
+		})
+	const hiddenCount = Object.keys(instancesContext).length - visibleCount
 
 	return (
 		<div>
@@ -119,6 +149,7 @@ export function InstancesList({ showHelp, doConfigureInstance, instanceStatus })
 			<table className="table table-responsive-sm">
 				<thead>
 					<tr>
+						<th>&nbsp;</th>
 						<th>Module</th>
 						<th>Label</th>
 						<th>Status</th>
@@ -180,6 +211,7 @@ function InstancesTableRow({
 	showVariables,
 	configureInstance,
 	deleteModalRef,
+	moveRow,
 }) {
 	const socket = useContext(SocketContext)
 	const modules = useContext(ModulesContext)
@@ -214,10 +246,40 @@ function InstancesTableRow({
 
 	const doShowVariables = useCallback(() => showVariables(instance.label), [showVariables, instance.label])
 
+	const ref = useRef(null)
+	const [, drop] = useDrop({
+		accept: 'connection',
+		hover(item, monitor) {
+			if (!ref.current) {
+				return
+			}
+			// Don't replace items with themselves
+			if (item.id === id) {
+				return
+			}
+
+			// Time to actually perform the action
+			moveRow(item.id, id)
+		},
+	})
+	const [{ isDragging }, drag, preview] = useDrag({
+		type: 'connection',
+		item: {
+			id,
+		},
+		collect: (monitor) => ({
+			isDragging: monitor.isDragging(),
+		}),
+	})
+	preview(drop(ref))
+
 	const instanceVariables = variableDefinitionsContext[instance.label]
 
 	return (
-		<tr>
+		<tr ref={ref} className={isDragging ? 'instancelist-dragging' : ''}>
+			<td ref={drag} className="td-reorder">
+				<FontAwesomeIcon icon={faSort} />
+			</td>
 			<td>
 				{moduleInfo ? (
 					<>
