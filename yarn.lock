@@ -3042,9 +3042,9 @@ commist@^1.0.0:
   dependencies:
     node-fetch "^2.6.7"
 
-"companion-module-bitfocus-companion@github:bitfocus/companion-module-bitfocus-companion#v1.10.0":
-  version "1.10.0"
-  resolved "https://codeload.github.com/bitfocus/companion-module-bitfocus-companion/tar.gz/00b1a741bbbd6d3b95edc63f707a758a720a8ab6"
+"companion-module-bitfocus-companion@github:bitfocus/companion-module-bitfocus-companion#v1.10.1":
+  version "1.10.1"
+  resolved "https://codeload.github.com/bitfocus/companion-module-bitfocus-companion/tar.gz/dc390b855b7c171ea57d5830c7f459a170df24c8"
   dependencies:
     jsonpath "^1.1.1"
     underscore "^1.13.2"
