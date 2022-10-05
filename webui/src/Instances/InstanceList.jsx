@@ -39,7 +39,7 @@ export function InstancesList({ showHelp, doConfigureInstance, instanceStatus })
 	const visibleConnectionsData = Object.entries(instancesContext).filter(([id, instance]) => {
 		const status = instanceStatus[id]
 
-		if (!visibleConnections.disabled && (!status || !status.category)) {
+		if (!visibleConnections.disabled && instance.enabled === false) {
 			return false
 		} else if (status) {
 			if (!visibleConnections.ok && status.category === 'good') {
