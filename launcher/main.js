@@ -44,6 +44,13 @@ if (!lock) {
 		}
 	}, 1000)
 
+	function customLog(line, prefix) {
+		if (prefix) line = `${new Date().toISOString()} ${prefix}: ${stripAnsi(line.trim())}`
+
+		logbuffer.push(line)
+		console.log(line)
+	}
+
 	// Use stored value
 	let machineId = nanoid()
 	const machineIdPath = path.join(configDir, 'machid')
@@ -184,7 +191,7 @@ if (!lock) {
 
 	const triggerRestart = debounceFn(
 		() => {
-			console.log('trigger companion restart')
+			customLog('trigger companion restart', 'Application')
 
 			child?.stop(() => child?.start())
 		},
@@ -207,7 +214,7 @@ if (!lock) {
 					// Stop the existing watcher
 					await watcher?.close()
 				} catch (e) {
-					console.log(`Failed to stop watcher: ${e}`)
+					customLog(`Failed to stop watcher: ${e}`, 'Application')
 				}
 
 				// Check developer mode is enabled
@@ -222,7 +229,7 @@ if (!lock) {
 					watcher.on('all', triggerRestart)
 				}
 			} catch (e) {
-				console.log(`Failed to restart watcher: ${e}`)
+				customLog(`Failed to restart watcher: ${e}`, 'Application')
 			} finally {
 				pendingWatcher = false
 			}
@@ -572,10 +579,10 @@ if (!lock) {
 			}
 		)
 		child.on('start', () => {
-			console.log(`Companion process started`)
+			customLog(`Companion process started`, 'Application')
 		})
 		child.on('stop', () => {
-			console.log(`Companion process stopped`)
+			customLog(`Companion process stopped`, 'Application')
 
 			appInfo = {
 				...appInfo,
@@ -599,7 +606,7 @@ if (!lock) {
 			if (crashTimeout) clearTimeout(crashTimeout)
 			crashTimeout = setTimeout(() => {
 				crashTimeout = null
-				console.log('Companion looks to be stable')
+				customLog('Companion looks to be stable', 'Application')
 				crashCounter = 0
 			}, 5000)
 		})
@@ -611,7 +618,7 @@ if (!lock) {
 			clearTimeout(crashTimeout)
 			crashTimeout = null
 
-			console.log(`Crashes: ${crashCounter}`)
+			customLog(`Crashes: ${crashCounter}`, 'Application')
 			if (crashCounter > 3) {
 				child.stop()
 				dialog.showErrorBox('Unable to start', 'Companion is unable to start')
@@ -620,14 +627,10 @@ if (!lock) {
 		})
 
 		child.on('stdout', (data) => {
-			const line = `${new Date().toISOString()} ${stripAnsi(data.toString().trim())}`
-			logbuffer.push(line)
-			console.log(`Companion process stdout: ${data.toString()}`)
+			customLog(data.toString())
 		})
 		child.on('stderr', (data) => {
-			console.log(`Companion process stderr: ${data.toString()}`)
-			const line = `${new Date().toISOString()} ${stripAnsi(data.toString().trim())}`
-			logbuffer.push(line)
+			customLog(data.toString())
 		})
 		child.on('message', (data) => {
 			console.log('Received IPC message', data)
@@ -642,7 +645,7 @@ if (!lock) {
 
 				sendAppInfo()
 			} else if (data.messageType === 'exit') {
-				if (watcher) watcher.close().catch(() => console.error('Failed to stop'))
+				if (watcher) watcher.close().catch(() => customLog('Failed to stop', 'Application'))
 
 				if (data.restart) {
 					// Do nothing, autorestart will kick in
