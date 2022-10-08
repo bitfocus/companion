@@ -16,7 +16,7 @@ import sanitizeHtml from 'sanitize-html'
 export function InstanceEditPanel({ instanceId, instanceStatus, doConfigureInstance, showHelp }) {
 	console.log('status', instanceStatus)
 
-	if (!instanceStatus || instanceStatus.level === 'crashed') {
+	if (!instanceStatus || !instanceStatus.level || instanceStatus.level === 'crashed') {
 		return (
 			<CRow className="edit-instance">
 				<CCol xs={12}>
