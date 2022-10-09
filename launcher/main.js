@@ -45,7 +45,8 @@ if (!lock) {
 	}, 1000)
 
 	function customLog(line, prefix) {
-		if (prefix) line = `${new Date().toISOString()} ${prefix}: ${stripAnsi(line.trim())}`
+		line = stripAnsi(line.trim())
+		if (prefix) line = `${new Date().toISOString()} ${prefix}: ${line}`
 
 		logbuffer.push(line)
 		console.log(line)
