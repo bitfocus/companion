@@ -3672,9 +3672,9 @@ commist@^1.0.0:
   version "1.1.0"
   resolved "https://codeload.github.com/bitfocus/companion-module-imagine-lrc/tar.gz/d30623d63243d432b0703413ef5f54b37c47eb1d"
 
-"companion-module-imimot-mitti@github:bitfocus/companion-module-imimot-mitti#v1.0.14":
-  version "1.0.14"
-  resolved "https://codeload.github.com/bitfocus/companion-module-imimot-mitti/tar.gz/3791cd8896b326f170506cc8d253ad259945a370"
+"companion-module-imimot-mitti@github:bitfocus/companion-module-imimot-mitti#v2.0.0":
+  version "2.0.0"
+  resolved "https://codeload.github.com/bitfocus/companion-module-imimot-mitti/tar.gz/36c8e922267df58f20a9c230335ee1e6c7b0bf15"
 
 "companion-module-intelix-matrix@github:bitfocus/companion-module-intelix-matrix#v1.0.3":
   version "1.0.3"
