@@ -193,6 +193,21 @@ function UserConfigTable() {
 					</td>
 				</tr>
 				<tr>
+					<td>Enable connected Loupedeck devices (Requires Companion restart)</td>
+					<td>
+						<div className="form-check form-check-inline mr-1">
+							<CInputCheckbox
+								id="userconfig_loupedeck_enable"
+								checked={config.loupedeck_enable}
+								onChange={(e) => setValue('loupedeck_enable', e.currentTarget.checked)}
+							/>
+							<label className="form-check-label" htmlFor="userconfig_loupedeck_enable">
+								Enabled
+							</label>
+						</div>
+					</td>
+				</tr>
+				<tr>
 					<td colSpan="2" className="settings-category">
 						PIN Lockout
 					</td>
