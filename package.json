@@ -153,6 +153,7 @@
 	"dependencies": {
 		"@elgato-stream-deck/node": "^5.4.0",
 		"@estilles/expression-parser": "^1.0.0",
+		"@loupedeck/node": "^0.2.1",
 		"@sentry/electron": "^2.5.4",
 		"app-root-path": "^3.0.0",
 		"archiver": "^5.3.1",
@@ -555,7 +556,6 @@
 		"fs-extra": "^10.1.0",
 		"infinitton-idisplay": "^1.1.2",
 		"lodash": "^4.17.20",
-		"loupedeck": "github:julusian/loupedeck#master",
 		"mkdirp": "^1.0.4",
 		"moment": "^2.29.3",
 		"node-fetch": "^2.6.7",

@@ -894,6 +894,16 @@
   resolved "https://registry.yarnpkg.com/@leichtgewicht/ip-codec/-/ip-codec-2.0.3.tgz#0300943770e04231041a51bd39f0439b5c7ab4f0"
   integrity sha512-nkalE/f1RvRGChwBnEIoBfSEYOXnCRdleKuv6+lePbMDrMZXeDQnqak5XDOeBgrPPyPfAdcCu/B5z+v3VhplGg==
 
+"@loupedeck/node@^0.2.1":
+  version "0.2.1"
+  resolved "https://registry.yarnpkg.com/@loupedeck/node/-/node-0.2.1.tgz#b833361b2aef46ce4535eae65b983b7035e458ba"
+  integrity sha512-uRFQQQKduw0CkEPes5XOA2POzgQNGv/6PEilLzYC/z97cvwealoFIa94qTCO0y2N2/EFqfXudU2EwhZfaheQCQ==
+  dependencies:
+    eventemitter3 "^4.0.7"
+    p-queue "^6.6.2"
+    serialport "^10.4.0"
+    tslib "^2.4.0"
+
 "@malept/cross-spawn-promise@^1.1.0":
   version "1.1.1"
   resolved "https://registry.yarnpkg.com/@malept/cross-spawn-promise/-/cross-spawn-promise-1.1.1.tgz#504af200af6b98e198bce768bc1730c6936ae01d"
@@ -2747,26 +2757,6 @@ color-name@^1.0.0, color-name@~1.1.4:
   version "1.1.4"
   resolved "https://registry.yarnpkg.com/color-name/-/color-name-1.1.4.tgz#c2a09a87acbde69543de6f63fa3995c826c536a2"
   integrity sha512-dOy+3AuW3a2wNbZHIuMZpTcgjGuLU/uBL/ubcZF9OXbDo8ff4O8yVp5Bf0efS8uEoYo5q4Fx7dY9OgQGXgAsQA==
-
-color-parse@^1.4.2:
-  version "1.4.2"
-  resolved "https://registry.yarnpkg.com/color-parse/-/color-parse-1.4.2.tgz#78651f5d34df1a57f997643d86f7f87268ad4eb5"
-  integrity sha512-RI7s49/8yqDj3fECFZjUI1Yi0z/Gq1py43oNJivAIIDSyJiOZLfYCRQEgn8HEVAj++PcRe8AnL2XF0fRJ3BTnA==
-  dependencies:
-    color-name "^1.0.0"
-
-color-rgba@^2.4.0:
-  version "2.4.0"
-  resolved "https://registry.yarnpkg.com/color-rgba/-/color-rgba-2.4.0.tgz#ae85819c530262c29fc2da129fc7c8f9efc57015"
-  integrity sha512-Nti4qbzr/z2LbUWySr7H9dk3Rl7gZt7ihHAxlgT4Ho90EXWkjtkL1avTleu9yeGuqrt/chxTB6GKK8nZZ6V0+Q==
-  dependencies:
-    color-parse "^1.4.2"
-    color-space "^2.0.0"
-
-color-space@^2.0.0:
-  version "2.0.0"
-  resolved "https://registry.yarnpkg.com/color-space/-/color-space-2.0.0.tgz#ae7813abcbe3dabda9e3e2266b0675f688b24977"
-  integrity sha512-Bu8P/usGNuVWushjxcuaGSkhT+L2KX0cvgMGMTF0KJ7lFeqonhsntT68d6Yu3uwZzCmbF7KTB9EV67AGcUXhJw==
 
 color-string@^1.9.0:
   version "1.9.0"
@@ -8291,14 +8281,6 @@ long@^3.2.0:
   resolved "https://registry.yarnpkg.com/long/-/long-3.2.0.tgz#d821b7138ca1cb581c172990ef14db200b5c474b"
   integrity sha1-2CG3E4yhy1gcFymQ7xTbIAtcR0s=
 
-"loupedeck@github:julusian/loupedeck#master":
-  version "1.3.3-julusian.0"
-  resolved "https://codeload.github.com/julusian/loupedeck/tar.gz/d5ec7c1951b8767c80193bc5e387aad1e0eb0733"
-  dependencies:
-    color-rgba "^2.4.0"
-    serialport "^10.4.0"
-    ws "^8.6.0"
-
 lowercase-keys@2.0.0, lowercase-keys@^2.0.0:
   version "2.0.0"
   resolved "https://registry.yarnpkg.com/lowercase-keys/-/lowercase-keys-2.0.0.tgz#2603e78b7b4b0006cbca2fbcc8a3202558ac9479"
@@ -11749,7 +11731,7 @@ ws@^7.5.9:
   resolved "https://registry.yarnpkg.com/ws/-/ws-7.5.9.tgz#54fa7db29f4c7cec68b1ddd3a89de099942bb591"
   integrity sha512-F+P9Jil7UiSKSkppIiD94dN07AwvFixvLIj1Og1Rl9GGMuNipJnV9JzjD6XuqmAeiswGvUmNLjr5cFuXwNS77Q==
 
-ws@^8.2.0, ws@^8.2.2, ws@^8.5.0, ws@^8.6.0:
+ws@^8.2.0, ws@^8.2.2, ws@^8.5.0:
   version "8.8.1"
   resolved "https://registry.yarnpkg.com/ws/-/ws-8.8.1.tgz#5dbad0feb7ade8ecc99b830c1d77c913d4955ff0"
   integrity sha512-bGy2JzvzkPowEJV++hF07hAD6niYSr0JzBNo/J29WsB57A2r7Wlc1UFcTR9IzrPvuNVO4B8LGqF8qcpsVOhJCA==
