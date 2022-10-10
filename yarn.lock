@@ -3012,13 +3012,13 @@ commist@^1.0.0:
   version "1.0.7"
   resolved "https://codeload.github.com/bitfocus/companion-module-behringer-wing/tar.gz/8bbc62553da8a60f7c0a99edec2e3c97dbf4fc50"
 
-"companion-module-behringer-x32@github:bitfocus/companion-module-behringer-x32#v2.9.1":
-  version "2.9.1"
-  resolved "https://codeload.github.com/bitfocus/companion-module-behringer-x32/tar.gz/9a6737a8fa04148e93cc80ce998f312e5b73a9b3"
+"companion-module-behringer-x32@github:bitfocus/companion-module-behringer-x32#v2.10.1":
+  version "2.10.1"
+  resolved "https://codeload.github.com/bitfocus/companion-module-behringer-x32/tar.gz/900243c8f6baf00c4a06c08418cb46a9cac954cc"
   dependencies:
     "@types/node" "^14.18.9"
     debounce-fn "github:julusian/debounce-fn#4.0.0-maxWaithack.0"
-    moment "^2.29.1"
+    moment "^2.29.2"
     p-queue "^6.6.2"
     type-fest "^2.9.0"
 
@@ -8561,7 +8561,7 @@ mkdirp@^1.0.4:
   resolved "https://registry.yarnpkg.com/mkdirp/-/mkdirp-1.0.4.tgz#3eb5ed62622756d79a5f0e2a221dfebad75c2f7e"
   integrity sha512-vVqVZQyf3WLx2Shd0qJ9xuvqgAyKPLAiqITEtqW0oIUjzo3PePDd6fW9iFz30ef7Ysp/oiWqbhszeGWW2T6Gzw==
 
-moment@^2.29.1, moment@^2.29.3:
+moment@^2.29.2, moment@^2.29.3:
   version "2.29.4"
   resolved "https://registry.yarnpkg.com/moment/-/moment-2.29.4.tgz#3dbe052889fe7c1b2ed966fcb3a77328964ef108"
   integrity sha512-5LC9SOxjSc2HF6vO2CyuTDNivEdoz2IvyJJGj6X8DJ0eFyfszE0QiEd+iXmBvUP3WHxSjFH/vIsA0EN00cgr8w==
