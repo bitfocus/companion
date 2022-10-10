@@ -17,7 +17,7 @@ export function FinishStep({ oldConfig, newConfig }) {
 						? 'Please note that Stream Deck devices will not appear since they are configured for the Stream Deck software.'
 						: ''}
 				</li>
-				<li>Go to the 'Conections' tab to configure the devices you'd like to control.</li>
+				<li>Go to the 'Connections' tab to configure the devices you'd like to control.</li>
 				<li>
 					Go to the 'Buttons' tab to program buttons to control your devices.
 					<br />
