@@ -398,6 +398,7 @@
 		"companion-module-nobe-omniscope": "github:bitfocus/companion-module-nobe-omniscope#v1.0.2",
 		"companion-module-noismada-octopuslistener": "github:bitfocus/companion-module-noismada-octopuslistener#v1.0.5",
 		"companion-module-noismada-octopusshowcontrol": "github:bitfocus/companion-module-noismada-octopusshowcontrol#v1.2.1",
+		"companion-module-nortek-bluebolt": "github:bitfocus/companion-module-nortek-bluebolt#v0.7.0",
 		"companion-module-notion-timestamp": "github:bitfocus/companion-module-notion-timestamp#v1.0.0",
 		"companion-module-novastar-controller": "github:bitfocus/companion-module-novastar-controller#v1.0.8",
 		"companion-module-novastar-h-series": "github:bitfocus/companion-module-novastar-h-series#v1.0.2",

@@ -3975,6 +3975,10 @@ commist@^1.0.0:
   version "1.2.1"
   resolved "https://codeload.github.com/bitfocus/companion-module-noismada-octopusshowcontrol/tar.gz/7434eb00233bde285562d7be4ff57117c0b5aa0d"
 
+"companion-module-nortek-bluebolt@github:bitfocus/companion-module-nortek-bluebolt#v0.7.0":
+  version "0.7.0"
+  resolved "https://codeload.github.com/bitfocus/companion-module-nortek-bluebolt/tar.gz/237692b1217528d07e6fe4dd018fdbcaf695dd5b"
+
 "companion-module-notion-timestamp@github:bitfocus/companion-module-notion-timestamp#v1.0.0":
   version "1.0.0"
   resolved "https://codeload.github.com/bitfocus/companion-module-notion-timestamp/tar.gz/df80f3a69a5d853bb6e70269552133cfc9dbb5ed"
