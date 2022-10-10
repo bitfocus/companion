@@ -521,7 +521,7 @@
 		"companion-module-ubiquiti-unifi": "github:bitfocus/companion-module-ubiquiti-unifi#v1.0.4",
 		"companion-module-utahscientific-bpspanel": "github:bitfocus/companion-module-utahscientific-bpspanel#v1.0.1",
 		"companion-module-vaddio-ptz": "github:bitfocus/companion-module-vaddio-ptz#v1.0.2",
-		"companion-module-vdo-ninja": "github:bitfocus/companion-module-vdo-ninja#v1.0.2",
+		"companion-module-vdo-ninja": "github:bitfocus/companion-module-vdo-ninja#v1.1.0",
 		"companion-module-vdwall-lvp615": "github:bitfocus/companion-module-vdwall-lvp615#v1.0.0",
 		"companion-module-ventuz-director": "github:bitfocus/companion-module-ventuz-director#v1.0.1",
 		"companion-module-vicreo-hotkey": "github:bitfocus/companion-module-vicreo-hotkey#v3.0.4",

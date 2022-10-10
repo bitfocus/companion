@@ -4561,11 +4561,11 @@ commist@^1.0.0:
   version "1.0.2"
   resolved "https://codeload.github.com/bitfocus/companion-module-vaddio-ptz/tar.gz/34db543de37310a183247b11ee596a87d45faab4"
 
-"companion-module-vdo-ninja@github:bitfocus/companion-module-vdo-ninja#v1.0.2":
-  version "1.0.2"
-  resolved "https://codeload.github.com/bitfocus/companion-module-vdo-ninja/tar.gz/ca187652d15fd4deff42a794aa8f6c372591c489"
+"companion-module-vdo-ninja@github:bitfocus/companion-module-vdo-ninja#v1.1.0":
+  version "1.1.0"
+  resolved "https://codeload.github.com/bitfocus/companion-module-vdo-ninja/tar.gz/33d78bdb133eb4d6569e93e5d3fe28ede34372ba"
   dependencies:
-    ws "^7.2.1"
+    ws "^7.5.9"
 
 "companion-module-vdwall-lvp615@github:bitfocus/companion-module-vdwall-lvp615#v1.0.0":
   version "1.0.0"
@@ -11711,6 +11711,11 @@ ws@^7.2.1, ws@^7.4.1, ws@^7.4.4, ws@^7.4.5, ws@^7.4.6, ws@^7.5.5:
   version "7.5.7"
   resolved "https://registry.yarnpkg.com/ws/-/ws-7.5.7.tgz#9e0ac77ee50af70d58326ecff7e85eb3fa375e67"
   integrity sha512-KMvVuFzpKBuiIXW3E4u3mySRO2/mCHSyZDJQM5NQ9Q9KHWHWh0NHgfbRMLLrceUK5qAL4ytALJbpRMjixFZh8A==
+
+ws@^7.5.9:
+  version "7.5.9"
+  resolved "https://registry.yarnpkg.com/ws/-/ws-7.5.9.tgz#54fa7db29f4c7cec68b1ddd3a89de099942bb591"
+  integrity sha512-F+P9Jil7UiSKSkppIiD94dN07AwvFixvLIj1Og1Rl9GGMuNipJnV9JzjD6XuqmAeiswGvUmNLjr5cFuXwNS77Q==
 
 ws@^8.2.0, ws@^8.2.2, ws@^8.5.0:
   version "8.8.1"
