@@ -1,7 +1,7 @@
 import React, { useEffect, useCallback, useState } from 'react'
 import { CCol, CInput, CRow } from '@coreui/react'
 
-export function NumberInputField({ definition, value, setValue, setValid, disabled }) {
+export function NumberInputField({ required, min, max, step, tooltip, range, value, setValue, setValid, disabled }) {
 	const [tmpValue, setTmpValue] = useState(null)
 
 	// Check if the value is valid
@@ -9,7 +9,7 @@ export function NumberInputField({ definition, value, setValue, setValid, disabl
 		(val) => {
 			if (val === '') {
 				// If required, it must not be empty
-				if (definition.required) {
+				if (required) {
 					return false
 				}
 			} else {
@@ -19,28 +19,23 @@ export function NumberInputField({ definition, value, setValue, setValid, disabl
 				}
 
 				// Verify the value range
-				if (definition.min !== undefined && val < definition.min) {
+				if (min !== undefined && val < min) {
 					return false
 				}
-				if (definition.max !== undefined && val > definition.max) {
+				if (max !== undefined && val > max) {
 					return false
 				}
 			}
 
 			return true
 		},
-		[definition.required, definition.min, definition.max]
+		[required, min, max]
 	)
 
 	// If the value is undefined, populate with the default. Also inform the parent about the validity
 	useEffect(() => {
-		if (value === undefined && definition.default !== undefined) {
-			setValue(definition.default)
-			setValid?.(isValueValid(definition.default))
-		} else {
-			setValid?.(isValueValid(value))
-		}
-	}, [isValueValid, definition.default, value, setValue, setValid])
+		setValid?.(isValueValid(value))
+	}, [isValueValid, value, setValid])
 
 	const onChange = useCallback(
 		(e) => {
@@ -59,18 +54,18 @@ export function NumberInputField({ definition, value, setValue, setValid, disabl
 			type="number"
 			disabled={disabled}
 			value={tmpValue ?? value ?? 0}
-			min={definition.min}
-			max={definition.max}
-			step={definition.step}
+			min={min}
+			max={max}
+			step={step}
 			style={{ color: !isValueValid(tmpValue ?? value) ? 'red' : undefined }}
-			title={definition.tooltip}
+			title={tooltip}
 			onChange={onChange}
 			onFocus={() => setTmpValue(value ?? '')}
 			onBlur={() => setTmpValue(null)}
 		/>
 	)
 
-	if (definition.range) {
+	if (range) {
 		return (
 			<CRow>
 				<CCol sm={12}>{input}</CCol>
@@ -79,10 +74,10 @@ export function NumberInputField({ definition, value, setValue, setValid, disabl
 						type="range"
 						disabled={disabled}
 						value={tmpValue ?? value ?? 0}
-						min={definition.min}
-						max={definition.max}
-						step={definition.step}
-						title={definition.tooltip}
+						min={min}
+						max={max}
+						step={step}
+						title={tooltip}
 						onChange={onChange}
 						onFocus={() => setTmpValue(value ?? '')}
 						onBlur={() => setTmpValue(null)}

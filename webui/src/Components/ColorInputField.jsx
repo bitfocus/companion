@@ -9,17 +9,14 @@ function splitColors(number) {
 	}
 }
 
-export function ColorInputField({ definition, value, setValue, setValid, disabled }) {
+export function ColorInputField({ value, setValue, setValid, disabled }) {
 	const [currentColor, setCurrentColor] = useState(null)
 	const [displayPicker, setDisplayPicker] = useState(false)
 
 	// If the value is undefined, populate with the default. Also inform the parent about the validity
 	useEffect(() => {
-		if (value === undefined && definition.default !== undefined) {
-			setValue(definition.default)
-		}
 		setValid?.(true)
-	}, [definition.default, value, setValue, setValid])
+	}, [setValid])
 
 	const handleClick = useCallback(() => setDisplayPicker((d) => !d), [])
 

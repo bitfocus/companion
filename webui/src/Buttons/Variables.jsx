@@ -235,18 +235,13 @@ function CustomVariablesList({ setShowCustom }) {
 										<CFormGroup>
 											<CLabel htmlFor="current_value">Current value: </CLabel>
 											<TextInputField
-												definition={{}}
 												value={variableValues[shortname] || ''}
 												setValue={(val) => setCurrentValue(name, val)}
 											/>
 										</CFormGroup>
 										<CFormGroup>
 											<CLabel htmlFor="startup_value">Startup value: </CLabel>
-											<TextInputField
-												definition={{}}
-												value={info.defaultValue}
-												setValue={(val) => setStartupValue(name, val)}
-											/>
+											<TextInputField value={info.defaultValue} setValue={(val) => setStartupValue(name, val)} />
 										</CFormGroup>
 									</CForm>
 								</td>

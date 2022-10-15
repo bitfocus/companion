@@ -13,7 +13,26 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faQuestionCircle } from '@fortawesome/free-solid-svg-icons'
 import sanitizeHtml from 'sanitize-html'
 
-export const InstanceEditPanel = memo(function InstanceEditPanel({ instanceId, doConfigureInstance, showHelp }) {
+export function InstanceEditPanel({ instanceId, instanceStatus, doConfigureInstance, showHelp }) {
+	console.log('status', instanceStatus)
+
+	if (!instanceStatus || !instanceStatus.level || instanceStatus.level === 'crashed') {
+		return (
+			<CRow className="edit-instance">
+				<CCol xs={12}>
+					<p>Waiting for connection to start...</p>
+				</CCol>
+				<LoadingRetryOrError dataReady={false} />
+			</CRow>
+		)
+	}
+
+	return (
+		<InstanceEditPanelInner instanceId={instanceId} doConfigureInstance={doConfigureInstance} showHelp={showHelp} />
+	)
+}
+
+const InstanceEditPanelInner = memo(function InstanceEditPanel({ instanceId, doConfigureInstance, showHelp }) {
 	const socket = useContext(SocketContext)
 	const modules = useContext(ModulesContext)
 
@@ -157,7 +176,7 @@ export const InstanceEditPanel = memo(function InstanceEditPanel({ instanceId, d
 					<>
 						<CCol className={`fieldtype-textinput`} sm={12}>
 							<label>Label</label>
-							<TextInputField definition={{}} value={instanceLabel} setValue={setInstanceLabel} />
+							<TextInputField value={instanceLabel} setValue={setInstanceLabel} />
 						</CCol>
 
 						{configFields.map((field, i) => {
@@ -204,12 +223,11 @@ export const InstanceEditPanel = memo(function InstanceEditPanel({ instanceId, d
 	)
 })
 
-function ConfigField({ setValue, setValid, ...props }) {
-	const id = props.definition.id
+function ConfigField({ setValue, setValid, definition, value }) {
+	const id = definition.id
 	const setValue2 = useCallback((val) => setValue(id, val), [setValue, id])
 	const setValid2 = useCallback((valid) => setValid(id, valid), [setValid, id])
 
-	const { definition } = props
 	switch (definition.type) {
 		case 'static-text': {
 			const descriptionHtml = {
@@ -222,17 +240,66 @@ function ConfigField({ setValue, setValid, ...props }) {
 			return <p title={definition.tooltip} dangerouslySetInnerHTML={descriptionHtml}></p>
 		}
 		case 'textinput':
-			return <TextInputField {...props} setValue={setValue2} setValid={setValid2} />
+			return (
+				<TextInputField
+					value={value}
+					regex={definition.regex}
+					required={definition.required}
+					tooltip={definition.tooltip}
+					setValue={setValue2}
+					setValid={setValid2}
+				/>
+			)
 		case 'number':
-			return <NumberInputField {...props} setValue={setValue2} setValid={setValid2} />
+			return (
+				<NumberInputField
+					required={definition.required}
+					min={definition.min}
+					max={definition.max}
+					step={definition.step}
+					tooltip={definition.tooltip}
+					range={definition.range}
+					value={value}
+					setValue={setValue2}
+					setValid={setValid2}
+				/>
+			)
 		case 'checkbox':
-			return <CheckboxInputField {...props} setValue={setValue2} setValid={setValid2} />
+			return <CheckboxInputField value={value} tooltip={definition.tooltip} setValue={setValue2} setValid={setValid2} />
 		case 'dropdown':
-			return <DropdownInputField {...props} setValue={setValue2} setValid={setValid2} multiple={false} />
+			return (
+				<DropdownInputField
+					choices={definition.choices}
+					allowCustom={definition.allowCustom}
+					minSelection={definition.minSelection}
+					minChoicesForSearch={definition.minChoicesForSearch}
+					maximumSelectionLength={definition.maximumSelectionLength}
+					tooltip={definition.tooltip}
+					regex={definition.regex}
+					value={value}
+					setValue={setValue2}
+					setValid={setValid2}
+					multiple={false}
+				/>
+			)
 		case 'multidropdown':
-			return <DropdownInputField {...props} setValue={setValue2} setValid={setValid2} multiple={true} />
+			return (
+				<DropdownInputField
+					choices={definition.choices}
+					allowCustom={definition.allowCustom}
+					minSelection={definition.minSelection}
+					minChoicesForSearch={definition.minChoicesForSearch}
+					maximumSelectionLength={definition.maximumSelectionLength}
+					tooltip={definition.tooltip}
+					regex={definition.regex}
+					value={value}
+					setValue={setValue2}
+					setValid={setValid2}
+					multiple={true}
+				/>
+			)
 		case 'colorpicker':
-			return <ColorInputField {...props} setValue={setValue2} setValid={setValid2} />
+			return <ColorInputField value={value} setValue={setValue2} setValid={setValid2} />
 		default:
 			return <p>Unknown field "{definition.type}"</p>
 	}

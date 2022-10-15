@@ -403,11 +403,7 @@ export function TriggerEditModal({ doClose, doSave, item, plugins }) {
 						<CCol className="fieldtype-checkbox" sm={2} xs={3}>
 							<CLabel>Relative Delays</CLabel>
 							<p>
-								<CheckboxInputField
-									definition={{ default: false }}
-									value={config.relative_delays ?? false}
-									setValue={setRelativeDelays}
-								/>
+								<CheckboxInputField value={config.relative_delays ?? false} setValue={setRelativeDelays} />
 								&nbsp;
 							</p>
 						</CCol>

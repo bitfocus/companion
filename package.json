@@ -50,7 +50,7 @@
 		"zx": "^4.3.0"
 	},
 	"dependencies": {
-		"@companion-module/base": "^0.4.3",
+		"@companion-module/base": "^0.4.6",
 		"@elgato-stream-deck/node": "^5.5.0",
 		"@estilles/expression-parser": "^1.0.0",
 		"@julusian/jpeg-turbo": "^2.0.0",
@@ -89,7 +89,6 @@
 		"socket.io": "^4.5.2",
 		"socketcluster-client": "^16.1.1",
 		"supports-color": "^9.2.3",
-		"systeminformation": "^5.12.6",
 		"usb": "^2.5.2",
 		"utf-8-validate": "^5.0.9",
 		"winston": "^3.8.2",

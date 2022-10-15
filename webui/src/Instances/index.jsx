@@ -1,5 +1,5 @@
 import { CCol, CRow, CTabs, CTabContent, CTabPane, CNavItem, CNavLink, CNav } from '@coreui/react'
-import { memo, useCallback, useContext, useRef, useState } from 'react'
+import { memo, useCallback, useContext, useEffect, useRef, useState } from 'react'
 import { HelpModal } from './HelpModal'
 import { NotifierContext, MyErrorBoundary, socketEmitPromise, SocketContext } from '../util'
 import { InstancesList } from './InstanceList'
@@ -8,6 +8,8 @@ import { InstanceEditPanel } from './InstanceEditPanel'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { nanoid } from 'nanoid'
 import { faCog, faPlus } from '@fortawesome/free-solid-svg-icons'
+import jsonPatch from 'fast-json-patch'
+import { cloneDeep } from 'lodash-es'
 
 export const InstancesPage = memo(function InstancesPage() {
 	const socket = useContext(SocketContext)
@@ -49,12 +51,34 @@ export const InstancesPage = memo(function InstancesPage() {
 		setActiveTab(id ? 'edit' : 'add')
 	}, [])
 
+	const [instanceStatus, setInstanceStatus] = useState({})
+	useEffect(() => {
+		socketEmitPromise(socket, 'instance_status:get', [])
+			.then((statuses) => {
+				setInstanceStatus(statuses)
+			})
+			.catch((e) => {
+				console.error(`Failed to load instance statuses`, e)
+			})
+
+		const patchStatuses = (patch) => {
+			setInstanceStatus((oldStatuses) => {
+				return jsonPatch.applyPatch(cloneDeep(oldStatuses) || {}, patch).newDocument
+			})
+		}
+		socket.on('instance_status:patch', patchStatuses)
+
+		return () => {
+			socket.off('instance_status:patch', patchStatuses)
+		}
+	}, [socket])
+
 	return (
 		<CRow className="instances-page split-panels">
 			<HelpModal ref={helpModalRef} />
 
 			<CCol xl={6} className="instances-panel primary-panel">
-				<InstancesList showHelp={showHelp} doConfigureInstance={doConfigureInstance} />
+				<InstancesList instanceStatus={instanceStatus} showHelp={showHelp} doConfigureInstance={doConfigureInstance} />
 			</CCol>
 
 			<CCol xl={6} className="instances-panel secondary-panel add-instances-panel">
@@ -86,6 +110,7 @@ export const InstancesPage = memo(function InstancesPage() {
 											showHelp={showHelp}
 											doConfigureInstance={doConfigureInstance}
 											instanceId={selectedInstanceId}
+											instanceStatus={instanceStatus[selectedInstanceId]}
 										/>
 									) : (
 										''

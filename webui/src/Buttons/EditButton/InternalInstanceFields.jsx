@@ -45,9 +45,7 @@ export function InternalInstanceField(option, isOnBank, readonly, value, setValu
 				/>
 			)
 		case 'internal:variable':
-			return (
-				<InternalVariableDropdown disabled={readonly} value={value} setValue={setValue} defaultVal={option.default} />
-			)
+			return <InternalVariableDropdown disabled={readonly} value={value} setValue={setValue} />
 		case 'internal:surface_serial':
 			return (
 				<InternalSurfaceBySerialDropdown disabled={readonly} isOnBank={isOnBank} value={value} setValue={setValue} />
@@ -78,16 +76,7 @@ function InternalInstanceIdDropdown({ includeAll, value, setValue, disabled, mul
 	}, [context, includeAll, filterActionsRecorder])
 
 	return (
-		<DropdownInputField
-			disabled={disabled}
-			value={value}
-			definition={{
-				choices: choices,
-				default: multiple ? [] : choices[0]?.id,
-			}}
-			multiple={!!multiple}
-			setValue={setValue}
-		/>
+		<DropdownInputField disabled={disabled} value={value} choices={choices} multiple={!!multiple} setValue={setValue} />
 	)
 }
 
@@ -110,18 +99,7 @@ function InternalPageDropdown({ isOnBank, includeDirection, value, setValue, dis
 		return choices
 	}, [pages, isOnBank, includeDirection])
 
-	return (
-		<DropdownInputField
-			disabled={disabled}
-			value={value}
-			definition={{
-				choices: choices,
-				default: choices[0]?.id,
-			}}
-			multiple={false}
-			setValue={setValue}
-		/>
-	)
+	return <DropdownInputField disabled={disabled} value={value} choices={choices} multiple={false} setValue={setValue} />
 }
 
 function InternalBankDropdown({ isOnBank, value, setValue, disabled }) {
@@ -137,18 +115,7 @@ function InternalBankDropdown({ isOnBank, value, setValue, disabled }) {
 		return choices
 	}, [isOnBank])
 
-	return (
-		<DropdownInputField
-			disabled={disabled}
-			value={value}
-			definition={{
-				choices: choices,
-				default: choices[0]?.id,
-			}}
-			multiple={false}
-			setValue={setValue}
-		/>
-	)
+	return <DropdownInputField disabled={disabled} value={value} choices={choices} multiple={false} setValue={setValue} />
 }
 
 export function InternalCustomVariableDropdown({ value, setValue, includeNone, disabled }) {
@@ -173,21 +140,10 @@ export function InternalCustomVariableDropdown({ value, setValue, includeNone, d
 		return choices
 	}, [context, includeNone])
 
-	return (
-		<DropdownInputField
-			disabled={disabled}
-			value={value}
-			definition={{
-				choices: choices,
-				default: '',
-			}}
-			multiple={false}
-			setValue={setValue}
-		/>
-	)
+	return <DropdownInputField disabled={disabled} value={value} choices={choices} multiple={false} setValue={setValue} />
 }
 
-function InternalVariableDropdown({ value, setValue, defaultVal, disabled }) {
+function InternalVariableDropdown({ value, setValue, disabled }) {
 	const context = useContext(VariableDefinitionsContext)
 	const choices = useMemo(() => {
 		const choices = []
@@ -207,18 +163,7 @@ function InternalVariableDropdown({ value, setValue, defaultVal, disabled }) {
 		return choices
 	}, [context])
 
-	return (
-		<DropdownInputField
-			disabled={disabled}
-			value={value}
-			definition={{
-				choices: choices,
-				default: defaultVal ?? choices[0]?.id ?? '',
-			}}
-			multiple={false}
-			setValue={setValue}
-		/>
-	)
+	return <DropdownInputField disabled={disabled} value={value} choices={choices} multiple={false} setValue={setValue} />
 }
 
 function InternalSurfaceBySerialDropdown({ isOnBank, value, setValue, disabled }) {
@@ -239,18 +184,7 @@ function InternalSurfaceBySerialDropdown({ isOnBank, value, setValue, disabled }
 		return choices
 	}, [context, isOnBank])
 
-	return (
-		<DropdownInputField
-			disabled={disabled}
-			value={value}
-			definition={{
-				choices: choices,
-				default: choices[0]?.id,
-			}}
-			multiple={false}
-			setValue={setValue}
-		/>
-	)
+	return <DropdownInputField disabled={disabled} value={value} choices={choices} multiple={false} setValue={setValue} />
 }
 
 function InternalTriggerDropdown({ value, setValue, disabled }) {
@@ -267,16 +201,5 @@ function InternalTriggerDropdown({ value, setValue, disabled }) {
 		return choices
 	}, [context])
 
-	return (
-		<DropdownInputField
-			disabled={disabled}
-			value={value}
-			definition={{
-				choices: choices,
-				default: choices[0]?.id,
-			}}
-			multiple={false}
-			setValue={setValue}
-		/>
-	)
+	return <DropdownInputField disabled={disabled} value={value} choices={choices} multiple={false} setValue={setValue} />
 }

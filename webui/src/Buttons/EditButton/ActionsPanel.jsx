@@ -492,7 +492,8 @@ function ActionTableRow({
 									<label>Delay</label>
 									<CInputGroup>
 										<NumberInputField
-											definition={{ default: 0 }}
+											min={0}
+											step={10}
 											disabled={readonly}
 											value={action.delay}
 											setValue={innerDelay}

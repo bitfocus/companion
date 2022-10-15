@@ -30,12 +30,21 @@ export function ActionTableRowOption({
 	let control = undefined
 	switch (option.type) {
 		case 'textinput': {
-			control = <TextInputField value={value} definition={option} disabled={readonly} setValue={setValue2} />
+			control = (
+				<TextInputField
+					value={value}
+					regex={option.regex}
+					required={option.required}
+					tooltip={option.tooltip}
+					disabled={readonly}
+					setValue={setValue2}
+				/>
+			)
 			break
 		}
 		case 'textwithvariables': {
 			control = (
-				<TextWithVariablesInputField value={value} definition={option} disabled={readonly} setValue={setValue2} />
+				<TextWithVariablesInputField value={value} tooltip={option.tooltip} disabled={readonly} setValue={setValue2} />
 			)
 			break
 		}
@@ -43,7 +52,13 @@ export function ActionTableRowOption({
 			control = (
 				<DropdownInputField
 					value={value}
-					definition={option}
+					choices={option.choices}
+					allowCustom={option.allowCustom}
+					minSelection={option.minSelection}
+					minChoicesForSearch={option.minChoicesForSearch}
+					maximumSelectionLength={option.maximumSelectionLength}
+					tooltip={option.tooltip}
+					regex={option.regex}
 					disabled={readonly}
 					multiple={false}
 					setValue={setValue2}
@@ -55,7 +70,13 @@ export function ActionTableRowOption({
 			control = (
 				<DropdownInputField
 					value={value}
-					definition={option}
+					choices={option.choices}
+					allowCustom={option.allowCustom}
+					minSelection={option.minSelection}
+					minChoicesForSearch={option.minChoicesForSearch}
+					maximumSelectionLength={option.maximumSelectionLength}
+					tooltip={option.tooltip}
+					regex={option.regex}
 					disabled={readonly}
 					multiple={true}
 					setValue={setValue2}
@@ -64,15 +85,28 @@ export function ActionTableRowOption({
 			break
 		}
 		case 'checkbox': {
-			control = <CheckboxInputField value={value} definition={option} disabled={readonly} setValue={setValue2} />
+			control = <CheckboxInputField value={value} tooltip={option.tooltip} disabled={readonly} setValue={setValue2} />
 			break
 		}
 		case 'colorpicker': {
-			control = <ColorInputField value={value} definition={option} disabled={readonly} setValue={setValue2} />
+			control = <ColorInputField value={value} disabled={readonly} setValue={setValue2} />
 			break
 		}
 		case 'number': {
-			control = <NumberInputField value={value} definition={option} disabled={readonly} setValue={setValue2} />
+			control = (
+				<NumberInputField
+					value={value}
+					required={option.required}
+					min={option.min}
+					max={option.max}
+					step={option.step}
+					tooltip={option.tooltip}
+					range={option.range}
+					definition={option}
+					disabled={readonly}
+					setValue={setValue2}
+				/>
+			)
 			break
 		}
 		case 'static-text': {
