@@ -542,7 +542,7 @@
 		"companion-module-workflownetwork-livetime": "github:bitfocus/companion-module-workflownetwork-livetime#v1.0.0",
 		"companion-module-wyrestorm-sw0402mv": "github:bitfocus/companion-module-wyrestorm-sw0402mv#v1.0.3",
 		"companion-module-xiamen-sprolink-vd-series": "github:bitfocus/companion-module-xiamen-sprolink-vd-series#v1.0.3",
-		"companion-module-yamaha-rcp": "github:bitfocus/companion-module-yamaha-rcp#v1.6.5",
+		"companion-module-yamaha-rcp": "github:bitfocus/companion-module-yamaha-rcp#v1.6.7",
 		"companion-module-youtube-live": "github:bitfocus/companion-module-youtube-live#v1.1.5",
 		"companion-module-zenvideo-ndirouter": "github:bitfocus/companion-module-zenvideo-ndirouter#v1.0.2",
 		"companion-module-zoom-osc-iso": "github:bitfocus/companion-module-zoom-osc-iso#v2.4.2",
