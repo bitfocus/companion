@@ -54,9 +54,7 @@ export function ActionTableRowOption({
 					value={value}
 					choices={option.choices}
 					allowCustom={option.allowCustom}
-					minSelection={option.minSelection}
 					minChoicesForSearch={option.minChoicesForSearch}
-					maximumSelectionLength={option.maximumSelectionLength}
 					tooltip={option.tooltip}
 					regex={option.regex}
 					disabled={readonly}
@@ -74,7 +72,7 @@ export function ActionTableRowOption({
 					allowCustom={option.allowCustom}
 					minSelection={option.minSelection}
 					minChoicesForSearch={option.minChoicesForSearch}
-					maximumSelectionLength={option.maximumSelectionLength}
+					maxSelection={option.maxSelection}
 					tooltip={option.tooltip}
 					regex={option.regex}
 					disabled={readonly}
