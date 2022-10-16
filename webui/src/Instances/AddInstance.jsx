@@ -43,7 +43,7 @@ const AddInstancesInner = memo(function AddInstancesInner({ showHelp, configureI
 		(type, product, module) => {
 			if (module.isLegacy) {
 				confirmRef.current.show(
-					`${module.name} is outdated`,
+					`${module.manufacturer} ${product} is outdated`,
 					null, // Passed as param to the thing
 					'Add anyway',
 					() => {
