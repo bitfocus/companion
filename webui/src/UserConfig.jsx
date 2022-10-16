@@ -917,7 +917,7 @@ function RemoteControlInfo() {
 										<i>Change text size on a button (between the predefined values)</i>
 									</li>
 									<li>
-										<code>/api/custom-variable/</code>&lt;name&gt;<code>?value=</code>&lt;value&gt;
+										<code>/set/custom-variable/</code>&lt;name&gt;<code>?value=</code>&lt;value&gt;
 										<br />
 										<i>Change custom variable value</i>
 									</li>
@@ -955,7 +955,7 @@ function RemoteControlInfo() {
 							<p>
 								Change custom variable &quot;cue&quot; to value &quot;intro&quot;
 								<br />
-								<code>/api/custom-variable/cue?value=intro</code>
+								<code>/set/custom-variable/cue?value=intro</code>
 							</p>
 						</MyErrorBoundary>
 					</CTabPane>
