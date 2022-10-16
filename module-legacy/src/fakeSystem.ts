@@ -129,7 +129,7 @@ export function convertInputField(input: SomeCompanionInputField): Complete<Modu
 					default: input.default,
 					minChoicesForSearch: input.minChoicesForSearch,
 					minSelection: input.minSelection,
-					maxSelection: input.maximumSelectionLength,
+					maxSelection: input.maxSelection,
 				})
 			} else {
 				return literal<Complete<ModuleApi.CompanionInputFieldDropdown>>({
