@@ -175,9 +175,16 @@ function InternalSurfaceBySerialDropdown({ isOnBank, value, setValue, disabled }
 			choices.push({ id: 'self', label: 'Current surface' })
 		}
 
-		for (const surface of Object.values(context)) {
+		for (const surface of Object.values(context?.available ?? {})) {
 			choices.push({
 				label: `${surface.name || surface.type} (${surface.id})`,
+				id: surface.id,
+			})
+		}
+
+		for (const surface of Object.values(context?.offline ?? {})) {
+			choices.push({
+				label: `${surface.name || surface.type} (${surface.id}) - Offline`,
 				id: surface.id,
 			})
 		}
