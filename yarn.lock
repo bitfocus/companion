@@ -620,6 +620,16 @@
     node-addon-api "^5.0.0"
     pkg-prebuilds "~0.1.0"
 
+"@loupedeck/node@^0.2.1":
+  version "0.2.1"
+  resolved "https://registry.yarnpkg.com/@loupedeck/node/-/node-0.2.1.tgz#b833361b2aef46ce4535eae65b983b7035e458ba"
+  integrity sha512-uRFQQQKduw0CkEPes5XOA2POzgQNGv/6PEilLzYC/z97cvwealoFIa94qTCO0y2N2/EFqfXudU2EwhZfaheQCQ==
+  dependencies:
+    eventemitter3 "^4.0.7"
+    p-queue "^6.6.2"
+    serialport "^10.4.0"
+    tslib "^2.4.0"
+
 "@nodelib/fs.scandir@2.1.5":
   version "2.1.5"
   resolved "https://registry.yarnpkg.com/@nodelib/fs.scandir/-/fs.scandir-2.1.5.tgz#7619c2eb21b25483f6d167548b4cfd5a7488c3d5"
@@ -4563,7 +4573,7 @@ serialize-javascript@^6.0.0:
   dependencies:
     randombytes "^2.1.0"
 
-serialport@10.4.0:
+serialport@10.4.0, serialport@^10.4.0:
   version "10.4.0"
   resolved "https://registry.yarnpkg.com/serialport/-/serialport-10.4.0.tgz#93c95ecccc0e314d5bbee3f06cde2c70be70e671"
   integrity sha512-PszPM5SnFMgSXom60PkKS2A9nMlNbHkuoyRBlzdSWw9rmgOn258+V0dYbWMrETJMM+TJV32vqBzjg5MmmUMwMw==

@@ -10,6 +10,7 @@ export function VariablesTable({ label }) {
 	const notifier = useContext(NotifierContext)
 	const variableDefinitionsContext = useContext(VariableDefinitionsContext)
 
+	const [variableValues, setVariableValues] = useState({})
 	const [filter, setFilter] = useState('')
 
 	const variableDefinitions = useMemo(() => {
@@ -25,7 +26,6 @@ export function VariablesTable({ label }) {
 
 		return defs
 	}, [variableDefinitionsContext, label])
-	const [variableValues, setVariableValues] = useState({})
 
 	useEffect(() => {
 		if (label) {

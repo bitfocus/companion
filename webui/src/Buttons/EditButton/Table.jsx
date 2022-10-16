@@ -100,7 +100,6 @@ export function ActionTableRowOption({
 					step={option.step}
 					tooltip={option.tooltip}
 					range={option.range}
-					definition={option}
 					disabled={readonly}
 					setValue={setValue2}
 				/>
