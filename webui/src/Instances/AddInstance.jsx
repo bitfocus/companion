@@ -1,9 +1,11 @@
 import React, { memo, useContext, useState } from 'react'
 import { CAlert, CButton, CInput, CInputGroup, CInputGroupAppend } from '@coreui/react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faQuestionCircle, faTimes } from '@fortawesome/free-solid-svg-icons'
+import { faExclamationTriangle, faQuestionCircle, faTimes } from '@fortawesome/free-solid-svg-icons'
 import { socketEmitPromise, SocketContext, NotifierContext, ModulesContext } from '../util'
 import { useCallback } from 'react'
+import { useRef } from 'react'
+import { GenericConfirmModal } from '../Components/GenericConfirmModal'
 
 export function AddInstancesPanel({ showHelp, doConfigureInstance }) {
 	return (
@@ -19,7 +21,9 @@ const AddInstancesInner = memo(function AddInstancesInner({ showHelp, configureI
 	const modules = useContext(ModulesContext)
 	const [filter, setFilter] = useState('')
 
-	const addInstance = useCallback(
+	const confirmRef = useRef(null)
+
+	const addInstanceInner = useCallback(
 		(type, product) => {
 			socketEmitPromise(socket, 'instances:add', [{ type: type, product: product }])
 				.then((id) => {
@@ -33,6 +37,24 @@ const AddInstancesInner = memo(function AddInstancesInner({ showHelp, configureI
 				})
 		},
 		[socket, notifier, configureInstance]
+	)
+
+	const addInstance = useCallback(
+		(type, product, module) => {
+			if (module.isLegacy) {
+				confirmRef.current.show(
+					`${module.name} is outdated`,
+					null, // Passed as param to the thing
+					'Add anyway',
+					() => {
+						addInstanceInner(type, product)
+					}
+				)
+			} else {
+				addInstanceInner(type, product)
+			}
+		},
+		[addInstanceInner]
 	)
 
 	let candidates = []
@@ -49,13 +71,24 @@ const AddInstancesInner = memo(function AddInstancesInner({ showHelp, configureI
 				if (name.replace(';', ' ').match(regexp) || keywords.find((kw) => kw.match(regexp))) {
 					candidatesObj[name] = (
 						<div key={name + id}>
-							<CButton color="primary" onClick={() => addInstance(id, subprod)}>
+							<CButton color="primary" onClick={() => addInstance(id, subprod, module)}>
 								Add
 							</CButton>
 							&nbsp;
+							{module.isLegacy ? (
+								<>
+									<FontAwesomeIcon
+										icon={faExclamationTriangle}
+										title="This module has not been updated for Companion 3.0, and may be broken as a result"
+									/>
+									&nbsp;
+								</>
+							) : (
+								''
+							)}
 							{name}
 							{module.hasHelp ? (
-								<div className="instance_help" onClick={() => showHelp(id)}>
+								<div className="float_right" onClick={() => showHelp(id)}>
 									<FontAwesomeIcon icon={faQuestionCircle} />
 								</div>
 							) : (
@@ -89,8 +122,25 @@ const AddInstancesInner = memo(function AddInstancesInner({ showHelp, configureI
 		)
 	}
 
+	const confirmContent = (
+		<>
+			<p>
+				This module has not been verified to be compatible with this version of companion. It may be buggy or completely
+				broken.
+			</p>
+			<p>
+				If this module is broken, please let us know in{' '}
+				<a target="_blank" rel="noreferrer" href="https://github.com/bitfocus/companion/issues/9999">
+					this github issue
+				</a>
+			</p>
+		</>
+	)
+
 	return (
 		<div style={{ clear: 'both' }}>
+			<GenericConfirmModal ref={confirmRef} content={confirmContent} />
+
 			<h4>Add connection</h4>
 			<p>
 				Companion currently supports {Object.keys(modules).length} different things, and the list grows every day. If

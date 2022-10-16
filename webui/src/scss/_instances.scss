@@ -1,9 +1,20 @@
-.instance_help,
-.instance_bug,
-.instance_variables {
+.float_right {
 	float: right;
 	cursor: pointer;
 	cursor: hand;
+
+	svg {
+		margin-right: 4px;
+	}
+
+	> * {
+		display: inline-block;
+
+		color: inherit;
+		&:hover {
+			color: inherit;
+		}
+	}
 }
 
 .instancelist-dragging {
