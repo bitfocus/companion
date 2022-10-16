@@ -50,7 +50,7 @@
 		"zx": "^4.3.0"
 	},
 	"dependencies": {
-		"@companion-module/base": "^0.4.6",
+		"@companion-module/base": "^0.4.7",
 		"@elgato-stream-deck/node": "^5.5.0",
 		"@estilles/expression-parser": "^1.0.0",
 		"@julusian/jpeg-turbo": "^2.0.0",
