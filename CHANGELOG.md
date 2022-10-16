@@ -2,7 +2,7 @@
 
 ## Companion v3.0.0 - Unreleased
 
-Documented up to 3aaf64b2f88d2d0c7ea16269675d0496c3a3ff9c
+Documented up to 273683aa6f3359fb9ef0009ec9a5f54803ba3810
 
 ### BREAKING CHANGES
 
@@ -35,6 +35,14 @@ Documented up to 3aaf64b2f88d2d0c7ea16269675d0496c3a3ff9c
 - Show inactive surfaces in the ui
 
 - https://github.com/bitfocus/companion/pull/2127
+
+- Action recorder (https://github.com/bitfocus/companion/pull/2125)
+
+- Show button preview on internal actions & feedbacks (https://github.com/bitfocus/companion/issues/2102)
+
+- Enable/disable any action or feedback on a button or trigger
+
+- Connections list is now sortable
 
 ### 🐞 BUG FIXES
 
