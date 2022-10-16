@@ -52,9 +52,9 @@ export function DropdownInputField({ definition, multiple, value, setValue, setV
 				for (const val of newValue) {
 					// Require the selected choices to be valid
 					if (
-						!options.find((c) => c.value === val) &&
 						definition.allowCustom &&
 						regex &&
+						!options.find((c) => c.value === val) &&
 						(typeof val !== 'string' || !val.match(regex))
 					) {
 						return false
@@ -63,9 +63,9 @@ export function DropdownInputField({ definition, multiple, value, setValue, setV
 			} else {
 				// Require the selected choice to be valid
 				if (
-					!options.find((c) => c.value === newValue) &&
 					definition.allowCustom &&
 					regex &&
+					!options.find((c) => c.value === newValue) &&
 					(typeof newValue !== 'string' || !newValue.match(regex))
 				) {
 					return false
@@ -133,6 +133,22 @@ export function DropdownInputField({ definition, multiple, value, setValue, setV
 		onChange: onChange,
 	}
 
+	const isValidNewOption = useCallback(
+		(newValue) => regex && typeof newValue === 'string' && !!newValue.match(regex),
+		[regex]
+	)
+	const noOptionsMessage = useCallback(
+		(inputValue) => {
+			if (!isValidNewOption(inputValue)) {
+				return 'Input is not a valid value'
+			} else {
+				return 'Begin typing to use a custom value'
+			}
+		},
+		[isValidNewOption]
+	)
+	const formatCreateLabel = useCallback((v) => `Use "${v}"`, [])
+
 	return (
 		<div
 			className={classNames({
@@ -147,9 +163,10 @@ export function DropdownInputField({ definition, multiple, value, setValue, setV
 				<CreatableSelect
 					{...selectProps}
 					isSearchable={true}
-					noOptionsMessage={() => 'Begin typing to use a custom value'}
+					noOptionsMessage={noOptionsMessage}
 					createOptionPosition="first"
-					formatCreateLabel={(v) => `Use "${v}"`}
+					formatCreateLabel={formatCreateLabel}
+					isValidNewOption={isValidNewOption}
 				/>
 			) : (
 				<Select {...selectProps} />
