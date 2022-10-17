@@ -3930,9 +3930,9 @@ commist@^1.0.0:
   version "1.0.0"
   resolved "https://codeload.github.com/bitfocus/companion-module-netio-powerbox/tar.gz/c28e57da9784c77c8ec22554bf0c7d80f97d20bd"
 
-"companion-module-neumannmueller-stageflow@github:bitfocus/companion-module-neumannmueller-stageflow#v1.0.1":
+"companion-module-neumannmueller-stageflow@github:bitfocus/companion-module-neumannmueller-stageflow#v1.0.2":
   version "1.0.1"
-  resolved "https://codeload.github.com/bitfocus/companion-module-neumannmueller-stageflow/tar.gz/47fb1f74bcfaffd149e873d9d17ccd54f55b3e62"
+  resolved "https://codeload.github.com/bitfocus/companion-module-neumannmueller-stageflow/tar.gz/58537511ad5709f244e2015c777ae19788c2c437"
   dependencies:
     socket.io-client "^4.5.1"
 
