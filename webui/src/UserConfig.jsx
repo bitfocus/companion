@@ -1069,7 +1069,8 @@ function RemoteControlInfo() {
 					<CTabPane data-tab="rosstalk">
 						<MyErrorBoundary>
 							<p>
-								Remote triggering can be done by sending RossTalk commands to port <code>7788</code>.
+								Remote triggering can be done by sending RossTalk commands to port{' '}
+								<code>{config?.rosstalk_enabled ? '7788' : 'disabled'}</code>.
 							</p>
 							<p>
 								<strong>Commands:</strong>
