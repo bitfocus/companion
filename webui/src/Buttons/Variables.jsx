@@ -14,6 +14,7 @@ import { CopyToClipboard } from 'react-copy-to-clipboard'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faCopy, faTrash } from '@fortawesome/free-solid-svg-icons'
 import { TextInputField } from '../Components/TextInputField'
+import { CheckboxInputField } from '../Components/CheckboxInputField'
 import { GenericConfirmModal } from '../Components/GenericConfirmModal'
 
 export const InstanceVariables = function InstanceVariables({ resetToken }) {
@@ -186,6 +187,15 @@ function CustomVariablesList({ setShowCustom }) {
 		[socket]
 	)
 
+	const setPersistenceValue = useCallback(
+		(name, value) => {
+			socketEmitPromise(socket, 'custom-variables::set-persistence', [name, value]).catch((e) => {
+				console.error('Failed to update variable')
+			})
+		},
+		[socket]
+	)
+
 	const confirmRef = useRef(null)
 	const doDelete = useCallback(
 		(name) => {
@@ -240,8 +250,19 @@ function CustomVariablesList({ setShowCustom }) {
 											/>
 										</CFormGroup>
 										<CFormGroup>
+											<CLabel htmlFor="persist_value">Persist value: </CLabel>
+											<CheckboxInputField
+												value={info.persistCurrentValue}
+												setValue={(val) => setPersistenceValue(name, val)}
+											/>
+										</CFormGroup>
+										<CFormGroup>
 											<CLabel htmlFor="startup_value">Startup value: </CLabel>
-											<TextInputField value={info.defaultValue} setValue={(val) => setStartupValue(name, val)} />
+											<TextInputField
+												disabled={!!info.persistCurrentValue}
+												value={info.defaultValue}
+												setValue={(val) => setStartupValue(name, val)}
+											/>
 										</CFormGroup>
 									</CForm>
 								</td>

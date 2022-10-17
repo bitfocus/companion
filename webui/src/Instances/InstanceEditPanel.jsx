@@ -271,9 +271,7 @@ function ConfigField({ setValue, setValid, definition, value }) {
 				<DropdownInputField
 					choices={definition.choices}
 					allowCustom={definition.allowCustom}
-					minSelection={definition.minSelection}
 					minChoicesForSearch={definition.minChoicesForSearch}
-					maximumSelectionLength={definition.maximumSelectionLength}
 					tooltip={definition.tooltip}
 					regex={definition.regex}
 					value={value}
@@ -289,7 +287,7 @@ function ConfigField({ setValue, setValid, definition, value }) {
 					allowCustom={definition.allowCustom}
 					minSelection={definition.minSelection}
 					minChoicesForSearch={definition.minChoicesForSearch}
-					maximumSelectionLength={definition.maximumSelectionLength}
+					maxSelection={definition.maxSelection}
 					tooltip={definition.tooltip}
 					regex={definition.regex}
 					value={value}

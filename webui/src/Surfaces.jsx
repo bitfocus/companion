@@ -150,6 +150,17 @@ export const SurfacesPage = memo(function SurfacesPage() {
 				These are the surfaces currently connected to companion. If your streamdeck is missing from this list, you might
 				need to close the Elgato Streamdeck application and click the Rescan button below.
 			</p>
+
+			<CAlert color="info">
+				<p>
+					Did you know, you can connect a Streamdeck from another computer or Raspberry Pi with{' '}
+					<a target="_blank" rel="noreferrer" href="https://github.com/bitfocus/companion-satellite">
+						Companion Satellite
+					</a>
+					?
+				</p>
+			</CAlert>
+
 			<p>
 				<i>
 					Rescanning blocks all operations while the scan is ongoing. <b>Use with care!</b>
@@ -158,6 +169,18 @@ export const SurfacesPage = memo(function SurfacesPage() {
 			<CAlert color="warning" role="alert" style={{ display: scanError ? '' : 'none' }}>
 				{scanError}
 			</CAlert>
+
+			<CButtonGroup>
+				<CButton color="warning" onClick={refreshUSB}>
+					<FontAwesomeIcon icon={faSync} spin={scanning} />
+					{scanning ? ' Checking for new devices...' : ' Rescan USB'}
+				</CButton>
+				<CButton color="success" onClick={addEmulator}>
+					<FontAwesomeIcon icon={faAdd} /> Add Emulator
+				</CButton>
+			</CButtonGroup>
+
+			<p>&nbsp;</p>
 
 			<SurfaceEditModal ref={editModalRef} />
 			<GenericConfirmModal ref={confirmModalRef} />
@@ -261,27 +284,6 @@ export const SurfacesPage = memo(function SurfacesPage() {
 					)}
 				</tbody>
 			</table>
-
-			<CButtonGroup>
-				<CButton color="warning" onClick={refreshUSB}>
-					<FontAwesomeIcon icon={faSync} spin={scanning} />
-					{scanning ? ' Checking for new devices...' : ' Rescan USB'}
-				</CButton>
-				<CButton color="success" onClick={addEmulator}>
-					<FontAwesomeIcon icon={faAdd} /> Add Emulator
-				</CButton>
-			</CButtonGroup>
-
-			<p>&nbsp;</p>
-			<CAlert color="info">
-				<p>
-					Did you know, you can connect a Streamdeck from another computer or Raspberry Pi with{' '}
-					<a target="_blank" rel="noreferrer" href="https://github.com/bitfocus/companion-satellite">
-						Companion Satellite
-					</a>
-					?
-				</p>
-			</CAlert>
 		</div>
 	)
 })

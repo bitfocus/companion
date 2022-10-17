@@ -193,6 +193,21 @@ function UserConfigTable() {
 					</td>
 				</tr>
 				<tr>
+					<td>Enable connected Loupedeck devices (Requires Companion restart)</td>
+					<td>
+						<div className="form-check form-check-inline mr-1">
+							<CInputCheckbox
+								id="userconfig_loupedeck_enable"
+								checked={config.loupedeck_enable}
+								onChange={(e) => setValue('loupedeck_enable', e.currentTarget.checked)}
+							/>
+							<label className="form-check-label" htmlFor="userconfig_loupedeck_enable">
+								Enabled
+							</label>
+						</div>
+					</td>
+				</tr>
+				<tr>
 					<td colSpan="2" className="settings-category">
 						PIN Lockout
 					</td>
@@ -902,7 +917,7 @@ function RemoteControlInfo() {
 										<i>Change text size on a button (between the predefined values)</i>
 									</li>
 									<li>
-										<code>/api/custom-variable/</code>&lt;name&gt;<code>?value=</code>&lt;value&gt;
+										<code>/set/custom-variable/</code>&lt;name&gt;<code>?value=</code>&lt;value&gt;
 										<br />
 										<i>Change custom variable value</i>
 									</li>
@@ -940,7 +955,7 @@ function RemoteControlInfo() {
 							<p>
 								Change custom variable &quot;cue&quot; to value &quot;intro&quot;
 								<br />
-								<code>/api/custom-variable/cue?value=intro</code>
+								<code>/set/custom-variable/cue?value=intro</code>
 							</p>
 						</MyErrorBoundary>
 					</CTabPane>

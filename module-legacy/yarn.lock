@@ -9,10 +9,10 @@
   dependencies:
     regenerator-runtime "^0.13.4"
 
-"@companion-module/base@~0.4.6":
-  version "0.4.6"
-  resolved "https://registry.yarnpkg.com/@companion-module/base/-/base-0.4.6.tgz#fa58134914811f83e2d9f2097bd480b04027e24a"
-  integrity sha512-MMIqOSUQ/ToqwKtWldT22moOGn4szYR/Iw9jp4auDKjuxf+ok6pN87STgfjFS+EOM8XIeQQVAC26gYCd3JEZbA==
+"@companion-module/base@~0.4.7":
+  version "0.4.7"
+  resolved "https://registry.yarnpkg.com/@companion-module/base/-/base-0.4.7.tgz#ea4f716c712886b36d6af0cf6171bbffcea0905f"
+  integrity sha512-rSqmxMTFFVRHWi5Vi1WD6/S6yf6afYfrUeiL5HgavbzdTlU897uhtX2MfL03huWgWC3FRH//sMZP7oEEH4V5mA==
   dependencies:
     "@sentry/node" "^7.14.0"
     "@sentry/tracing" "^7.14.0"

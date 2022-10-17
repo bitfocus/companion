@@ -302,10 +302,10 @@
   resolved "https://registry.yarnpkg.com/@colors/colors/-/colors-1.5.0.tgz#bb504579c1cae923e6576a4f5da43d25f97bdbd9"
   integrity sha512-ooWCrlZP11i8GImSjTHYHLkvFDP48nS4+204nGb1RiX/WXYHmJA2III9/e2DWVabCESdW7hBAEzHRqUn9OUVvQ==
 
-"@companion-module/base@^0.4.6":
-  version "0.4.6"
-  resolved "https://registry.yarnpkg.com/@companion-module/base/-/base-0.4.6.tgz#fa58134914811f83e2d9f2097bd480b04027e24a"
-  integrity sha512-MMIqOSUQ/ToqwKtWldT22moOGn4szYR/Iw9jp4auDKjuxf+ok6pN87STgfjFS+EOM8XIeQQVAC26gYCd3JEZbA==
+"@companion-module/base@^0.4.7":
+  version "0.4.7"
+  resolved "https://registry.yarnpkg.com/@companion-module/base/-/base-0.4.7.tgz#ea4f716c712886b36d6af0cf6171bbffcea0905f"
+  integrity sha512-rSqmxMTFFVRHWi5Vi1WD6/S6yf6afYfrUeiL5HgavbzdTlU897uhtX2MfL03huWgWC3FRH//sMZP7oEEH4V5mA==
   dependencies:
     "@sentry/node" "^7.14.0"
     "@sentry/tracing" "^7.14.0"
@@ -619,6 +619,16 @@
     cmake-js "7.0.0-3"
     node-addon-api "^5.0.0"
     pkg-prebuilds "~0.1.0"
+
+"@loupedeck/node@^0.2.1":
+  version "0.2.1"
+  resolved "https://registry.yarnpkg.com/@loupedeck/node/-/node-0.2.1.tgz#b833361b2aef46ce4535eae65b983b7035e458ba"
+  integrity sha512-uRFQQQKduw0CkEPes5XOA2POzgQNGv/6PEilLzYC/z97cvwealoFIa94qTCO0y2N2/EFqfXudU2EwhZfaheQCQ==
+  dependencies:
+    eventemitter3 "^4.0.7"
+    p-queue "^6.6.2"
+    serialport "^10.4.0"
+    tslib "^2.4.0"
 
 "@nodelib/fs.scandir@2.1.5":
   version "2.1.5"
@@ -4575,7 +4585,7 @@ serialize-javascript@^6.0.0:
   dependencies:
     randombytes "^2.1.0"
 
-serialport@10.4.0:
+serialport@10.4.0, serialport@^10.4.0:
   version "10.4.0"
   resolved "https://registry.yarnpkg.com/serialport/-/serialport-10.4.0.tgz#93c95ecccc0e314d5bbee3f06cde2c70be70e671"
   integrity sha512-PszPM5SnFMgSXom60PkKS2A9nMlNbHkuoyRBlzdSWw9rmgOn258+V0dYbWMrETJMM+TJV32vqBzjg5MmmUMwMw==

@@ -8,7 +8,7 @@ export function DropdownInputField({
 	allowCustom,
 	minSelection,
 	minChoicesForSearch,
-	maximumSelectionLength,
+	maxSelection,
 	tooltip,
 	regex,
 	multiple,
@@ -65,9 +65,9 @@ export function DropdownInputField({
 				for (const val of newValue) {
 					// Require the selected choices to be valid
 					if (
-						!options.find((c) => c.value === val) &&
 						allowCustom &&
 						compiledRegex &&
+						!options.find((c) => c.value === val) &&
 						(typeof val !== 'string' || !val.match(compiledRegex))
 					) {
 						return false
@@ -76,9 +76,9 @@ export function DropdownInputField({
 			} else {
 				// Require the selected choice to be valid
 				if (
-					!options.find((c) => c.value === newValue) &&
 					allowCustom &&
 					compiledRegex &&
+					!options.find((c) => c.value === newValue) &&
 					(typeof newValue !== 'string' || !newValue.match(compiledRegex))
 				) {
 					return false
@@ -113,8 +113,8 @@ export function DropdownInputField({
 				}
 
 				if (
-					typeof maximumSelectionLength === 'number' &&
-					newValue.length > maximumSelectionLength &&
+					typeof maxSelection === 'number' &&
+					newValue.length > maxSelection &&
 					newValue.length >= (this.props.value || []).length
 				) {
 					// Block change if too many are selected
@@ -125,7 +125,7 @@ export function DropdownInputField({
 			setValue(newValue)
 			setValid?.(isValid)
 		},
-		[setValue, setValid, multiple, minSelection, maximumSelectionLength, isValueValid]
+		[setValue, setValid, multiple, minSelection, maxSelection, isValueValid]
 	)
 
 	const minChoicesForSearch2 = typeof minChoicesForSearch === 'number' ? minChoicesForSearch : 10
@@ -142,6 +142,22 @@ export function DropdownInputField({
 		onChange: onChange,
 	}
 
+	const isValidNewOption = useCallback(
+		(newValue) => compiledRegex && typeof newValue === 'string' && !!newValue.match(compiledRegex),
+		[compiledRegex]
+	)
+	const noOptionsMessage = useCallback(
+		(inputValue) => {
+			if (!isValidNewOption(inputValue)) {
+				return 'Input is not a valid value'
+			} else {
+				return 'Begin typing to use a custom value'
+			}
+		},
+		[isValidNewOption]
+	)
+	const formatCreateLabel = useCallback((v) => `Use "${v}"`, [])
+
 	return (
 		<div
 			className={classNames({
@@ -156,9 +172,10 @@ export function DropdownInputField({
 				<CreatableSelect
 					{...selectProps}
 					isSearchable={true}
-					noOptionsMessage={() => 'Begin typing to use a custom value'}
+					noOptionsMessage={noOptionsMessage}
 					createOptionPosition="first"
-					formatCreateLabel={(v) => `Use "${v}"`}
+					formatCreateLabel={formatCreateLabel}
+					isValidNewOption={isValidNewOption}
 				/>
 			) : (
 				<Select {...selectProps} />
