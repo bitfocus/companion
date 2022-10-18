@@ -2985,9 +2985,9 @@ commist@^1.0.0:
   version "1.2.5"
   resolved "https://codeload.github.com/bitfocus/companion-module-barco-eventmaster-xml/tar.gz/76b7bc18dcfcd865596a6936b3eaeb9cb54b1aa5"
 
-"companion-module-barco-eventmaster@github:bitfocus/companion-module-barco-eventmaster#v2.10.1":
-  version "2.10.1"
-  resolved "https://codeload.github.com/bitfocus/companion-module-barco-eventmaster/tar.gz/8380a258ffd9f2e0cf9ef23658ee85610623cdb4"
+"companion-module-barco-eventmaster@github:bitfocus/companion-module-barco-eventmaster#v2.10.2":
+  version "2.10.2"
+  resolved "https://codeload.github.com/bitfocus/companion-module-barco-eventmaster/tar.gz/d3fae626bd2d101d7727f1931728fb92c0f5b5db"
   dependencies:
     barco-eventmaster "github:willosof/node-barco-eventmaster#v8.0.3"
     lodash "^4.17.21"
