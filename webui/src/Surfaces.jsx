@@ -194,6 +194,7 @@ export const SurfacesPage = memo(function SurfacesPage() {
 						<th>ID</th>
 						<th>Name</th>
 						<th>Type</th>
+						<th>Location</th>
 						<th>&nbsp;</th>
 					</tr>
 				</thead>
@@ -207,6 +208,7 @@ export const SurfacesPage = memo(function SurfacesPage() {
 									<TextInputField value={dev.name} setValue={(val) => updateName(dev.id, val)} />
 								</td>
 								<td>{dev.type}</td>
+								<td>{dev.location}</td>
 								<td>
 									<CButtonGroup>
 										<CButton color="success" onClick={() => configureDevice(dev)} title="Configure">
