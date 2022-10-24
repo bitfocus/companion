@@ -61,6 +61,7 @@
 		"body-parser": "^1.20.0",
 		"bufferutil": "^4.0.6",
 		"commander": "^9.4.0",
+		"debounce-fn": "^5.1.2",
 		"ejson": "^2.2.3",
 		"emberplus-connection": "^0.1.2",
 		"env-paths": "^3.0.0",

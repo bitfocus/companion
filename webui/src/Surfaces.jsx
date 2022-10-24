@@ -11,6 +11,7 @@ import React, {
 import {
 	CAlert,
 	CButton,
+	CButtonGroup,
 	CForm,
 	CFormGroup,
 	CInput,
@@ -24,7 +25,7 @@ import {
 } from '@coreui/react'
 import { LoadingRetryOrError, SurfacesContext, socketEmitPromise, SocketContext } from './util'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faCog, faSync, faTrash } from '@fortawesome/free-solid-svg-icons'
+import { faAdd, faCog, faFolderOpen, faSync, faTrash } from '@fortawesome/free-solid-svg-icons'
 import { nanoid } from 'nanoid'
 import { TextInputField } from './Components/TextInputField'
 import { useMemo } from 'react'
@@ -33,6 +34,8 @@ import { GenericConfirmModal } from './Components/GenericConfirmModal'
 export const SurfacesPage = memo(function SurfacesPage() {
 	const socket = useContext(SocketContext)
 	const devices = useContext(SurfacesContext)
+
+	const confirmRef = useRef(null)
 
 	const devicesList = useMemo(() => {
 		const ary = Object.values(devices.available)
@@ -92,6 +95,23 @@ export const SurfacesPage = memo(function SurfacesPage() {
 			})
 	}, [socket])
 
+	const addEmulator = useCallback(() => {
+		socketEmitPromise(socket, 'surfaces:emulator-add', []).catch((err) => {
+			console.error('Emulator add failed', err)
+		})
+	}, [socket])
+
+	const deleteEmulator = useCallback(
+		(dev) => {
+			confirmRef?.current?.show('Remove Emulator', 'Are you sure?', 'Remove', () => {
+				socketEmitPromise(socket, 'surfaces:emulator-remove', [dev.id]).catch((err) => {
+					console.error('Emulator remove failed', err)
+				})
+			})
+		},
+		[socket]
+	)
+
 	const configureDevice = useCallback((device) => {
 		editModalRef.current.show(device)
 	}, [])
@@ -123,6 +143,8 @@ export const SurfacesPage = memo(function SurfacesPage() {
 
 	return (
 		<div>
+			<GenericConfirmModal ref={confirmRef} />
+
 			<h4>Surfaces</h4>
 			<p>
 				These are the surfaces currently connected to companion. If your streamdeck is missing from this list, you might
@@ -148,10 +170,16 @@ export const SurfacesPage = memo(function SurfacesPage() {
 				{scanError}
 			</CAlert>
 
-			<CButton color="warning" onClick={refreshUSB}>
-				<FontAwesomeIcon icon={faSync} spin={scanning} />
-				{scanning ? ' Checking for new devices...' : ' Rescan USB'}
-			</CButton>
+			<CButtonGroup>
+				<CButton color="warning" onClick={refreshUSB}>
+					<FontAwesomeIcon icon={faSync} spin={scanning} />
+					{scanning ? ' Checking for new devices...' : ' Rescan USB'}
+				</CButton>
+				<CButton color="success" onClick={addEmulator}>
+					<FontAwesomeIcon icon={faAdd} /> Add Emulator
+				</CButton>
+			</CButtonGroup>
+
 			<p>&nbsp;</p>
 
 			<SurfaceEditModal ref={editModalRef} />
@@ -182,9 +210,29 @@ export const SurfacesPage = memo(function SurfacesPage() {
 								<td>{dev.type}</td>
 								<td>{dev.location}</td>
 								<td>
-									<CButton color="success" onClick={() => configureDevice(dev)}>
-										<FontAwesomeIcon icon={faCog} /> Settings
-									</CButton>
+									<CButtonGroup>
+										<CButton color="success" onClick={() => configureDevice(dev)} title="Configure">
+											<FontAwesomeIcon icon={faCog} /> Settings
+										</CButton>
+
+										{dev.integrationType === 'emulator' ? (
+											<>
+												<CButton
+													color="info"
+													href={`/emulator/${dev.id.substring(9)}`}
+													target="_blank"
+													title="Open Emulator"
+												>
+													<FontAwesomeIcon icon={faFolderOpen} />
+												</CButton>
+												<CButton color="danger" onClick={() => deleteEmulator(dev)} title="Delete Emulator">
+													<FontAwesomeIcon icon={faTrash} />
+												</CButton>
+											</>
+										) : (
+											''
+										)}
+									</CButtonGroup>
 								</td>
 							</tr>
 						)
@@ -454,6 +502,20 @@ const SurfaceEditModal = forwardRef(function SurfaceEditModal(_props, ref) {
 									checked={!!deviceConfig.emulator_control_enable}
 									value={true}
 									onChange={(e) => updateConfig('emulator_control_enable', !!e.currentTarget.checked)}
+								/>
+							</CFormGroup>
+						) : (
+							''
+						)}
+						{deviceInfo.configFields?.includes('emulator_prompt_fullscreen') ? (
+							<CFormGroup>
+								<CLabel htmlFor="emulator_prompt_fullscreen">Prompt to enter fullscreen</CLabel>
+								<CInputCheckbox
+									name="emulator_prompt_fullscreen"
+									type="checkbox"
+									checked={!!deviceConfig.emulator_prompt_fullscreen}
+									value={true}
+									onChange={(e) => updateConfig('emulator_prompt_fullscreen', !!e.currentTarget.checked)}
 								/>
 							</CFormGroup>
 						) : (
