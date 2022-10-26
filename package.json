@@ -572,7 +572,7 @@
 		"strip-ansi": "^5.2.0",
 		"systeminformation": "^5.11.21",
 		"websocket": "^1.0.34",
-		"xkeys": "^2.3.4",
+		"xkeys": "^2.4.0",
 		"zx": "^4.3.0"
 	},
 	"collective": {
