@@ -113,38 +113,35 @@ export function InstancesList({ showHelp, doConfigureInstance, instanceStatus })
 			<GenericConfirmModal ref={deleteModalRef} />
 			<InstanceVariablesModal ref={variablesModalRef} />
 
-			<p>
-				Show:
-				<CButtonGroup>
-					<CButton
-						size="sm"
-						color="light"
-						style={{ opacity: visibleConnections.disabled ? 1 : 0.2 }}
-						onClick={doToggleDisabled}
-					>
-						Disabled
-					</CButton>
-					<CButton size="sm" color="success" style={{ opacity: visibleConnections.ok ? 1 : 0.2 }} onClick={doToggleOk}>
-						OK
-					</CButton>
-					<CButton
-						size="sm"
-						color="warning"
-						style={{ opacity: visibleConnections.warning ? 1 : 0.2 }}
-						onClick={doToggleWarning}
-					>
-						Warning
-					</CButton>
-					<CButton
-						size="sm"
-						color="danger"
-						style={{ opacity: visibleConnections.error ? 1 : 0.2 }}
-						onClick={doToggleError}
-					>
-						Error
-					</CButton>
-				</CButtonGroup>
-			</p>
+			<CButtonGroup style={{ marginBottom: '0.3em' }}>
+				<CButton
+					size="sm"
+					color="light"
+					style={{ opacity: visibleConnections.disabled ? 1 : 0.2 }}
+					onClick={doToggleDisabled}
+				>
+					Disabled
+				</CButton>
+				<CButton size="sm" color="success" style={{ opacity: visibleConnections.ok ? 1 : 0.2 }} onClick={doToggleOk}>
+					OK
+				</CButton>
+				<CButton
+					size="sm"
+					color="warning"
+					style={{ opacity: visibleConnections.warning ? 1 : 0.2 }}
+					onClick={doToggleWarning}
+				>
+					Warning
+				</CButton>
+				<CButton
+					size="sm"
+					color="danger"
+					style={{ opacity: visibleConnections.error ? 1 : 0.2 }}
+					onClick={doToggleError}
+				>
+					Error
+				</CButton>
+			</CButtonGroup>
 
 			<table className="table table-responsive-sm">
 				<thead>
