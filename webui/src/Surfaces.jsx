@@ -462,6 +462,20 @@ const SurfaceEditModal = forwardRef(function SurfaceEditModal(_props, ref) {
 						) : (
 							''
 						)}
+						{deviceInfo.configFields?.includes('illuminate_pressed') ? (
+							<CFormGroup>
+								<CLabel htmlFor="illuminate_pressed">Illuminate pressed buttons</CLabel>
+								<CInputCheckbox
+									name="illuminate_pressed"
+									type="checkbox"
+									checked={!!deviceConfig.illuminate_pressed}
+									value={true}
+									onChange={(e) => updateConfig('illuminate_pressed', !!e.currentTarget.checked)}
+								/>
+							</CFormGroup>
+						) : (
+							''
+						)}
 						{deviceInfo.configFields?.includes('rotation') ? (
 							<CFormGroup>
 								<CLabel htmlFor="rotation">Button rotation</CLabel>
@@ -475,20 +489,6 @@ const SurfaceEditModal = forwardRef(function SurfaceEditModal(_props, ref) {
 									<option value="90">90 CW</option>
 									<option value="180">180</option>
 								</CSelect>
-							</CFormGroup>
-						) : (
-							''
-						)}
-						{deviceInfo.configFields?.includes('enable_device') ? (
-							<CFormGroup>
-								<CLabel htmlFor="enable_device">Enable Device</CLabel>
-								<CInputCheckbox
-									name="enable_device"
-									type="checkbox"
-									checked={!!deviceConfig.enable_device}
-									value={true}
-									onChange={(e) => updateConfig('enable_device', !!e.currentTarget.checked)}
-								/>
 							</CFormGroup>
 						) : (
 							''
