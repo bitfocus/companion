@@ -11,7 +11,7 @@
 		"dev": "electron dev.js"
 	},
 	"dependencies": {
-		"@sentry/electron": "^4.0.2",
+		"@sentry/electron": "^4.1.0",
 		"chokidar": "^3.5.3",
 		"debounce-fn": "^4.0.0",
 		"electron-store": "^8.1.0",
@@ -19,12 +19,12 @@
 		"nanoid": "^3.3.4",
 		"respawn": "link:../vendor/respawn",
 		"strip-ansi": "^6.0.0",
-		"systeminformation": "^5.12.6"
+		"systeminformation": "^5.12.10"
 	},
 	"devDependencies": {
-		"electron": "^20.1.4",
-		"electron-builder": "^23.3.3",
-		"electron-notarize": "^1.2.1",
+		"electron": "^20.3.3",
+		"electron-builder": "^23.6.0",
+		"electron-notarize": "^1.2.2",
 		"electron-reloader": "^1.2.3"
 	},
 	"build": {
