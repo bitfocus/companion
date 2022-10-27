@@ -3906,9 +3906,9 @@ commist@^1.0.0:
   dependencies:
     utility "1.16.3"
 
-"companion-module-newtek-tricaster@github:bitfocus/companion-module-newtek-tricaster#v1.1.7":
-  version "1.1.7"
-  resolved "https://codeload.github.com/bitfocus/companion-module-newtek-tricaster/tar.gz/05815867c0c4eda8667ea16f8ea5d95684686b3a"
+"companion-module-newtek-tricaster@github:bitfocus/companion-module-newtek-tricaster#v1.1.8":
+  version "1.1.8"
+  resolved "https://codeload.github.com/bitfocus/companion-module-newtek-tricaster/tar.gz/3dce649bab9731a8948f442a2f1c767439805c8f"
   dependencies:
     ping "^0.4.0"
     util "^0.12.3"
