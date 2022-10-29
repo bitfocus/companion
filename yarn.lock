@@ -4556,9 +4556,9 @@ commist@^1.0.0:
     lodash "^4.17.21"
     urllib "^3.0.4"
 
-"companion-module-videolan-vlc@github:bitfocus/companion-module-videolan-vlc#v1.1.14":
-  version "1.1.14"
-  resolved "https://codeload.github.com/bitfocus/companion-module-videolan-vlc/tar.gz/e90c9a32ea538654de7e8c1f44c37c937282df84"
+"companion-module-videolan-vlc@github:bitfocus/companion-module-videolan-vlc#v1.1.15":
+  version "1.1.15"
+  resolved "https://codeload.github.com/bitfocus/companion-module-videolan-vlc/tar.gz/34e7aef020d521bc5d6094c8e2d6f8c6c7d9b606"
 
 "companion-module-vimeo-livestreamstudio6@github:bitfocus/companion-module-vimeo-livestreamstudio6#v1.0.0":
   version "1.0.0"
