@@ -3946,11 +3946,11 @@ commist@^1.0.0:
   version "1.0.2"
   resolved "https://codeload.github.com/bitfocus/companion-module-novastar-h-series/tar.gz/47bd4872a3c9bdc624d3a4305da9a29027e68744"
 
-"companion-module-obs-studio@github:bitfocus/companion-module-obs-studio#v2.0.3":
-  version "2.0.3"
-  resolved "https://codeload.github.com/bitfocus/companion-module-obs-studio/tar.gz/28796300c1fb1d0b3bbe03a4f6f16b41feddafea"
+"companion-module-obs-studio@github:bitfocus/companion-module-obs-studio#v2.0.4":
+  version "2.0.4"
+  resolved "https://codeload.github.com/bitfocus/companion-module-obs-studio/tar.gz/632bab2a6b7060cce44b8f62d7b23a82e5182b12"
   dependencies:
-    obs-websocket-js "5.0.1"
+    obs-websocket-js "5.0.2"
 
 "companion-module-obsidiancontrol-onyx@github:bitfocus/companion-module-obsidiancontrol-onyx#v1.0.4":
   version "1.0.4"
@@ -8829,10 +8829,10 @@ object.assign@^4.1.2:
     has-symbols "^1.0.1"
     object-keys "^1.1.1"
 
-obs-websocket-js@5.0.1:
-  version "5.0.1"
-  resolved "https://registry.yarnpkg.com/obs-websocket-js/-/obs-websocket-js-5.0.1.tgz#fd72e93a6bc110e308c5881871a7f06dd81dd41e"
-  integrity sha512-3oWN1g/gA2A2g9OxubLPKAqBKhAoNGYnF3QIYp6fZ2kfE4Az1PqCnd5zwgRsh5j49uTWyfuX199HkRSsaJE3mw==
+obs-websocket-js@5.0.2:
+  version "5.0.2"
+  resolved "https://registry.yarnpkg.com/obs-websocket-js/-/obs-websocket-js-5.0.2.tgz#07660d050dfb851b16623b58cfe2645822112d08"
+  integrity sha512-4XxWd5abIFOk0HjIHk+X/NwSXuOTPGsNnn7845g0UQZV0T3AtNk+dfp21zSjJVzuN/5oZR3UKjzEqg8pxMndCA==
   dependencies:
     "@msgpack/msgpack" "^2.7.1"
     crypto-js "^4.1.1"
