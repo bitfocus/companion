@@ -888,6 +888,14 @@
     node-addon-api "^5.0.0"
     pkg-prebuilds "~0.1.0"
 
+"@julusian/midi@^3.0.0-3":
+  version "3.0.0-3"
+  resolved "https://registry.yarnpkg.com/@julusian/midi/-/midi-3.0.0-3.tgz#2a42056a5557ad8044f6645b7562b77a96bca0fd"
+  integrity sha512-h09ne0W3pFLoEr//IK+d2PnHyDvTUw8SpxzXjvM5t/AzZIHnpmRZSLhxgAolThEHLVRoiYWKWmc+kXFVVeaCBQ==
+  dependencies:
+    node-addon-api "^5.0.0"
+    pkg-prebuilds "^0.1.0"
+
 "@leichtgewicht/ip-codec@^2.0.1":
   version "2.0.3"
   resolved "https://registry.yarnpkg.com/@leichtgewicht/ip-codec/-/ip-codec-2.0.3.tgz#0300943770e04231041a51bd39f0439b5c7ab4f0"
@@ -4111,10 +4119,11 @@ commist@^1.0.0:
   version "1.0.1"
   resolved "https://codeload.github.com/bitfocus/companion-module-reddotlogics-hdmimatrix/tar.gz/bc477246f54092342cc5de4eeea8057b95d7b7c8"
 
-"companion-module-renewedvision-propresenter@github:bitfocus/companion-module-renewedvision-propresenter#v2.5.2":
-  version "2.5.2"
-  resolved "https://codeload.github.com/bitfocus/companion-module-renewedvision-propresenter/tar.gz/513dd650f339d20bdbbc694b36436d8ff6febea0"
+"companion-module-renewedvision-propresenter@github:bitfocus/companion-module-renewedvision-propresenter#v2.5.5":
+  version "2.5.5"
+  resolved "https://codeload.github.com/bitfocus/companion-module-renewedvision-propresenter/tar.gz/7f94cbd23ce89ed7c29b718139c026931585893f"
   dependencies:
+    easymidi "^3.0.1"
     websocket "^1.0.26"
 
 "companion-module-renewedvision-pvp@github:bitfocus/companion-module-renewedvision-pvp#v1.0.10":
@@ -5275,6 +5284,13 @@ duplexify@^4.1.1:
     inherits "^2.0.3"
     readable-stream "^3.1.1"
     stream-shift "^1.0.0"
+
+easymidi@^3.0.1:
+  version "3.0.1"
+  resolved "https://registry.yarnpkg.com/easymidi/-/easymidi-3.0.1.tgz#eb1d5f357df15d8a0615c1c60ae7a7a5f408d4ec"
+  integrity sha512-bemB6ZyyRuFNlw5E4jF3NsJmItzNflrk3jlzMSWmjmULVTUHYBIL+Lv0R5L2i0Pxe8h3krSKo0mcdfeziNwzAg==
+  dependencies:
+    "@julusian/midi" "^3.0.0-3"
 
 ecc-jsbn@~0.1.1:
   version "0.1.2"
@@ -9224,7 +9240,7 @@ pkg-dir@^4.2.0:
   dependencies:
     find-up "^4.0.0"
 
-pkg-prebuilds@~0.1.0:
+pkg-prebuilds@^0.1.0, pkg-prebuilds@~0.1.0:
   version "0.1.0"
   resolved "https://registry.yarnpkg.com/pkg-prebuilds/-/pkg-prebuilds-0.1.0.tgz#7ac38674146708e763a4581a0759d5e8594f61b6"
   integrity sha512-ALsGSiwO6EDvjrrFRiv7Q6HZPrqCgTpNxQMFs3P4Ic25cP94DmLy0iGvZDlJmQBbq2IS8xkZrifwkoOHIetY9Q==
