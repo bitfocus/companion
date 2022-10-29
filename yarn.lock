@@ -2985,9 +2985,9 @@ commist@^1.0.0:
     p-queue "^6.6.2"
     type-fest "^2.9.0"
 
-"companion-module-behringer-xair@github:bitfocus/companion-module-behringer-xair#v1.6.9":
-  version "1.6.9"
-  resolved "https://codeload.github.com/bitfocus/companion-module-behringer-xair/tar.gz/1fbc65b2392ff7f252ef2aa16941126877972d02"
+"companion-module-behringer-xair@github:bitfocus/companion-module-behringer-xair#v1.6.10":
+  version "1.6.10"
+  resolved "https://codeload.github.com/bitfocus/companion-module-behringer-xair/tar.gz/57322b66ee5dde0598d3cafe9c68b776908bfc2f"
 
 "companion-module-biamp-audia@github:bitfocus/companion-module-biamp-audia#v1.0.2":
   version "1.0.2"

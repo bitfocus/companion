@@ -206,7 +206,7 @@
 		"companion-module-bbc-raven": "github:bitfocus/companion-module-bbc-raven#v1.0.3",
 		"companion-module-behringer-wing": "github:bitfocus/companion-module-behringer-wing#v1.0.7",
 		"companion-module-behringer-x32": "github:bitfocus/companion-module-behringer-x32#v2.10.2",
-		"companion-module-behringer-xair": "github:bitfocus/companion-module-behringer-xair#v1.6.9",
+		"companion-module-behringer-xair": "github:bitfocus/companion-module-behringer-xair#v1.6.10",
 		"companion-module-biamp-audia": "github:bitfocus/companion-module-biamp-audia#v1.0.2",
 		"companion-module-biamp-tesira": "github:bitfocus/companion-module-biamp-tesira#v1.0.0",
 		"companion-module-birddog-ptz": "github:bitfocus/companion-module-birddog-ptz#v2.3.2",
