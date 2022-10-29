@@ -4065,6 +4065,12 @@ commist@^1.0.0:
   dependencies:
     bent "^7.3.12"
 
+"companion-module-pnh-soundr@github:bitfocus/companion-module-pnh-soundr#v1.0.2":
+  version "1.0.2"
+  resolved "https://codeload.github.com/bitfocus/companion-module-pnh-soundr/tar.gz/2e0aec79605164d580acab56eca6ab4b28f47deb"
+  dependencies:
+    bent "^7.3.12"
+
 "companion-module-presentationtools-aps@github:bitfocus/companion-module-presentationtools-aps#v1.2.0":
   version "1.2.0"
   resolved "https://codeload.github.com/bitfocus/companion-module-presentationtools-aps/tar.gz/85b27e8e736f83eb70229b0e1e81bb7c50ba286f"
