@@ -3565,9 +3565,9 @@ commist@^1.0.0:
   version "1.0.1"
   resolved "https://codeload.github.com/bitfocus/companion-module-groupme-webhooks/tar.gz/eedf74014708299383b245d9b83469bd3a46a7e7"
 
-"companion-module-h2r-graphics@github:bitfocus/companion-module-h2r-graphics#v2.0.1":
-  version "2.0.1"
-  resolved "https://codeload.github.com/bitfocus/companion-module-h2r-graphics/tar.gz/5bf1ea2d41f98f3485cfe1dd6ecea9c6d337d427"
+"companion-module-h2r-graphics@github:bitfocus/companion-module-h2r-graphics#v2.1.0":
+  version "2.1.0"
+  resolved "https://codeload.github.com/bitfocus/companion-module-h2r-graphics/tar.gz/2809a2147bc18de5f907796576da63da66accb8a"
   dependencies:
     socket.io-client "^4.4.0"
 
