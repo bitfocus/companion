@@ -142,7 +142,6 @@ export function EditButton({ page, bank, onKeyUp }) {
 							</CButtonGroup>
 							<CDropdownMenu>
 								<CDropdownItem onClick={() => setButtonType('png')}>Regular button</CDropdownItem>
-								<CDropdownItem onClick={() => setButtonType('rotary')}>Rotary Encoder</CDropdownItem>
 								<CDropdownItem onClick={() => setButtonType('pageup')}>Page up</CDropdownItem>
 								<CDropdownItem onClick={() => setButtonType('pagenum')}>Page number</CDropdownItem>
 								<CDropdownItem onClick={() => setButtonType('pagedown')}>Page down</CDropdownItem>
@@ -156,18 +155,18 @@ export function EditButton({ page, bank, onKeyUp }) {
 						<CButtonGroup>
 							<CButton
 								color="warning"
-								hidden={config.style !== 'png' && config.style !== 'rotary'}
+								hidden={config.style !== 'png'}
 								onMouseDown={() => context.socket.emit('hot_press', page, bank, true)}
 								onMouseUp={() => context.socket.emit('hot_press', page, bank, false)}
 							>
 								Test press
 							</CButton>
-							{config.style === 'rotary' && (
+							{config.rotary_actions && (
 								<CButton color="warning" onMouseDown={() => context.socket.emit('hot_rotate', page, bank, false)}>
 									Click Left
 								</CButton>
 							)}
-							{config.style === 'rotary' && (
+							{config.rotary_actions && (
 								<CButton color="warning" onMouseDown={() => context.socket.emit('hot_rotate', page, bank, true)}>
 									Click Right
 								</CButton>
@@ -177,7 +176,7 @@ export function EditButton({ page, bank, onKeyUp }) {
 
 					<ButtonStyleConfig config={config} configRef={configRef} page={page} bank={bank} valueChanged={loadConfig} />
 
-					{config.style === 'rotary' && (
+					{config.rotary_actions && (
 						<>
 							<h4 className="mt-3">Rotate left actions</h4>
 							<ActionsPanel
@@ -217,7 +216,7 @@ export function EditButton({ page, bank, onKeyUp }) {
 						</>
 					)}
 
-					{config.style === 'png' || config.style === 'rotary' ? (
+					{config.style === 'png' ? (
 						<>
 							<h4 className="mt-3">{config.latch ? 'Latch' : 'Press'} actions</h4>
 							<ActionsPanel

@@ -11,7 +11,7 @@ import {
 } from '../../Components'
 import { FONT_SIZES } from '../../Constants'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faTrash } from '@fortawesome/free-solid-svg-icons'
+import { faQuestionCircle, faTrash } from '@fortawesome/free-solid-svg-icons'
 
 export function ButtonStyleConfig({ page, bank, config, configRef, valueChanged }) {
 	const context = useContext(StaticContext)
@@ -51,6 +51,7 @@ export function ButtonStyleConfig({ page, bank, config, configRef, valueChanged 
 
 	const setShowTopBar = useCallback((val) => setValueInner('show_topbar', val), [setValueInner])
 	const setLatchValue = useCallback((val) => setValueInner('latch', val), [setValueInner])
+	const setRotaryActions = useCallback((val) => setValueInner('rotary_actions', val), [setValueInner])
 	const setRelativeDelayValue = useCallback((val) => setValueInner('relative_delay', val), [setValueInner])
 
 	switch (config.style) {
@@ -127,6 +128,22 @@ export function ButtonStyleConfig({ page, bank, config, configRef, valueChanged 
 								definition={{ default: false }}
 								setValue={setRelativeDelayValue}
 								value={config.relative_delay}
+							/>
+						</p>
+					</CCol>
+					<CCol className="fieldtype-checkbox" sm={2} xs={3}>
+						<label>
+							Enable Rotary Actions
+							<FontAwesomeIcon
+								icon={faQuestionCircle}
+								title="Make this bank compatible with rotation events for the Loupedeck Live product range"
+							/>
+						</label>
+						<p>
+							<CheckboxInputField
+								definition={{ default: false, id: 'rotary_actions' }}
+								setValue={setRotaryActions}
+								value={config.rotary_actions}
 							/>
 						</p>
 					</CCol>
