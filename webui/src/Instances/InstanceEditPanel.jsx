@@ -163,7 +163,7 @@ const InstanceEditPanelInner = memo(function InstanceEditPanel({ instanceId, doC
 			<h5>
 				{moduleInfo?.shortname ?? instanceConfig?.instance_type} configuration
 				{moduleInfo?.hasHelp ? (
-					<div className="instance_help" onClick={() => showHelp(instanceConfig?.instance_type)}>
+					<div className="float_right" onClick={() => showHelp(instanceConfig?.instance_type)}>
 						<FontAwesomeIcon icon={faQuestionCircle} />
 					</div>
 				) : (

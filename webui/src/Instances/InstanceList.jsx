@@ -2,7 +2,7 @@ import { useCallback, useContext, useEffect, useRef, useState } from 'react'
 import { CButton, CButtonGroup } from '@coreui/react'
 import { InstancesContext, VariableDefinitionsContext, socketEmitPromise, SocketContext, ModulesContext } from '../util'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faDollarSign, faQuestionCircle, faBug, faSort } from '@fortawesome/free-solid-svg-icons'
+import { faDollarSign, faQuestionCircle, faBug, faSort, faExclamationTriangle } from '@fortawesome/free-solid-svg-icons'
 import { InstanceVariablesModal } from './InstanceVariablesModal'
 import { GenericConfirmModal } from '../Components/GenericConfirmModal'
 import CSwitch from '../CSwitch'
@@ -272,6 +272,8 @@ function InstancesTableRow({
 
 	const instanceVariables = variableDefinitionsContext[instance.label]
 
+	console.log(moduleInfo)
+
 	return (
 		<tr ref={ref} className={isDragging ? 'instancelist-dragging' : ''}>
 			<td ref={drag} className="td-reorder">
@@ -280,20 +282,30 @@ function InstancesTableRow({
 			<td>
 				{moduleInfo ? (
 					<>
-						{moduleInfo?.hasHelp ? (
-							<div className="instance_help" onClick={doShowHelp} title="Help">
-								<FontAwesomeIcon icon={faQuestionCircle} />
-							</div>
-						) : (
-							''
-						)}
-						{moduleInfo?.bugUrl ? (
-							<a className="instance_bug" href={moduleInfo.bugUrl} target="_new" title="Report Bug">
-								<FontAwesomeIcon icon={faBug} />
-							</a>
-						) : (
-							''
-						)}
+						<div className="float_right">
+							{moduleInfo.isLegacy ? (
+								<FontAwesomeIcon
+									icon={faExclamationTriangle}
+									title="This module has not been updated for Companion 3.0, and may be broken as a result"
+								/>
+							) : (
+								''
+							)}
+							{moduleInfo.hasHelp ? (
+								<div onClick={doShowHelp} title="Help">
+									<FontAwesomeIcon icon={faQuestionCircle} />
+								</div>
+							) : (
+								''
+							)}
+							{moduleInfo.bugUrl ? (
+								<a href={moduleInfo.bugUrl} target="_new" title="Report Bug">
+									<FontAwesomeIcon icon={faBug} />
+								</a>
+							) : (
+								''
+							)}
+						</div>
 
 						<b>{moduleInfo?.shortname ?? ''}</b>
 						<br />
@@ -305,7 +317,7 @@ function InstancesTableRow({
 			</td>
 			<td>
 				{instanceVariables && Object.keys(instanceVariables).length > 0 ? (
-					<div className="instance_variables" onClick={doShowVariables} title="Variables">
+					<div className="float_right" onClick={doShowVariables} title="Variables">
 						<FontAwesomeIcon icon={faDollarSign} />
 					</div>
 				) : (
