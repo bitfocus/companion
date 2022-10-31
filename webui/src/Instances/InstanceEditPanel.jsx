@@ -12,6 +12,7 @@ import { nanoid } from 'nanoid'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faQuestionCircle } from '@fortawesome/free-solid-svg-icons'
 import sanitizeHtml from 'sanitize-html'
+import { isLabelValid } from '@companion/shared/Label'
 
 export function InstanceEditPanel({ instanceId, instanceStatus, doConfigureInstance, showHelp }) {
 	console.log('status', instanceStatus)
@@ -42,6 +43,7 @@ const InstanceEditPanelInner = memo(function InstanceEditPanel({ instanceId, doC
 	const [configFields, setConfigFields] = useState(null)
 	const [instanceConfig, setInstanceConfig] = useState(null)
 	const [instanceLabel, setInstanceLabel] = useState(null)
+	const [instanceType, setInstanceType] = useState(null)
 	const [validFields, setValidFields] = useState(null)
 
 	const [fieldVisibility, setFieldVisibility] = useState({})
@@ -54,19 +56,21 @@ const InstanceEditPanelInner = memo(function InstanceEditPanel({ instanceId, doC
 	const doSave = useCallback(() => {
 		setError(null)
 
+		const newLabel = instanceLabel?.trim()
+
 		const isInvalid = Object.entries(validFields).filter(([k, v]) => !v)
-		if (!instanceLabel?.trim() || isInvalid.length > 0) {
+		if (!isLabelValid(newLabel) || isInvalid.length > 0) {
 			setError(`Some config fields are not valid: ${isInvalid.map(([k]) => k).join(', ')}`)
 			return
 		}
 
-		socketEmitPromise(socket, 'instances:set-config', [instanceId, instanceLabel, instanceConfig])
+		socketEmitPromise(socket, 'instances:set-config', [instanceId, newLabel, instanceConfig])
 			.then((err) => {
 				if (err) {
-					if (err === 'duplicate label') {
-						setError(
-							`The label "${instanceConfig.label}" is already in use. Please use a unique label for this connection`
-						)
+					if (err === 'invalid label') {
+						setError(`The label "${newLabel}" in not valid`)
+					} else if (err === 'duplicate label') {
+						setError(`The label "${newLabel}" is already in use. Please use a unique label for this connection`)
 					} else {
 						setError(`Unable to save connection config: "${err}"`)
 					}
@@ -98,6 +102,7 @@ const InstanceEditPanelInner = memo(function InstanceEditPanel({ instanceId, doC
 
 						setConfigFields(res.fields)
 						setInstanceLabel(res.label)
+						setInstanceType(res.instance_type)
 						setInstanceConfig(res.config)
 						setValidFields(validFields)
 					} else {
@@ -156,14 +161,14 @@ const InstanceEditPanelInner = memo(function InstanceEditPanel({ instanceId, doC
 		}
 	}, [configFields, instanceConfig])
 
-	const moduleInfo = modules[instanceConfig?.instance_type] ?? {}
+	const moduleInfo = modules[instanceType] ?? {}
 	const dataReady = instanceConfig && configFields && validFields
 	return (
 		<div>
 			<h5>
-				{moduleInfo?.shortname ?? instanceConfig?.instance_type} configuration
+				{moduleInfo?.shortname ?? instanceType} configuration
 				{moduleInfo?.hasHelp ? (
-					<div className="float_right" onClick={() => showHelp(instanceConfig?.instance_type)}>
+					<div className="float_right" onClick={() => showHelp(instanceType)}>
 						<FontAwesomeIcon icon={faQuestionCircle} />
 					</div>
 				) : (
@@ -176,7 +181,7 @@ const InstanceEditPanelInner = memo(function InstanceEditPanel({ instanceId, doC
 					<>
 						<CCol className={`fieldtype-textinput`} sm={12}>
 							<label>Label</label>
-							<TextInputField value={instanceLabel} setValue={setInstanceLabel} />
+							<TextInputField value={instanceLabel} setValue={setInstanceLabel} isValid={isLabelValid(instanceLabel)} />
 						</CCol>
 
 						{configFields.map((field, i) => {
@@ -208,7 +213,9 @@ const InstanceEditPanelInner = memo(function InstanceEditPanel({ instanceId, doC
 				<CCol sm={12}>
 					<CButton
 						color="success"
-						disabled={!validFields || Object.values(validFields).find((v) => !v) === false}
+						disabled={
+							!validFields || Object.values(validFields).find((v) => !v) === false || !isLabelValid(instanceLabel)
+						}
 						onClick={doSave}
 					>
 						Save
