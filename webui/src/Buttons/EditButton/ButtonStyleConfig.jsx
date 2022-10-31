@@ -1,5 +1,5 @@
 import { CButton, CRow, CCol, CButtonGroup, CLabel, CForm, CAlert } from '@coreui/react'
-import React, { useCallback, useContext, useState } from 'react'
+import React, { useCallback, useContext, useRef, useState } from 'react'
 import { StaticContext, socketEmit } from '../../util'
 import {
 	AlignmentInputField,
@@ -12,9 +12,12 @@ import {
 import { FONT_SIZES } from '../../Constants'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faQuestionCircle, faTrash } from '@fortawesome/free-solid-svg-icons'
+import { GenericConfirmModal } from '../../Components/GenericConfirmModal'
 
 export function ButtonStyleConfig({ page, bank, config, configRef, valueChanged }) {
 	const context = useContext(StaticContext)
+
+	const confirmRef = useRef(null)
 
 	const [pngError, setPngError] = useState(null)
 	const clearPng = useCallback(() => context.socket.emit('bank_clear_png', page, bank), [context.socket, page, bank])
@@ -40,7 +43,6 @@ export function ButtonStyleConfig({ page, bank, config, configRef, valueChanged 
 
 	const setValueInner = useCallback(
 		(key, value) => {
-			console.log('set', page, bank, key, value)
 			if (!configRef.current || value !== configRef.current[key]) {
 				context.socket.emit('bank_changefield', page, bank, key, value)
 				valueChanged()
@@ -51,8 +53,24 @@ export function ButtonStyleConfig({ page, bank, config, configRef, valueChanged 
 
 	const setShowTopBar = useCallback((val) => setValueInner('show_topbar', val), [setValueInner])
 	const setLatchValue = useCallback((val) => setValueInner('latch', val), [setValueInner])
-	const setRotaryActions = useCallback((val) => setValueInner('rotary_actions', val), [setValueInner])
 	const setRelativeDelayValue = useCallback((val) => setValueInner('relative_delay', val), [setValueInner])
+	const setRotaryActions = useCallback(
+		(val) => {
+			if (!val && confirmRef.current) {
+				confirmRef.current.show(
+					'Disable rotary actions',
+					'Are you sure? This will clear any rotary actions that have been defined.',
+					'OK',
+					() => {
+						setValueInner('rotary_actions', val)
+					}
+				)
+			} else {
+				setValueInner('rotary_actions', val)
+			}
+		},
+		[setValueInner]
+	)
 
 	switch (config.style) {
 		case undefined:
@@ -80,6 +98,8 @@ export function ButtonStyleConfig({ page, bank, config, configRef, valueChanged 
 			) : (
 				''
 			)}
+
+			<GenericConfirmModal ref={confirmRef} />
 
 			<CForm inline>
 				<CRow form className="button-style-form">
