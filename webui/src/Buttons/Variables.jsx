@@ -16,6 +16,7 @@ import { faCopy, faTrash } from '@fortawesome/free-solid-svg-icons'
 import { TextInputField } from '../Components/TextInputField'
 import { CheckboxInputField } from '../Components/CheckboxInputField'
 import { GenericConfirmModal } from '../Components/GenericConfirmModal'
+import { isCustomVariableValid } from '@companion/shared/CustomVariable'
 
 export const InstanceVariables = function InstanceVariables({ resetToken }) {
 	const instancesContext = useContext(InstancesContext)
@@ -155,20 +156,21 @@ function CustomVariablesList({ setShowCustom }) {
 	const [newName, setNewName] = useState('')
 
 	const doCreateNew = useCallback(() => {
-		setNewName((newName) => {
-			socketEmitPromise(socket, 'custom-variables::create', [newName, ''])
-				.then((res) => {
-					// TODO
-					console.log('done with', res)
-				})
-				.catch((e) => {
-					console.error('Failed to create variable')
-				})
+		socketEmitPromise(socket, 'custom-variables::create', [newName, ''])
+			.then((res) => {
+				console.log('done with', res)
+				if (res) {
+					notifier.current.show(`Failed to create variable`, res, 5000)
+				}
 
-			// clear value
-			return ''
-		})
-	}, [socket])
+				// clear value
+				setNewName('')
+			})
+			.catch((e) => {
+				console.error('Failed to create variable')
+				notifier.current.show(`Failed to create variable`, e?.toString?.() ?? e ?? 'Failed', 5000)
+			})
+	}, [socket, notifier, newName])
 
 	const setStartupValue = useCallback(
 		(name, value) => {
@@ -295,7 +297,7 @@ function CustomVariablesList({ setShowCustom }) {
 					<CFormGroup>
 						<CLabel htmlFor="new_name">Create custom variable: </CLabel>
 						<CInput name="new_name" type="text" value={newName} onChange={(e) => setNewName(e.currentTarget.value)} />
-						<CButton color="primary" onClick={doCreateNew}>
+						<CButton color="primary" onClick={doCreateNew} disabled={!isCustomVariableValid(newName)}>
 							Add
 						</CButton>
 					</CFormGroup>
