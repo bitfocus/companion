@@ -272,8 +272,6 @@ function InstancesTableRow({
 
 	const instanceVariables = variableDefinitionsContext[instance.label]
 
-	console.log(moduleInfo)
-
 	return (
 		<tr ref={ref} className={isDragging ? 'instancelist-dragging' : ''}>
 			<td ref={drag} className="td-reorder">

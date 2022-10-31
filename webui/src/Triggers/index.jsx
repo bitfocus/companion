@@ -1,10 +1,13 @@
-import React, { memo, useCallback, useContext, useEffect, useState, useMemo } from 'react'
+import React, { memo, useCallback, useContext, useEffect, useState, useMemo, useRef } from 'react'
 import { CButton, CButtonGroup } from '@coreui/react'
-import { SocketContext, TriggersContext } from '../util'
+import { SocketContext, socketEmitPromise, TriggersContext } from '../util'
 import dayjs from 'dayjs'
 import { TriggerEditModal } from './EditModal'
 import sanitizeHtml from 'sanitize-html'
 import CSwitch from '../CSwitch'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faSort } from '@fortawesome/free-solid-svg-icons'
+import { useDrag, useDrop } from 'react-dnd'
 
 export const Triggers = memo(function Triggers() {
 	const socket = useContext(SocketContext)
@@ -71,10 +74,43 @@ export const Triggers = memo(function Triggers() {
 
 const tableDateFormat = 'MM/DD HH:mm:ss'
 function TriggersTable({ triggersList, editItem }) {
+	const socket = useContext(SocketContext)
+
+	const triggersRef = useRef(triggersList)
+	useEffect(() => {
+		triggersRef.current = triggersList
+	}, [triggersList])
+
+	const moveTrigger = useCallback(
+		(itemId, targetId) => {
+			itemId = itemId + ''
+			targetId = targetId + ''
+
+			if (triggersRef.current) {
+				const rawIds = Object.entries(triggersRef.current)
+					.sort(([, a], [, b]) => a.sortOrder - b.sortOrder)
+					.map(([id]) => id)
+
+				const itemIndex = rawIds.indexOf(itemId)
+				const targetIndex = rawIds.indexOf(targetId)
+				if (itemIndex === -1 || targetIndex === -1) return
+
+				const newIds = rawIds.filter((id) => id !== itemId)
+				newIds.splice(targetIndex, 0, itemId)
+
+				socketEmitPromise(socket, 'triggers:set-order', [newIds]).catch((e) => {
+					console.error('Reorder failed', e)
+				})
+			}
+		},
+		[socket]
+	)
+
 	return (
 		<table className="table table-responsive-sm ">
 			<thead>
 				<tr>
+					<th>&nbsp;</th>
 					<th>Name</th>
 					<th>Trigger</th>
 					<th>&nbsp;</th>
@@ -82,7 +118,9 @@ function TriggersTable({ triggersList, editItem }) {
 			</thead>
 			<tbody>
 				{triggersList && Object.keys(triggersList).length > 0 ? (
-					Object.values(triggersList).map((item) => <TriggersTableRow key={item.id} item={item} editItem={editItem} />)
+					Object.values(triggersList)
+						.sort((a, b) => a.sortOrder - b.sortOrder)
+						.map((item) => <TriggersTableRow key={item.id} item={item} editItem={editItem} moveTrigger={moveTrigger} />)
 				) : (
 					<tr>
 						<td colSpan="4">There currently are no triggers or scheduled tasks.</td>
@@ -92,7 +130,7 @@ function TriggersTable({ triggersList, editItem }) {
 		</table>
 	)
 }
-function TriggersTableRow({ item, editItem }) {
+function TriggersTableRow({ item, editItem, moveTrigger }) {
 	const socket = useContext(SocketContext)
 
 	const doEnableDisable = useCallback(() => {
@@ -118,8 +156,38 @@ function TriggersTableRow({ item, editItem }) {
 		[item.config_desc]
 	)
 
+	const ref = useRef(null)
+	const [, drop] = useDrop({
+		accept: 'trigger',
+		hover(hoverItem, monitor) {
+			if (!ref.current) {
+				return
+			}
+			// Don't replace items with themselves
+			if (hoverItem.id === item.id) {
+				return
+			}
+
+			// Time to actually perform the action
+			moveTrigger(hoverItem.id, item.id)
+		},
+	})
+	const [{ isDragging }, drag, preview] = useDrag({
+		type: 'trigger',
+		item: {
+			id: item.id,
+		},
+		collect: (monitor) => ({
+			isDragging: monitor.isDragging(),
+		}),
+	})
+	preview(drop(ref))
+
 	return (
-		<tr>
+		<tr ref={ref} className={isDragging ? 'instancelist-dragging' : ''}>
+			<td ref={drag} className="td-reorder">
+				<FontAwesomeIcon icon={faSort} />
+			</td>
 			<td>{item.title}</td>
 			<td>
 				<span dangerouslySetInnerHTML={descriptionHtml} />

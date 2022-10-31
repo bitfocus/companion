@@ -132,7 +132,7 @@ export function ContextData({ children }) {
 				setCustomVariables((oldVariables) => applyPatchOrReplaceObject(oldVariables, patch))
 			}
 			const updateTriggers = (patch) => {
-				setTriggers((oldVariables) => applyPatchOrReplaceObject(oldVariables, patch))
+				setTriggers((oldTriggers) => applyPatchOrReplaceObject(oldTriggers, patch))
 			}
 
 			socketEmitPromise(socket, 'instances:subscribe', [])
