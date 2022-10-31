@@ -152,17 +152,69 @@ export function EditButton({ page, bank, onKeyUp }) {
 							Erase
 						</CButton>
 						&nbsp;
-						<CButton
-							color="warning"
-							hidden={config.style !== 'png'}
-							onMouseDown={() => context.socket.emit('hot_press', page, bank, true)}
-							onMouseUp={() => context.socket.emit('hot_press', page, bank, false)}
-						>
-							Test actions
-						</CButton>
+						<CButtonGroup>
+							<CButton
+								color="warning"
+								hidden={config.style !== 'png'}
+								onMouseDown={() => context.socket.emit('hot_press', page, bank, true)}
+								onMouseUp={() => context.socket.emit('hot_press', page, bank, false)}
+							>
+								Test press
+							</CButton>
+							{config.rotary_actions && (
+								<CButton color="warning" onMouseDown={() => context.socket.emit('hot_rotate', page, bank, false)}>
+									Click Left
+								</CButton>
+							)}
+							{config.rotary_actions && (
+								<CButton color="warning" onMouseDown={() => context.socket.emit('hot_rotate', page, bank, true)}>
+									Click Right
+								</CButton>
+							)}
+						</CButtonGroup>
 					</div>
 
 					<ButtonStyleConfig config={config} configRef={configRef} page={page} bank={bank} valueChanged={loadConfig} />
+
+					{config.rotary_actions && (
+						<>
+							<h4 className="mt-3">Rotate left actions</h4>
+							<ActionsPanel
+								page={page}
+								bank={bank}
+								dragId={'rotateLeftAction'}
+								addCommand="bank_addRotateLeftAction"
+								getCommand="bank_rotate_left_actions_get"
+								updateOption="bank_rotate_left_action_update_option"
+								orderCommand="bank_rotate_left_action_update_option_order"
+								setDelay="bank_update_rotate_left_action_delay"
+								deleteCommand="bank_rotate_left_action_delete"
+								learnCommand="bank_rotate_left_action_learn"
+								addPlaceholder="+ Add rotate left action"
+								loadStatusKey={'rotateLeftActions'}
+								setLoadStatus={addLoadStatus}
+								reloadToken={reloadTablesToken}
+							/>
+
+							<h4 className="mt-3">Rotate right actions</h4>
+							<ActionsPanel
+								page={page}
+								bank={bank}
+								dragId={'rotateRightAction'}
+								addCommand="bank_addRotateRightAction"
+								getCommand="bank_rotate_right_actions_get"
+								updateOption="bank_rotate_right_action_update_option"
+								orderCommand="bank_rotate_right_action_update_option_order"
+								setDelay="bank_update_rotate_right_action_delay"
+								deleteCommand="bank_rotate_right_action_delete"
+								learnCommand="bank_rotate_right_action_learn"
+								addPlaceholder="+ Add rotate right action"
+								loadStatusKey={'rotateRightActions'}
+								setLoadStatus={addLoadStatus}
+								reloadToken={reloadTablesToken}
+							/>
+						</>
+					)}
 
 					{config.style === 'png' ? (
 						<>

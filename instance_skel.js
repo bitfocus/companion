@@ -373,9 +373,7 @@ instance.prototype.getAllActions = function () {
 	self.system.emit('actions_for_instance', self.id, function (_result) {
 		result = _result
 	})
-	self.system.emit('release_actions_for_instance', self.id, function (_result) {
-		result.push(..._result)
-	})
+
 	return result
 }
 
