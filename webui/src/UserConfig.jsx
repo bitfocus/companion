@@ -144,7 +144,7 @@ function UserConfigTable() {
 
 				<tr>
 					<td colSpan="2" className="settings-category">
-						Devices
+						Surfaces
 					</td>
 				</tr>
 				<tr>
@@ -193,7 +193,7 @@ function UserConfigTable() {
 					</td>
 				</tr>
 				<tr>
-					<td>Enable connected Loupedeck devices (Requires Companion restart)</td>
+					<td>Enable connected Loupedeck Live devices (Requires Companion restart)</td>
 					<td>
 						<div className="form-check form-check-inline mr-1">
 							<CInputCheckbox
