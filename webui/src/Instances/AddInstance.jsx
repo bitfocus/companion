@@ -130,7 +130,7 @@ const AddInstancesInner = memo(function AddInstancesInner({ showHelp, configureI
 			</p>
 			<p>
 				If this module is broken, please let us know in{' '}
-				<a target="_blank" rel="noreferrer" href="https://github.com/bitfocus/companion/issues/9999">
+				<a target="_blank" rel="noreferrer" href="https://github.com/bitfocus/companion/issues/2157">
 					this github issue
 				</a>
 			</p>
