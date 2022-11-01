@@ -2,7 +2,7 @@ import { CButton, CForm, CInputGroup, CInputGroupAppend, CInputGroupText, CButto
 import { faSort, faTrash, faExpandArrowsAlt, faCompressArrowsAlt, faCopy } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import React, { useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react'
-import { NumberInputField } from '../../Components'
+import { NumberInputField } from '../Components'
 import {
 	ActionsContext,
 	InstancesContext,
@@ -11,21 +11,17 @@ import {
 	sandbox,
 	useMountEffect,
 	SocketContext,
-	ParseControlId,
-	ButtonRenderCacheContext,
-} from '../../util'
+} from '../util'
 import Select, { createFilter } from 'react-select'
-import { ActionTableRowOption } from './Table'
+import { OptionsInputField } from './OptionsInputField'
 import { useDrag, useDrop } from 'react-dnd'
-import { GenericConfirmModal } from '../../Components/GenericConfirmModal'
+import { GenericConfirmModal } from '../Components/GenericConfirmModal'
 import { AddActionsModal } from './AddModal'
-import { usePanelCollapseHelper } from './CollapseHelper'
-import { BankPreview } from '../../Components/BankButton'
-import { useSharedBankRenderCache } from '../../ButtonRenderCache'
-import { nanoid } from 'nanoid'
-import CSwitch from '../../CSwitch'
+import { usePanelCollapseHelper } from '../Helpers/CollapseHelper'
+import CSwitch from '../CSwitch'
+import { OptionBankPreview } from './OptionBankPreview'
 
-export function ActionsPanel({ controlId, set, actions, dragId, addPlaceholder, heading, headingActions }) {
+export function ControlActionSetEditor({ controlId, set, actions, addPlaceholder, heading, headingActions }) {
 	const socket = useContext(SocketContext)
 
 	const confirmModal = useRef()
@@ -141,7 +137,7 @@ export function ActionsPanel({ controlId, set, actions, dragId, addPlaceholder, 
 				</CButtonGroup>
 			</h4>
 			<GenericConfirmModal ref={confirmModal} />
-			<ActionsPanelInner
+			<ActionsList
 				isOnBank={true}
 				controlId={controlId}
 				dragId={`${controlId}_actions`}
@@ -213,7 +209,7 @@ export function AddActionsPanel({ addPlaceholder, addAction }) {
 	)
 }
 
-export function ActionsPanelInner({
+export function ActionsList({
 	isOnBank,
 	controlId,
 	dragId,
@@ -481,7 +477,7 @@ function ActionTableRow({
 							Array.isArray(actionSpec?.previewBank) &&
 							actionSpec.previewBank.length === 2 ? (
 								<div className="cell-bank-preview">
-									<ActionBankPreview fields={actionSpec.previewBank} options={action.options} controlId={controlId} />
+									<OptionBankPreview fields={actionSpec.previewBank} options={action.options} controlId={controlId} />
 								</div>
 							) : (
 								''
@@ -525,7 +521,7 @@ function ActionTableRow({
 								<CForm>
 									{options.map((opt, i) => (
 										<MyErrorBoundary key={i}>
-											<ActionTableRowOption
+											<OptionsInputField
 												isOnBank={isOnBank}
 												isAction={true}
 												instanceId={action.instance}
@@ -549,24 +545,6 @@ function ActionTableRow({
 			</td>
 		</tr>
 	)
-}
-
-export function ActionBankPreview({ fields, options, controlId }) {
-	const buttonCache = useContext(ButtonRenderCacheContext)
-
-	let page = options[fields[0]]
-	let bank = options[fields[1]]
-
-	const parsedControlId = ParseControlId(controlId)
-	if (parsedControlId && parsedControlId.type === 'bank') {
-		page = page || parsedControlId.page
-		bank = bank || parsedControlId.bank
-	}
-
-	const id = useMemo(() => nanoid(), [])
-	const image = useSharedBankRenderCache(buttonCache, id, page, bank)
-
-	return <BankPreview fixedSize noPad preview={image} />
 }
 
 const baseFilter = createFilter()

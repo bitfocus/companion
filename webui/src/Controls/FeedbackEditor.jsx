@@ -10,18 +10,18 @@ import {
 	sandbox,
 	useMountEffect,
 	SocketContext,
-} from '../../util'
+} from '../util'
 import Select, { createFilter } from 'react-select'
-import { ActionTableRowOption } from './Table'
+import { OptionsInputField } from './OptionsInputField'
 import { useDrag, useDrop } from 'react-dnd'
-import { GenericConfirmModal } from '../../Components/GenericConfirmModal'
-import { DropdownInputField } from '../../Components'
+import { GenericConfirmModal } from '../Components/GenericConfirmModal'
+import { DropdownInputField } from '../Components'
 import { ButtonStyleConfigFields } from './ButtonStyleConfig'
 import { AddFeedbacksModal } from './AddModal'
-import { usePanelCollapseHelper } from './CollapseHelper'
-import { ActionBankPreview } from './ActionsPanel'
+import { usePanelCollapseHelper } from '../Helpers/CollapseHelper'
+import { OptionBankPreview } from './OptionBankPreview'
 
-export const FeedbacksPanel = function ({ controlId, feedbacks, dragId, heading }) {
+export function ControlFeedbacksEditor({ controlId, feedbacks, dragId, heading }) {
 	const socket = useContext(SocketContext)
 
 	const confirmModal = useRef()
@@ -421,7 +421,7 @@ export function FeedbackEditor({
 					Array.isArray(feedbackSpec?.previewBank) &&
 					feedbackSpec.previewBank.length === 2 ? (
 						<div className="cell-bank-preview">
-							<ActionBankPreview fields={feedbackSpec.previewBank} options={feedback.options} controlId={controlId} />
+							<OptionBankPreview fields={feedbackSpec.previewBank} options={feedback.options} controlId={controlId} />
 						</div>
 					) : (
 						''
@@ -441,7 +441,7 @@ export function FeedbackEditor({
 						<CForm>
 							{options.map((opt, i) => (
 								<MyErrorBoundary key={i}>
-									<ActionTableRowOption
+									<OptionsInputField
 										isOnBank={isOnBank}
 										instanceId={feedback.instance_id}
 										option={opt}

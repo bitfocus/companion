@@ -12,7 +12,7 @@ import {
 	CModalHeader,
 } from '@coreui/react'
 import React, { forwardRef, useCallback, useContext, useImperativeHandle, useMemo, useState } from 'react'
-import { ActionsContext, FeedbacksContext, InstancesContext } from '../../util'
+import { ActionsContext, FeedbacksContext, InstancesContext } from '../util'
 
 export const AddActionsModal = forwardRef(function AddActionsModal({ addAction }, ref) {
 	const actions = useContext(ActionsContext)

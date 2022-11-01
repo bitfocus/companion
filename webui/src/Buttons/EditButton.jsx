@@ -3,8 +3,8 @@ import { faArrowDown, faArrowUp, faPlus, faTrash } from '@fortawesome/free-solid
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import React, { useCallback, useContext, useEffect, useRef, useState } from 'react'
 import { nanoid } from 'nanoid'
-import { BankPreview, dataToButtonImage } from '../../Components/BankButton'
-import { GenericConfirmModal } from '../../Components/GenericConfirmModal'
+import { BankPreview, dataToButtonImage } from '../Components/BankButton'
+import { GenericConfirmModal } from '../Components/GenericConfirmModal'
 import {
 	KeyReceiver,
 	LoadingRetryOrError,
@@ -14,12 +14,13 @@ import {
 	SocketContext,
 	MyErrorBoundary,
 	FormatButtonControlId,
-} from '../../util'
-import { ActionsPanel } from './ActionsPanel'
+} from '../util'
+import { ControlActionSetEditor } from '../Controls/ActionSetEditor'
 import jsonPatch from 'fast-json-patch'
 
-import { ButtonOptionsConfig, ButtonStyleConfig } from './ButtonStyleConfig'
-import { FeedbacksPanel } from './FeedbackPanel'
+import { ButtonStyleConfig } from '../Controls/ButtonStyleConfig'
+import { ControlOptionsEditor } from '../Controls/ControlOptionsEditor'
+import { ControlFeedbacksEditor } from '../Controls/FeedbackEditor'
 import { cloneDeep } from 'lodash-es'
 
 export function EditButton({ controlId, onKeyUp }) {
@@ -225,7 +226,7 @@ export function EditButton({ controlId, onKeyUp }) {
 							controlId={controlId}
 						/>
 
-						<ButtonOptionsConfig
+						<ControlOptionsEditor
 							controlType={config.type}
 							options={config.options}
 							configRef={configRef}
@@ -251,7 +252,7 @@ export function EditButton({ controlId, onKeyUp }) {
 							{config.feedbacks ? (
 								<>
 									<MyErrorBoundary>
-										<FeedbacksPanel
+										<ControlFeedbacksEditor
 											heading={'Feedback'}
 											controlId={controlId}
 											feedbacks={config.feedbacks}
@@ -332,21 +333,19 @@ function ActionsSection({ style, controlId, action_sets, runtimeProps }) {
 		return (
 			<>
 				<MyErrorBoundary>
-					<ActionsPanel
+					<ControlActionSetEditor
 						heading="Press actions"
 						controlId={controlId}
 						set={'down'}
-						dragId={'downAction'}
 						addPlaceholder="+ Add key press action"
 						actions={action_sets['down']}
 					/>
 				</MyErrorBoundary>
 				<MyErrorBoundary>
-					<ActionsPanel
+					<ControlActionSetEditor
 						heading="Release actions"
 						controlId={controlId}
 						set={'up'}
-						dragId={'releaseAction'}
 						addPlaceholder="+ Add key release action"
 						actions={action_sets['up']}
 					/>
@@ -360,7 +359,7 @@ function ActionsSection({ style, controlId, action_sets, runtimeProps }) {
 				<GenericConfirmModal ref={confirmRef} />
 				{keys.map((k, i) => (
 					<MyErrorBoundary>
-						<ActionsPanel
+						<ControlActionSetEditor
 							heading={`Step ${i + 1} actions`}
 							headingActions={[
 								<CButton
@@ -406,7 +405,6 @@ function ActionsSection({ style, controlId, action_sets, runtimeProps }) {
 							key={`panel_${k}`}
 							controlId={controlId}
 							set={k}
-							dragId={`${k}Action`}
 							addPlaceholder={`+ Add action to step ${i + 1}`}
 							actions={action_sets[k]}
 						/>

@@ -33,12 +33,12 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faCalendarAlt, faClock } from '@fortawesome/free-solid-svg-icons'
 import { useMemo } from 'react'
 import { DropdownInputField } from '../Components'
-import { ActionsPanelInner } from './EditButton/ActionsPanel'
+import { ActionsList } from '../Controls/ActionSetEditor'
 import { GenericConfirmModal } from '../Components/GenericConfirmModal'
 import { ButtonGrid, ButtonGridHeader } from './ButtonGrid'
 import { cloneDeep } from 'lodash-es'
 import jsonPatch from 'fast-json-patch'
-import { usePanelCollapseHelper } from './EditButton/CollapseHelper'
+import { usePanelCollapseHelper } from '../Helpers/CollapseHelper'
 import CSwitch from '../CSwitch'
 
 export function ActionRecorder() {
@@ -615,7 +615,7 @@ function RecorderSession({ sessionId, sessionInfo }) {
 
 	return (
 		<CCol xs={12}>
-			<ActionsPanelInner
+			<ActionsList
 				isOnBank={false}
 				dragId={'triggerAction'}
 				actions={sessionInfo.actions}

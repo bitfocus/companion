@@ -19,7 +19,7 @@ import { MyErrorBoundary, useMountEffect, socketEmitPromise, SocketContext } fro
 import Select from 'react-select'
 import { AddFeedbackDropdown, FeedbackEditor } from '../Buttons/EditButton/FeedbackPanel'
 import { nanoid } from 'nanoid'
-import { ActionsPanelInner, AddActionsPanel } from '../Buttons/EditButton/ActionsPanel'
+import { ActionsList, AddActionsPanel } from '../Buttons/EditButton/ActionsPanel'
 import { CheckboxInputField } from '../Components'
 import update from 'immutability-helper'
 import { AddFeedbacksModal } from '../Buttons/EditButton/AddModal'
@@ -408,7 +408,7 @@ export function TriggerEditModal({ doClose, doSave, controlId }) {
 							</p>
 						</CCol>
 					</CRow>
-					<ActionsPanelInner
+					<ActionsList
 						isOnBank={false}
 						dragId={'triggerAction'}
 						setId={0}

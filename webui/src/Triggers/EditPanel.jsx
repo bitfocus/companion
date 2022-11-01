@@ -3,11 +3,11 @@ import React, { useCallback, useContext, useEffect, useRef, useState } from 'rea
 import { nanoid } from 'nanoid'
 import { GenericConfirmModal } from '../Components/GenericConfirmModal'
 import { LoadingRetryOrError, socketEmitPromise, SocketContext, MyErrorBoundary } from '../util'
-import { ActionsPanel } from '../Buttons/EditButton/ActionsPanel'
+import { ControlActionSetEditor } from '../Controls/ActionSetEditor'
 import jsonPatch from 'fast-json-patch'
 
-import { ButtonOptionsConfig } from '../Buttons/EditButton/ButtonStyleConfig'
-import { FeedbacksPanel } from '../Buttons/EditButton/FeedbackPanel'
+import { ControlOptionsEditor } from '../Buttons/EditButton/ControlOptionsEditor'
+import { ControlFeedbacksEditor } from '../Controls/FeedbackEditor'
 import { cloneDeep } from 'lodash-es'
 import { TextInputField } from '../Components'
 
@@ -112,7 +112,7 @@ export function EditTriggerPanel({ controlId }) {
 							</CButton>
 						</div>
 
-						<ButtonOptionsConfig
+						<ControlOptionsEditor
 							controlType={config.type}
 							options={config.options}
 							configRef={configRef}
@@ -124,11 +124,10 @@ export function EditTriggerPanel({ controlId }) {
 						<>
 							{config.action_sets ? (
 								<MyErrorBoundary>
-									<ActionsPanel
+									<ControlActionSetEditor
 										heading="Actions"
 										controlId={controlId}
 										set={'0'}
-										dragId={'actions0'}
 										addPlaceholder="+ Add action"
 										actions={config.action_sets['0']}
 									/>
@@ -140,7 +139,7 @@ export function EditTriggerPanel({ controlId }) {
 							{/* {config.feedbacks ? (
 								<>
 									<MyErrorBoundary>
-										<FeedbacksPanel
+										<ControlFeedbacksEditor
 											heading={'Feedback'}
 											controlId={controlId}
 											feedbacks={config.feedbacks}
