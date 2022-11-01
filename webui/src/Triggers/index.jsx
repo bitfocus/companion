@@ -15,11 +15,19 @@ export const Triggers = memo(function Triggers() {
 	const triggersList = useContext(TriggersContext)
 
 	const [plugins, setPlugins] = useState(null)
-	const [editItem, setEditItem] = useState([false, null])
+	const [editItemId, setEditItemId] = useState(null)
 
-	const doEditItem = useCallback((itemId) => setEditItem([true, itemId]), [])
-	const doAddNew = useCallback(() => setEditItem([true, null]), [])
-	const doCloseModal = useCallback(() => setEditItem([false, null]), [])
+	const doAddNew = useCallback(() => {
+		socketEmitPromise(socket, 'triggers:create', [])
+			.then((controlId) => {
+				console.log('created trigger', controlId)
+				setEditItemId(controlId)
+			})
+			.catch((e) => {
+				console.error('failed to create trigger', e)
+			})
+	}, [socket])
+	const doCloseModal = useCallback(() => setEditItemId(null), [])
 
 	const doSave = useCallback(
 		(newConfig) => {
@@ -41,18 +49,13 @@ export const Triggers = memo(function Triggers() {
 			<h4>Triggers and schedules</h4>
 			<p>This allows you to run actions based on Companion, feedback or time events.</p>
 
-			{editItem[0] ? (
-				<TriggerEditModal
-					item={editItem[1] !== null ? triggersList[editItem[1]] : undefined}
-					doClose={doCloseModal}
-					plugins={plugins}
-					doSave={doSave}
-				/>
+			{editItemId ? (
+				<TriggerEditModal controlId={editItemId} doClose={doCloseModal} plugins={plugins} doSave={doSave} />
 			) : (
 				''
 			)}
 
-			<TriggersTable triggersList={triggersList} editItem={doEditItem} />
+			<TriggersTable triggersList={triggersList} editItem={setEditItemId} />
 
 			<CButton color="primary" onClick={doAddNew}>
 				Add New Trigger
@@ -118,9 +121,17 @@ function TriggersTable({ triggersList, editItem }) {
 			</thead>
 			<tbody>
 				{triggersList && Object.keys(triggersList).length > 0 ? (
-					Object.values(triggersList)
-						.sort((a, b) => a.sortOrder - b.sortOrder)
-						.map((item) => <TriggersTableRow key={item.id} item={item} editItem={editItem} moveTrigger={moveTrigger} />)
+					Object.entries(triggersList)
+						.sort((a, b) => a[1].sortOrder - b[1].sortOrder)
+						.map(([controlId, item]) => (
+							<TriggersTableRow
+								key={controlId}
+								controlId={controlId}
+								item={item}
+								editItem={editItem}
+								moveTrigger={moveTrigger}
+							/>
+						))
 				) : (
 					<tr>
 						<td colSpan="4">There currently are no triggers or scheduled tasks.</td>
@@ -130,21 +141,29 @@ function TriggersTable({ triggersList, editItem }) {
 		</table>
 	)
 }
-function TriggersTableRow({ item, editItem, moveTrigger }) {
+function TriggersTableRow({ controlId, item, editItem, moveTrigger }) {
 	const socket = useContext(SocketContext)
 
 	const doEnableDisable = useCallback(() => {
-		socket.emit('schedule_update_item', item.id, { disabled: !item.disabled })
-	}, [socket, item.id, item.disabled])
+		socketEmitPromise(socket, 'controls:set-config-field', [controlId, 'enabled', !item.enabled]).catch((e) => {
+			console.error('failed to toggle trigger state', e)
+		})
+	}, [socket, controlId, item.enabled])
 	const doDelete = useCallback(() => {
-		socket.emit('schedule_update_item', item.id, { deleted: true })
-	}, [socket, item.id])
-	const doEdit = useCallback(() => {
-		editItem(item.id)
-	}, [editItem, item.id])
+		socketEmitPromise(socket, 'triggers:delete', [controlId]).catch((e) => {
+			console.error('Failed to delete', e)
+		})
+	}, [socket, controlId])
+	const doEdit = useCallback(() => editItem(controlId), [editItem, controlId])
 	const doClone = useCallback(() => {
-		socket.emit('schedule_clone_item', item.id)
-	}, [socket, item.id])
+		socketEmitPromise(socket, 'triggers:clone', [controlId])
+			.then((newControlId) => {
+				console.log('cloned to control', newControlId)
+			})
+			.catch((e) => {
+				console.error('Failed to clone', e)
+			})
+	}, [socket, controlId])
 
 	const descriptionHtml = useMemo(
 		() => ({
@@ -164,18 +183,18 @@ function TriggersTableRow({ item, editItem, moveTrigger }) {
 				return
 			}
 			// Don't replace items with themselves
-			if (hoverItem.id === item.id) {
+			if (hoverItem.id === controlId) {
 				return
 			}
 
 			// Time to actually perform the action
-			moveTrigger(hoverItem.id, item.id)
+			moveTrigger(hoverItem.id, controlId)
 		},
 	})
 	const [{ isDragging }, drag, preview] = useDrag({
 		type: 'trigger',
 		item: {
-			id: item.id,
+			id: controlId,
 		},
 		collect: (monitor) => ({
 			isDragging: monitor.isDragging(),
@@ -188,7 +207,7 @@ function TriggersTableRow({ item, editItem, moveTrigger }) {
 			<td ref={drag} className="td-reorder">
 				<FontAwesomeIcon icon={faSort} />
 			</td>
-			<td>{item.title}</td>
+			<td>{item.name}</td>
 			<td>
 				<span dangerouslySetInnerHTML={descriptionHtml} />
 				<br />
@@ -197,9 +216,9 @@ function TriggersTableRow({ item, editItem, moveTrigger }) {
 			<td className="action-buttons">
 				<CSwitch
 					color="info"
-					checked={!item.disabled}
+					checked={item.enabled}
 					onChange={doEnableDisable}
-					title={!item.disabled ? 'Disable trigger' : 'Enable trigger'}
+					title={item.enabled ? 'Disable trigger' : 'Enable trigger'}
 				/>
 				&nbsp;
 				<CButtonGroup>
@@ -212,7 +231,7 @@ function TriggersTableRow({ item, editItem, moveTrigger }) {
 					<CButton size="sm" color="danger" onClick={doDelete}>
 						delete
 					</CButton>
-					{/* <CButton size="sm" color="light" href={`/int/trigger_export/${item.id}`} target="_new">
+					{/* <CButton size="sm" color="light" href={`/int/trigger_export/${controlId}`} target="_new">
 					export
 				</CButton> */}
 				</CButtonGroup>

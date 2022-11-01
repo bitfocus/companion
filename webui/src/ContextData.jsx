@@ -131,8 +131,9 @@ export function ContextData({ children }) {
 			const updateCustomVariables = (patch) => {
 				setCustomVariables((oldVariables) => applyPatchOrReplaceObject(oldVariables, patch))
 			}
-			const updateTriggers = (patch) => {
-				setTriggers((oldTriggers) => applyPatchOrReplaceObject(oldTriggers, patch))
+			const updateTriggers = (controlId, patch) => {
+				console.log('trigger', controlId, patch)
+				setTriggers((oldTriggers) => applyPatchOrReplaceSubObject(oldTriggers, controlId, patch))
 			}
 
 			socketEmitPromise(socket, 'instances:subscribe', [])
@@ -205,20 +206,30 @@ export function ContextData({ children }) {
 			socket.on('pages:update', updatePageInfo)
 
 			const updateTriggerLastRun = (id, time) => {
-				setTriggers((list) => {
-					if (!list) return list
-
-					const res = { ...list }
-					if (res[id]) {
-						res[id] = { ...res[id], last_run: time }
-					}
-
-					return res
-				})
+				// TODO
+				// setTriggers((list) => {
+				// 	if (!list) return list
+				// 	const res = { ...list }
+				// 	if (res[id]) {
+				// 		res[id] = { ...res[id], last_run: time }
+				// 	}
+				// 	return res
+				// })
 			}
 
-			socket.emit('schedule_get', setTriggers)
-			socket.on('schedule:update', updateTriggers)
+			socketEmitPromise(socket, 'triggers:subscribe', [])
+				.then((pages) => {
+					// setLoadError(null)
+					setTriggers(pages)
+				})
+				.catch((e) => {
+					console.error('Failed to load triggers list:', e)
+					// setLoadError(`Failed to load pages list`)
+					setPages(null)
+				})
+
+			// socket.emit('schedule_get', setTriggers)
+			socket.on('triggers:update', updateTriggers)
 			socket.on('schedule_last_run', updateTriggerLastRun)
 
 			return () => {
@@ -230,7 +241,7 @@ export function ContextData({ children }) {
 				socket.off('surfaces:patch', patchSurfaces)
 				socket.off('pages:update', updatePageInfo)
 
-				socket.off('schedule:update', updateTriggers)
+				socket.off('triggers:update', updateTriggers)
 				socket.off('schedule_last_run', updateTriggerLastRun)
 
 				socket.off('instances:patch', patchInstances)
