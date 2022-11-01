@@ -1,67 +1,74 @@
 import React, { memo, useCallback, useContext, useEffect, useState, useMemo, useRef } from 'react'
-import { CButton, CButtonGroup } from '@coreui/react'
-import { SocketContext, socketEmitPromise, TriggersContext } from '../util'
+import {
+	CButton,
+	CButtonGroup,
+	CCol,
+	CNav,
+	CNavItem,
+	CNavLink,
+	CRow,
+	CTabContent,
+	CTabPane,
+	CTabs,
+} from '@coreui/react'
+import { MyErrorBoundary, SocketContext, socketEmitPromise, TriggersContext } from '../util'
 import dayjs from 'dayjs'
-import { TriggerEditModal } from './EditModal'
 import sanitizeHtml from 'sanitize-html'
 import CSwitch from '../CSwitch'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faSort } from '@fortawesome/free-solid-svg-icons'
+import { faCalculator, faGhost, faSort } from '@fortawesome/free-solid-svg-icons'
 import { useDrag, useDrop } from 'react-dnd'
+import { nanoid } from 'nanoid'
+import { EditTriggerPanel } from './EditPanel'
 
 export const Triggers = memo(function Triggers() {
 	const socket = useContext(SocketContext)
 
 	const triggersList = useContext(TriggersContext)
 
-	const [plugins, setPlugins] = useState(null)
 	const [editItemId, setEditItemId] = useState(null)
+	const [tabResetToken, setTabResetToken] = useState(nanoid())
+	const [activeTab, setActiveTab] = useState('placeholder')
+
+	const doChangeTab = useCallback((newTab) => {
+		setActiveTab((oldTab) => {
+			const preserveButtonsTab = newTab === 'variables' && oldTab === 'edit'
+			if (newTab !== 'edit' && oldTab !== newTab && !preserveButtonsTab) {
+				setEditItemId(null)
+				setTabResetToken(nanoid())
+			}
+			return newTab
+		})
+	}, [])
+	const doEditItem = useCallback((controlId) => {
+		setEditItemId(controlId)
+		setActiveTab('edit')
+	}, [])
 
 	const doAddNew = useCallback(() => {
 		socketEmitPromise(socket, 'triggers:create', [])
 			.then((controlId) => {
 				console.log('created trigger', controlId)
-				setEditItemId(controlId)
+				doEditItem(controlId)
 			})
 			.catch((e) => {
 				console.error('failed to create trigger', e)
 			})
-	}, [socket])
-	const doCloseModal = useCallback(() => setEditItemId(null), [])
-
-	const doSave = useCallback(
-		(newConfig) => {
-			console.log('save item', newConfig)
-			socket.emit('schedule_save_item', newConfig)
-		},
-		[socket]
-	)
-
-	// on mount, load the plugins
-	useEffect(() => {
-		socket.emit('schedule_plugins', (newPlugins) => {
-			setPlugins(newPlugins)
-		})
-	}, [socket])
+	}, [socket, doEditItem])
 
 	return (
-		<div>
-			<h4>Triggers and schedules</h4>
-			<p>This allows you to run actions based on Companion, feedback or time events.</p>
+		<CRow className="triggers-page split-panels">
+			<CCol xs={12} xl={6} className="primary-panel">
+				<h4>Triggers and schedules</h4>
+				<p>This allows you to run actions based on Companion, feedback or time events.</p>
 
-			{editItemId ? (
-				<TriggerEditModal controlId={editItemId} doClose={doCloseModal} plugins={plugins} doSave={doSave} />
-			) : (
-				''
-			)}
+				<TriggersTable triggersList={triggersList} editItem={doEditItem} />
 
-			<TriggersTable triggersList={triggersList} editItem={setEditItemId} />
+				<CButton color="primary" onClick={doAddNew}>
+					Add New Trigger
+				</CButton>
 
-			<CButton color="primary" onClick={doAddNew}>
-				Add New Trigger
-			</CButton>
-
-			{/* <CButton
+				{/* <CButton
 				color="light"
 				style={{
 					marginLeft: 10,
@@ -71,7 +78,37 @@ export const Triggers = memo(function Triggers() {
 			>
 				<FontAwesomeIcon icon={faFileExport} /> Export all
 			</CButton> */}
-		</div>
+			</CCol>
+
+			<CCol xs={12} xl={6} className="secondary-panel">
+				<div className="secondary-panel-inner">
+					<CTabs activeTab={activeTab} onActiveTabChange={doChangeTab}>
+						<CNav variant="tabs">
+							<CNavItem>
+								<CNavLink data-tab="placeholder">
+									<FontAwesomeIcon icon={faGhost} /> Placeholder
+								</CNavLink>
+							</CNavItem>
+							<CNavItem hidden={!editItemId}>
+								<CNavLink data-tab="edit">
+									<FontAwesomeIcon icon={faCalculator} /> Edit Trigger
+								</CNavLink>
+							</CNavItem>
+						</CNav>
+						<CTabContent fade={false}>
+							<CTabPane data-tab="placeholder">
+								<p>Placeholder</p>
+							</CTabPane>
+							<CTabPane data-tab="edit">
+								<MyErrorBoundary>
+									{editItemId ? <EditTriggerPanel key={`${editItemId}.${tabResetToken}`} controlId={editItemId} /> : ''}
+								</MyErrorBoundary>
+							</CTabPane>
+						</CTabContent>
+					</CTabs>
+				</div>
+			</CCol>
+		</CRow>
 	)
 })
 

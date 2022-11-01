@@ -62,7 +62,7 @@ function getFeedbackDefaults() {
 	]
 }
 
-export function TriggerEditModal({ doClose, doSave, item, plugins }) {
+export function TriggerEditModal({ doClose, doSave, controlId }) {
 	const socket = useContext(SocketContext)
 
 	const actionsRef = useRef()
@@ -73,7 +73,7 @@ export function TriggerEditModal({ doClose, doSave, item, plugins }) {
 		actionsRef.current = config.actions
 	}, [config.actions])
 
-	const pluginSpec = plugins?.find((p) => p.type === config.type)
+	const pluginSpec = null // plugins?.find((p) => p.type === config.type)
 
 	const doSaveInner = useCallback(
 		(e) => {
@@ -85,8 +85,8 @@ export function TriggerEditModal({ doClose, doSave, item, plugins }) {
 		[doClose, doSave, config]
 	)
 
-	const changeType = useCallback(
-		(e) => {
+	const changeType = useCallback((e) => {
+		/*
 			const pluginType = e.value
 			const pluginSpec = plugins?.find((p) => p.type === pluginType)
 			const pluginOptions = pluginSpec?.options || []
@@ -101,10 +101,10 @@ export function TriggerEditModal({ doClose, doSave, item, plugins }) {
 				type: pluginType,
 				config: pluginType === 'feedback' ? getFeedbackDefaults() : innerConfig,
 			}))
-		},
-		[plugins]
-	)
+			*/
+	}, [])
 
+	/*
 	useMountEffect(() => {
 		if (item) {
 			// hack
@@ -117,11 +117,11 @@ export function TriggerEditModal({ doClose, doSave, item, plugins }) {
 			const defaultPlugin = plugins.find((p) => p.type === 'feedback') ?? plugins[0]
 			changeType({ value: defaultPlugin.type })
 		}
-	})
+	})*/
 
-	const pluginChoices = useMemo(() => {
+	const pluginChoices = [] /* useMemo(() => {
 		return plugins.map((p) => ({ value: p.type, label: p.name }))
-	}, [plugins])
+	}, [plugins])*/
 
 	const setActions = useCallback((cb) => {
 		setConfig((oldConfig) => {
@@ -279,7 +279,7 @@ export function TriggerEditModal({ doClose, doSave, item, plugins }) {
 		setAllExpanded: setAllActionExpanded,
 		canExpandAll: canExpandAllAction,
 		canCollapseAll: canCollapseAllAction,
-	} = usePanelCollapseHelper(`trigger_actions_${item?.id}`, actionIds)
+	} = usePanelCollapseHelper(`trigger_actions_${controlId}`, actionIds)
 
 	const isFeedbackBased = pluginSpec?.type === 'feedback'
 	const feedbackIds = useMemo(() => {
@@ -296,7 +296,7 @@ export function TriggerEditModal({ doClose, doSave, item, plugins }) {
 		setAllExpanded: setAllFeedbackExpanded,
 		canExpandAll: canExpandAllFeedback,
 		canCollapseAll: canCollapseAllFeedback,
-	} = usePanelCollapseHelper(`feedbacks_${item?.id}`, feedbackIds)
+	} = usePanelCollapseHelper(`feedbacks_${controlId}`, feedbackIds)
 
 	return (
 		<CModal show={true} onClose={doClose} size="lg">
