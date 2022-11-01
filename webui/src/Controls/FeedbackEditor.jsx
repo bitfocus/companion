@@ -21,7 +21,7 @@ import { AddFeedbacksModal } from './AddModal'
 import { usePanelCollapseHelper } from '../Helpers/CollapseHelper'
 import { OptionBankPreview } from './OptionBankPreview'
 
-export function ControlFeedbacksEditor({ controlId, feedbacks, dragId, heading }) {
+export function ControlFeedbacksEditor({ controlId, feedbacks, heading }) {
 	const socket = useContext(SocketContext)
 
 	const confirmModal = useRef()
@@ -178,7 +178,7 @@ export function ControlFeedbacksEditor({ controlId, feedbacks, dragId, heading }
 								doDuplicate={doDuplicate}
 								doLearn={doLearn}
 								doEnabled={emitEnabled}
-								dragId={dragId}
+								dragId={`feedback_${controlId}`}
 								moveCard={moveCard}
 								setCollapsed={setPanelCollapsed}
 								isCollapsed={isPanelCollapsed(a.id)}

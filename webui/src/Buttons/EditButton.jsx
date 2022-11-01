@@ -252,12 +252,7 @@ export function EditButton({ controlId, onKeyUp }) {
 							{config.feedbacks ? (
 								<>
 									<MyErrorBoundary>
-										<ControlFeedbacksEditor
-											heading={'Feedback'}
-											controlId={controlId}
-											feedbacks={config.feedbacks}
-											dragId={'feedback'}
-										/>
+										<ControlFeedbacksEditor heading={'Feedback'} controlId={controlId} feedbacks={config.feedbacks} />
 									</MyErrorBoundary>
 								</>
 							) : (

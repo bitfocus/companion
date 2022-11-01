@@ -143,7 +143,6 @@ export function EditTriggerPanel({ controlId }) {
 											heading={'Feedback'}
 											controlId={controlId}
 											feedbacks={config.feedbacks}
-											dragId={'feedback'}
 										/>
 									</MyErrorBoundary>
 								</>
