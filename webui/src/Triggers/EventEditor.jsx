@@ -4,11 +4,11 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import React, { useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react'
 import { MyErrorBoundary, socketEmitPromise, sandbox, SocketContext } from '../util'
 import Select from 'react-select'
-import { OptionsInputField } from './OptionsInputField'
+import { OptionsInputField } from '../Controls/OptionsInputField'
 import { useDrag, useDrop } from 'react-dnd'
 import { GenericConfirmModal } from '../Components/GenericConfirmModal'
 import { usePanelCollapseHelper } from '../Helpers/CollapseHelper'
-import { OptionBankPreview } from './OptionBankPreview'
+import { OptionBankPreview } from '../Controls/OptionBankPreview'
 
 export function TriggerEventEditor({ controlId, events, heading }) {
 	const socket = useContext(SocketContext)

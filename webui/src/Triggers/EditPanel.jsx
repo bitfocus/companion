@@ -10,6 +10,7 @@ import { ControlOptionsEditor } from '../Buttons/EditButton/ControlOptionsEditor
 import { ControlFeedbacksEditor } from '../Controls/FeedbackEditor'
 import { cloneDeep } from 'lodash-es'
 import { TextInputField } from '../Components'
+import { TriggerEventEditor } from './EventEditor'
 
 export function EditTriggerPanel({ controlId }) {
 	const socket = useContext(SocketContext)
@@ -122,19 +123,19 @@ export function EditTriggerPanel({ controlId }) {
 
 					{config && runtimeProps ? (
 						<>
-							{config.action_sets ? (
-								<MyErrorBoundary>
-									<ControlActionSetEditor
-										heading="Actions"
-										controlId={controlId}
-										set={'0'}
-										addPlaceholder="+ Add action"
-										actions={config.action_sets['0']}
-									/>
-								</MyErrorBoundary>
-							) : (
-								''
-							)}
+							<MyErrorBoundary>
+								<TriggerEventEditor heading="Events" controlId={controlId} events={config.events} />
+							</MyErrorBoundary>
+
+							<MyErrorBoundary>
+								<ControlActionSetEditor
+									heading="Actions"
+									controlId={controlId}
+									set={'0'}
+									addPlaceholder="+ Add action"
+									actions={config.action_sets['0']}
+								/>
+							</MyErrorBoundary>
 
 							{/* {config.feedbacks ? (
 								<>
