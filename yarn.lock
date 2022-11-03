@@ -4214,9 +4214,9 @@ commist@^1.0.0:
   version "1.2.11"
   resolved "https://codeload.github.com/bitfocus/companion-module-rossvideo-rosstalk/tar.gz/0aaeb1fba69da1e9e152fd70c383ca202600dc50"
 
-"companion-module-rossvideo-videoserver@github:bitfocus/companion-module-rossvideo-videoserver#v1.0.0":
-  version "1.0.0"
-  resolved "https://codeload.github.com/bitfocus/companion-module-rossvideo-videoserver/tar.gz/ef0400b9cd451d58712caf4a62e20b90565544d8"
+"companion-module-rossvideo-videoserver@github:bitfocus/companion-module-rossvideo-videoserver#v1.1.0":
+  version "1.1.0"
+  resolved "https://codeload.github.com/bitfocus/companion-module-rossvideo-videoserver/tar.gz/b0518191215473eb17c345bf44d03764f41636cd"
 
 "companion-module-rossvideo-xpression@github:bitfocus/companion-module-rossvideo-xpression#v1.0.3":
   version "1.0.3"

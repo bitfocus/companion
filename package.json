@@ -460,7 +460,7 @@
 		"companion-module-rossvideo-caprica": "github:bitfocus/companion-module-rossvideo-caprica#v1.0.1",
 		"companion-module-rossvideo-nkrouter": "github:bitfocus/companion-module-rossvideo-nkrouter#v1.0.3",
 		"companion-module-rossvideo-rosstalk": "github:bitfocus/companion-module-rossvideo-rosstalk#v1.2.11",
-		"companion-module-rossvideo-videoserver": "github:bitfocus/companion-module-rossvideo-videoserver#v1.0.0",
+		"companion-module-rossvideo-videoserver": "github:bitfocus/companion-module-rossvideo-videoserver#v1.1.0",
 		"companion-module-rossvideo-xpression": "github:bitfocus/companion-module-rossvideo-xpression#v1.0.3",
 		"companion-module-sain-smart-relay": "github:bitfocus/companion-module-sain-smart-relay#v1.0.2",
 		"companion-module-samsung-display": "github:bitfocus/companion-module-samsung-display#v1.0.5",
