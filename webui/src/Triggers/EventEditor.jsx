@@ -451,12 +451,12 @@ const EventDefinitions = {
 			},
 		],
 	},
-	// 				{
-	// 					id: 'button_press',
-	// 					label: 'On any button press',
-	// 				},
-	// 				{
-	// 					id: 'button_depress',
-	// 					label: 'On any button depress',
-	// 				},
+	button_press: {
+		name: 'On any button press',
+		options: [],
+	},
+	button_depress: {
+		name: 'On any button depress',
+		options: [],
+	},
 }
