@@ -3060,9 +3060,9 @@ commist@^1.0.0:
   version "1.0.3"
   resolved "https://codeload.github.com/bitfocus/companion-module-bmd-audiomonitor/tar.gz/d61fef16a8a059d18ea648a5b2a477ee14b83209"
 
-"companion-module-bmd-hyperdeck@github:bitfocus/companion-module-bmd-hyperdeck#v1.3.2":
-  version "1.3.2"
-  resolved "https://codeload.github.com/bitfocus/companion-module-bmd-hyperdeck/tar.gz/762fd88481bff08fe41501b2aaf1b0b34cd4b2f3"
+"companion-module-bmd-hyperdeck@github:bitfocus/companion-module-bmd-hyperdeck#v1.3.3":
+  version "1.3.3"
+  resolved "https://codeload.github.com/bitfocus/companion-module-bmd-hyperdeck/tar.gz/b0ced02603d04ebd96d9d854839fe94ae68445da"
   dependencies:
     hyperdeck-connection "0.5.0-nightly-latest-20220422-103424-8749727.0"
     smpte-timecode "1.2.3"
