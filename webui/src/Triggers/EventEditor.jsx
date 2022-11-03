@@ -429,4 +429,34 @@ const EventDefinitions = {
 			},
 		],
 	},
+	startup: {
+		name: 'Startup',
+		options: [
+			{
+				id: 'delay',
+				type: 'number',
+				label: 'Delay (milliseconds)',
+				min: 0,
+			},
+		],
+	},
+	client_connect: {
+		name: 'Web client connect',
+		options: [
+			{
+				id: 'delay',
+				type: 'number',
+				label: 'Delay (milliseconds)',
+				min: 0,
+			},
+		],
+	},
+	// 				{
+	// 					id: 'button_press',
+	// 					label: 'On any button press',
+	// 				},
+	// 				{
+	// 					id: 'button_depress',
+	// 					label: 'On any button depress',
+	// 				},
 }
