@@ -365,6 +365,9 @@ function AddEventDropdown({ onSelect }) {
 			})
 		}
 
+		// Sort by name
+		options.sort((a, b) => a.label.localeCompare(b.label))
+
 		return options
 	}, [])
 
@@ -462,6 +465,10 @@ const EventDefinitions = {
 	},
 	button_depress: {
 		name: 'On any button depress',
+		options: [],
+	},
+	condition_change: {
+		name: 'On condition change',
 		options: [],
 	},
 }
