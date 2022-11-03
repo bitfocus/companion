@@ -248,7 +248,7 @@ function TriggersTableRow({ controlId, item, editItem, moveTrigger }) {
 			<td>
 				<span dangerouslySetInnerHTML={descriptionHtml} />
 				<br />
-				{item.last_run ? <small>Last run: {dayjs(item.last_run).format(tableDateFormat)}</small> : ''}
+				{item.lastExecuted ? <small>Last run: {dayjs(item.lastExecuted).format(tableDateFormat)}</small> : ''}
 			</td>
 			<td className="action-buttons">
 				<CSwitch

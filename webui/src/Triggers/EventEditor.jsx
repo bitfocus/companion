@@ -286,8 +286,8 @@ function EventEditor({
 					{doEnabled && (
 						<CSwitch
 							color="info"
-							checked={!event.disabled}
-							title={event.disabled ? 'Enable event' : 'Disable event'}
+							checked={event.enabled}
+							title={event.enabled ? 'Disable event' : 'Enable event'}
 							onChange={innerSetEnabled}
 						/>
 					)}
@@ -395,7 +395,12 @@ const EventDefinitions = {
 	interval: {
 		name: 'Time Interval',
 		options: [
-			// TODO
+			{
+				id: 'seconds',
+				type: 'number',
+				label: 'Interval (seconds)',
+				min: 1,
+			},
 		],
 	},
 }
