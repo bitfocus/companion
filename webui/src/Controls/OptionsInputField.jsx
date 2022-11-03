@@ -36,6 +36,7 @@ export function OptionsInputField({
 					regex={option.regex}
 					required={option.required}
 					tooltip={option.tooltip}
+					placeholder={option.placeholder}
 					disabled={readonly}
 					setValue={setValue2}
 				/>

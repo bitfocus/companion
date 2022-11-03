@@ -9,6 +9,7 @@ import { useDrag, useDrop } from 'react-dnd'
 import { GenericConfirmModal } from '../Components/GenericConfirmModal'
 import { usePanelCollapseHelper } from '../Helpers/CollapseHelper'
 import { OptionBankPreview } from '../Controls/OptionBankPreview'
+import moment from 'moment'
 
 export function TriggerEventEditor({ controlId, events, heading }) {
 	const socket = useContext(SocketContext)
@@ -400,6 +401,31 @@ const EventDefinitions = {
 				type: 'number',
 				label: 'Interval (seconds)',
 				min: 1,
+			},
+		],
+	},
+	timeofday: {
+		name: 'Time of Day',
+		options: [
+			{
+				id: 'time',
+				label: 'Time',
+				type: 'textinput',
+				placeholder: 'HH:MM:SS',
+				pattern: '(0[0-9]|1[0-9]|2[0-3])(:[0-5][0-9]){2}',
+			},
+			{
+				id: 'days',
+				label: 'Days',
+				type: 'multidropdown',
+				minChoicesForSearch: 10,
+				minSelection: 1,
+				choices: [...Array(7).keys()].map((i) => {
+					return {
+						id: i,
+						label: moment().weekday(i).format('ddd'),
+					}
+				}),
 			},
 		],
 	},

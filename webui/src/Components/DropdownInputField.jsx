@@ -32,6 +32,8 @@ export function DropdownInputField({
 
 	const isMultiple = !!multiple
 
+	if (isMultiple && value === undefined) value = []
+
 	const currentValue = useMemo(() => {
 		const selectedValue = Array.isArray(value) ? value : [value]
 		let res = []

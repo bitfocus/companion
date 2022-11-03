@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState, useCallback } from 'react'
 import { CInput } from '@coreui/react'
 
-export function TextInputField({ regex, required, tooltip, value, setValue, setValid, disabled }) {
+export function TextInputField({ regex, required, tooltip, placeholder, value, setValue, setValid, disabled }) {
 	const [tmpValue, setTmpValue] = useState(null)
 
 	// Compile the regex (and cache)
@@ -61,6 +61,7 @@ export function TextInputField({ regex, required, tooltip, value, setValue, setV
 			}}
 			onFocus={() => setTmpValue(value ?? '')}
 			onBlur={() => setTmpValue(null)}
+			placeholder={placeholder}
 		/>
 	)
 }
