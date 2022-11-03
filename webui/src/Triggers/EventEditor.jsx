@@ -401,6 +401,7 @@ const EventDefinitions = {
 				type: 'number',
 				label: 'Interval (seconds)',
 				min: 1,
+				default: 10,
 			},
 		],
 	},
@@ -413,6 +414,7 @@ const EventDefinitions = {
 				type: 'textinput',
 				placeholder: 'HH:MM:SS',
 				pattern: '(0[0-9]|1[0-9]|2[0-3])(:[0-5][0-9]){2}',
+				default: '',
 			},
 			{
 				id: 'days',
@@ -420,12 +422,13 @@ const EventDefinitions = {
 				type: 'multidropdown',
 				minChoicesForSearch: 10,
 				minSelection: 1,
-				choices: [...Array(7).keys()].map((i) => {
+				choices: Array.from(Array(7).keys()).map((i) => {
 					return {
 						id: i,
 						label: moment().weekday(i).format('ddd'),
 					}
 				}),
+				default: Array.from(Array(7).keys()),
 			},
 		],
 	},
@@ -437,6 +440,7 @@ const EventDefinitions = {
 				type: 'number',
 				label: 'Delay (milliseconds)',
 				min: 0,
+				default: 10000,
 			},
 		],
 	},
@@ -448,6 +452,7 @@ const EventDefinitions = {
 				type: 'number',
 				label: 'Delay (milliseconds)',
 				min: 0,
+				default: 0,
 			},
 		],
 	},

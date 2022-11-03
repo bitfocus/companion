@@ -204,12 +204,12 @@ function TriggersTableRow({ controlId, item, editItem, moveTrigger }) {
 
 	const descriptionHtml = useMemo(
 		() => ({
-			__html: sanitizeHtml(item.config_desc, {
+			__html: sanitizeHtml(item.description, {
 				allowedTags: sanitizeHtml.defaults.allowedTags.concat(['img']),
 				disallowedTagsMode: 'escape',
 			}),
 		}),
-		[item.config_desc]
+		[item.description]
 	)
 
 	const ref = useRef(null)
