@@ -6,7 +6,7 @@ import { LoadingRetryOrError, socketEmitPromise, SocketContext, MyErrorBoundary 
 import { ControlActionSetEditor } from '../Controls/ActionSetEditor'
 import jsonPatch from 'fast-json-patch'
 
-import { ControlOptionsEditor } from '../Buttons/EditButton/ControlOptionsEditor'
+import { ControlOptionsEditor } from '../Controls/ControlOptionsEditor'
 import { ControlFeedbacksEditor } from '../Controls/FeedbackEditor'
 import { cloneDeep } from 'lodash-es'
 import { TextInputField } from '../Components'
