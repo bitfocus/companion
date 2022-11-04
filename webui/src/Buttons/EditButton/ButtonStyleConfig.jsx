@@ -56,7 +56,7 @@ export function ButtonStyleConfig({ page, bank, config, configRef, valueChanged 
 	const setRelativeDelayValue = useCallback((val) => setValueInner('relative_delay', val), [setValueInner])
 	const setRotaryActions = useCallback(
 		(val) => {
-			if (!val && confirmRef.current) {
+			if (!val && confirmRef.current && configRef.current && configRef.current.rotary_actions === true) {
 				confirmRef.current.show(
 					'Disable rotary actions',
 					'Are you sure? This will clear any rotary actions that have been defined.',
@@ -69,7 +69,7 @@ export function ButtonStyleConfig({ page, bank, config, configRef, valueChanged 
 				setValueInner('rotary_actions', val)
 			}
 		},
-		[setValueInner]
+		[setValueInner, configRef]
 	)
 
 	switch (config.style) {
