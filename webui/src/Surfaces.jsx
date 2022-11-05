@@ -213,7 +213,7 @@ export const SurfacesPage = memo(function SurfacesPage() {
 											<FontAwesomeIcon icon={faCog} /> Settings
 										</CButton>
 
-										{dev.integrationType === 'emulator' ? (
+										{dev.integrationType === 'emulator' && (
 											<>
 												<CButton
 													color="info"
@@ -227,8 +227,6 @@ export const SurfacesPage = memo(function SurfacesPage() {
 													<FontAwesomeIcon icon={faTrash} />
 												</CButton>
 											</>
-										) : (
-											''
 										)}
 									</CButtonGroup>
 								</td>
@@ -236,12 +234,10 @@ export const SurfacesPage = memo(function SurfacesPage() {
 						)
 					})}
 
-					{devicesList.length === 0 ? (
+					{devicesList.length === 0 && (
 						<tr>
 							<td colSpan={4}>No control surfaces have been detected</td>
 						</tr>
-					) : (
-						''
 					)}
 				</tbody>
 			</table>
@@ -275,12 +271,10 @@ export const SurfacesPage = memo(function SurfacesPage() {
 						)
 					})}
 
-					{offlineDevicesList.length === 0 ? (
+					{offlineDevicesList.length === 0 && (
 						<tr>
 							<td colSpan={4}>No items</td>
 						</tr>
-					) : (
-						''
 					)}
 				</tbody>
 			</table>
@@ -384,7 +378,7 @@ const SurfaceEditModal = forwardRef(function SurfaceEditModal(_props, ref) {
 					dataReady={deviceConfig && deviceConfigInfo}
 					doRetry={doRetryConfigLoad}
 				/>
-				{deviceConfig && deviceInfo && deviceConfigInfo ? (
+				{deviceConfig && deviceInfo && deviceConfigInfo && (
 					<CForm>
 						<CFormGroup>
 							<CLabel htmlFor="use_last_page">Use Last Page At Startup</CLabel>
@@ -410,7 +404,7 @@ const SurfaceEditModal = forwardRef(function SurfaceEditModal(_props, ref) {
 							/>
 							<span>{deviceConfig.page}</span>
 						</CFormGroup>
-						{deviceConfigInfo.xOffsetMax > 0 ? (
+						{deviceConfigInfo.xOffsetMax > 0 && (
 							<CFormGroup>
 								<CLabel htmlFor="page">X Offset in grid</CLabel>
 								<CInput
@@ -424,10 +418,8 @@ const SurfaceEditModal = forwardRef(function SurfaceEditModal(_props, ref) {
 								/>
 								<span>{deviceConfig.xOffset}</span>
 							</CFormGroup>
-						) : (
-							''
 						)}
-						{deviceConfigInfo.yOffsetMax > 0 ? (
+						{deviceConfigInfo.yOffsetMax > 0 && (
 							<CFormGroup>
 								<CLabel htmlFor="page">Y Offset in grid</CLabel>
 								<CInput
@@ -441,10 +433,8 @@ const SurfaceEditModal = forwardRef(function SurfaceEditModal(_props, ref) {
 								/>
 								<span>{deviceConfig.yOffset}</span>
 							</CFormGroup>
-						) : (
-							''
 						)}
-						{deviceInfo.configFields?.includes('brightness') ? (
+						{deviceInfo.configFields?.includes('brightness') && (
 							<CFormGroup>
 								<CLabel htmlFor="brightness">Brightness</CLabel>
 								<CInput
@@ -457,10 +447,8 @@ const SurfaceEditModal = forwardRef(function SurfaceEditModal(_props, ref) {
 									onChange={(e) => updateConfig('brightness', parseInt(e.currentTarget.value))}
 								/>
 							</CFormGroup>
-						) : (
-							''
 						)}
-						{deviceInfo.configFields?.includes('illuminate_pressed') ? (
+						{deviceInfo.configFields?.includes('illuminate_pressed') && (
 							<CFormGroup>
 								<CLabel htmlFor="illuminate_pressed">Illuminate pressed buttons</CLabel>
 								<CInputCheckbox
@@ -471,10 +459,8 @@ const SurfaceEditModal = forwardRef(function SurfaceEditModal(_props, ref) {
 									onChange={(e) => updateConfig('illuminate_pressed', !!e.currentTarget.checked)}
 								/>
 							</CFormGroup>
-						) : (
-							''
 						)}
-						{deviceInfo.configFields?.includes('rotation') ? (
+						{deviceInfo.configFields?.includes('rotation') && (
 							<CFormGroup>
 								<CLabel htmlFor="rotation">Button rotation</CLabel>
 								<CSelect
@@ -488,10 +474,8 @@ const SurfaceEditModal = forwardRef(function SurfaceEditModal(_props, ref) {
 									<option value="180">180</option>
 								</CSelect>
 							</CFormGroup>
-						) : (
-							''
 						)}
-						{deviceInfo.configFields?.includes('emulator_control_enable') ? (
+						{deviceInfo.configFields?.includes('emulator_control_enable') && (
 							<CFormGroup>
 								<CLabel htmlFor="emulator_control_enable">Enable support for Logitech R400/Mastercue/DSan</CLabel>
 								<CInputCheckbox
@@ -502,10 +486,8 @@ const SurfaceEditModal = forwardRef(function SurfaceEditModal(_props, ref) {
 									onChange={(e) => updateConfig('emulator_control_enable', !!e.currentTarget.checked)}
 								/>
 							</CFormGroup>
-						) : (
-							''
 						)}
-						{deviceInfo.configFields?.includes('emulator_prompt_fullscreen') ? (
+						{deviceInfo.configFields?.includes('emulator_prompt_fullscreen') && (
 							<CFormGroup>
 								<CLabel htmlFor="emulator_prompt_fullscreen">Prompt to enter fullscreen</CLabel>
 								<CInputCheckbox
@@ -516,12 +498,8 @@ const SurfaceEditModal = forwardRef(function SurfaceEditModal(_props, ref) {
 									onChange={(e) => updateConfig('emulator_prompt_fullscreen', !!e.currentTarget.checked)}
 								/>
 							</CFormGroup>
-						) : (
-							''
 						)}
 					</CForm>
-				) : (
-					''
 				)}
 			</CModalBody>
 			<CModalFooter>

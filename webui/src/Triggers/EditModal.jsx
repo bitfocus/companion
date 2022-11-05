@@ -312,7 +312,7 @@ export function TriggerEditModal({ doClose, doSave, item, plugins }) {
 
 					<legend>
 						Condition
-						{isFeedbackBased ? (
+						{isFeedbackBased && (
 							<CButtonGroup className="right">
 								<CButtonGroup>
 									<CButton
@@ -335,8 +335,6 @@ export function TriggerEditModal({ doClose, doSave, item, plugins }) {
 									</CButton>
 								</CButtonGroup>
 							</CButtonGroup>
-						) : (
-							''
 						)}
 					</legend>
 					<CFormGroup>

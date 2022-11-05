@@ -173,7 +173,7 @@ export function EditButton({ controlId, onKeyUp }) {
 			<GenericConfirmModal ref={resetModalRef} />
 
 			<LoadingRetryOrError dataReady={dataReady} error={loadError} doRetry={doRetryLoad} />
-			{hasConfig ? (
+			{hasConfig && (
 				<div style={{ display: dataReady ? '' : 'none' }}>
 					<MyErrorBoundary>
 						<div>
@@ -271,8 +271,6 @@ export function EditButton({ controlId, onKeyUp }) {
 						</p>
 					)}
 				</div>
-			) : (
-				''
 			)}
 		</KeyReceiver>
 	)

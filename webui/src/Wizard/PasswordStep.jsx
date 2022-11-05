@@ -19,7 +19,7 @@ export function PasswordStep({ config, setValue }) {
 					/>
 					<CLabel htmlFor="userconfig_admin_lockout">Enable Admin Password</CLabel>
 				</div>
-				{config.admin_lockout ? (
+				{config.admin_lockout && (
 					<div className="indent2, group">
 						<div className="col-left">Password</div>
 						<div className="col-right">
@@ -49,8 +49,6 @@ export function PasswordStep({ config, setValue }) {
 							</div>
 						</div>
 					</div>
-				) : (
-					''
 				)}
 			</div>
 		</div>

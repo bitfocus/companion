@@ -55,15 +55,13 @@ export function ButtonOptionsConfig({ controlId, controlType, options, configRef
 						</p>
 					</CCol>
 
-					{controlType === 'step' ? (
+					{controlType === 'step' && (
 						<CCol className="fieldtype-checkbox" sm={2} xs={3}>
 							<label>Auto progress</label>
 							<p>
 								<CheckboxInputField setValue={setStepAutoProgressValue} value={options.stepAutoProgress} />
 							</p>
 						</CCol>
-					) : (
-						''
 					)}
 				</CRow>
 			</CForm>
@@ -130,12 +128,10 @@ export function ButtonStyleConfig({ controlId, controlType, style, configRef }) 
 
 	return (
 		<CCol sm={12} className="p-0 mt-5">
-			{pngError ? (
+			{pngError && (
 				<CAlert color="warning" closeButton>
 					{pngError}
 				</CAlert>
-			) : (
-				''
 			)}
 
 			<CForm inline>
@@ -213,12 +209,10 @@ export function ButtonStyleConfigFields({ values, setValueInner, setPng, setPngE
 							min={{ width: 36, height: 36 }}
 							max={{ width: 72, height: 58 }}
 						/>
-						{clearPng ? (
+						{clearPng && (
 							<CButton color="danger" disabled={!values.png64} onClick={clearPng}>
 								<FontAwesomeIcon icon={faTrash} />
 							</CButton>
-						) : (
-							''
 						)}
 					</CButtonGroup>
 				</>

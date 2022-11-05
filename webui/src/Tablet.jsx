@@ -139,12 +139,10 @@ export function Tablet() {
 									<CCol sm={12} className="pagebank-row" style={gridStyle}>
 										{validPages.map((number, i) => (
 											<MyErrorBoundary key={i}>
-												{showPageHeadings ? (
+												{showPageHeadings && (
 													<div className="page-heading">
 														<h1>{pages[number]?.name}</h1>
 													</div>
-												) : (
-													''
 												)}
 												<ButtonsFromPage imageCache={imageCache} number={number} cols={cols} rows={rows} />
 											</MyErrorBoundary>
@@ -270,19 +268,15 @@ function ConfigurePanel({ updateQueryUrl, query }) {
 	) : (
 		<CRow className="header">
 			<CCol xs={12}>
-				{(!fullscreen || !query['noconfigure']) && !query['nofullscreen'] ? (
+				{(!fullscreen || !query['noconfigure']) && !query['nofullscreen'] && (
 					<CButton onClick={() => document.documentElement.requestFullscreen()} title="Fullscreen">
 						<FontAwesomeIcon icon={faExpand} />
 					</CButton>
-				) : (
-					''
 				)}
-				{!query['noconfigure'] ? (
+				{!query['noconfigure'] && (
 					<CButton className="open-config" onClick={() => setShow(true)} title="Configure">
 						<FontAwesomeIcon icon={faCog} />
 					</CButton>
-				) : (
-					''
 				)}
 			</CCol>
 		</CRow>

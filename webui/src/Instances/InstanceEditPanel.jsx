@@ -167,17 +167,15 @@ const InstanceEditPanelInner = memo(function InstanceEditPanel({ instanceId, doC
 		<div>
 			<h5>
 				{moduleInfo?.shortname ?? instanceType} configuration
-				{moduleInfo?.hasHelp ? (
+				{moduleInfo?.hasHelp && (
 					<div className="float_right" onClick={() => showHelp(instanceType)}>
 						<FontAwesomeIcon icon={faQuestionCircle} />
 					</div>
-				) : (
-					''
 				)}
 			</h5>
 			<CRow className="edit-instance">
 				<LoadingRetryOrError error={error} dataReady={dataReady} doRetry={doRetryConfigLoad} />
-				{instanceId && dataReady ? (
+				{instanceId && dataReady && (
 					<>
 						<CCol className={`fieldtype-textinput`} sm={12}>
 							<label>Label</label>
@@ -204,8 +202,6 @@ const InstanceEditPanelInner = memo(function InstanceEditPanel({ instanceId, doC
 							)
 						})}
 					</>
-				) : (
-					''
 				)}
 			</CRow>
 

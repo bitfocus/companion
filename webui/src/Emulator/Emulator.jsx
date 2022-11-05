@@ -210,25 +210,27 @@ function ConfigurePanel({ config }) {
 		setShow(false)
 	}, [])
 
-	return show && config.emulator_prompt_fullscreen && !fullscreen ? (
-		<CRow className="configure">
-			<CCol sm={12}>
-				<CForm>
-					<CRow>
-						<CCol xs={12}>
-							<CButton onClick={doRequestFullscreen} title="Fullscreen">
-								<FontAwesomeIcon icon={faExpand} /> Fullscreen
-							</CButton>
-							<CButton onClick={doDismiss} title="Dismiss">
-								<FontAwesomeIcon icon={faCancel} /> Dismiss
-							</CButton>
-						</CCol>
-					</CRow>
-				</CForm>
-			</CCol>
-		</CRow>
-	) : (
-		''
+	return (
+		show &&
+		config.emulator_prompt_fullscreen &&
+		!fullscreen && (
+			<CRow className="configure">
+				<CCol sm={12}>
+					<CForm>
+						<CRow>
+							<CCol xs={12}>
+								<CButton onClick={doRequestFullscreen} title="Fullscreen">
+									<FontAwesomeIcon icon={faExpand} /> Fullscreen
+								</CButton>
+								<CButton onClick={doDismiss} title="Dismiss">
+									<FontAwesomeIcon icon={faCancel} /> Dismiss
+								</CButton>
+							</CCol>
+						</CRow>
+					</CForm>
+				</CCol>
+			</CRow>
+		)
 	)
 }
 
@@ -283,7 +285,7 @@ function CyclePages({ emulatorId, imageCache }) {
 						{/* <h1 id={`page_${currentPage}`}> */}
 						{/* {pages[currentPage]?.name || ' '} */}
 
-						{/* {orderedPages.length > 1 ? (
+						{/* {orderedPages.length > 1 && (
 								<>
 									<CButton onClick={goNextPage} disabled={!loop && currentIndex === orderedPages.length - 1} size="lg">
 										<FontAwesomeIcon icon={faArrowRight} />
@@ -292,8 +294,6 @@ function CyclePages({ emulatorId, imageCache }) {
 										<FontAwesomeIcon icon={faArrowLeft} />
 									</CButton>
 								</>
-							) : (
-								''
 							)} */}
 						{/* </h1> */}
 					</div>

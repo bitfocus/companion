@@ -41,15 +41,13 @@ export const Triggers = memo(function Triggers() {
 			<h4>Triggers and schedules</h4>
 			<p>This allows you to run actions based on Companion, feedback or time events.</p>
 
-			{editItem[0] ? (
+			{editItem[0] && (
 				<TriggerEditModal
 					item={editItem[1] !== null ? triggersList[editItem[1]] : undefined}
 					doClose={doCloseModal}
 					plugins={plugins}
 					doSave={doSave}
 				/>
-			) : (
-				''
 			)}
 
 			<TriggersTable triggersList={triggersList} editItem={doEditItem} />

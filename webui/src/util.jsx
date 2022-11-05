@@ -160,28 +160,22 @@ export function LoadingBar(props) {
 export function LoadingRetryOrError({ error, dataReady, doRetry }) {
 	return (
 		<>
-			{error ? (
+			{error && (
 				<CCol sm={12}>
 					<CAlert color="danger" role="alert">
 						<p>{error}</p>
-						{!dataReady ? (
+						{!dataReady && (
 							<CButton color="primary" onClick={doRetry}>
 								Retry
 							</CButton>
-						) : (
-							''
 						)}
 					</CAlert>
 				</CCol>
-			) : (
-				''
 			)}
-			{!dataReady && !error ? (
+			{!dataReady && !error && (
 				<CCol sm={12}>
 					<LoadingBar />
 				</CCol>
-			) : (
-				''
 			)}
 		</>
 	)

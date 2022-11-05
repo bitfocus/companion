@@ -155,14 +155,12 @@ export const ButtonsPage = memo(function ButtonsPage({ hotPress }) {
 						<CTabContent fade={false}>
 							<CTabPane data-tab="edit">
 								<MyErrorBoundary>
-									{selectedButton ? (
+									{selectedButton && (
 										<EditButton
 											key={`${selectedButton}.${tabResetToken}`}
 											controlId={selectedButton}
 											onKeyUp={handleKeyDownInButtons}
 										/>
-									) : (
-										''
 									)}
 								</MyErrorBoundary>
 							</CTabPane>

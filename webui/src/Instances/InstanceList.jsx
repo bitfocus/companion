@@ -277,27 +277,21 @@ function InstancesTableRow({
 				{moduleInfo ? (
 					<>
 						<div className="float_right">
-							{moduleInfo.isLegacy ? (
+							{moduleInfo.isLegacy && (
 								<FontAwesomeIcon
 									icon={faExclamationTriangle}
 									title="This module has not been updated for Companion 3.0, and may be broken as a result"
 								/>
-							) : (
-								''
 							)}
-							{moduleInfo.hasHelp ? (
+							{moduleInfo.hasHelp && (
 								<div onClick={doShowHelp} title="Help">
 									<FontAwesomeIcon icon={faQuestionCircle} />
 								</div>
-							) : (
-								''
 							)}
-							{moduleInfo.bugUrl ? (
+							{moduleInfo.bugUrl && (
 								<a href={moduleInfo.bugUrl} target="_new" title="Report Bug">
 									<FontAwesomeIcon icon={faBug} />
 								</a>
-							) : (
-								''
 							)}
 						</div>
 
@@ -310,12 +304,10 @@ function InstancesTableRow({
 				)}
 			</td>
 			<td>
-				{instanceVariables && Object.keys(instanceVariables).length > 0 ? (
+				{instanceVariables && Object.keys(instanceVariables).length > 0 && (
 					<div className="float_right" onClick={doShowVariables} title="Variables">
 						<FontAwesomeIcon icon={faDollarSign} />
 					</div>
-				) : (
-					''
 				)}
 				{instance.label}
 			</td>
