@@ -199,7 +199,7 @@ function InstanceCollapse({
 				</CAlert>,
 			]
 		}
-	}, [items, filter, instanceId, itemName])
+	}, [items, filter, instanceId, itemName, booleanOnly])
 
 	if (Object.keys(items).length === 0) {
 		// Hide card if there are no actions which match

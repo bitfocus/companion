@@ -62,11 +62,13 @@ export const Triggers = memo(function Triggers() {
 				<h4>Triggers and schedules</h4>
 				<p>This allows you to run actions based on Companion, feedback or time events.</p>
 
-				<TriggersTable triggersList={triggersList} editItem={doEditItem} />
+				<CButtonGroup style={{ marginBottom: '0.3em' }}>
+					<CButton color="primary" onClick={doAddNew}>
+						Add New Trigger
+					</CButton>
+				</CButtonGroup>
 
-				<CButton color="primary" onClick={doAddNew}>
-					Add New Trigger
-				</CButton>
+				<TriggersTable triggersList={triggersList} editItem={doEditItem} />
 
 				{/* <CButton
 				color="light"
