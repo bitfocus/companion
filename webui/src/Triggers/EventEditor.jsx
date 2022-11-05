@@ -8,7 +8,6 @@ import { OptionsInputField } from '../Controls/OptionsInputField'
 import { useDrag, useDrop } from 'react-dnd'
 import { GenericConfirmModal } from '../Components/GenericConfirmModal'
 import { usePanelCollapseHelper } from '../Helpers/CollapseHelper'
-import { OptionBankPreview } from '../Controls/OptionBankPreview'
 
 export function TriggerEventEditor({ controlId, events, heading }) {
 	const socket = useContext(SocketContext)
@@ -316,16 +315,6 @@ function EventEditor({
 				<>
 					<div className="cell-description">{eventSpec?.description || ''}</div>
 
-					{event.instance_id === 'internal' &&
-					Array.isArray(eventSpec?.previewBank) &&
-					eventSpec.previewBank.length === 2 ? (
-						<div className="cell-bank-preview">
-							<OptionBankPreview fields={eventSpec.previewBank} options={event.options} controlId={controlId} />
-						</div>
-					) : (
-						''
-					)}
-
 					<div className="cell-option">
 						<CForm>
 							{options.map((opt, i) => (
@@ -333,7 +322,7 @@ function EventEditor({
 									<OptionsInputField
 										key={i}
 										isOnBank={false}
-										instanceId={event.instance_id}
+										instanceId={'internal'}
 										option={opt}
 										actionId={event.id}
 										value={(event.options || {})[opt.id]}
