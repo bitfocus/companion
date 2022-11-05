@@ -105,13 +105,12 @@ export function EditTriggerPanel({ controlId }) {
 			{hasConfig ? (
 				<div style={{ display: dataReady ? '' : 'none' }}>
 					<MyErrorBoundary>
-						<TriggerConfig config={config.config} controlId={controlId} />
-
-						<div>
-							<CButton color="warning" hidden={!config} onMouseDown={hotPressDown} onMouseUp={hotPressUp}>
-								Test actions
-							</CButton>
-						</div>
+						<TriggerConfig
+							config={config.config}
+							controlId={controlId}
+							hotPressDown={hotPressDown}
+							hotPressUp={hotPressUp}
+						/>
 
 						<ControlOptionsEditor
 							controlType={config.type}
@@ -162,7 +161,7 @@ export function EditTriggerPanel({ controlId }) {
 	)
 }
 
-function TriggerConfig({ controlId, config }) {
+function TriggerConfig({ controlId, config, hotPressDown, hotPressUp }) {
 	const socket = useContext(SocketContext)
 
 	const setValueInner = useCallback(
@@ -181,10 +180,14 @@ function TriggerConfig({ controlId, config }) {
 		<CCol sm={12} className="p-0">
 			<CForm inline>
 				<CRow form className="button-style-form">
-					<CCol className="fieldtype-checkbox" sm={2} xs={3}>
+					<CCol className="fieldtype-checkbox" xs={12}>
 						<CLabel>Name</CLabel>
 						<p>
 							<TextInputField setValue={setName} value={config.name} />
+							&nbsp;
+							<CButton color="warning" hidden={!config} onMouseDown={hotPressDown} onMouseUp={hotPressUp}>
+								Test actions
+							</CButton>
 						</p>
 					</CCol>
 				</CRow>

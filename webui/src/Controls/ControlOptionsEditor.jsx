@@ -35,7 +35,7 @@ export function ControlOptionsEditor({ controlId, controlType, options, configRe
 	}
 
 	return (
-		<CCol sm={12} className="p-0 mt-5">
+		<CCol sm={12} className="p-0">
 			<CForm inline>
 				<CRow form className="button-style-form">
 					<CCol className="fieldtype-checkbox" sm={2} xs={3}>
