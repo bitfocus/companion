@@ -207,7 +207,7 @@ export function ImportExport({ pageNumber }) {
 					/>
 				</CRow>
 
-				{!importMode ? (
+				{!importMode && (
 					<div>
 						<h5>What to do</h5>
 						<CButtonGroup>
@@ -219,11 +219,9 @@ export function ImportExport({ pageNumber }) {
 							</CButton>
 						</CButtonGroup>
 					</div>
-				) : (
-					''
 				)}
 
-				{importMode === 'page' ? (
+				{importMode === 'page' && (
 					<div id="import_resolve">
 						<h5>Link config connections with local connections</h5>
 
@@ -276,8 +274,6 @@ export function ImportExport({ pageNumber }) {
 							</CButton>
 						</p>
 					</div>
-				) : (
-					''
 				)}
 			</>
 		)

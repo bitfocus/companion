@@ -75,7 +75,7 @@ const AddInstancesInner = memo(function AddInstancesInner({ showHelp, configureI
 								Add
 							</CButton>
 							&nbsp;
-							{module.isLegacy ? (
+							{module.isLegacy && (
 								<>
 									<FontAwesomeIcon
 										icon={faExclamationTriangle}
@@ -83,16 +83,12 @@ const AddInstancesInner = memo(function AddInstancesInner({ showHelp, configureI
 									/>
 									&nbsp;
 								</>
-							) : (
-								''
 							)}
 							{name}
-							{module.hasHelp ? (
+							{module.hasHelp && (
 								<div className="float_right" onClick={() => showHelp(id)}>
 									<FontAwesomeIcon icon={faQuestionCircle} />
 								</div>
-							) : (
-								''
 							)}
 						</div>
 					)

@@ -46,7 +46,7 @@ export function MyHeader({ toggleSidebar, canLock, setLocked }) {
 				</CHeaderNavItem>
 			</CHeaderNav>
 
-			{canLock ? (
+			{canLock && (
 				<CHeaderNav className="ml-auto header-right">
 					<CHeaderNavItem>
 						<CHeaderNavLink onClick={setLocked} title="Lock Admin UI">
@@ -54,8 +54,6 @@ export function MyHeader({ toggleSidebar, canLock, setLocked }) {
 						</CHeaderNavLink>
 					</CHeaderNavItem>
 				</CHeaderNav>
-			) : (
-				''
 			)}
 		</CHeader>
 	)

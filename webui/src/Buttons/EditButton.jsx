@@ -174,7 +174,7 @@ export function EditButton({ controlId, onKeyUp }) {
 			<GenericConfirmModal ref={resetModalRef} />
 
 			<LoadingRetryOrError dataReady={dataReady} error={loadError} doRetry={doRetryLoad} />
-			{hasConfig ? (
+			{hasConfig && (
 				<div style={{ display: dataReady ? '' : 'none' }}>
 					<MyErrorBoundary>
 						<div>
@@ -234,9 +234,9 @@ export function EditButton({ controlId, onKeyUp }) {
 						/>
 					</MyErrorBoundary>
 
-					{config && runtimeProps ? (
+					{config && runtimeProps && (
 						<>
-							{config.action_sets ? (
+							{config.action_sets && (
 								<MyErrorBoundary>
 									<ActionsSection
 										style={config.type}
@@ -245,32 +245,24 @@ export function EditButton({ controlId, onKeyUp }) {
 										runtimeProps={runtimeProps}
 									/>
 								</MyErrorBoundary>
-							) : (
-								''
 							)}
 
-							{config.feedbacks ? (
-								<>
-									<MyErrorBoundary>
-										<ControlFeedbacksEditor
-											heading={'Feedback'}
-											controlId={controlId}
-											feedbacks={config.feedbacks}
-											isOnBank={true}
-										/>
-									</MyErrorBoundary>
-								</>
-							) : (
-								''
+							{config.feedbacks && (
+								<MyErrorBoundary>
+									<ControlFeedbacksEditor
+										heading={'Feedback'}
+										controlId={controlId}
+										feedbacks={config.feedbacks}
+										isOnBank={true}
+									/>
+								</MyErrorBoundary>
 							)}
 						</>
-					) : (
-						''
 					)}
 
 					<hr />
 
-					{parsedId?.page && parsedId?.bank ? (
+					{parsedId?.page && parsedId?.bank && (
 						<p>
 							<b>Hint:</b> Control buttons with OSC or HTTP: /press/bank/{parsedId.page}/{parsedId.bank} to press this
 							button remotely. OSC port{' '}
@@ -281,12 +273,8 @@ export function EditButton({ controlId, onKeyUp }) {
 							</code>
 							!
 						</p>
-					) : (
-						''
 					)}
 				</div>
-			) : (
-				''
 			)}
 		</KeyReceiver>
 	)

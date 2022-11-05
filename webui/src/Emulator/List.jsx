@@ -50,7 +50,7 @@ export function EmulatorList() {
 		<div className="page-emulator-list">
 			<CContainer fluid className="d-flex flex-column">
 				<LoadingRetryOrError error={loadError} dataReady={surfaces} doRetry={doRetryLoad} />
-				{surfaces ? (
+				{surfaces && (
 					<CRow alignHorizontal="center">
 						<CCol sm={12}>
 							<p>&nbsp;</p>
@@ -60,18 +60,14 @@ export function EmulatorList() {
 							<EmulatorCard key={dev.id} surface={dev} />
 						))}
 
-						{emulators.length === 0 ? (
+						{emulators.length === 0 && (
 							<CCol sm={4}>
 								<CWidgetSimple text="No Emulators have been created">
 									You can create one in the Surfaces tab
 								</CWidgetSimple>
 							</CCol>
-						) : (
-							''
 						)}
 					</CRow>
-				) : (
-					''
 				)}
 			</CContainer>
 		</div>

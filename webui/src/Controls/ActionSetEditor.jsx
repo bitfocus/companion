@@ -469,19 +469,17 @@ function ActionTableRow({
 						</CButtonGroup>
 					</div>
 
-					{!isCollapsed ? (
+					{!isCollapsed && (
 						<>
 							<div className="cell-description">{actionSpec?.description || ''}</div>
 
 							{action.instance === 'internal' &&
-							Array.isArray(actionSpec?.previewBank) &&
-							actionSpec.previewBank.length === 2 ? (
-								<div className="cell-bank-preview">
-									<OptionBankPreview fields={actionSpec.previewBank} options={action.options} controlId={controlId} />
-								</div>
-							) : (
-								''
-							)}
+								Array.isArray(actionSpec?.previewBank) &&
+								actionSpec.previewBank.length === 2 && (
+									<div className="cell-bank-preview">
+										<OptionBankPreview fields={actionSpec.previewBank} options={action.options} controlId={controlId} />
+									</div>
+								)}
 
 							<div className="cell-delay">
 								<CForm>
@@ -502,7 +500,7 @@ function ActionTableRow({
 							</div>
 
 							<div className="cell-actions">
-								{actionSpec?.hasLearn ? (
+								{actionSpec?.hasLearn && (
 									<CButton
 										disabled={readonly}
 										color="info"
@@ -512,8 +510,6 @@ function ActionTableRow({
 									>
 										Learn
 									</CButton>
-								) : (
-									''
 								)}
 							</div>
 
@@ -539,8 +535,6 @@ function ActionTableRow({
 								</CForm>
 							</div>
 						</>
-					) : (
-						''
 					)}
 				</div>
 			</td>

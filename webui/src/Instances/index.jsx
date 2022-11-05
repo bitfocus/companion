@@ -104,7 +104,7 @@ export const InstancesPage = memo(function InstancesPage() {
 							</CTabPane>
 							<CTabPane data-tab="edit">
 								<MyErrorBoundary>
-									{selectedInstanceId ? (
+									{selectedInstanceId && (
 										<InstanceEditPanel
 											key={tabResetToken}
 											showHelp={showHelp}
@@ -112,8 +112,6 @@ export const InstancesPage = memo(function InstancesPage() {
 											instanceId={selectedInstanceId}
 											instanceStatus={instanceStatus[selectedInstanceId]}
 										/>
-									) : (
-										''
 									)}
 								</MyErrorBoundary>
 							</CTabPane>

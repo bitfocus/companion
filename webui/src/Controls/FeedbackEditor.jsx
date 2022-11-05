@@ -419,27 +419,23 @@ function FeedbackEditor({
 				</CButtonGroup>
 			</div>
 
-			{!isCollapsed ? (
+			{!isCollapsed && (
 				<>
 					<div className="cell-description">{feedbackSpec?.description || ''}</div>
 
 					{feedback.instance_id === 'internal' &&
-					Array.isArray(feedbackSpec?.previewBank) &&
-					feedbackSpec.previewBank.length === 2 ? (
-						<div className="cell-bank-preview">
-							<OptionBankPreview fields={feedbackSpec.previewBank} options={feedback.options} controlId={controlId} />
-						</div>
-					) : (
-						''
-					)}
+						Array.isArray(feedbackSpec?.previewBank) &&
+						feedbackSpec.previewBank.length === 2 && (
+							<div className="cell-bank-preview">
+								<OptionBankPreview fields={feedbackSpec.previewBank} options={feedback.options} controlId={controlId} />
+							</div>
+						)}
 
 					<div className="cell-actions">
-						{feedbackSpec?.hasLearn ? (
+						{feedbackSpec?.hasLearn && (
 							<CButton color="info" size="sm" onClick={innerLearn} title="Capture the current values from the device">
 								Learn
 							</CButton>
-						) : (
-							''
 						)}
 					</div>
 
@@ -473,8 +469,6 @@ function FeedbackEditor({
 						</>
 					)}
 				</>
-			) : (
-				''
 			)}
 		</div>
 	)
@@ -555,12 +549,10 @@ function FeedbackStyles({ feedbackSpec, feedback, setStylePropsValue }) {
 		return (
 			<div className="cell-styles">
 				<CForm>
-					{pngError ? (
+					{pngError && (
 						<CAlert color="warning" closeButton>
 							{pngError}
 						</CAlert>
-					) : (
-						''
 					)}
 
 					<ButtonStyleConfigFields
