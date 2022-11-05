@@ -281,12 +281,10 @@ function CustomVariablesList({ setShowCustom }) {
 							</tr>
 						)
 					})}
-					{Object.keys(customVariableContext).length === 0 ? (
+					{Object.keys(customVariableContext).length === 0 && (
 						<tr>
 							<td colSpan={3}>No custom variables have been created</td>
 						</tr>
-					) : (
-						''
 					)}
 				</tbody>
 			</table>

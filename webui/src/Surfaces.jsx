@@ -238,12 +238,10 @@ export const SurfacesPage = memo(function SurfacesPage() {
 						)
 					})}
 
-					{devicesList.length === 0 ? (
+					{devicesList.length === 0 && (
 						<tr>
 							<td colSpan={4}>No control surfaces have been detected</td>
 						</tr>
-					) : (
-						''
 					)}
 				</tbody>
 			</table>
@@ -277,12 +275,10 @@ export const SurfacesPage = memo(function SurfacesPage() {
 						)
 					})}
 
-					{offlineDevicesList.length === 0 ? (
+					{offlineDevicesList.length === 0 && (
 						<tr>
 							<td colSpan={4}>No items</td>
 						</tr>
-					) : (
-						''
 					)}
 				</tbody>
 			</table>

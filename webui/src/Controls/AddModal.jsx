@@ -212,9 +212,11 @@ function InstanceCollapse({
 					<CCardBody>
 						{candidates.length > 0 ? (
 							<table className="table">
-								{candidates.map((info) => (
-									<AddRow key={info.fullId} info={info} id={info.fullId} doAdd={doAdd} />
-								))}
+								<tbody>
+									{candidates.map((info) => (
+										<AddRow key={info.fullId} info={info} id={info.fullId} doAdd={doAdd} />
+									))}
+								</tbody>
 							</table>
 						) : (
 							<p className="no-entries">No {itemName} match the search</p>
