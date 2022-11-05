@@ -21,7 +21,7 @@ import { AddFeedbacksModal } from './AddModal'
 import { usePanelCollapseHelper } from '../Helpers/CollapseHelper'
 import { OptionBankPreview } from './OptionBankPreview'
 
-export function ControlFeedbacksEditor({ controlId, feedbacks, heading }) {
+export function ControlFeedbacksEditor({ controlId, feedbacks, heading, booleanOnly, isOnBank }) {
 	const socket = useContext(SocketContext)
 
 	const confirmModal = useRef()
@@ -135,7 +135,7 @@ export function ControlFeedbacksEditor({ controlId, feedbacks, heading }) {
 			<GenericConfirmModal ref={confirmModal} />
 
 			<MyErrorBoundary>
-				<AddFeedbacksModal ref={addFeedbacksRef} addFeedback={addFeedback} />
+				<AddFeedbacksModal ref={addFeedbacksRef} addFeedback={addFeedback} booleanOnly={booleanOnly} />
 			</MyErrorBoundary>
 
 			<h4 className="mt-3">
@@ -182,6 +182,8 @@ export function ControlFeedbacksEditor({ controlId, feedbacks, heading }) {
 								moveCard={moveCard}
 								setCollapsed={setPanelCollapsed}
 								isCollapsed={isPanelCollapsed(a.id)}
+								booleanOnly={booleanOnly}
+								isOnBank={isOnBank}
 							/>
 						</MyErrorBoundary>
 					))}
@@ -189,7 +191,7 @@ export function ControlFeedbacksEditor({ controlId, feedbacks, heading }) {
 			</table>
 
 			<div className="add-dropdown-wrapper">
-				<AddFeedbackDropdown onSelect={addFeedback} recentFeedbacks={recentFeedbacks} />
+				<AddFeedbackDropdown onSelect={addFeedback} recentFeedbacks={recentFeedbacks} booleanOnly={booleanOnly} />
 				<CButton color="primary" variant="outline" onClick={showAddModal}>
 					Browse
 				</CButton>
@@ -211,6 +213,8 @@ function FeedbackTableRow({
 	doEnabled,
 	isCollapsed,
 	setCollapsed,
+	booleanOnly,
+	isOnBank,
 }) {
 	const socket = useContext(SocketContext)
 
@@ -258,7 +262,7 @@ function FeedbackTableRow({
 		(selected) => {
 			socketEmitPromise(socket, 'controls:feedback:set-style-selection', [controlId, feedback.id, selected]).catch(
 				(e) => {
-					// TODO
+					console.error(`Failed: ${e}`)
 				}
 			)
 		},
@@ -295,7 +299,7 @@ function FeedbackTableRow({
 			</td>
 			<td>
 				<FeedbackEditor
-					isOnBank={true}
+					isOnBank={isOnBank}
 					controlId={controlId}
 					feedback={feedback}
 					setValue={setValue}
@@ -308,13 +312,14 @@ function FeedbackTableRow({
 					doCollapse={doCollapse}
 					doExpand={doExpand}
 					doEnabled={doEnabled}
+					booleanOnly={booleanOnly}
 				/>
 			</td>
 		</tr>
 	)
 }
 
-export function FeedbackEditor({
+function FeedbackEditor({
 	feedback,
 	isOnBank,
 	controlId,
@@ -328,6 +333,7 @@ export function FeedbackEditor({
 	doCollapse,
 	doExpand,
 	doEnabled,
+	booleanOnly,
 }) {
 	const feedbacksContext = useContext(FeedbacksContext)
 	const instancesContext = useContext(InstancesContext)
@@ -442,6 +448,7 @@ export function FeedbackEditor({
 							{options.map((opt, i) => (
 								<MyErrorBoundary key={i}>
 									<OptionsInputField
+										key={i}
 										isOnBank={isOnBank}
 										instanceId={feedback.instance_id}
 										option={opt}
@@ -455,7 +462,7 @@ export function FeedbackEditor({
 							{options.length === 0 ? 'Nothing to configure' : ''}
 						</CForm>
 					</div>
-					{setSelectedStyleProps || setStylePropsValue ? (
+					{!booleanOnly && (
 						<>
 							<FeedbackStyles feedbackSpec={feedbackSpec} feedback={feedback} setStylePropsValue={setStylePropsValue} />
 							<FeedbackManageStyles
@@ -464,8 +471,6 @@ export function FeedbackEditor({
 								setSelectedStyleProps={setSelectedStyleProps}
 							/>
 						</>
-					) : (
-						''
 					)}
 				</>
 			) : (

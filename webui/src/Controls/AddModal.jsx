@@ -85,7 +85,7 @@ export const AddActionsModal = forwardRef(function AddActionsModal({ addAction }
 	)
 })
 
-export const AddFeedbacksModal = forwardRef(function AddFeedbacksModal({ addFeedback }, ref) {
+export const AddFeedbacksModal = forwardRef(function AddFeedbacksModal({ addFeedback, booleanOnly }, ref) {
 	const feedbacks = useContext(FeedbacksContext)
 	const instances = useContext(InstancesContext)
 
@@ -142,6 +142,7 @@ export const AddFeedbacksModal = forwardRef(function AddFeedbacksModal({ addFeed
 						itemName="feedbacks"
 						expanded={!!filter || expanded[instanceId]}
 						filter={filter}
+						booleanOnly={booleanOnly}
 						doToggle={toggle}
 						doAdd={addFeedback}
 					/>
@@ -156,7 +157,17 @@ export const AddFeedbacksModal = forwardRef(function AddFeedbacksModal({ addFeed
 	)
 })
 
-function InstanceCollapse({ instanceId, instanceInfo, items, itemName, expanded, filter, doToggle, doAdd }) {
+function InstanceCollapse({
+	instanceId,
+	instanceInfo,
+	items,
+	itemName,
+	expanded,
+	filter,
+	booleanOnly,
+	doToggle,
+	doAdd,
+}) {
 	const doToggle2 = useCallback(() => doToggle(instanceId), [doToggle, instanceId])
 
 	const candidates = useMemo(() => {
@@ -165,6 +176,8 @@ function InstanceCollapse({ instanceId, instanceInfo, items, itemName, expanded,
 
 			const res = []
 			for (const [id, info] of Object.entries(items)) {
+				if (booleanOnly && info.type !== 'boolean') continue
+
 				if (info.label.match(regexp)) {
 					const fullId = `${instanceId}:${id}`
 					res.push({

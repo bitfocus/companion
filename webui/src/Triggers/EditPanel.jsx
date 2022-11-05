@@ -127,6 +127,16 @@ export function EditTriggerPanel({ controlId }) {
 							</MyErrorBoundary>
 
 							<MyErrorBoundary>
+								<ControlFeedbacksEditor
+									heading={'Condition'}
+									controlId={controlId}
+									feedbacks={config.condition}
+									booleanOnly={true}
+									isOnBank={false}
+								/>
+							</MyErrorBoundary>
+
+							<MyErrorBoundary>
 								<ControlActionSetEditor
 									heading="Actions"
 									controlId={controlId}
@@ -135,20 +145,6 @@ export function EditTriggerPanel({ controlId }) {
 									actions={config.action_sets['0']}
 								/>
 							</MyErrorBoundary>
-
-							{/* {config.feedbacks ? (
-								<>
-									<MyErrorBoundary>
-										<ControlFeedbacksEditor
-											heading={'Feedback'}
-											controlId={controlId}
-											feedbacks={config.feedbacks}
-										/>
-									</MyErrorBoundary>
-								</>
-							) : (
-								''
-							)} */}
 						</>
 					) : (
 						''

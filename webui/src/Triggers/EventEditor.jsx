@@ -467,8 +467,8 @@ const EventDefinitions = {
 		name: 'On any button depress',
 		options: [],
 	},
-	condition_change: {
-		name: 'On condition change',
+	condition_true: {
+		name: 'On condition becoming true',
 		options: [],
 	},
 }
