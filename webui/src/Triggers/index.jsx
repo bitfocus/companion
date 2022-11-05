@@ -182,7 +182,7 @@ function TriggersTableRow({ controlId, item, editItem, moveTrigger }) {
 	const socket = useContext(SocketContext)
 
 	const doEnableDisable = useCallback(() => {
-		socketEmitPromise(socket, 'controls:set-config-field', [controlId, 'enabled', !item.enabled]).catch((e) => {
+		socketEmitPromise(socket, 'controls:set-options-field', [controlId, 'enabled', !item.enabled]).catch((e) => {
 			console.error('failed to toggle trigger state', e)
 		})
 	}, [socket, controlId, item.enabled])

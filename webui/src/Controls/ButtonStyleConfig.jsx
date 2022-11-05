@@ -19,7 +19,7 @@ export function ButtonStyleConfig({ controlId, controlType, style, configRef }) 
 	const setPng = useCallback(
 		(data) => {
 			setPngError(null)
-			socketEmitPromise(socket, 'controls:set-config-fields', [
+			socketEmitPromise(socket, 'controls:set-style-fields', [
 				controlId,
 				{
 					png64: data,
@@ -36,7 +36,7 @@ export function ButtonStyleConfig({ controlId, controlType, style, configRef }) 
 		(key, value) => {
 			console.log('set', controlId, key, value)
 			if (configRef.current === undefined || value !== configRef.current.style[key]) {
-				socketEmitPromise(socket, 'controls:set-config-fields', [
+				socketEmitPromise(socket, 'controls:set-style-fields', [
 					controlId,
 					{
 						[key]: value,

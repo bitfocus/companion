@@ -106,7 +106,7 @@ export function EditTriggerPanel({ controlId }) {
 				<div style={{ display: dataReady ? '' : 'none' }}>
 					<MyErrorBoundary>
 						<TriggerConfig
-							config={config.config}
+							options={config.options}
 							controlId={controlId}
 							hotPressDown={hotPressDown}
 							hotPressUp={hotPressUp}
@@ -157,13 +157,13 @@ export function EditTriggerPanel({ controlId }) {
 	)
 }
 
-function TriggerConfig({ controlId, config, hotPressDown, hotPressUp }) {
+function TriggerConfig({ controlId, options, hotPressDown, hotPressUp }) {
 	const socket = useContext(SocketContext)
 
 	const setValueInner = useCallback(
 		(key, value) => {
 			console.log('set', controlId, key, value)
-			socketEmitPromise(socket, 'controls:set-config-field', [controlId, key, value]).catch((e) => {
+			socketEmitPromise(socket, 'controls:set-options-field', [controlId, key, value]).catch((e) => {
 				console.error(`Set field failed: ${e}`)
 			})
 		},
@@ -180,9 +180,9 @@ function TriggerConfig({ controlId, config, hotPressDown, hotPressUp }) {
 						<CLabel>Name</CLabel>
 						<p>
 							<CInputGroup>
-								<TextInputField setValue={setName} value={config.name} />
+								<TextInputField setValue={setName} value={options.name} />
 								<CInputGroupAppend>
-									<CButton color="warning" hidden={!config} onMouseDown={hotPressDown} onMouseUp={hotPressUp}>
+									<CButton color="warning" hidden={!options} onMouseDown={hotPressDown} onMouseUp={hotPressUp}>
 										Test actions
 									</CButton>
 								</CInputGroupAppend>
