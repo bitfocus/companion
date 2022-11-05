@@ -25,7 +25,7 @@ import { useSharedBankRenderCache } from '../../ButtonRenderCache'
 import { nanoid } from 'nanoid'
 import CSwitch from '../../CSwitch'
 
-export function ActionsPanel({ controlId, set, actions, dragId, addPlaceholder, heading, headingActions }) {
+export function ActionsPanel({ controlId, set, actions, addPlaceholder, heading, headingActions }) {
 	const socket = useContext(SocketContext)
 
 	const confirmModal = useRef()
@@ -526,6 +526,7 @@ function ActionTableRow({
 									{options.map((opt, i) => (
 										<MyErrorBoundary key={i}>
 											<ActionTableRowOption
+												key={i}
 												isOnBank={isOnBank}
 												isAction={true}
 												instanceId={action.instance}

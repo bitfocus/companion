@@ -233,9 +233,9 @@ export function EditButton({ controlId, onKeyUp }) {
 						/>
 					</MyErrorBoundary>
 
-					{config && runtimeProps ? (
+					{config && runtimeProps && (
 						<>
-							{config.action_sets ? (
+							{config.action_sets && (
 								<MyErrorBoundary>
 									<ActionsSection
 										style={config.type}
@@ -244,32 +244,21 @@ export function EditButton({ controlId, onKeyUp }) {
 										runtimeProps={runtimeProps}
 									/>
 								</MyErrorBoundary>
-							) : (
-								''
 							)}
 
-							{config.feedbacks ? (
+							{config.feedbacks && (
 								<>
 									<MyErrorBoundary>
-										<FeedbacksPanel
-											heading={'Feedback'}
-											controlId={controlId}
-											feedbacks={config.feedbacks}
-											dragId={'feedback'}
-										/>
+										<FeedbacksPanel heading={'Feedback'} controlId={controlId} feedbacks={config.feedbacks} />
 									</MyErrorBoundary>
 								</>
-							) : (
-								''
 							)}
 						</>
-					) : (
-						''
 					)}
 
 					<hr />
 
-					{parsedId?.page && parsedId?.bank ? (
+					{parsedId?.page && parsedId?.bank && (
 						<p>
 							<b>Hint:</b> Control buttons with OSC or HTTP: /press/bank/{parsedId.page}/{parsedId.bank} to press this
 							button remotely. OSC port{' '}
@@ -280,8 +269,6 @@ export function EditButton({ controlId, onKeyUp }) {
 							</code>
 							!
 						</p>
-					) : (
-						''
 					)}
 				</div>
 			) : (
@@ -336,7 +323,6 @@ function ActionsSection({ style, controlId, action_sets, runtimeProps }) {
 						heading="Press actions"
 						controlId={controlId}
 						set={'down'}
-						dragId={'downAction'}
 						addPlaceholder="+ Add key press action"
 						actions={action_sets['down']}
 					/>
@@ -346,7 +332,6 @@ function ActionsSection({ style, controlId, action_sets, runtimeProps }) {
 						heading="Release actions"
 						controlId={controlId}
 						set={'up'}
-						dragId={'releaseAction'}
 						addPlaceholder="+ Add key release action"
 						actions={action_sets['up']}
 					/>
@@ -406,7 +391,6 @@ function ActionsSection({ style, controlId, action_sets, runtimeProps }) {
 							key={`panel_${k}`}
 							controlId={controlId}
 							set={k}
-							dragId={`${k}Action`}
 							addPlaceholder={`+ Add action to step ${i + 1}`}
 							actions={action_sets[k]}
 						/>

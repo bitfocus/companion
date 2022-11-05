@@ -155,14 +155,12 @@ export function InstancesList({ showHelp, doConfigureInstance, instanceStatus })
 				</thead>
 				<tbody>
 					{rows}
-					{hiddenCount > 0 ? (
+					{hiddenCount > 0 && (
 						<tr>
 							<td colSpan={4}>{hiddenCount} Connections are hidden</td>
 						</tr>
-					) : (
-						''
 					)}
-					{Object.keys(instancesContext).length === 0 ? (
+					{Object.keys(instancesContext).length === 0 && (
 						<tr>
 							<td colSpan={4}>
 								You haven't setup any connections yet. <br />
@@ -170,8 +168,6 @@ export function InstancesList({ showHelp, doConfigureInstance, instanceStatus })
 								<span className="d-none d-xl-inline">to the right</span>.
 							</td>
 						</tr>
-					) : (
-						''
 					)}
 				</tbody>
 			</table>

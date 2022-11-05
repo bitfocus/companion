@@ -21,7 +21,7 @@ import { AddFeedbacksModal } from './AddModal'
 import { usePanelCollapseHelper } from './CollapseHelper'
 import { ActionBankPreview } from './ActionsPanel'
 
-export const FeedbacksPanel = function ({ controlId, feedbacks, dragId, heading }) {
+export const FeedbacksPanel = function ({ controlId, feedbacks, heading }) {
 	const socket = useContext(SocketContext)
 
 	const confirmModal = useRef()
@@ -178,7 +178,7 @@ export const FeedbacksPanel = function ({ controlId, feedbacks, dragId, heading 
 								doDuplicate={doDuplicate}
 								doLearn={doLearn}
 								doEnabled={emitEnabled}
-								dragId={dragId}
+								dragId={`feedback_${controlId}`}
 								moveCard={moveCard}
 								setCollapsed={setPanelCollapsed}
 								isCollapsed={isPanelCollapsed(a.id)}
@@ -442,6 +442,7 @@ export function FeedbackEditor({
 							{options.map((opt, i) => (
 								<MyErrorBoundary key={i}>
 									<ActionTableRowOption
+										key={i}
 										isOnBank={isOnBank}
 										instanceId={feedback.instance_id}
 										option={opt}
