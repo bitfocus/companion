@@ -16,7 +16,7 @@ import dayjs from 'dayjs'
 import sanitizeHtml from 'sanitize-html'
 import CSwitch from '../CSwitch'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faCalculator, faGhost, faSort } from '@fortawesome/free-solid-svg-icons'
+import { faCalculator, faSort } from '@fortawesome/free-solid-svg-icons'
 import { useDrag, useDrop } from 'react-dnd'
 import { nanoid } from 'nanoid'
 import { EditTriggerPanel } from './EditPanel'
@@ -87,9 +87,7 @@ export const Triggers = memo(function Triggers() {
 					<CTabs activeTab={activeTab} onActiveTabChange={doChangeTab}>
 						<CNav variant="tabs">
 							<CNavItem>
-								<CNavLink data-tab="placeholder">
-									<FontAwesomeIcon icon={faGhost} /> Placeholder
-								</CNavLink>
+								<CNavLink data-tab="placeholder">Select a trigger</CNavLink>
 							</CNavItem>
 							<CNavItem hidden={!editItemId}>
 								<CNavLink data-tab="edit">
@@ -99,7 +97,7 @@ export const Triggers = memo(function Triggers() {
 						</CNav>
 						<CTabContent fade={false}>
 							<CTabPane data-tab="placeholder">
-								<p>Placeholder</p>
+								<p>Select a trigger...</p>
 							</CTabPane>
 							<CTabPane data-tab="edit">
 								<MyErrorBoundary>

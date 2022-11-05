@@ -1,4 +1,4 @@
-import { CButton, CCol, CForm, CLabel, CRow } from '@coreui/react'
+import { CButton, CCol, CForm, CInputGroup, CInputGroupAppend, CLabel, CRow } from '@coreui/react'
 import React, { useCallback, useContext, useEffect, useRef, useState } from 'react'
 import { nanoid } from 'nanoid'
 import { GenericConfirmModal } from '../Components/GenericConfirmModal'
@@ -174,16 +174,19 @@ function TriggerConfig({ controlId, config, hotPressDown, hotPressUp }) {
 
 	return (
 		<CCol sm={12} className="p-0">
-			<CForm inline>
+			<CForm>
 				<CRow form className="button-style-form">
 					<CCol className="fieldtype-checkbox" xs={12}>
 						<CLabel>Name</CLabel>
 						<p>
-							<TextInputField setValue={setName} value={config.name} />
-							&nbsp;
-							<CButton color="warning" hidden={!config} onMouseDown={hotPressDown} onMouseUp={hotPressUp}>
-								Test actions
-							</CButton>
+							<CInputGroup>
+								<TextInputField setValue={setName} value={config.name} />
+								<CInputGroupAppend>
+									<CButton color="warning" hidden={!config} onMouseDown={hotPressDown} onMouseUp={hotPressUp}>
+										Test actions
+									</CButton>
+								</CInputGroupAppend>
+							</CInputGroup>
 						</p>
 					</CCol>
 				</CRow>
