@@ -373,7 +373,7 @@ function AddEventDropdown({ onSelect }) {
 		options.sort((a, b) => a.label.localeCompare(b.label))
 
 		return options
-	}, [])
+	}, [EventDefinitions])
 
 	const innerChange = useCallback(
 		(e) => {

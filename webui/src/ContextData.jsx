@@ -215,18 +215,6 @@ export function ContextData({ children }) {
 
 			socket.on('pages:update', updatePageInfo)
 
-			const updateTriggerLastRun = (id, time) => {
-				// TODO
-				// setTriggers((list) => {
-				// 	if (!list) return list
-				// 	const res = { ...list }
-				// 	if (res[id]) {
-				// 		res[id] = { ...res[id], last_run: time }
-				// 	}
-				// 	return res
-				// })
-			}
-
 			socketEmitPromise(socket, 'triggers:subscribe', [])
 				.then((pages) => {
 					// setLoadError(null)
@@ -238,9 +226,7 @@ export function ContextData({ children }) {
 					setPages(null)
 				})
 
-			// socket.emit('schedule_get', setTriggers)
 			socket.on('triggers:update', updateTriggers)
-			socket.on('schedule_last_run', updateTriggerLastRun)
 
 			return () => {
 				socket.off('variable-definitions:update', updateVariableDefinitions)
@@ -252,7 +238,6 @@ export function ContextData({ children }) {
 				socket.off('pages:update', updatePageInfo)
 
 				socket.off('triggers:update', updateTriggers)
-				socket.off('schedule_last_run', updateTriggerLastRun)
 
 				socket.off('instances:patch', patchInstances)
 
