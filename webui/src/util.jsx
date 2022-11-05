@@ -10,6 +10,7 @@ import _ from 'lodash'
 export const SERVER_URL = window.SERVER_URL === '%REACT_APP_SERVER_URL%' ? undefined : window.SERVER_URL
 
 export const SocketContext = React.createContext(null)
+export const EventDefinitionsContext = React.createContext(null)
 export const NotifierContext = React.createContext(null)
 export const ModulesContext = React.createContext(null)
 export const ActionsContext = React.createContext(null)

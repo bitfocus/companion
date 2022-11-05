@@ -522,6 +522,7 @@ function ActionTableRow({
 									{options.map((opt, i) => (
 										<MyErrorBoundary key={i}>
 											<OptionsInputField
+												key={i}
 												isOnBank={isOnBank}
 												isAction={true}
 												instanceId={action.instance}

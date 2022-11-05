@@ -2,14 +2,13 @@ import { CButton, CForm, CButtonGroup, CSwitch } from '@coreui/react'
 import { faSort, faTrash, faCompressArrowsAlt, faExpandArrowsAlt, faCopy } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import React, { useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react'
-import { MyErrorBoundary, socketEmitPromise, sandbox, SocketContext } from '../util'
+import { MyErrorBoundary, socketEmitPromise, sandbox, SocketContext, EventDefinitionsContext } from '../util'
 import Select from 'react-select'
 import { OptionsInputField } from '../Controls/OptionsInputField'
 import { useDrag, useDrop } from 'react-dnd'
 import { GenericConfirmModal } from '../Components/GenericConfirmModal'
 import { usePanelCollapseHelper } from '../Helpers/CollapseHelper'
 import { OptionBankPreview } from '../Controls/OptionBankPreview'
-import moment from 'moment'
 
 export function TriggerEventEditor({ controlId, events, heading }) {
 	const socket = useContext(SocketContext)
@@ -109,7 +108,7 @@ export function TriggerEventEditor({ controlId, events, heading }) {
 			<table className="table feedback-table">
 				<tbody>
 					{events.map((a, i) => (
-						<MyErrorBoundary>
+						<MyErrorBoundary key={a?.id ?? i}>
 							<EventsTableRow
 								key={a?.id ?? i}
 								index={i}
@@ -233,6 +232,8 @@ function EventEditor({
 	doExpand,
 	doEnabled,
 }) {
+	const EventDefinitions = useContext(EventDefinitionsContext)
+
 	const eventSpec = EventDefinitions[event.type]
 	const options = eventSpec?.options ?? []
 
@@ -330,6 +331,7 @@ function EventEditor({
 							{options.map((opt, i) => (
 								<MyErrorBoundary key={i}>
 									<OptionsInputField
+										key={i}
 										isOnBank={false}
 										instanceId={event.instance_id}
 										option={opt}
@@ -356,6 +358,8 @@ const noOptionsMessage = ({ inputValue }) => {
 }
 
 function AddEventDropdown({ onSelect }) {
+	const EventDefinitions = useContext(EventDefinitionsContext)
+
 	const options = useMemo(() => {
 		const options = []
 		for (const [eventId, event] of Object.entries(EventDefinitions || {})) {
@@ -393,82 +397,4 @@ function AddEventDropdown({ onSelect }) {
 			noOptionsMessage={noOptionsMessage}
 		/>
 	)
-}
-
-const EventDefinitions = {
-	interval: {
-		name: 'Time Interval',
-		options: [
-			{
-				id: 'seconds',
-				type: 'number',
-				label: 'Interval (seconds)',
-				min: 1,
-				default: 10,
-			},
-		],
-	},
-	timeofday: {
-		name: 'Time of Day',
-		options: [
-			{
-				id: 'time',
-				label: 'Time',
-				type: 'textinput',
-				placeholder: 'HH:MM:SS',
-				pattern: '(0[0-9]|1[0-9]|2[0-3])(:[0-5][0-9]){2}',
-				default: '',
-			},
-			{
-				id: 'days',
-				label: 'Days',
-				type: 'multidropdown',
-				minChoicesForSearch: 10,
-				minSelection: 1,
-				choices: Array.from(Array(7).keys()).map((i) => {
-					return {
-						id: i,
-						label: moment().weekday(i).format('ddd'),
-					}
-				}),
-				default: Array.from(Array(7).keys()),
-			},
-		],
-	},
-	startup: {
-		name: 'Startup',
-		options: [
-			{
-				id: 'delay',
-				type: 'number',
-				label: 'Delay (milliseconds)',
-				min: 0,
-				default: 10000,
-			},
-		],
-	},
-	client_connect: {
-		name: 'Web client connect',
-		options: [
-			{
-				id: 'delay',
-				type: 'number',
-				label: 'Delay (milliseconds)',
-				min: 0,
-				default: 0,
-			},
-		],
-	},
-	button_press: {
-		name: 'On any button press',
-		options: [],
-	},
-	button_depress: {
-		name: 'On any button depress',
-		options: [],
-	},
-	condition_true: {
-		name: 'On condition becoming true',
-		options: [],
-	},
 }

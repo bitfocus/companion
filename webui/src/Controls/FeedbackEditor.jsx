@@ -167,7 +167,7 @@ export function ControlFeedbacksEditor({ controlId, feedbacks, heading, booleanO
 			<table className="table feedback-table">
 				<tbody>
 					{feedbacks.map((a, i) => (
-						<MyErrorBoundary>
+						<MyErrorBoundary key={a?.id ?? i}>
 							<FeedbackTableRow
 								key={a?.id ?? i}
 								index={i}
