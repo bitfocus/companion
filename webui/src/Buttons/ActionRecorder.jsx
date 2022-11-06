@@ -395,17 +395,13 @@ function BankPicker({ selectBank }) {
 	)
 }
 
-function TriggerPickerRow({ trigger, selectTrigger }) {
-	const replaceActions = useCallback(() => {
-		selectTrigger(trigger.id, 'replace')
-	}, [trigger.id, selectTrigger])
-	const appendActions = useCallback(() => {
-		selectTrigger(trigger.id, 'append')
-	}, [trigger.id, selectTrigger])
+function TriggerPickerRow({ id, trigger, selectTrigger }) {
+	const replaceActions = useCallback(() => selectTrigger(id, 'replace'), [id, selectTrigger])
+	const appendActions = useCallback(() => selectTrigger(id, 'append'), [id, selectTrigger])
 
 	return (
 		<tr>
-			<td>{trigger.title}</td>
+			<td>{trigger.name}</td>
 			<td>
 				<CButtonGroup>
 					<CButton color="primary" title="Replace all the actions on the trigger" onClick={replaceActions}>
@@ -438,8 +434,8 @@ function TriggerPicker({ selectControl }) {
 				</thead>
 				<tbody>
 					{triggersList && Object.keys(triggersList).length > 0 ? (
-						Object.values(triggersList).map((item) => (
-							<TriggerPickerRow key={item.id} trigger={item} selectTrigger={selectTrigger} />
+						Object.entries(triggersList).map(([id, item]) => (
+							<TriggerPickerRow key={id} id={id} trigger={item} selectTrigger={selectTrigger} />
 						))
 					) : (
 						<tr>
