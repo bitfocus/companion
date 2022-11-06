@@ -95,16 +95,15 @@ export function EditTriggerPanel({ controlId }) {
 	const errors = []
 	if (configError) errors.push(configError)
 	const loadError = errors.length > 0 ? errors.join(', ') : null
-	const hasConfig = config || config === false
 	const hasRuntimeProps = runtimeProps || runtimeProps === false
-	const dataReady = !loadError && hasConfig && hasRuntimeProps
+	const dataReady = !loadError && config && hasRuntimeProps
 
 	return (
 		<div className="edit-button-panel">
 			<GenericConfirmModal ref={resetModalRef} />
 
 			<LoadingRetryOrError dataReady={dataReady} error={loadError} doRetry={doRetryLoad} />
-			{hasConfig ? (
+			{config ? (
 				<div style={{ display: dataReady ? '' : 'none' }}>
 					<MyErrorBoundary>
 						<TriggerConfig

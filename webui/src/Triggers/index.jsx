@@ -16,7 +16,7 @@ import dayjs from 'dayjs'
 import sanitizeHtml from 'sanitize-html'
 import CSwitch from '../CSwitch'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faCalculator, faSort } from '@fortawesome/free-solid-svg-icons'
+import { faAdd, faCalculator, faSort } from '@fortawesome/free-solid-svg-icons'
 import { useDrag, useDrop } from 'react-dnd'
 import { nanoid } from 'nanoid'
 import { EditTriggerPanel } from './EditPanel'
@@ -29,6 +29,17 @@ export const Triggers = memo(function Triggers() {
 	const [editItemId, setEditItemId] = useState(null)
 	const [tabResetToken, setTabResetToken] = useState(nanoid())
 	const [activeTab, setActiveTab] = useState('placeholder')
+
+	// Ensure the selected trigger is valid
+	useEffect(() => {
+		setEditItemId((currentId) => {
+			if (triggersList[currentId]) {
+				return currentId
+			} else {
+				return null
+			}
+		})
+	}, [triggersList])
 
 	const doChangeTab = useCallback((newTab) => {
 		setActiveTab((oldTab) => {
@@ -64,7 +75,7 @@ export const Triggers = memo(function Triggers() {
 
 				<CButtonGroup style={{ marginBottom: '0.3em' }}>
 					<CButton color="primary" onClick={doAddNew}>
-						Add New Trigger
+						<FontAwesomeIcon icon={faAdd} /> Add Trigger
 					</CButton>
 				</CButtonGroup>
 
