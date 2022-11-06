@@ -610,6 +610,7 @@ function AddActionDropdown({ onSelect, placeholder, recentActions }) {
 
 	return (
 		<Select
+			menuPlacement="auto"
 			isClearable={false}
 			isSearchable={true}
 			isMulti={false}

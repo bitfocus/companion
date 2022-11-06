@@ -375,7 +375,7 @@ function AddEventDropdown({ onSelect }) {
 
 	return (
 		<Select
-			menuPlacement="top"
+			menuPlacement="auto"
 			isClearable={false}
 			isSearchable={true}
 			isMulti={false}

@@ -641,7 +641,7 @@ export function AddFeedbackDropdown({ onSelect, booleanOnly, recentFeedbacks }) 
 
 	return (
 		<Select
-			menuPlacement="top"
+			menuPlacement="auto"
 			isClearable={false}
 			isSearchable={true}
 			isMulti={false}
