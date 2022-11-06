@@ -11,6 +11,8 @@ import { ControlFeedbacksEditor } from '../Controls/FeedbackEditor'
 import { cloneDeep } from 'lodash-es'
 import { TextInputField } from '../Components'
 import { TriggerEventEditor } from './EventEditor'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faQuestionCircle } from '@fortawesome/free-solid-svg-icons'
 
 export function EditTriggerPanel({ controlId }) {
 	const socket = useContext(SocketContext)
@@ -123,12 +125,29 @@ export function EditTriggerPanel({ controlId }) {
 					{config && runtimeProps ? (
 						<>
 							<MyErrorBoundary>
-								<TriggerEventEditor heading="Events" controlId={controlId} events={config.events} />
+								<TriggerEventEditor
+									heading={
+										<>
+											Events &nbsp;
+											<FontAwesomeIcon icon={faQuestionCircle} title="When should the trigger execute" />
+										</>
+									}
+									controlId={controlId}
+									events={config.events}
+								/>
 							</MyErrorBoundary>
 
 							<MyErrorBoundary>
 								<ControlFeedbacksEditor
-									heading={'Condition'}
+									heading={
+										<>
+											Condition &nbsp;
+											<FontAwesomeIcon
+												icon={faQuestionCircle}
+												title="Only execute when all of this conditions are true"
+											/>
+										</>
+									}
 									controlId={controlId}
 									feedbacks={config.condition}
 									booleanOnly={true}
@@ -138,7 +157,12 @@ export function EditTriggerPanel({ controlId }) {
 
 							<MyErrorBoundary>
 								<ControlActionSetEditor
-									heading="Actions"
+									heading={
+										<>
+											Actions &nbsp;
+											<FontAwesomeIcon icon={faQuestionCircle} title="What should happen when executed" />
+										</>
+									}
 									controlId={controlId}
 									set={'0'}
 									addPlaceholder="+ Add action"
