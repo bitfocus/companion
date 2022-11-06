@@ -158,6 +158,16 @@ export function EditButton({ controlId, onKeyUp }) {
 			console.error(`Hot press failed: ${e}`)
 		)
 	}, [socket, controlId])
+	const hotRotateLeft = useCallback(() => {
+		socketEmitPromise(socket, 'controls:hot-rotate', [controlId, false]).catch((e) =>
+			console.error(`Hot rotate failed: ${e}`)
+		)
+	}, [socket, controlId])
+	const hotRotateRight = useCallback(() => {
+		socketEmitPromise(socket, 'controls:hot-rotate', [controlId, false]).catch((e) =>
+			console.error(`Hot rotate failed: ${e}`)
+		)
+	}, [socket, controlId])
 
 	const errors = []
 	if (configError) errors.push(configError)
@@ -206,14 +216,26 @@ export function EditButton({ controlId, onKeyUp }) {
 								Erase
 							</CButton>
 							&nbsp;
-							<CButton
-								color="warning"
-								hidden={!config || (config.type !== 'press' && config.type !== 'step')}
-								onMouseDown={hotPressDown}
-								onMouseUp={hotPressUp}
-							>
-								Test actions
-							</CButton>
+							<CButtonGroup>
+								<CButton
+									color="warning"
+									hidden={!config || (config.type !== 'press' && config.type !== 'step')}
+									onMouseDown={hotPressDown}
+									onMouseUp={hotPressUp}
+								>
+									Test actions
+								</CButton>
+								{config.rotaryActions && (
+									<CButton color="warning" onMouseDown={hotRotateLeft}>
+										Click Left
+									</CButton>
+								)}
+								{config.rotaryActions && (
+									<CButton color="warning" onMouseDown={hotRotateRight}>
+										Click Right
+									</CButton>
+								)}
+							</CButtonGroup>
 						</div>
 					</MyErrorBoundary>
 
@@ -242,6 +264,7 @@ export function EditButton({ controlId, onKeyUp }) {
 										controlId={controlId}
 										action_sets={config.action_sets}
 										runtimeProps={runtimeProps}
+										rotaryActions={config.options.rotaryActions}
 									/>
 								</MyErrorBoundary>
 							)}
@@ -276,7 +299,7 @@ export function EditButton({ controlId, onKeyUp }) {
 	)
 }
 
-function ActionsSection({ style, controlId, action_sets, runtimeProps }) {
+function ActionsSection({ style, controlId, action_sets, runtimeProps, rotaryActions }) {
 	const socket = useContext(SocketContext)
 
 	const confirmRef = useRef()
@@ -316,6 +339,30 @@ function ActionsSection({ style, controlId, action_sets, runtimeProps }) {
 	if (style === 'press') {
 		return (
 			<>
+				{rotaryActions && (
+					<>
+						<MyErrorBoundary>
+							<ActionsPanel
+								heading="Rotate left actions"
+								controlId={controlId}
+								set={'rotate_left'}
+								addPlaceholder="+ Add rotate left action"
+								actions={action_sets['rotate_left']}
+							/>
+						</MyErrorBoundary>
+
+						<MyErrorBoundary>
+							<ActionsPanel
+								heading="Rotate right actions"
+								controlId={controlId}
+								set={'rotate_right'}
+								addPlaceholder="+ Add rotate right action"
+								actions={action_sets['rotate_right']}
+							/>
+						</MyErrorBoundary>
+					</>
+				)}
+
 				<MyErrorBoundary>
 					<ActionsPanel
 						heading="Press actions"

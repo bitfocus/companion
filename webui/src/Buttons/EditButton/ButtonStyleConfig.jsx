@@ -1,5 +1,5 @@
 import { CButton, CRow, CCol, CButtonGroup, CLabel, CForm, CAlert } from '@coreui/react'
-import React, { useCallback, useContext, useState } from 'react'
+import React, { useCallback, useContext, useRef, useState } from 'react'
 import { socketEmitPromise, SocketContext } from '../../util'
 import {
 	AlignmentInputField,
@@ -11,10 +11,13 @@ import {
 } from '../../Components'
 import { FONT_SIZES } from '../../Constants'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faTrash } from '@fortawesome/free-solid-svg-icons'
+import { faQuestionCircle, faTrash } from '@fortawesome/free-solid-svg-icons'
+import { GenericConfirmModal } from '../../Components/GenericConfirmModal'
 
 export function ButtonOptionsConfig({ controlId, controlType, options, configRef }) {
 	const socket = useContext(SocketContext)
+
+	const confirmRef = useRef(null)
 
 	const setValueInner = useCallback(
 		(key, value) => {
@@ -30,6 +33,23 @@ export function ButtonOptionsConfig({ controlId, controlType, options, configRef
 
 	const setStepAutoProgressValue = useCallback((val) => setValueInner('stepAutoProgress', val), [setValueInner])
 	const setRelativeDelayValue = useCallback((val) => setValueInner('relativeDelay', val), [setValueInner])
+	const setRotaryActions = useCallback(
+		(val) => {
+			if (!val && confirmRef.current && configRef.current && configRef.current.options.rotaryActions === true) {
+				confirmRef.current.show(
+					'Disable rotary actions',
+					'Are you sure? This will clear any rotary actions that have been defined.',
+					'OK',
+					() => {
+						setValueInner('rotaryActions', val)
+					}
+				)
+			} else {
+				setValueInner('rotaryActions', val)
+			}
+		},
+		[setValueInner, configRef]
+	)
 
 	switch (controlType) {
 		case undefined:
@@ -45,10 +65,12 @@ export function ButtonOptionsConfig({ controlId, controlType, options, configRef
 	}
 
 	return (
-		<CCol sm={12} className="p-0 mt-5">
-			<CForm inline>
+		<CCol sm={12} className="p-0">
+			<GenericConfirmModal ref={confirmRef} />
+
+			<CForm>
 				<CRow form className="button-style-form">
-					<CCol className="fieldtype-checkbox" sm={2} xs={3}>
+					<CCol className="fieldtype-checkbox" sm={3} xs={4}>
 						<CLabel>Relative Delays</CLabel>
 						<p>
 							<CheckboxInputField setValue={setRelativeDelayValue} value={options.relativeDelay} />
@@ -56,10 +78,25 @@ export function ButtonOptionsConfig({ controlId, controlType, options, configRef
 					</CCol>
 
 					{controlType === 'step' && (
-						<CCol className="fieldtype-checkbox" sm={2} xs={3}>
+						<CCol className="fieldtype-checkbox" sm={3} xs={4}>
 							<label>Auto progress</label>
 							<p>
 								<CheckboxInputField setValue={setStepAutoProgressValue} value={options.stepAutoProgress} />
+							</p>
+						</CCol>
+					)}
+
+					{controlType === 'press' && (
+						<CCol className="fieldtype-checkbox" sm={3} xs={4}>
+							<label>
+								Enable Rotary Actions &nbsp;
+								<FontAwesomeIcon
+									icon={faQuestionCircle}
+									title="Make this bank compatible with rotation events for the Loupedeck Live product range"
+								/>
+							</label>
+							<p>
+								<CheckboxInputField setValue={setRotaryActions} value={options.rotaryActions} />
 							</p>
 						</CCol>
 					)}
@@ -91,7 +128,6 @@ export function ButtonStyleConfig({ controlId, controlType, style, configRef }) 
 
 	const setValueInner = useCallback(
 		(key, value) => {
-			console.log('set', controlId, key, value)
 			if (configRef.current === undefined || value !== configRef.current.style[key]) {
 				socketEmitPromise(socket, 'controls:set-config-fields', [
 					controlId,
