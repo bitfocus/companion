@@ -178,7 +178,7 @@ if (!lock) {
 		const ip = uiConfig.get('bind_ip')
 		const port = uiConfig.get('http_port')
 
-		if (child) {
+		if (child && child.child) {
 			child.child.send({
 				messageType: 'http-rebind',
 				ip,
@@ -287,9 +287,11 @@ if (!lock) {
 				if (watcher) watcher.close().catch(() => console.error('Failed to stop'))
 
 				child.shouldRestart = false
-				child.child.send({
-					messageType: 'exit',
-				})
+				if (child.child) {
+					child.child.send({
+						messageType: 'exit',
+					})
+				}
 			}
 		})
 
@@ -456,16 +458,18 @@ if (!lock) {
 
 					if (child) {
 						child.shouldRestart = false
-						child.child.send({
-							messageType: 'exit',
-						})
+						if (child.child) {
+							child.child.send({
+								messageType: 'exit',
+							})
+						}
 					}
 				}
 			})
 	}
 
 	function scanUsb() {
-		if (child) {
+		if (child && child.child) {
 			child.child.send({
 				messageType: 'scan-usb',
 			})
@@ -498,7 +502,7 @@ if (!lock) {
 		createWindow()
 
 		electron.powerMonitor.on('suspend', () => {
-			if (child) {
+			if (child && child.child) {
 				child.child.send({
 					messageType: 'power-status',
 					status: 'suspend',
@@ -507,7 +511,7 @@ if (!lock) {
 		})
 
 		electron.powerMonitor.on('resume', () => {
-			if (child) {
+			if (child && child.child) {
 				child.child.send({
 					messageType: 'power-status',
 					status: 'resume',
@@ -516,7 +520,7 @@ if (!lock) {
 		})
 
 		electron.powerMonitor.on('on-ac', () => {
-			if (child) {
+			if (child && child.child) {
 				child.child.send({
 					messageType: 'power-status',
 					status: 'ac',
@@ -525,7 +529,7 @@ if (!lock) {
 		})
 
 		electron.powerMonitor.on('on-battery', () => {
-			if (child) {
+			if (child && child.child) {
 				child.child.send({
 					messageType: 'power-status',
 					status: 'battery',
