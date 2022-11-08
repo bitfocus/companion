@@ -1,6 +1,6 @@
 import { CButton, CRow, CCol, CButtonGroup, CForm, CAlert } from '@coreui/react'
 import React, { useCallback, useContext, useState } from 'react'
-import { socketEmitPromise, SocketContext } from '../../util'
+import { socketEmitPromise, SocketContext } from '../util'
 import {
 	AlignmentInputField,
 	ColorInputField,

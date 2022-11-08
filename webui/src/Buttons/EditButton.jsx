@@ -346,7 +346,7 @@ function ActionsSection({ style, controlId, action_sets, runtimeProps, rotaryAct
 				{rotaryActions && (
 					<>
 						<MyErrorBoundary>
-							<ActionsPanel
+							<ControlActionSetEditor
 								heading="Rotate left actions"
 								controlId={controlId}
 								set={'rotate_left'}
@@ -356,7 +356,7 @@ function ActionsSection({ style, controlId, action_sets, runtimeProps, rotaryAct
 						</MyErrorBoundary>
 
 						<MyErrorBoundary>
-							<ActionsPanel
+							<ControlActionSetEditor
 								heading="Rotate right actions"
 								controlId={controlId}
 								set={'rotate_right'}
