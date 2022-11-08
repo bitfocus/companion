@@ -438,6 +438,7 @@
 		"companion-module-qsys-remote-control": "github:bitfocus/companion-module-qsys-remote-control#v1.0.5",
 		"companion-module-radiodj-rest": "github:bitfocus/companion-module-radiodj-rest#v1.0.0",
 		"companion-module-rationalacoustics-smaart3": "github:bitfocus/companion-module-rationalacoustics-smaart3#v1.0.5",
+		"companion-module-rationalacoustics-smaart4": "github:bitfocus/companion-module-rationalacoustics-smaart4#v1.0.0",
 		"companion-module-reddotlogics-hdmimatrix": "github:bitfocus/companion-module-reddotlogics-hdmimatrix#v1.0.1",
 		"companion-module-renewedvision-propresenter": "github:bitfocus/companion-module-renewedvision-propresenter#v2.5.5",
 		"companion-module-renewedvision-pvp": "github:bitfocus/companion-module-renewedvision-pvp#v1.0.10",
