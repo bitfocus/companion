@@ -2,7 +2,7 @@
 
 ## Companion v3.0.0 - Unreleased
 
-Documented up to 273683aa6f3359fb9ef0009ec9a5f54803ba3810
+Documented up to 766f728671778001161d9ec140fbd3d51eb6b255
 
 ### BREAKING CHANGES
 
@@ -13,8 +13,6 @@ Documented up to 273683aa6f3359fb9ef0009ec9a5f54803ba3810
 - Modernisation of large restructuring of codebase
 
 - step button type to replace latching (https://github.com/bitfocus/companion/pull/1630)
-
-- Support Bitfocus cloud https://github.com/bitfocus/companion/pull/1884
 
 - Modules run in child processes. This ensures that module crashes cannot crash the whole of Companion
 
@@ -27,6 +25,10 @@ Documented up to 273683aa6f3359fb9ef0009ec9a5f54803ba3810
 - Rework ui data flow, to reduce amount of data sent to the ui
 
 - Rework ui data flow, to make ui more reactive as changes are made
+
+- Support multiple emulators with new styling
+
+- Overhaul tablet/web views
 
 - Remove old tablet/web-buttons pages
 
@@ -42,11 +44,23 @@ Documented up to 273683aa6f3359fb9ef0009ec9a5f54803ba3810
 
 - Enable/disable any action or feedback on a button or trigger
 
-- Connections list is now sortable
+- Connections list is now manually sortable
+
+- Triggers list is now manually sortable
+
+- Overhaul triggers editor to be like the button editor
+
+- Support multiple event sources per trigger, and a separate condition
+
+- Improve xkeys key colours
 
 ### 🐞 BUG FIXES
 
--
+- Ensure variable ids are valid
+
+- Ensure custom variable ids are valid
+
+- Ensure connection labels are valid
 
 ## Companion v2.3.1 - Release Notes
 
