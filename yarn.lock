@@ -4117,9 +4117,9 @@ commist@^1.0.0:
   version "1.0.0"
   resolved "https://codeload.github.com/bitfocus/companion-module-radiodj-rest/tar.gz/79d922c4d186e6dfe14f715d3f4566dccba03a64"
 
-"companion-module-rationalacoustics-smaart3@github:bitfocus/companion-module-rationalacoustics-smaart3#v1.0.4":
-  version "1.0.4"
-  resolved "https://codeload.github.com/bitfocus/companion-module-rationalacoustics-smaart3/tar.gz/108bd54a40617eeab63e2723d7ddcfbe3539aba8"
+"companion-module-rationalacoustics-smaart3@github:bitfocus/companion-module-rationalacoustics-smaart3#v1.0.5":
+  version "1.0.5"
+  resolved "https://codeload.github.com/bitfocus/companion-module-rationalacoustics-smaart3/tar.gz/84c9167ba10c6eaa2c05ea687109009d6208ebbe"
 
 "companion-module-reddotlogics-hdmimatrix@github:bitfocus/companion-module-reddotlogics-hdmimatrix#v1.0.1":
   version "1.0.1"
