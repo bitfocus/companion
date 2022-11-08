@@ -14,6 +14,7 @@ import {
 	applyPatchOrReplaceObject,
 	SocketContext,
 	NotifierContext,
+	EventDefinitionsContext,
 	ModulesContext,
 	ButtonRenderCacheContext,
 } from './util'
@@ -25,6 +26,7 @@ import { ButtonRenderCache } from './ButtonRenderCache'
 export function ContextData({ children }) {
 	const socket = useContext(SocketContext)
 
+	const [eventDefinitions, setEventDefinitions] = useState(null)
 	const [instances, setInstances] = useState(null)
 	const [modules, setModules] = useState(null)
 	const [actionDefinitions, setActionDefinitions] = useState(null)
@@ -64,6 +66,14 @@ export function ContextData({ children }) {
 
 	useEffect(() => {
 		if (socket) {
+			socketEmitPromise(socket, 'event-definitions:get', [])
+				.then((definitions) => {
+					setEventDefinitions(definitions)
+				})
+				.catch((e) => {
+					console.error('Failed to load event definitions')
+				})
+
 			socketEmitPromise(socket, 'modules:get', [])
 				.then((modules) => {
 					const modulesObj = {}
@@ -131,8 +141,9 @@ export function ContextData({ children }) {
 			const updateCustomVariables = (patch) => {
 				setCustomVariables((oldVariables) => applyPatchOrReplaceObject(oldVariables, patch))
 			}
-			const updateTriggers = (patch) => {
-				setTriggers((oldTriggers) => applyPatchOrReplaceObject(oldTriggers, patch))
+			const updateTriggers = (controlId, patch) => {
+				console.log('trigger', controlId, patch)
+				setTriggers((oldTriggers) => applyPatchOrReplaceSubObject(oldTriggers, controlId, patch))
 			}
 
 			socketEmitPromise(socket, 'instances:subscribe', [])
@@ -204,22 +215,18 @@ export function ContextData({ children }) {
 
 			socket.on('pages:update', updatePageInfo)
 
-			const updateTriggerLastRun = (id, time) => {
-				setTriggers((list) => {
-					if (!list) return list
-
-					const res = { ...list }
-					if (res[id]) {
-						res[id] = { ...res[id], last_run: time }
-					}
-
-					return res
+			socketEmitPromise(socket, 'triggers:subscribe', [])
+				.then((pages) => {
+					// setLoadError(null)
+					setTriggers(pages)
 				})
-			}
+				.catch((e) => {
+					console.error('Failed to load triggers list:', e)
+					// setLoadError(`Failed to load pages list`)
+					setPages(null)
+				})
 
-			socket.emit('schedule_get', setTriggers)
-			socket.on('schedule:update', updateTriggers)
-			socket.on('schedule_last_run', updateTriggerLastRun)
+			socket.on('triggers:update', updateTriggers)
 
 			return () => {
 				socket.off('variable-definitions:update', updateVariableDefinitions)
@@ -230,8 +237,7 @@ export function ContextData({ children }) {
 				socket.off('surfaces:patch', patchSurfaces)
 				socket.off('pages:update', updatePageInfo)
 
-				socket.off('schedule:update', updateTriggers)
-				socket.off('schedule_last_run', updateTriggerLastRun)
+				socket.off('triggers:update', updateTriggers)
 
 				socket.off('instances:patch', patchInstances)
 
@@ -263,6 +269,7 @@ export function ContextData({ children }) {
 	const notifierRef = useRef()
 
 	const steps = [
+		eventDefinitions,
 		instances,
 		modules,
 		variableDefinitions,
@@ -282,29 +289,31 @@ export function ContextData({ children }) {
 	return (
 		<NotifierContext.Provider value={notifierRef}>
 			<ButtonRenderCacheContext.Provider value={buttonCache}>
-				<ModulesContext.Provider value={modules}>
-					<ActionsContext.Provider value={actionDefinitions}>
-						<FeedbacksContext.Provider value={feedbackDefinitions}>
-							<InstancesContext.Provider value={instances}>
-								<VariableDefinitionsContext.Provider value={completeVariableDefinitions}>
-									<CustomVariableDefinitionsContext.Provider value={customVariables}>
-										<UserConfigContext.Provider value={userConfig}>
-											<SurfacesContext.Provider value={surfaces}>
-												<PagesContext.Provider value={pages}>
-													<TriggersContext.Provider value={triggers}>
-														<NotificationsManager ref={notifierRef} />
+				<EventDefinitionsContext.Provider value={eventDefinitions}>
+					<ModulesContext.Provider value={modules}>
+						<ActionsContext.Provider value={actionDefinitions}>
+							<FeedbacksContext.Provider value={feedbackDefinitions}>
+								<InstancesContext.Provider value={instances}>
+									<VariableDefinitionsContext.Provider value={completeVariableDefinitions}>
+										<CustomVariableDefinitionsContext.Provider value={customVariables}>
+											<UserConfigContext.Provider value={userConfig}>
+												<SurfacesContext.Provider value={surfaces}>
+													<PagesContext.Provider value={pages}>
+														<TriggersContext.Provider value={triggers}>
+															<NotificationsManager ref={notifierRef} />
 
-														{children(progressPercent, completedSteps.length === steps.length)}
-													</TriggersContext.Provider>
-												</PagesContext.Provider>
-											</SurfacesContext.Provider>
-										</UserConfigContext.Provider>
-									</CustomVariableDefinitionsContext.Provider>
-								</VariableDefinitionsContext.Provider>
-							</InstancesContext.Provider>
-						</FeedbacksContext.Provider>
-					</ActionsContext.Provider>
-				</ModulesContext.Provider>
+															{children(progressPercent, completedSteps.length === steps.length)}
+														</TriggersContext.Provider>
+													</PagesContext.Provider>
+												</SurfacesContext.Provider>
+											</UserConfigContext.Provider>
+										</CustomVariableDefinitionsContext.Provider>
+									</VariableDefinitionsContext.Provider>
+								</InstancesContext.Provider>
+							</FeedbacksContext.Provider>
+						</ActionsContext.Provider>
+					</ModulesContext.Provider>
+				</EventDefinitionsContext.Provider>
 			</ButtonRenderCacheContext.Provider>
 		</NotifierContext.Provider>
 	)

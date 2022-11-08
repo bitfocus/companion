@@ -33,12 +33,12 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faCalendarAlt, faClock } from '@fortawesome/free-solid-svg-icons'
 import { useMemo } from 'react'
 import { DropdownInputField } from '../Components'
-import { ActionsPanelInner } from './EditButton/ActionsPanel'
+import { ActionsList } from '../Controls/ActionSetEditor'
 import { GenericConfirmModal } from '../Components/GenericConfirmModal'
 import { ButtonGrid, ButtonGridHeader } from './ButtonGrid'
 import { cloneDeep } from 'lodash-es'
 import jsonPatch from 'fast-json-patch'
-import { usePanelCollapseHelper } from './EditButton/CollapseHelper'
+import { usePanelCollapseHelper } from '../Helpers/CollapseHelper'
 import CSwitch from '../CSwitch'
 
 export function ActionRecorder() {
@@ -395,17 +395,13 @@ function BankPicker({ selectBank }) {
 	)
 }
 
-function TriggerPickerRow({ trigger, selectTrigger }) {
-	const replaceActions = useCallback(() => {
-		selectTrigger(trigger.id, 'replace')
-	}, [trigger.id, selectTrigger])
-	const appendActions = useCallback(() => {
-		selectTrigger(trigger.id, 'append')
-	}, [trigger.id, selectTrigger])
+function TriggerPickerRow({ id, trigger, selectTrigger }) {
+	const replaceActions = useCallback(() => selectTrigger(id, 'replace'), [id, selectTrigger])
+	const appendActions = useCallback(() => selectTrigger(id, 'append'), [id, selectTrigger])
 
 	return (
 		<tr>
-			<td>{trigger.title}</td>
+			<td>{trigger.name}</td>
 			<td>
 				<CButtonGroup>
 					<CButton color="primary" title="Replace all the actions on the trigger" onClick={replaceActions}>
@@ -438,8 +434,8 @@ function TriggerPicker({ selectControl }) {
 				</thead>
 				<tbody>
 					{triggersList && Object.keys(triggersList).length > 0 ? (
-						Object.values(triggersList).map((item) => (
-							<TriggerPickerRow key={item.id} trigger={item} selectTrigger={selectTrigger} />
+						Object.entries(triggersList).map(([id, item]) => (
+							<TriggerPickerRow key={id} id={id} trigger={item} selectTrigger={selectTrigger} />
 						))
 					) : (
 						<tr>
@@ -615,7 +611,7 @@ function RecorderSession({ sessionId, sessionInfo }) {
 
 	return (
 		<CCol xs={12}>
-			<ActionsPanelInner
+			<ActionsList
 				isOnBank={false}
 				dragId={'triggerAction'}
 				actions={sessionInfo.actions}

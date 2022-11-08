@@ -10,18 +10,18 @@ import {
 	sandbox,
 	useMountEffect,
 	SocketContext,
-} from '../../util'
+} from '../util'
 import Select, { createFilter } from 'react-select'
-import { ActionTableRowOption } from './Table'
+import { OptionsInputField } from './OptionsInputField'
 import { useDrag, useDrop } from 'react-dnd'
-import { GenericConfirmModal } from '../../Components/GenericConfirmModal'
-import { DropdownInputField } from '../../Components'
+import { GenericConfirmModal } from '../Components/GenericConfirmModal'
+import { DropdownInputField } from '../Components'
 import { ButtonStyleConfigFields } from './ButtonStyleConfig'
 import { AddFeedbacksModal } from './AddModal'
-import { usePanelCollapseHelper } from './CollapseHelper'
-import { ActionBankPreview } from './ActionsPanel'
+import { usePanelCollapseHelper } from '../Helpers/CollapseHelper'
+import { OptionBankPreview } from './OptionBankPreview'
 
-export const FeedbacksPanel = function ({ controlId, feedbacks, heading }) {
+export function ControlFeedbacksEditor({ controlId, feedbacks, heading, booleanOnly, isOnBank }) {
 	const socket = useContext(SocketContext)
 
 	const confirmModal = useRef()
@@ -135,7 +135,7 @@ export const FeedbacksPanel = function ({ controlId, feedbacks, heading }) {
 			<GenericConfirmModal ref={confirmModal} />
 
 			<MyErrorBoundary>
-				<AddFeedbacksModal ref={addFeedbacksRef} addFeedback={addFeedback} />
+				<AddFeedbacksModal ref={addFeedbacksRef} addFeedback={addFeedback} booleanOnly={booleanOnly} />
 			</MyErrorBoundary>
 
 			<h4 className="mt-3">
@@ -167,7 +167,7 @@ export const FeedbacksPanel = function ({ controlId, feedbacks, heading }) {
 			<table className="table feedback-table">
 				<tbody>
 					{feedbacks.map((a, i) => (
-						<MyErrorBoundary>
+						<MyErrorBoundary key={a?.id ?? i}>
 							<FeedbackTableRow
 								key={a?.id ?? i}
 								index={i}
@@ -182,6 +182,8 @@ export const FeedbacksPanel = function ({ controlId, feedbacks, heading }) {
 								moveCard={moveCard}
 								setCollapsed={setPanelCollapsed}
 								isCollapsed={isPanelCollapsed(a.id)}
+								booleanOnly={booleanOnly}
+								isOnBank={isOnBank}
 							/>
 						</MyErrorBoundary>
 					))}
@@ -189,7 +191,7 @@ export const FeedbacksPanel = function ({ controlId, feedbacks, heading }) {
 			</table>
 
 			<div className="add-dropdown-wrapper">
-				<AddFeedbackDropdown onSelect={addFeedback} recentFeedbacks={recentFeedbacks} />
+				<AddFeedbackDropdown onSelect={addFeedback} recentFeedbacks={recentFeedbacks} booleanOnly={booleanOnly} />
 				<CButton color="primary" variant="outline" onClick={showAddModal}>
 					Browse
 				</CButton>
@@ -211,6 +213,8 @@ function FeedbackTableRow({
 	doEnabled,
 	isCollapsed,
 	setCollapsed,
+	booleanOnly,
+	isOnBank,
 }) {
 	const socket = useContext(SocketContext)
 
@@ -258,7 +262,7 @@ function FeedbackTableRow({
 		(selected) => {
 			socketEmitPromise(socket, 'controls:feedback:set-style-selection', [controlId, feedback.id, selected]).catch(
 				(e) => {
-					// TODO
+					console.error(`Failed: ${e}`)
 				}
 			)
 		},
@@ -295,7 +299,7 @@ function FeedbackTableRow({
 			</td>
 			<td>
 				<FeedbackEditor
-					isOnBank={true}
+					isOnBank={isOnBank}
 					controlId={controlId}
 					feedback={feedback}
 					setValue={setValue}
@@ -308,13 +312,14 @@ function FeedbackTableRow({
 					doCollapse={doCollapse}
 					doExpand={doExpand}
 					doEnabled={doEnabled}
+					booleanOnly={booleanOnly}
 				/>
 			</td>
 		</tr>
 	)
 }
 
-export function FeedbackEditor({
+function FeedbackEditor({
 	feedback,
 	isOnBank,
 	controlId,
@@ -328,6 +333,7 @@ export function FeedbackEditor({
 	doCollapse,
 	doExpand,
 	doEnabled,
+	booleanOnly,
 }) {
 	const feedbacksContext = useContext(FeedbacksContext)
 	const instancesContext = useContext(InstancesContext)
@@ -421,7 +427,7 @@ export function FeedbackEditor({
 						Array.isArray(feedbackSpec?.previewBank) &&
 						feedbackSpec.previewBank.length === 2 && (
 							<div className="cell-bank-preview">
-								<ActionBankPreview fields={feedbackSpec.previewBank} options={feedback.options} controlId={controlId} />
+								<OptionBankPreview fields={feedbackSpec.previewBank} options={feedback.options} controlId={controlId} />
 							</div>
 						)}
 
@@ -437,7 +443,7 @@ export function FeedbackEditor({
 						<CForm>
 							{options.map((opt, i) => (
 								<MyErrorBoundary key={i}>
-									<ActionTableRowOption
+									<OptionsInputField
 										key={i}
 										isOnBank={isOnBank}
 										instanceId={feedback.instance_id}
@@ -452,7 +458,7 @@ export function FeedbackEditor({
 							{options.length === 0 ? 'Nothing to configure' : ''}
 						</CForm>
 					</div>
-					{(setSelectedStyleProps || setStylePropsValue) && (
+					{!booleanOnly && (
 						<>
 							<FeedbackStyles feedbackSpec={feedbackSpec} feedback={feedback} setStylePropsValue={setStylePropsValue} />
 							<FeedbackManageStyles
@@ -635,7 +641,7 @@ export function AddFeedbackDropdown({ onSelect, booleanOnly, recentFeedbacks }) 
 
 	return (
 		<Select
-			menuPlacement="top"
+			menuPlacement="auto"
 			isClearable={false}
 			isSearchable={true}
 			isMulti={false}

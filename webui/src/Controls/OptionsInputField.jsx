@@ -7,10 +7,10 @@ import {
 	NumberInputField,
 	TextInputField,
 	TextWithVariablesInputField,
-} from '../../Components'
+} from '../Components'
 import { InternalCustomVariableDropdown, InternalInstanceField } from './InternalInstanceFields'
 
-export function ActionTableRowOption({
+export function OptionsInputField({
 	instanceId,
 	isOnBank,
 	isAction,
@@ -36,6 +36,7 @@ export function ActionTableRowOption({
 					regex={option.regex}
 					required={option.required}
 					tooltip={option.tooltip}
+					placeholder={option.placeholder}
 					disabled={readonly}
 					setValue={setValue2}
 				/>
@@ -113,7 +114,6 @@ export function ActionTableRowOption({
 		}
 		case 'custom-variable': {
 			if (isAction) {
-				//isAction
 				control = (
 					<InternalCustomVariableDropdown disabled={readonly} value={value} setValue={setValue2} includeNone={true} />
 				)

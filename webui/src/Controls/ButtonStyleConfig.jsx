@@ -1,110 +1,16 @@
-import { CButton, CRow, CCol, CButtonGroup, CLabel, CForm, CAlert } from '@coreui/react'
-import React, { useCallback, useContext, useRef, useState } from 'react'
-import { socketEmitPromise, SocketContext } from '../../util'
+import { CButton, CRow, CCol, CButtonGroup, CForm, CAlert } from '@coreui/react'
+import React, { useCallback, useContext, useState } from 'react'
+import { socketEmitPromise, SocketContext } from '../util'
 import {
 	AlignmentInputField,
-	CheckboxInputField,
 	ColorInputField,
 	DropdownInputField,
 	PNGInputField,
 	TextWithVariablesInputField,
-} from '../../Components'
-import { FONT_SIZES } from '../../Constants'
+} from '../Components'
+import { FONT_SIZES } from '../Constants'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faQuestionCircle, faTrash } from '@fortawesome/free-solid-svg-icons'
-import { GenericConfirmModal } from '../../Components/GenericConfirmModal'
-
-export function ButtonOptionsConfig({ controlId, controlType, options, configRef }) {
-	const socket = useContext(SocketContext)
-
-	const confirmRef = useRef(null)
-
-	const setValueInner = useCallback(
-		(key, value) => {
-			console.log('set', controlId, key, value)
-			if (configRef.current === undefined || value !== configRef.current.options[key]) {
-				socketEmitPromise(socket, 'controls:set-options-field', [controlId, key, value]).catch((e) => {
-					console.error(`Set field failed: ${e}`)
-				})
-			}
-		},
-		[socket, controlId, configRef]
-	)
-
-	const setStepAutoProgressValue = useCallback((val) => setValueInner('stepAutoProgress', val), [setValueInner])
-	const setRelativeDelayValue = useCallback((val) => setValueInner('relativeDelay', val), [setValueInner])
-	const setRotaryActions = useCallback(
-		(val) => {
-			if (!val && confirmRef.current && configRef.current && configRef.current.options.rotaryActions === true) {
-				confirmRef.current.show(
-					'Disable rotary actions',
-					'Are you sure? This will clear any rotary actions that have been defined.',
-					'OK',
-					() => {
-						setValueInner('rotaryActions', val)
-					}
-				)
-			} else {
-				setValueInner('rotaryActions', val)
-			}
-		},
-		[setValueInner, configRef]
-	)
-
-	switch (controlType) {
-		case undefined:
-			return ''
-		case 'pageup':
-			return ''
-		case 'pagenum':
-			return ''
-		case 'pagedown':
-			return ''
-		default:
-		// See below
-	}
-
-	return (
-		<CCol sm={12} className="p-0">
-			<GenericConfirmModal ref={confirmRef} />
-
-			<CForm>
-				<CRow form className="button-style-form">
-					<CCol className="fieldtype-checkbox" sm={3} xs={4}>
-						<CLabel>Relative Delays</CLabel>
-						<p>
-							<CheckboxInputField setValue={setRelativeDelayValue} value={options.relativeDelay} />
-						</p>
-					</CCol>
-
-					{controlType === 'step' && (
-						<CCol className="fieldtype-checkbox" sm={3} xs={4}>
-							<label>Auto progress</label>
-							<p>
-								<CheckboxInputField setValue={setStepAutoProgressValue} value={options.stepAutoProgress} />
-							</p>
-						</CCol>
-					)}
-
-					{controlType === 'press' && (
-						<CCol className="fieldtype-checkbox" sm={3} xs={4}>
-							<label>
-								Enable Rotary Actions &nbsp;
-								<FontAwesomeIcon
-									icon={faQuestionCircle}
-									title="Make this bank compatible with rotation events for the Loupedeck Live product range"
-								/>
-							</label>
-							<p>
-								<CheckboxInputField setValue={setRotaryActions} value={options.rotaryActions} />
-							</p>
-						</CCol>
-					)}
-				</CRow>
-			</CForm>
-		</CCol>
-	)
-}
+import { faTrash } from '@fortawesome/free-solid-svg-icons'
 
 export function ButtonStyleConfig({ controlId, controlType, style, configRef }) {
 	const socket = useContext(SocketContext)
@@ -113,7 +19,7 @@ export function ButtonStyleConfig({ controlId, controlType, style, configRef }) 
 	const setPng = useCallback(
 		(data) => {
 			setPngError(null)
-			socketEmitPromise(socket, 'controls:set-config-fields', [
+			socketEmitPromise(socket, 'controls:set-style-fields', [
 				controlId,
 				{
 					png64: data,
@@ -129,7 +35,7 @@ export function ButtonStyleConfig({ controlId, controlType, style, configRef }) 
 	const setValueInner = useCallback(
 		(key, value) => {
 			if (configRef.current === undefined || value !== configRef.current.style[key]) {
-				socketEmitPromise(socket, 'controls:set-config-fields', [
+				socketEmitPromise(socket, 'controls:set-style-fields', [
 					controlId,
 					{
 						[key]: value,
