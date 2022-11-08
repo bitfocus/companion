@@ -226,12 +226,12 @@ export function EditButton({ controlId, onKeyUp }) {
 								>
 									Test actions
 								</CButton>
-								{config.rotaryActions && (
+								{config?.options?.rotaryActions && (
 									<CButton color="warning" onMouseDown={hotRotateLeft}>
 										Click Left
 									</CButton>
 								)}
-								{config.rotaryActions && (
+								{config?.options?.rotaryActions && (
 									<CButton color="warning" onMouseDown={hotRotateRight}>
 										Click Right
 									</CButton>
