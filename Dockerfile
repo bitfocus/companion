@@ -37,8 +37,10 @@ WORKDIR /app
 COPY --from=companion-builder /app/	/app/
 
 # Install curl for the health check
-RUN apt update && apt install -y curl && \
-    rm -rf /var/lib/apt/lists/*
+RUN apt update && apt install -y \
+    curl \
+    iputils-ping \
+    && rm -rf /var/lib/apt/lists/*
 
 # Create config directory and set correct permissions
 # Once docker mounts the volume, the directory will be owned by node:node

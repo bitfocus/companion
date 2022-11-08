@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState, useCallback } from 'react'
 import { CInput } from '@coreui/react'
 
-export function TextInputField({ definition, value, setValue, setValid }) {
+export function TextInputField({ definition, value, setValue, setValid, readonly }) {
 	const [tmpValue, setTmpValue] = useState(null)
 
 	// Compile the regex (and cache)
@@ -55,6 +55,7 @@ export function TextInputField({ definition, value, setValue, setValid }) {
 	return (
 		<CInput
 			type="text"
+			readOnly={readonly}
 			value={tmpValue ?? value ?? ''}
 			style={{ color: !isValueValid(tmpValue ?? value) ? 'red' : undefined }}
 			title={definition.tooltip}

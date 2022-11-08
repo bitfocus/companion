@@ -160,7 +160,7 @@ export interface CompanionInputFieldMultiDropdown extends CompanionInputFieldDro
 	/** The minimum number of selected values */
 	minSelection?: number
 	/** The maximum number of selected values */
-	maximumSelectionLength?: number
+	maxSelection?: number
 }
 export interface CompanionInputFieldDropdownBase extends CompanionInputField {
 	type: 'dropdown'

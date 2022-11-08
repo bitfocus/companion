@@ -31,6 +31,7 @@ import { UserConfig } from './UserConfig'
 import { LogPanel } from './LogPanel'
 import { DndProvider } from 'react-dnd'
 import { HTML5Backend } from 'react-dnd-html5-backend'
+import { TouchBackend } from 'react-dnd-touch-backend'
 import { MySidebar } from './Layout/Sidebar'
 import { MyHeader } from './Layout/Header'
 import { Triggers } from './Triggers'
@@ -40,6 +41,8 @@ import { ContextData } from './ContextData'
 import { WizardModal } from './Wizard'
 import { Redirect, useLocation } from 'react-router-dom'
 import { useIdleTimer } from 'react-idle-timer'
+
+const useTouchBackend = window.localStorage.getItem('test_touch_backend') === '1'
 
 export default function App() {
 	const [connected, setConnected] = useState(false)
@@ -120,7 +123,10 @@ export default function App() {
 						</div>
 					</div>
 					<Suspense fallback={<AppLoading progress={loadingProgress} connected={connected} />}>
-						<DndProvider backend={HTML5Backend}>
+						<DndProvider
+							backend={useTouchBackend ? TouchBackend : HTML5Backend}
+							options={useTouchBackend ? { enableMouseEvents: true } : {}}
+						>
 							<AppMain
 								connected={connected}
 								loadingComplete={loadingComplete}

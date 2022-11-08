@@ -144,7 +144,7 @@ function UserConfigTable() {
 
 				<tr>
 					<td colSpan="2" className="settings-category">
-						Devices
+						Surfaces
 					</td>
 				</tr>
 				<tr>
@@ -187,6 +187,21 @@ function UserConfigTable() {
 								onChange={(e) => setValue('xkeys_enable', e.currentTarget.checked)}
 							/>
 							<label className="form-check-label" htmlFor="userconfig_xkeys_enable">
+								Enabled
+							</label>
+						</div>
+					</td>
+				</tr>
+				<tr>
+					<td>Enable connected Loupedeck Live devices (Requires Companion restart)</td>
+					<td>
+						<div className="form-check form-check-inline mr-1">
+							<CInputCheckbox
+								id="userconfig_loupedeck_enable"
+								checked={config.loupedeck_enable}
+								onChange={(e) => setValue('loupedeck_enable', e.currentTarget.checked)}
+							/>
+							<label className="form-check-label" htmlFor="userconfig_loupedeck_enable">
 								Enabled
 							</label>
 						</div>
@@ -706,6 +721,31 @@ function UserConfigTable() {
 						</td>
 					</tr>
 				)}
+				<tr>
+					<td colSpan="2" className="settings-category">
+						Experiments
+					</td>
+				</tr>
+				<tr>
+					<td colSpan="2">
+						<CAlert color="danger">Do not touch these settings unless you know what you are doing!</CAlert>
+					</td>
+				</tr>
+				<tr>
+					<td>Use TouchBackend for Drag and Drop</td>
+					<td>
+						<div className="form-check form-check-inline mr-1">
+							<CInputCheckbox
+								checked={window.localStorage.getItem('test_touch_backend') === '1'}
+								onChange={(e) => {
+									window.localStorage.setItem('test_touch_backend', e.currentTarget.checked ? '1' : '0')
+									window.location.reload()
+								}}
+							/>
+							<label className="form-check-label">Enabled</label>
+						</div>
+					</td>
+				</tr>
 			</tbody>
 		</table>
 	)
@@ -877,7 +917,7 @@ function RemoteControlInfo() {
 										<i>Change text size on a button (between the predefined values)</i>
 									</li>
 									<li>
-										<code>/api/custom-variable/</code>&lt;name&gt;<code>?value=</code>&lt;value&gt;
+										<code>/set/custom-variable/</code>&lt;name&gt;<code>?value=</code>&lt;value&gt;
 										<br />
 										<i>Change custom variable value</i>
 									</li>
@@ -915,7 +955,7 @@ function RemoteControlInfo() {
 							<p>
 								Change custom variable &quot;cue&quot; to value &quot;intro&quot;
 								<br />
-								<code>/api/custom-variable/cue?value=intro</code>
+								<code>/set/custom-variable/cue?value=intro</code>
 							</p>
 						</MyErrorBoundary>
 					</CTabPane>

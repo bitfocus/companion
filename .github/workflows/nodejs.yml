@@ -12,6 +12,9 @@ jobs:
           node-version-file: '.node-version'
       - name: yarn update and lindist
         run: |
+          # try and avoid timeout errors
+          yarn config set network-timeout 100000 -g
+
           yarn update
           yarn build:rebuild_modules
 
@@ -191,6 +194,9 @@ jobs:
       - name: yarn update and windist
         shell: bash
         run: |
+          # try and avoid timeout errors
+          yarn config set network-timeout 100000 -g
+
           # This fixes it somehow, and without it we get no logs from any shell scripts which are run
           yarn config set script-shell bash
 
