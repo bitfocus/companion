@@ -1,6 +1,6 @@
 import { CButton, CRow, CCol, CButtonGroup, CForm, CAlert } from '@coreui/react'
 import React, { useCallback, useContext, useState } from 'react'
-import { socketEmitPromise, SocketContext } from '../util'
+import { socketEmitPromise, SocketContext } from '../../util'
 import {
 	AlignmentInputField,
 	ColorInputField,
@@ -34,7 +34,6 @@ export function ButtonStyleConfig({ controlId, controlType, style, configRef }) 
 
 	const setValueInner = useCallback(
 		(key, value) => {
-			console.log('set', controlId, key, value)
 			if (configRef.current === undefined || value !== configRef.current.style[key]) {
 				socketEmitPromise(socket, 'controls:set-style-fields', [
 					controlId,

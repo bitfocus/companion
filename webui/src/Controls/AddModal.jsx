@@ -178,7 +178,7 @@ function InstanceCollapse({
 			for (const [id, info] of Object.entries(items)) {
 				if (booleanOnly && info.type !== 'boolean') continue
 
-				if (info.label.match(regexp)) {
+				if (info.label?.match(regexp)) {
 					const fullId = `${instanceId}:${id}`
 					res.push({
 						...info,
@@ -191,13 +191,13 @@ function InstanceCollapse({
 		} catch (e) {
 			console.error('Failed to compile candidates list:', e)
 
-			return [
+			return (
 				<CAlert color="warning" role="alert">
 					Failed to build list of {itemName}:
 					<br />
 					{e}
-				</CAlert>,
-			]
+				</CAlert>
+			)
 		}
 	}, [items, filter, instanceId, itemName, booleanOnly])
 
@@ -210,7 +210,9 @@ function InstanceCollapse({
 				<CCardHeader onClick={doToggle2}>{instanceInfo?.label || instanceId}</CCardHeader>
 				<CCollapse show={expanded}>
 					<CCardBody>
-						{candidates.length > 0 ? (
+						{!Array.isArray(candidates) ? (
+							candidates
+						) : candidates.length > 0 ? (
 							<table className="table">
 								<tbody>
 									{candidates.map((info) => (

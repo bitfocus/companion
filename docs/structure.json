@@ -104,8 +104,8 @@
 						"file": "3_config/settings/navigation_buttons.md"
 					},
 					{
-						"label": "Devices",
-						"file": "3_config/settings/devices.md"
+						"label": "Surfaces",
+						"file": "3_config/settings/surfaces.md"
 					},
 					{
 						"label": "PIN lockout",
@@ -235,5 +235,27 @@
 	{
 		"label": "Modules",
 		"file": "6_modules.md"
+	},
+	{
+		"label": "Surfaces",
+		"file": "7_surfaces.md",
+		"children": [
+			{
+				"label": "Elgato Stream Deck",
+				"file": "7_surfaces/elgato_streamdeck.md"
+			},
+			{
+				"label": "Satellite",
+				"file": "7_surfaces/satellite.md"
+			},
+			{
+				"label": "XKeys",
+				"file": "7_surfaces/xkeys.md"
+			},
+			{
+				"label": "Loupedeck Live",
+				"file": "7_surfaces/loupedeck-live.md"
+			}
+		]
 	}
 ]

@@ -16,4 +16,5 @@ if [ -d /app/module-local-dev ]; then
   done
 fi
 
+cd /app
 exec "$@"
