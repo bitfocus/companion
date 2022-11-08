@@ -5,9 +5,9 @@ jobs:
   linux64:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v1
+      - uses: actions/checkout@v3
       - name: Use Node.js
-        uses: actions/setup-node@v2
+        uses: actions/setup-node@v3
         with:
           node-version-file: '.node-version'
 
@@ -35,9 +35,9 @@ jobs:
         run: |
           VERSION=$(cat ./dist/BUILD)
 
-          echo ::set-output name=sourcename::"electron-output/companion-x64.tar.gz"
-          echo ::set-output name=targetname::"companion-linux-x64-${VERSION}.tar.gz"
-          echo ::set-output name=longversion::"${VERSION}"
+          echo "sourcename=electron-output/companion-x64.tar.gz" >> $GITHUB_OUTPUT
+          echo "targetname=companion-linux-x64-${VERSION}.tar.gz" >> $GITHUB_OUTPUT
+          echo "longversion=${VERSION}" >> $GITHUB_OUTPUT
 
       - name: Upload build
         uses: bitfocus/actions/upload-and-notify@main
@@ -60,9 +60,9 @@ jobs:
   osx:
     runs-on: macos-latest
     steps:
-      - uses: actions/checkout@v1
+      - uses: actions/checkout@v3
       - name: Use Node.js
-        uses: actions/setup-node@v2
+        uses: actions/setup-node@v3
         with:
           node-version-file: '.node-version'
 
@@ -89,9 +89,9 @@ jobs:
         run: |
           VERSION=$(cat ./dist/BUILD)
 
-          echo ::set-output name=sourcename::"electron-output/companion-mac-x64.dmg"
-          echo ::set-output name=targetname::"companion-mac-x64-${VERSION}.dmg"
-          echo ::set-output name=longversion::"${VERSION}"
+          echo "sourcename=electron-output/companion-mac-x64.dmg" >> $GITHUB_OUTPUT
+          echo "targetname=companion-mac-x64-${VERSION}.dmg" >> $GITHUB_OUTPUT
+          echo "longversion=${VERSION}" >> $GITHUB_OUTPUT"
 
       - name: Upload build
         uses: bitfocus/actions/upload-and-notify@main
@@ -114,9 +114,9 @@ jobs:
   osx-arm64:
     runs-on: macos-11
     steps:
-      - uses: actions/checkout@v1
+      - uses: actions/checkout@v3
       - name: Use Node.js
-        uses: actions/setup-node@v2
+        uses: actions/setup-node@v3
         with:
           node-version-file: '.node-version'
 
@@ -147,9 +147,9 @@ jobs:
         run: |
           VERSION=$(cat ./dist/BUILD)
 
-          echo ::set-output name=sourcename::"electron-output/companion-mac-arm64.dmg"
-          echo ::set-output name=targetname::"companion-mac-arm64-${VERSION}.dmg"
-          echo ::set-output name=longversion::"${VERSION}"
+          echo "sourcename=electron-output/companion-mac-arm64.dmg" >> $GITHUB_OUTPUT
+          echo "targetname=companion-mac-arm64-${VERSION}.dmg" >> $GITHUB_OUTPUT
+          echo "longversion=${VERSION}" >> $GITHUB_OUTPUT
 
       - name: Upload build
         uses: bitfocus/actions/upload-and-notify@main
@@ -172,9 +172,9 @@ jobs:
   win64:
     runs-on: windows-2019
     steps:
-      - uses: actions/checkout@v1
+      - uses: actions/checkout@v3
       - name: Use Node.js
-        uses: actions/setup-node@v2
+        uses: actions/setup-node@v3
         with:
           node-version-file: '.node-version'
 
@@ -205,9 +205,9 @@ jobs:
         run: |
           VERSION=$(cat ./dist/BUILD)
 
-          echo ::set-output name=sourcename::"electron-output/companion-win64.exe"
-          echo ::set-output name=targetname::"companion-win64-${VERSION}.exe"
-          echo ::set-output name=longversion::"${VERSION}"
+          echo "sourcename=electron-output/companion-win64.exe" >> $GITHUB_OUTPUT
+          echo "targetname=companion-win64-${VERSION}.exe" >> $GITHUB_OUTPUT
+          echo "longversion=${VERSION}" >> $GITHUB_OUTPUT
 
       - name: Upload build
         uses: bitfocus/actions/upload-and-notify@main
