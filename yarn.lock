@@ -4598,6 +4598,10 @@ commist@^1.0.0:
   version "1.0.0"
   resolved "https://codeload.github.com/bitfocus/companion-module-vimeo-livestreamstudio6/tar.gz/7e494ee4f43b1bb054d97a3dcaa375d129a7374f"
 
+"companion-module-vislink-ulrx-ld@github:bitfocus/companion-module-vislink-ulrx-ld#v1.0.4":
+  version "1.0.4"
+  resolved "https://codeload.github.com/bitfocus/companion-module-vislink-ulrx-ld/tar.gz/6c56baa68e2b134a5f772c8d441a6ad5757cbb66"
+
 "companion-module-vistream-online@github:bitfocus/companion-module-vistream-online#v1.0.8":
   version "1.0.8"
   resolved "https://codeload.github.com/bitfocus/companion-module-vistream-online/tar.gz/a077975ca7f94eeb7c56dc45cf5ae26372574e6c"
