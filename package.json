@@ -312,6 +312,7 @@
 		"companion-module-gefen-dvimatrix": "github:bitfocus/companion-module-gefen-dvimatrix#v1.0.2",
 		"companion-module-generic-artnet": "github:bitfocus/companion-module-generic-artnet#v1.2.0",
 		"companion-module-generic-emberplus": "github:bitfocus/companion-module-generic-emberplus#v1.1.4",
+		"companion-module-generic-filereader": "github:bitfocus/companion-module-generic-filereader#v1.0.0",
 		"companion-module-generic-http": "github:bitfocus/companion-module-generic-http#v1.2.5",
 		"companion-module-generic-mqtt": "github:bitfocus/companion-module-generic-mqtt#v1.2.2",
 		"companion-module-generic-osc": "github:bitfocus/companion-module-generic-osc#v1.1.3",

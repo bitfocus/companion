@@ -3499,6 +3499,10 @@ commist@^1.0.0:
     "@types/node" "^12.0.4"
     type-fest "^1.1.3"
 
+"companion-module-generic-filereader@github:bitfocus/companion-module-generic-filereader#v1.0.0":
+  version "1.0.0"
+  resolved "https://codeload.github.com/bitfocus/companion-module-generic-filereader/tar.gz/501b611d8ba0da9958785c1281a2c0b54fe1cbe5"
+
 "companion-module-generic-http@github:bitfocus/companion-module-generic-http#v1.2.5":
   version "1.2.5"
   resolved "https://codeload.github.com/bitfocus/companion-module-generic-http/tar.gz/0527faba63df2c4386cfa8326a676ceaef65e248"
