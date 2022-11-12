@@ -2871,6 +2871,10 @@ commist@^1.0.0:
   version "1.0.5"
   resolved "https://codeload.github.com/bitfocus/companion-module-arkaos-mediamaster/tar.gz/b2a69f65be372bd18cd907124f5fd6e43cf7d6d0"
 
+"companion-module-arri-tally@github:bitfocus/companion-module-arri-tally#v1.0.0":
+  version "1.0.0"
+  resolved "https://codeload.github.com/bitfocus/companion-module-arri-tally/tar.gz/2259eb2039f902c668b94af40ea01ea5d5beb4ab"
+
 "companion-module-aten-matrix@github:bitfocus/companion-module-aten-matrix#v1.0.1":
   version "1.0.1"
   resolved "https://codeload.github.com/bitfocus/companion-module-aten-matrix/tar.gz/6c66b5375c554062ec382cea010a0a39c9e26fee"
