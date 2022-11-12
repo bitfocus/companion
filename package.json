@@ -245,7 +245,7 @@
 		"companion-module-cisco-cms": "github:bitfocus/companion-module-cisco-cms#v1.0.2",
 		"companion-module-cisco-webex-websocket": "github:bitfocus/companion-module-cisco-webex-websocket#v1.1.0",
 		"companion-module-classx-liveboard": "github:bitfocus/companion-module-classx-liveboard#v1.0.1",
-		"companion-module-cleartouch-ippctrl": "github:bitfocus/companion-module-cleartouch-ippctrl#v0.0.2",
+		"companion-module-cleartouch-ippctrl": "github:bitfocus/companion-module-cleartouch-ippctrl#v0.0.5",
 		"companion-module-cockos-reaper": "github:bitfocus/companion-module-cockos-reaper#v1.1.2",
 		"companion-module-connect-webcaster": "github:bitfocus/companion-module-connect-webcaster#v1.0.1",
 		"companion-module-crystal-scte": "github:bitfocus/companion-module-crystal-scte#v1.0.2",

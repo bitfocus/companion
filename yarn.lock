@@ -3185,9 +3185,9 @@ commist@^1.0.0:
   version "1.0.1"
   resolved "https://codeload.github.com/bitfocus/companion-module-classx-liveboard/tar.gz/3f2c3f488f2f728e8ab44eca608b2755f8695c44"
 
-"companion-module-cleartouch-ippctrl@github:bitfocus/companion-module-cleartouch-ippctrl#v0.0.2":
-  version "0.0.2"
-  resolved "https://codeload.github.com/bitfocus/companion-module-cleartouch-ippctrl/tar.gz/53ac589c75f6fb65cb01baf878343b8aac4f1f02"
+"companion-module-cleartouch-ippctrl@github:bitfocus/companion-module-cleartouch-ippctrl#v0.0.5":
+  version "0.0.5"
+  resolved "https://codeload.github.com/bitfocus/companion-module-cleartouch-ippctrl/tar.gz/7347be5e3014e53793ad9792ad8cb8c1926d59de"
 
 "companion-module-cockos-reaper@github:bitfocus/companion-module-cockos-reaper#v1.1.2":
   version "1.1.2"
