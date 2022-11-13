@@ -376,14 +376,6 @@ function ResetConfiguration() {
 				</CButton>
 			</p>
 			<ConfirmFullResetModal ref={resetModalRef} />
-
-			<CAlert color="warning">
-				<strong>Something to know</strong>
-				<br />
-				There's been reports of weird stuff going on with import, export and reset. So, at this point after using any of
-				the features, it's recommended to restart companion manually by exiting and reopening the applications. That's
-				been known to fix most of the problems.
-			</CAlert>
 		</>
 	)
 }

@@ -93,6 +93,8 @@ if (!process.env.SKIP_LAUNCH_CHECK) {
 
 // TODO - make optional from flag
 if (process.env.ELECTRON !== '0') {
+	// TODO - set version of the launcher to match the main package
+
 	// perform the electron build
 	await $`yarn --cwd launcher install`
 	await $`yarn --cwd launcher electron-builder --publish=never ${platformInfo.electronBuilderArgs}`
