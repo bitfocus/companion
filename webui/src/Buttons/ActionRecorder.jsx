@@ -7,9 +7,8 @@ import {
 	applyPatchOrReplaceObject,
 	PagesContext,
 	TriggersContext,
-	CreateTriggerControlId,
-	CreateBankControlId,
 } from '../util'
+import { CreateTriggerControlId, CreateBankControlId } from '@companion/shared/ControlId'
 import {
 	CButton,
 	CAlert,

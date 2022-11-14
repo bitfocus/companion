@@ -1,12 +1,6 @@
 import React, { forwardRef, useCallback, useContext, useEffect, useImperativeHandle, useRef, useState } from 'react'
-import {
-	InstancesContext,
-	socketEmitPromise,
-	CreateBankControlId,
-	SocketContext,
-	NotifierContext,
-	ModulesContext,
-} from '../util'
+import { InstancesContext, socketEmitPromise, SocketContext, NotifierContext, ModulesContext } from '../util'
+import { CreateBankControlId } from '@companion/shared/ControlId'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faDownload, faFileImport, faTrashAlt } from '@fortawesome/free-solid-svg-icons'
 import {

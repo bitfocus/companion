@@ -6,6 +6,7 @@ import { PRIMARY_COLOR } from './Constants'
 import { BarLoader } from 'react-spinners'
 import { applyPatch } from 'fast-json-patch'
 import _ from 'lodash'
+import { ParseControlId } from '@companion/shared/ControlId'
 
 export const SERVER_URL = window.SERVER_URL === '%REACT_APP_SERVER_URL%' ? undefined : window.SERVER_URL
 
@@ -180,57 +181,6 @@ export function LoadingRetryOrError({ error, dataReady, doRetry }) {
 			)}
 		</>
 	)
-}
-
-/**
- * TODO
- * Copied from backend
- * @param {*} page
- * @param {*} bank
- * @returns
- */
-export function CreateBankControlId(page, bank) {
-	return `bank:${page}-${bank}`
-}
-
-/**
- * TODO
- * Copied from backend
- * @param {*} page
- * @param {*} bank
- * @returns
- */
-export function CreateTriggerControlId(triggerId) {
-	return `trigger:${triggerId}`
-}
-
-/**
- * TODO
- * Copied from backend
- * @param {*} controlId
- * @returns
- */
-export function ParseControlId(controlId) {
-	if (typeof controlId === 'string') {
-		const match = controlId.match(/^bank:(\d+)-(\d+)$/)
-		if (match) {
-			return {
-				type: 'bank',
-				page: Number(match[1]),
-				bank: Number(match[2]),
-			}
-		}
-
-		const match2 = controlId.match(/^trigger:(.*)$/)
-		if (match2) {
-			return {
-				type: 'trigger',
-				trigger: match2[1],
-			}
-		}
-	}
-
-	return undefined
 }
 
 export function FormatButtonControlId(controlId) {
