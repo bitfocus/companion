@@ -4103,9 +4103,9 @@ commist@^1.0.0:
   dependencies:
     bent "^7.3.12"
 
-"companion-module-presentationtools-aps@github:bitfocus/companion-module-presentationtools-aps#v1.2.0":
-  version "1.2.0"
-  resolved "https://codeload.github.com/bitfocus/companion-module-presentationtools-aps/tar.gz/85b27e8e736f83eb70229b0e1e81bb7c50ba286f"
+"companion-module-presentationtools-aps@github:bitfocus/companion-module-presentationtools-aps#v1.2.1":
+  version "1.2.1"
+  resolved "https://codeload.github.com/bitfocus/companion-module-presentationtools-aps/tar.gz/b7c712da0f5fea0c2c59288ff8070941cef667a3"
 
 "companion-module-presentationtools-cuetimer@github:bitfocus/companion-module-presentationtools-cuetimer#v1.1.3":
   version "1.1.3"
