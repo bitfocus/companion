@@ -10,14 +10,8 @@ import React, {
 	useState,
 	useMemo,
 } from 'react'
-import {
-	KeyReceiver,
-	PagesContext,
-	socketEmitPromise,
-	CreateBankControlId,
-	SocketContext,
-	ButtonRenderCacheContext,
-} from '../util'
+import { KeyReceiver, PagesContext, socketEmitPromise, SocketContext, ButtonRenderCacheContext } from '../util'
+import { CreateBankControlId } from '@companion/shared/ControlId'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import {
 	faArrowsAlt,

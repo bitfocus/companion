@@ -17,10 +17,8 @@ export function dataToButtonImage(data) {
 	return 'data:image/bmp;base64,' + Buffer.concat([PREVIEW_BMP_HEADER, convertedData]).toString('base64')
 }
 
-export const BlackImage = dataToButtonImage(Buffer.concat([PREVIEW_BMP_HEADER, Buffer.alloc(72 * 72 * 3)]))
-export const RedImage = dataToButtonImage(
-	Buffer.concat([PREVIEW_BMP_HEADER, Buffer.alloc(72 * 72 * 3, Buffer.from([255, 0, 0]))])
-)
+export const BlackImage = dataToButtonImage(Buffer.alloc(72 * 72 * 3))
+export const RedImage = dataToButtonImage(Buffer.alloc(72 * 72 * 3, Buffer.from([255, 0, 0])))
 
 export const BankPreview = React.memo(function (props) {
 	const classes = {

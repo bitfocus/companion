@@ -3,7 +3,8 @@ import { nanoid } from 'nanoid'
 import { useContext, useMemo } from 'react'
 import { useSharedBankRenderCache } from '../ButtonRenderCache'
 import { BankPreview } from '../Components/BankButton'
-import { ButtonRenderCacheContext, ParseControlId } from '../util'
+import { ButtonRenderCacheContext } from '../util'
+import { ParseControlId } from '@companion/shared/ControlId.js'
 
 /**
  * Preview a bank based on the selected options

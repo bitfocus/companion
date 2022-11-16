@@ -1,12 +1,6 @@
 import { useCallback, useContext, useEffect, useMemo, useState } from 'react'
-import {
-	CreateBankControlId,
-	LoadingRetryOrError,
-	MyErrorBoundary,
-	SocketContext,
-	socketEmitPromise,
-	useMountEffect,
-} from './util'
+import { LoadingRetryOrError, MyErrorBoundary, SocketContext, socketEmitPromise, useMountEffect } from './util'
+import { CreateBankControlId } from '@companion/shared/ControlId'
 import { CButton, CCol, CContainer, CForm, CFormGroup, CInput, CInputCheckbox, CRow } from '@coreui/react'
 import { nanoid } from 'nanoid'
 import { MAX_COLS, MAX_ROWS } from './Constants'

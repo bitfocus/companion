@@ -25,11 +25,11 @@ import {
 	LoadingRetryOrError,
 	UserConfigContext,
 	socketEmitPromise,
-	ParseControlId,
 	SocketContext,
 	MyErrorBoundary,
 	FormatButtonControlId,
 } from '../util'
+import { ParseControlId } from '@companion/shared/ControlId.js'
 import { ControlActionSetEditor } from '../Controls/ActionSetEditor'
 import jsonPatch from 'fast-json-patch'
 

@@ -2,7 +2,8 @@ import { useEffect, useState } from 'react'
 import { EventEmitter } from 'events'
 import { dataToButtonImage } from './Components/BankButton'
 import { MAX_BUTTONS } from './Constants'
-import { CreateBankControlId, socketEmitPromise } from './util'
+import { socketEmitPromise } from './util'
+import { CreateBankControlId } from '@companion/shared/ControlId'
 
 /**
  * The main cache store

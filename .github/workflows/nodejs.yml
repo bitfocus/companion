@@ -6,6 +6,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
       - name: Use Node.js
         uses: actions/setup-node@v3
         with:
@@ -61,6 +63,8 @@ jobs:
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
       - name: Use Node.js
         uses: actions/setup-node@v3
         with:
@@ -91,7 +95,7 @@ jobs:
 
           echo "sourcename=electron-output/companion-mac-x64.dmg" >> $GITHUB_OUTPUT
           echo "targetname=companion-mac-x64-${VERSION}.dmg" >> $GITHUB_OUTPUT
-          echo "longversion=${VERSION}" >> $GITHUB_OUTPUT"
+          echo "longversion=${VERSION}" >> $GITHUB_OUTPUT
 
       - name: Upload build
         uses: bitfocus/actions/upload-and-notify@main
@@ -115,6 +119,8 @@ jobs:
     runs-on: macos-11
     steps:
       - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
       - name: Use Node.js
         uses: actions/setup-node@v3
         with:
@@ -173,6 +179,8 @@ jobs:
     runs-on: windows-2019
     steps:
       - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
       - name: Use Node.js
         uses: actions/setup-node@v3
         with:

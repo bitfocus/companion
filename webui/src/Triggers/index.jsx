@@ -20,6 +20,7 @@ import { faAdd, faCalculator, faSort } from '@fortawesome/free-solid-svg-icons'
 import { useDrag, useDrop } from 'react-dnd'
 import { nanoid } from 'nanoid'
 import { EditTriggerPanel } from './EditPanel'
+import { GenericConfirmModal } from '../Components/GenericConfirmModal'
 
 export const Triggers = memo(function Triggers() {
 	const socket = useContext(SocketContext)
@@ -192,14 +193,18 @@ function TriggersTable({ triggersList, editItem }) {
 function TriggersTableRow({ controlId, item, editItem, moveTrigger }) {
 	const socket = useContext(SocketContext)
 
+	const confirmRef = useRef(null)
+
 	const doEnableDisable = useCallback(() => {
 		socketEmitPromise(socket, 'controls:set-options-field', [controlId, 'enabled', !item.enabled]).catch((e) => {
 			console.error('failed to toggle trigger state', e)
 		})
 	}, [socket, controlId, item.enabled])
 	const doDelete = useCallback(() => {
-		socketEmitPromise(socket, 'triggers:delete', [controlId]).catch((e) => {
-			console.error('Failed to delete', e)
+		confirmRef.current.show('Delete trigger', 'Are you sure you wish to delete this trigger?', 'Delete', () => {
+			socketEmitPromise(socket, 'triggers:delete', [controlId]).catch((e) => {
+				console.error('Failed to delete', e)
+			})
 		})
 	}, [socket, controlId])
 	const doEdit = useCallback(() => editItem(controlId), [editItem, controlId])
@@ -252,6 +257,8 @@ function TriggersTableRow({ controlId, item, editItem, moveTrigger }) {
 
 	return (
 		<tr ref={ref} className={isDragging ? 'instancelist-dragging' : ''}>
+			<GenericConfirmModal ref={confirmRef} />
+
 			<td ref={drag} className="td-reorder">
 				<FontAwesomeIcon icon={faSort} />
 			</td>
