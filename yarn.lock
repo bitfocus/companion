@@ -3519,6 +3519,12 @@ commist@^1.0.0:
   version "1.1.3"
   resolved "https://codeload.github.com/bitfocus/companion-module-generic-osc/tar.gz/87e7c0e44e52c1abf336d926d985e8a2be48b263"
 
+"companion-module-generic-ping@github:bitfocus/companion-module-generic-ping#v1.0.0":
+  version "1.0.0"
+  resolved "https://codeload.github.com/bitfocus/companion-module-generic-ping/tar.gz/73b355dbbed4b69bd51de08c110524dfb57551f4"
+  dependencies:
+    ping "^0.4.2"
+
 "companion-module-generic-pjlink@github:bitfocus/companion-module-generic-pjlink#v1.3.0":
   version "1.3.0"
   resolved "https://codeload.github.com/bitfocus/companion-module-generic-pjlink/tar.gz/4d0e461fa2e20c4aaebc78f3381bd5c4e861bf4b"
@@ -9255,6 +9261,14 @@ ping@^0.4.0, ping@^0.4.1:
   version "0.4.1"
   resolved "https://registry.yarnpkg.com/ping/-/ping-0.4.1.tgz#1436575a39baafe3ed2b76f6a116c51780f32299"
   integrity sha512-zYouogtyis0QpEZwWY1T26iuIOMJx+ajtjVMcPKIdWRq2Ie3Ftkbel8I25M5kCAQQMQhsez6ZbPiYjNe7aBjSQ==
+  dependencies:
+    q "1.x"
+    underscore "^1.12.0"
+
+ping@^0.4.2:
+  version "0.4.2"
+  resolved "https://registry.yarnpkg.com/ping/-/ping-0.4.2.tgz#8ca8857f201281b5977fe765e7887d0477b5cf52"
+  integrity sha512-1uAw0bzHtrPbPo2s6no06oZAzY6KqKclEJR1JRZKIHKXKlPdrz9N0/1MPPB+BbrvMjN3Mk0pcod3bfLNZFRo9w==
   dependencies:
     q "1.x"
     underscore "^1.12.0"
