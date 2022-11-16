@@ -72,7 +72,7 @@ export default class MockModule extends InstanceBase<MockConfig> {
 		this.#legacy.updateConfig(config)
 	}
 	getConfigFields(): SomeCompanionConfigField[] {
-		if (!this.#legacy) throw new Error('Not yet initialized')
+		if (!this.#legacy) return []
 		const rawFields = this.#legacy.config_fields()
 
 		return rawFields.map((input) => {
