@@ -39,7 +39,7 @@ export const ButtonsPage = memo(function ButtonsPage({ hotPress }) {
 		(page, bank, isDown) => {
 			if (hotPress) {
 				const controlId = CreateBankControlId(page, bank)
-				socketEmitPromise(socket, 'controls:hot-press', [controlId, isDown]).catch((e) =>
+				socketEmitPromise(socket, 'controls:hot-press', [controlId, isDown, 'grid']).catch((e) =>
 					console.error(`Hot press failed: ${e}`)
 				)
 			} else if (isDown) {

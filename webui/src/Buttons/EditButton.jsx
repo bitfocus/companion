@@ -1,7 +1,22 @@
-import { CDropdown, CDropdownToggle, CDropdownItem, CDropdownMenu, CButton, CButtonGroup } from '@coreui/react'
-import { faArrowDown, faArrowUp, faPlus, faTrash } from '@fortawesome/free-solid-svg-icons'
+import {
+	CDropdown,
+	CDropdownToggle,
+	CDropdownItem,
+	CDropdownMenu,
+	CButton,
+	CButtonGroup,
+	CModal,
+	CModalHeader,
+	CModalBody,
+	CModalFooter,
+	CForm,
+	CFormGroup,
+	CLabel,
+	CInput,
+} from '@coreui/react'
+import { faArrowDown, faArrowUp, faPencil, faPlus, faTrash } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import React, { useCallback, useContext, useEffect, useRef, useState } from 'react'
+import React, { forwardRef, useCallback, useContext, useEffect, useImperativeHandle, useRef, useState } from 'react'
 import { nanoid } from 'nanoid'
 import { BankPreview, dataToButtonImage } from '../Components/BankButton'
 import { GenericConfirmModal } from '../Components/GenericConfirmModal'
@@ -150,12 +165,12 @@ export function EditButton({ controlId, onKeyUp }) {
 	}, [socket, controlId])
 
 	const hotPressDown = useCallback(() => {
-		socketEmitPromise(socket, 'controls:hot-press', [controlId, true]).catch((e) =>
+		socketEmitPromise(socket, 'controls:hot-press', [controlId, true, 'edit']).catch((e) =>
 			console.error(`Hot press failed: ${e}`)
 		)
 	}, [socket, controlId])
 	const hotPressUp = useCallback(() => {
-		socketEmitPromise(socket, 'controls:hot-press', [controlId, false]).catch((e) =>
+		socketEmitPromise(socket, 'controls:hot-press', [controlId, false, 'edit']).catch((e) =>
 			console.error(`Hot press failed: ${e}`)
 		)
 	}, [socket, controlId])
@@ -165,7 +180,7 @@ export function EditButton({ controlId, onKeyUp }) {
 		)
 	}, [socket, controlId])
 	const hotRotateRight = useCallback(() => {
-		socketEmitPromise(socket, 'controls:hot-rotate', [controlId, false]).catch((e) =>
+		socketEmitPromise(socket, 'controls:hot-rotate', [controlId, true]).catch((e) =>
 			console.error(`Hot rotate failed: ${e}`)
 		)
 	}, [socket, controlId])
@@ -206,7 +221,7 @@ export function EditButton({ controlId, onKeyUp }) {
 								</CButtonGroup>
 								<CDropdownMenu>
 									<CDropdownItem onClick={() => setButtonType('press')}>Regular button</CDropdownItem>
-									<CDropdownItem onClick={() => setButtonType('step')}>Step/latch</CDropdownItem>
+									<CDropdownItem onClick={() => setButtonType('step')}>Step/latch button</CDropdownItem>
 									<CDropdownItem onClick={() => setButtonType('pageup')}>Page up</CDropdownItem>
 									<CDropdownItem onClick={() => setButtonType('pagenum')}>Page number</CDropdownItem>
 									<CDropdownItem onClick={() => setButtonType('pagedown')}>Page down</CDropdownItem>
@@ -343,6 +358,8 @@ function ActionsSection({ style, controlId, action_sets, runtimeProps, rotaryAct
 	if (style === 'press') {
 		return (
 			<>
+				<GenericConfirmModal ref={confirmRef} />
+
 				{rotaryActions && (
 					<>
 						<MyErrorBoundary>
@@ -376,15 +393,15 @@ function ActionsSection({ style, controlId, action_sets, runtimeProps, rotaryAct
 						actions={action_sets['down']}
 					/>
 				</MyErrorBoundary>
-				<MyErrorBoundary>
-					<ControlActionSetEditor
-						heading="Release actions"
-						controlId={controlId}
-						set={'up'}
-						addPlaceholder="+ Add key release action"
-						actions={action_sets['up']}
-					/>
-				</MyErrorBoundary>
+
+				<EditActionsRelease controlId={controlId} action_sets={action_sets} removeStep={removeStep} />
+
+				<br />
+				<p>
+					<CButton onClick={appendStep} color="primary">
+						<FontAwesomeIcon icon={faPlus} /> Add duration group
+					</CButton>
+				</p>
 			</>
 		)
 	} else if (style === 'step') {
@@ -457,3 +474,151 @@ function ActionsSection({ style, controlId, action_sets, runtimeProps, rotaryAct
 		return ''
 	}
 }
+
+function EditActionsRelease({ controlId, action_sets, removeStep }) {
+	const socket = useContext(SocketContext)
+
+	const editRef = useRef(null)
+
+	const renameStep = useCallback(
+		(oldId) => {
+			if (editRef.current) {
+				editRef.current.show(Number(oldId), (newId) => {
+					if (!isNaN(newId)) {
+						socketEmitPromise(socket, 'controls:action-set:rename', [controlId, oldId, newId]).catch((e) => {
+							console.error('Failed to rename set:', e)
+						})
+					}
+				})
+			}
+		},
+		[socket, controlId]
+	)
+
+	const candidate_sets = Object.entries(action_sets).filter(([id]) => !isNaN(id))
+	candidate_sets.sort((a, b) => Number(a[0]) - Number(b[0]))
+
+	const components = candidate_sets.map(([id, actions]) => {
+		const ident = `Release after ${id}ms`
+		return (
+			<MyErrorBoundary key={id}>
+				<ControlActionSetEditor
+					key={id}
+					heading={`${ident} actions`}
+					headingActions={[
+						<CButton key="rename" color="warning" title="Change time" size="sm" onClick={() => renameStep(id)}>
+							<FontAwesomeIcon icon={faPencil} />
+						</CButton>,
+						<CButton key="delete" color="danger" title="Delete step" size="sm" onClick={() => removeStep(id)}>
+							<FontAwesomeIcon icon={faTrash} />
+						</CButton>,
+					]}
+					controlId={controlId}
+					set={id}
+					addPlaceholder={`+ Add ${ident} action`}
+					actions={actions}
+				/>
+			</MyErrorBoundary>
+		)
+	})
+
+	return (
+		<>
+			<EditDurationModal ref={editRef} />
+
+			<MyErrorBoundary>
+				<ControlActionSetEditor
+					heading={candidate_sets.length ? 'Short release actions' : 'Release actions'}
+					controlId={controlId}
+					set={'up'}
+					addPlaceholder={candidate_sets.length ? '+ Add key short release action' : '+ Add key release action'}
+					actions={action_sets['up']}
+				/>
+			</MyErrorBoundary>
+
+			{components}
+		</>
+	)
+}
+
+const EditDurationModal = forwardRef(function EditDurationModal(props, ref) {
+	const [data, setData] = useState(null)
+	const [show, setShow] = useState(false)
+
+	const [newValue, setNewValue] = useState(null)
+
+	const buttonRef = useRef()
+
+	const buttonFocus = () => {
+		if (buttonRef.current) {
+			buttonRef.current.focus()
+		}
+	}
+
+	const doClose = useCallback(() => setShow(false), [])
+	const onClosed = useCallback(() => setData(null), [])
+	const doAction = useCallback(
+		(e) => {
+			if (e) e.preventDefault()
+
+			setData(null)
+			setShow(false)
+			setNewValue(null)
+
+			// completion callback
+			const cb = data?.[1]
+			cb(newValue)
+		},
+		[data, newValue]
+	)
+
+	useImperativeHandle(
+		ref,
+		() => ({
+			show(duration, completeCallback) {
+				setNewValue(duration)
+				setData([duration, completeCallback])
+				setShow(true)
+
+				// Focus the button asap. It also gets focused once the open is complete
+				setTimeout(buttonFocus, 50)
+			},
+		}),
+		[]
+	)
+
+	const onChange = useCallback((e) => {
+		setNewValue(Number(e.target.value))
+	}, [])
+
+	return (
+		<CModal show={show} onClose={doClose} onClosed={onClosed} onOpened={buttonFocus}>
+			<CModalHeader closeButton>
+				<h5>Change press duration</h5>
+			</CModalHeader>
+			<CModalBody>
+				<CForm onSubmit={doAction}>
+					<CFormGroup>
+						<CLabel>New press duration</CLabel>
+						<CInput
+							type="number"
+							value={newValue}
+							min={1}
+							step={1}
+							style={{ color: !newValue || newValue <= 0 ? 'red' : undefined }}
+							onChange={onChange}
+						/>
+					</CFormGroup>
+				</CForm>
+			</CModalBody>
+			<CModalFooter>
+				<CButton color="secondary" onClick={doClose}>
+					Cancel
+				</CButton>
+				<CButton innerRef={buttonRef} color="primary" onClick={doAction}>
+					Save
+				</CButton>
+			</CModalFooter>
+		</CModal>
+	)
+})

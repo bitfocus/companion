@@ -82,12 +82,12 @@ export function EditTriggerPanel({ controlId }) {
 	const doRetryLoad = useCallback(() => setReloadConfigToken(nanoid()), [])
 
 	const hotPressDown = useCallback(() => {
-		socketEmitPromise(socket, 'controls:hot-press', [controlId, true]).catch((e) =>
+		socketEmitPromise(socket, 'controls:hot-press', [controlId, true, 'edit']).catch((e) =>
 			console.error(`Hot press failed: ${e}`)
 		)
 	}, [socket, controlId])
 	const hotPressUp = useCallback(() => {
-		socketEmitPromise(socket, 'controls:hot-press', [controlId, false]).catch((e) =>
+		socketEmitPromise(socket, 'controls:hot-press', [controlId, false, 'edit']).catch((e) =>
 			console.error(`Hot press failed: ${e}`)
 		)
 	}, [socket, controlId])
