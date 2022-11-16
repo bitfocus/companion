@@ -13,6 +13,12 @@ import {
 	CFormGroup,
 	CLabel,
 	CInput,
+	CTabPane,
+	CTabContent,
+	CNavItem,
+	CNavLink,
+	CNav,
+	CTabs,
 } from '@coreui/react'
 import { faArrowDown, faArrowUp, faPencil, faPlus, faTrash } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
@@ -360,48 +366,58 @@ function ActionsSection({ style, controlId, action_sets, runtimeProps, rotaryAct
 			<>
 				<GenericConfirmModal ref={confirmRef} />
 
-				{rotaryActions && (
-					<>
-						<MyErrorBoundary>
-							<ControlActionSetEditor
-								heading="Rotate left actions"
-								controlId={controlId}
-								set={'rotate_left'}
-								addPlaceholder="+ Add rotate left action"
-								actions={action_sets['rotate_left']}
-							/>
-						</MyErrorBoundary>
+				<CTabs
+				// activeTab={activeTab} onActiveTabChange={doChangeTab}
+				>
+					<CNav variant="tabs">
+						<CNavItem>
+							<CNavLink data-tab="actions">Actions</CNavLink>
+						</CNavItem>
+					</CNav>
+					<CTabContent fade={false}>
+						<CTabPane data-tab="actions">
+							{rotaryActions && (
+								<>
+									<MyErrorBoundary>
+										<ControlActionSetEditor
+											heading="Rotate left actions"
+											controlId={controlId}
+											set={'rotate_left'}
+											addPlaceholder="+ Add rotate left action"
+											actions={action_sets['rotate_left']}
+										/>
+									</MyErrorBoundary>
 
-						<MyErrorBoundary>
-							<ControlActionSetEditor
-								heading="Rotate right actions"
-								controlId={controlId}
-								set={'rotate_right'}
-								addPlaceholder="+ Add rotate right action"
-								actions={action_sets['rotate_right']}
-							/>
-						</MyErrorBoundary>
-					</>
-				)}
-
-				<MyErrorBoundary>
-					<ControlActionSetEditor
-						heading="Press actions"
-						controlId={controlId}
-						set={'down'}
-						addPlaceholder="+ Add key press action"
-						actions={action_sets['down']}
-					/>
-				</MyErrorBoundary>
-
-				<EditActionsRelease controlId={controlId} action_sets={action_sets} removeStep={removeStep} />
-
-				<br />
-				<p>
-					<CButton onClick={appendStep} color="primary">
-						<FontAwesomeIcon icon={faPlus} /> Add duration group
-					</CButton>
-				</p>
+									<MyErrorBoundary>
+										<ControlActionSetEditor
+											heading="Rotate right actions"
+											controlId={controlId}
+											set={'rotate_right'}
+											addPlaceholder="+ Add rotate right action"
+											actions={action_sets['rotate_right']}
+										/>
+									</MyErrorBoundary>
+								</>
+							)}
+							<MyErrorBoundary>
+								<ControlActionSetEditor
+									heading="Press actions"
+									controlId={controlId}
+									set={'down'}
+									addPlaceholder="+ Add key press action"
+									actions={action_sets['down']}
+								/>
+							</MyErrorBoundary>
+							<EditActionsRelease controlId={controlId} action_sets={action_sets} removeStep={removeStep} />
+							<br />
+							<p>
+								<CButton onClick={appendStep} color="primary">
+									<FontAwesomeIcon icon={faPlus} /> Add duration group
+								</CButton>
+							</p>
+						</CTabPane>
+					</CTabContent>
+				</CTabs>
 			</>
 		)
 	} else if (style === 'step') {
@@ -409,59 +425,115 @@ function ActionsSection({ style, controlId, action_sets, runtimeProps, rotaryAct
 		return (
 			<>
 				<GenericConfirmModal ref={confirmRef} />
-				{keys.map((k, i) => (
-					<MyErrorBoundary>
-						<ControlActionSetEditor
-							heading={`Step ${i + 1} actions`}
-							headingActions={[
-								<CButton
-									key="set-next"
-									color={runtimeProps.current_step_id === k ? 'success' : 'primary'}
-									size="sm"
-									disabled={runtimeProps.current_step_id === k}
-									onClick={() => setNextStep(k)}
-								>
-									Set Next
-								</CButton>,
-								<CButton
-									key="move-up"
-									color="warning"
-									title="Move step up"
-									size="sm"
-									disabled={i === 0}
-									onClick={() => swapSteps(k, keys[i - 1])}
-								>
-									<FontAwesomeIcon icon={faArrowUp} />
-								</CButton>,
-								<CButton
-									key="move-down"
-									color="warning"
-									title="Move step down"
-									size="sm"
-									disabled={i === keys.length - 1}
-									onClick={() => swapSteps(k, keys[i + 1])}
-								>
-									<FontAwesomeIcon icon={faArrowDown} />
-								</CButton>,
-								<CButton
-									key="delete"
-									color="danger"
-									title="Delete step"
-									size="sm"
-									disabled={keys.length === 1}
-									onClick={() => removeStep(k)}
-								>
-									<FontAwesomeIcon icon={faTrash} />
-								</CButton>,
-							]}
-							key={`panel_${k}`}
-							controlId={controlId}
-							set={k}
-							addPlaceholder={`+ Add action to step ${i + 1}`}
-							actions={action_sets[k]}
-						/>
-					</MyErrorBoundary>
-				))}
+
+				<CTabs
+				// activeTab={activeTab} onActiveTabChange={doChangeTab}
+				>
+					<CNav variant="tabs">
+						{keys.map((k, i) => (
+							<CNavItem key={k}>
+								<CNavLink data-tab={`actions:${k}`}>Step {Number(k) + 1}</CNavLink>
+							</CNavItem>
+						))}
+						<CNavItem key="feedbacks">
+							<CNavLink data-tab="feedbacks">Feedbacks</CNavLink>
+						</CNavItem>
+					</CNav>
+					<CTabContent fade={false}>
+						{keys.map((k, i) => (
+							<CTabPane key={k} data-tab={`actions:${k}`}>
+								<CButtonGroup>
+									<CButton
+										key="set-next"
+										color={runtimeProps.current_step_id === k ? 'success' : 'primary'}
+										size="sm"
+										disabled={runtimeProps.current_step_id === k}
+										onClick={() => setNextStep(k)}
+									>
+										Set Next
+									</CButton>
+
+									<CButton
+										key="move-up"
+										color="warning"
+										title="Move step up"
+										size="sm"
+										disabled={i === 0}
+										onClick={() => swapSteps(k, keys[i - 1])}
+									>
+										<FontAwesomeIcon icon={faArrowUp} />
+									</CButton>
+									<CButton
+										key="move-down"
+										color="warning"
+										title="Move step down"
+										size="sm"
+										disabled={i === keys.length - 1}
+										onClick={() => swapSteps(k, keys[i + 1])}
+									>
+										<FontAwesomeIcon icon={faArrowDown} />
+									</CButton>
+									<CButton
+										key="delete"
+										color="danger"
+										title="Delete step"
+										size="sm"
+										disabled={keys.length === 1}
+										onClick={() => removeStep(k)}
+									>
+										<FontAwesomeIcon icon={faTrash} />
+									</CButton>
+								</CButtonGroup>
+
+								{rotaryActions && (
+									<>
+										<MyErrorBoundary>
+											<ControlActionSetEditor
+												heading="Rotate left actions"
+												controlId={controlId}
+												set={`rotate_left_${k}`}
+												addPlaceholder="+ Add rotate left action"
+												// actions={action_sets['rotate_left']}
+												actions={action_sets[k]}
+											/>
+										</MyErrorBoundary>
+
+										<MyErrorBoundary>
+											<ControlActionSetEditor
+												heading="Rotate right actions"
+												controlId={controlId}
+												set={`rotate_right_${k}`}
+												addPlaceholder="+ Add rotate right action"
+												// actions={action_sets['rotate_right']}
+												actions={action_sets[k]}
+											/>
+										</MyErrorBoundary>
+									</>
+								)}
+
+								<MyErrorBoundary>
+									<ControlActionSetEditor
+										heading={`Press actions`}
+										set={`press_${k}`}
+										controlId={controlId}
+										addPlaceholder={`+ Add action to step ${i + 1}`}
+										actions={action_sets[k]}
+									/>
+								</MyErrorBoundary>
+
+								<MyErrorBoundary>
+									<ControlActionSetEditor
+										heading={`Release actions`}
+										set={`release_${k}`}
+										controlId={controlId}
+										addPlaceholder={`+ Add action to step ${i + 1}`}
+										actions={action_sets[k]}
+									/>
+								</MyErrorBoundary>
+							</CTabPane>
+						))}
+					</CTabContent>
+				</CTabs>
 				<br />
 				<p>
 					<CButton onClick={appendStep} color="primary">
