@@ -20,7 +20,7 @@ import {
 	CNav,
 	CTabs,
 } from '@coreui/react'
-import { faArrowDown, faArrowUp, faPencil, faPlus, faTrash } from '@fortawesome/free-solid-svg-icons'
+import { faArrowDown, faArrowUp, faPencil, faPlus, faStar, faTrash } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import React, { forwardRef, useCallback, useContext, useEffect, useImperativeHandle, useRef, useState } from 'react'
 import { nanoid } from 'nanoid'
@@ -329,11 +329,49 @@ function ActionsSection({ style, controlId, action_sets, runtimeProps, rotaryAct
 
 	const confirmRef = useRef()
 
-	const appendStep = useCallback(() => {
-		socketEmitPromise(socket, 'controls:action-set:add', [controlId]).catch((e) => {
-			console.error('Failed to append set:', e)
+	const keys = Object.keys(action_sets).sort()
+	const [selectedStep, setSelectedStep] = useState(keys.length ? `actions:${keys[0]}` : 'feedbacks')
+
+	const doChangeTab = useCallback((newTab) => {
+		console.log('tab', newTab)
+		setSelectedStep((oldTab) => {
+			// 	const preserveButtonsTab = newTab === 'variables' && oldTab === 'edit'
+			// 	if (newTab !== 'edit' && oldTab !== newTab && !preserveButtonsTab) {
+			// 		setSelectedButton(null)
+			// 		setTabResetToken(nanoid())
+			// 	}
+			return newTab
 		})
-	}, [socket, controlId])
+	}, [])
+
+	useEffect(() => {
+		const keys2 = keys.map((k) => `actions:${k}`)
+		keys2.push('feedbacks')
+		console.log('check tab', keys2, selectedStep)
+
+		if (!keys2.includes(selectedStep)) {
+			console.log('force change', keys2[0])
+			setSelectedStep(keys2[0])
+		}
+	}, [keys, selectedStep])
+
+	const appendStep = useCallback(
+		(e) => {
+			if (e) e.preventDefault()
+
+			socketEmitPromise(socket, 'controls:action-set:add', [controlId])
+				.then((newStep) => {
+					if (newStep) {
+						setSelectedStep(`actions:${newStep}`)
+						setTimeout(() => setSelectedStep(`actions:${newStep}`), 500)
+					}
+				})
+				.catch((e) => {
+					console.error('Failed to append set:', e)
+				})
+		},
+		[socket, controlId]
+	)
 	const removeStep = useCallback(
 		(id) => {
 			confirmRef.current.show('Remove step', 'Are you sure you wish to remove this step?', 'Remove', () => {
@@ -421,20 +459,26 @@ function ActionsSection({ style, controlId, action_sets, runtimeProps, rotaryAct
 			</>
 		)
 	} else if (style === 'step') {
-		const keys = Object.keys(action_sets).sort()
 		return (
 			<>
 				<GenericConfirmModal ref={confirmRef} />
 
-				<CTabs
-				// activeTab={activeTab} onActiveTabChange={doChangeTab}
-				>
+				<CTabs activeTab={selectedStep} onActiveTabChange={doChangeTab}>
 					<CNav variant="tabs">
 						{keys.map((k, i) => (
 							<CNavItem key={k}>
-								<CNavLink data-tab={`actions:${k}`}>Step {Number(k) + 1}</CNavLink>
+								<CNavLink data-tab={`actions:${k}`}>
+									Step {i + 1}{' '}
+									{runtimeProps.current_step_id === k && <FontAwesomeIcon icon={faStar} title="Next step" />}
+								</CNavLink>
 							</CNavItem>
 						))}
+						<CNavItem key="add-step">
+							{/* TODO - colour */}
+							<CNavLink onClick={appendStep}>
+								<FontAwesomeIcon icon={faPlus} /> Add Step
+							</CNavLink>
+						</CNavItem>
 						<CNavItem key="feedbacks">
 							<CNavLink data-tab="feedbacks">Feedbacks</CNavLink>
 						</CNavItem>
@@ -534,12 +578,6 @@ function ActionsSection({ style, controlId, action_sets, runtimeProps, rotaryAct
 						))}
 					</CTabContent>
 				</CTabs>
-				<br />
-				<p>
-					<CButton onClick={appendStep} color="primary">
-						<FontAwesomeIcon icon={faPlus} /> Add Step
-					</CButton>
-				</p>
 			</>
 		)
 	} else {
