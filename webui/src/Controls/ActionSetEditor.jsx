@@ -112,28 +112,19 @@ export function ControlActionSetEditor({ controlId, set, actions, addPlaceholder
 			<h4 className="mt-3">
 				{heading}
 				<CButtonGroup className="right">
-					<CButtonGroup>
-						<CButton
-							color="info"
-							size="sm"
-							onClick={setAllExpanded}
-							title="Expand all actions"
-							disabled={!canExpandAll}
-						>
-							<FontAwesomeIcon icon={faExpandArrowsAlt} />
-						</CButton>{' '}
-						<CButton
-							color="info"
-							size="sm"
-							onClick={setAllCollapsed}
-							title="Collapse all actions"
-							disabled={!canCollapseAll}
-						>
-							<FontAwesomeIcon icon={faCompressArrowsAlt} />
-						</CButton>
-					</CButtonGroup>
-
 					{headingActions || ''}
+					<CButton color="info" size="sm" onClick={setAllExpanded} title="Expand all actions" disabled={!canExpandAll}>
+						<FontAwesomeIcon icon={faExpandArrowsAlt} />
+					</CButton>{' '}
+					<CButton
+						color="info"
+						size="sm"
+						onClick={setAllCollapsed}
+						title="Collapse all actions"
+						disabled={!canCollapseAll}
+					>
+						<FontAwesomeIcon icon={faCompressArrowsAlt} />
+					</CButton>
 				</CButtonGroup>
 			</h4>
 			<GenericConfirmModal ref={confirmModal} />
