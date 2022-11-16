@@ -77,7 +77,7 @@ export function ControlOptionsEditor({ controlId, controlType, options, configRe
 						</CCol>
 					)}
 
-					{(controlType === 'press' || controlType === 'timed') && (
+					{controlType === 'press' && (
 						<CCol className="fieldtype-checkbox" sm={3} xs={4}>
 							<label>
 								Enable Rotary Actions &nbsp;

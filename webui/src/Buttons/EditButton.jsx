@@ -222,7 +222,6 @@ export function EditButton({ controlId, onKeyUp }) {
 								<CDropdownMenu>
 									<CDropdownItem onClick={() => setButtonType('press')}>Regular button</CDropdownItem>
 									<CDropdownItem onClick={() => setButtonType('step')}>Step/latch button</CDropdownItem>
-									<CDropdownItem onClick={() => setButtonType('timed')}>Timed button</CDropdownItem>
 									<CDropdownItem onClick={() => setButtonType('pageup')}>Page up</CDropdownItem>
 									<CDropdownItem onClick={() => setButtonType('pagenum')}>Page number</CDropdownItem>
 									<CDropdownItem onClick={() => setButtonType('pagedown')}>Page down</CDropdownItem>
@@ -236,7 +235,7 @@ export function EditButton({ controlId, onKeyUp }) {
 							<CButtonGroup>
 								<CButton
 									color="warning"
-									hidden={!config || (config.type !== 'press' && config.type !== 'step' && config.type !== 'timed')}
+									hidden={!config || (config.type !== 'press' && config.type !== 'step')}
 									onMouseDown={hotPressDown}
 									onMouseUp={hotPressUp}
 								>
@@ -359,6 +358,8 @@ function ActionsSection({ style, controlId, action_sets, runtimeProps, rotaryAct
 	if (style === 'press') {
 		return (
 			<>
+				<GenericConfirmModal ref={confirmRef} />
+
 				{rotaryActions && (
 					<>
 						<MyErrorBoundary>
@@ -392,15 +393,15 @@ function ActionsSection({ style, controlId, action_sets, runtimeProps, rotaryAct
 						actions={action_sets['down']}
 					/>
 				</MyErrorBoundary>
-				<MyErrorBoundary>
-					<ControlActionSetEditor
-						heading="Release actions"
-						controlId={controlId}
-						set={'up'}
-						addPlaceholder="+ Add key release action"
-						actions={action_sets['up']}
-					/>
-				</MyErrorBoundary>
+
+				<EditActionsRelease controlId={controlId} action_sets={action_sets} removeStep={removeStep} />
+
+				<br />
+				<p>
+					<CButton onClick={appendStep} color="primary">
+						<FontAwesomeIcon icon={faPlus} /> Add duration group
+					</CButton>
+				</p>
 			</>
 		)
 	} else if (style === 'step') {
@@ -469,61 +470,12 @@ function ActionsSection({ style, controlId, action_sets, runtimeProps, rotaryAct
 				</p>
 			</>
 		)
-	} else if (style === 'timed') {
-		return (
-			<>
-				<GenericConfirmModal ref={confirmRef} />
-
-				{rotaryActions && (
-					<>
-						<MyErrorBoundary>
-							<ControlActionSetEditor
-								heading="Rotate left actions"
-								controlId={controlId}
-								set={'rotate_left'}
-								addPlaceholder="+ Add rotate left action"
-								actions={action_sets['rotate_left']}
-							/>
-						</MyErrorBoundary>
-
-						<MyErrorBoundary>
-							<ControlActionSetEditor
-								heading="Rotate right actions"
-								controlId={controlId}
-								set={'rotate_right'}
-								addPlaceholder="+ Add rotate right action"
-								actions={action_sets['rotate_right']}
-							/>
-						</MyErrorBoundary>
-					</>
-				)}
-
-				<MyErrorBoundary>
-					<ControlActionSetEditor
-						heading="Down actions"
-						controlId={controlId}
-						set={'down'}
-						addPlaceholder="+ Add key down action"
-						actions={action_sets['down']}
-					/>
-				</MyErrorBoundary>
-
-				<EditActionsTimed controlId={controlId} action_sets={action_sets} removeStep={removeStep} />
-
-				<br />
-				<p>
-					<CButton onClick={appendStep} color="primary">
-						<FontAwesomeIcon icon={faPlus} /> Add duration group
-					</CButton>
-				</p>
-			</>
-		)
 	} else {
 		return ''
 	}
 }
 
-function EditActionsTimed({ controlId, action_sets, removeStep }) {
+function EditActionsRelease({ controlId, action_sets, removeStep }) {
 	const socket = useContext(SocketContext)
 
 	const editRef = useRef(null)
@@ -547,31 +499,20 @@ function EditActionsTimed({ controlId, action_sets, removeStep }) {
 	candidate_sets.sort((a, b) => Number(a[0]) - Number(b[0]))
 
 	const components = candidate_sets.map(([id, actions]) => {
-		const isShort = id === '0'
-		const ident = isShort ? 'Short release' : `Release after ${id}ms`
+		const ident = `Release after ${id}ms`
 		return (
 			<MyErrorBoundary key={id}>
 				<ControlActionSetEditor
 					key={id}
 					heading={`${ident} actions`}
-					headingActions={
-						!isShort && [
-							<CButton key="rename" color="warning" title="Change time" size="sm" onClick={() => renameStep(id)}>
-								<FontAwesomeIcon icon={faPencil} />
-							</CButton>,
-
-							<CButton
-								key="delete"
-								color="danger"
-								title="Delete step"
-								size="sm"
-								disabled={candidate_sets.length === 1}
-								onClick={() => removeStep(id)}
-							>
-								<FontAwesomeIcon icon={faTrash} />
-							</CButton>,
-						]
-					}
+					headingActions={[
+						<CButton key="rename" color="warning" title="Change time" size="sm" onClick={() => renameStep(id)}>
+							<FontAwesomeIcon icon={faPencil} />
+						</CButton>,
+						<CButton key="delete" color="danger" title="Delete step" size="sm" onClick={() => removeStep(id)}>
+							<FontAwesomeIcon icon={faTrash} />
+						</CButton>,
+					]}
 					controlId={controlId}
 					set={id}
 					addPlaceholder={`+ Add ${ident} action`}
@@ -584,6 +525,16 @@ function EditActionsTimed({ controlId, action_sets, removeStep }) {
 	return (
 		<>
 			<EditDurationModal ref={editRef} />
+
+			<MyErrorBoundary>
+				<ControlActionSetEditor
+					heading={candidate_sets.length ? 'Short release actions' : 'Release actions'}
+					controlId={controlId}
+					set={'up'}
+					addPlaceholder={candidate_sets.length ? '+ Add key short release action' : '+ Add key release action'}
+					actions={action_sets['up']}
+				/>
+			</MyErrorBoundary>
 
 			{components}
 		</>
