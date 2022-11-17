@@ -21,56 +21,59 @@ import { usePanelCollapseHelper } from '../Helpers/CollapseHelper'
 import CSwitch from '../CSwitch'
 import { OptionBankPreview } from './OptionBankPreview'
 
-export function ControlActionSetEditor({ controlId, setId, actions, addPlaceholder, heading, headingActions }) {
+export function ControlActionSetEditor({ controlId, stepId, setId, actions, addPlaceholder, heading, headingActions }) {
 	const socket = useContext(SocketContext)
 
 	const confirmModal = useRef()
 
 	const emitUpdateOption = useCallback(
 		(actionId, key, val) => {
-			socketEmitPromise(socket, 'controls:action:set-option', [controlId, setId, actionId, key, val]).catch((e) => {
-				console.error('Failed to set bank action option', e)
-			})
+			socketEmitPromise(socket, 'controls:action:set-option', [controlId, stepId, setId, actionId, key, val]).catch(
+				(e) => {
+					console.error('Failed to set bank action option', e)
+				}
+			)
 		},
-		[socket, controlId, setId]
+		[socket, controlId, stepId, setId]
 	)
 	const emitSetDelay = useCallback(
 		(actionId, delay) => {
-			socketEmitPromise(socket, 'controls:action:set-delay', [controlId, setId, actionId, delay]).catch((e) => {
+			socketEmitPromise(socket, 'controls:action:set-delay', [controlId, stepId, setId, actionId, delay]).catch((e) => {
 				console.error('Failed to set bank action delay', e)
 			})
 		},
-		[socket, controlId, setId]
+		[socket, controlId, stepId, setId]
 	)
 
 	const emitDelete = useCallback(
 		(actionId) => {
-			socketEmitPromise(socket, 'controls:action:remove', [controlId, setId, actionId]).catch((e) => {
+			socketEmitPromise(socket, 'controls:action:remove', [controlId, stepId, setId, actionId]).catch((e) => {
 				console.error('Failed to remove bank action', e)
 			})
 		},
-		[socket, controlId, setId]
+		[socket, controlId, stepId, setId]
 	)
 	const emitDuplicate = useCallback(
 		(actionId) => {
-			socketEmitPromise(socket, 'controls:action:duplicate', [controlId, setId, actionId]).catch((e) => {
+			socketEmitPromise(socket, 'controls:action:duplicate', [controlId, stepId, setId, actionId]).catch((e) => {
 				console.error('Failed to duplicate bank action', e)
 			})
 		},
-		[socket, controlId, setId]
+		[socket, controlId, stepId, setId]
 	)
 
 	const emitLearn = useCallback(
 		(actionId) => {
-			socketEmitPromise(socket, 'controls:action:learn', [controlId, setId, actionId]).catch((e) => {
+			socketEmitPromise(socket, 'controls:action:learn', [controlId, stepId, setId, actionId]).catch((e) => {
 				console.error('Failed to learn bank action values', e)
 			})
 		},
-		[socket, controlId, setId]
+		[socket, controlId, stepId, setId]
 	)
 
 	const emitOrder = useCallback(
 		(dragSetId, dragIndex, dropSetId, dropIndex) => {
+			// TODO
 			socketEmitPromise(socket, 'controls:action:reorder', [
 				controlId,
 				dragSetId,
@@ -86,21 +89,21 @@ export function ControlActionSetEditor({ controlId, setId, actions, addPlacehold
 
 	const emitEnabled = useCallback(
 		(actionId, enabled) => {
-			socketEmitPromise(socket, 'controls:action:enabled', [controlId, setId, actionId, enabled]).catch((e) => {
+			socketEmitPromise(socket, 'controls:action:enabled', [controlId, stepId, setId, actionId, enabled]).catch((e) => {
 				console.error('Failed to enable/disable action', e)
 			})
 		},
-		[socket, controlId, setId]
+		[socket, controlId, stepId, setId]
 	)
 
 	const addAction = useCallback(
 		(actionType) => {
 			const [instanceId, actionId] = actionType.split(':', 2)
-			socketEmitPromise(socket, 'controls:action:add', [controlId, setId, instanceId, actionId]).catch((e) => {
+			socketEmitPromise(socket, 'controls:action:add', [controlId, stepId, setId, instanceId, actionId]).catch((e) => {
 				console.error('Failed to add bank action', e)
 			})
 		},
-		[socket, controlId, setId]
+		[socket, controlId, stepId, setId]
 	)
 
 	const actionIds = useMemo(() => actions.map((act) => act.id), [actions])
