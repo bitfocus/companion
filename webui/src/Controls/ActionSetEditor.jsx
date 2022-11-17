@@ -21,52 +21,52 @@ import { usePanelCollapseHelper } from '../Helpers/CollapseHelper'
 import CSwitch from '../CSwitch'
 import { OptionBankPreview } from './OptionBankPreview'
 
-export function ControlActionSetEditor({ controlId, set, actions, addPlaceholder, heading, headingActions }) {
+export function ControlActionSetEditor({ controlId, setId, actions, addPlaceholder, heading, headingActions }) {
 	const socket = useContext(SocketContext)
 
 	const confirmModal = useRef()
 
 	const emitUpdateOption = useCallback(
 		(actionId, key, val) => {
-			socketEmitPromise(socket, 'controls:action:set-option', [controlId, set, actionId, key, val]).catch((e) => {
+			socketEmitPromise(socket, 'controls:action:set-option', [controlId, setId, actionId, key, val]).catch((e) => {
 				console.error('Failed to set bank action option', e)
 			})
 		},
-		[socket, controlId, set]
+		[socket, controlId, setId]
 	)
 	const emitSetDelay = useCallback(
 		(actionId, delay) => {
-			socketEmitPromise(socket, 'controls:action:set-delay', [controlId, set, actionId, delay]).catch((e) => {
+			socketEmitPromise(socket, 'controls:action:set-delay', [controlId, setId, actionId, delay]).catch((e) => {
 				console.error('Failed to set bank action delay', e)
 			})
 		},
-		[socket, controlId, set]
+		[socket, controlId, setId]
 	)
 
 	const emitDelete = useCallback(
 		(actionId) => {
-			socketEmitPromise(socket, 'controls:action:remove', [controlId, set, actionId]).catch((e) => {
+			socketEmitPromise(socket, 'controls:action:remove', [controlId, setId, actionId]).catch((e) => {
 				console.error('Failed to remove bank action', e)
 			})
 		},
-		[socket, controlId, set]
+		[socket, controlId, setId]
 	)
 	const emitDuplicate = useCallback(
 		(actionId) => {
-			socketEmitPromise(socket, 'controls:action:duplicate', [controlId, set, actionId]).catch((e) => {
+			socketEmitPromise(socket, 'controls:action:duplicate', [controlId, setId, actionId]).catch((e) => {
 				console.error('Failed to duplicate bank action', e)
 			})
 		},
-		[socket, controlId, set]
+		[socket, controlId, setId]
 	)
 
 	const emitLearn = useCallback(
 		(actionId) => {
-			socketEmitPromise(socket, 'controls:action:learn', [controlId, set, actionId]).catch((e) => {
+			socketEmitPromise(socket, 'controls:action:learn', [controlId, setId, actionId]).catch((e) => {
 				console.error('Failed to learn bank action values', e)
 			})
 		},
-		[socket, controlId, set]
+		[socket, controlId, setId]
 	)
 
 	const emitOrder = useCallback(
@@ -86,26 +86,26 @@ export function ControlActionSetEditor({ controlId, set, actions, addPlaceholder
 
 	const emitEnabled = useCallback(
 		(actionId, enabled) => {
-			socketEmitPromise(socket, 'controls:action:enabled', [controlId, set, actionId, enabled]).catch((e) => {
+			socketEmitPromise(socket, 'controls:action:enabled', [controlId, setId, actionId, enabled]).catch((e) => {
 				console.error('Failed to enable/disable action', e)
 			})
 		},
-		[socket, controlId, set]
+		[socket, controlId, setId]
 	)
 
 	const addAction = useCallback(
 		(actionType) => {
 			const [instanceId, actionId] = actionType.split(':', 2)
-			socketEmitPromise(socket, 'controls:action:add', [controlId, set, instanceId, actionId]).catch((e) => {
+			socketEmitPromise(socket, 'controls:action:add', [controlId, setId, instanceId, actionId]).catch((e) => {
 				console.error('Failed to add bank action', e)
 			})
 		},
-		[socket, controlId, set]
+		[socket, controlId, setId]
 	)
 
 	const actionIds = useMemo(() => actions.map((act) => act.id), [actions])
 	const { setPanelCollapsed, isPanelCollapsed, setAllCollapsed, setAllExpanded, canExpandAll, canCollapseAll } =
-		usePanelCollapseHelper(`actions_${controlId}_${set}`, actionIds)
+		usePanelCollapseHelper(`actions_${controlId}_${setId}`, actionIds)
 
 	return (
 		<>
@@ -132,7 +132,7 @@ export function ControlActionSetEditor({ controlId, set, actions, addPlaceholder
 				isOnBank={true}
 				controlId={controlId}
 				dragId={`${controlId}_actions`}
-				setId={set}
+				setId={setId}
 				confirmModal={confirmModal}
 				actions={actions}
 				doSetValue={emitUpdateOption}

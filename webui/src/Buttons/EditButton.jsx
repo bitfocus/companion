@@ -422,7 +422,8 @@ function ActionsSection({ style, controlId, steps, runtimeProps, rotaryActions, 
 		// 								<ControlActionSetEditor
 		// 									heading="Rotate left actions"
 		// 									controlId={controlId}
-		// 									set={'rotate_left'}
+		// 									stepId={stepId}
+		// 									setId={'rotate_left'}
 		// 									addPlaceholder="+ Add rotate left action"
 		// 									actions={action_sets['rotate_left']}
 		// 								/>
@@ -432,7 +433,8 @@ function ActionsSection({ style, controlId, steps, runtimeProps, rotaryActions, 
 		// 								<ControlActionSetEditor
 		// 									heading="Rotate right actions"
 		// 									controlId={controlId}
-		// 									set={'rotate_right'}
+		// 									stepId={stepId}
+		// 									setId={'rotate_right'}
 		// 									addPlaceholder="+ Add rotate right action"
 		// 									actions={action_sets['rotate_right']}
 		// 								/>
@@ -443,12 +445,13 @@ function ActionsSection({ style, controlId, steps, runtimeProps, rotaryActions, 
 		// 						<ControlActionSetEditor
 		// 							heading="Press actions"
 		// 							controlId={controlId}
-		// 							set={'down'}
+		// 							stepId={stepId}
+		// 							setId={'down'}
 		// 							addPlaceholder="+ Add key press action"
 		// 							actions={action_sets['down']}
 		// 						/>
 		// 					</MyErrorBoundary>
-		// 					<EditActionsRelease controlId={controlId} action_sets={action_sets} removeStep={removeStep} />
+		// 					<EditActionsRelease controlId={controlId} action_sets={action_sets} stepId={stepId} removeStep={removeStep} />
 		// 					<br />
 		// 					<p>
 		// 						<CButton onClick={appendStep} color="primary">
@@ -543,7 +546,8 @@ function ActionsSection({ style, controlId, steps, runtimeProps, rotaryActions, 
 												<ControlActionSetEditor
 													heading="Rotate left actions"
 													controlId={controlId}
-													set={`rotate_left_${k}`}
+													stepId={k}
+													setId="rotate_left"
 													addPlaceholder="+ Add rotate left action"
 													actions={step.action_sets['rotate_left']}
 												/>
@@ -553,7 +557,8 @@ function ActionsSection({ style, controlId, steps, runtimeProps, rotaryActions, 
 												<ControlActionSetEditor
 													heading="Rotate right actions"
 													controlId={controlId}
-													set={`rotate_right_${k}`}
+													stepId={k}
+													setId="rotate_right"
 													addPlaceholder="+ Add rotate right action"
 													actions={step.action_sets['rotate_right']}
 												/>
@@ -564,8 +569,9 @@ function ActionsSection({ style, controlId, steps, runtimeProps, rotaryActions, 
 									<MyErrorBoundary>
 										<ControlActionSetEditor
 											heading={`Press actions`}
-											set={`press_${k}`}
 											controlId={controlId}
+											stepId={k}
+											setId="down"
 											addPlaceholder={`+ Add action to step ${i + 1}`}
 											actions={step.action_sets['down']}
 										/>
@@ -574,8 +580,9 @@ function ActionsSection({ style, controlId, steps, runtimeProps, rotaryActions, 
 									<MyErrorBoundary>
 										<ControlActionSetEditor
 											heading={`Release actions`}
-											set={`release_${k}`}
 											controlId={controlId}
+											stepId={k}
+											setId="up"
 											addPlaceholder={`+ Add action to step ${i + 1}`}
 											actions={step.action_sets['up']}
 										/>
@@ -603,7 +610,7 @@ function ActionsSection({ style, controlId, steps, runtimeProps, rotaryActions, 
 	}
 }
 
-function EditActionsRelease({ controlId, action_sets, removeStep }) {
+function EditActionsRelease({ controlId, action_sets, stepId, removeStep }) {
 	const socket = useContext(SocketContext)
 
 	const editRef = useRef(null)
@@ -642,7 +649,8 @@ function EditActionsRelease({ controlId, action_sets, removeStep }) {
 						</CButton>,
 					]}
 					controlId={controlId}
-					set={id}
+					stepId={stepId}
+					setId={id}
 					addPlaceholder={`+ Add ${ident} action`}
 					actions={actions}
 				/>
@@ -658,7 +666,8 @@ function EditActionsRelease({ controlId, action_sets, removeStep }) {
 				<ControlActionSetEditor
 					heading={candidate_sets.length ? 'Short release actions' : 'Release actions'}
 					controlId={controlId}
-					set={'up'}
+					stepId={stepId}
+					setId={'up'}
 					addPlaceholder={candidate_sets.length ? '+ Add key short release action' : '+ Add key release action'}
 					actions={action_sets['up']}
 				/>
