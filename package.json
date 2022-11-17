@@ -320,7 +320,7 @@
 		"companion-module-generic-pjlink": "github:bitfocus/companion-module-generic-pjlink#v1.3.0",
 		"companion-module-generic-sacn": "github:bitfocus/companion-module-generic-sacn#v1.0.2",
 		"companion-module-generic-swp08": "github:bitfocus/companion-module-generic-swp08#v1.0.5",
-		"companion-module-generic-tcp-serial": "github:bitfocus/companion-module-generic-tcp-serial#v1.0.6",
+		"companion-module-generic-tcp-serial": "github:bitfocus/companion-module-generic-tcp-serial#v1.0.7",
 		"companion-module-generic-tcp-udp": "github:bitfocus/companion-module-generic-tcp-udp#v1.0.11",
 		"companion-module-generic-wakeonlan": "github:bitfocus/companion-module-generic-wakeonlan#v1.0.5",
 		"companion-module-generic-websocket": "github:bitfocus/companion-module-generic-websocket#v1.0.3",
