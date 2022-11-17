@@ -287,11 +287,12 @@ export function EditButton({ controlId, onKeyUp }) {
 										action_sets={config.action_sets}
 										runtimeProps={runtimeProps}
 										rotaryActions={config.options.rotaryActions}
+										feedbacks={config.feedbacks}
 									/>
 								</MyErrorBoundary>
 							)}
 
-							{config.feedbacks && (
+							{config.feedbacks && config.type !== 'step' && (
 								<MyErrorBoundary>
 									<ControlFeedbacksEditor
 										heading={'Feedback'}
@@ -324,7 +325,7 @@ export function EditButton({ controlId, onKeyUp }) {
 	)
 }
 
-function ActionsSection({ style, controlId, action_sets, runtimeProps, rotaryActions }) {
+function ActionsSection({ style, controlId, action_sets, runtimeProps, rotaryActions, feedbacks }) {
 	const socket = useContext(SocketContext)
 
 	const confirmRef = useRef()
@@ -463,6 +464,8 @@ function ActionsSection({ style, controlId, action_sets, runtimeProps, rotaryAct
 			<>
 				<GenericConfirmModal ref={confirmRef} />
 
+				<br />
+
 				<CTabs activeTab={selectedStep} onActiveTabChange={doChangeTab}>
 					<CNav variant="tabs">
 						{keys.map((k, i) => (
@@ -576,6 +579,17 @@ function ActionsSection({ style, controlId, action_sets, runtimeProps, rotaryAct
 								</MyErrorBoundary>
 							</CTabPane>
 						))}
+
+						<CTabPane data-tab={`feedbacks`}>
+							<MyErrorBoundary>
+								<ControlFeedbacksEditor
+									heading="Feedbacks"
+									controlId={controlId}
+									feedbacks={feedbacks}
+									isOnBank={true}
+								/>
+							</MyErrorBoundary>
+						</CTabPane>
 					</CTabContent>
 				</CTabs>
 			</>
