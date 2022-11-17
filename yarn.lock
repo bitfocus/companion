@@ -3543,9 +3543,9 @@ commist@^1.0.0:
   dependencies:
     serialport "10.4.0"
 
-"companion-module-generic-tcp-udp@github:bitfocus/companion-module-generic-tcp-udp#v1.0.10":
-  version "1.0.10"
-  resolved "https://codeload.github.com/bitfocus/companion-module-generic-tcp-udp/tar.gz/bb3940eac659b8cb5fa6b7bb22fc1b89f355ce9a"
+"companion-module-generic-tcp-udp@github:bitfocus/companion-module-generic-tcp-udp#v1.0.11":
+  version "1.0.11"
+  resolved "https://codeload.github.com/bitfocus/companion-module-generic-tcp-udp/tar.gz/b4f62fa82d0ec6386ff2db68544ad3f409bc31cd"
 
 "companion-module-generic-wakeonlan@github:bitfocus/companion-module-generic-wakeonlan#v1.0.5":
   version "1.0.5"
