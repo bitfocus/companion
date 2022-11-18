@@ -423,7 +423,7 @@ function TabsSection({ style, controlId, steps, runtimeProps, rotaryActions, fee
 
 							return (
 								<CTabPane key={k} data-tab={`step:${k}`}>
-									<CButtonGroup>
+									<CButtonGroup hidden={keys.length === 1}>
 										<CButton
 											key="set-next"
 											color={runtimeProps.current_step_id === k ? 'success' : 'primary'}
