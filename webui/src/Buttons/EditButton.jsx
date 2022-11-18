@@ -213,7 +213,7 @@ export function EditButton({ controlId, onKeyUp }) {
 							<CDropdown className="mt-2" style={{ display: 'inline-block' }}>
 								<CButtonGroup>
 									{/* This could be simplified to use the split property on CDropdownToggle, but then onClick doesnt work https://github.com/coreui/coreui-react/issues/179 */}
-									<CButton color="success" onClick={() => setButtonType('press')}>
+									<CButton color="success" onClick={() => setButtonType('button')}>
 										Regular button
 									</CButton>
 									<CDropdownToggle
@@ -226,8 +226,7 @@ export function EditButton({ controlId, onKeyUp }) {
 									</CDropdownToggle>
 								</CButtonGroup>
 								<CDropdownMenu>
-									<CDropdownItem onClick={() => setButtonType('press')}>Regular button</CDropdownItem>
-									<CDropdownItem onClick={() => setButtonType('step')}>Step/latch button</CDropdownItem>
+									<CDropdownItem onClick={() => setButtonType('button')}>Regular button</CDropdownItem>
 									<CDropdownItem onClick={() => setButtonType('pageup')}>Page up</CDropdownItem>
 									<CDropdownItem onClick={() => setButtonType('pagenum')}>Page number</CDropdownItem>
 									<CDropdownItem onClick={() => setButtonType('pagedown')}>Page down</CDropdownItem>
@@ -241,7 +240,7 @@ export function EditButton({ controlId, onKeyUp }) {
 							<CButtonGroup>
 								<CButton
 									color="warning"
-									hidden={!config || (config.type !== 'press' && config.type !== 'step')}
+									hidden={!config || config.type !== 'button'}
 									onMouseDown={hotPressDown}
 									onMouseUp={hotPressUp}
 								>
@@ -278,31 +277,16 @@ export function EditButton({ controlId, onKeyUp }) {
 					</MyErrorBoundary>
 
 					{config && runtimeProps && (
-						<>
-							{config.steps && (
-								<MyErrorBoundary>
-									<ActionsSection
-										style={config.type}
-										controlId={controlId}
-										steps={config.steps}
-										runtimeProps={runtimeProps}
-										rotaryActions={config.options.rotaryActions}
-										feedbacks={config.feedbacks}
-									/>
-								</MyErrorBoundary>
-							)}
-
-							{config.feedbacks && config.type !== 'step' && (
-								<MyErrorBoundary>
-									<ControlFeedbacksEditor
-										heading={'Feedback'}
-										controlId={controlId}
-										feedbacks={config.feedbacks}
-										isOnBank={true}
-									/>
-								</MyErrorBoundary>
-							)}
-						</>
+						<MyErrorBoundary>
+							<TabsSection
+								style={config.type}
+								controlId={controlId}
+								steps={config.steps || {}}
+								runtimeProps={runtimeProps}
+								rotaryActions={config.options.rotaryActions}
+								feedbacks={config.feedbacks}
+							/>
+						</MyErrorBoundary>
 					)}
 
 					<hr />
@@ -325,7 +309,7 @@ export function EditButton({ controlId, onKeyUp }) {
 	)
 }
 
-function ActionsSection({ style, controlId, steps, runtimeProps, rotaryActions, feedbacks }) {
+function TabsSection({ style, controlId, steps, runtimeProps, rotaryActions, feedbacks }) {
 	const socket = useContext(SocketContext)
 
 	const confirmRef = useRef()
@@ -348,10 +332,8 @@ function ActionsSection({ style, controlId, steps, runtimeProps, rotaryActions, 
 	useEffect(() => {
 		const keys2 = keys.map((k) => `step:${k}`)
 		keys2.push('feedbacks')
-		console.log('check tab', keys2, selectedStep)
 
 		if (!keys2.includes(selectedStep)) {
-			console.log('force change', keys2[0])
 			setSelectedStep(keys2[0])
 		}
 	}, [keys, selectedStep])
@@ -419,70 +401,7 @@ function ActionsSection({ style, controlId, steps, runtimeProps, rotaryActions, 
 		[socket, controlId]
 	)
 
-	if (style === 'press') {
-		return <p> broken</p>
-		// return (
-		// 	<>
-		// 		<GenericConfirmModal ref={confirmRef} />
-
-		// 		<CTabs
-		// 		// activeTab={activeTab} onActiveTabChange={doChangeTab}
-		// 		>
-		// 			<CNav variant="tabs">
-		// 				<CNavItem>
-		// 					<CNavLink data-tab="actions">Actions</CNavLink>
-		// 				</CNavItem>
-		// 			</CNav>
-		// 			<CTabContent fade={false}>
-		// 				<CTabPane data-tab="actions">
-		// 					{rotaryActions && (
-		// 						<>
-		// 							<MyErrorBoundary>
-		// 								<ControlActionSetEditor
-		// 									heading="Rotate left actions"
-		// 									controlId={controlId}
-		// 									stepId={stepId}
-		// 									setId={'rotate_left'}
-		// 									addPlaceholder="+ Add rotate left action"
-		// 									actions={action_sets['rotate_left']}
-		// 								/>
-		// 							</MyErrorBoundary>
-
-		// 							<MyErrorBoundary>
-		// 								<ControlActionSetEditor
-		// 									heading="Rotate right actions"
-		// 									controlId={controlId}
-		// 									stepId={stepId}
-		// 									setId={'rotate_right'}
-		// 									addPlaceholder="+ Add rotate right action"
-		// 									actions={action_sets['rotate_right']}
-		// 								/>
-		// 							</MyErrorBoundary>
-		// 						</>
-		// 					)}
-		// 					<MyErrorBoundary>
-		// 						<ControlActionSetEditor
-		// 							heading="Press actions"
-		// 							controlId={controlId}
-		// 							stepId={stepId}
-		// 							setId={'down'}
-		// 							addPlaceholder="+ Add key press action"
-		// 							actions={action_sets['down']}
-		// 						/>
-		// 					</MyErrorBoundary>
-		// 					<EditActionsRelease controlId={controlId} action_sets={action_sets} stepId={stepId} removeSet={removeSet} />
-		// 					<br />
-		// 					<p>
-		// 						<CButton onClick={appendStep} color="primary">
-		// 							<FontAwesomeIcon icon={faPlus} /> Add duration group
-		// 						</CButton>
-		// 					</p>
-		// 				</CTabPane>
-		// 			</CTabContent>
-		// 		</CTabs>
-		// 	</>
-		// )
-	} else if (style === 'step') {
+	if (style === 'button') {
 		return (
 			<>
 				<GenericConfirmModal ref={confirmRef} />

@@ -68,14 +68,12 @@ export function ControlOptionsEditor({ controlId, controlType, options, configRe
 						</p>
 					</CCol>
 
-					{controlType === 'step' && (
-						<CCol className="fieldtype-checkbox" sm={3} xs={4}>
-							<label>Auto progress step</label>
-							<p>
-								<CheckboxInputField setValue={setStepAutoProgressValue} value={options.stepAutoProgress} />
-							</p>
-						</CCol>
-					)}
+					<CCol className="fieldtype-checkbox" sm={3} xs={4}>
+						<label>Auto progress step</label>
+						<p>
+							<CheckboxInputField setValue={setStepAutoProgressValue} value={options.stepAutoProgress} />
+						</p>
+					</CCol>
 
 					<CCol className="fieldtype-checkbox" sm={3} xs={4}>
 						<label>
