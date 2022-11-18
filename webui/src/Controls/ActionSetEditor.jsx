@@ -72,12 +72,13 @@ export function ControlActionSetEditor({ controlId, stepId, setId, actions, addP
 	)
 
 	const emitOrder = useCallback(
-		(dragSetId, dragIndex, dropSetId, dropIndex) => {
-			// TODO
+		(dragStepId, dragSetId, dragIndex, dropStepId, dropSetId, dropIndex) => {
 			socketEmitPromise(socket, 'controls:action:reorder', [
 				controlId,
+				dragStepId,
 				dragSetId,
 				dragIndex,
+				dropStepId,
 				dropSetId,
 				dropIndex,
 			]).catch((e) => {
@@ -135,6 +136,7 @@ export function ControlActionSetEditor({ controlId, stepId, setId, actions, addP
 				isOnBank={true}
 				controlId={controlId}
 				dragId={`${controlId}_actions`}
+				stepId={stepId}
 				setId={setId}
 				confirmModal={confirmModal}
 				actions={actions}
@@ -207,6 +209,7 @@ export function ActionsList({
 	isOnBank,
 	controlId,
 	dragId,
+	stepId,
 	setId,
 	confirmModal,
 	actions,
@@ -244,6 +247,7 @@ export function ActionsList({
 							isOnBank={isOnBank}
 							action={a}
 							index={i}
+							stepId={stepId}
 							setId={setId}
 							controlId={controlId}
 							dragId={dragId}
@@ -260,13 +264,19 @@ export function ActionsList({
 						/>
 					</MyErrorBoundary>
 				))}
-				<ActionRowDropPlaceholder dragId={dragId} actionCount={actions.length} setId={setId} moveCard={doReorder} />
+				<ActionRowDropPlaceholder
+					dragId={dragId}
+					actionCount={actions.length}
+					stepId={stepId}
+					setId={setId}
+					moveCard={doReorder}
+				/>
 			</tbody>
 		</table>
 	)
 }
 
-function ActionRowDropPlaceholder({ dragId, setId, actionCount, moveCard }) {
+function ActionRowDropPlaceholder({ dragId, stepId, setId, actionCount, moveCard }) {
 	const [isDragging, drop] = useDrop({
 		accept: dragId,
 		collect: (monitor) => {
@@ -275,7 +285,7 @@ function ActionRowDropPlaceholder({ dragId, setId, actionCount, moveCard }) {
 		hover(item, monitor) {
 			console.log('hover', item)
 
-			moveCard(item.setId, item.index, setId, 0)
+			moveCard(item.stepId, item.setId, item.index, stepId, setId, 0)
 		},
 	})
 
@@ -292,6 +302,7 @@ function ActionRowDropPlaceholder({ dragId, setId, actionCount, moveCard }) {
 
 function ActionTableRow({
 	action,
+	stepId,
 	setId,
 	isOnBank,
 	index,
@@ -331,12 +342,12 @@ function ActionTableRow({
 			const dragIndex = item.index
 			const hoverIndex = index
 			// Don't replace items with themselves
-			if (dragIndex === hoverIndex && item.setId === setId) {
+			if (dragIndex === hoverIndex && item.setId === setId && item.stepId === stepId) {
 				return
 			}
 
 			// Time to actually perform the action
-			moveCard(item.setId, item.index, setId, index)
+			moveCard(item.stepId, item.setId, item.index, stepId, setId, index)
 
 			// Note: we're mutating the monitor item here!
 			// Generally it's better to avoid mutations,
@@ -351,6 +362,7 @@ function ActionTableRow({
 		canDrag: !readonly,
 		item: {
 			actionId: action.id,
+			stepId: stepId,
 			setId: setId,
 			index: index,
 			// ref: ref,

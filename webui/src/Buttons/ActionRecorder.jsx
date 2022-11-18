@@ -591,8 +591,8 @@ function RecorderSession({ sessionId, sessionInfo }) {
 		[socket, sessionId]
 	)
 	const doActionReorder = useCallback(
-		(dragIndex, hoverIndex) => {
-			socketEmitPromise(socket, 'action-recorder:session:action-reorder', [sessionId, dragIndex, hoverIndex]).catch(
+		(_dragStepId, _dragSetId, dragIndex, _dropStepId, _dropSetId, dropIndex) => {
+			socketEmitPromise(socket, 'action-recorder:session:action-reorder', [sessionId, dragIndex, dropIndex]).catch(
 				(e) => {
 					console.error(e)
 				}
