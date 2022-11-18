@@ -20,7 +20,7 @@ import {
 	CNav,
 	CTabs,
 } from '@coreui/react'
-import { faArrowDown, faArrowUp, faPencil, faPlus, faStar, faTrash } from '@fortawesome/free-solid-svg-icons'
+import { faArrowLeft, faArrowRight, faPencil, faPlus, faStar, faTrash } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import React, { forwardRef, useCallback, useContext, useEffect, useImperativeHandle, useRef, useState } from 'react'
 import { nanoid } from 'nanoid'
@@ -317,18 +317,6 @@ function TabsSection({ style, controlId, steps, runtimeProps, rotaryActions, fee
 	const keys = Object.keys(steps).sort()
 	const [selectedStep, setSelectedStep] = useState(keys.length ? `step:${keys[0]}` : 'feedbacks')
 
-	const doChangeTab = useCallback((newTab) => {
-		console.log('tab', newTab)
-		setSelectedStep((oldTab) => {
-			// 	const preserveButtonsTab = newTab === 'variables' && oldTab === 'edit'
-			// 	if (newTab !== 'edit' && oldTab !== newTab && !preserveButtonsTab) {
-			// 		setSelectedButton(null)
-			// 		setTabResetToken(nanoid())
-			// 	}
-			return newTab
-		})
-	}, [])
-
 	useEffect(() => {
 		const keys2 = keys.map((k) => `step:${k}`)
 		keys2.push('feedbacks')
@@ -408,7 +396,7 @@ function TabsSection({ style, controlId, steps, runtimeProps, rotaryActions, fee
 
 				<br />
 
-				<CTabs activeTab={selectedStep} onActiveTabChange={doChangeTab}>
+				<CTabs activeTab={selectedStep} onActiveTabChange={setSelectedStep}>
 					<CNav variant="tabs">
 						{keys.map((k, i) => (
 							<CNavItem key={k}>
@@ -449,22 +437,22 @@ function TabsSection({ style, controlId, steps, runtimeProps, rotaryActions, fee
 										<CButton
 											key="move-up"
 											color="warning"
-											title="Move step up"
+											title="Move step before"
 											size="sm"
 											disabled={i === 0}
 											onClick={() => swapSteps(k, keys[i - 1])}
 										>
-											<FontAwesomeIcon icon={faArrowUp} />
+											<FontAwesomeIcon icon={faArrowLeft} />
 										</CButton>
 										<CButton
 											key="move-down"
 											color="warning"
-											title="Move step down"
+											title="Move step after"
 											size="sm"
 											disabled={i === keys.length - 1}
 											onClick={() => swapSteps(k, keys[i + 1])}
 										>
-											<FontAwesomeIcon icon={faArrowDown} />
+											<FontAwesomeIcon icon={faArrowRight} />
 										</CButton>
 										<CButton
 											key="delete"
@@ -510,7 +498,7 @@ function TabsSection({ style, controlId, steps, runtimeProps, rotaryActions, fee
 											controlId={controlId}
 											stepId={k}
 											setId="down"
-											addPlaceholder={`+ Add action to step ${i + 1}`}
+											addPlaceholder={`+ Add press action`}
 											actions={step.action_sets['down']}
 										/>
 									</MyErrorBoundary>

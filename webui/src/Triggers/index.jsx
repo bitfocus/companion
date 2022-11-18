@@ -166,6 +166,7 @@ function TriggersTable({ triggersList, editItem }) {
 					<th>Name</th>
 					<th>Trigger</th>
 					<th>&nbsp;</th>
+					<th>&nbsp;</th>
 				</tr>
 			</thead>
 			<tbody>

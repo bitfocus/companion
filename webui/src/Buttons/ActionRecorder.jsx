@@ -164,8 +164,8 @@ function RecorderSessionFinishModal({ doClose, sessionId }) {
 	}, [])
 
 	const doSave = useCallback(
-		(controlId, setId, mode) => {
-			socketEmitPromise(socket, 'action-recorder:session:save-to-control', [sessionId, controlId, setId, mode])
+		(controlId, stepId, setId, mode) => {
+			socketEmitPromise(socket, 'action-recorder:session:save-to-control', [sessionId, controlId, stepId, setId, mode])
 				.then(() => {
 					doClose()
 				})
@@ -232,6 +232,7 @@ function BankPicker({ selectBank }) {
 
 	const [pageNumber, setPageNumber] = useState(1)
 	const [selectedControl, setSelectedControl] = useState(null)
+	const [selectedStep, setSelectedStep] = useState(null)
 	const [selectedSet, setSelectedSet] = useState(null)
 
 	const changePage = useCallback((delta) => {
@@ -262,11 +263,11 @@ function BankPicker({ selectBank }) {
 	)
 
 	const replaceActions = useCallback(() => {
-		selectBank(selectedControl, selectedSet, 'replace')
-	}, [selectedControl, selectedSet, selectBank])
+		selectBank(selectedControl, selectedStep, selectedSet, 'replace')
+	}, [selectedControl, selectedStep, selectedSet, selectBank])
 	const appendActions = useCallback(() => {
-		selectBank(selectedControl, selectedSet, 'append')
-	}, [selectedControl, selectedSet, selectBank])
+		selectBank(selectedControl, selectedStep, selectedSet, 'append')
+	}, [selectedControl, selectedStep, selectedSet, selectBank])
 
 	const [controlInfo, setControlInfo] = useState(null)
 	useEffect(() => {
@@ -305,10 +306,23 @@ function BankPicker({ selectBank }) {
 		}
 	}, [socket, selectedControl])
 
+	const actionStepOptions = useMemo(() => {
+		switch (controlInfo?.type) {
+			case 'button':
+				return Object.keys(controlInfo.steps || {}).map((stepId) => ({
+					id: stepId,
+					label: `Step ${Number(stepId) + 1}`,
+				}))
+			default:
+				return []
+		}
+	}, [controlInfo?.type, controlInfo?.steps])
+
+	const selectedStepInfo = controlInfo?.steps?.[selectedStep]
 	const actionSetOptions = useMemo(() => {
 		switch (controlInfo?.type) {
-			case 'press':
-				return [
+			case 'button': {
+				const sets = [
 					{
 						id: 'down',
 						label: 'Down',
@@ -318,15 +332,46 @@ function BankPicker({ selectBank }) {
 						label: 'Up',
 					},
 				]
-			case 'step':
-				return Object.keys(controlInfo.action_sets || {}).map((setId) => ({
-					id: setId,
-					label: `Set ${Number(setId) + 1}`,
-				}))
+
+				if (selectedStepInfo?.action_sets?.['rotate_left'] || selectedStepInfo?.action_sets?.['rotate_right']) {
+					sets.unshift(
+						{
+							id: 'rotate_left',
+							label: 'Rotate left',
+						},
+						{
+							id: 'rotate_right',
+							label: 'Rotate right',
+						}
+					)
+				}
+
+				const candidate_sets = Object.keys(selectedStepInfo?.action_sets || {}).filter((id) => !isNaN(id))
+				candidate_sets.sort((a, b) => Number(a) - Number(b))
+
+				for (const set of candidate_sets) {
+					sets.push({
+						id: set,
+						label: `Release after ${set}ms`,
+					})
+				}
+
+				return sets
+			}
 			default:
 				return []
 		}
-	}, [controlInfo?.type, controlInfo?.action_sets])
+	}, [controlInfo?.type, selectedStepInfo])
+
+	useEffect(() => {
+		setSelectedStep((oldStep) => {
+			if (actionStepOptions.find((opt) => opt.id === oldStep)) {
+				return oldStep
+			} else {
+				return actionStepOptions[0]?.id
+			}
+		})
+	}, [actionStepOptions])
 
 	useEffect(() => {
 		setSelectedSet((oldSet) => {
@@ -357,6 +402,17 @@ function BankPicker({ selectBank }) {
 				<CCol sm={12}>
 					<CForm className="edit-button-panel">
 						<CRow form>
+							<CCol className="fieldtype-checkbox" sm={10} xs={9} hidden={actionStepOptions.length === 1}>
+								<CLabel>Step</CLabel>
+
+								<DropdownInputField
+									choices={actionStepOptions}
+									multiple={false}
+									value={selectedStep}
+									setValue={setSelectedStep}
+									disabled={!controlInfo}
+								/>
+							</CCol>
 							<CCol className="fieldtype-checkbox" sm={10} xs={9}>
 								<CLabel>Action Set</CLabel>
 
@@ -367,6 +423,8 @@ function BankPicker({ selectBank }) {
 									setValue={setSelectedSet}
 									disabled={!controlInfo}
 								/>
+							</CCol>
+							<CCol className="fieldtype-checkbox" sm={10} xs={9}>
 								<CButtonGroup>
 									<CButton
 										color="primary"
@@ -418,7 +476,7 @@ function TriggerPicker({ selectControl }) {
 	const triggersList = useContext(TriggersContext)
 
 	const selectTrigger = useCallback(
-		(id, mode) => selectControl(CreateTriggerControlId(id), null, mode),
+		(id, mode) => selectControl(CreateTriggerControlId(id), null, null, mode),
 		[selectControl]
 	)
 
@@ -545,7 +603,7 @@ function RecorderSessionHeading({ confirmRef, sessionId, sessionInfo, doFinish }
 				<CButton onClick={doAbort} color="danger">
 					Discard
 				</CButton>
-				<CButton onClick={doFinish2} color="success" disabled={!sessionInfo.actions?.length}>
+				<CButton onClick={doFinish2} color="success" disabled={sessionInfo.actions?.length}>
 					Finish
 				</CButton>
 			</CButtonGroup>
