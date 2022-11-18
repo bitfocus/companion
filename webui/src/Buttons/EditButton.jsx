@@ -400,6 +400,25 @@ function ActionsSection({ style, controlId, steps, runtimeProps, rotaryActions, 
 		[socket, controlId]
 	)
 
+	const appendSet = useCallback(
+		(stepId) => {
+			socketEmitPromise(socket, 'controls:action-set:add', [controlId, stepId]).catch((e) => {
+				console.error('Failed to append set:', e)
+			})
+		},
+		[socket, controlId]
+	)
+	const removeSet = useCallback(
+		(stepId, setId) => {
+			confirmRef.current.show('Remove step', 'Are you sure you wish to remove this group?', 'Remove', () => {
+				socketEmitPromise(socket, 'controls:action-set:remove', [controlId, stepId, setId]).catch((e) => {
+					console.error('Failed to delete set:', e)
+				})
+			})
+		},
+		[socket, controlId]
+	)
+
 	if (style === 'press') {
 		return <p> broken</p>
 		// return (
@@ -451,7 +470,7 @@ function ActionsSection({ style, controlId, steps, runtimeProps, rotaryActions, 
 		// 							actions={action_sets['down']}
 		// 						/>
 		// 					</MyErrorBoundary>
-		// 					<EditActionsRelease controlId={controlId} action_sets={action_sets} stepId={stepId} removeStep={removeStep} />
+		// 					<EditActionsRelease controlId={controlId} action_sets={action_sets} stepId={stepId} removeSet={removeSet} />
 		// 					<br />
 		// 					<p>
 		// 						<CButton onClick={appendStep} color="primary">
@@ -577,16 +596,19 @@ function ActionsSection({ style, controlId, steps, runtimeProps, rotaryActions, 
 										/>
 									</MyErrorBoundary>
 
-									<MyErrorBoundary>
-										<ControlActionSetEditor
-											heading={`Release actions`}
-											controlId={controlId}
-											stepId={k}
-											setId="up"
-											addPlaceholder={`+ Add action to step ${i + 1}`}
-											actions={step.action_sets['up']}
-										/>
-									</MyErrorBoundary>
+									<EditActionsRelease
+										controlId={controlId}
+										action_sets={step.action_sets}
+										stepId={k}
+										removeSet={removeSet}
+									/>
+
+									<br />
+									<p>
+										<CButton onClick={() => appendSet(k)} color="primary">
+											<FontAwesomeIcon icon={faPlus} /> Add duration group
+										</CButton>
+									</p>
 								</CTabPane>
 							)
 						})}
@@ -610,24 +632,24 @@ function ActionsSection({ style, controlId, steps, runtimeProps, rotaryActions, 
 	}
 }
 
-function EditActionsRelease({ controlId, action_sets, stepId, removeStep }) {
+function EditActionsRelease({ controlId, action_sets, stepId, removeSet }) {
 	const socket = useContext(SocketContext)
 
 	const editRef = useRef(null)
 
-	const renameStep = useCallback(
+	const renameSet = useCallback(
 		(oldId) => {
 			if (editRef.current) {
 				editRef.current.show(Number(oldId), (newId) => {
 					if (!isNaN(newId)) {
-						socketEmitPromise(socket, 'controls:action-set:rename', [controlId, oldId, newId]).catch((e) => {
+						socketEmitPromise(socket, 'controls:action-set:rename', [controlId, stepId, oldId, newId]).catch((e) => {
 							console.error('Failed to rename set:', e)
 						})
 					}
 				})
 			}
 		},
-		[socket, controlId]
+		[socket, controlId, stepId]
 	)
 
 	const candidate_sets = Object.entries(action_sets).filter(([id]) => !isNaN(id))
@@ -641,10 +663,10 @@ function EditActionsRelease({ controlId, action_sets, stepId, removeStep }) {
 					key={id}
 					heading={`${ident} actions`}
 					headingActions={[
-						<CButton key="rename" color="warning" title="Change time" size="sm" onClick={() => renameStep(id)}>
+						<CButton key="rename" color="warning" title="Change time" size="sm" onClick={() => renameSet(id)}>
 							<FontAwesomeIcon icon={faPencil} />
 						</CButton>,
-						<CButton key="delete" color="danger" title="Delete step" size="sm" onClick={() => removeStep(id)}>
+						<CButton key="delete" color="danger" title="Delete step" size="sm" onClick={() => removeSet(stepId, id)}>
 							<FontAwesomeIcon icon={faTrash} />
 						</CButton>,
 					]}
