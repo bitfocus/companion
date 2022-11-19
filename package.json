@@ -433,7 +433,7 @@
 		"companion-module-phillips-hue": "github:bitfocus/companion-module-phillips-hue#v0.1.0",
 		"companion-module-pixap-pixtimerpro": "github:bitfocus/companion-module-pixap-pixtimerpro#v1.0.8",
 		"companion-module-planningcenter-serviceslive": "github:bitfocus/companion-module-planningcenter-serviceslive#v1.0.7",
-		"companion-module-pnh-opencountdown": "github:bitfocus/companion-module-pnh-opencountdown#v1.0.2",
+		"companion-module-pnh-opencountdown": "github:bitfocus/companion-module-pnh-opencountdown#v1.0.4",
 		"companion-module-pnh-soundr": "github:bitfocus/companion-module-pnh-soundr#v1.0.2",
 		"companion-module-presentationtools-aps": "github:bitfocus/companion-module-presentationtools-aps#v1.2.1",
 		"companion-module-presentationtools-cuetimer": "github:bitfocus/companion-module-presentationtools-cuetimer#v1.1.3",
