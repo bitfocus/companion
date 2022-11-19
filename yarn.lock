@@ -4551,9 +4551,9 @@ commist@^1.0.0:
   dependencies:
     tsl-umd-v5 "^1.0.5"
 
-"companion-module-tslproducts-umdlistener@github:bitfocus/companion-module-tslproducts-umdlistener#v1.0.0":
-  version "1.0.0"
-  resolved "https://codeload.github.com/bitfocus/companion-module-tslproducts-umdlistener/tar.gz/3372d432c241ac3e22ef9a5745c93ee6aab3401e"
+"companion-module-tslproducts-umdlistener@github:bitfocus/companion-module-tslproducts-umdlistener#v1.0.1":
+  version "1.0.1"
+  resolved "https://codeload.github.com/bitfocus/companion-module-tslproducts-umdlistener/tar.gz/4fee97ef30c5e91e469fa0b9328b5a22a18b03ac"
   dependencies:
     packet "0.0.6"
     tsl-umd "^1.1.2"
