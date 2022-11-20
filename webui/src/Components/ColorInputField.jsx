@@ -1,6 +1,8 @@
-import { useState, useEffect, useCallback, useRef } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { SketchPicker } from '@hello-pangea/color-picker'
+import { createPortal } from 'react-dom'
 import { useOnClickOutsideExt } from '../util'
+import { usePopper } from 'react-popper'
 
 function splitColors(number) {
 	return {
@@ -68,24 +70,21 @@ export function ColorInputField({ value, setValue, setValid, disabled }) {
 			display: 'inline-block',
 			cursor: 'pointer',
 		},
-		popover: {
-			position: 'absolute',
-			zIndex: '2',
-		},
 	}
 
-	const pickerRef = useRef(null)
-	const toggleRef = useRef(null)
-	useOnClickOutsideExt([pickerRef, toggleRef], setHide)
+	const [referenceElement, setReferenceElement] = useState(null)
+	const [popperElement, setPopperElement] = useState(null)
+	const { styles: popperStyles, attributes } = usePopper(referenceElement, popperElement)
+	useOnClickOutsideExt([{ current: referenceElement }, { current: popperElement }], setHide)
 
 	return (
 		<div style={{ lineHeight: 0 }}>
-			<div style={styles.swatch} onClick={handleClick} ref={toggleRef}>
+			<div style={styles.swatch} onClick={handleClick} ref={setReferenceElement}>
 				<div style={styles.color} />
 			</div>
-			{displayPicker ? (
-				<>
-					<div style={styles.popover} ref={pickerRef}>
+			{displayPicker &&
+				createPortal(
+					<div ref={setPopperElement} style={popperStyles.popper} {...attributes.popper}>
 						<SketchPicker
 							disabled={disabled}
 							color={color}
@@ -94,9 +93,9 @@ export function ColorInputField({ value, setValue, setValid, disabled }) {
 							disableAlpha={true}
 							presetColors={PICKER_COLORS}
 						/>
-					</div>
-				</>
-			) : null}
+					</div>,
+					document.body
+				)}
 		</div>
 	)
 }
