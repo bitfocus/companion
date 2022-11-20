@@ -4113,9 +4113,9 @@ commist@^1.0.0:
   version "1.2.1"
   resolved "https://codeload.github.com/bitfocus/companion-module-presentationtools-aps/tar.gz/b7c712da0f5fea0c2c59288ff8070941cef667a3"
 
-"companion-module-presentationtools-cuetimer@github:bitfocus/companion-module-presentationtools-cuetimer#v1.1.3":
-  version "1.1.3"
-  resolved "https://codeload.github.com/bitfocus/companion-module-presentationtools-cuetimer/tar.gz/c0bc8ab5e2d4baeceef11441d603469bcbf9984d"
+"companion-module-presentationtools-cuetimer@github:bitfocus/companion-module-presentationtools-cuetimer#v1.1.4":
+  version "1.1.4"
+  resolved "https://codeload.github.com/bitfocus/companion-module-presentationtools-cuetimer/tar.gz/fa703dea00b6fc9375125d1f188d7392e710d2dc"
 
 "companion-module-protopie-bridge@github:bitfocus/companion-module-protopie-bridge#v1.0.3":
   version "1.0.3"
