@@ -1454,10 +1454,10 @@
   resolved "https://registry.yarnpkg.com/@types/node/-/node-12.20.47.tgz#ca9237d51f2a2557419688511dab1c8daf475188"
   integrity sha512-BzcaRsnFuznzOItW1WpQrDHM7plAa7GIDMZ6b5pnMbkqEtM/6WCOhvZar39oeMQP79gwvFUWjjptE7/KGcNqFg==
 
-"@types/node@^14.14.31", "@types/node@^14.18.12", "@types/node@^14.18.22", "@types/node@^14.18.3", "@types/node@^14.18.9", "@types/node@^14.6.2":
-  version "14.18.31"
-  resolved "https://registry.yarnpkg.com/@types/node/-/node-14.18.31.tgz#4b873dea3122e71af4f77e65ec5841397ff254d3"
-  integrity sha512-vQAnaReSQkEDa8uwAyQby8bYGKu84R/deEc6mg5T8fX6gzCn8QW6rziSgsti1fNvsrswKUKPnVTi7uoB+u62Mw==
+"@types/node@^14.14.31", "@types/node@^14.18.12", "@types/node@^14.18.22", "@types/node@^14.18.3", "@types/node@^14.18.33", "@types/node@^14.6.2":
+  version "14.18.33"
+  resolved "https://registry.yarnpkg.com/@types/node/-/node-14.18.33.tgz#8c29a0036771569662e4635790ffa9e057db379b"
+  integrity sha512-qelS/Ra6sacc4loe/3MSjXNL1dNQ/GjxNHVzuChwMfmk7HuycRLVQN2qNY3XahK+fZc5E2szqQSKUyAF0E+2bg==
 
 "@types/node@^16.6":
   version "16.11.26"
@@ -2979,15 +2979,15 @@ commist@^1.0.0:
   version "1.0.7"
   resolved "https://codeload.github.com/bitfocus/companion-module-behringer-wing/tar.gz/8bbc62553da8a60f7c0a99edec2e3c97dbf4fc50"
 
-"companion-module-behringer-x32@github:bitfocus/companion-module-behringer-x32#v2.10.2":
-  version "2.10.2"
-  resolved "https://codeload.github.com/bitfocus/companion-module-behringer-x32/tar.gz/7b43546a022a1acab7659a9f5f38237eb483f4b9"
+"companion-module-behringer-x32@github:bitfocus/companion-module-behringer-x32#v2.11.1":
+  version "2.11.1"
+  resolved "https://codeload.github.com/bitfocus/companion-module-behringer-x32/tar.gz/38440a37a4e3a7f860664136c6979433af6b6608"
   dependencies:
-    "@types/node" "^14.18.9"
+    "@types/node" "^14.18.33"
     debounce-fn "github:julusian/debounce-fn#4.0.0-maxWaithack.0"
-    moment "^2.29.2"
+    moment "^2.29.4"
     p-queue "^6.6.2"
-    type-fest "^2.9.0"
+    type-fest "^2.19.0"
 
 "companion-module-behringer-xair@github:bitfocus/companion-module-behringer-xair#v1.6.11":
   version "1.6.11"
@@ -8516,7 +8516,7 @@ mkdirp@^1.0.3, mkdirp@^1.0.4:
   resolved "https://registry.yarnpkg.com/mkdirp/-/mkdirp-1.0.4.tgz#3eb5ed62622756d79a5f0e2a221dfebad75c2f7e"
   integrity sha512-vVqVZQyf3WLx2Shd0qJ9xuvqgAyKPLAiqITEtqW0oIUjzo3PePDd6fW9iFz30ef7Ysp/oiWqbhszeGWW2T6Gzw==
 
-moment@^2.29.2, moment@^2.29.3:
+moment@^2.29.3, moment@^2.29.4:
   version "2.29.4"
   resolved "https://registry.yarnpkg.com/moment/-/moment-2.29.4.tgz#3dbe052889fe7c1b2ed966fcb3a77328964ef108"
   integrity sha512-5LC9SOxjSc2HF6vO2CyuTDNivEdoz2IvyJJGj6X8DJ0eFyfszE0QiEd+iXmBvUP3WHxSjFH/vIsA0EN00cgr8w==
@@ -9280,15 +9280,7 @@ pify@^3.0.0:
   resolved "https://registry.yarnpkg.com/pify/-/pify-3.0.0.tgz#e5a4acd2c101fdf3d9a4d07f0dbc4db49dd28176"
   integrity sha1-5aSs0sEB/fPZpNB/DbxNtJ3SgXY=
 
-ping@^0.4.0, ping@^0.4.1:
-  version "0.4.1"
-  resolved "https://registry.yarnpkg.com/ping/-/ping-0.4.1.tgz#1436575a39baafe3ed2b76f6a116c51780f32299"
-  integrity sha512-zYouogtyis0QpEZwWY1T26iuIOMJx+ajtjVMcPKIdWRq2Ie3Ftkbel8I25M5kCAQQMQhsez6ZbPiYjNe7aBjSQ==
-  dependencies:
-    q "1.x"
-    underscore "^1.12.0"
-
-ping@^0.4.2:
+ping@^0.4.0, ping@^0.4.1, ping@^0.4.2:
   version "0.4.2"
   resolved "https://registry.yarnpkg.com/ping/-/ping-0.4.2.tgz#8ca8857f201281b5977fe765e7887d0477b5cf52"
   integrity sha512-1uAw0bzHtrPbPo2s6no06oZAzY6KqKclEJR1JRZKIHKXKlPdrz9N0/1MPPB+BbrvMjN3Mk0pcod3bfLNZFRo9w==
@@ -10969,10 +10961,10 @@ type-fest@^1.0.1, type-fest@^1.1.3, type-fest@^1.2.1, type-fest@^1.2.2:
   resolved "https://registry.yarnpkg.com/type-fest/-/type-fest-1.4.0.tgz#e9fb813fe3bf1744ec359d55d1affefa76f14be1"
   integrity sha512-yGSza74xk0UG8k+pLh5oeoYirvIiWo5t0/o3zHHAO2tRDiZcxWP7fywNlXhqb6/r6sWvwi+RsyQMWhVLe4BVuA==
 
-type-fest@^2.11.2, type-fest@^2.12.2, type-fest@^2.17.0, type-fest@^2.3.2, type-fest@^2.9.0:
-  version "2.18.0"
-  resolved "https://registry.yarnpkg.com/type-fest/-/type-fest-2.18.0.tgz#fdef3a74e0a9e68ebe46054836650fb91ac3881e"
-  integrity sha512-pRS+/yrW5TjPPHNOvxhbNZexr2bS63WjrMU8a+VzEBhUi9Tz1pZeD+vQz3ut0svZ46P+SRqMEPnJmk2XnvNzTw==
+type-fest@^2.11.2, type-fest@^2.12.2, type-fest@^2.17.0, type-fest@^2.19.0, type-fest@^2.3.2:
+  version "2.19.0"
+  resolved "https://registry.yarnpkg.com/type-fest/-/type-fest-2.19.0.tgz#88068015bb33036a598b952e55e9311a60fd3a9b"
+  integrity sha512-RAH822pAdBgcNMAfWnCBU3CFZcfZ/i1eZjwFU/dsLKumyuuP3niueg2UAukXYF0E2AAoc82ZSSf9J0WQBinzHA==
 
 type-is@~1.6.18:
   version "1.6.18"
