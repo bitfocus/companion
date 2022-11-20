@@ -43,8 +43,9 @@ import { ButtonStyleConfig } from '../Controls/ButtonStyleConfig'
 import { ControlOptionsEditor } from '../Controls/ControlOptionsEditor'
 import { ControlFeedbacksEditor } from '../Controls/FeedbackEditor'
 import { cloneDeep } from 'lodash-es'
+import { useElementSize } from 'usehooks-ts'
 
-export function EditButton({ controlId, onKeyUp }) {
+export function EditButton({ controlId, onKeyUp, contentHeight }) {
 	const socket = useContext(SocketContext)
 	const userConfig = useContext(UserConfigContext)
 
@@ -200,15 +201,17 @@ export function EditButton({ controlId, onKeyUp }) {
 
 	const parsedId = ParseControlId(controlId)
 
+	const [hintRef, { height: hintHeight }] = useElementSize()
+
 	return (
 		<KeyReceiver onKeyUp={onKeyUp} tabIndex={0} className="edit-button-panel">
 			<GenericConfirmModal ref={resetModalRef} />
 
 			<LoadingRetryOrError dataReady={dataReady} error={loadError} doRetry={doRetryLoad} />
-			{hasConfig && (
-				<div style={{ display: dataReady ? '' : 'none' }}>
+			{hasConfig && dataReady && (
+				<>
 					<MyErrorBoundary>
-						<div>
+						<>
 							<BankPreview fixedSize preview={previewImage} right={true} />
 							<CDropdown className="mt-2" style={{ display: 'inline-block' }}>
 								<CButtonGroup>
@@ -257,7 +260,7 @@ export function EditButton({ controlId, onKeyUp }) {
 									</CButton>
 								)}
 							</CButtonGroup>
-						</div>
+						</>
 					</MyErrorBoundary>
 
 					<MyErrorBoundary>
@@ -279,6 +282,7 @@ export function EditButton({ controlId, onKeyUp }) {
 					{config && runtimeProps && (
 						<MyErrorBoundary>
 							<TabsSection
+								fillHeight={contentHeight - hintHeight}
 								style={config.type}
 								controlId={controlId}
 								steps={config.steps || {}}
@@ -289,30 +293,56 @@ export function EditButton({ controlId, onKeyUp }) {
 						</MyErrorBoundary>
 					)}
 
-					<hr />
-
-					{parsedId?.page && parsedId?.bank && (
-						<p>
-							<b>Hint:</b> Control buttons with OSC or HTTP: /press/bank/{parsedId.page}/{parsedId.bank} to press this
-							button remotely. OSC port{' '}
-							<code>
-								{userConfig?.osc_enabled && userConfig?.osc_listen_port && userConfig?.osc_listen_port !== '0'
-									? userConfig?.osc_listen_port
-									: 'disabled'}
-							</code>
-							!
-						</p>
-					)}
-				</div>
+					<div ref={hintRef} style={{ padding: '1px 0' }}>
+						{parsedId?.page && parsedId?.bank && (
+							<>
+								<hr />
+								<p>
+									<b>Hint:</b> Control buttons with OSC or HTTP: /press/bank/{parsedId.page}/{parsedId.bank} to press
+									this button remotely. OSC port{' '}
+									<code>
+										{userConfig?.osc_enabled && userConfig?.osc_listen_port && userConfig?.osc_listen_port !== '0'
+											? userConfig?.osc_listen_port
+											: 'disabled'}
+									</code>
+									!
+								</p>
+							</>
+						)}
+					</div>
+				</>
 			)}
 		</KeyReceiver>
 	)
 }
 
-function TabsSection({ style, controlId, steps, runtimeProps, rotaryActions, feedbacks }) {
+function TabsSection({ fillHeight, style, controlId, steps, runtimeProps, rotaryActions, feedbacks }) {
 	const socket = useContext(SocketContext)
 
 	const confirmRef = useRef()
+
+	const tabsScrollRef = useRef(null)
+	const [tabsSizeRef, { height: tabsHeight }] = useElementSize()
+
+	const setTabsRef = useCallback(
+		(ref) => {
+			tabsSizeRef(ref)
+			tabsScrollRef.current = ref
+		},
+		[tabsSizeRef]
+	)
+
+	const clickSelectedStep = useCallback((newStep) => {
+		setSelectedStep(newStep)
+
+		if (tabsScrollRef.current) {
+			tabsScrollRef.current.scrollIntoView({
+				block: 'start',
+				inline: 'nearest',
+				behavior: 'smooth',
+			})
+		}
+	}, [])
 
 	const keys = Object.keys(steps).sort()
 	const [selectedStep, setSelectedStep] = useState(keys.length ? `step:${keys[0]}` : 'feedbacks')
@@ -390,148 +420,152 @@ function TabsSection({ style, controlId, steps, runtimeProps, rotaryActions, fee
 	)
 
 	if (style === 'button') {
+		const selectedIndex = keys.findIndex((k) => `step:${k}` === selectedStep)
+		const selectedKey = selectedIndex >= 0 && keys[selectedIndex]
+		const selectedStep2 = selectedKey && steps[selectedKey]
+
 		return (
 			<>
 				<GenericConfirmModal ref={confirmRef} />
 
 				<br />
 
-				<CTabs activeTab={selectedStep} onActiveTabChange={setSelectedStep}>
-					<CNav variant="tabs">
-						{keys.map((k, i) => (
-							<CNavItem key={k}>
-								<CNavLink data-tab={`step:${k}`}>
-									Step {i + 1}{' '}
-									{runtimeProps.current_step_id === k && <FontAwesomeIcon icon={faStar} title="Next step" />}
+				<div ref={setTabsRef} className={'row-heading'}>
+					<CTabs activeTab={selectedStep} onActiveTabChange={clickSelectedStep}>
+						<CNav variant="tabs">
+							{keys.map((k, i) => (
+								<CNavItem key={k}>
+									<CNavLink data-tab={`step:${k}`}>
+										Step {i + 1}{' '}
+										{runtimeProps.current_step_id === k && <FontAwesomeIcon icon={faStar} title="Next step" />}
+									</CNavLink>
+								</CNavItem>
+							))}
+							<CNavItem key="add-step">
+								{/* TODO - colour */}
+								<CNavLink onClick={appendStep}>
+									<FontAwesomeIcon icon={faPlus} /> Add Step
 								</CNavLink>
 							</CNavItem>
-						))}
-						<CNavItem key="add-step">
-							{/* TODO - colour */}
-							<CNavLink onClick={appendStep}>
-								<FontAwesomeIcon icon={faPlus} /> Add Step
-							</CNavLink>
-						</CNavItem>
-						<CNavItem key="feedbacks">
-							<CNavLink data-tab="feedbacks">Feedbacks</CNavLink>
-						</CNavItem>
-					</CNav>
-					<CTabContent fade={false}>
-						{keys.map((k, i) => {
-							const step = steps[k]
-							if (!step) return <p>Missing...</p>
+							<CNavItem key="feedbacks">
+								<CNavLink data-tab="feedbacks">Feedbacks</CNavLink>
+							</CNavItem>
+						</CNav>
+					</CTabs>
+				</div>
 
-							return (
-								<CTabPane key={k} data-tab={`step:${k}`}>
-									<CButtonGroup hidden={keys.length === 1}>
-										<CButton
-											key="set-next"
-											color={runtimeProps.current_step_id === k ? 'success' : 'primary'}
-											size="sm"
-											disabled={runtimeProps.current_step_id === k}
-											onClick={() => setNextStep(k)}
-										>
-											Set Next
-										</CButton>
+				<div
+					className="edit-sticky-body"
+					style={{
+						// minHeight: `calc(${contentHeight - tabsHeight}px - 1rem`,
+						'--raw-height': `${fillHeight - tabsHeight}px`,
+					}}
+				>
+					<p></p>
+					{selectedStep === 'feedbacks' && (
+						<MyErrorBoundary>
+							<ControlFeedbacksEditor heading="Feedbacks" controlId={controlId} feedbacks={feedbacks} isOnBank={true} />
+						</MyErrorBoundary>
+					)}
 
-										<CButton
-											key="move-up"
-											color="warning"
-											title="Move step before"
-											size="sm"
-											disabled={i === 0}
-											onClick={() => swapSteps(k, keys[i - 1])}
-										>
-											<FontAwesomeIcon icon={faArrowLeft} />
-										</CButton>
-										<CButton
-											key="move-down"
-											color="warning"
-											title="Move step after"
-											size="sm"
-											disabled={i === keys.length - 1}
-											onClick={() => swapSteps(k, keys[i + 1])}
-										>
-											<FontAwesomeIcon icon={faArrowRight} />
-										</CButton>
-										<CButton
-											key="delete"
-											color="danger"
-											title="Delete step"
-											size="sm"
-											disabled={keys.length === 1}
-											onClick={() => removeStep(k)}
-										>
-											<FontAwesomeIcon icon={faTrash} />
-										</CButton>
-									</CButtonGroup>
+					{selectedKey && selectedStep && (
+						<>
+							<CButtonGroup hidden={keys.length === 1}>
+								<CButton
+									key="set-next"
+									color={runtimeProps.current_step_id === selectedKey ? 'success' : 'primary'}
+									size="sm"
+									disabled={runtimeProps.current_step_id === selectedKey}
+									onClick={() => setNextStep(selectedKey)}
+								>
+									Set Next
+								</CButton>
 
-									{rotaryActions && (
-										<>
-											<MyErrorBoundary>
-												<ControlActionSetEditor
-													heading="Rotate left actions"
-													controlId={controlId}
-													stepId={k}
-													setId="rotate_left"
-													addPlaceholder="+ Add rotate left action"
-													actions={step.action_sets['rotate_left']}
-												/>
-											</MyErrorBoundary>
+								<CButton
+									key="move-up"
+									color="warning"
+									title="Move step before"
+									size="sm"
+									disabled={selectedIndex === 0}
+									onClick={() => swapSteps(selectedKey, keys[selectedIndex - 1])}
+								>
+									<FontAwesomeIcon icon={faArrowLeft} />
+								</CButton>
+								<CButton
+									key="move-down"
+									color="warning"
+									title="Move step after"
+									size="sm"
+									disabled={selectedIndex === keys.length - 1}
+									onClick={() => swapSteps(selectedKey, keys[selectedIndex + 1])}
+								>
+									<FontAwesomeIcon icon={faArrowRight} />
+								</CButton>
+								<CButton
+									key="delete"
+									color="danger"
+									title="Delete step"
+									size="sm"
+									disabled={keys.length === 1}
+									onClick={() => removeStep(selectedKey)}
+								>
+									<FontAwesomeIcon icon={faTrash} />
+								</CButton>
+							</CButtonGroup>
 
-											<MyErrorBoundary>
-												<ControlActionSetEditor
-													heading="Rotate right actions"
-													controlId={controlId}
-													stepId={k}
-													setId="rotate_right"
-													addPlaceholder="+ Add rotate right action"
-													actions={step.action_sets['rotate_right']}
-												/>
-											</MyErrorBoundary>
-										</>
-									)}
-
+							{rotaryActions && (
+								<>
 									<MyErrorBoundary>
 										<ControlActionSetEditor
-											heading={`Press actions`}
+											heading="Rotate left actions"
 											controlId={controlId}
-											stepId={k}
-											setId="down"
-											addPlaceholder={`+ Add press action`}
-											actions={step.action_sets['down']}
+											stepId={selectedKey}
+											setId="rotate_left"
+											addPlaceholder="+ Add rotate left action"
+											actions={selectedStep2.action_sets['rotate_left']}
 										/>
 									</MyErrorBoundary>
 
-									<EditActionsRelease
-										controlId={controlId}
-										action_sets={step.action_sets}
-										stepId={k}
-										removeSet={removeSet}
-									/>
+									<MyErrorBoundary>
+										<ControlActionSetEditor
+											heading="Rotate right actions"
+											controlId={controlId}
+											stepId={selectedKey}
+											setId="rotate_right"
+											addPlaceholder="+ Add rotate right action"
+											actions={selectedStep2.action_sets['rotate_right']}
+										/>
+									</MyErrorBoundary>
+								</>
+							)}
 
-									<br />
-									<p>
-										<CButton onClick={() => appendSet(k)} color="primary">
-											<FontAwesomeIcon icon={faPlus} /> Add duration group
-										</CButton>
-									</p>
-								</CTabPane>
-							)
-						})}
-
-						<CTabPane data-tab={`feedbacks`}>
 							<MyErrorBoundary>
-								<ControlFeedbacksEditor
-									heading="Feedbacks"
+								<ControlActionSetEditor
+									heading={`Press actions`}
 									controlId={controlId}
-									feedbacks={feedbacks}
-									isOnBank={true}
+									stepId={selectedKey}
+									setId="down"
+									addPlaceholder={`+ Add press action`}
+									actions={selectedStep2.action_sets['down']}
 								/>
 							</MyErrorBoundary>
-						</CTabPane>
-					</CTabContent>
-				</CTabs>
+
+							<EditActionsRelease
+								controlId={controlId}
+								action_sets={selectedStep2.action_sets}
+								stepId={selectedKey}
+								removeSet={removeSet}
+							/>
+
+							<br />
+							<p>
+								<CButton onClick={() => appendSet(selectedKey)} color="primary">
+									<FontAwesomeIcon icon={faPlus} /> Add duration group
+								</CButton>
+							</p>
+						</>
+					)}
+				</div>
 			</>
 		)
 	} else {

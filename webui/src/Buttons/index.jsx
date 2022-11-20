@@ -12,6 +12,7 @@ import { ActionRecorder } from './ActionRecorder'
 import { memo, useCallback, useContext, useRef, useState } from 'react'
 import { GenericConfirmModal } from '../Components/GenericConfirmModal'
 import { InstanceVariables } from './Variables'
+import { useElementSize } from 'usehooks-ts'
 
 export const ButtonsPage = memo(function ButtonsPage({ hotPress }) {
 	const socket = useContext(SocketContext)
@@ -104,6 +105,8 @@ export const ButtonsPage = memo(function ButtonsPage({ hotPress }) {
 		[socket, selectedButton, copyFromButton]
 	)
 
+	const [contentRef, { height: contentHeight }] = useElementSize()
+
 	return (
 		<CRow className="buttons-page split-panels">
 			<GenericConfirmModal ref={clearModalRef} />
@@ -153,12 +156,13 @@ export const ButtonsPage = memo(function ButtonsPage({ hotPress }) {
 								</CNavLink>
 							</CNavItem>
 						</CNav>
-						<CTabContent fade={false}>
+						<CTabContent fade={false} innerRef={contentRef}>
 							<CTabPane data-tab="edit">
 								<MyErrorBoundary>
 									{selectedButton && (
 										<EditButton
 											key={`${selectedButton}.${tabResetToken}`}
+											contentHeight={contentHeight}
 											controlId={selectedButton}
 											onKeyUp={handleKeyDownInButtons}
 										/>

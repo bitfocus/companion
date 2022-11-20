@@ -2,6 +2,7 @@ import { Fragment, useRef, useState, useEffect } from 'react'
 import { useHash } from 'react-use'
 import { SERVER_URL } from './util'
 import ReactMarkdown from 'react-markdown'
+import { useIntersectionObserver } from 'usehooks-ts'
 
 const style = {
 	header: {
@@ -250,7 +251,9 @@ function LoadContent({ file }) {
 
 function OnScreenReporter({ children, onChange }) {
 	const ref = useRef()
-	const isOnScreen = useOnScreen(ref)
+	const entry = useIntersectionObserver(ref, {})
+	const isOnScreen = entry?.isIntersecting
+
 	const [visible, setVisible] = useState(null)
 
 	useEffect(() => {
@@ -261,19 +264,4 @@ function OnScreenReporter({ children, onChange }) {
 	}, [visible, isOnScreen, onChange])
 
 	return <div ref={ref}>{children}</div>
-}
-
-function useOnScreen(ref) {
-	const [isIntersecting, setIntersecting] = useState(false)
-	const observer = new IntersectionObserver(([entry]) => setIntersecting(entry.isIntersecting))
-
-	useEffect(() => {
-		observer.observe(ref.current)
-		return () => {
-			observer.disconnect()
-		}
-		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [])
-
-	return isIntersecting
 }
