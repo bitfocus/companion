@@ -50,10 +50,10 @@
 	},
 	"dependencies": {
 		"@companion-module/base": "^0.4.7",
-		"@elgato-stream-deck/node": "^5.6.0",
+		"@elgato-stream-deck/node": "^5.7.0",
 		"@estilles/expression-parser": "^1.0.0",
 		"@julusian/jpeg-turbo": "^2.0.0",
-		"@loupedeck/node": "^0.2.1",
+		"@loupedeck/node": "^0.2.2",
 		"@sentry/node": "^7.19.0",
 		"@sentry/tracing": "^7.19.0",
 		"archiver": "^5.3.1",

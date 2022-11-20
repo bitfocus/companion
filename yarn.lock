@@ -331,20 +331,20 @@
   resolved "https://registry.yarnpkg.com/@discoveryjs/json-ext/-/json-ext-0.5.7.tgz#1d572bfbbe14b7704e0ba0f39b74815b84870d70"
   integrity sha512-dBVuXR082gk3jsFp7Rd/JI4kytwGHecnCoTtXFb7DB6CNHp4rg5k1bhg0nWdLGLnOV71lmDzGQaLMy8iPLY0pw==
 
-"@elgato-stream-deck/core@5.6.0":
-  version "5.6.0"
-  resolved "https://registry.yarnpkg.com/@elgato-stream-deck/core/-/core-5.6.0.tgz#ff943c2bd3eeea4348b15ea9cbe5e6ee834a9cf5"
-  integrity sha512-TSTNH+ItXMBD6ZniptRMbDkjF6and5PLbIlpmByiC/d46AL9FiHE1W3FSiAdZVzCf2j8A45r6goQrhVFjJOeKg==
+"@elgato-stream-deck/core@5.7.0":
+  version "5.7.0"
+  resolved "https://registry.yarnpkg.com/@elgato-stream-deck/core/-/core-5.7.0.tgz#f1d0aa132eefa85c16386b7a57861957916b926d"
+  integrity sha512-BZr4y3XqX5cHov8VmV1Kigx5qvdetk7WYOygDlaPJ+yQB4XcBOf2pdEDW6wd81zRT2TnuScWkuBUSZvrRFZMqA==
   dependencies:
     eventemitter3 "^4.0.7"
     tslib "^2.4.0"
 
-"@elgato-stream-deck/node@^5.6.0":
-  version "5.6.0"
-  resolved "https://registry.yarnpkg.com/@elgato-stream-deck/node/-/node-5.6.0.tgz#b2e4b876abcf2d786b0daa8049adcb804412bdf9"
-  integrity sha512-eyar2PCxOiSPTWLMaItDx1aFqDfYw+eMQZ+6qIsaHEPzB38ksvhzqsGVeKa4d95o4tji938DCkCZ9zMFAyZNCQ==
+"@elgato-stream-deck/node@^5.7.0":
+  version "5.7.0"
+  resolved "https://registry.yarnpkg.com/@elgato-stream-deck/node/-/node-5.7.0.tgz#17788386167df5f272ba9e268ffdd317267c3dd6"
+  integrity sha512-KTLNq6MabjIzuk7OpdwMreBECr6NkwAQxers1vLXKeu+sgmZwt2CQeBKJYocmMnltILfnfvTGNMZhS61tT47pw==
   dependencies:
-    "@elgato-stream-deck/core" "5.6.0"
+    "@elgato-stream-deck/core" "5.7.0"
     jpeg-js "^0.4.2"
     node-hid "^2.1.1"
     tslib "^2.4.0"
@@ -619,10 +619,10 @@
     node-addon-api "^5.0.0"
     pkg-prebuilds "~0.1.0"
 
-"@loupedeck/node@^0.2.1":
-  version "0.2.1"
-  resolved "https://registry.yarnpkg.com/@loupedeck/node/-/node-0.2.1.tgz#b833361b2aef46ce4535eae65b983b7035e458ba"
-  integrity sha512-uRFQQQKduw0CkEPes5XOA2POzgQNGv/6PEilLzYC/z97cvwealoFIa94qTCO0y2N2/EFqfXudU2EwhZfaheQCQ==
+"@loupedeck/node@^0.2.2":
+  version "0.2.2"
+  resolved "https://registry.yarnpkg.com/@loupedeck/node/-/node-0.2.2.tgz#3d715c454d216ea6d8de8162a256b403a465863b"
+  integrity sha512-RSc73zcytzA5rVkVUvJ7INTlIGhKHAJMvVzNJW70A4C4UBAm5AIvAox6adKBKwlGvZaEhC49nLoZnDtvzdttTA==
   dependencies:
     eventemitter3 "^4.0.7"
     p-queue "^6.6.2"
