@@ -1317,10 +1317,9 @@
   resolved "https://registry.yarnpkg.com/@gar/promisify/-/promisify-1.1.3.tgz#555193ab2e3bb3b6adc3d551c9c030d9e860daf6"
   integrity sha512-k2Ty1JcVojjJFwrg/ThKi2ujJ7XNLYaFGNB/bWT9wGR+oSMJHMa5w+CUq6p/pVrKeNNgA7pCqEcjSnHVoqJQFw==
 
-"@hello-pangea/color-picker@^3.2.2":
-  version "3.2.2"
-  resolved "https://registry.yarnpkg.com/@hello-pangea/color-picker/-/color-picker-3.2.2.tgz#80a0620e219041a24d1bf03171a4edd16b4af5e1"
-  integrity sha512-1JIWv8zh9SVDXlfzlCtzdbsRElLWGX+Ljh5RYzJKigVFroycTToP/6I7qISoeQJr3B045Uq6sZXyE/F/cKmz3g==
+"@hello-pangea/color-picker@https://github.com/Julusian/color-picker/releases/download/v3.3.0-julusian.0/hello-pangea-color-picker-v3.3.0-julusian.0.tgz":
+  version "3.3.0-julusian.0"
+  resolved "https://github.com/Julusian/color-picker/releases/download/v3.3.0-julusian.0/hello-pangea-color-picker-v3.3.0-julusian.0.tgz#3e7c21fe937fb21379e79b7b671666c54c2f9639"
   dependencies:
     "@babel/runtime" "^7.20.1"
     lodash "^4.17.21"
