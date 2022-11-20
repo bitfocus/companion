@@ -571,6 +571,10 @@ function AddActionDropdown({ onSelect, placeholder, recentActions }) {
 
 	return (
 		<Select
+			menuPortalTarget={document.body}
+			menuPosition={'fixed'}
+			classNamePrefix="select-control"
+			menuPlacement="auto"
 			isClearable={false}
 			isSearchable={true}
 			isMulti={false}

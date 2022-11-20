@@ -616,7 +616,10 @@ export function AddFeedbackDropdown({ onSelect, booleanOnly, recentFeedbacks }) 
 
 	return (
 		<Select
-			menuPlacement="top"
+			menuPortalTarget={document.body}
+			menuPosition={'fixed'}
+			classNamePrefix="select-control"
+			menuPlacement="auto"
 			isClearable={false}
 			isSearchable={true}
 			isMulti={false}
