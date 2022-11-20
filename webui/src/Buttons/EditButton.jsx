@@ -13,8 +13,6 @@ import {
 	CFormGroup,
 	CLabel,
 	CInput,
-	CTabPane,
-	CTabContent,
 	CNavItem,
 	CNavLink,
 	CNav,
