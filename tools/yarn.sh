@@ -43,7 +43,7 @@ yarn build:writefile
 echo
 
 heading "UI"
-yarn --frozen-lockfile --cwd webui
+yarn --frozen-lockfile --cwd webui --ignore-engines
 if [ -z "$CI" ]; then
   echo "Warning: This next step can take many minutes to run"
   yarn --cwd webui build

@@ -134,33 +134,35 @@ const AddInstancesInner = memo(function AddInstancesInner({ showHelp, configureI
 	)
 
 	return (
-		<div style={{ clear: 'both' }}>
+		<>
 			<GenericConfirmModal ref={confirmRef} content={confirmContent} />
-
-			<h4>Add connection</h4>
-			<p>
-				Companion currently supports {Object.keys(modules).length} different things, and the list grows every day. If
-				you can't find the device you're looking for, please{' '}
-				<a target="_new" href="https://github.com/bitfocus/companion-module-requests">
-					add a request
-				</a>{' '}
-				on GitHub
-			</p>
-			<CInputGroup>
-				<CInput
-					type="text"
-					placeholder="Search ..."
-					onChange={(e) => setFilter(e.currentTarget.value)}
-					value={filter}
-					style={{ fontSize: '1.2em' }}
-				/>
-				<CInputGroupAppend>
-					<CButton color="danger" onClick={() => setFilter('')}>
-						<FontAwesomeIcon icon={faTimes} />
-					</CButton>
-				</CInputGroupAppend>
-			</CInputGroup>
+			<div style={{ clear: 'both' }} className="row-heading">
+				<h4>Add connection</h4>
+				<p>
+					Companion currently supports {Object.keys(modules).length} different things, and the list grows every day. If
+					you can't find the device you're looking for, please{' '}
+					<a target="_new" href="https://github.com/bitfocus/companion-module-requests">
+						add a request
+					</a>{' '}
+					on GitHub
+				</p>
+				<CInputGroup>
+					<CInput
+						type="text"
+						placeholder="Search ..."
+						onChange={(e) => setFilter(e.currentTarget.value)}
+						value={filter}
+						style={{ fontSize: '1.2em' }}
+					/>
+					<CInputGroupAppend>
+						<CButton color="danger" onClick={() => setFilter('')}>
+							<FontAwesomeIcon icon={faTimes} />
+						</CButton>
+					</CInputGroupAppend>
+				</CInputGroup>
+				<br />
+			</div>
 			<div id="instance_add_search_results">{candidates}</div>
-		</div>
+		</>
 	)
 })

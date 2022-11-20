@@ -1,5 +1,6 @@
-import { useState, useEffect, useCallback } from 'react'
-import { SketchPicker } from 'react-color'
+import { useState, useEffect, useCallback, useRef } from 'react'
+import { SketchPicker } from '@hello-pangea/color-picker'
+import { useOnClickOutsideExt } from '../util'
 
 function splitColors(number) {
 	return {
@@ -18,7 +19,15 @@ export function ColorInputField({ value, setValue, setValid, disabled }) {
 		setValid?.(true)
 	}, [setValid])
 
-	const handleClick = useCallback(() => setDisplayPicker((d) => !d), [])
+	const handleClick = useCallback((e) => setDisplayPicker((d) => !d), [])
+	const setHide = useCallback((e) => {
+		if (e) {
+			e.preventDefault()
+			e.stopPropagation()
+		}
+
+		setDisplayPicker(false)
+	}, [])
 
 	const onChange = useCallback(
 		(c) => {
@@ -65,14 +74,18 @@ export function ColorInputField({ value, setValue, setValid, disabled }) {
 		},
 	}
 
+	const pickerRef = useRef(null)
+	const toggleRef = useRef(null)
+	useOnClickOutsideExt([pickerRef, toggleRef], setHide)
+
 	return (
 		<div style={{ lineHeight: 0 }}>
-			<div style={styles.swatch} onClick={handleClick}>
+			<div style={styles.swatch} onClick={handleClick} ref={toggleRef}>
 				<div style={styles.color} />
 			</div>
 			{displayPicker ? (
 				<>
-					<div style={styles.popover}>
+					<div style={styles.popover} ref={pickerRef}>
 						<SketchPicker
 							disabled={disabled}
 							color={color}
@@ -81,12 +94,6 @@ export function ColorInputField({ value, setValue, setValid, disabled }) {
 							disableAlpha={true}
 							presetColors={PICKER_COLORS}
 						/>
-					</div>
-					<div style={{ position: 'absolute' }}>
-						<div
-							style={{ position: 'fixed', top: '0', right: '0', bottom: '0', left: '0' }}
-							onClick={handleClick}
-						></div>
 					</div>
 				</>
 			) : null}
