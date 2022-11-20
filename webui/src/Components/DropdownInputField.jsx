@@ -135,6 +135,8 @@ export function DropdownInputField({
 	const selectProps = {
 		isDisabled: disabled,
 		classNamePrefix: 'select-control',
+		menuPortalTarget: document.body,
+		menuPosition: 'fixed',
 		menuPlacement: 'auto',
 		isClearable: false,
 		isSearchable: minChoicesForSearch2 <= options.length,

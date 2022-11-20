@@ -78,3 +78,7 @@ input[type='checkbox']:checked {
 // 		margin-bottom: 0;
 // 	}
 // }
+
+.select-control__menu-portal {
+	z-index: 100 !important;
+}
