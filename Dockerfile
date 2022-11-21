@@ -46,9 +46,9 @@ RUN useradd -ms /bin/bash companion
 ENV COMPANION_CONFIG_BASEDIR /companion
 RUN mkdir $COMPANION_CONFIG_BASEDIR && chown companion:companion $COMPANION_CONFIG_BASEDIR
 
-# Export both web and Satellite API ports
 USER companion
-EXPOSE 8000 16622
+# Export ports for web, Satellite API and WebSocket (Elgato Plugin)
+EXPOSE 8000 16622 28492
 
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 CMD [ "curl", "-fSsq", "http://localhost:8000/" ]
 
