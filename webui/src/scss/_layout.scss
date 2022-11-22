@@ -82,10 +82,15 @@ body {
 		margin-top: -1rem;
 		top: 0;
 		left: 0;
-		float: left;
+		// float: left;
 
 		background-color: #fff;
 		z-index: 2;
+	}
+
+	.edit-sticky-body {
+		--raw-height: 0px;
+		min-height: calc(var(--raw-height) - 2.1rem);
 	}
 }
 

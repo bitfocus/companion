@@ -21,60 +21,64 @@ import { usePanelCollapseHelper } from '../Helpers/CollapseHelper'
 import CSwitch from '../CSwitch'
 import { OptionBankPreview } from './OptionBankPreview'
 
-export function ControlActionSetEditor({ controlId, set, actions, addPlaceholder, heading, headingActions }) {
+export function ControlActionSetEditor({ controlId, stepId, setId, actions, addPlaceholder, heading, headingActions }) {
 	const socket = useContext(SocketContext)
 
 	const confirmModal = useRef()
 
 	const emitUpdateOption = useCallback(
 		(actionId, key, val) => {
-			socketEmitPromise(socket, 'controls:action:set-option', [controlId, set, actionId, key, val]).catch((e) => {
-				console.error('Failed to set bank action option', e)
-			})
+			socketEmitPromise(socket, 'controls:action:set-option', [controlId, stepId, setId, actionId, key, val]).catch(
+				(e) => {
+					console.error('Failed to set bank action option', e)
+				}
+			)
 		},
-		[socket, controlId, set]
+		[socket, controlId, stepId, setId]
 	)
 	const emitSetDelay = useCallback(
 		(actionId, delay) => {
-			socketEmitPromise(socket, 'controls:action:set-delay', [controlId, set, actionId, delay]).catch((e) => {
+			socketEmitPromise(socket, 'controls:action:set-delay', [controlId, stepId, setId, actionId, delay]).catch((e) => {
 				console.error('Failed to set bank action delay', e)
 			})
 		},
-		[socket, controlId, set]
+		[socket, controlId, stepId, setId]
 	)
 
 	const emitDelete = useCallback(
 		(actionId) => {
-			socketEmitPromise(socket, 'controls:action:remove', [controlId, set, actionId]).catch((e) => {
+			socketEmitPromise(socket, 'controls:action:remove', [controlId, stepId, setId, actionId]).catch((e) => {
 				console.error('Failed to remove bank action', e)
 			})
 		},
-		[socket, controlId, set]
+		[socket, controlId, stepId, setId]
 	)
 	const emitDuplicate = useCallback(
 		(actionId) => {
-			socketEmitPromise(socket, 'controls:action:duplicate', [controlId, set, actionId]).catch((e) => {
+			socketEmitPromise(socket, 'controls:action:duplicate', [controlId, stepId, setId, actionId]).catch((e) => {
 				console.error('Failed to duplicate bank action', e)
 			})
 		},
-		[socket, controlId, set]
+		[socket, controlId, stepId, setId]
 	)
 
 	const emitLearn = useCallback(
 		(actionId) => {
-			socketEmitPromise(socket, 'controls:action:learn', [controlId, set, actionId]).catch((e) => {
+			socketEmitPromise(socket, 'controls:action:learn', [controlId, stepId, setId, actionId]).catch((e) => {
 				console.error('Failed to learn bank action values', e)
 			})
 		},
-		[socket, controlId, set]
+		[socket, controlId, stepId, setId]
 	)
 
 	const emitOrder = useCallback(
-		(dragSetId, dragIndex, dropSetId, dropIndex) => {
+		(dragStepId, dragSetId, dragIndex, dropStepId, dropSetId, dropIndex) => {
 			socketEmitPromise(socket, 'controls:action:reorder', [
 				controlId,
+				dragStepId,
 				dragSetId,
 				dragIndex,
+				dropStepId,
 				dropSetId,
 				dropIndex,
 			]).catch((e) => {
@@ -86,26 +90,26 @@ export function ControlActionSetEditor({ controlId, set, actions, addPlaceholder
 
 	const emitEnabled = useCallback(
 		(actionId, enabled) => {
-			socketEmitPromise(socket, 'controls:action:enabled', [controlId, set, actionId, enabled]).catch((e) => {
+			socketEmitPromise(socket, 'controls:action:enabled', [controlId, stepId, setId, actionId, enabled]).catch((e) => {
 				console.error('Failed to enable/disable action', e)
 			})
 		},
-		[socket, controlId, set]
+		[socket, controlId, stepId, setId]
 	)
 
 	const addAction = useCallback(
 		(actionType) => {
 			const [instanceId, actionId] = actionType.split(':', 2)
-			socketEmitPromise(socket, 'controls:action:add', [controlId, set, instanceId, actionId]).catch((e) => {
+			socketEmitPromise(socket, 'controls:action:add', [controlId, stepId, setId, instanceId, actionId]).catch((e) => {
 				console.error('Failed to add bank action', e)
 			})
 		},
-		[socket, controlId, set]
+		[socket, controlId, stepId, setId]
 	)
 
 	const actionIds = useMemo(() => actions.map((act) => act.id), [actions])
 	const { setPanelCollapsed, isPanelCollapsed, setAllCollapsed, setAllExpanded, canExpandAll, canCollapseAll } =
-		usePanelCollapseHelper(`actions_${controlId}_${set}`, actionIds)
+		usePanelCollapseHelper(`actions_${controlId}_${setId}`, actionIds)
 
 	return (
 		<>
@@ -132,7 +136,8 @@ export function ControlActionSetEditor({ controlId, set, actions, addPlaceholder
 				isOnBank={true}
 				controlId={controlId}
 				dragId={`${controlId}_actions`}
-				setId={set}
+				stepId={stepId}
+				setId={setId}
 				confirmModal={confirmModal}
 				actions={actions}
 				doSetValue={emitUpdateOption}
@@ -204,6 +209,7 @@ export function ActionsList({
 	isOnBank,
 	controlId,
 	dragId,
+	stepId,
 	setId,
 	confirmModal,
 	actions,
@@ -241,6 +247,7 @@ export function ActionsList({
 							isOnBank={isOnBank}
 							action={a}
 							index={i}
+							stepId={stepId}
 							setId={setId}
 							controlId={controlId}
 							dragId={dragId}
@@ -257,13 +264,19 @@ export function ActionsList({
 						/>
 					</MyErrorBoundary>
 				))}
-				<ActionRowDropPlaceholder dragId={dragId} actionCount={actions.length} setId={setId} moveCard={doReorder} />
+				<ActionRowDropPlaceholder
+					dragId={dragId}
+					actionCount={actions.length}
+					stepId={stepId}
+					setId={setId}
+					moveCard={doReorder}
+				/>
 			</tbody>
 		</table>
 	)
 }
 
-function ActionRowDropPlaceholder({ dragId, setId, actionCount, moveCard }) {
+function ActionRowDropPlaceholder({ dragId, stepId, setId, actionCount, moveCard }) {
 	const [isDragging, drop] = useDrop({
 		accept: dragId,
 		collect: (monitor) => {
@@ -272,7 +285,7 @@ function ActionRowDropPlaceholder({ dragId, setId, actionCount, moveCard }) {
 		hover(item, monitor) {
 			console.log('hover', item)
 
-			moveCard(item.setId, item.index, setId, 0)
+			moveCard(item.stepId, item.setId, item.index, stepId, setId, 0)
 		},
 	})
 
@@ -289,6 +302,7 @@ function ActionRowDropPlaceholder({ dragId, setId, actionCount, moveCard }) {
 
 function ActionTableRow({
 	action,
+	stepId,
 	setId,
 	isOnBank,
 	index,
@@ -328,12 +342,12 @@ function ActionTableRow({
 			const dragIndex = item.index
 			const hoverIndex = index
 			// Don't replace items with themselves
-			if (dragIndex === hoverIndex && item.setId === setId) {
+			if (dragIndex === hoverIndex && item.setId === setId && item.stepId === stepId) {
 				return
 			}
 
 			// Time to actually perform the action
-			moveCard(item.setId, item.index, setId, index)
+			moveCard(item.stepId, item.setId, item.index, stepId, setId, index)
 
 			// Note: we're mutating the monitor item here!
 			// Generally it's better to avoid mutations,
@@ -348,6 +362,7 @@ function ActionTableRow({
 		canDrag: !readonly,
 		item: {
 			actionId: action.id,
+			stepId: stepId,
 			setId: setId,
 			index: index,
 			// ref: ref,

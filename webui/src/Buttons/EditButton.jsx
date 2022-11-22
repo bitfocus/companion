@@ -13,8 +13,12 @@ import {
 	CFormGroup,
 	CLabel,
 	CInput,
+	CNavItem,
+	CNavLink,
+	CNav,
+	CTabs,
 } from '@coreui/react'
-import { faArrowDown, faArrowUp, faPencil, faPlus, faTrash } from '@fortawesome/free-solid-svg-icons'
+import { faArrowLeft, faArrowRight, faPencil, faPlus, faStar, faTrash } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import React, { forwardRef, useCallback, useContext, useEffect, useImperativeHandle, useRef, useState } from 'react'
 import { nanoid } from 'nanoid'
@@ -37,8 +41,9 @@ import { ButtonStyleConfig } from '../Controls/ButtonStyleConfig'
 import { ControlOptionsEditor } from '../Controls/ControlOptionsEditor'
 import { ControlFeedbacksEditor } from '../Controls/FeedbackEditor'
 import { cloneDeep } from 'lodash-es'
+import { useElementSize } from 'usehooks-ts'
 
-export function EditButton({ controlId, onKeyUp }) {
+export function EditButton({ controlId, onKeyUp, contentHeight }) {
 	const socket = useContext(SocketContext)
 	const userConfig = useContext(UserConfigContext)
 
@@ -194,20 +199,22 @@ export function EditButton({ controlId, onKeyUp }) {
 
 	const parsedId = ParseControlId(controlId)
 
+	const [hintRef, { height: hintHeight }] = useElementSize()
+
 	return (
 		<KeyReceiver onKeyUp={onKeyUp} tabIndex={0} className="edit-button-panel">
 			<GenericConfirmModal ref={resetModalRef} />
 
 			<LoadingRetryOrError dataReady={dataReady} error={loadError} doRetry={doRetryLoad} />
-			{hasConfig && (
-				<div style={{ display: dataReady ? '' : 'none' }}>
+			{hasConfig && dataReady && (
+				<>
 					<MyErrorBoundary>
-						<div>
+						<>
 							<BankPreview fixedSize preview={previewImage} right={true} />
 							<CDropdown className="mt-2" style={{ display: 'inline-block' }}>
 								<CButtonGroup>
 									{/* This could be simplified to use the split property on CDropdownToggle, but then onClick doesnt work https://github.com/coreui/coreui-react/issues/179 */}
-									<CButton color="success" onClick={() => setButtonType('press')}>
+									<CButton color="success" onClick={() => setButtonType('button')}>
 										Regular button
 									</CButton>
 									<CDropdownToggle
@@ -220,8 +227,7 @@ export function EditButton({ controlId, onKeyUp }) {
 									</CDropdownToggle>
 								</CButtonGroup>
 								<CDropdownMenu>
-									<CDropdownItem onClick={() => setButtonType('press')}>Regular button</CDropdownItem>
-									<CDropdownItem onClick={() => setButtonType('step')}>Step/latch button</CDropdownItem>
+									<CDropdownItem onClick={() => setButtonType('button')}>Regular button</CDropdownItem>
 									<CDropdownItem onClick={() => setButtonType('pageup')}>Page up</CDropdownItem>
 									<CDropdownItem onClick={() => setButtonType('pagenum')}>Page number</CDropdownItem>
 									<CDropdownItem onClick={() => setButtonType('pagedown')}>Page down</CDropdownItem>
@@ -235,7 +241,7 @@ export function EditButton({ controlId, onKeyUp }) {
 							<CButtonGroup>
 								<CButton
 									color="warning"
-									hidden={!config || (config.type !== 'press' && config.type !== 'step')}
+									hidden={!config || config.type !== 'button'}
 									onMouseDown={hotPressDown}
 									onMouseUp={hotPressUp}
 								>
@@ -252,7 +258,7 @@ export function EditButton({ controlId, onKeyUp }) {
 									</CButton>
 								)}
 							</CButtonGroup>
-						</div>
+						</>
 					</MyErrorBoundary>
 
 					<MyErrorBoundary>
@@ -272,202 +278,292 @@ export function EditButton({ controlId, onKeyUp }) {
 					</MyErrorBoundary>
 
 					{config && runtimeProps && (
-						<>
-							{config.action_sets && (
-								<MyErrorBoundary>
-									<ActionsSection
-										style={config.type}
-										controlId={controlId}
-										action_sets={config.action_sets}
-										runtimeProps={runtimeProps}
-										rotaryActions={config.options.rotaryActions}
-									/>
-								</MyErrorBoundary>
-							)}
-
-							{config.feedbacks && (
-								<MyErrorBoundary>
-									<ControlFeedbacksEditor
-										heading={'Feedback'}
-										controlId={controlId}
-										feedbacks={config.feedbacks}
-										isOnBank={true}
-									/>
-								</MyErrorBoundary>
-							)}
-						</>
+						<MyErrorBoundary>
+							<TabsSection
+								fillHeight={contentHeight - hintHeight}
+								style={config.type}
+								controlId={controlId}
+								steps={config.steps || {}}
+								runtimeProps={runtimeProps}
+								rotaryActions={config.options.rotaryActions}
+								feedbacks={config.feedbacks}
+							/>
+						</MyErrorBoundary>
 					)}
 
-					<hr />
-
-					{parsedId?.page && parsedId?.bank && (
-						<p>
-							<b>Hint:</b> Control buttons with OSC or HTTP: /press/bank/{parsedId.page}/{parsedId.bank} to press this
-							button remotely. OSC port{' '}
-							<code>
-								{userConfig?.osc_enabled && userConfig?.osc_listen_port && userConfig?.osc_listen_port !== '0'
-									? userConfig?.osc_listen_port
-									: 'disabled'}
-							</code>
-							!
-						</p>
-					)}
-				</div>
+					<div ref={hintRef} style={{ padding: '1px 0' }}>
+						{parsedId?.page && parsedId?.bank && (
+							<>
+								<hr />
+								<p>
+									<b>Hint:</b> Control buttons with OSC or HTTP: /press/bank/{parsedId.page}/{parsedId.bank} to press
+									this button remotely. OSC port{' '}
+									<code>
+										{userConfig?.osc_enabled && userConfig?.osc_listen_port && userConfig?.osc_listen_port !== '0'
+											? userConfig?.osc_listen_port
+											: 'disabled'}
+									</code>
+									!
+								</p>
+							</>
+						)}
+					</div>
+				</>
 			)}
 		</KeyReceiver>
 	)
 }
 
-function ActionsSection({ style, controlId, action_sets, runtimeProps, rotaryActions }) {
+function TabsSection({ fillHeight, style, controlId, steps, runtimeProps, rotaryActions, feedbacks }) {
 	const socket = useContext(SocketContext)
 
 	const confirmRef = useRef()
 
-	const appendStep = useCallback(() => {
-		socketEmitPromise(socket, 'controls:action-set:add', [controlId]).catch((e) => {
-			console.error('Failed to append set:', e)
-		})
-	}, [socket, controlId])
+	const tabsScrollRef = useRef(null)
+	const [tabsSizeRef, { height: tabsHeight }] = useElementSize()
+
+	const setTabsRef = useCallback(
+		(ref) => {
+			tabsSizeRef(ref)
+			tabsScrollRef.current = ref
+		},
+		[tabsSizeRef]
+	)
+
+	const clickSelectedStep = useCallback((newStep) => {
+		setSelectedStep(newStep)
+
+		if (tabsScrollRef.current) {
+			tabsScrollRef.current.scrollIntoView({
+				block: 'start',
+				inline: 'nearest',
+				behavior: 'smooth',
+			})
+		}
+	}, [])
+
+	const keys = Object.keys(steps).sort()
+	const [selectedStep, setSelectedStep] = useState(keys.length ? `step:${keys[0]}` : 'feedbacks')
+
+	useEffect(() => {
+		const keys2 = keys.map((k) => `step:${k}`)
+		keys2.push('feedbacks')
+
+		if (!keys2.includes(selectedStep)) {
+			setSelectedStep(keys2[0])
+		}
+	}, [keys, selectedStep])
+
+	const appendStep = useCallback(
+		(e) => {
+			if (e) e.preventDefault()
+
+			socketEmitPromise(socket, 'controls:step:add', [controlId])
+				.then((newStep) => {
+					if (newStep) {
+						setSelectedStep(`step:${newStep}`)
+						setTimeout(() => setSelectedStep(`step:${newStep}`), 500)
+					}
+				})
+				.catch((e) => {
+					console.error('Failed to append step:', e)
+				})
+		},
+		[socket, controlId]
+	)
 	const removeStep = useCallback(
-		(id) => {
+		(stepId) => {
 			confirmRef.current.show('Remove step', 'Are you sure you wish to remove this step?', 'Remove', () => {
-				socketEmitPromise(socket, 'controls:action-set:remove', [controlId, id]).catch((e) => {
-					console.error('Failed to delete set:', e)
+				socketEmitPromise(socket, 'controls:step:remove', [controlId, stepId]).catch((e) => {
+					console.error('Failed to delete step:', e)
 				})
 			})
 		},
 		[socket, controlId]
 	)
 	const swapSteps = useCallback(
-		(id1, id2) => {
-			socketEmitPromise(socket, 'controls:action-set:swap', [controlId, id1, id2]).catch((e) => {
-				console.error('Failed to swap sets:', e)
+		(stepId1, stepId2) => {
+			socketEmitPromise(socket, 'controls:step:swap', [controlId, stepId1, stepId2]).catch((e) => {
+				console.error('Failed to swap steps:', e)
 			})
 		},
 		[socket, controlId]
 	)
 	const setNextStep = useCallback(
-		(id) => {
-			socketEmitPromise(socket, 'controls:action-set:set-next', [controlId, id]).catch((e) => {
-				console.error('Failed to set next set:', e)
+		(stepId) => {
+			socketEmitPromise(socket, 'controls:step:set-next', [controlId, stepId]).catch((e) => {
+				console.error('Failed to set next step:', e)
 			})
 		},
 		[socket, controlId]
 	)
 
-	if (style === 'press') {
+	const appendSet = useCallback(
+		(stepId) => {
+			socketEmitPromise(socket, 'controls:action-set:add', [controlId, stepId]).catch((e) => {
+				console.error('Failed to append set:', e)
+			})
+		},
+		[socket, controlId]
+	)
+	const removeSet = useCallback(
+		(stepId, setId) => {
+			confirmRef.current.show('Remove step', 'Are you sure you wish to remove this group?', 'Remove', () => {
+				socketEmitPromise(socket, 'controls:action-set:remove', [controlId, stepId, setId]).catch((e) => {
+					console.error('Failed to delete set:', e)
+				})
+			})
+		},
+		[socket, controlId]
+	)
+
+	if (style === 'button') {
+		const selectedIndex = keys.findIndex((k) => `step:${k}` === selectedStep)
+		const selectedKey = selectedIndex >= 0 && keys[selectedIndex]
+		const selectedStep2 = selectedKey && steps[selectedKey]
+
 		return (
 			<>
 				<GenericConfirmModal ref={confirmRef} />
-
-				{rotaryActions && (
-					<>
-						<MyErrorBoundary>
-							<ControlActionSetEditor
-								heading="Rotate left actions"
-								controlId={controlId}
-								set={'rotate_left'}
-								addPlaceholder="+ Add rotate left action"
-								actions={action_sets['rotate_left']}
-							/>
-						</MyErrorBoundary>
-
-						<MyErrorBoundary>
-							<ControlActionSetEditor
-								heading="Rotate right actions"
-								controlId={controlId}
-								set={'rotate_right'}
-								addPlaceholder="+ Add rotate right action"
-								actions={action_sets['rotate_right']}
-							/>
-						</MyErrorBoundary>
-					</>
-				)}
-
-				<MyErrorBoundary>
-					<ControlActionSetEditor
-						heading="Press actions"
-						controlId={controlId}
-						set={'down'}
-						addPlaceholder="+ Add key press action"
-						actions={action_sets['down']}
-					/>
-				</MyErrorBoundary>
-
-				<EditActionsRelease controlId={controlId} action_sets={action_sets} removeStep={removeStep} />
 
 				<br />
-				<p>
-					<CButton onClick={appendStep} color="primary">
-						<FontAwesomeIcon icon={faPlus} /> Add duration group
-					</CButton>
-				</p>
-			</>
-		)
-	} else if (style === 'step') {
-		const keys = Object.keys(action_sets).sort()
-		return (
-			<>
-				<GenericConfirmModal ref={confirmRef} />
-				{keys.map((k, i) => (
-					<MyErrorBoundary>
-						<ControlActionSetEditor
-							heading={`Step ${i + 1} actions`}
-							headingActions={[
+
+				<div ref={setTabsRef} className={'row-heading'}>
+					<CTabs activeTab={selectedStep} onActiveTabChange={clickSelectedStep}>
+						<CNav variant="tabs">
+							{keys.map((k, i) => (
+								<CNavItem key={k}>
+									<CNavLink data-tab={`step:${k}`}>
+										Step {i + 1}{' '}
+										{runtimeProps.current_step_id === k && <FontAwesomeIcon icon={faStar} title="Next step" />}
+									</CNavLink>
+								</CNavItem>
+							))}
+							<CNavItem key="add-step">
+								{/* TODO - colour */}
+								<CNavLink onClick={appendStep}>
+									<FontAwesomeIcon icon={faPlus} /> Add Step
+								</CNavLink>
+							</CNavItem>
+							<CNavItem key="feedbacks">
+								<CNavLink data-tab="feedbacks">Feedbacks</CNavLink>
+							</CNavItem>
+						</CNav>
+					</CTabs>
+				</div>
+
+				<div
+					className="edit-sticky-body"
+					style={{
+						// minHeight: `calc(${contentHeight - tabsHeight}px - 1rem`,
+						'--raw-height': `${fillHeight - tabsHeight}px`,
+					}}
+				>
+					<p></p>
+					{selectedStep === 'feedbacks' && (
+						<MyErrorBoundary>
+							<ControlFeedbacksEditor heading="Feedbacks" controlId={controlId} feedbacks={feedbacks} isOnBank={true} />
+						</MyErrorBoundary>
+					)}
+
+					{selectedKey && selectedStep && (
+						<>
+							<CButtonGroup hidden={keys.length === 1}>
 								<CButton
 									key="set-next"
-									color={runtimeProps.current_step_id === k ? 'success' : 'primary'}
+									color={runtimeProps.current_step_id === selectedKey ? 'success' : 'primary'}
 									size="sm"
-									disabled={runtimeProps.current_step_id === k}
-									onClick={() => setNextStep(k)}
+									disabled={runtimeProps.current_step_id === selectedKey}
+									onClick={() => setNextStep(selectedKey)}
 								>
 									Set Next
-								</CButton>,
+								</CButton>
+
 								<CButton
 									key="move-up"
 									color="warning"
-									title="Move step up"
+									title="Move step before"
 									size="sm"
-									disabled={i === 0}
-									onClick={() => swapSteps(k, keys[i - 1])}
+									disabled={selectedIndex === 0}
+									onClick={() => swapSteps(selectedKey, keys[selectedIndex - 1])}
 								>
-									<FontAwesomeIcon icon={faArrowUp} />
-								</CButton>,
+									<FontAwesomeIcon icon={faArrowLeft} />
+								</CButton>
 								<CButton
 									key="move-down"
 									color="warning"
-									title="Move step down"
+									title="Move step after"
 									size="sm"
-									disabled={i === keys.length - 1}
-									onClick={() => swapSteps(k, keys[i + 1])}
+									disabled={selectedIndex === keys.length - 1}
+									onClick={() => swapSteps(selectedKey, keys[selectedIndex + 1])}
 								>
-									<FontAwesomeIcon icon={faArrowDown} />
-								</CButton>,
+									<FontAwesomeIcon icon={faArrowRight} />
+								</CButton>
 								<CButton
 									key="delete"
 									color="danger"
 									title="Delete step"
 									size="sm"
 									disabled={keys.length === 1}
-									onClick={() => removeStep(k)}
+									onClick={() => removeStep(selectedKey)}
 								>
 									<FontAwesomeIcon icon={faTrash} />
-								</CButton>,
-							]}
-							key={`panel_${k}`}
-							controlId={controlId}
-							set={k}
-							addPlaceholder={`+ Add action to step ${i + 1}`}
-							actions={action_sets[k]}
-						/>
-					</MyErrorBoundary>
-				))}
-				<br />
-				<p>
-					<CButton onClick={appendStep} color="primary">
-						<FontAwesomeIcon icon={faPlus} /> Add Step
-					</CButton>
-				</p>
+								</CButton>
+							</CButtonGroup>
+
+							{rotaryActions && (
+								<>
+									<MyErrorBoundary>
+										<ControlActionSetEditor
+											heading="Rotate left actions"
+											controlId={controlId}
+											stepId={selectedKey}
+											setId="rotate_left"
+											addPlaceholder="+ Add rotate left action"
+											actions={selectedStep2.action_sets['rotate_left']}
+										/>
+									</MyErrorBoundary>
+
+									<MyErrorBoundary>
+										<ControlActionSetEditor
+											heading="Rotate right actions"
+											controlId={controlId}
+											stepId={selectedKey}
+											setId="rotate_right"
+											addPlaceholder="+ Add rotate right action"
+											actions={selectedStep2.action_sets['rotate_right']}
+										/>
+									</MyErrorBoundary>
+								</>
+							)}
+
+							<MyErrorBoundary>
+								<ControlActionSetEditor
+									heading={`Press actions`}
+									controlId={controlId}
+									stepId={selectedKey}
+									setId="down"
+									addPlaceholder={`+ Add press action`}
+									actions={selectedStep2.action_sets['down']}
+								/>
+							</MyErrorBoundary>
+
+							<EditActionsRelease
+								controlId={controlId}
+								action_sets={selectedStep2.action_sets}
+								stepId={selectedKey}
+								removeSet={removeSet}
+							/>
+
+							<br />
+							<p>
+								<CButton onClick={() => appendSet(selectedKey)} color="primary">
+									<FontAwesomeIcon icon={faPlus} /> Add duration group
+								</CButton>
+							</p>
+						</>
+					)}
+				</div>
 			</>
 		)
 	} else {
@@ -475,24 +571,24 @@ function ActionsSection({ style, controlId, action_sets, runtimeProps, rotaryAct
 	}
 }
 
-function EditActionsRelease({ controlId, action_sets, removeStep }) {
+function EditActionsRelease({ controlId, action_sets, stepId, removeSet }) {
 	const socket = useContext(SocketContext)
 
 	const editRef = useRef(null)
 
-	const renameStep = useCallback(
+	const renameSet = useCallback(
 		(oldId) => {
 			if (editRef.current) {
 				editRef.current.show(Number(oldId), (newId) => {
 					if (!isNaN(newId)) {
-						socketEmitPromise(socket, 'controls:action-set:rename', [controlId, oldId, newId]).catch((e) => {
+						socketEmitPromise(socket, 'controls:action-set:rename', [controlId, stepId, oldId, newId]).catch((e) => {
 							console.error('Failed to rename set:', e)
 						})
 					}
 				})
 			}
 		},
-		[socket, controlId]
+		[socket, controlId, stepId]
 	)
 
 	const candidate_sets = Object.entries(action_sets).filter(([id]) => !isNaN(id))
@@ -506,15 +602,16 @@ function EditActionsRelease({ controlId, action_sets, removeStep }) {
 					key={id}
 					heading={`${ident} actions`}
 					headingActions={[
-						<CButton key="rename" color="warning" title="Change time" size="sm" onClick={() => renameStep(id)}>
+						<CButton key="rename" color="warning" title="Change time" size="sm" onClick={() => renameSet(id)}>
 							<FontAwesomeIcon icon={faPencil} />
 						</CButton>,
-						<CButton key="delete" color="danger" title="Delete step" size="sm" onClick={() => removeStep(id)}>
+						<CButton key="delete" color="danger" title="Delete step" size="sm" onClick={() => removeSet(stepId, id)}>
 							<FontAwesomeIcon icon={faTrash} />
 						</CButton>,
 					]}
 					controlId={controlId}
-					set={id}
+					stepId={stepId}
+					setId={id}
 					addPlaceholder={`+ Add ${ident} action`}
 					actions={actions}
 				/>
@@ -530,7 +627,8 @@ function EditActionsRelease({ controlId, action_sets, removeStep }) {
 				<ControlActionSetEditor
 					heading={candidate_sets.length ? 'Short release actions' : 'Release actions'}
 					controlId={controlId}
-					set={'up'}
+					stepId={stepId}
+					setId={'up'}
 					addPlaceholder={candidate_sets.length ? '+ Add key short release action' : '+ Add key release action'}
 					actions={action_sets['up']}
 				/>

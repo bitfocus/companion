@@ -147,7 +147,7 @@ export function DropdownInputField({
 	}
 
 	const isValidNewOption = useCallback(
-		(newValue) => compiledRegex && typeof newValue === 'string' && !!newValue.match(compiledRegex),
+		(newValue) => typeof newValue === 'string' && (!compiledRegex || !!newValue.match(compiledRegex)),
 		[compiledRegex]
 	)
 	const noOptionsMessage = useCallback(

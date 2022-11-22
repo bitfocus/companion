@@ -68,29 +68,28 @@ export function ControlOptionsEditor({ controlId, controlType, options, configRe
 						</p>
 					</CCol>
 
-					{controlType === 'step' && (
-						<CCol className="fieldtype-checkbox" sm={3} xs={4}>
-							<label>Auto progress</label>
-							<p>
-								<CheckboxInputField setValue={setStepAutoProgressValue} value={options.stepAutoProgress} />
-							</p>
-						</CCol>
-					)}
+					<CCol className="fieldtype-checkbox" sm={3} xs={4}>
+						<label>
+							Auto progress step &nbsp;
+							<FontAwesomeIcon
+								icon={faQuestionCircle}
+								title="When this button has multiple steps, progress to the next step when the button is released"
+							/>
+						</label>
+						<p>
+							<CheckboxInputField setValue={setStepAutoProgressValue} value={options.stepAutoProgress} />
+						</p>
+					</CCol>
 
-					{controlType === 'press' && (
-						<CCol className="fieldtype-checkbox" sm={3} xs={4}>
-							<label>
-								Enable Rotary Actions &nbsp;
-								<FontAwesomeIcon
-									icon={faQuestionCircle}
-									title="Make this bank compatible with rotation events for the Loupedeck Live product range"
-								/>
-							</label>
-							<p>
-								<CheckboxInputField setValue={setRotaryActions} value={options.rotaryActions} />
-							</p>
-						</CCol>
-					)}
+					<CCol className="fieldtype-checkbox" sm={3} xs={4}>
+						<label>
+							Enable Rotary Actions &nbsp;
+							<FontAwesomeIcon icon={faQuestionCircle} title="Make this button compatible with rotation events" />
+						</label>
+						<p>
+							<CheckboxInputField setValue={setRotaryActions} value={options.rotaryActions} />
+						</p>
+					</CCol>
 				</CRow>
 			</CForm>
 		</CCol>

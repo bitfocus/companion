@@ -163,7 +163,7 @@ export function EditTriggerPanel({ controlId }) {
 										</>
 									}
 									controlId={controlId}
-									set={'0'}
+									setId={'0'}
 									addPlaceholder="+ Add action"
 									actions={config.action_sets['0']}
 								/>
