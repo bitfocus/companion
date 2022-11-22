@@ -205,18 +205,18 @@ export class FakeSystem extends EventEmitter {
 				this.parent.updateStatus(InstanceStatus.Ok, message)
 				break
 			case 1:
-				this.parent.updateStatus(InstanceStatus.UnknwownWarning, message)
+				this.parent.updateStatus(InstanceStatus.UnknownWarning, message)
 				break
 			case 2:
 				this.parent.updateStatus(InstanceStatus.UnknownError, message)
 				break
 			case null:
 			case 0:
-				this.parent.updateStatus(InstanceStatus.UnknwownWarning, message)
+				this.parent.updateStatus(InstanceStatus.UnknownWarning, message)
 				break
 			default:
 				assertNever(level)
-				this.parent.updateStatus(InstanceStatus.UnknwownWarning, message)
+				this.parent.updateStatus(InstanceStatus.UnknownWarning, message)
 				break
 		}
 	}
@@ -412,38 +412,38 @@ export class FakeSystem extends EventEmitter {
 		const newPresets: ModuleApi.CompanionPresetDefinitions = {}
 
 		presets.forEach((preset, index) => {
+			let steps: ModuleApi.CompanionButtonPresetDefinition['steps'] = []
 			if (preset.bank.latch) {
-				newPresets[index] = literal<ModuleApi.CompanionSteppedButtonPresetDefinition>({
-					category: preset.category,
-					name: preset.label,
-					type: 'step',
-					style: convertPresetBank(preset.bank),
-					options: {
-						relativeDelay: preset.bank.relative_delay,
-						stepAutoProgress: true,
+				steps = [
+					{
+						down: preset.actions?.map(convertPresetAction) ?? [],
+						up: [],
 					},
-					feedbacks: preset.feedbacks?.map(convertPresetFeedback) ?? [],
-					actions: {
-						[0]: preset.actions?.map(convertPresetAction) ?? [],
-						[1]: preset.release_actions?.map(convertPresetAction) ?? [],
+					{
+						down: preset.release_actions?.map(convertPresetAction) ?? [],
+						up: [],
 					},
-				})
+				]
 			} else {
-				newPresets[index] = literal<ModuleApi.CompanionPressButtonPresetDefinition>({
-					category: preset.category,
-					name: preset.label,
-					type: 'press',
-					style: convertPresetBank(preset.bank),
-					options: {
-						relativeDelay: preset.bank.relative_delay,
-					},
-					feedbacks: preset.feedbacks?.map(convertPresetFeedback) ?? [],
-					actions: {
+				steps = [
+					{
 						down: preset.actions?.map(convertPresetAction) ?? [],
 						up: preset.release_actions?.map(convertPresetAction) ?? [],
 					},
-				})
+				]
 			}
+			newPresets[index] = literal<ModuleApi.CompanionButtonPresetDefinition>({
+				category: preset.category,
+				name: preset.label,
+				type: 'button',
+				style: convertPresetBank(preset.bank),
+				options: {
+					relativeDelay: preset.bank.relative_delay,
+					stepAutoProgress: true,
+				},
+				feedbacks: preset.feedbacks?.map(convertPresetFeedback) ?? [],
+				steps,
+			})
 		})
 
 		this.parent.setPresetDefinitions(newPresets)
