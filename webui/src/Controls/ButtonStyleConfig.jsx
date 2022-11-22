@@ -1,13 +1,7 @@
 import { CButton, CRow, CCol, CButtonGroup, CForm, CAlert } from '@coreui/react'
 import React, { useCallback, useContext, useState } from 'react'
 import { socketEmitPromise, SocketContext } from '../util'
-import {
-	AlignmentInputField,
-	ColorInputField,
-	DropdownInputField,
-	PNGInputField,
-	TextWithVariablesInputField,
-} from '../Components'
+import { AlignmentInputField, ColorInputField, DropdownInputField, PNGInputField, TextInputField } from '../Components'
 import { FONT_SIZES } from '../Constants'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faTrash } from '@fortawesome/free-solid-svg-icons'
@@ -126,7 +120,7 @@ export function ButtonStyleConfigFields({ values, setValueInner, setPng, setPngE
 				{ sm: 6 },
 				<>
 					<label>Button text</label>
-					<TextWithVariablesInputField tooltip={'Button text'} setValue={setTextValue} value={values.text} />
+					<TextInputField tooltip={'Button text'} setValue={setTextValue} value={values.text} useVariables />
 				</>
 			)}
 

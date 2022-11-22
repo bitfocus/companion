@@ -6,7 +6,6 @@ import {
 	DropdownInputField,
 	NumberInputField,
 	TextInputField,
-	TextWithVariablesInputField,
 } from '../Components'
 import { InternalCustomVariableDropdown, InternalInstanceField } from './InternalInstanceFields'
 
@@ -37,15 +36,10 @@ export function OptionsInputField({
 					required={option.required}
 					tooltip={option.tooltip}
 					placeholder={option.placeholder}
+					useVariables={option.useVariables}
 					disabled={readonly}
 					setValue={setValue2}
 				/>
-			)
-			break
-		}
-		case 'textwithvariables': {
-			control = (
-				<TextWithVariablesInputField value={value} tooltip={option.tooltip} disabled={readonly} setValue={setValue2} />
 			)
 			break
 		}
