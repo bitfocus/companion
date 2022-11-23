@@ -18,6 +18,7 @@ import { ActionTableRowOption } from './Table'
 import { useDrag, useDrop } from 'react-dnd'
 import { GenericConfirmModal } from '../../Components/GenericConfirmModal'
 import { AddActionsModal } from './AddModal'
+import { MenuPortalContext } from '../../Components/DropdownInputField'
 
 export function ActionsPanel({
 	page,
@@ -521,6 +522,7 @@ const noOptionsMessage = ({ inputValue }) => {
 }
 
 function AddActionDropdown({ onSelect, placeholder, recentActions }) {
+	const menuPortal = useContext(MenuPortalContext)
 	const instancesContext = useContext(InstancesContext)
 	const actionsContext = useContext(ActionsContext)
 
@@ -571,7 +573,8 @@ function AddActionDropdown({ onSelect, placeholder, recentActions }) {
 
 	return (
 		<Select
-			menuPortalTarget={document.body}
+			menuShouldBlockScroll={!!menuPortal} // The dropdown doesn't follow scroll when in a modal
+			menuPortalTarget={menuPortal || document.body}
 			menuPosition={'fixed'}
 			classNamePrefix="select-control"
 			menuPlacement="auto"
