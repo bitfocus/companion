@@ -8,6 +8,7 @@ import { OptionsInputField } from '../Controls/OptionsInputField'
 import { useDrag, useDrop } from 'react-dnd'
 import { GenericConfirmModal } from '../Components/GenericConfirmModal'
 import { usePanelCollapseHelper } from '../Helpers/CollapseHelper'
+import { MenuPortalContext } from '../Components/DropdownInputField'
 
 export function TriggerEventEditor({ controlId, events, heading }) {
 	const socket = useContext(SocketContext)
@@ -347,6 +348,7 @@ const noOptionsMessage = ({ inputValue }) => {
 }
 
 function AddEventDropdown({ onSelect }) {
+	const menuPortal = useContext(MenuPortalContext)
 	const EventDefinitions = useContext(EventDefinitionsContext)
 
 	const options = useMemo(() => {
@@ -375,7 +377,8 @@ function AddEventDropdown({ onSelect }) {
 
 	return (
 		<Select
-			menuPortalTarget={document.body}
+			menuShouldBlockScroll={!!menuPortal} // The dropdown doesn't follow scroll when in a modal
+			menuPortalTarget={menuPortal || document.body}
 			menuPosition={'fixed'}
 			classNamePrefix="select-control"
 			menuPlacement="auto"

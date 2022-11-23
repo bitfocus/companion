@@ -20,6 +20,7 @@ import { AddActionsModal } from './AddModal'
 import { usePanelCollapseHelper } from '../Helpers/CollapseHelper'
 import CSwitch from '../CSwitch'
 import { OptionBankPreview } from './OptionBankPreview'
+import { MenuPortalContext } from '../Components/DropdownInputField'
 
 export function ControlActionSetEditor({ controlId, stepId, setId, actions, addPlaceholder, heading, headingActions }) {
 	const socket = useContext(SocketContext)
@@ -566,6 +567,7 @@ const noOptionsMessage = ({ inputValue }) => {
 }
 
 function AddActionDropdown({ onSelect, placeholder, recentActions }) {
+	const menuPortal = useContext(MenuPortalContext)
 	const instancesContext = useContext(InstancesContext)
 	const actionsContext = useContext(ActionsContext)
 
@@ -616,7 +618,8 @@ function AddActionDropdown({ onSelect, placeholder, recentActions }) {
 
 	return (
 		<Select
-			menuPortalTarget={document.body}
+			menuShouldBlockScroll={!!menuPortal} // The dropdown doesn't follow scroll when in a modal
+			menuPortalTarget={menuPortal || document.body}
 			menuPosition={'fixed'}
 			classNamePrefix="select-control"
 			menuPlacement="auto"

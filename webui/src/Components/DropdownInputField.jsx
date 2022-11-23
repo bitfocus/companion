@@ -1,7 +1,11 @@
 import classNames from 'classnames'
+import { createContext } from 'react'
+import { useContext } from 'react'
 import { useMemo, useEffect, useCallback } from 'react'
 import Select from 'react-select'
 import CreatableSelect from 'react-select/creatable'
+
+export const MenuPortalContext = createContext(null)
 
 export function DropdownInputField({
 	choices,
@@ -17,6 +21,8 @@ export function DropdownInputField({
 	setValid,
 	disabled,
 }) {
+	const menuPortal = useContext(MenuPortalContext)
+
 	const options = useMemo(() => {
 		let options = []
 		if (options) {
@@ -135,7 +141,8 @@ export function DropdownInputField({
 	const selectProps = {
 		isDisabled: disabled,
 		classNamePrefix: 'select-control',
-		menuPortalTarget: document.body,
+		menuPortalTarget: menuPortal || document.body,
+		menuShouldBlockScroll: !!menuPortal, // The dropdown doesn't follow scroll when in a modal
 		menuPosition: 'fixed',
 		menuPlacement: 'auto',
 		isClearable: false,

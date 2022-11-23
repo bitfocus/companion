@@ -20,6 +20,7 @@ import { ButtonStyleConfigFields } from './ButtonStyleConfig'
 import { AddFeedbacksModal } from './AddModal'
 import { usePanelCollapseHelper } from '../Helpers/CollapseHelper'
 import { OptionBankPreview } from './OptionBankPreview'
+import { MenuPortalContext } from '../Components/DropdownInputField'
 
 export function ControlFeedbacksEditor({ controlId, feedbacks, heading, booleanOnly, isOnBank }) {
 	const socket = useContext(SocketContext)
@@ -589,6 +590,7 @@ const noOptionsMessage = ({ inputValue }) => {
 }
 
 export function AddFeedbackDropdown({ onSelect, booleanOnly, recentFeedbacks }) {
+	const menuPortal = useContext(MenuPortalContext)
 	const feedbacksContext = useContext(FeedbacksContext)
 	const instancesContext = useContext(InstancesContext)
 
@@ -641,7 +643,8 @@ export function AddFeedbackDropdown({ onSelect, booleanOnly, recentFeedbacks }) 
 
 	return (
 		<Select
-			menuPortalTarget={document.body}
+			menuShouldBlockScroll={!!menuPortal} // The dropdown doesn't follow scroll when in a modal
+			menuPortalTarget={menuPortal || document.body}
 			menuPosition={'fixed'}
 			classNamePrefix="select-control"
 			menuPlacement="auto"
