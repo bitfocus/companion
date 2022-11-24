@@ -40,6 +40,18 @@ export function SurfacesStep({ config, setValue }) {
 					<CLabel htmlFor="userconfig_xkeys_enable">Enable</CLabel>
 				</div>
 			</div>
+
+			<p className="indent3">Loupedeck USB Devices</p>
+			<div className="indent3">
+				<div className="form-check form-check-inline mr-1">
+					<CInputCheckbox
+						id="userconfig_loupedeck_enable"
+						checked={config.loupedeck_enable}
+						onChange={(e) => setValue('loupedeck_enable', e.currentTarget.checked)}
+					/>
+					<CLabel htmlFor="userconfig_loupedeck_enable">Enable</CLabel>
+				</div>
+			</div>
 		</div>
 	)
 }

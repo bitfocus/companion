@@ -17,7 +17,7 @@ export function FinishStep({ oldConfig, newConfig }) {
 						? 'Please note that Stream Deck devices will not appear since they are configured for the Stream Deck software.'
 						: ''}
 				</li>
-				<li>Go to the 'Conections' tab to configure the devices you'd like to control.</li>
+				<li>Go to the 'Connections' tab to configure the devices you'd like to control.</li>
 				<li>
 					Go to the 'Buttons' tab to program buttons to control your devices.
 					<br />
@@ -28,7 +28,8 @@ export function FinishStep({ oldConfig, newConfig }) {
 				</li>
 			</ol>
 			{(newConfig.elgato_plugin_enable && oldConfig.elgato_plugin_enable !== newConfig.elgato_plugin_enable) ||
-			(!newConfig.xkeys_enable && oldConfig.xkeys_enable !== newConfig.xkeys_enable) ? (
+			(!newConfig.xkeys_enable && oldConfig.xkeys_enable !== newConfig.xkeys_enable) ||
+			(!newConfig.loupedeck_enable && oldConfig.loupedeck_enable !== newConfig.loupedeck_enable) ? (
 				<CAlert color="danger">
 					After completing this wizard a restart of Companion is required to apply your USB detection settings. You will
 					need to do this manually.

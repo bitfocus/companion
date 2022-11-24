@@ -54,13 +54,17 @@
 }
 
 .variables-panel {
-	.variables-table {
-		margin-top: 20px;
+	.variables-table-filter {
+		margin-top: 1rem;
 	}
 }
 
 .variables-table {
 	word-break: break-all;
+}
+
+.variables-table-filter {
+	margin: 0 0 1rem 0;
 }
 
 .instances-panel {

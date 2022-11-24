@@ -20,6 +20,7 @@ import { ActionsPanelInner } from '../Buttons/EditButton/ActionsPanel'
 import { CheckboxInputField } from '../Components'
 import { AddFeedbacksModal } from '../Buttons/EditButton/AddModal'
 import { useEffect } from 'react'
+import { MenuPortalContext } from '../Components/DropdownInputField'
 
 function getPluginSpecDefaults(pluginOptions) {
 	const config = {}
@@ -183,81 +184,85 @@ export function TriggerEditModal({ doClose, doSave, item, plugins }) {
 		}))
 	}, [])
 
+	const [modalRef, setModalRef] = useState(null)
+
 	return (
-		<CModal show={true} onClose={doClose} size="lg">
-			<CForm onSubmit={doSaveInner} className={'edit-button-panel'}>
-				<CModalHeader closeButton>
-					<h5>Trigger Editor</h5>
-				</CModalHeader>
-				<CModalBody>
-					<CFormGroup>
-						<label>Name</label>
-						<CInput required value={config.title} onChange={setTitle} />
-					</CFormGroup>
+		<CModal innerRef={setModalRef} show={true} onClose={doClose} size="lg">
+			<MenuPortalContext.Provider value={modalRef}>
+				<CForm onSubmit={doSaveInner} className={'edit-button-panel'}>
+					<CModalHeader closeButton>
+						<h5>Trigger Editor</h5>
+					</CModalHeader>
+					<CModalBody>
+						<CFormGroup>
+							<label>Name</label>
+							<CInput required value={config.title} onChange={setTitle} />
+						</CFormGroup>
 
-					<legend>Condition</legend>
-					<CFormGroup>
-						<label>Type</label>
-						<Select
-							value={pluginChoices.find((c) => c.value === config.type)}
-							onChange={changeType}
-							isSearchable={false}
-							isClearable={false}
-							options={pluginChoices}
-							required
+						<legend>Condition</legend>
+						<CFormGroup>
+							<label>Type</label>
+							<Select
+								value={pluginChoices.find((c) => c.value === config.type)}
+								onChange={changeType}
+								isSearchable={false}
+								isClearable={false}
+								options={pluginChoices}
+								required
+							/>
+						</CFormGroup>
+
+						{pluginSpec?.options ? (
+							<TriggerEditModalConfig pluginSpec={pluginSpec} config={config.config} setConfig={setConfig} />
+						) : (
+							'Unknown type selected'
+						)}
+
+						<hr />
+						<legend>Action</legend>
+						<CRow form className="button-style-form">
+							<CCol className="fieldtype-checkbox" sm={2} xs={3}>
+								<CButton
+									color="warning"
+									onMouseDown={() =>
+										context.socket.emit('schedule_test_actions', config.title, config.actions, config.relative_delays)
+									}
+								>
+									Test actions
+								</CButton>
+							</CCol>
+							<CCol className="fieldtype-checkbox" sm={2} xs={3}>
+								<CLabel>Relative Delays</CLabel>
+								<p>
+									<CheckboxInputField
+										definition={{ default: false }}
+										value={config.relative_delays ?? false}
+										setValue={setRelativeDelays}
+									/>
+									&nbsp;
+								</p>
+							</CCol>
+						</CRow>
+						<ActionsPanelInner
+							isOnBank={false}
+							dragId={'triggerAction'}
+							addPlaceholder="+ Add action"
+							actions={config.actions || []}
+							setActions={setActions}
+							addAction={addActionSelect}
+							emitLearn={doLearn}
 						/>
-					</CFormGroup>
-
-					{pluginSpec?.options ? (
-						<TriggerEditModalConfig pluginSpec={pluginSpec} config={config.config} setConfig={setConfig} />
-					) : (
-						'Unknown type selected'
-					)}
-
-					<hr />
-					<legend>Action</legend>
-					<CRow form className="button-style-form">
-						<CCol className="fieldtype-checkbox" sm={2} xs={3}>
-							<CButton
-								color="warning"
-								onMouseDown={() =>
-									context.socket.emit('schedule_test_actions', config.title, config.actions, config.relative_delays)
-								}
-							>
-								Test actions
-							</CButton>
-						</CCol>
-						<CCol className="fieldtype-checkbox" sm={2} xs={3}>
-							<CLabel>Relative Delays</CLabel>
-							<p>
-								<CheckboxInputField
-									definition={{ default: false }}
-									value={config.relative_delays ?? false}
-									setValue={setRelativeDelays}
-								/>
-								&nbsp;
-							</p>
-						</CCol>
-					</CRow>
-					<ActionsPanelInner
-						isOnBank={false}
-						dragId={'triggerAction'}
-						addPlaceholder="+ Add action"
-						actions={config.actions || []}
-						setActions={setActions}
-						addAction={addActionSelect}
-						emitLearn={doLearn}
-					/>
-				</CModalBody>
-				<CModalFooter>
-					<CButton color="secondary" onClick={doClose}>
-						Cancel
-					</CButton>
-					<CButton color="primary" type="submit">
-						Save
-					</CButton>
-				</CModalFooter>
-			</CForm>
+					</CModalBody>
+					<CModalFooter>
+						<CButton color="secondary" onClick={doClose}>
+							Cancel
+						</CButton>
+						<CButton color="primary" type="submit">
+							Save
+						</CButton>
+					</CModalFooter>
+				</CForm>
+			</MenuPortalContext.Provider>
 		</CModal>
 	)
 }

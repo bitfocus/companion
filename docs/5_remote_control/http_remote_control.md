@@ -4,10 +4,10 @@ Remote triggering can be done by sending `HTTP` Requests to the same IP and port
 
 - `/press/bank/<page>/<bank>`  
   _Press and release a button (run both down and up actions)_
-- `/press/bank/<page>/<bank>/up`  
-  _Press a button (run up actions)_
 - `/press/bank/<page>/<bank>/down`  
-  _Release a button (run both down actions)_
+   Press a button (run both down actions)_
+- `/press/bank/<page>/<bank>/up`  
+   Release a button (run up actions)_
 - `/style/bank/<page>/<bank>?bgcolor=<bgcolor HEX>`  
   _Change background color of button_
 - `/style/bank/<page>/<bank>?color=<color HEX>`  
