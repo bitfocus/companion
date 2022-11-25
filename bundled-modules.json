@@ -1,6 +1,0 @@
-{
-	"behringer-x32": "https://builds.julusian.dev/companion-module-test/behringer-x32-0.tgz",
-	"bmd-atem": "https://builds.julusian.dev/companion-module-test/bmd-atem-0.tgz",
-	"homeassistant-server": "https://builds.julusian.dev/companion-module-test/homeassistant-server-0.tgz",
-	"generic-osc": "https://builds.julusian.dev/companion-module-test/generic-osc-0.tgz"
-}
