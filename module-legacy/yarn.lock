@@ -24,10 +24,10 @@
     p-timeout "^4.1.0"
     tslib "^2.4.1"
 
-"@companion-module/tools@^0.4.0":
-  version "0.4.0"
-  resolved "https://registry.yarnpkg.com/@companion-module/tools/-/tools-0.4.0.tgz#fe6e46214764d070fa5c7f4ddf490ceb1c3a0d74"
-  integrity sha512-odGaVDT9DJo2ZX0jFgigOscOFkq1Vjut2JPEC2bjEWz4B0lSv/Qobq71d8BMLIbbZCT6A9p/IWl5NWKj3D7lVQ==
+"@companion-module/tools@^0.4.1":
+  version "0.4.1"
+  resolved "https://registry.yarnpkg.com/@companion-module/tools/-/tools-0.4.1.tgz#d0a11b7c8a98d66854d38372fa07b9300f43b5e8"
+  integrity sha512-jug1qVvnbD/aMIcDxQItFhDGedbRiOgGEB76IC1xhIKXX5amOrzSiK4sje6F3tzfiyg3TxwisIKzyFWj9p4f5Q==
   dependencies:
     "@typescript-eslint/eslint-plugin" "^5.44.0"
     "@typescript-eslint/parser" "^5.44.0"
