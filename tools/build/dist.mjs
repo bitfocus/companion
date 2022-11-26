@@ -4,12 +4,7 @@ import { generateVersionString } from '../lib.mjs'
 import archiver from 'archiver'
 import { fs } from 'zx'
 import { createRequire } from 'node:module'
-import { pipeline } from 'node:stream'
-import { promisify } from 'node:util'
 import path from 'node:path'
-import tar from 'tar'
-
-const streamPipeline = promisify(pipeline)
 
 /**
  * @param {String} sourceDir: /some/folder/to/compress

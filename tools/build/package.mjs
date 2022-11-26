@@ -10,7 +10,7 @@ const streamPipeline = promisify(pipeline)
 const toPosix = (str) => str.split(path.sep).join(path.posix.sep)
 
 // Determine some environment info
-const platformInfo = determinePlatformInfo(argv._[1])
+const platformInfo = determinePlatformInfo(argv._[0])
 if (platformInfo.nodePlatform) process.env.npm_config_platform = platformInfo.nodePlatform
 if (platformInfo.nodeArch) process.env.npm_config_arch = platformInfo.nodeArch
 
