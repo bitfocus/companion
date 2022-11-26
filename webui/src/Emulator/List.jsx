@@ -43,7 +43,7 @@ export function EmulatorList() {
 	}, [socket, reloadToken])
 
 	const emulators = useMemo(() => {
-		return Object.values(surfaces || {}).filter((s) => s.id.startsWith('emulator:'))
+		return Object.values(surfaces?.available || {}).filter((s) => s.id.startsWith('emulator:'))
 	}, [surfaces])
 
 	return (
