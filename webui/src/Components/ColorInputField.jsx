@@ -1,8 +1,9 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useContext } from 'react'
 import { SketchPicker } from '@hello-pangea/color-picker'
 import { createPortal } from 'react-dom'
 import { useOnClickOutsideExt } from '../util'
 import { usePopper } from 'react-popper'
+import { MenuPortalContext } from './DropdownInputField'
 
 function splitColors(number) {
 	return {
@@ -13,6 +14,8 @@ function splitColors(number) {
 }
 
 export function ColorInputField({ definition, value, setValue, setValid }) {
+	const menuPortal = useContext(MenuPortalContext)
+
 	const [currentColor, setCurrentColor] = useState(null)
 	const [displayPicker, setDisplayPicker] = useState(false)
 
@@ -96,7 +99,7 @@ export function ColorInputField({ definition, value, setValue, setValid }) {
 							presetColors={PICKER_COLORS}
 						/>
 					</div>,
-					document.body
+					menuPortal || document.body
 				)}
 		</div>
 	)
