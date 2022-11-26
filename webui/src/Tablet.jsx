@@ -39,7 +39,7 @@ export function Tablet() {
 		setLoadError(null)
 		setPages(null)
 
-		socketEmitPromise(socket, 'web-buttons:subscribe', [])
+		socketEmitPromise(socket, 'pages:subscribe', [])
 			.then((newPages) => {
 				setLoadError(null)
 				setPages(newPages)
@@ -63,12 +63,12 @@ export function Tablet() {
 			})
 		}
 
-		socket.on('web-buttons:page-info', updatePageInfo)
+		socket.on('pages:update', updatePageInfo)
 
 		return () => {
-			socket.off('web-buttons:page-info', updatePageInfo)
+			socket.off('pages:update', updatePageInfo)
 
-			socketEmitPromise(socket, 'web-buttons:unsubscribe', []).catch((e) => {
+			socketEmitPromise(socket, 'pages:unsubscribe', []).catch((e) => {
 				console.error('Failed to cleanup web-buttons:', e)
 			})
 		}

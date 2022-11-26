@@ -210,27 +210,25 @@ function ConfigurePanel({ config }) {
 		setShow(false)
 	}, [])
 
-	return (
-		show &&
-		config.emulator_prompt_fullscreen &&
-		!fullscreen && (
-			<CRow className="configure">
-				<CCol sm={12}>
-					<CForm>
-						<CRow>
-							<CCol xs={12}>
-								<CButton onClick={doRequestFullscreen} title="Fullscreen">
-									<FontAwesomeIcon icon={faExpand} /> Fullscreen
-								</CButton>
-								<CButton onClick={doDismiss} title="Dismiss">
-									<FontAwesomeIcon icon={faCancel} /> Dismiss
-								</CButton>
-							</CCol>
-						</CRow>
-					</CForm>
-				</CCol>
-			</CRow>
-		)
+	return show && config.emulator_prompt_fullscreen && !fullscreen ? (
+		<CRow className="configure">
+			<CCol sm={12}>
+				<CForm>
+					<CRow>
+						<CCol xs={12}>
+							<CButton onClick={doRequestFullscreen} title="Fullscreen">
+								<FontAwesomeIcon icon={faExpand} /> Fullscreen
+							</CButton>
+							<CButton onClick={doDismiss} title="Dismiss">
+								<FontAwesomeIcon icon={faCancel} /> Dismiss
+							</CButton>
+						</CCol>
+					</CRow>
+				</CForm>
+			</CCol>
+		</CRow>
+	) : (
+		''
 	)
 }
 
