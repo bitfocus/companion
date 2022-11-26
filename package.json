@@ -33,7 +33,7 @@
 	"engines": {
 		"npm": "please-use-yarn",
 		"yarn": "^1.22",
-		"node": ">=14.19 <15"
+		"node": ">=18.12 <19"
 	},
 	"author": "Bitfocus AS",
 	"license": "MIT",
@@ -46,10 +46,10 @@
 		"tui-jsdoc-template": "^1.2.2",
 		"webpack": "^5.75.0",
 		"webpack-cli": "^4.10.0",
-		"zx": "^4.3.0"
+		"zx": "^7.1.1"
 	},
 	"dependencies": {
-		"@companion-module/base": "^0.5.1",
+		"@companion-module/base": "^0.6.1",
 		"@elgato-stream-deck/node": "^5.7.0",
 		"@estilles/expression-parser": "^1.0.0",
 		"@julusian/jpeg-turbo": "^2.0.0",

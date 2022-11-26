@@ -40,8 +40,8 @@ function convertPresetFeedback(feedback: CompanionPreset['feedbacks'][0]): Compl
 		style: feedback.style,
 	}
 }
-function convertPresetBank(bank: CompanionBankPreset): Complete<ModuleApi.CompanionPresetStyle> {
-	const res: Complete<ModuleApi.CompanionPresetStyle> = {
+function convertPresetBank(bank: CompanionBankPreset): Complete<ModuleApi.CompanionButtonStyleProps> {
+	const res: Complete<ModuleApi.CompanionButtonStyleProps> = {
 		text: bank.text,
 		size: bank.size,
 		color: bank.color,

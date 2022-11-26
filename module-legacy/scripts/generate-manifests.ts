@@ -86,7 +86,7 @@ for (const folder of dirs) {
 			legacyIds: [...(pkgJson.legacy || [])],
 
 			runtime: {
-				type: 'node14',
+				type: 'node18',
 				api: 'nodejs-ipc',
 				apiVersion: '0.0.0',
 

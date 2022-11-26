@@ -6,11 +6,32 @@ This is a wrapper to wrap a Companion 2.4 module to run through the new Companio
 
 The following modules had issues when imported into this wrapper
 
+- analogway-awj
+- barco-clickshare
+- bitfocus-snapshot
+- cisco-webex-websocket
+- discord-api
 - ecamm-live
+- esphome-api
+- generic-emberplus
 - generic-pjlink
 - google-sheets
+- ipl-ocp
+- linkbox-remote
+- magewell-ultrastream
+- olzzon-ndicontroller
+- panasonic-kairos
+- seervision-suite
+- sennheiser-evolutionwireless
+- sonos-speakers
+- soundcraft-ui
+- studiocoast-vmix
+- theatrixx-xpresscue
+- twitch-api
+- ventuz-director
 - videocom-zoom-bridge
 - vystem-api
+- youtube-live
 - zoom-osc-iso
 
 ### Potential issues
