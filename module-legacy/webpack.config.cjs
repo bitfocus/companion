@@ -14,7 +14,7 @@ for (const file of dirs) {
 
 module.exports = {
 	entry: entries,
-	mode: 'development',
+	mode: 'production',
 	output: {
 		path: path.resolve(process.cwd(), 'manifests'),
 	},
