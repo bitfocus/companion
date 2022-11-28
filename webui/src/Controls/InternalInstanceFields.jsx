@@ -140,7 +140,15 @@ export function InternalCustomVariableDropdown({ value, setValue, includeNone, d
 		return choices
 	}, [context, includeNone])
 
-	return <DropdownInputField disabled={disabled} value={value} choices={choices} multiple={false} setValue={setValue} />
+	return (
+		<DropdownInputField
+			disabled={disabled}
+			value={value ?? ''}
+			choices={choices}
+			multiple={false}
+			setValue={setValue}
+		/>
+	)
 }
 
 function InternalVariableDropdown({ value, setValue, disabled }) {
