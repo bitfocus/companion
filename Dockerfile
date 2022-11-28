@@ -8,7 +8,7 @@ RUN apt-get update && apt-get install -y \
     cmake \
     && rm -rf /var/lib/apt/lists/*
 
-RUN yarn config set network-timeout 100000 -g
+RUN yarn config set network-timeout 200000 -g
 
 WORKDIR /app
 COPY . /app/
