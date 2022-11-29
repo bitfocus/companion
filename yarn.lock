@@ -901,10 +901,10 @@
   resolved "https://registry.yarnpkg.com/@leichtgewicht/ip-codec/-/ip-codec-2.0.3.tgz#0300943770e04231041a51bd39f0439b5c7ab4f0"
   integrity sha512-nkalE/f1RvRGChwBnEIoBfSEYOXnCRdleKuv6+lePbMDrMZXeDQnqak5XDOeBgrPPyPfAdcCu/B5z+v3VhplGg==
 
-"@loupedeck/node@^0.2.2":
-  version "0.2.2"
-  resolved "https://registry.yarnpkg.com/@loupedeck/node/-/node-0.2.2.tgz#3d715c454d216ea6d8de8162a256b403a465863b"
-  integrity sha512-RSc73zcytzA5rVkVUvJ7INTlIGhKHAJMvVzNJW70A4C4UBAm5AIvAox6adKBKwlGvZaEhC49nLoZnDtvzdttTA==
+"@loupedeck/node@^0.2.3":
+  version "0.2.3"
+  resolved "https://registry.yarnpkg.com/@loupedeck/node/-/node-0.2.3.tgz#25aa8cdac1560334e3aa2749a29ee35ffb6d0dc9"
+  integrity sha512-KkptoYuYGKY7AI6Ti2ppRaA5waDaAbkBlDcJjWc2i/QKkbQZpCiBwjadtGV0khS88JuAeJu+d7EL8p/yXM/slQ==
   dependencies:
     eventemitter3 "^4.0.7"
     p-queue "^6.6.2"
@@ -3354,12 +3354,6 @@ commist@^1.0.0:
   version "1.0.4"
   resolved "https://codeload.github.com/bitfocus/companion-module-digitalprojection-highlight/tar.gz/758784edf593a9c3525efbfc37bec1d3a7970f98"
 
-"companion-module-discord-api@github:bitfocus/companion-module-discord-api#v0.1.2":
-  version "0.1.2"
-  resolved "https://codeload.github.com/bitfocus/companion-module-discord-api/tar.gz/fc7e2acbab95cebb4bba2c9b5ec9de373f58ad71"
-  dependencies:
-    got-cjs "^12.0.1"
-
 "companion-module-disguise-mtc@github:bitfocus/companion-module-disguise-mtc#v1.0.4":
   version "1.0.4"
   resolved "https://codeload.github.com/bitfocus/companion-module-disguise-mtc/tar.gz/7c3dd40f6cbefff4daf22dd9e604640fbd16c9ca"
@@ -4571,13 +4565,6 @@ commist@^1.0.0:
   version "1.1.1"
   resolved "https://codeload.github.com/bitfocus/companion-module-tplink-kasasmartplug/tar.gz/4776e5d40e20a8e28d22882cc9613015d109a59d"
   dependencies:
-    tplink-smarthome-api "^4.2.0"
-
-"companion-module-tplink-kasasmartstrip@github:bitfocus/companion-module-tplink-kasasmartstrip#v1.0.0":
-  version "1.0.0"
-  resolved "https://codeload.github.com/bitfocus/companion-module-tplink-kasasmartstrip/tar.gz/2fafdc8fc13ef75e1c1dac44282444ddfc74c119"
-  dependencies:
-    colorsys "^1.0.22"
     tplink-smarthome-api "^4.2.0"
 
 "companion-module-tplink-taposmartplug@github:bitfocus/companion-module-tplink-taposmartplug#v1.0.2":
