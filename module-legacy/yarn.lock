@@ -2318,10 +2318,6 @@ commist@^1.0.0:
   version "1.2.1"
   resolved "https://codeload.github.com/bitfocus/companion-module-noismada-octopusshowcontrol/tar.gz/7434eb00233bde285562d7be4ff57117c0b5aa0d"
 
-"companion-module-nortek-bluebolt@github:bitfocus/companion-module-nortek-bluebolt#v0.7.0":
-  version "0.7.0"
-  resolved "https://codeload.github.com/bitfocus/companion-module-nortek-bluebolt/tar.gz/237692b1217528d07e6fe4dd018fdbcaf695dd5b"
-
 "companion-module-notion-timestamp@github:bitfocus/companion-module-notion-timestamp#v1.0.0":
   version "1.0.0"
   resolved "https://codeload.github.com/bitfocus/companion-module-notion-timestamp/tar.gz/df80f3a69a5d853bb6e70269552133cfc9dbb5ed"
@@ -2848,12 +2844,6 @@ commist@^1.0.0:
 "companion-module-vaddio-ptz@github:bitfocus/companion-module-vaddio-ptz#v1.0.2":
   version "1.0.2"
   resolved "https://codeload.github.com/bitfocus/companion-module-vaddio-ptz/tar.gz/34db543de37310a183247b11ee596a87d45faab4"
-
-"companion-module-vdo-ninja@github:bitfocus/companion-module-vdo-ninja#v1.1.0":
-  version "1.1.0"
-  resolved "https://codeload.github.com/bitfocus/companion-module-vdo-ninja/tar.gz/33d78bdb133eb4d6569e93e5d3fe28ede34372ba"
-  dependencies:
-    ws "^7.5.9"
 
 "companion-module-vdwall-lvp615@github:bitfocus/companion-module-vdwall-lvp615#v1.0.0":
   version "1.0.0"
@@ -7018,7 +7008,7 @@ ws@8.5.0:
   resolved "https://registry.yarnpkg.com/ws/-/ws-8.5.0.tgz#bfb4be96600757fe5382de12c670dab984a1ed4f"
   integrity sha512-BWX0SWVgLPzYwF8lTzEy1egjhS4S4OEAHfsO8o65WOVsrnSRGaSiUaa9e0ggGlkMTtBlmOpEXiie9RUcBO86qg==
 
-ws@^7.2.1, ws@^7.4.4, ws@^7.4.6, ws@^7.5.5, ws@^7.5.9:
+ws@^7.2.1, ws@^7.4.4, ws@^7.4.6, ws@^7.5.5:
   version "7.5.9"
   resolved "https://registry.yarnpkg.com/ws/-/ws-7.5.9.tgz#54fa7db29f4c7cec68b1ddd3a89de099942bb591"
   integrity sha512-F+P9Jil7UiSKSkppIiD94dN07AwvFixvLIj1Og1Rl9GGMuNipJnV9JzjD6XuqmAeiswGvUmNLjr5cFuXwNS77Q==
