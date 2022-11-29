@@ -38,6 +38,7 @@ module.exports = {
 		usb: 'commonjs2 usb',
 		bufferutil: 'commonjs2 bufferutil',
 		'utf-8-validate': 'commonjs2 utf-8-validate',
+		'@serialport/bindings-cpp': 'commonjs2 @serialport/bindings-cpp',
 	},
 	experiments: {
 		topLevelAwait: true,
