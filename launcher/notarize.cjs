@@ -1,6 +1,6 @@
 /* Based on https://kilianvalkhof.com/2019/electron/notarizing-your-electron-application/ */
 
-const { notarize } = require('electron-notarize')
+const { notarize } = require('@electron/notarize')
 
 exports.default = async function notarizing(context) {
 	const { electronPlatformName, appOutDir } = context
