@@ -29,6 +29,7 @@ jobs:
         env:
           CI: 1
           SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
           USE_HARD_LINKS: false
 
       - name: Determine files to upload
