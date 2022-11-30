@@ -1,4 +1,11 @@
 const path = require('path')
+const fs = require('fs')
+const SentryWebpackPlugin = require('@sentry/webpack-plugin')
+
+const sentryAuthToken = process.env.SENTRY_AUTH_TOKEN
+
+const distPath = path.resolve(__dirname, 'dist')
+const buildFile = fs.readFileSync(path.join(__dirname, 'BUILD')).toString().trim()
 
 module.exports = {
 	entry: {
@@ -6,9 +13,10 @@ module.exports = {
 		Handler: './lib/Surface/USB/Handler.js',
 	},
 	mode: 'production',
+	devtool: sentryAuthToken ? 'source-map' : undefined,
 	output: {
 		// filename: 'main.js',
-		path: path.resolve(__dirname, 'dist'),
+		path: distPath,
 	},
 	context: path.resolve(__dirname, '.'),
 	target: 'node',
@@ -65,4 +73,22 @@ module.exports = {
 			},
 		],
 	},
+	plugins: [
+		sentryAuthToken
+			? new SentryWebpackPlugin({
+					url: 'https://sentry.bitfocus.io/',
+					authToken: sentryAuthToken,
+
+					org: 'bitfocus',
+					project: 'companion',
+
+					include: distPath,
+
+					// Auth tokens can be obtained from https://sentry.io/settings/account/api/auth-tokens/
+					// and needs the `project:releases` and `org:read` scopes
+
+					release: `companion@${buildFile}`,
+			  })
+			: '',
+	].filter(Boolean),
 }
