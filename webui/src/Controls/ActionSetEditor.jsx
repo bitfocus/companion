@@ -110,7 +110,7 @@ export function ControlActionSetEditor({ controlId, stepId, setId, actions, addP
 
 	const actionIds = useMemo(() => actions.map((act) => act.id), [actions])
 	const { setPanelCollapsed, isPanelCollapsed, setAllCollapsed, setAllExpanded, canExpandAll, canCollapseAll } =
-		usePanelCollapseHelper(`actions_${controlId}_${setId}`, actionIds)
+		usePanelCollapseHelper(`actions_${controlId}_${stepId}_${setId}`, actionIds)
 
 	return (
 		<>
