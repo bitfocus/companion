@@ -402,7 +402,7 @@ function BankPicker({ selectBank }) {
 				<CCol sm={12}>
 					<CForm className="edit-button-panel">
 						<CRow form>
-							<CCol className="fieldtype-checkbox" sm={10} xs={9} hidden={actionStepOptions.length === 1}>
+							<CCol className="fieldtype-checkbox" sm={10} xs={9} hidden={actionStepOptions.length <= 1}>
 								<CLabel>Step</CLabel>
 
 								<DropdownInputField
@@ -413,7 +413,7 @@ function BankPicker({ selectBank }) {
 									disabled={!controlInfo}
 								/>
 							</CCol>
-							<CCol className="fieldtype-checkbox" sm={10} xs={9}>
+							<CCol className="fieldtype-checkbox" sm={10} xs={9} hidden={actionSetOptions.length === 0}>
 								<CLabel>Action Set</CLabel>
 
 								<DropdownInputField
@@ -603,7 +603,7 @@ function RecorderSessionHeading({ confirmRef, sessionId, sessionInfo, doFinish }
 				<CButton onClick={doAbort} color="danger">
 					Discard
 				</CButton>
-				<CButton onClick={doFinish2} color="success" disabled={sessionInfo.actions?.length}>
+				<CButton onClick={doFinish2} color="success" disabled={!sessionInfo.actions?.length}>
 					Finish
 				</CButton>
 			</CButtonGroup>
