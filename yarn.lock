@@ -901,10 +901,10 @@
   resolved "https://registry.yarnpkg.com/@leichtgewicht/ip-codec/-/ip-codec-2.0.3.tgz#0300943770e04231041a51bd39f0439b5c7ab4f0"
   integrity sha512-nkalE/f1RvRGChwBnEIoBfSEYOXnCRdleKuv6+lePbMDrMZXeDQnqak5XDOeBgrPPyPfAdcCu/B5z+v3VhplGg==
 
-"@loupedeck/node@^0.2.3":
-  version "0.2.3"
-  resolved "https://registry.yarnpkg.com/@loupedeck/node/-/node-0.2.3.tgz#25aa8cdac1560334e3aa2749a29ee35ffb6d0dc9"
-  integrity sha512-KkptoYuYGKY7AI6Ti2ppRaA5waDaAbkBlDcJjWc2i/QKkbQZpCiBwjadtGV0khS88JuAeJu+d7EL8p/yXM/slQ==
+"@loupedeck/node@^0.3.0":
+  version "0.3.0"
+  resolved "https://registry.yarnpkg.com/@loupedeck/node/-/node-0.3.0.tgz#5239f3ae3ec8a7d9efa3a65a41e2f007fb17ad1e"
+  integrity sha512-nWVKUr0jGxU/fJAfY73hp+FsodsvKfAsjAI1QxdJ6VmHmaAmz6RkEvMq/c7E29K3Dr8Us+vU1UA0pBNUPD6BHQ==
   dependencies:
     eventemitter3 "^4.0.7"
     p-queue "^6.6.2"
