@@ -14,7 +14,7 @@
 
 **Bleeding edge builds**
 
-- https://user.bitfocus.io/login
+- https://user.bitfocus.io/download
 
 For checking known bugs or reporting of potential bugs, please use the [issue system](https://github.com/bitfocus/companion/issues) on GitHub
 
