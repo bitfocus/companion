@@ -62,6 +62,120 @@ Documented up to 766f728671778001161d9ec140fbd3d51eb6b255
 
 - Ensure connection labels are valid
 
+
+## Companion v2.4.0 - Release Notes
+
+### 📣 CORE FEATURES AND IMPROVEMENTS
+
+- Option to enable react-dnd-touch-backend 'experiment'
+- Filter in variables table (#1899)
+- Additional custom variable internal actions
+- Option to persist custom variable
+- Support for new Stream Deck XL revision
+- Loupedeck Live support (#2110)
+- Loupedeck Live S support
+- Stream Deck + support
+
+### 🐞 BUG FIXES
+
+- Increase yarn timeout to avoid failed builds
+- Fix multi-dropdown `maxSelection` property
+- Dropdown not enforcing regex when adding custom values
+- Satellite bitmap rotation
+- Add action/feedback modal fails to display error
+- Missing method on X-keys
+- Colors for bottom row of X-keys buttons not showing
+- Docker: use correct directory when local modules are added (#2163)
+- Select input dropdowns being clipped inside scroll regions
+- Color picker posititioning
+- Restore custom variable values when importing config (#2191)
+- Dropdowns in modals broken (#2196)
+
+### 🧩 NEW MODULES
+
+- analogway-awj
+- arri-tally
+- audac-mtx
+- birddog-central
+- blustream-hdmimatrix
+- cleartouch-ippctrl
+- discord-api
+- djsoft-radioboss
+- ecamm-live
+- eiki-wspprojector
+- generic-filereader
+- generic-ping
+- google-sheets
+- middleman-adit
+- neumannmueller-stageflow
+- nortek-bluebolt
+- pnh-soundr
+- rationalacoustics-smaart4
+- rgblink-mini
+- rgblink-x3
+- roland-v160hd
+- televic-dcerno
+- tplink-kasasmartstrip
+- tslproducts-umdlistener
+- utahscientific-bpspanel
+- vdwall-lvp615
+- vislink-ulrx-ld
+- vizrt-tcp-engine-trio
+
+### 👍🏻 MODULE IMPROVEMENTS
+
+- aja-helo
+- arkaos-mediamaster
+- barco-eventmaster
+- behringer-x32
+- behringer-xair
+- birddog-ptz
+- bitfocus-companion
+- bmd-atem
+- bmd-hyperdeck
+- bmd-webpresenterhd
+- denon-receiver
+- figure53-qlab-advance
+- generic-pjlink
+- generic-tcp-serial
+- generic-tcp-udp
+- getontime-ontime
+- h2r-graphics
+- imimot-mitti
+- ipl-ocp
+- kramer-matrix
+- liminalet-zoomosc
+- ltn-schedule
+- magewell-proconvert-decoder
+- magewell-ultrastream
+- malighting-grandma2
+- motu-avb
+- newtek-tricaster
+- obs-studio
+- panasonic-kairos
+- panasonic-ptz
+- pixap-pixtimerpro
+- pnh-opencountdown
+- presentationtools-aps
+- presentationtools-cuetimer
+- rationalacoustics-smaart3
+- renewedvision-propresenter
+- roland-v60hd
+- rossvideo-videoserver
+- seervision-suite
+- softron-movierecorder
+- sony-visca
+- studiocoast-vmix
+- techministry-spotifycontroller
+- tesmart-hdmimatrix
+- timemachines-clock
+- tslproducts-umd
+- vdo-ninja
+- videolan-vlc
+- vizio-smartcast
+- yamaha-rcp
+- zoom-osc-iso
+
 ## Companion v2.3.1 - Release Notes
 
 ### 🐞 BUG FIXES
