@@ -44,6 +44,8 @@
     "react-select": "^5.6.0",
     "react-spinners": "^0.13.6",
     "react-use": "^17.4.0",
+    "react-virtualized-auto-sizer": "^1.0.7",
+    "react-window": "^1.8.8",
     "sanitize-html": "^2.7.3",
     "socket.io-client": "^4.5.3",
     "tributejs": "^5.1.3",

@@ -443,11 +443,13 @@ function AppContent({ buttonGridHotPress }) {
 						<UserConfig />
 					</MyErrorBoundary>
 				</CTabPane>
-				<CTabPane className={getClassForPane('/log')}>
-					<MyErrorBoundary>
-						<LogPanel />
-					</MyErrorBoundary>
-				</CTabPane>
+				{getClassForPane('/log') !== '' && (
+					<CTabPane className={getClassForPane('/log')}>
+						<MyErrorBoundary>
+							<LogPanel />
+						</MyErrorBoundary>
+					</CTabPane>
+				)}
 				{getClassForPane('/cloud') !== '' && (
 					// We want the cloud panel to only load when it it needs to
 					<CTabPane className={getClassForPane('/cloud')}>
