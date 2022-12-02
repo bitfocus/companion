@@ -16,13 +16,12 @@ export const LogPanel = memo(function LogPanel() {
 	// on 'Mount' setup
 	useEffect(() => {
 		const getClearLog = () => setHistory([])
-		const logRecv = (rawItem) => {
-			const item = {
-				...rawItem,
-				id: nanoid(),
-			}
+		const logRecv = (rawItems) => {
+			if (!rawItems || rawItems.length === 0) return
 
-			setHistory((history) => [item, ...history].slice(0, 500))
+			const newItems = rawItems.map((item) => ({ ...item, id: nanoid() }))
+
+			setHistory((history) => [...newItems, ...history].slice(0, 500))
 		}
 
 		socketEmitPromise(socket, 'logs:subscribe', [])
@@ -38,11 +37,11 @@ export const LogPanel = memo(function LogPanel() {
 				console.error('log subscibe error', e)
 			})
 
-		socket.on('logs:line', logRecv)
+		socket.on('logs:lines', logRecv)
 		socket.on('logs:clear', getClearLog)
 
 		return () => {
-			socket.off('logs:line', logRecv)
+			socket.off('logs:lines', logRecv)
 			socket.off('logs:clear', getClearLog)
 
 			socketEmitPromise(socket, 'logs:unsubscribe', []).catch((e) => {
@@ -135,12 +134,7 @@ export const LogPanel = memo(function LogPanel() {
 					<CCol lg={12}>
 						{history.map((h) => {
 							if (h.level === 'error' || config[h.level]) {
-								const time_format = dayjs(h.time).format('YY.MM.DD HH:mm:ss')
-								return (
-									<div key={h.id} className={`log-line log-type-${h.level}`}>
-										{time_format} <strong>{h.source}</strong>: <span className="log-message">{h.message}</span>
-									</div>
-								)
+								return <LogLine key={h.id} h={h} />
 							} else {
 								return ''
 							}
@@ -149,6 +143,15 @@ export const LogPanel = memo(function LogPanel() {
 				</CRow>
 			</div>
 		</>
+	)
+})
+
+const LogLine = memo(({ h }) => {
+	const time_format = dayjs(h.time).format('YY.MM.DD HH:mm:ss')
+	return (
+		<div className={`log-line log-type-${h.level}`}>
+			{time_format} <strong>{h.source}</strong>: <span className="log-message">{h.message}</span>
+		</div>
 	)
 })
 
