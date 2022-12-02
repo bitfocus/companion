@@ -2,17 +2,25 @@
 
 ## Companion v3.0.0 - Unreleased
 
-Documented up to 766f728671778001161d9ec140fbd3d51eb6b255
+Documented up to 870ba6d5
 
 ### BREAKING CHANGES
 
--
+- Companion now runs on node 18. This should have no impact to users, only module developers.
+
+- Modules are required to be written in a new format. Some modules may be broken or missing if they have not been updated before the release.
+
+- Large parts of the internals of Companion have been overhauled or rewritten.
+
+- Windows 7, 8 and 8.1 are no longer supported. This is due to Chromium ending support for these versions.
 
 ### 📣 CORE FEATURES AND IMPROVEMENTS
 
 - Modernisation of large restructuring of codebase
 
-- step button type to replace latching (https://github.com/bitfocus/companion/pull/1630)
+- buttons can have multiple steps (replaces latching) (https://github.com/bitfocus/companion/pull/1630) (https://github.com/bitfocus/companion/pull/2187)
+
+- buttons can execute different actions for long presses (https://github.com/bitfocus/companion/pull/2171)
 
 - Modules run in child processes. This ensures that module crashes cannot crash the whole of Companion
 
@@ -54,6 +62,8 @@ Documented up to 766f728671778001161d9ec140fbd3d51eb6b255
 
 - Improve xkeys key colours
 
+- Image buffers returned from feedbacks will now be properly composited
+
 ### 🐞 BUG FIXES
 
 - Ensure variable ids are valid
@@ -62,6 +72,7 @@ Documented up to 766f728671778001161d9ec140fbd3d51eb6b255
 
 - Ensure connection labels are valid
 
+- Color picker indicates the currently selected swatch
 
 ## Companion v2.4.0 - Release Notes
 
