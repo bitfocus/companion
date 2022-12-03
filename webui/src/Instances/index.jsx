@@ -51,7 +51,7 @@ export const InstancesPage = memo(function InstancesPage() {
 		setActiveTab(id ? 'edit' : 'add')
 	}, [])
 
-	const [instanceStatus, setInstanceStatus] = useState({})
+	const [instanceStatus, setInstanceStatus] = useState(null)
 	useEffect(() => {
 		socketEmitPromise(socket, 'instance_status:get', [])
 			.then((statuses) => {
@@ -63,6 +63,7 @@ export const InstancesPage = memo(function InstancesPage() {
 
 		const patchStatuses = (patch) => {
 			setInstanceStatus((oldStatuses) => {
+				if (!oldStatuses) return oldStatuses
 				return jsonPatch.applyPatch(cloneDeep(oldStatuses) || {}, patch).newDocument
 			})
 		}
@@ -110,7 +111,7 @@ export const InstancesPage = memo(function InstancesPage() {
 											showHelp={showHelp}
 											doConfigureInstance={doConfigureInstance}
 											instanceId={selectedInstanceId}
-											instanceStatus={instanceStatus[selectedInstanceId]}
+											instanceStatus={instanceStatus?.[selectedInstanceId]}
 										/>
 									)}
 								</MyErrorBoundary>
