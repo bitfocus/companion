@@ -3920,9 +3920,9 @@ commist@^1.0.0:
   dependencies:
     node-rest-client "^3.1.0"
 
-"companion-module-middleman-adit@github:bitfocus/companion-module-middleman-adit#v1.0.1":
-  version "1.0.1"
-  resolved "https://codeload.github.com/bitfocus/companion-module-middleman-adit/tar.gz/ca807248fe718ac711d7081fb2b71964a3c489a4"
+"companion-module-middleman-adit@github:bitfocus/companion-module-middleman-adit#v1.0.2":
+  version "1.0.2"
+  resolved "https://codeload.github.com/bitfocus/companion-module-middleman-adit/tar.gz/f68ba1f840e514d031b9eea4eff2e6e8cd2e5cf2"
   dependencies:
     http "^0.0.1-security"
     uuid "^9.0.0"
