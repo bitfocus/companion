@@ -70,7 +70,7 @@ export function InstancesList({ showHelp, doConfigureInstance, instanceStatus })
 	const rows = Object.entries(instancesContext)
 		.sort(([, a], [, b]) => a.sortOrder - b.sortOrder)
 		.map(([id, instance]) => {
-			const status = instanceStatus[id]
+			const status = instanceStatus?.[id]
 
 			if (!visibleConnections.disabled && instance.enabled === false) {
 				return undefined
