@@ -290,7 +290,7 @@ function ActionRowDropPlaceholder({ dragId, stepId, setId, actionCount, moveCard
 		},
 	})
 
-	if (!isDragging || actionCount > 0) return ''
+	if (!isDragging || actionCount > 0) return <></>
 
 	return (
 		<tr ref={drop} className={'actionlist-dropzone'}>
