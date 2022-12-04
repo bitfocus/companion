@@ -137,7 +137,7 @@ export const WizardModal = forwardRef(function WizardModal(_props, ref) {
 			<CForm onSubmit={doSave} className={'edit-button-panel'}>
 				<CModalHeader>
 					<h2>
-						<img src="/img/brand/icon.png" height="30" alt="logo" />
+						<img src="/img/icons/48x48.png" height="30" alt="logo" />
 						Welcome to Companion
 					</h2>
 				</CModalHeader>

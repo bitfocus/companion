@@ -4,49 +4,29 @@
 	"name": "bitfocus companion",
 	"icons": [
 		{
-			"src": "/img/brand/icons-72.png",
+			"src": "/img/icons/16x16.png",
 			"type": "image/png",
-			"sizes": "72x72"
+			"sizes": "16x16"
 		},
 		{
-			"src": "/img/brand/icons-96.png",
+			"src": "/img/icons/32x32.png",
 			"type": "image/png",
-			"sizes": "96x96"
+			"sizes": "32x32"
 		},
 		{
-			"src": "/img/brand/icons-128.png",
+			"src": "/img/icons/48x48.png",
+			"type": "image/png",
+			"sizes": "48x48"
+		},
+		{
+			"src": "/img/icons/128x128.png",
 			"type": "image/png",
 			"sizes": "128x128"
 		},
 		{
-			"src": "/img/brand/icons-144.png",
+			"src": "/img/icons/256x256.png",
 			"type": "image/png",
-			"sizes": "144x144"
-		},
-		{
-			"src": "/img/brand/icons-152.png",
-			"type": "image/png",
-			"sizes": "152x152"
-		},
-		{
-			"src": "/img/brand/icons-192.png",
-			"type": "image/png",
-			"sizes": "192x192"
-		},
-		{
-			"src": "/img/brand/icons-384.png",
-			"type": "image/png",
-			"sizes": "384x384"
-		},
-		{
-			"src": "/img/brand/icons-512.png",
-			"type": "image/png",
-			"sizes": "512x512"
-		},
-		{
-			"src": "/img/brand/icons-1080.png",
-			"type": "image/png",
-			"sizes": "1080x1080"
+			"sizes": "256x256"
 		}
 	],
 	"background_color": "#000000",

@@ -18,12 +18,12 @@ export const MySidebar = memo(function MySidebar({ show, showWizard }) {
 			<CSidebarNav>
 				<CSidebarBrand>
 					<div className="c-sidebar-brand-full">
-						<img src="/img/brand/icon.png" height="30" alt="logo" />
+						<img src="/img/icons/48x48.png" height="30" alt="logo" />
 						&nbsp; Bitfocus&nbsp;
 						<span style={{ fontWeight: 'bold' }}>Companion</span>
 					</div>
 					<div className="c-sidebar-brand-minimized">
-						<img src="/img/brand/icon.png" height="42px" alt="logo" />
+						<img src="/img/icons/48x48.png" height="42px" alt="logo" />
 					</div>
 				</CSidebarBrand>
 

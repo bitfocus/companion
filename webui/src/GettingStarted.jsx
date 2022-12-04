@@ -148,7 +148,7 @@ export function GettingStarted() {
 		<Fragment>
 			<div style={style.header}>
 				<div>
-					<img src="/img/brand/icons-72.png" alt="link icon" style={{ width: 72 / 2 }} />
+					<img src="/img/icons/48x48.png" alt="link icon" style={{ width: 72 / 2 }} />
 				</div>
 				<div style={style.headerText}>
 					<strong>Bitfocus Companion</strong>
