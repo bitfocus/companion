@@ -13,6 +13,12 @@ jobs:
         with:
           node-version-file: '.node-version'
 
+      - name: Cache build sources
+        uses: actions/cache@v3
+        with:
+          path: .cache
+          key: linux-x64-build-cache
+
       - name: build & package
         run: |
           # try and avoid timeout errors
@@ -71,6 +77,12 @@ jobs:
         with:
           node-version-file: '.node-version'
 
+      - name: Cache build sources
+        uses: actions/cache@v3
+        with:
+          path: .cache
+          key: macos-x64-build-cache
+
       - name: build & package
         run: |
           # try and avoid timeout errors
@@ -126,6 +138,12 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version-file: '.node-version'
+
+      - name: Cache build sources
+        uses: actions/cache@v3
+        with:
+          path: .cache
+          key: macos-arm64-build-cache
 
       - name: yarn update
         run: |
@@ -186,6 +204,12 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version-file: '.node-version'
+
+      - name: Cache build sources
+        uses: actions/cache@v3
+        with:
+          path: .cache
+          key: windows-x64-build-cache
 
       - name: build & package
         shell: bash
