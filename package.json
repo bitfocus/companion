@@ -193,7 +193,7 @@
 		"companion-module-avolites-titan": "github:bitfocus/companion-module-avolites-titan#v1.2.1",
 		"companion-module-avproconnect-acmx1616-auhd": "github:bitfocus/companion-module-avproconnect-acmx1616-auhd#v1.0.1",
 		"companion-module-avstumpfl-pixera": "github:bitfocus/companion-module-avstumpfl-pixera#v1.0.4",
-		"companion-module-axis-ptz": "github:bitfocus/companion-module-axis-ptz#v1.0.3",
+		"companion-module-axis-ptz": "github:bitfocus/companion-module-axis-ptz#v2.0.0",
 		"companion-module-barco-clickshare": "github:bitfocus/companion-module-barco-clickshare#v1.0.1",
 		"companion-module-barco-dcs": "github:bitfocus/companion-module-barco-dcs#v1.0.6",
 		"companion-module-barco-dp": "github:bitfocus/companion-module-barco-dp#v1.1.3",
