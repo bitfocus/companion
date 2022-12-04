@@ -122,30 +122,20 @@ if (!lock) {
 		// }
 	}
 
-	let appBuild
-	try {
-		appBuild = fs.readFileSync(path.join(companionRootPath, 'BUILD')).toString().trim()
-	} catch (e) {
-		electron.dialog.showErrorBox('Missing files', 'The companion installation is corrupt. Please reinstall')
-		app.exit(1)
-	}
-
-	const pkgInfo = require('./package.json')
-
 	let appInfo = {
-		appVersion: pkgInfo.version,
-		appBuild: appBuild,
+		// The version number of the build was set to match the BUILD file
+		appVersion: app.getVersion(),
 
 		appStatus: 'Unknown',
 		appURL: 'Waiting for webserver..',
 		appLaunch: null,
 	}
 
-	if (sentryDsn && sentryDsn.substring(0, 8) == 'https://') {
+	if (app.isPackaged && sentryDsn && sentryDsn.substring(0, 8) == 'https://') {
 		console.log('Configuring sentry error reporting')
 		init({
 			dsn: sentryDsn,
-			release: `companion@${appInfo.appBuild || appInfo.appVersion}`,
+			release: `companion@${appInfo.appVersion}`,
 			beforeSend(event) {
 				if (event.exception) {
 					showReportDialog()
@@ -157,7 +147,7 @@ if (!lock) {
 		try {
 			configureScope((scope) => {
 				scope.setUser({ id: machineId })
-				scope.setExtra('build', appInfo.appBuild)
+				scope.setExtra('build', appInfo.appVersion)
 			})
 		} catch (e) {
 			console.log('Error setting up sentry info: ', e)

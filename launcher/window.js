@@ -23,7 +23,7 @@ document.getElementById('dev_modules_path_clear').addEventListener('click', () =
 api.receive('info', function (config, info) {
 	document.getElementById('status').innerHTML = info.appStatus
 	document.getElementById('url').innerHTML = info.appURL
-	document.getElementById('model').innerHTML = `Companion v${info.appVersion} (${info.appBuild})`
+	document.getElementById('model').innerHTML = `Companion v${info.appVersion}`
 
 	document.getElementById('start_minimized').checked = config.start_minimised
 	document.getElementById('http_port').value = config.http_port
