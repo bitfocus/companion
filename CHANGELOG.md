@@ -1,5 +1,25 @@
 # Bitfocus Companion
 
+## Companion v2.4.1 - Release Notes
+
+### 🐞 BUG FIXES
+
+- X-keys LEDs always show colors from page 1
+- Fixes for Loupedeck support
+- Dropdowns using `allowCustom` reject values if not using regex
+- Export page broken (#2210)
+- Colorpicker in modals broken (#2203)
+
+### 🐞 MODULE FIXES
+
+- analogway-awj
+- bmd-atem
+- esphome-api
+- figure53-qlab-advance
+- middleman-adit
+- roland-v60hd
+- zoom-osc-iso
+
 ## Companion v2.4.0 - Release Notes
 
 ### 📣 CORE FEATURES AND IMPROVEMENTS
