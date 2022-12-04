@@ -84,10 +84,10 @@ if (!process.env.SKIP_LAUNCH_CHECK) {
 	if (launchCheck !== 89) throw new Error("Launch check failed. Build looks like it won't launch!")
 }
 
-if (!platform) {
-	// If for our own platform, make sure the correct deps are installed
-	await $`electron-builder install-app-deps`
-}
+// if (!platform) {
+// 	// If for our own platform, make sure the correct deps are installed
+// 	await $`electron-builder install-app-deps`
+// }
 
 // TODO - make optional from flag
 if (process.env.ELECTRON !== '0') {
