@@ -99,5 +99,8 @@
 	"collective": {
 		"type": "donorbox",
 		"url": "https://donorbox.org/bitfocus-opensource"
+	},
+	"resolutions": {
+		"node-gyp-build": "github:julusian/node-gyp-build#cross-install-support"
 	}
 }
