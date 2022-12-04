@@ -369,7 +369,7 @@
 		"companion-module-lectrosonics-aspen": "github:bitfocus/companion-module-lectrosonics-aspen#v1.0.1",
 		"companion-module-lgtv-display": "github:bitfocus/companion-module-lgtv-display#v1.0.3",
 		"companion-module-lightware-lw2": "github:bitfocus/companion-module-lightware-lw2#v1.0.4",
-		"companion-module-lightware-lw3": "github:bitfocus/companion-module-lightware-lw3#v1.0.3",
+		"companion-module-lightware-lw3": "github:bitfocus/companion-module-lightware-lw3#v1.1.0",
 		"companion-module-liminalet-zoomosc": "github:bitfocus/companion-module-liminalet-zoomosc#v1.0.12",
 		"companion-module-linkbox-remote": "github:bitfocus/companion-module-linkbox-remote#v1.2.1",
 		"companion-module-livemind-recorder": "github:bitfocus/companion-module-livemind-recorder",
