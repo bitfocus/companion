@@ -44,6 +44,7 @@ import { Navigate, useLocation } from 'react-router-dom'
 import { useIdleTimer } from 'react-idle-timer'
 
 const useTouchBackend = window.localStorage.getItem('test_touch_backend') === '1'
+const showCloudTab = window.localStorage.getItem('show_companion_cloud') === '1'
 
 export default function App() {
 	const socket = useContext(SocketContext)
@@ -411,11 +412,13 @@ function AppContent({ buttonGridHotPress }) {
 						<FontAwesomeIcon icon={faClipboardList} /> Log
 					</CNavLink>
 				</CNavItem>
-				<CNavItem>
-					<CNavLink to="/cloud">
-						<FontAwesomeIcon icon={faCloud} /> Cloud
-					</CNavLink>
-				</CNavItem>
+				{showCloudTab && (
+					<CNavItem>
+						<CNavLink to="/cloud">
+							<FontAwesomeIcon icon={faCloud} /> Cloud
+						</CNavLink>
+					</CNavItem>
+				)}
 			</CNav>
 			<CTabContent fade={false}>
 				<CTabPane className={getClassForPane('/connections')}>
