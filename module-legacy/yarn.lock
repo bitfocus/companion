@@ -1863,9 +1863,9 @@ commist@^1.0.0:
   version "1.2.6"
   resolved "https://codeload.github.com/bitfocus/companion-module-figure53-go-button/tar.gz/7abff553ac55bbe5ddca71bf0fcfc09f1d527850"
 
-"companion-module-figure53-qlab-advance@github:bitfocus/companion-module-figure53-qlab-advance#v1.4.2":
-  version "1.4.2"
-  resolved "https://codeload.github.com/bitfocus/companion-module-figure53-qlab-advance/tar.gz/839d43f7669160188c159b2793da35ce3adf8c99"
+"companion-module-figure53-qlab-advance@github:bitfocus/companion-module-figure53-qlab-advance#v1.5.2":
+  version "1.5.2"
+  resolved "https://codeload.github.com/bitfocus/companion-module-figure53-qlab-advance/tar.gz/ca7551aa8bbdd00676a7490a5a77a3da7f252687"
 
 "companion-module-figure53-qlab@github:bitfocus/companion-module-figure53-qlab#v1.2.7":
   version "1.2.7"
@@ -2208,9 +2208,9 @@ commist@^1.0.0:
   dependencies:
     node-rest-client "^3.1.0"
 
-"companion-module-middleman-adit@github:bitfocus/companion-module-middleman-adit#v1.0.1":
-  version "1.0.1"
-  resolved "https://codeload.github.com/bitfocus/companion-module-middleman-adit/tar.gz/ca807248fe718ac711d7081fb2b71964a3c489a4"
+"companion-module-middleman-adit@github:bitfocus/companion-module-middleman-adit#v1.0.2":
+  version "1.0.2"
+  resolved "https://codeload.github.com/bitfocus/companion-module-middleman-adit/tar.gz/f68ba1f840e514d031b9eea4eff2e6e8cd2e5cf2"
   dependencies:
     http "^0.0.1-security"
     uuid "^9.0.0"
@@ -2515,9 +2515,9 @@ commist@^1.0.0:
   version "1.0.6"
   resolved "https://codeload.github.com/bitfocus/companion-module-roland-v600uhd/tar.gz/4536a61a8c3b361947d0d31ed66f94dfbcaf1b4c"
 
-"companion-module-roland-v60hd@github:bitfocus/companion-module-roland-v60hd#v1.0.15":
-  version "1.0.15"
-  resolved "https://codeload.github.com/bitfocus/companion-module-roland-v60hd/tar.gz/dc5980d136ba2318291395cfcafcaf99fd60705c"
+"companion-module-roland-v60hd@github:bitfocus/companion-module-roland-v60hd#v1.0.16":
+  version "1.0.16"
+  resolved "https://codeload.github.com/bitfocus/companion-module-roland-v60hd/tar.gz/294e89439d0bac8512c977e74ea65cc2f686ff48"
 
 "companion-module-roland-vp42h@github:bitfocus/companion-module-roland-vp42h#v1.0.2":
   version "1.0.2"

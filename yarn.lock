@@ -619,10 +619,10 @@
     node-addon-api "^5.0.0"
     pkg-prebuilds "~0.1.0"
 
-"@loupedeck/node@^0.3.0":
-  version "0.3.0"
-  resolved "https://registry.yarnpkg.com/@loupedeck/node/-/node-0.3.0.tgz#5239f3ae3ec8a7d9efa3a65a41e2f007fb17ad1e"
-  integrity sha512-nWVKUr0jGxU/fJAfY73hp+FsodsvKfAsjAI1QxdJ6VmHmaAmz6RkEvMq/c7E29K3Dr8Us+vU1UA0pBNUPD6BHQ==
+"@loupedeck/node@^0.3.1":
+  version "0.3.1"
+  resolved "https://registry.yarnpkg.com/@loupedeck/node/-/node-0.3.1.tgz#8f4c6abdf3b3ad909c7a0435df1e7b3796fb5e52"
+  integrity sha512-2WVnjmWROAIXUUam/yeGqP47AdsOExocBx3GOIwfxKh8tm99BFOl+xukb0pGBOROK43aqM0LEyWGJOs5vtCF4g==
   dependencies:
     eventemitter3 "^4.0.7"
     p-queue "^6.6.2"
