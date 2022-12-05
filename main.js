@@ -93,16 +93,25 @@ program.command('start', { isDefault: true, hidden: true }).action(() => {
 	let configDir = options.configDir
 	if (!configDir) {
 		// Check the old location first
-		configDir = path.join(
-			process.env[process.platform == 'win32' ? 'USERPROFILE' : 'HOME'],
-			'companion-REMOVE-THIS-SUFFIX-BEFORE-ITS-BETA' // HACK: temporary testing path
-		)
+		configDir = path.join(process.env[process.platform == 'win32' ? 'USERPROFILE' : 'HOME'], 'companion')
 		if (!fs.pathExistsSync(configDir)) {
 			// Creating a new folder, so use the proper place
-			const paths = envPaths('companion3-test') // HACK: temporary testing path
+			const paths = envPaths('companion')
 			configDir = paths.config
 		}
 	}
+
+	// machid is always in the configDir
+	const machineIdPath = path.join(configDir, 'machid')
+
+	// develop should use subfolder. This should be disabled when ready for mass testing
+	configDir = path.join(configDir, 'develop')
+
+	// Hack: move config from older 3.0 config. This should be removed before 3.0 switches to the main config path
+	const oldConfigPath = path.join(configDir, '../../companion3-test')
+	if (!fs.existsSync(configDir) && fs.existsSync(oldConfigPath)) fs.moveSync(oldConfigPath, configDir)
+	const oldConfigPath2 = envPaths('companion3-test').config
+	if (!fs.existsSync(configDir) && fs.existsSync(oldConfigPath2)) fs.moveSync(oldConfigPath2, configDir)
 
 	try {
 		fs.ensureDirSync(configDir)
@@ -118,7 +127,6 @@ program.command('start', { isDefault: true, hidden: true }).action(() => {
 	let machineId = options.machineId
 	if (!machineId) {
 		// Use stored value
-		const machineIdPath = path.join(configDir, 'machid')
 		if (fs.pathExistsSync(machineIdPath)) {
 			let text = ''
 			try {
