@@ -3,11 +3,12 @@ name: Docker
 on:
   push:
     branches:
-      - master
-      - beta
-      - develop
-    tags:
-      - v*
+      - dont-do-it
+    #   - master
+    #   - beta
+    #   - develop
+    # tags:
+    #   - v*
 
 env:
   IMAGE_NAME: companion
