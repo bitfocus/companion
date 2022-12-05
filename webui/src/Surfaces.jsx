@@ -133,8 +133,8 @@ export const SurfacesPage = memo(function SurfacesPage() {
 	)
 
 	const updateName = useCallback(
-		(serialnumber, name) => {
-			socketEmitPromise(socket, 'surfaces:set-name', [serialnumber, name]).catch((err) => {
+		(deviceId, name) => {
+			socketEmitPromise(socket, 'surfaces:set-name', [deviceId, name]).catch((err) => {
 				console.error('Update name failed', err)
 			})
 		},
