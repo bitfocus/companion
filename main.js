@@ -105,6 +105,7 @@ program.command('start', { isDefault: true, hidden: true }).action(() => {
 	const machineIdPath = path.join(configDir, 'machid')
 
 	// develop should use subfolder. This should be disabled when ready for mass testing
+	const rootConfigDir = configDir
 	configDir = path.join(configDir, 'develop')
 
 	// Hack: move config from older 3.0 config. This should be removed before 3.0 switches to the main config path
@@ -119,6 +120,14 @@ program.command('start', { isDefault: true, hidden: true }).action(() => {
 		console.error(`Failed to create config directory. Do you have the correct permissions?`)
 		process.exit(1)
 	}
+
+	// try and import the non-develop copy. we only need to take `db` for this
+	if (
+		configDir !== rootConfigDir &&
+		!fs.existsSync(path.join(configDir, 'db')) &&
+		fs.existsSync(path.join(rootConfigDir, 'db'))
+	)
+		fs.copyFileSync(path.join(rootConfigDir, 'db'), path.join(configDir, 'db'))
 
 	if (options.logLevel) {
 		logger.setLogLevel(options.logLevel)
