@@ -1,7 +1,7 @@
 import { CButton, CModal, CModalBody, CModalFooter, CModalHeader } from '@coreui/react'
 import { forwardRef, useCallback, useImperativeHandle, useRef, useState } from 'react'
 
-export const GenericConfirmModal = forwardRef(function GenericConfirmModal(_props, ref) {
+export const GenericConfirmModal = forwardRef(function GenericConfirmModal(props, ref) {
 	const [data, setData] = useState(null)
 	const [show, setShow] = useState(false)
 
@@ -38,14 +38,21 @@ export const GenericConfirmModal = forwardRef(function GenericConfirmModal(_prop
 		[]
 	)
 
+	let content = props.content ?? ''
+	if (data?.[1]) {
+		if (Array.isArray(data?.[1])) {
+			content = data?.[1].map((line) => <p>{line}</p>)
+		} else {
+			content = <p>{data?.[1]}</p>
+		}
+	}
+
 	return (
 		<CModal show={show} onClose={doClose} onClosed={onClosed} onOpened={buttonFocus}>
 			<CModalHeader closeButton>
 				<h5>{data?.[0]}</h5>
 			</CModalHeader>
-			<CModalBody>
-				<p>{data?.[1]}</p>
-			</CModalBody>
+			<CModalBody>{content}</CModalBody>
 			<CModalFooter>
 				<CButton color="secondary" onClick={doClose}>
 					Cancel

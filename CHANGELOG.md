@@ -1,5 +1,50 @@
 # Bitfocus Companion
 
+## Companion v3.0.0 - Unreleased
+
+Documented up to 870ba6d5
+
+### BREAKING CHANGES
+
+- Companion now runs on node 18. This should have no impact to users, only module developers.
+- Modules are required to be written in a new format. Some modules may be broken or missing if they have not been updated before the release.
+- Large parts of the internals of Companion have been overhauled or rewritten.
+- Windows 7, 8 and 8.1 are no longer supported. This is due to Chromium ending support for these versions.
+
+### 📣 CORE FEATURES AND IMPROVEMENTS
+
+- Modernisation of large restructuring of codebase
+- buttons can have multiple steps (replaces latching) (https://github.com/bitfocus/companion/pull/1630) (https://github.com/bitfocus/companion/pull/2187)
+- buttons can execute different actions for long presses (https://github.com/bitfocus/companion/pull/2171)
+- Modules run in child processes. This ensures that module crashes cannot crash the whole of Companion
+- Use hidraw usb backend on linux, this will improve usb performance on linux or companion-pi
+- Split launcher and Companion main process
+- Support module development against release builds of Companion ()
+- Rework ui data flow, to reduce amount of data sent to the ui
+- Rework ui data flow, to make ui more reactive as changes are made
+- Support multiple emulators with new styling
+- Overhaul tablet/web views
+- Remove old tablet/web-buttons pages
+- Watch for usb devices being connected
+- Show inactive surfaces in the ui
+- https://github.com/bitfocus/companion/pull/2127
+- Action recorder (https://github.com/bitfocus/companion/pull/2125)
+- Show button preview on internal actions & feedbacks (https://github.com/bitfocus/companion/issues/2102)
+- Enable/disable any action or feedback on a button or trigger
+- Connections list is now manually sortable
+- Triggers list is now manually sortable
+- Overhaul triggers editor to be like the button editor
+- Support multiple event sources per trigger, and a separate condition
+- Improve xkeys key colours
+- Image buffers returned from feedbacks will now be properly composited
+
+### 🐞 BUG FIXES
+
+- Ensure variable ids are valid
+- Ensure custom variable ids are valid
+- Ensure connection labels are valid
+- Color picker indicates the currently selected swatch
+
 ## Companion v2.4.1 - Release Notes
 
 ### 🐞 BUG FIXES

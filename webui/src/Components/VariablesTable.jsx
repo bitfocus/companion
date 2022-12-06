@@ -1,24 +1,37 @@
-import React, { useCallback, useContext, useState, useMemo, memo } from 'react'
+import React, { useCallback, useContext, useState, useMemo, useEffect, memo } from 'react'
 import { CAlert, CButton, CInput, CInputGroup, CInputGroupAppend } from '@coreui/react'
-import { socketEmit, StaticContext, VariableDefinitionsContext } from '../util'
+import { SocketContext, socketEmitPromise, NotifierContext, VariableDefinitionsContext } from '../util'
 import { CopyToClipboard } from 'react-copy-to-clipboard'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faCopy, faTimes } from '@fortawesome/free-solid-svg-icons'
-import { useEffect } from 'react'
 
 export function VariablesTable({ label }) {
-	const context = useContext(StaticContext)
+	const socket = useContext(SocketContext)
+	const notifier = useContext(NotifierContext)
 	const variableDefinitionsContext = useContext(VariableDefinitionsContext)
 
-	const variableDefinitions = variableDefinitionsContext[label]
 	const [variableValues, setVariableValues] = useState({})
 	const [filter, setFilter] = useState('')
+
+	const variableDefinitions = useMemo(() => {
+		const defs = []
+		for (const [name, variable] of Object.entries(variableDefinitionsContext[label] || {})) {
+			defs.push({
+				...variable,
+				name,
+			})
+		}
+
+		defs.sort((a, b) => a.name.localeCompare(b.name))
+
+		return defs
+	}, [variableDefinitionsContext, label])
 
 	useEffect(() => {
 		if (label) {
 			const doPoll = () => {
-				socketEmit(context.socket, 'variable_values_for_instance', [label])
-					.then(([values]) => {
+				socketEmitPromise(socket, 'variables:instance-values', [label])
+					.then((values) => {
 						setVariableValues(values || {})
 					})
 					.catch((e) => {
@@ -35,40 +48,36 @@ export function VariablesTable({ label }) {
 				clearInterval(interval)
 			}
 		}
-	}, [context.socket, label])
+	}, [socket, label])
 
 	const onCopied = useCallback(() => {
-		context.notifier.current.show(`Copied`, 'Copied to clipboard', 5000)
-	}, [context.notifier])
+		notifier.current.show(`Copied`, 'Copied to clipboard', 5000)
+	}, [notifier])
 
 	const [candidates, errorMsg] = useMemo(() => {
 		let candidates = []
-		if (variableDefinitions) {
-			try {
-				if (!filter) {
-					candidates = Object.entries(variableDefinitions)
-				} else {
-					const regexp = new RegExp(filter, 'i')
+		try {
+			if (!filter) {
+				candidates = variableDefinitions
+			} else {
+				const regexp = new RegExp(filter, 'i')
 
-					candidates = Object.entries(variableDefinitions).filter(
-						([name, variable]) => name.match(regexp) || variable.label.match(regexp)
-					)
-				}
-				return [candidates, null]
-			} catch (e) {
-				console.error('Failed to compile candidates list:', e)
-
-				return [null, e?.toString() || 'Unknown error']
+				candidates = variableDefinitions.filter(
+					(variable) => variable.name.match(regexp) || variable.label.match(regexp)
+				)
 			}
-		} else {
-			return [null, null]
+			return [candidates, null]
+		} catch (e) {
+			console.error('Failed to compile candidates list:', e)
+
+			return [null, e?.toString() || 'Unknown error']
 		}
 	}, [variableDefinitions, filter])
 
 	const clearFilter = useCallback(() => setFilter(''), [])
 	const updateFilter = useCallback((e) => setFilter(e.currentTarget.value), [])
 
-	if (!variableDefinitions || Object.keys(variableDefinitions).length === 0) {
+	if (variableDefinitions.length === 0) {
 		return (
 			<CAlert color="warning" role="alert">
 				Connection has no variables
@@ -114,12 +123,11 @@ export function VariablesTable({ label }) {
 						</tr>
 					)}
 					{candidates &&
-						candidates.map(([name, variable]) => (
+						candidates.map((variable) => (
 							<VariablesTableRow
 								key={variable.name}
 								variable={variable}
-								name={name}
-								value={variableValues[name]}
+								value={variableValues[variable.name]}
 								label={label}
 								onCopied={onCopied}
 							/>
@@ -130,7 +138,7 @@ export function VariablesTable({ label }) {
 	)
 }
 
-const VariablesTableRow = memo(function VariablesTableRow({ variable, value, name, label, onCopied }) {
+const VariablesTableRow = memo(function VariablesTableRow({ variable, value, label, onCopied }) {
 	if (typeof value !== 'string') {
 		value += ''
 	}
@@ -149,12 +157,12 @@ const VariablesTableRow = memo(function VariablesTableRow({ variable, value, nam
 	return (
 		<tr>
 			<td>
-				$({label}:{name})
+				$({label}:{variable.name})
 			</td>
 			<td>{variable.label}</td>
 			<td>{elms}</td>
 			<td>
-				<CopyToClipboard text={`$(${label}:${name})`} onCopy={onCopied}>
+				<CopyToClipboard text={`$(${label}:${variable.name})`} onCopy={onCopied}>
 					<CButton size="sm">
 						<FontAwesomeIcon icon={faCopy} />
 					</CButton>

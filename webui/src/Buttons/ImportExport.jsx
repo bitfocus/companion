@@ -1,5 +1,6 @@
 import React, { forwardRef, useCallback, useContext, useEffect, useImperativeHandle, useRef, useState } from 'react'
-import { StaticContext, InstancesContext, socketEmit } from '../util'
+import { InstancesContext, socketEmitPromise, SocketContext, NotifierContext, ModulesContext } from '../util'
+import { CreateBankControlId } from '@companion/shared/ControlId'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faDownload, faFileImport, faTrashAlt } from '@fortawesome/free-solid-svg-icons'
 import {
@@ -14,14 +15,14 @@ import {
 	CCol,
 	CRow,
 } from '@coreui/react'
-import update from 'immutability-helper'
 import { BankPreview, dataToButtonImage } from '../Components/BankButton'
 import { MAX_COLS, MAX_ROWS } from '../Constants'
 import { ButtonGridHeader } from './ButtonGrid'
 import { GenericConfirmModal } from '../Components/GenericConfirmModal'
 
 export function ImportExport({ pageNumber }) {
-	const context = useContext(StaticContext)
+	const socket = useContext(SocketContext)
+	const modules = useContext(ModulesContext)
 	const instancesContext = useContext(InstancesContext)
 
 	const confirmModalRef = useRef()
@@ -29,11 +30,16 @@ export function ImportExport({ pageNumber }) {
 	const [snapshot, setSnapshot] = useState(null)
 	const [importPage, setImportPage] = useState(1)
 	const [importMode, setImportMode] = useState(null)
+	const [instanceRemap, setInstanceRemap] = useState({})
+	const [isRunning, setIsRunning] = useState(false)
 
 	const fileApiIsSupported = !!(window.File && window.FileReader && window.FileList && window.Blob)
 
 	const [loadError, setLoadError] = useState(null)
-	const clearSnapshot = useCallback(() => setSnapshot(null), [])
+	const clearSnapshot = useCallback(() => {
+		setSnapshot(null)
+		socketEmitPromise(socket, 'loadsave:abort', [])
+	}, [socket])
 	const loadSnapshot = useCallback(
 		(e) => {
 			const newFiles = e.currentTarget.files
@@ -47,24 +53,36 @@ export function ImportExport({ pageNumber }) {
 				var fr = new FileReader()
 				fr.onload = () => {
 					setLoadError(null)
-					socketEmit(context.socket, 'loadsave_import_config', [fr.result])
+					socketEmitPromise(socket, 'loadsave:prepare-import', [fr.result], 20000)
 						.then(([err, config]) => {
 							if (err) {
 								setLoadError(err)
 							} else {
-								for (const id in config.instances || {}) {
-									const instance_type = config.instances[id]?.instance_type
-									if (instancesContext[id]) {
-										config.instances[id].import_to = id
-									} else if (!context.modules[instance_type] && !context.moduleRedirects[instance_type]) {
-										// Ignore unknown modules
-										config.instances[id].import_to = null
+								const initialRemap = {}
+
+								// Figure out some initial mappings. Look for matching type and hopefully label
+								for (const [id, obj] of Object.entries(config.instances)) {
+									const candidateIds = []
+									let matchingLabelId = ''
+
+									for (const [otherId, otherObj] of Object.entries(instancesContext)) {
+										if (otherObj.instance_type === obj.instance_type) {
+											candidateIds.push(otherId)
+											if (otherObj.label === obj.label) {
+												matchingLabelId = otherId
+											}
+										}
+									}
+
+									if (matchingLabelId) {
+										initialRemap[id] = matchingLabelId
 									} else {
-										config.instances[id].import_to = 'new'
+										initialRemap[id] = candidateIds[0] || ''
 									}
 								}
 
 								setLoadError(null)
+								setInstanceRemap(initialRemap)
 								setSnapshot(config)
 								setImportMode(config.type === 'page' ? 'page' : null)
 							}
@@ -79,26 +97,35 @@ export function ImportExport({ pageNumber }) {
 				setLoadError('Companion requires a more modern browser')
 			}
 		},
-		[context.socket, context.modules, context.moduleRedirects, instancesContext, fileApiIsSupported]
+		[socket, instancesContext, fileApiIsSupported]
 	)
 
 	const doImport = useCallback(() => {
-		setSnapshot((oldSnapshot) => {
-			if (oldSnapshot?.type === 'page') {
-				// If we imported a page, we can clear it now
-				return null
-			} else {
-				return oldSnapshot
-			}
-		})
+		setIsRunning(true)
+		socketEmitPromise(socket, 'loadsave:import-page', [pageNumber, importPage, instanceRemap])
+			.then((instanceRemap2) => {
+				if (instanceRemap2) setInstanceRemap(instanceRemap2)
 
-		// No response, we assume it was ok
-		context.socket.emit('loadsave_import_page', pageNumber, importPage, snapshot)
-	}, [context.socket, pageNumber, snapshot, importPage])
+				setSnapshot((oldSnapshot) => {
+					if (oldSnapshot?.type === 'page') {
+						// If we imported a page, we can clear it now
+						return null
+					} else {
+						return oldSnapshot
+					}
+				})
+			})
+			.catch((e) => {
+				console.error(`Import failed: ${e}`)
+			})
+			.finally(() => {
+				setIsRunning(false)
+			})
+	}, [socket, pageNumber, importPage, instanceRemap])
 
 	const changePage = useCallback(
 		(delta) => {
-			const pageNumbers = Object.keys(snapshot?.config ?? {})
+			const pageNumbers = Object.keys(snapshot?.pages ?? {})
 			const currentIndex = pageNumbers.findIndex((p) => p === importPage + '')
 			let newPage = pageNumbers[0]
 			if (currentIndex !== -1) {
@@ -113,7 +140,7 @@ export function ImportExport({ pageNumber }) {
 				setImportPage(newPage)
 			}
 		},
-		[importPage, snapshot?.config]
+		[importPage, snapshot?.pages]
 	)
 	const setPage = useCallback(
 		(newPage) => {
@@ -128,7 +155,8 @@ export function ImportExport({ pageNumber }) {
 
 	const doFullImport = useCallback(() => {
 		confirmModalRef.current.show('Replace config', 'Are you sure you wish to replace the config?', 'Import', () => {
-			socketEmit(context.socket, 'loadsave_import_full', [snapshot])
+			setIsRunning(true)
+			socketEmitPromise(socket, 'loadsave:import-full', [snapshot])
 				.then(() => {
 					window.location.reload()
 				})
@@ -137,7 +165,14 @@ export function ImportExport({ pageNumber }) {
 					window.location.reload()
 				})
 		})
-	}, [context.socket, snapshot])
+	}, [socket, snapshot])
+
+	const setInstanceRemap2 = useCallback((fromId, toId) => {
+		setInstanceRemap((oldRemap) => ({
+			...oldRemap,
+			[fromId]: toId,
+		}))
+	}, [])
 
 	if (snapshot) {
 		const isSinglePage = snapshot.type === 'page'
@@ -146,7 +181,7 @@ export function ImportExport({ pageNumber }) {
 			<>
 				<h4>
 					Import Configuration
-					<CButton color="danger" size="sm" onClick={clearSnapshot}>
+					<CButton color="danger" size="sm" onClick={clearSnapshot} disabled={isRunning}>
 						Cancel
 					</CButton>
 				</h4>
@@ -155,31 +190,32 @@ export function ImportExport({ pageNumber }) {
 
 				<ButtonGridHeader
 					pageNumber={importPage}
-					pageName={isSinglePage ? snapshot.page.name : snapshot.page[importPage].name}
+					pageName={isSinglePage ? snapshot.page.name : snapshot.pages[importPage]?.name}
 					changePage={isSinglePage ? null : changePage}
 					setPage={isSinglePage ? null : setPage}
 				/>
 				<CRow className="bankgrid">
-					<ButtonImportGrid config={isSinglePage ? snapshot.config : snapshot.config[importPage]} />
+					<ButtonImportGrid
+						page={isSinglePage ? snapshot.oldPageNumber : importPage}
+						// config={isSinglePage ? snapshot.config : snapshot.config[importPage]}
+					/>
 				</CRow>
 
-				{!importMode ? (
+				{!importMode && (
 					<div>
 						<h5>What to do</h5>
 						<CButtonGroup>
-							<CButton color="primary" onClick={() => setImportMode('page')}>
+							<CButton color="primary" onClick={() => setImportMode('page')} disabled={isRunning}>
 								Import individual pages
 							</CButton>
-							<CButton color="warning" onClick={doFullImport}>
+							<CButton color="warning" onClick={doFullImport} disabled={isRunning}>
 								Replace current configuration
 							</CButton>
 						</CButtonGroup>
 					</div>
-				) : (
-					''
 				)}
 
-				{importMode === 'page' ? (
+				{importMode === 'page' && (
 					<div id="import_resolve">
 						<h5>Link config connections with local connections</h5>
 
@@ -193,59 +229,45 @@ export function ImportExport({ pageNumber }) {
 							</thead>
 							<tbody>
 								{Object.entries(snapshot.instances || {}).map(([key, instance]) => {
-									if (key === 'companion-bitfocus' || instance.instance_type === 'bitfocus-companion') {
-										return ''
-									} else {
-										const instance_type = context.moduleRedirects[instance.instance_type] ?? instance.instance_type
-										const snapshotModule = context.modules[instance_type]
-										const currentInstances = Object.entries(instancesContext).filter(
-											([id, inst]) => inst.instance_type === instance_type
-										)
+									const snapshotModule = modules[instance.instance_type]
+									const currentInstances = Object.entries(instancesContext).filter(
+										([id, inst]) => inst.instance_type === instance.instance_type
+									)
 
-										return (
-											<tr>
-												<td>
-													{snapshotModule ? (
-														<CSelect
-															value={instance.import_to ?? 'new'}
-															onChange={(e) => {
-																setSnapshot((snapshot) =>
-																	update(snapshot, {
-																		instances: {
-																			[key]: {
-																				import_to: { $set: e.target.value },
-																			},
-																		},
-																	})
-																)
-															}}
-														>
-															<option value="new">[ Create new connection ]</option>
-															{currentInstances.map(([id, inst]) => (
-																<option value={id}>{inst.label}</option>
-															))}
-														</CSelect>
-													) : (
-														'Ignored'
-													)}
-												</td>
-												<td>{snapshotModule ? snapshotModule.label : 'Unknown module'}</td>
-												<td>{instance.label}</td>
-											</tr>
-										)
-									}
+									return (
+										<tr>
+											<td>
+												{snapshotModule ? (
+													<CSelect
+														disabled={isRunning}
+														value={instanceRemap[key] ?? ''}
+														onChange={(e) => setInstanceRemap2(key, e.target.value)}
+													>
+														<option value="">[ Create new connection ]</option>
+														{currentInstances.map(([id, inst]) => (
+															<option key={id} value={id}>
+																{inst.label}
+															</option>
+														))}
+													</CSelect>
+												) : (
+													'Ignored'
+												)}
+											</td>
+											<td>{snapshotModule ? snapshotModule.name : `Unknown module (${instance.instance_type})`}</td>
+											<td>{instance.label}</td>
+										</tr>
+									)
 								})}
 							</tbody>
 						</table>
 
 						<p>
-							<CButton color="warning" onClick={doImport}>
+							<CButton color="warning" onClick={doImport} disabled={isRunning}>
 								Import to page {pageNumber}
 							</CButton>
 						</p>
 					</div>
-				) : (
-					''
 				)}
 			</>
 		)
@@ -280,7 +302,7 @@ export function ImportExport({ pageNumber }) {
 	)
 }
 
-function ButtonImportGrid({ config }) {
+function ButtonImportGrid({ page }) {
 	return (
 		<>
 			{Array(MAX_ROWS)
@@ -292,7 +314,9 @@ function ButtonImportGrid({ config }) {
 								.fill(0)
 								.map((_, x) => {
 									const index = y * MAX_COLS + x + 1
-									return <ButtonImportPreview key={x} config={config[index]} alt={`Bank ${index}`} />
+									return (
+										<ButtonImportPreview key={x} controlId={CreateBankControlId(page, index)} alt={`Bank ${index}`} />
+									)
 								})}
 						</CCol>
 					)
@@ -301,19 +325,21 @@ function ButtonImportGrid({ config }) {
 	)
 }
 
-function ButtonImportPreview({ config, instanceId, ...childProps }) {
-	const context = useContext(StaticContext)
+function ButtonImportPreview({ controlId, instanceId, ...childProps }) {
+	const socket = useContext(SocketContext)
 	const [previewImage, setPreviewImage] = useState(null)
 
 	useEffect(() => {
-		socketEmit(context.socket, 'graphics_preview_generate', [config])
-			.then(([img]) => {
-				setPreviewImage(dataToButtonImage(img))
+		setPreviewImage(null)
+
+		socketEmitPromise(socket, 'loadsave:control-preview', [controlId])
+			.then((img) => {
+				setPreviewImage(img ? dataToButtonImage(img) : null)
 			})
 			.catch((e) => {
-				console.error('Failed to preview bank')
+				console.error(`Failed to preview bank: ${e}`)
 			})
-	}, [config, context.socket])
+	}, [controlId, socket])
 
 	return <BankPreview {...childProps} preview={previewImage} />
 }
@@ -344,20 +370,13 @@ function ResetConfiguration() {
 				</CButton>
 			</p>
 			<ConfirmFullResetModal ref={resetModalRef} />
-
-			<CAlert color="warning">
-				<strong>Something to know</strong>
-				<br />
-				There's been reports of weird stuff going on with import, export and reset. So, at this point after using any of
-				the features, it's recommended to restart companion manually by exiting and reopening the applications. That's
-				been known to fix most of the problems.
-			</CAlert>
 		</>
 	)
 }
 
 const ConfirmFullResetModal = forwardRef(function ConfirmFullResetModal(_props, ref) {
-	const context = useContext(StaticContext)
+	const socket = useContext(SocketContext)
+	const notifier = useContext(NotifierContext)
 
 	const [show, setShow] = useState(false)
 
@@ -366,15 +385,15 @@ const ConfirmFullResetModal = forwardRef(function ConfirmFullResetModal(_props, 
 		setShow(false)
 
 		// Perform the reset
-		socketEmit(context.socket, 'reset_all', [], 30000)
+		socketEmitPromise(socket, 'loadsave:reset-full', [], 30000)
 			.then(() => {
 				window.location.reload()
 			})
 			.catch((e) => {
-				context.notifier.current.show('Reset configuration', `Failed to reset configuration: ${e}`)
+				notifier.current.show('Reset configuration', `Failed to reset configuration: ${e}`)
 				console.error('Failed to reset configuration:', e)
 			})
-	}, [context.socket, context.notifier])
+	}, [socket, notifier])
 
 	useImperativeHandle(
 		ref,

@@ -22,13 +22,6 @@ function heading() {
 	echo -e "\033[1m$1\033[m"
 }
 
-if [ "$MANAGE_NODE_VERSION" ]; then 
-	# This is for older companion-pi installations to manage their node versions
-	# if enabled, then setup n and ensure that the correct version is in use
-	n install auto
-	n prune
-fi
-
 heading "Check Node version"
 NODE_VERSION=$(node -v)
 REQUIRED_VERSION=$(node -p -e "require('./package.json').engines.node")
@@ -46,12 +39,23 @@ set -e
 
 heading "Core"
 yarn --frozen-lockfile
+yarn build:writefile
 echo
 
 heading "UI"
-yarn --frozen-lockfile --cwd webui --ignore-engines
-echo "Warning: This next step can take many minutes to run"
-yarn --cwd webui build
+yarn --frozen-lockfile --cwd webui
+if [ -z "$CI" ]; then
+  echo "Warning: This next step can take many minutes to run"
+  yarn --cwd webui build
+fi 
+echo
+
+heading "Legacy Modules"
+yarn --frozen-lockfile --cwd module-legacy
+if [ -z "$CI" ]; then
+  echo "Warning: This next step can take many minutes to run"
+  yarn --cwd module-legacy generate-manifests
+fi 
 echo
 
 exit 0

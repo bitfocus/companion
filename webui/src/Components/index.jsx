@@ -1,5 +1,4 @@
 export { ColorInputField } from './ColorInputField'
-export { TextWithVariablesInputField } from './TextWithVariablesInputField'
 export { PNGInputField } from './PNGInputField'
 export { AlignmentInputField } from './AlignmentInputField'
 export { CheckboxInputField } from './CheckboxInputField'

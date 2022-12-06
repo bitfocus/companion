@@ -13,7 +13,7 @@ function splitColors(number) {
 	}
 }
 
-export function ColorInputField({ definition, value, setValue, setValid }) {
+export function ColorInputField({ value, setValue, setValid, disabled }) {
 	const menuPortal = useContext(MenuPortalContext)
 
 	const [currentColor, setCurrentColor] = useState(null)
@@ -21,11 +21,8 @@ export function ColorInputField({ definition, value, setValue, setValid }) {
 
 	// If the value is undefined, populate with the default. Also inform the parent about the validity
 	useEffect(() => {
-		if (value === undefined && definition.default !== undefined) {
-			setValue(definition.default)
-		}
 		setValid?.(true)
-	}, [definition.default, value, setValue, setValid])
+	}, [setValid])
 
 	const handleClick = useCallback((e) => setDisplayPicker((d) => !d), [])
 	const setHide = useCallback((e) => {
@@ -92,6 +89,7 @@ export function ColorInputField({ definition, value, setValue, setValid }) {
 				createPortal(
 					<div ref={setPopperElement} style={popperStyles.popper} {...attributes.popper}>
 						<SketchPicker
+							disabled={disabled}
 							color={color}
 							onChange={onChange}
 							onChangeComplete={onChangeComplete}

@@ -1,15 +1,18 @@
 BUILD
+SENTRY
 .DS_Store
 *-x64/*
 package-lock.json
 .cache
-build/
+/build/
 out/
 config
 db
 /module-tmp
 /bundle-*.zip
 .vscode
+
+dist
 
 # Visual Studio 2015/2017 cache/options directory
 .vs/
@@ -78,3 +81,6 @@ typings/
 
 # next.js build output
 .next
+
+# jsdoc
+docs/jsdoc/

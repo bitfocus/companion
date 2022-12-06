@@ -1,20 +1,68 @@
-import { useEffect, useMemo, useState, useCallback } from 'react'
+import Tribute from 'tributejs'
+import { useEffect, useMemo, useState, useCallback, useContext } from 'react'
 import { CInput } from '@coreui/react'
+import { VariableDefinitionsContext } from '../util'
 
-export function TextInputField({ definition, value, setValue, setValid, readonly }) {
+export function TextInputField({
+	regex,
+	required,
+	tooltip,
+	placeholder,
+	value,
+	setValue,
+	setValid,
+	disabled,
+	useVariables,
+}) {
+	const variableDefinitionsContext = useContext(VariableDefinitionsContext)
+
 	const [tmpValue, setTmpValue] = useState(null)
 
+	const tribute = useMemo(() => {
+		// Create it once, then we attach and detach whenever the ref changes
+		return new Tribute({
+			values: [],
+			trigger: '$(',
+
+			// function called on select that returns the content to insert
+			selectTemplate: (item) => `$(${item.original.value})`,
+
+			// template for displaying item in menu
+			menuItemTemplate: (item) =>
+				`<span class="var-name">${item.original.value}</span><span class="var-label">${item.original.label}</span>`,
+		})
+	}, [])
+
+	useEffect(() => {
+		// Update the suggestions list in tribute whenever anything changes
+		const suggestions = []
+		if (useVariables) {
+			for (const [instanceLabel, variables] of Object.entries(variableDefinitionsContext)) {
+				for (const [name, va] of Object.entries(variables || {})) {
+					const variableId = `${instanceLabel}:${name}`
+					suggestions.push({
+						key: variableId + ')',
+						value: variableId,
+						label: va.label,
+					})
+				}
+			}
+		}
+
+		tribute.append(0, suggestions, true)
+	}, [variableDefinitionsContext, tribute, useVariables])
+
 	// Compile the regex (and cache)
-	const regex = useMemo(() => {
-		if (definition.regex) {
+	const compiledRegex = useMemo(() => {
+		if (regex) {
 			// Compile the regex string
-			const match = definition.regex.match(/^\/(.*)\/(.*)$/)
+			const match = regex.match(/^\/(.*)\/(.*)$/)
 			if (match) {
 				return new RegExp(match[1], match[2])
 			}
 		}
 		return null
-	}, [definition.regex])
+	}, [regex])
 
 	// Check if the value is valid
 	const isValueValid = useCallback(
@@ -25,47 +73,71 @@ export function TextInputField({ definition, value, setValue, setValid, readonly
 			}
 
 			// Must match the regex, if required or has a value
-			if (definition.required || val !== '') {
-				if (regex && (typeof val !== 'string' || !val.match(regex))) {
+			if (required || val !== '') {
+				if (compiledRegex && (typeof val !== 'string' || !val.match(compiledRegex))) {
 					return false
 				}
 			}
 
 			// if required, must not be empty
-			if (definition.required && val === '') {
+			if (required && val === '') {
 				return false
 			}
 
 			return true
 		},
-		[regex, definition.required]
+		[compiledRegex, required]
 	)
 
 	// If the value is undefined, populate with the default. Also inform the parent about the validity
 	useEffect(() => {
-		if (value === undefined && definition.default !== undefined) {
-			setValue(definition.default)
-			setValid?.(isValueValid(definition.default))
-		} else {
-			setValid?.(isValueValid(value))
-		}
-	}, [isValueValid, definition.default, value, setValue, setValid])
+		setValid?.(isValueValid(value))
+	}, [isValueValid, value, setValid])
+
+	const doOnChange = useCallback(
+		(e) => {
+			// const newValue = decode(e.currentTarget.value, { scope: 'strict' })
+			setTmpValue(e.currentTarget.value)
+			setValue(e.currentTarget.value)
+			setValid?.(isValueValid(e.currentTarget.value))
+		},
+		[setValue, setValid, isValueValid]
+	)
+
+	const [, setupTributePrevious] = useState([null, null])
+	const setupTribute = useCallback(
+		(ref) => {
+			// we need to detach, so need to track the value manually
+			setupTributePrevious(([oldRef, oldDoOnChange]) => {
+				if (oldRef) {
+					tribute.detach(oldRef)
+					if (oldDoOnChange) {
+						oldRef.removeEventListener('tribute-replaced', oldDoOnChange)
+					}
+				}
+				if (ref) {
+					tribute.attach(ref)
+					ref.addEventListener('tribute-replaced', doOnChange)
+				}
+				return [ref, doOnChange]
+			})
+		},
+		[tribute, doOnChange]
+	)
 
 	// Render the input
 	return (
 		<CInput
+			innerRef={useVariables ? setupTribute : undefined}
 			type="text"
-			readOnly={readonly}
+			disabled={disabled}
 			value={tmpValue ?? value ?? ''}
 			style={{ color: !isValueValid(tmpValue ?? value) ? 'red' : undefined }}
-			title={definition.tooltip}
-			onChange={(e) => {
-				setTmpValue(e.currentTarget.value)
-				setValue(e.currentTarget.value)
-				setValid?.(isValueValid(e.currentTarget.value))
-			}}
+			title={tooltip}
+			onChange={doOnChange}
 			onFocus={() => setTmpValue(value ?? '')}
 			onBlur={() => setTmpValue(null)}
+			placeholder={placeholder}
 		/>
 	)
 }

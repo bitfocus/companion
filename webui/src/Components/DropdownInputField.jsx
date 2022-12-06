@@ -7,23 +7,38 @@ import CreatableSelect from 'react-select/creatable'
 
 export const MenuPortalContext = createContext(null)
 
-export function DropdownInputField({ definition, multiple, value, setValue, setValid }) {
+export function DropdownInputField({
+	choices,
+	allowCustom,
+	minSelection,
+	minChoicesForSearch,
+	maxSelection,
+	tooltip,
+	regex,
+	multiple,
+	value,
+	setValue,
+	setValid,
+	disabled,
+}) {
 	const menuPortal = useContext(MenuPortalContext)
 
 	const options = useMemo(() => {
-		let choices = []
-		if (definition.choices) {
-			if (Array.isArray(definition.choices)) {
-				choices = definition.choices
-			} else if (typeof definition.choices === 'object') {
-				choices = Object.values(definition.choices)
+		let options = []
+		if (options) {
+			if (Array.isArray(choices)) {
+				options = choices
+			} else if (typeof choices === 'object') {
+				options = Object.values(choices)
 			}
 		}
 
-		return choices.map((choice) => ({ value: choice.id, label: choice.label }))
-	}, [definition.choices])
+		return options.map((choice) => ({ value: choice.id, label: choice.label }))
+	}, [choices])
 
 	const isMultiple = !!multiple
+
+	if (isMultiple && value === undefined) value = []
 
 	const currentValue = useMemo(() => {
 		const selectedValue = Array.isArray(value) ? value : [value]
@@ -34,23 +49,23 @@ export function DropdownInputField({ definition, multiple, value, setValue, setV
 			if (entry) {
 				res.push(entry)
 			} else {
-				res.push({ value: val, label: definition.allowCustom ? val : `?? (${val})` })
+				res.push({ value: val, label: allowCustom ? val : `?? (${val})` })
 			}
 		}
 		return res
-	}, [value, options, definition.allowCustom])
+	}, [value, options, allowCustom])
 
 	// Compile the regex (and cache)
-	const regex = useMemo(() => {
-		if (definition.regex) {
+	const compiledRegex = useMemo(() => {
+		if (regex) {
 			// Compile the regex string
-			const match = definition.regex.match(/^\/(.*)\/(.*)$/)
+			const match = regex.match(/^\/(.*)\/(.*)$/)
 			if (match) {
 				return new RegExp(match[1], match[2])
 			}
 		}
 		return null
-	}, [definition.regex])
+	}, [regex])
 
 	const isValueValid = useCallback(
 		(newValue) => {
@@ -58,10 +73,10 @@ export function DropdownInputField({ definition, multiple, value, setValue, setV
 				for (const val of newValue) {
 					// Require the selected choices to be valid
 					if (
-						definition.allowCustom &&
-						regex &&
+						allowCustom &&
+						compiledRegex &&
 						!options.find((c) => c.value === val) &&
-						(typeof val !== 'string' || !val.match(regex))
+						(typeof val !== 'string' || !val.match(compiledRegex))
 					) {
 						return false
 					}
@@ -69,10 +84,10 @@ export function DropdownInputField({ definition, multiple, value, setValue, setV
 			} else {
 				// Require the selected choice to be valid
 				if (
-					definition.allowCustom &&
-					regex &&
+					allowCustom &&
+					compiledRegex &&
 					!options.find((c) => c.value === newValue) &&
-					(typeof newValue !== 'string' || !newValue.match(regex))
+					(typeof newValue !== 'string' || !newValue.match(compiledRegex))
 				) {
 					return false
 				}
@@ -80,18 +95,13 @@ export function DropdownInputField({ definition, multiple, value, setValue, setV
 
 			return true
 		},
-		[definition.allowCustom, regex, options, isMultiple]
+		[allowCustom, compiledRegex, options, isMultiple]
 	)
 
 	// If the value is undefined, populate with the default. Also inform the parent about the validity
 	useEffect(() => {
-		if (value === undefined && definition.default !== undefined) {
-			setValue(definition.default)
-			setValid?.(isValueValid(definition.default))
-		} else {
-			setValid?.(isValueValid(value))
-		}
-	}, [definition.default, value, setValue, setValid, isValueValid])
+		setValid?.(isValueValid(value))
+	}, [value, setValid, isValueValid])
 
 	const onChange = useCallback(
 		(e) => {
@@ -102,8 +112,8 @@ export function DropdownInputField({ definition, multiple, value, setValue, setV
 
 			if (isMultiple) {
 				if (
-					typeof definition.minSelection === 'number' &&
-					newValue.length < definition.minSelection &&
+					typeof minSelection === 'number' &&
+					newValue.length < minSelection &&
 					newValue.length <= (this.props.value || []).length
 				) {
 					// Block change if too few are selected
@@ -111,8 +121,8 @@ export function DropdownInputField({ definition, multiple, value, setValue, setV
 				}
 
 				if (
-					typeof definition.maxSelection === 'number' &&
-					newValue.length > definition.maxSelection &&
+					typeof maxSelection === 'number' &&
+					newValue.length > maxSelection &&
 					newValue.length >= (this.props.value || []).length
 				) {
 					// Block change if too many are selected
@@ -123,19 +133,20 @@ export function DropdownInputField({ definition, multiple, value, setValue, setV
 			setValue(newValue)
 			setValid?.(isValid)
 		},
-		[setValue, setValid, multiple, definition.minSelection, definition.maxSelection, isValueValid]
+		[setValue, setValid, multiple, minSelection, maxSelection, isValueValid]
 	)
 
-	const minChoicesForSearch = typeof definition.minChoicesForSearch === 'number' ? definition.minChoicesForSearch : 10
+	const minChoicesForSearch2 = typeof minChoicesForSearch === 'number' ? minChoicesForSearch : 10
 
 	const selectProps = {
+		isDisabled: disabled,
 		classNamePrefix: 'select-control',
 		menuPortalTarget: menuPortal || document.body,
 		menuShouldBlockScroll: !!menuPortal, // The dropdown doesn't follow scroll when in a modal
 		menuPosition: 'fixed',
 		menuPlacement: 'auto',
 		isClearable: false,
-		isSearchable: minChoicesForSearch <= options.length,
+		isSearchable: minChoicesForSearch2 <= options.length,
 		isMulti: isMultiple,
 		options: options,
 		value: isMultiple ? currentValue : currentValue[0],
@@ -143,8 +154,8 @@ export function DropdownInputField({ definition, multiple, value, setValue, setV
 	}
 
 	const isValidNewOption = useCallback(
-		(newValue) => typeof newValue === 'string' && (!regex || !!newValue.match(regex)),
-		[regex]
+		(newValue) => typeof newValue === 'string' && (!compiledRegex || !!newValue.match(compiledRegex)),
+		[compiledRegex]
 	)
 	const noOptionsMessage = useCallback(
 		(inputValue) => {
@@ -166,9 +177,9 @@ export function DropdownInputField({ definition, multiple, value, setValue, setV
 					isMultiple && currentValue ? currentValue.map((v) => v.value) ?? [] : currentValue[0]?.value
 				),
 			})}
-			title={definition.tooltip}
+			title={tooltip}
 		>
-			{definition.allowCustom ? (
+			{allowCustom ? (
 				<CreatableSelect
 					{...selectProps}
 					isSearchable={true}

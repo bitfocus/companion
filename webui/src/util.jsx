@@ -6,13 +6,15 @@ import { PRIMARY_COLOR } from './Constants'
 import { BarLoader } from 'react-spinners'
 import { applyPatch } from 'fast-json-patch'
 import { cloneDeep } from 'lodash-es'
+import { ParseControlId } from '@companion/shared/ControlId'
 import { useEventListener } from 'usehooks-ts'
 
 export const SERVER_URL = window.SERVER_URL === '%REACT_APP_SERVER_URL%' ? undefined : window.SERVER_URL
 
-export const StaticContext = React.createContext({
-	socket: undefined,
-})
+export const SocketContext = React.createContext(null)
+export const EventDefinitionsContext = React.createContext(null)
+export const NotifierContext = React.createContext(null)
+export const ModulesContext = React.createContext(null)
 export const ActionsContext = React.createContext(null)
 export const FeedbacksContext = React.createContext(null)
 export const InstancesContext = React.createContext(null)
@@ -22,16 +24,23 @@ export const UserConfigContext = React.createContext(null)
 export const SurfacesContext = React.createContext(null)
 export const PagesContext = React.createContext(null)
 export const TriggersContext = React.createContext(null)
+export const ButtonRenderCacheContext = React.createContext(null)
 
-export function socketEmit(socket, name, args, timeout, timeoutMessage) {
+export function socketEmitPromise(socket, name, args, timeout, timeoutMessage) {
 	const p = new Promise((resolve, reject) => {
 		console.log('send', name, ...args)
 
-		socket.emit(name, ...args, (...res) => resolve(res))
+		socket.emit(name, ...args, (err, res) => {
+			if (err) reject(err)
+			else resolve(res)
+		})
 	})
 
 	timeout = timeout ?? 5000
-	return pTimeout(p, timeout, timeoutMessage ?? `Timed out after ${timeout / 1000}s`)
+	return pTimeout(p, {
+		milliseconds: timeout,
+		message: timeoutMessage ?? `Timed out after ${timeout / 1000}s`,
+	})
 }
 
 const freezePrototypes = () => {
@@ -144,7 +153,7 @@ export function LoadingBar(props) {
 			loading={true}
 			height={4}
 			width="50%"
-			css={{ margin: '0 auto', display: 'inherit' }}
+			cssOverride={{ margin: '0 auto', display: 'inherit' }}
 			color={PRIMARY_COLOR}
 			{...props}
 		/>
@@ -154,34 +163,38 @@ export function LoadingBar(props) {
 export function LoadingRetryOrError({ error, dataReady, doRetry }) {
 	return (
 		<>
-			{error ? (
+			{error && (
 				<CCol sm={12}>
 					<CAlert color="danger" role="alert">
 						<p>{error}</p>
-						{!dataReady ? (
+						{!dataReady && (
 							<CButton color="primary" onClick={doRetry}>
 								Retry
 							</CButton>
-						) : (
-							''
 						)}
 					</CAlert>
 				</CCol>
-			) : (
-				''
 			)}
-			{!dataReady && !error ? (
+			{!dataReady && !error && (
 				<CCol sm={12}>
 					<LoadingBar />
 				</CCol>
-			) : (
-				''
 			)}
 		</>
 	)
 }
 
-export function myApplyPatch(oldDefinitions, key, patch, defVal = {}) {
+export function FormatButtonControlId(controlId) {
+	const parsed = ParseControlId(controlId)
+
+	if (parsed && parsed.type === 'bank') {
+		return `${parsed.page}.${parsed.bank}`
+	} else {
+		return controlId
+	}
+}
+
+export function applyPatchOrReplaceSubObject(oldDefinitions, key, patch, defVal = {}) {
 	if (oldDefinitions) {
 		const oldEntry = oldDefinitions[key] ?? defVal
 
@@ -201,7 +214,7 @@ export function myApplyPatch(oldDefinitions, key, patch, defVal = {}) {
 		return oldDefinitions
 	}
 }
-export function myApplyPatch2(oldObj, patch) {
+export function applyPatchOrReplaceObject(oldObj, patch) {
 	const oldEntry = oldObj ?? {}
 
 	if (Array.isArray(patch)) {

@@ -11,6 +11,7 @@ import React, {
 import {
 	CAlert,
 	CButton,
+	CButtonGroup,
 	CForm,
 	CFormGroup,
 	CInput,
@@ -22,42 +23,51 @@ import {
 	CModalHeader,
 	CSelect,
 } from '@coreui/react'
-import { StaticContext, LoadingRetryOrError, socketEmit, SurfacesContext } from './util'
+import { LoadingRetryOrError, SurfacesContext, socketEmitPromise, SocketContext } from './util'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faCog, faSync } from '@fortawesome/free-solid-svg-icons'
-import shortid from 'shortid'
+import { faAdd, faCog, faFolderOpen, faSync, faTrash } from '@fortawesome/free-solid-svg-icons'
+import { nanoid } from 'nanoid'
 import { TextInputField } from './Components/TextInputField'
 import { useMemo } from 'react'
+import { GenericConfirmModal } from './Components/GenericConfirmModal'
 
 export const SurfacesPage = memo(function SurfacesPage() {
-	const context = useContext(StaticContext)
+	const socket = useContext(SocketContext)
 	const devices = useContext(SurfacesContext)
 
+	const confirmRef = useRef(null)
+
 	const devicesList = useMemo(() => {
-		const ary = Object.values(devices)
+		const ary = Object.values(devices.available)
 
 		ary.sort((a, b) => {
-			// emulator must be first
-			if (a.id === 'emulator') {
-				return -1
-			} else if (b.id === 'emulator') {
-				return 1
+			if (a.index !== b.index) {
+				return a.index - b.index
 			}
 
-			// sort by type first
-			const type = a.type.localeCompare(b.type)
-			if (type !== 0) {
-				return type
-			}
-
-			// then by serial
-			return a.serialnumber.localeCompare(b.serialnumber)
+			// fallback to serial
+			return a.id.localeCompare(b.id)
 		})
 
 		return ary
-	}, [devices])
+	}, [devices.available])
+	const offlineDevicesList = useMemo(() => {
+		const ary = Object.values(devices.offline)
+
+		ary.sort((a, b) => {
+			if (a.index !== b.index) {
+				return a.index - b.index
+			}
+
+			// fallback to serial
+			return a.id.localeCompare(b.id)
+		})
+
+		return ary
+	}, [devices.offline])
 
 	const editModalRef = useRef()
+	const confirmModalRef = useRef(null)
 
 	const [scanning, setScanning] = useState(false)
 	const [scanError, setScanError] = useState(null)
@@ -73,8 +83,8 @@ export const SurfacesPage = memo(function SurfacesPage() {
 		setScanning(true)
 		setScanError(null)
 
-		socketEmit(context.socket, 'devices_reenumerate', [], 30000)
-			.then(([errorMsg]) => {
+		socketEmitPromise(socket, 'surfaces:rescan', [], 30000)
+			.then((errorMsg) => {
 				setScanError(errorMsg || null)
 				setScanning(false)
 			})
@@ -83,26 +93,72 @@ export const SurfacesPage = memo(function SurfacesPage() {
 
 				setScanning(false)
 			})
-	}, [context.socket])
+	}, [socket])
+
+	const addEmulator = useCallback(() => {
+		socketEmitPromise(socket, 'surfaces:emulator-add', []).catch((err) => {
+			console.error('Emulator add failed', err)
+		})
+	}, [socket])
+
+	const deleteEmulator = useCallback(
+		(dev) => {
+			confirmRef?.current?.show('Remove Emulator', 'Are you sure?', 'Remove', () => {
+				socketEmitPromise(socket, 'surfaces:emulator-remove', [dev.id]).catch((err) => {
+					console.error('Emulator remove failed', err)
+				})
+			})
+		},
+		[socket]
+	)
 
 	const configureDevice = useCallback((device) => {
 		editModalRef.current.show(device)
 	}, [])
 
-	const updateName = useCallback(
-		(serialnumber, name) => {
-			context.socket.emit('device_set_name', serialnumber, name)
+	const forgetDevice = useCallback(
+		(device) => {
+			confirmModalRef.current.show(
+				'Forget Surface',
+				'Are you sure you want to forget this surface? Any settings will be lost',
+				'Forget',
+				() => {
+					socketEmitPromise(socket, 'surfaces:forget', [device.id]).catch((err) => {
+						console.error('fotget failed', err)
+					})
+				}
+			)
 		},
-		[context.socket]
+		[socket]
+	)
+
+	const updateName = useCallback(
+		(deviceId, name) => {
+			socketEmitPromise(socket, 'surfaces:set-name', [deviceId, name]).catch((err) => {
+				console.error('Update name failed', err)
+			})
+		},
+		[socket]
 	)
 
 	return (
 		<div>
+			<GenericConfirmModal ref={confirmRef} />
+
 			<h4>Surfaces</h4>
 			<p>
 				These are the surfaces currently connected to companion. If your streamdeck is missing from this list, you might
 				need to close the Elgato Streamdeck application and click the Rescan button below.
 			</p>
+
+			<CAlert color="info">
+				Did you know, you can connect a Streamdeck from another computer or Raspberry Pi with{' '}
+				<a target="_blank" rel="noreferrer" href="https://github.com/bitfocus/companion-satellite">
+					Companion Satellite
+				</a>
+				?
+			</CAlert>
+
 			<p>
 				<i>
 					Rescanning blocks all operations while the scan is ongoing. <b>Use with care!</b>
@@ -112,7 +168,22 @@ export const SurfacesPage = memo(function SurfacesPage() {
 				{scanError}
 			</CAlert>
 
+			<CButtonGroup>
+				<CButton color="warning" onClick={refreshUSB}>
+					<FontAwesomeIcon icon={faSync} spin={scanning} />
+					{scanning ? ' Checking for new devices...' : ' Rescan USB'}
+				</CButton>
+				<CButton color="success" onClick={addEmulator}>
+					<FontAwesomeIcon icon={faAdd} /> Add Emulator
+				</CButton>
+			</CButtonGroup>
+
+			<p>&nbsp;</p>
+
 			<SurfaceEditModal ref={editModalRef} />
+			<GenericConfirmModal ref={confirmModalRef} />
+
+			<h5>Connected</h5>
 
 			<table className="table table-responsive-sm">
 				<thead>
@@ -121,62 +192,98 @@ export const SurfacesPage = memo(function SurfacesPage() {
 						<th>ID</th>
 						<th>Name</th>
 						<th>Type</th>
+						<th>Location</th>
 						<th>&nbsp;</th>
 					</tr>
 				</thead>
 				<tbody>
-					{devicesList.map((dev, i) => {
+					{devicesList.map((dev) => {
 						return (
 							<tr key={dev.id}>
-								<td>#{i}</td>
-								<td>{dev.serialnumber}</td>
+								<td>#{dev.index}</td>
+								<td>{dev.id}</td>
 								<td>
-									<TextInputField
-										definition={{}}
-										value={dev.name}
-										setValue={(val) => updateName(dev.serialnumber, val)}
-									/>
+									<TextInputField value={dev.name} setValue={(val) => updateName(dev.id, val)} />
+								</td>
+								<td>{dev.type}</td>
+								<td>{dev.location}</td>
+								<td>
+									<CButtonGroup>
+										<CButton color="success" onClick={() => configureDevice(dev)} title="Configure">
+											<FontAwesomeIcon icon={faCog} /> Settings
+										</CButton>
+
+										{dev.integrationType === 'emulator' && (
+											<>
+												<CButton
+													color="info"
+													href={`/emulator/${dev.id.substring(9)}`}
+													target="_blank"
+													title="Open Emulator"
+												>
+													<FontAwesomeIcon icon={faFolderOpen} />
+												</CButton>
+												<CButton color="danger" onClick={() => deleteEmulator(dev)} title="Delete Emulator">
+													<FontAwesomeIcon icon={faTrash} />
+												</CButton>
+											</>
+										)}
+									</CButtonGroup>
+								</td>
+							</tr>
+						)
+					})}
+
+					{devicesList.length === 0 && (
+						<tr>
+							<td colSpan={4}>No control surfaces have been detected</td>
+						</tr>
+					)}
+				</tbody>
+			</table>
+
+			<h5>Disconnected</h5>
+
+			<table className="table table-responsive-sm">
+				<thead>
+					<tr>
+						<th>ID</th>
+						<th>Name</th>
+						<th>Type</th>
+						<th>&nbsp;</th>
+					</tr>
+				</thead>
+				<tbody>
+					{offlineDevicesList.map((dev) => {
+						return (
+							<tr key={dev.id}>
+								<td>{dev.id}</td>
+								<td>
+									<TextInputField value={dev.name} setValue={(val) => updateName(dev.id, val)} />
 								</td>
 								<td>{dev.type}</td>
 								<td>
-									<CButton color="success" onClick={() => configureDevice(dev)}>
-										<FontAwesomeIcon icon={faCog} /> Settings
+									<CButton color="danger" onClick={() => forgetDevice(dev)}>
+										<FontAwesomeIcon icon={faTrash} /> Forget
 									</CButton>
 								</td>
 							</tr>
 						)
 					})}
 
-					{devicesList.length === 0 ? (
+					{offlineDevicesList.length === 0 && (
 						<tr>
-							<td colSpan={4}>No control surfaces have been detected</td>
+							<td colSpan={4}>No items</td>
 						</tr>
-					) : (
-						''
 					)}
 				</tbody>
 			</table>
-
-			<CButton color="warning" onClick={refreshUSB}>
-				<FontAwesomeIcon icon={faSync} spin={scanning} />
-				{scanning ? ' Checking for new devices...' : ' Rescan USB'}
-			</CButton>
-			<p>&nbsp;</p>
-			<CAlert color="info">
-				<p>
-					Did you know, you can connect a Streamdeck from another computer or Raspberry Pi with{' '}
-					<a target="_blank" rel="noreferrer" href="https://github.com/bitfocus/companion-satellite">
-						Companion Satellite
-					</a>
-					?
-				</p>
-			</CAlert>
 		</div>
 	)
 })
 
 const SurfaceEditModal = forwardRef(function SurfaceEditModal(_props, ref) {
-	const context = useContext(StaticContext)
+	const socket = useContext(SocketContext)
 
 	const [deviceInfo, setDeviceInfo] = useState(null)
 	const [show, setShow] = useState(false)
@@ -184,7 +291,7 @@ const SurfaceEditModal = forwardRef(function SurfaceEditModal(_props, ref) {
 	const [deviceConfig, setDeviceConfig] = useState(null)
 	const [deviceConfigInfo, setDeviceConfigInfo] = useState(null)
 	const [deviceConfigError, setDeviceConfigError] = useState(null)
-	const [reloadToken, setReloadToken] = useState(shortid())
+	const [reloadToken, setReloadToken] = useState(nanoid())
 
 	const doClose = useCallback(() => setShow(false), [])
 	const onClosed = useCallback(() => {
@@ -193,16 +300,16 @@ const SurfaceEditModal = forwardRef(function SurfaceEditModal(_props, ref) {
 		setDeviceConfigError(null)
 	}, [])
 
-	const doRetryConfigLoad = useCallback(() => setReloadToken(shortid()), [])
+	const doRetryConfigLoad = useCallback(() => setReloadToken(nanoid()), [])
 
 	useEffect(() => {
 		setDeviceConfigError(null)
 		setDeviceConfig(null)
 
 		if (deviceInfo?.id) {
-			socketEmit(context.socket, 'device_config_get', [deviceInfo.id])
-				.then(([err, config, info]) => {
-					console.log(err, config, info)
+			socketEmitPromise(socket, 'surfaces:config-get', [deviceInfo.id])
+				.then(([config, info]) => {
+					console.log(config, info)
 					setDeviceConfig(config)
 					setDeviceConfigInfo(info)
 				})
@@ -211,7 +318,7 @@ const SurfaceEditModal = forwardRef(function SurfaceEditModal(_props, ref) {
 					setDeviceConfigError(`Failed to load device config`)
 				})
 		}
-	}, [context.socket, deviceInfo?.id, reloadToken])
+	}, [socket, deviceInfo?.id, reloadToken])
 
 	useImperativeHandle(
 		ref,
@@ -242,10 +349,10 @@ const SurfaceEditModal = forwardRef(function SurfaceEditModal(_props, ref) {
 						[key]: value,
 					}
 
-					socketEmit(context.socket, 'device_config_set', [deviceInfo.id, newConfig])
-						.then(([err, newConfig]) => {
-							if (err) {
-								console.log('Config update failed', err)
+					socketEmitPromise(socket, 'surfaces:config-set', [deviceInfo.id, newConfig])
+						.then((newConfig) => {
+							if (typeof newConfig === 'string') {
+								console.log('Config update failed', newConfig)
 							} else {
 								setDeviceConfig(newConfig)
 							}
@@ -257,7 +364,7 @@ const SurfaceEditModal = forwardRef(function SurfaceEditModal(_props, ref) {
 				})
 			}
 		},
-		[context.socket, deviceInfo?.id]
+		[socket, deviceInfo?.id]
 	)
 
 	return (
@@ -271,7 +378,7 @@ const SurfaceEditModal = forwardRef(function SurfaceEditModal(_props, ref) {
 					dataReady={deviceConfig && deviceConfigInfo}
 					doRetry={doRetryConfigLoad}
 				/>
-				{deviceConfig && deviceInfo && deviceConfigInfo ? (
+				{deviceConfig && deviceInfo && deviceConfigInfo && (
 					<CForm>
 						<CFormGroup>
 							<CLabel htmlFor="use_last_page">Use Last Page At Startup</CLabel>
@@ -297,7 +404,7 @@ const SurfaceEditModal = forwardRef(function SurfaceEditModal(_props, ref) {
 							/>
 							<span>{deviceConfig.page}</span>
 						</CFormGroup>
-						{deviceConfigInfo.xOffsetMax > 0 ? (
+						{deviceConfigInfo.xOffsetMax > 0 && (
 							<CFormGroup>
 								<CLabel htmlFor="page">X Offset in grid</CLabel>
 								<CInput
@@ -311,10 +418,8 @@ const SurfaceEditModal = forwardRef(function SurfaceEditModal(_props, ref) {
 								/>
 								<span>{deviceConfig.xOffset}</span>
 							</CFormGroup>
-						) : (
-							''
 						)}
-						{deviceConfigInfo.yOffsetMax > 0 ? (
+						{deviceConfigInfo.yOffsetMax > 0 && (
 							<CFormGroup>
 								<CLabel htmlFor="page">Y Offset in grid</CLabel>
 								<CInput
@@ -328,10 +433,8 @@ const SurfaceEditModal = forwardRef(function SurfaceEditModal(_props, ref) {
 								/>
 								<span>{deviceConfig.yOffset}</span>
 							</CFormGroup>
-						) : (
-							''
 						)}
-						{deviceInfo.config?.includes('brightness') ? (
+						{deviceInfo.configFields?.includes('brightness') && (
 							<CFormGroup>
 								<CLabel htmlFor="brightness">Brightness</CLabel>
 								<CInput
@@ -344,14 +447,24 @@ const SurfaceEditModal = forwardRef(function SurfaceEditModal(_props, ref) {
 									onChange={(e) => updateConfig('brightness', parseInt(e.currentTarget.value))}
 								/>
 							</CFormGroup>
-						) : (
-							''
 						)}
-						{deviceInfo.config?.includes('orientation') ? (
+						{deviceInfo.configFields?.includes('illuminate_pressed') && (
 							<CFormGroup>
-								<CLabel htmlFor="orientation">Button rotation</CLabel>
+								<CLabel htmlFor="illuminate_pressed">Illuminate pressed buttons</CLabel>
+								<CInputCheckbox
+									name="illuminate_pressed"
+									type="checkbox"
+									checked={!!deviceConfig.illuminate_pressed}
+									value={true}
+									onChange={(e) => updateConfig('illuminate_pressed', !!e.currentTarget.checked)}
+								/>
+							</CFormGroup>
+						)}
+						{deviceInfo.configFields?.includes('rotation') && (
+							<CFormGroup>
+								<CLabel htmlFor="rotation">Button rotation</CLabel>
 								<CSelect
-									name="orientation"
+									name="rotation"
 									value={deviceConfig.rotation}
 									onChange={(e) => updateConfig('rotation', parseInt(e.currentTarget.value))}
 								>
@@ -361,26 +474,32 @@ const SurfaceEditModal = forwardRef(function SurfaceEditModal(_props, ref) {
 									<option value="180">180</option>
 								</CSelect>
 							</CFormGroup>
-						) : (
-							''
 						)}
-						{deviceInfo.config?.includes('enable_device') ? (
+						{deviceInfo.configFields?.includes('emulator_control_enable') && (
 							<CFormGroup>
-								<CLabel htmlFor="enable_device">Enable Device</CLabel>
+								<CLabel htmlFor="emulator_control_enable">Enable support for Logitech R400/Mastercue/DSan</CLabel>
 								<CInputCheckbox
-									name="enable_device"
+									name="emulator_control_enable"
 									type="checkbox"
-									checked={!!deviceConfig.enable_device}
+									checked={!!deviceConfig.emulator_control_enable}
 									value={true}
-									onChange={(e) => updateConfig('enable_device', !!e.currentTarget.checked)}
+									onChange={(e) => updateConfig('emulator_control_enable', !!e.currentTarget.checked)}
 								/>
 							</CFormGroup>
-						) : (
-							''
+						)}
+						{deviceInfo.configFields?.includes('emulator_prompt_fullscreen') && (
+							<CFormGroup>
+								<CLabel htmlFor="emulator_prompt_fullscreen">Prompt to enter fullscreen</CLabel>
+								<CInputCheckbox
+									name="emulator_prompt_fullscreen"
+									type="checkbox"
+									checked={!!deviceConfig.emulator_prompt_fullscreen}
+									value={true}
+									onChange={(e) => updateConfig('emulator_prompt_fullscreen', !!e.currentTarget.checked)}
+								/>
+							</CFormGroup>
 						)}
 					</CForm>
-				) : (
-					''
 				)}
 			</CModalBody>
 			<CModalFooter>

@@ -19,7 +19,7 @@ export function ServicesStep({ config, setValue }) {
 					/>
 					<CLabel htmlFor="userconfig_tcp_enabled">TCP Raw Socket</CLabel>
 				</div>
-				{config.tcp_enabled ? (
+				{config.tcp_enabled && (
 					<div className="indent2, group">
 						<div className="col-left">Listen Port</div>
 						<div className="col-right">
@@ -32,8 +32,6 @@ export function ServicesStep({ config, setValue }) {
 							</div>
 						</div>
 					</div>
-				) : (
-					''
 				)}
 			</div>
 			<div className="indent3">
@@ -45,7 +43,7 @@ export function ServicesStep({ config, setValue }) {
 					/>
 					<CLabel htmlFor="userconfig_udp_enabled">UDP Raw Socket</CLabel>
 				</div>
-				{config.udp_enabled ? (
+				{config.udp_enabled && (
 					<div className="indent2, group">
 						<div className="col-left">Listen Port</div>
 						<div className="col-right">
@@ -58,8 +56,6 @@ export function ServicesStep({ config, setValue }) {
 							</div>
 						</div>
 					</div>
-				) : (
-					''
 				)}
 			</div>
 			<div className="indent3">
@@ -71,7 +67,7 @@ export function ServicesStep({ config, setValue }) {
 					/>
 					<CLabel htmlFor="userconfig_osc_enabled">Open Sound Control (OSC)</CLabel>
 				</div>
-				{config.osc_enabled ? (
+				{config.osc_enabled && (
 					<div className="indent2, group">
 						<div className="col-left">Listen Port</div>
 						<div className="col-right">
@@ -84,8 +80,6 @@ export function ServicesStep({ config, setValue }) {
 							</div>
 						</div>
 					</div>
-				) : (
-					''
 				)}
 			</div>
 			<div className="indent3">
@@ -117,7 +111,7 @@ export function ServicesStep({ config, setValue }) {
 					/>
 					<CLabel htmlFor="userconfig_artnet_enabled">Artnet</CLabel>
 				</div>
-				{config.artnet_enabled ? (
+				{config.artnet_enabled && (
 					<div className="indent2, group">
 						<div className="col-left">Universe (first is 0)</div>
 						<div className="col-right">
@@ -141,8 +135,6 @@ export function ServicesStep({ config, setValue }) {
 							</div>
 						</div>
 					</div>
-				) : (
-					''
 				)}
 			</div>
 			<p>You can change these later and review how to use them on the 'Settings' tab in the GUI.</p>

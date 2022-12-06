@@ -2,11 +2,11 @@ import React, { forwardRef, memo, useCallback, useContext, useImperativeHandle, 
 import { CModal, CModalBody, CModalHeader, CModalFooter, CButton } from '@coreui/react'
 import sanitizeHtml from 'sanitize-html'
 import { marked } from 'marked'
-import { StaticContext } from '../util'
+import { ModulesContext } from '../util'
 
 export const HelpModal = memo(
 	forwardRef(function HelpModal(_props, ref) {
-		const context = useContext(StaticContext)
+		const modules = useContext(ModulesContext)
 
 		const [content, setContent] = useState(null)
 		const [show, setShow] = useState(false)
@@ -39,7 +39,7 @@ export const HelpModal = memo(
 			  }
 			: undefined
 
-		const moduleInfo = context.modules?.[content?.[0]]
+		const moduleInfo = modules?.[content?.[0]]
 
 		return (
 			<CModal show={show} onClose={doClose} onClosed={onClosed} size="lg">

@@ -1,59 +1,85 @@
 import { CCol, CRow, CTabs, CTabContent, CTabPane, CNavItem, CNavLink, CNav } from '@coreui/react'
-import { memo, useCallback, useContext, useRef, useState } from 'react'
+import { memo, useCallback, useContext, useEffect, useRef, useState } from 'react'
 import { HelpModal } from './HelpModal'
-import { StaticContext, MyErrorBoundary, socketEmit } from '../util'
+import { NotifierContext, MyErrorBoundary, socketEmitPromise, SocketContext } from '../util'
 import { InstancesList } from './InstanceList'
 import { AddInstancesPanel } from './AddInstance'
 import { InstanceEditPanel } from './InstanceEditPanel'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import shortid from 'shortid'
+import { nanoid } from 'nanoid'
 import { faCog, faPlus } from '@fortawesome/free-solid-svg-icons'
+import jsonPatch from 'fast-json-patch'
+import { cloneDeep } from 'lodash-es'
 
 export const InstancesPage = memo(function InstancesPage() {
-	const context = useContext(StaticContext)
+	const socket = useContext(SocketContext)
+	const notifier = useContext(NotifierContext)
 
 	const helpModalRef = useRef()
 
-	const [tabResetToken, setTabResetToken] = useState(shortid())
+	const [tabResetToken, setTabResetToken] = useState(nanoid())
 	const [activeTab, setActiveTab] = useState('add')
 	const [selectedInstanceId, setSelectedInstanceId] = useState(null)
 	const doChangeTab = useCallback((newTab) => {
 		setActiveTab((oldTab) => {
 			if (oldTab !== newTab) {
 				setSelectedInstanceId(null)
-				setTabResetToken(shortid())
+				setTabResetToken(nanoid())
 			}
 			return newTab
 		})
 	}, [])
 
 	const showHelp = useCallback(
-		(name) => {
-			socketEmit(context.socket, 'instance_get_help_md', [name]).then(([err, result]) => {
+		(id) => {
+			socketEmitPromise(socket, 'instances:get-help', [id]).then(([err, result]) => {
 				if (err) {
-					context.notifier.current.show('Instance help', `Failed to get help text: ${err}`)
+					notifier.current.show('Instance help', `Failed to get help text: ${err}`)
 					return
 				}
 				if (result) {
-					helpModalRef.current?.show(name, result)
+					helpModalRef.current?.show(id, result)
 				}
 			})
 		},
-		[context.socket, context.notifier]
+		[socket, notifier]
 	)
 
 	const doConfigureInstance = useCallback((id) => {
 		setSelectedInstanceId(id)
-		setTabResetToken(shortid())
+		setTabResetToken(nanoid())
 		setActiveTab(id ? 'edit' : 'add')
 	}, [])
+
+	const [instanceStatus, setInstanceStatus] = useState(null)
+	useEffect(() => {
+		socketEmitPromise(socket, 'instance_status:get', [])
+			.then((statuses) => {
+				setInstanceStatus(statuses)
+			})
+			.catch((e) => {
+				console.error(`Failed to load instance statuses`, e)
+			})
+
+		const patchStatuses = (patch) => {
+			setInstanceStatus((oldStatuses) => {
+				if (!oldStatuses) return oldStatuses
+				return jsonPatch.applyPatch(cloneDeep(oldStatuses) || {}, patch).newDocument
+			})
+		}
+		socket.on('instance_status:patch', patchStatuses)
+
+		return () => {
+			socket.off('instance_status:patch', patchStatuses)
+		}
+	}, [socket])
 
 	return (
 		<CRow className="instances-page split-panels">
 			<HelpModal ref={helpModalRef} />
 
 			<CCol xl={6} className="instances-panel primary-panel">
-				<InstancesList showHelp={showHelp} doConfigureInstance={doConfigureInstance} />
+				<InstancesList instanceStatus={instanceStatus} showHelp={showHelp} doConfigureInstance={doConfigureInstance} />
 			</CCol>
 
 			<CCol xl={6} className="instances-panel secondary-panel add-instances-panel">
@@ -79,15 +105,14 @@ export const InstancesPage = memo(function InstancesPage() {
 							</CTabPane>
 							<CTabPane data-tab="edit">
 								<MyErrorBoundary>
-									{selectedInstanceId ? (
+									{selectedInstanceId && (
 										<InstanceEditPanel
 											key={tabResetToken}
 											showHelp={showHelp}
 											doConfigureInstance={doConfigureInstance}
 											instanceId={selectedInstanceId}
+											instanceStatus={instanceStatus?.[selectedInstanceId]}
 										/>
-									) : (
-										''
 									)}
 								</MyErrorBoundary>
 							</CTabPane>

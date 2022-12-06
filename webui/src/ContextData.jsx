@@ -1,10 +1,8 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useContext, useEffect, useMemo, useRef, useState } from 'react'
 import {
-	myApplyPatch,
-	StaticContext,
+	applyPatchOrReplaceSubObject,
 	ActionsContext,
 	FeedbacksContext,
-	socketEmit,
 	InstancesContext,
 	VariableDefinitionsContext,
 	CustomVariableDefinitionsContext,
@@ -12,14 +10,25 @@ import {
 	SurfacesContext,
 	PagesContext,
 	TriggersContext,
-	myApplyPatch2,
+	socketEmitPromise,
+	applyPatchOrReplaceObject,
+	SocketContext,
+	NotifierContext,
+	EventDefinitionsContext,
+	ModulesContext,
+	ButtonRenderCacheContext,
 } from './util'
 import { NotificationsManager } from './Components/Notifications'
+import { cloneDeep } from 'lodash-es'
+import jsonPatch from 'fast-json-patch'
+import { ButtonRenderCache } from './ButtonRenderCache'
 
-export function ContextData({ socket, children }) {
+export function ContextData({ children }) {
+	const socket = useContext(SocketContext)
+
+	const [eventDefinitions, setEventDefinitions] = useState(null)
 	const [instances, setInstances] = useState(null)
 	const [modules, setModules] = useState(null)
-	const [moduleRedirects, setModuleRedirects] = useState(null)
 	const [actionDefinitions, setActionDefinitions] = useState(null)
 	const [feedbackDefinitions, setFeedbackDefinitions] = useState(null)
 	const [variableDefinitions, setVariableDefinitions] = useState(null)
@@ -29,59 +38,84 @@ export function ContextData({ socket, children }) {
 	const [pages, setPages] = useState(null)
 	const [triggers, setTriggers] = useState(null)
 
+	const buttonCache = useMemo(() => {
+		return new ButtonRenderCache(socket)
+	}, [socket])
+
+	const completeVariableDefinitions = useMemo(() => {
+		if (variableDefinitions) {
+			// Generate definitions for all the custom variables
+			const customVariableDefinitions = {}
+			for (const [id, info] of Object.entries(customVariables || {})) {
+				customVariableDefinitions[`custom_${id}`] = {
+					label: info.description,
+				}
+			}
+
+			return {
+				...variableDefinitions,
+				internal: {
+					...variableDefinitions.internal,
+					...customVariableDefinitions,
+				},
+			}
+		} else {
+			return null
+		}
+	}, [customVariables, variableDefinitions])
+
 	useEffect(() => {
 		if (socket) {
-			socketEmit(socket, 'modules_get', [])
-				.then(([res]) => {
-					const modulesObj = {}
-					const redirectsObj = {}
-					for (const mod of res.modules) {
-						modulesObj[mod.name] = mod
+			socketEmitPromise(socket, 'event-definitions:get', [])
+				.then((definitions) => {
+					setEventDefinitions(definitions)
+				})
+				.catch((e) => {
+					console.error('Failed to load event definitions')
+				})
 
-						// Add legacy names to the redirect list
-						if (mod.legacy && Array.isArray(mod.legacy)) {
-							for (const from of mod.legacy) {
-								redirectsObj[from] = mod.name
-							}
-						}
+			socketEmitPromise(socket, 'modules:get', [])
+				.then((modules) => {
+					const modulesObj = {}
+					for (const mod of modules) {
+						modulesObj[mod.id] = mod
 					}
 					setModules(modulesObj)
-					setModuleRedirects(redirectsObj)
 				})
 				.catch((e) => {
 					console.error('Failed to load modules list', e)
 				})
-			socketEmit(socket, 'action_instance_definitions_get', [])
-				.then(([data]) => {
+			socketEmitPromise(socket, 'action-definitions:subscribe', [])
+				.then((data) => {
 					setActionDefinitions(data || {})
 				})
 				.catch((e) => {
-					console.error('Failed to load variable definitions list', e)
+					console.error('Failed to load action definitions list', e)
 				})
-			socketEmit(socket, 'feedback_instance_definitions_get', [])
-				.then(([data]) => {
+			socketEmitPromise(socket, 'feedback-definitions:subscribe', [])
+				.then((data) => {
 					setFeedbackDefinitions(data || {})
 				})
 				.catch((e) => {
-					console.error('Failed to load variable definitions list', e)
+					console.error('Failed to load feedback definitions list', e)
 				})
-			socketEmit(socket, 'variable_instance_definitions_get', [])
-				.then(([data]) => {
+			socketEmitPromise(socket, 'variable-definitions:subscribe', [])
+				.then((data) => {
 					setVariableDefinitions(data || {})
 				})
 				.catch((e) => {
 					console.error('Failed to load variable definitions list', e)
 				})
-			socketEmit(socket, 'custom_variables_get', [])
-				.then(([data]) => {
+			socketEmitPromise(socket, 'custom-variables:subscribe', [])
+				.then((data) => {
 					setCustomVariables(data || {})
 				})
 				.catch((e) => {
 					console.error('Failed to load custom values list', e)
 				})
 
-			socketEmit(socket, 'get_userconfig_all', [])
-				.then(([config]) => {
+			socketEmitPromise(socket, 'userconfig:get-all', [])
+				.then((config) => {
 					setUserConfig(config)
 				})
 				.catch((e) => {
@@ -89,13 +123,13 @@ export function ContextData({ socket, children }) {
 				})
 
 			const updateVariableDefinitions = (label, patch) => {
-				setVariableDefinitions((oldDefinitions) => myApplyPatch(oldDefinitions, label, patch))
+				setVariableDefinitions((oldDefinitions) => applyPatchOrReplaceSubObject(oldDefinitions, label, patch))
 			}
 			const updateFeedbackDefinitions = (id, patch) => {
-				setFeedbackDefinitions((oldDefinitions) => myApplyPatch(oldDefinitions, id, patch))
+				setFeedbackDefinitions((oldDefinitions) => applyPatchOrReplaceSubObject(oldDefinitions, id, patch))
 			}
 			const updateActionDefinitions = (id, patch) => {
-				setActionDefinitions((oldDefinitions) => myApplyPatch(oldDefinitions, id, patch))
+				setActionDefinitions((oldDefinitions) => applyPatchOrReplaceSubObject(oldDefinitions, id, patch))
 			}
 
 			const updateUserConfigValue = (key, value) => {
@@ -104,34 +138,59 @@ export function ContextData({ socket, children }) {
 					[key]: value,
 				}))
 			}
-			const updateSurfaces = (patch) => {
-				console.log('surfaces', patch)
-				setSurfaces((oldSurfaces) => myApplyPatch2(oldSurfaces, patch))
-			}
 			const updateCustomVariables = (patch) => {
-				setCustomVariables((oldVariables) => myApplyPatch2(oldVariables, patch))
+				setCustomVariables((oldVariables) => applyPatchOrReplaceObject(oldVariables, patch))
 			}
-			const updateTriggers = (patch) => {
-				setTriggers((oldVariables) => myApplyPatch2(oldVariables, patch))
+			const updateTriggers = (controlId, patch) => {
+				console.log('trigger', controlId, patch)
+				setTriggers((oldTriggers) => applyPatchOrReplaceSubObject(oldTriggers, controlId, patch))
 			}
 
-			socket.on('instances_get:result', setInstances)
-			socket.emit('instances_get')
+			socketEmitPromise(socket, 'instances:subscribe', [])
+				.then((instances) => {
+					setInstances(instances)
+				})
+				.catch((e) => {
+					console.error('Failed to load instances list:', e)
+					setInstances(null)
+				})
 
-			socket.on('variable_instance_definitions_patch', updateVariableDefinitions)
-			socket.on('custom_variables_get', updateCustomVariables)
+			const patchInstances = (patch) => {
+				setInstances((oldInstances) => {
+					if (patch === false) {
+						return false
+					} else {
+						return jsonPatch.applyPatch(cloneDeep(oldInstances) || {}, patch).newDocument
+					}
+				})
+			}
+			socket.on('instances:patch', patchInstances)
 
-			socket.on('action_instance_definitions_patch', updateActionDefinitions)
+			socket.on('variable-definitions:update', updateVariableDefinitions)
+			socket.on('custom-variables:update', updateCustomVariables)
 
-			socket.on('feedback_instance_definitions_patch', updateFeedbackDefinitions)
+			socket.on('action-definitions:update', updateActionDefinitions)
+			socket.on('feedback-definitions:update', updateFeedbackDefinitions)
 
 			socket.on('set_userconfig_key', updateUserConfigValue)
 
-			socket.on('devices_list', updateSurfaces)
-			socket.emit('devices_list_get')
+			socketEmitPromise(socket, 'surfaces:subscribe', [])
+				.then((surfaces) => {
+					setSurfaces(surfaces)
+				})
+				.catch((e) => {
+					console.error('Failed to load surfaces', e)
+				})
 
-			socketEmit(socket, 'get_page_all', [])
-				.then(([pages]) => {
+			const patchSurfaces = (patch) => {
+				setSurfaces((oldSurfaces) => {
+					return jsonPatch.applyPatch(cloneDeep(oldSurfaces) || {}, patch).newDocument
+				})
+			}
+			socket.on('surfaces:patch', patchSurfaces)
+
+			socketEmitPromise(socket, 'pages:subscribe', [])
+				.then((pages) => {
 					// setLoadError(null)
 					setPages(pages)
 				})
@@ -154,58 +213,67 @@ export function ContextData({ socket, children }) {
 				})
 			}
 
-			socket.on('set_page', updatePageInfo)
+			socket.on('pages:update', updatePageInfo)
 
-			const updateTriggerLastRun = (id, time) => {
-				setTriggers((list) => {
-					if (!list) return list
-
-					const res = { ...list }
-					if (res[id]) {
-						res[id] = { ...res[id], last_run: time }
-					}
-
-					return res
+			socketEmitPromise(socket, 'triggers:subscribe', [])
+				.then((pages) => {
+					// setLoadError(null)
+					setTriggers(pages)
 				})
-			}
+				.catch((e) => {
+					console.error('Failed to load triggers list:', e)
+					// setLoadError(`Failed to load pages list`)
+					setPages(null)
+				})
 
-			socket.emit('schedule_get', setTriggers)
-			socket.on('schedule_refresh', updateTriggers)
-			socket.on('schedule_last_run', updateTriggerLastRun)
+			socket.on('triggers:update', updateTriggers)
 
 			return () => {
-				socket.off('instances_get:result', setInstances)
-				socket.off('variable_instance_definitions_patch', updateVariableDefinitions)
-				socket.off('custom_variables_get', updateCustomVariables)
-				socket.off('action_instance_definitions_patch', updateActionDefinitions)
-				socket.off('feedback_instance_definitions_patch', updateFeedbackDefinitions)
+				socket.off('variable-definitions:update', updateVariableDefinitions)
+				socket.off('custom-variables:update', updateCustomVariables)
+				socket.off('action-definitions:update', updateActionDefinitions)
+				socket.off('feedback-definitions:update', updateFeedbackDefinitions)
 				socket.off('set_userconfig_key', updateUserConfigValue)
-				socket.off('devices_list', updateSurfaces)
-				socket.off('set_page', updatePageInfo)
+				socket.off('surfaces:patch', patchSurfaces)
+				socket.off('pages:update', updatePageInfo)
 
-				socket.off('schedule_refresh', updateTriggers)
-				socket.off('schedule_last_run', updateTriggerLastRun)
+				socket.off('triggers:update', updateTriggers)
+
+				socket.off('instances:patch', patchInstances)
+
+				socketEmitPromise(socket, 'action-definitions:unsubscribe', []).catch((e) => {
+					console.error('Failed to unsubscribe to action definitions list', e)
+				})
+				socketEmitPromise(socket, 'feedback-definitions:unsubscribe', []).catch((e) => {
+					console.error('Failed to unsubscribe to feedback definitions list', e)
+				})
+				socketEmitPromise(socket, 'variable-definitions:unsubscribe', []).catch((e) => {
+					console.error('Failed to unsubscribe to variable definitions list', e)
+				})
+				socketEmitPromise(socket, 'instances:unsubscribe', []).catch((e) => {
+					console.error('Failed to unsubscribe from instances list:', e)
+				})
+				socketEmitPromise(socket, 'surfaces:unsubscribe', []).catch((e) => {
+					console.error('Failed to unsubscribe from surfaces', e)
+				})
+				socketEmitPromise(socket, 'custom-variables:unsubscribe', []).catch((e) => {
+					console.error('Failed to unsubscribe from custom variables', e)
+				})
+				socketEmitPromise(socket, 'pages:unsubscribe', []).catch((e) => {
+					console.error('Failed to unsubscribe pages list:', e)
+				})
 			}
 		}
 	}, [socket])
 
 	const notifierRef = useRef()
 
-	const contextValue = useMemo(
-		() => ({
-			socket: socket,
-			notifier: notifierRef,
-			modules: modules,
-			moduleRedirects: moduleRedirects,
-			currentVersion: 22,
-		}),
-		[socket, notifierRef, modules, moduleRedirects]
-	)
-
 	const steps = [
+		eventDefinitions,
 		instances,
 		modules,
 		variableDefinitions,
+		completeVariableDefinitions,
 		actionDefinitions,
 		feedbackDefinitions,
 		customVariables,
@@ -219,28 +287,34 @@ export function ContextData({ socket, children }) {
 	const progressPercent = (completedSteps.length / steps.length) * 100
 
 	return (
-		<StaticContext.Provider value={contextValue}>
-			<ActionsContext.Provider value={actionDefinitions}>
-				<FeedbacksContext.Provider value={feedbackDefinitions}>
-					<InstancesContext.Provider value={instances}>
-						<VariableDefinitionsContext.Provider value={variableDefinitions}>
-							<CustomVariableDefinitionsContext.Provider value={customVariables}>
-								<UserConfigContext.Provider value={userConfig}>
-									<SurfacesContext.Provider value={surfaces}>
-										<PagesContext.Provider value={pages}>
-											<TriggersContext.Provider value={triggers}>
-												<NotificationsManager ref={notifierRef} />
+		<NotifierContext.Provider value={notifierRef}>
+			<ButtonRenderCacheContext.Provider value={buttonCache}>
+				<EventDefinitionsContext.Provider value={eventDefinitions}>
+					<ModulesContext.Provider value={modules}>
+						<ActionsContext.Provider value={actionDefinitions}>
+							<FeedbacksContext.Provider value={feedbackDefinitions}>
+								<InstancesContext.Provider value={instances}>
+									<VariableDefinitionsContext.Provider value={completeVariableDefinitions}>
+										<CustomVariableDefinitionsContext.Provider value={customVariables}>
+											<UserConfigContext.Provider value={userConfig}>
+												<SurfacesContext.Provider value={surfaces}>
+													<PagesContext.Provider value={pages}>
+														<TriggersContext.Provider value={triggers}>
+															<NotificationsManager ref={notifierRef} />
 
-												{children(progressPercent, completedSteps.length === steps.length)}
-											</TriggersContext.Provider>
-										</PagesContext.Provider>
-									</SurfacesContext.Provider>
-								</UserConfigContext.Provider>
-							</CustomVariableDefinitionsContext.Provider>
-						</VariableDefinitionsContext.Provider>
-					</InstancesContext.Provider>
-				</FeedbacksContext.Provider>
-			</ActionsContext.Provider>
-		</StaticContext.Provider>
+															{children(progressPercent, completedSteps.length === steps.length)}
+														</TriggersContext.Provider>
+													</PagesContext.Provider>
+												</SurfacesContext.Provider>
+											</UserConfigContext.Provider>
+										</CustomVariableDefinitionsContext.Provider>
+									</VariableDefinitionsContext.Provider>
+								</InstancesContext.Provider>
+							</FeedbacksContext.Provider>
+						</ActionsContext.Provider>
+					</ModulesContext.Provider>
+				</EventDefinitionsContext.Provider>
+			</ButtonRenderCacheContext.Provider>
+		</NotifierContext.Provider>
 	)
 }

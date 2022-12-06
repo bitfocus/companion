@@ -1,4 +1,4 @@
-const { parseVariablesInString } = require('../lib/variable')
+import { parseVariablesInString } from '../lib/Instance/Variable.js'
 
 describe('variable parsing', () => {
 	test('undefined string', () => {

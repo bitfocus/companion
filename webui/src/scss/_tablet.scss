@@ -19,15 +19,6 @@
 		margin: 0 auto;
 	}
 
-	.bankgrid {
-		width: 100%;
-
-		.bank img {
-			max-width: 150px;
-			max-height: 150px;
-		}
-	}
-
 	.btn.open-config,
 	.btn.close-config {
 		float: right;
@@ -73,6 +64,40 @@
 			.btn {
 				float: right;
 			}
+		}
+	}
+
+	.button-zone {
+		display: grid;
+		grid-auto-flow: row;
+		grid-auto-rows: 1fr;
+		grid-auto-columns: 1fr;
+
+		width: 100%;
+
+		.bank img {
+			max-width: 150px;
+			max-height: 150px;
+		}
+
+		&.bank-armed .pagebank-row {
+			background-color: rgba(255, 0, 0, 0.5);
+		}
+
+		.pagebank-row {
+			display: grid;
+			// grid-auto-flow: column;
+			grid-auto-columns: 1fr;
+			transition: background-color 0.05s ease-in-out;
+			background-color: transparent;
+
+			img:hover {
+				border: 1px solid rgba(255, 255, 255, 0.3);
+			}
+		}
+
+		.page-heading {
+			grid-column: 1/-1;
 		}
 	}
 }

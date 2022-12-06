@@ -1,5 +1,5 @@
 import React, { memo, useCallback, useContext, useEffect, useState } from 'react'
-import { StaticContext, LoadingRetryOrError, socketEmit, sandbox } from '../util'
+import { LoadingRetryOrError, sandbox, socketEmitPromise, SocketContext, ModulesContext } from '../util'
 import { CRow, CCol, CButton } from '@coreui/react'
 import {
 	CheckboxInputField,
@@ -8,18 +8,42 @@ import {
 	NumberInputField,
 	TextInputField,
 } from '../Components'
-import shortid from 'shortid'
+import { nanoid } from 'nanoid'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faQuestionCircle } from '@fortawesome/free-solid-svg-icons'
+import sanitizeHtml from 'sanitize-html'
+import { isLabelValid } from '@companion/shared/Label'
 
-export const InstanceEditPanel = memo(function InstanceEditPanel({ instanceId, doConfigureInstance, showHelp }) {
-	const context = useContext(StaticContext)
+export function InstanceEditPanel({ instanceId, instanceStatus, doConfigureInstance, showHelp }) {
+	console.log('status', instanceStatus)
+
+	if (!instanceStatus || !instanceStatus.level || instanceStatus.level === 'crashed') {
+		return (
+			<CRow className="edit-instance">
+				<CCol xs={12}>
+					<p>Waiting for connection to start...</p>
+				</CCol>
+				<LoadingRetryOrError dataReady={false} />
+			</CRow>
+		)
+	}
+
+	return (
+		<InstanceEditPanelInner instanceId={instanceId} doConfigureInstance={doConfigureInstance} showHelp={showHelp} />
+	)
+}
+
+const InstanceEditPanelInner = memo(function InstanceEditPanel({ instanceId, doConfigureInstance, showHelp }) {
+	const socket = useContext(SocketContext)
+	const modules = useContext(ModulesContext)
 
 	const [error, setError] = useState(null)
-	const [reloadToken, setReloadToken] = useState(shortid())
+	const [reloadToken, setReloadToken] = useState(nanoid())
 
 	const [configFields, setConfigFields] = useState(null)
 	const [instanceConfig, setInstanceConfig] = useState(null)
+	const [instanceLabel, setInstanceLabel] = useState(null)
+	const [instanceType, setInstanceType] = useState(null)
 	const [validFields, setValidFields] = useState(null)
 
 	const [fieldVisibility, setFieldVisibility] = useState({})
@@ -32,19 +56,21 @@ export const InstanceEditPanel = memo(function InstanceEditPanel({ instanceId, d
 	const doSave = useCallback(() => {
 		setError(null)
 
+		const newLabel = instanceLabel?.trim()
+
 		const isInvalid = Object.entries(validFields).filter(([k, v]) => !v)
-		if (isInvalid.length > 0) {
+		if (!isLabelValid(newLabel) || isInvalid.length > 0) {
 			setError(`Some config fields are not valid: ${isInvalid.map(([k]) => k).join(', ')}`)
 			return
 		}
 
-		socketEmit(context.socket, 'instance_config_put', [instanceId, instanceConfig])
-			.then(([err, ok]) => {
+		socketEmitPromise(socket, 'instances:set-config', [instanceId, newLabel, instanceConfig])
+			.then((err) => {
 				if (err) {
-					if (err === 'duplicate label') {
-						setError(
-							`The label "${instanceConfig.label}" is already in use. Please use a unique label for this connection`
-						)
+					if (err === 'invalid label') {
+						setError(`The label "${newLabel}" in not valid`)
+					} else if (err === 'duplicate label') {
+						setError(`The label "${newLabel}" is already in use. Please use a unique label for this connection`)
 					} else {
 						setError(`Unable to save connection config: "${err}"`)
 					}
@@ -56,26 +82,32 @@ export const InstanceEditPanel = memo(function InstanceEditPanel({ instanceId, d
 			.catch((e) => {
 				setError(`Failed to save connection config: ${e}`)
 			})
-	}, [context.socket, instanceId, validFields, instanceConfig, doCancel])
+	}, [socket, instanceId, validFields, instanceLabel, instanceConfig, doCancel])
 
 	useEffect(() => {
 		if (instanceId) {
-			socketEmit(context.socket, 'instance_edit', [instanceId])
-				.then(([_instanceId, _configFields, _instanceConfig]) => {
-					const validFields = {}
-					for (const field of _configFields) {
-						// Real validation status gets generated when the editor components first mount
-						validFields[field.id] = true
+			socketEmitPromise(socket, 'instances:edit', [instanceId])
+				.then((res) => {
+					if (res) {
+						const validFields = {}
+						for (const field of res.fields) {
+							// Real validation status gets generated when the editor components first mount
+							validFields[field.id] = true
 
-						// deserialize `isVisible` with a sandbox/proxy version
-						if (typeof field.isVisibleFn === 'string') {
-							field.isVisible = sandbox(field.isVisibleFn)
+							// deserialize `isVisible` with a sandbox/proxy version
+							if (typeof field.isVisibleFn === 'string') {
+								field.isVisible = sandbox(field.isVisibleFn)
+							}
 						}
-					}
 
-					setConfigFields(_configFields)
-					setInstanceConfig(_instanceConfig)
-					setValidFields(validFields)
+						setConfigFields(res.fields)
+						setInstanceLabel(res.label)
+						setInstanceType(res.instance_type)
+						setInstanceConfig(res.config)
+						setValidFields(validFields)
+					} else {
+						setError(`Connection config unavailable`)
+					}
 				})
 				.catch((e) => {
 					setError(`Failed to load connection info: "${e}"`)
@@ -85,12 +117,13 @@ export const InstanceEditPanel = memo(function InstanceEditPanel({ instanceId, d
 		return () => {
 			setError(null)
 			setConfigFields(null)
+			setInstanceLabel(null)
 			setInstanceConfig(null)
 			setValidFields(null)
 		}
-	}, [context.socket, instanceId, reloadToken])
+	}, [socket, instanceId, reloadToken])
 
-	const doRetryConfigLoad = useCallback(() => setReloadToken(shortid()), [])
+	const doRetryConfigLoad = useCallback(() => setReloadToken(nanoid()), [])
 
 	const setValue = useCallback((key, value) => {
 		console.log('set value', key, value)
@@ -128,24 +161,28 @@ export const InstanceEditPanel = memo(function InstanceEditPanel({ instanceId, d
 		}
 	}, [configFields, instanceConfig])
 
-	const moduleInfo = context.modules[instanceConfig?.instance_type] ?? {}
+	const moduleInfo = modules[instanceType] ?? {}
 	const dataReady = instanceConfig && configFields && validFields
 	return (
 		<div>
 			<h5>
-				{moduleInfo?.shortname ?? instanceConfig?.instance_type} configuration
-				{moduleInfo?.help ? (
-					<div className="instance_help" onClick={() => showHelp(instanceConfig?.instance_type)}>
+				{moduleInfo?.shortname ?? instanceType} configuration
+				{moduleInfo?.hasHelp && (
+					<div className="float_right" onClick={() => showHelp(instanceType)}>
 						<FontAwesomeIcon icon={faQuestionCircle} />
 					</div>
-				) : (
-					''
 				)}
 			</h5>
 			<CRow className="edit-instance">
 				<LoadingRetryOrError error={error} dataReady={dataReady} doRetry={doRetryConfigLoad} />
-				{instanceId && dataReady
-					? configFields.map((field, i) => {
+				{instanceId && dataReady && (
+					<>
+						<CCol className={`fieldtype-textinput`} sm={12}>
+							<label>Label</label>
+							<TextInputField value={instanceLabel} setValue={setInstanceLabel} isValid={isLabelValid(instanceLabel)} />
+						</CCol>
+
+						{configFields.map((field, i) => {
 							return (
 								<CCol
 									key={i}
@@ -163,15 +200,18 @@ export const InstanceEditPanel = memo(function InstanceEditPanel({ instanceId, d
 									/>
 								</CCol>
 							)
-					  })
-					: ''}
+						})}
+					</>
+				)}
 			</CRow>
 
 			<CRow>
 				<CCol sm={12}>
 					<CButton
 						color="success"
-						disabled={!validFields || Object.values(validFields).find((v) => !v) === false}
+						disabled={
+							!validFields || Object.values(validFields).find((v) => !v) === false || !isLabelValid(instanceLabel)
+						}
 						onClick={doSave}
 					>
 						Save
@@ -186,29 +226,81 @@ export const InstanceEditPanel = memo(function InstanceEditPanel({ instanceId, d
 	)
 })
 
-function ConfigField({ setValue, setValid, ...props }) {
-	const id = props.definition.id
+function ConfigField({ setValue, setValid, definition, value }) {
+	const id = definition.id
 	const setValue2 = useCallback((val) => setValue(id, val), [setValue, id])
 	const setValid2 = useCallback((valid) => setValid(id, valid), [setValid, id])
 
-	const { definition } = props
 	switch (definition.type) {
-		case 'text':
-			return (
-				<p title={definition.tooltip}>
-					<div dangerouslySetInnerHTML={{ __html: definition.value }} />
-				</p>
-			)
+		case 'static-text': {
+			const descriptionHtml = {
+				__html: sanitizeHtml(definition.value ?? '', {
+					allowedTags: sanitizeHtml.defaults.allowedTags.concat(['img']),
+					disallowedTagsMode: 'escape',
+				}),
+			}
+
+			return <p title={definition.tooltip} dangerouslySetInnerHTML={descriptionHtml}></p>
+		}
 		case 'textinput':
-			return <TextInputField {...props} setValue={setValue2} setValid={setValid2} />
+			return (
+				<TextInputField
+					value={value}
+					regex={definition.regex}
+					required={definition.required}
+					tooltip={definition.tooltip}
+					setValue={setValue2}
+					setValid={setValid2}
+				/>
+			)
 		case 'number':
-			return <NumberInputField {...props} setValue={setValue2} setValid={setValid2} />
+			return (
+				<NumberInputField
+					required={definition.required}
+					min={definition.min}
+					max={definition.max}
+					step={definition.step}
+					tooltip={definition.tooltip}
+					range={definition.range}
+					value={value}
+					setValue={setValue2}
+					setValid={setValid2}
+				/>
+			)
 		case 'checkbox':
-			return <CheckboxInputField {...props} setValue={setValue2} setValid={setValid2} />
+			return <CheckboxInputField value={value} tooltip={definition.tooltip} setValue={setValue2} setValid={setValid2} />
 		case 'dropdown':
-			return <DropdownInputField {...props} setValue={setValue2} setValid={setValid2} />
+			return (
+				<DropdownInputField
+					choices={definition.choices}
+					allowCustom={definition.allowCustom}
+					minChoicesForSearch={definition.minChoicesForSearch}
+					tooltip={definition.tooltip}
+					regex={definition.regex}
+					value={value}
+					setValue={setValue2}
+					setValid={setValid2}
+					multiple={false}
+				/>
+			)
+		case 'multidropdown':
+			return (
+				<DropdownInputField
+					choices={definition.choices}
+					allowCustom={definition.allowCustom}
+					minSelection={definition.minSelection}
+					minChoicesForSearch={definition.minChoicesForSearch}
+					maxSelection={definition.maxSelection}
+					tooltip={definition.tooltip}
+					regex={definition.regex}
+					value={value}
+					setValue={setValue2}
+					setValid={setValid2}
+					multiple={true}
+				/>
+			)
 		case 'colorpicker':
-			return <ColorInputField {...props} setValue={setValue2} setValid={setValid2} />
+			return <ColorInputField value={value} setValue={setValue2} setValid={setValid2} />
 		default:
 			return <p>Unknown field "{definition.type}"</p>
 	}

@@ -15,32 +15,33 @@ require('intersection-observer')
 
 import React from 'react'
 import ReactDOM from 'react-dom'
-import { BrowserRouter, Redirect, Route, Switch } from 'react-router-dom'
-import App from './App'
-import reportWebVitals from './reportWebVitals'
+import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
+import io from 'socket.io-client'
 
-import i18n from 'i18next'
-import Backend from 'i18next-http-backend'
-import LanguageDetector from 'i18next-browser-languagedetector'
-import { initReactI18next } from 'react-i18next'
+import App from './App'
+import { SERVER_URL, SocketContext } from './util'
+
+// import i18n from 'i18next'
+// import Backend from 'i18next-http-backend'
+// import LanguageDetector from 'i18next-browser-languagedetector'
+// import { initReactI18next } from 'react-i18next'
 import { GettingStarted } from './GettingStarted'
 import { Tablet } from './Tablet'
-import { Emulator } from './Emulator'
+import { Emulator } from './Emulator/Emulator'
+import { EmulatorList } from './Emulator/List'
 
-i18n
-	.use(Backend)
-	.use(LanguageDetector)
-	.use(initReactI18next) // passes i18n down to react-i18next
-	.init({
-		lng: 'en',
-		fallbackLng: 'en',
+// i18n
+// 	.use(Backend)
+// 	.use(LanguageDetector)
+// 	.use(initReactI18next) // passes i18n down to react-i18next
+// 	.init({
+// 		lng: 'en',
+// 		fallbackLng: 'en',
 
-		// debug: true, // TODO disable
-
-		interpolation: {
-			escapeValue: false,
-		},
-	})
+// 		interpolation: {
+// 			escapeValue: false,
+// 		},
+// 	})
 
 // function RedirectPreserveQuery(from, to) {
 // 	return (
@@ -58,40 +59,39 @@ i18n
 // 	)
 // }
 
+const socket = new io(SERVER_URL)
+if (window.location.hash && window.location.hash.includes('debug_socket')) {
+	socket.onAny(function (name, ...data) {
+		console.log('received event', name, data)
+	})
+}
+
 ReactDOM.render(
 	<React.StrictMode>
-		<BrowserRouter>
-			<Switch>
-				<Redirect from="/help.html" to="/getting-started" />
-				<Route path="/getting-started">
-					<GettingStarted />
-				</Route>
+		<SocketContext.Provider value={socket}>
+			<BrowserRouter>
+				<Routes>
+					<Route path="/help.html" element={<Navigate to="/getting-started" replace />} />
+					<Route path="/getting-started" element={<GettingStarted />} />
 
-				<Route path="/emulator">
-					<Emulator />
-				</Route>
-				<Redirect from="/emulator2" to="/emulator" />
-				<Redirect from="/emulator.html" to="/emulator" />
+					<Route path="/emulator/:id" element={<Emulator />} />
+					<Route path="/emulators" element={<EmulatorList />} />
+					<Route path="/emulator" element={<Navigate to="/emulator/emulator" replace />} />
+					<Route path="/emulator2" element={<Navigate to="/emulator/emulator" replace />} />
+					<Route path="/emulator.html" element={<Navigate to="/emulator/emulator" replace />} />
 
-				{/* TODO this needs some work, to translate the query strings to the new format */}
-				{/* {RedirectPreserveQuery('/tablet.html', '/tablet')} */}
-				{/* <Redirect from="/tablet.html" to="/tablet" />
-				<Redirect from="/tablet2.html" to="/tablet" />
-				<Redirect from="/ipad.html" to="/tablet" />
-				<Redirect from="/tablet34" to="/tablet" /> */}
-				<Route path="/tablet3">
-					<Tablet />
-				</Route>
-				<Route>
-					<App />
-				</Route>
-			</Switch>
-		</BrowserRouter>
+					{/* TODO this needs some work, to translate the query strings to the new format */}
+					{/* {RedirectPreserveQuery('/tablet.html', '/tablet')} */}
+					<Route path="/tablet.html" element={<Navigate to="/tablet" replace />} />
+					<Route path="/tablet2.html" element={<Navigate to="/tablet" replace />} />
+					<Route path="/ipad.html" element={<Navigate to="/tablet" replace />} />
+					<Route path="/tablet3" element={<Navigate to="/tablet" replace />} />
+
+					<Route path="/tablet" element={<Tablet />} />
+					<Route path="/*" element={<App />} />
+				</Routes>
+			</BrowserRouter>
+		</SocketContext.Provider>
 	</React.StrictMode>,
 	document.getElementById('root')
 )
-
-// If you want to start measuring performance in your app, pass a function
-// to log results (for example: reportWebVitals(console.log))
-// or send to an analytics endpoint. Learn more: https://bit.ly/CRA-vitals
-reportWebVitals()

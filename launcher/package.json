@@ -1,0 +1,89 @@
+{
+	"name": "companion-launcher",
+	"description": "Companion",
+	"version": "0.0.1",
+	"main": "main.js",
+	"license": "MIT",
+	"private": true,
+	"type": "commonjs",
+	"scripts": {
+		"start": "electron main.js",
+		"dev": "electron dev.js"
+	},
+	"dependencies": {
+		"@sentry/electron": "^4.1.2",
+		"chokidar": "^3.5.3",
+		"debounce-fn": "^4.0.0",
+		"electron-store": "^8.1.0",
+		"fs-extra": "^11.1.0",
+		"nanoid": "^3.3.4",
+		"respawn": "link:../vendor/respawn",
+		"strip-ansi": "^6.0.0",
+		"systeminformation": "^5.15.1"
+	},
+	"devDependencies": {
+		"@electron/notarize": "^1.2.3",
+		"electron": "^21.3.1",
+		"electron-builder": "^23.6.0",
+		"electron-reloader": "^1.2.3"
+	},
+	"build": {
+		"productName": "Companion",
+		"appId": "test-companion.bitfocus.no",
+		"remoteBuild": false,
+		"dmg": {
+			"artifactName": "companion-mac-${arch}.dmg",
+			"sign": true
+		},
+		"mac": {
+			"target": "dmg",
+			"category": "no.bitfocus.companion",
+			"extendInfo": {
+				"LSBackgroundOnly": 1,
+				"LSUIElement": 1
+			},
+			"hardenedRuntime": "true",
+			"gatekeeperAssess": "false",
+			"entitlements": "entitlements.mac.plist",
+			"entitlementsInherit": "entitlements.mac.plist"
+		},
+		"afterPack": "fix-bundled-modules.cjs",
+		"afterSign": "notarize.cjs",
+		"win": {
+			"target": "nsis"
+		},
+		"nsis": {
+			"artifactName": "companion-win64.exe",
+			"createStartMenuShortcut": true,
+			"perMachine": true,
+			"oneClick": false,
+			"allowElevation": true,
+			"allowToChangeInstallationDirectory": true,
+			"installerIcon": "icon.ico",
+			"installerSidebar": "compinst.bmp",
+			"uninstallerSidebar": "compinst.bmp"
+		},
+		"directories": {
+			"buildResources": "assets/",
+			"output": "../electron-output/"
+		},
+		"linux": {
+			"target": "dir",
+			"artifactName": "companion-x64"
+		},
+		"files": [
+			"**/*",
+			"assets/*"
+		],
+		"extraResources": [
+			{
+				"from": "../dist",
+				"to": "."
+			},
+			{
+				"from": "../module-legacy/manifests",
+				"to": "./module-legacy/manifests"
+			}
+		]
+	}
+}

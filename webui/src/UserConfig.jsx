@@ -17,7 +17,7 @@ import {
 	CTabPane,
 	CTabs,
 } from '@coreui/react'
-import { MyErrorBoundary, StaticContext, UserConfigContext } from './util'
+import { MyErrorBoundary, SocketContext, UserConfigContext } from './util'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faFileImport, faSync, faTrash, faUndo } from '@fortawesome/free-solid-svg-icons'
 
@@ -44,39 +44,39 @@ export const UserConfig = memo(function UserConfig() {
 })
 
 function UserConfigTable() {
-	const context = useContext(StaticContext)
+	const socket = useContext(SocketContext)
 	const config = useContext(UserConfigContext)
 
 	const setValue = useCallback(
 		(key, value) => {
 			console.log('set ', key, value)
-			context.socket.emit('set_userconfig_key', key, value)
+			socket.emit('set_userconfig_key', key, value)
 		},
-		[context.socket]
+		[socket]
 	)
 
 	const resetValue = useCallback(
 		(key) => {
 			console.log('reset ', key)
-			context.socket.emit('reset_userconfig_key', key)
+			socket.emit('reset_userconfig_key', key)
 		},
-		[context.socket]
+		[socket]
 	)
 
 	const createSslCertificate = useCallback(() => {
 		console.log('create SSL certificate')
-		context.socket.emit('ssl_certificate_create')
-	}, [context.socket])
+		socket.emit('ssl_certificate_create')
+	}, [socket])
 
 	const deleteSslCertificate = useCallback(() => {
 		console.log('delete SSL certificate')
-		context.socket.emit('ssl_certificate_delete')
-	}, [context.socket])
+		socket.emit('ssl_certificate_delete')
+	}, [socket])
 
 	const renewSslCertificate = useCallback(() => {
 		console.log('renew SSL certificate')
-		context.socket.emit('ssl_certificate_renew')
-	}, [context.socket])
+		socket.emit('ssl_certificate_renew')
+	}, [socket])
 
 	return (
 		<table className="table table-responsive-sm">
@@ -148,15 +148,15 @@ function UserConfigTable() {
 					</td>
 				</tr>
 				<tr>
-					<td>Enable emulator control for Logitech R400/Mastercue/DSan</td>
+					<td>Watch for new USB Devices</td>
 					<td>
 						<div className="form-check form-check-inline mr-1">
 							<CInputCheckbox
-								id="userconfig_emulator_control_enable"
-								checked={config.emulator_control_enable}
-								onChange={(e) => setValue('emulator_control_enable', e.currentTarget.checked)}
+								id="userconfig_usb_hotplug"
+								checked={config.usb_hotplug}
+								onChange={(e) => setValue('usb_hotplug', e.currentTarget.checked)}
 							/>
-							<label className="form-check-label" htmlFor="userconfig_emulator_control_enable">
+							<label className="form-check-label" htmlFor="userconfig_usb_hotplug">
 								Enabled
 							</label>
 						</div>
@@ -1069,7 +1069,8 @@ function RemoteControlInfo() {
 					<CTabPane data-tab="rosstalk">
 						<MyErrorBoundary>
 							<p>
-								Remote triggering can be done by sending RossTalk commands to port <code>7788</code>.
+								Remote triggering can be done by sending RossTalk commands to port{' '}
+								<code>{config?.rosstalk_enabled ? '7788' : 'disabled'}</code>.
 							</p>
 							<p>
 								<strong>Commands:</strong>

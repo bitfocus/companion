@@ -1,22 +1,25 @@
 import { CCol, CNav, CNavItem, CNavLink, CRow, CTabContent, CTabPane, CTabs } from '@coreui/react'
-import { faCalculator, faDollarSign, faFileImport, faGift } from '@fortawesome/free-solid-svg-icons'
+import { faCalculator, faDollarSign, faFileImport, faGift, faVideoCamera } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import shortid from 'shortid'
+import { nanoid } from 'nanoid'
 import { InstancePresets } from './Presets'
-import { StaticContext, MyErrorBoundary } from '../util'
+import { SocketContext, MyErrorBoundary, socketEmitPromise, FormatButtonControlId } from '../util'
+import { CreateBankControlId } from '@companion/shared/ControlId'
 import { ButtonsGridPanel } from './ButtonGrid'
 import { EditButton } from './EditButton'
 import { ImportExport } from './ImportExport'
+import { ActionRecorder } from './ActionRecorder'
 import { memo, useCallback, useContext, useRef, useState } from 'react'
 import { GenericConfirmModal } from '../Components/GenericConfirmModal'
 import { InstanceVariables } from './Variables'
+import { useElementSize } from 'usehooks-ts'
 
 export const ButtonsPage = memo(function ButtonsPage({ hotPress }) {
-	const context = useContext(StaticContext)
+	const socket = useContext(SocketContext)
 
 	const clearModalRef = useRef()
 
-	const [tabResetToken, setTabResetToken] = useState(shortid())
+	const [tabResetToken, setTabResetToken] = useState(nanoid())
 	const [activeTab, setActiveTab] = useState('presets')
 	const [selectedButton, setSelectedButton] = useState(null)
 	const [pageNumber, setPageNumber] = useState(1)
@@ -27,7 +30,7 @@ export const ButtonsPage = memo(function ButtonsPage({ hotPress }) {
 			const preserveButtonsTab = newTab === 'variables' && oldTab === 'edit'
 			if (newTab !== 'edit' && oldTab !== newTab && !preserveButtonsTab) {
 				setSelectedButton(null)
-				setTabResetToken(shortid())
+				setTabResetToken(nanoid())
 			}
 			return newTab
 		})
@@ -36,14 +39,17 @@ export const ButtonsPage = memo(function ButtonsPage({ hotPress }) {
 	const doButtonGridClick = useCallback(
 		(page, bank, isDown) => {
 			if (hotPress) {
-				context.socket.emit('hot_press', page, bank, isDown)
+				const controlId = CreateBankControlId(page, bank)
+				socketEmitPromise(socket, 'controls:hot-press', [controlId, isDown, 'grid']).catch((e) =>
+					console.error(`Hot press failed: ${e}`)
+				)
 			} else if (isDown) {
 				setActiveTab('edit')
-				setSelectedButton([page, bank])
-				setTabResetToken(shortid())
+				setSelectedButton(CreateBankControlId(page, bank))
+				setTabResetToken(nanoid())
 			}
 		},
-		[context.socket, hotPress]
+		[socket, hotPress]
 	)
 	const clearSelectedButton = useCallback(() => {
 		doChangeTab('presets')
@@ -57,55 +63,49 @@ export const ButtonsPage = memo(function ButtonsPage({ hotPress }) {
 
 					if (!e.ctrlKey && !e.metaKey && !e.altKey && (e.key === 'Backspace' || e.key === 'Delete')) {
 						clearModalRef.current.show(
-							`Clear button ${selectedButton[0]}.${selectedButton[1]}`,
+							`Clear button ${FormatButtonControlId(selectedButton)}`,
 							`This will clear the style, feedbacks and all actions`,
 							'Clear',
 							() => {
-								context.socket.emit('bank_reset', selectedButton[0], selectedButton[1])
-								// Invalidate the ui component to cause a reload
-								setTabResetToken(shortid())
+								socketEmitPromise(socket, 'controls:reset', [selectedButton]).catch((e) => {
+									console.error(`Reset failed: ${e}`)
+								})
 							}
 						)
 					}
 					if ((e.ctrlKey || e.metaKey) && !e.altKey && e.key === 'c') {
 						console.log('prepare copy', selectedButton)
-						setCopyFromButton([...selectedButton, 'copy'])
+						setCopyFromButton([selectedButton, 'copy'])
 					}
 					if ((e.ctrlKey || e.metaKey) && !e.altKey && e.key === 'x') {
 						console.log('prepare cut', selectedButton)
-						setCopyFromButton([...selectedButton, 'cut'])
+						setCopyFromButton([selectedButton, 'cut'])
 					}
 					if ((e.ctrlKey || e.metaKey) && !e.altKey && e.key === 'v' && copyFromButton) {
 						console.log('do paste', copyFromButton, selectedButton)
 
-						if (copyFromButton[2] === 'copy') {
-							context.socket.emit(
-								'bank_copy',
-								copyFromButton[0],
-								copyFromButton[1],
-								selectedButton[0],
-								selectedButton[1]
-							)
-							setTabResetToken(shortid())
-						} else if (copyFromButton[2] === 'cut') {
-							context.socket.emit(
-								'bank_move',
-								copyFromButton[0],
-								copyFromButton[1],
-								selectedButton[0],
-								selectedButton[1]
-							)
+						if (copyFromButton[1] === 'copy') {
+							socketEmitPromise(socket, 'controls:copy', [copyFromButton[0], selectedButton]).catch((e) => {
+								console.error(`copy failed: ${e}`)
+							})
+							setTabResetToken(nanoid())
+						} else if (copyFromButton[1] === 'cut') {
+							socketEmitPromise(socket, 'controls:move', [copyFromButton[0], selectedButton]).catch((e) => {
+								console.error(`move failed: ${e}`)
+							})
 							setCopyFromButton(null)
-							setTabResetToken(shortid())
+							setTabResetToken(nanoid())
 						} else {
-							console.error('unknown paste operation:', copyFromButton[2])
+							console.error('unknown paste operation:', copyFromButton[1])
 						}
 					}
 				}
 			}
 		},
-		[context.socket, selectedButton, copyFromButton]
+		[socket, selectedButton, copyFromButton]
 	)
+
+	const [contentRef, { height: contentHeight }] = useElementSize()
 
 	return (
 		<CRow className="buttons-page split-panels">
@@ -132,7 +132,7 @@ export const ButtonsPage = memo(function ButtonsPage({ hotPress }) {
 							<CNavItem hidden={!selectedButton}>
 								<CNavLink data-tab="edit">
 									<FontAwesomeIcon icon={faCalculator} /> Edit Button{' '}
-									{selectedButton ? `${selectedButton[0]}.${selectedButton[1]}` : '?'}
+									{selectedButton ? `${FormatButtonControlId(selectedButton)}` : '?'}
 								</CNavLink>
 							</CNavItem>
 							<CNavItem>
@@ -150,19 +150,22 @@ export const ButtonsPage = memo(function ButtonsPage({ hotPress }) {
 									<FontAwesomeIcon icon={faFileImport} /> Import / Export
 								</CNavLink>
 							</CNavItem>
+							<CNavItem>
+								<CNavLink data-tab="action-recorder">
+									<FontAwesomeIcon icon={faVideoCamera} /> Action Recorder
+								</CNavLink>
+							</CNavItem>
 						</CNav>
-						<CTabContent fade={false}>
+						<CTabContent fade={false} innerRef={contentRef}>
 							<CTabPane data-tab="edit">
 								<MyErrorBoundary>
-									{selectedButton ? (
+									{selectedButton && (
 										<EditButton
-											key={`${selectedButton[0]}.${selectedButton[1]}.${tabResetToken}`}
-											page={selectedButton[0]}
-											bank={selectedButton[1]}
+											key={`${selectedButton}.${tabResetToken}`}
+											contentHeight={contentHeight}
+											controlId={selectedButton}
 											onKeyUp={handleKeyDownInButtons}
 										/>
-									) : (
-										''
 									)}
 								</MyErrorBoundary>
 							</CTabPane>
@@ -179,6 +182,11 @@ export const ButtonsPage = memo(function ButtonsPage({ hotPress }) {
 							<CTabPane data-tab="importexport">
 								<MyErrorBoundary>
 									<ImportExport key={tabResetToken} pageNumber={pageNumber} />
+								</MyErrorBoundary>
+							</CTabPane>
+							<CTabPane data-tab="action-recorder">
+								<MyErrorBoundary>
+									<ActionRecorder key={tabResetToken} />
 								</MyErrorBoundary>
 							</CTabPane>
 						</CTabContent>

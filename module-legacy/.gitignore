@@ -1,0 +1,6 @@
+dist
+bundle.tar.gz
+node_modules
+*.log
+manifests
+entrypoints

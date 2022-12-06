@@ -7,90 +7,75 @@ import {
 	faGamepad,
 	faHatWizard,
 	faInfo,
-	faMousePointer,
 	faTabletAlt,
 	faUsers,
 } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { useTranslation } from 'react-i18next'
 
 export const MySidebar = memo(function MySidebar({ show, showWizard }) {
-	const { t } = useTranslation()
-
 	return (
 		<CSidebar show={show}>
 			<CSidebarNav>
 				<CSidebarBrand>
 					<div className="c-sidebar-brand-full">
-						<img src="/img/brand/icon.png" height="30" alt="logo" />
+						<img src="/img/icons/48x48.png" height="30" alt="logo" />
 						&nbsp; Bitfocus&nbsp;
 						<span style={{ fontWeight: 'bold' }}>Companion</span>
 					</div>
 					<div className="c-sidebar-brand-minimized">
-						<img src="/img/brand/icon.png" height="42px" alt="logo" />
+						<img src="/img/icons/48x48.png" height="42px" alt="logo" />
 					</div>
 				</CSidebarBrand>
 
 				<CSidebarNavItem
 					icon={<FontAwesomeIcon className="c-sidebar-nav-icon" icon={faHatWizard} />}
-					name={t('Configuration Wizard')}
+					name={'Configuration Wizard'}
 					onClick={showWizard}
 				/>
 				<CSidebarNavItem
 					target="_new"
-					href="/emulator"
+					href="/emulators"
 					icon={<FontAwesomeIcon className="c-sidebar-nav-icon" icon={faGamepad} />}
-					name={t('Emulator')}
+					name={'Emulator'}
 				/>
+
 				<CSidebarNavItem
 					target="_new"
-					href="/tablet.html"
-					icon={<FontAwesomeIcon className="c-sidebar-nav-icon" icon={faMousePointer} />}
-					name={t('Web buttons')}
-				/>
-				<CSidebarNavItem
-					target="_new"
-					href="/tablet2.html"
+					href="/tablet"
 					icon={<FontAwesomeIcon className="c-sidebar-nav-icon" icon={faTabletAlt} />}
-					name={t('Mobile buttons')}
-				/>
-				<CSidebarNavItem
-					target="_new"
-					href="/tablet3"
-					icon={<FontAwesomeIcon className="c-sidebar-nav-icon" icon={faTabletAlt} />}
-					name={t('New Web/Mobile buttons')}
+					name={'Web buttons'}
 				/>
 
 				<CSidebarNavItem
 					target="_new"
 					href="https://github.com/bitfocus/companion/issues"
 					icon={<FontAwesomeIcon className="c-sidebar-nav-icon" icon={faBug} />}
-					name={t('Bugs & Features')}
+					name={'Bugs & Features'}
 				/>
 				<CSidebarNavItem
 					target="_new"
 					href="https://www.facebook.com/groups/companion/"
 					icon={<FontAwesomeIcon className="c-sidebar-nav-icon" icon={faUsers} />}
-					name={t('Facebook')}
+					name={'Facebook'}
 				/>
 				<CSidebarNavItem
 					target="_new"
 					href="https://join.slack.com/t/bitfocusio/shared_invite/zt-1fsnlu7iv-YIjW9dRECR_VDZY8QX4r5A"
 					icon={<FontAwesomeIcon className="c-sidebar-nav-icon" icon={faComments} />}
-					name={t('Slack Chat')}
+					name={'Slack Chat'}
 				/>
 				<CSidebarNavItem
 					target="_new"
 					href="https://donorbox.org/bitfocus-opensource"
 					icon={<FontAwesomeIcon className="c-sidebar-nav-icon" icon={faDollarSign} />}
-					name={t('Donate')}
+					name={'Donate'}
 				/>
 
 				<CSidebarNavItem
 					target="_new"
 					href="/getting-started"
 					icon={<FontAwesomeIcon className="c-sidebar-nav-icon" icon={faInfo} />}
-					name={t('Getting Started')}
+					name={'Getting Started'}
 				/>
 			</CSidebarNav>
 			<CSidebarMinimizer />

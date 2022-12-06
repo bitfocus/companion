@@ -1,4 +1,4 @@
-import React, { Suspense, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react'
+import React, { Suspense, useCallback, useContext, useEffect, useRef, useState } from 'react'
 import {
 	CContainer,
 	CTabContent,
@@ -18,14 +18,14 @@ import {
 	faCalendarAlt,
 	faClipboardList,
 	faClock,
+	faCloud,
 	faGamepad,
 	faPlug,
 	faUserNinja,
 } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import io from 'socket.io-client'
 import '@fontsource/fira-code'
-import { MyErrorBoundary, SERVER_URL, useMountEffect, UserConfigContext, StaticContext } from './util'
+import { MyErrorBoundary, useMountEffect, UserConfigContext, SocketContext, NotifierContext } from './util'
 import { SurfacesPage } from './Surfaces'
 import { UserConfig } from './UserConfig'
 import { LogPanel } from './LogPanel'
@@ -38,20 +38,22 @@ import { Triggers } from './Triggers'
 import { InstancesPage } from './Instances'
 import { ButtonsPage } from './Buttons'
 import { ContextData } from './ContextData'
-import { WizardModal } from './Wizard'
-import { Redirect, useLocation } from 'react-router-dom'
+import { CloudPage } from './CloudPage'
+import { WizardModal, WIZARD_CURRENT_VERSION } from './Wizard'
+import { Navigate, useLocation } from 'react-router-dom'
 import { useIdleTimer } from 'react-idle-timer'
 
 const useTouchBackend = window.localStorage.getItem('test_touch_backend') === '1'
+const showCloudTab = window.localStorage.getItem('show_companion_cloud') === '1'
 
 export default function App() {
+	const socket = useContext(SocketContext)
 	const [connected, setConnected] = useState(false)
 	const [wasConnected, setWasConnected] = useState(false)
 	const [buttonGridHotPress, setButtonGridHotPress] = useState(false)
 
-	const socket = useMemo(() => {
-		const sock = new io(SERVER_URL)
-		sock.on('connect', () => {
+	useEffect(() => {
+		const onConnected = () => {
 			setWasConnected((wasConnected0) => {
 				if (wasConnected0) {
 					window.location.reload(true)
@@ -60,20 +62,23 @@ export default function App() {
 				}
 				return wasConnected0
 			})
-		})
-		if (window.location.hash && window.location.hash.includes('debug_socket')) {
-			sock.onAny(function (name, ...data) {
-				console.log('received event', name, data)
-			})
 		}
-		sock.on('disconnect', () => {
+		const onDisconnected = () => {
 			setConnected((val) => {
 				setWasConnected(val)
 				return false
 			})
-		})
-		return sock
-	}, [])
+		}
+		socket.on('connect', onConnected)
+		socket.on('disconnect', onDisconnected)
+
+		if (socket.connected) onConnected()
+
+		return () => {
+			socket.off('connect', onConnected)
+			socket.off('disconnect', onDisconnected)
+		}
+	}, [socket])
 
 	const handleWindowBlur = useCallback(() => {
 		setButtonGridHotPress(false)
@@ -105,7 +110,7 @@ export default function App() {
 	})
 
 	return (
-		<ContextData socket={socket}>
+		<ContextData>
 			{(loadingProgress, loadingComplete) => (
 				<>
 					<div id="error-container" className={wasConnected ? 'show-error' : ''}>
@@ -142,7 +147,6 @@ export default function App() {
 }
 
 function AppMain({ connected, loadingComplete, loadingProgress, buttonGridHotPress }) {
-	const context = useContext(StaticContext)
 	const config = useContext(UserConfigContext)
 
 	const [showSidebar, setShowSidebar] = useState(true)
@@ -167,20 +171,20 @@ function AppMain({ connected, loadingComplete, loadingProgress, buttonGridHotPre
 
 	const setUnlockedInner = useCallback(() => {
 		setUnlocked(true)
-		if (config && config?.setup_wizard < context.currentVersion) {
+		if (config && config?.setup_wizard < WIZARD_CURRENT_VERSION) {
 			showWizard()
 		}
-	}, [config, context.currentVersion, showWizard])
+	}, [config, showWizard])
 
 	// If lockout is disabled, then we are logged in
 	useEffect(() => {
 		if (config && !config?.admin_lockout) {
 			setUnlocked(true)
-			if (config?.setup_wizard < context.currentVersion) {
+			if (config?.setup_wizard < WIZARD_CURRENT_VERSION) {
 				showWizard()
 			}
 		}
-	}, [config, context.currentVersion, showWizard])
+	}, [config, showWizard])
 
 	return (
 		<div className="c-app">
@@ -189,7 +193,7 @@ function AppMain({ connected, loadingComplete, loadingProgress, buttonGridHotPre
 			) : (
 				''
 			)}
-			<WizardModal ref={wizardModal} currentVerson={context.currentVersion} />
+			<WizardModal ref={wizardModal} />
 			<MySidebar show={showSidebar} showWizard={showWizard} />
 			<div className="c-wrapper">
 				<MyHeader toggleSidebar={toggleSidebar} setLocked={setLocked} canLock={canLock && unlocked} />
@@ -211,7 +215,7 @@ function AppMain({ connected, loadingComplete, loadingProgress, buttonGridHotPre
 
 /** Wrap the idle timer in its own component, as it invalidates every second */
 function IdleTimerWrapper({ setLocked, timeoutMinutes }) {
-	const context = useContext(StaticContext)
+	const notifier = useContext(NotifierContext)
 
 	const [, setIdleTimeout] = useState(null)
 
@@ -226,8 +230,8 @@ function IdleTimerWrapper({ setLocked, timeoutMinutes }) {
 			}
 
 			// close toast
-			if (context.notifier.current) {
-				context.notifier.current.close(TOAST_ID)
+			if (notifier.current) {
+				notifier.current.close(TOAST_ID)
 			}
 
 			return null
@@ -238,7 +242,7 @@ function IdleTimerWrapper({ setLocked, timeoutMinutes }) {
 	}
 
 	const handleIdle = () => {
-		context.notifier.current.show(
+		notifier.current.show(
 			'Session timeout',
 			'Your session is about to timeout, and Companion will be locked',
 			null,
@@ -249,8 +253,8 @@ function IdleTimerWrapper({ setLocked, timeoutMinutes }) {
 			if (!v) {
 				return setTimeout(() => {
 					// close toast
-					if (context.notifier.current) {
-						context.notifier.current.close(TOAST_ID)
+					if (notifier.current) {
+						notifier.current.close(TOAST_ID)
 					}
 
 					setLocked()
@@ -279,8 +283,8 @@ function IdleTimerWrapper({ setLocked, timeoutMinutes }) {
 			})
 
 			// close toast
-			if (context.notifier.current) {
-				context.notifier.current.close(TOAST_ID)
+			if (notifier.current) {
+				notifier.current.close(TOAST_ID)
 			}
 		}
 	})
@@ -408,6 +412,13 @@ function AppContent({ buttonGridHotPress }) {
 						<FontAwesomeIcon icon={faClipboardList} /> Log
 					</CNavLink>
 				</CNavItem>
+				{showCloudTab && (
+					<CNavItem>
+						<CNavLink to="/cloud">
+							<FontAwesomeIcon icon={faCloud} /> Cloud
+						</CNavLink>
+					</CNavItem>
+				)}
 			</CNav>
 			<CTabContent fade={false}>
 				<CTabPane className={getClassForPane('/connections')}>
@@ -435,17 +446,28 @@ function AppContent({ buttonGridHotPress }) {
 						<UserConfig />
 					</MyErrorBoundary>
 				</CTabPane>
-				<CTabPane className={getClassForPane('/log')}>
-					<MyErrorBoundary>
-						<LogPanel />
-					</MyErrorBoundary>
-				</CTabPane>
+				{getClassForPane('/log') !== '' && (
+					<CTabPane className={getClassForPane('/log')}>
+						<MyErrorBoundary>
+							<LogPanel />
+						</MyErrorBoundary>
+					</CTabPane>
+				)}
+				{getClassForPane('/cloud') !== '' && (
+					// We want the cloud panel to only load when it it needs to
+					<CTabPane className={getClassForPane('/cloud')}>
+						<MyErrorBoundary>
+							<CloudPage />
+						</MyErrorBoundary>
+					</CTabPane>
+				)}
 				{!hasMatchedPane ? (
 					// If no pane was matched, then redirect to the default
-					<Redirect
+					<Navigate
 						to={{
 							pathname: '/connections',
 						}}
+						replace
 					/>
 				) : (
 					''

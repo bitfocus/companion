@@ -8,8 +8,10 @@ import React, {
 	useImperativeHandle,
 	useRef,
 	useState,
+	useMemo,
 } from 'react'
-import { StaticContext, KeyReceiver, LoadingRetryOrError, PagesContext } from '../util'
+import { KeyReceiver, PagesContext, socketEmitPromise, SocketContext, ButtonRenderCacheContext } from '../util'
+import { CreateBankControlId } from '@companion/shared/ControlId'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import {
 	faArrowsAlt,
@@ -21,10 +23,12 @@ import {
 	faTrash,
 } from '@fortawesome/free-solid-svg-icons'
 import classnames from 'classnames'
-import { MAX_COLS, MAX_ROWS, MAX_BUTTONS } from '../Constants'
+import { MAX_COLS, MAX_ROWS } from '../Constants'
 import { useDrop } from 'react-dnd'
-import { BankPreview, dataToButtonImage } from '../Components/BankButton'
+import { BankPreview } from '../Components/BankButton'
 import { GenericConfirmModal } from '../Components/GenericConfirmModal'
+import { nanoid } from 'nanoid'
+import { useSharedPageRenderCache } from '../ButtonRenderCache'
 
 export const ButtonsGridPanel = memo(function ButtonsPage({
 	pageNumber,
@@ -35,8 +39,14 @@ export const ButtonsGridPanel = memo(function ButtonsPage({
 	selectedButton,
 	clearSelectedButton,
 }) {
-	const context = useContext(StaticContext)
+	const socket = useContext(SocketContext)
 	const pages = useContext(PagesContext)
+	const pagesRef = useRef()
+
+	useEffect(() => {
+		// Avoid binding into callbacks
+		pagesRef.current = pages
+	}, [pages])
 
 	const actionsRef = useRef()
 
@@ -52,18 +62,18 @@ export const ButtonsGridPanel = memo(function ButtonsPage({
 
 	const setPage = useCallback(
 		(newPage) => {
-			const pageNumbers = Object.keys(pages)
+			const pageNumbers = Object.keys(pagesRef.current || {})
 			const newIndex = pageNumbers.findIndex((p) => p === newPage + '')
 			if (newIndex !== -1) {
 				changePage(newPage)
 			}
 		},
-		[changePage, pages]
+		[changePage]
 	)
 
 	const changePage2 = useCallback(
 		(delta) => {
-			const pageNumbers = Object.keys(pages)
+			const pageNumbers = Object.keys(pagesRef.current || {})
 			const currentIndex = pageNumbers.findIndex((p) => p === pageNumber + '')
 			let newPage = pageNumbers[0]
 			if (currentIndex !== -1) {
@@ -78,7 +88,7 @@ export const ButtonsGridPanel = memo(function ButtonsPage({
 				changePage(newPage)
 			}
 		},
-		[changePage, pages, pageNumber]
+		[changePage, pageNumber]
 	)
 
 	const pageInfo = pages?.[pageNumber]
@@ -87,18 +97,13 @@ export const ButtonsGridPanel = memo(function ButtonsPage({
 	const clearNewPageName = useCallback(() => setNewPageName(null), [])
 	const changeNewPageName = useCallback(
 		(e) => {
-			context.socket.emit('set_page', pageNumber, {
-				...pageInfo,
-				name: e.currentTarget.value,
+			socketEmitPromise(socket, 'pages:set-name', [pageNumber, e.currentTarget.value]).catch((e) => {
+				console.error('Failed to set name', e)
 			})
 			setNewPageName(e.currentTarget.value)
 		},
-		[context.socket, pageNumber, pageInfo]
+		[socket, pageNumber]
 	)
-
-	if (!pages) {
-		return <LoadingRetryOrError dataReady={pages} />
-	}
 
 	const pageName = pageInfo?.name ?? 'PAGE'
 
@@ -163,7 +168,7 @@ export const ButtonsGridPanel = memo(function ButtonsPage({
 })
 
 const ButtonGridActions = forwardRef(function ButtonGridActions({ isHot, pageNumber, clearSelectedButton }, ref) {
-	const context = useContext(StaticContext)
+	const socket = useContext(SocketContext)
 
 	const resetRef = useRef()
 
@@ -222,10 +227,12 @@ const ButtonGridActions = forwardRef(function ButtonGridActions({ isHot, pageNum
 			`Are you sure you want to clear all buttons on page ${pageNumber}?\nThere's no going back from this.`,
 			'Reset',
 			() => {
-				context.socket.emit('loadsave_reset_page_all', pageNumber)
+				socketEmitPromise(socket, 'loadsave:reset-page-clear', [pageNumber]).catch((e) => {
+					console.error(`Clear page failed: ${e}`)
+				})
 			}
 		)
-	}, [context.socket, pageNumber, clearSelectedButton])
+	}, [socket, pageNumber, clearSelectedButton])
 	const resetPageNav = useCallback(() => {
 		clearSelectedButton()
 
@@ -234,10 +241,12 @@ const ButtonGridActions = forwardRef(function ButtonGridActions({ isHot, pageNum
 			`Are you sure you want to reset navigation buttons? This will completely erase bank ${pageNumber}.1, ${pageNumber}.9 and ${pageNumber}.17`,
 			'Reset',
 			() => {
-				context.socket.emit('loadsave_reset_page_nav', pageNumber)
+				socketEmitPromise(socket, 'loadsave:reset-page-nav', [pageNumber]).catch((e) => {
+					console.error(`Reset nav failed: ${e}`)
+				})
 			}
 		)
-	}, [context.socket, pageNumber, clearSelectedButton])
+	}, [socket, pageNumber, clearSelectedButton])
 
 	useImperativeHandle(
 		ref,
@@ -247,7 +256,10 @@ const ButtonGridActions = forwardRef(function ButtonGridActions({ isHot, pageNum
 					switch (activeFunction) {
 						case 'delete':
 							resetRef.current.show('Clear bank', `Clear style and actions for this button?`, 'Clear', () => {
-								context.socket.emit('bank_reset', pageNumber, index)
+								const controlId = CreateBankControlId(pageNumber, index)
+								socketEmitPromise(socket, 'controls:reset', [controlId]).catch((e) => {
+									console.error(`Reset failed: ${e}`)
+								})
 							})
 
 							stopFunction()
@@ -255,7 +267,12 @@ const ButtonGridActions = forwardRef(function ButtonGridActions({ isHot, pageNum
 						case 'copy':
 							if (activeFunctionBank) {
 								const fromInfo = activeFunctionBank
-								context.socket.emit('bank_copy', fromInfo.page, fromInfo.bank, pageNumber, index)
+								socketEmitPromise(socket, 'controls:copy', [
+									CreateBankControlId(fromInfo.page, fromInfo.bank),
+									CreateBankControlId(pageNumber, index),
+								]).catch((e) => {
+									console.error(`copy failed: ${e}`)
+								})
 								stopFunction()
 							} else {
 								setActiveFunctionBank({
@@ -267,7 +284,12 @@ const ButtonGridActions = forwardRef(function ButtonGridActions({ isHot, pageNum
 						case 'move':
 							if (activeFunctionBank) {
 								const fromInfo = activeFunctionBank
-								context.socket.emit('bank_move', fromInfo.page, fromInfo.bank, pageNumber, index)
+								socketEmitPromise(socket, 'controls:move', [
+									CreateBankControlId(fromInfo.page, fromInfo.bank),
+									CreateBankControlId(pageNumber, index),
+								]).catch((e) => {
+									console.error(`move failed: ${e}`)
+								})
 								stopFunction()
 							} else {
 								setActiveFunctionBank({
@@ -289,7 +311,7 @@ const ButtonGridActions = forwardRef(function ButtonGridActions({ isHot, pageNum
 				}
 			},
 		}),
-		[context.socket, activeFunction, activeFunctionBank, pageNumber, stopFunction]
+		[socket, activeFunction, activeFunctionBank, pageNumber, stopFunction]
 	)
 
 	return (
@@ -328,7 +350,14 @@ const ButtonGridActions = forwardRef(function ButtonGridActions({ isHot, pageNum
 	)
 })
 
-export function ButtonGridHeader({ pageNumber, pageName, onNameChange, onNameBlur, changePage, setPage }) {
+export const ButtonGridHeader = memo(function ButtonGridHeader({
+	pageNumber,
+	pageName,
+	onNameChange,
+	onNameBlur,
+	changePage,
+	setPage,
+}) {
 	const [tmpText, setTmpText] = useState(null)
 
 	const inputChange = useCallback(
@@ -365,11 +394,18 @@ export function ButtonGridHeader({ pageNumber, pageName, onNameChange, onNameBlu
 		setTimeout(event.target.select.bind(event.target), 20)
 	}
 
+	const nextPage = useCallback(() => {
+		changePage(1)
+	}, [changePage])
+	const prevPage = useCallback(() => {
+		changePage(-1)
+	}, [changePage])
+
 	return (
 		<div className="button-grid-header">
 			<CInputGroup>
 				<CInputGroupPrepend>
-					<CButton color="dark" hidden={!changePage} onClick={() => changePage(-1)}>
+					<CButton color="dark" hidden={!changePage} onClick={prevPage}>
 						<FontAwesomeIcon icon={faChevronLeft} />
 					</CButton>
 				</CInputGroupPrepend>
@@ -385,7 +421,7 @@ export function ButtonGridHeader({ pageNumber, pageName, onNameChange, onNameBlu
 					className="button-page-input"
 				/>
 				<CInputGroupAppend>
-					<CButton color="dark" hidden={!changePage} onClick={() => changePage(1)}>
+					<CButton color="dark" hidden={!changePage} onClick={nextPage}>
 						<FontAwesomeIcon icon={faChevronRight} />
 					</CButton>
 				</CInputGroupAppend>
@@ -401,49 +437,13 @@ export function ButtonGridHeader({ pageNumber, pageName, onNameChange, onNameBlu
 			/>
 		</div>
 	)
-}
+})
 
-function ButtonGrid({ bankClick, pageNumber, selectedButton }) {
-	const context = useContext(StaticContext)
+export function ButtonGrid({ bankClick, pageNumber, selectedButton }) {
+	const buttonCache = useContext(ButtonRenderCacheContext)
 
-	const [imageCache, setImageCache] = useState({})
-
-	useEffect(() => {
-		const updatePreviewImages = (images) => {
-			setImageCache((oldImages) => {
-				const newImages = { ...oldImages }
-				for (let key = 1; key <= MAX_BUTTONS; ++key) {
-					if (images[key] !== undefined) {
-						newImages[key] = {
-							image: dataToButtonImage(images[key].buffer),
-							updated: images[key].updated,
-						}
-					}
-				}
-				return newImages
-			})
-		}
-
-		context.socket.on('preview_page_data', updatePreviewImages)
-
-		// Inform server of our new page, and last updated, so it can skip unchanged previews
-		setImageCache((imageCache) => {
-			// don't want to change imageCache, but this avoids the dependency
-			const lastUpdated = {}
-			for (const [id, data] of Object.entries(imageCache)) {
-				lastUpdated[id] = { updated: data.updated }
-			}
-			context.socket.emit('bank_preview_page', pageNumber, lastUpdated)
-			return imageCache
-		})
-
-		return () => {
-			context.socket.off('preview_page_data', updatePreviewImages)
-		}
-	}, [context.socket, pageNumber])
-
-	const selectedPage = selectedButton ? selectedButton[0] : null
-	const selectedBank = selectedButton ? selectedButton[1] : null
+	const gridId = useMemo(() => nanoid(), [])
+	const pageImages = useSharedPageRenderCache(buttonCache, gridId, pageNumber)
 
 	return (
 		<div
@@ -464,15 +464,16 @@ function ButtonGrid({ bankClick, pageNumber, selectedButton }) {
 								.fill(0)
 								.map((_, x) => {
 									const index = y * MAX_COLS + x + 1
+									const controlId = CreateBankControlId(pageNumber, index)
 									return (
 										<ButtonGridIcon
 											key={x}
 											page={pageNumber}
 											index={index}
-											preview={imageCache[index]?.image}
+											preview={pageImages[index]}
 											onClick={bankClick}
 											alt={`Bank ${index}`}
-											selected={selectedPage === pageNumber && selectedBank === index}
+											selected={selectedButton === controlId}
 										/>
 									)
 								})}
@@ -483,13 +484,21 @@ function ButtonGrid({ bankClick, pageNumber, selectedButton }) {
 	)
 }
 
-function ButtonGridIcon(props) {
-	const context = useContext(StaticContext)
+const ButtonGridIcon = memo(function ButtonGridIcon(props) {
+	const socket = useContext(SocketContext)
+
 	const [{ isOver, canDrop }, drop] = useDrop({
 		accept: 'preset',
 		drop: (dropData) => {
 			console.log('preset drop', dropData)
-			context.socket.emit('preset_drop', dropData.instanceId, dropData.preset, props.page, props.index)
+			socketEmitPromise(socket, 'presets:import_to_bank', [
+				dropData.instanceId,
+				dropData.presetId,
+				props.page,
+				props.index,
+			]).catch((e) => {
+				console.error('Preset import failed')
+			})
 		},
 		collect: (monitor) => ({
 			isOver: !!monitor.isOver(),
@@ -499,4 +508,4 @@ function ButtonGridIcon(props) {
 
 	const title = `${props.page}.${props.index}`
 	return <BankPreview {...props} dropRef={drop} dropHover={isOver} canDrop={canDrop} alt={title} title={title} />
-}
+})

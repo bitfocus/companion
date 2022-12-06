@@ -4,5 +4,4 @@ const config = {
 	testPathIgnorePatterns: ['module-local-dev'],
 	roots: ['test'],
 }
-
-module.exports = config
+export default config
