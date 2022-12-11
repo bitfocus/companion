@@ -629,7 +629,10 @@ if (!lock) {
 		})
 		child.on('message', (data) => {
 			console.log('Received IPC message', data)
-			if (data.messageType === 'show-error') {
+			if (data.messageType === 'fatal-error') {
+				electron.dialog.showErrorBox(data.title, data.body)
+				app.exit(1)
+			} else if (data.messageType === 'show-error') {
 				electron.dialog.showErrorBox(data.title, data.body)
 			} else if (data.messageType === 'http-bind-status') {
 				appInfo = {
