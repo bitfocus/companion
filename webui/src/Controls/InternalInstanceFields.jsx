@@ -48,7 +48,13 @@ export function InternalInstanceField(option, isOnBank, readonly, value, setValu
 			return <InternalVariableDropdown disabled={readonly} value={value} setValue={setValue} />
 		case 'internal:surface_serial':
 			return (
-				<InternalSurfaceBySerialDropdown disabled={readonly} isOnBank={isOnBank} value={value} setValue={setValue} />
+				<InternalSurfaceBySerialDropdown
+					disabled={readonly}
+					isOnBank={isOnBank}
+					value={value}
+					setValue={setValue}
+					includeSelf={option.includeSelf}
+				/>
 			)
 		case 'internal:trigger':
 			return <InternalTriggerDropdown disabled={readonly} value={value} setValue={setValue} />
@@ -174,12 +180,12 @@ function InternalVariableDropdown({ value, setValue, disabled }) {
 	return <DropdownInputField disabled={disabled} value={value} choices={choices} multiple={false} setValue={setValue} />
 }
 
-function InternalSurfaceBySerialDropdown({ isOnBank, value, setValue, disabled }) {
+function InternalSurfaceBySerialDropdown({ isOnBank, value, setValue, disabled, includeSelf }) {
 	const context = useContext(SurfacesContext)
 
 	const choices = useMemo(() => {
 		const choices = []
-		if (isOnBank) {
+		if (isOnBank && includeSelf) {
 			choices.push({ id: 'self', label: 'Current surface' })
 		}
 
@@ -197,7 +203,7 @@ function InternalSurfaceBySerialDropdown({ isOnBank, value, setValue, disabled }
 			})
 		}
 		return choices
-	}, [context, isOnBank])
+	}, [context, isOnBank, includeSelf])
 
 	return <DropdownInputField disabled={disabled} value={value} choices={choices} multiple={false} setValue={setValue} />
 }
