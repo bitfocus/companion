@@ -162,20 +162,6 @@ export function Emulator() {
 						<ConfigurePanel config={config} />
 
 						<CyclePages emulatorId={emulatorId} imageCache={imageCache} />
-
-						<CAlert color="info" closeButton>
-							Use <b>1 2 3 4 5 6 7 8</b>, <b>Q W E R T Y U I</b>, <b>A S D F G H J K</b>, <b>Z X C V B N M ,</b> to
-							control this surface with your keyboard!
-							<br />
-							{config.emulator_control_enable ? (
-								<>
-									A Logitech R400/Mastercue/DSan will send a button press to button; 2 (Back), 3 (forward), 4 (black)
-									and for logitech: 10/11 (Start and stop) on each page.
-								</>
-							) : (
-								<>You can enable support for some controllers in the Surface Settings!</>
-							)}
-						</CAlert>
 					</>
 				) : (
 					<CRow>

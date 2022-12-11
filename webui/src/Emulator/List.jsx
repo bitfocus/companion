@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState, useContext } from 'react'
 import { LoadingRetryOrError, SocketContext, socketEmitPromise } from '../util'
-import { CCol, CContainer, CRow, CWidgetSimple } from '@coreui/react'
+import { CAlert, CCol, CContainer, CRow, CWidgetSimple } from '@coreui/react'
 import { nanoid } from 'nanoid'
 import { useNavigate } from 'react-router-dom'
 import jsonPatch from 'fast-json-patch'
@@ -69,6 +69,14 @@ export function EmulatorList() {
 						)}
 					</CRow>
 				)}
+
+				<CAlert color="info">
+					Use <b>1 2 3 4 5 6 7 8</b>, <b>Q W E R T Y U I</b>, <b>A S D F G H J K</b>, <b>Z X C V B N M ,</b> to control
+					this surface with your keyboard!
+					<br />
+					If enabled in the Surface Settings, A Logitech R400/Mastercue/DSan will send a button press to button; 2
+					(Back), 3 (forward), 4 (black) and for logitech: 10/11 (Start and stop) on each page.
+				</CAlert>
 			</CContainer>
 		</div>
 	)
