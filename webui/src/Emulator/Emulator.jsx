@@ -7,7 +7,7 @@ import {
 	socketEmitPromise,
 	useMountEffect,
 } from '../util'
-import { CAlert, CButton, CCol, CContainer, CForm, CRow } from '@coreui/react'
+import { CButton, CCol, CContainer, CForm, CRow } from '@coreui/react'
 import { nanoid } from 'nanoid'
 import { useParams } from 'react-router-dom'
 import { dsanMastercueKeymap, keyboardKeymap, logitecKeymap } from './Keymaps'
