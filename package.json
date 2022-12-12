@@ -55,6 +55,7 @@
 		"@estilles/expression-parser": "^1.0.0",
 		"@julusian/jpeg-turbo": "^2.0.0",
 		"@loupedeck/node": "^0.3.1",
+		"@sentry/integrations": "^7.25.0",
 		"@sentry/node": "^7.19.0",
 		"@sentry/tracing": "^7.19.0",
 		"archiver": "^5.3.1",

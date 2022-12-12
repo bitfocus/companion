@@ -83,6 +83,7 @@ module.exports = {
 					project: 'companion',
 
 					include: distPath,
+					urlPrefix: '~/',
 
 					// Auth tokens can be obtained from https://sentry.io/settings/account/api/auth-tokens/
 					// and needs the `project:releases` and `org:read` scopes
