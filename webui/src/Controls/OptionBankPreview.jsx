@@ -13,16 +13,16 @@ import { ParseControlId } from '@companion/shared/ControlId.js'
  * @param {string} param.controlId control where this preview is located (if any)
  * @returns
  */
-export function OptionBankPreview({ fields, options, controlId }) {
+export function OptionBankPreview({ controlId }) {
 	const buttonCache = useContext(ButtonRenderCacheContext)
 
-	let page = options[fields[0]]
-	let bank = options[fields[1]]
+	let page = 0
+	let bank = 0
 
 	const parsedControlId = ParseControlId(controlId)
 	if (parsedControlId && parsedControlId.type === 'bank') {
-		page = page || parsedControlId.page
-		bank = bank || parsedControlId.bank
+		page = parsedControlId.page
+		bank = parsedControlId.bank
 	}
 
 	const sessionId = useMemo(() => nanoid(), [])
