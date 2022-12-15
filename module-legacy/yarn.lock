@@ -1843,10 +1843,6 @@ commist@^1.0.0:
   version "1.0.5"
   resolved "https://codeload.github.com/bitfocus/companion-module-extron-smp111/tar.gz/84a62ff779b1ed3a6835e745eb2a5818027c1d47"
 
-"companion-module-extron-smp351@github:bitfocus/companion-module-extron-smp351#v1.3.1":
-  version "1.3.1"
-  resolved "https://codeload.github.com/bitfocus/companion-module-extron-smp351/tar.gz/c4ce5bbefd0359f91d7e9731beb7ff5765c8cbb6"
-
 "companion-module-extron-smx@github:bitfocus/companion-module-extron-smx#v1.0.5":
   version "1.0.5"
   resolved "https://codeload.github.com/bitfocus/companion-module-extron-smx/tar.gz/80cf51960c4ec9c91965189bda69943b2f1fd9f1"
@@ -1979,10 +1975,6 @@ commist@^1.0.0:
   resolved "https://codeload.github.com/bitfocus/companion-module-h2r-graphics/tar.gz/2809a2147bc18de5f907796576da63da66accb8a"
   dependencies:
     socket.io-client "^4.4.0"
-
-"companion-module-haivision-kbencoder@github:bitfocus/companion-module-haivision-kbencoder#v1.1.0":
-  version "1.1.0"
-  resolved "https://codeload.github.com/bitfocus/companion-module-haivision-kbencoder/tar.gz/30aab5b62de69e214d03845e0a102dd82e1dc9b3"
 
 "companion-module-hermann-stagetimerio@github:bitfocus/companion-module-hermann-stagetimerio#v1.0.0":
   version "1.0.0"
@@ -2380,10 +2372,6 @@ commist@^1.0.0:
   dependencies:
     ntcontrol-connection "^0.2.0"
 
-"companion-module-panasonic-ptz@github:bitfocus/companion-module-panasonic-ptz#v1.0.21":
-  version "1.0.21"
-  resolved "https://codeload.github.com/bitfocus/companion-module-panasonic-ptz/tar.gz/0e522ac16d95ee2771b501d122d85143d61f7a8b"
-
 "companion-module-panasonic-tv-th@github:bitfocus/companion-module-panasonic-tv-th#v0.0.3":
   version "0.0.3"
   resolved "https://codeload.github.com/bitfocus/companion-module-panasonic-tv-th/tar.gz/c3584f37df224d2f4cecef8e27f2ca3e25f69957"
@@ -2630,12 +2618,6 @@ commist@^1.0.0:
   dependencies:
     bonjour "^3.5.0"
 
-"companion-module-softron-movierecorder@github:bitfocus/companion-module-softron-movierecorder#v1.0.7":
-  version "1.0.7"
-  resolved "https://codeload.github.com/bitfocus/companion-module-softron-movierecorder/tar.gz/60c23e1a0de12398fd81b8bdb96e1ada68d68287"
-  dependencies:
-    node-fetch "^2.6.7"
-
 "companion-module-softron-ontheairvideo@github:bitfocus/companion-module-softron-ontheairvideo#v1.0.3":
   version "1.0.3"
   resolved "https://codeload.github.com/bitfocus/companion-module-softron-ontheairvideo/tar.gz/e57499fa6cb9f6de77f77d3d8ed5722067f73e59"
@@ -2751,10 +2733,6 @@ commist@^1.0.0:
   resolved "https://codeload.github.com/bitfocus/companion-module-thelightingcontroller/tar.gz/cbc6569ef6ca46ed86e44a4ae7d18e340ec810bd"
   dependencies:
     xml2js "^0.4.17"
-
-"companion-module-timemachines-clock@github:bitfocus/companion-module-timemachines-clock#v1.1.0":
-  version "1.1.0"
-  resolved "https://codeload.github.com/bitfocus/companion-module-timemachines-clock/tar.gz/bf383a08aafeb01f47b9253ea61a51ff1e568607"
 
 "companion-module-toggl-track@github:bitfocus/companion-module-toggl-track#v1.0.3":
   version "1.0.3"
