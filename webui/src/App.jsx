@@ -21,7 +21,7 @@ import {
 	faCloud,
 	faGamepad,
 	faPlug,
-	faUserNinja,
+	faCog,
 } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import '@fontsource/fira-code'
@@ -404,7 +404,7 @@ function AppContent({ buttonGridHotPress }) {
 				</CNavItem>
 				<CNavItem>
 					<CNavLink to="/settings">
-						<FontAwesomeIcon icon={faUserNinja} /> Settings
+						<FontAwesomeIcon icon={faCog} /> Settings
 					</CNavLink>
 				</CNavItem>
 				<CNavItem>
