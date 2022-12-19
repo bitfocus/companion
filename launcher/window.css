@@ -207,3 +207,11 @@ input[type='checkbox'] {
 #developer_settings_panel {
 	display: none;
 }
+
+.two-columns {
+	display: grid;
+	grid-auto-flow: column;
+	grid-auto-columns: 1fr;
+
+	padding: 0 20px;
+}
