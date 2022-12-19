@@ -159,10 +159,15 @@ if (!lock) {
 	function sendAppInfo() {
 		if (window) {
 			const loginSettings = app.getLoginItemSettings()
-			window.webContents.send('info', {
-				...uiConfig.store,
-				run_at_login: loginSettings.openAtLogin
-			}, appInfo, process.platform)
+			window.webContents.send(
+				'info',
+				{
+					...uiConfig.store,
+					run_at_login: loginSettings.openAtLogin,
+				},
+				appInfo,
+				process.platform
+			)
 		}
 	}
 
@@ -317,10 +322,10 @@ if (!lock) {
 			console.log('changed start minimized:', msg)
 			uiConfig.set('start_minimised', msg)
 		})
-		
+
 		ipcMain.on('launcher-set-run-at-login', (e, msg) => {
 			console.log('changed run at login:', msg)
-			
+
 			app.setLoginItemSettings({
 				openAtLogin: !!msg,
 			})
