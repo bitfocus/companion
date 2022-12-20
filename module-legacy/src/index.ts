@@ -87,7 +87,7 @@ export default class MockModule extends InstanceBase<MockConfig> {
 
 const UpgradeScripts: Array<CompanionStaticUpgradeScript<any>> = []
 if (LegacyModule.GetUpgradeScripts) {
-	const innerScripts: Array<CompanionStaticUpgradeScriptOld> = LegacyModule.GetUpgradeScripts()
+	const innerScripts: Array<CompanionStaticUpgradeScriptOld> = LegacyModule.GetUpgradeScripts() || []
 
 	for (const fcn of innerScripts) {
 		UpgradeScripts.push((_context, props) => {
