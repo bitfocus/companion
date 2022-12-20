@@ -153,11 +153,11 @@ export function InstancesList({ showHelp, doConfigureInstance, instanceStatus })
 			<table className="table table-responsive-sm">
 				<thead>
 					<tr>
-						<th>&nbsp;</th>
+						<th className="fit">&nbsp;</th>
 						<th>Module</th>
 						<th>Label</th>
 						<th>Status</th>
-						<th>&nbsp;</th>
+						<th className="fit">&nbsp;</th>
 					</tr>
 				</thead>
 				<tbody>
