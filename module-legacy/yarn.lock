@@ -892,6 +892,13 @@
   dependencies:
     "@types/node" "*"
 
+"@types/xml2js@^0.4.9":
+  version "0.4.11"
+  resolved "https://registry.yarnpkg.com/@types/xml2js/-/xml2js-0.4.11.tgz#bf46a84ecc12c41159a7bd9cf51ae84129af0e79"
+  integrity sha512-JdigeAKmCyoJUiQljjr7tQG3if9NkqGUgwEUqBvV0N7LM4HyQk7UXCnusRa1lnvXAEYJ8mw8GtZWioagNztOwA==
+  dependencies:
+    "@types/node" "*"
+
 "@types/yargs-parser@*":
   version "21.0.0"
   resolved "https://registry.yarnpkg.com/@types/yargs-parser/-/yargs-parser-21.0.0.tgz#0c60e537fa790f5f9472ed2776c2b71ec117351b"
@@ -3228,6 +3235,15 @@ commist@^1.0.0:
 "companion-module-spx-gc@github:bitfocus/companion-module-spx-gc#v1.0.5":
   version "1.0.5"
   resolved "https://codeload.github.com/bitfocus/companion-module-spx-gc/tar.gz/59fff3493e356d89475952df12074d516c45096f"
+
+"companion-module-studiocoast-vmix@github:bitfocus/companion-module-studiocoast-vmix#v2.1.4":
+  version "2.1.4"
+  resolved "https://codeload.github.com/bitfocus/companion-module-studiocoast-vmix/tar.gz/3c78cec9d64dd7dc3592c504f3e60cdc1a19fd63"
+  dependencies:
+    "@types/lodash" "^4.14.178"
+    "@types/xml2js" "^0.4.9"
+    lodash "^4.17.21"
+    xml2js "^0.4.23"
 
 "companion-module-symetrix-dsp@github:bitfocus/companion-module-symetrix-dsp#v1.5.1":
   version "1.5.1"

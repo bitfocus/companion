@@ -332,6 +332,7 @@
 		"companion-module-soundcraft-ui": "github:bitfocus/companion-module-soundcraft-ui#v2.0.7",
     "companion-module-sounddevices-pixnet": "github:bitfocus/companion-module-sounddevices-pixnet#v1.0.1",
     "companion-module-spx-gc": "github:bitfocus/companion-module-spx-gc#v1.0.5",
+		"companion-module-studiocoast-vmix": "github:bitfocus/companion-module-studiocoast-vmix#v2.1.4",
     "companion-module-symetrix-dsp": "github:bitfocus/companion-module-symetrix-dsp#v1.5.1",
     "companion-module-tallyma-wirelesstally": "github:bitfocus/companion-module-tallyma-wirelesstally#v1.0.5",
     "companion-module-tascam-bdmp1": "github:bitfocus/companion-module-tascam-bdmp1#v0.1.8",
