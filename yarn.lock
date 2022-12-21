@@ -3430,9 +3430,9 @@ commist@^1.0.0:
   version "1.0.0"
   resolved "https://codeload.github.com/bitfocus/companion-module-epson-businesspj/tar.gz/386c58a0a73dbf13888477bf609eabc495412d4e"
 
-"companion-module-equipson-lightshark@github:bitfocus/companion-module-equipson-lightshark#v1.0.1":
-  version "1.0.1"
-  resolved "https://codeload.github.com/bitfocus/companion-module-equipson-lightshark/tar.gz/a7b4d9f0ec096dede22638c420685a5b2119bee4"
+"companion-module-equipson-lightshark@github:bitfocus/companion-module-equipson-lightshark#v1.0.2":
+  version "1.0.2"
+  resolved "https://codeload.github.com/bitfocus/companion-module-equipson-lightshark/tar.gz/ee0b6a78af7df6acdd208d04e6a37a03cb4a40fd"
 
 "companion-module-esphome-api@github:bitfocus/companion-module-esphome-api#v1.0.3":
   version "1.0.3"
