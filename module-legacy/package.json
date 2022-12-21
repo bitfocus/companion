@@ -11,7 +11,7 @@
     "generate-manifests": "node --loader ts-node/esm scripts/generate-manifests.ts"
   },
   "dependencies": {
-    "@companion-module/base": "~0.6.1",
+    "@companion-module/base": "~1.0.1",
     "@tsconfig/node18": "^1.0.1",
     "@types/debug": "^4.1.7",
     "@types/ws": "^8.5.3",
@@ -365,7 +365,6 @@
     "companion-module-vdwall-lvp615": "github:bitfocus/companion-module-vdwall-lvp615#v1.0.0",
 		"companion-module-ventuz-director": "github:bitfocus/companion-module-ventuz-director#v1.0.2",
     "companion-module-vicreo-hotkey": "github:bitfocus/companion-module-vicreo-hotkey#v3.0.4",
-    "companion-module-vicreo-variablelistener": "github:bitfocus/companion-module-vicreo-variablelistener#v1.0.8",
 		"companion-module-videocom-zoom-bridge": "github:bitfocus/companion-module-videocom-zoom-bridge#v1.0.2",
     "companion-module-videolan-vlc": "github:bitfocus/companion-module-videolan-vlc#v1.1.15",
     "companion-module-vimeo-livestreamstudio6": "github:bitfocus/companion-module-vimeo-livestreamstudio6#v1.0.0",
@@ -392,7 +391,7 @@
     "tslib": "^2.3.1"
   },
   "devDependencies": {
-    "@companion-module/tools": "^0.4.1",
+    "@companion-module/tools": "^0.5.1",
     "@types/node": "^14",
     "@types/parse-author": "^2.0.1",
     "parse-author": "^2.0.0",
