@@ -26,6 +26,7 @@
 			padding-right: 5px;
 			border-radius: 4px;
 			font-family: 'Fira Code', monospace;
+			white-space: pre-wrap;
 
 			&.log-type-fatal {
 				background-color: black;
