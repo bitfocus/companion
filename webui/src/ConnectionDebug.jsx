@@ -14,10 +14,14 @@ export function ConnectionDebug() {
 	// const [loadError, setLoadError]=useState(null)
 	const [linesBuffer, setLinesBuffer] = useState([])
 
+	// A unqiue identifier which changes upon each reconnection
+	const [connectionToken, setConnectionToken] = useState(nanoid())
+
 	const [isConnected, setIsConnected] = useState(false)
 	useEffect(() => {
 		const onConnected = () => {
 			setIsConnected(true)
+			setConnectionToken(nanoid())
 		}
 		const onDisconnected = () => {
 			setIsConnected(false)
@@ -57,7 +61,7 @@ export function ConnectionDebug() {
 			socket.emit('connection-debug:unsubscribe')
 			socket.off(`connection-debug:update:${connectionId}`, onNewLines)
 		}
-	}, [socket, connectionId])
+	}, [socket, connectionId, connectionToken])
 
 	const [listChunkClearedToken, setListChunkClearedToken] = useState(nanoid())
 
