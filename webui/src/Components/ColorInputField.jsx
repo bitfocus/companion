@@ -87,7 +87,7 @@ export function ColorInputField({ value, setValue, setValid, disabled }) {
 			</div>
 			{displayPicker &&
 				createPortal(
-					<div ref={setPopperElement} style={popperStyles.popper} {...attributes.popper}>
+					<div ref={setPopperElement} style={{ ...popperStyles.popper, zIndex: 3 }} {...attributes.popper}>
 						<SketchPicker
 							disabled={disabled}
 							color={color}

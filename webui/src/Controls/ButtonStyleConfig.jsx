@@ -70,7 +70,7 @@ export function ButtonStyleConfig({ controlId, controlType, style, configRef }) 
 				</CAlert>
 			)}
 
-			<CForm inline>
+			<CForm>
 				<CRow form className="button-style-form">
 					<ButtonStyleConfigFields
 						values={style}
