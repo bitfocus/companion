@@ -349,11 +349,6 @@
     node-hid "^2.1.1"
     tslib "^2.4.0"
 
-"@estilles/expression-parser@^1.0.0":
-  version "1.0.0"
-  resolved "https://registry.yarnpkg.com/@estilles/expression-parser/-/expression-parser-1.0.0.tgz#227a182309051f4e371e1b5c652351b84213eddc"
-  integrity sha512-Pidcwrp+YgjWjzXtt2IacpBkBcWCtMMcc21Jic/taXaPOX7efdcdYR5w65K7DWyOGyFXzaQAfvwEqBvDbyM9+w==
-
 "@istanbuljs/load-nyc-config@^1.0.0":
   version "1.1.0"
   resolved "https://registry.yarnpkg.com/@istanbuljs/load-nyc-config/-/load-nyc-config-1.1.0.tgz#fd3db1d59ecf7cf121e80650bb86712f9b55eced"

@@ -52,7 +52,6 @@
 	"dependencies": {
 		"@companion-module/base": "^1.0.0",
 		"@elgato-stream-deck/node": "^5.7.0",
-		"@estilles/expression-parser": "^1.0.0",
 		"@jsep-plugin/numbers": "^1.0.1",
 		"@jsep-plugin/template": "^1.0.2",
 		"@julusian/jpeg-turbo": "^2.0.0",
