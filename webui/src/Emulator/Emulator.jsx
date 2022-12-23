@@ -11,7 +11,7 @@ import { CButton, CCol, CContainer, CForm, CRow } from '@coreui/react'
 import { nanoid } from 'nanoid'
 import { useParams } from 'react-router-dom'
 import { dsanMastercueKeymap, keyboardKeymap, logitecKeymap } from './Keymaps'
-import { BankPreview, dataToButtonImage } from '../Components/BankButton'
+import { ButtonPreview, dataToButtonImage } from '../Components/ButtonPreview'
 import { MAX_COLS, MAX_ROWS } from '../Constants'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faCancel, faExpand } from '@fortawesome/free-solid-svg-icons'
@@ -293,12 +293,12 @@ function CyclePages({ emulatorId, imageCache }) {
 											.map((_2, x) => {
 												const index = y * MAX_COLS + x
 												return (
-													<BankPreview
+													<ButtonPreview
 														key={x}
 														index={index}
 														preview={imageCache[index]}
 														onClick={bankClick}
-														alt={`Bank ${index}`}
+														alt={`Button ${index}`}
 														selected={false}
 													/>
 												)

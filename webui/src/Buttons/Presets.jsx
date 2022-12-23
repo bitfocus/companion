@@ -9,7 +9,7 @@ import {
 	ModulesContext,
 } from '../util'
 import { useDrag } from 'react-dnd'
-import { BankPreview, dataToButtonImage, RedImage } from '../Components/BankButton'
+import { ButtonPreview, dataToButtonImage, RedImage } from '../Components/ButtonPreview'
 import { nanoid } from 'nanoid'
 
 export const InstancePresets = function InstancePresets({ resetToken }) {
@@ -232,7 +232,7 @@ function PresetIconPreview({ preset, instanceId, ...childProps }) {
 	const onClick = useCallback((i, isDown) => isDown && setRetryToken(nanoid()), [])
 
 	return (
-		<BankPreview
+		<ButtonPreview
 			fixedSize
 			dragRef={drag}
 			{...childProps}

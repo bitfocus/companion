@@ -15,7 +15,7 @@ import {
 	CCol,
 	CRow,
 } from '@coreui/react'
-import { BankPreview, dataToButtonImage } from '../Components/BankButton'
+import { ButtonPreview, dataToButtonImage } from '../Components/ButtonPreview'
 import { MAX_COLS, MAX_ROWS } from '../Constants'
 import { ButtonGridHeader } from './ButtonGrid'
 import { GenericConfirmModal } from '../Components/GenericConfirmModal'
@@ -315,7 +315,7 @@ function ButtonImportGrid({ page }) {
 								.map((_, x) => {
 									const index = y * MAX_COLS + x + 1
 									return (
-										<ButtonImportPreview key={x} controlId={CreateBankControlId(page, index)} alt={`Bank ${index}`} />
+										<ButtonImportPreview key={x} controlId={CreateBankControlId(page, index)} alt={`Button ${index}`} />
 									)
 								})}
 						</CCol>
@@ -341,7 +341,7 @@ function ButtonImportPreview({ controlId, instanceId, ...childProps }) {
 			})
 	}, [controlId, socket])
 
-	return <BankPreview {...childProps} preview={previewImage} />
+	return <ButtonPreview {...childProps} preview={previewImage} />
 }
 
 function FullExport() {

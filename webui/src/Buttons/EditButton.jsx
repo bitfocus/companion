@@ -22,7 +22,7 @@ import { faArrowLeft, faArrowRight, faPencil, faPlus, faStar, faTrash } from '@f
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import React, { forwardRef, useCallback, useContext, useEffect, useImperativeHandle, useRef, useState } from 'react'
 import { nanoid } from 'nanoid'
-import { BankPreview, dataToButtonImage } from '../Components/BankButton'
+import { ButtonPreview, dataToButtonImage } from '../Components/ButtonPreview'
 import { GenericConfirmModal } from '../Components/GenericConfirmModal'
 import {
 	KeyReceiver,
@@ -156,7 +156,7 @@ export function EditButton({ controlId, onKeyUp, contentHeight }) {
 	)
 
 	const doRetryLoad = useCallback(() => setReloadConfigToken(nanoid()), [])
-	const resetBank = useCallback(() => {
+	const clearButton = useCallback(() => {
 		resetModalRef.current.show(
 			`Clear button ${FormatButtonControlId(controlId)}`,
 			`This will clear the style, feedbacks and all actions`,
@@ -210,7 +210,7 @@ export function EditButton({ controlId, onKeyUp, contentHeight }) {
 				<>
 					<MyErrorBoundary>
 						<>
-							<BankPreview fixedSize preview={previewImage} right={true} />
+							<ButtonPreview fixedSize preview={previewImage} right={true} />
 							<CDropdown className="mt-2" style={{ display: 'inline-block' }}>
 								<CButtonGroup>
 									{/* This could be simplified to use the split property on CDropdownToggle, but then onClick doesnt work https://github.com/coreui/coreui-react/issues/179 */}
@@ -234,7 +234,7 @@ export function EditButton({ controlId, onKeyUp, contentHeight }) {
 								</CDropdownMenu>
 							</CDropdown>
 							&nbsp;
-							<CButton color="danger" hidden={!config} onClick={resetBank}>
+							<CButton color="danger" hidden={!config} onClick={clearButton}>
 								Erase
 							</CButton>
 							&nbsp;
@@ -462,7 +462,12 @@ function TabsSection({ fillHeight, style, controlId, steps, runtimeProps, rotary
 					<p></p>
 					{selectedStep === 'feedbacks' && (
 						<MyErrorBoundary>
-							<ControlFeedbacksEditor heading="Feedbacks" controlId={controlId} feedbacks={feedbacks} isOnBank={true} />
+							<ControlFeedbacksEditor
+								heading="Feedbacks"
+								controlId={controlId}
+								feedbacks={feedbacks}
+								isOnControl={true}
+							/>
 						</MyErrorBoundary>
 					)}
 
