@@ -90,26 +90,46 @@ describe('resolver', function () {
 	describe('expressions with symbol/variable operands', function () {
 		it('should handle symbol and literal operands', function () {
 			const postfix = parse('$(internal:a) + 1')
-			const variables = { internal: { a: 2 } }
-			expect(resolve(postfix, variables)).toBe(3)
+			const getVariable = (id) => {
+				switch (id) {
+					case 'internal:a':
+						return 2
+				}
+			}
+			expect(resolve(postfix, getVariable)).toBe(3)
 		})
 
 		it('should handle multiple symbol operands', function () {
 			const postfix = parse('$(internal:a) ^ 2 + 2 * $(internal:b) + $(test:c)')
-			const variables = { internal: { a: 3, b: 2 }, test: { c: 1 } }
-			expect(resolve(postfix, variables)).toBe(4)
+			const getVariable = (id) => {
+				switch (id) {
+					case 'internal:a':
+						return 3
+					case 'internal:b':
+						return 2
+					case 'test:c':
+						return 1
+				}
+			}
+			expect(resolve(postfix, getVariable)).toBe(4)
 		})
 
 		it('should handle duplicate symbol operands', function () {
 			const postfix = parse('$(internal:a) / $(internal:a)')
-			const variables = { internal: { a: 10 } }
-			expect(resolve(postfix, variables)).toBe(1)
+			const getVariable = (id) => {
+				switch (id) {
+					case 'internal:a':
+						return 10
+				}
+			}
+			expect(resolve(postfix, getVariable)).toBe(1)
 		})
 	})
 
 	describe('expressions with errors', function () {
 		it('should detect missing symbol values', function () {
-			const fn = () => resolve(parse('$(internal:a) + 1'))
+			const getVariable = () => undefined
+			const fn = () => resolve(parse('$(internal:a) + 1'), getVariable)
 			expect(fn).toThrow(/Missing variable value/)
 		})
 
