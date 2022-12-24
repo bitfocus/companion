@@ -13,6 +13,7 @@ import {
 	CFormGroup,
 	CLabel,
 	CInput,
+	CInputCheckbox,
 	CNavItem,
 	CNavLink,
 	CNav,
@@ -556,6 +557,7 @@ function TabsSection({ fillHeight, style, controlId, steps, runtimeProps, rotary
 							<EditActionsRelease
 								controlId={controlId}
 								action_sets={selectedStep2.action_sets}
+								stepOptions={selectedStep2.options}
 								stepId={selectedKey}
 								removeSet={removeSet}
 							/>
@@ -576,7 +578,7 @@ function TabsSection({ fillHeight, style, controlId, steps, runtimeProps, rotary
 	}
 }
 
-function EditActionsRelease({ controlId, action_sets, stepId, removeSet }) {
+function EditActionsRelease({ controlId, action_sets, stepOptions, stepId, removeSet }) {
 	const socket = useContext(SocketContext)
 
 	const editRef = useRef(null)
@@ -584,23 +586,37 @@ function EditActionsRelease({ controlId, action_sets, stepId, removeSet }) {
 	const renameSet = useCallback(
 		(oldId) => {
 			if (editRef.current) {
-				editRef.current.show(Number(oldId), (newId) => {
+				console.log(stepOptions, oldId)
+				const runWhileHeld = stepOptions.runWhileHeld.includes(Number(oldId))
+				editRef.current.show(Number(oldId), runWhileHeld, (newId, runWhileHeld) => {
 					if (!isNaN(newId)) {
-						socketEmitPromise(socket, 'controls:action-set:rename', [controlId, stepId, oldId, newId]).catch((e) => {
-							console.error('Failed to rename set:', e)
-						})
+						socketEmitPromise(socket, 'controls:action-set:rename', [controlId, stepId, oldId, newId])
+							.then(() => {
+								socketEmitPromise(socket, 'controls:action-set:set-run-while-held', [
+									controlId,
+									stepId,
+									newId,
+									runWhileHeld,
+								]).catch((e) => {
+									console.error('Failed to set runWhileHeld:', e)
+								})
+							})
+							.catch((e) => {
+								console.error('Failed to rename set:', e)
+							})
 					}
 				})
 			}
 		},
-		[socket, controlId, stepId]
+		[socket, controlId, stepId, stepOptions]
 	)
 
 	const candidate_sets = Object.entries(action_sets).filter(([id]) => !isNaN(id))
 	candidate_sets.sort((a, b) => Number(a[0]) - Number(b[0]))
 
 	const components = candidate_sets.map(([id, actions]) => {
-		const ident = `Release after ${id}ms`
+		const runWhileHeld = stepOptions.runWhileHeld.includes(Number(id))
+		const ident = runWhileHeld ? `Held for ${id}ms` : `Release after ${id}ms`
 		return (
 			<MyErrorBoundary key={id}>
 				<ControlActionSetEditor
@@ -626,7 +642,7 @@ function EditActionsRelease({ controlId, action_sets, stepId, removeSet }) {
 
 	return (
 		<>
-			<EditDurationModal ref={editRef} />
+			<EditDurationGroupPropertiesModal ref={editRef} />
 
 			<MyErrorBoundary>
 				<ControlActionSetEditor
@@ -644,11 +660,12 @@ function EditActionsRelease({ controlId, action_sets, stepId, removeSet }) {
 	)
 }
 
-const EditDurationModal = forwardRef(function EditDurationModal(props, ref) {
+const EditDurationGroupPropertiesModal = forwardRef(function EditDurationGroupPropertiesModal(props, ref) {
 	const [data, setData] = useState(null)
 	const [show, setShow] = useState(false)
 
-	const [newValue, setNewValue] = useState(null)
+	const [newDurationValue, setNewDurationValue] = useState(null)
+	const [newWhileHeldValue, setNewWhileHeldValue] = useState(null)
 
 	const buttonRef = useRef()
 
@@ -666,20 +683,22 @@ const EditDurationModal = forwardRef(function EditDurationModal(props, ref) {
 
 			setData(null)
 			setShow(false)
-			setNewValue(null)
+			setNewDurationValue(null)
+			setNewWhileHeldValue(null)
 
 			// completion callback
 			const cb = data?.[1]
-			cb(newValue)
+			cb(newDurationValue, newWhileHeldValue)
 		},
-		[data, newValue]
+		[data, newDurationValue, newWhileHeldValue]
 	)
 
 	useImperativeHandle(
 		ref,
 		() => ({
-			show(duration, completeCallback) {
-				setNewValue(duration)
+			show(duration, whileHeld, completeCallback) {
+				setNewDurationValue(duration)
+				setNewWhileHeldValue(whileHeld)
 				setData([duration, completeCallback])
 				setShow(true)
 
@@ -690,14 +709,18 @@ const EditDurationModal = forwardRef(function EditDurationModal(props, ref) {
 		[]
 	)
 
-	const onChange = useCallback((e) => {
-		setNewValue(Number(e.target.value))
+	const onDurationChange = useCallback((e) => {
+		setNewDurationValue(Number(e.target.value))
+	}, [])
+
+	const onWhileHeldChange = useCallback((e) => {
+		setNewWhileHeldValue(!!e.target.checked)
 	}, [])
 
 	return (
 		<CModal show={show} onClose={doClose} onClosed={onClosed} onOpened={buttonFocus}>
 			<CModalHeader closeButton>
-				<h5>Change press duration</h5>
+				<h5>Change delay group properties</h5>
 			</CModalHeader>
 			<CModalBody>
 				<CForm onSubmit={doAction}>
@@ -705,12 +728,17 @@ const EditDurationModal = forwardRef(function EditDurationModal(props, ref) {
 						<CLabel>New press duration</CLabel>
 						<CInput
 							type="number"
-							value={newValue}
+							value={newDurationValue}
 							min={1}
 							step={1}
-							style={{ color: !newValue || newValue <= 0 ? 'red' : undefined }}
-							onChange={onChange}
+							style={{ color: !newDurationValue || newDurationValue <= 0 ? 'red' : undefined }}
+							onChange={onDurationChange}
 						/>
+					</CFormGroup>
+
+					<CFormGroup className="fieldtype-checkbox">
+						<CLabel>Execute while held</CLabel>
+						<CInputCheckbox type="checkbox" checked={!!newWhileHeldValue} value={true} onChange={onWhileHeldChange} />
 					</CFormGroup>
 				</CForm>
 			</CModalBody>
