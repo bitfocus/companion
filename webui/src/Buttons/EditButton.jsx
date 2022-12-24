@@ -725,7 +725,7 @@ const EditDurationGroupPropertiesModal = forwardRef(function EditDurationGroupPr
 			<CModalBody>
 				<CForm onSubmit={doAction}>
 					<CFormGroup>
-						<CLabel>New press duration</CLabel>
+						<CLabel>Press duration</CLabel>
 						<CInput
 							type="number"
 							value={newDurationValue}
