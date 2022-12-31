@@ -238,7 +238,7 @@ const ButtonGridActions = forwardRef(function ButtonGridActions({ isHot, pageNum
 
 		resetRef.current.show(
 			'Reset page',
-			`Are you sure you want to reset navigation buttons? This will completely erase bank ${pageNumber}.1, ${pageNumber}.9 and ${pageNumber}.17`,
+			`Are you sure you want to reset navigation buttons? This will completely erase button ${pageNumber}.1, ${pageNumber}.9 and ${pageNumber}.17`,
 			'Reset',
 			() => {
 				socketEmitPromise(socket, 'loadsave:reset-page-nav', [pageNumber]).catch((e) => {
