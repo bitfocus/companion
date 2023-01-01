@@ -68,7 +68,11 @@ const AddInstancesInner = memo(function AddInstancesInner({ showHelp, configureI
 				const name = `${module.manufacturer} ${subprod}`
 				const keywords = module.keywords || []
 
-				if (name.replace(';', ' ').match(regexp) || keywords.find((kw) => kw.match(regexp))) {
+				if (
+					name.replace(';', ' ').match(regexp) ||
+					name.replace(/[^\w]/g, '').toLowerCase().includes(filter.replace(/[^\w]/g, '').toLowerCase()) ||
+					keywords.find((kw) => kw.match(regexp))
+				) {
 					candidatesObj[name] = (
 						<div key={name + id}>
 							<CButton color="primary" onClick={() => addInstance(id, subprod, module)}>
