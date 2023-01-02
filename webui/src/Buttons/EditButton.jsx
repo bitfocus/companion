@@ -286,7 +286,7 @@ export function EditButton({ controlId, onKeyUp, contentHeight }) {
 								controlId={controlId}
 								steps={config.steps || {}}
 								runtimeProps={runtimeProps}
-								rotaryActions={config.options.rotaryActions}
+								rotaryActions={config?.options?.rotaryActions}
 								feedbacks={config.feedbacks}
 							/>
 						</MyErrorBoundary>
