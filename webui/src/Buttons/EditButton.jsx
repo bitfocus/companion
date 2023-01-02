@@ -43,6 +43,7 @@ import { ControlOptionsEditor } from '../Controls/ControlOptionsEditor'
 import { ControlFeedbacksEditor } from '../Controls/FeedbackEditor'
 import { cloneDeep } from 'lodash-es'
 import { useElementSize } from 'usehooks-ts'
+import { GetStepIds } from '@companion/shared/Controls'
 
 export function EditButton({ controlId, onKeyUp, contentHeight }) {
 	const socket = useContext(SocketContext)
@@ -343,7 +344,7 @@ function TabsSection({ fillHeight, style, controlId, steps, runtimeProps, rotary
 		}
 	}, [])
 
-	const keys = Object.keys(steps).sort()
+	const keys = GetStepIds(steps)
 	const [selectedStep, setSelectedStep] = useState(keys.length ? `step:${keys[0]}` : 'feedbacks')
 
 	useEffect(() => {
