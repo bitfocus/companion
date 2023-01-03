@@ -1,5 +1,6 @@
-import React, { memo, useContext, useState } from 'react'
+import React, { memo, useContext, useMemo, useState } from 'react'
 import { CAlert, CButton, CInput, CInputGroup, CInputGroupAppend } from '@coreui/react'
+import Fuse from 'fuse.js'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faExclamationTriangle, faQuestionCircle, faTimes } from '@fortawesome/free-solid-svg-icons'
 import { socketEmitPromise, SocketContext, NotifierContext, ModulesContext } from '../util'
@@ -57,47 +58,48 @@ const AddInstancesInner = memo(function AddInstancesInner({ showHelp, configureI
 		[addInstanceInner]
 	)
 
+	const { searchEngine, allProducts } = useMemo(() => {
+		const allProducts = Object.values(modules).flatMap((module) =>
+			module.products.map((product) => ({ product, ...module }))
+		)
+		return {
+			allProducts,
+			searchEngine: new Fuse(allProducts, {
+				threshold: 0.3,
+				keys: ['product', 'name', 'manufacturer', 'keywords'],
+			}),
+		}
+	}, [modules])
+
 	let candidates = []
 	try {
-		const regexp = new RegExp(filter, 'i')
-
 		const candidatesObj = {}
-		for (const [id, module] of Object.entries(modules)) {
-			const products = new Set(module.products)
-			for (const subprod of products) {
-				const name = `${module.manufacturer} ${subprod}`
-				const keywords = module.keywords || []
+		const searchResults = filter ? searchEngine.search(filter).map((x) => x.item) : allProducts
 
-				if (
-					name.replace(';', ' ').match(regexp) ||
-					name.replace(/[^\w]/g, '').toLowerCase().includes(filter.replace(/[^\w]/g, '').toLowerCase()) ||
-					keywords.find((kw) => kw.match(regexp))
-				) {
-					candidatesObj[name] = (
-						<div key={name + id}>
-							<CButton color="primary" onClick={() => addInstance(id, subprod, module)}>
-								Add
-							</CButton>
+		for (const module of searchResults) {
+			candidatesObj[module.name] = (
+				<div key={module.name + module.id}>
+					<CButton color="primary" onClick={() => addInstance(module.id, module.product, module)}>
+						Add
+					</CButton>
+					&nbsp;
+					{module.isLegacy && (
+						<>
+							<FontAwesomeIcon
+								icon={faExclamationTriangle}
+								title="This module has not been updated for Companion 3.0, and may be broken as a result"
+							/>
 							&nbsp;
-							{module.isLegacy && (
-								<>
-									<FontAwesomeIcon
-										icon={faExclamationTriangle}
-										title="This module has not been updated for Companion 3.0, and may be broken as a result"
-									/>
-									&nbsp;
-								</>
-							)}
-							{name}
-							{module.hasHelp && (
-								<div className="float_right" onClick={() => showHelp(id)}>
-									<FontAwesomeIcon icon={faQuestionCircle} />
-								</div>
-							)}
+						</>
+					)}
+					{module.name}
+					{module.hasHelp && (
+						<div className="float_right" onClick={() => showHelp(module.id)}>
+							<FontAwesomeIcon icon={faQuestionCircle} />
 						</div>
-					)
-				}
-			}
+					)}
+				</div>
+			)
 		}
 
 		candidates = Object.entries(candidatesObj)
