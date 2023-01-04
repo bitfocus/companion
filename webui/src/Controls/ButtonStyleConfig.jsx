@@ -124,7 +124,7 @@ export function ButtonStyleConfigFields({ values, setValueInner, setPng, setPngE
 				'text',
 				{ sm: 6 },
 				<>
-					<label>Button text</label>
+					<label>{values.textExpression ? 'Button text expression' : 'Button text string'}</label>
 					<CInputGroup>
 						<TextInputField tooltip={'Button text'} setValue={setTextValue} value={values.text} useVariables />
 						<CInputGroupAppend>
