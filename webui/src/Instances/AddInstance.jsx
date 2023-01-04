@@ -1,6 +1,6 @@
 import React, { memo, useContext, useMemo, useState } from 'react'
 import { CAlert, CButton, CInput, CInputGroup, CInputGroupAppend } from '@coreui/react'
-import Fuse from 'fuse.js'
+import { go as fuzzySearch } from 'fuzzysort'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faExclamationTriangle, faQuestionCircle, faTimes } from '@fortawesome/free-solid-svg-icons'
 import { socketEmitPromise, SocketContext, NotifierContext, ModulesContext } from '../util'
@@ -58,23 +58,20 @@ const AddInstancesInner = memo(function AddInstancesInner({ showHelp, configureI
 		[addInstanceInner]
 	)
 
-	const { searchEngine, allProducts } = useMemo(() => {
-		const allProducts = Object.values(modules).flatMap((module) =>
-			module.products.map((product) => ({ product, ...module }))
-		)
-		return {
-			allProducts,
-			searchEngine: new Fuse(allProducts, {
-				threshold: 0.3,
-				keys: ['product', 'name', 'manufacturer', 'keywords'],
-			}),
-		}
+	const allProducts = useMemo(() => {
+		return Object.values(modules).flatMap((module) => module.products.map((product) => ({ product, ...module })))
 	}, [modules])
 
 	let candidates = []
 	try {
 		const candidatesObj = {}
-		const searchResults = filter ? searchEngine.search(filter).map((x) => x.item) : allProducts
+
+		const searchResults = filter
+			? fuzzySearch(filter, allProducts, {
+					keys: ['product', 'name', 'manufacturer', 'keywords'],
+					threshold: -100_000,
+			  }).map((x) => x.obj)
+			: allProducts
 
 		for (const module of searchResults) {
 			candidatesObj[module.name] = (
