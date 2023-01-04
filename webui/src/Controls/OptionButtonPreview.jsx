@@ -2,7 +2,7 @@ import React from 'react'
 import { nanoid } from 'nanoid'
 import { useContext, useMemo } from 'react'
 import { useSharedBankRenderCache } from '../ButtonRenderCache'
-import { BankPreview } from '../Components/BankButton'
+import { ButtonPreview } from '../Components/ButtonPreview'
 import { ButtonRenderCacheContext } from '../util'
 import { ParseControlId } from '@companion/shared/ControlId.js'
 
@@ -13,7 +13,7 @@ import { ParseControlId } from '@companion/shared/ControlId.js'
  * @param {string} param.controlId control where this preview is located (if any)
  * @returns
  */
-export function OptionBankPreview({ controlId }) {
+export function OptionButtonPreview({ controlId }) {
 	const buttonCache = useContext(ButtonRenderCacheContext)
 
 	let page = 0
@@ -28,5 +28,5 @@ export function OptionBankPreview({ controlId }) {
 	const sessionId = useMemo(() => nanoid(), [])
 	const image = useSharedBankRenderCache(buttonCache, sessionId, page, bank)
 
-	return <BankPreview fixedSize noPad preview={image} />
+	return <ButtonPreview fixedSize noPad preview={image} />
 }

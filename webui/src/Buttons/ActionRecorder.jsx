@@ -202,7 +202,7 @@ function RecorderSessionFinishModal({ doClose, sessionId }) {
 							</CNav>
 							<CTabContent fade={false} className="default-scroll">
 								<CTabPane data-tab="buttons">
-									<ButtonPicker selectBank={doSave} />
+									<ButtonPicker selectButton={doSave} />
 								</CTabPane>
 								<CTabPane data-tab="triggers">
 									<CRow>
@@ -225,7 +225,7 @@ function RecorderSessionFinishModal({ doClose, sessionId }) {
 	)
 }
 
-function ButtonPicker({ selectBank }) {
+function ButtonPicker({ selectButton }) {
 	const socket = useContext(SocketContext)
 	const pages = useContext(PagesContext)
 	const pagesRef = useRef()
@@ -268,11 +268,11 @@ function ButtonPicker({ selectBank }) {
 	)
 
 	const replaceActions = useCallback(() => {
-		selectBank(selectedControl, selectedStep, selectedSet, 'replace')
-	}, [selectedControl, selectedStep, selectedSet, selectBank])
+		selectButton(selectedControl, selectedStep, selectedSet, 'replace')
+	}, [selectedControl, selectedStep, selectedSet, selectButton])
 	const appendActions = useCallback(() => {
-		selectBank(selectedControl, selectedStep, selectedSet, 'append')
-	}, [selectedControl, selectedStep, selectedSet, selectBank])
+		selectButton(selectedControl, selectedStep, selectedSet, 'append')
+	}, [selectedControl, selectedStep, selectedSet, selectButton])
 
 	const [controlInfo, setControlInfo] = useState(null)
 	useEffect(() => {
@@ -674,7 +674,7 @@ function RecorderSession({ sessionId, sessionInfo }) {
 	return (
 		<CCol xs={12}>
 			<ActionsList
-				isOnBank={false}
+				isOnControl={false}
 				dragId={'triggerAction'}
 				actions={sessionInfo.actions}
 				readonly={!!sessionInfo.isRunning}

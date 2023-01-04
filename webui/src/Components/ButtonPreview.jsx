@@ -20,7 +20,7 @@ export function dataToButtonImage(data) {
 export const BlackImage = dataToButtonImage(Buffer.alloc(72 * 72 * 3))
 export const RedImage = dataToButtonImage(Buffer.alloc(72 * 72 * 3, Buffer.from([255, 0, 0])))
 
-export const BankPreview = React.memo(function (props) {
+export const ButtonPreview = React.memo(function (props) {
 	const classes = {
 		bank: true,
 		fixed: !!props.fixedSize,

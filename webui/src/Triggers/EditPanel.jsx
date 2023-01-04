@@ -150,7 +150,7 @@ export function EditTriggerPanel({ controlId }) {
 									controlId={controlId}
 									feedbacks={config.condition}
 									booleanOnly={true}
-									isOnBank={false}
+									isOnControl={false}
 								/>
 							</MyErrorBoundary>
 

@@ -19,7 +19,7 @@ import { GenericConfirmModal } from '../Components/GenericConfirmModal'
 import { AddActionsModal } from './AddModal'
 import { usePanelCollapseHelper } from '../Helpers/CollapseHelper'
 import CSwitch from '../CSwitch'
-import { OptionBankPreview } from './OptionBankPreview'
+import { OptionButtonPreview } from './OptionButtonPreview'
 import { MenuPortalContext } from '../Components/DropdownInputField'
 import { ParseControlId } from '@companion/shared/ControlId'
 
@@ -135,7 +135,7 @@ export function ControlActionSetEditor({ controlId, stepId, setId, actions, addP
 			</h4>
 			<GenericConfirmModal ref={confirmModal} />
 			<ActionsList
-				isOnBank={true}
+				isOnControl={true}
 				controlId={controlId}
 				dragId={`${controlId}_actions`}
 				stepId={stepId}
@@ -208,7 +208,7 @@ export function AddActionsPanel({ addPlaceholder, addAction }) {
 }
 
 export function ActionsList({
-	isOnBank,
+	isOnControl,
 	controlId,
 	dragId,
 	stepId,
@@ -246,7 +246,7 @@ export function ActionsList({
 					<MyErrorBoundary key={a?.id ?? i}>
 						<ActionTableRow
 							key={a?.id ?? i}
-							isOnBank={isOnBank}
+							isOnControl={isOnControl}
 							action={a}
 							index={i}
 							stepId={stepId}
@@ -304,7 +304,7 @@ function ActionTableRow({
 	action,
 	stepId,
 	setId,
-	isOnBank,
+	isOnControl,
 	index,
 	dragId,
 	controlId,
@@ -490,7 +490,7 @@ function ActionTableRow({
 
 							{previewControlId && (
 								<div className="cell-bank-preview">
-									<OptionBankPreview controlId={previewControlId} />
+									<OptionButtonPreview controlId={previewControlId} />
 								</div>
 							)}
 
@@ -532,7 +532,7 @@ function ActionTableRow({
 										<MyErrorBoundary key={i}>
 											<OptionsInputField
 												key={i}
-												isOnBank={isOnBank}
+												isOnControl={isOnControl}
 												isAction={true}
 												instanceId={action.instance}
 												option={opt}
