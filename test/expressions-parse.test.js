@@ -288,4 +288,121 @@ describe('parser', () => {
 			})
 		})
 	})
+
+	describe('template', () => {
+		it('handle template', () => {
+			const result = ParseExpression('`val: ${1 + 2}dB`')
+			expect(result).toEqual({
+				type: 'TemplateLiteral',
+				expressions: [
+					{
+						type: 'BinaryExpression',
+						operator: '+',
+						left: {
+							type: 'Literal',
+							raw: '1',
+							value: 1,
+						},
+						right: {
+							type: 'Literal',
+							raw: '2',
+							value: 2,
+						},
+					},
+				],
+				quasis: [
+					{
+						type: 'TemplateElement',
+						tail: false,
+						value: {
+							cooked: 'val: ',
+							raw: 'val: ',
+						},
+					},
+					{
+						type: 'TemplateElement',
+						tail: true,
+						value: {
+							cooked: 'dB',
+							raw: 'dB',
+						},
+					},
+				],
+			})
+		})
+
+		it('handle complex templates', () => {
+			const result = ParseExpression('`val: ${1 + 2}dB or ${$(some:var)} and ${$(another:var)}` + 1')
+			expect(result).toEqual({
+				type: 'BinaryExpression',
+				operator: '+',
+				left: {
+					type: 'TemplateLiteral',
+					expressions: [
+						{
+							type: 'BinaryExpression',
+							operator: '+',
+							left: {
+								type: 'Literal',
+								raw: '1',
+								value: 1,
+							},
+							right: {
+								type: 'Literal',
+								raw: '2',
+								value: 2,
+							},
+						},
+						{
+							type: 'CompanionVariable',
+							name: 'some:var',
+						},
+						{
+							type: 'CompanionVariable',
+							name: 'another:var',
+						},
+					],
+					quasis: [
+						{
+							type: 'TemplateElement',
+							tail: false,
+							value: {
+								cooked: 'val: ',
+								raw: 'val: ',
+							},
+						},
+						{
+							type: 'TemplateElement',
+							tail: false,
+							value: {
+								cooked: 'dB or ',
+								raw: 'dB or ',
+							},
+						},
+						{
+							tail: false,
+							type: 'TemplateElement',
+							value: {
+								cooked: ' and ',
+								raw: ' and ',
+							},
+						},
+						{
+							type: 'TemplateElement',
+							tail: true,
+							value: {
+								cooked: '',
+								raw: '',
+							},
+						},
+					],
+				},
+				right: {
+					type: 'Literal',
+					raw: '1',
+					value: 1,
+				},
+			})
+		})
+	})
 })

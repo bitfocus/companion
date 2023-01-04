@@ -171,4 +171,34 @@ describe('resolver', function () {
 			expect(result).toBe(4)
 		})
 	})
+
+	describe('templates', function () {
+		it('handle template', () => {
+			const result = resolve(parse('`val: ${1 + 2}dB`'))
+			expect(result).toBe('val: 3dB')
+		})
+
+		it('handle template at start', () => {
+			const result = resolve(parse('`${1 + 2}dB`'))
+			expect(result).toBe('3dB')
+		})
+
+		it('handle template at end', () => {
+			const result = resolve(parse('`val: ${1 + 2}`'))
+			expect(result).toBe('val: 3')
+		})
+
+		it('handle complex templates', () => {
+			const getVariable = (id) => {
+				switch (id) {
+					case 'some:var':
+						return 'var1'
+					case 'another:var':
+						return 99
+				}
+			}
+			const result = resolve(parse('`val: ${1 + 2}dB or ${$(some:var)} and ${$(another:var)}` + 1'), getVariable)
+			expect(result).toBe('val: 3dB or var1 and 991')
+		})
+	})
 })
