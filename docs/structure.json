@@ -159,48 +159,41 @@
 				"file": "4_secondary_admin_controls/presets.md"
 			},
 			{
-				"label": "Dynamic variables",
+				"label": "Module variables",
 				"file": "4_secondary_admin_controls/dynamic_variables.md"
 			},
 			{
 				"label": "Custom variables",
-				"file": "4_secondary_admin_controls/custom_variables/custom_variables.md",
+				"file": "4_secondary_admin_controls/custom_variables.md"
+				
+			},
+			{
+				"label": "Expressions",
+				"file": "4_secondary_admin_controls/expressions/expressions.md",
 				"children": [
 					{
-						"label": "Custom variable usage",
-						"file": "4_secondary_admin_controls/custom_variables/custom_variable_usage.md"
-					},
-					{
-						"label": "Setting custom variable value",
-						"file": "4_secondary_admin_controls/custom_variables/setting_custom_variable_value.md"
-					},
-					{
-						"label": "Setting custom variable value to another variable",
-						"file": "4_secondary_admin_controls/custom_variables/setting_custom_variable_value_to_variable.md"
-					},
-					{
-						"label": "Setting Custom Variable Value to an Expression",
-						"file": "4_secondary_admin_controls/custom_variables/setting_custom_variable_value_to_expression.md"
-					},
-					{
 						"label": "Valid Expressions",
-						"file": "4_secondary_admin_controls/custom_variables/valid_expressions.md"
+						"file": "4_secondary_admin_controls/expressions/valid_expressions.md"
 					},
 					{
 						"label": "Number Literals",
-						"file": "4_secondary_admin_controls/custom_variables/number_literals.md"
+						"file": "4_secondary_admin_controls/expressions/number_literals.md"
 					},
 					{
 						"label": "Dynamic and Custom Variables",
-						"file": "4_secondary_admin_controls/custom_variables/dynamic_and_custom_variables.md"
+						"file": "4_secondary_admin_controls/expressions/dynamic_and_custom_variables.md"
 					},
 					{
 						"label": "Operators",
-						"file": "4_secondary_admin_controls/custom_variables/operators.md"
+						"file": "4_secondary_admin_controls/expressions/operators.md"
+					},
+					{
+						"label": "Functions",
+						"file": "4_secondary_admin_controls/expressions/functions.md"
 					},
 					{
 						"label": "Invalid Expressions",
-						"file": "4_secondary_admin_controls/custom_variables/invalid_expressions.md"
+						"file": "4_secondary_admin_controls/expressions/invalid_expressions.md"
 					}
 				]
 			}
