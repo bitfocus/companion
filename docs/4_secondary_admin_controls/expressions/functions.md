@@ -50,6 +50,23 @@ Finds the smallest of the provided values.
 
 Trims any whitespace at the beginning and end of the string.
 
+**strlen(val)**
+
+Find the length of the given string.
+
+**substr(val, indexStart, indexEnd)**
+
+substr() extracts characters from indexStart up to but not including indexEnd.
+
+* If indexStart >= str.length, an empty string is returned.
+* If indexStart < 0, the index is counted from the end of the string. More formally, in this case, the substring starts at max(indexStart + str.length, 0).
+* If indexStart is omitted, undefined, or cannot be converted to a number, it's treated as 0.
+* If indexEnd is omitted, undefined, or cannot be converted to a number, or if indexEnd >= str.length, substr() extracts to the end of the string.
+* If indexEnd < 0, the index is counted from the end of the string.
+* If indexEnd <= indexStart after normalizing negative values, an empty string is returned.
+
+Tip: If you don't want the behaviour of negative numbers, you can use `max(0, index)` to limit the value to never be below 0.
+
 ##### Bool operations
 
 **bool(val)**
