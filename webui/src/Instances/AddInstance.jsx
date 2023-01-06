@@ -1,5 +1,6 @@
-import React, { memo, useContext, useState } from 'react'
+import React, { memo, useContext, useMemo, useState } from 'react'
 import { CAlert, CButton, CInput, CInputGroup, CInputGroupAppend } from '@coreui/react'
+import { go as fuzzySearch } from 'fuzzysort'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faExclamationTriangle, faQuestionCircle, faTimes } from '@fortawesome/free-solid-svg-icons'
 import { socketEmitPromise, SocketContext, NotifierContext, ModulesContext } from '../util'
@@ -57,43 +58,45 @@ const AddInstancesInner = memo(function AddInstancesInner({ showHelp, configureI
 		[addInstanceInner]
 	)
 
+	const allProducts = useMemo(() => {
+		return Object.values(modules).flatMap((module) => module.products.map((product) => ({ product, ...module })))
+	}, [modules])
+
 	let candidates = []
 	try {
-		const regexp = new RegExp(filter, 'i')
-
 		const candidatesObj = {}
-		for (const [id, module] of Object.entries(modules)) {
-			const products = new Set(module.products)
-			for (const subprod of products) {
-				const name = `${module.manufacturer} ${subprod}`
-				const keywords = module.keywords || []
 
-				if (name.replace(';', ' ').match(regexp) || keywords.find((kw) => kw.match(regexp))) {
-					candidatesObj[name] = (
-						<div key={name + id}>
-							<CButton color="primary" onClick={() => addInstance(id, subprod, module)}>
-								Add
-							</CButton>
+		const searchResults = filter
+			? fuzzySearch(filter, allProducts, {
+					keys: ['product', 'name', 'manufacturer', 'keywords'],
+					threshold: -100_000,
+			  }).map((x) => x.obj)
+			: allProducts
+
+		for (const module of searchResults) {
+			candidatesObj[module.name] = (
+				<div key={module.name + module.id}>
+					<CButton color="primary" onClick={() => addInstance(module.id, module.product, module)}>
+						Add
+					</CButton>
+					&nbsp;
+					{module.isLegacy && (
+						<>
+							<FontAwesomeIcon
+								icon={faExclamationTriangle}
+								title="This module has not been updated for Companion 3.0, and may be broken as a result"
+							/>
 							&nbsp;
-							{module.isLegacy && (
-								<>
-									<FontAwesomeIcon
-										icon={faExclamationTriangle}
-										title="This module has not been updated for Companion 3.0, and may be broken as a result"
-									/>
-									&nbsp;
-								</>
-							)}
-							{name}
-							{module.hasHelp && (
-								<div className="float_right" onClick={() => showHelp(id)}>
-									<FontAwesomeIcon icon={faQuestionCircle} />
-								</div>
-							)}
+						</>
+					)}
+					{module.name}
+					{module.hasHelp && (
+						<div className="float_right" onClick={() => showHelp(module.id)}>
+							<FontAwesomeIcon icon={faQuestionCircle} />
 						</div>
-					)
-				}
-			}
+					)}
+				</div>
+			)
 		}
 
 		candidates = Object.entries(candidatesObj)
