@@ -4,7 +4,7 @@ import { socketEmitPromise, SocketContext } from '../util'
 import { AlignmentInputField, ColorInputField, DropdownInputField, PNGInputField, TextInputField } from '../Components'
 import { FONT_SIZES } from '../Constants'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faDollarSign, faFont, faTrash } from '@fortawesome/free-solid-svg-icons'
+import { faDollarSign, faFont, faQuestionCircle, faTrash } from '@fortawesome/free-solid-svg-icons'
 
 export function ButtonStyleConfig({ controlId, controlType, style, configRef }) {
 	const socket = useContext(SocketContext)
@@ -124,7 +124,19 @@ export function ButtonStyleConfigFields({ values, setValueInner, setPng, setPngE
 				'text',
 				{ sm: 6 },
 				<>
-					<label>{values.textExpression ? 'Button text expression' : 'Button text string'}</label>
+					<label>
+						{values.textExpression ? (
+							<>
+								Button text expression&nbsp;
+								<FontAwesomeIcon
+									icon={faQuestionCircle}
+									title="You can read more about expressions in the Getting Started pages"
+								/>
+							</>
+						) : (
+							'Button text string'
+						)}
+					</label>
 					<CInputGroup>
 						<TextInputField tooltip={'Button text'} setValue={setTextValue} value={values.text} useVariables />
 						<CInputGroupAppend>
