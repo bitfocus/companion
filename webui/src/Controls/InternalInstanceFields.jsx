@@ -177,7 +177,16 @@ function InternalVariableDropdown({ value, setValue, disabled }) {
 		return choices
 	}, [context])
 
-	return <DropdownInputField disabled={disabled} value={value} choices={choices} multiple={false} setValue={setValue} />
+	return (
+		<DropdownInputField
+			disabled={disabled}
+			value={value}
+			choices={choices}
+			multiple={false}
+			setValue={setValue}
+			allowCustom /* Allow specifying a variable which doesnt currently exist, perhaps as something is offline */
+		/>
+	)
 }
 
 function InternalSurfaceBySerialDropdown({ isOnControl, value, setValue, disabled, includeSelf }) {
