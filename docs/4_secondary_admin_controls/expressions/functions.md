@@ -16,6 +16,13 @@ Rounds down a number to a whole number.
 
 Rounds up a number to a whole number.
 
+**abs(val)**
+
+Get the absolute value of a number.  
+If the value is negative, the positive will be returned.
+
+eg `abs(-4)` and `abs(4)` both give `4`
+
 **fromRadix(val)**
 
 Converts a string from the specified radix to an int.
@@ -44,6 +51,18 @@ Finds the largest of the provided values.
 
 Finds the smallest of the provided values.
 
+**unixNow()**
+
+Get the current unix time in milliseconds.
+
+**timestampToSeconds(timestamp)**
+
+Convert a timestamp of format 'HH:MM:SS' into the number of seconds it represents.
+
+eg `00:10:15` gives 615
+
+You can do the reverse of this with `secondsToTimestamp(str)`
+
 ##### String operations
 
 **trim(val)**
@@ -66,6 +85,12 @@ substr() extracts characters from indexStart up to but not including indexEnd.
 * If indexEnd <= indexStart after normalizing negative values, an empty string is returned.
 
 Tip: If you don't want the behaviour of negative numbers, you can use `max(0, index)` to limit the value to never be below 0.
+
+**secondsToTimestamp(seconds)**
+
+Convert a number of seconds into a timestamp of format 'HH:MM:SS'.
+
+Note: If the value is less than 0, it will report 0. There is no limit to the number of hours shown, it will display values greater than 24.
 
 ##### Bool operations
 
