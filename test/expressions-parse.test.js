@@ -250,6 +250,52 @@ describe('parser', () => {
 				variableIds: ['internal:a', 'internal:b', 'internal:c'],
 			})
 		})
+
+		it('boolean expression', () => {
+			const result = ParseExpression2('true || !$(internal:b)')
+			expect(result).toEqual({
+				expr: {
+					type: 'BinaryExpression',
+					operator: '||',
+					left: {
+						type: 'Literal',
+						raw: 'true',
+						value: true,
+					},
+					right: {
+						type: 'UnaryExpression',
+						prefix: true,
+						operator: '!',
+						argument: {
+							name: 'internal:b',
+							type: 'CompanionVariable',
+						},
+					},
+				},
+				variableIds: ['internal:b'],
+			})
+		})
+
+		it('boolean expression2', () => {
+			const result = ParseExpression2('1 == true')
+			expect(result).toEqual({
+				expr: {
+					type: 'BinaryExpression',
+					operator: '==',
+					left: {
+						type: 'Literal',
+						raw: '1',
+						value: 1,
+					},
+					right: {
+						type: 'Literal',
+						raw: 'true',
+						value: true,
+					},
+				},
+				variableIds: [],
+			})
+		})
 	})
 
 	describe('syntax errors', () => {
@@ -446,6 +492,32 @@ describe('parser', () => {
 					},
 				},
 				variableIds: ['some:var', 'another:var'],
+			})
+		})
+	})
+
+	describe('variable parsing', () => {
+		it('unclosed identifier', () => {
+			expect(() => ParseExpression2('21 == $(')).toThrow('Expected )')
+		})
+		it('no name', () => {
+			const res = ParseExpression2('21 == $()')
+
+			expect(res).toEqual({
+				expr: {
+					type: 'BinaryExpression',
+					operator: '==',
+					left: {
+						type: 'Literal',
+						raw: '21',
+						value: 21,
+					},
+					right: {
+						type: 'CompanionVariable',
+						name: '',
+					},
+				},
+				variableIds: [''],
 			})
 		})
 	})
