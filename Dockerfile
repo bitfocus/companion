@@ -40,6 +40,7 @@ COPY --from=companion-builder /app/	/app/
 RUN apt update && apt install -y \
     curl \
     iputils-ping \
+    libasound2 \
     && rm -rf /var/lib/apt/lists/*
 
 # Create config directory and set correct permissions
