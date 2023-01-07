@@ -14,7 +14,7 @@
 
 **Bleeding edge builds**
 
-- https://builds.bitfocus.io/companion/
+- https://user.bitfocus.io/download
 
 For checking known bugs or reporting of potential bugs, please use the [issue system](https://github.com/bitfocus/companion/issues) on GitHub
 
@@ -24,7 +24,7 @@ For checking known bugs or reporting of potential bugs, please use the [issue sy
 
 ## Modules (Supported devices/software)
 
-- https://bitfocus.io/support (200+!)
+- https://bitfocus.io/connections (200+!)
 
 ## Contributors
 

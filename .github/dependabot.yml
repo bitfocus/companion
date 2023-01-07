@@ -1,0 +1,23 @@
+version: 2
+updates:
+  - package-ecosystem: 'npm'
+    directory: '/'
+    target-branch: 'beta'
+    schedule:
+      interval: 'daily'
+    # Labels on pull requests for security and version updates
+    labels:
+      - 'type/dependencies'
+    # Disable version updates for npm dependencies (we only want security updates)
+    open-pull-requests-limit: 0
+
+  - package-ecosystem: 'npm'
+    directory: '/webui'
+    target-branch: 'beta'
+    schedule:
+      interval: 'daily'
+    # Labels on pull requests for security and version updates
+    labels:
+      - 'type/dependencies'
+    # Disable version updates for npm dependencies (we only want security updates)
+    open-pull-requests-limit: 0
