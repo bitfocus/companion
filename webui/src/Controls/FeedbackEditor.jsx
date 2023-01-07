@@ -494,7 +494,8 @@ function FeedbackManageStyles({ feedbackSpec, feedback, setSelectedStyleProps })
 			{ id: 'color', label: 'Color' },
 			{ id: 'bgcolor', label: 'Background' },
 		]
-		const currentValue = Object.keys(feedback.style || {})
+		const choicesSet = new Set(choices.map((c) => c.id))
+		const currentValue = Object.keys(feedback.style || {}).filter((id) => choicesSet.has(id))
 
 		return (
 			<div className="cell-styles-manage">

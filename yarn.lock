@@ -349,11 +349,6 @@
     node-hid "^2.1.1"
     tslib "^2.4.0"
 
-"@estilles/expression-parser@^1.0.0":
-  version "1.0.0"
-  resolved "https://registry.yarnpkg.com/@estilles/expression-parser/-/expression-parser-1.0.0.tgz#227a182309051f4e371e1b5c652351b84213eddc"
-  integrity sha512-Pidcwrp+YgjWjzXtt2IacpBkBcWCtMMcc21Jic/taXaPOX7efdcdYR5w65K7DWyOGyFXzaQAfvwEqBvDbyM9+w==
-
 "@istanbuljs/load-nyc-config@^1.0.0":
   version "1.1.0"
   resolved "https://registry.yarnpkg.com/@istanbuljs/load-nyc-config/-/load-nyc-config-1.1.0.tgz#fd3db1d59ecf7cf121e80650bb86712f9b55eced"
@@ -609,6 +604,16 @@
   dependencies:
     "@jridgewell/resolve-uri" "3.1.0"
     "@jridgewell/sourcemap-codec" "1.4.14"
+
+"@jsep-plugin/numbers@^1.0.1":
+  version "1.0.1"
+  resolved "https://registry.yarnpkg.com/@jsep-plugin/numbers/-/numbers-1.0.1.tgz#6ad5406cd3b42fa4f657e5ab13994cf2f8b09fab"
+  integrity sha512-SdZgumrnEKcKSr1IA+yHY9RXwnGFO8BBh3hXHKxJUIodEsl1tFrKtapHGKtbi2jSX9RIig9sfumNJfI1/MYHng==
+
+"@jsep-plugin/template@^1.0.2":
+  version "1.0.2"
+  resolved "https://registry.yarnpkg.com/@jsep-plugin/template/-/template-1.0.2.tgz#9d5fcb0b1a0d62e938fb83ecd0fda19524617cfa"
+  integrity sha512-fGIPHL4W/YZ3YShDByfWlLEIMCLRUTZDUDii4Xat4sJ+DTYeS21RWrZkvbprICyiwmO/fRY7xdHZh7K/ng6xLg==
 
 "@julusian/jpeg-turbo@^2.0.0":
   version "2.0.0"
@@ -3519,6 +3524,11 @@ js2xmlparser@^4.0.1:
     strip-json-comments "^3.1.0"
     taffydb "2.6.2"
     underscore "~1.10.2"
+
+jsep@^1.3.8:
+  version "1.3.8"
+  resolved "https://registry.yarnpkg.com/jsep/-/jsep-1.3.8.tgz#facb6eb908d085d71d950bd2b24b757c7b8a46d7"
+  integrity sha512-qofGylTGgYj9gZFsHuyWAN4jr35eJ66qJCK4eKDnldohuUoQFbU3iZn2zjvEbd9wOAhP9Wx5DsAAduTyE1PSWQ==
 
 jsesc@^2.5.1:
   version "2.5.2"
