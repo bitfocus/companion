@@ -1,4 +1,4 @@
-name: Sync modules (develop)
+name: Sync modules (beta)
 on:
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
@@ -10,14 +10,14 @@ env:
   MODULES_BRANCH: main
 
 jobs:
-  sync-develop:
+  sync-beta:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
         with:
           fetch-depth: 0
           submodules: true
-          ref: develop
+          ref: beta
           token: ${{ secrets.SYNC_MODULES_PAT }}
 
       - name: update submodule
