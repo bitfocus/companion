@@ -58,7 +58,9 @@ export function ConnectionDebug() {
 			})
 
 		return () => {
-			socket.emit('connection-debug:unsubscribe')
+			socketEmitPromise(socket, 'connection-debug:unsubscribe').catch((err) => {
+				console.error('Unsubscribe failure', err)
+			})
 			socket.off(`connection-debug:update:${connectionId}`, onNewLines)
 		}
 	}, [socket, connectionId, connectionToken])
