@@ -2395,12 +2395,6 @@ commist@^1.0.0:
   version "1.0.2"
   resolved "https://codeload.github.com/bitfocus/companion-module-gefen-dvimatrix/tar.gz/dd4d006dc5c33c897355acf4f4ee170621abe94d"
 
-"companion-module-generic-artnet@github:bitfocus/companion-module-generic-artnet#v1.2.0":
-  version "1.2.0"
-  resolved "https://codeload.github.com/bitfocus/companion-module-generic-artnet/tar.gz/c86c2ce0e4447a85af4df20c969e7c0484228796"
-  dependencies:
-    artnet-node haakonnessjoen/artnet-node#ee6273d
-
 "companion-module-generic-emberplus@github:bitfocus/companion-module-generic-emberplus#v1.1.6":
   version "1.1.6"
   resolved "https://codeload.github.com/bitfocus/companion-module-generic-emberplus/tar.gz/f120c80ed734f89e7678a16e081f870da1c797a8"
@@ -2422,10 +2416,6 @@ commist@^1.0.0:
   version "1.3.1"
   resolved "https://codeload.github.com/bitfocus/companion-module-generic-pjlink/tar.gz/7825a63e06b559474061fb77e63f6d874ed2274b"
 
-"companion-module-generic-sacn@github:bitfocus/companion-module-generic-sacn#v1.0.2":
-  version "1.0.2"
-  resolved "https://codeload.github.com/bitfocus/companion-module-generic-sacn/tar.gz/9e0244ba7f8291823341beea60112c05329e59ba"
-
 "companion-module-generic-swp08@github:bitfocus/companion-module-generic-swp08#v1.0.5":
   version "1.0.5"
   resolved "https://codeload.github.com/bitfocus/companion-module-generic-swp08/tar.gz/6f8bd9aeea1d8ca50da24fa3d993e4d2ed822f0d"
@@ -2435,10 +2425,6 @@ commist@^1.0.0:
   resolved "https://codeload.github.com/bitfocus/companion-module-generic-tcp-serial/tar.gz/ec0edc779aafae98bfc781ff8b7ee4fa829284ee"
   dependencies:
     serialport "10.4.0"
-
-"companion-module-generic-tcp-udp@github:bitfocus/companion-module-generic-tcp-udp#v1.0.11":
-  version "1.0.11"
-  resolved "https://codeload.github.com/bitfocus/companion-module-generic-tcp-udp/tar.gz/b4f62fa82d0ec6386ff2db68544ad3f409bc31cd"
 
 "companion-module-generic-wakeonlan@github:bitfocus/companion-module-generic-wakeonlan#v1.0.5":
   version "1.0.5"
@@ -3404,10 +3390,6 @@ commist@^1.0.0:
     "@types/lodash" "^4.14.178"
     lodash "^4.17.21"
     urllib "^3.0.4"
-
-"companion-module-videolan-vlc@github:bitfocus/companion-module-videolan-vlc#v1.1.15":
-  version "1.1.15"
-  resolved "https://codeload.github.com/bitfocus/companion-module-videolan-vlc/tar.gz/34e7aef020d521bc5d6094c8e2d6f8c6c7d9b606"
 
 "companion-module-vimeo-livestreamstudio6@github:bitfocus/companion-module-vimeo-livestreamstudio6#v1.0.0":
   version "1.0.0"
