@@ -94,7 +94,7 @@ export function sandbox(serializedFn) {
 				return (() => {
 					"use strict"
 					const fn = ${serializedFn}
-					return fn(config)
+					return fn(arg0, arg1)
 				})()
 			}
 		}
@@ -106,9 +106,9 @@ export function sandbox(serializedFn) {
 		// eslint-disable-next-line no-new-func
 		const scopedFn = new Function('catchAllProxy', src)
 
-		return (config) => {
+		return (arg0, arg1) => {
 			// create a sandboxed/proxy version of the context passed to the function
-			const configProxy = new Proxy({ ...allowList, config }, proxyHandler)
+			const configProxy = new Proxy({ ...allowList, arg0, arg1 }, proxyHandler)
 			const catchAllProxy = new Proxy({ __proto__: null, configProxy }, proxyHandler)
 			// call scoped function with context that only includes config
 			return scopedFn(catchAllProxy)

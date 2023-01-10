@@ -4,9 +4,9 @@ import { CreateBankControlId } from '@companion/shared/ControlId'
 import { CButton, CCol, CContainer, CForm, CFormGroup, CInput, CInputCheckbox, CRow } from '@coreui/react'
 import { nanoid } from 'nanoid'
 import { MAX_COLS, MAX_ROWS } from './Constants'
-import { BankPreview } from './Components/BankButton'
+import { ButtonPreview } from './Components/ButtonPreview'
 import { useInView } from 'react-intersection-observer'
-import * as queryString from 'query-string'
+import queryString from 'query-string'
 import rangeParser from 'parse-numeric-range'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faCog, faExpand } from '@fortawesome/free-solid-svg-icons'
@@ -337,13 +337,13 @@ function ButtonWrapper({ page, index, image, bankClick, setInView }) {
 	}, [setInView, index, inView])
 
 	return (
-		<BankPreview
+		<ButtonPreview
 			dropRef={ref}
 			page={page}
 			index={index}
 			preview={image}
 			onClick={bankClick}
-			alt={`Bank ${index}`}
+			alt={`Button ${index}`}
 			selected={false}
 		/>
 	)

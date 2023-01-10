@@ -200,6 +200,19 @@ export class FakeSystem extends EventEmitter {
 	}
 
 	sendStatus: InstanceSkel<any>['status'] = (level, message) => {
+		if (typeof message === 'string') {
+			// Attempt to tidy up some common statuses
+			const messageSafe = message.trim().toLowerCase()
+			switch (messageSafe) {
+				case 'connecting':
+					this.parent.updateStatus(InstanceStatus.Connecting)
+					return
+				case 'disconnected':
+					this.parent.updateStatus(InstanceStatus.Disconnected)
+					return
+			}
+		}
+
 		switch (level) {
 			case 0:
 				this.parent.updateStatus(InstanceStatus.Ok, message)

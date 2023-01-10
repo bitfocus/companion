@@ -36,6 +36,7 @@ RUN apt update && apt install -y \
     libusb-1.0-0 \
     libudev1 \
     iputils-ping \
+    libasound2 \
     && rm -rf /var/lib/apt/lists/*
 
 # Don't run as root

@@ -10,7 +10,7 @@ import {
 	VariableDefinitionsContext,
 } from '../util'
 
-export function InternalInstanceField(option, isOnBank, readonly, value, setValue) {
+export function InternalInstanceField(option, isOnControl, readonly, value, setValue) {
 	switch (option.type) {
 		case 'internal:instance_id':
 			return (
@@ -27,14 +27,14 @@ export function InternalInstanceField(option, isOnBank, readonly, value, setValu
 			return (
 				<InternalPageDropdown
 					disabled={readonly}
-					isOnBank={isOnBank}
+					isOnControl={isOnControl}
 					includeDirection={option.includeDirection}
 					value={value}
 					setValue={setValue}
 				/>
 			)
 		case 'internal:bank':
-			return <InternalBankDropdown disabled={readonly} isOnBank={isOnBank} value={value} setValue={setValue} />
+			return <InternalButtonDropdown disabled={readonly} isOnControl={isOnControl} value={value} setValue={setValue} />
 		case 'internal:custom_variable':
 			return (
 				<InternalCustomVariableDropdown
@@ -50,7 +50,7 @@ export function InternalInstanceField(option, isOnBank, readonly, value, setValu
 			return (
 				<InternalSurfaceBySerialDropdown
 					disabled={readonly}
-					isOnBank={isOnBank}
+					isOnControl={isOnControl}
 					value={value}
 					setValue={setValue}
 					includeSelf={option.includeSelf}
@@ -86,12 +86,12 @@ function InternalInstanceIdDropdown({ includeAll, value, setValue, disabled, mul
 	)
 }
 
-function InternalPageDropdown({ isOnBank, includeDirection, value, setValue, disabled }) {
+function InternalPageDropdown({ isOnControl, includeDirection, value, setValue, disabled }) {
 	const pages = useContext(PagesContext)
 
 	const choices = useMemo(() => {
 		const choices = []
-		if (isOnBank) {
+		if (isOnControl) {
 			choices.push({ id: 0, label: 'This page' })
 		}
 		if (includeDirection) {
@@ -103,23 +103,23 @@ function InternalPageDropdown({ isOnBank, includeDirection, value, setValue, dis
 			choices.push({ id: i, label: `${i}` + (name ? ` (${name.name || ''})` : '') })
 		}
 		return choices
-	}, [pages, isOnBank, includeDirection])
+	}, [pages, isOnControl, includeDirection])
 
 	return <DropdownInputField disabled={disabled} value={value} choices={choices} multiple={false} setValue={setValue} />
 }
 
-function InternalBankDropdown({ isOnBank, value, setValue, disabled }) {
+function InternalButtonDropdown({ isOnControl, value, setValue, disabled }) {
 	const choices = useMemo(() => {
 		const choices = []
-		if (isOnBank) {
-			choices.push({ id: 0, label: 'This bank' })
+		if (isOnControl) {
+			choices.push({ id: 0, label: 'This button' })
 		}
 
 		for (let i = 1; i <= MAX_BUTTONS; i++) {
 			choices.push({ id: i, label: `${i}` })
 		}
 		return choices
-	}, [isOnBank])
+	}, [isOnControl])
 
 	return <DropdownInputField disabled={disabled} value={value} choices={choices} multiple={false} setValue={setValue} />
 }
@@ -177,15 +177,24 @@ function InternalVariableDropdown({ value, setValue, disabled }) {
 		return choices
 	}, [context])
 
-	return <DropdownInputField disabled={disabled} value={value} choices={choices} multiple={false} setValue={setValue} />
+	return (
+		<DropdownInputField
+			disabled={disabled}
+			value={value}
+			choices={choices}
+			multiple={false}
+			setValue={setValue}
+			allowCustom /* Allow specifying a variable which doesnt currently exist, perhaps as something is offline */
+		/>
+	)
 }
 
-function InternalSurfaceBySerialDropdown({ isOnBank, value, setValue, disabled, includeSelf }) {
+function InternalSurfaceBySerialDropdown({ isOnControl, value, setValue, disabled, includeSelf }) {
 	const context = useContext(SurfacesContext)
 
 	const choices = useMemo(() => {
 		const choices = []
-		if (isOnBank && includeSelf) {
+		if (isOnControl && includeSelf) {
 			choices.push({ id: 'self', label: 'Current surface' })
 		}
 
@@ -203,7 +212,7 @@ function InternalSurfaceBySerialDropdown({ isOnBank, value, setValue, disabled, 
 			})
 		}
 		return choices
-	}, [context, isOnBank, includeSelf])
+	}, [context, isOnControl, includeSelf])
 
 	return <DropdownInputField disabled={disabled} value={value} choices={choices} multiple={false} setValue={setValue} />
 }

@@ -187,6 +187,9 @@ function InstanceCollapse({
 				}
 			}
 
+			// Sort by label
+			res.sort((a, b) => a.label.localeCompare(b.label))
+
 			return res
 		} catch (e) {
 			console.error('Failed to compile candidates list:', e)

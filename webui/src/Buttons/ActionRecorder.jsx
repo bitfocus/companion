@@ -39,6 +39,7 @@ import { cloneDeep } from 'lodash-es'
 import jsonPatch from 'fast-json-patch'
 import { usePanelCollapseHelper } from '../Helpers/CollapseHelper'
 import CSwitch from '../CSwitch'
+import { MenuPortalContext } from '../Components/DropdownInputField'
 
 export function ActionRecorder() {
 	const socket = useContext(SocketContext)
@@ -176,51 +177,55 @@ function RecorderSessionFinishModal({ doClose, sessionId }) {
 		[socket, sessionId, doClose]
 	)
 
+	const [modalRef, setModalRef] = useState(null)
+
 	return (
-		<CModal show={true} onClose={doClose} size="lg">
-			<CForm onSubmit={blockAction} className={'action-recorder-finish-panel'}>
-				<CModalHeader closeButton>
-					<h5>Select destination</h5>
-				</CModalHeader>
-				<CModalBody>
-					<CTabs activeTab="buttons">
-						<CNav variant="tabs">
-							<CNavItem>
-								<CNavLink data-tab="buttons">
-									<FontAwesomeIcon icon={faCalendarAlt} /> Buttons
-								</CNavLink>
-							</CNavItem>
-							<CNavItem>
-								<CNavLink data-tab="triggers">
-									<FontAwesomeIcon icon={faClock} /> Triggers
-								</CNavLink>
-							</CNavItem>
-						</CNav>
-						<CTabContent fade={false} className="default-scroll">
-							<CTabPane data-tab="buttons">
-								<BankPicker selectBank={doSave} />
-							</CTabPane>
-							<CTabPane data-tab="triggers">
-								<CRow>
-									<CCol sm={12}>
-										<TriggerPicker selectControl={doSave} />
-									</CCol>
-								</CRow>
-							</CTabPane>
-						</CTabContent>
-					</CTabs>
-				</CModalBody>
-				<CModalFooter>
-					<CButton color="secondary" onClick={doClose}>
-						Cancel
-					</CButton>
-				</CModalFooter>
-			</CForm>
+		<CModal innerRef={setModalRef} show={true} onClose={doClose} size="lg">
+			<MenuPortalContext.Provider value={modalRef}>
+				<CForm onSubmit={blockAction} className={'action-recorder-finish-panel'}>
+					<CModalHeader closeButton>
+						<h5>Select destination</h5>
+					</CModalHeader>
+					<CModalBody>
+						<CTabs activeTab="buttons">
+							<CNav variant="tabs">
+								<CNavItem>
+									<CNavLink data-tab="buttons">
+										<FontAwesomeIcon icon={faCalendarAlt} /> Buttons
+									</CNavLink>
+								</CNavItem>
+								<CNavItem>
+									<CNavLink data-tab="triggers">
+										<FontAwesomeIcon icon={faClock} /> Triggers
+									</CNavLink>
+								</CNavItem>
+							</CNav>
+							<CTabContent fade={false} className="default-scroll">
+								<CTabPane data-tab="buttons">
+									<ButtonPicker selectButton={doSave} />
+								</CTabPane>
+								<CTabPane data-tab="triggers">
+									<CRow>
+										<CCol sm={12}>
+											<TriggerPicker selectControl={doSave} />
+										</CCol>
+									</CRow>
+								</CTabPane>
+							</CTabContent>
+						</CTabs>
+					</CModalBody>
+					<CModalFooter>
+						<CButton color="secondary" onClick={doClose}>
+							Cancel
+						</CButton>
+					</CModalFooter>
+				</CForm>
+			</MenuPortalContext.Provider>
 		</CModal>
 	)
 }
 
-function BankPicker({ selectBank }) {
+function ButtonPicker({ selectButton }) {
 	const socket = useContext(SocketContext)
 	const pages = useContext(PagesContext)
 	const pagesRef = useRef()
@@ -263,11 +268,11 @@ function BankPicker({ selectBank }) {
 	)
 
 	const replaceActions = useCallback(() => {
-		selectBank(selectedControl, selectedStep, selectedSet, 'replace')
-	}, [selectedControl, selectedStep, selectedSet, selectBank])
+		selectButton(selectedControl, selectedStep, selectedSet, 'replace')
+	}, [selectedControl, selectedStep, selectedSet, selectButton])
 	const appendActions = useCallback(() => {
-		selectBank(selectedControl, selectedStep, selectedSet, 'append')
-	}, [selectedControl, selectedStep, selectedSet, selectBank])
+		selectButton(selectedControl, selectedStep, selectedSet, 'append')
+	}, [selectedControl, selectedStep, selectedSet, selectButton])
 
 	const [controlInfo, setControlInfo] = useState(null)
 	useEffect(() => {
@@ -325,11 +330,11 @@ function BankPicker({ selectBank }) {
 				const sets = [
 					{
 						id: 'down',
-						label: 'Down',
+						label: 'Press',
 					},
 					{
 						id: 'up',
-						label: 'Up',
+						label: 'Release',
 					},
 				]
 
@@ -414,7 +419,7 @@ function BankPicker({ selectBank }) {
 								/>
 							</CCol>
 							<CCol className="fieldtype-checkbox" sm={10} xs={9} hidden={actionSetOptions.length === 0}>
-								<CLabel>Action Set</CLabel>
+								<CLabel>Action Group</CLabel>
 
 								<DropdownInputField
 									choices={actionSetOptions}
@@ -424,7 +429,7 @@ function BankPicker({ selectBank }) {
 									disabled={!controlInfo}
 								/>
 							</CCol>
-							<CCol className="fieldtype-checkbox" sm={10} xs={9}>
+							<CCol className="fieldtype-checkbox py-1" sm={10} xs={9}>
 								<CButtonGroup>
 									<CButton
 										color="primary"
@@ -669,7 +674,7 @@ function RecorderSession({ sessionId, sessionInfo }) {
 	return (
 		<CCol xs={12}>
 			<ActionsList
-				isOnBank={false}
+				isOnControl={false}
 				dragId={'triggerAction'}
 				actions={sessionInfo.actions}
 				readonly={!!sessionInfo.isRunning}

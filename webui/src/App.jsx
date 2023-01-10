@@ -21,7 +21,7 @@ import {
 	faCloud,
 	faGamepad,
 	faPlug,
-	faUserNinja,
+	faCog,
 } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import '@fontsource/fira-code'
@@ -42,6 +42,7 @@ import { CloudPage } from './CloudPage'
 import { WizardModal, WIZARD_CURRENT_VERSION } from './Wizard'
 import { Navigate, useLocation } from 'react-router-dom'
 import { useIdleTimer } from 'react-idle-timer'
+import { UnstableWarningModal } from './UnstableWarning'
 
 const useTouchBackend = window.localStorage.getItem('test_touch_backend') === '1'
 const showCloudTab = window.localStorage.getItem('show_companion_cloud') === '1'
@@ -113,6 +114,7 @@ export default function App() {
 		<ContextData>
 			{(loadingProgress, loadingComplete) => (
 				<>
+					<UnstableWarningModal />
 					<div id="error-container" className={wasConnected ? 'show-error' : ''}>
 						<div className="row justify-content-center">
 							<div className="col-md-6">
@@ -404,7 +406,7 @@ function AppContent({ buttonGridHotPress }) {
 				</CNavItem>
 				<CNavItem>
 					<CNavLink to="/settings">
-						<FontAwesomeIcon icon={faUserNinja} /> Settings
+						<FontAwesomeIcon icon={faCog} /> Settings
 					</CNavLink>
 				</CNavItem>
 				<CNavItem>

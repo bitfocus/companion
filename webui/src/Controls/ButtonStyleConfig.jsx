@@ -1,10 +1,10 @@
-import { CButton, CRow, CCol, CButtonGroup, CForm, CAlert } from '@coreui/react'
+import { CButton, CRow, CCol, CButtonGroup, CForm, CAlert, CInputGroup, CInputGroupAppend } from '@coreui/react'
 import React, { useCallback, useContext, useState } from 'react'
 import { socketEmitPromise, SocketContext } from '../util'
 import { AlignmentInputField, ColorInputField, DropdownInputField, PNGInputField, TextInputField } from '../Components'
 import { FONT_SIZES } from '../Constants'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faTrash } from '@fortawesome/free-solid-svg-icons'
+import { faDollarSign, faFont, faQuestionCircle, faTrash } from '@fortawesome/free-solid-svg-icons'
 
 export function ButtonStyleConfig({ controlId, controlType, style, configRef }) {
 	const socket = useContext(SocketContext)
@@ -70,7 +70,7 @@ export function ButtonStyleConfig({ controlId, controlType, style, configRef }) 
 				</CAlert>
 			)}
 
-			<CForm inline>
+			<CForm>
 				<CRow form className="button-style-form">
 					<ButtonStyleConfigFields
 						values={style}
@@ -113,14 +113,43 @@ export function ButtonStyleConfigFields({ values, setValueInner, setPng, setPngE
 	const setColorValue = useCallback((val) => setValueInner('color', val), [setValueInner])
 	const setBackgroundColorValue = useCallback((val) => setValueInner('bgcolor', val), [setValueInner])
 
+	const toggleExpression = useCallback(
+		() => setValueInner('textExpression', !values.textExpression),
+		[setValueInner, values.textExpression]
+	)
+
 	return (
 		<>
 			{controlTemplate(
 				'text',
 				{ sm: 6 },
 				<>
-					<label>Button text</label>
-					<TextInputField tooltip={'Button text'} setValue={setTextValue} value={values.text} useVariables />
+					<label>
+						{values.textExpression ? (
+							<>
+								Button text expression&nbsp;
+								<FontAwesomeIcon
+									icon={faQuestionCircle}
+									title="You can read more about expressions in the Getting Started pages"
+								/>
+							</>
+						) : (
+							'Button text string'
+						)}
+					</label>
+					<CInputGroup>
+						<TextInputField tooltip={'Button text'} setValue={setTextValue} value={values.text} useVariables />
+						<CInputGroupAppend>
+							<CButton
+								color="info"
+								variant="outline"
+								onClick={toggleExpression}
+								title={values.textExpression ? 'Expression mode ' : 'String mode'}
+							>
+								<FontAwesomeIcon icon={values.textExpression ? faDollarSign : faFont} />
+							</CButton>
+						</CInputGroupAppend>
+					</CInputGroup>
 				</>
 			)}
 

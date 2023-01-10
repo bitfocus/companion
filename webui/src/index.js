@@ -29,6 +29,7 @@ import { GettingStarted } from './GettingStarted'
 import { Tablet } from './Tablet'
 import { Emulator } from './Emulator/Emulator'
 import { EmulatorList } from './Emulator/List'
+import { ConnectionDebug } from './ConnectionDebug'
 
 // i18n
 // 	.use(Backend)
@@ -42,22 +43,6 @@ import { EmulatorList } from './Emulator/List'
 // 			escapeValue: false,
 // 		},
 // 	})
-
-// function RedirectPreserveQuery(from, to) {
-// 	return (
-// 		<Route
-// 			path={from}
-// 			component={({ location }) => (
-// 				<Redirect
-// 					to={{
-// 						...location,
-// 						pathname: location.pathname.replace(from, to),
-// 					}}
-// 				/>
-// 			)}
-// 		/>
-// 	)
-// }
 
 const socket = new io(SERVER_URL)
 if (window.location.hash && window.location.hash.includes('debug_socket')) {
@@ -73,6 +58,8 @@ ReactDOM.render(
 				<Routes>
 					<Route path="/help.html" element={<Navigate to="/getting-started" replace />} />
 					<Route path="/getting-started" element={<GettingStarted />} />
+
+					<Route path="/connection-debug/:id" element={<ConnectionDebug />} />
 
 					<Route path="/emulator/:id" element={<Emulator />} />
 					<Route path="/emulators" element={<EmulatorList />} />

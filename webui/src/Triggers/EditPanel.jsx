@@ -82,14 +82,7 @@ export function EditTriggerPanel({ controlId }) {
 	const doRetryLoad = useCallback(() => setReloadConfigToken(nanoid()), [])
 
 	const hotPressDown = useCallback(() => {
-		socketEmitPromise(socket, 'controls:hot-press', [controlId, true, 'edit']).catch((e) =>
-			console.error(`Hot press failed: ${e}`)
-		)
-	}, [socket, controlId])
-	const hotPressUp = useCallback(() => {
-		socketEmitPromise(socket, 'controls:hot-press', [controlId, false, 'edit']).catch((e) =>
-			console.error(`Hot press failed: ${e}`)
-		)
+		socketEmitPromise(socket, 'triggers:test', [controlId]).catch((e) => console.error(`Hot press failed: ${e}`))
 	}, [socket, controlId])
 
 	const errors = []
@@ -106,12 +99,7 @@ export function EditTriggerPanel({ controlId }) {
 			{config ? (
 				<div style={{ display: dataReady ? '' : 'none' }}>
 					<MyErrorBoundary>
-						<TriggerConfig
-							options={config.options}
-							controlId={controlId}
-							hotPressDown={hotPressDown}
-							hotPressUp={hotPressUp}
-						/>
+						<TriggerConfig options={config.options} controlId={controlId} hotPressDown={hotPressDown} />
 
 						<ControlOptionsEditor
 							controlType={config.type}
@@ -150,7 +138,7 @@ export function EditTriggerPanel({ controlId }) {
 									controlId={controlId}
 									feedbacks={config.condition}
 									booleanOnly={true}
-									isOnBank={false}
+									isOnControl={false}
 								/>
 							</MyErrorBoundary>
 
@@ -180,7 +168,7 @@ export function EditTriggerPanel({ controlId }) {
 	)
 }
 
-function TriggerConfig({ controlId, options, hotPressDown, hotPressUp }) {
+function TriggerConfig({ controlId, options, hotPressDown }) {
 	const socket = useContext(SocketContext)
 
 	const setValueInner = useCallback(
@@ -205,7 +193,7 @@ function TriggerConfig({ controlId, options, hotPressDown, hotPressUp }) {
 							<CInputGroup>
 								<TextInputField setValue={setName} value={options.name} />
 								<CInputGroupAppend>
-									<CButton color="warning" hidden={!options} onMouseDown={hotPressDown} onMouseUp={hotPressUp}>
+									<CButton color="warning" hidden={!options} onMouseDown={hotPressDown}>
 										Test actions
 									</CButton>
 								</CInputGroupAppend>

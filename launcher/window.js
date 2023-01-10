@@ -20,12 +20,17 @@ document.getElementById('dev_modules_path_clear').addEventListener('click', () =
 	api.send('clear-developer-modules-path')
 })
 
-api.receive('info', function (config, info) {
+api.receive('info', function (config, info, platform) {
+	if (platform !== 'win32' && platform !== 'darwin') {
+		document.getElementById('run_at_login_group').remove()
+	}
+
 	document.getElementById('status').innerHTML = info.appStatus
 	document.getElementById('url').innerHTML = info.appURL
 	document.getElementById('model').innerHTML = `Companion v${info.appVersion}`
 
 	document.getElementById('start_minimized').checked = config.start_minimised
+	document.getElementById('run_at_login').checked = config.run_at_login
 	document.getElementById('http_port').value = config.http_port
 
 	document.getElementById('developer_settings_panel').style.display = config.enable_developer ? 'block' : 'none'
@@ -41,6 +46,11 @@ document.getElementById('http_port_button').addEventListener('click', function (
 document.getElementById('start_minimized').addEventListener('click', function () {
 	var e = document.getElementById('start_minimized')
 	api.send('launcher-set-start-minimised', e.checked)
+})
+
+document.getElementById('run_at_login').addEventListener('click', function () {
+	var e = document.getElementById('run_at_login')
+	api.send('launcher-set-run-at-login', e.checked)
 })
 
 api.receive('network-interfaces:get', function (interfaces) {

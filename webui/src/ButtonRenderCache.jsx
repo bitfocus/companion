@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { EventEmitter } from 'events'
-import { dataToButtonImage } from './Components/BankButton'
+import { dataToButtonImage } from './Components/ButtonPreview'
 import { MAX_BUTTONS } from './Constants'
 import { socketEmitPromise } from './util'
 import { CreateBankControlId } from '@companion/shared/ControlId'

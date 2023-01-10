@@ -322,7 +322,7 @@ function EventEditor({
 								<MyErrorBoundary key={i}>
 									<OptionsInputField
 										key={i}
-										isOnBank={false}
+										isOnControl={false}
 										instanceId={'internal'}
 										option={opt}
 										actionId={event.id}

@@ -63,7 +63,7 @@ export function GettingStarted() {
 
 	useEffect(() => {
 		setTimeout(() => {
-			if (contentWrapperRef) {
+			if (contentWrapperRef.current) {
 				// scroll to hash
 				const el = contentWrapperRef.current.querySelector(`[anchor="${hash}"]`)
 				if (el) {

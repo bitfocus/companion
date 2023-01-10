@@ -16,3 +16,4 @@ module-legacy/dist
 module-legacy/entrypoints
 
 module-local-dev
+bundled-modules

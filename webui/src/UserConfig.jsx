@@ -732,6 +732,21 @@ function UserConfigTable() {
 					</td>
 				</tr>
 				<tr>
+					<td>Unstable Startup warning</td>
+					<td>
+						<div className="form-check form-check-inline mr-1">
+							<CInputCheckbox
+								checked={window.localStorage.getItem('dismiss_3.0_unstable_warning') === '1'}
+								onChange={(e) => {
+									window.localStorage.setItem('dismiss_3.0_unstable_warning', e.currentTarget.checked ? '1' : '0')
+									window.location.reload()
+								}}
+							/>
+							<label className="form-check-label">Disabled</label>
+						</div>
+					</td>
+				</tr>
+				<tr>
 					<td>Use TouchBackend for Drag and Drop</td>
 					<td>
 						<div className="form-check form-check-inline mr-1">
@@ -812,34 +827,34 @@ function RemoteControlInfo() {
 									<i>Page down on a specific surface</i>
 								</li>
 								<li>
-									<code>BANK-PRESS</code> &lt;page&gt; &lt;bank&gt;
+									<code>BANK-PRESS</code> &lt;page&gt; &lt;button&gt;
 									<br />
 									<i>Press and release a button (run both down and up actions)</i>
 								</li>
 								<li>
-									<code>BANK-DOWN</code> &lt;page&gt; &lt;bank&gt;
+									<code>BANK-DOWN</code> &lt;page&gt; &lt;button&gt;
 									<br />
 									<i>Press the button (run down actions)</i>
 								</li>
 								<li>
-									<code>BANK-UP</code> &lt;page&gt; &lt;bank&gt;
+									<code>BANK-UP</code> &lt;page&gt; &lt;button&gt;
 									<br />
 									<i>Release the button (run up actions)</i>
 								</li>
 								<li>
-									<code>STYLE BANK</code> &lt;page&gt; &lt;bank&gt;<code> TEXT </code>
+									<code>STYLE BANK</code> &lt;page&gt; &lt;button&gt;<code> TEXT </code>
 									&lt;text&gt;
 									<br />
 									<i>Change text on a button</i>
 								</li>
 								<li>
-									<code>STYLE BANK</code> &lt;page&gt; &lt;bank&gt;
+									<code>STYLE BANK</code> &lt;page&gt; &lt;button&gt;
 									<code> COLOR </code>&lt;color HEX&gt;
 									<br />
 									<i>Change text color on a button (#000000)</i>
 								</li>
 								<li>
-									<code>STYLE BANK</code> &lt;page&gt; &lt;bank&gt;
+									<code>STYLE BANK</code> &lt;page&gt; &lt;button&gt;
 									<code> BGCOLOR </code>&lt;color HEX&gt;
 									<br />
 									<i>Change background color on a button (#000000)</i>
@@ -888,30 +903,30 @@ function RemoteControlInfo() {
 								<strong>Commands:</strong>
 								<ul>
 									<li>
-										<code>/press/bank/</code>&lt;page&gt;<code>/</code>&lt;bank&gt;
+										<code>/press/bank/</code>&lt;page&gt;<code>/</code>&lt;button&gt;
 										<br />
 										<i>Press and release a button (run both down and up actions)</i>
 									</li>
 									<li>
-										<code>/style/bank/</code>&lt;page&gt;<code>/</code>&lt;bank&gt;
+										<code>/style/bank/</code>&lt;page&gt;<code>/</code>&lt;button&gt;
 										<code>?bgcolor=</code>&lt;bgcolor HEX&gt;
 										<br />
 										<i>Change background color of button</i>
 									</li>
 									<li>
-										<code>/style/bank/</code>&lt;page&gt;<code>/</code>&lt;bank&gt;
+										<code>/style/bank/</code>&lt;page&gt;<code>/</code>&lt;button&gt;
 										<code>?color=</code>&lt;color HEX&gt;
 										<br />
 										<i>Change color of text on button</i>
 									</li>
 									<li>
-										<code>/style/bank/</code>&lt;page&gt;<code>/</code>&lt;bank&gt;
+										<code>/style/bank/</code>&lt;page&gt;<code>/</code>&lt;button&gt;
 										<code>?text=</code>&lt;text&gt;
 										<br />
 										<i>Change text on a button</i>
 									</li>
 									<li>
-										<code>/style/bank/</code>&lt;page&gt;<code>/</code>&lt;bank&gt;
+										<code>/style/bank/</code>&lt;page&gt;<code>/</code>&lt;button&gt;
 										<code>?size=</code>&lt;text size&gt;
 										<br />
 										<i>Change text size on a button (between the predefined values)</i>
@@ -975,34 +990,34 @@ function RemoteControlInfo() {
 							</p>
 							<ul>
 								<li>
-									<code>/press/bank/</code>&lt;page&gt;<code>/</code>&lt;bank&gt;
+									<code>/press/bank/</code>&lt;page&gt;<code>/</code>&lt;button&gt;
 									<br />
 									<i>Press and release a button (run both down and up actions)</i>
 								</li>
 								<li>
-									<code>/press/bank/</code>&lt;page&gt;<code>/</code>&lt;bank&gt; &lt;1&gt;
+									<code>/press/bank/</code>&lt;page&gt;<code>/</code>&lt;button&gt; &lt;1&gt;
 									<br />
 									<i>Press the button (run down actions and hold)</i>
 								</li>
 								<li>
-									<code>/press/bank/</code>&lt;page&gt;<code>/</code>&lt;bank&gt; &lt;0&gt;
+									<code>/press/bank/</code>&lt;page&gt;<code>/</code>&lt;button&gt; &lt;0&gt;
 									<br />
 									<i>Release the button (run up actions)</i>
 								</li>
 								<li>
-									<code>/style/bgcolor/</code>&lt;page&gt;<code>/</code>&lt;bank&gt; &lt;red 0-255&gt; &lt;green
+									<code>/style/bgcolor/</code>&lt;page&gt;<code>/</code>&lt;button&gt; &lt;red 0-255&gt; &lt;green
 									0-255&gt; &lt;blue 0-255&gt;
 									<br />
 									<i>Change background color of button</i>
 								</li>
 								<li>
-									<code>/style/color/</code>&lt;page&gt;<code>/</code>&lt;bank&gt; &lt;red 0-255&gt; &lt;green 0-255&gt;
-									&lt;blue 0-255&gt;
+									<code>/style/color/</code>&lt;page&gt;<code>/</code>&lt;button&gt; &lt;red 0-255&gt; &lt;green
+									0-255&gt; &lt;blue 0-255&gt;
 									<br />
 									<i>Change color of text on button</i>
 								</li>
 								<li>
-									<code>/style/text/</code>&lt;page&gt;<code>/</code>&lt;bank&gt; &lt;text&gt;
+									<code>/style/text/</code>&lt;page&gt;<code>/</code>&lt;button&gt; &lt;text&gt;
 									<br />
 									<i>Change text on a button</i>
 								</li>

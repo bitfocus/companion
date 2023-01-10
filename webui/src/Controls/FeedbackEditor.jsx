@@ -19,10 +19,11 @@ import { DropdownInputField } from '../Components'
 import { ButtonStyleConfigFields } from './ButtonStyleConfig'
 import { AddFeedbacksModal } from './AddModal'
 import { usePanelCollapseHelper } from '../Helpers/CollapseHelper'
-import { OptionBankPreview } from './OptionBankPreview'
+import { OptionButtonPreview } from './OptionButtonPreview'
 import { MenuPortalContext } from '../Components/DropdownInputField'
+import { ParseControlId } from '@companion/shared/ControlId'
 
-export function ControlFeedbacksEditor({ controlId, feedbacks, heading, booleanOnly, isOnBank }) {
+export function ControlFeedbacksEditor({ controlId, feedbacks, heading, booleanOnly, isOnControl }) {
 	const socket = useContext(SocketContext)
 
 	const confirmModal = useRef()
@@ -184,7 +185,7 @@ export function ControlFeedbacksEditor({ controlId, feedbacks, heading, booleanO
 								setCollapsed={setPanelCollapsed}
 								isCollapsed={isPanelCollapsed(a.id)}
 								booleanOnly={booleanOnly}
-								isOnBank={isOnBank}
+								isOnControl={isOnControl}
 							/>
 						</MyErrorBoundary>
 					))}
@@ -215,7 +216,7 @@ function FeedbackTableRow({
 	isCollapsed,
 	setCollapsed,
 	booleanOnly,
-	isOnBank,
+	isOnControl,
 }) {
 	const socket = useContext(SocketContext)
 
@@ -300,7 +301,7 @@ function FeedbackTableRow({
 			</td>
 			<td>
 				<FeedbackEditor
-					isOnBank={isOnBank}
+					isOnControl={isOnControl}
 					controlId={controlId}
 					feedback={feedback}
 					setValue={setValue}
@@ -322,7 +323,7 @@ function FeedbackTableRow({
 
 function FeedbackEditor({
 	feedback,
-	isOnBank,
+	isOnControl,
 	controlId,
 	setValue,
 	innerDelete,
@@ -387,6 +388,15 @@ function FeedbackEditor({
 		name = `${instanceLabel}: ${feedback.type} (undefined)`
 	}
 
+	const previewControlIdFunction = useMemo(() => {
+		if (feedback?.instance_id === 'internal' && feedbackSpec?.previewControlIdFn) {
+			return sandbox(feedbackSpec.previewControlIdFn)
+		} else {
+			return undefined
+		}
+	}, [feedback?.instance_id, feedbackSpec?.previewControlIdFn])
+	const previewControlId = previewControlIdFunction?.(feedback.options, ParseControlId(controlId))
+
 	return (
 		<div className="editor-grid">
 			<div className="cell-name">{name}</div>
@@ -424,13 +434,11 @@ function FeedbackEditor({
 				<>
 					<div className="cell-description">{feedbackSpec?.description || ''}</div>
 
-					{feedback.instance_id === 'internal' &&
-						Array.isArray(feedbackSpec?.previewBank) &&
-						feedbackSpec.previewBank.length === 2 && (
-							<div className="cell-bank-preview">
-								<OptionBankPreview fields={feedbackSpec.previewBank} options={feedback.options} controlId={controlId} />
-							</div>
-						)}
+					{previewControlId && (
+						<div className="cell-bank-preview">
+							<OptionButtonPreview controlId={previewControlId} />
+						</div>
+					)}
 
 					<div className="cell-actions">
 						{feedbackSpec?.hasLearn && (
@@ -446,7 +454,7 @@ function FeedbackEditor({
 								<MyErrorBoundary key={i}>
 									<OptionsInputField
 										key={i}
-										isOnBank={isOnBank}
+										isOnControl={isOnControl}
 										instanceId={feedback.instance_id}
 										option={opt}
 										actionId={feedback.id}
@@ -486,7 +494,8 @@ function FeedbackManageStyles({ feedbackSpec, feedback, setSelectedStyleProps })
 			{ id: 'color', label: 'Color' },
 			{ id: 'bgcolor', label: 'Background' },
 		]
-		const currentValue = Object.keys(feedback.style || {})
+		const choicesSet = new Set(choices.map((c) => c.id))
+		const currentValue = Object.keys(feedback.style || {}).filter((id) => choicesSet.has(id))
 
 		return (
 			<div className="cell-styles-manage">

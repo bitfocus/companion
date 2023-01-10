@@ -44,7 +44,7 @@ export default class MockModule extends InstanceBase<MockConfig> {
 		return this.#legacy.handleHttpRequest(req)
 	}
 
-	async init(config: MockConfig): Promise<void> {
+	async init(config: MockConfig, isFirstInit: boolean): Promise<void> {
 		if (this.#legacy) throw new Error('Already initialized')
 
 		this.#legacy = new LegacyModule(this.#system, this.id, config)
@@ -56,7 +56,31 @@ export default class MockModule extends InstanceBase<MockConfig> {
 		}
 
 		if (typeof this.#legacy.init == 'function') {
-			this.#legacy.init()
+			// Match behaviour of 2.x, and log but ignore any errors during init()
+			try {
+				this.#legacy.init()
+			} catch (e: any) {
+				this.log('error', 'Error initalizing module: ' + (e?.message ?? String(e)))
+			}
+		}
+
+		// Ensure config fields are defined.
+		// Approximates the behaviour from before of it being done after the first `init()` call, by the user clicking save
+		if (isFirstInit) {
+			const newConfig: any = this.#legacy.config
+			const fields = this.getConfigFields()
+			for (const field of fields) {
+				if ('default' in field && newConfig[field.id] === undefined) {
+					newConfig[field.id] = field.default
+				}
+			}
+			config = newConfig as MockConfig
+			this.saveConfig(config)
+			try {
+				this.#legacy.updateConfig(config)
+			} catch (e: any) {
+				this.log('error', 'Error updating instance config: ' + (e?.message ?? String(e)))
+			}
 		}
 	}
 	async destroy(): Promise<void> {
@@ -87,7 +111,7 @@ export default class MockModule extends InstanceBase<MockConfig> {
 
 const UpgradeScripts: Array<CompanionStaticUpgradeScript<any>> = []
 if (LegacyModule.GetUpgradeScripts) {
-	const innerScripts: Array<CompanionStaticUpgradeScriptOld> = LegacyModule.GetUpgradeScripts()
+	const innerScripts: Array<CompanionStaticUpgradeScriptOld> = LegacyModule.GetUpgradeScripts() || []
 
 	for (const fcn of innerScripts) {
 		UpgradeScripts.push((_context, props) => {

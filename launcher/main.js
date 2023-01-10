@@ -158,7 +158,16 @@ if (!lock) {
 
 	function sendAppInfo() {
 		if (window) {
-			window.webContents.send('info', uiConfig.store, appInfo)
+			const loginSettings = app.getLoginItemSettings()
+			window.webContents.send(
+				'info',
+				{
+					...uiConfig.store,
+					run_at_login: loginSettings.openAtLogin,
+				},
+				appInfo,
+				process.platform
+			)
 		}
 	}
 
@@ -247,7 +256,9 @@ if (!lock) {
 			},
 		})
 
-		// window.webContents.openDevTools()
+		// window.webContents.openDevTools({
+		// 	mode:'detach'
+		// })
 
 		window
 			.loadURL(
@@ -310,6 +321,14 @@ if (!lock) {
 		ipcMain.on('launcher-set-start-minimised', (e, msg) => {
 			console.log('changed start minimized:', msg)
 			uiConfig.set('start_minimised', msg)
+		})
+
+		ipcMain.on('launcher-set-run-at-login', (e, msg) => {
+			console.log('changed run at login:', msg)
+
+			app.setLoginItemSettings({
+				openAtLogin: !!msg,
+			})
 		})
 
 		ipcMain.on('toggle-developer-settings', (e, msg) => {
@@ -629,7 +648,10 @@ if (!lock) {
 		})
 		child.on('message', (data) => {
 			console.log('Received IPC message', data)
-			if (data.messageType === 'show-error') {
+			if (data.messageType === 'fatal-error') {
+				electron.dialog.showErrorBox(data.title, data.body)
+				app.exit(1)
+			} else if (data.messageType === 'show-error') {
 				electron.dialog.showErrorBox(data.title, data.body)
 			} else if (data.messageType === 'http-bind-status') {
 				appInfo = {

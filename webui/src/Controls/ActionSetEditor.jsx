@@ -19,8 +19,9 @@ import { GenericConfirmModal } from '../Components/GenericConfirmModal'
 import { AddActionsModal } from './AddModal'
 import { usePanelCollapseHelper } from '../Helpers/CollapseHelper'
 import CSwitch from '../CSwitch'
-import { OptionBankPreview } from './OptionBankPreview'
+import { OptionButtonPreview } from './OptionButtonPreview'
 import { MenuPortalContext } from '../Components/DropdownInputField'
+import { ParseControlId } from '@companion/shared/ControlId'
 
 export function ControlActionSetEditor({ controlId, stepId, setId, actions, addPlaceholder, heading, headingActions }) {
 	const socket = useContext(SocketContext)
@@ -134,7 +135,7 @@ export function ControlActionSetEditor({ controlId, stepId, setId, actions, addP
 			</h4>
 			<GenericConfirmModal ref={confirmModal} />
 			<ActionsList
-				isOnBank={true}
+				isOnControl={true}
 				controlId={controlId}
 				dragId={`${controlId}_actions`}
 				stepId={stepId}
@@ -207,7 +208,7 @@ export function AddActionsPanel({ addPlaceholder, addAction }) {
 }
 
 export function ActionsList({
-	isOnBank,
+	isOnControl,
 	controlId,
 	dragId,
 	stepId,
@@ -245,7 +246,7 @@ export function ActionsList({
 					<MyErrorBoundary key={a?.id ?? i}>
 						<ActionTableRow
 							key={a?.id ?? i}
-							isOnBank={isOnBank}
+							isOnControl={isOnControl}
 							action={a}
 							index={i}
 							stepId={stepId}
@@ -284,8 +285,6 @@ function ActionRowDropPlaceholder({ dragId, stepId, setId, actionCount, moveCard
 			return monitor.canDrop()
 		},
 		hover(item, monitor) {
-			console.log('hover', item)
-
 			moveCard(item.stepId, item.setId, item.index, stepId, setId, 0)
 		},
 	})
@@ -305,7 +304,7 @@ function ActionTableRow({
 	action,
 	stepId,
 	setId,
-	isOnBank,
+	isOnControl,
 	index,
 	dragId,
 	controlId,
@@ -420,6 +419,14 @@ function ActionTableRow({
 		setCollapsed(action.id, false)
 	}, [setCollapsed, action.id])
 
+	const previewControlIdFunction = useMemo(() => {
+		if (action?.instance === 'internal' && actionSpec?.previewControlIdFn) {
+			return sandbox(actionSpec.previewControlIdFn)
+		} else {
+			return undefined
+		}
+	}, [action?.instance, actionSpec?.previewControlIdFn])
+
 	if (!action) {
 		// Invalid action, so skip
 		return ''
@@ -430,6 +437,7 @@ function ActionTableRow({
 	const instanceLabel = instance?.label ?? action.instance
 
 	const options = actionSpec?.options ?? []
+	const previewControlId = previewControlIdFunction?.(action.options, ParseControlId(controlId))
 
 	let name = ''
 	if (actionSpec) {
@@ -480,13 +488,11 @@ function ActionTableRow({
 						<>
 							<div className="cell-description">{actionSpec?.description || ''}</div>
 
-							{action.instance === 'internal' &&
-								Array.isArray(actionSpec?.previewBank) &&
-								actionSpec.previewBank.length === 2 && (
-									<div className="cell-bank-preview">
-										<OptionBankPreview fields={actionSpec.previewBank} options={action.options} controlId={controlId} />
-									</div>
-								)}
+							{previewControlId && (
+								<div className="cell-bank-preview">
+									<OptionButtonPreview controlId={previewControlId} />
+								</div>
+							)}
 
 							<div className="cell-delay">
 								<CForm>
@@ -526,7 +532,7 @@ function ActionTableRow({
 										<MyErrorBoundary key={i}>
 											<OptionsInputField
 												key={i}
-												isOnBank={isOnBank}
+												isOnControl={isOnControl}
 												isAction={true}
 												instanceId={action.instance}
 												option={opt}

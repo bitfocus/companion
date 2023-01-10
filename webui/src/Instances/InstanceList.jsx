@@ -2,7 +2,14 @@ import { useCallback, useContext, useEffect, useRef, useState } from 'react'
 import { CButton, CButtonGroup } from '@coreui/react'
 import { InstancesContext, VariableDefinitionsContext, socketEmitPromise, SocketContext, ModulesContext } from '../util'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faDollarSign, faQuestionCircle, faBug, faSort, faExclamationTriangle } from '@fortawesome/free-solid-svg-icons'
+import {
+	faDollarSign,
+	faQuestionCircle,
+	faBug,
+	faSort,
+	faExclamationTriangle,
+	faBarsStaggered,
+} from '@fortawesome/free-solid-svg-icons'
 import { InstanceVariablesModal } from './InstanceVariablesModal'
 import { GenericConfirmModal } from '../Components/GenericConfirmModal'
 import CSwitch from '../CSwitch'
@@ -146,11 +153,11 @@ export function InstancesList({ showHelp, doConfigureInstance, instanceStatus })
 			<table className="table table-responsive-sm">
 				<thead>
 					<tr>
-						<th>&nbsp;</th>
+						<th className="fit">&nbsp;</th>
 						<th>Module</th>
 						<th>Label</th>
 						<th>Status</th>
-						<th>&nbsp;</th>
+						<th className="fit">&nbsp;</th>
 					</tr>
 				</thead>
 				<tbody>
@@ -289,10 +296,13 @@ function InstancesTableRow({
 								</div>
 							)}
 							{moduleInfo.bugUrl && (
-								<a href={moduleInfo.bugUrl} target="_new" title="Report Bug">
+								<a href={moduleInfo.bugUrl} target="_blank" rel="noreferrer" title="Report Bug">
 									<FontAwesomeIcon icon={faBug} />
 								</a>
 							)}
+							<a href={`/connection-debug/${id}`} target="_blank" rel="noreferrer" title="View debug log">
+								<FontAwesomeIcon icon={faBarsStaggered} />
+							</a>
 						</div>
 
 						<b>{moduleInfo?.shortname ?? ''}</b>

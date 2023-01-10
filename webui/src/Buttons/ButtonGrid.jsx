@@ -25,7 +25,7 @@ import {
 import classnames from 'classnames'
 import { MAX_COLS, MAX_ROWS } from '../Constants'
 import { useDrop } from 'react-dnd'
-import { BankPreview } from '../Components/BankButton'
+import { ButtonPreview } from '../Components/ButtonPreview'
 import { GenericConfirmModal } from '../Components/GenericConfirmModal'
 import { nanoid } from 'nanoid'
 import { useSharedPageRenderCache } from '../ButtonRenderCache'
@@ -173,11 +173,11 @@ const ButtonGridActions = forwardRef(function ButtonGridActions({ isHot, pageNum
 	const resetRef = useRef()
 
 	const [activeFunction, setActiveFunction] = useState(null)
-	const [activeFunctionBank, setActiveFunctionBank] = useState(null)
+	const [activeFunctionButton, setActiveFunctionButton] = useState(null)
 
 	let hintText = ''
 	if (activeFunction) {
-		if (!activeFunctionBank) {
+		if (!activeFunctionButton) {
 			hintText = `Press the button you want to ${activeFunction}`
 		} else {
 			hintText = `Where do you want it?`
@@ -188,7 +188,7 @@ const ButtonGridActions = forwardRef(function ButtonGridActions({ isHot, pageNum
 		(func) => {
 			setActiveFunction((oldFunction) => {
 				if (oldFunction === null) {
-					setActiveFunctionBank(null)
+					setActiveFunctionButton(null)
 					clearSelectedButton()
 					return func
 				} else {
@@ -200,7 +200,7 @@ const ButtonGridActions = forwardRef(function ButtonGridActions({ isHot, pageNum
 	)
 	const stopFunction = useCallback(() => {
 		setActiveFunction(null)
-		setActiveFunctionBank(null)
+		setActiveFunctionButton(null)
 	}, [])
 
 	const getButton = (label, icon, func) => {
@@ -238,7 +238,7 @@ const ButtonGridActions = forwardRef(function ButtonGridActions({ isHot, pageNum
 
 		resetRef.current.show(
 			'Reset page',
-			`Are you sure you want to reset navigation buttons? This will completely erase bank ${pageNumber}.1, ${pageNumber}.9 and ${pageNumber}.17`,
+			`Are you sure you want to reset navigation buttons? This will completely erase button ${pageNumber}.1, ${pageNumber}.9 and ${pageNumber}.17`,
 			'Reset',
 			() => {
 				socketEmitPromise(socket, 'loadsave:reset-page-nav', [pageNumber]).catch((e) => {
@@ -265,8 +265,8 @@ const ButtonGridActions = forwardRef(function ButtonGridActions({ isHot, pageNum
 							stopFunction()
 							return true
 						case 'copy':
-							if (activeFunctionBank) {
-								const fromInfo = activeFunctionBank
+							if (activeFunctionButton) {
+								const fromInfo = activeFunctionButton
 								socketEmitPromise(socket, 'controls:copy', [
 									CreateBankControlId(fromInfo.page, fromInfo.bank),
 									CreateBankControlId(pageNumber, index),
@@ -275,15 +275,15 @@ const ButtonGridActions = forwardRef(function ButtonGridActions({ isHot, pageNum
 								})
 								stopFunction()
 							} else {
-								setActiveFunctionBank({
+								setActiveFunctionButton({
 									page: pageNumber,
 									bank: index,
 								})
 							}
 							return true
 						case 'move':
-							if (activeFunctionBank) {
-								const fromInfo = activeFunctionBank
+							if (activeFunctionButton) {
+								const fromInfo = activeFunctionButton
 								socketEmitPromise(socket, 'controls:move', [
 									CreateBankControlId(fromInfo.page, fromInfo.bank),
 									CreateBankControlId(pageNumber, index),
@@ -292,7 +292,7 @@ const ButtonGridActions = forwardRef(function ButtonGridActions({ isHot, pageNum
 								})
 								stopFunction()
 							} else {
-								setActiveFunctionBank({
+								setActiveFunctionButton({
 									page: pageNumber,
 									bank: index,
 								})
@@ -311,7 +311,7 @@ const ButtonGridActions = forwardRef(function ButtonGridActions({ isHot, pageNum
 				}
 			},
 		}),
-		[socket, activeFunction, activeFunctionBank, pageNumber, stopFunction]
+		[socket, activeFunction, activeFunctionButton, pageNumber, stopFunction]
 	)
 
 	return (
@@ -472,7 +472,7 @@ export function ButtonGrid({ bankClick, pageNumber, selectedButton }) {
 											index={index}
 											preview={pageImages[index]}
 											onClick={bankClick}
-											alt={`Bank ${index}`}
+											alt={`Button ${index}`}
 											selected={selectedButton === controlId}
 										/>
 									)
@@ -507,5 +507,5 @@ const ButtonGridIcon = memo(function ButtonGridIcon(props) {
 	})
 
 	const title = `${props.page}.${props.index}`
-	return <BankPreview {...props} dropRef={drop} dropHover={isOver} canDrop={canDrop} alt={title} title={title} />
+	return <ButtonPreview {...props} dropRef={drop} dropHover={isOver} canDrop={canDrop} alt={title} title={title} />
 })

@@ -1,0 +1,45 @@
+name: Sync modules (beta)
+on:
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+  # Run every 6 hours
+  schedule:
+    - cron: '0 */6 * * *'
+
+env:
+  MODULES_BRANCH: main
+
+jobs:
+  sync-beta:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+          submodules: true
+          ref: beta
+          token: ${{ secrets.SYNC_MODULES_PAT }}
+
+      - name: update submodule
+        run: |
+          cd bundled-modules
+
+          FROM_COMMIT=$(git rev-parse HEAD)
+
+          git checkout ${{ env.MODULES_BRANCH }}
+          git pull
+
+          TO_COMMIT=$(git rev-parse HEAD)
+
+          CHANGES_MESSAGE=$(git log --oneline --no-decorate ${FROM_COMMIT}..${TO_COMMIT})
+
+          echo "Changes: "$CHANGES_MESSAGE
+
+          echo "CHANGES_MESSAGE<<EOF" >> $GITHUB_ENV
+          echo "$CHANGES_MESSAGE" >> $GITHUB_ENV
+          echo "EOF" >> $GITHUB_ENV
+
+      - name: Commit module updates
+        uses: stefanzweifel/git-auto-commit-action@v4
+        with:
+          commit_message: "chore: update bundled-modules\n\n${{ env.CHANGES_MESSAGE }}"

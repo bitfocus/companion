@@ -4,6 +4,20 @@ import ts from 'typescript'
 
 let allEvents = new Map()
 
+const ignoreUses = new Set([
+	'rest_get',
+	'rest',
+	'rest_put',
+	'rest_poll',
+	'rest_poll_get',
+	'rest_poll_destroy',
+	'instance_actions',
+	'variable_parse',
+	'osc_send',
+	'log',
+	'mode', // toggl-track hiding some rest calls
+])
+
 const possibleModuleFolders = await fs.readdir('./node_modules')
 await Promise.all(
 	possibleModuleFolders.map(async (folder) => {
@@ -60,7 +74,10 @@ await Promise.all(
 								if (text.includes('system.emit') || text.includes('system.on')) {
 									// console.log(node.getText())
 									// console.log(node)
+
 									const n = node.arguments[0].text
+									if (ignoreUses.has(n)) return
+
 									{
 										const oldVal = usedCalls.get(n)
 										usedCalls.set(n, (oldVal ? oldVal : 0) + 1)
