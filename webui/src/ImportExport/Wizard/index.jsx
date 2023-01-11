@@ -61,7 +61,10 @@ export const WizardModal = forwardRef(function WizardModal(_props, ref) {
 						.then((status) => {
 							if (status !== 'ok') {
 								setApplyError('An unspecified error occurred during the reset.  Please try again.')
+							} else {
+								setApplyError(null)
 							}
+
 							doNextStep()
 						})
 						.catch((e) => {
@@ -184,7 +187,7 @@ export const WizardModal = forwardRef(function WizardModal(_props, ref) {
 	}
 
 	return (
-		<CModal show={show} onClose={doClose} className={'wizard'}>
+		<CModal show={show} onClose={doClose} className={'wizard'} closeOnBackdrop={false}>
 			<CForm className={'edit-button-panel'}>
 				<CModalHeader>
 					<h2>
@@ -194,15 +197,16 @@ export const WizardModal = forwardRef(function WizardModal(_props, ref) {
 				</CModalHeader>
 				<CModalBody>{modalBody}</CModalBody>
 				<CModalFooter>
-					{!applyStep ||
-						(currentStep <= applyStep && (
+					{(!applyStep || currentStep <= applyStep) && (
+						<>
 							<CButton color="secondary" onClick={doClose}>
 								Cancel
 							</CButton>
-						))}
-					<CButton color="secondary" disabled={currentStep === 1} onClick={doPrevStep}>
-						Previous
-					</CButton>
+							<CButton color="secondary" disabled={currentStep === 1} onClick={doPrevStep}>
+								Previous
+							</CButton>
+						</>
+					)}
 					{nextButton}
 				</CModalFooter>
 			</CForm>
