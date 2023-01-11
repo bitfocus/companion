@@ -8,7 +8,7 @@ import {
 	SomeCompanionConfigField,
 } from '@companion-module/base'
 import { CompanionHTTPRequest, CompanionHTTPResponse } from '@companion-module/base/dist/module-api/http'
-import { from15to32Keys, literal } from '@companion-module/base/dist/util.js'
+import { literal } from '@companion-module/base/dist/util.js'
 import type InstanceSkel = require('../instance_skel')
 import type {
 	CompanionStaticUpgradeScript as CompanionStaticUpgradeScriptOld,
@@ -107,6 +107,20 @@ export default class MockModule extends InstanceBase<MockConfig> {
 			}
 		})
 	}
+}
+
+function from15to32Keys(key: number): number {
+	key = key - 1
+
+	const rows = Math.floor(key / 5)
+	const col = (key % 5) + 1
+	const res = rows * 8 + col
+
+	if (res >= 32) {
+		//debug('from15to32: assert: old config had bigger pages than expected')
+		return 31
+	}
+	return res
 }
 
 const UpgradeScripts: Array<CompanionStaticUpgradeScript<any>> = []
