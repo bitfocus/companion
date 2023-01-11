@@ -2,6 +2,7 @@ import React, { forwardRef, useCallback, useContext, useImperativeHandle, useSta
 import { CButton, CForm, CModal, CModalBody, CModalFooter, CModalHeader } from '@coreui/react'
 import { SocketContext, socketEmitPromise } from '../../util'
 import { ResetBeginStep, ResetOptionsStep, ResetApplyStep } from './Reset'
+import { ResetFinishStep } from './Reset'
 
 export const WizardModal = forwardRef(function WizardModal(_props, ref) {
 	const socket = useContext(SocketContext)
@@ -174,7 +175,7 @@ export const WizardModal = forwardRef(function WizardModal(_props, ref) {
 					modalBody = <ResetApplyStep config={config} />
 					break
 				case 4:
-					//modalBody = <ResetFinishStep error={applyError} />
+					modalBody = <ResetFinishStep error={applyError} />
 					break
 				default:
 			}

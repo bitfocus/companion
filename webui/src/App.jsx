@@ -54,6 +54,7 @@ export default function App() {
 	const [connected, setConnected] = useState(false)
 	const [wasConnected, setWasConnected] = useState(false)
 	const [buttonGridHotPress, setButtonGridHotPress] = useState(false)
+	const [currentImportTask, setCurrentImportTask] = useState(null)
 
 	useEffect(() => {
 		const onConnected = () => {
@@ -75,11 +76,15 @@ export default function App() {
 		socket.on('connect', onConnected)
 		socket.on('disconnect', onDisconnected)
 
+		socket.on('load-save:task', setCurrentImportTask)
+
 		if (socket.connected) onConnected()
 
 		return () => {
 			socket.off('connect', onConnected)
 			socket.off('disconnect', onDisconnected)
+
+			socket.off('load-save:task', setCurrentImportTask)
 		}
 	}, [socket])
 
@@ -127,6 +132,16 @@ export default function App() {
 										<li className="text-muted">Check that the application is still running</li>
 										<li className="text-muted">If you're using the Admin GUI over a network - check your connection</li>
 									</p>
+								</div>
+							</div>
+						</div>
+					</div>
+					<div id="current-import-container" className={!wasConnected && currentImportTask ? 'show-error' : ''}>
+						<div className="row justify-content-center">
+							<div className="col-md-6">
+								<div className="clearfix">
+									<h4 className="pt-3">Stand by, the config is being updated!</h4>
+									{/* <p className="text-muted">It seems that we have lost connection to the companion app.</p> */}
 								</div>
 							</div>
 						</div>

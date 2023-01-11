@@ -149,3 +149,28 @@ export function ResetApplyStep({ config }) {
 		</div>
 	)
 }
+
+export function ResetFinishStep({ applyError }) {
+	// TODO this is horrible
+	return (
+		<div>
+			{applyError ? (
+				<>
+					<p>{applyError}</p>
+				</>
+			) : (
+				<>
+					<p>Configuration has been successfully reset</p>
+				</>
+			)}
+			{/* <p style={{ marginTop: 0 }}>
+				Proceeding will allow you to reset some or all major components of this Companion installation.
+			</p>
+			<p>It is recommended to export the system configuration first.</p>
+
+			<CButton color="success" href="/int/full_export" target="_new">
+				<FontAwesomeIcon icon={faDownload} /> Export
+			</CButton> */}
+		</div>
+	)
+}
