@@ -70,10 +70,10 @@ export function ResetOptionsStep({ config, setValue }) {
 					/>
 					<CLabel htmlFor="wizard_custom_variables">Custom Variables</CLabel>
 				</div>
-				{config.customVariables && !(config.connections && config.buttons && config.triggers) ? (
+				{config.customVariables && !(config.buttons && config.triggers) ? (
 					<CAlert color="warning">
-						Resetting 'Custom Variables' without also resetting 'Connections', 'Buttons', and/or 'Triggers' that may
-						utilize them can create an unstable environment.
+						Resetting 'Custom Variables' without also resetting 'Buttons', and 'Triggers' that may utilize them can
+						create an unstable environment.
 					</CAlert>
 				) : (
 					''
@@ -104,40 +104,40 @@ export function ResetOptionsStep({ config, setValue }) {
 }
 
 export function ResetApplyStep({ config }) {
-	let changes = []
+	const changes = []
 
 	if (config.connections && !config.buttons && !config.triggers) {
-		changes.push(<li>All connections including their actions, feedbacks, and triggers.</li>)
+		changes.push(<li key="connections">All connections including their actions, feedbacks, and triggers.</li>)
 	} else if (config.connections && !config.buttons) {
-		changes.push(<li>All connections including their button actions and feedbacks.</li>)
+		changes.push(<li key="connections">All connections including their button actions and feedbacks.</li>)
 	} else if (config.connections && !config.triggers) {
-		changes.push(<li>All connections including their triggers and trigger actions.</li>)
+		changes.push(<li key="connections">All connections including their triggers and trigger actions.</li>)
 	} else if (config.connections) {
-		changes.push(<li>All connections.</li>)
+		changes.push(<li key="connections">All connections.</li>)
 	}
 
 	if (config.buttons) {
-		changes.push(<li>All button styles, actions, and feedbacks.</li>)
+		changes.push(<li key="buttons">All button styles, actions, and feedbacks.</li>)
 	}
 
 	if (config.surfaces) {
-		changes.push(<li>All surface settings.</li>)
+		changes.push(<li key="surfaces">All surface settings.</li>)
 	}
 
 	if (config.triggers) {
-		changes.push(<li>All triggers.</li>)
+		changes.push(<li key="triggers">All triggers.</li>)
 	}
 
 	if (config.customVariables) {
-		changes.push(<li>All custom variables.</li>)
+		changes.push(<li key="custom-variables">All custom variables.</li>)
 	}
 
 	if (config.userconfig) {
-		changes.push(<li>All settings, including enabled remote control services.</li>)
+		changes.push(<li key="userconfig">All settings, including enabled remote control services.</li>)
 	}
 
 	if (changes.length === 0) {
-		changes.push(<li>No changes to the configuration will be made.</li>)
+		changes.push(<li key="no-change">No changes to the configuration will be made.</li>)
 	}
 
 	return (
@@ -145,7 +145,7 @@ export function ResetApplyStep({ config }) {
 			<h5>Review Changes</h5>
 			<p>The following data will be reset:</p>
 			<ul>{changes}</ul>
-			{changes.length > 0 ? <CAlert color="warning">Proceeding will permanently clear the above data.</CAlert> : ''}
+			{changes.length > 0 ? <CAlert color="danger">Proceeding will permanently clear the above data.</CAlert> : ''}
 		</div>
 	)
 }

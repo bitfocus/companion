@@ -82,10 +82,12 @@ export function ImportExport() {
 
 	return (
 		<>
+			<WizardModal ref={modalRef} />
+
 			<h5>Import configuration</h5>
 			{!fileApiIsSupported ? (
 				<>
-					<CAlert color="warning">Not supported in your browser</CAlert>
+					<CAlert color="warning">File uploading is not supported in your browser</CAlert>
 				</>
 			) : (
 				<>
@@ -118,7 +120,6 @@ export function ImportExport() {
 					<FontAwesomeIcon icon={faTrashAlt} /> Reset Configuration
 				</CButton>
 			</p>
-			<WizardModal ref={modalRef} />
 		</>
 	)
 }

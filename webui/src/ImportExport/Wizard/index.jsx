@@ -90,12 +90,12 @@ export const WizardModal = forwardRef(function WizardModal(_props, ref) {
 			case 'import_page':
 				setMaxSteps(6)
 				setApplyStep(5)
-				setWizardTitle('Import Wizard')
+				setWizardTitle('Import Configuration')
 				break
 			case 'import_full':
 				setMaxSteps(4)
 				setApplyStep(3)
-				setWizardTitle('Import Wizard')
+				setWizardTitle('Import Configuration')
 				break
 			case 'reset':
 				setMaxSteps(4)
@@ -108,7 +108,7 @@ export const WizardModal = forwardRef(function WizardModal(_props, ref) {
 					customVariables: true,
 					userconfig: true,
 				})
-				setWizardTitle('Reset Configuration Wizard')
+				setWizardTitle('Reset Configuration')
 				break
 			default:
 		}
@@ -187,7 +187,7 @@ export const WizardModal = forwardRef(function WizardModal(_props, ref) {
 			<CForm className={'edit-button-panel'}>
 				<CModalHeader>
 					<h2>
-						<img src="/img/brand/icon.png" height="30" alt="logo" />
+						<img src="/img/icons/48x48.png" height="30" alt="logo" />
 						{wizardTitle}
 					</h2>
 				</CModalHeader>
