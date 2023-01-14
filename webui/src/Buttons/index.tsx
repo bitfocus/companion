@@ -1,5 +1,5 @@
 import { CCol, CNav, CNavItem, CNavLink, CRow, CTabContent, CTabPane, CTabs } from '@coreui/react'
-import { faCalculator, faDollarSign, faGift, faVideoCamera } from '@fortawesome/free-solid-svg-icons'
+import { faCalculator, faDollarSign, faGift, faPaperPlane, faVideoCamera } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { nanoid } from 'nanoid'
 import { InstancePresets } from './Presets.js'
@@ -12,6 +12,7 @@ import { GenericConfirmModal, GenericConfirmModalRef } from '../Components/Gener
 import { ConnectionVariables } from './Variables.js'
 import { formatLocation } from '@companion/shared/ControlId.js'
 import { ControlLocation } from '@companion/shared/Model/Common.js'
+import { PagesList } from './Pages'
 
 interface ButtonsPageProps {
 	hotPress: boolean
@@ -24,7 +25,7 @@ export const ButtonsPage = memo(function ButtonsPage({ hotPress }: ButtonsPagePr
 	const clearModalRef = useRef<GenericConfirmModalRef>(null)
 
 	const [tabResetToken, setTabResetToken] = useState(nanoid())
-	const [activeTab, setActiveTab] = useState('presets')
+	const [activeTab, setActiveTab] = useState('pages')
 	const [selectedButton, setSelectedButton] = useState<ControlLocation | null>(null)
 	const [pageNumber, setPageNumber] = useState(1)
 	const [copyFromButton, setCopyFromButton] = useState<[ControlLocation, string] | null>(null)
@@ -56,7 +57,7 @@ export const ButtonsPage = memo(function ButtonsPage({ hotPress }: ButtonsPagePr
 		[socket, hotPress]
 	)
 	const clearSelectedButton = useCallback(() => {
-		doChangeTab('presets')
+		doChangeTab('pages')
 	}, [doChangeTab])
 
 	const handleKeyDownInButtons = useCallback(
@@ -232,6 +233,12 @@ export const ButtonsPage = memo(function ButtonsPage({ hotPress }: ButtonsPagePr
 									{selectedButton ? `${formatLocation(selectedButton)}` : '?'}
 								</CNavLink>
 							</CNavItem>
+
+							<CNavItem>
+								<CNavLink data-tab="pages">
+									<FontAwesomeIcon icon={faPaperPlane} /> Pages
+								</CNavLink>
+							</CNavItem>
 							<CNavItem>
 								<CNavLink data-tab="presets">
 									<FontAwesomeIcon icon={faGift} /> Presets
@@ -258,6 +265,11 @@ export const ButtonsPage = memo(function ButtonsPage({ hotPress }: ButtonsPagePr
 											onKeyUp={handleKeyDownInButtons}
 										/>
 									)}
+								</MyErrorBoundary>
+							</CTabPane>
+							<CTabPane data-tab="pages">
+								<MyErrorBoundary>
+									<PagesList setPageNumber={setPageNumber} />
 								</MyErrorBoundary>
 							</CTabPane>
 							<CTabPane data-tab="presets">
