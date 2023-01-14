@@ -42,7 +42,7 @@ export const LogPanel = memo(function LogPanel() {
 			'Are you sure you want to export your configuration and logs?  This may contain sensitive information, such as connection information to online services.  It is not recommended to post this publicly, rather you should send it privately to the necessary party.',
 			'Export',
 			() => {
-				window.open('/int/support_export')
+				window.open('/int/export/support')
 			}
 		)
 	}, [])
@@ -75,7 +75,7 @@ export const LogPanel = memo(function LogPanel() {
 									marginLeft: 10,
 								}}
 								size="sm"
-								href={`/int/log_export`}
+								href={`/int/export/log`}
 								target="_new"
 							>
 								<FontAwesomeIcon icon={faFileExport} /> Export log
