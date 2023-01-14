@@ -155,22 +155,29 @@ function CustomVariablesList({ setShowCustom }) {
 
 	const [newName, setNewName] = useState('')
 
-	const doCreateNew = useCallback(() => {
-		socketEmitPromise(socket, 'custom-variables::create', [newName, ''])
-			.then((res) => {
-				console.log('done with', res)
-				if (res) {
-					notifier.current.show(`Failed to create variable`, res, 5000)
-				}
+	const doCreateNew = useCallback(
+		(e) => {
+			e?.preventDefault()
 
-				// clear value
-				setNewName('')
-			})
-			.catch((e) => {
-				console.error('Failed to create variable')
-				notifier.current.show(`Failed to create variable`, e?.toString?.() ?? e ?? 'Failed', 5000)
-			})
-	}, [socket, notifier, newName])
+			if (isCustomVariableValid(newName)) {
+				socketEmitPromise(socket, 'custom-variables::create', [newName, ''])
+					.then((res) => {
+						console.log('done with', res)
+						if (res) {
+							notifier.current.show(`Failed to create variable`, res, 5000)
+						}
+
+						// clear value
+						setNewName('')
+					})
+					.catch((e) => {
+						console.error('Failed to create variable')
+						notifier.current.show(`Failed to create variable`, e?.toString?.() ?? e ?? 'Failed', 5000)
+					})
+			}
+		},
+		[socket, notifier, newName]
+	)
 
 	const setStartupValue = useCallback(
 		(name, value) => {
@@ -291,7 +298,7 @@ function CustomVariablesList({ setShowCustom }) {
 
 			<hr />
 			<div>
-				<CForm inline>
+				<CForm inline onSubmit={doCreateNew}>
 					<CFormGroup>
 						<CLabel htmlFor="new_name">Create custom variable: </CLabel>
 						<CInput name="new_name" type="text" value={newName} onChange={(e) => setNewName(e.currentTarget.value)} />
