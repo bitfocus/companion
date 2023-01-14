@@ -87,7 +87,7 @@ export const Triggers = memo(function Triggers() {
 				style={{
 					marginLeft: 10,
 				}}
-				href={`/int/trigger_export_all`}
+				href={`/int/export/triggers/all`}
 				target="_new"
 			>
 				<FontAwesomeIcon icon={faFileExport} /> Export all
