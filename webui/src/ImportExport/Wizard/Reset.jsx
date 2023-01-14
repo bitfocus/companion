@@ -11,7 +11,7 @@ export function ResetBeginStep() {
 			</p>
 			<p>It is recommended to export the system configuration first.</p>
 
-			<CButton color="success" href="/int/full_export" target="_new">
+			<CButton color="success" href="/int/export/full" target="_new">
 				<FontAwesomeIcon icon={faDownload} /> Export
 			</CButton>
 		</div>

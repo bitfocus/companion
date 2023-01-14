@@ -287,7 +287,7 @@ function TriggersTableRow({ controlId, item, editItem, moveTrigger }) {
 					<CButton size="sm" color="danger" onClick={doDelete}>
 						delete
 					</CButton>
-					{/* <CButton size="sm" color="light" href={`/int/trigger_export/${controlId}`} target="_new">
+					{/* <CButton size="sm" color="light" href={`/int/export/trigger/single/${controlId}`} target="_new">
 					export
 				</CButton> */}
 				</CButtonGroup>

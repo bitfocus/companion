@@ -1,5 +1,15 @@
 import React, { forwardRef, useCallback, useImperativeHandle, useState } from 'react'
-import { CButton, CForm, CInputCheckbox, CLabel, CModal, CModalBody, CModalFooter, CModalHeader } from '@coreui/react'
+import {
+	CAlert,
+	CButton,
+	CForm,
+	CInputCheckbox,
+	CLabel,
+	CModal,
+	CModalBody,
+	CModalFooter,
+	CModalHeader,
+} from '@coreui/react'
 
 export const ExportWizardModal = forwardRef(function WizardModal(_props, ref) {
 	const [show, setShow] = useState(false)
@@ -20,7 +30,7 @@ export const ExportWizardModal = forwardRef(function WizardModal(_props, ref) {
 
 			const link = document.createElement('a')
 			link.setAttribute('download', 'export.companionconfig')
-			link.href = `/int/full_export?${params}`
+			link.href = `/int/export/custom?${params}`
 			document.body.appendChild(link)
 			link.click()
 			link.remove()
@@ -95,13 +105,12 @@ function ExportOptionsStep({ config, setValue }) {
 					/>
 					<CLabel htmlFor="wizard_connections">Connections</CLabel>
 				</div>
-				{/* {!config.connections && (config.buttons || config.triggers) ? (
+				{!config.connections && (config.buttons || config.triggers) && (
 					<CAlert color="warning">
-						Connections referenced by buttons or triggers will still be included in the export.
+						Any connections referenced by buttons or triggers will still be included in the export, with the config
+						options removed.
 					</CAlert>
-				) : (
-					''
-				)} */}
+				)}
 			</div>
 			<div className="indent3">
 				<div className="form-check form-check-inline mr-1">
