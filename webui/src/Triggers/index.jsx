@@ -16,11 +16,12 @@ import dayjs from 'dayjs'
 import sanitizeHtml from 'sanitize-html'
 import CSwitch from '../CSwitch'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faAdd, faCalculator, faSort } from '@fortawesome/free-solid-svg-icons'
+import { faAdd, faCalculator, faFileExport, faSort } from '@fortawesome/free-solid-svg-icons'
 import { useDrag, useDrop } from 'react-dnd'
 import { nanoid } from 'nanoid'
 import { EditTriggerPanel } from './EditPanel'
 import { GenericConfirmModal } from '../Components/GenericConfirmModal'
+import { ParseControlId } from '@companion/shared/ControlId'
 
 export const Triggers = memo(function Triggers() {
 	const socket = useContext(SocketContext)
@@ -82,16 +83,16 @@ export const Triggers = memo(function Triggers() {
 
 				<TriggersTable triggersList={triggersList} editItem={doEditItem} />
 
-				{/* <CButton
-				color="light"
-				style={{
-					marginLeft: 10,
-				}}
-				href={`/int/export/triggers/all`}
-				target="_new"
-			>
-				<FontAwesomeIcon icon={faFileExport} /> Export all
-			</CButton> */}
+				<CButton
+					color="light"
+					style={{
+						marginLeft: 10,
+					}}
+					href={`/int/export/triggers/all`}
+					target="_new"
+				>
+					<FontAwesomeIcon icon={faFileExport} /> Export all
+				</CButton>
 			</CCol>
 
 			<CCol xs={12} xl={6} className="secondary-panel">
@@ -256,6 +257,9 @@ function TriggersTableRow({ controlId, item, editItem, moveTrigger }) {
 	})
 	preview(drop(ref))
 
+	const parsedId = ParseControlId(controlId)
+	const exportId = parsedId?.type === 'trigger' ? parsedId?.trigger : undefined
+
 	return (
 		<tr ref={ref} className={isDragging ? 'instancelist-dragging' : ''}>
 			<GenericConfirmModal ref={confirmRef} />
@@ -287,9 +291,15 @@ function TriggersTableRow({ controlId, item, editItem, moveTrigger }) {
 					<CButton size="sm" color="danger" onClick={doDelete}>
 						delete
 					</CButton>
-					{/* <CButton size="sm" color="light" href={`/int/export/trigger/single/${controlId}`} target="_new">
-					export
-				</CButton> */}
+					<CButton
+						size="sm"
+						color="light"
+						href={`/int/export/triggers/single/${exportId}`}
+						target="_new"
+						disabled={!exportId}
+					>
+						export
+					</CButton>
 				</CButtonGroup>
 			</td>
 		</tr>
