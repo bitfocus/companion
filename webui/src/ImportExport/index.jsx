@@ -12,17 +12,11 @@ export function ImportExport() {
 	const instancesContext = useContext(InstancesContext)
 
 	const [loadError, setLoadError] = useState(null)
-	const [snapshot, setSnapshot] = useState(null)
-	const [instanceRemap, setInstanceRemap] = useState({})
 
 	const modalRef = useRef(null)
 	const exportRef = useRef(null)
 	const doReset = useCallback(() => modalRef.current.show('reset'), [])
 	const doExport = useCallback(() => exportRef.current.show(), [])
-	const doImport = useCallback(
-		(mode) => modalRef.current.show(mode, snapshot, instanceRemap),
-		[snapshot, instanceRemap]
-	)
 
 	const fileApiIsSupported = !!(window.File && window.FileReader && window.FileList && window.Blob)
 
@@ -68,9 +62,8 @@ export function ImportExport() {
 							}
 
 							setLoadError(null)
-							setInstanceRemap(initialRemap)
-							setSnapshot(config)
-							doImport(config.type === 'page' ? 'import_page' : 'import_page')
+							const mode = config.type === 'page' ? 'import_page' : 'import_full'
+							modalRef.current.show(mode, config, initialRemap)
 						}
 					})
 					.catch((e) => {
@@ -80,7 +73,7 @@ export function ImportExport() {
 			}
 			fr.readAsText(newFiles[0])
 		},
-		[socket, instancesContext, doImport]
+		[socket, instancesContext]
 	)
 
 	return (
