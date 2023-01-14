@@ -151,7 +151,6 @@ export function ResetApplyStep({ config }) {
 }
 
 export function ResetFinishStep({ applyError }) {
-	// TODO this is horrible
 	return (
 		<div>
 			{applyError ? (

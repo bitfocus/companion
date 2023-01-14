@@ -5,6 +5,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faDownload, faFileImport, faTrashAlt } from '@fortawesome/free-solid-svg-icons'
 import { CAlert, CButton } from '@coreui/react'
 import { WizardModal } from './Wizard'
+import { ExportWizardModal } from './Wizard/Export'
 
 export function ImportExport() {
 	const socket = useContext(SocketContext)
@@ -14,8 +15,10 @@ export function ImportExport() {
 	const [snapshot, setSnapshot] = useState(null)
 	const [instanceRemap, setInstanceRemap] = useState({})
 
-	const modalRef = useRef()
+	const modalRef = useRef(null)
+	const exportRef = useRef(null)
 	const doReset = useCallback(() => modalRef.current.show('reset'), [])
+	const doExport = useCallback(() => exportRef.current.show(), [])
 	const doImport = useCallback(
 		(mode) => modalRef.current.show(mode, snapshot, instanceRemap),
 		[snapshot, instanceRemap]
@@ -83,6 +86,7 @@ export function ImportExport() {
 	return (
 		<>
 			<WizardModal ref={modalRef} />
+			<ExportWizardModal ref={exportRef} />
 
 			<h5>Import configuration</h5>
 			{!fileApiIsSupported ? (
@@ -109,7 +113,7 @@ export function ImportExport() {
 			<hr />
 			<h5>Export configuration</h5>
 			<p>Download a file containing all connections and button pages.</p>
-			<CButton color="success" href="/int/full_export" target="_new">
+			<CButton color="success" onClick={doExport}>
 				<FontAwesomeIcon icon={faDownload} /> Export
 			</CButton>
 			<hr />

@@ -123,7 +123,7 @@ export const ButtonsGridPanel = memo(function ButtonsPage({
 								float: 'right',
 								marginTop: 10,
 							}}
-							href={`/int/page_export/${pageNumber}`}
+							href={`/int/export/page/${pageNumber}`}
 							target="_new"
 						>
 							<FontAwesomeIcon icon={faFileExport} /> Export page
