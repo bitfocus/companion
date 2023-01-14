@@ -1,15 +1,5 @@
 import React, { forwardRef, useCallback, useImperativeHandle, useState } from 'react'
-import {
-	CAlert,
-	CButton,
-	CForm,
-	CInputCheckbox,
-	CLabel,
-	CModal,
-	CModalBody,
-	CModalFooter,
-	CModalHeader,
-} from '@coreui/react'
+import { CButton, CForm, CInputCheckbox, CLabel, CModal, CModalBody, CModalFooter, CModalHeader } from '@coreui/react'
 
 export const ExportWizardModal = forwardRef(function WizardModal(_props, ref) {
 	const [show, setShow] = useState(false)
@@ -66,6 +56,8 @@ export const ExportWizardModal = forwardRef(function WizardModal(_props, ref) {
 		[]
 	)
 
+	const canExport = Object.values(config).find((v) => !!v)
+
 	return (
 		<CModal show={show} onClose={doClose} className={'wizard'} closeOnBackdrop={false}>
 			<CForm className={'edit-button-panel'}>
@@ -82,7 +74,7 @@ export const ExportWizardModal = forwardRef(function WizardModal(_props, ref) {
 					<CButton color="secondary" onClick={doClose}>
 						Close
 					</CButton>
-					<CButton color="primary" onClick={doSave}>
+					<CButton color="primary" onClick={doSave} disabled={!canExport}>
 						Download
 					</CButton>
 				</CModalFooter>
@@ -105,12 +97,12 @@ function ExportOptionsStep({ config, setValue }) {
 					/>
 					<CLabel htmlFor="wizard_connections">Connections</CLabel>
 				</div>
-				{!config.connections && (config.buttons || config.triggers) && (
+				{/* {!config.connections && (config.buttons || config.triggers) && (
 					<CAlert color="warning">
 						Any connections referenced by buttons or triggers will still be included in the export, with the config
 						options removed.
 					</CAlert>
-				)}
+				)} */}
 			</div>
 			<div className="indent3">
 				<div className="form-check form-check-inline mr-1">
