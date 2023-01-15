@@ -17,7 +17,7 @@ import { faDownload } from '@fortawesome/free-solid-svg-icons'
 export const ResetWizardModal = forwardRef(function WizardModal(_props, ref) {
 	const socket = useContext(SocketContext)
 	const [currentStep, setCurrentStep] = useState(1)
-	const maxSteps = 4
+	const maxSteps = 3
 	const applyStep = 3
 	const [clear, setClear] = useState(true)
 	const [show, setShow] = useState(false)
@@ -141,9 +141,6 @@ export const ResetWizardModal = forwardRef(function WizardModal(_props, ref) {
 			break
 		case 3:
 			modalBody = <ResetApplyStep config={config} />
-			break
-		case 4:
-			modalBody = <ResetFinishStep error={applyError} />
 			break
 		default:
 	}
@@ -319,25 +316,6 @@ function ResetApplyStep({ config }) {
 			<p>The following data will be reset:</p>
 			<ul>{changes}</ul>
 			{changes.length > 0 ? <CAlert color="danger">Proceeding will permanently clear the above data.</CAlert> : ''}
-		</div>
-	)
-}
-
-function ResetFinishStep({ applyError }) {
-	return (
-		<div>
-			{applyError ? (
-				<>
-					<CAlert color="danger">
-						<p>Reset failed with error:</p>
-						<p>{applyError}</p>
-					</CAlert>
-				</>
-			) : (
-				<>
-					<p>Configuration has been successfully reset</p>
-				</>
-			)}
 		</div>
 	)
 }

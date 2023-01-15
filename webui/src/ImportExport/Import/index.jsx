@@ -1,5 +1,5 @@
 import { CButton } from '@coreui/react'
-import React, { useCallback, useContext, useState } from 'react'
+import React, { useCallback, useContext, useEffect, useState } from 'react'
 import { NotifierContext, SocketContext, socketEmitPromise } from '../../util'
 import { ImportPageWizard } from './Page'
 import { ImportFullWizard } from './Full'
@@ -11,6 +11,10 @@ export function ImportWizard({ importInfo, clearImport }) {
 	const [snapshot, instanceRemap0] = importInfo
 
 	const [instanceRemap, setInstanceRemap] = useState(instanceRemap0)
+	useEffect(() => {
+		console.log('new remap')
+		setInstanceRemap(instanceRemap0)
+	}, [instanceRemap0])
 
 	const doSinglePageImport = useCallback(
 		(_fromPage, toPage, instanceRemap) => {

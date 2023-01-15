@@ -13,11 +13,32 @@ import {
 	CTabPane,
 	CTabs,
 } from '@coreui/react'
-import { faCalendar, faFileImport, faGlobe } from '@fortawesome/free-solid-svg-icons'
+import { faCalendar, faDownload, faFileImport, faGlobe } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { ImportPageWizard } from './Page'
 
 export function ImportFullWizard({ snapshot, instanceRemap, setInstanceRemap }) {
+	const socket = useContext(SocketContext)
+	const notifier = useContext(NotifierContext)
+
+	const doSinglePageImport = useCallback(
+		(_fromPage, toPage, instanceRemap) => {
+			socketEmitPromise(socket, 'loadsave:import-page', [toPage, _fromPage, instanceRemap])
+				.then((res) => {
+					notifier.current.show(`Import successful`, `Page was imported successfully`, 10000)
+					console.log('remap response', res)
+					if (res) {
+						setInstanceRemap(res)
+					}
+				})
+				.catch((e) => {
+					notifier.current.show(`Import failed`, `Page import failed with: "${e}"`, 10000)
+					console.error('import failed', e)
+				})
+		},
+		[socket, notifier, setInstanceRemap]
+	)
+
 	return (
 		<CTabs activeTab="full">
 			<CNav variant="tabs">
@@ -40,7 +61,12 @@ export function ImportFullWizard({ snapshot, instanceRemap, setInstanceRemap }) 
 				</CTabPane>
 				<CTabPane data-tab="buttons">
 					<MyErrorBoundary>
-						<ImportPageWizard snapshot={snapshot} instanceRemap={instanceRemap} setInstanceRemap={setInstanceRemap} />
+						<ImportPageWizard
+							snapshot={snapshot}
+							instanceRemap={instanceRemap}
+							setInstanceRemap={setInstanceRemap}
+							doImport={doSinglePageImport}
+						/>
 					</MyErrorBoundary>
 				</CTabPane>
 			</CTabContent>
@@ -102,7 +128,17 @@ function FullImportTab({ snapshot }) {
 	return (
 		<>
 			<h5>Full Import</h5>
+
 			<CAlert color="info">If you wish to do a more selective import, check the other tabs.</CAlert>
+
+			<p>It is recommended to export the system configuration first.</p>
+
+			<CButton color="success" href="/int/export/full" target="_new">
+				<FontAwesomeIcon icon={faDownload} /> Export
+			</CButton>
+
+			<p>&nbsp;</p>
+
 			<p>Perform a full reset, and import the selected components:</p>
 
 			{/* <InputCheckbox
