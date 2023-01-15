@@ -67,17 +67,29 @@ export function ImportFullWizard({ snapshot, instanceRemap, setInstanceRemap }) 
 				</CTabPane>
 				<CTabPane data-tab="buttons">
 					<MyErrorBoundary>
-						<ImportPageWizard
-							snapshot={snapshot}
-							instanceRemap={instanceRemap}
-							setInstanceRemap={setInstanceRemap}
-							doImport={doSinglePageImport}
-						/>
+						{snapshot.controls ? (
+							<ImportPageWizard
+								snapshot={snapshot}
+								instanceRemap={instanceRemap}
+								setInstanceRemap={setInstanceRemap}
+								doImport={doSinglePageImport}
+							/>
+						) : (
+							''
+						)}
 					</MyErrorBoundary>
 				</CTabPane>
 				<CTabPane data-tab="triggers">
 					<MyErrorBoundary>
-						<ImportTriggersTab snapshot={snapshot} instanceRemap={instanceRemap} setInstanceRemap={setInstanceRemap} />
+						{snapshot.triggers ? (
+							<ImportTriggersTab
+								snapshot={snapshot}
+								instanceRemap={instanceRemap}
+								setInstanceRemap={setInstanceRemap}
+							/>
+						) : (
+							''
+						)}
 					</MyErrorBoundary>
 				</CTabPane>
 			</CTabContent>

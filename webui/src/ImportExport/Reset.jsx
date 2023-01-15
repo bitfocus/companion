@@ -10,19 +10,20 @@ import {
 	CInputCheckbox,
 	CLabel,
 } from '@coreui/react'
-import { SocketContext, socketEmitPromise } from '../util'
+import { NotifierContext, SocketContext, socketEmitPromise } from '../util'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faDownload } from '@fortawesome/free-solid-svg-icons'
 
 export const ResetWizardModal = forwardRef(function WizardModal(_props, ref) {
 	const socket = useContext(SocketContext)
+	const notifier = useContext(NotifierContext)
+
 	const [currentStep, setCurrentStep] = useState(1)
 	const maxSteps = 3
 	const applyStep = 3
 	const [clear, setClear] = useState(true)
 	const [show, setShow] = useState(false)
 	const [config, setConfig] = useState({})
-	const [applyError, setApplyError] = useState(null)
 
 	const doClose = useCallback(() => {
 		setShow(false)
@@ -59,21 +60,23 @@ export const ResetWizardModal = forwardRef(function WizardModal(_props, ref) {
 			socketEmitPromise(socket, 'loadsave:reset', [config], 30000)
 				.then((status) => {
 					if (status !== 'ok') {
-						setApplyError('An unspecified error occurred during the reset.  Please try again.')
-					} else {
-						setApplyError(null)
+						notifier.current.show(
+							`Reset failed`,
+							`An unspecified error occurred during the reset.  Please try again.`,
+							10000
+						)
 					}
 
 					doNextStep()
 				})
 				.catch((e) => {
-					setApplyError('An error occurred:', e)
+					notifier.current.show(`Reset failed`, 'An error occurred:' + e, 10000)
 					doNextStep()
 				})
 
 			doNextStep()
 		},
-		[socket, config, doNextStep]
+		[socket, notifier, config, doNextStep]
 	)
 
 	const setValue = (key, value) => {
@@ -98,7 +101,6 @@ export const ResetWizardModal = forwardRef(function WizardModal(_props, ref) {
 					})
 
 					setCurrentStep(1)
-					setApplyError(null)
 				}
 				setShow(true)
 				setClear(false)
