@@ -13,17 +13,18 @@ import {
 	CTabPane,
 	CTabs,
 } from '@coreui/react'
-import { faCalendar, faDownload, faFileImport, faGlobe } from '@fortawesome/free-solid-svg-icons'
+import { faCalendar, faClock, faDownload, faFileImport, faGlobe } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { ImportPageWizard } from './Page'
+import { ImportTriggersTab } from './Triggers'
 
 export function ImportFullWizard({ snapshot, instanceRemap, setInstanceRemap }) {
 	const socket = useContext(SocketContext)
 	const notifier = useContext(NotifierContext)
 
 	const doSinglePageImport = useCallback(
-		(_fromPage, toPage, instanceRemap) => {
-			socketEmitPromise(socket, 'loadsave:import-page', [toPage, _fromPage, instanceRemap])
+		(fromPage, toPage, instanceRemap) => {
+			socketEmitPromise(socket, 'loadsave:import-page', [toPage, fromPage, instanceRemap])
 				.then((res) => {
 					notifier.current.show(`Import successful`, `Page was imported successfully`, 10000)
 					console.log('remap response', res)
@@ -52,6 +53,11 @@ export function ImportFullWizard({ snapshot, instanceRemap, setInstanceRemap }) 
 						<FontAwesomeIcon icon={faCalendar} /> Buttons
 					</CNavLink>
 				</CNavItem>
+				<CNavItem>
+					<CNavLink data-tab="triggers" disabled={!snapshot.triggers}>
+						<FontAwesomeIcon icon={faClock} /> Triggers
+					</CNavLink>
+				</CNavItem>
 			</CNav>
 			<CTabContent fade={false}>
 				<CTabPane data-tab="full">
@@ -69,6 +75,11 @@ export function ImportFullWizard({ snapshot, instanceRemap, setInstanceRemap }) 
 						/>
 					</MyErrorBoundary>
 				</CTabPane>
+				<CTabPane data-tab="triggers">
+					<MyErrorBoundary>
+						<ImportTriggersTab snapshot={snapshot} instanceRemap={instanceRemap} setInstanceRemap={setInstanceRemap} />
+					</MyErrorBoundary>
+				</CTabPane>
 			</CTabContent>
 		</CTabs>
 	)
@@ -79,7 +90,11 @@ function FullImportTab({ snapshot }) {
 	const notifier = useContext(NotifierContext)
 
 	const snapshotKeys = useMemo(() => {
-		const keys = Object.keys(snapshot)
+		const keys = []
+
+		for (const [key, val] of Object.entries(snapshot)) {
+			if (val) keys.push(key)
+		}
 
 		{
 			const i = keys.indexOf('instances')
@@ -183,7 +198,7 @@ function FullImportTab({ snapshot }) {
 				All the connections will be imported, as they are required to be able to import any actions and feedbacks.
 			</CAlert>
 
-			<CButton color="success" onClick={doImport} disabled={validConfigKeys.length === 0}>
+			<CButton color="warning" onClick={doImport} disabled={validConfigKeys.length === 0}>
 				<FontAwesomeIcon icon={faFileImport} /> Reset and Import
 			</CButton>
 		</>

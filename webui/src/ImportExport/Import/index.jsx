@@ -12,13 +12,12 @@ export function ImportWizard({ importInfo, clearImport }) {
 
 	const [instanceRemap, setInstanceRemap] = useState(instanceRemap0)
 	useEffect(() => {
-		console.log('new remap')
 		setInstanceRemap(instanceRemap0)
 	}, [instanceRemap0])
 
 	const doSinglePageImport = useCallback(
-		(_fromPage, toPage, instanceRemap) => {
-			socketEmitPromise(socket, 'loadsave:import-page', [toPage, _fromPage, instanceRemap])
+		(fromPage, toPage, instanceRemap) => {
+			socketEmitPromise(socket, 'loadsave:import-page', [toPage, fromPage, instanceRemap])
 				.then((res) => {
 					notifier.current.show(`Import successful`, `Page was imported successfully`, 10000)
 					clearImport()

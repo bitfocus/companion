@@ -104,7 +104,7 @@ export function ImportPageWizard({ snapshot, instanceRemap, setInstanceRemap, do
 	)
 }
 
-function ImportRemap({ snapshot, instanceRemap, setInstanceRemap }) {
+export function ImportRemap({ snapshot, instanceRemap, setInstanceRemap }) {
 	const modules = useContext(ModulesContext)
 	const instancesContext = useContext(InstancesContext)
 
@@ -121,6 +121,11 @@ function ImportRemap({ snapshot, instanceRemap, setInstanceRemap }) {
 					</tr>
 				</thead>
 				<tbody>
+					{Object.keys(snapshot.instances || {}).length === 0 && (
+						<tr>
+							<td colSpan={3}>No connections</td>
+						</tr>
+					)}
 					{Object.entries(snapshot.instances || {}).map(([key, instance]) => {
 						const snapshotModule = modules[instance.instance_type]
 						const currentInstances = Object.entries(instancesContext).filter(
