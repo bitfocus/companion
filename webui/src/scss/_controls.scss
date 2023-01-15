@@ -12,6 +12,20 @@ input[type='checkbox'] {
 input[type='checkbox']:checked {
 	background: 0 0 url('/img/check.png') no-repeat;
 }
+input[type='checkbox']:disabled {
+	background: #eee;
+}
+
+label.disabled {
+	color: #ccc;
+}
+
+.form-check {
+	label {
+		line-height: 24px;
+		margin-bottom: 0;
+	}
+}
 
 /* Style for autocomplete of variable */
 .tribute-container li span {

@@ -22,10 +22,10 @@ export function ImportExport() {
 
 	const loadSnapshot = useCallback(
 		(e) => {
-			const newFiles = e.currentTarget.files
-			e.currentTarget.files = null
+			const newFile = e.currentTarget.files?.[0]
+			e.currentTarget.value = null
 
-			if (!newFiles[0] === undefined || newFiles[0].type === undefined) {
+			if (newFile === undefined || newFile.type === undefined) {
 				setLoadError('Unable to read config file')
 				return
 			}
@@ -71,7 +71,7 @@ export function ImportExport() {
 						console.error('Failed to load config to import:', e)
 					})
 			}
-			fr.readAsText(newFiles[0])
+			fr.readAsText(newFile)
 		},
 		[socket, instancesContext]
 	)

@@ -1,11 +1,13 @@
-import React, { forwardRef, useCallback, useContext, useImperativeHandle, useState } from 'react'
+import React, { forwardRef, useCallback, useContext, useImperativeHandle, useMemo, useState } from 'react'
 import { CButton, CForm, CModal, CModalBody, CModalFooter, CModalHeader } from '@coreui/react'
 import { SocketContext, socketEmitPromise } from '../../util'
 import { ResetBeginStep, ResetOptionsStep, ResetApplyStep } from './Reset'
 import { ResetFinishStep } from './Reset'
+import { ImportOptionsStep, ImportPageSelectionStep } from './Import'
 
 export const WizardModal = forwardRef(function WizardModal(_props, ref) {
 	const socket = useContext(SocketContext)
+	const [size, setSize] = useState(undefined)
 	const [currentStep, setCurrentStep] = useState(1)
 	const [maxSteps, setMaxSteps] = useState(6)
 	const [applyStep, setApplyStep] = useState(5)
@@ -77,7 +79,7 @@ export const WizardModal = forwardRef(function WizardModal(_props, ref) {
 
 			doNextStep()
 		},
-		[socket, wizardMode, snapshot, config, doNextStep]
+		[socket, wizardMode, config, doNextStep]
 	)
 
 	const setValue = (key, value) => {
@@ -95,11 +97,21 @@ export const WizardModal = forwardRef(function WizardModal(_props, ref) {
 				setMaxSteps(6)
 				setApplyStep(5)
 				setWizardTitle('Import Configuration')
+				setSize('lg')
 				break
 			case 'import_full':
 				setMaxSteps(4)
 				setApplyStep(3)
 				setWizardTitle('Import Configuration')
+				setConfig({
+					connections: true,
+					buttons: true,
+					surfaces: true,
+					triggers: true,
+					customVariables: true,
+					// userconfig: true,
+				})
+				setSize('lg')
 				break
 			case 'reset':
 				setMaxSteps(4)
@@ -113,6 +125,7 @@ export const WizardModal = forwardRef(function WizardModal(_props, ref) {
 					userconfig: true,
 				})
 				setWizardTitle('Reset Configuration')
+				setSize(undefined)
 				break
 			default:
 		}
@@ -160,11 +173,38 @@ export const WizardModal = forwardRef(function WizardModal(_props, ref) {
 			)
 	}
 
+	const snapshotKeys = useMemo(() => Object.keys(snapshot || {}), [snapshot])
+	console.log(config)
+
 	let modalBody
 	switch (wizardMode) {
 		case 'import_page':
+			switch (currentStep) {
+				case 1:
+					modalBody = <ImportPageSelectionStep config={config} setValue={setValue} snapshot={snapshot} />
+					break
+				case 2:
+					break
+				case 3:
+					break
+				case 4:
+					break
+				default:
+			}
 			break
 		case 'import_full':
+			switch (currentStep) {
+				case 1:
+					modalBody = <ImportOptionsStep config={config} setValue={setValue} snapshotKeys={snapshotKeys} />
+					break
+				case 2:
+					break
+				case 3:
+					break
+				case 4:
+					break
+				default:
+			}
 			break
 		case 'reset':
 			switch (currentStep) {
@@ -187,7 +227,7 @@ export const WizardModal = forwardRef(function WizardModal(_props, ref) {
 	}
 
 	return (
-		<CModal show={show} onClose={doClose} className={'wizard'} closeOnBackdrop={false}>
+		<CModal show={show} onClose={doClose} className={'wizard'} closeOnBackdrop={false} size={size}>
 			<CForm className={'edit-button-panel'}>
 				<CModalHeader>
 					<h2>
@@ -203,7 +243,7 @@ export const WizardModal = forwardRef(function WizardModal(_props, ref) {
 								Cancel
 							</CButton>
 							<CButton color="secondary" disabled={currentStep === 1} onClick={doPrevStep}>
-								Previous
+								Back
 							</CButton>
 						</>
 					)}
