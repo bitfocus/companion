@@ -29,6 +29,7 @@ import { ButtonPreview } from '../Components/ButtonPreview'
 import { GenericConfirmModal } from '../Components/GenericConfirmModal'
 import { nanoid } from 'nanoid'
 import { useSharedPageRenderCache } from '../ButtonRenderCache'
+import Select from 'react-select'
 
 export const ButtonsGridPanel = memo(function ButtonsPage({
 	pageNumber,
@@ -358,41 +359,17 @@ export const ButtonGridHeader = memo(function ButtonGridHeader({
 	changePage,
 	setPage,
 }) {
-	const [tmpText, setTmpText] = useState(null)
+	const pagesContext = useContext(PagesContext)
 
 	const inputChange = useCallback(
-		(e) => {
-			const number = parseInt(e.currentTarget.value)
-			if (number > 0) {
-				setTmpText(number)
-			} else if (e.currentTarget.value === '') {
-				setTmpText(e.currentTarget.value)
+		(val) => {
+			const val2 = Number(val?.value)
+			if (!isNaN(val2)) {
+				setPage(val2)
 			}
 		},
-		[setTmpText]
+		[setPage]
 	)
-	const inputBlur = useCallback(() => {
-		setTmpText((tmpText) => {
-			if (typeof tmpText === 'number') {
-				setPage(tmpText)
-			}
-
-			return null
-		})
-	}, [setTmpText, setPage])
-
-	const inputEnter = useCallback(
-		(e) => {
-			if (e.key === 'Enter') {
-				inputBlur()
-			}
-		},
-		[inputBlur]
-	)
-
-	const inputSelectAll = (event) => {
-		setTimeout(event.target.select.bind(event.target), 20)
-	}
 
 	const nextPage = useCallback(() => {
 		changePage(1)
@@ -400,6 +377,13 @@ export const ButtonGridHeader = memo(function ButtonGridHeader({
 	const prevPage = useCallback(() => {
 		changePage(-1)
 	}, [changePage])
+
+	const pageOptions = useMemo(() => {
+		return Object.entries(pagesContext).map(([id, value]) => ({
+			value: id,
+			label: `${id} (${value.name})`,
+		}))
+	}, [pagesContext])
 
 	return (
 		<div className="button-grid-header">
@@ -409,16 +393,17 @@ export const ButtonGridHeader = memo(function ButtonGridHeader({
 						<FontAwesomeIcon icon={faChevronLeft} />
 					</CButton>
 				</CInputGroupPrepend>
-				<CInput
-					type="text"
-					disabled={!setPage}
-					placeholder={pageNumber}
-					value={tmpText ?? pageNumber}
-					onChange={inputChange}
-					onBlur={inputBlur}
-					onFocus={inputSelectAll}
-					onKeyDown={inputEnter}
+				<Select
 					className="button-page-input"
+					isDisabled={!setPage}
+					placeholder={pageNumber}
+					classNamePrefix={'select-control'}
+					isClearable={false}
+					isSearchable={true}
+					isMulti={false}
+					options={pageOptions}
+					value={{ value: pageNumber, label: pageNumber }}
+					onChange={inputChange}
 				/>
 				<CInputGroupAppend>
 					<CButton color="dark" hidden={!changePage} onClick={nextPage}>
