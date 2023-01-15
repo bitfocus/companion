@@ -4,8 +4,8 @@ import { InstancesContext, SocketContext, socketEmitPromise } from '../util'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faDownload, faFileImport, faTrashAlt } from '@fortawesome/free-solid-svg-icons'
 import { CAlert, CButton } from '@coreui/react'
-import { WizardModal } from './Wizard'
-import { ExportWizardModal } from './Wizard/Export'
+import { ResetWizardModal } from './Reset'
+import { ExportWizardModal } from './Export'
 import { ImportWizard } from './Import'
 
 export function ImportExport() {
@@ -14,9 +14,9 @@ export function ImportExport() {
 
 	const [loadError, setLoadError] = useState(null)
 
-	const modalRef = useRef(null)
+	const resetRef = useRef(null)
 	const exportRef = useRef(null)
-	const doReset = useCallback(() => modalRef.current.show('reset'), [])
+	const doReset = useCallback(() => resetRef.current.show(), [])
 	const doExport = useCallback(() => exportRef.current.show(), [])
 
 	const [importInfo, setImportInfo] = useState(null)
@@ -93,7 +93,7 @@ export function ImportExport() {
 
 	return (
 		<>
-			<WizardModal ref={modalRef} />
+			<ResetWizardModal ref={resetRef} />
 			<ExportWizardModal ref={exportRef} />
 
 			<h5>Import configuration</h5>

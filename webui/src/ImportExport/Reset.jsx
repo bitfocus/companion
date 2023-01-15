@@ -1,9 +1,182 @@
-import React from 'react'
-import { CAlert, CButton, CInputCheckbox, CLabel } from '@coreui/react'
+import React, { forwardRef, useCallback, useContext, useImperativeHandle, useState } from 'react'
+import {
+	CButton,
+	CForm,
+	CModal,
+	CModalBody,
+	CModalFooter,
+	CModalHeader,
+	CAlert,
+	CInputCheckbox,
+	CLabel,
+} from '@coreui/react'
+import { SocketContext, socketEmitPromise } from '../util'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faDownload } from '@fortawesome/free-solid-svg-icons'
 
-export function ResetBeginStep() {
+export const ResetWizardModal = forwardRef(function WizardModal(_props, ref) {
+	const socket = useContext(SocketContext)
+	const [currentStep, setCurrentStep] = useState(1)
+	const maxSteps = 4
+	const applyStep = 3
+	const [clear, setClear] = useState(true)
+	const [show, setShow] = useState(false)
+	const [config, setConfig] = useState({})
+	const [applyError, setApplyError] = useState(null)
+
+	const doClose = useCallback(() => {
+		setShow(false)
+		setClear(true)
+	}, [])
+
+	const doNextStep = useCallback(() => {
+		let newStep = currentStep
+		// Make sure step is set to something reasonable
+		if (newStep >= maxSteps - 1) {
+			newStep = maxSteps
+		} else {
+			newStep = newStep + 1
+		}
+
+		setCurrentStep(newStep)
+	}, [currentStep, maxSteps])
+
+	const doPrevStep = useCallback(() => {
+		let newStep = currentStep
+		if (newStep <= 1) {
+			newStep = 1
+		} else {
+			newStep = newStep - 1
+		}
+
+		setCurrentStep(newStep)
+	}, [currentStep])
+
+	const doSave = useCallback(
+		(e) => {
+			e.preventDefault()
+
+			socketEmitPromise(socket, 'loadsave:reset', [config], 30000)
+				.then((status) => {
+					if (status !== 'ok') {
+						setApplyError('An unspecified error occurred during the reset.  Please try again.')
+					} else {
+						setApplyError(null)
+					}
+
+					doNextStep()
+				})
+				.catch((e) => {
+					setApplyError('An error occurred:', e)
+					doNextStep()
+				})
+
+			doNextStep()
+		},
+		[socket, config, doNextStep]
+	)
+
+	const setValue = (key, value) => {
+		setConfig((oldState) => ({
+			...oldState,
+			[key]: value,
+		}))
+	}
+
+	useImperativeHandle(
+		ref,
+		() => ({
+			show() {
+				if (clear) {
+					setConfig({
+						connections: true,
+						buttons: true,
+						surfaces: true,
+						triggers: true,
+						customVariables: true,
+						userconfig: true,
+					})
+
+					setCurrentStep(1)
+					setApplyError(null)
+				}
+				setShow(true)
+				setClear(false)
+			},
+		}),
+		[clear]
+	)
+
+	let nextButton
+	switch (currentStep) {
+		case applyStep:
+			nextButton = (
+				<CButton color="primary" onClick={doSave}>
+					Apply
+				</CButton>
+			)
+			break
+		case maxSteps:
+			nextButton = (
+				<CButton color="primary" onClick={doClose}>
+					Finish
+				</CButton>
+			)
+			break
+		default:
+			nextButton = (
+				<CButton color="primary" onClick={doNextStep}>
+					Next
+				</CButton>
+			)
+	}
+
+	let modalBody
+	switch (currentStep) {
+		case 1:
+			modalBody = <ResetBeginStep />
+			break
+		case 2:
+			modalBody = <ResetOptionsStep config={config} setValue={setValue} />
+			break
+		case 3:
+			modalBody = <ResetApplyStep config={config} />
+			break
+		case 4:
+			modalBody = <ResetFinishStep error={applyError} />
+			break
+		default:
+	}
+
+	return (
+		<CModal show={show} onClose={doClose} className={'wizard'} closeOnBackdrop={false}>
+			<CForm className={'edit-button-panel'}>
+				<CModalHeader>
+					<h2>
+						<img src="/img/icons/48x48.png" height="30" alt="logo" />
+						Reset Configuration
+					</h2>
+				</CModalHeader>
+				<CModalBody>{modalBody}</CModalBody>
+				<CModalFooter>
+					{currentStep <= applyStep && (
+						<>
+							<CButton color="secondary" onClick={doClose}>
+								Cancel
+							</CButton>
+							<CButton color="secondary" disabled={currentStep === 1} onClick={doPrevStep}>
+								Back
+							</CButton>
+						</>
+					)}
+					{nextButton}
+				</CModalFooter>
+			</CForm>
+		</CModal>
+	)
+})
+
+function ResetBeginStep() {
 	return (
 		<div>
 			<p style={{ marginTop: 0 }}>
@@ -18,7 +191,7 @@ export function ResetBeginStep() {
 	)
 }
 
-export function ResetOptionsStep({ config, setValue }) {
+function ResetOptionsStep({ config, setValue }) {
 	return (
 		<div>
 			<h5>Reset Options</h5>
@@ -103,7 +276,7 @@ export function ResetOptionsStep({ config, setValue }) {
 	)
 }
 
-export function ResetApplyStep({ config }) {
+function ResetApplyStep({ config }) {
 	const changes = []
 
 	if (config.connections && !config.buttons && !config.triggers) {
@@ -150,7 +323,7 @@ export function ResetApplyStep({ config }) {
 	)
 }
 
-export function ResetFinishStep({ applyError }) {
+function ResetFinishStep({ applyError }) {
 	return (
 		<div>
 			{applyError ? (
