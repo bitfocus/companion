@@ -82,7 +82,7 @@ export function ImportTriggersTab({ snapshot, instanceRemap, setInstanceRemap })
 									<CInputCheckbox data-id={id} checked={selectedTriggers.includes(id)} onChange={toggleTrigger} />
 								</div>
 							</td>
-							<td>{info.options.name}</td>
+							<td>{info.name}</td>
 						</tr>
 					))}
 				</tbody>
