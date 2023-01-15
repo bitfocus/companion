@@ -427,7 +427,7 @@ function AppContent({ buttonGridHotPress }) {
 					</CNavLink>
 				</CNavItem>
 				<CNavItem>
-					<CNavLink to="/importexport">
+					<CNavLink to="/import-export">
 						<FontAwesomeIcon icon={faFileImport} /> Import / Export
 					</CNavLink>
 				</CNavItem>
@@ -470,7 +470,7 @@ function AppContent({ buttonGridHotPress }) {
 						<UserConfig />
 					</MyErrorBoundary>
 				</CTabPane>
-				<CTabPane className={getClassForPane('/importexport')}>
+				<CTabPane className={getClassForPane('/import-export')}>
 					<MyErrorBoundary>
 						<ImportExport />
 					</MyErrorBoundary>

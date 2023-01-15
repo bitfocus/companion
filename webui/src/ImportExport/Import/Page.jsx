@@ -52,13 +52,13 @@ export function ImportPageWizard({ snapshot, instanceRemap, setInstanceRemap, do
 						<CCol sm={12}>
 							<ButtonGridHeader
 								pageNumber={isSinglePage ? snapshot.oldPageNumber : importPageNumber}
-								pageName={isSinglePage ? snapshot.page.name : snapshot.pages[importPageNumber]?.name}
+								pageName={isSinglePage ? snapshot.page.name : snapshot.pages?.[importPageNumber]?.name}
 								changePage={isSinglePage ? null : changeImportPage}
 								setPage={isSinglePage ? null : setImportPageNumber}
 							/>
 						</CCol>
 						<div className="bankgrid">
-							<ButtonImportGrid page={snapshot.oldPageNumber} />
+							<ButtonImportGrid page={isSinglePage ? snapshot.oldPageNumber : importPageNumber} />
 						</div>
 					</div>
 				</MyErrorBoundary>

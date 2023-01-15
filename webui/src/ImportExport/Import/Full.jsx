@@ -1,5 +1,182 @@
-import React from 'react'
+import React, { useCallback, useContext, useMemo, useState } from 'react'
+import ClassNames from 'classnames'
+import { MyErrorBoundary, NotifierContext, SocketContext, socketEmitPromise } from '../../util'
+import {
+	CAlert,
+	CButton,
+	CInputCheckbox,
+	CLabel,
+	CNav,
+	CNavItem,
+	CNavLink,
+	CTabContent,
+	CTabPane,
+	CTabs,
+} from '@coreui/react'
+import { faCalendar, faFileImport, faGlobe } from '@fortawesome/free-solid-svg-icons'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { ImportPageWizard } from './Page'
 
-export function ImportFullWizard({ snapshot, instanceRemap }) {
-	return <p>Full2</p>
+export function ImportFullWizard({ snapshot, instanceRemap, setInstanceRemap }) {
+	return (
+		<CTabs activeTab="full">
+			<CNav variant="tabs">
+				<CNavItem>
+					<CNavLink data-tab="full">
+						<FontAwesomeIcon icon={faGlobe} /> Full Import
+					</CNavLink>
+				</CNavItem>
+				<CNavItem>
+					<CNavLink data-tab="buttons" disabled={!snapshot.controls}>
+						<FontAwesomeIcon icon={faCalendar} /> Buttons
+					</CNavLink>
+				</CNavItem>
+			</CNav>
+			<CTabContent fade={false}>
+				<CTabPane data-tab="full">
+					<MyErrorBoundary>
+						<FullImportTab snapshot={snapshot} />
+					</MyErrorBoundary>
+				</CTabPane>
+				<CTabPane data-tab="buttons">
+					<MyErrorBoundary>
+						<ImportPageWizard snapshot={snapshot} instanceRemap={instanceRemap} setInstanceRemap={setInstanceRemap} />
+					</MyErrorBoundary>
+				</CTabPane>
+			</CTabContent>
+		</CTabs>
+	)
+}
+
+function FullImportTab({ snapshot }) {
+	const socket = useContext(SocketContext)
+	const notifier = useContext(NotifierContext)
+
+	const snapshotKeys = useMemo(() => {
+		const keys = Object.keys(snapshot)
+
+		{
+			const i = keys.indexOf('instances')
+			if (i !== -1) keys[i] = 'connections'
+		}
+		{
+			const i = keys.indexOf('controls')
+			if (i !== -1) keys[i] = 'buttons'
+		}
+
+		return keys
+	}, [snapshot])
+
+	const [config, setConfig] = useState(() => ({
+		// connections: true,
+		buttons: true,
+		surfaces: true,
+		triggers: true,
+		customVariables: true,
+		// userconfig: true,
+	}))
+
+	const validConfigKeys = Object.entries(config).filter(([k, v]) => v && snapshotKeys.includes(k))
+	// console.log('validkeys', validConfigKeys)
+
+	const setValue = useCallback((key, value) => {
+		setConfig((oldConfig) => ({
+			...oldConfig,
+			[key]: value,
+		}))
+	}, [])
+
+	const doImport = useCallback(() => {
+		socketEmitPromise(socket, 'loadsave:import-full', [config])
+			.then((res) => {
+				// notifier.current.show(`Import successful`, `Page was imported successfully`, 10000)
+				window.location.reload()
+			})
+			.catch((e) => {
+				console.log('import failed', e)
+				notifier.current.show(`Import failed`, `Full import failed with: "${e?.message ?? e}"`, 10000)
+			})
+		console.log('do import!')
+	}, [socket, notifier, config])
+
+	return (
+		<>
+			<h5>Full Import</h5>
+			<CAlert color="info">If you wish to do a more selective import, check the other tabs.</CAlert>
+			<p>Perform a full reset, and import the selected components:</p>
+
+			{/* <InputCheckbox
+				config={config}
+				allowKeys={snapshotKeys}
+				keyName="connections"
+				setValue={() => null}
+				label="Connections"
+			/> */}
+			{/* {!config.connections && (config.buttons || config.triggers) ? (
+				<CAlert color="warning">
+					Any 'Connections' referenced by an action or feedback will still be imported, but it  will remove all actions, feedbacks, and triggers associated with the connections even
+					if 'Buttons' and/or 'Triggers' are not also reset.
+				</CAlert>
+			) : (
+				''
+			)} */}
+
+			<InputCheckbox config={config} allowKeys={snapshotKeys} keyName="buttons" setValue={setValue} label="Buttons" />
+
+			<InputCheckbox config={config} allowKeys={snapshotKeys} keyName="triggers" setValue={setValue} label="Triggers" />
+
+			<InputCheckbox
+				config={config}
+				allowKeys={snapshotKeys}
+				keyName="customVariables"
+				setValue={setValue}
+				label="Custom Variables"
+			/>
+
+			<InputCheckbox config={config} allowKeys={snapshotKeys} keyName="surfaces" setValue={setValue} label="Surfaces" />
+
+			{/* <InputCheckbox
+				config={config}
+				allowKeys={snapshotKeys}
+				keyName="userconfig"
+				setValue={setValue}
+				label="Settings"
+			/> */}
+
+			<CAlert color="info">
+				All the connections will be imported, as they are required to be able to import any actions and feedbacks.
+			</CAlert>
+
+			<CButton color="success" onClick={doImport} disabled={validConfigKeys.length === 0}>
+				<FontAwesomeIcon icon={faFileImport} /> Reset and Import
+			</CButton>
+		</>
+	)
+}
+
+function InputCheckbox({ config, allowKeys, keyName, setValue, label, forceDisabled }) {
+	const disabled = allowKeys && !allowKeys.includes(keyName)
+
+	const setValue2 = useCallback((e) => setValue(keyName, !!e.currentTarget.checked), [setValue, keyName])
+
+	return (
+		<div className="indent3">
+			<div className="form-check form-check-inline mr-1">
+				<CInputCheckbox
+					id="wizard_connections"
+					checked={!disabled && !!config[keyName]}
+					onChange={setValue2}
+					disabled={disabled}
+				/>
+				<CLabel
+					htmlFor="wizard_connections"
+					className={ClassNames({
+						disabled: disabled,
+					})}
+				>
+					{label}
+				</CLabel>
+			</div>
+		</div>
+	)
 }
