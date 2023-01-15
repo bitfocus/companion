@@ -34,7 +34,7 @@ import { useMemo } from 'react'
 import { DropdownInputField } from '../Components'
 import { ActionsList } from '../Controls/ActionSetEditor'
 import { GenericConfirmModal } from '../Components/GenericConfirmModal'
-import { ButtonGrid, ButtonGridHeader } from './ButtonGrid'
+import { ButtonGrid, ButtonGridHeader, usePagePicker } from './ButtonGrid'
 import { cloneDeep } from 'lodash-es'
 import jsonPatch from 'fast-json-patch'
 import { usePanelCollapseHelper } from '../Helpers/CollapseHelper'
@@ -228,34 +228,12 @@ function RecorderSessionFinishModal({ doClose, sessionId }) {
 function ButtonPicker({ selectButton }) {
 	const socket = useContext(SocketContext)
 	const pages = useContext(PagesContext)
-	const pagesRef = useRef()
 
-	useEffect(() => {
-		// Avoid binding into callbacks
-		pagesRef.current = pages
-	}, [pages])
+	const { pageNumber, setPageNumber, changePage } = usePagePicker(pages, 1)
 
-	const [pageNumber, setPageNumber] = useState(1)
 	const [selectedControl, setSelectedControl] = useState(null)
 	const [selectedStep, setSelectedStep] = useState(null)
 	const [selectedSet, setSelectedSet] = useState(null)
-
-	const changePage = useCallback((delta) => {
-		setPageNumber((pageNumber) => {
-			const pageNumbers = Object.keys(pagesRef.current || {})
-			const currentIndex = pageNumbers.findIndex((p) => p === pageNumber + '')
-			let newPage = pageNumbers[0]
-			if (currentIndex !== -1) {
-				let newIndex = currentIndex + delta
-				if (newIndex < 0) newIndex += pageNumbers.length
-				if (newIndex >= pageNumbers.length) newIndex -= pageNumbers.length
-
-				newPage = pageNumbers[newIndex]
-			}
-
-			return newPage ?? pageNumber
-		})
-	}, [])
 
 	const bankClick = useCallback(
 		(bank, pressed) => {

@@ -6,6 +6,7 @@ import { faDownload, faFileImport, faTrashAlt } from '@fortawesome/free-solid-sv
 import { CAlert, CButton } from '@coreui/react'
 import { WizardModal } from './Wizard'
 import { ExportWizardModal } from './Wizard/Export'
+import { ImportWizard } from './Import'
 
 export function ImportExport() {
 	const socket = useContext(SocketContext)
@@ -17,6 +18,15 @@ export function ImportExport() {
 	const exportRef = useRef(null)
 	const doReset = useCallback(() => modalRef.current.show('reset'), [])
 	const doExport = useCallback(() => exportRef.current.show(), [])
+
+	const [importInfo, setImportInfo] = useState(null)
+	const clearImport = useCallback(() => {
+		setImportInfo(null)
+
+		socketEmitPromise(socket, 'loadsave:abort', []).catch((e) => {
+			console.error('Failed to abort import', e)
+		})
+	}, [socket])
 
 	const fileApiIsSupported = !!(window.File && window.FileReader && window.FileList && window.Blob)
 
@@ -62,8 +72,9 @@ export function ImportExport() {
 							}
 
 							setLoadError(null)
-							const mode = config.type === 'page' ? 'import_page' : 'import_full'
-							modalRef.current.show(mode, config, initialRemap)
+							// const mode = config.type === 'page' ? 'import_page' : 'import_full'
+							// modalRef.current.show(mode, config, initialRemap)
+							setImportInfo([config, initialRemap])
 						}
 					})
 					.catch((e) => {
@@ -75,6 +86,10 @@ export function ImportExport() {
 		},
 		[socket, instancesContext]
 	)
+
+	if (importInfo) {
+		return <ImportWizard importInfo={importInfo} clearImport={clearImport} />
+	}
 
 	return (
 		<>

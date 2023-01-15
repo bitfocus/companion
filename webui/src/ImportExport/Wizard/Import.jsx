@@ -2,11 +2,6 @@ import React, { useEffect, useState } from 'react'
 import Classnames from 'classnames'
 import { CCol, CInputCheckbox, CLabel, CSelect } from '@coreui/react'
 import { useCallback } from 'react'
-import { useContext } from 'react'
-import { InstancesContext, ModulesContext, SocketContext, socketEmitPromise } from '../../util'
-import { CreateBankControlId } from '@companion/shared/ControlId'
-import { MAX_COLS, MAX_ROWS } from '../../Constants'
-import { ButtonPreview, dataToButtonImage } from '../../Components/ButtonPreview'
 
 function InputCheckbox({ config, allowKeys, keyName, setValue, label }) {
 	const disabled = allowKeys && !allowKeys.includes(keyName)
@@ -144,103 +139,11 @@ export function ImportPageSelectionStep({ config, setValue, snapshot }) {
 	return (
 		<div>
 			<h5>Import Page</h5>
-			<ButtonImportGrid page={snapshot?.oldPageNumber ?? null} />
+			{/* <ButtonImportGrid page={snapshot?.oldPageNumber ?? null} /> */}
 
 			<hr />
 
 			<h5>Destination Page</h5>
 		</div>
 	)
-}
-
-export function ImportRemap({ snapshot, instanceRemap, setInstanceRemap }) {
-	const modules = useContext(ModulesContext)
-	const instancesContext = useContext(InstancesContext)
-
-	return (
-		<div id="import_resolve">
-			<h5>Link config connections with local connections</h5>
-
-			<table className="table table-responsive-sm">
-				<thead>
-					<tr>
-						<th>Select connection</th>
-						<th>Config connection type</th>
-						<th>Config connection name</th>
-					</tr>
-				</thead>
-				<tbody>
-					{Object.entries(snapshot.instances || {}).map(([key, instance]) => {
-						const snapshotModule = modules[instance.instance_type]
-						const currentInstances = Object.entries(instancesContext).filter(
-							([id, inst]) => inst.instance_type === instance.instance_type
-						)
-
-						return (
-							<tr>
-								<td>
-									{snapshotModule ? (
-										<CSelect value={instanceRemap[key] ?? ''} onChange={(e) => setInstanceRemap(key, e.target.value)}>
-											<option value="">[ Create new connection ]</option>
-											{currentInstances.map(([id, inst]) => (
-												<option key={id} value={id}>
-													{inst.label}
-												</option>
-											))}
-										</CSelect>
-									) : (
-										'Ignored'
-									)}
-								</td>
-								<td>{snapshotModule ? snapshotModule.name : `Unknown module (${instance.instance_type})`}</td>
-								<td>{instance.label}</td>
-							</tr>
-						)
-					})}
-				</tbody>
-			</table>
-		</div>
-	)
-}
-
-function ButtonImportGrid({ page }) {
-	return (
-		<>
-			{Array(MAX_ROWS)
-				.fill(0)
-				.map((_, y) => {
-					return (
-						<CCol key={y} className="pagebank-row">
-							{Array(MAX_COLS)
-								.fill(0)
-								.map((_, x) => {
-									const index = y * MAX_COLS + x + 1
-									return (
-										<ButtonImportPreview key={x} controlId={CreateBankControlId(page, index)} alt={`Button ${index}`} />
-									)
-								})}
-						</CCol>
-					)
-				})}
-		</>
-	)
-}
-
-function ButtonImportPreview({ controlId, instanceId, ...childProps }) {
-	const socket = useContext(SocketContext)
-	const [previewImage, setPreviewImage] = useState(null)
-
-	useEffect(() => {
-		setPreviewImage(null)
-
-		socketEmitPromise(socket, 'loadsave:control-preview', [controlId])
-			.then((img) => {
-				setPreviewImage(img ? dataToButtonImage(img) : null)
-			})
-			.catch((e) => {
-				console.error(`Failed to preview bank: ${e}`)
-			})
-	}, [controlId, socket])
-
-	return <ButtonPreview {...childProps} preview={previewImage} />
 }
