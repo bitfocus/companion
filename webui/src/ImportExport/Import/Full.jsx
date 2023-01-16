@@ -140,7 +140,7 @@ function FullImportTab({ snapshot }) {
 	}, [])
 
 	const doImport = useCallback(() => {
-		socketEmitPromise(socket, 'loadsave:import-full', [config])
+		socketEmitPromise(socket, 'loadsave:import-full', [config], 60000)
 			.then((res) => {
 				// notifier.current.show(`Import successful`, `Page was imported successfully`, 10000)
 				window.location.reload()
@@ -217,7 +217,7 @@ function FullImportTab({ snapshot }) {
 	)
 }
 
-function InputCheckbox({ config, allowKeys, keyName, setValue, label, forceDisabled }) {
+function InputCheckbox({ config, allowKeys, keyName, setValue, label }) {
 	const disabled = allowKeys && !allowKeys.includes(keyName)
 
 	const setValue2 = useCallback((e) => setValue(keyName, !!e.currentTarget.checked), [setValue, keyName])
@@ -226,13 +226,13 @@ function InputCheckbox({ config, allowKeys, keyName, setValue, label, forceDisab
 		<div className="indent3">
 			<div className="form-check form-check-inline mr-1">
 				<CInputCheckbox
-					id="wizard_connections"
+					id={`check-${keyName}`}
 					checked={!disabled && !!config[keyName]}
 					onChange={setValue2}
 					disabled={disabled}
 				/>
 				<CLabel
-					htmlFor="wizard_connections"
+					htmlFor={`check-${keyName}`}
 					className={ClassNames({
 						disabled: disabled,
 					})}
