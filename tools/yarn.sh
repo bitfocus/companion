@@ -25,7 +25,7 @@ function heading() {
 heading "Check Node version"
 NODE_VERSION=$(node -v)
 REQUIRED_VERSION=$(node -p -e "require('./package.json').engines.node")
-NODE_IS_CORRECT=$(npx semver --range "$REQUIRED_VERSION" $NODE_VERSION)
+NODE_IS_CORRECT=$(npx -y semver --range "$REQUIRED_VERSION" $NODE_VERSION)
 echo "Found ${NODE_VERSION}"
 if [ "$NODE_IS_CORRECT" ]; then
 	echo "Node version is OK "
