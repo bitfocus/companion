@@ -2345,13 +2345,9 @@ commist@^1.0.0:
   version "1.2.6"
   resolved "https://codeload.github.com/bitfocus/companion-module-figure53-go-button/tar.gz/7abff553ac55bbe5ddca71bf0fcfc09f1d527850"
 
-"companion-module-figure53-qlab-advance@github:bitfocus/companion-module-figure53-qlab-advance#v1.5.2":
-  version "1.5.2"
-  resolved "https://codeload.github.com/bitfocus/companion-module-figure53-qlab-advance/tar.gz/ca7551aa8bbdd00676a7490a5a77a3da7f252687"
-
-"companion-module-figure53-qlab@github:bitfocus/companion-module-figure53-qlab#v1.2.7":
-  version "1.2.7"
-  resolved "https://codeload.github.com/bitfocus/companion-module-figure53-qlab/tar.gz/e4e19dcd7fe3bf508e9c77fab3d7a68e854e2820"
+"companion-module-figure53-qlab-advance@github:bitfocus/companion-module-figure53-qlab-advance#v1.5.3":
+  version "1.5.3"
+  resolved "https://codeload.github.com/bitfocus/companion-module-figure53-qlab-advance/tar.gz/8ef5cf460ae3cec072fac86bc4e7a2d3baaa5376"
 
 "companion-module-figure53-qview@github:bitfocus/companion-module-figure53-qview#v1.0.2":
   version "1.0.2"
