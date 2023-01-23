@@ -163,7 +163,7 @@ function InstancesTableRow({
 				{instance.label}
 			</td>
 			<td className={status.className} title={status.title}>
-				{status.text}
+				{typeof status.text === 'string' ? status.text : JSON.stringify(status.text)}
 			</td>
 			<td className="action-buttons">
 				<CButton onClick={doDelete} variant="ghost" color="danger" size="sm">
