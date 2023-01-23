@@ -635,7 +635,7 @@
     "@serialport/bindings-interface" "1.2.1"
     debug "^4.3.2"
 
-"@sindresorhus/is@4.6.0", "@sindresorhus/is@^4.0.0":
+"@sindresorhus/is@^4.0.0":
   version "4.6.0"
   resolved "https://registry.yarnpkg.com/@sindresorhus/is/-/is-4.6.0.tgz#3c7c9c46e678feefe7a2e5bb609d3dbd665ffb3f"
   integrity sha512-t09vSN3MdfsyCHoFcTRCH/iUtG7OJ0CsjzB8cjAmKc/va/kIgeDI/TxsigdncE/4be734m0cvIYwNaV4i2XqAw==
@@ -660,7 +660,7 @@
     guid-typescript "^1.0.9"
     node-fetch "^2.6.0"
 
-"@szmarczak/http-timer@4.0.6", "@szmarczak/http-timer@^4.0.5":
+"@szmarczak/http-timer@^4.0.5":
   version "4.0.6"
   resolved "https://registry.yarnpkg.com/@szmarczak/http-timer/-/http-timer-4.0.6.tgz#b4a914bb62e7c272d4e5989fe4440f812ab1d807"
   integrity sha512-4BAffykYOgO+5nzBWYwE3W90sBgLJoUPRWWcL8wlyiM8IB8ipJz3UMJ9KXQd1RKQXpKp8Tutn80HZtWsu2u76w==
@@ -854,7 +854,7 @@
   resolved "https://registry.yarnpkg.com/@types/ps-tree/-/ps-tree-1.1.2.tgz#5c60773a38ffb1402e049902a7b7a8d3c67cd59a"
   integrity sha512-ZREFYlpUmPQJ0esjxoG1fMvB2HNaD3z+mjqdSosZvd3RalncI9NEur73P8ZJz4YQdL64CmV1w0RuqoRUlhQRBw==
 
-"@types/responselike@*", "@types/responselike@1.0.0", "@types/responselike@^1.0.0":
+"@types/responselike@*", "@types/responselike@^1.0.0":
   version "1.0.0"
   resolved "https://registry.yarnpkg.com/@types/responselike/-/responselike-1.0.0.tgz#251f4fe7d154d2bad125abe1b429b23afd262e29"
   integrity sha512-85Y2BjiufFzaMIlvJDvTTB8Fxl2xfLo4HgmHzVBz08w4wDePCTjYw66PdrolO0kzli3yam/YCgRufyo1DdQVTA==
@@ -889,13 +889,6 @@
   version "8.5.3"
   resolved "https://registry.yarnpkg.com/@types/ws/-/ws-8.5.3.tgz#7d25a1ffbecd3c4f2d35068d0b283c037003274d"
   integrity sha512-6YOoWjruKj1uLf3INHH7D3qTXwFfEsg1kf3c0uDdSBJwfa/llkwIjrAGV7j7mVgGNbzTQ3HiHKKDXl6bJPD97w==
-  dependencies:
-    "@types/node" "*"
-
-"@types/xml2js@^0.4.9":
-  version "0.4.11"
-  resolved "https://registry.yarnpkg.com/@types/xml2js/-/xml2js-0.4.11.tgz#bf46a84ecc12c41159a7bd9cf51ae84129af0e79"
-  integrity sha512-JdigeAKmCyoJUiQljjr7tQG3if9NkqGUgwEUqBvV0N7LM4HyQk7UXCnusRa1lnvXAEYJ8mw8GtZWioagNztOwA==
   dependencies:
     "@types/node" "*"
 
@@ -1572,17 +1565,12 @@ bytesish@^0.4.1:
   resolved "https://registry.yarnpkg.com/bytesish/-/bytesish-0.4.4.tgz#f3b535a0f1153747427aee27256748cff92347e6"
   integrity sha512-i4uu6M4zuMUiyfZN4RU2+i9+peJh//pXhd9x1oSe1LBkZ3LEbCoygu8W0bXTukU1Jme2txKuotpCZRaC3FLxcQ==
 
-cacheable-lookup@6.1.0:
-  version "6.1.0"
-  resolved "https://registry.yarnpkg.com/cacheable-lookup/-/cacheable-lookup-6.1.0.tgz#0330a543471c61faa4e9035db583aad753b36385"
-  integrity sha512-KJ/Dmo1lDDhmW2XDPMo+9oiy/CeqosPguPCrgcVzKyZrL6pM1gU2GmPY/xo6OQPTUaA/c0kwHuywB4E6nmT9ww==
-
 cacheable-lookup@^5.0.3:
   version "5.0.4"
   resolved "https://registry.yarnpkg.com/cacheable-lookup/-/cacheable-lookup-5.0.4.tgz#5a6b865b2c44357be3d5ebc2a467b032719a7005"
   integrity sha512-2/kNscPhpcxrOigMZzbiWF7dz8ilhb/nIHU3EyZiXWXpeq/au8qJ8VhdftMkty3n7Gj6HIGalQG8oiBNB3AJgA==
 
-cacheable-request@7.0.2, cacheable-request@^7.0.2:
+cacheable-request@^7.0.2:
   version "7.0.2"
   resolved "https://registry.yarnpkg.com/cacheable-request/-/cacheable-request-7.0.2.tgz#ea0d0b889364a25854757301ca12b2da77f91d27"
   integrity sha512-pouW8/FmiPQbuGpkXQ9BAPv/Mo5xDGANgSNXzTzJ8DrKGuXOssM4wIQRjfanNRh3Yu5cfYPvcorqbhg2KIJtew==
@@ -2226,12 +2214,6 @@ commist@^1.0.0:
 "companion-module-digitalprojection-highlight@github:bitfocus/companion-module-digitalprojection-highlight#v1.0.4":
   version "1.0.4"
   resolved "https://codeload.github.com/bitfocus/companion-module-digitalprojection-highlight/tar.gz/758784edf593a9c3525efbfc37bec1d3a7970f98"
-
-"companion-module-discord-api@github:bitfocus/companion-module-discord-api#v0.1.4":
-  version "0.1.4"
-  resolved "https://codeload.github.com/bitfocus/companion-module-discord-api/tar.gz/9ee51893e8ec651c2b9a90dbede93d7b91f9ce76"
-  dependencies:
-    got-cjs "^12.0.1"
 
 "companion-module-disguise-mtc@github:bitfocus/companion-module-disguise-mtc#v1.0.4":
   version "1.0.4"
@@ -2912,12 +2894,6 @@ commist@^1.0.0:
   dependencies:
     bent "^7.3.12"
 
-"companion-module-pnh-soundr@github:bitfocus/companion-module-pnh-soundr#v1.0.2":
-  version "1.0.2"
-  resolved "https://codeload.github.com/bitfocus/companion-module-pnh-soundr/tar.gz/2e0aec79605164d580acab56eca6ab4b28f47deb"
-  dependencies:
-    bent "^7.3.12"
-
 "companion-module-presentationtools-aps@github:bitfocus/companion-module-presentationtools-aps#v1.2.1":
   version "1.2.1"
   resolved "https://codeload.github.com/bitfocus/companion-module-presentationtools-aps/tar.gz/b7c712da0f5fea0c2c59288ff8070941cef667a3"
@@ -3176,15 +3152,6 @@ commist@^1.0.0:
 "companion-module-spx-gc@github:bitfocus/companion-module-spx-gc#v1.0.5":
   version "1.0.5"
   resolved "https://codeload.github.com/bitfocus/companion-module-spx-gc/tar.gz/59fff3493e356d89475952df12074d516c45096f"
-
-"companion-module-studiocoast-vmix@github:bitfocus/companion-module-studiocoast-vmix#v2.1.4":
-  version "2.1.4"
-  resolved "https://codeload.github.com/bitfocus/companion-module-studiocoast-vmix/tar.gz/3c78cec9d64dd7dc3592c504f3e60cdc1a19fd63"
-  dependencies:
-    "@types/lodash" "^4.14.178"
-    "@types/xml2js" "^0.4.9"
-    lodash "^4.17.21"
-    xml2js "^0.4.23"
 
 "companion-module-symetrix-dsp@github:bitfocus/companion-module-symetrix-dsp#v1.5.1":
   version "1.5.1"
@@ -4400,7 +4367,7 @@ forever-agent@~0.6.1:
   resolved "https://registry.yarnpkg.com/forever-agent/-/forever-agent-0.6.1.tgz#fbc71f0c41adeb37f96c577ad1ed42d8fdacca91"
   integrity sha1-+8cfDEGt6zf5bFd60e1C2P2sypE=
 
-form-data-encoder@1.7.2, form-data-encoder@^1.7.2:
+form-data-encoder@^1.7.2:
   version "1.7.2"
   resolved "https://registry.yarnpkg.com/form-data-encoder/-/form-data-encoder-1.7.2.tgz#1f1ae3dccf58ed4690b86d87e4f57c654fbab040"
   integrity sha512-qfqtYan3rxrnCk1VYaA4H+Ms9xdpPqvLZa6xmMgFvhO32x7/3J/ExcTd6qpxM0vH2GdMI+poehyBZvqfMTto8A==
@@ -4563,11 +4530,6 @@ get-stream@^5.1.0:
   dependencies:
     pump "^3.0.0"
 
-get-stream@^6.0.1:
-  version "6.0.1"
-  resolved "https://registry.yarnpkg.com/get-stream/-/get-stream-6.0.1.tgz#a262d8eef67aced57c2852ad6167526a43cbf7b7"
-  integrity sha512-ts6Wi+2j3jQjqi70w5AlN8DFnkSwC+MqmxEzdEALB2qXZYV3X/b1CTfgPLGJNMeAWxdPfU8FO1ms3NUfaHCPYg==
-
 get-symbol-description@^1.0.0:
   version "1.0.0"
   resolved "https://registry.yarnpkg.com/get-symbol-description/-/get-symbol-description-1.0.0.tgz#7fdb81c900101fbd564dd5f1a30af5aadc1e58d6"
@@ -4718,24 +4680,6 @@ googleapis@^48.0.0:
   dependencies:
     google-auth-library "^5.6.1"
     googleapis-common "^3.2.0"
-
-got-cjs@^12.0.1:
-  version "12.5.4"
-  resolved "https://registry.yarnpkg.com/got-cjs/-/got-cjs-12.5.4.tgz#b46419c0e8e5fb5503b926941807408049ae2e11"
-  integrity sha512-Uas6lAsP8bRCt5WXGMhjFf/qEHTrm4v4qxGR02rLG2kdG9qedctvlkdwXVcDJ7Cs84X+r4dPU7vdwGjCaspXug==
-  dependencies:
-    "@sindresorhus/is" "4.6.0"
-    "@szmarczak/http-timer" "4.0.6"
-    "@types/responselike" "1.0.0"
-    cacheable-lookup "6.1.0"
-    cacheable-request "7.0.2"
-    decompress-response "^6.0.0"
-    form-data-encoder "1.7.2"
-    get-stream "^6.0.1"
-    http2-wrapper "^2.1.10"
-    lowercase-keys "2.0.0"
-    p-cancelable "2.1.1"
-    responselike "2.0.1"
 
 got@^11.8.2, got@^11.8.3:
   version "11.8.5"
@@ -4932,14 +4876,6 @@ http2-wrapper@^1.0.0-beta.5.2:
   dependencies:
     quick-lru "^5.1.1"
     resolve-alpn "^1.0.0"
-
-http2-wrapper@^2.1.10:
-  version "2.2.0"
-  resolved "https://registry.yarnpkg.com/http2-wrapper/-/http2-wrapper-2.2.0.tgz#b80ad199d216b7d3680195077bd7b9060fa9d7f3"
-  integrity sha512-kZB0wxMo0sh1PehyjJUWRFEd99KC5TLjZ2cULC4f9iqJBAmKQQXEICjxl5iPJRwP40dpeHFqqhm7tYCvODpqpQ==
-  dependencies:
-    quick-lru "^5.1.1"
-    resolve-alpn "^1.2.0"
 
 http@^0.0.1-security:
   version "0.0.1-security"
@@ -5649,15 +5585,15 @@ long@4.0.0:
   resolved "https://registry.yarnpkg.com/long/-/long-4.0.0.tgz#9a7b71cfb7d361a194ea555241c92f7468d5bf28"
   integrity sha512-XsP+KhQif4bjX1kbuSiySJFNAehNxgLb6hPRGJ9QsUr8ajHkuXGdrHmFUTUUXhDwVX2R5bY4JNZEwbUiMhV+MA==
 
-lowercase-keys@2.0.0, lowercase-keys@^2.0.0:
-  version "2.0.0"
-  resolved "https://registry.yarnpkg.com/lowercase-keys/-/lowercase-keys-2.0.0.tgz#2603e78b7b4b0006cbca2fbcc8a3202558ac9479"
-  integrity sha512-tqNXrS78oMOE73NMxK4EMLQsQowWf8jKooH9g7xPavRT706R6bkQJ6DY2Te7QukaZsulxa30wQ7bk0pm4XiHmA==
-
 lowercase-keys@^1.0.0:
   version "1.0.1"
   resolved "https://registry.yarnpkg.com/lowercase-keys/-/lowercase-keys-1.0.1.tgz#6f9e30b47084d971a7c820ff15a6c5167b74c26f"
   integrity sha512-G2Lj61tXDnVFFOi8VZds+SoQjtQC3dgokKdDG2mTm1tx4m50NUHBOZSBwQQHyy0V12A0JTG4icfZQH+xPyh8VA==
+
+lowercase-keys@^2.0.0:
+  version "2.0.0"
+  resolved "https://registry.yarnpkg.com/lowercase-keys/-/lowercase-keys-2.0.0.tgz#2603e78b7b4b0006cbca2fbcc8a3202558ac9479"
+  integrity sha512-tqNXrS78oMOE73NMxK4EMLQsQowWf8jKooH9g7xPavRT706R6bkQJ6DY2Te7QukaZsulxa30wQ7bk0pm4XiHmA==
 
 lru-cache@^5.0.0, lru-cache@^5.1.1:
   version "5.1.1"
@@ -6216,7 +6152,7 @@ osx-release@^1.0.0:
   dependencies:
     minimist "^1.1.0"
 
-p-cancelable@2.1.1, p-cancelable@^2.0.0:
+p-cancelable@^2.0.0:
   version "2.1.1"
   resolved "https://registry.yarnpkg.com/p-cancelable/-/p-cancelable-2.1.1.tgz#aab7fbd416582fa32a3db49859c122487c5ed2cf"
   integrity sha512-BZOr3nRQHOntUjTrH8+Lh54smKHoHyur8We1V8DSMVrl5A2malOOwuJRnKRDjSnkoeBh4at6BwEnb5I7Jl31wg==
@@ -6783,7 +6719,7 @@ requires-port@^1.0.0:
   resolved "https://registry.yarnpkg.com/requires-port/-/requires-port-1.0.0.tgz#925d2601d39ac485e091cf0da5c6e694dc3dcaff"
   integrity sha1-kl0mAdOaxIXgkc8NpcbmlNw9yv8=
 
-resolve-alpn@^1.0.0, resolve-alpn@^1.2.0:
+resolve-alpn@^1.0.0:
   version "1.2.1"
   resolved "https://registry.yarnpkg.com/resolve-alpn/-/resolve-alpn-1.2.1.tgz#b7adbdac3546aaaec20b45e7d8265927072726f9"
   integrity sha512-0a1F4l73/ZFZOakJnQ3FvkJ2+gSTQWz/r2KE5OdDY0TxPm5h4GkqkWWfM47T7HsbnOtcJVEF4epCVy6u7Q3K+g==
@@ -6813,13 +6749,6 @@ resolve@^1.10.1, resolve@^1.20.0:
     is-core-module "^2.9.0"
     path-parse "^1.0.7"
     supports-preserve-symlinks-flag "^1.0.0"
-
-responselike@2.0.1:
-  version "2.0.1"
-  resolved "https://registry.yarnpkg.com/responselike/-/responselike-2.0.1.tgz#9a0bc8fdc252f3fb1cca68b016591059ba1422bc"
-  integrity sha512-4gl03wn3hj1HP3yzgdI7d3lCkF95F21Pz4BPGvKHinyQzALR5CapwC8yIi0Rh58DEMQ/SguC03wFj2k0M/mHhw==
-  dependencies:
-    lowercase-keys "^2.0.0"
 
 responselike@^2.0.0:
   version "2.0.0"
