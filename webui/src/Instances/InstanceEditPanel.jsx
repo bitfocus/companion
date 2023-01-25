@@ -174,7 +174,7 @@ const InstanceEditPanelInner = memo(function InstanceEditPanel({ instanceId, doC
 				)}
 			</h5>
 			<CRow className="edit-instance">
-				<LoadingRetryOrError error={error} dataReady={dataReady} doRetry={doRetryConfigLoad} />
+				<LoadingRetryOrError error={error} dataReady={dataReady} doRetry={doRetryConfigLoad} autoRetryAfter={2} />
 				{instanceId && dataReady && (
 					<>
 						<CCol className={`fieldtype-textinput`} sm={12}>

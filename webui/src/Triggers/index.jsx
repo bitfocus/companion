@@ -16,7 +16,7 @@ import dayjs from 'dayjs'
 import sanitizeHtml from 'sanitize-html'
 import CSwitch from '../CSwitch'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faAdd, faCalculator, faSort } from '@fortawesome/free-solid-svg-icons'
+import { faAdd, faCalculator, faSort, faTrash, faClone } from '@fortawesome/free-solid-svg-icons'
 import { useDrag, useDrop } from 'react-dnd'
 import { nanoid } from 'nanoid'
 import { EditTriggerPanel } from './EditPanel'
@@ -98,9 +98,11 @@ export const Triggers = memo(function Triggers() {
 				<div className="secondary-panel-inner">
 					<CTabs activeTab={activeTab} onActiveTabChange={doChangeTab}>
 						<CNav variant="tabs">
-							<CNavItem>
-								<CNavLink data-tab="placeholder">Select a trigger</CNavLink>
-							</CNavItem>
+							{!editItemId && (
+								<CNavItem>
+									<CNavLink data-tab="placeholder">Select a trigger</CNavLink>
+								</CNavItem>
+							)}
 							<CNavItem hidden={!editItemId}>
 								<CNavLink data-tab="edit">
 									<FontAwesomeIcon icon={faCalculator} /> Edit Trigger
@@ -108,9 +110,11 @@ export const Triggers = memo(function Triggers() {
 							</CNavItem>
 						</CNav>
 						<CTabContent fade={false}>
-							<CTabPane data-tab="placeholder">
-								<p>Select a trigger...</p>
-							</CTabPane>
+							{!editItemId && (
+								<CTabPane data-tab="placeholder">
+									<p>Select a trigger...</p>
+								</CTabPane>
+							)}
 							<CTabPane data-tab="edit">
 								<MyErrorBoundary>
 									{editItemId ? <EditTriggerPanel key={`${editItemId}.${tabResetToken}`} controlId={editItemId} /> : ''}
@@ -159,13 +163,12 @@ function TriggersTable({ triggersList, editItem }) {
 	)
 
 	return (
-		<table className="table table-responsive-sm ">
+		<table className="table-tight table-responsive-sm ">
 			<thead>
 				<tr>
 					<th>&nbsp;</th>
 					<th>Name</th>
 					<th>Trigger</th>
-					<th>&nbsp;</th>
 					<th>&nbsp;</th>
 				</tr>
 			</thead>
@@ -257,40 +260,60 @@ function TriggersTableRow({ controlId, item, editItem, moveTrigger }) {
 	preview(drop(ref))
 
 	return (
-		<tr ref={ref} className={isDragging ? 'instancelist-dragging' : ''}>
-			<GenericConfirmModal ref={confirmRef} />
-
-			<td ref={drag} className="td-reorder">
+		<tr ref={ref} className={isDragging ? 'instancelist-dragging' : 'instancelist-notdragging'}>
+			<td ref={drag} className="td-reorder" style={{ maxWidth: 20 }}>
 				<FontAwesomeIcon icon={faSort} />
 			</td>
-			<td>{item.name}</td>
-			<td>
+			<td
+				onClick={(e) => {
+					doEdit()
+				}}
+				className="hand"
+			>
+				{item.name}
+
+				{/* TODO: For some reason, the modal component leaves a big inline
+				footprint within tables when not active. This is probably the best 
+				place to hide it while it does that.. (until someone figures it out) */}
+				<br />
+				<GenericConfirmModal ref={confirmRef} />
+				{/* end hax */}
+			</td>
+			<td
+				onClick={(e) => {
+					doEdit()
+				}}
+				className="hand"
+			>
 				<span dangerouslySetInnerHTML={descriptionHtml} />
 				<br />
 				{item.lastExecuted ? <small>Last run: {dayjs(item.lastExecuted).format(tableDateFormat)}</small> : ''}
 			</td>
 			<td className="action-buttons">
-				<CSwitch
-					color="info"
-					checked={item.enabled}
-					onChange={doEnableDisable}
-					title={item.enabled ? 'Disable trigger' : 'Enable trigger'}
-				/>
-				&nbsp;
-				<CButtonGroup>
-					<CButton size="sm" color="info" onClick={doEdit}>
-						edit
-					</CButton>
-					<CButton size="sm" color="warning" onClick={doClone}>
-						clone
-					</CButton>
-					<CButton size="sm" color="danger" onClick={doDelete}>
-						delete
-					</CButton>
-					{/* <CButton size="sm" color="light" href={`/int/trigger_export/${controlId}`} target="_new">
+				<div style={{ display: 'flex' }}>
+					<div>
+						<CButtonGroup>
+							<CButton size="sm" color="white" onClick={doClone} title="Clone">
+								<FontAwesomeIcon icon={faClone} />
+							</CButton>
+							<CButton size="sm" color="gray" onClick={doDelete} title="Delete">
+								<FontAwesomeIcon icon={faTrash} />
+							</CButton>
+							{/* <CButton size="sm" color="light" href={`/int/trigger_export/${controlId}`} target="_new">
 					export
 				</CButton> */}
-				</CButtonGroup>
+						</CButtonGroup>
+					</div>
+					<div style={{ marginTop: 0, marginLeft: 4 }}>
+						<CSwitch
+							color="success"
+							checked={item.enabled}
+							size={'md'}
+							onChange={doEnableDisable}
+							title={item.enabled ? 'Disable trigger' : 'Enable trigger'}
+						/>
+					</div>
+				</div>
 			</td>
 		</tr>
 	)
