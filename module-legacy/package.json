@@ -152,7 +152,6 @@
     "companion-module-gallery-virtualvtrpro": "github:bitfocus/companion-module-gallery-virtualvtrpro#v1.0.3",
     "companion-module-gammacontrol-gmaestro": "github:bitfocus/companion-module-gammacontrol-gmaestro#v1.0.2",
     "companion-module-gefen-dvimatrix": "github:bitfocus/companion-module-gefen-dvimatrix#v1.0.2",
-		"companion-module-generic-emberplus": "github:bitfocus/companion-module-generic-emberplus#v1.1.6",
     "companion-module-generic-filereader": "github:bitfocus/companion-module-generic-filereader#v1.0.0",
     "companion-module-generic-ping": "github:bitfocus/companion-module-generic-ping#v1.0.2",
 		"companion-module-generic-pjlink": "github:bitfocus/companion-module-generic-pjlink#v1.3.1",
