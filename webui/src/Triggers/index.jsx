@@ -270,7 +270,7 @@ function TriggersTableRow({ controlId, item, editItem, moveTrigger }) {
 				}}
 				className="hand"
 			>
-				{item.name}
+				<b>{item.name}</b>
 
 				{/* TODO: For some reason, the modal component leaves a big inline
 				footprint within tables when not active. This is probably the best 
