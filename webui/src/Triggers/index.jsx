@@ -293,10 +293,10 @@ function TriggersTableRow({ controlId, item, editItem, moveTrigger }) {
 				<div style={{ display: 'flex' }}>
 					<div>
 						<CButtonGroup>
-							<CButton size="sm" color="white" onClick={doClone} title="Clone">
+							<CButton size="md" color="white" onClick={doClone} title="Clone" style={{ padding: 3, paddingRight: 6 }}>
 								<FontAwesomeIcon icon={faClone} />
 							</CButton>
-							<CButton size="sm" color="gray" onClick={doDelete} title="Delete">
+							<CButton size="md" color="gray" onClick={doDelete} title="Delete" style={{ padding: 3, paddingRight: 6 }}>
 								<FontAwesomeIcon icon={faTrash} />
 							</CButton>
 							{/* <CButton size="sm" color="light" href={`/int/trigger_export/${controlId}`} target="_new">
