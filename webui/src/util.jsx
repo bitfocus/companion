@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react'
+import React, { useEffect, useState } from 'react'
 import pTimeout from 'p-timeout'
 import { CAlert, CButton, CCol } from '@coreui/react'
 import { ErrorBoundary } from 'react-error-boundary'
@@ -160,7 +160,26 @@ export function LoadingBar(props) {
 	)
 }
 
-export function LoadingRetryOrError({ error, dataReady, doRetry }) {
+export function LoadingRetryOrError({ error, dataReady, doRetry, autoRetryAfter = null }) {
+	const [countdown, setCountdown] = useState(autoRetryAfter)
+
+	useEffect(() => {
+		if (autoRetryAfter) {
+			const interval = setInterval(() => {
+				setCountdown((c) => c - 1)
+			}, 1000)
+			return () => clearInterval(interval)
+		}
+	})
+
+	useEffect(() => {
+		if (countdown === 0) {
+			doRetry()
+			setCountdown(null);			
+		}
+	// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [countdown])
+
 	return (
 		<>
 			{error && (
@@ -169,7 +188,7 @@ export function LoadingRetryOrError({ error, dataReady, doRetry }) {
 						<p>{error}</p>
 						{!dataReady && (
 							<CButton color="primary" onClick={doRetry}>
-								Retry
+								Retry {countdown && '(' + countdown + ')'}
 							</CButton>
 						)}
 					</CAlert>
