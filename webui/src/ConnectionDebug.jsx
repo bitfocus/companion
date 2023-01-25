@@ -5,6 +5,7 @@ import { nanoid } from 'nanoid'
 import { useParams } from 'react-router-dom'
 import { VariableSizeList as List } from 'react-window'
 import AutoSizer from 'react-virtualized-auto-sizer'
+import { useElementSize } from 'usehooks-ts'
 
 export function ConnectionDebug() {
 	const socket = useContext(SocketContext)
@@ -102,6 +103,8 @@ export function ConnectionDebug() {
 	const doToggleDebug = useCallback(() => doToggleConfig('debug'), [doToggleConfig])
 	const doToggleConsole = useCallback(() => doToggleConfig('console'), [doToggleConfig])
 
+	const [contentRef, { width: contentWidth }] = useElementSize()
+
 	return (
 		<CContainer style={{ height: 'calc(100vh - 10px)', padding: '10px', background: '#eee' }}>
 			<div className="log-page">
@@ -152,9 +155,14 @@ export function ConnectionDebug() {
 						</CButtonGroup>
 					</div>
 				</CRow>
-				<CRow className="log-panel">
+				<CRow ref={contentRef} className="log-panel">
 					<CCol lg={12} style={{ overflow: 'hidden', height: '100%', width: '100%' }}>
-						<LogPanelContents linesBuffer={linesBuffer} listChunkClearedToken={listChunkClearedToken} config={config} />
+						<LogPanelContents
+							linesBuffer={linesBuffer}
+							listChunkClearedToken={listChunkClearedToken}
+							config={config}
+							contentWidth={contentWidth}
+						/>
 					</CCol>
 				</CRow>
 			</div>
@@ -162,7 +170,7 @@ export function ConnectionDebug() {
 	)
 }
 
-function LogPanelContents({ linesBuffer, listChunkClearedToken, config }) {
+function LogPanelContents({ linesBuffer, listChunkClearedToken, config, contentWidth }) {
 	const listRef = useRef(null)
 	const rowHeights = useRef({})
 
@@ -173,7 +181,7 @@ function LogPanelContents({ linesBuffer, listChunkClearedToken, config }) {
 		if (listRef.current) {
 			listRef.current.resetAfterIndex(0)
 		}
-	}, [listRef, listChunkClearedToken])
+	}, [listRef, listChunkClearedToken, contentWidth])
 
 	const messages = useMemo(() => {
 		return linesBuffer.filter((msg) => msg.level === 'system' || config[msg.level])
@@ -287,7 +295,6 @@ const LogLineInner = memo(({ h, innerRef }) => {
 
 function loadConfig(connectionId) {
 	const saveId = `module_debug:${connectionId}`
-	console.log('try', saveId)
 	try {
 		const rawConfig = window.localStorage.getItem(saveId)
 		if (!rawConfig) throw new Error()
