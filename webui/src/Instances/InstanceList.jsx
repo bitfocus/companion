@@ -325,7 +325,7 @@ function InstancesTableRow({
 					instance.instance_type
 				)}
 			</td>
-			<td onClick={doEdit} className={status.text === 'ok hand' ? 'hand' : status.className}>
+			<td onClick={doEdit} className={status.text === 'ok' ? 'hand' : status.className}>
 				{isEnabled ? (
 					<>
 						{status.text === 'ok' ? <FontAwesomeIcon icon={faCheckCircle} color={'#33aa33'} size="2xl" /> : status.text}
