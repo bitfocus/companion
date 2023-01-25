@@ -4,16 +4,19 @@ import { InstancesContext, VariableDefinitionsContext, socketEmitPromise, Socket
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import {
 	faDollarSign,
-	faQuestionCircle,
-	faBug,
 	faSort,
 	faExclamationTriangle,
-	faBarsStaggered,
+	faTrash,
+	faTerminal,
+	faCheckCircle,
+	faQuestionCircle,
 } from '@fortawesome/free-solid-svg-icons'
+
 import { InstanceVariablesModal } from './InstanceVariablesModal'
 import { GenericConfirmModal } from '../Components/GenericConfirmModal'
 import CSwitch from '../CSwitch'
 import { useDrag, useDrop } from 'react-dnd'
+import { windowLinkOpen } from '../Helpers/Window'
 
 export function InstancesList({ showHelp, doConfigureInstance, instanceStatus }) {
 	const socket = useContext(SocketContext)
@@ -150,12 +153,12 @@ export function InstancesList({ showHelp, doConfigureInstance, instanceStatus })
 				</CButton>
 			</CButtonGroup>
 
-			<table className="table table-responsive-sm">
+			<table className="table-tight table-responsive-sm">
 				<thead>
 					<tr>
 						<th className="fit">&nbsp;</th>
-						<th>Module</th>
 						<th>Label</th>
+						<th>Module</th>
 						<th>Status</th>
 						<th className="fit">&nbsp;</th>
 					</tr>
@@ -275,37 +278,46 @@ function InstancesTableRow({
 
 	const instanceVariables = variableDefinitionsContext[instance.label]
 
+	const doEdit = () => {
+		if (!moduleInfo || !isEnabled) {
+			return
+		}
+
+		configureInstance(id)
+	}
+
 	return (
-		<tr ref={ref} className={isDragging ? 'instancelist-dragging' : ''}>
+		<tr ref={ref} className={isDragging ? 'instancelist-dragging' : 'instancelist-notdragging'}>
 			<td ref={drag} className="td-reorder">
 				<FontAwesomeIcon icon={faSort} />
 			</td>
-			<td>
+			<td onClick={doEdit} className="hand">
+				<b>{instance.label}</b>
+			</td>
+			<td onClick={doEdit} className="hand">
 				{moduleInfo ? (
 					<>
-						<div className="float_right">
-							{moduleInfo.isLegacy && (
+						{moduleInfo.isLegacy && (
+							<>
 								<FontAwesomeIcon
 									icon={faExclamationTriangle}
+									color="#f80"
 									title="This module has not been updated for Companion 3.0, and may be broken as a result"
-								/>
-							)}
-							{moduleInfo.hasHelp && (
-								<div onClick={doShowHelp} title="Help">
-									<FontAwesomeIcon icon={faQuestionCircle} />
-								</div>
-							)}
-							{moduleInfo.bugUrl && (
-								<a href={moduleInfo.bugUrl} target="_blank" rel="noreferrer" title="Report Bug">
-									<FontAwesomeIcon icon={faBug} />
-								</a>
-							)}
-							<a href={`/connection-debug/${id}`} target="_blank" rel="noreferrer" title="View debug log">
-								<FontAwesomeIcon icon={faBarsStaggered} />
-							</a>
-						</div>
+								/>{' '}
+							</>
+						)}
+						{moduleInfo?.shortname ?? ''}
+						{/*	
+						{moduleInfo.hasHelp && (
+							<span onClick={doShowHelp} title="Help">
+								<FontAwesomeIcon icon={faQuestionCircle} />
+							</span>
+						)}
+							<WindowLinkOpen href={moduleInfo.bugUrl} title="Report Bug">
+								<FontAwesomeIcon icon={faBug} color="#faa" />
+							</WindowLinkOpen>
+							*/}
 
-						<b>{moduleInfo?.shortname ?? ''}</b>
 						<br />
 						{moduleInfo?.manufacturer ?? ''}
 					</>
@@ -313,41 +325,73 @@ function InstancesTableRow({
 					instance.instance_type
 				)}
 			</td>
-			<td>
-				{instanceVariables && Object.keys(instanceVariables).length > 0 && (
-					<div className="float_right" onClick={doShowVariables} title="Variables">
-						<FontAwesomeIcon icon={faDollarSign} />
-					</div>
-				)}
-				{instance.label}
-			</td>
-			<td className={status.className}>
+			<td onClick={doEdit} className={status.text === 'ok hand' ? 'hand' : status.className}>
 				{isEnabled ? (
 					<>
-						<p>{status.text}</p>
-						<p>{typeof status.message === 'string' ? status.message : JSON.stringify(status.message)}</p>
+						{status.text === 'ok' ? <FontAwesomeIcon icon={faCheckCircle} color={'#33aa33'} size="2xl" /> : status.text}
+						{status.text !== 'ok' && (
+							<>
+								<br />
+								{typeof status.message === 'string' ? status.message : JSON.stringify(status.message)}
+							</>
+						)}
 					</>
 				) : (
 					<p>Disabled</p>
 				)}
 			</td>
 			<td className="action-buttons">
-				<CSwitch
-					disabled={!moduleInfo}
-					color="info"
-					checked={isEnabled}
-					onChange={doToggleEnabled}
-					title={isEnabled ? 'Disable connection' : 'Enable connection'}
-				/>
-				&nbsp;
-				<CButtonGroup>
-					<CButton onClick={() => configureInstance(id)} color="info" size="sm" disabled={!moduleInfo || !isEnabled}>
-						edit
-					</CButton>
-					<CButton onClick={doDelete} color="danger" size="sm">
-						delete
-					</CButton>
-				</CButtonGroup>
+				<div style={{ display: 'flex' }}>
+					<div>
+						<CButtonGroup>
+							<CButton
+								onClick={doShowHelp}
+								title="Help"
+								size="md"
+								disabled={!isEnabled || !moduleInfo?.hasHelp}
+								style={{ padding: 4 }}
+							>
+								<FontAwesomeIcon icon={faQuestionCircle} />
+							</CButton>
+
+							<CButton
+								onClick={doShowVariables}
+								title="Variables"
+								size="md"
+								style={{
+									padding: 4,
+									opacity: !isEnabled || !(instanceVariables && Object.keys(instanceVariables).length > 0) ? 0.2 : 1,
+								}}
+								disabled={!isEnabled || !(instanceVariables && Object.keys(instanceVariables).length > 0)}
+							>
+								<FontAwesomeIcon icon={faDollarSign} />
+							</CButton>
+
+							<CButton
+								onClick={(e) => windowLinkOpen({ href: `/connection-debug/${id}`, title: 'View debug log' })}
+								size="md"
+								title="Logs"
+								disabled={!isEnabled}
+								style={{ padding: 4 }}
+							>
+								<FontAwesomeIcon icon={faTerminal} />
+							</CButton>
+
+							<CButton onClick={doDelete} size="md" title="Delete" color="#ff00ff" style={{ padding: 4 }}>
+								<FontAwesomeIcon icon={faTrash} />
+							</CButton>
+						</CButtonGroup>
+					</div>
+					<div style={{ paddingTop: 1, paddingLeft: 4 }}>
+						<CSwitch
+							disabled={!moduleInfo}
+							color="success"
+							checked={isEnabled}
+							onChange={doToggleEnabled}
+							title={isEnabled ? 'Disable connection' : 'Enable connection'}
+						/>
+					</div>
+				</div>
 			</td>
 		</tr>
 	)
