@@ -100,6 +100,19 @@ describe('resolver', function () {
 		})
 
 		it('should handle multiple symbol operands', function () {
+			const postfix = parse('$(internal:a) + $(test:c)')
+			const getVariable = (id) => {
+				switch (id) {
+					case 'internal:a':
+						return '3'
+					case 'test:c':
+						return '1'
+				}
+			}
+			expect(resolve(postfix, getVariable)).toBe(4)
+		})
+
+		it('handle string variables', function () {
 			const postfix = parse('$(internal:a) ^ 2 + 2 * $(internal:b) + $(test:c)')
 			const getVariable = (id) => {
 				switch (id) {
@@ -197,8 +210,8 @@ describe('resolver', function () {
 						return 99
 				}
 			}
-			const result = resolve(parse('`val: ${1 + 2}dB or ${$(some:var)} and ${$(another:var)}` + 1'), getVariable)
-			expect(result).toBe('val: 3dB or var1 and 991')
+			const result = resolve(parse('`val: ${1 + 2}dB or ${$(some:var)} and ${$(another:var)}`'), getVariable)
+			expect(result).toBe('val: 3dB or var1 and 99')
 		})
 	})
 })

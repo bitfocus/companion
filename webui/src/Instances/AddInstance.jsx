@@ -84,6 +84,8 @@ const AddInstancesInner = memo(function AddInstancesInner({ showHelp, configureI
 						<>
 							<FontAwesomeIcon
 								icon={faExclamationTriangle}
+								color="#ff6600"
+								size={'xl'}
 								title="This module has not been updated for Companion 3.0, and may be broken as a result"
 							/>
 							&nbsp;

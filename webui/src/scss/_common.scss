@@ -34,6 +34,16 @@ h5 {
 	font-weight: bold;
 }
 
+.table-tight {
+	width: 100%;
+}
+
+.table-tight td,
+th {
+	padding: 5px 10px;
+	border-bottom: 1px solid #ddd;
+}
+
 .table-responsive-sm {
 	border: 1px solid #ddd;
 	border-collapse: collapse;
@@ -67,6 +77,7 @@ code {
 	}
 }
 
-.widget-clickable {
+.widget-clickable,
+.hand {
 	cursor: pointer;
 }

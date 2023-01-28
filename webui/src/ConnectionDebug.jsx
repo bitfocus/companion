@@ -1,10 +1,11 @@
-import { useCallback, useEffect, useState, useContext, memo, useRef } from 'react'
+import { useCallback, useEffect, useState, useContext, memo, useRef, useMemo } from 'react'
 import { SocketContext, socketEmitPromise } from './util'
 import { CButton, CButtonGroup, CCol, CContainer, CRow } from '@coreui/react'
 import { nanoid } from 'nanoid'
 import { useParams } from 'react-router-dom'
 import { VariableSizeList as List } from 'react-window'
 import AutoSizer from 'react-virtualized-auto-sizer'
+import { useElementSize } from 'usehooks-ts'
 
 export function ConnectionDebug() {
 	const socket = useContext(SocketContext)
@@ -58,7 +59,7 @@ export function ConnectionDebug() {
 			})
 
 		return () => {
-			socketEmitPromise(socket, 'connection-debug:unsubscribe').catch((err) => {
+			socketEmitPromise(socket, 'connection-debug:unsubscribe', [connectionId]).catch((err) => {
 				console.error('Unsubscribe failure', err)
 			})
 			socket.off(`connection-debug:update:${connectionId}`, onNewLines)
@@ -82,6 +83,27 @@ export function ConnectionDebug() {
 			console.error('Failed', e)
 		})
 	}, [socket, connectionId])
+
+	const [config, setConfig] = useState(() => loadConfig(connectionId))
+	// Save the config when it changes
+	useEffect(() => {
+		window.localStorage.setItem(`module_debug:${connectionId}`, JSON.stringify(config))
+	}, [config, connectionId])
+
+	const doToggleConfig = useCallback((key) => {
+		setConfig((oldConfig) => ({
+			...oldConfig,
+			[key]: !oldConfig[key],
+		}))
+	}, [])
+
+	const doToggleError = useCallback(() => doToggleConfig('error'), [doToggleConfig])
+	const doToggleWarn = useCallback(() => doToggleConfig('warn'), [doToggleConfig])
+	const doToggleInfo = useCallback(() => doToggleConfig('info'), [doToggleConfig])
+	const doToggleDebug = useCallback(() => doToggleConfig('debug'), [doToggleConfig])
+	const doToggleConsole = useCallback(() => doToggleConfig('console'), [doToggleConfig])
+
+	const [contentRef, { width: contentWidth }] = useElementSize()
 
 	return (
 		<CContainer style={{ height: 'calc(100vh - 10px)', padding: '10px', background: '#eee' }}>
@@ -107,10 +129,40 @@ export function ConnectionDebug() {
 							Start connection
 						</CButton>
 					</CButtonGroup>
+
+					<div className="float-right">
+						<CButtonGroup>
+							<CButton color="danger" size="sm" onClick={doToggleError} style={{ opacity: config.error ? 1 : 0.2 }}>
+								Error
+							</CButton>
+							<CButton color="warning" size="sm" onClick={doToggleWarn} style={{ opacity: config.warn ? 1 : 0.2 }}>
+								Warning
+							</CButton>
+							<CButton color="info" size="sm" onClick={doToggleInfo} style={{ opacity: config.info ? 1 : 0.2 }}>
+								Info
+							</CButton>
+							<CButton color="secondary" size="sm" onClick={doToggleDebug} style={{ opacity: config.debug ? 1 : 0.2 }}>
+								Debug
+							</CButton>
+							<CButton
+								color="secondary"
+								size="sm"
+								onClick={doToggleConsole}
+								style={{ opacity: config.console ? 1 : 0.2 }}
+							>
+								Console
+							</CButton>
+						</CButtonGroup>
+					</div>
 				</CRow>
-				<CRow className="log-panel">
+				<CRow ref={contentRef} className="log-panel">
 					<CCol lg={12} style={{ overflow: 'hidden', height: '100%', width: '100%' }}>
-						<LogPanelContents linesBuffer={linesBuffer} listChunkClearedToken={listChunkClearedToken} />
+						<LogPanelContents
+							linesBuffer={linesBuffer}
+							listChunkClearedToken={listChunkClearedToken}
+							config={config}
+							contentWidth={contentWidth}
+						/>
 					</CCol>
 				</CRow>
 			</div>
@@ -118,7 +170,7 @@ export function ConnectionDebug() {
 	)
 }
 
-function LogPanelContents({ linesBuffer, listChunkClearedToken }) {
+function LogPanelContents({ linesBuffer, listChunkClearedToken, config, contentWidth }) {
 	const listRef = useRef(null)
 	const rowHeights = useRef({})
 
@@ -129,12 +181,11 @@ function LogPanelContents({ linesBuffer, listChunkClearedToken }) {
 		if (listRef.current) {
 			listRef.current.resetAfterIndex(0)
 		}
-	}, [listRef, listChunkClearedToken])
+	}, [listRef, listChunkClearedToken, contentWidth])
 
-	const messages = linesBuffer
-	// const messages = useMemo(() => {
-	// 	return history.filter((msg) => msg.level === 'error' || config[msg.level])
-	// }, [history, config])
+	const messages = useMemo(() => {
+		return linesBuffer.filter((msg) => msg.level === 'system' || config[msg.level])
+	}, [linesBuffer, config])
 
 	useEffect(() => {
 		if (follow && listRef.current && messages.length > 0) {
@@ -232,7 +283,34 @@ function LogPanelContents({ linesBuffer, listChunkClearedToken }) {
 const LogLineInner = memo(({ h, innerRef }) => {
 	return (
 		<div ref={innerRef} className={`log-line log-type-${h.level}`}>
-			<strong>{h.level}</strong>: <span className="log-message">{h.message}</span>
+			{h.level !== 'console' && (
+				<>
+					<strong>{h.level}</strong>:{' '}
+				</>
+			)}
+			<span className="log-message">{h.message}</span>
 		</div>
 	)
 })
+
+function loadConfig(connectionId) {
+	const saveId = `module_debug:${connectionId}`
+	try {
+		const rawConfig = window.localStorage.getItem(saveId)
+		if (!rawConfig) throw new Error()
+		return JSON.parse(rawConfig) ?? {}
+	} catch (e) {
+		// setup defaults
+		const config = {
+			debug: true,
+			info: true,
+			warn: true,
+			error: true,
+			console: true,
+		}
+
+		window.localStorage.setItem(saveId, JSON.stringify(config))
+
+		return config
+	}
+}
