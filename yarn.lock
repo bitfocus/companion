@@ -4748,9 +4748,9 @@ commist@^1.0.0:
   version "1.0.2"
   resolved "https://codeload.github.com/bitfocus/companion-module-zenvideo-ndirouter/tar.gz/0e0a57e7b2da97f609cc779fff21ff87d47183ba"
 
-"companion-module-zoom-osc-iso@github:bitfocus/companion-module-zoom-osc-iso#v2.8.2":
-  version "2.8.2"
-  resolved "https://codeload.github.com/bitfocus/companion-module-zoom-osc-iso/tar.gz/46ebb5e428fba7818d8286d24bfd5889e02ea488"
+"companion-module-zoom-osc-iso@github:bitfocus/companion-module-zoom-osc-iso#v2.8.3":
+  version "2.8.3"
+  resolved "https://codeload.github.com/bitfocus/companion-module-zoom-osc-iso/tar.gz/e2d2007bde0bee18da1b731e485cd637b86c808c"
   dependencies:
     "@types/lodash" "^4.14.178"
     lodash "^4.17.21"
