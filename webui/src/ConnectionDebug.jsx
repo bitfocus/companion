@@ -50,6 +50,9 @@ export function ConnectionDebug() {
 
 		socketEmitPromise(socket, 'connection-debug:subscribe', [connectionId])
 			.then((info) => {
+				if (!info) {
+					onNewLines('system', 'Connection was not found')
+				}
 				// TODO
 				console.log('subscried', info)
 			})
