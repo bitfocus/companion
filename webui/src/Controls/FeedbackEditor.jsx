@@ -405,7 +405,7 @@ function FeedbackEditor({
 				<CButtonGroup>
 					{doEnabled && (
 						<CSwitch
-							color="info"
+							color="success"
 							checked={!feedback.disabled}
 							title={feedback.disabled ? 'Enable feedback' : 'Disable feedback'}
 							onChange={innerSetEnabled}
