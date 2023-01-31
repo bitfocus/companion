@@ -74,13 +74,9 @@ export function ContextData({ children }) {
 					console.error('Failed to load event definitions')
 				})
 
-			socketEmitPromise(socket, 'modules:get', [])
+			socketEmitPromise(socket, 'modules:subscribe', [])
 				.then((modules) => {
-					const modulesObj = {}
-					for (const mod of modules) {
-						modulesObj[mod.id] = mod
-					}
-					setModules(modulesObj)
+					setModules(modules)
 				})
 				.catch((e) => {
 					console.error('Failed to load modules list', e)
@@ -166,6 +162,17 @@ export function ContextData({ children }) {
 			}
 			socket.on('instances:patch', patchInstances)
 
+			const patchModules = (patch) => {
+				setModules((oldModules) => {
+					if (patch === false) {
+						return false
+					} else {
+						return jsonPatch.applyPatch(cloneDeep(oldModules) || {}, patch).newDocument
+					}
+				})
+			}
+			socket.on('modules:patch', patchModules)
+
 			socket.on('variable-definitions:update', updateVariableDefinitions)
 			socket.on('custom-variables:update', updateCustomVariables)
 
@@ -240,6 +247,7 @@ export function ContextData({ children }) {
 				socket.off('triggers:update', updateTriggers)
 
 				socket.off('instances:patch', patchInstances)
+				socket.off('modules:patch', patchModules)
 
 				socketEmitPromise(socket, 'action-definitions:unsubscribe', []).catch((e) => {
 					console.error('Failed to unsubscribe to action definitions list', e)
@@ -252,6 +260,9 @@ export function ContextData({ children }) {
 				})
 				socketEmitPromise(socket, 'instances:unsubscribe', []).catch((e) => {
 					console.error('Failed to unsubscribe from instances list:', e)
+				})
+				socketEmitPromise(socket, 'modules:unsubscribe', []).catch((e) => {
+					console.error('Failed to unsubscribe from modules list:', e)
 				})
 				socketEmitPromise(socket, 'surfaces:unsubscribe', []).catch((e) => {
 					console.error('Failed to unsubscribe from surfaces', e)
