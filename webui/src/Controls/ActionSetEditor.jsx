@@ -459,7 +459,7 @@ function ActionTableRow({
 						<CButtonGroup>
 							{doEnabled && (
 								<CSwitch
-									color="info"
+									color="success"
 									checked={!action.disabled}
 									title={action.disabled ? 'Enable action' : 'Disable action'}
 									onChange={innerSetEnabled}

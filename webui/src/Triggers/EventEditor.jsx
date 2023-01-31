@@ -287,7 +287,7 @@ function EventEditor({
 				<CButtonGroup>
 					{doEnabled && (
 						<CSwitch
-							color="info"
+							color="success"
 							checked={event.enabled}
 							title={event.enabled ? 'Disable event' : 'Enable event'}
 							onChange={innerSetEnabled}
