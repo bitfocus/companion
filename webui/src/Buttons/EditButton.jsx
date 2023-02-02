@@ -391,10 +391,10 @@ function TabsSection({ fillHeight, style, controlId, steps, runtimeProps, rotary
 		},
 		[socket, controlId]
 	)
-	const setNextStep = useCallback(
+	const setCurrentStep = useCallback(
 		(stepId) => {
-			socketEmitPromise(socket, 'controls:step:set-next', [controlId, stepId]).catch((e) => {
-				console.error('Failed to set next step:', e)
+			socketEmitPromise(socket, 'controls:step:set-current', [controlId, stepId]).catch((e) => {
+				console.error('Failed to set step:', e)
 			})
 		},
 		[socket, controlId]
@@ -437,7 +437,7 @@ function TabsSection({ fillHeight, style, controlId, steps, runtimeProps, rotary
 								<CNavItem key={k}>
 									<CNavLink data-tab={`step:${k}`}>
 										Step {i + 1}{' '}
-										{runtimeProps.current_step_id === k && <FontAwesomeIcon icon={faStar} title="Next step" />}
+										{runtimeProps.current_step_id === k && <FontAwesomeIcon icon={faStar} title="Current step" />}
 									</CNavLink>
 								</CNavItem>
 							))}
@@ -477,13 +477,13 @@ function TabsSection({ fillHeight, style, controlId, steps, runtimeProps, rotary
 						<>
 							<CButtonGroup hidden={keys.length === 1}>
 								<CButton
-									key="set-next"
+									key="set-current"
 									color={runtimeProps.current_step_id === selectedKey ? 'success' : 'primary'}
 									size="sm"
 									disabled={runtimeProps.current_step_id === selectedKey}
-									onClick={() => setNextStep(selectedKey)}
+									onClick={() => setCurrentStep(selectedKey)}
 								>
-									Set Next
+									Make Current
 								</CButton>
 
 								<CButton
