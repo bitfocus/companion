@@ -93,3 +93,7 @@
 	// Cap images in modals to be the width of the modal
 	max-width: 100%;
 }
+
+.unstable-warning {
+	z-index: 10000;
+}

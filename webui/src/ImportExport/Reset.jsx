@@ -67,7 +67,7 @@ export const ResetWizardModal = forwardRef(function WizardModal(_props, ref) {
 						)
 					}
 
-					doNextStep()
+					doClose()
 				})
 				.catch((e) => {
 					notifier.current.show(`Reset failed`, 'An error occurred:' + e, 10000)
@@ -76,7 +76,7 @@ export const ResetWizardModal = forwardRef(function WizardModal(_props, ref) {
 
 			doNextStep()
 		},
-		[socket, notifier, config, doNextStep]
+		[socket, notifier, config, doNextStep, doClose]
 	)
 
 	const setValue = (key, value) => {
