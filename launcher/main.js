@@ -189,6 +189,8 @@ if (!lock) {
 	let window
 	let tray = null
 
+	const cachedDebounces = {}
+
 	const triggerRestart = debounceFn(
 		() => {
 			customLog('trigger companion restart', 'Application')
@@ -220,13 +222,43 @@ if (!lock) {
 				// Check developer mode is enabled
 				if (!uiConfig.get('enable_developer')) return
 
-				const newPath = uiConfig.get('dev_modules_path')
-				if (newPath && (await fs.pathExists(newPath))) {
-					watcher = chokidar.watch(newPath, {
+				const newPath0 = uiConfig.get('dev_modules_path')
+				if (newPath0 && (await fs.pathExists(newPath0))) {
+					const devModulesPath = path.resolve(newPath0)
+					watcher = chokidar.watch(devModulesPath, {
 						ignoreInitial: true,
+						ignored: ['**/node_modules/**'],
 					})
 
-					watcher.on('all', triggerRestart)
+					watcher.on('all', (event, filename) => {
+						const fullpath = path.resolve(filename)
+						if (fullpath.startsWith(devModulesPath)) {
+							const moduleDirName = fullpath.slice(devModulesPath.length + 1).split('/')[0]
+
+							let fn = cachedDebounces[moduleDirName]
+							if (!fn) {
+								fn = debounceFn(
+									() => {
+										console.log('Sending reload for module:', moduleDirName)
+										if (child?.child) {
+											child.child.send({
+												messageType: 'reload-extra-module',
+												fullpath: path.join(devModulesPath, moduleDirName),
+											})
+										}
+									},
+									{
+										after: true,
+										before: false,
+										wait: 100,
+									}
+								)
+								cachedDebounces[moduleDirName] = fn
+							}
+
+							fn()
+						}
+					})
 				}
 			} catch (e) {
 				customLog(`Failed to restart watcher: ${e}`, 'Application')
