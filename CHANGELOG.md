@@ -1,5 +1,22 @@
 # Bitfocus Companion
 
+## Companion v2.4.2 - Release Notes
+
+### 🐞 BUG FIXES
+
+- UI crash after saving a trigger
+- UI crash if module status is not a string
+- Missing libasound2 in docker image
+
+### 🐞 MODULE FIXES
+
+- bitfocus-companion
+- equipson-lightshark
+- generic-artnet
+- generic-sacn
+- haivision-connectdvr
+- zoom-osc-iso
+
 ## Companion v2.4.1 - Release Notes
 
 ### 🐞 BUG FIXES
