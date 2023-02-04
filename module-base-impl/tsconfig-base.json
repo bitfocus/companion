@@ -1,0 +1,16 @@
+{
+	"extends": "@tsconfig/node18/tsconfig.json",
+	"compilerOptions": {
+		"module": "CommonJS",
+		"moduleResolution": "node",
+		"sourceMap": true,
+		"paths": {
+			"*": ["../node_modules/*"]
+		},
+		"declaration": true,
+		"importHelpers": true,
+		"pretty": true,
+		"types": ["node"]
+	},
+	"compileOnSave": false
+}

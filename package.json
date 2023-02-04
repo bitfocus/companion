@@ -51,6 +51,7 @@
 	},
 	"dependencies": {
 		"@companion-module/base": "^1.1.0",
+		"@companion-module/base-impl":"link:./module-base-impl",
 		"@elgato-stream-deck/node": "^5.7.0",
 		"@jsep-plugin/numbers": "^1.0.1",
 		"@jsep-plugin/template": "^1.0.2",
