@@ -10,8 +10,8 @@ import {
 	literal,
 	InstanceBase,
 	CompanionStaticUpgradeScript,
+	InstanceBaseOptions,
 } from '@companion-module/base'
-import { CompanionInstanceApi, InstanceBaseOptions } from '@companion-module/base/dist/internal/newapi'
 import {
 	ExecuteActionMessage,
 	GetConfigFieldsMessage,
@@ -43,6 +43,7 @@ import { FeedbackManager } from './feedback'
 import PQueue from 'p-queue'
 import { serializeIsVisibleFn } from './util'
 import { runThroughUpgradeScripts } from './upgrade'
+import { CompanionInstanceApi } from '@companion-module/base/dist/internal-api'
 
 export class CompanionInstanceApiImpl<TConfig> implements CompanionInstanceApi<TConfig> {
 	readonly connectionId: string

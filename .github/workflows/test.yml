@@ -12,6 +12,7 @@ jobs:
           node-version-file: '.node-version'
       - name: yarn update
         run: |
+          yarn --cwd module-base-impl install
           yarn
       - name: run tests
         run: |
