@@ -44,6 +44,7 @@ import { ControlFeedbacksEditor } from '../Controls/FeedbackEditor'
 import { cloneDeep } from 'lodash-es'
 import { useElementSize } from 'usehooks-ts'
 import { GetStepIds } from '@companion/shared/Controls'
+import { useMemo } from 'react'
 
 export function EditButton({ controlId, onKeyUp, contentHeight }) {
 	const socket = useContext(SocketContext)
@@ -201,6 +202,8 @@ export function EditButton({ controlId, onKeyUp, contentHeight }) {
 
 	const parsedId = ParseControlId(controlId)
 
+	// Tip: This query needs to match the page layout. It doesn't need to be reactive, as the useElementSize will force a re-render
+	const isTwoColumn = window.matchMedia('(min-width: 1200px)').matches
 	const [hintRef, { height: hintHeight }] = useElementSize()
 
 	return (
@@ -282,7 +285,7 @@ export function EditButton({ controlId, onKeyUp, contentHeight }) {
 					{config && runtimeProps && (
 						<MyErrorBoundary>
 							<TabsSection
-								fillHeight={contentHeight - hintHeight}
+								fillHeight={isTwoColumn ? contentHeight - hintHeight : 0}
 								style={config.type}
 								controlId={controlId}
 								steps={config.steps || {}}
@@ -344,7 +347,7 @@ function TabsSection({ fillHeight, style, controlId, steps, runtimeProps, rotary
 		}
 	}, [])
 
-	const keys = GetStepIds(steps)
+	const keys = useMemo(() => GetStepIds(steps), [steps])
 	const [selectedStep, setSelectedStep] = useState(keys.length ? `step:${keys[0]}` : 'feedbacks')
 
 	useEffect(() => {
