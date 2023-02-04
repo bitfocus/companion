@@ -1,20 +1,9 @@
-# @companion-module/base
+# @companion-module/base-impl
 
-If you have found this without being directed here, then this is not for you.
-Companion 3.0 is not ready for users yet, so you should not be targetting a module to it yet. We will make some announcements when we are ready
+This provides an implementation of the `CompanionInstanceApi` interface and `InternalApiGenerator` function defined in `@companion-module/base`.
 
-This module provides the base class and framework needed to write a module for [Companion 3.0](https://github.com/bitfocus/companion) and later in NodeJS.
+To minimise the amount of Companion code that is bundled into each module, `@companion-module/base` is loading a javascript file with a path defined from an environment variable, and using that as the basis for execution.
 
-In the future it will be possible to write modules in other languages, but it is not recommended as it will reduce the change of gettings other in the community to contribute features and fixes. If you interested in doing this then reach out and we can work together on creating an alternate framework for the language you are using.
+The benefit of this approach is that it lets us update some of the code that runs inside the module as part of Companion, rather than requring the modules to be rebuilt and updated.
 
-## Getting started with a new module
-
-To get started with creating a new module, you should start with one of the following templates. These should be kept up to date, but you should make sure all the dependencies are up to date before you begin.
-
-- TODO
-
-## Documentation
-
-You can view detailed generated documentation [here](https://bitfocus.github.io/companion-module-base/).
-
-Or refer to [the wiki](https://github.com/bitfocus/companion-module-base/wiki) for a more handwritten version
+The `CompanionInstanceApi` interface is the new stable API, and needs to be kept version safe, to allow for the cross version support that `@companion-module/base` introduced

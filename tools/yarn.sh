@@ -37,6 +37,12 @@ fi
 
 set -e
 
+heading "Module Base Implementation"
+yarn --cwd module-base-impl --frozen-lockfile
+yarn --cwd module-base-impl build
+echo
+
+
 heading "Core"
 yarn --frozen-lockfile
 yarn build:writefile
