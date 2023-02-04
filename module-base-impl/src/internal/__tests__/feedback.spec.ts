@@ -1,4 +1,5 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
+import { CompanionFeedbackDefinition, literal, LogLevel } from '@companion-module/base'
 import {
 	FeedbackInstance,
 	ParseVariablesInStringResponseMessage,
@@ -8,8 +9,6 @@ import {
 } from '../../host-api/api'
 import { runAllTimers } from '../../__mocks__/util'
 import { FeedbackManager } from '../feedback'
-import { CompanionFeedbackDefinition, LogLevel } from '../../module-api'
-import { literal } from '../../util'
 
 const mockDefinitionId = 'definition0'
 const mockDefinitionId2 = 'definition1'

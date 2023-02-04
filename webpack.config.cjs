@@ -11,6 +11,7 @@ module.exports = {
 	entry: {
 		main: './main.js',
 		Handler: './lib/Surface/USB/Handler.js',
+		ModuleInternalApi: './module-base-impl/dist/main.js',
 	},
 	mode: 'production',
 	devtool: sentryAuthToken ? 'source-map' : undefined,
