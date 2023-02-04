@@ -7,7 +7,7 @@ import { InstanceConstructor, InternalApiGenerator } from '@companion-module/bas
 import { configureScope, init } from '@sentry/node'
 import '@sentry/tracing'
 import { IpcWrapper } from './host-api/ipc-wrapper'
-import { CompanionInstanceApiImpl } from './newapi'
+import { CompanionInstanceApiImpl } from './internal/internal-api'
 
 const createInstanceApi: InternalApiGenerator<any> = async <TConfig>(
 	factory: InstanceConstructor<TConfig>,

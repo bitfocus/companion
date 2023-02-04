@@ -8,7 +8,7 @@ import {
 	UpdateFeedbackValuesMessage,
 	VariablesChangedMessage,
 } from '../host-api/api'
-import { serializeIsVisibleFn } from './base'
+import { serializeIsVisibleFn } from './util'
 import debounceFn from 'debounce-fn'
 import {
 	CompanionAdvancedFeedbackResult,

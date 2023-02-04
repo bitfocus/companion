@@ -15,7 +15,7 @@ import {
 	CompanionFeedbackContext,
 	LogLevel,
 } from '@companion-module/base'
-import { serializeIsVisibleFn } from './base'
+import { serializeIsVisibleFn } from './util'
 
 function convertActionInstanceToEvent(action: ActionInstance): CompanionActionInfo {
 	return {

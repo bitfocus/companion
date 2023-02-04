@@ -36,13 +36,13 @@ import {
 	UpdateActionInstancesMessage,
 	UpdateFeedbackInstancesMessage,
 	VariablesChangedMessage,
-} from './host-api/api'
-import { IpcWrapper } from './host-api/ipc-wrapper'
-import { ActionManager } from './internal/actions'
-import { FeedbackManager } from './internal/feedback'
+} from '../host-api/api'
+import { IpcWrapper } from '../host-api/ipc-wrapper'
+import { ActionManager } from './actions'
+import { FeedbackManager } from './feedback'
 import PQueue from 'p-queue'
-import { serializeIsVisibleFn } from './internal/base'
-import { runThroughUpgradeScripts } from './internal/upgrade'
+import { serializeIsVisibleFn } from './util'
+import { runThroughUpgradeScripts } from './upgrade'
 
 export class CompanionInstanceApiImpl<TConfig> implements CompanionInstanceApi<TConfig> {
 	readonly connectionId: string
