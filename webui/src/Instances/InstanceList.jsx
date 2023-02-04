@@ -302,7 +302,7 @@ function InstancesTableRow({
 								<FontAwesomeIcon
 									icon={faExclamationTriangle}
 									color="#f80"
-									title="This module has not been updated for Companion 3.0, and may be broken as a result"
+									title="This module has not been updated for Companion 3.0, and may not work fully"
 								/>{' '}
 							</>
 						)}
