@@ -388,9 +388,13 @@ function TabsSection({ fillHeight, style, controlId, steps, runtimeProps, rotary
 	)
 	const swapSteps = useCallback(
 		(stepId1, stepId2) => {
-			socketEmitPromise(socket, 'controls:step:swap', [controlId, stepId1, stepId2]).catch((e) => {
-				console.error('Failed to swap steps:', e)
-			})
+			socketEmitPromise(socket, 'controls:step:swap', [controlId, stepId1, stepId2])
+				.then(() => {
+					setSelectedStep(`step:${stepId2}`)
+				})
+				.catch((e) => {
+					console.error('Failed to swap steps:', e)
+				})
 		},
 		[socket, controlId]
 	)
