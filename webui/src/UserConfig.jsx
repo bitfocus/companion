@@ -84,12 +84,13 @@ function UserConfigTable() {
 				<tr>
 					<th>Setting</th>
 					<th>Value</th>
+					<th></th>
 				</tr>
 			</thead>
 
 			<tbody>
 				<tr>
-					<td colSpan="2" className="settings-category">
+					<td colSpan="3" className="settings-category">
 						Buttons
 					</td>
 				</tr>
@@ -108,6 +109,11 @@ function UserConfigTable() {
 							</label>
 						</div>
 					</td>
+					<td>
+						<CButton onClick={() => resetValue('page_direction_flipped')} title="Reset to default">
+							<FontAwesomeIcon icon={faUndo} />
+						</CButton>
+					</td>
 				</tr>
 
 				<tr>
@@ -123,6 +129,11 @@ function UserConfigTable() {
 								Enabled
 							</label>
 						</div>
+					</td>
+					<td>
+						<CButton onClick={() => resetValue('page_plusminus')} title="Reset to default">
+							<FontAwesomeIcon icon={faUndo} />
+						</CButton>
 					</td>
 				</tr>
 
@@ -140,10 +151,15 @@ function UserConfigTable() {
 							</label>
 						</div>
 					</td>
+					<td>
+						<CButton onClick={() => resetValue('remove_topbar')} title="Reset to default">
+							<FontAwesomeIcon icon={faUndo} />
+						</CButton>
+					</td>
 				</tr>
 
 				<tr>
-					<td colSpan="2" className="settings-category">
+					<td colSpan="3" className="settings-category">
 						Surfaces
 					</td>
 				</tr>
@@ -161,9 +177,14 @@ function UserConfigTable() {
 							</label>
 						</div>
 					</td>
+					<td>
+						<CButton onClick={() => resetValue('usb_hotplug')} title="Reset to default">
+							<FontAwesomeIcon icon={faUndo} />
+						</CButton>
+					</td>
 				</tr>
 				<tr>
-					<td>Use Elgato Plugin for StreamDeck access (Requires Companion restart)</td>
+					<td>Use Elgato Plugin for StreamDeck access<br /><em>(Requires Companion restart)</em></td>
 					<td>
 						<div className="form-check form-check-inline mr-1">
 							<CInputCheckbox
@@ -176,9 +197,14 @@ function UserConfigTable() {
 							</label>
 						</div>
 					</td>
+					<td>
+						<CButton onClick={() => resetValue('xkeys_enable')} title="Reset to default">
+							<FontAwesomeIcon icon={faUndo} />
+						</CButton>
+					</td>
 				</tr>
 				<tr>
-					<td>Enable connected xkeys (Requires Companion restart)</td>
+					<td>Enable connected X-keys<br /><em>(Requires Companion restart)</em></td>
 					<td>
 						<div className="form-check form-check-inline mr-1">
 							<CInputCheckbox
@@ -191,9 +217,14 @@ function UserConfigTable() {
 							</label>
 						</div>
 					</td>
+					<td>
+						<CButton onClick={() => resetValue('xkeys_enable')} title="Reset to default">
+							<FontAwesomeIcon icon={faUndo} />
+						</CButton>
+					</td>
 				</tr>
 				<tr>
-					<td>Enable connected Loupedeck Live devices (Requires Companion restart)</td>
+					<td>Enable connected Loupedeck Live devices<br /><em>(Requires Companion restart)</em></td>
 					<td>
 						<div className="form-check form-check-inline mr-1">
 							<CInputCheckbox
@@ -206,9 +237,14 @@ function UserConfigTable() {
 							</label>
 						</div>
 					</td>
+					<td>
+						<CButton onClick={() => resetValue('loupedeck_enable')} title="Reset to default">
+							<FontAwesomeIcon icon={faUndo} />
+						</CButton>
+					</td>
 				</tr>
 				<tr>
-					<td colSpan="2" className="settings-category">
+					<td colSpan="3" className="settings-category">
 						PIN Lockout
 					</td>
 				</tr>
@@ -226,6 +262,11 @@ function UserConfigTable() {
 							</label>
 						</div>
 					</td>
+					<td>
+						<CButton onClick={() => resetValue('pin_enable')} title="Reset to default">
+							<FontAwesomeIcon icon={faUndo} />
+						</CButton>
+					</td>
 				</tr>
 
 				<tr>
@@ -242,6 +283,11 @@ function UserConfigTable() {
 							</label>
 						</div>
 					</td>
+					<td>
+						<CButton onClick={() => resetValue('link_lockouts')} title="Reset to default">
+							<FontAwesomeIcon icon={faUndo} />
+						</CButton>
+					</td>
 				</tr>
 
 				<tr>
@@ -250,6 +296,11 @@ function UserConfigTable() {
 						<div className="form-check form-check-inline mr-1">
 							<CInput type="text" value={config.pin} onChange={(e) => setValue('pin', e.currentTarget.value)} />
 						</div>
+					</td>
+					<td>
+						<CButton onClick={() => resetValue('pin')} title="Reset to default">
+							<FontAwesomeIcon icon={faUndo} />
+						</CButton>
 					</td>
 				</tr>
 
@@ -264,10 +315,15 @@ function UserConfigTable() {
 							/>
 						</div>
 					</td>
+					<td>
+						<CButton onClick={() => resetValue('pin_timeout')} title="Reset to default">
+							<FontAwesomeIcon icon={faUndo} />
+						</CButton>
+					</td>
 				</tr>
 
 				<tr>
-					<td colSpan="2" className="settings-category">
+					<td colSpan="3" className="settings-category">
 						TCP
 					</td>
 				</tr>
@@ -285,6 +341,11 @@ function UserConfigTable() {
 							</label>
 						</div>
 					</td>
+					<td>
+						<CButton onClick={() => resetValue('tcp_enabled')} title="Reset to default">
+							<FontAwesomeIcon icon={faUndo} />
+						</CButton>
+					</td>
 				</tr>
 				<tr>
 					<td>TCP Listen Port</td>
@@ -297,10 +358,15 @@ function UserConfigTable() {
 							/>
 						</div>
 					</td>
+					<td>
+						<CButton onClick={() => resetValue('tcp_listen_port')} title="Reset to default">
+							<FontAwesomeIcon icon={faUndo} />
+						</CButton>
+					</td>
 				</tr>
 
 				<tr>
-					<td colSpan="2" className="settings-category">
+					<td colSpan="3" className="settings-category">
 						UDP
 					</td>
 				</tr>
@@ -318,6 +384,11 @@ function UserConfigTable() {
 							</label>
 						</div>
 					</td>
+					<td>
+						<CButton onClick={() => resetValue('udp_enabled')} title="Reset to default">
+							<FontAwesomeIcon icon={faUndo} />
+						</CButton>
+					</td>
 				</tr>
 				<tr>
 					<td>UDP Listen Port</td>
@@ -330,10 +401,15 @@ function UserConfigTable() {
 							/>
 						</div>
 					</td>
+					<td>
+						<CButton onClick={() => resetValue('udp_listen_port')} title="Reset to default">
+							<FontAwesomeIcon icon={faUndo} />
+						</CButton>
+					</td>
 				</tr>
 
 				<tr>
-					<td colSpan="2" className="settings-category">
+					<td colSpan="3" className="settings-category">
 						OSC
 					</td>
 				</tr>
@@ -351,6 +427,11 @@ function UserConfigTable() {
 							</label>
 						</div>
 					</td>
+					<td>
+						<CButton onClick={() => resetValue('osc_enabled')} title="Reset to default">
+							<FontAwesomeIcon icon={faUndo} />
+						</CButton>
+					</td>
 				</tr>
 				<tr>
 					<td>OSC Listen Port</td>
@@ -363,10 +444,15 @@ function UserConfigTable() {
 							/>
 						</div>
 					</td>
+					<td>
+						<CButton onClick={() => resetValue('osc_listen_port')} title="Reset to default">
+							<FontAwesomeIcon icon={faUndo} />
+						</CButton>
+					</td>
 				</tr>
 
 				<tr>
-					<td colSpan="2" className="settings-category">
+					<td colSpan="3" className="settings-category">
 						RossTalk
 					</td>
 				</tr>
@@ -384,9 +470,14 @@ function UserConfigTable() {
 							</label>
 						</div>
 					</td>
+					<td>
+						<CButton onClick={() => resetValue('rosstalk_enabled')} title="Reset to default">
+							<FontAwesomeIcon icon={faUndo} />
+						</CButton>
+					</td>
 				</tr>
 				<tr>
-					<td colSpan="2" className="settings-category">
+					<td colSpan="3" className="settings-category">
 						Ember+
 					</td>
 				</tr>
@@ -404,9 +495,14 @@ function UserConfigTable() {
 							</label>
 						</div>
 					</td>
+					<td>
+						<CButton onClick={() => resetValue('emberplus_enabled')} title="Reset to default">
+							<FontAwesomeIcon icon={faUndo} />
+						</CButton>
+					</td>
 				</tr>
 				<tr>
-					<td colSpan="2" className="settings-category">
+					<td colSpan="3" className="settings-category">
 						Artnet Listener
 					</td>
 				</tr>
@@ -424,6 +520,11 @@ function UserConfigTable() {
 							</label>
 						</div>
 					</td>
+					<td>
+						<CButton onClick={() => resetValue('artnet_enabled')} title="Reset to default">
+							<FontAwesomeIcon icon={faUndo} />
+						</CButton>
+					</td>
 				</tr>
 
 				<tr>
@@ -436,6 +537,11 @@ function UserConfigTable() {
 								onChange={(e) => setValue('artnet_universe', e.currentTarget.value)}
 							/>
 						</div>
+					</td>
+					<td>
+						<CButton onClick={() => resetValue('artnet_universe')} title="Reset to default">
+							<FontAwesomeIcon icon={faUndo} />
+						</CButton>
 					</td>
 				</tr>
 
@@ -450,15 +556,20 @@ function UserConfigTable() {
 							/>
 						</div>
 					</td>
+					<td>
+						<CButton onClick={() => resetValue('artnet_channel')} title="Reset to default">
+							<FontAwesomeIcon icon={faUndo} />
+						</CButton>
+					</td>
 				</tr>
 
 				<tr>
-					<td colSpan="2" className="settings-category">
+					<td colSpan="3" className="settings-category">
 						Admin UI Password
 					</td>
 				</tr>
 				<tr>
-					<td colSpan="2">
+					<td colSpan="3">
 						<CAlert color="danger">
 							This does not make an installation secure!
 							<br /> This is intended to keep normal users from stumbling upon the settings and changing things. It will
@@ -476,6 +587,11 @@ function UserConfigTable() {
 							/>
 						</div>
 					</td>
+					<td>
+						<CButton onClick={() => resetValue('admin_lockout')} title="Reset to default">
+							<FontAwesomeIcon icon={faUndo} />
+						</CButton>
+					</td>
 				</tr>
 				<tr>
 					<td>Session Timeout (minutes, 0 for no timeout)</td>
@@ -490,6 +606,11 @@ function UserConfigTable() {
 							/>
 						</div>
 					</td>
+					<td>
+						<CButton onClick={() => resetValue('admin_timeout')} title="Reset to default">
+							<FontAwesomeIcon icon={faUndo} />
+						</CButton>
+					</td>
 				</tr>
 				<tr>
 					<td>Password</td>
@@ -502,15 +623,20 @@ function UserConfigTable() {
 							/>
 						</div>
 					</td>
+					<td>
+						<CButton onClick={() => resetValue('admin_password')} title="Reset to default">
+							<FontAwesomeIcon icon={faUndo} />
+						</CButton>
+					</td>
 				</tr>
 
 				<tr>
-					<td colSpan="2" className="settings-category">
+					<td colSpan="3" className="settings-category">
 						HTTPS Web Server
 					</td>
 				</tr>
 				<tr>
-					<td colSpan="2">
+					<td colSpan="3">
 						<p>An HTTPS server can be enabled for the Companion web interfaces should your deployment require it.</p>
 						<CAlert color="danger">
 							It is never recommended to expose the Companion interface to the Internet and HTTPS does not provide any
@@ -532,6 +658,11 @@ function UserConfigTable() {
 							</label>
 						</div>
 					</td>
+					<td>
+						<CButton onClick={() => resetValue('https_enabled')} title="Reset to default">
+							<FontAwesomeIcon icon={faUndo} />
+						</CButton>
+					</td>
 				</tr>
 
 				<tr>
@@ -544,6 +675,11 @@ function UserConfigTable() {
 								onChange={(e) => setValue('https_port', e.currentTarget.value)}
 							/>
 						</div>
+					</td>
+					<td>
+						<CButton onClick={() => resetValue('https_port')} title="Reset to default">
+							<FontAwesomeIcon icon={faUndo} />
+						</CButton>
 					</td>
 				</tr>
 
@@ -560,15 +696,20 @@ function UserConfigTable() {
 							</CDropdown>
 						</div>
 					</td>
+					<td>
+						<CButton onClick={() => resetValue('https_cert_type')} title="Reset to default">
+							<FontAwesomeIcon icon={faUndo} />
+						</CButton>
+					</td>
 				</tr>
 
 				{config.https_cert_type === 'self' && (
 					<tr>
-						<td colSpan="2">
+						<td colSpan="3">
 							<table className="table table-responsive-sm">
 								<tbody>
 									<tr>
-										<td colSpan="2">This tool will help create a self-signed certificate for the server to use.</td>
+										<td colSpan="3">This tool will help create a self-signed certificate for the server to use.</td>
 									</tr>
 
 									<tr>
@@ -580,10 +721,12 @@ function UserConfigTable() {
 													value={config.https_self_cn}
 													onChange={(e) => setValue('https_self_cn', e.currentTarget.value)}
 												/>
-												<CButton onClick={() => resetValue('https_self_cn')} title="Reset">
-													<FontAwesomeIcon icon={faUndo} />
-												</CButton>
 											</div>
+										</td>
+										<td>
+											<CButton onClick={() => resetValue('https_self_cn')} title="Reset to default">
+												<FontAwesomeIcon icon={faUndo} />
+											</CButton>
 										</td>
 									</tr>
 									<tr>
@@ -595,61 +738,51 @@ function UserConfigTable() {
 													value={config.https_self_expiry}
 													onChange={(e) => setValue('https_self_expiry', e.currentTarget.value)}
 												/>
-												<CButton onClick={() => resetValue('https_self_expiry')} title="Reset">
-													<FontAwesomeIcon icon={faUndo} />
-												</CButton>
 											</div>
 										</td>
+										<td>
+											<CButton onClick={() => resetValue('https_self_expiry')} title="Reset to default">
+												<FontAwesomeIcon icon={faUndo} />
+											</CButton>
+										</td>
 									</tr>
-
-									{(!config.https_self_cert || config.https_self_cert.length === 0) && (
-										<tr>
-											<td>
-												Certificate Details
-												<br />
-												{(!config.https_self_cert || config.https_self_cert.length === 0) && (
-													<ul>
-														<li>No certificate available</li>
-													</ul>
-												)}
-											</td>
-											<td>
-												<CButton onClick={() => createSslCertificate()} color="success">
-													<FontAwesomeIcon icon={faSync} />
-													&nbsp;Generate
-												</CButton>
-											</td>
-										</tr>
-									)}
-									{config.https_self_cert && config.https_self_cert.length > 0 && (
-										<tr>
-											<td>
-												Certificate Details
-												<br />
-												{config.https_self_cert && config.https_self_cert.length > 0 && (
-													<ul>
-														<li>Common Name: {config.https_self_cert_cn}</li>
-														<li>Created: {config.https_self_cert_created}</li>
-														<li>Expiry Period: {config.https_self_cert_expiry}</li>
-													</ul>
-												)}
-											</td>
-											<td>
+									<tr>
+										<td>
+											Certificate Details
+											<br />
+											{config.https_self_cert && config.https_self_cert.length > 0 ? (
+												<ul>
+													<li>Common Name: {config.https_self_cert_cn}</li>
+													<li>Created: {config.https_self_cert_created}</li>
+													<li>Expiry Period: {config.https_self_cert_expiry}</li>
+												</ul>
+											) : (
+												<ul>
+													<li>No certificate available</li>
+												</ul>
+											)}
+										</td>
+										<td>
+											{config.https_self_cert && config.https_self_cert.length > 0 ? (
 												<p>
 													<CButton onClick={() => renewSslCertificate()} color="success">
 														<FontAwesomeIcon icon={faSync} />
 														&nbsp;Renew
 													</CButton>
-												</p>
-												<p>
+													<br />
 													<CButton onClick={() => deleteSslCertificate()} color="danger">
 														<FontAwesomeIcon icon={faTrash} />
 														&nbsp;Delete
 													</CButton>
 												</p>
-											</td>
-										</tr>
-									)}
+											) : (
+												<CButton onClick={() => createSslCertificate()} color="success">
+													<FontAwesomeIcon icon={faSync} />
+													&nbsp;Generate
+												</CButton>
+											)}
+										</td>
+									</tr>
 								</tbody>
 							</table>
 						</td>
@@ -658,11 +791,11 @@ function UserConfigTable() {
 
 				{config.https_cert_type === 'external' && (
 					<tr>
-						<td colSpan="2">
+						<td colSpan="3">
 							<table className="table table-responsive-sm">
 								<tbody>
 									<tr>
-										<td colSpan="2">
+										<td colSpan="3">
 											<p>
 												This requires you to generate your own self-signed certificate or go through a certificate
 												authority. A properly signed certificate will work.
@@ -685,6 +818,11 @@ function UserConfigTable() {
 												/>
 											</div>
 										</td>
+										<td>
+											<CButton onClick={() => resetValue('https_ext_private_key')} title="Reset to default">
+												<FontAwesomeIcon icon={faUndo} />
+											</CButton>
+										</td>
 									</tr>
 
 									<tr>
@@ -697,6 +835,11 @@ function UserConfigTable() {
 													onChange={(e) => setValue('https_ext_certificate', e.currentTarget.value)}
 												/>
 											</div>
+										</td>
+										<td>
+											<CButton onClick={() => resetValue('https_ext_certificate')} title="Reset to default">
+												<FontAwesomeIcon icon={faUndo} />
+											</CButton>
 										</td>
 									</tr>
 
@@ -715,6 +858,11 @@ function UserConfigTable() {
 												/>
 											</div>
 										</td>
+										<td>
+											<CButton onClick={() => resetValue('https_ext_chain')} title="Reset to default">
+												<FontAwesomeIcon icon={faUndo} />
+											</CButton>
+										</td>
 									</tr>
 								</tbody>
 							</table>
@@ -722,12 +870,12 @@ function UserConfigTable() {
 					</tr>
 				)}
 				<tr>
-					<td colSpan="2" className="settings-category">
+					<td colSpan="3" className="settings-category">
 						Experiments
 					</td>
 				</tr>
 				<tr>
-					<td colSpan="2">
+					<td colSpan="3">
 						<CAlert color="danger">Do not touch these settings unless you know what you are doing!</CAlert>
 					</td>
 				</tr>
@@ -745,6 +893,7 @@ function UserConfigTable() {
 							<label className="form-check-label">Disabled</label>
 						</div>
 					</td>
+					<td>&nbsp;</td>
 				</tr>
 				<tr>
 					<td>Use TouchBackend for Drag and Drop</td>
@@ -760,6 +909,7 @@ function UserConfigTable() {
 							<label className="form-check-label">Enabled</label>
 						</div>
 					</td>
+					<td>&nbsp;</td>
 				</tr>
 			</tbody>
 		</table>
@@ -901,48 +1051,48 @@ function RemoteControlInfo() {
 							</p>
 							<p>
 								<strong>Commands:</strong>
-								<ul>
-									<li>
-										<code>/press/bank/</code>&lt;page&gt;<code>/</code>&lt;button&gt;
-										<br />
-										<i>Press and release a button (run both down and up actions)</i>
-									</li>
-									<li>
-										<code>/style/bank/</code>&lt;page&gt;<code>/</code>&lt;button&gt;
-										<code>?bgcolor=</code>&lt;bgcolor HEX&gt;
-										<br />
-										<i>Change background color of button</i>
-									</li>
-									<li>
-										<code>/style/bank/</code>&lt;page&gt;<code>/</code>&lt;button&gt;
-										<code>?color=</code>&lt;color HEX&gt;
-										<br />
-										<i>Change color of text on button</i>
-									</li>
-									<li>
-										<code>/style/bank/</code>&lt;page&gt;<code>/</code>&lt;button&gt;
-										<code>?text=</code>&lt;text&gt;
-										<br />
-										<i>Change text on a button</i>
-									</li>
-									<li>
-										<code>/style/bank/</code>&lt;page&gt;<code>/</code>&lt;button&gt;
-										<code>?size=</code>&lt;text size&gt;
-										<br />
-										<i>Change text size on a button (between the predefined values)</i>
-									</li>
-									<li>
-										<code>/set/custom-variable/</code>&lt;name&gt;<code>?value=</code>&lt;value&gt;
-										<br />
-										<i>Change custom variable value</i>
-									</li>
-									<li>
-										<code>/rescan</code>
-										<br />
-										<i>Make Companion rescan for newly attached USB surfaces</i>
-									</li>
-								</ul>
 							</p>
+							<ul>
+								<li>
+									<code>/press/bank/</code>&lt;page&gt;<code>/</code>&lt;button&gt;
+									<br />
+									<i>Press and release a button (run both down and up actions)</i>
+								</li>
+								<li>
+									<code>/style/bank/</code>&lt;page&gt;<code>/</code>&lt;button&gt;
+									<code>?bgcolor=</code>&lt;bgcolor HEX&gt;
+									<br />
+									<i>Change background color of button</i>
+								</li>
+								<li>
+									<code>/style/bank/</code>&lt;page&gt;<code>/</code>&lt;button&gt;
+									<code>?color=</code>&lt;color HEX&gt;
+									<br />
+									<i>Change color of text on button</i>
+								</li>
+								<li>
+									<code>/style/bank/</code>&lt;page&gt;<code>/</code>&lt;button&gt;
+									<code>?text=</code>&lt;text&gt;
+									<br />
+									<i>Change text on a button</i>
+								</li>
+								<li>
+									<code>/style/bank/</code>&lt;page&gt;<code>/</code>&lt;button&gt;
+									<code>?size=</code>&lt;text size&gt;
+									<br />
+									<i>Change text size on a button (between the predefined values)</i>
+								</li>
+								<li>
+									<code>/set/custom-variable/</code>&lt;name&gt;<code>?value=</code>&lt;value&gt;
+									<br />
+									<i>Change custom variable value</i>
+								</li>
+								<li>
+									<code>/rescan</code>
+									<br />
+									<i>Make Companion rescan for newly attached USB surfaces</i>
+								</li>
+							</ul>
 
 							<p>
 								<strong>Examples</strong>
