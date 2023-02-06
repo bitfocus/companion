@@ -736,7 +736,7 @@ const EditDurationGroupPropertiesModal = forwardRef(function EditDurationGroupPr
 						<CLabel>Press duration</CLabel>
 						<CInput
 							type="number"
-							value={newDurationValue}
+							value={newDurationValue || ''}
 							min={1}
 							step={1}
 							style={{ color: !newDurationValue || newDurationValue <= 0 ? 'red' : undefined }}
