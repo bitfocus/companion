@@ -83,17 +83,16 @@ export function ButtonStyleConfig({ controlId, controlType, style, configRef }) 
 
 					<CCol className="fieldtype-checkbox" sm={3} xs={6}>
 						<label>Show Topbar</label>
-						<p>
-							<DropdownInputField
-								choices={[
-									{ id: 'default', label: 'Follow Default' },
-									{ id: true, label: 'Show' },
-									{ id: false, label: 'Hide' },
-								]}
-								setValue={setShowTopBar}
-								value={style.show_topbar}
-							/>
-						</p>
+
+						<DropdownInputField
+							choices={[
+								{ id: 'default', label: 'Follow Default' },
+								{ id: true, label: 'Show' },
+								{ id: false, label: 'Hide' },
+							]}
+							setValue={setShowTopBar}
+							value={style.show_topbar}
+						/>
 					</CCol>
 				</CRow>
 			</CForm>
