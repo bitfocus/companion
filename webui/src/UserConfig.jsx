@@ -184,7 +184,11 @@ function UserConfigTable() {
 					</td>
 				</tr>
 				<tr>
-					<td>Use Elgato Plugin for StreamDeck access<br /><em>(Requires Companion restart)</em></td>
+					<td>
+						Use Elgato Plugin for StreamDeck access
+						<br />
+						<em>(Requires Companion restart)</em>
+					</td>
 					<td>
 						<div className="form-check form-check-inline mr-1">
 							<CInputCheckbox
@@ -204,7 +208,11 @@ function UserConfigTable() {
 					</td>
 				</tr>
 				<tr>
-					<td>Enable connected X-keys<br /><em>(Requires Companion restart)</em></td>
+					<td>
+						Enable connected X-keys
+						<br />
+						<em>(Requires Companion restart)</em>
+					</td>
 					<td>
 						<div className="form-check form-check-inline mr-1">
 							<CInputCheckbox
@@ -224,7 +232,11 @@ function UserConfigTable() {
 					</td>
 				</tr>
 				<tr>
-					<td>Enable connected Loupedeck Live devices<br /><em>(Requires Companion restart)</em></td>
+					<td>
+						Enable connected Loupedeck Live devices
+						<br />
+						<em>(Requires Companion restart)</em>
+					</td>
 					<td>
 						<div className="form-check form-check-inline mr-1">
 							<CInputCheckbox
