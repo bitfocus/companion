@@ -1,6 +1,6 @@
 import { CButton, CRow, CCol, CButtonGroup, CForm, CAlert, CInputGroup, CInputGroupAppend } from '@coreui/react'
 import React, { useCallback, useContext, useState } from 'react'
-import { socketEmitPromise, SocketContext } from '../util'
+import { socketEmitPromise, SocketContext, UserConfigContext } from '../util'
 import { AlignmentInputField, ColorInputField, DropdownInputField, PNGInputField, TextInputField } from '../Components'
 import { FONT_SIZES } from '../Constants'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
@@ -117,6 +117,11 @@ export function ButtonStyleConfigFields({ values, setValueInner, setPng, setPngE
 		[setValueInner, values.textExpression]
 	)
 
+	const userconfig = useContext(UserConfigContext)
+
+	let pngHeight =
+		values.show_topbar === false || (values.show_topbar === 'default' && userconfig.remove_topbar === true) ? 72 : 58
+
 	return (
 		<>
 			{controlTemplate(
@@ -165,13 +170,13 @@ export function ButtonStyleConfigFields({ values, setValueInner, setPng, setPngE
 				'png64',
 				{ sm: 3, xs: 6 },
 				<>
-					<label>72x58 PNG</label>
+					<label>72x{pngHeight} PNG</label>
 					<CButtonGroup className="png-browse">
 						<PNGInputField
 							onSelect={setPng}
 							onError={setPngError}
 							min={{ width: 36, height: 36 }}
-							max={{ width: 72, height: 58 }}
+							max={{ width: 72, height: pngHeight }}
 						/>
 						{clearPng && (
 							<CButton color="danger" disabled={!values.png64} onClick={clearPng}>
