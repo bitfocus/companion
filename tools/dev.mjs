@@ -27,10 +27,12 @@ chokidar
 				fn = debounceFn(
 					() => {
 						console.log('Sending reload for module:', moduleDirName)
-						node.send({
-							messageType: 'reload-extra-module',
-							fullpath: path.join(devModulesPath, moduleDirName),
-						})
+						if (node) {
+							node.send({
+								messageType: 'reload-extra-module',
+								fullpath: path.join(devModulesPath, moduleDirName),
+							})
+						}
 					},
 					{
 						after: true,
@@ -61,7 +63,7 @@ async function start() {
 }
 
 function restart() {
-	if (!node.kill()) {
+	if (node && !node.kill()) {
 		console.error('Failed to kill')
 		process.exit(1)
 	}
@@ -70,5 +72,12 @@ function restart() {
 	console.log('RESTARTING')
 	console.log('********')
 
-	node.on('exit', () => start())
+	if (node) {
+		node.on('exit', () => {
+			node = null
+			start()
+		})
+	} else {
+		start()
+	}
 }
