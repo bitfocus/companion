@@ -331,10 +331,10 @@ function InstancesTableRow({
 							</CButton>
 
 							<CButton
-								onClick={(e) => windowLinkOpen({ href: moduleInfo.bugUrl })}
+								onClick={(e) => windowLinkOpen({ href: moduleInfo?.bugUrl })}
 								size="md"
 								title="Issue Tracker"
-								disabled={!moduleInfo.bugUrl}
+								disabled={!moduleInfo?.bugUrl}
 								style={{ padding: 4 }}
 							>
 								<FontAwesomeIcon icon={faBug} />
