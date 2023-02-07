@@ -22,6 +22,7 @@ import {
 	faGamepad,
 	faPlug,
 	faCog,
+	faFileImport,
 } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import '@fontsource/fira-code'
@@ -43,6 +44,7 @@ import { WizardModal, WIZARD_CURRENT_VERSION } from './Wizard'
 import { Navigate, useLocation } from 'react-router-dom'
 import { useIdleTimer } from 'react-idle-timer'
 import { UnstableWarningModal } from './UnstableWarning'
+import { ImportExport } from './ImportExport'
 
 const useTouchBackend = window.localStorage.getItem('test_touch_backend') === '1'
 const showCloudTab = window.localStorage.getItem('show_companion_cloud') === '1'
@@ -52,6 +54,7 @@ export default function App() {
 	const [connected, setConnected] = useState(false)
 	const [wasConnected, setWasConnected] = useState(false)
 	const [buttonGridHotPress, setButtonGridHotPress] = useState(false)
+	const [currentImportTask, setCurrentImportTask] = useState(null)
 
 	useEffect(() => {
 		const onConnected = () => {
@@ -73,11 +76,15 @@ export default function App() {
 		socket.on('connect', onConnected)
 		socket.on('disconnect', onDisconnected)
 
+		socket.on('load-save:task', setCurrentImportTask)
+
 		if (socket.connected) onConnected()
 
 		return () => {
 			socket.off('connect', onConnected)
 			socket.off('disconnect', onDisconnected)
+
+			socket.off('load-save:task', setCurrentImportTask)
 		}
 	}, [socket])
 
@@ -125,6 +132,16 @@ export default function App() {
 										<li className="text-muted">Check that the application is still running</li>
 										<li className="text-muted">If you're using the Admin GUI over a network - check your connection</li>
 									</p>
+								</div>
+							</div>
+						</div>
+					</div>
+					<div id="current-import-container" className={!wasConnected && currentImportTask ? 'show-error' : ''}>
+						<div className="row justify-content-center">
+							<div className="col-md-6">
+								<div className="clearfix">
+									<h4 className="pt-3">Stand by, the config is being updated!</h4>
+									{/* <p className="text-muted">It seems that we have lost connection to the companion app.</p> */}
 								</div>
 							</div>
 						</div>
@@ -410,6 +427,11 @@ function AppContent({ buttonGridHotPress }) {
 					</CNavLink>
 				</CNavItem>
 				<CNavItem>
+					<CNavLink to="/import-export">
+						<FontAwesomeIcon icon={faFileImport} /> Import / Export
+					</CNavLink>
+				</CNavItem>
+				<CNavItem>
 					<CNavLink to="/log">
 						<FontAwesomeIcon icon={faClipboardList} /> Log
 					</CNavLink>
@@ -446,6 +468,11 @@ function AppContent({ buttonGridHotPress }) {
 				<CTabPane className={getClassForPane('/settings')}>
 					<MyErrorBoundary>
 						<UserConfig />
+					</MyErrorBoundary>
+				</CTabPane>
+				<CTabPane className={getClassForPane('/import-export')}>
+					<MyErrorBoundary>
+						<ImportExport />
 					</MyErrorBoundary>
 				</CTabPane>
 				{getClassForPane('/log') !== '' && (

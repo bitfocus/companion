@@ -1,4 +1,4 @@
-export const windowLinkOpen = ({href,sameWindow}) => {
+export const windowLinkOpen = ({ href, sameWindow }) => {
 	window.open(href, !sameWindow ? '_blank' : '', 'noreferrer')
 }
 export function WindowLinkOpen({ children, href, sameWindow = false, title }) {

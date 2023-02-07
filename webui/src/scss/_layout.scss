@@ -108,6 +108,10 @@ body {
 		&:hover {
 			color: #333;
 		}
+
+		&.disabled {
+			color: #aaa;
+		}
 	}
 }
 

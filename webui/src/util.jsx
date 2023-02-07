@@ -164,21 +164,27 @@ export function LoadingRetryOrError({ error, dataReady, doRetry, autoRetryAfter 
 	const [countdown, setCountdown] = useState(autoRetryAfter)
 
 	useEffect(() => {
-		if (autoRetryAfter) {
+		if (!dataReady && autoRetryAfter) {
 			const interval = setInterval(() => {
-				setCountdown((c) => c - 1)
+				setCountdown((c) => {
+					if (c <= 0) {
+						return autoRetryAfter - 1
+					} else {
+						return c - 1
+					}
+				})
 			}, 1000)
 			return () => clearInterval(interval)
+		} else {
+			setCountdown(null)
 		}
-	})
+	}, [dataReady, autoRetryAfter])
 
 	useEffect(() => {
 		if (countdown === 0) {
 			doRetry()
-			setCountdown(null);			
 		}
-	// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [countdown])
+	}, [countdown, doRetry])
 
 	return (
 		<>

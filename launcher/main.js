@@ -546,7 +546,7 @@ if (!lock) {
 			}
 		})
 
-		let crashCounter = 0
+		let restartCounter = 0
 		let crashTimeout = null
 
 		// Find the node binary
@@ -621,19 +621,19 @@ if (!lock) {
 			crashTimeout = setTimeout(() => {
 				crashTimeout = null
 				customLog('Companion looks to be stable', 'Application')
-				crashCounter = 0
+				restartCounter = 0
 			}, 5000)
 		})
 
 		child.on('exit', (code) => {
 			if (code === 0) return
 
-			crashCounter++
+			restartCounter++
 			clearTimeout(crashTimeout)
 			crashTimeout = null
 
-			customLog(`Crashes: ${crashCounter}`, 'Application')
-			if (crashCounter > 3) {
+			customLog(`Restart Count: ${restartCounter}`, 'Application')
+			if (restartCounter > 3) {
 				child.stop()
 				dialog.showErrorBox('Unable to start', 'Companion is unable to start')
 				app.exit(1)

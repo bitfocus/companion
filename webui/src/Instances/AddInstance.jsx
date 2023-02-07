@@ -69,7 +69,7 @@ const AddInstancesInner = memo(function AddInstancesInner({ showHelp, configureI
 		const searchResults = filter
 			? fuzzySearch(filter, allProducts, {
 					keys: ['product', 'name', 'manufacturer', 'keywords'],
-					threshold: -100_000,
+					threshold: -10_000,
 			  }).map((x) => x.obj)
 			: allProducts
 
@@ -85,8 +85,8 @@ const AddInstancesInner = memo(function AddInstancesInner({ showHelp, configureI
 							<FontAwesomeIcon
 								icon={faExclamationTriangle}
 								color="#ff6600"
-								size={"xl"}
-								title="This module has not been updated for Companion 3.0, and may be broken as a result"
+								size={'xl'}
+								title="This module has not been updated for Companion 3.0, and may not work fully"
 							/>
 							&nbsp;
 						</>
@@ -101,15 +101,19 @@ const AddInstancesInner = memo(function AddInstancesInner({ showHelp, configureI
 			)
 		}
 
-		candidates = Object.entries(candidatesObj)
-			.sort((a, b) => {
-				const aName = a[0].toLocaleLowerCase()
-				const bName = b[0].toLocaleLowerCase()
-				if (aName < bName) return -1
-				if (aName > bName) return 1
-				return 0
-			})
-			.map((c) => c[1])
+		if (!filter) {
+			candidates = Object.entries(candidatesObj)
+				.sort((a, b) => {
+					const aName = a[0].toLocaleLowerCase()
+					const bName = b[0].toLocaleLowerCase()
+					if (aName < bName) return -1
+					if (aName > bName) return 1
+					return 0
+				})
+				.map((c) => c[1])
+		} else {
+			candidates = Object.entries(candidatesObj).map((c) => c[1])
+		}
 	} catch (e) {
 		console.error('Failed to compile candidates list:', e)
 

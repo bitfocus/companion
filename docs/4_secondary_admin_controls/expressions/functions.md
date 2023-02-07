@@ -86,11 +86,33 @@ substr() extracts characters from indexStart up to but not including indexEnd.
 
 Tip: If you don't want the behaviour of negative numbers, you can use `max(0, index)` to limit the value to never be below 0.
 
-**secondsToTimestamp(seconds)**
+**secondsToTimestamp(seconds, format)**
 
-Convert a number of seconds into a timestamp of format 'HH:MM:SS'.
+Convert a number of seconds into a timestamp of format 'HH:mm:ss'.
 
 Note: If the value is less than 0, it will report 0. There is no limit to the number of hours shown, it will display values greater than 24.
+
+By supplying the format parameter, you can choose which components will be included in the output string.
+
+The following components are allowed:
+* `HH` / `hh` - hours
+* `mm` - minutes
+* `ss` - seconds
+
+**msToTimestamp(milliseconds, format)**
+
+Convert a number of milliseconds into a timestamp of format 'HH:mm:ss.SSS'.
+
+Note: If the value is less than 0, it will report 0. There is no limit to the number of hours shown, it will display values greater than 24.
+
+By supplying the format parameter, you can choose which components will be included in the output string.
+
+The following components are allowed:
+* `HH` / `hh` - hours
+* `mm` - minutes
+* `ss` - seconds
+* `.S` / `.SS` / `.SSS` - milliseconds, in varying levels of accuracy. Must be at the end of the string
+
 
 ##### Bool operations
 

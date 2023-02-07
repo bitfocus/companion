@@ -22,7 +22,7 @@ document.getElementById('dev_modules_path_clear').addEventListener('click', () =
 
 api.receive('info', function (config, info, platform) {
 	if (platform !== 'win32' && platform !== 'darwin') {
-		document.getElementById('run_at_login_group').remove()
+		document.getElementById('run_at_login_group')?.remove()
 	}
 
 	document.getElementById('status').innerHTML = info.appStatus
@@ -30,7 +30,7 @@ api.receive('info', function (config, info, platform) {
 	document.getElementById('model').innerHTML = `Companion v${info.appVersion}`
 
 	document.getElementById('start_minimized').checked = config.start_minimised
-	document.getElementById('run_at_login').checked = config.run_at_login
+	if (document.getElementById('run_at_login')) document.getElementById('run_at_login').checked = config.run_at_login
 	document.getElementById('http_port').value = config.http_port
 
 	document.getElementById('developer_settings_panel').style.display = config.enable_developer ? 'block' : 'none'

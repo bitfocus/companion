@@ -38,7 +38,8 @@ h5 {
 	width: 100%;
 }
 
-.table-tight td,th {
+.table-tight td,
+th {
 	padding: 5px 10px;
 	border-bottom: 1px solid #ddd;
 }
@@ -76,6 +77,7 @@ code {
 	}
 }
 
-.widget-clickable, .hand {
+.widget-clickable,
+.hand {
 	cursor: pointer;
 }
