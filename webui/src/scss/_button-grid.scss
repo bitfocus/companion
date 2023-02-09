@@ -58,3 +58,8 @@
 		margin-bottom: 1rem;
 	}
 }
+
+.c-sidebar-nav-link,
+.c-sidebar-nav-dropdown-toggle {
+	transition: none;
+}

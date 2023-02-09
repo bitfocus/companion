@@ -143,28 +143,22 @@ export function ControlFeedbacksEditor({ controlId, feedbacks, heading, booleanO
 
 			<h4 className="mt-3">
 				{heading}
-				<CButtonGroup className="right">
-					<CButtonGroup>
-						<CButton
-							color="info"
-							size="sm"
-							onClick={setAllExpanded}
-							title="Expand all feedbacks"
-							disabled={!canExpandAll}
-						>
-							<FontAwesomeIcon icon={faExpandArrowsAlt} />
-						</CButton>{' '}
-						<CButton
-							color="info"
-							size="sm"
-							onClick={setAllCollapsed}
-							title="Collapse all feedbacks"
-							disabled={!canCollapseAll}
-						>
-							<FontAwesomeIcon icon={faCompressArrowsAlt} />
-						</CButton>
+				{feedbacks.length > 1 && (
+					<CButtonGroup className="right">
+						<CButtonGroup>
+							{canExpandAll && (
+								<CButton size="sm" onClick={setAllExpanded} title="Expand all feedbacks">
+									<FontAwesomeIcon icon={faExpandArrowsAlt} />
+								</CButton>
+							)}
+							{canCollapseAll && (
+								<CButton size="sm" onClick={setAllCollapsed} title="Collapse all feedbacks">
+									<FontAwesomeIcon icon={faCompressArrowsAlt} />
+								</CButton>
+							)}
+						</CButtonGroup>
 					</CButtonGroup>
-				</CButtonGroup>
+				)}
 			</h4>
 
 			<table className="table feedback-table">
@@ -200,7 +194,14 @@ export function ControlFeedbacksEditor({ controlId, feedbacks, heading, booleanO
 					booleanOnly={booleanOnly}
 					addPlaceholder={addPlaceholder}
 				/>
-				<CButton color="primary" variant="outline" onClick={showAddModal}>
+				<CButton
+					color="primary"
+					onClick={showAddModal}
+					style={{
+						borderTopLeftRadius: 0,
+						borderBottomLeftRadius: 0,
+					}}
+				>
 					Browse
 				</CButton>
 			</div>
@@ -404,35 +405,37 @@ function FeedbackEditor({
 	const previewControlId = previewControlIdFunction?.(feedback.options, ParseControlId(controlId))
 
 	return (
-		<div className="editor-grid">
+		<div className="editor-grid remove075right">
 			<div className="cell-name">{name}</div>
 
 			<div className="cell-controls">
 				<CButtonGroup>
-					{doEnabled && (
-						<CSwitch
-							color="success"
-							checked={!feedback.disabled}
-							title={feedback.disabled ? 'Enable feedback' : 'Disable feedback'}
-							onChange={innerSetEnabled}
-						/>
-					)}
-					&nbsp;
 					{isCollapsed ? (
-						<CButton color="info" size="sm" onClick={doExpand} title="Expand feedback view">
+						<CButton size="sm" onClick={doExpand} title="Expand feedback view">
 							<FontAwesomeIcon icon={faExpandArrowsAlt} />
 						</CButton>
 					) : (
-						<CButton color="info" size="sm" onClick={doCollapse} title="Collapse feedback view">
+						<CButton size="sm" onClick={doCollapse} title="Collapse feedback view">
 							<FontAwesomeIcon icon={faCompressArrowsAlt} />
 						</CButton>
 					)}
-					<CButton color="warning" size="sm" onClick={innerDuplicate} title="Duplicate feedback">
+					<CButton size="sm" onClick={innerDuplicate} title="Duplicate feedback">
 						<FontAwesomeIcon icon={faCopy} />
 					</CButton>
-					<CButton color="danger" size="sm" onClick={innerDelete} title="Remove feedback">
+					<CButton size="sm" onClick={innerDelete} title="Remove feedback">
 						<FontAwesomeIcon icon={faTrash} />
 					</CButton>
+					{doEnabled && (
+						<>
+							&nbsp;
+							<CSwitch
+								color="success"
+								checked={!feedback.disabled}
+								title={feedback.disabled ? 'Enable feedback' : 'Disable feedback'}
+								onChange={innerSetEnabled}
+							/>
+						</>
+					)}
 				</CButtonGroup>
 			</div>
 
@@ -470,7 +473,6 @@ function FeedbackEditor({
 									/>
 								</MyErrorBoundary>
 							))}
-							{options.length === 0 ? 'Nothing to configure' : ''}
 						</CForm>
 					</div>
 					{!booleanOnly && (

@@ -9,6 +9,7 @@ export function TextInputField({
 	tooltip,
 	placeholder,
 	value,
+	style,
 	setValue,
 	setValid,
 	disabled,
@@ -126,13 +127,14 @@ export function TextInputField({
 	)
 
 	// Render the input
+	const extraStyle = style || {}
 	return (
 		<CInput
 			innerRef={useVariables ? setupTribute : undefined}
 			type="text"
 			disabled={disabled}
 			value={tmpValue ?? value ?? ''}
-			style={{ color: !isValueValid(tmpValue ?? value) ? 'red' : undefined }}
+			style={{ color: !isValueValid(tmpValue ?? value) ? 'red' : undefined, ...extraStyle }}
 			title={tooltip}
 			onChange={doOnChange}
 			onFocus={() => setTmpValue(value ?? '')}

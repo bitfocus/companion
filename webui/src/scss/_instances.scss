@@ -70,11 +70,14 @@
 
 .td-reorder {
 	cursor: ns-resize;
+	background-color: #f7f7f7;
 }
 
 .variables-panel {
+	margin-right: -1rem;
 	.variables-table-filter {
 		margin-top: 1rem;
+		
 	}
 }
 

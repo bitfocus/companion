@@ -11,6 +11,7 @@ import {
 	faCheckCircle,
 	faQuestionCircle,
 	faBug,
+	faEyeSlash,
 } from '@fortawesome/free-solid-svg-icons'
 
 import { InstanceVariablesModal } from './InstanceVariablesModal'
@@ -116,6 +117,7 @@ export function InstancesList({ showHelp, doConfigureInstance, instanceStatus })
 	return (
 		<div>
 			<h4>Connections</h4>
+
 			<p>
 				When you want to control devices or software with Companion, you need to add a connection to let Companion know
 				how to communicate with whatever you want to control.
@@ -124,51 +126,59 @@ export function InstancesList({ showHelp, doConfigureInstance, instanceStatus })
 			<GenericConfirmModal ref={deleteModalRef} />
 			<InstanceVariablesModal ref={variablesModalRef} />
 
-			<CButtonGroup style={{ marginBottom: '0.3em' }}>
-				<CButton
-					size="sm"
-					color="light"
-					style={{ opacity: visibleConnections.disabled ? 1 : 0.2 }}
-					onClick={doToggleDisabled}
-				>
-					Disabled
-				</CButton>
-				<CButton size="sm" color="success" style={{ opacity: visibleConnections.ok ? 1 : 0.2 }} onClick={doToggleOk}>
-					OK
-				</CButton>
-				<CButton
-					size="sm"
-					color="warning"
-					style={{ opacity: visibleConnections.warning ? 1 : 0.2 }}
-					onClick={doToggleWarning}
-				>
-					Warning
-				</CButton>
-				<CButton
-					size="sm"
-					color="danger"
-					style={{ opacity: visibleConnections.error ? 1 : 0.2 }}
-					onClick={doToggleError}
-				>
-					Error
-				</CButton>
-			</CButtonGroup>
-
 			<table className="table-tight table-responsive-sm">
 				<thead>
 					<tr>
 						<th className="fit">&nbsp;</th>
 						<th>Label</th>
 						<th>Module</th>
-						<th>Status</th>
-						<th className="fit">&nbsp;</th>
+						<th colSpan={2} className="fit">
+							Status
+							<CButtonGroup style={{ float: 'right', margin: 0 }}>
+								<CButton
+									color="secondary"
+									size="sm"
+									style={{ opacity: visibleConnections.disabled ? 1 : 0.4, padding: '1px 5px', color: 'black' }}
+									onClick={doToggleDisabled}
+								>
+									Disabled
+								</CButton>
+								<CButton
+									size="sm"
+									color="success"
+									style={{ opacity: visibleConnections.ok ? 1 : 0.4, padding: '1px 5px' }}
+									onClick={doToggleOk}
+								>
+									OK
+								</CButton>
+								<CButton
+									color="warning"
+									size="sm"
+									style={{ opacity: visibleConnections.warning ? 1 : 0.4, padding: '1px 5px' }}
+									onClick={doToggleWarning}
+								>
+									Warning
+								</CButton>
+								<CButton
+									color="danger"
+									size="sm"
+									style={{ opacity: visibleConnections.error ? 1 : 0.4, padding: '1px 5px' }}
+									onClick={doToggleError}
+								>
+									Error
+								</CButton>
+							</CButtonGroup>
+						</th>
 					</tr>
 				</thead>
 				<tbody>
 					{rows}
 					{hiddenCount > 0 && (
 						<tr>
-							<td colSpan={4}>{hiddenCount} Connections are hidden</td>
+							<td colSpan={4} style={{padding:'10px 5px'}}>
+								<FontAwesomeIcon icon={faEyeSlash} style={{ marginRight: '0.5em', color: 'red' }} />
+								<strong>{hiddenCount} Connections are hidden</strong>
+							</td>
 						</tr>
 					)}
 					{Object.keys(instancesContext).length === 0 && (

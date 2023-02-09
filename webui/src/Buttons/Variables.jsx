@@ -226,7 +226,7 @@ function CustomVariablesList({ setShowCustom }) {
 	return (
 		<div className="variables-panel">
 			<h5>
-				<CButton color="primary" size="sm" onClick={doBack}>
+				<CButton color="primary" size="sm" onClick={doBack} className="gap-b">
 					Back
 				</CButton>
 				Custom Variables

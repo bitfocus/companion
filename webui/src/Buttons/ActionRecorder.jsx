@@ -476,7 +476,9 @@ function TriggerPicker({ selectControl }) {
 						))
 					) : (
 						<tr>
-							<td colSpan="2">There currently are no triggers or scheduled tasks.</td>
+							<td colSpan="2" className="currentlyNone">
+								There currently are no triggers or scheduled tasks.
+							</td>
 						</tr>
 					)}
 				</tbody>
@@ -570,20 +572,20 @@ function RecorderSessionHeading({ confirmRef, sessionId, sessionInfo, doFinish }
 
 					<CCol className="fieldtype-checkbox" sm={2} xs={3}>
 						<CLabel>Recording</CLabel>
-						<p>
-							<CSwitch color="primary" size="lg" checked={!!sessionInfo.isRunning} onChange={changeRecording} />
-						</p>
+						<span style={{ marginTop: 4, display: 'inline-block' }}>
+							<CSwitch color="success" size="lg" checked={!!sessionInfo.isRunning} onChange={changeRecording} />
+						</span>
 					</CCol>
 				</CRow>
 			</CForm>
 			<CButtonGroup className={'margin-bottom'}>
-				<CButton onClick={doClearActions} color="warning" disabled={!sessionInfo.actions?.length}>
+				<CButton onClick={doClearActions} color="danger" disabled={!sessionInfo.actions?.length}>
 					Clear Actions
 				</CButton>
 				<CButton onClick={doAbort} color="danger">
 					Discard
 				</CButton>
-				<CButton onClick={doFinish2} color="success" disabled={!sessionInfo.actions?.length}>
+				<CButton onClick={doFinish2} color="danger" disabled={!sessionInfo.actions?.length}>
 					Finish
 				</CButton>
 			</CButtonGroup>
