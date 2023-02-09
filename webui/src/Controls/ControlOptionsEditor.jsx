@@ -1,7 +1,6 @@
-import { CRow, CCol, CLabel, CForm } from '@coreui/react'
+import { CLabel } from '@coreui/react'
 import React, { useCallback, useContext, useRef } from 'react'
 import { socketEmitPromise, SocketContext } from '../util'
-import { CheckboxInputField } from '../Components'
 import { GenericConfirmModal } from '../Components/GenericConfirmModal'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faQuestionCircle } from '@fortawesome/free-solid-svg-icons'
