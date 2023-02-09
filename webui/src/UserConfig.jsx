@@ -20,6 +20,7 @@ import {
 import { MyErrorBoundary, SocketContext, UserConfigContext } from './util'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faFileImport, faSync, faTrash, faUndo } from '@fortawesome/free-solid-svg-icons'
+import CSwitch from './CSwitch'
 
 export const UserConfig = memo(function UserConfig() {
 	return (
@@ -99,14 +100,14 @@ function UserConfigTable() {
 					<td>Flip counting direction on page up/down buttons</td>
 					<td>
 						<div className="form-check form-check-inline mr-1">
-							<CInputCheckbox
-								id="userconfig_page_direction_flipped"
+							<CSwitch
+								color="success"
 								checked={config.page_direction_flipped}
-								onChange={(e) => setValue('page_direction_flipped', e.currentTarget.checked)}
+								size={'lg'}
+								onChange={() => {
+									setValue('page_direction_flipped', !config.page_direction_flipped)
+								}}
 							/>
-							<label className="form-check-label" htmlFor="userconfig_page_direction_flipped">
-								Enabled
-							</label>
 						</div>
 					</td>
 					<td>
@@ -120,14 +121,14 @@ function UserConfigTable() {
 					<td>Show + and - instead of arrows on page up/down buttons</td>
 					<td>
 						<div className="form-check form-check-inline mr-1">
-							<CInputCheckbox
-								id="userconfig_page_plusminus"
+							<CSwitch
+								color="success"
 								checked={config.page_plusminus}
-								onChange={(e) => setValue('page_plusminus', e.currentTarget.checked)}
+								size={'lg'}
+								onChange={() => {
+									setValue('page_plusminus', !config.page_plusminus)
+								}}
 							/>
-							<label className="form-check-label" htmlFor="userconfig_page_plusminus">
-								Enabled
-							</label>
 						</div>
 					</td>
 					<td>
@@ -141,14 +142,16 @@ function UserConfigTable() {
 					<td>Show the topbar on each button. This can be overridden per-button</td>
 					<td>
 						<div className="form-check form-check-inline mr-1">
-							<CInputCheckbox
-								id="userconfig_remove_topbar"
+						
+						<CSwitch
+								color="success"
 								checked={!config.remove_topbar}
-								onChange={(e) => setValue('remove_topbar', !e.currentTarget.checked)}
+								size={'lg'}
+								onChange={() => {
+									setValue('remove_topbar', !config.remove_topbar)
+								}}
 							/>
-							<label className="form-check-label" htmlFor="userconfig_remove_topbar">
-								Enabled
-							</label>
+						
 						</div>
 					</td>
 					<td>

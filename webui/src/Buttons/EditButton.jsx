@@ -286,6 +286,7 @@ export function EditButton({ controlId, onKeyUp, contentHeight }) {
 							style={config.style}
 							configRef={configRef}
 							controlId={controlId}
+							mainDialog
 						/>
 
 						<ControlOptionsEditor

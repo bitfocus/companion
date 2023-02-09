@@ -6,7 +6,7 @@ import { FONT_SIZES } from '../Constants'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faDollarSign, faFont, faQuestionCircle, faTrash } from '@fortawesome/free-solid-svg-icons'
 
-export function ButtonStyleConfig({ controlId, controlType, style, configRef }) {
+export function ButtonStyleConfig({ controlId, controlType, style, configRef, mainDialog = false }) {
 	const socket = useContext(SocketContext)
 
 	const [pngError, setPngError] = useState(null)
@@ -49,8 +49,8 @@ export function ButtonStyleConfig({ controlId, controlType, style, configRef }) 
 				<>
 					<h4>Empty button</h4>
 					<p className="mt-3">
-						To get started, click button above to create a regular button, or use the drop down
-						to make a special button.
+						To get started, click button above to create a regular button, or use the drop down to make a special
+						button.
 					</p>
 				</>
 			)
@@ -96,6 +96,7 @@ export function ButtonStyleConfig({ controlId, controlType, style, configRef }) 
 						setPngError={setPngError}
 						clearPng={clearPng}
 						controlTemplate={ControlWrapper}
+						mainDialog={mainDialog}
 						style={style}
 					/>
 				</CRow>
@@ -115,6 +116,7 @@ export function ButtonStyleConfigFields({
 	setPng,
 	setPngError,
 	clearPng,
+	mainDialog,
 	controlTemplate,
 }) {
 	const setTextValue = useCallback((val) => setValueInner('text', val), [setValueInner])
@@ -133,9 +135,12 @@ export function ButtonStyleConfigFields({
 	let pngHeight =
 		values.show_topbar === false || (values.show_topbar === 'default' && userconfig.remove_topbar === true) ? 72 : 58
 
+	// this style will be different when you use it in the main dialog compared to in the feedback editor.
+	const specialStyleForButtonEditor = mainDialog ? { width: 'calc(100% - 100px)', marginTop: -35, paddingLeft: 4 } : {}
+
 	return (
 		<>
-			<div style={{ width: 'calc(100% - 100px)', marginTop: -35, paddingLeft: 4 }}>
+			<div style={specialStyleForButtonEditor}>
 				<label>
 					{values.textExpression ? (
 						<>
@@ -206,13 +211,17 @@ export function ButtonStyleConfigFields({
 					<div>
 						<div>
 							<label>Text</label>
-							<AlignmentInputField setValue={setAlignmentValue} value={values.alignment} />
+							<div style={{ border: '1px solid #ccc' }}>
+								<AlignmentInputField setValue={setAlignmentValue} value={values.alignment} />
+							</div>
 						</div>
 					</div>
 					<div>
 						<div>
 							<label>PNG</label>
-							<AlignmentInputField setValue={setPngAlignmentValue} value={values.pngalignment} />
+							<div style={{ border: '1px solid #ccc' }}>
+								<AlignmentInputField setValue={setPngAlignmentValue} value={values.pngalignment} />
+							</div>
 						</div>
 					</div>
 					<div>
