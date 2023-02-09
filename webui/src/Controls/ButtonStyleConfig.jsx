@@ -1,14 +1,4 @@
-import {
-	CButton,
-	CRow,
-	CCol,
-	CButtonGroup,
-	CForm,
-	CAlert,
-	CInputGroup,
-	CInputGroupAppend,
-	CPopover,
-} from '@coreui/react'
+import { CButton, CRow, CCol, CButtonGroup, CForm, CAlert, CInputGroup, CInputGroupAppend } from '@coreui/react'
 import React, { useCallback, useContext, useState } from 'react'
 import { socketEmitPromise, SocketContext, UserConfigContext, PreventDefaultHandler } from '../util'
 import { AlignmentInputField, ColorInputField, DropdownInputField, PNGInputField, TextInputField } from '../Components'
@@ -127,7 +117,6 @@ export function ButtonStyleConfigFields({
 	clearPng,
 	controlTemplate,
 }) {
-	const [showStylePopover, setShowStylePopover] = useState(false)
 	const setTextValue = useCallback((val) => setValueInner('text', val), [setValueInner])
 	const setSizeValue = useCallback((val) => setValueInner('size', val), [setValueInner])
 	const setAlignmentValue = useCallback((val) => setValueInner('alignment', val), [setValueInner])

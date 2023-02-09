@@ -20,10 +20,6 @@ import {
 	CTabs,
 } from '@coreui/react'
 import {
-	faArrowLeft,
-	faArrowRight,
-	faCaretDown,
-	faCaretLeft,
 	faChevronLeft,
 	faChevronRight,
 	faPencil,
@@ -42,13 +38,12 @@ import { GenericConfirmModal } from '../Components/GenericConfirmModal'
 import {
 	KeyReceiver,
 	LoadingRetryOrError,
-	UserConfigContext,
 	socketEmitPromise,
 	SocketContext,
 	MyErrorBoundary,
 	FormatButtonControlId,
 } from '../util'
-import { ParseControlId } from '@companion/shared/ControlId.js'
+//import { ParseControlId } from '@companion/shared/ControlId.js'
 import { ControlActionSetEditor } from '../Controls/ActionSetEditor'
 import jsonPatch from 'fast-json-patch'
 
@@ -62,7 +57,6 @@ import { useMemo } from 'react'
 
 export function EditButton({ controlId, onKeyUp, contentHeight }) {
 	const socket = useContext(SocketContext)
-	const userConfig = useContext(UserConfigContext)
 
 	const resetModalRef = useRef()
 
@@ -214,11 +208,11 @@ export function EditButton({ controlId, onKeyUp, contentHeight }) {
 	const hasRuntimeProps = runtimeProps || runtimeProps === false
 	const dataReady = !loadError && hasConfig && hasRuntimeProps
 
-	const parsedId = ParseControlId(controlId)
+	//const parsedId = ParseControlId(controlId)
 
 	// Tip: This query needs to match the page layout. It doesn't need to be reactive, as the useElementSize will force a re-render
 	const isTwoColumn = window.matchMedia('(min-width: 1200px)').matches
-	const [hintRef, { height: hintHeight }] = useElementSize()
+	const [, { height: hintHeight }] = useElementSize()
 
 	return (
 		<KeyReceiver onKeyUp={onKeyUp} tabIndex={0} className="edit-button-panel">
