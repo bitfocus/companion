@@ -1,5 +1,7 @@
 import React, { useCallback, useRef } from 'react'
 import { CButton, CInputFile } from '@coreui/react'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faFolderOpen } from '@fortawesome/free-solid-svg-icons'
 
 export function PNGInputField({ min, max, onSelect, onError }) {
 	const inputRef = useRef()
@@ -86,7 +88,7 @@ export function PNGInputField({ min, max, onSelect, onError }) {
 			disabled={!apiIsSupported}
 			title={apiIsSupported ? undefined : 'Not supported in your browser'}
 		>
-			Browse
+			<FontAwesomeIcon icon={faFolderOpen} />
 			<CInputFile innerRef={inputRef} onChange={onChange} disabled={!apiIsSupported} />
 		</CButton>
 	)

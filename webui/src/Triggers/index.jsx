@@ -94,7 +94,7 @@ export const Triggers = memo(function Triggers() {
 				<CButton
 					color="light"
 					style={{
-						marginLeft: 10,
+						marginTop: 10,
 					}}
 					href={`/int/export/triggers/all`}
 					target="_new"
@@ -196,7 +196,9 @@ function TriggersTable({ triggersList, editItem }) {
 						))
 				) : (
 					<tr>
-						<td colSpan="4">There currently are no triggers or scheduled tasks.</td>
+						<td colSpan="4" className="currentlyNone">
+							There currently are no triggers or scheduled tasks.
+						</td>
 					</tr>
 				)}
 			</tbody>

@@ -97,7 +97,7 @@ export const InstancesPage = memo(function InstancesPage() {
 								</CNavLink>
 							</CNavItem>
 						</CNav>
-						<CTabContent fade={false}>
+						<CTabContent fade={false} className="remove075right">
 							<CTabPane data-tab="add">
 								<MyErrorBoundary>
 									<AddInstancesPanel showHelp={showHelp} doConfigureInstance={doConfigureInstance} />

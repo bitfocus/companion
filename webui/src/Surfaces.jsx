@@ -153,7 +153,7 @@ export const SurfacesPage = memo(function SurfacesPage() {
 
 			<CAlert color="info">
 				Did you know, you can connect a Streamdeck from another computer or Raspberry Pi with{' '}
-				<a target="_blank" rel="noreferrer" href="https://github.com/bitfocus/companion-satellite">
+				<a target="_blank" rel="noreferrer" href="https://bitfocus.io/companion-satellite">
 					Companion Satellite
 				</a>
 				?
@@ -173,7 +173,7 @@ export const SurfacesPage = memo(function SurfacesPage() {
 					<FontAwesomeIcon icon={faSync} spin={scanning} />
 					{scanning ? ' Checking for new devices...' : ' Rescan USB'}
 				</CButton>
-				<CButton color="success" onClick={addEmulator}>
+				<CButton color="danger" onClick={addEmulator}>
 					<FontAwesomeIcon icon={faAdd} /> Add Emulator
 				</CButton>
 			</CButtonGroup>
@@ -207,23 +207,18 @@ export const SurfacesPage = memo(function SurfacesPage() {
 								</td>
 								<td>{dev.type}</td>
 								<td>{dev.location}</td>
-								<td>
+								<td className="text-right">
 									<CButtonGroup>
-										<CButton color="success" onClick={() => configureDevice(dev)} title="Configure">
+										<CButton onClick={() => configureDevice(dev)} title="Configure">
 											<FontAwesomeIcon icon={faCog} /> Settings
 										</CButton>
 
 										{dev.integrationType === 'emulator' && (
 											<>
-												<CButton
-													color="info"
-													href={`/emulator/${dev.id.substring(9)}`}
-													target="_blank"
-													title="Open Emulator"
-												>
+												<CButton href={`/emulator/${dev.id.substring(9)}`} target="_blank" title="Open Emulator">
 													<FontAwesomeIcon icon={faFolderOpen} />
 												</CButton>
-												<CButton color="danger" onClick={() => deleteEmulator(dev)} title="Delete Emulator">
+												<CButton onClick={() => deleteEmulator(dev)} title="Delete Emulator">
 													<FontAwesomeIcon icon={faTrash} />
 												</CButton>
 											</>
@@ -262,8 +257,8 @@ export const SurfacesPage = memo(function SurfacesPage() {
 									<TextInputField value={dev.name} setValue={(val) => updateName(dev.id, val)} />
 								</td>
 								<td>{dev.type}</td>
-								<td>
-									<CButton color="danger" onClick={() => forgetDevice(dev)}>
+								<td className="text-right">
+									<CButton onClick={() => forgetDevice(dev)}>
 										<FontAwesomeIcon icon={faTrash} /> Forget
 									</CButton>
 								</td>
