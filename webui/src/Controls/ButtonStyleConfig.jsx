@@ -49,8 +49,8 @@ export function ButtonStyleConfig({ controlId, controlType, style, configRef }) 
 				<>
 					<h4>Empty button</h4>
 					<p className="mt-3">
-						To get started, define this button by clicking button above to create a regular button, or use the drop down
-						to make special buttons.
+						To get started, click button above to create a regular button, or use the drop down
+						to make a special button.
 					</p>
 				</>
 			)
