@@ -110,7 +110,7 @@ export function VariablesTable({ label }) {
 					<tr>
 						<th>Variable</th>
 						<th>Description</th>
-						<th>Current value</th>
+						<th>Value</th>
 						<th>&nbsp;</th>
 					</tr>
 				</thead>
@@ -164,7 +164,13 @@ const VariablesTableRow = memo(function VariablesTableRow({ variable, value, lab
 				$({label}:{variable.name})
 			</td>
 			<td>{variable.label}</td>
-			<td>{elms}</td>
+			<td>
+				{elms === '' || elms === null || elms === undefined ? (
+					'(empty)'
+				) : (
+					<code style={{ backgroundColor: 'rgba(255,0,0,0.1)', padding: '1px 4px' }}>{elms}</code>
+				)}
+			</td>
 			<td>
 				<CopyToClipboard text={`$(${label}:${variable.name})`} onCopy={onCopied}>
 					<CButton size="sm">
