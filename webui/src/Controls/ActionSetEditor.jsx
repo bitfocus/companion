@@ -116,7 +116,7 @@ export function ControlActionSetEditor({ controlId, stepId, setId, actions, addP
 		[socket, controlId, stepId, setId]
 	)
 
-	const actionIds = useMemo(() => actions.map((act) => act.id), [actions])
+	const actionIds = useMemo(() => (actions ? actions.map((act) => act.id) : []), [actions])
 	const { setPanelCollapsed, isPanelCollapsed, setAllCollapsed, setAllExpanded, canExpandAll, canCollapseAll } =
 		usePanelCollapseHelper(`actions_${controlId}_${stepId}_${setId}`, actionIds)
 
@@ -124,7 +124,7 @@ export function ControlActionSetEditor({ controlId, stepId, setId, actions, addP
 		<div className="action-category">
 			<h4>
 				{heading}
-				{actions.length > 1 && (
+				{actions && actions.length > 1 && (
 					<CButtonGroup className="right">
 						{headingActions || ''}
 						{canExpandAll && (
@@ -249,33 +249,34 @@ export function ActionsList({
 	return (
 		<table className="table action-table">
 			<tbody>
-				{actions.map((a, i) => (
-					<MyErrorBoundary key={a?.id ?? i}>
-						<ActionTableRow
-							key={a?.id ?? i}
-							isOnControl={isOnControl}
-							action={a}
-							index={i}
-							stepId={stepId}
-							setId={setId}
-							controlId={controlId}
-							dragId={dragId}
-							setValue={doSetValue}
-							doDelete={doDelete2}
-							doDuplicate={doDuplicate}
-							doDelay={doSetDelay}
-							doEnabled={doEnabled}
-							moveCard={doReorder}
-							doLearn={emitLearn}
-							readonly={readonly ?? false}
-							setCollapsed={setPanelCollapsed}
-							isCollapsed={isPanelCollapsed(a.id)}
-						/>
-					</MyErrorBoundary>
-				))}
+				{actions &&
+					actions.map((a, i) => (
+						<MyErrorBoundary key={a?.id ?? i}>
+							<ActionTableRow
+								key={a?.id ?? i}
+								isOnControl={isOnControl}
+								action={a}
+								index={i}
+								stepId={stepId}
+								setId={setId}
+								controlId={controlId}
+								dragId={dragId}
+								setValue={doSetValue}
+								doDelete={doDelete2}
+								doDuplicate={doDuplicate}
+								doDelay={doSetDelay}
+								doEnabled={doEnabled}
+								moveCard={doReorder}
+								doLearn={emitLearn}
+								readonly={readonly ?? false}
+								setCollapsed={setPanelCollapsed}
+								isCollapsed={isPanelCollapsed(a.id)}
+							/>
+						</MyErrorBoundary>
+					))}
 				<ActionRowDropPlaceholder
 					dragId={dragId}
-					actionCount={actions.length}
+					actionCount={actions ? actions.length : 0}
 					stepId={stepId}
 					setId={setId}
 					moveCard={doReorder}

@@ -73,7 +73,6 @@ body {
 
 .tab-content {
 	background-color: #fff;
-	z-index: 0;
 	border-bottom-right-radius: 8px;
 	border-bottom-left-radius: 8px;
 	border-left: 1px solid #bbb;
@@ -97,9 +96,8 @@ body {
 		margin-top: -1rem;
 		top: 0;
 		left: 0;
-		// float: left;
-
 		background-color: #fff;
+		z-index: 1;
 	}
 
 	.edit-sticky-body {
@@ -118,7 +116,6 @@ body {
 		/* this is a mess, but hey, it works */
 		&.active,
 		&.active:hover {
-			z-index: 0;
 			background-color: #fff;
 			border: 1px solid #bbb;
 			border-top: 3px solid #d50215;

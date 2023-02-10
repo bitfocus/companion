@@ -315,7 +315,6 @@ function TriggersTableRow({ controlId, item, editItem, moveTrigger }) {
 							</CButton>
 							<CButton
 								style={{ padding: 3, paddingRight: 6 }}
-								size="md"
 								color="white"
 								href={`/int/export/triggers/single/${exportId}`}
 								target="_new"
@@ -330,7 +329,6 @@ function TriggersTableRow({ controlId, item, editItem, moveTrigger }) {
 						<CSwitch
 							color="success"
 							checked={item.enabled}
-							size={'md'}
 							onChange={doEnableDisable}
 							title={item.enabled ? 'Disable trigger' : 'Enable trigger'}
 						/>
