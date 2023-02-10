@@ -1,5 +1,12 @@
 import { CButton, CForm, CInputGroup, CInputGroupAppend, CInputGroupText, CButtonGroup } from '@coreui/react'
-import { faSort, faTrash, faExpandArrowsAlt, faCompressArrowsAlt, faCopy } from '@fortawesome/free-solid-svg-icons'
+import {
+	faSort,
+	faTrash,
+	faExpandArrowsAlt,
+	faCompressArrowsAlt,
+	faCopy,
+	faFolderOpen,
+} from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import React, { useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react'
 import { NumberInputField } from '../Components'
@@ -115,8 +122,8 @@ export function ControlActionSetEditor({ controlId, stepId, setId, actions, addP
 		usePanelCollapseHelper(`actions_${controlId}_${stepId}_${setId}`, actionIds)
 
 	return (
-		<>
-			<h4 className="mt-3">
+		<div className="action-category">
+			<h4>
 				{heading}
 				{actions.length > 1 && (
 					<CButtonGroup className="right">
@@ -154,7 +161,7 @@ export function ControlActionSetEditor({ controlId, stepId, setId, actions, addP
 				isPanelCollapsed={isPanelCollapsed}
 			/>
 			<AddActionsPanel addPlaceholder={addPlaceholder} addAction={addAction} />
-		</>
+		</div>
 	)
 }
 
@@ -197,8 +204,8 @@ export function AddActionsPanel({ addPlaceholder, addAction }) {
 	return (
 		<div className="add-dropdown-wrapper">
 			<AddActionDropdown onSelect={addAction2} placeholder={addPlaceholder} recentActions={recentActions} />
-			<CButton color="primary" onClick={showAddModal} style={{ borderTopLeftRadius:0, borderBottomLeftRadius:0 }}>
-				Browse
+			<CButton color="primary" onClick={showAddModal} style={{ borderTopLeftRadius: 0, borderBottomLeftRadius: 0 }}>
+				<FontAwesomeIcon icon={faFolderOpen} />
 			</CButton>
 
 			<MyErrorBoundary>

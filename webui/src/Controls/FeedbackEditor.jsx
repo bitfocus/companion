@@ -1,5 +1,12 @@
 import { CAlert, CButton, CForm, CFormGroup, CButtonGroup, CSwitch } from '@coreui/react'
-import { faSort, faTrash, faCompressArrowsAlt, faExpandArrowsAlt, faCopy } from '@fortawesome/free-solid-svg-icons'
+import {
+	faSort,
+	faTrash,
+	faCompressArrowsAlt,
+	faExpandArrowsAlt,
+	faCopy,
+	faFolderOpen,
+} from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import React, { useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react'
 import {
@@ -202,7 +209,7 @@ export function ControlFeedbacksEditor({ controlId, feedbacks, heading, booleanO
 						borderBottomLeftRadius: 0,
 					}}
 				>
-					Browse
+					<FontAwesomeIcon icon={faFolderOpen} />
 				</CButton>
 			</div>
 		</>

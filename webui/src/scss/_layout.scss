@@ -286,25 +286,48 @@ hr.slim {
 }
 
 .nav-steps-special {
-	margin-top: 5px;
+	margin-bottom: 0px !important;
+}
+.nav-steps-special .only-current {
+	animation: rotor 0.25s infinite alternate ease-in-out;
 }
 
-.nav-steps-special-link {
-	padding: 0px 12px;
-	border-left: 1px solid #eee !important;
-	border-right: 1px solid #eee !important;
+@keyframes rotor {
+	0% {
+		box-shadow: inset 0 10px 15px -10px #2eb85cff;
+	}
+	100% {
+		box-shadow: inset 0 10px 10px -10px #2eb85c00;
+	}
 }
 
-.nav-steps-special-link-current {
-	border-left: 3px solid green !important;
-	border-right: 3px solid green !important;	
-	padding-left: 10px;	
-	padding-right: 10px;
-	background-color: rgba(0, 128, 0, 0.1) !important;
-}
 .gap-b {
-	margin-bottom:6px;
+	margin-bottom: 6px;
 }
+
 .block {
-	display:block;
+	display: block;
+}
+
+.action-category {
+	margin-top: 60px;
+}
+
+.add-browse-card .header {
+	padding: 6px 12px;
+	font-size: 1.6em;
+	font-weight: bold;
+	background-color: $primary;
+	color: white;
+	border-radius: 4px;
+}
+.add-browse-card .clickable-add-item {
+	cursor: pointer;
+}
+.add-browse-card .clickable-add-item:hover {
+	background-color: rgba(0, 0, 0, 0.1);
+}
+
+.shadow-inset {
+	box-shadow: inset 0 10px 20px -10px rgba(0, 0, 0, 0.3);
 }
