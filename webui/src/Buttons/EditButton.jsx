@@ -334,6 +334,8 @@ function TabsSection({ style, controlId, steps, runtimeProps, rotaryActions, fee
 	const clickSelectedStep = useCallback((newStep) => {
 		setSelectedStep(newStep)
 
+		// Let's reactivate this again if users start setting cars on fire because I removed it. -wv
+		/* 
 		if (tabsScrollRef.current) {
 			tabsScrollRef.current.scrollIntoView({
 				block: 'start',
@@ -341,6 +343,7 @@ function TabsSection({ style, controlId, steps, runtimeProps, rotaryActions, fee
 				behavior: 'smooth',
 			})
 		}
+		*/
 	}, [])
 
 	const keys = useMemo(() => GetStepIds(steps), [steps])
@@ -440,14 +443,20 @@ function TabsSection({ style, controlId, steps, runtimeProps, rotaryActions, fee
 								<CNavItem key={k} className="nav-steps-special">
 									<CNavLink
 										data-tab={`step:${k}`}
-										className={
-											(keys.length > 1 ? 'nav-steps-special-link ' : '') +
-											(runtimeProps.current_step_id === k && keys.length > 1 ? 'nav-steps-special-link-current' : '')
-										}
-										style={{
-											borderBottom:
-												k === selectedIndex && runtimeProps.current_step_id === k ? '2px solid white' : undefined,
-										}}
+										className={(() => {
+											// if there's more than one step, we need to show the current step
+											const moreThanOneStep = keys.length > 1
+											// the current step is the one that is currently being executed
+											const isCurrent = runtimeProps.current_step_id === k
+											// both selected and the current step
+											const isActiveAndCurrent = k === selectedIndex && runtimeProps.current_step_id === k
+
+											if (moreThanOneStep) {
+												if (isActiveAndCurrent) return 'selected-and-active'
+												if (isCurrent) return 'only-current'
+											}
+										})()}
+										style={{}}
 									>
 										{i === 0 ? (keys.length > 1 ? 'Step ' + (i + 1) : 'Actions') : i + 1}
 									</CNavLink>

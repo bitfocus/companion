@@ -55,13 +55,13 @@ label.disabled {
 
 	> div {
 		border: 2px solid #eee;
-		border-radius:3px;
+		border-radius: 3px;
 		padding: 1px;
 		&.selected {
 			border: 2px solid #d502146e;
-			
+
 			background-size: contain !important;
-			background-color: rgba(255,0,0,0.1);
+			background-color: rgba(255, 0, 0, 0.1);
 		}
 	}
 }
