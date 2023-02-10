@@ -46,7 +46,12 @@ export const ButtonPreview = React.memo(function (props) {
 				e.preventDefault()
 				props?.onClick?.(props.index, false)
 			}}
-			onTouchCancel={() => props?.onClick?.(props.index, false)}
+			onTouchCancel={(e) => {
+				e.preventDefault()
+				e.stopPropagation()
+
+				props?.onClick?.(props.index, false)
+			}}
 			onContextMenu={(e) => {
 				e.preventDefault()
 				e.stopPropagation()
