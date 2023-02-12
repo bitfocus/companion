@@ -81,25 +81,19 @@ function UserConfigTable() {
 
 	return (
 		<table className="table table-responsive-sm">
-			<thead>
-				<tr>
-					<th>Setting</th>
-					<th>Value</th>
-					<th></th>
-				</tr>
-			</thead>
-
 			<tbody>
 				<tr>
-					<td colSpan="3" className="settings-category">
+					<th colSpan="0" className="settings-category">
 						Buttons
-					</td>
+					</th>
+					<th className="fit"></th>
+					<th></th>
 				</tr>
 
 				<tr>
 					<td>Flip counting direction on page up/down buttons</td>
 					<td>
-						<div className="form-check form-check-inline mr-1">
+						<div className="form-check form-check-inline mr-1 float-right">
 							<CSwitch
 								color="success"
 								checked={config.page_direction_flipped}
@@ -120,7 +114,7 @@ function UserConfigTable() {
 				<tr>
 					<td>Show + and - instead of arrows on page up/down buttons</td>
 					<td>
-						<div className="form-check form-check-inline mr-1">
+						<div className="form-check form-check-inline mr-1 float-right">
 							<CSwitch
 								color="success"
 								checked={config.page_plusminus}
@@ -141,9 +135,8 @@ function UserConfigTable() {
 				<tr>
 					<td>Show the topbar on each button. This can be overridden per-button</td>
 					<td>
-						<div className="form-check form-check-inline mr-1">
-						
-						<CSwitch
+						<div className="form-check form-check-inline mr-1 float-right">
+							<CSwitch
 								color="success"
 								checked={!config.remove_topbar}
 								size={'lg'}
@@ -151,7 +144,6 @@ function UserConfigTable() {
 									setValue('remove_topbar', !config.remove_topbar)
 								}}
 							/>
-						
 						</div>
 					</td>
 					<td>
@@ -162,9 +154,9 @@ function UserConfigTable() {
 				</tr>
 
 				<tr>
-					<td colSpan="3" className="settings-category">
+					<th colSpan="3" className="settings-category">
 						Surfaces
-					</td>
+					</th>
 				</tr>
 				<tr>
 					<td>Watch for new USB Devices</td>
@@ -259,9 +251,9 @@ function UserConfigTable() {
 					</td>
 				</tr>
 				<tr>
-					<td colSpan="3" className="settings-category">
+					<th colSpan="3" className="settings-category">
 						PIN Lockout
-					</td>
+					</th>
 				</tr>
 				<tr>
 					<td>Enable Pin Codes</td>
@@ -338,9 +330,9 @@ function UserConfigTable() {
 				</tr>
 
 				<tr>
-					<td colSpan="3" className="settings-category">
+					<th colSpan="3" className="settings-category">
 						TCP
-					</td>
+					</th>
 				</tr>
 				<tr>
 					<td>TCP Listener</td>
@@ -381,9 +373,9 @@ function UserConfigTable() {
 				</tr>
 
 				<tr>
-					<td colSpan="3" className="settings-category">
+					<th colSpan="3" className="settings-category">
 						UDP
-					</td>
+					</th>
 				</tr>
 				<tr>
 					<td>UDP Listener</td>
@@ -424,9 +416,9 @@ function UserConfigTable() {
 				</tr>
 
 				<tr>
-					<td colSpan="3" className="settings-category">
+					<th colSpan="3" className="settings-category">
 						OSC
-					</td>
+					</th>
 				</tr>
 				<tr>
 					<td>OSC Listener</td>
@@ -467,9 +459,9 @@ function UserConfigTable() {
 				</tr>
 
 				<tr>
-					<td colSpan="3" className="settings-category">
+					<th colSpan="3" className="settings-category">
 						RossTalk
-					</td>
+					</th>
 				</tr>
 				<tr>
 					<td>RossTalk Listener</td>
@@ -492,9 +484,9 @@ function UserConfigTable() {
 					</td>
 				</tr>
 				<tr>
-					<td colSpan="3" className="settings-category">
+					<th colSpan="3" className="settings-category">
 						Ember+
-					</td>
+					</th>
 				</tr>
 				<tr>
 					<td>Ember+ Listener</td>
@@ -517,9 +509,9 @@ function UserConfigTable() {
 					</td>
 				</tr>
 				<tr>
-					<td colSpan="3" className="settings-category">
+					<th colSpan="3" className="settings-category">
 						Artnet Listener
-					</td>
+					</th>
 				</tr>
 				<tr>
 					<td>Artnet Listener</td>
@@ -579,9 +571,9 @@ function UserConfigTable() {
 				</tr>
 
 				<tr>
-					<td colSpan="3" className="settings-category">
+					<th colSpan="3" className="settings-category">
 						Admin UI Password
-					</td>
+					</th>
 				</tr>
 				<tr>
 					<td colSpan="3">
@@ -646,9 +638,9 @@ function UserConfigTable() {
 				</tr>
 
 				<tr>
-					<td colSpan="3" className="settings-category">
+					<th colSpan="3" className="settings-category">
 						HTTPS Web Server
-					</td>
+					</th>
 				</tr>
 				<tr>
 					<td colSpan="3">
@@ -780,7 +772,7 @@ function UserConfigTable() {
 										<td>
 											{config.https_self_cert && config.https_self_cert.length > 0 ? (
 												<p>
-													<CButton onClick={() => renewSslCertificate()} color="success">
+													<CButton onClick={() => renewSslCertificate()} color="success" className="mb-2">
 														<FontAwesomeIcon icon={faSync} />
 														&nbsp;Renew
 													</CButton>
@@ -885,9 +877,9 @@ function UserConfigTable() {
 					</tr>
 				)}
 				<tr>
-					<td colSpan="3" className="settings-category">
+					<th colSpan="3" className="settings-category">
 						Experiments
-					</td>
+					</th>
 				</tr>
 				<tr>
 					<td colSpan="3">
