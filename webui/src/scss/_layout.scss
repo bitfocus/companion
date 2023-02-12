@@ -307,7 +307,7 @@ hr.slim {
 }
 
 .action-category {
-	margin-top: 60px;
+	margin-top: 40px;
 }
 
 .add-browse-card .header {
@@ -327,4 +327,7 @@ hr.slim {
 
 .shadow-inset {
 	box-shadow: inset 0 10px 20px -10px rgba(0, 0, 0, 0.3);
+}
+.text-right {
+	text-align: right;
 }
