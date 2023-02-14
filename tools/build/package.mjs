@@ -15,25 +15,6 @@ const platformInfo = determinePlatformInfo(argv._[0])
 if (platformInfo.nodePlatform) process.env.npm_config_platform = platformInfo.nodePlatform
 if (platformInfo.nodeArch) process.env.npm_config_arch = platformInfo.nodeArch
 
-// Ensure we have the correct sharp libs
-// await $`cross-env ${sharpArgs} yarn dist:prepare`
-
-// const sharpVendorDir = './dist/node_modules/sharp/vendor/'
-// const sharpVersionDirs = await fs.readdir(sharpVendorDir)
-// if (sharpVersionDirs.length !== 1) {
-// 	console.error(`Failed to determine sharp lib version`)
-// 	process.exit(1)
-// }
-
-// const sharpPlatformDirs = await fs.readdir(path.join(sharpVendorDir, sharpVersionDirs[0]))
-// if (sharpPlatformDirs.length !== 1) {
-// 	console.error(`Failed to determine sharp lib platform`)
-// 	process.exit(1)
-// }
-
-// const vipsVendorName = path.join(sharpVersionDirs[0], sharpPlatformDirs[0])
-// process.env.VIPS_VENDOR = vipsVendorName
-
 const nodeVersion = await fs.readFile('./dist/.node-version')
 const isZip = platformInfo.runtimePlatform === 'win'
 
