@@ -617,10 +617,10 @@
   resolved "https://registry.yarnpkg.com/@jsep-plugin/template/-/template-1.0.2.tgz#9d5fcb0b1a0d62e938fb83ecd0fda19524617cfa"
   integrity sha512-fGIPHL4W/YZ3YShDByfWlLEIMCLRUTZDUDii4Xat4sJ+DTYeS21RWrZkvbprICyiwmO/fRY7xdHZh7K/ng6xLg==
 
-"@julusian/image-rs@^0.0.8":
-  version "0.0.8"
-  resolved "https://registry.yarnpkg.com/@julusian/image-rs/-/image-rs-0.0.8.tgz#f4af47a53ad38b47d394569dce103730b6cd3eb8"
-  integrity sha512-+1Av6aLZKLx00/Sxhbj5MqfJKs9rJw8xME+nfN289FNbRnCZ4Wf06jHrdBfLzCudO3i6MlYxOLEvONDqRgIMWw==
+"@julusian/image-rs@^0.1.0":
+  version "0.1.0"
+  resolved "https://registry.yarnpkg.com/@julusian/image-rs/-/image-rs-0.1.0.tgz#3892e53f6a2d0a343f93c2f214b2d1d1a1665553"
+  integrity sha512-14dYrmwoXwhAhA5d6EYsWSd5ogA3AbCDmEt5yEhTcyzvBGZNVXVcChz2TMK0NkDu2PGhvzw+rlaQ/s6BVhGAiA==
 
 "@julusian/jpeg-turbo@^2.1.0":
   version "2.1.0"
