@@ -201,7 +201,7 @@ input[type='checkbox'] {
 	/* text-decoration: none; */
 	color: white;
 	background: none;
-	padding: 0;
+	outline: none !important;
 }
 
 #developer_settings_panel {
