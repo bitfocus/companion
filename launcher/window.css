@@ -171,10 +171,10 @@ input[type='checkbox'] {
 	-webkit-appearance: checkbox;
 	cursor: pointer;
 	font: inherit;
-  	width: 1.15em;
-  	height: 1.15em;
-  	transform: translateY(0.275em);
-  	accent-color: #b00013;
+	width: 1.15em;
+	height: 1.15em;
+	transform: translateY(0.275em);
+	accent-color: #b00013;
 }
 
 .checkbox_text {
