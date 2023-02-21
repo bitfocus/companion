@@ -41,7 +41,6 @@ module.exports = {
 	externalsPresets: { node: true },
 	externals: {
 		// Native libs that are needed
-		sharp: 'commonjs2 sharp',
 		usb: 'commonjs2 usb',
 		bufferutil: 'commonjs2 bufferutil',
 		'utf-8-validate': 'commonjs2 utf-8-validate',

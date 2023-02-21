@@ -1,7 +1,6 @@
 function expandMissing(info) {
 	return {
 		// Allow some fields to be optional, if they are repeated
-		sharpPlatform: info.runtimePlatform,
 		nodeArch: info.runtimeArch,
 		runtimePlatform: info.runtimePlatform,
 		runtimeArch: info.runtimeArch,
