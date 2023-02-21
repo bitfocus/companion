@@ -175,7 +175,7 @@ export function InstancesList({ showHelp, doConfigureInstance, instanceStatus })
 					{rows}
 					{hiddenCount > 0 && (
 						<tr>
-							<td colSpan={4} style={{padding:'10px 5px'}}>
+							<td colSpan={4} style={{ padding: '10px 5px' }}>
 								<FontAwesomeIcon icon={faEyeSlash} style={{ marginRight: '0.5em', color: 'red' }} />
 								<strong>{hiddenCount} Connections are hidden</strong>
 							</td>

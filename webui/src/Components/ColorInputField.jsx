@@ -62,7 +62,7 @@ export function ColorInputField({ value, setValue, setValid, disabled }) {
 		color: {
 			width: '36px',
 			height: '32px',
-			borderRadius: '3px',			
+			borderRadius: '3px',
 			background: `rgb(${color.r}, ${color.g}, ${color.b})`,
 		},
 		swatch: {
