@@ -71,7 +71,7 @@ await fs.copyFile('yarn.lock', 'dist/yarn.lock') // use the same yarn.lock file,
 await fs.copyFile('.node-version', 'dist/.node-version')
 
 // Copy prebuilds
-const copyPrebuildsFromDependencies = ['@julusian/jpeg-turbo']
+const copyPrebuildsFromDependencies = ['@julusian/jpeg-turbo', 'node-hid']
 for (const name of copyPrebuildsFromDependencies) {
 	await fs.mkdirp('dist/prebuilds')
 	await fs.copy(path.join('node_modules', name, 'prebuilds'), 'dist/prebuilds')

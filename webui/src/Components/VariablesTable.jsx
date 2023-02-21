@@ -22,7 +22,11 @@ export function VariablesTable({ label }) {
 			})
 		}
 
-		defs.sort((a, b) => a.name.localeCompare(b.name))
+		defs.sort((a, b) =>
+			a.name.localeCompare(b.name, undefined, {
+				numeric: true,
+			})
+		)
 
 		return defs
 	}, [variableDefinitionsContext, label])
