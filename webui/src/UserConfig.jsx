@@ -20,6 +20,7 @@ import {
 import { MyErrorBoundary, SocketContext, UserConfigContext } from './util'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faFileImport, faSync, faTrash, faUndo } from '@fortawesome/free-solid-svg-icons'
+import CSwitch from './CSwitch'
 
 export const UserConfig = memo(function UserConfig() {
 	return (
@@ -80,33 +81,27 @@ function UserConfigTable() {
 
 	return (
 		<table className="table table-responsive-sm">
-			<thead>
-				<tr>
-					<th>Setting</th>
-					<th>Value</th>
-					<th></th>
-				</tr>
-			</thead>
-
 			<tbody>
 				<tr>
-					<td colSpan="3" className="settings-category">
+					<th colSpan="0" className="settings-category">
 						Buttons
-					</td>
+					</th>
+					<th className="fit"></th>
+					<th></th>
 				</tr>
 
 				<tr>
 					<td>Flip counting direction on page up/down buttons</td>
 					<td>
-						<div className="form-check form-check-inline mr-1">
-							<CInputCheckbox
-								id="userconfig_page_direction_flipped"
+						<div className="form-check form-check-inline mr-1 float-right">
+							<CSwitch
+								color="success"
 								checked={config.page_direction_flipped}
-								onChange={(e) => setValue('page_direction_flipped', e.currentTarget.checked)}
+								size={'lg'}
+								onChange={() => {
+									setValue('page_direction_flipped', !config.page_direction_flipped)
+								}}
 							/>
-							<label className="form-check-label" htmlFor="userconfig_page_direction_flipped">
-								Enabled
-							</label>
 						</div>
 					</td>
 					<td>
@@ -119,15 +114,15 @@ function UserConfigTable() {
 				<tr>
 					<td>Show + and - instead of arrows on page up/down buttons</td>
 					<td>
-						<div className="form-check form-check-inline mr-1">
-							<CInputCheckbox
-								id="userconfig_page_plusminus"
+						<div className="form-check form-check-inline mr-1 float-right">
+							<CSwitch
+								color="success"
 								checked={config.page_plusminus}
-								onChange={(e) => setValue('page_plusminus', e.currentTarget.checked)}
+								size={'lg'}
+								onChange={() => {
+									setValue('page_plusminus', !config.page_plusminus)
+								}}
 							/>
-							<label className="form-check-label" htmlFor="userconfig_page_plusminus">
-								Enabled
-							</label>
 						</div>
 					</td>
 					<td>
@@ -140,15 +135,15 @@ function UserConfigTable() {
 				<tr>
 					<td>Show the topbar on each button. This can be overridden per-button</td>
 					<td>
-						<div className="form-check form-check-inline mr-1">
-							<CInputCheckbox
-								id="userconfig_remove_topbar"
+						<div className="form-check form-check-inline mr-1 float-right">
+							<CSwitch
+								color="success"
 								checked={!config.remove_topbar}
-								onChange={(e) => setValue('remove_topbar', !e.currentTarget.checked)}
+								size={'lg'}
+								onChange={() => {
+									setValue('remove_topbar', !config.remove_topbar)
+								}}
 							/>
-							<label className="form-check-label" htmlFor="userconfig_remove_topbar">
-								Enabled
-							</label>
 						</div>
 					</td>
 					<td>
@@ -159,9 +154,9 @@ function UserConfigTable() {
 				</tr>
 
 				<tr>
-					<td colSpan="3" className="settings-category">
+					<th colSpan="3" className="settings-category">
 						Surfaces
-					</td>
+					</th>
 				</tr>
 				<tr>
 					<td>Watch for new USB Devices</td>
@@ -256,9 +251,9 @@ function UserConfigTable() {
 					</td>
 				</tr>
 				<tr>
-					<td colSpan="3" className="settings-category">
+					<th colSpan="3" className="settings-category">
 						PIN Lockout
-					</td>
+					</th>
 				</tr>
 				<tr>
 					<td>Enable Pin Codes</td>
@@ -335,9 +330,9 @@ function UserConfigTable() {
 				</tr>
 
 				<tr>
-					<td colSpan="3" className="settings-category">
+					<th colSpan="3" className="settings-category">
 						TCP
-					</td>
+					</th>
 				</tr>
 				<tr>
 					<td>TCP Listener</td>
@@ -378,9 +373,9 @@ function UserConfigTable() {
 				</tr>
 
 				<tr>
-					<td colSpan="3" className="settings-category">
+					<th colSpan="3" className="settings-category">
 						UDP
-					</td>
+					</th>
 				</tr>
 				<tr>
 					<td>UDP Listener</td>
@@ -421,9 +416,9 @@ function UserConfigTable() {
 				</tr>
 
 				<tr>
-					<td colSpan="3" className="settings-category">
+					<th colSpan="3" className="settings-category">
 						OSC
-					</td>
+					</th>
 				</tr>
 				<tr>
 					<td>OSC Listener</td>
@@ -464,9 +459,9 @@ function UserConfigTable() {
 				</tr>
 
 				<tr>
-					<td colSpan="3" className="settings-category">
+					<th colSpan="3" className="settings-category">
 						RossTalk
-					</td>
+					</th>
 				</tr>
 				<tr>
 					<td>RossTalk Listener</td>
@@ -489,9 +484,9 @@ function UserConfigTable() {
 					</td>
 				</tr>
 				<tr>
-					<td colSpan="3" className="settings-category">
+					<th colSpan="3" className="settings-category">
 						Ember+
-					</td>
+					</th>
 				</tr>
 				<tr>
 					<td>Ember+ Listener</td>
@@ -514,9 +509,9 @@ function UserConfigTable() {
 					</td>
 				</tr>
 				<tr>
-					<td colSpan="3" className="settings-category">
+					<th colSpan="3" className="settings-category">
 						Artnet Listener
-					</td>
+					</th>
 				</tr>
 				<tr>
 					<td>Artnet Listener</td>
@@ -576,9 +571,9 @@ function UserConfigTable() {
 				</tr>
 
 				<tr>
-					<td colSpan="3" className="settings-category">
+					<th colSpan="3" className="settings-category">
 						Admin UI Password
-					</td>
+					</th>
 				</tr>
 				<tr>
 					<td colSpan="3">
@@ -643,9 +638,9 @@ function UserConfigTable() {
 				</tr>
 
 				<tr>
-					<td colSpan="3" className="settings-category">
+					<th colSpan="3" className="settings-category">
 						HTTPS Web Server
-					</td>
+					</th>
 				</tr>
 				<tr>
 					<td colSpan="3">
@@ -777,7 +772,7 @@ function UserConfigTable() {
 										<td>
 											{config.https_self_cert && config.https_self_cert.length > 0 ? (
 												<p>
-													<CButton onClick={() => renewSslCertificate()} color="success">
+													<CButton onClick={() => renewSslCertificate()} color="success" className="mb-2">
 														<FontAwesomeIcon icon={faSync} />
 														&nbsp;Renew
 													</CButton>
@@ -882,9 +877,9 @@ function UserConfigTable() {
 					</tr>
 				)}
 				<tr>
-					<td colSpan="3" className="settings-category">
+					<th colSpan="3" className="settings-category">
 						Experiments
-					</td>
+					</th>
 				</tr>
 				<tr>
 					<td colSpan="3">

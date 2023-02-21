@@ -7,7 +7,13 @@ html {
 
 body {
 	color: white;
-	font-family: 'Helvetica';
+	-webkit-text-size-adjust: 100%;
+	-moz-tab-size: 4;
+	-o-tab-size: 4;
+	tab-size: 4;
+	font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial,
+		'Noto Sans', sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+	font-feature-settings: normal;
 	overflow: hidden;
 	background-color: #d40215;
 }
@@ -131,7 +137,7 @@ input[type='text'] {
 	border-bottom-left-radius: 3px;
 	border-top-left-radius: 3px;
 	background-color: #d40215;
-	font-size: 13px;
+	font-size: 14px;
 	color: #fff;
 	padding-top: 3px;
 	padding-bottom: 3px;
@@ -168,9 +174,17 @@ input[type='text']::placeholder {
 }
 
 input[type='checkbox'] {
-	color: white;
 	-webkit-appearance: checkbox;
 	cursor: pointer;
+	font: inherit;
+	width: 1.15em;
+	height: 1.15em;
+	transform: translateY(0.275em);
+	accent-color: #b00013;
+}
+
+.checkbox_text {
+	font-size: 12px;
 }
 
 #ifs {
@@ -201,7 +215,7 @@ input[type='checkbox'] {
 	/* text-decoration: none; */
 	color: white;
 	background: none;
-	padding: 0;
+	outline: none !important;
 }
 
 #developer_settings_panel {

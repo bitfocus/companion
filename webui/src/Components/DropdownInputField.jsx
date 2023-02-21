@@ -114,7 +114,7 @@ export function DropdownInputField({
 				if (
 					typeof minSelection === 'number' &&
 					newValue.length < minSelection &&
-					newValue.length <= (this.props.value || []).length
+					newValue.length <= (value || []).length
 				) {
 					// Block change if too few are selected
 					return
@@ -123,7 +123,7 @@ export function DropdownInputField({
 				if (
 					typeof maxSelection === 'number' &&
 					newValue.length > maxSelection &&
-					newValue.length >= (this.props.value || []).length
+					newValue.length >= (value || []).length
 				) {
 					// Block change if too many are selected
 					return
@@ -133,7 +133,7 @@ export function DropdownInputField({
 			setValue(newValue)
 			setValid?.(isValid)
 		},
-		[setValue, setValid, multiple, minSelection, maxSelection, isValueValid]
+		[setValue, setValid, value, multiple, minSelection, maxSelection, isValueValid]
 	)
 
 	const minChoicesForSearch2 = typeof minChoicesForSearch === 'number' ? minChoicesForSearch : 10

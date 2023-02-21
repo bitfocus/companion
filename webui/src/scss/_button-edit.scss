@@ -1,4 +1,5 @@
 .edit-button-panel {
+	margin-right: -0.75rem;
 	h4 {
 		margin-top: 1rem;
 	}
@@ -27,7 +28,15 @@
 	}
 }
 
+table.action-table td,
+table.variables-table td,
+table.feedback-table td {
+	border-bottom: 10px solid #f0f0f0;
+	border-top: 10px solid #f0f0f0;
+}
+
 table.action-table,
+table.variables-table,
 table.feedback-table {
 	.actionlist-dragging,
 	.feedbacklist-dragging {
@@ -38,9 +47,7 @@ table.feedback-table {
 		p {
 			border: 2px dashed #bbb;
 			border-radius: 5px;
-
 			text-align: center;
-
 			margin: 0;
 			padding: 0.75rem;
 		}
@@ -50,13 +57,14 @@ table.feedback-table {
 		padding-right: 0;
 		vertical-align: middle;
 	}
-
+	.editor-grid-events {
+		margin-right: -0.75rem;
+	}
 	.editor-grid {
 		display: grid;
 		grid-template-columns: 0.7fr auto 1fr;
 		grid-template-rows: auto auto auto 1fr;
 		column-gap: 10px;
-		row-gap: 5px;
 
 		.cell-name {
 			font-weight: bold;

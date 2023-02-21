@@ -19,7 +19,17 @@ import {
 	CNav,
 	CTabs,
 } from '@coreui/react'
-import { faArrowLeft, faArrowRight, faPencil, faPlus, faStar, faTrash } from '@fortawesome/free-solid-svg-icons'
+import {
+	faChevronLeft,
+	faChevronRight,
+	faPencil,
+	faPlay,
+	faPlus,
+	faRedo,
+	faTrash,
+	faTrashAlt,
+	faUndo,
+} from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import React, { forwardRef, useCallback, useContext, useEffect, useImperativeHandle, useRef, useState } from 'react'
 import { nanoid } from 'nanoid'
@@ -28,13 +38,12 @@ import { GenericConfirmModal } from '../Components/GenericConfirmModal'
 import {
 	KeyReceiver,
 	LoadingRetryOrError,
-	UserConfigContext,
 	socketEmitPromise,
 	SocketContext,
 	MyErrorBoundary,
 	FormatButtonControlId,
 } from '../util'
-import { ParseControlId } from '@companion/shared/ControlId.js'
+//import { ParseControlId } from '@companion/shared/ControlId.js'
 import { ControlActionSetEditor } from '../Controls/ActionSetEditor'
 import jsonPatch from 'fast-json-patch'
 
@@ -48,7 +57,6 @@ import { useMemo } from 'react'
 
 export function EditButton({ controlId, onKeyUp, contentHeight }) {
 	const socket = useContext(SocketContext)
-	const userConfig = useContext(UserConfigContext)
 
 	const resetModalRef = useRef()
 
@@ -200,36 +208,39 @@ export function EditButton({ controlId, onKeyUp, contentHeight }) {
 	const hasRuntimeProps = runtimeProps || runtimeProps === false
 	const dataReady = !loadError && hasConfig && hasRuntimeProps
 
-	const parsedId = ParseControlId(controlId)
+	//const parsedId = ParseControlId(controlId)
 
 	// Tip: This query needs to match the page layout. It doesn't need to be reactive, as the useElementSize will force a re-render
 	const isTwoColumn = window.matchMedia('(min-width: 1200px)').matches
-	const [hintRef, { height: hintHeight }] = useElementSize()
+	const [, { height: hintHeight }] = useElementSize()
 
 	return (
 		<KeyReceiver onKeyUp={onKeyUp} tabIndex={0} className="edit-button-panel">
 			<GenericConfirmModal ref={resetModalRef} />
-
 			<LoadingRetryOrError dataReady={dataReady} error={loadError} doRetry={doRetryLoad} />
 			{hasConfig && dataReady && (
 				<>
 					<MyErrorBoundary>
 						<>
 							<ButtonPreview fixedSize preview={previewImage} right={true} />
-							<CDropdown className="mt-2" style={{ display: 'inline-block' }}>
+							<CDropdown className="" style={{ display: 'inline-block', marginRight: -4 }}>
 								<CButtonGroup>
 									{/* This could be simplified to use the split property on CDropdownToggle, but then onClick doesnt work https://github.com/coreui/coreui-react/issues/179 */}
-									<CButton color="success" onClick={() => setButtonType('button')}>
-										Regular button
-									</CButton>
-									<CDropdownToggle
-										caret
-										color="success"
-										style={{ opacity: 0.8, paddingLeft: 6 }}
-										className="dropdown-toggle dropdown-toggle-split"
-									>
-										<span className="sr-only">Toggle Dropdown</span>
-									</CDropdownToggle>
+									{config.type === undefined && (
+										<CButton color="danger" onClick={() => setButtonType('button')}>
+											Create button
+										</CButton>
+									)}
+									{config.type !== 'button' && (
+										<CDropdownToggle
+											caret
+											color="danger"
+											style={{ opacity: 0.7, paddingLeft: 14, paddingRight: 16 }}
+											className="dropdown-toggle dropdown-toggle-split"
+										>
+											<span className="sr-only">Toggle Dropdown</span>
+										</CDropdownToggle>
+									)}
 								</CButtonGroup>
 								<CDropdownMenu>
 									<CDropdownItem onClick={() => setButtonType('button')}>Regular button</CDropdownItem>
@@ -240,7 +251,7 @@ export function EditButton({ controlId, onKeyUp, contentHeight }) {
 							</CDropdown>
 							&nbsp;
 							<CButton color="danger" hidden={!config} onClick={clearButton}>
-								Erase
+								<FontAwesomeIcon icon={faTrashAlt} />
 							</CButton>
 							&nbsp;
 							<CButtonGroup>
@@ -249,29 +260,33 @@ export function EditButton({ controlId, onKeyUp, contentHeight }) {
 									hidden={!config || config.type !== 'button'}
 									onMouseDown={hotPressDown}
 									onMouseUp={hotPressUp}
+									style={{ color: 'white' }}
 								>
-									Test actions
+									<FontAwesomeIcon icon={faPlay} />
+									&nbsp;Test
 								</CButton>
-								{config?.options?.rotaryActions && (
-									<CButton color="warning" onMouseDown={hotRotateLeft}>
-										Click Left
-									</CButton>
-								)}
-								{config?.options?.rotaryActions && (
-									<CButton color="warning" onMouseDown={hotRotateRight}>
-										Click Right
-									</CButton>
-								)}
 							</CButtonGroup>
+							&nbsp;
+							{config?.options?.rotaryActions && (
+								<>
+									<CButton color="warning" onMouseDown={hotRotateLeft} style={{ color: 'white' }}>
+										<FontAwesomeIcon icon={faUndo} />
+									</CButton>
+									&nbsp;
+									<CButton color="warning" onMouseDown={hotRotateRight} style={{ color: 'white' }}>
+										<FontAwesomeIcon icon={faRedo} />
+									</CButton>
+								</>
+							)}
 						</>
 					</MyErrorBoundary>
-
 					<MyErrorBoundary>
 						<ButtonStyleConfig
 							controlType={config.type}
 							style={config.style}
 							configRef={configRef}
 							controlId={controlId}
+							mainDialog
 						/>
 
 						<ControlOptionsEditor
@@ -281,7 +296,6 @@ export function EditButton({ controlId, onKeyUp, contentHeight }) {
 							controlId={controlId}
 						/>
 					</MyErrorBoundary>
-
 					{config && runtimeProps && (
 						<MyErrorBoundary>
 							<TabsSection
@@ -295,37 +309,19 @@ export function EditButton({ controlId, onKeyUp, contentHeight }) {
 							/>
 						</MyErrorBoundary>
 					)}
-
-					<div ref={hintRef} style={{ padding: '1px 0' }}>
-						{parsedId?.page && parsedId?.bank && (
-							<>
-								<hr />
-								<p>
-									<b>Hint:</b> Control buttons with OSC or HTTP: /press/bank/{parsedId.page}/{parsedId.bank} to press
-									this button remotely. OSC port{' '}
-									<code>
-										{userConfig?.osc_enabled && userConfig?.osc_listen_port && userConfig?.osc_listen_port !== '0'
-											? userConfig?.osc_listen_port
-											: 'disabled'}
-									</code>
-									!
-								</p>
-							</>
-						)}
-					</div>
 				</>
 			)}
 		</KeyReceiver>
 	)
 }
 
-function TabsSection({ fillHeight, style, controlId, steps, runtimeProps, rotaryActions, feedbacks }) {
+function TabsSection({ style, controlId, steps, runtimeProps, rotaryActions, feedbacks }) {
 	const socket = useContext(SocketContext)
 
 	const confirmRef = useRef()
 
 	const tabsScrollRef = useRef(null)
-	const [tabsSizeRef, { height: tabsHeight }] = useElementSize()
+	const [tabsSizeRef] = useElementSize()
 
 	const setTabsRef = useCallback(
 		(ref) => {
@@ -338,6 +334,8 @@ function TabsSection({ fillHeight, style, controlId, steps, runtimeProps, rotary
 	const clickSelectedStep = useCallback((newStep) => {
 		setSelectedStep(newStep)
 
+		// Let's reactivate this again if users start setting cars on fire because I removed it. -wv
+		/* 
 		if (tabsScrollRef.current) {
 			tabsScrollRef.current.scrollIntoView({
 				block: 'start',
@@ -345,6 +343,7 @@ function TabsSection({ fillHeight, style, controlId, steps, runtimeProps, rotary
 				behavior: 'smooth',
 			})
 		}
+		*/
 	}, [])
 
 	const keys = useMemo(() => GetStepIds(steps), [steps])
@@ -432,7 +431,7 @@ function TabsSection({ fillHeight, style, controlId, steps, runtimeProps, rotary
 		const selectedStep2 = selectedKey && steps[selectedKey]
 
 		return (
-			<>
+			<div key="button">
 				<GenericConfirmModal ref={confirmRef} />
 
 				<br />
@@ -441,32 +440,50 @@ function TabsSection({ fillHeight, style, controlId, steps, runtimeProps, rotary
 					<CTabs activeTab={selectedStep} onActiveTabChange={clickSelectedStep}>
 						<CNav variant="tabs">
 							{keys.map((k, i) => (
-								<CNavItem key={k}>
-									<CNavLink data-tab={`step:${k}`}>
-										Step {i + 1}{' '}
-										{runtimeProps.current_step_id === k && <FontAwesomeIcon icon={faStar} title="Current step" />}
+								<CNavItem key={k} className="nav-steps-special">
+									<CNavLink
+										data-tab={`step:${k}`}
+										className={(() => {
+											// if there's more than one step, we need to show the current step
+											const moreThanOneStep = keys.length > 1
+											// the current step is the one that is currently being executed
+											const isCurrent = runtimeProps.current_step_id === k
+											// both selected and the current step
+											const isActiveAndCurrent = k === selectedIndex && runtimeProps.current_step_id === k
+
+											if (moreThanOneStep) {
+												if (isActiveAndCurrent) return 'selected-and-active'
+												if (isCurrent) return 'only-current'
+											}
+										})()}
+										style={{}}
+									>
+										{i === 0 ? (keys.length > 1 ? 'Step ' + (i + 1) : 'Actions') : i + 1}
 									</CNavLink>
 								</CNavItem>
 							))}
-							<CNavItem key="add-step">
-								{/* TODO - colour */}
-								<CNavLink onClick={appendStep}>
-									<FontAwesomeIcon icon={faPlus} /> Add Step
-								</CNavLink>
-							</CNavItem>
-							<CNavItem key="feedbacks">
+
+							<CNavItem key="feedbacks" className="nav-steps-special">
 								<CNavLink data-tab="feedbacks">Feedbacks</CNavLink>
 							</CNavItem>
+							{keys.length === 1 && (
+								<CNavItem key="add-step" className="nav-steps-special">
+									<CNavLink onClick={appendStep}>
+										<FontAwesomeIcon icon={faPlus} /> Add step
+									</CNavLink>
+								</CNavItem>
+							)}
 						</CNav>
 					</CTabs>
 				</div>
 
 				<div
 					className="edit-sticky-body"
-					style={{
-						// minHeight: `calc(${contentHeight - tabsHeight}px - 1rem`,
-						'--raw-height': `${fillHeight - tabsHeight}px`,
-					}}
+					style={
+						{
+							// minHeight: `calc(${contentHeight - tabsHeight}px - 1rem`,
+						}
+					}
 				>
 					<p></p>
 					{selectedStep === 'feedbacks' && (
@@ -484,40 +501,41 @@ function TabsSection({ fillHeight, style, controlId, steps, runtimeProps, rotary
 						<>
 							<CButtonGroup hidden={keys.length === 1}>
 								<CButton
-									key="set-current"
-									color={runtimeProps.current_step_id === selectedKey ? 'success' : 'primary'}
-									size="sm"
-									disabled={runtimeProps.current_step_id === selectedKey}
-									onClick={() => setCurrentStep(selectedKey)}
-								>
-									Make Current
-								</CButton>
-
-								<CButton
-									key="move-up"
-									color="warning"
+									color="danger"
 									title="Move step before"
-									size="sm"
 									disabled={selectedIndex === 0}
 									onClick={() => swapSteps(selectedKey, keys[selectedIndex - 1])}
 								>
-									<FontAwesomeIcon icon={faArrowLeft} />
+									<FontAwesomeIcon icon={faChevronLeft} />
 								</CButton>
 								<CButton
-									key="move-down"
-									color="warning"
+									color="danger"
 									title="Move step after"
-									size="sm"
 									disabled={selectedIndex === keys.length - 1}
 									onClick={() => swapSteps(selectedKey, keys[selectedIndex + 1])}
 								>
-									<FontAwesomeIcon icon={faArrowRight} />
+									<FontAwesomeIcon icon={faChevronRight} />
+								</CButton>
+
+								<CButton
+									color="success"
+									style={{ fontWeight: 'bold', opacity: runtimeProps.current_step_id === selectedKey ? 0.3 : 1 }}
+									disabled={runtimeProps.current_step_id === selectedKey}
+									onClick={() => setCurrentStep(selectedKey)}
+								>
+									Select
 								</CButton>
 								<CButton
-									key="delete"
-									color="danger"
+									style={{ backgroundColor: '#f0f0f0', marginRight: 1 }}
+									title="Add step"
+									disabled={keys.length === 1}
+									onClick={() => appendStep()}
+								>
+									<FontAwesomeIcon icon={faPlus} />
+								</CButton>
+								<CButton
+									style={{ backgroundColor: '#f0f0f0' }}
 									title="Delete step"
-									size="sm"
 									disabled={keys.length === 1}
 									onClick={() => removeStep(selectedKey)}
 								>
@@ -579,10 +597,10 @@ function TabsSection({ fillHeight, style, controlId, steps, runtimeProps, rotary
 						</>
 					)}
 				</div>
-			</>
+			</div>
 		)
 	} else {
-		return ''
+		return <div key="else"></div>
 	}
 }
 

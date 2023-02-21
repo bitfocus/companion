@@ -94,7 +94,7 @@ export const Triggers = memo(function Triggers() {
 				<CButton
 					color="light"
 					style={{
-						marginLeft: 10,
+						marginTop: 10,
 					}}
 					href={`/int/export/triggers/all`}
 					target="_new"
@@ -196,7 +196,9 @@ function TriggersTable({ triggersList, editItem }) {
 						))
 				) : (
 					<tr>
-						<td colSpan="4">There currently are no triggers or scheduled tasks.</td>
+						<td colSpan="4" className="currentlyNone">
+							There currently are no triggers or scheduled tasks.
+						</td>
 					</tr>
 				)}
 			</tbody>
@@ -313,7 +315,6 @@ function TriggersTableRow({ controlId, item, editItem, moveTrigger }) {
 							</CButton>
 							<CButton
 								style={{ padding: 3, paddingRight: 6 }}
-								size="md"
 								color="white"
 								href={`/int/export/triggers/single/${exportId}`}
 								target="_new"
@@ -328,7 +329,6 @@ function TriggersTableRow({ controlId, item, editItem, moveTrigger }) {
 						<CSwitch
 							color="success"
 							checked={item.enabled}
-							size={'md'}
 							onChange={doEnableDisable}
 							title={item.enabled ? 'Disable trigger' : 'Enable trigger'}
 						/>

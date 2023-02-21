@@ -1,18 +1,13 @@
 import React, { memo, useCallback, useContext, useEffect, useState } from 'react'
 import { LoadingRetryOrError, sandbox, socketEmitPromise, SocketContext, ModulesContext } from '../util'
 import { CRow, CCol, CButton } from '@coreui/react'
-import {
-	CheckboxInputField,
-	ColorInputField,
-	DropdownInputField,
-	NumberInputField,
-	TextInputField,
-} from '../Components'
+import { ColorInputField, DropdownInputField, NumberInputField, TextInputField } from '../Components'
 import { nanoid } from 'nanoid'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faQuestionCircle } from '@fortawesome/free-solid-svg-icons'
 import sanitizeHtml from 'sanitize-html'
 import { isLabelValid } from '@companion/shared/Label'
+import CSwitch from '../CSwitch'
 
 export function InstanceEditPanel({ instanceId, instanceStatus, doConfigureInstance, showHelp }) {
 	console.log('status', instanceStatus)
@@ -268,7 +263,20 @@ function ConfigField({ setValue, setValid, definition, value }) {
 				/>
 			)
 		case 'checkbox':
-			return <CheckboxInputField value={value} tooltip={definition.tooltip} setValue={setValue2} setValid={setValid2} />
+			return (
+				<div style={{ marginRight: 40, marginTop: 2 }}>
+					<CSwitch
+						color="success"
+						checked={value}
+						size={'lg'}
+						tooltip={definition.tooltip}
+						onChange={() => {
+							setValue2(!value)
+							//setValid2(true)
+						}}
+					/>
+				</div>
+			)
 		case 'dropdown':
 			return (
 				<DropdownInputField

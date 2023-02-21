@@ -242,7 +242,7 @@ if (!lock) {
 			show: false,
 			width: 400,
 			height: 600,
-			minHeight: 600,
+			//minHeight: 600,
 			minWidth: 440,
 			// maxHeight: 380,
 			frame: false,

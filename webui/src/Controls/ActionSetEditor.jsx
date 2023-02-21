@@ -1,5 +1,12 @@
 import { CButton, CForm, CInputGroup, CInputGroupAppend, CInputGroupText, CButtonGroup } from '@coreui/react'
-import { faSort, faTrash, faExpandArrowsAlt, faCompressArrowsAlt, faCopy } from '@fortawesome/free-solid-svg-icons'
+import {
+	faSort,
+	faTrash,
+	faExpandArrowsAlt,
+	faCompressArrowsAlt,
+	faCopy,
+	faFolderOpen,
+} from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import React, { useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react'
 import { NumberInputField } from '../Components'
@@ -109,29 +116,29 @@ export function ControlActionSetEditor({ controlId, stepId, setId, actions, addP
 		[socket, controlId, stepId, setId]
 	)
 
-	const actionIds = useMemo(() => actions.map((act) => act.id), [actions])
+	const actionIds = useMemo(() => (actions ? actions.map((act) => act.id) : []), [actions])
 	const { setPanelCollapsed, isPanelCollapsed, setAllCollapsed, setAllExpanded, canExpandAll, canCollapseAll } =
 		usePanelCollapseHelper(`actions_${controlId}_${stepId}_${setId}`, actionIds)
 
 	return (
-		<>
-			<h4 className="mt-3">
+		<div className="action-category">
+			<h4>
 				{heading}
-				<CButtonGroup className="right">
-					{headingActions || ''}
-					<CButton color="info" size="sm" onClick={setAllExpanded} title="Expand all actions" disabled={!canExpandAll}>
-						<FontAwesomeIcon icon={faExpandArrowsAlt} />
-					</CButton>{' '}
-					<CButton
-						color="info"
-						size="sm"
-						onClick={setAllCollapsed}
-						title="Collapse all actions"
-						disabled={!canCollapseAll}
-					>
-						<FontAwesomeIcon icon={faCompressArrowsAlt} />
-					</CButton>
-				</CButtonGroup>
+				{actions && actions.length > 1 && (
+					<CButtonGroup className="right">
+						{headingActions || ''}
+						{canExpandAll && (
+							<CButton color="white" size="sm" onClick={setAllExpanded} title="Expand all">
+								<FontAwesomeIcon icon={faExpandArrowsAlt} />
+							</CButton>
+						)}
+						{canCollapseAll && (
+							<CButton color="white" size="sm" onClick={setAllCollapsed} title="Collapse all">
+								<FontAwesomeIcon icon={faCompressArrowsAlt} />
+							</CButton>
+						)}
+					</CButtonGroup>
+				)}
 			</h4>
 			<GenericConfirmModal ref={confirmModal} />
 			<ActionsList
@@ -153,7 +160,7 @@ export function ControlActionSetEditor({ controlId, stepId, setId, actions, addP
 				isPanelCollapsed={isPanelCollapsed}
 			/>
 			<AddActionsPanel addPlaceholder={addPlaceholder} addAction={addAction} />
-		</>
+		</div>
 	)
 }
 
@@ -196,8 +203,8 @@ export function AddActionsPanel({ addPlaceholder, addAction }) {
 	return (
 		<div className="add-dropdown-wrapper">
 			<AddActionDropdown onSelect={addAction2} placeholder={addPlaceholder} recentActions={recentActions} />
-			<CButton color="primary" variant="outline" onClick={showAddModal}>
-				Browse
+			<CButton color="primary" onClick={showAddModal} style={{ borderTopLeftRadius: 0, borderBottomLeftRadius: 0 }}>
+				<FontAwesomeIcon icon={faFolderOpen} />
 			</CButton>
 
 			<MyErrorBoundary>
@@ -242,33 +249,34 @@ export function ActionsList({
 	return (
 		<table className="table action-table">
 			<tbody>
-				{actions.map((a, i) => (
-					<MyErrorBoundary key={a?.id ?? i}>
-						<ActionTableRow
-							key={a?.id ?? i}
-							isOnControl={isOnControl}
-							action={a}
-							index={i}
-							stepId={stepId}
-							setId={setId}
-							controlId={controlId}
-							dragId={dragId}
-							setValue={doSetValue}
-							doDelete={doDelete2}
-							doDuplicate={doDuplicate}
-							doDelay={doSetDelay}
-							doEnabled={doEnabled}
-							moveCard={doReorder}
-							doLearn={emitLearn}
-							readonly={readonly ?? false}
-							setCollapsed={setPanelCollapsed}
-							isCollapsed={isPanelCollapsed(a.id)}
-						/>
-					</MyErrorBoundary>
-				))}
+				{actions &&
+					actions.map((a, i) => (
+						<MyErrorBoundary key={a?.id ?? i}>
+							<ActionTableRow
+								key={a?.id ?? i}
+								isOnControl={isOnControl}
+								action={a}
+								index={i}
+								stepId={stepId}
+								setId={setId}
+								controlId={controlId}
+								dragId={dragId}
+								setValue={doSetValue}
+								doDelete={doDelete2}
+								doDuplicate={doDuplicate}
+								doDelay={doSetDelay}
+								doEnabled={doEnabled}
+								moveCard={doReorder}
+								doLearn={emitLearn}
+								readonly={readonly ?? false}
+								setCollapsed={setPanelCollapsed}
+								isCollapsed={isPanelCollapsed(a.id)}
+							/>
+						</MyErrorBoundary>
+					))}
 				<ActionRowDropPlaceholder
 					dragId={dragId}
-					actionCount={actions.length}
+					actionCount={actions ? actions.length : 0}
 					stepId={stepId}
 					setId={setId}
 					moveCard={doReorder}
@@ -451,36 +459,38 @@ function ActionTableRow({
 			<td ref={drag} className="td-reorder">
 				<FontAwesomeIcon icon={faSort} />
 			</td>
-			<td>
+			<td style={{ paddingRight: 0 }}>
 				<div className="editor-grid">
 					<div className="cell-name">{name}</div>
 
 					<div className="cell-controls">
 						<CButtonGroup>
-							{doEnabled && (
-								<CSwitch
-									color="success"
-									checked={!action.disabled}
-									title={action.disabled ? 'Enable action' : 'Disable action'}
-									onChange={innerSetEnabled}
-								/>
-							)}
-							&nbsp;
 							{isCollapsed ? (
-								<CButton color="info" size="sm" onClick={doExpand} title="Expand action view">
+								<CButton size="sm" onClick={doExpand} title="Expand action view">
 									<FontAwesomeIcon icon={faExpandArrowsAlt} />
 								</CButton>
 							) : (
-								<CButton color="info" size="sm" onClick={doCollapse} title="Collapse action view">
+								<CButton size="sm" onClick={doCollapse} title="Collapse action view">
 									<FontAwesomeIcon icon={faCompressArrowsAlt} />
 								</CButton>
 							)}
-							<CButton disabled={readonly} color="warning" size="sm" onClick={innerDuplicate} title="Duplicate action">
+							<CButton disabled={readonly} size="sm" onClick={innerDuplicate} title="Duplicate action">
 								<FontAwesomeIcon icon={faCopy} />
 							</CButton>
-							<CButton disabled={readonly} color="danger" size="sm" onClick={innerDelete} title="Remove action">
+							<CButton disabled={readonly} size="sm" onClick={innerDelete} title="Remove action">
 								<FontAwesomeIcon icon={faTrash} />
 							</CButton>
+							{doEnabled && (
+								<>
+									&nbsp;
+									<CSwitch
+										color="success"
+										checked={!action.disabled}
+										title={action.disabled ? 'Enable action' : 'Disable action'}
+										onChange={innerSetEnabled}
+									/>
+								</>
+							)}
 						</CButtonGroup>
 					</div>
 
@@ -544,7 +554,6 @@ function ActionTableRow({
 											/>
 										</MyErrorBoundary>
 									))}
-									{options.length === 0 ? 'Nothing to configure' : ''}
 								</CForm>
 							</div>
 						</>

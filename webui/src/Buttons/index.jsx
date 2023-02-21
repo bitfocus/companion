@@ -146,7 +146,7 @@ export const ButtonsPage = memo(function ButtonsPage({ hotPress }) {
 							</CNavItem>
 							<CNavItem>
 								<CNavLink data-tab="action-recorder">
-									<FontAwesomeIcon icon={faVideoCamera} /> Action Recorder
+									<FontAwesomeIcon icon={faVideoCamera} /> Recorder
 								</CNavLink>
 							</CNavItem>
 						</CNav>

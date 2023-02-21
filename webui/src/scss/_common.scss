@@ -81,3 +81,60 @@ code {
 .hand {
 	cursor: pointer;
 }
+
+.btn-danger {
+	background-color: $primary;
+}
+
+.c-app {
+	color: #222;
+}
+.form-control {
+	color: #333;
+}
+.form-control:focus {
+	color: #111;
+}
+.table {
+	color: #111;
+}
+
+.modal {
+	max-height: 94vh;
+	margin-top: 6vh;
+}
+
+.btn-secondary {
+	background-color: $secondary;
+	color: black;
+}
+
+.text-right {
+	text-align: right;
+}
+.remove075right {
+	margin-right: -0.75rem;
+}
+
+.currentlyNone {
+	color: #777;
+	text-align: center;
+	padding: 30px !important;
+}
+
+.flex {
+	display: flex;
+}
+
+.w-full {
+	width: 100%;
+}
+.gap-1 {
+	gap: 1rem;
+}
+.gap-2 {
+	gap: 2rem;
+}
+.flex-wrap {
+	flex-wrap: wrap;
+}

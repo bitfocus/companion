@@ -5,7 +5,7 @@
 	padding: 10px 0;
 
 	.input-group {
-		// width: 150px;
+		// width: 150px;		
 	}
 }
 
@@ -57,4 +57,9 @@
 		white-space: nowrap;
 		margin-bottom: 1rem;
 	}
+}
+
+.c-sidebar-nav-link,
+.c-sidebar-nav-dropdown-toggle {
+	transition: none;
 }
