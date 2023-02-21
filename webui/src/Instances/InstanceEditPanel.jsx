@@ -1,13 +1,7 @@
 import React, { memo, useCallback, useContext, useEffect, useState } from 'react'
 import { LoadingRetryOrError, sandbox, socketEmitPromise, SocketContext, ModulesContext } from '../util'
 import { CRow, CCol, CButton } from '@coreui/react'
-import {
-	CheckboxInputField,
-	ColorInputField,
-	DropdownInputField,
-	NumberInputField,
-	TextInputField,
-} from '../Components'
+import { ColorInputField, DropdownInputField, NumberInputField, TextInputField } from '../Components'
 import { nanoid } from 'nanoid'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faQuestionCircle } from '@fortawesome/free-solid-svg-icons'
@@ -271,7 +265,7 @@ function ConfigField({ setValue, setValid, definition, value }) {
 			)
 		case 'checkbox':
 			return (
-				<div style={{marginRight:40,marginTop:2}}>
+				<div style={{ marginRight: 40, marginTop: 2 }}>
 					<CSwitch
 						color="success"
 						checked={value}
