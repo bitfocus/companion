@@ -11,7 +11,7 @@
     "generate-manifests": "node --loader ts-node/esm scripts/generate-manifests.ts"
   },
   "dependencies": {
-    "@companion-module/base": "~1.0.1",
+    "@companion-module/base": "~1.2.0",
     "@tsconfig/node18": "^1.0.1",
     "@types/debug": "^4.1.7",
     "@types/ws": "^8.5.3",
