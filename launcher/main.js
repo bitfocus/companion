@@ -260,6 +260,13 @@ if (!lock) {
 		// 	mode:'detach'
 		// })
 
+		app.on('second-instance', (event, commandLine, workingDirectory, additionalData) => {
+			// Someone tried to run a second instance, we should focus our window.
+			if (window) {
+				showWindow()
+			}
+		})
+
 		window
 			.loadURL(
 				url.format({
