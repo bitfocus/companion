@@ -159,11 +159,6 @@ export const SurfacesPage = memo(function SurfacesPage() {
 				?
 			</CAlert>
 
-			<p>
-				<i>
-					Rescanning blocks all operations while the scan is ongoing. <b>Use with care!</b>
-				</i>
-			</p>
 			<CAlert color="warning" role="alert" style={{ display: scanError ? '' : 'none' }}>
 				{scanError}
 			</CAlert>

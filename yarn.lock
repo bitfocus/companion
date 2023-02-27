@@ -3976,7 +3976,7 @@ neo-async@^2.6.2:
   resolved "https://registry.yarnpkg.com/neo-async/-/neo-async-2.6.2.tgz#b4aafb93e3aeb2d8174ca53cf163ab7d7308305f"
   integrity sha512-Yd3UES5mWCSqR+qNT93S3UoYUkqAZ9lLg8a7g9rimsWmYGK8cVToA4/sF3RrshdyV3sAGMXVUmpMYOw+dLpOuw==
 
-node-addon-api@^3.0.2:
+node-addon-api@^3.2.1:
   version "3.2.1"
   resolved "https://registry.yarnpkg.com/node-addon-api/-/node-addon-api-3.2.1.tgz#81325e0a2117789c0128dab65e7e38f07ceba161"
   integrity sha512-mmcei9JghVNDYydghQmeDX8KoAm0FAiYyIcUt/N4nhyAipB17pllZQDOJD2fotxABnt4Mdz+dKTO7eftLg4d0A==
@@ -4021,12 +4021,12 @@ node-gyp-build@^4.3.0, node-gyp-build@^4.5.0, "node-gyp-build@github:julusian/no
   version "4.5.0"
   resolved "https://codeload.github.com/julusian/node-gyp-build/tar.gz/33c9759a3215892a520d50ad20c947795b813904"
 
-node-hid@^2.1.1, "node-hid@npm:@julusian/hid@2.2.0-0":
-  version "2.2.0-0"
-  resolved "https://registry.yarnpkg.com/@julusian/hid/-/hid-2.2.0-0.tgz#849953da3d945c94a63264971ad4294b773912a6"
-  integrity sha512-OtbyP83Ar5JTTnTy/6d8QAQnExeYZg8tebjeUJbioiIfDStQfCOe+tlT7nIQDDW+4p5UfRS1hmzuOQ6fq+5zng==
+node-hid@^2.1.1, "node-hid@npm:@julusian/hid@2.5.0-3":
+  version "2.5.0-3"
+  resolved "https://registry.yarnpkg.com/@julusian/hid/-/hid-2.5.0-3.tgz#4d0a1aabef8a47b79a3ccdb30fc5b53e8618f5e1"
+  integrity sha512-BXL3QbgWvtuFPY8lMwBQ6CwDBeU/WJDedOhe5Y9QGf2ibwdbSMMLRfdFGUqeVgoO5YcyvUqXTM6oighswc3yVg==
   dependencies:
-    node-addon-api "^3.0.2"
+    node-addon-api "^3.2.1"
     pkg-prebuilds "^0.1.0"
 
 node-int64@^0.4.0:
