@@ -224,6 +224,7 @@ if (!lock) {
 
 				const newPath0 = uiConfig.get('dev_modules_path')
 				if (newPath0 && (await fs.pathExists(newPath0))) {
+					// Watch for changes in the modules
 					const devModulesPath = path.resolve(newPath0)
 					watcher = chokidar.watch(devModulesPath, {
 						ignoreInitial: true,
@@ -237,6 +238,7 @@ if (!lock) {
 
 							let fn = cachedDebounces[moduleDirName]
 							if (!fn) {
+								// Debounce, to avoid spamming when many files change
 								fn = debounceFn(
 									() => {
 										console.log('Sending reload for module:', moduleDirName)
