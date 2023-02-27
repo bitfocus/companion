@@ -81,3 +81,12 @@ function restart() {
 		start()
 	}
 }
+
+function signalHandler(signal) {
+	process.exit()
+}
+
+// Make sure to exit on interupt
+process.on('SIGINT', signalHandler)
+process.on('SIGTERM', signalHandler)
+process.on('SIGQUIT', signalHandler)
