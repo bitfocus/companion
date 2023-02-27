@@ -23,7 +23,7 @@ import { OptionButtonPreview } from './OptionButtonPreview'
 import { MenuPortalContext } from '../Components/DropdownInputField'
 import { ParseControlId } from '@companion/shared/ControlId'
 
-export function ControlFeedbacksEditor({ controlId, feedbacks, heading, booleanOnly, isOnControl }) {
+export function ControlFeedbacksEditor({ controlId, feedbacks, heading, booleanOnly, isOnControl, addPlaceholder }) {
 	const socket = useContext(SocketContext)
 
 	const confirmModal = useRef()
@@ -193,7 +193,12 @@ export function ControlFeedbacksEditor({ controlId, feedbacks, heading, booleanO
 			</table>
 
 			<div className="add-dropdown-wrapper">
-				<AddFeedbackDropdown onSelect={addFeedback} recentFeedbacks={recentFeedbacks} booleanOnly={booleanOnly} />
+				<AddFeedbackDropdown
+					onSelect={addFeedback}
+					recentFeedbacks={recentFeedbacks}
+					booleanOnly={booleanOnly}
+					addPlaceholder={addPlaceholder}
+				/>
 				<CButton color="primary" variant="outline" onClick={showAddModal}>
 					Browse
 				</CButton>
@@ -405,7 +410,7 @@ function FeedbackEditor({
 				<CButtonGroup>
 					{doEnabled && (
 						<CSwitch
-							color="info"
+							color="success"
 							checked={!feedback.disabled}
 							title={feedback.disabled ? 'Enable feedback' : 'Disable feedback'}
 							onChange={innerSetEnabled}
@@ -598,7 +603,7 @@ const noOptionsMessage = ({ inputValue }) => {
 	}
 }
 
-export function AddFeedbackDropdown({ onSelect, booleanOnly, recentFeedbacks }) {
+function AddFeedbackDropdown({ onSelect, booleanOnly, recentFeedbacks, addPlaceholder }) {
 	const menuPortal = useContext(MenuPortalContext)
 	const feedbacksContext = useContext(FeedbacksContext)
 	const instancesContext = useContext(InstancesContext)
@@ -661,7 +666,7 @@ export function AddFeedbackDropdown({ onSelect, booleanOnly, recentFeedbacks }) 
 			isSearchable={true}
 			isMulti={false}
 			options={options}
-			placeholder="+ Add feedback"
+			placeholder={addPlaceholder || '+ Add feedback'}
 			value={null}
 			onChange={innerChange}
 			filterOption={filterOptions}

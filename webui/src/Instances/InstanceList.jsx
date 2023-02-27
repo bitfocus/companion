@@ -10,6 +10,7 @@ import {
 	faTerminal,
 	faCheckCircle,
 	faQuestionCircle,
+	faBug,
 } from '@fortawesome/free-solid-svg-icons'
 
 import { InstanceVariablesModal } from './InstanceVariablesModal'
@@ -301,21 +302,11 @@ function InstancesTableRow({
 								<FontAwesomeIcon
 									icon={faExclamationTriangle}
 									color="#f80"
-									title="This module has not been updated for Companion 3.0, and may be broken as a result"
+									title="This module has not been updated for Companion 3.0, and may not work fully"
 								/>{' '}
 							</>
 						)}
 						{moduleInfo?.shortname ?? ''}
-						{/*	
-						{moduleInfo.hasHelp && (
-							<span onClick={doShowHelp} title="Help">
-								<FontAwesomeIcon icon={faQuestionCircle} />
-							</span>
-						)}
-							<WindowLinkOpen href={moduleInfo.bugUrl} title="Report Bug">
-								<FontAwesomeIcon icon={faBug} color="#faa" />
-							</WindowLinkOpen>
-							*/}
 
 						<br />
 						{moduleInfo?.manufacturer ?? ''}
@@ -333,10 +324,20 @@ function InstancesTableRow({
 								onClick={doShowHelp}
 								title="Help"
 								size="md"
-								disabled={!isEnabled || !moduleInfo?.hasHelp}
+								disabled={!moduleInfo?.hasHelp}
 								style={{ padding: 4 }}
 							>
 								<FontAwesomeIcon icon={faQuestionCircle} />
+							</CButton>
+
+							<CButton
+								onClick={(e) => windowLinkOpen({ href: moduleInfo?.bugUrl })}
+								size="md"
+								title="Issue Tracker"
+								disabled={!moduleInfo?.bugUrl}
+								style={{ padding: 4 }}
+							>
+								<FontAwesomeIcon icon={faBug} />
 							</CButton>
 
 							<CButton

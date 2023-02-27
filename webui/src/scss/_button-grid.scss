@@ -14,6 +14,10 @@
 }
 
 .bankgrid {
+	-webkit-touch-callout: none !important;
+	-webkit-user-select: none !important;
+	user-select: none !important;
+
 	display: grid;
 	grid-auto-flow: row;
 	grid-auto-rows: 1fr;

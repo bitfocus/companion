@@ -139,6 +139,7 @@ export function EditTriggerPanel({ controlId }) {
 									feedbacks={config.condition}
 									booleanOnly={true}
 									isOnControl={false}
+									addPlaceholder="+ Add condition"
 								/>
 							</MyErrorBoundary>
 

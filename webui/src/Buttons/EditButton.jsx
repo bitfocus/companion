@@ -44,6 +44,7 @@ import { ControlFeedbacksEditor } from '../Controls/FeedbackEditor'
 import { cloneDeep } from 'lodash-es'
 import { useElementSize } from 'usehooks-ts'
 import { GetStepIds } from '@companion/shared/Controls'
+import { useMemo } from 'react'
 
 export function EditButton({ controlId, onKeyUp, contentHeight }) {
 	const socket = useContext(SocketContext)
@@ -201,6 +202,8 @@ export function EditButton({ controlId, onKeyUp, contentHeight }) {
 
 	const parsedId = ParseControlId(controlId)
 
+	// Tip: This query needs to match the page layout. It doesn't need to be reactive, as the useElementSize will force a re-render
+	const isTwoColumn = window.matchMedia('(min-width: 1200px)').matches
 	const [hintRef, { height: hintHeight }] = useElementSize()
 
 	return (
@@ -282,7 +285,7 @@ export function EditButton({ controlId, onKeyUp, contentHeight }) {
 					{config && runtimeProps && (
 						<MyErrorBoundary>
 							<TabsSection
-								fillHeight={contentHeight - hintHeight}
+								fillHeight={isTwoColumn ? contentHeight - hintHeight : 0}
 								style={config.type}
 								controlId={controlId}
 								steps={config.steps || {}}
@@ -344,7 +347,7 @@ function TabsSection({ fillHeight, style, controlId, steps, runtimeProps, rotary
 		}
 	}, [])
 
-	const keys = GetStepIds(steps)
+	const keys = useMemo(() => GetStepIds(steps), [steps])
 	const [selectedStep, setSelectedStep] = useState(keys.length ? `step:${keys[0]}` : 'feedbacks')
 
 	useEffect(() => {
@@ -385,9 +388,13 @@ function TabsSection({ fillHeight, style, controlId, steps, runtimeProps, rotary
 	)
 	const swapSteps = useCallback(
 		(stepId1, stepId2) => {
-			socketEmitPromise(socket, 'controls:step:swap', [controlId, stepId1, stepId2]).catch((e) => {
-				console.error('Failed to swap steps:', e)
-			})
+			socketEmitPromise(socket, 'controls:step:swap', [controlId, stepId1, stepId2])
+				.then(() => {
+					setSelectedStep(`step:${stepId2}`)
+				})
+				.catch((e) => {
+					console.error('Failed to swap steps:', e)
+				})
 		},
 		[socket, controlId]
 	)
@@ -729,7 +736,7 @@ const EditDurationGroupPropertiesModal = forwardRef(function EditDurationGroupPr
 						<CLabel>Press duration</CLabel>
 						<CInput
 							type="number"
-							value={newDurationValue}
+							value={newDurationValue || ''}
 							min={1}
 							step={1}
 							style={{ color: !newDurationValue || newDurationValue <= 0 ? 'red' : undefined }}

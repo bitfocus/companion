@@ -43,6 +43,7 @@ export function ConnectionDebug() {
 		setLinesBuffer([])
 
 		const onNewLines = (level, message) => {
+			console.log('line', level, message)
 			setLinesBuffer((oldLines) => [...oldLines, { level, message }])
 		}
 
@@ -158,7 +159,7 @@ export function ConnectionDebug() {
 						</CButtonGroup>
 					</div>
 				</CRow>
-				<CRow ref={contentRef} className="log-panel">
+				<CRow innerRef={contentRef} className="log-panel">
 					<CCol lg={12} style={{ overflow: 'hidden', height: '100%', width: '100%' }}>
 						<LogPanelContents
 							linesBuffer={linesBuffer}

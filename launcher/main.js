@@ -274,7 +274,7 @@ if (!lock) {
 			show: false,
 			width: 400,
 			height: 600,
-			minHeight: 600,
+			//minHeight: 600,
 			minWidth: 440,
 			// maxHeight: 380,
 			frame: false,
@@ -291,6 +291,13 @@ if (!lock) {
 		// window.webContents.openDevTools({
 		// 	mode:'detach'
 		// })
+
+		app.on('second-instance', (event, commandLine, workingDirectory, additionalData) => {
+			// Someone tried to run a second instance, we should focus our window.
+			if (window) {
+				showWindow()
+			}
+		})
 
 		window
 			.loadURL(
