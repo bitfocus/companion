@@ -4,6 +4,10 @@ import { fs, path, $ } from 'zx'
 import parseAuthor from 'parse-author'
 
 import type { ModuleManifest, ModuleManifestMaintainer } from '@companion-module/base'
+const moduleBasePkgStr = fs
+	.readFileSync(new URL('../../node_modules/@companion-module/base/package.json', import.meta.url))
+	.toString()
+const moduleBasePkg = JSON.parse(moduleBasePkgStr)
 
 await $`yarn build`
 
@@ -29,11 +33,6 @@ const ignoreNames: string[] = [
 	// Add any modules which are broken here, so that they are ignored, and not available
 	// 'companion-module-something'
 	'companion-module-figure53-go-button', // Uses ../../lib/resources/icons.js
-	'companion-module-discord-api', // Currently broken https://github.com/bitfocus/companion-module-discord-api/issues/4
-	'companion-module-bmd-atem', // New-api alternative
-	'companion-module-behringer-x32', // New-api alternative
-	'companion-module-homeassistant-server', // New-api alternative
-	'companion-module-generic-osc', // New-api alternative
 ]
 
 for (const folder of dirs) {
@@ -88,7 +87,7 @@ for (const folder of dirs) {
 			runtime: {
 				type: 'node18',
 				api: 'nodejs-ipc',
-				apiVersion: '0.0.0',
+				apiVersion: moduleBasePkg.version,
 
 				// entrypoint: '../../dist/index.js',
 				entrypoint: '../index.js',
