@@ -191,6 +191,9 @@ const InstanceEditPanelInner = memo(function InstanceEditPanel({ instanceId, doC
 									style={{ display: fieldVisibility[field.id] === false ? 'none' : null }}
 								>
 									<label>{field.label}</label>
+									{field.tooltip && (
+										<FontAwesomeIcon style={{ marginLeft: '5px' }} icon={faQuestionCircle} title={field.tooltip} />
+									)}
 									<ConfigField
 										definition={field}
 										value={instanceConfig[field.id]}
@@ -248,7 +251,6 @@ function ConfigField({ setValue, setValid, definition, value }) {
 					value={value}
 					regex={definition.regex}
 					required={definition.required}
-					tooltip={definition.tooltip}
 					setValue={setValue2}
 					setValid={setValid2}
 				/>
@@ -260,7 +262,6 @@ function ConfigField({ setValue, setValid, definition, value }) {
 					min={definition.min}
 					max={definition.max}
 					step={definition.step}
-					tooltip={definition.tooltip}
 					range={definition.range}
 					value={value}
 					setValue={setValue2}
@@ -275,7 +276,6 @@ function ConfigField({ setValue, setValid, definition, value }) {
 					choices={definition.choices}
 					allowCustom={definition.allowCustom}
 					minChoicesForSearch={definition.minChoicesForSearch}
-					tooltip={definition.tooltip}
 					regex={definition.regex}
 					value={value}
 					setValue={setValue2}
@@ -291,7 +291,6 @@ function ConfigField({ setValue, setValid, definition, value }) {
 					minSelection={definition.minSelection}
 					minChoicesForSearch={definition.minChoicesForSearch}
 					maxSelection={definition.maxSelection}
-					tooltip={definition.tooltip}
 					regex={definition.regex}
 					value={value}
 					setValue={setValue2}

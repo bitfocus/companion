@@ -8,6 +8,8 @@ import {
 	TextInputField,
 } from '../Components'
 import { InternalCustomVariableDropdown, InternalInstanceField } from './InternalInstanceFields'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faQuestionCircle } from '@fortawesome/free-solid-svg-icons'
 
 export function OptionsInputField({
 	instanceId,
@@ -34,7 +36,6 @@ export function OptionsInputField({
 					value={value}
 					regex={option.regex}
 					required={option.required}
-					tooltip={option.tooltip}
 					placeholder={option.placeholder}
 					useVariables={option.useVariables}
 					disabled={readonly}
@@ -50,7 +51,6 @@ export function OptionsInputField({
 					choices={option.choices}
 					allowCustom={option.allowCustom}
 					minChoicesForSearch={option.minChoicesForSearch}
-					tooltip={option.tooltip}
 					regex={option.regex}
 					disabled={readonly}
 					multiple={false}
@@ -68,7 +68,6 @@ export function OptionsInputField({
 					minSelection={option.minSelection}
 					minChoicesForSearch={option.minChoicesForSearch}
 					maxSelection={option.maxSelection}
-					tooltip={option.tooltip}
 					regex={option.regex}
 					disabled={readonly}
 					multiple={true}
@@ -78,7 +77,7 @@ export function OptionsInputField({
 			break
 		}
 		case 'checkbox': {
-			control = <CheckboxInputField value={value} tooltip={option.tooltip} disabled={readonly} setValue={setValue2} />
+			control = <CheckboxInputField value={value} disabled={readonly} setValue={setValue2} />
 			break
 		}
 		case 'colorpicker': {
@@ -93,7 +92,6 @@ export function OptionsInputField({
 					min={option.min}
 					max={option.max}
 					step={option.step}
-					tooltip={option.tooltip}
 					range={option.range}
 					disabled={readonly}
 					setValue={setValue2}
@@ -129,7 +127,12 @@ export function OptionsInputField({
 
 	return (
 		<CFormGroup style={{ display: visibility === false ? 'none' : null }}>
-			<CLabel>{option.label}</CLabel>
+			<CLabel>
+				{option.label}
+				{option.tooltip && (
+					<FontAwesomeIcon style={{ marginLeft: '5px' }} icon={faQuestionCircle} title={option.tooltip} />
+				)}
+			</CLabel>
 			{control}
 		</CFormGroup>
 	)
