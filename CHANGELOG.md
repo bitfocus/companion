@@ -2,7 +2,7 @@
 
 ## Companion v3.0.0 - Unreleased
 
-Documented up to 41260f0708801d5cc749aee3d57430215fd1c6ae
+Documented up to bb3d1052f9b99bd1567749a98f8278aef26d4ef4
 
 ### BREAKING CHANGES
 
@@ -43,6 +43,8 @@ Documented up to 41260f0708801d5cc749aee3d57430215fd1c6ae
 - Improved expression syntax with support for functions and strings
 - UI style improvements
 - New import/export system, allowing for more fine-grained control
+- New variables of page names
+- Rework internal actions to have less duplication
 
 ### 🐞 BUG FIXES
 
