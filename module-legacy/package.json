@@ -351,7 +351,7 @@
     "companion-module-wyrestorm-sw0402mv": "github:bitfocus/companion-module-wyrestorm-sw0402mv#v1.0.3",
     "companion-module-xiamen-sprolink-vd-series": "github:bitfocus/companion-module-xiamen-sprolink-vd-series#v1.0.3",
     "companion-module-yamaha-rcp": "github:bitfocus/companion-module-yamaha-rcp#v1.6.7",
-		"companion-module-youtube-live": "github:bitfocus/companion-module-youtube-live#v1.1.6",
+		"companion-module-youtube-live": "github:bitfocus/companion-module-youtube-live#v1.2.0",
     "companion-module-zenvideo-ndirouter": "github:bitfocus/companion-module-zenvideo-ndirouter#v1.0.2",
     "debug": "^4.3.3",
     "nanoid": "^3.3.4",
