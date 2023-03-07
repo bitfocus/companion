@@ -6,6 +6,7 @@ import {
 	SocketContext,
 	socketEmitPromise,
 	useMountEffect,
+	PreventDefaultHandler,
 } from '../util'
 import { CButton, CCol, CContainer, CForm, CRow } from '@coreui/react'
 import { nanoid } from 'nanoid'
@@ -199,7 +200,7 @@ function ConfigurePanel({ config }) {
 	return show && config.emulator_prompt_fullscreen && !fullscreen ? (
 		<CRow className="configure">
 			<CCol sm={12}>
-				<CForm>
+				<CForm onSubmit={PreventDefaultHandler}>
 					<CRow>
 						<CCol xs={12}>
 							<CButton onClick={doRequestFullscreen} title="Fullscreen">

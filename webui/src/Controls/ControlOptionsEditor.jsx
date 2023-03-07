@@ -1,6 +1,6 @@
 import { CRow, CCol, CLabel, CForm } from '@coreui/react'
 import React, { useCallback, useContext, useRef } from 'react'
-import { socketEmitPromise, SocketContext } from '../util'
+import { socketEmitPromise, SocketContext, PreventDefaultHandler } from '../util'
 import { CheckboxInputField } from '../Components'
 import { GenericConfirmModal } from '../Components/GenericConfirmModal'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
@@ -59,7 +59,7 @@ export function ControlOptionsEditor({ controlId, controlType, options, configRe
 		<CCol sm={12} className="p-0">
 			<GenericConfirmModal ref={confirmRef} />
 
-			<CForm>
+			<CForm onSubmit={PreventDefaultHandler}>
 				<CRow form className="button-style-form">
 					<CCol className="fieldtype-checkbox" sm={3} xs={4}>
 						<CLabel>Relative Delays</CLabel>

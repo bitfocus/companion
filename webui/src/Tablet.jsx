@@ -1,5 +1,12 @@
 import { useCallback, useContext, useEffect, useMemo, useState } from 'react'
-import { LoadingRetryOrError, MyErrorBoundary, SocketContext, socketEmitPromise, useMountEffect } from './util'
+import {
+	LoadingRetryOrError,
+	MyErrorBoundary,
+	PreventDefaultHandler,
+	SocketContext,
+	socketEmitPromise,
+	useMountEffect,
+} from './util'
 import { CreateBankControlId } from '@companion/shared/ControlId'
 import { CButton, CCol, CContainer, CForm, CFormGroup, CInput, CInputCheckbox, CRow } from '@coreui/react'
 import { nanoid } from 'nanoid'
@@ -181,7 +188,7 @@ function ConfigurePanel({ updateQueryUrl, query }) {
 						<FontAwesomeIcon icon={faCog} />
 					</CButton>
 				</h3>
-				<CForm>
+				<CForm onSubmit={PreventDefaultHandler}>
 					<CRow>
 						<CCol sm={6} xs={12}>
 							<legend>Basic</legend>

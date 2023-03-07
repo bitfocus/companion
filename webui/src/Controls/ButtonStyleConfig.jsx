@@ -1,6 +1,6 @@
 import { CButton, CRow, CCol, CButtonGroup, CForm, CAlert, CInputGroup, CInputGroupAppend } from '@coreui/react'
 import React, { useCallback, useContext, useState } from 'react'
-import { socketEmitPromise, SocketContext, UserConfigContext } from '../util'
+import { socketEmitPromise, SocketContext, UserConfigContext, PreventDefaultHandler } from '../util'
 import { AlignmentInputField, ColorInputField, DropdownInputField, PNGInputField, TextInputField } from '../Components'
 import { FONT_SIZES } from '../Constants'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
@@ -70,7 +70,7 @@ export function ButtonStyleConfig({ controlId, controlType, style, configRef }) 
 				</CAlert>
 			)}
 
-			<CForm>
+			<CForm onSubmit={PreventDefaultHandler}>
 				<CRow form className="button-style-form">
 					<ButtonStyleConfigFields
 						values={style}

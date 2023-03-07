@@ -10,7 +10,7 @@ import {
 	CInputCheckbox,
 	CLabel,
 } from '@coreui/react'
-import { NotifierContext, SocketContext, socketEmitPromise } from '../util'
+import { NotifierContext, PreventDefaultHandler, SocketContext, socketEmitPromise } from '../util'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faDownload } from '@fortawesome/free-solid-svg-icons'
 
@@ -149,7 +149,7 @@ export const ResetWizardModal = forwardRef(function WizardModal(_props, ref) {
 
 	return (
 		<CModal show={show} onClose={doClose} className={'wizard'} closeOnBackdrop={false}>
-			<CForm className={'edit-button-panel'}>
+			<CForm className={'edit-button-panel'} onSubmit={PreventDefaultHandler}>
 				<CModalHeader>
 					<h2>
 						<img src="/img/icons/48x48.png" height="30" alt="logo" />

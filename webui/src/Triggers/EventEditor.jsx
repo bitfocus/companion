@@ -2,7 +2,14 @@ import { CButton, CForm, CButtonGroup, CSwitch } from '@coreui/react'
 import { faSort, faTrash, faCompressArrowsAlt, faExpandArrowsAlt, faCopy } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import React, { useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react'
-import { MyErrorBoundary, socketEmitPromise, sandbox, SocketContext, EventDefinitionsContext } from '../util'
+import {
+	MyErrorBoundary,
+	socketEmitPromise,
+	sandbox,
+	SocketContext,
+	EventDefinitionsContext,
+	PreventDefaultHandler,
+} from '../util'
 import Select from 'react-select'
 import { OptionsInputField } from '../Controls/OptionsInputField'
 import { useDrag, useDrop } from 'react-dnd'
@@ -317,7 +324,7 @@ function EventEditor({
 					<div className="cell-description">{eventSpec?.description || ''}</div>
 
 					<div className="cell-option">
-						<CForm>
+						<CForm onSubmit={PreventDefaultHandler}>
 							{options.map((opt, i) => (
 								<MyErrorBoundary key={i}>
 									<OptionsInputField

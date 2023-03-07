@@ -10,6 +10,7 @@ import {
 	sandbox,
 	useMountEffect,
 	SocketContext,
+	PreventDefaultHandler,
 } from '../util'
 import Select, { createFilter } from 'react-select'
 import { OptionsInputField } from './OptionsInputField'
@@ -454,7 +455,7 @@ function FeedbackEditor({
 					</div>
 
 					<div className="cell-option">
-						<CForm>
+						<CForm onSubmit={PreventDefaultHandler}>
 							{options.map((opt, i) => (
 								<MyErrorBoundary key={i}>
 									<OptionsInputField
@@ -504,7 +505,7 @@ function FeedbackManageStyles({ feedbackSpec, feedback, setSelectedStyleProps })
 
 		return (
 			<div className="cell-styles-manage">
-				<CForm>
+				<CForm onSubmit={PreventDefaultHandler}>
 					<MyErrorBoundary>
 						<CFormGroup>
 							<label>Change style properties</label>
@@ -563,7 +564,7 @@ function FeedbackStyles({ feedbackSpec, feedback, setStylePropsValue }) {
 
 		return (
 			<div className="cell-styles">
-				<CForm>
+				<CForm onSubmit={PreventDefaultHandler}>
 					{pngError && (
 						<CAlert color="warning" closeButton>
 							{pngError}
