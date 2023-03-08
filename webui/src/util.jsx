@@ -268,3 +268,7 @@ export function useOnClickOutsideExt(refs, handler, mouseEvent = 'mousedown') {
 		handler(event)
 	})
 }
+
+export const PreventDefaultHandler = (e) => {
+	e.preventDefault()
+}

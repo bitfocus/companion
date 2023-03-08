@@ -18,6 +18,7 @@ import {
 	sandbox,
 	useMountEffect,
 	SocketContext,
+	PreventDefaultHandler,
 } from '../util'
 import Select, { createFilter } from 'react-select'
 import { OptionsInputField } from './OptionsInputField'
@@ -505,7 +506,7 @@ function ActionTableRow({
 							)}
 
 							<div className="cell-delay">
-								<CForm>
+								<CForm onSubmit={PreventDefaultHandler}>
 									<label>Delay</label>
 									<CInputGroup>
 										<NumberInputField
@@ -537,7 +538,7 @@ function ActionTableRow({
 							</div>
 
 							<div className="cell-option">
-								<CForm>
+								<CForm onSubmit={PreventDefaultHandler}>
 									{options.map((opt, i) => (
 										<MyErrorBoundary key={i}>
 											<OptionsInputField

@@ -23,7 +23,7 @@ import {
 	CModalHeader,
 	CSelect,
 } from '@coreui/react'
-import { LoadingRetryOrError, SurfacesContext, socketEmitPromise, SocketContext } from './util'
+import { LoadingRetryOrError, SurfacesContext, socketEmitPromise, SocketContext, PreventDefaultHandler } from './util'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faAdd, faCog, faFolderOpen, faSync, faTrash } from '@fortawesome/free-solid-svg-icons'
 import { nanoid } from 'nanoid'
@@ -369,7 +369,7 @@ const SurfaceEditModal = forwardRef(function SurfaceEditModal(_props, ref) {
 					doRetry={doRetryConfigLoad}
 				/>
 				{deviceConfig && deviceInfo && deviceConfigInfo && (
-					<CForm>
+					<CForm onSubmit={PreventDefaultHandler}>
 						<CFormGroup>
 							<CLabel htmlFor="use_last_page">Use Last Page At Startup</CLabel>
 							<CInputCheckbox

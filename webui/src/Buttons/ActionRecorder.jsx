@@ -7,6 +7,7 @@ import {
 	applyPatchOrReplaceObject,
 	PagesContext,
 	TriggersContext,
+	PreventDefaultHandler,
 } from '../util'
 import { CreateTriggerControlId, CreateBankControlId } from '@companion/shared/ControlId'
 import {
@@ -160,10 +161,6 @@ export function ActionRecorder() {
 function RecorderSessionFinishModal({ doClose, sessionId }) {
 	const socket = useContext(SocketContext)
 
-	const blockAction = useCallback((e) => {
-		e.preventDefault()
-	}, [])
-
 	const doSave = useCallback(
 		(controlId, stepId, setId, mode) => {
 			socketEmitPromise(socket, 'action-recorder:session:save-to-control', [sessionId, controlId, stepId, setId, mode])
@@ -182,7 +179,7 @@ function RecorderSessionFinishModal({ doClose, sessionId }) {
 	return (
 		<CModal innerRef={setModalRef} show={true} onClose={doClose} size="lg">
 			<MenuPortalContext.Provider value={modalRef}>
-				<CForm onSubmit={blockAction} className={'action-recorder-finish-panel'}>
+				<CForm onSubmit={PreventDefaultHandler} className={'action-recorder-finish-panel'}>
 					<CModalHeader closeButton>
 						<h5>Select destination</h5>
 					</CModalHeader>
@@ -383,7 +380,7 @@ function ButtonPicker({ selectButton }) {
 			</CRow>
 			<CRow>
 				<CCol sm={12}>
-					<CForm className="edit-button-panel">
+					<CForm className="edit-button-panel" onSubmit={PreventDefaultHandler}>
 						<CRow form>
 							<CCol className="fieldtype-checkbox" sm={10} xs={9} hidden={actionStepOptions.length <= 1}>
 								<CLabel>Step</CLabel>
@@ -561,7 +558,7 @@ function RecorderSessionHeading({ confirmRef, sessionId, sessionInfo, doFinish }
 
 	return (
 		<>
-			<CForm className="edit-button-panel">
+			<CForm className="edit-button-panel" onSubmit={PreventDefaultHandler}>
 				<CRow form>
 					<CCol className="fieldtype-checkbox" sm={10} xs={9}>
 						<CLabel>Connections</CLabel>

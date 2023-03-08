@@ -21,5 +21,4 @@ There are several internal actions you can add to a button in order to control C
 | Rescan USB for devices                    | Scans for any newly attached Stream Decks.                                                                         |
 | Abort actions on button                   | Will cancel all delayed actions on a specific button (those not yet started).                                      |
 | Abort all delayed actions                 | Will cancel all delayed actions on all buttons (those not yet started).                                            |
-| Kill Companion                            | Shuts down Companion when its not responding.                                                                      |
 | Restart Companion                         | Closes and restarts Companion.                                                                                     |
