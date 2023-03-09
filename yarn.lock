@@ -4211,9 +4211,9 @@ commist@^1.0.0:
   version "1.1.5"
   resolved "https://codeload.github.com/bitfocus/companion-module-resi-decoders/tar.gz/f507b00ddef98d292b9b3b0db009c22937d19be1"
 
-"companion-module-resolume-arena@github:bitfocus/companion-module-resolume-arena#v1.0.7":
-  version "1.0.7"
-  resolved "https://codeload.github.com/bitfocus/companion-module-resolume-arena/tar.gz/f907c87ff01d8805cce628effaf9cd034e5c892f"
+"companion-module-resolume-arena@github:bitfocus/companion-module-resolume-arena#v1.0.8":
+  version "1.0.8"
+  resolved "https://codeload.github.com/bitfocus/companion-module-resolume-arena/tar.gz/f83915b0f169c3cf36e3ffc990a4d7dfc6c8dca4"
 
 "companion-module-rgblink-mini@github:bitfocus/companion-module-rgblink-mini#v1.0.2":
   version "1.0.2"
