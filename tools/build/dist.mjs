@@ -53,15 +53,17 @@ for (const name of neededDependencies) {
 	dependencies[name] = pkgJson.version
 }
 
+const nodeVersion = await fs.readFile('.node-version')
 await fs.writeFile(
 	'dist/package.json',
 	JSON.stringify(
 		{
-			name: 'companion-dist',
+			name: 'companion',
 			version: buildString,
 			license: 'MIT',
 			main: 'main.js',
 			dependencies: dependencies,
+			engines: { node: nodeVersion.toString() },
 		},
 		undefined,
 		2
