@@ -1,32 +1,7 @@
-FROM node:18-bullseye as companion-builder
-
-# Installation Prep
-RUN apt-get update && apt-get install -y \
-    libusb-1.0-0-dev \
-    libudev-dev \
-    && rm -rf /var/lib/apt/lists/*
-
-RUN yarn config set network-timeout 200000 -g
-
-WORKDIR /app
-COPY . /app/
-
-# Install dependencies
-RUN CI=1 ./tools/yarn.sh
-
-# Generate version number file
-RUN yarn build:writefile
-
-# build the application
-RUN ELECTRON=0 yarn dist
-
-# make the production image
 FROM debian:bullseye-slim
 
-WORKDIR /app
-COPY --from=companion-builder /app/dist	/app/
-COPY --from=companion-builder /app/docker-entrypoint.sh /docker-entrypoint.sh
-COPY --from=companion-builder /app/module-legacy/manifests	/app/module-legacy/manifests
+ARG build_name
+ARG TARGETPLATFORM
 
 # Install curl for the health check
 RUN apt update && apt install -y \
@@ -36,6 +11,21 @@ RUN apt update && apt install -y \
     iputils-ping \
     libasound2 \
     && rm -rf /var/lib/apt/lists/*
+
+RUN case ${TARGETPLATFORM} in \
+    "linux/amd64")  ARCH=x64  ;; \
+    "linux/arm64")  ARCH=arm64  ;; \
+    *) echo "Unsupported platform ${TARGETPLATFORM}"; exit 9 ;; \
+    esac \
+    && curl https://s3.bitfocus.io/builds/companion/companion-linux-${ARCH}-${build_name}.tar.gz --output /tmp/companion-build.tar.gz \
+    && mkdir /tmp/companion \
+    && tar -xzf /tmp/companion-build.tar.gz --strip-components=1 -C /tmp/companion \
+    && mv /tmp/companion/resources /app \
+    && rm -R /tmp/companion-build.tar.gz /tmp/companion
+
+COPY docker-entrypoint.sh /docker-entrypoint.sh
+
+WORKDIR /app
 
 # Don't run as root
 RUN useradd -ms /bin/bash companion

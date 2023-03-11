@@ -49,6 +49,7 @@ jobs:
           echo "longversion=${VERSION}" >> $GITHUB_OUTPUT
 
       - name: Upload build
+        id: upload
         uses: bitfocus/actions/upload-and-notify@main
         with:
           long-version: ${{ steps.filenames.outputs.longversion }}
@@ -65,6 +66,13 @@ jobs:
           api-product: companion
           api-target: 'linux-tgz'
           api-secret: ${{ secrets.BITFOCUS_API_PROJECT_SECRET }}
+
+      - name: Report docker build is needed
+        if: ${{ steps.upload.outputs.branch }}
+        uses: actions/upload-artifact@v3
+        with:
+          name: do-docker-build
+          path: dist/BUILD
 
   linux-arm64:
     runs-on: ubuntu-20.04
@@ -323,3 +331,84 @@ jobs:
           api-product: companion
           api-target: 'win-x64'
           api-secret: ${{ secrets.BITFOCUS_API_PROJECT_SECRET }}
+
+  docker-image:
+    runs-on: ubuntu-latest
+
+    needs:
+      - linux64
+      - linux-arm64
+
+    env:
+      IMAGE_NAME: companion
+
+    steps:
+      - name: Check if build is required
+        id: build-check
+        uses: xSAVIKx/artifact-exists-action@v0
+        with:
+          name: do-docker-build
+
+      - uses: actions/checkout@v3
+        if: ${{ steps.build-check.outputs.exists }}
+
+      - uses: actions/download-artifact@v3
+        if: ${{ steps.build-check.outputs.exists }}
+        with:
+          name: do-docker-build
+
+      - name: Determine target image name
+        if: ${{ steps.build-check.outputs.exists }}
+        id: image-name
+        run: |
+          BUILD_VERSION=$(cat dist/BUILD)
+
+          IMAGE_ID=ghcr.io/${{ github.repository }}/$IMAGE_NAME
+
+           # Change all uppercase to lowercase
+          IMAGE_ID=$(echo $IMAGE_ID | tr '[A-Z]' '[a-z]')
+
+          # Strip git ref prefix from version
+          VERSION=$(echo "${{ github.ref }}" | sed -e 's,.*/\(.*\),\1,')
+
+          # Strip "v" prefix from tag name
+          [[ "${{ github.ref }}" == "refs/tags/"* ]] && VERSION=$(echo $VERSION | sed -e 's/^v//')
+
+          # Use Docker `latest` tag convention
+          [ "$VERSION" == "master" ] && VERSION=latest
+
+          IMAGES=
+          IMAGES="$IMAGE_ID:$VERSION"$'\n'$IMAGES
+          IMAGES="$IMAGE_ID:$BUILD_VERSION"$'\n'$IMAGES
+
+          # debug output
+          echo images $IMAGES
+          echo "images=$IMAGES" >> $GITHUB_OUTPUT
+          echo "build_version=$BUILD_VERSION" >> $GITHUB_OUTPUT
+
+      - name: Set up QEMU
+        if: ${{ steps.image-name.outputs.images }}
+        uses: docker/setup-qemu-action@v2
+
+      - name: Set up Docker Buildx
+        if: ${{ steps.image-name.outputs.images }}
+        uses: docker/setup-buildx-action@v2
+
+      - name: Login to registry
+        if: ${{ steps.image-name.outputs.images }}
+        uses: docker/login-action@v2
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push
+        uses: docker/build-push-action@v3
+        if: ${{ steps.image-name.outputs.images }}
+        with:
+          context: .
+          platforms: linux/amd64,inux/arm64
+          push: true
+          tags: ${{ steps.image-name.outputs.images }}
+          build-args: |
+            build_name=${{ steps.image-name.output.build_version }}
