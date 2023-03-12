@@ -27,13 +27,11 @@ COPY docker-entrypoint.sh /docker-entrypoint.sh
 
 WORKDIR /app
 
-# Don't run as root
-RUN useradd -ms /bin/bash companion
-
-# Create config directory and set correct permissions
-# Once docker mounts the volume, the directory will be owned by node:node
+# Create config directory and set correct permissions to not run as root
+# Once docker mounts the volume, the directory will be owned by companion:companion
 ENV COMPANION_CONFIG_BASEDIR /companion
-RUN mkdir $COMPANION_CONFIG_BASEDIR && chown companion:companion $COMPANION_CONFIG_BASEDIR
+RUN useradd -ms /bin/bash companion \
+    && mkdir $COMPANION_CONFIG_BASEDIR && chown companion:companion $COMPANION_CONFIG_BASEDIR
 
 USER companion
 # Export ports for web, Satellite API and WebSocket (Elgato Plugin)

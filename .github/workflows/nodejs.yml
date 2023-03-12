@@ -378,8 +378,8 @@ jobs:
           [ "$VERSION" == "master" ] && VERSION=latest
 
           IMAGES=
-          IMAGES="$IMAGE_ID:$VERSION"$'\n'$IMAGES
-          IMAGES="$IMAGE_ID:$BUILD_VERSION"$'\n'$IMAGES
+          IMAGES="$IMAGE_ID:$VERSION,$IMAGES"
+          # IMAGES="$IMAGE_ID:$BUILD_VERSION,$IMAGES" TODO - this would be nice to have, but the version needs making docker-tag safe first
 
           # debug output
           echo images $IMAGES
@@ -407,8 +407,9 @@ jobs:
         if: ${{ steps.image-name.outputs.images }}
         with:
           context: .
-          platforms: linux/amd64,inux/arm64
-          push: true
+          file: Dockerfile.prebuild
+          platforms: linux/amd64,linux/arm64/v8
+          push: false
           tags: ${{ steps.image-name.outputs.images }}
           build-args: |
-            build_name=${{ steps.image-name.output.build_version }}
+            build_name=${{ steps.image-name.outputs.build_version }}
