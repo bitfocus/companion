@@ -134,7 +134,7 @@ export const WizardModal = forwardRef(function WizardModal(_props, ref) {
 
 	return (
 		<CModal show={show} onClose={doClose} className={'wizard'}>
-			<CForm onSubmit={doSave} className={'edit-button-panel'}>
+			<CForm onSubmit={doSave} className={'flex-form'}>
 				<CModalHeader>
 					<h2>
 						<img src="/img/icons/48x48.png" height="30" alt="logo" />

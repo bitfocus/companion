@@ -556,21 +556,10 @@ function FeedbackStyles({ feedbackSpec, feedback, setStylePropsValue }) {
 		[setStylePropsValue]
 	)
 
+	const currentStyle = useMemo(() => feedback?.style || {}, [feedback?.style])
+	const showField = useCallback((id) => id in currentStyle, [currentStyle])
+
 	if (feedbackSpec?.type === 'boolean') {
-		const currentStyle = feedback.style || {}
-
-		const FeedbackStyleControlWrapper = (id, props, contents) => {
-			if (id in currentStyle) {
-				return (
-					<MyErrorBoundary>
-						<CFormGroup>{contents}</CFormGroup>
-					</MyErrorBoundary>
-				)
-			} else {
-				return ''
-			}
-		}
-
 		return (
 			<div className="cell-styles">
 				<CForm onSubmit={PreventDefaultHandler}>
@@ -585,7 +574,7 @@ function FeedbackStyles({ feedbackSpec, feedback, setStylePropsValue }) {
 						setValueInner={setValue}
 						setPng={setPng}
 						setPngError={clearPngError}
-						controlTemplate={FeedbackStyleControlWrapper}
+						showField={showField}
 					/>
 					{Object.keys(currentStyle).length === 0 ? 'Feedback has no effect. Try adding a property to override' : ''}
 				</CForm>

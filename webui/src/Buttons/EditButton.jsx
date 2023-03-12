@@ -13,7 +13,6 @@ import {
 	CFormGroup,
 	CLabel,
 	CInput,
-	CInputCheckbox,
 	CNavItem,
 	CNavLink,
 	CNav,
@@ -31,7 +30,16 @@ import {
 	faUndo,
 } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import React, { forwardRef, useCallback, useContext, useEffect, useImperativeHandle, useRef, useState } from 'react'
+import React, {
+	forwardRef,
+	useCallback,
+	useContext,
+	useEffect,
+	useImperativeHandle,
+	useRef,
+	useState,
+	useMemo,
+} from 'react'
 import { nanoid } from 'nanoid'
 import { ButtonPreview, dataToButtonImage } from '../Components/ButtonPreview'
 import { GenericConfirmModal } from '../Components/GenericConfirmModal'
@@ -43,17 +51,15 @@ import {
 	MyErrorBoundary,
 	FormatButtonControlId,
 } from '../util'
-//import { ParseControlId } from '@companion/shared/ControlId.js'
 import { ControlActionSetEditor } from '../Controls/ActionSetEditor'
 import jsonPatch from 'fast-json-patch'
-
 import { ButtonStyleConfig } from '../Controls/ButtonStyleConfig'
 import { ControlOptionsEditor } from '../Controls/ControlOptionsEditor'
 import { ControlFeedbacksEditor } from '../Controls/FeedbackEditor'
 import { cloneDeep } from 'lodash-es'
 import { useElementSize } from 'usehooks-ts'
 import { GetStepIds } from '@companion/shared/Controls'
-import { useMemo } from 'react'
+import CSwitch from '../CSwitch'
 
 export function EditButton({ controlId, onKeyUp, contentHeight }) {
 	const socket = useContext(SocketContext)
@@ -215,7 +221,7 @@ export function EditButton({ controlId, onKeyUp, contentHeight }) {
 	const [, { height: hintHeight }] = useElementSize()
 
 	return (
-		<KeyReceiver onKeyUp={onKeyUp} tabIndex={0} className="edit-button-panel">
+		<KeyReceiver onKeyUp={onKeyUp} tabIndex={0} className="edit-button-panel flex-form">
 			<GenericConfirmModal ref={resetModalRef} />
 			<LoadingRetryOrError dataReady={dataReady} error={loadError} doRetry={doRetryLoad} />
 			{hasConfig && dataReady && (
@@ -250,7 +256,7 @@ export function EditButton({ controlId, onKeyUp, contentHeight }) {
 								</CDropdownMenu>
 							</CDropdown>
 							&nbsp;
-							<CButton color="danger" hidden={!config} onClick={clearButton}>
+							<CButton color="danger" hidden={!config} onClick={clearButton} title="Clear Button">
 								<FontAwesomeIcon icon={faTrashAlt} />
 							</CButton>
 							&nbsp;
@@ -261,6 +267,7 @@ export function EditButton({ controlId, onKeyUp, contentHeight }) {
 									onMouseDown={hotPressDown}
 									onMouseUp={hotPressUp}
 									style={{ color: 'white' }}
+									title="Test press button"
 								>
 									<FontAwesomeIcon icon={faPlay} />
 									&nbsp;Test
@@ -269,11 +276,21 @@ export function EditButton({ controlId, onKeyUp, contentHeight }) {
 							&nbsp;
 							{config?.options?.rotaryActions && (
 								<>
-									<CButton color="warning" onMouseDown={hotRotateLeft} style={{ color: 'white' }}>
+									<CButton
+										color="warning"
+										onMouseDown={hotRotateLeft}
+										style={{ color: 'white' }}
+										title="Test rotate left"
+									>
 										<FontAwesomeIcon icon={faUndo} />
 									</CButton>
 									&nbsp;
-									<CButton color="warning" onMouseDown={hotRotateRight} style={{ color: 'white' }}>
+									<CButton
+										color="warning"
+										onMouseDown={hotRotateRight}
+										style={{ color: 'white' }}
+										title="Test rotate right"
+									>
 										<FontAwesomeIcon icon={faRedo} />
 									</CButton>
 								</>
@@ -289,12 +306,14 @@ export function EditButton({ controlId, onKeyUp, contentHeight }) {
 							mainDialog
 						/>
 
-						<ControlOptionsEditor
-							controlType={config.type}
-							options={config.options}
-							configRef={configRef}
-							controlId={controlId}
-						/>
+						<div style={{ marginLeft: '5px' }}>
+							<ControlOptionsEditor
+								controlType={config.type}
+								options={config.options}
+								configRef={configRef}
+								controlId={controlId}
+							/>
+						</div>
 					</MyErrorBoundary>
 					{config && runtimeProps && (
 						<MyErrorBoundary>
@@ -609,7 +628,7 @@ function EditActionsRelease({ controlId, action_sets, stepOptions, stepId, remov
 
 	const editRef = useRef(null)
 
-	const renameSet = useCallback(
+	const configureSet = useCallback(
 		(oldId) => {
 			if (editRef.current) {
 				console.log(stepOptions, oldId)
@@ -649,10 +668,10 @@ function EditActionsRelease({ controlId, action_sets, stepOptions, stepId, remov
 					key={id}
 					heading={`${ident} actions`}
 					headingActions={[
-						<CButton key="rename" color="warning" title="Change time" size="sm" onClick={() => renameSet(id)}>
+						<CButton key="rename" color="white" title="Configure" size="sm" onClick={() => configureSet(id)}>
 							<FontAwesomeIcon icon={faPencil} />
 						</CButton>,
-						<CButton key="delete" color="danger" title="Delete step" size="sm" onClick={() => removeSet(stepId, id)}>
+						<CButton key="delete" color="white" title="Delete step" size="sm" onClick={() => removeSet(stepId, id)}>
 							<FontAwesomeIcon icon={faTrash} />
 						</CButton>,
 					]}
@@ -762,9 +781,11 @@ const EditDurationGroupPropertiesModal = forwardRef(function EditDurationGroupPr
 						/>
 					</CFormGroup>
 
-					<CFormGroup className="fieldtype-checkbox">
+					<CFormGroup>
 						<CLabel>Execute while held</CLabel>
-						<CInputCheckbox type="checkbox" checked={!!newWhileHeldValue} value={true} onChange={onWhileHeldChange} />
+						<p>
+							<CSwitch color="success" checked={!!newWhileHeldValue} onChange={onWhileHeldChange} />
+						</p>
 					</CFormGroup>
 				</CForm>
 			</CModalBody>

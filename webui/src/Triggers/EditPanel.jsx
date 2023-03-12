@@ -92,7 +92,7 @@ export function EditTriggerPanel({ controlId }) {
 	const dataReady = !loadError && config && hasRuntimeProps
 
 	return (
-		<div className="edit-button-panel">
+		<div className="edit-button-panel flex-form">
 			<GenericConfirmModal ref={resetModalRef} />
 
 			<LoadingRetryOrError dataReady={dataReady} error={loadError} doRetry={doRetryLoad} />
@@ -187,8 +187,8 @@ function TriggerConfig({ controlId, options, hotPressDown }) {
 	return (
 		<CCol sm={12} className="p-0">
 			<CForm onSubmit={PreventDefaultHandler}>
-				<CRow form className="button-style-form">
-					<CCol className="fieldtype-checkbox" xs={12}>
+				<CRow form className="flex-form">
+					<CCol xs={12}>
 						<CLabel>Name</CLabel>
 						<p>
 							<CInputGroup>

@@ -59,7 +59,7 @@ export function ControlOptionsEditor({ controlId, controlType, options, configRe
 		<>
 			{' '}
 			<GenericConfirmModal ref={confirmRef} />
-			<div className="flex w-full gap-2">
+			<div className="flex w-full gap-2 flex-form">
 				<div>
 					<CLabel>
 						Relative Delays &nbsp;{' '}
@@ -79,40 +79,44 @@ export function ControlOptionsEditor({ controlId, controlType, options, configRe
 					</p>
 				</div>
 
-				<div>
-					<label>
-						Progress &nbsp;
-						<FontAwesomeIcon
-							icon={faQuestionCircle}
-							title="When this button has multiple steps, progress to the next step when the button is released"
-						/>
-					</label>
-					<p>
-						<CSwitch
-							color="success"
-							checked={options.stepAutoProgress}
-							onChange={() => {
-								setStepAutoProgressValue(!options.stepAutoProgress)
-							}}
-						/>
-					</p>
-				</div>
+				{controlType === 'button' && (
+					<>
+						<div>
+							<label>
+								Progress &nbsp;
+								<FontAwesomeIcon
+									icon={faQuestionCircle}
+									title="When this button has multiple steps, progress to the next step when the button is released"
+								/>
+							</label>
+							<p>
+								<CSwitch
+									color="success"
+									checked={options.stepAutoProgress}
+									onChange={() => {
+										setStepAutoProgressValue(!options.stepAutoProgress)
+									}}
+								/>
+							</p>
+						</div>
 
-				<div>
-					<label>
-						Rotary Actions &nbsp;
-						<FontAwesomeIcon icon={faQuestionCircle} title="Make this button compatible with rotation events" />
-					</label>
-					<p>
-						<CSwitch
-							color="success"
-							checked={options.rotaryActions}
-							onChange={() => {
-								setRotaryActions(!options.rotaryActions)
-							}}
-						/>
-					</p>
-				</div>
+						<div>
+							<label>
+								Rotary Actions &nbsp;
+								<FontAwesomeIcon icon={faQuestionCircle} title="Make this button compatible with rotation events" />
+							</label>
+							<p>
+								<CSwitch
+									color="success"
+									checked={options.rotaryActions}
+									onChange={() => {
+										setRotaryActions(!options.rotaryActions)
+									}}
+								/>
+							</p>
+						</div>
+					</>
+				)}
 			</div>
 		</>
 	)

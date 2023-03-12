@@ -125,21 +125,19 @@ export function ControlActionSetEditor({ controlId, stepId, setId, actions, addP
 		<div className="action-category">
 			<h4>
 				{heading}
-				{actions && actions.length > 1 && (
-					<CButtonGroup className="right">
-						{headingActions || ''}
-						{canExpandAll && (
-							<CButton color="white" size="sm" onClick={setAllExpanded} title="Expand all">
-								<FontAwesomeIcon icon={faExpandArrowsAlt} />
-							</CButton>
-						)}
-						{canCollapseAll && (
-							<CButton color="white" size="sm" onClick={setAllCollapsed} title="Collapse all">
-								<FontAwesomeIcon icon={faCompressArrowsAlt} />
-							</CButton>
-						)}
-					</CButtonGroup>
-				)}
+				<CButtonGroup className="right">
+					{actions && actions.length > 1 && canExpandAll && (
+						<CButton color="white" size="sm" onClick={setAllExpanded} title="Expand all">
+							<FontAwesomeIcon icon={faExpandArrowsAlt} />
+						</CButton>
+					)}
+					{actions && actions.length > 1 && canCollapseAll && (
+						<CButton color="white" size="sm" onClick={setAllCollapsed} title="Collapse all">
+							<FontAwesomeIcon icon={faCompressArrowsAlt} />
+						</CButton>
+					)}
+					{headingActions || ''}
+				</CButtonGroup>
 			</h4>
 			<GenericConfirmModal ref={confirmModal} />
 			<ActionsList

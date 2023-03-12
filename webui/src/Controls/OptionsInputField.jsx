@@ -77,7 +77,12 @@ export function OptionsInputField({
 			break
 		}
 		case 'checkbox': {
-			control = <CheckboxInputField value={value} disabled={readonly} setValue={setValue2} />
+			control = (
+				<p>
+					<CheckboxInputField value={value} disabled={readonly} setValue={setValue2} />
+					&nbsp;
+				</p>
+			)
 			break
 		}
 		case 'colorpicker': {
