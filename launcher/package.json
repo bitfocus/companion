@@ -69,7 +69,13 @@
 		},
 		"linux": {
 			"target": "dir",
-			"artifactName": "companion-x64"
+			"artifactName": "companion-x64",
+			"extraFiles": [
+				{
+					"from": "../assets/linux",
+					"to": "."
+				}
+			]
 		},
 		"files": [
 			"**/*",

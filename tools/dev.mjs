@@ -72,13 +72,13 @@ function restart() {
 	console.log('RESTARTING')
 	console.log('********')
 
-	if (node) {
+	if (!node) {
+		start()
+	} else if (node.listenerCount('exit') === 0) {
 		node.on('exit', () => {
 			node = null
 			start()
 		})
-	} else {
-		start()
 	}
 }
 

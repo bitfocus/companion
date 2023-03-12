@@ -4,8 +4,6 @@ FROM node:18-bullseye as companion-builder
 RUN apt-get update && apt-get install -y \
     libusb-1.0-0-dev \
     libudev-dev \
-    unzip \
-    cmake \
     && rm -rf /var/lib/apt/lists/*
 
 RUN yarn config set network-timeout 200000 -g
