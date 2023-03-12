@@ -63,9 +63,15 @@ async function start() {
 }
 
 function restart() {
-	if (node && !node.kill()) {
-		console.error('Failed to kill')
-		process.exit(1)
+	if (node) {
+		// Check if process has already exited
+		if (node.exitCode !== null) node = null
+
+		// Try and kill the process
+		if (!node.kill()) {
+			console.error('Failed to kill')
+			process.exit(1)
+		}
 	}
 
 	console.log('********')
@@ -74,8 +80,8 @@ function restart() {
 
 	if (!node) {
 		start()
-	} else if (node.listenerCount('exit') === 0) {
-		node.on('exit', () => {
+	} else if (node.listenerCount('close') === 0) {
+		node.on('close', () => {
 			node = null
 			start()
 		})
