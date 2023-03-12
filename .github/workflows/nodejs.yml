@@ -72,7 +72,7 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: do-docker-build
-          path: BUILD
+          path: dist/BUILD
 
   linux-arm64:
     runs-on: ubuntu-20.04
@@ -361,7 +361,7 @@ jobs:
         if: ${{ steps.build-check.outputs.exists }}
         id: image-name
         run: |
-          BUILD_VERSION=$(cat dist/BUILD)
+          BUILD_VERSION=$(cat BUILD)
 
           IMAGE_ID=ghcr.io/${{ github.repository }}/$IMAGE_NAME
 
