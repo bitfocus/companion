@@ -409,7 +409,7 @@ jobs:
           context: .
           file: Dockerfile.prebuild
           platforms: linux/amd64,linux/arm64/v8
-          push: false
+          push: true
           tags: ${{ steps.image-name.outputs.images }}
           build-args: |
             build_name=${{ steps.image-name.outputs.build_version }}
