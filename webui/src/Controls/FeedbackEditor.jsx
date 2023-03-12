@@ -15,9 +15,9 @@ import {
 	MyErrorBoundary,
 	socketEmitPromise,
 	sandbox,
-	useMountEffect,
 	SocketContext,
 	PreventDefaultHandler,
+	RecentFeedbacksContext,
 } from '../util'
 import Select, { createFilter } from 'react-select'
 import { OptionsInputField } from './OptionsInputField'
@@ -89,14 +89,6 @@ export function ControlFeedbacksEditor({ controlId, feedbacks, heading, booleanO
 
 	const addFeedback = useCallback(
 		(feedbackType) => {
-			setRecentFeedbacks((existing) => {
-				const newActions = [feedbackType, ...existing.filter((v) => v !== feedbackType)].slice(0, 20)
-
-				window.localStorage.setItem('recent_feedbacks', JSON.stringify(newActions))
-
-				return newActions
-			})
-
 			const [instanceId, feedbackId] = feedbackType.split(':', 2)
 			socketEmitPromise(socket, 'controls:feedback:add', [controlId, instanceId, feedbackId]).catch((e) => {
 				console.error('Failed to add bank feedback', e)
@@ -122,19 +114,6 @@ export function ControlFeedbacksEditor({ controlId, feedbacks, heading, booleanO
 		},
 		[socket, controlId]
 	)
-
-	const [recentFeedbacks, setRecentFeedbacks] = useState([])
-	useMountEffect(() => {
-		try {
-			// Load from localStorage at startup
-			const recent = JSON.parse(window.localStorage.getItem('recent_feedbacks') || '[]')
-			if (Array.isArray(recent)) {
-				setRecentFeedbacks(recent)
-			}
-		} catch (e) {
-			setRecentFeedbacks([])
-		}
-	})
 
 	const feedbackIds = useMemo(() => feedbacks.map((fb) => fb.id), [feedbacks])
 	const { setPanelCollapsed, isPanelCollapsed, setAllCollapsed, setAllExpanded, canExpandAll, canCollapseAll } =
@@ -195,12 +174,7 @@ export function ControlFeedbacksEditor({ controlId, feedbacks, heading, booleanO
 			</table>
 
 			<div className="add-dropdown-wrapper">
-				<AddFeedbackDropdown
-					onSelect={addFeedback}
-					recentFeedbacks={recentFeedbacks}
-					booleanOnly={booleanOnly}
-					addPlaceholder={addPlaceholder}
-				/>
+				<AddFeedbackDropdown onSelect={addFeedback} booleanOnly={booleanOnly} addPlaceholder={addPlaceholder} />
 				<CButton
 					color="primary"
 					onClick={showAddModal}
@@ -602,7 +576,8 @@ const noOptionsMessage = ({ inputValue }) => {
 	}
 }
 
-function AddFeedbackDropdown({ onSelect, booleanOnly, recentFeedbacks, addPlaceholder }) {
+function AddFeedbackDropdown({ onSelect, booleanOnly, addPlaceholder }) {
+	const recentFeedbacksContext = useContext(RecentFeedbacksContext)
 	const menuPortal = useContext(MenuPortalContext)
 	const feedbacksContext = useContext(FeedbacksContext)
 	const instancesContext = useContext(InstancesContext)
@@ -623,7 +598,7 @@ function AddFeedbackDropdown({ onSelect, booleanOnly, recentFeedbacks, addPlaceh
 		}
 
 		const recents = []
-		for (const feedbackType of recentFeedbacks || []) {
+		for (const feedbackType of recentFeedbacksContext.recentFeedbacks || []) {
 			if (feedbackType) {
 				const [instanceId, feedbackId] = feedbackType.split(':', 2)
 				const feedbackInfo = feedbacksContext[instanceId]?.[feedbackId]
@@ -643,15 +618,17 @@ function AddFeedbackDropdown({ onSelect, booleanOnly, recentFeedbacks, addPlaceh
 		})
 
 		return options
-	}, [feedbacksContext, instancesContext, booleanOnly, recentFeedbacks])
+	}, [feedbacksContext, instancesContext, booleanOnly, recentFeedbacksContext.recentFeedbacks])
 
 	const innerChange = useCallback(
 		(e) => {
 			if (e.value) {
+				recentFeedbacksContext.trackRecentFeedback(e.value)
+
 				onSelect(e.value)
 			}
 		},
-		[onSelect]
+		[onSelect, recentFeedbacksContext]
 	)
 
 	return (

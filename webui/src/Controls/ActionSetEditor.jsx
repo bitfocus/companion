@@ -16,9 +16,9 @@ import {
 	MyErrorBoundary,
 	socketEmitPromise,
 	sandbox,
-	useMountEffect,
 	SocketContext,
 	PreventDefaultHandler,
+	RecentActionsContext,
 } from '../util'
 import Select, { createFilter } from 'react-select'
 import { OptionsInputField } from './OptionsInputField'
@@ -163,7 +163,7 @@ export function ControlActionSetEditor({ controlId, stepId, setId, actions, addP
 	)
 }
 
-export function AddActionsPanel({ addPlaceholder, addAction }) {
+function AddActionsPanel({ addPlaceholder, addAction }) {
 	const addActionsRef = useRef(null)
 	const showAddModal = useCallback(() => {
 		if (addActionsRef.current) {
@@ -171,43 +171,15 @@ export function AddActionsPanel({ addPlaceholder, addAction }) {
 		}
 	}, [])
 
-	const [recentActions, setRecentActions] = useState([])
-	useMountEffect(() => {
-		try {
-			// Load from localStorage at startup
-			const recent = JSON.parse(window.localStorage.getItem('recent_actions') || '[]')
-			if (Array.isArray(recent)) {
-				setRecentActions(recent)
-			}
-		} catch (e) {
-			setRecentActions([])
-		}
-	})
-
-	const addAction2 = useCallback(
-		(actionType) => {
-			setRecentActions((existing) => {
-				const newActions = [actionType, ...existing.filter((v) => v !== actionType)].slice(0, 20)
-
-				window.localStorage.setItem('recent_actions', JSON.stringify(newActions))
-
-				return newActions
-			})
-
-			addAction(actionType)
-		},
-		[addAction]
-	)
-
 	return (
 		<div className="add-dropdown-wrapper">
-			<AddActionDropdown onSelect={addAction2} placeholder={addPlaceholder} recentActions={recentActions} />
+			<AddActionDropdown onSelect={addAction} placeholder={addPlaceholder} />
 			<CButton color="primary" onClick={showAddModal} style={{ borderTopLeftRadius: 0, borderBottomLeftRadius: 0 }}>
 				<FontAwesomeIcon icon={faFolderOpen} />
 			</CButton>
 
 			<MyErrorBoundary>
-				<AddActionsModal ref={addActionsRef} addAction={addAction2} />
+				<AddActionsModal ref={addActionsRef} addAction={addAction} />
 			</MyErrorBoundary>
 		</div>
 	)
@@ -580,7 +552,8 @@ const noOptionsMessage = ({ inputValue }) => {
 	}
 }
 
-function AddActionDropdown({ onSelect, placeholder, recentActions }) {
+function AddActionDropdown({ onSelect, placeholder }) {
+	const recentActionsContext = useContext(RecentActionsContext)
 	const menuPortal = useContext(MenuPortalContext)
 	const instancesContext = useContext(InstancesContext)
 	const actionsContext = useContext(ActionsContext)
@@ -599,7 +572,7 @@ function AddActionDropdown({ onSelect, placeholder, recentActions }) {
 		}
 
 		const recents = []
-		for (const actionType of recentActions) {
+		for (const actionType of recentActionsContext.recentActions) {
 			if (actionType) {
 				const [instanceId, actionId] = actionType.split(':', 2)
 				const actionInfo = actionsContext[instanceId]?.[actionId]
@@ -619,15 +592,17 @@ function AddActionDropdown({ onSelect, placeholder, recentActions }) {
 		})
 
 		return options
-	}, [actionsContext, instancesContext, recentActions])
+	}, [actionsContext, instancesContext, recentActionsContext.recentActions])
 
 	const innerChange = useCallback(
 		(e) => {
 			if (e.value) {
+				recentActionsContext.trackRecentAction(e.value)
+
 				onSelect(e.value)
 			}
 		},
-		[onSelect]
+		[onSelect, recentActionsContext]
 	)
 
 	return (

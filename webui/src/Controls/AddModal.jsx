@@ -11,9 +11,16 @@ import {
 	CModalHeader,
 } from '@coreui/react'
 import React, { forwardRef, useCallback, useContext, useImperativeHandle, useMemo, useState } from 'react'
-import { ActionsContext, FeedbacksContext, InstancesContext } from '../util'
+import {
+	ActionsContext,
+	FeedbacksContext,
+	InstancesContext,
+	RecentActionsContext,
+	RecentFeedbacksContext,
+} from '../util'
 
 export const AddActionsModal = forwardRef(function AddActionsModal({ addAction }, ref) {
+	const recentActionsContext = useContext(RecentActionsContext)
 	const actions = useContext(ActionsContext)
 	const instances = useContext(InstancesContext)
 
@@ -46,6 +53,15 @@ export const AddActionsModal = forwardRef(function AddActionsModal({ addAction }
 	}, [])
 	const [filter, setFilter] = useState('')
 
+	const addAction2 = useCallback(
+		(actionType) => {
+			recentActionsContext.trackRecentAction(actionType)
+
+			addAction(actionType)
+		},
+		[recentActionsContext, addAction]
+	)
+
 	return (
 		<CModal show={show} onClose={doClose} onClosed={onClosed} size="lg" scrollable={true}>
 			<CModalHeader closeButton>
@@ -72,7 +88,7 @@ export const AddActionsModal = forwardRef(function AddActionsModal({ addAction }
 						expanded={!!filter || expanded[instanceId]}
 						filter={filter}
 						doToggle={toggle}
-						doAdd={addAction}
+						doAdd={addAction2}
 					/>
 				))}
 			</CModalBody>
@@ -86,6 +102,7 @@ export const AddActionsModal = forwardRef(function AddActionsModal({ addAction }
 })
 
 export const AddFeedbacksModal = forwardRef(function AddFeedbacksModal({ addFeedback, booleanOnly }, ref) {
+	const recentFeedbacksContext = useContext(RecentFeedbacksContext)
 	const feedbacks = useContext(FeedbacksContext)
 	const instances = useContext(InstancesContext)
 
@@ -118,6 +135,15 @@ export const AddFeedbacksModal = forwardRef(function AddFeedbacksModal({ addFeed
 	}, [])
 	const [filter, setFilter] = useState('')
 
+	const addFeedback2 = useCallback(
+		(feedbackType) => {
+			recentFeedbacksContext.trackRecentFeedback(feedbackType)
+
+			addFeedback(feedbackType)
+		},
+		[recentFeedbacksContext, addFeedback]
+	)
+
 	return (
 		<CModal show={show} onClose={doClose} onClosed={onClosed} size="lg" scrollable={true}>
 			<CModalHeader closeButton>
@@ -144,7 +170,7 @@ export const AddFeedbacksModal = forwardRef(function AddFeedbacksModal({ addFeed
 						filter={filter}
 						booleanOnly={booleanOnly}
 						doToggle={toggle}
-						doAdd={addFeedback}
+						doAdd={addFeedback2}
 					/>
 				))}
 			</CModalBody>
