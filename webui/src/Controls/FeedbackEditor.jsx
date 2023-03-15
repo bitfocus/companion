@@ -30,6 +30,7 @@ import { usePanelCollapseHelper } from '../Helpers/CollapseHelper'
 import { OptionButtonPreview } from './OptionButtonPreview'
 import { MenuPortalContext } from '../Components/DropdownInputField'
 import { ParseControlId } from '@companion/shared/ControlId'
+import { ButtonStyleProperties } from '@companion/shared/Style'
 
 export function ControlFeedbacksEditor({ controlId, feedbacks, heading, booleanOnly, isOnControl, addPlaceholder }) {
 	const socket = useContext(SocketContext)
@@ -474,16 +475,7 @@ function FeedbackEditor({
 
 function FeedbackManageStyles({ feedbackSpec, feedback, setSelectedStyleProps }) {
 	if (feedbackSpec?.type === 'boolean') {
-		const choices = [
-			{ id: 'text', label: 'Text' },
-			{ id: 'size', label: 'Font Size' },
-			{ id: 'png64', label: 'PNG' },
-			{ id: 'alignment', label: 'Text Alignment' },
-			{ id: 'pngalignment', label: 'PNG Alignment' },
-			{ id: 'color', label: 'Color' },
-			{ id: 'bgcolor', label: 'Background' },
-		]
-		const choicesSet = new Set(choices.map((c) => c.id))
+		const choicesSet = new Set(ButtonStyleProperties.map((c) => c.id))
 		const currentValue = Object.keys(feedback.style || {}).filter((id) => choicesSet.has(id))
 
 		return (
@@ -494,7 +486,7 @@ function FeedbackManageStyles({ feedbackSpec, feedback, setSelectedStyleProps })
 							<label>Change style properties</label>
 							<DropdownInputField
 								multiple={true}
-								choices={choices}
+								choices={ButtonStyleProperties}
 								setValue={setSelectedStyleProps}
 								value={currentValue}
 							/>
