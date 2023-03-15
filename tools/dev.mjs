@@ -68,7 +68,7 @@ function restart() {
 		if (node.exitCode !== null) node = null
 
 		// Try and kill the process
-		if (!node.kill()) {
+		if (node && !node.kill()) {
 			console.error('Failed to kill')
 			process.exit(1)
 		}
