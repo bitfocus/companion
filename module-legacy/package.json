@@ -68,6 +68,7 @@
     "companion-module-bmd-multiview16": "github:bitfocus/companion-module-bmd-multiview16#v1.0.1",
     "companion-module-bmd-multiview4": "github:bitfocus/companion-module-bmd-multiview4#v1.3.5",
     "companion-module-bmd-teranex": "github:bitfocus/companion-module-bmd-teranex#v1.0.9",
+		"companion-module-bmd-videohub": "github:bitfocus/companion-module-bmd-videohub#v1.4.0",
     "companion-module-bmd-webpresenterhd": "github:bitfocus/companion-module-bmd-webpresenterhd#v1.0.6",
     "companion-module-boinx-mimolive": "github:bitfocus/companion-module-boinx-mimolive#v1.0.3",
     "companion-module-brightsign-player": "github:bitfocus/companion-module-brightsign-player#v1.1.2",
