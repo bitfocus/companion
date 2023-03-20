@@ -53,15 +53,17 @@ for (const name of neededDependencies) {
 	dependencies[name] = pkgJson.version
 }
 
+const nodeVersion = await fs.readFile('.node-version')
 await fs.writeFile(
 	'dist/package.json',
 	JSON.stringify(
 		{
-			name: 'companion-dist',
+			name: 'companion',
 			version: buildString,
 			license: 'MIT',
 			main: 'main.js',
 			dependencies: dependencies,
+			engines: { node: nodeVersion.toString() },
 		},
 		undefined,
 		2
@@ -71,7 +73,7 @@ await fs.copyFile('yarn.lock', 'dist/yarn.lock') // use the same yarn.lock file,
 await fs.copyFile('.node-version', 'dist/.node-version')
 
 // Copy prebuilds
-const copyPrebuildsFromDependencies = ['@julusian/jpeg-turbo']
+const copyPrebuildsFromDependencies = ['@julusian/jpeg-turbo', 'node-hid', '@julusian/image-rs']
 for (const name of copyPrebuildsFromDependencies) {
 	await fs.mkdirp('dist/prebuilds')
 	await fs.copy(path.join('node_modules', name, 'prebuilds'), 'dist/prebuilds')

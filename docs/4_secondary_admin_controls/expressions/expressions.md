@@ -11,6 +11,6 @@ You can also do more complex expressions with conditional logic, such as `($(int
 
 There are various functions that you can use. These can be used in the usual ways to do various things. For example `round($(internal:a))`. There is a full list of available functions documented below.
 
-Strings can be formed in a couple of ways. Either using the addition operator such as `$(internal:a) + 'dB'` or using `` `${$(internal:a)}dB` `` You can use anything instead of `$(internal:a)`, even other templates and conditional logic.
+Strings can be formed using `` `${$(internal:a)}dB` ``. You can use anything instead of `$(internal:a)`, even other templates and conditional logic.
 
 All of these features can be combined into long and complex expressions, and more is sure to be possible in the future. We look forward to seeing what you come up with!

@@ -13,7 +13,7 @@ export const UnstableWarningModal = memo(function UnstableWarningModal() {
 	}, [])
 
 	return show !== null ? (
-		<CModal show={show} onClose={doClose} className={'wizard'} size="lg" closeOnBackdrop={false}>
+		<CModal show={show} onClose={doClose} className={'unstable-warning'} size="lg" closeOnBackdrop={false}>
 			<CModalHeader>
 				<h2>
 					<img src="/img/icons/48x48.png" height="30" alt="logo" />

@@ -3,7 +3,6 @@ import {
 	CButton,
 	CCard,
 	CCardBody,
-	CCardHeader,
 	CCollapse,
 	CInput,
 	CModal,
@@ -55,13 +54,14 @@ export const AddActionsModal = forwardRef(function AddActionsModal({ addAction }
 			<CModalHeader>
 				<CInput
 					type="text"
-					placeholder="Search ..."
+					placeholder="Search..."
 					onChange={(e) => setFilter(e.currentTarget.value)}
 					value={filter}
-					style={{ fontSize: '1.2em' }}
+					autoFocus={true}
+					style={{ fontSize: '1.5em' }}
 				/>
 			</CModalHeader>
-			<CModalBody>
+			<CModalBody className="shadow-inset">
 				{Object.entries(actions).map(([instanceId, items]) => (
 					<InstanceCollapse
 						key={instanceId}
@@ -210,7 +210,9 @@ function InstanceCollapse({
 	} else {
 		return (
 			<CCard className={'add-browse-card'}>
-				<CCardHeader onClick={doToggle2}>{instanceInfo?.label || instanceId}</CCardHeader>
+				<div className="header" onClick={doToggle2}>
+					{instanceInfo?.label || instanceId}
+				</div>
 				<CCollapse show={expanded}>
 					<CCardBody>
 						{!Array.isArray(candidates) ? (
@@ -237,17 +239,11 @@ function AddRow({ info, id, doAdd }) {
 	const doAdd2 = useCallback(() => doAdd(id), [doAdd, id])
 
 	return (
-		<tr>
-			{/* <p>{id}</p> */}
+		<tr onClick={doAdd2} className="clickable-add-item">
 			<td>
 				<span className="item-label">{info.label}</span>
 				<br />
 				{info.description || ''}
-			</td>
-			<td>
-				<CButton color="primary" onClick={doAdd2}>
-					Add
-				</CButton>
 			</td>
 		</tr>
 	)

@@ -61,15 +61,15 @@ export function ColorInputField({ value, setValue, setValid, disabled }) {
 	const styles = {
 		color: {
 			width: '36px',
-			height: '14px',
-			borderRadius: '2px',
+			height: '32px',
+			borderRadius: '3px',
 			background: `rgb(${color.r}, ${color.g}, ${color.b})`,
 		},
 		swatch: {
-			padding: '5px',
+			padding: '2px',
 			background: '#fff',
-			borderRadius: '1px',
-			boxShadow: '0 0 0 1px rgba(0,0,0,.1)',
+			borderRadius: '3px',
+			boxShadow: '0 0 0 1px rgba(0,0,0,.3)',
 			display: 'inline-block',
 			cursor: 'pointer',
 		},

@@ -1,0 +1,33 @@
+# Quickstart guide
+
+1. Headless Companion
+
+   If you want to run companion on a headless machine, consider using the CompanionPi install script
+
+   This can be run with:
+   $ curl https://raw.githubusercontent.com/bitfocus/companion-pi/main/install.sh | sh
+
+   The benefit of this approach is that it will setup and manage any required dependencies, udev rules for you, and provide you with an easy script to run to perform an update.
+
+   Alternatively, you are able to set it up yourself and define a systemd unit to launch it or do whatever you wish. For examples on how to do this, check the scripts in the CompanionPi repository https://github.com/bitfocus/companion-pi#other-debianubuntu
+
+2. Required Dependencies
+
+   Companion requires some depdencies that aren't included by default on some Debian and Ubuntu installations.
+
+   $ apt-get update
+   $ apt-get install -y libusb-1.0-0-dev libudev-dev
+
+3. Udev rules
+
+   For Companion to be able to access your Streamdecks, Loupedecks, xkeys or other supported USB devices, some udev rules must be setup.
+   You can do this by running as root:
+   $ cp 50-companion.rules /etc/udev/rules.d/50-companion.rules
+   $ udevadm control --reload-rules
+   And replugging any usb devices that Companion should be able to use.
+
+   Sometimes this file can change, when adding support for new devices, so it can be a good idea to update it when updating Companion.
+
+4. Launching
+
+   To run companion, either run companion-launcher to get the desktop build, or run the ./companion_headless.sh script to start it headless.

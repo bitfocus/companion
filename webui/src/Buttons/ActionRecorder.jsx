@@ -7,6 +7,7 @@ import {
 	applyPatchOrReplaceObject,
 	PagesContext,
 	TriggersContext,
+	PreventDefaultHandler,
 } from '../util'
 import { CreateTriggerControlId, CreateBankControlId } from '@companion/shared/ControlId'
 import {
@@ -34,7 +35,7 @@ import { useMemo } from 'react'
 import { DropdownInputField } from '../Components'
 import { ActionsList } from '../Controls/ActionSetEditor'
 import { GenericConfirmModal } from '../Components/GenericConfirmModal'
-import { ButtonGrid, ButtonGridHeader } from './ButtonGrid'
+import { ButtonGrid, ButtonGridHeader, usePagePicker } from './ButtonGrid'
 import { cloneDeep } from 'lodash-es'
 import jsonPatch from 'fast-json-patch'
 import { usePanelCollapseHelper } from '../Helpers/CollapseHelper'
@@ -160,10 +161,6 @@ export function ActionRecorder() {
 function RecorderSessionFinishModal({ doClose, sessionId }) {
 	const socket = useContext(SocketContext)
 
-	const blockAction = useCallback((e) => {
-		e.preventDefault()
-	}, [])
-
 	const doSave = useCallback(
 		(controlId, stepId, setId, mode) => {
 			socketEmitPromise(socket, 'action-recorder:session:save-to-control', [sessionId, controlId, stepId, setId, mode])
@@ -182,7 +179,7 @@ function RecorderSessionFinishModal({ doClose, sessionId }) {
 	return (
 		<CModal innerRef={setModalRef} show={true} onClose={doClose} size="lg">
 			<MenuPortalContext.Provider value={modalRef}>
-				<CForm onSubmit={blockAction} className={'action-recorder-finish-panel'}>
+				<CForm onSubmit={PreventDefaultHandler} className={'action-recorder-finish-panel'}>
 					<CModalHeader closeButton>
 						<h5>Select destination</h5>
 					</CModalHeader>
@@ -228,34 +225,12 @@ function RecorderSessionFinishModal({ doClose, sessionId }) {
 function ButtonPicker({ selectButton }) {
 	const socket = useContext(SocketContext)
 	const pages = useContext(PagesContext)
-	const pagesRef = useRef()
 
-	useEffect(() => {
-		// Avoid binding into callbacks
-		pagesRef.current = pages
-	}, [pages])
+	const { pageNumber, setPageNumber, changePage } = usePagePicker(pages, 1)
 
-	const [pageNumber, setPageNumber] = useState(1)
 	const [selectedControl, setSelectedControl] = useState(null)
 	const [selectedStep, setSelectedStep] = useState(null)
 	const [selectedSet, setSelectedSet] = useState(null)
-
-	const changePage = useCallback((delta) => {
-		setPageNumber((pageNumber) => {
-			const pageNumbers = Object.keys(pagesRef.current || {})
-			const currentIndex = pageNumbers.findIndex((p) => p === pageNumber + '')
-			let newPage = pageNumbers[0]
-			if (currentIndex !== -1) {
-				let newIndex = currentIndex + delta
-				if (newIndex < 0) newIndex += pageNumbers.length
-				if (newIndex >= pageNumbers.length) newIndex -= pageNumbers.length
-
-				newPage = pageNumbers[newIndex]
-			}
-
-			return newPage ?? pageNumber
-		})
-	}, [])
 
 	const bankClick = useCallback(
 		(bank, pressed) => {
@@ -405,7 +380,7 @@ function ButtonPicker({ selectButton }) {
 			</CRow>
 			<CRow>
 				<CCol sm={12}>
-					<CForm className="edit-button-panel">
+					<CForm className="edit-button-panel" onSubmit={PreventDefaultHandler}>
 						<CRow form>
 							<CCol className="fieldtype-checkbox" sm={10} xs={9} hidden={actionStepOptions.length <= 1}>
 								<CLabel>Step</CLabel>
@@ -501,7 +476,9 @@ function TriggerPicker({ selectControl }) {
 						))
 					) : (
 						<tr>
-							<td colSpan="2">There currently are no triggers or scheduled tasks.</td>
+							<td colSpan="2" className="currentlyNone">
+								There currently are no triggers or scheduled tasks.
+							</td>
 						</tr>
 					)}
 				</tbody>
@@ -581,7 +558,7 @@ function RecorderSessionHeading({ confirmRef, sessionId, sessionInfo, doFinish }
 
 	return (
 		<>
-			<CForm className="edit-button-panel">
+			<CForm className="edit-button-panel" onSubmit={PreventDefaultHandler}>
 				<CRow form>
 					<CCol className="fieldtype-checkbox" sm={10} xs={9}>
 						<CLabel>Connections</CLabel>
@@ -595,20 +572,20 @@ function RecorderSessionHeading({ confirmRef, sessionId, sessionInfo, doFinish }
 
 					<CCol className="fieldtype-checkbox" sm={2} xs={3}>
 						<CLabel>Recording</CLabel>
-						<p>
-							<CSwitch color="primary" size="lg" checked={!!sessionInfo.isRunning} onChange={changeRecording} />
-						</p>
+						<span style={{ marginTop: 4, display: 'inline-block' }}>
+							<CSwitch color="success" size="lg" checked={!!sessionInfo.isRunning} onChange={changeRecording} />
+						</span>
 					</CCol>
 				</CRow>
 			</CForm>
 			<CButtonGroup className={'margin-bottom'}>
-				<CButton onClick={doClearActions} color="warning" disabled={!sessionInfo.actions?.length}>
+				<CButton onClick={doClearActions} color="danger" disabled={!sessionInfo.actions?.length}>
 					Clear Actions
 				</CButton>
 				<CButton onClick={doAbort} color="danger">
 					Discard
 				</CButton>
-				<CButton onClick={doFinish2} color="success" disabled={!sessionInfo.actions?.length}>
+				<CButton onClick={doFinish2} color="danger" disabled={!sessionInfo.actions?.length}>
 					Finish
 				</CButton>
 			</CButtonGroup>

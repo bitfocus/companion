@@ -2,7 +2,7 @@
 
 ## Companion v3.0.0 - Unreleased
 
-Documented up to 4be5e8db1dcac5801aa1402264c1fb2feee12360
+Documented up to bb3d1052f9b99bd1567749a98f8278aef26d4ef4
 
 ### BREAKING CHANGES
 
@@ -11,6 +11,7 @@ Documented up to 4be5e8db1dcac5801aa1402264c1fb2feee12360
 - Companion now runs on node 18. This should have no impact to users, only module developers.
 - Large parts of the internals of Companion have been overhauled or rewritten.
 - Format of streamdeck and other surfaces ids have changed. They may become unlinked in some places
+- Some modules have made some breaking changes due to new requirements from Companion. Make sure to check everything over before your first show.
 
 ### 📣 CORE FEATURES AND IMPROVEMENTS
 
@@ -36,6 +37,14 @@ Documented up to 4be5e8db1dcac5801aa1402264c1fb2feee12360
 - Overhaul triggers editor to be like the button editor
 - Support multiple event sources per trigger, and a separate condition
 - Image buffers returned from feedbacks will now be properly composited
+- Launcher option to run at login
+- Improved search function in add connections list
+- Support rotary events from elgato streamdeck plugin
+- Improved expression syntax with support for functions and strings
+- UI style improvements
+- New import/export system, allowing for more fine-grained control
+- New variables of page names
+- Rework internal actions to have less duplication
 
 ### 🐞 BUG FIXES
 

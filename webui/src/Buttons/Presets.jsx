@@ -109,7 +109,11 @@ function PresetsInstanceList({ presets, setInstanceAndCategory }) {
 
 		return (
 			<div key={id}>
-				<CButton color="info" className="choose_instance mr-2 mb-2" onClick={() => setInstanceAndCategory([id, null])}>
+				<CButton
+					color="danger"
+					className="choose_instance mr-2 mb-2"
+					onClick={() => setInstanceAndCategory([id, null])}
+				>
 					{module?.name ?? '?'} ({instance?.label ?? id})
 				</CButton>
 			</div>
@@ -143,7 +147,12 @@ function PresetsCategoryList({ presets, instance, module, selectedInstanceId, se
 
 	const buttons = Array.from(categories).map((category) => {
 		return (
-			<CButton key={category} color="info" block onClick={() => setInstanceAndCategory([selectedInstanceId, category])}>
+			<CButton
+				key={category}
+				color="danger"
+				block
+				onClick={() => setInstanceAndCategory([selectedInstanceId, category])}
+			>
 				{category}
 			</CButton>
 		)

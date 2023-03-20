@@ -2,7 +2,7 @@ import { CButton, CCol, CForm, CInputGroup, CInputGroupAppend, CLabel, CRow } fr
 import React, { useCallback, useContext, useEffect, useRef, useState } from 'react'
 import { nanoid } from 'nanoid'
 import { GenericConfirmModal } from '../Components/GenericConfirmModal'
-import { LoadingRetryOrError, socketEmitPromise, SocketContext, MyErrorBoundary } from '../util'
+import { LoadingRetryOrError, socketEmitPromise, SocketContext, MyErrorBoundary, PreventDefaultHandler } from '../util'
 import { ControlActionSetEditor } from '../Controls/ActionSetEditor'
 import jsonPatch from 'fast-json-patch'
 
@@ -139,6 +139,7 @@ export function EditTriggerPanel({ controlId }) {
 									feedbacks={config.condition}
 									booleanOnly={true}
 									isOnControl={false}
+									addPlaceholder="+ Add condition"
 								/>
 							</MyErrorBoundary>
 
@@ -185,7 +186,7 @@ function TriggerConfig({ controlId, options, hotPressDown }) {
 
 	return (
 		<CCol sm={12} className="p-0">
-			<CForm>
+			<CForm onSubmit={PreventDefaultHandler}>
 				<CRow form className="button-style-form">
 					<CCol className="fieldtype-checkbox" xs={12}>
 						<CLabel>Name</CLabel>

@@ -10,6 +10,8 @@ import {
 	faTerminal,
 	faCheckCircle,
 	faQuestionCircle,
+	faBug,
+	faEyeSlash,
 } from '@fortawesome/free-solid-svg-icons'
 
 import { InstanceVariablesModal } from './InstanceVariablesModal'
@@ -115,6 +117,7 @@ export function InstancesList({ showHelp, doConfigureInstance, instanceStatus })
 	return (
 		<div>
 			<h4>Connections</h4>
+
 			<p>
 				When you want to control devices or software with Companion, you need to add a connection to let Companion know
 				how to communicate with whatever you want to control.
@@ -123,51 +126,59 @@ export function InstancesList({ showHelp, doConfigureInstance, instanceStatus })
 			<GenericConfirmModal ref={deleteModalRef} />
 			<InstanceVariablesModal ref={variablesModalRef} />
 
-			<CButtonGroup style={{ marginBottom: '0.3em' }}>
-				<CButton
-					size="sm"
-					color="light"
-					style={{ opacity: visibleConnections.disabled ? 1 : 0.2 }}
-					onClick={doToggleDisabled}
-				>
-					Disabled
-				</CButton>
-				<CButton size="sm" color="success" style={{ opacity: visibleConnections.ok ? 1 : 0.2 }} onClick={doToggleOk}>
-					OK
-				</CButton>
-				<CButton
-					size="sm"
-					color="warning"
-					style={{ opacity: visibleConnections.warning ? 1 : 0.2 }}
-					onClick={doToggleWarning}
-				>
-					Warning
-				</CButton>
-				<CButton
-					size="sm"
-					color="danger"
-					style={{ opacity: visibleConnections.error ? 1 : 0.2 }}
-					onClick={doToggleError}
-				>
-					Error
-				</CButton>
-			</CButtonGroup>
-
 			<table className="table-tight table-responsive-sm">
 				<thead>
 					<tr>
 						<th className="fit">&nbsp;</th>
 						<th>Label</th>
 						<th>Module</th>
-						<th>Status</th>
-						<th className="fit">&nbsp;</th>
+						<th colSpan={2} className="fit">
+							Status
+							<CButtonGroup style={{ float: 'right', margin: 0 }}>
+								<CButton
+									color="secondary"
+									size="sm"
+									style={{ opacity: visibleConnections.disabled ? 1 : 0.4, padding: '1px 5px', color: 'black' }}
+									onClick={doToggleDisabled}
+								>
+									Disabled
+								</CButton>
+								<CButton
+									size="sm"
+									color="success"
+									style={{ opacity: visibleConnections.ok ? 1 : 0.4, padding: '1px 5px' }}
+									onClick={doToggleOk}
+								>
+									OK
+								</CButton>
+								<CButton
+									color="warning"
+									size="sm"
+									style={{ opacity: visibleConnections.warning ? 1 : 0.4, padding: '1px 5px' }}
+									onClick={doToggleWarning}
+								>
+									Warning
+								</CButton>
+								<CButton
+									color="danger"
+									size="sm"
+									style={{ opacity: visibleConnections.error ? 1 : 0.4, padding: '1px 5px' }}
+									onClick={doToggleError}
+								>
+									Error
+								</CButton>
+							</CButtonGroup>
+						</th>
 					</tr>
 				</thead>
 				<tbody>
 					{rows}
 					{hiddenCount > 0 && (
 						<tr>
-							<td colSpan={4}>{hiddenCount} Connections are hidden</td>
+							<td colSpan={4} style={{ padding: '10px 5px' }}>
+								<FontAwesomeIcon icon={faEyeSlash} style={{ marginRight: '0.5em', color: 'red' }} />
+								<strong>{hiddenCount} Connections are hidden</strong>
+							</td>
 						</tr>
 					)}
 					{Object.keys(instancesContext).length === 0 && (
@@ -222,7 +233,6 @@ function InstancesTableRow({
 
 	const moduleInfo = modules[instance.instance_type]
 
-	const status = processModuleStatus(instanceStatus)
 	const isEnabled = instance.enabled === undefined || instance.enabled
 
 	const doDelete = useCallback(() => {
@@ -302,21 +312,11 @@ function InstancesTableRow({
 								<FontAwesomeIcon
 									icon={faExclamationTriangle}
 									color="#f80"
-									title="This module has not been updated for Companion 3.0, and may be broken as a result"
+									title="This module has not been updated for Companion 3.0, and may not work fully"
 								/>{' '}
 							</>
 						)}
 						{moduleInfo?.shortname ?? ''}
-						{/*	
-						{moduleInfo.hasHelp && (
-							<span onClick={doShowHelp} title="Help">
-								<FontAwesomeIcon icon={faQuestionCircle} />
-							</span>
-						)}
-							<WindowLinkOpen href={moduleInfo.bugUrl} title="Report Bug">
-								<FontAwesomeIcon icon={faBug} color="#faa" />
-							</WindowLinkOpen>
-							*/}
 
 						<br />
 						{moduleInfo?.manufacturer ?? ''}
@@ -325,21 +325,7 @@ function InstancesTableRow({
 					instance.instance_type
 				)}
 			</td>
-			<td onClick={doEdit} className={status.text === 'ok' ? 'hand' : status.className}>
-				{isEnabled ? (
-					<>
-						{status.text === 'ok' ? <FontAwesomeIcon icon={faCheckCircle} color={'#33aa33'} size="2xl" /> : status.text}
-						{status.text !== 'ok' && (
-							<>
-								<br />
-								{typeof status.message === 'string' ? status.message : JSON.stringify(status.message)}
-							</>
-						)}
-					</>
-				) : (
-					<p>Disabled</p>
-				)}
-			</td>
+			<ModuleStatusCall isEnabled={isEnabled} status={instanceStatus} />
 			<td className="action-buttons">
 				<div style={{ display: 'flex' }}>
 					<div>
@@ -348,10 +334,20 @@ function InstancesTableRow({
 								onClick={doShowHelp}
 								title="Help"
 								size="md"
-								disabled={!isEnabled || !moduleInfo?.hasHelp}
+								disabled={!moduleInfo?.hasHelp}
 								style={{ padding: 4 }}
 							>
 								<FontAwesomeIcon icon={faQuestionCircle} />
+							</CButton>
+
+							<CButton
+								onClick={(e) => windowLinkOpen({ href: moduleInfo?.bugUrl })}
+								size="md"
+								title="Issue Tracker"
+								disabled={!moduleInfo?.bugUrl}
+								style={{ padding: 4 }}
+							>
+								<FontAwesomeIcon icon={faBug} />
 							</CButton>
 
 							<CButton
@@ -397,46 +393,51 @@ function InstancesTableRow({
 	)
 }
 
-function processModuleStatus(status) {
-	if (status) {
-		switch (status.category) {
-			case -1:
-				return {
-					message: '',
-					text: 'Disabled',
-					className: 'instance-status-disabled',
-				}
-			case 'good':
-				return {
-					message: status.message || '',
-					text: status.level || 'OK',
-					className: 'instance-status-ok',
-				}
-			case 'warning':
-				return {
-					message: status.message || '',
-					text: status.level || 'Warning',
-					className: 'instance-status-warn',
-				}
-			case 'error':
-				return {
-					message: status.message || '',
-					text: status.level || 'ERROR',
-					className: 'instance-status-error',
-				}
-			case null:
-			default:
-				return {
-					message: status.message || '',
-					text: 'Unknown' || '',
-					className: '',
-				}
-		}
-	}
+function ModuleStatusCall({ isEnabled, status }) {
+	if (isEnabled) {
+		const messageStr =
+			!!status &&
+			(typeof status.message === 'string' || typeof status.message === 'number' || !status.message
+				? status.message || ''
+				: JSON.stringify(status.message))
 
-	return {
-		title: '',
-		text: '',
-		className: '',
+		switch (status?.category) {
+			case 'good':
+				return (
+					<td className="hand">
+						<FontAwesomeIcon icon={faCheckCircle} color={'#33aa33'} size="2xl" />
+					</td>
+				)
+			case 'warning':
+				return (
+					<td className="instance-status-warn">
+						{status.level || 'Warning'}
+						<br />
+						{messageStr}
+					</td>
+				)
+			case 'error':
+				return (
+					<td className="instance-status-error">
+						{status.level || 'ERROR'}
+						<br />
+						{messageStr}
+					</td>
+				)
+			default:
+				return (
+					<td className="instance-status-error">
+						Unknown
+						<br />
+						{messageStr}
+					</td>
+				)
+		}
+	} else {
+		return (
+			<td>
+				<p>Disabled</p>
+			</td>
+		)
 	}
 }

@@ -1,5 +1,12 @@
 import { CAlert, CButton, CForm, CFormGroup, CButtonGroup, CSwitch } from '@coreui/react'
-import { faSort, faTrash, faCompressArrowsAlt, faExpandArrowsAlt, faCopy } from '@fortawesome/free-solid-svg-icons'
+import {
+	faSort,
+	faTrash,
+	faCompressArrowsAlt,
+	faExpandArrowsAlt,
+	faCopy,
+	faFolderOpen,
+} from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import React, { useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react'
 import {
@@ -10,6 +17,7 @@ import {
 	sandbox,
 	useMountEffect,
 	SocketContext,
+	PreventDefaultHandler,
 } from '../util'
 import Select, { createFilter } from 'react-select'
 import { OptionsInputField } from './OptionsInputField'
@@ -23,7 +31,7 @@ import { OptionButtonPreview } from './OptionButtonPreview'
 import { MenuPortalContext } from '../Components/DropdownInputField'
 import { ParseControlId } from '@companion/shared/ControlId'
 
-export function ControlFeedbacksEditor({ controlId, feedbacks, heading, booleanOnly, isOnControl }) {
+export function ControlFeedbacksEditor({ controlId, feedbacks, heading, booleanOnly, isOnControl, addPlaceholder }) {
 	const socket = useContext(SocketContext)
 
 	const confirmModal = useRef()
@@ -142,28 +150,22 @@ export function ControlFeedbacksEditor({ controlId, feedbacks, heading, booleanO
 
 			<h4 className="mt-3">
 				{heading}
-				<CButtonGroup className="right">
-					<CButtonGroup>
-						<CButton
-							color="info"
-							size="sm"
-							onClick={setAllExpanded}
-							title="Expand all feedbacks"
-							disabled={!canExpandAll}
-						>
-							<FontAwesomeIcon icon={faExpandArrowsAlt} />
-						</CButton>{' '}
-						<CButton
-							color="info"
-							size="sm"
-							onClick={setAllCollapsed}
-							title="Collapse all feedbacks"
-							disabled={!canCollapseAll}
-						>
-							<FontAwesomeIcon icon={faCompressArrowsAlt} />
-						</CButton>
+				{feedbacks.length > 1 && (
+					<CButtonGroup className="right">
+						<CButtonGroup>
+							{canExpandAll && (
+								<CButton size="sm" onClick={setAllExpanded} title="Expand all feedbacks">
+									<FontAwesomeIcon icon={faExpandArrowsAlt} />
+								</CButton>
+							)}
+							{canCollapseAll && (
+								<CButton size="sm" onClick={setAllCollapsed} title="Collapse all feedbacks">
+									<FontAwesomeIcon icon={faCompressArrowsAlt} />
+								</CButton>
+							)}
+						</CButtonGroup>
 					</CButtonGroup>
-				</CButtonGroup>
+				)}
 			</h4>
 
 			<table className="table feedback-table">
@@ -193,9 +195,21 @@ export function ControlFeedbacksEditor({ controlId, feedbacks, heading, booleanO
 			</table>
 
 			<div className="add-dropdown-wrapper">
-				<AddFeedbackDropdown onSelect={addFeedback} recentFeedbacks={recentFeedbacks} booleanOnly={booleanOnly} />
-				<CButton color="primary" variant="outline" onClick={showAddModal}>
-					Browse
+				<AddFeedbackDropdown
+					onSelect={addFeedback}
+					recentFeedbacks={recentFeedbacks}
+					booleanOnly={booleanOnly}
+					addPlaceholder={addPlaceholder}
+				/>
+				<CButton
+					color="primary"
+					onClick={showAddModal}
+					style={{
+						borderTopLeftRadius: 0,
+						borderBottomLeftRadius: 0,
+					}}
+				>
+					<FontAwesomeIcon icon={faFolderOpen} />
 				</CButton>
 			</div>
 		</>
@@ -398,35 +412,37 @@ function FeedbackEditor({
 	const previewControlId = previewControlIdFunction?.(feedback.options, ParseControlId(controlId))
 
 	return (
-		<div className="editor-grid">
+		<div className="editor-grid remove075right">
 			<div className="cell-name">{name}</div>
 
 			<div className="cell-controls">
 				<CButtonGroup>
-					{doEnabled && (
-						<CSwitch
-							color="success"
-							checked={!feedback.disabled}
-							title={feedback.disabled ? 'Enable feedback' : 'Disable feedback'}
-							onChange={innerSetEnabled}
-						/>
-					)}
-					&nbsp;
 					{isCollapsed ? (
-						<CButton color="info" size="sm" onClick={doExpand} title="Expand feedback view">
+						<CButton size="sm" onClick={doExpand} title="Expand feedback view">
 							<FontAwesomeIcon icon={faExpandArrowsAlt} />
 						</CButton>
 					) : (
-						<CButton color="info" size="sm" onClick={doCollapse} title="Collapse feedback view">
+						<CButton size="sm" onClick={doCollapse} title="Collapse feedback view">
 							<FontAwesomeIcon icon={faCompressArrowsAlt} />
 						</CButton>
 					)}
-					<CButton color="warning" size="sm" onClick={innerDuplicate} title="Duplicate feedback">
+					<CButton size="sm" onClick={innerDuplicate} title="Duplicate feedback">
 						<FontAwesomeIcon icon={faCopy} />
 					</CButton>
-					<CButton color="danger" size="sm" onClick={innerDelete} title="Remove feedback">
+					<CButton size="sm" onClick={innerDelete} title="Remove feedback">
 						<FontAwesomeIcon icon={faTrash} />
 					</CButton>
+					{doEnabled && (
+						<>
+							&nbsp;
+							<CSwitch
+								color="success"
+								checked={!feedback.disabled}
+								title={feedback.disabled ? 'Enable feedback' : 'Disable feedback'}
+								onChange={innerSetEnabled}
+							/>
+						</>
+					)}
 				</CButtonGroup>
 			</div>
 
@@ -449,7 +465,7 @@ function FeedbackEditor({
 					</div>
 
 					<div className="cell-option">
-						<CForm>
+						<CForm onSubmit={PreventDefaultHandler}>
 							{options.map((opt, i) => (
 								<MyErrorBoundary key={i}>
 									<OptionsInputField
@@ -464,7 +480,6 @@ function FeedbackEditor({
 									/>
 								</MyErrorBoundary>
 							))}
-							{options.length === 0 ? 'Nothing to configure' : ''}
 						</CForm>
 					</div>
 					{!booleanOnly && (
@@ -499,7 +514,7 @@ function FeedbackManageStyles({ feedbackSpec, feedback, setSelectedStyleProps })
 
 		return (
 			<div className="cell-styles-manage">
-				<CForm>
+				<CForm onSubmit={PreventDefaultHandler}>
 					<MyErrorBoundary>
 						<CFormGroup>
 							<label>Change style properties</label>
@@ -558,7 +573,7 @@ function FeedbackStyles({ feedbackSpec, feedback, setStylePropsValue }) {
 
 		return (
 			<div className="cell-styles">
-				<CForm>
+				<CForm onSubmit={PreventDefaultHandler}>
 					{pngError && (
 						<CAlert color="warning" closeButton>
 							{pngError}
@@ -598,7 +613,7 @@ const noOptionsMessage = ({ inputValue }) => {
 	}
 }
 
-export function AddFeedbackDropdown({ onSelect, booleanOnly, recentFeedbacks }) {
+function AddFeedbackDropdown({ onSelect, booleanOnly, recentFeedbacks, addPlaceholder }) {
 	const menuPortal = useContext(MenuPortalContext)
 	const feedbacksContext = useContext(FeedbacksContext)
 	const instancesContext = useContext(InstancesContext)
@@ -661,7 +676,7 @@ export function AddFeedbackDropdown({ onSelect, booleanOnly, recentFeedbacks }) 
 			isSearchable={true}
 			isMulti={false}
 			options={options}
-			placeholder="+ Add feedback"
+			placeholder={addPlaceholder || '+ Add feedback'}
 			value={null}
 			onChange={innerChange}
 			filterOption={filterOptions}

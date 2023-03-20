@@ -8,6 +8,7 @@ import {
 	SocketContext,
 	NotifierContext,
 	ModulesContext,
+	PreventDefaultHandler,
 } from '../util'
 import { VariablesTable } from '../Components/VariablesTable'
 import { CopyToClipboard } from 'react-copy-to-clipboard'
@@ -225,7 +226,7 @@ function CustomVariablesList({ setShowCustom }) {
 	return (
 		<div className="variables-panel">
 			<h5>
-				<CButton color="primary" size="sm" onClick={doBack}>
+				<CButton color="primary" size="sm" onClick={doBack} className="gap-b">
 					Back
 				</CButton>
 				Custom Variables
@@ -250,7 +251,7 @@ function CustomVariablesList({ setShowCustom }) {
 								<td>$({fullname})</td>
 								{/* <td>{elms}</td> */}
 								<td>
-									<CForm>
+									<CForm onSubmit={PreventDefaultHandler}>
 										<CFormGroup>
 											<CLabel htmlFor="current_value">Current value: </CLabel>
 											<TextInputField

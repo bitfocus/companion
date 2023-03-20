@@ -11,7 +11,7 @@
 		"dev": "electron dev.js"
 	},
 	"dependencies": {
-		"@sentry/electron": "^4.1.2",
+		"@sentry/electron": "^4.2.0",
 		"chokidar": "^3.5.3",
 		"debounce-fn": "^4.0.0",
 		"electron-store": "^8.1.0",
@@ -19,11 +19,11 @@
 		"nanoid": "^3.3.4",
 		"respawn": "link:../vendor/respawn",
 		"strip-ansi": "^6.0.0",
-		"systeminformation": "^5.15.1"
+		"systeminformation": "^5.17.8"
 	},
 	"devDependencies": {
 		"@electron/notarize": "^1.2.3",
-		"electron": "^21.3.1",
+		"electron": "^22.2.0",
 		"electron-builder": "^23.6.0",
 		"electron-reloader": "^1.2.3"
 	},
@@ -69,7 +69,13 @@
 		},
 		"linux": {
 			"target": "dir",
-			"artifactName": "companion-x64"
+			"artifactName": "companion-x64",
+			"extraFiles": [
+				{
+					"from": "../assets/linux",
+					"to": "."
+				}
+			]
 		},
 		"files": [
 			"**/*",

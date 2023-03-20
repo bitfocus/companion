@@ -2,7 +2,14 @@ import { CButton, CForm, CButtonGroup, CSwitch } from '@coreui/react'
 import { faSort, faTrash, faCompressArrowsAlt, faExpandArrowsAlt, faCopy } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import React, { useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react'
-import { MyErrorBoundary, socketEmitPromise, sandbox, SocketContext, EventDefinitionsContext } from '../util'
+import {
+	MyErrorBoundary,
+	socketEmitPromise,
+	sandbox,
+	SocketContext,
+	EventDefinitionsContext,
+	PreventDefaultHandler,
+} from '../util'
 import Select from 'react-select'
 import { OptionsInputField } from '../Controls/OptionsInputField'
 import { useDrag, useDrop } from 'react-dnd'
@@ -87,22 +94,22 @@ export function TriggerEventEditor({ controlId, events, heading }) {
 
 			<h4 className="mt-3">
 				{heading}
-				<CButtonGroup className="right">
-					<CButtonGroup>
-						<CButton color="info" size="sm" onClick={setAllExpanded} title="Expand all events" disabled={!canExpandAll}>
-							<FontAwesomeIcon icon={faExpandArrowsAlt} />
-						</CButton>{' '}
-						<CButton
-							color="info"
-							size="sm"
-							onClick={setAllCollapsed}
-							title="Collapse all events"
-							disabled={!canCollapseAll}
-						>
-							<FontAwesomeIcon icon={faCompressArrowsAlt} />
-						</CButton>
+				{events.length > 1 && (
+					<CButtonGroup className="right">
+						<CButtonGroup>
+							{canExpandAll && (
+								<CButton size="sm" onClick={setAllExpanded} title="Expand all events">
+									<FontAwesomeIcon icon={faExpandArrowsAlt} />
+								</CButton>
+							)}
+							{canCollapseAll && (
+								<CButton size="sm" onClick={setAllCollapsed} title="Collapse all events">
+									<FontAwesomeIcon icon={faCompressArrowsAlt} />
+								</CButton>
+							)}
+						</CButtonGroup>
 					</CButtonGroup>
-				</CButtonGroup>
+				)}
 			</h4>
 
 			<table className="table feedback-table">
@@ -280,35 +287,37 @@ function EventEditor({
 	}
 
 	return (
-		<div className="editor-grid">
+		<div className="editor-grid editor-grid-events">
 			<div className="cell-name">{name}</div>
 
 			<div className="cell-controls">
 				<CButtonGroup>
-					{doEnabled && (
-						<CSwitch
-							color="success"
-							checked={event.enabled}
-							title={event.enabled ? 'Disable event' : 'Enable event'}
-							onChange={innerSetEnabled}
-						/>
-					)}
-					&nbsp;
 					{isCollapsed ? (
-						<CButton color="info" size="sm" onClick={doExpand} title="Expand event view">
+						<CButton size="sm" onClick={doExpand} title="Expand event view">
 							<FontAwesomeIcon icon={faExpandArrowsAlt} />
 						</CButton>
 					) : (
-						<CButton color="info" size="sm" onClick={doCollapse} title="Collapse event view">
+						<CButton size="sm" onClick={doCollapse} title="Collapse event view">
 							<FontAwesomeIcon icon={faCompressArrowsAlt} />
 						</CButton>
 					)}
-					<CButton color="warning" size="sm" onClick={innerDuplicate} title="Duplicate event">
+					<CButton size="sm" onClick={innerDuplicate} title="Duplicate event">
 						<FontAwesomeIcon icon={faCopy} />
 					</CButton>
-					<CButton color="danger" size="sm" onClick={innerDelete} title="Remove event">
+					<CButton size="sm" onClick={innerDelete} title="Remove event">
 						<FontAwesomeIcon icon={faTrash} />
 					</CButton>
+					{doEnabled && (
+						<>
+							&nbsp;
+							<CSwitch
+								color="success"
+								checked={event.enabled}
+								title={event.enabled ? 'Disable event' : 'Enable event'}
+								onChange={innerSetEnabled}
+							/>
+						</>
+					)}
 				</CButtonGroup>
 			</div>
 
@@ -317,7 +326,7 @@ function EventEditor({
 					<div className="cell-description">{eventSpec?.description || ''}</div>
 
 					<div className="cell-option">
-						<CForm>
+						<CForm onSubmit={PreventDefaultHandler}>
 							{options.map((opt, i) => (
 								<MyErrorBoundary key={i}>
 									<OptionsInputField
@@ -332,7 +341,6 @@ function EventEditor({
 									/>
 								</MyErrorBoundary>
 							))}
-							{options.length === 0 ? 'Nothing to configure' : ''}
 						</CForm>
 					</div>
 				</>

@@ -1,5 +1,5 @@
 import { CCol, CNav, CNavItem, CNavLink, CRow, CTabContent, CTabPane, CTabs } from '@coreui/react'
-import { faCalculator, faDollarSign, faFileImport, faGift, faVideoCamera } from '@fortawesome/free-solid-svg-icons'
+import { faCalculator, faDollarSign, faGift, faVideoCamera } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { nanoid } from 'nanoid'
 import { InstancePresets } from './Presets'
@@ -7,7 +7,6 @@ import { SocketContext, MyErrorBoundary, socketEmitPromise, FormatButtonControlI
 import { CreateBankControlId } from '@companion/shared/ControlId'
 import { ButtonsGridPanel } from './ButtonGrid'
 import { EditButton } from './EditButton'
-import { ImportExport } from './ImportExport'
 import { ActionRecorder } from './ActionRecorder'
 import { memo, useCallback, useContext, useRef, useState } from 'react'
 import { GenericConfirmModal } from '../Components/GenericConfirmModal'
@@ -146,13 +145,8 @@ export const ButtonsPage = memo(function ButtonsPage({ hotPress }) {
 								</CNavLink>
 							</CNavItem>
 							<CNavItem>
-								<CNavLink data-tab="importexport">
-									<FontAwesomeIcon icon={faFileImport} /> Import / Export
-								</CNavLink>
-							</CNavItem>
-							<CNavItem>
 								<CNavLink data-tab="action-recorder">
-									<FontAwesomeIcon icon={faVideoCamera} /> Action Recorder
+									<FontAwesomeIcon icon={faVideoCamera} /> Recorder
 								</CNavLink>
 							</CNavItem>
 						</CNav>
@@ -177,11 +171,6 @@ export const ButtonsPage = memo(function ButtonsPage({ hotPress }) {
 							<CTabPane data-tab="variables">
 								<MyErrorBoundary>
 									<InstanceVariables resetToken={tabResetToken} />
-								</MyErrorBoundary>
-							</CTabPane>
-							<CTabPane data-tab="importexport">
-								<MyErrorBoundary>
-									<ImportExport key={tabResetToken} pageNumber={pageNumber} />
 								</MyErrorBoundary>
 							</CTabPane>
 							<CTabPane data-tab="action-recorder">

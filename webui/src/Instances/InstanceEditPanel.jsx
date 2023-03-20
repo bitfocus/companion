@@ -1,18 +1,13 @@
 import React, { memo, useCallback, useContext, useEffect, useState } from 'react'
 import { LoadingRetryOrError, sandbox, socketEmitPromise, SocketContext, ModulesContext } from '../util'
 import { CRow, CCol, CButton } from '@coreui/react'
-import {
-	CheckboxInputField,
-	ColorInputField,
-	DropdownInputField,
-	NumberInputField,
-	TextInputField,
-} from '../Components'
+import { ColorInputField, DropdownInputField, NumberInputField, TextInputField } from '../Components'
 import { nanoid } from 'nanoid'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faQuestionCircle } from '@fortawesome/free-solid-svg-icons'
 import sanitizeHtml from 'sanitize-html'
 import { isLabelValid } from '@companion/shared/Label'
+import CSwitch from '../CSwitch'
 
 export function InstanceEditPanel({ instanceId, instanceStatus, doConfigureInstance, showHelp }) {
 	console.log('status', instanceStatus)
@@ -191,6 +186,9 @@ const InstanceEditPanelInner = memo(function InstanceEditPanel({ instanceId, doC
 									style={{ display: fieldVisibility[field.id] === false ? 'none' : null }}
 								>
 									<label>{field.label}</label>
+									{field.tooltip && (
+										<FontAwesomeIcon style={{ marginLeft: '5px' }} icon={faQuestionCircle} title={field.tooltip} />
+									)}
 									<ConfigField
 										definition={field}
 										value={instanceConfig[field.id]}
@@ -248,7 +246,6 @@ function ConfigField({ setValue, setValid, definition, value }) {
 					value={value}
 					regex={definition.regex}
 					required={definition.required}
-					tooltip={definition.tooltip}
 					setValue={setValue2}
 					setValid={setValid2}
 				/>
@@ -260,7 +257,6 @@ function ConfigField({ setValue, setValid, definition, value }) {
 					min={definition.min}
 					max={definition.max}
 					step={definition.step}
-					tooltip={definition.tooltip}
 					range={definition.range}
 					value={value}
 					setValue={setValue2}
@@ -268,14 +264,26 @@ function ConfigField({ setValue, setValid, definition, value }) {
 				/>
 			)
 		case 'checkbox':
-			return <CheckboxInputField value={value} tooltip={definition.tooltip} setValue={setValue2} setValid={setValid2} />
+			return (
+				<div style={{ marginRight: 40, marginTop: 2 }}>
+					<CSwitch
+						color="success"
+						checked={value}
+						size={'lg'}
+						tooltip={definition.tooltip}
+						onChange={() => {
+							setValue2(!value)
+							//setValid2(true)
+						}}
+					/>
+				</div>
+			)
 		case 'dropdown':
 			return (
 				<DropdownInputField
 					choices={definition.choices}
 					allowCustom={definition.allowCustom}
 					minChoicesForSearch={definition.minChoicesForSearch}
-					tooltip={definition.tooltip}
 					regex={definition.regex}
 					value={value}
 					setValue={setValue2}
@@ -291,7 +299,6 @@ function ConfigField({ setValue, setValid, definition, value }) {
 					minSelection={definition.minSelection}
 					minChoicesForSearch={definition.minChoicesForSearch}
 					maxSelection={definition.maxSelection}
-					tooltip={definition.tooltip}
 					regex={definition.regex}
 					value={value}
 					setValue={setValue2}

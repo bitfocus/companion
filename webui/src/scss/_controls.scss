@@ -12,6 +12,20 @@ input[type='checkbox'] {
 input[type='checkbox']:checked {
 	background: 0 0 url('/img/check.png') no-repeat;
 }
+input[type='checkbox']:disabled {
+	background: #eee;
+}
+
+label.disabled {
+	color: #ccc;
+}
+
+.form-check {
+	label {
+		line-height: 24px;
+		margin-bottom: 0;
+	}
+}
 
 /* Style for autocomplete of variable */
 .tribute-container li span {
@@ -33,19 +47,21 @@ input[type='checkbox']:checked {
 
 	grid-template-columns: 1fr 1fr 1fr;
 	grid-template-rows: 1fr 1fr 1fr;
-	column-gap: 2px;
-	row-gap: 2px;
-	padding: 1px;
+	column-gap: 1px;
+	row-gap: 1px;
+	padding: 0px;
 
 	line-height: 0;
 
 	> div {
-		border: 1px solid #aaa;
+		border: 2px solid #eee;
+		border-radius: 3px;
 		padding: 1px;
-
 		&.selected {
-			background-image: url('/img/check.png') !important;
+			border: 2px solid #d502146e;
+
 			background-size: contain !important;
+			background-color: rgba(255, 0, 0, 0.1);
 		}
 	}
 }
@@ -77,4 +93,9 @@ input[type='checkbox']:checked {
 
 .select-control__menu-portal {
 	z-index: 100 !important;
+}
+
+.select-control__control {
+	border-color: #bbb !important;
+	font-weight: bold;
 }
