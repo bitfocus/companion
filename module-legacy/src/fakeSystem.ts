@@ -450,6 +450,7 @@ export class FakeSystem extends EventEmitter {
 				name: preset.label,
 				type: 'button',
 				style: convertPresetBank(preset.bank),
+				preview_style: preset.preview && convertPresetBank(preset.preview),
 				options: {
 					relativeDelay: preset.bank.relative_delay,
 					stepAutoProgress: true,
