@@ -1901,12 +1901,6 @@ commist@^1.0.0:
   dependencies:
     node-fetch "^2.6.7"
 
-"companion-module-birddog-ptz@github:bitfocus/companion-module-birddog-ptz#v2.3.3":
-  version "2.3.3"
-  resolved "https://codeload.github.com/bitfocus/companion-module-birddog-ptz/tar.gz/9c71ea0ba275b92f106f5b08a32d5d65f660e23c"
-  dependencies:
-    node-fetch "^2.6.7"
-
 "companion-module-bitfocus-snapshot@github:bitfocus/companion-module-bitfocus-snapshot#v0.0.7":
   version "0.0.7"
   resolved "https://codeload.github.com/bitfocus/companion-module-bitfocus-snapshot/tar.gz/8dc658819c7936389d39d7f81a5f21fb52539bea"
@@ -1977,10 +1971,6 @@ commist@^1.0.0:
   resolved "https://codeload.github.com/bitfocus/companion-module-bytehive-playoutbee/tar.gz/e684da8d7363159a42dc80f6298f51b6ac89a0a7"
   dependencies:
     got "^11.8.3"
-
-"companion-module-canon-ptz@github:bitfocus/companion-module-canon-ptz#v1.1.1":
-  version "1.1.1"
-  resolved "https://codeload.github.com/bitfocus/companion-module-canon-ptz/tar.gz/9900c17fd0e0e6cbcc14587414acffcf2c48135d"
 
 "companion-module-canon-xf@github:bitfocus/companion-module-canon-xf#v1.0.2":
   version "1.0.2"
@@ -2725,14 +2715,6 @@ commist@^1.0.0:
   version "1.0.7"
   resolved "https://codeload.github.com/bitfocus/companion-module-planningcenter-serviceslive/tar.gz/7591e8362f50edf941d098d4dc886bc501165e1a"
 
-"companion-module-presentationtools-aps@github:bitfocus/companion-module-presentationtools-aps#v1.2.1":
-  version "1.2.1"
-  resolved "https://codeload.github.com/bitfocus/companion-module-presentationtools-aps/tar.gz/b7c712da0f5fea0c2c59288ff8070941cef667a3"
-
-"companion-module-presentationtools-cuetimer@github:bitfocus/companion-module-presentationtools-cuetimer#v1.1.4":
-  version "1.1.4"
-  resolved "https://codeload.github.com/bitfocus/companion-module-presentationtools-cuetimer/tar.gz/fa703dea00b6fc9375125d1f188d7392e710d2dc"
-
 "companion-module-protopie-bridge@github:bitfocus/companion-module-protopie-bridge#v1.0.3":
   version "1.0.3"
   resolved "https://codeload.github.com/bitfocus/companion-module-protopie-bridge/tar.gz/8096bc46cd661a1d46e6fb7d0bb491f581964531"
@@ -2890,10 +2872,6 @@ commist@^1.0.0:
   dependencies:
     xml2js "^0.4.23"
 
-"companion-module-singularlive-studio@github:bitfocus/companion-module-singularlive-studio#v1.0.11":
-  version "1.0.11"
-  resolved "https://codeload.github.com/bitfocus/companion-module-singularlive-studio/tar.gz/5068cefa416f6ec3acdd4554471e5c3673c79e30"
-
 "companion-module-snapav-wattbox@github:bitfocus/companion-module-snapav-wattbox#v1.0.2":
   version "1.0.1"
   resolved "https://codeload.github.com/bitfocus/companion-module-snapav-wattbox/tar.gz/ee45a88f78dd7255127c39e09b206e4e6f3688b0"
@@ -2903,10 +2881,6 @@ commist@^1.0.0:
   resolved "https://codeload.github.com/bitfocus/companion-module-softouch-easyworship/tar.gz/62557ef2b39dc30d5ceed3efb733b02ed07bce62"
   dependencies:
     bonjour "^3.5.0"
-
-"companion-module-softron-ontheairvideo@github:bitfocus/companion-module-softron-ontheairvideo#v1.0.3":
-  version "1.0.3"
-  resolved "https://codeload.github.com/bitfocus/companion-module-softron-ontheairvideo/tar.gz/e57499fa6cb9f6de77f77d3d8ed5722067f73e59"
 
 "companion-module-sononum-horae@github:bitfocus/companion-module-sononum-horae#v1.0.3":
   version "1.0.3"
