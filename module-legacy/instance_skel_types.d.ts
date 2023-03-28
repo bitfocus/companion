@@ -229,6 +229,7 @@ export interface CompanionPreset {
 	category: string
 	label: string
 	bank: CompanionBankPreset
+	preview?: CompanionBankPreset
 	feedbacks: Array<{
 		type: string
 		options: CompanionOptionValues
