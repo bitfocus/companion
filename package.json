@@ -89,6 +89,7 @@
 		"respawn": "link:./vendor/respawn",
 		"selfsigned": "^2.1.1",
 		"semver": "^7.3.8",
+		"skia-canvas": "^1.0.1",
 		"socket.io": "^4.5.4",
 		"socketcluster-client": "^16.1.1",
 		"supports-color": "^9.3.1",
