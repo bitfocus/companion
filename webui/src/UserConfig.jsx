@@ -299,6 +299,8 @@ function UserConfigTable() {
 							<CInput
 								type="number"
 								value={config.pin_timeout}
+								min={0}
+								step={1}
 								onChange={(e) => setValue('pin_timeout', e.currentTarget.value)}
 							/>
 						</div>
