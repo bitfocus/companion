@@ -304,10 +304,10 @@
   resolved "https://registry.yarnpkg.com/@colors/colors/-/colors-1.5.0.tgz#bb504579c1cae923e6576a4f5da43d25f97bdbd9"
   integrity sha512-ooWCrlZP11i8GImSjTHYHLkvFDP48nS4+204nGb1RiX/WXYHmJA2III9/e2DWVabCESdW7hBAEzHRqUn9OUVvQ==
 
-"@companion-module/base@^1.3.0":
-  version "1.3.0"
-  resolved "https://registry.yarnpkg.com/@companion-module/base/-/base-1.3.0.tgz#1168f36235bdec7f2603f88824fc2e930c1e41e7"
-  integrity sha512-gp8Pb0is0kG3J2hkGu28zJWo3C8igkiA/KMmNgrQMJWWY0yR1HiKCSllyTpmrjBUixvOUqrHgZKfuHA1bpJ93A==
+"@companion-module/base@~1.4.1":
+  version "1.4.1"
+  resolved "https://registry.yarnpkg.com/@companion-module/base/-/base-1.4.1.tgz#4ddc4ba636b672bcbbc3dc4645634007a49d6189"
+  integrity sha512-xg5OX33ptfFsV/drfeNTHID7hp9f2cdp8V+7Pj8uartdNstCr28W3bAy8xRz+XRFKxQVkJcL2LqrkYZ8GGfetw==
   dependencies:
     "@sentry/node" "^7.36.0"
     "@sentry/tracing" "^7.36.0"
