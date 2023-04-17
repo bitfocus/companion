@@ -624,15 +624,23 @@
     node-addon-api "^5.0.0"
     pkg-prebuilds "~0.1.0"
 
-"@loupedeck/node@^0.3.1":
-  version "0.3.1"
-  resolved "https://registry.yarnpkg.com/@loupedeck/node/-/node-0.3.1.tgz#8f4c6abdf3b3ad909c7a0435df1e7b3796fb5e52"
-  integrity sha512-2WVnjmWROAIXUUam/yeGqP47AdsOExocBx3GOIwfxKh8tm99BFOl+xukb0pGBOROK43aqM0LEyWGJOs5vtCF4g==
+"@loupedeck/core@0.4.0":
+  version "0.4.0"
+  resolved "https://registry.yarnpkg.com/@loupedeck/core/-/core-0.4.0.tgz#301340bf2bf225a45cf48c86395efff3c97b5fb3"
+  integrity sha512-XU1XNxM8EoZ1Tdl83E0v3rBuFh1FgTiE3/sE8qNHVQvkOel5IOQHN1cQ754m2cxFnhtePuLFk3lwfHdUIuebIQ==
   dependencies:
     eventemitter3 "^4.0.7"
     p-queue "^6.6.2"
-    serialport "^10.4.0"
-    tslib "^2.4.0"
+    tslib "^2.5.0"
+
+"@loupedeck/node@^0.4.0":
+  version "0.4.0"
+  resolved "https://registry.yarnpkg.com/@loupedeck/node/-/node-0.4.0.tgz#da9e117e602c009384457aa49dc3cba444cb4ea1"
+  integrity sha512-JrkxtNg3jmhybyY6+fnqEzD5PgNUyIN8m+9Xf1yFZhH9zgSaK/LhhPNoz4tCv1LujevPrckqF6f43ZZ6IQ/83w==
+  dependencies:
+    "@loupedeck/core" "0.4.0"
+    serialport "^10.5.0"
+    tslib "^2.5.0"
 
 "@nodelib/fs.scandir@2.1.5":
   version "2.1.5"
@@ -4374,7 +4382,6 @@ node-forge@^1:
 
 node-gyp-build@^4.3.0, node-gyp-build@^4.5.0, "node-gyp-build@github:julusian/node-gyp-build#cross-install-support":
   version "4.5.0"
-  uid "33c9759a3215892a520d50ad20c947795b813904"
   resolved "https://codeload.github.com/julusian/node-gyp-build/tar.gz/33c9759a3215892a520d50ad20c947795b813904"
 
 node-hid@^2.1.1, "node-hid@npm:@julusian/hid@2.2.0-0":
@@ -5020,7 +5027,7 @@ serialize-javascript@^6.0.1:
   dependencies:
     randombytes "^2.1.0"
 
-serialport@10.5.0, serialport@^10.4.0:
+serialport@10.5.0, serialport@^10.4.0, serialport@^10.5.0:
   version "10.5.0"
   resolved "https://registry.yarnpkg.com/serialport/-/serialport-10.5.0.tgz#b85f614def6e8914e5865c798b0555330903a0f8"
   integrity sha512-7OYLDsu5i6bbv3lU81pGy076xe0JwpK6b49G6RjNvGibstUqQkI+I3/X491yBGtf4gaqUdOgoU1/5KZ/XxL4dw==

@@ -171,7 +171,7 @@ function UserConfigTable() {
 				</tr>
 				<tr>
 					<td>
-						Use Elgato Plugin for StreamDeck access
+						Enable connected Streamdecks. When disabled support for the Elgato software Plugin will be enbaled
 						<br />
 						<em>(Requires Companion restart)</em>
 					</td>
@@ -179,9 +179,9 @@ function UserConfigTable() {
 						<div className="form-check form-check-inline mr-1 float-right">
 							<CSwitch
 								color="success"
-								checked={config.elgato_plugin_enable}
+								checked={!config.elgato_plugin_enable}
 								size={'lg'}
-								onChange={(e) => setValue('elgato_plugin_enable', e.currentTarget.checked)}
+								onChange={(e) => setValue('elgato_plugin_enable', !e.currentTarget.checked)}
 							/>
 						</div>
 					</td>
@@ -215,7 +215,7 @@ function UserConfigTable() {
 				</tr>
 				<tr>
 					<td>
-						Enable connected Loupedeck Live devices
+						Enable connected Loupedeck Live and Razer Stream Controller devices
 						<br />
 						<em>(Requires Companion restart)</em>
 					</td>
