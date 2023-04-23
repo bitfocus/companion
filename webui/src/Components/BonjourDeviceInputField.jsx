@@ -82,7 +82,7 @@ export function BonjourDeviceInputField({ value, setValue, filter, allowNone, no
 		}
 	}, [socket, filter])
 
-	const choices = useMemo(() => {
+	const choicesRaw = useMemo(() => {
 		const choices = []
 
 		if (allowNone) {
@@ -99,6 +99,19 @@ export function BonjourDeviceInputField({ value, setValue, filter, allowNone, no
 
 		return choices
 	}, [services, allowNone, noneLabel])
+
+	const choices = useMemo(() => {
+		const choices = [...choicesRaw]
+
+		if (!choices.find((opt) => opt.id == value)) {
+			choices.push({
+				id: value,
+				label: `*Unavailable* (${value})`,
+			})
+		}
+
+		return choices
+	}, [choicesRaw, value])
 
 	return <DropdownInputField value={value} setValue={setValue} choices={choices} />
 }
