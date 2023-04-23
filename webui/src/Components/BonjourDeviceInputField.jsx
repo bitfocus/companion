@@ -6,7 +6,7 @@ import { DropdownInputField } from './DropdownInputField'
 
 export const MenuPortalContext = createContext(null)
 
-export function BonjourDeviceInputField({ value, setValue, filter, allowNone, noneLabel }) {
+export function BonjourDeviceInputField({ value, setValue, filter }) {
 	const socket = useContext(SocketContext)
 
 	const [_subId, setSubId] = useState(null)
@@ -85,9 +85,7 @@ export function BonjourDeviceInputField({ value, setValue, filter, allowNone, no
 	const choicesRaw = useMemo(() => {
 		const choices = []
 
-		if (allowNone) {
-			choices.push({ id: null, label: noneLabel || 'None' })
-		}
+		choices.push({ id: null, label: 'Manual' })
 
 		for (const svc of Object.values(services)) {
 			const address = `${svc.host}:${svc.port}`
@@ -98,7 +96,7 @@ export function BonjourDeviceInputField({ value, setValue, filter, allowNone, no
 		}
 
 		return choices
-	}, [services, allowNone, noneLabel])
+	}, [services])
 
 	const choices = useMemo(() => {
 		const choices = [...choicesRaw]
