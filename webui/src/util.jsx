@@ -9,8 +9,6 @@ import { cloneDeep } from 'lodash-es'
 import { ParseControlId } from '@companion/shared/ControlId'
 import { useEventListener } from 'usehooks-ts'
 
-export const SERVER_URL = window.SERVER_URL === '%REACT_APP_SERVER_URL%' ? undefined : window.SERVER_URL
-
 export const SocketContext = React.createContext(null)
 export const EventDefinitionsContext = React.createContext(null)
 export const NotifierContext = React.createContext(null)
