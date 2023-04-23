@@ -1,4 +1,4 @@
-import { useContext, useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react'
 import {
 	applyPatchOrReplaceSubObject,
 	ActionsContext,
@@ -17,6 +17,8 @@ import {
 	EventDefinitionsContext,
 	ModulesContext,
 	ButtonRenderCacheContext,
+	RecentActionsContext,
+	RecentFeedbacksContext,
 } from './util'
 import { NotificationsManager } from './Components/Notifications'
 import { cloneDeep } from 'lodash-es'
@@ -37,6 +39,50 @@ export function ContextData({ children }) {
 	const [surfaces, setSurfaces] = useState(null)
 	const [pages, setPages] = useState(null)
 	const [triggers, setTriggers] = useState(null)
+
+	const [recentActions, setRecentActions] = useState(() => {
+		const recent = JSON.parse(window.localStorage.getItem('recent_actions') || '[]')
+		return Array.isArray(recent) ? recent : []
+	})
+
+	const trackRecentAction = useCallback((actionType) => {
+		setRecentActions((existing) => {
+			const newActions = [actionType, ...existing.filter((v) => v !== actionType)].slice(0, 20)
+
+			window.localStorage.setItem('recent_actions', JSON.stringify(newActions))
+
+			return newActions
+		})
+	}, [])
+	const recentActionsContext = useMemo(
+		() => ({
+			recentActions,
+			trackRecentAction,
+		}),
+		[recentActions, trackRecentAction]
+	)
+
+	const [recentFeedbacks, setRecentFeedbacks] = useState(() => {
+		const recent = JSON.parse(window.localStorage.getItem('recent_feedbacks') || '[]')
+		return Array.isArray(recent) ? recent : []
+	})
+
+	const trackRecentFeedback = useCallback((feedbackType) => {
+		setRecentFeedbacks((existing) => {
+			const newFeedbacks = [feedbackType, ...existing.filter((v) => v !== feedbackType)].slice(0, 20)
+
+			window.localStorage.setItem('recent_feedbacks', JSON.stringify(newFeedbacks))
+
+			return newFeedbacks
+		})
+	}, [])
+	const recentFeedbacksContext = useMemo(
+		() => ({
+			recentFeedbacks,
+			trackRecentFeedback,
+		}),
+		[recentFeedbacks, trackRecentFeedback]
+	)
 
 	const buttonCache = useMemo(() => {
 		return new ButtonRenderCache(socket)
@@ -311,9 +357,13 @@ export function ContextData({ children }) {
 												<SurfacesContext.Provider value={surfaces}>
 													<PagesContext.Provider value={pages}>
 														<TriggersContext.Provider value={triggers}>
-															<NotificationsManager ref={notifierRef} />
+															<RecentActionsContext.Provider value={recentActionsContext}>
+																<RecentFeedbacksContext.Provider value={recentFeedbacksContext}>
+																	<NotificationsManager ref={notifierRef} />
 
-															{children(progressPercent, completedSteps.length === steps.length)}
+																	{children(progressPercent, completedSteps.length === steps.length)}
+																</RecentFeedbacksContext.Provider>
+															</RecentActionsContext.Provider>
 														</TriggersContext.Provider>
 													</PagesContext.Provider>
 												</SurfacesContext.Provider>

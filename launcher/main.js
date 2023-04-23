@@ -234,7 +234,7 @@ if (!lock) {
 					watcher.on('all', (event, filename) => {
 						const fullpath = path.resolve(filename)
 						if (fullpath.startsWith(devModulesPath)) {
-							const moduleDirName = fullpath.slice(devModulesPath.length + 1).split('/')[0]
+							const moduleDirName = fullpath.slice(devModulesPath.length + 1).split(path.sep)[0]
 
 							let fn = cachedDebounces[moduleDirName]
 							if (!fn) {

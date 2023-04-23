@@ -59,7 +59,7 @@ export function ImportFullWizard({ snapshot, instanceRemap, setInstanceRemap }) 
 					</CNavLink>
 				</CNavItem>
 			</CNav>
-			<CTabContent fade={false}>
+			<CTabContent fade={false} className="no-height-limit">
 				<CTabPane data-tab="full">
 					<MyErrorBoundary>
 						<FullImportTab snapshot={snapshot} />

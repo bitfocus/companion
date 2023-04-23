@@ -1,5 +1,5 @@
 import { CButton, CRow, CCol, CButtonGroup, CForm, CAlert, CInputGroup, CInputGroupAppend } from '@coreui/react'
-import React, { useCallback, useContext, useState } from 'react'
+import React, { useCallback, useContext, useMemo, useState } from 'react'
 import { socketEmitPromise, SocketContext, UserConfigContext, PreventDefaultHandler } from '../util'
 import { AlignmentInputField, ColorInputField, DropdownInputField, PNGInputField, TextInputField } from '../Components'
 import { FONT_SIZES } from '../Constants'
@@ -88,16 +88,14 @@ export function ButtonStyleConfig({ controlId, controlType, style, configRef, ma
 			)}
 
 			<CForm onSubmit={PreventDefaultHandler}>
-				<CRow form className="button-style-form" style={{ clear: 'both' }}>
+				<CRow form className="flex-form flex-form-row" style={{ clear: 'both' }}>
 					<ButtonStyleConfigFields
 						values={style}
 						setValueInner={setValueInner}
 						setPng={setPng}
 						setPngError={setPngError}
 						clearPng={clearPng}
-						controlTemplate={ControlWrapper}
 						mainDialog={mainDialog}
-						style={style}
 					/>
 				</CRow>
 			</CForm>
@@ -105,19 +103,14 @@ export function ButtonStyleConfig({ controlId, controlType, style, configRef, ma
 	)
 }
 
-function ControlWrapper(id, props, contents) {
-	return <CCol {...props}>{contents}</CCol>
-}
-
 export function ButtonStyleConfigFields({
 	values,
-	style,
 	setValueInner,
 	setPng,
 	setPngError,
 	clearPng,
 	mainDialog,
-	controlTemplate,
+	showField,
 }) {
 	const setTextValue = useCallback((val) => setValueInner('text', val), [setValueInner])
 	const setSizeValue = useCallback((val) => setValueInner('size', val), [setValueInner])
@@ -136,110 +129,131 @@ export function ButtonStyleConfigFields({
 		values.show_topbar === false || (values.show_topbar === 'default' && userconfig.remove_topbar === true) ? 72 : 58
 
 	// this style will be different when you use it in the main dialog compared to in the feedback editor.
-	const specialStyleForButtonEditor = mainDialog ? { width: 'calc(100% - 100px)', marginTop: -35, paddingLeft: 4 } : {}
+	const specialStyleForButtonEditor = useMemo(
+		() => (mainDialog ? { width: 'calc(100% - 100px)', marginTop: -35, paddingLeft: 4 } : {}),
+		[mainDialog]
+	)
+
+	const showField2 = (id) => !showField || showField(id)
 
 	return (
 		<>
-			<div style={specialStyleForButtonEditor}>
-				<label>
-					{values.textExpression ? (
-						<>
-							Button text expression&nbsp;
-							<FontAwesomeIcon
-								icon={faQuestionCircle}
-								title="You can read more about expressions in the Getting Started pages"
-							/>
-						</>
-					) : (
-						'Button text string'
-					)}
-				</label>
-				<CInputGroup>
-					<TextInputField
-						tooltip={'Button text'}
-						setValue={setTextValue}
-						value={values.text}
-						useVariables
-						style={{ fontWeight: 'bold', fontSize: 18 }}
-					/>
-					<CInputGroupAppend>
-						<CButton
-							color="info"
-							variant="outline"
-							onClick={toggleExpression}
-							title={values.textExpression ? 'Expression mode ' : 'String mode'}
-						>
-							<FontAwesomeIcon icon={values.textExpression ? faDollarSign : faFont} />
-						</CButton>
-					</CInputGroupAppend>
-				</CInputGroup>
-			</div>
+			{showField2('text') && (
+				<div style={specialStyleForButtonEditor}>
+					<label>
+						{values.textExpression ? (
+							<>
+								Button text expression&nbsp;
+								<FontAwesomeIcon
+									icon={faQuestionCircle}
+									title="You can read more about expressions in the Getting Started pages"
+								/>
+							</>
+						) : (
+							'Button text string'
+						)}
+					</label>
+					<CInputGroup>
+						<TextInputField
+							tooltip={'Button text'}
+							setValue={setTextValue}
+							value={values.text}
+							useVariables
+							style={{ fontWeight: 'bold', fontSize: 18 }}
+						/>
+						<CInputGroupAppend>
+							<CButton
+								color="info"
+								variant="outline"
+								onClick={toggleExpression}
+								title={values.textExpression ? 'Expression mode ' : 'String mode'}
+							>
+								<FontAwesomeIcon icon={values.textExpression ? faDollarSign : faFont} />
+							</CButton>
+						</CInputGroupAppend>
+					</CInputGroup>
+				</div>
+			)}
 
 			<div style={{ display: 'block', padding: 4 }}>
-				<div className="flex flex-wrap gap-1">
-					<div>
+				<div className="flex flex-wrap gap-1 flex-form">
+					{showField2('size') && (
 						<div>
-							<label>Font size</label>
-							<DropdownInputField choices={FONT_SIZES} setValue={setSizeValue} value={values.size} />
+							<div>
+								<label>Font size</label>
+								<DropdownInputField choices={FONT_SIZES} setValue={setSizeValue} value={values.size} />
+							</div>
 						</div>
-					</div>
+					)}
 					<div>
 						<div className="flex gap-1">
+							{showField2('color') && (
+								<div>
+									<label>Text</label>
+									<ColorInputField setValue={setColorValue} value={values.color} />
+								</div>
+							)}
+							{showField2('bgcolor') && (
+								<div>
+									<label>BG</label>
+									<ColorInputField setValue={setBackgroundColorValue} value={values.bgcolor} />
+								</div>
+							)}
+						</div>
+					</div>
+					{showField2('show_topbar') && (
+						<div>
+							<label>Topbar</label>
+							<DropdownInputField
+								choices={[
+									{ id: 'default', label: 'Follow Default' },
+									{ id: true, label: 'Show' },
+									{ id: false, label: 'Hide' },
+								]}
+								setValue={setShowTopBar}
+								value={values.show_topbar}
+							/>
+						</div>
+					)}
+
+					{showField2('alignment') && (
+						<div>
 							<div>
 								<label>Text</label>
-								<ColorInputField setValue={setColorValue} value={values.color} />
+								<div style={{ border: '1px solid #ccc' }}>
+									<AlignmentInputField setValue={setAlignmentValue} value={values.alignment} />
+								</div>
 							</div>
+						</div>
+					)}
+					{showField2('pngalignment') && (
+						<div>
 							<div>
-								<label>BG</label>
-								<ColorInputField setValue={setBackgroundColorValue} value={values.bgcolor} />
+								<label>PNG</label>
+								<div style={{ border: '1px solid #ccc' }}>
+									<AlignmentInputField setValue={setPngAlignmentValue} value={values.pngalignment} />
+								</div>
 							</div>
 						</div>
-					</div>
-					<div>
-						<label>Topbar</label>
-						<DropdownInputField
-							choices={[
-								{ id: 'default', label: 'Follow Default' },
-								{ id: true, label: 'Show' },
-								{ id: false, label: 'Hide' },
-							]}
-							setValue={setShowTopBar}
-							value={style?.show_topbar}
-						/>
-					</div>
-
-					<div>
+					)}
+					{showField2('png64') && (
 						<div>
-							<label>Text</label>
-							<div style={{ border: '1px solid #ccc' }}>
-								<AlignmentInputField setValue={setAlignmentValue} value={values.alignment} />
-							</div>
+							<label>72x{pngHeight} PNG</label>
+							<CButtonGroup className="png-browse">
+								<PNGInputField
+									onSelect={setPng}
+									onError={setPngError}
+									min={{ width: 36, height: 36 }}
+									max={{ width: 72, height: pngHeight }}
+								/>
+								{clearPng && (
+									<CButton color="danger" disabled={!values.png64} onClick={clearPng}>
+										<FontAwesomeIcon icon={faTrash} />
+									</CButton>
+								)}
+							</CButtonGroup>
 						</div>
-					</div>
-					<div>
-						<div>
-							<label>PNG</label>
-							<div style={{ border: '1px solid #ccc' }}>
-								<AlignmentInputField setValue={setPngAlignmentValue} value={values.pngalignment} />
-							</div>
-						</div>
-					</div>
-					<div>
-						<label>72x{pngHeight} PNG</label>
-						<CButtonGroup className="png-browse">
-							<PNGInputField
-								onSelect={setPng}
-								onError={setPngError}
-								min={{ width: 36, height: 36 }}
-								max={{ width: 72, height: pngHeight }}
-							/>
-							{clearPng && (
-								<CButton color="danger" disabled={!values.png64} onClick={clearPng}>
-									<FontAwesomeIcon icon={faTrash} />
-								</CButton>
-							)}
-						</CButtonGroup>
-					</div>
+					)}
 				</div>
 			</div>
 		</>

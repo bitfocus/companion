@@ -380,9 +380,9 @@ function ButtonPicker({ selectButton }) {
 			</CRow>
 			<CRow>
 				<CCol sm={12}>
-					<CForm className="edit-button-panel" onSubmit={PreventDefaultHandler}>
+					<CForm className="flex-form" onSubmit={PreventDefaultHandler}>
 						<CRow form>
-							<CCol className="fieldtype-checkbox" sm={10} xs={9} hidden={actionStepOptions.length <= 1}>
+							<CCol sm={10} xs={9} hidden={actionStepOptions.length <= 1}>
 								<CLabel>Step</CLabel>
 
 								<DropdownInputField
@@ -393,7 +393,7 @@ function ButtonPicker({ selectButton }) {
 									disabled={!controlInfo}
 								/>
 							</CCol>
-							<CCol className="fieldtype-checkbox" sm={10} xs={9} hidden={actionSetOptions.length === 0}>
+							<CCol sm={10} xs={9} hidden={actionSetOptions.length === 0}>
 								<CLabel>Action Group</CLabel>
 
 								<DropdownInputField
@@ -404,7 +404,7 @@ function ButtonPicker({ selectButton }) {
 									disabled={!controlInfo}
 								/>
 							</CCol>
-							<CCol className="fieldtype-checkbox py-1" sm={10} xs={9}>
+							<CCol className="py-1" sm={10} xs={9}>
 								<CButtonGroup>
 									<CButton
 										color="primary"
@@ -558,37 +558,42 @@ function RecorderSessionHeading({ confirmRef, sessionId, sessionInfo, doFinish }
 
 	return (
 		<>
-			<CForm className="edit-button-panel" onSubmit={PreventDefaultHandler}>
-				<CRow form>
-					<CCol className="fieldtype-checkbox" sm={10} xs={9}>
-						<CLabel>Connections</CLabel>
-						<DropdownInputField
-							value={sessionInfo.instanceIds}
-							setValue={changeInstanceIds}
-							multiple={true}
-							choices={instancesWhichCanRecord}
-						/>
-					</CCol>
+			<CForm onSubmit={PreventDefaultHandler}>
+				<CRow form className="flex-form flex-form-row" style={{ clear: 'both' }}>
+					<div className="flex w-full gap-2">
+						<div className="w-full">
+							<CLabel>Connections</CLabel>
+							<DropdownInputField
+								value={sessionInfo.instanceIds}
+								setValue={changeInstanceIds}
+								multiple={true}
+								choices={instancesWhichCanRecord}
+							/>
+						</div>
 
-					<CCol className="fieldtype-checkbox" sm={2} xs={3}>
-						<CLabel>Recording</CLabel>
-						<span style={{ marginTop: 4, display: 'inline-block' }}>
-							<CSwitch color="success" size="lg" checked={!!sessionInfo.isRunning} onChange={changeRecording} />
-						</span>
-					</CCol>
+						<div>
+							<CLabel>Recording</CLabel>
+							<p>
+								<CSwitch color="success" size="lg" checked={!!sessionInfo.isRunning} onChange={changeRecording} />
+							</p>
+						</div>
+					</div>
+				</CRow>
+
+				<CRow form className="flex-form-row" style={{ clear: 'both' }}>
+					<CButtonGroup className={'margin-bottom'}>
+						<CButton onClick={doClearActions} color="danger" disabled={!sessionInfo.actions?.length}>
+							Clear Actions
+						</CButton>
+						<CButton onClick={doAbort} color="danger">
+							Discard
+						</CButton>
+						<CButton onClick={doFinish2} color="danger" disabled={!sessionInfo.actions?.length}>
+							Finish
+						</CButton>
+					</CButtonGroup>
 				</CRow>
 			</CForm>
-			<CButtonGroup className={'margin-bottom'}>
-				<CButton onClick={doClearActions} color="danger" disabled={!sessionInfo.actions?.length}>
-					Clear Actions
-				</CButton>
-				<CButton onClick={doAbort} color="danger">
-					Discard
-				</CButton>
-				<CButton onClick={doFinish2} color="danger" disabled={!sessionInfo.actions?.length}>
-					Finish
-				</CButton>
-			</CButtonGroup>
 		</>
 	)
 }
@@ -649,7 +654,7 @@ function RecorderSession({ sessionId, sessionInfo }) {
 	if (!sessionInfo || !sessionInfo.actions) return <LoadingRetryOrError dataReady={false} />
 
 	return (
-		<CCol xs={12}>
+		<CCol xs={12} className="flex-form">
 			<ActionsList
 				isOnControl={false}
 				dragId={'triggerAction'}

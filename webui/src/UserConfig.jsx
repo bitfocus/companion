@@ -8,7 +8,6 @@ import {
 	CDropdownMenu,
 	CDropdownToggle,
 	CInput,
-	CInputCheckbox,
 	CNav,
 	CNavItem,
 	CNavLink,
@@ -98,9 +97,7 @@ function UserConfigTable() {
 								color="success"
 								checked={config.page_direction_flipped}
 								size={'lg'}
-								onChange={() => {
-									setValue('page_direction_flipped', !config.page_direction_flipped)
-								}}
+								onChange={(e) => setValue('page_direction_flipped', e.currentTarget.checked)}
 							/>
 						</div>
 					</td>
@@ -119,9 +116,7 @@ function UserConfigTable() {
 								color="success"
 								checked={config.page_plusminus}
 								size={'lg'}
-								onChange={() => {
-									setValue('page_plusminus', !config.page_plusminus)
-								}}
+								onChange={(e) => setValue('page_plusminus', e.currentTarget.checked)}
 							/>
 						</div>
 					</td>
@@ -140,9 +135,7 @@ function UserConfigTable() {
 								color="success"
 								checked={!config.remove_topbar}
 								size={'lg'}
-								onChange={() => {
-									setValue('remove_topbar', !config.remove_topbar)
-								}}
+								onChange={(e) => setValue('remove_topbar', !e.currentTarget.checked)}
 							/>
 						</div>
 					</td>
@@ -161,15 +154,13 @@ function UserConfigTable() {
 				<tr>
 					<td>Watch for new USB Devices</td>
 					<td>
-						<div className="form-check form-check-inline mr-1">
-							<CInputCheckbox
-								id="userconfig_usb_hotplug"
+						<div className="form-check form-check-inline mr-1 float-right">
+							<CSwitch
+								color="success"
 								checked={config.usb_hotplug}
+								size={'lg'}
 								onChange={(e) => setValue('usb_hotplug', e.currentTarget.checked)}
 							/>
-							<label className="form-check-label" htmlFor="userconfig_usb_hotplug">
-								Enabled
-							</label>
 						</div>
 					</td>
 					<td>
@@ -180,20 +171,18 @@ function UserConfigTable() {
 				</tr>
 				<tr>
 					<td>
-						Use Elgato Plugin for StreamDeck access
+						Enable connected Streamdecks. When disabled support for the Elgato software Plugin will be enbaled
 						<br />
 						<em>(Requires Companion restart)</em>
 					</td>
 					<td>
-						<div className="form-check form-check-inline mr-1">
-							<CInputCheckbox
-								id="userconfig_elgato_plugin_enable"
-								checked={config.elgato_plugin_enable}
-								onChange={(e) => setValue('elgato_plugin_enable', e.currentTarget.checked)}
+						<div className="form-check form-check-inline mr-1 float-right">
+							<CSwitch
+								color="success"
+								checked={!config.elgato_plugin_enable}
+								size={'lg'}
+								onChange={(e) => setValue('elgato_plugin_enable', !e.currentTarget.checked)}
 							/>
-							<label className="form-check-label" htmlFor="userconfig_elgato_plugin_enable">
-								Enabled
-							</label>
 						</div>
 					</td>
 					<td>
@@ -209,15 +198,13 @@ function UserConfigTable() {
 						<em>(Requires Companion restart)</em>
 					</td>
 					<td>
-						<div className="form-check form-check-inline mr-1">
-							<CInputCheckbox
-								id="userconfig_xkeys_enable"
+						<div className="form-check form-check-inline mr-1 float-right">
+							<CSwitch
+								color="success"
 								checked={config.xkeys_enable}
+								size={'lg'}
 								onChange={(e) => setValue('xkeys_enable', e.currentTarget.checked)}
 							/>
-							<label className="form-check-label" htmlFor="userconfig_xkeys_enable">
-								Enabled
-							</label>
 						</div>
 					</td>
 					<td>
@@ -228,20 +215,18 @@ function UserConfigTable() {
 				</tr>
 				<tr>
 					<td>
-						Enable connected Loupedeck Live devices
+						Enable connected Loupedeck Live and Razer Stream Controller devices
 						<br />
 						<em>(Requires Companion restart)</em>
 					</td>
 					<td>
-						<div className="form-check form-check-inline mr-1">
-							<CInputCheckbox
-								id="userconfig_loupedeck_enable"
+						<div className="form-check form-check-inline mr-1 float-right">
+							<CSwitch
+								color="success"
 								checked={config.loupedeck_enable}
+								size={'lg'}
 								onChange={(e) => setValue('loupedeck_enable', e.currentTarget.checked)}
 							/>
-							<label className="form-check-label" htmlFor="userconfig_loupedeck_enable">
-								Enabled
-							</label>
 						</div>
 					</td>
 					<td>
@@ -258,15 +243,13 @@ function UserConfigTable() {
 				<tr>
 					<td>Enable Pin Codes</td>
 					<td>
-						<div className="form-check form-check-inline mr-1">
-							<CInputCheckbox
-								id="userconfig_pin_enable"
+						<div className="form-check form-check-inline mr-1 float-right">
+							<CSwitch
+								color="success"
 								checked={config.pin_enable}
+								size={'lg'}
 								onChange={(e) => setValue('pin_enable', e.currentTarget.checked)}
 							/>
-							<label className="form-check-label" htmlFor="userconfig_pin_enable">
-								Enabled
-							</label>
 						</div>
 					</td>
 					<td>
@@ -279,15 +262,13 @@ function UserConfigTable() {
 				<tr>
 					<td>Link Lockouts</td>
 					<td>
-						<div className="form-check form-check-inline mr-1">
-							<CInputCheckbox
-								id="userconfig_link_lockouts"
+						<div className="form-check form-check-inline mr-1 float-right">
+							<CSwitch
+								color="success"
 								checked={config.link_lockouts}
+								size={'lg'}
 								onChange={(e) => setValue('link_lockouts', e.currentTarget.checked)}
 							/>
-							<label className="form-check-label" htmlFor="userconfig_link_lockouts">
-								Enabled
-							</label>
 						</div>
 					</td>
 					<td>
@@ -318,6 +299,8 @@ function UserConfigTable() {
 							<CInput
 								type="number"
 								value={config.pin_timeout}
+								min={0}
+								step={1}
 								onChange={(e) => setValue('pin_timeout', e.currentTarget.value)}
 							/>
 						</div>
@@ -337,15 +320,13 @@ function UserConfigTable() {
 				<tr>
 					<td>TCP Listener</td>
 					<td>
-						<div className="form-check form-check-inline mr-1">
-							<CInputCheckbox
-								id="userconfig_tcp_enabled"
+						<div className="form-check form-check-inline mr-1 float-right">
+							<CSwitch
+								color="success"
 								checked={config.tcp_enabled}
+								size={'lg'}
 								onChange={(e) => setValue('tcp_enabled', e.currentTarget.checked)}
 							/>
-							<label className="form-check-label" htmlFor="userconfig_tcp_enabled">
-								Enabled
-							</label>
 						</div>
 					</td>
 					<td>
@@ -380,15 +361,13 @@ function UserConfigTable() {
 				<tr>
 					<td>UDP Listener</td>
 					<td>
-						<div className="form-check form-check-inline mr-1">
-							<CInputCheckbox
-								id="userconfig_udp_enabled"
+						<div className="form-check form-check-inline mr-1 float-right">
+							<CSwitch
+								color="success"
 								checked={config.udp_enabled}
+								size={'lg'}
 								onChange={(e) => setValue('udp_enabled', e.currentTarget.checked)}
 							/>
-							<label className="form-check-label" htmlFor="userconfig_udp_enabled">
-								Enabled
-							</label>
 						</div>
 					</td>
 					<td>
@@ -423,15 +402,13 @@ function UserConfigTable() {
 				<tr>
 					<td>OSC Listener</td>
 					<td>
-						<div className="form-check form-check-inline mr-1">
-							<CInputCheckbox
-								id="userconfig_osc_enabled"
+						<div className="form-check form-check-inline mr-1 float-right">
+							<CSwitch
+								color="success"
 								checked={config.osc_enabled}
+								size={'lg'}
 								onChange={(e) => setValue('osc_enabled', e.currentTarget.checked)}
 							/>
-							<label className="form-check-label" htmlFor="userconfig_osc_enabled">
-								Enabled
-							</label>
 						</div>
 					</td>
 					<td>
@@ -466,15 +443,13 @@ function UserConfigTable() {
 				<tr>
 					<td>RossTalk Listener</td>
 					<td>
-						<div className="form-check form-check-inline mr-1">
-							<CInputCheckbox
-								id="userconfig_rosstalk_enabled"
+						<div className="form-check form-check-inline mr-1 float-right">
+							<CSwitch
+								color="success"
 								checked={config.rosstalk_enabled}
+								size={'lg'}
 								onChange={(e) => setValue('rosstalk_enabled', e.currentTarget.checked)}
 							/>
-							<label className="form-check-label" htmlFor="userconfig_rosstalk_enabled">
-								Enabled
-							</label>
 						</div>
 					</td>
 					<td>
@@ -491,15 +466,13 @@ function UserConfigTable() {
 				<tr>
 					<td>Ember+ Listener</td>
 					<td>
-						<div className="form-check form-check-inline mr-1">
-							<CInputCheckbox
-								id="userconfig_emberplus_enabled"
+						<div className="form-check form-check-inline mr-1 float-right">
+							<CSwitch
+								color="success"
 								checked={config.emberplus_enabled}
+								size={'lg'}
 								onChange={(e) => setValue('emberplus_enabled', e.currentTarget.checked)}
 							/>
-							<label className="form-check-label" htmlFor="userconfig_emberplus_enabled">
-								Enabled
-							</label>
 						</div>
 					</td>
 					<td>
@@ -516,15 +489,13 @@ function UserConfigTable() {
 				<tr>
 					<td>Artnet Listener</td>
 					<td>
-						<div className="form-check form-check-inline mr-1">
-							<CInputCheckbox
-								id="userconfig_artnet_enabled"
+						<div className="form-check form-check-inline mr-1 float-right">
+							<CSwitch
+								color="success"
 								checked={config.artnet_enabled}
+								size={'lg'}
 								onChange={(e) => setValue('artnet_enabled', e.currentTarget.checked)}
 							/>
-							<label className="form-check-label" htmlFor="userconfig_artnet_enabled">
-								Enabled
-							</label>
 						</div>
 					</td>
 					<td>
@@ -587,9 +558,11 @@ function UserConfigTable() {
 				<tr>
 					<td>Enable Locking</td>
 					<td>
-						<div className="form-check form-check-inline mr-1">
-							<CInputCheckbox
+						<div className="form-check form-check-inline mr-1 float-right">
+							<CSwitch
+								color="success"
 								checked={config.admin_lockout}
+								size={'lg'}
 								onChange={(e) => setValue('admin_lockout', e.currentTarget.checked)}
 							/>
 						</div>
@@ -654,15 +627,13 @@ function UserConfigTable() {
 				<tr>
 					<td>HTTPS Web Server</td>
 					<td>
-						<div className="form-check form-check-inline mr-1">
-							<CInputCheckbox
-								id="userconfig_https_enabled"
+						<div className="form-check form-check-inline mr-1 float-right">
+							<CSwitch
+								color="success"
 								checked={config.https_enabled}
+								size={'lg'}
 								onChange={(e) => setValue('https_enabled', e.currentTarget.checked)}
 							/>
-							<label className="form-check-label" htmlFor="userconfig_https_enabled">
-								Enabled
-							</label>
 						</div>
 					</td>
 					<td>
@@ -789,6 +760,7 @@ function UserConfigTable() {
 												</CButton>
 											)}
 										</td>
+										<td>&nbsp;</td>
 									</tr>
 								</tbody>
 							</table>
@@ -887,17 +859,18 @@ function UserConfigTable() {
 					</td>
 				</tr>
 				<tr>
-					<td>Unstable Startup warning</td>
+					<td>Disable unstable Startup warning</td>
 					<td>
-						<div className="form-check form-check-inline mr-1">
-							<CInputCheckbox
+						<div className="form-check form-check-inline mr-1 float-right">
+							<CSwitch
+								color="success"
 								checked={window.localStorage.getItem('dismiss_3.0_unstable_warning') === '1'}
+								size={'lg'}
 								onChange={(e) => {
 									window.localStorage.setItem('dismiss_3.0_unstable_warning', e.currentTarget.checked ? '1' : '0')
 									window.location.reload()
 								}}
 							/>
-							<label className="form-check-label">Disabled</label>
 						</div>
 					</td>
 					<td>&nbsp;</td>
@@ -905,15 +878,16 @@ function UserConfigTable() {
 				<tr>
 					<td>Use TouchBackend for Drag and Drop</td>
 					<td>
-						<div className="form-check form-check-inline mr-1">
-							<CInputCheckbox
+						<div className="form-check form-check-inline mr-1 float-right">
+							<CSwitch
+								color="success"
 								checked={window.localStorage.getItem('test_touch_backend') === '1'}
+								size={'lg'}
 								onChange={(e) => {
 									window.localStorage.setItem('test_touch_backend', e.currentTarget.checked ? '1' : '0')
 									window.location.reload()
 								}}
 							/>
-							<label className="form-check-label">Enabled</label>
 						</div>
 					</td>
 					<td>&nbsp;</td>

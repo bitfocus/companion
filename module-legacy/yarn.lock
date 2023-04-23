@@ -823,6 +823,14 @@
   resolved "https://registry.yarnpkg.com/@types/ms/-/ms-0.7.31.tgz#31b7ca6407128a3d2bbc27fe2d21b345397f6197"
   integrity sha512-iiUgKzV9AuaEkZqkOLDIvlQiL6ltuZd9tGcW3gwpnX8JbuiuhFlEGmmFXEXkN50Cvq7Os88IY2v0dkDqXYWVgA==
 
+"@types/node-fetch@^2.6.2":
+  version "2.6.2"
+  resolved "https://registry.yarnpkg.com/@types/node-fetch/-/node-fetch-2.6.2.tgz#d1a9c5fd049d9415dce61571557104dec3ec81da"
+  integrity sha512-DHqhlq5jeESLy19TYhLakJ07kNumXWjcDdxXsLUMJZ6ue8VZJj4kLPQVE/2mdHh3xZziNF1xppu5lwmS53HR+A==
+  dependencies:
+    "@types/node" "*"
+    form-data "^3.0.0"
+
 "@types/node@*", "@types/node@16.9.1", "@types/node@^12.19.3", "@types/node@^12.19.4", "@types/node@^12.20.13", "@types/node@^14", "@types/node@^14.14.31", "@types/node@^14.18.22", "@types/node@^18.7.20":
   version "14.18.33"
   resolved "https://registry.yarnpkg.com/@types/node/-/node-14.18.33.tgz#8c29a0036771569662e4635790ffa9e057db379b"
@@ -1770,10 +1778,6 @@ commist@^1.0.0:
   version "1.0.6"
   resolved "https://codeload.github.com/bitfocus/companion-module-analogway-midra/tar.gz/b5136e8a8c18245e144ab78be7fa49072d673468"
 
-"companion-module-analogway-picturall@github:bitfocus/companion-module-analogway-picturall#v1.2.3":
-  version "1.2.3"
-  resolved "https://codeload.github.com/bitfocus/companion-module-analogway-picturall/tar.gz/9f0578b530335198e54acd3cd45000e40e9e4894"
-
 "companion-module-analogway-pls300@github:bitfocus/companion-module-analogway-pls300#v1.0.5":
   version "1.0.5"
   resolved "https://codeload.github.com/bitfocus/companion-module-analogway-pls300/tar.gz/dae9384f0c6abf303d9633fa89c1871ce9e2d354"
@@ -1832,10 +1836,11 @@ commist@^1.0.0:
   version "1.0.4"
   resolved "https://codeload.github.com/bitfocus/companion-module-avstumpfl-pixera/tar.gz/e745b28a9997e5e0fc3fdcee848758be3f8f1acd"
 
-"companion-module-barco-clickshare@github:bitfocus/companion-module-barco-clickshare#v1.0.3":
-  version "1.0.3"
-  resolved "https://codeload.github.com/bitfocus/companion-module-barco-clickshare/tar.gz/f4de13df908ccb1b80023339e9220a08123a2bb8"
+"companion-module-barco-clickshare@github:bitfocus/companion-module-barco-clickshare#cda8edc6a064cc01316061fdbd12302cd88d4489":
+  version "1.0.4"
+  resolved "https://codeload.github.com/bitfocus/companion-module-barco-clickshare/tar.gz/cda8edc6a064cc01316061fdbd12302cd88d4489"
   dependencies:
+    "@types/node-fetch" "^2.6.2"
     node-fetch "^2.0.0"
 
 "companion-module-barco-dcs@github:bitfocus/companion-module-barco-dcs#v1.0.6":
@@ -1882,19 +1887,9 @@ commist@^1.0.0:
   version "1.1.3"
   resolved "https://codeload.github.com/bitfocus/companion-module-barco-pulse/tar.gz/8f18481142991222ee274406b92fbc9938519bd5"
 
-"companion-module-bbc-raven@github:bitfocus/companion-module-bbc-raven#v1.0.3":
-  version "1.0.3"
-  resolved "https://codeload.github.com/bitfocus/companion-module-bbc-raven/tar.gz/c7a0055626609a8def7d73b61c0b1f2a5e153859"
-  dependencies:
-    node-rest-client "^3.1.0"
-
 "companion-module-behringer-wing@github:bitfocus/companion-module-behringer-wing#v1.0.8":
   version "1.0.8"
   resolved "https://codeload.github.com/bitfocus/companion-module-behringer-wing/tar.gz/0fd459ee7144490bbc86b76ee475f35823628374"
-
-"companion-module-biamp-audia@github:bitfocus/companion-module-biamp-audia#v1.0.2":
-  version "1.0.2"
-  resolved "https://codeload.github.com/bitfocus/companion-module-biamp-audia/tar.gz/0082201462f94251b4f55c2c851f053d82ef701d"
 
 "companion-module-biamp-tesira@github:bitfocus/companion-module-biamp-tesira#v1.0.0":
   version "1.0.0"
@@ -1903,12 +1898,6 @@ commist@^1.0.0:
 "companion-module-birddog-central@github:bitfocus/companion-module-birddog-central#v1.0.0":
   version "1.0.0"
   resolved "https://codeload.github.com/bitfocus/companion-module-birddog-central/tar.gz/c7844722b36cd6eed07940466281b9c522a35d5f"
-  dependencies:
-    node-fetch "^2.6.7"
-
-"companion-module-birddog-ptz@github:bitfocus/companion-module-birddog-ptz#v2.3.3":
-  version "2.3.3"
-  resolved "https://codeload.github.com/bitfocus/companion-module-birddog-ptz/tar.gz/9c71ea0ba275b92f106f5b08a32d5d65f660e23c"
   dependencies:
     node-fetch "^2.6.7"
 
@@ -1982,10 +1971,6 @@ commist@^1.0.0:
   resolved "https://codeload.github.com/bitfocus/companion-module-bytehive-playoutbee/tar.gz/e684da8d7363159a42dc80f6298f51b6ac89a0a7"
   dependencies:
     got "^11.8.3"
-
-"companion-module-canon-ptz@github:bitfocus/companion-module-canon-ptz#v1.1.1":
-  version "1.1.1"
-  resolved "https://codeload.github.com/bitfocus/companion-module-canon-ptz/tar.gz/9900c17fd0e0e6cbcc14587414acffcf2c48135d"
 
 "companion-module-canon-xf@github:bitfocus/companion-module-canon-xf#v1.0.2":
   version "1.0.2"
@@ -2467,9 +2452,9 @@ commist@^1.0.0:
   version "1.0.4"
   resolved "https://codeload.github.com/bitfocus/companion-module-lightware-lw2/tar.gz/8789d544893aa58aee8a4383a9f219ff7f071000"
 
-"companion-module-lightware-lw3@github:bitfocus/companion-module-lightware-lw3#v1.0.3":
-  version "1.0.3"
-  resolved "https://codeload.github.com/bitfocus/companion-module-lightware-lw3/tar.gz/5623ce51d0fc6f0b3a61ccd827ff04647806a6c5"
+"companion-module-lightware-lw3@github:bitfocus/companion-module-lightware-lw3#v1.1.0":
+  version "1.1.0"
+  resolved "https://codeload.github.com/bitfocus/companion-module-lightware-lw3/tar.gz/0caaccb209810b1426b73f27d3a768b5f95ed0f8"
 
 "companion-module-linkbox-remote@github:bitfocus/companion-module-linkbox-remote#v1.2.3":
   version "1.2.3"
@@ -2730,14 +2715,6 @@ commist@^1.0.0:
   version "1.0.7"
   resolved "https://codeload.github.com/bitfocus/companion-module-planningcenter-serviceslive/tar.gz/7591e8362f50edf941d098d4dc886bc501165e1a"
 
-"companion-module-presentationtools-aps@github:bitfocus/companion-module-presentationtools-aps#v1.2.1":
-  version "1.2.1"
-  resolved "https://codeload.github.com/bitfocus/companion-module-presentationtools-aps/tar.gz/b7c712da0f5fea0c2c59288ff8070941cef667a3"
-
-"companion-module-presentationtools-cuetimer@github:bitfocus/companion-module-presentationtools-cuetimer#v1.1.4":
-  version "1.1.4"
-  resolved "https://codeload.github.com/bitfocus/companion-module-presentationtools-cuetimer/tar.gz/fa703dea00b6fc9375125d1f188d7392e710d2dc"
-
 "companion-module-protopie-bridge@github:bitfocus/companion-module-protopie-bridge#v1.0.3":
   version "1.0.3"
   resolved "https://codeload.github.com/bitfocus/companion-module-protopie-bridge/tar.gz/8096bc46cd661a1d46e6fb7d0bb491f581964531"
@@ -2780,10 +2757,6 @@ commist@^1.0.0:
 "companion-module-resi-decoders@github:bitfocus/companion-module-resi-decoders#v1.1.5":
   version "1.1.5"
   resolved "https://codeload.github.com/bitfocus/companion-module-resi-decoders/tar.gz/f507b00ddef98d292b9b3b0db009c22937d19be1"
-
-"companion-module-resolume-arena@github:bitfocus/companion-module-resolume-arena#v1.0.7":
-  version "1.0.7"
-  resolved "https://codeload.github.com/bitfocus/companion-module-resolume-arena/tar.gz/f907c87ff01d8805cce628effaf9cd034e5c892f"
 
 "companion-module-rgblink-mini@github:bitfocus/companion-module-rgblink-mini#v1.0.2":
   version "1.0.2"
@@ -2851,10 +2824,6 @@ commist@^1.0.0:
   version "1.0.3"
   resolved "https://codeload.github.com/bitfocus/companion-module-rossvideo-nkrouter/tar.gz/6390d3c0b1dbc441e8eabecc8f87cc453d036532"
 
-"companion-module-rossvideo-rosstalk@github:bitfocus/companion-module-rossvideo-rosstalk#v1.2.11":
-  version "1.2.11"
-  resolved "https://codeload.github.com/bitfocus/companion-module-rossvideo-rosstalk/tar.gz/0aaeb1fba69da1e9e152fd70c383ca202600dc50"
-
 "companion-module-rossvideo-videoserver@github:bitfocus/companion-module-rossvideo-videoserver#v1.1.0":
   version "1.1.0"
   resolved "https://codeload.github.com/bitfocus/companion-module-rossvideo-videoserver/tar.gz/b0518191215473eb17c345bf44d03764f41636cd"
@@ -2903,10 +2872,6 @@ commist@^1.0.0:
   dependencies:
     xml2js "^0.4.23"
 
-"companion-module-singularlive-studio@github:bitfocus/companion-module-singularlive-studio#v1.0.11":
-  version "1.0.11"
-  resolved "https://codeload.github.com/bitfocus/companion-module-singularlive-studio/tar.gz/5068cefa416f6ec3acdd4554471e5c3673c79e30"
-
 "companion-module-snapav-wattbox@github:bitfocus/companion-module-snapav-wattbox#v1.0.2":
   version "1.0.1"
   resolved "https://codeload.github.com/bitfocus/companion-module-snapav-wattbox/tar.gz/ee45a88f78dd7255127c39e09b206e4e6f3688b0"
@@ -2916,10 +2881,6 @@ commist@^1.0.0:
   resolved "https://codeload.github.com/bitfocus/companion-module-softouch-easyworship/tar.gz/62557ef2b39dc30d5ceed3efb733b02ed07bce62"
   dependencies:
     bonjour "^3.5.0"
-
-"companion-module-softron-ontheairvideo@github:bitfocus/companion-module-softron-ontheairvideo#v1.0.3":
-  version "1.0.3"
-  resolved "https://codeload.github.com/bitfocus/companion-module-softron-ontheairvideo/tar.gz/e57499fa6cb9f6de77f77d3d8ed5722067f73e59"
 
 "companion-module-sononum-horae@github:bitfocus/companion-module-sononum-horae#v1.0.3":
   version "1.0.3"
