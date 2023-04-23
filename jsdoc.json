@@ -10,8 +10,7 @@
 		"readme": "./README.md",
 		"destination": "docs/jsdoc/",
 		"recurse": true,
-		"verbose": true,
-		"template": "node_modules/tui-jsdoc-template"
+		"verbose": true
 	},
 	"templates": {
 		"name": "Companion",

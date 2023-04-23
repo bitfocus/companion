@@ -42,11 +42,10 @@
 		"chokidar": "^3.5.3",
 		"dotenv": "^16.0.3",
 		"jest": "^29.5.0",
-		"jsdoc": "github:bitfocus/jsdoc#3.6.6-patch",
+		"jsdoc": "^4.0.2",
 		"octokit": "^2.0.14",
 		"prettier": "^2.8.7",
 		"tar": "^6.1.13",
-		"tui-jsdoc-template": "^1.2.2",
 		"webpack": "^5.79.0",
 		"webpack-cli": "^5.0.1",
 		"zx": "^7.2.1"
