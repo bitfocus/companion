@@ -4,6 +4,9 @@ on: [push]
 jobs:
   linux64:
     runs-on: ubuntu-20.04
+    outputs:
+      version: ${{ steps.filenames.outputs.longversion }}
+      do-docker: ${{ steps.upload.outputs.branch }}
     steps:
       - uses: actions/checkout@v3
         with:
@@ -66,13 +69,6 @@ jobs:
           api-product: companion
           api-target: 'linux-tgz'
           api-secret: ${{ secrets.BITFOCUS_API_PROJECT_SECRET }}
-
-      - name: Report docker build is needed
-        if: ${{ steps.upload.outputs.branch }}
-        uses: actions/upload-artifact@v3
-        with:
-          name: do-docker-build
-          path: dist/BUILD
 
   linux-arm64:
     runs-on: ubuntu-20.04
@@ -343,25 +339,14 @@ jobs:
       IMAGE_NAME: companion
 
     steps:
-      - name: Check if build is required
-        id: build-check
-        uses: xSAVIKx/artifact-exists-action@v0
-        with:
-          name: do-docker-build
-
       - uses: actions/checkout@v3
-        if: '${{ steps.build-check.outputs.exists }}'
-
-      - uses: actions/download-artifact@v3
-        if: '${{ steps.build-check.outputs.exists }}'
-        with:
-          name: do-docker-build
+        if: ${{ needs.linux64.outputs.do-docker }}
 
       - name: Determine target image name
-        if: '${{ steps.build-check.outputs.exists }}'
+        if: ${{ needs.linux64.outputs.do-docker }}
         id: image-name
         run: |
-          BUILD_VERSION=$(cat BUILD)
+          BUILD_VERSION=${{ needs.linux64.outputs.version }}
 
           IMAGE_ID=ghcr.io/${{ github.repository }}/$IMAGE_NAME
 
