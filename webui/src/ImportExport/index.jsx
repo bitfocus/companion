@@ -82,7 +82,7 @@ export function ImportExport() {
 						console.error('Failed to load config to import:', e)
 					})
 			}
-			fr.readAsText(newFile)
+			fr.readAsArrayBuffer(newFile)
 		},
 		[socket, instancesContext]
 	)
