@@ -30,6 +30,7 @@ import { GenericConfirmModal } from '../Components/GenericConfirmModal'
 import { nanoid } from 'nanoid'
 import { useSharedPageRenderCache } from '../ButtonRenderCache'
 import Select from 'react-select'
+import { ConfirmExportModal } from '../Components/ConfirmExportModal'
 
 export const ButtonsGridPanel = memo(function ButtonsPage({
 	pageNumber,
@@ -108,8 +109,15 @@ export const ButtonsGridPanel = memo(function ButtonsPage({
 
 	const pageName = pageInfo?.name ?? 'PAGE'
 
+	const exportModalRef = useRef(null)
+	const showExportModal = useCallback(() => {
+		exportModalRef.current.show(`/int/export/page/${pageNumber}`)
+	}, [pageNumber])
+
 	return (
 		<KeyReceiver onKeyDown={onKeyDown} tabIndex={0}>
+			<ConfirmExportModal ref={exportModalRef} title="Export Page" />
+
 			<h4>Buttons</h4>
 			<p>
 				The squares below represent each button on your Streamdeck. Click on them to set up how you want them to look,
@@ -124,8 +132,7 @@ export const ButtonsGridPanel = memo(function ButtonsPage({
 								float: 'right',
 								marginTop: 10,
 							}}
-							href={`/int/export/page/${pageNumber}`}
-							target="_new"
+							onClick={showExportModal}
 						>
 							<FontAwesomeIcon icon={faFileExport} /> Export page
 						</CButton>

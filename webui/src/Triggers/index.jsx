@@ -30,6 +30,7 @@ import { nanoid } from 'nanoid'
 import { EditTriggerPanel } from './EditPanel'
 import { GenericConfirmModal } from '../Components/GenericConfirmModal'
 import { ParseControlId } from '@companion/shared/ControlId'
+import { ConfirmExportModal } from '../Components/ConfirmExportModal'
 
 export const Triggers = memo(function Triggers() {
 	const socket = useContext(SocketContext)
@@ -77,8 +78,15 @@ export const Triggers = memo(function Triggers() {
 			})
 	}, [socket, doEditItem])
 
+	const exportModalRef = useRef(null)
+	const showExportModal = useCallback(() => {
+		exportModalRef.current.show(`/int/export/triggers/all`)
+	}, [])
+
 	return (
 		<CRow className="triggers-page split-panels">
+			<ConfirmExportModal ref={exportModalRef} title="Export Triggers" />
+
 			<CCol xs={12} xl={6} className="primary-panel">
 				<h4>Triggers and schedules</h4>
 				<p>This allows you to run actions based on Companion, feedback or time events.</p>
@@ -96,8 +104,7 @@ export const Triggers = memo(function Triggers() {
 					style={{
 						marginTop: 10,
 					}}
-					href={`/int/export/triggers/all`}
-					target="_new"
+					onClick={showExportModal}
 				>
 					<FontAwesomeIcon icon={faFileExport} /> Export all
 				</CButton>
