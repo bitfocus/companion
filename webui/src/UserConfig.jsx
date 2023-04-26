@@ -171,7 +171,9 @@ function UserConfigTable() {
 				</tr>
 				<tr>
 					<td>
-						Enable connected Streamdecks. When disabled support for the Elgato software Plugin will be enbaled
+						Enable connected Streamdecks
+						<br />
+						When disabled support for the Elgato software Plugin will be enabled
 						<br />
 						<em>(Requires Companion restart)</em>
 					</td>
