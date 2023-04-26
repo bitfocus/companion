@@ -2,7 +2,7 @@
 
 ## Companion v3.0.0 - Unreleased
 
-Documented up to bb3d1052f9b99bd1567749a98f8278aef26d4ef4
+Documented up to bde02297f71b0b88e1d8cf03080e707e2bfcae87
 
 ### BREAKING CHANGES
 
@@ -40,6 +40,7 @@ Documented up to bb3d1052f9b99bd1567749a98f8278aef26d4ef4
 - Launcher option to run at login
 - Improved search function in add connections list
 - Support rotary events from elgato streamdeck plugin
+- Support the new Razer Stream Controller X
 - Improved expression syntax with support for functions and strings
 - UI style improvements
 - New import/export system, allowing for more fine-grained control
