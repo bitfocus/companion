@@ -8,7 +8,10 @@ import { PasswordStep } from './PasswordStep'
 import { ApplyStep } from './ApplyStep'
 import { FinishStep } from './FinishStep'
 
-export const WIZARD_CURRENT_VERSION = 22
+export const WIZARD_VERSION_2_2 = 22 // 2.2
+export const WIZARD_VERSION_3_0 = 30 // 3.0
+
+export const WIZARD_CURRENT_VERSION = WIZARD_VERSION_3_0
 
 export const WizardModal = forwardRef(function WizardModal(_props, ref) {
 	const socket = useContext(SocketContext)
