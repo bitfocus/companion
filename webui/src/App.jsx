@@ -43,7 +43,6 @@ import { CloudPage } from './CloudPage'
 import { WizardModal, WIZARD_CURRENT_VERSION } from './Wizard'
 import { Navigate, useLocation } from 'react-router-dom'
 import { useIdleTimer } from 'react-idle-timer'
-import { UnstableWarningModal } from './UnstableWarning'
 import { ImportExport } from './ImportExport'
 
 const useTouchBackend = window.localStorage.getItem('test_touch_backend') === '1'
@@ -121,7 +120,6 @@ export default function App() {
 		<ContextData>
 			{(loadingProgress, loadingComplete) => (
 				<>
-					<UnstableWarningModal />
 					<div id="error-container" className={wasConnected ? 'show-error' : ''}>
 						<div className="row justify-content-center">
 							<div className="col-md-6">

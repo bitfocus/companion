@@ -859,23 +859,6 @@ function UserConfigTable() {
 					</td>
 				</tr>
 				<tr>
-					<td>Disable unstable Startup warning</td>
-					<td>
-						<div className="form-check form-check-inline mr-1 float-right">
-							<CSwitch
-								color="success"
-								checked={window.localStorage.getItem('dismiss_3.0_unstable_warning') === '1'}
-								size={'lg'}
-								onChange={(e) => {
-									window.localStorage.setItem('dismiss_3.0_unstable_warning', e.currentTarget.checked ? '1' : '0')
-									window.location.reload()
-								}}
-							/>
-						</div>
-					</td>
-					<td>&nbsp;</td>
-				</tr>
-				<tr>
 					<td>Use TouchBackend for Drag and Drop</td>
 					<td>
 						<div className="form-check form-check-inline mr-1 float-right">
