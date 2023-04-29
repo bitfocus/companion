@@ -1,7 +1,7 @@
 import Tribute from 'tributejs'
 import { useEffect, useMemo, useState, useCallback, useContext } from 'react'
 import { CInput } from '@coreui/react'
-import { VariableDefinitionsContext } from '../util'
+import { InstancesContext, PropertyDefinitionsContext } from '../util'
 
 export function TextInputField({
 	regex,
@@ -15,7 +15,8 @@ export function TextInputField({
 	disabled,
 	useVariables,
 }) {
-	const variableDefinitionsContext = useContext(VariableDefinitionsContext)
+	const propertyDefinitionsContext = useContext(PropertyDefinitionsContext)
+	const instancesContext = useContext(InstancesContext)
 
 	const [tmpValue, setTmpValue] = useState(null)
 
@@ -38,20 +39,21 @@ export function TextInputField({
 		// Update the suggestions list in tribute whenever anything changes
 		const suggestions = []
 		if (useVariables) {
-			for (const [instanceLabel, variables] of Object.entries(variableDefinitionsContext)) {
-				for (const [name, va] of Object.entries(variables || {})) {
+			for (const [instanceId, properties] of Object.entries(propertyDefinitionsContext)) {
+				const instanceLabel = (instancesContext[instanceId] ?? {})?.label || instanceId
+				for (const [name, property] of Object.entries(properties || {})) {
 					const variableId = `${instanceLabel}:${name}`
 					suggestions.push({
 						key: variableId + ')',
 						value: variableId,
-						label: va.label,
+						label: property.name,
 					})
 				}
 			}
 		}
 
 		tribute.append(0, suggestions, true)
-	}, [variableDefinitionsContext, tribute, useVariables])
+	}, [propertyDefinitionsContext, instancesContext, tribute, useVariables])
 
 	// Compile the regex (and cache)
 	const compiledRegex = useMemo(() => {

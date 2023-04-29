@@ -1,6 +1,6 @@
 import { useCallback, useContext, useEffect, useRef, useState } from 'react'
 import { CButton, CButtonGroup } from '@coreui/react'
-import { InstancesContext, VariableDefinitionsContext, socketEmitPromise, SocketContext, ModulesContext } from '../util'
+import { InstancesContext, socketEmitPromise, SocketContext, ModulesContext, PropertyDefinitionsContext } from '../util'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import {
 	faDollarSign,
@@ -229,7 +229,7 @@ function InstancesTableRow({
 }) {
 	const socket = useContext(SocketContext)
 	const modules = useContext(ModulesContext)
-	const variableDefinitionsContext = useContext(VariableDefinitionsContext)
+	const propertyDefinitionsContext = useContext(PropertyDefinitionsContext)
 
 	const moduleInfo = modules[instance.instance_type]
 
@@ -286,7 +286,7 @@ function InstancesTableRow({
 	})
 	preview(drop(ref))
 
-	const instanceVariables = variableDefinitionsContext[instance.label]
+	const hasReadableProperties = !!Object.values(propertyDefinitionsContext[id] || {}).find((p) => !!p.hasGetter)
 
 	const doEdit = () => {
 		if (!moduleInfo || !isEnabled) {
@@ -356,9 +356,9 @@ function InstancesTableRow({
 								size="md"
 								style={{
 									padding: 4,
-									opacity: !isEnabled || !(instanceVariables && Object.keys(instanceVariables).length > 0) ? 0.2 : 1,
+									opacity: !isEnabled || !hasReadableProperties ? 0.2 : 1,
 								}}
-								disabled={!isEnabled || !(instanceVariables && Object.keys(instanceVariables).length > 0)}
+								disabled={!isEnabled || !hasReadableProperties}
 							>
 								<FontAwesomeIcon icon={faDollarSign} />
 							</CButton>

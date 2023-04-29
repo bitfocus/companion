@@ -1,6 +1,12 @@
 import React, { useCallback, useContext, useState, useMemo, useEffect, memo } from 'react'
 import { CAlert, CButton, CInput, CInputGroup, CInputGroupAppend } from '@coreui/react'
-import { SocketContext, socketEmitPromise, NotifierContext, VariableDefinitionsContext } from '../util'
+import {
+	SocketContext,
+	socketEmitPromise,
+	NotifierContext,
+	PropertyDefinitionsContext,
+	InstancesContext,
+} from '../util'
 import { CopyToClipboard } from 'react-copy-to-clipboard'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faCopy, faTimes } from '@fortawesome/free-solid-svg-icons'
@@ -8,17 +14,22 @@ import { faCopy, faTimes } from '@fortawesome/free-solid-svg-icons'
 export function VariablesTable({ label }) {
 	const socket = useContext(SocketContext)
 	const notifier = useContext(NotifierContext)
-	const variableDefinitionsContext = useContext(VariableDefinitionsContext)
+	const propertyDefinitionsContext = useContext(PropertyDefinitionsContext)
+	const instancesContext = useContext(InstancesContext)
+
+	const instanceId = Object.entries(instancesContext || {}).find((e) => e[1]?.label === label)?.[0]
+	const propertyDefinitions = propertyDefinitionsContext[instanceId]
 
 	const [variableValues, setVariableValues] = useState({})
 	const [filter, setFilter] = useState('')
 
 	const variableDefinitions = useMemo(() => {
 		const defs = []
-		for (const [name, variable] of Object.entries(variableDefinitionsContext[label] || {})) {
+		for (const [propertyId, property] of Object.entries(propertyDefinitions || {})) {
 			defs.push({
-				...variable,
-				name,
+				// ...variable,
+				label: property.name,
+				name: propertyId,
 			})
 		}
 
@@ -29,7 +40,7 @@ export function VariablesTable({ label }) {
 		)
 
 		return defs
-	}, [variableDefinitionsContext, label])
+	}, [propertyDefinitions])
 
 	useEffect(() => {
 		if (label) {

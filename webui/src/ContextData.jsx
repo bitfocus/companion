@@ -4,7 +4,7 @@ import {
 	ActionsContext,
 	FeedbacksContext,
 	InstancesContext,
-	VariableDefinitionsContext,
+	PropertyDefinitionsContext,
 	CustomVariableDefinitionsContext,
 	UserConfigContext,
 	SurfacesContext,
@@ -33,7 +33,7 @@ export function ContextData({ children }) {
 	const [modules, setModules] = useState(null)
 	const [actionDefinitions, setActionDefinitions] = useState(null)
 	const [feedbackDefinitions, setFeedbackDefinitions] = useState(null)
-	const [variableDefinitions, setVariableDefinitions] = useState(null)
+	const [propertyDefinitions, setPropertyDefinitions] = useState(null)
 	const [customVariables, setCustomVariables] = useState(null)
 	const [userConfig, setUserConfig] = useState(null)
 	const [surfaces, setSurfaces] = useState(null)
@@ -88,27 +88,36 @@ export function ContextData({ children }) {
 		return new ButtonRenderCache(socket)
 	}, [socket])
 
-	const completeVariableDefinitions = useMemo(() => {
-		if (variableDefinitions) {
+	const completePropertyDefinitions = useMemo(() => {
+		if (propertyDefinitions) {
 			// Generate definitions for all the custom variables
 			const customVariableDefinitions = {}
 			for (const [id, info] of Object.entries(customVariables || {})) {
 				customVariableDefinitions[`custom_${id}`] = {
-					label: info.description,
+					// TODO - these should be settable, and probably more fleshed out...
+					name: info.description,
+					description: '',
+
+					type: 'legacy',
+
+					instanceIds: null,
+
+					hasSetter: false,
+					hasGetter: true,
 				}
 			}
 
 			return {
-				...variableDefinitions,
+				...propertyDefinitions,
 				internal: {
-					...variableDefinitions.internal,
+					...propertyDefinitions.internal,
 					...customVariableDefinitions,
 				},
 			}
 		} else {
 			return null
 		}
-	}, [customVariables, variableDefinitions])
+	}, [customVariables, propertyDefinitions])
 
 	useEffect(() => {
 		if (socket) {
@@ -141,12 +150,12 @@ export function ContextData({ children }) {
 				.catch((e) => {
 					console.error('Failed to load feedback definitions list', e)
 				})
-			socketEmitPromise(socket, 'variable-definitions:subscribe', [])
+			socketEmitPromise(socket, 'property-definitions:subscribe', [])
 				.then((data) => {
-					setVariableDefinitions(data || {})
+					setPropertyDefinitions(data || {})
 				})
 				.catch((e) => {
-					console.error('Failed to load variable definitions list', e)
+					console.error('Failed to load property definitions list', e)
 				})
 			socketEmitPromise(socket, 'custom-variables:subscribe', [])
 				.then((data) => {
@@ -164,8 +173,8 @@ export function ContextData({ children }) {
 					console.error('Failed to load user config', e)
 				})
 
-			const updateVariableDefinitions = (label, patch) => {
-				setVariableDefinitions((oldDefinitions) => applyPatchOrReplaceSubObject(oldDefinitions, label, patch))
+			const updatePropertyDefinitions = (label, patch) => {
+				setPropertyDefinitions((oldDefinitions) => applyPatchOrReplaceSubObject(oldDefinitions, label, patch))
 			}
 			const updateFeedbackDefinitions = (id, patch) => {
 				setFeedbackDefinitions((oldDefinitions) => applyPatchOrReplaceSubObject(oldDefinitions, id, patch))
@@ -219,7 +228,7 @@ export function ContextData({ children }) {
 			}
 			socket.on('modules:patch', patchModules)
 
-			socket.on('variable-definitions:update', updateVariableDefinitions)
+			socket.on('property-definitions:update', updatePropertyDefinitions)
 			socket.on('custom-variables:update', updateCustomVariables)
 
 			socket.on('action-definitions:update', updateActionDefinitions)
@@ -282,7 +291,7 @@ export function ContextData({ children }) {
 			socket.on('triggers:update', updateTriggers)
 
 			return () => {
-				socket.off('variable-definitions:update', updateVariableDefinitions)
+				socket.off('property-definitions:update', updatePropertyDefinitions)
 				socket.off('custom-variables:update', updateCustomVariables)
 				socket.off('action-definitions:update', updateActionDefinitions)
 				socket.off('feedback-definitions:update', updateFeedbackDefinitions)
@@ -301,8 +310,8 @@ export function ContextData({ children }) {
 				socketEmitPromise(socket, 'feedback-definitions:unsubscribe', []).catch((e) => {
 					console.error('Failed to unsubscribe to feedback definitions list', e)
 				})
-				socketEmitPromise(socket, 'variable-definitions:unsubscribe', []).catch((e) => {
-					console.error('Failed to unsubscribe to variable definitions list', e)
+				socketEmitPromise(socket, 'property-definitions:unsubscribe', []).catch((e) => {
+					console.error('Failed to unsubscribe to property definitions list', e)
 				})
 				socketEmitPromise(socket, 'instances:unsubscribe', []).catch((e) => {
 					console.error('Failed to unsubscribe from instances list:', e)
@@ -329,8 +338,8 @@ export function ContextData({ children }) {
 		eventDefinitions,
 		instances,
 		modules,
-		variableDefinitions,
-		completeVariableDefinitions,
+		propertyDefinitions,
+		completePropertyDefinitions,
 		actionDefinitions,
 		feedbackDefinitions,
 		customVariables,
@@ -351,7 +360,7 @@ export function ContextData({ children }) {
 						<ActionsContext.Provider value={actionDefinitions}>
 							<FeedbacksContext.Provider value={feedbackDefinitions}>
 								<InstancesContext.Provider value={instances}>
-									<VariableDefinitionsContext.Provider value={completeVariableDefinitions}>
+									<PropertyDefinitionsContext.Provider value={completePropertyDefinitions}>
 										<CustomVariableDefinitionsContext.Provider value={customVariables}>
 											<UserConfigContext.Provider value={userConfig}>
 												<SurfacesContext.Provider value={surfaces}>
@@ -369,7 +378,7 @@ export function ContextData({ children }) {
 												</SurfacesContext.Provider>
 											</UserConfigContext.Provider>
 										</CustomVariableDefinitionsContext.Provider>
-									</VariableDefinitionsContext.Provider>
+									</PropertyDefinitionsContext.Provider>
 								</InstancesContext.Provider>
 							</FeedbacksContext.Provider>
 						</ActionsContext.Provider>

@@ -2,7 +2,7 @@ import React, { useCallback, useContext, useEffect, useMemo, useRef, useState } 
 import { CButton, CForm, CFormGroup, CInput, CLabel } from '@coreui/react'
 import {
 	InstancesContext,
-	VariableDefinitionsContext,
+	PropertyDefinitionsContext,
 	CustomVariableDefinitionsContext,
 	socketEmitPromise,
 	SocketContext,
@@ -25,14 +25,6 @@ export const InstanceVariables = function InstanceVariables({ resetToken }) {
 	const [instanceId, setInstance] = useState(null)
 	const [showCustom, setShowCustom] = useState(false)
 
-	const instancesLabelMap = useMemo(() => {
-		const labelMap = new Map()
-		for (const [id, instance] of Object.entries(instancesContext)) {
-			labelMap.set(instance.label, id)
-		}
-		return labelMap
-	}, [instancesContext])
-
 	// Reset selection on resetToken change
 	useEffect(() => {
 		setInstance(null)
@@ -46,27 +38,22 @@ export const InstanceVariables = function InstanceVariables({ resetToken }) {
 
 		return <VariablesList selectedInstanceLabel={instanceLabel} setInstance={setInstance} />
 	} else {
-		return (
-			<VariablesInstanceList
-				setInstance={setInstance}
-				setShowCustom={setShowCustom}
-				instancesLabelMap={instancesLabelMap}
-			/>
-		)
+		return <VariablesInstanceList setInstance={setInstance} setShowCustom={setShowCustom} />
 	}
 }
 
-function VariablesInstanceList({ setInstance, setShowCustom, instancesLabelMap }) {
+function VariablesInstanceList({ setInstance, setShowCustom }) {
 	const modules = useContext(ModulesContext)
 	const instancesContext = useContext(InstancesContext)
-	const variableDefinitionsContext = useContext(VariableDefinitionsContext)
+	const propertyDefinitionsContext = useContext(PropertyDefinitionsContext)
 
-	const options = Object.entries(variableDefinitionsContext || []).map(([label, defs]) => {
-		if (!defs || Object.keys(defs).length === 0) return ''
+	const options = Object.entries(propertyDefinitionsContext || {}).map(([instanceId, properties]) => {
+		const hasReadableProperties = !!Object.values(properties || {}).find((p) => !!p.hasGetter)
+		if (!hasReadableProperties) return ''
 
-		if (label === 'internal') {
+		if (instanceId === 'internal') {
 			return (
-				<div key={label}>
+				<div key={instanceId}>
 					<CButton color="info" className="choose_instance mb-3 mr-2" onClick={() => setInstance('internal')}>
 						Internal
 					</CButton>
@@ -74,14 +61,13 @@ function VariablesInstanceList({ setInstance, setShowCustom, instancesLabelMap }
 			)
 		}
 
-		const id = instancesLabelMap.get(label)
-		const instance = id ? instancesContext[id] : undefined
+		const instance = instancesContext[instanceId]
 		const module = instance ? modules[instance.instance_type] : undefined
 
 		return (
-			<div key={id}>
-				<CButton color="info" className="choose_instance mb-3 mr-2" onClick={() => setInstance(id)}>
-					{module?.name ?? module?.name ?? '?'} ({label ?? id})
+			<div key={instanceId}>
+				<CButton color="info" className="choose_instance mb-3 mr-2" onClick={() => setInstance(instanceId)}>
+					{module?.name ?? '?'} ({instance?.label ?? instanceId})
 				</CButton>
 			</div>
 		)
