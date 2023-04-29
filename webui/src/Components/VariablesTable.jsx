@@ -17,7 +17,8 @@ export function VariablesTable({ label }) {
 	const propertyDefinitionsContext = useContext(PropertyDefinitionsContext)
 	const instancesContext = useContext(InstancesContext)
 
-	const instanceId = Object.entries(instancesContext || {}).find((e) => e[1]?.label === label)?.[0]
+	const instanceId =
+		label === 'internal' ? 'internal' : Object.entries(instancesContext || {}).find((e) => e[1]?.label === label)?.[0]
 	const propertyDefinitions = propertyDefinitionsContext[instanceId]
 
 	const [variableValues, setVariableValues] = useState({})
@@ -142,7 +143,7 @@ export function VariablesTable({ label }) {
 							<VariablesTableRow
 								key={variable.name}
 								variable={variable}
-								value={variableValues[variable.name]}
+								values={variableValues[variable.name]}
 								label={label}
 								onCopied={onCopied}
 							/>
@@ -153,14 +154,16 @@ export function VariablesTable({ label }) {
 	)
 }
 
-const VariablesTableRow = memo(function VariablesTableRow({ variable, value, label, onCopied }) {
-	if (typeof value !== 'string') {
-		value += ''
+const VariablesTableRow = memo(function VariablesTableRow({ variable, values, label, onCopied }) {
+	values = JSON.stringify(values) // TODO this is not correct
+
+	if (typeof values !== 'string') {
+		values += ''
 	}
 
 	// Split into the lines
 	const elms = []
-	const lines = value.split('\\n')
+	const lines = values.split('\\n')
 	for (const i in lines) {
 		const l = lines[i]
 		elms.push(l)
