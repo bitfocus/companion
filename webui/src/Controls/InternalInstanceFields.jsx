@@ -167,11 +167,21 @@ function InternalVariableDropdown({ value, setValue, disabled }) {
 		for (const [instanceId, properties] of Object.entries(propertyDefinitionsContext)) {
 			const instanceLabel = (instancesContext[instanceId] ?? {})?.label || instanceId
 			for (const [propertyId, property] of Object.entries(properties || {})) {
-				const id = `${instanceLabel}:${propertyId}`
-				choices.push({
-					id,
-					label: `${property.name} (${id})`,
-				})
+				if (property.instanceIds) {
+					for (const subProp of property.instanceIds) {
+						const id = `${instanceLabel}:${propertyId}:${subProp.id}`
+						choices.push({
+							id,
+							label: `${property.name} - ${subProp.label} (${id})`,
+						})
+					}
+				} else {
+					const id = `${instanceLabel}:${propertyId}`
+					choices.push({
+						id,
+						label: `${property.name} (${id})`,
+					})
+				}
 			}
 		}
 

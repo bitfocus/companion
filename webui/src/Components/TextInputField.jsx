@@ -42,12 +42,23 @@ export function TextInputField({
 			for (const [instanceId, properties] of Object.entries(propertyDefinitionsContext)) {
 				const instanceLabel = (instancesContext[instanceId] ?? {})?.label || instanceId
 				for (const [name, property] of Object.entries(properties || {})) {
-					const variableId = `${instanceLabel}:${name}`
-					suggestions.push({
-						key: variableId + ')',
-						value: variableId,
-						label: property.name,
-					})
+					if (property.instanceIds) {
+						for (const subProp of property.instanceIds) {
+							const variableId = `${instanceLabel}:${name}:${subProp.id}`
+							suggestions.push({
+								key: variableId + ')',
+								value: variableId,
+								label: `${property.name} - ${subProp.label}`,
+							})
+						}
+					} else {
+						const variableId = `${instanceLabel}:${name}`
+						suggestions.push({
+							key: variableId + ')',
+							value: variableId,
+							label: property.name,
+						})
+					}
 				}
 			}
 		}

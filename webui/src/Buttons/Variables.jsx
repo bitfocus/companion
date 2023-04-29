@@ -241,7 +241,7 @@ function CustomVariablesList({ setShowCustom }) {
 										<CFormGroup>
 											<CLabel htmlFor="current_value">Current value: </CLabel>
 											<TextInputField
-												value={variableValues[shortname] || ''}
+												value={variableValues[shortname]?.value || ''}
 												setValue={(val) => setCurrentValue(name, val)}
 											/>
 										</CFormGroup>

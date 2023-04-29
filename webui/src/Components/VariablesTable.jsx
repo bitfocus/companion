@@ -19,18 +19,20 @@ export function VariablesTable({ label }) {
 
 	const instanceId =
 		label === 'internal' ? 'internal' : Object.entries(instancesContext || {}).find((e) => e[1]?.label === label)?.[0]
-	const propertyDefinitions = propertyDefinitionsContext[instanceId]
+	const instancePropertyDefinitions = propertyDefinitionsContext[instanceId]
 
 	const [variableValues, setVariableValues] = useState({})
 	const [filter, setFilter] = useState('')
 
-	const variableDefinitions = useMemo(() => {
+	const propertyDefinitions = useMemo(() => {
 		const defs = []
-		for (const [propertyId, property] of Object.entries(propertyDefinitions || {})) {
+		for (const [propertyId, property] of Object.entries(instancePropertyDefinitions || {})) {
+			// Ignore instances here
 			defs.push({
 				// ...variable,
-				label: property.name,
-				name: propertyId,
+				name: property.name,
+				id: propertyId,
+				instanceIds: property.instanceIds,
 			})
 		}
 
@@ -41,7 +43,7 @@ export function VariablesTable({ label }) {
 		)
 
 		return defs
-	}, [propertyDefinitions])
+	}, [instancePropertyDefinitions])
 
 	useEffect(() => {
 		if (label) {
@@ -74,13 +76,11 @@ export function VariablesTable({ label }) {
 		let candidates = []
 		try {
 			if (!filter) {
-				candidates = variableDefinitions
+				candidates = propertyDefinitions
 			} else {
 				const regexp = new RegExp(filter, 'i')
 
-				candidates = variableDefinitions.filter(
-					(variable) => variable.name.match(regexp) || variable.label.match(regexp)
-				)
+				candidates = propertyDefinitions.filter((variable) => variable.id.match(regexp) || variable.name.match(regexp))
 			}
 			return [candidates, null]
 		} catch (e) {
@@ -88,12 +88,12 @@ export function VariablesTable({ label }) {
 
 			return [null, e?.toString() || 'Unknown error']
 		}
-	}, [variableDefinitions, filter])
+	}, [propertyDefinitions, filter])
 
 	const clearFilter = useCallback(() => setFilter(''), [])
 	const updateFilter = useCallback((e) => setFilter(e.currentTarget.value), [])
 
-	if (variableDefinitions.length === 0) {
+	if (propertyDefinitions.length === 0) {
 		return (
 			<CAlert color="warning" role="alert">
 				Connection has no variables
@@ -120,9 +120,10 @@ export function VariablesTable({ label }) {
 			<table className="table table-responsive-sm variables-table">
 				<thead>
 					<tr>
-						<th>Variable</th>
-						<th>Description</th>
-						<th>Value</th>
+						<th>Name</th>
+						{/* <th>Variable</th> */}
+						<th>Values</th>
+						<th>&nbsp;</th>
 						<th>&nbsp;</th>
 					</tr>
 				</thead>
@@ -139,11 +140,11 @@ export function VariablesTable({ label }) {
 						</tr>
 					)}
 					{candidates &&
-						candidates.map((variable) => (
+						candidates.map((property) => (
 							<VariablesTableRow
-								key={variable.name}
-								variable={variable}
-								values={variableValues[variable.name]}
+								key={property.id}
+								property={property}
+								values={variableValues[property.id]}
 								label={label}
 								onCopied={onCopied}
 							/>
@@ -154,16 +155,36 @@ export function VariablesTable({ label }) {
 	)
 }
 
-const VariablesTableRow = memo(function VariablesTableRow({ variable, values, label, onCopied }) {
-	values = JSON.stringify(values) // TODO this is not correct
+const VariablesTableRow = memo(function VariablesTableRow({ property, values, label, onCopied }) {
+	if (property.instanceIds) {
+		return property.instanceIds.map((subProp) => (
+			<VariablesTableSubRow
+				propertyName={`${property.name} - ${subProp.label}`}
+				value={values?.values?.[subProp.id]}
+				fullId={`$(${label}:${property.id}:${subProp.id})`}
+				onCopied={onCopied}
+			/>
+		))
+	} else {
+		return (
+			<VariablesTableSubRow
+				propertyName={property.name}
+				value={values?.value}
+				fullId={`$(${label}:${property.id})`}
+				onCopied={onCopied}
+			/>
+		)
+	}
+})
 
-	if (typeof values !== 'string') {
-		values += ''
+const VariablesTableSubRow = memo(function VariablesTableSubRow({ propertyName, value, fullId, onCopied }) {
+	if (typeof value !== 'string') {
+		value += ''
 	}
 
 	// Split into the lines
 	const elms = []
-	const lines = values.split('\\n')
+	const lines = value.split('\\n')
 	for (const i in lines) {
 		const l = lines[i]
 		elms.push(l)
@@ -174,10 +195,9 @@ const VariablesTableRow = memo(function VariablesTableRow({ variable, values, la
 
 	return (
 		<tr>
-			<td>
-				$({label}:{variable.name})
-			</td>
-			<td>{variable.label}</td>
+			<td>{propertyName}</td>
+			<td>{fullId}</td>
+
 			<td>
 				{elms === '' || elms === null || elms === undefined ? (
 					'(empty)'
@@ -186,7 +206,7 @@ const VariablesTableRow = memo(function VariablesTableRow({ variable, values, la
 				)}
 			</td>
 			<td>
-				<CopyToClipboard text={`$(${label}:${variable.name})`} onCopy={onCopied}>
+				<CopyToClipboard text={fullId} onCopy={onCopied}>
 					<CButton size="sm">
 						<FontAwesomeIcon icon={faCopy} />
 					</CButton>
