@@ -334,23 +334,23 @@
   resolved "https://registry.yarnpkg.com/@discoveryjs/json-ext/-/json-ext-0.5.7.tgz#1d572bfbbe14b7704e0ba0f39b74815b84870d70"
   integrity sha512-dBVuXR082gk3jsFp7Rd/JI4kytwGHecnCoTtXFb7DB6CNHp4rg5k1bhg0nWdLGLnOV71lmDzGQaLMy8iPLY0pw==
 
-"@elgato-stream-deck/core@5.7.0":
-  version "5.7.0"
-  resolved "https://registry.yarnpkg.com/@elgato-stream-deck/core/-/core-5.7.0.tgz#f1d0aa132eefa85c16386b7a57861957916b926d"
-  integrity sha512-BZr4y3XqX5cHov8VmV1Kigx5qvdetk7WYOygDlaPJ+yQB4XcBOf2pdEDW6wd81zRT2TnuScWkuBUSZvrRFZMqA==
+"@elgato-stream-deck/core@^6.0.0-async-test.4":
+  version "6.0.0-async-test.4"
+  resolved "https://registry.yarnpkg.com/@elgato-stream-deck/core/-/core-6.0.0-async-test.4.tgz#dd20d97641f6cca9fb8e8d3d8102f2d5169b8a47"
+  integrity sha512-I6QxbwUyNmjQay2NRK6klgaHFFHTZf/KZUwYTJcti0UixWZowa4CHa/ko2wuvM/+RabLD64mzTNHMvUK2wAxlg==
   dependencies:
     eventemitter3 "^4.0.7"
-    tslib "^2.4.0"
+    tslib "^2.5.0"
 
-"@elgato-stream-deck/node@^5.7.2":
-  version "5.7.2"
-  resolved "https://registry.yarnpkg.com/@elgato-stream-deck/node/-/node-5.7.2.tgz#f78fbc85b60647f6d861f1958d484b76063d1e18"
-  integrity sha512-U7gl/R+Jnl3CIyMx2b/WhEs0DBbDt8irDXj++DrRJudWg/JSenHyccg/7KFVixCU6JRxWktEPdVJKJ6U+8FPVQ==
+"@elgato-stream-deck/node@^6.0.0-async-test.4":
+  version "6.0.0-async-test.4"
+  resolved "https://registry.yarnpkg.com/@elgato-stream-deck/node/-/node-6.0.0-async-test.4.tgz#40f0e3706fda5c35f3b47a9824dc8412e1c2abbf"
+  integrity sha512-Akm2/P8grzPcj3Qa0TFSWvS+iGeKVa19NEox1BQSgMWeLNMpnlzwSRzptyWtabl/ejpozmNnNBb6n0hjUVK8AQ==
   dependencies:
-    "@elgato-stream-deck/core" "5.7.0"
+    "@elgato-stream-deck/core" "^6.0.0-async-test.4"
     jpeg-js "^0.4.2"
-    node-hid "^2.1.1"
-    tslib "^2.4.0"
+    node-hid "npm:@julusian/hid@^3.0.0-0"
+    tslib "^2.5.0"
 
 "@istanbuljs/load-nyc-config@^1.0.0":
   version "1.1.0"
@@ -4213,13 +4213,13 @@ node-gyp-build@^4.3.0, node-gyp-build@^4.5.0, "node-gyp-build@github:julusian/no
   version "4.5.0"
   resolved "https://codeload.github.com/julusian/node-gyp-build/tar.gz/33c9759a3215892a520d50ad20c947795b813904"
 
-node-hid@^2.1.1, "node-hid@npm:@julusian/hid@2.5.0-3":
-  version "2.5.0-3"
-  resolved "https://registry.yarnpkg.com/@julusian/hid/-/hid-2.5.0-3.tgz#4d0a1aabef8a47b79a3ccdb30fc5b53e8618f5e1"
-  integrity sha512-BXL3QbgWvtuFPY8lMwBQ6CwDBeU/WJDedOhe5Y9QGf2ibwdbSMMLRfdFGUqeVgoO5YcyvUqXTM6oighswc3yVg==
+node-hid@^2.1.1, "node-hid@npm:@julusian/hid@3.0.0-0", "node-hid@npm:@julusian/hid@^3.0.0-0":
+  version "3.0.0-0"
+  resolved "https://registry.yarnpkg.com/@julusian/hid/-/hid-3.0.0-0.tgz#f3cbde6a13781e3c436f388c24225805006582fa"
+  integrity sha512-7k1lpDZcI8zH8Qsu6ivBWMhcJL7TxaJLZiYGx0KoxGPJhOvkEf7z+ZwHk02wZmh+z5gccHGKIpMKhP5P54aZeQ==
   dependencies:
     node-addon-api "^3.2.1"
-    pkg-prebuilds "^0.1.0"
+    pkg-prebuilds "^0.2.1"
 
 node-int64@^0.4.0:
   version "0.4.0"
@@ -4487,7 +4487,14 @@ pkg-dir@^4.2.0:
   dependencies:
     find-up "^4.0.0"
 
-pkg-prebuilds@^0.1.0, pkg-prebuilds@~0.1.0:
+pkg-prebuilds@^0.2.1:
+  version "0.2.1"
+  resolved "https://registry.yarnpkg.com/pkg-prebuilds/-/pkg-prebuilds-0.2.1.tgz#4b91f410ab600df4eb657634d623549cc188c5ed"
+  integrity sha512-FdOlDiRqRL7i9aYzQflhGWCoiJf/8u6Qgzq48gKsRDYejtfjvGb1U5QGSzllcqpNg2a8Swx/9fMgtuVefwU+zw==
+  dependencies:
+    yargs "^17.5.1"
+
+pkg-prebuilds@~0.1.0:
   version "0.1.0"
   resolved "https://registry.yarnpkg.com/pkg-prebuilds/-/pkg-prebuilds-0.1.0.tgz#7ac38674146708e763a4581a0759d5e8594f61b6"
   integrity sha512-ALsGSiwO6EDvjrrFRiv7Q6HZPrqCgTpNxQMFs3P4Ic25cP94DmLy0iGvZDlJmQBbq2IS8xkZrifwkoOHIetY9Q==
@@ -4823,7 +4830,7 @@ serialize-javascript@^6.0.1:
   dependencies:
     randombytes "^2.1.0"
 
-serialport@10.5.0, serialport@^10.4.0, serialport@^10.5.0:
+serialport@10.5.0, serialport@^10.5.0:
   version "10.5.0"
   resolved "https://registry.yarnpkg.com/serialport/-/serialport-10.5.0.tgz#b85f614def6e8914e5865c798b0555330903a0f8"
   integrity sha512-7OYLDsu5i6bbv3lU81pGy076xe0JwpK6b49G6RjNvGibstUqQkI+I3/X491yBGtf4gaqUdOgoU1/5KZ/XxL4dw==
