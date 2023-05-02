@@ -1270,13 +1270,6 @@
   resolved "https://registry.yarnpkg.com/@types/minimist/-/minimist-1.2.2.tgz#ee771e2ba4b3dc5b372935d549fd9617bf345b8c"
   integrity sha512-jhuKLIRrhvCPLqwPcx6INqmKeiA5EWrsCOPhrlFSrbrmU4ZMPjj5Ul/oLCMDO98XRUIwVm78xICz4EPCektzeQ==
 
-"@types/node-hid@^1.3.1":
-  version "1.3.1"
-  resolved "https://registry.yarnpkg.com/@types/node-hid/-/node-hid-1.3.1.tgz#e84507a35a6f3ece3f6324c21ba9252405758b65"
-  integrity sha512-VPxuGDCoDxOUKrTZPSok7IEmiK4cVLfj8Csu09FtG5uF+eqf1HETERHXQkO02Rk6j6YiiHxp0/DA9R4llvhEzQ==
-  dependencies:
-    "@types/node" "*"
-
 "@types/node@*", "@types/node@>=10.0.0", "@types/node@^18.14.2":
   version "18.15.11"
   resolved "https://registry.yarnpkg.com/@types/node/-/node-18.15.11.tgz#b3b790f09cb1696cffcec605de025b088fa4225f"
@@ -5584,14 +5577,13 @@ ws@~8.11.0:
   resolved "https://registry.yarnpkg.com/ws/-/ws-8.11.0.tgz#6a0d36b8edfd9f96d8b25683db2f8d7de6e8e143"
   integrity sha512-HPG3wQd9sNQoT9xHyNCXoDUa+Xw/VevmY9FoHyQ+g+rrMn4j6FB4np7Z0OhdTgjx6MgQLK7jwSy1YecU1+4Asg==
 
-xkeys@^2.4.0:
-  version "2.4.0"
-  resolved "https://registry.yarnpkg.com/xkeys/-/xkeys-2.4.0.tgz#bad32c6968290fa89c66900c53ee4515b4aede54"
-  integrity sha512-/9+U26SlopufMlMvoVEbFCTnSPzl9jKeb3HWjHg5Tl/MQKKQG98yUDWsFF2BGPUKxFwBqZfmYGaQ2jsaD2S5XQ==
+"xkeys@npm:@julusian/xkeys@2.5.0-1":
+  version "2.5.0-1"
+  resolved "https://registry.yarnpkg.com/@julusian/xkeys/-/xkeys-2.5.0-1.tgz#9ee5a248a4e50398fe47c8fa60c2e974476e318b"
+  integrity sha512-wzAV1t75RblgUp5c9mbtO8+T9/7wroGZS/BEwGGrmTJiqFOkh4qkGUmS6TcW8JjNfEGhrZD3KprzKrRMXzVMjg==
   dependencies:
-    "@types/node-hid" "^1.3.1"
     "@xkeys-lib/core" "2.4.0"
-    node-hid "^2.1.1"
+    node-hid "npm:@julusian/hid@^3.0.0-0"
     tslib "^2.4.0"
   optionalDependencies:
     usb "^2.5.2"

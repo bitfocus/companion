@@ -97,7 +97,7 @@
 		"utf-8-validate": "^6.0.3",
 		"winston": "^3.8.2",
 		"ws": "^8.13.0",
-		"xkeys": "^2.4.0"
+		"xkeys": "npm:@julusian/xkeys@2.5.0-1"
 	},
 	"collective": {
 		"type": "donorbox",
