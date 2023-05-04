@@ -188,7 +188,7 @@ function UserConfigTable() {
 						</div>
 					</td>
 					<td>
-						<CButton onClick={() => resetValue('xkeys_enable')} title="Reset to default">
+						<CButton onClick={() => resetValue('elegato_plugin_enable')} title="Reset to default">
 							<FontAwesomeIcon icon={faUndo} />
 						</CButton>
 					</td>
