@@ -4253,7 +4253,7 @@ node-gyp-build@^4.3.0, node-gyp-build@^4.5.0, "node-gyp-build@github:julusian/no
   version "4.5.0"
   resolved "https://codeload.github.com/julusian/node-gyp-build/tar.gz/33c9759a3215892a520d50ad20c947795b813904"
 
-node-hid@^2.1.1, "node-hid@npm:@julusian/hid@2.2.0-0":
+node-hid@^2.1.1, node-hid@^2.1.2, "node-hid@npm:@julusian/hid@2.2.0-0":
   version "2.2.0-0"
   resolved "https://registry.yarnpkg.com/@julusian/hid/-/hid-2.2.0-0.tgz#849953da3d945c94a63264971ad4294b773912a6"
   integrity sha512-OtbyP83Ar5JTTnTy/6d8QAQnExeYZg8tebjeUJbioiIfDStQfCOe+tlT7nIQDDW+4p5UfRS1hmzuOQ6fq+5zng==
@@ -4961,6 +4961,14 @@ shebang-regex@^3.0.0:
   version "3.0.0"
   resolved "https://registry.yarnpkg.com/shebang-regex/-/shebang-regex-3.0.0.tgz#ae16f1644d873ecad843b0307b143362d4c42172"
   integrity sha512-7++dFhtcx3353uBaq8DDR4NuxBetBzC7ZQOhmTQInHEd6bSrXdiEyzCvG07Z44UYdLShWUyXt5M/yhz8ekcb1A==
+
+shuttle-control-usb@^1.1.0:
+  version "1.1.0"
+  resolved "https://registry.yarnpkg.com/shuttle-control-usb/-/shuttle-control-usb-1.1.0.tgz#a977e021a22fe472141f7f064a5c697e86a11bb0"
+  integrity sha512-X5OiUAN5cvihMT/NVv524smPwshCcltklrBHHYKLyM5I3gpLqd5kVUavYxgIZVYwV+dF/lEQ77dxUfSlzPd1jg==
+  dependencies:
+    node-hid "^2.1.2"
+    usb "^2.9.0"
 
 side-channel@^1.0.4:
   version "1.0.4"

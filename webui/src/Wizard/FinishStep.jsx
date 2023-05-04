@@ -29,7 +29,8 @@ export function FinishStep({ oldConfig, newConfig }) {
 			</ol>
 			{((newConfig.elgato_plugin_enable && oldConfig.elgato_plugin_enable !== newConfig.elgato_plugin_enable) ||
 				(!newConfig.xkeys_enable && oldConfig.xkeys_enable !== newConfig.xkeys_enable) ||
-				(!newConfig.loupedeck_enable && oldConfig.loupedeck_enable !== newConfig.loupedeck_enable)) && (
+				(!newConfig.loupedeck_enable && oldConfig.loupedeck_enable !== newConfig.loupedeck_enable) ||
+				(!newConfig.shuttle_enable && oldConfig.shuttle_enable !== newConfig.shuttle_enable)) && (
 				<CAlert color="danger">
 					After completing this wizard a restart of Companion is required to apply your USB detection settings. You will
 					need to do this manually.

@@ -238,6 +238,28 @@ function UserConfigTable() {
 					</td>
 				</tr>
 				<tr>
+					<td>
+						Enable connected Contour Shuttle
+						<br />
+						<em>(Requires Companion restart)</em>
+					</td>
+					<td>
+						<div className="form-check form-check-inline mr-1 float-right">
+							<CSwitch
+								color="success"
+								checked={config.shuttle_enable}
+								size={'lg'}
+								onChange={(e) => setValue('shuttle_enable', e.currentTarget.checked)}
+							/>
+						</div>
+					</td>
+					<td>
+						<CButton onClick={() => resetValue('shuttle_enable')} title="Reset to default">
+							<FontAwesomeIcon icon={faUndo} />
+						</CButton>
+					</td>
+				</tr>
+				<tr>
 					<th colSpan="3" className="settings-category">
 						PIN Lockout
 					</th>
