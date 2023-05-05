@@ -19,6 +19,7 @@ import {
 	SocketContext,
 	PreventDefaultHandler,
 	RecentActionsContext,
+	PropertyDefinitionsContext,
 } from '../util'
 import Select, { createFilter } from 'react-select'
 import { OptionsInputField } from './OptionsInputField'
@@ -108,9 +109,15 @@ export function ControlActionSetEditor({ controlId, stepId, setId, actions, addP
 	)
 
 	const addAction = useCallback(
-		(actionType) => {
-			const [instanceId, actionId] = actionType.split(':', 2)
-			socketEmitPromise(socket, 'controls:action:add', [controlId, stepId, setId, instanceId, actionId]).catch((e) => {
+		({ instanceId, actionId, propertyId }) => {
+			socketEmitPromise(socket, 'controls:action:add', [
+				controlId,
+				stepId,
+				setId,
+				instanceId,
+				actionId,
+				propertyId,
+			]).catch((e) => {
 				console.error('Failed to add bank action', e)
 			})
 		},
@@ -300,6 +307,7 @@ function ActionTableRow({
 }) {
 	const instancesContext = useContext(InstancesContext)
 	const actionsContext = useContext(ActionsContext)
+	const propertyDefinitionsContext = useContext(PropertyDefinitionsContext)
 
 	const innerDelete = useCallback(() => doDelete(action.id), [action.id, doDelete])
 	const innerDuplicate = useCallback(() => doDuplicate(action.id), [action.id, doDuplicate])
@@ -309,7 +317,57 @@ function ActionTableRow({
 
 	const [optionVisibility, setOptionVisibility] = useState({})
 
-	const actionSpec = (actionsContext[action.instance] || {})[action.action]
+	const rawActionSpec = !action.propertyId ? actionsContext[action.instance]?.[action.action] : undefined
+	const rawPropertySpec = action.propertyId
+		? propertyDefinitionsContext[action.instance]?.[action.propertyId]
+		: undefined
+	const actionSpec = useMemo(() => {
+		if (rawActionSpec) return rawActionSpec
+
+		// TODO - move this to the backend. as part of the PropertyDefinitionsContext?
+
+		const result = {
+			label: rawPropertySpec.name,
+			description: rawPropertySpec.description,
+			options: [],
+			hasLearn: false,
+		}
+
+		if (rawPropertySpec.instanceIds) {
+			result.options.push({
+				type: 'dropdown',
+				label: 'Instance',
+				id: 'valueInstance',
+				choices: rawPropertySpec.instanceIds,
+			})
+		}
+
+		switch (action.action) {
+			case 'set-value': {
+				switch (rawPropertySpec.type) {
+					case 'number':
+						result.options.push({
+							type: 'number',
+							label: 'Value',
+							id: 'value',
+						})
+						break
+					default:
+						result.options.push({
+							type: 'static-text',
+							label: 'Unknown type',
+							value: `${rawPropertySpec.type} is not supported`,
+						})
+						break
+				}
+
+				return result
+			}
+		}
+
+		// Unknown
+		return null
+	}, [rawActionSpec, rawPropertySpec, action.action])
 
 	const ref = useRef(null)
 	const [, drop] = useDrop({
@@ -557,30 +615,49 @@ function AddActionDropdown({ onSelect, placeholder }) {
 	const menuPortal = useContext(MenuPortalContext)
 	const instancesContext = useContext(InstancesContext)
 	const actionsContext = useContext(ActionsContext)
+	const propertyDefinitionsContext = useContext(PropertyDefinitionsContext)
 
 	const options = useMemo(() => {
 		const options = []
+		// Add all the properties
+		for (const [instanceId, instanceProperties] of Object.entries(propertyDefinitionsContext)) {
+			for (const [propertyId, property] of Object.entries(instanceProperties || {})) {
+				if (property.hasSetter) {
+					const instanceLabel = instancesContext[instanceId]?.label ?? instanceId
+					options.push({
+						isRecent: false,
+						value: { instanceId, actionId: 'set-value', propertyId: propertyId },
+						label: `${instanceLabel}: Set ${property.name}`,
+					})
+				}
+			}
+		}
+
+		// Add all the actions
 		for (const [instanceId, instanceActions] of Object.entries(actionsContext)) {
 			for (const [actionId, action] of Object.entries(instanceActions || {})) {
 				const instanceLabel = instancesContext[instanceId]?.label ?? instanceId
 				options.push({
 					isRecent: false,
-					value: `${instanceId}:${actionId}`,
+					value: { instanceId, actionId },
 					label: `${instanceLabel}: ${action.label}`,
 				})
 			}
 		}
 
 		const recents = []
-		for (const actionType of recentActionsContext.recentActions) {
+		for (let actionType of recentActionsContext.recentActions) {
 			if (actionType) {
-				const [instanceId, actionId] = actionType.split(':', 2)
-				const actionInfo = actionsContext[instanceId]?.[actionId]
+				if (typeof actionType === 'string') {
+					const [instanceId, actionId] = actionType.split(':', 2)
+					actionType = { instanceId, actionId }
+				}
+				const actionInfo = actionsContext[actionType.instanceId]?.[actionType.actionId]
 				if (actionInfo) {
-					const instanceLabel = instancesContext[instanceId]?.label ?? instanceId
+					const instanceLabel = instancesContext[actionType.instanceId]?.label ?? actionType.instanceId
 					recents.push({
 						isRecent: true,
-						value: `${instanceId}:${actionId}`,
+						value: actionType,
 						label: `${instanceLabel}: ${actionInfo.label}`,
 					})
 				}
