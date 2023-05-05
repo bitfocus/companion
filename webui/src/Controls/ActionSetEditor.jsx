@@ -317,57 +317,9 @@ function ActionTableRow({
 
 	const [optionVisibility, setOptionVisibility] = useState({})
 
-	const rawActionSpec = !action.propertyId ? actionsContext[action.instance]?.[action.action] : undefined
-	const rawPropertySpec = action.propertyId
-		? propertyDefinitionsContext[action.instance]?.[action.propertyId]
-		: undefined
-	const actionSpec = useMemo(() => {
-		if (rawActionSpec) return rawActionSpec
-
-		// TODO - move this to the backend. as part of the PropertyDefinitionsContext?
-
-		const result = {
-			label: rawPropertySpec.name,
-			description: rawPropertySpec.description,
-			options: [],
-			hasLearn: false,
-		}
-
-		if (rawPropertySpec.instanceIds) {
-			result.options.push({
-				type: 'dropdown',
-				label: 'Instance',
-				id: 'valueInstance',
-				choices: rawPropertySpec.instanceIds,
-			})
-		}
-
-		switch (action.action) {
-			case 'set-value': {
-				switch (rawPropertySpec.type) {
-					case 'number':
-						result.options.push({
-							type: 'number',
-							label: 'Value',
-							id: 'value',
-						})
-						break
-					default:
-						result.options.push({
-							type: 'static-text',
-							label: 'Unknown type',
-							value: `${rawPropertySpec.type} is not supported`,
-						})
-						break
-				}
-
-				return result
-			}
-		}
-
-		// Unknown
-		return null
-	}, [rawActionSpec, rawPropertySpec, action.action])
+	const actionSpec = action.propertyId
+		? propertyDefinitionsContext[action.instance]?.[action.propertyId]?.actions?.[action.action]
+		: actionsContext[action.instance]?.[action.action]
 
 	const ref = useRef(null)
 	const [, drop] = useDrop({
@@ -479,6 +431,8 @@ function ActionTableRow({
 	let name = ''
 	if (actionSpec) {
 		name = `${instanceLabel}: ${actionSpec.label}`
+	} else if (action.propertyId) {
+		name = `${instanceLabel}: ${action.action} ${action.propertyId} (undefined)`
 	} else {
 		name = `${instanceLabel}: ${action.action} (undefined)`
 	}
@@ -621,13 +575,14 @@ function AddActionDropdown({ onSelect, placeholder }) {
 		const options = []
 		// Add all the properties
 		for (const [instanceId, instanceProperties] of Object.entries(propertyDefinitionsContext)) {
+			const instanceLabel = instancesContext[instanceId]?.label ?? instanceId
+
 			for (const [propertyId, property] of Object.entries(instanceProperties || {})) {
-				if (property.hasSetter) {
-					const instanceLabel = instancesContext[instanceId]?.label ?? instanceId
+				for (const [actionId, action] of Object.entries(property.actions || {})) {
 					options.push({
 						isRecent: false,
-						value: { instanceId, actionId: 'set-value', propertyId: propertyId },
-						label: `${instanceLabel}: Set ${property.name}`,
+						value: { instanceId, actionId, propertyId },
+						label: `${instanceLabel}: ${action.label}`,
 					})
 				}
 			}
@@ -635,8 +590,9 @@ function AddActionDropdown({ onSelect, placeholder }) {
 
 		// Add all the actions
 		for (const [instanceId, instanceActions] of Object.entries(actionsContext)) {
+			const instanceLabel = instancesContext[instanceId]?.label ?? instanceId
+
 			for (const [actionId, action] of Object.entries(instanceActions || {})) {
-				const instanceLabel = instancesContext[instanceId]?.label ?? instanceId
 				options.push({
 					isRecent: false,
 					value: { instanceId, actionId },
