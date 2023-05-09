@@ -54,6 +54,23 @@ Documented up to bde02297f71b0b88e1d8cf03080e707e2bfcae87
 - Ensure connection labels are valid
 - Color picker indicates the currently selected swatch
 
+## Companion v2.4.2 - Release Notes
+
+### 🐞 BUG FIXES
+
+- UI crash after saving a trigger
+- UI crash if module status is not a string
+- Missing libasound2 in docker image
+
+### 🐞 MODULE FIXES
+
+- bitfocus-companion
+- equipson-lightshark
+- generic-artnet
+- generic-sacn
+- haivision-connectdvr
+- zoom-osc-iso
+
 ## Companion v2.4.1 - Release Notes
 
 ### 🐞 BUG FIXES
