@@ -994,6 +994,11 @@ fd-slicer@~1.1.0:
   dependencies:
     pend "~1.2.0"
 
+file-stream-rotator@^1.0.0:
+  version "1.0.0"
+  resolved "https://registry.yarnpkg.com/file-stream-rotator/-/file-stream-rotator-1.0.0.tgz#de58379321a1ea6d2938ed5f5a2eff3b7f8b2780"
+  integrity sha512-qg5mQO7o+vhS7NPqkrkfJS8qqhz0d17Tnewmb5sUTUKwYe27LKaDtbTuRAtQWkBn6jROuFPVIDF5DtckzokFTQ==
+
 filelist@^1.0.1:
   version "1.0.4"
   resolved "https://registry.yarnpkg.com/filelist/-/filelist-1.0.4.tgz#f78978a1e944775ff9e62e744424f215e58352b5"
