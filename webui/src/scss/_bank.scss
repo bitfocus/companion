@@ -58,6 +58,10 @@
 	// text-align: center;
 	display: block;
 	min-width: 150px;
+
+	// HACK: Safari has issues with drawing scrollbars due to a sub-component having a higher z-index
+	// https://github.com/bitfocus/companion/issues/2407
+	z-index: 100;
 }
 
 .button-page-name {
