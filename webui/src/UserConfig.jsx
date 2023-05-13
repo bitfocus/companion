@@ -171,7 +171,9 @@ function UserConfigTable() {
 				</tr>
 				<tr>
 					<td>
-						Enable connected Streamdecks. When disabled support for the Elgato software Plugin will be enbaled
+						Enable connected Streamdecks
+						<br />
+						When disabled support for the Elgato software Plugin will be enabled
 						<br />
 						<em>(Requires Companion restart)</em>
 					</td>
@@ -186,7 +188,7 @@ function UserConfigTable() {
 						</div>
 					</td>
 					<td>
-						<CButton onClick={() => resetValue('xkeys_enable')} title="Reset to default">
+						<CButton onClick={() => resetValue('elegato_plugin_enable')} title="Reset to default">
 							<FontAwesomeIcon icon={faUndo} />
 						</CButton>
 					</td>
@@ -857,23 +859,6 @@ function UserConfigTable() {
 					<td colSpan="3">
 						<CAlert color="danger">Do not touch these settings unless you know what you are doing!</CAlert>
 					</td>
-				</tr>
-				<tr>
-					<td>Disable unstable Startup warning</td>
-					<td>
-						<div className="form-check form-check-inline mr-1 float-right">
-							<CSwitch
-								color="success"
-								checked={window.localStorage.getItem('dismiss_3.0_unstable_warning') === '1'}
-								size={'lg'}
-								onChange={(e) => {
-									window.localStorage.setItem('dismiss_3.0_unstable_warning', e.currentTarget.checked ? '1' : '0')
-									window.location.reload()
-								}}
-							/>
-						</div>
-					</td>
-					<td>&nbsp;</td>
 				</tr>
 				<tr>
 					<td>Use TouchBackend for Drag and Drop</td>

@@ -60,7 +60,7 @@ export const MySidebar = memo(function MySidebar({ show, showWizard }) {
 				/>
 				<CSidebarNavItem
 					target="_new"
-					href="https://join.slack.com/t/bitfocusio/shared_invite/zt-1fsnlu7iv-YIjW9dRECR_VDZY8QX4r5A"
+					href="https://bitfocus.io/api/slackinvite"
 					icon={<FontAwesomeIcon className="c-sidebar-nav-icon" icon={faComments} />}
 					name={'Slack Chat'}
 				/>

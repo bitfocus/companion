@@ -11,6 +11,7 @@ const respawn = require('respawn')
 const stripAnsi = require('strip-ansi')
 const chokidar = require('chokidar')
 const debounceFn = require('debounce-fn')
+const fileStreamRotator = require('file-stream-rotator')
 
 // Ensure there isn't another instance of companion running already
 var lock = app.requestSingleInstanceLock()
@@ -26,29 +27,33 @@ if (!lock) {
 		configDir = process.env.COMPANION_CONFIG_BASEDIR
 	}
 
-	// Setup a simple logging method
-	// TODO - this will loose some lines when exiting
-	let logwriting = false
-	let logbuffer = []
-	setInterval(() => {
-		if (logbuffer.length > 0 && !logwriting) {
-			const writestring = logbuffer.join('\n')
-			logbuffer = []
-			logwriting = true
-			fs.appendFile(path.join(configDir, 'companion.log'), writestring + '\n', function (err) {
-				if (err) {
-					console.log('log write error', err)
-				}
-				logwriting = false
-			})
+	// Remove the old log file
+	try {
+		const oldLogFile = path.join(configDir, 'companion.log')
+		if (fs.existsSync(oldLogFile)) {
+			fs.removeSync(oldLogFile)
 		}
-	}, 1000)
+	} catch (e) {
+		// Ignore
+	}
+
+	// Setup a simple logging method
+	const logsDir = path.join(configDir, 'logs')
+	const logStream = fileStreamRotator.getStream({
+		filename: path.join(logsDir, 'companion-%DATE%'),
+		extension: '.log',
+		frequency: 'daily',
+		date_format: 'YYYY-MM-DD',
+		size: '100m',
+		max_logs: '7d',
+		audit_file: path.join(logsDir, 'audit.json'),
+	})
 
 	function customLog(line, prefix) {
 		line = stripAnsi(line.trim())
 		if (prefix) line = `${new Date().toISOString()} ${prefix}: ${line}`
 
-		logbuffer.push(line)
+		logStream.write(line)
 		console.log(line)
 	}
 
