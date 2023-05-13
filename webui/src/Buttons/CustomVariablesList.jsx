@@ -1,5 +1,5 @@
-import React, { useCallback, useContext, useEffect, useRef, useState } from 'react'
-import { CButton, CForm, CFormGroup, CInput, CLabel } from '@coreui/react'
+import React, { useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react'
+import { CButton, CButtonGroup, CForm, CFormGroup, CInput, CLabel } from '@coreui/react'
 import {
 	CustomVariableDefinitionsContext,
 	socketEmitPromise,
@@ -9,11 +9,15 @@ import {
 } from '../util'
 import { CopyToClipboard } from 'react-copy-to-clipboard'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faCopy, faTrash } from '@fortawesome/free-solid-svg-icons'
+import { faCompressArrowsAlt, faCopy, faExpandArrowsAlt, faSort, faTrash } from '@fortawesome/free-solid-svg-icons'
 import { TextInputField } from '../Components/TextInputField'
 import { CheckboxInputField } from '../Components/CheckboxInputField'
 import { GenericConfirmModal } from '../Components/GenericConfirmModal'
 import { isCustomVariableValid } from '@companion/shared/CustomVariable'
+import { useDrag, useDrop } from 'react-dnd'
+import { usePanelCollapseHelper } from '../Helpers/CollapseHelper'
+
+const DRAG_ID = 'custom-variables'
 
 export function CustomVariablesList({ setShowCustom }) {
 	const doBack = useCallback(() => setShowCustom(false), [setShowCustom])
@@ -56,7 +60,7 @@ export function CustomVariablesList({ setShowCustom }) {
 			e?.preventDefault()
 
 			if (isCustomVariableValid(newName)) {
-				socketEmitPromise(socket, 'custom-variables::create', [newName, ''])
+				socketEmitPromise(socket, 'custom-variables:create', [newName, ''])
 					.then((res) => {
 						console.log('done with', res)
 						if (res) {
@@ -77,7 +81,7 @@ export function CustomVariablesList({ setShowCustom }) {
 
 	const setStartupValue = useCallback(
 		(name, value) => {
-			socketEmitPromise(socket, 'custom-variables::set-default', [name, value]).catch((e) => {
+			socketEmitPromise(socket, 'custom-variables:set-default', [name, value]).catch((e) => {
 				console.error('Failed to update variable')
 			})
 		},
@@ -85,7 +89,7 @@ export function CustomVariablesList({ setShowCustom }) {
 	)
 	const setCurrentValue = useCallback(
 		(name, value) => {
-			socketEmitPromise(socket, 'custom-variables::set-current', [name, value]).catch((e) => {
+			socketEmitPromise(socket, 'custom-variables:set-current', [name, value]).catch((e) => {
 				console.error('Failed to update variable')
 			})
 		},
@@ -94,7 +98,7 @@ export function CustomVariablesList({ setShowCustom }) {
 
 	const setPersistenceValue = useCallback(
 		(name, value) => {
-			socketEmitPromise(socket, 'custom-variables::set-persistence', [name, value]).catch((e) => {
+			socketEmitPromise(socket, 'custom-variables:set-persistence', [name, value]).catch((e) => {
 				console.error('Failed to update variable')
 			})
 		},
@@ -109,7 +113,7 @@ export function CustomVariablesList({ setShowCustom }) {
 				`Are you sure you want to delete the custom variable "${name}"?`,
 				'Delete',
 				() => {
-					socketEmitPromise(socket, 'custom-variables::delete', [name]).catch((e) => {
+					socketEmitPromise(socket, 'custom-variables:delete', [name]).catch((e) => {
 						console.error('Failed to delete variable')
 					})
 				}
@@ -118,45 +122,89 @@ export function CustomVariablesList({ setShowCustom }) {
 		[socket]
 	)
 
+	const customVariablesRef = useRef(null)
+	useEffect(() => {
+		customVariablesRef.current = customVariableContext
+	}, [customVariableContext])
+
+	const moveRow = useCallback(
+		(itemName, targetName) => {
+			if (customVariablesRef.current) {
+				const rawNames = Object.entries(customVariablesRef.current)
+					.sort(([, a], [, b]) => a.sortOrder - b.sortOrder)
+					.map(([id]) => id)
+
+				const itemIndex = rawNames.indexOf(itemName)
+				const targetIndex = rawNames.indexOf(targetName)
+				if (itemIndex === -1 || targetIndex === -1) return
+
+				const newNames = rawNames.filter((id) => id !== itemName)
+				newNames.splice(targetIndex, 0, itemName)
+
+				socketEmitPromise(socket, 'custom-variables:set-order', [newNames]).catch((e) => {
+					console.error('Reorder failed', e)
+				})
+			}
+		},
+		[socket]
+	)
+
+	const variableNames = useMemo(() => Object.keys(customVariableContext || {}), [customVariableContext])
+	const { setPanelCollapsed, isPanelCollapsed, setAllCollapsed, setAllExpanded, canExpandAll, canCollapseAll } =
+		usePanelCollapseHelper(`custom_variables`, variableNames)
+
+	const hasNoVariables = variableNames.length === 0
+
 	return (
 		<div className="variables-panel">
 			<h5>
-				<CButton color="primary" size="sm" onClick={doBack} className="gap-b">
-					Back
-				</CButton>
 				Custom Variables
+				<CButtonGroup>
+					{!hasNoVariables && canExpandAll && (
+						<CButton color="white" size="sm" onClick={setAllExpanded} title="Expand all">
+							<FontAwesomeIcon icon={faExpandArrowsAlt} />
+						</CButton>
+					)}
+					{!hasNoVariables && canCollapseAll && (
+						<CButton color="white" size="sm" onClick={setAllCollapsed} title="Collapse all">
+							<FontAwesomeIcon icon={faCompressArrowsAlt} />
+						</CButton>
+					)}
+					<CButton color="primary" size="sm" onClick={doBack} className="gap-b">
+						Back
+					</CButton>
+				</CButtonGroup>
 			</h5>
 
 			<GenericConfirmModal ref={confirmRef} />
 
-			<table className="table table-responsive-sm variables-table">
-				<thead>
-					<tr>
-						<th>Variable</th>
-						<th>Current value</th>
-						<th>&nbsp;</th>
-					</tr>
-				</thead>
+			<table className="table variables-table">
 				<tbody>
-					{Object.entries(customVariableContext).map(([name, info]) => {
-						const shortname = `custom_${name}`
+					{Object.entries(customVariableContext)
+						.sort(([, a], [, b]) => a.sortOrder - b.sortOrder)
+						.map(([name, info], index) => {
+							const shortname = `custom_${name}`
 
-						return (
-							<CustomVariableRow
-								key={name}
-								name={name}
-								shortname={shortname}
-								value={variableValues[shortname]}
-								info={info}
-								onCopied={onCopied}
-								doDelete={doDelete}
-								setStartupValue={setStartupValue}
-								setCurrentValue={setCurrentValue}
-								setPersistenceValue={setPersistenceValue}
-							/>
-						)
-					})}
-					{Object.keys(customVariableContext).length === 0 && (
+							return (
+								<CustomVariableRow
+									key={name}
+									index={index}
+									name={name}
+									shortname={shortname}
+									value={variableValues[shortname]}
+									info={info}
+									onCopied={onCopied}
+									doDelete={doDelete}
+									setStartupValue={setStartupValue}
+									setCurrentValue={setCurrentValue}
+									setPersistenceValue={setPersistenceValue}
+									moveRow={moveRow}
+									setCollapsed={setPanelCollapsed}
+									isCollapsed={isPanelCollapsed(name)}
+								/>
+							)
+						})}
+					{hasNoVariables && (
 						<tr>
 							<td colSpan={3}>No custom variables have been created</td>
 						</tr>
@@ -168,7 +216,7 @@ export function CustomVariablesList({ setShowCustom }) {
 			<div>
 				<CForm inline onSubmit={doCreateNew}>
 					<CFormGroup>
-						<CLabel htmlFor="new_name">Create custom variable: </CLabel>
+						<CLabel htmlFor="new_name">Create custom variable:&nbsp;</CLabel>
 						<CInput name="new_name" type="text" value={newName} onChange={(e) => setNewName(e.currentTarget.value)} />
 						<CButton color="primary" onClick={doCreateNew} disabled={!isCustomVariableValid(newName)}>
 							Add
@@ -183,6 +231,7 @@ export function CustomVariablesList({ setShowCustom }) {
 }
 
 function CustomVariableRow({
+	index,
 	name,
 	shortname,
 	value,
@@ -192,42 +241,117 @@ function CustomVariableRow({
 	setStartupValue,
 	setCurrentValue,
 	setPersistenceValue,
+	moveRow,
+	isCollapsed,
+	setCollapsed,
 }) {
 	const fullname = `internal:${shortname}`
 
+	const doCollapse = useCallback(() => setCollapsed(name, true), [setCollapsed, name])
+	const doExpand = useCallback(() => setCollapsed(name, false), [setCollapsed, name])
+
+	const ref = useRef(null)
+	const [, drop] = useDrop({
+		accept: DRAG_ID,
+		hover(item, monitor) {
+			if (!ref.current) {
+				return
+			}
+			const dragIndex = item.index
+			const hoverIndex = index
+
+			// Don't replace items with themselves
+			if (dragIndex === hoverIndex) {
+				return
+			}
+
+			// Don't replace items with themselves
+			if (item.name === name) {
+				return
+			}
+
+			// Time to actually perform the action
+			moveRow(item.name, name)
+		},
+	})
+	const [{ isDragging }, drag, preview] = useDrag({
+		type: DRAG_ID,
+		canDrag: true,
+		item: {
+			name: name,
+			// index: index,
+			// ref: ref,
+		},
+		collect: (monitor) => ({
+			isDragging: monitor.isDragging(),
+		}),
+	})
+	preview(drop(ref))
+
 	return (
-		<tr>
-			<td>$({fullname})</td>
-			{/* <td>{elms}</td> */}
-			<td>
-				<CForm onSubmit={PreventDefaultHandler}>
-					<CFormGroup>
-						<CLabel htmlFor="current_value">Current value: </CLabel>
-						<TextInputField value={value || ''} setValue={(val) => setCurrentValue(name, val)} />
-					</CFormGroup>
-					<CFormGroup>
-						<CLabel htmlFor="persist_value">Persist value: </CLabel>
-						<CheckboxInputField value={info.persistCurrentValue} setValue={(val) => setPersistenceValue(name, val)} />
-					</CFormGroup>
-					<CFormGroup>
-						<CLabel htmlFor="startup_value">Startup value: </CLabel>
-						<TextInputField
-							disabled={!!info.persistCurrentValue}
-							value={info.defaultValue}
-							setValue={(val) => setStartupValue(name, val)}
-						/>
-					</CFormGroup>
-				</CForm>
+		<tr ref={ref} className={isDragging ? 'variable-dragging' : ''}>
+			<td ref={drag} className="td-reorder">
+				<FontAwesomeIcon icon={faSort} />
 			</td>
-			<td>
-				<CopyToClipboard text={`$(${fullname})`} onCopy={onCopied}>
-					<CButton size="sm">
-						<FontAwesomeIcon icon={faCopy} />
-					</CButton>
-				</CopyToClipboard>
-				<CButton color="danger" size="sm" onClick={() => doDelete(name)}>
-					<FontAwesomeIcon icon={faTrash} />
-				</CButton>
+			<td style={{ paddingRight: 0 }}>
+				<div className="editor-grid">
+					<div className="cell-header">
+						$({fullname})
+						<CButtonGroup className="right">
+							{isCollapsed ? (
+								<CButton size="sm" onClick={doExpand} title="Expand variable view">
+									<FontAwesomeIcon icon={faExpandArrowsAlt} />
+								</CButton>
+							) : (
+								<CButton size="sm" onClick={doCollapse} title="Collapse variable view">
+									<FontAwesomeIcon icon={faCompressArrowsAlt} />
+								</CButton>
+							)}
+							<CopyToClipboard text={`$(${fullname})`} onCopy={onCopied}>
+								<CButton size="sm">
+									<FontAwesomeIcon icon={faCopy} />
+								</CButton>
+							</CopyToClipboard>
+							<CButton color="danger" size="sm" onClick={() => doDelete(name)}>
+								<FontAwesomeIcon icon={faTrash} />
+							</CButton>
+						</CButtonGroup>
+					</div>
+
+					{!isCollapsed && (
+						<>
+							<div className="cell-options">
+								<CForm onSubmit={PreventDefaultHandler}>
+									<CFormGroup>
+										<CLabel htmlFor="persist_value">Persist value: </CLabel>
+										<CheckboxInputField
+											value={info.persistCurrentValue}
+											setValue={(val) => setPersistenceValue(name, val)}
+										/>
+									</CFormGroup>
+								</CForm>
+							</div>
+
+							<div className="cell-values">
+								<CForm onSubmit={PreventDefaultHandler}>
+									<CFormGroup>
+										<CLabel htmlFor="current_value">Current value: </CLabel>
+										<TextInputField value={value || ''} setValue={(val) => setCurrentValue(name, val)} />
+									</CFormGroup>
+
+									<CFormGroup>
+										<CLabel htmlFor="startup_value">Startup value: </CLabel>
+										<TextInputField
+											disabled={!!info.persistCurrentValue}
+											value={info.defaultValue}
+											setValue={(val) => setStartupValue(name, val)}
+										/>
+									</CFormGroup>
+								</CForm>
+							</div>
+						</>
+					)}
+				</div>
 			</td>
 		</tr>
 	)
