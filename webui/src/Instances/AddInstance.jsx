@@ -130,8 +130,7 @@ const AddInstancesInner = memo(function AddInstancesInner({ showHelp, configureI
 	const confirmContent = (
 		<>
 			<p>
-				This module has not been verified to be compatible with this version of companion. It may be buggy or completely
-				broken.
+				This module has not been verified to be compatible with this version of companion. It may be buggy or broken.
 			</p>
 			<p>
 				If this module is broken, please let us know in{' '}

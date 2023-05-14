@@ -5,6 +5,17 @@ export function SurfacesStep({ config, setValue }) {
 	return (
 		<div>
 			<h5>USB Surface Detection Configuration</h5>
+			<p className="indent3">Watch for newly connected USB devices</p>
+			<div className="indent3">
+				<div className="form-check form-check-inline mr-1">
+					<CInputCheckbox
+						id="userconfig_watch_for_devices"
+						checked={config.usb_hotplug}
+						onChange={(e) => setValue('usb_hotplug', e.currentTarget.checked)}
+					/>
+					<CLabel htmlFor="userconfig_watch_for_devices">Enable</CLabel>
+				</div>
+			</div>
 			<p className="indent3">Stream Deck USB Hardware</p>
 			<div className="indent3">
 				<div className="form-check form-check-inline mr-1">
