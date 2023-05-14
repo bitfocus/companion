@@ -13,16 +13,19 @@ describe('variable parsing', () => {
 		expect(parseVariablesInString('$(abc:def)', {})).toMatchObject({ text: '$NA', variableIds: ['abc:def'] })
 	})
 	test('malformed variable', () => {
-		expect(parseVariablesInString('$(abc)', {})).toMatchObject({ text: '$(abc)', variableIds: [] })
+		expect(parseVariablesInString('$(abc)', {})).toMatchObject({ text: '$NA', variableIds: ['abc'] })
 		expect(parseVariablesInString('$(abc:f', {})).toMatchObject({ text: '$(abc:f', variableIds: [] })
-		expect(parseVariablesInString('$(abc:)', {})).toMatchObject({ text: '$(abc:)', variableIds: [] })
-		expect(parseVariablesInString('$(:abc)', {})).toMatchObject({ text: '$(:abc)', variableIds: [] })
+		expect(parseVariablesInString('$(abc:)', {})).toMatchObject({ text: '$NA', variableIds: ['abc:'] })
+		expect(parseVariablesInString('$(:abc)', {})).toMatchObject({ text: '$NA', variableIds: [':abc'] })
 	})
 
 	test('unknown variable', () => {
 		const variables = {
 			abc: {
-				def: 'val1',
+				def: {
+					value: 'val1',
+					isSingleValue: true,
+				},
 			},
 		}
 		expect(parseVariablesInString('$(abc:def2) $(abc2:def)', variables)).toMatchObject({
@@ -35,12 +38,24 @@ describe('variable parsing', () => {
 	test('basic variable', () => {
 		const variables = {
 			abc: {
-				def: 'val1',
-				v2: 'val2',
-				3: 'val3',
+				def: {
+					value: 'val1',
+					isSingleValue: true,
+				},
+				v2: {
+					value: 'val2',
+					isSingleValue: true,
+				},
+				3: {
+					value: 'val3',
+					isSingleValue: true,
+				},
 			},
 			another: {
-				str: 'vvvv',
+				str: {
+					value: 'vvvv',
+					isSingleValue: true,
+				},
 			},
 		}
 		expect(parseVariablesInString('$(abc:def)', variables)).toMatchObject({ text: 'val1', variableIds: ['abc:def'] })
@@ -53,13 +68,28 @@ describe('variable parsing', () => {
 	test('simple inter variable references', () => {
 		const variables = {
 			abc: {
-				def: 'val1',
-				v2: 'val2',
-				3: 'val3',
+				def: {
+					value: 'val1',
+					isSingleValue: true,
+				},
+				v2: {
+					value: 'val2',
+					isSingleValue: true,
+				},
+				3: {
+					value: 'val3',
+					isSingleValue: true,
+				},
 			},
 			another: {
-				str: '$(abc:def) $(abc:3)',
-				str2: '$(abc:v2)',
+				str: {
+					value: '$(abc:def) $(abc:3)',
+					isSingleValue: true,
+				},
+				str2: {
+					value: '$(abc:v2)',
+					isSingleValue: true,
+				},
 			},
 		}
 		expect(parseVariablesInString('$(another:str) $(abc:v2) $(another:str2)', variables)).toMatchObject({
@@ -71,7 +101,10 @@ describe('variable parsing', () => {
 	test('self referencing variable', () => {
 		const variables = {
 			abc: {
-				def: '$(abc:def) + 1',
+				def: {
+					value: '$(abc:def) + 1',
+					isSingleValue: true,
+				},
 			},
 		}
 		expect(parseVariablesInString('$(abc:def)', variables)).toMatchObject({
@@ -83,8 +116,14 @@ describe('variable parsing', () => {
 	test('infinite referencing variable', () => {
 		const variables = {
 			abc: {
-				def: '$(abc:second)_1',
-				second: '$(abc:def)_2',
+				def: {
+					value: '$(abc:second)_1',
+					isSingleValue: true,
+				},
+				second: {
+					value: '$(abc:def)_2',
+					isSingleValue: true,
+				},
 			},
 		}
 		expect(parseVariablesInString('$(abc:def)', variables)).toEqual({
@@ -100,9 +139,18 @@ describe('variable parsing', () => {
 	test('variable name from variable name', () => {
 		const variables = {
 			abc: {
-				def: 'second',
-				second: 'val2',
-				third: 'nope',
+				def: {
+					value: 'second',
+					isSingleValue: true,
+				},
+				second: {
+					value: 'val2',
+					isSingleValue: true,
+				},
+				third: {
+					value: 'nope',
+					isSingleValue: true,
+				},
 			},
 		}
 		expect(parseVariablesInString('$(abc:def)', variables)).toEqual({
