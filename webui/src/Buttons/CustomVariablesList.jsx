@@ -1,5 +1,15 @@
 import React, { useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react'
-import { CButton, CButtonGroup, CForm, CFormGroup, CInput, CLabel } from '@coreui/react'
+import {
+	CAlert,
+	CButton,
+	CButtonGroup,
+	CForm,
+	CFormGroup,
+	CInput,
+	CInputGroup,
+	CInputGroupAppend,
+	CLabel,
+} from '@coreui/react'
 import {
 	CustomVariableDefinitionsContext,
 	socketEmitPromise,
@@ -9,7 +19,14 @@ import {
 } from '../util'
 import { CopyToClipboard } from 'react-copy-to-clipboard'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faCompressArrowsAlt, faCopy, faExpandArrowsAlt, faSort, faTrash } from '@fortawesome/free-solid-svg-icons'
+import {
+	faCompressArrowsAlt,
+	faCopy,
+	faExpandArrowsAlt,
+	faSort,
+	faTimes,
+	faTrash,
+} from '@fortawesome/free-solid-svg-icons'
 import { TextInputField } from '../Components/TextInputField'
 import { CheckboxInputField } from '../Components/CheckboxInputField'
 import { GenericConfirmModal } from '../Components/GenericConfirmModal'
@@ -149,11 +166,46 @@ export function CustomVariablesList({ setShowCustom }) {
 		[socket]
 	)
 
-	const variableNames = useMemo(() => Object.keys(customVariableContext || {}), [customVariableContext])
+	const allVariableNames = useMemo(() => Object.keys(customVariableContext || {}), [customVariableContext])
 	const { setPanelCollapsed, isPanelCollapsed, setAllCollapsed, setAllExpanded, canExpandAll, canCollapseAll } =
-		usePanelCollapseHelper(`custom_variables`, variableNames)
+		usePanelCollapseHelper(`custom_variables`, allVariableNames)
 
-	const hasNoVariables = variableNames.length === 0
+	const [filter, setFilter] = useState('')
+	const clearFilter = useCallback(() => setFilter(''), [])
+	const updateFilter = useCallback((e) => setFilter(e.currentTarget.value), [])
+
+	const variableDefinitions = useMemo(() => {
+		const defs = []
+		for (const [name, variable] of Object.entries(customVariableContext || {})) {
+			defs.push({
+				...variable,
+				name,
+			})
+		}
+
+		defs.sort((a, b) => a.sortOrder - b.sortOrder)
+
+		return defs
+	}, [customVariableContext])
+	const hasNoVariables = variableDefinitions.length === 0
+
+	const [candidates, errorMsg] = useMemo(() => {
+		let candidates = []
+		try {
+			if (!filter) {
+				candidates = variableDefinitions
+			} else {
+				const regexp = new RegExp(filter, 'i')
+
+				candidates = variableDefinitions.filter((variable) => variable.name.match(regexp))
+			}
+			return [candidates, null]
+		} catch (e) {
+			console.error('Failed to compile candidates list:', e)
+
+			return [null, e?.toString() || 'Unknown error']
+		}
+	}, [variableDefinitions, filter])
 
 	return (
 		<div className="variables-panel">
@@ -178,18 +230,44 @@ export function CustomVariablesList({ setShowCustom }) {
 
 			<GenericConfirmModal ref={confirmRef} />
 
+			<CInputGroup className="variables-table-filter">
+				<CInput
+					type="text"
+					placeholder="Filter ..."
+					onChange={updateFilter}
+					value={filter}
+					style={{ fontSize: '1.2em' }}
+				/>
+				<CInputGroupAppend>
+					<CButton color="danger" onClick={clearFilter}>
+						<FontAwesomeIcon icon={faTimes} />
+					</CButton>
+				</CInputGroupAppend>
+			</CInputGroup>
+
 			<table className="table variables-table">
 				<tbody>
-					{Object.entries(customVariableContext)
-						.sort(([, a], [, b]) => a.sortOrder - b.sortOrder)
-						.map(([name, info], index) => {
-							const shortname = `custom_${name}`
+					{!hasNoVariables && errorMsg && (
+						<tr>
+							<td>
+								<CAlert color="warning" role="alert">
+									Failed to build list of variables:
+									<br />
+									{errorMsg}
+								</CAlert>
+							</td>
+						</tr>
+					)}
+
+					{candidates &&
+						candidates.map((info, index) => {
+							const shortname = `custom_${info.name}`
 
 							return (
 								<CustomVariableRow
-									key={name}
+									key={info.name}
 									index={index}
-									name={name}
+									name={info.name}
 									shortname={shortname}
 									value={variableValues[shortname]}
 									info={info}
@@ -200,7 +278,7 @@ export function CustomVariablesList({ setShowCustom }) {
 									setPersistenceValue={setPersistenceValue}
 									moveRow={moveRow}
 									setCollapsed={setPanelCollapsed}
-									isCollapsed={isPanelCollapsed(name)}
+									isCollapsed={isPanelCollapsed(info.name)}
 								/>
 							)
 						})}
