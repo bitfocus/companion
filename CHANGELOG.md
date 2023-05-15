@@ -2,7 +2,7 @@
 
 ## Companion v3.0.0 - Unreleased
 
-Documented up to bde02297f71b0b88e1d8cf03080e707e2bfcae87
+Documented up to 2d6b23d1e661ccf2972127ac3647d150b2650121
 
 ### BREAKING CHANGES
 
@@ -36,6 +36,7 @@ Documented up to bde02297f71b0b88e1d8cf03080e707e2bfcae87
 - Triggers list is now manually sortable
 - Overhaul triggers editor to be like the button editor
 - Support multiple event sources per trigger, and a separate condition
+- Trigger on sunrise/sunset
 - Image buffers returned from feedbacks will now be properly composited
 - Launcher option to run at login
 - Improved search function in add connections list
@@ -46,6 +47,7 @@ Documented up to bde02297f71b0b88e1d8cf03080e707e2bfcae87
 - New import/export system, allowing for more fine-grained control
 - New variables of page names
 - Rework internal actions to have less duplication
+- Improve handling of pin locking
 
 ### 🐞 BUG FIXES
 
@@ -53,6 +55,23 @@ Documented up to bde02297f71b0b88e1d8cf03080e707e2bfcae87
 - Ensure custom variable ids are valid
 - Ensure connection labels are valid
 - Color picker indicates the currently selected swatch
+
+## Companion v2.4.2 - Release Notes
+
+### 🐞 BUG FIXES
+
+- UI crash after saving a trigger
+- UI crash if module status is not a string
+- Missing libasound2 in docker image
+
+### 🐞 MODULE FIXES
+
+- bitfocus-companion
+- equipson-lightshark
+- generic-artnet
+- generic-sacn
+- haivision-connectdvr
+- zoom-osc-iso
 
 ## Companion v2.4.1 - Release Notes
 
