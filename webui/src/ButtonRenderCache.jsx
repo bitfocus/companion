@@ -115,7 +115,7 @@ export class ButtonRenderCache extends EventEmitter {
 
 	unsubscribeBank(sessionId, page, bank) {
 		const id = CreateBankControlId(page, bank)
-		const subsForBank = this.#bankRenders[id]
+		const subsForBank = this.#bankSubs[id]
 		if (subsForBank && subsForBank.size > 0) {
 			subsForBank.delete(sessionId)
 
