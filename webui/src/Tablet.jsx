@@ -282,7 +282,7 @@ function ConfigurePanel({ updateQueryUrl, query }) {
 	)
 }
 
-function ButtonsFromPage({ imageCache, number, cols, rows }) {
+function ButtonsFromPage({, imageCache, number, cols, rows }) {
 	const socket = useContext(SocketContext)
 
 	const [buttonsInView, setButtonsInView] = useState({})
@@ -291,9 +291,8 @@ function ButtonsFromPage({ imageCache, number, cols, rows }) {
 	const images = useSharedPageRenderCache(imageCache, 'tablet', number, !anyVisible)
 
 	const bankClick = useCallback(
-		(bank, pressed) => {
-			const controlId = CreateBankControlId(number, bank) // TODO-coordinate
-			socketEmitPromise(socket, 'controls:hot-press', [controlId, pressed, 'tablet']).catch((e) =>
+		(coordinate, pressed) => {
+			socketEmitPromise(socket, 'controls:hot-press', [number, coordinate, pressed, 'tablet']).catch((e) =>
 				console.error(`Hot press failed: ${e}`)
 			)
 		},
@@ -315,7 +314,7 @@ function ButtonsFromPage({ imageCache, number, cols, rows }) {
 				.fill(0)
 				.map((_2, x) => {
 					const index = y * MAX_COLS + x + 1
-					const controlId = CreateBankControlId(page, index)
+					const controlId = CreateBankControlId(number, index)
 					return (
 						<ButtonWrapper
 							key={x}

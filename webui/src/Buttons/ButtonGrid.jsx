@@ -262,7 +262,7 @@ const ButtonGridActions = forwardRef(function ButtonGridActions({ isHot, pageNum
 					switch (activeFunction) {
 						case 'delete':
 							resetRef.current.show('Clear bank', `Clear style and actions for this button?`, 'Clear', () => {
-								socketEmitPromise(socket, 'controls:reset', [coordinate]).catch((e) => {
+								socketEmitPromise(socket, 'controls:reset', [pageNumber, coordinate]).catch((e) => {
 									console.error(`Reset failed: ${e}`)
 								})
 							})
@@ -272,7 +272,12 @@ const ButtonGridActions = forwardRef(function ButtonGridActions({ isHot, pageNum
 						case 'copy':
 							if (activeFunctionButton) {
 								const fromInfo = activeFunctionButton
-								socketEmitPromise(socket, 'controls:copy', [fromInfo, coordinate]).catch((e) => {
+								socketEmitPromise(socket, 'controls:copy', [
+									fromInfo.page,
+									fromInfo.coordinate,
+									pageNumber,
+									coordinate,
+								]).catch((e) => {
 									console.error(`copy failed: ${e}`)
 								})
 								stopFunction()
@@ -283,7 +288,12 @@ const ButtonGridActions = forwardRef(function ButtonGridActions({ isHot, pageNum
 						case 'move':
 							if (activeFunctionButton) {
 								const fromInfo = activeFunctionButton
-								socketEmitPromise(socket, 'controls:move', [fromInfo, coordinate]).catch((e) => {
+								socketEmitPromise(socket, 'controls:move', [
+									fromInfo.page,
+									fromInfo.coordinate,
+									pageNumber,
+									coordinate,
+								]).catch((e) => {
 									console.error(`move failed: ${e}`)
 								})
 								stopFunction()

@@ -28,8 +28,7 @@ export class ButtonRenderCache extends EventEmitter {
 
 	#bankChange(page, controlId, render) {
 		page = Number(page)
-		bank = Number(bank)
-		if (isNaN(page) || isNaN(bank)) return
+		if (isNaN(page)) return
 
 		const newImage = dataToButtonImage(render)
 

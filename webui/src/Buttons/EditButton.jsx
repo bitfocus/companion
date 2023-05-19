@@ -49,7 +49,8 @@ import {
 	socketEmitPromise,
 	SocketContext,
 	MyErrorBoundary,
-	FormatButtonControlId,
+	FormatPageAndCoordinate,
+	PagesContext,
 } from '../util'
 import { ControlActionSetEditor } from '../Controls/ActionSetEditor'
 import jsonPatch from 'fast-json-patch'
@@ -61,8 +62,12 @@ import { useElementSize } from 'usehooks-ts'
 import { GetStepIds } from '@companion/shared/Controls'
 import CSwitch from '../CSwitch'
 
-export function EditButton({ controlId, onKeyUp, contentHeight }) {
+export function EditButton({ pageNumber, coordinate, onKeyUp, contentHeight }) {
 	const socket = useContext(SocketContext)
+	const pages = useContext(PagesContext)
+
+	const controlId = pages?.[pageNumber]?.controls?.[coordinate]
+	console.log()
 
 	const resetModalRef = useRef()
 
@@ -151,7 +156,7 @@ export function EditButton({ controlId, onKeyUp, contentHeight }) {
 			}
 
 			const doChange = () => {
-				socketEmitPromise(socket, 'controls:reset', [controlId, newType]).catch((e) => {
+				socketEmitPromise(socket, 'controls:reset', [pageNumber, coordinate, newType]).catch((e) => {
 					console.error(`Set type failed: ${e}`)
 				})
 			}
@@ -169,43 +174,43 @@ export function EditButton({ controlId, onKeyUp, contentHeight }) {
 				doChange()
 			}
 		},
-		[socket, controlId, configRef]
+		[socket, pageNumber, coordinate, configRef]
 	)
 
 	const doRetryLoad = useCallback(() => setReloadConfigToken(nanoid()), [])
 	const clearButton = useCallback(() => {
 		resetModalRef.current.show(
-			`Clear button ${FormatButtonControlId(controlId)}`,
+			`Clear button ${FormatPageAndCoordinate(pageNumber, coordinate)}`,
 			`This will clear the style, feedbacks and all actions`,
 			'Clear',
 			() => {
-				socketEmitPromise(socket, 'controls:reset', [controlId]).catch((e) => {
+				socketEmitPromise(socket, 'controls:reset', [pageNumber, coordinate]).catch((e) => {
 					console.error(`Reset failed: ${e}`)
 				})
 			}
 		)
-	}, [socket, controlId])
+	}, [socket, pageNumber, coordinate])
 
 	const hotPressDown = useCallback(() => {
-		socketEmitPromise(socket, 'controls:hot-press', [controlId, true, 'edit']).catch((e) =>
+		socketEmitPromise(socket, 'controls:hot-press', [pageNumber, coordinate, true, 'edit']).catch((e) =>
 			console.error(`Hot press failed: ${e}`)
 		)
-	}, [socket, controlId])
+	}, [socket, pageNumber, coordinate])
 	const hotPressUp = useCallback(() => {
-		socketEmitPromise(socket, 'controls:hot-press', [controlId, false, 'edit']).catch((e) =>
+		socketEmitPromise(socket, 'controls:hot-press', [pageNumber, coordinate, false, 'edit']).catch((e) =>
 			console.error(`Hot press failed: ${e}`)
 		)
-	}, [socket, controlId])
+	}, [socket, pageNumber, coordinate])
 	const hotRotateLeft = useCallback(() => {
-		socketEmitPromise(socket, 'controls:hot-rotate', [controlId, false]).catch((e) =>
+		socketEmitPromise(socket, 'controls:hot-rotate', [pageNumber, coordinate, false]).catch((e) =>
 			console.error(`Hot rotate failed: ${e}`)
 		)
-	}, [socket, controlId])
+	}, [socket, pageNumber, coordinate])
 	const hotRotateRight = useCallback(() => {
-		socketEmitPromise(socket, 'controls:hot-rotate', [controlId, true]).catch((e) =>
+		socketEmitPromise(socket, 'controls:hot-rotate', [pageNumber, coordinate, true]).catch((e) =>
 			console.error(`Hot rotate failed: ${e}`)
 		)
-	}, [socket, controlId])
+	}, [socket, pageNumber, coordinate])
 
 	const errors = []
 	if (configError) errors.push(configError)
@@ -213,8 +218,6 @@ export function EditButton({ controlId, onKeyUp, contentHeight }) {
 	const hasConfig = config || config === false
 	const hasRuntimeProps = runtimeProps || runtimeProps === false
 	const dataReady = !loadError && hasConfig && hasRuntimeProps
-
-	//const parsedId = ParseControlId(controlId)
 
 	// Tip: This query needs to match the page layout. It doesn't need to be reactive, as the useElementSize will force a re-render
 	const isTwoColumn = window.matchMedia('(min-width: 1200px)').matches

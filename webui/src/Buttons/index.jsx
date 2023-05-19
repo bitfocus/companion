@@ -3,7 +3,7 @@ import { faCalculator, faDollarSign, faGift, faVideoCamera } from '@fortawesome/
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { nanoid } from 'nanoid'
 import { InstancePresets } from './Presets'
-import { SocketContext, MyErrorBoundary, socketEmitPromise, FormatButtonControlId } from '../util'
+import { SocketContext, MyErrorBoundary, socketEmitPromise, FormatPageAndCoordinate } from '../util'
 import { CreateBankControlId } from '@companion/shared/ControlId'
 import { ButtonsGridPanel } from './ButtonGrid'
 import { EditButton } from './EditButton'
@@ -36,15 +36,15 @@ export const ButtonsPage = memo(function ButtonsPage({ hotPress }) {
 	}, [])
 
 	const doButtonGridClick = useCallback(
-		(page, bank, isDown) => {
+		(page, coordinate, isDown) => {
 			if (hotPress) {
-				const controlId = CreateBankControlId(page, bank)
-				socketEmitPromise(socket, 'controls:hot-press', [controlId, isDown, 'grid']).catch((e) =>
+				socketEmitPromise(socket, 'controls:hot-press', [page, coordinate, isDown, 'grid']).catch((e) =>
 					console.error(`Hot press failed: ${e}`)
 				)
 			} else if (isDown) {
 				setActiveTab('edit')
-				setSelectedButton(CreateBankControlId(page, bank))
+				console.log('set selected', page, coordinate)
+				setSelectedButton({ page, coordinate })
 				setTabResetToken(nanoid())
 			}
 		},
@@ -62,13 +62,15 @@ export const ButtonsPage = memo(function ButtonsPage({ hotPress }) {
 
 					if (!e.ctrlKey && !e.metaKey && !e.altKey && (e.key === 'Backspace' || e.key === 'Delete')) {
 						clearModalRef.current.show(
-							`Clear button ${FormatButtonControlId(selectedButton)}`,
+							`Clear button ${FormatPageAndCoordinate(selectedButton.page, selectedButton.coordinate)}`,
 							`This will clear the style, feedbacks and all actions`,
 							'Clear',
 							() => {
-								socketEmitPromise(socket, 'controls:reset', [selectedButton]).catch((e) => {
-									console.error(`Reset failed: ${e}`)
-								})
+								socketEmitPromise(socket, 'controls:reset', [selectedButton.page, selectedButton.coordinate]).catch(
+									(e) => {
+										console.error(`Reset failed: ${e}`)
+									}
+								)
 							}
 						)
 					}
@@ -84,12 +86,22 @@ export const ButtonsPage = memo(function ButtonsPage({ hotPress }) {
 						console.log('do paste', copyFromButton, selectedButton)
 
 						if (copyFromButton[1] === 'copy') {
-							socketEmitPromise(socket, 'controls:copy', [copyFromButton[0], selectedButton]).catch((e) => {
+							socketEmitPromise(socket, 'controls:copy', [
+								copyFromButton[0].page,
+								copyFromButton[0].coordinate,
+								selectedButton.page,
+								selectedButton.coordinate,
+							]).catch((e) => {
 								console.error(`copy failed: ${e}`)
 							})
 							setTabResetToken(nanoid())
 						} else if (copyFromButton[1] === 'cut') {
-							socketEmitPromise(socket, 'controls:move', [copyFromButton[0], selectedButton]).catch((e) => {
+							socketEmitPromise(socket, 'controls:move', [
+								copyFromButton[0].page,
+								copyFromButton[0].coordinate,
+								selectedButton.page,
+								selectedButton.coordinate,
+							]).catch((e) => {
 								console.error(`move failed: ${e}`)
 							})
 							setCopyFromButton(null)
@@ -131,7 +143,7 @@ export const ButtonsPage = memo(function ButtonsPage({ hotPress }) {
 							<CNavItem hidden={!selectedButton}>
 								<CNavLink data-tab="edit">
 									<FontAwesomeIcon icon={faCalculator} /> Edit Button{' '}
-									{selectedButton ? `${FormatButtonControlId(selectedButton)}` : '?'}
+									{selectedButton ? `${FormatPageAndCoordinate(selectedButton.page, selectedButton.coordinate)}` : '?'}
 								</CNavLink>
 							</CNavItem>
 							<CNavItem>
@@ -157,7 +169,8 @@ export const ButtonsPage = memo(function ButtonsPage({ hotPress }) {
 										<EditButton
 											key={`${selectedButton}.${tabResetToken}`}
 											contentHeight={contentHeight}
-											controlId={selectedButton}
+											pageNumber={selectedButton.page}
+											coordinate={selectedButton.coordinate}
 											onKeyUp={handleKeyDownInButtons}
 										/>
 									)}

@@ -4,7 +4,6 @@ import { useContext, useMemo } from 'react'
 import { useSharedBankRenderCache } from '../ButtonRenderCache'
 import { ButtonPreview } from '../Components/ButtonPreview'
 import { ButtonRenderCacheContext } from '../util'
-import { ParseControlId } from '@companion/shared/ControlId.js'
 
 /**
  * Preview a bank based on the selected options
