@@ -315,12 +315,13 @@ function ButtonsFromPage({ imageCache, number, cols, rows }) {
 				.fill(0)
 				.map((_2, x) => {
 					const index = y * MAX_COLS + x + 1
+					const controlId = CreateBankControlId(page, index)
 					return (
 						<ButtonWrapper
 							key={x}
 							page={number}
 							index={index}
-							image={images[index]}
+							image={images[controlId]}
 							bankClick={bankClick}
 							setInView={setInView}
 						/>

@@ -16,17 +16,8 @@ import { ParseControlId } from '@companion/shared/ControlId.js'
 export function OptionButtonPreview({ controlId }) {
 	const buttonCache = useContext(ButtonRenderCacheContext)
 
-	let page = 0
-	let bank = 0
-
-	const parsedControlId = ParseControlId(controlId)
-	if (parsedControlId && parsedControlId.type === 'bank') {
-		page = parsedControlId.page
-		bank = parsedControlId.bank
-	}
-
 	const sessionId = useMemo(() => nanoid(), [])
-	const image = useSharedBankRenderCache(buttonCache, sessionId, page, bank)
+	const image = useSharedBankRenderCache(buttonCache, sessionId, controlId)
 
 	return <ButtonPreview fixedSize noPad preview={image} />
 }

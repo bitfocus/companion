@@ -488,7 +488,7 @@ export function ButtonGrid({ bankClick, pageNumber, selectedButton }) {
 											key={x}
 											page={pageNumber}
 											index={index}
-											preview={pageImages[index]}
+											preview={pageImages[controlId]}
 											onClick={bankClick}
 											alt={`Button ${index}`}
 											selected={selectedButton === controlId}

@@ -23,10 +23,10 @@ export class ButtonRenderCache extends EventEmitter {
 		this.#socket = socket
 
 		// TODO - this will leak if the Memo re-evaluates
-		socket.on('preview:page-bank', this.bankChange.bind(this))
+		socket.on('preview:page-bank', this.#bankChange.bind(this))
 	}
 
-	bankChange(page, bank, render) {
+	#bankChange(page, controlId, render) {
 		page = Number(page)
 		bank = Number(bank)
 		if (isNaN(page) || isNaN(bank)) return
@@ -37,7 +37,7 @@ export class ButtonRenderCache extends EventEmitter {
 		if (subsForPage && subsForPage.size) {
 			const newImages = {
 				...this.#pageRenders[page],
-				[bank]: newImage,
+				[controlId]: newImage,
 			}
 			this.#pageRenders[page] = newImages
 
@@ -45,13 +45,12 @@ export class ButtonRenderCache extends EventEmitter {
 			this.emit('page', page, newImages)
 		}
 
-		const id = CreateBankControlId(page, bank)
-		const subsForBank = this.#bankSubs[id]
+		const subsForBank = this.#bankSubs[controlId]
 		if (subsForBank && subsForBank.size > 0) {
-			this.#bankRenders[id] = newImage
+			this.#bankRenders[controlId] = newImage
 
 			// TODO - debounce?
-			this.emit('bank', page, bank, newImage)
+			this.emit('bank', controlId, newImage)
 		}
 	}
 
@@ -68,8 +67,9 @@ export class ButtonRenderCache extends EventEmitter {
 				.then((data) => {
 					const newImages = {}
 					for (let key = 1; key <= MAX_BUTTONS; ++key) {
-						if (data[key]) {
-							newImages[key] = dataToButtonImage(data[key])
+						const controlId = CreateBankControlId(page, key)
+						if (data[controlId]) {
+							newImages[controlId] = dataToButtonImage(data[controlId])
 						}
 					}
 					this.#pageRenders[page] = newImages
@@ -100,44 +100,42 @@ export class ButtonRenderCache extends EventEmitter {
 		}
 	}
 
-	subscribeBank(sessionId, page, bank) {
-		const id = CreateBankControlId(page, bank)
-		let subsForBank = this.#bankSubs[id]
-		if (!subsForBank) subsForBank = this.#bankSubs[id] = new Set()
+	subscribeBank(sessionId, controlId) {
+		let subsForBank = this.#bankSubs[controlId]
+		if (!subsForBank) subsForBank = this.#bankSubs[controlId] = new Set()
 
 		const doSubscribe = subsForBank.size === 0
 
 		subsForBank.add(sessionId)
 
 		if (doSubscribe) {
-			socketEmitPromise(this.#socket, 'preview:bank:subscribe', [page, bank])
+			socketEmitPromise(this.#socket, 'preview:bank:subscribe', [controlId])
 				.then((data) => {
 					const newImage = dataToButtonImage(data)
-					this.#bankRenders[CreateBankControlId(page, bank)] = newImage
+					this.#bankRenders[controlId] = newImage
 
-					this.emit('bank', page, bank, newImage)
+					this.emit('bank', controlId, newImage)
 				})
 				.catch((e) => {
 					console.error(e)
 				})
 			return undefined
 		} else {
-			return this.#bankRenders[id]
+			return this.#bankRenders[controlId]
 		}
 	}
 
-	unsubscribeBank(sessionId, page, bank) {
-		const id = CreateBankControlId(page, bank)
-		const subsForBank = this.#bankSubs[id]
+	unsubscribeBank(sessionId, controlId) {
+		const subsForBank = this.#bankSubs[controlId]
 		if (subsForBank && subsForBank.size > 0) {
 			subsForBank.delete(sessionId)
 
 			if (subsForBank.size === 0) {
-				socketEmitPromise(this.#socket, 'preview:bank:unsubscribe', [page, bank]).catch((e) => {
+				socketEmitPromise(this.#socket, 'preview:bank:unsubscribe', [controlId]).catch((e) => {
 					console.error(e)
 				})
 
-				delete this.#bankRenders[id]
+				delete this.#bankRenders[controlId]
 			}
 		}
 	}
@@ -181,34 +179,31 @@ export function useSharedPageRenderCache(cacheContext, sessionId, page, disable 
  * Load and retrieve a page from the shared button render cache
  * @param {ButtonRenderCache} cacheContext The cache to use
  * @param {string} sessionId Unique id of this accessor
- * @param {number | undefined} page Page number to load and retrieve
- * @param {number | undefined} bank Bank number to load and retrieve
+ * @param {string | undefined} controlId Id of the control to load and retrieve
  * @param {boolean | undefined} disable Disable loading of this page
  * @returns
  */
-export function useSharedBankRenderCache(cacheContext, sessionId, page, bank, disable = false) {
+export function useSharedBankRenderCache(cacheContext, sessionId, controlId, disable = false) {
 	const [imageState, setImageState] = useState({})
 
 	useEffect(() => {
-		const page2 = Number(page)
-		const bank2 = Number(bank)
-		if (!isNaN(page2) && !isNaN(bank2) && !disable) {
-			const updateImage = (page3, bank3, image) => {
-				if (page3 === page2 && bank3 === bank2) setImageState(image)
+		if (!disable) {
+			const updateImage = (controlId2, image) => {
+				if (controlId === controlId2) setImageState(image)
 			}
 
 			cacheContext.on('bank', updateImage)
 
-			const initialImages = cacheContext.subscribeBank(sessionId, page2, bank2)
+			const initialImages = cacheContext.subscribeBank(sessionId, controlId)
 			if (initialImages) setImageState(initialImages)
 
 			return () => {
 				cacheContext.off('bank', updateImage)
 
-				cacheContext.unsubscribeBank(sessionId, page2, bank2)
+				cacheContext.unsubscribeBank(sessionId, controlId)
 			}
 		}
-	}, [cacheContext, sessionId, page, bank, disable])
+	}, [cacheContext, sessionId, controlId, disable])
 
 	return imageState
 }
