@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { EventEmitter } from 'events'
-import { dataToButtonImage } from './Components/ButtonPreview'
+import { BlackImage, dataToButtonImage } from './Components/ButtonPreview'
 import { MAX_BUTTONS } from './Constants'
 import { socketEmitPromise } from './util'
 import { CreateBankControlId } from '@companion/shared/ControlId'
@@ -101,6 +101,8 @@ export class ButtonRenderCache extends EventEmitter {
 	}
 
 	subscribeBank(sessionId, controlId) {
+		if (!controlId) return
+
 		let subsForBank = this.#bankSubs[controlId]
 		if (!subsForBank) subsForBank = this.#bankSubs[controlId] = new Set()
 
@@ -126,6 +128,8 @@ export class ButtonRenderCache extends EventEmitter {
 	}
 
 	unsubscribeBank(sessionId, controlId) {
+		if (!controlId) return
+
 		const subsForBank = this.#bankSubs[controlId]
 		if (subsForBank && subsForBank.size > 0) {
 			subsForBank.delete(sessionId)
@@ -184,12 +188,14 @@ export function useSharedPageRenderCache(cacheContext, sessionId, page, disable 
  * @returns
  */
 export function useSharedBankRenderCache(cacheContext, sessionId, controlId, disable = false) {
-	const [imageState, setImageState] = useState({})
+	const [imageState, setImageState] = useState(BlackImage)
 
 	useEffect(() => {
 		if (!disable) {
+			setImageState(BlackImage)
+
 			const updateImage = (controlId2, image) => {
-				if (controlId === controlId2) setImageState(image)
+				if (controlId === controlId2) setImageState(image ?? BlackImage)
 			}
 
 			cacheContext.on('bank', updateImage)

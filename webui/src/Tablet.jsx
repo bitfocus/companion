@@ -292,7 +292,7 @@ function ButtonsFromPage({ imageCache, number, cols, rows }) {
 
 	const bankClick = useCallback(
 		(bank, pressed) => {
-			const controlId = CreateBankControlId(number, bank)
+			const controlId = CreateBankControlId(number, bank) // TODO-coordinate
 			socketEmitPromise(socket, 'controls:hot-press', [controlId, pressed, 'tablet']).catch((e) =>
 				console.error(`Hot press failed: ${e}`)
 			)

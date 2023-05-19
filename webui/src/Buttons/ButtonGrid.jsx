@@ -11,7 +11,7 @@ import React, {
 	useMemo,
 } from 'react'
 import { KeyReceiver, PagesContext, socketEmitPromise, SocketContext, ButtonRenderCacheContext } from '../util'
-import { CreateBankControlId } from '@companion/shared/ControlId'
+import { formatCoordinate } from '@companion/shared/ControlId'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import {
 	faArrowsAlt,
@@ -28,7 +28,7 @@ import { useDrop } from 'react-dnd'
 import { ButtonPreview } from '../Components/ButtonPreview'
 import { GenericConfirmModal } from '../Components/GenericConfirmModal'
 import { nanoid } from 'nanoid'
-import { useSharedPageRenderCache } from '../ButtonRenderCache'
+import { useSharedPageRenderCache, useSharedBankRenderCache } from '../ButtonRenderCache'
 import Select from 'react-select'
 
 export const ButtonsGridPanel = memo(function ButtonsPage({
@@ -52,10 +52,10 @@ export const ButtonsGridPanel = memo(function ButtonsPage({
 	const actionsRef = useRef()
 
 	const bankClick = useCallback(
-		(index, isDown) => {
-			console.log('bank', pageNumber, index, isDown)
-			if (!actionsRef.current?.bankClick(index, isDown)) {
-				buttonGridClick(pageNumber, index, isDown)
+		(coordinate, isDown) => {
+			console.log('bank', pageNumber, coordinate, isDown)
+			if (!actionsRef.current?.bankClick(coordinate, isDown)) {
+				buttonGridClick(pageNumber, coordinate, isDown)
 			}
 		},
 		[buttonGridClick, pageNumber]
@@ -142,7 +142,12 @@ export const ButtonsGridPanel = memo(function ButtonsPage({
 				</CRow>
 
 				<CRow className={classnames({ 'bank-armed': isHot, bankgrid: true })}>
-					<ButtonGrid pageNumber={pageNumber} bankClick={bankClick} selectedButton={selectedButton} />
+					<ButtonGrid
+						pageNumber={pageNumber}
+						pageInfo={pageInfo}
+						bankClick={bankClick}
+						selectedButton={selectedButton}
+					/>
 				</CRow>
 
 				<CRow style={{ paddingTop: '15px' }}>
@@ -252,13 +257,12 @@ const ButtonGridActions = forwardRef(function ButtonGridActions({ isHot, pageNum
 	useImperativeHandle(
 		ref,
 		() => ({
-			bankClick(index, isDown) {
+			bankClick(coordinate, isDown) {
 				if (isDown) {
 					switch (activeFunction) {
 						case 'delete':
 							resetRef.current.show('Clear bank', `Clear style and actions for this button?`, 'Clear', () => {
-								const controlId = CreateBankControlId(pageNumber, index)
-								socketEmitPromise(socket, 'controls:reset', [controlId]).catch((e) => {
+								socketEmitPromise(socket, 'controls:reset', [coordinate]).catch((e) => {
 									console.error(`Reset failed: ${e}`)
 								})
 							})
@@ -268,35 +272,23 @@ const ButtonGridActions = forwardRef(function ButtonGridActions({ isHot, pageNum
 						case 'copy':
 							if (activeFunctionButton) {
 								const fromInfo = activeFunctionButton
-								socketEmitPromise(socket, 'controls:copy', [
-									CreateBankControlId(fromInfo.page, fromInfo.bank),
-									CreateBankControlId(pageNumber, index),
-								]).catch((e) => {
+								socketEmitPromise(socket, 'controls:copy', [fromInfo, coordinate]).catch((e) => {
 									console.error(`copy failed: ${e}`)
 								})
 								stopFunction()
 							} else {
-								setActiveFunctionButton({
-									page: pageNumber,
-									bank: index,
-								})
+								setActiveFunctionButton(coordinate)
 							}
 							return true
 						case 'move':
 							if (activeFunctionButton) {
 								const fromInfo = activeFunctionButton
-								socketEmitPromise(socket, 'controls:move', [
-									CreateBankControlId(fromInfo.page, fromInfo.bank),
-									CreateBankControlId(pageNumber, index),
-								]).catch((e) => {
+								socketEmitPromise(socket, 'controls:move', [fromInfo, coordinate]).catch((e) => {
 									console.error(`move failed: ${e}`)
 								})
 								stopFunction()
 							} else {
-								setActiveFunctionButton({
-									page: pageNumber,
-									bank: index,
-								})
+								setActiveFunctionButton(coordinate)
 							}
 							return true
 						default:
@@ -457,12 +449,7 @@ export const ButtonGridHeader = memo(function ButtonGridHeader({
 	)
 })
 
-export function ButtonGrid({ bankClick, pageNumber, selectedButton }) {
-	const buttonCache = useContext(ButtonRenderCacheContext)
-
-	const gridId = useMemo(() => nanoid(), [])
-	const pageImages = useSharedPageRenderCache(buttonCache, gridId, pageNumber)
-
+export function ButtonGrid({ bankClick, pageNumber, pageInfo, selectedButton }) {
 	return (
 		<div
 			style={{
@@ -481,16 +468,16 @@ export function ButtonGrid({ bankClick, pageNumber, selectedButton }) {
 							{Array(MAX_COLS)
 								.fill(0)
 								.map((_, x) => {
-									const index = y * MAX_COLS + x + 1
-									const controlId = CreateBankControlId(pageNumber, index)
+									const coordinate = formatCoordinate(x, y)
+									const controlId = pageInfo?.controls?.[coordinate]
 									return (
 										<ButtonGridIcon
 											key={x}
 											page={pageNumber}
-											index={index}
-											preview={pageImages[controlId]}
+											coordinate={coordinate}
+											controlId={controlId}
 											onClick={bankClick}
-											alt={`Button ${index}`}
+											alt={`Button ${coordinate}`}
 											selected={selectedButton === controlId}
 										/>
 									)
@@ -505,6 +492,11 @@ export function ButtonGrid({ bankClick, pageNumber, selectedButton }) {
 const ButtonGridIcon = memo(function ButtonGridIcon(props) {
 	const socket = useContext(SocketContext)
 
+	const buttonCache = useContext(ButtonRenderCacheContext)
+
+	const sessionId = useMemo(() => nanoid(), [])
+	const image = useSharedBankRenderCache(buttonCache, sessionId, props.controlId)
+
 	const [{ isOver, canDrop }, drop] = useDrop({
 		accept: 'preset',
 		drop: (dropData) => {
@@ -513,7 +505,7 @@ const ButtonGridIcon = memo(function ButtonGridIcon(props) {
 				dropData.instanceId,
 				dropData.presetId,
 				props.page,
-				props.index,
+				props.coordinate,
 			]).catch((e) => {
 				console.error('Preset import failed')
 			})
@@ -524,6 +516,16 @@ const ButtonGridIcon = memo(function ButtonGridIcon(props) {
 		}),
 	})
 
-	const title = `${props.page}.${props.index}`
-	return <ButtonPreview {...props} dropRef={drop} dropHover={isOver} canDrop={canDrop} alt={title} title={title} />
+	const title = `${props.page}.${props.coordinate}`
+	return (
+		<ButtonPreview
+			{...props}
+			preview={image}
+			dropRef={drop}
+			dropHover={isOver}
+			canDrop={canDrop}
+			alt={title}
+			title={title}
+		/>
+	)
 })

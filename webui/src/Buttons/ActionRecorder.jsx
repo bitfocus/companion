@@ -233,8 +233,9 @@ function ButtonPicker({ selectButton }) {
 	const [selectedSet, setSelectedSet] = useState(null)
 
 	const bankClick = useCallback(
-		(bank, pressed) => {
+		(coordinate, pressed) => {
 			if (pressed) {
+				// TODO-coordinate
 				setSelectedControl(CreateBankControlId(pageNumber, bank))
 				setSelectedSet(null)
 			}

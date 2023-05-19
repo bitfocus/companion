@@ -16,6 +16,7 @@ import { ButtonPreview, dataToButtonImage } from '../Components/ButtonPreview'
 import { MAX_COLS, MAX_ROWS } from '../Constants'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faCancel, faExpand } from '@fortawesome/free-solid-svg-icons'
+import { formatCoordinate } from '@companion/shared/ControlId'
 
 export function Emulator() {
 	const socket = useContext(SocketContext)
@@ -248,12 +249,12 @@ function CyclePages({ emulatorId, imageCache }) {
 	// }, [])
 
 	const bankClick = useCallback(
-		(bank, pressed) => {
+		(coordinate, pressed) => {
 			const command = pressed ? 'emulator:press' : 'emulator:release'
-			socketEmitPromise(socket, command, [emulatorId, bank]).catch((e) => {
+			socketEmitPromise(socket, command, [emulatorId, coordinate]).catch((e) => {
 				console.error(`${command} failed`, e)
 			})
-			console.log(command, emulatorId, bank)
+			console.log(command, emulatorId, coordinate)
 		},
 		[socket, emulatorId]
 	)
@@ -296,7 +297,7 @@ function CyclePages({ emulatorId, imageCache }) {
 												return (
 													<ButtonPreview
 														key={x}
-														index={index}
+														coordinate={formatCoordinate(x, y)}
 														preview={imageCache[index]}
 														onClick={bankClick}
 														alt={`Button ${index}`}
