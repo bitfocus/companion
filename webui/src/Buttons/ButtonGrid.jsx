@@ -504,6 +504,7 @@ const ButtonGridIcon = memo(function ButtonGridIcon(props) {
 
 	const sessionId = useMemo(() => nanoid(), [])
 	const image = useSharedBankRenderCache(buttonCache, sessionId, props.page, props.coordinate)
+	console.log('image', image, props)
 
 	const [{ isOver, canDrop }, drop] = useDrop({
 		accept: 'preset',

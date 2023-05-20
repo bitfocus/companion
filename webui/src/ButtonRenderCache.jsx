@@ -195,7 +195,8 @@ export function useSharedBankRenderCache(cacheContext, sessionId, page, coordina
 			setImageState(BlackImage)
 
 			const updateImage = (page2, coordinate2, image) => {
-				if (page2 === page && coordinate2 === coordinate) setImageState(image ?? BlackImage)
+				// Note: intentionally loose comparison
+				if (page2 == page && coordinate2 == coordinate) setImageState(image ?? BlackImage)
 			}
 
 			cacheContext.on('bank', updateImage)

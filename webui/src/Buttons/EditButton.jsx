@@ -67,7 +67,6 @@ export function EditButton({ pageNumber, coordinate, onKeyUp, contentHeight }) {
 	const pages = useContext(PagesContext)
 
 	const controlId = pages?.[pageNumber]?.controls?.[coordinate]
-	console.log()
 
 	const resetModalRef = useRef()
 
@@ -275,7 +274,8 @@ export function EditButton({ pageNumber, coordinate, onKeyUp, contentHeight }) {
 									<FontAwesomeIcon icon={faPlay} />
 									&nbsp;Test
 								</CButton>
-							</CButtonGroup>
+							</CButtonGroup>{' '}
+							{controlId}
 							&nbsp;
 							{config?.options?.rotaryActions && (
 								<>
