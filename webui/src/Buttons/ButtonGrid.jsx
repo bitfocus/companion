@@ -28,7 +28,7 @@ import { useDrop } from 'react-dnd'
 import { ButtonPreview } from '../Components/ButtonPreview'
 import { GenericConfirmModal } from '../Components/GenericConfirmModal'
 import { nanoid } from 'nanoid'
-import { useSharedPageRenderCache, useSharedBankRenderCache } from '../ButtonRenderCache'
+import { useSharedBankRenderCache } from '../ButtonRenderCache'
 import Select from 'react-select'
 
 export const ButtonsGridPanel = memo(function ButtonsPage({
@@ -479,16 +479,14 @@ export function ButtonGrid({ bankClick, pageNumber, pageInfo, selectedButton }) 
 								.fill(0)
 								.map((_, x) => {
 									const coordinate = formatCoordinate(x, y)
-									const controlId = pageInfo?.controls?.[coordinate]
 									return (
 										<ButtonGridIcon
 											key={x}
 											page={pageNumber}
 											coordinate={coordinate}
-											controlId={controlId}
 											onClick={bankClick}
 											alt={`Button ${coordinate}`}
-											selected={selectedButton === controlId}
+											selected={selectedButton?.page === pageNumber && selectedButton?.coordinate === coordinate}
 										/>
 									)
 								})}
@@ -505,7 +503,7 @@ const ButtonGridIcon = memo(function ButtonGridIcon(props) {
 	const buttonCache = useContext(ButtonRenderCacheContext)
 
 	const sessionId = useMemo(() => nanoid(), [])
-	const image = useSharedBankRenderCache(buttonCache, sessionId, props.controlId)
+	const image = useSharedBankRenderCache(buttonCache, sessionId, props.page, props.coordinate)
 
 	const [{ isOver, canDrop }, drop] = useDrop({
 		accept: 'preset',

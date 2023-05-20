@@ -15,8 +15,9 @@ import { ButtonRenderCacheContext } from '../util'
 export function OptionButtonPreview({ controlId }) {
 	const buttonCache = useContext(ButtonRenderCacheContext)
 
+	// TODO-coordinate
 	const sessionId = useMemo(() => nanoid(), [])
-	const image = useSharedBankRenderCache(buttonCache, sessionId, controlId)
+	const image = useSharedBankRenderCache(buttonCache, sessionId, page, coordinate)
 
 	return <ButtonPreview fixedSize noPad preview={image} />
 }

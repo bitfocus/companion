@@ -7,7 +7,7 @@ import {
 	socketEmitPromise,
 	useMountEffect,
 } from './util'
-import { CreateBankControlId } from '@companion/shared/ControlId'
+import { CreateBankControlId, formatCoordinate } from '@companion/shared/ControlId'
 import { CButton, CCol, CContainer, CForm, CFormGroup, CInput, CInputCheckbox, CRow } from '@coreui/react'
 import { nanoid } from 'nanoid'
 import { MAX_COLS, MAX_ROWS } from './Constants'
@@ -282,7 +282,7 @@ function ConfigurePanel({ updateQueryUrl, query }) {
 	)
 }
 
-function ButtonsFromPage({, imageCache, number, cols, rows }) {
+function ButtonsFromPage({ imageCache, number, cols, rows }) {
 	const socket = useContext(SocketContext)
 
 	const [buttonsInView, setButtonsInView] = useState({})
@@ -313,14 +313,14 @@ function ButtonsFromPage({, imageCache, number, cols, rows }) {
 			return Array(Math.min(MAX_COLS, cols))
 				.fill(0)
 				.map((_2, x) => {
-					const index = y * MAX_COLS + x + 1
-					const controlId = CreateBankControlId(number, index)
+					const coordinate = formatCoordinate(x, y)
+
 					return (
 						<ButtonWrapper
 							key={x}
 							page={number}
-							index={index}
-							image={images[controlId]}
+							coordinate={coordinate}
+							image={images[coordinate]}
 							bankClick={bankClick}
 							setInView={setInView}
 						/>
@@ -330,7 +330,7 @@ function ButtonsFromPage({, imageCache, number, cols, rows }) {
 	// </div>
 }
 
-function ButtonWrapper({ page, index, image, bankClick, setInView }) {
+function ButtonWrapper({ page, coordinate, image, bankClick, setInView }) {
 	const { ref, inView } = useInView({
 		rootMargin: '50%',
 		/* Optional options */
@@ -338,17 +338,17 @@ function ButtonWrapper({ page, index, image, bankClick, setInView }) {
 	})
 
 	useEffect(() => {
-		setInView(index, inView)
-	}, [setInView, index, inView])
+		setInView(coordinate, inView)
+	}, [setInView, coordinate, inView])
 
 	return (
 		<ButtonPreview
 			dropRef={ref}
 			page={page}
-			index={index}
+			coordinate={coordinate}
 			preview={image}
 			onClick={bankClick}
-			alt={`Button ${index}`}
+			alt={`Button ${coordinate}`}
 			selected={false}
 		/>
 	)
