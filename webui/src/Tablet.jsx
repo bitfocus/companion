@@ -7,7 +7,7 @@ import {
 	socketEmitPromise,
 	useMountEffect,
 } from './util'
-import { CreateBankControlId, formatCoordinate } from '@companion/shared/ControlId'
+import { formatCoordinate } from '@companion/shared/ControlId'
 import { CButton, CCol, CContainer, CForm, CFormGroup, CInput, CInputCheckbox, CRow } from '@coreui/react'
 import { nanoid } from 'nanoid'
 import { MAX_COLS, MAX_ROWS } from './Constants'
