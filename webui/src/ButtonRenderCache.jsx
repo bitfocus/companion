@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react'
 import { EventEmitter } from 'events'
 import { BlackImage, dataToButtonImage } from './Components/ButtonPreview'
 import { socketEmitPromise } from './util'
+import { MAX_COLS, MAX_ROWS } from './Constants'
+import { formatCoordinate } from '@companion/shared/ControlId'
 
 /**
  * The main cache store
@@ -64,8 +66,8 @@ export class ButtonRenderCache extends EventEmitter {
 			socketEmitPromise(this.#socket, 'preview:page:subscribe', [page])
 				.then((data) => {
 					const newImages = {}
-					for (let y = 0; y < global.MAX_BUTTONS_PER_COL; ++y) {
-						for (let x = 0; x < global.MAX_BUTTONS_PER_ROW; ++x) {
+					for (let y = 0; y < MAX_ROWS; ++y) {
+						for (let x = 0; x < MAX_COLS; ++x) {
 							const coordinate = formatCoordinate(x, y)
 							if (data[coordinate]) {
 								newImages[coordinate] = dataToButtonImage(data[coordinate])

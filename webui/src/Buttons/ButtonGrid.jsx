@@ -28,7 +28,7 @@ import { useDrop } from 'react-dnd'
 import { ButtonPreview } from '../Components/ButtonPreview'
 import { GenericConfirmModal } from '../Components/GenericConfirmModal'
 import { nanoid } from 'nanoid'
-import { useSharedBankRenderCache } from '../ButtonRenderCache'
+import { useSharedBankRenderCache, useSharedPageRenderCache } from '../ButtonRenderCache'
 import Select from 'react-select'
 
 export const ButtonsGridPanel = memo(function ButtonsPage({
@@ -460,6 +460,11 @@ export const ButtonGridHeader = memo(function ButtonGridHeader({
 })
 
 export function ButtonGrid({ bankClick, pageNumber, pageInfo, selectedButton }) {
+	const buttonCache = useContext(ButtonRenderCacheContext)
+
+	const sessionId = useMemo(() => nanoid(), [])
+	const images = useSharedPageRenderCache(buttonCache, sessionId, pageNumber)
+
 	return (
 		<div
 			style={{
@@ -484,6 +489,7 @@ export function ButtonGrid({ bankClick, pageNumber, pageInfo, selectedButton }) 
 											key={x}
 											page={pageNumber}
 											coordinate={coordinate}
+											preview={images[coordinate]}
 											onClick={bankClick}
 											alt={`Button ${coordinate}`}
 											selected={selectedButton?.page === pageNumber && selectedButton?.coordinate === coordinate}
@@ -499,12 +505,6 @@ export function ButtonGrid({ bankClick, pageNumber, pageInfo, selectedButton }) 
 
 const ButtonGridIcon = memo(function ButtonGridIcon(props) {
 	const socket = useContext(SocketContext)
-
-	const buttonCache = useContext(ButtonRenderCacheContext)
-
-	const sessionId = useMemo(() => nanoid(), [])
-	const image = useSharedBankRenderCache(buttonCache, sessionId, props.page, props.coordinate)
-	console.log('image', image, props)
 
 	const [{ isOver, canDrop }, drop] = useDrop({
 		accept: 'preset',
@@ -526,15 +526,5 @@ const ButtonGridIcon = memo(function ButtonGridIcon(props) {
 	})
 
 	const title = `${props.page}.${props.coordinate}`
-	return (
-		<ButtonPreview
-			{...props}
-			preview={image}
-			dropRef={drop}
-			dropHover={isOver}
-			canDrop={canDrop}
-			alt={title}
-			title={title}
-		/>
-	)
+	return <ButtonPreview {...props} dropRef={drop} dropHover={isOver} canDrop={canDrop} alt={title} title={title} />
 })
