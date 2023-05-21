@@ -1,5 +1,5 @@
 import React, { Component } from 'react'
-import { CSwitch } from '@coreui/react'
+import { CAlert, CListGroupItem, CSwitch } from '@coreui/react'
 
 // The cloud part is written in old fashioned Class-components
 // because even if the hipsters say it's slow and retarted, i think it's prettier.
@@ -35,22 +35,18 @@ export class CloudRegionPanel extends Component {
 
 	cloudStateDidUpdate(id, newState) {
 		if (id === this.props.id) {
-			console.log(`cloud region ${id} state did update to:`, newState)
 			this.setState({ ...newState })
 		}
 	}
 
 	cloudSetState(newState) {
-		this.props.socket.emit('cloud_region_state_set', this.props.id, newState)
-	}
-
-	shouldComponentUpdate(_nextProps, nextState) {
-		const a = JSON.stringify(nextState)
-		const b = JSON.stringify(this.state)
-		if (a !== b) {
-			return true
+		if (!this.props.disabled) {
+			this.props.socket.emit('cloud_region_state_set', this.props.id, newState)
+			// Reset the error message if the user changes the enabled state
+			if (newState.enabled !== undefined) {
+				this.setState({ error: '' })
+			}
 		}
-		return false
 	}
 
 	render() {
@@ -62,36 +58,31 @@ export class CloudRegionPanel extends Component {
 			paddingTop: 19,
 		}
 
-		return (
-			<div style={{ clear: 'both' }}>
+		return !this.props.disabled || this.state.enabled ? (
+			<CListGroupItem>
 				<span style={{ display: 'inline-block', paddingTop: 5, float: 'left' }}>
 					<CSwitch
-						variant="3d"
 						color={this.state.connected ? 'success' : 'danger'}
 						checked={!!this.state.enabled}
 						onChange={(e) => this.cloudSetState({ enabled: e.target.checked })}
-						labelOff={'Off'}
-						labelOn={'On'}
+						disabled={this.props.disabled}
 						width={100}
 					/>{' '}
 				</span>
-				<span style={{ ...styleText, ...(this.state.connected ? onlineServerStyle : {}) }}>
+				<span
+					style={{
+						...styleText,
+						...(this.state.connected ? onlineServerStyle : this.props.disabled ? { opacity: 0.5 } : {}),
+					}}
+				>
 					{this.state.name} {this.state.pingResults > -1 ? `(${this.state.pingResults}ms)` : ''}
 				</span>
-				{this.state.error !== '' && (
-					<span
-						style={{
-							backgroundColor: 'red',
-							color: 'white',
-							padding: '0.2em 0.5em',
-							borderRadius: '0.25em',
-							margin: '0.5em',
-						}}
-					>
+				{this.state.enabled && this.state.error !== '' && (
+					<CAlert color="danger" style={{ marginTop: '10px', marginBottom: 0 }}>
 						{this.state.error}
-					</span>
+					</CAlert>
 				)}
-			</div>
-		)
+			</CListGroupItem>
+		) : null
 	}
 }
