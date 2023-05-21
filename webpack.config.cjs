@@ -45,6 +45,7 @@ module.exports = {
 		bufferutil: 'commonjs2 bufferutil',
 		'utf-8-validate': 'commonjs2 utf-8-validate',
 		'@serialport/bindings-cpp': 'commonjs2 @serialport/bindings-cpp',
+		'skia-canvas': 'commonjs2 skia-canvas',
 	},
 	experiments: {
 		topLevelAwait: true,
