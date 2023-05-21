@@ -85,7 +85,6 @@ export function EmulatorList() {
 function EmulatorCard({ surface }) {
 	const navigate = useNavigate()
 	const click = useCallback(() => {
-		console.log('click', surface.id)
 		navigate(`/emulator/${surface.id.substring(9)}`)
 	}, [navigate, surface.id])
 	return (
