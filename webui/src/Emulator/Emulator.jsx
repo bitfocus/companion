@@ -16,7 +16,7 @@ import { ButtonPreview, dataToButtonImage } from '../Components/ButtonPreview'
 import { MAX_COLS, MAX_ROWS } from '../Constants'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faCancel, faExpand } from '@fortawesome/free-solid-svg-icons'
-import { formatCoordinate } from '@companion/shared/ControlId'
+import { formatCoordinate, splitCoordinate } from '@companion/shared/ControlId'
 
 export function Emulator() {
 	const socket = useContext(SocketContext)
@@ -100,19 +100,21 @@ export function Emulator() {
 	useEffect(() => {
 		const onKeyDown = (e) => {
 			if (keymap[e.keyCode] !== undefined) {
-				socketEmitPromise(socket, 'emulator:press', [emulatorId, keymap[e.keyCode]]).catch((e) => {
+				const xy = keymap[e.keyCode]
+				socketEmitPromise(socket, 'emulator:press', [emulatorId, ...xy]).catch((e) => {
 					console.error('press failed', e)
 				})
-				console.log('emulator:press', emulatorId, keymap[e.keyCode])
+				console.log('emulator:press', emulatorId, xy)
 			}
 		}
 
 		const onKeyUp = (e) => {
 			if (keymap[e.keyCode] !== undefined) {
-				socketEmitPromise(socket, 'emulator:release', [emulatorId, keymap[e.keyCode]]).catch((e) => {
+				const xy = keymap[e.keyCode]
+				socketEmitPromise(socket, 'emulator:release', [emulatorId, ...xy]).catch((e) => {
 					console.error('release failed', e)
 				})
-				console.log('emulator:release', emulatorId, keymap[e.keyCode])
+				console.log('emulator:release', emulatorId, xk)
 			}
 		}
 
@@ -128,13 +130,13 @@ export function Emulator() {
 	useEffect(() => {
 		// handle changes to keyDown, as it isnt safe to do inside setState
 		if (keyDown) {
-			socketEmitPromise(socket, 'emulator:press', [emulatorId, keyDown]).catch((e) => {
+			socketEmitPromise(socket, 'emulator:press', [emulatorId, ...keyDown]).catch((e) => {
 				console.error('press failed', e)
 			})
 			console.log('emulator:press', emulatorId, keyDown)
 
 			return () => {
-				socketEmitPromise(socket, 'emulator:release', [emulatorId, keyDown]).catch((e) => {
+				socketEmitPromise(socket, 'emulator:release', [emulatorId, ...keyDown]).catch((e) => {
 					console.error('release failed', e)
 				})
 				console.log('emulator:release', emulatorId, keyDown)
@@ -163,7 +165,7 @@ export function Emulator() {
 					<>
 						<ConfigurePanel config={config} />
 
-						<CyclePages emulatorId={emulatorId} imageCache={imageCache} />
+						<CyclePages imageCache={imageCache} setKeyDown={setKeyDown} />
 					</>
 				) : (
 					<CRow>
@@ -224,8 +226,7 @@ function ConfigurePanel({ config }) {
 // 	return Math.min(Math.max(0, val), max)
 // }
 
-function CyclePages({ emulatorId, imageCache }) {
-	const socket = useContext(SocketContext)
+function CyclePages({ imageCache, setKeyDown }) {
 	// const goPrevPage = useCallback(() => {
 	// 	// if (currentIndex <= 0) {
 	// 	// 	if (loop) {
@@ -250,13 +251,13 @@ function CyclePages({ emulatorId, imageCache }) {
 
 	const bankClick = useCallback(
 		(coordinate, pressed) => {
-			const command = pressed ? 'emulator:press' : 'emulator:release'
-			socketEmitPromise(socket, command, [emulatorId, coordinate]).catch((e) => {
-				console.error(`${command} failed`, e)
-			})
-			console.log(command, emulatorId, coordinate)
+			if (pressed) {
+				setKeyDown(splitCoordinate(coordinate))
+			} else {
+				setKeyDown(null)
+			}
 		},
-		[socket, emulatorId]
+		[setKeyDown]
 	)
 
 	const cols = 8
