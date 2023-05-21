@@ -877,6 +877,23 @@ function UserConfigTable() {
 					</td>
 					<td>&nbsp;</td>
 				</tr>
+				<tr>
+					<td>Companion Cloud Tab</td>
+					<td>
+						<div className="form-check form-check-inline mr-1 float-right">
+							<CSwitch
+								color="success"
+								checked={window.localStorage.getItem('show_companion_cloud') === '1'}
+								size={'lg'}
+								onChange={(e) => {
+									window.localStorage.setItem('show_companion_cloud', e.currentTarget.checked ? '1' : '0')
+									window.location.reload()
+								}}
+							/>
+						</div>
+					</td>
+					<td>&nbsp;</td>
+				</tr>
 			</tbody>
 		</table>
 	)

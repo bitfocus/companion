@@ -78,7 +78,7 @@ export class Cloud extends Component {
 		return (
 			<div
 				style={{
-					maxWidth: 600,
+					maxWidth: 1000,
 				}}
 			>
 				<h4>Companion Cloud</h4>
@@ -149,17 +149,19 @@ export class Cloud extends Component {
 								}}
 								value={this.state.authenticatedAs}
 							/>
-							<div style={{ marginTop: 20 }}>
-								<CButton
-									color="success"
-									onClick={() => {
-										this.setState({ error: null })
-										this.props.socket.emit('cloud_logout')
-									}}
-								>
-									Log out
-								</CButton>
-							</div>
+							{!this.state.cloudActive && (
+								<div style={{ marginTop: 10, marginBottom: 20 }}>
+									<CButton
+										color="success"
+										onClick={() => {
+											this.setState({ error: null })
+											this.props.socket.emit('cloud_logout')
+										}}
+									>
+										Log out
+									</CButton>
+								</div>
+							)}
 						</div>
 						{this.state.authenticated && (
 							<CCard>
@@ -184,7 +186,7 @@ export class Cloud extends Component {
 									{this.state.cloudActive ? (
 										<CCallout color={this.state.cloudActive ? 'info' : 'success'}>
 											<div style={{ fontSize: 14, clear: 'both' }}>
-												Companion Cloud is currently activated. You can not change the regions before you deactivate it.
+												Companion Cloud is currently activated. Deactivate to change regions.
 											</div>
 										</CCallout>
 									) : null}
