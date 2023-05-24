@@ -7,7 +7,7 @@ import {
 	PagesContext,
 	SurfacesContext,
 	TriggersContext,
-	VariableDefinitionsContext,
+	PropertyDefinitionsContext,
 } from '../util'
 
 export function InternalInstanceField(option, isOnControl, readonly, value, setValue) {
@@ -158,24 +158,37 @@ export function InternalCustomVariableDropdown({ value, setValue, includeNone, d
 }
 
 function InternalVariableDropdown({ value, setValue, disabled }) {
-	const context = useContext(VariableDefinitionsContext)
+	const propertyDefinitionsContext = useContext(PropertyDefinitionsContext)
+	const instancesContext = useContext(InstancesContext)
+
 	const choices = useMemo(() => {
 		const choices = []
 
-		for (const [instanceLabel, variables] of Object.entries(context)) {
-			for (const [name, variable] of Object.entries(variables || {})) {
-				const id = `${instanceLabel}:${name}`
-				choices.push({
-					id,
-					label: `${variable.label} (${id})`,
-				})
+		for (const [instanceId, properties] of Object.entries(propertyDefinitionsContext)) {
+			const instanceLabel = (instancesContext[instanceId] ?? {})?.label || instanceId
+			for (const [propertyId, property] of Object.entries(properties || {})) {
+				if (property.instanceIds) {
+					for (const subProp of property.instanceIds) {
+						const id = `${instanceLabel}:${propertyId}:${subProp.id}`
+						choices.push({
+							id,
+							label: `${property.name} - ${subProp.label} (${id})`,
+						})
+					}
+				} else {
+					const id = `${instanceLabel}:${propertyId}`
+					choices.push({
+						id,
+						label: `${property.name} (${id})`,
+					})
+				}
 			}
 		}
 
 		choices.sort((a, b) => a.id.localeCompare(b.id))
 
 		return choices
-	}, [context])
+	}, [propertyDefinitionsContext, instancesContext])
 
 	return (
 		<DropdownInputField

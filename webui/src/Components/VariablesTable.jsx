@@ -1,6 +1,12 @@
 import React, { useCallback, useContext, useState, useMemo, useEffect, memo } from 'react'
 import { CAlert, CButton, CInput, CInputGroup, CInputGroupAppend } from '@coreui/react'
-import { SocketContext, socketEmitPromise, NotifierContext, VariableDefinitionsContext } from '../util'
+import {
+	SocketContext,
+	socketEmitPromise,
+	NotifierContext,
+	PropertyDefinitionsContext,
+	InstancesContext,
+} from '../util'
 import { CopyToClipboard } from 'react-copy-to-clipboard'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faCopy, faTimes } from '@fortawesome/free-solid-svg-icons'
@@ -8,17 +14,25 @@ import { faCopy, faTimes } from '@fortawesome/free-solid-svg-icons'
 export function VariablesTable({ label }) {
 	const socket = useContext(SocketContext)
 	const notifier = useContext(NotifierContext)
-	const variableDefinitionsContext = useContext(VariableDefinitionsContext)
+	const propertyDefinitionsContext = useContext(PropertyDefinitionsContext)
+	const instancesContext = useContext(InstancesContext)
+
+	const instanceId =
+		label === 'internal' ? 'internal' : Object.entries(instancesContext || {}).find((e) => e[1]?.label === label)?.[0]
+	const instancePropertyDefinitions = propertyDefinitionsContext[instanceId]
 
 	const [variableValues, setVariableValues] = useState({})
 	const [filter, setFilter] = useState('')
 
-	const variableDefinitions = useMemo(() => {
+	const propertyDefinitions = useMemo(() => {
 		const defs = []
-		for (const [name, variable] of Object.entries(variableDefinitionsContext[label] || {})) {
+		for (const [propertyId, property] of Object.entries(instancePropertyDefinitions || {})) {
+			// Ignore instances here
 			defs.push({
-				...variable,
-				name,
+				// ...variable,
+				name: property.name,
+				id: propertyId,
+				instanceIds: property.instanceIds,
 			})
 		}
 
@@ -29,7 +43,7 @@ export function VariablesTable({ label }) {
 		)
 
 		return defs
-	}, [variableDefinitionsContext, label])
+	}, [instancePropertyDefinitions])
 
 	useEffect(() => {
 		if (label) {
@@ -62,13 +76,11 @@ export function VariablesTable({ label }) {
 		let candidates = []
 		try {
 			if (!filter) {
-				candidates = variableDefinitions
+				candidates = propertyDefinitions
 			} else {
 				const regexp = new RegExp(filter, 'i')
 
-				candidates = variableDefinitions.filter(
-					(variable) => variable.name.match(regexp) || variable.label.match(regexp)
-				)
+				candidates = propertyDefinitions.filter((variable) => variable.id.match(regexp) || variable.name.match(regexp))
 			}
 			return [candidates, null]
 		} catch (e) {
@@ -76,12 +88,12 @@ export function VariablesTable({ label }) {
 
 			return [null, e?.toString() || 'Unknown error']
 		}
-	}, [variableDefinitions, filter])
+	}, [propertyDefinitions, filter])
 
 	const clearFilter = useCallback(() => setFilter(''), [])
 	const updateFilter = useCallback((e) => setFilter(e.currentTarget.value), [])
 
-	if (variableDefinitions.length === 0) {
+	if (propertyDefinitions.length === 0) {
 		return (
 			<CAlert color="warning" role="alert">
 				Connection has no variables
@@ -108,9 +120,10 @@ export function VariablesTable({ label }) {
 			<table className="table table-responsive-sm variables-table">
 				<thead>
 					<tr>
-						<th>Variable</th>
-						<th>Description</th>
-						<th>Value</th>
+						<th>Name</th>
+						{/* <th>Variable</th> */}
+						<th>Values</th>
+						<th>&nbsp;</th>
 						<th>&nbsp;</th>
 					</tr>
 				</thead>
@@ -127,11 +140,11 @@ export function VariablesTable({ label }) {
 						</tr>
 					)}
 					{candidates &&
-						candidates.map((variable) => (
+						candidates.map((property) => (
 							<VariablesTableRow
-								key={variable.name}
-								variable={variable}
-								value={variableValues[variable.name]}
+								key={property.id}
+								property={property}
+								values={variableValues[property.id]}
 								label={label}
 								onCopied={onCopied}
 							/>
@@ -142,7 +155,29 @@ export function VariablesTable({ label }) {
 	)
 }
 
-const VariablesTableRow = memo(function VariablesTableRow({ variable, value, label, onCopied }) {
+const VariablesTableRow = memo(function VariablesTableRow({ property, values, label, onCopied }) {
+	if (property.instanceIds) {
+		return property.instanceIds.map((subProp) => (
+			<VariablesTableSubRow
+				propertyName={`${property.name} - ${subProp.label}`}
+				value={values?.values?.[subProp.id]}
+				fullId={`$(${label}:${property.id}:${subProp.id})`}
+				onCopied={onCopied}
+			/>
+		))
+	} else {
+		return (
+			<VariablesTableSubRow
+				propertyName={property.name}
+				value={values?.value}
+				fullId={`$(${label}:${property.id})`}
+				onCopied={onCopied}
+			/>
+		)
+	}
+})
+
+const VariablesTableSubRow = memo(function VariablesTableSubRow({ propertyName, value, fullId, onCopied }) {
 	if (typeof value !== 'string') {
 		value += ''
 	}
@@ -160,10 +195,9 @@ const VariablesTableRow = memo(function VariablesTableRow({ variable, value, lab
 
 	return (
 		<tr>
-			<td>
-				$({label}:{variable.name})
-			</td>
-			<td>{variable.label}</td>
+			<td>{propertyName}</td>
+			<td>{fullId}</td>
+
 			<td>
 				{elms === '' || elms === null || elms === undefined ? (
 					'(empty)'
@@ -172,7 +206,7 @@ const VariablesTableRow = memo(function VariablesTableRow({ variable, value, lab
 				)}
 			</td>
 			<td>
-				<CopyToClipboard text={`$(${label}:${variable.name})`} onCopy={onCopied}>
+				<CopyToClipboard text={fullId} onCopy={onCopied}>
 					<CButton size="sm">
 						<FontAwesomeIcon icon={faCopy} />
 					</CButton>
