@@ -1,8 +1,6 @@
 # Bitfocus Companion
 
-## Companion v3.0.0 - Unreleased
-
-Documented up to 2d6b23d1e661ccf2972127ac3647d150b2650121
+## Companion v3.0.0 RC1 - Release Notes
 
 ### BREAKING CHANGES
 
@@ -34,6 +32,7 @@ Documented up to 2d6b23d1e661ccf2972127ac3647d150b2650121
 - Enable/disable any action or feedback on a button or trigger
 - Connections list is now manually sortable
 - Triggers list is now manually sortable
+- Custom variables list is now manually sortable
 - Overhaul triggers editor to be like the button editor
 - Support multiple event sources per trigger, and a separate condition
 - Trigger on sunrise/sunset
@@ -48,6 +47,8 @@ Documented up to 2d6b23d1e661ccf2972127ac3647d150b2650121
 - New variables of page names
 - Rework internal actions to have less duplication
 - Improve handling of pin locking
+- Log file gets rotated with a limited size
+- Surfaces can be set to never follow pin lock
 
 ### 🐞 BUG FIXES
 
@@ -55,6 +56,34 @@ Documented up to 2d6b23d1e661ccf2972127ac3647d150b2650121
 - Ensure custom variable ids are valid
 - Ensure connection labels are valid
 - Color picker indicates the currently selected swatch
+
+### 🧩 NEW MODULES
+
+- marshall-ipcamera
+- riedel-mediornet
+- panasonic-p2
+- obsidiancontrol-onyx-osc
+- apc-ups
+- hdtv-wolfpackgreen
+- camstreamer-camstreamer
+- roland-p20hd
+- restream-api
+- gnuralnet-livetoair
+- shure-mxcw
+- microsoft-vscode
+- android-tv
+- cablematters-hdmimatrix
+- simedia-yesapi
+- rgblink-vsp628pro
+- soundtrack-remote
+- colorlight-processor
+- eaton-epdu
+- roland-vr120hd
+- netgeat-avline
+- atlasied-atmosphere
+- ezcoo-matrix
+- openrgb-sdk
+- cyberpower-pdu
 
 ## Companion v2.4.2 - Release Notes
 
