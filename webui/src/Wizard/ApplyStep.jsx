@@ -1,7 +1,18 @@
 import React from 'react'
+import { WIZARD_VERSION_3_0 } from '.'
 
 export function ApplyStep({ oldConfig, newConfig }) {
 	let changes = []
+
+	if (oldConfig.setup_wizard < WIZARD_VERSION_3_0 || oldConfig.usb_hotplug !== newConfig.usb_hotplug) {
+		changes.push(
+			newConfig.usb_hotplug ? (
+				<li>Companion will watch for and use newly detected USB devices.</li>
+			) : (
+				<li>After attaching a new USB device, you must scan for it in the Surfaces tab.</li>
+			)
+		)
+	}
 
 	if (oldConfig.setup_wizard === 0 || oldConfig.elgato_plugin_enable !== newConfig.elgato_plugin_enable) {
 		changes.push(
@@ -30,9 +41,12 @@ export function ApplyStep({ oldConfig, newConfig }) {
 	if (oldConfig.setup_wizard === 0 || oldConfig.loupedeck_enable !== newConfig.loupedeck_enable) {
 		changes.push(
 			newConfig.loupedeck_enable ? (
-				<li>Loupedeck hardware will be detected by Companion.</li>
+				<li>Loupedeck Live and Razer Stream Controller hardware will be detected by Companion.</li>
 			) : (
-				<li>Loupedeck hardware will {oldConfig.setup_wizard > 0 ? 'no longer' : 'not'} be detected by Companion.</li>
+				<li>
+					Loupedeck Live and Razer Stream Controller hardware will {oldConfig.setup_wizard > 0 ? 'no longer' : 'not'} be
+					detected by Companion.
+				</li>
 			)
 		)
 	}

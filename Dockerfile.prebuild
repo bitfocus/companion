@@ -5,6 +5,7 @@ ARG TARGETPLATFORM
 
 # Install curl for the health check
 RUN apt update && apt install -y \
+    procps \
     curl \
     libusb-1.0-0 \
     libudev1 \

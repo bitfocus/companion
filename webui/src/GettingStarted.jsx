@@ -1,6 +1,5 @@
 import { Fragment, useRef, useState, useEffect } from 'react'
 import { useHash } from 'react-use'
-import { SERVER_URL } from './util'
 import ReactMarkdown from 'react-markdown'
 import { useIntersectionObserver } from 'usehooks-ts'
 
@@ -73,12 +72,12 @@ export function GettingStarted() {
 		}, 50)
 	}, [contentWrapperRef, hash])
 
-	// Fetch ${SERVER_URL}/docs/structure.json and parse it
+	// Fetch /docs/structure.json and parse it
 	useEffect(() => {
 		const fetchData = async () => {
 			try {
 				try {
-					const response = await fetch(`${SERVER_URL || ''}/docs/structure.json`)
+					const response = await fetch(`/docs/structure.json`)
 					const structure = await response.json()
 					setStructure(structure)
 				} catch (e) {
@@ -224,7 +223,7 @@ function LoadContent({ file }) {
 
 	useEffect(() => {
 		const fetchContent = async () => {
-			const response = await fetch(`${SERVER_URL || ''}/docs/${file}`)
+			const response = await fetch(`/docs/${file}`)
 			const text = await response.text()
 			setContent(text)
 			setLoading(false)
@@ -240,7 +239,7 @@ function LoadContent({ file }) {
 			) : (
 				<ReactMarkdown
 					transformImageUri={(src, alt, title) => {
-						return `${SERVER_URL || ''}/docs/${baseUrl}${src}`
+						return `/docs/${baseUrl}${src}`
 					}}
 					children={content}
 				/>

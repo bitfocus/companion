@@ -72,15 +72,15 @@ export const ButtonsPage = memo(function ButtonsPage({ hotPress }) {
 							}
 						)
 					}
-					if ((e.ctrlKey || e.metaKey) && !e.altKey && e.key === 'c') {
+					if ((e.ctrlKey || e.metaKey) && !e.altKey && e.key.toLowerCase() === 'c') {
 						console.log('prepare copy', selectedButton)
 						setCopyFromButton([selectedButton, 'copy'])
 					}
-					if ((e.ctrlKey || e.metaKey) && !e.altKey && e.key === 'x') {
+					if ((e.ctrlKey || e.metaKey) && !e.altKey && e.key.toLowerCase() === 'x') {
 						console.log('prepare cut', selectedButton)
 						setCopyFromButton([selectedButton, 'cut'])
 					}
-					if ((e.ctrlKey || e.metaKey) && !e.altKey && e.key === 'v' && copyFromButton) {
+					if ((e.ctrlKey || e.metaKey) && !e.altKey && e.key.toLowerCase() === 'v' && copyFromButton) {
 						console.log('do paste', copyFromButton, selectedButton)
 
 						if (copyFromButton[1] === 'copy') {

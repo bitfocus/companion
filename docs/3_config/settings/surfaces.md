@@ -10,5 +10,5 @@ More details on supported surfaces are available in the chapter on [Surfaces](#7
 - **Enable connected xkeys (Requires Companion restart)**
   Whether to enable support for connecting to XKeys devices.  
 
-- **Enable connected Loupedeck Live devices (Requires Companion restart)**
+- **Enable connected Loupedeck Live and Razer Stream Controller devices (Requires Companion restart)**
   Whether to enable support for connecting Loupedeck Live and Razer Stream Controller devices.

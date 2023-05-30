@@ -489,6 +489,16 @@ const SurfaceEditModal = forwardRef(function SurfaceEditModal(_props, ref) {
 								/>
 							</CFormGroup>
 						)}
+						<CFormGroup>
+							<CLabel htmlFor="never_lock">Never Pin code lock</CLabel>
+							<CInputCheckbox
+								name="never_lock"
+								type="checkbox"
+								checked={!!deviceConfig.never_lock}
+								value={true}
+								onChange={(e) => updateConfig('never_lock', !!e.currentTarget.checked)}
+							/>
+						</CFormGroup>
 					</CForm>
 				)}
 			</CModalBody>

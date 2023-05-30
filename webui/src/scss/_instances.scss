@@ -74,7 +74,7 @@
 }
 
 .variables-panel {
-	margin-right: -1rem;
+	margin-right: -0.5rem;
 	.variables-table-filter {
 		margin-top: 1rem;
 	}
@@ -82,6 +82,37 @@
 
 .variables-table {
 	word-break: break-all;
+
+	.variable-dragging {
+		opacity: 0.5;
+	}
+
+	.editor-grid {
+		display: grid;
+		grid-template-columns: 0.7fr auto 1fr;
+		grid-template-rows: auto auto auto 1fr;
+		column-gap: 10px;
+
+		.cell-header {
+			font-weight: bold;
+			grid-row: 1;
+			grid-column: 1 / 4;
+		}
+
+		.cell-options {
+			grid-row: 3;
+			grid-column: 1;
+
+			// @include media-breakpoint-up('sm') {
+			// 	width: 70%;
+			// }
+		}
+
+		.cell-values {
+			grid-row: 2 / 5;
+			grid-column: 3;
+		}
+	}
 }
 
 .variables-table-filter {

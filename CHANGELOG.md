@@ -1,8 +1,6 @@
 # Bitfocus Companion
 
-## Companion v3.0.0 - Unreleased
-
-Documented up to bb3d1052f9b99bd1567749a98f8278aef26d4ef4
+## Companion v3.0.0 RC1 - Release Notes
 
 ### BREAKING CHANGES
 
@@ -34,17 +32,23 @@ Documented up to bb3d1052f9b99bd1567749a98f8278aef26d4ef4
 - Enable/disable any action or feedback on a button or trigger
 - Connections list is now manually sortable
 - Triggers list is now manually sortable
+- Custom variables list is now manually sortable
 - Overhaul triggers editor to be like the button editor
 - Support multiple event sources per trigger, and a separate condition
+- Trigger on sunrise/sunset
 - Image buffers returned from feedbacks will now be properly composited
 - Launcher option to run at login
 - Improved search function in add connections list
 - Support rotary events from elgato streamdeck plugin
+- Support the new Razer Stream Controller X
 - Improved expression syntax with support for functions and strings
 - UI style improvements
 - New import/export system, allowing for more fine-grained control
 - New variables of page names
 - Rework internal actions to have less duplication
+- Improve handling of pin locking
+- Log file gets rotated with a limited size
+- Surfaces can be set to never follow pin lock
 
 ### 🐞 BUG FIXES
 
@@ -52,6 +56,51 @@ Documented up to bb3d1052f9b99bd1567749a98f8278aef26d4ef4
 - Ensure custom variable ids are valid
 - Ensure connection labels are valid
 - Color picker indicates the currently selected swatch
+
+### 🧩 NEW MODULES
+
+- marshall-ipcamera
+- riedel-mediornet
+- panasonic-p2
+- obsidiancontrol-onyx-osc
+- apc-ups
+- hdtv-wolfpackgreen
+- camstreamer-camstreamer
+- roland-p20hd
+- restream-api
+- gnuralnet-livetoair
+- shure-mxcw
+- microsoft-vscode
+- android-tv
+- cablematters-hdmimatrix
+- simedia-yesapi
+- rgblink-vsp628pro
+- soundtrack-remote
+- colorlight-processor
+- eaton-epdu
+- roland-vr120hd
+- netgeat-avline
+- atlasied-atmosphere
+- ezcoo-matrix
+- openrgb-sdk
+- cyberpower-pdu
+
+## Companion v2.4.2 - Release Notes
+
+### 🐞 BUG FIXES
+
+- UI crash after saving a trigger
+- UI crash if module status is not a string
+- Missing libasound2 in docker image
+
+### 🐞 MODULE FIXES
+
+- bitfocus-companion
+- equipson-lightshark
+- generic-artnet
+- generic-sacn
+- haivision-connectdvr
+- zoom-osc-iso
 
 ## Companion v2.4.1 - Release Notes
 

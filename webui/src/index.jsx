@@ -11,7 +11,7 @@ if (process.env.NODE_ENV === 'development') {
 }
 
 // polyfills
-require('intersection-observer')
+import 'intersection-observer'
 
 import React from 'react'
 import ReactDOM from 'react-dom'
@@ -19,7 +19,7 @@ import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
 import io from 'socket.io-client'
 
 import App from './App'
-import { SERVER_URL, SocketContext } from './util'
+import { SocketContext } from './util'
 
 // import i18n from 'i18next'
 // import Backend from 'i18next-http-backend'
@@ -44,7 +44,7 @@ import { ConnectionDebug } from './ConnectionDebug'
 // 		},
 // 	})
 
-const socket = new io(SERVER_URL)
+const socket = new io()
 if (window.location.hash && window.location.hash.includes('debug_socket')) {
 	socket.onAny(function (name, ...data) {
 		console.log('received event', name, data)

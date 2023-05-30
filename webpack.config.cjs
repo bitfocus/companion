@@ -10,7 +10,7 @@ const buildFile = fs.readFileSync(path.join(__dirname, 'BUILD')).toString().trim
 module.exports = {
 	entry: {
 		main: './main.js',
-		Handler: './lib/Surface/USB/Handler.js',
+		// Handler: './lib/Surface/USB/Handler.js',
 	},
 	mode: 'production',
 	devtool: sentryAuthToken ? 'source-map' : undefined,

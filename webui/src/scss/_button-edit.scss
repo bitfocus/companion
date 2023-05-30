@@ -1,11 +1,18 @@
 .edit-button-panel {
-	margin-right: -0.75rem;
+	margin-right: -0.5rem;
 	h4 {
 		margin-top: 1rem;
 	}
 
 	svg {
 		font-size: 1rem;
+	}
+}
+
+.flex-form {
+	& > div:not(.btn-group) {
+		// column
+		margin-bottom: 10px;
 	}
 
 	label {
@@ -14,18 +21,15 @@
 		font-size: 0.85em;
 		margin-bottom: 0.15rem;
 	}
-}
-
-.button-style-form {
-	& > div {
-		// column
-		margin-bottom: 10px;
-	}
 
 	.png-browse {
 		display: block;
 		white-space: nowrap;
 	}
+}
+
+.flex-form-row {
+	margin: 0;
 }
 
 table.action-table td,

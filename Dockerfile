@@ -30,6 +30,7 @@ COPY --from=companion-builder /app/module-legacy/manifests	/app/module-legacy/ma
 
 # Install curl for the health check
 RUN apt update && apt install -y \
+    procps \
     curl \
     libusb-1.0-0 \
     libudev1 \
