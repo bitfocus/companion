@@ -182,7 +182,13 @@ export function ButtonStyleConfigFields({
 						<div>
 							<div>
 								<label>Font size</label>
-								<DropdownInputField choices={FONT_SIZES} setValue={setSizeValue} value={values.size} />
+								<DropdownInputField
+									choices={FONT_SIZES}
+									setValue={setSizeValue}
+									value={values.size}
+									allowCustom={true} 
+									regex={'/^0*(?:[3-9]|[1-9][0-9]|1[0-9]{2}|200)\\s?(?:pt|px)?$/i'}
+									/>
 							</div>
 						</div>
 					)}
