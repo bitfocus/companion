@@ -140,7 +140,7 @@ function LogPanelContents({ config }) {
 				setHistory(items)
 			})
 			.catch((e) => {
-				console.error('log subscibe error', e)
+				console.error('log subscribe error', e)
 			})
 
 		socket.on('logs:lines', logRecv)
@@ -151,7 +151,7 @@ function LogPanelContents({ config }) {
 			socket.off('logs:clear', getClearLog)
 
 			socketEmitPromise(socket, 'logs:unsubscribe', []).catch((e) => {
-				console.error('log unsubscibe error', e)
+				console.error('log unsubscribe error', e)
 			})
 		}
 	}, [socket])

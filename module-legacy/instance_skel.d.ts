@@ -152,7 +152,7 @@ declare abstract class InstanceSkel<TConfig> {
 	 * @param host destination ip address
 	 * @param port destination port number
 	 * @param path message path
-	 * @param args mesage arguments
+	 * @param args message arguments
 	 */
 	oscSend(host: string, port: number, path: string, args: OSCSomeArguments): void
 

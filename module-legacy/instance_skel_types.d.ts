@@ -51,7 +51,7 @@ export interface CompanionBankPreset
 	extends CompanionBankRequiredProps,
 		Partial<CompanionBankAdditionalStyleProps>,
 		Partial<CompanionBankAdditionalCoreProps> {
-	style: 'png' | 'text' // 'text' for backwards compatability
+	style: 'png' | 'text' // 'text' for backwards compatibility
 }
 
 export interface CompanionOptionValues {
