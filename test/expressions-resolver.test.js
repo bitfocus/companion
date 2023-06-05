@@ -56,12 +56,12 @@ describe('resolver', function () {
 			expect(result).toBe(-3)
 		})
 
-		it('should handle consective unary negation', function () {
+		it('should handle consecutive unary negation', function () {
 			const result = resolve(parse('--1 + 1'))
 			expect(result).toBe(2)
 		})
 
-		it('should handle consective unary negation with parenthesis', function () {
+		it('should handle consecutive unary negation with parenthesis', function () {
 			const result = resolve(parse('-(-1) + 1'))
 			expect(result).toBe(2)
 		})

@@ -27,7 +27,7 @@ const LegacyModule = global.moduleFactory
 if (!modName || !LegacyModule) throw new Error('Missing globals!')
 
 // eslint-disable-next-line @typescript-eslint/no-empty-interface
-export interface MockConfig {}
+export interface MockConfig { }
 
 export default class MockModule extends InstanceBase<MockConfig> {
 	#legacy: InstanceSkel<MockConfig> | undefined
@@ -60,7 +60,7 @@ export default class MockModule extends InstanceBase<MockConfig> {
 			try {
 				this.#legacy.init()
 			} catch (e: any) {
-				this.log('error', 'Error initalizing module: ' + (e?.message ?? String(e)))
+				this.log('error', 'Error initializing module: ' + (e?.message ?? String(e)))
 			}
 		}
 

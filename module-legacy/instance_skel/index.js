@@ -93,7 +93,7 @@ function instance(system, id, config) {
 	self.currentStatusMessage = ''
 
 	/**
-	 * Backwards compatability for some usages of system..`
+	 * Backwards compatibility for some usages of system..`
 	 */
 
 	system.on('instance_actions', function (_id, actions) {
