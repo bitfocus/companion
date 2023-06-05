@@ -1,7 +1,7 @@
 /// <reference types="node" />
 import { EventEmitter } from 'events'
 
-export interface CompanionSystem extends EventEmitter { }
+export interface CompanionSystem extends EventEmitter {}
 
 export type InputValue = number | string | boolean | Array<string | number>
 
@@ -42,15 +42,15 @@ export interface CompanionBankAdditionalCoreProps {
 
 export interface CompanionBankPNG
 	extends CompanionBankRequiredProps,
-	CompanionBankAdditionalStyleProps,
-	CompanionBankAdditionalCoreProps {
+		CompanionBankAdditionalStyleProps,
+		CompanionBankAdditionalCoreProps {
 	style: 'png'
 }
 
 export interface CompanionBankPreset
 	extends CompanionBankRequiredProps,
-	Partial<CompanionBankAdditionalStyleProps>,
-	Partial<CompanionBankAdditionalCoreProps> {
+		Partial<CompanionBankAdditionalStyleProps>,
+		Partial<CompanionBankAdditionalCoreProps> {
 	style: 'png' | 'text' // 'text' for backwards compatibility
 }
 
@@ -268,12 +268,12 @@ export type CompanionStaticUpgradeScript = (
 
 export interface CompanionUpgradeToBooleanFeedbackMap {
 	[feedback_id: string]:
-	| true
-	| {
-		// Option name to style property
-		[option_key: string]: 'text' | 'size' | 'color' | 'bgcolor' | 'alignment' | 'pngalignment' | 'png64'
-	}
-	| undefined
+		| true
+		| {
+				// Option name to style property
+				[option_key: string]: 'text' | 'size' | 'color' | 'bgcolor' | 'alignment' | 'pngalignment' | 'png64'
+		  }
+		| undefined
 }
 
 export interface CompanionCoreInstanceconfig {

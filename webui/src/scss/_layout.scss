@@ -22,16 +22,16 @@ body {
 	height: calc(100% - #{$header-height});
 
 	// Force to fill the screen and scroll internally
-	>.container-fluid {
+	> .container-fluid {
 		height: 100%;
 
 		display: grid;
 		grid-template-rows: auto 1fr;
 
-		>.tab-content {
+		> .tab-content {
 			overflow-y: hidden;
 
-			>.tab-pane {
+			> .tab-pane {
 				overflow-y: auto;
 				height: 100%;
 				position: relative;
@@ -232,12 +232,12 @@ body {
 	.split-panels {
 		height: 100%;
 
-		>.primary-panel {
+		> .primary-panel {
 			height: 100%;
 			overflow-y: auto;
 		}
 
-		>.secondary-panel {
+		> .secondary-panel {
 			height: 100%;
 
 			.secondary-panel-inner {
@@ -268,11 +268,11 @@ body {
 	}
 
 	.split-panels {
-		>.primary-panel {
+		> .primary-panel {
 			flex: 0 0 40%;
 		}
 
-		>.secondary-panel {
+		> .secondary-panel {
 			flex: 0 0 60%;
 		}
 	}
