@@ -45,7 +45,7 @@ export function DropdownInputField({
 		let res = []
 		for (const val of selectedValue) {
 			// eslint-disable-next-line eqeqeq
-			const entry = options.find((o) => o.value == val) // Intentionally loose for compatability
+			const entry = options.find((o) => o.value == val) // Intentionally loose for compatibility
 			if (entry) {
 				res.push(entry)
 			} else {

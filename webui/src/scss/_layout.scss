@@ -52,10 +52,12 @@ body {
 .c-sidebar .c-sidebar-brand {
 	font-size: 1.3em;
 }
+
 .c-header .c-header-brand {
 	font-size: 1.3em;
 	margin: 0 auto;
 }
+
 .header-right {
 	margin-right: 5px;
 }
@@ -184,12 +186,14 @@ body {
 	&.active:hover {
 		margin-bottom: -1px;
 	}
+
 	&:not(.active):hover {
 		background-color: #f9f9f9;
 		color: black !important;
 		border: 1px solid #ddd;
 		border-bottom-width: 0;
 	}
+
 	&:not(.active) {
 		border: 1px solid #ddd;
 		margin-bottom: 0px;
@@ -253,7 +257,7 @@ body {
 	}
 }
 
-// For bigger screens, like 1440p and 4K, alow scaling
+// For bigger screens, like 1440p and 4K, allow scaling
 @media only screen and (min-width: 2000px) {
 	.tab-content {
 		max-width: 100%;
@@ -290,6 +294,7 @@ hr.slim {
 .nav-steps-special {
 	margin-bottom: 0px !important;
 }
+
 .nav-steps-special .only-current {
 	animation: rotor 0.25s infinite alternate ease-in-out;
 }
@@ -298,6 +303,7 @@ hr.slim {
 	0% {
 		box-shadow: inset 0 10px 15px -10px #2eb85cff;
 	}
+
 	100% {
 		box-shadow: inset 0 10px 10px -10px #2eb85c00;
 	}
@@ -323,9 +329,11 @@ hr.slim {
 	color: white;
 	border-radius: 4px;
 }
+
 .add-browse-card .clickable-add-item {
 	cursor: pointer;
 }
+
 .add-browse-card .clickable-add-item:hover {
 	background-color: rgba(0, 0, 0, 0.1);
 }
@@ -333,6 +341,7 @@ hr.slim {
 .shadow-inset {
 	box-shadow: inset 0 10px 20px -10px rgba(0, 0, 0, 0.3);
 }
+
 .text-right {
 	text-align: right;
 }

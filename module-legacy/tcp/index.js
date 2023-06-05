@@ -169,7 +169,7 @@ tcp.prototype.write = tcp.prototype.send = function (message, cb) {
 				}
 			})
 		} catch (error) {
-			// Unhandeled socket error
+			// Unhandled socket error
 			new_status(self, STATUS_ERROR, error.message)
 			self.emit.apply(self, ['error'].concat(Array.from(arguments)))
 			self.connected = false

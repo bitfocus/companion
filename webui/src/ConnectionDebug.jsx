@@ -15,7 +15,7 @@ export function ConnectionDebug() {
 	// const [loadError, setLoadError]=useState(null)
 	const [linesBuffer, setLinesBuffer] = useState([])
 
-	// A unqiue identifier which changes upon each reconnection
+	// A unique identifier which changes upon each reconnection
 	const [connectionToken, setConnectionToken] = useState(nanoid())
 
 	const [isConnected, setIsConnected] = useState(false)
