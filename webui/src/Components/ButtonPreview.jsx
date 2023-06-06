@@ -2,39 +2,40 @@ import React from 'react'
 import classnames from 'classnames'
 import { PREVIEW_BMP_HEADER } from '../Constants'
 import { Buffer } from 'buffer'
+import { Console } from 'console'
 
 export function dataToButtonImage(data) {
 	const sourceData = Buffer.from(data)
-	const imageSize = Math.sqrt(sourceData.length / 3)
+	const imageSize = Math.sqrt(sourceData.length / 4)
 
-	const bmpHeaderSize = 54
-	const bmpHeader = Buffer.alloc(bmpHeaderSize)
+	const bmpHeaderSize = 138
+	const bmpHeader = Buffer.alloc(bmpHeaderSize, 0)
 	bmpHeader.write('BM', 0, 2) // flag
 	bmpHeader.writeUInt32LE(sourceData.length + bmpHeaderSize, 2) // filesize
-	bmpHeader.writeUInt32LE(0, 6) // reserver
+	bmpHeader.writeUInt32LE(0, 6) // reserved
 	bmpHeader.writeUInt32LE(bmpHeaderSize, 10) // data start
 
-	bmpHeader.writeUInt32LE(40, 14) // header info size
+	bmpHeader.writeUInt32LE(124, 14) // header info size
 	bmpHeader.writeUInt32LE(imageSize, 18) // width
 	bmpHeader.writeInt32LE(imageSize * -1, 22) // height
 	bmpHeader.writeUInt16LE(1, 26) // planes
-	bmpHeader.writeUInt16LE(24, 28) // bits per pixel
-	bmpHeader.writeUInt32LE(0, 30) // compress
+	bmpHeader.writeUInt16LE(32, 28) // bits per pixel
+	bmpHeader.writeUInt32LE(3, 30) // compress
 	bmpHeader.writeUInt32LE(sourceData.length, 34) // data size
-	bmpHeader.writeUInt32LE(0, 38) // hr
-	bmpHeader.writeUInt32LE(0, 42) // vr
+	bmpHeader.writeUInt32LE(2835, 38) // hr
+	bmpHeader.writeUInt32LE(2835, 42) // vr
 	bmpHeader.writeUInt32LE(0, 46) // colors
-	bmpHeader.writeUInt32LE(0, 48) // importantColors
+	bmpHeader.writeUInt32LE(0, 50) // importantColors
+	bmpHeader.writeUInt32LE(0x000000ff, 54) // Red Bitmask
+	bmpHeader.writeUInt32LE(0x0000ff00, 58) // Green Bitmask
+	bmpHeader.writeUInt32LE(0x00ff0000, 62) // Blue Bitmask
+	bmpHeader.writeUInt32LE(0xff000000, 66) // Alpha Bitmask
+	bmpHeader.write('sRGB', 70, 4) // colorspace
 
-	const convertedData = Buffer.alloc(sourceData.length)
-	for (let i = 0; i < sourceData.length; i += 3) {
-		// convert bgr to rgb
-		convertedData.writeUInt8(sourceData.readUInt8(i), i + 2)
-		convertedData.writeUInt8(sourceData.readUInt8(i + 1), i + 1)
-		convertedData.writeUInt8(sourceData.readUInt8(i + 2), i)
-	}
+	console.log('received image size=' + imageSize, 'length='+sourceData.length)
+	console.log(Array.from(bmpHeader).map(i => i.toString(16)))	
 
-	return 'data:image/bmp;base64,' + Buffer.concat([bmpHeader, convertedData]).toString('base64')
+	return 'data:image/bmp;base64,' + Buffer.concat([bmpHeader, sourceData]).toString('base64')
 }
 
 export const BlackImage = dataToButtonImage(Buffer.alloc(72 * 72 * 3))
