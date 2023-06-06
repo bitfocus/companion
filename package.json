@@ -63,6 +63,7 @@
 		"archiver": "^5.3.1",
 		"body-parser": "^1.20.2",
 		"bufferutil": "^4.0.7",
+		"colord": "^2.9.3",
 		"commander": "^10.0.1",
 		"debounce-fn": "^5.1.2",
 		"ejson": "^2.2.3",
