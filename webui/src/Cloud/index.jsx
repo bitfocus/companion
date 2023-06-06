@@ -63,6 +63,13 @@ export class Cloud extends Component {
 		this.props.socket.emit('cloud_login', user, pass)
 	}
 
+	/**
+	 * Regenerate the UUID for the cloud controller
+	*/
+	cloudRegenerateUUID() {
+		this.props.socket.emit('cloud_regenerate_uuid')
+	}
+
 	shouldComponentUpdate(_nextProps, nextState) {
 		const a = JSON.stringify(nextState)
 		const b = JSON.stringify(this.state)
@@ -227,6 +234,9 @@ export class Cloud extends Component {
 									When you have successfully connected to two or more regions, you can use this key in another remote
 									companion to control this companion. Go to the connections tab in another companion and search for
 									"companion cloud", and add it with the key above to start controlling this companion via internet.
+								</div>
+								<div style={{ marginTop: 5 }}>
+									<CButton color="primary" onClick={() => this.cloudRegenerateUUID()}>Change UUID</CButton>
 								</div>
 							</div>
 						)}
