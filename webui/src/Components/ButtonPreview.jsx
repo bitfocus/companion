@@ -1,8 +1,6 @@
 import React from 'react'
 import classnames from 'classnames'
-import { PREVIEW_BMP_HEADER } from '../Constants'
 import { Buffer } from 'buffer'
-import { Console } from 'console'
 
 export function dataToButtonImage(data) {
 	const sourceData = Buffer.from(data)
@@ -22,8 +20,8 @@ export function dataToButtonImage(data) {
 	bmpHeader.writeUInt16LE(32, 28) // bits per pixel
 	bmpHeader.writeUInt32LE(3, 30) // compress
 	bmpHeader.writeUInt32LE(sourceData.length, 34) // data size
-	bmpHeader.writeUInt32LE(2835, 38) // hr
-	bmpHeader.writeUInt32LE(2835, 42) // vr
+	bmpHeader.writeUInt32LE(Math.round(39.375 * imageSize), 38) // hr
+	bmpHeader.writeUInt32LE(Math.round(39.375 * imageSize), 42) // vr
 	bmpHeader.writeUInt32LE(0, 46) // colors
 	bmpHeader.writeUInt32LE(0, 50) // importantColors
 	bmpHeader.writeUInt32LE(0x000000ff, 54) // Red Bitmask
@@ -32,14 +30,11 @@ export function dataToButtonImage(data) {
 	bmpHeader.writeUInt32LE(0xff000000, 66) // Alpha Bitmask
 	bmpHeader.write('sRGB', 70, 4) // colorspace
 
-	console.log('received image size=' + imageSize, 'length='+sourceData.length)
-	console.log(Array.from(bmpHeader).map(i => i.toString(16)))	
-
 	return 'data:image/bmp;base64,' + Buffer.concat([bmpHeader, sourceData]).toString('base64')
 }
 
-export const BlackImage = dataToButtonImage(Buffer.alloc(72 * 72 * 3))
-export const RedImage = dataToButtonImage(Buffer.alloc(72 * 72 * 3, Buffer.from([255, 0, 0])))
+export const BlackImage = dataToButtonImage(Buffer.alloc(24 * 24 * 4))
+export const RedImage = dataToButtonImage(Buffer.alloc(24 * 24 * 4, Buffer.from([255, 0, 0, 0])))
 
 export const ButtonPreview = React.memo(function (props) {
 	const classes = {
@@ -79,9 +74,17 @@ export const ButtonPreview = React.memo(function (props) {
 				return false
 			}}
 		>
-			<div className="bank-border">
+			<div
+				className="bank-border"
+				ref={props.dragRef}
+				style={{
+					backgroundImage: `url(${props.preview})`,
+					backgroundSize: '0%',
+					backgroundPosition: 'center',
+					backgroundRepeat: 'no-repeat'
+				}}
+			>
 				<img
-					ref={props.dragRef}
 					width={72}
 					height={72}
 					src={props.preview ?? BlackImage}
