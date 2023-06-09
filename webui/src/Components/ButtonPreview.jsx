@@ -5,8 +5,8 @@ import { Buffer } from 'buffer'
 /**
  * Creates a BMP image header for the given size
  * assuming RGBA channel order, 32Bit/Pixel, starting with top left pixel
- * @param {number} imageWidth 
- * @param {number} imageHeight 
+ * @param {number} imageWidth
+ * @param {number} imageHeight
  * @returns {Buffer} buffer containing the header
  */
 export function createBmpHeader(imageWidth = 72, imageHeight = 72) {
@@ -95,16 +95,10 @@ export const ButtonPreview = React.memo(function (props) {
 					backgroundImage: `url(${props.preview})`,
 					backgroundSize: '0%',
 					backgroundPosition: 'center',
-					backgroundRepeat: 'no-repeat'
+					backgroundRepeat: 'no-repeat',
 				}}
 			>
-				<img
-					width={72}
-					height={72}
-					src={props.preview ?? BlackImage}
-					alt={props.alt}
-					title={props.title}
-				/>
+				<img width={72} height={72} src={props.preview ?? BlackImage} alt={props.alt} title={props.title} />
 			</div>
 		</div>
 	)

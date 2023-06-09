@@ -186,9 +186,9 @@ export function ButtonStyleConfigFields({
 									choices={FONT_SIZES}
 									setValue={setSizeValue}
 									value={values.size}
-									allowCustom={true} 
+									allowCustom={true}
 									regex={'/^0*(?:[3-9]|[1-9][0-9]|1[0-9]{2}|200)\\s?(?:pt|px)?$/i'}
-									/>
+								/>
 							</div>
 						</div>
 					)}
@@ -245,7 +245,9 @@ export function ButtonStyleConfigFields({
 					)}
 					{showField2('png64') && (
 						<div>
-							<label>{pngWidth}x{pngHeight} PNG</label>
+							<label>
+								{pngWidth}x{pngHeight} PNG
+							</label>
 							<CButtonGroup className="png-browse">
 								<PNGInputField
 									onSelect={setPng}
