@@ -60,7 +60,7 @@ export default class MockModule extends InstanceBase<MockConfig> {
 			try {
 				this.#legacy.init()
 			} catch (e: any) {
-				this.log('error', 'Error initalizing module: ' + (e?.message ?? String(e)))
+				this.log('error', 'Error initializing module: ' + (e?.message ?? String(e)))
 			}
 		}
 

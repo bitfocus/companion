@@ -27,9 +27,14 @@ export class ButtonRenderCache extends EventEmitter {
 	}
 
 	bankChange(page, bank, render) {
+		page = Number(page)
+		bank = Number(bank)
+		if (isNaN(page) || isNaN(bank)) return
+
+		const newImage = dataToButtonImage(render)
+
 		const subsForPage = this.#pageSubs[page]
 		if (subsForPage && subsForPage.size) {
-			const newImage = dataToButtonImage(render)
 			const newImages = {
 				...this.#pageRenders[page],
 				[bank]: newImage,
@@ -38,6 +43,14 @@ export class ButtonRenderCache extends EventEmitter {
 
 			// TODO - debounce?
 			this.emit('page', page, newImages)
+		}
+
+		const id = CreateBankControlId(page, bank)
+		const subsForBank = this.#bankSubs[id]
+		if (subsForBank && subsForBank.size > 0) {
+			this.#bankRenders[id] = newImage
+
+			// TODO - debounce?
 			this.emit('bank', page, bank, newImage)
 		}
 	}

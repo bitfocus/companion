@@ -92,7 +92,7 @@ function signalHandler(signal) {
 	process.exit()
 }
 
-// Make sure to exit on interupt
+// Make sure to exit on interrupt
 process.on('SIGINT', signalHandler)
 process.on('SIGTERM', signalHandler)
 process.on('SIGQUIT', signalHandler)
