@@ -65,7 +65,7 @@ export class Cloud extends Component {
 
 	/**
 	 * Regenerate the UUID for the cloud controller
-	*/
+	 */
 	cloudRegenerateUUID() {
 		this.props.socket.emit('cloud_regenerate_uuid')
 	}
@@ -236,7 +236,9 @@ export class Cloud extends Component {
 									"companion cloud", and add it with the key above to start controlling this companion via internet.
 								</div>
 								<div style={{ marginTop: 5 }}>
-									<CButton color="primary" onClick={() => this.cloudRegenerateUUID()}>Change UUID</CButton>
+									<CButton color="primary" onClick={() => this.cloudRegenerateUUID()}>
+										Change UUID
+									</CButton>
 								</div>
 							</div>
 						)}
