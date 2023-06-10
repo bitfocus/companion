@@ -377,14 +377,15 @@ function FeedbackEditor({
 		name = `${instanceLabel}: ${feedback.type} (undefined)`
 	}
 
-	const previewControlIdFunction = useMemo(() => {
-		if (feedback?.instance_id === 'internal' && feedbackSpec?.previewControlIdFn) {
-			return sandbox(feedbackSpec.previewControlIdFn)
+	const previewButtonFunction = useMemo(() => {
+		if (feedback?.instance_id === 'internal' && feedbackSpec?.previewButtonFn) {
+			return sandbox(feedbackSpec.previewButtonFn)
 		} else {
 			return undefined
 		}
-	}, [feedback?.instance_id, feedbackSpec?.previewControlIdFn])
-	const previewControlId = previewControlIdFunction?.(feedback.options, ParseControlId(controlId))
+	}, [feedback?.instance_id, feedbackSpec?.previewButtonFn])
+	// TODO-coordinates need xy to the info of this
+	const previewButtonProps = previewButtonFunction?.(feedback.options, ParseControlId(controlId))
 
 	return (
 		<div className="editor-grid remove075right">
@@ -425,9 +426,9 @@ function FeedbackEditor({
 				<>
 					<div className="cell-description">{feedbackSpec?.description || ''}</div>
 
-					{previewControlId && (
+					{previewButtonProps && (
 						<div className="cell-bank-preview">
-							<OptionButtonPreview controlId={previewControlId} />
+							<OptionButtonPreview {...previewButtonProps} />
 						</div>
 					)}
 

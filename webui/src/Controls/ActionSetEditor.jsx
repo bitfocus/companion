@@ -398,13 +398,13 @@ function ActionTableRow({
 		setCollapsed(action.id, false)
 	}, [setCollapsed, action.id])
 
-	const previewControlIdFunction = useMemo(() => {
-		if (action?.instance === 'internal' && actionSpec?.previewControlIdFn) {
-			return sandbox(actionSpec.previewControlIdFn)
+	const previewButtonFunction = useMemo(() => {
+		if (action?.instance === 'internal' && actionSpec?.previewButtonFn) {
+			return sandbox(actionSpec.previewButtonFn)
 		} else {
 			return undefined
 		}
-	}, [action?.instance, actionSpec?.previewControlIdFn])
+	}, [action?.instance, actionSpec?.previewButtonFn])
 
 	if (!action) {
 		// Invalid action, so skip
@@ -416,7 +416,8 @@ function ActionTableRow({
 	const instanceLabel = instance?.label ?? action.instance
 
 	const options = actionSpec?.options ?? []
-	const previewControlId = previewControlIdFunction?.(action.options, ParseControlId(controlId))
+	// TODO-coordinates need xy to the info of this
+	const previewButtonProps = previewButtonFunction?.(action.options, ParseControlId(controlId))
 
 	let name = ''
 	if (actionSpec) {
@@ -469,9 +470,9 @@ function ActionTableRow({
 						<>
 							<div className="cell-description">{actionSpec?.description || ''}</div>
 
-							{previewControlId && (
+							{previewButtonProps && (
 								<div className="cell-bank-preview">
-									<OptionButtonPreview controlId={previewControlId} />
+									<OptionButtonPreview {...previewButtonProps} />
 								</div>
 							)}
 
