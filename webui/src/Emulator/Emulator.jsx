@@ -73,6 +73,7 @@ export function Emulator() {
 				for (const [coordinate, data] of Object.entries(newImages)) {
 					res[coordinate] = data ? dataToButtonImage(data) : undefined
 				}
+				console.log('new', newImages, old, res)
 				return res
 			})
 		}
