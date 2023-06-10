@@ -273,7 +273,7 @@ const ButtonGridActions = forwardRef(function ButtonGridActions({ isHot, pageNum
 							if (activeFunctionButton) {
 								const fromInfo = activeFunctionButton
 								socketEmitPromise(socket, 'controls:copy', [
-									fromInfo.page,
+									fromInfo.pageNumber,
 									fromInfo.coordinate,
 									pageNumber,
 									coordinate,
@@ -282,14 +282,14 @@ const ButtonGridActions = forwardRef(function ButtonGridActions({ isHot, pageNum
 								})
 								stopFunction()
 							} else {
-								setActiveFunctionButton(coordinate)
+								setActiveFunctionButton({ pageNumber, coordinate })
 							}
 							return true
 						case 'move':
 							if (activeFunctionButton) {
 								const fromInfo = activeFunctionButton
 								socketEmitPromise(socket, 'controls:move', [
-									fromInfo.page,
+									fromInfo.pageNumber,
 									fromInfo.coordinate,
 									pageNumber,
 									coordinate,
@@ -298,7 +298,7 @@ const ButtonGridActions = forwardRef(function ButtonGridActions({ isHot, pageNum
 								})
 								stopFunction()
 							} else {
-								setActiveFunctionButton(coordinate)
+								setActiveFunctionButton({ pageNumber, coordinate })
 							}
 							return true
 						default:

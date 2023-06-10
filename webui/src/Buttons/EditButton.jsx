@@ -275,7 +275,6 @@ export function EditButton({ pageNumber, coordinate, onKeyUp, contentHeight }) {
 									&nbsp;Test
 								</CButton>
 							</CButtonGroup>{' '}
-							{controlId}
 							&nbsp;
 							{config?.options?.rotaryActions && (
 								<>

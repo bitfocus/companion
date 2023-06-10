@@ -70,8 +70,8 @@ export function Emulator() {
 		const updateImages = (newImages) => {
 			setImageCache((old) => {
 				const res = { ...old }
-				for (const [key, data] of Object.entries(newImages)) {
-					res[key] = data ? dataToButtonImage(data) : undefined
+				for (const [coordinate, data] of Object.entries(newImages)) {
+					res[coordinate] = data ? dataToButtonImage(data) : undefined
 				}
 				return res
 			})
@@ -109,12 +109,12 @@ export function Emulator() {
 		}
 
 		const onKeyUp = (e) => {
-			if (keymap[e.keyCode] !== undefined) {
-				const xy = keymap[e.keyCode]
+			const xy = keymap[e.keyCode]
+			if (xy) {
 				socketEmitPromise(socket, 'emulator:release', [emulatorId, ...xy]).catch((e) => {
 					console.error('release failed', e)
 				})
-				console.log('emulator:release', emulatorId, xk)
+				console.log('emulator:release', emulatorId, xy)
 			}
 		}
 
@@ -294,14 +294,14 @@ function CyclePages({ imageCache, setKeyDown }) {
 										{Array(Math.min(MAX_COLS, cols))
 											.fill(0)
 											.map((_2, x) => {
-												const index = y * MAX_COLS + x
+												const coordinate = formatCoordinate(x, y)
 												return (
 													<ButtonPreview
 														key={x}
-														coordinate={formatCoordinate(x, y)}
-														preview={imageCache[index]}
+														coordinate={coordinate}
+														preview={imageCache[coordinate]}
 														onClick={bankClick}
-														alt={`Button ${index}`}
+														alt={`Button ${coordinate}`}
 														selected={false}
 													/>
 												)
