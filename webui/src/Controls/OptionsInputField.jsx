@@ -86,7 +86,16 @@ export function OptionsInputField({
 			break
 		}
 		case 'colorpicker': {
-			control = <ColorInputField value={value} disabled={readonly} setValue={setValue2} />
+			control = (
+				<ColorInputField
+					value={value}
+					disabled={readonly}
+					setValue={setValue2}
+					enableAlpha={option.enableAlpha ?? false}
+					returnType={option.returnType ?? 'number'}
+					presetColors={option.presetColors}
+				/>
+			)
 			break
 		}
 		case 'number': {

@@ -306,8 +306,19 @@ function ConfigField({ setValue, setValid, definition, value }) {
 					multiple={true}
 				/>
 			)
-		case 'colorpicker':
-			return <ColorInputField value={value} setValue={setValue2} setValid={setValid2} />
+		case 'colorpicker': {
+			return (
+				<ColorInputField
+					value={value}
+					setValue={setValue2}
+					setValid={setValid2}
+					enableAlpha={definition.enableAlpha ?? false}
+					returnType={definition.returnType ?? 'number'}
+					presetColors={definition.presetColors}
+				/>
+			)
+			break
+		}
 		default:
 			return <p>Unknown field "{definition.type}"</p>
 	}
