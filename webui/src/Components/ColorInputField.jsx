@@ -4,6 +4,7 @@ import { createPortal } from 'react-dom'
 import { useOnClickOutsideExt } from '../util'
 import { usePopper } from 'react-popper'
 import { MenuPortalContext } from './DropdownInputField'
+import { colord } from 'colord'
 
 function splitColor(color) {
 	if (typeof color === 'number') {
@@ -22,13 +23,13 @@ function splitColor(color) {
 				a: 1,
 			}
 		}
-	} else if (typeof color === 'string' && color.match(/rgba\(\d+, \d+, \d+, \d+(\.\d+)?\)/)) {
-		let [_all, r, g, b, a] = color.match(/rgba\((\d+), (\d+), (\d+), (\d+(?:\.\d+)?)\)/) // TODO: parse all valid CSS strings
+	} else if (typeof color === 'string' && colord(color).isValid()) {
+		let rgb = colord(color).toRgb()
 		return {
-			r: parseInt(r),
-			g: parseInt(g),
-			b: parseInt(b),
-			a: parseFloat(a),
+			r: rgb.r,
+			g: rgb.g,
+			b: rgb.b,
+			a: rgb.a,
 		}
 	} else {
 		return {
