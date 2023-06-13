@@ -13,7 +13,10 @@ const toPosix = (str) => str.split(path.sep).join(path.posix.sep)
 // Determine some environment info
 const platformInfo = determinePlatformInfo(argv._[0])
 if (platformInfo.nodePlatform) process.env.npm_config_platform = platformInfo.nodePlatform
-if (platformInfo.nodeArch) process.env.npm_config_arch = platformInfo.nodeArch
+if (platformInfo.nodeArch) {
+	process.env.npm_config_arch = platformInfo.nodeArch
+	process.env.npm_config_target_arch = platformInfo.nodeArch
+}
 
 const nodeVersion = await fs.readFile('./dist/.node-version')
 const isZip = platformInfo.runtimePlatform === 'win'
