@@ -8,6 +8,7 @@
 	height: fit-content;
 	display: inline-block;
 	border: 1px solid transparent;
+	container-type: inline-size;
 
 	&.clickable {
 		cursor: pointer;
@@ -50,6 +51,10 @@
 		margin: 0 auto;
 
 		-webkit-user-drag: none;
+
+		@container (min-width: 72px) {
+			image-rendering: pixelated;
+		}
 	}
 }
 
