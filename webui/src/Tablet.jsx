@@ -295,7 +295,7 @@ function ButtonsFromPage({ imageCache, number, cols, rows }) {
 	const bankClick = useCallback(
 		(bank, pressed) => {
 			const controlId = CreateBankControlId(number, bank)
-			socketEmitPromise(socket, 'controls:hot-press', [controlId, pressed]).catch((e) =>
+			socketEmitPromise(socket, 'controls:hot-press', [controlId, pressed, 'tablet']).catch((e) =>
 				console.error(`Hot press failed: ${e}`)
 			)
 		},
