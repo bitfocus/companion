@@ -21,8 +21,6 @@ export async function generateVersionString() {
 		const commitCountRaw = await $`git rev-list --count HEAD`
 		const commitCount = commitCountRaw.stdout.trim()
 
-		const postTokens = [commitCount, gitRef, headHash].filter(Boolean)
-
 		return `${packageVersion}+${commitCount}-${gitRef}-${headHash}`
 	})
 }
