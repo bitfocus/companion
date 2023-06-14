@@ -19,7 +19,7 @@ export function createBmpHeader(imageWidth = 72, imageHeight = 72) {
 	bmpHeader.writeUInt32LE(0, 6) // reserved
 	bmpHeader.writeUInt32LE(bmpHeaderSize, 10) // data start
 	// image header
-	bmpHeader.writeUInt32LE(124, 14) // header info size
+	bmpHeader.writeUInt32LE(bmpHeaderSize - 14, 14) // header info size
 	bmpHeader.writeUInt32LE(imageWidth, 18) // width
 	bmpHeader.writeInt32LE(imageHeight * -1, 22) // height
 	bmpHeader.writeUInt16LE(1, 26) // planes
@@ -34,7 +34,7 @@ export function createBmpHeader(imageWidth = 72, imageHeight = 72) {
 	bmpHeader.writeUInt32LE(0x0000ff00, 58) // Green Bitmask
 	bmpHeader.writeUInt32LE(0x00ff0000, 62) // Blue Bitmask
 	bmpHeader.writeUInt32LE(0xff000000, 66) // Alpha Bitmask
-	bmpHeader.write('sRGB', 70, 4) // colorspace
+	bmpHeader.write('BGRs', 70, 4) // colorspace
 
 	return bmpHeader
 }
