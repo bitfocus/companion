@@ -1656,10 +1656,6 @@ commist@^1.0.0:
   version "1.0.3"
   resolved "https://codeload.github.com/bitfocus/companion-module-analogway-vio/tar.gz/f82c38eace1b229dc14660d3c553a576ba5a5346"
 
-"companion-module-anomes-millumin@github:bitfocus/companion-module-anomes-millumin#v1.0.8":
-  version "1.0.8"
-  resolved "https://codeload.github.com/bitfocus/companion-module-anomes-millumin/tar.gz/8616f07d034bfb25d969d54e03aa6eae77eee6de"
-
 "companion-module-arkaos-mediamaster@github:bitfocus/companion-module-arkaos-mediamaster#v1.0.5":
   version "1.0.5"
   resolved "https://codeload.github.com/bitfocus/companion-module-arkaos-mediamaster/tar.gz/b2a69f65be372bd18cd907124f5fd6e43cf7d6d0"
@@ -1675,10 +1671,6 @@ commist@^1.0.0:
 "companion-module-audiostrom-liveprofessor@github:bitfocus/companion-module-audiostrom-liveprofessor#v1.0.3":
   version "1.0.3"
   resolved "https://codeload.github.com/bitfocus/companion-module-audiostrom-liveprofessor/tar.gz/e0bb33619f0f009d1544f83e48c6ef8426fefc0c"
-
-"companion-module-audivero-unityintercom-client@github:bitfocus/companion-module-audivero-unityintercom-client#v1.0.3":
-  version "1.0.3"
-  resolved "https://codeload.github.com/bitfocus/companion-module-audivero-unityintercom-client/tar.gz/936108cd3d679c7a672787339f8b58897b5d2ce6"
 
 "companion-module-avishop-hdbaset-matrix@github:bitfocus/companion-module-avishop-hdbaset-matrix#v1.0.3":
   version "1.0.3"
@@ -2120,10 +2112,6 @@ commist@^1.0.0:
   version "1.1.0"
   resolved "https://codeload.github.com/bitfocus/companion-module-imagine-lrc/tar.gz/d30623d63243d432b0703413ef5f54b37c47eb1d"
 
-"companion-module-interactivetechnologies-cueserver@github:bitfocus/companion-module-interactivetechnologies-cueserver#v1.0.2":
-  version "1.0.2"
-  resolved "https://codeload.github.com/bitfocus/companion-module-interactivetechnologies-cueserver/tar.gz/3be8fa4b29de57c471f2f6fdcb4555d434981846"
-
 "companion-module-ioversal-vertex@github:bitfocus/companion-module-ioversal-vertex#v0.0.2":
   version "0.0.2"
   resolved "https://codeload.github.com/bitfocus/companion-module-ioversal-vertex/tar.gz/df3b4a965b98d33679d6e78d9e128ab2dd35eab9"
@@ -2162,12 +2150,6 @@ commist@^1.0.0:
   resolved "https://codeload.github.com/bitfocus/companion-module-jvc-ptz/tar.gz/5e3c8611ad3893abb5d842d3a2caf530f390124d"
   dependencies:
     urllib "^2.38.0"
-
-"companion-module-kiloview-encoder@github:bitfocus/companion-module-kiloview-encoder#v1.0.0":
-  version "1.0.0"
-  resolved "https://codeload.github.com/bitfocus/companion-module-kiloview-encoder/tar.gz/0e934fb7b2a006a8231e16f5305ab38710fd4d79"
-  dependencies:
-    axios "^0.27.2"
 
 "companion-module-kiloview-ndi@github:bitfocus/companion-module-kiloview-ndi#v1.0.2":
   version "1.0.2"
@@ -2698,12 +2680,6 @@ commist@^1.0.0:
   resolved "https://codeload.github.com/bitfocus/companion-module-tplink-kasasmartbulb/tar.gz/71c7c9ee35d85081635a858db2fdf34b485bbef6"
   dependencies:
     colorsys "^1.0.22"
-
-"companion-module-tplink-kasasmartplug@github:bitfocus/companion-module-tplink-kasasmartplug#v1.1.1":
-  version "1.1.1"
-  resolved "https://codeload.github.com/bitfocus/companion-module-tplink-kasasmartplug/tar.gz/4776e5d40e20a8e28d22882cc9613015d109a59d"
-  dependencies:
-    tplink-smarthome-api "^4.2.0"
 
 "companion-module-tplink-kasasmartstrip@github:bitfocus/companion-module-tplink-kasasmartstrip#v1.0.0":
   version "1.0.0"
