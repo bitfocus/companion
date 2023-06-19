@@ -14,6 +14,30 @@ const debounceFn = require('debounce-fn')
 const fileStreamRotator = require('file-stream-rotator')
 const { ConfigReleaseDirs } = require('./Paths.cjs')
 
+// Electron works on older versions of macos than nodejs, we should give a proper warning if we know companion will get stuck in a crash loop
+if (process.platform === 'darwin') {
+	try {
+		const plist = require('plist')
+		const semver = require('semver')
+
+		const minimumVersion = '10.15'
+		const supportedVersions = new semver.Range(`>=${minimumVersion}`)
+
+		const versionInfo = plist.parse(fs.readFileSync('/System/Library/CoreServices/SystemVersion.plist', 'utf8'))
+		const productVersion = versionInfo.ProductVersion
+
+		if (supportedVersions.test(productVersion)) {
+			electron.dialog.showErrorBox(
+				'Unsupported macOS',
+				`Companion is not supported on ${productVersion} of macOS, you must be running at least ${minimumVersion}`
+			)
+			app.quit()
+		}
+	} catch (e) {
+		// We can't figure out if its compatible, so assume it is
+	}
+}
+
 // Ensure there isn't another instance of companion running already
 var lock = app.requestSingleInstanceLock()
 if (!lock) {
