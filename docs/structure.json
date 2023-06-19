@@ -32,10 +32,6 @@
 			{
 				"label": "Web buttons",
 				"file": "2_sidebar/web_buttons.md"
-			},
-			{
-				"label": "Mobile buttons",
-				"file": "2_sidebar/mobile_buttons.md"
 			}
 		]
 	},
@@ -52,24 +48,20 @@
 				"file": "3_config/buttons.md",
 				"children": [
 					{
-						"label": "Latch / Toggle",
-						"file": "3_config/buttons/latch_toggle.md"
+						"label": "Creating buttons",
+						"file": "3_config/buttons/creating.md"
 					},
 					{
-						"label": "Delays",
-						"file": "3_config/buttons/delays.md"
+						"label": "Actions",
+						"file": "3_config/buttons/actions.md"
 					},
 					{
-						"label": "Key actions",
-						"file": "3_config/buttons/key_actions.md"
+						"label": "Feedbacks",
+						"file": "3_config/buttons/feedbacks.md"
 					},
 					{
-						"label": "Internal actions",
-						"file": "3_config/buttons/internal_actions.md"
-					},
-					{
-						"label": "Connection actions",
-						"file": "3_config/buttons/instance_feedback.md"
+						"label": "Steps",
+						"file": "3_config/buttons/steps.md"
 					},
 					{
 						"label": "Button indicators",
@@ -78,8 +70,8 @@
 				]
 			},
 			{
-				"label": "Surface",
-				"file": "3_config/surface.md"
+				"label": "Surfaces",
+				"file": "3_config/surfaces.md"
 			},
 			{
 				"label": "Triggers",
@@ -88,10 +80,6 @@
 					{
 						"label": "Trigger Setup",
 						"file": "3_config/triggers/trigger_setup.md"
-					},
-					{
-						"label": "Trigger Types",
-						"file": "3_config/triggers/trigger_types.md"
 					}
 				]
 			},
@@ -110,6 +98,10 @@
 					{
 						"label": "PIN lockout",
 						"file": "3_config/settings/pin_lockout.md"
+					},
+					{
+						"label": "Satellite",
+						"file": "3_config/settings/satellite.md"
 					},
 					{
 						"label": "TCP",
@@ -146,6 +138,24 @@
 				]
 			},
 			{
+				"label": "Import / Export",
+				"file": "3_config/import_export.md",
+				"children": [
+					{
+						"label": "Import",
+						"file": "3_config/import-export/import.md"
+					},
+					{
+						"label": "Export",
+						"file": "3_config/import-export/export.md"
+					},
+					{
+						"label": "Reset",
+						"file": "3_config/import-export/reset.md"
+					}
+				]
+			},
+			{
 				"label": "Log",
 				"file": "3_config/log.md"
 			}
@@ -154,10 +164,6 @@
 	{
 		"label": "Secondary admin controls",
 		"children": [
-			{
-				"label": "Presets",
-				"file": "4_secondary_admin_controls/presets.md"
-			},
 			{
 				"label": "Module variables",
 				"file": "4_secondary_admin_controls/dynamic_variables.md"
@@ -222,6 +228,10 @@
 			{
 				"label": "RossTalk Control",
 				"file": "5_remote_control/rosstalk_control.md"
+			},
+			{
+				"label": "Satellite Protocol",
+				"file": "5_remote_control/satellite.md"
 			}
 		]
 	},

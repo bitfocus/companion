@@ -1,8 +1,10 @@
-The Log section gives status updates of commands going out and coming back to Companion. Different log levels can be filtered.
+The Log section gives status updates of Companion. Different log levels can be filtered.
 
-Use the three buttons to toggle warnings, info and debug on and off. Errors will always be displayed in the log, no matter the settings. Last, of all, you have the option to clear the current log history.
+More detailed module specific logs can be viewed from the **Connections** page
 
-Be sure to check here if you're running into problems with a module.
+Use the three buttons to toggle warnings, info and debug on and off. Errors will always be displayed in the log, no matter the settings. Last, of all, you have the option to clear the current log history, as well as export the log or a support bundle to help developers debug with your configuration.
+
+Be sure to check here if you're running into problems.
 
 ![Log File](images/log.png?raw=true 'Log File')  
 _An example of a log with everything enabled_
