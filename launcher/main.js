@@ -12,7 +12,7 @@ const stripAnsi = require('strip-ansi')
 const chokidar = require('chokidar')
 const debounceFn = require('debounce-fn')
 const fileStreamRotator = require('file-stream-rotator')
-const { ConfigReleaseDirs } = require('../lib/Data/Paths.cjs')
+const { ConfigReleaseDirs } = require('./Paths.cjs')
 
 // Ensure there isn't another instance of companion running already
 var lock = app.requestSingleInstanceLock()
