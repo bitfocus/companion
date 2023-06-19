@@ -29,7 +29,7 @@ if (process.platform === 'darwin') {
 		if (supportedVersions.test(productVersion)) {
 			electron.dialog.showErrorBox(
 				'Unsupported macOS',
-				`Companion is not supported on ${productVersion} of macOS, you must be running at least ${minimumVersion}`
+				`Companion is not supported on macOS ${productVersion}, you must be running at least ${minimumVersion}`
 			)
 			app.quit()
 		}

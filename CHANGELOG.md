@@ -1,5 +1,11 @@
 # Bitfocus Companion
 
+## Companion v3.0.0 RC2 - Release Notes (Unreleased)
+
+### BREAKING CHANGES
+
+- macOS must be at least 10.15 to run Companion. This is due to nodejs dropping support for older versions.
+
 ## Companion v3.0.0 RC1 - Release Notes
 
 ### BREAKING CHANGES
