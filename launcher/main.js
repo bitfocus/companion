@@ -24,9 +24,9 @@ if (process.platform === 'darwin') {
 		const supportedVersions = new semver.Range(`>=${minimumVersion}`)
 
 		const versionInfo = plist.parse(fs.readFileSync('/System/Library/CoreServices/SystemVersion.plist', 'utf8'))
-		const productVersion = versionInfo.ProductVersion
+		const productVersion = semver.coerce(versionInfo.ProductVersion)
 
-		if (supportedVersions.test(productVersion)) {
+		if (productVersion && !supportedVersions.test(productVersion)) {
 			electron.dialog.showErrorBox(
 				'Unsupported macOS',
 				`Companion is not supported on macOS ${productVersion}, you must be running at least ${minimumVersion}`
