@@ -334,23 +334,23 @@
   resolved "https://registry.yarnpkg.com/@discoveryjs/json-ext/-/json-ext-0.5.7.tgz#1d572bfbbe14b7704e0ba0f39b74815b84870d70"
   integrity sha512-dBVuXR082gk3jsFp7Rd/JI4kytwGHecnCoTtXFb7DB6CNHp4rg5k1bhg0nWdLGLnOV71lmDzGQaLMy8iPLY0pw==
 
-"@elgato-stream-deck/core@5.7.0":
-  version "5.7.0"
-  resolved "https://registry.yarnpkg.com/@elgato-stream-deck/core/-/core-5.7.0.tgz#f1d0aa132eefa85c16386b7a57861957916b926d"
-  integrity sha512-BZr4y3XqX5cHov8VmV1Kigx5qvdetk7WYOygDlaPJ+yQB4XcBOf2pdEDW6wd81zRT2TnuScWkuBUSZvrRFZMqA==
+"@elgato-stream-deck/core@5.7.3":
+  version "5.7.3"
+  resolved "https://registry.yarnpkg.com/@elgato-stream-deck/core/-/core-5.7.3.tgz#e1bc0b597c8f256ac57401dd677ace7fbc7f789c"
+  integrity sha512-b85Vj8nc8mUzWJ3vuNZqZPgTGELXpKLMui56y266qb1Gf6fzvG1kT1WQ3wHW2AaEWuG4xEt9yZA1Y5SK6sRreg==
   dependencies:
     eventemitter3 "^4.0.7"
-    tslib "^2.4.0"
+    tslib "^2.5.3"
 
-"@elgato-stream-deck/node@^5.7.2":
-  version "5.7.2"
-  resolved "https://registry.yarnpkg.com/@elgato-stream-deck/node/-/node-5.7.2.tgz#f78fbc85b60647f6d861f1958d484b76063d1e18"
-  integrity sha512-U7gl/R+Jnl3CIyMx2b/WhEs0DBbDt8irDXj++DrRJudWg/JSenHyccg/7KFVixCU6JRxWktEPdVJKJ6U+8FPVQ==
+"@elgato-stream-deck/node@^5.7.3":
+  version "5.7.3"
+  resolved "https://registry.yarnpkg.com/@elgato-stream-deck/node/-/node-5.7.3.tgz#3cead5f09da6fb9ff00004f635cb614f7f4b617e"
+  integrity sha512-VWE2bln7cXlkSyfrKXps+1dADfoDE1sDVNMMc0XPfxMbw7brZtdtoaU9QTVMNexfMEfI2/uzwtTxAi8AB4MLlQ==
   dependencies:
-    "@elgato-stream-deck/core" "5.7.0"
+    "@elgato-stream-deck/core" "5.7.3"
     jpeg-js "^0.4.2"
     node-hid "^2.1.1"
-    tslib "^2.4.0"
+    tslib "^2.5.3"
 
 "@istanbuljs/load-nyc-config@^1.0.0":
   version "1.1.0"
@@ -5371,10 +5371,10 @@ tslib@^1.13.0, tslib@^1.9.3:
   resolved "https://registry.yarnpkg.com/tslib/-/tslib-1.14.1.tgz#cf2d38bdc34a134bcaf1091c41f6619e2f672d00"
   integrity sha512-Xni35NKzjgMrwevysHTCArtLDpPvye8zV/0E4EyYn43P7/7qvQwPh9BGkHewbMulVntbigmcT7rdX3BNo9wRJg==
 
-tslib@^2.3.1, tslib@^2.4.0, tslib@^2.5.0:
-  version "2.5.2"
-  resolved "https://registry.yarnpkg.com/tslib/-/tslib-2.5.2.tgz#1b6f07185c881557b0ffa84b111a0106989e8338"
-  integrity sha512-5svOrSA2w3iGFDs1HibEVBGbDrAY82bFQ3HZ3ixB+88nsbsWQoKqDRb5UBYAUPEzbBn6dAp5gRNXglySbx1MlA==
+tslib@^2.3.1, tslib@^2.4.0, tslib@^2.5.0, tslib@^2.5.3:
+  version "2.5.3"
+  resolved "https://registry.yarnpkg.com/tslib/-/tslib-2.5.3.tgz#24944ba2d990940e6e982c4bea147aba80209913"
+  integrity sha512-mSxlJJwl3BMEQCUNnxXBU9jP4JBktcEGhURcPR6VQVlnP0FdDEsIaz0C35dXNGLyRfrATNofF0F5p2KPxQgB+w==
 
 tunnel-agent@^0.6.0:
   version "0.6.0"
