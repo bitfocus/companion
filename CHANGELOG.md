@@ -1,6 +1,6 @@
 # Bitfocus Companion
 
-## Companion v3.0.0 RC2 - Release Notes (Unreleased)
+## Companion v3.0.0 RC2 - Release Notes
 
 ### BREAKING CHANGES
 
@@ -16,7 +16,7 @@
 ### 🐞 BUG FIXES
 
 - Pagenumber buttons not drawing correctly #2468
-- Update `sharp` to fix macOS 10.15 support 
+- Update `sharp` to fix macOS 10.15 support
 - Include logs in support bundle #2287
 - Tablet page not supporting delayed press groups #2475
 - Multiple decrement/increment page for a surface on a button dont combine as expected #2328
@@ -53,6 +53,7 @@
 - h2r-graphics
 - imimot-mitti
 - interactivetechnololgies-cueserver
+- interspace-mastercuev7
 - kiloview-encoder
 - leolabs-ableset
 - lightware-lw3
