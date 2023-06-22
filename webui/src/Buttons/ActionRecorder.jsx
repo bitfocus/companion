@@ -657,7 +657,7 @@ function RecorderSession({ sessionId, sessionInfo }) {
 	return (
 		<CCol xs={12} className="flex-form">
 			<ActionsList
-				isOnControl={false}
+				location={undefined}
 				dragId={'triggerAction'}
 				actions={sessionInfo.actions}
 				readonly={!!sessionInfo.isRunning}

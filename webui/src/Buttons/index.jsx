@@ -35,15 +35,15 @@ export const ButtonsPage = memo(function ButtonsPage({ hotPress }) {
 	}, [])
 
 	const doButtonGridClick = useCallback(
-		(page, coordinate, isDown) => {
+		(pageNumber, coordinate, isDown) => {
 			if (hotPress) {
-				socketEmitPromise(socket, 'controls:hot-press', [page, coordinate, isDown, 'grid']).catch((e) =>
+				socketEmitPromise(socket, 'controls:hot-press', [pageNumber, coordinate, isDown, 'grid']).catch((e) =>
 					console.error(`Hot press failed: ${e}`)
 				)
 			} else if (isDown) {
 				setActiveTab('edit')
-				console.log('set selected', page, coordinate)
-				setSelectedButton({ page, coordinate })
+				console.log('set selected', pageNumber, coordinate)
+				setSelectedButton({ pageNumber, coordinate })
 				setTabResetToken(nanoid())
 			}
 		},
@@ -61,15 +61,16 @@ export const ButtonsPage = memo(function ButtonsPage({ hotPress }) {
 
 					if (!e.ctrlKey && !e.metaKey && !e.altKey && (e.key === 'Backspace' || e.key === 'Delete')) {
 						clearModalRef.current.show(
-							`Clear button ${FormatPageAndCoordinate(selectedButton.page, selectedButton.coordinate)}`,
+							`Clear button ${FormatPageAndCoordinate(selectedButton.pageNumber, selectedButton.coordinate)}`,
 							`This will clear the style, feedbacks and all actions`,
 							'Clear',
 							() => {
-								socketEmitPromise(socket, 'controls:reset', [selectedButton.page, selectedButton.coordinate]).catch(
-									(e) => {
-										console.error(`Reset failed: ${e}`)
-									}
-								)
+								socketEmitPromise(socket, 'controls:reset', [
+									selectedButton.pageNumber,
+									selectedButton.coordinate,
+								]).catch((e) => {
+									console.error(`Reset failed: ${e}`)
+								})
 							}
 						)
 					}
@@ -88,7 +89,7 @@ export const ButtonsPage = memo(function ButtonsPage({ hotPress }) {
 							socketEmitPromise(socket, 'controls:copy', [
 								copyFromButton[0].page,
 								copyFromButton[0].coordinate,
-								selectedButton.page,
+								selectedButton.pageNumber,
 								selectedButton.coordinate,
 							]).catch((e) => {
 								console.error(`copy failed: ${e}`)
@@ -98,7 +99,7 @@ export const ButtonsPage = memo(function ButtonsPage({ hotPress }) {
 							socketEmitPromise(socket, 'controls:move', [
 								copyFromButton[0].page,
 								copyFromButton[0].coordinate,
-								selectedButton.page,
+								selectedButton.pageNumber,
 								selectedButton.coordinate,
 							]).catch((e) => {
 								console.error(`move failed: ${e}`)
@@ -142,7 +143,9 @@ export const ButtonsPage = memo(function ButtonsPage({ hotPress }) {
 							<CNavItem hidden={!selectedButton}>
 								<CNavLink data-tab="edit">
 									<FontAwesomeIcon icon={faCalculator} /> Edit Button{' '}
-									{selectedButton ? `${FormatPageAndCoordinate(selectedButton.page, selectedButton.coordinate)}` : '?'}
+									{selectedButton
+										? `${FormatPageAndCoordinate(selectedButton.pageNumber, selectedButton.coordinate)}`
+										: '?'}
 								</CNavLink>
 							</CNavItem>
 							<CNavItem>
@@ -166,10 +169,9 @@ export const ButtonsPage = memo(function ButtonsPage({ hotPress }) {
 								<MyErrorBoundary>
 									{selectedButton && (
 										<EditButton
-											key={`${selectedButton}.${tabResetToken}`}
+											key={`${selectedButton.pageNumber}.${selectedButton.coordinate}.${tabResetToken}`}
 											contentHeight={contentHeight}
-											pageNumber={selectedButton.page}
-											coordinate={selectedButton.coordinate}
+											location={selectedButton}
 											onKeyUp={handleKeyDownInButtons}
 										/>
 									)}

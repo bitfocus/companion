@@ -14,12 +14,9 @@ import { formatCoordinate } from '@companion/shared/ControlId'
 export function OptionButtonPreview({ pageNumber, coordinate }) {
 	const buttonCache = useContext(ButtonRenderCacheContext)
 
-	// let image = RedImage
-
 	pageNumber = pageNumber || 1
 	coordinate = coordinate || formatCoordinate(0, 0)
 
-	// TODO-coordinate
 	const sessionId = useMemo(() => nanoid(), [])
 	const image = useSharedBankRenderCache(buttonCache, sessionId, pageNumber, coordinate)
 

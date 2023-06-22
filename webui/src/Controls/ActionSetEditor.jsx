@@ -31,7 +31,16 @@ import { OptionButtonPreview } from './OptionButtonPreview'
 import { MenuPortalContext } from '../Components/DropdownInputField'
 import { ParseControlId } from '@companion/shared/ControlId'
 
-export function ControlActionSetEditor({ controlId, stepId, setId, actions, addPlaceholder, heading, headingActions }) {
+export function ControlActionSetEditor({
+	controlId,
+	location,
+	stepId,
+	setId,
+	actions,
+	addPlaceholder,
+	heading,
+	headingActions,
+}) {
 	const socket = useContext(SocketContext)
 
 	const confirmModal = useRef()
@@ -141,7 +150,7 @@ export function ControlActionSetEditor({ controlId, stepId, setId, actions, addP
 			</h4>
 			<GenericConfirmModal ref={confirmModal} />
 			<ActionsList
-				isOnControl={true}
+				location={location}
 				controlId={controlId}
 				dragId={`${controlId}_actions`}
 				stepId={stepId}
@@ -186,7 +195,7 @@ function AddActionsPanel({ addPlaceholder, addAction }) {
 }
 
 export function ActionsList({
-	isOnControl,
+	location,
 	controlId,
 	dragId,
 	stepId,
@@ -225,7 +234,7 @@ export function ActionsList({
 						<MyErrorBoundary key={a?.id ?? i}>
 							<ActionTableRow
 								key={a?.id ?? i}
-								isOnControl={isOnControl}
+								location={location}
 								action={a}
 								index={i}
 								stepId={stepId}
@@ -283,7 +292,7 @@ function ActionTableRow({
 	action,
 	stepId,
 	setId,
-	isOnControl,
+	location,
 	index,
 	dragId,
 	controlId,
@@ -417,7 +426,7 @@ function ActionTableRow({
 
 	const options = actionSpec?.options ?? []
 	// TODO-coordinates need xy to the info of this
-	const previewButtonProps = previewButtonFunction?.(action.options, ParseControlId(controlId))
+	const previewButtonProps = previewButtonFunction?.(action.options, location)
 
 	let name = ''
 	if (actionSpec) {
@@ -514,7 +523,7 @@ function ActionTableRow({
 										<MyErrorBoundary key={i}>
 											<OptionsInputField
 												key={i}
-												isOnControl={isOnControl}
+												isOnControl={!!location}
 												isAction={true}
 												instanceId={action.instance}
 												option={opt}

@@ -62,9 +62,11 @@ import { useElementSize } from 'usehooks-ts'
 import { GetStepIds } from '@companion/shared/Controls'
 import CSwitch from '../CSwitch'
 
-export function EditButton({ pageNumber, coordinate, onKeyUp, contentHeight }) {
+export function EditButton({ location, onKeyUp, contentHeight }) {
 	const socket = useContext(SocketContext)
 	const pages = useContext(PagesContext)
+
+	const { pageNumber, coordinate } = location
 
 	const controlId = pages?.[pageNumber]?.controls?.[coordinate]
 
@@ -322,6 +324,7 @@ export function EditButton({ pageNumber, coordinate, onKeyUp, contentHeight }) {
 							<TabsSection
 								fillHeight={isTwoColumn ? contentHeight - hintHeight : 0}
 								style={config.type}
+								location={location}
 								controlId={controlId}
 								steps={config.steps || {}}
 								runtimeProps={runtimeProps}
@@ -336,7 +339,7 @@ export function EditButton({ pageNumber, coordinate, onKeyUp, contentHeight }) {
 	)
 }
 
-function TabsSection({ style, controlId, steps, runtimeProps, rotaryActions, feedbacks }) {
+function TabsSection({ style, controlId, location, steps, runtimeProps, rotaryActions, feedbacks }) {
 	const socket = useContext(SocketContext)
 
 	const confirmRef = useRef()
@@ -570,6 +573,7 @@ function TabsSection({ style, controlId, steps, runtimeProps, rotaryActions, fee
 										<ControlActionSetEditor
 											heading="Rotate left actions"
 											controlId={controlId}
+											location={location}
 											stepId={selectedKey}
 											setId="rotate_left"
 											addPlaceholder="+ Add rotate left action"
@@ -581,6 +585,7 @@ function TabsSection({ style, controlId, steps, runtimeProps, rotaryActions, fee
 										<ControlActionSetEditor
 											heading="Rotate right actions"
 											controlId={controlId}
+											location={location}
 											stepId={selectedKey}
 											setId="rotate_right"
 											addPlaceholder="+ Add rotate right action"
@@ -594,6 +599,7 @@ function TabsSection({ style, controlId, steps, runtimeProps, rotaryActions, fee
 								<ControlActionSetEditor
 									heading={`Press actions`}
 									controlId={controlId}
+									location={location}
 									stepId={selectedKey}
 									setId="down"
 									addPlaceholder={`+ Add press action`}
@@ -603,6 +609,7 @@ function TabsSection({ style, controlId, steps, runtimeProps, rotaryActions, fee
 
 							<EditActionsRelease
 								controlId={controlId}
+								location={location}
 								action_sets={selectedStep2.action_sets}
 								stepOptions={selectedStep2.options}
 								stepId={selectedKey}
@@ -625,7 +632,7 @@ function TabsSection({ style, controlId, steps, runtimeProps, rotaryActions, fee
 	}
 }
 
-function EditActionsRelease({ controlId, action_sets, stepOptions, stepId, removeSet }) {
+function EditActionsRelease({ controlId, location, action_sets, stepOptions, stepId, removeSet }) {
 	const socket = useContext(SocketContext)
 
 	const editRef = useRef(null)
@@ -678,6 +685,7 @@ function EditActionsRelease({ controlId, action_sets, stepOptions, stepId, remov
 						</CButton>,
 					]}
 					controlId={controlId}
+					location={location}
 					stepId={stepId}
 					setId={id}
 					addPlaceholder={`+ Add ${ident} action`}
@@ -695,6 +703,7 @@ function EditActionsRelease({ controlId, action_sets, stepOptions, stepId, remov
 				<ControlActionSetEditor
 					heading={candidate_sets.length ? 'Short release actions' : 'Release actions'}
 					controlId={controlId}
+					location={location}
 					stepId={stepId}
 					setId={'up'}
 					addPlaceholder={candidate_sets.length ? '+ Add key short release action' : '+ Add key release action'}
