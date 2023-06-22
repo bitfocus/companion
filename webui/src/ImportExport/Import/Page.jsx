@@ -9,7 +9,7 @@ import {
 	socketEmitPromise,
 } from '../../util'
 import { ButtonPreview, dataToButtonImage } from '../../Components/ButtonPreview'
-import { CreateBankControlId } from '@companion/shared/ControlId'
+import { CreateBankControlId, formatCoordinate } from '@companion/shared/ControlId'
 import { MAX_COLS, MAX_ROWS } from '../../Constants'
 import { ButtonGrid, ButtonGridHeader, usePagePicker } from '../../Buttons/ButtonGrid'
 
@@ -179,9 +179,14 @@ function ButtonImportGrid({ page }) {
 							{Array(MAX_COLS)
 								.fill(0)
 								.map((_, x) => {
-									const index = y * MAX_COLS + x + 1
+									const coordinate = formatCoordinate(x, y)
 									return (
-										<ButtonImportPreview key={x} controlId={CreateBankControlId(page, index)} alt={`Button ${index}`} />
+										<ButtonImportPreview
+											key={x}
+											pageNumber={page}
+											coordinate={coordinate}
+											alt={`Button ${coordinate}`}
+										/>
 									)
 								})}
 						</CCol>
@@ -191,21 +196,21 @@ function ButtonImportGrid({ page }) {
 	)
 }
 
-function ButtonImportPreview({ controlId, instanceId, ...childProps }) {
+function ButtonImportPreview({ pageNumber, coordinate, instanceId, ...childProps }) {
 	const socket = useContext(SocketContext)
 	const [previewImage, setPreviewImage] = useState(null)
 
 	useEffect(() => {
 		setPreviewImage(null)
 
-		socketEmitPromise(socket, 'loadsave:control-preview', [controlId])
+		socketEmitPromise(socket, 'loadsave:control-preview', [pageNumber, coordinate])
 			.then((img) => {
 				setPreviewImage(img ? dataToButtonImage(img) : null)
 			})
 			.catch((e) => {
 				console.error(`Failed to preview bank: ${e}`)
 			})
-	}, [controlId, socket])
+	}, [pageNumber, coordinate, socket])
 
 	return <ButtonPreview {...childProps} preview={previewImage} />
 }
