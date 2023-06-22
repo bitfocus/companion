@@ -350,15 +350,15 @@ jobs:
           name: do-docker-build
 
       - uses: actions/checkout@v3
-        if: ${{ steps.build-check.outputs.exists }}
+        if: '${{ steps.build-check.outputs.exists }}'
 
       - uses: actions/download-artifact@v3
-        if: ${{ steps.build-check.outputs.exists }}
+        if: '${{ steps.build-check.outputs.exists }}'
         with:
           name: do-docker-build
 
       - name: Determine target image name
-        if: ${{ steps.build-check.outputs.exists }}
+        if: '${{ steps.build-check.outputs.exists }}'
         id: image-name
         run: |
           BUILD_VERSION=$(cat BUILD)

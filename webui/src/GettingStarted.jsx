@@ -1,6 +1,7 @@
 import { Fragment, useRef, useState, useEffect } from 'react'
 import { useHash } from 'react-use'
 import ReactMarkdown from 'react-markdown'
+import remarkGfm from 'remark-gfm'
 import { useIntersectionObserver } from 'usehooks-ts'
 
 const style = {
@@ -242,6 +243,7 @@ function LoadContent({ file }) {
 						return `/docs/${baseUrl}${src}`
 					}}
 					children={content}
+					remarkPlugins={[remarkGfm]}
 				/>
 			)}
 		</div>

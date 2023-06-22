@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 // Setup logging before anything else runs
-import Logging from './lib/Log/Controller.js'
+import './lib/Log/Controller.js'
 
 // Now we can think about startup
 import { Command } from 'commander'
@@ -12,6 +12,7 @@ import fs from 'fs-extra'
 import envPaths from 'env-paths'
 import { nanoid } from 'nanoid'
 import logger from './lib/Log/Controller.js'
+import { ConfigReleaseDirs } from './launcher/Paths.cjs'
 
 const program = new Command()
 
@@ -104,15 +105,30 @@ program.command('start', { isDefault: true, hidden: true }).action(() => {
 	// machid is always in the configDir
 	const machineIdPath = path.join(configDir, 'machid')
 
+	// Make sure README file exists in the config dir
+	const readmePath = path.join(configDir, 'README.txt')
+	if (!fs.existsSync(readmePath)) {
+		fs.writeFileSync(
+			readmePath,
+			'Since Companion 3.0, each release your config gets put into a new folder.\n' +
+				'This makes it much easier and safer to downgrade to older releases, as their configuration will be left untouched.\n' +
+				"When launching a version whose folder doesn't yet exist, the config will be copied from one of the previous releases, looking in release order.\n" +
+				'\n' +
+				'The db file in this folder is used for 2.4 or older, use the appropriate folders for newer configs\n'
+		)
+	}
+
+	// Handle the rename from `develop` to `v3.0`, setting up a link for backwards compatibility
+	const developDir = path.join(configDir, 'develop')
+	const v30Dir = path.join(configDir, 'v3.0')
+	if (fs.existsSync(developDir) && !fs.existsSync(v30Dir)) {
+		fs.moveSync(developDir, v30Dir)
+		fs.symlinkSync(v30Dir, developDir, process.platform === 'win32' ? 'junction' : undefined)
+	}
+
 	// develop should use subfolder. This should be disabled when ready for mass testing
 	const rootConfigDir = configDir
-	configDir = path.join(configDir, 'develop')
-
-	// Hack: move config from older 3.0 config. This should be removed before 3.0 switches to the main config path
-	const oldConfigPath = path.join(configDir, '../../companion3-test')
-	if (!fs.existsSync(configDir) && fs.existsSync(oldConfigPath)) fs.moveSync(oldConfigPath, configDir)
-	const oldConfigPath2 = envPaths('companion3-test').config
-	if (!fs.existsSync(configDir) && fs.existsSync(oldConfigPath2)) fs.moveSync(oldConfigPath2, configDir)
+	configDir = path.join(configDir, ConfigReleaseDirs[ConfigReleaseDirs.length - 1])
 
 	try {
 		fs.ensureDirSync(configDir)
@@ -121,13 +137,18 @@ program.command('start', { isDefault: true, hidden: true }).action(() => {
 		process.exit(1)
 	}
 
-	// try and import the non-develop copy. we only need to take `db` for this
-	if (
-		configDir !== rootConfigDir &&
-		!fs.existsSync(path.join(configDir, 'db')) &&
-		fs.existsSync(path.join(rootConfigDir, 'db'))
-	)
-		fs.copyFileSync(path.join(rootConfigDir, 'db'), path.join(configDir, 'db'))
+	// copy an older db if needed
+	if (configDir !== rootConfigDir && !fs.existsSync(path.join(configDir, 'db'))) {
+		// try and import the non-develop copy. we only need to take `db` for this
+		for (let i = ConfigReleaseDirs.length - 1; i--; i >= 0) {
+			const previousDbPath =
+				i > 0 ? path.join(rootConfigDir, ConfigReleaseDirs[i], 'db') : path.join(rootConfigDir, 'db')
+			if (fs.existsSync(previousDbPath)) {
+				// Found the one to copy
+				fs.copyFileSync(previousDbPath, path.join(configDir, 'db'))
+			}
+		}
+	}
 
 	if (options.logLevel) {
 		logger.setLogLevel(options.logLevel)

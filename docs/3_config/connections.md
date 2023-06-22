@@ -1,20 +1,22 @@
-From the Connections tab, you can add, edit and remove devices. You can also see if a device is connected by looking at the Status column.
+From the Connections tab, you can add, configure and remove devices. You can also see the status of a connection, as well as other information about it in the table.
 
-Press the question mark **"?"** icon to open that module's help information.
+![Connections Page](images/connection_list.png?raw=true 'Connections Page')
+
+In 3.0 the API used between the connections and Companion was overhauled, and this has resulted in some modules breaking. While a lot of the connections have been updated to fully use the new API, many haven't. Many connections which haven't been updated work just fine, but some unfortonately do not. This is indicated by the ⚠ symbol. Please let us know if one is broken, so we know which to prioritise.
 
 **To add a new device**
 
 1.  Add a new device, by scrolling though the list or through a search.
 2.  Choose the specific device you want to add.
-3.  Enter the connection information for device. Apply the changes.
+3.  Enter the connection information for device. Save the changes.
 
 Your new device should now show in the Connections tab along with all the other devices you want to control.
 Each device needs to be a separate connection. If you have two separate Barco E2, you need to add both of them as separate connections.
 
-![Connection](images/instance.png?raw=true 'Connection')
+Once you have added your connections, you can reorder or filter them in the table. In the rightmost column, is a selection of buttons:
+* **?** will open that module's help information. This is also possible in the list on the right before adding a connection.
+* The bug icon will take you to the GitHub page for the module. You should report any bugs you encounter with the module here, or any feature requests for missing functionality. Tip: The more detail you give on a bug or feature request, the more likely it is to be handled quickly.
+* **$** will show a list of all the variables that a connection provides. These can be used in various places either explained later on.
+* **>_** is a debug log for the module. When reporting a bug, module developers may want extra information from here to help figure out the bug. To most users this will not be interesting.
 
-After an connection has been created and successfully configured, it may provide you with a list of [Module Variables](#header-dynamic-variables) you can use when configuring your button. This will be described below. **Please note** these have moved places since Companion 2.1.2, and they are now located in their own tab under **Buttons**, or can be viewed by clicking the **$** icon.
-
-If something is missing, please make a support request on the GitHub page for the module describing the feature, use cases, and providing documentation, if needed, for the implementation. You can click the bug icon to take you directly to the GitHub page for each module.
-
-A full list of supported devices can also be found on our website. [Companion Module Support List](https://bitfocus.io/support)
+A full list of supported devices can also be found on the website. [Companion Module Support List](https://bitfocus.io/support)

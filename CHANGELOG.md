@@ -1,5 +1,84 @@
 # Bitfocus Companion
 
+## Companion v3.0.0 RC2 - Release Notes
+
+### BREAKING CHANGES
+
+- macOS must be at least 10.15 to run Companion. This is due to nodejs dropping support for older versions.
+
+### 📣 CORE FEATURES AND IMPROVEMENTS
+
+- Documentation is updated for 3.0
+- Port numbers are shown for all protocols in the Settings page, even those which cannot be changed
+- Config directories have been rearranged to be more logical and futureproof
+- New trigger event, 'on condition becoming false'
+
+### 🐞 BUG FIXES
+
+- Pagenumber buttons not drawing correctly #2468
+- Update `sharp` to fix macOS 10.15 support
+- Include logs in support bundle #2287
+- Tablet page not supporting delayed press groups #2475
+- Multiple decrement/increment page for a surface on a button dont combine as expected #2328
+- Crash on windows if powershell.exe is unavailable #2474
+- Set serialnumber to page "Back" can stop working #2484
+- show_topbar button style not importing from 2.4 correctly
+- Streamdeck Mini with latest firmware not working on Windows
+
+### 🧩 NEW & UPDATED MODULES
+
+- anomes-millumin
+- atlasied-atmosphere
+- audiovero-unityintercom-client
+- barco-pulse
+- betr-support
+- bitfocus-cloud
+- bmd-atem
+- bmd-smartview
+- bmd-videohub
+- canon-ptz
+- christie-projector
+- cisco-roomos
+- cvmeventi-countdown
+- discord-api
+- emotimo-st4
+- etc-eos
+- etc-paradigm
+- generic-osc
+- generic-pjlink
+- generic-tcp-serial
+- getontime-ontime
+- govee-lights
+- greengo-intercom
+- h2r-graphics
+- imimot-mitti
+- interactivetechnololgies-cueserver
+- interspace-mastercuev7
+- kiloview-encoder
+- leolabs-ableset
+- lightware-lw3
+- malighting-msc
+- marshall-ipcamera
+- middleman-adit
+- netron-en
+- newtek-tricaster
+- pharos-designer
+- pixap-pixtimerpro
+- renewedvision-propresenter
+- shure-psm1000
+- shure-scm820
+- softron-movierecorder
+- softron-ontheairvideo
+- studiocoast-vmix
+- tascam-bdmp1
+- techministry-timekeeper
+- teradek-prism
+- tow-mixeffect
+- tplink-kasasmartplug
+- vbaudio-voicemeeter
+- yamaha-rcp
+- zoom-osc-iso
+
 ## Companion v3.0.0 RC1 - Release Notes
 
 ### BREAKING CHANGES

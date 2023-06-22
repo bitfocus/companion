@@ -45,6 +45,7 @@
     "react-use": "^17.4.0",
     "react-virtualized-auto-sizer": "^1.0.14",
     "react-window": "^1.8.8",
+    "remark-gfm": "^3.0.1",
     "sanitize-html": "^2.10.0",
     "sass": "^1.62.0",
     "socket.io-client": "^4.6.1",

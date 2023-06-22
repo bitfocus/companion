@@ -1,15 +1,27 @@
-All triggers have a few identical configuration fields that need to be filled out before they can be created.
+Once you add a trigger, it can be opened in the edit panel on the right.
 
-- **Name**  
-  An identifier for you has no direct purpose other than giving a quick way to identify one trigger from the rest.
+When adding a new trigger, it starts off as disabled so that it doesn't get executed until you are ready for it.
 
-- **Condition**  
-  This specifies the condition that should be met for the trigger to execute. Each trigger type will change what specific information will be needed for it to fire.
-
-- **Actions**  
-  This defines what actions should be executed when the condition below is met. Every action that can be placed on a button is also available to be used here. If you want, you can make it press a button using the 'internal: Press and release' action.
+To begin with you should give it a name, and fill in the other fields.
 
 
-![Trigger Edit](images/trigger_edit.png?raw=true 'Trigger Edit')
+Triggers have 3 sections to configure
 
-There are several trigger types you should be familiar with:
+- **Events**
+  This defines when the trigger to be executed.  
+  Common events are **Time interval** and **On variable change**
+
+  ![Events](images/events.png?raw=true 'Events')
+
+- **Condition**
+  This allows you to apply a filter on the events.  
+  For example, if using the **On variable change** event, you can use a condition to limit the trigger to execute only when the variable has a value of `1`.  
+  This is a subset of the feedbacks that can be used on buttons.
+
+  ![Condition](images/condition.png?raw=true 'Condition')
+
+- **Actions**
+  This defines what will happen when the trigger executes and condition is met.  
+  Every action that can be used on a button can also be used here. If you want, you can make it press a button using the 'internal: Press and release' action.
+
+  ![Actions](images/actions.png?raw=true 'Actions')
