@@ -516,7 +516,7 @@ function TabsSection({ style, controlId, location, steps, runtimeProps, rotaryAc
 								heading="Feedbacks"
 								controlId={controlId}
 								feedbacks={feedbacks}
-								isOnControl={true}
+								location={location}
 							/>
 						</MyErrorBoundary>
 					)}

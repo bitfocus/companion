@@ -29,7 +29,6 @@ import { usePanelCollapseHelper } from '../Helpers/CollapseHelper'
 import CSwitch from '../CSwitch'
 import { OptionButtonPreview } from './OptionButtonPreview'
 import { MenuPortalContext } from '../Components/DropdownInputField'
-import { ParseControlId } from '@companion/shared/ControlId'
 
 export function ControlActionSetEditor({
 	controlId,
@@ -425,7 +424,6 @@ function ActionTableRow({
 	const instanceLabel = instance?.label ?? action.instance
 
 	const options = actionSpec?.options ?? []
-	// TODO-coordinates need xy to the info of this
 	const previewButtonProps = previewButtonFunction?.(action.options, location)
 
 	let name = ''

@@ -29,10 +29,9 @@ import { AddFeedbacksModal } from './AddModal'
 import { usePanelCollapseHelper } from '../Helpers/CollapseHelper'
 import { OptionButtonPreview } from './OptionButtonPreview'
 import { MenuPortalContext } from '../Components/DropdownInputField'
-import { ParseControlId } from '@companion/shared/ControlId'
 import { ButtonStyleProperties } from '@companion/shared/Style'
 
-export function ControlFeedbacksEditor({ controlId, feedbacks, heading, booleanOnly, isOnControl, addPlaceholder }) {
+export function ControlFeedbacksEditor({ controlId, feedbacks, heading, booleanOnly, location, addPlaceholder }) {
 	const socket = useContext(SocketContext)
 
 	const confirmModal = useRef()
@@ -167,7 +166,7 @@ export function ControlFeedbacksEditor({ controlId, feedbacks, heading, booleanO
 								setCollapsed={setPanelCollapsed}
 								isCollapsed={isPanelCollapsed(a.id)}
 								booleanOnly={booleanOnly}
-								isOnControl={isOnControl}
+								location={location}
 							/>
 						</MyErrorBoundary>
 					))}
@@ -205,7 +204,7 @@ function FeedbackTableRow({
 	isCollapsed,
 	setCollapsed,
 	booleanOnly,
-	isOnControl,
+	location,
 }) {
 	const socket = useContext(SocketContext)
 
@@ -290,8 +289,7 @@ function FeedbackTableRow({
 			</td>
 			<td>
 				<FeedbackEditor
-					isOnControl={isOnControl}
-					controlId={controlId}
+					location={location}
 					feedback={feedback}
 					setValue={setValue}
 					innerDelete={innerDelete}
@@ -312,8 +310,7 @@ function FeedbackTableRow({
 
 function FeedbackEditor({
 	feedback,
-	isOnControl,
-	controlId,
+	location,
 	setValue,
 	innerDelete,
 	innerDuplicate,
@@ -384,8 +381,7 @@ function FeedbackEditor({
 			return undefined
 		}
 	}, [feedback?.instance_id, feedbackSpec?.previewButtonFn])
-	// TODO-coordinates need xy to the info of this
-	const previewButtonProps = previewButtonFunction?.(feedback.options, ParseControlId(controlId))
+	const previewButtonProps = previewButtonFunction?.(feedback.options, location)
 
 	return (
 		<div className="editor-grid remove075right">
@@ -446,7 +442,7 @@ function FeedbackEditor({
 								<MyErrorBoundary key={i}>
 									<OptionsInputField
 										key={i}
-										isOnControl={isOnControl}
+										isOnControl={!!location}
 										instanceId={feedback.instance_id}
 										option={opt}
 										actionId={feedback.id}
