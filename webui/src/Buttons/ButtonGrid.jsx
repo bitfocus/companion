@@ -142,12 +142,7 @@ export const ButtonsGridPanel = memo(function ButtonsPage({
 				</CRow>
 
 				<CRow className={classnames({ 'bank-armed': isHot, bankgrid: true })}>
-					<ButtonGrid
-						pageNumber={pageNumber}
-						pageInfo={pageInfo}
-						bankClick={bankClick}
-						selectedButton={selectedButton}
-					/>
+					<ButtonGrid pageNumber={pageNumber} bankClick={bankClick} selectedButton={selectedButton} />
 				</CRow>
 
 				<CRow style={{ paddingTop: '15px' }}>
@@ -459,7 +454,7 @@ export const ButtonGridHeader = memo(function ButtonGridHeader({
 	)
 })
 
-export function ButtonGrid({ bankClick, pageNumber, pageInfo, selectedButton }) {
+export function ButtonGrid({ bankClick, pageNumber, selectedButton }) {
 	const buttonCache = useContext(ButtonRenderCacheContext)
 
 	const sessionId = useMemo(() => nanoid(), [])
@@ -492,7 +487,7 @@ export function ButtonGrid({ bankClick, pageNumber, pageInfo, selectedButton }) 
 											preview={images[coordinate]}
 											onClick={bankClick}
 											alt={`Button ${coordinate}`}
-											selected={selectedButton?.page === pageNumber && selectedButton?.coordinate === coordinate}
+											selected={selectedButton?.pageNumber === pageNumber && selectedButton?.coordinate === coordinate}
 										/>
 									)
 								})}

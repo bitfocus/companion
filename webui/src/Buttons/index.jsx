@@ -87,7 +87,7 @@ export const ButtonsPage = memo(function ButtonsPage({ hotPress }) {
 
 						if (copyFromButton[1] === 'copy') {
 							socketEmitPromise(socket, 'controls:copy', [
-								copyFromButton[0].page,
+								copyFromButton[0].pageNumber,
 								copyFromButton[0].coordinate,
 								selectedButton.pageNumber,
 								selectedButton.coordinate,
@@ -97,7 +97,7 @@ export const ButtonsPage = memo(function ButtonsPage({ hotPress }) {
 							setTabResetToken(nanoid())
 						} else if (copyFromButton[1] === 'cut') {
 							socketEmitPromise(socket, 'controls:move', [
-								copyFromButton[0].page,
+								copyFromButton[0].pageNumber,
 								copyFromButton[0].coordinate,
 								selectedButton.pageNumber,
 								selectedButton.coordinate,
