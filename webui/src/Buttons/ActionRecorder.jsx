@@ -234,13 +234,13 @@ function ButtonPicker({ selectButton }) {
 
 	const bankClick = useCallback(
 		(coordinate, pressed) => {
-			if (pressed) {
-				// TODO-coordinate
-				setSelectedControl(CreateBankControlId(pageNumber, bank))
+			const controlId = pages[pageNumber]?.controls?.[coordinate]
+			if (pressed && controlId) {
+				setSelectedControl(controlId)
 				setSelectedSet(null)
 			}
 		},
-		[pageNumber]
+		[pages[pageNumber]]
 	)
 
 	const replaceActions = useCallback(() => {
