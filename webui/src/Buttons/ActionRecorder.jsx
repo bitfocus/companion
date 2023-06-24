@@ -9,7 +9,7 @@ import {
 	TriggersContext,
 	PreventDefaultHandler,
 } from '../util'
-import { CreateTriggerControlId, CreateBankControlId } from '@companion/shared/ControlId'
+import { CreateTriggerControlId } from '@companion/shared/ControlId'
 import {
 	CButton,
 	CAlert,

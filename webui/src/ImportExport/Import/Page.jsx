@@ -9,7 +9,7 @@ import {
 	socketEmitPromise,
 } from '../../util'
 import { ButtonPreview, dataToButtonImage } from '../../Components/ButtonPreview'
-import { CreateBankControlId, formatCoordinate } from '@companion/shared/ControlId'
+import { formatCoordinate } from '@companion/shared/ControlId'
 import { MAX_COLS, MAX_ROWS } from '../../Constants'
 import { ButtonGrid, ButtonGridHeader, usePagePicker } from '../../Buttons/ButtonGrid'
 
