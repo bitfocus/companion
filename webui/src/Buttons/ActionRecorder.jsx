@@ -233,8 +233,8 @@ function ButtonPicker({ selectButton }) {
 	const [selectedSet, setSelectedSet] = useState(null)
 
 	const bankClick = useCallback(
-		(coordinate, pressed) => {
-			const controlId = pages[pageNumber]?.controls?.[coordinate]
+		(location, pressed) => {
+			const controlId = pages[pageNumber]?.controls?.[location.row]?.[location.column]
 			if (pressed && controlId) {
 				setSelectedControl(controlId)
 				setSelectedSet(null)

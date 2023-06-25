@@ -66,9 +66,7 @@ export function EditButton({ location, onKeyUp, contentHeight }) {
 	const socket = useContext(SocketContext)
 	const pages = useContext(PagesContext)
 
-	const { pageNumber, coordinate } = location
-
-	const controlId = pages?.[pageNumber]?.controls?.[coordinate]
+	const controlId = pages?.[location.pageNumber]?.controls?.[location.row]?.[location.column]
 
 	const resetModalRef = useRef()
 
@@ -157,7 +155,7 @@ export function EditButton({ location, onKeyUp, contentHeight }) {
 			}
 
 			const doChange = () => {
-				socketEmitPromise(socket, 'controls:reset', [pageNumber, coordinate, newType]).catch((e) => {
+				socketEmitPromise(socket, 'controls:reset', [location, newType]).catch((e) => {
 					console.error(`Set type failed: ${e}`)
 				})
 			}
@@ -175,43 +173,43 @@ export function EditButton({ location, onKeyUp, contentHeight }) {
 				doChange()
 			}
 		},
-		[socket, pageNumber, coordinate, configRef]
+		[socket, location, configRef]
 	)
 
 	const doRetryLoad = useCallback(() => setReloadConfigToken(nanoid()), [])
 	const clearButton = useCallback(() => {
 		resetModalRef.current.show(
-			`Clear button ${FormatPageAndCoordinate(pageNumber, coordinate)}`,
+			`Clear button ${FormatPageAndCoordinate(location)}`,
 			`This will clear the style, feedbacks and all actions`,
 			'Clear',
 			() => {
-				socketEmitPromise(socket, 'controls:reset', [pageNumber, coordinate]).catch((e) => {
+				socketEmitPromise(socket, 'controls:reset', [location]).catch((e) => {
 					console.error(`Reset failed: ${e}`)
 				})
 			}
 		)
-	}, [socket, pageNumber, coordinate])
+	}, [socket, location])
 
 	const hotPressDown = useCallback(() => {
-		socketEmitPromise(socket, 'controls:hot-press', [pageNumber, coordinate, true, 'edit']).catch((e) =>
+		socketEmitPromise(socket, 'controls:hot-press', [location, true, 'edit']).catch((e) =>
 			console.error(`Hot press failed: ${e}`)
 		)
-	}, [socket, pageNumber, coordinate])
+	}, [socket, location])
 	const hotPressUp = useCallback(() => {
-		socketEmitPromise(socket, 'controls:hot-press', [pageNumber, coordinate, false, 'edit']).catch((e) =>
+		socketEmitPromise(socket, 'controls:hot-press', [location, false, 'edit']).catch((e) =>
 			console.error(`Hot press failed: ${e}`)
 		)
-	}, [socket, pageNumber, coordinate])
+	}, [socket, location])
 	const hotRotateLeft = useCallback(() => {
-		socketEmitPromise(socket, 'controls:hot-rotate', [pageNumber, coordinate, false]).catch((e) =>
+		socketEmitPromise(socket, 'controls:hot-rotate', [location, false]).catch((e) =>
 			console.error(`Hot rotate failed: ${e}`)
 		)
-	}, [socket, pageNumber, coordinate])
+	}, [socket, location])
 	const hotRotateRight = useCallback(() => {
-		socketEmitPromise(socket, 'controls:hot-rotate', [pageNumber, coordinate, true]).catch((e) =>
+		socketEmitPromise(socket, 'controls:hot-rotate', [location, true]).catch((e) =>
 			console.error(`Hot rotate failed: ${e}`)
 		)
-	}, [socket, pageNumber, coordinate])
+	}, [socket, location])
 
 	const errors = []
 	if (configError) errors.push(configError)

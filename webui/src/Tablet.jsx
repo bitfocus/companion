@@ -1,5 +1,6 @@
 import { useCallback, useContext, useEffect, useMemo, useState } from 'react'
 import {
+	FormatPageAndCoordinate,
 	LoadingRetryOrError,
 	MyErrorBoundary,
 	PreventDefaultHandler,
@@ -7,7 +8,6 @@ import {
 	socketEmitPromise,
 	useMountEffect,
 } from './util'
-import { formatCoordinate } from '@companion/shared/ControlId'
 import { CButton, CCol, CContainer, CForm, CFormGroup, CInput, CInputCheckbox, CRow } from '@coreui/react'
 import { nanoid } from 'nanoid'
 import { MAX_COLS, MAX_ROWS } from './Constants'
@@ -291,18 +291,18 @@ function ButtonsFromPage({ imageCache, number, cols, rows }) {
 	const images = useSharedPageRenderCache(imageCache, 'tablet', number, !anyVisible)
 
 	const bankClick = useCallback(
-		(coordinate, pressed) => {
-			socketEmitPromise(socket, 'controls:hot-press', [number, coordinate, pressed, 'tablet']).catch((e) =>
+		(location, pressed) => {
+			socketEmitPromise(socket, 'controls:hot-press', [location, pressed, 'tablet']).catch((e) =>
 				console.error(`Hot press failed: ${e}`)
 			)
 		},
 		[socket, number]
 	)
 
-	const setInView = useCallback((index, inView) => {
+	const setInView = useCallback((location, inView) => {
 		setButtonsInView((old) => ({
 			...old,
-			[index]: inView,
+			[`${location.column}/${location.row}`]: inView,
 		}))
 	}, [])
 
@@ -313,14 +313,13 @@ function ButtonsFromPage({ imageCache, number, cols, rows }) {
 			return Array(Math.min(MAX_COLS, cols))
 				.fill(0)
 				.map((_2, x) => {
-					const coordinate = formatCoordinate(x, y)
-
 					return (
 						<ButtonWrapper
 							key={x}
-							page={number}
-							coordinate={coordinate}
-							image={images[coordinate]}
+							pageNumber={number}
+							column={x}
+							row={y}
+							image={images?.[y]?.[x]}
 							bankClick={bankClick}
 							setInView={setInView}
 						/>
@@ -330,25 +329,27 @@ function ButtonsFromPage({ imageCache, number, cols, rows }) {
 	// </div>
 }
 
-function ButtonWrapper({ page, coordinate, image, bankClick, setInView }) {
+function ButtonWrapper({ pageNumber, column, row, image, bankClick, setInView }) {
 	const { ref, inView } = useInView({
 		rootMargin: '50%',
 		/* Optional options */
 		threshold: 0,
 	})
 
+	const location = useMemo(() => ({ pageNumber, column, row }), [pageNumber, column, row])
+
 	useEffect(() => {
-		setInView(coordinate, inView)
-	}, [setInView, coordinate, inView])
+		setInView(location, inView)
+	}, [setInView, location, inView])
 
 	return (
 		<ButtonPreview
 			dropRef={ref}
-			page={page}
-			coordinate={coordinate}
+			page={pageNumber}
+			location={location}
 			preview={image}
 			onClick={bankClick}
-			alt={`Button ${coordinate}`}
+			alt={`Button ${FormatPageAndCoordinate(location)}`}
 			selected={false}
 		/>
 	)

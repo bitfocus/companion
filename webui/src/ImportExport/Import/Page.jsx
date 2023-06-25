@@ -1,4 +1,4 @@
-import React, { useCallback, useContext, useEffect, useState } from 'react'
+import React, { useCallback, useContext, useEffect, useMemo, useState } from 'react'
 import { CButton, CCol, CRow, CSelect } from '@coreui/react'
 import {
 	InstancesContext,
@@ -12,6 +12,7 @@ import { ButtonPreview, dataToButtonImage } from '../../Components/ButtonPreview
 import { formatCoordinate } from '@companion/shared/ControlId'
 import { MAX_COLS, MAX_ROWS } from '../../Constants'
 import { ButtonGrid, ButtonGridHeader, usePagePicker } from '../../Buttons/ButtonGrid'
+import { useMap } from 'usehooks-ts'
 
 export function ImportPageWizard({ snapshot, instanceRemap, setInstanceRemap, doImport }) {
 	const pages = useContext(PagesContext)
@@ -179,13 +180,13 @@ function ButtonImportGrid({ page }) {
 							{Array(MAX_COLS)
 								.fill(0)
 								.map((_, x) => {
-									const coordinate = formatCoordinate(x, y)
 									return (
 										<ButtonImportPreview
 											key={x}
 											pageNumber={page}
-											coordinate={coordinate}
-											alt={`Button ${coordinate}`}
+											column={x}
+											row={y}
+											alt={`Button ${formatCoordinate(x, y)}`}
 										/>
 									)
 								})}
@@ -196,21 +197,27 @@ function ButtonImportGrid({ page }) {
 	)
 }
 
-function ButtonImportPreview({ pageNumber, coordinate, instanceId, ...childProps }) {
+function ButtonImportPreview({ pageNumber, column, row, instanceId, ...childProps }) {
 	const socket = useContext(SocketContext)
 	const [previewImage, setPreviewImage] = useState(null)
 
 	useEffect(() => {
 		setPreviewImage(null)
 
-		socketEmitPromise(socket, 'loadsave:control-preview', [pageNumber, coordinate])
+		socketEmitPromise(socket, 'loadsave:control-preview', [
+			{
+				pageNumber,
+				column,
+				row,
+			},
+		])
 			.then((img) => {
 				setPreviewImage(img ? dataToButtonImage(img) : null)
 			})
 			.catch((e) => {
 				console.error(`Failed to preview bank: ${e}`)
 			})
-	}, [pageNumber, coordinate, socket])
+	}, [pageNumber, column, row, socket])
 
 	return <ButtonPreview {...childProps} preview={previewImage} />
 }

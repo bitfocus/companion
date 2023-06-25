@@ -7,6 +7,7 @@ import {
 	socketEmitPromise,
 	useMountEffect,
 	PreventDefaultHandler,
+	FormatPageAndCoordinate,
 } from '../util'
 import { CButton, CCol, CContainer, CForm, CRow } from '@coreui/react'
 import { nanoid } from 'nanoid'
@@ -16,7 +17,7 @@ import { ButtonPreview, dataToButtonImage } from '../Components/ButtonPreview'
 import { MAX_COLS, MAX_ROWS } from '../Constants'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faCancel, faExpand } from '@fortawesome/free-solid-svg-icons'
-import { formatCoordinate, splitCoordinate } from '@companion/shared/ControlId'
+import { formatCoordinate } from '@companion/shared/ControlId'
 
 export function Emulator() {
 	const socket = useContext(SocketContext)
@@ -131,13 +132,13 @@ export function Emulator() {
 	useEffect(() => {
 		// handle changes to keyDown, as it isnt safe to do inside setState
 		if (keyDown) {
-			socketEmitPromise(socket, 'emulator:press', [emulatorId, ...keyDown]).catch((e) => {
+			socketEmitPromise(socket, 'emulator:press', [emulatorId, keyDown.column, keyDown.row]).catch((e) => {
 				console.error('press failed', e)
 			})
 			console.log('emulator:press', emulatorId, keyDown)
 
 			return () => {
-				socketEmitPromise(socket, 'emulator:release', [emulatorId, ...keyDown]).catch((e) => {
+				socketEmitPromise(socket, 'emulator:release', [emulatorId, keyDown.column, keyDown.row]).catch((e) => {
 					console.error('release failed', e)
 				})
 				console.log('emulator:release', emulatorId, keyDown)
@@ -251,9 +252,9 @@ function CyclePages({ imageCache, setKeyDown }) {
 	// }, [])
 
 	const bankClick = useCallback(
-		(coordinate, pressed) => {
+		(location, pressed) => {
 			if (pressed) {
-				setKeyDown(splitCoordinate(coordinate))
+				setKeyDown(location)
 			} else {
 				setKeyDown(null)
 			}
@@ -295,14 +296,15 @@ function CyclePages({ imageCache, setKeyDown }) {
 										{Array(Math.min(MAX_COLS, cols))
 											.fill(0)
 											.map((_2, x) => {
-												const coordinate = formatCoordinate(x, y)
 												return (
-													<ButtonPreview
+													<ButtonPreview2
 														key={x}
-														coordinate={coordinate}
-														preview={imageCache[coordinate]}
+														pageNumber={null}
+														column={x}
+														row={y}
+														preview={imageCache[formatCoordinate(x, y)]}
 														onClick={bankClick}
-														alt={`Button ${coordinate}`}
+														alt={`Button ${FormatPageAndCoordinate(location)}`}
 														selected={false}
 													/>
 												)
@@ -315,4 +317,9 @@ function CyclePages({ imageCache, setKeyDown }) {
 			</div>
 		</CRow>
 	)
+}
+
+function ButtonPreview2({ pageNumber, column, row, ...props }) {
+	const location = useMemo(() => ({ pageNumber, column, row }), [pageNumber, column, row])
+	return <ButtonPreview {...props} location={location} />
 }

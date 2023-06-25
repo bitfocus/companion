@@ -208,8 +208,8 @@ export function LoadingRetryOrError({ error, dataReady, doRetry, autoRetryAfter 
 	)
 }
 
-export function FormatPageAndCoordinate(page, coordinate) {
-	return `${page}-${coordinate}`
+export function FormatPageAndCoordinate(location) {
+	return `${location.pageNumber}/${location.column}/${location.row}`
 }
 
 export function applyPatchOrReplaceSubObject(oldDefinitions, key, patch, defVal = {}) {
