@@ -417,7 +417,7 @@ function FeedbackEditor({
 
 					{location && showButtonPreview && (
 						<div className="cell-bank-preview">
-							<OptionButtonPreview location={location} options={feedback.options} useVariables={false} />
+							<OptionButtonPreview location={location} options={feedback.options} />
 						</div>
 					)}
 
