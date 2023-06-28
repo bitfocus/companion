@@ -38,6 +38,7 @@ export function OptionsInputField({
 					required={option.required}
 					placeholder={option.placeholder}
 					useVariables={option.useVariables}
+					useInternalLocationVariables={instanceId === 'internal' && option.useInternalLocationVariables}
 					disabled={readonly}
 					setValue={setValue2}
 				/>
