@@ -472,7 +472,7 @@ function ActionTableRow({
 
 							{location && showButtonPreview && (
 								<div className="cell-bank-preview">
-									<OptionButtonPreview location={location} options={action.options} />
+									<OptionButtonPreview location={location} options={action.options} useVariables={true} />
 								</div>
 							)}
 

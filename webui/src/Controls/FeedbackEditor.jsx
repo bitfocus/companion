@@ -374,7 +374,7 @@ function FeedbackEditor({
 		name = `${instanceLabel}: ${feedback.type} (undefined)`
 	}
 
-	const showButtonPreview = action?.instance === 'internal' && actionSpec?.showButtonPreview
+	const showButtonPreview = feedback?.instance_id === 'internal' && feedbackSpec?.showButtonPreview
 
 	return (
 		<div className="editor-grid remove075right">
@@ -417,7 +417,7 @@ function FeedbackEditor({
 
 					{location && showButtonPreview && (
 						<div className="cell-bank-preview">
-							<OptionButtonPreview location={location} options={feedback.options} />
+							<OptionButtonPreview location={location} options={feedback.options} useVariables={false} />
 						</div>
 					)}
 

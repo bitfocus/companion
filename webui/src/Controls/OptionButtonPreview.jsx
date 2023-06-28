@@ -9,13 +9,13 @@ import { useDeepCompareEffect } from 'use-deep-compare'
  * @param {string} param.location where this preview is located (if any)
  * @returns
  */
-export function OptionButtonPreview({ location, options }) {
+export function OptionButtonPreview({ location, options, useVariables }) {
 	const socket = useContext(SocketContext)
 
 	const [image, setImage] = useState(null)
 	useDeepCompareEffect(() => {
 		const id = nanoid()
-		socketEmitPromise(socket, 'preview:button-reference:subscribe', [id, location, options])
+		socketEmitPromise(socket, 'preview:button-reference:subscribe', [id, location, options, useVariables])
 			.then((newImage) => {
 				console.log('got image', newImage)
 				setImage(newImage ? dataToButtonImage(newImage) : newImage)
