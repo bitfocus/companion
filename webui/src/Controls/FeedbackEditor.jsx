@@ -374,14 +374,7 @@ function FeedbackEditor({
 		name = `${instanceLabel}: ${feedback.type} (undefined)`
 	}
 
-	const previewButtonFunction = useMemo(() => {
-		if (feedback?.instance_id === 'internal' && feedbackSpec?.previewButtonFn) {
-			return sandbox(feedbackSpec.previewButtonFn)
-		} else {
-			return undefined
-		}
-	}, [feedback?.instance_id, feedbackSpec?.previewButtonFn])
-	const previewButtonProps = previewButtonFunction?.(feedback.options, location)
+	const showButtonPreview = action?.instance === 'internal' && actionSpec?.showButtonPreview
 
 	return (
 		<div className="editor-grid remove075right">
@@ -422,9 +415,9 @@ function FeedbackEditor({
 				<>
 					<div className="cell-description">{feedbackSpec?.description || ''}</div>
 
-					{previewButtonProps && (
+					{location && showButtonPreview && (
 						<div className="cell-bank-preview">
-							<OptionButtonPreview {...previewButtonProps} />
+							<OptionButtonPreview location={location} options={feedback.options} />
 						</div>
 					)}
 

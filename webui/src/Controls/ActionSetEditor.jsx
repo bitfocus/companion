@@ -406,14 +406,6 @@ function ActionTableRow({
 		setCollapsed(action.id, false)
 	}, [setCollapsed, action.id])
 
-	const previewButtonFunction = useMemo(() => {
-		if (action?.instance === 'internal' && actionSpec?.previewButtonFn) {
-			return sandbox(actionSpec.previewButtonFn)
-		} else {
-			return undefined
-		}
-	}, [action?.instance, actionSpec?.previewButtonFn])
-
 	if (!action) {
 		// Invalid action, so skip
 		return ''
@@ -424,7 +416,8 @@ function ActionTableRow({
 	const instanceLabel = instance?.label ?? action.instance
 
 	const options = actionSpec?.options ?? []
-	const previewButtonProps = previewButtonFunction?.(action.options, location)
+
+	const showButtonPreview = action?.instance === 'internal' && actionSpec?.showButtonPreview
 
 	let name = ''
 	if (actionSpec) {
@@ -477,9 +470,9 @@ function ActionTableRow({
 						<>
 							<div className="cell-description">{actionSpec?.description || ''}</div>
 
-							{previewButtonProps && (
+							{location && showButtonPreview && (
 								<div className="cell-bank-preview">
-									<OptionButtonPreview {...previewButtonProps} />
+									<OptionButtonPreview location={location} options={action.options} />
 								</div>
 							)}
 

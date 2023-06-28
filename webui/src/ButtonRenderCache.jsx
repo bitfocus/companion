@@ -1,9 +1,8 @@
 import { useEffect, useState } from 'react'
 import { EventEmitter } from 'events'
-import { BlackImage, dataToButtonImage } from './Components/ButtonPreview'
-import { FormatPageAndCoordinate, socketEmitPromise } from './util'
+import { dataToButtonImage } from './Components/ButtonPreview'
+import { socketEmitPromise } from './util'
 import { MAX_COLS, MAX_ROWS } from './Constants'
-import { cloneDeep } from 'lodash-es'
 
 /**
  * The main cache store
@@ -14,9 +13,7 @@ export class ButtonRenderCache extends EventEmitter {
 	#socket
 
 	#pageRenders = {}
-	#bankRenders = {}
 	#pageSubs = {}
-	#bankSubs = {}
 
 	constructor(socket) {
 		super()
@@ -43,15 +40,6 @@ export class ButtonRenderCache extends EventEmitter {
 
 			// TODO - debounce?
 			this.emit('page', location.pageNumber, newImages)
-		}
-
-		const id = FormatPageAndCoordinate(location)
-		const subsForBank = this.#bankSubs[id]
-		if (subsForBank && subsForBank.size > 0) {
-			this.#bankRenders[id] = newImage
-
-			// TODO - debounce?
-			this.emit('bank', location, newImage)
 		}
 	}
 
@@ -105,50 +93,6 @@ export class ButtonRenderCache extends EventEmitter {
 			}
 		}
 	}
-
-	subscribeBank(sessionId, location) {
-		const id = FormatPageAndCoordinate(location)
-
-		let subsForBank = this.#bankSubs[id]
-		if (!subsForBank) subsForBank = this.#bankSubs[id] = new Set()
-
-		const doSubscribe = subsForBank.size === 0
-
-		subsForBank.add(sessionId)
-
-		if (doSubscribe) {
-			socketEmitPromise(this.#socket, 'preview:bank:subscribe', [location])
-				.then((data) => {
-					const newImage = dataToButtonImage(data)
-					this.#bankRenders[id] = newImage
-
-					this.emit('bank', location, newImage)
-				})
-				.catch((e) => {
-					console.error(e)
-				})
-			return undefined
-		} else {
-			return this.#bankRenders[id]
-		}
-	}
-
-	unsubscribeBank(sessionId, location) {
-		const id = FormatPageAndCoordinate(location)
-
-		const subsForBank = this.#bankSubs[id]
-		if (subsForBank && subsForBank.size > 0) {
-			subsForBank.delete(sessionId)
-
-			if (subsForBank.size === 0) {
-				socketEmitPromise(this.#socket, 'preview:bank:unsubscribe', [location]).catch((e) => {
-					console.error(e)
-				})
-
-				delete this.#bankRenders[id]
-			}
-		}
-	}
 }
 
 /**
@@ -183,48 +127,4 @@ export function useSharedPageRenderCache(cacheContext, sessionId, page, disable 
 	}, [cacheContext, sessionId, page, disable])
 
 	return imagesState
-}
-
-/**
- * Load and retrieve a page from the shared button render cache
- * @param {ButtonRenderCache} cacheContext The cache to use
- * @param {string} sessionId Unique id of this accessor
- * @param {string | undefined} controlId Id of the control to load and retrieve
- * @param {boolean | undefined} disable Disable loading of this page
- * @returns
- */
-export function useSharedBankRenderCache(cacheContext, sessionId, location, disable = false) {
-	const [imageState, setImageState] = useState(BlackImage)
-
-	useEffect(() => {
-		if (!disable && location) {
-			// Make sure we have a copy
-			location = cloneDeep(location)
-
-			setImageState(BlackImage)
-
-			const updateImage = (location2, image) => {
-				// Note: intentionally loose comparison
-				if (
-					location2.pageNumber == location.pageNumber &&
-					location2.column == location.column &&
-					location2.row == location.row
-				)
-					setImageState(image ?? BlackImage)
-			}
-
-			cacheContext.on('bank', updateImage)
-
-			const initialImages = cacheContext.subscribeBank(sessionId, location)
-			if (initialImages) setImageState(initialImages)
-
-			return () => {
-				cacheContext.off('bank', updateImage)
-
-				cacheContext.unsubscribeBank(sessionId, location)
-			}
-		}
-	}, [cacheContext, sessionId, location, disable])
-
-	return imageState
 }
