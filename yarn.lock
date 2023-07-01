@@ -636,23 +636,23 @@
     node-addon-api "^5.0.0"
     pkg-prebuilds "~0.1.0"
 
-"@loupedeck/core@0.4.0":
-  version "0.4.0"
-  resolved "https://registry.yarnpkg.com/@loupedeck/core/-/core-0.4.0.tgz#301340bf2bf225a45cf48c86395efff3c97b5fb3"
-  integrity sha512-XU1XNxM8EoZ1Tdl83E0v3rBuFh1FgTiE3/sE8qNHVQvkOel5IOQHN1cQ754m2cxFnhtePuLFk3lwfHdUIuebIQ==
+"@loupedeck/core@1.0.0":
+  version "1.0.0"
+  resolved "https://registry.yarnpkg.com/@loupedeck/core/-/core-1.0.0.tgz#d002c82b73e4f01315032c0e8e9c60f4c090bf20"
+  integrity sha512-syCuom1QMiu6snQ7xY+ByTqax7PgZggTqsDKD1/ktZsHp4hi3qMNwv99JFbf8XPCndffVmUB6kY1HIvJ3iuY7g==
   dependencies:
     eventemitter3 "^4.0.7"
     p-queue "^6.6.2"
-    tslib "^2.5.0"
+    tslib "^2.6.0"
 
-"@loupedeck/node@^0.4.0":
-  version "0.4.0"
-  resolved "https://registry.yarnpkg.com/@loupedeck/node/-/node-0.4.0.tgz#da9e117e602c009384457aa49dc3cba444cb4ea1"
-  integrity sha512-JrkxtNg3jmhybyY6+fnqEzD5PgNUyIN8m+9Xf1yFZhH9zgSaK/LhhPNoz4tCv1LujevPrckqF6f43ZZ6IQ/83w==
+"@loupedeck/node@^1.0.0":
+  version "1.0.0"
+  resolved "https://registry.yarnpkg.com/@loupedeck/node/-/node-1.0.0.tgz#0e92f106b56a86d1c1ffcf561ddf07405d7a0d90"
+  integrity sha512-S9FvOzFwQeaNevOrmeCpbtfhg8oVCog6BINFEYeTr0U6wzEsKWDzTOj1nr5WmQyKAeRe3Le07D8ihzTghnCM4A==
   dependencies:
-    "@loupedeck/core" "0.4.0"
+    "@loupedeck/core" "1.0.0"
     serialport "^10.5.0"
-    tslib "^2.5.0"
+    tslib "^2.6.0"
 
 "@mapbox/node-pre-gyp@^1.0.9":
   version "1.0.10"
@@ -5407,6 +5407,11 @@ tslib@^2.3.1, tslib@^2.4.0, tslib@^2.5.0:
   version "2.5.3"
   resolved "https://registry.yarnpkg.com/tslib/-/tslib-2.5.3.tgz#24944ba2d990940e6e982c4bea147aba80209913"
   integrity sha512-mSxlJJwl3BMEQCUNnxXBU9jP4JBktcEGhURcPR6VQVlnP0FdDEsIaz0C35dXNGLyRfrATNofF0F5p2KPxQgB+w==
+
+tslib@^2.6.0:
+  version "2.6.0"
+  resolved "https://registry.yarnpkg.com/tslib/-/tslib-2.6.0.tgz#b295854684dbda164e181d259a22cd779dcd7bc3"
+  integrity sha512-7At1WUettjcSRHXCyYtTselblcHl9PJFFVKiCAy/bY97+BPZXSQ2wbq0P9s8tK2G7dFQfNnlJnPAiArVBVBsfA==
 
 type-detect@4.0.8:
   version "4.0.8"

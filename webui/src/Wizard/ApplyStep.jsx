@@ -41,10 +41,10 @@ export function ApplyStep({ oldConfig, newConfig }) {
 	if (oldConfig.setup_wizard === 0 || oldConfig.loupedeck_enable !== newConfig.loupedeck_enable) {
 		changes.push(
 			newConfig.loupedeck_enable ? (
-				<li>Loupedeck Live and Razer Stream Controller hardware will be detected by Companion.</li>
+				<li>Loupedeck and Razer Stream Controller hardware will be detected by Companion.</li>
 			) : (
 				<li>
-					Loupedeck Live and Razer Stream Controller hardware will {oldConfig.setup_wizard > 0 ? 'no longer' : 'not'} be
+					Loupedeck and Razer Stream Controller hardware will {oldConfig.setup_wizard > 0 ? 'no longer' : 'not'} be
 					detected by Companion.
 				</li>
 			)

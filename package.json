@@ -56,7 +56,7 @@
 		"@jsep-plugin/template": "^1.0.2",
 		"@julusian/image-rs": "^0.1.3",
 		"@julusian/jpeg-turbo": "^2.1.0",
-		"@loupedeck/node": "^0.4.0",
+		"@loupedeck/node": "^1.0.0",
 		"@sentry/integrations": "^7.53.1",
 		"@sentry/node": "^7.53.1",
 		"@sentry/tracing": "^7.53.1",

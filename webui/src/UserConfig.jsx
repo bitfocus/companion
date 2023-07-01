@@ -217,7 +217,7 @@ function UserConfigTable() {
 				</tr>
 				<tr>
 					<td>
-						Enable connected Loupedeck Live and Razer Stream Controller devices
+						Enable connected Loupedeck and Razer Stream Controller devices
 						<br />
 						<em>(Requires Companion restart)</em>
 					</td>
