@@ -1,6 +1,8 @@
 import React, { forwardRef, useCallback, useImperativeHandle, useState } from 'react'
 import { CButton, CForm, CInputCheckbox, CLabel, CModal, CModalBody, CModalFooter, CModalHeader } from '@coreui/react'
 import { PreventDefaultHandler } from '../util'
+import { ExportFormatDefault, SelectExportFormat } from './ExportFormat'
+import { MenuPortalContext } from '../Components/DropdownInputField'
 
 export const ExportWizardModal = forwardRef(function WizardModal(_props, ref) {
 	const [show, setShow] = useState(false)
@@ -16,7 +18,11 @@ export const ExportWizardModal = forwardRef(function WizardModal(_props, ref) {
 
 			const params = new URLSearchParams()
 			for (const [key, value] of Object.entries(config)) {
-				params.set(key, value ? '1' : '0')
+				if (typeof value === 'boolean') {
+					params.set(key, value ? '1' : '0')
+				} else {
+					params.set(key, value + '')
+				}
 			}
 
 			const link = document.createElement('a')
@@ -49,6 +55,7 @@ export const ExportWizardModal = forwardRef(function WizardModal(_props, ref) {
 					triggers: true,
 					customVariables: true,
 					// userconfig: true,
+					format: ExportFormatDefault,
 				})
 
 				setShow(true)
@@ -59,27 +66,31 @@ export const ExportWizardModal = forwardRef(function WizardModal(_props, ref) {
 
 	const canExport = Object.values(config).find((v) => !!v)
 
+	const [modalRef, setModalRef] = useState(null)
+
 	return (
-		<CModal show={show} onClose={doClose} className={'wizard'} closeOnBackdrop={false}>
-			<CForm className={'flex-form'} onSubmit={PreventDefaultHandler}>
-				<CModalHeader>
-					<h2>
-						<img src="/img/icons/48x48.png" height="30" alt="logo" />
-						Export Configuration
-					</h2>
-				</CModalHeader>
-				<CModalBody>
-					<ExportOptionsStep config={config} setValue={setValue} />
-				</CModalBody>
-				<CModalFooter>
-					<CButton color="secondary" onClick={doClose}>
-						Close
-					</CButton>
-					<CButton color="primary" onClick={doSave} disabled={!canExport}>
-						Download
-					</CButton>
-				</CModalFooter>
-			</CForm>
+		<CModal innerRef={setModalRef} show={show} onClose={doClose} className={'wizard'} closeOnBackdrop={false}>
+			<MenuPortalContext.Provider value={modalRef}>
+				<CForm className={'flex-form'} onSubmit={PreventDefaultHandler}>
+					<CModalHeader>
+						<h2>
+							<img src="/img/icons/48x48.png" height="30" alt="logo" />
+							Export Configuration
+						</h2>
+					</CModalHeader>
+					<CModalBody>
+						<ExportOptionsStep config={config} setValue={setValue} />
+					</CModalBody>
+					<CModalFooter>
+						<CButton color="secondary" onClick={doClose}>
+							Close
+						</CButton>
+						<CButton color="primary" onClick={doSave} disabled={!canExport}>
+							Download
+						</CButton>
+					</CModalFooter>
+				</CForm>
+			</MenuPortalContext.Provider>
 		</CModal>
 	)
 })
@@ -155,6 +166,14 @@ function ExportOptionsStep({ config, setValue }) {
 					<CLabel htmlFor="wizard_userconfig">Settings</CLabel>
 				</div>
 			</div> */}
+
+			<div className="indent3">
+				<div className="form-check form-check-inline mr-1">
+					<CLabel htmlFor="file_format">File format</CLabel>
+					&nbsp;
+					<SelectExportFormat value={config.format} setValue={(val) => setValue('format', val)} />
+				</div>
+			</div>
 		</div>
 	)
 }
