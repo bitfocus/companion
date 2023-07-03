@@ -78,7 +78,7 @@ if (!lock) {
 		line = stripAnsi(line.trim())
 		if (prefix) line = `${new Date().toISOString()} ${prefix}: ${line}`
 
-		logStream.write(line)
+		logStream.write(line + '\n')
 		console.log(line)
 	}
 
