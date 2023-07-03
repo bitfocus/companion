@@ -78,7 +78,7 @@ if (!lock) {
 		line = stripAnsi(line.trim())
 		if (prefix) line = `${new Date().toISOString()} ${prefix}: ${line}`
 
-		logStream.write(line)
+		logStream.write(line + '\n')
 		console.log(line)
 	}
 
@@ -644,9 +644,9 @@ if (!lock) {
 
 			if (selected == 1) {
 				app.exit(1)
-			} else {
+			} else if (fs.existsSync(thisDbPath)) {
 				// Mark the current config as most recently modified
-				fs.utimesSync(path.join(configDir, dirname, 'db'), Date.now(), Date.now())
+				fs.utimesSync(thisDbPath, Date.now(), Date.now())
 			}
 		}
 

@@ -1,6 +1,6 @@
 import React, { useContext, useEffect, useState } from 'react'
 import { CHeader, CHeaderBrand, CHeaderNavItem, CHeaderNav, CHeaderNavLink, CToggler } from '@coreui/react'
-import { SocketContext } from '../util'
+import { SocketContext, socketEmitPromise } from '../util'
 import { faLock } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 
@@ -12,12 +12,18 @@ export function MyHeader({ toggleSidebar, canLock, setLocked }) {
 
 	useEffect(() => {
 		if (socket) {
-			socket.on('app-version-info', setVersionInfo)
 			socket.on('app-update-info', setUpdateData)
 			socket.emit('app-update-info')
 
+			socketEmitPromise(socket, 'app-version-info', [])
+				.then((info) => {
+					setVersionInfo(info)
+				})
+				.catch((e) => {
+					console.error('Failed to load version info', e)
+				})
+
 			return () => {
-				socket.off('app-version-info', setVersionInfo)
 				socket.off('app-update-info', setUpdateData)
 			}
 		}
