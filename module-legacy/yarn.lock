@@ -2629,10 +2629,6 @@ commist@^1.0.0:
   dependencies:
     xml2js "^0.4.17"
 
-"companion-module-to-track@github:bitfocus/companion-module-toggl-track#v1.0.3":
-  version "1.0.3"
-  resolved "https://codeload.github.com/bitfocus/companion-module-toggl-track/tar.gz/113af5105d562a2609e678b5dfeab09ac8abcd37"
-
 "companion-module-tplink-kasasmartstrip@github:bitfocus/companion-module-tplink-kasasmartstrip#v1.0.0":
   version "1.0.0"
   resolved "https://codeload.github.com/bitfocus/companion-module-tplink-kasasmartstrip/tar.gz/2fafdc8fc13ef75e1c1dac44282444ddfc74c119"
