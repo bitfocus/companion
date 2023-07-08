@@ -90,7 +90,6 @@ Tip: If you don't want the behaviour of negative numbers, you can use `max(0, in
 
 Check if a string contains a specific value
 
-
 eg `includes("Companion is great!", "great")` gives `true`
 
 **toUpperCase(val)**
