@@ -24,12 +24,12 @@ program.command('check-launches', { hidden: true }).action(() => {
 
 program
 	.option('--list-interfaces', 'List the available network interfaces that can be passed to --admin-interface')
-	.option('--admin-port <number>', 'Set the port the admin ui should bind to (default: 8000)', 8000)
+	.option('--admin-port <number>', 'Set the port the admin ui should bind to', 8000)
 	.option(
 		'--admin-interface <string>',
-		"Set the interface the admin ui should bind to. The first ip on this interface will be used (default: '')"
+		'Set the interface the admin ui should bind to. The first ip on this interface will be used'
 	)
-	.option('--admin-address <string>', 'Set the ip address the admin ui should bind to (default: 0.0.0.0)', '0.0.0.0')
+	.option('--admin-address <string>', 'Set the ip address the admin ui should bind to (default: "0.0.0.0")')
 	.option(
 		'--config-dir <string>',
 		'Use the specified directory for storing configuration. The default path varies by system, and is different to 2.2 (the old path will be used if existing config is found)'
