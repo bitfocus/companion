@@ -1,5 +1,3 @@
-import { Buffer } from 'buffer'
-
 export const MAX_BUTTONS = 32
 export const MAX_COLS = 8
 export const MAX_ROWS = MAX_BUTTONS / MAX_COLS

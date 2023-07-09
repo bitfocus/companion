@@ -8,7 +8,7 @@ import {
 	SocketContext,
 	socketEmitPromise,
 } from '../../util'
-import { ButtonPreview, dataToButtonImage } from '../../Components/ButtonPreview'
+import { ButtonPreview } from '../../Components/ButtonPreview'
 import { formatLocation } from '@companion/shared/ControlId'
 import { MAX_COLS, MAX_ROWS } from '../../Constants'
 import { ButtonGrid, ButtonGridHeader, usePagePicker } from '../../Buttons/ButtonGrid'
@@ -216,7 +216,7 @@ function ButtonImportPreview({ pageNumber, column, row, instanceId, ...childProp
 			},
 		])
 			.then((img) => {
-				setPreviewImage(img ? dataToButtonImage(img) : null)
+				setPreviewImage(img)
 			})
 			.catch((e) => {
 				console.error(`Failed to preview bank: ${e}`)
