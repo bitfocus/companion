@@ -13,7 +13,6 @@ import { nanoid } from 'nanoid'
 import { useParams } from 'react-router-dom'
 import { dsanMastercueKeymap, keyboardKeymap, logitecKeymap } from './Keymaps'
 import { ButtonPreview } from '../Components/ButtonPreview'
-import { MAX_COLS, MAX_ROWS } from '../Constants'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faCancel, faExpand } from '@fortawesome/free-solid-svg-icons'
 import { formatLocation } from '@companion/shared/ControlId'
@@ -68,6 +67,7 @@ export function Emulator() {
 
 	useEffect(() => {
 		const updateImages = (newImages) => {
+			console.log('new images', newImages)
 			setImageCache((old) => {
 				if (Array.isArray(newImages)) {
 					const res = { ...old }
@@ -172,7 +172,12 @@ export function Emulator() {
 					<>
 						<ConfigurePanel config={config} />
 
-						<CyclePages imageCache={imageCache} setKeyDown={setKeyDown} />
+						<CyclePages
+							imageCache={imageCache}
+							setKeyDown={setKeyDown}
+							columns={config.emulator_columns}
+							rows={config.emulator_rows}
+						/>
 					</>
 				) : (
 					<CRow>
@@ -233,29 +238,7 @@ function ConfigurePanel({ config }) {
 // 	return Math.min(Math.max(0, val), max)
 // }
 
-function CyclePages({ imageCache, setKeyDown }) {
-	// const goPrevPage = useCallback(() => {
-	// 	// if (currentIndex <= 0) {
-	// 	// 	if (loop) {
-	// 	// 		setCurrentIndex(orderedPages.length - 1)
-	// 	// 	}
-	// 	// } else {
-	// 	// 	setCurrentIndex(currentIndex - 1)
-	// 	// }
-	// }, [])
-	// const goNextPage = useCallback(() => {
-	// 	// if (currentIndex >= orderedPages.length - 1) {
-	// 	// 	if (loop) {
-	// 	// 		setCurrentIndex(0)
-	// 	// 	}
-	// 	// } else {
-	// 	// 	setCurrentIndex(currentIndex + 1)
-	// 	// }
-	// }, [])
-	// const goFirstPage = useCallback(() => {
-	// 	// setCurrentIndex(0)
-	// }, [])
-
+function CyclePages({ imageCache, setKeyDown, columns, rows }) {
 	const bankClick = useCallback(
 		(location, pressed) => {
 			if (pressed) {
@@ -266,9 +249,6 @@ function CyclePages({ imageCache, setKeyDown }) {
 		},
 		[setKeyDown]
 	)
-
-	const cols = 8
-	const rows = 4
 
 	return (
 		<CRow className="flex-grow-1">
@@ -293,12 +273,12 @@ function CyclePages({ imageCache, setKeyDown }) {
 					</div>
 					<div className="bankgrid">
 						{' '}
-						{Array(Math.min(MAX_ROWS, rows))
+						{Array(rows)
 							.fill(0)
 							.map((_, y) => {
 								return (
 									<CCol key={y} sm={12} className="pagebank-row">
-										{Array(Math.min(MAX_COLS, cols))
+										{Array(columns)
 											.fill(0)
 											.map((_2, x) => {
 												return (
