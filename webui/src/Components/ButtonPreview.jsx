@@ -56,7 +56,7 @@ export const ButtonPreview = React.memo(function (props) {
 					backgroundRepeat: 'no-repeat',
 				}}
 			>
-				<img width={72} height={72} src={props.preview ?? BlackImage} alt={props.alt} title={props.title} />
+				<img width={72} height={72} src={props.preview || BlackImage} alt={props.alt} title={props.title} />
 			</div>
 		</div>
 	)
