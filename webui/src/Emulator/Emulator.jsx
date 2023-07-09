@@ -16,7 +16,7 @@ import { ButtonPreview, dataToButtonImage } from '../Components/ButtonPreview'
 import { MAX_COLS, MAX_ROWS } from '../Constants'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faCancel, faExpand } from '@fortawesome/free-solid-svg-icons'
-import { formatEmulatorCoordinate, formatLocation } from '@companion/shared/ControlId'
+import { formatLocation } from '@companion/shared/ControlId'
 
 export function Emulator() {
 	const socket = useContext(SocketContext)
@@ -69,12 +69,27 @@ export function Emulator() {
 	useEffect(() => {
 		const updateImages = (newImages) => {
 			setImageCache((old) => {
-				const res = { ...old }
-				for (const [coordinate, data] of Object.entries(newImages)) {
-					res[coordinate] = data ? dataToButtonImage(data) : undefined
+				if (Array.isArray(newImages)) {
+					const res = { ...old }
+
+					for (const change of newImages) {
+						res[change.y] = { ...res[change.y] }
+						res[change.y][change.x] = change.buffer ? dataToButtonImage(change.buffer) : undefined
+					}
+
+					return res
+				} else {
+					const res = {}
+
+					for (const [y, yObj] of Object.entries(newImages)) {
+						res[y] = {}
+						for (const [x, data] of Object.entries(yObj)) {
+							res[y][x] = data ? dataToButtonImage(data) : undefined
+						}
+					}
+
+					return res
 				}
-				console.log('new', newImages, old, res)
-				return res
 			})
 		}
 
@@ -301,7 +316,7 @@ function CyclePages({ imageCache, setKeyDown }) {
 														pageNumber={null}
 														column={x}
 														row={y}
-														preview={imageCache[formatEmulatorCoordinate(x, y)]}
+														preview={imageCache[y]?.[x]}
 														onClick={bankClick}
 														alt={`Button ${formatLocation(location)}`}
 														selected={false}
