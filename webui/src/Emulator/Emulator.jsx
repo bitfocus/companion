@@ -16,7 +16,7 @@ import { ButtonPreview, dataToButtonImage } from '../Components/ButtonPreview'
 import { MAX_COLS, MAX_ROWS } from '../Constants'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faCancel, faExpand } from '@fortawesome/free-solid-svg-icons'
-import { formatCoordinate, formatLocation } from '@companion/shared/ControlId'
+import { formatEmulatorCoordinate, formatLocation } from '@companion/shared/ControlId'
 
 export function Emulator() {
 	const socket = useContext(SocketContext)
@@ -301,7 +301,7 @@ function CyclePages({ imageCache, setKeyDown }) {
 														pageNumber={null}
 														column={x}
 														row={y}
-														preview={imageCache[formatCoordinate(x, y)]}
+														preview={imageCache[formatEmulatorCoordinate(x, y)]}
 														onClick={bankClick}
 														alt={`Button ${formatLocation(location)}`}
 														selected={false}
