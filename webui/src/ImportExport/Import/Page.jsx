@@ -9,10 +9,9 @@ import {
 	socketEmitPromise,
 } from '../../util'
 import { ButtonPreview, dataToButtonImage } from '../../Components/ButtonPreview'
-import { formatCoordinate } from '@companion/shared/ControlId'
+import { formatLocation } from '@companion/shared/ControlId'
 import { MAX_COLS, MAX_ROWS } from '../../Constants'
 import { ButtonGrid, ButtonGridHeader, usePagePicker } from '../../Buttons/ButtonGrid'
-import { useMap } from 'usehooks-ts'
 
 export function ImportPageWizard({ snapshot, instanceRemap, setInstanceRemap, doImport }) {
 	const pages = useContext(PagesContext)
@@ -180,13 +179,18 @@ function ButtonImportGrid({ page }) {
 							{Array(MAX_COLS)
 								.fill(0)
 								.map((_, x) => {
+									const location = {
+										pageNumber: page,
+										column: x,
+										row: y,
+									}
 									return (
 										<ButtonImportPreview
 											key={x}
 											pageNumber={page}
 											column={x}
 											row={y}
-											alt={`Button ${formatCoordinate(x, y)}`}
+											alt={`Button ${formatLocation(location)}`}
 										/>
 									)
 								})}

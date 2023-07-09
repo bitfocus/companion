@@ -1,6 +1,5 @@
 import { useCallback, useContext, useEffect, useMemo, useState } from 'react'
 import {
-	FormatPageAndCoordinate,
 	LoadingRetryOrError,
 	MyErrorBoundary,
 	PreventDefaultHandler,
@@ -19,6 +18,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faCog, faExpand } from '@fortawesome/free-solid-svg-icons'
 import { useNavigate } from 'react-router-dom'
 import { ButtonRenderCache, useSharedPageRenderCache } from './ButtonRenderCache'
+import { formatLocation } from '@companion/shared/ControlId'
 
 export function Tablet() {
 	const socket = useContext(SocketContext)
@@ -296,13 +296,13 @@ function ButtonsFromPage({ imageCache, number, cols, rows }) {
 				console.error(`Hot press failed: ${e}`)
 			)
 		},
-		[socket, number]
+		[socket]
 	)
 
 	const setInView = useCallback((location, inView) => {
 		setButtonsInView((old) => ({
 			...old,
-			[`${location.column}/${location.row}`]: inView,
+			[`${location.row}/${location.column}`]: inView,
 		}))
 	}, [])
 
@@ -349,7 +349,7 @@ function ButtonWrapper({ pageNumber, column, row, image, bankClick, setInView })
 			location={location}
 			preview={image}
 			onClick={bankClick}
-			alt={`Button ${FormatPageAndCoordinate(location)}`}
+			alt={`Button ${formatLocation(location)}`}
 			selected={false}
 		/>
 	)

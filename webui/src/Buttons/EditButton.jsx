@@ -49,7 +49,6 @@ import {
 	socketEmitPromise,
 	SocketContext,
 	MyErrorBoundary,
-	FormatPageAndCoordinate,
 	PagesContext,
 } from '../util'
 import { ControlActionSetEditor } from '../Controls/ActionSetEditor'
@@ -61,6 +60,7 @@ import { cloneDeep } from 'lodash-es'
 import { useElementSize } from 'usehooks-ts'
 import { GetStepIds } from '@companion/shared/Controls'
 import CSwitch from '../CSwitch'
+import { formatLocation } from '@companion/shared/ControlId'
 
 export function EditButton({ location, onKeyUp, contentHeight }) {
 	const socket = useContext(SocketContext)
@@ -179,7 +179,7 @@ export function EditButton({ location, onKeyUp, contentHeight }) {
 	const doRetryLoad = useCallback(() => setReloadConfigToken(nanoid()), [])
 	const clearButton = useCallback(() => {
 		resetModalRef.current.show(
-			`Clear button ${FormatPageAndCoordinate(location)}`,
+			`Clear button ${formatLocation(location)}`,
 			`This will clear the style, feedbacks and all actions`,
 			'Clear',
 			() => {

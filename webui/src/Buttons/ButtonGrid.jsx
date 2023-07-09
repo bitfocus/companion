@@ -10,14 +10,7 @@ import React, {
 	useState,
 	useMemo,
 } from 'react'
-import {
-	KeyReceiver,
-	PagesContext,
-	socketEmitPromise,
-	SocketContext,
-	ButtonRenderCacheContext,
-	FormatPageAndCoordinate,
-} from '../util'
+import { KeyReceiver, PagesContext, socketEmitPromise, SocketContext, ButtonRenderCacheContext } from '../util'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import {
 	faArrowsAlt,
@@ -37,6 +30,7 @@ import { nanoid } from 'nanoid'
 import { useSharedPageRenderCache } from '../ButtonRenderCache'
 import Select from 'react-select'
 import { ConfirmExportModal } from '../Components/ConfirmExportModal'
+import { formatLocation } from '@companion/shared/ControlId'
 
 export const ButtonsGridPanel = memo(function ButtonsPage({
 	pageNumber,
@@ -524,7 +518,7 @@ const ButtonGridIcon = memo(function ButtonGridIcon({ pageNumber, column, row, .
 		}),
 	})
 
-	const title = FormatPageAndCoordinate(location)
+	const title = formatLocation(location)
 	return (
 		<ButtonPreview
 			{...props}

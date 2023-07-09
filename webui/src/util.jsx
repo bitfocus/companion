@@ -208,10 +208,6 @@ export function LoadingRetryOrError({ error, dataReady, doRetry, autoRetryAfter 
 	)
 }
 
-export function FormatPageAndCoordinate(location) {
-	return `${location.pageNumber}/${location.column}/${location.row}`
-}
-
 export function applyPatchOrReplaceSubObject(oldDefinitions, key, patch, defVal = {}) {
 	if (oldDefinitions) {
 		const oldEntry = oldDefinitions[key] ?? defVal
