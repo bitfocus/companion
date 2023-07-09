@@ -528,6 +528,7 @@ const ButtonGridIcon = memo(function ButtonGridIcon({ pageNumber, column, row, .
 			canDrop={canDrop}
 			alt={title}
 			title={title}
+			placeholder={`${location.row}/${location.column}`}
 		/>
 	)
 })

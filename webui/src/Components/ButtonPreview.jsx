@@ -1,9 +1,6 @@
 import React from 'react'
 import classnames from 'classnames'
 
-// Single pixel of black
-export const BlackImage =
-	'data:image/bmp;base64,Qk2OAAAAAAAAAIoAAAB8AAAAAQAAAP////8BACAAAwAAAAQAAAAnAAAAJwAAAAAAAAAAAAAA/wAAAAD/AAAAAP8AAAAA/0JHUnMAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=='
 // Single pixel of red
 export const RedImage =
 	'data:image/bmp;base64,Qk2OAAAAAAAAAIoAAAB8AAAAAQAAAP////8BACAAAwAAAAQAAAAnAAAAJwAAAAAAAAAAAAAA/wAAAAD/AAAAAP8AAAAA/0JHUnMAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA/wAAAA=='
@@ -50,13 +47,12 @@ export const ButtonPreview = React.memo(function (props) {
 				className="bank-border"
 				ref={props.dragRef}
 				style={{
-					backgroundImage: `url(${props.preview})`,
-					backgroundSize: '0%',
-					backgroundPosition: 'center',
-					backgroundRepeat: 'no-repeat',
+					backgroundImage: props.preview ? `url(${props.preview})` : undefined,
 				}}
+				alt={props.alt}
+				title={props.title}
 			>
-				<img width={72} height={72} src={props.preview || BlackImage} alt={props.alt} title={props.title} />
+				{!props.preview && props.placeholder && <div className="placeholder">{props.placeholder}</div>}
 			</div>
 		</div>
 	)
