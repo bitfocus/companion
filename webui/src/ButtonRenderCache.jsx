@@ -1,8 +1,6 @@
 import { useEffect, useState } from 'react'
 import { EventEmitter } from 'events'
-import { dataToButtonImage } from './Components/ButtonPreview'
 import { socketEmitPromise } from './util'
-import { MAX_COLS, MAX_ROWS } from './Constants'
 
 /**
  * The main cache store
@@ -27,14 +25,12 @@ export class ButtonRenderCache extends EventEmitter {
 		location.pageNumber = Number(location.pageNumber)
 		if (isNaN(location.pageNumber)) return
 
-		const newImage = dataToButtonImage(render)
-
 		const subsForPage = this.#pageSubs[location.pageNumber]
 		if (subsForPage && subsForPage.size) {
 			const newImages = { ...this.#pageRenders[location.pageNumber] }
 			newImages[location.row] = {
 				...newImages[location.row],
-				[location.column]: newImage,
+				[location.column]: render,
 			}
 			this.#pageRenders[location.pageNumber] = newImages
 
@@ -53,19 +49,7 @@ export class ButtonRenderCache extends EventEmitter {
 
 		if (doSubscribe) {
 			socketEmitPromise(this.#socket, 'preview:page:subscribe', [page])
-				.then((data) => {
-					const newImages = {}
-					for (let y = 0; y < MAX_ROWS; ++y) {
-						const srcImages = data[y]
-						if (!srcImages) continue
-
-						const rowImages = (newImages[y] = {})
-						for (let x = 0; x < MAX_COLS; ++x) {
-							if (srcImages[x]) {
-								rowImages[x] = dataToButtonImage(srcImages[x])
-							}
-						}
-					}
+				.then((newImages) => {
 					this.#pageRenders[page] = newImages
 
 					this.emit('page', page, newImages)

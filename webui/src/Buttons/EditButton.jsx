@@ -41,7 +41,7 @@ import React, {
 	useMemo,
 } from 'react'
 import { nanoid } from 'nanoid'
-import { ButtonPreview, dataToButtonImage } from '../Components/ButtonPreview'
+import { ButtonPreview } from '../Components/ButtonPreview'
 import { GenericConfirmModal } from '../Components/GenericConfirmModal'
 import {
 	KeyReceiver,
@@ -123,7 +123,7 @@ export function EditButton({ location, onKeyUp, contentHeight }) {
 		socket.on(`controls:runtime-${controlId}`, patchRuntimeProps)
 
 		const updateImage = (img) => {
-			setPreviewImage(dataToButtonImage(img))
+			setPreviewImage(img)
 		}
 		socket.on(`controls:preview-${controlId}`, updateImage)
 

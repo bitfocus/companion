@@ -12,7 +12,7 @@ import { CButton, CCol, CContainer, CForm, CRow } from '@coreui/react'
 import { nanoid } from 'nanoid'
 import { useParams } from 'react-router-dom'
 import { dsanMastercueKeymap, keyboardKeymap, logitecKeymap } from './Keymaps'
-import { ButtonPreview, dataToButtonImage } from '../Components/ButtonPreview'
+import { ButtonPreview } from '../Components/ButtonPreview'
 import { MAX_COLS, MAX_ROWS } from '../Constants'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faCancel, faExpand } from '@fortawesome/free-solid-svg-icons'
@@ -74,21 +74,12 @@ export function Emulator() {
 
 					for (const change of newImages) {
 						res[change.y] = { ...res[change.y] }
-						res[change.y][change.x] = change.buffer ? dataToButtonImage(change.buffer) : undefined
+						res[change.y][change.x] = change.buffer
 					}
 
 					return res
 				} else {
-					const res = {}
-
-					for (const [y, yObj] of Object.entries(newImages)) {
-						res[y] = {}
-						for (const [x, data] of Object.entries(yObj)) {
-							res[y][x] = data ? dataToButtonImage(data) : undefined
-						}
-					}
-
-					return res
+					return newImages
 				}
 			})
 		}

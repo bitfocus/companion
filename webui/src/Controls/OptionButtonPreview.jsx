@@ -1,6 +1,6 @@
 import React, { useContext, useState } from 'react'
 import { nanoid } from 'nanoid'
-import { ButtonPreview, dataToButtonImage } from '../Components/ButtonPreview'
+import { ButtonPreview } from '../Components/ButtonPreview'
 import { SocketContext, socketEmitPromise } from '../util'
 import { useDeepCompareEffect } from 'use-deep-compare'
 
@@ -18,7 +18,7 @@ export function OptionButtonPreview({ location, options }) {
 		socketEmitPromise(socket, 'preview:button-reference:subscribe', [id, location, options])
 			.then((newImage) => {
 				console.log('got image', newImage)
-				setImage(newImage ? dataToButtonImage(newImage) : newImage)
+				setImage(newImage)
 			})
 			.catch((err) => {
 				console.error('Subscribe failure', err)
@@ -26,7 +26,7 @@ export function OptionButtonPreview({ location, options }) {
 			})
 
 		const updateImage = (newImage) => {
-			setImage(newImage ? dataToButtonImage(newImage) : newImage)
+			setImage(newImage)
 		}
 
 		socket.on(`preview:button-reference:update:${id}`, updateImage)
