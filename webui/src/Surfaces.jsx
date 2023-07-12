@@ -412,36 +412,62 @@ const SurfaceEditModal = forwardRef(function SurfaceEditModal(_props, ref) {
 							/>
 							<span>{deviceConfig.page}</span>
 						</CFormGroup>
-						{deviceInfo.configFields?.includes('emulator_size') && (
-							<>
-								<CFormGroup>
-									<CLabel htmlFor="page">Row count</CLabel>
-									<CInput
-										name="emulator_rows"
-										type="range"
-										min={1}
-										max={MAX_ROWS}
-										step={1}
-										value={deviceConfig.emulator_rows}
-										onChange={(e) => updateConfig('emulator_rows', parseInt(e.currentTarget.value))}
-									/>
-									<span>{deviceConfig.emulator_rows}</span>
-								</CFormGroup>
-								<CFormGroup>
-									<CLabel htmlFor="page">Column count</CLabel>
-									<CInput
-										name="emulator_columns"
-										type="range"
-										min={1}
-										max={MAX_COLS}
-										step={1}
-										value={deviceConfig.emulator_columns}
-										onChange={(e) => updateConfig('emulator_columns', parseInt(e.currentTarget.value))}
-									/>
-									<span>{deviceConfig.emulator_columns}</span>
-								</CFormGroup>
-							</>
-						)}
+						{deviceInfo.configFields?.includes('emulator_size') &&
+							(userConfig?.experiment_enlarged_grid ? (
+								<>
+									<CFormGroup>
+										<CLabel htmlFor="page">Row count</CLabel>
+										<CInput
+											name="emulator_rows"
+											type="number"
+											min={1}
+											step={1}
+											value={deviceConfig.emulator_rows}
+											onChange={(e) => updateConfig('emulator_rows', parseInt(e.currentTarget.value))}
+										/>
+									</CFormGroup>
+									<CFormGroup>
+										<CLabel htmlFor="page">Column count</CLabel>
+										<CInput
+											name="emulator_columns"
+											type="number"
+											min={1}
+											step={1}
+											value={deviceConfig.emulator_columns}
+											onChange={(e) => updateConfig('emulator_columns', parseInt(e.currentTarget.value))}
+										/>
+									</CFormGroup>
+								</>
+							) : (
+								<>
+									<CFormGroup>
+										<CLabel htmlFor="page">Row count</CLabel>
+										<CInput
+											name="emulator_rows"
+											type="range"
+											min={1}
+											max={MAX_ROWS}
+											step={1}
+											value={deviceConfig.emulator_rows}
+											onChange={(e) => updateConfig('emulator_rows', parseInt(e.currentTarget.value))}
+										/>
+										<span>{deviceConfig.emulator_rows}</span>
+									</CFormGroup>
+									<CFormGroup>
+										<CLabel htmlFor="page">Column count</CLabel>
+										<CInput
+											name="emulator_columns"
+											type="range"
+											min={1}
+											max={MAX_COLS}
+											step={1}
+											value={deviceConfig.emulator_columns}
+											onChange={(e) => updateConfig('emulator_columns', parseInt(e.currentTarget.value))}
+										/>
+										<span>{deviceConfig.emulator_columns}</span>
+									</CFormGroup>
+								</>
+							))}
 
 						{userConfig?.experiment_enlarged_grid ? (
 							<CFormGroup>
