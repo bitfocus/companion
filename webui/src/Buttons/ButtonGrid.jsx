@@ -10,7 +10,14 @@ import React, {
 	useState,
 	useMemo,
 } from 'react'
-import { KeyReceiver, PagesContext, socketEmitPromise, SocketContext, ButtonRenderCacheContext } from '../util'
+import {
+	KeyReceiver,
+	PagesContext,
+	socketEmitPromise,
+	SocketContext,
+	ButtonRenderCacheContext,
+	UserConfigContext,
+} from '../util'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import {
 	faArrowsAlt,
@@ -450,11 +457,25 @@ export const ButtonGridHeader = memo(function ButtonGridHeader({
 	)
 })
 
+function generateNumbers(count, start = 0) {
+	return Array(count)
+		.fill(0)
+		.map((_, i) => i + start)
+}
+
 export function ButtonGrid({ bankClick, pageNumber, selectedButton }) {
 	const buttonCache = useContext(ButtonRenderCacheContext)
+	const userConfig = useContext(UserConfigContext)
 
 	const sessionId = useMemo(() => nanoid(), [])
 	const images = useSharedPageRenderCache(buttonCache, sessionId, pageNumber)
+
+	const rowNumbers = userConfig?.experiment_enlarged_grid
+		? generateNumbers(MAX_ROWS * 2, -MAX_ROWS / 2)
+		: generateNumbers(MAX_ROWS)
+	const colNumbers = userConfig?.experiment_enlarged_grid
+		? generateNumbers(MAX_COLS * 2, -MAX_COLS / 2)
+		: generateNumbers(MAX_COLS)
 
 	return (
 		<div
@@ -466,33 +487,29 @@ export function ButtonGrid({ bankClick, pageNumber, selectedButton }) {
 				marginLeft: 14,
 			}}
 		>
-			{Array(MAX_ROWS)
-				.fill(0)
-				.map((_, y) => {
-					return (
-						<CCol key={y} sm={12} className="pagebank-row">
-							{Array(MAX_COLS)
-								.fill(0)
-								.map((_, x) => {
-									return (
-										<ButtonGridIcon
-											key={x}
-											pageNumber={pageNumber}
-											column={x}
-											row={y}
-											preview={images?.[y]?.[x]}
-											onClick={bankClick}
-											selected={
-												selectedButton?.pageNumber === pageNumber &&
-												selectedButton?.column === x &&
-												selectedButton?.row === y
-											}
-										/>
-									)
-								})}
-						</CCol>
-					)
-				})}
+			{rowNumbers.map((y) => {
+				return (
+					<CCol key={y} sm={12} className="pagebank-row">
+						{colNumbers.map((x) => {
+							return (
+								<ButtonGridIcon
+									key={x}
+									pageNumber={pageNumber}
+									column={x}
+									row={y}
+									preview={images?.[y]?.[x]}
+									onClick={bankClick}
+									selected={
+										selectedButton?.pageNumber === pageNumber &&
+										selectedButton?.column === x &&
+										selectedButton?.row === y
+									}
+								/>
+							)
+						})}
+					</CCol>
+				)
+			})}
 		</div>
 	)
 }

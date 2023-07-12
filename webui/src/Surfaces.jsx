@@ -23,7 +23,14 @@ import {
 	CModalHeader,
 	CSelect,
 } from '@coreui/react'
-import { LoadingRetryOrError, SurfacesContext, socketEmitPromise, SocketContext, PreventDefaultHandler } from './util'
+import {
+	LoadingRetryOrError,
+	SurfacesContext,
+	socketEmitPromise,
+	SocketContext,
+	PreventDefaultHandler,
+	UserConfigContext,
+} from './util'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faAdd, faCog, faFolderOpen, faSync, faTrash } from '@fortawesome/free-solid-svg-icons'
 import { nanoid } from 'nanoid'
@@ -275,6 +282,7 @@ export const SurfacesPage = memo(function SurfacesPage() {
 
 const SurfaceEditModal = forwardRef(function SurfaceEditModal(_props, ref) {
 	const socket = useContext(SocketContext)
+	const userConfig = useContext(UserConfigContext)
 
 	const [deviceInfo, setDeviceInfo] = useState(null)
 	const [show, setShow] = useState(false)
@@ -435,35 +443,61 @@ const SurfaceEditModal = forwardRef(function SurfaceEditModal(_props, ref) {
 							</>
 						)}
 
-						{maxHorizontalOffset > 0 && (
+						{userConfig?.experiment_enlarged_grid ? (
 							<CFormGroup>
 								<CLabel htmlFor="page">Horizontal Offset in grid</CLabel>
 								<CInput
 									name="page"
-									type="range"
-									min={0}
-									max={maxHorizontalOffset}
+									type="number"
 									step={1}
 									value={deviceConfig.xOffset}
 									onChange={(e) => updateConfig('xOffset', parseInt(e.currentTarget.value))}
 								/>
-								<span>{deviceConfig.xOffset}</span>
 							</CFormGroup>
+						) : (
+							maxHorizontalOffset > 0 && (
+								<CFormGroup>
+									<CLabel htmlFor="page">Horizontal Offset in grid</CLabel>
+									<CInput
+										name="page"
+										type="range"
+										min={0}
+										max={maxHorizontalOffset}
+										step={1}
+										value={deviceConfig.xOffset}
+										onChange={(e) => updateConfig('xOffset', parseInt(e.currentTarget.value))}
+									/>
+									<span>{deviceConfig.xOffset}</span>
+								</CFormGroup>
+							)
 						)}
-						{maxVerticalOffset > 0 && (
+						{userConfig?.experiment_enlarged_grid ? (
 							<CFormGroup>
 								<CLabel htmlFor="page">Vertical Offset in grid</CLabel>
 								<CInput
 									name="page"
-									type="range"
-									min={0}
-									max={maxVerticalOffset}
+									type="number"
 									step={1}
 									value={deviceConfig.yOffset}
 									onChange={(e) => updateConfig('yOffset', parseInt(e.currentTarget.value))}
 								/>
-								<span>{deviceConfig.yOffset}</span>
 							</CFormGroup>
+						) : (
+							maxVerticalOffset > 0 && (
+								<CFormGroup>
+									<CLabel htmlFor="page">Vertical Offset in grid</CLabel>
+									<CInput
+										name="page"
+										type="range"
+										min={0}
+										max={maxVerticalOffset}
+										step={1}
+										value={deviceConfig.yOffset}
+										onChange={(e) => updateConfig('yOffset', parseInt(e.currentTarget.value))}
+									/>
+									<span>{deviceConfig.yOffset}</span>
+								</CFormGroup>
+							)
 						)}
 						{deviceInfo.configFields?.includes('brightness') && (
 							<CFormGroup>
