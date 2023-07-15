@@ -24,12 +24,12 @@ program.command('check-launches', { hidden: true }).action(() => {
 
 program
 	.option('--list-interfaces', 'List the available network interfaces that can be passed to --admin-interface')
-	.option('--admin-port <number>', 'Set the port the admin ui should bind to (default: 8000)', 8000)
+	.option('--admin-port <number>', 'Set the port the admin ui should bind to', 8000)
 	.option(
 		'--admin-interface <string>',
-		"Set the interface the admin ui should bind to. The first ip on this interface will be used (default: '')"
+		'Set the interface the admin ui should bind to. The first ip on this interface will be used'
 	)
-	.option('--admin-address <string>', 'Set the ip address the admin ui should bind to (default: 0.0.0.0)', '0.0.0.0')
+	.option('--admin-address <string>', 'Set the ip address the admin ui should bind to (default: "0.0.0.0")')
 	.option(
 		'--config-dir <string>',
 		'Use the specified directory for storing configuration. The default path varies by system, and is different to 2.2 (the old path will be used if existing config is found)'
@@ -102,21 +102,9 @@ program.command('start', { isDefault: true, hidden: true }).action(() => {
 		}
 	}
 
-	// machid is always in the configDir
+	// some files are always in the root configDir
 	const machineIdPath = path.join(configDir, 'machid')
-
-	// Make sure README file exists in the config dir
 	const readmePath = path.join(configDir, 'README.txt')
-	if (!fs.existsSync(readmePath)) {
-		fs.writeFileSync(
-			readmePath,
-			'Since Companion 3.0, each release your config gets put into a new folder.\n' +
-				'This makes it much easier and safer to downgrade to older releases, as their configuration will be left untouched.\n' +
-				"When launching a version whose folder doesn't yet exist, the config will be copied from one of the previous releases, looking in release order.\n" +
-				'\n' +
-				'The db file in this folder is used for 2.4 or older, use the appropriate folders for newer configs\n'
-		)
-	}
 
 	// Handle the rename from `develop` to `v3.0`, setting up a link for backwards compatibility
 	const developDir = path.join(configDir, 'develop')
@@ -135,6 +123,18 @@ program.command('start', { isDefault: true, hidden: true }).action(() => {
 	} catch (e) {
 		console.error(`Failed to create config directory. Do you have the correct permissions?`)
 		process.exit(1)
+	}
+
+	// Make sure README file exists in the config dir
+	if (!fs.existsSync(readmePath)) {
+		fs.writeFileSync(
+			readmePath,
+			'Since Companion 3.0, each release your config gets put into a new folder.\n' +
+				'This makes it much easier and safer to downgrade to older releases, as their configuration will be left untouched.\n' +
+				"When launching a version whose folder doesn't yet exist, the config will be copied from one of the previous releases, looking in release order.\n" +
+				'\n' +
+				'The db file in this folder is used for 2.4 or older, use the appropriate folders for newer configs\n'
+		)
 	}
 
 	// copy an older db if needed

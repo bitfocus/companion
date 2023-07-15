@@ -377,7 +377,7 @@ function ActionTableRow({
 		for (const option of options) {
 			try {
 				if (typeof option.isVisible === 'function') {
-					visibility[option.id] = option.isVisible(action.options)
+					visibility[option.id] = option.isVisible(action.options, option.isVisibleData)
 				}
 			} catch (e) {
 				console.error('Failed to check visibility', e)

@@ -268,7 +268,7 @@ function EventEditor({
 
 		for (const option of options) {
 			if (typeof option.isVisible === 'function') {
-				visibility[option.id] = option.isVisible(event.options)
+				visibility[option.id] = option.isVisible(event.options, option.isVisibleData)
 			}
 		}
 

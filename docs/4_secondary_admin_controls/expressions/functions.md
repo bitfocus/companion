@@ -86,6 +86,26 @@ substr() extracts characters from indexStart up to but not including indexEnd.
 
 Tip: If you don't want the behaviour of negative numbers, you can use `max(0, index)` to limit the value to never be below 0.
 
+**includes(val, find)**
+
+Check if a string contains a specific value
+
+eg `includes("Companion is great!", "great")` gives `true`
+
+**toUpperCase(val)**
+
+Coverts all characters in a string to uppercase
+
+**toLowerCase(val)**
+
+Coverts all characters in a string to lowercase
+
+**replaceAll(val, find, replace)**
+
+Searches a string for a specific value, and then replaces all instances of that value with a new string
+
+eg `replaceAll("This is great!", "This", "Companion")` gives `Companion is great!`
+
 **secondsToTimestamp(seconds, format)**
 
 Convert a number of seconds into a timestamp of format 'HH:mm:ss'.
