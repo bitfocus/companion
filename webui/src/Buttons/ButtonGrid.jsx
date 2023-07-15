@@ -11,7 +11,6 @@ import React, {
 	useMemo,
 } from 'react'
 import { KeyReceiver, PagesContext, socketEmitPromise, SocketContext, ButtonRenderCacheContext } from '../util'
-import { CreateBankControlId } from '@companion/shared/ControlId'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import {
 	faArrowsAlt,
@@ -31,6 +30,7 @@ import { nanoid } from 'nanoid'
 import { useSharedPageRenderCache } from '../ButtonRenderCache'
 import Select from 'react-select'
 import { ConfirmExportModal } from '../Components/ConfirmExportModal'
+import { formatLocation } from '@companion/shared/ControlId'
 
 export const ButtonsGridPanel = memo(function ButtonsPage({
 	pageNumber,
@@ -53,13 +53,12 @@ export const ButtonsGridPanel = memo(function ButtonsPage({
 	const actionsRef = useRef()
 
 	const bankClick = useCallback(
-		(index, isDown) => {
-			console.log('bank', pageNumber, index, isDown)
-			if (!actionsRef.current?.bankClick(index, isDown)) {
-				buttonGridClick(pageNumber, index, isDown)
+		(location, isDown) => {
+			if (!actionsRef.current?.bankClick(location, isDown)) {
+				buttonGridClick(location, isDown)
 			}
 		},
-		[buttonGridClick, pageNumber]
+		[buttonGridClick]
 	)
 
 	const setPage = useCallback(
@@ -259,13 +258,12 @@ const ButtonGridActions = forwardRef(function ButtonGridActions({ isHot, pageNum
 	useImperativeHandle(
 		ref,
 		() => ({
-			bankClick(index, isDown) {
+			bankClick(location, isDown) {
 				if (isDown) {
 					switch (activeFunction) {
 						case 'delete':
 							resetRef.current.show('Clear bank', `Clear style and actions for this button?`, 'Clear', () => {
-								const controlId = CreateBankControlId(pageNumber, index)
-								socketEmitPromise(socket, 'controls:reset', [controlId]).catch((e) => {
+								socketEmitPromise(socket, 'controls:reset', [location]).catch((e) => {
 									console.error(`Reset failed: ${e}`)
 								})
 							})
@@ -275,35 +273,23 @@ const ButtonGridActions = forwardRef(function ButtonGridActions({ isHot, pageNum
 						case 'copy':
 							if (activeFunctionButton) {
 								const fromInfo = activeFunctionButton
-								socketEmitPromise(socket, 'controls:copy', [
-									CreateBankControlId(fromInfo.page, fromInfo.bank),
-									CreateBankControlId(pageNumber, index),
-								]).catch((e) => {
+								socketEmitPromise(socket, 'controls:copy', [fromInfo, location]).catch((e) => {
 									console.error(`copy failed: ${e}`)
 								})
 								stopFunction()
 							} else {
-								setActiveFunctionButton({
-									page: pageNumber,
-									bank: index,
-								})
+								setActiveFunctionButton(location)
 							}
 							return true
 						case 'move':
 							if (activeFunctionButton) {
 								const fromInfo = activeFunctionButton
-								socketEmitPromise(socket, 'controls:move', [
-									CreateBankControlId(fromInfo.page, fromInfo.bank),
-									CreateBankControlId(pageNumber, index),
-								]).catch((e) => {
+								socketEmitPromise(socket, 'controls:move', [fromInfo, location]).catch((e) => {
 									console.error(`move failed: ${e}`)
 								})
 								stopFunction()
 							} else {
-								setActiveFunctionButton({
-									page: pageNumber,
-									bank: index,
-								})
+								setActiveFunctionButton(location)
 							}
 							return true
 						default:
@@ -467,8 +453,8 @@ export const ButtonGridHeader = memo(function ButtonGridHeader({
 export function ButtonGrid({ bankClick, pageNumber, selectedButton }) {
 	const buttonCache = useContext(ButtonRenderCacheContext)
 
-	const gridId = useMemo(() => nanoid(), [])
-	const pageImages = useSharedPageRenderCache(buttonCache, gridId, pageNumber)
+	const sessionId = useMemo(() => nanoid(), [])
+	const images = useSharedPageRenderCache(buttonCache, sessionId, pageNumber)
 
 	return (
 		<div
@@ -488,17 +474,19 @@ export function ButtonGrid({ bankClick, pageNumber, selectedButton }) {
 							{Array(MAX_COLS)
 								.fill(0)
 								.map((_, x) => {
-									const index = y * MAX_COLS + x + 1
-									const controlId = CreateBankControlId(pageNumber, index)
 									return (
 										<ButtonGridIcon
 											key={x}
-											page={pageNumber}
-											index={index}
-											preview={pageImages[index]}
+											pageNumber={pageNumber}
+											column={x}
+											row={y}
+											preview={images?.[y]?.[x]}
 											onClick={bankClick}
-											alt={`Button ${index}`}
-											selected={selectedButton === controlId}
+											selected={
+												selectedButton?.pageNumber === pageNumber &&
+												selectedButton?.column === x &&
+												selectedButton?.row === y
+											}
 										/>
 									)
 								})}
@@ -509,21 +497,20 @@ export function ButtonGrid({ bankClick, pageNumber, selectedButton }) {
 	)
 }
 
-const ButtonGridIcon = memo(function ButtonGridIcon(props) {
+const ButtonGridIcon = memo(function ButtonGridIcon({ pageNumber, column, row, ...props }) {
 	const socket = useContext(SocketContext)
+
+	const location = useMemo(() => ({ pageNumber, column, row }), [pageNumber, column, row])
 
 	const [{ isOver, canDrop }, drop] = useDrop({
 		accept: 'preset',
 		drop: (dropData) => {
 			console.log('preset drop', dropData)
-			socketEmitPromise(socket, 'presets:import_to_bank', [
-				dropData.instanceId,
-				dropData.presetId,
-				props.page,
-				props.index,
-			]).catch((e) => {
-				console.error('Preset import failed')
-			})
+			socketEmitPromise(socket, 'presets:import_to_bank', [dropData.instanceId, dropData.presetId, location]).catch(
+				(e) => {
+					console.error('Preset import failed')
+				}
+			)
 		},
 		collect: (monitor) => ({
 			isOver: !!monitor.isOver(),
@@ -531,6 +518,16 @@ const ButtonGridIcon = memo(function ButtonGridIcon(props) {
 		}),
 	})
 
-	const title = `${props.page}.${props.index}`
-	return <ButtonPreview {...props} dropRef={drop} dropHover={isOver} canDrop={canDrop} alt={title} title={title} />
+	const title = formatLocation(location)
+	return (
+		<ButtonPreview
+			{...props}
+			location={location}
+			dropRef={drop}
+			dropHover={isOver}
+			canDrop={canDrop}
+			alt={title}
+			title={title}
+		/>
+	)
 })

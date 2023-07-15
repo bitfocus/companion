@@ -6,7 +6,6 @@ import { PRIMARY_COLOR } from './Constants'
 import { BarLoader } from 'react-spinners'
 import { applyPatch } from 'fast-json-patch'
 import { cloneDeep } from 'lodash-es'
-import { ParseControlId } from '@companion/shared/ControlId'
 import { useEventListener } from 'usehooks-ts'
 
 export const SocketContext = React.createContext(null)
@@ -207,16 +206,6 @@ export function LoadingRetryOrError({ error, dataReady, doRetry, autoRetryAfter 
 			)}
 		</>
 	)
-}
-
-export function FormatButtonControlId(controlId) {
-	const parsed = ParseControlId(controlId)
-
-	if (parsed && parsed.type === 'bank') {
-		return `${parsed.page}.${parsed.bank}`
-	} else {
-		return controlId
-	}
 }
 
 export function applyPatchOrReplaceSubObject(oldDefinitions, key, patch, defVal = {}) {

@@ -66,21 +66,21 @@ export const ButtonPreview = React.memo(function (props) {
 		<div
 			ref={props.dropRef}
 			className={classnames(classes)}
-			onMouseDown={() => props?.onClick?.(props.index, true)}
-			onMouseUp={() => props?.onClick?.(props.index, false)}
+			onMouseDown={() => props?.onClick?.(props.location, true)}
+			onMouseUp={() => props?.onClick?.(props.location, false)}
 			onTouchStart={(e) => {
 				e.preventDefault()
-				props?.onClick?.(props.index, true)
+				props?.onClick?.(props.location, true)
 			}}
 			onTouchEnd={(e) => {
 				e.preventDefault()
-				props?.onClick?.(props.index, false)
+				props?.onClick?.(props.location, false)
 			}}
 			onTouchCancel={(e) => {
 				e.preventDefault()
 				e.stopPropagation()
 
-				props?.onClick?.(props.index, false)
+				props?.onClick?.(props.location, false)
 			}}
 			onContextMenu={(e) => {
 				e.preventDefault()

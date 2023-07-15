@@ -1,4 +1,4 @@
-import React, { useCallback, useContext, useEffect, useState } from 'react'
+import React, { useCallback, useContext, useEffect, useMemo, useState } from 'react'
 import { CButton, CCol, CRow, CSelect } from '@coreui/react'
 import {
 	InstancesContext,
@@ -9,7 +9,7 @@ import {
 	socketEmitPromise,
 } from '../../util'
 import { ButtonPreview, dataToButtonImage } from '../../Components/ButtonPreview'
-import { CreateBankControlId } from '@companion/shared/ControlId'
+import { formatLocation } from '@companion/shared/ControlId'
 import { MAX_COLS, MAX_ROWS } from '../../Constants'
 import { ButtonGrid, ButtonGridHeader, usePagePicker } from '../../Buttons/ButtonGrid'
 
@@ -179,9 +179,19 @@ function ButtonImportGrid({ page }) {
 							{Array(MAX_COLS)
 								.fill(0)
 								.map((_, x) => {
-									const index = y * MAX_COLS + x + 1
+									const location = {
+										pageNumber: page,
+										column: x,
+										row: y,
+									}
 									return (
-										<ButtonImportPreview key={x} controlId={CreateBankControlId(page, index)} alt={`Button ${index}`} />
+										<ButtonImportPreview
+											key={x}
+											pageNumber={page}
+											column={x}
+											row={y}
+											alt={`Button ${formatLocation(location)}`}
+										/>
 									)
 								})}
 						</CCol>
@@ -191,21 +201,27 @@ function ButtonImportGrid({ page }) {
 	)
 }
 
-function ButtonImportPreview({ controlId, instanceId, ...childProps }) {
+function ButtonImportPreview({ pageNumber, column, row, instanceId, ...childProps }) {
 	const socket = useContext(SocketContext)
 	const [previewImage, setPreviewImage] = useState(null)
 
 	useEffect(() => {
 		setPreviewImage(null)
 
-		socketEmitPromise(socket, 'loadsave:control-preview', [controlId])
+		socketEmitPromise(socket, 'loadsave:control-preview', [
+			{
+				pageNumber,
+				column,
+				row,
+			},
+		])
 			.then((img) => {
 				setPreviewImage(img ? dataToButtonImage(img) : null)
 			})
 			.catch((e) => {
 				console.error(`Failed to preview bank: ${e}`)
 			})
-	}, [controlId, socket])
+	}, [pageNumber, column, row, socket])
 
 	return <ButtonPreview {...childProps} preview={previewImage} />
 }

@@ -16,6 +16,7 @@ import { ButtonPreview, dataToButtonImage } from '../Components/ButtonPreview'
 import { MAX_COLS, MAX_ROWS } from '../Constants'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faCancel, faExpand } from '@fortawesome/free-solid-svg-icons'
+import { formatLocation } from '@companion/shared/ControlId'
 
 export function Emulator() {
 	const socket = useContext(SocketContext)
@@ -68,11 +69,27 @@ export function Emulator() {
 	useEffect(() => {
 		const updateImages = (newImages) => {
 			setImageCache((old) => {
-				const res = { ...old }
-				for (const [key, data] of Object.entries(newImages)) {
-					res[key] = data ? dataToButtonImage(data) : undefined
+				if (Array.isArray(newImages)) {
+					const res = { ...old }
+
+					for (const change of newImages) {
+						res[change.y] = { ...res[change.y] }
+						res[change.y][change.x] = change.buffer ? dataToButtonImage(change.buffer) : undefined
+					}
+
+					return res
+				} else {
+					const res = {}
+
+					for (const [y, yObj] of Object.entries(newImages)) {
+						res[y] = {}
+						for (const [x, data] of Object.entries(yObj)) {
+							res[y][x] = data ? dataToButtonImage(data) : undefined
+						}
+					}
+
+					return res
 				}
-				return res
 			})
 		}
 
@@ -99,19 +116,21 @@ export function Emulator() {
 	useEffect(() => {
 		const onKeyDown = (e) => {
 			if (keymap[e.keyCode] !== undefined) {
-				socketEmitPromise(socket, 'emulator:press', [emulatorId, keymap[e.keyCode]]).catch((e) => {
+				const xy = keymap[e.keyCode]
+				socketEmitPromise(socket, 'emulator:press', [emulatorId, ...xy]).catch((e) => {
 					console.error('press failed', e)
 				})
-				console.log('emulator:press', emulatorId, keymap[e.keyCode])
+				console.log('emulator:press', emulatorId, xy)
 			}
 		}
 
 		const onKeyUp = (e) => {
-			if (keymap[e.keyCode] !== undefined) {
-				socketEmitPromise(socket, 'emulator:release', [emulatorId, keymap[e.keyCode]]).catch((e) => {
+			const xy = keymap[e.keyCode]
+			if (xy) {
+				socketEmitPromise(socket, 'emulator:release', [emulatorId, ...xy]).catch((e) => {
 					console.error('release failed', e)
 				})
-				console.log('emulator:release', emulatorId, keymap[e.keyCode])
+				console.log('emulator:release', emulatorId, xy)
 			}
 		}
 
@@ -127,13 +146,13 @@ export function Emulator() {
 	useEffect(() => {
 		// handle changes to keyDown, as it isnt safe to do inside setState
 		if (keyDown) {
-			socketEmitPromise(socket, 'emulator:press', [emulatorId, keyDown]).catch((e) => {
+			socketEmitPromise(socket, 'emulator:press', [emulatorId, keyDown.column, keyDown.row]).catch((e) => {
 				console.error('press failed', e)
 			})
 			console.log('emulator:press', emulatorId, keyDown)
 
 			return () => {
-				socketEmitPromise(socket, 'emulator:release', [emulatorId, keyDown]).catch((e) => {
+				socketEmitPromise(socket, 'emulator:release', [emulatorId, keyDown.column, keyDown.row]).catch((e) => {
 					console.error('release failed', e)
 				})
 				console.log('emulator:release', emulatorId, keyDown)
@@ -162,7 +181,7 @@ export function Emulator() {
 					<>
 						<ConfigurePanel config={config} />
 
-						<CyclePages emulatorId={emulatorId} imageCache={imageCache} />
+						<CyclePages imageCache={imageCache} setKeyDown={setKeyDown} />
 					</>
 				) : (
 					<CRow>
@@ -223,8 +242,7 @@ function ConfigurePanel({ config }) {
 // 	return Math.min(Math.max(0, val), max)
 // }
 
-function CyclePages({ emulatorId, imageCache }) {
-	const socket = useContext(SocketContext)
+function CyclePages({ imageCache, setKeyDown }) {
 	// const goPrevPage = useCallback(() => {
 	// 	// if (currentIndex <= 0) {
 	// 	// 	if (loop) {
@@ -248,14 +266,14 @@ function CyclePages({ emulatorId, imageCache }) {
 	// }, [])
 
 	const bankClick = useCallback(
-		(bank, pressed) => {
-			const command = pressed ? 'emulator:press' : 'emulator:release'
-			socketEmitPromise(socket, command, [emulatorId, bank]).catch((e) => {
-				console.error(`${command} failed`, e)
-			})
-			console.log(command, emulatorId, bank)
+		(location, pressed) => {
+			if (pressed) {
+				setKeyDown(location)
+			} else {
+				setKeyDown(null)
+			}
 		},
-		[socket, emulatorId]
+		[setKeyDown]
 	)
 
 	const cols = 8
@@ -292,14 +310,15 @@ function CyclePages({ emulatorId, imageCache }) {
 										{Array(Math.min(MAX_COLS, cols))
 											.fill(0)
 											.map((_2, x) => {
-												const index = y * MAX_COLS + x
 												return (
-													<ButtonPreview
+													<ButtonPreview2
 														key={x}
-														index={index}
-														preview={imageCache[index]}
+														pageNumber={null}
+														column={x}
+														row={y}
+														preview={imageCache[y]?.[x]}
 														onClick={bankClick}
-														alt={`Button ${index}`}
+														alt={`Button ${formatLocation(location)}`}
 														selected={false}
 													/>
 												)
@@ -312,4 +331,9 @@ function CyclePages({ emulatorId, imageCache }) {
 			</div>
 		</CRow>
 	)
+}
+
+function ButtonPreview2({ pageNumber, column, row, ...props }) {
+	const location = useMemo(() => ({ pageNumber, column, row }), [pageNumber, column, row])
+	return <ButtonPreview {...props} location={location} />
 }

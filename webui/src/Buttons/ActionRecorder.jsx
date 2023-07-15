@@ -9,7 +9,7 @@ import {
 	TriggersContext,
 	PreventDefaultHandler,
 } from '../util'
-import { CreateTriggerControlId, CreateBankControlId } from '@companion/shared/ControlId'
+import { CreateTriggerControlId } from '@companion/shared/ControlId'
 import {
 	CButton,
 	CAlert,
@@ -233,13 +233,14 @@ function ButtonPicker({ selectButton }) {
 	const [selectedSet, setSelectedSet] = useState(null)
 
 	const bankClick = useCallback(
-		(bank, pressed) => {
-			if (pressed) {
-				setSelectedControl(CreateBankControlId(pageNumber, bank))
+		(location, pressed) => {
+			const controlId = pages[pageNumber]?.controls?.[location.row]?.[location.column]
+			if (pressed && controlId) {
+				setSelectedControl(controlId)
 				setSelectedSet(null)
 			}
 		},
-		[pageNumber]
+		[pages[pageNumber]]
 	)
 
 	const replaceActions = useCallback(() => {
@@ -656,7 +657,7 @@ function RecorderSession({ sessionId, sessionInfo }) {
 	return (
 		<CCol xs={12} className="flex-form">
 			<ActionsList
-				isOnControl={false}
+				location={undefined}
 				dragId={'triggerAction'}
 				actions={sessionInfo.actions}
 				readonly={!!sessionInfo.isRunning}

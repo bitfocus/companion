@@ -238,7 +238,7 @@ function PresetIconPreview({ preset, instanceId, ...childProps }) {
 			})
 	}, [preset.id, socket, instanceId, retryToken])
 
-	const onClick = useCallback((i, isDown) => isDown && setRetryToken(nanoid()), [])
+	const onClick = useCallback((_location, isDown) => isDown && setRetryToken(nanoid()), [])
 
 	return (
 		<ButtonPreview
