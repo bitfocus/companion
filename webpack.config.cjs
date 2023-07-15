@@ -1,6 +1,6 @@
 const path = require('path')
 const fs = require('fs')
-const SentryWebpackPlugin = require('@sentry/webpack-plugin')
+const { sentryWebpackPlugin } = require('@sentry/webpack-plugin')
 
 const sentryAuthToken = process.env.SENTRY_AUTH_TOKEN
 
@@ -74,15 +74,17 @@ module.exports = {
 	},
 	plugins: [
 		sentryAuthToken
-			? new SentryWebpackPlugin({
+			? sentryWebpackPlugin({
 					url: 'https://sentry.bitfocus.io/',
 					authToken: sentryAuthToken,
 
 					org: 'bitfocus',
 					project: 'companion',
 
-					include: distPath,
-					urlPrefix: '~/',
+					sourcemaps: {
+						assets: [path.join(distPath, '**')],
+						deleteFilesAfterUpload: [path.join(distPath, '**/*.map')],
+					},
 
 					// Auth tokens can be obtained from https://sentry.io/settings/account/api/auth-tokens/
 					// and needs the `project:releases` and `org:read` scopes
