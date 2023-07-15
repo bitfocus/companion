@@ -81,12 +81,6 @@ module.exports = {
 					org: 'bitfocus',
 					project: 'companion',
 
-					// HACK: use the legacy method for now, as bitfocus sentry is too old to support the new way
-					uploadLegacySourcemaps: {
-						include: distPath,
-						urlPrefix: '~/',
-					},
-
 					// sourcemaps: {
 					// 	assets: [path.join(distPath, '**')],
 					// 	deleteFilesAfterUpload: [path.join(distPath, '**/*.map')],
@@ -95,7 +89,15 @@ module.exports = {
 					// Auth tokens can be obtained from https://sentry.io/settings/account/api/auth-tokens/
 					// and needs the `project:releases` and `org:read` scopes
 
-					release: `companion@${buildFile}`,
+					release: {
+						name: `companion@${buildFile}`,
+
+						// HACK: use the legacy method for now, as bitfocus sentry is too old to support the new way
+						uploadLegacySourcemaps: {
+							paths: [distPath],
+							urlPrefix: '~/',
+						},
+					},
 			  })
 			: '',
 	].filter(Boolean),
