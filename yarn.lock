@@ -633,6 +633,18 @@
     node-addon-api "^5.0.0"
     pkg-prebuilds "~0.1.0"
 
+"@julusian/skia-canvas@^1.0.4":
+  version "1.0.4"
+  resolved "https://registry.yarnpkg.com/@julusian/skia-canvas/-/skia-canvas-1.0.4.tgz#c0119526d3ad5585cec961409497cb7b5ab3776a"
+  integrity sha512-k5RXtBab/IMJPV2E/dv2a9MZ34VEdmT+oHFsVO5NxB7+FjI6JO2QNUadLhQiGv9r7l8BMn0Ze+mGQPRTAYmaZg==
+  dependencies:
+    "@mapbox/node-pre-gyp" "^1.0.9"
+    cargo-cp-artifact "^0.1"
+    glob "^8.0.3"
+    path-browserify "^1.0.1"
+    simple-get "^4.0.1"
+    string-split-by "^1.0.0"
+
 "@loupedeck/core@1.0.0":
   version "1.0.0"
   resolved "https://registry.yarnpkg.com/@loupedeck/core/-/core-1.0.0.tgz#d002c82b73e4f01315032c0e8e9c60f4c090bf20"
@@ -5172,18 +5184,6 @@ sisteransi@^1.0.5:
   version "1.0.5"
   resolved "https://registry.yarnpkg.com/sisteransi/-/sisteransi-1.0.5.tgz#134d681297756437cc05ca01370d3a7a571075ed"
   integrity sha512-bLGGlR1QxBcynn2d5YmDX4MGjlZvy2MRBDRNHLJ8VI6l6+9FUiyTFNJ0IveOSP0bcXgVDPRcfGqA0pjaqUpfVg==
-
-skia-canvas@^1.0.1:
-  version "1.0.1"
-  resolved "https://registry.yarnpkg.com/skia-canvas/-/skia-canvas-1.0.1.tgz#d0f6a4c99f273bb79311afa6e4410e09d5bb61b5"
-  integrity sha512-/HtZlmib2BD3Fi6P4ZywSq7VquPl2A1Frc0pA+xD5hJSvSzN7FoOJpBWDpDd0e1ByzrVO6ZIjO98dNSQ2XqlKw==
-  dependencies:
-    "@mapbox/node-pre-gyp" "^1.0.9"
-    cargo-cp-artifact "^0.1"
-    glob "^8.0.3"
-    path-browserify "^1.0.1"
-    simple-get "^4.0.1"
-    string-split-by "^1.0.0"
 
 slash@^3.0.0:
   version "3.0.0"
