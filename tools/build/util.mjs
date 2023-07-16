@@ -29,9 +29,8 @@ export function determinePlatformInfo(platform) {
 	} else if (platform === 'win-x64' || platform === 'win32-x64') {
 		return expandMissing({
 			electronBuilderArgs: ['--x64', '--win'],
-			runtimePlatform: 'win32',
-			runtimeArch: 'x64',
 			runtimePlatform: 'win',
+			runtimeArch: 'x64',
 		})
 	} else if (platform === 'linux-x64') {
 		return expandMissing({

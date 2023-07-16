@@ -1,6 +1,6 @@
 #!/usr/bin/env zx
 
-import { fetch, fs } from 'zx'
+import { fetch, fs, glob } from 'zx'
 import { createWriteStream } from 'node:fs'
 import { pipeline } from 'node:stream'
 import { promisify } from 'node:util'
@@ -57,11 +57,35 @@ if (isZip) {
 await fs.remove(path.join(runtimeDir, 'share'))
 await fs.remove(path.join(runtimeDir, 'include'))
 
-// Prune out any prebuilds from other platforms
-// TODO
-
 // Install dependencies
 await $`yarn --cwd dist install`
+
+// Prune out any prebuilds from other platforms
+if (platformInfo.runtimePlatform === 'win') {
+	// Electron-builder fails trying to sign `.node` files from other platforms
+	async function pruneContentsOfDir(dirname) {
+		const contents = await fs.readdir(dirname)
+		for (const subdir of contents) {
+			// TODO - test if it is a node file, or contains one?
+			// TODO - cross-platform matching?
+			if (
+				subdir.includes('android') ||
+				subdir.includes('linux') ||
+				subdir.includes('darwin') ||
+				subdir.includes('ia32')
+			) {
+				await fs.remove(path.join(dirname, subdir))
+			}
+		}
+	}
+
+	const prebuildDirs = await glob('dist/**/prebuilds', { onlyDirectories: true })
+	console.log(`Cleaning ${prebuildDirs.length} prebuild directories`)
+	for (const dirname of prebuildDirs) {
+		console.log(`pruning prebuilds from: ${dirname}`)
+		await pruneContentsOfDir(dirname)
+	}
+}
 
 if (!process.env.SKIP_LAUNCH_CHECK) {
 	const launchCheck = await $`node dist/main.js check-launches`.exitCode
