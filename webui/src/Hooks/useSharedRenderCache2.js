@@ -16,7 +16,7 @@ export function useButtonRenderCache(location, disable = false) {
 
 	// TODO - should these be managed a bit more centrally, and batched? It is likely that lots of subscribe/unsubscribe calls will happen at once (changing page/scrolling)
 
-	const [imageState, setImageState] = useState(null)
+	const [imageState, setImageState] = useState({ image: null, isUsed: false })
 
 	useEffect(() => {
 		if (disable) return
@@ -24,20 +24,20 @@ export function useButtonRenderCache(location, disable = false) {
 		let terminated = false
 
 		socketEmitPromise(socket, 'preview:location:subscribe', [location, subId])
-			.then((image) => {
+			.then((imageData) => {
 				if (terminated) {
 					socketEmitPromise(socket, 'preview:location:unsubscribe', [location, subId]).catch((e) => {
 						console.error(e)
 					})
 				} else {
-					setImageState(image)
+					setImageState(imageData)
 				}
 			})
 			.catch((e) => {
 				console.error(e)
 			})
 
-		const changeHandler = (renderLocation, render) => {
+		const changeHandler = (renderLocation, image, isUsed) => {
 			if (terminated) return
 
 			if (
@@ -45,7 +45,7 @@ export function useButtonRenderCache(location, disable = false) {
 				location.row === renderLocation.row &&
 				location.column === renderLocation.column
 			) {
-				setImageState(render)
+				setImageState({ image, isUsed })
 			}
 		}
 

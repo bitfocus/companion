@@ -123,7 +123,7 @@ const ButtonGridIcon = memo(function ButtonGridIcon({ pageNumber, column, row, .
 
 	const location = useMemo(() => ({ pageNumber, column, row }), [pageNumber, column, row])
 
-	const image = useButtonRenderCache(location)
+	const { image, isUsed } = useButtonRenderCache(location)
 
 	const [{ isOver, canDrop }, drop] = useDrop({
 		accept: 'preset',
@@ -152,7 +152,7 @@ const ButtonGridIcon = memo(function ButtonGridIcon({ pageNumber, column, row, .
 			alt={title}
 			title={title}
 			placeholder={`${location.row}/${location.column}`}
-			preview={image}
+			preview={isUsed ? image : null}
 		/>
 	)
 })
