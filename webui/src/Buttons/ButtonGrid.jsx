@@ -10,14 +10,7 @@ import React, {
 	useState,
 	useMemo,
 } from 'react'
-import {
-	KeyReceiver,
-	PagesContext,
-	socketEmitPromise,
-	SocketContext,
-	ButtonRenderCacheContext,
-	UserConfigContext,
-} from '../util'
+import { KeyReceiver, PagesContext, socketEmitPromise, SocketContext, ButtonRenderCacheContext } from '../util'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import {
 	faArrowsAlt,
@@ -491,17 +484,12 @@ function generateNumbers(count, start = 0) {
 
 export function ButtonGrid({ bankClick, pageNumber, selectedButton }) {
 	const buttonCache = useContext(ButtonRenderCacheContext)
-	const userConfig = useContext(UserConfigContext)
 
 	const sessionId = useMemo(() => nanoid(), [])
 	const images = useSharedPageRenderCache(buttonCache, sessionId, pageNumber)
 
-	const rowNumbers = userConfig?.experiment_enlarged_grid
-		? generateNumbers(MAX_ROWS * 2, -MAX_ROWS / 2)
-		: generateNumbers(MAX_ROWS)
-	const colNumbers = userConfig?.experiment_enlarged_grid
-		? generateNumbers(MAX_COLS * 2, -MAX_COLS / 2)
-		: generateNumbers(MAX_COLS)
+	const rowNumbers = generateNumbers(MAX_ROWS * 2, -MAX_ROWS / 2)
+	const colNumbers = generateNumbers(MAX_COLS * 2, -MAX_COLS / 2)
 
 	return (
 		<div

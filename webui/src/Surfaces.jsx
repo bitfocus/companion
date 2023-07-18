@@ -282,7 +282,6 @@ export const SurfacesPage = memo(function SurfacesPage() {
 
 const SurfaceEditModal = forwardRef(function SurfaceEditModal(_props, ref) {
 	const socket = useContext(SocketContext)
-	const userConfig = useContext(UserConfigContext)
 
 	const [deviceInfo, setDeviceInfo] = useState(null)
 	const [show, setShow] = useState(false)
@@ -366,15 +365,6 @@ const SurfaceEditModal = forwardRef(function SurfaceEditModal(_props, ref) {
 		[socket, deviceInfo?.id]
 	)
 
-	const maxHorizontalOffset =
-		deviceInfo?.configFields?.includes('emulator_size') && deviceConfig
-			? MAX_COLS - deviceConfig.emulator_columns
-			: deviceConfigInfo?.xOffsetMax
-	const maxVerticalOffset =
-		deviceInfo?.configFields?.includes('emulator_size') && deviceConfig
-			? MAX_ROWS - deviceConfig.emulator_rows
-			: deviceConfigInfo?.yOffsetMax
-
 	return (
 		<CModal show={show} onClose={doClose} onClosed={onClosed}>
 			<CModalHeader closeButton>
@@ -412,119 +402,54 @@ const SurfaceEditModal = forwardRef(function SurfaceEditModal(_props, ref) {
 							/>
 							<span>{deviceConfig.page}</span>
 						</CFormGroup>
-						{deviceInfo.configFields?.includes('emulator_size') &&
-							(userConfig?.experiment_enlarged_grid ? (
-								<>
-									<CFormGroup>
-										<CLabel htmlFor="page">Row count</CLabel>
-										<CInput
-											name="emulator_rows"
-											type="number"
-											min={1}
-											step={1}
-											value={deviceConfig.emulator_rows}
-											onChange={(e) => updateConfig('emulator_rows', parseInt(e.currentTarget.value))}
-										/>
-									</CFormGroup>
-									<CFormGroup>
-										<CLabel htmlFor="page">Column count</CLabel>
-										<CInput
-											name="emulator_columns"
-											type="number"
-											min={1}
-											step={1}
-											value={deviceConfig.emulator_columns}
-											onChange={(e) => updateConfig('emulator_columns', parseInt(e.currentTarget.value))}
-										/>
-									</CFormGroup>
-								</>
-							) : (
-								<>
-									<CFormGroup>
-										<CLabel htmlFor="page">Row count</CLabel>
-										<CInput
-											name="emulator_rows"
-											type="range"
-											min={1}
-											max={MAX_ROWS}
-											step={1}
-											value={deviceConfig.emulator_rows}
-											onChange={(e) => updateConfig('emulator_rows', parseInt(e.currentTarget.value))}
-										/>
-										<span>{deviceConfig.emulator_rows}</span>
-									</CFormGroup>
-									<CFormGroup>
-										<CLabel htmlFor="page">Column count</CLabel>
-										<CInput
-											name="emulator_columns"
-											type="range"
-											min={1}
-											max={MAX_COLS}
-											step={1}
-											value={deviceConfig.emulator_columns}
-											onChange={(e) => updateConfig('emulator_columns', parseInt(e.currentTarget.value))}
-										/>
-										<span>{deviceConfig.emulator_columns}</span>
-									</CFormGroup>
-								</>
-							))}
+						{deviceInfo.configFields?.includes('emulator_size') && (
+							<>
+								<CFormGroup>
+									<CLabel htmlFor="page">Row count</CLabel>
+									<CInput
+										name="emulator_rows"
+										type="number"
+										min={1}
+										step={1}
+										value={deviceConfig.emulator_rows}
+										onChange={(e) => updateConfig('emulator_rows', parseInt(e.currentTarget.value))}
+									/>
+								</CFormGroup>
+								<CFormGroup>
+									<CLabel htmlFor="page">Column count</CLabel>
+									<CInput
+										name="emulator_columns"
+										type="number"
+										min={1}
+										step={1}
+										value={deviceConfig.emulator_columns}
+										onChange={(e) => updateConfig('emulator_columns', parseInt(e.currentTarget.value))}
+									/>
+								</CFormGroup>
+							</>
+						)}
 
-						{userConfig?.experiment_enlarged_grid ? (
-							<CFormGroup>
-								<CLabel htmlFor="page">Horizontal Offset in grid</CLabel>
-								<CInput
-									name="page"
-									type="number"
-									step={1}
-									value={deviceConfig.xOffset}
-									onChange={(e) => updateConfig('xOffset', parseInt(e.currentTarget.value))}
-								/>
-							</CFormGroup>
-						) : (
-							maxHorizontalOffset > 0 && (
-								<CFormGroup>
-									<CLabel htmlFor="page">Horizontal Offset in grid</CLabel>
-									<CInput
-										name="page"
-										type="range"
-										min={0}
-										max={maxHorizontalOffset}
-										step={1}
-										value={deviceConfig.xOffset}
-										onChange={(e) => updateConfig('xOffset', parseInt(e.currentTarget.value))}
-									/>
-									<span>{deviceConfig.xOffset}</span>
-								</CFormGroup>
-							)
-						)}
-						{userConfig?.experiment_enlarged_grid ? (
-							<CFormGroup>
-								<CLabel htmlFor="page">Vertical Offset in grid</CLabel>
-								<CInput
-									name="page"
-									type="number"
-									step={1}
-									value={deviceConfig.yOffset}
-									onChange={(e) => updateConfig('yOffset', parseInt(e.currentTarget.value))}
-								/>
-							</CFormGroup>
-						) : (
-							maxVerticalOffset > 0 && (
-								<CFormGroup>
-									<CLabel htmlFor="page">Vertical Offset in grid</CLabel>
-									<CInput
-										name="page"
-										type="range"
-										min={0}
-										max={maxVerticalOffset}
-										step={1}
-										value={deviceConfig.yOffset}
-										onChange={(e) => updateConfig('yOffset', parseInt(e.currentTarget.value))}
-									/>
-									<span>{deviceConfig.yOffset}</span>
-								</CFormGroup>
-							)
-						)}
+						<CFormGroup>
+							<CLabel htmlFor="page">Horizontal Offset in grid</CLabel>
+							<CInput
+								name="page"
+								type="number"
+								step={1}
+								value={deviceConfig.xOffset}
+								onChange={(e) => updateConfig('xOffset', parseInt(e.currentTarget.value))}
+							/>
+						</CFormGroup>
+						<CFormGroup>
+							<CLabel htmlFor="page">Vertical Offset in grid</CLabel>
+							<CInput
+								name="page"
+								type="number"
+								step={1}
+								value={deviceConfig.yOffset}
+								onChange={(e) => updateConfig('yOffset', parseInt(e.currentTarget.value))}
+							/>
+						</CFormGroup>
+
 						{deviceInfo.configFields?.includes('brightness') && (
 							<CFormGroup>
 								<CLabel htmlFor="brightness">Brightness</CLabel>

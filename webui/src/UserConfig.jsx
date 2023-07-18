@@ -917,20 +917,6 @@ function UserConfigTable() {
 					</td>
 					<td>&nbsp;</td>
 				</tr>
-				<tr>
-					<td>Enlarged Grid</td>
-					<td>
-						<div className="form-check form-check-inline mr-1 float-right">
-							<CSwitch
-								color="success"
-								checked={config.experiment_enlarged_grid}
-								size={'lg'}
-								onChange={(e) => setValue('experiment_enlarged_grid', e.currentTarget.checked)}
-							/>
-						</div>
-					</td>
-					<td>&nbsp;</td>
-				</tr>
 			</tbody>
 		</table>
 	)
