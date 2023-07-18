@@ -1,6 +1,6 @@
 import { formatLocation } from '@companion/shared/ControlId'
 import { ButtonPreview } from '../Components/ButtonPreview'
-import { memo, useCallback, useContext, useMemo, useRef } from 'react'
+import { forwardRef, memo, useCallback, useContext, useImperativeHandle, useMemo, useRef } from 'react'
 import { useDrop } from 'react-dnd'
 import { SocketContext } from '../util'
 import classNames from 'classnames'
@@ -8,7 +8,10 @@ import useScrollPosition from '../Hooks/useScrollPosition'
 import useElementInnerSize from '../Hooks/useElementInnerSize'
 import { useButtonRenderCache } from '../Hooks/useSharedRenderCache2'
 
-export function ButtonInfiniteGrid({ isHot, pageNumber, bankClick, selectedButton }) {
+export const ButtonInfiniteGrid = forwardRef(function ButtonInfiniteGrid(
+	{ isHot, pageNumber, bankClick, selectedButton },
+	ref
+) {
 	const minX = -10
 	const maxX = 20
 	const minY = -10
@@ -21,12 +24,35 @@ export function ButtonInfiniteGrid({ isHot, pageNumber, bankClick, selectedButto
 	const [setSizeElement, windowSize] = useElementInnerSize()
 	const { scrollX, scrollY, setRef: setScrollRef } = useScrollPosition()
 
+	const scrollerRef = useRef(null)
+
+	const resetScrollPosition = useCallback(() => {
+		if (scrollerRef.current) {
+			scrollerRef.current.scrollTop = -minY * tileSize
+			scrollerRef.current.scrollLeft = -minX * tileSize
+		}
+	}, [minX, minY, tileSize])
+
 	const setRef = useCallback(
 		(ref) => {
 			setSizeElement(ref)
 			setScrollRef(ref)
+
+			scrollerRef.current = ref
+			resetScrollPosition()
 		},
-		[setSizeElement, setScrollRef]
+		[setSizeElement, setScrollRef, resetScrollPosition]
+	)
+
+	// Expose reload to the parent
+	useImperativeHandle(
+		ref,
+		() => ({
+			resetPosition() {
+				resetScrollPosition()
+			},
+		}),
+		[resetScrollPosition]
 	)
 
 	const visibleColumns = windowSize.width / tileSize
@@ -90,7 +116,7 @@ export function ButtonInfiniteGrid({ isHot, pageNumber, bankClick, selectedButto
 			</div>
 		</div>
 	)
-}
+})
 
 const ButtonGridIcon = memo(function ButtonGridIcon({ pageNumber, column, row, ...props }) {
 	const socket = useContext(SocketContext)

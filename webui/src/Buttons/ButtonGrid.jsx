@@ -26,6 +26,7 @@ import {
 	faCopy,
 	faEraser,
 	faFileExport,
+	faHome,
 	faTrash,
 } from '@fortawesome/free-solid-svg-icons'
 import classnames from 'classnames'
@@ -116,6 +117,8 @@ export const ButtonsGridPanel = memo(function ButtonsPage({
 
 	const pageName = pageInfo?.name ?? 'PAGE'
 
+	const gridRef = useRef(null)
+
 	const exportModalRef = useRef(null)
 	const showExportModal = useCallback(() => {
 		exportModalRef.current.show(`/int/export/page/${pageNumber}`)
@@ -144,7 +147,17 @@ export const ButtonsGridPanel = memo(function ButtonsPage({
 						>
 							<FontAwesomeIcon icon={faFileExport} /> Export page
 						</CButton>
-
+						&nbsp;
+						<CButton
+							color="light"
+							style={{
+								float: 'right',
+								marginTop: 10,
+							}}
+							onClick={gridRef.current?.resetPosition}
+						>
+							<FontAwesomeIcon icon={faHome} /> Reset Position
+						</CButton>
 						<ButtonGridHeader
 							pageNumber={pageNumber}
 							pageName={newPageName ?? pageName}
@@ -158,6 +171,7 @@ export const ButtonsGridPanel = memo(function ButtonsPage({
 			</div>
 			<div className="button-grid-panel-content">
 				<ButtonInfiniteGrid
+					ref={gridRef}
 					isHot={isHot}
 					pageNumber={pageNumber}
 					bankClick={bankClick}
