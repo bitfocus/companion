@@ -57,6 +57,51 @@ export const ButtonsPage = memo(function ButtonsPage({ hotPress }) {
 	const handleKeyDownInButtons = useCallback(
 		(e) => {
 			if (e.target.tagName !== 'INPUT' && e.target.tagName !== 'TEXTAREA') {
+				switch (e.key) {
+					case 'ArrowDown':
+						setSelectedButton((selectedButton) =>
+							selectedButton ? { ...selectedButton, row: selectedButton.row + 1 } : undefined
+						)
+						// TODO - ensure kept in view
+						// TODO - ensure kept in bounds
+						break
+					case 'ArrowUp':
+						setSelectedButton((selectedButton) =>
+							selectedButton ? { ...selectedButton, row: selectedButton.row - 1 } : undefined
+						)
+						// TODO - ensure kept in view
+						// TODO - ensure kept in bounds
+						break
+					case 'ArrowLeft':
+						setSelectedButton((selectedButton) =>
+							selectedButton ? { ...selectedButton, column: selectedButton.column - 1 } : undefined
+						)
+						// TODO - ensure kept in view
+						// TODO - ensure kept in bounds
+						break
+					case 'ArrowRight':
+						setSelectedButton((selectedButton) =>
+							selectedButton ? { ...selectedButton, column: selectedButton.column + 1 } : undefined
+						)
+						// TODO - ensure kept in view
+						// TODO - ensure kept in bounds
+						break
+					case 'PageUp':
+						setSelectedButton((selectedButton) =>
+							selectedButton ? { ...selectedButton, pageNumber: selectedButton.pageNumber + 1 } : undefined
+						)
+						setPageNumber(selectedButton.pageNumber + 1)
+						// TODO - ensure kept in bounds
+						break
+					case 'PageDown':
+						setSelectedButton((selectedButton) =>
+							selectedButton ? { ...selectedButton, pageNumber: selectedButton.pageNumber - 1 } : undefined
+						)
+						setPageNumber(selectedButton.pageNumber - 1)
+						// TODO - ensure kept in bounds
+						break
+				}
+
 				if (selectedButton) {
 					// keyup with button selected
 
