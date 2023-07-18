@@ -23,7 +23,7 @@ import {
 import { NotificationsManager } from './Components/Notifications'
 import { cloneDeep } from 'lodash-es'
 import jsonPatch from 'fast-json-patch'
-import { ButtonRenderCache } from './ButtonRenderCache'
+import { ButtonRenderCache } from './Hooks/useSharedRenderCache'
 
 export function ContextData({ children }) {
 	const socket = useContext(SocketContext)

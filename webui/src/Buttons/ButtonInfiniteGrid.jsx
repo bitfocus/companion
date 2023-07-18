@@ -6,6 +6,7 @@ import { SocketContext } from '../util'
 import classNames from 'classnames'
 import useScrollPosition from '../Hooks/useScrollPosition'
 import useElementInnerSize from '../Hooks/useElementInnerSize'
+import { useButtonRenderCache } from '../Hooks/useSharedRenderCache2'
 
 export function ButtonInfiniteGrid({ isHot, pageNumber, bankClick, selectedButton }) {
 	const minX = -10
@@ -96,6 +97,8 @@ const ButtonGridIcon = memo(function ButtonGridIcon({ pageNumber, column, row, .
 
 	const location = useMemo(() => ({ pageNumber, column, row }), [pageNumber, column, row])
 
+	const image = useButtonRenderCache(location)
+
 	const [{ isOver, canDrop }, drop] = useDrop({
 		accept: 'preset',
 		drop: (dropData) => {
@@ -123,6 +126,7 @@ const ButtonGridIcon = memo(function ButtonGridIcon({ pageNumber, column, row, .
 			alt={title}
 			title={title}
 			placeholder={`${location.row}/${location.column}`}
+			preview={image}
 		/>
 	)
 })

@@ -17,7 +17,7 @@ import rangeParser from 'parse-numeric-range'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faCog, faExpand } from '@fortawesome/free-solid-svg-icons'
 import { useNavigate } from 'react-router-dom'
-import { ButtonRenderCache, useSharedPageRenderCache } from './ButtonRenderCache'
+import { ButtonRenderCache, useSharedPageRenderCache } from './Hooks/useSharedRenderCache'
 import { formatLocation } from '@companion/shared/ControlId'
 
 export function Tablet() {
