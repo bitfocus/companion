@@ -63,3 +63,35 @@
 .c-sidebar-nav-dropdown-toggle {
 	transition: none;
 }
+
+.button-grid-panel {
+	display: grid;
+	grid-template-rows: auto 1fr auto;
+	height: 100%;
+}
+
+.button-grid-panel-content {
+	overflow: hidden;
+}
+
+.button-infinite-grid {
+	height: 100%;
+	background-color: #222;
+	border-radius: 5px;
+	overflow: scroll;
+
+	&.bank-armed .button-grid-canvas {
+		background-color: rgba(255, 0, 0, 0.5);
+	}
+
+	.button-grid-canvas {
+		position: relative;
+		width: 1000px;
+		height: 1000px;
+
+		.bank {
+			position: absolute;
+			float: left;
+		}
+	}
+}

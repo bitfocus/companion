@@ -38,6 +38,7 @@ import { useSharedPageRenderCache } from '../ButtonRenderCache'
 import Select from 'react-select'
 import { ConfirmExportModal } from '../Components/ConfirmExportModal'
 import { formatLocation } from '@companion/shared/ControlId'
+import { ButtonInfiniteGrid } from './ButtonInfiniteGrid'
 
 export const ButtonsGridPanel = memo(function ButtonsPage({
 	pageNumber,
@@ -121,15 +122,16 @@ export const ButtonsGridPanel = memo(function ButtonsPage({
 	}, [pageNumber])
 
 	return (
-		<KeyReceiver onKeyDown={onKeyDown} tabIndex={0}>
-			<ConfirmExportModal ref={exportModalRef} title="Export Page" />
+		<KeyReceiver onKeyDown={onKeyDown} tabIndex={0} className="button-grid-panel">
+			<div className="button-grid-panel-header">
+				<ConfirmExportModal ref={exportModalRef} title="Export Page" />
 
-			<h4>Buttons</h4>
-			<p>
-				The squares below represent each button on your Streamdeck. Click on them to set up how you want them to look,
-				and what they should do when you press or click on them.
-			</p>
-			<div style={{ paddingRight: 16 }}>
+				<h4>Buttons</h4>
+				<p>
+					The squares below represent each button on your Streamdeck. Click on them to set up how you want them to look,
+					and what they should do when you press or click on them.
+				</p>
+
 				<CRow>
 					<CCol sm={12}>
 						<CButton
@@ -153,11 +155,21 @@ export const ButtonsGridPanel = memo(function ButtonsPage({
 						/>
 					</CCol>
 				</CRow>
+			</div>
+			<div className="button-grid-panel-content">
+				<ButtonInfiniteGrid
+					isHot={isHot}
+					pageNumber={pageNumber}
+					bankClick={bankClick}
+					selectedButton={selectedButton}
+				/>
+				{/* <p>AA</p>
 
 				<CRow className={classnames({ 'bank-armed': isHot, bankgrid: true })}>
 					<ButtonGrid pageNumber={pageNumber} bankClick={bankClick} selectedButton={selectedButton} />
-				</CRow>
-
+				</CRow> */}
+			</div>
+			<div className="button-grid-panel-footer">
 				<CRow style={{ paddingTop: '15px' }}>
 					<ButtonGridActions
 						ref={actionsRef}

@@ -21,6 +21,7 @@ export const ButtonPreview = React.memo(function (props) {
 		<div
 			ref={props.dropRef}
 			className={classnames(classes)}
+			style={props.style}
 			onMouseDown={() => props?.onClick?.(props.location, true)}
 			onMouseUp={() => props?.onClick?.(props.location, false)}
 			onTouchStart={(e) => {
