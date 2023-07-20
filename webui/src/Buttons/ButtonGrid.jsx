@@ -117,6 +117,10 @@ export const ButtonsGridPanel = memo(function ButtonsPage({
 		exportModalRef.current.show(`/int/export/page/${pageNumber}`)
 	}, [pageNumber])
 
+	const resetPosition = useCallback(() => {
+		gridRef.current?.resetPosition()
+	}, [gridRef])
+
 	return (
 		<KeyReceiver onKeyDown={onKeyDown} tabIndex={0} className="button-grid-panel">
 			<div className="button-grid-panel-header">
@@ -147,9 +151,9 @@ export const ButtonsGridPanel = memo(function ButtonsPage({
 								float: 'right',
 								marginTop: 10,
 							}}
-							onClick={gridRef.current?.resetPosition}
+							onClick={resetPosition}
 						>
-							<FontAwesomeIcon icon={faHome} /> Reset Position
+							<FontAwesomeIcon icon={faHome} /> Home Position
 						</CButton>
 						<ButtonGridHeader
 							pageNumber={pageNumber}

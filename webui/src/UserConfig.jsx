@@ -148,6 +148,90 @@ function UserConfigTable() {
 
 				<tr>
 					<th colSpan="3" className="settings-category">
+						Grid
+						<p>TODO - this needs some confirmations as it is destructive</p>
+					</th>
+				</tr>
+
+				<tr>
+					<td>Min Column</td>
+					<td>
+						<div className="form-check form-check-inline mr-1">
+							<CInput
+								type="number"
+								value={config.grid_min_column}
+								max={0}
+								step={1}
+								onChange={(e) => setValue('grid_min_column', e.currentTarget.value)}
+							/>
+						</div>
+					</td>
+					<td>
+						<CButton onClick={() => resetValue('grid_min_column')} title="Reset to default">
+							<FontAwesomeIcon icon={faUndo} />
+						</CButton>
+					</td>
+				</tr>
+				<tr>
+					<td>Max Column</td>
+					<td>
+						<div className="form-check form-check-inline mr-1">
+							<CInput
+								type="number"
+								value={config.grid_max_column}
+								min={0}
+								step={1}
+								onChange={(e) => setValue('grid_max_column', e.currentTarget.value)}
+							/>
+						</div>
+					</td>
+					<td>
+						<CButton onClick={() => resetValue('grid_max_column')} title="Reset to default">
+							<FontAwesomeIcon icon={faUndo} />
+						</CButton>
+					</td>
+				</tr>
+				<tr>
+					<td>Min Row</td>
+					<td>
+						<div className="form-check form-check-inline mr-1">
+							<CInput
+								type="number"
+								value={config.grid_min_row}
+								max={0}
+								step={1}
+								onChange={(e) => setValue('grid_min_row', e.currentTarget.value)}
+							/>
+						</div>
+					</td>
+					<td>
+						<CButton onClick={() => resetValue('grid_min_row')} title="Reset to default">
+							<FontAwesomeIcon icon={faUndo} />
+						</CButton>
+					</td>
+				</tr>
+				<tr>
+					<td>Max Row</td>
+					<td>
+						<div className="form-check form-check-inline mr-1">
+							<CInput
+								type="number"
+								value={config.grid_max_row}
+								min={0}
+								step={1}
+								onChange={(e) => setValue('grid_max_row', e.currentTarget.value)}
+							/>
+						</div>
+					</td>
+					<td>
+						<CButton onClick={() => resetValue('grid_max_row')} title="Reset to default">
+							<FontAwesomeIcon icon={faUndo} />
+						</CButton>
+					</td>
+				</tr>
+
+				<tr>
+					<th colSpan="3" className="settings-category">
 						Surfaces
 					</th>
 				</tr>

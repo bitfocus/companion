@@ -2,7 +2,7 @@ import { formatLocation } from '@companion/shared/ControlId'
 import { ButtonPreview } from '../Components/ButtonPreview'
 import { forwardRef, memo, useCallback, useContext, useImperativeHandle, useMemo, useRef } from 'react'
 import { useDrop } from 'react-dnd'
-import { SocketContext } from '../util'
+import { SocketContext, UserConfigContext } from '../util'
 import classNames from 'classnames'
 import useScrollPosition from '../Hooks/useScrollPosition'
 import useElementInnerSize from '../Hooks/useElementInnerSize'
@@ -12,12 +12,14 @@ export const ButtonInfiniteGrid = forwardRef(function ButtonInfiniteGrid(
 	{ isHot, pageNumber, bankClick, selectedButton },
 	ref
 ) {
-	const minX = -10
-	const maxX = 20
-	const minY = -10
-	const maxY = 15
-	const countX = maxX - minX
-	const countY = maxY - minY
+	const userConfig = useContext(UserConfigContext)
+
+	const minColumn = userConfig.grid_min_column
+	const maxColumn = userConfig.grid_max_column
+	const minRow = userConfig.grid_min_row
+	const maxRow = userConfig.grid_max_row
+	const countColumns = maxColumn - minColumn
+	const countRows = maxRow - minRow
 
 	const tileSize = 84
 
@@ -27,11 +29,12 @@ export const ButtonInfiniteGrid = forwardRef(function ButtonInfiniteGrid(
 	const scrollerRef = useRef(null)
 
 	const resetScrollPosition = useCallback(() => {
+		console.log(scrollerRef.current, -minRow * tileSize, -minColumn * tileSize)
 		if (scrollerRef.current) {
-			scrollerRef.current.scrollTop = -minY * tileSize
-			scrollerRef.current.scrollLeft = -minX * tileSize
+			scrollerRef.current.scrollTop = -minRow * tileSize
+			scrollerRef.current.scrollLeft = -minColumn * tileSize
 		}
-	}, [minX, minY, tileSize])
+	}, [minColumn, minRow, tileSize])
 
 	const setRef = useCallback(
 		(ref) => {
@@ -61,17 +64,17 @@ export const ButtonInfiniteGrid = forwardRef(function ButtonInfiniteGrid(
 	// Calculate the extents of what is visible
 	const scrollColumn = scrollX / tileSize
 	const scrollRow = scrollY / tileSize
-	const visibleMinX = minX + scrollColumn
+	const visibleMinX = minColumn + scrollColumn
 	const visibleMaxX = visibleMinX + visibleColumns
-	const visibleMinY = minY + scrollRow
+	const visibleMinY = minRow + scrollRow
 	const visibleMaxY = visibleMinY + visibleRows
 
 	// Calculate the bounds of what to draw in the DOM
 	// Include some spill to make scrolling smoother, but not too much to avoid being a performance drain
-	const drawMinColumn = Math.max(Math.floor(visibleMinX - visibleColumns / 2), minX)
-	const drawMaxColumn = Math.min(Math.ceil(visibleMaxX + visibleColumns / 2), maxX)
-	const drawMinRow = Math.max(Math.floor(visibleMinY - visibleRows / 2), minY)
-	const drawMaxRow = Math.min(Math.ceil(visibleMaxY + visibleRows / 2), maxY)
+	const drawMinColumn = Math.max(Math.floor(visibleMinX - visibleColumns / 2), minColumn)
+	const drawMaxColumn = Math.min(Math.ceil(visibleMaxX + visibleColumns / 2), maxColumn)
+	const drawMinRow = Math.max(Math.floor(visibleMinY - visibleRows / 2), minRow)
+	const drawMaxRow = Math.min(Math.ceil(visibleMaxY + visibleRows / 2), maxRow)
 
 	const visibleButtons = []
 	for (let row = drawMinRow; row <= drawMaxRow; row++) {
@@ -90,8 +93,8 @@ export const ButtonInfiniteGrid = forwardRef(function ButtonInfiniteGrid(
 						selectedButton?.row === row
 					}
 					style={{
-						left: (column - minX) * tileSize,
-						top: (row - minY) * tileSize,
+						left: (column - minColumn) * tileSize,
+						top: (row - minRow) * tileSize,
 					}}
 				/>
 			)
@@ -108,8 +111,8 @@ export const ButtonInfiniteGrid = forwardRef(function ButtonInfiniteGrid(
 			<div
 				className="button-grid-canvas"
 				style={{
-					width: countX * tileSize,
-					height: countY * tileSize,
+					width: countColumns * tileSize,
+					height: countRows * tileSize,
 				}}
 			>
 				{visibleButtons}
