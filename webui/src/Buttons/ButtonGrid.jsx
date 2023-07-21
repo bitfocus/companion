@@ -10,7 +10,14 @@ import React, {
 	useState,
 	useMemo,
 } from 'react'
-import { KeyReceiver, PagesContext, socketEmitPromise, SocketContext, ButtonRenderCacheContext } from '../util'
+import {
+	KeyReceiver,
+	PagesContext,
+	socketEmitPromise,
+	SocketContext,
+	ButtonRenderCacheContext,
+	UserConfigContext,
+} from '../util'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import {
 	faArrowsAlt,
@@ -45,6 +52,7 @@ export const ButtonsGridPanel = memo(function ButtonsPage({
 }) {
 	const socket = useContext(SocketContext)
 	const pages = useContext(PagesContext)
+	const userConfig = useContext(UserConfigContext)
 	const pagesRef = useRef()
 
 	useEffect(() => {
@@ -121,6 +129,37 @@ export const ButtonsGridPanel = memo(function ButtonsPage({
 		gridRef.current?.resetPosition()
 	}, [gridRef])
 
+	const gridSize = useMemo(
+		() => ({
+			minColumn: userConfig.grid_min_column,
+			maxColumn: userConfig.grid_max_column,
+			minRow: userConfig.grid_min_row,
+			maxRow: userConfig.grid_max_row,
+		}),
+		[userConfig.grid_min_column, userConfig.grid_max_column, userConfig.grid_min_row, userConfig.grid_max_row]
+	)
+
+	const doGrow = useCallback(
+		(direction, amount) => {
+			console.log('grow', direction, amount)
+			switch (direction) {
+				case 'left':
+					socket.emit('set_userconfig_key', 'grid_min_column', gridSize.minColumn - (amount || 2))
+					break
+				case 'right':
+					socket.emit('set_userconfig_key', 'grid_max_column', gridSize.maxColumn + (amount || 2))
+					break
+				case 'top':
+					socket.emit('set_userconfig_key', 'grid_min_row', gridSize.minRow - (amount || 2))
+					break
+				case 'bottom':
+					socket.emit('set_userconfig_key', 'grid_max_row', gridSize.maxRow + (amount || 2))
+					break
+			}
+		},
+		[socket, gridSize]
+	)
+
 	return (
 		<KeyReceiver onKeyDown={onKeyDown} tabIndex={0} className="button-grid-panel">
 			<div className="button-grid-panel-header">
@@ -173,6 +212,8 @@ export const ButtonsGridPanel = memo(function ButtonsPage({
 					pageNumber={pageNumber}
 					bankClick={bankClick}
 					selectedButton={selectedButton}
+					gridSize={gridSize}
+					doGrow={doGrow}
 				/>
 				{/* <p>AA</p>
 

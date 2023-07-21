@@ -76,18 +76,74 @@
 
 .button-infinite-grid {
 	height: 100%;
+	max-height: 60vh;
 	background-color: #222;
 	border-radius: 5px;
 	overflow: scroll;
 
-	&.bank-armed .button-grid-canvas {
-		background-color: rgba(255, 0, 0, 0.5);
+	&.bank-armed {
+		background-color: #7f1111;
 	}
 
 	.button-grid-canvas {
 		position: relative;
 		width: 1000px;
 		height: 1000px;
+
+		.expand {
+			float: left;
+			position: absolute;
+
+			background-color: #444;
+
+			&.left {
+				left: 0;
+			}
+			&.right {
+				right: 0;
+			}
+			&.top {
+				top: 0;
+			}
+			&.bottom {
+				bottom: 0;
+			}
+
+			&.left,
+			&.right {
+				height: 100%;
+				width: 80px;
+
+				top: 0;
+
+				.sticky-center {
+					position: sticky;
+					top: 50%;
+					transform: translateY(-50%);
+
+					text-align: center;
+				}
+			}
+
+			&.top,
+			&.bottom {
+				height: 80px;
+				width: 100%;
+
+				left: 0;
+
+				display: flex;
+				align-items: center;
+
+				.sticky-center {
+					position: sticky;
+
+					// display: inline-block;
+					left: 50%;
+					transform: translateX(-50%);
+				}
+			}
+		}
 
 		.bank {
 			position: absolute;

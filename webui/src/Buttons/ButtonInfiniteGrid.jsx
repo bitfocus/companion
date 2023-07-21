@@ -1,51 +1,49 @@
 import { formatLocation } from '@companion/shared/ControlId'
 import { ButtonPreview } from '../Components/ButtonPreview'
-import { forwardRef, memo, useCallback, useContext, useImperativeHandle, useMemo, useRef } from 'react'
+import { forwardRef, memo, useCallback, useContext, useEffect, useImperativeHandle, useMemo, useState } from 'react'
 import { useDrop } from 'react-dnd'
-import { SocketContext, UserConfigContext } from '../util'
+import { SocketContext, socketEmitPromise } from '../util'
 import classNames from 'classnames'
 import useScrollPosition from '../Hooks/useScrollPosition'
 import useElementInnerSize from '../Hooks/useElementInnerSize'
 import { useButtonRenderCache } from '../Hooks/useSharedRenderCache2'
+import { CButton } from '@coreui/react'
 
 export const ButtonInfiniteGrid = forwardRef(function ButtonInfiniteGrid(
-	{ isHot, pageNumber, bankClick, selectedButton },
+	{ isHot, pageNumber, bankClick, selectedButton, gridSize, doGrow },
 	ref
 ) {
-	const userConfig = useContext(UserConfigContext)
-
-	const minColumn = userConfig.grid_min_column
-	const maxColumn = userConfig.grid_max_column
-	const minRow = userConfig.grid_min_row
-	const maxRow = userConfig.grid_max_row
-	const countColumns = maxColumn - minColumn
-	const countRows = maxRow - minRow
+	const { minColumn, maxColumn, minRow, maxRow } = gridSize
+	const countColumns = maxColumn - minColumn + 1
+	const countRows = maxRow - minRow + 1
 
 	const tileSize = 84
+	const growWidth = doGrow ? 80 : 0
+	const growHeight = doGrow ? 80 : 0
 
 	const [setSizeElement, windowSize] = useElementInnerSize()
 	const { scrollX, scrollY, setRef: setScrollRef } = useScrollPosition()
 
-	const scrollerRef = useRef(null)
-
+	const [scrollerRef, setScrollerRef] = useState(null)
 	const resetScrollPosition = useCallback(() => {
-		console.log(scrollerRef.current, -minRow * tileSize, -minColumn * tileSize)
-		if (scrollerRef.current) {
-			scrollerRef.current.scrollTop = -minRow * tileSize
-			scrollerRef.current.scrollLeft = -minColumn * tileSize
+		if (scrollerRef) {
+			scrollerRef.scrollTop = -minRow * tileSize + growHeight
+			scrollerRef.scrollLeft = -minColumn * tileSize + growWidth
 		}
-	}, [minColumn, minRow, tileSize])
+	}, [scrollerRef, minColumn, minRow, tileSize, growWidth, growHeight])
 
 	const setRef = useCallback(
 		(ref) => {
 			setSizeElement(ref)
 			setScrollRef(ref)
 
-			scrollerRef.current = ref
-			resetScrollPosition()
+			setScrollerRef(ref)
 		},
-		[setSizeElement, setScrollRef, resetScrollPosition]
+		[setSizeElement, setScrollRef]
 	)
+
+	// Reset the position when the element changes
+	useEffect(() => resetScrollPosition(), [scrollerRef])
 
 	// Expose reload to the parent
 	useImperativeHandle(
@@ -93,13 +91,28 @@ export const ButtonInfiniteGrid = forwardRef(function ButtonInfiniteGrid(
 						selectedButton?.row === row
 					}
 					style={{
-						left: (column - minColumn) * tileSize,
-						top: (row - minRow) * tileSize,
+						left: (column - minColumn) * tileSize + growWidth,
+						top: (row - minRow) * tileSize + growHeight,
 					}}
 				/>
 			)
 		}
 	}
+
+	const doGrowLeft = useCallback(() => {
+		if (doGrow) doGrow('left', undefined)
+	}, [doGrow])
+	const doGrowRight = useCallback(() => {
+		if (doGrow) doGrow('right', undefined)
+	}, [doGrow])
+	const doGrowTop = useCallback(() => {
+		if (doGrow) doGrow('top', undefined)
+	}, [doGrow])
+	const doGrowBottom = useCallback(() => {
+		if (doGrow) doGrow('bottom', undefined)
+	}, [doGrow])
+
+	window.doGrow = doGrow
 
 	return (
 		<div
@@ -111,10 +124,37 @@ export const ButtonInfiniteGrid = forwardRef(function ButtonInfiniteGrid(
 			<div
 				className="button-grid-canvas"
 				style={{
-					width: countColumns * tileSize,
-					height: countRows * tileSize,
+					width: countColumns * tileSize + growWidth * 2,
+					height: countRows * tileSize + growHeight * 2,
 				}}
 			>
+				{doGrow && (
+					<>
+						<div className="expand left">
+							<div className="sticky-center">
+								<CButton color="primary" onClick={doGrowLeft}>
+									Grow
+								</CButton>
+							</div>
+						</div>
+						<div className="expand right">
+							<div className="sticky-center" onClick={doGrowRight}>
+								<CButton color="primary">Grow</CButton>
+							</div>
+						</div>
+						<div className="expand top">
+							<div className="sticky-center" onClick={doGrowTop}>
+								<CButton color="primary">Grow</CButton>
+							</div>
+						</div>
+						<div className="expand bottom">
+							<div className="sticky-center" onClick={doGrowBottom}>
+								<CButton color="primary">Grow</CButton>
+							</div>
+						</div>
+					</>
+				)}
+
 				{visibleButtons}
 			</div>
 		</div>
