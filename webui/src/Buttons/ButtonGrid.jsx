@@ -225,11 +225,6 @@ export const ButtonsGridPanel = memo(function ButtonsPage({
 						doGrow={doGrow}
 					/>
 				)}
-				{/* <p>AA</p>
-
-				<CRow className={classnames({ 'bank-armed': isHot, bankgrid: true })}>
-					<ButtonGrid pageNumber={pageNumber} bankClick={bankClick} selectedButton={selectedButton} />
-				</CRow> */}
 			</div>
 			<div className="button-grid-panel-footer">
 				<CRow style={{ paddingTop: '15px' }}>
@@ -424,39 +419,6 @@ const ButtonGridActions = forwardRef(function ButtonGridActions({ isHot, pageNum
 		</>
 	)
 })
-
-export function usePagePicker(pagesObj, initialPage) {
-	const [pageNumber, setPageNumber] = useState(initialPage)
-
-	const pagesRef = useRef()
-	useEffect(() => {
-		// Avoid binding into callbacks
-		pagesRef.current = pagesObj
-	}, [pagesObj])
-
-	const changePage = useCallback((delta) => {
-		setPageNumber((pageNumber) => {
-			const pageNumbers = Object.keys(pagesRef.current || {})
-			const currentIndex = pageNumbers.findIndex((p) => p === pageNumber + '')
-			let newPage = pageNumbers[0]
-			if (currentIndex !== -1) {
-				let newIndex = currentIndex + delta
-				if (newIndex < 0) newIndex += pageNumbers.length
-				if (newIndex >= pageNumbers.length) newIndex -= pageNumbers.length
-
-				newPage = pageNumbers[newIndex]
-			}
-
-			return newPage ?? pageNumber
-		})
-	}, [])
-
-	return {
-		pageNumber,
-		setPageNumber,
-		changePage,
-	}
-}
 
 export const ButtonGridHeader = memo(function ButtonGridHeader({
 	pageNumber,

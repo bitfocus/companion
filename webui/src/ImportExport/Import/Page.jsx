@@ -11,7 +11,8 @@ import {
 import { ButtonPreview } from '../../Components/ButtonPreview'
 import { formatLocation } from '@companion/shared/ControlId'
 import { MAX_COLS, MAX_ROWS } from '../../Constants'
-import { ButtonGrid, ButtonGridHeader, usePagePicker } from '../../Buttons/ButtonGrid'
+import { ButtonGrid, ButtonGridHeader } from '../../Buttons/ButtonGrid'
+import { usePagePicker } from '../../Hooks/usePagePicker'
 
 export function ImportPageWizard({ snapshot, instanceRemap, setInstanceRemap, doImport }) {
 	const pages = useContext(PagesContext)
