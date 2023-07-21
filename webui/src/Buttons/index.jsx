@@ -3,7 +3,7 @@ import { faCalculator, faDollarSign, faGift, faVideoCamera } from '@fortawesome/
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { nanoid } from 'nanoid'
 import { InstancePresets } from './Presets'
-import { SocketContext, MyErrorBoundary, socketEmitPromise } from '../util'
+import { SocketContext, MyErrorBoundary, socketEmitPromise, UserConfigContext } from '../util'
 import { ButtonsGridPanel } from './ButtonGrid'
 import { EditButton } from './EditButton'
 import { ActionRecorder } from './ActionRecorder'
@@ -15,6 +15,7 @@ import { formatLocation } from '@companion/shared/ControlId'
 
 export const ButtonsPage = memo(function ButtonsPage({ hotPress }) {
 	const socket = useContext(SocketContext)
+	const userConfig = useContext(UserConfigContext)
 
 	const clearModalRef = useRef()
 
@@ -59,46 +60,78 @@ export const ButtonsPage = memo(function ButtonsPage({ hotPress }) {
 			if (e.target.tagName !== 'INPUT' && e.target.tagName !== 'TEXTAREA') {
 				switch (e.key) {
 					case 'ArrowDown':
-						setSelectedButton((selectedButton) =>
-							selectedButton ? { ...selectedButton, row: selectedButton.row + 1 } : undefined
-						)
+						setSelectedButton((selectedButton) => {
+							if (selectedButton) {
+								return {
+									...selectedButton,
+									row: selectedButton.row >= userConfig.grid_max_row ? userConfig.grid_min_row : selectedButton.row + 1,
+								}
+							}
+						})
 						// TODO - ensure kept in view
-						// TODO - ensure kept in bounds
 						break
 					case 'ArrowUp':
-						setSelectedButton((selectedButton) =>
-							selectedButton ? { ...selectedButton, row: selectedButton.row - 1 } : undefined
-						)
+						setSelectedButton((selectedButton) => {
+							if (selectedButton) {
+								return {
+									...selectedButton,
+									row: selectedButton.row <= userConfig.grid_min_row ? userConfig.grid_max_row : selectedButton.row - 1,
+								}
+							}
+						})
 						// TODO - ensure kept in view
-						// TODO - ensure kept in bounds
 						break
 					case 'ArrowLeft':
-						setSelectedButton((selectedButton) =>
-							selectedButton ? { ...selectedButton, column: selectedButton.column - 1 } : undefined
-						)
+						setSelectedButton((selectedButton) => {
+							if (selectedButton) {
+								return {
+									...selectedButton,
+									column:
+										selectedButton.column <= userConfig.grid_min_column
+											? userConfig.grid_max_column
+											: selectedButton.column - 1,
+								}
+							}
+						})
 						// TODO - ensure kept in view
-						// TODO - ensure kept in bounds
 						break
 					case 'ArrowRight':
-						setSelectedButton((selectedButton) =>
-							selectedButton ? { ...selectedButton, column: selectedButton.column + 1 } : undefined
-						)
+						setSelectedButton((selectedButton) => {
+							if (selectedButton) {
+								return {
+									...selectedButton,
+									column:
+										selectedButton.column >= userConfig.grid_max_column
+											? userConfig.grid_min_column
+											: selectedButton.column + 1,
+								}
+							}
+						})
 						// TODO - ensure kept in view
-						// TODO - ensure kept in bounds
 						break
 					case 'PageUp':
-						setSelectedButton((selectedButton) =>
-							selectedButton ? { ...selectedButton, pageNumber: selectedButton.pageNumber + 1 } : undefined
-						)
-						setPageNumber(selectedButton.pageNumber + 1)
-						// TODO - ensure kept in bounds
+						setSelectedButton((selectedButton) => {
+							if (selectedButton) {
+								const newPageNumber = selectedButton.pageNumber >= 99 ? 1 : selectedButton.pageNumber + 1
+								setPageNumber(newPageNumber)
+								return {
+									...selectedButton,
+									pageNumber: newPageNumber,
+								}
+							}
+						})
 						break
 					case 'PageDown':
-						setSelectedButton((selectedButton) =>
-							selectedButton ? { ...selectedButton, pageNumber: selectedButton.pageNumber - 1 } : undefined
-						)
-						setPageNumber(selectedButton.pageNumber - 1)
-						// TODO - ensure kept in bounds
+						setSelectedButton((selectedButton) => {
+							if (selectedButton) {
+								const newPageNumber = selectedButton.pageNumber <= 1 ? 99 : selectedButton.pageNumber - 1
+								setPageNumber(newPageNumber)
+								return {
+									...selectedButton,
+									pageNumber: newPageNumber,
+								}
+							}
+						})
 						break
 				}
 
