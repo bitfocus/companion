@@ -24,6 +24,7 @@ export const ButtonInfiniteGrid = forwardRef(function ButtonInfiniteGrid(
 	const [setSizeElement, windowSize] = useElementInnerSize()
 	const { scrollX, scrollY, setRef: setScrollRef } = useScrollPosition()
 
+	// Reposition the window to have 0/0 in the top left
 	const [scrollerRef, setScrollerRef] = useState(null)
 	const resetScrollPosition = useCallback(() => {
 		if (scrollerRef) {

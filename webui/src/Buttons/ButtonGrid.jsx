@@ -40,6 +40,7 @@ import Select from 'react-select'
 import { ConfirmExportModal } from '../Components/ConfirmExportModal'
 import { formatLocation } from '@companion/shared/ControlId'
 import { ButtonInfiniteGrid } from './ButtonInfiniteGrid'
+import { useInView } from 'react-intersection-observer'
 
 export const ButtonsGridPanel = memo(function ButtonsPage({
 	pageNumber,
@@ -160,9 +161,16 @@ export const ButtonsGridPanel = memo(function ButtonsPage({
 		[socket, gridSize]
 	)
 
+	// Track whether this tab has been rendered, to allow lazy rendering of the grid component
+	const { ref: isInViewRef, inView } = useInView()
+	const [hasBeenInView, setHasBeenInView] = useState(false)
+	useEffect(() => {
+		if (inView) setHasBeenInView(true)
+	}, [inView])
+
 	return (
 		<KeyReceiver onKeyDown={onKeyDown} tabIndex={0} className="button-grid-panel">
-			<div className="button-grid-panel-header">
+			<div className="button-grid-panel-header" ref={isInViewRef}>
 				<ConfirmExportModal ref={exportModalRef} title="Export Page" />
 
 				<h4>Buttons</h4>
@@ -206,15 +214,17 @@ export const ButtonsGridPanel = memo(function ButtonsPage({
 				</CRow>
 			</div>
 			<div className="button-grid-panel-content">
-				<ButtonInfiniteGrid
-					ref={gridRef}
-					isHot={isHot}
-					pageNumber={pageNumber}
-					bankClick={bankClick}
-					selectedButton={selectedButton}
-					gridSize={gridSize}
-					doGrow={doGrow}
-				/>
+				{hasBeenInView && (
+					<ButtonInfiniteGrid
+						ref={gridRef}
+						isHot={isHot}
+						pageNumber={pageNumber}
+						bankClick={bankClick}
+						selectedButton={selectedButton}
+						gridSize={gridSize}
+						doGrow={doGrow}
+					/>
+				)}
 				{/* <p>AA</p>
 
 				<CRow className={classnames({ 'bank-armed': isHot, bankgrid: true })}>
