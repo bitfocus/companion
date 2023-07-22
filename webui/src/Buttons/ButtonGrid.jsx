@@ -41,6 +41,7 @@ import { ConfirmExportModal } from '../Components/ConfirmExportModal'
 import { formatLocation } from '@companion/shared/ControlId'
 import { ButtonInfiniteGrid } from './ButtonInfiniteGrid'
 import { useInView } from 'react-intersection-observer'
+import { useHasBeenRendered } from '../Hooks/useHasBeenRendered'
 
 export const ButtonsGridPanel = memo(function ButtonsPage({
 	pageNumber,
@@ -161,12 +162,7 @@ export const ButtonsGridPanel = memo(function ButtonsPage({
 		[socket, gridSize]
 	)
 
-	// Track whether this tab has been rendered, to allow lazy rendering of the grid component
-	const { ref: isInViewRef, inView } = useInView()
-	const [hasBeenInView, setHasBeenInView] = useState(false)
-	useEffect(() => {
-		if (inView) setHasBeenInView(true)
-	}, [inView])
+	const [hasBeenInView, isInViewRef] = useHasBeenRendered()
 
 	return (
 		<KeyReceiver onKeyDown={onKeyDown} tabIndex={0} className="button-grid-panel">

@@ -8,6 +8,7 @@ import {
 	PagesContext,
 	TriggersContext,
 	PreventDefaultHandler,
+	UserConfigContext,
 } from '../util'
 import { CreateTriggerControlId } from '@companion/shared/ControlId'
 import {
@@ -30,18 +31,20 @@ import {
 	CTabPane,
 } from '@coreui/react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faCalendarAlt, faClock } from '@fortawesome/free-solid-svg-icons'
+import { faCalendarAlt, faClock, faHome } from '@fortawesome/free-solid-svg-icons'
 import { useMemo } from 'react'
 import { DropdownInputField } from '../Components'
 import { ActionsList } from '../Controls/ActionSetEditor'
 import { GenericConfirmModal } from '../Components/GenericConfirmModal'
-import { ButtonGrid, ButtonGridHeader } from './ButtonGrid'
+import { ButtonGridHeader } from './ButtonGrid'
 import { usePagePicker } from '../Hooks/usePagePicker'
 import { cloneDeep } from 'lodash-es'
 import jsonPatch from 'fast-json-patch'
 import { usePanelCollapseHelper } from '../Helpers/CollapseHelper'
 import CSwitch from '../CSwitch'
 import { MenuPortalContext } from '../Components/DropdownInputField'
+import { ButtonInfiniteGrid } from './ButtonInfiniteGrid'
+import { useHasBeenRendered } from '../Hooks/useHasBeenRendered'
 
 export function ActionRecorder() {
 	const socket = useContext(SocketContext)
@@ -178,7 +181,7 @@ function RecorderSessionFinishModal({ doClose, sessionId }) {
 	const [modalRef, setModalRef] = useState(null)
 
 	return (
-		<CModal innerRef={setModalRef} show={true} onClose={doClose} size="lg">
+		<CModal innerRef={setModalRef} show={true} onClose={doClose} size="lg" className="modal-full-height" scrollable>
 			<MenuPortalContext.Provider value={modalRef}>
 				<CForm onSubmit={PreventDefaultHandler} className={'action-recorder-finish-panel'}>
 					<CModalHeader closeButton>
@@ -199,7 +202,7 @@ function RecorderSessionFinishModal({ doClose, sessionId }) {
 								</CNavItem>
 							</CNav>
 							<CTabContent fade={false} className="default-scroll">
-								<CTabPane data-tab="buttons">
+								<CTabPane data-tab="buttons" className="action-recorder-finish-button-grid">
 									<ButtonPicker selectButton={doSave} />
 								</CTabPane>
 								<CTabPane data-tab="triggers">
@@ -226,23 +229,27 @@ function RecorderSessionFinishModal({ doClose, sessionId }) {
 function ButtonPicker({ selectButton }) {
 	const socket = useContext(SocketContext)
 	const pages = useContext(PagesContext)
+	const userConfig = useContext(UserConfigContext)
 
 	const { pageNumber, setPageNumber, changePage } = usePagePicker(pages, 1)
 
-	const [selectedControl, setSelectedControl] = useState(null)
+	const [selectedLocation, setSelectedLocation] = useState(null)
 	const [selectedStep, setSelectedStep] = useState(null)
 	const [selectedSet, setSelectedSet] = useState(null)
 
 	const bankClick = useCallback(
 		(location, pressed) => {
-			const controlId = pages[pageNumber]?.controls?.[location.row]?.[location.column]
-			if (pressed && controlId) {
-				setSelectedControl(controlId)
-				setSelectedSet(null)
-			}
+			if (pressed) setSelectedLocation(location)
 		},
 		[pages[pageNumber]]
 	)
+
+	const selectedControl = useMemo(() => {
+		return selectedLocation ? pages[pageNumber]?.controls?.[selectedLocation.row]?.[selectedLocation.column] : undefined
+	}, [selectedLocation, pages[pageNumber]])
+
+	// Reset set when control is changed
+	useEffect(() => setSelectedSet(null), [selectedControl])
 
 	const replaceActions = useCallback(() => {
 		selectButton(selectedControl, selectedStep, selectedSet, 'replace')
@@ -365,71 +372,107 @@ function ButtonPicker({ selectButton }) {
 		})
 	}, [actionSetOptions])
 
+	const gridSize = useMemo(
+		() => ({
+			minColumn: userConfig.grid_min_column,
+			maxColumn: userConfig.grid_max_column,
+			minRow: userConfig.grid_min_row,
+			maxRow: userConfig.grid_max_row,
+		}),
+		[userConfig.grid_min_column, userConfig.grid_max_column, userConfig.grid_min_row, userConfig.grid_max_row]
+	)
+
+	const [hasBeenInView, isInViewRef] = useHasBeenRendered()
+
+	const gridRef = useRef(null)
+	const resetPosition = useCallback(() => {
+		gridRef.current?.resetPosition()
+	}, [gridRef])
+
+	console.log('render', selectedLocation, selectedControl, pages[pageNumber])
+
 	return (
 		<>
-			<CRow>
-				<CCol sm={12}>
-					<ButtonGridHeader
+			{/* <div className="action-recorder-finish-button-grid"> */}
+			<div>
+				<CButton
+					color="light"
+					style={{
+						float: 'right',
+						marginTop: 10,
+					}}
+					onClick={resetPosition}
+				>
+					<FontAwesomeIcon icon={faHome} /> Home Position
+				</CButton>
+
+				<ButtonGridHeader
+					pageNumber={pageNumber}
+					pageName={pages[pageNumber]?.name ?? 'PAGE'}
+					changePage={changePage}
+					setPage={setPageNumber}
+				/>
+			</div>
+			<div className="bankgrid" ref={isInViewRef}>
+				{hasBeenInView && (
+					<ButtonInfiniteGrid
+						ref={gridRef}
+						bankClick={bankClick}
 						pageNumber={pageNumber}
-						pageName={pages[pageNumber]?.name ?? 'PAGE'}
-						changePage={changePage}
-						setPage={setPageNumber}
+						selectedButton={selectedLocation}
+						gridSize={gridSize}
 					/>
-				</CCol>
-				<div className="bankgrid">
-					<ButtonGrid bankClick={bankClick} pageNumber={pageNumber} selectedButton={selectedControl} />
-				</div>
-			</CRow>
-			<CRow>
-				<CCol sm={12}>
-					<CForm className="flex-form" onSubmit={PreventDefaultHandler}>
-						<CRow form>
-							<CCol sm={10} xs={9} hidden={actionStepOptions.length <= 1}>
-								<CLabel>Step</CLabel>
+				)}
+			</div>
+			<div>
+				<CForm className="flex-form" onSubmit={PreventDefaultHandler}>
+					<CRow form>
+						<CCol sm={10} xs={9} hidden={actionStepOptions.length <= 1}>
+							<CLabel>Step</CLabel>
 
-								<DropdownInputField
-									choices={actionStepOptions}
-									multiple={false}
-									value={selectedStep}
-									setValue={setSelectedStep}
-									disabled={!controlInfo}
-								/>
-							</CCol>
-							<CCol sm={10} xs={9} hidden={actionSetOptions.length === 0}>
-								<CLabel>Action Group</CLabel>
+							<DropdownInputField
+								choices={actionStepOptions}
+								multiple={false}
+								value={selectedStep}
+								setValue={setSelectedStep}
+								disabled={!controlInfo}
+							/>
+						</CCol>
+						<CCol sm={10} xs={9} hidden={actionSetOptions.length === 0}>
+							<CLabel>Action Group</CLabel>
 
-								<DropdownInputField
-									choices={actionSetOptions}
-									multiple={false}
-									value={selectedSet}
-									setValue={setSelectedSet}
-									disabled={!controlInfo}
-								/>
-							</CCol>
-							<CCol className="py-1" sm={10} xs={9}>
-								<CButtonGroup>
-									<CButton
-										color="primary"
-										title="Replace all the actions on the trigger"
-										disabled={!selectedControl || !selectedSet}
-										onClick={replaceActions}
-									>
-										Replace
-									</CButton>
-									<CButton
-										color="info"
-										title="Append to the existing actions"
-										disabled={!selectedControl || !selectedSet}
-										onClick={appendActions}
-									>
-										Append
-									</CButton>
-								</CButtonGroup>
-							</CCol>
-						</CRow>
-					</CForm>
-				</CCol>
-			</CRow>
+							<DropdownInputField
+								choices={actionSetOptions}
+								multiple={false}
+								value={selectedSet}
+								setValue={setSelectedSet}
+								disabled={!controlInfo}
+							/>
+						</CCol>
+						<CCol className="py-1" sm={10} xs={9}>
+							<CButtonGroup>
+								<CButton
+									color="primary"
+									title="Replace all the actions on the trigger"
+									disabled={!selectedControl || !selectedSet}
+									onClick={replaceActions}
+								>
+									Replace
+								</CButton>
+								<CButton
+									color="info"
+									title="Append to the existing actions"
+									disabled={!selectedControl || !selectedSet}
+									onClick={appendActions}
+								>
+									Append
+								</CButton>
+							</CButtonGroup>
+						</CCol>
+					</CRow>
+				</CForm>
+			</div>
+			{/* </div> */}
 		</>
 	)
 }

@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 
 export function usePagePicker(pagesObj, initialPage) {
-	const [pageNumber, setPageNumber] = useState(initialPage)
+	const [pageNumber, setPageNumber] = useState(Number(initialPage))
 
 	const pagesRef = useRef()
 	useEffect(() => {
@@ -13,7 +13,7 @@ export function usePagePicker(pagesObj, initialPage) {
 		setPageNumber((pageNumber) => {
 			const pageNumbers = Object.keys(pagesRef.current || {})
 			const currentIndex = pageNumbers.findIndex((p) => p === pageNumber + '')
-			let newPage = pageNumbers[0]
+			let newPage = Number(pageNumbers[0])
 			if (currentIndex !== -1) {
 				let newIndex = currentIndex + delta
 				if (newIndex < 0) newIndex += pageNumbers.length
