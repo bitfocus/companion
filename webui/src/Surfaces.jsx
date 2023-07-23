@@ -23,21 +23,13 @@ import {
 	CModalHeader,
 	CSelect,
 } from '@coreui/react'
-import {
-	LoadingRetryOrError,
-	SurfacesContext,
-	socketEmitPromise,
-	SocketContext,
-	PreventDefaultHandler,
-	UserConfigContext,
-} from './util'
+import { LoadingRetryOrError, SurfacesContext, socketEmitPromise, SocketContext, PreventDefaultHandler } from './util'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faAdd, faCog, faFolderOpen, faSync, faTrash } from '@fortawesome/free-solid-svg-icons'
 import { nanoid } from 'nanoid'
 import { TextInputField } from './Components/TextInputField'
 import { useMemo } from 'react'
 import { GenericConfirmModal } from './Components/GenericConfirmModal'
-import { MAX_COLS, MAX_ROWS } from './Constants'
 
 export const SurfacesPage = memo(function SurfacesPage() {
 	const socket = useContext(SocketContext)

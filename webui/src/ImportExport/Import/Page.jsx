@@ -9,12 +9,9 @@ import {
 	UserConfigContext,
 	socketEmitPromise,
 } from '../../util'
-import { ButtonPreview } from '../../Components/ButtonPreview'
-import { formatLocation } from '@companion/shared/ControlId'
-import { MAX_COLS, MAX_ROWS } from '../../Constants'
 import { ButtonGridHeader } from '../../Buttons/ButtonGrid'
 import { usePagePicker } from '../../Hooks/usePagePicker'
-import { ButtonGridIcon, ButtonInfiniteGrid } from '../../Buttons/ButtonInfiniteGrid'
+import { ButtonGridIcon, ButtonGridIconBase, ButtonInfiniteGrid } from '../../Buttons/ButtonInfiniteGrid'
 import { faHome } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 
@@ -54,11 +51,17 @@ export function ImportPageWizard({ snapshot, instanceRemap, setInstanceRemap, do
 		}),
 		[userConfig.grid_min_column, userConfig.grid_max_column, userConfig.grid_min_row, userConfig.grid_max_row]
 	)
+	const sourceGridSize = destinationGridSize // TODO - change this
 
 	const destinationGridRef = useRef(null)
 	const resetDestinationPosition = useCallback(() => {
 		destinationGridRef.current?.resetPosition()
 	}, [destinationGridRef])
+
+	const sourceGridRef = useRef(null)
+	const resetSourcePosition = useCallback(() => {
+		sourceGridRef.current?.resetPosition()
+	}, [sourceGridRef])
 
 	const isRunning = false
 
@@ -69,6 +72,17 @@ export function ImportPageWizard({ snapshot, instanceRemap, setInstanceRemap, do
 				<MyErrorBoundary>
 					<div>
 						<CCol sm={12}>
+							<CButton
+								color="light"
+								style={{
+									float: 'right',
+									marginTop: 10,
+								}}
+								onClick={resetSourcePosition}
+							>
+								<FontAwesomeIcon icon={faHome} /> Home Position
+							</CButton>
+
 							<ButtonGridHeader
 								pageNumber={isSinglePage ? snapshot.oldPageNumber : importPageNumber}
 								pageName={isSinglePage ? snapshot.page.name : snapshot.pages?.[importPageNumber]?.name}
@@ -77,7 +91,12 @@ export function ImportPageWizard({ snapshot, instanceRemap, setInstanceRemap, do
 							/>
 						</CCol>
 						<div className="bankgrid">
-							<ButtonImportGrid page={isSinglePage ? snapshot.oldPageNumber : importPageNumber} />
+							<ButtonInfiniteGrid
+								ref={sourceGridRef}
+								pageNumber={isSinglePage ? snapshot.oldPageNumber : importPageNumber}
+								gridSize={sourceGridSize}
+								buttonIconFactory={ButtonImportPreview}
+							/>
 						</div>
 					</div>
 				</MyErrorBoundary>
@@ -191,48 +210,7 @@ export function ImportRemap({ snapshot, instanceRemap, setInstanceRemap }) {
 	)
 }
 
-function ButtonImportGrid({ page }) {
-	return (
-		<div
-			style={{
-				paddingTop: 14,
-				paddingBottom: 14,
-				backgroundColor: '#222',
-				borderRadius: 20,
-				marginLeft: 14,
-			}}
-		>
-			{Array(MAX_ROWS)
-				.fill(0)
-				.map((_, y) => {
-					return (
-						<CCol key={y} className="pagebank-row">
-							{Array(MAX_COLS)
-								.fill(0)
-								.map((_, x) => {
-									const location = {
-										pageNumber: page,
-										column: x,
-										row: y,
-									}
-									return (
-										<ButtonImportPreview
-											key={x}
-											pageNumber={page}
-											column={x}
-											row={y}
-											alt={`Button ${formatLocation(location)}`}
-										/>
-									)
-								})}
-						</CCol>
-					)
-				})}
-		</div>
-	)
-}
-
-function ButtonImportPreview({ pageNumber, column, row, instanceId, ...childProps }) {
+function ButtonImportPreview({ instanceId, ...props }) {
 	const socket = useContext(SocketContext)
 	const [previewImage, setPreviewImage] = useState(null)
 
@@ -241,9 +219,9 @@ function ButtonImportPreview({ pageNumber, column, row, instanceId, ...childProp
 
 		socketEmitPromise(socket, 'loadsave:control-preview', [
 			{
-				pageNumber,
-				column,
-				row,
+				pageNumber: props.pageNumber,
+				column: props.column,
+				row: props.row,
 			},
 		])
 			.then((img) => {
@@ -252,7 +230,7 @@ function ButtonImportPreview({ pageNumber, column, row, instanceId, ...childProp
 			.catch((e) => {
 				console.error(`Failed to preview bank: ${e}`)
 			})
-	}, [pageNumber, column, row, socket])
+	}, [props.pageNumber, props.column, props.row, socket])
 
-	return <ButtonPreview {...childProps} preview={previewImage} />
+	return <ButtonGridIconBase {...props} image={previewImage} />
 }
