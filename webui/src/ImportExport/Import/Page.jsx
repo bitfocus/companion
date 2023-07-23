@@ -1,4 +1,4 @@
-import React, { useCallback, useContext, useEffect, useMemo, useState } from 'react'
+import React, { useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react'
 import { CButton, CCol, CRow, CSelect } from '@coreui/react'
 import {
 	InstancesContext,
@@ -6,16 +6,21 @@ import {
 	MyErrorBoundary,
 	PagesContext,
 	SocketContext,
+	UserConfigContext,
 	socketEmitPromise,
 } from '../../util'
 import { ButtonPreview } from '../../Components/ButtonPreview'
 import { formatLocation } from '@companion/shared/ControlId'
 import { MAX_COLS, MAX_ROWS } from '../../Constants'
-import { ButtonGrid, ButtonGridHeader } from '../../Buttons/ButtonGrid'
+import { ButtonGridHeader } from '../../Buttons/ButtonGrid'
 import { usePagePicker } from '../../Hooks/usePagePicker'
+import { ButtonGridIcon, ButtonInfiniteGrid } from '../../Buttons/ButtonInfiniteGrid'
+import { faHome } from '@fortawesome/free-solid-svg-icons'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 
 export function ImportPageWizard({ snapshot, instanceRemap, setInstanceRemap, doImport }) {
 	const pages = useContext(PagesContext)
+	const userConfig = useContext(UserConfigContext)
 
 	const isSinglePage = snapshot.type === 'page'
 
@@ -40,12 +45,25 @@ export function ImportPageWizard({ snapshot, instanceRemap, setInstanceRemap, do
 		doImport(importPageNumber, pageNumber, instanceRemap)
 	}, [doImport, importPageNumber, pageNumber, instanceRemap])
 
+	const destinationGridSize = useMemo(
+		() => ({
+			minColumn: userConfig.grid_min_column,
+			maxColumn: userConfig.grid_max_column,
+			minRow: userConfig.grid_min_row,
+			maxRow: userConfig.grid_max_row,
+		}),
+		[userConfig.grid_min_column, userConfig.grid_max_column, userConfig.grid_min_row, userConfig.grid_max_row]
+	)
+
+	const destinationGridRef = useRef(null)
+	const resetDestinationPosition = useCallback(() => {
+		destinationGridRef.current?.resetPosition()
+	}, [destinationGridRef])
+
 	const isRunning = false
 
 	return (
 		<CRow className="">
-			{/* <GenericConfirmModal ref={clearModalRef} /> */}
-
 			<CCol xs={12} xl={6}>
 				<h5>Source Page</h5>
 				<MyErrorBoundary>
@@ -70,6 +88,17 @@ export function ImportPageWizard({ snapshot, instanceRemap, setInstanceRemap, do
 				<MyErrorBoundary>
 					<div>
 						<CCol sm={12}>
+							<CButton
+								color="light"
+								style={{
+									float: 'right',
+									marginTop: 10,
+								}}
+								onClick={resetDestinationPosition}
+							>
+								<FontAwesomeIcon icon={faHome} /> Home Position
+							</CButton>
+
 							<ButtonGridHeader
 								pageNumber={pageNumber}
 								pageName={pages[pageNumber]?.name ?? 'PAGE'}
@@ -78,10 +107,11 @@ export function ImportPageWizard({ snapshot, instanceRemap, setInstanceRemap, do
 							/>
 						</CCol>
 						<div className="bankgrid">
-							<ButtonGrid
-								// bankClick={bankClick}
+							<ButtonInfiniteGrid
+								ref={destinationGridRef}
 								pageNumber={pageNumber}
-								// selectedButton={selectedControl}
+								gridSize={destinationGridSize}
+								buttonIconFactory={ButtonGridIcon}
 							/>
 						</div>
 					</div>

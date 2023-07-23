@@ -1,6 +1,15 @@
 import { formatLocation } from '@companion/shared/ControlId'
 import { ButtonPreview } from '../Components/ButtonPreview'
-import { forwardRef, memo, useCallback, useContext, useEffect, useImperativeHandle, useMemo, useState } from 'react'
+import React, {
+	forwardRef,
+	memo,
+	useCallback,
+	useContext,
+	useEffect,
+	useImperativeHandle,
+	useMemo,
+	useState,
+} from 'react'
 import { useDrop } from 'react-dnd'
 import { SocketContext, socketEmitPromise } from '../util'
 import classNames from 'classnames'
@@ -10,7 +19,7 @@ import { useButtonRenderCache } from '../Hooks/useSharedRenderCache2'
 import { CButton } from '@coreui/react'
 
 export const ButtonInfiniteGrid = forwardRef(function ButtonInfiniteGrid(
-	{ isHot, pageNumber, bankClick, selectedButton, gridSize, doGrow },
+	{ isHot, pageNumber, bankClick, selectedButton, gridSize, doGrow, buttonIconFactory },
 	ref
 ) {
 	const { minColumn, maxColumn, minRow, maxRow } = gridSize
@@ -79,23 +88,23 @@ export const ButtonInfiniteGrid = forwardRef(function ButtonInfiniteGrid(
 	for (let row = drawMinRow; row <= drawMaxRow; row++) {
 		for (let column = drawMinColumn; column <= drawMaxColumn; column++) {
 			visibleButtons.push(
-				<ButtonGridIcon
-					key={`${column}_${row}`}
-					fixedSize
-					row={row}
-					column={column}
-					pageNumber={pageNumber}
-					onClick={bankClick}
-					selected={
+				React.createElement(buttonIconFactory, {
+					key: `${column}_${row}`,
+
+					fixedSize: true,
+					row,
+					column,
+					pageNumber,
+					onClick: bankClick,
+					selected:
 						selectedButton?.pageNumber === pageNumber &&
 						selectedButton?.column === column &&
-						selectedButton?.row === row
-					}
-					style={{
+						selectedButton?.row === row,
+					style: {
 						left: (column - minColumn) * tileSize + growWidth,
 						top: (row - minRow) * tileSize + growHeight,
-					}}
-				/>
+					},
+				})
 			)
 		}
 	}
@@ -162,17 +171,14 @@ export const ButtonInfiniteGrid = forwardRef(function ButtonInfiniteGrid(
 	)
 })
 
-const ButtonGridIcon = memo(function ButtonGridIcon({ pageNumber, column, row, ...props }) {
+export const PrimaryButtonGridIcon = memo(function PrimaryButtonGridIcon({ ...props }) {
 	const socket = useContext(SocketContext)
-
-	const location = useMemo(() => ({ pageNumber, column, row }), [pageNumber, column, row])
-
-	const { image, isUsed } = useButtonRenderCache(location)
 
 	const [{ isOver, canDrop }, drop] = useDrop({
 		accept: 'preset',
 		drop: (dropData) => {
 			console.log('preset drop', dropData)
+			const location = { pageNumber: props.pageNumber, column: props.column, row: props.row }
 			socketEmitPromise(socket, 'presets:import_to_bank', [dropData.instanceId, dropData.presetId, location]).catch(
 				(e) => {
 					console.error('Preset import failed')
@@ -185,18 +191,27 @@ const ButtonGridIcon = memo(function ButtonGridIcon({ pageNumber, column, row, .
 		}),
 	})
 
+	return <ButtonGridIcon {...props} dropRef={drop} dropHover={isOver} canDrop={canDrop} />
+})
+
+export const ButtonGridIcon = memo(function ButtonGridIcon({ ...props }) {
+	const { image, isUsed } = useButtonRenderCache({ pageNumber: props.pageNumber, column: props.column, row: props.row })
+
+	return <ButtonGridIconBase {...props} image={isUsed ? image : null} />
+})
+
+export const ButtonGridIconBase = memo(function ButtonGridIcon({ pageNumber, column, row, image, ...props }) {
+	const location = useMemo(() => ({ pageNumber, column, row }), [pageNumber, column, row])
+
 	const title = formatLocation(location)
 	return (
 		<ButtonPreview
 			{...props}
 			location={location}
-			dropRef={drop}
-			dropHover={isOver}
-			canDrop={canDrop}
 			alt={title}
 			title={title}
 			placeholder={`${location.row}/${location.column}`}
-			preview={isUsed ? image : null}
+			preview={image}
 		/>
 	)
 })

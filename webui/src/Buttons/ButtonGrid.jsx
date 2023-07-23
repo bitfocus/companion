@@ -10,14 +10,7 @@ import React, {
 	useState,
 	useMemo,
 } from 'react'
-import {
-	KeyReceiver,
-	PagesContext,
-	socketEmitPromise,
-	SocketContext,
-	ButtonRenderCacheContext,
-	UserConfigContext,
-} from '../util'
+import { KeyReceiver, PagesContext, socketEmitPromise, SocketContext, UserConfigContext } from '../util'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import {
 	faArrowsAlt,
@@ -30,17 +23,10 @@ import {
 	faTrash,
 } from '@fortawesome/free-solid-svg-icons'
 import classnames from 'classnames'
-import { MAX_COLS, MAX_ROWS } from '../Constants'
-import { useDrop } from 'react-dnd'
-import { ButtonPreview } from '../Components/ButtonPreview'
 import { GenericConfirmModal } from '../Components/GenericConfirmModal'
-import { nanoid } from 'nanoid'
-import { useSharedPageRenderCache } from '../Hooks/useSharedRenderCache'
 import Select from 'react-select'
 import { ConfirmExportModal } from '../Components/ConfirmExportModal'
-import { formatLocation } from '@companion/shared/ControlId'
-import { ButtonInfiniteGrid } from './ButtonInfiniteGrid'
-import { useInView } from 'react-intersection-observer'
+import { ButtonInfiniteGrid, PrimaryButtonGridIcon } from './ButtonInfiniteGrid'
 import { useHasBeenRendered } from '../Hooks/useHasBeenRendered'
 
 export const ButtonsGridPanel = memo(function ButtonsPage({
@@ -219,6 +205,7 @@ export const ButtonsGridPanel = memo(function ButtonsPage({
 						selectedButton={selectedButton}
 						gridSize={gridSize}
 						doGrow={doGrow}
+						buttonIconFactory={PrimaryButtonGridIcon}
 					/>
 				)}
 			</div>
@@ -486,93 +473,5 @@ export const ButtonGridHeader = memo(function ButtonGridHeader({
 				disabled={!onNameChange}
 			/>
 		</div>
-	)
-})
-
-function generateNumbers(count, start = 0) {
-	return Array(count)
-		.fill(0)
-		.map((_, i) => i + start)
-}
-
-export function ButtonGrid({ bankClick, pageNumber, selectedButton }) {
-	const buttonCache = useContext(ButtonRenderCacheContext)
-
-	const sessionId = useMemo(() => nanoid(), [])
-	const images = useSharedPageRenderCache(buttonCache, sessionId, pageNumber)
-
-	const rowNumbers = generateNumbers(MAX_ROWS * 2, -MAX_ROWS / 2)
-	const colNumbers = generateNumbers(MAX_COLS * 2, -MAX_COLS / 2)
-
-	return (
-		<div
-			style={{
-				paddingTop: 14,
-				paddingBottom: 14,
-				backgroundColor: '#222',
-				borderRadius: 20,
-				marginLeft: 14,
-			}}
-		>
-			{rowNumbers.map((y) => {
-				return (
-					<CCol key={y} sm={12} className="pagebank-row">
-						{colNumbers.map((x) => {
-							return (
-								<ButtonGridIcon
-									key={x}
-									pageNumber={pageNumber}
-									column={x}
-									row={y}
-									preview={images?.[y]?.[x]}
-									onClick={bankClick}
-									selected={
-										selectedButton?.pageNumber === pageNumber &&
-										selectedButton?.column === x &&
-										selectedButton?.row === y
-									}
-								/>
-							)
-						})}
-					</CCol>
-				)
-			})}
-		</div>
-	)
-}
-
-const ButtonGridIcon = memo(function ButtonGridIcon({ pageNumber, column, row, ...props }) {
-	const socket = useContext(SocketContext)
-
-	const location = useMemo(() => ({ pageNumber, column, row }), [pageNumber, column, row])
-
-	const [{ isOver, canDrop }, drop] = useDrop({
-		accept: 'preset',
-		drop: (dropData) => {
-			console.log('preset drop', dropData)
-			socketEmitPromise(socket, 'presets:import_to_bank', [dropData.instanceId, dropData.presetId, location]).catch(
-				(e) => {
-					console.error('Preset import failed')
-				}
-			)
-		},
-		collect: (monitor) => ({
-			isOver: !!monitor.isOver(),
-			canDrop: !!monitor.canDrop(),
-		}),
-	})
-
-	const title = formatLocation(location)
-	return (
-		<ButtonPreview
-			{...props}
-			location={location}
-			dropRef={drop}
-			dropHover={isOver}
-			canDrop={canDrop}
-			alt={title}
-			title={title}
-			placeholder={`${location.row}/${location.column}`}
-		/>
 	)
 })

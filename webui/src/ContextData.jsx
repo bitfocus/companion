@@ -16,14 +16,12 @@ import {
 	NotifierContext,
 	EventDefinitionsContext,
 	ModulesContext,
-	ButtonRenderCacheContext,
 	RecentActionsContext,
 	RecentFeedbacksContext,
 } from './util'
 import { NotificationsManager } from './Components/Notifications'
 import { cloneDeep } from 'lodash-es'
 import jsonPatch from 'fast-json-patch'
-import { ButtonRenderCache } from './Hooks/useSharedRenderCache'
 
 export function ContextData({ children }) {
 	const socket = useContext(SocketContext)
@@ -83,10 +81,6 @@ export function ContextData({ children }) {
 		}),
 		[recentFeedbacks, trackRecentFeedback]
 	)
-
-	const buttonCache = useMemo(() => {
-		return new ButtonRenderCache(socket)
-	}, [socket])
 
 	const completeVariableDefinitions = useMemo(() => {
 		if (variableDefinitions) {
@@ -345,37 +339,35 @@ export function ContextData({ children }) {
 
 	return (
 		<NotifierContext.Provider value={notifierRef}>
-			<ButtonRenderCacheContext.Provider value={buttonCache}>
-				<EventDefinitionsContext.Provider value={eventDefinitions}>
-					<ModulesContext.Provider value={modules}>
-						<ActionsContext.Provider value={actionDefinitions}>
-							<FeedbacksContext.Provider value={feedbackDefinitions}>
-								<InstancesContext.Provider value={instances}>
-									<VariableDefinitionsContext.Provider value={completeVariableDefinitions}>
-										<CustomVariableDefinitionsContext.Provider value={customVariables}>
-											<UserConfigContext.Provider value={userConfig}>
-												<SurfacesContext.Provider value={surfaces}>
-													<PagesContext.Provider value={pages}>
-														<TriggersContext.Provider value={triggers}>
-															<RecentActionsContext.Provider value={recentActionsContext}>
-																<RecentFeedbacksContext.Provider value={recentFeedbacksContext}>
-																	<NotificationsManager ref={notifierRef} />
+			<EventDefinitionsContext.Provider value={eventDefinitions}>
+				<ModulesContext.Provider value={modules}>
+					<ActionsContext.Provider value={actionDefinitions}>
+						<FeedbacksContext.Provider value={feedbackDefinitions}>
+							<InstancesContext.Provider value={instances}>
+								<VariableDefinitionsContext.Provider value={completeVariableDefinitions}>
+									<CustomVariableDefinitionsContext.Provider value={customVariables}>
+										<UserConfigContext.Provider value={userConfig}>
+											<SurfacesContext.Provider value={surfaces}>
+												<PagesContext.Provider value={pages}>
+													<TriggersContext.Provider value={triggers}>
+														<RecentActionsContext.Provider value={recentActionsContext}>
+															<RecentFeedbacksContext.Provider value={recentFeedbacksContext}>
+																<NotificationsManager ref={notifierRef} />
 
-																	{children(progressPercent, completedSteps.length === steps.length)}
-																</RecentFeedbacksContext.Provider>
-															</RecentActionsContext.Provider>
-														</TriggersContext.Provider>
-													</PagesContext.Provider>
-												</SurfacesContext.Provider>
-											</UserConfigContext.Provider>
-										</CustomVariableDefinitionsContext.Provider>
-									</VariableDefinitionsContext.Provider>
-								</InstancesContext.Provider>
-							</FeedbacksContext.Provider>
-						</ActionsContext.Provider>
-					</ModulesContext.Provider>
-				</EventDefinitionsContext.Provider>
-			</ButtonRenderCacheContext.Provider>
+																{children(progressPercent, completedSteps.length === steps.length)}
+															</RecentFeedbacksContext.Provider>
+														</RecentActionsContext.Provider>
+													</TriggersContext.Provider>
+												</PagesContext.Provider>
+											</SurfacesContext.Provider>
+										</UserConfigContext.Provider>
+									</CustomVariableDefinitionsContext.Provider>
+								</VariableDefinitionsContext.Provider>
+							</InstancesContext.Provider>
+						</FeedbacksContext.Provider>
+					</ActionsContext.Provider>
+				</ModulesContext.Provider>
+			</EventDefinitionsContext.Provider>
 		</NotifierContext.Provider>
 	)
 }

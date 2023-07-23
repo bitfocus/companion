@@ -59,7 +59,7 @@ export function useButtonRenderCache(location, disable = false) {
 
 			socket.off('preview:location:render', changeHandler)
 		}
-	}, [socket, subId, location, disable])
+	}, [socket, subId, location.pageNumber, location.row, location.column, disable])
 
 	return imageState
 }

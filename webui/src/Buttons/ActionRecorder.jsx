@@ -43,7 +43,7 @@ import jsonPatch from 'fast-json-patch'
 import { usePanelCollapseHelper } from '../Helpers/CollapseHelper'
 import CSwitch from '../CSwitch'
 import { MenuPortalContext } from '../Components/DropdownInputField'
-import { ButtonInfiniteGrid } from './ButtonInfiniteGrid'
+import { ButtonGridIcon, ButtonInfiniteGrid } from './ButtonInfiniteGrid'
 import { useHasBeenRendered } from '../Hooks/useHasBeenRendered'
 
 export function ActionRecorder() {
@@ -389,11 +389,8 @@ function ButtonPicker({ selectButton }) {
 		gridRef.current?.resetPosition()
 	}, [gridRef])
 
-	console.log('render', selectedLocation, selectedControl, pages[pageNumber])
-
 	return (
 		<>
-			{/* <div className="action-recorder-finish-button-grid"> */}
 			<div>
 				<CButton
 					color="light"
@@ -421,6 +418,7 @@ function ButtonPicker({ selectButton }) {
 						pageNumber={pageNumber}
 						selectedButton={selectedLocation}
 						gridSize={gridSize}
+						buttonIconFactory={ButtonGridIcon}
 					/>
 				)}
 			</div>
@@ -472,7 +470,6 @@ function ButtonPicker({ selectButton }) {
 					</CRow>
 				</CForm>
 			</div>
-			{/* </div> */}
 		</>
 	)
 }
