@@ -14,6 +14,7 @@ import { usePagePicker } from '../../Hooks/usePagePicker'
 import { ButtonGridIcon, ButtonGridIconBase, ButtonInfiniteGrid } from '../../Buttons/ButtonInfiniteGrid'
 import { faHome } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { useHasBeenRendered } from '../../Hooks/useHasBeenRendered'
 
 export function ImportPageWizard({ snapshot, instanceRemap, setInstanceRemap, doImport }) {
 	const pages = useContext(PagesContext)
@@ -51,7 +52,6 @@ export function ImportPageWizard({ snapshot, instanceRemap, setInstanceRemap, do
 		}),
 		[userConfig.grid_min_column, userConfig.grid_max_column, userConfig.grid_min_row, userConfig.grid_max_row]
 	)
-	const sourceGridSize = destinationGridSize // TODO - change this
 
 	const destinationGridRef = useRef(null)
 	const resetDestinationPosition = useCallback(() => {
@@ -64,6 +64,11 @@ export function ImportPageWizard({ snapshot, instanceRemap, setInstanceRemap, do
 	}, [sourceGridRef])
 
 	const isRunning = false
+
+	const sourcePageInfo = isSinglePage ? snapshot.page : snapshot.pages?.[importPageNumber]
+	const sourceGridSize = sourcePageInfo?.gridSize ?? destinationGridSize
+
+	const [hasBeenRendered, hasBeenRenderedRef] = useHasBeenRendered()
 
 	return (
 		<CRow className="">
@@ -85,18 +90,20 @@ export function ImportPageWizard({ snapshot, instanceRemap, setInstanceRemap, do
 
 							<ButtonGridHeader
 								pageNumber={isSinglePage ? snapshot.oldPageNumber : importPageNumber}
-								pageName={isSinglePage ? snapshot.page.name : snapshot.pages?.[importPageNumber]?.name}
+								pageName={sourcePageInfo?.name}
 								changePage={isSinglePage ? null : changeImportPage}
 								setPage={isSinglePage ? null : setImportPageNumber}
 							/>
 						</CCol>
-						<div className="bankgrid">
-							<ButtonInfiniteGrid
-								ref={sourceGridRef}
-								pageNumber={isSinglePage ? snapshot.oldPageNumber : importPageNumber}
-								gridSize={sourceGridSize}
-								buttonIconFactory={ButtonImportPreview}
-							/>
+						<div className="bankgrid" ref={hasBeenRenderedRef}>
+							{hasBeenRendered && (
+								<ButtonInfiniteGrid
+									ref={sourceGridRef}
+									pageNumber={isSinglePage ? snapshot.oldPageNumber : importPageNumber}
+									gridSize={sourceGridSize}
+									buttonIconFactory={ButtonImportPreview}
+								/>
+							)}
 						</div>
 					</div>
 				</MyErrorBoundary>
@@ -126,12 +133,14 @@ export function ImportPageWizard({ snapshot, instanceRemap, setInstanceRemap, do
 							/>
 						</CCol>
 						<div className="bankgrid">
-							<ButtonInfiniteGrid
-								ref={destinationGridRef}
-								pageNumber={pageNumber}
-								gridSize={destinationGridSize}
-								buttonIconFactory={ButtonGridIcon}
-							/>
+							{hasBeenRendered && (
+								<ButtonInfiniteGrid
+									ref={destinationGridRef}
+									pageNumber={pageNumber}
+									gridSize={destinationGridSize}
+									buttonIconFactory={ButtonGridIcon}
+								/>
+							)}
 						</div>
 					</div>
 				</MyErrorBoundary>
