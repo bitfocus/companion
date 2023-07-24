@@ -16,6 +16,7 @@ import {
 	faArrowsAlt,
 	faChevronLeft,
 	faChevronRight,
+	faCompass,
 	faCopy,
 	faEraser,
 	faFileExport,
@@ -28,6 +29,7 @@ import Select from 'react-select'
 import { ConfirmExportModal } from '../Components/ConfirmExportModal'
 import { ButtonInfiniteGrid, PrimaryButtonGridIcon } from './ButtonInfiniteGrid'
 import { useHasBeenRendered } from '../Hooks/useHasBeenRendered'
+import { useElementSize } from 'usehooks-ts'
 
 export const ButtonsGridPanel = memo(function ButtonsPage({
 	pageNumber,
@@ -150,6 +152,10 @@ export const ButtonsGridPanel = memo(function ButtonsPage({
 
 	const [hasBeenInView, isInViewRef] = useHasBeenRendered()
 
+	const [setSizeRef, holderSize] = useElementSize()
+	console.log('s', holderSize)
+	const useCompactButtons = holderSize.width < 680 // Cutoff for what of the header row fit in the large mode
+
 	return (
 		<KeyReceiver onKeyDown={onKeyDown} tabIndex={0} className="button-grid-panel">
 			<div className="button-grid-panel-header" ref={isInViewRef}>
@@ -161,28 +167,14 @@ export const ButtonsGridPanel = memo(function ButtonsPage({
 					and what they should do when you press or click on them.
 				</p>
 
-				<CRow>
+				<CRow innerRef={setSizeRef}>
 					<CCol sm={12}>
-						<CButton
-							color="light"
-							style={{
-								float: 'right',
-								marginTop: 10,
-							}}
-							onClick={showExportModal}
-						>
-							<FontAwesomeIcon icon={faFileExport} /> Export page
+						<CButton color="light" onClick={showExportModal} title="Export page" className="btn-right">
+							<FontAwesomeIcon icon={faFileExport} />
+							{useCompactButtons ? '' : 'Export page'}
 						</CButton>
-						&nbsp;
-						<CButton
-							color="light"
-							style={{
-								float: 'right',
-								marginTop: 10,
-							}}
-							onClick={resetPosition}
-						>
-							<FontAwesomeIcon icon={faHome} /> Home Position
+						<CButton color="light" onClick={resetPosition} title="Home Position" className="btn-right">
+							<FontAwesomeIcon icon={faHome} /> {useCompactButtons ? '' : 'Home Position'}
 						</CButton>
 						<ButtonGridHeader
 							pageNumber={pageNumber}
@@ -269,6 +261,9 @@ const ButtonGridActions = forwardRef(function ButtonGridActions({ isHot, pageNum
 		setActiveFunctionButton(null)
 	}, [])
 
+	const [setSizeRef, holderSize] = useElementSize()
+	const useCompactButtons = holderSize.width < 600 // Cutoff for what of the action buttons fit in their large mode
+
 	const getButton = (label, icon, func) => {
 		let color = 'light'
 		let disabled = false
@@ -279,9 +274,11 @@ const ButtonGridActions = forwardRef(function ButtonGridActions({ isHot, pageNum
 		}
 
 		return (
-			<CButton color={color} disabled={disabled} onClick={() => startFunction(func)}>
-				<FontAwesomeIcon icon={icon} /> {label}
-			</CButton>
+			!disabled && (
+				<CButton color={color} disabled={disabled} onClick={() => startFunction(func)} title={label}>
+					<FontAwesomeIcon icon={icon} /> {useCompactButtons ? '' : label}
+				</CButton>
+			)
 		)
 	}
 
@@ -372,7 +369,7 @@ const ButtonGridActions = forwardRef(function ButtonGridActions({ isHot, pageNum
 			<GenericConfirmModal ref={resetRef} />
 
 			<CCol sm={12} className={classnames({ out: isHot, fadeinout: true })}>
-				<div className="button-grid-controls">
+				<div className="button-grid-controls" ref={setSizeRef}>
 					<div>
 						{getButton('Copy', faCopy, 'copy')}
 						&nbsp;
@@ -382,19 +379,19 @@ const ButtonGridActions = forwardRef(function ButtonGridActions({ isHot, pageNum
 						&nbsp;
 					</div>
 					<div style={{ display: activeFunction ? '' : 'none' }}>
-						<CButton color="danger" onClick={() => stopFunction()}>
+						<CButton color="danger" onClick={() => stopFunction()} title="Cancel">
 							Cancel
 						</CButton>
 						&nbsp;
 						<CButton color="disabled">{hintText}</CButton>
 					</div>
-					<div style={{ display: activeFunction ? 'none' : undefined }}>
-						<CButton color="light" onClick={() => resetPage()}>
-							<FontAwesomeIcon icon={faEraser} /> Wipe page
+					<div style={{ display: activeFunction ? 'none' : undefined }} title="Reset page buttons">
+						<CButton color="light" onClick={() => resetPageNav()}>
+							<FontAwesomeIcon icon={faCompass} /> {useCompactButtons ? '' : 'Reset page buttons'}
 						</CButton>
 						&nbsp;
-						<CButton color="light" onClick={() => resetPageNav()}>
-							<FontAwesomeIcon icon={faEraser} /> Reset page buttons
+						<CButton color="light" onClick={() => resetPage()} title="Wipe page">
+							<FontAwesomeIcon icon={faEraser} /> {useCompactButtons ? '' : 'Wipe page'}
 						</CButton>
 					</div>
 				</div>

@@ -74,6 +74,14 @@
 	overflow: hidden;
 }
 
+.button-grid-panel-header {
+	.btn-right {
+		float: right;
+		margin-top: 10px;
+		margin-left: 3px;
+	}
+}
+
 .button-infinite-grid {
 	height: 100%;
 	max-height: 60vh;
