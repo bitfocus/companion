@@ -1,4 +1,20 @@
-import { CAlert, CButton, CCol, CInput, CInputGroup, CInputGroupAppend, CInputGroupPrepend, CRow } from '@coreui/react'
+import {
+	CAlert,
+	CButton,
+	CCol,
+	CForm,
+	CFormGroup,
+	CInput,
+	CInputGroup,
+	CInputGroupAppend,
+	CInputGroupPrepend,
+	CLabel,
+	CModal,
+	CModalBody,
+	CModalFooter,
+	CModalHeader,
+	CRow,
+} from '@coreui/react'
 import React, {
 	forwardRef,
 	memo,
@@ -21,6 +37,7 @@ import {
 	faEraser,
 	faFileExport,
 	faHome,
+	faPencil,
 	faTrash,
 } from '@fortawesome/free-solid-svg-icons'
 import classnames from 'classnames'
@@ -30,6 +47,7 @@ import { ConfirmExportModal } from '../Components/ConfirmExportModal'
 import { ButtonInfiniteGrid, PrimaryButtonGridIcon } from './ButtonInfiniteGrid'
 import { useHasBeenRendered } from '../Hooks/useHasBeenRendered'
 import { useElementSize } from 'usehooks-ts'
+import { ButtonGridHeader } from './ButtonGridHeader'
 
 export const ButtonsGridPanel = memo(function ButtonsPage({
 	pageNumber,
@@ -94,21 +112,8 @@ export const ButtonsGridPanel = memo(function ButtonsPage({
 
 	const pageInfo = pages?.[pageNumber]
 
-	const [newPageName, setNewPageName] = useState(null)
-	const clearNewPageName = useCallback(() => setNewPageName(null), [])
-	const changeNewPageName = useCallback(
-		(e) => {
-			socketEmitPromise(socket, 'pages:set-name', [pageNumber, e.currentTarget.value]).catch((e) => {
-				console.error('Failed to set name', e)
-			})
-			setNewPageName(e.currentTarget.value)
-		},
-		[socket, pageNumber]
-	)
-
-	const pageName = pageInfo?.name ?? 'PAGE'
-
 	const gridRef = useRef(null)
+	const editRef = useRef(null)
 
 	const exportModalRef = useRef(null)
 	const showExportModal = useCallback(() => {
@@ -118,6 +123,14 @@ export const ButtonsGridPanel = memo(function ButtonsPage({
 	const resetPosition = useCallback(() => {
 		gridRef.current?.resetPosition()
 	}, [gridRef])
+
+	const configurePage = useCallback(() => {
+		editRef.current?.show(Number(pageNumber), pageInfo, (pageNumber, newName) => {
+			socketEmitPromise(socket, 'pages:set-name', [pageNumber, newName]).catch((e) => {
+				console.error('Failed to set name', e)
+			})
+		})
+	}, [pageNumber, pageInfo])
 
 	const gridSize = useMemo(
 		() => ({
@@ -131,7 +144,6 @@ export const ButtonsGridPanel = memo(function ButtonsPage({
 
 	const doGrow = useCallback(
 		(direction, amount) => {
-			console.log('grow', direction, amount)
 			switch (direction) {
 				case 'left':
 					socket.emit('set_userconfig_key', 'grid_min_column', gridSize.minColumn - (amount || 2))
@@ -153,13 +165,13 @@ export const ButtonsGridPanel = memo(function ButtonsPage({
 	const [hasBeenInView, isInViewRef] = useHasBeenRendered()
 
 	const [setSizeRef, holderSize] = useElementSize()
-	console.log('s', holderSize)
 	const useCompactButtons = holderSize.width < 680 // Cutoff for what of the header row fit in the large mode
 
 	return (
 		<KeyReceiver onKeyDown={onKeyDown} tabIndex={0} className="button-grid-panel">
 			<div className="button-grid-panel-header" ref={isInViewRef}>
 				<ConfirmExportModal ref={exportModalRef} title="Export Page" />
+				<EditPagePropertiesModal ref={editRef} />
 
 				<h4>Buttons</h4>
 				<p>
@@ -176,14 +188,10 @@ export const ButtonsGridPanel = memo(function ButtonsPage({
 						<CButton color="light" onClick={resetPosition} title="Home Position" className="btn-right">
 							<FontAwesomeIcon icon={faHome} /> {useCompactButtons ? '' : 'Home Position'}
 						</CButton>
-						<ButtonGridHeader
-							pageNumber={pageNumber}
-							pageName={newPageName ?? pageName}
-							changePage={changePage2}
-							setPage={setPage}
-							onNameBlur={clearNewPageName}
-							onNameChange={changeNewPageName}
-						/>
+						<CButton color="light" onClick={configurePage} title="Rename Page" className="btn-right">
+							<FontAwesomeIcon icon={faPencil} /> {useCompactButtons ? '' : 'Rename Page'}
+						</CButton>
+						<ButtonGridHeader pageNumber={pageNumber} changePage={changePage2} setPage={setPage} />
 					</CCol>
 				</CRow>
 			</div>
@@ -210,11 +218,6 @@ export const ButtonsGridPanel = memo(function ButtonsPage({
 						clearSelectedButton={clearSelectedButton}
 					/>
 				</CRow>
-
-				<CAlert color="info">
-					You can navigate between pages using the arrow buttons, or by clicking the page number, typing in a number,
-					and pressing 'Enter' on your keyboard.
-				</CAlert>
 
 				<CAlert color="info">
 					You can use common key commands such as copy, paste, and cut to move buttons around. You can also press the
@@ -400,75 +403,77 @@ const ButtonGridActions = forwardRef(function ButtonGridActions({ isHot, pageNum
 	)
 })
 
-export const ButtonGridHeader = memo(function ButtonGridHeader({
-	pageNumber,
-	pageName,
-	onNameChange,
-	onNameBlur,
-	changePage,
-	setPage,
-}) {
-	const pagesContext = useContext(PagesContext)
+const EditPagePropertiesModal = forwardRef(function EditPagePropertiesModal(props, ref) {
+	const [data, setData] = useState(null)
+	const [show, setShow] = useState(false)
 
-	const inputChange = useCallback(
-		(val) => {
-			const val2 = Number(val?.value)
-			if (!isNaN(val2)) {
-				setPage(val2)
-			}
+	const [pageName, setName] = useState(null)
+
+	const buttonRef = useRef()
+
+	const buttonFocus = () => {
+		if (buttonRef.current) {
+			buttonRef.current.focus()
+		}
+	}
+
+	const doClose = useCallback(() => setShow(false), [])
+	const onClosed = useCallback(() => setData(null), [])
+	const doAction = useCallback(
+		(e) => {
+			if (e) e.preventDefault()
+
+			setData(null)
+			setShow(false)
+			setName(null)
+
+			// completion callback
+			const cb = data?.[1]
+			cb(data?.[0], pageName)
 		},
-		[setPage]
+		[data, pageName]
 	)
 
-	const nextPage = useCallback(() => {
-		changePage(1)
-	}, [changePage])
-	const prevPage = useCallback(() => {
-		changePage(-1)
-	}, [changePage])
+	useImperativeHandle(
+		ref,
+		() => ({
+			show(pageNumber, pageInfo, completeCallback) {
+				setName(pageInfo?.name)
+				setData([pageNumber, completeCallback])
+				setShow(true)
 
-	const pageOptions = useMemo(() => {
-		return Object.entries(pagesContext).map(([id, value]) => ({
-			value: id,
-			label: `${id} (${value.name})`,
-		}))
-	}, [pagesContext])
+				// Focus the button asap. It also gets focused once the open is complete
+				setTimeout(buttonFocus, 50)
+			},
+		}),
+		[]
+	)
+
+	const onNameChange = useCallback((e) => {
+		setName(e.target.value)
+	}, [])
 
 	return (
-		<div className="button-grid-header">
-			<CInputGroup>
-				<CInputGroupPrepend>
-					<CButton color="dark" hidden={!changePage} onClick={prevPage}>
-						<FontAwesomeIcon icon={faChevronLeft} />
-					</CButton>
-				</CInputGroupPrepend>
-				<Select
-					className="button-page-input"
-					isDisabled={!setPage}
-					placeholder={pageNumber}
-					classNamePrefix={'select-control'}
-					isClearable={false}
-					isSearchable={true}
-					isMulti={false}
-					options={pageOptions}
-					value={{ value: pageNumber, label: pageNumber }}
-					onChange={inputChange}
-				/>
-				<CInputGroupAppend>
-					<CButton color="dark" hidden={!changePage} onClick={nextPage}>
-						<FontAwesomeIcon icon={faChevronRight} />
-					</CButton>
-				</CInputGroupAppend>
-			</CInputGroup>
-			<CInput
-				type="text"
-				className="button-page-name"
-				placeholder="Page name"
-				value={pageName}
-				onBlur={onNameBlur}
-				onChange={onNameChange}
-				disabled={!onNameChange}
-			/>
-		</div>
+		<CModal show={show} onClose={doClose} onClosed={onClosed} onOpened={buttonFocus}>
+			<CModalHeader closeButton>
+				<h5>Configure Page {data?.[0]}</h5>
+			</CModalHeader>
+			<CModalBody>
+				<CForm onSubmit={doAction}>
+					<CFormGroup>
+						<CLabel>Name</CLabel>
+						<CInput type="text" value={pageName || ''} onChange={onNameChange} />
+					</CFormGroup>
+				</CForm>
+			</CModalBody>
+			<CModalFooter>
+				<CButton color="secondary" onClick={doClose}>
+					Cancel
+				</CButton>
+				<CButton innerRef={buttonRef} color="primary" onClick={doAction}>
+					Save
+				</CButton>
+			</CModalFooter>
+		</CModal>
 	)
 })

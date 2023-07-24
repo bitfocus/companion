@@ -9,7 +9,7 @@ import {
 	UserConfigContext,
 	socketEmitPromise,
 } from '../../util'
-import { ButtonGridHeader } from '../../Buttons/ButtonGrid'
+import { ButtonGridHeader } from '../../Buttons/ButtonGridHeader'
 import { usePagePicker } from '../../Hooks/usePagePicker'
 import { ButtonGridIcon, ButtonGridIconBase, ButtonInfiniteGrid } from '../../Buttons/ButtonInfiniteGrid'
 import { faHome } from '@fortawesome/free-solid-svg-icons'
@@ -90,7 +90,6 @@ export function ImportPageWizard({ snapshot, instanceRemap, setInstanceRemap, do
 
 							<ButtonGridHeader
 								pageNumber={isSinglePage ? snapshot.oldPageNumber : importPageNumber}
-								pageName={sourcePageInfo?.name}
 								changePage={isSinglePage ? null : changeImportPage}
 								setPage={isSinglePage ? null : setImportPageNumber}
 							/>
@@ -125,12 +124,7 @@ export function ImportPageWizard({ snapshot, instanceRemap, setInstanceRemap, do
 								<FontAwesomeIcon icon={faHome} /> Home Position
 							</CButton>
 
-							<ButtonGridHeader
-								pageNumber={pageNumber}
-								pageName={pages[pageNumber]?.name ?? 'PAGE'}
-								changePage={changePage}
-								setPage={setPageNumber}
-							/>
+							<ButtonGridHeader pageNumber={pageNumber} changePage={changePage} setPage={setPageNumber} />
 						</CCol>
 						<div className="bankgrid">
 							{hasBeenRendered && (

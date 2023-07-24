@@ -36,7 +36,7 @@ import { useMemo } from 'react'
 import { DropdownInputField } from '../Components'
 import { ActionsList } from '../Controls/ActionSetEditor'
 import { GenericConfirmModal } from '../Components/GenericConfirmModal'
-import { ButtonGridHeader } from './ButtonGrid'
+import { ButtonGridHeader } from './ButtonGridHeader'
 import { usePagePicker } from '../Hooks/usePagePicker'
 import { cloneDeep } from 'lodash-es'
 import jsonPatch from 'fast-json-patch'
@@ -403,12 +403,7 @@ function ButtonPicker({ selectButton }) {
 					<FontAwesomeIcon icon={faHome} /> Home Position
 				</CButton>
 
-				<ButtonGridHeader
-					pageNumber={pageNumber}
-					pageName={pages[pageNumber]?.name ?? 'PAGE'}
-					changePage={changePage}
-					setPage={setPageNumber}
-				/>
+				<ButtonGridHeader pageNumber={pageNumber} changePage={changePage} setPage={setPageNumber} />
 			</div>
 			<div className="bankgrid" ref={isInViewRef}>
 				{hasBeenInView && (
