@@ -134,8 +134,8 @@ export const ButtonInfiniteGrid = forwardRef(function ButtonInfiniteGrid(
 			<div
 				className="button-grid-canvas"
 				style={{
-					width: countColumns * tileSize + growWidth * 2,
-					height: countRows * tileSize + growHeight * 2,
+					width: Math.max(countColumns * tileSize, windowSize.width) + growWidth * 2,
+					height: Math.max(countRows * tileSize, windowSize.height) + growHeight * 2,
 				}}
 			>
 				{doGrow && (

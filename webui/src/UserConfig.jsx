@@ -1429,6 +1429,14 @@ const GridSizeModal = forwardRef(function GridSizeModal(props, ref) {
 		}))
 	}, [])
 
+	const isReducingSize =
+		newGridSize &&
+		userConfig.gridSize &&
+		(newGridSize.minColumn > userConfig.gridSize.minColumn ||
+			newGridSize.maxColumn < userConfig.gridSize.maxColumn ||
+			newGridSize.minRow > userConfig.gridSize.minRow ||
+			newGridSize.maxRow < userConfig.gridSize.maxRow)
+
 	return (
 		<CModal show={show} onClose={doClose} onClosed={onClosed} onOpened={buttonFocus}>
 			<CModalHeader closeButton>
@@ -1453,6 +1461,11 @@ const GridSizeModal = forwardRef(function GridSizeModal(props, ref) {
 						<CInput type="number" value={newGridSize?.maxRow} min={0} step={1} onChange={setMaxRow} />
 					</CFormGroup>
 				</CForm>
+				{isReducingSize && (
+					<CAlert color="danger">
+						By reducing the grid size, any buttons outside of the new boundaries will be deleted.
+					</CAlert>
+				)}
 			</CModalBody>
 			<CModalFooter>
 				<CButton color="secondary" onClick={doClose}>
