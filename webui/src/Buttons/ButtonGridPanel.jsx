@@ -5,9 +5,6 @@ import {
 	CForm,
 	CFormGroup,
 	CInput,
-	CInputGroup,
-	CInputGroupAppend,
-	CInputGroupPrepend,
 	CLabel,
 	CModal,
 	CModalBody,
@@ -24,25 +21,10 @@ import React, {
 	useImperativeHandle,
 	useRef,
 	useState,
-	useMemo,
 } from 'react'
 import { KeyReceiver, PagesContext, socketEmitPromise, SocketContext, UserConfigContext } from '../util'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import {
-	faArrowsAlt,
-	faChevronLeft,
-	faChevronRight,
-	faCompass,
-	faCopy,
-	faEraser,
-	faFileExport,
-	faHome,
-	faPencil,
-	faTrash,
-} from '@fortawesome/free-solid-svg-icons'
-import classnames from 'classnames'
-import { GenericConfirmModal } from '../Components/GenericConfirmModal'
-import Select from 'react-select'
+import { faFileExport, faHome, faPencil } from '@fortawesome/free-solid-svg-icons'
 import { ConfirmExportModal } from '../Components/ConfirmExportModal'
 import { ButtonInfiniteGrid, PrimaryButtonGridIcon } from './ButtonInfiniteGrid'
 import { useHasBeenRendered } from '../Hooks/useHasBeenRendered'
@@ -126,37 +108,37 @@ export const ButtonsGridPanel = memo(function ButtonsPage({
 	}, [gridRef])
 
 	const configurePage = useCallback(() => {
-		editRef.current?.show(Number(pageNumber), pageInfo, (pageNumber, newName) => {
-			socketEmitPromise(socket, 'pages:set-name', [pageNumber, newName]).catch((e) => {
-				console.error('Failed to set name', e)
-			})
-		})
+		editRef.current?.show(Number(pageNumber), pageInfo)
 	}, [pageNumber, pageInfo])
 
-	const gridSize = useMemo(
-		() => ({
-			minColumn: userConfig.grid_min_column,
-			maxColumn: userConfig.grid_max_column,
-			minRow: userConfig.grid_min_row,
-			maxRow: userConfig.grid_max_row,
-		}),
-		[userConfig.grid_min_column, userConfig.grid_max_column, userConfig.grid_min_row, userConfig.grid_max_row]
-	)
+	const gridSize = userConfig.gridSize
 
 	const doGrow = useCallback(
 		(direction, amount) => {
 			switch (direction) {
 				case 'left':
-					socket.emit('set_userconfig_key', 'grid_min_column', gridSize.minColumn - (amount || 2))
+					socket.emit('set_userconfig_key', 'gridSize', {
+						...gridSize,
+						minColumn: gridSize.minColumn - (amount || 2),
+					})
 					break
 				case 'right':
-					socket.emit('set_userconfig_key', 'grid_max_column', gridSize.maxColumn + (amount || 2))
+					socket.emit('set_userconfig_key', 'gridSize', {
+						...gridSize,
+						maxColumn: gridSize.maxColumn + (amount || 2),
+					})
 					break
 				case 'top':
-					socket.emit('set_userconfig_key', 'grid_min_row', gridSize.minRow - (amount || 2))
+					socket.emit('set_userconfig_key', 'gridSize', {
+						...gridSize,
+						minRow: gridSize.minRow - (amount || 2),
+					})
 					break
 				case 'bottom':
-					socket.emit('set_userconfig_key', 'grid_max_row', gridSize.maxRow + (amount || 2))
+					socket.emit('set_userconfig_key', 'gridSize', {
+						...gridSize,
+						maxRow: gridSize.maxRow + (amount || 2),
+					})
 					break
 			}
 		},
@@ -231,7 +213,8 @@ export const ButtonsGridPanel = memo(function ButtonsPage({
 })
 
 const EditPagePropertiesModal = forwardRef(function EditPagePropertiesModal(props, ref) {
-	const [data, setData] = useState(null)
+	const socket = useContext(SocketContext)
+	const [pageNumber, setPageNumber] = useState(null)
 	const [show, setShow] = useState(false)
 
 	const [pageName, setName] = useState(null)
@@ -245,28 +228,30 @@ const EditPagePropertiesModal = forwardRef(function EditPagePropertiesModal(prop
 	}
 
 	const doClose = useCallback(() => setShow(false), [])
-	const onClosed = useCallback(() => setData(null), [])
+	const onClosed = useCallback(() => setPageNumber(null), [])
 	const doAction = useCallback(
 		(e) => {
 			if (e) e.preventDefault()
 
-			setData(null)
+			setPageNumber(null)
 			setShow(false)
 			setName(null)
 
-			// completion callback
-			const cb = data?.[1]
-			cb(data?.[0], pageName)
+			if (pageNumber === null) return
+
+			socketEmitPromise(socket, 'pages:set-name', [pageNumber, pageName]).catch((e) => {
+				console.error('Failed to set name', e)
+			})
 		},
-		[data, pageName]
+		[pageNumber, pageName]
 	)
 
 	useImperativeHandle(
 		ref,
 		() => ({
-			show(pageNumber, pageInfo, completeCallback) {
+			show(pageNumber, pageInfo) {
 				setName(pageInfo?.name)
-				setData([pageNumber, completeCallback])
+				setPageNumber(pageNumber)
 				setShow(true)
 
 				// Focus the button asap. It also gets focused once the open is complete
@@ -283,7 +268,7 @@ const EditPagePropertiesModal = forwardRef(function EditPagePropertiesModal(prop
 	return (
 		<CModal show={show} onClose={doClose} onClosed={onClosed} onOpened={buttonFocus}>
 			<CModalHeader closeButton>
-				<h5>Configure Page {data?.[0]}</h5>
+				<h5>Configure Page {pageNumber}</h5>
 			</CModalHeader>
 			<CModalBody>
 				<CForm onSubmit={doAction}>

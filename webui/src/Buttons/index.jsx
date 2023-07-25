@@ -64,7 +64,10 @@ export const ButtonsPage = memo(function ButtonsPage({ hotPress }) {
 							if (selectedButton) {
 								return {
 									...selectedButton,
-									row: selectedButton.row >= userConfig.grid_max_row ? userConfig.grid_min_row : selectedButton.row + 1,
+									row:
+										selectedButton.row >= userConfig.gridSize.maxRow
+											? userConfig.gridSize.minRow
+											: selectedButton.row + 1,
 								}
 							}
 						})
@@ -75,7 +78,10 @@ export const ButtonsPage = memo(function ButtonsPage({ hotPress }) {
 							if (selectedButton) {
 								return {
 									...selectedButton,
-									row: selectedButton.row <= userConfig.grid_min_row ? userConfig.grid_max_row : selectedButton.row - 1,
+									row:
+										selectedButton.row <= userConfig.gridSize.minRow
+											? userConfig.gridSize.maxRow
+											: selectedButton.row - 1,
 								}
 							}
 						})
@@ -87,8 +93,8 @@ export const ButtonsPage = memo(function ButtonsPage({ hotPress }) {
 								return {
 									...selectedButton,
 									column:
-										selectedButton.column <= userConfig.grid_min_column
-											? userConfig.grid_max_column
+										selectedButton.column <= userConfig.gridSize.minColumn
+											? userConfig.gridSize.maxColumn
 											: selectedButton.column - 1,
 								}
 							}
@@ -101,8 +107,8 @@ export const ButtonsPage = memo(function ButtonsPage({ hotPress }) {
 								return {
 									...selectedButton,
 									column:
-										selectedButton.column >= userConfig.grid_max_column
-											? userConfig.grid_min_column
+										selectedButton.column >= userConfig.gridSize.maxColumn
+											? userConfig.gridSize.minColumn
 											: selectedButton.column + 1,
 								}
 							}

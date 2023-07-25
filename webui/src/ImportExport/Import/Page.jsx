@@ -43,15 +43,7 @@ export function ImportPageWizard({ snapshot, instanceRemap, setInstanceRemap, do
 		doImport(importPageNumber, pageNumber, instanceRemap)
 	}, [doImport, importPageNumber, pageNumber, instanceRemap])
 
-	const destinationGridSize = useMemo(
-		() => ({
-			minColumn: userConfig.grid_min_column,
-			maxColumn: userConfig.grid_max_column,
-			minRow: userConfig.grid_min_row,
-			maxRow: userConfig.grid_max_row,
-		}),
-		[userConfig.grid_min_column, userConfig.grid_max_column, userConfig.grid_min_row, userConfig.grid_max_row]
-	)
+	const destinationGridSize = userConfig.gridSize
 
 	const destinationGridRef = useRef(null)
 	const resetDestinationPosition = useCallback(() => {

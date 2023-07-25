@@ -1,4 +1,13 @@
-import React, { memo, useCallback, useContext } from 'react'
+import React, {
+	forwardRef,
+	memo,
+	useCallback,
+	useContext,
+	useEffect,
+	useImperativeHandle,
+	useRef,
+	useState,
+} from 'react'
 import {
 	CAlert,
 	CButton,
@@ -7,7 +16,14 @@ import {
 	CDropdownItem,
 	CDropdownMenu,
 	CDropdownToggle,
+	CForm,
+	CFormGroup,
 	CInput,
+	CLabel,
+	CModal,
+	CModalBody,
+	CModalFooter,
+	CModalHeader,
 	CNav,
 	CNavItem,
 	CNavLink,
@@ -18,7 +34,7 @@ import {
 } from '@coreui/react'
 import { MyErrorBoundary, SocketContext, UserConfigContext } from './util'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faFileImport, faSync, faTrash, faUndo } from '@fortawesome/free-solid-svg-icons'
+import { faCog, faFileImport, faSync, faTrash, faUndo } from '@fortawesome/free-solid-svg-icons'
 import CSwitch from './CSwitch'
 
 export const UserConfig = memo(function UserConfig() {
@@ -46,6 +62,8 @@ export const UserConfig = memo(function UserConfig() {
 function UserConfigTable() {
 	const socket = useContext(SocketContext)
 	const config = useContext(UserConfigContext)
+
+	const gridSizeRef = useRef(null)
 
 	const setValue = useCallback(
 		(key, value) => {
@@ -78,8 +96,13 @@ function UserConfigTable() {
 		socket.emit('ssl_certificate_renew')
 	}, [socket])
 
+	const editGridSize = useCallback(() => {
+		gridSizeRef.current?.show()
+	}, [socket])
+
 	return (
 		<table className="table table-responsive-sm">
+			<GridSizeModal ref={gridSizeRef} />
 			<tbody>
 				<tr>
 					<th colSpan="0" className="settings-category">
@@ -149,84 +172,46 @@ function UserConfigTable() {
 				<tr>
 					<th colSpan="3" className="settings-category">
 						Grid
-						<p>TODO - this needs some confirmations as it is destructive</p>
 					</th>
 				</tr>
 
 				<tr>
 					<td>Min Column</td>
 					<td>
-						<div className="form-check form-check-inline mr-1">
-							<CInput
-								type="number"
-								value={config.grid_min_column}
-								max={0}
-								step={1}
-								onChange={(e) => setValue('grid_min_column', e.currentTarget.value)}
-							/>
-						</div>
+						<div className="form-check form-check-inline mr-1">{config.gridSize?.minColumn}</div>
 					</td>
-					<td>
-						<CButton onClick={() => resetValue('grid_min_column')} title="Reset to default">
-							<FontAwesomeIcon icon={faUndo} />
-						</CButton>
-					</td>
+					<td></td>
 				</tr>
 				<tr>
 					<td>Max Column</td>
 					<td>
-						<div className="form-check form-check-inline mr-1">
-							<CInput
-								type="number"
-								value={config.grid_max_column}
-								min={0}
-								step={1}
-								onChange={(e) => setValue('grid_max_column', e.currentTarget.value)}
-							/>
-						</div>
+						<div className="form-check form-check-inline mr-1">{config.gridSize?.maxColumn}</div>
 					</td>
-					<td>
-						<CButton onClick={() => resetValue('grid_max_column')} title="Reset to default">
-							<FontAwesomeIcon icon={faUndo} />
-						</CButton>
-					</td>
+					<td></td>
 				</tr>
 				<tr>
 					<td>Min Row</td>
 					<td>
-						<div className="form-check form-check-inline mr-1">
-							<CInput
-								type="number"
-								value={config.grid_min_row}
-								max={0}
-								step={1}
-								onChange={(e) => setValue('grid_min_row', e.currentTarget.value)}
-							/>
-						</div>
+						<div className="form-check form-check-inline mr-1">{config.gridSize?.minRow}</div>
 					</td>
-					<td>
-						<CButton onClick={() => resetValue('grid_min_row')} title="Reset to default">
-							<FontAwesomeIcon icon={faUndo} />
-						</CButton>
-					</td>
+					<td></td>
 				</tr>
 				<tr>
 					<td>Max Row</td>
 					<td>
-						<div className="form-check form-check-inline mr-1">
-							<CInput
-								type="number"
-								value={config.grid_max_row}
-								min={0}
-								step={1}
-								onChange={(e) => setValue('grid_max_row', e.currentTarget.value)}
-							/>
-						</div>
+						<div className="form-check form-check-inline mr-1">{config.gridSize?.maxRow}</div>
 					</td>
-					<td>
-						<CButton onClick={() => resetValue('grid_max_row')} title="Reset to default">
-							<FontAwesomeIcon icon={faUndo} />
-						</CButton>
+					<td></td>
+				</tr>
+				<tr>
+					<td></td>
+					<td colSpan={2}>
+						<div className="form-check form-check-inline mr-1">
+							<CButton onClick={editGridSize} color="success">
+								<FontAwesomeIcon icon={faCog} />
+								&nbsp;Edit Grid Size
+							</CButton>
+						</div>
 					</td>
 				</tr>
 
@@ -1354,3 +1339,129 @@ function RemoteControlInfo() {
 		</>
 	)
 }
+
+const GridSizeModal = forwardRef(function GridSizeModal(props, ref) {
+	const socket = useContext(SocketContext)
+	const userConfig = useContext(UserConfigContext)
+	const [show, setShow] = useState(false)
+
+	const [newGridSize, setNewGridSize] = useState(null)
+
+	const buttonRef = useRef()
+
+	const buttonFocus = () => {
+		if (buttonRef.current) {
+			buttonRef.current.focus()
+		}
+	}
+
+	const doClose = useCallback(() => setShow(false), [])
+	const onClosed = useCallback(() => {
+		setNewGridSize(null)
+	}, [])
+	const doAction = useCallback(
+		(e) => {
+			if (e) e.preventDefault()
+
+			setShow(false)
+			setNewGridSize(null)
+
+			if (!setNewGridSize) return
+
+			console.log('set gridSize', newGridSize)
+			socket.emit('set_userconfig_key', 'gridSize', newGridSize)
+		},
+		[newGridSize]
+	)
+
+	useImperativeHandle(
+		ref,
+		() => ({
+			show() {
+				setShow(true)
+
+				// Focus the button asap. It also gets focused once the open is complete
+				setTimeout(buttonFocus, 50)
+			},
+		}),
+		[]
+	)
+
+	useEffect(() => {
+		if (show) {
+			setNewGridSize((oldGridSize) => {
+				if (!oldGridSize) return userConfig.gridSize
+				return oldGridSize
+			})
+		}
+	}, [show, userConfig])
+
+	const onNameChange = useCallback((e) => {
+		setNewGridSize(e.target.value)
+	}, [])
+
+	const setMinColumn = useCallback((e) => {
+		const newValue = Number(e.currentTarget.value)
+		setNewGridSize((oldSize) => ({
+			...oldSize,
+			minColumn: newValue,
+		}))
+	}, [])
+	const setMaxColumn = useCallback((e) => {
+		const newValue = Number(e.currentTarget.value)
+		setNewGridSize((oldSize) => ({
+			...oldSize,
+			maxColumn: newValue,
+		}))
+	}, [])
+	const setMinRow = useCallback((e) => {
+		const newValue = Number(e.currentTarget.value)
+		setNewGridSize((oldSize) => ({
+			...oldSize,
+			minRow: newValue,
+		}))
+	}, [])
+	const setMaxRow = useCallback((e) => {
+		const newValue = Number(e.currentTarget.value)
+		setNewGridSize((oldSize) => ({
+			...oldSize,
+			maxRow: newValue,
+		}))
+	}, [])
+
+	return (
+		<CModal show={show} onClose={doClose} onClosed={onClosed} onOpened={buttonFocus}>
+			<CModalHeader closeButton>
+				<h5>Configure Grid Size</h5>
+			</CModalHeader>
+			<CModalBody>
+				<CForm onSubmit={doAction}>
+					<CFormGroup>
+						<CLabel>Min Column</CLabel>
+						<CInput type="number" value={newGridSize?.minColumn} max={0} step={1} onChange={setMinColumn} />
+					</CFormGroup>
+					<CFormGroup>
+						<CLabel>Max Column</CLabel>
+						<CInput type="number" value={newGridSize?.maxColumn} min={0} step={1} onChange={setMaxColumn} />
+					</CFormGroup>
+					<CFormGroup>
+						<CLabel>Min Row</CLabel>
+						<CInput type="number" value={newGridSize?.minRow} max={0} step={1} onChange={setMinRow} />
+					</CFormGroup>
+					<CFormGroup>
+						<CLabel>Max Row</CLabel>
+						<CInput type="number" value={newGridSize?.maxRow} min={0} step={1} onChange={setMaxRow} />
+					</CFormGroup>
+				</CForm>
+			</CModalBody>
+			<CModalFooter>
+				<CButton color="secondary" onClick={doClose}>
+					Cancel
+				</CButton>
+				<CButton innerRef={buttonRef} color="primary" onClick={doAction}>
+					Save
+				</CButton>
+			</CModalFooter>
+		</CModal>
+	)
+})

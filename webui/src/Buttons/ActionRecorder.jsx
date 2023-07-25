@@ -372,15 +372,7 @@ function ButtonPicker({ selectButton }) {
 		})
 	}, [actionSetOptions])
 
-	const gridSize = useMemo(
-		() => ({
-			minColumn: userConfig.grid_min_column,
-			maxColumn: userConfig.grid_max_column,
-			minRow: userConfig.grid_min_row,
-			maxRow: userConfig.grid_max_row,
-		}),
-		[userConfig.grid_min_column, userConfig.grid_max_column, userConfig.grid_min_row, userConfig.grid_max_row]
-	)
+	const gridSize = userConfig.gridSize
 
 	const [hasBeenInView, isInViewRef] = useHasBeenRendered()
 
