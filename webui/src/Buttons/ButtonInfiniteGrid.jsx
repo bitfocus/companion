@@ -8,6 +8,7 @@ import React, {
 	useEffect,
 	useImperativeHandle,
 	useMemo,
+	useRef,
 	useState,
 } from 'react'
 import { useDrop } from 'react-dnd'
@@ -16,7 +17,7 @@ import classNames from 'classnames'
 import useScrollPosition from '../Hooks/useScrollPosition'
 import useElementInnerSize from '../Hooks/useElementInnerSize'
 import { useButtonRenderCache } from '../Hooks/useSharedRenderCache2'
-import { CButton } from '@coreui/react'
+import { CButton, CInput } from '@coreui/react'
 
 export const ButtonInfiniteGrid = forwardRef(function ButtonInfiniteGrid(
 	{ isHot, pageNumber, bankClick, selectedButton, gridSize, doGrow, buttonIconFactory },
@@ -27,8 +28,8 @@ export const ButtonInfiniteGrid = forwardRef(function ButtonInfiniteGrid(
 	const countRows = maxRow - minRow + 1
 
 	const tileSize = 84
-	const growWidth = doGrow ? 80 : 0
-	const growHeight = doGrow ? 80 : 0
+	const growWidth = doGrow ? 90 : 0
+	const growHeight = doGrow ? 60 : 0
 
 	const [setSizeElement, windowSize] = useElementInnerSize()
 	const { scrollX, scrollY, setRef: setScrollRef } = useScrollPosition()
@@ -109,17 +110,42 @@ export const ButtonInfiniteGrid = forwardRef(function ButtonInfiniteGrid(
 		}
 	}
 
+	const growTopRef = useRef(null)
+	const growBottomRef = useRef(null)
+	const growLeftRef = useRef(null)
+	const growRightRef = useRef(null)
+
 	const doGrowLeft = useCallback(() => {
-		if (doGrow) doGrow('left', undefined)
+		if (!doGrow || !growLeftRef.current) return
+
+		const amount = Number(growLeftRef.current.value)
+		if (!isNaN(amount)) return
+
+		doGrow('left', undefined)
 	}, [doGrow])
 	const doGrowRight = useCallback(() => {
-		if (doGrow) doGrow('right', undefined)
+		if (!doGrow || !growRightRef.current) return
+
+		const amount = Number(growRightRef.current.value)
+		if (!isNaN(amount)) return
+
+		doGrow('right', undefined)
 	}, [doGrow])
 	const doGrowTop = useCallback(() => {
-		if (doGrow) doGrow('top', undefined)
+		if (!doGrow || !growTopRef.current) return
+
+		const amount = Number(growTopRef.current.value)
+		if (!isNaN(amount)) return
+
+		doGrow('top', amount)
 	}, [doGrow])
 	const doGrowBottom = useCallback(() => {
-		if (doGrow) doGrow('bottom', undefined)
+		if (!doGrow || !growBottomRef.current) return
+
+		const amount = Number(growBottomRef.current.value)
+		if (!isNaN(amount)) return
+
+		doGrow('bottom', amount)
 	}, [doGrow])
 
 	window.doGrow = doGrow
@@ -142,24 +168,30 @@ export const ButtonInfiniteGrid = forwardRef(function ButtonInfiniteGrid(
 					<>
 						<div className="expand left">
 							<div className="sticky-center">
-								<CButton color="primary" onClick={doGrowLeft}>
-									Grow
-								</CButton>
+								<CButton onClick={doGrowLeft}>Add</CButton>
+								<CInput innerRef={growLeftRef} type="number" min={1} defaultValue={2} />
+								&nbsp;&nbsp;columns
 							</div>
 						</div>
 						<div className="expand right">
-							<div className="sticky-center" onClick={doGrowRight}>
-								<CButton color="primary">Grow</CButton>
+							<div className="sticky-center">
+								<CButton onClick={doGrowRight}>Add</CButton>
+								<CInput innerRef={growRightRef} type="number" min={1} defaultValue={2} />
+								&nbsp;&nbsp;columns
 							</div>
 						</div>
 						<div className="expand top">
-							<div className="sticky-center" onClick={doGrowTop}>
-								<CButton color="primary">Grow</CButton>
+							<div className="sticky-center">
+								<CButton onClick={doGrowTop}>Add</CButton>
+								<CInput innerRef={growTopRef} type="number" min={1} defaultValue={2} />
+								&nbsp;&nbsp;rows
 							</div>
 						</div>
 						<div className="expand bottom">
-							<div className="sticky-center" onClick={doGrowBottom}>
-								<CButton color="primary">Grow</CButton>
+							<div className="sticky-center">
+								<CButton onClick={doGrowBottom}>Add</CButton>
+								<CInput innerRef={growBottomRef} type="number" min={1} defaultValue={2} />
+								&nbsp;&nbsp;rows
 							</div>
 						</div>
 					</>

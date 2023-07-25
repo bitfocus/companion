@@ -102,7 +102,18 @@
 			float: left;
 			position: absolute;
 
-			background-color: #444;
+			background-color: #333;
+
+			color: #eee;
+
+			.btn {
+				color: $primary;
+			}
+
+			input {
+				display: inline-block;
+				width: 70px;
+			}
 
 			&.left {
 				left: 0;
@@ -120,7 +131,7 @@
 			&.left,
 			&.right {
 				height: 100%;
-				width: 80px;
+				width: 90px;
 
 				top: 0;
 
@@ -135,7 +146,7 @@
 
 			&.top,
 			&.bottom {
-				height: 80px;
+				height: 60px;
 				width: 100%;
 
 				left: 0;
