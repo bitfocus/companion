@@ -72,6 +72,8 @@
 
 .button-grid-panel-content {
 	overflow: hidden;
+
+	min-height: 300px;
 }
 
 .button-grid-panel-header {
@@ -85,6 +87,7 @@
 .button-infinite-grid {
 	height: 100%;
 	max-height: 60vh;
+
 	background-color: #222;
 	border-radius: 5px;
 	overflow: scroll;

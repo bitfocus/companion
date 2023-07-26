@@ -119,7 +119,7 @@ export const ButtonInfiniteGrid = forwardRef(function ButtonInfiniteGrid(
 		if (!doGrow || !growLeftRef.current) return
 
 		const amount = Number(growLeftRef.current.value)
-		if (!isNaN(amount)) return
+		if (isNaN(amount)) return
 
 		doGrow('left', undefined)
 	}, [doGrow])
@@ -127,7 +127,7 @@ export const ButtonInfiniteGrid = forwardRef(function ButtonInfiniteGrid(
 		if (!doGrow || !growRightRef.current) return
 
 		const amount = Number(growRightRef.current.value)
-		if (!isNaN(amount)) return
+		if (isNaN(amount)) return
 
 		doGrow('right', undefined)
 	}, [doGrow])
@@ -135,7 +135,7 @@ export const ButtonInfiniteGrid = forwardRef(function ButtonInfiniteGrid(
 		if (!doGrow || !growTopRef.current) return
 
 		const amount = Number(growTopRef.current.value)
-		if (!isNaN(amount)) return
+		if (isNaN(amount)) return
 
 		doGrow('top', amount)
 	}, [doGrow])
@@ -143,7 +143,7 @@ export const ButtonInfiniteGrid = forwardRef(function ButtonInfiniteGrid(
 		if (!doGrow || !growBottomRef.current) return
 
 		const amount = Number(growBottomRef.current.value)
-		if (!isNaN(amount)) return
+		if (isNaN(amount)) return
 
 		doGrow('bottom', amount)
 	}, [doGrow])
