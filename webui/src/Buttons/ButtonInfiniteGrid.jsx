@@ -121,7 +121,7 @@ export const ButtonInfiniteGrid = forwardRef(function ButtonInfiniteGrid(
 		const amount = Number(growLeftRef.current.value)
 		if (isNaN(amount)) return
 
-		doGrow('left', undefined)
+		doGrow('left', amount)
 	}, [doGrow])
 	const doGrowRight = useCallback(() => {
 		if (!doGrow || !growRightRef.current) return
@@ -129,7 +129,7 @@ export const ButtonInfiniteGrid = forwardRef(function ButtonInfiniteGrid(
 		const amount = Number(growRightRef.current.value)
 		if (isNaN(amount)) return
 
-		doGrow('right', undefined)
+		doGrow('right', amount)
 	}, [doGrow])
 	const doGrowTop = useCallback(() => {
 		if (!doGrow || !growTopRef.current) return
