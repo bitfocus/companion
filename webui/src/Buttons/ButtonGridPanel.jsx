@@ -187,7 +187,7 @@ export const ButtonsGridPanel = memo(function ButtonsPage({
 						bankClick={bankClick}
 						selectedButton={selectedButton}
 						gridSize={gridSize}
-						doGrow={doGrow}
+						doGrow={userConfig.gridSizeInlineGrow ? doGrow : undefined}
 						buttonIconFactory={PrimaryButtonGridIcon}
 					/>
 				)}
