@@ -203,7 +203,7 @@ export const ButtonsGridPanel = memo(function ButtonsPage({
 				</CRow>
 
 				<CAlert color="info">
-					You can use the arrow keys ,pageup and pagedown to navigate with the keyboard, and use common key commands
+					You can use the arrow keys, pageup and pagedown to navigate with the keyboard, and use common key commands
 					such as copy, paste, and cut to rearrange buttons. You can also press the delete or backspace key with any
 					button highlighted to delete it.
 				</CAlert>

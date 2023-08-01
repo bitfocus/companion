@@ -16,7 +16,7 @@ import { SocketContext, socketEmitPromise } from '../util'
 import classNames from 'classnames'
 import useScrollPosition from '../Hooks/useScrollPosition'
 import useElementInnerSize from '../Hooks/useElementInnerSize'
-import { useButtonRenderCache } from '../Hooks/useSharedRenderCache2'
+import { useButtonRenderCache } from '../Hooks/useSharedRenderCache'
 import { CButton, CInput } from '@coreui/react'
 
 export const ButtonInfiniteGrid = forwardRef(function ButtonInfiniteGrid(

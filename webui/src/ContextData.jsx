@@ -22,6 +22,8 @@ import {
 import { NotificationsManager } from './Components/Notifications'
 import { cloneDeep } from 'lodash-es'
 import jsonPatch from 'fast-json-patch'
+import { useUserConfigSubscription } from './Hooks/useUserConfigSubscription'
+import { usePagesInfoSubscription } from './Hooks/usePagesInfoSubscription'
 
 export function ContextData({ children }) {
 	const socket = useContext(SocketContext)
@@ -33,9 +35,7 @@ export function ContextData({ children }) {
 	const [feedbackDefinitions, setFeedbackDefinitions] = useState(null)
 	const [variableDefinitions, setVariableDefinitions] = useState(null)
 	const [customVariables, setCustomVariables] = useState(null)
-	const [userConfig, setUserConfig] = useState(null)
 	const [surfaces, setSurfaces] = useState(null)
-	const [pages, setPages] = useState(null)
 	const [triggers, setTriggers] = useState(null)
 
 	const [recentActions, setRecentActions] = useState(() => {
@@ -104,6 +104,9 @@ export function ContextData({ children }) {
 		}
 	}, [customVariables, variableDefinitions])
 
+	const pages = usePagesInfoSubscription(socket)
+	const userConfig = useUserConfigSubscription(socket)
+
 	useEffect(() => {
 		if (socket) {
 			socketEmitPromise(socket, 'event-definitions:get', [])
@@ -150,14 +153,6 @@ export function ContextData({ children }) {
 					console.error('Failed to load custom values list', e)
 				})
 
-			socketEmitPromise(socket, 'userconfig:get-all', [])
-				.then((config) => {
-					setUserConfig(config)
-				})
-				.catch((e) => {
-					console.error('Failed to load user config', e)
-				})
-
 			const updateVariableDefinitions = (label, patch) => {
 				setVariableDefinitions((oldDefinitions) => applyPatchOrReplaceSubObject(oldDefinitions, label, patch))
 			}
@@ -168,12 +163,6 @@ export function ContextData({ children }) {
 				setActionDefinitions((oldDefinitions) => applyPatchOrReplaceSubObject(oldDefinitions, id, patch))
 			}
 
-			const updateUserConfigValue = (key, value) => {
-				setUserConfig((oldState) => ({
-					...oldState,
-					[key]: value,
-				}))
-			}
 			const updateCustomVariables = (patch) => {
 				setCustomVariables((oldVariables) => applyPatchOrReplaceObject(oldVariables, patch))
 			}
@@ -219,8 +208,6 @@ export function ContextData({ children }) {
 			socket.on('action-definitions:update', updateActionDefinitions)
 			socket.on('feedback-definitions:update', updateFeedbackDefinitions)
 
-			socket.on('set_userconfig_key', updateUserConfigValue)
-
 			socketEmitPromise(socket, 'surfaces:subscribe', [])
 				.then((surfaces) => {
 					setSurfaces(surfaces)
@@ -236,41 +223,15 @@ export function ContextData({ children }) {
 			}
 			socket.on('surfaces:patch', patchSurfaces)
 
-			socketEmitPromise(socket, 'pages:subscribe', [])
-				.then((pages) => {
-					// setLoadError(null)
-					setPages(pages)
-				})
-				.catch((e) => {
-					console.error('Failed to load pages list:', e)
-					// setLoadError(`Failed to load pages list`)
-					setPages(null)
-				})
-
-			const updatePageInfo = (page, info) => {
-				setPages((oldPages) => {
-					if (oldPages) {
-						return {
-							...oldPages,
-							[page]: info,
-						}
-					} else {
-						return null
-					}
-				})
-			}
-
-			socket.on('pages:update', updatePageInfo)
-
 			socketEmitPromise(socket, 'triggers:subscribe', [])
-				.then((pages) => {
+				.then((triggers) => {
 					// setLoadError(null)
-					setTriggers(pages)
+					setTriggers(triggers)
 				})
 				.catch((e) => {
 					console.error('Failed to load triggers list:', e)
 					// setLoadError(`Failed to load pages list`)
-					setPages(null)
+					setTriggers(null)
 				})
 
 			socket.on('triggers:update', updateTriggers)
@@ -280,9 +241,7 @@ export function ContextData({ children }) {
 				socket.off('custom-variables:update', updateCustomVariables)
 				socket.off('action-definitions:update', updateActionDefinitions)
 				socket.off('feedback-definitions:update', updateFeedbackDefinitions)
-				socket.off('set_userconfig_key', updateUserConfigValue)
 				socket.off('surfaces:patch', patchSurfaces)
-				socket.off('pages:update', updatePageInfo)
 
 				socket.off('triggers:update', updateTriggers)
 
@@ -309,9 +268,6 @@ export function ContextData({ children }) {
 				})
 				socketEmitPromise(socket, 'custom-variables:unsubscribe', []).catch((e) => {
 					console.error('Failed to unsubscribe from custom variables', e)
-				})
-				socketEmitPromise(socket, 'pages:unsubscribe', []).catch((e) => {
-					console.error('Failed to unsubscribe pages list:', e)
 				})
 			}
 		}
