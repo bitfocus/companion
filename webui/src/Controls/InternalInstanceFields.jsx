@@ -1,6 +1,5 @@
 import React, { useContext, useMemo } from 'react'
 import { DropdownInputField } from '../Components'
-import { MAX_BUTTONS } from '../Constants'
 import {
 	CustomVariableDefinitionsContext,
 	InstancesContext,

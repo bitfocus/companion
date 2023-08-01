@@ -3,8 +3,8 @@ import { faCalculator, faDollarSign, faGift, faVideoCamera } from '@fortawesome/
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { nanoid } from 'nanoid'
 import { InstancePresets } from './Presets'
-import { SocketContext, MyErrorBoundary, socketEmitPromise } from '../util'
-import { ButtonsGridPanel } from './ButtonGrid'
+import { SocketContext, MyErrorBoundary, socketEmitPromise, UserConfigContext } from '../util'
+import { ButtonsGridPanel } from './ButtonGridPanel'
 import { EditButton } from './EditButton'
 import { ActionRecorder } from './ActionRecorder'
 import { memo, useCallback, useContext, useRef, useState } from 'react'
@@ -15,6 +15,7 @@ import { formatLocation } from '@companion/shared/ControlId'
 
 export const ButtonsPage = memo(function ButtonsPage({ hotPress }) {
 	const socket = useContext(SocketContext)
+	const userConfig = useContext(UserConfigContext)
 
 	const clearModalRef = useRef()
 
@@ -57,6 +58,89 @@ export const ButtonsPage = memo(function ButtonsPage({ hotPress }) {
 	const handleKeyDownInButtons = useCallback(
 		(e) => {
 			if (e.target.tagName !== 'INPUT' && e.target.tagName !== 'TEXTAREA') {
+				switch (e.key) {
+					case 'ArrowDown':
+						setSelectedButton((selectedButton) => {
+							if (selectedButton) {
+								return {
+									...selectedButton,
+									row:
+										selectedButton.row >= userConfig.gridSize.maxRow
+											? userConfig.gridSize.minRow
+											: selectedButton.row + 1,
+								}
+							}
+						})
+						// TODO - ensure kept in view
+						break
+					case 'ArrowUp':
+						setSelectedButton((selectedButton) => {
+							if (selectedButton) {
+								return {
+									...selectedButton,
+									row:
+										selectedButton.row <= userConfig.gridSize.minRow
+											? userConfig.gridSize.maxRow
+											: selectedButton.row - 1,
+								}
+							}
+						})
+						// TODO - ensure kept in view
+						break
+					case 'ArrowLeft':
+						setSelectedButton((selectedButton) => {
+							if (selectedButton) {
+								return {
+									...selectedButton,
+									column:
+										selectedButton.column <= userConfig.gridSize.minColumn
+											? userConfig.gridSize.maxColumn
+											: selectedButton.column - 1,
+								}
+							}
+						})
+						// TODO - ensure kept in view
+						break
+					case 'ArrowRight':
+						setSelectedButton((selectedButton) => {
+							if (selectedButton) {
+								return {
+									...selectedButton,
+									column:
+										selectedButton.column >= userConfig.gridSize.maxColumn
+											? userConfig.gridSize.minColumn
+											: selectedButton.column + 1,
+								}
+							}
+						})
+						// TODO - ensure kept in view
+						break
+					case 'PageUp':
+						setSelectedButton((selectedButton) => {
+							if (selectedButton) {
+								const newPageNumber = selectedButton.pageNumber >= 99 ? 1 : selectedButton.pageNumber + 1
+								setPageNumber(newPageNumber)
+								return {
+									...selectedButton,
+									pageNumber: newPageNumber,
+								}
+							}
+						})
+						break
+					case 'PageDown':
+						setSelectedButton((selectedButton) => {
+							if (selectedButton) {
+								const newPageNumber = selectedButton.pageNumber <= 1 ? 99 : selectedButton.pageNumber - 1
+								setPageNumber(newPageNumber)
+								return {
+									...selectedButton,
+									pageNumber: newPageNumber,
+								}
+							}
+						})
+						break
+				}
+
 				if (selectedButton) {
 					// keyup with button selected
 

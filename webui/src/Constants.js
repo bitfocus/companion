@@ -1,7 +1,3 @@
-export const MAX_BUTTONS = 32
-export const MAX_COLS = 8
-export const MAX_ROWS = MAX_BUTTONS / MAX_COLS
-
 export const FONT_SIZES = [
 	{ id: 'auto', label: 'Auto' },
 	{ id: '7', label: '7pt' },

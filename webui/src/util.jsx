@@ -21,7 +21,6 @@ export const UserConfigContext = React.createContext(null)
 export const SurfacesContext = React.createContext(null)
 export const PagesContext = React.createContext(null)
 export const TriggersContext = React.createContext(null)
-export const ButtonRenderCacheContext = React.createContext(null)
 export const RecentActionsContext = React.createContext(null)
 export const RecentFeedbacksContext = React.createContext(null)
 
