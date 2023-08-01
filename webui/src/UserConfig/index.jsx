@@ -19,6 +19,7 @@ import { UdpConfig } from './UdpConfig'
 import { OscConfig } from './OscConfig'
 import { RosstalkConfig } from './RosstalkConfig'
 import { ArtnetConfig } from './ArtnetConfig'
+import { GridConfig } from './GridConfig'
 
 export const UserConfig = memo(function UserConfig() {
 	return (
@@ -66,6 +67,7 @@ function UserConfigTable() {
 		<table className="table table-responsive-sm">
 			<tbody>
 				<ButtonsConfig config={config} setValue={setValue} resetValue={resetValue} />
+				<GridConfig config={config} setValue={setValue} resetValue={resetValue} />
 				<SurfacesConfig config={config} setValue={setValue} resetValue={resetValue} />
 				<PinLockoutConfig config={config} setValue={setValue} resetValue={resetValue} />
 

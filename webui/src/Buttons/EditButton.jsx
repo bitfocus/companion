@@ -231,15 +231,13 @@ export function EditButton({ location, onKeyUp, contentHeight }) {
 					<MyErrorBoundary>
 						<>
 							<ButtonPreview fixedSize preview={previewImage} right={true} />
-							<CDropdown className="" style={{ display: 'inline-block', marginRight: -4 }}>
-								<CButtonGroup>
-									{/* This could be simplified to use the split property on CDropdownToggle, but then onClick doesnt work https://github.com/coreui/coreui-react/issues/179 */}
-									{config.type === undefined && (
+							{config.type === undefined && (
+								<CDropdown className="" style={{ display: 'inline-block', marginRight: -4 }}>
+									<CButtonGroup>
+										{/* This could be simplified to use the split property on CDropdownToggle, but then onClick doesnt work https://github.com/coreui/coreui-react/issues/179 */}
 										<CButton color="danger" onClick={() => setButtonType('button')}>
 											Create button
 										</CButton>
-									)}
-									{config.type !== 'button' && (
 										<CDropdownToggle
 											caret
 											color="danger"
@@ -248,15 +246,15 @@ export function EditButton({ location, onKeyUp, contentHeight }) {
 										>
 											<span className="sr-only">Toggle Dropdown</span>
 										</CDropdownToggle>
-									)}
-								</CButtonGroup>
-								<CDropdownMenu>
-									<CDropdownItem onClick={() => setButtonType('button')}>Regular button</CDropdownItem>
-									<CDropdownItem onClick={() => setButtonType('pageup')}>Page up</CDropdownItem>
-									<CDropdownItem onClick={() => setButtonType('pagenum')}>Page number</CDropdownItem>
-									<CDropdownItem onClick={() => setButtonType('pagedown')}>Page down</CDropdownItem>
-								</CDropdownMenu>
-							</CDropdown>
+									</CButtonGroup>
+									<CDropdownMenu>
+										<CDropdownItem onClick={() => setButtonType('button')}>Regular button</CDropdownItem>
+										<CDropdownItem onClick={() => setButtonType('pageup')}>Page up</CDropdownItem>
+										<CDropdownItem onClick={() => setButtonType('pagenum')}>Page number</CDropdownItem>
+										<CDropdownItem onClick={() => setButtonType('pagedown')}>Page down</CDropdownItem>
+									</CDropdownMenu>
+								</CDropdown>
+							)}
 							&nbsp;
 							<CButton color="danger" hidden={!config} onClick={clearButton} title="Clear Button">
 								<FontAwesomeIcon icon={faTrashAlt} />

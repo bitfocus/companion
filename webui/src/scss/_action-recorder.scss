@@ -1,0 +1,14 @@
+.action-recorder-finish-panel {
+	display: grid;
+	grid-template-rows: auto 1fr auto;
+
+	.action-recorder-finish-button-grid {
+		&.active {
+			display: grid;
+		}
+		grid-template-rows: auto minmax(0, 1fr) min-content;
+		height: 100%;
+
+		padding-bottom: 0;
+	}
+}

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { EventEmitter } from 'events'
-import { socketEmitPromise } from './util'
+import { socketEmitPromise } from '../util'
 
 /**
  * The main cache store
