@@ -14,6 +14,20 @@ export const SurfacesPage = memo(function SurfacesPage() {
 
 	const confirmRef = useRef(null)
 
+	const manualGroupsList = useMemo(() => {
+		const ary = Object.values(devices.groups).filter((grp) => !grp.isAutoGroup)
+
+		ary.sort((a, b) => {
+			if (a.index !== b.index) {
+				return a.index - b.index
+			}
+
+			// fallback to serial
+			return a.id.localeCompare(b.id)
+		})
+
+		return ary
+	}, [devices.groups])
 	const devicesList = useMemo(() => {
 		const ary = Object.values(devices.available)
 
@@ -89,6 +103,13 @@ export const SurfacesPage = memo(function SurfacesPage() {
 		[socket]
 	)
 
+	const addGroup = useCallback(() => {
+		// TODO-group provide id and name?
+		socketEmitPromise(socket, 'surfaces:group-add', []).catch((err) => {
+			console.error('Group add failed', err)
+		})
+	}, [socket])
+
 	const configureDevice = useCallback((device) => {
 		editModalRef.current.show(device)
 	}, [])
@@ -148,6 +169,9 @@ export const SurfacesPage = memo(function SurfacesPage() {
 				<CButton color="danger" onClick={addEmulator}>
 					<FontAwesomeIcon icon={faAdd} /> Add Emulator
 				</CButton>
+				<CButton color="warning" onClick={addGroup}>
+					<FontAwesomeIcon icon={faAdd} /> Add Group
+				</CButton>
 			</CButtonGroup>
 
 			<p>&nbsp;</p>
@@ -169,6 +193,9 @@ export const SurfacesPage = memo(function SurfacesPage() {
 					</tr>
 				</thead>
 				<tbody>
+					{manualGroupsList.map((group) => (
+						<ManualGroupRow key={group.id} group={group} />
+					))}
 					{devicesList.map((dev) => (
 						<AvailableDeviceRow
 							key={dev.id}
@@ -179,7 +206,7 @@ export const SurfacesPage = memo(function SurfacesPage() {
 						/>
 					))}
 
-					{devicesList.length === 0 && (
+					{devicesList.length === 0 && manualGroupsList.length === 0 && (
 						<tr>
 							<td colSpan={4}>No control surfaces have been detected</td>
 						</tr>
@@ -213,6 +240,16 @@ export const SurfacesPage = memo(function SurfacesPage() {
 		</div>
 	)
 })
+
+function ManualGroupRow({ group }) {
+	return (
+		<tr>
+			<td>#{group.index}</td>
+			<td>{group.id}</td>
+			<td>Some group</td>
+		</tr>
+	)
+}
 
 function AvailableDeviceRow({ device, updateName, configureDevice, deleteEmulator }) {
 	const updateName2 = useCallback((val) => updateName(device.id, val), [updateName, device.id])
