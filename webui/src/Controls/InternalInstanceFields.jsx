@@ -179,19 +179,28 @@ function InternalSurfaceBySerialDropdown({ isOnControl, value, setValue, disable
 			choices.push({ id: 'self', label: 'Current surface' })
 		}
 
-		for (const surface of Object.values(context?.available ?? {})) {
+		console.log('groups', context)
+
+		for (const group of Object.values(context?.groups ?? {})) {
 			choices.push({
-				label: `${surface.name || surface.type} (${surface.id})`,
-				id: surface.id,
+				label: group.displayName,
+				id: group.id,
 			})
 		}
 
-		for (const surface of Object.values(context?.offline ?? {})) {
-			choices.push({
-				label: `${surface.name || surface.type} (${surface.id}) - Offline`,
-				id: surface.id,
-			})
-		}
+		// for (const surface of Object.values(context?.available ?? {})) {
+		// 	choices.push({
+		// 		label: `${surface.name || surface.type} (${surface.id})`,
+		// 		id: surface.id,
+		// 	})
+		// }
+
+		// for (const surface of Object.values(context?.offline ?? {})) {
+		// 	choices.push({
+		// 		label: `${surface.name || surface.type} (${surface.id}) - Offline`,
+		// 		id: surface.id,
+		// 	})
+		// }
 		return choices
 	}, [context, isOnControl, includeSelf])
 

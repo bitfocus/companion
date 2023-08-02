@@ -155,7 +155,7 @@ export const SurfacesPage = memo(function SurfacesPage() {
 			<SurfaceEditModal ref={editModalRef} />
 			<GenericConfirmModal ref={confirmModalRef} />
 
-			<h5>Connected</h5>
+			<h5>Available</h5>
 
 			<table className="table table-responsive-sm">
 				<thead>
