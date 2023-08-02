@@ -139,6 +139,13 @@ export const SurfacesPage = memo(function SurfacesPage() {
 		[socket]
 	)
 
+	/**
+	 * TODO-group
+	 *
+	 * rework this ui, to be a single table, with filters to show/hide disconnected surfaces
+	 * surfaces should be nested below the group they belong to
+	 */
+
 	return (
 		<div>
 			<GenericConfirmModal ref={confirmRef} />
@@ -188,6 +195,7 @@ export const SurfacesPage = memo(function SurfacesPage() {
 						<th>ID</th>
 						<th>Name</th>
 						<th>Type</th>
+						<th>Group</th>
 						<th>Location</th>
 						<th>&nbsp;</th>
 					</tr>
@@ -200,6 +208,7 @@ export const SurfacesPage = memo(function SurfacesPage() {
 						<AvailableDeviceRow
 							key={dev.id}
 							device={dev}
+							groupName={devices.groups?.[dev.groupId]?.displayName}
 							updateName={updateName}
 							configureDevice={configureDevice}
 							deleteEmulator={deleteEmulator}
@@ -208,7 +217,7 @@ export const SurfacesPage = memo(function SurfacesPage() {
 
 					{devicesList.length === 0 && manualGroupsList.length === 0 && (
 						<tr>
-							<td colSpan={4}>No control surfaces have been detected</td>
+							<td colSpan={7}>No control surfaces have been detected</td>
 						</tr>
 					)}
 				</tbody>
@@ -222,17 +231,24 @@ export const SurfacesPage = memo(function SurfacesPage() {
 						<th>ID</th>
 						<th>Name</th>
 						<th>Type</th>
+						<th>Group</th>
 						<th>&nbsp;</th>
 					</tr>
 				</thead>
 				<tbody>
 					{offlineDevicesList.map((dev) => (
-						<OfflineDeviceRow key={dev.id} device={dev} updateName={updateName} forgetDevice={forgetDevice} />
+						<OfflineDeviceRow
+							key={dev.id}
+							device={dev}
+							groupName={devices.groups?.[dev.groupId]?.displayName}
+							updateName={updateName}
+							forgetDevice={forgetDevice}
+						/>
 					))}
 
 					{offlineDevicesList.length === 0 && (
 						<tr>
-							<td colSpan={4}>No items</td>
+							<td colSpan={5}>No items</td>
 						</tr>
 					)}
 				</tbody>
@@ -246,24 +262,31 @@ function ManualGroupRow({ group }) {
 		<tr>
 			<td>#{group.index}</td>
 			<td>{group.id}</td>
-			<td>Some group</td>
+			<td>Name</td>
+			<td>Group</td>
+			<td>-</td>
+			<td>-</td>
+			<td className="text-right">
+				<CButtonGroup>{/* TODO */}</CButtonGroup>
+			</td>
 		</tr>
 	)
 }
 
-function AvailableDeviceRow({ device, updateName, configureDevice, deleteEmulator }) {
+function AvailableDeviceRow({ device, groupName, updateName, configureDevice, deleteEmulator }) {
 	const updateName2 = useCallback((val) => updateName(device.id, val), [updateName, device.id])
 	const configureDevice2 = useCallback(() => configureDevice(device), [configureDevice, device])
 	const deleteEmulator2 = useCallback(() => deleteEmulator(device.id), [deleteEmulator, device.id])
 
 	return (
 		<tr>
-			<td>#{device.index}</td>
+			<td>{device.index !== undefined ? `#${device.index}` : ''}</td>
 			<td>{device.id}</td>
 			<td>
 				<TextInputField value={device.name} setValue={updateName2} />
 			</td>
 			<td>{device.type}</td>
+			<td>{groupName || device.groupId || '-'}</td>
 			<td>{device.location}</td>
 			<td className="text-right">
 				<CButtonGroup>
@@ -287,7 +310,7 @@ function AvailableDeviceRow({ device, updateName, configureDevice, deleteEmulato
 	)
 }
 
-function OfflineDeviceRow({ device, updateName, forgetDevice }) {
+function OfflineDeviceRow({ device, groupName, updateName, forgetDevice }) {
 	const updateName2 = useCallback((val) => updateName(device.id, val), [updateName, device.id])
 	const forgetDevice2 = useCallback(() => forgetDevice(device.id), [forgetDevice, device.id])
 
@@ -298,6 +321,7 @@ function OfflineDeviceRow({ device, updateName, forgetDevice }) {
 				<TextInputField value={device.name} setValue={updateName2} />
 			</td>
 			<td>{device.type}</td>
+			<td>{groupName || device.groupId || '-'}</td>
 			<td className="text-right">
 				<CButton onClick={forgetDevice2}>
 					<FontAwesomeIcon icon={faTrash} /> Forget
