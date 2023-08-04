@@ -45,6 +45,7 @@ export const AddSurfaceGroupModal = forwardRef(function SurfaceEditModal(_props,
 		() => ({
 			show() {
 				setShow(true)
+				setGroupName('My group')
 			},
 		}),
 		[]
