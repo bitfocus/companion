@@ -106,15 +106,6 @@ export const SurfacesPage = memo(function SurfacesPage() {
 		[socket]
 	)
 
-	/**
-	 * TODO-group
-	 *
-	 * rework this ui, to be a single table, with filters to show/hide disconnected surfaces
-	 * surfaces should be nested below the group they belong to
-	 */
-
-	console.log(surfacesContext)
-
 	return (
 		<div>
 			<GenericConfirmModal ref={confirmRef} />
@@ -173,6 +164,7 @@ export const SurfacesPage = memo(function SurfacesPage() {
 							<SurfaceRow
 								key={group.id}
 								surface={group.surfaces[0]}
+								index={group.index}
 								updateName={updateName}
 								configureDevice={configureDevice}
 								deleteEmulator={deleteEmulator}
@@ -204,15 +196,16 @@ export const SurfacesPage = memo(function SurfacesPage() {
 
 function ManualGroupRow({ group, deleteGroup, updateName, configureDevice, deleteEmulator, forgetDevice }) {
 	const deleteGroup2 = useCallback(() => deleteGroup(group.id), [deleteGroup, group.id])
-
-	console.log(group)
+	const updateName2 = useCallback((val) => updateName(group.id, val), [updateName, group.id])
 
 	return (
 		<>
 			<tr>
 				<td>#{group.index}</td>
 				<td>{group.id}</td>
-				<td>{group.displayName}</td>
+				<td>
+					<TextInputField value={group.displayName} setValue={updateName2} />
+				</td>
 				<td>Group</td>
 				<td>-</td>
 				<td className="text-right">
@@ -237,7 +230,7 @@ function ManualGroupRow({ group, deleteGroup, updateName, configureDevice, delet
 	)
 }
 
-function SurfaceRow({ surface, updateName, configureDevice, deleteEmulator, forgetDevice }) {
+function SurfaceRow({ surface, index, updateName, configureDevice, deleteEmulator, forgetDevice }) {
 	const updateName2 = useCallback((val) => updateName(surface.id, val), [updateName, surface.id])
 	const configureDevice2 = useCallback(() => configureDevice(surface), [configureDevice, surface])
 	const deleteEmulator2 = useCallback(() => deleteEmulator(surface.id), [deleteEmulator, surface.id])
@@ -245,7 +238,7 @@ function SurfaceRow({ surface, updateName, configureDevice, deleteEmulator, forg
 
 	return (
 		<tr>
-			<td>{surface.index !== undefined ? `#${surface.index}` : ''}</td>
+			<td>{index !== undefined ? `#${index}` : ''}</td>
 			<td>{surface.id}</td>
 			<td>
 				<TextInputField value={surface.name} setValue={updateName2} />
