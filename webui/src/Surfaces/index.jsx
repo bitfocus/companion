@@ -7,6 +7,7 @@ import { TextInputField } from '../Components/TextInputField'
 import { useMemo } from 'react'
 import { GenericConfirmModal } from '../Components/GenericConfirmModal'
 import { SurfaceEditModal } from './EditModal'
+import { AddSurfaceGroupModal } from './AddGroupModal'
 
 export const SurfacesPage = memo(function SurfacesPage() {
 	const socket = useContext(SocketContext)
@@ -57,7 +58,8 @@ export const SurfacesPage = memo(function SurfacesPage() {
 		return ary
 	}, [devices.offline])
 
-	const editModalRef = useRef()
+	const editModalRef = useRef(null)
+	const addGroupModalRef = useRef(null)
 	const confirmModalRef = useRef(null)
 
 	const [scanning, setScanning] = useState(false)
@@ -104,11 +106,19 @@ export const SurfacesPage = memo(function SurfacesPage() {
 	)
 
 	const addGroup = useCallback(() => {
-		// TODO-group provide id and name?
-		socketEmitPromise(socket, 'surfaces:group-add', []).catch((err) => {
-			console.error('Group add failed', err)
-		})
+		addGroupModalRef.current.show()
 	}, [socket])
+
+	const deleteGroup = useCallback(
+		(groupId) => {
+			confirmRef?.current?.show('Remove Group', 'Are you sure?', 'Remove', () => {
+				socketEmitPromise(socket, 'surfaces:group-remove', [groupId]).catch((err) => {
+					console.error('Group remove failed', err)
+				})
+			})
+		},
+		[socket]
+	)
 
 	const configureDevice = useCallback((device) => {
 		editModalRef.current.show(device)
@@ -145,6 +155,8 @@ export const SurfacesPage = memo(function SurfacesPage() {
 	 * rework this ui, to be a single table, with filters to show/hide disconnected surfaces
 	 * surfaces should be nested below the group they belong to
 	 */
+
+	console.log(devices)
 
 	return (
 		<div>
@@ -184,6 +196,7 @@ export const SurfacesPage = memo(function SurfacesPage() {
 			<p>&nbsp;</p>
 
 			<SurfaceEditModal ref={editModalRef} />
+			<AddSurfaceGroupModal ref={addGroupModalRef} />
 			<GenericConfirmModal ref={confirmModalRef} />
 
 			<h5>Available</h5>
@@ -202,7 +215,7 @@ export const SurfacesPage = memo(function SurfacesPage() {
 				</thead>
 				<tbody>
 					{manualGroupsList.map((group) => (
-						<ManualGroupRow key={group.id} group={group} />
+						<ManualGroupRow key={group.id} group={group} deleteGroup={deleteGroup} />
 					))}
 					{devicesList.map((dev) => (
 						<AvailableDeviceRow
@@ -257,17 +270,23 @@ export const SurfacesPage = memo(function SurfacesPage() {
 	)
 })
 
-function ManualGroupRow({ group }) {
+function ManualGroupRow({ group, deleteGroup }) {
+	const deleteGroup2 = useCallback(() => deleteGroup(group.id), [deleteGroup, group.id])
+
 	return (
 		<tr>
 			<td>#{group.index}</td>
 			<td>{group.id}</td>
-			<td>Name</td>
+			<td>{group.displayName}</td>
 			<td>Group</td>
 			<td>-</td>
 			<td>-</td>
 			<td className="text-right">
-				<CButtonGroup>{/* TODO */}</CButtonGroup>
+				<CButtonGroup>
+					<CButton onClick={deleteGroup2} title="Delete group">
+						<FontAwesomeIcon icon={faTrash} />
+					</CButton>
+				</CButtonGroup>
 			</td>
 		</tr>
 	)
