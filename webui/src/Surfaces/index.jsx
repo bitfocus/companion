@@ -4,59 +4,15 @@ import { SurfacesContext, socketEmitPromise, SocketContext } from '../util'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faAdd, faCog, faFolderOpen, faSync, faTrash } from '@fortawesome/free-solid-svg-icons'
 import { TextInputField } from '../Components/TextInputField'
-import { useMemo } from 'react'
 import { GenericConfirmModal } from '../Components/GenericConfirmModal'
 import { SurfaceEditModal } from './EditModal'
 import { AddSurfaceGroupModal } from './AddGroupModal'
 
 export const SurfacesPage = memo(function SurfacesPage() {
 	const socket = useContext(SocketContext)
-	const devices = useContext(SurfacesContext)
+	const surfacesContext = useContext(SurfacesContext)
 
 	const confirmRef = useRef(null)
-
-	const manualGroupsList = useMemo(() => {
-		const ary = Object.values(devices.groups).filter((grp) => !grp.isAutoGroup)
-
-		ary.sort((a, b) => {
-			if (a.index !== b.index) {
-				return a.index - b.index
-			}
-
-			// fallback to serial
-			return a.id.localeCompare(b.id)
-		})
-
-		return ary
-	}, [devices.groups])
-	const devicesList = useMemo(() => {
-		const ary = Object.values(devices.available)
-
-		ary.sort((a, b) => {
-			if (a.index !== b.index) {
-				return a.index - b.index
-			}
-
-			// fallback to serial
-			return a.id.localeCompare(b.id)
-		})
-
-		return ary
-	}, [devices.available])
-	const offlineDevicesList = useMemo(() => {
-		const ary = Object.values(devices.offline)
-
-		ary.sort((a, b) => {
-			if (a.index !== b.index) {
-				return a.index - b.index
-			}
-
-			// fallback to serial
-			return a.id.localeCompare(b.id)
-		})
-
-		return ary
-	}, [devices.offline])
 
 	const editModalRef = useRef(null)
 	const addGroupModalRef = useRef(null)
@@ -68,9 +24,10 @@ export const SurfacesPage = memo(function SurfacesPage() {
 	useEffect(() => {
 		// If device disappears, hide the edit modal
 		if (editModalRef.current) {
-			editModalRef.current.ensureIdIsValid(Object.keys(devices))
+			// TODO-groups fix this
+			editModalRef.current.ensureIdIsValid(Object.keys(surfacesContext))
 		}
-	}, [devices])
+	}, [surfacesContext])
 
 	const refreshUSB = useCallback(() => {
 		setScanning(true)
@@ -156,7 +113,7 @@ export const SurfacesPage = memo(function SurfacesPage() {
 	 * surfaces should be nested below the group they belong to
 	 */
 
-	console.log(devices)
+	console.log(surfacesContext)
 
 	return (
 		<div>
@@ -199,8 +156,6 @@ export const SurfacesPage = memo(function SurfacesPage() {
 			<AddSurfaceGroupModal ref={addGroupModalRef} />
 			<GenericConfirmModal ref={confirmModalRef} />
 
-			<h5>Available</h5>
-
 			<table className="table table-responsive-sm">
 				<thead>
 					<tr>
@@ -208,60 +163,37 @@ export const SurfacesPage = memo(function SurfacesPage() {
 						<th>ID</th>
 						<th>Name</th>
 						<th>Type</th>
-						<th>Group</th>
 						<th>Location</th>
 						<th>&nbsp;</th>
 					</tr>
 				</thead>
 				<tbody>
-					{manualGroupsList.map((group) => (
-						<ManualGroupRow key={group.id} group={group} deleteGroup={deleteGroup} />
-					))}
-					{devicesList.map((dev) => (
-						<AvailableDeviceRow
-							key={dev.id}
-							device={dev}
-							groupName={devices.groups?.[dev.groupId]?.displayName}
-							updateName={updateName}
-							configureDevice={configureDevice}
-							deleteEmulator={deleteEmulator}
-						/>
-					))}
+					{surfacesContext.map((group) =>
+						group.isAutoGroup && (group.surfaces || []).length === 1 ? (
+							<SurfaceRow
+								key={group.id}
+								surface={group.surfaces[0]}
+								updateName={updateName}
+								configureDevice={configureDevice}
+								deleteEmulator={deleteEmulator}
+								forgetDevice={forgetDevice}
+							/>
+						) : (
+							<ManualGroupRow
+								key={group.id}
+								group={group}
+								deleteGroup={deleteGroup}
+								updateName={updateName}
+								configureDevice={configureDevice}
+								deleteEmulator={deleteEmulator}
+								forgetDevice={forgetDevice}
+							/>
+						)
+					)}
 
-					{devicesList.length === 0 && manualGroupsList.length === 0 && (
+					{surfacesContext.length === 0 && (
 						<tr>
 							<td colSpan={7}>No control surfaces have been detected</td>
-						</tr>
-					)}
-				</tbody>
-			</table>
-
-			<h5>Disconnected</h5>
-
-			<table className="table table-responsive-sm">
-				<thead>
-					<tr>
-						<th>ID</th>
-						<th>Name</th>
-						<th>Type</th>
-						<th>Group</th>
-						<th>&nbsp;</th>
-					</tr>
-				</thead>
-				<tbody>
-					{offlineDevicesList.map((dev) => (
-						<OfflineDeviceRow
-							key={dev.id}
-							device={dev}
-							groupName={devices.groups?.[dev.groupId]?.displayName}
-							updateName={updateName}
-							forgetDevice={forgetDevice}
-						/>
-					))}
-
-					{offlineDevicesList.length === 0 && (
-						<tr>
-							<td colSpan={5}>No items</td>
 						</tr>
 					)}
 				</tbody>
@@ -270,81 +202,79 @@ export const SurfacesPage = memo(function SurfacesPage() {
 	)
 })
 
-function ManualGroupRow({ group, deleteGroup }) {
+function ManualGroupRow({ group, deleteGroup, updateName, configureDevice, deleteEmulator, forgetDevice }) {
 	const deleteGroup2 = useCallback(() => deleteGroup(group.id), [deleteGroup, group.id])
 
+	console.log(group)
+
 	return (
-		<tr>
-			<td>#{group.index}</td>
-			<td>{group.id}</td>
-			<td>{group.displayName}</td>
-			<td>Group</td>
-			<td>-</td>
-			<td>-</td>
-			<td className="text-right">
-				<CButtonGroup>
-					<CButton onClick={deleteGroup2} title="Delete group">
-						<FontAwesomeIcon icon={faTrash} />
-					</CButton>
-				</CButtonGroup>
-			</td>
-		</tr>
+		<>
+			<tr>
+				<td>#{group.index}</td>
+				<td>{group.id}</td>
+				<td>{group.displayName}</td>
+				<td>Group</td>
+				<td>-</td>
+				<td className="text-right">
+					<CButtonGroup>
+						<CButton onClick={deleteGroup2} title="Delete group">
+							<FontAwesomeIcon icon={faTrash} />
+						</CButton>
+					</CButtonGroup>
+				</td>
+			</tr>
+			{(group.surfaces || []).map((surface) => (
+				<SurfaceRow
+					key={surface.id}
+					surface={surface}
+					updateName={updateName}
+					configureDevice={configureDevice}
+					deleteEmulator={deleteEmulator}
+					forgetDevice={forgetDevice}
+				/>
+			))}
+		</>
 	)
 }
 
-function AvailableDeviceRow({ device, groupName, updateName, configureDevice, deleteEmulator }) {
-	const updateName2 = useCallback((val) => updateName(device.id, val), [updateName, device.id])
-	const configureDevice2 = useCallback(() => configureDevice(device), [configureDevice, device])
-	const deleteEmulator2 = useCallback(() => deleteEmulator(device.id), [deleteEmulator, device.id])
+function SurfaceRow({ surface, updateName, configureDevice, deleteEmulator, forgetDevice }) {
+	const updateName2 = useCallback((val) => updateName(surface.id, val), [updateName, surface.id])
+	const configureDevice2 = useCallback(() => configureDevice(surface), [configureDevice, surface])
+	const deleteEmulator2 = useCallback(() => deleteEmulator(surface.id), [deleteEmulator, surface.id])
+	const forgetDevice2 = useCallback(() => forgetDevice(surface.id), [forgetDevice, surface.id])
 
 	return (
 		<tr>
-			<td>{device.index !== undefined ? `#${device.index}` : ''}</td>
-			<td>{device.id}</td>
+			<td>{surface.index !== undefined ? `#${surface.index}` : ''}</td>
+			<td>{surface.id}</td>
 			<td>
-				<TextInputField value={device.name} setValue={updateName2} />
+				<TextInputField value={surface.name} setValue={updateName2} />
 			</td>
-			<td>{device.type}</td>
-			<td>{groupName || device.groupId || '-'}</td>
-			<td>{device.location}</td>
+			<td>{surface.type}</td>
+			<td>{surface.isConnected ? surface.location || 'Local' : 'Offline'}</td>
 			<td className="text-right">
-				<CButtonGroup>
-					<CButton onClick={configureDevice2} title="Configure">
-						<FontAwesomeIcon icon={faCog} /> Settings
+				{surface.isConnected ? (
+					<CButtonGroup>
+						<CButton onClick={configureDevice2} title="Configure">
+							<FontAwesomeIcon icon={faCog} /> Settings
+						</CButton>
+
+						{surface.integrationType === 'emulator' && (
+							<>
+								<CButton href={`/emulator/${surface.id.substring(9)}`} target="_blank" title="Open Emulator">
+									<FontAwesomeIcon icon={faFolderOpen} />
+								</CButton>
+								<CButton onClick={deleteEmulator2} title="Delete Emulator">
+									<FontAwesomeIcon icon={faTrash} />
+								</CButton>
+							</>
+						)}
+					</CButtonGroup>
+				) : (
+					<CButton onClick={forgetDevice2}>
+						<FontAwesomeIcon icon={faTrash} /> Forget
 					</CButton>
-
-					{device.integrationType === 'emulator' && (
-						<>
-							<CButton href={`/emulator/${device.id.substring(9)}`} target="_blank" title="Open Emulator">
-								<FontAwesomeIcon icon={faFolderOpen} />
-							</CButton>
-							<CButton onClick={deleteEmulator2} title="Delete Emulator">
-								<FontAwesomeIcon icon={faTrash} />
-							</CButton>
-						</>
-					)}
-				</CButtonGroup>
-			</td>
-		</tr>
-	)
-}
-
-function OfflineDeviceRow({ device, groupName, updateName, forgetDevice }) {
-	const updateName2 = useCallback((val) => updateName(device.id, val), [updateName, device.id])
-	const forgetDevice2 = useCallback(() => forgetDevice(device.id), [forgetDevice, device.id])
-
-	return (
-		<tr>
-			<td>{device.id}</td>
-			<td>
-				<TextInputField value={device.name} setValue={updateName2} />
-			</td>
-			<td>{device.type}</td>
-			<td>{groupName || device.groupId || '-'}</td>
-			<td className="text-right">
-				<CButton onClick={forgetDevice2}>
-					<FontAwesomeIcon icon={faTrash} /> Forget
-				</CButton>
+				)}
 			</td>
 		</tr>
 	)

@@ -171,7 +171,7 @@ function InternalVariableDropdown({ value, setValue, disabled }) {
 }
 
 function InternalSurfaceBySerialDropdown({ isOnControl, value, setValue, disabled, includeSelf }) {
-	const context = useContext(SurfacesContext)
+	const surfacesContext = useContext(SurfacesContext)
 
 	const choices = useMemo(() => {
 		const choices = []
@@ -179,30 +179,15 @@ function InternalSurfaceBySerialDropdown({ isOnControl, value, setValue, disable
 			choices.push({ id: 'self', label: 'Current surface' })
 		}
 
-		console.log('groups', context)
-
-		for (const group of Object.values(context?.groups ?? {})) {
+		for (const group of surfacesContext ?? []) {
 			choices.push({
 				label: group.displayName,
 				id: group.id,
 			})
 		}
 
-		// for (const surface of Object.values(context?.available ?? {})) {
-		// 	choices.push({
-		// 		label: `${surface.name || surface.type} (${surface.id})`,
-		// 		id: surface.id,
-		// 	})
-		// }
-
-		// for (const surface of Object.values(context?.offline ?? {})) {
-		// 	choices.push({
-		// 		label: `${surface.name || surface.type} (${surface.id}) - Offline`,
-		// 		id: surface.id,
-		// 	})
-		// }
 		return choices
-	}, [context, isOnControl, includeSelf])
+	}, [surfacesContext, isOnControl, includeSelf])
 
 	return <DropdownInputField disabled={disabled} value={value} choices={choices} multiple={false} setValue={setValue} />
 }
