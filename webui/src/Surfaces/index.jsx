@@ -141,13 +141,11 @@ export const SurfacesPage = memo(function SurfacesPage() {
 				</CButton>
 			</CButtonGroup>
 
-			<p>&nbsp;</p>
-
 			<SurfaceEditModal ref={editModalRef} />
 			<AddSurfaceGroupModal ref={addGroupModalRef} />
 			<GenericConfirmModal ref={confirmModalRef} />
 
-			<table className="table table-responsive-sm">
+			<table className="table table-responsive-sm table-margin-top">
 				<thead>
 					<tr>
 						<th>NO</th>
