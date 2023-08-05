@@ -12,13 +12,16 @@ import {
 	CModalHeader,
 	CSelect,
 } from '@coreui/react'
-import { LoadingRetryOrError, socketEmitPromise, SocketContext, PreventDefaultHandler } from '../util'
+import { LoadingRetryOrError, socketEmitPromise, SocketContext, PreventDefaultHandler, SurfacesContext } from '../util'
 import { nanoid } from 'nanoid'
+import { faQuestionCircle } from '@fortawesome/free-solid-svg-icons'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 
 export const SurfaceEditModal = forwardRef(function SurfaceEditModal(_props, ref) {
 	const socket = useContext(SocketContext)
+	const surfacesContext = useContext(SurfacesContext)
 
-	const [deviceInfo, setDeviceInfo] = useState(null)
+	const [surfaceId, setSurfaceId] = useState(null)
 	const [show, setShow] = useState(false)
 
 	const [deviceConfig, setDeviceConfig] = useState(null)
@@ -28,7 +31,7 @@ export const SurfaceEditModal = forwardRef(function SurfaceEditModal(_props, ref
 
 	const doClose = useCallback(() => setShow(false), [])
 	const onClosed = useCallback(() => {
-		setDeviceInfo(null)
+		setSurfaceId(null)
 		setDeviceConfig(null)
 		setDeviceConfigError(null)
 	}, [])
@@ -39,10 +42,9 @@ export const SurfaceEditModal = forwardRef(function SurfaceEditModal(_props, ref
 		setDeviceConfigError(null)
 		setDeviceConfig(null)
 
-		if (deviceInfo?.id) {
-			socketEmitPromise(socket, 'surfaces:config-get', [deviceInfo.id])
+		if (surfaceId) {
+			socketEmitPromise(socket, 'surfaces:config-get', [surfaceId])
 				.then(([config, info]) => {
-					console.log(config, info)
 					setDeviceConfig(config)
 					setDeviceConfigInfo(info)
 				})
@@ -51,38 +53,48 @@ export const SurfaceEditModal = forwardRef(function SurfaceEditModal(_props, ref
 					setDeviceConfigError(`Failed to load device config`)
 				})
 		}
-	}, [socket, deviceInfo?.id, reloadToken])
+	}, [socket, surfaceId, reloadToken])
 
 	useImperativeHandle(
 		ref,
 		() => ({
-			show(device) {
-				setDeviceInfo(device)
+			show(surfaceId) {
+				setSurfaceId(surfaceId)
 				setShow(true)
-			},
-			ensureIdIsValid(deviceIds) {
-				setDeviceInfo((oldDevice) => {
-					if (oldDevice && deviceIds.indexOf(oldDevice.id) === -1) {
-						setShow(false)
-					}
-					return oldDevice
-				})
 			},
 		}),
 		[]
 	)
 
+	useEffect(() => {
+		// If device disappears, hide this
+
+		const allSurfaceIds = new Set()
+		for (const group of surfacesContext) {
+			for (const surface of group.surfaces) {
+				allSurfaceIds.add(surface.id)
+			}
+		}
+
+		setSurfaceId((oldSurfaceId) => {
+			if (oldSurfaceId && !allSurfaceIds.has(oldSurfaceId)) {
+				setShow(false)
+			}
+			return oldSurfaceId
+		})
+	}, [surfacesContext])
+
 	const updateConfig = useCallback(
 		(key, value) => {
 			console.log('update', key, value)
-			if (deviceInfo?.id) {
+			if (surfaceId) {
 				setDeviceConfig((oldConfig) => {
 					const newConfig = {
 						...oldConfig,
 						[key]: value,
 					}
 
-					socketEmitPromise(socket, 'surfaces:config-set', [deviceInfo.id, newConfig])
+					socketEmitPromise(socket, 'surfaces:config-set', [surfaceId, newConfig])
 						.then((newConfig) => {
 							if (typeof newConfig === 'string') {
 								console.log('Config update failed', newConfig)
@@ -97,8 +109,33 @@ export const SurfaceEditModal = forwardRef(function SurfaceEditModal(_props, ref
 				})
 			}
 		},
-		[socket, deviceInfo?.id]
+		[socket, surfaceId]
 	)
+
+	const setGroupId = useCallback(
+		(groupId) => {
+			if (!groupId || groupId === 'null') groupId = null
+			socketEmitPromise(socket, 'surfaces:add-to-group', [groupId, surfaceId]).catch((e) => {
+				console.log('Config update failed', e)
+			})
+		},
+		[socket, surfaceId]
+	)
+
+	let deviceInfo = null
+	for (const group of surfacesContext) {
+		if (deviceInfo) break
+
+		for (const surface of group.surfaces) {
+			if (surface.id === surfaceId) {
+				deviceInfo = {
+					...surface,
+					groupId: group.isAutoGroup ? null : group.id,
+				}
+				break
+			}
+		}
+	}
 
 	return (
 		<CModal show={show} onClose={doClose} onClosed={onClosed}>
@@ -114,29 +151,58 @@ export const SurfaceEditModal = forwardRef(function SurfaceEditModal(_props, ref
 				{deviceConfig && deviceInfo && deviceConfigInfo && (
 					<CForm onSubmit={PreventDefaultHandler}>
 						<CFormGroup>
-							<CLabel htmlFor="use_last_page">Use Last Page At Startup</CLabel>
-							<CInputCheckbox
-								name="use_last_page"
-								type="checkbox"
-								checked={!!deviceConfig.use_last_page}
-								value={true}
-								onChange={(e) => updateConfig('use_last_page', !!e.currentTarget.checked)}
-							/>
+							<CLabel>
+								Surface Group&nbsp;
+								<FontAwesomeIcon
+									icon={faQuestionCircle}
+									title="When in a group, surfaces will follow the page number of that group"
+								/>
+							</CLabel>
+							<CSelect
+								name="surface-group"
+								value={deviceInfo.groupId || 'null'}
+								onChange={(e) => setGroupId(e.currentTarget.value)}
+							>
+								<option value="null">Standalone (Default)</option>
+
+								{surfacesContext
+									.filter((group) => !group.isAutoGroup)
+									.map((group) => (
+										<option key={group.id} value={group.id}>
+											{group.displayName}
+										</option>
+									))}
+							</CSelect>
 						</CFormGroup>
-						<CFormGroup>
-							<CLabel htmlFor="page">Startup Page</CLabel>
-							<CInput
-								disabled={!!deviceConfig.use_last_page}
-								name="page"
-								type="range"
-								min={1}
-								max={99}
-								step={1}
-								value={deviceConfig.page}
-								onChange={(e) => updateConfig('page', parseInt(e.currentTarget.value))}
-							/>
-							<span>{deviceConfig.page}</span>
-						</CFormGroup>
+						{!deviceInfo.groupId && (
+							<>
+								<CFormGroup>
+									<CLabel htmlFor="use_last_page">Use Last Page At Startup</CLabel>
+									<CInputCheckbox
+										name="use_last_page"
+										type="checkbox"
+										checked={!!deviceConfig.use_last_page}
+										value={true}
+										onChange={(e) => updateConfig('use_last_page', !!e.currentTarget.checked)}
+									/>
+								</CFormGroup>
+								<CFormGroup>
+									<CLabel htmlFor="page">Startup Page</CLabel>
+									<CInput
+										disabled={!!deviceConfig.use_last_page}
+										name="page"
+										type="range"
+										min={1}
+										max={99}
+										step={1}
+										value={deviceConfig.page}
+										onChange={(e) => updateConfig('page', parseInt(e.currentTarget.value))}
+									/>
+									<span>{deviceConfig.page}</span>
+								</CFormGroup>
+							</>
+						)}
+
 						{deviceInfo.configFields?.includes('emulator_size') && (
 							<>
 								<CFormGroup>

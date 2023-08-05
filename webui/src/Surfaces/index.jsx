@@ -21,14 +21,6 @@ export const SurfacesPage = memo(function SurfacesPage() {
 	const [scanning, setScanning] = useState(false)
 	const [scanError, setScanError] = useState(null)
 
-	useEffect(() => {
-		// If device disappears, hide the edit modal
-		if (editModalRef.current) {
-			// TODO-groups fix this
-			editModalRef.current.ensureIdIsValid(Object.keys(surfacesContext))
-		}
-	}, [surfacesContext])
-
 	const refreshUSB = useCallback(() => {
 		setScanning(true)
 		setScanError(null)
@@ -77,8 +69,8 @@ export const SurfacesPage = memo(function SurfacesPage() {
 		[socket]
 	)
 
-	const configureDevice = useCallback((device) => {
-		editModalRef.current.show(device)
+	const configureDevice = useCallback((surfaceId) => {
+		editModalRef.current.show(surfaceId)
 	}, [])
 
 	const forgetDevice = useCallback(
@@ -230,7 +222,7 @@ function ManualGroupRow({ group, deleteGroup, updateName, configureDevice, delet
 
 function SurfaceRow({ surface, index, updateName, configureDevice, deleteEmulator, forgetDevice }) {
 	const updateName2 = useCallback((val) => updateName(surface.id, val), [updateName, surface.id])
-	const configureDevice2 = useCallback(() => configureDevice(surface), [configureDevice, surface])
+	const configureDevice2 = useCallback(() => configureDevice(surface.id), [configureDevice, surface.id])
 	const deleteEmulator2 = useCallback(() => deleteEmulator(surface.id), [deleteEmulator, surface.id])
 	const forgetDevice2 = useCallback(() => forgetDevice(surface.id), [forgetDevice, surface.id])
 
