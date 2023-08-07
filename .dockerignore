@@ -12,5 +12,4 @@ dist
 */dist
 module-legacy/entrypoints
 module-legacy/manifests
-launcher
 .cache
