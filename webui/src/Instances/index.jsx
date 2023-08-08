@@ -79,7 +79,12 @@ export const InstancesPage = memo(function InstancesPage() {
 			<HelpModal ref={helpModalRef} />
 
 			<CCol xl={6} className="instances-panel primary-panel">
-				<InstancesList instanceStatus={instanceStatus} showHelp={showHelp} doConfigureInstance={doConfigureInstance} />
+				<InstancesList
+					instanceStatus={instanceStatus}
+					showHelp={showHelp}
+					doConfigureInstance={doConfigureInstance}
+					selectedInstanceId={selectedInstanceId}
+				/>
 			</CCol>
 
 			<CCol xl={6} className="instances-panel secondary-panel add-instances-panel">

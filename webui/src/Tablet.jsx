@@ -191,7 +191,6 @@ function ConfigurePanel({ updateQueryUrl, query }) {
 				<CForm onSubmit={PreventDefaultHandler}>
 					<CRow>
 						<CCol sm={6} xs={12}>
-							<legend>Basic</legend>
 							<CFormGroup>
 								<label>Pages</label>
 								<p>use 1..6 for ranges, and commas for multiple selections. Follows provided order</p>
@@ -223,7 +222,6 @@ function ConfigurePanel({ updateQueryUrl, query }) {
 							</CFormGroup>
 						</CCol>
 						<CCol sm={6} xs={12}>
-							<legend>Layout</legend>
 							<CFormGroup>
 								<label>Hide configure button</label>
 								<CInputCheckbox
@@ -295,7 +293,7 @@ function ButtonsFromPage({ imageCache, number, cols, rows }) {
 	const bankClick = useCallback(
 		(bank, pressed) => {
 			const controlId = CreateBankControlId(number, bank)
-			socketEmitPromise(socket, 'controls:hot-press', [controlId, pressed]).catch((e) =>
+			socketEmitPromise(socket, 'controls:hot-press', [controlId, pressed, 'tablet']).catch((e) =>
 				console.error(`Hot press failed: ${e}`)
 			)
 		},

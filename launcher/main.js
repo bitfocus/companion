@@ -12,6 +12,31 @@ const stripAnsi = require('strip-ansi')
 const chokidar = require('chokidar')
 const debounceFn = require('debounce-fn')
 const fileStreamRotator = require('file-stream-rotator')
+const { ConfigReleaseDirs } = require('./Paths.cjs')
+
+// Electron works on older versions of macos than nodejs, we should give a proper warning if we know companion will get stuck in a crash loop
+if (process.platform === 'darwin') {
+	try {
+		const plist = require('plist')
+		const semver = require('semver')
+
+		const minimumVersion = '10.15'
+		const supportedVersions = new semver.Range(`>=${minimumVersion}`)
+
+		const versionInfo = plist.parse(fs.readFileSync('/System/Library/CoreServices/SystemVersion.plist', 'utf8'))
+		const productVersion = semver.coerce(versionInfo.ProductVersion)
+
+		if (productVersion && !supportedVersions.test(productVersion)) {
+			electron.dialog.showErrorBox(
+				'Unsupported macOS',
+				`Companion is not supported on macOS ${productVersion}, you must be running at least ${minimumVersion}`
+			)
+			app.quit()
+		}
+	} catch (e) {
+		// We can't figure out if its compatible, so assume it is
+	}
+}
 
 // Ensure there isn't another instance of companion running already
 var lock = app.requestSingleInstanceLock()
@@ -53,7 +78,7 @@ if (!lock) {
 		line = stripAnsi(line.trim())
 		if (prefix) line = `${new Date().toISOString()} ${prefix}: ${line}`
 
-		logStream.write(line)
+		logStream.write(line + '\n')
 		console.log(line)
 	}
 
@@ -100,6 +125,9 @@ if (!lock) {
 	} catch (e) {
 		// Ignore the failure, its not worth trying to handle
 	}
+
+	const thisDbFolderName = ConfigReleaseDirs[ConfigReleaseDirs.length - 1]
+	const thisDbPath = path.join(configDir, thisDbFolderName, 'db')
 
 	const uiConfig = new Store({
 		cwd: configDir,
@@ -553,6 +581,75 @@ if (!lock) {
 	}
 
 	app.whenReady().then(async () => {
+		// Check for a more recently modified db
+		const dirs = fs.readdirSync(configDir)
+		let mostRecentDir = null
+		for (const dirname of dirs) {
+			try {
+				const dbStat = fs.statSync(path.join(configDir, dirname, 'db'))
+				if (dirname.match('^v(.*)') && dbStat && dbStat.isFile()) {
+					if (!mostRecentDir || mostRecentDir[0] < dbStat.mtimeMs) {
+						mostRecentDir = [dbStat.mtimeMs, dirname]
+					}
+				}
+			} catch (e) {
+				// Not worth considering
+			}
+		}
+
+		if (mostRecentDir && mostRecentDir[1] !== thisDbFolderName) {
+			let selected
+			// Check for a new db file
+			if (fs.existsSync(thisDbPath)) {
+				selected = electron.dialog.showMessageBoxSync({
+					title: 'Config version mismatch',
+					message:
+						`Another version of Companion (${mostRecentDir[1]}) has been run more recently.\n` +
+						`Any config changes you have made to that version will not be loaded, but will return when you next open the other version.\n\n` +
+						`Do you wish to continue?`,
+					type: 'question',
+					buttons: ['Continue', 'Exit'],
+					defaultId: 0,
+				})
+			} else {
+				if (!ConfigReleaseDirs.includes(mostRecentDir[1])) {
+					// Figure out what version the upgrade will be from
+					let importFrom = null
+					for (let i = ConfigReleaseDirs.length - 2; i--; i > 0) {
+						const dirname = ConfigReleaseDirs[i]
+						if (fs.existsSync(path.join(configDir, dirname, 'db'))) {
+							importFrom = dirname
+						}
+					}
+					if (!importFrom && fs.existsSync(path.join(configDir, 'db'))) {
+						importFrom = 'v2.4'
+					}
+					const importNote = importFrom
+						? `This will import the configuration from ${importFrom}`
+						: `This will create an empty configuration`
+
+					// It looks like a newer version has been opened
+					selected = electron.dialog.showMessageBoxSync({
+						title: 'Config version mismatch',
+						message:
+							`Another version of Companion (${mostRecentDir[1]}) has been run more recently.\n` +
+							`Any config changes you have made to that version will not be loaded, but will return when you next open the other version.\n\n` +
+							`Do you wish to continue? ${importNote}`,
+						type: 'question',
+						buttons: ['Continue', 'Exit'],
+						defaultId: 0,
+					})
+				}
+			}
+
+			if (selected == 1) {
+				app.exit(1)
+			} else if (fs.existsSync(thisDbPath)) {
+				// Mark the current config as most recently modified
+				fs.utimesSync(thisDbPath, Date.now(), Date.now())
+			}
+		}
+
 		createTray()
 		createWindow()
 

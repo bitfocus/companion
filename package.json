@@ -1,6 +1,6 @@
 {
 	"name": "companion",
-	"version": "3.0.0",
+	"version": "3.1.0",
 	"description": "Companion",
 	"main": "main.js",
 	"type": "module",
@@ -52,7 +52,7 @@
 	},
 	"dependencies": {
 		"@companion-module/base": "~1.4.1",
-		"@elgato-stream-deck/node": "^5.7.2",
+		"@elgato-stream-deck/node": "^5.7.3",
 		"@jsep-plugin/numbers": "^1.0.1",
 		"@jsep-plugin/template": "^1.0.2",
 		"@julusian/jpeg-turbo": "^2.1.0",
@@ -71,7 +71,7 @@
 		"express": "^4.18.2",
 		"express-serve-zip": "^1.0.1",
 		"fast-json-patch": "^3.1.1",
-		"find-process": "1.4.7",
+		"find-process": "github:julusian/find-process#fix/spawn-error-handler",
 		"fs-extra": "^11.1.1",
 		"get-port": "^6.1.2",
 		"got": "^12.6.1",

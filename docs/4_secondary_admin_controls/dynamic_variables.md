@@ -1,4 +1,4 @@
-Some modules can expose their state through module variables. If one of your modules supports this, it will show up in the variables tab. The picture below shows where the tab is located, and if one of your modules supports variables, it will be listed in this tab for you to select.
+Some modules can expose their state through module variables. If one of your modules supports this, it will show up in the variables tab.
 
 ![Module variables Tab](images/admingui-variables.png?raw=true 'Module variables tab')
 
@@ -6,10 +6,12 @@ When a module is selected, you will get a complete list of available variables. 
 
 ![Module variables](images/dynamic-variables.png?raw=true 'Module variables')
 
-To use a dynamic variable in a button, just copy/paste the variable into the button's label, or begin typing `$(` in the button's text to choose from a list of available module variables.
+To use a variable in a button, just copy/paste the variable into the button's label, or begin typing `$(` in the button's text to choose from a list of available module variables.
 
 ![Module variables usage](images/dynamic-variable-usage.png?raw=true 'Module variable usage')
 
 The variables (and the button) will be updated when the device updates.
 
 _A line break can be forced by putting `\n` where you want the line break to be._
+
+Some actions and feedbacks support variables to be used in values. You can tell if they are supported whether typing `$(` in the text field starts the variable suggestions.

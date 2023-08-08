@@ -1,5 +1,166 @@
 # Bitfocus Companion
 
+## Companion v3.0.0 - Release Notes
+
+Changes are relative to v3.0.0-RC2
+
+If you are coming from an older version, make sure to check the changes in v3.0.0-RC1 and v3.0.0-RC2, in particular the BREAKING CHANGES.
+
+### 📣 CORE FEATURES AND IMPROVEMENTS
+
+- Additional string functions in expressions
+
+### 🐞 BUG FIXES
+
+- Unable to start headless in new installations
+- Emberplus server failing to handle incoming updates
+- Crash when prompting about a version conflict
+- Missing line ending in log files
+- Make version number in header more durable
+- Headless `--admin-interface` parameter
+- Improve performance when a large number of variables are changed
+
+### 🧩 NEW & UPDATED MODULES
+
+- agf-characterworks
+- aja-kumo
+- analogway-awj
+- analogway-livecore
+- analogway-livepremier
+- anomes-millumin
+- arri-tally
+- audiotechnica-ceilingarray
+- aver-ptz
+- barco-eventmaster
+- bbc-raven
+- behringer-xair
+- betr-support
+- bmd-hyperdeck
+- bmd-smartview
+- bytehive-playoutbee
+- canon-ptz
+- canon-xf
+- chamsys-quickq
+- dataton-watchout
+- discord-api
+- elgato-keylight
+- epson-businesspj
+- extron-smp351
+- figure53-go-button
+- generic-http
+- generic-pjlink
+- generic-smtp
+- generic-ssh
+- google-sheets
+- govee-lights
+- irisdown-remoteshowcontrol
+- kiloview-encoder
+- lightware-lw3
+- middlethings-middlecontrol
+- netio-powerbox
+- notion-timestamp
+- panasonic-projector
+- panasonic-ptz
+- pharos-designer
+- ptzoptics-visca
+- qsys-remote-control
+- renewedvision-pvp
+- resolume-arena
+- roland-v600uhd
+- roland-v60hd
+- sony-bravia
+- stagetimerio-api
+- studiocoast-vmix
+- techministry-spotifycontroller
+- toggl-track
+- tow-mixeffect
+- tplink-kasasmartbulb
+- tplink-kasasmartplug
+- tslproducts-umdlistener
+- twitch-api
+- videolan-vlc
+- vistream-online
+- zoom-osc-iso
+
+## Companion v3.0.0 RC2 - Release Notes
+
+### BREAKING CHANGES
+
+- macOS must be at least 10.15 to run Companion. This is due to nodejs dropping support for older versions.
+
+### 📣 CORE FEATURES AND IMPROVEMENTS
+
+- Documentation is updated for 3.0
+- Port numbers are shown for all protocols in the Settings page, even those which cannot be changed
+- Config directories have been rearranged to be more logical and futureproof
+- New trigger event, 'on condition becoming false'
+
+### 🐞 BUG FIXES
+
+- Pagenumber buttons not drawing correctly #2468
+- Update `sharp` to fix macOS 10.15 support
+- Include logs in support bundle #2287
+- Tablet page not supporting delayed press groups #2475
+- Multiple decrement/increment page for a surface on a button dont combine as expected #2328
+- Crash on windows if powershell.exe is unavailable #2474
+- Set serialnumber to page "Back" can stop working #2484
+- show_topbar button style not importing from 2.4 correctly
+- Streamdeck Mini with latest firmware not working on Windows
+
+### 🧩 NEW & UPDATED MODULES
+
+- anomes-millumin
+- atlasied-atmosphere
+- audiovero-unityintercom-client
+- barco-pulse
+- betr-support
+- bitfocus-cloud
+- bmd-atem
+- bmd-smartview
+- bmd-videohub
+- canon-ptz
+- christie-projector
+- cisco-roomos
+- cvmeventi-countdown
+- discord-api
+- emotimo-st4
+- etc-eos
+- etc-paradigm
+- generic-osc
+- generic-pjlink
+- generic-tcp-serial
+- getontime-ontime
+- govee-lights
+- greengo-intercom
+- h2r-graphics
+- imimot-mitti
+- interactivetechnololgies-cueserver
+- interspace-mastercuev7
+- kiloview-encoder
+- leolabs-ableset
+- lightware-lw3
+- malighting-msc
+- marshall-ipcamera
+- middleman-adit
+- netron-en
+- newtek-tricaster
+- pharos-designer
+- pixap-pixtimerpro
+- renewedvision-propresenter
+- shure-psm1000
+- shure-scm820
+- softron-movierecorder
+- softron-ontheairvideo
+- studiocoast-vmix
+- tascam-bdmp1
+- techministry-timekeeper
+- teradek-prism
+- tow-mixeffect
+- tplink-kasasmartplug
+- vbaudio-voicemeeter
+- yamaha-rcp
+- zoom-osc-iso
+
 ## Companion v3.0.0 RC1 - Release Notes
 
 ### BREAKING CHANGES

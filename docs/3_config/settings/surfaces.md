@@ -1,13 +1,14 @@
 More details on supported surfaces are available in the chapter on [Surfaces](#7_surfaces.md).
 
-- **Enable emulator control for Logitech R400/Mastercue/DSan**
-  A Logitech R400/Mastercue/DSan will send a button press to button; 2 (Back), 3 (forward), 4 (black) and for logitec: 10/11 (Start and stop) on each page.
+- **Watch for new USB Devices**
+  Companion can watch for newly connected USB Surfaces if this is enabled.
+  If disabled, you will have to trigger a refresh yourself for Companion to use newly connected StreamDecks.
 
-- **Use Elgato Plugin for StreamDeck access (Requires Companion restart)**
-  Whether to enable support for the Elgato Plugin for connecting to StreamDecks.
-  When this is enabled Companion will not directly try to connect to a StreamDeck
+- **Enable connected Streamdecks (Requires Companion restart)**
+  When this is disabled Companion will not directly try to connect to a StreamDeck
+  Instead the Elgato software can be used to connect StreamDecks.
 
-- **Enable connected xkeys (Requires Companion restart)**
+- **Enable connected X-keys (Requires Companion restart)**
   Whether to enable support for connecting to XKeys devices.
 
 - **Enable connected Loupedeck Live and Razer Stream Controller devices (Requires Companion restart)**
