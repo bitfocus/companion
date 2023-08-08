@@ -31,6 +31,7 @@ import { EditTriggerPanel } from './EditPanel'
 import { GenericConfirmModal } from '../Components/GenericConfirmModal'
 import { ParseControlId } from '@companion/shared/ControlId'
 import { ConfirmExportModal } from '../Components/ConfirmExportModal'
+import classNames from 'classnames'
 
 export const Triggers = memo(function Triggers() {
 	const socket = useContext(SocketContext)
@@ -97,7 +98,7 @@ export const Triggers = memo(function Triggers() {
 					</CButton>
 				</CButtonGroup>
 
-				<TriggersTable triggersList={triggersList} editItem={doEditItem} />
+				<TriggersTable triggersList={triggersList} editItem={doEditItem} selectedControlId={editItemId} />
 
 				<CButton
 					color="light"
@@ -145,7 +146,7 @@ export const Triggers = memo(function Triggers() {
 })
 
 const tableDateFormat = 'MM/DD HH:mm:ss'
-function TriggersTable({ triggersList, editItem }) {
+function TriggersTable({ triggersList, editItem, selectedControlId }) {
 	const socket = useContext(SocketContext)
 
 	const triggersRef = useRef(triggersList)
@@ -199,6 +200,7 @@ function TriggersTable({ triggersList, editItem }) {
 								item={item}
 								editItem={editItem}
 								moveTrigger={moveTrigger}
+								isSelected={controlId === selectedControlId}
 							/>
 						))
 				) : (
@@ -212,7 +214,7 @@ function TriggersTable({ triggersList, editItem }) {
 		</table>
 	)
 }
-function TriggersTableRow({ controlId, item, editItem, moveTrigger }) {
+function TriggersTableRow({ controlId, item, editItem, moveTrigger, isSelected }) {
 	const socket = useContext(SocketContext)
 
 	const confirmRef = useRef(null)
@@ -281,7 +283,14 @@ function TriggersTableRow({ controlId, item, editItem, moveTrigger }) {
 	const exportId = parsedId?.type === 'trigger' ? parsedId?.trigger : undefined
 
 	return (
-		<tr ref={ref} className={isDragging ? 'instancelist-dragging' : 'instancelist-notdragging'}>
+		<tr
+			ref={ref}
+			className={classNames({
+				'instancelist-dragging': isDragging,
+				'instancelist-notdragging': !isDragging,
+				'instancelist-selected': isSelected,
+			})}
+		>
 			<td ref={drag} className="td-reorder" style={{ maxWidth: 20 }}>
 				<FontAwesomeIcon icon={faSort} />
 			</td>

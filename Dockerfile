@@ -1,4 +1,4 @@
-FROM node:18-bullseye as companion-builder
+FROM node:18.16.1-bullseye as companion-builder
 
 # Installation Prep
 RUN apt-get update && apt-get install -y \
