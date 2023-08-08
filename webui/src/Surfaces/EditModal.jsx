@@ -250,6 +250,20 @@ export const SurfaceEditModal = forwardRef(function SurfaceEditModal(_props, ref
 								/>
 							</CFormGroup>
 						)}
+						{deviceInfo.configFields?.includes('videohub_page_count') && (
+							<CFormGroup>
+								<CLabel htmlFor="videohub_page_count">Page Count</CLabel>
+								<CInput
+									name="videohub_page_count"
+									type="range"
+									min={0}
+									max={8}
+									step={2}
+									value={deviceConfig.videohub_page_count}
+									onChange={(e) => updateConfig('videohub_page_count', parseInt(e.currentTarget.value))}
+								/>
+							</CFormGroup>
+						)}
 						<CFormGroup>
 							<CLabel htmlFor="never_lock">Never Pin code lock</CLabel>
 							<CInputCheckbox
