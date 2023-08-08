@@ -5668,10 +5668,10 @@ vary@^1, vary@~1.1.2:
   resolved "https://registry.yarnpkg.com/vary/-/vary-1.1.2.tgz#2299f02c6ded30d4a5961b0b9f74524a18f634fc"
   integrity sha512-BNGbWLfd0eUPabhkXUVm0j8uuvREyTh5ovRa/dyow/BqAbZJyC+5fU+IzQOzmAKzYqYRAISoRhdQr3eIZ/PXqg==
 
-videohub-server@^0.1.0:
-  version "0.1.0"
-  resolved "https://registry.yarnpkg.com/videohub-server/-/videohub-server-0.1.0.tgz#0c263888393e16978991cdf70941103c1b0fa6b3"
-  integrity sha512-eZf+o0wTQBQDbbG2dNg5CvLxPqME8K2ro1t5VXzev8b4p+Vl1B71417ADFmP86CpNPAlJMc1RHbh9r4I41K2Qg==
+videohub-server@^0.2.0:
+  version "0.2.0"
+  resolved "https://registry.yarnpkg.com/videohub-server/-/videohub-server-0.2.0.tgz#869f861e72c7acde27aa3194f4b18ef3d90ec535"
+  integrity sha512-mZfbV00u3FPMG09xzta5fQ9EyvRnuQly5T0i78PvjRPUIaPbxPDa7KTaVYB2xyLX0EM+Gg8GLT0bfE6EgKhmqQ==
 
 vinyl-buffer@^1.0.1:
   version "1.0.1"
