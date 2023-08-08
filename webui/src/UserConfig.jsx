@@ -247,14 +247,14 @@ function UserConfigTable() {
 						<div className="form-check form-check-inline mr-1 float-right">
 							<CSwitch
 								color="success"
-								checked={config.shuttle_enable}
+								checked={config.contour_shuttle_enable}
 								size={'lg'}
-								onChange={(e) => setValue('shuttle_enable', e.currentTarget.checked)}
+								onChange={(e) => setValue('contour_shuttle_enable', e.currentTarget.checked)}
 							/>
 						</div>
 					</td>
 					<td>
-						<CButton onClick={() => resetValue('shuttle_enable')} title="Reset to default">
+						<CButton onClick={() => resetValue('contour_shuttle_enable')} title="Reset to default">
 							<FontAwesomeIcon icon={faUndo} />
 						</CButton>
 					</td>

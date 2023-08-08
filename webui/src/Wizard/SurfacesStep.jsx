@@ -68,11 +68,11 @@ export function SurfacesStep({ config, setValue }) {
 			<div className="indent3">
 				<div className="form-check form-check-inline mr-1">
 					<CInputCheckbox
-						id="userconfig_shuttle_enable"
-						checked={config.shuttle_enable}
-						onChange={(e) => setValue('shuttle_enable', e.currentTarget.checked)}
+						id="userconfig_contour_shuttle_enable"
+						checked={config.contour_shuttle_enable}
+						onChange={(e) => setValue('contour_shuttle_enable', e.currentTarget.checked)}
 					/>
-					<CLabel htmlFor="userconfig_shuttle_enable">Enable</CLabel>
+					<CLabel htmlFor="userconfig_contour_shuttle_enable">Enable</CLabel>
 				</div>
 			</div>
 		</div>
