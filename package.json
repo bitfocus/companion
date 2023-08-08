@@ -99,6 +99,7 @@
 		"usb": "^2.9.0",
 		"utf-8-validate": "^6.0.3",
 		"winston": "^3.10.0",
+		"videohub-server": "^0.3.0",
 		"ws": "^8.13.0",
 		"xkeys": "npm:@julusian/xkeys@2.5.0-1"
 	},
