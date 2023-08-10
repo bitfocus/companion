@@ -1,5 +1,9 @@
 import { Buffer } from 'buffer'
 
+// Hack for csv library which needs a global 'Buffer'
+global.Buffer = Buffer
+window.Buffer = Buffer
+
 export const MAX_BUTTONS = 32
 export const MAX_COLS = 8
 export const MAX_ROWS = MAX_BUTTONS / MAX_COLS
