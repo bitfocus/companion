@@ -64,6 +64,7 @@
 		"body-parser": "^1.20.2",
 		"bufferutil": "^4.0.7",
 		"commander": "^10.0.1",
+		"csv-stringify": "^6.4.0",
 		"debounce-fn": "^5.1.2",
 		"ejson": "^2.2.3",
 		"emberplus-connection": "^0.1.2",
