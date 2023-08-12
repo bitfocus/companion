@@ -88,11 +88,13 @@ export function BonjourDeviceInputField({ value, setValue, connectionId, queryId
 		choices.push({ id: null, label: 'Manual' })
 
 		for (const svc of Object.values(services)) {
-			const address = `${svc.host}:${svc.port}`
-			choices.push({
-				id: address,
-				label: `${svc.name} (${address})`,
-			})
+			for (const rawAddress of svc.addresses || []) {
+				const address = `${rawAddress}:${svc.port}`
+				choices.push({
+					id: address,
+					label: `${svc.name} (${address})`,
+				})
+			}
 		}
 
 		return choices
