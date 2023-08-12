@@ -6,7 +6,7 @@ import { DropdownInputField } from './DropdownInputField'
 
 export const MenuPortalContext = createContext(null)
 
-export function BonjourDeviceInputField({ value, setValue, filter }) {
+export function BonjourDeviceInputField({ value, setValue, connectionId, queryId }) {
 	const socket = useContext(SocketContext)
 
 	const [_subId, setSubId] = useState(null)
@@ -53,7 +53,7 @@ export function BonjourDeviceInputField({ value, setValue, filter }) {
 	useEffect(() => {
 		let killed = false
 		let mySubId = null
-		socketEmitPromise(socket, 'bonjour:subscribe', [filter])
+		socketEmitPromise(socket, 'bonjour:subscribe', [connectionId, queryId])
 			.then((newSubId) => {
 				// Make sure it hasnt been terminated
 				if (killed) {
@@ -80,7 +80,7 @@ export function BonjourDeviceInputField({ value, setValue, filter }) {
 
 			if (mySubId) socket.emit('bonjour:unsubscribe', mySubId)
 		}
-	}, [socket, filter])
+	}, [socket, connectionId, queryId])
 
 	const choicesRaw = useMemo(() => {
 		const choices = []

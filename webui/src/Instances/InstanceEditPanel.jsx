@@ -196,6 +196,7 @@ const InstanceEditPanelInner = memo(function InstanceEditPanel({ instanceId, doC
 										valid={validFields[field.id]}
 										setValue={setValue}
 										setValid={setValid}
+										connectionId={instanceId}
 									/>
 								</CCol>
 							)
@@ -225,7 +226,7 @@ const InstanceEditPanelInner = memo(function InstanceEditPanel({ instanceId, doC
 	)
 })
 
-function ConfigField({ setValue, setValid, definition, value }) {
+function ConfigField({ setValue, setValid, definition, value, connectionId }) {
 	const id = definition.id
 	const setValue2 = useCallback((val) => setValue(id, val), [setValue, id])
 	const setValid2 = useCallback((valid) => setValid(id, valid), [setValid, id])
@@ -321,7 +322,14 @@ function ConfigField({ setValue, setValid, definition, value }) {
 			break
 		}
 		case 'bonjour-device':
-			return <BonjourDeviceInputField value={value} setValue={setValue2} filter={definition.bonjourQuery} />
+			return (
+				<BonjourDeviceInputField
+					value={value}
+					setValue={setValue2}
+					connectionId={connectionId}
+					queryId={definition.id}
+				/>
+			)
 		default:
 			return <p>Unknown field "{definition.type}"</p>
 	}
