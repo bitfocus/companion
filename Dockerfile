@@ -41,6 +41,10 @@ RUN apt update && apt install -y \
 # Don't run as root
 RUN useradd -ms /bin/bash companion
 
+# setup path and corepack
+RUN export PATH="$PATH:/app/node-runtime/bin"
+RUN corepack enable
+
 # Create config directory and set correct permissions
 # Once docker mounts the volume, the directory will be owned by node:node
 ENV COMPANION_CONFIG_BASEDIR /companion
