@@ -236,7 +236,7 @@ function FeedbackTableRow({
 	const innerDelete = useCallback(() => doDelete(feedback.id), [feedback.id, doDelete])
 	const innerDuplicate = useCallback(() => doDuplicate(feedback.id), [feedback.id, doDuplicate])
 	const innerLearn = useCallback(() => doLearn(feedback.id), [doLearn, feedback.id])
-	const innerInverted = useCallback((isInverted) => setInverted(feedback.id, isInverted), [feedback.id, doDelete])
+	const innerInverted = useCallback((isInverted) => setInverted(feedback.id, isInverted), [feedback.id, setInverted])
 
 	const ref = useRef(null)
 	const [, drop] = useDrop({
