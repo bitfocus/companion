@@ -29,7 +29,7 @@ COPY docker-entrypoint.sh /docker-entrypoint.sh
 WORKDIR /app
 
 # setup path and corepack
-RUN export PATH="$PATH:/app/node-runtime/bin"
+ENV PATH="$PATH:/app/node-runtime/bin"
 RUN corepack enable
 
 # Create config directory and set correct permissions to not run as root
