@@ -43,6 +43,7 @@ RUN useradd -ms /bin/bash companion
 
 # setup path and corepack
 ENV PATH="$PATH:/app/node-runtime/bin"
+RUN echo "PATH="${PATH}"" | tee -a /etc/environment
 RUN corepack enable
 
 # Create config directory and set correct permissions
