@@ -68,8 +68,11 @@ if (isZip) {
 	// We need to keep some portions of this to have corepack/yarn work, but npm is large and unnecessary
 	// TODO - can this be simplified and combined into the extract step?
 	await fs.remove(path.join(runtimeDir, 'lib/node_modules/npm'))
-	// await fs.remove(path.join(runtimeDir, 'bin/npm'))
-	// await fs.remove(path.join(runtimeDir, 'bin/npx'))
+	if (platformInfo.runtimePlatform === 'darwin') {
+		// macos doesn't like symlinks
+		await fs.remove(path.join(runtimeDir, 'bin/npm'))
+		await fs.remove(path.join(runtimeDir, 'bin/npx'))
+	}
 }
 await fs.remove(path.join(runtimeDir, 'share'))
 await fs.remove(path.join(runtimeDir, 'include'))
