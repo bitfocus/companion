@@ -1,4 +1,4 @@
-import React, { useContext, useMemo } from 'react'
+import React, { useCallback, useContext, useMemo } from 'react'
 import { DropdownInputField } from '../Components'
 import { MAX_BUTTONS } from '../Constants'
 import {
@@ -9,6 +9,7 @@ import {
 	TriggersContext,
 	VariableDefinitionsContext,
 } from '../util'
+import TimePicker from 'react-time-picker'
 
 export function InternalInstanceField(option, isOnControl, readonly, value, setValue) {
 	switch (option.type) {
@@ -58,6 +59,8 @@ export function InternalInstanceField(option, isOnControl, readonly, value, setV
 			)
 		case 'internal:trigger':
 			return <InternalTriggerDropdown disabled={readonly} value={value} setValue={setValue} />
+		case 'internal:time':
+			return <InternalTimePicker disabled={readonly} value={value} setValue={setValue} />
 		default:
 			// Use fallback
 			return undefined
@@ -232,4 +235,19 @@ function InternalTriggerDropdown({ value, setValue, disabled }) {
 	}, [context])
 
 	return <DropdownInputField disabled={disabled} value={value} choices={choices} multiple={false} setValue={setValue} />
+}
+
+function InternalTimePicker({ value, setValue, disabled }) {
+	return (
+		<TimePicker
+			disabled={disabled}
+			format="HH:mm:ss"
+			maxDetail="second"
+			required
+			value={value}
+			onChange={setValue}
+			className={''}
+			openClockOnFocus={false}
+		/>
+	)
 }
