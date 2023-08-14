@@ -146,7 +146,7 @@ const InstanceEditPanelInner = memo(function InstanceEditPanel({ instanceId, doC
 		}
 		for (const field of configFields) {
 			if (typeof field.isVisible === 'function') {
-				visibility[field.id] = field.isVisible(instanceConfig)
+				visibility[field.id] = field.isVisible(instanceConfig, field.isVisibleData)
 			}
 		}
 

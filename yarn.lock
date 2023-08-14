@@ -2413,6 +2413,11 @@ cross-spawn@^7.0.3:
     shebang-command "^2.0.0"
     which "^2.0.1"
 
+csv-stringify@^6.4.0:
+  version "6.4.0"
+  resolved "https://registry.yarnpkg.com/csv-stringify/-/csv-stringify-6.4.0.tgz#6d006dca9194700e44f9fbc541bee8bbbd4f459c"
+  integrity sha512-HQsw0QXiN5fdlO+R8/JzCZnR3Fqp8E87YVnhHlaPtNGJjt6ffbV0LpOkieIb1x6V1+xt878IYq77SpXHWAqKkA==
+
 data-uri-to-buffer@^4.0.0:
   version "4.0.1"
   resolved "https://registry.yarnpkg.com/data-uri-to-buffer/-/data-uri-to-buffer-4.0.1.tgz#d8feb2b2881e6a4f58c2e08acfd0e2834e26222e"
@@ -4459,7 +4464,7 @@ node-gyp-build@^4.3.0, node-gyp-build@^4.5.0, "node-gyp-build@github:julusian/no
   version "4.5.0"
   resolved "https://codeload.github.com/julusian/node-gyp-build/tar.gz/33c9759a3215892a520d50ad20c947795b813904"
 
-node-hid@^2.1.1, "node-hid@npm:@julusian/hid@3.0.0-0", "node-hid@npm:@julusian/hid@^3.0.0-0":
+node-hid@^2.1.1, node-hid@^2.1.2, "node-hid@npm:@julusian/hid@3.0.0-0", "node-hid@npm:@julusian/hid@^3.0.0-0":
   version "3.0.0-0"
   resolved "https://registry.yarnpkg.com/@julusian/hid/-/hid-3.0.0-0.tgz#f3cbde6a13781e3c436f388c24225805006582fa"
   integrity sha512-7k1lpDZcI8zH8Qsu6ivBWMhcJL7TxaJLZiYGx0KoxGPJhOvkEf7z+ZwHk02wZmh+z5gccHGKIpMKhP5P54aZeQ==
@@ -5184,6 +5189,14 @@ shebang-regex@^3.0.0:
   version "3.0.0"
   resolved "https://registry.yarnpkg.com/shebang-regex/-/shebang-regex-3.0.0.tgz#ae16f1644d873ecad843b0307b143362d4c42172"
   integrity sha512-7++dFhtcx3353uBaq8DDR4NuxBetBzC7ZQOhmTQInHEd6bSrXdiEyzCvG07Z44UYdLShWUyXt5M/yhz8ekcb1A==
+
+shuttle-control-usb@^1.4.0:
+  version "1.4.0"
+  resolved "https://registry.yarnpkg.com/shuttle-control-usb/-/shuttle-control-usb-1.4.0.tgz#3a238b6102bee968c3e3c608251f6e0e46269886"
+  integrity sha512-fOuFhHb/1Jl/FLvBsD9HCDD6xZHTVSVU5nEsFI7Om7KlVSJTpG87bjWYo2mib18Jr3aL2fG2fnEK/f6f1vD0Yw==
+  dependencies:
+    node-hid "^2.1.2"
+    usb "^2.9.0"
 
 side-channel@^1.0.4:
   version "1.0.4"

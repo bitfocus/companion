@@ -63,6 +63,10 @@ eg `00:10:15` gives 615
 
 You can do the reverse of this with `secondsToTimestamp(str)`
 
+**randomInt(min, max)**
+
+Generate a random integer in the specified range (inclusive).
+
 ##### String operations
 
 **trim(val)**
@@ -86,11 +90,28 @@ substr() extracts characters from indexStart up to but not including indexEnd.
 
 Tip: If you don't want the behaviour of negative numbers, you can use `max(0, index)` to limit the value to never be below 0.
 
+**concat(str1, str2)**
+
+Combine one or more values into a single string
+
 **includes(val, find)**
 
 Check if a string contains a specific value
 
 eg `includes("Companion is great!", "great")` gives `true`
+
+**indexOf(val, find, offset)**
+
+Find the index of the first occurence of a value within the provided string.
+
+Optionally provide an offset to start the search from.
+
+
+**lastIndexOf(val, find, offset)**
+
+Find the index of the last occurence of a value within the provided string.
+
+Optionally provide an offset to start the search from.
 
 **toUpperCase(val)**
 

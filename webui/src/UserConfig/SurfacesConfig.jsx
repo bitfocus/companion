@@ -120,6 +120,28 @@ export function SurfacesConfig({ config, setValue, resetValue }) {
 					</CButton>
 				</td>
 			</tr>
+			<tr>
+				<td>
+					Enable connected Contour Shuttle
+					<br />
+					<em>(Requires Companion restart)</em>
+				</td>
+				<td>
+					<div className="form-check form-check-inline mr-1 float-right">
+						<CSwitch
+							color="success"
+							checked={config.contour_shuttle_enable}
+							size={'lg'}
+							onChange={(e) => setValue('contour_shuttle_enable', e.currentTarget.checked)}
+						/>
+					</div>
+				</td>
+				<td>
+					<CButton onClick={() => resetValue('contour_shuttle_enable')} title="Reset to default">
+						<FontAwesomeIcon icon={faUndo} />
+					</CButton>
+				</td>
+			</tr>
 		</>
 	)
 }

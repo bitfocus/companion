@@ -63,6 +63,18 @@ export function SurfacesStep({ config, setValue }) {
 					<CLabel htmlFor="userconfig_loupedeck_enable">Enable</CLabel>
 				</div>
 			</div>
+
+			<p className="indent3">Contour Shuttle USB Devices</p>
+			<div className="indent3">
+				<div className="form-check form-check-inline mr-1">
+					<CInputCheckbox
+						id="userconfig_contour_shuttle_enable"
+						checked={config.contour_shuttle_enable}
+						onChange={(e) => setValue('contour_shuttle_enable', e.currentTarget.checked)}
+					/>
+					<CLabel htmlFor="userconfig_contour_shuttle_enable">Enable</CLabel>
+				</div>
+			</div>
 		</div>
 	)
 }
