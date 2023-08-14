@@ -1,5 +1,5 @@
 [
-	{	
+	{
 		"label": "Getting started",
 		"file": "1_welcome.md",
 		"children": [
@@ -171,7 +171,6 @@
 			{
 				"label": "Custom variables",
 				"file": "4_secondary_admin_controls/custom_variables.md"
-				
 			},
 			{
 				"label": "Expressions",
@@ -258,6 +257,10 @@
 			{
 				"label": "Loupedeck Live",
 				"file": "7_surfaces/loupedeck-live.md"
+			},
+			{
+				"label": "Contour Shuttle",
+				"file": "7_surfaces/contour_shuttle.md"
 			}
 		]
 	}
