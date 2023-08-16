@@ -135,6 +135,7 @@ export function EditTriggerPanel({ controlId }) {
 											/>
 										</>
 									}
+									entityType="condition"
 									controlId={controlId}
 									feedbacks={config.condition}
 									booleanOnly={true}

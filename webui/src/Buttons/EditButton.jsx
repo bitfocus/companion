@@ -509,6 +509,7 @@ function TabsSection({ style, controlId, steps, runtimeProps, rotaryActions, fee
 						<MyErrorBoundary>
 							<ControlFeedbacksEditor
 								heading="Feedbacks"
+								entityType="feedback"
 								controlId={controlId}
 								feedbacks={feedbacks}
 								isOnControl={true}
