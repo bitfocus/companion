@@ -120,9 +120,18 @@ export function convertInputField(input: SomeCompanionInputField): Complete<Modu
 				type: 'checkbox',
 				default: input.default,
 			})
-		case 'dropdown':
 		case 'multiselect':
-			if (input.multiple || input.type === 'multiselect') {
+			return literal<Complete<ModuleApi.CompanionInputFieldMultiDropdown>>({
+				...convertInputFieldBase(input),
+				type: 'multidropdown',
+				choices: input.choices,
+				default: input.default,
+				minChoicesForSearch: input.minChoicesForSearch,
+				minSelection: input.minSelection,
+				maxSelection: input.maxSelection,
+			})
+		case 'dropdown':
+			if (input.multiple) {
 				return literal<Complete<ModuleApi.CompanionInputFieldMultiDropdown>>({
 					...convertInputFieldBase(input),
 					type: 'multidropdown',
