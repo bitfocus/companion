@@ -175,7 +175,7 @@ export interface CompanionInputFieldDropdownBase extends CompanionInputField {
 	minChoicesForSearch?: number
 }
 
-export interface CompanionInputFieldMultiselect extends CompanionInputFieldDropdownBase {
+export interface CompanionInputFieldMultiselect extends CompanionInputField {
 	type: 'multiselect'
 	default: ConfigValue[]
 
