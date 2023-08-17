@@ -121,7 +121,8 @@ export function convertInputField(input: SomeCompanionInputField): Complete<Modu
 				default: input.default,
 			})
 		case 'dropdown':
-			if (input.multiple) {
+		case 'multiselect':
+			if (input.multiple || input.type === 'multiselect') {
 				return literal<Complete<ModuleApi.CompanionInputFieldMultiDropdown>>({
 					...convertInputFieldBase(input),
 					type: 'multidropdown',
