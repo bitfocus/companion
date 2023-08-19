@@ -133,6 +133,13 @@ The following components are allowed:
 * `ss` - seconds
 * `.S` / `.SS` / `.SSS` - milliseconds, in varying levels of accuracy. Must be at the end of the string
 
+**parseVariables(string)**
+
+In some scenarios it can be beneficial to have nested variables. This is not supported in the expression syntax.
+
+Instead you can use the `parseVariables` function, which will interpret a string using the string variables syntax. 
+
+eg `parseVariables('$(internal:custom_$(internal:custom_b))')`
 
 ##### Bool operations
 
