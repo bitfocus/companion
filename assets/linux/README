@@ -16,7 +16,7 @@
    Companion requires some dependencies that aren't included by default on some Debian and Ubuntu installations.
 
    $ apt-get update
-   $ apt-get install -y libusb-1.0-0-dev libudev-dev
+   $ apt-get install -y libusb-1.0-0-dev libudev-dev libfontconfig1
 
 3. Udev rules
 

@@ -36,6 +36,7 @@ RUN apt update && apt install -y \
     libudev1 \
     iputils-ping \
     libasound2 \
+    libfontconfig1 \
     && rm -rf /var/lib/apt/lists/*
 
 # Don't run as root
