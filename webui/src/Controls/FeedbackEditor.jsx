@@ -31,7 +31,15 @@ import { OptionButtonPreview } from './OptionButtonPreview'
 import { MenuPortalContext } from '../Components/DropdownInputField'
 import { ButtonStyleProperties } from '@companion/shared/Style'
 
-export function ControlFeedbacksEditor({ controlId, feedbacks, heading, booleanOnly, location, addPlaceholder }) {
+export function ControlFeedbacksEditor({
+	controlId,
+	feedbacks,
+	heading,
+	entityType,
+	booleanOnly,
+	location,
+	addPlaceholder,
+}) {
 	const socket = useContext(SocketContext)
 
 	const confirmModal = useRef()
@@ -60,13 +68,13 @@ export function ControlFeedbacksEditor({ controlId, feedbacks, heading, booleanO
 
 	const doDelete = useCallback(
 		(feedbackId) => {
-			confirmModal.current.show('Delete feedback', 'Delete feedback?', 'Delete', () => {
+			confirmModal.current.show(`Delete ${entityType}`, `Delete ${entityType}?`, 'Delete', () => {
 				socketEmitPromise(socket, 'controls:feedback:remove', [controlId, feedbackId]).catch((e) => {
 					console.error(`Failed to delete feedback: ${e}`)
 				})
 			})
 		},
-		[socket, controlId]
+		[socket, controlId, entityType]
 	)
 
 	const doDuplicate = useCallback(
@@ -153,6 +161,7 @@ export function ControlFeedbacksEditor({ controlId, feedbacks, heading, booleanO
 						<MyErrorBoundary key={a?.id ?? i}>
 							<FeedbackTableRow
 								key={a?.id ?? i}
+								entityType={entityType}
 								index={i}
 								controlId={controlId}
 								feedback={a}
@@ -191,6 +200,7 @@ export function ControlFeedbacksEditor({ controlId, feedbacks, heading, booleanO
 }
 
 function FeedbackTableRow({
+	entityType,
 	feedback,
 	controlId,
 	index,
@@ -289,6 +299,7 @@ function FeedbackTableRow({
 			</td>
 			<td>
 				<FeedbackEditor
+					entityType={entityType}
 					location={location}
 					feedback={feedback}
 					setValue={setValue}
@@ -309,6 +320,7 @@ function FeedbackTableRow({
 }
 
 function FeedbackEditor({
+	entityType,
 	feedback,
 	location,
 	setValue,
@@ -383,18 +395,18 @@ function FeedbackEditor({
 			<div className="cell-controls">
 				<CButtonGroup>
 					{isCollapsed ? (
-						<CButton size="sm" onClick={doExpand} title="Expand feedback view">
+						<CButton size="sm" onClick={doExpand} title={`Expand ${entityType} view`}>
 							<FontAwesomeIcon icon={faExpandArrowsAlt} />
 						</CButton>
 					) : (
-						<CButton size="sm" onClick={doCollapse} title="Collapse feedback view">
+						<CButton size="sm" onClick={doCollapse} title={`Collapse ${entityType} view`}>
 							<FontAwesomeIcon icon={faCompressArrowsAlt} />
 						</CButton>
 					)}
-					<CButton size="sm" onClick={innerDuplicate} title="Duplicate feedback">
+					<CButton size="sm" onClick={innerDuplicate} title={`Duplicate ${entityType}`}>
 						<FontAwesomeIcon icon={faCopy} />
 					</CButton>
-					<CButton size="sm" onClick={innerDelete} title="Remove feedback">
+					<CButton size="sm" onClick={innerDelete} title={`Remove ${entityType}`}>
 						<FontAwesomeIcon icon={faTrash} />
 					</CButton>
 					{doEnabled && (
@@ -403,7 +415,7 @@ function FeedbackEditor({
 							<CSwitch
 								color="success"
 								checked={!feedback.disabled}
-								title={feedback.disabled ? 'Enable feedback' : 'Disable feedback'}
+								title={feedback.disabled ? `Enable ${entityType}` : `Disable ${entityType}`}
 								onChange={innerSetEnabled}
 							/>
 						</>

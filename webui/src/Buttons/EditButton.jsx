@@ -510,6 +510,7 @@ function TabsSection({ style, controlId, location, steps, runtimeProps, rotaryAc
 						<MyErrorBoundary>
 							<ControlFeedbacksEditor
 								heading="Feedbacks"
+								entityType="feedback"
 								controlId={controlId}
 								feedbacks={feedbacks}
 								location={location}

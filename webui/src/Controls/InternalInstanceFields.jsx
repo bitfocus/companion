@@ -1,4 +1,4 @@
-import React, { useCallback, useContext, useMemo } from 'react'
+import React, { useContext, useMemo } from 'react'
 import { DropdownInputField } from '../Components'
 import {
 	CustomVariableDefinitionsContext,
