@@ -54,7 +54,7 @@
 		"@elgato-stream-deck/node": "^6.0.0-async-test.4",
 		"@jsep-plugin/numbers": "^1.0.1",
 		"@jsep-plugin/template": "^1.0.2",
-		"@julusian/image-rs": "^0.1.3",
+		"@julusian/image-rs": "^0.2.0",
 		"@julusian/jpeg-turbo": "^2.1.0",
 		"@julusian/skia-canvas": "^1.0.4",
 		"@loupedeck/node": "^1.0.0",
