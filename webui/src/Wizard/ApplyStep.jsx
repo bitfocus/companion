@@ -51,6 +51,18 @@ export function ApplyStep({ oldConfig, newConfig }) {
 		)
 	}
 
+	if (oldConfig.setup_wizard === 0 || oldConfig.contour_shuttle_enable !== newConfig.contour_shuttle_enable) {
+		changes.push(
+			newConfig.contour_shuttle_enable ? (
+				<li>Contour Shuttle hardware will be detected by Companion.</li>
+			) : (
+				<li>
+					Contour Shuttle hardware will {oldConfig.setup_wizard > 0 ? 'no longer' : 'not'} be detected by Companion.
+				</li>
+			)
+		)
+	}
+
 	if (
 		oldConfig.setup_wizard === 0 &&
 		!newConfig.tcp_enabled &&

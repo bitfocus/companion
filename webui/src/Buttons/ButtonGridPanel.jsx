@@ -115,6 +115,8 @@ export const ButtonsGridPanel = memo(function ButtonsPage({
 
 	const doGrow = useCallback(
 		(direction, amount) => {
+			if (amount <= 0) return
+
 			switch (direction) {
 				case 'left':
 					socket.emit('set_userconfig_key', 'gridSize', {

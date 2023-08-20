@@ -1,3 +1,8 @@
+import { Buffer } from 'buffer'
+
+// Hack for csv library which needs a global 'Buffer'
+window.Buffer = Buffer
+
 export const FONT_SIZES = [
 	{ id: 'auto', label: 'Auto' },
 	{ id: '7', label: '7pt' },

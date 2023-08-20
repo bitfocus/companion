@@ -1,4 +1,4 @@
-FROM node:18-bullseye as companion-builder
+FROM node:18.16.1-bullseye as companion-builder
 
 # Installation Prep
 RUN apt-get update && apt-get install -y \
@@ -36,10 +36,16 @@ RUN apt update && apt install -y \
     libudev1 \
     iputils-ping \
     libasound2 \
+    libfontconfig1 \
     && rm -rf /var/lib/apt/lists/*
 
 # Don't run as root
 RUN useradd -ms /bin/bash companion
+
+# setup path and corepack
+ENV PATH="$PATH:/app/node-runtime/bin"
+RUN echo "PATH="${PATH}"" | tee -a /etc/environment
+RUN corepack enable
 
 # Create config directory and set correct permissions
 # Once docker mounts the volume, the directory will be owned by node:node

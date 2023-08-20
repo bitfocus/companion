@@ -21,6 +21,14 @@
 	opacity: 0.5;
 }
 
+.instancelist-selected {
+	background-color: rgba(200, 200, 200, 0.35);
+
+	&:hover {
+		background-color: rgba(200, 200, 200, 0.3) !important;
+	}
+}
+
 .instancelist-notdragging:hover {
 	background-color: rgba(200, 200, 200, 0.1);
 }

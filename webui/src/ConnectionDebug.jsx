@@ -6,6 +6,7 @@ import { useParams } from 'react-router-dom'
 import { VariableSizeList as List } from 'react-window'
 import AutoSizer from 'react-virtualized-auto-sizer'
 import { useElementSize } from 'usehooks-ts'
+import { stringify as csvStringify } from 'csv-stringify/sync'
 
 export function ConnectionDebug() {
 	const socket = useContext(SocketContext)
@@ -77,6 +78,21 @@ export function ConnectionDebug() {
 		setListChunkClearedToken(nanoid())
 	}, [])
 
+	const doExportLog = useCallback(() => {
+		const csv = csvStringify(linesBuffer.map((line) => [line.level, line.message]))
+
+		const blob = new Blob([csv], { type: 'text/csv' })
+		const link = document.createElement('a')
+		link.setAttribute(
+			'download',
+			`module-log-${new Date().toLocaleDateString()}-${new Date().toLocaleTimeString()}.csv`
+		)
+		link.href = window.URL.createObjectURL(blob, { oneTimeOnly: true })
+		document.body.appendChild(link)
+		link.click()
+		link.remove()
+	}, [linesBuffer])
+
 	const doStopConnection = useCallback(() => {
 		socketEmitPromise(socket, 'instances:set-enabled', [connectionId, false]).catch((e) => {
 			console.error('Failed', e)
@@ -122,6 +138,9 @@ export function ConnectionDebug() {
 					<CButtonGroup>
 						<CButton color="danger" size="sm" onClick={doClearLog}>
 							Clear log
+						</CButton>
+						<CButton color="info" size="sm" onClick={doExportLog}>
+							Export log
 						</CButton>
 					</CButtonGroup>
 

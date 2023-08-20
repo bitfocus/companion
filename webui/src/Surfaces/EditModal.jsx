@@ -277,21 +277,31 @@ export const SurfaceEditModal = forwardRef(function SurfaceEditModal(_props, ref
 								/>
 							</CFormGroup>
 						)}
-						{deviceInfo.configFields?.includes('rotation') && (
-							<CFormGroup>
-								<CLabel htmlFor="rotation">Button rotation</CLabel>
-								<CSelect
-									name="rotation"
-									value={deviceConfig.rotation}
-									onChange={(e) => updateConfig('rotation', parseInt(e.currentTarget.value))}
-								>
-									<option value="0">Normal</option>
-									<option value="-90">90 CCW</option>
-									<option value="90">90 CW</option>
-									<option value="180">180</option>
-								</CSelect>
-							</CFormGroup>
-						)}
+
+						<CFormGroup>
+							<CLabel htmlFor="rotation">Button rotation</CLabel>
+							<CSelect
+								name="rotation"
+								value={deviceConfig.rotation}
+								onChange={(e) => {
+									const valueNumber = parseInt(e.currentTarget.value)
+									updateConfig('rotation', isNaN(valueNumber) ? e.currentTarget.value : valueNumber)
+								}}
+							>
+								<option value="0">Normal</option>
+								<option value="surface-90">90 CCW</option>
+								<option value="surface90">90 CW</option>
+								<option value="surface180">180</option>
+
+								{deviceInfo.configFields?.includes('legacy_rotation') && (
+									<>
+										<option value="-90">90 CCW (Legacy)</option>
+										<option value="90">90 CW (Legacy)</option>
+										<option value="180">180 (Legacy)</option>
+									</>
+								)}
+							</CSelect>
+						</CFormGroup>
 						{deviceInfo.configFields?.includes('emulator_control_enable') && (
 							<CFormGroup>
 								<CLabel htmlFor="emulator_control_enable">Enable support for Logitech R400/Mastercue/DSan</CLabel>
@@ -313,6 +323,20 @@ export const SurfaceEditModal = forwardRef(function SurfaceEditModal(_props, ref
 									checked={!!deviceConfig.emulator_prompt_fullscreen}
 									value={true}
 									onChange={(e) => updateConfig('emulator_prompt_fullscreen', !!e.currentTarget.checked)}
+								/>
+							</CFormGroup>
+						)}
+						{deviceInfo.configFields?.includes('videohub_page_count') && (
+							<CFormGroup>
+								<CLabel htmlFor="videohub_page_count">Page Count</CLabel>
+								<CInput
+									name="videohub_page_count"
+									type="range"
+									min={0}
+									max={8}
+									step={2}
+									value={deviceConfig.videohub_page_count}
+									onChange={(e) => updateConfig('videohub_page_count', parseInt(e.currentTarget.value))}
 								/>
 							</CFormGroup>
 						)}

@@ -8,6 +8,7 @@ import { faQuestionCircle } from '@fortawesome/free-solid-svg-icons'
 import sanitizeHtml from 'sanitize-html'
 import { isLabelValid } from '@companion/shared/Label'
 import CSwitch from '../CSwitch'
+import { BonjourDeviceInputField } from '../Components/BonjourDeviceInputField'
 
 export function InstanceEditPanel({ instanceId, instanceStatus, doConfigureInstance, showHelp }) {
 	console.log('status', instanceStatus)
@@ -145,7 +146,7 @@ const InstanceEditPanelInner = memo(function InstanceEditPanel({ instanceId, doC
 		}
 		for (const field of configFields) {
 			if (typeof field.isVisible === 'function') {
-				visibility[field.id] = field.isVisible(instanceConfig)
+				visibility[field.id] = field.isVisible(instanceConfig, field.isVisibleData)
 			}
 		}
 
@@ -195,6 +196,7 @@ const InstanceEditPanelInner = memo(function InstanceEditPanel({ instanceId, doC
 										valid={validFields[field.id]}
 										setValue={setValue}
 										setValid={setValid}
+										connectionId={instanceId}
 									/>
 								</CCol>
 							)
@@ -224,7 +226,7 @@ const InstanceEditPanelInner = memo(function InstanceEditPanel({ instanceId, doC
 	)
 })
 
-function ConfigField({ setValue, setValid, definition, value }) {
+function ConfigField({ setValue, setValid, definition, value, connectionId }) {
 	const id = definition.id
 	const setValue2 = useCallback((val) => setValue(id, val), [setValue, id])
 	const setValid2 = useCallback((valid) => setValid(id, valid), [setValid, id])
@@ -319,6 +321,15 @@ function ConfigField({ setValue, setValid, definition, value }) {
 			)
 			break
 		}
+		case 'bonjour-device':
+			return (
+				<BonjourDeviceInputField
+					value={value}
+					setValue={setValue2}
+					connectionId={connectionId}
+					queryId={definition.id}
+				/>
+			)
 		default:
 			return <p>Unknown field "{definition.type}"</p>
 	}

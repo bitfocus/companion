@@ -11,6 +11,7 @@ RUN apt update && apt install -y \
     libudev1 \
     iputils-ping \
     libasound2 \
+    libfontconfig1 \
     && rm -rf /var/lib/apt/lists/*
 
 RUN case ${TARGETPLATFORM} in \
@@ -27,6 +28,11 @@ RUN case ${TARGETPLATFORM} in \
 COPY docker-entrypoint.sh /docker-entrypoint.sh
 
 WORKDIR /app
+
+# setup path and corepack
+ENV PATH="$PATH:/app/node-runtime/bin"
+RUN echo "PATH="${PATH}"" | tee -a /etc/environment
+RUN corepack enable
 
 # Create config directory and set correct permissions to not run as root
 # Once docker mounts the volume, the directory will be owned by companion:companion

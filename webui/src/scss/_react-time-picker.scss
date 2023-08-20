@@ -1,0 +1,15 @@
+@import 'react-time-picker/dist/TimePicker.css';
+
+.react-time-picker {
+	display: block;
+
+	.react-time-picker__wrapper {
+		@extend .form-control;
+	}
+
+	.react-time-picker__clear-button,
+	.react-time-picker__clock-button {
+		// Temporary?
+		display: none;
+	}
+}

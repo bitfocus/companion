@@ -103,7 +103,7 @@ If you are coming from an older version, make sure to check the changes in v3.0.
 - Tablet page not supporting delayed press groups #2475
 - Multiple decrement/increment page for a surface on a button dont combine as expected #2328
 - Crash on windows if powershell.exe is unavailable #2474
-- Set serialnumber to page "Back" can stop working #2484
+- Set serialNumber to page "Back" can stop working #2484
 - show_topbar button style not importing from 2.4 correctly
 - Streamdeck Mini with latest firmware not working on Windows
 

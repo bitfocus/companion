@@ -2,6 +2,7 @@
 
 import '@fontsource/roboto'
 import './App.scss'
+import './Constants'
 
 if (process.env.NODE_ENV === 'development') {
 	const defineProperties = Object.defineProperties
