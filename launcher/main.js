@@ -386,8 +386,19 @@ if (!lock) {
 		})
 
 		ipcMain.on('launcher-set-http-port', (e, msg) => {
-			console.log('changed bind port:', msg)
-			uiConfig.set('http_port', msg)
+			const newPort = Number(msg)
+			if (isNaN(newPort) || newPort < 1024 || newPort > 65535) {
+				electron.dialog
+					.showMessageBox(window, {
+						type: 'warning',
+						message: 'Port must be between 1024 and 65535',
+					})
+					.catch(() => null)
+				return
+			}
+
+			console.log('changed bind port:', newPort)
+			uiConfig.set('http_port', newPort)
 
 			rebindHttp()
 		})
