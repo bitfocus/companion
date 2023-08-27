@@ -50,7 +50,7 @@
 		"zx": "^7.2.3"
 	},
 	"dependencies": {
-		"@companion-module/base": "~1.4.1",
+		"@companion-module/base": "~1.5.0",
 		"@elgato-stream-deck/node": "^6.0.0-async-test.4",
 		"@jsep-plugin/numbers": "^1.0.1",
 		"@jsep-plugin/template": "^1.0.2",
@@ -58,9 +58,9 @@
 		"@julusian/jpeg-turbo": "^2.1.0",
 		"@julusian/skia-canvas": "^1.0.4",
 		"@loupedeck/node": "^1.0.0",
-		"@sentry/integrations": "^7.58.1",
-		"@sentry/node": "^7.58.1",
-		"@sentry/tracing": "^7.58.1",
+		"@sentry/integrations": "^7.64.0",
+		"@sentry/node": "^7.64.0",
+		"@sentry/tracing": "^7.64.0",
 		"archiver": "^5.3.1",
 		"body-parser": "^1.20.2",
 		"bonjour-service": "^1.1.1",

@@ -1,4 +1,4 @@
-import { CAlert, CButton, CForm, CFormGroup, CButtonGroup, CSwitch } from '@coreui/react'
+import { CAlert, CButton, CForm, CFormGroup, CButtonGroup, CSwitch, CLabel } from '@coreui/react'
 import {
 	faSort,
 	faTrash,
@@ -6,6 +6,7 @@ import {
 	faExpandArrowsAlt,
 	faCopy,
 	faFolderOpen,
+	faQuestionCircle,
 } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import React, { useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react'
@@ -23,7 +24,7 @@ import Select, { createFilter } from 'react-select'
 import { OptionsInputField } from './OptionsInputField'
 import { useDrag, useDrop } from 'react-dnd'
 import { GenericConfirmModal } from '../Components/GenericConfirmModal'
-import { DropdownInputField } from '../Components'
+import { CheckboxInputField, DropdownInputField } from '../Components'
 import { ButtonStyleConfigFields } from './ButtonStyleConfig'
 import { AddFeedbacksModal } from './AddModal'
 import { usePanelCollapseHelper } from '../Helpers/CollapseHelper'
@@ -60,6 +61,17 @@ export function ControlFeedbacksEditor({
 			if (!currentFeedback?.options || currentFeedback.options[key] !== val) {
 				socketEmitPromise(socket, 'controls:feedback:set-option', [controlId, feedbackId, key, val]).catch((e) => {
 					console.error(`Set-option failed: ${e}`)
+				})
+			}
+		},
+		[socket, controlId]
+	)
+	const setInverted = useCallback(
+		(feedbackId, isInverted) => {
+			const currentFeedback = feedbacksRef.current?.find((fb) => fb.id === feedbackId)
+			if (!currentFeedback || currentFeedback.isInverted !== isInverted) {
+				socketEmitPromise(socket, 'controls:feedback:set-inverted', [controlId, feedbackId, isInverted]).catch((e) => {
+					console.error(`Set-inverted failed: ${e}`)
 				})
 			}
 		},
@@ -166,6 +178,7 @@ export function ControlFeedbacksEditor({
 								controlId={controlId}
 								feedback={a}
 								setValue={setValue}
+								setInverted={setInverted}
 								doDelete={doDelete}
 								doDuplicate={doDuplicate}
 								doLearn={doLearn}
@@ -207,6 +220,7 @@ function FeedbackTableRow({
 	dragId,
 	moveCard,
 	setValue,
+	setInverted,
 	doDelete,
 	doDuplicate,
 	doLearn,
@@ -221,6 +235,7 @@ function FeedbackTableRow({
 	const innerDelete = useCallback(() => doDelete(feedback.id), [feedback.id, doDelete])
 	const innerDuplicate = useCallback(() => doDuplicate(feedback.id), [feedback.id, doDuplicate])
 	const innerLearn = useCallback(() => doLearn(feedback.id), [doLearn, feedback.id])
+	const innerInverted = useCallback((isInverted) => setInverted(feedback.id, isInverted), [feedback.id, setInverted])
 
 	const ref = useRef(null)
 	const [, drop] = useDrop({
@@ -303,6 +318,7 @@ function FeedbackTableRow({
 					location={location}
 					feedback={feedback}
 					setValue={setValue}
+					setInverted={innerInverted}
 					innerDelete={innerDelete}
 					innerDuplicate={innerDuplicate}
 					innerLearn={innerLearn}
@@ -324,6 +340,7 @@ function FeedbackEditor({
 	feedback,
 	location,
 	setValue,
+	setInverted,
 	innerDelete,
 	innerDuplicate,
 	innerLearn,
@@ -459,6 +476,30 @@ function FeedbackEditor({
 							))}
 						</CForm>
 					</div>
+
+					{feedbackSpec?.type === 'boolean' && feedbackSpec.showInvert !== false && (
+						<div className="cell-invert">
+							<MyErrorBoundary>
+								<CForm onSubmit={PreventDefaultHandler}>
+									<CFormGroup>
+										<CLabel>
+											Invert
+											<FontAwesomeIcon
+												style={{ marginLeft: '5px' }}
+												icon={faQuestionCircle}
+												title={'If checked, the behaviour of this feedback is inverted'}
+											/>
+										</CLabel>
+										<p>
+											<CheckboxInputField value={feedback.isInverted} setValue={setInverted} />
+											&nbsp;
+										</p>
+									</CFormGroup>
+								</CForm>
+							</MyErrorBoundary>
+						</div>
+					)}
+
 					{!booleanOnly && (
 						<>
 							<FeedbackStyles feedbackSpec={feedbackSpec} feedback={feedback} setStylePropsValue={setStylePropsValue} />
