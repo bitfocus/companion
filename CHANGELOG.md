@@ -1,5 +1,47 @@
 # Bitfocus Companion
 
+## Companion v3.0.1 - Release Notes
+
+### 🐞 BUG FIXES
+
+- Local building of docker image #2542
+- Missing node/yarn binaries in docker image
+- Allow modules to expose `.companionconfig` files in help pages
+- Time of day trigger value validation #2544
+- Trigger editor references conditions instead of feedbacks
+- Allow `multiselect` fields in legacy modules
+- Page buttons not showing in new installations
+- Warn about invalid port number being selected in the launcher
+- Trigger incorrectly firing when all the conditions are invalid #2397
+- Don't crash on presets missing feedback options
+
+### 🧩 MODULES WITH BUG FIXES
+
+- barco-eventmaster
+- barco-pds
+- behringer-xair
+- bmd-atem
+- bmd-smartview
+- figure53-qlab-advance
+- generic-filereader
+- generic-pjlink
+- google-sheets
+- hdtv-wolfpackgreen
+- imimot-mitti
+- newtek-tricaster
+- panasonic-projector
+- planningcenter-serviceslive
+- presentationtools-aps
+- presentationtools-cuetimer
+- renewedvision-propresenter
+- resolume-arena
+- teradek-prism
+- tplink-kasasmartdimmer
+- tslproducts-umdlistener
+- videolan-vlc
+- vistream-online
+- vizio-smartcast
+
 ## Companion v3.0.0 - Release Notes
 
 Changes are relative to v3.0.0-RC2
