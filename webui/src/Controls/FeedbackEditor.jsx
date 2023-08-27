@@ -484,8 +484,13 @@ function FeedbackEditor({
 									/>
 								</MyErrorBoundary>
 							))}
-							{feedbackSpec?.type === 'boolean' && feedbackSpec.showInvert !== false && (
-								<MyErrorBoundary>
+						</CForm>
+					</div>
+
+					{feedbackSpec?.type === 'boolean' && feedbackSpec.showInvert !== false && (
+						<div className="cell-invert">
+							<MyErrorBoundary>
+								<CForm onSubmit={PreventDefaultHandler}>
 									<CFormGroup>
 										<CLabel>
 											Invert
@@ -500,10 +505,11 @@ function FeedbackEditor({
 											&nbsp;
 										</p>
 									</CFormGroup>
-								</MyErrorBoundary>
-							)}
-						</CForm>
-					</div>
+								</CForm>
+							</MyErrorBoundary>
+						</div>
+					)}
+
 					{!booleanOnly && (
 						<>
 							<FeedbackStyles feedbackSpec={feedbackSpec} feedback={feedback} setStylePropsValue={setStylePropsValue} />
