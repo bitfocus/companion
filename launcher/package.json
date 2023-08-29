@@ -30,6 +30,9 @@
 		"electron-builder": "^23.6.0",
 		"electron-reloader": "^1.2.3"
 	},
+	"resolutions": {
+		"app-builder-bin": "npm:@julusian/app-builder-bin#v4.0.1"
+	},
 	"build": {
 		"productName": "Companion",
 		"appId": "test-companion.bitfocus.no",

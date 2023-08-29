@@ -107,11 +107,6 @@ if (process.env.ELECTRON !== '0') {
 
 	await fs.writeFile(launcherPkgJsonPath, JSON.stringify(launcherPkgJson))
 
-	// Electron-builder is pulling in dependencies from the wrong place https://github.com/electron-userland/electron-builder/issues/7745
-	const rootNodeModules = new URL('../../node_modules', import.meta.url)
-	const rootNodeModulesTmp = new URL('../../node_modules2', import.meta.url)
-	await fs.rename(rootNodeModules, rootNodeModulesTmp)
-
 	try {
 		// perform the electron build
 		await $`yarn --cwd launcher install`
@@ -119,7 +114,6 @@ if (process.env.ELECTRON !== '0') {
 	} finally {
 		// undo the changes made
 		await fs.writeFile(launcherPkgJsonPath, launcherPkgJsonStr)
-		await fs.rename(rootNodeModulesTmp, rootNodeModules)
 	}
 } else {
 	// TODO - populate dist with the rest of the bits
