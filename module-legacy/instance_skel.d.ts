@@ -71,7 +71,7 @@ declare abstract class InstanceSkel<TConfig> {
 	 * @param upgradeMap The feedbacks to upgrade and the properties to convert
 	 */
 	static CreateConvertToBooleanFeedbackUpgradeScript(
-		upgradeMap: CompanionUpgradeToBooleanFeedbackMap
+		upgradeMap: CompanionUpgradeToBooleanFeedbackMap,
 	): CompanionStaticUpgradeScript
 
 	/**
@@ -87,7 +87,7 @@ declare abstract class InstanceSkel<TConfig> {
 	feedback?(
 		feedback: CompanionFeedbackEvent,
 		bank: CompanionBankPNG | null,
-		info: CompanionFeedbackEventInfo | null
+		info: CompanionFeedbackEventInfo | null,
 	): CompanionFeedbackResult
 
 	/**
@@ -169,7 +169,7 @@ declare abstract class InstanceSkel<TConfig> {
 	 * @param request partial request object from Express
 	 */
 	handleHttpRequest?(
-		request: CompanionInstanceHTTPRequest
+		request: CompanionInstanceHTTPRequest,
 	): CompanionInstanceHTTPResponse | Promise<CompanionInstanceHTTPResponse>
 
 	STATUS_UNKNOWN: null
