@@ -907,10 +907,10 @@ electron-store@^8.1.0:
     conf "^10.2.0"
     type-fest "^2.17.0"
 
-electron@^24.6.3:
-  version "24.6.3"
-  resolved "https://registry.yarnpkg.com/electron/-/electron-24.6.3.tgz#fc41279a5ec7b0aa3d48128df61fa29ca8a21199"
-  integrity sha512-hWy2ot0987DRzhOxIyv9tgybd0yrAcc9MRFYZ+znjXgdmbvcSveXdcGKGdtpgw1EW/TKUonJMH3VfDNeAmdPUg==
+electron@^24.8.3:
+  version "24.8.3"
+  resolved "https://registry.yarnpkg.com/electron/-/electron-24.8.3.tgz#ea842167eaf0323961ff3bcce7237bdaf4f1317d"
+  integrity sha512-6YTsEOIMIQNnOz0Fj5gAWtwCuDd66iYKkuRJGyc80jKKYI49jBeH+R7ZZry9uiVu4T4bZgBN2FAN24XfCioQZA==
   dependencies:
     "@electron/get" "^2.0.0"
     "@types/node" "^18.11.18"
@@ -1760,8 +1760,9 @@ resolve-alpn@^1.0.0:
   integrity sha512-0a1F4l73/ZFZOakJnQ3FvkJ2+gSTQWz/r2KE5OdDY0TxPm5h4GkqkWWfM47T7HsbnOtcJVEF4epCVy6u7Q3K+g==
 
 "respawn@link:../vendor/respawn":
-  version "0.0.0"
-  uid ""
+  version "2.6.0"
+  dependencies:
+    ps-tree "^1.2.0"
 
 responselike@^2.0.0:
   version "2.0.1"
