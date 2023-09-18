@@ -25,7 +25,6 @@ import {
 	faFileImport,
 } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import '@fontsource/fira-code'
 import { MyErrorBoundary, useMountEffect, UserConfigContext, SocketContext, NotifierContext } from './util'
 import { SurfacesPage } from './Surfaces'
 import { UserConfig } from './UserConfig'
