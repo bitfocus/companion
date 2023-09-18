@@ -33,7 +33,7 @@
 	"engines": {
 		"npm": "please-use-yarn",
 		"yarn": "^1.22",
-		"node": ">=18.12 <19"
+		"node": ">=18.16 <19"
 	},
 	"author": "Bitfocus AS",
 	"license": "MIT",
