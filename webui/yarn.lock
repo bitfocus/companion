@@ -478,24 +478,24 @@
   resolved "https://registry.yarnpkg.com/@fontsource/roboto/-/roboto-4.5.8.tgz#56347764786079838faf43f0eeda22dd7328437f"
   integrity sha512-CnD7zLItIzt86q4Sj3kZUiLcBk1dSk81qcqgMGaZe7SQ1P8hFNxhMl5AZthK1zrDM5m74VVhaOpuMGIL4gagaA==
 
-"@fortawesome/fontawesome-common-types@6.4.0":
-  version "6.4.0"
-  resolved "https://registry.yarnpkg.com/@fortawesome/fontawesome-common-types/-/fontawesome-common-types-6.4.0.tgz#88da2b70d6ca18aaa6ed3687832e11f39e80624b"
-  integrity sha512-HNii132xfomg5QVZw0HwXXpN22s7VBHQBv9CeOu9tfJnhsWQNd2lmTNi8CSrnw5B+5YOmzu1UoPAyxaXsJ6RgQ==
+"@fortawesome/fontawesome-common-types@6.4.2":
+  version "6.4.2"
+  resolved "https://registry.yarnpkg.com/@fortawesome/fontawesome-common-types/-/fontawesome-common-types-6.4.2.tgz#1766039cad33f8ad87f9467b98e0d18fbc8f01c5"
+  integrity sha512-1DgP7f+XQIJbLFCTX1V2QnxVmpLdKdzzo2k8EmvDOePfchaIGQ9eCHj2up3/jNEbZuBqel5OxiaOJf37TWauRA==
 
-"@fortawesome/fontawesome-svg-core@^6.4.0":
-  version "6.4.0"
-  resolved "https://registry.yarnpkg.com/@fortawesome/fontawesome-svg-core/-/fontawesome-svg-core-6.4.0.tgz#3727552eff9179506e9203d72feb5b1063c11a21"
-  integrity sha512-Bertv8xOiVELz5raB2FlXDPKt+m94MQ3JgDfsVbrqNpLU9+UE2E18GKjLKw+d3XbeYPqg1pzyQKGsrzbw+pPaw==
+"@fortawesome/fontawesome-svg-core@^6.4.2":
+  version "6.4.2"
+  resolved "https://registry.yarnpkg.com/@fortawesome/fontawesome-svg-core/-/fontawesome-svg-core-6.4.2.tgz#37f4507d5ec645c8b50df6db14eced32a6f9be09"
+  integrity sha512-gjYDSKv3TrM2sLTOKBc5rH9ckje8Wrwgx1CxAPbN5N3Fm4prfi7NsJVWd1jklp7i5uSCVwhZS5qlhMXqLrpAIg==
   dependencies:
-    "@fortawesome/fontawesome-common-types" "6.4.0"
+    "@fortawesome/fontawesome-common-types" "6.4.2"
 
-"@fortawesome/free-solid-svg-icons@^6.4.0":
-  version "6.4.0"
-  resolved "https://registry.yarnpkg.com/@fortawesome/free-solid-svg-icons/-/free-solid-svg-icons-6.4.0.tgz#48c0e790847fa56299e2f26b82b39663b8ad7119"
-  integrity sha512-kutPeRGWm8V5dltFP1zGjQOEAzaLZj4StdQhWVZnfGFCvAPVvHh8qk5bRrU4KXnRRRNni5tKQI9PBAdI6MP8nQ==
+"@fortawesome/free-solid-svg-icons@^6.4.2":
+  version "6.4.2"
+  resolved "https://registry.yarnpkg.com/@fortawesome/free-solid-svg-icons/-/free-solid-svg-icons-6.4.2.tgz#33a02c4cb6aa28abea7bc082a9626b7922099df4"
+  integrity sha512-sYwXurXUEQS32fZz9hVCUUv/xu49PEJEyUOsA51l6PU/qVgfbTb2glsTEaJngVVT8VqBATRIdh7XVgV1JF1LkA==
   dependencies:
-    "@fortawesome/fontawesome-common-types" "6.4.0"
+    "@fortawesome/fontawesome-common-types" "6.4.2"
 
 "@fortawesome/react-fontawesome@^0.2.0":
   version "0.2.0"
@@ -866,10 +866,10 @@ csstype@^3.0.2, csstype@^3.0.6:
   resolved "https://registry.yarnpkg.com/csstype/-/csstype-3.1.2.tgz#1d4bf9d572f11c14031f0436e1c10bc1f571f50b"
   integrity sha512-I7K1Uu0MBPzaFKg4nI5Q7Vs2t+3gWWW648spaF+Rg7pI9ds18Ugn+lvg4SHczUdKlHI5LWBXyqfS8+DufyBsgQ==
 
-csv-stringify@^6.4.0:
-  version "6.4.0"
-  resolved "https://registry.yarnpkg.com/csv-stringify/-/csv-stringify-6.4.0.tgz#6d006dca9194700e44f9fbc541bee8bbbd4f459c"
-  integrity sha512-HQsw0QXiN5fdlO+R8/JzCZnR3Fqp8E87YVnhHlaPtNGJjt6ffbV0LpOkieIb1x6V1+xt878IYq77SpXHWAqKkA==
+csv-stringify@^6.4.2:
+  version "6.4.2"
+  resolved "https://registry.yarnpkg.com/csv-stringify/-/csv-stringify-6.4.2.tgz#209cb17ab5520f51bd5a7edeb06ed6d4c322fce3"
+  integrity sha512-DXIdnnCUQYjDKTu6TgCSzRDiAuLxDjhl4ErFP9FGMF3wzBGOVMg9bZTLaUcYtuvhXgNbeXPKeaRfpgyqE4xySw==
 
 dayjs@^1.11.9:
   version "1.11.9"
@@ -972,21 +972,21 @@ electron-to-chromium@^1.4.431:
   resolved "https://registry.yarnpkg.com/electron-to-chromium/-/electron-to-chromium-1.4.461.tgz#6b14af66042732bf883ab63a4d82cac8f35eb252"
   integrity sha512-1JkvV2sgEGTDXjdsaQCeSwYYuhLRphRpc+g6EHTFELJXEiznLt3/0pZ9JuAOQ5p2rI3YxKTbivtvajirIfhrEQ==
 
-engine.io-client@~6.5.1:
-  version "6.5.1"
-  resolved "https://registry.yarnpkg.com/engine.io-client/-/engine.io-client-6.5.1.tgz#1735fb8ae3bae5ae13115e18d2f484daf005dd9c"
-  integrity sha512-hE5wKXH8Ru4L19MbM1GgYV/2Qo54JSMh1rlJbfpa40bEWkCKNo3ol2eOtGmowcr+ysgbI7+SGL+by42Q3pt/Ng==
+engine.io-client@~6.5.2:
+  version "6.5.2"
+  resolved "https://registry.yarnpkg.com/engine.io-client/-/engine.io-client-6.5.2.tgz#8709e22c291d4297ae80318d3c8baeae71f0e002"
+  integrity sha512-CQZqbrpEYnrpGqC07a9dJDz4gePZUgTPMU3NKJPSeQOyw27Tst4Pl3FemKoFGAlHzgZmKjoRmiJvbWfhCXUlIg==
   dependencies:
     "@socket.io/component-emitter" "~3.1.0"
     debug "~4.3.1"
-    engine.io-parser "~5.1.0"
+    engine.io-parser "~5.2.1"
     ws "~8.11.0"
     xmlhttprequest-ssl "~2.0.0"
 
-engine.io-parser@~5.1.0:
-  version "5.1.0"
-  resolved "https://registry.yarnpkg.com/engine.io-parser/-/engine.io-parser-5.1.0.tgz#d593d6372d7f79212df48f807b8cace1ea1cb1b8"
-  integrity sha512-enySgNiK5tyZFynt3z7iqBR+Bto9EVVVvDFuTT0ioHCGbzirZVGDGiQjZzEp8hWl6hd5FSVytJGuScX1C1C35w==
+engine.io-parser@~5.2.1:
+  version "5.2.1"
+  resolved "https://registry.yarnpkg.com/engine.io-parser/-/engine.io-parser-5.2.1.tgz#9f213c77512ff1a6cc0c7a86108a7ffceb16fcfb"
+  integrity sha512-9JktcM3u18nU9N2Lz3bWeBgxVgOKpw7yhRaoxQA3FUDZzzw+9WlA6p4G4u0RixNkg14fH7EfEc/RhpurtiROTQ==
 
 entities@^4.2.0, entities@^4.4.0:
   version "4.5.0"
@@ -2302,7 +2302,7 @@ socket.io-client@^4.6.1:
   dependencies:
     "@socket.io/component-emitter" "~3.1.0"
     debug "~4.3.2"
-    engine.io-client "~6.5.1"
+    engine.io-client "~6.5.2"
     socket.io-parser "~4.2.4"
 
 socket.io-parser@~4.2.4:

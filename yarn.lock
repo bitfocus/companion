@@ -934,14 +934,14 @@
     "@octokit/webhooks-types" "6.11.0"
     aggregate-error "^3.1.0"
 
-"@sentry-internal/tracing@7.64.0":
-  version "7.64.0"
-  resolved "https://registry.yarnpkg.com/@sentry-internal/tracing/-/tracing-7.64.0.tgz#3e110473b8edf805b799cc91d6ee592830237bb4"
-  integrity sha512-1XE8W6ki7hHyBvX9hfirnGkKDBKNq3bDJyXS86E0bYVDl94nvbRM9BD9DHsCFetqYkVm1yDGEK+6aUVs4CztoQ==
+"@sentry-internal/tracing@7.69.0":
+  version "7.69.0"
+  resolved "https://registry.yarnpkg.com/@sentry-internal/tracing/-/tracing-7.69.0.tgz#8d8eb740b72967b6ba3fdc0a5173aa55331b7d35"
+  integrity sha512-4BgeWZUj9MO6IgfO93C9ocP3+AdngqujF/+zB2rFdUe+y9S6koDyUC7jr9Knds/0Ta72N/0D6PwhgSCpHK8s0Q==
   dependencies:
-    "@sentry/core" "7.64.0"
-    "@sentry/types" "7.64.0"
-    "@sentry/utils" "7.64.0"
+    "@sentry/core" "7.69.0"
+    "@sentry/types" "7.69.0"
+    "@sentry/utils" "7.69.0"
     tslib "^2.4.1 || ^1.9.3"
 
 "@sentry/bundler-plugin-core@2.7.0":
@@ -969,22 +969,22 @@
     proxy-from-env "^1.1.0"
     which "^2.0.2"
 
-"@sentry/core@7.64.0":
-  version "7.64.0"
-  resolved "https://registry.yarnpkg.com/@sentry/core/-/core-7.64.0.tgz#9d61cdc29ba299dedbdcbe01cfadf94bd0b7df48"
-  integrity sha512-IzmEyl5sNG7NyEFiyFHEHC+sizsZp9MEw1+RJRLX6U5RITvcsEgcajSkHQFafaBPzRrcxZMdm47Cwhl212LXcw==
+"@sentry/core@7.69.0":
+  version "7.69.0"
+  resolved "https://registry.yarnpkg.com/@sentry/core/-/core-7.69.0.tgz#ebbe01df573f438f8613107020a4e18eb9adca4d"
+  integrity sha512-V6jvK2lS8bhqZDMFUtvwe2XvNstFQf5A+2LMKCNBOV/NN6eSAAd6THwEpginabjet9dHsNRmMk7WNKvrUfQhZw==
   dependencies:
-    "@sentry/types" "7.64.0"
-    "@sentry/utils" "7.64.0"
+    "@sentry/types" "7.69.0"
+    "@sentry/utils" "7.69.0"
     tslib "^2.4.1 || ^1.9.3"
 
-"@sentry/integrations@^7.64.0":
-  version "7.64.0"
-  resolved "https://registry.yarnpkg.com/@sentry/integrations/-/integrations-7.64.0.tgz#a392ddeebeec0c08ae5ca1f544c80ab15977fe10"
-  integrity sha512-6gbSGiruOifAmLtXw//Za19GWiL5qugDMEFxSvc5WrBWb+A8UK+foPn3K495OcivLS68AmqAQCUGb+6nlVowwA==
+"@sentry/integrations@^7.69.0":
+  version "7.69.0"
+  resolved "https://registry.yarnpkg.com/@sentry/integrations/-/integrations-7.69.0.tgz#04c0206d9436ec7b79971e3bde5d6e1e9194595f"
+  integrity sha512-FEFtFqXuCo9+L7bENZxFpEAlIODwHl6FyW/DwLfniy9jOXHU7BhP/oICLrFE5J7rh1gNY7N/8VlaiQr3hCnS/g==
   dependencies:
-    "@sentry/types" "7.64.0"
-    "@sentry/utils" "7.64.0"
+    "@sentry/types" "7.69.0"
+    "@sentry/utils" "7.69.0"
     localforage "^1.8.1"
     tslib "^2.4.1 || ^1.9.3"
 
@@ -993,33 +993,33 @@
   resolved "https://registry.yarnpkg.com/@sentry/node/-/node-7.64.0.tgz#c6f7a67c1442324298f0525e7191bc18572ee1ce"
   integrity sha512-wRi0uTnp1WSa83X2yLD49tV9QPzGh5e42IKdIDBiQ7lV9JhLILlyb34BZY1pq6p4dp35yDasDrP3C7ubn7wo6A==
   dependencies:
-    "@sentry-internal/tracing" "7.64.0"
-    "@sentry/core" "7.64.0"
-    "@sentry/types" "7.64.0"
-    "@sentry/utils" "7.64.0"
+    "@sentry-internal/tracing" "7.69.0"
+    "@sentry/core" "7.69.0"
+    "@sentry/types" "7.69.0"
+    "@sentry/utils" "7.69.0"
     cookie "^0.4.1"
     https-proxy-agent "^5.0.0"
     lru_map "^0.3.3"
     tslib "^2.4.1 || ^1.9.3"
 
-"@sentry/tracing@^7.63.0", "@sentry/tracing@^7.64.0":
-  version "7.64.0"
-  resolved "https://registry.yarnpkg.com/@sentry/tracing/-/tracing-7.64.0.tgz#994a779d6c8b810b98784b33eb6defd014303913"
-  integrity sha512-Php0XnnJolfxkFdgLlgwgRz3bgHmu/7gDRQaGQHJeDgCCjrmNHI+sHi8zmkWCWSO0Z1mi111n2ZUr9B9YLPBTg==
+"@sentry/tracing@^7.63.0", "@sentry/tracing@^7.69.0":
+  version "7.69.0"
+  resolved "https://registry.yarnpkg.com/@sentry/tracing/-/tracing-7.69.0.tgz#fa87cad49f3522c7fea3c22ce992b0700a7322cd"
+  integrity sha512-nhwJXyLU2KT6ci3YRUCkpFQH7RL9lpEuVDHqaJ9xLql766FJ7A7jKtRGSaefgRzJvvdKHUVboIjZnSvqIu8gWw==
   dependencies:
-    "@sentry-internal/tracing" "7.64.0"
+    "@sentry-internal/tracing" "7.69.0"
 
-"@sentry/types@7.64.0":
-  version "7.64.0"
-  resolved "https://registry.yarnpkg.com/@sentry/types/-/types-7.64.0.tgz#21fc545ea05c3c8c4c3e518583eca1a8c5429506"
-  integrity sha512-LqjQprWXjUFRmzIlUjyA+KL+38elgIYmAeoDrdyNVh8MK5IC1W2Lh1Q87b4yOiZeMiIhIVNBd7Ecoh2rodGrGA==
+"@sentry/types@7.69.0":
+  version "7.69.0"
+  resolved "https://registry.yarnpkg.com/@sentry/types/-/types-7.69.0.tgz#012b8d90d270a473cc2a5cf58a56870542739292"
+  integrity sha512-zPyCox0mzitzU6SIa1KIbNoJAInYDdUpdiA+PoUmMn2hFMH1llGU/cS7f4w/mAsssTlbtlBi72RMnWUCy578bw==
 
 "@sentry/utils@7.64.0", "@sentry/utils@^7.60.0":
   version "7.64.0"
   resolved "https://registry.yarnpkg.com/@sentry/utils/-/utils-7.64.0.tgz#6fe3ce9a56d3433ed32119f914907361a54cc184"
   integrity sha512-HRlM1INzK66Gt+F4vCItiwGKAng4gqzCR4C5marsL3qv6SrKH98dQnCGYgXluSWaaa56h97FRQu7TxCk6jkSvQ==
   dependencies:
-    "@sentry/types" "7.64.0"
+    "@sentry/types" "7.69.0"
     tslib "^2.4.1 || ^1.9.3"
 
 "@sentry/webpack-plugin@^2.7.0":
@@ -2349,6 +2349,19 @@ crc32-stream@^4.0.2:
     crc-32 "^1.2.0"
     readable-stream "^3.4.0"
 
+create-jest@^29.7.0:
+  version "29.7.0"
+  resolved "https://registry.yarnpkg.com/create-jest/-/create-jest-29.7.0.tgz#a355c5b3cb1e1af02ba177fe7afd7feee49a5320"
+  integrity sha512-Adz2bdH0Vq3F53KEMJOoftQFutWCukm6J24wbPWRO4k1kMY7gS7ds/uoJkNuV8wDCtWWnuwGcJwpWcih+zEW1Q==
+  dependencies:
+    "@jest/types" "^29.6.3"
+    chalk "^4.0.0"
+    exit "^0.1.2"
+    graceful-fs "^4.2.9"
+    jest-config "^29.7.0"
+    jest-util "^29.7.0"
+    prompts "^2.0.1"
+
 cross-spawn@^7.0.3:
   version "7.0.3"
   resolved "https://registry.yarnpkg.com/cross-spawn/-/cross-spawn-7.0.3.tgz#f73a85b9d5d41d045551c177e2882d4ac85728a6"
@@ -2691,6 +2704,11 @@ eventemitter3@^4.0.4, eventemitter3@^4.0.7:
   version "4.0.7"
   resolved "https://registry.yarnpkg.com/eventemitter3/-/eventemitter3-4.0.7.tgz#2de9b68f6528d5644ef5c59526a1b4a07306169f"
   integrity sha512-8guHBZCwKnFhYdHr2ysuRWErTwhoN2X8XELRlrRwpmfeY2jjuUN4taQMsULKUVo1K4DvZl+0pgfyoysHxvmvEw==
+
+eventemitter3@^5.0.1:
+  version "5.0.1"
+  resolved "https://registry.yarnpkg.com/eventemitter3/-/eventemitter3-5.0.1.tgz#53f5ffd0a492ac800721bb42c66b841de96423c4"
+  integrity sha512-GWkBvjiSZK87ELrYOSESUYeVIc9mvLLf/nXalMOS5dYrgZq9o5OVkbZAVM06CVxYsCwH9BDZFPlQTlPA1j4ahA==
 
 events@^3.2.0:
   version "3.3.0"
@@ -3482,8 +3500,8 @@ jest-cli@^29.6.4:
     "@jest/test-result" "^29.6.4"
     "@jest/types" "^29.6.3"
     chalk "^4.0.0"
+    create-jest "^29.7.0"
     exit "^0.1.2"
-    graceful-fs "^4.2.9"
     import-local "^3.0.2"
     jest-config "^29.6.4"
     jest-util "^29.6.3"
@@ -4385,6 +4403,11 @@ node-addon-api@^7.0.0:
   resolved "https://registry.yarnpkg.com/node-addon-api/-/node-addon-api-7.0.0.tgz#8136add2f510997b3b94814f4af1cce0b0e3962e"
   integrity sha512-vgbBJTS4m5/KkE16t5Ly0WW9hz46swAstv0hYYwMtbG7AznRhNyfLRe8HZAiWIpcHzoO7HxhLuBQj9rJ/Ho0ZA==
 
+node-addon-api@^7.0.0:
+  version "7.0.0"
+  resolved "https://registry.yarnpkg.com/node-addon-api/-/node-addon-api-7.0.0.tgz#8136add2f510997b3b94814f4af1cce0b0e3962e"
+  integrity sha512-vgbBJTS4m5/KkE16t5Ly0WW9hz46swAstv0hYYwMtbG7AznRhNyfLRe8HZAiWIpcHzoO7HxhLuBQj9rJ/Ho0ZA==
+
 node-api-headers@^0.0.2:
   version "0.0.2"
   resolved "https://registry.yarnpkg.com/node-api-headers/-/node-api-headers-0.0.2.tgz#31f4c6c2750b63e598128e76a60aefca6d76ac5d"
@@ -4611,12 +4634,12 @@ p-queue@^6.6.2:
     eventemitter3 "^4.0.4"
     p-timeout "^3.2.0"
 
-p-queue@^7.3.4:
-  version "7.3.4"
-  resolved "https://registry.yarnpkg.com/p-queue/-/p-queue-7.3.4.tgz#7ef7d89b6c1a0563596d98adbc9dc404e9ed4a84"
-  integrity sha512-esox8CWt0j9EZECFvkFl2WNPat8LN4t7WWeXq73D9ha0V96qPRufApZi4ZhPwXAln1uVVal429HVVKPa2X0yQg==
+p-queue@^7.4.1:
+  version "7.4.1"
+  resolved "https://registry.yarnpkg.com/p-queue/-/p-queue-7.4.1.tgz#7f86f853048beca8272abdbb7cec1ed2afc0f265"
+  integrity sha512-vRpMXmIkYF2/1hLBKisKeVYJZ8S2tZ0zEAmIJgdVKP2nq0nh4qCdf8bgw+ZgKrkh71AOCaqzwbJJk1WtdcF3VA==
   dependencies:
-    eventemitter3 "^4.0.7"
+    eventemitter3 "^5.0.1"
     p-timeout "^5.0.2"
 
 p-timeout@^3.2.0:
@@ -4830,6 +4853,11 @@ queue-microtask@^1.2.2:
   version "1.2.3"
   resolved "https://registry.yarnpkg.com/queue-microtask/-/queue-microtask-1.2.3.tgz#4929228bbc724dfac43e0efb058caf7b6cfb6243"
   integrity sha512-NuaNSa6flKT5JaSYQzJok04JzTL1CA6aGhv5rfLW3PgqA+M2ChpZQnAC8h8i4ZFkBS8X5RqkDBHA7r4hej3K9A==
+
+queue-tick@^1.0.1:
+  version "1.0.1"
+  resolved "https://registry.yarnpkg.com/queue-tick/-/queue-tick-1.0.1.tgz#f6f07ac82c1fd60f82e098b417a80e52f1f4c142"
+  integrity sha512-kJt5qhMxoszgU/62PLP1CJytzd2NKetjSRnyuj31fDd3Rlcz3fzlFdFLD1SItunPwyqEOkca6GbV612BWfaBag==
 
 quick-lru@^5.1.1:
   version "5.1.1"
@@ -5333,6 +5361,14 @@ stream-demux@^8.0.0, stream-demux@^8.1.0:
     consumable-stream "^2.0.0"
     writable-consumable-stream "^3.0.1"
 
+streamx@^2.15.0:
+  version "2.15.1"
+  resolved "https://registry.yarnpkg.com/streamx/-/streamx-2.15.1.tgz#396ad286d8bc3eeef8f5cea3f029e81237c024c6"
+  integrity sha512-fQMzy2O/Q47rgwErk/eGeLu/roaFWV0jVsogDmrszM9uIw8L5OA+t+V93MgYlufNptfjmYR1tOMWhei/Eh7TQA==
+  dependencies:
+    fast-fifo "^1.1.0"
+    queue-tick "^1.0.1"
+
 string-length@^4.0.1:
   version "4.0.2"
   resolved "https://registry.yarnpkg.com/string-length/-/string-length-4.0.2.tgz#a8a8dc7bd5c1a82b9b3c8b87e125f66871b6e57a"
@@ -5445,10 +5481,19 @@ tar-stream@^2.2.0:
     inherits "^2.0.3"
     readable-stream "^3.1.1"
 
-tar@^6.1.11, tar@^6.1.15:
-  version "6.1.15"
-  resolved "https://registry.yarnpkg.com/tar/-/tar-6.1.15.tgz#c9738b0b98845a3b344d334b8fa3041aaba53a69"
-  integrity sha512-/zKt9UyngnxIT/EAGYuxaMYgOIJiP81ab9ZfkILq4oNLPFX50qyYmu7jRj9qeXoxmJHjGlbH0+cm2uy1WCs10A==
+tar-stream@^3.1.5:
+  version "3.1.6"
+  resolved "https://registry.yarnpkg.com/tar-stream/-/tar-stream-3.1.6.tgz#6520607b55a06f4a2e2e04db360ba7d338cc5bab"
+  integrity sha512-B/UyjYwPpMBv+PaFSWAmtYjwdrlEaZQEhMIBFNC5oEG8lpiW8XjcSdmEaClj28ArfKScKHs2nshz3k2le6crsg==
+  dependencies:
+    b4a "^1.6.4"
+    fast-fifo "^1.2.0"
+    streamx "^2.15.0"
+
+tar@^6.1.11, tar@^6.2.0:
+  version "6.2.0"
+  resolved "https://registry.yarnpkg.com/tar/-/tar-6.2.0.tgz#b14ce49a79cb1cd23bc9b016302dea5474493f73"
+  integrity sha512-/Wo7DcT0u5HUV486xg675HtjNd3BXZ6xDbzsCUZPt5iw8bTQ63bP0Raut3mvro9u+CUyq7YQd8Cx55fsZXxqLQ==
   dependencies:
     chownr "^2.0.0"
     fs-minipass "^2.0.0"
@@ -5887,7 +5932,7 @@ write-file-atomic@^4.0.2:
     imurmurhash "^0.1.4"
     signal-exit "^3.0.7"
 
-ws@8.13.0, ws@^8.13.0:
+ws@8.13.0:
   version "8.13.0"
   resolved "https://registry.yarnpkg.com/ws/-/ws-8.13.0.tgz#9a9fb92f93cf41512a0735c8f4dd09b8a1211cd0"
   integrity sha512-x9vcZYTrFPC7aSIbj7sRCYo7L/Xb8Iy+pW0ng0wt2vCJv7M9HOMy0UoN3rr+IFC7hb7vXoqS+P9ktyLLLhO+LA==
@@ -5896,6 +5941,11 @@ ws@^7.4.6:
   version "7.5.9"
   resolved "https://registry.yarnpkg.com/ws/-/ws-7.5.9.tgz#54fa7db29f4c7cec68b1ddd3a89de099942bb591"
   integrity sha512-F+P9Jil7UiSKSkppIiD94dN07AwvFixvLIj1Og1Rl9GGMuNipJnV9JzjD6XuqmAeiswGvUmNLjr5cFuXwNS77Q==
+
+ws@^8.14.1:
+  version "8.14.1"
+  resolved "https://registry.yarnpkg.com/ws/-/ws-8.14.1.tgz#4b9586b4f70f9e6534c7bb1d3dc0baa8b8cf01e0"
+  integrity sha512-4OOseMUq8AzRBI/7SLMUwO+FEDnguetSk7KMb1sHwvF2w2Wv5Hoj0nlifx8vtGsftE/jWHojPy8sMMzYLJ2G/A==
 
 ws@~8.11.0:
   version "8.11.0"
