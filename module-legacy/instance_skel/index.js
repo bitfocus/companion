@@ -50,16 +50,16 @@ function instance(system, id, config) {
 
 	self.defineConst(
 		'REGEX_IP',
-		'/^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/'
+		'/^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/',
 	)
 	self.defineConst(
 		'REGEX_HOSTNAME',
-		'/^(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9-]*[a-zA-Z0-9])\\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9-]*[A-Za-z0-9])$/'
+		'/^(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9-]*[a-zA-Z0-9])\\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9-]*[A-Za-z0-9])$/',
 	)
 	self.defineConst('REGEX_BOOLEAN', '/^(true|false|0|1)$/i')
 	self.defineConst(
 		'REGEX_PORT',
-		'/^([1-9]|[1-8][0-9]|9[0-9]|[1-8][0-9]{2}|9[0-8][0-9]|99[0-9]|[1-8][0-9]{3}|9[0-8][0-9]{2}|99[0-8][0-9]|999[0-9]|[1-5][0-9]{4}|6[0-4][0-9]{3}|65[0-4][0-9]{2}|655[0-2][0-9]|6553[0-4])$/'
+		'/^([1-9]|[1-8][0-9]|9[0-9]|[1-8][0-9]{2}|9[0-8][0-9]|99[0-9]|[1-8][0-9]{3}|9[0-8][0-9]{2}|99[0-8][0-9]|999[0-9]|[1-5][0-9]{4}|6[0-4][0-9]{3}|65[0-4][0-9]{2}|655[0-2][0-9]|6553[0-4])$/',
 	)
 	self.defineConst('REGEX_PERCENT', '/^(100|[0-9]|[0-9][0-9])$/')
 	self.defineConst('REGEX_FLOAT', '/^([0-9]*\\.)?[0-9]+$/')
@@ -70,7 +70,7 @@ function instance(system, id, config) {
 	self.defineConst('REGEX_SIGNED_NUMBER', '/^[+-]?\\d+$/')
 	self.defineConst(
 		'REGEX_TIMECODE',
-		'/^(0*[0-9]|1[0-9]|2[0-4]):(0*[0-9]|[1-5][0-9]|60):(0*[0-9]|[1-5][0-9]|60):(0*[0-9]|[12][0-9]|30)$/'
+		'/^(0*[0-9]|1[0-9]|2[0-4]):(0*[0-9]|[1-5][0-9]|60):(0*[0-9]|[1-5][0-9]|60):(0*[0-9]|[12][0-9]|30)$/',
 	)
 	self.defineConst('CHOICES_YESNO_BOOLEAN', [
 		{ id: 'true', label: 'Yes' },
@@ -198,7 +198,7 @@ instance.prototype.addUpgradeScript = function () {
 	var self = this
 
 	throw new Error(
-		'addUpgradeScript has been removed and replaced by a new static GetUpgradeScripts flow. Check the wiki for more information'
+		'addUpgradeScript has been removed and replaced by a new static GetUpgradeScripts flow. Check the wiki for more information',
 	)
 }
 
