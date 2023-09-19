@@ -573,6 +573,7 @@ function TabsSection({ style, controlId, steps, runtimeProps, rotaryActions, fee
 											setId="rotate_left"
 											addPlaceholder="+ Add rotate left action"
 											actions={selectedStep2.action_sets['rotate_left']}
+											isOnControl={true}
 										/>
 									</MyErrorBoundary>
 
@@ -584,6 +585,7 @@ function TabsSection({ style, controlId, steps, runtimeProps, rotaryActions, fee
 											setId="rotate_right"
 											addPlaceholder="+ Add rotate right action"
 											actions={selectedStep2.action_sets['rotate_right']}
+											isOnControl={true}
 										/>
 									</MyErrorBoundary>
 								</>
@@ -597,6 +599,7 @@ function TabsSection({ style, controlId, steps, runtimeProps, rotaryActions, fee
 									setId="down"
 									addPlaceholder={`+ Add press action`}
 									actions={selectedStep2.action_sets['down']}
+									isOnControl={true}
 								/>
 							</MyErrorBoundary>
 
@@ -681,6 +684,7 @@ function EditActionsRelease({ controlId, action_sets, stepOptions, stepId, remov
 					setId={id}
 					addPlaceholder={`+ Add ${ident} action`}
 					actions={actions}
+					isOnControl={true}
 				/>
 			</MyErrorBoundary>
 		)
@@ -698,6 +702,7 @@ function EditActionsRelease({ controlId, action_sets, stepOptions, stepId, remov
 					setId={'up'}
 					addPlaceholder={candidate_sets.length ? '+ Add key short release action' : '+ Add key release action'}
 					actions={action_sets['up']}
+					isOnControl={true}
 				/>
 			</MyErrorBoundary>
 

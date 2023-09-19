@@ -31,7 +31,16 @@ import { OptionButtonPreview } from './OptionButtonPreview'
 import { MenuPortalContext } from '../Components/DropdownInputField'
 import { ParseControlId } from '@companion/shared/ControlId'
 
-export function ControlActionSetEditor({ controlId, stepId, setId, actions, addPlaceholder, heading, headingActions }) {
+export function ControlActionSetEditor({
+	controlId,
+	stepId,
+	setId,
+	actions,
+	addPlaceholder,
+	heading,
+	headingActions,
+	isOnControl,
+}) {
 	const socket = useContext(SocketContext)
 
 	const confirmModal = useRef()
@@ -141,7 +150,7 @@ export function ControlActionSetEditor({ controlId, stepId, setId, actions, addP
 			</h4>
 			<GenericConfirmModal ref={confirmModal} />
 			<ActionsList
-				isOnControl={true}
+				isOnControl={isOnControl}
 				controlId={controlId}
 				dragId={`${controlId}_actions`}
 				stepId={stepId}

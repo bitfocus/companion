@@ -156,6 +156,7 @@ export function EditTriggerPanel({ controlId }) {
 									setId={'0'}
 									addPlaceholder="+ Add action"
 									actions={config.action_sets['0']}
+									isOnControl={false}
 								/>
 							</MyErrorBoundary>
 						</>
