@@ -1,5 +1,35 @@
 # Bitfocus Companion
 
+## Companion v3.1.0 - Release Notes (unreleased)
+
+### 📣 CORE FEATURES AND IMPROVEMENTS
+
+- Highlight trigger/connection being edited #2385 #2541
+- More expression functions #2515 #2528
+- Expose additional fields over ember+ #2435
+- Export connection debug logs as csv #2529
+- Ensure csv log export is encoded safely
+- Add more connection status count variables #2507
+- Use variable for step in internal: Button: Set current step #2294
+- Set button step over tcp/udp #1520
+- Add 12 hour internal time variables #2209
+- Support for Contour Shuttle (#2436)
+- Better time picker for trigger event #2544
+- Reimplement infinitton surface support (untested)
+- Allow inverting all boolean feedbacks #2547 (#2549)
+- Support the razer stream controller
+- Support Companion cloud
+- Add Actions: Abort delayed actions on a trigger internal action
+- Add events for computer becoming locked/unlocked #907
+
+### 🐞 BUG FIXES
+
+- Fix artnet listener
+- Handle presets where feedbacks options are undefined
+- Validate config path to import before importing
+
+### 🧩 NEW & UPDATED MODULES
+
 ## Companion v3.0.1 - Release Notes
 
 ### 🐞 BUG FIXES
