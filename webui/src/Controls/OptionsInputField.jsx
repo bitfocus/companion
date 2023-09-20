@@ -9,7 +9,7 @@ import {
 } from '../Components'
 import { InternalCustomVariableDropdown, InternalInstanceField } from './InternalInstanceFields'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faQuestionCircle } from '@fortawesome/free-solid-svg-icons'
+import { faDollarSign, faQuestionCircle } from '@fortawesome/free-solid-svg-icons'
 
 export function OptionsInputField({
 	instanceId,
@@ -29,6 +29,7 @@ export function OptionsInputField({
 	}
 
 	let control = undefined
+	let features = {}
 	switch (option.type) {
 		case 'textinput': {
 			control = (
@@ -42,6 +43,7 @@ export function OptionsInputField({
 					setValue={setValue2}
 				/>
 			)
+			features.variables = !!option.useVariables
 			break
 		}
 		case 'dropdown': {
@@ -134,9 +136,10 @@ export function OptionsInputField({
 		<CFormGroup style={{ display: visibility === false ? 'none' : null }}>
 			<CLabel>
 				{option.label}
-				{option.tooltip && (
-					<FontAwesomeIcon style={{ marginLeft: '5px' }} icon={faQuestionCircle} title={option.tooltip} />
+				{features.variables && (
+					<FontAwesomeIcon className="feature-icon" icon={faDollarSign} title={'Supports variables'} />
 				)}
+				{option.tooltip && <FontAwesomeIcon icon={faQuestionCircle} title={option.tooltip} />}
 			</CLabel>
 			{control}
 		</CFormGroup>

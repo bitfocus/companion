@@ -18,8 +18,18 @@
 	label {
 		justify-content: left;
 		font-weight: bold;
-		font-size: 0.85em;
+		font-size: 0.95em;
 		margin-bottom: 0.15rem;
+
+		svg {
+			margin-left: 5px;
+
+			&.feature-icon {
+				margin-left: 3px;
+
+				font-size: 0.8rem;
+			}
+		}
 	}
 
 	.png-browse {
