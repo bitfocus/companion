@@ -6,9 +6,9 @@
 	"type": "module",
 	"private": true,
 	"scripts": {
-		"dev": "yarn dev:inner --log-level debug",
-		"dev:inner": "yarn build:writefile && yarn zx ./tools/dev.mjs -- --admin-address 127.0.0.1 --extra-module-path=./module-local-dev",
-		"dev:debug": "yarn dev:inner --log-level silly",
+		"dev": "yarn dev:inner --admin-address 127.0.0.1 --log-level debug",
+		"dev:inner": "yarn build:writefile && yarn zx ./tools/dev.mjs -- --extra-module-path=./module-local-dev",
+		"dev:debug": "yarn dev:inner --admin-address 127.0.0.1 --log-level silly",
 		"update": "./tools/update.sh",
 		"dist:webui": "yarn --cwd webui build",
 		"dist": "zx ./tools/build/complete.mjs",
