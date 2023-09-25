@@ -416,42 +416,44 @@ function FeedbackEditor({
 	const previewControlId = previewControlIdFunction?.(feedback.options, ParseControlId(controlId))
 
 	return (
-		<div className="editor-grid remove075right">
-			<div className="cell-name">{name}</div>
+		<>
+			<div className="editor-grid-header remove075right">
+				<div className="cell-name">{name}</div>
 
-			<div className="cell-controls">
-				<CButtonGroup>
-					{isCollapsed ? (
-						<CButton size="sm" onClick={doExpand} title={`Expand ${entityType} view`}>
-							<FontAwesomeIcon icon={faExpandArrowsAlt} />
+				<div className="cell-controls">
+					<CButtonGroup>
+						{isCollapsed ? (
+							<CButton size="sm" onClick={doExpand} title={`Expand ${entityType} view`}>
+								<FontAwesomeIcon icon={faExpandArrowsAlt} />
+							</CButton>
+						) : (
+							<CButton size="sm" onClick={doCollapse} title={`Collapse ${entityType} view`}>
+								<FontAwesomeIcon icon={faCompressArrowsAlt} />
+							</CButton>
+						)}
+						<CButton size="sm" onClick={innerDuplicate} title={`Duplicate ${entityType}`}>
+							<FontAwesomeIcon icon={faCopy} />
 						</CButton>
-					) : (
-						<CButton size="sm" onClick={doCollapse} title={`Collapse ${entityType} view`}>
-							<FontAwesomeIcon icon={faCompressArrowsAlt} />
+						<CButton size="sm" onClick={innerDelete} title={`Remove ${entityType}`}>
+							<FontAwesomeIcon icon={faTrash} />
 						</CButton>
-					)}
-					<CButton size="sm" onClick={innerDuplicate} title={`Duplicate ${entityType}`}>
-						<FontAwesomeIcon icon={faCopy} />
-					</CButton>
-					<CButton size="sm" onClick={innerDelete} title={`Remove ${entityType}`}>
-						<FontAwesomeIcon icon={faTrash} />
-					</CButton>
-					{doEnabled && (
-						<>
-							&nbsp;
-							<CSwitch
-								color="success"
-								checked={!feedback.disabled}
-								title={feedback.disabled ? `Enable ${entityType}` : `Disable ${entityType}`}
-								onChange={innerSetEnabled}
-							/>
-						</>
-					)}
-				</CButtonGroup>
+						{doEnabled && (
+							<>
+								&nbsp;
+								<CSwitch
+									color="success"
+									checked={!feedback.disabled}
+									title={feedback.disabled ? `Enable ${entityType}` : `Disable ${entityType}`}
+									onChange={innerSetEnabled}
+								/>
+							</>
+						)}
+					</CButtonGroup>
+				</div>
 			</div>
 
 			{!isCollapsed && (
-				<>
+				<div className="editor-grid remove075right">
 					<div className="cell-description">{feedbackSpec?.description || ''}</div>
 
 					{previewControlId && (
@@ -520,9 +522,9 @@ function FeedbackEditor({
 							/>
 						</>
 					)}
-				</>
+				</div>
 			)}
-		</div>
+		</>
 	)
 }
 

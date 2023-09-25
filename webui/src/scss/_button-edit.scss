@@ -64,6 +64,21 @@ table.feedback-table {
 	.editor-grid-events {
 		margin-right: -0.75rem;
 	}
+	.editor-grid-header {
+		display: grid;
+		grid-template-columns: 1fr auto;
+
+		.cell-name {
+			font-weight: bold;
+			grid-row: 1;
+			grid-column: 1;
+		}
+		.cell-controls {
+			grid-row: 1;
+			grid-column: 2;
+			text-align: right;
+		}
+	}
 	.editor-grid {
 		display: grid;
 		grid-template-columns: 0.7fr auto 1fr;
