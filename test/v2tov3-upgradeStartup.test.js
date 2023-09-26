@@ -9,7 +9,7 @@ function CreateDataDatabase(dbContents) {
 	const db = new DataStoreBase(registry, 'db', 4000, DataDatabase.defaults, 'Data/Database')
 	// Bypass loading and just set it to our test data
 	db.store = dbContents
-	console.log("Got: ")
+	console.log('Got: ')
 	console.log(db.store)
 
 	return db
@@ -22,7 +22,7 @@ describe('upgrade', () => {
 		console.log(result)
 		console.log(db.store)
 		expect(db.store).toEqual({
-			page_config_version: 3
+			page_config_version: 3,
 		})
 	})
 })
