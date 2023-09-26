@@ -11,6 +11,32 @@ const respawn = require('respawn')
 const stripAnsi = require('strip-ansi')
 const chokidar = require('chokidar')
 const debounceFn = require('debounce-fn')
+const fileStreamRotator = require('file-stream-rotator')
+const { ConfigReleaseDirs } = require('./Paths.cjs')
+
+// Electron works on older versions of macos than nodejs, we should give a proper warning if we know companion will get stuck in a crash loop
+if (process.platform === 'darwin') {
+	try {
+		const plist = require('plist')
+		const semver = require('semver')
+
+		const minimumVersion = '10.15'
+		const supportedVersions = new semver.Range(`>=${minimumVersion}`)
+
+		const versionInfo = plist.parse(fs.readFileSync('/System/Library/CoreServices/SystemVersion.plist', 'utf8'))
+		const productVersion = semver.coerce(versionInfo.ProductVersion)
+
+		if (productVersion && !supportedVersions.test(productVersion)) {
+			electron.dialog.showErrorBox(
+				'Unsupported macOS',
+				`Companion is not supported on macOS ${productVersion}, you must be running at least ${minimumVersion}`
+			)
+			app.quit()
+		}
+	} catch (e) {
+		// We can't figure out if its compatible, so assume it is
+	}
+}
 
 // Ensure there isn't another instance of companion running already
 var lock = app.requestSingleInstanceLock()
@@ -26,29 +52,33 @@ if (!lock) {
 		configDir = process.env.COMPANION_CONFIG_BASEDIR
 	}
 
-	// Setup a simple logging method
-	// TODO - this will loose some lines when exiting
-	let logwriting = false
-	let logbuffer = []
-	setInterval(() => {
-		if (logbuffer.length > 0 && !logwriting) {
-			const writestring = logbuffer.join('\n')
-			logbuffer = []
-			logwriting = true
-			fs.appendFile(path.join(configDir, 'companion.log'), writestring + '\n', function (err) {
-				if (err) {
-					console.log('log write error', err)
-				}
-				logwriting = false
-			})
+	// Remove the old log file
+	try {
+		const oldLogFile = path.join(configDir, 'companion.log')
+		if (fs.existsSync(oldLogFile)) {
+			fs.removeSync(oldLogFile)
 		}
-	}, 1000)
+	} catch (e) {
+		// Ignore
+	}
+
+	// Setup a simple logging method
+	const logsDir = path.join(configDir, 'logs')
+	const logStream = fileStreamRotator.getStream({
+		filename: path.join(logsDir, 'companion-%DATE%'),
+		extension: '.log',
+		frequency: 'daily',
+		date_format: 'YYYY-MM-DD',
+		size: '100m',
+		max_logs: '7d',
+		audit_file: path.join(logsDir, 'audit.json'),
+	})
 
 	function customLog(line, prefix) {
 		line = stripAnsi(line.trim())
 		if (prefix) line = `${new Date().toISOString()} ${prefix}: ${line}`
 
-		logbuffer.push(line)
+		logStream.write(line + '\n')
 		console.log(line)
 	}
 
@@ -95,6 +125,9 @@ if (!lock) {
 	} catch (e) {
 		// Ignore the failure, its not worth trying to handle
 	}
+
+	const thisDbFolderName = ConfigReleaseDirs[ConfigReleaseDirs.length - 1]
+	const thisDbPath = path.join(configDir, thisDbFolderName, 'db')
 
 	const uiConfig = new Store({
 		cwd: configDir,
@@ -353,8 +386,19 @@ if (!lock) {
 		})
 
 		ipcMain.on('launcher-set-http-port', (e, msg) => {
-			console.log('changed bind port:', msg)
-			uiConfig.set('http_port', msg)
+			const newPort = Number(msg)
+			if (isNaN(newPort) || newPort < 1024 || newPort > 65535) {
+				electron.dialog
+					.showMessageBox(window, {
+						type: 'warning',
+						message: 'Port must be between 1024 and 65535',
+					})
+					.catch(() => null)
+				return
+			}
+
+			console.log('changed bind port:', newPort)
+			uiConfig.set('http_port', newPort)
 
 			rebindHttp()
 		})
@@ -547,175 +591,280 @@ if (!lock) {
 		window.focus()
 	}
 
-	app.whenReady().then(async () => {
-		createTray()
-		createWindow()
-
-		electron.powerMonitor.on('suspend', () => {
-			if (child && child.child) {
-				child.child.send({
-					messageType: 'power-status',
-					status: 'suspend',
-				})
+	app
+		.whenReady()
+		.then(async () => {
+			// Check for a more recently modified db
+			const dirs = fs.readdirSync(configDir)
+			let mostRecentDir = null
+			for (const dirname of dirs) {
+				try {
+					const dbStat = fs.statSync(path.join(configDir, dirname, 'db'))
+					if (dirname.match('^v(.*)') && dbStat && dbStat.isFile()) {
+						if (!mostRecentDir || mostRecentDir[0] < dbStat.mtimeMs) {
+							mostRecentDir = [dbStat.mtimeMs, dirname]
+						}
+					}
+				} catch (e) {
+					// Not worth considering
+				}
 			}
-		})
 
-		electron.powerMonitor.on('resume', () => {
-			if (child && child.child) {
-				child.child.send({
-					messageType: 'power-status',
-					status: 'resume',
-				})
+			if (mostRecentDir && mostRecentDir[1] !== thisDbFolderName) {
+				let selected
+				// Check for a new db file
+				if (fs.existsSync(thisDbPath)) {
+					selected = electron.dialog.showMessageBoxSync({
+						title: 'Config version mismatch',
+						message:
+							`Another version of Companion (${mostRecentDir[1]}) has been run more recently.\n` +
+							`Any config changes you have made to that version will not be loaded, but will return when you next open the other version.\n\n` +
+							`Do you wish to continue?`,
+						type: 'question',
+						buttons: ['Continue', 'Exit'],
+						defaultId: 0,
+					})
+				} else {
+					if (!ConfigReleaseDirs.includes(mostRecentDir[1])) {
+						// Figure out what version the upgrade will be from
+						let importFrom = null
+						for (let i = ConfigReleaseDirs.length - 2; i--; i > 0) {
+							const dirname = ConfigReleaseDirs[i]
+							if (dirname && fs.existsSync(path.join(configDir, dirname, 'db'))) {
+								importFrom = dirname
+							}
+						}
+						if (!importFrom && fs.existsSync(path.join(configDir, 'db'))) {
+							importFrom = 'v2.4'
+						}
+						const importNote = importFrom
+							? `This will import the configuration from ${importFrom}`
+							: `This will create an empty configuration`
+
+						// It looks like a newer version has been opened
+						selected = electron.dialog.showMessageBoxSync({
+							title: 'Config version mismatch',
+							message:
+								`Another version of Companion (${mostRecentDir[1]}) has been run more recently.\n` +
+								`Any config changes you have made to that version will not be loaded, but will return when you next open the other version.\n\n` +
+								`Do you wish to continue? ${importNote}`,
+							type: 'question',
+							buttons: ['Continue', 'Exit'],
+							defaultId: 0,
+						})
+					}
+				}
+
+				if (selected == 1) {
+					app.exit(1)
+				} else if (fs.existsSync(thisDbPath)) {
+					// Mark the current config as most recently modified
+					fs.utimesSync(thisDbPath, Date.now(), Date.now())
+				}
 			}
-		})
 
-		electron.powerMonitor.on('on-ac', () => {
-			if (child && child.child) {
-				child.child.send({
-					messageType: 'power-status',
-					status: 'ac',
-				})
+			createTray()
+			createWindow()
+
+			electron.powerMonitor.on('suspend', () => {
+				if (child && child.child) {
+					child.child.send({
+						messageType: 'power-status',
+						status: 'suspend',
+					})
+				}
+			})
+
+			electron.powerMonitor.on('resume', () => {
+				if (child && child.child) {
+					child.child.send({
+						messageType: 'power-status',
+						status: 'resume',
+					})
+				}
+			})
+
+			electron.powerMonitor.on('on-ac', () => {
+				if (child && child.child) {
+					child.child.send({
+						messageType: 'power-status',
+						status: 'ac',
+					})
+				}
+			})
+
+			electron.powerMonitor.on('on-battery', () => {
+				if (child && child.child) {
+					child.child.send({
+						messageType: 'power-status',
+						status: 'battery',
+					})
+				}
+			})
+
+			let isLocked = false
+			electron.powerMonitor.on('lock-screen', () => {
+				isLocked = true
+				if (child && child.child) {
+					child.child.send({
+						messageType: 'lock-screen',
+						status: true,
+					})
+				}
+			})
+			electron.powerMonitor.on('unlock-screen', () => {
+				isLocked = false
+				if (child && child.child) {
+					child.child.send({
+						messageType: 'lock-screen',
+						status: false,
+					})
+				}
+			})
+
+			let restartCounter = 0
+			let crashTimeout = null
+
+			// Find the node binary
+			const nodeBinPath = [
+				path.join(companionRootPath, 'node-runtime/bin/node'),
+				path.join(companionRootPath, 'node-runtime/node'),
+				path.join(companionRootPath, 'node-runtime/node.exe'),
+			]
+			let nodeBin = null
+			for (const p of nodeBinPath) {
+				if (fs.pathExistsSync(p)) {
+					nodeBin = p
+					break
+				}
 			}
-		})
+			if (!app.isPackaged && !nodeBin) nodeBin = 'node'
 
-		electron.powerMonitor.on('on-battery', () => {
-			if (child && child.child) {
-				child.child.send({
-					messageType: 'power-status',
-					status: 'battery',
-				})
+			if (!nodeBin) {
+				dialog.showErrorBox('Unable to start', 'Failed to find binary to run')
+				app.exit(11)
 			}
-		})
 
-		let restartCounter = 0
-		let crashTimeout = null
+			child = respawn(
+				() => [
+					// Build a new command string for each start
+					nodeBin,
+					path.join(companionRootPath, 'main.js'),
+					`--machine-id=${machineId}`,
+					`--config-dir=${configDir}`,
+					`--admin-port=${uiConfig.get('http_port')}`,
+					`--admin-address=${uiConfig.get('bind_ip')}`,
+					uiConfig.get('enable_developer') ? `--extra-module-path=${uiConfig.get('dev_modules_path')}` : undefined,
+				],
+				{
+					name: `Companion process`,
+					env: {
+						COMPANION_IPC_PARENT: 1,
+					},
+					maxRestarts: -1,
+					sleep: 1000,
+					kill: 5000,
+					cwd: companionRootPath,
+					stdio: [null, null, null, 'ipc'],
+				}
+			)
+			child.on('start', () => {
+				customLog(`Companion process started`, 'Application')
 
-		// Find the node binary
-		const nodeBinPath = [
-			path.join(companionRootPath, 'node-runtime/bin/node'),
-			path.join(companionRootPath, 'node-runtime/node'),
-			path.join(companionRootPath, 'node-runtime/node.exe'),
-		]
-		let nodeBin = null
-		for (const p of nodeBinPath) {
-			if (fs.pathExistsSync(p)) {
-				nodeBin = p
-				break
-			}
-		}
-		if (!app.isPackaged && !nodeBin) nodeBin = 'node'
+				if (isLocked) {
+					child.child.send({
+						messageType: 'lock-screen',
+						status: isLocked,
+					})
+				}
+			})
+			child.on('stop', () => {
+				customLog(`Companion process stopped`, 'Application')
 
-		if (!nodeBin) {
-			dialog.showErrorBox('Unable to start', 'Failed to find binary to run')
-			app.exit(11)
-		}
-
-		child = respawn(
-			() => [
-				// Build a new command string for each start
-				nodeBin,
-				path.join(companionRootPath, 'main.js'),
-				`--machine-id=${machineId}`,
-				`--config-dir=${configDir}`,
-				`--admin-port=${uiConfig.get('http_port')}`,
-				`--admin-address=${uiConfig.get('bind_ip')}`,
-				uiConfig.get('enable_developer') ? `--extra-module-path=${uiConfig.get('dev_modules_path')}` : undefined,
-			],
-			{
-				name: `Companion process`,
-				env: {
-					COMPANION_IPC_PARENT: 1,
-				},
-				maxRestarts: -1,
-				sleep: 1000,
-				kill: 5000,
-				cwd: companionRootPath,
-				stdio: [null, null, null, 'ipc'],
-			}
-		)
-		child.on('start', () => {
-			customLog(`Companion process started`, 'Application')
-		})
-		child.on('stop', () => {
-			customLog(`Companion process stopped`, 'Application')
-
-			appInfo = {
-				...appInfo,
-
-				appStatus: 'Unknown',
-				appURL: 'Waiting for webserver..',
-				appLaunch: null,
-			}
-			sendAppInfo()
-
-			if (!child || !child.shouldRestart) {
-				if (watcher) watcher.close().catch(() => console.error('Failed to stop'))
-
-				app.exit()
-			} else {
-				child.start()
-			}
-		})
-
-		child.on('spawn', () => {
-			if (crashTimeout) clearTimeout(crashTimeout)
-			crashTimeout = setTimeout(() => {
-				crashTimeout = null
-				customLog('Companion looks to be stable', 'Application')
-				restartCounter = 0
-			}, 5000)
-		})
-
-		child.on('exit', (code) => {
-			if (code === 0) return
-
-			restartCounter++
-			clearTimeout(crashTimeout)
-			crashTimeout = null
-
-			customLog(`Restart Count: ${restartCounter}`, 'Application')
-			if (restartCounter > 3) {
-				child.stop()
-				dialog.showErrorBox('Unable to start', 'Companion is unable to start')
-				app.exit(1)
-			}
-		})
-
-		child.on('stdout', (data) => {
-			customLog(data.toString())
-		})
-		child.on('stderr', (data) => {
-			customLog(data.toString())
-		})
-		child.on('message', (data) => {
-			console.log('Received IPC message', data)
-			if (data.messageType === 'fatal-error') {
-				electron.dialog.showErrorBox(data.title, data.body)
-				app.exit(1)
-			} else if (data.messageType === 'show-error') {
-				electron.dialog.showErrorBox(data.title, data.body)
-			} else if (data.messageType === 'http-bind-status') {
 				appInfo = {
 					...appInfo,
-					...data,
-				}
-				delete appInfo.messageType
 
+					appStatus: 'Unknown',
+					appURL: 'Waiting for webserver..',
+					appLaunch: null,
+				}
 				sendAppInfo()
-			} else if (data.messageType === 'exit') {
-				if (watcher) watcher.close().catch(() => customLog('Failed to stop', 'Application'))
 
-				if (data.restart) {
-					// Do nothing, autorestart will kick in
-					if (child) child.shouldRestart = true
+				if (!child || !child.shouldRestart) {
+					if (watcher) watcher.close().catch(() => console.error('Failed to stop'))
+
+					app.exit()
 				} else {
-					// Exit
-					if (child) child.shouldRestart = false
+					child.start()
 				}
-			}
+			})
+
+			child.on('spawn', () => {
+				if (crashTimeout) clearTimeout(crashTimeout)
+				crashTimeout = setTimeout(() => {
+					crashTimeout = null
+					customLog('Companion looks to be stable', 'Application')
+					restartCounter = 0
+				}, 5000)
+			})
+
+			child.on('exit', (code) => {
+				if (code === 0) return
+
+				restartCounter++
+				clearTimeout(crashTimeout)
+				crashTimeout = null
+
+				customLog(`Restart Count: ${restartCounter}`, 'Application')
+				if (restartCounter > 3) {
+					child.stop()
+					dialog.showErrorBox('Unable to start', 'Companion is unable to start')
+					app.exit(1)
+				}
+			})
+
+			child.on('stdout', (data) => {
+				customLog(data.toString())
+			})
+			child.on('stderr', (data) => {
+				customLog(data.toString())
+			})
+			child.on('message', (data) => {
+				console.log('Received IPC message', data)
+				if (data.messageType === 'fatal-error') {
+					electron.dialog.showErrorBox(data.title, data.body)
+					app.exit(1)
+				} else if (data.messageType === 'show-error') {
+					electron.dialog.showErrorBox(data.title, data.body)
+				} else if (data.messageType === 'http-bind-status') {
+					appInfo = {
+						...appInfo,
+						...data,
+					}
+					delete appInfo.messageType
+
+					sendAppInfo()
+				} else if (data.messageType === 'exit') {
+					if (watcher) watcher.close().catch(() => customLog('Failed to stop', 'Application'))
+
+					if (data.restart) {
+						// Do nothing, autorestart will kick in
+						if (child) child.shouldRestart = true
+					} else {
+						// Exit
+						if (child) child.shouldRestart = false
+					}
+				}
+			})
+			child.start()
 		})
-		child.start()
-	})
+		.catch((e) => {
+			electron.dialog.showErrorBox(
+				'Startup error',
+				`Companion encountered an error while starting: ${e?.message ?? e?.toString?.() ?? e}`
+			)
+			app.quit()
+		})
 
 	app.on('window-all-closed', () => {
 		app.quit()

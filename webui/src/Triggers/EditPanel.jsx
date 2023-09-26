@@ -135,6 +135,7 @@ export function EditTriggerPanel({ controlId }) {
 											/>
 										</>
 									}
+									entityType="condition"
 									controlId={controlId}
 									feedbacks={config.condition}
 									booleanOnly={true}
@@ -155,6 +156,7 @@ export function EditTriggerPanel({ controlId }) {
 									setId={'0'}
 									addPlaceholder="+ Add action"
 									actions={config.action_sets['0']}
+									isOnControl={false}
 								/>
 							</MyErrorBoundary>
 						</>

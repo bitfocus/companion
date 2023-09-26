@@ -3,16 +3,20 @@ export async function generateVersionString() {
 		const headHashRaw = await $`git rev-parse --short HEAD`
 		const headHash = headHashRaw.stdout.trim()
 
+		const packageJsonStr = await fs.readFile(new URL('../package.json', import.meta.url))
+		const packageJson = JSON.parse(packageJsonStr.toString())
+		const packageVersion = packageJson.version
+
 		const gitRefRaw = await $`git rev-parse --abbrev-ref HEAD`
 		let gitRef = gitRefRaw.stdout.trim()
 		if (!gitRef || gitRef === 'HEAD') {
 			gitRef = process.env.GITHUB_REF_NAME || 'unknown'
 		}
-		gitRef = gitRef.replace(/[^a-zA-Z0-9]+/, '-').replace(/[-]+/g, '-')
-
-		const packageJsonStr = await fs.readFile(new URL('../package.json', import.meta.url))
-		const packageJson = JSON.parse(packageJsonStr.toString())
-		const packageVersion = packageJson.version
+		if (gitRef === 'v' + packageVersion) {
+			gitRef = 'stable'
+		} else {
+			gitRef = gitRef.replaceAll(/[^a-zA-Z0-9]+/g, '-').replaceAll(/[-]+/g, '-')
+		}
 
 		const commitCountRaw = await $`git rev-list --count HEAD`
 		const commitCount = commitCountRaw.stdout.trim()

@@ -1,8 +1,239 @@
 # Bitfocus Companion
 
-## Companion v3.0.0 - Unreleased
+## Companion v3.1.0 - Release Notes (unreleased)
 
-Documented up to bde02297f71b0b88e1d8cf03080e707e2bfcae87
+### 📣 CORE FEATURES AND IMPROVEMENTS
+
+- Highlight trigger/connection being edited #2385 #2541
+- More expression functions #2515 #2528
+- Expose additional fields over ember+ #2435
+- Export connection debug logs as csv #2529
+- Ensure csv log export is encoded safely
+- Add more connection status count variables #2507
+- Use variable for step in internal: Button: Set current step #2294
+- Set button step over tcp/udp #1520
+- Add 12 hour internal time variables #2209
+- Support for Contour Shuttle (#2436)
+- Better time picker for trigger event #2544
+- Reimplement infinitton surface support (untested)
+- Allow inverting all boolean feedbacks #2547 (#2549)
+- Support the razer stream controller
+- Support Companion cloud
+- Add Actions: Abort delayed actions on a trigger internal action
+- Add events for computer becoming locked/unlocked #907
+
+### 🐞 BUG FIXES
+
+- Fix artnet listener
+- Handle presets where feedbacks options are undefined
+- Validate config path to import before importing
+
+### 🧩 NEW & UPDATED MODULES
+
+## Companion v3.0.1 - Release Notes
+
+### 🐞 BUG FIXES
+
+- Local building of docker image #2542
+- Missing node/yarn binaries in docker image
+- Allow modules to expose `.companionconfig` files in help pages
+- Time of day trigger value validation #2544
+- Trigger editor references conditions instead of feedbacks
+- Allow `multiselect` fields in legacy modules
+- Page buttons not showing in new installations
+- Warn about invalid port number being selected in the launcher
+- Trigger incorrectly firing when all the conditions are invalid #2397
+- Don't crash on presets missing feedback options
+
+### 🧩 MODULES WITH BUG FIXES
+
+- barco-eventmaster
+- barco-pds
+- behringer-xair
+- bmd-atem
+- bmd-smartview
+- figure53-qlab-advance
+- generic-filereader
+- generic-pjlink
+- google-sheets
+- hdtv-wolfpackgreen
+- imimot-mitti
+- newtek-tricaster
+- panasonic-projector
+- planningcenter-serviceslive
+- presentationtools-aps
+- presentationtools-cuetimer
+- renewedvision-propresenter
+- resolume-arena
+- teradek-prism
+- tplink-kasasmartdimmer
+- tslproducts-umdlistener
+- videolan-vlc
+- vistream-online
+- vizio-smartcast
+
+## Companion v3.0.0 - Release Notes
+
+Changes are relative to v3.0.0-RC2
+
+If you are coming from an older version, make sure to check the changes in v3.0.0-RC1 and v3.0.0-RC2, in particular the BREAKING CHANGES.
+
+### 📣 CORE FEATURES AND IMPROVEMENTS
+
+- Additional string functions in expressions
+
+### 🐞 BUG FIXES
+
+- Unable to start headless in new installations
+- Emberplus server failing to handle incoming updates
+- Crash when prompting about a version conflict
+- Missing line ending in log files
+- Make version number in header more durable
+- Headless `--admin-interface` parameter
+- Improve performance when a large number of variables are changed
+
+### 🧩 NEW & UPDATED MODULES
+
+- agf-characterworks
+- aja-kumo
+- analogway-awj
+- analogway-livecore
+- analogway-livepremier
+- anomes-millumin
+- arri-tally
+- audiotechnica-ceilingarray
+- aver-ptz
+- barco-eventmaster
+- bbc-raven
+- behringer-xair
+- betr-support
+- bmd-hyperdeck
+- bmd-smartview
+- bytehive-playoutbee
+- canon-ptz
+- canon-xf
+- chamsys-quickq
+- dataton-watchout
+- discord-api
+- elgato-keylight
+- epson-businesspj
+- extron-smp351
+- figure53-go-button
+- generic-http
+- generic-pjlink
+- generic-smtp
+- generic-ssh
+- google-sheets
+- govee-lights
+- irisdown-remoteshowcontrol
+- kiloview-encoder
+- lightware-lw3
+- middlethings-middlecontrol
+- netio-powerbox
+- notion-timestamp
+- panasonic-projector
+- panasonic-ptz
+- pharos-designer
+- ptzoptics-visca
+- qsys-remote-control
+- renewedvision-pvp
+- resolume-arena
+- roland-v600uhd
+- roland-v60hd
+- sony-bravia
+- stagetimerio-api
+- studiocoast-vmix
+- techministry-spotifycontroller
+- toggl-track
+- tow-mixeffect
+- tplink-kasasmartbulb
+- tplink-kasasmartplug
+- tslproducts-umdlistener
+- twitch-api
+- videolan-vlc
+- vistream-online
+- zoom-osc-iso
+
+## Companion v3.0.0 RC2 - Release Notes
+
+### BREAKING CHANGES
+
+- macOS must be at least 10.15 to run Companion. This is due to nodejs dropping support for older versions.
+
+### 📣 CORE FEATURES AND IMPROVEMENTS
+
+- Documentation is updated for 3.0
+- Port numbers are shown for all protocols in the Settings page, even those which cannot be changed
+- Config directories have been rearranged to be more logical and futureproof
+- New trigger event, 'on condition becoming false'
+
+### 🐞 BUG FIXES
+
+- Pagenumber buttons not drawing correctly #2468
+- Update `sharp` to fix macOS 10.15 support
+- Include logs in support bundle #2287
+- Tablet page not supporting delayed press groups #2475
+- Multiple decrement/increment page for a surface on a button dont combine as expected #2328
+- Crash on windows if powershell.exe is unavailable #2474
+- Set serialNumber to page "Back" can stop working #2484
+- show_topbar button style not importing from 2.4 correctly
+- Streamdeck Mini with latest firmware not working on Windows
+
+### 🧩 NEW & UPDATED MODULES
+
+- anomes-millumin
+- atlasied-atmosphere
+- audiovero-unityintercom-client
+- barco-pulse
+- betr-support
+- bitfocus-cloud
+- bmd-atem
+- bmd-smartview
+- bmd-videohub
+- canon-ptz
+- christie-projector
+- cisco-roomos
+- cvmeventi-countdown
+- discord-api
+- emotimo-st4
+- etc-eos
+- etc-paradigm
+- generic-osc
+- generic-pjlink
+- generic-tcp-serial
+- getontime-ontime
+- govee-lights
+- greengo-intercom
+- h2r-graphics
+- imimot-mitti
+- interactivetechnololgies-cueserver
+- interspace-mastercuev7
+- kiloview-encoder
+- leolabs-ableset
+- lightware-lw3
+- malighting-msc
+- marshall-ipcamera
+- middleman-adit
+- netron-en
+- newtek-tricaster
+- pharos-designer
+- pixap-pixtimerpro
+- renewedvision-propresenter
+- shure-psm1000
+- shure-scm820
+- softron-movierecorder
+- softron-ontheairvideo
+- studiocoast-vmix
+- tascam-bdmp1
+- techministry-timekeeper
+- teradek-prism
+- tow-mixeffect
+- tplink-kasasmartplug
+- vbaudio-voicemeeter
+- yamaha-rcp
+- zoom-osc-iso
+
+## Companion v3.0.0 RC1 - Release Notes
 
 ### BREAKING CHANGES
 
@@ -34,8 +265,10 @@ Documented up to bde02297f71b0b88e1d8cf03080e707e2bfcae87
 - Enable/disable any action or feedback on a button or trigger
 - Connections list is now manually sortable
 - Triggers list is now manually sortable
+- Custom variables list is now manually sortable
 - Overhaul triggers editor to be like the button editor
 - Support multiple event sources per trigger, and a separate condition
+- Trigger on sunrise/sunset
 - Image buffers returned from feedbacks will now be properly composited
 - Launcher option to run at login
 - Improved search function in add connections list
@@ -46,6 +279,9 @@ Documented up to bde02297f71b0b88e1d8cf03080e707e2bfcae87
 - New import/export system, allowing for more fine-grained control
 - New variables of page names
 - Rework internal actions to have less duplication
+- Improve handling of pin locking
+- Log file gets rotated with a limited size
+- Surfaces can be set to never follow pin lock
 
 ### 🐞 BUG FIXES
 
@@ -53,6 +289,51 @@ Documented up to bde02297f71b0b88e1d8cf03080e707e2bfcae87
 - Ensure custom variable ids are valid
 - Ensure connection labels are valid
 - Color picker indicates the currently selected swatch
+
+### 🧩 NEW MODULES
+
+- marshall-ipcamera
+- riedel-mediornet
+- panasonic-p2
+- obsidiancontrol-onyx-osc
+- apc-ups
+- hdtv-wolfpackgreen
+- camstreamer-camstreamer
+- roland-p20hd
+- restream-api
+- gnuralnet-livetoair
+- shure-mxcw
+- microsoft-vscode
+- android-tv
+- cablematters-hdmimatrix
+- simedia-yesapi
+- rgblink-vsp628pro
+- soundtrack-remote
+- colorlight-processor
+- eaton-epdu
+- roland-vr120hd
+- netgeat-avline
+- atlasied-atmosphere
+- ezcoo-matrix
+- openrgb-sdk
+- cyberpower-pdu
+
+## Companion v2.4.2 - Release Notes
+
+### 🐞 BUG FIXES
+
+- UI crash after saving a trigger
+- UI crash if module status is not a string
+- Missing libasound2 in docker image
+
+### 🐞 MODULE FIXES
+
+- bitfocus-companion
+- equipson-lightshark
+- generic-artnet
+- generic-sacn
+- haivision-connectdvr
+- zoom-osc-iso
 
 ## Companion v2.4.1 - Release Notes
 

@@ -13,7 +13,7 @@
 
 2. Required Dependencies
 
-   Companion requires some depdencies that aren't included by default on some Debian and Ubuntu installations.
+   Companion requires some dependencies that aren't included by default on some Debian and Ubuntu installations.
 
    $ apt-get update
    $ apt-get install -y libusb-1.0-0-dev libudev-dev

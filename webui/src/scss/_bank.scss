@@ -9,10 +9,6 @@
 	display: inline-block;
 	border: 1px solid transparent;
 
-	&.right {
-		float: right;
-	}
-
 	&.clickable {
 		cursor: pointer;
 	}
@@ -42,7 +38,7 @@
 	}
 
 	img {
-		// Commented out to alow scaling in a uniform way, instead of streatching
+		// Commented out to allow scaling in a uniform way, instead of stretching
 		// max-width: 72px;
 		// max-height: 72px;
 		width: 100%;
@@ -62,6 +58,10 @@
 	// text-align: center;
 	display: block;
 	min-width: 150px;
+
+	// HACK: Safari has issues with drawing scrollbars due to a sub-component having a higher z-index
+	// https://github.com/bitfocus/companion/issues/2407
+	z-index: 100;
 }
 
 .button-page-name {

@@ -268,7 +268,7 @@ function EventEditor({
 
 		for (const option of options) {
 			if (typeof option.isVisible === 'function') {
-				visibility[option.id] = option.isVisible(event.options)
+				visibility[option.id] = option.isVisible(event.options, option.isVisibleData)
 			}
 		}
 
@@ -287,42 +287,44 @@ function EventEditor({
 	}
 
 	return (
-		<div className="editor-grid editor-grid-events">
-			<div className="cell-name">{name}</div>
+		<>
+			<div className="editor-grid-header editor-grid-events">
+				<div className="cell-name">{name}</div>
 
-			<div className="cell-controls">
-				<CButtonGroup>
-					{isCollapsed ? (
-						<CButton size="sm" onClick={doExpand} title="Expand event view">
-							<FontAwesomeIcon icon={faExpandArrowsAlt} />
+				<div className="cell-controls">
+					<CButtonGroup>
+						{isCollapsed ? (
+							<CButton size="sm" onClick={doExpand} title="Expand event view">
+								<FontAwesomeIcon icon={faExpandArrowsAlt} />
+							</CButton>
+						) : (
+							<CButton size="sm" onClick={doCollapse} title="Collapse event view">
+								<FontAwesomeIcon icon={faCompressArrowsAlt} />
+							</CButton>
+						)}
+						<CButton size="sm" onClick={innerDuplicate} title="Duplicate event">
+							<FontAwesomeIcon icon={faCopy} />
 						</CButton>
-					) : (
-						<CButton size="sm" onClick={doCollapse} title="Collapse event view">
-							<FontAwesomeIcon icon={faCompressArrowsAlt} />
+						<CButton size="sm" onClick={innerDelete} title="Remove event">
+							<FontAwesomeIcon icon={faTrash} />
 						</CButton>
-					)}
-					<CButton size="sm" onClick={innerDuplicate} title="Duplicate event">
-						<FontAwesomeIcon icon={faCopy} />
-					</CButton>
-					<CButton size="sm" onClick={innerDelete} title="Remove event">
-						<FontAwesomeIcon icon={faTrash} />
-					</CButton>
-					{doEnabled && (
-						<>
-							&nbsp;
-							<CSwitch
-								color="success"
-								checked={event.enabled}
-								title={event.enabled ? 'Disable event' : 'Enable event'}
-								onChange={innerSetEnabled}
-							/>
-						</>
-					)}
-				</CButtonGroup>
+						{doEnabled && (
+							<>
+								&nbsp;
+								<CSwitch
+									color="success"
+									checked={event.enabled}
+									title={event.enabled ? 'Disable event' : 'Enable event'}
+									onChange={innerSetEnabled}
+								/>
+							</>
+						)}
+					</CButtonGroup>
+				</div>
 			</div>
 
-			{!isCollapsed ? (
-				<>
+			{!isCollapsed && (
+				<div className="editor-grid editor-grid-events">
 					<div className="cell-description">{eventSpec?.description || ''}</div>
 
 					<div className="cell-option">
@@ -343,11 +345,9 @@ function EventEditor({
 							))}
 						</CForm>
 					</div>
-				</>
-			) : (
-				''
+				</div>
 			)}
-		</div>
+		</>
 	)
 }
 

@@ -50,7 +50,7 @@ await Promise.all(
 						} else if (info.isDirectory()) {
 							await scanDir(fullname)
 						}
-					})
+					}),
 				)
 			}
 			await scanDir(basePath)
@@ -100,7 +100,7 @@ await Promise.all(
 						console.warn(`Failed to scan file: ${e}`)
 						console.log(e.stack)
 					}
-				})
+				}),
 			)
 
 			outputStr += `Found calls for: ${Array.from(usedCalls.keys()).join(', ')}\n`
@@ -112,7 +112,7 @@ await Promise.all(
 			}
 			if (usedCalls.size > 0) console.log(csvStr)
 		}
-	})
+	}),
 )
 
 console.log('\n\n')

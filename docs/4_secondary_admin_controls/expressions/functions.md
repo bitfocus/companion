@@ -63,6 +63,10 @@ eg `00:10:15` gives 615
 
 You can do the reverse of this with `secondsToTimestamp(str)`
 
+**randomInt(min, max)**
+
+Generate a random integer in the specified range (inclusive).
+
 ##### String operations
 
 **trim(val)**
@@ -85,6 +89,43 @@ substr() extracts characters from indexStart up to but not including indexEnd.
 * If indexEnd <= indexStart after normalizing negative values, an empty string is returned.
 
 Tip: If you don't want the behaviour of negative numbers, you can use `max(0, index)` to limit the value to never be below 0.
+
+**concat(str1, str2)**
+
+Combine one or more values into a single string
+
+**includes(val, find)**
+
+Check if a string contains a specific value
+
+eg `includes("Companion is great!", "great")` gives `true`
+
+**indexOf(val, find, offset)**
+
+Find the index of the first occurence of a value within the provided string.
+
+Optionally provide an offset to start the search from.
+
+
+**lastIndexOf(val, find, offset)**
+
+Find the index of the last occurence of a value within the provided string.
+
+Optionally provide an offset to start the search from.
+
+**toUpperCase(val)**
+
+Coverts all characters in a string to uppercase
+
+**toLowerCase(val)**
+
+Coverts all characters in a string to lowercase
+
+**replaceAll(val, find, replace)**
+
+Searches a string for a specific value, and then replaces all instances of that value with a new string
+
+eg `replaceAll("This is great!", "This", "Companion")` gives `Companion is great!`
 
 **secondsToTimestamp(seconds, format)**
 
@@ -113,6 +154,13 @@ The following components are allowed:
 * `ss` - seconds
 * `.S` / `.SS` / `.SSS` - milliseconds, in varying levels of accuracy. Must be at the end of the string
 
+**parseVariables(string)**
+
+In some scenarios it can be beneficial to have nested variables. This is not supported in the expression syntax.
+
+Instead you can use the `parseVariables` function, which will interpret a string using the string variables syntax. 
+
+eg `parseVariables('$(internal:custom_$(internal:custom_b))')`
 
 ##### Bool operations
 

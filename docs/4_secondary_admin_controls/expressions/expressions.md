@@ -1,8 +1,8 @@
-Many modules allow for using variables in input fields. A select few places support a new concept of expressions too. We hope to make these avaibale in more places over time.
+Many modules allow for using variables in input fields. A select few places support a new concept of expressions too. We hope to make these available in more places over time.
 
 The key difference is that expressions are capable of a lot more, but are more complex to write.
 
-A simple expression which will add two variables, could look like `$(internal:a) + $(internal:b)`. Other operators can be used here instead.
+A simple expression which will add two numeric variables, could look like `$(internal:a) + $(internal:b)`. Other operators can be used here instead.
 Or a more complex boolean expression could be `($(internal:a) > $(internal:b)) && !$(internal:c)`.
 
 The normal operator precedence is used in complex expressions. Parentheses can also be used to overrule the precedence or to aid readability, such as `($(internal:a) + $(internal:b) / $(internal:c)`.

@@ -1,4 +1,4 @@
-import { CAlert, CButton, CForm, CFormGroup, CButtonGroup, CSwitch } from '@coreui/react'
+import { CAlert, CButton, CForm, CFormGroup, CButtonGroup, CSwitch, CLabel } from '@coreui/react'
 import {
 	faSort,
 	faTrash,
@@ -6,6 +6,7 @@ import {
 	faExpandArrowsAlt,
 	faCopy,
 	faFolderOpen,
+	faQuestionCircle,
 } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import React, { useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react'
@@ -23,7 +24,7 @@ import Select, { createFilter } from 'react-select'
 import { OptionsInputField } from './OptionsInputField'
 import { useDrag, useDrop } from 'react-dnd'
 import { GenericConfirmModal } from '../Components/GenericConfirmModal'
-import { DropdownInputField } from '../Components'
+import { CheckboxInputField, DropdownInputField } from '../Components'
 import { ButtonStyleConfigFields } from './ButtonStyleConfig'
 import { AddFeedbacksModal } from './AddModal'
 import { usePanelCollapseHelper } from '../Helpers/CollapseHelper'
@@ -32,7 +33,15 @@ import { MenuPortalContext } from '../Components/DropdownInputField'
 import { ParseControlId } from '@companion/shared/ControlId'
 import { ButtonStyleProperties } from '@companion/shared/Style'
 
-export function ControlFeedbacksEditor({ controlId, feedbacks, heading, booleanOnly, isOnControl, addPlaceholder }) {
+export function ControlFeedbacksEditor({
+	controlId,
+	feedbacks,
+	heading,
+	entityType,
+	booleanOnly,
+	isOnControl,
+	addPlaceholder,
+}) {
 	const socket = useContext(SocketContext)
 
 	const confirmModal = useRef()
@@ -58,16 +67,27 @@ export function ControlFeedbacksEditor({ controlId, feedbacks, heading, booleanO
 		},
 		[socket, controlId]
 	)
+	const setInverted = useCallback(
+		(feedbackId, isInverted) => {
+			const currentFeedback = feedbacksRef.current?.find((fb) => fb.id === feedbackId)
+			if (!currentFeedback || currentFeedback.isInverted !== isInverted) {
+				socketEmitPromise(socket, 'controls:feedback:set-inverted', [controlId, feedbackId, isInverted]).catch((e) => {
+					console.error(`Set-inverted failed: ${e}`)
+				})
+			}
+		},
+		[socket, controlId]
+	)
 
 	const doDelete = useCallback(
 		(feedbackId) => {
-			confirmModal.current.show('Delete feedback', 'Delete feedback?', 'Delete', () => {
+			confirmModal.current.show(`Delete ${entityType}`, `Delete ${entityType}?`, 'Delete', () => {
 				socketEmitPromise(socket, 'controls:feedback:remove', [controlId, feedbackId]).catch((e) => {
 					console.error(`Failed to delete feedback: ${e}`)
 				})
 			})
 		},
-		[socket, controlId]
+		[socket, controlId, entityType]
 	)
 
 	const doDuplicate = useCallback(
@@ -154,10 +174,12 @@ export function ControlFeedbacksEditor({ controlId, feedbacks, heading, booleanO
 						<MyErrorBoundary key={a?.id ?? i}>
 							<FeedbackTableRow
 								key={a?.id ?? i}
+								entityType={entityType}
 								index={i}
 								controlId={controlId}
 								feedback={a}
 								setValue={setValue}
+								setInverted={setInverted}
 								doDelete={doDelete}
 								doDuplicate={doDuplicate}
 								doLearn={doLearn}
@@ -192,12 +214,14 @@ export function ControlFeedbacksEditor({ controlId, feedbacks, heading, booleanO
 }
 
 function FeedbackTableRow({
+	entityType,
 	feedback,
 	controlId,
 	index,
 	dragId,
 	moveCard,
 	setValue,
+	setInverted,
 	doDelete,
 	doDuplicate,
 	doLearn,
@@ -212,6 +236,7 @@ function FeedbackTableRow({
 	const innerDelete = useCallback(() => doDelete(feedback.id), [feedback.id, doDelete])
 	const innerDuplicate = useCallback(() => doDuplicate(feedback.id), [feedback.id, doDuplicate])
 	const innerLearn = useCallback(() => doLearn(feedback.id), [doLearn, feedback.id])
+	const innerInverted = useCallback((isInverted) => setInverted(feedback.id, isInverted), [feedback.id, setInverted])
 
 	const ref = useRef(null)
 	const [, drop] = useDrop({
@@ -290,10 +315,12 @@ function FeedbackTableRow({
 			</td>
 			<td>
 				<FeedbackEditor
+					entityType={entityType}
 					isOnControl={isOnControl}
 					controlId={controlId}
 					feedback={feedback}
 					setValue={setValue}
+					setInverted={innerInverted}
 					innerDelete={innerDelete}
 					innerDuplicate={innerDuplicate}
 					innerLearn={innerLearn}
@@ -311,10 +338,12 @@ function FeedbackTableRow({
 }
 
 function FeedbackEditor({
+	entityType,
 	feedback,
 	isOnControl,
 	controlId,
 	setValue,
+	setInverted,
 	innerDelete,
 	innerDuplicate,
 	innerLearn,
@@ -359,7 +388,7 @@ function FeedbackEditor({
 
 		for (const option of options) {
 			if (typeof option.isVisible === 'function') {
-				visibility[option.id] = option.isVisible(feedback.options)
+				visibility[option.id] = option.isVisible(feedback.options, option.isVisibleData)
 			}
 		}
 
@@ -387,42 +416,44 @@ function FeedbackEditor({
 	const previewControlId = previewControlIdFunction?.(feedback.options, ParseControlId(controlId))
 
 	return (
-		<div className="editor-grid remove075right">
-			<div className="cell-name">{name}</div>
+		<>
+			<div className="editor-grid-header remove075right">
+				<div className="cell-name">{name}</div>
 
-			<div className="cell-controls">
-				<CButtonGroup>
-					{isCollapsed ? (
-						<CButton size="sm" onClick={doExpand} title="Expand feedback view">
-							<FontAwesomeIcon icon={faExpandArrowsAlt} />
+				<div className="cell-controls">
+					<CButtonGroup>
+						{isCollapsed ? (
+							<CButton size="sm" onClick={doExpand} title={`Expand ${entityType} view`}>
+								<FontAwesomeIcon icon={faExpandArrowsAlt} />
+							</CButton>
+						) : (
+							<CButton size="sm" onClick={doCollapse} title={`Collapse ${entityType} view`}>
+								<FontAwesomeIcon icon={faCompressArrowsAlt} />
+							</CButton>
+						)}
+						<CButton size="sm" onClick={innerDuplicate} title={`Duplicate ${entityType}`}>
+							<FontAwesomeIcon icon={faCopy} />
 						</CButton>
-					) : (
-						<CButton size="sm" onClick={doCollapse} title="Collapse feedback view">
-							<FontAwesomeIcon icon={faCompressArrowsAlt} />
+						<CButton size="sm" onClick={innerDelete} title={`Remove ${entityType}`}>
+							<FontAwesomeIcon icon={faTrash} />
 						</CButton>
-					)}
-					<CButton size="sm" onClick={innerDuplicate} title="Duplicate feedback">
-						<FontAwesomeIcon icon={faCopy} />
-					</CButton>
-					<CButton size="sm" onClick={innerDelete} title="Remove feedback">
-						<FontAwesomeIcon icon={faTrash} />
-					</CButton>
-					{doEnabled && (
-						<>
-							&nbsp;
-							<CSwitch
-								color="success"
-								checked={!feedback.disabled}
-								title={feedback.disabled ? 'Enable feedback' : 'Disable feedback'}
-								onChange={innerSetEnabled}
-							/>
-						</>
-					)}
-				</CButtonGroup>
+						{doEnabled && (
+							<>
+								&nbsp;
+								<CSwitch
+									color="success"
+									checked={!feedback.disabled}
+									title={feedback.disabled ? `Enable ${entityType}` : `Disable ${entityType}`}
+									onChange={innerSetEnabled}
+								/>
+							</>
+						)}
+					</CButtonGroup>
+				</div>
 			</div>
 
 			{!isCollapsed && (
-				<>
+				<div className="editor-grid remove075right">
 					<div className="cell-description">{feedbackSpec?.description || ''}</div>
 
 					{previewControlId && (
@@ -457,6 +488,30 @@ function FeedbackEditor({
 							))}
 						</CForm>
 					</div>
+
+					{feedbackSpec?.type === 'boolean' && feedbackSpec.showInvert !== false && (
+						<div className="cell-invert">
+							<MyErrorBoundary>
+								<CForm onSubmit={PreventDefaultHandler}>
+									<CFormGroup>
+										<CLabel>
+											Invert
+											<FontAwesomeIcon
+												style={{ marginLeft: '5px' }}
+												icon={faQuestionCircle}
+												title={'If checked, the behaviour of this feedback is inverted'}
+											/>
+										</CLabel>
+										<p>
+											<CheckboxInputField value={feedback.isInverted} setValue={setInverted} />
+											&nbsp;
+										</p>
+									</CFormGroup>
+								</CForm>
+							</MyErrorBoundary>
+						</div>
+					)}
+
 					{!booleanOnly && (
 						<>
 							<FeedbackStyles feedbackSpec={feedbackSpec} feedback={feedback} setStylePropsValue={setStylePropsValue} />
@@ -467,9 +522,9 @@ function FeedbackEditor({
 							/>
 						</>
 					)}
-				</>
+				</div>
 			)}
-		</div>
+		</>
 	)
 }
 

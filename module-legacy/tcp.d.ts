@@ -20,7 +20,7 @@ declare class TCPClient extends EventEmitter {
 			reconnect_interval?: number
 			/** default true */
 			reconnect?: boolean
-		}
+		},
 	)
 
 	/** Force a reconnection attempt */

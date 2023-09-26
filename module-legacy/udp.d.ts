@@ -26,7 +26,7 @@ declare class UDPSocket extends EventEmitter {
 			bind_port?: number
 			/** default: 0.0.0.0 */
 			bind_ip?: string
-		}
+		},
 	)
 
 	/** Attempt to add membership to a multicast address */

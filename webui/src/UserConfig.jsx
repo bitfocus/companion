@@ -188,7 +188,7 @@ function UserConfigTable() {
 						</div>
 					</td>
 					<td>
-						<CButton onClick={() => resetValue('xkeys_enable')} title="Reset to default">
+						<CButton onClick={() => resetValue('elegato_plugin_enable')} title="Reset to default">
 							<FontAwesomeIcon icon={faUndo} />
 						</CButton>
 					</td>
@@ -233,6 +233,28 @@ function UserConfigTable() {
 					</td>
 					<td>
 						<CButton onClick={() => resetValue('loupedeck_enable')} title="Reset to default">
+							<FontAwesomeIcon icon={faUndo} />
+						</CButton>
+					</td>
+				</tr>
+				<tr>
+					<td>
+						Enable connected Contour Shuttle
+						<br />
+						<em>(Requires Companion restart)</em>
+					</td>
+					<td>
+						<div className="form-check form-check-inline mr-1 float-right">
+							<CSwitch
+								color="success"
+								checked={config.contour_shuttle_enable}
+								size={'lg'}
+								onChange={(e) => setValue('contour_shuttle_enable', e.currentTarget.checked)}
+							/>
+						</div>
+					</td>
+					<td>
+						<CButton onClick={() => resetValue('contour_shuttle_enable')} title="Reset to default">
 							<FontAwesomeIcon icon={faUndo} />
 						</CButton>
 					</td>
@@ -312,6 +334,17 @@ function UserConfigTable() {
 							<FontAwesomeIcon icon={faUndo} />
 						</CButton>
 					</td>
+				</tr>
+
+				<tr>
+					<th colSpan="3" className="settings-category">
+						Satellite
+					</th>
+				</tr>
+				<tr>
+					<td>Satellite Listen Port</td>
+					<td>16622</td>
+					<td></td>
 				</tr>
 
 				<tr>
@@ -461,6 +494,12 @@ function UserConfigTable() {
 					</td>
 				</tr>
 				<tr>
+					<td>Rosstalk Listen Port</td>
+					<td>7788</td>
+					<td></td>
+				</tr>
+
+				<tr>
 					<th colSpan="3" className="settings-category">
 						Ember+
 					</th>
@@ -483,6 +522,12 @@ function UserConfigTable() {
 						</CButton>
 					</td>
 				</tr>
+				<tr>
+					<td>Ember+ Listen Port</td>
+					<td>9092</td>
+					<td></td>
+				</tr>
+
 				<tr>
 					<th colSpan="3" className="settings-category">
 						Artnet Listener
@@ -870,6 +915,23 @@ function UserConfigTable() {
 								size={'lg'}
 								onChange={(e) => {
 									window.localStorage.setItem('test_touch_backend', e.currentTarget.checked ? '1' : '0')
+									window.location.reload()
+								}}
+							/>
+						</div>
+					</td>
+					<td>&nbsp;</td>
+				</tr>
+				<tr>
+					<td>Companion Cloud Tab</td>
+					<td>
+						<div className="form-check form-check-inline mr-1 float-right">
+							<CSwitch
+								color="success"
+								checked={window.localStorage.getItem('show_companion_cloud') === '1'}
+								size={'lg'}
+								onChange={(e) => {
+									window.localStorage.setItem('show_companion_cloud', e.currentTarget.checked ? '1' : '0')
 									window.location.reload()
 								}}
 							/>

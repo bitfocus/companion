@@ -51,7 +51,7 @@ export interface CompanionBankPreset
 	extends CompanionBankRequiredProps,
 		Partial<CompanionBankAdditionalStyleProps>,
 		Partial<CompanionBankAdditionalCoreProps> {
-	style: 'png' | 'text' // 'text' for backwards compatability
+	style: 'png' | 'text' // 'text' for backwards compatibility
 }
 
 export interface CompanionOptionValues {
@@ -70,7 +70,7 @@ export interface CompanionAction {
 	 * The user requested to 'learn' the values for this action.
 	 */
 	learn?: (
-		action: CompanionActionEvent
+		action: CompanionActionEvent,
 	) => CompanionOptionValues | undefined | Promise<CompanionOptionValues | undefined>
 }
 export interface CompanionActionEvent {
@@ -115,11 +115,12 @@ export type SomeCompanionInputField =
 	| CompanionInputFieldTextWithVariablesInput
 	| CompanionInputFieldDropdown
 	| CompanionInputFieldMultiDropdown
+	| CompanionInputFieldMultiselect
 	| CompanionInputFieldNumber
 	| CompanionInputFieldCheckbox
 export interface CompanionInputField {
 	id: string
-	type: 'text' | 'textinput' | 'textwithvariables' | 'dropdown' | 'colorpicker' | 'number' | 'checkbox'
+	type: 'text' | 'textinput' | 'textwithvariables' | 'dropdown' | 'colorpicker' | 'number' | 'checkbox' | 'multiselect'
 	label: string
 	tooltip?: string
 	isVisible?: (options: any /*CompanionActionEvent | CompanionFeedbackEvent*/) => boolean // TODO - this varies based on where it is used, and in this current structure is not possible to type without breaking every module
@@ -152,6 +153,7 @@ export interface CompanionInputFieldDropdown extends CompanionInputFieldDropdown
 	regex?: string
 }
 export interface CompanionInputFieldMultiDropdown extends CompanionInputFieldDropdownBase {
+	type: 'dropdown'
 	multiple: true
 	default: ConfigValue[]
 
@@ -168,6 +170,23 @@ export interface CompanionInputFieldDropdownBase extends CompanionInputField {
 	choices: DropdownChoice[]
 
 	multiple?: boolean
+
+	/** The minimum number of entries the dropdown must have before it allows searching */
+	minChoicesForSearch?: number
+}
+
+export interface CompanionInputFieldMultiselect extends CompanionInputField {
+	type: 'multiselect'
+	default: ConfigValue[]
+
+	required?: boolean
+
+	choices: DropdownChoice[]
+
+	/** The minimum number of selected values */
+	minSelection?: number
+	/** The maximum number of selected values */
+	maxSelection?: number
 
 	/** The minimum number of entries the dropdown must have before it allows searching */
 	minChoicesForSearch?: number
@@ -204,7 +223,7 @@ export interface CompanionFeedbackBase<TRes> {
 	callback?: (
 		feedback: CompanionFeedbackEvent,
 		bank: CompanionBankPNG | null,
-		info: CompanionFeedbackEventInfo | null
+		info: CompanionFeedbackEventInfo | null,
 	) => TRes
 	subscribe?: (feedback: CompanionFeedbackEvent) => void
 	unsubscribe?: (feedback: CompanionFeedbackEvent) => void
@@ -213,7 +232,7 @@ export interface CompanionFeedbackBase<TRes> {
 	 * The user requested to 'learn' the values for this feedback.
 	 */
 	learn?: (
-		feedback: CompanionFeedbackEvent
+		feedback: CompanionFeedbackEvent,
 	) => CompanionOptionValues | undefined | Promise<CompanionOptionValues | undefined>
 }
 export interface CompanionFeedbackBoolean extends CompanionFeedbackBase<boolean> {
@@ -263,7 +282,7 @@ export type CompanionStaticUpgradeScript = (
 	context: CompanionUpgradeContext,
 	config: CompanionCoreInstanceconfig & Record<string, any>,
 	affected_actions: CompanionMigrationAction[],
-	affected_feedbacks: CompanionMigrationFeedback[]
+	affected_feedbacks: CompanionMigrationFeedback[],
 ) => boolean
 
 export interface CompanionUpgradeToBooleanFeedbackMap {

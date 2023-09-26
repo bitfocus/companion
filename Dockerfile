@@ -1,4 +1,4 @@
-FROM node:18-bullseye as companion-builder
+FROM node:18.17.1-bullseye as companion-builder
 
 # Installation Prep
 RUN apt-get update && apt-get install -y \
@@ -30,6 +30,7 @@ COPY --from=companion-builder /app/module-legacy/manifests	/app/module-legacy/ma
 
 # Install curl for the health check
 RUN apt update && apt install -y \
+    procps \
     curl \
     libusb-1.0-0 \
     libudev1 \
@@ -39,6 +40,11 @@ RUN apt update && apt install -y \
 
 # Don't run as root
 RUN useradd -ms /bin/bash companion
+
+# setup path and corepack
+ENV PATH="$PATH:/app/node-runtime/bin"
+RUN echo "PATH="${PATH}"" | tee -a /etc/environment
+RUN corepack enable
 
 # Create config directory and set correct permissions
 # Once docker mounts the volume, the directory will be owned by node:node

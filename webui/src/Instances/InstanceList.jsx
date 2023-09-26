@@ -19,8 +19,9 @@ import { GenericConfirmModal } from '../Components/GenericConfirmModal'
 import CSwitch from '../CSwitch'
 import { useDrag, useDrop } from 'react-dnd'
 import { windowLinkOpen } from '../Helpers/Window'
+import classNames from 'classnames'
 
-export function InstancesList({ showHelp, doConfigureInstance, instanceStatus }) {
+export function InstancesList({ showHelp, doConfigureInstance, instanceStatus, selectedInstanceId }) {
 	const socket = useContext(SocketContext)
 	const instancesContext = useContext(InstancesContext)
 
@@ -109,6 +110,7 @@ export function InstancesList({ showHelp, doConfigureInstance, instanceStatus })
 					deleteModalRef={deleteModalRef}
 					configureInstance={doConfigureInstance}
 					moveRow={moveRow}
+					isSelected={id === selectedInstanceId}
 				/>
 			)
 		})
@@ -226,6 +228,7 @@ function InstancesTableRow({
 	configureInstance,
 	deleteModalRef,
 	moveRow,
+	isSelected,
 }) {
 	const socket = useContext(SocketContext)
 	const modules = useContext(ModulesContext)
@@ -297,7 +300,14 @@ function InstancesTableRow({
 	}
 
 	return (
-		<tr ref={ref} className={isDragging ? 'instancelist-dragging' : 'instancelist-notdragging'}>
+		<tr
+			ref={ref}
+			className={classNames({
+				'instancelist-dragging': isDragging,
+				'instancelist-notdragging': !isDragging,
+				'instancelist-selected': isSelected,
+			})}
+		>
 			<td ref={drag} className="td-reorder">
 				<FontAwesomeIcon icon={faSort} />
 			</td>
