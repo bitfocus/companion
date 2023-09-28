@@ -67,7 +67,7 @@ export const ButtonsGridPanel = memo(function ButtonsPage({
 			const pageNumbers = Object.keys(pagesRef.current || {})
 			const newIndex = pageNumbers.findIndex((p) => p === newPage + '')
 			if (newIndex !== -1) {
-				changePage(newPage)
+				changePage(Number(newPage))
 			}
 		},
 		[changePage]
@@ -86,8 +86,8 @@ export const ButtonsGridPanel = memo(function ButtonsPage({
 				newPage = pageNumbers[newIndex]
 			}
 
-			if (newPage !== undefined) {
-				changePage(newPage)
+			if (newPage !== undefined && !isNaN(newPage)) {
+				changePage(Number(newPage))
 			}
 		},
 		[changePage, pageNumber]
