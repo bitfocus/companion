@@ -18,7 +18,7 @@
 		"lindist": "yarn dist linux-x64",
 		"rpidist": "yarn dist linux-arm7",
 		"dist:prepare": "zx tools/build_prepare.mjs",
-		"test": "node --experimental-vm-modules node_modules/jest/bin/jest.js",
+		"test": "node --max-old-space-size=4000 --experimental-vm-modules node_modules/jest/bin/jest.js",
 		"dev-webui": "yarn --cwd webui dev",
 		"format": "prettier --write .",
 		"jsdoc": "jsdoc -c jsdoc.json",
