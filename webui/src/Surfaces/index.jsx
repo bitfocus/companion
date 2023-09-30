@@ -164,6 +164,7 @@ export const SurfacesPage = memo(function SurfacesPage() {
 							<ManualGroupRow
 								key={group.id}
 								group={group}
+								configureGroup={configureDevice}
 								deleteGroup={deleteGroup}
 								updateName={updateName}
 								configureDevice={configureDevice}
@@ -184,7 +185,16 @@ export const SurfacesPage = memo(function SurfacesPage() {
 	)
 })
 
-function ManualGroupRow({ group, deleteGroup, updateName, configureDevice, deleteEmulator, forgetDevice }) {
+function ManualGroupRow({
+	group,
+	configureGroup,
+	deleteGroup,
+	updateName,
+	configureDevice,
+	deleteEmulator,
+	forgetDevice,
+}) {
+	const configureGroup2 = useCallback(() => configureGroup(group.id), [configureGroup, group.id])
 	const deleteGroup2 = useCallback(() => deleteGroup(group.id), [deleteGroup, group.id])
 	const updateName2 = useCallback((val) => updateName(group.id, val), [updateName, group.id])
 
@@ -200,8 +210,12 @@ function ManualGroupRow({ group, deleteGroup, updateName, configureDevice, delet
 				<td>-</td>
 				<td className="text-right">
 					<CButtonGroup>
+						<CButton onClick={configureGroup2} title="Configure">
+							<FontAwesomeIcon icon={faCog} /> Settings
+						</CButton>
+
 						<CButton onClick={deleteGroup2} title="Delete group">
-							<FontAwesomeIcon icon={faTrash} />
+							<FontAwesomeIcon icon={faTrash} /> Delete
 						</CButton>
 					</CButtonGroup>
 				</td>
