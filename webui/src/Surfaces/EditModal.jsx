@@ -16,6 +16,10 @@ import { LoadingRetryOrError, socketEmitPromise, SocketContext, PreventDefaultHa
 import { nanoid } from 'nanoid'
 import { faQuestionCircle } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { InternalInstanceField } from '../Controls/InternalInstanceFields'
+import { MenuPortalContext } from '../Components/DropdownInputField'
+
+const PAGE_FIELD_SPEC = { type: 'internal:page', includeDirection: false }
 
 export const SurfaceEditModal = forwardRef(function SurfaceEditModal(_props, ref) {
 	const socket = useContext(SocketContext)
@@ -188,248 +192,241 @@ export const SurfaceEditModal = forwardRef(function SurfaceEditModal(_props, ref
 		[socket, surfaceId]
 	)
 
+	const [modalRef, setModalRef] = useState(null)
+
 	return (
-		<CModal show={show} onClose={doClose} onClosed={onClosed}>
-			<CModalHeader closeButton>
-				<h5>Settings for {surfaceInfo?.displayName ?? surfaceInfo?.type ?? groupInfo?.displayName}</h5>
-			</CModalHeader>
-			<CModalBody>
-				<LoadingRetryOrError
-					error={configLoadError}
-					dataReady={(!surfaceId || surfaceConfig) && (!groupId || groupConfig)}
-					doRetry={doRetryConfigLoad}
-				/>
+		<CModal innerRef={setModalRef} show={show} onClose={doClose} onClosed={onClosed}>
+			<MenuPortalContext.Provider value={modalRef}>
+				<CModalHeader closeButton>
+					<h5>Settings for {surfaceInfo?.displayName ?? surfaceInfo?.type ?? groupInfo?.displayName}</h5>
+				</CModalHeader>
+				<CModalBody>
+					<LoadingRetryOrError
+						error={configLoadError}
+						dataReady={(!surfaceId || surfaceConfig) && (!groupId || groupConfig)}
+						doRetry={doRetryConfigLoad}
+					/>
 
-				<CForm onSubmit={PreventDefaultHandler}>
-					{surfaceInfo && (
-						<CFormGroup>
-							<CLabel>
-								Surface Group&nbsp;
-								<FontAwesomeIcon
-									icon={faQuestionCircle}
-									title="When in a group, surfaces will follow the page number of that group"
-								/>
-							</CLabel>
-							<CSelect
-								name="surface-group"
-								value={surfaceInfo.groupId || 'null'}
-								onChange={(e) => setSurfaceGroupId(e.currentTarget.value)}
-							>
-								<option value="null">Standalone (Default)</option>
-
-								{surfacesContext
-									.filter((group) => !group.isAutoGroup)
-									.map((group) => (
-										<option key={group.id} value={group.id}>
-											{group.displayName}
-										</option>
-									))}
-							</CSelect>
-						</CFormGroup>
-					)}
-
-					{groupConfig && (
-						<>
+					<CForm onSubmit={PreventDefaultHandler}>
+						{surfaceInfo && (
 							<CFormGroup>
-								<CLabel htmlFor="use_last_page">Use Last Page At Startup</CLabel>
-								<CInputCheckbox
-									name="use_last_page"
-									type="checkbox"
-									checked={!!groupConfig.use_last_page}
-									value={true}
-									onChange={(e) => setGroupConfigValue('use_last_page', !!e.currentTarget.checked)}
-								/>
-							</CFormGroup>
-							<CFormGroup>
-								<CLabel htmlFor="startup_page">Startup Page</CLabel>
-
-								<CInput
-									disabled={!!groupConfig.use_last_page}
-									name="startup_page"
-									type="range"
-									min={1}
-									max={99}
-									step={1}
-									value={groupConfig.startup_page}
-									onChange={(e) => setGroupConfigValue('startup_page', parseInt(e.currentTarget.value))}
-								/>
-								<span>{groupConfig.startup_page}</span>
-							</CFormGroup>
-							<CFormGroup>
-								<CLabel htmlFor="last_page">Current Page</CLabel>
-
-								<CInput
-									name="last_page"
-									type="range"
-									min={1}
-									max={99}
-									step={1}
-									value={groupConfig.last_page}
-									onChange={(e) => setGroupConfigValue('last_page', parseInt(e.currentTarget.value))}
-								/>
-								<span>{groupConfig.last_page}</span>
-							</CFormGroup>
-						</>
-					)}
-
-					{surfaceConfig && surfaceInfo && (
-						<>
-							{surfaceInfo.configFields?.includes('emulator_size') && (
-								<>
-									<CFormGroup>
-										<CLabel htmlFor="page">Row count</CLabel>
-										<CInput
-											name="emulator_rows"
-											type="number"
-											min={1}
-											step={1}
-											value={surfaceConfig.emulator_rows}
-											onChange={(e) => setSurfaceConfigValue('emulator_rows', parseInt(e.currentTarget.value))}
-										/>
-									</CFormGroup>
-									<CFormGroup>
-										<CLabel htmlFor="page">Column count</CLabel>
-										<CInput
-											name="emulator_columns"
-											type="number"
-											min={1}
-											step={1}
-											value={surfaceConfig.emulator_columns}
-											onChange={(e) => setSurfaceConfigValue('emulator_columns', parseInt(e.currentTarget.value))}
-										/>
-									</CFormGroup>
-								</>
-							)}
-
-							<CFormGroup>
-								<CLabel htmlFor="page">Horizontal Offset in grid</CLabel>
-								<CInput
-									name="page"
-									type="number"
-									step={1}
-									value={surfaceConfig.xOffset}
-									onChange={(e) => setSurfaceConfigValue('xOffset', parseInt(e.currentTarget.value))}
-								/>
-							</CFormGroup>
-							<CFormGroup>
-								<CLabel htmlFor="page">Vertical Offset in grid</CLabel>
-								<CInput
-									name="page"
-									type="number"
-									step={1}
-									value={surfaceConfig.yOffset}
-									onChange={(e) => setSurfaceConfigValue('yOffset', parseInt(e.currentTarget.value))}
-								/>
-							</CFormGroup>
-
-							{surfaceInfo.configFields?.includes('brightness') && (
-								<CFormGroup>
-									<CLabel htmlFor="brightness">Brightness</CLabel>
-									<CInput
-										name="brightness"
-										type="range"
-										min={0}
-										max={100}
-										step={1}
-										value={surfaceConfig.brightness}
-										onChange={(e) => setSurfaceConfigValue('brightness', parseInt(e.currentTarget.value))}
+								<CLabel>
+									Surface Group&nbsp;
+									<FontAwesomeIcon
+										icon={faQuestionCircle}
+										title="When in a group, surfaces will follow the page number of that group"
 									/>
-								</CFormGroup>
-							)}
-							{surfaceInfo.configFields?.includes('illuminate_pressed') && (
-								<CFormGroup>
-									<CLabel htmlFor="illuminate_pressed">Illuminate pressed buttons</CLabel>
-									<CInputCheckbox
-										name="illuminate_pressed"
-										type="checkbox"
-										checked={!!surfaceConfig.illuminate_pressed}
-										value={true}
-										onChange={(e) => setSurfaceConfigValue('illuminate_pressed', !!e.currentTarget.checked)}
-									/>
-								</CFormGroup>
-							)}
-
-							<CFormGroup>
-								<CLabel htmlFor="rotation">Button rotation</CLabel>
+								</CLabel>
 								<CSelect
-									name="rotation"
-									value={surfaceConfig.rotation}
-									onChange={(e) => {
-										const valueNumber = parseInt(e.currentTarget.value)
-										setSurfaceConfigValue('rotation', isNaN(valueNumber) ? e.currentTarget.value : valueNumber)
-									}}
+									name="surface-group"
+									value={surfaceInfo.groupId || 'null'}
+									onChange={(e) => setSurfaceGroupId(e.currentTarget.value)}
 								>
-									<option value="0">Normal</option>
-									<option value="surface-90">90 CCW</option>
-									<option value="surface90">90 CW</option>
-									<option value="surface180">180</option>
+									<option value="null">Standalone (Default)</option>
 
-									{surfaceInfo.configFields?.includes('legacy_rotation') && (
-										<>
-											<option value="-90">90 CCW (Legacy)</option>
-											<option value="90">90 CW (Legacy)</option>
-											<option value="180">180 (Legacy)</option>
-										</>
-									)}
+									{surfacesContext
+										.filter((group) => !group.isAutoGroup)
+										.map((group) => (
+											<option key={group.id} value={group.id}>
+												{group.displayName}
+											</option>
+										))}
 								</CSelect>
 							</CFormGroup>
-							{surfaceInfo.configFields?.includes('emulator_control_enable') && (
+						)}
+
+						{groupConfig && (
+							<>
 								<CFormGroup>
-									<CLabel htmlFor="emulator_control_enable">Enable support for Logitech R400/Mastercue/DSan</CLabel>
+									<CLabel htmlFor="use_last_page">Use Last Page At Startup</CLabel>
 									<CInputCheckbox
-										name="emulator_control_enable"
+										name="use_last_page"
 										type="checkbox"
-										checked={!!surfaceConfig.emulator_control_enable}
+										checked={!!groupConfig.use_last_page}
 										value={true}
-										onChange={(e) => setSurfaceConfigValue('emulator_control_enable', !!e.currentTarget.checked)}
+										onChange={(e) => setGroupConfigValue('use_last_page', !!e.currentTarget.checked)}
 									/>
 								</CFormGroup>
-							)}
-							{surfaceInfo.configFields?.includes('emulator_prompt_fullscreen') && (
 								<CFormGroup>
-									<CLabel htmlFor="emulator_prompt_fullscreen">Prompt to enter fullscreen</CLabel>
-									<CInputCheckbox
-										name="emulator_prompt_fullscreen"
-										type="checkbox"
-										checked={!!surfaceConfig.emulator_prompt_fullscreen}
-										value={true}
-										onChange={(e) => setSurfaceConfigValue('emulator_prompt_fullscreen', !!e.currentTarget.checked)}
-									/>
+									<CLabel htmlFor="startup_page">Startup Page</CLabel>
+
+									{InternalInstanceField(
+										PAGE_FIELD_SPEC,
+										false,
+										!!groupConfig.use_last_page,
+										groupConfig.startup_page,
+										(val) => setGroupConfigValue('startup_page', val)
+									)}
 								</CFormGroup>
-							)}
-							{surfaceInfo.configFields?.includes('videohub_page_count') && (
 								<CFormGroup>
-									<CLabel htmlFor="videohub_page_count">Page Count</CLabel>
+									<CLabel htmlFor="last_page">Current Page</CLabel>
+
+									{InternalInstanceField(PAGE_FIELD_SPEC, false, false, groupConfig.last_page, (val) =>
+										setGroupConfigValue('last_page', val)
+									)}
+								</CFormGroup>
+							</>
+						)}
+
+						{surfaceConfig && surfaceInfo && (
+							<>
+								{surfaceInfo.configFields?.includes('emulator_size') && (
+									<>
+										<CFormGroup>
+											<CLabel htmlFor="page">Row count</CLabel>
+											<CInput
+												name="emulator_rows"
+												type="number"
+												min={1}
+												step={1}
+												value={surfaceConfig.emulator_rows}
+												onChange={(e) => setSurfaceConfigValue('emulator_rows', parseInt(e.currentTarget.value))}
+											/>
+										</CFormGroup>
+										<CFormGroup>
+											<CLabel htmlFor="page">Column count</CLabel>
+											<CInput
+												name="emulator_columns"
+												type="number"
+												min={1}
+												step={1}
+												value={surfaceConfig.emulator_columns}
+												onChange={(e) => setSurfaceConfigValue('emulator_columns', parseInt(e.currentTarget.value))}
+											/>
+										</CFormGroup>
+									</>
+								)}
+
+								<CFormGroup>
+									<CLabel htmlFor="page">Horizontal Offset in grid</CLabel>
 									<CInput
-										name="videohub_page_count"
-										type="range"
-										min={0}
-										max={8}
-										step={2}
-										value={surfaceConfig.videohub_page_count}
-										onChange={(e) => setSurfaceConfigValue('videohub_page_count', parseInt(e.currentTarget.value))}
+										name="page"
+										type="number"
+										step={1}
+										value={surfaceConfig.xOffset}
+										onChange={(e) => setSurfaceConfigValue('xOffset', parseInt(e.currentTarget.value))}
 									/>
 								</CFormGroup>
-							)}
-							<CFormGroup>
-								<CLabel htmlFor="never_lock">Never Pin code lock</CLabel>
-								<CInputCheckbox
-									name="never_lock"
-									type="checkbox"
-									checked={!!surfaceConfig.never_lock}
-									value={true}
-									onChange={(e) => setSurfaceConfigValue('never_lock', !!e.currentTarget.checked)}
-								/>
-							</CFormGroup>
-						</>
-					)}
-				</CForm>
-			</CModalBody>
-			<CModalFooter>
-				<CButton color="secondary" onClick={doClose}>
-					Close
-				</CButton>
-			</CModalFooter>
+								<CFormGroup>
+									<CLabel htmlFor="page">Vertical Offset in grid</CLabel>
+									<CInput
+										name="page"
+										type="number"
+										step={1}
+										value={surfaceConfig.yOffset}
+										onChange={(e) => setSurfaceConfigValue('yOffset', parseInt(e.currentTarget.value))}
+									/>
+								</CFormGroup>
+
+								{surfaceInfo.configFields?.includes('brightness') && (
+									<CFormGroup>
+										<CLabel htmlFor="brightness">Brightness</CLabel>
+										<CInput
+											name="brightness"
+											type="range"
+											min={0}
+											max={100}
+											step={1}
+											value={surfaceConfig.brightness}
+											onChange={(e) => setSurfaceConfigValue('brightness', parseInt(e.currentTarget.value))}
+										/>
+									</CFormGroup>
+								)}
+								{surfaceInfo.configFields?.includes('illuminate_pressed') && (
+									<CFormGroup>
+										<CLabel htmlFor="illuminate_pressed">Illuminate pressed buttons</CLabel>
+										<CInputCheckbox
+											name="illuminate_pressed"
+											type="checkbox"
+											checked={!!surfaceConfig.illuminate_pressed}
+											value={true}
+											onChange={(e) => setSurfaceConfigValue('illuminate_pressed', !!e.currentTarget.checked)}
+										/>
+									</CFormGroup>
+								)}
+
+								<CFormGroup>
+									<CLabel htmlFor="rotation">Button rotation</CLabel>
+									<CSelect
+										name="rotation"
+										value={surfaceConfig.rotation}
+										onChange={(e) => {
+											const valueNumber = parseInt(e.currentTarget.value)
+											setSurfaceConfigValue('rotation', isNaN(valueNumber) ? e.currentTarget.value : valueNumber)
+										}}
+									>
+										<option value="0">Normal</option>
+										<option value="surface-90">90 CCW</option>
+										<option value="surface90">90 CW</option>
+										<option value="surface180">180</option>
+
+										{surfaceInfo.configFields?.includes('legacy_rotation') && (
+											<>
+												<option value="-90">90 CCW (Legacy)</option>
+												<option value="90">90 CW (Legacy)</option>
+												<option value="180">180 (Legacy)</option>
+											</>
+										)}
+									</CSelect>
+								</CFormGroup>
+								{surfaceInfo.configFields?.includes('emulator_control_enable') && (
+									<CFormGroup>
+										<CLabel htmlFor="emulator_control_enable">Enable support for Logitech R400/Mastercue/DSan</CLabel>
+										<CInputCheckbox
+											name="emulator_control_enable"
+											type="checkbox"
+											checked={!!surfaceConfig.emulator_control_enable}
+											value={true}
+											onChange={(e) => setSurfaceConfigValue('emulator_control_enable', !!e.currentTarget.checked)}
+										/>
+									</CFormGroup>
+								)}
+								{surfaceInfo.configFields?.includes('emulator_prompt_fullscreen') && (
+									<CFormGroup>
+										<CLabel htmlFor="emulator_prompt_fullscreen">Prompt to enter fullscreen</CLabel>
+										<CInputCheckbox
+											name="emulator_prompt_fullscreen"
+											type="checkbox"
+											checked={!!surfaceConfig.emulator_prompt_fullscreen}
+											value={true}
+											onChange={(e) => setSurfaceConfigValue('emulator_prompt_fullscreen', !!e.currentTarget.checked)}
+										/>
+									</CFormGroup>
+								)}
+								{surfaceInfo.configFields?.includes('videohub_page_count') && (
+									<CFormGroup>
+										<CLabel htmlFor="videohub_page_count">Page Count</CLabel>
+										<CInput
+											name="videohub_page_count"
+											type="range"
+											min={0}
+											max={8}
+											step={2}
+											value={surfaceConfig.videohub_page_count}
+											onChange={(e) => setSurfaceConfigValue('videohub_page_count', parseInt(e.currentTarget.value))}
+										/>
+									</CFormGroup>
+								)}
+								<CFormGroup>
+									<CLabel htmlFor="never_lock">Never Pin code lock</CLabel>
+									<CInputCheckbox
+										name="never_lock"
+										type="checkbox"
+										checked={!!surfaceConfig.never_lock}
+										value={true}
+										onChange={(e) => setSurfaceConfigValue('never_lock', !!e.currentTarget.checked)}
+									/>
+								</CFormGroup>
+							</>
+						)}
+					</CForm>
+				</CModalBody>
+				<CModalFooter>
+					<CButton color="secondary" onClick={doClose}>
+						Close
+					</CButton>
+				</CModalFooter>
+			</MenuPortalContext.Provider>
 		</CModal>
 	)
 })
