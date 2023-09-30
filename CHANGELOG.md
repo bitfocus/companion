@@ -27,6 +27,8 @@
 - Fix artnet listener
 - Handle presets where feedbacks options are undefined
 - Validate config path to import before importing
+- Fix sunrise/sunset triggers causing crash
+- Parsing variables containing `$` would result in incorrect output
 
 ### 🧩 NEW & UPDATED MODULES
 
