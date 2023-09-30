@@ -18,7 +18,7 @@ if (platformInfo.nodeArch) {
 	process.env.npm_config_target_arch = platformInfo.nodeArch
 }
 
-const nodeVersion = await fs.readFile('./dist/.node-version')
+const nodeVersion = (await fs.readFile('./dist/.node-version')).trim()
 const isZip = platformInfo.runtimePlatform === 'win'
 
 // Download and cache build of nodejs
