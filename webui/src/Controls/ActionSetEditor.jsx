@@ -150,7 +150,6 @@ export function ControlActionSetEditor({
 			<GenericConfirmModal ref={confirmModal} />
 			<ActionsList
 				location={location}
-				isOnControl={isOnControl}
 				controlId={controlId}
 				dragId={`${controlId}_actions`}
 				stepId={stepId}
