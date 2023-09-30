@@ -70,7 +70,11 @@ export const SurfacesPage = memo(function SurfacesPage() {
 	)
 
 	const configureDevice = useCallback((surfaceId) => {
-		editModalRef.current.show(surfaceId)
+		editModalRef.current.show(surfaceId, null)
+	}, [])
+
+	const configureGroup = useCallback((groupId) => {
+		editModalRef.current.show(null, groupId)
 	}, [])
 
 	const forgetDevice = useCallback(
@@ -164,7 +168,7 @@ export const SurfacesPage = memo(function SurfacesPage() {
 							<ManualGroupRow
 								key={group.id}
 								group={group}
-								configureGroup={configureDevice}
+								configureGroup={configureGroup}
 								deleteGroup={deleteGroup}
 								updateName={updateName}
 								configureDevice={configureDevice}
