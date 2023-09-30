@@ -651,16 +651,6 @@
   resolved "https://registry.yarnpkg.com/@socket.io/component-emitter/-/component-emitter-3.1.0.tgz#96116f2a912e0c02817345b3c10751069920d553"
   integrity sha512-+9jVqKhRSpsc591z5vX+X5Yyw+he/HCB4iQ/RYxw35CEPaY1gnsNE43nf9n9AaYjAQrTiI/mOwKUKdUs9vf7Xg==
 
-"@svrooij/sonos@^1.1.4":
-  version "1.2.3"
-  resolved "https://registry.yarnpkg.com/@svrooij/sonos/-/sonos-1.2.3.tgz#82ae4d11bfd2582b60db15f701e1264856e1f595"
-  integrity sha512-+n1spXbHdn+zz/BMlR6VZrGD7MUgRS4+g3pw64+q7FaBov/QJq3Jek//R4AAUOQN1xHf0SjDw82K+c+CYHK8Rw==
-  dependencies:
-    debug "^4.1.1"
-    fast-xml-parser "^3.16.0"
-    guid-typescript "^1.0.9"
-    node-fetch "^2.6.0"
-
 "@szmarczak/http-timer@^4.0.5":
   version "4.0.6"
   resolved "https://registry.yarnpkg.com/@szmarczak/http-timer/-/http-timer-4.0.6.tgz#b4a914bb62e7c272d4e5989fe4440f812ab1d807"
@@ -718,7 +708,7 @@
     "@types/node" "*"
     "@types/responselike" "*"
 
-"@types/debug@^4.1.5", "@types/debug@^4.1.7":
+"@types/debug@^4.1.7":
   version "4.1.7"
   resolved "https://registry.yarnpkg.com/@types/debug/-/debug-4.1.7.tgz#7cc0ea761509124709b8b2d1090d8f6c17aadb82"
   integrity sha512-9AonUzyTjXXhEOa0DnqpzZi6VHlqKMswga9EXjpXnnqxwLtdvPPtlO8evrI5D9S6asFRCQ6v+wpiUKbw+vKqyg==
@@ -803,7 +793,7 @@
     "@types/node" "*"
     form-data "^3.0.0"
 
-"@types/node@*", "@types/node@16.9.1", "@types/node@^12.20.13", "@types/node@^14", "@types/node@^14.14.31", "@types/node@^14.18.22", "@types/node@^18.7.20":
+"@types/node@*", "@types/node@16.9.1", "@types/node@^14", "@types/node@^14.14.31", "@types/node@^14.18.22", "@types/node@^18.7.20":
   version "14.18.33"
   resolved "https://registry.yarnpkg.com/@types/node/-/node-14.18.33.tgz#8c29a0036771569662e4635790ffa9e057db379b"
   integrity sha512-qelS/Ra6sacc4loe/3MSjXNL1dNQ/GjxNHVzuChwMfmk7HuycRLVQN2qNY3XahK+fZc5E2szqQSKUyAF0E+2bg==
@@ -2459,14 +2449,6 @@ commist@^1.0.0:
   version "1.0.2"
   resolved "https://codeload.github.com/bitfocus/companion-module-sonoran-coyote/tar.gz/b7117516b566d4c84099b091d619189af19f8578"
 
-"companion-module-sonos-speakers@github:bitfocus/companion-module-sonos-speakers#v0.2.3":
-  version "0.2.3"
-  resolved "https://codeload.github.com/bitfocus/companion-module-sonos-speakers/tar.gz/52d5c8b2e83903462b3de5b39b350ffd2fde5f58"
-  dependencies:
-    "@svrooij/sonos" "^1.1.4"
-    "@types/debug" "^4.1.5"
-    "@types/node" "^12.20.13"
-
 "companion-module-sony-broadcastmonitor@github:bitfocus/companion-module-sony-broadcastmonitor#v1.0.2":
   version "1.0.2"
   resolved "https://codeload.github.com/bitfocus/companion-module-sony-broadcastmonitor/tar.gz/29a4f119b2ba137b2a09db431eb6931dbad15e4c"
@@ -3309,7 +3291,7 @@ fast-levenshtein@^2.0.6, fast-levenshtein@~2.0.6:
   resolved "https://registry.yarnpkg.com/fast-levenshtein/-/fast-levenshtein-2.0.6.tgz#3d8a5c66883a16a30ca8643e851f19baa7797917"
   integrity sha1-PYpcZog6FqMMqGQ+hR8Zuqd5eRc=
 
-fast-xml-parser@^3.16.0, fast-xml-parser@^3.19.0:
+fast-xml-parser@^3.19.0:
   version "3.21.1"
   resolved "https://registry.yarnpkg.com/fast-xml-parser/-/fast-xml-parser-3.21.1.tgz#152a1d51d445380f7046b304672dd55d15c9e736"
   integrity sha512-FTFVjYoBOZTJekiUsawGsSYV9QL0A+zDYCRj7y34IO6Jg+2IMYEtQa+bbictpdpV8dHxXywqU7C0gRDEOFtBFg==
@@ -3726,11 +3708,6 @@ graphql@15.5.0:
   version "15.5.0"
   resolved "https://registry.yarnpkg.com/graphql/-/graphql-15.5.0.tgz#39d19494dbe69d1ea719915b578bf920344a69d5"
   integrity sha512-OmaM7y0kaK31NKG31q4YbD2beNYa6jBBKtMFT6gLYJljHLJr42IqJ8KX08u3Li/0ifzTU5HjmoOOrwa5BRLeDA==
-
-guid-typescript@^1.0.9:
-  version "1.0.9"
-  resolved "https://registry.yarnpkg.com/guid-typescript/-/guid-typescript-1.0.9.tgz#e35f77003535b0297ea08548f5ace6adb1480ddc"
-  integrity sha512-Y8T4vYhEfwJOTbouREvG+3XDsjr8E3kIr7uf+JZ0BYloFsttiHU0WfvANVsR7TxNUJa/WpCnw/Ino/p+DeBhBQ==
 
 har-schema@^2.0.0:
   version "2.0.0"
@@ -4656,7 +4633,7 @@ node-fetch@2.6.0:
   resolved "https://registry.yarnpkg.com/node-fetch/-/node-fetch-2.6.0.tgz#e633456386d4aa55863f676a7ab0daa8fdecb0fd"
   integrity sha512-8dG4H5ujfvFiqDmVu9fQ5bOHUC15JMjMY/Zumv26oOvvVJjM67KF8koCWIabKQ1GJIa9r2mMZscBq/TbdOcmNA==
 
-node-fetch@2.6.7, node-fetch@^2.0.0, node-fetch@^2.6.0, node-fetch@^2.6.7:
+node-fetch@2.6.7, node-fetch@^2.0.0, node-fetch@^2.6.7:
   version "2.6.7"
   resolved "https://registry.yarnpkg.com/node-fetch/-/node-fetch-2.6.7.tgz#24de9fba827e3b4ae44dc8b20256a379160052ad"
   integrity sha512-ZjMPFEfVx5j+y2yF35Kzx5sF7kDzxuDj6ziH4FFbOp87zKDZNx8yExJIb05OGF4Nlt9IHFIMBkRl41VdvcNdbQ==
