@@ -22,7 +22,7 @@ declare class Telnet extends EventEmitter {
 			reconnect_interval?: number
 			/** default true */
 			reconnect?: boolean
-		}
+		},
 	)
 
 	/** Force a reconnection attempt */

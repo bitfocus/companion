@@ -119,7 +119,7 @@ global.modulePkg = require('companion-module-${pkgJson.name}/package.json')
 global.moduleFactory = require('companion-module-${pkgJson.name}')
 global.moduleName = "${pkgJson.name}"
 import('../../dist/index.js')
-			`
+			`,
 		)
 	}
 }

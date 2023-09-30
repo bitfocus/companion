@@ -70,7 +70,7 @@ export interface CompanionAction {
 	 * The user requested to 'learn' the values for this action.
 	 */
 	learn?: (
-		action: CompanionActionEvent
+		action: CompanionActionEvent,
 	) => CompanionOptionValues | undefined | Promise<CompanionOptionValues | undefined>
 }
 export interface CompanionActionEvent {
@@ -223,7 +223,7 @@ export interface CompanionFeedbackBase<TRes> {
 	callback?: (
 		feedback: CompanionFeedbackEvent,
 		bank: CompanionBankPNG | null,
-		info: CompanionFeedbackEventInfo | null
+		info: CompanionFeedbackEventInfo | null,
 	) => TRes
 	subscribe?: (feedback: CompanionFeedbackEvent) => void
 	unsubscribe?: (feedback: CompanionFeedbackEvent) => void
@@ -232,7 +232,7 @@ export interface CompanionFeedbackBase<TRes> {
 	 * The user requested to 'learn' the values for this feedback.
 	 */
 	learn?: (
-		feedback: CompanionFeedbackEvent
+		feedback: CompanionFeedbackEvent,
 	) => CompanionOptionValues | undefined | Promise<CompanionOptionValues | undefined>
 }
 export interface CompanionFeedbackBoolean extends CompanionFeedbackBase<boolean> {
@@ -283,7 +283,7 @@ export type CompanionStaticUpgradeScript = (
 	context: CompanionUpgradeContext,
 	config: CompanionCoreInstanceconfig & Record<string, any>,
 	affected_actions: CompanionMigrationAction[],
-	affected_feedbacks: CompanionMigrationFeedback[]
+	affected_feedbacks: CompanionMigrationFeedback[],
 ) => boolean
 
 export interface CompanionUpgradeToBooleanFeedbackMap {

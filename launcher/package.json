@@ -11,7 +11,7 @@
 		"dev": "electron dev.js"
 	},
 	"dependencies": {
-		"@sentry/electron": "^4.8.0",
+		"@sentry/electron": "^4.11.0",
 		"chokidar": "^3.5.3",
 		"debounce-fn": "^4.0.0",
 		"electron-store": "^8.1.0",
@@ -22,13 +22,16 @@
 		"respawn": "link:../vendor/respawn",
 		"semver": "^7.5.4",
 		"strip-ansi": "^6.0.0",
-		"systeminformation": "^5.18.7"
+		"systeminformation": "^5.21.7"
 	},
 	"devDependencies": {
 		"@electron/notarize": "^2.1.0",
-		"electron": "^25.3.0",
-		"electron-builder": "^24.4.0",
+		"electron": "^25.8.1",
+		"electron-builder": "24.4.0",
 		"electron-reloader": "^1.2.3"
+	},
+	"resolutions": {
+		"app-builder-bin": "npm:@julusian/app-builder-bin#v4.0.1"
 	},
 	"build": {
 		"productName": "Companion",

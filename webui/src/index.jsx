@@ -1,6 +1,7 @@
 /* eslint-disable import/first */
 
 import '@fontsource/roboto'
+import '@fontsource/fira-code'
 import './App.scss'
 import './Constants'
 

@@ -20,6 +20,7 @@ For checking known bugs or reporting of potential bugs, please use the [issue sy
 
 **Donations**
 
+- https://opencollective.com/companion
 - https://donorbox.org/bitfocus-opensource
 
 ## Modules (Supported devices/software)

@@ -227,7 +227,11 @@ export const PrimaryButtonGridIcon = memo(function PrimaryButtonGridIcon({ ...pr
 })
 
 export const ButtonGridIcon = memo(function ButtonGridIcon({ ...props }) {
-	const { image, isUsed } = useButtonRenderCache({ pageNumber: props.pageNumber, column: props.column, row: props.row })
+	const { image, isUsed } = useButtonRenderCache({
+		pageNumber: Number(props.pageNumber),
+		column: props.column,
+		row: props.row,
+	})
 
 	return <ButtonGridIconBase {...props} image={isUsed ? image : null} />
 })

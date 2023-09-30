@@ -651,16 +651,6 @@
   resolved "https://registry.yarnpkg.com/@socket.io/component-emitter/-/component-emitter-3.1.0.tgz#96116f2a912e0c02817345b3c10751069920d553"
   integrity sha512-+9jVqKhRSpsc591z5vX+X5Yyw+he/HCB4iQ/RYxw35CEPaY1gnsNE43nf9n9AaYjAQrTiI/mOwKUKdUs9vf7Xg==
 
-"@svrooij/sonos@^1.1.4":
-  version "1.2.3"
-  resolved "https://registry.yarnpkg.com/@svrooij/sonos/-/sonos-1.2.3.tgz#82ae4d11bfd2582b60db15f701e1264856e1f595"
-  integrity sha512-+n1spXbHdn+zz/BMlR6VZrGD7MUgRS4+g3pw64+q7FaBov/QJq3Jek//R4AAUOQN1xHf0SjDw82K+c+CYHK8Rw==
-  dependencies:
-    debug "^4.1.1"
-    fast-xml-parser "^3.16.0"
-    guid-typescript "^1.0.9"
-    node-fetch "^2.6.0"
-
 "@szmarczak/http-timer@^4.0.5":
   version "4.0.6"
   resolved "https://registry.yarnpkg.com/@szmarczak/http-timer/-/http-timer-4.0.6.tgz#b4a914bb62e7c272d4e5989fe4440f812ab1d807"
@@ -718,7 +708,7 @@
     "@types/node" "*"
     "@types/responselike" "*"
 
-"@types/debug@^4.1.5", "@types/debug@^4.1.7":
+"@types/debug@^4.1.7":
   version "4.1.7"
   resolved "https://registry.yarnpkg.com/@types/debug/-/debug-4.1.7.tgz#7cc0ea761509124709b8b2d1090d8f6c17aadb82"
   integrity sha512-9AonUzyTjXXhEOa0DnqpzZi6VHlqKMswga9EXjpXnnqxwLtdvPPtlO8evrI5D9S6asFRCQ6v+wpiUKbw+vKqyg==
@@ -803,7 +793,7 @@
     "@types/node" "*"
     form-data "^3.0.0"
 
-"@types/node@*", "@types/node@16.9.1", "@types/node@^12.20.13", "@types/node@^14", "@types/node@^14.14.31", "@types/node@^14.18.22", "@types/node@^18.7.20":
+"@types/node@*", "@types/node@16.9.1", "@types/node@^14", "@types/node@^14.14.31", "@types/node@^14.18.22", "@types/node@^18.7.20":
   version "14.18.33"
   resolved "https://registry.yarnpkg.com/@types/node/-/node-14.18.33.tgz#8c29a0036771569662e4635790ffa9e057db379b"
   integrity sha512-qelS/Ra6sacc4loe/3MSjXNL1dNQ/GjxNHVzuChwMfmk7HuycRLVQN2qNY3XahK+fZc5E2szqQSKUyAF0E+2bg==
@@ -1602,10 +1592,6 @@ commist@^1.0.0:
   version "1.0.0"
   resolved "https://codeload.github.com/bitfocus/companion-module-adder-xdip/tar.gz/cc55c78aaaed3eeda71c7da7a7783fbbb5bb97f0"
 
-"companion-module-allenheath-ahm@github:bitfocus/companion-module-allenheath-ahm#v1.0.3":
-  version "1.0.2"
-  resolved "https://codeload.github.com/bitfocus/companion-module-allenheath-ahm/tar.gz/c15fd1e16bbf116d40026b73d73fa9a79cbcd55e"
-
 "companion-module-allenheath-avantis@github:bitfocus/companion-module-allenheath-avantis#v1.0.0":
   version "1.0.0"
   resolved "https://codeload.github.com/bitfocus/companion-module-allenheath-avantis/tar.gz/1dfb4814f09cd6c4436a3c3702ec62bc96a10e59"
@@ -1761,10 +1747,6 @@ commist@^1.0.0:
 "companion-module-bmd-multiview4@github:bitfocus/companion-module-bmd-multiview4#v1.3.5":
   version "1.3.5"
   resolved "https://codeload.github.com/bitfocus/companion-module-bmd-multiview4/tar.gz/0267e183560f8917374e6cd7943893f508867c5c"
-
-"companion-module-bmd-teranex@github:bitfocus/companion-module-bmd-teranex#v1.0.9":
-  version "1.0.9"
-  resolved "https://codeload.github.com/bitfocus/companion-module-bmd-teranex/tar.gz/2390f1c3f76ae82fdcc47e25ae05d0520af5e485"
 
 "companion-module-bmd-videohub@github:bitfocus/companion-module-bmd-videohub#v1.4.0":
   version "1.4.0"
@@ -2000,14 +1982,6 @@ commist@^1.0.0:
   version "1.0.5"
   resolved "https://codeload.github.com/bitfocus/companion-module-generic-swp08/tar.gz/6f8bd9aeea1d8ca50da24fa3d993e4d2ed822f0d"
 
-"companion-module-globalcache-itac-ir@github:bitfocus/companion-module-globalcache-itac-ir#v1.0.7":
-  version "1.0.7"
-  resolved "https://codeload.github.com/bitfocus/companion-module-globalcache-itac-ir/tar.gz/ca25859306d887cfe8a8b88f910f3f2f61019e80"
-
-"companion-module-globalcache-itac-sl@github:bitfocus/companion-module-globalcache-itac-sl#v1.0.6":
-  version "1.0.6"
-  resolved "https://codeload.github.com/bitfocus/companion-module-globalcache-itac-sl/tar.gz/9481a73496b8b94c09aec818d62b940e96e95d22"
-
 "companion-module-greenhippo-hippotizer@github:bitfocus/companion-module-greenhippo-hippotizer#v1.0.4":
   version "1.0.4"
   resolved "https://codeload.github.com/bitfocus/companion-module-greenhippo-hippotizer/tar.gz/d9bcdfaa8bbeef4001d83fe8685cf181471d89ad"
@@ -2068,10 +2042,6 @@ commist@^1.0.0:
 "companion-module-joy-playdeck@github:bitfocus/companion-module-joy-playdeck#v1.0.2":
   version "1.0.2"
   resolved "https://codeload.github.com/bitfocus/companion-module-joy-playdeck/tar.gz/f854d9662c452c2715c79bf142b257a3790fa14f"
-
-"companion-module-jozeemedia-jcounter@github:bitfocus/companion-module-jozeemedia-jcounter#v1.0.1":
-  version "1.0.1"
-  resolved "https://codeload.github.com/bitfocus/companion-module-jozeemedia-jcounter/tar.gz/258db4d8ce5b4b8d1e869c58cc66f519aebaf03e"
 
 "companion-module-jvc-ptz@github:bitfocus/companion-module-jvc-ptz#v1.1.0":
   version "1.1.0"
@@ -2479,14 +2449,6 @@ commist@^1.0.0:
   version "1.0.2"
   resolved "https://codeload.github.com/bitfocus/companion-module-sonoran-coyote/tar.gz/b7117516b566d4c84099b091d619189af19f8578"
 
-"companion-module-sonos-speakers@github:bitfocus/companion-module-sonos-speakers#v0.2.3":
-  version "0.2.3"
-  resolved "https://codeload.github.com/bitfocus/companion-module-sonos-speakers/tar.gz/52d5c8b2e83903462b3de5b39b350ffd2fde5f58"
-  dependencies:
-    "@svrooij/sonos" "^1.1.4"
-    "@types/debug" "^4.1.5"
-    "@types/node" "^12.20.13"
-
 "companion-module-sony-broadcastmonitor@github:bitfocus/companion-module-sony-broadcastmonitor#v1.0.2":
   version "1.0.2"
   resolved "https://codeload.github.com/bitfocus/companion-module-sony-broadcastmonitor/tar.gz/29a4f119b2ba137b2a09db431eb6931dbad15e4c"
@@ -2572,10 +2534,6 @@ commist@^1.0.0:
   version "1.0.1"
   resolved "https://codeload.github.com/bitfocus/companion-module-tvone-corio/tar.gz/0f1adbe3241f177d5b97c78286561b6a87ddb9fc"
 
-"companion-module-utahscientific-bpspanel@github:bitfocus/companion-module-utahscientific-bpspanel#v1.0.2":
-  version "1.0.2"
-  resolved "https://codeload.github.com/bitfocus/companion-module-utahscientific-bpspanel/tar.gz/1db51a503e35371fb157d72bc5a06597419aa82e"
-
 "companion-module-vdwall-lvp615@github:bitfocus/companion-module-vdwall-lvp615#v1.0.0":
   version "1.0.0"
   resolved "https://codeload.github.com/bitfocus/companion-module-vdwall-lvp615/tar.gz/067bd3c68d9d68510b3b72c646a3d4c6ba31cae0"
@@ -2623,10 +2581,6 @@ commist@^1.0.0:
 "companion-module-xiamen-sprolink-vd-series@github:bitfocus/companion-module-xiamen-sprolink-vd-series#v1.0.3":
   version "1.0.3"
   resolved "https://codeload.github.com/bitfocus/companion-module-xiamen-sprolink-vd-series/tar.gz/165183eb0c56cdbfc17f24a1920cbb384c192efc"
-
-"companion-module-zenvideo-ndirouter@github:bitfocus/companion-module-zenvideo-ndirouter#v1.0.2":
-  version "1.0.2"
-  resolved "https://codeload.github.com/bitfocus/companion-module-zenvideo-ndirouter/tar.gz/0e0a57e7b2da97f609cc779fff21ff87d47183ba"
 
 component-bind@1.0.0:
   version "1.0.0"
@@ -3337,7 +3291,7 @@ fast-levenshtein@^2.0.6, fast-levenshtein@~2.0.6:
   resolved "https://registry.yarnpkg.com/fast-levenshtein/-/fast-levenshtein-2.0.6.tgz#3d8a5c66883a16a30ca8643e851f19baa7797917"
   integrity sha1-PYpcZog6FqMMqGQ+hR8Zuqd5eRc=
 
-fast-xml-parser@^3.16.0, fast-xml-parser@^3.19.0:
+fast-xml-parser@^3.19.0:
   version "3.21.1"
   resolved "https://registry.yarnpkg.com/fast-xml-parser/-/fast-xml-parser-3.21.1.tgz#152a1d51d445380f7046b304672dd55d15c9e736"
   integrity sha512-FTFVjYoBOZTJekiUsawGsSYV9QL0A+zDYCRj7y34IO6Jg+2IMYEtQa+bbictpdpV8dHxXywqU7C0gRDEOFtBFg==
@@ -3754,11 +3708,6 @@ graphql@15.5.0:
   version "15.5.0"
   resolved "https://registry.yarnpkg.com/graphql/-/graphql-15.5.0.tgz#39d19494dbe69d1ea719915b578bf920344a69d5"
   integrity sha512-OmaM7y0kaK31NKG31q4YbD2beNYa6jBBKtMFT6gLYJljHLJr42IqJ8KX08u3Li/0ifzTU5HjmoOOrwa5BRLeDA==
-
-guid-typescript@^1.0.9:
-  version "1.0.9"
-  resolved "https://registry.yarnpkg.com/guid-typescript/-/guid-typescript-1.0.9.tgz#e35f77003535b0297ea08548f5ace6adb1480ddc"
-  integrity sha512-Y8T4vYhEfwJOTbouREvG+3XDsjr8E3kIr7uf+JZ0BYloFsttiHU0WfvANVsR7TxNUJa/WpCnw/Ino/p+DeBhBQ==
 
 har-schema@^2.0.0:
   version "2.0.0"
@@ -4684,7 +4633,7 @@ node-fetch@2.6.0:
   resolved "https://registry.yarnpkg.com/node-fetch/-/node-fetch-2.6.0.tgz#e633456386d4aa55863f676a7ab0daa8fdecb0fd"
   integrity sha512-8dG4H5ujfvFiqDmVu9fQ5bOHUC15JMjMY/Zumv26oOvvVJjM67KF8koCWIabKQ1GJIa9r2mMZscBq/TbdOcmNA==
 
-node-fetch@2.6.7, node-fetch@^2.0.0, node-fetch@^2.6.0, node-fetch@^2.6.7:
+node-fetch@2.6.7, node-fetch@^2.0.0, node-fetch@^2.6.7:
   version "2.6.7"
   resolved "https://registry.yarnpkg.com/node-fetch/-/node-fetch-2.6.7.tgz#24de9fba827e3b4ae44dc8b20256a379160052ad"
   integrity sha512-ZjMPFEfVx5j+y2yF35Kzx5sF7kDzxuDj6ziH4FFbOp87zKDZNx8yExJIb05OGF4Nlt9IHFIMBkRl41VdvcNdbQ==
