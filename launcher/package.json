@@ -22,7 +22,7 @@
 		"respawn": "link:../vendor/respawn",
 		"semver": "^7.5.4",
 		"strip-ansi": "^6.0.0",
-		"systeminformation": "^5.21.6"
+		"systeminformation": "^5.21.7"
 	},
 	"devDependencies": {
 		"@electron/notarize": "^2.1.0",

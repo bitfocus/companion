@@ -150,6 +150,7 @@ export function ControlActionSetEditor({
 			<GenericConfirmModal ref={confirmModal} />
 			<ActionsList
 				location={location}
+				isOnControl={isOnControl}
 				controlId={controlId}
 				dragId={`${controlId}_actions`}
 				stepId={stepId}
@@ -432,7 +433,7 @@ function ActionTableRow({
 				<FontAwesomeIcon icon={faSort} />
 			</td>
 			<td style={{ paddingRight: 0 }}>
-				<div className="editor-grid">
+				<div className="editor-grid-header">
 					<div className="cell-name">{name}</div>
 
 					<div className="cell-controls">
@@ -465,72 +466,66 @@ function ActionTableRow({
 							)}
 						</CButtonGroup>
 					</div>
-
-					{!isCollapsed && (
-						<>
-							<div className="cell-description">{actionSpec?.description || ''}</div>
-
-							{location && showButtonPreview && (
-								<div className="cell-bank-preview">
-									<OptionButtonPreview location={location} options={action.options} />
-								</div>
-							)}
-
-							<div className="cell-delay">
-								<CForm onSubmit={PreventDefaultHandler}>
-									<label>Delay</label>
-									<CInputGroup>
-										<NumberInputField
-											min={0}
-											step={10}
-											disabled={readonly}
-											value={action.delay}
-											setValue={innerDelay}
-										/>
-										<CInputGroupAppend>
-											<CInputGroupText>ms</CInputGroupText>
-										</CInputGroupAppend>
-									</CInputGroup>
-								</CForm>
-							</div>
-
-							<div className="cell-actions">
-								{actionSpec?.hasLearn && (
-									<CButton
-										disabled={readonly}
-										color="info"
-										size="sm"
-										onClick={innerLearn}
-										title="Capture the current values from the device"
-									>
-										Learn
-									</CButton>
-								)}
-							</div>
-
-							<div className="cell-option">
-								<CForm onSubmit={PreventDefaultHandler}>
-									{options.map((opt, i) => (
-										<MyErrorBoundary key={i}>
-											<OptionsInputField
-												key={i}
-												isOnControl={!!location}
-												isAction={true}
-												instanceId={action.instance}
-												option={opt}
-												actionId={action.id}
-												value={(action.options || {})[opt.id]}
-												setValue={setValue}
-												visibility={optionVisibility[opt.id]}
-												readonly={readonly}
-											/>
-										</MyErrorBoundary>
-									))}
-								</CForm>
-							</div>
-						</>
-					)}
 				</div>
+
+				{!isCollapsed && (
+					<div className="editor-grid">
+						<div className="cell-description">{actionSpec?.description || ''}</div>
+
+						{location && showButtonPreview && (
+							<div className="cell-bank-preview">
+								<OptionButtonPreview location={location} options={action.options} />
+							</div>
+						)}
+
+						<div className="cell-delay">
+							<CForm onSubmit={PreventDefaultHandler}>
+								<label>Delay</label>
+								<CInputGroup>
+									<NumberInputField min={0} step={10} disabled={readonly} value={action.delay} setValue={innerDelay} />
+									<CInputGroupAppend>
+										<CInputGroupText>ms</CInputGroupText>
+									</CInputGroupAppend>
+								</CInputGroup>
+							</CForm>
+						</div>
+
+						<div className="cell-actions">
+							{actionSpec?.hasLearn && (
+								<CButton
+									disabled={readonly}
+									color="info"
+									size="sm"
+									onClick={innerLearn}
+									title="Capture the current values from the device"
+								>
+									Learn
+								</CButton>
+							)}
+						</div>
+
+						<div className="cell-option">
+							<CForm onSubmit={PreventDefaultHandler}>
+								{options.map((opt, i) => (
+									<MyErrorBoundary key={i}>
+										<OptionsInputField
+											key={i}
+											isOnControl={!!location}
+											isAction={true}
+											instanceId={action.instance}
+											option={opt}
+											actionId={action.id}
+											value={(action.options || {})[opt.id]}
+											setValue={setValue}
+											visibility={optionVisibility[opt.id]}
+											readonly={readonly}
+										/>
+									</MyErrorBoundary>
+								))}
+							</CForm>
+						</div>
+					</div>
+				)}
 			</td>
 		</tr>
 	)

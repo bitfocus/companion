@@ -55,7 +55,15 @@ export function InternalInstanceField(option, isOnControl, readonly, value, setV
 				/>
 			)
 		case 'internal:trigger':
-			return <InternalTriggerDropdown disabled={readonly} value={value} setValue={setValue} />
+			return (
+				<InternalTriggerDropdown
+					disabled={readonly}
+					isOnControl={isOnControl}
+					value={value}
+					setValue={setValue}
+					includeSelf={option.includeSelf}
+				/>
+			)
 		case 'internal:time':
 			return <InternalTimePicker disabled={readonly} value={value} setValue={setValue} />
 		default:
@@ -201,11 +209,15 @@ function InternalSurfaceBySerialDropdown({ isOnControl, value, setValue, disable
 	return <DropdownInputField disabled={disabled} value={value} choices={choices} multiple={false} setValue={setValue} />
 }
 
-function InternalTriggerDropdown({ value, setValue, disabled }) {
+function InternalTriggerDropdown({ isOnControl, value, setValue, disabled, includeSelf }) {
 	const context = useContext(TriggersContext)
 
 	const choices = useMemo(() => {
 		const choices = []
+		if (!isOnControl && includeSelf) {
+			choices.push({ id: 'self', label: 'Current trigger' })
+		}
+
 		for (const [id, trigger] of Object.entries(context)) {
 			choices.push({
 				id: id,
@@ -213,7 +225,7 @@ function InternalTriggerDropdown({ value, setValue, disabled }) {
 			})
 		}
 		return choices
-	}, [context])
+	}, [context, isOnControl, includeSelf])
 
 	return <DropdownInputField disabled={disabled} value={value} choices={choices} multiple={false} setValue={setValue} />
 }

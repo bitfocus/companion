@@ -702,6 +702,26 @@ if (!lock) {
 				}
 			})
 
+			let isLocked = false
+			electron.powerMonitor.on('lock-screen', () => {
+				isLocked = true
+				if (child && child.child) {
+					child.child.send({
+						messageType: 'lock-screen',
+						status: true,
+					})
+				}
+			})
+			electron.powerMonitor.on('unlock-screen', () => {
+				isLocked = false
+				if (child && child.child) {
+					child.child.send({
+						messageType: 'lock-screen',
+						status: false,
+					})
+				}
+			})
+
 			let restartCounter = 0
 			let crashTimeout = null
 
@@ -750,6 +770,13 @@ if (!lock) {
 			)
 			child.on('start', () => {
 				customLog(`Companion process started`, 'Application')
+
+				if (isLocked) {
+					child.child.send({
+						messageType: 'lock-screen',
+						status: isLocked,
+					})
+				}
 			})
 			child.on('stop', () => {
 				customLog(`Companion process stopped`, 'Application')
