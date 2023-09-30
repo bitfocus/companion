@@ -241,10 +241,11 @@ export const SurfaceEditModal = forwardRef(function SurfaceEditModal(_props, ref
 								/>
 							</CFormGroup>
 							<CFormGroup>
-								<CLabel htmlFor="page">Startup Page</CLabel>
+								<CLabel htmlFor="startup_page">Startup Page</CLabel>
+
 								<CInput
 									disabled={!!groupConfig.use_last_page}
-									name="page"
+									name="startup_page"
 									type="range"
 									min={1}
 									max={99}
@@ -253,6 +254,20 @@ export const SurfaceEditModal = forwardRef(function SurfaceEditModal(_props, ref
 									onChange={(e) => setGroupConfigValue('startup_page', parseInt(e.currentTarget.value))}
 								/>
 								<span>{groupConfig.startup_page}</span>
+							</CFormGroup>
+							<CFormGroup>
+								<CLabel htmlFor="last_page">Current Page</CLabel>
+
+								<CInput
+									name="last_page"
+									type="range"
+									min={1}
+									max={99}
+									step={1}
+									value={groupConfig.last_page}
+									onChange={(e) => setGroupConfigValue('last_page', parseInt(e.currentTarget.value))}
+								/>
+								<span>{groupConfig.last_page}</span>
 							</CFormGroup>
 						</>
 					)}
