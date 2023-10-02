@@ -1,0 +1,15 @@
+{
+	"extends": "./module-legacy/node_modules/@companion-module/tools/tsconfig/node18/recommended",
+	"include": ["lib/**/*.js"],
+	"exclude": ["node_modules/**", "src/**/*spec.ts", "src/**/__tests__/*", "src/**/__mocks__/*"],
+	"compilerOptions": {
+		"outDir": "./dist",
+		"baseUrl": "./",
+		"paths": {
+			"*": ["./node_modules/*"]
+		},
+		"module": "ES2022",
+		"allowJs": true,
+		"strictPropertyInitialization": false
+	}
+}
