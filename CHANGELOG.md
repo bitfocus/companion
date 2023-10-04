@@ -1,6 +1,6 @@
 # Bitfocus Companion
 
-## Companion v3.1.0 - Release Notes (unreleased)
+## Companion v3.1.0 - Release Notes
 
 ### 📣 CORE FEATURES AND IMPROVEMENTS
 
@@ -31,6 +31,72 @@
 - Parsing variables containing `$` would result in incorrect output
 
 ### 🧩 NEW & UPDATED MODULES
+
+- agf-characterworks
+- aja-helo
+- allenheath-ahm
+- analogway-midra
+- aws-elementallive
+- barco-eventmaster
+- birddog-ptz
+- bmd-atem
+- bmd-teranex
+- bmd-videohub
+- bmd-webpresenter
+- bytehive-playoutbee
+- canon-ptz
+- christie-spyder
+- dashare-multiplay
+- figure53-qlab-advance
+- generic-http
+- generic-pjlink
+- generic-sacn
+- generic-tcp-serial
+- generic-timezone
+- getontime-ontime
+- glensound-divine
+- globalcache-itac-ir
+- globalcache-itac-sl
+- iccms-sib
+- jozeemedia-jcounter
+- lea-amplifier
+- leolabs-ableset
+- leonreucher-vstopowerpoint
+- magnimage-mig-ec
+- microsoft-teams
+- monospace-lightkey
+- netgear-avline
+- netio-powerbox
+- newtek-tricaster
+- novastar-coex
+- novastar-controller
+- novastar-d12
+- openweather-rest
+- panasonic-kairos
+- panasonic-panapod
+- panasonic-ptz
+- pixelhue-fseries
+- pnh-opencountdown
+- presentationtools-aps
+- presentationtools-cuetimer
+- shelly-http
+- shelly-ws
+- shure-mxw
+- skaarhoj-rawpanel
+- sonos-speakers
+- squared-powerlink
+- telegram-bot
+- tellyo-streamstudio
+- tesla-smart
+- tesmart-hdmimatrix
+- tslproducts-umd
+- utahscientific-bpspanel
+- videolan-vlc
+- visualproductions-timecore
+- wled-websocket
+- youtube-live
+- zenvideo-ndirouter
+- zoom-osc-iso
 
 ## Companion v3.0.1 - Release Notes
 
