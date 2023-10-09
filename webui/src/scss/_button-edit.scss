@@ -23,9 +23,20 @@
 
 		svg {
 			margin-left: 5px;
+		}
 
-			&.feature-icon {
-				margin-left: 3px;
+		.feature-icons {
+			background-color: #ddd;
+			border-radius: 50%;
+
+			margin-left: 3px;
+
+			padding-left: 3px;
+			padding-right: 3px;
+
+			svg {
+				margin-left: 2px;
+				margin-right: 2px;
 
 				font-size: 0.8rem;
 			}

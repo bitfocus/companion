@@ -132,13 +132,15 @@ export function OptionsInputField({
 		control = <CInputGroupText>Unknown type "{option.type}"</CInputGroupText>
 	}
 
+	const featureIcons = []
+	if (features.variables)
+		featureIcons.push(<FontAwesomeIcon key="variables" icon={faDollarSign} title={'Supports variables'} />)
+
 	return (
 		<CFormGroup style={{ display: visibility === false ? 'none' : null }}>
 			<CLabel>
 				{option.label}
-				{features.variables && (
-					<FontAwesomeIcon className="feature-icon" icon={faDollarSign} title={'Supports variables'} />
-				)}
+				{featureIcons.length && <span className="feature-icons">{featureIcons}</span>}
 				{option.tooltip && <FontAwesomeIcon icon={faQuestionCircle} title={option.tooltip} />}
 			</CLabel>
 			{control}
