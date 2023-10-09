@@ -1,5 +1,13 @@
 # Bitfocus Companion
 
+## Companion v3.1.1 - Release Notes
+
+### 🐞 BUG FIXES
+
+- Fix Companion importing confir from 2.4 instead of 3.0 at first start of 3.1
+- Companion cloud buttons missing some status fields
+- Update pngjs to improve draw performance
+
 ## Companion v3.1.0 - Release Notes
 
 ### 📣 CORE FEATURES AND IMPROVEMENTS
