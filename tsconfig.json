@@ -11,6 +11,7 @@
 		"module": "Node16",
 		"moduleResolution": "Node16",
 		"allowJs": true,
+		"checkJs": false,
 		"strictPropertyInitialization": false
 	}
 }
