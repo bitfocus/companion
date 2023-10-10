@@ -140,7 +140,7 @@ export function OptionsInputField({
 		<CFormGroup style={{ display: visibility === false ? 'none' : null }}>
 			<CLabel>
 				{option.label}
-				{featureIcons.length && <span className="feature-icons">{featureIcons}</span>}
+				{featureIcons.length ? <span className="feature-icons">{featureIcons}</span> : ''}
 				{option.tooltip && <FontAwesomeIcon icon={faQuestionCircle} title={option.tooltip} />}
 			</CLabel>
 			{control}
