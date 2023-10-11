@@ -11,7 +11,7 @@
 		"dev": "electron dev.js"
 	},
 	"dependencies": {
-		"@sentry/electron": "^4.11.0",
+		"@sentry/electron": "^4.13.0",
 		"chokidar": "^3.5.3",
 		"debounce-fn": "^4.0.0",
 		"electron-store": "^8.1.0",
@@ -22,11 +22,11 @@
 		"respawn": "link:../vendor/respawn",
 		"semver": "^7.5.4",
 		"strip-ansi": "^6.0.0",
-		"systeminformation": "^5.21.7"
+		"systeminformation": "^5.21.11"
 	},
 	"devDependencies": {
 		"@electron/notarize": "^2.1.0",
-		"electron": "^25.8.1",
+		"electron": "^25.9.1",
 		"electron-builder": "24.4.0",
 		"electron-reloader": "^1.2.3"
 	},
@@ -67,7 +67,7 @@
 			"installerIcon": "icon.ico",
 			"installerSidebar": "compinst.bmp",
 			"uninstallerSidebar": "compinst.bmp",
-      		"include": "windows/installer.nsi"
+			"include": "windows/installer.nsi"
 		},
 		"directories": {
 			"buildResources": "assets/",
