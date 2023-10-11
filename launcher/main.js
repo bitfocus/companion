@@ -632,6 +632,7 @@ if (!lock) {
 							const dirname = ConfigReleaseDirs[i]
 							if (dirname && fs.existsSync(path.join(configDir, dirname, 'db'))) {
 								importFrom = dirname
+								break
 							}
 						}
 						if (!importFrom && fs.existsSync(path.join(configDir, 'db'))) {
