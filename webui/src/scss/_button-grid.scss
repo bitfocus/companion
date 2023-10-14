@@ -1,11 +1,15 @@
 .button-grid-header {
 	display: grid;
-	grid-template-columns: auto 2fr 1fr;
+	grid-template-columns: 1fr auto;
 	column-gap: 5px;
 	padding: 10px 0;
 
-	.input-group {
-		// width: 150px;
+	.button-page-input {
+		flex-grow: 1;
+	}
+
+	.right-buttons .btn {
+		margin-top: 0;
 	}
 }
 
