@@ -146,6 +146,7 @@ program.command('start', { isDefault: true, hidden: true }).action(() => {
 			if (fs.existsSync(previousDbPath)) {
 				// Found the one to copy
 				fs.copyFileSync(previousDbPath, path.join(configDir, 'db'))
+				break
 			}
 		}
 	}

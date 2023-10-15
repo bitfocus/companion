@@ -166,17 +166,19 @@ export const ButtonsGridPanel = memo(function ButtonsPage({
 
 				<CRow innerRef={setSizeRef}>
 					<CCol sm={12}>
-						<CButton color="light" onClick={showExportModal} title="Export page" className="btn-right">
-							<FontAwesomeIcon icon={faFileExport} />
-							{useCompactButtons ? '' : 'Export page'}
-						</CButton>
-						<CButton color="light" onClick={resetPosition} title="Home Position" className="btn-right">
-							<FontAwesomeIcon icon={faHome} /> {useCompactButtons ? '' : 'Home Position'}
-						</CButton>
-						<CButton color="light" onClick={configurePage} title="Rename Page" className="btn-right">
-							<FontAwesomeIcon icon={faPencil} /> {useCompactButtons ? '' : 'Rename Page'}
-						</CButton>
-						<ButtonGridHeader pageNumber={pageNumber} changePage={changePage2} setPage={setPage} />
+						<ButtonGridHeader pageNumber={pageNumber} changePage={changePage2} setPage={setPage}>
+							<CButton color="light" onClick={showExportModal} title="Export page" className="btn-right">
+								<FontAwesomeIcon icon={faFileExport} />
+								&nbsp;
+								{useCompactButtons ? '' : 'Export page'}
+							</CButton>
+							<CButton color="light" onClick={resetPosition} title="Home Position" className="btn-right">
+								<FontAwesomeIcon icon={faHome} /> {useCompactButtons ? '' : 'Home Position'}
+							</CButton>
+							<CButton color="light" onClick={configurePage} title="Edit Page" className="btn-right">
+								<FontAwesomeIcon icon={faPencil} /> {useCompactButtons ? '' : 'Edit Page'}
+							</CButton>
+						</ButtonGridHeader>
 					</CCol>
 				</CRow>
 			</div>
@@ -278,6 +280,8 @@ const EditPagePropertiesModal = forwardRef(function EditPagePropertiesModal(prop
 						<CLabel>Name</CLabel>
 						<CInput type="text" value={pageName || ''} onChange={onNameChange} />
 					</CFormGroup>
+
+					<CAlert color="info">You can use resize the grid in the Settings tab</CAlert>
 				</CForm>
 			</CModalBody>
 			<CModalFooter>
