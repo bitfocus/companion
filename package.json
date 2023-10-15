@@ -103,6 +103,7 @@
 		"utf-8-validate": "^6.0.3",
 		"videohub-server": "^0.3.0",
 		"winston": "^3.11.0",
+		"workerpool": "^6.5.1",
 		"ws": "^8.14.2",
 		"xkeys": "npm:@julusian/xkeys@2.5.0-1"
 	},
