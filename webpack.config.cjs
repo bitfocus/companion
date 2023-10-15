@@ -11,6 +11,7 @@ module.exports = {
 	entry: {
 		main: './main.js',
 		// Handler: './lib/Surface/USB/Handler.js',
+		RenderThread: './lib/Graphics/Thread.js',
 	},
 	mode: 'production',
 	devtool: sentryAuthToken ? 'source-map' : undefined,
