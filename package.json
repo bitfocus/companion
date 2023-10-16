@@ -39,6 +39,7 @@
 	"devDependencies": {
 		"@sentry/webpack-plugin": "^2.8.0",
 		"@types/cors": "^2.8.14",
+		"@types/ejson": "^2.2.0",
 		"@types/express": "^4.17.18",
 		"@types/lodash-es": "^4.17.9",
 		"@types/pngjs": "^6.0.2",

@@ -1231,6 +1231,11 @@
   dependencies:
     "@types/node" "*"
 
+"@types/ejson@^2.2.0":
+  version "2.2.0"
+  resolved "https://registry.yarnpkg.com/@types/ejson/-/ejson-2.2.0.tgz#4b65b41308da94deb2363a826ed3946f7020a8e2"
+  integrity sha512-8+Rn+xSfDzkCZvJiRjrOCBsecxLOuioqyFmkDba/rmQawUFI2Yxaf6TzxXnGXmH4gpWrafZbErk69qnAWgVHNw==
+
 "@types/emscripten@^1.39.6":
   version "1.39.8"
   resolved "https://registry.yarnpkg.com/@types/emscripten/-/emscripten-1.39.8.tgz#5e3e81fb37397345cc7c12d189bd72c7d0095af8"
