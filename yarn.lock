@@ -1581,6 +1581,13 @@
   resolved "https://registry.yarnpkg.com/@types/which/-/which-3.0.0.tgz#849afdd9fdcb0b67339b9cfc80fa6ea4e0253fc5"
   integrity sha512-ASCxdbsrwNfSMXALlC3Decif9rwDMu+80KGp5zI2RLRotfMsTv7fHL8W8VDp24wymzDyIFudhUeSCugrgRFfHQ==
 
+"@types/workerpool@^6.4.4":
+  version "6.4.4"
+  resolved "https://registry.yarnpkg.com/@types/workerpool/-/workerpool-6.4.4.tgz#3168d7e9811833eef8f6634535e2efc2bab54d7d"
+  integrity sha512-rpYFug3QyKzQ7+y/x8BCTEseMorTyr9DiY3ao5KxzWJPtFyx/HL0SSLtJlRjUSpBeaMd/zn7hnLaWOb8WRFnnQ==
+  dependencies:
+    "@types/node" "*"
+
 "@types/writable-consumable-stream@*":
   version "2.0.1"
   resolved "https://registry.yarnpkg.com/@types/writable-consumable-stream/-/writable-consumable-stream-2.0.1.tgz#778d0651c01a336f700f14e0636ccef01a15ba1e"
@@ -6114,6 +6121,11 @@ wolfy87-eventemitter@5.2.9:
   version "5.2.9"
   resolved "https://registry.yarnpkg.com/wolfy87-eventemitter/-/wolfy87-eventemitter-5.2.9.tgz#e879f770b30fbb6512a8afbb330c388591099c2a"
   integrity sha512-P+6vtWyuDw+MB01X7UeF8TaHBvbCovf4HPEMF/SV7BdDc1SMTiBy13SRD71lQh4ExFTG1d/WNzDGDCyOKSMblw==
+
+workerpool@^6.5.1:
+  version "6.5.1"
+  resolved "https://registry.yarnpkg.com/workerpool/-/workerpool-6.5.1.tgz#060f73b39d0caf97c6db64da004cd01b4c099544"
+  integrity sha512-Fs4dNYcsdpYSAfVxhnl1L5zTksjvOJxtC5hzMNl+1t9B8hTJTdKDyZ5ju7ztgPy+ft9tBFXoOlDNiOT9WUXZlA==
 
 wrap-ansi@^7.0.0:
   version "7.0.0"
