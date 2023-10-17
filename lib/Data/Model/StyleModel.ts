@@ -13,7 +13,7 @@ export interface DrawStyleButtonModel {
 	alignment: CompanionAlignment | undefined
 	pngalignment: CompanionAlignment | undefined
 
-	size: number | 'small' | 'large'
+	size: number | 'small' | 'large' | 'auto'
 	text: string
 
 	bgcolor: string | number
