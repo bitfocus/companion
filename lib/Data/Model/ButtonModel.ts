@@ -23,7 +23,7 @@ export interface NormalButtonModel {
 
 	feedbacks: FeedbackInstance[]
 
-	steps?: NormalButtonSteps
+	steps: NormalButtonSteps
 }
 
 export type NormalButtonSteps = Record<
