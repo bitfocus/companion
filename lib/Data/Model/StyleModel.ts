@@ -1,4 +1,4 @@
-import type { CompanionAlignment } from '@companion-module/base'
+import type { CompanionAlignment, CompanionTextSize } from '@companion-module/base'
 
 export type DrawStyleModel =
 	| {
@@ -6,26 +6,15 @@ export type DrawStyleModel =
 	  }
 	| DrawStyleButtonModel
 
-export interface DrawStyleButtonModel {
+export interface DrawStyleButtonModel extends ButtonStyleProperties {
 	style: 'button'
 
-	show_topbar: boolean | 'default' | undefined
-	alignment: CompanionAlignment | undefined
-	pngalignment: CompanionAlignment | undefined
-
-	size: number | 'small' | 'large' | 'auto'
-	text: string
-
-	bgcolor: string | number
-	color: string | number
-
-	png64: string | undefined
 	imageBuffers: DrawImageBuffer[]
 
 	pushed: boolean
 	step_cycle: number | undefined
 	cloud: boolean | undefined
-	bank_status: 'error' | 'warning' | 'ok' | undefined
+	bank_status: 'error' | 'warning' | 'good' | undefined
 	action_running: boolean | undefined
 }
 
@@ -35,4 +24,23 @@ export interface DrawImageBuffer {
 	y: number | undefined
 	width: number | undefined
 	height: number | undefined
+}
+
+export interface UnparsedButtonStyle extends ButtonStyleProperties {
+	imageBuffers: DrawImageBuffer[]
+}
+
+export interface ButtonStyleProperties {
+	text: string
+	textExpression: boolean | undefined
+
+	size: CompanionTextSize | number | 'small' | 'large'
+	alignment: CompanionAlignment
+	pngalignment: CompanionAlignment
+
+	color: number
+	bgcolor: number
+	show_topbar: boolean | 'default' | undefined
+
+	png64: string | null
 }

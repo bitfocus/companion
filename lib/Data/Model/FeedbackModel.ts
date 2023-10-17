@@ -1,3 +1,5 @@
+import type { ButtonStyleProperties } from './StyleModel.js'
+
 export interface FeedbackInstance {
 	id: string
 	instance_id: string
@@ -6,5 +8,5 @@ export interface FeedbackInstance {
 	disabled?: boolean
 	upgradeIndex?: number
 	isInverted?: boolean
-	style?: Record<string, any> // TODO - better
+	style?: Partial<ButtonStyleProperties>
 }

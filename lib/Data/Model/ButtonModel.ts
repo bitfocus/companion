@@ -1,5 +1,6 @@
 import type { ActionSetsModel, ActionStepOptions } from './ActionModel.js'
 import type { FeedbackInstance } from './FeedbackModel.js'
+import type { ButtonStyleProperties } from './StyleModel.js'
 
 export type SomeButtonModel = PageNumberButtonModel | PageUpButtonModel | PageDownButtonModel | NormalButtonModel
 
@@ -19,7 +20,7 @@ export interface NormalButtonModel {
 
 	options: NormalButtonOptions
 
-	style: Record<string, any>
+	style: ButtonStyleProperties
 
 	feedbacks: FeedbackInstance[]
 
