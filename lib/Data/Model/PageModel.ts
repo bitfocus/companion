@@ -1,5 +1,4 @@
-
 export interface PageModel {
-    name: string
-    controls: Record<number, Record<number, string>>
+	name: string
+	controls: Record<number, Record<number, string>>
 }
