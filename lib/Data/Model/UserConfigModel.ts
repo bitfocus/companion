@@ -58,5 +58,5 @@ export interface UserConfigModel {
 	admin_password: string
 
 	gridSize: ExportGridSize
-	gridSizeInlineGrow: boolean // TODO: temporary until the styling of growing is better
+	gridSizeInlineGrow: boolean
 }
