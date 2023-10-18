@@ -1,5 +1,4 @@
 {
-	"extends": "./module-legacy/node_modules/@companion-module/tools/tsconfig/node18/recommended",
 	"include": ["lib/**/*.js", "lib/**/*.ts"],
 	"exclude": ["node_modules/**", "src/**/*spec.ts", "src/**/__tests__/*", "src/**/__mocks__/*"],
 	"compilerOptions": {
@@ -12,6 +11,27 @@
 		"moduleResolution": "Node16",
 		"allowJs": true,
 		"checkJs": true,
-		"strictPropertyInitialization": false
+		"strictPropertyInitialization": false,
+
+		"target": "es2022",
+		"noImplicitAny": true,
+		"sourceMap": true,
+		"declaration": false,
+		"importHelpers": false,
+		"listFiles": false,
+		"traceResolution": false,
+		"pretty": true,
+		"lib": ["es2022"],
+		"types": ["node"],
+		"strict": true,
+		"alwaysStrict": false,
+		"forceConsistentCasingInFileNames": true,
+		"noFallthroughCasesInSwitch": true,
+		"noImplicitReturns": true,
+		"noUnusedLocals": true,
+		"noUnusedParameters": true,
+		"skipLibCheck": true,
+		"allowSyntheticDefaultImports": true,
+		"esModuleInterop": true
 	}
 }
