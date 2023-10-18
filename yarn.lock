@@ -307,14 +307,15 @@
   resolved "https://registry.yarnpkg.com/@colors/colors/-/colors-1.6.0.tgz#ec6cd237440700bc23ca23087f513c75508958b0"
   integrity sha512-Ir+AOibqzrIsL6ajt3Rz3LskB7OiMVHqltZmspbW/TJuTVuyOMirVqAkjfY6JISiLHgyNqicAC8AyHHGzNd/dA==
 
-"@companion-module/base@~1.5.1":
-  version "1.5.1"
-  resolved "https://registry.yarnpkg.com/@companion-module/base/-/base-1.5.1.tgz#20612ba8adbe04ed2220ded9acb99c4cd877c304"
-  integrity sha512-gpUtE7121CuPJkZMEoqh1GU6QwDoqmj4WvjI/fqyeTrqejKcKz/oSgMxSMeh7T1Gf02a5OOTpJ+aYWBlNB0BKw==
+"@companion-module/base@~1.6.0":
+  version "1.6.0"
+  resolved "https://registry.yarnpkg.com/@companion-module/base/-/base-1.6.0.tgz#1caa1b310855a757a0a55eb4b1f1b301f37615e3"
+  integrity sha512-KnsgHtgmB36t2wlBSYyRgw4eSrm6rJXoBWClBURfssk9OgochaJtWwPLuA/SgjLAxPOnTTNt4PvHgzcVv6MjYg==
   dependencies:
     "@sentry/node" "^7.63.0"
     "@sentry/tracing" "^7.63.0"
     ajv "^8.12.0"
+    colord "^2.9.3"
     ejson "^2.2.3"
     eventemitter3 "^4.0.7"
     mimic-fn "^3.0.0"
@@ -4430,7 +4431,6 @@ node-forge@^1:
 
 node-gyp-build@^4.3.0, node-gyp-build@^4.5.0, "node-gyp-build@github:julusian/node-gyp-build#cross-install-support":
   version "4.5.0"
-  uid "33c9759a3215892a520d50ad20c947795b813904"
   resolved "https://codeload.github.com/julusian/node-gyp-build/tar.gz/33c9759a3215892a520d50ad20c947795b813904"
 
 node-hid@^2.1.1, node-hid@^2.1.2, "node-hid@npm:@julusian/hid@3.0.0-2", "node-hid@npm:@julusian/hid@^3.0.0-0":
@@ -5886,6 +5886,11 @@ wolfy87-eventemitter@5.2.9:
   version "5.2.9"
   resolved "https://registry.yarnpkg.com/wolfy87-eventemitter/-/wolfy87-eventemitter-5.2.9.tgz#e879f770b30fbb6512a8afbb330c388591099c2a"
   integrity sha512-P+6vtWyuDw+MB01X7UeF8TaHBvbCovf4HPEMF/SV7BdDc1SMTiBy13SRD71lQh4ExFTG1d/WNzDGDCyOKSMblw==
+
+workerpool@^6.5.1:
+  version "6.5.1"
+  resolved "https://registry.yarnpkg.com/workerpool/-/workerpool-6.5.1.tgz#060f73b39d0caf97c6db64da004cd01b4c099544"
+  integrity sha512-Fs4dNYcsdpYSAfVxhnl1L5zTksjvOJxtC5hzMNl+1t9B8hTJTdKDyZ5ju7ztgPy+ft9tBFXoOlDNiOT9WUXZlA==
 
 wrap-ansi@^7.0.0:
   version "7.0.0"

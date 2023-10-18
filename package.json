@@ -50,7 +50,7 @@
 		"zx": "^7.2.3"
 	},
 	"dependencies": {
-		"@companion-module/base": "~1.5.1",
+		"@companion-module/base": "~1.6.0",
 		"@elgato-stream-deck/node": "^6.0.0-async-test.4",
 		"@jsep-plugin/numbers": "^1.0.1",
 		"@jsep-plugin/template": "^1.0.3",
@@ -103,6 +103,7 @@
 		"utf-8-validate": "^6.0.3",
 		"videohub-server": "^0.3.0",
 		"winston": "^3.11.0",
+		"workerpool": "^6.5.1",
 		"ws": "^8.14.2",
 		"xkeys": "npm:@julusian/xkeys@2.5.0-1"
 	},
