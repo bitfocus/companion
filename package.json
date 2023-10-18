@@ -22,7 +22,9 @@
 		"format": "prettier --write .",
 		"jsdoc": "jsdoc -c jsdoc.json",
 		"build:writefile": "zx ./tools/build_writefile.mjs",
-		"module:bulk": "zx ./tools/module_bulk.mjs"
+		"module:bulk": "zx ./tools/module_bulk.mjs",
+		"check-types": "tsc --noEmit",
+		"watch-types": "tsc --noEmit --watch"
 	},
 	"repository": "https://github.com/bitfocus/companion",
 	"keywords": [
