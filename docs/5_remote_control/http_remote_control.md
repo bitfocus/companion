@@ -18,6 +18,8 @@ Remote triggering can be done by sending `HTTP` Requests to the same IP and port
   _Change text size on a button (between the predefined values)_
 - `/set/custom-variable/<name>?value=<value>`  
   _Change custom variable value_
+- `/get/custom-variable/<name>`  
+    _Read custom variable value_
 - `/rescan`  
   _Make Companion rescan for newly attached USB surfaces_
 
