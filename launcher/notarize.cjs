@@ -8,8 +8,8 @@ exports.default = async function notarizing(context) {
 		return
 	}
 
-	if (!process.env.APPLEID || !process.env.APPLEIDPASS) {
-		console.log('Skipping notarizing, due to missing APPLEID or APPLEIDPASS environment variables')
+	if (!process.env.APPLEID || !process.env.APPLEIDPASS || !process.env.APPLETEAMID) {
+		console.log('Skipping notarizing, due to missing APPLEID, APPLETEAMID or APPLEIDPASS environment variables')
 		return
 	}
 
@@ -20,5 +20,6 @@ exports.default = async function notarizing(context) {
 		appPath: `${appOutDir}/${appName}.app`,
 		appleId: process.env.APPLEID,
 		appleIdPassword: process.env.APPLEIDPASS,
+		teamId: process.env.APPLETEAMID,
 	})
 }

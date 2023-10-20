@@ -1,7 +1,8 @@
-import React, { forwardRef, memo, useCallback, useContext, useImperativeHandle, useState } from 'react'
+import React, { forwardRef, memo, useCallback, useContext, useImperativeHandle, useMemo, useState } from 'react'
 import { CModal, CModalBody, CModalHeader, CModalFooter, CButton } from '@coreui/react'
 import sanitizeHtml from 'sanitize-html'
-import { marked } from 'marked'
+import { Marked } from 'marked'
+import { baseUrl } from 'marked-base-url'
 import { ModulesContext } from '../util'
 
 export const HelpModal = memo(
@@ -25,17 +26,20 @@ export const HelpModal = memo(
 			[]
 		)
 
+		const contentBaseUrl = content?.[1]?.baseUrl
+		const marked = useMemo(() => {
+			const marked = new Marked()
+			marked.setOptions({
+				allowedTags: sanitizeHtml.defaults.allowedTags.concat(['img']),
+				disallowedTagsMode: 'escape',
+			})
+			if (contentBaseUrl) marked.use(baseUrl(contentBaseUrl))
+			return marked
+		}, [contentBaseUrl])
+
 		const html = content
 			? {
-					__html: sanitizeHtml(
-						marked(content[1].markdown, {
-							baseUrl: content[1].baseUrl,
-						}),
-						{
-							allowedTags: sanitizeHtml.defaults.allowedTags.concat(['img']),
-							disallowedTagsMode: 'escape',
-						}
-					),
+					__html: sanitizeHtml(marked.parse(content[1].markdown)),
 			  }
 			: undefined
 

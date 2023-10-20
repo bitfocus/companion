@@ -1,24 +1,9 @@
 import React from 'react'
 import classnames from 'classnames'
-import { PREVIEW_BMP_HEADER } from '../Constants'
-import { Buffer } from 'buffer'
 
-export function dataToButtonImage(data) {
-	const sourceData = Buffer.from(data)
-
-	const convertedData = Buffer.alloc(sourceData.length)
-	for (let i = 0; i < sourceData.length; i += 3) {
-		// convert bgr to rgb
-		convertedData.writeUInt8(sourceData.readUInt8(i), i + 2)
-		convertedData.writeUInt8(sourceData.readUInt8(i + 1), i + 1)
-		convertedData.writeUInt8(sourceData.readUInt8(i + 2), i)
-	}
-
-	return 'data:image/bmp;base64,' + Buffer.concat([PREVIEW_BMP_HEADER, convertedData]).toString('base64')
-}
-
-export const BlackImage = dataToButtonImage(Buffer.alloc(72 * 72 * 3))
-export const RedImage = dataToButtonImage(Buffer.alloc(72 * 72 * 3, Buffer.from([255, 0, 0])))
+// Single pixel of red
+export const RedImage =
+	'data:image/bmp;base64,Qk2OAAAAAAAAAIoAAAB8AAAAAQAAAP////8BACAAAwAAAAQAAAAnAAAAJwAAAAAAAAAAAAAA/wAAAAD/AAAAAP8AAAAA/0JHUnMAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA/wAAAA=='
 
 export const ButtonPreview = React.memo(function (props) {
 	const classes = {
@@ -36,21 +21,22 @@ export const ButtonPreview = React.memo(function (props) {
 		<div
 			ref={props.dropRef}
 			className={classnames(classes)}
-			onMouseDown={() => props?.onClick?.(props.index, true)}
-			onMouseUp={() => props?.onClick?.(props.index, false)}
+			style={props.style}
+			onMouseDown={() => props?.onClick?.(props.location, true)}
+			onMouseUp={() => props?.onClick?.(props.location, false)}
 			onTouchStart={(e) => {
 				e.preventDefault()
-				props?.onClick?.(props.index, true)
+				props?.onClick?.(props.location, true)
 			}}
 			onTouchEnd={(e) => {
 				e.preventDefault()
-				props?.onClick?.(props.index, false)
+				props?.onClick?.(props.location, false)
 			}}
 			onTouchCancel={(e) => {
 				e.preventDefault()
 				e.stopPropagation()
 
-				props?.onClick?.(props.index, false)
+				props?.onClick?.(props.location, false)
 			}}
 			onContextMenu={(e) => {
 				e.preventDefault()
@@ -58,15 +44,16 @@ export const ButtonPreview = React.memo(function (props) {
 				return false
 			}}
 		>
-			<div className="bank-border">
-				<img
-					ref={props.dragRef}
-					width={72}
-					height={72}
-					src={props.preview ?? BlackImage}
-					alt={props.alt}
-					title={props.title}
-				/>
+			<div
+				className="bank-border"
+				ref={props.dragRef}
+				style={{
+					backgroundImage: props.preview ? `url(${props.preview})` : undefined,
+				}}
+				alt={props.alt}
+				title={props.title}
+			>
+				{!props.preview && props.placeholder && <div className="placeholder">{props.placeholder}</div>}
 			</div>
 		</div>
 	)

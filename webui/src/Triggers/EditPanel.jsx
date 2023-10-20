@@ -139,7 +139,7 @@ export function EditTriggerPanel({ controlId }) {
 									controlId={controlId}
 									feedbacks={config.condition}
 									booleanOnly={true}
-									isOnControl={false}
+									location={undefined}
 									addPlaceholder="+ Add condition"
 								/>
 							</MyErrorBoundary>
@@ -156,7 +156,6 @@ export function EditTriggerPanel({ controlId }) {
 									setId={'0'}
 									addPlaceholder="+ Add action"
 									actions={config.action_sets['0']}
-									isOnControl={false}
 								/>
 							</MyErrorBoundary>
 						</>

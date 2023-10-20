@@ -29,17 +29,16 @@ import { usePanelCollapseHelper } from '../Helpers/CollapseHelper'
 import CSwitch from '../CSwitch'
 import { OptionButtonPreview } from './OptionButtonPreview'
 import { MenuPortalContext } from '../Components/DropdownInputField'
-import { ParseControlId } from '@companion/shared/ControlId'
 
 export function ControlActionSetEditor({
 	controlId,
+	location,
 	stepId,
 	setId,
 	actions,
 	addPlaceholder,
 	heading,
 	headingActions,
-	isOnControl,
 }) {
 	const socket = useContext(SocketContext)
 
@@ -150,7 +149,7 @@ export function ControlActionSetEditor({
 			</h4>
 			<GenericConfirmModal ref={confirmModal} />
 			<ActionsList
-				isOnControl={isOnControl}
+				location={location}
 				controlId={controlId}
 				dragId={`${controlId}_actions`}
 				stepId={stepId}
@@ -195,7 +194,7 @@ function AddActionsPanel({ addPlaceholder, addAction }) {
 }
 
 export function ActionsList({
-	isOnControl,
+	location,
 	controlId,
 	dragId,
 	stepId,
@@ -234,7 +233,7 @@ export function ActionsList({
 						<MyErrorBoundary key={a?.id ?? i}>
 							<ActionTableRow
 								key={a?.id ?? i}
-								isOnControl={isOnControl}
+								location={location}
 								action={a}
 								index={i}
 								stepId={stepId}
@@ -292,7 +291,7 @@ function ActionTableRow({
 	action,
 	stepId,
 	setId,
-	isOnControl,
+	location,
 	index,
 	dragId,
 	controlId,
@@ -407,14 +406,6 @@ function ActionTableRow({
 		setCollapsed(action.id, false)
 	}, [setCollapsed, action.id])
 
-	const previewControlIdFunction = useMemo(() => {
-		if (action?.instance === 'internal' && actionSpec?.previewControlIdFn) {
-			return sandbox(actionSpec.previewControlIdFn)
-		} else {
-			return undefined
-		}
-	}, [action?.instance, actionSpec?.previewControlIdFn])
-
 	if (!action) {
 		// Invalid action, so skip
 		return ''
@@ -425,7 +416,8 @@ function ActionTableRow({
 	const instanceLabel = instance?.label ?? action.instance
 
 	const options = actionSpec?.options ?? []
-	const previewControlId = previewControlIdFunction?.(action.options, ParseControlId(controlId))
+
+	const showButtonPreview = action?.instance === 'internal' && actionSpec?.showButtonPreview
 
 	let name = ''
 	if (actionSpec) {
@@ -479,9 +471,9 @@ function ActionTableRow({
 					<div className="editor-grid">
 						<div className="cell-description">{actionSpec?.description || ''}</div>
 
-						{previewControlId && (
+						{location && showButtonPreview && (
 							<div className="cell-bank-preview">
-								<OptionButtonPreview controlId={previewControlId} />
+								<OptionButtonPreview location={location} options={action.options} />
 							</div>
 						)}
 
@@ -517,7 +509,7 @@ function ActionTableRow({
 									<MyErrorBoundary key={i}>
 										<OptionsInputField
 											key={i}
-											isOnControl={isOnControl}
+											isOnControl={!!location}
 											isAction={true}
 											instanceId={action.instance}
 											option={opt}

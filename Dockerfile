@@ -1,4 +1,4 @@
-FROM node:18.17.1-bullseye as companion-builder
+FROM node:18.18.1-bullseye as companion-builder
 
 # Installation Prep
 RUN apt-get update && apt-get install -y \
@@ -36,6 +36,7 @@ RUN apt update && apt install -y \
     libudev1 \
     iputils-ping \
     libasound2 \
+    libfontconfig1 \
     && rm -rf /var/lib/apt/lists/*
 
 # Don't run as root

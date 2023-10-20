@@ -14,6 +14,7 @@ export function TextInputField({
 	setValid,
 	disabled,
 	useVariables,
+	useInternalLocationVariables,
 }) {
 	const variableDefinitionsContext = useContext(VariableDefinitionsContext)
 
@@ -50,8 +51,28 @@ export function TextInputField({
 			}
 		}
 
+		if (useInternalLocationVariables) {
+			suggestions.push(
+				{
+					key: 'this:page)',
+					value: 'this:page',
+					label: 'This page',
+				},
+				{
+					key: 'this:column)',
+					value: 'this:column',
+					label: 'This column',
+				},
+				{
+					key: 'this:row)',
+					value: 'this:row',
+					label: 'This row',
+				}
+			)
+		}
+
 		tribute.append(0, suggestions, true)
-	}, [variableDefinitionsContext, tribute, useVariables])
+	}, [variableDefinitionsContext, tribute, useVariables, useInternalLocationVariables])
 
 	// Compile the regex (and cache)
 	const compiledRegex = useMemo(() => {

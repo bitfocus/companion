@@ -1,32 +1,45 @@
-import React from 'react'
+import React, { useContext, useState } from 'react'
 import { nanoid } from 'nanoid'
-import { useContext, useMemo } from 'react'
-import { useSharedBankRenderCache } from '../ButtonRenderCache'
 import { ButtonPreview } from '../Components/ButtonPreview'
-import { ButtonRenderCacheContext } from '../util'
-import { ParseControlId } from '@companion/shared/ControlId.js'
+import { SocketContext, socketEmitPromise } from '../util'
+import { useDeepCompareEffect } from 'use-deep-compare'
 
 /**
  * Preview a bank based on the selected options
- * @param {Array} param.fields [page, bank] name of fields to check
- * @param {Object} param.options options object containing the pgae information
- * @param {string} param.controlId control where this preview is located (if any)
+ * @param {string} param.location where this preview is located (if any)
  * @returns
  */
-export function OptionButtonPreview({ controlId }) {
-	const buttonCache = useContext(ButtonRenderCacheContext)
+export function OptionButtonPreview({ location, options }) {
+	const socket = useContext(SocketContext)
 
-	let page = 0
-	let bank = 0
+	const [image, setImage] = useState(null)
+	useDeepCompareEffect(() => {
+		const id = nanoid()
+		socketEmitPromise(socket, 'preview:button-reference:subscribe', [id, location, options])
+			.then((newImage) => {
+				console.log('got image', newImage)
+				setImage(newImage)
+			})
+			.catch((err) => {
+				console.error('Subscribe failure', err)
+				setImage(null)
+			})
 
-	const parsedControlId = ParseControlId(controlId)
-	if (parsedControlId && parsedControlId.type === 'bank') {
-		page = parsedControlId.page
-		bank = parsedControlId.bank
-	}
+		const updateImage = (newImage) => {
+			setImage(newImage)
+		}
 
-	const sessionId = useMemo(() => nanoid(), [])
-	const image = useSharedBankRenderCache(buttonCache, sessionId, page, bank)
+		socket.on(`preview:button-reference:update:${id}`, updateImage)
+
+		return () => {
+			socketEmitPromise(socket, 'preview:button-reference:unsubscribe', [id]).catch((err) => {
+				console.error('Unsubscribe failure', err)
+			})
+			socket.off(`preview:button-reference:update:${id}`, updateImage)
+		}
+
+		// TODO - is this too reactive watching all the options?
+	}, [location, options])
 
 	return <ButtonPreview fixedSize noPad preview={image} />
 }

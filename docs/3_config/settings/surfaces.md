@@ -11,8 +11,8 @@ More details on supported surfaces are available in the chapter on [Surfaces](#7
 - **Enable connected X-keys (Requires Companion restart)**
   Whether to enable support for connecting to XKeys devices.
 
-- **Enable connected Loupedeck Live and Razer Stream Controller devices (Requires Companion restart)**
-  Whether to enable support for connecting Loupedeck Live and Razer Stream Controller devices.
+- **Enable connected Loupedeck and Razer Stream Controller devices (Requires Companion restart)**
+  Whether to enable support for connecting Loupedeck and Razer Stream Controller devices.
 
 - **Enable connected Contour Shuttle (Requires Companion restart)**
   Whether to enable support for connecting to Contour Shuttle devices.

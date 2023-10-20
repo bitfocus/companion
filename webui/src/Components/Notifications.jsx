@@ -1,5 +1,5 @@
 import { CToast, CToastBody, CToaster, CToastHeader } from '@coreui/react'
-import { forwardRef, useCallback, useImperativeHandle, useState } from 'react'
+import React, { forwardRef, useCallback, useImperativeHandle, useState } from 'react'
 import { nanoid } from 'nanoid'
 
 export const NotificationsManager = forwardRef(function NotificationsManager(_props, ref) {

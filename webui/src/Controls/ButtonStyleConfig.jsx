@@ -125,6 +125,7 @@ export function ButtonStyleConfigFields({
 	)
 	const userconfig = useContext(UserConfigContext)
 
+	let pngWidth = 72
 	let pngHeight =
 		values.show_topbar === false || (values.show_topbar === 'default' && userconfig.remove_topbar === true) ? 72 : 58
 
@@ -181,7 +182,13 @@ export function ButtonStyleConfigFields({
 						<div>
 							<div>
 								<label>Font size</label>
-								<DropdownInputField choices={FONT_SIZES} setValue={setSizeValue} value={values.size} />
+								<DropdownInputField
+									choices={FONT_SIZES}
+									setValue={setSizeValue}
+									value={values.size}
+									allowCustom={true}
+									regex={'/^0*(?:[3-9]|[1-9][0-9]|1[0-9]{2}|200)\\s?(?:pt|px)?$/i'}
+								/>
 							</div>
 						</div>
 					)}
@@ -238,13 +245,15 @@ export function ButtonStyleConfigFields({
 					)}
 					{showField2('png64') && (
 						<div>
-							<label>72x{pngHeight} PNG</label>
+							<label>
+								{pngWidth}x{pngHeight} PNG
+							</label>
 							<CButtonGroup className="png-browse">
 								<PNGInputField
 									onSelect={setPng}
 									onError={setPngError}
-									min={{ width: 36, height: 36 }}
-									max={{ width: 72, height: pngHeight }}
+									min={{ width: 8, height: 8 }}
+									max={{ width: 400, height: 400 }}
 								/>
 								{clearPng && (
 									<CButton color="danger" disabled={!values.png64} onClick={clearPng}>

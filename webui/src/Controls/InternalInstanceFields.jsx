@@ -1,6 +1,5 @@
 import React, { useContext, useMemo } from 'react'
 import { DropdownInputField } from '../Components'
-import { MAX_BUTTONS } from '../Constants'
 import {
 	CustomVariableDefinitionsContext,
 	InstancesContext,
@@ -34,8 +33,6 @@ export function InternalInstanceField(option, isOnControl, readonly, value, setV
 					setValue={setValue}
 				/>
 			)
-		case 'internal:bank':
-			return <InternalButtonDropdown disabled={readonly} isOnControl={isOnControl} value={value} setValue={setValue} />
 		case 'internal:custom_variable':
 			return (
 				<InternalCustomVariableDropdown
@@ -115,22 +112,6 @@ function InternalPageDropdown({ isOnControl, includeDirection, value, setValue, 
 		}
 		return choices
 	}, [pages, isOnControl, includeDirection])
-
-	return <DropdownInputField disabled={disabled} value={value} choices={choices} multiple={false} setValue={setValue} />
-}
-
-function InternalButtonDropdown({ isOnControl, value, setValue, disabled }) {
-	const choices = useMemo(() => {
-		const choices = []
-		if (isOnControl) {
-			choices.push({ id: 0, label: 'This button' })
-		}
-
-		for (let i = 1; i <= MAX_BUTTONS; i++) {
-			choices.push({ id: i, label: `${i}` })
-		}
-		return choices
-	}, [isOnControl])
 
 	return <DropdownInputField disabled={disabled} value={value} choices={choices} multiple={false} setValue={setValue} />
 }

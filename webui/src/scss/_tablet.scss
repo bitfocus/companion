@@ -75,6 +75,12 @@
 
 		width: 100%;
 
+		.bank {
+			border: none;
+			position: absolute;
+			float: left;
+		}
+
 		.bank img {
 			max-width: 150px;
 			max-height: 150px;
@@ -82,6 +88,10 @@
 
 		&.bank-armed .pagebank-row {
 			background-color: rgba(255, 0, 0, 0.5);
+		}
+
+		.buttons-holder {
+			position: relative;
 		}
 
 		.pagebank-row {
@@ -98,6 +108,16 @@
 
 		.page-heading {
 			grid-column: 1/-1;
+		}
+
+		.page-buttons {
+			position: relative;
+		}
+
+		.page-in-view-tester {
+			position: absolute;
+			float: left;
+			width: 100%;
 		}
 	}
 }

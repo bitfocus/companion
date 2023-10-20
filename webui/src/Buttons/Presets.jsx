@@ -9,7 +9,7 @@ import {
 	ModulesContext,
 } from '../util'
 import { useDrag } from 'react-dnd'
-import { ButtonPreview, dataToButtonImage, RedImage } from '../Components/ButtonPreview'
+import { ButtonPreview, RedImage } from '../Components/ButtonPreview'
 import { nanoid } from 'nanoid'
 
 export const InstancePresets = function InstancePresets({ resetToken }) {
@@ -230,7 +230,7 @@ function PresetIconPreview({ preset, instanceId, ...childProps }) {
 
 		socketEmitPromise(socket, 'presets:preview_render', [instanceId, preset.id])
 			.then((img) => {
-				setPreviewImage(img ? dataToButtonImage(img) : null)
+				setPreviewImage(img)
 			})
 			.catch((e) => {
 				console.error('Failed to preview bank')
@@ -238,7 +238,7 @@ function PresetIconPreview({ preset, instanceId, ...childProps }) {
 			})
 	}, [preset.id, socket, instanceId, retryToken])
 
-	const onClick = useCallback((i, isDown) => isDown && setRetryToken(nanoid()), [])
+	const onClick = useCallback((_location, isDown) => isDown && setRetryToken(nanoid()), [])
 
 	return (
 		<ButtonPreview

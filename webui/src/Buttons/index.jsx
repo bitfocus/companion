@@ -3,18 +3,19 @@ import { faCalculator, faDollarSign, faGift, faVideoCamera } from '@fortawesome/
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { nanoid } from 'nanoid'
 import { InstancePresets } from './Presets'
-import { SocketContext, MyErrorBoundary, socketEmitPromise, FormatButtonControlId } from '../util'
-import { CreateBankControlId } from '@companion/shared/ControlId'
-import { ButtonsGridPanel } from './ButtonGrid'
+import { SocketContext, MyErrorBoundary, socketEmitPromise, UserConfigContext } from '../util'
+import { ButtonsGridPanel } from './ButtonGridPanel'
 import { EditButton } from './EditButton'
 import { ActionRecorder } from './ActionRecorder'
 import { memo, useCallback, useContext, useRef, useState } from 'react'
 import { GenericConfirmModal } from '../Components/GenericConfirmModal'
 import { InstanceVariables } from './Variables'
 import { useElementSize } from 'usehooks-ts'
+import { formatLocation } from '@companion/shared/ControlId'
 
 export const ButtonsPage = memo(function ButtonsPage({ hotPress }) {
 	const socket = useContext(SocketContext)
+	const userConfig = useContext(UserConfigContext)
 
 	const clearModalRef = useRef()
 
@@ -36,15 +37,15 @@ export const ButtonsPage = memo(function ButtonsPage({ hotPress }) {
 	}, [])
 
 	const doButtonGridClick = useCallback(
-		(page, bank, isDown) => {
+		(location, isDown) => {
 			if (hotPress) {
-				const controlId = CreateBankControlId(page, bank)
-				socketEmitPromise(socket, 'controls:hot-press', [controlId, isDown, 'grid']).catch((e) =>
+				socketEmitPromise(socket, 'controls:hot-press', [location, isDown, 'grid']).catch((e) =>
 					console.error(`Hot press failed: ${e}`)
 				)
 			} else if (isDown) {
 				setActiveTab('edit')
-				setSelectedButton(CreateBankControlId(page, bank))
+				console.log('set selected', location)
+				setSelectedButton(location)
 				setTabResetToken(nanoid())
 			}
 		},
@@ -57,12 +58,95 @@ export const ButtonsPage = memo(function ButtonsPage({ hotPress }) {
 	const handleKeyDownInButtons = useCallback(
 		(e) => {
 			if (e.target.tagName !== 'INPUT' && e.target.tagName !== 'TEXTAREA') {
+				switch (e.key) {
+					case 'ArrowDown':
+						setSelectedButton((selectedButton) => {
+							if (selectedButton) {
+								return {
+									...selectedButton,
+									row:
+										selectedButton.row >= userConfig.gridSize.maxRow
+											? userConfig.gridSize.minRow
+											: selectedButton.row + 1,
+								}
+							}
+						})
+						// TODO - ensure kept in view
+						break
+					case 'ArrowUp':
+						setSelectedButton((selectedButton) => {
+							if (selectedButton) {
+								return {
+									...selectedButton,
+									row:
+										selectedButton.row <= userConfig.gridSize.minRow
+											? userConfig.gridSize.maxRow
+											: selectedButton.row - 1,
+								}
+							}
+						})
+						// TODO - ensure kept in view
+						break
+					case 'ArrowLeft':
+						setSelectedButton((selectedButton) => {
+							if (selectedButton) {
+								return {
+									...selectedButton,
+									column:
+										selectedButton.column <= userConfig.gridSize.minColumn
+											? userConfig.gridSize.maxColumn
+											: selectedButton.column - 1,
+								}
+							}
+						})
+						// TODO - ensure kept in view
+						break
+					case 'ArrowRight':
+						setSelectedButton((selectedButton) => {
+							if (selectedButton) {
+								return {
+									...selectedButton,
+									column:
+										selectedButton.column >= userConfig.gridSize.maxColumn
+											? userConfig.gridSize.minColumn
+											: selectedButton.column + 1,
+								}
+							}
+						})
+						// TODO - ensure kept in view
+						break
+					case 'PageUp':
+						setSelectedButton((selectedButton) => {
+							if (selectedButton) {
+								const newPageNumber = selectedButton.pageNumber >= 99 ? 1 : selectedButton.pageNumber + 1
+								setPageNumber(newPageNumber)
+								return {
+									...selectedButton,
+									pageNumber: newPageNumber,
+								}
+							}
+						})
+						break
+					case 'PageDown':
+						setSelectedButton((selectedButton) => {
+							if (selectedButton) {
+								const newPageNumber = selectedButton.pageNumber <= 1 ? 99 : selectedButton.pageNumber - 1
+								setPageNumber(newPageNumber)
+								return {
+									...selectedButton,
+									pageNumber: newPageNumber,
+								}
+							}
+						})
+						break
+				}
+
 				if (selectedButton) {
 					// keyup with button selected
 
 					if (!e.ctrlKey && !e.metaKey && !e.altKey && (e.key === 'Backspace' || e.key === 'Delete')) {
 						clearModalRef.current.show(
-							`Clear button ${FormatButtonControlId(selectedButton)}`,
+							`Clear button ${formatLocation(selectedButton)}`,
 							`This will clear the style, feedbacks and all actions`,
 							'Clear',
 							() => {
@@ -131,7 +215,7 @@ export const ButtonsPage = memo(function ButtonsPage({ hotPress }) {
 							<CNavItem hidden={!selectedButton}>
 								<CNavLink data-tab="edit">
 									<FontAwesomeIcon icon={faCalculator} /> Edit Button{' '}
-									{selectedButton ? `${FormatButtonControlId(selectedButton)}` : '?'}
+									{selectedButton ? `${formatLocation(selectedButton)}` : '?'}
 								</CNavLink>
 							</CNavItem>
 							<CNavItem>
@@ -155,9 +239,9 @@ export const ButtonsPage = memo(function ButtonsPage({ hotPress }) {
 								<MyErrorBoundary>
 									{selectedButton && (
 										<EditButton
-											key={`${selectedButton}.${tabResetToken}`}
+											key={`${formatLocation(selectedButton)}-${tabResetToken}`}
 											contentHeight={contentHeight}
-											controlId={selectedButton}
+											location={selectedButton}
 											onKeyUp={handleKeyDownInButtons}
 										/>
 									)}

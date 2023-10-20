@@ -30,7 +30,6 @@ import { AddFeedbacksModal } from './AddModal'
 import { usePanelCollapseHelper } from '../Helpers/CollapseHelper'
 import { OptionButtonPreview } from './OptionButtonPreview'
 import { MenuPortalContext } from '../Components/DropdownInputField'
-import { ParseControlId } from '@companion/shared/ControlId'
 import { ButtonStyleProperties } from '@companion/shared/Style'
 
 export function ControlFeedbacksEditor({
@@ -39,7 +38,7 @@ export function ControlFeedbacksEditor({
 	heading,
 	entityType,
 	booleanOnly,
-	isOnControl,
+	location,
 	addPlaceholder,
 }) {
 	const socket = useContext(SocketContext)
@@ -189,7 +188,7 @@ export function ControlFeedbacksEditor({
 								setCollapsed={setPanelCollapsed}
 								isCollapsed={isPanelCollapsed(a.id)}
 								booleanOnly={booleanOnly}
-								isOnControl={isOnControl}
+								location={location}
 							/>
 						</MyErrorBoundary>
 					))}
@@ -229,7 +228,7 @@ function FeedbackTableRow({
 	isCollapsed,
 	setCollapsed,
 	booleanOnly,
-	isOnControl,
+	location,
 }) {
 	const socket = useContext(SocketContext)
 
@@ -316,8 +315,7 @@ function FeedbackTableRow({
 			<td>
 				<FeedbackEditor
 					entityType={entityType}
-					isOnControl={isOnControl}
-					controlId={controlId}
+					location={location}
 					feedback={feedback}
 					setValue={setValue}
 					setInverted={innerInverted}
@@ -340,8 +338,7 @@ function FeedbackTableRow({
 function FeedbackEditor({
 	entityType,
 	feedback,
-	isOnControl,
-	controlId,
+	location,
 	setValue,
 	setInverted,
 	innerDelete,
@@ -406,14 +403,7 @@ function FeedbackEditor({
 		name = `${instanceLabel}: ${feedback.type} (undefined)`
 	}
 
-	const previewControlIdFunction = useMemo(() => {
-		if (feedback?.instance_id === 'internal' && feedbackSpec?.previewControlIdFn) {
-			return sandbox(feedbackSpec.previewControlIdFn)
-		} else {
-			return undefined
-		}
-	}, [feedback?.instance_id, feedbackSpec?.previewControlIdFn])
-	const previewControlId = previewControlIdFunction?.(feedback.options, ParseControlId(controlId))
+	const showButtonPreview = feedback?.instance_id === 'internal' && feedbackSpec?.showButtonPreview
 
 	return (
 		<>
@@ -456,9 +446,9 @@ function FeedbackEditor({
 				<div className="editor-grid remove075right">
 					<div className="cell-description">{feedbackSpec?.description || ''}</div>
 
-					{previewControlId && (
+					{location && showButtonPreview && (
 						<div className="cell-bank-preview">
-							<OptionButtonPreview controlId={previewControlId} />
+							<OptionButtonPreview location={location} options={feedback.options} />
 						</div>
 					)}
 
@@ -476,7 +466,7 @@ function FeedbackEditor({
 								<MyErrorBoundary key={i}>
 									<OptionsInputField
 										key={i}
-										isOnControl={isOnControl}
+										isOnControl={!!location}
 										instanceId={feedback.instance_id}
 										option={opt}
 										actionId={feedback.id}

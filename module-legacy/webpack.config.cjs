@@ -31,6 +31,7 @@ module.exports = {
 		'cpu-features': 'commonjs2 cpu-features',
 		'node-ssdp': 'commonjs2 node-ssdp',
 		serialport: 'commonjs2 fake-module-this-isnt-real',
+		'@julusian/skia-canvas': 'commonjs2 @julusian/skia-canvas',
 	},
 	// experiments: {
 	// 	topLevelAwait: true,

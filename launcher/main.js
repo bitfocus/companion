@@ -632,6 +632,7 @@ if (!lock) {
 							const dirname = ConfigReleaseDirs[i]
 							if (dirname && fs.existsSync(path.join(configDir, dirname, 'db'))) {
 								importFrom = dirname
+								break
 							}
 						}
 						if (!importFrom && fs.existsSync(path.join(configDir, 'db'))) {
@@ -659,7 +660,11 @@ if (!lock) {
 					app.exit(1)
 				} else if (fs.existsSync(thisDbPath)) {
 					// Mark the current config as most recently modified
-					fs.utimesSync(thisDbPath, Date.now(), Date.now())
+					try {
+						fs.utimesSync(thisDbPath, new Date(), new Date())
+					} catch (_e) {
+						// Ignore
+					}
 				}
 			}
 

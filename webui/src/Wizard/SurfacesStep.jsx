@@ -52,7 +52,7 @@ export function SurfacesStep({ config, setValue }) {
 				</div>
 			</div>
 
-			<p className="indent3">Loupedeck Live and Razer Stream Controller USB Devices</p>
+			<p className="indent3">Loupedeck and Razer Stream Controller USB Devices</p>
 			<div className="indent3">
 				<div className="form-check form-check-inline mr-1">
 					<CInputCheckbox

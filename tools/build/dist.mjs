@@ -5,6 +5,13 @@ import archiver from 'archiver'
 import { fs } from 'zx'
 import { createRequire } from 'node:module'
 import path from 'node:path'
+import { determinePlatformInfo } from './util.mjs'
+
+const companionPkgJsonPath = new URL('../../package.json', import.meta.url)
+const companionPkgJsonStr = await fs.readFile(companionPkgJsonPath)
+const companionPkgJson = JSON.parse(companionPkgJsonStr.toString())
+
+const platformInfo = determinePlatformInfo(argv._[0])
 
 /**
  * @param {String} sourceDir: /some/folder/to/compress
@@ -53,6 +60,12 @@ for (const name of neededDependencies) {
 	dependencies[name] = pkgJson.version
 }
 
+if (platformInfo.runtimePlatform === 'linux' && platformInfo.runtimeArch !== 'x64') {
+	// These have no prebuilds available
+	delete dependencies['bufferutil']
+	delete dependencies['utf-8-validate']
+}
+
 const nodeVersion = await fs.readFile('.node-version')
 await fs.writeFile(
 	'dist/package.json',
@@ -63,7 +76,11 @@ await fs.writeFile(
 			license: 'MIT',
 			main: 'main.js',
 			dependencies: dependencies,
-			engines: { node: nodeVersion.toString() },
+			engines: { node: nodeVersion.toString().trim() },
+			resolutions: {
+				// Force the same custom `node-gyp-build` version to allow better cross compiling
+				'node-gyp-build': companionPkgJson.resolutions['node-gyp-build'],
+			},
 		},
 		undefined,
 		2
@@ -73,11 +90,14 @@ await fs.copyFile('yarn.lock', 'dist/yarn.lock') // use the same yarn.lock file,
 await fs.copyFile('.node-version', 'dist/.node-version')
 
 // Copy prebuilds
-const copyPrebuildsFromDependencies = ['@julusian/jpeg-turbo', 'node-hid']
+const copyPrebuildsFromDependencies = ['@julusian/jpeg-turbo', 'node-hid', '@julusian/image-rs']
 for (const name of copyPrebuildsFromDependencies) {
 	await fs.mkdirp('dist/prebuilds')
 	await fs.copy(path.join('node_modules', name, 'prebuilds'), 'dist/prebuilds')
 }
+// Copy fonts
+await fs.mkdirp('dist/assets/Fonts')
+await fs.copy(path.join('assets', 'Fonts'), 'dist/assets/Fonts')
 
 // Build legacy modules
 await $`yarn --cwd module-legacy generate-manifests`

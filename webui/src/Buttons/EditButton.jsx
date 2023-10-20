@@ -41,7 +41,7 @@ import React, {
 	useMemo,
 } from 'react'
 import { nanoid } from 'nanoid'
-import { ButtonPreview, dataToButtonImage } from '../Components/ButtonPreview'
+import { ButtonPreview } from '../Components/ButtonPreview'
 import { GenericConfirmModal } from '../Components/GenericConfirmModal'
 import {
 	KeyReceiver,
@@ -49,7 +49,7 @@ import {
 	socketEmitPromise,
 	SocketContext,
 	MyErrorBoundary,
-	FormatButtonControlId,
+	PagesContext,
 } from '../util'
 import { ControlActionSetEditor } from '../Controls/ActionSetEditor'
 import jsonPatch from 'fast-json-patch'
@@ -60,9 +60,13 @@ import { cloneDeep } from 'lodash-es'
 import { useElementSize } from 'usehooks-ts'
 import { GetStepIds } from '@companion/shared/Controls'
 import CSwitch from '../CSwitch'
+import { formatLocation } from '@companion/shared/ControlId'
 
-export function EditButton({ controlId, onKeyUp, contentHeight }) {
+export function EditButton({ location, onKeyUp, contentHeight }) {
 	const socket = useContext(SocketContext)
+	const pages = useContext(PagesContext)
+
+	const controlId = pages?.[location.pageNumber]?.controls?.[location.row]?.[location.column]
 
 	const resetModalRef = useRef()
 
@@ -119,7 +123,7 @@ export function EditButton({ controlId, onKeyUp, contentHeight }) {
 		socket.on(`controls:runtime-${controlId}`, patchRuntimeProps)
 
 		const updateImage = (img) => {
-			setPreviewImage(dataToButtonImage(img))
+			setPreviewImage(img)
 		}
 		socket.on(`controls:preview-${controlId}`, updateImage)
 
@@ -151,7 +155,7 @@ export function EditButton({ controlId, onKeyUp, contentHeight }) {
 			}
 
 			const doChange = () => {
-				socketEmitPromise(socket, 'controls:reset', [controlId, newType]).catch((e) => {
+				socketEmitPromise(socket, 'controls:reset', [location, newType]).catch((e) => {
 					console.error(`Set type failed: ${e}`)
 				})
 			}
@@ -169,43 +173,43 @@ export function EditButton({ controlId, onKeyUp, contentHeight }) {
 				doChange()
 			}
 		},
-		[socket, controlId, configRef]
+		[socket, location, configRef]
 	)
 
 	const doRetryLoad = useCallback(() => setReloadConfigToken(nanoid()), [])
 	const clearButton = useCallback(() => {
 		resetModalRef.current.show(
-			`Clear button ${FormatButtonControlId(controlId)}`,
+			`Clear button ${formatLocation(location)}`,
 			`This will clear the style, feedbacks and all actions`,
 			'Clear',
 			() => {
-				socketEmitPromise(socket, 'controls:reset', [controlId]).catch((e) => {
+				socketEmitPromise(socket, 'controls:reset', [location]).catch((e) => {
 					console.error(`Reset failed: ${e}`)
 				})
 			}
 		)
-	}, [socket, controlId])
+	}, [socket, location])
 
 	const hotPressDown = useCallback(() => {
-		socketEmitPromise(socket, 'controls:hot-press', [controlId, true, 'edit']).catch((e) =>
+		socketEmitPromise(socket, 'controls:hot-press', [location, true, 'edit']).catch((e) =>
 			console.error(`Hot press failed: ${e}`)
 		)
-	}, [socket, controlId])
+	}, [socket, location])
 	const hotPressUp = useCallback(() => {
-		socketEmitPromise(socket, 'controls:hot-press', [controlId, false, 'edit']).catch((e) =>
+		socketEmitPromise(socket, 'controls:hot-press', [location, false, 'edit']).catch((e) =>
 			console.error(`Hot press failed: ${e}`)
 		)
-	}, [socket, controlId])
+	}, [socket, location])
 	const hotRotateLeft = useCallback(() => {
-		socketEmitPromise(socket, 'controls:hot-rotate', [controlId, false]).catch((e) =>
+		socketEmitPromise(socket, 'controls:hot-rotate', [location, false]).catch((e) =>
 			console.error(`Hot rotate failed: ${e}`)
 		)
-	}, [socket, controlId])
+	}, [socket, location])
 	const hotRotateRight = useCallback(() => {
-		socketEmitPromise(socket, 'controls:hot-rotate', [controlId, true]).catch((e) =>
+		socketEmitPromise(socket, 'controls:hot-rotate', [location, true]).catch((e) =>
 			console.error(`Hot rotate failed: ${e}`)
 		)
-	}, [socket, controlId])
+	}, [socket, location])
 
 	const errors = []
 	if (configError) errors.push(configError)
@@ -213,8 +217,6 @@ export function EditButton({ controlId, onKeyUp, contentHeight }) {
 	const hasConfig = config || config === false
 	const hasRuntimeProps = runtimeProps || runtimeProps === false
 	const dataReady = !loadError && hasConfig && hasRuntimeProps
-
-	//const parsedId = ParseControlId(controlId)
 
 	// Tip: This query needs to match the page layout. It doesn't need to be reactive, as the useElementSize will force a re-render
 	const isTwoColumn = window.matchMedia('(min-width: 1200px)').matches
@@ -229,15 +231,13 @@ export function EditButton({ controlId, onKeyUp, contentHeight }) {
 					<MyErrorBoundary>
 						<>
 							<ButtonPreview fixedSize preview={previewImage} right={true} />
-							<CDropdown className="" style={{ display: 'inline-block', marginRight: -4 }}>
-								<CButtonGroup>
-									{/* This could be simplified to use the split property on CDropdownToggle, but then onClick doesnt work https://github.com/coreui/coreui-react/issues/179 */}
-									{config.type === undefined && (
+							{config.type === undefined && (
+								<CDropdown className="" style={{ display: 'inline-block', marginRight: -4 }}>
+									<CButtonGroup>
+										{/* This could be simplified to use the split property on CDropdownToggle, but then onClick doesnt work https://github.com/coreui/coreui-react/issues/179 */}
 										<CButton color="danger" onClick={() => setButtonType('button')}>
 											Create button
 										</CButton>
-									)}
-									{config.type !== 'button' && (
 										<CDropdownToggle
 											caret
 											color="danger"
@@ -246,15 +246,15 @@ export function EditButton({ controlId, onKeyUp, contentHeight }) {
 										>
 											<span className="sr-only">Toggle Dropdown</span>
 										</CDropdownToggle>
-									)}
-								</CButtonGroup>
-								<CDropdownMenu>
-									<CDropdownItem onClick={() => setButtonType('button')}>Regular button</CDropdownItem>
-									<CDropdownItem onClick={() => setButtonType('pageup')}>Page up</CDropdownItem>
-									<CDropdownItem onClick={() => setButtonType('pagenum')}>Page number</CDropdownItem>
-									<CDropdownItem onClick={() => setButtonType('pagedown')}>Page down</CDropdownItem>
-								</CDropdownMenu>
-							</CDropdown>
+									</CButtonGroup>
+									<CDropdownMenu>
+										<CDropdownItem onClick={() => setButtonType('button')}>Regular button</CDropdownItem>
+										<CDropdownItem onClick={() => setButtonType('pageup')}>Page up</CDropdownItem>
+										<CDropdownItem onClick={() => setButtonType('pagenum')}>Page number</CDropdownItem>
+										<CDropdownItem onClick={() => setButtonType('pagedown')}>Page down</CDropdownItem>
+									</CDropdownMenu>
+								</CDropdown>
+							)}
 							&nbsp;
 							<CButton color="danger" hidden={!config} onClick={clearButton} title="Clear Button">
 								<FontAwesomeIcon icon={faTrashAlt} />
@@ -272,7 +272,7 @@ export function EditButton({ controlId, onKeyUp, contentHeight }) {
 									<FontAwesomeIcon icon={faPlay} />
 									&nbsp;Test
 								</CButton>
-							</CButtonGroup>
+							</CButtonGroup>{' '}
 							&nbsp;
 							{config?.options?.rotaryActions && (
 								<>
@@ -320,6 +320,7 @@ export function EditButton({ controlId, onKeyUp, contentHeight }) {
 							<TabsSection
 								fillHeight={isTwoColumn ? contentHeight - hintHeight : 0}
 								style={config.type}
+								location={location}
 								controlId={controlId}
 								steps={config.steps || {}}
 								runtimeProps={runtimeProps}
@@ -334,7 +335,7 @@ export function EditButton({ controlId, onKeyUp, contentHeight }) {
 	)
 }
 
-function TabsSection({ style, controlId, steps, runtimeProps, rotaryActions, feedbacks }) {
+function TabsSection({ style, controlId, location, steps, runtimeProps, rotaryActions, feedbacks }) {
 	const socket = useContext(SocketContext)
 
 	const confirmRef = useRef()
@@ -512,7 +513,7 @@ function TabsSection({ style, controlId, steps, runtimeProps, rotaryActions, fee
 								entityType="feedback"
 								controlId={controlId}
 								feedbacks={feedbacks}
-								isOnControl={true}
+								location={location}
 							/>
 						</MyErrorBoundary>
 					)}
@@ -569,11 +570,11 @@ function TabsSection({ style, controlId, steps, runtimeProps, rotaryActions, fee
 										<ControlActionSetEditor
 											heading="Rotate left actions"
 											controlId={controlId}
+											location={location}
 											stepId={selectedKey}
 											setId="rotate_left"
 											addPlaceholder="+ Add rotate left action"
 											actions={selectedStep2.action_sets['rotate_left']}
-											isOnControl={true}
 										/>
 									</MyErrorBoundary>
 
@@ -581,11 +582,11 @@ function TabsSection({ style, controlId, steps, runtimeProps, rotaryActions, fee
 										<ControlActionSetEditor
 											heading="Rotate right actions"
 											controlId={controlId}
+											location={location}
 											stepId={selectedKey}
 											setId="rotate_right"
 											addPlaceholder="+ Add rotate right action"
 											actions={selectedStep2.action_sets['rotate_right']}
-											isOnControl={true}
 										/>
 									</MyErrorBoundary>
 								</>
@@ -595,16 +596,17 @@ function TabsSection({ style, controlId, steps, runtimeProps, rotaryActions, fee
 								<ControlActionSetEditor
 									heading={`Press actions`}
 									controlId={controlId}
+									location={location}
 									stepId={selectedKey}
 									setId="down"
 									addPlaceholder={`+ Add press action`}
 									actions={selectedStep2.action_sets['down']}
-									isOnControl={true}
 								/>
 							</MyErrorBoundary>
 
 							<EditActionsRelease
 								controlId={controlId}
+								location={location}
 								action_sets={selectedStep2.action_sets}
 								stepOptions={selectedStep2.options}
 								stepId={selectedKey}
@@ -627,7 +629,7 @@ function TabsSection({ style, controlId, steps, runtimeProps, rotaryActions, fee
 	}
 }
 
-function EditActionsRelease({ controlId, action_sets, stepOptions, stepId, removeSet }) {
+function EditActionsRelease({ controlId, location, action_sets, stepOptions, stepId, removeSet }) {
 	const socket = useContext(SocketContext)
 
 	const editRef = useRef(null)
@@ -680,11 +682,11 @@ function EditActionsRelease({ controlId, action_sets, stepOptions, stepId, remov
 						</CButton>,
 					]}
 					controlId={controlId}
+					location={location}
 					stepId={stepId}
 					setId={id}
 					addPlaceholder={`+ Add ${ident} action`}
 					actions={actions}
-					isOnControl={true}
 				/>
 			</MyErrorBoundary>
 		)
@@ -698,11 +700,11 @@ function EditActionsRelease({ controlId, action_sets, stepOptions, stepId, remov
 				<ControlActionSetEditor
 					heading={candidate_sets.length ? 'Short release actions' : 'Release actions'}
 					controlId={controlId}
+					location={location}
 					stepId={stepId}
 					setId={'up'}
 					addPlaceholder={candidate_sets.length ? '+ Add key short release action' : '+ Add key release action'}
 					actions={action_sets['up']}
-					isOnControl={true}
 				/>
 			</MyErrorBoundary>
 
