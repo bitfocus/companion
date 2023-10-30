@@ -660,7 +660,11 @@ if (!lock) {
 					app.exit(1)
 				} else if (fs.existsSync(thisDbPath)) {
 					// Mark the current config as most recently modified
-					fs.utimesSync(thisDbPath, Date.now(), Date.now())
+					try {
+						fs.utimesSync(thisDbPath, new Date(), new Date())
+					} catch (_e) {
+						// Ignore
+					}
 				}
 			}
 

@@ -1,5 +1,8 @@
 #!/usr/bin/env node
 
+// Setup some fixes before loading any imports
+import './lib/Util/FixImports.js'
+
 // Setup logging before anything else runs
 import './lib/Log/Controller.js'
 
