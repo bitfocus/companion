@@ -1,5 +1,8 @@
 #!/usr/bin/env node
 
+// Setup some fixes before loading any imports
+import './lib/Util/FixImports.js'
+
 // Setup logging before anything else runs
 import './lib/Log/Controller.js'
 
@@ -146,6 +149,7 @@ program.command('start', { isDefault: true, hidden: true }).action(() => {
 			if (fs.existsSync(previousDbPath)) {
 				// Found the one to copy
 				fs.copyFileSync(previousDbPath, path.join(configDir, 'db'))
+				break
 			}
 		}
 	}

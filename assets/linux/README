@@ -5,7 +5,7 @@
    If you want to run companion on a headless machine, consider using the CompanionPi install script
 
    This can be run with:
-   $ curl https://raw.githubusercontent.com/bitfocus/companion-pi/main/install.sh | sh
+   $ curl https://raw.githubusercontent.com/bitfocus/companion-pi/main/install.sh | bash
 
    The benefit of this approach is that it will setup and manage any required dependencies, udev rules for you, and provide you with an easy script to run to perform an update.
 

@@ -18,7 +18,7 @@ if (platformInfo.nodeArch) {
 	process.env.npm_config_target_arch = platformInfo.nodeArch
 }
 
-const nodeVersion = await fs.readFile('./dist/.node-version')
+const nodeVersion = (await fs.readFile('./dist/.node-version')).toString().trim()
 const isZip = platformInfo.runtimePlatform === 'win'
 
 // Download and cache build of nodejs
@@ -103,6 +103,18 @@ if (!process.env.SKIP_LAUNCH_CHECK) {
 
 // TODO - make optional from flag
 if (process.env.ELECTRON !== '0') {
+	// Download vs redist if doing for windows
+	if (platformInfo.runtimePlatform === 'win') {
+		const localRedistPath = '.cache/vc_redist.x64.exe'
+		if (!(await fs.pathExists(localRedistPath))) {
+			await fs.mkdirp('.cache')
+
+			const response = await fetch('https://aka.ms/vs/17/release/vc_redist.x64.exe')
+			if (!response.ok) throw new Error(`unexpected response ${response.statusText}`)
+			await streamPipeline(response.body, createWriteStream('.cache/vc_redist.x64.exe'))
+		}
+	}
+
 	// Set version of the launcher to match the contents of the BUILD file
 
 	const launcherPkgJsonPath = new URL('../../launcher/package.json', import.meta.url)

@@ -2,8 +2,32 @@ name: Build binaries
 on: [push]
 
 jobs:
+  check-types:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      - name: Use Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version-file: '.node-version'
+
+      - name: Prepare
+        run: |
+          # try and avoid timeout errors
+          yarn config set network-timeout 100000 -g
+
+          yarn --frozen-lockfile
+
+      - name: Check types
+        run: |
+          yarn check-types
+
   linux64:
     runs-on: ubuntu-20.04
+    needs: check-types
+
     outputs:
       version: ${{ steps.filenames.outputs.longversion }}
       do-docker: ${{ steps.upload.outputs.branch }}
@@ -72,6 +96,8 @@ jobs:
 
   linux-arm64:
     runs-on: ubuntu-20.04
+    needs: check-types
+
     steps:
       - uses: actions/checkout@v3
         with:
@@ -136,6 +162,8 @@ jobs:
 
   osx:
     runs-on: macos-11
+    needs: check-types
+
     steps:
       - uses: actions/checkout@v3
         with:
@@ -199,6 +227,8 @@ jobs:
 
   osx-arm64:
     runs-on: macos-11
+    needs: check-types
+
     steps:
       - uses: actions/checkout@v3
         with:
@@ -266,6 +296,8 @@ jobs:
 
   win64:
     runs-on: windows-2019
+    needs: check-types
+
     steps:
       - uses: actions/checkout@v3
         with:
@@ -341,62 +373,46 @@ jobs:
       IMAGE_NAME: companion
 
     steps:
-      - uses: actions/checkout@v3
+      - name: Docker meta
         if: ${{ needs.linux64.outputs.do-docker }}
-
-      - name: Determine target image name
-        if: ${{ needs.linux64.outputs.do-docker }}
-        id: image-name
-        run: |
-          BUILD_VERSION=${{ needs.linux64.outputs.version }}
-
-          IMAGE_ID=ghcr.io/${{ github.repository }}/$IMAGE_NAME
-
-           # Change all uppercase to lowercase
-          IMAGE_ID=$(echo $IMAGE_ID | tr '[A-Z]' '[a-z]')
-
-          # Strip git ref prefix from version
-          VERSION=$(echo "${{ github.ref }}" | sed -e 's,.*/\(.*\),\1,')
-
-          # Strip "v" prefix from tag name
-          [[ "${{ github.ref }}" == "refs/tags/"* ]] && VERSION=$(echo $VERSION | sed -e 's/^v//')
-
-          # Use Docker `latest` tag convention
-          [ "$VERSION" == "master" ] && VERSION=latest
-
-          IMAGES=
-          IMAGES="$IMAGE_ID:$VERSION,$IMAGES"
-          # IMAGES="$IMAGE_ID:$BUILD_VERSION,$IMAGES" TODO - this would be nice to have, but the version needs making docker-tag safe first
-
-          # debug output
-          echo images $IMAGES
-          echo "images=$IMAGES" >> $GITHUB_OUTPUT
-          echo "build_version=$BUILD_VERSION" >> $GITHUB_OUTPUT
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: |
+            ghcr.io/${{ github.repository }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=raw,value=${{ needs.linux64.outputs.version }}
+            type=ref,event=tag
+            type=ref,event=branch
 
       - name: Set up QEMU
-        if: ${{ steps.image-name.outputs.images }}
+        if: ${{ steps.meta.outputs.tags }}
         uses: docker/setup-qemu-action@v2
 
       - name: Set up Docker Buildx
-        if: ${{ steps.image-name.outputs.images }}
+        if: ${{ steps.meta.outputs.tags }}
         uses: docker/setup-buildx-action@v2
 
       - name: Login to registry
-        if: ${{ steps.image-name.outputs.images }}
+        if: ${{ steps.meta.outputs.tags }}
         uses: docker/login-action@v2
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      - uses: actions/checkout@v3
+        if: ${{ steps.meta.outputs.tags }}
+
       - name: Build and push
         uses: docker/build-push-action@v3
-        if: ${{ steps.image-name.outputs.images }}
+        if: ${{ steps.meta.outputs.tags }}
         with:
           context: .
           file: Dockerfile.prebuild
           platforms: linux/amd64,linux/arm64/v8
           push: true
-          tags: ${{ steps.image-name.outputs.images }}
+          labels: ${{ steps.meta.outputs.labels }}
+          tags: '${{ steps.meta.outputs.tags }}'
           build-args: |
-            build_name=${{ steps.image-name.outputs.build_version }}
+            build_name=${{ needs.linux64.outputs.version }}

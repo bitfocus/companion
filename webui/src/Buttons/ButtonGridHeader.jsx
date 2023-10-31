@@ -5,7 +5,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faChevronLeft, faChevronRight } from '@fortawesome/free-solid-svg-icons'
 import Select from 'react-select'
 
-export const ButtonGridHeader = memo(function ButtonGridHeader({ pageNumber, changePage, setPage }) {
+export const ButtonGridHeader = memo(function ButtonGridHeader({ pageNumber, changePage, setPage, children }) {
 	const pagesContext = useContext(PagesContext)
 
 	const inputChange = useCallback(
@@ -62,6 +62,7 @@ export const ButtonGridHeader = memo(function ButtonGridHeader({ pageNumber, cha
 					</CButton>
 				</CInputGroupAppend>
 			</CInputGroup>
+			<div className="right-buttons">{children}</div>
 		</div>
 	)
 })
