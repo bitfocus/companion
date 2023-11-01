@@ -1,5 +1,33 @@
 # Bitfocus Companion
 
+## Companion v3.1.2 - Release Notes
+
+### 🐞 BUG FIXES
+
+- Fixed xkeys unable to show colours
+- Fixed https binding to wrong port at startup (#2610)
+- Fixed switching between version branches failing on windows
+- Fixed crash with fresh config (#2557, #2615)
+- Added default for lastUpgradeIndex (#2627)
+- Updated some vulnerable dependencies
+- Ensured timed triggers dont trigger when enabled unexpectedly (#2626)
+- Fixed handle missing property in import (#2627)
+
+### 🐞 MODULE FIXES
+
+- dataton-watchout
+- etc-eos
+- generic-mqtt
+- globalcache-itac-cc
+- grassvalley-amp
+- presentationtools-aps
+- ptzoptics-visca
+- qsys-remote-control
+- shelly-ws
+- softron-movierecorder
+- videolan-vlc
+- vistream-online
+
 ## Companion v3.1.1 - Release Notes
 
 ### 🐞 BUG FIXES
