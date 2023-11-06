@@ -4,6 +4,7 @@ import { ServiceHttpApi } from '../../lib/Service/HttpApi'
 import express from 'express'
 import supertest from 'supertest'
 import bodyParser from 'body-parser'
+import { rgb } from '../../lib/Resources/Util'
 
 const mockOptions = {
 	fallbackMockImplementation: () => {
@@ -52,8 +53,8 @@ describe('HttpApi', () => {
 
 		const app = express()
 
-		// parse text/plain
 		app.use(bodyParser.text())
+		app.use(bodyParser.json())
 
 		app.use(router)
 
@@ -164,6 +165,9 @@ describe('HttpApi', () => {
 				const res = await supertest(app).get('/api/custom-variable/my-var-name/value').send()
 				expect(res.status).toBe(404)
 				expect(res.text).toBe('Not found')
+
+				expect(mockFn).toHaveBeenCalledTimes(1)
+				expect(mockFn).toHaveBeenCalledWith('my-var-name')
 			})
 
 			test('value empty string', async () => {
@@ -176,6 +180,9 @@ describe('HttpApi', () => {
 				const res = await supertest(app).get('/api/custom-variable/my-var-name/value').send()
 				expect(res.status).toBe(200)
 				expect(res.text).toBe('')
+
+				expect(mockFn).toHaveBeenCalledTimes(1)
+				expect(mockFn).toHaveBeenCalledWith('my-var-name')
 			})
 
 			test('value proper string', async () => {
@@ -188,6 +195,9 @@ describe('HttpApi', () => {
 				const res = await supertest(app).get('/api/custom-variable/my-var-name/value').send()
 				expect(res.status).toBe(200)
 				expect(res.text).toBe('something 123')
+
+				expect(mockFn).toHaveBeenCalledTimes(1)
+				expect(mockFn).toHaveBeenCalledWith('my-var-name')
 			})
 
 			test('value zero number', async () => {
@@ -200,6 +210,9 @@ describe('HttpApi', () => {
 				const res = await supertest(app).get('/api/custom-variable/my-var-name/value').send()
 				expect(res.status).toBe(200)
 				expect(res.text).toBe('0')
+
+				expect(mockFn).toHaveBeenCalledTimes(1)
+				expect(mockFn).toHaveBeenCalledWith('my-var-name')
 			})
 
 			test('value real number', async () => {
@@ -212,6 +225,9 @@ describe('HttpApi', () => {
 				const res = await supertest(app).get('/api/custom-variable/my-var-name/value').send()
 				expect(res.status).toBe(200)
 				expect(res.text).toBe('455.8')
+
+				expect(mockFn).toHaveBeenCalledTimes(1)
+				expect(mockFn).toHaveBeenCalledWith('my-var-name')
 			})
 
 			test('value false', async () => {
@@ -224,6 +240,9 @@ describe('HttpApi', () => {
 				const res = await supertest(app).get('/api/custom-variable/my-var-name/value').send()
 				expect(res.status).toBe(200)
 				expect(res.text).toBe('false')
+
+				expect(mockFn).toHaveBeenCalledTimes(1)
+				expect(mockFn).toHaveBeenCalledWith('my-var-name')
 			})
 
 			test('value true', async () => {
@@ -236,6 +255,9 @@ describe('HttpApi', () => {
 				const res = await supertest(app).get('/api/custom-variable/my-var-name/value').send()
 				expect(res.status).toBe(200)
 				expect(res.text).toBe('true')
+
+				expect(mockFn).toHaveBeenCalledTimes(1)
+				expect(mockFn).toHaveBeenCalledWith('my-var-name')
 			})
 
 			test('value object', async () => {
@@ -251,6 +273,9 @@ describe('HttpApi', () => {
 				const res = await supertest(app).get('/api/custom-variable/my-var-name/value').send()
 				expect(res.status).toBe(200)
 				expect(res.text).toBe('{"a":1,"b":"str"}')
+
+				expect(mockFn).toHaveBeenCalledTimes(1)
+				expect(mockFn).toHaveBeenCalledWith('my-var-name')
 			})
 		})
 	})
@@ -667,6 +692,186 @@ describe('HttpApi', () => {
 
 				expect(registry.page.getControlIdAt).toHaveBeenCalledTimes(0)
 				expect(registry.controls.rotateControl).toHaveBeenCalledTimes(0)
+			})
+		})
+
+		describe('set style', () => {
+			test('no control', async () => {
+				const { app, registry } = createService()
+				registry.page.getControlIdAt.mockReturnValue(undefined)
+
+				// Perform the request
+				const res = await supertest(app).post('/api/location/1/2/3/style').send()
+				expect(res.status).toBe(204)
+				// expect(res.text).toBe('No control')
+
+				expect(registry.page.getControlIdAt).toHaveBeenCalledTimes(1)
+				expect(registry.page.getControlIdAt).toHaveBeenCalledWith({
+					pageNumber: 1,
+					row: 2,
+					column: 3,
+				})
+			})
+
+			test('control without style', async () => {
+				const { app, registry } = createService()
+				registry.page.getControlIdAt.mockReturnValue('abc')
+
+				registry.controls.getControl.mockReturnValue({ abc: null })
+
+				// Perform the request
+				const res = await supertest(app).post('/api/location/1/2/3/style').send()
+				expect(res.status).toBe(204)
+				// expect(res.text).toBe('No control')
+
+				expect(registry.page.getControlIdAt).toHaveBeenCalledTimes(1)
+				expect(registry.page.getControlIdAt).toHaveBeenCalledWith({
+					pageNumber: 1,
+					row: 2,
+					column: 3,
+				})
+
+				expect(registry.controls.getControl).toHaveBeenCalledTimes(1)
+				expect(registry.controls.getControl).toHaveBeenCalledWith('abc')
+			})
+
+			test('bad page', async () => {
+				const { app, registry } = createService()
+				registry.page.getControlIdAt.mockReturnValue('control123')
+				registry.controls.rotateControl.mockReturnValue(true)
+
+				// Perform the request
+				const res = await supertest(app).post('/api/location/1a/2/3/style').send()
+				expect(res.status).toBe(404)
+
+				expect(registry.page.getControlIdAt).toHaveBeenCalledTimes(0)
+				expect(registry.controls.rotateControl).toHaveBeenCalledTimes(0)
+			})
+
+			test('bad row', async () => {
+				const { app, registry } = createService()
+				registry.page.getControlIdAt.mockReturnValue('control123')
+				registry.controls.rotateControl.mockReturnValue(true)
+
+				// Perform the request
+				const res = await supertest(app).post('/api/location/1/2a/3/style').send()
+				expect(res.status).toBe(404)
+
+				expect(registry.page.getControlIdAt).toHaveBeenCalledTimes(0)
+				expect(registry.controls.rotateControl).toHaveBeenCalledTimes(0)
+			})
+
+			test('bad column', async () => {
+				const { app, registry } = createService()
+				registry.page.getControlIdAt.mockReturnValue('control123')
+				registry.controls.rotateControl.mockReturnValue(true)
+
+				// Perform the request
+				const res = await supertest(app).post('/api/location/1/2/3a/style').send()
+				expect(res.status).toBe(404)
+
+				expect(registry.page.getControlIdAt).toHaveBeenCalledTimes(0)
+				expect(registry.controls.rotateControl).toHaveBeenCalledTimes(0)
+			})
+
+			test('set style without properties', async () => {
+				const { app, registry } = createService()
+				registry.page.getControlIdAt.mockReturnValue('abc')
+
+				const mockControl = mock(
+					{
+						styleSetFields: jest.fn(),
+					},
+					mockOptions
+				)
+				registry.controls.getControl.mockReturnValue(mockControl)
+
+				// Perform the request
+				const res = await supertest(app).post('/api/location/1/2/3/style').send()
+				expect(res.status).toBe(200)
+				expect(res.text).toBe('ok')
+
+				expect(registry.page.getControlIdAt).toHaveBeenCalledTimes(1)
+				expect(registry.page.getControlIdAt).toHaveBeenCalledWith({
+					pageNumber: 1,
+					row: 2,
+					column: 3,
+				})
+
+				expect(registry.controls.getControl).toHaveBeenCalledTimes(1)
+				expect(registry.controls.getControl).toHaveBeenCalledWith('abc')
+
+				expect(mockControl.styleSetFields).toHaveBeenCalledTimes(0)
+			})
+
+			test('set style unknown properties', async () => {
+				const { app, registry } = createService()
+				registry.page.getControlIdAt.mockReturnValue('abc')
+
+				const mockControl = mock(
+					{
+						styleSetFields: jest.fn(),
+					},
+					mockOptions
+				)
+				registry.controls.getControl.mockReturnValue(mockControl)
+
+				// Perform the request
+				const res = await supertest(app)
+					.post('/api/location/1/2/3/style?abc=123')
+					.set('Content-Type', 'application/json')
+					.send({ def: 456 })
+				expect(res.status).toBe(200)
+				expect(res.text).toBe('ok')
+
+				expect(registry.page.getControlIdAt).toHaveBeenCalledTimes(1)
+				expect(registry.page.getControlIdAt).toHaveBeenCalledWith({
+					pageNumber: 1,
+					row: 2,
+					column: 3,
+				})
+
+				expect(registry.controls.getControl).toHaveBeenCalledTimes(1)
+				expect(registry.controls.getControl).toHaveBeenCalledWith('abc')
+
+				expect(mockControl.styleSetFields).toHaveBeenCalledTimes(0)
+			})
+
+			test('set color properties', async () => {
+				const { app, registry } = createService()
+				registry.page.getControlIdAt.mockReturnValue('abc')
+
+				const mockControl = mock(
+					{
+						styleSetFields: jest.fn(),
+					},
+					mockOptions
+				)
+				registry.controls.getControl.mockReturnValue(mockControl)
+
+				// Perform the request
+				const res = await supertest(app)
+					.post('/api/location/1/2/3/style?bgcolor=%23abcdef')
+					.set('Content-Type', 'application/json')
+					.send({ color: 'rgb(1,2,3)' })
+				expect(res.status).toBe(200)
+				expect(res.text).toBe('ok')
+
+				expect(registry.page.getControlIdAt).toHaveBeenCalledTimes(1)
+				expect(registry.page.getControlIdAt).toHaveBeenCalledWith({
+					pageNumber: 1,
+					row: 2,
+					column: 3,
+				})
+
+				expect(registry.controls.getControl).toHaveBeenCalledTimes(1)
+				expect(registry.controls.getControl).toHaveBeenCalledWith('abc')
+
+				expect(mockControl.styleSetFields).toHaveBeenCalledTimes(1)
+				expect(mockControl.styleSetFields).toHaveBeenCalledWith({
+					bgcolor: rgb('ab', 'cd', 'ef', 16),
+					color: rgb(1, 2, 3),
+				})
 			})
 		})
 	})
