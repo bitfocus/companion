@@ -96,7 +96,7 @@ describe('HttpApi', () => {
 				const { app } = createService()
 
 				// Perform the request
-				const res = await supertest(app).post('/api/custom-variable/my-var-name/set-value').send()
+				const res = await supertest(app).post('/api/custom-variable/my-var-name/value').send()
 				expect(res.status).toBe(400)
 				expect(res.text).toBe('No value')
 			})
@@ -108,7 +108,7 @@ describe('HttpApi', () => {
 				mockFn.mockReturnValue()
 
 				// Perform the request
-				const res = await supertest(app).post('/api/custom-variable/my-var-name/set-value?value=123').send()
+				const res = await supertest(app).post('/api/custom-variable/my-var-name/value?value=123').send()
 				expect(res.status).toBe(200)
 				expect(res.text).toBe('ok')
 
@@ -124,7 +124,7 @@ describe('HttpApi', () => {
 
 				// Perform the request
 				const res = await supertest(app)
-					.post('/api/custom-variable/my-var-name/set-value')
+					.post('/api/custom-variable/my-var-name/value')
 					.set('Content-Type', 'text/plain')
 					.send('def')
 				expect(res.status).toBe(200)
@@ -142,7 +142,7 @@ describe('HttpApi', () => {
 
 				// Perform the request
 				const res = await supertest(app)
-					.post('/api/custom-variable/my-var-name/set-value')
+					.post('/api/custom-variable/my-var-name/value')
 					.set('Content-Type', 'text/plain')
 					.send('def')
 				expect(res.status).toBe(404)
@@ -150,6 +150,108 @@ describe('HttpApi', () => {
 
 				expect(mockFn).toHaveBeenCalledTimes(1)
 				expect(mockFn).toHaveBeenCalledWith('my-var-name', 'def')
+			})
+		})
+
+		describe('get value', () => {
+			test('no value', async () => {
+				const { app, registry } = createService()
+
+				const mockFn = registry.instance.variable.custom.getValue
+				mockFn.mockReturnValue(undefined)
+
+				// Perform the request
+				const res = await supertest(app).get('/api/custom-variable/my-var-name/value').send()
+				expect(res.status).toBe(404)
+				expect(res.text).toBe('Not found')
+			})
+
+			test('value empty string', async () => {
+				const { app, registry } = createService()
+
+				const mockFn = registry.instance.variable.custom.getValue
+				mockFn.mockReturnValue('')
+
+				// Perform the request
+				const res = await supertest(app).get('/api/custom-variable/my-var-name/value').send()
+				expect(res.status).toBe(200)
+				expect(res.text).toBe('')
+			})
+
+			test('value proper string', async () => {
+				const { app, registry } = createService()
+
+				const mockFn = registry.instance.variable.custom.getValue
+				mockFn.mockReturnValue('something 123')
+
+				// Perform the request
+				const res = await supertest(app).get('/api/custom-variable/my-var-name/value').send()
+				expect(res.status).toBe(200)
+				expect(res.text).toBe('something 123')
+			})
+
+			test('value zero number', async () => {
+				const { app, registry } = createService()
+
+				const mockFn = registry.instance.variable.custom.getValue
+				mockFn.mockReturnValue(0)
+
+				// Perform the request
+				const res = await supertest(app).get('/api/custom-variable/my-var-name/value').send()
+				console.log(res)
+				expect(res.status).toBe(200)
+				expect(res.text).toBe('0')
+			})
+
+			test('value real number', async () => {
+				const { app, registry } = createService()
+
+				const mockFn = registry.instance.variable.custom.getValue
+				mockFn.mockReturnValue(455.8)
+
+				// Perform the request
+				const res = await supertest(app).get('/api/custom-variable/my-var-name/value').send()
+				expect(res.status).toBe(200)
+				expect(res.text).toBe('455.8')
+			})
+
+			test('value false', async () => {
+				const { app, registry } = createService()
+
+				const mockFn = registry.instance.variable.custom.getValue
+				mockFn.mockReturnValue(false)
+
+				// Perform the request
+				const res = await supertest(app).get('/api/custom-variable/my-var-name/value').send()
+				expect(res.status).toBe(200)
+				expect(res.text).toBe('false')
+			})
+
+			test('value true', async () => {
+				const { app, registry } = createService()
+
+				const mockFn = registry.instance.variable.custom.getValue
+				mockFn.mockReturnValue(true)
+
+				// Perform the request
+				const res = await supertest(app).get('/api/custom-variable/my-var-name/value').send()
+				expect(res.status).toBe(200)
+				expect(res.text).toBe('true')
+			})
+
+			test('value object', async () => {
+				const { app, registry } = createService()
+
+				const mockFn = registry.instance.variable.custom.getValue
+				mockFn.mockReturnValue({
+					a: 1,
+					b: 'str',
+				})
+
+				// Perform the request
+				const res = await supertest(app).get('/api/custom-variable/my-var-name/value').send()
+				expect(res.status).toBe(200)
+				expect(res.text).toBe('{"a":1,"b":"str"}')
 			})
 		})
 	})
