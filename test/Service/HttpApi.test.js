@@ -198,7 +198,6 @@ describe('HttpApi', () => {
 
 				// Perform the request
 				const res = await supertest(app).get('/api/custom-variable/my-var-name/value').send()
-				console.log(res)
 				expect(res.status).toBe(200)
 				expect(res.text).toBe('0')
 			})
