@@ -29,17 +29,16 @@ export const HelpModal = memo(
 		const contentBaseUrl = content?.[1]?.baseUrl
 		const marked = useMemo(() => {
 			const marked = new Marked()
-			marked.setOptions({
-				allowedTags: sanitizeHtml.defaults.allowedTags.concat(['img']),
-				disallowedTagsMode: 'escape',
-			})
 			if (contentBaseUrl) marked.use(baseUrl(contentBaseUrl))
 			return marked
 		}, [contentBaseUrl])
 
 		const html = content
 			? {
-					__html: sanitizeHtml(marked.parse(content[1].markdown)),
+					__html: sanitizeHtml(marked.parse(content[1].markdown), {
+						allowedTags: sanitizeHtml.defaults.allowedTags.concat(['img']),
+						disallowedTagsMode: 'escape',
+					}),
 			  }
 			: undefined
 
