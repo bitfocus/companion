@@ -171,7 +171,7 @@ export function TabletView() {
 													) : (
 														<ButtonsFromPage
 															pageNumber={number}
-															indexOffset={(number - 1) * gridSize.columnCount * gridSize.rowCount}
+															indexOffset={i * gridSize.columnCount * gridSize.rowCount}
 															displayColumns={displayColumns}
 															gridSize={gridSize}
 															buttonSize={buttonSize}
