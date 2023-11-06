@@ -256,7 +256,7 @@ describe('HttpApi', () => {
 		})
 	})
 
-	describe('controls', () => {
+	describe('controls by location', () => {
 		describe('down', () => {
 			test('no control', async () => {
 				const { app, registry } = createService()
@@ -266,7 +266,7 @@ describe('HttpApi', () => {
 				registry.controls.getControl.mockReturnValue(mockControl)
 
 				// Perform the request
-				const res = await supertest(app).post('/api/controls/1/2/3/down').send()
+				const res = await supertest(app).post('/api/location/1/2/3/down').send()
 				expect(res.status).toBe(204)
 				// expect(res.text).toBe('No control')
 
@@ -284,7 +284,7 @@ describe('HttpApi', () => {
 				registry.controls.pressControl.mockReturnValue(true)
 
 				// Perform the request
-				const res = await supertest(app).post('/api/controls/1/2/3/down').send()
+				const res = await supertest(app).post('/api/location/1/2/3/down').send()
 				expect(res.status).toBe(200)
 				expect(res.text).toBe('ok')
 
@@ -304,7 +304,7 @@ describe('HttpApi', () => {
 				registry.controls.pressControl.mockReturnValue(true)
 
 				// Perform the request
-				const res = await supertest(app).post('/api/controls/1a/2/3/down').send()
+				const res = await supertest(app).post('/api/location/1a/2/3/down').send()
 				expect(res.status).toBe(404)
 
 				expect(registry.page.getControlIdAt).toHaveBeenCalledTimes(0)
@@ -317,7 +317,7 @@ describe('HttpApi', () => {
 				registry.controls.pressControl.mockReturnValue(true)
 
 				// Perform the request
-				const res = await supertest(app).post('/api/controls/1/2a/3/down').send()
+				const res = await supertest(app).post('/api/location/1/2a/3/down').send()
 				expect(res.status).toBe(404)
 
 				expect(registry.page.getControlIdAt).toHaveBeenCalledTimes(0)
@@ -330,7 +330,7 @@ describe('HttpApi', () => {
 				registry.controls.pressControl.mockReturnValue(true)
 
 				// Perform the request
-				const res = await supertest(app).post('/api/controls/1/2/3a/down').send()
+				const res = await supertest(app).post('/api/location/1/2/3a/down').send()
 				expect(res.status).toBe(404)
 
 				expect(registry.page.getControlIdAt).toHaveBeenCalledTimes(0)
@@ -347,7 +347,7 @@ describe('HttpApi', () => {
 				registry.controls.getControl.mockReturnValue(mockControl)
 
 				// Perform the request
-				const res = await supertest(app).post('/api/controls/1/2/3/up').send()
+				const res = await supertest(app).post('/api/location/1/2/3/up').send()
 				expect(res.status).toBe(204)
 				// expect(res.text).toBe('No control')
 
@@ -365,7 +365,7 @@ describe('HttpApi', () => {
 				registry.controls.pressControl.mockReturnValue(true)
 
 				// Perform the request
-				const res = await supertest(app).post('/api/controls/1/2/3/up').send()
+				const res = await supertest(app).post('/api/location/1/2/3/up').send()
 				expect(res.status).toBe(200)
 				expect(res.text).toBe('ok')
 
@@ -385,7 +385,7 @@ describe('HttpApi', () => {
 				registry.controls.pressControl.mockReturnValue(true)
 
 				// Perform the request
-				const res = await supertest(app).post('/api/controls/1a/2/3/up').send()
+				const res = await supertest(app).post('/api/location/1a/2/3/up').send()
 				expect(res.status).toBe(404)
 
 				expect(registry.page.getControlIdAt).toHaveBeenCalledTimes(0)
@@ -398,7 +398,7 @@ describe('HttpApi', () => {
 				registry.controls.pressControl.mockReturnValue(true)
 
 				// Perform the request
-				const res = await supertest(app).post('/api/controls/1/2a/3/up').send()
+				const res = await supertest(app).post('/api/location/1/2a/3/up').send()
 				expect(res.status).toBe(404)
 
 				expect(registry.page.getControlIdAt).toHaveBeenCalledTimes(0)
@@ -411,7 +411,7 @@ describe('HttpApi', () => {
 				registry.controls.pressControl.mockReturnValue(true)
 
 				// Perform the request
-				const res = await supertest(app).post('/api/controls/1/2/3a/up').send()
+				const res = await supertest(app).post('/api/location/1/2/3a/up').send()
 				expect(res.status).toBe(404)
 
 				expect(registry.page.getControlIdAt).toHaveBeenCalledTimes(0)
@@ -432,7 +432,7 @@ describe('HttpApi', () => {
 				registry.controls.getControl.mockReturnValue(mockControl)
 
 				// Perform the request
-				const res = await supertest(app).post('/api/controls/1/2/3/press').send()
+				const res = await supertest(app).post('/api/location/1/2/3/press').send()
 				expect(res.status).toBe(204)
 				// expect(res.text).toBe('No control')
 
@@ -450,7 +450,7 @@ describe('HttpApi', () => {
 				registry.controls.pressControl.mockReturnValue(true)
 
 				// Perform the request
-				const res = await supertest(app).post('/api/controls/1/2/3/press').send()
+				const res = await supertest(app).post('/api/location/1/2/3/press').send()
 				expect(res.status).toBe(200)
 				expect(res.text).toBe('ok')
 
@@ -475,7 +475,7 @@ describe('HttpApi', () => {
 				registry.controls.pressControl.mockReturnValue(true)
 
 				// Perform the request
-				const res = await supertest(app).post('/api/controls/1a/2/3/press').send()
+				const res = await supertest(app).post('/api/location/1a/2/3/press').send()
 				expect(res.status).toBe(404)
 
 				expect(registry.page.getControlIdAt).toHaveBeenCalledTimes(0)
@@ -488,7 +488,7 @@ describe('HttpApi', () => {
 				registry.controls.pressControl.mockReturnValue(true)
 
 				// Perform the request
-				const res = await supertest(app).post('/api/controls/1/2a/3/press').send()
+				const res = await supertest(app).post('/api/location/1/2a/3/press').send()
 				expect(res.status).toBe(404)
 
 				expect(registry.page.getControlIdAt).toHaveBeenCalledTimes(0)
@@ -501,7 +501,7 @@ describe('HttpApi', () => {
 				registry.controls.pressControl.mockReturnValue(true)
 
 				// Perform the request
-				const res = await supertest(app).post('/api/controls/1/2/3a/press').send()
+				const res = await supertest(app).post('/api/location/1/2/3a/press').send()
 				expect(res.status).toBe(404)
 
 				expect(registry.page.getControlIdAt).toHaveBeenCalledTimes(0)
@@ -518,7 +518,7 @@ describe('HttpApi', () => {
 				registry.controls.getControl.mockReturnValue(mockControl)
 
 				// Perform the request
-				const res = await supertest(app).post('/api/controls/1/2/3/rotate-left').send()
+				const res = await supertest(app).post('/api/location/1/2/3/rotate-left').send()
 				expect(res.status).toBe(204)
 				// expect(res.text).toBe('No control')
 
@@ -536,7 +536,7 @@ describe('HttpApi', () => {
 				registry.controls.rotateControl.mockReturnValue(true)
 
 				// Perform the request
-				const res = await supertest(app).post('/api/controls/1/2/3/rotate-left').send()
+				const res = await supertest(app).post('/api/location/1/2/3/rotate-left').send()
 				expect(res.status).toBe(200)
 				expect(res.text).toBe('ok')
 
@@ -556,7 +556,7 @@ describe('HttpApi', () => {
 				registry.controls.rotateControl.mockReturnValue(true)
 
 				// Perform the request
-				const res = await supertest(app).post('/api/controls/1a/2/3/rotate-left').send()
+				const res = await supertest(app).post('/api/location/1a/2/3/rotate-left').send()
 				expect(res.status).toBe(404)
 
 				expect(registry.page.getControlIdAt).toHaveBeenCalledTimes(0)
@@ -569,7 +569,7 @@ describe('HttpApi', () => {
 				registry.controls.rotateControl.mockReturnValue(true)
 
 				// Perform the request
-				const res = await supertest(app).post('/api/controls/1/2a/3/rotate-left').send()
+				const res = await supertest(app).post('/api/location/1/2a/3/rotate-left').send()
 				expect(res.status).toBe(404)
 
 				expect(registry.page.getControlIdAt).toHaveBeenCalledTimes(0)
@@ -582,7 +582,7 @@ describe('HttpApi', () => {
 				registry.controls.rotateControl.mockReturnValue(true)
 
 				// Perform the request
-				const res = await supertest(app).post('/api/controls/1/2/3a/rotate-left').send()
+				const res = await supertest(app).post('/api/location/1/2/3a/rotate-left').send()
 				expect(res.status).toBe(404)
 
 				expect(registry.page.getControlIdAt).toHaveBeenCalledTimes(0)
@@ -599,7 +599,7 @@ describe('HttpApi', () => {
 				registry.controls.getControl.mockReturnValue(mockControl)
 
 				// Perform the request
-				const res = await supertest(app).post('/api/controls/1/2/3/rotate-right').send()
+				const res = await supertest(app).post('/api/location/1/2/3/rotate-right').send()
 				expect(res.status).toBe(204)
 				// expect(res.text).toBe('No control')
 
@@ -617,7 +617,7 @@ describe('HttpApi', () => {
 				registry.controls.rotateControl.mockReturnValue(true)
 
 				// Perform the request
-				const res = await supertest(app).post('/api/controls/1/2/3/rotate-right').send()
+				const res = await supertest(app).post('/api/location/1/2/3/rotate-right').send()
 				expect(res.status).toBe(200)
 				expect(res.text).toBe('ok')
 
@@ -637,7 +637,7 @@ describe('HttpApi', () => {
 				registry.controls.rotateControl.mockReturnValue(true)
 
 				// Perform the request
-				const res = await supertest(app).post('/api/controls/1a/2/3/rotate-right').send()
+				const res = await supertest(app).post('/api/location/1a/2/3/rotate-right').send()
 				expect(res.status).toBe(404)
 
 				expect(registry.page.getControlIdAt).toHaveBeenCalledTimes(0)
@@ -650,7 +650,7 @@ describe('HttpApi', () => {
 				registry.controls.rotateControl.mockReturnValue(true)
 
 				// Perform the request
-				const res = await supertest(app).post('/api/controls/1/2a/3/rotate-right').send()
+				const res = await supertest(app).post('/api/location/1/2a/3/rotate-right').send()
 				expect(res.status).toBe(404)
 
 				expect(registry.page.getControlIdAt).toHaveBeenCalledTimes(0)
@@ -663,7 +663,7 @@ describe('HttpApi', () => {
 				registry.controls.rotateControl.mockReturnValue(true)
 
 				// Perform the request
-				const res = await supertest(app).post('/api/controls/1/2/3a/rotate-right').send()
+				const res = await supertest(app).post('/api/location/1/2/3a/rotate-right').send()
 				expect(res.status).toBe(404)
 
 				expect(registry.page.getControlIdAt).toHaveBeenCalledTimes(0)
