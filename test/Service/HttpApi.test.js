@@ -300,6 +300,7 @@ describe('HttpApi', () => {
 					row: 2,
 					column: 3,
 				})
+				expect(registry.controls.pressControl).toHaveBeenCalledTimes(0)
 			})
 
 			test('ok', async () => {
@@ -381,6 +382,7 @@ describe('HttpApi', () => {
 					row: 2,
 					column: 3,
 				})
+				expect(registry.controls.pressControl).toHaveBeenCalledTimes(0)
 			})
 
 			test('ok', async () => {
@@ -466,6 +468,7 @@ describe('HttpApi', () => {
 					row: 2,
 					column: 3,
 				})
+				expect(registry.controls.pressControl).toHaveBeenCalledTimes(0)
 			})
 
 			test('ok', async () => {
@@ -552,6 +555,7 @@ describe('HttpApi', () => {
 					row: 2,
 					column: 3,
 				})
+				expect(registry.controls.pressControl).toHaveBeenCalledTimes(0)
 			})
 
 			test('ok', async () => {
@@ -633,6 +637,7 @@ describe('HttpApi', () => {
 					row: 2,
 					column: 3,
 				})
+				expect(registry.controls.pressControl).toHaveBeenCalledTimes(0)
 			})
 
 			test('ok', async () => {
@@ -866,7 +871,25 @@ describe('HttpApi', () => {
 			})
 
 			test('set png', async () => {
-				await testSetStyle('', { png64: 'aaabncc' }, { png64: 'data:image/png;base64,aaabncc' })
+				await testSetStyle('', { png64: 'data:image/png;base64,aaabncc' }, { png64: 'data:image/png;base64,aaabncc' })
+			})
+
+			test('set bad alignment', async () => {
+				await testSetStyle('', { alignment: 'something' }, { alignment: 'center:center' })
+				await testSetStyle('', { alignment: 'top:nope' }, { alignment: 'center:center' })
+			})
+
+			test('set alignment', async () => {
+				await testSetStyle('', { alignment: 'left:top' }, { alignment: 'left:top' })
+			})
+
+			test('set bad pngalignment', async () => {
+				await testSetStyle('', { pngalignment: 'something' }, { pngalignment: 'center:center' })
+				await testSetStyle('', { pngalignment: 'top:nope' }, { pngalignment: 'center:center' })
+			})
+
+			test('set pngalignment', async () => {
+				await testSetStyle('', { pngalignment: 'left:top' }, { pngalignment: 'left:top' })
 			})
 		})
 	})
