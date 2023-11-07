@@ -1,4 +1,4 @@
-import React, { memo, useCallback, useContext, useEffect, useState } from 'react'
+import React, { memo, useCallback, useContext, useEffect, useMemo, useState } from 'react'
 import { LoadingRetryOrError, sandbox, socketEmitPromise, SocketContext, ModulesContext } from '../util'
 import { CRow, CCol, CButton } from '@coreui/react'
 import { ColorInputField, DropdownInputField, NumberInputField, TextInputField } from '../Components'
@@ -44,6 +44,20 @@ const InstanceEditPanelInner = memo(function InstanceEditPanel({ instanceId, doC
 
 	const [fieldVisibility, setFieldVisibility] = useState({})
 
+	const invalidFieldNames = useMemo(() => {
+		const fieldNames = []
+
+		if (validFields) {
+			for (const [field, valid] of Object.entries(validFields)) {
+				if (!valid && fieldVisibility[field] !== false) {
+					fieldNames.push(field)
+				}
+			}
+		}
+
+		return fieldNames
+	}, [validFields, fieldVisibility])
+
 	const doCancel = useCallback(() => {
 		doConfigureInstance(null)
 		setConfigFields([])
@@ -54,9 +68,8 @@ const InstanceEditPanelInner = memo(function InstanceEditPanel({ instanceId, doC
 
 		const newLabel = instanceLabel?.trim()
 
-		const isInvalid = Object.entries(validFields).filter(([k, v]) => !v)
-		if (!isLabelValid(newLabel) || isInvalid.length > 0) {
-			setError(`Some config fields are not valid: ${isInvalid.map(([k]) => k).join(', ')}`)
+		if (!isLabelValid(newLabel) || invalidFieldNames.length > 0) {
+			setError(`Some config fields are not valid: ${invalidFieldNames.join(', ')}`)
 			return
 		}
 
@@ -78,7 +91,7 @@ const InstanceEditPanelInner = memo(function InstanceEditPanel({ instanceId, doC
 			.catch((e) => {
 				setError(`Failed to save connection config: ${e}`)
 			})
-	}, [socket, instanceId, validFields, instanceLabel, instanceConfig, doCancel])
+	}, [socket, instanceId, invalidFieldNames, instanceLabel, instanceConfig, doCancel])
 
 	useEffect(() => {
 		if (instanceId) {
@@ -209,9 +222,7 @@ const InstanceEditPanelInner = memo(function InstanceEditPanel({ instanceId, doC
 				<CCol sm={12}>
 					<CButton
 						color="success"
-						disabled={
-							!validFields || Object.values(validFields).find((v) => !v) === false || !isLabelValid(instanceLabel)
-						}
+						disabled={!validFields || invalidFieldNames.length > 0 || !isLabelValid(instanceLabel)}
 						onClick={doSave}
 					>
 						Save
