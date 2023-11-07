@@ -774,7 +774,7 @@ describe('HttpApi', () => {
 				expect(registry.controls.rotateControl).toHaveBeenCalledTimes(0)
 			})
 
-			test('set style without properties', async () => {
+			async function testSetStyle(queryStr, body, expected) {
 				const { app, registry } = createService()
 				registry.page.getControlIdAt.mockReturnValue('abc')
 
@@ -787,7 +787,10 @@ describe('HttpApi', () => {
 				registry.controls.getControl.mockReturnValue(mockControl)
 
 				// Perform the request
-				const res = await supertest(app).post('/api/location/1/2/3/style').send()
+				const res = await supertest(app)
+					.post(`/api/location/1/2/3/style?${queryStr}`)
+					.set('Content-Type', 'application/json')
+					.send(body)
 				expect(res.status).toBe(200)
 				expect(res.text).toBe('ok')
 
@@ -801,77 +804,69 @@ describe('HttpApi', () => {
 				expect(registry.controls.getControl).toHaveBeenCalledTimes(1)
 				expect(registry.controls.getControl).toHaveBeenCalledWith('abc')
 
-				expect(mockControl.styleSetFields).toHaveBeenCalledTimes(0)
+				if (expected) {
+					expect(mockControl.styleSetFields).toHaveBeenCalledTimes(1)
+					expect(mockControl.styleSetFields).toHaveBeenCalledWith(expected)
+				} else {
+					expect(mockControl.styleSetFields).toHaveBeenCalledTimes(0)
+				}
+			}
+
+			test('set style without properties', async () => {
+				await testSetStyle('', undefined, null)
 			})
 
 			test('set style unknown properties', async () => {
-				const { app, registry } = createService()
-				registry.page.getControlIdAt.mockReturnValue('abc')
-
-				const mockControl = mock(
-					{
-						styleSetFields: jest.fn(),
-					},
-					mockOptions
-				)
-				registry.controls.getControl.mockReturnValue(mockControl)
-
-				// Perform the request
-				const res = await supertest(app)
-					.post('/api/location/1/2/3/style?abc=123')
-					.set('Content-Type', 'application/json')
-					.send({ def: 456 })
-				expect(res.status).toBe(200)
-				expect(res.text).toBe('ok')
-
-				expect(registry.page.getControlIdAt).toHaveBeenCalledTimes(1)
-				expect(registry.page.getControlIdAt).toHaveBeenCalledWith({
-					pageNumber: 1,
-					row: 2,
-					column: 3,
-				})
-
-				expect(registry.controls.getControl).toHaveBeenCalledTimes(1)
-				expect(registry.controls.getControl).toHaveBeenCalledWith('abc')
-
-				expect(mockControl.styleSetFields).toHaveBeenCalledTimes(0)
+				await testSetStyle('abc=123', { def: 456 }, null)
 			})
 
 			test('set color properties', async () => {
-				const { app, registry } = createService()
-				registry.page.getControlIdAt.mockReturnValue('abc')
-
-				const mockControl = mock(
+				await testSetStyle(
+					'bgcolor=%23abcdef',
+					{ color: 'rgb(1,2,3)' },
 					{
-						styleSetFields: jest.fn(),
-					},
-					mockOptions
+						bgcolor: rgb('ab', 'cd', 'ef', 16),
+						color: rgb(1, 2, 3),
+					}
 				)
-				registry.controls.getControl.mockReturnValue(mockControl)
+			})
 
-				// Perform the request
-				const res = await supertest(app)
-					.post('/api/location/1/2/3/style?bgcolor=%23abcdef')
-					.set('Content-Type', 'application/json')
-					.send({ color: 'rgb(1,2,3)' })
-				expect(res.status).toBe(200)
-				expect(res.text).toBe('ok')
+			test('set color properties bad', async () => {
+				await testSetStyle('bgcolor=bad', { color: 'rgb(1,2,an)' }, null)
+			})
 
-				expect(registry.page.getControlIdAt).toHaveBeenCalledTimes(1)
-				expect(registry.page.getControlIdAt).toHaveBeenCalledWith({
-					pageNumber: 1,
-					row: 2,
-					column: 3,
-				})
+			test('set text size auto', async () => {
+				await testSetStyle('', { size: 'auto' }, { size: 'auto' })
+			})
 
-				expect(registry.controls.getControl).toHaveBeenCalledTimes(1)
-				expect(registry.controls.getControl).toHaveBeenCalledWith('abc')
+			test('set text size bad', async () => {
+				await testSetStyle('', { size: 'bad' }, null)
+			})
 
-				expect(mockControl.styleSetFields).toHaveBeenCalledTimes(1)
-				expect(mockControl.styleSetFields).toHaveBeenCalledWith({
-					bgcolor: rgb('ab', 'cd', 'ef', 16),
-					color: rgb(1, 2, 3),
-				})
+			test('set text size number', async () => {
+				await testSetStyle('size=134.2', {}, { size: 134 })
+			})
+
+			test('set text', async () => {
+				await testSetStyle('text=something%20%23%20new', {}, { text: 'something # new' })
+			})
+
+			test('set empty text', async () => {
+				await testSetStyle('text=', {}, { text: '' })
+				await testSetStyle('', { text: '' }, { text: '' })
+			})
+
+			test('set empty png', async () => {
+				await testSetStyle('png64=', {}, { png64: null })
+				await testSetStyle('', { png64: '' }, { png64: null })
+			})
+
+			test('set bad png', async () => {
+				await testSetStyle('', { png64: 'something' }, null)
+			})
+
+			test('set png', async () => {
+				await testSetStyle('', { png64: 'aaabncc' }, { png64: 'data:image/png;base64,aaabncc' })
 			})
 		})
 	})
