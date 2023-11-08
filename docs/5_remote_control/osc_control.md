@@ -27,7 +27,7 @@ Remote triggering can be done by sending OSC commands to port `12321` (the port 
 - `/custom-variable/<name>/value <value>`  
   _Change custom variable value_
 - `/surfaces/rescan`
-  _Make Companion rescan for newly attached USB surfaces_
+  _Rescan for USB surfaces_
 
 **Examples**
 
