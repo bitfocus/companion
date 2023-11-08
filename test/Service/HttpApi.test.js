@@ -33,6 +33,10 @@ describe('HttpApi', () => {
 				surfaces: mock({}, mockOptions),
 				page: mock({}, mockOptions),
 				controls: mock({}, mockOptions),
+				userconfig: {
+					// Force config to return true
+					getKey: () => true,
+				},
 				instance: mock(
 					{
 						variable: mock(
@@ -48,13 +52,15 @@ describe('HttpApi', () => {
 			mockOptions
 		)
 
-		const service = new ServiceHttpApi(registry)
+		const legacyRouter = express.Router()
+		const service = new ServiceHttpApi(registry, legacyRouter)
 
 		const app = express()
 
 		app.use(bodyParser.text())
 		app.use(bodyParser.json())
 
+		app.use(legacyRouter)
 		service.bindToApp(app)
 
 		return {

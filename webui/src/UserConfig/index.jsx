@@ -21,6 +21,7 @@ import { RosstalkConfig } from './RosstalkConfig'
 import { ArtnetConfig } from './ArtnetConfig'
 import { GridConfig } from './GridConfig'
 import { VideohubServerConfig } from './VideohubServerConfig'
+import { HttpConfig } from './HttpConfig'
 
 export const UserConfig = memo(function UserConfig() {
 	return (
@@ -75,6 +76,7 @@ function UserConfigTable() {
 				<SatelliteConfig config={config} setValue={setValue} resetValue={resetValue} />
 				<TcpConfig config={config} setValue={setValue} resetValue={resetValue} />
 				<UdpConfig config={config} setValue={setValue} resetValue={resetValue} />
+				<HttpConfig config={config} setValue={setValue} resetValue={resetValue} />
 				<OscConfig config={config} setValue={setValue} resetValue={resetValue} />
 				<RosstalkConfig config={config} setValue={setValue} resetValue={resetValue} />
 				<EmberPlusConfig config={config} setValue={setValue} resetValue={resetValue} />
