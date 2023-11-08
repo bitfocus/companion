@@ -48,20 +48,18 @@ describe('HttpApi', () => {
 			mockOptions
 		)
 
-		const router = express.Router()
-		const service = new ServiceHttpApi(registry, router)
+		const service = new ServiceHttpApi(registry)
 
 		const app = express()
 
 		app.use(bodyParser.text())
 		app.use(bodyParser.json())
 
-		app.use(router)
+		service.bindToApp(app)
 
 		return {
 			app,
 			registry,
-			router,
 			service,
 			logger,
 		}
