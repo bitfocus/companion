@@ -46,6 +46,12 @@ export function OscProtocol() {
 					<br />
 					<i>Trigger a right rotation of the button/encoder</i>
 				</li>
+				<li>
+					<code>/location/</code>&lt;page&gt;<code>/</code>&lt;row&gt;<code>/</code>&lt;column&gt;
+					<code>/step</code>
+					<br />
+					<i>Set the current step of a button/encoder</i>
+				</li>
 
 				<li>
 					<code>/location/</code>&lt;page&gt;<code>/</code>&lt;row&gt;<code>/</code>&lt;column&gt;

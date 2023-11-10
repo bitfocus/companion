@@ -53,6 +53,14 @@ export function HttpProtocol() {
 					Path: <code>/api/location/</code>&lt;page&gt;<code>/</code>&lt;row&gt;<code>/</code>&lt;column&gt;
 					<code>/rotate-right</code>
 				</li>
+				<li>
+					Set the current step of a button/encoder
+					<br />
+					Method: <code>POST</code>
+					<br />
+					Path: <code>/api/location/</code>&lt;page&gt;<code>/</code>&lt;row&gt;<code>/</code>&lt;column&gt;
+					<code>/step?step=&lt;step&gt;</code>
+				</li>
 
 				<br />
 

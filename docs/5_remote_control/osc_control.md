@@ -12,6 +12,8 @@ Remote triggering can be done by sending OSC commands to port `12321` (the port 
   _Trigger a left rotation of the button/encoder_
 - `/location/<page>/<row>/<column>/rotate-right`  
   _Trigger a right rotation of the button/encoder_
+- `/location/<page>/<row>/<column>/step`  
+  _Set the current step of a button/encoder_
 
 - `/location/<page>/<row>/<column>/style/bgcolor <red 0-255> <green 0-255> <blue 0-255>`  
   _Change background color of button_

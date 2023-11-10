@@ -19,6 +19,9 @@ This API tries to follow REST principles, and the convention that a `POST` reque
 - Trigger a right rotation of the button/encoder
   Method: POST  
   Path: `/api/location/<page>/<row>/<column>/rotate-right`  
+- Set the current step of a button/encoder
+  Method: POST  
+  Path: `/api/location/<page>/<row>/<column>/step`  
 
 - Change background color of button
   Method: POST  
