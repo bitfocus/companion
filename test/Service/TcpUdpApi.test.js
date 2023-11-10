@@ -1,6 +1,6 @@
 import { jest } from '@jest/globals'
 import { mock } from 'jest-mock-extended'
-import { ServiceOscApi } from '../../lib/Service/OscApi'
+import { ApiMessageError, ServiceTcpUdpApi } from '../../lib/Service/TcpUdpApi'
 import { rgb } from '../../lib/Resources/Util'
 
 const mockOptions = {
@@ -9,7 +9,7 @@ const mockOptions = {
 	},
 }
 
-describe('OscApi', () => {
+describe('TcpUdpApi', () => {
 	function createService() {
 		const logger = mock(
 			{
@@ -45,7 +45,7 @@ describe('OscApi', () => {
 			mockOptions
 		)
 
-		const service = new ServiceOscApi(registry)
+		const service = new ServiceTcpUdpApi(registry, 'fake-proto')
 		const router = service.router
 
 		return {
@@ -63,7 +63,7 @@ describe('OscApi', () => {
 				registry.surfaces.triggerRefreshDevices.mockResolvedValue()
 
 				// Perform the request
-				router.processMessage('/surfaces/rescan')
+				await router.processMessage('surfaces rescan')
 
 				expect(registry.surfaces.triggerRefreshDevices).toHaveBeenCalledTimes(1)
 			})
@@ -73,7 +73,7 @@ describe('OscApi', () => {
 				registry.surfaces.triggerRefreshDevices.mockRejectedValue('internal error')
 
 				// Perform the request
-				router.processMessage('/surfaces/rescan')
+				await expect(router.processMessage('surfaces rescan')).rejects.toEqual(new ApiMessageError('Scan failed'))
 
 				expect(registry.surfaces.triggerRefreshDevices).toHaveBeenCalledTimes(1)
 			})
@@ -82,13 +82,6 @@ describe('OscApi', () => {
 
 	describe('custom-variable', () => {
 		describe('set value', () => {
-			test('no value', async () => {
-				const { router } = createService()
-
-				// Perform the request
-				router.processMessage('/custom-variable/my-var-name/value', { args: [] })
-			})
-
 			test('ok from query', async () => {
 				const { router, registry } = createService()
 
@@ -96,54 +89,23 @@ describe('OscApi', () => {
 				mockFn.mockReturnValue()
 
 				// Perform the request
-				router.processMessage('/custom-variable/my-var-name/value', {
-					args: [
-						{
-							value: '123',
-						},
-					],
-				})
+				await router.processMessage('custom-variable my-var-name set-value 123')
 
 				expect(mockFn).toHaveBeenCalledTimes(1)
 				expect(mockFn).toHaveBeenCalledWith('my-var-name', '123')
 			})
 
-			test('ok from body', async () => {
+			test('ok empty', async () => {
 				const { router, registry } = createService()
 
 				const mockFn = registry.instance.variable.custom.setValue
 				mockFn.mockReturnValue()
 
 				// Perform the request
-				router.processMessage('/custom-variable/my-var-name/value', {
-					args: [
-						{
-							value: 'def',
-						},
-					],
-				})
+				await router.processMessage('custom-variable my-var-name set-value ')
 
 				expect(mockFn).toHaveBeenCalledTimes(1)
-				expect(mockFn).toHaveBeenCalledWith('my-var-name', 'def')
-			})
-
-			test('unknown name', async () => {
-				const { router, registry } = createService()
-
-				const mockFn = registry.instance.variable.custom.setValue
-				mockFn.mockReturnValue('Unknown name')
-
-				// Perform the request
-				router.processMessage('/custom-variable/my-var-name/value', {
-					args: [
-						{
-							value: 'def',
-						},
-					],
-				})
-
-				expect(mockFn).toHaveBeenCalledTimes(1)
-				expect(mockFn).toHaveBeenCalledWith('my-var-name', 'def')
+				expect(mockFn).toHaveBeenCalledWith('my-var-name', '')
 			})
 		})
 	})
@@ -158,7 +120,9 @@ describe('OscApi', () => {
 				registry.controls.getControl.mockReturnValue(mockControl)
 
 				// Perform the request
-				router.processMessage('/location/1/2/3/down')
+				expect(() => router.processMessage('location 1/2/3 down')).toThrow(
+					new ApiMessageError('No control at location')
+				)
 
 				expect(registry.page.getControlIdAt).toHaveBeenCalledTimes(1)
 				expect(registry.page.getControlIdAt).toHaveBeenCalledWith({
@@ -175,7 +139,7 @@ describe('OscApi', () => {
 				registry.controls.pressControl.mockReturnValue(true)
 
 				// Perform the request
-				router.processMessage('/location/1/2/3/down')
+				router.processMessage('location 1/2/3 down')
 
 				expect(registry.page.getControlIdAt).toHaveBeenCalledTimes(1)
 				expect(registry.page.getControlIdAt).toHaveBeenCalledWith({
@@ -184,7 +148,7 @@ describe('OscApi', () => {
 					column: 3,
 				})
 				expect(registry.controls.pressControl).toHaveBeenCalledTimes(1)
-				expect(registry.controls.pressControl).toHaveBeenCalledWith('control123', true, 'osc')
+				expect(registry.controls.pressControl).toHaveBeenCalledWith('control123', true, 'fake-proto')
 			})
 
 			test('bad page', async () => {
@@ -193,7 +157,7 @@ describe('OscApi', () => {
 				registry.controls.pressControl.mockReturnValue(true)
 
 				// Perform the request
-				router.processMessage('/location/1a/2/3/down')
+				expect(() => router.processMessage('location 1a/2/3 down')).toThrow(new ApiMessageError('Syntax error'))
 
 				expect(registry.page.getControlIdAt).toHaveBeenCalledTimes(0)
 				expect(registry.controls.pressControl).toHaveBeenCalledTimes(0)
@@ -205,7 +169,7 @@ describe('OscApi', () => {
 				registry.controls.pressControl.mockReturnValue(true)
 
 				// Perform the request
-				router.processMessage('/location/1/2a/3/down')
+				expect(() => router.processMessage('location 1/2a/3 down')).toThrow(new ApiMessageError('Syntax error'))
 
 				expect(registry.page.getControlIdAt).toHaveBeenCalledTimes(0)
 				expect(registry.controls.pressControl).toHaveBeenCalledTimes(0)
@@ -217,7 +181,7 @@ describe('OscApi', () => {
 				registry.controls.pressControl.mockReturnValue(true)
 
 				// Perform the request
-				router.processMessage('/location/1/2/3a/down')
+				expect(() => router.processMessage('location 1/2/3a down')).toThrow(new ApiMessageError('Syntax error'))
 
 				expect(registry.page.getControlIdAt).toHaveBeenCalledTimes(0)
 				expect(registry.controls.pressControl).toHaveBeenCalledTimes(0)
@@ -233,7 +197,7 @@ describe('OscApi', () => {
 				registry.controls.getControl.mockReturnValue(mockControl)
 
 				// Perform the request
-				router.processMessage('/location/1/2/3/up')
+				expect(() => router.processMessage('location 1/2/3 up')).toThrow(new ApiMessageError('No control at location'))
 
 				expect(registry.page.getControlIdAt).toHaveBeenCalledTimes(1)
 				expect(registry.page.getControlIdAt).toHaveBeenCalledWith({
@@ -250,7 +214,7 @@ describe('OscApi', () => {
 				registry.controls.pressControl.mockReturnValue(true)
 
 				// Perform the request
-				router.processMessage('/location/1/2/3/up')
+				router.processMessage('location 1/2/3 up')
 
 				expect(registry.page.getControlIdAt).toHaveBeenCalledTimes(1)
 				expect(registry.page.getControlIdAt).toHaveBeenCalledWith({
@@ -259,7 +223,7 @@ describe('OscApi', () => {
 					column: 3,
 				})
 				expect(registry.controls.pressControl).toHaveBeenCalledTimes(1)
-				expect(registry.controls.pressControl).toHaveBeenCalledWith('control123', false, 'osc')
+				expect(registry.controls.pressControl).toHaveBeenCalledWith('control123', false, 'fake-proto')
 			})
 
 			test('bad page', async () => {
@@ -268,7 +232,7 @@ describe('OscApi', () => {
 				registry.controls.pressControl.mockReturnValue(true)
 
 				// Perform the request
-				router.processMessage('/location/1a/2/3/up')
+				expect(() => router.processMessage('location 1a/2/3 up')).toThrow(new ApiMessageError('Syntax error'))
 
 				expect(registry.page.getControlIdAt).toHaveBeenCalledTimes(0)
 				expect(registry.controls.pressControl).toHaveBeenCalledTimes(0)
@@ -280,7 +244,7 @@ describe('OscApi', () => {
 				registry.controls.pressControl.mockReturnValue(true)
 
 				// Perform the request
-				router.processMessage('/location/1/2a/3/up')
+				expect(() => router.processMessage('location 1/2a/3 up')).toThrow(new ApiMessageError('Syntax error'))
 
 				expect(registry.page.getControlIdAt).toHaveBeenCalledTimes(0)
 				expect(registry.controls.pressControl).toHaveBeenCalledTimes(0)
@@ -292,7 +256,7 @@ describe('OscApi', () => {
 				registry.controls.pressControl.mockReturnValue(true)
 
 				// Perform the request
-				router.processMessage('/location/1/2/3a/up')
+				expect(() => router.processMessage('location 1/2/3a up')).toThrow(new ApiMessageError('Syntax error'))
 
 				expect(registry.page.getControlIdAt).toHaveBeenCalledTimes(0)
 				expect(registry.controls.pressControl).toHaveBeenCalledTimes(0)
@@ -309,7 +273,9 @@ describe('OscApi', () => {
 				registry.page.getControlIdAt.mockReturnValue(undefined)
 
 				// Perform the request
-				router.processMessage('/location/1/2/3/press')
+				expect(() => router.processMessage('location 1/2/3 press')).toThrow(
+					new ApiMessageError('No control at location')
+				)
 
 				expect(registry.page.getControlIdAt).toHaveBeenCalledTimes(1)
 				expect(registry.page.getControlIdAt).toHaveBeenCalledWith({
@@ -326,7 +292,7 @@ describe('OscApi', () => {
 				registry.controls.pressControl.mockReturnValue(true)
 
 				// Perform the request
-				router.processMessage('/location/1/2/3/press')
+				router.processMessage('location 1/2/3 press')
 
 				expect(registry.page.getControlIdAt).toHaveBeenCalledTimes(1)
 				expect(registry.page.getControlIdAt).toHaveBeenCalledWith({
@@ -335,12 +301,12 @@ describe('OscApi', () => {
 					column: 3,
 				})
 				expect(registry.controls.pressControl).toHaveBeenCalledTimes(1)
-				expect(registry.controls.pressControl).toHaveBeenCalledWith('control123', true, 'osc')
+				expect(registry.controls.pressControl).toHaveBeenCalledWith('control123', true, 'fake-proto')
 
 				jest.advanceTimersByTime(100)
 
 				expect(registry.controls.pressControl).toHaveBeenCalledTimes(2)
-				expect(registry.controls.pressControl).toHaveBeenLastCalledWith('control123', false, 'osc')
+				expect(registry.controls.pressControl).toHaveBeenLastCalledWith('control123', false, 'fake-proto')
 			})
 
 			test('bad page', async () => {
@@ -349,7 +315,7 @@ describe('OscApi', () => {
 				registry.controls.pressControl.mockReturnValue(true)
 
 				// Perform the request
-				router.processMessage('/location/1a/2/3/press')
+				expect(() => router.processMessage('location 1a/2/3 press')).toThrow(new ApiMessageError('Syntax error'))
 
 				expect(registry.page.getControlIdAt).toHaveBeenCalledTimes(0)
 				expect(registry.controls.pressControl).toHaveBeenCalledTimes(0)
@@ -361,7 +327,7 @@ describe('OscApi', () => {
 				registry.controls.pressControl.mockReturnValue(true)
 
 				// Perform the request
-				router.processMessage('/location/1/2a/3/press')
+				expect(() => router.processMessage('location 1/2a/3 press')).toThrow(new ApiMessageError('Syntax error'))
 
 				expect(registry.page.getControlIdAt).toHaveBeenCalledTimes(0)
 				expect(registry.controls.pressControl).toHaveBeenCalledTimes(0)
@@ -373,7 +339,7 @@ describe('OscApi', () => {
 				registry.controls.pressControl.mockReturnValue(true)
 
 				// Perform the request
-				router.processMessage('/location/1/2/3a/press')
+				expect(() => router.processMessage('location 1/2/3a press')).toThrow(new ApiMessageError('Syntax error'))
 
 				expect(registry.page.getControlIdAt).toHaveBeenCalledTimes(0)
 				expect(registry.controls.pressControl).toHaveBeenCalledTimes(0)
@@ -386,7 +352,9 @@ describe('OscApi', () => {
 				registry.page.getControlIdAt.mockReturnValue(undefined)
 
 				// Perform the request
-				router.processMessage('/location/1/2/3/rotate-left')
+				expect(() => router.processMessage('location 1/2/3 rotate-left')).toThrow(
+					new ApiMessageError('No control at location')
+				)
 
 				expect(registry.page.getControlIdAt).toHaveBeenCalledTimes(1)
 				expect(registry.page.getControlIdAt).toHaveBeenCalledWith({
@@ -403,7 +371,7 @@ describe('OscApi', () => {
 				registry.controls.rotateControl.mockReturnValue(true)
 
 				// Perform the request
-				router.processMessage('/location/1/2/3/rotate-left')
+				router.processMessage('location 1/2/3 rotate-left')
 
 				expect(registry.page.getControlIdAt).toHaveBeenCalledTimes(1)
 				expect(registry.page.getControlIdAt).toHaveBeenCalledWith({
@@ -412,7 +380,7 @@ describe('OscApi', () => {
 					column: 3,
 				})
 				expect(registry.controls.rotateControl).toHaveBeenCalledTimes(1)
-				expect(registry.controls.rotateControl).toHaveBeenCalledWith('control123', false, 'osc')
+				expect(registry.controls.rotateControl).toHaveBeenCalledWith('control123', false, 'fake-proto')
 			})
 
 			test('bad page', async () => {
@@ -421,7 +389,7 @@ describe('OscApi', () => {
 				registry.controls.rotateControl.mockReturnValue(true)
 
 				// Perform the request
-				router.processMessage('/location/1a/2/3/rotate-left')
+				expect(() => router.processMessage('location 1a/2/3 rotate-left')).toThrow(new ApiMessageError('Syntax error'))
 
 				expect(registry.page.getControlIdAt).toHaveBeenCalledTimes(0)
 				expect(registry.controls.rotateControl).toHaveBeenCalledTimes(0)
@@ -433,7 +401,7 @@ describe('OscApi', () => {
 				registry.controls.rotateControl.mockReturnValue(true)
 
 				// Perform the request
-				router.processMessage('/location/1/2a/3/rotate-left')
+				expect(() => router.processMessage('location 1/2a/3 rotate-left')).toThrow(new ApiMessageError('Syntax error'))
 
 				expect(registry.page.getControlIdAt).toHaveBeenCalledTimes(0)
 				expect(registry.controls.rotateControl).toHaveBeenCalledTimes(0)
@@ -445,7 +413,7 @@ describe('OscApi', () => {
 				registry.controls.rotateControl.mockReturnValue(true)
 
 				// Perform the request
-				router.processMessage('/location/1/2/3a/rotate-left')
+				expect(() => router.processMessage('location 1/2/3a rotate-left')).toThrow(new ApiMessageError('Syntax error'))
 
 				expect(registry.page.getControlIdAt).toHaveBeenCalledTimes(0)
 				expect(registry.controls.rotateControl).toHaveBeenCalledTimes(0)
@@ -458,7 +426,9 @@ describe('OscApi', () => {
 				registry.page.getControlIdAt.mockReturnValue(undefined)
 
 				// Perform the request
-				router.processMessage('/location/1/2/3/rotate-right')
+				expect(() => router.processMessage('location 1/2/3 rotate-right')).toThrow(
+					new ApiMessageError('No control at location')
+				)
 
 				expect(registry.page.getControlIdAt).toHaveBeenCalledTimes(1)
 				expect(registry.page.getControlIdAt).toHaveBeenCalledWith({
@@ -475,7 +445,7 @@ describe('OscApi', () => {
 				registry.controls.rotateControl.mockReturnValue(true)
 
 				// Perform the request
-				router.processMessage('/location/1/2/3/rotate-right')
+				router.processMessage('location 1/2/3 rotate-right')
 
 				expect(registry.page.getControlIdAt).toHaveBeenCalledTimes(1)
 				expect(registry.page.getControlIdAt).toHaveBeenCalledWith({
@@ -484,7 +454,7 @@ describe('OscApi', () => {
 					column: 3,
 				})
 				expect(registry.controls.rotateControl).toHaveBeenCalledTimes(1)
-				expect(registry.controls.rotateControl).toHaveBeenCalledWith('control123', true, 'osc')
+				expect(registry.controls.rotateControl).toHaveBeenCalledWith('control123', true, 'fake-proto')
 			})
 
 			test('bad page', async () => {
@@ -493,7 +463,7 @@ describe('OscApi', () => {
 				registry.controls.rotateControl.mockReturnValue(true)
 
 				// Perform the request
-				router.processMessage('/location/1a/2/3/rotate-right')
+				expect(() => router.processMessage('location 1a/2/3 rotate-right')).toThrow(new ApiMessageError('Syntax error'))
 
 				expect(registry.page.getControlIdAt).toHaveBeenCalledTimes(0)
 				expect(registry.controls.rotateControl).toHaveBeenCalledTimes(0)
@@ -505,7 +475,7 @@ describe('OscApi', () => {
 				registry.controls.rotateControl.mockReturnValue(true)
 
 				// Perform the request
-				router.processMessage('/location/1/2a/3/rotate-right')
+				expect(() => router.processMessage('location 1/2a/3 rotate-right')).toThrow(new ApiMessageError('Syntax error'))
 
 				expect(registry.page.getControlIdAt).toHaveBeenCalledTimes(0)
 				expect(registry.controls.rotateControl).toHaveBeenCalledTimes(0)
@@ -517,7 +487,7 @@ describe('OscApi', () => {
 				registry.controls.rotateControl.mockReturnValue(true)
 
 				// Perform the request
-				router.processMessage('/location/1/2/3a/rotate-right')
+				expect(() => router.processMessage('location 1/2/3a rotate-right')).toThrow(new ApiMessageError('Syntax error'))
 
 				expect(registry.page.getControlIdAt).toHaveBeenCalledTimes(0)
 				expect(registry.controls.rotateControl).toHaveBeenCalledTimes(0)
@@ -529,11 +499,10 @@ describe('OscApi', () => {
 				const { router, registry } = createService()
 				registry.page.getControlIdAt.mockReturnValue(undefined)
 
-				const mockControl = mock({}, mockOptions)
-				registry.controls.getControl.mockReturnValue(mockControl)
-
 				// Perform the request
-				router.processMessage('/location/1/2/3/step', { args: [{ value: 2 }] })
+				expect(() => router.processMessage('location 1/2/3 set-step 2')).toThrow(
+					new ApiMessageError('No control at location')
+				)
 
 				expect(registry.page.getControlIdAt).toHaveBeenCalledTimes(1)
 				expect(registry.page.getControlIdAt).toHaveBeenCalledWith({
@@ -548,14 +517,20 @@ describe('OscApi', () => {
 				const { router, registry } = createService()
 				registry.page.getControlIdAt.mockReturnValue('test')
 
-				const mockControl = mock({}, mockOptions)
+				const mockControl = mock(
+					{
+						stepMakeCurrent: jest.fn(),
+					},
+					mockOptions
+				)
 				registry.controls.getControl.mockReturnValue(mockControl)
 
 				// Perform the request
-				router.processMessage('/location/1/2/3/step', { args: [] })
+				expect(() => router.processMessage('location 1/2/3 step')).toThrow(new ApiMessageError('Syntax error'))
 
 				expect(registry.page.getControlIdAt).toHaveBeenCalledTimes(0)
 				expect(registry.controls.getControl).toHaveBeenCalledTimes(0)
+				expect(mockControl.stepMakeCurrent).toHaveBeenCalledTimes(0)
 			})
 
 			test('ok', async () => {
@@ -572,7 +547,7 @@ describe('OscApi', () => {
 				mockControl.stepMakeCurrent.mockReturnValue(true)
 
 				// Perform the request
-				router.processMessage('/location/1/2/3/step', { args: [{ value: 2 }] })
+				router.processMessage('location 1/2/3 set-step 2')
 
 				expect(registry.page.getControlIdAt).toHaveBeenCalledTimes(1)
 				expect(registry.page.getControlIdAt).toHaveBeenCalledWith({
@@ -584,32 +559,6 @@ describe('OscApi', () => {
 				expect(mockControl.stepMakeCurrent).toHaveBeenCalledWith(2)
 			})
 
-			test('string step', async () => {
-				const { router, registry } = createService()
-				registry.page.getControlIdAt.mockReturnValue('control123')
-
-				const mockControl = mock(
-					{
-						stepMakeCurrent: jest.fn(),
-					},
-					mockOptions
-				)
-				registry.controls.getControl.mockReturnValue(mockControl)
-				mockControl.stepMakeCurrent.mockReturnValue(true)
-
-				// Perform the request
-				router.processMessage('/location/1/2/3/step', { args: [{ value: '4' }] })
-
-				expect(registry.page.getControlIdAt).toHaveBeenCalledTimes(1)
-				expect(registry.page.getControlIdAt).toHaveBeenCalledWith({
-					pageNumber: 1,
-					row: 2,
-					column: 3,
-				})
-				expect(mockControl.stepMakeCurrent).toHaveBeenCalledTimes(1)
-				expect(mockControl.stepMakeCurrent).toHaveBeenCalledWith(4)
-			})
-
 			test('bad page', async () => {
 				const { router, registry } = createService()
 				registry.page.getControlIdAt.mockReturnValue('control123')
@@ -618,7 +567,7 @@ describe('OscApi', () => {
 				registry.controls.getControl.mockReturnValue(mockControl)
 
 				// Perform the request
-				router.processMessage('/location/1a/2/3/step', { args: [{ value: 2 }] })
+				expect(() => router.processMessage('location 1a/2/3 set-step 2')).toThrow(new ApiMessageError('Syntax error'))
 
 				expect(registry.page.getControlIdAt).toHaveBeenCalledTimes(0)
 			})
@@ -631,7 +580,7 @@ describe('OscApi', () => {
 				registry.controls.getControl.mockReturnValue(mockControl)
 
 				// Perform the request
-				router.processMessage('/location/1/2a/3/step', { args: [{ value: 2 }] })
+				expect(() => router.processMessage('location 1/2a/3 set-step 2')).toThrow(new ApiMessageError('Syntax error'))
 
 				expect(registry.page.getControlIdAt).toHaveBeenCalledTimes(0)
 			})
@@ -644,7 +593,7 @@ describe('OscApi', () => {
 				registry.controls.getControl.mockReturnValue(mockControl)
 
 				// Perform the request
-				router.processMessage('/location/1/2/3a/step', { args: [{ value: 2 }] })
+				expect(() => router.processMessage('location 1/2/3a set-step 2')).toThrow(new ApiMessageError('Syntax error'))
 
 				expect(registry.page.getControlIdAt).toHaveBeenCalledTimes(0)
 			})
@@ -656,7 +605,9 @@ describe('OscApi', () => {
 				registry.page.getControlIdAt.mockReturnValue(undefined)
 
 				// Perform the request
-				router.processMessage('/location/1/2/3/style/text', { args: [{ value: 'abc' }] })
+				expect(() => router.processMessage('location 1/2/3 style text abc')).toThrow(
+					new ApiMessageError('No control at location')
+				)
 
 				expect(registry.page.getControlIdAt).toHaveBeenCalledTimes(1)
 				expect(registry.page.getControlIdAt).toHaveBeenCalledWith({
@@ -679,7 +630,7 @@ describe('OscApi', () => {
 				registry.controls.getControl.mockReturnValue(mockControl)
 
 				// Perform the request
-				router.processMessage('/location/1/2/3/style/text', { args: [{ value: 'def' }] })
+				router.processMessage('location 1/2/3 style text def')
 
 				expect(registry.page.getControlIdAt).toHaveBeenCalledTimes(1)
 				expect(registry.page.getControlIdAt).toHaveBeenCalledWith({
@@ -694,25 +645,8 @@ describe('OscApi', () => {
 				expect(mockControl.styleSetFields).toHaveBeenCalledTimes(1)
 				expect(mockControl.styleSetFields).toHaveBeenCalledWith({ text: 'def' })
 			})
-		})
 
-		describe('set style: color', () => {
-			test('no control', async () => {
-				const { router, registry } = createService()
-				registry.page.getControlIdAt.mockReturnValue(undefined)
-
-				// Perform the request
-				router.processMessage('/location/1/2/3/style/color', { args: [{ value: 'abc' }] })
-
-				expect(registry.page.getControlIdAt).toHaveBeenCalledTimes(1)
-				expect(registry.page.getControlIdAt).toHaveBeenCalledWith({
-					pageNumber: 1,
-					row: 2,
-					column: 3,
-				})
-			})
-
-			async function runColor(args, expected) {
+			test('ok no text', async () => {
 				const { router, registry } = createService()
 				registry.page.getControlIdAt.mockReturnValue('abc')
 
@@ -725,7 +659,55 @@ describe('OscApi', () => {
 				registry.controls.getControl.mockReturnValue(mockControl)
 
 				// Perform the request
-				router.processMessage('/location/1/2/3/style/color', { args })
+				router.processMessage('location 1/2/3 style text')
+
+				expect(registry.page.getControlIdAt).toHaveBeenCalledTimes(1)
+				expect(registry.page.getControlIdAt).toHaveBeenCalledWith({
+					pageNumber: 1,
+					row: 2,
+					column: 3,
+				})
+
+				expect(registry.controls.getControl).toHaveBeenCalledTimes(1)
+				expect(registry.controls.getControl).toHaveBeenCalledWith('abc')
+
+				expect(mockControl.styleSetFields).toHaveBeenCalledTimes(1)
+				expect(mockControl.styleSetFields).toHaveBeenCalledWith({ text: '' })
+			})
+		})
+
+		describe('set style: color', () => {
+			test('no control', async () => {
+				const { router, registry } = createService()
+				registry.page.getControlIdAt.mockReturnValue(undefined)
+
+				// Perform the request
+				expect(() => router.processMessage('location 1/2/3 style color abc')).toThrow(
+					new ApiMessageError('No control at location')
+				)
+
+				expect(registry.page.getControlIdAt).toHaveBeenCalledTimes(1)
+				expect(registry.page.getControlIdAt).toHaveBeenCalledWith({
+					pageNumber: 1,
+					row: 2,
+					column: 3,
+				})
+			})
+
+			async function runColor(input, expected) {
+				const { router, registry } = createService()
+				registry.page.getControlIdAt.mockReturnValue('abc')
+
+				const mockControl = mock(
+					{
+						styleSetFields: jest.fn(),
+					},
+					mockOptions
+				)
+				registry.controls.getControl.mockReturnValue(mockControl)
+
+				// Perform the request
+				router.processMessage(`location 1/2/3 style color ${input}`)
 
 				expect(registry.page.getControlIdAt).toHaveBeenCalledTimes(1)
 				expect(registry.page.getControlIdAt).toHaveBeenCalledWith({
@@ -742,15 +724,11 @@ describe('OscApi', () => {
 			}
 
 			test('ok hex', async () => {
-				await runColor([{ value: '#abcdef' }], rgb('ab', 'cd', 'ef', 16))
-			})
-
-			test('ok separate', async () => {
-				await runColor([{ value: 5 }, { value: 8 }, { value: 11 }], rgb(5, 8, 11))
+				await runColor('#abcdef', rgb('ab', 'cd', 'ef', 16))
 			})
 
 			test('ok css', async () => {
-				await runColor([{ value: 'rgb(1,4,5)' }], rgb(1, 4, 5))
+				await runColor('rgb(1,4,5)', rgb(1, 4, 5))
 			})
 		})
 
@@ -760,8 +738,9 @@ describe('OscApi', () => {
 				registry.page.getControlIdAt.mockReturnValue(undefined)
 
 				// Perform the request
-				router.processMessage('/location/1/2/3/style/bgcolor', { args: [{ value: 'abc' }] })
-
+				expect(() => router.processMessage('location 1/2/3 style bgcolor abc')).toThrow(
+					new ApiMessageError('No control at location')
+				)
 				expect(registry.page.getControlIdAt).toHaveBeenCalledTimes(1)
 				expect(registry.page.getControlIdAt).toHaveBeenCalledWith({
 					pageNumber: 1,
@@ -770,7 +749,7 @@ describe('OscApi', () => {
 				})
 			})
 
-			async function runColor(args, expected) {
+			async function runColor(input, expected) {
 				const { router, registry } = createService()
 				registry.page.getControlIdAt.mockReturnValue('abc')
 
@@ -783,7 +762,7 @@ describe('OscApi', () => {
 				registry.controls.getControl.mockReturnValue(mockControl)
 
 				// Perform the request
-				router.processMessage('/location/1/2/3/style/bgcolor', { args })
+				router.processMessage(`location 1/2/3 style bgcolor ${input}`)
 
 				expect(registry.page.getControlIdAt).toHaveBeenCalledTimes(1)
 				expect(registry.page.getControlIdAt).toHaveBeenCalledWith({
@@ -800,15 +779,11 @@ describe('OscApi', () => {
 			}
 
 			test('ok hex', async () => {
-				await runColor([{ value: '#abcdef' }], rgb('ab', 'cd', 'ef', 16))
-			})
-
-			test('ok separate', async () => {
-				await runColor([{ value: 5 }, { value: 8 }, { value: 11 }], rgb(5, 8, 11))
+				await runColor('#abcdef', rgb('ab', 'cd', 'ef', 16))
 			})
 
 			test('ok css', async () => {
-				await runColor([{ value: 'rgb(1,4,5)' }], rgb(1, 4, 5))
+				await runColor('rgb(1,4,5)', rgb(1, 4, 5))
 			})
 		})
 	})
