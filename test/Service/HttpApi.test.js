@@ -704,6 +704,124 @@ describe('HttpApi', () => {
 			})
 		})
 
+		describe('set step', () => {
+			test('no control', async () => {
+				const { app, registry } = createService()
+				registry.page.getControlIdAt.mockReturnValue(undefined)
+
+				const mockControl = mock({}, mockOptions)
+				registry.controls.getControl.mockReturnValue(mockControl)
+
+				// Perform the request
+				const res = await supertest(app).post('/api/location/1/2/3/step?step=2')
+				expect(res.status).toBe(204)
+
+				expect(registry.page.getControlIdAt).toHaveBeenCalledTimes(1)
+				expect(registry.page.getControlIdAt).toHaveBeenCalledWith({
+					pageNumber: 1,
+					row: 2,
+					column: 3,
+				})
+				expect(registry.controls.getControl).toHaveBeenCalledTimes(0)
+			})
+
+			test('no payload', async () => {
+				const { app, registry } = createService()
+				registry.page.getControlIdAt.mockReturnValue('test')
+
+				const mockControl = mock(
+					{
+						stepMakeCurrent: jest.fn(),
+					},
+					mockOptions
+				)
+				registry.controls.getControl.mockReturnValue(mockControl)
+
+				// Perform the request
+				const res = await supertest(app).post('/api/location/1/2/3/step')
+				expect(res.status).toBe(400)
+				expect(res.text).toBe('Bad step')
+
+				expect(registry.page.getControlIdAt).toHaveBeenCalledTimes(1)
+				expect(registry.page.getControlIdAt).toHaveBeenCalledWith({
+					pageNumber: 1,
+					row: 2,
+					column: 3,
+				})
+				expect(registry.controls.getControl).toHaveBeenCalledTimes(1)
+				expect(registry.controls.getControl).toHaveBeenCalledWith('test')
+
+				expect(mockControl.stepMakeCurrent).toHaveBeenCalledTimes(1)
+				expect(mockControl.stepMakeCurrent).toHaveBeenCalledWith(NaN)
+			})
+
+			test('ok', async () => {
+				const { app, registry } = createService()
+				registry.page.getControlIdAt.mockReturnValue('control123')
+
+				const mockControl = mock(
+					{
+						stepMakeCurrent: jest.fn(),
+					},
+					mockOptions
+				)
+				registry.controls.getControl.mockReturnValue(mockControl)
+				mockControl.stepMakeCurrent.mockReturnValue(true)
+
+				// Perform the request
+				const res = await supertest(app).post('/api/location/1/2/3/step?step=2')
+				expect(res.status).toBe(200)
+
+				expect(registry.page.getControlIdAt).toHaveBeenCalledTimes(1)
+				expect(registry.page.getControlIdAt).toHaveBeenCalledWith({
+					pageNumber: 1,
+					row: 2,
+					column: 3,
+				})
+				expect(mockControl.stepMakeCurrent).toHaveBeenCalledTimes(1)
+				expect(mockControl.stepMakeCurrent).toHaveBeenCalledWith(2)
+			})
+
+			test('bad page', async () => {
+				const { app, registry } = createService()
+				registry.page.getControlIdAt.mockReturnValue('control123')
+				registry.controls.rotateControl.mockReturnValue(true)
+
+				// Perform the request
+				const res = await supertest(app).post('/api/location/1a/2/3/step').send()
+				expect(res.status).toBe(404)
+
+				expect(registry.page.getControlIdAt).toHaveBeenCalledTimes(0)
+				expect(registry.controls.rotateControl).toHaveBeenCalledTimes(0)
+			})
+
+			test('bad row', async () => {
+				const { app, registry } = createService()
+				registry.page.getControlIdAt.mockReturnValue('control123')
+				registry.controls.rotateControl.mockReturnValue(true)
+
+				// Perform the request
+				const res = await supertest(app).post('/api/location/1/2a/3/step').send()
+				expect(res.status).toBe(404)
+
+				expect(registry.page.getControlIdAt).toHaveBeenCalledTimes(0)
+				expect(registry.controls.rotateControl).toHaveBeenCalledTimes(0)
+			})
+
+			test('bad column', async () => {
+				const { app, registry } = createService()
+				registry.page.getControlIdAt.mockReturnValue('control123')
+				registry.controls.rotateControl.mockReturnValue(true)
+
+				// Perform the request
+				const res = await supertest(app).post('/api/location/1/2/3a/step').send()
+				expect(res.status).toBe(404)
+
+				expect(registry.page.getControlIdAt).toHaveBeenCalledTimes(0)
+				expect(registry.controls.rotateControl).toHaveBeenCalledTimes(0)
+			})
+		})
+
 		describe('set style', () => {
 			test('no control', async () => {
 				const { app, registry } = createService()

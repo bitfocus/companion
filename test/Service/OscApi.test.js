@@ -311,9 +311,6 @@ describe('OscApi', () => {
 				const { router, registry } = createService()
 				registry.page.getControlIdAt.mockReturnValue(undefined)
 
-				const mockControl = mock({}, mockOptions)
-				registry.controls.getControl.mockReturnValue(mockControl)
-
 				// Perform the request
 				router.processMessage('/location/1/2/3/press')
 
@@ -391,9 +388,6 @@ describe('OscApi', () => {
 				const { router, registry } = createService()
 				registry.page.getControlIdAt.mockReturnValue(undefined)
 
-				const mockControl = mock({}, mockOptions)
-				registry.controls.getControl.mockReturnValue(mockControl)
-
 				// Perform the request
 				router.processMessage('/location/1/2/3/rotate-left')
 
@@ -466,9 +460,6 @@ describe('OscApi', () => {
 				const { router, registry } = createService()
 				registry.page.getControlIdAt.mockReturnValue(undefined)
 
-				const mockControl = mock({}, mockOptions)
-				registry.controls.getControl.mockReturnValue(mockControl)
-
 				// Perform the request
 				router.processMessage('/location/1/2/3/rotate-right')
 
@@ -533,6 +524,132 @@ describe('OscApi', () => {
 
 				expect(registry.page.getControlIdAt).toHaveBeenCalledTimes(0)
 				expect(registry.controls.rotateControl).toHaveBeenCalledTimes(0)
+			})
+		})
+
+		describe('set step', () => {
+			test('no control', async () => {
+				const { router, registry } = createService()
+				registry.page.getControlIdAt.mockReturnValue(undefined)
+
+				const mockControl = mock({}, mockOptions)
+				registry.controls.getControl.mockReturnValue(mockControl)
+
+				// Perform the request
+				router.processMessage('/location/1/2/3/step', { args: [{ value: 2 }] })
+
+				expect(registry.page.getControlIdAt).toHaveBeenCalledTimes(1)
+				expect(registry.page.getControlIdAt).toHaveBeenCalledWith({
+					pageNumber: 1,
+					row: 2,
+					column: 3,
+				})
+				expect(registry.controls.getControl).toHaveBeenCalledTimes(0)
+			})
+
+			test('no payload', async () => {
+				const { router, registry } = createService()
+				registry.page.getControlIdAt.mockReturnValue('test')
+
+				const mockControl = mock({}, mockOptions)
+				registry.controls.getControl.mockReturnValue(mockControl)
+
+				// Perform the request
+				router.processMessage('/location/1/2/3/step', { args: [] })
+
+				expect(registry.page.getControlIdAt).toHaveBeenCalledTimes(0)
+				expect(registry.controls.getControl).toHaveBeenCalledTimes(0)
+			})
+
+			test('ok', async () => {
+				const { router, registry } = createService()
+				registry.page.getControlIdAt.mockReturnValue('control123')
+
+				const mockControl = mock(
+					{
+						stepMakeCurrent: jest.fn(),
+					},
+					mockOptions
+				)
+				registry.controls.getControl.mockReturnValue(mockControl)
+				mockControl.stepMakeCurrent.mockReturnValue(true)
+
+				// Perform the request
+				router.processMessage('/location/1/2/3/step', { args: [{ value: 2 }] })
+
+				expect(registry.page.getControlIdAt).toHaveBeenCalledTimes(1)
+				expect(registry.page.getControlIdAt).toHaveBeenCalledWith({
+					pageNumber: 1,
+					row: 2,
+					column: 3,
+				})
+				expect(mockControl.stepMakeCurrent).toHaveBeenCalledTimes(1)
+				expect(mockControl.stepMakeCurrent).toHaveBeenCalledWith(2)
+			})
+
+			test('string step', async () => {
+				const { router, registry } = createService()
+				registry.page.getControlIdAt.mockReturnValue('control123')
+
+				const mockControl = mock(
+					{
+						stepMakeCurrent: jest.fn(),
+					},
+					mockOptions
+				)
+				registry.controls.getControl.mockReturnValue(mockControl)
+				mockControl.stepMakeCurrent.mockReturnValue(true)
+
+				// Perform the request
+				router.processMessage('/location/1/2/3/step', { args: [{ value: '4' }] })
+
+				expect(registry.page.getControlIdAt).toHaveBeenCalledTimes(1)
+				expect(registry.page.getControlIdAt).toHaveBeenCalledWith({
+					pageNumber: 1,
+					row: 2,
+					column: 3,
+				})
+				expect(mockControl.stepMakeCurrent).toHaveBeenCalledTimes(1)
+				expect(mockControl.stepMakeCurrent).toHaveBeenCalledWith(4)
+			})
+
+			test('bad page', async () => {
+				const { router, registry } = createService()
+				registry.page.getControlIdAt.mockReturnValue('control123')
+
+				const mockControl = mock({}, mockOptions)
+				registry.controls.getControl.mockReturnValue(mockControl)
+
+				// Perform the request
+				router.processMessage('/location/1a/2/3/step', { args: [{ value: 2 }] })
+
+				expect(registry.page.getControlIdAt).toHaveBeenCalledTimes(0)
+			})
+
+			test('bad row', async () => {
+				const { router, registry } = createService()
+				registry.page.getControlIdAt.mockReturnValue('control123')
+
+				const mockControl = mock({}, mockOptions)
+				registry.controls.getControl.mockReturnValue(mockControl)
+
+				// Perform the request
+				router.processMessage('/location/1/2a/3/step', { args: [{ value: 2 }] })
+
+				expect(registry.page.getControlIdAt).toHaveBeenCalledTimes(0)
+			})
+
+			test('bad column', async () => {
+				const { router, registry } = createService()
+				registry.page.getControlIdAt.mockReturnValue('control123')
+
+				const mockControl = mock({}, mockOptions)
+				registry.controls.getControl.mockReturnValue(mockControl)
+
+				// Perform the request
+				router.processMessage('/location/1/2/3a/step', { args: [{ value: 2 }] })
+
+				expect(registry.page.getControlIdAt).toHaveBeenCalledTimes(0)
 			})
 		})
 
