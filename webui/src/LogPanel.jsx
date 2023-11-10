@@ -9,6 +9,13 @@ import { GenericConfirmModal } from './Components/GenericConfirmModal'
 import { VariableSizeList as List } from 'react-window'
 import AutoSizer from 'react-virtualized-auto-sizer'
 
+const LogsOnDiskInfoLine = {
+	time: null,
+	level: 'debug',
+	source: 'log',
+	message: 'You can view older logs in the configuration folder',
+}
+
 export const LogPanel = memo(function LogPanel() {
 	const socket = useContext(SocketContext)
 	const [config, setConfig] = useState(() => loadConfig())
@@ -39,7 +46,10 @@ export const LogPanel = memo(function LogPanel() {
 	const exportSupportModal = useCallback(() => {
 		exportRef.current.show(
 			'Export Support Bundle',
-			'Are you sure you want to export your configuration and logs?  This may contain sensitive information, such as connection information to online services.  It is not recommended to post this publicly, rather you should send it privately to the necessary party.',
+			[
+				'This packages up your recent Companion logs, configuration and backups.',
+				'This may contain sensitive information, such as connection information to online services.  It is not recommended to post this publicly, rather you should send it privately to a trusted party who is able to help you with an issue.',
+			],
 			'Export',
 			() => {
 				window.open('/int/export/support')
@@ -227,7 +237,7 @@ function LogPanelContents({ config }) {
 	function Row({ style, index }) {
 		const rowRef = useRef({})
 
-		const h = messages[index]
+		const h = index === 0 ? LogsOnDiskInfoLine : messages[index - 1]
 
 		useEffect(() => {
 			if (rowRef.current) {
@@ -250,7 +260,7 @@ function LogPanelContents({ config }) {
 			{({ height, width }) => (
 				<List
 					height={height}
-					itemCount={messages.length}
+					itemCount={messages.length + 1}
 					onScroll={userScroll}
 					itemSize={getRowHeight}
 					ref={listRef}
@@ -265,7 +275,7 @@ function LogPanelContents({ config }) {
 }
 
 const LogLineInner = memo(({ h, innerRef }) => {
-	const time_format = dayjs(h.time).format('YY.MM.DD HH:mm:ss')
+	const time_format = h.time === null ? '                 ' : dayjs(h.time).format('YY.MM.DD HH:mm:ss')
 	return (
 		<div ref={innerRef} className={`log-line log-type-${h.level}`}>
 			{time_format} <strong>{h.source}</strong>: <span className="log-message">{h.message}</span>
