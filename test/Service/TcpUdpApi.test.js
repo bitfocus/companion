@@ -45,7 +45,7 @@ describe('TcpUdpApi', () => {
 			mockOptions
 		)
 
-		const service = new ServiceTcpUdpApi(registry, 'fake-proto')
+		const service = new ServiceTcpUdpApi(registry, 'fake-proto', null)
 		const router = service.router
 
 		return {
