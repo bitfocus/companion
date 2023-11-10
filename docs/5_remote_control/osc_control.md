@@ -14,7 +14,7 @@ Remote triggering can be done by sending OSC commands to port `12321`.
   _Change color of text on button_
 - `/style/text/ <page> <bank> <text>`  
   _Change text on a button_
-- `/custom-variable/<name> <value>`  
+- `/custom-variable/<name>/value <value>`  
   _Change custom variable value_
 - `/rescan 1`
   _Make Companion rescan for newly attached USB surfaces_
