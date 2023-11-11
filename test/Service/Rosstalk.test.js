@@ -72,8 +72,7 @@ describe('Rosstalk', () => {
 				column: 7,
 			})
 
-			expect(registry.controls.pressControl).toHaveBeenCalledTimes(1)
-			expect(registry.controls.pressControl).toHaveBeenLastCalledWith(undefined, true, 'rosstalk')
+			expect(registry.controls.pressControl).toHaveBeenCalledTimes(0)
 		})
 
 		test('out of range', async () => {

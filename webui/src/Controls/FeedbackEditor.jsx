@@ -566,6 +566,13 @@ function FeedbackStyles({ feedbackSpec, feedback, setStylePropsValue }) {
 		},
 		[setStylePropsValue]
 	)
+	const clearPng = useCallback(() => {
+		setPngError(null)
+		setStylePropsValue('png64', null).catch((e) => {
+			console.error('Failed to clear png', e)
+			setPngError('Failed to clear png')
+		})
+	}, [setStylePropsValue])
 
 	const currentStyle = useMemo(() => feedback?.style || {}, [feedback?.style])
 	const showField = useCallback((id) => id in currentStyle, [currentStyle])
@@ -584,6 +591,7 @@ function FeedbackStyles({ feedbackSpec, feedback, setStylePropsValue }) {
 						values={currentStyle}
 						setValueInner={setValue}
 						setPng={setPng}
+						clearPng={clearPng}
 						setPngError={clearPngError}
 						showField={showField}
 					/>
