@@ -3,7 +3,7 @@ import {
 	applyPatchOrReplaceSubObject,
 	ActionsContext,
 	FeedbacksContext,
-	InstancesContext,
+	ConnectionsContext,
 	VariableDefinitionsContext,
 	CustomVariableDefinitionsContext,
 	UserConfigContext,
@@ -171,7 +171,7 @@ export function ContextData({ children }) {
 				setTriggers((oldTriggers) => applyPatchOrReplaceSubObject(oldTriggers, controlId, patch))
 			}
 
-			socketEmitPromise(socket, 'instances:subscribe', [])
+			socketEmitPromise(socket, 'connections:subscribe', [])
 				.then((instances) => {
 					setInstances(instances)
 				})
@@ -189,7 +189,7 @@ export function ContextData({ children }) {
 					}
 				})
 			}
-			socket.on('instances:patch', patchInstances)
+			socket.on('connections:patch', patchInstances)
 
 			const patchModules = (patch) => {
 				setModules((oldModules) => {
@@ -245,7 +245,7 @@ export function ContextData({ children }) {
 
 				socket.off('triggers:update', updateTriggers)
 
-				socket.off('instances:patch', patchInstances)
+				socket.off('connections:patch', patchInstances)
 				socket.off('modules:patch', patchModules)
 
 				socketEmitPromise(socket, 'action-definitions:unsubscribe', []).catch((e) => {
@@ -257,7 +257,7 @@ export function ContextData({ children }) {
 				socketEmitPromise(socket, 'variable-definitions:unsubscribe', []).catch((e) => {
 					console.error('Failed to unsubscribe to variable definitions list', e)
 				})
-				socketEmitPromise(socket, 'instances:unsubscribe', []).catch((e) => {
+				socketEmitPromise(socket, 'connections:unsubscribe', []).catch((e) => {
 					console.error('Failed to unsubscribe from instances list:', e)
 				})
 				socketEmitPromise(socket, 'modules:unsubscribe', []).catch((e) => {
@@ -299,7 +299,7 @@ export function ContextData({ children }) {
 				<ModulesContext.Provider value={modules}>
 					<ActionsContext.Provider value={actionDefinitions}>
 						<FeedbacksContext.Provider value={feedbackDefinitions}>
-							<InstancesContext.Provider value={instances}>
+							<ConnectionsContext.Provider value={instances}>
 								<VariableDefinitionsContext.Provider value={completeVariableDefinitions}>
 									<CustomVariableDefinitionsContext.Provider value={customVariables}>
 										<UserConfigContext.Provider value={userConfig}>
@@ -319,7 +319,7 @@ export function ContextData({ children }) {
 										</UserConfigContext.Provider>
 									</CustomVariableDefinitionsContext.Provider>
 								</VariableDefinitionsContext.Provider>
-							</InstancesContext.Provider>
+							</ConnectionsContext.Provider>
 						</FeedbacksContext.Provider>
 					</ActionsContext.Provider>
 				</ModulesContext.Provider>

@@ -101,12 +101,12 @@ export function ConnectionDebug() {
 	}, [linesBuffer])
 
 	const doStopConnection = useCallback(() => {
-		socketEmitPromise(socket, 'instances:set-enabled', [connectionId, false]).catch((e) => {
+		socketEmitPromise(socket, 'connections:set-enabled', [connectionId, false]).catch((e) => {
 			console.error('Failed', e)
 		})
 	}, [socket, connectionId])
 	const doStartConnection = useCallback(() => {
-		socketEmitPromise(socket, 'instances:set-enabled', [connectionId, true]).catch((e) => {
+		socketEmitPromise(socket, 'connections:set-enabled', [connectionId, true]).catch((e) => {
 			console.error('Failed', e)
 		})
 	}, [socket, connectionId])

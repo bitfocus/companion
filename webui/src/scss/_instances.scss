@@ -17,11 +17,11 @@
 	}
 }
 
-.instancelist-dragging {
+.connectionlist-dragging {
 	opacity: 0.5;
 }
 
-.instancelist-selected {
+.connectionlist-selected {
 	background-color: rgba(200, 200, 200, 0.35);
 
 	&:hover {
@@ -29,7 +29,7 @@
 	}
 }
 
-.instancelist-notdragging:hover {
+.connectionlist-notdragging:hover {
 	background-color: rgba(200, 200, 200, 0.1);
 }
 
@@ -42,27 +42,27 @@
 	}
 }
 
-.instance-status-ok {
+.connection-status-ok {
 	background-color: #cfc;
 }
 
-.instance-status-warn {
+.connection-status-warn {
 	background-color: #fea;
 }
 
-.instance-status-error {
+.connection-status-error {
 	background-color: #fcc;
 }
 
-#instance_add_search_results {
+#connection_add_search_results {
 	margin-top: 10px;
 }
 
-#instance_add_search_results div {
+#connection_add_search_results div {
 	margin-bottom: 5px;
 }
 
-.edit-instance {
+.edit-connection {
 	& > div {
 		// column
 		margin-bottom: 10px;
@@ -127,7 +127,7 @@
 	margin: 0 0 1rem 0;
 }
 
-.instances-panel {
+.connections-panel {
 	.action-buttons {
 		.btn-primary.disabled {
 			opacity: 0.5;

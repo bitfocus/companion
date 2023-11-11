@@ -12,7 +12,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import React, { useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react'
 import {
 	FeedbacksContext,
-	InstancesContext,
+	ConnectionsContext,
 	MyErrorBoundary,
 	socketEmitPromise,
 	sandbox,
@@ -353,10 +353,10 @@ function FeedbackEditor({
 	booleanOnly,
 }) {
 	const feedbacksContext = useContext(FeedbacksContext)
-	const instancesContext = useContext(InstancesContext)
+	const connectionsContext = useContext(ConnectionsContext)
 
-	const instance = instancesContext[feedback.instance_id]
-	const instanceLabel = instance?.label ?? feedback.instance_id
+	const connectionInfo = connectionsContext[feedback.instance_id]
+	const connectionLabel = connectionInfo?.label ?? feedback.instance_id
 
 	const feedbackSpec = (feedbacksContext[feedback.instance_id] || {})[feedback.type]
 	const options = feedbackSpec?.options ?? []
@@ -398,9 +398,9 @@ function FeedbackEditor({
 
 	let name = ''
 	if (feedbackSpec) {
-		name = `${instanceLabel}: ${feedbackSpec.label}`
+		name = `${connectionLabel}: ${feedbackSpec.label}`
 	} else {
-		name = `${instanceLabel}: ${feedback.type} (undefined)`
+		name = `${connectionLabel}: ${feedback.type} (undefined)`
 	}
 
 	const showButtonPreview = feedback?.instance_id === 'internal' && feedbackSpec?.showButtonPreview
@@ -625,18 +625,18 @@ function AddFeedbackDropdown({ onSelect, booleanOnly, addPlaceholder }) {
 	const recentFeedbacksContext = useContext(RecentFeedbacksContext)
 	const menuPortal = useContext(MenuPortalContext)
 	const feedbacksContext = useContext(FeedbacksContext)
-	const instancesContext = useContext(InstancesContext)
+	const connectionsContext = useContext(ConnectionsContext)
 
 	const options = useMemo(() => {
 		const options = []
 		for (const [instanceId, instanceFeedbacks] of Object.entries(feedbacksContext)) {
 			for (const [feedbackId, feedback] of Object.entries(instanceFeedbacks || {})) {
 				if (!booleanOnly || feedback.type === 'boolean') {
-					const instanceLabel = instancesContext[instanceId]?.label ?? instanceId
+					const connectionLabel = connectionsContext[instanceId]?.label ?? instanceId
 					options.push({
 						isRecent: false,
 						value: `${instanceId}:${feedbackId}`,
-						label: `${instanceLabel}: ${feedback.label}`,
+						label: `${connectionLabel}: ${feedback.label}`,
 					})
 				}
 			}
@@ -648,11 +648,11 @@ function AddFeedbackDropdown({ onSelect, booleanOnly, addPlaceholder }) {
 				const [instanceId, feedbackId] = feedbackType.split(':', 2)
 				const feedbackInfo = feedbacksContext[instanceId]?.[feedbackId]
 				if (feedbackInfo) {
-					const instanceLabel = instancesContext[instanceId]?.label ?? instanceId
+					const connectionLabel = connectionsContext[instanceId]?.label ?? instanceId
 					recents.push({
 						isRecent: true,
 						value: `${instanceId}:${feedbackId}`,
-						label: `${instanceLabel}: ${feedbackInfo.label}`,
+						label: `${connectionLabel}: ${feedbackInfo.label}`,
 					})
 				}
 			}
@@ -663,7 +663,7 @@ function AddFeedbackDropdown({ onSelect, booleanOnly, addPlaceholder }) {
 		})
 
 		return options
-	}, [feedbacksContext, instancesContext, booleanOnly, recentFeedbacksContext.recentFeedbacks])
+	}, [feedbacksContext, connectionsContext, booleanOnly, recentFeedbacksContext.recentFeedbacks])
 
 	const innerChange = useCallback(
 		(e) => {

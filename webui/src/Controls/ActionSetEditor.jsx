@@ -12,7 +12,7 @@ import React, { useCallback, useContext, useEffect, useMemo, useRef, useState } 
 import { NumberInputField } from '../Components'
 import {
 	ActionsContext,
-	InstancesContext,
+	ConnectionsContext,
 	MyErrorBoundary,
 	socketEmitPromise,
 	sandbox,
@@ -306,7 +306,7 @@ function ActionTableRow({
 	isCollapsed,
 	setCollapsed,
 }) {
-	const instancesContext = useContext(InstancesContext)
+	const connectionsContext = useContext(ConnectionsContext)
 	const actionsContext = useContext(ActionsContext)
 
 	const innerDelete = useCallback(() => doDelete(action.id), [action.id, doDelete])
@@ -411,9 +411,9 @@ function ActionTableRow({
 		return ''
 	}
 
-	const instance = instancesContext[action.instance]
+	const connectionInfo = connectionsContext[action.instance]
 	// const module = instance ? modules[instance.instance_type] : undefined
-	const instanceLabel = instance?.label ?? action.instance
+	const connectionLabel = connectionInfo?.label ?? action.instance
 
 	const options = actionSpec?.options ?? []
 
@@ -421,9 +421,9 @@ function ActionTableRow({
 
 	let name = ''
 	if (actionSpec) {
-		name = `${instanceLabel}: ${actionSpec.label}`
+		name = `${connectionLabel}: ${actionSpec.label}`
 	} else {
-		name = `${instanceLabel}: ${action.action} (undefined)`
+		name = `${connectionLabel}: ${action.action} (undefined)`
 	}
 
 	return (
@@ -550,18 +550,18 @@ const noOptionsMessage = ({ inputValue }) => {
 function AddActionDropdown({ onSelect, placeholder }) {
 	const recentActionsContext = useContext(RecentActionsContext)
 	const menuPortal = useContext(MenuPortalContext)
-	const instancesContext = useContext(InstancesContext)
+	const connectionsContext = useContext(ConnectionsContext)
 	const actionsContext = useContext(ActionsContext)
 
 	const options = useMemo(() => {
 		const options = []
 		for (const [instanceId, instanceActions] of Object.entries(actionsContext)) {
 			for (const [actionId, action] of Object.entries(instanceActions || {})) {
-				const instanceLabel = instancesContext[instanceId]?.label ?? instanceId
+				const connectionLabel = connectionsContext[instanceId]?.label ?? instanceId
 				options.push({
 					isRecent: false,
 					value: `${instanceId}:${actionId}`,
-					label: `${instanceLabel}: ${action.label}`,
+					label: `${connectionLabel}: ${action.label}`,
 				})
 			}
 		}
@@ -572,11 +572,11 @@ function AddActionDropdown({ onSelect, placeholder }) {
 				const [instanceId, actionId] = actionType.split(':', 2)
 				const actionInfo = actionsContext[instanceId]?.[actionId]
 				if (actionInfo) {
-					const instanceLabel = instancesContext[instanceId]?.label ?? instanceId
+					const connectionLabel = connectionsContext[instanceId]?.label ?? instanceId
 					recents.push({
 						isRecent: true,
 						value: `${instanceId}:${actionId}`,
-						label: `${instanceLabel}: ${actionInfo.label}`,
+						label: `${connectionLabel}: ${actionInfo.label}`,
 					})
 				}
 			}
@@ -587,7 +587,7 @@ function AddActionDropdown({ onSelect, placeholder }) {
 		})
 
 		return options
-	}, [actionsContext, instancesContext, recentActionsContext.recentActions])
+	}, [actionsContext, connectionsContext, recentActionsContext.recentActions])
 
 	const innerChange = useCallback(
 		(e) => {

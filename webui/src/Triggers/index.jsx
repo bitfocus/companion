@@ -286,9 +286,9 @@ function TriggersTableRow({ controlId, item, editItem, moveTrigger, isSelected }
 		<tr
 			ref={ref}
 			className={classNames({
-				'instancelist-dragging': isDragging,
-				'instancelist-notdragging': !isDragging,
-				'instancelist-selected': isSelected,
+				'connectionlist-dragging': isDragging,
+				'connectionlist-notdragging': !isDragging,
+				'connectionlist-selected': isSelected,
 			})}
 		>
 			<td ref={drag} className="td-reorder" style={{ maxWidth: 20 }}>

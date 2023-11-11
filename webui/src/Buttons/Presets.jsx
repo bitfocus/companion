@@ -1,7 +1,7 @@
 import React, { useCallback, useContext, useEffect, useState } from 'react'
 import { CAlert, CButton, CRow } from '@coreui/react'
 import {
-	InstancesContext,
+	ConnectionsContext,
 	LoadingRetryOrError,
 	socketEmitPromise,
 	applyPatchOrReplaceSubObject,
@@ -15,7 +15,7 @@ import { nanoid } from 'nanoid'
 export const InstancePresets = function InstancePresets({ resetToken }) {
 	const socket = useContext(SocketContext)
 	const modules = useContext(ModulesContext)
-	const instancesContext = useContext(InstancesContext)
+	const connectionsContext = useContext(ConnectionsContext)
 
 	const [instanceAndCategory, setInstanceAndCategory] = useState([null, null])
 	const [presetsMap, setPresetsMap] = useState(null)
@@ -67,7 +67,7 @@ export const InstancePresets = function InstancePresets({ resetToken }) {
 	}
 
 	if (instanceAndCategory[0]) {
-		const instance = instancesContext[instanceAndCategory[0]]
+		const instance = connectionsContext[instanceAndCategory[0]]
 		const module = instance ? modules[instance.instance_type] : undefined
 
 		const presets = presetsMap[instanceAndCategory[0]] ?? []
@@ -99,12 +99,12 @@ export const InstancePresets = function InstancePresets({ resetToken }) {
 
 function PresetsInstanceList({ presets, setInstanceAndCategory }) {
 	const modules = useContext(ModulesContext)
-	const instancesContext = useContext(InstancesContext)
+	const connectionsContext = useContext(ConnectionsContext)
 
 	const options = Object.entries(presets).map(([id, vals]) => {
 		if (!vals || Object.values(vals).length === 0) return ''
 
-		const instance = instancesContext[id]
+		const instance = connectionsContext[id]
 		const module = instance ? modules[instance.instance_type] : undefined
 
 		return (

@@ -1,6 +1,12 @@
 import { useCallback, useContext, useEffect, useRef, useState } from 'react'
 import { CButton, CButtonGroup } from '@coreui/react'
-import { InstancesContext, VariableDefinitionsContext, socketEmitPromise, SocketContext, ModulesContext } from '../util'
+import {
+	ConnectionsContext,
+	VariableDefinitionsContext,
+	socketEmitPromise,
+	SocketContext,
+	ModulesContext,
+} from '../util'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import {
 	faDollarSign,
@@ -14,27 +20,27 @@ import {
 	faEyeSlash,
 } from '@fortawesome/free-solid-svg-icons'
 
-import { InstanceVariablesModal } from './InstanceVariablesModal'
+import { ConnectionVariablesModal } from './ConnectionVariablesModal'
 import { GenericConfirmModal } from '../Components/GenericConfirmModal'
 import CSwitch from '../CSwitch'
 import { useDrag, useDrop } from 'react-dnd'
 import { windowLinkOpen } from '../Helpers/Window'
 import classNames from 'classnames'
 
-export function InstancesList({ showHelp, doConfigureInstance, instanceStatus, selectedInstanceId }) {
+export function ConnectionsList({ showHelp, doConfigureConnection, connectionStatus, selectedConnectionId }) {
 	const socket = useContext(SocketContext)
-	const instancesContext = useContext(InstancesContext)
+	const connectionsContext = useContext(ConnectionsContext)
 
-	const instancesRef = useRef(null)
+	const connectionsRef = useRef(null)
 	useEffect(() => {
-		instancesRef.current = instancesContext
-	}, [instancesContext])
+		connectionsRef.current = connectionsContext
+	}, [connectionsContext])
 
 	const deleteModalRef = useRef()
 	const variablesModalRef = useRef()
 
-	const doShowVariables = useCallback((instanceId) => {
-		variablesModalRef.current.show(instanceId)
+	const doShowVariables = useCallback((connectionId) => {
+		variablesModalRef.current.show(connectionId)
 	}, [])
 
 	const [visibleConnections, setVisibleConnections] = useState(() => loadVisibility())
@@ -58,8 +64,8 @@ export function InstancesList({ showHelp, doConfigureInstance, instanceStatus, s
 
 	const moveRow = useCallback(
 		(itemId, targetId) => {
-			if (instancesRef.current) {
-				const rawIds = Object.entries(instancesRef.current)
+			if (connectionsRef.current) {
+				const rawIds = Object.entries(connectionsRef.current)
 					.sort(([, a], [, b]) => a.sortOrder - b.sortOrder)
 					.map(([id]) => id)
 
@@ -70,7 +76,7 @@ export function InstancesList({ showHelp, doConfigureInstance, instanceStatus, s
 				const newIds = rawIds.filter((id) => id !== itemId)
 				newIds.splice(targetIndex, 0, itemId)
 
-				socketEmitPromise(socket, 'instances:set-order', [newIds]).catch((e) => {
+				socketEmitPromise(socket, 'connections:set-order', [newIds]).catch((e) => {
 					console.error('Reorder failed', e)
 				})
 			}
@@ -80,12 +86,12 @@ export function InstancesList({ showHelp, doConfigureInstance, instanceStatus, s
 
 	let visibleCount = 0
 
-	const rows = Object.entries(instancesContext)
+	const rows = Object.entries(connectionsContext)
 		.sort(([, a], [, b]) => a.sortOrder - b.sortOrder)
-		.map(([id, instance]) => {
-			const status = instanceStatus?.[id]
+		.map(([id, connection]) => {
+			const status = connectionStatus?.[id]
 
-			if (!visibleConnections.disabled && instance.enabled === false) {
+			if (!visibleConnections.disabled && connection.enabled === false) {
 				return undefined
 			} else if (status) {
 				if (!visibleConnections.ok && status.category === 'good') {
@@ -100,21 +106,21 @@ export function InstancesList({ showHelp, doConfigureInstance, instanceStatus, s
 			visibleCount++
 
 			return (
-				<InstancesTableRow
+				<ConnectionsTableRow
 					key={id}
 					id={id}
-					instance={instance}
-					instanceStatus={status}
+					connection={connection}
+					connectionStatus={status}
 					showHelp={showHelp}
 					showVariables={doShowVariables}
 					deleteModalRef={deleteModalRef}
-					configureInstance={doConfigureInstance}
+					configureConnection={doConfigureConnection}
 					moveRow={moveRow}
-					isSelected={id === selectedInstanceId}
+					isSelected={id === selectedConnectionId}
 				/>
 			)
 		})
-	const hiddenCount = Object.keys(instancesContext).length - visibleCount
+	const hiddenCount = Object.keys(connectionsContext).length - visibleCount
 
 	return (
 		<div>
@@ -126,7 +132,7 @@ export function InstancesList({ showHelp, doConfigureInstance, instanceStatus, s
 			</p>
 
 			<GenericConfirmModal ref={deleteModalRef} />
-			<InstanceVariablesModal ref={variablesModalRef} />
+			<ConnectionVariablesModal ref={variablesModalRef} />
 
 			<table className="table-tight table-responsive-sm">
 				<thead>
@@ -183,7 +189,7 @@ export function InstancesList({ showHelp, doConfigureInstance, instanceStatus, s
 							</td>
 						</tr>
 					)}
-					{Object.keys(instancesContext).length === 0 && (
+					{Object.keys(connectionsContext).length === 0 && (
 						<tr>
 							<td colSpan={4}>
 								You haven't setup any connections yet. <br />
@@ -219,13 +225,13 @@ function loadVisibility() {
 	return config
 }
 
-function InstancesTableRow({
+function ConnectionsTableRow({
 	id,
-	instance,
-	instanceStatus,
+	connection,
+	connectionStatus,
 	showHelp,
 	showVariables,
-	configureInstance,
+	configureConnection,
 	deleteModalRef,
 	moveRow,
 	isSelected,
@@ -234,33 +240,33 @@ function InstancesTableRow({
 	const modules = useContext(ModulesContext)
 	const variableDefinitionsContext = useContext(VariableDefinitionsContext)
 
-	const moduleInfo = modules[instance.instance_type]
+	const moduleInfo = modules[connection.instance_type]
 
-	const isEnabled = instance.enabled === undefined || instance.enabled
+	const isEnabled = connection.enabled === undefined || connection.enabled
 
 	const doDelete = useCallback(() => {
 		deleteModalRef.current.show(
 			'Delete connection',
-			`Are you sure you want to delete "${instance.label}"?`,
+			`Are you sure you want to delete "${connection.label}"?`,
 			'Delete',
 			() => {
-				socketEmitPromise(socket, 'instances:delete', [id]).catch((e) => {
+				socketEmitPromise(socket, 'connections:delete', [id]).catch((e) => {
 					console.error('Delete failed', e)
 				})
-				configureInstance(null)
+				configureConnection(null)
 			}
 		)
-	}, [socket, deleteModalRef, id, instance.label, configureInstance])
+	}, [socket, deleteModalRef, id, connection.label, configureConnection])
 
 	const doToggleEnabled = useCallback(() => {
-		socketEmitPromise(socket, 'instances:set-enabled', [id, !isEnabled]).catch((e) => {
+		socketEmitPromise(socket, 'connections:set-enabled', [id, !isEnabled]).catch((e) => {
 			console.error('Set enabled failed', e)
 		})
 	}, [socket, id, isEnabled])
 
-	const doShowHelp = useCallback(() => showHelp(instance.instance_type), [showHelp, instance.instance_type])
+	const doShowHelp = useCallback(() => showHelp(connection.instance_type), [showHelp, connection.instance_type])
 
-	const doShowVariables = useCallback(() => showVariables(instance.label), [showVariables, instance.label])
+	const doShowVariables = useCallback(() => showVariables(connection.label), [showVariables, connection.label])
 
 	const ref = useRef(null)
 	const [, drop] = useDrop({
@@ -289,30 +295,30 @@ function InstancesTableRow({
 	})
 	preview(drop(ref))
 
-	const instanceVariables = variableDefinitionsContext[instance.label]
+	const connectionVariables = variableDefinitionsContext[connection.label]
 
 	const doEdit = () => {
 		if (!moduleInfo || !isEnabled) {
 			return
 		}
 
-		configureInstance(id)
+		configureConnection(id)
 	}
 
 	return (
 		<tr
 			ref={ref}
 			className={classNames({
-				'instancelist-dragging': isDragging,
-				'instancelist-notdragging': !isDragging,
-				'instancelist-selected': isSelected,
+				'connectionlist-dragging': isDragging,
+				'connectionlist-notdragging': !isDragging,
+				'connectionlist-selected': isSelected,
 			})}
 		>
 			<td ref={drag} className="td-reorder">
 				<FontAwesomeIcon icon={faSort} />
 			</td>
 			<td onClick={doEdit} className="hand">
-				<b>{instance.label}</b>
+				<b>{connection.label}</b>
 			</td>
 			<td onClick={doEdit} className="hand">
 				{moduleInfo ? (
@@ -332,10 +338,10 @@ function InstancesTableRow({
 						{moduleInfo?.manufacturer ?? ''}
 					</>
 				) : (
-					instance.instance_type
+					connection.instance_type
 				)}
 			</td>
-			<ModuleStatusCall isEnabled={isEnabled} status={instanceStatus} />
+			<ModuleStatusCall isEnabled={isEnabled} status={connectionStatus} />
 			<td className="action-buttons">
 				<div style={{ display: 'flex' }}>
 					<div>
@@ -366,9 +372,10 @@ function InstancesTableRow({
 								size="md"
 								style={{
 									padding: 4,
-									opacity: !isEnabled || !(instanceVariables && Object.keys(instanceVariables).length > 0) ? 0.2 : 1,
+									opacity:
+										!isEnabled || !(connectionVariables && Object.keys(connectionVariables).length > 0) ? 0.2 : 1,
 								}}
-								disabled={!isEnabled || !(instanceVariables && Object.keys(instanceVariables).length > 0)}
+								disabled={!isEnabled || !(connectionVariables && Object.keys(connectionVariables).length > 0)}
 							>
 								<FontAwesomeIcon icon={faDollarSign} />
 							</CButton>
@@ -420,7 +427,7 @@ function ModuleStatusCall({ isEnabled, status }) {
 				)
 			case 'warning':
 				return (
-					<td className="instance-status-warn">
+					<td className="connection-status-warn">
 						{status.level || 'Warning'}
 						<br />
 						{messageStr}
@@ -428,7 +435,7 @@ function ModuleStatusCall({ isEnabled, status }) {
 				)
 			case 'error':
 				return (
-					<td className="instance-status-error">
+					<td className="connection-status-error">
 						{status.level || 'ERROR'}
 						<br />
 						{messageStr}
@@ -436,7 +443,7 @@ function ModuleStatusCall({ isEnabled, status }) {
 				)
 			default:
 				return (
-					<td className="instance-status-error">
+					<td className="connection-status-error">
 						Unknown
 						<br />
 						{messageStr}

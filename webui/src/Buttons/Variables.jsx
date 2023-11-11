@@ -1,22 +1,22 @@
 import React, { useCallback, useContext, useEffect, useMemo, useState } from 'react'
 import { CButton } from '@coreui/react'
-import { InstancesContext, VariableDefinitionsContext, ModulesContext } from '../util'
+import { ConnectionsContext, VariableDefinitionsContext, ModulesContext } from '../util'
 import { VariablesTable } from '../Components/VariablesTable'
 import { CustomVariablesList } from './CustomVariablesList'
 
 export const InstanceVariables = function InstanceVariables({ resetToken }) {
-	const instancesContext = useContext(InstancesContext)
+	const connectionsContext = useContext(ConnectionsContext)
 
 	const [instanceId, setInstance] = useState(null)
 	const [showCustom, setShowCustom] = useState(false)
 
 	const instancesLabelMap = useMemo(() => {
 		const labelMap = new Map()
-		for (const [id, instance] of Object.entries(instancesContext)) {
+		for (const [id, instance] of Object.entries(connectionsContext)) {
 			labelMap.set(instance.label, id)
 		}
 		return labelMap
-	}, [instancesContext])
+	}, [connectionsContext])
 
 	// Reset selection on resetToken change
 	useEffect(() => {
@@ -26,10 +26,10 @@ export const InstanceVariables = function InstanceVariables({ resetToken }) {
 	if (showCustom) {
 		return <CustomVariablesList setShowCustom={setShowCustom} />
 	} else if (instanceId) {
-		let instanceLabel = instancesContext[instanceId]?.label
-		if (instanceId === 'internal') instanceLabel = 'internal'
+		let connectionLabel = connectionsContext[instanceId]?.label
+		if (instanceId === 'internal') connectionLabel = 'internal'
 
-		return <VariablesList selectedInstanceLabel={instanceLabel} setInstance={setInstance} />
+		return <VariablesList selectedConnectionLabel={connectionLabel} setInstance={setInstance} />
 	} else {
 		return (
 			<VariablesInstanceList
@@ -43,7 +43,7 @@ export const InstanceVariables = function InstanceVariables({ resetToken }) {
 
 function VariablesInstanceList({ setInstance, setShowCustom, instancesLabelMap }) {
 	const modules = useContext(ModulesContext)
-	const instancesContext = useContext(InstancesContext)
+	const connectionsContext = useContext(ConnectionsContext)
 	const variableDefinitionsContext = useContext(VariableDefinitionsContext)
 
 	const options = Object.entries(variableDefinitionsContext || []).map(([label, defs]) => {
@@ -60,7 +60,7 @@ function VariablesInstanceList({ setInstance, setShowCustom, instancesLabelMap }
 		}
 
 		const id = instancesLabelMap.get(label)
-		const instance = id ? instancesContext[id] : undefined
+		const instance = id ? connectionsContext[id] : undefined
 		const module = instance ? modules[instance.instance_type] : undefined
 
 		return (
@@ -86,7 +86,7 @@ function VariablesInstanceList({ setInstance, setShowCustom, instancesLabelMap }
 	)
 }
 
-function VariablesList({ selectedInstanceLabel, setInstance }) {
+function VariablesList({ selectedConnectionLabel, setInstance }) {
 	const doBack = useCallback(() => setInstance(null), [setInstance])
 
 	return (
@@ -95,10 +95,10 @@ function VariablesList({ selectedInstanceLabel, setInstance }) {
 				<CButton color="primary" size="sm" onClick={doBack}>
 					Back
 				</CButton>
-				Variables for {selectedInstanceLabel}
+				Variables for {selectedConnectionLabel}
 			</h5>
 
-			<VariablesTable label={selectedInstanceLabel} />
+			<VariablesTable label={selectedConnectionLabel} />
 
 			<br style={{ clear: 'both' }} />
 		</div>

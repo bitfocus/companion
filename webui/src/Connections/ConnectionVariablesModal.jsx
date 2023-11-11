@@ -2,18 +2,18 @@ import React, { forwardRef, useCallback, useImperativeHandle, useState } from 'r
 import { CModal, CModalBody, CModalHeader, CModalFooter, CButton, CRow, CCol } from '@coreui/react'
 import { VariablesTable } from '../Components/VariablesTable'
 
-export const InstanceVariablesModal = forwardRef(function HelpModal(_props, ref) {
-	const [instanceLabel, setInstanceLabel] = useState(null)
+export const ConnectionVariablesModal = forwardRef(function HelpModal(_props, ref) {
+	const [connectionLabel, setConnectionLabel] = useState(null)
 	const [show, setShow] = useState(false)
 
 	const doClose = useCallback(() => setShow(false), [])
-	const onClosed = useCallback(() => setInstanceLabel(null), [])
+	const onClosed = useCallback(() => setConnectionLabel(null), [])
 
 	useImperativeHandle(
 		ref,
 		() => ({
 			show(label) {
-				setInstanceLabel(label)
+				setConnectionLabel(label)
 				setShow(true)
 			},
 		}),
@@ -23,12 +23,12 @@ export const InstanceVariablesModal = forwardRef(function HelpModal(_props, ref)
 	return (
 		<CModal show={show} onClose={doClose} onClosed={onClosed} size="lg">
 			<CModalHeader closeButton>
-				<h5>Variables for {instanceLabel}</h5>
+				<h5>Variables for {connectionLabel}</h5>
 			</CModalHeader>
 			<CModalBody>
 				<CRow>
 					<CCol lg={12}>
-						<VariablesTable label={instanceLabel} />
+						<VariablesTable label={connectionLabel} />
 					</CCol>
 				</CRow>
 			</CModalBody>

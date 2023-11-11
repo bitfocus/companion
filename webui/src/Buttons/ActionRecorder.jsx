@@ -1,6 +1,6 @@
 import React, { useCallback, useContext, useEffect, useState, useRef } from 'react'
 import {
-	InstancesContext,
+	ConnectionsContext,
 	socketEmitPromise,
 	SocketContext,
 	LoadingRetryOrError,
@@ -518,7 +518,7 @@ function TriggerPicker({ selectControl }) {
 
 function RecorderSessionHeading({ confirmRef, sessionId, sessionInfo, doFinish }) {
 	const socket = useContext(SocketContext)
-	const instances = useContext(InstancesContext)
+	const instances = useContext(ConnectionsContext)
 
 	const doClearActions = useCallback(() => {
 		socketEmitPromise(socket, 'action-recorder:session:discard-actions', [sessionId]).catch((e) => {
@@ -593,7 +593,7 @@ function RecorderSessionHeading({ confirmRef, sessionId, sessionInfo, doFinish }
 						<div className="w-full">
 							<CLabel>Connections</CLabel>
 							<DropdownInputField
-								value={sessionInfo.instanceIds}
+								value={sessionInfo.connectionIds}
 								setValue={changeInstanceIds}
 								multiple={true}
 								choices={instancesWhichCanRecord}
