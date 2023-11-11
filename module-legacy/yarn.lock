@@ -1630,10 +1630,6 @@ commist@^1.0.0:
   version "1.0.1"
   resolved "https://codeload.github.com/bitfocus/companion-module-aten-matrix/tar.gz/6c66b5375c554062ec382cea010a0a39c9e26fee"
 
-"companion-module-audiostrom-liveprofessor@github:bitfocus/companion-module-audiostrom-liveprofessor#v1.0.3":
-  version "1.0.3"
-  resolved "https://codeload.github.com/bitfocus/companion-module-audiostrom-liveprofessor/tar.gz/e0bb33619f0f009d1544f83e48c6ef8426fefc0c"
-
 "companion-module-avishop-hdbaset-matrix@github:bitfocus/companion-module-avishop-hdbaset-matrix#v1.0.3":
   version "1.0.3"
   resolved "https://codeload.github.com/bitfocus/companion-module-avishop-hdbaset-matrix/tar.gz/ca912f5076dc948dd6f0481181ecce1b66aff67a"
@@ -1651,10 +1647,6 @@ commist@^1.0.0:
 "companion-module-avproconnect-acmx1616-auhd@github:bitfocus/companion-module-avproconnect-acmx1616-auhd#v1.0.1":
   version "1.0.1"
   resolved "https://codeload.github.com/bitfocus/companion-module-avproconnect-acmx1616-auhd/tar.gz/43ce1b0ee6e3c454a22700fd99af05d57305ced3"
-
-"companion-module-avstumpfl-pixera@github:bitfocus/companion-module-avstumpfl-pixera#v1.0.4":
-  version "1.0.4"
-  resolved "https://codeload.github.com/bitfocus/companion-module-avstumpfl-pixera/tar.gz/e745b28a9997e5e0fc3fdcee848758be3f8f1acd"
 
 "companion-module-barco-clickshare@github:bitfocus/companion-module-barco-clickshare#cda8edc6a064cc01316061fdbd12302cd88d4489":
   version "1.0.4"
@@ -1698,12 +1690,6 @@ commist@^1.0.0:
 "companion-module-biamp-tesira@github:bitfocus/companion-module-biamp-tesira#v1.0.0":
   version "1.0.0"
   resolved "https://codeload.github.com/bitfocus/companion-module-biamp-tesira/tar.gz/c8a46fdd19d18169980a8ffc24e63d6b1f68ccf2"
-
-"companion-module-birddog-central@github:bitfocus/companion-module-birddog-central#v1.0.0":
-  version "1.0.0"
-  resolved "https://codeload.github.com/bitfocus/companion-module-birddog-central/tar.gz/c7844722b36cd6eed07940466281b9c522a35d5f"
-  dependencies:
-    node-fetch "^2.6.7"
 
 "companion-module-bitfocus-snapshot@github:bitfocus/companion-module-bitfocus-snapshot#v0.0.7":
   version "0.0.7"
@@ -2032,10 +2018,6 @@ commist@^1.0.0:
     socket.io-client "^2.4.0"
     tslib "^2.4.1"
     typed-emitter "^2.1.0"
-
-"companion-module-jamesholt-x32tc@github:bitfocus/companion-module-jamesholt-x32tc#v1.0.8":
-  version "1.0.8"
-  resolved "https://codeload.github.com/bitfocus/companion-module-jamesholt-x32tc/tar.gz/1d11531a2374f5e0041f7306509f1a17cc549166"
 
 "companion-module-joy-playdeck@github:bitfocus/companion-module-joy-playdeck#v1.0.2":
   version "1.0.2"
