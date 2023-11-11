@@ -334,7 +334,7 @@ function EventEditor({
 									<OptionsInputField
 										key={i}
 										isOnControl={false}
-										instanceId={'internal'}
+										connectionId={'internal'}
 										option={opt}
 										actionId={event.id}
 										value={(event.options || {})[opt.id]}

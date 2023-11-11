@@ -211,7 +211,7 @@ export const PrimaryButtonGridIcon = memo(function PrimaryButtonGridIcon({ ...pr
 		drop: (dropData) => {
 			console.log('preset drop', dropData)
 			const location = { pageNumber: props.pageNumber, column: props.column, row: props.row }
-			socketEmitPromise(socket, 'presets:import_to_bank', [dropData.instanceId, dropData.presetId, location]).catch(
+			socketEmitPromise(socket, 'presets:import_to_bank', [dropData.connectionId, dropData.presetId, location]).catch(
 				(e) => {
 					console.error('Preset import failed')
 				}

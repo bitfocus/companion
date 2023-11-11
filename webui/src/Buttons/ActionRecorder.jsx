@@ -518,7 +518,7 @@ function TriggerPicker({ selectControl }) {
 
 function RecorderSessionHeading({ confirmRef, sessionId, sessionInfo, doFinish }) {
 	const socket = useContext(SocketContext)
-	const instances = useContext(ConnectionsContext)
+	const connections = useContext(ConnectionsContext)
 
 	const doClearActions = useCallback(() => {
 		socketEmitPromise(socket, 'action-recorder:session:discard-actions', [sessionId]).catch((e) => {
@@ -559,19 +559,19 @@ function RecorderSessionHeading({ confirmRef, sessionId, sessionInfo, doFinish }
 		doFinish()
 	}, [changeRecording, doFinish])
 
-	const changeInstanceIds = useCallback(
+	const changeConnectionIds = useCallback(
 		(ids) => {
-			socketEmitPromise(socket, 'action-recorder:session:set-instances', [sessionId, ids]).catch((e) => {
+			socketEmitPromise(socket, 'action-recorder:session:set-connections', [sessionId, ids]).catch((e) => {
 				console.error(e)
 			})
 		},
 		[socket, sessionId]
 	)
 
-	const instancesWhichCanRecord = useMemo(() => {
+	const connectionsWhichCanRecord = useMemo(() => {
 		const result = []
 
-		for (const [id, info] of Object.entries(instances)) {
+		for (const [id, info] of Object.entries(connections)) {
 			if (info.hasRecordActionsHandler) {
 				result.push({
 					id,
@@ -581,7 +581,7 @@ function RecorderSessionHeading({ confirmRef, sessionId, sessionInfo, doFinish }
 		}
 
 		return result
-	}, [instances])
+	}, [connections])
 
 	if (!sessionInfo) return <></>
 
@@ -594,9 +594,9 @@ function RecorderSessionHeading({ confirmRef, sessionId, sessionInfo, doFinish }
 							<CLabel>Connections</CLabel>
 							<DropdownInputField
 								value={sessionInfo.connectionIds}
-								setValue={changeInstanceIds}
+								setValue={changeConnectionIds}
 								multiple={true}
-								choices={instancesWhichCanRecord}
+								choices={connectionsWhichCanRecord}
 							/>
 						</div>
 

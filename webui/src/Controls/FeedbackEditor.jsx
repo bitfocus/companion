@@ -109,8 +109,8 @@ export function ControlFeedbacksEditor({
 
 	const addFeedback = useCallback(
 		(feedbackType) => {
-			const [instanceId, feedbackId] = feedbackType.split(':', 2)
-			socketEmitPromise(socket, 'controls:feedback:add', [controlId, instanceId, feedbackId]).catch((e) => {
+			const [connectionId, feedbackId] = feedbackType.split(':', 2)
+			socketEmitPromise(socket, 'controls:feedback:add', [controlId, connectionId, feedbackId]).catch((e) => {
 				console.error('Failed to add bank feedback', e)
 			})
 		},
@@ -467,7 +467,7 @@ function FeedbackEditor({
 									<OptionsInputField
 										key={i}
 										isOnControl={!!location}
-										instanceId={feedback.instance_id}
+										connectionId={feedback.instance_id}
 										option={opt}
 										actionId={feedback.id}
 										value={(feedback.options || {})[opt.id]}
@@ -629,13 +629,13 @@ function AddFeedbackDropdown({ onSelect, booleanOnly, addPlaceholder }) {
 
 	const options = useMemo(() => {
 		const options = []
-		for (const [instanceId, instanceFeedbacks] of Object.entries(feedbacksContext)) {
+		for (const [connectionId, instanceFeedbacks] of Object.entries(feedbacksContext)) {
 			for (const [feedbackId, feedback] of Object.entries(instanceFeedbacks || {})) {
 				if (!booleanOnly || feedback.type === 'boolean') {
-					const connectionLabel = connectionsContext[instanceId]?.label ?? instanceId
+					const connectionLabel = connectionsContext[connectionId]?.label ?? connectionId
 					options.push({
 						isRecent: false,
-						value: `${instanceId}:${feedbackId}`,
+						value: `${connectionId}:${feedbackId}`,
 						label: `${connectionLabel}: ${feedback.label}`,
 					})
 				}
@@ -645,13 +645,13 @@ function AddFeedbackDropdown({ onSelect, booleanOnly, addPlaceholder }) {
 		const recents = []
 		for (const feedbackType of recentFeedbacksContext.recentFeedbacks || []) {
 			if (feedbackType) {
-				const [instanceId, feedbackId] = feedbackType.split(':', 2)
-				const feedbackInfo = feedbacksContext[instanceId]?.[feedbackId]
+				const [connectionId, feedbackId] = feedbackType.split(':', 2)
+				const feedbackInfo = feedbacksContext[connectionId]?.[feedbackId]
 				if (feedbackInfo) {
-					const connectionLabel = connectionsContext[instanceId]?.label ?? instanceId
+					const connectionLabel = connectionsContext[connectionId]?.label ?? connectionId
 					recents.push({
 						isRecent: true,
-						value: `${instanceId}:${feedbackId}`,
+						value: `${connectionId}:${feedbackId}`,
 						label: `${connectionLabel}: ${feedbackInfo.label}`,
 					})
 				}

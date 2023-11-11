@@ -4,44 +4,44 @@ import { ConnectionsContext, VariableDefinitionsContext, ModulesContext } from '
 import { VariablesTable } from '../Components/VariablesTable'
 import { CustomVariablesList } from './CustomVariablesList'
 
-export const InstanceVariables = function InstanceVariables({ resetToken }) {
+export const ConnectionVariables = function ConnectionVariables({ resetToken }) {
 	const connectionsContext = useContext(ConnectionsContext)
 
-	const [instanceId, setInstance] = useState(null)
+	const [connectionId, setConnectionId] = useState(null)
 	const [showCustom, setShowCustom] = useState(false)
 
-	const instancesLabelMap = useMemo(() => {
+	const connectionsLabelMap = useMemo(() => {
 		const labelMap = new Map()
-		for (const [id, instance] of Object.entries(connectionsContext)) {
-			labelMap.set(instance.label, id)
+		for (const [connectionId, connectionInfo] of Object.entries(connectionsContext)) {
+			labelMap.set(connectionInfo.label, connectionId)
 		}
 		return labelMap
 	}, [connectionsContext])
 
 	// Reset selection on resetToken change
 	useEffect(() => {
-		setInstance(null)
+		setConnectionId(null)
 	}, [resetToken])
 
 	if (showCustom) {
 		return <CustomVariablesList setShowCustom={setShowCustom} />
-	} else if (instanceId) {
-		let connectionLabel = connectionsContext[instanceId]?.label
-		if (instanceId === 'internal') connectionLabel = 'internal'
+	} else if (connectionId) {
+		let connectionLabel = connectionsContext[connectionId]?.label
+		if (connectionId === 'internal') connectionLabel = 'internal'
 
-		return <VariablesList selectedConnectionLabel={connectionLabel} setInstance={setInstance} />
+		return <VariablesList selectedConnectionLabel={connectionLabel} setConnectionId={setConnectionId} />
 	} else {
 		return (
-			<VariablesInstanceList
-				setInstance={setInstance}
+			<VariablesConnectionList
+				setConnectionId={setConnectionId}
 				setShowCustom={setShowCustom}
-				instancesLabelMap={instancesLabelMap}
+				connectionsLabelMap={connectionsLabelMap}
 			/>
 		)
 	}
 }
 
-function VariablesInstanceList({ setInstance, setShowCustom, instancesLabelMap }) {
+function VariablesConnectionList({ setConnectionId, setShowCustom, connectionsLabelMap }) {
 	const modules = useContext(ModulesContext)
 	const connectionsContext = useContext(ConnectionsContext)
 	const variableDefinitionsContext = useContext(VariableDefinitionsContext)
@@ -52,21 +52,21 @@ function VariablesInstanceList({ setInstance, setShowCustom, instancesLabelMap }
 		if (label === 'internal') {
 			return (
 				<div key={label}>
-					<CButton color="info" className="choose_instance mb-3 mr-2" onClick={() => setInstance('internal')}>
+					<CButton color="info" className="choose_connection mb-3 mr-2" onClick={() => setConnectionId('internal')}>
 						Internal
 					</CButton>
 				</div>
 			)
 		}
 
-		const id = instancesLabelMap.get(label)
-		const instance = id ? connectionsContext[id] : undefined
-		const module = instance ? modules[instance.instance_type] : undefined
+		const connectionId = connectionsLabelMap.get(label)
+		const connectionInfo = connectionId ? connectionsContext[connectionId] : undefined
+		const moduleInfo = connectionInfo ? modules[connectionInfo.instance_type] : undefined
 
 		return (
-			<div key={id}>
-				<CButton color="info" className="choose_instance mb-3 mr-2" onClick={() => setInstance(id)}>
-					{module?.name ?? module?.name ?? '?'} ({label ?? id})
+			<div key={connectionId}>
+				<CButton color="info" className="choose_connection mb-3 mr-2" onClick={() => setConnectionId(connectionId)}>
+					{moduleInfo?.name ?? moduleInfo?.name ?? '?'} ({label ?? connectionId})
 				</CButton>
 			</div>
 		)
@@ -77,7 +77,7 @@ function VariablesInstanceList({ setInstance, setShowCustom, instancesLabelMap }
 			<h5>Variables</h5>
 			<p>Some connection types provide variables for you to use in button text.</p>
 			<div>
-				<CButton color="info" className="choose_instance mb-3 mr-2" onClick={() => setShowCustom(true)}>
+				<CButton color="info" className="choose_connection mb-3 mr-2" onClick={() => setShowCustom(true)}>
 					Custom Variables
 				</CButton>
 			</div>
@@ -86,8 +86,8 @@ function VariablesInstanceList({ setInstance, setShowCustom, instancesLabelMap }
 	)
 }
 
-function VariablesList({ selectedConnectionLabel, setInstance }) {
-	const doBack = useCallback(() => setInstance(null), [setInstance])
+function VariablesList({ selectedConnectionLabel, setConnectionId }) {
+	const doBack = useCallback(() => setConnectionId(null), [setConnectionId])
 
 	return (
 		<div className="variables-panel">

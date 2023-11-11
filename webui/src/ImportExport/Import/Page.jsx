@@ -205,7 +205,7 @@ export function ImportRemap({ snapshot, instanceRemap, setInstanceRemap }) {
 	)
 }
 
-function ButtonImportPreview({ instanceId, ...props }) {
+function ButtonImportPreview({ ...props }) {
 	const socket = useContext(SocketContext)
 	const [previewImage, setPreviewImage] = useState(null)
 

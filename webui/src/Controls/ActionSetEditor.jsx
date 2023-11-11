@@ -117,10 +117,12 @@ export function ControlActionSetEditor({
 
 	const addAction = useCallback(
 		(actionType) => {
-			const [instanceId, actionId] = actionType.split(':', 2)
-			socketEmitPromise(socket, 'controls:action:add', [controlId, stepId, setId, instanceId, actionId]).catch((e) => {
-				console.error('Failed to add bank action', e)
-			})
+			const [connectionId, actionId] = actionType.split(':', 2)
+			socketEmitPromise(socket, 'controls:action:add', [controlId, stepId, setId, connectionId, actionId]).catch(
+				(e) => {
+					console.error('Failed to add bank action', e)
+				}
+			)
 		},
 		[socket, controlId, stepId, setId]
 	)
@@ -511,7 +513,7 @@ function ActionTableRow({
 											key={i}
 											isOnControl={!!location}
 											isAction={true}
-											instanceId={action.instance}
+											connectionId={action.instance}
 											option={opt}
 											actionId={action.id}
 											value={(action.options || {})[opt.id]}
@@ -555,12 +557,12 @@ function AddActionDropdown({ onSelect, placeholder }) {
 
 	const options = useMemo(() => {
 		const options = []
-		for (const [instanceId, instanceActions] of Object.entries(actionsContext)) {
-			for (const [actionId, action] of Object.entries(instanceActions || {})) {
-				const connectionLabel = connectionsContext[instanceId]?.label ?? instanceId
+		for (const [connectionId, connectionActions] of Object.entries(actionsContext)) {
+			for (const [actionId, action] of Object.entries(connectionActions || {})) {
+				const connectionLabel = connectionsContext[connectionId]?.label ?? connectionId
 				options.push({
 					isRecent: false,
-					value: `${instanceId}:${actionId}`,
+					value: `${connectionId}:${actionId}`,
 					label: `${connectionLabel}: ${action.label}`,
 				})
 			}
@@ -569,13 +571,13 @@ function AddActionDropdown({ onSelect, placeholder }) {
 		const recents = []
 		for (const actionType of recentActionsContext.recentActions) {
 			if (actionType) {
-				const [instanceId, actionId] = actionType.split(':', 2)
-				const actionInfo = actionsContext[instanceId]?.[actionId]
+				const [connectionId, actionId] = actionType.split(':', 2)
+				const actionInfo = actionsContext[connectionId]?.[actionId]
 				if (actionInfo) {
-					const connectionLabel = connectionsContext[instanceId]?.label ?? instanceId
+					const connectionLabel = connectionsContext[connectionId]?.label ?? connectionId
 					recents.push({
 						isRecent: true,
-						value: `${instanceId}:${actionId}`,
+						value: `${connectionId}:${actionId}`,
 						label: `${connectionLabel}: ${actionInfo.label}`,
 					})
 				}
