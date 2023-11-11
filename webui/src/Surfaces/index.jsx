@@ -10,12 +10,12 @@ import { SurfaceEditModal } from './EditModal'
 
 export const SurfacesPage = memo(function SurfacesPage() {
 	const socket = useContext(SocketContext)
-	const devices = useContext(SurfacesContext)
+	const surfaces = useContext(SurfacesContext)
 
 	const confirmRef = useRef(null)
 
-	const devicesList = useMemo(() => {
-		const ary = Object.values(devices.available)
+	const surfacesList = useMemo(() => {
+		const ary = Object.values(surfaces.available)
 
 		ary.sort((a, b) => {
 			if (a.index !== b.index) {
@@ -27,9 +27,9 @@ export const SurfacesPage = memo(function SurfacesPage() {
 		})
 
 		return ary
-	}, [devices.available])
-	const offlineDevicesList = useMemo(() => {
-		const ary = Object.values(devices.offline)
+	}, [surfaces.available])
+	const offlineSurfacesList = useMemo(() => {
+		const ary = Object.values(surfaces.offline)
 
 		ary.sort((a, b) => {
 			if (a.index !== b.index) {
@@ -41,7 +41,7 @@ export const SurfacesPage = memo(function SurfacesPage() {
 		})
 
 		return ary
-	}, [devices.offline])
+	}, [surfaces.offline])
 
 	const editModalRef = useRef()
 	const confirmModalRef = useRef(null)
@@ -50,11 +50,11 @@ export const SurfacesPage = memo(function SurfacesPage() {
 	const [scanError, setScanError] = useState(null)
 
 	useEffect(() => {
-		// If device disappears, hide the edit modal
+		// If surface disappears, hide the edit modal
 		if (editModalRef.current) {
-			editModalRef.current.ensureIdIsValid(Object.keys(devices))
+			editModalRef.current.ensureIdIsValid(Object.keys(surfaces))
 		}
-	}, [devices])
+	}, [surfaces])
 
 	const refreshUSB = useCallback(() => {
 		setScanning(true)
@@ -79,9 +79,9 @@ export const SurfacesPage = memo(function SurfacesPage() {
 	}, [socket])
 
 	const deleteEmulator = useCallback(
-		(deviceId) => {
+		(surfaceId) => {
 			confirmRef?.current?.show('Remove Emulator', 'Are you sure?', 'Remove', () => {
-				socketEmitPromise(socket, 'surfaces:emulator-remove', [deviceId]).catch((err) => {
+				socketEmitPromise(socket, 'surfaces:emulator-remove', [surfaceId]).catch((err) => {
 					console.error('Emulator remove failed', err)
 				})
 			})
@@ -89,18 +89,18 @@ export const SurfacesPage = memo(function SurfacesPage() {
 		[socket]
 	)
 
-	const configureDevice = useCallback((device) => {
-		editModalRef.current.show(device)
+	const configureSurface = useCallback((surface) => {
+		editModalRef.current.show(surface)
 	}, [])
 
-	const forgetDevice = useCallback(
-		(deviceId) => {
+	const forgetSurface = useCallback(
+		(surfaceId) => {
 			confirmModalRef.current.show(
 				'Forget Surface',
 				'Are you sure you want to forget this surface? Any settings will be lost',
 				'Forget',
 				() => {
-					socketEmitPromise(socket, 'surfaces:forget', [deviceId]).catch((err) => {
+					socketEmitPromise(socket, 'surfaces:forget', [surfaceId]).catch((err) => {
 						console.error('fotget failed', err)
 					})
 				}
@@ -110,8 +110,8 @@ export const SurfacesPage = memo(function SurfacesPage() {
 	)
 
 	const updateName = useCallback(
-		(deviceId, name) => {
-			socketEmitPromise(socket, 'surfaces:set-name', [deviceId, name]).catch((err) => {
+		(surfaceId, name) => {
+			socketEmitPromise(socket, 'surfaces:set-name', [surfaceId, name]).catch((err) => {
 				console.error('Update name failed', err)
 			})
 		},
@@ -143,7 +143,7 @@ export const SurfacesPage = memo(function SurfacesPage() {
 			<CButtonGroup>
 				<CButton color="warning" onClick={refreshUSB}>
 					<FontAwesomeIcon icon={faSync} spin={scanning} />
-					{scanning ? ' Checking for new devices...' : ' Rescan USB'}
+					{scanning ? ' Checking for new surfaces...' : ' Rescan USB'}
 				</CButton>
 				<CButton color="danger" onClick={addEmulator}>
 					<FontAwesomeIcon icon={faAdd} /> Add Emulator
@@ -169,17 +169,17 @@ export const SurfacesPage = memo(function SurfacesPage() {
 					</tr>
 				</thead>
 				<tbody>
-					{devicesList.map((dev) => (
-						<AvailableDeviceRow
-							key={dev.id}
-							device={dev}
+					{surfacesList.map((surface) => (
+						<AvailableSurfaceRow
+							key={surface.id}
+							surface={surface}
 							updateName={updateName}
-							configureDevice={configureDevice}
+							configureSurface={configureSurface}
 							deleteEmulator={deleteEmulator}
 						/>
 					))}
 
-					{devicesList.length === 0 && (
+					{surfacesList.length === 0 && (
 						<tr>
 							<td colSpan={4}>No control surfaces have been detected</td>
 						</tr>
@@ -199,11 +199,16 @@ export const SurfacesPage = memo(function SurfacesPage() {
 					</tr>
 				</thead>
 				<tbody>
-					{offlineDevicesList.map((dev) => (
-						<OfflineDeviceRow key={dev.id} device={dev} updateName={updateName} forgetDevice={forgetDevice} />
+					{offlineSurfacesList.map((surface) => (
+						<OfflineSuraceRow
+							key={surface.id}
+							surface={surface}
+							updateName={updateName}
+							forgetSurface={forgetSurface}
+						/>
 					))}
 
-					{offlineDevicesList.length === 0 && (
+					{offlineSurfacesList.length === 0 && (
 						<tr>
 							<td colSpan={4}>No items</td>
 						</tr>
@@ -214,29 +219,29 @@ export const SurfacesPage = memo(function SurfacesPage() {
 	)
 })
 
-function AvailableDeviceRow({ device, updateName, configureDevice, deleteEmulator }) {
-	const updateName2 = useCallback((val) => updateName(device.id, val), [updateName, device.id])
-	const configureDevice2 = useCallback(() => configureDevice(device), [configureDevice, device])
-	const deleteEmulator2 = useCallback(() => deleteEmulator(device.id), [deleteEmulator, device.id])
+function AvailableSurfaceRow({ surface, updateName, configureSurface, deleteEmulator }) {
+	const updateName2 = useCallback((val) => updateName(surface.id, val), [updateName, surface.id])
+	const configureSurface2 = useCallback(() => configureSurface(surface), [configureSurface, surface])
+	const deleteEmulator2 = useCallback(() => deleteEmulator(surface.id), [deleteEmulator, surface.id])
 
 	return (
 		<tr>
-			<td>#{device.index}</td>
-			<td>{device.id}</td>
+			<td>#{surface.index}</td>
+			<td>{surface.id}</td>
 			<td>
-				<TextInputField value={device.name} setValue={updateName2} />
+				<TextInputField value={surface.name} setValue={updateName2} />
 			</td>
-			<td>{device.type}</td>
-			<td>{device.location}</td>
+			<td>{surface.type}</td>
+			<td>{surface.location}</td>
 			<td className="text-right">
 				<CButtonGroup>
-					<CButton onClick={configureDevice2} title="Configure">
+					<CButton onClick={configureSurface2} title="Configure">
 						<FontAwesomeIcon icon={faCog} /> Settings
 					</CButton>
 
-					{device.integrationType === 'emulator' && (
+					{surface.integrationType === 'emulator' && (
 						<>
-							<CButton href={`/emulator/${device.id.substring(9)}`} target="_blank" title="Open Emulator">
+							<CButton href={`/emulator/${surface.id.substring(9)}`} target="_blank" title="Open Emulator">
 								<FontAwesomeIcon icon={faFolderOpen} />
 							</CButton>
 							<CButton onClick={deleteEmulator2} title="Delete Emulator">
@@ -250,19 +255,19 @@ function AvailableDeviceRow({ device, updateName, configureDevice, deleteEmulato
 	)
 }
 
-function OfflineDeviceRow({ device, updateName, forgetDevice }) {
-	const updateName2 = useCallback((val) => updateName(device.id, val), [updateName, device.id])
-	const forgetDevice2 = useCallback(() => forgetDevice(device.id), [forgetDevice, device.id])
+function OfflineSuraceRow({ surface, updateName, forgetSurface }) {
+	const updateName2 = useCallback((val) => updateName(surface.id, val), [updateName, surface.id])
+	const forgetSurface2 = useCallback(() => forgetSurface(surface.id), [forgetSurface, surface.id])
 
 	return (
 		<tr>
-			<td>{device.id}</td>
+			<td>{surface.id}</td>
 			<td>
-				<TextInputField value={device.name} setValue={updateName2} />
+				<TextInputField value={surface.name} setValue={updateName2} />
 			</td>
-			<td>{device.type}</td>
+			<td>{surface.type}</td>
 			<td className="text-right">
-				<CButton onClick={forgetDevice2}>
+				<CButton onClick={forgetSurface2}>
 					<FontAwesomeIcon icon={faTrash} /> Forget
 				</CButton>
 			</td>

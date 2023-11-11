@@ -18,52 +18,52 @@ import { nanoid } from 'nanoid'
 export const SurfaceEditModal = forwardRef(function SurfaceEditModal(_props, ref) {
 	const socket = useContext(SocketContext)
 
-	const [deviceInfo, setDeviceInfo] = useState(null)
+	const [surfaceInfo, setSurfaceInfo] = useState(null)
 	const [show, setShow] = useState(false)
 
-	const [deviceConfig, setDeviceConfig] = useState(null)
-	const [deviceConfigError, setDeviceConfigError] = useState(null)
+	const [surfaceConfig, setSurfaceConfig] = useState(null)
+	const [surfaceConfigError, setSurfaceConfigError] = useState(null)
 	const [reloadToken, setReloadToken] = useState(nanoid())
 
 	const doClose = useCallback(() => setShow(false), [])
 	const onClosed = useCallback(() => {
-		setDeviceInfo(null)
-		setDeviceConfig(null)
-		setDeviceConfigError(null)
+		setSurfaceInfo(null)
+		setSurfaceConfig(null)
+		setSurfaceConfigError(null)
 	}, [])
 
 	const doRetryConfigLoad = useCallback(() => setReloadToken(nanoid()), [])
 
 	useEffect(() => {
-		setDeviceConfigError(null)
-		setDeviceConfig(null)
+		setSurfaceConfigError(null)
+		setSurfaceConfig(null)
 
-		if (deviceInfo?.id) {
-			socketEmitPromise(socket, 'surfaces:config-get', [deviceInfo.id])
+		if (surfaceInfo?.id) {
+			socketEmitPromise(socket, 'surfaces:config-get', [surfaceInfo.id])
 				.then((config) => {
 					console.log(config)
-					setDeviceConfig(config)
+					setSurfaceConfig(config)
 				})
 				.catch((err) => {
-					console.error('Failed to load device config')
-					setDeviceConfigError(`Failed to load device config`)
+					console.error('Failed to load surface config')
+					setSurfaceConfigError(`Failed to load surface config`)
 				})
 		}
-	}, [socket, deviceInfo?.id, reloadToken])
+	}, [socket, surfaceInfo?.id, reloadToken])
 
 	useImperativeHandle(
 		ref,
 		() => ({
-			show(device) {
-				setDeviceInfo(device)
+			show(surface) {
+				setSurfaceInfo(surface)
 				setShow(true)
 			},
-			ensureIdIsValid(deviceIds) {
-				setDeviceInfo((oldDevice) => {
-					if (oldDevice && deviceIds.indexOf(oldDevice.id) === -1) {
+			ensureIdIsValid(surfaceIds) {
+				setSurfaceInfo((oldSurface) => {
+					if (oldSurface && surfaceIds.indexOf(oldSurface.id) === -1) {
 						setShow(false)
 					}
-					return oldDevice
+					return oldSurface
 				})
 			},
 		}),
@@ -73,19 +73,19 @@ export const SurfaceEditModal = forwardRef(function SurfaceEditModal(_props, ref
 	const updateConfig = useCallback(
 		(key, value) => {
 			console.log('update', key, value)
-			if (deviceInfo?.id) {
-				setDeviceConfig((oldConfig) => {
+			if (surfaceInfo?.id) {
+				setSurfaceConfig((oldConfig) => {
 					const newConfig = {
 						...oldConfig,
 						[key]: value,
 					}
 
-					socketEmitPromise(socket, 'surfaces:config-set', [deviceInfo.id, newConfig])
+					socketEmitPromise(socket, 'surfaces:config-set', [surfaceInfo.id, newConfig])
 						.then((newConfig) => {
 							if (typeof newConfig === 'string') {
 								console.log('Config update failed', newConfig)
 							} else {
-								setDeviceConfig(newConfig)
+								setSurfaceConfig(newConfig)
 							}
 						})
 						.catch((e) => {
@@ -95,24 +95,24 @@ export const SurfaceEditModal = forwardRef(function SurfaceEditModal(_props, ref
 				})
 			}
 		},
-		[socket, deviceInfo?.id]
+		[socket, surfaceInfo?.id]
 	)
 
 	return (
 		<CModal show={show} onClose={doClose} onClosed={onClosed}>
 			<CModalHeader closeButton>
-				<h5>Settings for {deviceInfo?.type}</h5>
+				<h5>Settings for {surfaceInfo?.type}</h5>
 			</CModalHeader>
 			<CModalBody>
-				<LoadingRetryOrError error={deviceConfigError} dataReady={deviceConfig} doRetry={doRetryConfigLoad} />
-				{deviceConfig && deviceInfo && (
+				<LoadingRetryOrError error={surfaceConfigError} dataReady={surfaceConfig} doRetry={doRetryConfigLoad} />
+				{surfaceConfig && surfaceInfo && (
 					<CForm onSubmit={PreventDefaultHandler}>
 						<CFormGroup>
 							<CLabel htmlFor="use_last_page">Use Last Page At Startup</CLabel>
 							<CInputCheckbox
 								name="use_last_page"
 								type="checkbox"
-								checked={!!deviceConfig.use_last_page}
+								checked={!!surfaceConfig.use_last_page}
 								value={true}
 								onChange={(e) => updateConfig('use_last_page', !!e.currentTarget.checked)}
 							/>
@@ -120,18 +120,18 @@ export const SurfaceEditModal = forwardRef(function SurfaceEditModal(_props, ref
 						<CFormGroup>
 							<CLabel htmlFor="page">Startup Page</CLabel>
 							<CInput
-								disabled={!!deviceConfig.use_last_page}
+								disabled={!!surfaceConfig.use_last_page}
 								name="page"
 								type="range"
 								min={1}
 								max={99}
 								step={1}
-								value={deviceConfig.page}
+								value={surfaceConfig.page}
 								onChange={(e) => updateConfig('page', parseInt(e.currentTarget.value))}
 							/>
-							<span>{deviceConfig.page}</span>
+							<span>{surfaceConfig.page}</span>
 						</CFormGroup>
-						{deviceInfo.configFields?.includes('emulator_size') && (
+						{surfaceInfo.configFields?.includes('emulator_size') && (
 							<>
 								<CFormGroup>
 									<CLabel htmlFor="page">Row count</CLabel>
@@ -140,7 +140,7 @@ export const SurfaceEditModal = forwardRef(function SurfaceEditModal(_props, ref
 										type="number"
 										min={1}
 										step={1}
-										value={deviceConfig.emulator_rows}
+										value={surfaceConfig.emulator_rows}
 										onChange={(e) => updateConfig('emulator_rows', parseInt(e.currentTarget.value))}
 									/>
 								</CFormGroup>
@@ -151,7 +151,7 @@ export const SurfaceEditModal = forwardRef(function SurfaceEditModal(_props, ref
 										type="number"
 										min={1}
 										step={1}
-										value={deviceConfig.emulator_columns}
+										value={surfaceConfig.emulator_columns}
 										onChange={(e) => updateConfig('emulator_columns', parseInt(e.currentTarget.value))}
 									/>
 								</CFormGroup>
@@ -164,7 +164,7 @@ export const SurfaceEditModal = forwardRef(function SurfaceEditModal(_props, ref
 								name="page"
 								type="number"
 								step={1}
-								value={deviceConfig.xOffset}
+								value={surfaceConfig.xOffset}
 								onChange={(e) => updateConfig('xOffset', parseInt(e.currentTarget.value))}
 							/>
 						</CFormGroup>
@@ -174,12 +174,12 @@ export const SurfaceEditModal = forwardRef(function SurfaceEditModal(_props, ref
 								name="page"
 								type="number"
 								step={1}
-								value={deviceConfig.yOffset}
+								value={surfaceConfig.yOffset}
 								onChange={(e) => updateConfig('yOffset', parseInt(e.currentTarget.value))}
 							/>
 						</CFormGroup>
 
-						{deviceInfo.configFields?.includes('brightness') && (
+						{surfaceInfo.configFields?.includes('brightness') && (
 							<CFormGroup>
 								<CLabel htmlFor="brightness">Brightness</CLabel>
 								<CInput
@@ -188,18 +188,18 @@ export const SurfaceEditModal = forwardRef(function SurfaceEditModal(_props, ref
 									min={0}
 									max={100}
 									step={1}
-									value={deviceConfig.brightness}
+									value={surfaceConfig.brightness}
 									onChange={(e) => updateConfig('brightness', parseInt(e.currentTarget.value))}
 								/>
 							</CFormGroup>
 						)}
-						{deviceInfo.configFields?.includes('illuminate_pressed') && (
+						{surfaceInfo.configFields?.includes('illuminate_pressed') && (
 							<CFormGroup>
 								<CLabel htmlFor="illuminate_pressed">Illuminate pressed buttons</CLabel>
 								<CInputCheckbox
 									name="illuminate_pressed"
 									type="checkbox"
-									checked={!!deviceConfig.illuminate_pressed}
+									checked={!!surfaceConfig.illuminate_pressed}
 									value={true}
 									onChange={(e) => updateConfig('illuminate_pressed', !!e.currentTarget.checked)}
 								/>
@@ -210,7 +210,7 @@ export const SurfaceEditModal = forwardRef(function SurfaceEditModal(_props, ref
 							<CLabel htmlFor="rotation">Button rotation</CLabel>
 							<CSelect
 								name="rotation"
-								value={deviceConfig.rotation}
+								value={surfaceConfig.rotation}
 								onChange={(e) => {
 									const valueNumber = parseInt(e.currentTarget.value)
 									updateConfig('rotation', isNaN(valueNumber) ? e.currentTarget.value : valueNumber)
@@ -221,7 +221,7 @@ export const SurfaceEditModal = forwardRef(function SurfaceEditModal(_props, ref
 								<option value="surface90">90 CW</option>
 								<option value="surface180">180</option>
 
-								{deviceInfo.configFields?.includes('legacy_rotation') && (
+								{surfaceInfo.configFields?.includes('legacy_rotation') && (
 									<>
 										<option value="-90">90 CCW (Legacy)</option>
 										<option value="90">90 CW (Legacy)</option>
@@ -230,31 +230,31 @@ export const SurfaceEditModal = forwardRef(function SurfaceEditModal(_props, ref
 								)}
 							</CSelect>
 						</CFormGroup>
-						{deviceInfo.configFields?.includes('emulator_control_enable') && (
+						{surfaceInfo.configFields?.includes('emulator_control_enable') && (
 							<CFormGroup>
 								<CLabel htmlFor="emulator_control_enable">Enable support for Logitech R400/Mastercue/DSan</CLabel>
 								<CInputCheckbox
 									name="emulator_control_enable"
 									type="checkbox"
-									checked={!!deviceConfig.emulator_control_enable}
+									checked={!!surfaceConfig.emulator_control_enable}
 									value={true}
 									onChange={(e) => updateConfig('emulator_control_enable', !!e.currentTarget.checked)}
 								/>
 							</CFormGroup>
 						)}
-						{deviceInfo.configFields?.includes('emulator_prompt_fullscreen') && (
+						{surfaceInfo.configFields?.includes('emulator_prompt_fullscreen') && (
 							<CFormGroup>
 								<CLabel htmlFor="emulator_prompt_fullscreen">Prompt to enter fullscreen</CLabel>
 								<CInputCheckbox
 									name="emulator_prompt_fullscreen"
 									type="checkbox"
-									checked={!!deviceConfig.emulator_prompt_fullscreen}
+									checked={!!surfaceConfig.emulator_prompt_fullscreen}
 									value={true}
 									onChange={(e) => updateConfig('emulator_prompt_fullscreen', !!e.currentTarget.checked)}
 								/>
 							</CFormGroup>
 						)}
-						{deviceInfo.configFields?.includes('videohub_page_count') && (
+						{surfaceInfo.configFields?.includes('videohub_page_count') && (
 							<CFormGroup>
 								<CLabel htmlFor="videohub_page_count">Page Count</CLabel>
 								<CInput
@@ -263,7 +263,7 @@ export const SurfaceEditModal = forwardRef(function SurfaceEditModal(_props, ref
 									min={0}
 									max={8}
 									step={2}
-									value={deviceConfig.videohub_page_count}
+									value={surfaceConfig.videohub_page_count}
 									onChange={(e) => updateConfig('videohub_page_count', parseInt(e.currentTarget.value))}
 								/>
 							</CFormGroup>
@@ -273,7 +273,7 @@ export const SurfaceEditModal = forwardRef(function SurfaceEditModal(_props, ref
 							<CInputCheckbox
 								name="never_lock"
 								type="checkbox"
-								checked={!!deviceConfig.never_lock}
+								checked={!!surfaceConfig.never_lock}
 								value={true}
 								onChange={(e) => updateConfig('never_lock', !!e.currentTarget.checked)}
 							/>
