@@ -20,7 +20,7 @@ import { useButtonRenderCache } from '../Hooks/useSharedRenderCache'
 import { CButton, CInput } from '@coreui/react'
 
 export const ButtonInfiniteGrid = forwardRef(function ButtonInfiniteGrid(
-	{ isHot, pageNumber, bankClick, selectedButton, gridSize, doGrow, buttonIconFactory },
+	{ isHot, pageNumber, buttonClick, selectedButton, gridSize, doGrow, buttonIconFactory },
 	ref
 ) {
 	const { minColumn, maxColumn, minRow, maxRow } = gridSize
@@ -96,7 +96,7 @@ export const ButtonInfiniteGrid = forwardRef(function ButtonInfiniteGrid(
 					row,
 					column,
 					pageNumber,
-					onClick: bankClick,
+					onClick: buttonClick,
 					selected:
 						selectedButton?.pageNumber === pageNumber &&
 						selectedButton?.column === column &&
@@ -211,11 +211,13 @@ export const PrimaryButtonGridIcon = memo(function PrimaryButtonGridIcon({ ...pr
 		drop: (dropData) => {
 			console.log('preset drop', dropData)
 			const location = { pageNumber: props.pageNumber, column: props.column, row: props.row }
-			socketEmitPromise(socket, 'presets:import_to_bank', [dropData.connectionId, dropData.presetId, location]).catch(
-				(e) => {
-					console.error('Preset import failed')
-				}
-			)
+			socketEmitPromise(socket, 'presets:import-to-location', [
+				dropData.connectionId,
+				dropData.presetId,
+				location,
+			]).catch((e) => {
+				console.error('Preset import failed')
+			})
 		},
 		collect: (monitor) => ({
 			isOver: !!monitor.isOver(),

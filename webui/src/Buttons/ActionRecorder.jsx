@@ -237,7 +237,7 @@ function ButtonPicker({ selectButton }) {
 	const [selectedStep, setSelectedStep] = useState(null)
 	const [selectedSet, setSelectedSet] = useState(null)
 
-	const bankClick = useCallback(
+	const buttonClick = useCallback(
 		(location, pressed) => {
 			if (pressed) setSelectedLocation(location)
 		},
@@ -269,7 +269,7 @@ function ButtonPicker({ selectButton }) {
 					setControlInfo(config?.config ?? false)
 				})
 				.catch((e) => {
-					console.error('Failed to load bank config', e)
+					console.error('Failed to load control config', e)
 					setControlInfo(null)
 				})
 
@@ -289,7 +289,7 @@ function ButtonPicker({ selectButton }) {
 				socket.off(`controls:config-${selectedControl}`, patchConfig)
 
 				socketEmitPromise(socket, 'controls:unsubscribe', [selectedControl]).catch((e) => {
-					console.error('Failed to unsubscribe bank config', e)
+					console.error('Failed to unsubscribe control config', e)
 				})
 			}
 		}
@@ -401,7 +401,7 @@ function ButtonPicker({ selectButton }) {
 				{hasBeenInView && (
 					<ButtonInfiniteGrid
 						ref={gridRef}
-						bankClick={bankClick}
+						buttonClick={buttonClick}
 						pageNumber={pageNumber}
 						selectedButton={selectedLocation}
 						gridSize={gridSize}

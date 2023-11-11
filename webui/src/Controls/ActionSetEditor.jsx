@@ -48,7 +48,7 @@ export function ControlActionSetEditor({
 		(actionId, key, val) => {
 			socketEmitPromise(socket, 'controls:action:set-option', [controlId, stepId, setId, actionId, key, val]).catch(
 				(e) => {
-					console.error('Failed to set bank action option', e)
+					console.error('Failed to set control action option', e)
 				}
 			)
 		},
@@ -57,7 +57,7 @@ export function ControlActionSetEditor({
 	const emitSetDelay = useCallback(
 		(actionId, delay) => {
 			socketEmitPromise(socket, 'controls:action:set-delay', [controlId, stepId, setId, actionId, delay]).catch((e) => {
-				console.error('Failed to set bank action delay', e)
+				console.error('Failed to set control action delay', e)
 			})
 		},
 		[socket, controlId, stepId, setId]
@@ -66,7 +66,7 @@ export function ControlActionSetEditor({
 	const emitDelete = useCallback(
 		(actionId) => {
 			socketEmitPromise(socket, 'controls:action:remove', [controlId, stepId, setId, actionId]).catch((e) => {
-				console.error('Failed to remove bank action', e)
+				console.error('Failed to remove control action', e)
 			})
 		},
 		[socket, controlId, stepId, setId]
@@ -74,7 +74,7 @@ export function ControlActionSetEditor({
 	const emitDuplicate = useCallback(
 		(actionId) => {
 			socketEmitPromise(socket, 'controls:action:duplicate', [controlId, stepId, setId, actionId]).catch((e) => {
-				console.error('Failed to duplicate bank action', e)
+				console.error('Failed to duplicate control action', e)
 			})
 		},
 		[socket, controlId, stepId, setId]
@@ -83,7 +83,7 @@ export function ControlActionSetEditor({
 	const emitLearn = useCallback(
 		(actionId) => {
 			socketEmitPromise(socket, 'controls:action:learn', [controlId, stepId, setId, actionId]).catch((e) => {
-				console.error('Failed to learn bank action values', e)
+				console.error('Failed to learn control action values', e)
 			})
 		},
 		[socket, controlId, stepId, setId]
@@ -100,7 +100,7 @@ export function ControlActionSetEditor({
 				dropSetId,
 				dropIndex,
 			]).catch((e) => {
-				console.error('Failed to reorder bank actions', e)
+				console.error('Failed to reorder control actions', e)
 			})
 		},
 		[socket, controlId]
@@ -120,7 +120,7 @@ export function ControlActionSetEditor({
 			const [connectionId, actionId] = actionType.split(':', 2)
 			socketEmitPromise(socket, 'controls:action:add', [controlId, stepId, setId, connectionId, actionId]).catch(
 				(e) => {
-					console.error('Failed to add bank action', e)
+					console.error('Failed to add control action', e)
 				}
 			)
 		},

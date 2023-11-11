@@ -111,7 +111,7 @@ export function ControlFeedbacksEditor({
 		(feedbackType) => {
 			const [connectionId, feedbackId] = feedbackType.split(':', 2)
 			socketEmitPromise(socket, 'controls:feedback:add', [controlId, connectionId, feedbackId]).catch((e) => {
-				console.error('Failed to add bank feedback', e)
+				console.error('Failed to add control feedback', e)
 			})
 		},
 		[socket, controlId]

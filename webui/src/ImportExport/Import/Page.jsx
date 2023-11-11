@@ -223,7 +223,7 @@ function ButtonImportPreview({ ...props }) {
 				setPreviewImage(img)
 			})
 			.catch((e) => {
-				console.error(`Failed to preview bank: ${e}`)
+				console.error(`Failed to preview button: ${e}`)
 			})
 	}, [props.pageNumber, props.column, props.row, socket])
 

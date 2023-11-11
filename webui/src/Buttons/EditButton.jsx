@@ -94,9 +94,9 @@ export function EditButton({ location, onKeyUp, contentHeight }) {
 				setConfigError(null)
 			})
 			.catch((e) => {
-				console.error('Failed to load bank config', e)
+				console.error('Failed to load control config', e)
 				setConfig(null)
-				setConfigError('Failed to load bank config')
+				setConfigError('Failed to load control config')
 			})
 
 		const patchConfig = (patch) => {

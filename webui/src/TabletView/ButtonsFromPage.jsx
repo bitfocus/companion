@@ -8,7 +8,7 @@ import { useButtonRenderCache } from '../Hooks/useSharedRenderCache'
 export function ButtonsFromPage({ pageNumber, displayColumns, gridSize, buttonSize, indexOffset }) {
 	const socket = useContext(SocketContext)
 
-	const bankClick = useCallback(
+	const buttonClick = useCallback(
 		(location, pressed) => {
 			socketEmitPromise(socket, 'controls:hot-press', [location, pressed, 'tablet']).catch((e) =>
 				console.error(`Hot press failed: ${e}`)
@@ -51,7 +51,7 @@ export function ButtonsFromPage({ pageNumber, displayColumns, gridSize, buttonSi
 						buttonSize={buttonSize}
 						displayColumn={displayColumn}
 						displayRow={displayRow}
-						bankClick={bankClick}
+						buttonClick={buttonClick}
 					/>
 				)
 			}
@@ -65,7 +65,7 @@ export function ButtonsFromPage({ pageNumber, displayColumns, gridSize, buttonSi
 		</>
 	)
 }
-function ButtonWrapper({ pageNumber, column, row, buttonSize, displayColumn, displayRow, bankClick }) {
+function ButtonWrapper({ pageNumber, column, row, buttonSize, displayColumn, displayRow, buttonClick }) {
 	const location = useMemo(() => ({ pageNumber, column, row }), [pageNumber, column, row])
 
 	const { image } = useButtonRenderCache(location)
@@ -85,7 +85,7 @@ function ButtonWrapper({ pageNumber, column, row, buttonSize, displayColumn, dis
 			page={pageNumber}
 			location={location}
 			preview={image}
-			onClick={bankClick}
+			onClick={buttonClick}
 			alt={`Button ${formatLocation(location)}`}
 			selected={false}
 			style={buttonStyle}

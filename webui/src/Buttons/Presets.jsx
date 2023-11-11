@@ -233,7 +233,7 @@ function PresetIconPreview({ preset, connectionId, ...childProps }) {
 				setPreviewImage(img)
 			})
 			.catch((e) => {
-				console.error('Failed to preview bank')
+				console.error('Failed to preview control')
 				setPreviewError(true)
 			})
 	}, [preset.id, socket, connectionId, retryToken])

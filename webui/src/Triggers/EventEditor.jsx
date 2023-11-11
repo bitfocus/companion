@@ -60,7 +60,7 @@ export function TriggerEventEditor({ controlId, events, heading }) {
 	const addEvent = useCallback(
 		(eventType) => {
 			socketEmitPromise(socket, 'controls:event:add', [controlId, eventType]).catch((e) => {
-				console.error('Failed to add bank event', e)
+				console.error('Failed to add trigger event', e)
 			})
 		},
 		[socket, controlId]

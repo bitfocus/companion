@@ -5,7 +5,7 @@ import { SocketContext, socketEmitPromise } from '../util'
 import { useDeepCompareEffect } from 'use-deep-compare'
 
 /**
- * Preview a bank based on the selected options
+ * Preview a button based on the selected options
  * @param {string} param.location where this preview is located (if any)
  * @returns
  */
