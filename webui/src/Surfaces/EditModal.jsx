@@ -22,7 +22,6 @@ export const SurfaceEditModal = forwardRef(function SurfaceEditModal(_props, ref
 	const [show, setShow] = useState(false)
 
 	const [deviceConfig, setDeviceConfig] = useState(null)
-	const [deviceConfigInfo, setDeviceConfigInfo] = useState(null)
 	const [deviceConfigError, setDeviceConfigError] = useState(null)
 	const [reloadToken, setReloadToken] = useState(nanoid())
 
@@ -41,10 +40,9 @@ export const SurfaceEditModal = forwardRef(function SurfaceEditModal(_props, ref
 
 		if (deviceInfo?.id) {
 			socketEmitPromise(socket, 'surfaces:config-get', [deviceInfo.id])
-				.then(([config, info]) => {
-					console.log(config, info)
+				.then((config) => {
+					console.log(config)
 					setDeviceConfig(config)
-					setDeviceConfigInfo(info)
 				})
 				.catch((err) => {
 					console.error('Failed to load device config')
@@ -106,12 +104,8 @@ export const SurfaceEditModal = forwardRef(function SurfaceEditModal(_props, ref
 				<h5>Settings for {deviceInfo?.type}</h5>
 			</CModalHeader>
 			<CModalBody>
-				<LoadingRetryOrError
-					error={deviceConfigError}
-					dataReady={deviceConfig && deviceConfigInfo}
-					doRetry={doRetryConfigLoad}
-				/>
-				{deviceConfig && deviceInfo && deviceConfigInfo && (
+				<LoadingRetryOrError error={deviceConfigError} dataReady={deviceConfig} doRetry={doRetryConfigLoad} />
+				{deviceConfig && deviceInfo && (
 					<CForm onSubmit={PreventDefaultHandler}>
 						<CFormGroup>
 							<CLabel htmlFor="use_last_page">Use Last Page At Startup</CLabel>

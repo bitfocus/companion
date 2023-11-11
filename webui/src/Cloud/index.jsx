@@ -267,10 +267,10 @@ export class Cloud extends Component {
  * @property {boolean} authenticated - is the cloud authenticated
  * @property {string} authenticatedAs - the cloud username
  * @property {boolean} ping - is someone watching ping info?
- * @property {Array} regions - the cloud regions
+ * @property {string[]} regions - the cloud regions
  * @property {string} tryUsername - the username to try
  * @property {string} tryPassword - the password to try
- * @property {null|string} tryError - the error message
+ * @property {null|string} error - the error message
  * @property {boolean} cloudActive - is the cloud active
  * @property {boolean} canActivate - can the cloud be activated
  */

@@ -2,8 +2,32 @@ name: Build binaries
 on: [push]
 
 jobs:
+  check-types:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      - name: Use Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version-file: '.node-version'
+
+      - name: Prepare
+        run: |
+          # try and avoid timeout errors
+          yarn config set network-timeout 100000 -g
+
+          yarn --frozen-lockfile
+
+      - name: Check types
+        run: |
+          yarn check-types
+
   linux64:
     runs-on: ubuntu-20.04
+    needs: check-types
+
     outputs:
       version: ${{ steps.filenames.outputs.longversion }}
       do-docker: ${{ steps.upload.outputs.branch }}
@@ -72,6 +96,8 @@ jobs:
 
   linux-arm64:
     runs-on: ubuntu-20.04
+    needs: check-types
+
     steps:
       - uses: actions/checkout@v3
         with:
@@ -136,6 +162,8 @@ jobs:
 
   osx:
     runs-on: macos-11
+    needs: check-types
+
     steps:
       - uses: actions/checkout@v3
         with:
@@ -199,6 +227,8 @@ jobs:
 
   osx-arm64:
     runs-on: macos-11
+    needs: check-types
+
     steps:
       - uses: actions/checkout@v3
         with:
@@ -266,6 +296,8 @@ jobs:
 
   win64:
     runs-on: windows-2019
+    needs: check-types
+
     steps:
       - uses: actions/checkout@v3
         with:
