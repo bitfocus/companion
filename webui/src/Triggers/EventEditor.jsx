@@ -1,7 +1,7 @@
 import { CButton, CForm, CButtonGroup, CSwitch } from '@coreui/react'
 import { faSort, faTrash, faCompressArrowsAlt, faExpandArrowsAlt, faCopy } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import React, { useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react'
+import React, { memo, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react'
 import {
 	MyErrorBoundary,
 	socketEmitPromise,
@@ -355,7 +355,7 @@ const noOptionsMessage = ({ inputValue }) => {
 	return 'No events found'
 }
 
-function AddEventDropdown({ onSelect }) {
+const AddEventDropdown = memo(function AddEventDropdown({ onSelect }) {
 	const menuPortal = useContext(MenuPortalContext)
 	const EventDefinitions = useContext(EventDefinitionsContext)
 
@@ -400,4 +400,4 @@ function AddEventDropdown({ onSelect }) {
 			noOptionsMessage={noOptionsMessage}
 		/>
 	)
-}
+})

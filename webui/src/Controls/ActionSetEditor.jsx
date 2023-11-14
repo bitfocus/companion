@@ -8,7 +8,7 @@ import {
 	faFolderOpen,
 } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import React, { useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react'
+import React, { memo, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react'
 import { NumberInputField } from '../Components'
 import {
 	ActionsContext,
@@ -30,7 +30,7 @@ import CSwitch from '../CSwitch'
 import { OptionButtonPreview } from './OptionButtonPreview'
 import { MenuPortalContext } from '../Components/DropdownInputField'
 
-export function ControlActionSetEditor({
+export const ControlActionSetEditor = memo(function ControlActionSetEditor({
 	controlId,
 	location,
 	stepId,
@@ -171,9 +171,9 @@ export function ControlActionSetEditor({
 			<AddActionsPanel addPlaceholder={addPlaceholder} addAction={addAction} />
 		</div>
 	)
-}
+})
 
-function AddActionsPanel({ addPlaceholder, addAction }) {
+const AddActionsPanel = memo(function AddActionsPanel({ addPlaceholder, addAction }) {
 	const addActionsRef = useRef(null)
 	const showAddModal = useCallback(() => {
 		if (addActionsRef.current) {
@@ -193,7 +193,7 @@ function AddActionsPanel({ addPlaceholder, addAction }) {
 			</MyErrorBoundary>
 		</div>
 	)
-}
+})
 
 export function ActionsList({
 	location,

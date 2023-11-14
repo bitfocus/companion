@@ -9,7 +9,7 @@ import {
 	faQuestionCircle,
 } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import React, { useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react'
+import React, { memo, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react'
 import {
 	FeedbacksContext,
 	ConnectionsContext,
@@ -621,7 +621,7 @@ const noOptionsMessage = ({ inputValue }) => {
 	}
 }
 
-function AddFeedbackDropdown({ onSelect, booleanOnly, addPlaceholder }) {
+const AddFeedbackDropdown = memo(function AddFeedbackDropdown({ onSelect, booleanOnly, addPlaceholder }) {
 	const recentFeedbacksContext = useContext(RecentFeedbacksContext)
 	const menuPortal = useContext(MenuPortalContext)
 	const feedbacksContext = useContext(FeedbacksContext)
@@ -694,4 +694,4 @@ function AddFeedbackDropdown({ onSelect, booleanOnly, addPlaceholder }) {
 			noOptionsMessage={noOptionsMessage}
 		/>
 	)
-}
+})

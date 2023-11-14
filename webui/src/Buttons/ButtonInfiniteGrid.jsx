@@ -101,10 +101,8 @@ export const ButtonInfiniteGrid = forwardRef(function ButtonInfiniteGrid(
 						selectedButton?.pageNumber === pageNumber &&
 						selectedButton?.column === column &&
 						selectedButton?.row === row,
-					style: {
-						left: (column - minColumn) * tileSize + growWidth,
-						top: (row - minRow) * tileSize + growHeight,
-					},
+					left: (column - minColumn) * tileSize + growWidth,
+					top: (row - minRow) * tileSize + growHeight,
 				})
 			)
 		}
@@ -150,6 +148,14 @@ export const ButtonInfiniteGrid = forwardRef(function ButtonInfiniteGrid(
 
 	window.doGrow = doGrow
 
+	const gridCanvasStyle = useMemo(
+		() => ({
+			width: Math.max(countColumns * tileSize, windowSize.width) + growWidth * 2,
+			height: Math.max(countRows * tileSize, windowSize.height) + growHeight * 2,
+		}),
+		[countColumns, countRows, tileSize, windowSize, growWidth, growHeight]
+	)
+
 	return (
 		<div
 			ref={setRef}
@@ -157,13 +163,7 @@ export const ButtonInfiniteGrid = forwardRef(function ButtonInfiniteGrid(
 				'bank-armed': isHot,
 			})}
 		>
-			<div
-				className="button-grid-canvas"
-				style={{
-					width: Math.max(countColumns * tileSize, windowSize.width) + growWidth * 2,
-					height: Math.max(countRows * tileSize, windowSize.height) + growHeight * 2,
-				}}
-			>
+			<div className="button-grid-canvas" style={gridCanvasStyle}>
 				{doGrow && (
 					<>
 						<div className="expand left">
@@ -238,13 +238,27 @@ export const ButtonGridIcon = memo(function ButtonGridIcon({ ...props }) {
 	return <ButtonGridIconBase {...props} image={isUsed ? image : null} />
 })
 
-export const ButtonGridIconBase = memo(function ButtonGridIcon({ pageNumber, column, row, image, ...props }) {
+export const ButtonGridIconBase = memo(function ButtonGridIcon({
+	pageNumber,
+	column,
+	row,
+	image,
+	left,
+	top,
+	style,
+	...props
+}) {
 	const location = useMemo(() => ({ pageNumber, column, row }), [pageNumber, column, row])
 
 	const title = formatLocation(location)
 	return (
 		<ButtonPreview
 			{...props}
+			style={{
+				...style,
+				left,
+				top,
+			}}
 			location={location}
 			alt={title}
 			title={title}

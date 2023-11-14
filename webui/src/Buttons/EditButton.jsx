@@ -39,6 +39,7 @@ import React, {
 	useRef,
 	useState,
 	useMemo,
+	memo,
 } from 'react'
 import { nanoid } from 'nanoid'
 import { ButtonPreview } from '../Components/ButtonPreview'
@@ -62,7 +63,7 @@ import { GetStepIds } from '@companion/shared/Controls'
 import CSwitch from '../CSwitch'
 import { formatLocation } from '@companion/shared/ControlId'
 
-export function EditButton({ location, onKeyUp, contentHeight }) {
+export const EditButton = memo(function EditButton({ location, onKeyUp, contentHeight }) {
 	const socket = useContext(SocketContext)
 	const pages = useContext(PagesContext)
 
@@ -333,7 +334,7 @@ export function EditButton({ location, onKeyUp, contentHeight }) {
 			)}
 		</KeyReceiver>
 	)
-}
+})
 
 function TabsSection({ style, controlId, location, steps, runtimeProps, rotaryActions, feedbacks }) {
 	const socket = useContext(SocketContext)
