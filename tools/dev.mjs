@@ -14,7 +14,7 @@ const cachedDebounces = {}
 chokidar
 	.watch(['**/*.mjs', '**/*.js', '**/*.cjs', '**/*.json'], {
 		ignoreInitial: true,
-		ignored: ['**/node_modules/**', './webui/', './launcher/', './dist/'],
+		ignored: ['**/node_modules/**', './webui/', './launcher/', './dist/', './test/'],
 	})
 	.on('all', (event, filename) => {
 		const fullpath = path.resolve(filename)
