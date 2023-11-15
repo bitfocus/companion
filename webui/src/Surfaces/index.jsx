@@ -1,4 +1,4 @@
-import React, { memo, useCallback, useContext, useEffect, useRef, useState } from 'react'
+import React, { memo, useCallback, useContext, useRef, useState } from 'react'
 import { CAlert, CButton, CButtonGroup } from '@coreui/react'
 import { SurfacesContext, socketEmitPromise, SocketContext } from '../util'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
@@ -44,9 +44,9 @@ export const SurfacesPage = memo(function SurfacesPage() {
 	}, [socket])
 
 	const deleteEmulator = useCallback(
-		(deviceId) => {
+		(surfaceId) => {
 			confirmRef?.current?.show('Remove Emulator', 'Are you sure?', 'Remove', () => {
-				socketEmitPromise(socket, 'surfaces:emulator-remove', [deviceId]).catch((err) => {
+				socketEmitPromise(socket, 'surfaces:emulator-remove', [surfaceId]).catch((err) => {
 					console.error('Emulator remove failed', err)
 				})
 			})
@@ -69,7 +69,7 @@ export const SurfacesPage = memo(function SurfacesPage() {
 		[socket]
 	)
 
-	const configureDevice = useCallback((surfaceId) => {
+	const configureSurface = useCallback((surfaceId) => {
 		editModalRef.current.show(surfaceId, null)
 	}, [])
 
@@ -77,14 +77,14 @@ export const SurfacesPage = memo(function SurfacesPage() {
 		editModalRef.current.show(null, groupId)
 	}, [])
 
-	const forgetDevice = useCallback(
-		(deviceId) => {
+	const forgetSurface = useCallback(
+		(surfaceId) => {
 			confirmModalRef.current.show(
 				'Forget Surface',
 				'Are you sure you want to forget this surface? Any settings will be lost',
 				'Forget',
 				() => {
-					socketEmitPromise(socket, 'surfaces:forget', [deviceId]).catch((err) => {
+					socketEmitPromise(socket, 'surfaces:forget', [surfaceId]).catch((err) => {
 						console.error('fotget failed', err)
 					})
 				}
@@ -94,8 +94,8 @@ export const SurfacesPage = memo(function SurfacesPage() {
 	)
 
 	const updateName = useCallback(
-		(deviceId, name) => {
-			socketEmitPromise(socket, 'surfaces:set-name', [deviceId, name]).catch((err) => {
+		(surfaceId, name) => {
+			socketEmitPromise(socket, 'surfaces:set-name', [surfaceId, name]).catch((err) => {
 				console.error('Update name failed', err)
 			})
 		},
@@ -127,7 +127,7 @@ export const SurfacesPage = memo(function SurfacesPage() {
 			<CButtonGroup>
 				<CButton color="warning" onClick={refreshUSB}>
 					<FontAwesomeIcon icon={faSync} spin={scanning} />
-					{scanning ? ' Checking for new devices...' : ' Rescan USB'}
+					{scanning ? ' Checking for new surfaces...' : ' Rescan USB'}
 				</CButton>
 				<CButton color="danger" onClick={addEmulator}>
 					<FontAwesomeIcon icon={faAdd} /> Add Emulator
@@ -160,9 +160,9 @@ export const SurfacesPage = memo(function SurfacesPage() {
 								surface={group.surfaces[0]}
 								index={group.index}
 								updateName={updateName}
-								configureDevice={configureDevice}
+								configureSurface={configureSurface}
 								deleteEmulator={deleteEmulator}
-								forgetDevice={forgetDevice}
+								forgetSurface={forgetSurface}
 							/>
 						) : (
 							<ManualGroupRow
@@ -171,9 +171,9 @@ export const SurfacesPage = memo(function SurfacesPage() {
 								configureGroup={configureGroup}
 								deleteGroup={deleteGroup}
 								updateName={updateName}
-								configureDevice={configureDevice}
+								configureSurface={configureSurface}
 								deleteEmulator={deleteEmulator}
-								forgetDevice={forgetDevice}
+								forgetSurface={forgetSurface}
 							/>
 						)
 					)}
@@ -194,9 +194,9 @@ function ManualGroupRow({
 	configureGroup,
 	deleteGroup,
 	updateName,
-	configureDevice,
+	configureSurface,
 	deleteEmulator,
-	forgetDevice,
+	forgetSurface,
 }) {
 	const configureGroup2 = useCallback(() => configureGroup(group.id), [configureGroup, group.id])
 	const deleteGroup2 = useCallback(() => deleteGroup(group.id), [deleteGroup, group.id])
@@ -229,20 +229,20 @@ function ManualGroupRow({
 					key={surface.id}
 					surface={surface}
 					updateName={updateName}
-					configureDevice={configureDevice}
+					configureSurface={configureSurface}
 					deleteEmulator={deleteEmulator}
-					forgetDevice={forgetDevice}
+					forgetSurface={forgetSurface}
 				/>
 			))}
 		</>
 	)
 }
 
-function SurfaceRow({ surface, index, updateName, configureDevice, deleteEmulator, forgetDevice }) {
+function SurfaceRow({ surface, index, updateName, configureSurface, deleteEmulator, forgetSurface }) {
 	const updateName2 = useCallback((val) => updateName(surface.id, val), [updateName, surface.id])
-	const configureDevice2 = useCallback(() => configureDevice(surface.id), [configureDevice, surface.id])
+	const configureSurface2 = useCallback(() => configureSurface(surface.id), [configureSurface, surface.id])
 	const deleteEmulator2 = useCallback(() => deleteEmulator(surface.id), [deleteEmulator, surface.id])
-	const forgetDevice2 = useCallback(() => forgetDevice(surface.id), [forgetDevice, surface.id])
+	const forgetSurface2 = useCallback(() => forgetSurface(surface.id), [forgetSurface, surface.id])
 
 	return (
 		<tr>
@@ -256,7 +256,7 @@ function SurfaceRow({ surface, index, updateName, configureDevice, deleteEmulato
 			<td className="text-right">
 				{surface.isConnected ? (
 					<CButtonGroup>
-						<CButton onClick={configureDevice2} title="Configure">
+						<CButton onClick={configureSurface2} title="Configure">
 							<FontAwesomeIcon icon={faCog} /> Settings
 						</CButton>
 
@@ -272,7 +272,7 @@ function SurfaceRow({ surface, index, updateName, configureDevice, deleteEmulato
 						)}
 					</CButtonGroup>
 				) : (
-					<CButton onClick={forgetDevice2}>
+					<CButton onClick={forgetSurface2}>
 						<FontAwesomeIcon icon={faTrash} /> Forget
 					</CButton>
 				)}

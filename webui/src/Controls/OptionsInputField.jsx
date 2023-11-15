@@ -12,7 +12,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faDollarSign, faQuestionCircle } from '@fortawesome/free-solid-svg-icons'
 
 export function OptionsInputField({
-	instanceId,
+	connectionId,
 	isOnControl,
 	isAction,
 	actionId,
@@ -39,7 +39,7 @@ export function OptionsInputField({
 					required={option.required}
 					placeholder={option.placeholder}
 					useVariables={option.useVariables}
-					useInternalLocationVariables={instanceId === 'internal' && option.useInternalLocationVariables}
+					useInternalLocationVariables={connectionId === 'internal' && option.useInternalLocationVariables}
 					disabled={readonly}
 					setValue={setValue2}
 				/>
@@ -131,7 +131,7 @@ export function OptionsInputField({
 		}
 		default:
 			// The 'internal instance' is allowed to use some special input fields, to minimise when it reacts to changes elsewhere in the system
-			if (instanceId === 'internal') {
+			if (connectionId === 'internal') {
 				control = InternalInstanceField(option, isOnControl, readonly, value, setValue2)
 			}
 			// Use default below

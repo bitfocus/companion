@@ -1,7 +1,7 @@
 import React, { useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react'
 import { CButton, CCol, CRow, CSelect } from '@coreui/react'
 import {
-	InstancesContext,
+	ConnectionsContext,
 	ModulesContext,
 	MyErrorBoundary,
 	PagesContext,
@@ -151,7 +151,7 @@ export function ImportPageWizard({ snapshot, instanceRemap, setInstanceRemap, do
 
 export function ImportRemap({ snapshot, instanceRemap, setInstanceRemap }) {
 	const modules = useContext(ModulesContext)
-	const instancesContext = useContext(InstancesContext)
+	const connectionsContext = useContext(ConnectionsContext)
 
 	return (
 		<div id="import_resolve">
@@ -173,7 +173,7 @@ export function ImportRemap({ snapshot, instanceRemap, setInstanceRemap }) {
 					)}
 					{Object.entries(snapshot.instances || {}).map(([key, instance]) => {
 						const snapshotModule = modules[instance.instance_type]
-						const currentInstances = Object.entries(instancesContext).filter(
+						const currentInstances = Object.entries(connectionsContext).filter(
 							([id, inst]) => inst.instance_type === instance.instance_type
 						)
 
@@ -205,7 +205,7 @@ export function ImportRemap({ snapshot, instanceRemap, setInstanceRemap }) {
 	)
 }
 
-function ButtonImportPreview({ instanceId, ...props }) {
+function ButtonImportPreview({ ...props }) {
 	const socket = useContext(SocketContext)
 	const [previewImage, setPreviewImage] = useState(null)
 
@@ -223,7 +223,7 @@ function ButtonImportPreview({ instanceId, ...props }) {
 				setPreviewImage(img)
 			})
 			.catch((e) => {
-				console.error(`Failed to preview bank: ${e}`)
+				console.error(`Failed to preview button: ${e}`)
 			})
 	}, [props.pageNumber, props.column, props.row, socket])
 

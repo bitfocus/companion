@@ -14,7 +14,7 @@ import React, { forwardRef, useCallback, useContext, useImperativeHandle, useMem
 import {
 	ActionsContext,
 	FeedbacksContext,
-	InstancesContext,
+	ConnectionsContext,
 	RecentActionsContext,
 	RecentFeedbacksContext,
 } from '../util'
@@ -22,7 +22,7 @@ import {
 export const AddActionsModal = forwardRef(function AddActionsModal({ addAction }, ref) {
 	const recentActionsContext = useContext(RecentActionsContext)
 	const actions = useContext(ActionsContext)
-	const instances = useContext(InstancesContext)
+	const connections = useContext(ConnectionsContext)
 
 	const [show, setShow] = useState(false)
 
@@ -78,14 +78,14 @@ export const AddActionsModal = forwardRef(function AddActionsModal({ addAction }
 				/>
 			</CModalHeader>
 			<CModalBody className="shadow-inset">
-				{Object.entries(actions).map(([instanceId, items]) => (
-					<InstanceCollapse
-						key={instanceId}
-						instanceId={instanceId}
-						instanceInfo={instances[instanceId]}
+				{Object.entries(actions).map(([connectionId, items]) => (
+					<ConnectionCollapse
+						key={connectionId}
+						connectionId={connectionId}
+						connectionInfo={connections[connectionId]}
 						items={items}
 						itemName="actions"
-						expanded={!!filter || expanded[instanceId]}
+						expanded={!!filter || expanded[connectionId]}
 						filter={filter}
 						doToggle={toggle}
 						doAdd={addAction2}
@@ -104,7 +104,7 @@ export const AddActionsModal = forwardRef(function AddActionsModal({ addAction }
 export const AddFeedbacksModal = forwardRef(function AddFeedbacksModal({ addFeedback, booleanOnly }, ref) {
 	const recentFeedbacksContext = useContext(RecentFeedbacksContext)
 	const feedbacks = useContext(FeedbacksContext)
-	const instances = useContext(InstancesContext)
+	const connections = useContext(ConnectionsContext)
 
 	const [show, setShow] = useState(false)
 
@@ -159,14 +159,14 @@ export const AddFeedbacksModal = forwardRef(function AddFeedbacksModal({ addFeed
 				/>
 			</CModalHeader>
 			<CModalBody>
-				{Object.entries(feedbacks).map(([instanceId, items]) => (
-					<InstanceCollapse
-						key={instanceId}
-						instanceId={instanceId}
-						instanceInfo={instances[instanceId]}
+				{Object.entries(feedbacks).map(([connectionId, items]) => (
+					<ConnectionCollapse
+						key={connectionId}
+						connectionId={connectionId}
+						connectionInfo={connections[connectionId]}
 						items={items}
 						itemName="feedbacks"
-						expanded={!!filter || expanded[instanceId]}
+						expanded={!!filter || expanded[connectionId]}
 						filter={filter}
 						booleanOnly={booleanOnly}
 						doToggle={toggle}
@@ -183,9 +183,9 @@ export const AddFeedbacksModal = forwardRef(function AddFeedbacksModal({ addFeed
 	)
 })
 
-function InstanceCollapse({
-	instanceId,
-	instanceInfo,
+function ConnectionCollapse({
+	connectionId,
+	connectionInfo,
 	items,
 	itemName,
 	expanded,
@@ -194,7 +194,7 @@ function InstanceCollapse({
 	doToggle,
 	doAdd,
 }) {
-	const doToggle2 = useCallback(() => doToggle(instanceId), [doToggle, instanceId])
+	const doToggle2 = useCallback(() => doToggle(connectionId), [doToggle, connectionId])
 
 	const candidates = useMemo(() => {
 		try {
@@ -205,7 +205,7 @@ function InstanceCollapse({
 				if (booleanOnly && info.type !== 'boolean') continue
 
 				if (info.label?.match(regexp)) {
-					const fullId = `${instanceId}:${id}`
+					const fullId = `${connectionId}:${id}`
 					res.push({
 						...info,
 						fullId: fullId,
@@ -228,7 +228,7 @@ function InstanceCollapse({
 				</CAlert>
 			)
 		}
-	}, [items, filter, instanceId, itemName, booleanOnly])
+	}, [items, filter, connectionId, itemName, booleanOnly])
 
 	if (Object.keys(items).length === 0) {
 		// Hide card if there are no actions which match
@@ -237,7 +237,7 @@ function InstanceCollapse({
 		return (
 			<CCard className={'add-browse-card'}>
 				<div className="header" onClick={doToggle2}>
-					{instanceInfo?.label || instanceId}
+					{connectionInfo?.label || connectionId}
 				</div>
 				<CCollapse show={expanded}>
 					<CCardBody>

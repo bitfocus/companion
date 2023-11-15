@@ -239,7 +239,7 @@ function ConfigurePanel({ config }) {
 // }
 
 function CyclePages({ imageCache, setKeyDown, columns, rows }) {
-	const bankClick = useCallback(
+	const buttonClick = useCallback(
 		(location, pressed) => {
 			if (pressed) {
 				setKeyDown(location)
@@ -288,7 +288,7 @@ function CyclePages({ imageCache, setKeyDown, columns, rows }) {
 														column={x}
 														row={y}
 														preview={imageCache[y]?.[x]}
-														onClick={bankClick}
+														onClick={buttonClick}
 														alt={`Button ${formatLocation(location)}`}
 														selected={false}
 													/>

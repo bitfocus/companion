@@ -47,6 +47,28 @@ export function OscConfig({ config, setValue, resetValue }) {
 					</CButton>
 				</td>
 			</tr>
+			<tr>
+				<td>
+					Deprecated OSC API
+					<br />
+					<em>(This portion of the API will be removed in a future release)</em>
+				</td>
+				<td>
+					<div className="form-check form-check-inline mr-1 float-right">
+						<CSwitch
+							color="success"
+							checked={config.osc_legacy_api_enabled}
+							size={'lg'}
+							onChange={(e) => setValue('osc_legacy_api_enabled', e.currentTarget.checked)}
+						/>
+					</div>
+				</td>
+				<td>
+					<CButton onClick={() => resetValue('osc_legacy_api_enabled')} title="Reset to default">
+						<FontAwesomeIcon icon={faUndo} />
+					</CButton>
+				</td>
+			</tr>
 		</>
 	)
 }

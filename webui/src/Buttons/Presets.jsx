@@ -1,7 +1,7 @@
 import React, { useCallback, useContext, useEffect, useState } from 'react'
 import { CAlert, CButton, CRow } from '@coreui/react'
 import {
-	InstancesContext,
+	ConnectionsContext,
 	LoadingRetryOrError,
 	socketEmitPromise,
 	applyPatchOrReplaceSubObject,
@@ -15,9 +15,9 @@ import { nanoid } from 'nanoid'
 export const InstancePresets = function InstancePresets({ resetToken }) {
 	const socket = useContext(SocketContext)
 	const modules = useContext(ModulesContext)
-	const instancesContext = useContext(InstancesContext)
+	const connectionsContext = useContext(ConnectionsContext)
 
-	const [instanceAndCategory, setInstanceAndCategory] = useState([null, null])
+	const [connectionAndCategory, setConnectionAndCategory] = useState([null, null])
 	const [presetsMap, setPresetsMap] = useState(null)
 	const [presetsError, setPresetError] = useState(null)
 	const [reloadToken, setReloadToken] = useState(nanoid())
@@ -26,7 +26,7 @@ export const InstancePresets = function InstancePresets({ resetToken }) {
 
 	// Reset selection on resetToken change
 	useEffect(() => {
-		setInstanceAndCategory([null, null])
+		setConnectionAndCategory([null, null])
 	}, [resetToken])
 
 	useEffect(() => {
@@ -66,55 +66,55 @@ export const InstancePresets = function InstancePresets({ resetToken }) {
 		)
 	}
 
-	if (instanceAndCategory[0]) {
-		const instance = instancesContext[instanceAndCategory[0]]
-		const module = instance ? modules[instance.instance_type] : undefined
+	if (connectionAndCategory[0]) {
+		const connectionInfo = connectionsContext[connectionAndCategory[0]]
+		const moduleInfo = connectionInfo ? modules[connectionInfo.instance_type] : undefined
 
-		const presets = presetsMap[instanceAndCategory[0]] ?? []
+		const presets = presetsMap[connectionAndCategory[0]] ?? []
 
-		if (instanceAndCategory[1]) {
+		if (connectionAndCategory[1]) {
 			return (
 				<PresetsButtonList
 					presets={presets}
-					selectedInstanceId={instanceAndCategory[0]}
-					selectedCategory={instanceAndCategory[1]}
-					setInstanceAndCategory={setInstanceAndCategory}
+					selectedConnectionId={connectionAndCategory[0]}
+					selectedCategory={connectionAndCategory[1]}
+					setConnectionAndCategory={setConnectionAndCategory}
 				/>
 			)
 		} else {
 			return (
 				<PresetsCategoryList
 					presets={presets}
-					instance={instance}
-					module={module}
-					selectedInstanceId={instanceAndCategory[0]}
-					setInstanceAndCategory={setInstanceAndCategory}
+					connectionInfo={connectionInfo}
+					moduleInfo={moduleInfo}
+					selectedConnectionId={connectionAndCategory[0]}
+					setConnectionAndCategory={setConnectionAndCategory}
 				/>
 			)
 		}
 	} else {
-		return <PresetsInstanceList presets={presetsMap} setInstanceAndCategory={setInstanceAndCategory} />
+		return <PresetsConnectionList presets={presetsMap} setConnectionAndCategory={setConnectionAndCategory} />
 	}
 }
 
-function PresetsInstanceList({ presets, setInstanceAndCategory }) {
+function PresetsConnectionList({ presets, setConnectionAndCategory }) {
 	const modules = useContext(ModulesContext)
-	const instancesContext = useContext(InstancesContext)
+	const connectionsContext = useContext(ConnectionsContext)
 
 	const options = Object.entries(presets).map(([id, vals]) => {
 		if (!vals || Object.values(vals).length === 0) return ''
 
-		const instance = instancesContext[id]
-		const module = instance ? modules[instance.instance_type] : undefined
+		const connectionInfo = connectionsContext[id]
+		const moduleInfo = connectionInfo ? modules[connectionInfo.instance_type] : undefined
 
 		return (
 			<div key={id}>
 				<CButton
 					color="danger"
-					className="choose_instance mr-2 mb-2"
-					onClick={() => setInstanceAndCategory([id, null])}
+					className="choose_connection mr-2 mb-2"
+					onClick={() => setConnectionAndCategory([id, null])}
 				>
-					{module?.name ?? '?'} ({instance?.label ?? id})
+					{moduleInfo?.name ?? '?'} ({connectionInfo?.label ?? id})
 				</CButton>
 			</div>
 		)
@@ -137,13 +137,13 @@ function PresetsInstanceList({ presets, setInstanceAndCategory }) {
 	)
 }
 
-function PresetsCategoryList({ presets, instance, module, selectedInstanceId, setInstanceAndCategory }) {
+function PresetsCategoryList({ presets, connectionInfo, moduleInfo, selectedConnectionId, setConnectionAndCategory }) {
 	const categories = new Set()
 	for (const preset of Object.values(presets)) {
 		categories.add(preset.category)
 	}
 
-	const doBack = useCallback(() => setInstanceAndCategory([null, null]), [setInstanceAndCategory])
+	const doBack = useCallback(() => setConnectionAndCategory([null, null]), [setConnectionAndCategory])
 
 	const buttons = Array.from(categories).map((category) => {
 		return (
@@ -151,7 +151,7 @@ function PresetsCategoryList({ presets, instance, module, selectedInstanceId, se
 				key={category}
 				color="danger"
 				block
-				onClick={() => setInstanceAndCategory([selectedInstanceId, category])}
+				onClick={() => setConnectionAndCategory([selectedConnectionId, category])}
 			>
 				{category}
 			</CButton>
@@ -164,7 +164,7 @@ function PresetsCategoryList({ presets, instance, module, selectedInstanceId, se
 				<CButton color="primary" size="sm" onClick={doBack}>
 					Back
 				</CButton>
-				{module?.name ?? '?'} ({instance?.label ?? selectedInstanceId})
+				{moduleInfo?.name ?? '?'} ({connectionInfo?.label ?? selectedConnectionId})
 			</h5>
 
 			{buttons.length === 0 ? (
@@ -176,10 +176,10 @@ function PresetsCategoryList({ presets, instance, module, selectedInstanceId, se
 	)
 }
 
-function PresetsButtonList({ presets, selectedInstanceId, selectedCategory, setInstanceAndCategory }) {
+function PresetsButtonList({ presets, selectedConnectionId, selectedCategory, setConnectionAndCategory }) {
 	const doBack = useCallback(
-		() => setInstanceAndCategory([selectedInstanceId, null]),
-		[setInstanceAndCategory, selectedInstanceId]
+		() => setConnectionAndCategory([selectedConnectionId, null]),
+		[setConnectionAndCategory, selectedConnectionId]
 	)
 
 	const options = Object.values(presets).filter((p) => p.category === selectedCategory)
@@ -198,7 +198,7 @@ function PresetsButtonList({ presets, selectedInstanceId, selectedCategory, setI
 				return (
 					<PresetIconPreview
 						key={i}
-						instanceId={selectedInstanceId}
+						connectionId={selectedConnectionId}
 						preset={preset}
 						alt={preset.label}
 						title={preset.label}
@@ -211,7 +211,7 @@ function PresetsButtonList({ presets, selectedInstanceId, selectedCategory, setI
 	)
 }
 
-function PresetIconPreview({ preset, instanceId, ...childProps }) {
+function PresetIconPreview({ preset, connectionId, ...childProps }) {
 	const socket = useContext(SocketContext)
 	const [previewImage, setPreviewImage] = useState(null)
 	const [previewError, setPreviewError] = useState(false)
@@ -220,7 +220,7 @@ function PresetIconPreview({ preset, instanceId, ...childProps }) {
 	const [, drag] = useDrag({
 		type: 'preset',
 		item: {
-			instanceId: instanceId,
+			connectionId: connectionId,
 			presetId: preset.id,
 		},
 	})
@@ -228,15 +228,15 @@ function PresetIconPreview({ preset, instanceId, ...childProps }) {
 	useEffect(() => {
 		setPreviewError(false)
 
-		socketEmitPromise(socket, 'presets:preview_render', [instanceId, preset.id])
+		socketEmitPromise(socket, 'presets:preview_render', [connectionId, preset.id])
 			.then((img) => {
 				setPreviewImage(img)
 			})
 			.catch((e) => {
-				console.error('Failed to preview bank')
+				console.error('Failed to preview control')
 				setPreviewError(true)
 			})
-	}, [preset.id, socket, instanceId, retryToken])
+	}, [preset.id, socket, connectionId, retryToken])
 
 	const onClick = useCallback((_location, isDown) => isDown && setRetryToken(nanoid()), [])
 

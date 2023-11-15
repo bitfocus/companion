@@ -1,8 +1,8 @@
 import { CButton, CRow, CCol, CButtonGroup, CForm, CAlert, CInputGroup, CInputGroupAppend } from '@coreui/react'
 import React, { useCallback, useContext, useMemo, useState } from 'react'
-import { socketEmitPromise, SocketContext, UserConfigContext, PreventDefaultHandler } from '../util'
+import { socketEmitPromise, SocketContext, PreventDefaultHandler } from '../util'
 import { AlignmentInputField, ColorInputField, DropdownInputField, PNGInputField, TextInputField } from '../Components'
-import { FONT_SIZES } from '../Constants'
+import { FONT_SIZES, SHOW_HIDE_TOP_BAR } from '../Constants'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faDollarSign, faFont, faQuestionCircle, faTrash } from '@fortawesome/free-solid-svg-icons'
 
@@ -123,11 +123,6 @@ export function ButtonStyleConfigFields({
 		() => setValueInner('textExpression', !values.textExpression),
 		[setValueInner, values.textExpression]
 	)
-	const userconfig = useContext(UserConfigContext)
-
-	let pngWidth = 72
-	let pngHeight =
-		values.show_topbar === false || (values.show_topbar === 'default' && userconfig.remove_topbar === true) ? 72 : 58
 
 	// this style will be different when you use it in the main dialog compared to in the feedback editor.
 	const specialStyleForButtonEditor = useMemo(
@@ -211,15 +206,7 @@ export function ButtonStyleConfigFields({
 					{showField2('show_topbar') && (
 						<div>
 							<label>Topbar</label>
-							<DropdownInputField
-								choices={[
-									{ id: 'default', label: 'Follow Default' },
-									{ id: true, label: 'Show' },
-									{ id: false, label: 'Hide' },
-								]}
-								setValue={setShowTopBar}
-								value={values.show_topbar}
-							/>
+							<DropdownInputField choices={SHOW_HIDE_TOP_BAR} setValue={setShowTopBar} value={values.show_topbar} />
 						</div>
 					)}
 
@@ -246,7 +233,7 @@ export function ButtonStyleConfigFields({
 					{showField2('png64') && (
 						<div>
 							<label>
-								{pngWidth}x{pngHeight} PNG
+								PNG <FontAwesomeIcon icon={faQuestionCircle} title="Recommended minimum size is 72x72" />
 							</label>
 							<CButtonGroup className="png-browse">
 								<PNGInputField

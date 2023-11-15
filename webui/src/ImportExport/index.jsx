@@ -1,5 +1,5 @@
 import React, { useCallback, useContext, useRef, useState } from 'react'
-import { InstancesContext, SocketContext, socketEmitPromise } from '../util'
+import { ConnectionsContext, SocketContext, socketEmitPromise } from '../util'
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faDownload, faFileImport, faTrashAlt } from '@fortawesome/free-solid-svg-icons'
@@ -10,7 +10,7 @@ import { ImportWizard } from './Import'
 
 export function ImportExport() {
 	const socket = useContext(SocketContext)
-	const instancesContext = useContext(InstancesContext)
+	const connectionsContext = useContext(ConnectionsContext)
 
 	const [loadError, setLoadError] = useState(null)
 
@@ -55,7 +55,7 @@ export function ImportExport() {
 								const candidateIds = []
 								let matchingLabelId = ''
 
-								for (const [otherId, otherObj] of Object.entries(instancesContext)) {
+								for (const [otherId, otherObj] of Object.entries(connectionsContext)) {
 									if (otherObj.instance_type === obj.instance_type) {
 										candidateIds.push(otherId)
 										if (otherObj.label === obj.label) {
@@ -84,7 +84,7 @@ export function ImportExport() {
 			}
 			fr.readAsArrayBuffer(newFile)
 		},
-		[socket, instancesContext]
+		[socket, connectionsContext]
 	)
 
 	if (importInfo) {

@@ -9,7 +9,7 @@ import { EditButton } from './EditButton'
 import { ActionRecorder } from './ActionRecorder'
 import { memo, useCallback, useContext, useRef, useState } from 'react'
 import { GenericConfirmModal } from '../Components/GenericConfirmModal'
-import { InstanceVariables } from './Variables'
+import { ConnectionVariables } from './Variables'
 import { useElementSize } from 'usehooks-ts'
 import { formatLocation } from '@companion/shared/ControlId'
 
@@ -254,7 +254,7 @@ export const ButtonsPage = memo(function ButtonsPage({ hotPress }) {
 							</CTabPane>
 							<CTabPane data-tab="variables">
 								<MyErrorBoundary>
-									<InstanceVariables resetToken={tabResetToken} />
+									<ConnectionVariables resetToken={tabResetToken} />
 								</MyErrorBoundary>
 							</CTabPane>
 							<CTabPane data-tab="action-recorder">

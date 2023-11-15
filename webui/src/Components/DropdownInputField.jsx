@@ -1,13 +1,13 @@
 import classNames from 'classnames'
 import { createContext } from 'react'
 import { useContext } from 'react'
-import { useMemo, useEffect, useCallback } from 'react'
+import { useMemo, useEffect, useCallback, memo } from 'react'
 import Select from 'react-select'
 import CreatableSelect from 'react-select/creatable'
 
 export const MenuPortalContext = createContext(null)
 
-export function DropdownInputField({
+export const DropdownInputField = memo(function DropdownInputField({
 	choices,
 	allowCustom,
 	minSelection,
@@ -193,4 +193,4 @@ export function DropdownInputField({
 			)}
 		</div>
 	)
-}
+})

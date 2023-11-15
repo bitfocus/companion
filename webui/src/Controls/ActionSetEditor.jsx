@@ -8,11 +8,11 @@ import {
 	faFolderOpen,
 } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import React, { useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react'
+import React, { memo, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react'
 import { NumberInputField } from '../Components'
 import {
 	ActionsContext,
-	InstancesContext,
+	ConnectionsContext,
 	MyErrorBoundary,
 	socketEmitPromise,
 	sandbox,
@@ -30,7 +30,7 @@ import CSwitch from '../CSwitch'
 import { OptionButtonPreview } from './OptionButtonPreview'
 import { MenuPortalContext } from '../Components/DropdownInputField'
 
-export function ControlActionSetEditor({
+export const ControlActionSetEditor = memo(function ControlActionSetEditor({
 	controlId,
 	location,
 	stepId,
@@ -48,7 +48,7 @@ export function ControlActionSetEditor({
 		(actionId, key, val) => {
 			socketEmitPromise(socket, 'controls:action:set-option', [controlId, stepId, setId, actionId, key, val]).catch(
 				(e) => {
-					console.error('Failed to set bank action option', e)
+					console.error('Failed to set control action option', e)
 				}
 			)
 		},
@@ -57,7 +57,7 @@ export function ControlActionSetEditor({
 	const emitSetDelay = useCallback(
 		(actionId, delay) => {
 			socketEmitPromise(socket, 'controls:action:set-delay', [controlId, stepId, setId, actionId, delay]).catch((e) => {
-				console.error('Failed to set bank action delay', e)
+				console.error('Failed to set control action delay', e)
 			})
 		},
 		[socket, controlId, stepId, setId]
@@ -66,7 +66,7 @@ export function ControlActionSetEditor({
 	const emitDelete = useCallback(
 		(actionId) => {
 			socketEmitPromise(socket, 'controls:action:remove', [controlId, stepId, setId, actionId]).catch((e) => {
-				console.error('Failed to remove bank action', e)
+				console.error('Failed to remove control action', e)
 			})
 		},
 		[socket, controlId, stepId, setId]
@@ -74,7 +74,7 @@ export function ControlActionSetEditor({
 	const emitDuplicate = useCallback(
 		(actionId) => {
 			socketEmitPromise(socket, 'controls:action:duplicate', [controlId, stepId, setId, actionId]).catch((e) => {
-				console.error('Failed to duplicate bank action', e)
+				console.error('Failed to duplicate control action', e)
 			})
 		},
 		[socket, controlId, stepId, setId]
@@ -83,7 +83,7 @@ export function ControlActionSetEditor({
 	const emitLearn = useCallback(
 		(actionId) => {
 			socketEmitPromise(socket, 'controls:action:learn', [controlId, stepId, setId, actionId]).catch((e) => {
-				console.error('Failed to learn bank action values', e)
+				console.error('Failed to learn control action values', e)
 			})
 		},
 		[socket, controlId, stepId, setId]
@@ -100,7 +100,7 @@ export function ControlActionSetEditor({
 				dropSetId,
 				dropIndex,
 			]).catch((e) => {
-				console.error('Failed to reorder bank actions', e)
+				console.error('Failed to reorder control actions', e)
 			})
 		},
 		[socket, controlId]
@@ -117,10 +117,12 @@ export function ControlActionSetEditor({
 
 	const addAction = useCallback(
 		(actionType) => {
-			const [instanceId, actionId] = actionType.split(':', 2)
-			socketEmitPromise(socket, 'controls:action:add', [controlId, stepId, setId, instanceId, actionId]).catch((e) => {
-				console.error('Failed to add bank action', e)
-			})
+			const [connectionId, actionId] = actionType.split(':', 2)
+			socketEmitPromise(socket, 'controls:action:add', [controlId, stepId, setId, connectionId, actionId]).catch(
+				(e) => {
+					console.error('Failed to add control action', e)
+				}
+			)
 		},
 		[socket, controlId, stepId, setId]
 	)
@@ -169,9 +171,9 @@ export function ControlActionSetEditor({
 			<AddActionsPanel addPlaceholder={addPlaceholder} addAction={addAction} />
 		</div>
 	)
-}
+})
 
-function AddActionsPanel({ addPlaceholder, addAction }) {
+const AddActionsPanel = memo(function AddActionsPanel({ addPlaceholder, addAction }) {
 	const addActionsRef = useRef(null)
 	const showAddModal = useCallback(() => {
 		if (addActionsRef.current) {
@@ -191,7 +193,7 @@ function AddActionsPanel({ addPlaceholder, addAction }) {
 			</MyErrorBoundary>
 		</div>
 	)
-}
+})
 
 export function ActionsList({
 	location,
@@ -306,7 +308,7 @@ function ActionTableRow({
 	isCollapsed,
 	setCollapsed,
 }) {
-	const instancesContext = useContext(InstancesContext)
+	const connectionsContext = useContext(ConnectionsContext)
 	const actionsContext = useContext(ActionsContext)
 
 	const innerDelete = useCallback(() => doDelete(action.id), [action.id, doDelete])
@@ -411,9 +413,9 @@ function ActionTableRow({
 		return ''
 	}
 
-	const instance = instancesContext[action.instance]
+	const connectionInfo = connectionsContext[action.instance]
 	// const module = instance ? modules[instance.instance_type] : undefined
-	const instanceLabel = instance?.label ?? action.instance
+	const connectionLabel = connectionInfo?.label ?? action.instance
 
 	const options = actionSpec?.options ?? []
 
@@ -421,9 +423,9 @@ function ActionTableRow({
 
 	let name = ''
 	if (actionSpec) {
-		name = `${instanceLabel}: ${actionSpec.label}`
+		name = `${connectionLabel}: ${actionSpec.label}`
 	} else {
-		name = `${instanceLabel}: ${action.action} (undefined)`
+		name = `${connectionLabel}: ${action.action} (undefined)`
 	}
 
 	return (
@@ -511,7 +513,7 @@ function ActionTableRow({
 											key={i}
 											isOnControl={!!location}
 											isAction={true}
-											instanceId={action.instance}
+											connectionId={action.instance}
 											option={opt}
 											actionId={action.id}
 											value={(action.options || {})[opt.id]}
@@ -550,18 +552,18 @@ const noOptionsMessage = ({ inputValue }) => {
 function AddActionDropdown({ onSelect, placeholder }) {
 	const recentActionsContext = useContext(RecentActionsContext)
 	const menuPortal = useContext(MenuPortalContext)
-	const instancesContext = useContext(InstancesContext)
+	const connectionsContext = useContext(ConnectionsContext)
 	const actionsContext = useContext(ActionsContext)
 
 	const options = useMemo(() => {
 		const options = []
-		for (const [instanceId, instanceActions] of Object.entries(actionsContext)) {
-			for (const [actionId, action] of Object.entries(instanceActions || {})) {
-				const instanceLabel = instancesContext[instanceId]?.label ?? instanceId
+		for (const [connectionId, connectionActions] of Object.entries(actionsContext)) {
+			for (const [actionId, action] of Object.entries(connectionActions || {})) {
+				const connectionLabel = connectionsContext[connectionId]?.label ?? connectionId
 				options.push({
 					isRecent: false,
-					value: `${instanceId}:${actionId}`,
-					label: `${instanceLabel}: ${action.label}`,
+					value: `${connectionId}:${actionId}`,
+					label: `${connectionLabel}: ${action.label}`,
 				})
 			}
 		}
@@ -569,14 +571,14 @@ function AddActionDropdown({ onSelect, placeholder }) {
 		const recents = []
 		for (const actionType of recentActionsContext.recentActions) {
 			if (actionType) {
-				const [instanceId, actionId] = actionType.split(':', 2)
-				const actionInfo = actionsContext[instanceId]?.[actionId]
+				const [connectionId, actionId] = actionType.split(':', 2)
+				const actionInfo = actionsContext[connectionId]?.[actionId]
 				if (actionInfo) {
-					const instanceLabel = instancesContext[instanceId]?.label ?? instanceId
+					const connectionLabel = connectionsContext[connectionId]?.label ?? connectionId
 					recents.push({
 						isRecent: true,
-						value: `${instanceId}:${actionId}`,
-						label: `${instanceLabel}: ${actionInfo.label}`,
+						value: `${connectionId}:${actionId}`,
+						label: `${connectionLabel}: ${actionInfo.label}`,
 					})
 				}
 			}
@@ -587,7 +589,7 @@ function AddActionDropdown({ onSelect, placeholder }) {
 		})
 
 		return options
-	}, [actionsContext, instancesContext, recentActionsContext.recentActions])
+	}, [actionsContext, connectionsContext, recentActionsContext.recentActions])
 
 	const innerChange = useCallback(
 		(e) => {

@@ -1,6 +1,6 @@
 import React, { useCallback, useContext, useEffect, useState, useRef } from 'react'
 import {
-	InstancesContext,
+	ConnectionsContext,
 	socketEmitPromise,
 	SocketContext,
 	LoadingRetryOrError,
@@ -237,7 +237,7 @@ function ButtonPicker({ selectButton }) {
 	const [selectedStep, setSelectedStep] = useState(null)
 	const [selectedSet, setSelectedSet] = useState(null)
 
-	const bankClick = useCallback(
+	const buttonClick = useCallback(
 		(location, pressed) => {
 			if (pressed) setSelectedLocation(location)
 		},
@@ -269,7 +269,7 @@ function ButtonPicker({ selectButton }) {
 					setControlInfo(config?.config ?? false)
 				})
 				.catch((e) => {
-					console.error('Failed to load bank config', e)
+					console.error('Failed to load control config', e)
 					setControlInfo(null)
 				})
 
@@ -289,7 +289,7 @@ function ButtonPicker({ selectButton }) {
 				socket.off(`controls:config-${selectedControl}`, patchConfig)
 
 				socketEmitPromise(socket, 'controls:unsubscribe', [selectedControl]).catch((e) => {
-					console.error('Failed to unsubscribe bank config', e)
+					console.error('Failed to unsubscribe control config', e)
 				})
 			}
 		}
@@ -401,7 +401,7 @@ function ButtonPicker({ selectButton }) {
 				{hasBeenInView && (
 					<ButtonInfiniteGrid
 						ref={gridRef}
-						bankClick={bankClick}
+						buttonClick={buttonClick}
 						pageNumber={pageNumber}
 						selectedButton={selectedLocation}
 						gridSize={gridSize}
@@ -518,7 +518,7 @@ function TriggerPicker({ selectControl }) {
 
 function RecorderSessionHeading({ confirmRef, sessionId, sessionInfo, doFinish }) {
 	const socket = useContext(SocketContext)
-	const instances = useContext(InstancesContext)
+	const connections = useContext(ConnectionsContext)
 
 	const doClearActions = useCallback(() => {
 		socketEmitPromise(socket, 'action-recorder:session:discard-actions', [sessionId]).catch((e) => {
@@ -559,19 +559,19 @@ function RecorderSessionHeading({ confirmRef, sessionId, sessionInfo, doFinish }
 		doFinish()
 	}, [changeRecording, doFinish])
 
-	const changeInstanceIds = useCallback(
+	const changeConnectionIds = useCallback(
 		(ids) => {
-			socketEmitPromise(socket, 'action-recorder:session:set-instances', [sessionId, ids]).catch((e) => {
+			socketEmitPromise(socket, 'action-recorder:session:set-connections', [sessionId, ids]).catch((e) => {
 				console.error(e)
 			})
 		},
 		[socket, sessionId]
 	)
 
-	const instancesWhichCanRecord = useMemo(() => {
+	const connectionsWhichCanRecord = useMemo(() => {
 		const result = []
 
-		for (const [id, info] of Object.entries(instances)) {
+		for (const [id, info] of Object.entries(connections)) {
 			if (info.hasRecordActionsHandler) {
 				result.push({
 					id,
@@ -581,7 +581,7 @@ function RecorderSessionHeading({ confirmRef, sessionId, sessionInfo, doFinish }
 		}
 
 		return result
-	}, [instances])
+	}, [connections])
 
 	if (!sessionInfo) return <></>
 
@@ -593,10 +593,10 @@ function RecorderSessionHeading({ confirmRef, sessionId, sessionInfo, doFinish }
 						<div className="w-full">
 							<CLabel>Connections</CLabel>
 							<DropdownInputField
-								value={sessionInfo.instanceIds}
-								setValue={changeInstanceIds}
+								value={sessionInfo.connectionIds}
+								setValue={changeConnectionIds}
 								multiple={true}
-								choices={instancesWhichCanRecord}
+								choices={connectionsWhichCanRecord}
 							/>
 						</div>
 

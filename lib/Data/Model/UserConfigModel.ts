@@ -19,14 +19,20 @@ export interface UserConfigModel {
 	pin: string
 	pin_timeout: number
 
+	http_api_enabled: boolean
+	http_legacy_api_enabled: boolean
+
 	tcp_enabled: boolean
 	tcp_listen_port: number
+	tcp_legacy_api_enabled: boolean
 
 	udp_enabled: boolean
 	udp_listen_port: number
+	udp_legacy_api_enabled: boolean
 
 	osc_enabled: boolean
 	osc_listen_port: number
+	osc_legacy_api_enabled: boolean
 
 	rosstalk_enabled: boolean
 

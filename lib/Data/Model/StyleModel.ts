@@ -14,7 +14,7 @@ export interface DrawStyleButtonModel extends ButtonStyleProperties {
 	pushed: boolean
 	step_cycle: number | undefined
 	cloud: boolean | undefined
-	bank_status: 'error' | 'warning' | 'good' | undefined
+	button_status: 'error' | 'warning' | 'good' | undefined
 	action_running: boolean | undefined
 }
 

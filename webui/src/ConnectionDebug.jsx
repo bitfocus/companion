@@ -8,6 +8,13 @@ import AutoSizer from 'react-virtualized-auto-sizer'
 import { useElementSize } from 'usehooks-ts'
 import { stringify as csvStringify } from 'csv-stringify/sync'
 
+const LogsOnDiskInfoLine = {
+	time: null,
+	level: 'debug',
+	source: 'log',
+	message: 'Only recent lines are shown here, nothing is persisted',
+}
+
 export function ConnectionDebug() {
 	const socket = useContext(SocketContext)
 
@@ -94,12 +101,12 @@ export function ConnectionDebug() {
 	}, [linesBuffer])
 
 	const doStopConnection = useCallback(() => {
-		socketEmitPromise(socket, 'instances:set-enabled', [connectionId, false]).catch((e) => {
+		socketEmitPromise(socket, 'connections:set-enabled', [connectionId, false]).catch((e) => {
 			console.error('Failed', e)
 		})
 	}, [socket, connectionId])
 	const doStartConnection = useCallback(() => {
-		socketEmitPromise(socket, 'instances:set-enabled', [connectionId, true]).catch((e) => {
+		socketEmitPromise(socket, 'connections:set-enabled', [connectionId, true]).catch((e) => {
 			console.error('Failed', e)
 		})
 	}, [socket, connectionId])
@@ -266,7 +273,7 @@ function LogPanelContents({ linesBuffer, listChunkClearedToken, config, contentW
 	function Row({ style, index }) {
 		const rowRef = useRef({})
 
-		const h = messages[index]
+		const h = index === 0 ? LogsOnDiskInfoLine : messages[index - 1]
 
 		useEffect(() => {
 			if (rowRef.current) {
@@ -289,7 +296,7 @@ function LogPanelContents({ linesBuffer, listChunkClearedToken, config, contentW
 			{({ height, width }) => (
 				<List
 					height={height}
-					itemCount={messages.length}
+					itemCount={messages.length + 1}
 					onScroll={userScroll}
 					itemSize={getRowHeight}
 					ref={listRef}

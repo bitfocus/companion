@@ -18,7 +18,7 @@ Rounds up a number to a whole number.
 
 **abs(val)**
 
-Get the absolute value of a number.  
+Get the absolute value of a number.
 If the value is negative, the positive will be returned.
 
 eg `abs(-4)` and `abs(4)` both give `4`
@@ -102,14 +102,14 @@ eg `includes("Companion is great!", "great")` gives `true`
 
 **indexOf(val, find, offset)**
 
-Find the index of the first occurence of a value within the provided string.
+Find the index of the first occurrence of a value within the provided string.
 
 Optionally provide an offset to start the search from.
 
 
 **lastIndexOf(val, find, offset)**
 
-Find the index of the last occurence of a value within the provided string.
+Find the index of the last occurrence of a value within the provided string.
 
 Optionally provide an offset to start the search from.
 
@@ -158,7 +158,7 @@ The following components are allowed:
 
 In some scenarios it can be beneficial to have nested variables. This is not supported in the expression syntax.
 
-Instead you can use the `parseVariables` function, which will interpret a string using the string variables syntax. 
+Instead you can use the `parseVariables` function, which will interpret a string using the string variables syntax.
 
 eg `parseVariables('$(internal:custom_$(internal:custom_b))')`
 
