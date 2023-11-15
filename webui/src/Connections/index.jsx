@@ -2,16 +2,16 @@ import { CCol, CRow, CTabs, CTabContent, CTabPane, CNavItem, CNavLink, CNav } fr
 import { memo, useCallback, useContext, useEffect, useRef, useState } from 'react'
 import { HelpModal } from './HelpModal'
 import { NotifierContext, MyErrorBoundary, socketEmitPromise, SocketContext } from '../util'
-import { InstancesList } from './InstanceList'
-import { AddInstancesPanel } from './AddInstance'
-import { InstanceEditPanel } from './InstanceEditPanel'
+import { ConnectionsList } from './ConnectionList'
+import { AddConnectionsPanel } from './AddConnection'
+import { ConnectionEditPanel } from './ConnectionEditPanel'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { nanoid } from 'nanoid'
 import { faCog, faPlus } from '@fortawesome/free-solid-svg-icons'
 import jsonPatch from 'fast-json-patch'
 import { cloneDeep } from 'lodash-es'
 
-export const InstancesPage = memo(function InstancesPage() {
+export const ConnectionsPage = memo(function ConnectionsPage() {
 	const socket = useContext(SocketContext)
 	const notifier = useContext(NotifierContext)
 
@@ -19,11 +19,11 @@ export const InstancesPage = memo(function InstancesPage() {
 
 	const [tabResetToken, setTabResetToken] = useState(nanoid())
 	const [activeTab, setActiveTab] = useState('add')
-	const [selectedInstanceId, setSelectedInstanceId] = useState(null)
+	const [selectedConnectionId, setSelectedConnectionId] = useState(null)
 	const doChangeTab = useCallback((newTab) => {
 		setActiveTab((oldTab) => {
 			if (oldTab !== newTab) {
-				setSelectedInstanceId(null)
+				setSelectedConnectionId(null)
 				setTabResetToken(nanoid())
 			}
 			return newTab
@@ -32,7 +32,7 @@ export const InstancesPage = memo(function InstancesPage() {
 
 	const showHelp = useCallback(
 		(id) => {
-			socketEmitPromise(socket, 'instances:get-help', [id]).then(([err, result]) => {
+			socketEmitPromise(socket, 'connections:get-help', [id]).then(([err, result]) => {
 				if (err) {
 					notifier.current.show('Instance help', `Failed to get help text: ${err}`)
 					return
@@ -45,49 +45,49 @@ export const InstancesPage = memo(function InstancesPage() {
 		[socket, notifier]
 	)
 
-	const doConfigureInstance = useCallback((id) => {
-		setSelectedInstanceId(id)
+	const doConfigureConnection = useCallback((id) => {
+		setSelectedConnectionId(id)
 		setTabResetToken(nanoid())
 		setActiveTab(id ? 'edit' : 'add')
 	}, [])
 
-	const [instanceStatus, setInstanceStatus] = useState(null)
+	const [connectionStatus, setConnectionStatus] = useState(null)
 	useEffect(() => {
-		socketEmitPromise(socket, 'instance_status:get', [])
+		socketEmitPromise(socket, 'connections:get-statuses', [])
 			.then((statuses) => {
-				setInstanceStatus(statuses)
+				setConnectionStatus(statuses)
 			})
 			.catch((e) => {
-				console.error(`Failed to load instance statuses`, e)
+				console.error(`Failed to load connection statuses`, e)
 			})
 
 		const patchStatuses = (patch) => {
-			setInstanceStatus((oldStatuses) => {
+			setConnectionStatus((oldStatuses) => {
 				if (!oldStatuses) return oldStatuses
 				return jsonPatch.applyPatch(cloneDeep(oldStatuses) || {}, patch).newDocument
 			})
 		}
-		socket.on('instance_status:patch', patchStatuses)
+		socket.on('connections:patch-statuses', patchStatuses)
 
 		return () => {
-			socket.off('instance_status:patch', patchStatuses)
+			socket.off('connections:patch-statuses', patchStatuses)
 		}
 	}, [socket])
 
 	return (
-		<CRow className="instances-page split-panels">
+		<CRow className="connections-page split-panels">
 			<HelpModal ref={helpModalRef} />
 
-			<CCol xl={6} className="instances-panel primary-panel">
-				<InstancesList
-					instanceStatus={instanceStatus}
+			<CCol xl={6} className="connections-panel primary-panel">
+				<ConnectionsList
+					connectionStatus={connectionStatus}
 					showHelp={showHelp}
-					doConfigureInstance={doConfigureInstance}
-					selectedInstanceId={selectedInstanceId}
+					doConfigureConnection={doConfigureConnection}
+					selectedConnectionId={selectedConnectionId}
 				/>
 			</CCol>
 
-			<CCol xl={6} className="instances-panel secondary-panel add-instances-panel">
+			<CCol xl={6} className="connections-panel secondary-panel add-connections-panel">
 				<div className="secondary-panel-inner">
 					<CTabs activeTab={activeTab} onActiveTabChange={doChangeTab}>
 						<CNav variant="tabs">
@@ -96,7 +96,7 @@ export const InstancesPage = memo(function InstancesPage() {
 									<FontAwesomeIcon icon={faPlus} /> Add connection
 								</CNavLink>
 							</CNavItem>
-							<CNavItem hidden={!selectedInstanceId}>
+							<CNavItem hidden={!selectedConnectionId}>
 								<CNavLink data-tab="edit">
 									<FontAwesomeIcon icon={faCog} /> Edit connection
 								</CNavLink>
@@ -105,18 +105,18 @@ export const InstancesPage = memo(function InstancesPage() {
 						<CTabContent fade={false} className="remove075right">
 							<CTabPane data-tab="add">
 								<MyErrorBoundary>
-									<AddInstancesPanel showHelp={showHelp} doConfigureInstance={doConfigureInstance} />
+									<AddConnectionsPanel showHelp={showHelp} doConfigureConnection={doConfigureConnection} />
 								</MyErrorBoundary>
 							</CTabPane>
 							<CTabPane data-tab="edit">
 								<MyErrorBoundary>
-									{selectedInstanceId && (
-										<InstanceEditPanel
+									{selectedConnectionId && (
+										<ConnectionEditPanel
 											key={tabResetToken}
 											showHelp={showHelp}
-											doConfigureInstance={doConfigureInstance}
-											instanceId={selectedInstanceId}
-											instanceStatus={instanceStatus?.[selectedInstanceId]}
+											doConfigureConnection={doConfigureConnection}
+											connectionId={selectedConnectionId}
+											connectionStatus={connectionStatus?.[selectedConnectionId]}
 										/>
 									)}
 								</MyErrorBoundary>

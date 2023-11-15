@@ -35,7 +35,7 @@ import { TouchBackend } from 'react-dnd-touch-backend'
 import { MySidebar } from './Layout/Sidebar'
 import { MyHeader } from './Layout/Header'
 import { Triggers } from './Triggers'
-import { InstancesPage } from './Instances'
+import { ConnectionsPage } from './Connections'
 import { ButtonsPage } from './Buttons'
 import { ContextData } from './ContextData'
 import { CloudPage } from './CloudPage'
@@ -444,7 +444,7 @@ function AppContent({ buttonGridHotPress }) {
 			<CTabContent fade={false}>
 				<CTabPane className={getClassForPane('/connections')}>
 					<MyErrorBoundary>
-						<InstancesPage />
+						<ConnectionsPage />
 					</MyErrorBoundary>
 				</CTabPane>
 				<CTabPane className={getClassForPane('/buttons')}>

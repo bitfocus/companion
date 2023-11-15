@@ -39,9 +39,9 @@ export function TextInputField({
 		// Update the suggestions list in tribute whenever anything changes
 		const suggestions = []
 		if (useVariables) {
-			for (const [instanceLabel, variables] of Object.entries(variableDefinitionsContext)) {
+			for (const [connectionLabel, variables] of Object.entries(variableDefinitionsContext)) {
 				for (const [name, va] of Object.entries(variables || {})) {
-					const variableId = `${instanceLabel}:${name}`
+					const variableId = `${connectionLabel}:${name}`
 					suggestions.push({
 						key: variableId + ')',
 						value: variableId,

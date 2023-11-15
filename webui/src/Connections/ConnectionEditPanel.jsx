@@ -10,12 +10,12 @@ import { isLabelValid } from '@companion/shared/Label'
 import CSwitch from '../CSwitch'
 import { BonjourDeviceInputField } from '../Components/BonjourDeviceInputField'
 
-export function InstanceEditPanel({ instanceId, instanceStatus, doConfigureInstance, showHelp }) {
-	console.log('status', instanceStatus)
+export function ConnectionEditPanel({ connectionId, connectionStatus, doConfigureConnection, showHelp }) {
+	console.log('status', connectionStatus)
 
-	if (!instanceStatus || !instanceStatus.level || instanceStatus.level === 'crashed') {
+	if (!connectionStatus || !connectionStatus.level || connectionStatus.level === 'crashed') {
 		return (
-			<CRow className="edit-instance">
+			<CRow className="edit-connection">
 				<CCol xs={12}>
 					<p>Waiting for connection to start...</p>
 				</CCol>
@@ -25,11 +25,19 @@ export function InstanceEditPanel({ instanceId, instanceStatus, doConfigureInsta
 	}
 
 	return (
-		<InstanceEditPanelInner instanceId={instanceId} doConfigureInstance={doConfigureInstance} showHelp={showHelp} />
+		<ConnectionEditPanelInner
+			connectionId={connectionId}
+			doConfigureConnection={doConfigureConnection}
+			showHelp={showHelp}
+		/>
 	)
 }
 
-const InstanceEditPanelInner = memo(function InstanceEditPanel({ instanceId, doConfigureInstance, showHelp }) {
+const ConnectionEditPanelInner = memo(function ConnectionEditPanelInner({
+	connectionId,
+	doConfigureConnection,
+	showHelp,
+}) {
 	const socket = useContext(SocketContext)
 	const modules = useContext(ModulesContext)
 
@@ -37,9 +45,9 @@ const InstanceEditPanelInner = memo(function InstanceEditPanel({ instanceId, doC
 	const [reloadToken, setReloadToken] = useState(nanoid())
 
 	const [configFields, setConfigFields] = useState(null)
-	const [instanceConfig, setInstanceConfig] = useState(null)
-	const [instanceLabel, setInstanceLabel] = useState(null)
-	const [instanceType, setInstanceType] = useState(null)
+	const [connectionConfig, setConnectionConfig] = useState(null)
+	const [connectionLabel, setConnectionLabel] = useState(null)
+	const [connectionType, setConnectionType] = useState(null)
 	const [validFields, setValidFields] = useState(null)
 
 	const [fieldVisibility, setFieldVisibility] = useState({})
@@ -59,21 +67,21 @@ const InstanceEditPanelInner = memo(function InstanceEditPanel({ instanceId, doC
 	}, [validFields, fieldVisibility])
 
 	const doCancel = useCallback(() => {
-		doConfigureInstance(null)
+		doConfigureConnection(null)
 		setConfigFields([])
-	}, [doConfigureInstance])
+	}, [doConfigureConnection])
 
 	const doSave = useCallback(() => {
 		setError(null)
 
-		const newLabel = instanceLabel?.trim()
+		const newLabel = connectionLabel?.trim()
 
 		if (!isLabelValid(newLabel) || invalidFieldNames.length > 0) {
 			setError(`Some config fields are not valid: ${invalidFieldNames.join(', ')}`)
 			return
 		}
 
-		socketEmitPromise(socket, 'instances:set-config', [instanceId, newLabel, instanceConfig])
+		socketEmitPromise(socket, 'connections:set-config', [connectionId, newLabel, connectionConfig])
 			.then((err) => {
 				if (err) {
 					if (err === 'invalid label') {
@@ -91,11 +99,11 @@ const InstanceEditPanelInner = memo(function InstanceEditPanel({ instanceId, doC
 			.catch((e) => {
 				setError(`Failed to save connection config: ${e}`)
 			})
-	}, [socket, instanceId, invalidFieldNames, instanceLabel, instanceConfig, doCancel])
+	}, [socket, connectionId, invalidFieldNames, connectionLabel, connectionConfig, doCancel])
 
 	useEffect(() => {
-		if (instanceId) {
-			socketEmitPromise(socket, 'instances:edit', [instanceId])
+		if (connectionId) {
+			socketEmitPromise(socket, 'connections:edit', [connectionId])
 				.then((res) => {
 					if (res) {
 						const validFields = {}
@@ -110,9 +118,9 @@ const InstanceEditPanelInner = memo(function InstanceEditPanel({ instanceId, doC
 						}
 
 						setConfigFields(res.fields)
-						setInstanceLabel(res.label)
-						setInstanceType(res.instance_type)
-						setInstanceConfig(res.config)
+						setConnectionLabel(res.label)
+						setConnectionType(res.instance_type)
+						setConnectionConfig(res.config)
 						setValidFields(validFields)
 					} else {
 						setError(`Connection config unavailable`)
@@ -126,18 +134,18 @@ const InstanceEditPanelInner = memo(function InstanceEditPanel({ instanceId, doC
 		return () => {
 			setError(null)
 			setConfigFields(null)
-			setInstanceLabel(null)
-			setInstanceConfig(null)
+			setConnectionLabel(null)
+			setConnectionConfig(null)
 			setValidFields(null)
 		}
-	}, [socket, instanceId, reloadToken])
+	}, [socket, connectionId, reloadToken])
 
 	const doRetryConfigLoad = useCallback(() => setReloadToken(nanoid()), [])
 
 	const setValue = useCallback((key, value) => {
 		console.log('set value', key, value)
 
-		setInstanceConfig((oldConfig) => ({
+		setConnectionConfig((oldConfig) => ({
 			...oldConfig,
 			[key]: value,
 		}))
@@ -154,12 +162,12 @@ const InstanceEditPanelInner = memo(function InstanceEditPanel({ instanceId, doC
 	useEffect(() => {
 		const visibility = {}
 
-		if (configFields === null || instanceConfig === null) {
+		if (configFields === null || connectionConfig === null) {
 			return
 		}
 		for (const field of configFields) {
 			if (typeof field.isVisible === 'function') {
-				visibility[field.id] = field.isVisible(instanceConfig, field.isVisibleData)
+				visibility[field.id] = field.isVisible(connectionConfig, field.isVisibleData)
 			}
 		}
 
@@ -168,27 +176,31 @@ const InstanceEditPanelInner = memo(function InstanceEditPanel({ instanceId, doC
 		return () => {
 			setFieldVisibility({})
 		}
-	}, [configFields, instanceConfig])
+	}, [configFields, connectionConfig])
 
-	const moduleInfo = modules[instanceType] ?? {}
-	const dataReady = instanceConfig && configFields && validFields
+	const moduleInfo = modules[connectionType] ?? {}
+	const dataReady = connectionConfig && configFields && validFields
 	return (
 		<div>
 			<h5>
-				{moduleInfo?.shortname ?? instanceType} configuration
+				{moduleInfo?.shortname ?? connectionType} configuration
 				{moduleInfo?.hasHelp && (
-					<div className="float_right" onClick={() => showHelp(instanceType)}>
+					<div className="float_right" onClick={() => showHelp(connectionType)}>
 						<FontAwesomeIcon icon={faQuestionCircle} />
 					</div>
 				)}
 			</h5>
-			<CRow className="edit-instance">
+			<CRow className="edit-connection">
 				<LoadingRetryOrError error={error} dataReady={dataReady} doRetry={doRetryConfigLoad} autoRetryAfter={2} />
-				{instanceId && dataReady && (
+				{connectionId && dataReady && (
 					<>
 						<CCol className={`fieldtype-textinput`} sm={12}>
 							<label>Label</label>
-							<TextInputField value={instanceLabel} setValue={setInstanceLabel} isValid={isLabelValid(instanceLabel)} />
+							<TextInputField
+								value={connectionLabel}
+								setValue={setConnectionLabel}
+								isValid={isLabelValid(connectionLabel)}
+							/>
 						</CCol>
 
 						{configFields.map((field, i) => {
@@ -205,11 +217,11 @@ const InstanceEditPanelInner = memo(function InstanceEditPanel({ instanceId, doC
 									)}
 									<ConfigField
 										definition={field}
-										value={instanceConfig[field.id]}
+										value={connectionConfig[field.id]}
 										valid={validFields[field.id]}
 										setValue={setValue}
 										setValid={setValid}
-										connectionId={instanceId}
+										connectionId={connectionId}
 									/>
 								</CCol>
 							)
@@ -222,7 +234,7 @@ const InstanceEditPanelInner = memo(function InstanceEditPanel({ instanceId, doC
 				<CCol sm={12}>
 					<CButton
 						color="success"
-						disabled={!validFields || invalidFieldNames.length > 0 || !isLabelValid(instanceLabel)}
+						disabled={!validFields || invalidFieldNames.length > 0 || !isLabelValid(connectionLabel)}
 						onClick={doSave}
 					>
 						Save

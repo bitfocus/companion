@@ -99,11 +99,11 @@ export const ButtonGridActions = forwardRef(function ButtonGridActions(
 	useImperativeHandle(
 		ref,
 		() => ({
-			bankClick(location, isDown) {
+			buttonClick(location, isDown) {
 				if (isDown) {
 					switch (activeFunction) {
 						case 'delete':
-							resetRef.current.show('Clear bank', `Clear style and actions for this button?`, 'Clear', () => {
+							resetRef.current.show('Clear button', `Clear style and actions for this button?`, 'Clear', () => {
 								socketEmitPromise(socket, 'controls:reset', [location]).catch((e) => {
 									console.error(`Reset failed: ${e}`)
 								})
@@ -134,7 +134,7 @@ export const ButtonGridActions = forwardRef(function ButtonGridActions(
 							}
 							return true
 						default:
-							// show bank edit page
+							// show button edit page
 							return false
 					}
 				} else {

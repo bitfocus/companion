@@ -41,9 +41,9 @@ export function EditTriggerPanel({ controlId }) {
 				setConfigError(null)
 			})
 			.catch((e) => {
-				console.error('Failed to load bank config', e)
+				console.error('Failed to load trigger config', e)
 				setConfig(null)
-				setConfigError('Failed to load bank config')
+				setConfigError('Failed to load trigger config')
 			})
 
 		const patchConfig = (patch) => {
@@ -74,7 +74,7 @@ export function EditTriggerPanel({ controlId }) {
 			socket.off(`controls:runtime-${controlId}`, patchRuntimeProps)
 
 			socketEmitPromise(socket, 'controls:unsubscribe', [controlId]).catch((e) => {
-				console.error('Failed to unsubscribe bank config', e)
+				console.error('Failed to unsubscribe trigger config', e)
 			})
 		}
 	}, [socket, controlId, reloadConfigToken])

@@ -9,10 +9,10 @@ import {
 	faQuestionCircle,
 } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import React, { useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react'
+import React, { memo, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react'
 import {
 	FeedbacksContext,
-	InstancesContext,
+	ConnectionsContext,
 	MyErrorBoundary,
 	socketEmitPromise,
 	sandbox,
@@ -109,9 +109,9 @@ export function ControlFeedbacksEditor({
 
 	const addFeedback = useCallback(
 		(feedbackType) => {
-			const [instanceId, feedbackId] = feedbackType.split(':', 2)
-			socketEmitPromise(socket, 'controls:feedback:add', [controlId, instanceId, feedbackId]).catch((e) => {
-				console.error('Failed to add bank feedback', e)
+			const [connectionId, feedbackId] = feedbackType.split(':', 2)
+			socketEmitPromise(socket, 'controls:feedback:add', [controlId, connectionId, feedbackId]).catch((e) => {
+				console.error('Failed to add control feedback', e)
 			})
 		},
 		[socket, controlId]
@@ -353,10 +353,10 @@ function FeedbackEditor({
 	booleanOnly,
 }) {
 	const feedbacksContext = useContext(FeedbacksContext)
-	const instancesContext = useContext(InstancesContext)
+	const connectionsContext = useContext(ConnectionsContext)
 
-	const instance = instancesContext[feedback.instance_id]
-	const instanceLabel = instance?.label ?? feedback.instance_id
+	const connectionInfo = connectionsContext[feedback.instance_id]
+	const connectionLabel = connectionInfo?.label ?? feedback.instance_id
 
 	const feedbackSpec = (feedbacksContext[feedback.instance_id] || {})[feedback.type]
 	const options = feedbackSpec?.options ?? []
@@ -398,9 +398,9 @@ function FeedbackEditor({
 
 	let name = ''
 	if (feedbackSpec) {
-		name = `${instanceLabel}: ${feedbackSpec.label}`
+		name = `${connectionLabel}: ${feedbackSpec.label}`
 	} else {
-		name = `${instanceLabel}: ${feedback.type} (undefined)`
+		name = `${connectionLabel}: ${feedback.type} (undefined)`
 	}
 
 	const showButtonPreview = feedback?.instance_id === 'internal' && feedbackSpec?.showButtonPreview
@@ -467,7 +467,7 @@ function FeedbackEditor({
 									<OptionsInputField
 										key={i}
 										isOnControl={!!location}
-										instanceId={feedback.instance_id}
+										connectionId={feedback.instance_id}
 										option={opt}
 										actionId={feedback.id}
 										value={(feedback.options || {})[opt.id]}
@@ -621,22 +621,22 @@ const noOptionsMessage = ({ inputValue }) => {
 	}
 }
 
-function AddFeedbackDropdown({ onSelect, booleanOnly, addPlaceholder }) {
+const AddFeedbackDropdown = memo(function AddFeedbackDropdown({ onSelect, booleanOnly, addPlaceholder }) {
 	const recentFeedbacksContext = useContext(RecentFeedbacksContext)
 	const menuPortal = useContext(MenuPortalContext)
 	const feedbacksContext = useContext(FeedbacksContext)
-	const instancesContext = useContext(InstancesContext)
+	const connectionsContext = useContext(ConnectionsContext)
 
 	const options = useMemo(() => {
 		const options = []
-		for (const [instanceId, instanceFeedbacks] of Object.entries(feedbacksContext)) {
+		for (const [connectionId, instanceFeedbacks] of Object.entries(feedbacksContext)) {
 			for (const [feedbackId, feedback] of Object.entries(instanceFeedbacks || {})) {
 				if (!booleanOnly || feedback.type === 'boolean') {
-					const instanceLabel = instancesContext[instanceId]?.label ?? instanceId
+					const connectionLabel = connectionsContext[connectionId]?.label ?? connectionId
 					options.push({
 						isRecent: false,
-						value: `${instanceId}:${feedbackId}`,
-						label: `${instanceLabel}: ${feedback.label}`,
+						value: `${connectionId}:${feedbackId}`,
+						label: `${connectionLabel}: ${feedback.label}`,
 					})
 				}
 			}
@@ -645,14 +645,14 @@ function AddFeedbackDropdown({ onSelect, booleanOnly, addPlaceholder }) {
 		const recents = []
 		for (const feedbackType of recentFeedbacksContext.recentFeedbacks || []) {
 			if (feedbackType) {
-				const [instanceId, feedbackId] = feedbackType.split(':', 2)
-				const feedbackInfo = feedbacksContext[instanceId]?.[feedbackId]
+				const [connectionId, feedbackId] = feedbackType.split(':', 2)
+				const feedbackInfo = feedbacksContext[connectionId]?.[feedbackId]
 				if (feedbackInfo) {
-					const instanceLabel = instancesContext[instanceId]?.label ?? instanceId
+					const connectionLabel = connectionsContext[connectionId]?.label ?? connectionId
 					recents.push({
 						isRecent: true,
-						value: `${instanceId}:${feedbackId}`,
-						label: `${instanceLabel}: ${feedbackInfo.label}`,
+						value: `${connectionId}:${feedbackId}`,
+						label: `${connectionLabel}: ${feedbackInfo.label}`,
 					})
 				}
 			}
@@ -663,7 +663,7 @@ function AddFeedbackDropdown({ onSelect, booleanOnly, addPlaceholder }) {
 		})
 
 		return options
-	}, [feedbacksContext, instancesContext, booleanOnly, recentFeedbacksContext.recentFeedbacks])
+	}, [feedbacksContext, connectionsContext, booleanOnly, recentFeedbacksContext.recentFeedbacks])
 
 	const innerChange = useCallback(
 		(e) => {
@@ -694,4 +694,4 @@ function AddFeedbackDropdown({ onSelect, booleanOnly, addPlaceholder }) {
 			noOptionsMessage={noOptionsMessage}
 		/>
 	)
-}
+})

@@ -8,15 +8,15 @@ import { useCallback } from 'react'
 import { useRef } from 'react'
 import { GenericConfirmModal } from '../Components/GenericConfirmModal'
 
-export function AddInstancesPanel({ showHelp, doConfigureInstance }) {
+export function AddConnectionsPanel({ showHelp, doConfigureConnection }) {
 	return (
 		<>
-			<AddInstancesInner showHelp={showHelp} configureInstance={doConfigureInstance} />
+			<AddConnectionsInner showHelp={showHelp} configureConnection={doConfigureConnection} />
 		</>
 	)
 }
 
-const AddInstancesInner = memo(function AddInstancesInner({ showHelp, configureInstance }) {
+const AddConnectionsInner = memo(function AddConnectionsInner({ showHelp, configureConnection }) {
 	const socket = useContext(SocketContext)
 	const notifier = useContext(NotifierContext)
 	const modules = useContext(ModulesContext)
@@ -24,23 +24,23 @@ const AddInstancesInner = memo(function AddInstancesInner({ showHelp, configureI
 
 	const confirmRef = useRef(null)
 
-	const addInstanceInner = useCallback(
+	const addConnectionInner = useCallback(
 		(type, product) => {
-			socketEmitPromise(socket, 'instances:add', [{ type: type, product: product }])
+			socketEmitPromise(socket, 'connections:add', [{ type: type, product: product }])
 				.then((id) => {
 					setFilter('')
-					console.log('NEW INSTANCE', id)
-					configureInstance(id)
+					console.log('NEW CONNECTION', id)
+					configureConnection(id)
 				})
 				.catch((e) => {
 					notifier.current.show(`Failed to create connection`, `Failed: ${e}`)
 					console.error('Failed to create connection:', e)
 				})
 		},
-		[socket, notifier, configureInstance]
+		[socket, notifier, configureConnection]
 	)
 
-	const addInstance = useCallback(
+	const addConnection = useCallback(
 		(type, product, module) => {
 			if (module.isLegacy) {
 				confirmRef.current.show(
@@ -48,14 +48,14 @@ const AddInstancesInner = memo(function AddInstancesInner({ showHelp, configureI
 					null, // Passed as param to the thing
 					'Add anyway',
 					() => {
-						addInstanceInner(type, product)
+						addConnectionInner(type, product)
 					}
 				)
 			} else {
-				addInstanceInner(type, product)
+				addConnectionInner(type, product)
 			}
 		},
-		[addInstanceInner]
+		[addConnectionInner]
 	)
 
 	const allProducts = useMemo(() => {
@@ -76,7 +76,7 @@ const AddInstancesInner = memo(function AddInstancesInner({ showHelp, configureI
 		for (const module of searchResults) {
 			candidatesObj[module.name] = (
 				<div key={module.name + module.id}>
-					<CButton color="primary" onClick={() => addInstance(module.id, module.product, module)}>
+					<CButton color="primary" onClick={() => addConnection(module.id, module.product, module)}>
 						Add
 					</CButton>
 					&nbsp;
@@ -170,7 +170,7 @@ const AddInstancesInner = memo(function AddInstancesInner({ showHelp, configureI
 				</CInputGroup>
 				<br />
 			</div>
-			<div id="instance_add_search_results">{candidates}</div>
+			<div id="connection_add_search_results">{candidates}</div>
 		</>
 	)
 })

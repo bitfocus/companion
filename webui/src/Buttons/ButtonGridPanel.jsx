@@ -53,9 +53,9 @@ export const ButtonsGridPanel = memo(function ButtonsPage({
 
 	const actionsRef = useRef()
 
-	const bankClick = useCallback(
+	const buttonClick = useCallback(
 		(location, isDown) => {
-			if (!actionsRef.current?.bankClick(location, isDown)) {
+			if (!actionsRef.current?.buttonClick(location, isDown)) {
 				buttonGridClick(location, isDown)
 			}
 		},
@@ -188,7 +188,7 @@ export const ButtonsGridPanel = memo(function ButtonsPage({
 						ref={gridRef}
 						isHot={isHot}
 						pageNumber={pageNumber}
-						bankClick={bankClick}
+						buttonClick={buttonClick}
 						selectedButton={selectedButton}
 						gridSize={gridSize}
 						doGrow={userConfig.gridSizeInlineGrow ? doGrow : undefined}

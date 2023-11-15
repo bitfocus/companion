@@ -2,7 +2,7 @@ import { CButton, CRow, CCol, CButtonGroup, CForm, CAlert, CInputGroup, CInputGr
 import React, { useCallback, useContext, useMemo, useState } from 'react'
 import { socketEmitPromise, SocketContext, PreventDefaultHandler } from '../util'
 import { AlignmentInputField, ColorInputField, DropdownInputField, PNGInputField, TextInputField } from '../Components'
-import { FONT_SIZES } from '../Constants'
+import { FONT_SIZES, SHOW_HIDE_TOP_BAR } from '../Constants'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faDollarSign, faFont, faQuestionCircle, faTrash } from '@fortawesome/free-solid-svg-icons'
 
@@ -206,15 +206,7 @@ export function ButtonStyleConfigFields({
 					{showField2('show_topbar') && (
 						<div>
 							<label>Topbar</label>
-							<DropdownInputField
-								choices={[
-									{ id: 'default', label: 'Follow Default' },
-									{ id: true, label: 'Show' },
-									{ id: false, label: 'Hide' },
-								]}
-								setValue={setShowTopBar}
-								value={values.show_topbar}
-							/>
+							<DropdownInputField choices={SHOW_HIDE_TOP_BAR} setValue={setShowTopBar} value={values.show_topbar} />
 						</div>
 					)}
 

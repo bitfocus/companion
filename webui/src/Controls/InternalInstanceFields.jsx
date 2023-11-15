@@ -2,7 +2,7 @@ import React, { useContext, useMemo } from 'react'
 import { DropdownInputField } from '../Components'
 import {
 	CustomVariableDefinitionsContext,
-	InstancesContext,
+	ConnectionsContext,
 	PagesContext,
 	SurfacesContext,
 	TriggersContext,
@@ -73,7 +73,7 @@ export function InternalInstanceField(option, isOnControl, readonly, value, setV
 }
 
 function InternalInstanceIdDropdown({ includeAll, value, setValue, disabled, multiple, filterActionsRecorder }) {
-	const context = useContext(InstancesContext)
+	const context = useContext(ConnectionsContext)
 
 	const choices = useMemo(() => {
 		const instance_choices = []
@@ -154,9 +154,9 @@ function InternalVariableDropdown({ value, setValue, disabled }) {
 	const choices = useMemo(() => {
 		const choices = []
 
-		for (const [instanceLabel, variables] of Object.entries(context)) {
+		for (const [connectionLabel, variables] of Object.entries(context)) {
 			for (const [name, variable] of Object.entries(variables || {})) {
-				const id = `${instanceLabel}:${name}`
+				const id = `${connectionLabel}:${name}`
 				choices.push({
 					id,
 					label: `${variable.label} (${id})`,

@@ -13,4 +13,10 @@ export const FONT_SIZES = [
 	{ id: '44', label: '44pt' },
 ]
 
+export const SHOW_HIDE_TOP_BAR = [
+	{ id: 'default', label: 'Follow Default' },
+	{ id: true, label: 'Show' },
+	{ id: false, label: 'Hide' },
+]
+
 export const PRIMARY_COLOR = '#d50215'
