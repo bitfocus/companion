@@ -7,6 +7,7 @@ import { TextInputField } from '../Components/TextInputField'
 import { GenericConfirmModal } from '../Components/GenericConfirmModal'
 import { SurfaceEditModal } from './EditModal'
 import { AddSurfaceGroupModal } from './AddGroupModal'
+import classNames from 'classnames'
 
 export const SurfacesPage = memo(function SurfacesPage() {
 	const socket = useContext(SocketContext)
@@ -232,20 +233,25 @@ function ManualGroupRow({
 					configureSurface={configureSurface}
 					deleteEmulator={deleteEmulator}
 					forgetSurface={forgetSurface}
+					noBorder
 				/>
 			))}
 		</>
 	)
 }
 
-function SurfaceRow({ surface, index, updateName, configureSurface, deleteEmulator, forgetSurface }) {
+function SurfaceRow({ surface, index, updateName, configureSurface, deleteEmulator, forgetSurface, noBorder }) {
 	const updateName2 = useCallback((val) => updateName(surface.id, val), [updateName, surface.id])
 	const configureSurface2 = useCallback(() => configureSurface(surface.id), [configureSurface, surface.id])
 	const deleteEmulator2 = useCallback(() => deleteEmulator(surface.id), [deleteEmulator, surface.id])
 	const forgetSurface2 = useCallback(() => forgetSurface(surface.id), [forgetSurface, surface.id])
 
 	return (
-		<tr>
+		<tr
+			className={classNames({
+				noBorder,
+			})}
+		>
 			<td>{index !== undefined ? `#${index}` : ''}</td>
 			<td>{surface.id}</td>
 			<td>
