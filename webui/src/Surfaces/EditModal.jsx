@@ -111,17 +111,19 @@ export const SurfaceEditModal = forwardRef(function SurfaceEditModal(_props, ref
 	)
 
 	useEffect(() => {
-		// If surface disappears, hide this
+		// If surface disappears/disconnects, hide this
 
-		const allSurfaceIds = new Set()
+		const onlineSurfaceIds = new Set()
 		for (const group of surfacesContext) {
 			for (const surface of group.surfaces) {
-				allSurfaceIds.add(surface.id)
+				if (surface.isConnected) {
+					onlineSurfaceIds.add(surface.id)
+				}
 			}
 		}
 
 		setSurfaceId((oldSurfaceId) => {
-			if (oldSurfaceId && !allSurfaceIds.has(oldSurfaceId)) {
+			if (oldSurfaceId && !onlineSurfaceIds.has(oldSurfaceId)) {
 				setShow(false)
 			}
 			return oldSurfaceId
