@@ -91,7 +91,7 @@
 		"respawn": "link:./vendor/respawn",
 		"selfsigned": "^2.1.1",
 		"semver": "^7.5.1",
-		"sharp": "^0.32.5",
+		"sharp": "^0.32.6",
 		"shuttle-control-usb": "^1.4.0",
 		"socket.io": "^4.7.2",
 		"socketcluster-client": "^16.1.1",
