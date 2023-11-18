@@ -160,7 +160,7 @@ export const ButtonInfiniteGrid = forwardRef(function ButtonInfiniteGrid(
 		<div
 			ref={setRef}
 			className={classNames('button-infinite-grid', {
-				'bank-armed': isHot,
+				'button-armed': isHot,
 			})}
 		>
 			<div className="button-grid-canvas" style={gridCanvasStyle}>
