@@ -1,13 +1,34 @@
+import { DropdownChoice, DropdownChoiceId } from '@companion-module/base'
 import classNames from 'classnames'
-import { createContext } from 'react'
-import { useContext } from 'react'
-import { useMemo, useEffect, useCallback, memo } from 'react'
+import React, { createContext, useContext, useMemo, useEffect, useCallback, memo } from 'react'
 import Select from 'react-select'
-import CreatableSelect from 'react-select/creatable'
+import CreatableSelect, { CreatableProps } from 'react-select/creatable'
 
 export const MenuPortalContext = createContext(null)
 
-export const DropdownInputField = memo(function DropdownInputField({
+type AsType<Multi extends boolean> = Multi extends true ? DropdownChoiceId[] : DropdownChoiceId
+
+interface DropdownInputFieldProps<Multi extends boolean> {
+	choices: DropdownChoice[] | Record<string, DropdownChoice>
+	allowCustom?: boolean
+	minSelection?: number
+	minChoicesForSearch?: number
+	maxSelection?: number
+	tooltip?: string
+	regex?: string
+	multiple: Multi
+	value: AsType<Multi>
+	setValue: (value: AsType<Multi>) => void
+	setValid: (valid: boolean) => void
+	disabled?: boolean
+}
+
+interface DropdownChoiceInt {
+	value: any
+	label: DropdownChoiceId
+}
+
+export const DropdownInputField = memo(function DropdownInputField<Multi extends boolean>({
 	choices,
 	allowCustom,
 	minSelection,
@@ -20,11 +41,11 @@ export const DropdownInputField = memo(function DropdownInputField({
 	setValue,
 	setValid,
 	disabled,
-}) {
+}: DropdownInputFieldProps<Multi>) {
 	const menuPortal = useContext(MenuPortalContext)
 
 	const options = useMemo(() => {
-		let options = []
+		let options: DropdownChoice[] = []
 		if (options) {
 			if (Array.isArray(choices)) {
 				options = choices
@@ -33,16 +54,16 @@ export const DropdownInputField = memo(function DropdownInputField({
 			}
 		}
 
-		return options.map((choice) => ({ value: choice.id, label: choice.label }))
+		return options.map((choice): DropdownChoiceInt => ({ value: choice.id, label: choice.label }))
 	}, [choices])
 
 	const isMultiple = !!multiple
 
-	if (isMultiple && value === undefined) value = []
+	if (isMultiple && value === undefined) value = [] as any
 
 	const currentValue = useMemo(() => {
 		const selectedValue = Array.isArray(value) ? value : [value]
-		let res = []
+		let res: DropdownChoiceInt[] = []
 		for (const val of selectedValue) {
 			// eslint-disable-next-line eqeqeq
 			const entry = options.find((o) => o.value == val) // Intentionally loose for compatibility
@@ -111,10 +132,11 @@ export const DropdownInputField = memo(function DropdownInputField({
 			const isValid = isValueValid(newValue)
 
 			if (isMultiple) {
+				const valueArr = value as DropdownChoiceId[] | undefined
 				if (
 					typeof minSelection === 'number' &&
 					newValue.length < minSelection &&
-					newValue.length <= (value || []).length
+					newValue.length <= (valueArr || []).length
 				) {
 					// Block change if too few are selected
 					return
@@ -123,7 +145,7 @@ export const DropdownInputField = memo(function DropdownInputField({
 				if (
 					typeof maxSelection === 'number' &&
 					newValue.length > maxSelection &&
-					newValue.length >= (value || []).length
+					newValue.length >= (valueArr || []).length
 				) {
 					// Block change if too many are selected
 					return
@@ -138,7 +160,7 @@ export const DropdownInputField = memo(function DropdownInputField({
 
 	const minChoicesForSearch2 = typeof minChoicesForSearch === 'number' ? minChoicesForSearch : 10
 
-	const selectProps = {
+	const selectProps: Partial<CreatableProps<any, any, any>> = {
 		isDisabled: disabled,
 		classNamePrefix: 'select-control',
 		menuPortalTarget: menuPortal || document.body,

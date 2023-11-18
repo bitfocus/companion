@@ -4,8 +4,18 @@ import { SocketContext, socketEmitPromise, NotifierContext, VariableDefinitionsC
 import { CopyToClipboard } from 'react-copy-to-clipboard'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faCopy, faTimes } from '@fortawesome/free-solid-svg-icons'
+import type { CompanionVariableValue } from '@companion-module/base'
+import type { VariableDefinition } from '@companion/shared/Model/Variables'
 
-export function VariablesTable({ label }) {
+interface VariablesTableProps {
+	label: string
+}
+
+interface VariableDefinitionExt extends VariableDefinition {
+	name: string
+}
+
+export function VariablesTable({ label }: VariablesTableProps) {
 	const socket = useContext(SocketContext)
 	const notifier = useContext(NotifierContext)
 	const variableDefinitionsContext = useContext(VariableDefinitionsContext)
@@ -14,12 +24,14 @@ export function VariablesTable({ label }) {
 	const [filter, setFilter] = useState('')
 
 	const variableDefinitions = useMemo(() => {
-		const defs = []
+		const defs: VariableDefinitionExt[] = []
 		for (const [name, variable] of Object.entries(variableDefinitionsContext[label] || {})) {
-			defs.push({
-				...variable,
-				name,
-			})
+			if (variable) {
+				defs.push({
+					...variable,
+					name,
+				})
+			}
 		}
 
 		defs.sort((a, b) =>
@@ -55,11 +67,11 @@ export function VariablesTable({ label }) {
 	}, [socket, label])
 
 	const onCopied = useCallback(() => {
-		notifier.current.show(`Copied`, 'Copied to clipboard', 5000)
+		notifier.current?.show(`Copied`, 'Copied to clipboard', 5000)
 	}, [notifier])
 
 	const [candidates, errorMsg] = useMemo(() => {
-		let candidates = []
+		let candidates: VariableDefinitionExt[] = []
 		try {
 			if (!filter) {
 				candidates = variableDefinitions
@@ -142,21 +154,30 @@ export function VariablesTable({ label }) {
 	)
 }
 
-const VariablesTableRow = memo(function VariablesTableRow({ variable, value, label, onCopied }) {
-	if (typeof value !== 'string') {
-		value += ''
-	}
+interface VariablesTableRowProps {
+	variable: VariableDefinitionExt
+	label: string
+	value: CompanionVariableValue
+	onCopied: () => void
+}
+
+const VariablesTableRow = memo(function VariablesTableRow({
+	variable,
+	value: valueRaw,
+	label,
+	onCopied,
+}: VariablesTableRowProps) {
+	const value = typeof valueRaw !== 'string' ? valueRaw + '' : valueRaw
 
 	// Split into the lines
-	const elms = []
+	const elms: Array<string | JSX.Element> = []
 	const lines = value.split('\\n')
-	for (const i in lines) {
-		const l = lines[i]
+	lines.forEach((l, i) => {
 		elms.push(l)
 		if (i <= lines.length - 1) {
 			elms.push(<br key={i} />)
 		}
-	}
+	})
 
 	return (
 		<tr>
@@ -165,11 +186,15 @@ const VariablesTableRow = memo(function VariablesTableRow({ variable, value, lab
 			</td>
 			<td>{variable.label}</td>
 			<td>
-				{elms === '' || elms === null || elms === undefined ? (
-					'(empty)'
-				) : (
-					<code style={{ backgroundColor: 'rgba(255,0,0,0.1)', padding: '1px 4px' }}>{elms}</code>
-				)}
+				{
+					/*elms === '' || elms === null || elms === undefined */ lines.length === 0 ||
+					valueRaw === undefined ||
+					valueRaw === null ? (
+						'(empty)'
+					) : (
+						<code style={{ backgroundColor: 'rgba(255,0,0,0.1)', padding: '1px 4px' }}>{elms}</code>
+					)
+				}
 			</td>
 			<td>
 				<CopyToClipboard text={`$(${label}:${variable.name})`} onCopy={onCopied}>

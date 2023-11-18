@@ -1,7 +1,15 @@
-import { useEffect, useCallback } from 'react'
+import React, { useEffect, useCallback } from 'react'
 import { CInputCheckbox } from '@coreui/react'
 
-export function CheckboxInputField({ tooltip, value, setValue, setValid, disabled }) {
+interface CheckboxInputFieldProps {
+	tooltip?: string
+	value: boolean
+	setValue: (value: boolean) => void
+	setValid: (valid: boolean) => void
+	disabled?: boolean
+}
+
+export function CheckboxInputField({ tooltip, value, setValue, setValid, disabled }: CheckboxInputFieldProps) {
 	// If the value is undefined, populate with the default. Also inform the parent about the validity
 	useEffect(() => {
 		setValid?.(true)
@@ -20,7 +28,7 @@ export function CheckboxInputField({ tooltip, value, setValue, setValid, disable
 			type="checkbox"
 			disabled={disabled}
 			checked={!!value}
-			value={true}
+			value={true as any}
 			title={tooltip}
 			onChange={onChange}
 		/>

@@ -4,20 +4,27 @@ import { CAlert, CButton, CCol } from '@coreui/react'
 import { ErrorBoundary } from 'react-error-boundary'
 import { PRIMARY_COLOR } from './Constants'
 import { BarLoader } from 'react-spinners'
-import { JsonPatchError, Operation as JsonPatchOperation, applyPatch } from 'fast-json-patch'
+import { Operation as JsonPatchOperation, applyPatch } from 'fast-json-patch'
 import { cloneDeep } from 'lodash-es'
 import { useEventListener } from 'usehooks-ts'
 import { LoaderHeightWidthProps } from 'react-spinners/helpers/props'
-import socket, { Socket } from 'socket.io-client'
+import { Socket } from 'socket.io-client'
+import type { AllVariableDefinitions } from '@companion/shared/Model/Variables'
+import { NotificationsManagerRef } from './Components/Notifications'
 
 export const SocketContext = React.createContext<Socket>(null as any) // TODO - fix this
 export const EventDefinitionsContext = React.createContext(null)
-export const NotifierContext = React.createContext(null)
+export const NotifierContext = React.createContext<React.RefObject<NotificationsManagerRef>>({ current: null }) // TODO - this is not good
+/*({
+	show: () => {
+		throw new Error('Not inside of context!')
+	},
+})*/
 export const ModulesContext = React.createContext(null)
 export const ActionsContext = React.createContext(null)
 export const FeedbacksContext = React.createContext(null)
 export const ConnectionsContext = React.createContext(null)
-export const VariableDefinitionsContext = React.createContext(null)
+export const VariableDefinitionsContext = React.createContext<AllVariableDefinitions>({})
 export const CustomVariableDefinitionsContext = React.createContext(null)
 export const UserConfigContext = React.createContext(null)
 export const SurfacesContext = React.createContext(null)

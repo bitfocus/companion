@@ -1,10 +1,11 @@
-import { useState, useEffect, useCallback, useContext } from 'react'
-import { SketchPicker } from '@hello-pangea/color-picker'
+import React, { useState, useEffect, useCallback, useContext } from 'react'
+import { ColorResult, SketchPicker } from '@hello-pangea/color-picker'
 import { createPortal } from 'react-dom'
 import { useOnClickOutsideExt } from '../util'
 import { usePopper } from 'react-popper'
 import { MenuPortalContext } from './DropdownInputField'
 import { colord } from 'colord'
+import { CompanionColorPresetValue } from '@companion-module/base'
 
 function splitColor(color) {
 	if (typeof color === 'number') {
@@ -41,22 +42,45 @@ function splitColor(color) {
 	}
 }
 
-const toReturnType = (value, returnType) => {
+const toReturnType = <T extends 'string' | 'number'>(
+	value: ColorResult,
+	returnType: 'string' | 'number'
+): AsType<T> => {
 	if (returnType === 'string') {
-		return `rgba(${value.rgb.r}, ${value.rgb.g}, ${value.rgb.b}, ${value.rgb.a})`
+		return `rgba(${value.rgb.r}, ${value.rgb.g}, ${value.rgb.b}, ${value.rgb.a})` as any // TODO - typings
 	} else {
 		let colorNumber = parseInt(value.hex.substr(1), 16)
 		if (value.rgb.a && value.rgb.a !== 1) {
 			colorNumber += 0x1000000 * Math.round(255 * (1 - value.rgb.a)) // add possible transparency to number
 		}
-		return colorNumber
+		return colorNumber as any // TODO - typings
 	}
 }
 
-export function ColorInputField({ value, setValue, setValid, disabled, enableAlpha, returnType, presetColors }) {
+type AsType<T extends 'string' | 'number'> = T extends 'string' ? string : number
+
+interface ColorInputFieldProps<T extends 'string' | 'number'> {
+	value: AsType<T>
+	setValue: (value: AsType<T>) => void
+	setValid: (valid: boolean) => void
+	disabled?: boolean
+	enableAlpha?: boolean
+	returnType: 'string' | 'number'
+	presetColors?: CompanionColorPresetValue[]
+}
+
+export function ColorInputField<T extends 'string' | 'number'>({
+	value,
+	setValue,
+	setValid,
+	disabled,
+	enableAlpha,
+	returnType,
+	presetColors,
+}: ColorInputFieldProps<T>) {
 	const menuPortal = useContext(MenuPortalContext)
 
-	const [currentColor, setCurrentColor] = useState(null)
+	const [currentColor, setCurrentColor] = useState<AsType<T> | null>(null)
 	const [displayPicker, setDisplayPicker] = useState(false)
 
 	// If the value is undefined, populate with the default. Also inform the parent about the validity
@@ -75,8 +99,8 @@ export function ColorInputField({ value, setValue, setValid, disabled, enableAlp
 	}, [])
 
 	const onChange = useCallback(
-		(c) => {
-			const newValue = toReturnType(c, returnType)
+		(c: ColorResult) => {
+			const newValue = toReturnType<T>(c, returnType)
 			console.log('change', newValue)
 			setValue(newValue)
 			setValid?.(true)
@@ -86,8 +110,8 @@ export function ColorInputField({ value, setValue, setValid, disabled, enableAlp
 	)
 
 	const onChangeComplete = useCallback(
-		(c) => {
-			const newValue = toReturnType(c, returnType)
+		(c: ColorResult) => {
+			const newValue = toReturnType<T>(c, returnType)
 			console.log('complete', newValue)
 			setValue(newValue)
 			setValid?.(true)
@@ -117,8 +141,8 @@ export function ColorInputField({ value, setValue, setValid, disabled, enableAlp
 		},
 	}
 
-	const [referenceElement, setReferenceElement] = useState(null)
-	const [popperElement, setPopperElement] = useState(null)
+	const [referenceElement, setReferenceElement] = useState<HTMLDivElement | null>(null)
+	const [popperElement, setPopperElement] = useState<HTMLDivElement | null>(null)
 	const { styles: popperStyles, attributes } = usePopper(referenceElement, popperElement)
 	useOnClickOutsideExt([{ current: referenceElement }, { current: popperElement }], setHide)
 
@@ -131,12 +155,12 @@ export function ColorInputField({ value, setValue, setValid, disabled, enableAlp
 				createPortal(
 					<div ref={setPopperElement} style={{ ...popperStyles.popper, zIndex: 3 }} {...attributes.popper}>
 						<SketchPicker
-							disabled={disabled}
+							// disabled={disabled}
 							color={color}
 							onChange={onChange}
 							onChangeComplete={onChangeComplete}
 							disableAlpha={enableAlpha ? false : true}
-							presetColors={Array.isArray(presetColors) ? presetColors : PICKER_COLORS}
+							presetColors={Array.isArray(presetColors) ? (presetColors as any) : PICKER_COLORS}
 						/>
 					</div>,
 					menuPortal || document.body
@@ -145,7 +169,7 @@ export function ColorInputField({ value, setValue, setValid, disabled, enableAlp
 	)
 }
 
-const PICKER_COLORS = [
+const PICKER_COLORS: CompanionColorPresetValue[] = [
 	//Grey
 	{ color: '#000000', title: 'Black' },
 	{ color: '#242424', title: '14% White' },

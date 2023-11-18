@@ -1,7 +1,27 @@
 import Tribute from 'tributejs'
-import { useEffect, useMemo, useState, useCallback, useContext } from 'react'
+import React, { useEffect, useMemo, useState, useCallback, useContext, ChangeEvent } from 'react'
 import { CInput } from '@coreui/react'
 import { VariableDefinitionsContext } from '../util'
+
+interface TextInputFieldProps {
+	regex?: string
+	required?: boolean
+	tooltip?: string
+	placeholder?: string
+	value: string
+	style?: React.CSSProperties
+	setValue: (value: string) => void
+	setValid: (valid: boolean) => void
+	disabled?: boolean
+	useVariables?: boolean
+	useInternalLocationVariables?: boolean
+}
+
+interface TributeSuggestion {
+	key: string
+	value: string
+	label: string
+}
 
 export function TextInputField({
 	regex,
@@ -15,14 +35,14 @@ export function TextInputField({
 	disabled,
 	useVariables,
 	useInternalLocationVariables,
-}) {
+}: TextInputFieldProps) {
 	const variableDefinitionsContext = useContext(VariableDefinitionsContext)
 
-	const [tmpValue, setTmpValue] = useState(null)
+	const [tmpValue, setTmpValue] = useState<string | null>(null)
 
 	const tribute = useMemo(() => {
 		// Create it once, then we attach and detach whenever the ref changes
-		return new Tribute({
+		return new Tribute<TributeSuggestion>({
 			values: [],
 			trigger: '$(',
 
@@ -37,10 +57,11 @@ export function TextInputField({
 
 	useEffect(() => {
 		// Update the suggestions list in tribute whenever anything changes
-		const suggestions = []
+		const suggestions: TributeSuggestion[] = []
 		if (useVariables) {
 			for (const [connectionLabel, variables] of Object.entries(variableDefinitionsContext)) {
 				for (const [name, va] of Object.entries(variables || {})) {
+					if (!va) continue
 					const variableId = `${connectionLabel}:${name}`
 					suggestions.push({
 						key: variableId + ')',
@@ -88,7 +109,7 @@ export function TextInputField({
 
 	// Check if the value is valid
 	const isValueValid = useCallback(
-		(val) => {
+		(val: string) => {
 			// We need a string here, but sometimes get a number...
 			if (typeof val === 'number') {
 				val = `${val}`
@@ -117,7 +138,7 @@ export function TextInputField({
 	}, [isValueValid, value, setValid])
 
 	const doOnChange = useCallback(
-		(e) => {
+		(e: React.ChangeEvent<HTMLInputElement>) => {
 			// const newValue = decode(e.currentTarget.value, { scope: 'strict' })
 			setTmpValue(e.currentTarget.value)
 			setValue(e.currentTarget.value)
@@ -126,19 +147,23 @@ export function TextInputField({
 		[setValue, setValid, isValueValid]
 	)
 
-	const [, setupTributePrevious] = useState([null, null])
+	const [, setupTributePrevious] = useState<
+		[HTMLInputElement | null, ((e: React.ChangeEvent<HTMLInputElement>) => void) | null]
+	>([null, null])
 	const setupTribute = useCallback(
-		(ref) => {
+		(ref: HTMLInputElement) => {
 			// we need to detach, so need to track the value manually
 			setupTributePrevious(([oldRef, oldDoOnChange]) => {
 				if (oldRef) {
 					tribute.detach(oldRef)
 					if (oldDoOnChange) {
+						// @ts-expect-error
 						oldRef.removeEventListener('tribute-replaced', oldDoOnChange)
 					}
 				}
 				if (ref) {
 					tribute.attach(ref)
+					// @ts-expect-error
 					ref.addEventListener('tribute-replaced', doOnChange)
 				}
 				return [ref, doOnChange]
