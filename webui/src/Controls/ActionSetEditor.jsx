@@ -474,7 +474,7 @@ function ActionTableRow({
 						<div className="cell-description">{actionSpec?.description || ''}</div>
 
 						{location && showButtonPreview && (
-							<div className="cell-bank-preview">
+							<div className="cell-button-preview">
 								<OptionButtonPreview location={location} options={action.options} />
 							</div>
 						)}

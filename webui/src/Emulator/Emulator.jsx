@@ -271,13 +271,13 @@ function CyclePages({ imageCache, setKeyDown, columns, rows }) {
 							)} */}
 						{/* </h1> */}
 					</div>
-					<div className="bankgrid">
+					<div className="buttongrid">
 						{' '}
 						{Array(rows)
 							.fill(0)
 							.map((_, y) => {
 								return (
-									<CCol key={y} sm={12} className="pagebank-row">
+									<CCol key={y} sm={12} className="buttongrid-row">
 										{Array(columns)
 											.fill(0)
 											.map((_2, x) => {
