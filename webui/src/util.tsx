@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { FormEvent, useEffect, useState } from 'react'
 import pTimeout from 'p-timeout'
 import { CAlert, CButton, CCol } from '@coreui/react'
 import { ErrorBoundary } from 'react-error-boundary'
@@ -155,7 +155,7 @@ function ErrorFallback({ error, resetErrorBoundary }: ErrorFallbackProps) {
 	)
 }
 
-export function MyErrorBoundary({ children }: React.PropsWithChildren<Record<string, never>>) {
+export function MyErrorBoundary({ children }: React.PropsWithChildren) {
 	return <ErrorBoundary FallbackComponent={ErrorFallback}>{children}</ErrorBoundary>
 }
 
@@ -189,7 +189,7 @@ interface LoadingRetryOrErrorProps {
 	error: string | undefined | null
 	dataReady: boolean
 	doRetry: () => void
-	autoRetryAfter: number | null
+	autoRetryAfter?: number | null
 }
 export function LoadingRetryOrError({ error, dataReady, doRetry, autoRetryAfter = null }: LoadingRetryOrErrorProps) {
 	const [countdown, setCountdown] = useState(autoRetryAfter)
@@ -299,6 +299,6 @@ export function useOnClickOutsideExt(
 	})
 }
 
-export const PreventDefaultHandler = (e: SubmitEvent): void => {
+export const PreventDefaultHandler = (e: FormEvent): void => {
 	e.preventDefault()
 }

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState, useContext } from 'react'
+import React, { useCallback, useEffect, useMemo, useState, useContext } from 'react'
 import {
 	LoadingRetryOrError,
 	applyPatchOrReplaceObject,
@@ -16,16 +16,19 @@ import { ButtonPreview } from '../Components/ButtonPreview'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faCancel, faExpand } from '@fortawesome/free-solid-svg-icons'
 import { formatLocation } from '@companion/shared/ControlId'
+import { ControlLocation, EmulatorConfig, EmulatorImage } from '@companion/shared/Model/Common'
+
+type EmulatorImageCache = Record<number, Record<number, string | false | undefined> | undefined>
 
 export function Emulator() {
 	const socket = useContext(SocketContext)
 
-	const [config, setConfig] = useState(null)
-	const [loadError, setLoadError] = useState(null)
+	const [config, setConfig] = useState<EmulatorConfig | null>(null)
+	const [loadError, setLoadError] = useState<string | null>(null)
 
 	const { id: emulatorId } = useParams()
 
-	const [imageCache, setImageCache] = useState({})
+	const [imageCache, setImageCache] = useState<EmulatorImageCache>({})
 	useEffect(() => {
 		// Clear the images on id change
 		setImageCache({})
@@ -66,15 +69,15 @@ export function Emulator() {
 	}, [config?.emulator_control_enable])
 
 	useEffect(() => {
-		const updateImages = (newImages) => {
+		const updateImages = (newImages: EmulatorImage[]) => {
 			console.log('new images', newImages)
 			setImageCache((old) => {
 				if (Array.isArray(newImages)) {
 					const res = { ...old }
 
 					for (const change of newImages) {
-						res[change.y] = { ...res[change.y] }
-						res[change.y][change.x] = change.buffer
+						const row = (res[change.y] = { ...res[change.y] })
+						row[change.x] = change.buffer
 					}
 
 					return res
@@ -101,21 +104,23 @@ export function Emulator() {
 		}
 	}, [socket])
 
-	const [keyDown, setKeyDown] = useState(null)
+	const [keyDown, setKeyDown] = useState<ControlLocation | null>(null)
 
 	// Register key handlers
 	useEffect(() => {
-		const onKeyDown = (e) => {
+		const onKeyDown = (e: KeyboardEvent) => {
 			if (keymap[e.keyCode] !== undefined) {
 				const xy = keymap[e.keyCode]
-				socketEmitPromise(socket, 'emulator:press', [emulatorId, ...xy]).catch((e) => {
-					console.error('press failed', e)
-				})
-				console.log('emulator:press', emulatorId, xy)
+				if (xy) {
+					socketEmitPromise(socket, 'emulator:press', [emulatorId, ...xy]).catch((e) => {
+						console.error('press failed', e)
+					})
+					console.log('emulator:press', emulatorId, xy)
+				}
 			}
 		}
 
-		const onKeyUp = (e) => {
+		const onKeyUp = (e: KeyboardEvent) => {
 			const xy = keymap[e.keyCode]
 			if (xy) {
 				socketEmitPromise(socket, 'emulator:release', [emulatorId, ...xy]).catch((e) => {
@@ -189,7 +194,11 @@ export function Emulator() {
 	)
 }
 
-function ConfigurePanel({ config }) {
+interface ConfigurePanelProps {
+	config: EmulatorConfig
+}
+
+function ConfigurePanel({ config }: ConfigurePanelProps) {
 	const [show, setShow] = useState(true)
 	const [fullscreen, setFullscreen] = useState(document.fullscreenElement !== null)
 
@@ -238,9 +247,16 @@ function ConfigurePanel({ config }) {
 // 	return Math.min(Math.max(0, val), max)
 // }
 
-function CyclePages({ imageCache, setKeyDown, columns, rows }) {
+interface CyclePagesProps {
+	imageCache: EmulatorImageCache
+	setKeyDown: (location: ControlLocation | null) => void
+	columns: number
+	rows: number
+}
+
+function CyclePages({ imageCache, setKeyDown, columns, rows }: CyclePagesProps) {
 	const buttonClick = useCallback(
-		(location, pressed) => {
+		(location: ControlLocation, pressed: boolean) => {
 			if (pressed) {
 				setKeyDown(location)
 			} else {
@@ -284,13 +300,11 @@ function CyclePages({ imageCache, setKeyDown, columns, rows }) {
 												return (
 													<ButtonPreview2
 														key={x}
-														pageNumber={null}
 														column={x}
 														row={y}
 														preview={imageCache[y]?.[x]}
 														onClick={buttonClick}
-														alt={`Button ${formatLocation(location)}`}
-														selected={false}
+														title={`Button ${formatLocation(location)}`}
 													/>
 												)
 											})}
@@ -304,7 +318,15 @@ function CyclePages({ imageCache, setKeyDown, columns, rows }) {
 	)
 }
 
-function ButtonPreview2({ pageNumber, column, row, ...props }) {
-	const location = useMemo(() => ({ pageNumber, column, row }), [pageNumber, column, row])
+interface ButtonPreview2Props {
+	column: number
+	row: number
+
+	preview: string | undefined | null | false
+	title: string
+	onClick: (location: ControlLocation, pressed: boolean) => void
+}
+function ButtonPreview2({ column, row, ...props }: ButtonPreview2Props) {
+	const location = useMemo(() => ({ pageNumber: 0, column, row }), [column, row])
 	return <ButtonPreview {...props} location={location} />
 }

@@ -1,5 +1,7 @@
+export type KeyMap = Record<number, [number, number] | undefined>
+
 // Added last row for logitec controllers (PageUp, PageDown, F5, Escape, .)
-export const keyboardKeymap = {
+export const keyboardKeymap: KeyMap = {
 	49: [0, 0],
 	50: [1, 0],
 	51: [2, 0],
@@ -34,7 +36,7 @@ export const keyboardKeymap = {
 	188: [7, 3],
 }
 
-export const logitecKeymap = {
+export const logitecKeymap: KeyMap = {
 	33: [1, 0],
 	34: [2, 0],
 	190: [3, 0],
@@ -42,7 +44,7 @@ export const logitecKeymap = {
 	27: [2, 1],
 }
 
-export const dsanMastercueKeymap = {
+export const dsanMastercueKeymap: KeyMap = {
 	37: [1, 0],
 	39: [2, 0],
 	66: [3, 0],

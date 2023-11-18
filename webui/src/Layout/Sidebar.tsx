@@ -12,7 +12,12 @@ import {
 } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 
-export const MySidebar = memo(function MySidebar({ show, showWizard }) {
+interface MySidebarProps {
+	show: boolean
+	showWizard: () => void
+}
+
+export const MySidebar = memo(function MySidebar({ show, showWizard }: MySidebarProps) {
 	return (
 		<CSidebar show={show}>
 			<CSidebarNav>

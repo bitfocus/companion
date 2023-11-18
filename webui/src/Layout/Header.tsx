@@ -3,12 +3,19 @@ import { CHeader, CHeaderBrand, CHeaderNavItem, CHeaderNav, CHeaderNavLink, CTog
 import { SocketContext, socketEmitPromise } from '../util'
 import { faLock } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import type { AppUpdateInfo, AppVersionInfo } from '@companion/shared/Model/Common'
 
-export function MyHeader({ toggleSidebar, canLock, setLocked }) {
+interface MyHeaderProps {
+	toggleSidebar: () => void
+	canLock: boolean
+	setLocked: (locked: boolean) => void
+}
+
+export function MyHeader({ toggleSidebar, canLock, setLocked }: MyHeaderProps) {
 	const socket = useContext(SocketContext)
 
-	const [versionInfo, setVersionInfo] = useState(null)
-	const [updateData, setUpdateData] = useState(null)
+	const [versionInfo, setVersionInfo] = useState<AppVersionInfo | null>(null)
+	const [updateData, setUpdateData] = useState<AppUpdateInfo | null>(null)
 
 	useEffect(() => {
 		if (socket) {

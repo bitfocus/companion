@@ -1,11 +1,28 @@
 import React from 'react'
 import classnames from 'classnames'
+import type { ControlLocation } from '@companion/shared/Model/Common'
 
 // Single pixel of red
-export const RedImage =
+export const RedImage: string =
 	'data:image/bmp;base64,Qk2OAAAAAAAAAIoAAAB8AAAAAQAAAP////8BACAAAwAAAAQAAAAnAAAAJwAAAAAAAAAAAAAA/wAAAAD/AAAAAP8AAAAA/0JHUnMAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA/wAAAA=='
 
-export const ButtonPreview = React.memo(function (props) {
+export interface ButtonPreviewProps {
+	fixedSize?: boolean
+	canDrop?: boolean
+	dropHover?: boolean
+	dragRef?: React.RefCallback<HTMLDivElement>
+	selected?: boolean
+	onClick?: (location: ControlLocation, pressed: boolean) => void
+	right?: boolean
+	dropRef?: React.RefCallback<HTMLDivElement>
+	style?: React.CSSProperties
+	location: ControlLocation
+	preview: string | undefined | null | false
+	placeholder?: string
+	title?: string
+}
+
+export const ButtonPreview = React.memo(function ButtonPreview(props: ButtonPreviewProps) {
 	const classes = {
 		'button-control': true,
 		fixed: !!props.fixedSize,
@@ -50,7 +67,6 @@ export const ButtonPreview = React.memo(function (props) {
 				style={{
 					backgroundImage: props.preview ? `url(${props.preview})` : undefined,
 				}}
-				alt={props.alt}
 				title={props.title}
 			>
 				{!props.preview && props.placeholder && <div className="placeholder">{props.placeholder}</div>}

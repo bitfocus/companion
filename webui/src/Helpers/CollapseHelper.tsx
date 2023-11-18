@@ -1,9 +1,23 @@
 import { useCallback, useEffect, useState } from 'react'
 
-export function usePanelCollapseHelper(storageId, panelIds) {
+interface PanelCollapseHelperResult {
+	setAllCollapsed: () => void
+	setAllExpanded: () => void
+	canExpandAll: boolean
+	canCollapseAll: boolean
+	setPanelCollapsed: (panelId: string, collapsed: boolean) => void
+	isPanelCollapsed: (panelId: string) => boolean
+}
+
+interface CollapsedState {
+	defaultCollapsed?: boolean
+	ids?: Record<string, boolean | undefined>
+}
+
+export function usePanelCollapseHelper(storageId: string, panelIds: string[]): PanelCollapseHelperResult {
 	const collapseStorageId = `companion_ui_collapsed_${storageId}`
 
-	const [collapsed, setCollapsed] = useState({})
+	const [collapsed, setCollapsed] = useState<CollapsedState>({})
 	useEffect(() => {
 		// Reload from storage whenever the storage key changes
 		const oldState = window.localStorage.getItem(collapseStorageId)
@@ -27,7 +41,7 @@ export function usePanelCollapseHelper(storageId, panelIds) {
 
 				// preserve only the panels which exist
 				for (const id of panelIds) {
-					newState.ids[id] = oldState.ids[id]
+					newState.ids[id] = oldState.ids?.[id]
 				}
 
 				// set the new one
@@ -75,8 +89,8 @@ export function usePanelCollapseHelper(storageId, panelIds) {
 	}, [collapseStorageId, panelIds])
 
 	const isPanelCollapsed = useCallback(
-		(panelId) => {
-			return collapsed?.ids?.[panelId] ?? collapsed?.defaultCollapsed
+		(panelId: string) => {
+			return collapsed?.ids?.[panelId] ?? collapsed?.defaultCollapsed ?? false
 		},
 		[collapsed]
 	)

@@ -1,16 +1,17 @@
-import { useCallback, useEffect, useMemo, useState, useContext } from 'react'
+import React, { useCallback, useEffect, useMemo, useState, useContext } from 'react'
 import { LoadingRetryOrError, SocketContext, socketEmitPromise } from '../util'
 import { CAlert, CCol, CContainer, CRow, CWidgetSimple } from '@coreui/react'
 import { nanoid } from 'nanoid'
 import { useNavigate } from 'react-router-dom'
-import jsonPatch from 'fast-json-patch'
+import jsonPatch, { Operation as JsonPatchOperation } from 'fast-json-patch'
 import { cloneDeep } from 'lodash-es'
+import type { AvailableDeviceInfo, ClientDevicesList } from '@companion/shared/Model/Surfaces'
 
 export function EmulatorList() {
 	const socket = useContext(SocketContext)
 
-	const [surfaces, setSurfaces] = useState(null)
-	const [loadError, setLoadError] = useState(null)
+	const [surfaces, setSurfaces] = useState<ClientDevicesList | null>(null)
+	const [loadError, setLoadError] = useState<string | null>(null)
 	const [reloadToken, setReloadToken] = useState(nanoid())
 
 	const doRetryLoad = useCallback(() => setReloadToken(nanoid()), [])
@@ -28,9 +29,9 @@ export function EmulatorList() {
 				setLoadError('Failed to load surfaces')
 			})
 
-		const patchSurfaces = (patch) => {
+		const patchSurfaces = (patch: JsonPatchOperation[]) => {
 			setSurfaces((oldSurfaces) => {
-				return jsonPatch.applyPatch(cloneDeep(oldSurfaces) || {}, patch).newDocument
+				return jsonPatch.applyPatch(cloneDeep(oldSurfaces || { available: {}, offline: {} }) || {}, patch).newDocument
 			})
 		}
 		socket.on('surfaces:patch', patchSurfaces)
@@ -43,13 +44,15 @@ export function EmulatorList() {
 	}, [socket, reloadToken])
 
 	const emulators = useMemo(() => {
-		return Object.values(surfaces?.available || {}).filter((s) => s.id.startsWith('emulator:'))
+		return Object.values(surfaces?.available || {}).filter(
+			(s): s is AvailableDeviceInfo => !!s && s.id.startsWith('emulator:')
+		)
 	}, [surfaces])
 
 	return (
 		<div className="page-emulator-list">
 			<CContainer fluid className="d-flex flex-column">
-				<LoadingRetryOrError error={loadError} dataReady={surfaces} doRetry={doRetryLoad} />
+				<LoadingRetryOrError error={loadError} dataReady={!!surfaces} doRetry={doRetryLoad} />
 				{surfaces && (
 					<CRow alignHorizontal="center">
 						<CCol sm={12}>
@@ -82,7 +85,10 @@ export function EmulatorList() {
 	)
 }
 
-function EmulatorCard({ surface }) {
+interface EmulatorCardProps {
+	surface: AvailableDeviceInfo
+}
+function EmulatorCard({ surface }: EmulatorCardProps) {
 	const navigate = useNavigate()
 	const click = useCallback(() => {
 		navigate(`/emulator/${surface.id.substring(9)}`)
