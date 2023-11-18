@@ -1,8 +1,14 @@
-import { Fragment, useRef, useState, useEffect } from 'react'
+import React, { Fragment, useRef, useState, useEffect } from 'react'
 import { useHash } from 'react-use'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import { useIntersectionObserver } from 'usehooks-ts'
+
+interface DocsSection {
+	label: string
+	file: string
+	children?: DocsSection[]
+}
 
 const style = {
 	header: {
@@ -15,9 +21,17 @@ const style = {
 		zIndex: 300,
 		position: 'relative',
 		display: 'flex',
-	},
-	headerText: { lineHeight: '1.1em', marginTop: 4, marginLeft: 5 },
-	menuWrapper: { backgroundColor: 'white', display: 'flex', zIndex: 1 },
+	} satisfies React.CSSProperties,
+	headerText: {
+		lineHeight: '1.1em',
+		marginTop: 4,
+		marginLeft: 5,
+	} satisfies React.CSSProperties,
+	menuWrapper: {
+		backgroundColor: 'white',
+		display: 'flex',
+		zIndex: 1,
+	} satisfies React.CSSProperties,
 	menuStructure: {
 		width: '20vw',
 		minWidth: 250,
@@ -25,7 +39,7 @@ const style = {
 		overflow: 'scroll',
 		zIndex: 200,
 		boxShadow: '-15px 2px 31px 22px rgba(100,100,100,0.1)',
-	},
+	} satisfies React.CSSProperties,
 	contentGithubLink: {
 		backgroundColor: '#f0f0f0',
 		display: 'inline-block',
@@ -35,7 +49,7 @@ const style = {
 		padding: '2px 5px',
 		clear: 'both',
 		float: 'right',
-	},
+	} satisfies React.CSSProperties,
 	contentWrapper: {
 		width: '80vw',
 		maxWidth: 'calc(100vw - 250px)',
@@ -45,27 +59,37 @@ const style = {
 		zIndex: 100,
 		padding: 20,
 		paddingLeft: 40,
-	},
+	} satisfies React.CSSProperties,
 	contentWrapper2: {
 		maxWidth: 1200,
-	},
-	menuChildren: { marginLeft: 3, borderLeft: '1px dotted gray', paddingLeft: 20, marginBottom: 10 },
-	imgLink: { width: 12, opacity: 0.3, marginTop: -2, marginLeft: 4 },
+	} satisfies React.CSSProperties,
+	menuChildren: {
+		marginLeft: 3,
+		borderLeft: '1px dotted gray',
+		paddingLeft: 20,
+		marginBottom: 10,
+	} satisfies React.CSSProperties,
+	imgLink: {
+		width: 12,
+		opacity: 0.3,
+		marginTop: -2,
+		marginLeft: 4,
+	} satisfies React.CSSProperties,
 }
 
 export function GettingStarted() {
 	const [hash] = useHash()
-	const contentWrapperRef = useRef(null)
+	const contentWrapperRef = useRef<HTMLDivElement>(null)
 	const [structure, setStructure] = useState([])
 	const [error, setError] = useState(null)
 	const [loading, setLoading] = useState(true)
-	const [visibleFiles, setVisibleFiles] = useState([])
+	const [visibleFiles, setVisibleFiles] = useState<string[]>([])
 
 	useEffect(() => {
 		setTimeout(() => {
 			if (contentWrapperRef.current) {
 				// scroll to hash
-				const el = contentWrapperRef.current.querySelector(`[anchor="${hash}"]`)
+				const el = contentWrapperRef.current.querySelector(`[data-anchor="${hash}"]`)
 				if (el) {
 					el.scrollIntoView({ behavior: 'smooth' })
 				}
@@ -94,7 +118,7 @@ export function GettingStarted() {
 		fetchData()
 	}, [])
 
-	const iterateMenu = (s, path, depth) => {
+	const iterateMenu = (s: DocsSection[], path: string[], depth: number) => {
 		return (
 			<Fragment>
 				{loading ? (
@@ -125,18 +149,12 @@ export function GettingStarted() {
 		)
 	}
 
-	const iterateContent = (s, path, depth) => {
+	const iterateContent = (s: DocsSection[], path: string[], depth: number) => {
 		return (
 			<Fragment>
 				{s.map((subsect) => (
 					<Fragment key={subsect.label}>
-						<RenderSubsection
-							subsect={subsect}
-							path={path}
-							depth={depth}
-							setVisibleFiles={setVisibleFiles}
-							visibleFiles={visibleFiles}
-						/>
+						<RenderSubsection subsect={subsect} setVisibleFiles={setVisibleFiles} visibleFiles={visibleFiles} />
 						{subsect.children && <div>{iterateContent(subsect.children, [...path, subsect.label], depth + 1)}</div>}
 					</Fragment>
 				))}
@@ -166,7 +184,7 @@ export function GettingStarted() {
 						</div>
 						<div style={style.contentWrapper} ref={contentWrapperRef} className="img-max-width">
 							<div style={style.contentWrapper2}>
-								<div anchor="#top"></div>
+								<div data-anchor="#top"></div>
 								{iterateContent(structure, [], 0)}
 							</div>
 						</div>
@@ -177,25 +195,28 @@ export function GettingStarted() {
 	)
 }
 
-function RenderSubsection({ subsect, path, depth, setVisibleFiles, visibleFiles }) {
+interface RenderSubsectionProps {
+	subsect: DocsSection
+	setVisibleFiles: (visibleFiles: string[]) => void
+	visibleFiles: string[]
+}
+function RenderSubsection({ subsect, setVisibleFiles, visibleFiles }: RenderSubsectionProps) {
 	return (
 		<Fragment key={subsect.label}>
 			{subsect.file && (
 				<div style={{ marginBottom: 30, paddingBottom: 20, borderBottom: '1px solid #eee' }}>
 					<OnScreenReporter
 						onChange={(visible) => {
-							let updatedVisible
-							if (visible) {
-								updatedVisible = [...visibleFiles, subsect.file]
-							} else {
-								updatedVisible = visibleFiles.filter((f) => f !== subsect.file)
-							}
+							const updatedVisible = visible
+								? [...visibleFiles, subsect.file].filter((f): f is string => !!f)
+								: visibleFiles.filter((f) => f !== subsect.file)
+
 							if (JSON.stringify(visible) !== JSON.stringify(updatedVisible)) {
 								setVisibleFiles(updatedVisible)
 							}
 						}}
 					>
-						<h4 style={{ marginBottom: 15, paddingTop: 10 }} anchor={'#' + subsect.file}>
+						<h4 style={{ marginBottom: 15, paddingTop: 10 }} data-anchor={'#' + subsect.file}>
 							{subsect.label}
 						</h4>
 						<a
@@ -215,8 +236,11 @@ function RenderSubsection({ subsect, path, depth, setVisibleFiles, visibleFiles 
 	)
 }
 
-function LoadContent({ file }) {
-	const [content, setContent] = useState(null)
+interface LoadContentProps {
+	file: string
+}
+function LoadContent({ file }: LoadContentProps) {
+	const [content, setContent] = useState<string>('')
 	const [loading, setLoading] = useState(true)
 
 	// strip filename
@@ -250,12 +274,15 @@ function LoadContent({ file }) {
 	)
 }
 
-function OnScreenReporter({ children, onChange }) {
-	const ref = useRef()
+interface OnScreenReporterProps {
+	onChange: (isOnScreen: boolean) => void
+}
+function OnScreenReporter({ children, onChange }: React.PropsWithChildren<OnScreenReporterProps>) {
+	const ref = useRef<HTMLDivElement>(null)
 	const entry = useIntersectionObserver(ref, {})
-	const isOnScreen = entry?.isIntersecting
+	const isOnScreen = entry?.isIntersecting ?? false
 
-	const [visible, setVisible] = useState(null)
+	const [visible, setVisible] = useState<boolean | null>(null)
 
 	useEffect(() => {
 		if (isOnScreen !== visible) {

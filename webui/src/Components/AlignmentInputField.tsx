@@ -1,7 +1,8 @@
 import React from 'react'
 import classnames from 'classnames'
+import type { CompanionAlignment } from '@companion-module/base'
 
-const ALIGMENT_OPTIONS = [
+const ALIGMENT_OPTIONS: CompanionAlignment[] = [
 	'left:top',
 	'center:top',
 	'right:top',
@@ -13,7 +14,12 @@ const ALIGMENT_OPTIONS = [
 	'right:bottom',
 ]
 
-export function AlignmentInputField({ value, setValue }) {
+interface AlignmentInputFieldProps {
+	value: CompanionAlignment
+	setValue: (value: CompanionAlignment) => void
+}
+
+export function AlignmentInputField({ value, setValue }: AlignmentInputFieldProps) {
 	return (
 		<div className="alignmentinput">
 			{ALIGMENT_OPTIONS.map((align) => {

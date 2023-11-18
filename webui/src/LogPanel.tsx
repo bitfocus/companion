@@ -5,11 +5,22 @@ import { nanoid } from 'nanoid'
 import dayjs from 'dayjs'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faFileExport } from '@fortawesome/free-solid-svg-icons'
-import { GenericConfirmModal } from './Components/GenericConfirmModal'
+import { GenericConfirmModal, GenericConfirmModalRef } from './Components/GenericConfirmModal'
 import { VariableSizeList as List } from 'react-window'
 import AutoSizer from 'react-virtualized-auto-sizer'
+import type { ClientLogLine } from '@companion/shared/Model/LogLine'
 
-const LogsOnDiskInfoLine = {
+interface LogConfig {
+	debug: boolean | undefined
+	info: boolean | undefined
+	warn: boolean | undefined
+}
+
+interface ClientLogLineExt extends Omit<ClientLogLine, 'time'> {
+	time: number | null
+}
+
+const LogsOnDiskInfoLine: ClientLogLineExt = {
 	time: null,
 	level: 'debug',
 	source: 'log',
@@ -18,8 +29,8 @@ const LogsOnDiskInfoLine = {
 
 export const LogPanel = memo(function LogPanel() {
 	const socket = useContext(SocketContext)
-	const [config, setConfig] = useState(() => loadConfig())
-	const exportRef = useRef()
+	const [config, setConfig] = useState<LogConfig>(() => loadConfig())
+	const exportRef = useRef<GenericConfirmModalRef>(null)
 
 	// Save the config when it changes
 	useEffect(() => {
@@ -32,7 +43,7 @@ export const LogPanel = memo(function LogPanel() {
 		})
 	}, [socket])
 
-	const doToggleConfig = useCallback((key) => {
+	const doToggleConfig = useCallback((key: keyof LogConfig) => {
 		setConfig((oldConfig) => ({
 			...oldConfig,
 			[key]: !oldConfig[key],
@@ -44,7 +55,7 @@ export const LogPanel = memo(function LogPanel() {
 	const doToggleDebug = useCallback(() => doToggleConfig('debug'), [doToggleConfig])
 
 	const exportSupportModal = useCallback(() => {
-		exportRef.current.show(
+		exportRef.current?.show(
 			'Export Support Bundle',
 			[
 				'This packages up your recent Companion logs, configuration and backups.',
@@ -117,13 +128,13 @@ export const LogPanel = memo(function LogPanel() {
 function LogPanelContents({ config }) {
 	const socket = useContext(SocketContext)
 
-	const [history, setHistory] = useState([])
+	const [history, setHistory] = useState<ClientLogLineExt[]>([])
 	const [listChunkClearedToken, setListChunkClearedToken] = useState(nanoid())
 
 	// on 'Mount' setup
 	useEffect(() => {
 		const getClearLog = () => setHistory([])
-		const logRecv = (rawItems) => {
+		const logRecv = (rawItems: ClientLogLine[]) => {
 			if (!rawItems || rawItems.length === 0) return
 
 			const newItems = rawItems.map((item) => ({ ...item, id: nanoid() }))
@@ -141,7 +152,7 @@ function LogPanelContents({ config }) {
 		}
 
 		socketEmitPromise(socket, 'logs:subscribe', [])
-			.then((lines) => {
+			.then((lines: ClientLogLine[]) => {
 				const items = lines.map((item) => ({
 					...item,
 					id: nanoid(),
@@ -165,7 +176,7 @@ function LogPanelContents({ config }) {
 			})
 		}
 	}, [socket])
-	const listRef = useRef(null)
+	const listRef = useRef<List>(null)
 	const rowHeights = useRef({})
 
 	const [follow, setFollow] = useState(true)
@@ -229,13 +240,15 @@ function LogPanelContents({ config }) {
 		[rowHeights]
 	)
 
-	function setRowHeight(index, size) {
-		listRef.current.resetAfterIndex(0)
+	function setRowHeight(index: number, size: number) {
+		if (listRef.current) {
+			listRef.current.resetAfterIndex(0)
+		}
 		rowHeights.current = { ...rowHeights.current, [index]: size }
 	}
 
 	function Row({ style, index }) {
-		const rowRef = useRef({})
+		const rowRef = useRef<HTMLDivElement>(null)
 
 		const h = index === 0 ? LogsOnDiskInfoLine : messages[index - 1]
 
@@ -253,7 +266,7 @@ function LogPanelContents({ config }) {
 		)
 	}
 
-	const outerRef = useRef(null)
+	const outerRef = useRef<HTMLElement>(null)
 
 	return (
 		<AutoSizer style={{ width: '100%', height: '100%' }}>
@@ -274,7 +287,11 @@ function LogPanelContents({ config }) {
 	)
 }
 
-const LogLineInner = memo(({ h, innerRef }) => {
+interface LogLineInnerProps {
+	h: ClientLogLineExt
+	innerRef: React.RefObject<HTMLDivElement>
+}
+const LogLineInner = memo(({ h, innerRef }: LogLineInnerProps) => {
 	const time_format = h.time === null ? '                 ' : dayjs(h.time).format('YY.MM.DD HH:mm:ss')
 	return (
 		<div ref={innerRef} className={`log-line log-type-${h.level}`}>
@@ -283,13 +300,16 @@ const LogLineInner = memo(({ h, innerRef }) => {
 	)
 })
 
-function loadConfig() {
+function loadConfig(): LogConfig {
 	try {
 		const rawConfig = window.localStorage.getItem('debug_config')
-		return JSON.parse(rawConfig) ?? {}
+		if (!rawConfig) throw new Error()
+		const config = JSON.parse(rawConfig)
+		if (!config) throw new Error()
+		return config
 	} catch (e) {
 		// setup defaults
-		const config = {
+		const config: LogConfig = {
 			debug: false,
 			info: false,
 			warn: true,

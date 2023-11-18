@@ -4,11 +4,13 @@ import { CAlert, CButton, CCol } from '@coreui/react'
 import { ErrorBoundary } from 'react-error-boundary'
 import { PRIMARY_COLOR } from './Constants'
 import { BarLoader } from 'react-spinners'
-import { applyPatch } from 'fast-json-patch'
+import { JsonPatchError, Operation as JsonPatchOperation, applyPatch } from 'fast-json-patch'
 import { cloneDeep } from 'lodash-es'
 import { useEventListener } from 'usehooks-ts'
+import { LoaderHeightWidthProps } from 'react-spinners/helpers/props'
+import socket, { Socket } from 'socket.io-client'
 
-export const SocketContext = React.createContext(null)
+export const SocketContext = React.createContext<Socket>(null as any) // TODO - fix this
 export const EventDefinitionsContext = React.createContext(null)
 export const NotifierContext = React.createContext(null)
 export const ModulesContext = React.createContext(null)
@@ -24,7 +26,13 @@ export const TriggersContext = React.createContext(null)
 export const RecentActionsContext = React.createContext(null)
 export const RecentFeedbacksContext = React.createContext(null)
 
-export function socketEmitPromise(socket, name, args, timeout, timeoutMessage) {
+export function socketEmitPromise(
+	socket: Socket,
+	name: string,
+	args: any[],
+	timeout?: number,
+	timeoutMessage?: string
+): Promise<any> {
 	const p = new Promise((resolve, reject) => {
 		console.log('send', name, ...args)
 
@@ -50,6 +58,7 @@ const freezePrototypes = () => {
 	Object.freeze(console)
 	Object.freeze(Array.prototype)
 	Object.freeze(Function.prototype)
+	// @ts-ignore
 	Object.freeze(Math.prototype)
 	Object.freeze(Number.prototype)
 	Object.freeze(Object.prototype)
@@ -58,14 +67,19 @@ const freezePrototypes = () => {
 	Object.freeze(Symbol.prototype)
 
 	// prevent constructors of async/generator functions to bypass sandbox
+	// @ts-ignore
 	Object.freeze(async function () {}.__proto__)
+	// @ts-ignore
 	Object.freeze(async function* () {}.__proto__)
+	// @ts-ignore
 	Object.freeze(function* () {}.__proto__)
+	// @ts-ignore
 	Object.freeze(function* () {}.__proto__.prototype)
+	// @ts-ignore
 	Object.freeze(async function* () {}.__proto__.prototype)
 }
 
-export function sandbox(serializedFn) {
+export function sandbox(serializedFn: string): (...args: any[]) => any {
 	// proxy handler
 	const proxyHandler = {
 		has: () => true,
@@ -118,7 +132,11 @@ export function sandbox(serializedFn) {
 	}
 }
 
-function ErrorFallback({ error, resetErrorBoundary }) {
+interface ErrorFallbackProps {
+	error: Error | undefined
+	resetErrorBoundary: () => void
+}
+function ErrorFallback({ error, resetErrorBoundary }: ErrorFallbackProps) {
 	return (
 		<CAlert color="danger">
 			<p>Something went wrong:</p>
@@ -130,11 +148,12 @@ function ErrorFallback({ error, resetErrorBoundary }) {
 	)
 }
 
-export function MyErrorBoundary({ children }) {
+export function MyErrorBoundary({ children }: React.PropsWithChildren<Record<string, never>>) {
 	return <ErrorBoundary FallbackComponent={ErrorFallback}>{children}</ErrorBoundary>
 }
 
-export function KeyReceiver({ children, ...props }) {
+type KeyReceiverProps = React.PropsWithChildren<React.HTMLAttributes<HTMLDivElement>>
+export function KeyReceiver({ children, ...props }: KeyReceiverProps) {
 	return (
 		<div {...props} style={{ ...props.style, outline: 'none' }}>
 			{children}
@@ -143,9 +162,10 @@ export function KeyReceiver({ children, ...props }) {
 }
 
 // eslint-disable-next-line react-hooks/exhaustive-deps
-export const useMountEffect = (fun) => useEffect(fun, [])
+export const useMountEffect = (fun: React.EffectCallback) => useEffect(fun, [])
 
-export function LoadingBar(props) {
+type LoadingBarProps = LoaderHeightWidthProps
+export function LoadingBar(props: LoadingBarProps) {
 	return (
 		<BarLoader
 			loading={true}
@@ -158,14 +178,20 @@ export function LoadingBar(props) {
 	)
 }
 
-export function LoadingRetryOrError({ error, dataReady, doRetry, autoRetryAfter = null }) {
+interface LoadingRetryOrErrorProps {
+	error: string | undefined | null
+	dataReady: boolean
+	doRetry: () => void
+	autoRetryAfter: number | null
+}
+export function LoadingRetryOrError({ error, dataReady, doRetry, autoRetryAfter = null }: LoadingRetryOrErrorProps) {
 	const [countdown, setCountdown] = useState(autoRetryAfter)
 
 	useEffect(() => {
 		if (!dataReady && autoRetryAfter) {
 			const interval = setInterval(() => {
 				setCountdown((c) => {
-					if (c <= 0) {
+					if (!c || c <= 0) {
 						return autoRetryAfter - 1
 					} else {
 						return c - 1
@@ -207,7 +233,12 @@ export function LoadingRetryOrError({ error, dataReady, doRetry, autoRetryAfter 
 	)
 }
 
-export function applyPatchOrReplaceSubObject(oldDefinitions, key, patch, defVal = {}) {
+export function applyPatchOrReplaceSubObject<T extends object>(
+	oldDefinitions: Record<string, T>,
+	key: string,
+	patch: JsonPatchOperation[],
+	defVal: T
+) {
 	if (oldDefinitions) {
 		const oldEntry = oldDefinitions[key] ?? defVal
 
@@ -227,7 +258,7 @@ export function applyPatchOrReplaceSubObject(oldDefinitions, key, patch, defVal 
 		return oldDefinitions
 	}
 }
-export function applyPatchOrReplaceObject(oldObj, patch) {
+export function applyPatchOrReplaceObject<T extends object>(oldObj: T, patch: JsonPatchOperation[] | T): T {
 	const oldEntry = oldObj ?? {}
 
 	if (Array.isArray(patch)) {
@@ -242,13 +273,17 @@ export function applyPatchOrReplaceObject(oldObj, patch) {
 /**
  * Slight modification of useClickoutside from usehooks-ts, which expects an array of refs to check
  */
-export function useOnClickOutsideExt(refs, handler, mouseEvent = 'mousedown') {
+export function useOnClickOutsideExt(
+	refs: React.RefObject<HTMLElement>[],
+	handler: (e: MouseEvent) => void,
+	mouseEvent: 'mousedown' | 'mouseup' = 'mousedown'
+) {
 	useEventListener(mouseEvent, (event) => {
 		for (const ref of refs) {
 			const el = ref?.current
 
 			// Do nothing if clicking ref's element or descendent elements
-			if (!el || el.contains(event.target)) {
+			if (!el || el.contains(event.target as any)) {
 				return
 			}
 		}
@@ -257,6 +292,6 @@ export function useOnClickOutsideExt(refs, handler, mouseEvent = 'mousedown') {
 	})
 }
 
-export const PreventDefaultHandler = (e) => {
+export const PreventDefaultHandler = (e: SubmitEvent): void => {
 	e.preventDefault()
 }

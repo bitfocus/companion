@@ -1,9 +1,10 @@
+import { DropdownChoice } from '@companion-module/base'
 import { Buffer } from 'buffer'
 
 // Hack for csv library which needs a global 'Buffer'
 window.Buffer = Buffer
 
-export const FONT_SIZES = [
+export const FONT_SIZES: DropdownChoice[] = [
 	{ id: 'auto', label: 'Auto' },
 	{ id: '7', label: '7pt' },
 	{ id: '14', label: '14pt' },
@@ -13,10 +14,10 @@ export const FONT_SIZES = [
 	{ id: '44', label: '44pt' },
 ]
 
-export const SHOW_HIDE_TOP_BAR = [
+export const SHOW_HIDE_TOP_BAR: DropdownChoice[] = [
 	{ id: 'default', label: 'Follow Default' },
-	{ id: true, label: 'Show' },
-	{ id: false, label: 'Hide' },
+	{ id: true as any, label: 'Show' },
+	{ id: false as any, label: 'Hide' },
 ]
 
-export const PRIMARY_COLOR = '#d50215'
+export const PRIMARY_COLOR: string = '#d50215'

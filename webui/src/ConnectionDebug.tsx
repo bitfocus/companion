@@ -1,17 +1,28 @@
-import { useCallback, useEffect, useState, useContext, memo, useRef, useMemo } from 'react'
+import React, { useCallback, useEffect, useState, useContext, memo, useRef, useMemo, MutableRefObject } from 'react'
 import { SocketContext, socketEmitPromise } from './util'
 import { CButton, CButtonGroup, CCol, CContainer, CRow } from '@coreui/react'
 import { nanoid } from 'nanoid'
 import { useParams } from 'react-router-dom'
-import { VariableSizeList as List } from 'react-window'
+import { VariableSizeList as List, ListOnScrollProps } from 'react-window'
 import AutoSizer from 'react-virtualized-auto-sizer'
 import { useElementSize } from 'usehooks-ts'
 import { stringify as csvStringify } from 'csv-stringify/sync'
 
-const LogsOnDiskInfoLine = {
-	time: null,
+interface DebugLogLine {
+	level: string
+	message: string
+}
+
+interface DebugConfig {
+	debug: boolean | undefined
+	info: boolean | undefined
+	warn: boolean | undefined
+	error: boolean | undefined
+	console: boolean | undefined
+}
+
+const LogsOnDiskInfoLine: DebugLogLine = {
 	level: 'debug',
-	source: 'log',
 	message: 'Only recent lines are shown here, nothing is persisted',
 }
 
@@ -21,7 +32,7 @@ export function ConnectionDebug() {
 	const { id: connectionId } = useParams()
 
 	// const [loadError, setLoadError]=useState(null)
-	const [linesBuffer, setLinesBuffer] = useState([])
+	const [linesBuffer, setLinesBuffer] = useState<DebugLogLine[]>([])
 
 	// A unique identifier which changes upon each reconnection
 	const [connectionToken, setConnectionToken] = useState(nanoid())
@@ -50,7 +61,7 @@ export function ConnectionDebug() {
 	useEffect(() => {
 		setLinesBuffer([])
 
-		const onNewLines = (level, message) => {
+		const onNewLines = (level: string, message: string) => {
 			console.log('line', level, message)
 			setLinesBuffer((oldLines) => [...oldLines, { level, message }])
 		}
@@ -62,11 +73,9 @@ export function ConnectionDebug() {
 				if (!info) {
 					onNewLines('system', 'Connection was not found')
 				}
-				// TODO
-				console.log('subscried', info)
+				console.log('subscribed', info)
 			})
 			.catch((err) => {
-				//TODO
 				console.error('Subscribe failure', err)
 			})
 
@@ -94,6 +103,7 @@ export function ConnectionDebug() {
 			'download',
 			`module-log-${new Date().toLocaleDateString()}-${new Date().toLocaleTimeString()}.csv`
 		)
+		// @ts-expect-error `oneTimeOnly` not defined in typings
 		link.href = window.URL.createObjectURL(blob, { oneTimeOnly: true })
 		document.body.appendChild(link)
 		link.click()
@@ -111,13 +121,13 @@ export function ConnectionDebug() {
 		})
 	}, [socket, connectionId])
 
-	const [config, setConfig] = useState(() => loadConfig(connectionId))
+	const [config, setConfig] = useState<DebugConfig>(() => loadConfig(connectionId ?? ''))
 	// Save the config when it changes
 	useEffect(() => {
 		window.localStorage.setItem(`module_debug:${connectionId}`, JSON.stringify(config))
 	}, [config, connectionId])
 
-	const doToggleConfig = useCallback((key) => {
+	const doToggleConfig = useCallback((key: keyof DebugConfig) => {
 		setConfig((oldConfig) => ({
 			...oldConfig,
 			[key]: !oldConfig[key],
@@ -200,8 +210,15 @@ export function ConnectionDebug() {
 	)
 }
 
-function LogPanelContents({ linesBuffer, listChunkClearedToken, config, contentWidth }) {
-	const listRef = useRef(null)
+interface LogPanelContentsProps {
+	linesBuffer: DebugLogLine[]
+	listChunkClearedToken: string
+	config: DebugConfig
+	contentWidth: number
+}
+
+function LogPanelContents({ linesBuffer, listChunkClearedToken, config, contentWidth }: LogPanelContentsProps) {
+	const listRef = useRef<List>(null)
 	const rowHeights = useRef({})
 
 	const [follow, setFollow] = useState(true)
@@ -227,7 +244,7 @@ function LogPanelContents({ linesBuffer, listChunkClearedToken, config, contentW
 
 	const hasMountedRef = useRef(false)
 	const userScroll = useCallback(
-		(event) => {
+		(event: ListOnScrollProps) => {
 			// Ignore scroll event on mount
 			if (!hasMountedRef.current) {
 				hasMountedRef.current = true
@@ -259,19 +276,21 @@ function LogPanelContents({ linesBuffer, listChunkClearedToken, config, contentW
 	)
 
 	const getRowHeight = useCallback(
-		(index) => {
+		(index: number) => {
 			return rowHeights.current[index] || 18
 		},
 		[rowHeights]
 	)
 
-	function setRowHeight(index, size) {
-		listRef.current.resetAfterIndex(0)
+	function setRowHeight(index: number, size: number) {
+		if (listRef.current) {
+			listRef.current.resetAfterIndex(0)
+		}
 		rowHeights.current = { ...rowHeights.current, [index]: size }
 	}
 
 	function Row({ style, index }) {
-		const rowRef = useRef({})
+		const rowRef = useRef<HTMLDivElement>(null)
 
 		const h = index === 0 ? LogsOnDiskInfoLine : messages[index - 1]
 
@@ -289,7 +308,7 @@ function LogPanelContents({ linesBuffer, listChunkClearedToken, config, contentW
 		)
 	}
 
-	const outerRef = useRef(null)
+	const outerRef = useRef<HTMLElement>(null)
 
 	return (
 		<AutoSizer style={{ width: '100%', height: '100%' }}>
@@ -310,7 +329,11 @@ function LogPanelContents({ linesBuffer, listChunkClearedToken, config, contentW
 	)
 }
 
-const LogLineInner = memo(({ h, innerRef }) => {
+interface LogLineInnerProps {
+	h: DebugLogLine
+	innerRef: React.RefObject<HTMLDivElement>
+}
+const LogLineInner = memo(({ h, innerRef }: LogLineInnerProps) => {
 	return (
 		<div ref={innerRef} className={`log-line log-type-${h.level}`}>
 			{h.level !== 'console' && (
@@ -323,15 +346,17 @@ const LogLineInner = memo(({ h, innerRef }) => {
 	)
 })
 
-function loadConfig(connectionId) {
+function loadConfig(connectionId: string): DebugConfig {
 	const saveId = `module_debug:${connectionId}`
 	try {
 		const rawConfig = window.localStorage.getItem(saveId)
 		if (!rawConfig) throw new Error()
-		return JSON.parse(rawConfig) ?? {}
+		const config = JSON.parse(rawConfig)
+		if (!config) throw new Error()
+		return config
 	} catch (e) {
 		// setup defaults
-		const config = {
+		const config: DebugConfig = {
 			debug: true,
 			info: true,
 			warn: true,

@@ -2,8 +2,20 @@ import React from 'react'
 import PropTypes from 'prop-types'
 import classNames from 'classnames'
 
+interface CSwitchProps {
+	className: string
+	innerRef: React.LegacyRef<HTMLInputElement>
+	size?: '' | 'lg' | 'sm'
+	shape?: '' | 'pill' | 'square'
+	variant?: '' | '3d' | 'opposite' | 'outline'
+	color?: string
+	labelOn: string
+	labelOff: string
+	title: string
+}
+
 //component - CoreUI / CSwitch
-const CSwitch = (props) => {
+const CSwitch = (props: CSwitchProps) => {
 	let {
 		className,
 		//

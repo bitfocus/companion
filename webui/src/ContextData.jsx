@@ -154,13 +154,13 @@ export function ContextData({ children }) {
 				})
 
 			const updateVariableDefinitions = (label, patch) => {
-				setVariableDefinitions((oldDefinitions) => applyPatchOrReplaceSubObject(oldDefinitions, label, patch))
+				setVariableDefinitions((oldDefinitions) => applyPatchOrReplaceSubObject(oldDefinitions, label, patch, {}))
 			}
 			const updateFeedbackDefinitions = (id, patch) => {
-				setFeedbackDefinitions((oldDefinitions) => applyPatchOrReplaceSubObject(oldDefinitions, id, patch))
+				setFeedbackDefinitions((oldDefinitions) => applyPatchOrReplaceSubObject(oldDefinitions, id, patch, {}))
 			}
 			const updateActionDefinitions = (id, patch) => {
-				setActionDefinitions((oldDefinitions) => applyPatchOrReplaceSubObject(oldDefinitions, id, patch))
+				setActionDefinitions((oldDefinitions) => applyPatchOrReplaceSubObject(oldDefinitions, id, patch, {}))
 			}
 
 			const updateCustomVariables = (patch) => {
@@ -168,7 +168,7 @@ export function ContextData({ children }) {
 			}
 			const updateTriggers = (controlId, patch) => {
 				console.log('trigger', controlId, patch)
-				setTriggers((oldTriggers) => applyPatchOrReplaceSubObject(oldTriggers, controlId, patch))
+				setTriggers((oldTriggers) => applyPatchOrReplaceSubObject(oldTriggers, controlId, patch, {}))
 			}
 
 			socketEmitPromise(socket, 'connections:subscribe', [])

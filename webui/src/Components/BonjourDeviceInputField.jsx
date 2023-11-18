@@ -1,10 +1,8 @@
-import { createContext, useRef, useState } from 'react'
+import { useRef, useState } from 'react'
 import { useContext } from 'react'
 import { useMemo, useEffect } from 'react'
 import { SocketContext, socketEmitPromise } from '../util'
 import { DropdownInputField } from './DropdownInputField'
-
-export const MenuPortalContext = createContext(null)
 
 export function BonjourDeviceInputField({ value, setValue, connectionId, queryId }) {
 	const socket = useContext(SocketContext)

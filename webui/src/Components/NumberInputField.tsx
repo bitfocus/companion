@@ -1,28 +1,53 @@
 import React, { useEffect, useCallback, useState } from 'react'
 import { CCol, CInput, CRow } from '@coreui/react'
 
-export function NumberInputField({ required, min, max, step, tooltip, range, value, setValue, setValid, disabled }) {
-	const [tmpValue, setTmpValue] = useState(null)
+interface NumberInputFieldProps {
+	required?: boolean
+	min?: number
+	max?: number
+	step?: number
+	tooltip?: string
+	range?: boolean
+	value: number
+	setValue: (value: number) => void
+	setValid: (valid: boolean) => void
+	disabled?: boolean
+}
+
+export function NumberInputField({
+	required,
+	min,
+	max,
+	step,
+	tooltip,
+	range,
+	value,
+	setValue,
+	setValid,
+	disabled,
+}: NumberInputFieldProps) {
+	const [tmpValue, setTmpValue] = useState<string | number | null>(null)
 
 	// Check if the value is valid
 	const isValueValid = useCallback(
-		(val) => {
+		(val: string | number) => {
 			if (val === '') {
 				// If required, it must not be empty
 				if (required) {
 					return false
 				}
 			} else {
+				const valNum = Number(val)
 				// If has a value, it must be a number
-				if (isNaN(val)) {
+				if (isNaN(valNum)) {
 					return false
 				}
 
 				// Verify the value range
-				if (min !== undefined && val < min) {
+				if (min !== undefined && valNum < min) {
 					return false
 				}
-				if (max !== undefined && val > max) {
+				if (max !== undefined && valNum > max) {
 					return false
 				}
 			}
@@ -38,11 +63,11 @@ export function NumberInputField({ required, min, max, step, tooltip, range, val
 	}, [isValueValid, value, setValid])
 
 	const onChange = useCallback(
-		(e) => {
+		(e: React.FormEvent<HTMLInputElement>) => {
 			const parsedValue = parseFloat(e.currentTarget.value)
 			const processedValue = isNaN(parsedValue) ? e.currentTarget.value : parsedValue
 			setTmpValue(processedValue)
-			setValue(processedValue)
+			setValue(Number(processedValue))
 			setValid?.(isValueValid(processedValue))
 		},
 		[setValue, setValid, isValueValid]

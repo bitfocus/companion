@@ -3,12 +3,24 @@ import { CButton, CInputFile } from '@coreui/react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faFolderOpen } from '@fortawesome/free-solid-svg-icons'
 
-export function PNGInputField({ min, max, onSelect, onError }) {
-	const inputRef = useRef()
+interface MinMaxDimension {
+	width: number
+	height: number
+}
+
+interface PNGInputFieldProps {
+	min: MinMaxDimension
+	max: MinMaxDimension
+	onSelect: (png64Str: string, name: string) => void
+	onError: (err: string | null) => void
+}
+
+export function PNGInputField({ min, max, onSelect, onError }: PNGInputFieldProps) {
+	const inputRef = useRef<HTMLElement>(null)
 
 	const apiIsSupported = !!(window.File && window.FileReader && window.FileList && window.Blob)
 
-	const imageResize = (img, maxWidth, maxHeight) => {
+	const imageResize = (img: HTMLImageElement, maxWidth: number, maxHeight: number) => {
 		const canvas = document.createElement('canvas')
 		let width = img.width
 		let height = img.height
@@ -29,13 +41,16 @@ export function PNGInputField({ min, max, onSelect, onError }) {
 		canvas.height = height
 
 		const ctx = canvas.getContext('2d')
+		if (!ctx) throw new Error('Not supported!')
 		ctx.drawImage(img, 0, 0, width, height)
 		return canvas.toDataURL()
 	}
 
 	const onClick = useCallback(() => {
 		onError(null)
-		inputRef.current.click()
+		if (inputRef.current) {
+			inputRef.current.click()
+		}
 	}, [onError])
 	const onChange = useCallback(
 		(e) => {
@@ -56,6 +71,8 @@ export function PNGInputField({ min, max, onSelect, onError }) {
 					var img = new Image()
 
 					img.onload = () => {
+						if (!fr.result) return
+
 						// image is loaded; sizes are available
 						if (max && (img.height > max.height || img.width > max.width)) {
 							onError(null)
@@ -66,11 +83,13 @@ export function PNGInputField({ min, max, onSelect, onError }) {
 							onError(`Image dimensions must be at most ${max.width}x${max.height}`)
 						} else {
 							onError(null)
-							onSelect(fr.result, newFiles[0].name)
+							onSelect(fr.result.toString(), newFiles[0].name)
 						}
 					}
 
-					img.src = fr.result // is the data URL because called with readAsDataURL
+					if (fr.result) {
+						img.src = fr.result.toString() // is the data URL because called with readAsDataURL
+					}
 				}
 				fr.readAsDataURL(newFiles[0])
 			} else {
