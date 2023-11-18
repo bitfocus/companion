@@ -447,7 +447,7 @@ function FeedbackEditor({
 					<div className="cell-description">{feedbackSpec?.description || ''}</div>
 
 					{location && showButtonPreview && (
-						<div className="cell-bank-preview">
+						<div className="cell-button-preview">
 							<OptionButtonPreview location={location} options={feedback.options} />
 						</div>
 					)}

@@ -1,4 +1,4 @@
-.bank {
+.button-control {
 	-webkit-touch-callout: none !important;
 	-webkit-user-select: none !important;
 	user-select: none !important;
@@ -13,12 +13,12 @@
 		cursor: pointer;
 	}
 
-	&.selected .bank-border {
+	&.selected .button-border {
 		border: 1px solid #d50215 !important;
 		box-shadow: 0px 0px 0px 1px #d50215 inset;
 	}
 
-	&.fixed .bank-border {
+	&.fixed .button-border {
 		width: 72px;
 		height: 72px;
 	}
@@ -37,7 +37,7 @@
 	// 	-webkit-user-drag: inherit;
 	// }
 
-	.bank-border {
+	.button-border {
 		position: relative;
 		object-fit: contain;
 		display: block;

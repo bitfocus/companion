@@ -17,7 +17,7 @@
 	color: black;
 }
 
-.bankgrid {
+.buttongrid {
 	-webkit-touch-callout: none !important;
 	-webkit-user-select: none !important;
 	user-select: none !important;
@@ -26,11 +26,11 @@
 	grid-auto-flow: row;
 	grid-auto-rows: 1fr;
 
-	&.bank-armed .pagebank-row {
+	&.button-armed .buttongrid-row {
 		background-color: rgba(255, 0, 0, 0.5);
 	}
 
-	.pagebank-row {
+	.buttongrid-row {
 		display: grid;
 		grid-auto-flow: column;
 		grid-auto-columns: 1fr;
@@ -96,7 +96,7 @@
 	border-radius: 5px;
 	overflow: scroll;
 
-	&.bank-armed {
+	&.button-armed {
 		background-color: #7f1111;
 	}
 
@@ -171,7 +171,7 @@
 			}
 		}
 
-		.bank {
+		.button-control {
 			position: absolute;
 			float: left;
 		}

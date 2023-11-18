@@ -7,7 +7,7 @@ export const RedImage =
 
 export const ButtonPreview = React.memo(function (props) {
 	const classes = {
-		bank: true,
+		'button-control': true,
 		fixed: !!props.fixedSize,
 		drophere: props.canDrop,
 		drophover: props.dropHover,
@@ -45,7 +45,7 @@ export const ButtonPreview = React.memo(function (props) {
 			}}
 		>
 			<div
-				className="bank-border"
+				className="button-border"
 				ref={props.dragRef}
 				style={{
 					backgroundImage: props.preview ? `url(${props.preview})` : undefined,

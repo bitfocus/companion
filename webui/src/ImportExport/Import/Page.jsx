@@ -86,7 +86,7 @@ export function ImportPageWizard({ snapshot, instanceRemap, setInstanceRemap, do
 								setPage={isSinglePage ? null : setImportPageNumber}
 							/>
 						</CCol>
-						<div className="bankgrid" ref={hasBeenRenderedRef}>
+						<div className="buttongrid" ref={hasBeenRenderedRef}>
 							{hasBeenRendered && (
 								<ButtonInfiniteGrid
 									ref={sourceGridRef}
@@ -118,7 +118,7 @@ export function ImportPageWizard({ snapshot, instanceRemap, setInstanceRemap, do
 
 							<ButtonGridHeader pageNumber={pageNumber} changePage={changePage} setPage={setPageNumber} />
 						</CCol>
-						<div className="bankgrid">
+						<div className="buttongrid">
 							{hasBeenRendered && (
 								<ButtonInfiniteGrid
 									ref={destinationGridRef}

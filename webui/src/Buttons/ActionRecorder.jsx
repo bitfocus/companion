@@ -397,7 +397,7 @@ function ButtonPicker({ selectButton }) {
 
 				<ButtonGridHeader pageNumber={pageNumber} changePage={changePage} setPage={setPageNumber} />
 			</div>
-			<div className="bankgrid" ref={isInViewRef}>
+			<div className="buttongrid" ref={isInViewRef}>
 				{hasBeenInView && (
 					<ButtonInfiniteGrid
 						ref={gridRef}

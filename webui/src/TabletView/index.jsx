@@ -149,7 +149,7 @@ export function TabletView() {
 
 							<div className="button-zone">
 								<CRow>
-									<CCol sm={12} className="pagebank-row">
+									<CCol sm={12} className="buttongrid-row">
 										<div ref={elementSizeRef} className="buttons-holder">
 											{validPages.map((number, i) => (
 												<MyErrorBoundary key={i}>
