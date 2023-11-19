@@ -125,9 +125,9 @@ export const DropdownInputField = memo(function DropdownInputField<Multi extends
 	}, [value, setValid, isValueValid])
 
 	const onChange = useCallback(
-		(e) => {
+		(e: DropdownChoiceInt | DropdownChoiceInt[]) => {
 			const isMultiple = !!multiple
-			const newValue = isMultiple ? e?.map((v) => v.value) ?? [] : e?.value
+			const newValue = Array.isArray(e) ? e?.map((v) => v.value) ?? [] : e?.value
 
 			const isValid = isValueValid(newValue)
 

@@ -57,7 +57,7 @@ export function BonjourDeviceInputField({ value, setValue, connectionId, queryId
 	// Start/Stop the subscription
 	useEffect(() => {
 		let killed = false
-		let mySubId = null
+		let mySubId: string | null = null
 		socketEmitPromise(socket, 'bonjour:subscribe', [connectionId, queryId])
 			.then((newSubId) => {
 				// Make sure it hasnt been terminated

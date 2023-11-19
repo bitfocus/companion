@@ -9,11 +9,11 @@ import {
 	MyErrorBoundary,
 	PreventDefaultHandler,
 } from '../util.js'
-import { ControlActionSetEditor } from '../Controls/ActionSetEditor.js'
+import { ControlActionSetEditor } from '../Controls/ActionSetEditor.jsx'
 import jsonPatch, { Operation as JsonPatchOperation } from 'fast-json-patch'
 
 import { ControlOptionsEditor } from '../Controls/ControlOptionsEditor.js'
-import { ControlFeedbacksEditor } from '../Controls/FeedbackEditor.js'
+import { ControlFeedbacksEditor } from '../Controls/FeedbackEditor.jsx'
 import { cloneDeep } from 'lodash-es'
 import { TextInputField } from '../Components/index.js'
 import { TriggerEventEditor } from './EventEditor.js'

@@ -4,7 +4,7 @@ import { SocketContext, socketEmitPromise, NotifierContext, VariableDefinitionsC
 import { CopyToClipboard } from 'react-copy-to-clipboard'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faCopy, faTimes } from '@fortawesome/free-solid-svg-icons'
-import type { CompanionVariableValue } from '@companion-module/base'
+import { CompanionVariableValues, type CompanionVariableValue } from '@companion-module/base'
 import type { VariableDefinition } from '@companion/shared/Model/Variables'
 
 interface VariablesTableProps {
@@ -20,7 +20,7 @@ export function VariablesTable({ label }: VariablesTableProps) {
 	const notifier = useContext(NotifierContext)
 	const variableDefinitionsContext = useContext(VariableDefinitionsContext)
 
-	const [variableValues, setVariableValues] = useState({})
+	const [variableValues, setVariableValues] = useState<CompanionVariableValues>({})
 	const [filter, setFilter] = useState('')
 
 	const variableDefinitions = useMemo(() => {
@@ -44,25 +44,25 @@ export function VariablesTable({ label }: VariablesTableProps) {
 	}, [variableDefinitionsContext, label])
 
 	useEffect(() => {
-		if (label) {
-			const doPoll = () => {
-				socketEmitPromise(socket, 'variables:instance-values', [label])
-					.then((values) => {
-						setVariableValues(values || {})
-					})
-					.catch((e) => {
-						setVariableValues({})
-						console.log('Failed to fetch variable values: ', e)
-					})
-			}
+		if (!label) return
 
-			doPoll()
-			const interval = setInterval(doPoll, 1000)
+		const doPoll = () => {
+			socketEmitPromise(socket, 'variables:instance-values', [label])
+				.then((values) => {
+					setVariableValues(values || {})
+				})
+				.catch((e) => {
+					setVariableValues({})
+					console.log('Failed to fetch variable values: ', e)
+				})
+		}
 
-			return () => {
-				setVariableValues({})
-				clearInterval(interval)
-			}
+		doPoll()
+		const interval = setInterval(doPoll, 1000)
+
+		return () => {
+			setVariableValues({})
+			clearInterval(interval)
 		}
 	}, [socket, label])
 
@@ -157,7 +157,7 @@ export function VariablesTable({ label }: VariablesTableProps) {
 interface VariablesTableRowProps {
 	variable: VariableDefinitionExt
 	label: string
-	value: CompanionVariableValue
+	value: CompanionVariableValue | undefined
 	onCopied: () => void
 }
 

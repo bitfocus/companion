@@ -7,7 +7,7 @@ import { MenuPortalContext } from './DropdownInputField'
 import { colord } from 'colord'
 import { CompanionColorPresetValue } from '@companion-module/base'
 
-function splitColor(color) {
+function splitColor(color: number | string) {
 	if (typeof color === 'number') {
 		if (color > 0xffffff) {
 			return {
@@ -73,7 +73,7 @@ export function ColorInputField<T extends 'string' | 'number'>({
 	value,
 	setValue,
 	setValid,
-	disabled,
+	// disabled,
 	enableAlpha,
 	returnType,
 	presetColors,
@@ -88,7 +88,7 @@ export function ColorInputField<T extends 'string' | 'number'>({
 		setValid?.(true)
 	}, [setValid])
 
-	const handleClick = useCallback((e) => setDisplayPicker((d) => !d), [])
+	const handleClick = useCallback(() => setDisplayPicker((d) => !d), [])
 	const setHide = useCallback((e) => {
 		if (e) {
 			e.preventDefault()

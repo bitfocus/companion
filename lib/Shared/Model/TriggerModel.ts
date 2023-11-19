@@ -17,3 +17,9 @@ export interface TriggerOptions {
 	sortOrder: number
 	relativeDelay: boolean
 }
+
+export interface ClientTriggerData extends TriggerOptions {
+	type: 'trigger'
+	lastExecuted: number | undefined
+	description: string
+}

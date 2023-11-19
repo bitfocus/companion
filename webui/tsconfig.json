@@ -7,14 +7,14 @@
 		"paths": {
 			"*": ["./node_modules/*"]
 		},
-		// "module": "Node16",
-		"moduleResolution": "Bundler",
+		"module": "ESNext",
+		"moduleResolution": "node",
 		"jsx": "react",
 		"allowJs": true,
 		// "checkJs": true,
 		"strictPropertyInitialization": false,
 
-		"target": "es2022",
+		"target": "ESNext",
 		"noImplicitAny": true,
 		"sourceMap": true,
 		"declaration": false,
@@ -22,7 +22,7 @@
 		"listFiles": false,
 		"traceResolution": false,
 		"pretty": true,
-		"lib": ["es2022", "DOM"],
+		"lib": ["DOM", "DOM.Iterable", "ESNext"],
 		"types": ["node", "react"],
 		"strict": true,
 		"alwaysStrict": false,

@@ -7,7 +7,7 @@ import { BarLoader } from 'react-spinners'
 import { Operation as JsonPatchOperation, applyPatch } from 'fast-json-patch'
 import { cloneDeep } from 'lodash-es'
 import { useEventListener } from 'usehooks-ts'
-import { LoaderHeightWidthProps } from 'react-spinners/helpers/props.js'
+import type { LoaderHeightWidthProps } from 'react-spinners/helpers/props.js'
 import { Socket } from 'socket.io-client'
 import type { AllVariableDefinitions } from '@companion/shared/Model/Variables.js'
 import type { NotificationsManagerRef } from './Components/Notifications.js'
@@ -16,6 +16,7 @@ import type {
 	ClientEventDefinition,
 	ModuleDisplayInfo,
 } from '@companion/shared/Model/Common.js'
+import type { ClientTriggerData } from '@companion/shared/Model/TriggerModel.js'
 
 export const SocketContext = React.createContext<Socket>(null as any) // TODO - fix this
 export const EventDefinitionsContext = React.createContext<Record<string, ClientEventDefinition | undefined>>({})
@@ -34,7 +35,7 @@ export const CustomVariableDefinitionsContext = React.createContext(null)
 export const UserConfigContext = React.createContext(null)
 export const SurfacesContext = React.createContext(null)
 export const PagesContext = React.createContext(null)
-export const TriggersContext = React.createContext(null)
+export const TriggersContext = React.createContext<Record<string, ClientTriggerData | undefined>>({})
 export const RecentActionsContext = React.createContext(null)
 export const RecentFeedbacksContext = React.createContext(null)
 

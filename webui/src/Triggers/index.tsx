@@ -28,24 +28,25 @@ import {
 import { useDrag, useDrop } from 'react-dnd'
 import { nanoid } from 'nanoid'
 import { EditTriggerPanel } from './EditPanel'
-import { GenericConfirmModal } from '../Components/GenericConfirmModal'
+import { GenericConfirmModal, GenericConfirmModalRef } from '../Components/GenericConfirmModal'
 import { ParseControlId } from '@companion/shared/ControlId'
-import { ConfirmExportModal } from '../Components/ConfirmExportModal'
+import { ConfirmExportModal, ConfirmExportModalRef } from '../Components/ConfirmExportModal'
 import classNames from 'classnames'
+import { ClientTriggerData } from '@companion/shared/Model/TriggerModel'
 
 export const Triggers = memo(function Triggers() {
 	const socket = useContext(SocketContext)
 
 	const triggersList = useContext(TriggersContext)
 
-	const [editItemId, setEditItemId] = useState(null)
+	const [editItemId, setEditItemId] = useState<string | null>(null)
 	const [tabResetToken, setTabResetToken] = useState(nanoid())
 	const [activeTab, setActiveTab] = useState('placeholder')
 
 	// Ensure the selected trigger is valid
 	useEffect(() => {
 		setEditItemId((currentId) => {
-			if (triggersList[currentId]) {
+			if (currentId && triggersList[currentId]) {
 				return currentId
 			} else {
 				return null
@@ -53,7 +54,7 @@ export const Triggers = memo(function Triggers() {
 		})
 	}, [triggersList])
 
-	const doChangeTab = useCallback((newTab) => {
+	const doChangeTab = useCallback((newTab: string) => {
 		setActiveTab((oldTab) => {
 			const preserveButtonsTab = newTab === 'variables' && oldTab === 'edit'
 			if (newTab !== 'edit' && oldTab !== newTab && !preserveButtonsTab) {
@@ -63,7 +64,7 @@ export const Triggers = memo(function Triggers() {
 			return newTab
 		})
 	}, [])
-	const doEditItem = useCallback((controlId) => {
+	const doEditItem = useCallback((controlId: string) => {
 		setEditItemId(controlId)
 		setActiveTab('edit')
 	}, [])
@@ -79,9 +80,9 @@ export const Triggers = memo(function Triggers() {
 			})
 	}, [socket, doEditItem])
 
-	const exportModalRef = useRef(null)
+	const exportModalRef = useRef<ConfirmExportModalRef>(null)
 	const showExportModal = useCallback(() => {
-		exportModalRef.current.show(`/int/export/triggers/all`)
+		exportModalRef.current?.show(`/int/export/triggers/all`)
 	}, [])
 
 	return (
@@ -145,8 +146,14 @@ export const Triggers = memo(function Triggers() {
 	)
 })
 
+interface TriggersTableProps {
+	triggersList: Record<string, ClientTriggerData | undefined>
+	editItem: (controlId: string) => void
+	selectedControlId: string | null
+}
+
 const tableDateFormat = 'MM/DD HH:mm:ss'
-function TriggersTable({ triggersList, editItem, selectedControlId }) {
+function TriggersTable({ triggersList, editItem, selectedControlId }: TriggersTableProps) {
 	const socket = useContext(SocketContext)
 
 	const triggersRef = useRef(triggersList)
@@ -161,6 +168,7 @@ function TriggersTable({ triggersList, editItem, selectedControlId }) {
 
 			if (triggersRef.current) {
 				const rawIds = Object.entries(triggersRef.current)
+					.filter((o): o is [string, ClientTriggerData] => !!o[1])
 					.sort(([, a], [, b]) => a.sortOrder - b.sortOrder)
 					.map(([id]) => id)
 
@@ -192,6 +200,7 @@ function TriggersTable({ triggersList, editItem, selectedControlId }) {
 			<tbody>
 				{triggersList && Object.keys(triggersList).length > 0 ? (
 					Object.entries(triggersList)
+						.filter((o): o is [string, ClientTriggerData] => !!o[1])
 						.sort((a, b) => a[1].sortOrder - b[1].sortOrder)
 						.map(([controlId, item]) => (
 							<TriggersTableRow
@@ -205,7 +214,7 @@ function TriggersTable({ triggersList, editItem, selectedControlId }) {
 						))
 				) : (
 					<tr>
-						<td colSpan="4" className="currentlyNone">
+						<td colSpan={4} className="currentlyNone">
 							There currently are no triggers or scheduled tasks.
 						</td>
 					</tr>
@@ -214,10 +223,26 @@ function TriggersTable({ triggersList, editItem, selectedControlId }) {
 		</table>
 	)
 }
-function TriggersTableRow({ controlId, item, editItem, moveTrigger, isSelected }) {
+
+interface TriggersTableRowDragData {
+	id: string
+}
+interface TriggersTableRowDragStatus {
+	isDragging: boolean
+}
+
+interface TriggersTableRowProps {
+	controlId: string
+	item: ClientTriggerData
+	editItem: (controlId: string) => void
+	moveTrigger: (hoverControlId: string, controlId: string) => void
+	isSelected: boolean
+}
+
+function TriggersTableRow({ controlId, item, editItem, moveTrigger, isSelected }: TriggersTableRowProps) {
 	const socket = useContext(SocketContext)
 
-	const confirmRef = useRef(null)
+	const confirmRef = useRef<GenericConfirmModalRef>(null)
 
 	const doEnableDisable = useCallback(() => {
 		socketEmitPromise(socket, 'controls:set-options-field', [controlId, 'enabled', !item.enabled]).catch((e) => {
@@ -225,7 +250,7 @@ function TriggersTableRow({ controlId, item, editItem, moveTrigger, isSelected }
 		})
 	}, [socket, controlId, item.enabled])
 	const doDelete = useCallback(() => {
-		confirmRef.current.show('Delete trigger', 'Are you sure you wish to delete this trigger?', 'Delete', () => {
+		confirmRef.current?.show('Delete trigger', 'Are you sure you wish to delete this trigger?', 'Delete', () => {
 			socketEmitPromise(socket, 'triggers:delete', [controlId]).catch((e) => {
 				console.error('Failed to delete', e)
 			})
@@ -253,9 +278,9 @@ function TriggersTableRow({ controlId, item, editItem, moveTrigger, isSelected }
 	)
 
 	const ref = useRef(null)
-	const [, drop] = useDrop({
+	const [, drop] = useDrop<TriggersTableRowDragData>({
 		accept: 'trigger',
-		hover(hoverItem, monitor) {
+		hover(hoverItem, _monitor) {
 			if (!ref.current) {
 				return
 			}
@@ -268,7 +293,7 @@ function TriggersTableRow({ controlId, item, editItem, moveTrigger, isSelected }
 			moveTrigger(hoverItem.id, controlId)
 		},
 	})
-	const [{ isDragging }, drag, preview] = useDrag({
+	const [{ isDragging }, drag, preview] = useDrag<TriggersTableRowDragData, unknown, TriggersTableRowDragStatus>({
 		type: 'trigger',
 		item: {
 			id: controlId,
@@ -294,12 +319,7 @@ function TriggersTableRow({ controlId, item, editItem, moveTrigger, isSelected }
 			<td ref={drag} className="td-reorder" style={{ maxWidth: 20 }}>
 				<FontAwesomeIcon icon={faSort} />
 			</td>
-			<td
-				onClick={(e) => {
-					doEdit()
-				}}
-				className="hand"
-			>
+			<td onClick={doEdit} className="hand">
 				<b>{item.name}</b>
 
 				{/* TODO: For some reason, the modal component leaves a big inline
@@ -309,12 +329,7 @@ function TriggersTableRow({ controlId, item, editItem, moveTrigger, isSelected }
 				<GenericConfirmModal ref={confirmRef} />
 				{/* end hax */}
 			</td>
-			<td
-				onClick={(e) => {
-					doEdit()
-				}}
-				className="hand"
-			>
+			<td onClick={doEdit} className="hand">
 				<span dangerouslySetInnerHTML={descriptionHtml} />
 				<br />
 				{item.lastExecuted ? <small>Last run: {dayjs(item.lastExecuted).format(tableDateFormat)}</small> : ''}

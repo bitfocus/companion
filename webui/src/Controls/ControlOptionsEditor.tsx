@@ -1,18 +1,30 @@
 import { CLabel } from '@coreui/react'
-import React, { useCallback, useContext, useRef } from 'react'
+import React, { MutableRefObject, useCallback, useContext, useRef } from 'react'
 import { socketEmitPromise, SocketContext } from '../util'
-import { GenericConfirmModal } from '../Components/GenericConfirmModal'
+import { GenericConfirmModal, GenericConfirmModalRef } from '../Components/GenericConfirmModal'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faQuestionCircle } from '@fortawesome/free-solid-svg-icons'
 import CSwitch from '../CSwitch'
 
-export function ControlOptionsEditor({ controlId, controlType, options, configRef }) {
+interface ControlOptionsEditorProps {
+	controlId: string
+	controlType: string
+	options: Record<string, any> // TODO
+	configRef: MutableRefObject<any> // TODO
+}
+
+export function ControlOptionsEditor({
+	controlId,
+	controlType,
+	options,
+	configRef,
+}: ControlOptionsEditorProps): JSX.Element | null {
 	const socket = useContext(SocketContext)
 
-	const confirmRef = useRef(null)
+	const confirmRef = useRef<GenericConfirmModalRef>(null)
 
 	const setValueInner = useCallback(
-		(key, value) => {
+		(key: string, value: any) => {
 			if (configRef.current === undefined || value !== configRef.current.options[key]) {
 				socketEmitPromise(socket, 'controls:set-options-field', [controlId, key, value]).catch((e) => {
 					console.error(`Set field failed: ${e}`)
@@ -25,7 +37,7 @@ export function ControlOptionsEditor({ controlId, controlType, options, configRe
 	const setStepAutoProgressValue = useCallback((val) => setValueInner('stepAutoProgress', val), [setValueInner])
 	const setRelativeDelayValue = useCallback((val) => setValueInner('relativeDelay', val), [setValueInner])
 	const setRotaryActions = useCallback(
-		(val) => {
+		(val: boolean) => {
 			if (!val && confirmRef.current && configRef.current && configRef.current.options.rotaryActions === true) {
 				confirmRef.current.show(
 					'Disable rotary actions',
@@ -44,13 +56,13 @@ export function ControlOptionsEditor({ controlId, controlType, options, configRe
 
 	switch (controlType) {
 		case undefined:
-			return ''
+			return null
 		case 'pageup':
-			return ''
+			return null
 		case 'pagenum':
-			return ''
+			return null
 		case 'pagedown':
-			return ''
+			return null
 		default:
 		// See below
 	}

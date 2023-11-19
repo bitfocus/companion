@@ -7,7 +7,7 @@ import {
 	NumberInputField,
 	TextInputField,
 } from '../Components/index.js'
-import { InternalCustomVariableDropdown, InternalInstanceField } from './InternalInstanceFields.js'
+import { InternalCustomVariableDropdown, InternalInstanceField } from './InternalInstanceFields.jsx'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faDollarSign, faQuestionCircle } from '@fortawesome/free-solid-svg-icons'
 import { SomeCompanionActionInputField, SomeCompanionFeedbackInputField } from '@companion-module/base'

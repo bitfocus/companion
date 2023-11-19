@@ -1,5 +1,5 @@
-import React, { useCallback, useEffect, useState, useContext, memo, useRef, useMemo, MutableRefObject } from 'react'
-import { SocketContext, socketEmitPromise } from './util'
+import React, { useCallback, useEffect, useState, useContext, memo, useRef, useMemo } from 'react'
+import { SocketContext, socketEmitPromise } from './util.js'
 import { CButton, CButtonGroup, CCol, CContainer, CRow } from '@coreui/react'
 import { nanoid } from 'nanoid'
 import { useParams } from 'react-router-dom'
@@ -219,7 +219,7 @@ interface LogPanelContentsProps {
 
 function LogPanelContents({ linesBuffer, listChunkClearedToken, config, contentWidth }: LogPanelContentsProps) {
 	const listRef = useRef<List>(null)
-	const rowHeights = useRef({})
+	const rowHeights = useRef<Record<string, number | undefined>>({})
 
 	const [follow, setFollow] = useState(true)
 
@@ -231,7 +231,7 @@ function LogPanelContents({ linesBuffer, listChunkClearedToken, config, contentW
 	}, [listRef, listChunkClearedToken, contentWidth])
 
 	const messages = useMemo(() => {
-		return linesBuffer.filter((msg) => msg.level === 'system' || config[msg.level])
+		return linesBuffer.filter((msg) => msg.level === 'system' || !!config[msg.level as keyof DebugConfig])
 	}, [linesBuffer, config])
 
 	useEffect(() => {
@@ -289,7 +289,7 @@ function LogPanelContents({ linesBuffer, listChunkClearedToken, config, contentW
 		rowHeights.current = { ...rowHeights.current, [index]: size }
 	}
 
-	function Row({ style, index }) {
+	function Row({ style, index }: { style: React.CSSProperties; index: number }) {
 		const rowRef = useRef<HTMLDivElement>(null)
 
 		const h = index === 0 ? LogsOnDiskInfoLine : messages[index - 1]
