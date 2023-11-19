@@ -1,14 +1,14 @@
 import React, { memo, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react'
 import { CButton, CButtonGroup, CCol, CRow } from '@coreui/react'
-import { socketEmitPromise, SocketContext } from './util'
+import { socketEmitPromise, SocketContext } from './util.js'
 import { nanoid } from 'nanoid'
 import dayjs from 'dayjs'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faFileExport } from '@fortawesome/free-solid-svg-icons'
-import { GenericConfirmModal, GenericConfirmModalRef } from './Components/GenericConfirmModal'
+import { GenericConfirmModal, GenericConfirmModalRef } from './Components/GenericConfirmModal.js'
 import { VariableSizeList as List } from 'react-window'
 import AutoSizer from 'react-virtualized-auto-sizer'
-import type { ClientLogLine } from '@companion/shared/Model/LogLine'
+import type { ClientLogLine } from '@companion/shared/Model/LogLine.js'
 
 interface LogConfig {
 	debug: boolean | undefined

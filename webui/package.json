@@ -14,6 +14,7 @@
     "@fortawesome/react-fontawesome": "^0.2.0",
     "@hello-pangea/color-picker": "https://github.com/Julusian/color-picker/releases/download/v3.3.0-julusian.0/hello-pangea-color-picker-v3.3.0-julusian.0.tgz",
     "@popperjs/core": "^2.11.8",
+    "@types/react": "^17",
     "@types/react-copy-to-clipboard": "^5.0.7",
     "@types/react-dom": "^18.2.15",
     "@types/react-window": "^1.8.8",

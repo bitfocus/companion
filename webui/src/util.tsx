@@ -2,16 +2,20 @@ import React, { FormEvent, useEffect, useState } from 'react'
 import pTimeout from 'p-timeout'
 import { CAlert, CButton, CCol } from '@coreui/react'
 import { ErrorBoundary } from 'react-error-boundary'
-import { PRIMARY_COLOR } from './Constants'
+import { PRIMARY_COLOR } from './Constants.js'
 import { BarLoader } from 'react-spinners'
 import { Operation as JsonPatchOperation, applyPatch } from 'fast-json-patch'
 import { cloneDeep } from 'lodash-es'
 import { useEventListener } from 'usehooks-ts'
-import { LoaderHeightWidthProps } from 'react-spinners/helpers/props'
+import { LoaderHeightWidthProps } from 'react-spinners/helpers/props.js'
 import { Socket } from 'socket.io-client'
-import type { AllVariableDefinitions } from '@companion/shared/Model/Variables'
-import type { NotificationsManagerRef } from './Components/Notifications'
-import type { ClientConnectionConfig, ClientEventDefinition, ModuleDisplayInfo } from '@companion/shared/Model/Common'
+import type { AllVariableDefinitions } from '@companion/shared/Model/Variables.js'
+import type { NotificationsManagerRef } from './Components/Notifications.js'
+import type {
+	ClientConnectionConfig,
+	ClientEventDefinition,
+	ModuleDisplayInfo,
+} from '@companion/shared/Model/Common.js'
 
 export const SocketContext = React.createContext<Socket>(null as any) // TODO - fix this
 export const EventDefinitionsContext = React.createContext<Record<string, ClientEventDefinition | undefined>>({})
@@ -44,7 +48,7 @@ export function socketEmitPromise(
 	const p = new Promise((resolve, reject) => {
 		console.log('send', name, ...args)
 
-		socket.emit(name, ...args, (err, res) => {
+		socket.emit(name, ...args, (err: Error, res: any) => {
 			if (err) reject(err)
 			else resolve(res)
 		})
@@ -91,7 +95,7 @@ export function sandbox(serializedFn: string): (...args: any[]) => any {
 	// proxy handler
 	const proxyHandler = {
 		has: () => true,
-		get: (obj, prop) => Reflect.get(obj, prop),
+		get: (obj: any, prop: any) => Reflect.get(obj, prop),
 	}
 
 	// global objects that will be allowed within the sandbox
@@ -156,7 +160,7 @@ function ErrorFallback({ error, resetErrorBoundary }: ErrorFallbackProps) {
 	)
 }
 
-export function MyErrorBoundary({ children }: React.PropsWithChildren) {
+export function MyErrorBoundary({ children }: React.PropsWithChildren<{}>) {
 	return <ErrorBoundary FallbackComponent={ErrorFallback}>{children}</ErrorBoundary>
 }
 

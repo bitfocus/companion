@@ -9,16 +9,16 @@ import {
 	SocketContext,
 	EventDefinitionsContext,
 	PreventDefaultHandler,
-} from '../util'
+} from '../util.js'
 import Select from 'react-select'
-import { OptionsInputField } from '../Controls/OptionsInputField'
+import { OptionsInputField } from '../Controls/OptionsInputField.js'
 import { useDrag, useDrop } from 'react-dnd'
-import { GenericConfirmModal, GenericConfirmModalRef } from '../Components/GenericConfirmModal'
-import { usePanelCollapseHelper } from '../Helpers/CollapseHelper'
-import { MenuPortalContext } from '../Components/DropdownInputField'
+import { GenericConfirmModal, GenericConfirmModalRef } from '../Components/GenericConfirmModal.js'
+import { usePanelCollapseHelper } from '../Helpers/CollapseHelper.js'
+import { MenuPortalContext } from '../Components/DropdownInputField.js'
 import type { DropdownChoice, DropdownChoiceId } from '@companion-module/base'
-import type { InternalActionInputField } from '@companion/shared/Model/Options'
-import type { EventInstance } from '@companion/shared/Model/EventModel'
+import type { InternalActionInputField } from '@companion/shared/Model/Options.js'
+import type { EventInstance } from '@companion/shared/Model/EventModel.js'
 
 interface TriggerEventEditorProps {
 	controlId: string

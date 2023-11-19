@@ -1,9 +1,9 @@
 import React, { useContext, useState } from 'react'
 import { nanoid } from 'nanoid'
-import { ButtonPreview } from '../Components/ButtonPreview'
-import { SocketContext, socketEmitPromise } from '../util'
+import { ButtonPreview } from '../Components/ButtonPreview.js'
+import { SocketContext, socketEmitPromise } from '../util.js'
 import { useDeepCompareEffect } from 'use-deep-compare'
-import { ControlLocation } from '@companion/shared/Model/Common'
+import { ControlLocation } from '@companion/shared/Model/Common.js'
 
 interface OptionButtonPreviewProps {
 	location: ControlLocation
@@ -31,7 +31,7 @@ export function OptionButtonPreview({ location, options }: OptionButtonPreviewPr
 				setImage(null)
 			})
 
-		const updateImage = (newImage) => {
+		const updateImage = (newImage: string) => {
 			setImage(newImage)
 		}
 

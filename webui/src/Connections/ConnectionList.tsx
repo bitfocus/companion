@@ -6,7 +6,7 @@ import {
 	socketEmitPromise,
 	SocketContext,
 	ModulesContext,
-} from '../util'
+} from '../util.js'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import {
 	faDollarSign,
@@ -20,13 +20,13 @@ import {
 	faEyeSlash,
 } from '@fortawesome/free-solid-svg-icons'
 
-import { ConnectionVariablesModal, ConnectionVariablesModalRef } from './ConnectionVariablesModal'
-import { GenericConfirmModal, GenericConfirmModalRef } from '../Components/GenericConfirmModal'
-import CSwitch from '../CSwitch'
+import { ConnectionVariablesModal, ConnectionVariablesModalRef } from './ConnectionVariablesModal.js'
+import { GenericConfirmModal, GenericConfirmModalRef } from '../Components/GenericConfirmModal.js'
+import CSwitch from '../CSwitch.js'
 import { useDrag, useDrop } from 'react-dnd'
-import { windowLinkOpen } from '../Helpers/Window'
+import { windowLinkOpen } from '../Helpers/Window.js'
 import classNames from 'classnames'
-import type { ClientConnectionConfig, ConnectionStatusEntry } from '@companion/shared/Model/Common'
+import type { ClientConnectionConfig, ConnectionStatusEntry } from '@companion/shared/Model/Common.js'
 
 interface ConnectionsListProps {
 	showHelp: (connectionId: string) => void

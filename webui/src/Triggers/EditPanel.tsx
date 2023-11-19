@@ -1,19 +1,25 @@
 import { CButton, CCol, CForm, CInputGroup, CInputGroupAppend, CLabel, CRow } from '@coreui/react'
 import React, { useCallback, useContext, useEffect, useRef, useState } from 'react'
 import { nanoid } from 'nanoid'
-import { GenericConfirmModal, GenericConfirmModalRef } from '../Components/GenericConfirmModal'
-import { LoadingRetryOrError, socketEmitPromise, SocketContext, MyErrorBoundary, PreventDefaultHandler } from '../util'
-import { ControlActionSetEditor } from '../Controls/ActionSetEditor'
+import { GenericConfirmModal, GenericConfirmModalRef } from '../Components/GenericConfirmModal.js'
+import {
+	LoadingRetryOrError,
+	socketEmitPromise,
+	SocketContext,
+	MyErrorBoundary,
+	PreventDefaultHandler,
+} from '../util.js'
+import { ControlActionSetEditor } from '../Controls/ActionSetEditor.js'
 import jsonPatch, { Operation as JsonPatchOperation } from 'fast-json-patch'
 
-import { ControlOptionsEditor } from '../Controls/ControlOptionsEditor'
-import { ControlFeedbacksEditor } from '../Controls/FeedbackEditor'
+import { ControlOptionsEditor } from '../Controls/ControlOptionsEditor.js'
+import { ControlFeedbacksEditor } from '../Controls/FeedbackEditor.js'
 import { cloneDeep } from 'lodash-es'
-import { TextInputField } from '../Components'
-import { TriggerEventEditor } from './EventEditor'
+import { TextInputField } from '../Components/index.js'
+import { TriggerEventEditor } from './EventEditor.js'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faQuestionCircle } from '@fortawesome/free-solid-svg-icons'
-import type { TriggerModel } from '@companion/shared/Model/TriggerModel'
+import type { TriggerModel } from '@companion/shared/Model/TriggerModel.js'
 
 interface EditTriggerPanelProps {
 	controlId: string

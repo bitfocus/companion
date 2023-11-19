@@ -1,9 +1,9 @@
 import React, { useContext, useEffect, useState } from 'react'
 import { CHeader, CHeaderBrand, CHeaderNavItem, CHeaderNav, CHeaderNavLink, CToggler } from '@coreui/react'
-import { SocketContext, socketEmitPromise } from '../util'
+import { SocketContext, socketEmitPromise } from '../util.js'
 import { faLock } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import type { AppUpdateInfo, AppVersionInfo } from '@companion/shared/Model/Common'
+import type { AppUpdateInfo, AppVersionInfo } from '@companion/shared/Model/Common.js'
 
 interface MyHeaderProps {
 	toggleSidebar: () => void
