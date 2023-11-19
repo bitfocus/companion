@@ -1,7 +1,7 @@
 import { CButton, CForm, CButtonGroup, CSwitch } from '@coreui/react'
 import { faSort, faTrash, faCompressArrowsAlt, faExpandArrowsAlt, faCopy } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import React, { memo, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react'
+import React, { FormEvent, memo, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react'
 import {
 	MyErrorBoundary,
 	socketEmitPromise,
@@ -13,20 +13,29 @@ import {
 import Select from 'react-select'
 import { OptionsInputField } from '../Controls/OptionsInputField'
 import { useDrag, useDrop } from 'react-dnd'
-import { GenericConfirmModal } from '../Components/GenericConfirmModal'
+import { GenericConfirmModal, GenericConfirmModalRef } from '../Components/GenericConfirmModal'
 import { usePanelCollapseHelper } from '../Helpers/CollapseHelper'
 import { MenuPortalContext } from '../Components/DropdownInputField'
+import type { DropdownChoice, DropdownChoiceId } from '@companion-module/base'
+import type { InternalActionInputField } from '@companion/shared/Model/Options'
+import type { EventInstance } from '@companion/shared/Model/EventModel'
 
-export function TriggerEventEditor({ controlId, events, heading }) {
+interface TriggerEventEditorProps {
+	controlId: string
+	events: EventInstance[]
+	heading: JSX.Element | string
+}
+
+export function TriggerEventEditor({ controlId, events, heading }: TriggerEventEditorProps) {
 	const socket = useContext(SocketContext)
 
-	const confirmModal = useRef()
+	const confirmModal = useRef<GenericConfirmModalRef>(null)
 
-	const eventsRef = useRef()
+	const eventsRef = useRef<EventInstance[]>()
 	eventsRef.current = events
 
 	const setValue = useCallback(
-		(eventId, key, val) => {
+		(eventId: string, key: string, val: any) => {
 			const currentEvent = eventsRef.current?.find((fb) => fb.id === eventId)
 			if (!currentEvent?.options || currentEvent.options[key] !== val) {
 				socketEmitPromise(socket, 'controls:event:set-option', [controlId, eventId, key, val]).catch((e) => {
@@ -38,8 +47,8 @@ export function TriggerEventEditor({ controlId, events, heading }) {
 	)
 
 	const doDelete = useCallback(
-		(eventId) => {
-			confirmModal.current.show('Delete event', 'Delete event?', 'Delete', () => {
+		(eventId: string) => {
+			confirmModal.current?.show('Delete event', 'Delete event?', 'Delete', () => {
 				socketEmitPromise(socket, 'controls:event:remove', [controlId, eventId]).catch((e) => {
 					console.error(`Failed to delete event: ${e}`)
 				})
@@ -49,7 +58,7 @@ export function TriggerEventEditor({ controlId, events, heading }) {
 	)
 
 	const doDuplicate = useCallback(
-		(eventId) => {
+		(eventId: string) => {
 			socketEmitPromise(socket, 'controls:event:duplicate', [controlId, eventId]).catch((e) => {
 				console.error(`Failed to duplicate feeeventdback: ${e}`)
 			})
@@ -58,7 +67,7 @@ export function TriggerEventEditor({ controlId, events, heading }) {
 	)
 
 	const addEvent = useCallback(
-		(eventType) => {
+		(eventType: DropdownChoiceId) => {
 			socketEmitPromise(socket, 'controls:event:add', [controlId, eventType]).catch((e) => {
 				console.error('Failed to add trigger event', e)
 			})
@@ -67,7 +76,7 @@ export function TriggerEventEditor({ controlId, events, heading }) {
 	)
 
 	const moveCard = useCallback(
-		(dragIndex, hoverIndex) => {
+		(dragIndex: number, hoverIndex: number) => {
 			socketEmitPromise(socket, 'controls:event:reorder', [controlId, dragIndex, hoverIndex]).catch((e) => {
 				console.error(`Move failed: ${e}`)
 			})
@@ -76,7 +85,7 @@ export function TriggerEventEditor({ controlId, events, heading }) {
 	)
 
 	const emitEnabled = useCallback(
-		(eventId, enabled) => {
+		(eventId: string, enabled: boolean) => {
 			socketEmitPromise(socket, 'controls:event:enabled', [controlId, eventId, enabled]).catch((e) => {
 				console.error('Failed to enable/disable event', e)
 			})
@@ -142,6 +151,27 @@ export function TriggerEventEditor({ controlId, events, heading }) {
 	)
 }
 
+interface EventsTableRowDragObject {
+	index: number
+}
+interface EventsTableRowDragCollection {
+	isDragging: boolean
+}
+
+interface EventsTableRowProps {
+	event: EventInstance
+	controlId: string
+	index: number
+	dragId: string
+	moveCard: (dragIndex: number, hoverIndex: number) => void
+	setValue: (eventId: string, key: string, value: any) => void
+	doDelete: (eventId: string) => void
+	doDuplicate: (eventId: string) => void
+	doEnabled: (eventId: string, value: boolean) => void
+	isCollapsed: boolean
+	setCollapsed: (eventId: string, collapsed: boolean) => void
+}
+
 function EventsTableRow({
 	event,
 	controlId,
@@ -154,12 +184,12 @@ function EventsTableRow({
 	doEnabled,
 	isCollapsed,
 	setCollapsed,
-}) {
+}: EventsTableRowProps) {
 	const innerDelete = useCallback(() => doDelete(event.id), [event.id, doDelete])
 	const innerDuplicate = useCallback(() => doDuplicate(event.id), [event.id, doDuplicate])
 
-	const ref = useRef(null)
-	const [, drop] = useDrop({
+	const ref = useRef<HTMLTableRowElement>(null)
+	const [, drop] = useDrop<EventsTableRowDragObject>({
 		accept: dragId,
 		hover(item, monitor) {
 			if (!ref.current) {
@@ -182,10 +212,9 @@ function EventsTableRow({
 			item.index = hoverIndex
 		},
 	})
-	const [{ isDragging }, drag, preview] = useDrag({
+	const [{ isDragging }, drag, preview] = useDrag<EventsTableRowDragObject, never, EventsTableRowDragCollection>({
 		type: dragId,
 		item: {
-			actionId: event.id,
 			index: index,
 		},
 		collect: (monitor) => ({
@@ -228,6 +257,18 @@ function EventsTableRow({
 	)
 }
 
+interface EventEditorProps {
+	event: EventInstance
+	controlId: string
+	setValue: (eventId: string, key: string, value: any) => void
+	innerDelete: () => void
+	innerDuplicate: () => void
+	isCollapsed: boolean
+	doCollapse: () => void
+	doExpand: () => void
+	doEnabled: (eventId: string, value: boolean) => void
+}
+
 function EventEditor({
 	event,
 	controlId,
@@ -238,35 +279,41 @@ function EventEditor({
 	doCollapse,
 	doExpand,
 	doEnabled,
-}) {
+}: EventEditorProps) {
 	const EventDefinitions = useContext(EventDefinitionsContext)
 
 	const eventSpec = EventDefinitions[event.type]
-	const options = eventSpec?.options ?? []
 
-	const [optionVisibility, setOptionVisibility] = useState({})
+	const [optionVisibility, setOptionVisibility] = useState<Record<string, boolean>>({})
 
-	const innerSetEnabled = useCallback((e) => doEnabled(event.id, e.target.checked), [doEnabled, event.id])
+	const innerSetEnabled = useCallback(
+		(e: FormEvent<HTMLInputElement>) => doEnabled(event.id, e.currentTarget.checked),
+		[doEnabled, event.id]
+	)
 
-	useEffect(() => {
+	const eventOptions = useMemo(() => {
 		const options = eventSpec?.options ?? []
 
-		for (const option of options) {
+		return options.map((option) => {
 			if (typeof option.isVisibleFn === 'string') {
-				option.isVisible = sandbox(option.isVisibleFn)
+				return {
+					...option,
+					isVisible: sandbox(option.isVisibleFn),
+				}
+			} else {
+				return option
 			}
-		}
+		}) as InternalActionInputField[]
 	}, [eventSpec])
 
 	useEffect(() => {
-		const visibility = {}
-		const options = eventSpec?.options ?? []
+		const visibility: Record<string, boolean> = {}
 
-		if (options === null || event === null) {
+		if (eventOptions === null || event === null) {
 			return
 		}
 
-		for (const option of options) {
+		for (const option of eventOptions) {
 			if (typeof option.isVisible === 'function') {
 				visibility[option.id] = option.isVisible(event.options, option.isVisibleData)
 			}
@@ -277,7 +324,7 @@ function EventEditor({
 		return () => {
 			setOptionVisibility({})
 		}
-	}, [eventSpec, event])
+	}, [eventOptions, event])
 
 	let name = ''
 	if (eventSpec) {
@@ -308,7 +355,7 @@ function EventEditor({
 						<CButton size="sm" onClick={innerDelete} title="Remove event">
 							<FontAwesomeIcon icon={faTrash} />
 						</CButton>
-						{doEnabled && (
+						{!!doEnabled && (
 							<>
 								&nbsp;
 								<CSwitch
@@ -329,11 +376,12 @@ function EventEditor({
 
 					<div className="cell-option">
 						<CForm onSubmit={PreventDefaultHandler}>
-							{options.map((opt, i) => (
+							{eventOptions.map((opt, i) => (
 								<MyErrorBoundary key={i}>
 									<OptionsInputField
 										key={i}
 										isOnControl={false}
+										isAction={false}
 										connectionId={'internal'}
 										option={opt}
 										actionId={event.id}
@@ -355,15 +403,20 @@ const noOptionsMessage = ({ inputValue }) => {
 	return 'No events found'
 }
 
-const AddEventDropdown = memo(function AddEventDropdown({ onSelect }) {
+interface AddEventDropdownProps {
+	onSelect: (value: DropdownChoiceId) => void
+}
+
+const AddEventDropdown = memo(function AddEventDropdown({ onSelect }: AddEventDropdownProps) {
 	const menuPortal = useContext(MenuPortalContext)
 	const EventDefinitions = useContext(EventDefinitionsContext)
 
 	const options = useMemo(() => {
-		const options = []
+		const options: DropdownChoice[] = []
 		for (const [eventId, event] of Object.entries(EventDefinitions || {})) {
+			if (!event) continue
 			options.push({
-				value: eventId,
+				id: eventId,
 				label: event.name,
 			})
 		}
@@ -375,9 +428,9 @@ const AddEventDropdown = memo(function AddEventDropdown({ onSelect }) {
 	}, [EventDefinitions])
 
 	const innerChange = useCallback(
-		(e) => {
-			if (e.value) {
-				onSelect(e.value)
+		(e: DropdownChoice | null) => {
+			if (e?.id) {
+				onSelect(e.id)
 			}
 		},
 		[onSelect]

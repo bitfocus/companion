@@ -62,7 +62,7 @@ type AsType<T extends 'string' | 'number'> = T extends 'string' ? string : numbe
 interface ColorInputFieldProps<T extends 'string' | 'number'> {
 	value: AsType<T>
 	setValue: (value: AsType<T>) => void
-	setValid: (valid: boolean) => void
+	setValid?: (valid: boolean) => void
 	disabled?: boolean
 	enableAlpha?: boolean
 	returnType: 'string' | 'number'

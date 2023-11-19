@@ -1,3 +1,5 @@
+import type { InternalActionInputField } from './Options.js'
+
 export interface AppVersionInfo {
 	appVersion: string
 	appBuild: string
@@ -59,4 +61,14 @@ export interface ClientBonjourService {
 	name: string
 	port: number
 	addresses: string[]
+}
+
+export interface EventDefinition {
+	name: string
+	description?: string
+	options: InternalActionInputField[]
+}
+
+export interface ClientEventDefinition extends Omit<EventDefinition, 'options'> {
+	options: Array<Omit<InternalActionInputField, 'isVisible'> & { isVisibleFn?: string }>
 }

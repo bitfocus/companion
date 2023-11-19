@@ -3,16 +3,22 @@ import { nanoid } from 'nanoid'
 import { ButtonPreview } from '../Components/ButtonPreview'
 import { SocketContext, socketEmitPromise } from '../util'
 import { useDeepCompareEffect } from 'use-deep-compare'
+import { ControlLocation } from '@companion/shared/Model/Common'
+
+interface OptionButtonPreviewProps {
+	location: ControlLocation
+	options: Record<string, any>
+}
 
 /**
  * Preview a button based on the selected options
  * @param {string} param.location where this preview is located (if any)
  * @returns
  */
-export function OptionButtonPreview({ location, options }) {
+export function OptionButtonPreview({ location, options }: OptionButtonPreviewProps) {
 	const socket = useContext(SocketContext)
 
-	const [image, setImage] = useState(null)
+	const [image, setImage] = useState<string | null>(null)
 	useDeepCompareEffect(() => {
 		const id = nanoid()
 		socketEmitPromise(socket, 'preview:button-reference:subscribe', [id, location, options])
@@ -41,5 +47,5 @@ export function OptionButtonPreview({ location, options }) {
 		// TODO - is this too reactive watching all the options?
 	}, [location, options])
 
-	return <ButtonPreview fixedSize noPad preview={image} />
+	return <ButtonPreview fixedSize preview={image} /> // TODO - noPad?
 }

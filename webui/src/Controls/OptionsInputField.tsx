@@ -10,6 +10,20 @@ import {
 import { InternalCustomVariableDropdown, InternalInstanceField } from './InternalInstanceFields'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faDollarSign, faQuestionCircle } from '@fortawesome/free-solid-svg-icons'
+import { SomeCompanionActionInputField, SomeCompanionFeedbackInputField } from '@companion-module/base'
+import { InternalActionInputField } from '@companion/shared/Model/Options'
+
+interface OptionsInputFieldProps {
+	connectionId: string
+	isOnControl: boolean
+	isAction: boolean
+	actionId: string
+	option: SomeCompanionActionInputField | SomeCompanionFeedbackInputField | InternalActionInputField
+	value: any
+	setValue: (actionId: string, key: string, value: any) => void
+	visibility: boolean
+	readonly?: boolean
+}
 
 export function OptionsInputField({
 	connectionId,
@@ -21,15 +35,15 @@ export function OptionsInputField({
 	setValue,
 	visibility,
 	readonly,
-}) {
-	const setValue2 = useCallback((val) => setValue(actionId, option.id, val), [actionId, option.id, setValue])
+}: OptionsInputFieldProps) {
+	const setValue2 = useCallback((val: any) => setValue(actionId, option.id, val), [actionId, option.id, setValue])
 
 	if (!option) {
 		return <p>Bad option</p>
 	}
 
-	let control = undefined
-	let features = {}
+	let control: JSX.Element | string | undefined = undefined
+	let features: Record<string, boolean> = {}
 	switch (option.type) {
 		case 'textinput': {
 			control = (
@@ -142,12 +156,12 @@ export function OptionsInputField({
 		control = <CInputGroupText>Unknown type "{option.type}"</CInputGroupText>
 	}
 
-	const featureIcons = []
+	const featureIcons: JSX.Element[] = []
 	if (features.variables)
 		featureIcons.push(<FontAwesomeIcon key="variables" icon={faDollarSign} title={'Supports variables'} />)
 
 	return (
-		<CFormGroup style={{ display: visibility === false ? 'none' : null }}>
+		<CFormGroup style={{ display: visibility === false ? 'none' : undefined }}>
 			<CLabel>
 				{option.label}
 				{featureIcons.length ? <span className="feature-icons">{featureIcons}</span> : ''}

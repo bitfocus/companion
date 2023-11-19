@@ -11,10 +11,10 @@ import { LoaderHeightWidthProps } from 'react-spinners/helpers/props'
 import { Socket } from 'socket.io-client'
 import type { AllVariableDefinitions } from '@companion/shared/Model/Variables'
 import type { NotificationsManagerRef } from './Components/Notifications'
-import type { ClientConnectionConfig, ModuleDisplayInfo } from '@companion/shared/Model/Common'
+import type { ClientConnectionConfig, ClientEventDefinition, ModuleDisplayInfo } from '@companion/shared/Model/Common'
 
 export const SocketContext = React.createContext<Socket>(null as any) // TODO - fix this
-export const EventDefinitionsContext = React.createContext(null)
+export const EventDefinitionsContext = React.createContext<Record<string, ClientEventDefinition | undefined>>({})
 export const NotifierContext = React.createContext<React.RefObject<NotificationsManagerRef>>({ current: null }) // TODO - this is not good
 /*({
 	show: () => {

@@ -10,7 +10,7 @@ interface NumberInputFieldProps {
 	range?: boolean
 	value: number
 	setValue: (value: number) => void
-	setValid: (valid: boolean) => void
+	setValid?: (valid: boolean) => void
 	disabled?: boolean
 }
 

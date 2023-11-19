@@ -1,10 +1,10 @@
 import { CButton, CCol, CForm, CInputGroup, CInputGroupAppend, CLabel, CRow } from '@coreui/react'
 import React, { useCallback, useContext, useEffect, useRef, useState } from 'react'
 import { nanoid } from 'nanoid'
-import { GenericConfirmModal } from '../Components/GenericConfirmModal'
+import { GenericConfirmModal, GenericConfirmModalRef } from '../Components/GenericConfirmModal'
 import { LoadingRetryOrError, socketEmitPromise, SocketContext, MyErrorBoundary, PreventDefaultHandler } from '../util'
 import { ControlActionSetEditor } from '../Controls/ActionSetEditor'
-import jsonPatch from 'fast-json-patch'
+import jsonPatch, { Operation as JsonPatchOperation } from 'fast-json-patch'
 
 import { ControlOptionsEditor } from '../Controls/ControlOptionsEditor'
 import { ControlFeedbacksEditor } from '../Controls/FeedbackEditor'
@@ -13,19 +13,24 @@ import { TextInputField } from '../Components'
 import { TriggerEventEditor } from './EventEditor'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faQuestionCircle } from '@fortawesome/free-solid-svg-icons'
+import type { TriggerModel } from '@companion/shared/Model/TriggerModel'
 
-export function EditTriggerPanel({ controlId }) {
+interface EditTriggerPanelProps {
+	controlId: string
+}
+
+export function EditTriggerPanel({ controlId }: EditTriggerPanelProps) {
 	const socket = useContext(SocketContext)
 
-	const resetModalRef = useRef()
+	const resetModalRef = useRef<GenericConfirmModalRef>(null)
 
-	const [config, setConfig] = useState(null)
-	const [runtimeProps, setRuntimeProps] = useState(null)
+	const [config, setConfig] = useState<TriggerModel | null>(null)
+	const [runtimeProps, setRuntimeProps] = useState<Record<string, never> | null>(null)
 
-	const configRef = useRef()
-	configRef.current = config // update the ref every render
+	const configRef = useRef<TriggerModel>()
+	configRef.current = config ?? undefined // update the ref every render
 
-	const [configError, setConfigError] = useState(null)
+	const [configError, setConfigError] = useState<string | null>(null)
 
 	const [reloadConfigToken, setReloadConfigToken] = useState(nanoid())
 
@@ -46,17 +51,17 @@ export function EditTriggerPanel({ controlId }) {
 				setConfigError('Failed to load trigger config')
 			})
 
-		const patchConfig = (patch) => {
+		const patchConfig = (patch: JsonPatchOperation[] | false) => {
 			setConfig((oldConfig) => {
-				if (patch === false) {
-					return false
+				if (!oldConfig || patch === false) {
+					return null
 				} else {
 					return jsonPatch.applyPatch(cloneDeep(oldConfig) || {}, patch).newDocument
 				}
 			})
 		}
 
-		const patchRuntimeProps = (patch) => {
+		const patchRuntimeProps = (patch: JsonPatchOperation[] | false) => {
 			setRuntimeProps((oldProps) => {
 				if (patch === false) {
 					return {}
@@ -85,11 +90,11 @@ export function EditTriggerPanel({ controlId }) {
 		socketEmitPromise(socket, 'triggers:test', [controlId]).catch((e) => console.error(`Hot press failed: ${e}`))
 	}, [socket, controlId])
 
-	const errors = []
+	const errors: string[] = []
 	if (configError) errors.push(configError)
 	const loadError = errors.length > 0 ? errors.join(', ') : null
-	const hasRuntimeProps = runtimeProps || runtimeProps === false
-	const dataReady = !loadError && config && hasRuntimeProps
+	const hasRuntimeProps = !!runtimeProps || runtimeProps === false
+	const dataReady = !loadError && !!config && hasRuntimeProps
 
 	return (
 		<div className="edit-button-panel flex-form">
@@ -170,11 +175,17 @@ export function EditTriggerPanel({ controlId }) {
 	)
 }
 
-function TriggerConfig({ controlId, options, hotPressDown }) {
+interface TriggerConfigProps {
+	controlId: string
+	options: Record<string, any>
+	hotPressDown: () => void
+}
+
+function TriggerConfig({ controlId, options, hotPressDown }: TriggerConfigProps) {
 	const socket = useContext(SocketContext)
 
 	const setValueInner = useCallback(
-		(key, value) => {
+		(key: string, value: any) => {
 			console.log('set', controlId, key, value)
 			socketEmitPromise(socket, 'controls:set-options-field', [controlId, key, value]).catch((e) => {
 				console.error(`Set field failed: ${e}`)
@@ -183,7 +194,7 @@ function TriggerConfig({ controlId, options, hotPressDown }) {
 		[socket, controlId]
 	)
 
-	const setName = useCallback((val) => setValueInner('name', val), [setValueInner])
+	const setName = useCallback((val: string) => setValueInner('name', val), [setValueInner])
 
 	return (
 		<CCol sm={12} className="p-0">

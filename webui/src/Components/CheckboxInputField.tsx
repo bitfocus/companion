@@ -5,7 +5,7 @@ interface CheckboxInputFieldProps {
 	tooltip?: string
 	value: boolean
 	setValue: (value: boolean) => void
-	setValid: (valid: boolean) => void
+	setValid?: (valid: boolean) => void
 	disabled?: boolean
 }
 
