@@ -209,6 +209,7 @@ export function LoadingRetryOrError({ error, dataReady, doRetry, autoRetryAfter 
 			return () => clearInterval(interval)
 		} else {
 			setCountdown(null)
+			return
 		}
 	}, [dataReady, autoRetryAfter])
 
