@@ -5,7 +5,9 @@ import { Marked } from 'marked'
 import { baseUrl } from 'marked-base-url'
 import { ModulesContext } from '../util'
 
-type HelpModalProps = Record<string, never>
+interface HelpModalProps {
+	// Nothing
+}
 
 interface HelpDescription {
 	markdown: string

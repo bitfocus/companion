@@ -1,8 +1,14 @@
 import { useEffect, useState } from 'react'
 import { socketEmitPromise } from '../util'
+import { Socket } from 'socket.io-client'
+import { UserConfigModel } from '@companion/shared/Model/UserConfigModel'
 
-export function useUserConfigSubscription(socket, setLoadError, retryToken) {
-	const [userConfig, setUserConfig] = useState(null)
+export function useUserConfigSubscription(
+	socket: Socket,
+	setLoadError: ((error: string | null) => void) | undefined,
+	retryToken: string
+) {
+	const [userConfig, setUserConfig] = useState<UserConfigModel | null>(null)
 
 	useEffect(() => {
 		setLoadError?.(null)
@@ -18,11 +24,15 @@ export function useUserConfigSubscription(socket, setLoadError, retryToken) {
 				setLoadError?.(`Failed to load user config`)
 			})
 
-		const updateUserConfigValue = (key, value) => {
-			setUserConfig((oldState) => ({
-				...oldState,
-				[key]: value,
-			}))
+		const updateUserConfigValue = (key: keyof UserConfigModel, value: any) => {
+			setUserConfig((oldState) =>
+				oldState
+					? {
+							...oldState,
+							[key]: value,
+					  }
+					: null
+			)
 		}
 
 		socket.on('set_userconfig_key', updateUserConfigValue)

@@ -14,7 +14,7 @@ import { SomeCompanionConfigField } from '@companion-module/base'
 
 interface ConnectionEditPanelProps {
 	connectionId: string
-	connectionStatus: ConnectionStatusEntry
+	connectionStatus: ConnectionStatusEntry | undefined
 	doConfigureConnection: (connectionId: string | null) => void
 	showHelp: (moduleId: string) => void
 }

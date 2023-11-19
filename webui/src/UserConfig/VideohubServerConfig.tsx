@@ -1,5 +1,5 @@
 import React from 'react'
-import { CButton, CInput } from '@coreui/react'
+import { CButton } from '@coreui/react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faUndo } from '@fortawesome/free-solid-svg-icons'
 import CSwitch from '../CSwitch'

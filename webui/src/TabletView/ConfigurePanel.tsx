@@ -1,10 +1,17 @@
-import { useState } from 'react'
+import React, { useState } from 'react'
 import { PreventDefaultHandler, useMountEffect } from '../util'
 import { CButton, CCol, CForm, CFormGroup, CInput, CInputCheckbox, CRow } from '@coreui/react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faCog, faExpand } from '@fortawesome/free-solid-svg-icons'
+import type { UserConfigGridSize } from '@companion/shared/Model/UserConfigModel'
 
-export function ConfigurePanel({ updateQueryUrl, query, gridSize }) {
+interface ConfigurePanelProps {
+	updateQueryUrl: (key: string, value: any) => void
+	query: Record<string, string | number>
+	gridSize: UserConfigGridSize
+}
+
+export function ConfigurePanel({ updateQueryUrl, query, gridSize }: ConfigurePanelProps) {
 	const [show, setShow] = useState(false)
 	const [fullscreen, setFullscreen] = useState(document.fullscreenElement !== null)
 
@@ -87,7 +94,6 @@ export function ConfigurePanel({ updateQueryUrl, query, gridSize }) {
 								<CInputCheckbox
 									type="checkbox"
 									checked={!!query['noconfigure']}
-									value={true}
 									onChange={(e) => updateQueryUrl('noconfigure', !!e.currentTarget.checked)}
 								/>
 							</CFormGroup>
@@ -96,7 +102,6 @@ export function ConfigurePanel({ updateQueryUrl, query, gridSize }) {
 								<CInputCheckbox
 									type="checkbox"
 									checked={!!query['nofullscreen']}
-									value={true}
 									onChange={(e) => updateQueryUrl('nofullscreen', !!e.currentTarget.checked)}
 								/>
 							</CFormGroup>
@@ -106,7 +111,6 @@ export function ConfigurePanel({ updateQueryUrl, query, gridSize }) {
 								<CInputCheckbox
 									type="checkbox"
 									checked={!!query['showpages']}
-									value={true}
 									onChange={(e) => updateQueryUrl('showpages', !!e.currentTarget.checked)}
 								/>
 							</CFormGroup>

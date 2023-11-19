@@ -1,6 +1,6 @@
 import { CCol, CRow, CTabs, CTabContent, CTabPane, CNavItem, CNavLink, CNav } from '@coreui/react'
-import { memo, useCallback, useContext, useEffect, useRef, useState } from 'react'
-import { HelpModal } from './HelpModal'
+import React, { memo, useCallback, useContext, useEffect, useRef, useState } from 'react'
+import { HelpModal, HelpModalRef } from './HelpModal'
 import { NotifierContext, MyErrorBoundary, socketEmitPromise, SocketContext } from '../util'
 import { ConnectionsList } from './ConnectionList'
 import { AddConnectionsPanel } from './AddConnection'
@@ -8,19 +8,20 @@ import { ConnectionEditPanel } from './ConnectionEditPanel'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { nanoid } from 'nanoid'
 import { faCog, faPlus } from '@fortawesome/free-solid-svg-icons'
-import jsonPatch from 'fast-json-patch'
+import jsonPatch, { Operation as JsonPatchOperation } from 'fast-json-patch'
 import { cloneDeep } from 'lodash-es'
+import { ConnectionStatusEntry } from '@companion/shared/Model/Common'
 
 export const ConnectionsPage = memo(function ConnectionsPage() {
 	const socket = useContext(SocketContext)
 	const notifier = useContext(NotifierContext)
 
-	const helpModalRef = useRef()
+	const helpModalRef = useRef<HelpModalRef>(null)
 
 	const [tabResetToken, setTabResetToken] = useState(nanoid())
 	const [activeTab, setActiveTab] = useState('add')
-	const [selectedConnectionId, setSelectedConnectionId] = useState(null)
-	const doChangeTab = useCallback((newTab) => {
+	const [selectedConnectionId, setSelectedConnectionId] = useState<string | null>(null)
+	const doChangeTab = useCallback((newTab: string) => {
 		setActiveTab((oldTab) => {
 			if (oldTab !== newTab) {
 				setSelectedConnectionId(null)
@@ -31,10 +32,10 @@ export const ConnectionsPage = memo(function ConnectionsPage() {
 	}, [])
 
 	const showHelp = useCallback(
-		(id) => {
+		(id: string) => {
 			socketEmitPromise(socket, 'connections:get-help', [id]).then(([err, result]) => {
 				if (err) {
-					notifier.current.show('Instance help', `Failed to get help text: ${err}`)
+					notifier.current?.show('Instance help', `Failed to get help text: ${err}`)
 					return
 				}
 				if (result) {
@@ -45,13 +46,13 @@ export const ConnectionsPage = memo(function ConnectionsPage() {
 		[socket, notifier]
 	)
 
-	const doConfigureConnection = useCallback((id) => {
-		setSelectedConnectionId(id)
+	const doConfigureConnection = useCallback((connectionId: string | null) => {
+		setSelectedConnectionId(connectionId)
 		setTabResetToken(nanoid())
-		setActiveTab(id ? 'edit' : 'add')
+		setActiveTab(connectionId ? 'edit' : 'add')
 	}, [])
 
-	const [connectionStatus, setConnectionStatus] = useState(null)
+	const [connectionStatus, setConnectionStatus] = useState<Record<string, ConnectionStatusEntry>>({})
 	useEffect(() => {
 		socketEmitPromise(socket, 'connections:get-statuses', [])
 			.then((statuses) => {
@@ -61,7 +62,7 @@ export const ConnectionsPage = memo(function ConnectionsPage() {
 				console.error(`Failed to load connection statuses`, e)
 			})
 
-		const patchStatuses = (patch) => {
+		const patchStatuses = (patch: JsonPatchOperation[]) => {
 			setConnectionStatus((oldStatuses) => {
 				if (!oldStatuses) return oldStatuses
 				return jsonPatch.applyPatch(cloneDeep(oldStatuses) || {}, patch).newDocument

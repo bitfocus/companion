@@ -1,8 +1,11 @@
 import { useCallback, useState } from 'react'
 import { useEventListener, useIsomorphicLayoutEffect } from 'usehooks-ts'
 
-export default function useElementclientSize() {
-	const [ref, setRef] = useState(null)
+export default function useElementclientSize<TElement extends HTMLElement>(): [
+	(elm: TElement | null) => void,
+	{ width: number; height: number },
+] {
+	const [ref, setRef] = useState<TElement | null>(null)
 	const [size, setSize] = useState({
 		width: 0,
 		height: 0,

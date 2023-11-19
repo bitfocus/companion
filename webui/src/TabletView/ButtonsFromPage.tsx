@@ -1,11 +1,31 @@
-import { useCallback, useContext, useMemo } from 'react'
+import React, { useCallback, useContext, useMemo } from 'react'
 import { SocketContext, socketEmitPromise } from '../util'
 import { ButtonPreview } from '../Components/ButtonPreview'
 import { useInView } from 'react-intersection-observer'
 import { formatLocation } from '@companion/shared/ControlId'
 import { useButtonRenderCache } from '../Hooks/useSharedRenderCache'
+import type { UserConfigGridSize } from '@companion/shared/Model/UserConfigModel'
+import { ControlLocation } from '@companion/shared/Model/Common'
 
-export function ButtonsFromPage({ pageNumber, displayColumns, gridSize, buttonSize, indexOffset }) {
+export interface TabletGridSize extends UserConfigGridSize {
+	buttonCount: number
+}
+
+interface ButtonsFromPageProps {
+	pageNumber: number
+	displayColumns: number
+	gridSize: TabletGridSize
+	buttonSize: number
+	indexOffset: number
+}
+
+export function ButtonsFromPage({
+	pageNumber,
+	displayColumns,
+	gridSize,
+	buttonSize,
+	indexOffset,
+}: ButtonsFromPageProps) {
 	const socket = useContext(SocketContext)
 
 	const buttonClick = useCallback(
@@ -65,7 +85,25 @@ export function ButtonsFromPage({ pageNumber, displayColumns, gridSize, buttonSi
 		</>
 	)
 }
-function ButtonWrapper({ pageNumber, column, row, buttonSize, displayColumn, displayRow, buttonClick }) {
+
+interface ButtonWrapperProps {
+	pageNumber: number
+	column: number
+	row: number
+	buttonSize: number
+	displayColumn: number
+	displayRow: number
+	buttonClick: (location: ControlLocation, pressed: boolean) => void
+}
+function ButtonWrapper({
+	pageNumber,
+	column,
+	row,
+	buttonSize,
+	displayColumn,
+	displayRow,
+	buttonClick,
+}: ButtonWrapperProps) {
 	const location = useMemo(() => ({ pageNumber, column, row }), [pageNumber, column, row])
 
 	const { image } = useButtonRenderCache(location)
@@ -82,11 +120,10 @@ function ButtonWrapper({ pageNumber, column, row, buttonSize, displayColumn, dis
 
 	return (
 		<ButtonPreview
-			page={pageNumber}
 			location={location}
 			preview={image}
 			onClick={buttonClick}
-			alt={`Button ${formatLocation(location)}`}
+			title={`Button ${formatLocation(location)}`}
 			selected={false}
 			style={buttonStyle}
 		/>

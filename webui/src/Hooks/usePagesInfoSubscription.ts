@@ -1,8 +1,14 @@
 import { useEffect, useState } from 'react'
 import { socketEmitPromise } from '../util'
+import { Socket } from 'socket.io-client'
+import type { PageModel } from '@companion/shared/Model/PageModel'
 
-export function usePagesInfoSubscription(socket, setLoadError, retryToken) {
-	const [pages, setPages] = useState(null)
+export function usePagesInfoSubscription(
+	socket: Socket,
+	setLoadError: ((error: string | null) => void) | undefined,
+	retryToken: string
+) {
+	const [pages, setPages] = useState<Record<number, PageModel | undefined> | null>(null)
 
 	useEffect(() => {
 		setLoadError?.(null)
@@ -19,7 +25,7 @@ export function usePagesInfoSubscription(socket, setLoadError, retryToken) {
 				setPages(null)
 			})
 
-		const updatePageInfo = (page, info) => {
+		const updatePageInfo = (page: number, info: PageModel) => {
 			setPages((oldPages) => {
 				if (oldPages) {
 					return {

@@ -1,4 +1,4 @@
-import { useCallback, useContext, useEffect, useMemo, useState } from 'react'
+import React, { useCallback, useContext, useEffect, useMemo, useState } from 'react'
 import { LoadingRetryOrError, MyErrorBoundary, SocketContext } from '../util'
 import { CCol, CContainer, CRow } from '@coreui/react'
 import { nanoid } from 'nanoid'
@@ -14,22 +14,34 @@ import { ButtonsFromPage } from './ButtonsFromPage'
 export function TabletView() {
 	const socket = useContext(SocketContext)
 
-	const [loadError, setLoadError] = useState(null)
+	const [loadError, setLoadError] = useState<string | null>(null)
 
 	const [queryUrl, setQueryUrl] = useState(window.location.search)
 	const { orderedPages, parsedQuery } = useMemo(() => {
-		const parsedQuery = queryString.parse(queryUrl)
+		const rawParsedQuery = queryString.parse(queryUrl)
 
-		const pagesRange = rangeParser(parsedQuery.pages ?? '').filter((p) => p >= 1 && p <= 99)
+		const pagesStr = Array.isArray(rawParsedQuery.pages) ? rawParsedQuery.pages[0] : rawParsedQuery.pages
+		const pagesRange = rangeParser(pagesStr ?? '').filter((p) => p >= 1 && p <= 99)
 
-		if (parsedQuery['max_col'] === undefined && parsedQuery['cols'])
-			parsedQuery['max_col'] = Number(parsedQuery['cols']) - 1
-		if (parsedQuery['max_row'] === undefined && parsedQuery['rows'])
-			parsedQuery['max_row'] = Number(parsedQuery['rows']) - 1
+		if (rawParsedQuery['max_col'] === undefined && rawParsedQuery['cols'])
+			rawParsedQuery['max_col'] = Number(rawParsedQuery['cols']) - 1 + ''
+		if (rawParsedQuery['max_row'] === undefined && rawParsedQuery['rows'])
+			rawParsedQuery['max_row'] = Number(rawParsedQuery['rows']) - 1 + ''
 
 		// Remove renamed properties
-		delete parsedQuery['cols']
-		delete parsedQuery['rows']
+		delete rawParsedQuery['cols']
+		delete rawParsedQuery['rows']
+
+		const parsedQuery: Record<string, string> = {}
+		for (const [key, value] of Object.entries(rawParsedQuery)) {
+			if (Array.isArray(value)) {
+				if (value[0]) {
+					parsedQuery[key] = value[0]
+				}
+			} else if (value) {
+				parsedQuery[key] = value
+			}
+		}
 
 		return {
 			parsedQuery,
@@ -62,7 +74,7 @@ export function TabletView() {
 				if (value === '' || value === undefined || value === null || value === false) {
 					delete newQuery[key]
 				} else if (value === true) {
-					newQuery[key] = 1
+					newQuery[key] = '1'
 				} else {
 					newQuery[key] = value
 				}
@@ -97,14 +109,24 @@ export function TabletView() {
 			}
 
 		const maxColumn = clampValue(
-			parsedQuery['max_col'],
+			Number(parsedQuery['max_col']),
 			rawGridSize.minColumn,
 			rawGridSize.maxColumn,
 			rawGridSize.maxColumn
 		)
-		const minColumn = clampValue(parsedQuery['min_col'], rawGridSize.minColumn, maxColumn, rawGridSize.minColumn)
-		const maxRow = clampValue(parsedQuery['max_row'], rawGridSize.minRow, rawGridSize.maxRow, rawGridSize.maxRow)
-		const minRow = clampValue(parsedQuery['min_row'], rawGridSize.minRow, maxRow, rawGridSize.minRow)
+		const minColumn = clampValue(
+			Number(parsedQuery['min_col']),
+			rawGridSize.minColumn,
+			maxColumn,
+			rawGridSize.minColumn
+		)
+		const maxRow = clampValue(
+			Number(parsedQuery['max_row']),
+			rawGridSize.minRow,
+			rawGridSize.maxRow,
+			rawGridSize.maxRow
+		)
+		const minRow = clampValue(Number(parsedQuery['min_row']), rawGridSize.minRow, maxRow, rawGridSize.minRow)
 
 		const columnCount = maxColumn - minColumn + 1
 		const rowCount = maxRow - minRow + 1
@@ -127,7 +149,7 @@ export function TabletView() {
 	let displayColumns = Number(parsedQuery['display_cols'])
 	if (displayColumns === 0 || isNaN(displayColumns)) displayColumns = gridSize.columnCount
 
-	const [elementSizeRef, pageSize] = useElementclientSize()
+	const [elementSizeRef, pageSize] = useElementclientSize<HTMLDivElement>()
 	const buttonSize = pageSize.width / displayColumns
 
 	const rowsPerPage = Math.ceil((gridSize.columnCount * gridSize.rowCount) / displayColumns)
@@ -198,7 +220,7 @@ export function TabletView() {
 	)
 }
 
-function clampValue(value, min, max, fallback) {
+function clampValue(value: number, min: number, max: number, fallback: number): number {
 	const valueNumber = Number(value)
 	if (isNaN(valueNumber)) return fallback
 
