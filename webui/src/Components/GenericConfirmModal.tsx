@@ -2,16 +2,16 @@ import React, { CButton, CModal, CModalBody, CModalFooter, CModalHeader } from '
 import { forwardRef, useCallback, useImperativeHandle, useRef, useState } from 'react'
 
 export interface GenericConfirmModalRef {
-	show(title: string, message: string | string[], buttonLabel: string, completeCallback: () => void): void
+	show(title: string, message: string | string[] | null, buttonLabel: string, completeCallback: () => void): void
 }
 
 interface GenericConfirmModalProps {
-	content?: string
+	content?: string | JSX.Element | JSX.Element[]
 }
 
 interface GenericConfirmModalData {
 	title: string
-	message: string | string[]
+	message: string | string[] | null
 	buttonLabel: string
 	completeCallback: () => void
 }

@@ -11,7 +11,7 @@ interface TextInputFieldProps {
 	value: string
 	style?: React.CSSProperties
 	setValue: (value: string) => void
-	setValid: (valid: boolean) => void
+	setValid?: (valid: boolean) => void
 	disabled?: boolean
 	useVariables?: boolean
 	useInternalLocationVariables?: boolean

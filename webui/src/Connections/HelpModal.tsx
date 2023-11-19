@@ -5,11 +5,22 @@ import { Marked } from 'marked'
 import { baseUrl } from 'marked-base-url'
 import { ModulesContext } from '../util'
 
+type HelpModalProps = Record<string, never>
+
+interface HelpDescription {
+	markdown: string
+	baseUrl: string
+}
+
+export interface HelpModalRef {
+	show(name: string, description: HelpDescription): void
+}
+
 export const HelpModal = memo(
-	forwardRef(function HelpModal(_props, ref) {
+	forwardRef<HelpModalRef, HelpModalProps>(function HelpModal(_props, ref) {
 		const modules = useContext(ModulesContext)
 
-		const [content, setContent] = useState(null)
+		const [content, setContent] = useState<[name: string, description: HelpDescription] | null>(null)
 		const [show, setShow] = useState(false)
 
 		const doClose = useCallback(() => setShow(false), [])
@@ -42,14 +53,13 @@ export const HelpModal = memo(
 			  }
 			: undefined
 
-		const moduleInfo = modules?.[content?.[0]]
+		const moduleInfo = content && modules?.[content[0]]
 
 		return (
 			<CModal show={show} onClose={doClose} onClosed={onClosed} size="lg">
 				<CModalHeader closeButton>
 					<h5>
-						Help for {moduleInfo?.description || moduleInfo?.name || content?.[0]}{' '}
-						{moduleInfo?.version ? `v${moduleInfo.version}` : ''}
+						Help for {moduleInfo?.name || content?.[0]} {moduleInfo?.version ? `v${moduleInfo.version}` : ''}
 					</h5>
 				</CModalHeader>
 				<CModalBody>

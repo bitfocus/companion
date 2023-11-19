@@ -9,8 +9,22 @@ import sanitizeHtml from 'sanitize-html'
 import { isLabelValid } from '@companion/shared/Label'
 import CSwitch from '../CSwitch'
 import { BonjourDeviceInputField } from '../Components/BonjourDeviceInputField'
+import { ConnectionStatusEntry } from '@companion/shared/Model/Common'
+import { SomeCompanionConfigField } from '@companion-module/base'
 
-export function ConnectionEditPanel({ connectionId, connectionStatus, doConfigureConnection, showHelp }) {
+interface ConnectionEditPanelProps {
+	connectionId: string
+	connectionStatus: ConnectionStatusEntry
+	doConfigureConnection: (connectionId: string | null) => void
+	showHelp: (moduleId: string) => void
+}
+
+export function ConnectionEditPanel({
+	connectionId,
+	connectionStatus,
+	doConfigureConnection,
+	showHelp,
+}: ConnectionEditPanelProps) {
 	console.log('status', connectionStatus)
 
 	if (!connectionStatus || !connectionStatus.level || connectionStatus.level === 'crashed') {
@@ -33,27 +47,33 @@ export function ConnectionEditPanel({ connectionId, connectionStatus, doConfigur
 	)
 }
 
+interface ConnectionEditPanelInnerProps {
+	connectionId: string
+	doConfigureConnection: (connectionId: string | null) => void
+	showHelp: (moduleId: string) => void
+}
+
 const ConnectionEditPanelInner = memo(function ConnectionEditPanelInner({
 	connectionId,
 	doConfigureConnection,
 	showHelp,
-}) {
+}: ConnectionEditPanelInnerProps) {
 	const socket = useContext(SocketContext)
 	const modules = useContext(ModulesContext)
 
-	const [error, setError] = useState(null)
+	const [error, setError] = useState<string | null>(null)
 	const [reloadToken, setReloadToken] = useState(nanoid())
 
-	const [configFields, setConfigFields] = useState(null)
-	const [connectionConfig, setConnectionConfig] = useState(null)
-	const [connectionLabel, setConnectionLabel] = useState(null)
-	const [connectionType, setConnectionType] = useState(null)
-	const [validFields, setValidFields] = useState(null)
+	const [configFields, setConfigFields] = useState<SomeCompanionConfigField[] | null>([])
+	const [connectionConfig, setConnectionConfig] = useState<Record<string, any> | null>(null)
+	const [connectionLabel, setConnectionLabel] = useState<string | null>(null)
+	const [connectionType, setConnectionType] = useState<string | null>(null)
+	const [validFields, setValidFields] = useState<Record<string, boolean | undefined> | null>(null)
 
 	const [fieldVisibility, setFieldVisibility] = useState({})
 
 	const invalidFieldNames = useMemo(() => {
-		const fieldNames = []
+		const fieldNames: string[] = []
 
 		if (validFields) {
 			for (const [field, valid] of Object.entries(validFields)) {
@@ -178,14 +198,14 @@ const ConnectionEditPanelInner = memo(function ConnectionEditPanelInner({
 		}
 	}, [configFields, connectionConfig])
 
-	const moduleInfo = modules[connectionType] ?? {}
-	const dataReady = connectionConfig && configFields && validFields
+	const moduleInfo = connectionType ? modules[connectionType] : undefined
+	const dataReady = !!connectionConfig && !!configFields && !!validFields
 	return (
 		<div>
 			<h5>
 				{moduleInfo?.shortname ?? connectionType} configuration
 				{moduleInfo?.hasHelp && (
-					<div className="float_right" onClick={() => showHelp(connectionType)}>
+					<div className="float_right" onClick={() => connectionType && showHelp(connectionType)}>
 						<FontAwesomeIcon icon={faQuestionCircle} />
 					</div>
 				)}
@@ -197,9 +217,9 @@ const ConnectionEditPanelInner = memo(function ConnectionEditPanelInner({
 						<CCol className={`fieldtype-textinput`} sm={12}>
 							<label>Label</label>
 							<TextInputField
-								value={connectionLabel}
+								value={connectionLabel ?? ''}
 								setValue={setConnectionLabel}
-								isValid={isLabelValid(connectionLabel)}
+								// isValid={isLabelValid(connectionLabel)}
 							/>
 						</CCol>
 
@@ -209,7 +229,7 @@ const ConnectionEditPanelInner = memo(function ConnectionEditPanelInner({
 									key={i}
 									className={`fieldtype-${field.type}`}
 									sm={field.width}
-									style={{ display: fieldVisibility[field.id] === false ? 'none' : null }}
+									style={{ display: fieldVisibility[field.id] === false ? 'none' : undefined }}
 								>
 									<label>{field.label}</label>
 									{field.tooltip && (
@@ -218,7 +238,7 @@ const ConnectionEditPanelInner = memo(function ConnectionEditPanelInner({
 									<ConfigField
 										definition={field}
 										value={connectionConfig[field.id]}
-										valid={validFields[field.id]}
+										// valid={validFields[field.id] ?? false}
 										setValue={setValue}
 										setValid={setValid}
 										connectionId={connectionId}
@@ -249,11 +269,20 @@ const ConnectionEditPanelInner = memo(function ConnectionEditPanelInner({
 	)
 })
 
-function ConfigField({ setValue, setValid, definition, value, connectionId }) {
-	const id = definition.id
-	const setValue2 = useCallback((val) => setValue(id, val), [setValue, id])
-	const setValid2 = useCallback((valid) => setValid(id, valid), [setValid, id])
+interface ConfigFieldProps {
+	setValue: (key: string, value: any) => void
+	setValid: (key: string, valid: boolean) => void
+	definition: SomeCompanionConfigField
+	value: any
+	connectionId: string
+}
 
+function ConfigField({ setValue, setValid, definition, value, connectionId }: ConfigFieldProps) {
+	const id = definition.id
+	const setValue2 = useCallback((val: any) => setValue(id, val), [setValue, id])
+	const setValid2 = useCallback((valid: boolean) => setValid(id, valid), [setValid, id])
+
+	const fieldType = definition.type
 	switch (definition.type) {
 		case 'static-text': {
 			const descriptionHtml = {
@@ -320,11 +349,11 @@ function ConfigField({ setValue, setValid, definition, value, connectionId }) {
 			return (
 				<DropdownInputField
 					choices={definition.choices}
-					allowCustom={definition.allowCustom}
+					// allowCustom={definition.allowCustom}
 					minSelection={definition.minSelection}
 					minChoicesForSearch={definition.minChoicesForSearch}
 					maxSelection={definition.maxSelection}
-					regex={definition.regex}
+					// regex={definition.regex}
 					value={value}
 					setValue={setValue2}
 					setValid={setValid2}
@@ -354,6 +383,6 @@ function ConfigField({ setValue, setValid, definition, value, connectionId }) {
 				/>
 			)
 		default:
-			return <p>Unknown field "{definition.type}"</p>
+			return <p>Unknown field "{fieldType}"</p>
 	}
 }

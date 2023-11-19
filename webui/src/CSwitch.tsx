@@ -1,17 +1,21 @@
-import React from 'react'
+import React, { ChangeEvent } from 'react'
 import PropTypes from 'prop-types'
 import classNames from 'classnames'
 
 interface CSwitchProps {
-	className: string
-	innerRef: React.LegacyRef<HTMLInputElement>
+	className?: string
+	innerRef?: React.LegacyRef<HTMLInputElement>
 	size?: '' | 'lg' | 'sm'
 	shape?: '' | 'pill' | 'square'
 	variant?: '' | '3d' | 'opposite' | 'outline'
 	color?: string
-	labelOn: string
-	labelOff: string
-	title: string
+	labelOn?: string
+	labelOff?: string
+	title?: string
+	disabled?: boolean
+	checked: boolean
+	onChange: (e: ChangeEvent<HTMLInputElement>) => void
+	tooltip?: string
 }
 
 //component - CoreUI / CSwitch

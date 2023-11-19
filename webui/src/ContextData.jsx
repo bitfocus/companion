@@ -29,7 +29,7 @@ export function ContextData({ children }) {
 	const socket = useContext(SocketContext)
 
 	const [eventDefinitions, setEventDefinitions] = useState(null)
-	const [instances, setInstances] = useState(null)
+	const [connections, setConnections] = useState(null)
 	const [modules, setModules] = useState(null)
 	const [actionDefinitions, setActionDefinitions] = useState(null)
 	const [feedbackDefinitions, setFeedbackDefinitions] = useState(null)
@@ -172,20 +172,20 @@ export function ContextData({ children }) {
 			}
 
 			socketEmitPromise(socket, 'connections:subscribe', [])
-				.then((instances) => {
-					setInstances(instances)
+				.then((connections) => {
+					setConnections(connections)
 				})
 				.catch((e) => {
 					console.error('Failed to load instances list:', e)
-					setInstances(null)
+					setConnections(null)
 				})
 
 			const patchInstances = (patch) => {
-				setInstances((oldInstances) => {
+				setConnections((oldConnections) => {
 					if (patch === false) {
 						return false
 					} else {
-						return jsonPatch.applyPatch(cloneDeep(oldInstances) || {}, patch).newDocument
+						return jsonPatch.applyPatch(cloneDeep(oldConnections) || {}, patch).newDocument
 					}
 				})
 			}
@@ -277,7 +277,7 @@ export function ContextData({ children }) {
 
 	const steps = [
 		eventDefinitions,
-		instances,
+		connections,
 		modules,
 		variableDefinitions,
 		completeVariableDefinitions,
@@ -299,7 +299,7 @@ export function ContextData({ children }) {
 				<ModulesContext.Provider value={modules}>
 					<ActionsContext.Provider value={actionDefinitions}>
 						<FeedbacksContext.Provider value={feedbackDefinitions}>
-							<ConnectionsContext.Provider value={instances}>
+							<ConnectionsContext.Provider value={connections}>
 								<VariableDefinitionsContext.Provider value={completeVariableDefinitions}>
 									<CustomVariableDefinitionsContext.Provider value={customVariables}>
 										<UserConfigContext.Provider value={userConfig}>

@@ -6,44 +6,53 @@ import { faExclamationTriangle, faQuestionCircle, faTimes } from '@fortawesome/f
 import { socketEmitPromise, SocketContext, NotifierContext, ModulesContext } from '../util'
 import { useCallback } from 'react'
 import { useRef } from 'react'
-import { GenericConfirmModal } from '../Components/GenericConfirmModal'
+import { GenericConfirmModal, GenericConfirmModalRef } from '../Components/GenericConfirmModal'
+import { ModuleDisplayInfo } from '@companion/shared/Model/Common'
 
-export function AddConnectionsPanel({ showHelp, doConfigureConnection }) {
+interface AddConnectionsPanelProps {
+	showHelp: (moduleId: string) => void
+	doConfigureConnection: (connectionId: string) => void
+}
+
+export function AddConnectionsPanel({ showHelp, doConfigureConnection }: AddConnectionsPanelProps) {
 	return (
 		<>
-			<AddConnectionsInner showHelp={showHelp} configureConnection={doConfigureConnection} />
+			<AddConnectionsInner showHelp={showHelp} doConfigureConnection={doConfigureConnection} />
 		</>
 	)
 }
 
-const AddConnectionsInner = memo(function AddConnectionsInner({ showHelp, configureConnection }) {
+const AddConnectionsInner = memo(function AddConnectionsInner({
+	showHelp,
+	doConfigureConnection,
+}: AddConnectionsPanelProps) {
 	const socket = useContext(SocketContext)
 	const notifier = useContext(NotifierContext)
 	const modules = useContext(ModulesContext)
 	const [filter, setFilter] = useState('')
 
-	const confirmRef = useRef(null)
+	const confirmRef = useRef<GenericConfirmModalRef>(null)
 
 	const addConnectionInner = useCallback(
-		(type, product) => {
+		(type: string, product: string | undefined) => {
 			socketEmitPromise(socket, 'connections:add', [{ type: type, product: product }])
 				.then((id) => {
 					setFilter('')
 					console.log('NEW CONNECTION', id)
-					configureConnection(id)
+					doConfigureConnection(id)
 				})
 				.catch((e) => {
-					notifier.current.show(`Failed to create connection`, `Failed: ${e}`)
+					notifier.current?.show(`Failed to create connection`, `Failed: ${e}`)
 					console.error('Failed to create connection:', e)
 				})
 		},
-		[socket, notifier, configureConnection]
+		[socket, notifier, doConfigureConnection]
 	)
 
 	const addConnection = useCallback(
-		(type, product, module) => {
+		(type: string, product: string | undefined, module: ModuleDisplayInfo) => {
 			if (module.isLegacy) {
-				confirmRef.current.show(
+				confirmRef.current?.show(
 					`${module.manufacturer} ${product} is outdated`,
 					null, // Passed as param to the thing
 					'Add anyway',
@@ -62,9 +71,9 @@ const AddConnectionsInner = memo(function AddConnectionsInner({ showHelp, config
 		return Object.values(modules).flatMap((module) => module.products.map((product) => ({ product, ...module })))
 	}, [modules])
 
-	let candidates = []
+	let candidates: JSX.Element[] = []
 	try {
-		const candidatesObj = {}
+		const candidatesObj: Record<string, JSX.Element> = {}
 
 		const searchResults = filter
 			? fuzzySearch(filter, allProducts, {

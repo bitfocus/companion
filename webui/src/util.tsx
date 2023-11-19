@@ -10,7 +10,8 @@ import { useEventListener } from 'usehooks-ts'
 import { LoaderHeightWidthProps } from 'react-spinners/helpers/props'
 import { Socket } from 'socket.io-client'
 import type { AllVariableDefinitions } from '@companion/shared/Model/Variables'
-import { NotificationsManagerRef } from './Components/Notifications'
+import type { NotificationsManagerRef } from './Components/Notifications'
+import type { ClientConnectionConfig, ModuleDisplayInfo } from '@companion/shared/Model/Common'
 
 export const SocketContext = React.createContext<Socket>(null as any) // TODO - fix this
 export const EventDefinitionsContext = React.createContext(null)
@@ -20,10 +21,10 @@ export const NotifierContext = React.createContext<React.RefObject<Notifications
 		throw new Error('Not inside of context!')
 	},
 })*/
-export const ModulesContext = React.createContext(null)
+export const ModulesContext = React.createContext<Record<string, ModuleDisplayInfo>>({})
 export const ActionsContext = React.createContext(null)
 export const FeedbacksContext = React.createContext(null)
-export const ConnectionsContext = React.createContext(null)
+export const ConnectionsContext = React.createContext<Record<string, ClientConnectionConfig>>({})
 export const VariableDefinitionsContext = React.createContext<AllVariableDefinitions>({})
 export const CustomVariableDefinitionsContext = React.createContext(null)
 export const UserConfigContext = React.createContext(null)
@@ -186,9 +187,9 @@ export function LoadingBar(props: LoadingBarProps) {
 }
 
 interface LoadingRetryOrErrorProps {
-	error: string | undefined | null
+	error?: string | null
 	dataReady: boolean
-	doRetry: () => void
+	doRetry?: () => void
 	autoRetryAfter?: number | null
 }
 export function LoadingRetryOrError({ error, dataReady, doRetry, autoRetryAfter = null }: LoadingRetryOrErrorProps) {
@@ -212,7 +213,7 @@ export function LoadingRetryOrError({ error, dataReady, doRetry, autoRetryAfter 
 	}, [dataReady, autoRetryAfter])
 
 	useEffect(() => {
-		if (countdown === 0) {
+		if (countdown === 0 && doRetry) {
 			doRetry()
 		}
 	}, [countdown, doRetry])

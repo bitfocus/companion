@@ -1,20 +1,27 @@
-import { useRef, useState } from 'react'
-import { useContext } from 'react'
-import { useMemo, useEffect } from 'react'
+import React, { useContext, useRef, useState, useMemo, useEffect } from 'react'
 import { SocketContext, socketEmitPromise } from '../util'
 import { DropdownInputField } from './DropdownInputField'
+import type { DropdownChoice, DropdownChoiceId } from '@companion-module/base'
+import type { ClientBonjourService } from '@companion/shared/Model/Common'
 
-export function BonjourDeviceInputField({ value, setValue, connectionId, queryId }) {
+interface BonjourDeviceInputFieldProps {
+	value: string
+	setValue: (value: DropdownChoiceId) => void
+	connectionId: string
+	queryId: string
+}
+
+export function BonjourDeviceInputField({ value, setValue, connectionId, queryId }: BonjourDeviceInputFieldProps) {
 	const socket = useContext(SocketContext)
 
-	const [_subId, setSubId] = useState(null)
+	const [_subId, setSubId] = useState<string | null>(null)
 	const subIdRef = useRef(null)
 
-	const [services, setServices] = useState({})
+	const [services, setServices] = useState<Record<string, ClientBonjourService | undefined>>({})
 
 	// Listen for data
 	useEffect(() => {
-		const onUp = (svc) => {
+		const onUp = (svc: ClientBonjourService) => {
 			if (svc.subId !== subIdRef.current) return
 
 			// console.log('up', svc)
@@ -26,7 +33,7 @@ export function BonjourDeviceInputField({ value, setValue, connectionId, queryId
 				}
 			})
 		}
-		const onDown = (svc) => {
+		const onDown = (svc: ClientBonjourService) => {
 			if (svc.subId !== subIdRef.current) return
 
 			// console.log('down', svc)
@@ -81,11 +88,12 @@ export function BonjourDeviceInputField({ value, setValue, connectionId, queryId
 	}, [socket, connectionId, queryId])
 
 	const choicesRaw = useMemo(() => {
-		const choices = []
+		const choices: DropdownChoice[] = []
 
-		choices.push({ id: null, label: 'Manual' })
+		choices.push({ id: null as any, label: 'Manual' })
 
 		for (const svc of Object.values(services)) {
+			if (!svc) continue
 			for (const rawAddress of svc.addresses || []) {
 				const address = `${rawAddress}:${svc.port}`
 				choices.push({
@@ -111,5 +119,5 @@ export function BonjourDeviceInputField({ value, setValue, connectionId, queryId
 		return choices
 	}, [choicesRaw, value])
 
-	return <DropdownInputField value={value} setValue={setValue} choices={choices} />
+	return <DropdownInputField<false> value={value} setValue={setValue} choices={choices} multiple={false} />
 }

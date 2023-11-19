@@ -19,7 +19,7 @@ interface DropdownInputFieldProps<Multi extends boolean> {
 	multiple: Multi
 	value: AsType<Multi>
 	setValue: (value: AsType<Multi>) => void
-	setValid: (valid: boolean) => void
+	setValid?: (valid: boolean) => void
 	disabled?: boolean
 }
 
@@ -215,4 +215,4 @@ export const DropdownInputField = memo(function DropdownInputField<Multi extends
 			)}
 		</div>
 	)
-})
+}) as <Multi extends boolean>(props: DropdownInputFieldProps<Multi>) => JSX.Element

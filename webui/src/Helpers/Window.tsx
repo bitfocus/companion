@@ -1,6 +1,6 @@
 import React from 'react'
 
-export const windowLinkOpen = ({ href, sameWindow }: { href: string; sameWindow?: boolean }) => {
+export const windowLinkOpen = ({ href, sameWindow }: { href: string; sameWindow?: boolean; title?: string }) => {
 	window.open(href, !sameWindow ? '_blank' : '', 'noreferrer')
 }
 

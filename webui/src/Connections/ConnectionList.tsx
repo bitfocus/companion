@@ -1,4 +1,4 @@
-import { useCallback, useContext, useEffect, useRef, useState } from 'react'
+import React, { RefObject, useCallback, useContext, useEffect, useRef, useState } from 'react'
 import { CButton, CButtonGroup } from '@coreui/react'
 import {
 	ConnectionsContext,
@@ -20,27 +20,40 @@ import {
 	faEyeSlash,
 } from '@fortawesome/free-solid-svg-icons'
 
-import { ConnectionVariablesModal } from './ConnectionVariablesModal'
-import { GenericConfirmModal } from '../Components/GenericConfirmModal'
+import { ConnectionVariablesModal, ConnectionVariablesModalRef } from './ConnectionVariablesModal'
+import { GenericConfirmModal, GenericConfirmModalRef } from '../Components/GenericConfirmModal'
 import CSwitch from '../CSwitch'
 import { useDrag, useDrop } from 'react-dnd'
 import { windowLinkOpen } from '../Helpers/Window'
 import classNames from 'classnames'
+import type { ClientConnectionConfig, ConnectionStatusEntry } from '@companion/shared/Model/Common'
 
-export function ConnectionsList({ showHelp, doConfigureConnection, connectionStatus, selectedConnectionId }) {
+interface ConnectionsListProps {
+	showHelp: (connectionId: string) => void
+	doConfigureConnection: (connectionId: string | null) => void
+	connectionStatus: Record<string, ConnectionStatusEntry | undefined>
+	selectedConnectionId: string | null
+}
+
+export function ConnectionsList({
+	showHelp,
+	doConfigureConnection,
+	connectionStatus,
+	selectedConnectionId,
+}: ConnectionsListProps) {
 	const socket = useContext(SocketContext)
 	const connectionsContext = useContext(ConnectionsContext)
 
-	const connectionsRef = useRef(null)
+	const connectionsRef = useRef<Record<string, ClientConnectionConfig>>()
 	useEffect(() => {
 		connectionsRef.current = connectionsContext
 	}, [connectionsContext])
 
-	const deleteModalRef = useRef()
-	const variablesModalRef = useRef()
+	const deleteModalRef = useRef<GenericConfirmModalRef>(null)
+	const variablesModalRef = useRef<ConnectionVariablesModalRef>(null)
 
-	const doShowVariables = useCallback((connectionId) => {
-		variablesModalRef.current.show(connectionId)
+	const doShowVariables = useCallback((connectionId: string) => {
+		variablesModalRef.current?.show(connectionId)
 	}, [])
 
 	const [visibleConnections, setVisibleConnections] = useState(() => loadVisibility())
@@ -225,6 +238,25 @@ function loadVisibility() {
 	return config
 }
 
+interface ConnectionDragItem {
+	id: string
+}
+interface ConnectionDragStatus {
+	isDragging: boolean
+}
+
+interface ConnectionsTableRowProps {
+	id: string
+	connection: ClientConnectionConfig
+	connectionStatus: ConnectionStatusEntry | undefined
+	showHelp: (connectionId: string) => void
+	showVariables: (label: string) => void
+	configureConnection: (connectionId: string | null) => void
+	deleteModalRef: RefObject<GenericConfirmModalRef>
+	moveRow: (itemId: string, targetId: string) => void
+	isSelected: boolean
+}
+
 function ConnectionsTableRow({
 	id,
 	connection,
@@ -235,7 +267,7 @@ function ConnectionsTableRow({
 	deleteModalRef,
 	moveRow,
 	isSelected,
-}) {
+}: ConnectionsTableRowProps) {
 	const socket = useContext(SocketContext)
 	const modules = useContext(ModulesContext)
 	const variableDefinitionsContext = useContext(VariableDefinitionsContext)
@@ -245,7 +277,7 @@ function ConnectionsTableRow({
 	const isEnabled = connection.enabled === undefined || connection.enabled
 
 	const doDelete = useCallback(() => {
-		deleteModalRef.current.show(
+		deleteModalRef.current?.show(
 			'Delete connection',
 			`Are you sure you want to delete "${connection.label}"?`,
 			'Delete',
@@ -269,7 +301,7 @@ function ConnectionsTableRow({
 	const doShowVariables = useCallback(() => showVariables(connection.label), [showVariables, connection.label])
 
 	const ref = useRef(null)
-	const [, drop] = useDrop({
+	const [, drop] = useDrop<ConnectionDragItem>({
 		accept: 'connection',
 		hover(item, monitor) {
 			if (!ref.current) {
@@ -284,7 +316,7 @@ function ConnectionsTableRow({
 			moveRow(item.id, id)
 		},
 	})
-	const [{ isDragging }, drag, preview] = useDrag({
+	const [{ isDragging }, drag, preview] = useDrag<ConnectionDragItem, unknown, ConnectionDragStatus>({
 		type: 'connection',
 		item: {
 			id,
@@ -410,7 +442,12 @@ function ConnectionsTableRow({
 	)
 }
 
-function ModuleStatusCall({ isEnabled, status }) {
+interface ModuleStatusCallProps {
+	isEnabled: boolean
+	status: ConnectionStatusEntry | undefined
+}
+
+function ModuleStatusCall({ isEnabled, status }: ModuleStatusCallProps) {
 	if (isEnabled) {
 		const messageStr =
 			!!status &&
