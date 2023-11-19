@@ -5,28 +5,43 @@ import { CInput, CButton, CCallout, CCard, CCardBody, CCardHeader, CListGroup } 
 import { CloudRegionPanel } from './RegionPanel'
 import { CloudUserPass } from './UserPass'
 import CSwitch from '../CSwitch'
+import type { Socket } from 'socket.io-client'
 
 // The cloud part is written in old fashioned Class-components because I am most
 // familiar with it
 
-export class Cloud extends Component {
-	/**
-	 * @type {CloudControllerState}
-	 */
+interface CloudControllerProps {
+	socket: Socket
+}
+
+interface CloudControllerState {
+	uuid: string // the machine UUID
+	authenticating: boolean // is the cloud authenticating
+	authenticated: boolean // is the cloud authenticated
+	authenticatedAs: string | undefined // the cloud username
+	ping: boolean // is someone watching ping info?
+	regions: string[] // the cloud regions
+	error: null | string // the error message
+	cloudActive: boolean // is the cloud active
+	canActivate: boolean // can the cloud be activated
+}
+
+export class Cloud extends Component<CloudControllerProps, CloudControllerState> {
 	state = {
-		enabled: false,
-		error: null,
-		authenticated: false,
 		uuid: '',
 		authenticating: false,
+		authenticated: false,
+		authenticatedAs: undefined,
+		ping: false,
+		regions: [],
+		enabled: false,
+		error: null,
 		cloudActive: false,
 		canActivate: false,
 	}
 
-	constructor(props) {
+	constructor(props: CloudControllerProps) {
 		super(props)
-
-		this.regions = {}
 
 		this.cloudStateDidUpdate = this.cloudStateDidUpdate.bind(this)
 		this.cloudSetState = this.cloudSetState.bind(this)
@@ -45,32 +60,30 @@ export class Cloud extends Component {
 		this.props.socket.off('cloud_state', this.cloudStateDidUpdate)
 	}
 
-	cloudStateDidUpdate(newState) {
+	private cloudStateDidUpdate(newState: Partial<CloudControllerState>) {
 		console.log('cloud state did update to:', { ...this.state, ...newState })
-		this.setState({ ...newState })
+		this.setState({ ...this.state, ...newState })
 	}
 
 	/**
 	 * Set a new state for the cloud controller
-	 *
-	 * @param {Partial<CloudControllerState>} newState
 	 */
-	cloudSetState(newState) {
+	private cloudSetState(newState: Partial<CloudControllerState>) {
 		this.props.socket.emit('cloud_state_set', newState)
 	}
 
-	cloudLogin(user, pass) {
+	private cloudLogin(user: string, pass: string) {
 		this.props.socket.emit('cloud_login', user, pass)
 	}
 
 	/**
 	 * Regenerate the UUID for the cloud controller
 	 */
-	cloudRegenerateUUID() {
+	private cloudRegenerateUUID() {
 		this.props.socket.emit('cloud_regenerate_uuid')
 	}
 
-	shouldComponentUpdate(_nextProps, nextState) {
+	shouldComponentUpdate(_nextProps: CloudControllerProps, nextState: CloudControllerState) {
 		const a = JSON.stringify(nextState)
 		const b = JSON.stringify(this.state)
 		if (a !== b) {
@@ -113,7 +126,7 @@ export class Cloud extends Component {
 					<div>
 						<CloudUserPass
 							working={this.state.authenticating}
-							user={this.state.user}
+							username={this.state.authenticatedAs}
 							onAuth={(user, pass) => {
 								this.cloudLogin(user, pass)
 							}}
@@ -258,19 +271,3 @@ export class Cloud extends Component {
 		)
 	}
 }
-
-/**
- * @typedef {Object} CloudControllerState
- *
- * @property {string} uuid - the machine UUID
- * @property {boolean} authenticating - is the cloud authenticating
- * @property {boolean} authenticated - is the cloud authenticated
- * @property {string} authenticatedAs - the cloud username
- * @property {boolean} ping - is someone watching ping info?
- * @property {string[]} regions - the cloud regions
- * @property {string} tryUsername - the username to try
- * @property {string} tryPassword - the password to try
- * @property {null|string} error - the error message
- * @property {boolean} cloudActive - is the cloud active
- * @property {boolean} canActivate - can the cloud be activated
- */

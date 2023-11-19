@@ -1,19 +1,33 @@
 import React, { Component } from 'react'
 import { CAlert, CListGroupItem, CSwitch } from '@coreui/react'
+import type { Socket } from 'socket.io-client'
 
 // The cloud part is written in old fashioned Class-components
 // because even if the hipsters say it's slow and retarted, i think it's prettier.
 
-const onlineServerStyle = { color: 'green' }
+const onlineServerStyle: React.CSSProperties = { color: 'green' }
 
-export class CloudRegionPanel extends Component {
-	constructor(props) {
+interface CloudRegionPanelProps {
+	socket: Socket
+	id: string
+	disabled: boolean
+}
+interface CloudRegionPanelState {
+	connected: boolean
+	enabled: boolean
+	error: string | null
+	name: string
+	pingResults: number
+}
+
+export class CloudRegionPanel extends Component<CloudRegionPanelProps, CloudRegionPanelState> {
+	constructor(props: CloudRegionPanelProps) {
 		super(props)
 
 		this.state = {
 			connected: false,
 			enabled: false,
-			error: '',
+			error: null,
 			name: '',
 			pingResults: -1,
 		}
@@ -33,24 +47,24 @@ export class CloudRegionPanel extends Component {
 		this.props.socket.off('cloud_region_state', this.cloudStateDidUpdate)
 	}
 
-	cloudStateDidUpdate(id, newState) {
+	private cloudStateDidUpdate(id: string, newState: CloudRegionPanelState) {
 		if (id === this.props.id) {
 			this.setState({ ...newState })
 		}
 	}
 
-	cloudSetState(newState) {
+	private cloudSetState(newState: Partial<CloudRegionPanelState>) {
 		if (!this.props.disabled) {
 			this.props.socket.emit('cloud_region_state_set', this.props.id, newState)
 			// Reset the error message if the user changes the enabled state
 			if (newState.enabled !== undefined) {
-				this.setState({ error: '' })
+				this.setState({ error: null })
 			}
 		}
 	}
 
 	render() {
-		const styleText = {
+		const styleText: React.CSSProperties = {
 			marginLeft: 6,
 			marginTop: -10,
 			display: 'inline-block',
@@ -64,7 +78,7 @@ export class CloudRegionPanel extends Component {
 					<CSwitch
 						color={this.state.connected ? 'success' : 'danger'}
 						checked={!!this.state.enabled}
-						onChange={(e) => this.cloudSetState({ enabled: e.target.checked })}
+						onChange={(e) => this.cloudSetState({ enabled: e.currentTarget.checked })}
 						disabled={this.props.disabled}
 						width={100}
 					/>{' '}
@@ -77,7 +91,7 @@ export class CloudRegionPanel extends Component {
 				>
 					{this.state.name} {this.state.pingResults > -1 ? `(${this.state.pingResults}ms)` : ''}
 				</span>
-				{this.state.enabled && this.state.error !== '' && (
+				{this.state.enabled && this.state.error && (
 					<CAlert color="danger" style={{ marginTop: '10px', marginBottom: 0 }}>
 						{this.state.error}
 					</CAlert>

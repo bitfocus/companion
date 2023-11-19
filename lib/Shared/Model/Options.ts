@@ -1,4 +1,8 @@
-import type { SomeCompanionActionInputField } from '@companion-module/base'
+import type {
+	CompanionButtonStyleProps,
+	SomeCompanionActionInputField,
+	SomeCompanionFeedbackInputField,
+} from '@companion-module/base'
 
 export type InternalInputField = (
 	| {
@@ -41,11 +45,29 @@ export type InternalInputField = (
 	Omit<import('@companion-module/base').CompanionInputFieldBase, 'type'>
 
 export type InternalActionInputField = SomeCompanionActionInputField | InternalInputField
+export type InternalFeedbackInputField = SomeCompanionFeedbackInputField | InternalInputField
 
-export interface InternalActionDefinition {
+export interface ActionDefinition {
 	label: string
-	description?: string
+	description: string | undefined
 	options: InternalActionInputField[]
 	hasLearn?: boolean
+}
+
+export interface FeedbackDefinition {
+	label: string
+	description: string | undefined
+	options: InternalFeedbackInputField[]
+	type: 'advanced' | 'boolean'
+	style: Partial<CompanionButtonStyleProps> | undefined
+	hasLearn: boolean
+	showInvert: boolean
+}
+
+export interface InternalFeedbackDefinition extends FeedbackDefinition {
+	showButtonPreview?: boolean
+}
+
+export interface InternalActionDefinition extends ActionDefinition {
 	showButtonPreview?: boolean
 }

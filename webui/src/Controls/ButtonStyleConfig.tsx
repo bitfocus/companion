@@ -1,15 +1,29 @@
 import { CButton, CRow, CCol, CButtonGroup, CForm, CAlert, CInputGroup, CInputGroupAppend } from '@coreui/react'
-import React, { useCallback, useContext, useMemo, useState } from 'react'
+import React, { MutableRefObject, useCallback, useContext, useMemo, useState } from 'react'
 import { socketEmitPromise, SocketContext, PreventDefaultHandler } from '../util'
 import { AlignmentInputField, ColorInputField, DropdownInputField, PNGInputField, TextInputField } from '../Components'
 import { FONT_SIZES, SHOW_HIDE_TOP_BAR } from '../Constants'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faDollarSign, faFont, faQuestionCircle, faTrash } from '@fortawesome/free-solid-svg-icons'
 
-export function ButtonStyleConfig({ controlId, controlType, style, configRef, mainDialog = false }) {
+interface ButtonStyleConfigProps {
+	controlId: string
+	controlType: string
+	style: Record<string, any>
+	configRef: MutableRefObject<{ style: Record<string, any> }>
+	mainDialog?: boolean
+}
+
+export function ButtonStyleConfig({
+	controlId,
+	controlType,
+	style,
+	configRef,
+	mainDialog = false,
+}: ButtonStyleConfigProps) {
 	const socket = useContext(SocketContext)
 
-	const [pngError, setPngError] = useState(null)
+	const [pngError, setPngError] = useState<string | null>(null)
 	const setPng = useCallback(
 		(data) => {
 			setPngError(null)
@@ -103,6 +117,16 @@ export function ButtonStyleConfig({ controlId, controlType, style, configRef, ma
 	)
 }
 
+interface ButtonStyleConfigFieldsProps {
+	values: Record<string, any>
+	setValueInner: (key: string, value: any) => void
+	setPng: (png64: string | null) => void
+	setPngError: (error: string | null) => void
+	clearPng: () => void
+	mainDialog?: boolean
+	showField?: (key: string) => boolean
+}
+
 export function ButtonStyleConfigFields({
 	values,
 	setValueInner,
@@ -111,14 +135,14 @@ export function ButtonStyleConfigFields({
 	clearPng,
 	mainDialog,
 	showField,
-}) {
-	const setTextValue = useCallback((val) => setValueInner('text', val), [setValueInner])
-	const setSizeValue = useCallback((val) => setValueInner('size', val), [setValueInner])
-	const setAlignmentValue = useCallback((val) => setValueInner('alignment', val), [setValueInner])
-	const setPngAlignmentValue = useCallback((val) => setValueInner('pngalignment', val), [setValueInner])
-	const setColorValue = useCallback((val) => setValueInner('color', val), [setValueInner])
-	const setBackgroundColorValue = useCallback((val) => setValueInner('bgcolor', val), [setValueInner])
-	const setShowTopBar = useCallback((val) => setValueInner('show_topbar', val), [setValueInner])
+}: ButtonStyleConfigFieldsProps) {
+	const setTextValue = useCallback((val: any) => setValueInner('text', val), [setValueInner])
+	const setSizeValue = useCallback((val: any) => setValueInner('size', val), [setValueInner])
+	const setAlignmentValue = useCallback((val: any) => setValueInner('alignment', val), [setValueInner])
+	const setPngAlignmentValue = useCallback((val: any) => setValueInner('pngalignment', val), [setValueInner])
+	const setColorValue = useCallback((val: any) => setValueInner('color', val), [setValueInner])
+	const setBackgroundColorValue = useCallback((val: any) => setValueInner('bgcolor', val), [setValueInner])
+	const setShowTopBar = useCallback((val: any) => setValueInner('show_topbar', val), [setValueInner])
 	const toggleExpression = useCallback(
 		() => setValueInner('textExpression', !values.textExpression),
 		[setValueInner, values.textExpression]
@@ -130,7 +154,7 @@ export function ButtonStyleConfigFields({
 		[mainDialog]
 	)
 
-	const showField2 = (id) => !showField || showField(id)
+	const showField2 = (id: string) => !showField || showField(id)
 
 	return (
 		<>
@@ -183,6 +207,7 @@ export function ButtonStyleConfigFields({
 									value={values.size}
 									allowCustom={true}
 									regex={'/^0*(?:[3-9]|[1-9][0-9]|1[0-9]{2}|200)\\s?(?:pt|px)?$/i'}
+									multiple={false}
 								/>
 							</div>
 						</div>
@@ -192,13 +217,13 @@ export function ButtonStyleConfigFields({
 							{showField2('color') && (
 								<div>
 									<label>Text</label>
-									<ColorInputField setValue={setColorValue} value={values.color} />
+									<ColorInputField setValue={setColorValue} value={values.color} returnType="number" />
 								</div>
 							)}
 							{showField2('bgcolor') && (
 								<div>
 									<label>BG</label>
-									<ColorInputField setValue={setBackgroundColorValue} value={values.bgcolor} />
+									<ColorInputField setValue={setBackgroundColorValue} value={values.bgcolor} returnType="number" />
 								</div>
 							)}
 						</div>
@@ -206,7 +231,12 @@ export function ButtonStyleConfigFields({
 					{showField2('show_topbar') && (
 						<div>
 							<label>Topbar</label>
-							<DropdownInputField choices={SHOW_HIDE_TOP_BAR} setValue={setShowTopBar} value={values.show_topbar} />
+							<DropdownInputField
+								choices={SHOW_HIDE_TOP_BAR}
+								setValue={setShowTopBar}
+								value={values.show_topbar}
+								multiple={false}
+							/>
 						</div>
 					)}
 

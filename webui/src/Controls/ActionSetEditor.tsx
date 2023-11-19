@@ -35,10 +35,10 @@ import { ControlLocation } from '@companion/shared/Model/Common'
 
 interface ControlActionSetEditorProps {
 	controlId: string
-	location: ControlLocation
+	location: ControlLocation | undefined
 	stepId: string
 	setId: string
-	actions: ActionInstance[]
+	actions: ActionInstance[] | undefined
 	addPlaceholder: string
 	heading: JSX.Element | string
 	headingActions?: JSX.Element
@@ -220,13 +220,13 @@ const AddActionsPanel = memo(function AddActionsPanel({ addPlaceholder, addActio
 })
 
 interface ActionsListProps {
-	location: ControlLocation
+	location: ControlLocation | undefined
 	controlId: string
 	dragId: string
 	stepId: string
 	setId: string
 	confirmModal: RefObject<GenericConfirmModalRef>
-	actions: ActionInstance[]
+	actions: ActionInstance[] | undefined
 	doSetValue: (actionId: string, key: string, val: any) => void
 	doSetDelay: (actionId: string, delay: number) => void
 	doDelete: (actionId: string) => void
@@ -369,7 +369,7 @@ interface ActionTableRowProps {
 	action: ActionInstance
 	stepId: string
 	setId: string
-	location: ControlLocation
+	location: ControlLocation | undefined
 	index: number
 	dragId: string
 	controlId: string
@@ -713,8 +713,8 @@ function AddActionDropdown({ onSelect, placeholder }: AddActionDropdownProps) {
 	}, [actionsContext, connectionsContext, recentActionsContext?.recentActions])
 
 	const innerChange = useCallback(
-		(e) => {
-			if (e.value) {
+		(e: AddActionOption | null) => {
+			if (e?.value) {
 				recentActionsContext?.trackRecentAction(e.value)
 
 				onSelect(e.value)

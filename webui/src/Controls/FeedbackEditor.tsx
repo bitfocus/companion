@@ -23,14 +23,29 @@ import {
 import Select, { createFilter } from 'react-select'
 import { OptionsInputField } from './OptionsInputField'
 import { useDrag, useDrop } from 'react-dnd'
-import { GenericConfirmModal } from '../Components/GenericConfirmModal'
+import { GenericConfirmModal, GenericConfirmModalRef } from '../Components/GenericConfirmModal'
 import { CheckboxInputField, DropdownInputField } from '../Components'
 import { ButtonStyleConfigFields } from './ButtonStyleConfig'
-import { AddFeedbacksModal } from './AddModal'
+import { AddFeedbacksModal, AddFeedbacksModalRef } from './AddModal'
 import { usePanelCollapseHelper } from '../Helpers/CollapseHelper'
 import { OptionButtonPreview } from './OptionButtonPreview'
 import { MenuPortalContext } from '../Components/DropdownInputField'
 import { ButtonStyleProperties } from '@companion/shared/Style'
+import { FilterOptionOption } from 'react-select/dist/declarations/src/filters'
+import { FeedbackInstance } from '@companion/shared/Model/FeedbackModel'
+import { FeedbackDefinition } from '@companion/shared/Model/Options'
+import { DropdownChoiceId } from '@companion-module/base'
+import { ControlLocation } from '@companion/shared/Model/Common'
+
+interface ControlFeedbacksEditorProps {
+	controlId: string
+	feedbacks: FeedbackInstance[]
+	heading: JSX.Element
+	entityType: string
+	booleanOnly: boolean
+	location: ControlLocation | undefined
+	addPlaceholder: string
+}
 
 export function ControlFeedbacksEditor({
 	controlId,
@@ -40,23 +55,21 @@ export function ControlFeedbacksEditor({
 	booleanOnly,
 	location,
 	addPlaceholder,
-}) {
+}: ControlFeedbacksEditorProps) {
 	const socket = useContext(SocketContext)
 
-	const confirmModal = useRef()
+	const confirmModal = useRef<GenericConfirmModalRef>(null)
 
-	const feedbacksRef = useRef()
+	const feedbacksRef = useRef<FeedbackInstance[]>()
 	feedbacksRef.current = feedbacks
 
-	const addFeedbacksRef = useRef(null)
+	const addFeedbacksRef = useRef<AddFeedbacksModalRef>(null)
 	const showAddModal = useCallback(() => {
-		if (addFeedbacksRef.current) {
-			addFeedbacksRef.current.show()
-		}
+		addFeedbacksRef.current?.show()
 	}, [])
 
 	const setValue = useCallback(
-		(feedbackId, key, val) => {
+		(feedbackId: string, key: string, val: any) => {
 			const currentFeedback = feedbacksRef.current?.find((fb) => fb.id === feedbackId)
 			if (!currentFeedback?.options || currentFeedback.options[key] !== val) {
 				socketEmitPromise(socket, 'controls:feedback:set-option', [controlId, feedbackId, key, val]).catch((e) => {
@@ -67,7 +80,7 @@ export function ControlFeedbacksEditor({
 		[socket, controlId]
 	)
 	const setInverted = useCallback(
-		(feedbackId, isInverted) => {
+		(feedbackId: string, isInverted: boolean) => {
 			const currentFeedback = feedbacksRef.current?.find((fb) => fb.id === feedbackId)
 			if (!currentFeedback || currentFeedback.isInverted !== isInverted) {
 				socketEmitPromise(socket, 'controls:feedback:set-inverted', [controlId, feedbackId, isInverted]).catch((e) => {
@@ -79,8 +92,8 @@ export function ControlFeedbacksEditor({
 	)
 
 	const doDelete = useCallback(
-		(feedbackId) => {
-			confirmModal.current.show(`Delete ${entityType}`, `Delete ${entityType}?`, 'Delete', () => {
+		(feedbackId: string) => {
+			confirmModal.current?.show(`Delete ${entityType}`, `Delete ${entityType}?`, 'Delete', () => {
 				socketEmitPromise(socket, 'controls:feedback:remove', [controlId, feedbackId]).catch((e) => {
 					console.error(`Failed to delete feedback: ${e}`)
 				})
@@ -90,7 +103,7 @@ export function ControlFeedbacksEditor({
 	)
 
 	const doDuplicate = useCallback(
-		(feedbackId) => {
+		(feedbackId: string) => {
 			socketEmitPromise(socket, 'controls:feedback:duplicate', [controlId, feedbackId]).catch((e) => {
 				console.error(`Failed to duplicate feedback: ${e}`)
 			})
@@ -99,7 +112,7 @@ export function ControlFeedbacksEditor({
 	)
 
 	const doLearn = useCallback(
-		(feedbackId) => {
+		(feedbackId: string) => {
 			socketEmitPromise(socket, 'controls:feedback:learn', [controlId, feedbackId]).catch((e) => {
 				console.error(`Failed to learn feedback values: ${e}`)
 			})
@@ -108,7 +121,7 @@ export function ControlFeedbacksEditor({
 	)
 
 	const addFeedback = useCallback(
-		(feedbackType) => {
+		(feedbackType: string) => {
 			const [connectionId, feedbackId] = feedbackType.split(':', 2)
 			socketEmitPromise(socket, 'controls:feedback:add', [controlId, connectionId, feedbackId]).catch((e) => {
 				console.error('Failed to add control feedback', e)
@@ -118,7 +131,7 @@ export function ControlFeedbacksEditor({
 	)
 
 	const moveCard = useCallback(
-		(dragIndex, hoverIndex) => {
+		(dragIndex: number, hoverIndex: number) => {
 			socketEmitPromise(socket, 'controls:feedback:reorder', [controlId, dragIndex, hoverIndex]).catch((e) => {
 				console.error(`Move failed: ${e}`)
 			})
@@ -127,7 +140,7 @@ export function ControlFeedbacksEditor({
 	)
 
 	const emitEnabled = useCallback(
-		(feedbackId, enabled) => {
+		(feedbackId: string, enabled: boolean) => {
 			socketEmitPromise(socket, 'controls:feedback:enabled', [controlId, feedbackId, enabled]).catch((e) => {
 				console.error('Failed to enable/disable feedback', e)
 			})
@@ -212,6 +225,33 @@ export function ControlFeedbacksEditor({
 	)
 }
 
+interface FeedbackTableRowDragItem {
+	feedbackId: string
+	index: number
+}
+interface FeedbackTableRowDragStatus {
+	isDragging: boolean
+}
+
+interface FeedbackTableRowProps {
+	entityType: string
+	feedback: FeedbackInstance
+	controlId: string
+	index: number
+	dragId: string
+	moveCard: (dragIndex: number, hoverIndex: number) => void
+	setValue: (feedbackId: string, key: string, val: any) => void
+	setInverted: (feedbackId: string, inverted: boolean) => void
+	doDelete: (feedbackId: string) => void
+	doDuplicate: (feedbackId: string) => void
+	doLearn: (feedbackId: string) => void
+	doEnabled: (feedbackId: string, enabled: boolean) => void
+	isCollapsed: boolean
+	setCollapsed: (feedbackId: string, collapsed: boolean) => void
+	booleanOnly: boolean
+	location: ControlLocation | undefined
+}
+
 function FeedbackTableRow({
 	entityType,
 	feedback,
@@ -229,7 +269,7 @@ function FeedbackTableRow({
 	setCollapsed,
 	booleanOnly,
 	location,
-}) {
+}: FeedbackTableRowProps) {
 	const socket = useContext(SocketContext)
 
 	const innerDelete = useCallback(() => doDelete(feedback.id), [feedback.id, doDelete])
@@ -237,10 +277,10 @@ function FeedbackTableRow({
 	const innerLearn = useCallback(() => doLearn(feedback.id), [doLearn, feedback.id])
 	const innerInverted = useCallback((isInverted) => setInverted(feedback.id, isInverted), [feedback.id, setInverted])
 
-	const ref = useRef(null)
-	const [, drop] = useDrop({
+	const ref = useRef<HTMLTableRowElement>(null)
+	const [, drop] = useDrop<FeedbackTableRowDragItem>({
 		accept: dragId,
-		hover(item, monitor) {
+		hover(item, _monitor) {
 			if (!ref.current) {
 				return
 			}
@@ -261,10 +301,10 @@ function FeedbackTableRow({
 			item.index = hoverIndex
 		},
 	})
-	const [{ isDragging }, drag, preview] = useDrag({
+	const [{ isDragging }, drag, preview] = useDrag<FeedbackTableRowDragItem, unknown, FeedbackTableRowDragStatus>({
 		type: dragId,
 		item: {
-			actionId: feedback.id,
+			feedbackId: feedback.id,
 			index: index,
 		},
 		collect: (monitor) => ({
@@ -274,7 +314,7 @@ function FeedbackTableRow({
 	preview(drop(ref))
 
 	const setSelectedStyleProps = useCallback(
-		(selected) => {
+		(selected: string[]) => {
 			socketEmitPromise(socket, 'controls:feedback:set-style-selection', [controlId, feedback.id, selected]).catch(
 				(e) => {
 					console.error(`Failed: ${e}`)
@@ -285,7 +325,7 @@ function FeedbackTableRow({
 	)
 
 	const setStylePropsValue = useCallback(
-		(key, value) => {
+		(key: string, value: any) => {
 			socketEmitPromise(socket, 'controls:feedback:set-style-value', [controlId, feedback.id, key, value]).catch(
 				(e) => {
 					console.error(`Failed: ${e}`)
@@ -304,7 +344,7 @@ function FeedbackTableRow({
 
 	if (!feedback) {
 		// Invalid feedback, so skip
-		return ''
+		return null
 	}
 
 	return (
@@ -335,6 +375,24 @@ function FeedbackTableRow({
 	)
 }
 
+interface FeedbackEditorProps {
+	entityType: string
+	feedback: FeedbackInstance
+	location: ControlLocation | undefined
+	setValue: (feedbackId: string, key: string, value: any) => void
+	setInverted: (inverted: boolean) => void
+	innerDelete: () => void
+	innerDuplicate: () => void
+	innerLearn: () => void
+	setSelectedStyleProps: (keys: string[]) => void
+	setStylePropsValue: (key: string, value: any) => void
+	isCollapsed: boolean
+	doCollapse: () => void
+	doExpand: () => void
+	doEnabled: (feedbackId: string, enabled: boolean) => void
+	booleanOnly: boolean
+}
+
 function FeedbackEditor({
 	entityType,
 	feedback,
@@ -351,7 +409,7 @@ function FeedbackEditor({
 	doExpand,
 	doEnabled,
 	booleanOnly,
-}) {
+}: FeedbackEditorProps) {
 	const feedbacksContext = useContext(FeedbacksContext)
 	const connectionsContext = useContext(ConnectionsContext)
 
@@ -359,31 +417,34 @@ function FeedbackEditor({
 	const connectionLabel = connectionInfo?.label ?? feedback.instance_id
 
 	const feedbackSpec = (feedbacksContext[feedback.instance_id] || {})[feedback.type]
-	const options = feedbackSpec?.options ?? []
 
-	const [optionVisibility, setOptionVisibility] = useState({})
+	const [optionVisibility, setOptionVisibility] = useState<Record<string, boolean>>({})
 
 	const innerSetEnabled = useCallback((e) => doEnabled(feedback.id, e.target.checked), [doEnabled, feedback.id])
 
-	useEffect(() => {
+	const feedbackOptions = useMemo(() => {
 		const options = feedbackSpec?.options ?? []
 
-		for (const option of options) {
+		return options.map((option) => {
 			if (typeof option.isVisibleFn === 'string') {
-				option.isVisible = sandbox(option.isVisibleFn)
+				return {
+					...option,
+					isVisible: sandbox(option.isVisibleFn),
+				}
 			}
-		}
+
+			return option
+		})
 	}, [feedbackSpec])
 
 	useEffect(() => {
-		const visibility = {}
-		const options = feedbackSpec?.options ?? []
+		const visibility: Record<string, boolean> = {}
 
-		if (options === null || feedback === null) {
+		if (feedbackOptions === null || feedback === null) {
 			return
 		}
 
-		for (const option of options) {
+		for (const option of feedbackOptions) {
 			if (typeof option.isVisible === 'function') {
 				visibility[option.id] = option.isVisible(feedback.options, option.isVisibleData)
 			}
@@ -394,7 +455,7 @@ function FeedbackEditor({
 		return () => {
 			setOptionVisibility({})
 		}
-	}, [feedbackSpec, feedback])
+	}, [feedbackOptions, feedback])
 
 	let name = ''
 	if (feedbackSpec) {
@@ -427,7 +488,7 @@ function FeedbackEditor({
 						<CButton size="sm" onClick={innerDelete} title={`Remove ${entityType}`}>
 							<FontAwesomeIcon icon={faTrash} />
 						</CButton>
-						{doEnabled && (
+						{!!doEnabled && (
 							<>
 								&nbsp;
 								<CSwitch
@@ -462,11 +523,12 @@ function FeedbackEditor({
 
 					<div className="cell-option">
 						<CForm onSubmit={PreventDefaultHandler}>
-							{options.map((opt, i) => (
+							{feedbackOptions.map((opt, i) => (
 								<MyErrorBoundary key={i}>
 									<OptionsInputField
 										key={i}
 										isOnControl={!!location}
+										isAction={false}
 										connectionId={feedback.instance_id}
 										option={opt}
 										actionId={feedback.id}
@@ -493,7 +555,7 @@ function FeedbackEditor({
 											/>
 										</CLabel>
 										<p>
-											<CheckboxInputField value={feedback.isInverted} setValue={setInverted} />
+											<CheckboxInputField value={!!feedback.isInverted} setValue={setInverted} />
 											&nbsp;
 										</p>
 									</CFormGroup>
@@ -518,7 +580,13 @@ function FeedbackEditor({
 	)
 }
 
-function FeedbackManageStyles({ feedbackSpec, feedback, setSelectedStyleProps }) {
+interface FeedbackManageStylesProps {
+	feedbackSpec: FeedbackDefinition | undefined
+	feedback: FeedbackInstance
+	setSelectedStyleProps: (keys: string[]) => void
+}
+
+function FeedbackManageStyles({ feedbackSpec, feedback, setSelectedStyleProps }: FeedbackManageStylesProps) {
 	if (feedbackSpec?.type === 'boolean') {
 		const choicesSet = new Set(ButtonStyleProperties.map((c) => c.id))
 		const currentValue = Object.keys(feedback.style || {}).filter((id) => choicesSet.has(id))
@@ -532,7 +600,7 @@ function FeedbackManageStyles({ feedbackSpec, feedback, setSelectedStyleProps })
 							<DropdownInputField
 								multiple={true}
 								choices={ButtonStyleProperties}
-								setValue={setSelectedStyleProps}
+								setValue={setSelectedStyleProps as (keys: DropdownChoiceId[]) => void}
 								value={currentValue}
 							/>
 						</CFormGroup>
@@ -541,37 +609,29 @@ function FeedbackManageStyles({ feedbackSpec, feedback, setSelectedStyleProps })
 			</div>
 		)
 	} else {
-		return ''
+		return null
 	}
 }
 
-function FeedbackStyles({ feedbackSpec, feedback, setStylePropsValue }) {
-	const setValue = useCallback(
-		(key, value) => {
-			setStylePropsValue(key, value).catch((e) => {
-				console.error('Failed to update feedback style', e)
-			})
-		},
-		[setStylePropsValue]
-	)
-	const [pngError, setPngError] = useState(null)
+interface FeedbackStylesProps {
+	feedbackSpec: FeedbackDefinition | undefined
+	feedback: FeedbackInstance
+	setStylePropsValue: (key: string, value: any) => void
+}
+
+function FeedbackStyles({ feedbackSpec, feedback, setStylePropsValue }: FeedbackStylesProps) {
+	const [pngError, setPngError] = useState<string | null>(null)
 	const clearPngError = useCallback(() => setPngError(null), [])
 	const setPng = useCallback(
 		(data) => {
 			setPngError(null)
-			setStylePropsValue('png64', data).catch((e) => {
-				console.error('Failed to upload png', e)
-				setPngError('Failed to set png')
-			})
+			setStylePropsValue('png64', data)
 		},
 		[setStylePropsValue]
 	)
 	const clearPng = useCallback(() => {
 		setPngError(null)
-		setStylePropsValue('png64', null).catch((e) => {
-			console.error('Failed to clear png', e)
-			setPngError('Failed to clear png')
-		})
+		setStylePropsValue('png64', null)
 	}, [setStylePropsValue])
 
 	const currentStyle = useMemo(() => feedback?.style || {}, [feedback?.style])
@@ -589,7 +649,7 @@ function FeedbackStyles({ feedbackSpec, feedback, setStylePropsValue }) {
 
 					<ButtonStyleConfigFields
 						values={currentStyle}
-						setValueInner={setValue}
+						setValueInner={setStylePropsValue}
 						setPng={setPng}
 						clearPng={clearPng}
 						setPngError={clearPngError}
@@ -600,12 +660,12 @@ function FeedbackStyles({ feedbackSpec, feedback, setStylePropsValue }) {
 			</div>
 		)
 	} else {
-		return ''
+		return null
 	}
 }
 
-const baseFilter = createFilter()
-const filterOptions = (candidate, input) => {
+const baseFilter = createFilter<AddFeedbackOption>()
+const filterOptions = (candidate: FilterOptionOption<AddFeedbackOption>, input: string) => {
 	if (input) {
 		return !candidate.data.isRecent && baseFilter(candidate, input)
 	} else {
@@ -613,7 +673,7 @@ const filterOptions = (candidate, input) => {
 	}
 }
 
-const noOptionsMessage = ({ inputValue }) => {
+const noOptionsMessage = ({ inputValue }: { inputValue: string }) => {
 	if (inputValue) {
 		return 'No feedbacks found'
 	} else {
@@ -621,16 +681,37 @@ const noOptionsMessage = ({ inputValue }) => {
 	}
 }
 
-const AddFeedbackDropdown = memo(function AddFeedbackDropdown({ onSelect, booleanOnly, addPlaceholder }) {
+interface AddFeedbackOption {
+	isRecent: boolean
+	value: string
+	label: string
+}
+interface AddFeedbackGroup {
+	label: string
+	options: AddFeedbackOption[]
+}
+
+interface AddFeedbackDropdownProps {
+	onSelect: (feedbackType: string) => void
+	booleanOnly: boolean
+	addPlaceholder: string
+}
+
+const AddFeedbackDropdown = memo(function AddFeedbackDropdown({
+	onSelect,
+	booleanOnly,
+	addPlaceholder,
+}: AddFeedbackDropdownProps) {
 	const recentFeedbacksContext = useContext(RecentFeedbacksContext)
 	const menuPortal = useContext(MenuPortalContext)
 	const feedbacksContext = useContext(FeedbacksContext)
 	const connectionsContext = useContext(ConnectionsContext)
 
 	const options = useMemo(() => {
-		const options = []
+		const options: Array<AddFeedbackOption | AddFeedbackGroup> = []
 		for (const [connectionId, instanceFeedbacks] of Object.entries(feedbacksContext)) {
 			for (const [feedbackId, feedback] of Object.entries(instanceFeedbacks || {})) {
+				if (!feedback) continue
 				if (!booleanOnly || feedback.type === 'boolean') {
 					const connectionLabel = connectionsContext[connectionId]?.label ?? connectionId
 					options.push({
@@ -642,8 +723,8 @@ const AddFeedbackDropdown = memo(function AddFeedbackDropdown({ onSelect, boolea
 			}
 		}
 
-		const recents = []
-		for (const feedbackType of recentFeedbacksContext.recentFeedbacks || []) {
+		const recents: AddFeedbackOption[] = []
+		for (const feedbackType of recentFeedbacksContext?.recentFeedbacks ?? []) {
 			if (feedbackType) {
 				const [connectionId, feedbackId] = feedbackType.split(':', 2)
 				const feedbackInfo = feedbacksContext[connectionId]?.[feedbackId]
@@ -663,12 +744,12 @@ const AddFeedbackDropdown = memo(function AddFeedbackDropdown({ onSelect, boolea
 		})
 
 		return options
-	}, [feedbacksContext, connectionsContext, booleanOnly, recentFeedbacksContext.recentFeedbacks])
+	}, [feedbacksContext, connectionsContext, booleanOnly, recentFeedbacksContext?.recentFeedbacks])
 
 	const innerChange = useCallback(
-		(e) => {
-			if (e.value) {
-				recentFeedbacksContext.trackRecentFeedback(e.value)
+		(e: AddFeedbackOption | null) => {
+			if (e?.value) {
+				recentFeedbacksContext?.trackRecentFeedback(e.value)
 
 				onSelect(e.value)
 			}
