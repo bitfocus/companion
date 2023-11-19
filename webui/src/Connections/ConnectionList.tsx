@@ -28,6 +28,13 @@ import { windowLinkOpen } from '../Helpers/Window.js'
 import classNames from 'classnames'
 import type { ClientConnectionConfig, ConnectionStatusEntry } from '@companion/shared/Model/Common.js'
 
+interface VisibleConnectionsState {
+	disabled: boolean
+	ok: boolean
+	warning: boolean
+	error: boolean
+}
+
 interface ConnectionsListProps {
 	showHelp: (connectionId: string) => void
 	doConfigureConnection: (connectionId: string | null) => void
@@ -56,14 +63,14 @@ export function ConnectionsList({
 		variablesModalRef.current?.show(connectionId)
 	}, [])
 
-	const [visibleConnections, setVisibleConnections] = useState(() => loadVisibility())
+	const [visibleConnections, setVisibleConnections] = useState<VisibleConnectionsState>(() => loadVisibility())
 
 	// Save the config when it changes
 	useEffect(() => {
 		window.localStorage.setItem('connections_visible', JSON.stringify(visibleConnections))
 	}, [visibleConnections])
 
-	const doToggleVisibility = useCallback((key) => {
+	const doToggleVisibility = useCallback((key: keyof VisibleConnectionsState) => {
 		setVisibleConnections((oldConfig) => ({
 			...oldConfig,
 			[key]: !oldConfig[key],
@@ -217,7 +224,7 @@ export function ConnectionsList({
 	)
 }
 
-function loadVisibility() {
+function loadVisibility(): VisibleConnectionsState {
 	try {
 		const rawConfig = window.localStorage.getItem('connections_visible')
 		if (rawConfig !== null) {
@@ -226,7 +233,7 @@ function loadVisibility() {
 	} catch (e) {}
 
 	// setup defaults
-	const config = {
+	const config: VisibleConnectionsState = {
 		disabled: true,
 		ok: true,
 		warning: true,
@@ -303,7 +310,7 @@ function ConnectionsTableRow({
 	const ref = useRef(null)
 	const [, drop] = useDrop<ConnectionDragItem>({
 		accept: 'connection',
-		hover(item, monitor) {
+		hover(item, _monitor) {
 			if (!ref.current) {
 				return
 			}
@@ -389,7 +396,7 @@ function ConnectionsTableRow({
 							</CButton>
 
 							<CButton
-								onClick={(e) => windowLinkOpen({ href: moduleInfo?.bugUrl })}
+								onClick={() => windowLinkOpen({ href: moduleInfo?.bugUrl })}
 								size="md"
 								title="Issue Tracker"
 								disabled={!moduleInfo?.bugUrl}
@@ -413,7 +420,7 @@ function ConnectionsTableRow({
 							</CButton>
 
 							<CButton
-								onClick={(e) => windowLinkOpen({ href: `/connection-debug/${id}`, title: 'View debug log' })}
+								onClick={() => windowLinkOpen({ href: `/connection-debug/${id}`, title: 'View debug log' })}
 								size="md"
 								title="Logs"
 								disabled={!isEnabled}

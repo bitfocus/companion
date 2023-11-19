@@ -18,21 +18,21 @@ export function MyHeader({ toggleSidebar, canLock, setLocked }: MyHeaderProps) {
 	const [updateData, setUpdateData] = useState<AppUpdateInfo | null>(null)
 
 	useEffect(() => {
-		if (socket) {
-			socket.on('app-update-info', setUpdateData)
-			socket.emit('app-update-info')
+		if (!socket) return
 
-			socketEmitPromise(socket, 'app-version-info', [])
-				.then((info) => {
-					setVersionInfo(info)
-				})
-				.catch((e) => {
-					console.error('Failed to load version info', e)
-				})
+		socket.on('app-update-info', setUpdateData)
+		socket.emit('app-update-info')
 
-			return () => {
-				socket.off('app-update-info', setUpdateData)
-			}
+		socketEmitPromise(socket, 'app-version-info', [])
+			.then((info) => {
+				setVersionInfo(info)
+			})
+			.catch((e) => {
+				console.error('Failed to load version info', e)
+			})
+
+		return () => {
+			socket.off('app-update-info', setUpdateData)
 		}
 	}, [socket])
 

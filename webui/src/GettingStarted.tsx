@@ -101,18 +101,14 @@ export function GettingStarted() {
 	useEffect(() => {
 		const fetchData = async () => {
 			try {
-				try {
-					const response = await fetch(`/docs/structure.json`)
-					const structure = await response.json()
-					setStructure(structure)
-				} catch (e) {
-					setError(e)
-				}
-
-				setLoading(false)
-			} catch (err) {
-				setError(err)
+				const response = await fetch(`/docs/structure.json`)
+				const structure = await response.json()
+				setStructure(structure)
+			} catch (e: any) {
+				setError(e)
 			}
+
+			setLoading(false)
 		}
 
 		fetchData()
@@ -263,7 +259,7 @@ function LoadContent({ file }: LoadContentProps) {
 				'loading'
 			) : (
 				<ReactMarkdown
-					transformImageUri={(src, alt, title) => {
+					transformImageUri={(src, _alt, _title) => {
 						return `/docs/${baseUrl}${src}`
 					}}
 					children={content}

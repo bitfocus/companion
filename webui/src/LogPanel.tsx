@@ -125,7 +125,10 @@ export const LogPanel = memo(function LogPanel() {
 	)
 })
 
-function LogPanelContents({ config }) {
+interface LogPanelContentsProps {
+	config: LogConfig
+}
+function LogPanelContents({ config }: LogPanelContentsProps) {
 	const socket = useContext(SocketContext)
 
 	const [history, setHistory] = useState<ClientLogLineExt[]>([])
@@ -177,7 +180,7 @@ function LogPanelContents({ config }) {
 		}
 	}, [socket])
 	const listRef = useRef<List>(null)
-	const rowHeights = useRef({})
+	const rowHeights = useRef<Record<string, number | undefined>>({})
 
 	const [follow, setFollow] = useState(true)
 
@@ -189,7 +192,7 @@ function LogPanelContents({ config }) {
 	}, [config, listRef, listChunkClearedToken])
 
 	const messages = useMemo(() => {
-		return history.filter((msg) => msg.level === 'error' || config[msg.level])
+		return history.filter((msg) => msg.level === 'error' || !!config[msg.level as keyof LogConfig])
 	}, [history, config])
 
 	useEffect(() => {
@@ -247,7 +250,7 @@ function LogPanelContents({ config }) {
 		rowHeights.current = { ...rowHeights.current, [index]: size }
 	}
 
-	function Row({ style, index }) {
+	function Row({ style, index }: { style: React.CSSProperties; index: number }) {
 		const rowRef = useRef<HTMLDivElement>(null)
 
 		const h = index === 0 ? LogsOnDiskInfoLine : messages[index - 1]

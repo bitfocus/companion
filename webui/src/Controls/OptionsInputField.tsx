@@ -6,12 +6,13 @@ import {
 	DropdownInputField,
 	NumberInputField,
 	TextInputField,
-} from '../Components'
-import { InternalCustomVariableDropdown, InternalInstanceField } from './InternalInstanceFields'
+} from '../Components/index.js'
+import { InternalCustomVariableDropdown, InternalInstanceField } from './InternalInstanceFields.js'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faDollarSign, faQuestionCircle } from '@fortawesome/free-solid-svg-icons'
 import { SomeCompanionActionInputField, SomeCompanionFeedbackInputField } from '@companion-module/base'
-import { InternalActionInputField } from '@companion/shared/Model/Options'
+import { InternalActionInputField } from '@companion/shared/Model/Options.js'
+import classNames from 'classnames'
 
 interface OptionsInputFieldProps {
 	connectionId: string
@@ -161,7 +162,7 @@ export function OptionsInputField({
 		featureIcons.push(<FontAwesomeIcon key="variables" icon={faDollarSign} title={'Supports variables'} />)
 
 	return (
-		<CFormGroup style={{ display: visibility === false ? 'none' : undefined }}>
+		<CFormGroup className={classNames({ displayNone: !!visibility })}>
 			<CLabel>
 				{option.label}
 				{featureIcons.length ? <span className="feature-icons">{featureIcons}</span> : ''}

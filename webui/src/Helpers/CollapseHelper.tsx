@@ -10,14 +10,14 @@ interface PanelCollapseHelperResult {
 }
 
 interface CollapsedState {
-	defaultCollapsed?: boolean
-	ids?: Record<string, boolean | undefined>
+	defaultCollapsed: boolean
+	ids: Record<string, boolean | undefined>
 }
 
 export function usePanelCollapseHelper(storageId: string, panelIds: string[]): PanelCollapseHelperResult {
 	const collapseStorageId = `companion_ui_collapsed_${storageId}`
 
-	const [collapsed, setCollapsed] = useState<CollapsedState>({})
+	const [collapsed, setCollapsed] = useState<CollapsedState>({ defaultCollapsed: false, ids: {} })
 	useEffect(() => {
 		// Reload from storage whenever the storage key changes
 		const oldState = window.localStorage.getItem(collapseStorageId)
@@ -34,7 +34,7 @@ export function usePanelCollapseHelper(storageId: string, panelIds: string[]): P
 	const setPanelCollapsed = useCallback(
 		(panelId, collapsed) => {
 			setCollapsed((oldState) => {
-				const newState = {
+				const newState: CollapsedState = {
 					...oldState,
 					ids: {},
 				}
@@ -55,7 +55,7 @@ export function usePanelCollapseHelper(storageId: string, panelIds: string[]): P
 	)
 	const setAllCollapsed = useCallback(() => {
 		setCollapsed((oldState) => {
-			const newState = {
+			const newState: CollapsedState = {
 				...oldState,
 				defaultCollapsed: true,
 				ids: {},
@@ -72,7 +72,7 @@ export function usePanelCollapseHelper(storageId: string, panelIds: string[]): P
 	}, [collapseStorageId, panelIds])
 	const setAllExpanded = useCallback(() => {
 		setCollapsed((oldState) => {
-			const newState = {
+			const newState: CollapsedState = {
 				...oldState,
 				defaultCollapsed: false,
 				ids: {},

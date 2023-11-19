@@ -1,15 +1,15 @@
 import React, { memo, useCallback, useContext, useEffect, useMemo, useState } from 'react'
-import { LoadingRetryOrError, sandbox, socketEmitPromise, SocketContext, ModulesContext } from '../util'
+import { LoadingRetryOrError, sandbox, socketEmitPromise, SocketContext, ModulesContext } from '../util.js'
 import { CRow, CCol, CButton } from '@coreui/react'
-import { ColorInputField, DropdownInputField, NumberInputField, TextInputField } from '../Components'
+import { ColorInputField, DropdownInputField, NumberInputField, TextInputField } from '../Components/index.js'
 import { nanoid } from 'nanoid'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faQuestionCircle } from '@fortawesome/free-solid-svg-icons'
 import sanitizeHtml from 'sanitize-html'
-import { isLabelValid } from '@companion/shared/Label'
-import CSwitch from '../CSwitch'
-import { BonjourDeviceInputField } from '../Components/BonjourDeviceInputField'
-import { ConnectionStatusEntry } from '@companion/shared/Model/Common'
+import { isLabelValid } from '@companion/shared/Label.js'
+import CSwitch from '../CSwitch.js'
+import { BonjourDeviceInputField } from '../Components/BonjourDeviceInputField.js'
+import { ConnectionStatusEntry } from '@companion/shared/Model/Common.js'
 import { SomeCompanionConfigField } from '@companion-module/base'
 
 interface ConnectionEditPanelProps {
@@ -70,7 +70,7 @@ const ConnectionEditPanelInner = memo(function ConnectionEditPanelInner({
 	const [connectionType, setConnectionType] = useState<string | null>(null)
 	const [validFields, setValidFields] = useState<Record<string, boolean | undefined> | null>(null)
 
-	const [fieldVisibility, setFieldVisibility] = useState({})
+	const [fieldVisibility, setFieldVisibility] = useState<Record<string, boolean>>({})
 
 	const invalidFieldNames = useMemo(() => {
 		const fieldNames: string[] = []
@@ -126,7 +126,7 @@ const ConnectionEditPanelInner = memo(function ConnectionEditPanelInner({
 			socketEmitPromise(socket, 'connections:edit', [connectionId])
 				.then((res) => {
 					if (res) {
-						const validFields = {}
+						const validFields: Record<string, boolean> = {}
 						for (const field of res.fields) {
 							// Real validation status gets generated when the editor components first mount
 							validFields[field.id] = true
@@ -162,7 +162,7 @@ const ConnectionEditPanelInner = memo(function ConnectionEditPanelInner({
 
 	const doRetryConfigLoad = useCallback(() => setReloadToken(nanoid()), [])
 
-	const setValue = useCallback((key, value) => {
+	const setValue = useCallback((key: string, value: any) => {
 		console.log('set value', key, value)
 
 		setConnectionConfig((oldConfig) => ({
@@ -170,7 +170,7 @@ const ConnectionEditPanelInner = memo(function ConnectionEditPanelInner({
 			[key]: value,
 		}))
 	}, [])
-	const setValid = useCallback((key, isValid) => {
+	const setValid = useCallback((key: string, isValid: boolean) => {
 		console.log('set valid', key, isValid)
 
 		setValidFields((oldValid) => ({
@@ -180,7 +180,7 @@ const ConnectionEditPanelInner = memo(function ConnectionEditPanelInner({
 	}, [])
 
 	useEffect(() => {
-		const visibility = {}
+		const visibility: Record<string, boolean> = {}
 
 		if (configFields === null || connectionConfig === null) {
 			return

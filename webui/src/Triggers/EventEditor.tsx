@@ -128,7 +128,6 @@ export function TriggerEventEditor({ controlId, events, heading }: TriggerEventE
 							<EventsTableRow
 								key={a?.id ?? i}
 								index={i}
-								controlId={controlId}
 								event={a}
 								setValue={setValue}
 								doDelete={doDelete}
@@ -160,7 +159,6 @@ interface EventsTableRowDragCollection {
 
 interface EventsTableRowProps {
 	event: EventInstance
-	controlId: string
 	index: number
 	dragId: string
 	moveCard: (dragIndex: number, hoverIndex: number) => void
@@ -174,7 +172,6 @@ interface EventsTableRowProps {
 
 function EventsTableRow({
 	event,
-	controlId,
 	index,
 	dragId,
 	moveCard,
@@ -184,14 +181,14 @@ function EventsTableRow({
 	doEnabled,
 	isCollapsed,
 	setCollapsed,
-}: EventsTableRowProps) {
+}: EventsTableRowProps): JSX.Element | null {
 	const innerDelete = useCallback(() => doDelete(event.id), [event.id, doDelete])
 	const innerDuplicate = useCallback(() => doDuplicate(event.id), [event.id, doDuplicate])
 
 	const ref = useRef<HTMLTableRowElement>(null)
 	const [, drop] = useDrop<EventsTableRowDragObject>({
 		accept: dragId,
-		hover(item, monitor) {
+		hover(item, _monitor) {
 			if (!ref.current) {
 				return
 			}
@@ -232,7 +229,7 @@ function EventsTableRow({
 
 	if (!event) {
 		// Invalid event, so skip
-		return ''
+		return null
 	}
 
 	return (
@@ -242,7 +239,6 @@ function EventsTableRow({
 			</td>
 			<td>
 				<EventEditor
-					controlId={controlId}
 					event={event}
 					setValue={setValue}
 					innerDelete={innerDelete}
@@ -259,7 +255,6 @@ function EventsTableRow({
 
 interface EventEditorProps {
 	event: EventInstance
-	controlId: string
 	setValue: (eventId: string, key: string, value: any) => void
 	innerDelete: () => void
 	innerDuplicate: () => void
@@ -271,7 +266,6 @@ interface EventEditorProps {
 
 function EventEditor({
 	event,
-	controlId,
 	setValue,
 	innerDelete,
 	innerDuplicate,
@@ -399,7 +393,7 @@ function EventEditor({
 	)
 }
 
-const noOptionsMessage = ({ inputValue }) => {
+const noOptionsMessage = ({}) => {
 	return 'No events found'
 }
 

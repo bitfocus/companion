@@ -7,16 +7,17 @@ import {
 	socketEmitPromise,
 	useMountEffect,
 	PreventDefaultHandler,
-} from '../util'
+} from '../util.js'
 import { CButton, CCol, CContainer, CForm, CRow } from '@coreui/react'
 import { nanoid } from 'nanoid'
 import { useParams } from 'react-router-dom'
-import { dsanMastercueKeymap, keyboardKeymap, logitecKeymap } from './Keymaps'
-import { ButtonPreview } from '../Components/ButtonPreview'
+import { dsanMastercueKeymap, keyboardKeymap, logitecKeymap } from './Keymaps.js'
+import { ButtonPreview } from '../Components/ButtonPreview.js'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faCancel, faExpand } from '@fortawesome/free-solid-svg-icons'
-import { formatLocation } from '@companion/shared/ControlId'
-import { ControlLocation, EmulatorConfig, EmulatorImage } from '@companion/shared/Model/Common'
+import { formatLocation } from '@companion/shared/ControlId.js'
+import { ControlLocation, EmulatorConfig, EmulatorImage } from '@companion/shared/Model/Common.js'
+import { Operation as JsonPatchOperation } from 'fast-json-patch'
 
 type EmulatorImageCache = Record<number, Record<number, string | false | undefined> | undefined>
 
@@ -44,13 +45,13 @@ export function Emulator() {
 			.then((config) => {
 				setConfig(config)
 			})
-			.catch((e) => {
+			.catch((e: any) => {
 				console.error('Emulator error', e)
 				setLoadError(`Failed: ${e}`)
 			})
 
-		const updateConfig = (patch) => {
-			setConfig((oldConfig) => applyPatchOrReplaceObject(oldConfig, patch))
+		const updateConfig = (patch: JsonPatchOperation[]) => {
+			setConfig((oldConfig) => oldConfig && applyPatchOrReplaceObject(oldConfig, patch))
 		}
 
 		socket.on('emulator:config', updateConfig)
@@ -112,7 +113,7 @@ export function Emulator() {
 			if (keymap[e.keyCode] !== undefined) {
 				const xy = keymap[e.keyCode]
 				if (xy) {
-					socketEmitPromise(socket, 'emulator:press', [emulatorId, ...xy]).catch((e) => {
+					socketEmitPromise(socket, 'emulator:press', [emulatorId, ...xy]).catch((e: any) => {
 						console.error('press failed', e)
 					})
 					console.log('emulator:press', emulatorId, xy)
@@ -123,7 +124,7 @@ export function Emulator() {
 		const onKeyUp = (e: KeyboardEvent) => {
 			const xy = keymap[e.keyCode]
 			if (xy) {
-				socketEmitPromise(socket, 'emulator:release', [emulatorId, ...xy]).catch((e) => {
+				socketEmitPromise(socket, 'emulator:release', [emulatorId, ...xy]).catch((e: any) => {
 					console.error('release failed', e)
 				})
 				console.log('emulator:release', emulatorId, xy)
@@ -141,23 +142,23 @@ export function Emulator() {
 
 	useEffect(() => {
 		// handle changes to keyDown, as it isnt safe to do inside setState
-		if (keyDown) {
-			socketEmitPromise(socket, 'emulator:press', [emulatorId, keyDown.column, keyDown.row]).catch((e) => {
-				console.error('press failed', e)
-			})
-			console.log('emulator:press', emulatorId, keyDown)
+		if (!keyDown) return
 
-			return () => {
-				socketEmitPromise(socket, 'emulator:release', [emulatorId, keyDown.column, keyDown.row]).catch((e) => {
-					console.error('release failed', e)
-				})
-				console.log('emulator:release', emulatorId, keyDown)
-			}
+		socketEmitPromise(socket, 'emulator:press', [emulatorId, keyDown.column, keyDown.row]).catch((e: any) => {
+			console.error('press failed', e)
+		})
+		console.log('emulator:press', emulatorId, keyDown)
+
+		return () => {
+			socketEmitPromise(socket, 'emulator:release', [emulatorId, keyDown.column, keyDown.row]).catch((e: any) => {
+				console.error('release failed', e)
+			})
+			console.log('emulator:release', emulatorId, keyDown)
 		}
 	}, [socket, keyDown, emulatorId])
 
 	useEffect(() => {
-		const onMouseUp = (e) => {
+		const onMouseUp = (e: MouseEvent) => {
 			e.preventDefault()
 			setKeyDown(null)
 		}
@@ -198,7 +199,7 @@ interface ConfigurePanelProps {
 	config: EmulatorConfig
 }
 
-function ConfigurePanel({ config }: ConfigurePanelProps) {
+function ConfigurePanel({ config }: ConfigurePanelProps): JSX.Element | null {
 	const [show, setShow] = useState(true)
 	const [fullscreen, setFullscreen] = useState(document.fullscreenElement !== null)
 
@@ -238,9 +239,7 @@ function ConfigurePanel({ config }: ConfigurePanelProps) {
 				</CForm>
 			</CCol>
 		</CRow>
-	) : (
-		''
-	)
+	) : null
 }
 
 // function clamp(val, max) {

@@ -1,11 +1,11 @@
 import React, { useCallback, useEffect, useMemo, useState, useContext } from 'react'
-import { LoadingRetryOrError, SocketContext, socketEmitPromise } from '../util'
+import { LoadingRetryOrError, SocketContext, socketEmitPromise } from '../util.js'
 import { CAlert, CCol, CContainer, CRow, CWidgetSimple } from '@coreui/react'
 import { nanoid } from 'nanoid'
 import { useNavigate } from 'react-router-dom'
 import jsonPatch, { Operation as JsonPatchOperation } from 'fast-json-patch'
 import { cloneDeep } from 'lodash-es'
-import type { AvailableDeviceInfo, ClientDevicesList } from '@companion/shared/Model/Surfaces'
+import type { AvailableDeviceInfo, ClientDevicesList } from '@companion/shared/Model/Surfaces.js'
 
 export function EmulatorList() {
 	const socket = useContext(SocketContext)
@@ -37,7 +37,7 @@ export function EmulatorList() {
 		socket.on('surfaces:patch', patchSurfaces)
 
 		return () => {
-			socketEmitPromise(socket, 'surfaces:unsubscribe', []).catch((e) => {
+			socketEmitPromise(socket, 'surfaces:unsubscribe', []).catch((e: any) => {
 				console.error('Failed to unsubscribe from surfaces', e)
 			})
 		}

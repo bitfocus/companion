@@ -18,7 +18,7 @@ export function WindowLinkOpen({
 }: React.PropsWithChildren<WindowLinkOpenProps>) {
 	return (
 		<div
-			onClick={(e) => windowLinkOpen({ href, sameWindow })}
+			onClick={() => windowLinkOpen({ href, sameWindow })}
 			style={{ display: 'inline-block', cursor: 'pointer' }}
 			title={title}
 		>
