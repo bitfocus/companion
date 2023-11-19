@@ -1,4 +1,13 @@
-import React, { forwardRef, useCallback, useContext, useEffect, useImperativeHandle, useRef, useState } from 'react'
+import React, {
+	FormEvent,
+	forwardRef,
+	useCallback,
+	useContext,
+	useEffect,
+	useImperativeHandle,
+	useRef,
+	useState,
+} from 'react'
 import {
 	CAlert,
 	CButton,
@@ -15,9 +24,16 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faCog, faUndo } from '@fortawesome/free-solid-svg-icons'
 import CSwitch from '../CSwitch'
 import { SocketContext, UserConfigContext } from '../util'
+import type { UserConfigGridSize, UserConfigModel } from '@companion/shared/Model/UserConfigModel'
 
-export function GridConfig({ config, setValue, resetValue }) {
-	const gridSizeRef = useRef(null)
+interface GridConfigProps {
+	config: UserConfigModel
+	setValue: (key: keyof UserConfigModel, value: any) => void
+	resetValue: (key: keyof UserConfigModel) => void
+}
+
+export function GridConfig({ config, setValue, resetValue }: GridConfigProps) {
+	const gridSizeRef = useRef<GridSizeModalRef>(null)
 
 	const editGridSize = useCallback(() => {
 		gridSizeRef.current?.show()
@@ -26,7 +42,7 @@ export function GridConfig({ config, setValue, resetValue }) {
 	return (
 		<>
 			<tr>
-				<th colSpan="3" className="settings-category">
+				<th colSpan={3} className="settings-category">
 					Grid
 					<GridSizeModal ref={gridSizeRef} />
 				</th>
@@ -93,14 +109,21 @@ export function GridConfig({ config, setValue, resetValue }) {
 	)
 }
 
-const GridSizeModal = forwardRef(function GridSizeModal(props, ref) {
+interface GridSizeModalProps {
+	// Nothing
+}
+interface GridSizeModalRef {
+	show(): void
+}
+
+const GridSizeModal = forwardRef<GridSizeModalRef, GridSizeModalProps>(function GridSizeModal(_props, ref) {
 	const socket = useContext(SocketContext)
 	const userConfig = useContext(UserConfigContext)
 	const [show, setShow] = useState(false)
 
-	const [newGridSize, setNewGridSize] = useState(null)
+	const [newGridSize, setNewGridSize] = useState<UserConfigGridSize | null>(null)
 
-	const buttonRef = useRef()
+	const buttonRef = useRef<HTMLElement>()
 
 	const buttonFocus = () => {
 		if (buttonRef.current) {
@@ -113,13 +136,13 @@ const GridSizeModal = forwardRef(function GridSizeModal(props, ref) {
 		setNewGridSize(null)
 	}, [])
 	const doAction = useCallback(
-		(e) => {
+		(e: FormEvent) => {
 			if (e) e.preventDefault()
 
 			setShow(false)
 			setNewGridSize(null)
 
-			if (!setNewGridSize) return
+			if (!newGridSize) return
 
 			console.log('set gridSize', newGridSize)
 			socket.emit('set_userconfig_key', 'gridSize', newGridSize)
@@ -143,7 +166,7 @@ const GridSizeModal = forwardRef(function GridSizeModal(props, ref) {
 	useEffect(() => {
 		if (show) {
 			setNewGridSize((oldGridSize) => {
-				if (!oldGridSize) return userConfig.gridSize
+				if (!oldGridSize && userConfig) return userConfig.gridSize
 				return oldGridSize
 			})
 		}
@@ -151,36 +174,52 @@ const GridSizeModal = forwardRef(function GridSizeModal(props, ref) {
 
 	const setMinColumn = useCallback((e) => {
 		const newValue = Number(e.currentTarget.value)
-		setNewGridSize((oldSize) => ({
-			...oldSize,
-			minColumn: newValue,
-		}))
+		setNewGridSize((oldSize) =>
+			oldSize
+				? {
+						...oldSize,
+						minColumn: newValue,
+				  }
+				: null
+		)
 	}, [])
 	const setMaxColumn = useCallback((e) => {
 		const newValue = Number(e.currentTarget.value)
-		setNewGridSize((oldSize) => ({
-			...oldSize,
-			maxColumn: newValue,
-		}))
+		setNewGridSize((oldSize) =>
+			oldSize
+				? {
+						...oldSize,
+						maxColumn: newValue,
+				  }
+				: null
+		)
 	}, [])
 	const setMinRow = useCallback((e) => {
 		const newValue = Number(e.currentTarget.value)
-		setNewGridSize((oldSize) => ({
-			...oldSize,
-			minRow: newValue,
-		}))
+		setNewGridSize((oldSize) =>
+			oldSize
+				? {
+						...oldSize,
+						minRow: newValue,
+				  }
+				: null
+		)
 	}, [])
 	const setMaxRow = useCallback((e) => {
 		const newValue = Number(e.currentTarget.value)
-		setNewGridSize((oldSize) => ({
-			...oldSize,
-			maxRow: newValue,
-		}))
+		setNewGridSize((oldSize) =>
+			oldSize
+				? {
+						...oldSize,
+						maxRow: newValue,
+				  }
+				: null
+		)
 	}, [])
 
 	const isReducingSize =
 		newGridSize &&
-		userConfig.gridSize &&
+		userConfig?.gridSize &&
 		(newGridSize.minColumn > userConfig.gridSize.minColumn ||
 			newGridSize.maxColumn < userConfig.gridSize.maxColumn ||
 			newGridSize.minRow > userConfig.gridSize.minRow ||

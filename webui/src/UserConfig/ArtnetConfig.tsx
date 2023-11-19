@@ -3,12 +3,19 @@ import { CButton, CInput } from '@coreui/react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faUndo } from '@fortawesome/free-solid-svg-icons'
 import CSwitch from '../CSwitch'
+import type { UserConfigModel } from '@companion/shared/Model/UserConfigModel'
 
-export function ArtnetConfig({ config, setValue, resetValue }) {
+interface ArtnetConfigProps {
+	config: UserConfigModel
+	setValue: (key: keyof UserConfigModel, value: any) => void
+	resetValue: (key: keyof UserConfigModel) => void
+}
+
+export function ArtnetConfig({ config, setValue, resetValue }: ArtnetConfigProps) {
 	return (
 		<>
 			<tr>
-				<th colSpan="3" className="settings-category">
+				<th colSpan={3} className="settings-category">
 					Artnet Listener
 				</th>
 			</tr>

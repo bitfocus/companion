@@ -1,5 +1,3 @@
-import { ExportGridSize } from './ExportModel.js'
-
 export interface UserConfigModel {
 	setup_wizard: number
 
@@ -63,6 +61,13 @@ export interface UserConfigModel {
 	admin_timeout: number
 	admin_password: string
 
-	gridSize: ExportGridSize
+	gridSize: UserConfigGridSize
 	gridSizeInlineGrow: boolean
+}
+
+export interface UserConfigGridSize {
+	minColumn: number
+	maxColumn: number
+	minRow: number
+	maxRow: number
 }

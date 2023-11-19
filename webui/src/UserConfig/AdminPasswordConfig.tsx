@@ -3,17 +3,24 @@ import { CAlert, CButton, CInput } from '@coreui/react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faUndo } from '@fortawesome/free-solid-svg-icons'
 import CSwitch from '../CSwitch'
+import type { UserConfigModel } from '@companion/shared/Model/UserConfigModel.js'
 
-export function AdminPasswordConfig({ config, setValue, resetValue }) {
+interface AdminPasswordConfigProps {
+	config: UserConfigModel
+	setValue: (key: keyof UserConfigModel, value: any) => void
+	resetValue: (key: keyof UserConfigModel) => void
+}
+
+export function AdminPasswordConfig({ config, setValue, resetValue }: AdminPasswordConfigProps) {
 	return (
 		<>
 			<tr>
-				<th colSpan="3" className="settings-category">
+				<th colSpan={3} className="settings-category">
 					Admin UI Password
 				</th>
 			</tr>
 			<tr>
-				<td colSpan="3">
+				<td colSpan={3}>
 					<CAlert color="danger">
 						This does not make an installation secure!
 						<br /> This is intended to keep normal users from stumbling upon the settings and changing things. It will

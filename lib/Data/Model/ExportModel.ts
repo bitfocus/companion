@@ -1,3 +1,4 @@
+import type { UserConfigGridSize } from '../../Shared/Model/UserConfigModel.js'
 import type { ConnectionConfig } from '../../Instance/Controller.js'
 import type { CustomVariablesModel } from './CustomVariableModel.js'
 
@@ -33,7 +34,7 @@ export interface ExportPageContentv4 {
 	name: string
 	controls: Record<number, Record<number, ExportControlv4>>
 
-	gridSize: ExportGridSize
+	gridSize: UserConfigGridSize
 }
 
 export type ExportControlv4 = Record<string, any> // TODO
@@ -56,11 +57,4 @@ export type ExportInstanceMinimalv4 = {
 	label: string
 	instance_type: string
 	lastUpgradeIndex: number
-}
-
-export interface ExportGridSize {
-	minColumn: number
-	maxColumn: number
-	minRow: number
-	maxRow: number
 }

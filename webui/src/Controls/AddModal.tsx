@@ -18,8 +18,19 @@ import {
 	RecentActionsContext,
 	RecentFeedbacksContext,
 } from '../util'
+import { ClientConnectionConfig } from '@companion/shared/Model/Common'
 
-export const AddActionsModal = forwardRef(function AddActionsModal({ addAction }, ref) {
+interface AddActionsModalProps {
+	addAction: (actionType: string) => void
+}
+export interface AddActionsModalRef {
+	show(): void
+}
+
+export const AddActionsModal = forwardRef<AddActionsModalRef, AddActionsModalProps>(function AddActionsModal(
+	{ addAction },
+	ref
+) {
 	const recentActionsContext = useContext(RecentActionsContext)
 	const actions = useContext(ActionsContext)
 	const connections = useContext(ConnectionsContext)
@@ -42,8 +53,8 @@ export const AddActionsModal = forwardRef(function AddActionsModal({ addAction }
 		[]
 	)
 
-	const [expanded, setExpanded] = useState({})
-	const toggle = useCallback((id) => {
+	const [expanded, setExpanded] = useState<Record<string, boolean>>({})
+	const toggleExpanded = useCallback((id: string) => {
 		setExpanded((oldVal) => {
 			return {
 				...oldVal,
@@ -54,8 +65,8 @@ export const AddActionsModal = forwardRef(function AddActionsModal({ addAction }
 	const [filter, setFilter] = useState('')
 
 	const addAction2 = useCallback(
-		(actionType) => {
-			recentActionsContext.trackRecentAction(actionType)
+		(actionType: string) => {
+			recentActionsContext?.trackRecentAction(actionType)
 
 			addAction(actionType)
 		},
@@ -87,7 +98,7 @@ export const AddActionsModal = forwardRef(function AddActionsModal({ addAction }
 						itemName="actions"
 						expanded={!!filter || expanded[connectionId]}
 						filter={filter}
-						doToggle={toggle}
+						doToggle={toggleExpanded}
 						doAdd={addAction2}
 					/>
 				))}
@@ -101,7 +112,18 @@ export const AddActionsModal = forwardRef(function AddActionsModal({ addAction }
 	)
 })
 
-export const AddFeedbacksModal = forwardRef(function AddFeedbacksModal({ addFeedback, booleanOnly }, ref) {
+interface AddFeedbacksModalProps {
+	addFeedback: (feedbackType: string) => void
+	booleanOnly: boolean
+}
+export interface AddFeedbacksModalRef {
+	show(): void
+}
+
+export const AddFeedbacksModal = forwardRef<AddFeedbacksModalRef, AddFeedbacksModalProps>(function AddFeedbacksModal(
+	{ addFeedback, booleanOnly },
+	ref
+) {
 	const recentFeedbacksContext = useContext(RecentFeedbacksContext)
 	const feedbacks = useContext(FeedbacksContext)
 	const connections = useContext(ConnectionsContext)
@@ -124,8 +146,8 @@ export const AddFeedbacksModal = forwardRef(function AddFeedbacksModal({ addFeed
 		[]
 	)
 
-	const [expanded, setExpanded] = useState({})
-	const toggle = useCallback((id) => {
+	const [expanded, setExpanded] = useState<Record<string, boolean>>({})
+	const toggleExpanded = useCallback((id: string) => {
 		setExpanded((oldVal) => {
 			return {
 				...oldVal,
@@ -137,7 +159,7 @@ export const AddFeedbacksModal = forwardRef(function AddFeedbacksModal({ addFeed
 
 	const addFeedback2 = useCallback(
 		(feedbackType) => {
-			recentFeedbacksContext.trackRecentFeedback(feedbackType)
+			recentFeedbacksContext?.trackRecentFeedback(feedbackType)
 
 			addFeedback(feedbackType)
 		},
@@ -169,7 +191,7 @@ export const AddFeedbacksModal = forwardRef(function AddFeedbacksModal({ addFeed
 						expanded={!!filter || expanded[connectionId]}
 						filter={filter}
 						booleanOnly={booleanOnly}
-						doToggle={toggle}
+						doToggle={toggleExpanded}
 						doAdd={addFeedback2}
 					/>
 				))}
@@ -183,6 +205,18 @@ export const AddFeedbacksModal = forwardRef(function AddFeedbacksModal({ addFeed
 	)
 })
 
+interface ConnectionCollapseProps {
+	connectionId: string
+	connectionInfo: ClientConnectionConfig | undefined
+	items: Record<string, { label: string; type?: string; description?: string } | undefined> | undefined
+	itemName: string
+	expanded: boolean
+	filter: string
+	booleanOnly?: boolean
+	doToggle: (connectionId: string) => void
+	doAdd: (itemId: string) => void
+}
+
 function ConnectionCollapse({
 	connectionId,
 	connectionInfo,
@@ -193,7 +227,7 @@ function ConnectionCollapse({
 	booleanOnly,
 	doToggle,
 	doAdd,
-}) {
+}: ConnectionCollapseProps) {
 	const doToggle2 = useCallback(() => doToggle(connectionId), [doToggle, connectionId])
 
 	const candidates = useMemo(() => {
@@ -201,8 +235,8 @@ function ConnectionCollapse({
 			const regexp = new RegExp(filter, 'i')
 
 			const res = []
-			for (const [id, info] of Object.entries(items)) {
-				if (booleanOnly && info.type !== 'boolean') continue
+			for (const [id, info] of Object.entries(items ?? {})) {
+				if (!info || (booleanOnly && info.type !== 'boolean')) continue
 
 				if (info.label?.match(regexp)) {
 					const fullId = `${connectionId}:${id}`
@@ -230,9 +264,9 @@ function ConnectionCollapse({
 		}
 	}, [items, filter, connectionId, itemName, booleanOnly])
 
-	if (Object.keys(items).length === 0) {
+	if (!items || Object.keys(items).length === 0) {
 		// Hide card if there are no actions which match
-		return ''
+		return null
 	} else {
 		return (
 			<CCard className={'add-browse-card'}>
@@ -261,7 +295,12 @@ function ConnectionCollapse({
 	}
 }
 
-function AddRow({ info, id, doAdd }) {
+interface AddRowProps {
+	info: { label: string; description?: string }
+	id: string
+	doAdd: (itemId: string) => void
+}
+function AddRow({ info, id, doAdd }: AddRowProps) {
 	const doAdd2 = useCallback(() => doAdd(id), [doAdd, id])
 
 	return (

@@ -1,17 +1,24 @@
 import React from 'react'
 import { CAlert } from '@coreui/react'
 import CSwitch from '../CSwitch'
+import type { UserConfigModel } from '@companion/shared/Model/UserConfigModel'
 
-export function ExperimentsConfig({ config, setValue, resetValue }) {
+interface ExperimentsConfigProps {
+	config: UserConfigModel
+	setValue: (key: keyof UserConfigModel, value: any) => void
+	resetValue: (key: keyof UserConfigModel) => void
+}
+
+export function ExperimentsConfig({}: ExperimentsConfigProps) {
 	return (
 		<>
 			<tr>
-				<th colSpan="3" className="settings-category">
+				<th colSpan={3} className="settings-category">
 					Experiments
 				</th>
 			</tr>
 			<tr>
-				<td colSpan="3">
+				<td colSpan={3}>
 					<CAlert color="danger">Do not touch these settings unless you know what you are doing!</CAlert>
 				</td>
 			</tr>

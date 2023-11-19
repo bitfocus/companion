@@ -4,14 +4,8 @@ import { UserConfigContext } from '../util'
 export function TcpUdpProtocol() {
 	const config = useContext(UserConfigContext)
 
-	const tcpPort =
-		config?.tcp_enabled && config?.tcp_listen_port && config?.tcp_listen_port !== '0'
-			? config?.tcp_listen_port
-			: 'disabled'
-	const udpPort =
-		config?.udp_enabled && config?.udp_listen_port && config?.udp_listen_port !== '0'
-			? config?.udp_listen_port
-			: 'disabled'
+	const tcpPort = config?.tcp_enabled && config?.tcp_listen_port ? config?.tcp_listen_port : 'disabled'
+	const udpPort = config?.udp_enabled && config?.udp_listen_port ? config?.udp_listen_port : 'disabled'
 
 	return (
 		<>

@@ -65,6 +65,8 @@ function UserConfigTable() {
 		[socket]
 	)
 
+	if (!config) return null
+
 	return (
 		<table className="table table-responsive-sm">
 			<tbody>

@@ -4,8 +4,15 @@ import { SocketContext } from '../util'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faSync, faTrash, faUndo } from '@fortawesome/free-solid-svg-icons'
 import CSwitch from '../CSwitch'
+import type { UserConfigModel } from '@companion/shared/Model/UserConfigModel'
 
-export function HttpsConfig({ config, setValue, resetValue }) {
+interface HttpsConfigProps {
+	config: UserConfigModel
+	setValue: (key: keyof UserConfigModel, value: any) => void
+	resetValue: (key: keyof UserConfigModel) => void
+}
+
+export function HttpsConfig({ config, setValue, resetValue }: HttpsConfigProps) {
 	const socket = useContext(SocketContext)
 
 	const createSslCertificate = useCallback(() => {
@@ -26,12 +33,12 @@ export function HttpsConfig({ config, setValue, resetValue }) {
 	return (
 		<>
 			<tr>
-				<th colSpan="3" className="settings-category">
+				<th colSpan={3} className="settings-category">
 					HTTPS Web Server
 				</th>
 			</tr>
 			<tr>
-				<td colSpan="3">
+				<td colSpan={3}>
 					<p>An HTTPS server can be enabled for the Companion web interfaces should your deployment require it.</p>
 					<CAlert color="danger">
 						It is never recommended to expose the Companion interface to the Internet and HTTPS does not provide any
@@ -98,11 +105,11 @@ export function HttpsConfig({ config, setValue, resetValue }) {
 
 			{config.https_cert_type === 'self' && (
 				<tr>
-					<td colSpan="3">
+					<td colSpan={3}>
 						<table className="table table-responsive-sm">
 							<tbody>
 								<tr>
-									<td colSpan="3">This tool will help create a self-signed certificate for the server to use.</td>
+									<td colSpan={3}>This tool will help create a self-signed certificate for the server to use.</td>
 								</tr>
 
 								<tr>
@@ -185,11 +192,11 @@ export function HttpsConfig({ config, setValue, resetValue }) {
 
 			{config.https_cert_type === 'external' && (
 				<tr>
-					<td colSpan="3">
+					<td colSpan={3}>
 						<table className="table table-responsive-sm">
 							<tbody>
 								<tr>
-									<td colSpan="3">
+									<td colSpan={3}>
 										<p>
 											This requires you to generate your own self-signed certificate or go through a certificate
 											authority. A properly signed certificate will work.

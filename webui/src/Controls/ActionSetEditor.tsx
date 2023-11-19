@@ -8,7 +8,7 @@ import {
 	faFolderOpen,
 } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import React, { memo, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react'
+import React, { RefObject, memo, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react'
 import { NumberInputField } from '../Components'
 import {
 	ActionsContext,
@@ -23,12 +23,26 @@ import {
 import Select, { createFilter } from 'react-select'
 import { OptionsInputField } from './OptionsInputField'
 import { useDrag, useDrop } from 'react-dnd'
-import { GenericConfirmModal } from '../Components/GenericConfirmModal'
-import { AddActionsModal } from './AddModal'
+import { GenericConfirmModal, GenericConfirmModalRef } from '../Components/GenericConfirmModal'
+import { AddActionsModal, AddActionsModalRef } from './AddModal'
 import { usePanelCollapseHelper } from '../Helpers/CollapseHelper'
 import CSwitch from '../CSwitch'
 import { OptionButtonPreview } from './OptionButtonPreview'
 import { MenuPortalContext } from '../Components/DropdownInputField'
+import type { FilterOptionOption } from 'react-select/dist/declarations/src/filters'
+import { ActionInstance } from '@companion/shared/Model/ActionModel'
+import { ControlLocation } from '@companion/shared/Model/Common'
+
+interface ControlActionSetEditorProps {
+	controlId: string
+	location: ControlLocation
+	stepId: string
+	setId: string
+	actions: ActionInstance[]
+	addPlaceholder: string
+	heading: JSX.Element | string
+	headingActions?: JSX.Element
+}
 
 export const ControlActionSetEditor = memo(function ControlActionSetEditor({
 	controlId,
@@ -39,13 +53,13 @@ export const ControlActionSetEditor = memo(function ControlActionSetEditor({
 	addPlaceholder,
 	heading,
 	headingActions,
-}) {
+}: ControlActionSetEditorProps) {
 	const socket = useContext(SocketContext)
 
-	const confirmModal = useRef()
+	const confirmModal = useRef<GenericConfirmModalRef>(null)
 
 	const emitUpdateOption = useCallback(
-		(actionId, key, val) => {
+		(actionId: string, key: string, val: any) => {
 			socketEmitPromise(socket, 'controls:action:set-option', [controlId, stepId, setId, actionId, key, val]).catch(
 				(e) => {
 					console.error('Failed to set control action option', e)
@@ -55,7 +69,7 @@ export const ControlActionSetEditor = memo(function ControlActionSetEditor({
 		[socket, controlId, stepId, setId]
 	)
 	const emitSetDelay = useCallback(
-		(actionId, delay) => {
+		(actionId: string, delay: number) => {
 			socketEmitPromise(socket, 'controls:action:set-delay', [controlId, stepId, setId, actionId, delay]).catch((e) => {
 				console.error('Failed to set control action delay', e)
 			})
@@ -64,7 +78,7 @@ export const ControlActionSetEditor = memo(function ControlActionSetEditor({
 	)
 
 	const emitDelete = useCallback(
-		(actionId) => {
+		(actionId: string) => {
 			socketEmitPromise(socket, 'controls:action:remove', [controlId, stepId, setId, actionId]).catch((e) => {
 				console.error('Failed to remove control action', e)
 			})
@@ -72,7 +86,7 @@ export const ControlActionSetEditor = memo(function ControlActionSetEditor({
 		[socket, controlId, stepId, setId]
 	)
 	const emitDuplicate = useCallback(
-		(actionId) => {
+		(actionId: string) => {
 			socketEmitPromise(socket, 'controls:action:duplicate', [controlId, stepId, setId, actionId]).catch((e) => {
 				console.error('Failed to duplicate control action', e)
 			})
@@ -81,7 +95,7 @@ export const ControlActionSetEditor = memo(function ControlActionSetEditor({
 	)
 
 	const emitLearn = useCallback(
-		(actionId) => {
+		(actionId: string) => {
 			socketEmitPromise(socket, 'controls:action:learn', [controlId, stepId, setId, actionId]).catch((e) => {
 				console.error('Failed to learn control action values', e)
 			})
@@ -90,7 +104,14 @@ export const ControlActionSetEditor = memo(function ControlActionSetEditor({
 	)
 
 	const emitOrder = useCallback(
-		(dragStepId, dragSetId, dragIndex, dropStepId, dropSetId, dropIndex) => {
+		(
+			dragStepId: string,
+			dragSetId: string,
+			dragIndex: number,
+			dropStepId: string,
+			dropSetId: string,
+			dropIndex: number
+		) => {
 			socketEmitPromise(socket, 'controls:action:reorder', [
 				controlId,
 				dragStepId,
@@ -107,7 +128,7 @@ export const ControlActionSetEditor = memo(function ControlActionSetEditor({
 	)
 
 	const emitEnabled = useCallback(
-		(actionId, enabled) => {
+		(actionId: string, enabled: boolean) => {
 			socketEmitPromise(socket, 'controls:action:enabled', [controlId, stepId, setId, actionId, enabled]).catch((e) => {
 				console.error('Failed to enable/disable action', e)
 			})
@@ -116,7 +137,7 @@ export const ControlActionSetEditor = memo(function ControlActionSetEditor({
 	)
 
 	const addAction = useCallback(
-		(actionType) => {
+		(actionType: string) => {
 			const [connectionId, actionId] = actionType.split(':', 2)
 			socketEmitPromise(socket, 'controls:action:add', [controlId, stepId, setId, connectionId, actionId]).catch(
 				(e) => {
@@ -173,12 +194,15 @@ export const ControlActionSetEditor = memo(function ControlActionSetEditor({
 	)
 })
 
-const AddActionsPanel = memo(function AddActionsPanel({ addPlaceholder, addAction }) {
-	const addActionsRef = useRef(null)
+interface AddActionsPanelProps {
+	addPlaceholder: string
+	addAction: (actionType: string) => void
+}
+
+const AddActionsPanel = memo(function AddActionsPanel({ addPlaceholder, addAction }: AddActionsPanelProps) {
+	const addActionsRef = useRef<AddActionsModalRef>(null)
 	const showAddModal = useCallback(() => {
-		if (addActionsRef.current) {
-			addActionsRef.current.show()
-		}
+		addActionsRef.current?.show()
 	}, [])
 
 	return (
@@ -194,6 +218,33 @@ const AddActionsPanel = memo(function AddActionsPanel({ addPlaceholder, addActio
 		</div>
 	)
 })
+
+interface ActionsListProps {
+	location: ControlLocation
+	controlId: string
+	dragId: string
+	stepId: string
+	setId: string
+	confirmModal: RefObject<GenericConfirmModalRef>
+	actions: ActionInstance[]
+	doSetValue: (actionId: string, key: string, val: any) => void
+	doSetDelay: (actionId: string, delay: number) => void
+	doDelete: (actionId: string) => void
+	doDuplicate: (actionId: string) => void
+	doEnabled: (actionId: string, enabled: boolean) => void
+	doReorder: (
+		stepId: string,
+		setId: string,
+		index: number,
+		targetStepId: string,
+		targetSetId: string,
+		targetIndex: number
+	) => void
+	emitLearn: (actionId: string) => void
+	readonly?: boolean
+	setPanelCollapsed: (panelId: string, collapsed: boolean) => void
+	isPanelCollapsed: (panelId: string) => boolean
+}
 
 export function ActionsList({
 	location,
@@ -213,11 +264,11 @@ export function ActionsList({
 	readonly,
 	setPanelCollapsed,
 	isPanelCollapsed,
-}) {
+}: ActionsListProps) {
 	const doDelete2 = useCallback(
 		(actionId) => {
 			if (confirmModal) {
-				confirmModal.current.show('Delete action', 'Delete action?', 'Delete', () => {
+				confirmModal.current?.show('Delete action', 'Delete action?', 'Delete', () => {
 					doDelete(actionId)
 				})
 			} else {
@@ -267,18 +318,33 @@ export function ActionsList({
 	)
 }
 
-function ActionRowDropPlaceholder({ dragId, stepId, setId, actionCount, moveCard }) {
-	const [isDragging, drop] = useDrop({
+interface ActionRowDropPlaceholderProps {
+	stepId: string
+	setId: string
+	dragId: string
+	actionCount: number
+	moveCard: (
+		stepId: string,
+		setId: string,
+		index: number,
+		targetStepId: string,
+		targetSetId: string,
+		targetIndex: number
+	) => void
+}
+
+function ActionRowDropPlaceholder({ dragId, stepId, setId, actionCount, moveCard }: ActionRowDropPlaceholderProps) {
+	const [isDragging, drop] = useDrop<ActionTableRowDragItem, unknown, boolean>({
 		accept: dragId,
 		collect: (monitor) => {
 			return monitor.canDrop()
 		},
-		hover(item, monitor) {
+		hover(item, _monitor) {
 			moveCard(item.stepId, item.setId, item.index, stepId, setId, 0)
 		},
 	})
 
-	if (!isDragging || actionCount > 0) return <></>
+	if (!isDragging || actionCount > 0) return null
 
 	return (
 		<tr ref={drop} className={'actionlist-dropzone'}>
@@ -289,6 +355,43 @@ function ActionRowDropPlaceholder({ dragId, stepId, setId, actionCount, moveCard
 	)
 }
 
+interface ActionTableRowDragItem {
+	actionId: string
+	stepId: string
+	setId: string
+	index: number
+}
+interface ActionTableRowDragStatus {
+	isDragging: boolean
+}
+
+interface ActionTableRowProps {
+	action: ActionInstance
+	stepId: string
+	setId: string
+	location: ControlLocation
+	index: number
+	dragId: string
+	controlId: string
+	setValue: (actionId: string, key: string, val: any) => void
+	doDelete: (actionId: string) => void
+	doDuplicate: (actionId: string) => void
+	doDelay: (actionId: string, delay: number) => void
+	moveCard: (
+		stepId: string,
+		setId: string,
+		index: number,
+		targetStepId: string,
+		targetSetId: string,
+		targetIndex: number
+	) => void
+	doLearn: (actionId: string) => void
+	doEnabled: (actionId: string, enabled: boolean) => void
+	readonly: boolean
+	isCollapsed: boolean
+	setCollapsed: (actionId: string, collapsed: boolean) => void
+}
+
 function ActionTableRow({
 	action,
 	stepId,
@@ -296,7 +399,7 @@ function ActionTableRow({
 	location,
 	index,
 	dragId,
-	controlId,
+	// controlId,
 	setValue,
 	doDelete,
 	doDuplicate,
@@ -307,7 +410,7 @@ function ActionTableRow({
 	readonly,
 	isCollapsed,
 	setCollapsed,
-}) {
+}: ActionTableRowProps): JSX.Element | null {
 	const connectionsContext = useContext(ConnectionsContext)
 	const actionsContext = useContext(ActionsContext)
 
@@ -317,14 +420,14 @@ function ActionTableRow({
 	const innerLearn = useCallback(() => doLearn(action.id), [doLearn, action.id])
 	const innerSetEnabled = useCallback((e) => doEnabled(action.id, e.target.checked), [doEnabled, action.id])
 
-	const [optionVisibility, setOptionVisibility] = useState({})
+	const [optionVisibility, setOptionVisibility] = useState<Record<string, boolean>>({})
 
 	const actionSpec = (actionsContext[action.instance] || {})[action.action]
 
-	const ref = useRef(null)
-	const [, drop] = useDrop({
+	const ref = useRef<HTMLTableRowElement>(null)
+	const [, drop] = useDrop<ActionTableRowDragItem>({
 		accept: dragId,
-		hover(item, monitor) {
+		hover(item, _monitor) {
 			if (!ref.current) {
 				return
 			}
@@ -346,7 +449,7 @@ function ActionTableRow({
 			item.setId = setId
 		},
 	})
-	const [{ isDragging }, drag, preview] = useDrag({
+	const [{ isDragging }, drag, preview] = useDrag<ActionTableRowDragItem, unknown, ActionTableRowDragStatus>({
 		type: dragId,
 		canDrag: !readonly,
 		item: {
@@ -362,23 +465,27 @@ function ActionTableRow({
 	})
 	preview(drop(ref))
 
-	useEffect(() => {
+	const actionOptions = useMemo(() => {
 		const options = actionSpec?.options ?? []
 
-		for (const option of options) {
+		return options.map((option) => {
 			try {
 				if (typeof option.isVisibleFn === 'string' && typeof option.isVisible !== 'function') {
-					option.isVisible = sandbox(option.isVisibleFn)
+					return {
+						...option,
+						isVisible: sandbox(option.isVisibleFn),
+					}
 				}
 			} catch (e) {
 				console.error('Failed to process isVisibleFn', e)
 			}
-		}
+			return option
+		})
 	}, [actionSpec])
 
 	useEffect(() => {
-		const visibility = {}
-		const options = actionSpec?.options ?? []
+		const visibility: Record<string, boolean> = {}
+		const options = actionOptions ?? []
 
 		if (options === null || action === null) {
 			return
@@ -399,7 +506,7 @@ function ActionTableRow({
 		return () => {
 			setOptionVisibility({})
 		}
-	}, [actionSpec, action])
+	}, [actionOptions, action])
 
 	const doCollapse = useCallback(() => {
 		setCollapsed(action.id, true)
@@ -410,14 +517,12 @@ function ActionTableRow({
 
 	if (!action) {
 		// Invalid action, so skip
-		return ''
+		return null
 	}
 
 	const connectionInfo = connectionsContext[action.instance]
 	// const module = instance ? modules[instance.instance_type] : undefined
 	const connectionLabel = connectionInfo?.label ?? action.instance
-
-	const options = actionSpec?.options ?? []
 
 	const showButtonPreview = action?.instance === 'internal' && actionSpec?.showButtonPreview
 
@@ -454,7 +559,7 @@ function ActionTableRow({
 							<CButton disabled={readonly} size="sm" onClick={innerDelete} title="Remove action">
 								<FontAwesomeIcon icon={faTrash} />
 							</CButton>
-							{doEnabled && (
+							{!!doEnabled && (
 								<>
 									&nbsp;
 									<CSwitch
@@ -507,7 +612,7 @@ function ActionTableRow({
 
 						<div className="cell-option">
 							<CForm onSubmit={PreventDefaultHandler}>
-								{options.map((opt, i) => (
+								{actionOptions.map((opt, i) => (
 									<MyErrorBoundary key={i}>
 										<OptionsInputField
 											key={i}
@@ -532,8 +637,8 @@ function ActionTableRow({
 	)
 }
 
-const baseFilter = createFilter()
-const filterOptions = (candidate, input) => {
+const baseFilter = createFilter<AddActionOption>()
+const filterOptions = (candidate: FilterOptionOption<AddActionOption>, input: string): boolean => {
 	if (input) {
 		return !candidate.data.isRecent && baseFilter(candidate, input)
 	} else {
@@ -541,7 +646,7 @@ const filterOptions = (candidate, input) => {
 	}
 }
 
-const noOptionsMessage = ({ inputValue }) => {
+const noOptionsMessage = ({ inputValue }: { inputValue: string }) => {
 	if (inputValue) {
 		return 'No actions found'
 	} else {
@@ -549,16 +654,32 @@ const noOptionsMessage = ({ inputValue }) => {
 	}
 }
 
-function AddActionDropdown({ onSelect, placeholder }) {
+interface AddActionOption {
+	isRecent: boolean
+	value: string
+	label: string
+}
+interface AddActionGroup {
+	label: string
+	options: AddActionOption[]
+}
+
+interface AddActionDropdownProps {
+	onSelect: (actionType: string) => void
+	placeholder: string
+}
+
+function AddActionDropdown({ onSelect, placeholder }: AddActionDropdownProps) {
 	const recentActionsContext = useContext(RecentActionsContext)
 	const menuPortal = useContext(MenuPortalContext)
 	const connectionsContext = useContext(ConnectionsContext)
 	const actionsContext = useContext(ActionsContext)
 
 	const options = useMemo(() => {
-		const options = []
+		const options: Array<AddActionOption | AddActionGroup> = []
 		for (const [connectionId, connectionActions] of Object.entries(actionsContext)) {
 			for (const [actionId, action] of Object.entries(connectionActions || {})) {
+				if (!action) continue
 				const connectionLabel = connectionsContext[connectionId]?.label ?? connectionId
 				options.push({
 					isRecent: false,
@@ -568,8 +689,8 @@ function AddActionDropdown({ onSelect, placeholder }) {
 			}
 		}
 
-		const recents = []
-		for (const actionType of recentActionsContext.recentActions) {
+		const recents: AddActionOption[] = []
+		for (const actionType of recentActionsContext?.recentActions ?? []) {
 			if (actionType) {
 				const [connectionId, actionId] = actionType.split(':', 2)
 				const actionInfo = actionsContext[connectionId]?.[actionId]
@@ -589,12 +710,12 @@ function AddActionDropdown({ onSelect, placeholder }) {
 		})
 
 		return options
-	}, [actionsContext, connectionsContext, recentActionsContext.recentActions])
+	}, [actionsContext, connectionsContext, recentActionsContext?.recentActions])
 
 	const innerChange = useCallback(
 		(e) => {
 			if (e.value) {
-				recentActionsContext.trackRecentAction(e.value)
+				recentActionsContext?.trackRecentAction(e.value)
 
 				onSelect(e.value)
 			}

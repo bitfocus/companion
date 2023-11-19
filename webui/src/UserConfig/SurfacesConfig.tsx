@@ -3,12 +3,19 @@ import { CButton } from '@coreui/react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faUndo } from '@fortawesome/free-solid-svg-icons'
 import CSwitch from '../CSwitch'
+import type { UserConfigModel } from '@companion/shared/Model/UserConfigModel'
 
-export function SurfacesConfig({ config, setValue, resetValue }) {
+interface SurfacesConfigProps {
+	config: UserConfigModel
+	setValue: (key: keyof UserConfigModel, value: any) => void
+	resetValue: (key: keyof UserConfigModel) => void
+}
+
+export function SurfacesConfig({ config, setValue, resetValue }: SurfacesConfigProps) {
 	return (
 		<>
 			<tr>
-				<th colSpan="3" className="settings-category">
+				<th colSpan={3} className="settings-category">
 					Surfaces
 				</th>
 			</tr>
@@ -49,7 +56,7 @@ export function SurfacesConfig({ config, setValue, resetValue }) {
 					</div>
 				</td>
 				<td>
-					<CButton onClick={() => resetValue('elegato_plugin_enable')} title="Reset to default">
+					<CButton onClick={() => resetValue('elgato_plugin_enable')} title="Reset to default">
 						<FontAwesomeIcon icon={faUndo} />
 					</CButton>
 				</td>

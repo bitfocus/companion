@@ -3,12 +3,19 @@ import { CButton } from '@coreui/react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faUndo } from '@fortawesome/free-solid-svg-icons'
 import CSwitch from '../CSwitch'
+import type { UserConfigModel } from '@companion/shared/Model/UserConfigModel'
 
-export function ButtonsConfig({ config, setValue, resetValue }) {
+interface ButtonsConfigProps {
+	config: UserConfigModel
+	setValue: (key: keyof UserConfigModel, value: any) => void
+	resetValue: (key: keyof UserConfigModel) => void
+}
+
+export function ButtonsConfig({ config, setValue, resetValue }: ButtonsConfigProps) {
 	return (
 		<>
 			<tr>
-				<th colSpan="0" className="settings-category">
+				<th colSpan={0} className="settings-category">
 					Buttons
 				</th>
 				<th className="fit"></th>

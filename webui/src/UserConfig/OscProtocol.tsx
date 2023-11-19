@@ -8,12 +8,7 @@ export function OscProtocol() {
 		<>
 			<p>
 				Remote triggering can be done by sending OSC commands to port{' '}
-				<code>
-					{config?.osc_enabled && config?.osc_listen_port && config?.osc_listen_port !== '0'
-						? config?.osc_listen_port
-						: 'disabled'}
-				</code>
-				.
+				<code>{config?.osc_enabled && config?.osc_listen_port ? config?.osc_listen_port : 'disabled'}</code>.
 			</p>
 			<p>
 				<strong>Commands:</strong>
