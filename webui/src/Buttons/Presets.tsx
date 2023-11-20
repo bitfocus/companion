@@ -11,15 +11,26 @@ import {
 import { useDrag } from 'react-dnd'
 import { ButtonPreview, RedImage } from '../Components/ButtonPreview'
 import { nanoid } from 'nanoid'
+import type { ClientConnectionConfig, ModuleDisplayInfo } from '@companion/shared/Model/Common'
+import type { UIPresetDefinition } from '@companion/shared/Model/Presets'
+import { Operation as JsonPatchOperation } from 'fast-json-patch'
 
-export const InstancePresets = function InstancePresets({ resetToken }) {
+interface InstancePresetsProps {
+	resetToken: string
+}
+
+export const InstancePresets = function InstancePresets({ resetToken }: InstancePresetsProps) {
 	const socket = useContext(SocketContext)
 	const modules = useContext(ModulesContext)
 	const connectionsContext = useContext(ConnectionsContext)
 
-	const [connectionAndCategory, setConnectionAndCategory] = useState([null, null])
-	const [presetsMap, setPresetsMap] = useState(null)
-	const [presetsError, setPresetError] = useState(null)
+	const [connectionAndCategory, setConnectionAndCategory] = useState<
+		[connectionId: string | null, category: string | null]
+	>([null, null])
+	const [presetsMap, setPresetsMap] = useState<Record<string, Record<string, UIPresetDefinition> | undefined> | null>(
+		null
+	)
+	const [presetsError, setPresetError] = useState<string | null>(null)
 	const [reloadToken, setReloadToken] = useState(nanoid())
 
 	const doRetryPresetsLoad = useCallback(() => setReloadToken(nanoid()), [])
@@ -38,12 +49,16 @@ export const InstancePresets = function InstancePresets({ resetToken }) {
 				setPresetsMap(data)
 			})
 			.catch((e) => {
-				console.error('Failed to load presets')
+				console.error('Failed to load presets', e)
 				setPresetError('Failed to load presets')
 			})
 
-		const updatePresets = (id, patch) => {
-			setPresetsMap((oldPresets) => applyPatchOrReplaceSubObject(oldPresets, id, patch, []))
+		const updatePresets = (id: string, patch: JsonPatchOperation[]) => {
+			setPresetsMap((oldPresets) =>
+				oldPresets
+					? applyPatchOrReplaceSubObject<Record<string, UIPresetDefinition> | undefined>(oldPresets, id, patch, {})
+					: null
+			)
 		}
 
 		socket.on('presets:update', updatePresets)
@@ -51,7 +66,7 @@ export const InstancePresets = function InstancePresets({ resetToken }) {
 		return () => {
 			socket.off('presets:update', updatePresets)
 
-			socketEmitPromise(socket, 'presets:unsubscribe', []).catch((e) => {
+			socketEmitPromise(socket, 'presets:unsubscribe', []).catch(() => {
 				console.error('Failed to unsubscribe to presets')
 			})
 		}
@@ -61,7 +76,7 @@ export const InstancePresets = function InstancePresets({ resetToken }) {
 		// Show loading or an error
 		return (
 			<CRow>
-				<LoadingRetryOrError error={presetsError} dataReady={presetsMap} doRetry={doRetryPresetsLoad} />
+				<LoadingRetryOrError error={presetsError} dataReady={!!presetsMap} doRetry={doRetryPresetsLoad} />
 			</CRow>
 		)
 	}
@@ -70,7 +85,7 @@ export const InstancePresets = function InstancePresets({ resetToken }) {
 		const connectionInfo = connectionsContext[connectionAndCategory[0]]
 		const moduleInfo = connectionInfo ? modules[connectionInfo.instance_type] : undefined
 
-		const presets = presetsMap[connectionAndCategory[0]] ?? []
+		const presets = presetsMap[connectionAndCategory[0]] ?? {}
 
 		if (connectionAndCategory[1]) {
 			return (
@@ -97,7 +112,12 @@ export const InstancePresets = function InstancePresets({ resetToken }) {
 	}
 }
 
-function PresetsConnectionList({ presets, setConnectionAndCategory }) {
+interface PresetsConnectionListProps {
+	presets: Record<string, Record<string, UIPresetDefinition> | undefined>
+	setConnectionAndCategory: (info: [connectionId: string | null, category: string | null]) => void
+}
+
+function PresetsConnectionList({ presets, setConnectionAndCategory }: PresetsConnectionListProps) {
 	const modules = useContext(ModulesContext)
 	const connectionsContext = useContext(ConnectionsContext)
 
@@ -137,8 +157,22 @@ function PresetsConnectionList({ presets, setConnectionAndCategory }) {
 	)
 }
 
-function PresetsCategoryList({ presets, connectionInfo, moduleInfo, selectedConnectionId, setConnectionAndCategory }) {
-	const categories = new Set()
+interface PresetsCategoryListProps {
+	presets: Record<string, UIPresetDefinition>
+	connectionInfo: ClientConnectionConfig
+	moduleInfo: ModuleDisplayInfo | undefined
+	selectedConnectionId: string
+	setConnectionAndCategory: (info: [connectionId: string | null, category: string | null]) => void
+}
+
+function PresetsCategoryList({
+	presets,
+	connectionInfo,
+	moduleInfo,
+	selectedConnectionId,
+	setConnectionAndCategory,
+}: PresetsCategoryListProps) {
+	const categories = new Set<string>()
 	for (const preset of Object.values(presets)) {
 		categories.add(preset.category)
 	}
@@ -176,13 +210,25 @@ function PresetsCategoryList({ presets, connectionInfo, moduleInfo, selectedConn
 	)
 }
 
-function PresetsButtonList({ presets, selectedConnectionId, selectedCategory, setConnectionAndCategory }) {
+interface PresetsButtonListProps {
+	presets: Record<string, UIPresetDefinition>
+	selectedConnectionId: string
+	selectedCategory: string
+	setConnectionAndCategory: (info: [connectionId: string | null, category: string | null]) => void
+}
+
+function PresetsButtonList({
+	presets,
+	selectedConnectionId,
+	selectedCategory,
+	setConnectionAndCategory,
+}: PresetsButtonListProps) {
 	const doBack = useCallback(
 		() => setConnectionAndCategory([selectedConnectionId, null]),
 		[setConnectionAndCategory, selectedConnectionId]
 	)
 
-	const options = Object.values(presets).filter((p) => p.category === selectedCategory)
+	const filteredPresets = Object.values(presets).filter((p) => p.category === selectedCategory)
 
 	return (
 		<div>
@@ -194,15 +240,9 @@ function PresetsButtonList({ presets, selectedConnectionId, selectedCategory, se
 			</h5>
 			<p>Drag and drop the preset buttons below into your buttons-configuration.</p>
 
-			{options.map((preset, i) => {
+			{filteredPresets.map((preset, i) => {
 				return (
-					<PresetIconPreview
-						key={i}
-						connectionId={selectedConnectionId}
-						preset={preset}
-						alt={preset.label}
-						title={preset.label}
-					/>
+					<PresetIconPreview key={i} connectionId={selectedConnectionId} presetId={preset.id} title={preset.label} />
 				)
 			})}
 
@@ -211,7 +251,13 @@ function PresetsButtonList({ presets, selectedConnectionId, selectedCategory, se
 	)
 }
 
-function PresetIconPreview({ preset, connectionId, ...childProps }) {
+interface PresetIconPreviewProps {
+	connectionId: string
+	presetId: string
+	title: string
+}
+
+function PresetIconPreview({ connectionId, presetId, title }: PresetIconPreviewProps) {
 	const socket = useContext(SocketContext)
 	const [previewImage, setPreviewImage] = useState(null)
 	const [previewError, setPreviewError] = useState(false)
@@ -221,14 +267,14 @@ function PresetIconPreview({ preset, connectionId, ...childProps }) {
 		type: 'preset',
 		item: {
 			connectionId: connectionId,
-			presetId: preset.id,
+			presetId: presetId,
 		},
 	})
 
 	useEffect(() => {
 		setPreviewError(false)
 
-		socketEmitPromise(socket, 'presets:preview_render', [connectionId, preset.id])
+		socketEmitPromise(socket, 'presets:preview_render', [connectionId, presetId])
 			.then((img) => {
 				setPreviewImage(img)
 			})
@@ -236,7 +282,7 @@ function PresetIconPreview({ preset, connectionId, ...childProps }) {
 				console.error('Failed to preview control')
 				setPreviewError(true)
 			})
-	}, [preset.id, socket, connectionId, retryToken])
+	}, [presetId, socket, connectionId, retryToken])
 
 	const onClick = useCallback((_location, isDown) => isDown && setRetryToken(nanoid()), [])
 
@@ -244,7 +290,8 @@ function PresetIconPreview({ preset, connectionId, ...childProps }) {
 		<ButtonPreview
 			fixedSize
 			dragRef={drag}
-			{...childProps}
+			title={title}
+			location={undefined}
 			preview={previewError ? RedImage : previewImage}
 			onClick={previewError ? onClick : undefined}
 		/>

@@ -23,7 +23,7 @@ export type InternalInputField = (
 	  }
 	| {
 			type: 'internal:instance_id'
-			multiple?: boolean
+			multiple: boolean
 			includeAll?: boolean
 			filterActionsRecorder?: boolean
 			default?: string[]

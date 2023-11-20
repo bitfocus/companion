@@ -4,14 +4,18 @@ import { ConnectionsContext, VariableDefinitionsContext, ModulesContext } from '
 import { VariablesTable } from '../Components/VariablesTable'
 import { CustomVariablesList } from './CustomVariablesList'
 
-export const ConnectionVariables = function ConnectionVariables({ resetToken }) {
+interface ConnectionVariablesProps {
+	resetToken: string
+}
+
+export const ConnectionVariables = function ConnectionVariables({ resetToken }: ConnectionVariablesProps) {
 	const connectionsContext = useContext(ConnectionsContext)
 
-	const [connectionId, setConnectionId] = useState(null)
+	const [connectionId, setConnectionId] = useState<string | null>(null)
 	const [showCustom, setShowCustom] = useState(false)
 
-	const connectionsLabelMap = useMemo(() => {
-		const labelMap = new Map()
+	const connectionsLabelMap: ReadonlyMap<string, string> = useMemo(() => {
+		const labelMap = new Map<string, string>()
 		for (const [connectionId, connectionInfo] of Object.entries(connectionsContext)) {
 			labelMap.set(connectionInfo.label, connectionId)
 		}
@@ -41,7 +45,17 @@ export const ConnectionVariables = function ConnectionVariables({ resetToken }) 
 	}
 }
 
-function VariablesConnectionList({ setConnectionId, setShowCustom, connectionsLabelMap }) {
+interface VariablesConnectionListProps {
+	setConnectionId: (connectionId: string | null) => void
+	setShowCustom: (show: boolean) => void
+	connectionsLabelMap: ReadonlyMap<string, string>
+}
+
+function VariablesConnectionList({
+	setConnectionId,
+	setShowCustom,
+	connectionsLabelMap,
+}: VariablesConnectionListProps) {
 	const modules = useContext(ModulesContext)
 	const connectionsContext = useContext(ConnectionsContext)
 	const variableDefinitionsContext = useContext(VariableDefinitionsContext)
@@ -65,7 +79,11 @@ function VariablesConnectionList({ setConnectionId, setShowCustom, connectionsLa
 
 		return (
 			<div key={connectionId}>
-				<CButton color="info" className="choose_connection mb-3 mr-2" onClick={() => setConnectionId(connectionId)}>
+				<CButton
+					color="info"
+					className="choose_connection mb-3 mr-2"
+					onClick={() => setConnectionId(connectionId ?? null)}
+				>
 					{moduleInfo?.name ?? moduleInfo?.name ?? '?'} ({label ?? connectionId})
 				</CButton>
 			</div>
@@ -86,7 +104,12 @@ function VariablesConnectionList({ setConnectionId, setShowCustom, connectionsLa
 	)
 }
 
-function VariablesList({ selectedConnectionLabel, setConnectionId }) {
+interface VariablesListProps {
+	selectedConnectionLabel: string
+	setConnectionId: (connectionId: string | null) => void
+}
+
+function VariablesList({ selectedConnectionLabel, setConnectionId }: VariablesListProps) {
 	const doBack = useCallback(() => setConnectionId(null), [setConnectionId])
 
 	return (

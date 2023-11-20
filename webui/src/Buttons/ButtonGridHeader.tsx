@@ -4,8 +4,21 @@ import { PagesContext } from '../util'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faChevronLeft, faChevronRight } from '@fortawesome/free-solid-svg-icons'
 import Select from 'react-select'
+import { PageModel } from '@companion/shared/Model/PageModel'
+import { DropdownChoice } from '@companion-module/base'
 
-export const ButtonGridHeader = memo(function ButtonGridHeader({ pageNumber, changePage, setPage, children }) {
+interface ButtonGridHeaderProps {
+	pageNumber: number
+	changePage?: (delta: number) => void
+	setPage: (page: number) => void
+}
+
+export const ButtonGridHeader = memo(function ButtonGridHeader({
+	pageNumber,
+	changePage,
+	setPage,
+	children,
+}: React.PropsWithChildren<ButtonGridHeaderProps>) {
 	const pagesContext = useContext(PagesContext)
 
 	const inputChange = useCallback(
@@ -19,21 +32,23 @@ export const ButtonGridHeader = memo(function ButtonGridHeader({ pageNumber, cha
 	)
 
 	const nextPage = useCallback(() => {
-		changePage(1)
+		changePage?.(1)
 	}, [changePage])
 	const prevPage = useCallback(() => {
-		changePage(-1)
+		changePage?.(-1)
 	}, [changePage])
 
-	const pageOptions = useMemo(() => {
-		return Object.entries(pagesContext).map(([index, value]) => ({
-			value: index,
-			label: `${index} (${value.name})`,
-		}))
+	const pageOptions: DropdownChoice[] = useMemo(() => {
+		return Object.entries(pagesContext)
+			.filter((pg): pg is [string, PageModel] => !!pg[1])
+			.map(([index, value]) => ({
+				id: index,
+				label: `${index} (${value.name})`,
+			}))
 	}, [pagesContext])
 
-	const currentValue = useMemo(() => {
-		return pageOptions.find((o) => o.value == pageNumber) ?? { value: pageNumber, label: pageNumber }
+	const currentValue: DropdownChoice | undefined = useMemo(() => {
+		return pageOptions.find((o) => o.id == pageNumber) ?? { id: pageNumber, label: pageNumber + '' }
 	}, [pageOptions, pageNumber])
 
 	return (

@@ -9,8 +9,16 @@ import {
 	VariableDefinitionsContext,
 } from '../util'
 import TimePicker from 'react-time-picker'
+import { InternalInputField } from '@companion/shared/Model/Options'
+import { DropdownChoice } from '@companion-module/base'
 
-export function InternalInstanceField(option, isOnControl, readonly, value, setValue) {
+export function InternalInstanceField(
+	option: InternalInputField,
+	isOnControl: boolean,
+	readonly: boolean,
+	value: any,
+	setValue: (value: any) => void
+): JSX.Element | null {
 	switch (option.type) {
 		case 'internal:instance_id':
 			return (
@@ -68,11 +76,27 @@ export function InternalInstanceField(option, isOnControl, readonly, value, setV
 			return <InternalTimePicker disabled={readonly} value={value} setValue={setValue} />
 		default:
 			// Use fallback
-			return undefined
+			return null
 	}
 }
 
-function InternalInstanceIdDropdown({ includeAll, value, setValue, disabled, multiple, filterActionsRecorder }) {
+interface InternalInstanceIdDropdownProps {
+	includeAll: boolean | undefined
+	value: any
+	setValue: (value: any) => void
+	disabled: boolean
+	multiple: boolean
+	filterActionsRecorder: boolean | undefined
+}
+
+function InternalInstanceIdDropdown({
+	includeAll,
+	value,
+	setValue,
+	disabled,
+	multiple,
+	filterActionsRecorder,
+}: InternalInstanceIdDropdownProps) {
 	const context = useContext(ConnectionsContext)
 
 	const choices = useMemo(() => {
@@ -94,11 +118,19 @@ function InternalInstanceIdDropdown({ includeAll, value, setValue, disabled, mul
 	)
 }
 
-function InternalPageDropdown({ isOnControl, includeDirection, value, setValue, disabled }) {
+interface InternalPageDropdownProps {
+	isOnControl: boolean
+	includeDirection: boolean | undefined
+	value: any
+	setValue: (value: any) => void
+	disabled: boolean
+}
+
+function InternalPageDropdown({ isOnControl, includeDirection, value, setValue, disabled }: InternalPageDropdownProps) {
 	const pages = useContext(PagesContext)
 
 	const choices = useMemo(() => {
-		const choices = []
+		const choices: DropdownChoice[] = []
 		if (isOnControl) {
 			choices.push({ id: 0, label: 'This page' })
 		}
@@ -107,8 +139,8 @@ function InternalPageDropdown({ isOnControl, includeDirection, value, setValue, 
 		}
 
 		for (let i = 1; i <= 99; i++) {
-			const name = pages[i]
-			choices.push({ id: i, label: `${i}` + (name ? ` (${name.name || ''})` : '') })
+			const name = pages?.[i]
+			choices.push({ id: i, label: `${i}` + (name ? ` (${name?.name || ''})` : '') })
 		}
 		return choices
 	}, [pages, isOnControl, includeDirection])
@@ -116,7 +148,19 @@ function InternalPageDropdown({ isOnControl, includeDirection, value, setValue, 
 	return <DropdownInputField disabled={disabled} value={value} choices={choices} multiple={false} setValue={setValue} />
 }
 
-export function InternalCustomVariableDropdown({ value, setValue, includeNone, disabled }) {
+interface InternalCustomVariableDropdownProps {
+	value: any
+	setValue: (value: any) => void
+	includeNone: boolean | undefined
+	disabled: boolean
+}
+
+export function InternalCustomVariableDropdown({
+	value,
+	setValue,
+	includeNone,
+	disabled,
+}: InternalCustomVariableDropdownProps) {
 	const context = useContext(CustomVariableDefinitionsContext)
 	const choices = useMemo(() => {
 		const choices = []
@@ -149,13 +193,20 @@ export function InternalCustomVariableDropdown({ value, setValue, includeNone, d
 	)
 }
 
-function InternalVariableDropdown({ value, setValue, disabled }) {
+interface InternalVariableDropdownProps {
+	value: any
+	setValue: (value: any) => void
+	disabled: boolean
+}
+
+function InternalVariableDropdown({ value, setValue, disabled }: InternalVariableDropdownProps) {
 	const context = useContext(VariableDefinitionsContext)
 	const choices = useMemo(() => {
 		const choices = []
 
 		for (const [connectionLabel, variables] of Object.entries(context)) {
 			for (const [name, variable] of Object.entries(variables || {})) {
+				if (!variable) continue
 				const id = `${connectionLabel}:${name}`
 				choices.push({
 					id,
@@ -181,16 +232,31 @@ function InternalVariableDropdown({ value, setValue, disabled }) {
 	)
 }
 
-function InternalSurfaceBySerialDropdown({ isOnControl, value, setValue, disabled, includeSelf }) {
+interface InternalSurfaceBySerialDropdownProps {
+	isOnControl: boolean
+	value: any
+	setValue: (value: any) => void
+	disabled: boolean
+	includeSelf: boolean | undefined
+}
+
+function InternalSurfaceBySerialDropdown({
+	isOnControl,
+	value,
+	setValue,
+	disabled,
+	includeSelf,
+}: InternalSurfaceBySerialDropdownProps) {
 	const context = useContext(SurfacesContext)
 
 	const choices = useMemo(() => {
-		const choices = []
+		const choices: DropdownChoice[] = []
 		if (isOnControl && includeSelf) {
 			choices.push({ id: 'self', label: 'Current surface' })
 		}
 
 		for (const surface of Object.values(context?.available ?? {})) {
+			if (!surface) continue
 			choices.push({
 				label: `${surface.name || surface.type} (${surface.id})`,
 				id: surface.id,
@@ -198,6 +264,7 @@ function InternalSurfaceBySerialDropdown({ isOnControl, value, setValue, disable
 		}
 
 		for (const surface of Object.values(context?.offline ?? {})) {
+			if (!surface) continue
 			choices.push({
 				label: `${surface.name || surface.type} (${surface.id}) - Offline`,
 				id: surface.id,
@@ -209,7 +276,21 @@ function InternalSurfaceBySerialDropdown({ isOnControl, value, setValue, disable
 	return <DropdownInputField disabled={disabled} value={value} choices={choices} multiple={false} setValue={setValue} />
 }
 
-function InternalTriggerDropdown({ isOnControl, value, setValue, disabled, includeSelf }) {
+interface InternalTriggerDropdownProps {
+	isOnControl: boolean
+	value: any
+	setValue: (value: any) => void
+	disabled: boolean
+	includeSelf: boolean | undefined
+}
+
+function InternalTriggerDropdown({
+	isOnControl,
+	value,
+	setValue,
+	disabled,
+	includeSelf,
+}: InternalTriggerDropdownProps) {
 	const context = useContext(TriggersContext)
 
 	const choices = useMemo(() => {
@@ -219,6 +300,8 @@ function InternalTriggerDropdown({ isOnControl, value, setValue, disabled, inclu
 		}
 
 		for (const [id, trigger] of Object.entries(context)) {
+			if (!trigger) continue
+
 			choices.push({
 				id: id,
 				label: trigger.name || `Trigger #${id}`,
@@ -230,7 +313,13 @@ function InternalTriggerDropdown({ isOnControl, value, setValue, disabled, inclu
 	return <DropdownInputField disabled={disabled} value={value} choices={choices} multiple={false} setValue={setValue} />
 }
 
-function InternalTimePicker({ value, setValue, disabled }) {
+interface InternalTimePickerProps {
+	value: any
+	setValue: (value: any) => void
+	disabled: boolean
+}
+
+function InternalTimePicker({ value, setValue, disabled }: InternalTimePickerProps) {
 	return (
 		<TimePicker
 			disabled={disabled}

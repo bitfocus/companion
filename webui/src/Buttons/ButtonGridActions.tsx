@@ -4,19 +4,30 @@ import { socketEmitPromise, SocketContext } from '../util'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faArrowsAlt, faCompass, faCopy, faEraser, faTrash } from '@fortawesome/free-solid-svg-icons'
 import classnames from 'classnames'
-import { GenericConfirmModal } from '../Components/GenericConfirmModal'
+import { GenericConfirmModal, GenericConfirmModalRef } from '../Components/GenericConfirmModal'
 import { useElementSize } from 'usehooks-ts'
+import { ControlLocation } from '@companion/shared/Model/Common'
+import { IconProp } from '@fortawesome/fontawesome-svg-core'
 
-export const ButtonGridActions = forwardRef(function ButtonGridActions(
+export interface ButtonGridActionsRef {
+	buttonClick: (location: ControlLocation, isDown: boolean) => void
+}
+interface ButtonGridActionsProps {
+	isHot: boolean
+	pageNumber: number
+	clearSelectedButton: () => void
+}
+
+export const ButtonGridActions = forwardRef<ButtonGridActionsRef, ButtonGridActionsProps>(function ButtonGridActions(
 	{ isHot, pageNumber, clearSelectedButton },
 	ref
 ) {
 	const socket = useContext(SocketContext)
 
-	const resetRef = useRef()
+	const resetRef = useRef<GenericConfirmModalRef>(null)
 
-	const [activeFunction, setActiveFunction] = useState(null)
-	const [activeFunctionButton, setActiveFunctionButton] = useState(null)
+	const [activeFunction, setActiveFunction] = useState<string | null>(null)
+	const [activeFunctionButton, setActiveFunctionButton] = useState<ControlLocation | null>(null)
 
 	let hintText = ''
 	if (activeFunction) {
@@ -28,7 +39,7 @@ export const ButtonGridActions = forwardRef(function ButtonGridActions(
 	}
 
 	const startFunction = useCallback(
-		(func) => {
+		(func: string) => {
 			setActiveFunction((oldFunction) => {
 				if (oldFunction === null) {
 					setActiveFunctionButton(null)
@@ -49,7 +60,7 @@ export const ButtonGridActions = forwardRef(function ButtonGridActions(
 	const [setSizeRef, holderSize] = useElementSize()
 	const useCompactButtons = holderSize.width < 600 // Cutoff for what of the action buttons fit in their large mode
 
-	const getButton = (label, icon, func) => {
+	const getButton = (label: string, icon: IconProp, func: string) => {
 		let color = 'light'
 		let disabled = false
 		if (activeFunction === func) {
@@ -70,7 +81,7 @@ export const ButtonGridActions = forwardRef(function ButtonGridActions(
 	const resetPage = useCallback(() => {
 		clearSelectedButton()
 
-		resetRef.current.show(
+		resetRef.current?.show(
 			'Reset page',
 			`Are you sure you want to clear all buttons on page ${pageNumber}?\nThere's no going back from this.`,
 			'Reset',
@@ -84,7 +95,7 @@ export const ButtonGridActions = forwardRef(function ButtonGridActions(
 	const resetPageNav = useCallback(() => {
 		clearSelectedButton()
 
-		resetRef.current.show(
+		resetRef.current?.show(
 			'Reset page',
 			`Are you sure you want to reset navigation buttons? This will completely erase button ${pageNumber}/0/0, ${pageNumber}/1/0 and ${pageNumber}/2/0`,
 			'Reset',
@@ -103,7 +114,7 @@ export const ButtonGridActions = forwardRef(function ButtonGridActions(
 				if (isDown) {
 					switch (activeFunction) {
 						case 'delete':
-							resetRef.current.show('Clear button', `Clear style and actions for this button?`, 'Clear', () => {
+							resetRef.current?.show('Clear button', `Clear style and actions for this button?`, 'Clear', () => {
 								socketEmitPromise(socket, 'controls:reset', [location]).catch((e) => {
 									console.error(`Reset failed: ${e}`)
 								})

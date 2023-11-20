@@ -17,8 +17,10 @@ import type {
 	ModuleDisplayInfo,
 } from '@companion/shared/Model/Common.js'
 import type { ClientTriggerData } from '@companion/shared/Model/TriggerModel.js'
-import { InternalFeedbackDefinition, InternalActionDefinition } from '@companion/shared/Model/Options.js'
-import { UserConfigModel } from '@companion/shared/Model/UserConfigModel.js'
+import type { InternalFeedbackDefinition, InternalActionDefinition } from '@companion/shared/Model/Options.js'
+import type { UserConfigModel } from '@companion/shared/Model/UserConfigModel.js'
+import type { ClientDevicesList } from '@companion/shared/Model/Surfaces.js'
+import type { PageModel } from '@companion/shared/Model/PageModel.js'
 
 export const SocketContext = React.createContext<Socket>(null as any) // TODO - fix this
 export const EventDefinitionsContext = React.createContext<Record<string, ClientEventDefinition | undefined>>({})
@@ -39,8 +41,8 @@ export const ConnectionsContext = React.createContext<Record<string, ClientConne
 export const VariableDefinitionsContext = React.createContext<AllVariableDefinitions>({})
 export const CustomVariableDefinitionsContext = React.createContext(null)
 export const UserConfigContext = React.createContext<UserConfigModel | null>(null)
-export const SurfacesContext = React.createContext(null)
-export const PagesContext = React.createContext(null)
+export const SurfacesContext = React.createContext<ClientDevicesList>({ available: {}, offline: {} })
+export const PagesContext = React.createContext<Record<number, PageModel | undefined>>({})
 export const TriggersContext = React.createContext<Record<string, ClientTriggerData | undefined>>({})
 export const RecentActionsContext = React.createContext<{
 	recentActions: string[]
@@ -259,7 +261,7 @@ export function LoadingRetryOrError({ error, dataReady, doRetry, autoRetryAfter 
 	)
 }
 
-export function applyPatchOrReplaceSubObject<T extends object>(
+export function applyPatchOrReplaceSubObject<T extends object | undefined>(
 	oldDefinitions: Record<string, T>,
 	key: string,
 	patch: JsonPatchOperation[],
