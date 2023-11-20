@@ -21,6 +21,7 @@ import type { InternalFeedbackDefinition, InternalActionDefinition } from '@comp
 import type { UserConfigModel } from '@companion/shared/Model/UserConfigModel.js'
 import type { ClientDevicesList } from '@companion/shared/Model/Surfaces.js'
 import type { PageModel } from '@companion/shared/Model/PageModel.js'
+import type { CustomVariablesModel } from '@companion/shared/Model/CustomVariableModel.js'
 
 export const SocketContext = React.createContext<Socket>(null as any) // TODO - fix this
 export const EventDefinitionsContext = React.createContext<Record<string, ClientEventDefinition | undefined>>({})
@@ -39,7 +40,7 @@ export const FeedbacksContext = React.createContext<
 >({})
 export const ConnectionsContext = React.createContext<Record<string, ClientConnectionConfig>>({})
 export const VariableDefinitionsContext = React.createContext<AllVariableDefinitions>({})
-export const CustomVariableDefinitionsContext = React.createContext(null)
+export const CustomVariableDefinitionsContext = React.createContext<CustomVariablesModel>({})
 export const UserConfigContext = React.createContext<UserConfigModel | null>(null)
 export const SurfacesContext = React.createContext<ClientDevicesList>({ available: {}, offline: {} })
 export const PagesContext = React.createContext<Record<number, PageModel | undefined>>({})

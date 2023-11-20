@@ -13,12 +13,12 @@ interface ButtonGridHeaderProps {
 	setPage: (page: number) => void
 }
 
-export const ButtonGridHeader = memo(function ButtonGridHeader({
+export const ButtonGridHeader = memo<React.PropsWithChildren<ButtonGridHeaderProps>>(function ButtonGridHeader({
 	pageNumber,
 	changePage,
 	setPage,
 	children,
-}: React.PropsWithChildren<ButtonGridHeaderProps>) {
+}) {
 	const pagesContext = useContext(PagesContext)
 
 	const inputChange = useCallback(

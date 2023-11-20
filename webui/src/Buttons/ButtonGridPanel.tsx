@@ -13,6 +13,7 @@ import {
 	CRow,
 } from '@coreui/react'
 import React, {
+	FormEvent,
 	forwardRef,
 	memo,
 	useCallback,
@@ -25,12 +26,24 @@ import React, {
 import { KeyReceiver, PagesContext, socketEmitPromise, SocketContext, UserConfigContext } from '../util'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faFileExport, faHome, faPencil } from '@fortawesome/free-solid-svg-icons'
-import { ConfirmExportModal } from '../Components/ConfirmExportModal'
-import { ButtonInfiniteGrid, PrimaryButtonGridIcon } from './ButtonInfiniteGrid'
+import { ConfirmExportModal, ConfirmExportModalRef } from '../Components/ConfirmExportModal'
+import { ButtonInfiniteGrid, ButtonInfiniteGridRef, PrimaryButtonGridIcon } from './ButtonInfiniteGrid'
 import { useHasBeenRendered } from '../Hooks/useHasBeenRendered'
 import { useElementSize } from 'usehooks-ts'
 import { ButtonGridHeader } from './ButtonGridHeader'
-import { ButtonGridActions } from './ButtonGridActions'
+import { ButtonGridActions, ButtonGridActionsRef } from './ButtonGridActions'
+import type { ControlLocation } from '@companion/shared/Model/Common'
+import type { PageModel } from '@companion/shared/Model/PageModel'
+
+interface ButtonsGridPanelProps {
+	pageNumber: number
+	onKeyDown: (event: React.KeyboardEvent) => void
+	isHot: boolean
+	buttonGridClick: (location: ControlLocation, pressed: boolean) => void
+	changePage: (pageNumber: number) => void
+	selectedButton: ControlLocation | null
+	clearSelectedButton: () => void
+}
 
 export const ButtonsGridPanel = memo(function ButtonsPage({
 	pageNumber,
@@ -40,18 +53,18 @@ export const ButtonsGridPanel = memo(function ButtonsPage({
 	changePage,
 	selectedButton,
 	clearSelectedButton,
-}) {
+}: ButtonsGridPanelProps) {
 	const socket = useContext(SocketContext)
 	const pages = useContext(PagesContext)
 	const userConfig = useContext(UserConfigContext)
-	const pagesRef = useRef()
 
+	const pagesRef = useRef<Record<number, PageModel | undefined>>()
 	useEffect(() => {
 		// Avoid binding into callbacks
 		pagesRef.current = pages
 	}, [pages])
 
-	const actionsRef = useRef()
+	const actionsRef = useRef<ButtonGridActionsRef>(null)
 
 	const buttonClick = useCallback(
 		(location, isDown) => {
@@ -86,7 +99,7 @@ export const ButtonsGridPanel = memo(function ButtonsPage({
 				newPage = pageNumbers[newIndex]
 			}
 
-			if (newPage !== undefined && !isNaN(newPage)) {
+			if (newPage !== undefined && !isNaN(Number(newPage))) {
 				changePage(Number(newPage))
 			}
 		},
@@ -95,12 +108,12 @@ export const ButtonsGridPanel = memo(function ButtonsPage({
 
 	const pageInfo = pages?.[pageNumber]
 
-	const gridRef = useRef(null)
-	const editRef = useRef(null)
+	const gridRef = useRef<ButtonInfiniteGridRef>(null)
+	const editRef = useRef<EditPagePropertiesModalRef>(null)
 
-	const exportModalRef = useRef(null)
+	const exportModalRef = useRef<ConfirmExportModalRef>(null)
 	const showExportModal = useCallback(() => {
-		exportModalRef.current.show(`/int/export/page/${pageNumber}`)
+		exportModalRef.current?.show(`/int/export/page/${pageNumber}`)
 	}, [pageNumber])
 
 	const resetPosition = useCallback(() => {
@@ -111,11 +124,11 @@ export const ButtonsGridPanel = memo(function ButtonsPage({
 		editRef.current?.show(Number(pageNumber), pageInfo)
 	}, [pageNumber, pageInfo])
 
-	const gridSize = userConfig.gridSize
+	const gridSize = userConfig?.gridSize
 
 	const doGrow = useCallback(
 		(direction, amount) => {
-			if (amount <= 0) return
+			if (amount <= 0 || !gridSize) return
 
 			switch (direction) {
 				case 'left':
@@ -183,7 +196,7 @@ export const ButtonsGridPanel = memo(function ButtonsPage({
 				</CRow>
 			</div>
 			<div className="button-grid-panel-content">
-				{hasBeenInView && (
+				{hasBeenInView && gridSize && (
 					<ButtonInfiniteGrid
 						ref={gridRef}
 						isHot={isHot}
@@ -216,82 +229,91 @@ export const ButtonsGridPanel = memo(function ButtonsPage({
 	)
 })
 
-const EditPagePropertiesModal = forwardRef(function EditPagePropertiesModal(props, ref) {
-	const socket = useContext(SocketContext)
-	const [pageNumber, setPageNumber] = useState(null)
-	const [show, setShow] = useState(false)
+interface EditPagePropertiesModalRef {
+	show(pageNumber: number, pageInfo: PageModel | undefined): void
+}
+interface EditPagePropertiesModalProps {
+	// Nothing
+}
 
-	const [pageName, setName] = useState(null)
+const EditPagePropertiesModal = forwardRef<EditPagePropertiesModalRef, EditPagePropertiesModalProps>(
+	function EditPagePropertiesModal(_props, ref) {
+		const socket = useContext(SocketContext)
+		const [pageNumber, setPageNumber] = useState<number | null>(null)
+		const [show, setShow] = useState(false)
 
-	const buttonRef = useRef()
+		const [pageName, setName] = useState<string | null>(null)
 
-	const buttonFocus = () => {
-		if (buttonRef.current) {
-			buttonRef.current.focus()
+		const buttonRef = useRef<HTMLButtonElement>(null)
+
+		const buttonFocus = () => {
+			if (buttonRef.current) {
+				buttonRef.current.focus()
+			}
 		}
-	}
 
-	const doClose = useCallback(() => setShow(false), [])
-	const onClosed = useCallback(() => setPageNumber(null), [])
-	const doAction = useCallback(
-		(e) => {
-			if (e) e.preventDefault()
+		const doClose = useCallback(() => setShow(false), [])
+		const onClosed = useCallback(() => setPageNumber(null), [])
+		const doAction = useCallback(
+			(e: FormEvent) => {
+				if (e) e.preventDefault()
 
-			setPageNumber(null)
-			setShow(false)
-			setName(null)
+				setPageNumber(null)
+				setShow(false)
+				setName(null)
 
-			if (pageNumber === null) return
+				if (pageNumber === null) return
 
-			socketEmitPromise(socket, 'pages:set-name', [pageNumber, pageName]).catch((e) => {
-				console.error('Failed to set name', e)
-			})
-		},
-		[pageNumber, pageName]
-	)
-
-	useImperativeHandle(
-		ref,
-		() => ({
-			show(pageNumber, pageInfo) {
-				setName(pageInfo?.name)
-				setPageNumber(pageNumber)
-				setShow(true)
-
-				// Focus the button asap. It also gets focused once the open is complete
-				setTimeout(buttonFocus, 50)
+				socketEmitPromise(socket, 'pages:set-name', [pageNumber, pageName]).catch((e) => {
+					console.error('Failed to set name', e)
+				})
 			},
-		}),
-		[]
-	)
+			[pageNumber, pageName]
+		)
 
-	const onNameChange = useCallback((e) => {
-		setName(e.target.value)
-	}, [])
+		useImperativeHandle(
+			ref,
+			() => ({
+				show(pageNumber, pageInfo) {
+					setName(pageInfo?.name ?? null)
+					setPageNumber(pageNumber)
+					setShow(true)
 
-	return (
-		<CModal show={show} onClose={doClose} onClosed={onClosed} onOpened={buttonFocus}>
-			<CModalHeader closeButton>
-				<h5>Configure Page {pageNumber}</h5>
-			</CModalHeader>
-			<CModalBody>
-				<CForm onSubmit={doAction}>
-					<CFormGroup>
-						<CLabel>Name</CLabel>
-						<CInput type="text" value={pageName || ''} onChange={onNameChange} />
-					</CFormGroup>
+					// Focus the button asap. It also gets focused once the open is complete
+					setTimeout(buttonFocus, 50)
+				},
+			}),
+			[]
+		)
 
-					<CAlert color="info">You can use resize the grid in the Settings tab</CAlert>
-				</CForm>
-			</CModalBody>
-			<CModalFooter>
-				<CButton color="secondary" onClick={doClose}>
-					Cancel
-				</CButton>
-				<CButton innerRef={buttonRef} color="primary" onClick={doAction}>
-					Save
-				</CButton>
-			</CModalFooter>
-		</CModal>
-	)
-})
+		const onNameChange = useCallback((e) => {
+			setName(e.target.value)
+		}, [])
+
+		return (
+			<CModal show={show} onClose={doClose} onClosed={onClosed} onOpened={buttonFocus}>
+				<CModalHeader closeButton>
+					<h5>Configure Page {pageNumber}</h5>
+				</CModalHeader>
+				<CModalBody>
+					<CForm onSubmit={doAction}>
+						<CFormGroup>
+							<CLabel>Name</CLabel>
+							<CInput type="text" value={pageName || ''} onChange={onNameChange} />
+						</CFormGroup>
+
+						<CAlert color="info">You can use resize the grid in the Settings tab</CAlert>
+					</CForm>
+				</CModalBody>
+				<CModalFooter>
+					<CButton color="secondary" onClick={doClose}>
+						Cancel
+					</CButton>
+					<CButton innerRef={buttonRef} color="primary" onClick={doAction}>
+						Save
+					</CButton>
+				</CModalFooter>
+			</CModal>
+		)
+	}
+)

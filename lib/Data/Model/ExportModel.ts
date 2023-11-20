@@ -1,6 +1,6 @@
 import type { UserConfigGridSize } from '../../Shared/Model/UserConfigModel.js'
 import type { ConnectionConfig } from '../../Instance/Controller.js'
-import type { CustomVariablesModel } from './CustomVariableModel.js'
+import type { CustomVariablesModel } from '../../Shared/Model/CustomVariableModel.js'
 
 export type SomeExportv4 = ExportFullv4 | ExportPageModelv4 | ExportTriggersListv4
 

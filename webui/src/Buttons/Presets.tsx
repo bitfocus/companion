@@ -263,7 +263,7 @@ function PresetIconPreview({ connectionId, presetId, title }: PresetIconPreviewP
 	const [previewError, setPreviewError] = useState(false)
 	const [retryToken, setRetryToken] = useState(nanoid())
 
-	const [, drag] = useDrag({
+	const [, drag] = useDrag<PresetDragItem>({
 		type: 'preset',
 		item: {
 			connectionId: connectionId,
@@ -278,7 +278,7 @@ function PresetIconPreview({ connectionId, presetId, title }: PresetIconPreviewP
 			.then((img) => {
 				setPreviewImage(img)
 			})
-			.catch((e) => {
+			.catch(() => {
 				console.error('Failed to preview control')
 				setPreviewError(true)
 			})
@@ -296,4 +296,9 @@ function PresetIconPreview({ connectionId, presetId, title }: PresetIconPreviewP
 			onClick={previewError ? onClick : undefined}
 		/>
 	)
+}
+
+export interface PresetDragItem {
+	connectionId: string
+	presetId: string
 }

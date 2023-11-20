@@ -139,7 +139,7 @@ export function OptionsInputField({
 		case 'custom-variable': {
 			if (isAction) {
 				control = (
-					<InternalCustomVariableDropdown disabled={readonly} value={value} setValue={setValue2} includeNone={true} />
+					<InternalCustomVariableDropdown disabled={!!readonly} value={value} setValue={setValue2} includeNone={true} />
 				)
 			}
 			break
@@ -147,7 +147,7 @@ export function OptionsInputField({
 		default:
 			// The 'internal instance' is allowed to use some special input fields, to minimise when it reacts to changes elsewhere in the system
 			if (connectionId === 'internal') {
-				control = InternalInstanceField(option, isOnControl, readonly, value, setValue2)
+				control = InternalInstanceField(option, isOnControl, !!readonly, value, setValue2) ?? undefined
 			}
 			// Use default below
 			break

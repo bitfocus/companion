@@ -1,4 +1,4 @@
-import React, { useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react'
+import React, { FormEvent, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react'
 import {
 	CAlert,
 	CButton,
@@ -29,21 +29,31 @@ import {
 } from '@fortawesome/free-solid-svg-icons'
 import { TextInputField } from '../Components/TextInputField'
 import { CheckboxInputField } from '../Components/CheckboxInputField'
-import { GenericConfirmModal } from '../Components/GenericConfirmModal'
+import { GenericConfirmModal, GenericConfirmModalRef } from '../Components/GenericConfirmModal'
 import { isCustomVariableValid } from '@companion/shared/CustomVariable'
 import { useDrag, useDrop } from 'react-dnd'
 import { usePanelCollapseHelper } from '../Helpers/CollapseHelper'
+import type { CompanionVariableValues } from '@companion-module/base'
+import { CustomVariablesModel, CustomVariableDefinition } from '@companion/shared/Model/CustomVariableModel'
 
 const DRAG_ID = 'custom-variables'
 
-export function CustomVariablesList({ setShowCustom }) {
+interface CustomVariableDefinitionExt extends CustomVariableDefinition {
+	name: string
+}
+
+interface CustomVariablesListProps {
+	setShowCustom: (show: boolean) => void
+}
+
+export function CustomVariablesList({ setShowCustom }: CustomVariablesListProps) {
 	const doBack = useCallback(() => setShowCustom(false), [setShowCustom])
 
 	const socket = useContext(SocketContext)
 	const notifier = useContext(NotifierContext)
 	const customVariableContext = useContext(CustomVariableDefinitionsContext)
 
-	const [variableValues, setVariableValues] = useState({})
+	const [variableValues, setVariableValues] = useState<CompanionVariableValues>({})
 
 	useEffect(() => {
 		const doPoll = () => {
@@ -67,13 +77,13 @@ export function CustomVariablesList({ setShowCustom }) {
 	}, [socket])
 
 	const onCopied = useCallback(() => {
-		notifier.current.show(`Copied`, 'Copied to clipboard', 5000)
+		notifier.current?.show(`Copied`, 'Copied to clipboard', 5000)
 	}, [notifier])
 
 	const [newName, setNewName] = useState('')
 
 	const doCreateNew = useCallback(
-		(e) => {
+		(e: FormEvent) => {
 			e?.preventDefault()
 
 			if (isCustomVariableValid(newName)) {
@@ -81,7 +91,7 @@ export function CustomVariablesList({ setShowCustom }) {
 					.then((res) => {
 						console.log('done with', res)
 						if (res) {
-							notifier.current.show(`Failed to create variable`, res, 5000)
+							notifier.current?.show(`Failed to create variable`, res, 5000)
 						}
 
 						// clear value
@@ -89,7 +99,7 @@ export function CustomVariablesList({ setShowCustom }) {
 					})
 					.catch((e) => {
 						console.error('Failed to create variable')
-						notifier.current.show(`Failed to create variable`, e?.toString?.() ?? e ?? 'Failed', 5000)
+						notifier.current?.show(`Failed to create variable`, e?.toString?.() ?? e ?? 'Failed', 5000)
 					})
 			}
 		},
@@ -97,16 +107,16 @@ export function CustomVariablesList({ setShowCustom }) {
 	)
 
 	const setStartupValue = useCallback(
-		(name, value) => {
-			socketEmitPromise(socket, 'custom-variables:set-default', [name, value]).catch((e) => {
+		(name: string, value: any) => {
+			socketEmitPromise(socket, 'custom-variables:set-default', [name, value]).catch(() => {
 				console.error('Failed to update variable')
 			})
 		},
 		[socket]
 	)
 	const setCurrentValue = useCallback(
-		(name, value) => {
-			socketEmitPromise(socket, 'custom-variables:set-current', [name, value]).catch((e) => {
+		(name: string, value: any) => {
+			socketEmitPromise(socket, 'custom-variables:set-current', [name, value]).catch(() => {
 				console.error('Failed to update variable')
 			})
 		},
@@ -114,23 +124,23 @@ export function CustomVariablesList({ setShowCustom }) {
 	)
 
 	const setPersistenceValue = useCallback(
-		(name, value) => {
-			socketEmitPromise(socket, 'custom-variables:set-persistence', [name, value]).catch((e) => {
+		(name: string, value: boolean) => {
+			socketEmitPromise(socket, 'custom-variables:set-persistence', [name, value]).catch(() => {
 				console.error('Failed to update variable')
 			})
 		},
 		[socket]
 	)
 
-	const confirmRef = useRef(null)
+	const confirmRef = useRef<GenericConfirmModalRef>(null)
 	const doDelete = useCallback(
-		(name) => {
-			confirmRef.current.show(
+		(name: string) => {
+			confirmRef.current?.show(
 				'Delete variable',
 				`Are you sure you want to delete the custom variable "${name}"?`,
 				'Delete',
 				() => {
-					socketEmitPromise(socket, 'custom-variables:delete', [name]).catch((e) => {
+					socketEmitPromise(socket, 'custom-variables:delete', [name]).catch(() => {
 						console.error('Failed to delete variable')
 					})
 				}
@@ -139,13 +149,13 @@ export function CustomVariablesList({ setShowCustom }) {
 		[socket]
 	)
 
-	const customVariablesRef = useRef(null)
+	const customVariablesRef = useRef<CustomVariablesModel>()
 	useEffect(() => {
 		customVariablesRef.current = customVariableContext
 	}, [customVariableContext])
 
 	const moveRow = useCallback(
-		(itemName, targetName) => {
+		(itemName: string, targetName: string) => {
 			if (customVariablesRef.current) {
 				const rawNames = Object.entries(customVariablesRef.current)
 					.sort(([, a], [, b]) => a.sortOrder - b.sortOrder)
@@ -175,7 +185,7 @@ export function CustomVariablesList({ setShowCustom }) {
 	const updateFilter = useCallback((e) => setFilter(e.currentTarget.value), [])
 
 	const variableDefinitions = useMemo(() => {
-		const defs = []
+		const defs: CustomVariableDefinitionExt[] = []
 		for (const [name, variable] of Object.entries(customVariableContext || {})) {
 			defs.push({
 				...variable,
@@ -190,7 +200,7 @@ export function CustomVariablesList({ setShowCustom }) {
 	const hasNoVariables = variableDefinitions.length === 0
 
 	const [candidates, errorMsg] = useMemo(() => {
-		let candidates = []
+		let candidates: CustomVariableDefinitionExt[] = []
 		try {
 			if (!filter) {
 				candidates = variableDefinitions
@@ -308,6 +318,30 @@ export function CustomVariablesList({ setShowCustom }) {
 	)
 }
 
+interface CustomVariableDragItem {
+	index: number
+	name: string
+}
+interface CustomVariableDragStatus {
+	isDragging: boolean
+}
+
+interface CustomVariableRowProps {
+	index: number
+	name: string
+	shortname: string
+	value: any
+	info: CustomVariableDefinitionExt
+	onCopied: () => void
+	doDelete: (name: string) => void
+	setStartupValue: (name: string, value: any) => void
+	setCurrentValue: (name: string, value: any) => void
+	setPersistenceValue: (name: string, persisted: boolean) => void
+	moveRow: (itemName: string, targetName: string) => void
+	isCollapsed: boolean
+	setCollapsed: (name: string, collapsed: boolean) => void
+}
+
 function CustomVariableRow({
 	index,
 	name,
@@ -322,16 +356,16 @@ function CustomVariableRow({
 	moveRow,
 	isCollapsed,
 	setCollapsed,
-}) {
+}: CustomVariableRowProps) {
 	const fullname = `internal:${shortname}`
 
 	const doCollapse = useCallback(() => setCollapsed(name, true), [setCollapsed, name])
 	const doExpand = useCallback(() => setCollapsed(name, false), [setCollapsed, name])
 
 	const ref = useRef(null)
-	const [, drop] = useDrop({
+	const [, drop] = useDrop<CustomVariableDragItem>({
 		accept: DRAG_ID,
-		hover(item, monitor) {
+		hover(item, _monitor) {
 			if (!ref.current) {
 				return
 			}
@@ -352,12 +386,12 @@ function CustomVariableRow({
 			moveRow(item.name, name)
 		},
 	})
-	const [{ isDragging }, drag, preview] = useDrag({
+	const [{ isDragging }, drag, preview] = useDrag<CustomVariableDragItem, unknown, CustomVariableDragStatus>({
 		type: DRAG_ID,
 		canDrag: true,
 		item: {
 			name: name,
-			// index: index,
+			index: index,
 			// ref: ref,
 		},
 		collect: (monitor) => ({
@@ -421,7 +455,7 @@ function CustomVariableRow({
 										<CLabel htmlFor="startup_value">Startup value: </CLabel>
 										<TextInputField
 											disabled={!!info.persistCurrentValue}
-											value={info.defaultValue}
+											value={info.defaultValue + ''}
 											setValue={(val) => setStartupValue(name, val)}
 										/>
 									</CFormGroup>
