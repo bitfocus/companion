@@ -17,23 +17,30 @@ import { faCalendar, faClock, faDownload, faFileImport, faGlobe } from '@fortawe
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { ImportPageWizard } from './Page'
 import { ImportTriggersTab } from './Triggers'
+import { ExportFullv4, SomeExportv4 } from '@companion/shared/Model/ExportModel'
 
-export function ImportFullWizard({ snapshot, instanceRemap, setInstanceRemap }) {
+interface ImportFullWizardProps {
+	snapshot: SomeExportv4
+	instanceRemap: Record<string, string | undefined>
+	setInstanceRemap: React.Dispatch<React.SetStateAction<Record<string, string | undefined>>>
+}
+
+export function ImportFullWizard({ snapshot, instanceRemap, setInstanceRemap }: ImportFullWizardProps) {
 	const socket = useContext(SocketContext)
 	const notifier = useContext(NotifierContext)
 
 	const doSinglePageImport = useCallback(
-		(fromPage, toPage, instanceRemap) => {
+		(fromPage: number, toPage: number, instanceRemap: Record<string, string | undefined>) => {
 			socketEmitPromise(socket, 'loadsave:import-page', [toPage, fromPage, instanceRemap])
 				.then((res) => {
-					notifier.current.show(`Import successful`, `Page was imported successfully`, 10000)
+					notifier.current?.show(`Import successful`, `Page was imported successfully`, 10000)
 					console.log('remap response', res)
 					if (res) {
 						setInstanceRemap(res)
 					}
 				})
 				.catch((e) => {
-					notifier.current.show(`Import failed`, `Page import failed with: "${e}"`, 10000)
+					notifier.current?.show(`Import failed`, `Page import failed with: "${e}"`, 10000)
 					console.error('import failed', e)
 				})
 		},
@@ -97,12 +104,16 @@ export function ImportFullWizard({ snapshot, instanceRemap, setInstanceRemap }) 
 	)
 }
 
-function FullImportTab({ snapshot }) {
+interface FullImportTabProps {
+	snapshot: ExportFullv4
+}
+
+function FullImportTab({ snapshot }: FullImportTabProps) {
 	const socket = useContext(SocketContext)
 	const notifier = useContext(NotifierContext)
 
 	const snapshotKeys = useMemo(() => {
-		const keys = []
+		const keys: string[] = []
 
 		for (const [key, val] of Object.entries(snapshot)) {
 			if (val) keys.push(key)
@@ -141,13 +152,13 @@ function FullImportTab({ snapshot }) {
 
 	const doImport = useCallback(() => {
 		socketEmitPromise(socket, 'loadsave:import-full', [config], 60000)
-			.then((res) => {
+			.then((_res) => {
 				// notifier.current.show(`Import successful`, `Page was imported successfully`, 10000)
 				window.location.reload()
 			})
 			.catch((e) => {
 				console.log('import failed', e)
-				notifier.current.show(`Import failed`, `Full import failed with: "${e?.message ?? e}"`, 10000)
+				notifier.current?.show(`Import failed`, `Full import failed with: "${e?.message ?? e}"`, 10000)
 			})
 		console.log('do import!')
 	}, [socket, notifier, config])
@@ -217,7 +228,15 @@ function FullImportTab({ snapshot }) {
 	)
 }
 
-function InputCheckbox({ config, allowKeys, keyName, setValue, label }) {
+interface InputCheckboxProps {
+	config: Record<string, boolean>
+	allowKeys: string[]
+	keyName: string
+	setValue: (key: string, value: any) => void
+	label: string
+}
+
+function InputCheckbox({ config, allowKeys, keyName, setValue, label }: InputCheckboxProps) {
 	const disabled = allowKeys && !allowKeys.includes(keyName)
 
 	const setValue2 = useCallback((e) => setValue(keyName, !!e.currentTarget.checked), [setValue, keyName])

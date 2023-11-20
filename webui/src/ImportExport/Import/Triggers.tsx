@@ -1,20 +1,27 @@
 import { CButton, CButtonGroup, CInputCheckbox } from '@coreui/react'
-import React from 'react'
+import React, { ChangeEvent } from 'react'
 import { useCallback } from 'react'
 import { useEffect } from 'react'
 import { useState } from 'react'
 import { ImportRemap } from './Page'
 import { NotifierContext, SocketContext, socketEmitPromise } from '../../util'
 import { useContext } from 'react'
+import type { ExportTriggersListv4 } from '@companion/shared/Model/ExportModel'
 
-export function ImportTriggersTab({ snapshot, instanceRemap, setInstanceRemap }) {
+interface ImportTriggersTabProps {
+	snapshot: ExportTriggersListv4
+	instanceRemap: Record<string, string | undefined>
+	setInstanceRemap: React.Dispatch<React.SetStateAction<Record<string, string | undefined>>>
+}
+
+export function ImportTriggersTab({ snapshot, instanceRemap, setInstanceRemap }: ImportTriggersTabProps) {
 	const socket = useContext(SocketContext)
 	const notifier = useContext(NotifierContext)
 
-	const [selectedTriggers, setSelectedTriggers] = useState([])
+	const [selectedTriggers, setSelectedTriggers] = useState<string[]>([])
 
 	const setInstanceRemap2 = useCallback(
-		(fromId, toId) => {
+		(fromId: string, toId: string) => {
 			setInstanceRemap((oldRemap) => ({
 				...oldRemap,
 				[fromId]: toId,
@@ -28,7 +35,7 @@ export function ImportTriggersTab({ snapshot, instanceRemap, setInstanceRemap })
 
 	useEffect(() => selectAllTriggers(), [selectAllTriggers])
 
-	const toggleTrigger = useCallback((e) => {
+	const toggleTrigger = useCallback((e: ChangeEvent<HTMLInputElement>) => {
 		const id = e.target.getAttribute('data-id')
 		const checked = e.target.checked
 		if (id) {
@@ -50,14 +57,14 @@ export function ImportTriggersTab({ snapshot, instanceRemap, setInstanceRemap })
 
 			socketEmitPromise(socket, 'loadsave:import-triggers', [selectedTriggers, instanceRemap, doReplace])
 				.then((res) => {
-					notifier.current.show(`Import successful`, `Triggers were imported successfully`, 10000)
+					notifier.current?.show(`Import successful`, `Triggers were imported successfully`, 10000)
 					console.log('remap response', res)
 					if (res) {
 						setInstanceRemap(res)
 					}
 				})
 				.catch((e) => {
-					notifier.current.show(`Import failed`, `Triggers import failed with: "${e}"`, 10000)
+					notifier.current?.show(`Import failed`, `Triggers import failed with: "${e}"`, 10000)
 					console.error('import failed', e)
 				})
 		},

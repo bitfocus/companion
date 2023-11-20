@@ -1,25 +1,26 @@
-import React, { useCallback, useContext, useRef, useState } from 'react'
+import React, { FormEvent, useCallback, useContext, useRef, useState } from 'react'
 import { ConnectionsContext, SocketContext, socketEmitPromise } from '../util'
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faDownload, faFileImport, faTrashAlt } from '@fortawesome/free-solid-svg-icons'
 import { CAlert, CButton } from '@coreui/react'
-import { ResetWizardModal } from './Reset'
-import { ExportWizardModal } from './Export'
+import { ResetWizardModal, ResetWizardModalRef } from './Reset'
+import { ExportWizardModal, ExportWizardModalRef } from './Export'
 import { ImportWizard } from './Import'
+import { SomeExportv4 } from '@companion/shared/Model/ExportModel'
 
 export function ImportExport() {
 	const socket = useContext(SocketContext)
 	const connectionsContext = useContext(ConnectionsContext)
 
-	const [loadError, setLoadError] = useState(null)
+	const [loadError, setLoadError] = useState<string | null>(null)
 
-	const resetRef = useRef(null)
-	const exportRef = useRef(null)
-	const doReset = useCallback(() => resetRef.current.show(), [])
-	const doExport = useCallback(() => exportRef.current.show(), [])
+	const resetRef = useRef<ResetWizardModalRef>(null)
+	const exportRef = useRef<ExportWizardModalRef>(null)
+	const doReset = useCallback(() => resetRef.current?.show(), [])
+	const doExport = useCallback(() => exportRef.current?.show(), [])
 
-	const [importInfo, setImportInfo] = useState(null)
+	const [importInfo, setImportInfo] = useState<[SomeExportv4, Record<string, string | undefined>] | null>(null)
 	const clearImport = useCallback(() => {
 		setImportInfo(null)
 
@@ -31,9 +32,9 @@ export function ImportExport() {
 	const fileApiIsSupported = !!(window.File && window.FileReader && window.FileList && window.Blob)
 
 	const loadSnapshot = useCallback(
-		(e) => {
+		(e: FormEvent<HTMLInputElement>) => {
 			const newFile = e.currentTarget.files?.[0]
-			e.currentTarget.value = null
+			e.currentTarget.value = null as any
 
 			if (newFile === undefined || newFile.type === undefined) {
 				setLoadError('Unable to read config file')
@@ -44,14 +45,16 @@ export function ImportExport() {
 			fr.onload = () => {
 				setLoadError(null)
 				socketEmitPromise(socket, 'loadsave:prepare-import', [fr.result], 20000)
-					.then(([err, config]) => {
+					.then(([err, config]: [string | null, SomeExportv4]) => {
 						if (err) {
 							setLoadError(err)
 						} else {
-							const initialRemap = {}
+							const initialRemap: Record<string, string | undefined> = {}
 
 							// Figure out some initial mappings. Look for matching type and hopefully label
-							for (const [id, obj] of Object.entries(config.instances)) {
+							for (const [id, obj] of Object.entries(config.instances ?? {})) {
+								if (!obj) continue
+
 								const candidateIds = []
 								let matchingLabelId = ''
 

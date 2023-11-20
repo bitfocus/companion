@@ -10,7 +10,7 @@ import { DropdownChoice } from '@companion-module/base'
 interface ButtonGridHeaderProps {
 	pageNumber: number
 	changePage?: (delta: number) => void
-	setPage: (page: number) => void
+	setPage?: (page: number) => void
 }
 
 export const ButtonGridHeader = memo<React.PropsWithChildren<ButtonGridHeaderProps>>(function ButtonGridHeader({
@@ -24,7 +24,7 @@ export const ButtonGridHeader = memo<React.PropsWithChildren<ButtonGridHeaderPro
 	const inputChange = useCallback(
 		(val) => {
 			const val2 = Number(val?.value)
-			if (!isNaN(val2)) {
+			if (setPage && !isNaN(val2)) {
 				setPage(val2)
 			}
 		},

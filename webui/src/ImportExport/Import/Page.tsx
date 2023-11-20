@@ -1,4 +1,4 @@
-import React, { useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react'
+import React, { useCallback, useContext, useEffect, useRef, useState } from 'react'
 import { CButton, CCol, CRow, CSelect } from '@coreui/react'
 import {
 	ConnectionsContext,
@@ -11,12 +11,25 @@ import {
 } from '../../util'
 import { ButtonGridHeader } from '../../Buttons/ButtonGridHeader'
 import { usePagePicker } from '../../Hooks/usePagePicker'
-import { ButtonGridIcon, ButtonGridIconBase, ButtonInfiniteGrid } from '../../Buttons/ButtonInfiniteGrid'
+import {
+	ButtonGridIcon,
+	ButtonGridIconBase,
+	ButtonInfiniteGrid,
+	ButtonInfiniteGridRef,
+} from '../../Buttons/ButtonInfiniteGrid'
 import { faHome } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { useHasBeenRendered } from '../../Hooks/useHasBeenRendered'
+import { ExportFullv4, ExportInstancesv4, ExportPageModelv4 } from '@companion/shared/Model/ExportModel'
 
-export function ImportPageWizard({ snapshot, instanceRemap, setInstanceRemap, doImport }) {
+interface ImportPageWizardProps {
+	snapshot: ExportFullv4 | ExportPageModelv4
+	instanceRemap: Record<string, string | undefined>
+	setInstanceRemap: React.Dispatch<React.SetStateAction<Record<string, string | undefined>>>
+	doImport: (importPageNumber: number, pageNumber: number, instanceRemap: Record<string, string | undefined>) => void
+}
+
+export function ImportPageWizard({ snapshot, instanceRemap, setInstanceRemap, doImport }: ImportPageWizardProps) {
 	const pages = useContext(PagesContext)
 	const userConfig = useContext(UserConfigContext)
 
@@ -30,7 +43,7 @@ export function ImportPageWizard({ snapshot, instanceRemap, setInstanceRemap, do
 	} = usePagePicker(pages, 1)
 
 	const setInstanceRemap2 = useCallback(
-		(fromId, toId) => {
+		(fromId: string, toId: string) => {
 			setInstanceRemap((oldRemap) => ({
 				...oldRemap,
 				[fromId]: toId,
@@ -43,14 +56,14 @@ export function ImportPageWizard({ snapshot, instanceRemap, setInstanceRemap, do
 		doImport(importPageNumber, pageNumber, instanceRemap)
 	}, [doImport, importPageNumber, pageNumber, instanceRemap])
 
-	const destinationGridSize = userConfig.gridSize
+	const destinationGridSize = userConfig?.gridSize
 
-	const destinationGridRef = useRef(null)
+	const destinationGridRef = useRef<ButtonInfiniteGridRef>(null)
 	const resetDestinationPosition = useCallback(() => {
 		destinationGridRef.current?.resetPosition()
 	}, [destinationGridRef])
 
-	const sourceGridRef = useRef(null)
+	const sourceGridRef = useRef<ButtonInfiniteGridRef>(null)
 	const resetSourcePosition = useCallback(() => {
 		sourceGridRef.current?.resetPosition()
 	}, [sourceGridRef])
@@ -82,12 +95,12 @@ export function ImportPageWizard({ snapshot, instanceRemap, setInstanceRemap, do
 
 							<ButtonGridHeader
 								pageNumber={isSinglePage ? snapshot.oldPageNumber : importPageNumber}
-								changePage={isSinglePage ? null : changeImportPage}
-								setPage={isSinglePage ? null : setImportPageNumber}
+								changePage={isSinglePage ? undefined : changeImportPage}
+								setPage={isSinglePage ? undefined : setImportPageNumber}
 							/>
 						</CCol>
 						<div className="buttongrid" ref={hasBeenRenderedRef}>
-							{hasBeenRendered && (
+							{hasBeenRendered && sourceGridSize && (
 								<ButtonInfiniteGrid
 									ref={sourceGridRef}
 									pageNumber={isSinglePage ? snapshot.oldPageNumber : importPageNumber}
@@ -119,7 +132,7 @@ export function ImportPageWizard({ snapshot, instanceRemap, setInstanceRemap, do
 							<ButtonGridHeader pageNumber={pageNumber} changePage={changePage} setPage={setPageNumber} />
 						</CCol>
 						<div className="buttongrid">
-							{hasBeenRendered && (
+							{hasBeenRendered && destinationGridSize && (
 								<ButtonInfiniteGrid
 									ref={destinationGridRef}
 									pageNumber={pageNumber}
@@ -149,7 +162,13 @@ export function ImportPageWizard({ snapshot, instanceRemap, setInstanceRemap, do
 	)
 }
 
-export function ImportRemap({ snapshot, instanceRemap, setInstanceRemap }) {
+interface ImportRemapProps {
+	snapshot: { instances?: ExportInstancesv4 }
+	instanceRemap: Record<string, string | undefined>
+	setInstanceRemap: (fromId: string, toId: string) => void
+}
+
+export function ImportRemap({ snapshot, instanceRemap, setInstanceRemap }: ImportRemapProps) {
 	const modules = useContext(ModulesContext)
 	const connectionsContext = useContext(ConnectionsContext)
 
@@ -172,16 +191,21 @@ export function ImportRemap({ snapshot, instanceRemap, setInstanceRemap }) {
 						</tr>
 					)}
 					{Object.entries(snapshot.instances || {}).map(([key, instance]) => {
+						if (!instance) return null
+
 						const snapshotModule = modules[instance.instance_type]
 						const currentInstances = Object.entries(connectionsContext).filter(
-							([id, inst]) => inst.instance_type === instance.instance_type
+							([_id, inst]) => inst.instance_type === instance.instance_type
 						)
 
 						return (
 							<tr>
 								<td>
 									{snapshotModule ? (
-										<CSelect value={instanceRemap[key] ?? ''} onChange={(e) => setInstanceRemap(key, e.target.value)}>
+										<CSelect
+											value={instanceRemap[key] ?? ''}
+											onChange={(e) => setInstanceRemap(key, e.currentTarget.value)}
+										>
 											<option value="_new">[ Create new connection ]</option>
 											<option value="_ignore">[ Ignore ]</option>
 											{currentInstances.map(([id, inst]) => (

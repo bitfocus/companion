@@ -40,8 +40,8 @@ export interface ButtonInfiniteGridButtonProps {
 interface ButtonInfiniteGridProps {
 	isHot?: boolean
 	pageNumber: number
-	buttonClick: (location: ControlLocation, pressed: boolean) => void
-	selectedButton: ControlLocation | null
+	buttonClick?: (location: ControlLocation, pressed: boolean) => void
+	selectedButton?: ControlLocation | null
 	gridSize: UserConfigGridSize
 	doGrow?: (direction: 'left' | 'right' | 'top' | 'bottom', amount: number) => void
 	buttonIconFactory: React.ClassType<ButtonInfiniteGridButtonProps, any, any>
