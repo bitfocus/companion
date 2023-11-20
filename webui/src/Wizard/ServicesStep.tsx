@@ -1,7 +1,13 @@
 import React from 'react'
 import { CInput, CInputCheckbox, CLabel } from '@coreui/react'
+import type { UserConfigModel } from '@companion/shared/Model/UserConfigModel'
 
-export function ServicesStep({ config, setValue }) {
+interface ServicesStepProps {
+	config: Partial<UserConfigModel>
+	setValue: (key: keyof UserConfigModel, value: any) => void
+}
+
+export function ServicesStep({ config, setValue }: ServicesStepProps) {
 	return (
 		<div>
 			<h5>Remote Control Services</h5>

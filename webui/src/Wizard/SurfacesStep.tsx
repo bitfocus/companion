@@ -1,7 +1,13 @@
 import React from 'react'
 import { CInputCheckbox, CInputRadio, CLabel } from '@coreui/react'
+import type { UserConfigModel } from '@companion/shared/Model/UserConfigModel'
 
-export function SurfacesStep({ config, setValue }) {
+interface SurfacesStepProps {
+	config: Partial<UserConfigModel>
+	setValue: (key: keyof UserConfigModel, value: any) => void
+}
+
+export function SurfacesStep({ config, setValue }: SurfacesStepProps) {
 	return (
 		<div>
 			<h5>USB Surface Detection Configuration</h5>
@@ -22,7 +28,7 @@ export function SurfacesStep({ config, setValue }) {
 					<CInputRadio
 						id="userconfig_elgato_plugin_disable"
 						checked={!config.elgato_plugin_enable}
-						onChange={(e) => setValue('elgato_plugin_enable', false)}
+						onChange={() => setValue('elgato_plugin_enable', false)}
 					/>
 					<CLabel htmlFor="userconfig_elgato_plugin_disable">
 						Use Companion natively (requires Stream Deck software to be closed)
@@ -34,7 +40,7 @@ export function SurfacesStep({ config, setValue }) {
 					<CInputRadio
 						id="userconfig_elgato_plugin_enable"
 						checked={config.elgato_plugin_enable}
-						onChange={(e) => setValue('elgato_plugin_enable', true)}
+						onChange={() => setValue('elgato_plugin_enable', true)}
 					/>
 					<CLabel htmlFor="userconfig_elgato_plugin_enable">Use Stream Deck software via Companion plugin</CLabel>
 				</div>

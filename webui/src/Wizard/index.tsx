@@ -1,4 +1,4 @@
-import React, { forwardRef, useCallback, useContext, useImperativeHandle, useState } from 'react'
+import React, { FormEvent, forwardRef, useCallback, useContext, useImperativeHandle, useState } from 'react'
 import { CAlert, CButton, CForm, CModal, CModalBody, CModalFooter, CModalHeader } from '@coreui/react'
 import { SocketContext, socketEmitPromise } from '../util'
 import { BeginStep } from './BeginStep'
@@ -7,21 +7,29 @@ import { ServicesStep } from './ServicesStep'
 import { PasswordStep } from './PasswordStep'
 import { ApplyStep } from './ApplyStep'
 import { FinishStep } from './FinishStep'
+import { UserConfigModel } from '@companion/shared/Model/UserConfigModel'
 
 export const WIZARD_VERSION_2_2 = 22 // 2.2
 export const WIZARD_VERSION_3_0 = 30 // 3.0
 
 export const WIZARD_CURRENT_VERSION = WIZARD_VERSION_3_0
 
-export const WizardModal = forwardRef(function WizardModal(_props, ref) {
+export interface WizardModalRef {
+	show(): void
+}
+interface WizardModalProps {
+	// Nothing
+}
+
+export const WizardModal = forwardRef<WizardModalRef, WizardModalProps>(function WizardModal(_props, ref) {
 	const socket = useContext(SocketContext)
 	const [currentStep, setCurrentStep] = useState(1)
 	const maxSteps = 6 // can use useState in the future if the number of steps needs to be dynamic
 	const applyStep = 5 // can use useState in the future if the number of steps needs to be dynamic
 	const [startConfig, setStartConfig] = useState(null)
-	const [oldConfig, setOldConfig] = useState(null)
-	const [newConfig, setNewConfig] = useState(null)
-	const [error, setError] = useState(null)
+	const [oldConfig, setOldConfig] = useState<UserConfigModel | null>(null)
+	const [newConfig, setNewConfig] = useState<UserConfigModel | null>(null)
+	const [error, setError] = useState<string | null>(null)
 	const [clear, setClear] = useState(true)
 
 	const getConfig = useCallback(() => {
@@ -46,37 +54,38 @@ export const WizardModal = forwardRef(function WizardModal(_props, ref) {
 	}, [socket])
 
 	const doNextStep = useCallback(() => {
-		let newStep = currentStep
-		// Make sure step is set to something reasonable
-		if (newStep >= maxSteps - 1) {
-			newStep = maxSteps
-		} else {
-			newStep = newStep + 1
-		}
-
-		setCurrentStep(newStep)
-	}, [currentStep, maxSteps])
+		setCurrentStep((currentStep) => {
+			// Make sure step is set to something reasonable
+			if (currentStep >= maxSteps - 1) {
+				return maxSteps
+			} else {
+				return currentStep + 1
+			}
+		})
+	}, [maxSteps])
 
 	const doPrevStep = useCallback(() => {
-		let newStep = currentStep
-		if (newStep <= 1) {
-			newStep = 1
-		} else {
-			newStep = newStep - 1
-		}
-
-		setCurrentStep(newStep)
-	}, [currentStep])
+		setCurrentStep((currentStep) => {
+			if (currentStep <= 1) {
+				return 1
+			} else {
+				return currentStep - 1
+			}
+		})
+	}, [])
 
 	const doSave = useCallback(
-		(e) => {
+		(e: FormEvent) => {
 			e.preventDefault()
 
-			let saveConfig = {}
+			if (!oldConfig || !newConfig) return
 
-			for (const id in oldConfig) {
+			let saveConfig: Partial<UserConfigModel> = {}
+
+			for (const id0 in oldConfig) {
+				const id = id0 as keyof UserConfigModel
 				if (oldConfig[id] !== newConfig[id]) {
-					saveConfig[id] = newConfig[id]
+					saveConfig[id] = newConfig[id] as any
 				}
 			}
 
@@ -89,11 +98,14 @@ export const WizardModal = forwardRef(function WizardModal(_props, ref) {
 		[socket, newConfig, oldConfig, doNextStep]
 	)
 
-	const setValue = (key, value) => {
-		setNewConfig((oldState) => ({
-			...oldState,
-			[key]: value,
-		}))
+	const setValue = (key: keyof UserConfigModel, value: any) => {
+		setNewConfig(
+			(oldState) =>
+				oldState && {
+					...oldState,
+					[key]: value,
+				}
+		)
 	}
 
 	useImperativeHandle(
@@ -146,12 +158,20 @@ export const WizardModal = forwardRef(function WizardModal(_props, ref) {
 				</CModalHeader>
 				<CModalBody>
 					{error ? <CAlert color="danger">{error}</CAlert> : ''}
-					{currentStep === 1 && !error ? <BeginStep /> : ''}
-					{currentStep === 2 && !error ? <SurfacesStep config={newConfig} setValue={setValue} /> : ''}
-					{currentStep === 3 && !error ? <ServicesStep config={newConfig} setValue={setValue} /> : ''}
-					{currentStep === 4 && !error ? <PasswordStep config={newConfig} setValue={setValue} /> : ''}
-					{currentStep === 5 && !error ? <ApplyStep oldConfig={oldConfig} newConfig={newConfig} /> : ''}
-					{currentStep === 6 && !error ? <FinishStep oldConfig={startConfig} newConfig={newConfig} /> : ''}
+					{currentStep === 1 && newConfig && !error ? <BeginStep /> : ''}
+					{currentStep === 2 && newConfig && !error ? <SurfacesStep config={newConfig} setValue={setValue} /> : ''}
+					{currentStep === 3 && newConfig && !error ? <ServicesStep config={newConfig} setValue={setValue} /> : ''}
+					{currentStep === 4 && newConfig && !error ? <PasswordStep config={newConfig} setValue={setValue} /> : ''}
+					{currentStep === 5 && newConfig && oldConfig && !error ? (
+						<ApplyStep oldConfig={oldConfig} newConfig={newConfig} />
+					) : (
+						''
+					)}
+					{currentStep === 6 && newConfig && startConfig && !error ? (
+						<FinishStep oldConfig={startConfig} newConfig={newConfig} />
+					) : (
+						''
+					)}
 				</CModalBody>
 				<CModalFooter>
 					{currentStep <= applyStep && (

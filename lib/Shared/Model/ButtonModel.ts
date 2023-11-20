@@ -1,6 +1,6 @@
-import type { ActionSetsModel, ActionStepOptions } from '../../Shared/Model/ActionModel.js'
-import type { FeedbackInstance } from '../../Shared/Model/FeedbackModel.js'
-import type { ButtonStyleProperties } from '../../Shared/Model/StyleModel.js'
+import type { ActionSetsModel, ActionStepOptions } from './ActionModel.js'
+import type { FeedbackInstance } from './FeedbackModel.js'
+import type { ButtonStyleProperties } from './StyleModel.js'
 
 export type SomeButtonModel = PageNumberButtonModel | PageUpButtonModel | PageDownButtonModel | NormalButtonModel
 

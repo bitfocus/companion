@@ -173,7 +173,6 @@ export const ControlActionSetEditor = memo(function ControlActionSetEditor({
 			<GenericConfirmModal ref={confirmModal} />
 			<ActionsList
 				location={location}
-				controlId={controlId}
 				dragId={`${controlId}_actions`}
 				stepId={stepId}
 				setId={setId}
@@ -221,17 +220,16 @@ const AddActionsPanel = memo(function AddActionsPanel({ addPlaceholder, addActio
 
 interface ActionsListProps {
 	location: ControlLocation | undefined
-	controlId: string
 	dragId: string
 	stepId: string
 	setId: string
-	confirmModal: RefObject<GenericConfirmModalRef>
+	confirmModal?: RefObject<GenericConfirmModalRef>
 	actions: ActionInstance[] | undefined
 	doSetValue: (actionId: string, key: string, val: any) => void
 	doSetDelay: (actionId: string, delay: number) => void
 	doDelete: (actionId: string) => void
 	doDuplicate: (actionId: string) => void
-	doEnabled: (actionId: string, enabled: boolean) => void
+	doEnabled?: (actionId: string, enabled: boolean) => void
 	doReorder: (
 		stepId: string,
 		setId: string,
@@ -240,7 +238,7 @@ interface ActionsListProps {
 		targetSetId: string,
 		targetIndex: number
 	) => void
-	emitLearn: (actionId: string) => void
+	emitLearn?: (actionId: string) => void
 	readonly?: boolean
 	setPanelCollapsed: (panelId: string, collapsed: boolean) => void
 	isPanelCollapsed: (panelId: string) => boolean
@@ -248,7 +246,6 @@ interface ActionsListProps {
 
 export function ActionsList({
 	location,
-	controlId,
 	dragId,
 	stepId,
 	setId,
@@ -291,7 +288,6 @@ export function ActionsList({
 								index={i}
 								stepId={stepId}
 								setId={setId}
-								controlId={controlId}
 								dragId={dragId}
 								setValue={doSetValue}
 								doDelete={doDelete2}
@@ -372,7 +368,6 @@ interface ActionTableRowProps {
 	location: ControlLocation | undefined
 	index: number
 	dragId: string
-	controlId: string
 	setValue: (actionId: string, key: string, val: any) => void
 	doDelete: (actionId: string) => void
 	doDuplicate: (actionId: string) => void
@@ -385,8 +380,8 @@ interface ActionTableRowProps {
 		targetSetId: string,
 		targetIndex: number
 	) => void
-	doLearn: (actionId: string) => void
-	doEnabled: (actionId: string, enabled: boolean) => void
+	doLearn: ((actionId: string) => void) | undefined
+	doEnabled: ((actionId: string, enabled: boolean) => void) | undefined
 	readonly: boolean
 	isCollapsed: boolean
 	setCollapsed: (actionId: string, collapsed: boolean) => void
@@ -399,7 +394,6 @@ function ActionTableRow({
 	location,
 	index,
 	dragId,
-	// controlId,
 	setValue,
 	doDelete,
 	doDuplicate,
@@ -417,8 +411,11 @@ function ActionTableRow({
 	const innerDelete = useCallback(() => doDelete(action.id), [action.id, doDelete])
 	const innerDuplicate = useCallback(() => doDuplicate(action.id), [action.id, doDuplicate])
 	const innerDelay = useCallback((delay) => doDelay(action.id, delay), [doDelay, action.id])
-	const innerLearn = useCallback(() => doLearn(action.id), [doLearn, action.id])
-	const innerSetEnabled = useCallback((e) => doEnabled(action.id, e.target.checked), [doEnabled, action.id])
+	const innerLearn = useCallback(() => doLearn && doLearn(action.id), [doLearn, action.id])
+	const innerSetEnabled = useCallback(
+		(e) => doEnabled && doEnabled(action.id, e.target.checked),
+		[doEnabled, action.id]
+	)
 
 	const [optionVisibility, setOptionVisibility] = useState<Record<string, boolean>>({})
 

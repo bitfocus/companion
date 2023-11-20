@@ -1,7 +1,13 @@
 import React from 'react'
 import { CAlert } from '@coreui/react'
+import type { UserConfigModel } from '@companion/shared/Model/UserConfigModel'
 
-export function FinishStep({ oldConfig, newConfig }) {
+interface FinishStepProps {
+	oldConfig: UserConfigModel
+	newConfig: UserConfigModel
+}
+
+export function FinishStep({ oldConfig, newConfig }: FinishStepProps) {
 	return (
 		<div>
 			<h4>Congratulations!</h4>

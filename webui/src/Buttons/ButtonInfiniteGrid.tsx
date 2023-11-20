@@ -38,7 +38,7 @@ export interface ButtonInfiniteGridButtonProps {
 }
 
 interface ButtonInfiniteGridProps {
-	isHot: boolean
+	isHot?: boolean
 	pageNumber: number
 	buttonClick: (location: ControlLocation, pressed: boolean) => void
 	selectedButton: ControlLocation | null

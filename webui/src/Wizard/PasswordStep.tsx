@@ -1,7 +1,13 @@
 import React from 'react'
 import { CAlert, CInput, CInputCheckbox, CLabel } from '@coreui/react'
+import type { UserConfigModel } from '@companion/shared/Model/UserConfigModel'
 
-export function PasswordStep({ config, setValue }) {
+interface PasswordStepProps {
+	config: Partial<UserConfigModel>
+	setValue: (key: keyof UserConfigModel, value: any) => void
+}
+
+export function PasswordStep({ config, setValue }: PasswordStepProps) {
 	return (
 		<div>
 			<h5>Admin GUI Password</h5>

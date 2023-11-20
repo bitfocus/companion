@@ -1,7 +1,13 @@
 import React from 'react'
 import { WIZARD_VERSION_3_0 } from '.'
+import type { UserConfigModel } from '@companion/shared/Model/UserConfigModel'
 
-export function ApplyStep({ oldConfig, newConfig }) {
+interface ApplyStepProps {
+	oldConfig: UserConfigModel
+	newConfig: UserConfigModel
+}
+
+export function ApplyStep({ oldConfig, newConfig }: ApplyStepProps) {
 	let changes = []
 
 	if (oldConfig.setup_wizard < WIZARD_VERSION_3_0 || oldConfig.usb_hotplug !== newConfig.usb_hotplug) {
@@ -216,18 +222,17 @@ export function ApplyStep({ oldConfig, newConfig }) {
 		(oldConfig.setup_wizard === 0 && newConfig.admin_lockout) ||
 		(newConfig.admin_lockout && oldConfig.admin_timeout !== newConfig.admin_timeout)
 	) {
+		const oldAdminTimeoutStr = oldConfig.admin_timeout + ''
+		const newAdminTimeoutStr = newConfig.admin_timeout + ''
 		oldConfig.setup_wizard > 0
 			? changes.push(
 					<li>
-						Change admin GUI timeout from{' '}
-						{oldConfig.admin_timeout === '0' ? 'none' : oldConfig.admin_timeout + ' minutes'} to{' '}
-						{newConfig.admin_timeout === '0' ? 'none' : newConfig.admin_timeout + ' minutes'}.
+						Change admin GUI timeout from {oldAdminTimeoutStr === '0' ? 'none' : oldConfig.admin_timeout + ' minutes'}{' '}
+						to {newAdminTimeoutStr ? 'none' : newConfig.admin_timeout + ' minutes'}.
 					</li>
 			  )
 			: changes.push(
-					<li>
-						Set admin GUI timeout to {newConfig.admin_timeout === '0' ? 'none' : newConfig.admin_timeout + ' minutes'}.
-					</li>
+					<li>Set admin GUI timeout to {newAdminTimeoutStr ? 'none' : newConfig.admin_timeout + ' minutes'}.</li>
 			  )
 	}
 

@@ -1,4 +1,4 @@
-import React, { useCallback, useContext, useEffect, useState, useRef } from 'react'
+import React, { useCallback, useContext, useEffect, useState, useRef, RefObject, ChangeEvent } from 'react'
 import {
 	ConnectionsContext,
 	socketEmitPromise,
@@ -35,24 +35,29 @@ import { faCalendarAlt, faClock, faHome } from '@fortawesome/free-solid-svg-icon
 import { useMemo } from 'react'
 import { DropdownInputField } from '../Components'
 import { ActionsList } from '../Controls/ActionSetEditor'
-import { GenericConfirmModal } from '../Components/GenericConfirmModal'
+import { GenericConfirmModal, GenericConfirmModalRef } from '../Components/GenericConfirmModal'
 import { ButtonGridHeader } from './ButtonGridHeader'
 import { usePagePicker } from '../Hooks/usePagePicker'
 import { cloneDeep } from 'lodash-es'
-import jsonPatch from 'fast-json-patch'
+import jsonPatch, { Operation as JsonPatchOperation } from 'fast-json-patch'
 import { usePanelCollapseHelper } from '../Helpers/CollapseHelper'
 import CSwitch from '../CSwitch'
 import { MenuPortalContext } from '../Components/DropdownInputField'
-import { ButtonGridIcon, ButtonInfiniteGrid } from './ButtonInfiniteGrid'
+import { ButtonGridIcon, ButtonInfiniteGrid, ButtonInfiniteGridRef } from './ButtonInfiniteGrid'
 import { useHasBeenRendered } from '../Hooks/useHasBeenRendered'
+import type { DropdownChoiceId } from '@companion-module/base'
+import type { ControlLocation } from '@companion/shared/Model/Common'
+import type { ClientTriggerData } from '@companion/shared/Model/TriggerModel'
+import type { RecordSessionInfo, RecordSessionListInfo } from '@companion/shared/Model/ActionRecorderModel'
+import type { NormalButtonModel } from '@companion/shared/Model/ButtonModel'
 
 export function ActionRecorder() {
 	const socket = useContext(SocketContext)
 
 	const confirmRef = useRef(null)
 
-	const [sessions, setSessions] = useState(null)
-	const [selectedSessionId, setSelectedSessionId] = useState(null)
+	const [sessions, setSessions] = useState<Record<string, RecordSessionListInfo | undefined> | null>(null)
+	const [selectedSessionId, setSelectedSessionId] = useState<string | null>(null)
 	const [isFinishing, setIsFinishing] = useState(false)
 
 	// Subscribe to the list of sessions
@@ -68,8 +73,8 @@ export function ActionRecorder() {
 				console.error('Action record subscribe', e)
 			})
 
-		const updateSessionList = (newSessions) => {
-			setSessions((oldSessions) => applyPatchOrReplaceObject(oldSessions, newSessions))
+		const updateSessionList = (newSessions: JsonPatchOperation[]) => {
+			setSessions((oldSessions) => oldSessions && applyPatchOrReplaceObject(oldSessions, newSessions))
 		}
 
 		socket.on('action-recorder:session-list', updateSessionList)
@@ -86,7 +91,7 @@ export function ActionRecorder() {
 	// Ensure the sessionId remains valid
 	useEffect(() => {
 		setSelectedSessionId((oldId) => {
-			return sessions && sessions[oldId] ? oldId : Object.keys(sessions || {}).sort()[0] || null
+			return sessions && oldId && sessions[oldId] ? oldId : Object.keys(sessions || {}).sort()[0] || null
 		})
 	}, [sessions])
 
@@ -94,33 +99,32 @@ export function ActionRecorder() {
 		setIsFinishing(false)
 	}, [selectedSessionId])
 
-	const [sessionInfo, setSessionInfo] = useState(null)
+	const [sessionInfo, setSessionInfo] = useState<RecordSessionInfo | null>(null)
 
 	useEffect(() => {
 		setSessionInfo(null)
 
-		if (selectedSessionId) {
-			socketEmitPromise(socket, 'action-recorder:session:subscribe', [selectedSessionId])
-				.then((info) => {
-					setSessionInfo(info)
-				})
-				.catch((e) => {
-					console.error('Action record session subscribe', e)
-				})
+		if (!selectedSessionId) return
+		socketEmitPromise(socket, 'action-recorder:session:subscribe', [selectedSessionId])
+			.then((info) => {
+				setSessionInfo(info)
+			})
+			.catch((e) => {
+				console.error('Action record session subscribe', e)
+			})
 
-			const updateSessionInfo = (patch) => {
-				setSessionInfo((oldInfo) => applyPatchOrReplaceObject(oldInfo, patch))
-			}
+		const updateSessionInfo = (patch: JsonPatchOperation[]) => {
+			setSessionInfo((oldInfo) => oldInfo && applyPatchOrReplaceObject(oldInfo, patch))
+		}
 
-			socket.on(`action-recorder:session:update:${selectedSessionId}`, updateSessionInfo)
+		socket.on(`action-recorder:session:update:${selectedSessionId}`, updateSessionInfo)
 
-			return () => {
-				socketEmitPromise(socket, 'action-recorder:session:unsubscribe', [selectedSessionId]).catch((e) => {
-					console.error('Action record subscribe', e)
-				})
+		return () => {
+			socketEmitPromise(socket, 'action-recorder:session:unsubscribe', [selectedSessionId]).catch((e) => {
+				console.error('Action record subscribe', e)
+			})
 
-				socket.off(`action-recorder:session:update:${selectedSessionId}`, updateSessionInfo)
-			}
+			socket.off(`action-recorder:session:update:${selectedSessionId}`, updateSessionInfo)
 		}
 	}, [socket, selectedSessionId])
 
@@ -135,7 +139,11 @@ export function ActionRecorder() {
 		<CRow className="action-recorder-panel">
 			<GenericConfirmModal ref={confirmRef} />
 
-			{isFinishing ? <RecorderSessionFinishModal doClose={closeFinishingModal} sessionId={selectedSessionId} /> : ''}
+			{isFinishing && selectedSessionId ? (
+				<RecorderSessionFinishModal doClose={closeFinishingModal} sessionId={selectedSessionId} />
+			) : (
+				''
+			)}
 
 			<CCol xs={12} className={'row-heading'}>
 				<h5>Action Recorder</h5>
@@ -144,12 +152,14 @@ export function ActionRecorder() {
 					Not many modules support this, and they don't support it for every action.
 				</p>
 
-				<RecorderSessionHeading
-					confirmRef={confirmRef}
-					sessionId={selectedSessionId}
-					sessionInfo={sessionInfo}
-					doFinish={openFinishingModal}
-				/>
+				{selectedSessionId && sessionInfo && (
+					<RecorderSessionHeading
+						confirmRef={confirmRef}
+						sessionId={selectedSessionId}
+						sessionInfo={sessionInfo}
+						doFinish={openFinishingModal}
+					/>
+				)}
 
 				<hr className="slim" />
 			</CCol>
@@ -162,11 +172,16 @@ export function ActionRecorder() {
 	)
 }
 
-function RecorderSessionFinishModal({ doClose, sessionId }) {
+interface RecorderSessionFinishModalProps {
+	doClose: () => void
+	sessionId: string
+}
+
+function RecorderSessionFinishModal({ doClose, sessionId }: RecorderSessionFinishModalProps) {
 	const socket = useContext(SocketContext)
 
 	const doSave = useCallback(
-		(controlId, stepId, setId, mode) => {
+		(controlId: string, stepId: string | null, setId: string | null, mode: 'replace' | 'append') => {
 			socketEmitPromise(socket, 'action-recorder:session:save-to-control', [sessionId, controlId, stepId, setId, mode])
 				.then(() => {
 					doClose()
@@ -226,16 +241,20 @@ function RecorderSessionFinishModal({ doClose, sessionId }) {
 	)
 }
 
-function ButtonPicker({ selectButton }) {
+interface ButtonPickerProps {
+	selectButton: (selectedControl: string, selectedStep: string, selectedSet: string, mode: 'replace' | 'append') => void
+}
+
+function ButtonPicker({ selectButton }: ButtonPickerProps) {
 	const socket = useContext(SocketContext)
 	const pages = useContext(PagesContext)
 	const userConfig = useContext(UserConfigContext)
 
 	const { pageNumber, setPageNumber, changePage } = usePagePicker(pages, 1)
 
-	const [selectedLocation, setSelectedLocation] = useState(null)
-	const [selectedStep, setSelectedStep] = useState(null)
-	const [selectedSet, setSelectedSet] = useState(null)
+	const [selectedLocation, setSelectedLocation] = useState<ControlLocation | null>(null)
+	const [selectedStep, setSelectedStep] = useState<string | null>(null)
+	const [selectedSet, setSelectedSet] = useState<string | null>(null)
 
 	const buttonClick = useCallback(
 		(location, pressed) => {
@@ -252,46 +271,47 @@ function ButtonPicker({ selectButton }) {
 	useEffect(() => setSelectedSet(null), [selectedControl])
 
 	const replaceActions = useCallback(() => {
-		selectButton(selectedControl, selectedStep, selectedSet, 'replace')
+		if (selectedControl && selectedStep && selectedSet)
+			selectButton(selectedControl, selectedStep, selectedSet, 'replace')
 	}, [selectedControl, selectedStep, selectedSet, selectButton])
 	const appendActions = useCallback(() => {
-		selectButton(selectedControl, selectedStep, selectedSet, 'append')
+		if (selectedControl && selectedStep && selectedSet)
+			selectButton(selectedControl, selectedStep, selectedSet, 'append')
 	}, [selectedControl, selectedStep, selectedSet, selectButton])
 
-	const [controlInfo, setControlInfo] = useState(null)
+	const [controlInfo, setControlInfo] = useState<NormalButtonModel | null>(null)
 	useEffect(() => {
 		setControlInfo(null)
 
-		if (selectedControl) {
-			socketEmitPromise(socket, 'controls:subscribe', [selectedControl])
-				.then((config) => {
-					console.log(config)
-					setControlInfo(config?.config ?? false)
-				})
-				.catch((e) => {
-					console.error('Failed to load control config', e)
-					setControlInfo(null)
-				})
+		if (!selectedControl) return
+		socketEmitPromise(socket, 'controls:subscribe', [selectedControl])
+			.then((config) => {
+				console.log(config)
+				setControlInfo(config?.config ?? false)
+			})
+			.catch((e) => {
+				console.error('Failed to load control config', e)
+				setControlInfo(null)
+			})
 
-			const patchConfig = (patch) => {
-				setControlInfo((oldConfig) => {
-					if (patch === false) {
-						return false
-					} else {
-						return jsonPatch.applyPatch(cloneDeep(oldConfig) || {}, patch).newDocument
-					}
-				})
-			}
+		const patchConfig = (patch: JsonPatchOperation[] | false) => {
+			setControlInfo((oldConfig) => {
+				if (!oldConfig || patch === false) {
+					return null
+				} else {
+					return jsonPatch.applyPatch(cloneDeep(oldConfig) || {}, patch).newDocument
+				}
+			})
+		}
 
-			socket.on(`controls:config-${selectedControl}`, patchConfig)
+		socket.on(`controls:config-${selectedControl}`, patchConfig)
 
-			return () => {
-				socket.off(`controls:config-${selectedControl}`, patchConfig)
+		return () => {
+			socket.off(`controls:config-${selectedControl}`, patchConfig)
 
-				socketEmitPromise(socket, 'controls:unsubscribe', [selectedControl]).catch((e) => {
-					console.error('Failed to unsubscribe control config', e)
-				})
-			}
+			socketEmitPromise(socket, 'controls:unsubscribe', [selectedControl]).catch((e) => {
+				console.error('Failed to unsubscribe control config', e)
+			})
 		}
 	}, [socket, selectedControl])
 
@@ -307,7 +327,7 @@ function ButtonPicker({ selectButton }) {
 		}
 	}, [controlInfo?.type, controlInfo?.steps])
 
-	const selectedStepInfo = controlInfo?.steps?.[selectedStep]
+	const selectedStepInfo = selectedStep ? controlInfo?.steps?.[selectedStep] : null
 	const actionSetOptions = useMemo(() => {
 		switch (controlInfo?.type) {
 			case 'button': {
@@ -335,7 +355,7 @@ function ButtonPicker({ selectButton }) {
 					)
 				}
 
-				const candidate_sets = Object.keys(selectedStepInfo?.action_sets || {}).filter((id) => !isNaN(id))
+				const candidate_sets = Object.keys(selectedStepInfo?.action_sets || {}).filter((id) => !isNaN(Number(id)))
 				candidate_sets.sort((a, b) => Number(a) - Number(b))
 
 				for (const set of candidate_sets) {
@@ -372,11 +392,11 @@ function ButtonPicker({ selectButton }) {
 		})
 	}, [actionSetOptions])
 
-	const gridSize = userConfig.gridSize
+	const gridSize = userConfig?.gridSize
 
 	const [hasBeenInView, isInViewRef] = useHasBeenRendered()
 
-	const gridRef = useRef(null)
+	const gridRef = useRef<ButtonInfiniteGridRef>(null)
 	const resetPosition = useCallback(() => {
 		gridRef.current?.resetPosition()
 	}, [gridRef])
@@ -398,7 +418,7 @@ function ButtonPicker({ selectButton }) {
 				<ButtonGridHeader pageNumber={pageNumber} changePage={changePage} setPage={setPageNumber} />
 			</div>
 			<div className="buttongrid" ref={isInViewRef}>
-				{hasBeenInView && (
+				{hasBeenInView && gridSize && (
 					<ButtonInfiniteGrid
 						ref={gridRef}
 						buttonClick={buttonClick}
@@ -418,8 +438,8 @@ function ButtonPicker({ selectButton }) {
 							<DropdownInputField
 								choices={actionStepOptions}
 								multiple={false}
-								value={selectedStep}
-								setValue={setSelectedStep}
+								value={selectedStep ?? ''}
+								setValue={setSelectedStep as (val: DropdownChoiceId) => void}
 								disabled={!controlInfo}
 							/>
 						</CCol>
@@ -429,8 +449,8 @@ function ButtonPicker({ selectButton }) {
 							<DropdownInputField
 								choices={actionSetOptions}
 								multiple={false}
-								value={selectedSet}
-								setValue={setSelectedSet}
+								value={selectedSet ?? ''}
+								setValue={setSelectedSet as (val: DropdownChoiceId) => void}
 								disabled={!controlInfo}
 							/>
 						</CCol>
@@ -461,7 +481,13 @@ function ButtonPicker({ selectButton }) {
 	)
 }
 
-function TriggerPickerRow({ id, trigger, selectTrigger }) {
+interface TriggerPickerRowProps {
+	id: string
+	trigger: ClientTriggerData
+	selectTrigger: (id: string, mode: 'replace' | 'append') => void
+}
+
+function TriggerPickerRow({ id, trigger, selectTrigger }: TriggerPickerRowProps) {
 	const replaceActions = useCallback(() => selectTrigger(id, 'replace'), [id, selectTrigger])
 	const appendActions = useCallback(() => selectTrigger(id, 'append'), [id, selectTrigger])
 
@@ -481,11 +507,16 @@ function TriggerPickerRow({ id, trigger, selectTrigger }) {
 		</tr>
 	)
 }
-function TriggerPicker({ selectControl }) {
+
+interface TriggerPickerProps {
+	selectControl: (controlId: string, stepId: string | null, setId: string | null, mode: 'append' | 'replace') => void
+}
+
+function TriggerPicker({ selectControl }: TriggerPickerProps) {
 	const triggersList = useContext(TriggersContext)
 
 	const selectTrigger = useCallback(
-		(id, mode) => selectControl(CreateTriggerControlId(id), null, null, mode),
+		(id: string, mode: 'append' | 'replace') => selectControl(CreateTriggerControlId(id), null, null, mode),
 		[selectControl]
 	)
 
@@ -500,12 +531,12 @@ function TriggerPicker({ selectControl }) {
 				</thead>
 				<tbody>
 					{triggersList && Object.keys(triggersList).length > 0 ? (
-						Object.entries(triggersList).map(([id, item]) => (
-							<TriggerPickerRow key={id} id={id} trigger={item} selectTrigger={selectTrigger} />
-						))
+						Object.entries(triggersList).map(
+							([id, item]) => item && <TriggerPickerRow key={id} id={id} trigger={item} selectTrigger={selectTrigger} />
+						)
 					) : (
 						<tr>
-							<td colSpan="2" className="currentlyNone">
+							<td colSpan={2} className="currentlyNone">
 								There currently are no triggers or scheduled tasks.
 							</td>
 						</tr>
@@ -516,7 +547,14 @@ function TriggerPicker({ selectControl }) {
 	)
 }
 
-function RecorderSessionHeading({ confirmRef, sessionId, sessionInfo, doFinish }) {
+interface RecorderSessionHeadingProps {
+	confirmRef: RefObject<GenericConfirmModalRef>
+	sessionId: string
+	sessionInfo: RecordSessionInfo
+	doFinish: () => void
+}
+
+function RecorderSessionHeading({ confirmRef, sessionId, sessionInfo, doFinish }: RecorderSessionHeadingProps) {
 	const socket = useContext(SocketContext)
 	const connections = useContext(ConnectionsContext)
 
@@ -542,7 +580,7 @@ function RecorderSessionHeading({ confirmRef, sessionId, sessionInfo, doFinish }
 	}, [socket, sessionId, confirmRef])
 
 	const changeRecording = useCallback(
-		(e) => {
+		(e: ChangeEvent<HTMLInputElement> | boolean) => {
 			socketEmitPromise(socket, 'action-recorder:session:recording', [
 				sessionId,
 				typeof e === 'boolean' ? e : e.target.checked,
@@ -560,7 +598,7 @@ function RecorderSessionHeading({ confirmRef, sessionId, sessionInfo, doFinish }
 	}, [changeRecording, doFinish])
 
 	const changeConnectionIds = useCallback(
-		(ids) => {
+		(ids: DropdownChoiceId[]) => {
 			socketEmitPromise(socket, 'action-recorder:session:set-connections', [sessionId, ids]).catch((e) => {
 				console.error(e)
 			})
@@ -583,8 +621,6 @@ function RecorderSessionHeading({ confirmRef, sessionId, sessionInfo, doFinish }
 		return result
 	}, [connections])
 
-	if (!sessionInfo) return <></>
-
 	return (
 		<>
 			<CForm onSubmit={PreventDefaultHandler}>
@@ -592,7 +628,7 @@ function RecorderSessionHeading({ confirmRef, sessionId, sessionInfo, doFinish }
 					<div className="flex w-full gap-2">
 						<div className="w-full">
 							<CLabel>Connections</CLabel>
-							<DropdownInputField
+							<DropdownInputField<true>
 								value={sessionInfo.connectionIds}
 								setValue={changeConnectionIds}
 								multiple={true}
@@ -627,11 +663,16 @@ function RecorderSessionHeading({ confirmRef, sessionId, sessionInfo, doFinish }
 	)
 }
 
-function RecorderSession({ sessionId, sessionInfo }) {
+interface RecorderSessionProps {
+	sessionId: string
+	sessionInfo: RecordSessionInfo | null
+}
+
+function RecorderSession({ sessionId, sessionInfo }: RecorderSessionProps) {
 	const socket = useContext(SocketContext)
 
 	const doActionDelete = useCallback(
-		(actionId) => {
+		(actionId: string) => {
 			socketEmitPromise(socket, 'action-recorder:session:action-delete', [sessionId, actionId]).catch((e) => {
 				console.error(e)
 			})
@@ -639,7 +680,7 @@ function RecorderSession({ sessionId, sessionInfo }) {
 		[socket, sessionId]
 	)
 	const doActionDuplicate = useCallback(
-		(actionId) => {
+		(actionId: string) => {
 			socketEmitPromise(socket, 'action-recorder:session:action-duplicate', [sessionId, actionId]).catch((e) => {
 				console.error(e)
 			})
@@ -647,7 +688,7 @@ function RecorderSession({ sessionId, sessionInfo }) {
 		[socket, sessionId]
 	)
 	const doActionDelay = useCallback(
-		(actionId, delay) => {
+		(actionId: string, delay: number) => {
 			socketEmitPromise(socket, 'action-recorder:session:action-delay', [sessionId, actionId, delay]).catch((e) => {
 				console.error(e)
 			})
@@ -655,7 +696,7 @@ function RecorderSession({ sessionId, sessionInfo }) {
 		[socket, sessionId]
 	)
 	const doActionSetValue = useCallback(
-		(actionId, key, value) => {
+		(actionId: string, key: string, value: any) => {
 			socketEmitPromise(socket, 'action-recorder:session:action-set-value', [sessionId, actionId, key, value]).catch(
 				(e) => {
 					console.error(e)
@@ -665,7 +706,14 @@ function RecorderSession({ sessionId, sessionInfo }) {
 		[socket, sessionId]
 	)
 	const doActionReorder = useCallback(
-		(_dragStepId, _dragSetId, dragIndex, _dropStepId, _dropSetId, dropIndex) => {
+		(
+			_dragStepId: string,
+			_dragSetId: string,
+			dragIndex: number,
+			_dropStepId: string,
+			_dropSetId: string,
+			dropIndex: number
+		) => {
 			socketEmitPromise(socket, 'action-recorder:session:action-reorder', [sessionId, dragIndex, dropIndex]).catch(
 				(e) => {
 					console.error(e)
@@ -686,6 +734,8 @@ function RecorderSession({ sessionId, sessionInfo }) {
 		<CCol xs={12} className="flex-form">
 			<ActionsList
 				location={undefined}
+				stepId=""
+				setId=""
 				dragId={'triggerAction'}
 				actions={sessionInfo.actions}
 				readonly={!!sessionInfo.isRunning}
