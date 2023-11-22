@@ -9,7 +9,7 @@ import {
 	ModulesContext,
 } from '../util'
 import { useDrag } from 'react-dnd'
-import { ButtonPreview, RedImage } from '../Components/ButtonPreview'
+import { ButtonPreviewBase, RedImage } from '../Components/ButtonPreview'
 import { nanoid } from 'nanoid'
 import type { ClientConnectionConfig, ModuleDisplayInfo } from '@companion/shared/Model/Common'
 import type { UIPresetDefinition } from '@companion/shared/Model/Presets'
@@ -284,14 +284,13 @@ function PresetIconPreview({ connectionId, presetId, title }: PresetIconPreviewP
 			})
 	}, [presetId, socket, connectionId, retryToken])
 
-	const onClick = useCallback((_location, isDown) => isDown && setRetryToken(nanoid()), [])
+	const onClick = useCallback((isDown) => isDown && setRetryToken(nanoid()), [])
 
 	return (
-		<ButtonPreview
+		<ButtonPreviewBase
 			fixedSize
 			dragRef={drag}
 			title={title}
-			location={undefined}
 			preview={previewError ? RedImage : previewImage}
 			onClick={previewError ? onClick : undefined}
 		/>

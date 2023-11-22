@@ -37,11 +37,11 @@ interface ControlActionSetEditorProps {
 	controlId: string
 	location: ControlLocation | undefined
 	stepId: string
-	setId: string
+	setId: string | number
 	actions: ActionInstance[] | undefined
 	addPlaceholder: string
 	heading: JSX.Element | string
-	headingActions?: JSX.Element
+	headingActions?: JSX.Element[]
 }
 
 export const ControlActionSetEditor = memo(function ControlActionSetEditor({
@@ -106,10 +106,10 @@ export const ControlActionSetEditor = memo(function ControlActionSetEditor({
 	const emitOrder = useCallback(
 		(
 			dragStepId: string,
-			dragSetId: string,
+			dragSetId: string | number,
 			dragIndex: number,
 			dropStepId: string,
-			dropSetId: string,
+			dropSetId: string | number,
 			dropIndex: number
 		) => {
 			socketEmitPromise(socket, 'controls:action:reorder', [
@@ -222,7 +222,7 @@ interface ActionsListProps {
 	location: ControlLocation | undefined
 	dragId: string
 	stepId: string
-	setId: string
+	setId: string | number
 	confirmModal?: RefObject<GenericConfirmModalRef>
 	actions: ActionInstance[] | undefined
 	doSetValue: (actionId: string, key: string, val: any) => void
@@ -232,10 +232,10 @@ interface ActionsListProps {
 	doEnabled?: (actionId: string, enabled: boolean) => void
 	doReorder: (
 		stepId: string,
-		setId: string,
+		setId: string | number,
 		index: number,
 		targetStepId: string,
-		targetSetId: string,
+		targetSetId: string | number,
 		targetIndex: number
 	) => void
 	emitLearn?: (actionId: string) => void
@@ -316,15 +316,15 @@ export function ActionsList({
 
 interface ActionRowDropPlaceholderProps {
 	stepId: string
-	setId: string
+	setId: string | number
 	dragId: string
 	actionCount: number
 	moveCard: (
 		stepId: string,
-		setId: string,
+		setId: string | number,
 		index: number,
 		targetStepId: string,
-		targetSetId: string,
+		targetSetId: string | number,
 		targetIndex: number
 	) => void
 }
@@ -354,7 +354,7 @@ function ActionRowDropPlaceholder({ dragId, stepId, setId, actionCount, moveCard
 interface ActionTableRowDragItem {
 	actionId: string
 	stepId: string
-	setId: string
+	setId: string | number
 	index: number
 }
 interface ActionTableRowDragStatus {
@@ -364,7 +364,7 @@ interface ActionTableRowDragStatus {
 interface ActionTableRowProps {
 	action: ActionInstance
 	stepId: string
-	setId: string
+	setId: string | number
 	location: ControlLocation | undefined
 	index: number
 	dragId: string
@@ -374,10 +374,10 @@ interface ActionTableRowProps {
 	doDelay: (actionId: string, delay: number) => void
 	moveCard: (
 		stepId: string,
-		setId: string,
+		setId: string | number,
 		index: number,
 		targetStepId: string,
-		targetSetId: string,
+		targetSetId: string | number,
 		targetIndex: number
 	) => void
 	doLearn: ((actionId: string) => void) | undefined

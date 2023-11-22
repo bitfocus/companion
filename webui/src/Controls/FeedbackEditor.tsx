@@ -40,7 +40,7 @@ import { ControlLocation } from '@companion/shared/Model/Common'
 interface ControlFeedbacksEditorProps {
 	controlId: string
 	feedbacks: FeedbackInstance[]
-	heading: JSX.Element
+	heading: JSX.Element | string
 	entityType: string
 	booleanOnly: boolean
 	location: ControlLocation | undefined

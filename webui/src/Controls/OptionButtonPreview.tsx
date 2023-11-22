@@ -1,6 +1,6 @@
 import React, { useContext, useState } from 'react'
 import { nanoid } from 'nanoid'
-import { ButtonPreview } from '../Components/ButtonPreview.js'
+import { ButtonPreview, ButtonPreviewBase } from '../Components/ButtonPreview.js'
 import { SocketContext, socketEmitPromise } from '../util.js'
 import { useDeepCompareEffect } from 'use-deep-compare'
 import { ControlLocation } from '@companion/shared/Model/Common.js'
@@ -47,5 +47,5 @@ export function OptionButtonPreview({ location, options }: OptionButtonPreviewPr
 		// TODO - is this too reactive watching all the options?
 	}, [location, options])
 
-	return <ButtonPreview fixedSize preview={image} /> // TODO - noPad?
+	return <ButtonPreviewBase fixedSize preview={image} /> // TODO - noPad?
 }

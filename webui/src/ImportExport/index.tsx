@@ -7,7 +7,7 @@ import { CAlert, CButton } from '@coreui/react'
 import { ResetWizardModal, ResetWizardModalRef } from './Reset'
 import { ExportWizardModal, ExportWizardModalRef } from './Export'
 import { ImportWizard } from './Import'
-import { SomeExportv4 } from '@companion/shared/Model/ExportModel'
+import type { ClientImportObject } from '@companion/shared/Model/ImportExport'
 
 export function ImportExport() {
 	const socket = useContext(SocketContext)
@@ -20,7 +20,7 @@ export function ImportExport() {
 	const doReset = useCallback(() => resetRef.current?.show(), [])
 	const doExport = useCallback(() => exportRef.current?.show(), [])
 
-	const [importInfo, setImportInfo] = useState<[SomeExportv4, Record<string, string | undefined>] | null>(null)
+	const [importInfo, setImportInfo] = useState<[ClientImportObject, Record<string, string | undefined>] | null>(null)
 	const clearImport = useCallback(() => {
 		setImportInfo(null)
 
@@ -45,7 +45,7 @@ export function ImportExport() {
 			fr.onload = () => {
 				setLoadError(null)
 				socketEmitPromise(socket, 'loadsave:prepare-import', [fr.result], 20000)
-					.then(([err, config]: [string | null, SomeExportv4]) => {
+					.then(([err, config]: [string | null, ClientImportObject]) => {
 						if (err) {
 							setLoadError(err)
 						} else {

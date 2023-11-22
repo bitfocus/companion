@@ -3,10 +3,10 @@ import React, { useCallback, useContext, useEffect, useState } from 'react'
 import { NotifierContext, SocketContext, socketEmitPromise } from '../../util'
 import { ImportPageWizard } from './Page'
 import { ImportFullWizard } from './Full'
-import { SomeExportv4 } from '@companion/shared/Model/ExportModel'
+import type { ClientImportObject } from '@companion/shared/Model/ImportExport'
 
 interface ImportWizardProps {
-	importInfo: [SomeExportv4, Record<string, string | undefined>]
+	importInfo: [ClientImportObject, Record<string, string | undefined>]
 	clearImport: () => void
 }
 

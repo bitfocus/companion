@@ -20,10 +20,10 @@ import {
 import { faHome } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { useHasBeenRendered } from '../../Hooks/useHasBeenRendered'
-import { ExportFullv4, ExportInstancesv4, ExportPageModelv4 } from '@companion/shared/Model/ExportModel'
+import type { ClientImportObject } from '@companion/shared/Model/ImportExport'
 
 interface ImportPageWizardProps {
-	snapshot: ExportFullv4 | ExportPageModelv4
+	snapshot: ClientImportObject
 	instanceRemap: Record<string, string | undefined>
 	setInstanceRemap: React.Dispatch<React.SetStateAction<Record<string, string | undefined>>>
 	doImport: (importPageNumber: number, pageNumber: number, instanceRemap: Record<string, string | undefined>) => void
@@ -94,7 +94,7 @@ export function ImportPageWizard({ snapshot, instanceRemap, setInstanceRemap, do
 							</CButton>
 
 							<ButtonGridHeader
-								pageNumber={isSinglePage ? snapshot.oldPageNumber : importPageNumber}
+								pageNumber={isSinglePage ? snapshot.oldPageNumber ?? 1 : importPageNumber}
 								changePage={isSinglePage ? undefined : changeImportPage}
 								setPage={isSinglePage ? undefined : setImportPageNumber}
 							/>
@@ -103,7 +103,7 @@ export function ImportPageWizard({ snapshot, instanceRemap, setInstanceRemap, do
 							{hasBeenRendered && sourceGridSize && (
 								<ButtonInfiniteGrid
 									ref={sourceGridRef}
-									pageNumber={isSinglePage ? snapshot.oldPageNumber : importPageNumber}
+									pageNumber={isSinglePage ? snapshot.oldPageNumber ?? 1 : importPageNumber}
 									gridSize={sourceGridSize}
 									buttonIconFactory={ButtonImportPreview}
 								/>
@@ -163,7 +163,7 @@ export function ImportPageWizard({ snapshot, instanceRemap, setInstanceRemap, do
 }
 
 interface ImportRemapProps {
-	snapshot: { instances?: ExportInstancesv4 }
+	snapshot: ClientImportObject
 	instanceRemap: Record<string, string | undefined>
 	setInstanceRemap: (fromId: string, toId: string) => void
 }

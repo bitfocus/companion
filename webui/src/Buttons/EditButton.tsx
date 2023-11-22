@@ -40,10 +40,11 @@ import React, {
 	useState,
 	useMemo,
 	memo,
+	FormEvent,
 } from 'react'
 import { nanoid } from 'nanoid'
-import { ButtonPreview } from '../Components/ButtonPreview'
-import { GenericConfirmModal } from '../Components/GenericConfirmModal'
+import { ButtonPreviewBase } from '../Components/ButtonPreview'
+import { GenericConfirmModal, GenericConfirmModalRef } from '../Components/GenericConfirmModal'
 import {
 	KeyReceiver,
 	LoadingRetryOrError,
@@ -53,7 +54,7 @@ import {
 	PagesContext,
 } from '../util'
 import { ControlActionSetEditor } from '../Controls/ActionSetEditor'
-import jsonPatch from 'fast-json-patch'
+import jsonPatch, { Operation as JsonPatchOperation } from 'fast-json-patch'
 import { ButtonStyleConfig } from '../Controls/ButtonStyleConfig'
 import { ControlOptionsEditor } from '../Controls/ControlOptionsEditor'
 import { ControlFeedbacksEditor } from '../Controls/FeedbackEditor'
@@ -62,23 +63,33 @@ import { useElementSize } from 'usehooks-ts'
 import { GetStepIds } from '@companion/shared/Controls'
 import CSwitch from '../CSwitch'
 import { formatLocation } from '@companion/shared/ControlId'
+import { ControlLocation } from '@companion/shared/Model/Common'
+import { ActionInstance, ActionSetsModel, ActionStepOptions } from '@companion/shared/Model/ActionModel'
+import { FeedbackInstance } from '@companion/shared/Model/FeedbackModel'
+import { NormalButtonSteps, SomeButtonModel } from '@companion/shared/Model/ButtonModel'
 
-export const EditButton = memo(function EditButton({ location, onKeyUp, contentHeight }) {
+interface EditButtonProps {
+	location: ControlLocation
+	onKeyUp: (e: React.KeyboardEvent<HTMLDivElement>) => void
+	contentHeight: number
+}
+
+export const EditButton = memo(function EditButton({ location, onKeyUp, contentHeight }: EditButtonProps) {
 	const socket = useContext(SocketContext)
 	const pages = useContext(PagesContext)
 
 	const controlId = pages?.[location.pageNumber]?.controls?.[location.row]?.[location.column]
 
-	const resetModalRef = useRef()
+	const resetModalRef = useRef<GenericConfirmModalRef>(null)
 
-	const [previewImage, setPreviewImage] = useState(null)
-	const [config, setConfig] = useState(null)
+	const [previewImage, setPreviewImage] = useState<string | null>(null)
+	const [config, setConfig] = useState<SomeButtonModel | null>(null)
 	const [runtimeProps, setRuntimeProps] = useState(null)
 
-	const configRef = useRef()
-	configRef.current = config // update the ref every render
+	const configRef = useRef<SomeButtonModel>()
+	configRef.current = config ?? undefined // update the ref every render
 
-	const [configError, setConfigError] = useState(null)
+	const [configError, setConfigError] = useState<string | null>(null)
 
 	const [reloadConfigToken, setReloadConfigToken] = useState(nanoid())
 
@@ -100,7 +111,7 @@ export const EditButton = memo(function EditButton({ location, onKeyUp, contentH
 				setConfigError('Failed to load control config')
 			})
 
-		const patchConfig = (patch) => {
+		const patchConfig = (patch: JsonPatchOperation[]) => {
 			setConfig((oldConfig) => {
 				if (patch === false) {
 					return false
@@ -110,7 +121,7 @@ export const EditButton = memo(function EditButton({ location, onKeyUp, contentH
 			})
 		}
 
-		const patchRuntimeProps = (patch) => {
+		const patchRuntimeProps = (patch: JsonPatchOperation[]) => {
 			setRuntimeProps((oldProps) => {
 				if (patch === false) {
 					return {}
@@ -123,7 +134,7 @@ export const EditButton = memo(function EditButton({ location, onKeyUp, contentH
 		socket.on(`controls:config-${controlId}`, patchConfig)
 		socket.on(`controls:runtime-${controlId}`, patchRuntimeProps)
 
-		const updateImage = (img) => {
+		const updateImage = (img: string | null) => {
 			setPreviewImage(img)
 		}
 		socket.on(`controls:preview-${controlId}`, updateImage)
@@ -140,7 +151,7 @@ export const EditButton = memo(function EditButton({ location, onKeyUp, contentH
 	}, [socket, controlId, reloadConfigToken])
 
 	const setButtonType = useCallback(
-		(newType) => {
+		(newType: string) => {
 			let show_warning = false
 
 			const currentType = configRef.current?.type
@@ -162,7 +173,7 @@ export const EditButton = memo(function EditButton({ location, onKeyUp, contentH
 			}
 
 			if (show_warning) {
-				resetModalRef.current.show(
+				resetModalRef.current?.show(
 					`Change style`,
 					`Changing to this button style will erase actions and feedbacks configured for this button - continue?`,
 					'OK',
@@ -179,7 +190,7 @@ export const EditButton = memo(function EditButton({ location, onKeyUp, contentH
 
 	const doRetryLoad = useCallback(() => setReloadConfigToken(nanoid()), [])
 	const clearButton = useCallback(() => {
-		resetModalRef.current.show(
+		resetModalRef.current?.show(
 			`Clear button ${formatLocation(location)}`,
 			`This will clear the style, feedbacks and all actions`,
 			'Clear',
@@ -212,7 +223,7 @@ export const EditButton = memo(function EditButton({ location, onKeyUp, contentH
 		)
 	}, [socket, location])
 
-	const errors = []
+	const errors: string[] = []
 	if (configError) errors.push(configError)
 	const loadError = errors.length > 0 ? errors.join(', ') : null
 	const hasConfig = config || config === false
@@ -231,7 +242,7 @@ export const EditButton = memo(function EditButton({ location, onKeyUp, contentH
 				<>
 					<MyErrorBoundary>
 						<>
-							<ButtonPreview fixedSize preview={previewImage} right={true} />
+							<ButtonPreviewBase fixedSize preview={previewImage} right={true} />
 							{config.type === undefined && (
 								<CDropdown className="" style={{ display: 'inline-block', marginRight: -4 }}>
 									<CButtonGroup>
@@ -275,7 +286,7 @@ export const EditButton = memo(function EditButton({ location, onKeyUp, contentH
 								</CButton>
 							</CButtonGroup>{' '}
 							&nbsp;
-							{config?.options?.rotaryActions && (
+							{'options' in config && config?.options?.rotaryActions && (
 								<>
 									<CButton
 										color="warning"
@@ -336,10 +347,20 @@ export const EditButton = memo(function EditButton({ location, onKeyUp, contentH
 	)
 })
 
-function TabsSection({ style, controlId, location, steps, runtimeProps, rotaryActions, feedbacks }) {
+interface TabsSectionProps {
+	style: 'button' | 'pageup' | 'pagenum' | 'pagedown'
+	controlId: string
+	location: ControlLocation
+	steps: NormalButtonSteps
+	runtimeProps
+	rotaryActions: boolean
+	feedbacks: FeedbackInstance[]
+}
+
+function TabsSection({ style, controlId, location, steps, runtimeProps, rotaryActions, feedbacks }: TabsSectionProps) {
 	const socket = useContext(SocketContext)
 
-	const confirmRef = useRef()
+	const confirmRef = useRef<GenericConfirmModalRef>(null)
 
 	const tabsScrollRef = useRef(null)
 	const [tabsSizeRef] = useElementSize()
@@ -352,7 +373,7 @@ function TabsSection({ style, controlId, location, steps, runtimeProps, rotaryAc
 		[tabsSizeRef]
 	)
 
-	const clickSelectedStep = useCallback((newStep) => {
+	const clickSelectedStep = useCallback((newStep: string) => {
 		setSelectedStep(newStep)
 
 		// Let's reactivate this again if users start setting cars on fire because I removed it. -wv
@@ -380,7 +401,7 @@ function TabsSection({ style, controlId, location, steps, runtimeProps, rotaryAc
 	}, [keys, selectedStep])
 
 	const appendStep = useCallback(
-		(e) => {
+		(e: FormEvent) => {
 			if (e) e.preventDefault()
 
 			socketEmitPromise(socket, 'controls:step:add', [controlId])
@@ -397,8 +418,8 @@ function TabsSection({ style, controlId, location, steps, runtimeProps, rotaryAc
 		[socket, controlId]
 	)
 	const removeStep = useCallback(
-		(stepId) => {
-			confirmRef.current.show('Remove step', 'Are you sure you wish to remove this step?', 'Remove', () => {
+		(stepId: string) => {
+			confirmRef.current?.show('Remove step', 'Are you sure you wish to remove this step?', 'Remove', () => {
 				socketEmitPromise(socket, 'controls:step:remove', [controlId, stepId]).catch((e) => {
 					console.error('Failed to delete step:', e)
 				})
@@ -407,7 +428,7 @@ function TabsSection({ style, controlId, location, steps, runtimeProps, rotaryAc
 		[socket, controlId]
 	)
 	const swapSteps = useCallback(
-		(stepId1, stepId2) => {
+		(stepId1: string, stepId2: string) => {
 			socketEmitPromise(socket, 'controls:step:swap', [controlId, stepId1, stepId2])
 				.then(() => {
 					setSelectedStep(`step:${stepId2}`)
@@ -419,7 +440,7 @@ function TabsSection({ style, controlId, location, steps, runtimeProps, rotaryAc
 		[socket, controlId]
 	)
 	const setCurrentStep = useCallback(
-		(stepId) => {
+		(stepId: string) => {
 			socketEmitPromise(socket, 'controls:step:set-current', [controlId, stepId]).catch((e) => {
 				console.error('Failed to set step:', e)
 			})
@@ -428,7 +449,7 @@ function TabsSection({ style, controlId, location, steps, runtimeProps, rotaryAc
 	)
 
 	const appendSet = useCallback(
-		(stepId) => {
+		(stepId: string) => {
 			socketEmitPromise(socket, 'controls:action-set:add', [controlId, stepId]).catch((e) => {
 				console.error('Failed to append set:', e)
 			})
@@ -436,8 +457,8 @@ function TabsSection({ style, controlId, location, steps, runtimeProps, rotaryAc
 		[socket, controlId]
 	)
 	const removeSet = useCallback(
-		(stepId, setId) => {
-			confirmRef.current.show('Remove step', 'Are you sure you wish to remove this group?', 'Remove', () => {
+		(stepId: string, setId: string | number) => {
+			confirmRef.current?.show('Remove set', 'Are you sure you wish to remove this group?', 'Remove', () => {
 				socketEmitPromise(socket, 'controls:action-set:remove', [controlId, stepId, setId]).catch((e) => {
 					console.error('Failed to delete set:', e)
 				})
@@ -449,7 +470,7 @@ function TabsSection({ style, controlId, location, steps, runtimeProps, rotaryAc
 	if (style === 'button') {
 		const selectedIndex = keys.findIndex((k) => `step:${k}` === selectedStep)
 		const selectedKey = selectedIndex >= 0 && keys[selectedIndex]
-		const selectedStep2 = selectedKey && steps[selectedKey]
+		const selectedStep2 = selectedKey ? steps[selectedKey] : undefined
 
 		return (
 			<div key="button">
@@ -460,29 +481,29 @@ function TabsSection({ style, controlId, location, steps, runtimeProps, rotaryAc
 				<div ref={setTabsRef} className={'row-heading'}>
 					<CTabs activeTab={selectedStep} onActiveTabChange={clickSelectedStep}>
 						<CNav variant="tabs">
-							{keys.map((k, i) => (
-								<CNavItem key={k} className="nav-steps-special">
-									<CNavLink
-										data-tab={`step:${k}`}
-										className={(() => {
-											// if there's more than one step, we need to show the current step
-											const moreThanOneStep = keys.length > 1
-											// the current step is the one that is currently being executed
-											const isCurrent = runtimeProps.current_step_id === k
-											// both selected and the current step
-											const isActiveAndCurrent = k === selectedIndex && runtimeProps.current_step_id === k
+							{keys.map((k: string | number, i) => {
+								let linkClassname: string | undefined = undefined
 
-											if (moreThanOneStep) {
-												if (isActiveAndCurrent) return 'selected-and-active'
-												if (isCurrent) return 'only-current'
-											}
-										})()}
-										style={{}}
-									>
-										{i === 0 ? (keys.length > 1 ? 'Step ' + (i + 1) : 'Actions') : i + 1}
-									</CNavLink>
-								</CNavItem>
-							))}
+								// if there's more than one step, we need to show the current step
+								const moreThanOneStep = keys.length > 1
+								// the current step is the one that is currently being executed
+								const isCurrent = runtimeProps.current_step_id === k
+								// both selected and the current step
+								const isActiveAndCurrent = k === selectedIndex && runtimeProps.current_step_id === k
+
+								if (moreThanOneStep) {
+									if (isActiveAndCurrent) linkClassname = 'selected-and-active'
+									else if (isCurrent) linkClassname = 'only-current'
+								}
+
+								return (
+									<CNavItem key={k} className="nav-steps-special">
+										<CNavLink data-tab={`step:${k}`} className={linkClassname}>
+											{i === 0 ? (keys.length > 1 ? 'Step ' + (i + 1) : 'Actions') : i + 1}
+										</CNavLink>
+									</CNavItem>
+								)
+							})}
 
 							<CNavItem key="feedbacks" className="nav-steps-special">
 								<CNavLink data-tab="feedbacks">Feedbacks</CNavLink>
@@ -515,6 +536,8 @@ function TabsSection({ style, controlId, location, steps, runtimeProps, rotaryAc
 								controlId={controlId}
 								feedbacks={feedbacks}
 								location={location}
+								booleanOnly={false}
+								addPlaceholder="+ Add feedback"
 							/>
 						</MyErrorBoundary>
 					)}
@@ -551,7 +574,7 @@ function TabsSection({ style, controlId, location, steps, runtimeProps, rotaryAc
 									style={{ backgroundColor: '#f0f0f0', marginRight: 1 }}
 									title="Add step"
 									disabled={keys.length === 1}
-									onClick={() => appendStep()}
+									onClick={appendStep}
 								>
 									<FontAwesomeIcon icon={faPlus} />
 								</CButton>
@@ -630,17 +653,33 @@ function TabsSection({ style, controlId, location, steps, runtimeProps, rotaryAc
 	}
 }
 
-function EditActionsRelease({ controlId, location, action_sets, stepOptions, stepId, removeSet }) {
+interface EditActionsReleaseProps {
+	controlId: string
+	location: ControlLocation
+	action_sets: ActionSetsModel
+	stepOptions: ActionStepOptions
+	stepId: string
+	removeSet: (stepId: string, setId: string | number) => void
+}
+
+function EditActionsRelease({
+	controlId,
+	location,
+	action_sets,
+	stepOptions,
+	stepId,
+	removeSet,
+}: EditActionsReleaseProps) {
 	const socket = useContext(SocketContext)
 
-	const editRef = useRef(null)
+	const editRef = useRef<EditDurationGroupPropertiesModalRef>(null)
 
 	const configureSet = useCallback(
-		(oldId) => {
+		(oldId: string | number) => {
 			if (editRef.current) {
 				console.log(stepOptions, oldId)
 				const runWhileHeld = stepOptions.runWhileHeld.includes(Number(oldId))
-				editRef.current.show(Number(oldId), runWhileHeld, (newId, runWhileHeld) => {
+				editRef.current?.show(Number(oldId), runWhileHeld, (newId: number, runWhileHeld: boolean) => {
 					if (!isNaN(newId)) {
 						socketEmitPromise(socket, 'controls:action-set:rename', [controlId, stepId, oldId, newId])
 							.then(() => {
@@ -663,8 +702,10 @@ function EditActionsRelease({ controlId, location, action_sets, stepOptions, ste
 		[socket, controlId, stepId, stepOptions]
 	)
 
-	const candidate_sets = Object.entries(action_sets).filter(([id]) => !isNaN(id))
-	candidate_sets.sort((a, b) => Number(a[0]) - Number(b[0]))
+	const candidate_sets = Object.entries(action_sets)
+		.map((o): [number, ActionInstance[] | undefined] => [Number(o[0]), o[1]])
+		.filter(([id]) => !isNaN(id))
+	candidate_sets.sort((a, b) => a[0] - b[0])
 
 	const components = candidate_sets.map(([id, actions]) => {
 		const runWhileHeld = stepOptions.runWhileHeld.includes(Number(id))
@@ -714,25 +755,36 @@ function EditActionsRelease({ controlId, location, action_sets, stepOptions, ste
 	)
 }
 
-const EditDurationGroupPropertiesModal = forwardRef(function EditDurationGroupPropertiesModal(props, ref) {
-	const [data, setData] = useState(null)
+type EditDurationCompleteCallback = (duration: number, whileHeld: boolean) => void
+
+interface EditDurationGroupPropertiesModalRef {
+	show(duration: number, whileHeld: boolean, completeCallback: EditDurationCompleteCallback): void
+}
+
+interface EditDurationGroupPropertiesModalProps {
+	// Nothing
+}
+
+const EditDurationGroupPropertiesModal = forwardRef<
+	EditDurationGroupPropertiesModalRef,
+	EditDurationGroupPropertiesModalProps
+>(function EditDurationGroupPropertiesModal(_props, ref) {
+	const [data, setData] = useState<[number, EditDurationCompleteCallback] | null>(null)
 	const [show, setShow] = useState(false)
 
-	const [newDurationValue, setNewDurationValue] = useState(null)
-	const [newWhileHeldValue, setNewWhileHeldValue] = useState(null)
+	const [newDurationValue, setNewDurationValue] = useState<number | null>(null)
+	const [newWhileHeldValue, setNewWhileHeldValue] = useState<boolean | null>(null)
 
-	const buttonRef = useRef()
+	const buttonRef = useRef<HTMLButtonElement>(null)
 
 	const buttonFocus = () => {
-		if (buttonRef.current) {
-			buttonRef.current.focus()
-		}
+		buttonRef.current?.focus()
 	}
 
 	const doClose = useCallback(() => setShow(false), [])
 	const onClosed = useCallback(() => setData(null), [])
 	const doAction = useCallback(
-		(e) => {
+		(e: FormEvent) => {
 			if (e) e.preventDefault()
 
 			setData(null)
@@ -742,6 +794,7 @@ const EditDurationGroupPropertiesModal = forwardRef(function EditDurationGroupPr
 
 			// completion callback
 			const cb = data?.[1]
+			if (!cb || newDurationValue === null || newWhileHeldValue === null) return
 			cb(newDurationValue, newWhileHeldValue)
 		},
 		[data, newDurationValue, newWhileHeldValue]

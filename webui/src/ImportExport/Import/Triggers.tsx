@@ -6,10 +6,10 @@ import { useState } from 'react'
 import { ImportRemap } from './Page'
 import { NotifierContext, SocketContext, socketEmitPromise } from '../../util'
 import { useContext } from 'react'
-import type { ExportTriggersListv4 } from '@companion/shared/Model/ExportModel'
+import type { ClientImportObject } from '@companion/shared/Model/ImportExport'
 
 interface ImportTriggersTabProps {
-	snapshot: ExportTriggersListv4
+	snapshot: ClientImportObject
 	instanceRemap: Record<string, string | undefined>
 	setInstanceRemap: React.Dispatch<React.SetStateAction<Record<string, string | undefined>>>
 }
@@ -30,7 +30,10 @@ export function ImportTriggersTab({ snapshot, instanceRemap, setInstanceRemap }:
 		[setInstanceRemap]
 	)
 
-	const selectAllTriggers = useCallback(() => setSelectedTriggers(Object.keys(snapshot.triggers)), [snapshot.triggers])
+	const selectAllTriggers = useCallback(
+		() => setSelectedTriggers(Object.keys(snapshot.triggers ?? {})),
+		[snapshot.triggers]
+	)
 	const unselectAllTriggers = useCallback(() => setSelectedTriggers([]), [])
 
 	useEffect(() => selectAllTriggers(), [selectAllTriggers])

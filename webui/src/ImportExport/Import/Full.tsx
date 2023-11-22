@@ -17,10 +17,10 @@ import { faCalendar, faClock, faDownload, faFileImport, faGlobe } from '@fortawe
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { ImportPageWizard } from './Page'
 import { ImportTriggersTab } from './Triggers'
-import { ExportFullv4, SomeExportv4 } from '@companion/shared/Model/ExportModel'
+import { ClientImportObject } from '@companion/shared/Model/ImportExport'
 
 interface ImportFullWizardProps {
-	snapshot: SomeExportv4
+	snapshot: ClientImportObject
 	instanceRemap: Record<string, string | undefined>
 	setInstanceRemap: React.Dispatch<React.SetStateAction<Record<string, string | undefined>>>
 }
@@ -105,7 +105,7 @@ export function ImportFullWizard({ snapshot, instanceRemap, setInstanceRemap }: 
 }
 
 interface FullImportTabProps {
-	snapshot: ExportFullv4
+	snapshot: ClientImportObject
 }
 
 function FullImportTab({ snapshot }: FullImportTabProps) {

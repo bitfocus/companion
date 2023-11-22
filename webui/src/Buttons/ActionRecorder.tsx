@@ -708,10 +708,10 @@ function RecorderSession({ sessionId, sessionInfo }: RecorderSessionProps) {
 	const doActionReorder = useCallback(
 		(
 			_dragStepId: string,
-			_dragSetId: string,
+			_dragSetId: string | number,
 			dragIndex: number,
 			_dropStepId: string,
-			_dropSetId: string,
+			_dropSetId: string | number,
 			dropIndex: number
 		) => {
 			socketEmitPromise(socket, 'action-recorder:session:action-reorder', [sessionId, dragIndex, dropIndex]).catch(
