@@ -83,11 +83,11 @@ export const EditButton = memo(function EditButton({ location, onKeyUp, contentH
 	const resetModalRef = useRef<GenericConfirmModalRef>(null)
 
 	const [previewImage, setPreviewImage] = useState<string | null>(null)
-	const [config, setConfig] = useState<SomeButtonModel | null>(null)
-	const [runtimeProps, setRuntimeProps] = useState(null)
+	const [config, setConfig] = useState<SomeButtonModel | null | false>(null)
+	const [runtimeProps, setRuntimeProps] = useState<Record<string, any> | null | false>(null)
 
 	const configRef = useRef<SomeButtonModel>()
-	configRef.current = config ?? undefined // update the ref every render
+	configRef.current = config || undefined // update the ref every render
 
 	const [configError, setConfigError] = useState<string | null>(null)
 
@@ -111,22 +111,24 @@ export const EditButton = memo(function EditButton({ location, onKeyUp, contentH
 				setConfigError('Failed to load control config')
 			})
 
-		const patchConfig = (patch: JsonPatchOperation[]) => {
+		const patchConfig = (patch: JsonPatchOperation[] | false) => {
 			setConfig((oldConfig) => {
+				if (!oldConfig) return oldConfig
 				if (patch === false) {
 					return false
 				} else {
-					return jsonPatch.applyPatch(cloneDeep(oldConfig) || {}, patch).newDocument
+					return jsonPatch.applyPatch(cloneDeep(oldConfig), patch).newDocument
 				}
 			})
 		}
 
-		const patchRuntimeProps = (patch: JsonPatchOperation[]) => {
+		const patchRuntimeProps = (patch: JsonPatchOperation[] | false) => {
 			setRuntimeProps((oldProps) => {
+				if (!oldProps) return oldProps
 				if (patch === false) {
 					return {}
 				} else {
-					return jsonPatch.applyPatch(cloneDeep(oldProps) || {}, patch).newDocument
+					return jsonPatch.applyPatch(cloneDeep(oldProps), patch).newDocument
 				}
 			})
 		}
@@ -226,13 +228,13 @@ export const EditButton = memo(function EditButton({ location, onKeyUp, contentH
 	const errors: string[] = []
 	if (configError) errors.push(configError)
 	const loadError = errors.length > 0 ? errors.join(', ') : null
-	const hasConfig = config || config === false
-	const hasRuntimeProps = runtimeProps || runtimeProps === false
+	const hasConfig = !!config || config === false
+	const hasRuntimeProps = !!runtimeProps || runtimeProps === false
 	const dataReady = !loadError && hasConfig && hasRuntimeProps
 
 	// Tip: This query needs to match the page layout. It doesn't need to be reactive, as the useElementSize will force a re-render
-	const isTwoColumn = window.matchMedia('(min-width: 1200px)').matches
-	const [, { height: hintHeight }] = useElementSize()
+	// const isTwoColumn = window.matchMedia('(min-width: 1200px)').matches
+	// const [, { height: hintHeight }] = useElementSize()
 
 	return (
 		<KeyReceiver onKeyUp={onKeyUp} tabIndex={0} className="edit-button-panel flex-form">
@@ -240,10 +242,11 @@ export const EditButton = memo(function EditButton({ location, onKeyUp, contentH
 			<LoadingRetryOrError dataReady={dataReady} error={loadError} doRetry={doRetryLoad} />
 			{hasConfig && dataReady && (
 				<>
-					<MyErrorBoundary>
-						<>
-							<ButtonPreviewBase fixedSize preview={previewImage} right={true} />
-							{config.type === undefined && (
+					<ButtonPreviewBase fixedSize preview={previewImage} right={true} />
+					{!config ||
+						(config.type === undefined && (
+							<MyErrorBoundary>
+								{' '}
 								<CDropdown className="" style={{ display: 'inline-block', marginRight: -4 }}>
 									<CButtonGroup>
 										{/* This could be simplified to use the split property on CDropdownToggle, but then onClick doesnt work https://github.com/coreui/coreui-react/issues/179 */}
@@ -266,80 +269,79 @@ export const EditButton = memo(function EditButton({ location, onKeyUp, contentH
 										<CDropdownItem onClick={() => setButtonType('pagedown')}>Page down</CDropdownItem>
 									</CDropdownMenu>
 								</CDropdown>
-							)}
-							&nbsp;
-							<CButton color="danger" hidden={!config} onClick={clearButton} title="Clear Button">
-								<FontAwesomeIcon icon={faTrashAlt} />
+							</MyErrorBoundary>
+						))}
+					&nbsp;
+					<MyErrorBoundary>
+						<CButton color="danger" hidden={!config} onClick={clearButton} title="Clear Button">
+							<FontAwesomeIcon icon={faTrashAlt} />
+						</CButton>
+						&nbsp;
+						<CButtonGroup>
+							<CButton
+								color="warning"
+								hidden={!config || config.type !== 'button'}
+								onMouseDown={hotPressDown}
+								onMouseUp={hotPressUp}
+								style={{ color: 'white' }}
+								title="Test press button"
+							>
+								<FontAwesomeIcon icon={faPlay} />
+								&nbsp;Test
+							</CButton>
+						</CButtonGroup>{' '}
+					</MyErrorBoundary>
+					&nbsp;
+					{config && 'options' in config && config?.options?.rotaryActions && (
+						<MyErrorBoundary>
+							<CButton color="warning" onMouseDown={hotRotateLeft} style={{ color: 'white' }} title="Test rotate left">
+								<FontAwesomeIcon icon={faUndo} />
 							</CButton>
 							&nbsp;
-							<CButtonGroup>
-								<CButton
-									color="warning"
-									hidden={!config || config.type !== 'button'}
-									onMouseDown={hotPressDown}
-									onMouseUp={hotPressUp}
-									style={{ color: 'white' }}
-									title="Test press button"
-								>
-									<FontAwesomeIcon icon={faPlay} />
-									&nbsp;Test
-								</CButton>
-							</CButtonGroup>{' '}
-							&nbsp;
-							{'options' in config && config?.options?.rotaryActions && (
-								<>
-									<CButton
-										color="warning"
-										onMouseDown={hotRotateLeft}
-										style={{ color: 'white' }}
-										title="Test rotate left"
-									>
-										<FontAwesomeIcon icon={faUndo} />
-									</CButton>
-									&nbsp;
-									<CButton
-										color="warning"
-										onMouseDown={hotRotateRight}
-										style={{ color: 'white' }}
-										title="Test rotate right"
-									>
-										<FontAwesomeIcon icon={faRedo} />
-									</CButton>
-								</>
+							<CButton
+								color="warning"
+								onMouseDown={hotRotateRight}
+								style={{ color: 'white' }}
+								title="Test rotate right"
+							>
+								<FontAwesomeIcon icon={faRedo} />
+							</CButton>
+						</MyErrorBoundary>
+					)}
+					{controlId && config && config.type === 'button' && (
+						<>
+							<MyErrorBoundary>
+								<ButtonStyleConfig
+									controlType={config.type}
+									style={config.style}
+									configRef={configRef}
+									controlId={controlId}
+									mainDialog
+								/>
+
+								<div style={{ marginLeft: '5px' }}>
+									<ControlOptionsEditor
+										controlType={config.type}
+										options={config.options}
+										configRef={configRef}
+										controlId={controlId}
+									/>
+								</div>
+							</MyErrorBoundary>
+							{runtimeProps && (
+								<MyErrorBoundary>
+									<TabsSection
+										style={config.type}
+										location={location}
+										controlId={controlId}
+										steps={config.steps || {}}
+										runtimeProps={runtimeProps}
+										rotaryActions={config?.options?.rotaryActions}
+										feedbacks={config.feedbacks}
+									/>
+								</MyErrorBoundary>
 							)}
 						</>
-					</MyErrorBoundary>
-					<MyErrorBoundary>
-						<ButtonStyleConfig
-							controlType={config.type}
-							style={config.style}
-							configRef={configRef}
-							controlId={controlId}
-							mainDialog
-						/>
-
-						<div style={{ marginLeft: '5px' }}>
-							<ControlOptionsEditor
-								controlType={config.type}
-								options={config.options}
-								configRef={configRef}
-								controlId={controlId}
-							/>
-						</div>
-					</MyErrorBoundary>
-					{config && runtimeProps && (
-						<MyErrorBoundary>
-							<TabsSection
-								fillHeight={isTwoColumn ? contentHeight - hintHeight : 0}
-								style={config.type}
-								location={location}
-								controlId={controlId}
-								steps={config.steps || {}}
-								runtimeProps={runtimeProps}
-								rotaryActions={config?.options?.rotaryActions}
-								feedbacks={config.feedbacks}
-							/>
-						</MyErrorBoundary>
 					)}
 				</>
 			)}
@@ -352,7 +354,7 @@ interface TabsSectionProps {
 	controlId: string
 	location: ControlLocation
 	steps: NormalButtonSteps
-	runtimeProps
+	runtimeProps: Record<string, any>
 	rotaryActions: boolean
 	feedbacks: FeedbackInstance[]
 }
@@ -588,7 +590,7 @@ function TabsSection({ style, controlId, location, steps, runtimeProps, rotaryAc
 								</CButton>
 							</CButtonGroup>
 
-							{rotaryActions && (
+							{rotaryActions && selectedStep2 && (
 								<>
 									<MyErrorBoundary>
 										<ControlActionSetEditor
@@ -616,26 +618,30 @@ function TabsSection({ style, controlId, location, steps, runtimeProps, rotaryAc
 								</>
 							)}
 
-							<MyErrorBoundary>
-								<ControlActionSetEditor
-									heading={`Press actions`}
-									controlId={controlId}
-									location={location}
-									stepId={selectedKey}
-									setId="down"
-									addPlaceholder={`+ Add press action`}
-									actions={selectedStep2.action_sets['down']}
-								/>
-							</MyErrorBoundary>
+							{selectedStep2 && (
+								<>
+									<MyErrorBoundary>
+										<ControlActionSetEditor
+											heading={`Press actions`}
+											controlId={controlId}
+											location={location}
+											stepId={selectedKey}
+											setId="down"
+											addPlaceholder={`+ Add press action`}
+											actions={selectedStep2.action_sets['down']}
+										/>
+									</MyErrorBoundary>
 
-							<EditActionsRelease
-								controlId={controlId}
-								location={location}
-								action_sets={selectedStep2.action_sets}
-								stepOptions={selectedStep2.options}
-								stepId={selectedKey}
-								removeSet={removeSet}
-							/>
+									<EditActionsRelease
+										controlId={controlId}
+										location={location}
+										action_sets={selectedStep2.action_sets}
+										stepOptions={selectedStep2.options}
+										stepId={selectedKey}
+										removeSet={removeSet}
+									/>
+								</>
+							)}
 
 							<br />
 							<p>

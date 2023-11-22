@@ -5,12 +5,14 @@ import { AlignmentInputField, ColorInputField, DropdownInputField, PNGInputField
 import { FONT_SIZES, SHOW_HIDE_TOP_BAR } from '../Constants'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faDollarSign, faFont, faQuestionCircle, faTrash } from '@fortawesome/free-solid-svg-icons'
+import { SomeButtonModel } from '@companion/shared/Model/ButtonModel'
+import { ButtonStyleProperties } from '@companion/shared/Model/StyleModel'
 
 interface ButtonStyleConfigProps {
 	controlId: string
 	controlType: string
 	style: Record<string, any>
-	configRef: MutableRefObject<{ style: Record<string, any> }>
+	configRef: MutableRefObject<SomeButtonModel | undefined>
 	mainDialog?: boolean
 }
 
@@ -41,8 +43,12 @@ export function ButtonStyleConfig({
 	)
 
 	const setValueInner = useCallback(
-		(key, value) => {
-			if (configRef.current === undefined || value !== configRef.current.style[key]) {
+		(key: string, value: any) => {
+			const currentConfig = configRef.current
+			if (
+				!currentConfig ||
+				(currentConfig.type === 'button' && value !== currentConfig.style[key as keyof ButtonStyleProperties])
+			) {
 				socketEmitPromise(socket, 'controls:set-style-fields', [
 					controlId,
 					{

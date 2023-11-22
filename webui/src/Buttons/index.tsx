@@ -7,23 +7,28 @@ import { SocketContext, MyErrorBoundary, socketEmitPromise, UserConfigContext } 
 import { ButtonsGridPanel } from './ButtonGridPanel'
 import { EditButton } from './EditButton'
 import { ActionRecorder } from './ActionRecorder'
-import { memo, useCallback, useContext, useRef, useState } from 'react'
-import { GenericConfirmModal } from '../Components/GenericConfirmModal'
+import React, { memo, useCallback, useContext, useRef, useState } from 'react'
+import { GenericConfirmModal, GenericConfirmModalRef } from '../Components/GenericConfirmModal'
 import { ConnectionVariables } from './Variables'
 import { useElementSize } from 'usehooks-ts'
 import { formatLocation } from '@companion/shared/ControlId'
+import { ControlLocation } from '@companion/shared/Model/Common'
 
-export const ButtonsPage = memo(function ButtonsPage({ hotPress }) {
+interface ButtonsPageProps {
+	hotPress: boolean
+}
+
+export const ButtonsPage = memo(function ButtonsPage({ hotPress }: ButtonsPageProps) {
 	const socket = useContext(SocketContext)
 	const userConfig = useContext(UserConfigContext)
 
-	const clearModalRef = useRef()
+	const clearModalRef = useRef<GenericConfirmModalRef>(null)
 
 	const [tabResetToken, setTabResetToken] = useState(nanoid())
 	const [activeTab, setActiveTab] = useState('presets')
-	const [selectedButton, setSelectedButton] = useState(null)
+	const [selectedButton, setSelectedButton] = useState<ControlLocation | null>(null)
 	const [pageNumber, setPageNumber] = useState(1)
-	const [copyFromButton, setCopyFromButton] = useState(null)
+	const [copyFromButton, setCopyFromButton] = useState<[ControlLocation, string] | null>(null)
 
 	const doChangeTab = useCallback((newTab) => {
 		setActiveTab((oldTab) => {
@@ -61,7 +66,7 @@ export const ButtonsPage = memo(function ButtonsPage({ hotPress }) {
 				switch (e.key) {
 					case 'ArrowDown':
 						setSelectedButton((selectedButton) => {
-							if (selectedButton) {
+							if (selectedButton && userConfig?.gridSize) {
 								return {
 									...selectedButton,
 									row:
@@ -69,13 +74,15 @@ export const ButtonsPage = memo(function ButtonsPage({ hotPress }) {
 											? userConfig.gridSize.minRow
 											: selectedButton.row + 1,
 								}
+							} else {
+								return selectedButton
 							}
 						})
 						// TODO - ensure kept in view
 						break
 					case 'ArrowUp':
 						setSelectedButton((selectedButton) => {
-							if (selectedButton) {
+							if (selectedButton && userConfig?.gridSize) {
 								return {
 									...selectedButton,
 									row:
@@ -83,13 +90,15 @@ export const ButtonsPage = memo(function ButtonsPage({ hotPress }) {
 											? userConfig.gridSize.maxRow
 											: selectedButton.row - 1,
 								}
+							} else {
+								return selectedButton
 							}
 						})
 						// TODO - ensure kept in view
 						break
 					case 'ArrowLeft':
 						setSelectedButton((selectedButton) => {
-							if (selectedButton) {
+							if (selectedButton && userConfig?.gridSize) {
 								return {
 									...selectedButton,
 									column:
@@ -97,13 +106,15 @@ export const ButtonsPage = memo(function ButtonsPage({ hotPress }) {
 											? userConfig.gridSize.maxColumn
 											: selectedButton.column - 1,
 								}
+							} else {
+								return selectedButton
 							}
 						})
 						// TODO - ensure kept in view
 						break
 					case 'ArrowRight':
 						setSelectedButton((selectedButton) => {
-							if (selectedButton) {
+							if (selectedButton && userConfig?.gridSize) {
 								return {
 									...selectedButton,
 									column:
@@ -111,6 +122,8 @@ export const ButtonsPage = memo(function ButtonsPage({ hotPress }) {
 											? userConfig.gridSize.minColumn
 											: selectedButton.column + 1,
 								}
+							} else {
+								return selectedButton
 							}
 						})
 						// TODO - ensure kept in view
@@ -124,6 +137,8 @@ export const ButtonsPage = memo(function ButtonsPage({ hotPress }) {
 									...selectedButton,
 									pageNumber: newPageNumber,
 								}
+							} else {
+								return selectedButton
 							}
 						})
 						break
@@ -136,6 +151,8 @@ export const ButtonsPage = memo(function ButtonsPage({ hotPress }) {
 									...selectedButton,
 									pageNumber: newPageNumber,
 								}
+							} else {
+								return selectedButton
 							}
 						})
 						break
@@ -145,7 +162,7 @@ export const ButtonsPage = memo(function ButtonsPage({ hotPress }) {
 					// keyup with button selected
 
 					if (!e.ctrlKey && !e.metaKey && !e.altKey && (e.key === 'Backspace' || e.key === 'Delete')) {
-						clearModalRef.current.show(
+						clearModalRef.current?.show(
 							`Clear button ${formatLocation(selectedButton)}`,
 							`This will clear the style, feedbacks and all actions`,
 							'Clear',
@@ -185,7 +202,7 @@ export const ButtonsPage = memo(function ButtonsPage({ hotPress }) {
 				}
 			}
 		},
-		[socket, selectedButton, copyFromButton]
+		[socket, selectedButton, copyFromButton, userConfig?.gridSize]
 	)
 
 	const [contentRef, { height: contentHeight }] = useElementSize()
