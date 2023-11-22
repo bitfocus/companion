@@ -5,17 +5,16 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faAdd, faCog, faFolderOpen, faSync, faTrash } from '@fortawesome/free-solid-svg-icons'
 import { TextInputField } from '../Components/TextInputField'
 import { useMemo } from 'react'
-import { GenericConfirmModal } from '../Components/GenericConfirmModal'
-import { SurfaceEditModal } from './EditModal'
+import { GenericConfirmModal, GenericConfirmModalRef } from '../Components/GenericConfirmModal'
+import { SurfaceEditModal, SurfaceEditModalRef } from './EditModal'
+import { AvailableDeviceInfo, OfflineDeviceInfo } from '@companion/shared/Model/Surfaces'
 
 export const SurfacesPage = memo(function SurfacesPage() {
 	const socket = useContext(SocketContext)
 	const surfaces = useContext(SurfacesContext)
 
-	const confirmRef = useRef(null)
-
 	const surfacesList = useMemo(() => {
-		const ary = Object.values(surfaces.available)
+		const ary = Object.values(surfaces.available).filter((s): s is AvailableDeviceInfo => !!s)
 
 		ary.sort((a, b) => {
 			if (a.index !== b.index) {
@@ -29,7 +28,7 @@ export const SurfacesPage = memo(function SurfacesPage() {
 		return ary
 	}, [surfaces.available])
 	const offlineSurfacesList = useMemo(() => {
-		const ary = Object.values(surfaces.offline)
+		const ary = Object.values(surfaces.offline).filter((s): s is OfflineDeviceInfo => !!s)
 
 		ary.sort((a, b) => {
 			if (a.index !== b.index) {
@@ -43,17 +42,15 @@ export const SurfacesPage = memo(function SurfacesPage() {
 		return ary
 	}, [surfaces.offline])
 
-	const editModalRef = useRef()
-	const confirmModalRef = useRef(null)
+	const editModalRef = useRef<SurfaceEditModalRef>(null)
+	const confirmRef = useRef<GenericConfirmModalRef>(null)
 
 	const [scanning, setScanning] = useState(false)
 	const [scanError, setScanError] = useState(null)
 
 	useEffect(() => {
 		// If surface disappears, hide the edit modal
-		if (editModalRef.current) {
-			editModalRef.current.ensureIdIsValid(Object.keys(surfaces))
-		}
+		editModalRef.current?.ensureIdIsValid(Object.keys(surfaces))
 	}, [surfaces])
 
 	const refreshUSB = useCallback(() => {
@@ -90,12 +87,12 @@ export const SurfacesPage = memo(function SurfacesPage() {
 	)
 
 	const configureSurface = useCallback((surface) => {
-		editModalRef.current.show(surface)
+		editModalRef.current?.show(surface)
 	}, [])
 
 	const forgetSurface = useCallback(
 		(surfaceId) => {
-			confirmModalRef.current.show(
+			confirmRef.current?.show(
 				'Forget Surface',
 				'Are you sure you want to forget this surface? Any settings will be lost',
 				'Forget',
@@ -120,8 +117,6 @@ export const SurfacesPage = memo(function SurfacesPage() {
 
 	return (
 		<div>
-			<GenericConfirmModal ref={confirmRef} />
-
 			<h4>Surfaces</h4>
 			<p>
 				These are the surfaces currently connected to companion. If your streamdeck is missing from this list, you might
@@ -153,7 +148,7 @@ export const SurfacesPage = memo(function SurfacesPage() {
 			<p>&nbsp;</p>
 
 			<SurfaceEditModal ref={editModalRef} />
-			<GenericConfirmModal ref={confirmModalRef} />
+			<GenericConfirmModal ref={confirmRef} />
 
 			<h5>Connected</h5>
 
@@ -219,7 +214,14 @@ export const SurfacesPage = memo(function SurfacesPage() {
 	)
 })
 
-function AvailableSurfaceRow({ surface, updateName, configureSurface, deleteEmulator }) {
+interface AvailableSurfaceRowProps {
+	surface: AvailableDeviceInfo
+	updateName: (surfaceId: string, name: string) => void
+	configureSurface: (surface: AvailableDeviceInfo) => void
+	deleteEmulator: (surfaceId: string) => void
+}
+
+function AvailableSurfaceRow({ surface, updateName, configureSurface, deleteEmulator }: AvailableSurfaceRowProps) {
 	const updateName2 = useCallback((val) => updateName(surface.id, val), [updateName, surface.id])
 	const configureSurface2 = useCallback(() => configureSurface(surface), [configureSurface, surface])
 	const deleteEmulator2 = useCallback(() => deleteEmulator(surface.id), [deleteEmulator, surface.id])
@@ -255,7 +257,13 @@ function AvailableSurfaceRow({ surface, updateName, configureSurface, deleteEmul
 	)
 }
 
-function OfflineSuraceRow({ surface, updateName, forgetSurface }) {
+interface OfflineSuraceRowProps {
+	surface: OfflineDeviceInfo
+	updateName: (surfaceId: string, name: string) => void
+	forgetSurface: (surfaceId: string) => void
+}
+
+function OfflineSuraceRow({ surface, updateName, forgetSurface }: OfflineSuraceRowProps) {
 	const updateName2 = useCallback((val) => updateName(surface.id, val), [updateName, surface.id])
 	const forgetSurface2 = useCallback(() => forgetSurface(surface.id), [forgetSurface, surface.id])
 

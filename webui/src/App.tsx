@@ -39,7 +39,7 @@ import { ConnectionsPage } from './Connections'
 import { ButtonsPage } from './Buttons'
 import { ContextData } from './ContextData'
 import { CloudPage } from './CloudPage'
-import { WizardModal, WIZARD_CURRENT_VERSION } from './Wizard'
+import { WizardModal, WIZARD_CURRENT_VERSION, WizardModalRef } from './Wizard'
 import { Navigate, useLocation } from 'react-router-dom'
 import { useIdleTimer } from 'react-idle-timer'
 import { ImportExport } from './ImportExport'
@@ -58,7 +58,7 @@ export default function App() {
 		const onConnected = () => {
 			setWasConnected((wasConnected0) => {
 				if (wasConnected0) {
-					window.location.reload(true)
+					window.location.reload()
 				} else {
 					setConnected(true)
 				}
@@ -162,7 +162,14 @@ export default function App() {
 	)
 }
 
-function AppMain({ connected, loadingComplete, loadingProgress, buttonGridHotPress }) {
+interface AppMainProps {
+	connected: boolean
+	loadingComplete: boolean
+	loadingProgress: number
+	buttonGridHotPress: boolean
+}
+
+function AppMain({ connected, loadingComplete, loadingProgress, buttonGridHotPress }: AppMainProps) {
 	const config = useContext(UserConfigContext)
 
 	const [showSidebar, setShowSidebar] = useState(true)
@@ -178,10 +185,10 @@ function AppMain({ connected, loadingComplete, loadingProgress, buttonGridHotPre
 		}
 	}, [canLock])
 
-	const wizardModal = useRef()
+	const wizardModal = useRef<WizardModalRef>(null)
 	const showWizard = useCallback(() => {
 		if (unlocked) {
-			wizardModal.current.show()
+			wizardModal.current?.show()
 		}
 	}, [unlocked])
 
@@ -229,16 +236,21 @@ function AppMain({ connected, loadingComplete, loadingProgress, buttonGridHotPre
 	)
 }
 
+interface IdleTimerWrapperProps {
+	setLocked: () => void
+	timeoutMinutes: number
+}
+
 /** Wrap the idle timer in its own component, as it invalidates every second */
-function IdleTimerWrapper({ setLocked, timeoutMinutes }) {
+function IdleTimerWrapper({ setLocked, timeoutMinutes }: IdleTimerWrapperProps) {
 	const notifier = useContext(NotifierContext)
 
-	const [, setIdleTimeout] = useState(null)
+	const [, setIdleTimeout] = useState<NodeJS.Timeout | null>(null)
 
 	const TOAST_ID = 'SESSION_TIMEOUT_TOAST'
 	const TOAST_DURATION = 45 * 1000
 
-	const handleOnActive = (event) => {
+	const handleOnActive = () => {
 		// user is now active, abort the lock
 		setIdleTimeout((v) => {
 			if (v) {
@@ -253,15 +265,15 @@ function IdleTimerWrapper({ setLocked, timeoutMinutes }) {
 			return null
 		})
 	}
-	const handleAction = (event) => {
+	const handleAction = () => {
 		// setShouldShowIdleWarning(false)
 	}
 
 	const handleIdle = () => {
-		notifier.current.show(
+		notifier.current?.show(
 			'Session timeout',
 			'Your session is about to timeout, and Companion will be locked',
-			null,
+			undefined,
 			TOAST_ID
 		)
 
@@ -305,10 +317,15 @@ function IdleTimerWrapper({ setLocked, timeoutMinutes }) {
 		}
 	})
 
-	return ''
+	return null
 }
 
-function AppLoading({ progress, connected }) {
+interface AppLoadingProps {
+	progress: number
+	connected: boolean
+}
+
+function AppLoading({ progress, connected }: AppLoadingProps) {
 	const message = connected ? 'Syncing' : 'Connecting'
 	return (
 		<CContainer fluid className="fadeIn loading">
@@ -325,7 +342,11 @@ function AppLoading({ progress, connected }) {
 	)
 }
 
-function AppAuthWrapper({ setUnlocked }) {
+interface AppAuthWrapperProps {
+	setUnlocked: () => void
+}
+
+function AppAuthWrapper({ setUnlocked }: AppAuthWrapperProps) {
 	const config = useContext(UserConfigContext)
 
 	const [password, setPassword] = useState('')
@@ -341,7 +362,7 @@ function AppAuthWrapper({ setUnlocked }) {
 			e.preventDefault()
 
 			setPassword((currentPassword) => {
-				if (currentPassword === config.admin_password) {
+				if (currentPassword === config?.admin_password) {
 					setShowError(false)
 					setUnlocked()
 					return ''
@@ -354,7 +375,7 @@ function AppAuthWrapper({ setUnlocked }) {
 
 			return false
 		},
-		[config.admin_password, setUnlocked]
+		[config?.admin_password, setUnlocked]
 	)
 
 	return (
@@ -370,6 +391,7 @@ function AppAuthWrapper({ setUnlocked }) {
 								value={password}
 								onChange={(e) => passwordChanged(e.currentTarget.value)}
 								invalid={showError}
+								readOnly={!config}
 							/>
 							<CButton type="submit" color="primary">
 								Unlock
@@ -382,10 +404,14 @@ function AppAuthWrapper({ setUnlocked }) {
 	)
 }
 
-function AppContent({ buttonGridHotPress }) {
+interface AppContentProps {
+	buttonGridHotPress: boolean
+}
+
+function AppContent({ buttonGridHotPress }: AppContentProps) {
 	const routerLocation = useLocation()
 	let hasMatchedPane = false
-	const getClassForPane = (prefix) => {
+	const getClassForPane = (prefix: string) => {
 		// Require the path to be the same, or to be a prefix with a sub-route
 		if (routerLocation.pathname.startsWith(prefix + '/') || routerLocation.pathname === prefix) {
 			hasMatchedPane = true

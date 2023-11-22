@@ -5,8 +5,8 @@ import { UserConfigModel } from '@companion/shared/Model/UserConfigModel'
 
 export function useUserConfigSubscription(
 	socket: Socket,
-	setLoadError: ((error: string | null) => void) | undefined,
-	retryToken: string
+	setLoadError?: ((error: string | null) => void) | undefined,
+	retryToken?: string
 ) {
 	const [userConfig, setUserConfig] = useState<UserConfigModel | null>(null)
 

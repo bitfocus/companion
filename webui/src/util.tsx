@@ -266,10 +266,11 @@ export function applyPatchOrReplaceSubObject<T extends object | undefined>(
 	oldDefinitions: Record<string, T>,
 	key: string,
 	patch: JsonPatchOperation[],
-	defVal: T
+	defVal: T | null
 ) {
 	if (oldDefinitions) {
 		const oldEntry = oldDefinitions[key] ?? defVal
+		if (!oldEntry) return oldDefinitions
 
 		const newDefinitions = { ...oldDefinitions }
 		if (!patch) {

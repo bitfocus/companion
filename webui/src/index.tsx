@@ -46,7 +46,7 @@ import { ConnectionDebug } from './ConnectionDebug'
 // 		},
 // 	})
 
-const socket = new io()
+const socket = io()
 if (window.location.hash && window.location.hash.includes('debug_socket')) {
 	socket.onAny(function (name, ...data) {
 		console.log('received event', name, data)

@@ -7,7 +7,9 @@ export interface NotificationsManagerRef {
 	close(messageId: string): void
 }
 
-type NotificationsManagerProps = Record<string, never>
+interface NotificationsManagerProps {
+	// Nothing
+}
 
 interface CurrentToast {
 	id: string

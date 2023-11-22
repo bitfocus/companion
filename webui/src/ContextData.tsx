@@ -19,31 +19,49 @@ import {
 	RecentActionsContext,
 	RecentFeedbacksContext,
 } from './util'
-import { NotificationsManager } from './Components/Notifications'
+import { NotificationsManager, NotificationsManagerRef } from './Components/Notifications'
 import { cloneDeep } from 'lodash-es'
-import jsonPatch from 'fast-json-patch'
+import jsonPatch, { Operation as JsonPatchOperation } from 'fast-json-patch'
 import { useUserConfigSubscription } from './Hooks/useUserConfigSubscription'
 import { usePagesInfoSubscription } from './Hooks/usePagesInfoSubscription'
+import type { ClientConnectionConfig, ClientEventDefinition, ModuleDisplayInfo } from '@companion/shared/Model/Common'
+import { InternalActionDefinition, InternalFeedbackDefinition } from '@companion/shared/Model/Options'
+import { AllVariableDefinitions, ModuleVariableDefinitions } from '@companion/shared/Model/Variables'
+import { CustomVariablesModel } from '@companion/shared/Model/CustomVariableModel'
+import { ClientDevicesList } from '@companion/shared/Model/Surfaces'
+import { ClientTriggerData } from '@companion/shared/Model/TriggerModel'
 
-export function ContextData({ children }) {
+interface ContextDataProps {
+	children: (progressPercent: number, loadingComplete: boolean) => React.JSX.Element | React.JSX.Element[]
+}
+
+export function ContextData({ children }: ContextDataProps) {
 	const socket = useContext(SocketContext)
 
-	const [eventDefinitions, setEventDefinitions] = useState(null)
-	const [connections, setConnections] = useState(null)
-	const [modules, setModules] = useState(null)
-	const [actionDefinitions, setActionDefinitions] = useState(null)
-	const [feedbackDefinitions, setFeedbackDefinitions] = useState(null)
-	const [variableDefinitions, setVariableDefinitions] = useState(null)
-	const [customVariables, setCustomVariables] = useState(null)
-	const [surfaces, setSurfaces] = useState(null)
-	const [triggers, setTriggers] = useState(null)
+	const [eventDefinitions, setEventDefinitions] = useState<Record<string, ClientEventDefinition | undefined> | null>(
+		null
+	)
+	const [connections, setConnections] = useState<Record<string, ClientConnectionConfig> | null>(null)
+	const [modules, setModules] = useState<Record<string, ModuleDisplayInfo> | null>(null)
+	const [actionDefinitions, setActionDefinitions] = useState<Record<
+		string,
+		Record<string, InternalActionDefinition | undefined> | undefined
+	> | null>(null)
+	const [feedbackDefinitions, setFeedbackDefinitions] = useState<Record<
+		string,
+		Record<string, InternalFeedbackDefinition | undefined> | undefined
+	> | null>(null)
+	const [variableDefinitions, setVariableDefinitions] = useState<AllVariableDefinitions | null>(null)
+	const [customVariables, setCustomVariables] = useState<CustomVariablesModel | null>(null)
+	const [surfaces, setSurfaces] = useState<ClientDevicesList | null>(null)
+	const [triggers, setTriggers] = useState<Record<string, ClientTriggerData | undefined> | null>(null)
 
-	const [recentActions, setRecentActions] = useState(() => {
+	const [recentActions, setRecentActions] = useState<string[]>(() => {
 		const recent = JSON.parse(window.localStorage.getItem('recent_actions') || '[]')
 		return Array.isArray(recent) ? recent : []
 	})
 
-	const trackRecentAction = useCallback((actionType) => {
+	const trackRecentAction = useCallback((actionType: string) => {
 		setRecentActions((existing) => {
 			const newActions = [actionType, ...existing.filter((v) => v !== actionType)].slice(0, 20)
 
@@ -60,12 +78,12 @@ export function ContextData({ children }) {
 		[recentActions, trackRecentAction]
 	)
 
-	const [recentFeedbacks, setRecentFeedbacks] = useState(() => {
+	const [recentFeedbacks, setRecentFeedbacks] = useState<string[]>(() => {
 		const recent = JSON.parse(window.localStorage.getItem('recent_feedbacks') || '[]')
 		return Array.isArray(recent) ? recent : []
 	})
 
-	const trackRecentFeedback = useCallback((feedbackType) => {
+	const trackRecentFeedback = useCallback((feedbackType: string) => {
 		setRecentFeedbacks((existing) => {
 			const newFeedbacks = [feedbackType, ...existing.filter((v) => v !== feedbackType)].slice(0, 20)
 
@@ -82,10 +100,10 @@ export function ContextData({ children }) {
 		[recentFeedbacks, trackRecentFeedback]
 	)
 
-	const completeVariableDefinitions = useMemo(() => {
+	const completeVariableDefinitions = useMemo<AllVariableDefinitions>(() => {
 		if (variableDefinitions) {
 			// Generate definitions for all the custom variables
-			const customVariableDefinitions = {}
+			const customVariableDefinitions: ModuleVariableDefinitions = {}
 			for (const [id, info] of Object.entries(customVariables || {})) {
 				customVariableDefinitions[`custom_${id}`] = {
 					label: info.description,
@@ -100,7 +118,7 @@ export function ContextData({ children }) {
 				},
 			}
 		} else {
-			return null
+			return {}
 		}
 	}, [customVariables, variableDefinitions])
 
@@ -153,22 +171,30 @@ export function ContextData({ children }) {
 					console.error('Failed to load custom values list', e)
 				})
 
-			const updateVariableDefinitions = (label, patch) => {
-				setVariableDefinitions((oldDefinitions) => applyPatchOrReplaceSubObject(oldDefinitions, label, patch, {}))
+			const updateVariableDefinitions = (label: string, patch: JsonPatchOperation[]) => {
+				setVariableDefinitions(
+					(oldDefinitions) =>
+						oldDefinitions &&
+						applyPatchOrReplaceSubObject<ModuleVariableDefinitions | undefined>(oldDefinitions, label, patch, {})
+				)
 			}
-			const updateFeedbackDefinitions = (id, patch) => {
-				setFeedbackDefinitions((oldDefinitions) => applyPatchOrReplaceSubObject(oldDefinitions, id, patch, {}))
+			const updateFeedbackDefinitions = (id: string, patch: JsonPatchOperation[]) => {
+				setFeedbackDefinitions(
+					(oldDefinitions) => oldDefinitions && applyPatchOrReplaceSubObject(oldDefinitions, id, patch, {})
+				)
 			}
-			const updateActionDefinitions = (id, patch) => {
-				setActionDefinitions((oldDefinitions) => applyPatchOrReplaceSubObject(oldDefinitions, id, patch, {}))
+			const updateActionDefinitions = (id: string, patch: JsonPatchOperation[]) => {
+				setActionDefinitions(
+					(oldDefinitions) => oldDefinitions && applyPatchOrReplaceSubObject(oldDefinitions, id, patch, {})
+				)
 			}
 
-			const updateCustomVariables = (patch) => {
-				setCustomVariables((oldVariables) => applyPatchOrReplaceObject(oldVariables, patch))
+			const updateCustomVariables = (patch: JsonPatchOperation[]) => {
+				setCustomVariables((oldVariables) => oldVariables && applyPatchOrReplaceObject(oldVariables, patch))
 			}
-			const updateTriggers = (controlId, patch) => {
+			const updateTriggers = (controlId: string, patch: JsonPatchOperation[]) => {
 				console.log('trigger', controlId, patch)
-				setTriggers((oldTriggers) => applyPatchOrReplaceSubObject(oldTriggers, controlId, patch, {}))
+				setTriggers((oldTriggers) => oldTriggers && applyPatchOrReplaceSubObject(oldTriggers, controlId, patch, null))
 			}
 
 			socketEmitPromise(socket, 'connections:subscribe', [])
@@ -180,10 +206,10 @@ export function ContextData({ children }) {
 					setConnections(null)
 				})
 
-			const patchInstances = (patch) => {
+			const patchInstances = (patch: JsonPatchOperation[] | false) => {
 				setConnections((oldConnections) => {
 					if (patch === false) {
-						return false
+						return {}
 					} else {
 						return jsonPatch.applyPatch(cloneDeep(oldConnections) || {}, patch).newDocument
 					}
@@ -191,10 +217,10 @@ export function ContextData({ children }) {
 			}
 			socket.on('connections:patch', patchInstances)
 
-			const patchModules = (patch) => {
+			const patchModules = (patch: JsonPatchOperation[] | false) => {
 				setModules((oldModules) => {
 					if (patch === false) {
-						return false
+						return {}
 					} else {
 						return jsonPatch.applyPatch(cloneDeep(oldModules) || {}, patch).newDocument
 					}
@@ -216,9 +242,9 @@ export function ContextData({ children }) {
 					console.error('Failed to load surfaces', e)
 				})
 
-			const patchSurfaces = (patch) => {
+			const patchSurfaces = (patch: JsonPatchOperation[]) => {
 				setSurfaces((oldSurfaces) => {
-					return jsonPatch.applyPatch(cloneDeep(oldSurfaces) || {}, patch).newDocument
+					return oldSurfaces && jsonPatch.applyPatch(cloneDeep(oldSurfaces) || {}, patch).newDocument
 				})
 			}
 			socket.on('surfaces:patch', patchSurfaces)
@@ -270,10 +296,12 @@ export function ContextData({ children }) {
 					console.error('Failed to unsubscribe from custom variables', e)
 				})
 			}
+		} else {
+			return
 		}
 	}, [socket])
 
-	const notifierRef = useRef()
+	const notifierRef = useRef<NotificationsManagerRef>(null)
 
 	const steps = [
 		eventDefinitions,
@@ -295,17 +323,17 @@ export function ContextData({ children }) {
 
 	return (
 		<NotifierContext.Provider value={notifierRef}>
-			<EventDefinitionsContext.Provider value={eventDefinitions}>
-				<ModulesContext.Provider value={modules}>
-					<ActionsContext.Provider value={actionDefinitions}>
-						<FeedbacksContext.Provider value={feedbackDefinitions}>
-							<ConnectionsContext.Provider value={connections}>
+			<EventDefinitionsContext.Provider value={eventDefinitions!}>
+				<ModulesContext.Provider value={modules!}>
+					<ActionsContext.Provider value={actionDefinitions!}>
+						<FeedbacksContext.Provider value={feedbackDefinitions!}>
+							<ConnectionsContext.Provider value={connections!}>
 								<VariableDefinitionsContext.Provider value={completeVariableDefinitions}>
-									<CustomVariableDefinitionsContext.Provider value={customVariables}>
+									<CustomVariableDefinitionsContext.Provider value={customVariables!}>
 										<UserConfigContext.Provider value={userConfig}>
-											<SurfacesContext.Provider value={surfaces}>
-												<PagesContext.Provider value={pages}>
-													<TriggersContext.Provider value={triggers}>
+											<SurfacesContext.Provider value={surfaces!}>
+												<PagesContext.Provider value={pages!}>
+													<TriggersContext.Provider value={triggers!}>
 														<RecentActionsContext.Provider value={recentActionsContext}>
 															<RecentFeedbacksContext.Provider value={recentFeedbacksContext}>
 																<NotificationsManager ref={notifierRef} />

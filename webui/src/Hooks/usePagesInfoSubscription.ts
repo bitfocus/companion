@@ -5,8 +5,8 @@ import type { PageModel } from '@companion/shared/Model/PageModel'
 
 export function usePagesInfoSubscription(
 	socket: Socket,
-	setLoadError: ((error: string | null) => void) | undefined,
-	retryToken: string
+	setLoadError?: ((error: string | null) => void) | undefined,
+	retryToken?: string
 ) {
 	const [pages, setPages] = useState<Record<number, PageModel | undefined> | null>(null)
 

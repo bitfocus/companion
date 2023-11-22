@@ -1,22 +1,27 @@
 import { useContext, useEffect, useMemo, useState } from 'react'
 import { SocketContext, socketEmitPromise } from '../util'
 import { nanoid } from 'nanoid'
+import { ControlLocation } from '@companion/shared/Model/Common'
+
+interface ImageState {
+	image: string | null
+	isUsed: boolean
+}
 
 /**
  * Load and retrieve a page from the shared button render cache
- * @param {string} sessionId Unique id of this accessor
- * @param {number | undefined} page Page number to load and retrieve
- * @param {boolean | undefined} disable Disable loading of this page
+ * @param location Location of the control to load
+ * @param disable Disable loading of this page
  * @returns
  */
-export function useButtonRenderCache(location, disable = false) {
+export function useButtonRenderCache(location: ControlLocation, disable = false) {
 	const socket = useContext(SocketContext)
 
 	const subId = useMemo(() => nanoid(), [])
 
 	// TODO - should these be managed a bit more centrally, and batched? It is likely that lots of subscribe/unsubscribe calls will happen at once (changing page/scrolling)
 
-	const [imageState, setImageState] = useState({ image: null, isUsed: false })
+	const [imageState, setImageState] = useState<ImageState>({ image: null, isUsed: false })
 
 	useEffect(() => {
 		if (disable) return
@@ -37,7 +42,7 @@ export function useButtonRenderCache(location, disable = false) {
 				console.error(e)
 			})
 
-		const changeHandler = (renderLocation, image, isUsed) => {
+		const changeHandler = (renderLocation: ControlLocation, image: string | null, isUsed: boolean) => {
 			if (terminated) return
 
 			if (

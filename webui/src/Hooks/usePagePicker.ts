@@ -1,9 +1,10 @@
+import { PageModel } from '@companion/shared/Model/PageModel'
 import { useCallback, useEffect, useRef, useState } from 'react'
 
-export function usePagePicker(pagesObj, initialPage) {
+export function usePagePicker(pagesObj: Record<number, PageModel | undefined>, initialPage: number) {
 	const [pageNumber, setPageNumber] = useState(Number(initialPage))
 
-	const pagesRef = useRef()
+	const pagesRef = useRef<Record<number, PageModel | undefined>>()
 	useEffect(() => {
 		// Avoid binding into callbacks
 		pagesRef.current = pagesObj
@@ -19,7 +20,7 @@ export function usePagePicker(pagesObj, initialPage) {
 				if (newIndex < 0) newIndex += pageNumbers.length
 				if (newIndex >= pageNumbers.length) newIndex -= pageNumbers.length
 
-				newPage = pageNumbers[newIndex]
+				newPage = Number(pageNumbers[newIndex])
 			}
 
 			return newPage ?? pageNumber
