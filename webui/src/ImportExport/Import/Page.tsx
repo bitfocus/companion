@@ -15,6 +15,7 @@ import {
 	ButtonGridIcon,
 	ButtonGridIconBase,
 	ButtonInfiniteGrid,
+	ButtonInfiniteGridButtonProps,
 	ButtonInfiniteGridRef,
 } from '../../Buttons/ButtonInfiniteGrid'
 import { faHome } from '@fortawesome/free-solid-svg-icons'
@@ -229,7 +230,7 @@ export function ImportRemap({ snapshot, instanceRemap, setInstanceRemap }: Impor
 	)
 }
 
-function ButtonImportPreview({ ...props }) {
+function ButtonImportPreview({ ...props }: ButtonInfiniteGridButtonProps) {
 	const socket = useContext(SocketContext)
 	const [previewImage, setPreviewImage] = useState(null)
 

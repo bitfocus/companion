@@ -1,6 +1,6 @@
 import React, { useContext, useState } from 'react'
 import { nanoid } from 'nanoid'
-import { ButtonPreview, ButtonPreviewBase } from '../Components/ButtonPreview.js'
+import { ButtonPreviewBase } from '../Components/ButtonPreview.js'
 import { SocketContext, socketEmitPromise } from '../util.js'
 import { useDeepCompareEffect } from 'use-deep-compare'
 import { ControlLocation } from '@companion/shared/Model/Common.js'
