@@ -1,5 +1,6 @@
 import type {
 	CompanionButtonStyleProps,
+	CompanionInputFieldBase,
 	SomeCompanionActionInputField,
 	SomeCompanionFeedbackInputField,
 } from '@companion-module/base'
@@ -44,20 +45,24 @@ export type InternalInputField = (
 ) &
 	Omit<import('@companion-module/base').CompanionInputFieldBase, 'type'>
 
+export type EncodeIsVisible2<T extends Pick<CompanionInputFieldBase, 'id' | 'isVisible'>> = Omit<T, 'isVisible'> & {
+	isVisibleFn?: string
+}
+
 export type InternalActionInputField = SomeCompanionActionInputField | InternalInputField
 export type InternalFeedbackInputField = SomeCompanionFeedbackInputField | InternalInputField
 
 export interface ActionDefinition {
 	label: string
 	description: string | undefined
-	options: InternalActionInputField[]
+	options: EncodeIsVisible2<InternalActionInputField>[]
 	hasLearn?: boolean
 }
 
 export interface FeedbackDefinition {
 	label: string
 	description: string | undefined
-	options: InternalFeedbackInputField[]
+	options: EncodeIsVisible2<InternalFeedbackInputField>[]
 	type: 'advanced' | 'boolean'
 	style: Partial<CompanionButtonStyleProps> | undefined
 	hasLearn: boolean
@@ -68,6 +73,11 @@ export interface InternalFeedbackDefinition extends FeedbackDefinition {
 	showButtonPreview?: boolean
 }
 
-export interface InternalActionDefinition extends ActionDefinition {
+export interface InternalActionDefinition extends Omit<ActionDefinition, 'options'> {
 	showButtonPreview?: boolean
+	options: InternalActionInputField[]
+}
+
+export interface ClientActionDefinition extends Omit<InternalActionDefinition, 'options'> {
+	options: EncodeIsVisible2<InternalActionInputField>[]
 }
