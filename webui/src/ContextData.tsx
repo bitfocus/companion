@@ -25,7 +25,7 @@ import jsonPatch, { Operation as JsonPatchOperation } from 'fast-json-patch'
 import { useUserConfigSubscription } from './Hooks/useUserConfigSubscription'
 import { usePagesInfoSubscription } from './Hooks/usePagesInfoSubscription'
 import type { ClientConnectionConfig, ClientEventDefinition, ModuleDisplayInfo } from '@companion/shared/Model/Common'
-import { InternalActionDefinition, InternalFeedbackDefinition } from '@companion/shared/Model/Options'
+import { ClientActionDefinition, InternalFeedbackDefinition } from '@companion/shared/Model/Options'
 import { AllVariableDefinitions, ModuleVariableDefinitions } from '@companion/shared/Model/Variables'
 import { CustomVariablesModel } from '@companion/shared/Model/CustomVariableModel'
 import { ClientDevicesList } from '@companion/shared/Model/Surfaces'
@@ -45,7 +45,7 @@ export function ContextData({ children }: ContextDataProps) {
 	const [modules, setModules] = useState<Record<string, ModuleDisplayInfo> | null>(null)
 	const [actionDefinitions, setActionDefinitions] = useState<Record<
 		string,
-		Record<string, InternalActionDefinition | undefined> | undefined
+		Record<string, ClientActionDefinition | undefined> | undefined
 	> | null>(null)
 	const [feedbackDefinitions, setFeedbackDefinitions] = useState<Record<
 		string,

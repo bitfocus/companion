@@ -17,7 +17,7 @@ import type {
 	ModuleDisplayInfo,
 } from '@companion/shared/Model/Common.js'
 import type { ClientTriggerData } from '@companion/shared/Model/TriggerModel.js'
-import type { InternalFeedbackDefinition, InternalActionDefinition } from '@companion/shared/Model/Options.js'
+import type { InternalFeedbackDefinition, ClientActionDefinition } from '@companion/shared/Model/Options.js'
 import type { UserConfigModel } from '@companion/shared/Model/UserConfigModel.js'
 import type { ClientDevicesList } from '@companion/shared/Model/Surfaces.js'
 import type { PageModel } from '@companion/shared/Model/PageModel.js'
@@ -33,7 +33,7 @@ export const NotifierContext = React.createContext<React.RefObject<Notifications
 })*/
 export const ModulesContext = React.createContext<Record<string, ModuleDisplayInfo>>({})
 export const ActionsContext = React.createContext<
-	Record<string, Record<string, InternalActionDefinition | undefined> | undefined>
+	Record<string, Record<string, ClientActionDefinition | undefined> | undefined>
 >({})
 export const FeedbacksContext = React.createContext<
 	Record<string, Record<string, InternalFeedbackDefinition | undefined> | undefined>

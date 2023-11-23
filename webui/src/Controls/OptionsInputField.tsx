@@ -11,7 +11,7 @@ import { InternalCustomVariableDropdown, InternalInstanceField } from './Interna
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faDollarSign, faQuestionCircle } from '@fortawesome/free-solid-svg-icons'
 import { SomeCompanionActionInputField, SomeCompanionFeedbackInputField } from '@companion-module/base'
-import { InternalActionInputField } from '@companion/shared/Model/Options.js'
+import { InternalActionInputField, InternalFeedbackInputField } from '@companion/shared/Model/Options.js'
 import classNames from 'classnames'
 
 interface OptionsInputFieldProps {
@@ -19,7 +19,7 @@ interface OptionsInputFieldProps {
 	isOnControl: boolean
 	isAction: boolean
 	actionId: string
-	option: SomeCompanionActionInputField | SomeCompanionFeedbackInputField | InternalActionInputField
+	option: InternalActionInputField | InternalFeedbackInputField
 	value: any
 	setValue: (actionId: string, key: string, value: any) => void
 	visibility: boolean

@@ -15,7 +15,6 @@ import { dsanMastercueKeymap, keyboardKeymap, logitecKeymap } from './Keymaps.js
 import { ButtonPreview } from '../Components/ButtonPreview.js'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faCancel, faExpand } from '@fortawesome/free-solid-svg-icons'
-import { formatLocation } from '@companion/shared/ControlId.js'
 import { ControlLocation, EmulatorConfig, EmulatorImage } from '@companion/shared/Model/Common.js'
 import { Operation as JsonPatchOperation } from 'fast-json-patch'
 
@@ -303,7 +302,7 @@ function CyclePages({ imageCache, setKeyDown, columns, rows }: CyclePagesProps) 
 														row={y}
 														preview={imageCache[y]?.[x]}
 														onClick={buttonClick}
-														title={`Button ${formatLocation(location)}`}
+														title={`Button ${y}/${x}`}
 													/>
 												)
 											})}
