@@ -52,6 +52,7 @@ export function InternalInstanceField(option, isOnControl, readonly, value, setV
 					value={value}
 					setValue={setValue}
 					includeSelf={option.includeSelf}
+					useRawSurfaces={option.useRawSurfaces}
 				/>
 			)
 		case 'internal:trigger':
@@ -181,8 +182,8 @@ function InternalVariableDropdown({ value, setValue, disabled }) {
 	)
 }
 
-function InternalSurfaceBySerialDropdown({ isOnControl, value, setValue, disabled, includeSelf }) {
-	const context = useContext(SurfacesContext)
+function InternalSurfaceBySerialDropdown({ isOnControl, value, setValue, disabled, includeSelf, useRawSurfaces }) {
+	const surfacesContext = useContext(SurfacesContext)
 
 	const choices = useMemo(() => {
 		const choices = []
@@ -190,21 +191,26 @@ function InternalSurfaceBySerialDropdown({ isOnControl, value, setValue, disable
 			choices.push({ id: 'self', label: 'Current surface' })
 		}
 
-		for (const surface of Object.values(context?.available ?? {})) {
-			choices.push({
-				label: `${surface.name || surface.type} (${surface.id})`,
-				id: surface.id,
-			})
+		if (!useRawSurfaces) {
+			for (const group of surfacesContext ?? []) {
+				choices.push({
+					label: group.displayName,
+					id: group.id,
+				})
+			}
+		} else {
+			for (const group of surfacesContext ?? []) {
+				for (const surface of group.surfaces) {
+					choices.push({
+						label: surface.displayName,
+						id: surface.id,
+					})
+				}
+			}
 		}
 
-		for (const surface of Object.values(context?.offline ?? {})) {
-			choices.push({
-				label: `${surface.name || surface.type} (${surface.id}) - Offline`,
-				id: surface.id,
-			})
-		}
 		return choices
-	}, [context, isOnControl, includeSelf])
+	}, [surfacesContext, isOnControl, includeSelf, useRawSurfaces])
 
 	return <DropdownInputField disabled={disabled} value={value} choices={choices} multiple={false} setValue={setValue} />
 }

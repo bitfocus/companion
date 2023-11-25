@@ -14,6 +14,7 @@ export interface ExportFullv4 extends ExportBase<'full'> {
 	custom_variables?: CustomVariablesModel
 	instances?: ExportInstancesv4
 	surfaces?: unknown
+	surfaceGroups?: unknown
 }
 
 export interface ExportPageModelv4 extends ExportBase<'page'> {
