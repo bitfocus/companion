@@ -124,9 +124,11 @@ function PresetsConnectionList({ presets, setConnectionAndCategory }) {
 		<div>
 			<h5>Presets</h5>
 			<p>
-				Some connections support something we call presets, it's ready made buttons with text, actions and feedback so
-				you don't need to spend time making everything from scratch. They can be drag and dropped onto your button
-				layout.
+				Here are some ready made buttons with text, actions and feedback which you can drop onto a button to help you
+				get started quickly.
+				<br />
+				Not every module provides presets, and you can do a lot more by editing the actions and feedbacks on a button
+				manually.
 			</p>
 			{options.length === 0 ? (
 				<CAlert color="info">You have no connections that support presets at the moment.</CAlert>
