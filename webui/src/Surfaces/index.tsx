@@ -102,6 +102,8 @@ export const SurfacesPage = memo(function SurfacesPage() {
 		[socket]
 	)
 
+	const surfacesList = Object.values(surfacesContext).filter((grp): grp is ClientDevicesListItem => !!grp)
+
 	return (
 		<div>
 			<h4>Surfaces</h4>
@@ -151,9 +153,7 @@ export const SurfacesPage = memo(function SurfacesPage() {
 					</tr>
 				</thead>
 				<tbody>
-					{Object.values(surfacesContext).map((group) => {
-						if (!group) return null
-
+					{surfacesList.map((group) => {
 						if (group.isAutoGroup && (group.surfaces || []).length === 1) {
 							return (
 								<SurfaceRow
@@ -183,7 +183,7 @@ export const SurfacesPage = memo(function SurfacesPage() {
 						}
 					})}
 
-					{Object.keys(surfacesContext).length === 0 && (
+					{surfacesList.length === 0 && (
 						<tr>
 							<td colSpan={7}>No control surfaces have been detected</td>
 						</tr>
