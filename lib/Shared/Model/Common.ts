@@ -69,6 +69,4 @@ export interface EventDefinition {
 	options: InternalActionInputField[]
 }
 
-export interface ClientEventDefinition extends Omit<EventDefinition, 'options'> {
-	options: Array<Omit<InternalActionInputField, 'isVisible'> & { isVisibleFn?: string }>
-}
+export interface ClientEventDefinition extends EventDefinition {}
