@@ -5,24 +5,24 @@ import { nanoid } from 'nanoid'
 import { useNavigate } from 'react-router-dom'
 import jsonPatch, { Operation as JsonPatchOperation } from 'fast-json-patch'
 import { cloneDeep } from 'lodash-es'
-import type { AvailableDeviceInfo, ClientDevicesList } from '@companion/shared/Model/Surfaces.js'
+import type { ClientDevicesListItem, ClientSurfaceItem } from '@companion/shared/Model/Surfaces.js'
 
 export function EmulatorList() {
 	const socket = useContext(SocketContext)
 
-	const [surfaces, setSurfaces] = useState<ClientDevicesList | null>(null)
+	const [surfaceGroups, setSurfaceGroups] = useState<Record<string, ClientDevicesListItem | undefined> | null>(null)
 	const [loadError, setLoadError] = useState<string | null>(null)
 	const [reloadToken, setReloadToken] = useState(nanoid())
 
 	const doRetryLoad = useCallback(() => setReloadToken(nanoid()), [])
 
 	useEffect(() => {
-		setSurfaces(null)
+		setSurfaceGroups(null)
 		setLoadError(null)
 
 		socketEmitPromise(socket, 'surfaces:subscribe', [])
 			.then((surfaces) => {
-				setSurfaces(surfaces)
+				setSurfaceGroups(surfaces)
 			})
 			.catch((e) => {
 				console.error('Failed to load surfaces', e)
@@ -30,8 +30,8 @@ export function EmulatorList() {
 			})
 
 		const patchSurfaces = (patch: JsonPatchOperation[]) => {
-			setSurfaces((oldSurfaces) => {
-				return jsonPatch.applyPatch(cloneDeep(oldSurfaces || { available: {}, offline: {} }) || {}, patch).newDocument
+			setSurfaceGroups((oldSurfaces) => {
+				return oldSurfaces && jsonPatch.applyPatch(cloneDeep(oldSurfaces) || {}, patch).newDocument
 			})
 		}
 		socket.on('surfaces:patch', patchSurfaces)
@@ -44,16 +44,26 @@ export function EmulatorList() {
 	}, [socket, reloadToken])
 
 	const emulators = useMemo(() => {
-		return Object.values(surfaces?.available || {}).filter(
-			(s): s is AvailableDeviceInfo => !!s && s.id.startsWith('emulator:')
-		)
-	}, [surfaces])
+		const emulators: ClientSurfaceItem[] = []
+
+		for (const group of Object.values(surfaceGroups ?? {})) {
+			if (!group) continue
+
+			for (const surface of group.surfaces) {
+				if (surface.integrationType === 'emulator' || surface.id.startsWith('emulator:')) {
+					emulators.push(surface)
+				}
+			}
+		}
+
+		return emulators
+	}, [surfaceGroups])
 
 	return (
 		<div className="page-emulator-list">
 			<CContainer fluid className="d-flex flex-column">
-				<LoadingRetryOrError error={loadError} dataReady={!!surfaces} doRetry={doRetryLoad} />
-				{surfaces && (
+				<LoadingRetryOrError error={loadError} dataReady={!!surfaceGroups} doRetry={doRetryLoad} />
+				{surfaceGroups && (
 					<CRow alignHorizontal="center">
 						<CCol sm={12}>
 							<p>&nbsp;</p>
@@ -86,7 +96,7 @@ export function EmulatorList() {
 }
 
 interface EmulatorCardProps {
-	surface: AvailableDeviceInfo
+	surface: ClientSurfaceItem
 }
 function EmulatorCard({ surface }: EmulatorCardProps) {
 	const navigate = useNavigate()

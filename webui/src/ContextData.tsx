@@ -25,11 +25,11 @@ import jsonPatch, { Operation as JsonPatchOperation } from 'fast-json-patch'
 import { useUserConfigSubscription } from './Hooks/useUserConfigSubscription'
 import { usePagesInfoSubscription } from './Hooks/usePagesInfoSubscription'
 import type { ClientConnectionConfig, ClientEventDefinition, ModuleDisplayInfo } from '@companion/shared/Model/Common'
-import { ClientActionDefinition, InternalFeedbackDefinition } from '@companion/shared/Model/Options'
-import { AllVariableDefinitions, ModuleVariableDefinitions } from '@companion/shared/Model/Variables'
-import { CustomVariablesModel } from '@companion/shared/Model/CustomVariableModel'
-import { ClientDevicesList } from '@companion/shared/Model/Surfaces'
-import { ClientTriggerData } from '@companion/shared/Model/TriggerModel'
+import type { ClientActionDefinition, InternalFeedbackDefinition } from '@companion/shared/Model/Options'
+import type { AllVariableDefinitions, ModuleVariableDefinitions } from '@companion/shared/Model/Variables'
+import type { CustomVariablesModel } from '@companion/shared/Model/CustomVariableModel'
+import type { ClientDevicesListItem } from '@companion/shared/Model/Surfaces'
+import type { ClientTriggerData } from '@companion/shared/Model/TriggerModel'
 
 interface ContextDataProps {
 	children: (progressPercent: number, loadingComplete: boolean) => React.JSX.Element | React.JSX.Element[]
@@ -53,7 +53,7 @@ export function ContextData({ children }: ContextDataProps) {
 	> | null>(null)
 	const [variableDefinitions, setVariableDefinitions] = useState<AllVariableDefinitions | null>(null)
 	const [customVariables, setCustomVariables] = useState<CustomVariablesModel | null>(null)
-	const [surfaces, setSurfaces] = useState<ClientDevicesList | null>(null)
+	const [surfaces, setSurfaces] = useState<Record<string, ClientDevicesListItem | undefined> | null>(null)
 	const [triggers, setTriggers] = useState<Record<string, ClientTriggerData | undefined> | null>(null)
 
 	const [recentActions, setRecentActions] = useState<string[]>(() => {
@@ -132,7 +132,7 @@ export function ContextData({ children }: ContextDataProps) {
 					setEventDefinitions(definitions)
 				})
 				.catch((e) => {
-					console.error('Failed to load event definitions')
+					console.error('Failed to load event definitions', e)
 				})
 
 			socketEmitPromise(socket, 'modules:subscribe', [])
