@@ -96,7 +96,7 @@ const ConnectionEditPanelInner = memo(function ConnectionEditPanelInner({
 
 		const newLabel = connectionLabel?.trim()
 
-		if (!isLabelValid(newLabel) || invalidFieldNames.length > 0) {
+		if (!newLabel || !isLabelValid(newLabel) || invalidFieldNames.length > 0) {
 			setError(`Some config fields are not valid: ${invalidFieldNames.join(', ')}`)
 			return
 		}
@@ -254,7 +254,9 @@ const ConnectionEditPanelInner = memo(function ConnectionEditPanelInner({
 				<CCol sm={12}>
 					<CButton
 						color="success"
-						disabled={!validFields || invalidFieldNames.length > 0 || !isLabelValid(connectionLabel)}
+						disabled={
+							!validFields || invalidFieldNames.length > 0 || !connectionLabel || !isLabelValid(connectionLabel)
+						}
 						onClick={doSave}
 					>
 						Save
