@@ -1,18 +1,18 @@
-export interface BaseDeviceInfo {
+export interface ClientSurfaceItem {
 	id: string
 	type: string
 	integrationType: string
 	name: string
-	index: number
-}
-export type OfflineDeviceInfo = BaseDeviceInfo
-
-export interface AvailableDeviceInfo extends BaseDeviceInfo {
-	location: string
 	configFields: string[]
+	isConnected: boolean
+	displayName: string
+	location: string | null
 }
 
-export interface ClientDevicesList {
-	available: Record<string, AvailableDeviceInfo | undefined>
-	offline: Record<string, OfflineDeviceInfo | undefined>
+export interface ClientDevicesListItem {
+	id: string
+	index: number
+	displayName: string
+	isAutoGroup: boolean
+	surfaces: ClientSurfaceItem[]
 }

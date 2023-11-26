@@ -4,7 +4,7 @@ import React, { createContext, useContext, useMemo, useEffect, useCallback, memo
 import Select from 'react-select'
 import CreatableSelect, { CreatableProps } from 'react-select/creatable'
 
-export const MenuPortalContext = createContext(null)
+export const MenuPortalContext = createContext<HTMLElement | null>(null)
 
 type AsType<Multi extends boolean> = Multi extends true ? DropdownChoiceId[] : DropdownChoiceId
 

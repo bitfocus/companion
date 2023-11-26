@@ -19,7 +19,7 @@ import type {
 import type { ClientTriggerData } from '@companion/shared/Model/TriggerModel.js'
 import type { InternalFeedbackDefinition, ClientActionDefinition } from '@companion/shared/Model/Options.js'
 import type { UserConfigModel } from '@companion/shared/Model/UserConfigModel.js'
-import type { ClientDevicesList } from '@companion/shared/Model/Surfaces.js'
+import type { ClientDevicesListItem } from '@companion/shared/Model/Surfaces.js'
 import type { PageModel } from '@companion/shared/Model/PageModel.js'
 import type { CustomVariablesModel } from '@companion/shared/Model/CustomVariableModel.js'
 
@@ -42,7 +42,7 @@ export const ConnectionsContext = React.createContext<Record<string, ClientConne
 export const VariableDefinitionsContext = React.createContext<AllVariableDefinitions>({})
 export const CustomVariableDefinitionsContext = React.createContext<CustomVariablesModel>({})
 export const UserConfigContext = React.createContext<UserConfigModel | null>(null)
-export const SurfacesContext = React.createContext<ClientDevicesList>({ available: {}, offline: {} })
+export const SurfacesContext = React.createContext<Record<string, ClientDevicesListItem | undefined>>({})
 export const PagesContext = React.createContext<Record<number, PageModel | undefined>>({})
 export const TriggersContext = React.createContext<Record<string, ClientTriggerData | undefined>>({})
 export const RecentActionsContext = React.createContext<{

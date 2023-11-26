@@ -33,6 +33,7 @@ export type InternalInputField = (
 			type: 'internal:surface_serial'
 			includeSelf: boolean
 			default: string
+			useRawSurfaces?: boolean
 	  }
 	| {
 			type: 'internal:page'

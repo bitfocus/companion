@@ -60,6 +60,7 @@ export function InternalInstanceField(
 					value={value}
 					setValue={setValue}
 					includeSelf={option.includeSelf}
+					useRawSurfaces={option.useRawSurfaces}
 				/>
 			)
 		case 'internal:trigger':
@@ -238,6 +239,7 @@ interface InternalSurfaceBySerialDropdownProps {
 	setValue: (value: any) => void
 	disabled: boolean
 	includeSelf: boolean | undefined
+	useRawSurfaces: boolean | undefined
 }
 
 function InternalSurfaceBySerialDropdown({
@@ -246,8 +248,9 @@ function InternalSurfaceBySerialDropdown({
 	setValue,
 	disabled,
 	includeSelf,
+	useRawSurfaces,
 }: InternalSurfaceBySerialDropdownProps) {
-	const context = useContext(SurfacesContext)
+	const surfacesContext = useContext(SurfacesContext)
 
 	const choices = useMemo(() => {
 		const choices: DropdownChoice[] = []
@@ -255,23 +258,30 @@ function InternalSurfaceBySerialDropdown({
 			choices.push({ id: 'self', label: 'Current surface' })
 		}
 
-		for (const surface of Object.values(context?.available ?? {})) {
-			if (!surface) continue
-			choices.push({
-				label: `${surface.name || surface.type} (${surface.id})`,
-				id: surface.id,
-			})
+		if (!useRawSurfaces) {
+			for (const group of Object.values(surfacesContext ?? {})) {
+				if (!group) continue
+
+				choices.push({
+					label: group.displayName,
+					id: group.id,
+				})
+			}
+		} else {
+			for (const group of Object.values(surfacesContext ?? {})) {
+				if (!group) continue
+
+				for (const surface of group.surfaces) {
+					choices.push({
+						label: surface.displayName,
+						id: surface.id,
+					})
+				}
+			}
 		}
 
-		for (const surface of Object.values(context?.offline ?? {})) {
-			if (!surface) continue
-			choices.push({
-				label: `${surface.name || surface.type} (${surface.id}) - Offline`,
-				id: surface.id,
-			})
-		}
 		return choices
-	}, [context, isOnControl, includeSelf])
+	}, [surfacesContext, isOnControl, includeSelf, useRawSurfaces])
 
 	return <DropdownInputField disabled={disabled} value={value} choices={choices} multiple={false} setValue={setValue} />
 }

@@ -8,7 +8,7 @@ import {
 	useMountEffect,
 	PreventDefaultHandler,
 } from '../util.js'
-import { CButton, CCol, CContainer, CForm, CRow } from '@coreui/react'
+import { CButton, CCol, CForm, CRow } from '@coreui/react'
 import { nanoid } from 'nanoid'
 import { useParams } from 'react-router-dom'
 import { dsanMastercueKeymap, keyboardKeymap, logitecKeymap } from './Keymaps.js'
@@ -171,25 +171,23 @@ export function Emulator() {
 	}, [])
 
 	return (
-		<div className="page-tablet">
-			<CContainer fluid className="d-flex flex-column">
-				{config ? (
-					<>
-						<ConfigurePanel config={config} />
+		<div className="page-tablet page-emulator">
+			{config ? (
+				<>
+					<ConfigurePanel config={config} />
 
-						<CyclePages
-							imageCache={imageCache}
-							setKeyDown={setKeyDown}
-							columns={config.emulator_columns}
-							rows={config.emulator_rows}
-						/>
-					</>
-				) : (
-					<CRow>
-						<LoadingRetryOrError dataReady={false} error={loadError} doRetry={doRetryLoad} />
-					</CRow>
-				)}
-			</CContainer>
+					<EmulatorButtons
+						imageCache={imageCache}
+						setKeyDown={setKeyDown}
+						columns={config.emulator_columns}
+						rows={config.emulator_rows}
+					/>
+				</>
+			) : (
+				<CRow className={'loading'}>
+					<LoadingRetryOrError dataReady={false} error={loadError} doRetry={doRetryLoad} />
+				</CRow>
+			)}
 		</div>
 	)
 }
@@ -241,18 +239,14 @@ function ConfigurePanel({ config }: ConfigurePanelProps): JSX.Element | null {
 	) : null
 }
 
-// function clamp(val, max) {
-// 	return Math.min(Math.max(0, val), max)
-// }
-
-interface CyclePagesProps {
+interface EmulatorButtonsProps {
 	imageCache: EmulatorImageCache
 	setKeyDown: (location: ControlLocation | null) => void
 	columns: number
 	rows: number
 }
 
-function CyclePages({ imageCache, setKeyDown, columns, rows }: CyclePagesProps) {
+function EmulatorButtons({ imageCache, setKeyDown, columns, rows }: EmulatorButtonsProps) {
 	const buttonClick = useCallback(
 		(location: ControlLocation, pressed: boolean) => {
 			if (pressed) {
@@ -264,55 +258,33 @@ function CyclePages({ imageCache, setKeyDown, columns, rows }: CyclePagesProps) 
 		[setKeyDown]
 	)
 
-	return (
-		<CRow className="flex-grow-1">
-			<div className="cycle-layout">
-				<MyErrorBoundary>
-					{/* <div></div> */}
-					<div className="cycle-heading">
-						{/* <h1 id={`page_${currentPage}`}> */}
-						{/* {pages[currentPage]?.name || ' '} */}
+	const gridStyle = useMemo(() => {
+		return {
+			gridTemplateColumns: 'minmax(0, 1fr) '.repeat(columns),
+			gridTemplateRows: 'minmax(0, 1fr) '.repeat(rows),
+			aspectRatio: `${columns} / ${rows}`,
+			height: `min(calc(100vw / ${columns} * ${rows}), 100vh)`,
+			width: `min(calc(100vh / ${rows} * ${columns}), 100vw)`,
+		}
+	}, [rows, columns])
 
-						{/* {orderedPages.length > 1 && (
-								<>
-									<CButton onClick={goNextPage} disabled={!loop && currentIndex === orderedPages.length - 1} size="lg">
-										<FontAwesomeIcon icon={faArrowRight} />
-									</CButton>
-									<CButton onClick={goPrevPage} disabled={!loop && currentIndex === 0} size="lg">
-										<FontAwesomeIcon icon={faArrowLeft} />
-									</CButton>
-								</>
-							)} */}
-						{/* </h1> */}
-					</div>
-					<div className="buttongrid">
-						{' '}
-						{Array(rows)
-							.fill(0)
-							.map((_, y) => {
-								return (
-									<CCol key={y} sm={12} className="buttongrid-row">
-										{Array(columns)
-											.fill(0)
-											.map((_2, x) => {
-												return (
-													<ButtonPreview2
-														key={x}
-														column={x}
-														row={y}
-														preview={imageCache[y]?.[x]}
-														onClick={buttonClick}
-														title={`Button ${y}/${x}`}
-													/>
-												)
-											})}
-									</CCol>
-								)
-							})}
-					</div>
-				</MyErrorBoundary>
+	const buttonElms = []
+	for (let y = 0; y < rows; y++) {
+		for (let x = 0; x < columns; x++) {
+			buttonElms.push(
+				<ButtonPreview2 key={`${y}/${x}`} column={x} row={y} preview={imageCache[y]?.[x]} onClick={buttonClick} />
+			)
+		}
+	}
+
+	return (
+		<MyErrorBoundary>
+			<div className="emulatorgrid">
+				<div className="buttongrid" style={gridStyle}>
+					{buttonElms}
+				</div>
 			</div>
-		</CRow>
+		</MyErrorBoundary>
 	)
 }
 
@@ -321,10 +293,9 @@ interface ButtonPreview2Props {
 	row: number
 
 	preview: string | undefined | null | false
-	title: string
 	onClick: (location: ControlLocation, pressed: boolean) => void
 }
 function ButtonPreview2({ column, row, ...props }: ButtonPreview2Props) {
 	const location = useMemo(() => ({ pageNumber: 0, column, row }), [column, row])
-	return <ButtonPreview {...props} location={location} />
+	return <ButtonPreview {...props} location={location} title={`Button ${column}/${row}`} />
 }

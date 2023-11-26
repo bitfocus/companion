@@ -15,6 +15,7 @@ export interface ExportFullv4 extends ExportBase<'full'> {
 	custom_variables?: CustomVariablesModel
 	instances?: ExportInstancesv4
 	surfaces?: unknown
+	surfaceGroups?: unknown
 }
 
 export interface ExportPageModelv4 extends ExportBase<'page'> {
@@ -50,11 +51,12 @@ export type ExportInstanceFullv4 = {
 	lastUpgradeIndex: number
 	instance_type: string
 	enabled: boolean
-	sortOrder: number
+	sortOrder?: number
 }
 
 export type ExportInstanceMinimalv4 = {
 	label: string
 	instance_type: string
 	lastUpgradeIndex: number
+	sortOrder?: number
 }

@@ -33,7 +33,7 @@ export interface ClientPageInfo {
 }
 export interface ClientImportObject {
 	type: 'page' | 'full'
-	instances: Record<string, { label: string; instance_type: string }>
+	instances: Record<string, { label: string; instance_type: string; sortOrder?: number }>
 	controls: boolean
 	customVariables: boolean
 	surfaces: boolean

@@ -1,4 +1,4 @@
-import React, { useCallback, useContext, useEffect, useRef, useState } from 'react'
+import React, { useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react'
 import { CButton, CCol, CRow, CSelect } from '@coreui/react'
 import {
 	ConnectionsContext,
@@ -22,6 +22,7 @@ import { faHome } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { useHasBeenRendered } from '../../Hooks/useHasBeenRendered'
 import type { ClientImportObject } from '@companion/shared/Model/ImportExport'
+import { compareExportedInstances } from '@companion/shared/Import'
 
 interface ImportPageWizardProps {
 	snapshot: ClientImportObject
@@ -173,6 +174,14 @@ export function ImportRemap({ snapshot, instanceRemap, setInstanceRemap }: Impor
 	const modules = useContext(ModulesContext)
 	const connectionsContext = useContext(ConnectionsContext)
 
+	const sortedInstances = useMemo(() => {
+		if (!snapshot.instances) return []
+
+		return Object.entries(snapshot.instances)
+			.filter((ent) => !!ent[1])
+			.sort(compareExportedInstances)
+	}, [snapshot.instances])
+
 	return (
 		<div id="import_resolve">
 			<h5>Link import connections with existing connections</h5>
@@ -186,14 +195,12 @@ export function ImportRemap({ snapshot, instanceRemap, setInstanceRemap }: Impor
 					</tr>
 				</thead>
 				<tbody>
-					{Object.keys(snapshot.instances || {}).length === 0 && (
+					{sortedInstances.length === 0 && (
 						<tr>
 							<td colSpan={3}>No connections</td>
 						</tr>
 					)}
-					{Object.entries(snapshot.instances || {}).map(([key, instance]) => {
-						if (!instance) return null
-
+					{sortedInstances.map(([key, instance]) => {
 						const snapshotModule = modules[instance.instance_type]
 						const currentInstances = Object.entries(connectionsContext).filter(
 							([_id, inst]) => inst.instance_type === instance.instance_type
