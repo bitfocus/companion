@@ -8,14 +8,13 @@ import {
 	faFolderOpen,
 } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import React, { RefObject, memo, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react'
+import React, { RefObject, memo, useCallback, useContext, useMemo, useRef } from 'react'
 import { NumberInputField } from '../Components'
 import {
 	ActionsContext,
 	ConnectionsContext,
 	MyErrorBoundary,
 	socketEmitPromise,
-	sandbox,
 	SocketContext,
 	PreventDefaultHandler,
 	RecentActionsContext,
@@ -32,6 +31,7 @@ import { MenuPortalContext } from '../Components/DropdownInputField'
 import type { FilterOptionOption } from 'react-select/dist/declarations/src/filters'
 import { ActionInstance } from '@companion/shared/Model/ActionModel'
 import { ControlLocation } from '@companion/shared/Model/Common'
+import { useOptionsAndIsVisible } from '../Hooks/useOptionsAndIsVisible'
 
 interface ControlActionSetEditorProps {
 	controlId: string
@@ -417,9 +417,9 @@ function ActionTableRow({
 		[doEnabled, action.id]
 	)
 
-	const [optionVisibility, setOptionVisibility] = useState<Record<string, boolean>>({})
-
 	const actionSpec = (actionsContext[action.instance] || {})[action.action]
+
+	const [actionOptions, optionVisibility] = useOptionsAndIsVisible(actionSpec, action)
 
 	const ref = useRef<HTMLTableRowElement>(null)
 	const [, drop] = useDrop<ActionTableRowDragItem>({
@@ -462,49 +462,6 @@ function ActionTableRow({
 	})
 	preview(drop(ref))
 
-	const actionOptions = useMemo(() => {
-		const options = actionSpec?.options ?? []
-
-		return options.map((option) => {
-			try {
-				if (typeof option.isVisibleFn === 'string' && typeof option.isVisible !== 'function') {
-					return {
-						...option,
-						isVisible: sandbox(option.isVisibleFn),
-					}
-				}
-			} catch (e) {
-				console.error('Failed to process isVisibleFn', e)
-			}
-			return option
-		})
-	}, [actionSpec])
-
-	useEffect(() => {
-		const visibility: Record<string, boolean> = {}
-		const options = actionOptions ?? []
-
-		if (options === null || action === null) {
-			return
-		}
-
-		for (const option of options) {
-			try {
-				if (typeof option.isVisible === 'function') {
-					visibility[option.id] = option.isVisible(action.options, option.isVisibleData)
-				}
-			} catch (e) {
-				console.error('Failed to check visibility', e)
-			}
-		}
-
-		setOptionVisibility(visibility)
-
-		return () => {
-			setOptionVisibility({})
-		}
-	}, [actionOptions, action])
-
 	const doCollapse = useCallback(() => {
 		setCollapsed(action.id, true)
 	}, [setCollapsed, action.id])
@@ -523,12 +480,9 @@ function ActionTableRow({
 
 	const showButtonPreview = action?.instance === 'internal' && actionSpec?.showButtonPreview
 
-	let name = ''
-	if (actionSpec) {
-		name = `${connectionLabel}: ${actionSpec.label}`
-	} else {
-		name = `${connectionLabel}: ${action.action} (undefined)`
-	}
+	const name = actionSpec
+		? `${connectionLabel}: ${actionSpec.label}`
+		: `${connectionLabel}: ${action.action} (undefined)`
 
 	return (
 		<tr ref={ref} className={isDragging ? 'actionlist-dragging' : ''}>

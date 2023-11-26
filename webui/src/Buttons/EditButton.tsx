@@ -71,10 +71,9 @@ import { NormalButtonSteps, SomeButtonModel } from '@companion/shared/Model/Butt
 interface EditButtonProps {
 	location: ControlLocation
 	onKeyUp: (e: React.KeyboardEvent<HTMLDivElement>) => void
-	contentHeight: number
 }
 
-export const EditButton = memo(function EditButton({ location, onKeyUp, contentHeight }: EditButtonProps) {
+export const EditButton = memo(function EditButton({ location, onKeyUp }: EditButtonProps) {
 	const socket = useContext(SocketContext)
 	const pages = useContext(PagesContext)
 

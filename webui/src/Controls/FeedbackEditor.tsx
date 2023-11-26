@@ -9,13 +9,12 @@ import {
 	faQuestionCircle,
 } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import React, { memo, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react'
+import React, { memo, useCallback, useContext, useMemo, useRef, useState } from 'react'
 import {
 	FeedbacksContext,
 	ConnectionsContext,
 	MyErrorBoundary,
 	socketEmitPromise,
-	sandbox,
 	SocketContext,
 	PreventDefaultHandler,
 	RecentFeedbacksContext,
@@ -36,6 +35,7 @@ import { FeedbackInstance } from '@companion/shared/Model/FeedbackModel'
 import { FeedbackDefinition } from '@companion/shared/Model/Options'
 import { DropdownChoiceId } from '@companion-module/base'
 import { ControlLocation } from '@companion/shared/Model/Common'
+import { useOptionsAndIsVisible } from '../Hooks/useOptionsAndIsVisible'
 
 interface ControlFeedbacksEditorProps {
 	controlId: string
@@ -418,51 +418,13 @@ function FeedbackEditor({
 
 	const feedbackSpec = (feedbacksContext[feedback.instance_id] || {})[feedback.type]
 
-	const [optionVisibility, setOptionVisibility] = useState<Record<string, boolean>>({})
+	const [feedbackOptions, optionVisibility] = useOptionsAndIsVisible(feedbackSpec, feedback)
 
 	const innerSetEnabled = useCallback((e) => doEnabled(feedback.id, e.target.checked), [doEnabled, feedback.id])
 
-	const feedbackOptions = useMemo(() => {
-		const options = feedbackSpec?.options ?? []
-
-		return options.map((option) => {
-			if (typeof option.isVisibleFn === 'string') {
-				return {
-					...option,
-					isVisible: sandbox(option.isVisibleFn),
-				}
-			}
-
-			return option
-		})
-	}, [feedbackSpec])
-
-	useEffect(() => {
-		const visibility: Record<string, boolean> = {}
-
-		if (feedbackOptions === null || feedback === null) {
-			return
-		}
-
-		for (const option of feedbackOptions) {
-			if (typeof option.isVisible === 'function') {
-				visibility[option.id] = option.isVisible(feedback.options, option.isVisibleData)
-			}
-		}
-
-		setOptionVisibility(visibility)
-
-		return () => {
-			setOptionVisibility({})
-		}
-	}, [feedbackOptions, feedback])
-
-	let name = ''
-	if (feedbackSpec) {
-		name = `${connectionLabel}: ${feedbackSpec.label}`
-	} else {
-		name = `${connectionLabel}: ${feedback.type} (undefined)`
-	}
+	const name = feedbackSpec
+		? `${connectionLabel}: ${feedbackSpec.label}`
+		: `${connectionLabel}: ${feedback.type} (undefined)`
 
 	const showButtonPreview = feedback?.instance_id === 'internal' && feedbackSpec?.showButtonPreview
 

@@ -1,11 +1,10 @@
 import { CButton, CForm, CButtonGroup, CSwitch } from '@coreui/react'
 import { faSort, faTrash, faCompressArrowsAlt, faExpandArrowsAlt, faCopy } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import React, { FormEvent, memo, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react'
+import React, { FormEvent, memo, useCallback, useContext, useMemo, useRef } from 'react'
 import {
 	MyErrorBoundary,
 	socketEmitPromise,
-	sandbox,
 	SocketContext,
 	EventDefinitionsContext,
 	PreventDefaultHandler,
@@ -17,8 +16,8 @@ import { GenericConfirmModal, GenericConfirmModalRef } from '../Components/Gener
 import { usePanelCollapseHelper } from '../Helpers/CollapseHelper.js'
 import { MenuPortalContext } from '../Components/DropdownInputField.js'
 import type { DropdownChoice, DropdownChoiceId } from '@companion-module/base'
-import type { InternalActionInputField } from '@companion/shared/Model/Options.js'
 import type { EventInstance } from '@companion/shared/Model/EventModel.js'
+import { useOptionsAndIsVisible } from '../Hooks/useOptionsAndIsVisible.js'
 
 interface TriggerEventEditorProps {
 	controlId: string
@@ -278,54 +277,14 @@ function EventEditor({
 
 	const eventSpec = EventDefinitions[event.type]
 
-	const [optionVisibility, setOptionVisibility] = useState<Record<string, boolean>>({})
+	const [eventOptions, optionVisibility] = useOptionsAndIsVisible(eventSpec, event)
 
 	const innerSetEnabled = useCallback(
 		(e: FormEvent<HTMLInputElement>) => doEnabled(event.id, e.currentTarget.checked),
 		[doEnabled, event.id]
 	)
 
-	const eventOptions = useMemo(() => {
-		const options = eventSpec?.options ?? []
-
-		return options.map((option) => {
-			if (typeof option.isVisibleFn === 'string') {
-				return {
-					...option,
-					isVisible: sandbox(option.isVisibleFn),
-				}
-			} else {
-				return option
-			}
-		}) as InternalActionInputField[]
-	}, [eventSpec])
-
-	useEffect(() => {
-		const visibility: Record<string, boolean> = {}
-
-		if (eventOptions === null || event === null) {
-			return
-		}
-
-		for (const option of eventOptions) {
-			if (typeof option.isVisible === 'function') {
-				visibility[option.id] = option.isVisible(event.options, option.isVisibleData)
-			}
-		}
-
-		setOptionVisibility(visibility)
-
-		return () => {
-			setOptionVisibility({})
-		}
-	}, [eventOptions, event])
-
-	let name = ''
-	if (eventSpec) {
-		name = eventSpec.name
-	} else {
-		name = `${event.type} (undefined)`
-	}
+	const name = eventSpec ? eventSpec.name : `${event.type} (undefined)`
 
 	return (
 		<>
