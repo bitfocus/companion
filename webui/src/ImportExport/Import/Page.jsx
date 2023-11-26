@@ -15,6 +15,7 @@ import { ButtonGridIcon, ButtonGridIconBase, ButtonInfiniteGrid } from '../../Bu
 import { faHome } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { useHasBeenRendered } from '../../Hooks/useHasBeenRendered'
+import { compareExportedInstances } from '@companion/shared/Import'
 
 export function ImportPageWizard({ snapshot, instanceRemap, setInstanceRemap, doImport }) {
 	const pages = useContext(PagesContext)
@@ -153,6 +154,14 @@ export function ImportRemap({ snapshot, instanceRemap, setInstanceRemap }) {
 	const modules = useContext(ModulesContext)
 	const connectionsContext = useContext(ConnectionsContext)
 
+	const sortedInstances = useMemo(() => {
+		if (!snapshot.instances) return []
+
+		return Object.entries(snapshot.instances)
+			.filter((ent) => !!ent[1])
+			.sort(compareExportedInstances)
+	}, [snapshot.instances])
+
 	return (
 		<div id="import_resolve">
 			<h5>Link import connections with existing connections</h5>
@@ -166,12 +175,12 @@ export function ImportRemap({ snapshot, instanceRemap, setInstanceRemap }) {
 					</tr>
 				</thead>
 				<tbody>
-					{Object.keys(snapshot.instances || {}).length === 0 && (
+					{sortedInstances.length === 0 && (
 						<tr>
 							<td colSpan={3}>No connections</td>
 						</tr>
 					)}
-					{Object.entries(snapshot.instances || {}).map(([key, instance]) => {
+					{sortedInstances.map(([key, instance]) => {
 						const snapshotModule = modules[instance.instance_type]
 						const currentInstances = Object.entries(connectionsContext).filter(
 							([id, inst]) => inst.instance_type === instance.instance_type

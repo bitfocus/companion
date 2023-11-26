@@ -50,13 +50,14 @@ export type ExportInstanceFullv4 = {
 	lastUpgradeIndex: number
 	instance_type: string
 	enabled: boolean
-	sortOrder: number
+	sortOrder?: number
 }
 
 export type ExportInstanceMinimalv4 = {
 	label: string
 	instance_type: string
 	lastUpgradeIndex: number
+	sortOrder?: number
 }
 
 export interface ExportGridSize {
