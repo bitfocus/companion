@@ -9,19 +9,19 @@ import { cloneDeep } from 'lodash-es'
 export function EmulatorList() {
 	const socket = useContext(SocketContext)
 
-	const [surfaces, setSurfaces] = useState(null)
+	const [surfaceGroups, setSurfaceGroups] = useState(null)
 	const [loadError, setLoadError] = useState(null)
 	const [reloadToken, setReloadToken] = useState(nanoid())
 
 	const doRetryLoad = useCallback(() => setReloadToken(nanoid()), [])
 
 	useEffect(() => {
-		setSurfaces(null)
+		setSurfaceGroups(null)
 		setLoadError(null)
 
 		socketEmitPromise(socket, 'surfaces:subscribe', [])
 			.then((surfaces) => {
-				setSurfaces(surfaces)
+				setSurfaceGroups(surfaces)
 			})
 			.catch((e) => {
 				console.error('Failed to load surfaces', e)
@@ -29,7 +29,7 @@ export function EmulatorList() {
 			})
 
 		const patchSurfaces = (patch) => {
-			setSurfaces((oldSurfaces) => {
+			setSurfaceGroups((oldSurfaces) => {
 				return jsonPatch.applyPatch(cloneDeep(oldSurfaces) || {}, patch).newDocument
 			})
 		}
@@ -43,14 +43,26 @@ export function EmulatorList() {
 	}, [socket, reloadToken])
 
 	const emulators = useMemo(() => {
-		return Object.values(surfaces?.available || {}).filter((s) => s.id.startsWith('emulator:'))
-	}, [surfaces])
+		const emulators = []
+
+		for (const group of Object.values(surfaceGroups ?? {})) {
+			if (!group) continue
+
+			for (const surface of group.surfaces) {
+				if (surface.integrationType === 'emulator' || surface.id.startsWith('emulator:')) {
+					emulators.push(surface)
+				}
+			}
+		}
+
+		return emulators
+	}, [surfaceGroups])
 
 	return (
 		<div className="page-emulator-list">
 			<CContainer fluid className="d-flex flex-column">
-				<LoadingRetryOrError error={loadError} dataReady={surfaces} doRetry={doRetryLoad} />
-				{surfaces && (
+				<LoadingRetryOrError error={loadError} dataReady={surfaceGroups} doRetry={doRetryLoad} />
+				{surfaceGroups && (
 					<CRow alignHorizontal="center">
 						<CCol sm={12}>
 							<p>&nbsp;</p>

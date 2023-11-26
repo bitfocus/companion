@@ -31,8 +31,9 @@ export const SurfaceEditModal = forwardRef(function SurfaceEditModal(_props, ref
 
 	let surfaceInfo = null
 	if (surfaceId) {
-		for (const group of surfacesContext) {
+		for (const group of Object.values(surfacesContext)) {
 			if (surfaceInfo) break
+			if (!group) continue
 
 			for (const surface of group.surfaces) {
 				if (surface.id === surfaceId) {
@@ -49,8 +50,8 @@ export const SurfaceEditModal = forwardRef(function SurfaceEditModal(_props, ref
 	const groupId = surfaceInfo && !surfaceInfo.groupId ? surfaceId : rawGroupId
 	let groupInfo = null
 	if (groupId) {
-		for (const group of surfacesContext) {
-			if (group.id === groupId) {
+		for (const group of Object.values(surfacesContext)) {
+			if (group && group.id === groupId) {
 				groupInfo = group
 				break
 			}
@@ -114,7 +115,8 @@ export const SurfaceEditModal = forwardRef(function SurfaceEditModal(_props, ref
 		// If surface disappears/disconnects, hide this
 
 		const onlineSurfaceIds = new Set()
-		for (const group of surfacesContext) {
+		for (const group of Object.values(surfacesContext)) {
+			if (!group) continue
 			for (const surface of group.surfaces) {
 				if (surface.isConnected) {
 					onlineSurfaceIds.add(surface.id)
@@ -226,8 +228,8 @@ export const SurfaceEditModal = forwardRef(function SurfaceEditModal(_props, ref
 								>
 									<option value="null">Standalone (Default)</option>
 
-									{surfacesContext
-										.filter((group) => !group.isAutoGroup)
+									{Object.values(surfacesContext)
+										.filter((group) => group && !group.isAutoGroup)
 										.map((group) => (
 											<option key={group.id} value={group.id}>
 												{group.displayName}

@@ -103,6 +103,8 @@ export const SurfacesPage = memo(function SurfacesPage() {
 		[socket]
 	)
 
+	const surfacesList = Object.values(surfacesContext).filter((grp) => !!grp)
+
 	return (
 		<div>
 			<GenericConfirmModal ref={confirmRef} />
@@ -154,7 +156,7 @@ export const SurfacesPage = memo(function SurfacesPage() {
 					</tr>
 				</thead>
 				<tbody>
-					{surfacesContext.map((group) =>
+					{surfacesList.map((group) =>
 						group.isAutoGroup && (group.surfaces || []).length === 1 ? (
 							<SurfaceRow
 								key={group.id}
@@ -179,7 +181,7 @@ export const SurfacesPage = memo(function SurfacesPage() {
 						)
 					)}
 
-					{surfacesContext.length === 0 && (
+					{surfacesList.length === 0 && (
 						<tr>
 							<td colSpan={7}>No control surfaces have been detected</td>
 						</tr>

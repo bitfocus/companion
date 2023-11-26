@@ -192,14 +192,14 @@ function InternalSurfaceBySerialDropdown({ isOnControl, value, setValue, disable
 		}
 
 		if (!useRawSurfaces) {
-			for (const group of surfacesContext ?? []) {
+			for (const group of Object.values(surfacesContext ?? {})) {
 				choices.push({
 					label: group.displayName,
 					id: group.id,
 				})
 			}
 		} else {
-			for (const group of surfacesContext ?? []) {
+			for (const group of Object.values(surfacesContext ?? {})) {
 				for (const surface of group.surfaces) {
 					choices.push({
 						label: surface.displayName,
