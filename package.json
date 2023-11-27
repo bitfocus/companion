@@ -116,6 +116,7 @@
 		"socket.io": "^4.7.2",
 		"socketcluster-client": "^16.1.1",
 		"supports-color": "^9.4.0",
+		"type-fest": "^4.8.2",
 		"usb": "^2.11.0",
 		"utf-8-validate": "^6.0.3",
 		"uuid": "^9.0.1",

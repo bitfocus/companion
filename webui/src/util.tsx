@@ -22,6 +22,8 @@ import type { UserConfigModel } from '@companion/shared/Model/UserConfigModel.js
 import type { ClientDevicesListItem } from '@companion/shared/Model/Surfaces.js'
 import type { PageModel } from '@companion/shared/Model/PageModel.js'
 import type { CustomVariablesModel } from '@companion/shared/Model/CustomVariableModel.js'
+import { ActiveLearnRequests } from './_Model/ActiveLearn.js'
+import { observable, ObservableSet } from 'mobx'
 
 export const SocketContext = React.createContext<Socket>(null as any) // TODO - fix this
 export const EventDefinitionsContext = React.createContext<Record<string, ClientEventDefinition | undefined>>({})
@@ -53,6 +55,7 @@ export const RecentFeedbacksContext = React.createContext<{
 	recentFeedbacks: string[]
 	trackRecentFeedback: (feedbackType: string) => void
 } | null>(null)
+export const ActiveLearnContext = React.createContext<ObservableSet<string>>(observable.set())
 
 export function socketEmitPromise(
 	socket: Socket,
