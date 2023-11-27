@@ -1,0 +1,38 @@
+{
+	"include": ["src/**/*.js", "src/**/*.jsx", "src/**/*.ts", "src/**/*.tsx", "../lib/Shared/*.js"],
+	"exclude": ["node_modules/**", "src/**/*spec.ts", "src/**/__tests__/*", "src/**/__mocks__/*"],
+	"compilerOptions": {
+		"outDir": "./dist",
+		"baseUrl": "./",
+		"paths": {
+			"*": ["./node_modules/*"]
+		},
+		"module": "ESNext",
+		"moduleResolution": "node",
+		"jsx": "react",
+		"allowJs": true,
+		// "checkJs": true,
+		"strictPropertyInitialization": false,
+
+		"target": "ESNext",
+		"noImplicitAny": true,
+		"sourceMap": true,
+		"declaration": false,
+		"importHelpers": false,
+		"listFiles": false,
+		"traceResolution": false,
+		"pretty": true,
+		"lib": ["DOM", "DOM.Iterable", "ESNext"],
+		"types": ["node", "react"],
+		"strict": true,
+		"alwaysStrict": false,
+		"forceConsistentCasingInFileNames": true,
+		"noFallthroughCasesInSwitch": true,
+		"noImplicitReturns": true,
+		"noUnusedLocals": true,
+		"noUnusedParameters": true,
+		"skipLibCheck": true,
+		"allowSyntheticDefaultImports": true,
+		"esModuleInterop": true
+	}
+}

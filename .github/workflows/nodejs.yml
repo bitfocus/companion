@@ -13,15 +13,28 @@ jobs:
         with:
           node-version-file: '.node-version'
 
-      - name: Prepare
+      - name: Prepare (server)
         run: |
           # try and avoid timeout errors
           yarn config set network-timeout 100000 -g
 
           yarn --frozen-lockfile
 
-      - name: Check types
+      - name: Check types (server)
         run: |
+          yarn check-types
+
+      - name: Prepare (client)
+        run: |
+          cd webui
+          # try and avoid timeout errors
+          yarn config set network-timeout 100000 -g
+
+          yarn --frozen-lockfile
+
+      - name: Check types (client)
+        run: |
+          cd webui
           yarn check-types
 
   linux64:
