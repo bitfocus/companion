@@ -7,9 +7,10 @@
 @import 'scss/layout';
 @import 'scss/common';
 @import 'scss/tablet';
+@import 'scss/emulator';
 
 @import 'scss/action-recorder';
-@import 'scss/bank';
+@import 'scss/button-control';
 @import 'scss/button-edit';
 @import 'scss/button-grid';
 @import 'scss/controls';
@@ -78,16 +79,6 @@
 			max-width: 100%;
 		}
 	}
-}
-
-.page-emulator {
-	background-color: white;
-	padding: 1px;
-
-	min-height: 100vh;
-	min-width: 1000px;
-
-	text-align: center;
 }
 
 .modal-body img {

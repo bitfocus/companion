@@ -47,6 +47,11 @@ declare module 'osc' {
 		args: Argument | Array<Argument> | MetaArgument | Array<MetaArgument>
 	}
 
+	export interface OscReceivedMessage {
+		address: string
+		args: Array<MetaArgument>
+	}
+
 	// eslint-disable-next-line @typescript-eslint/no-empty-interface
 	export interface OscBundle {}
 
@@ -59,7 +64,7 @@ declare module 'osc' {
 
 	export interface PortEvents {
 		ready: () => void
-		message: (message: OscMessage, timeTag: number | undefined, info: SenderInfo) => void
+		message: (message: OscReceivedMessage, timeTag: number | undefined, info: SenderInfo) => void
 		bundle: (bundle: OscBundle, timeTag: number, info: SenderInfo) => void
 		osc: (packet: OscBundle | OscMessage, info: SenderInfo) => void
 		raw: (data: Uint8Array, info: SenderInfo) => void

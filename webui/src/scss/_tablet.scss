@@ -14,7 +14,7 @@
 	}
 
 	.container-fluid {
-		max-width: 1200px;
+		// max-width: 1200px;
 		height: 100%;
 		margin: 0 auto;
 	}
@@ -75,18 +75,18 @@
 
 		width: 100%;
 
-		.bank {
+		.button-control {
 			border: none;
 			position: absolute;
 			float: left;
 		}
 
-		.bank img {
+		.button-control img {
 			max-width: 150px;
 			max-height: 150px;
 		}
 
-		&.bank-armed .pagebank-row {
+		&.button-armed .buttongrid-row {
 			background-color: rgba(255, 0, 0, 0.5);
 		}
 
@@ -94,7 +94,7 @@
 			position: relative;
 		}
 
-		.pagebank-row {
+		.buttongrid-row {
 			display: grid;
 			// grid-auto-flow: column;
 			grid-auto-columns: 1fr;

@@ -102,6 +102,10 @@ code {
 }
 .table {
 	color: #111;
+
+	&.table-margin-top {
+		margin-top: 1rem;
+	}
 }
 
 .modal {
@@ -146,4 +150,12 @@ code {
 
 .c-switch-input {
 	display: none;
+}
+
+.displayNone {
+	display: none;
+}
+
+.noBorder td {
+	border: none;
 }

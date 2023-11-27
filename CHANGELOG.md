@@ -2,9 +2,37 @@
 
 ## Companion v3.2.0 - Release Notes (unreleased)
 
+Up to 13984f3b4c3fb4f206cadfa5549573734f8e6432
+
 ### 📣 CORE FEATURES AND IMPROVEMENTS
 
+- Button grid can be resized to be smaller or larger than the default 8x4
+- Rework button image drawing, to be higher resolution. This changes some font sizes slightly.
+
+- Improved surface rotation, which rotates the whole surface not just the drawing of each button
+- Change surface image scaling library to reduce install size and improve performance
+- Use async HID library, removing spawning of child processes to handle HID devices
+- Add fontsize and image scaling to satellite api
+- Elgato Plugin performance improvements
+- Export and import compressed configs
+- Add support for Loupedeck CT
+- Add support for Videohub Panel as a surface
+- Send compressed button renders to webui
+- Emulators can have their grid size changed
+- Tablet page performance improvements
+- Bonjour discovery broker to assist modules in discovering possible devices to control
+- Indicate variables support on text input fields
+- Internal action to set or create custom variable
+- Slow down connection initiaisation at startup, to avoid crashes on lower power machines
+- Change webui build tooling to be more modern
+- Rework backend code to be loosely typed
+- Rework various api implementations, to support customisable grid size and avoid 'bank' terminology
+-
+
 ### 🐞 BUG FIXES
+
+- Streamdeck Plus LCD strip image positioning
+-
 
 ### 🧩 NEW & UPDATED MODULES
 
