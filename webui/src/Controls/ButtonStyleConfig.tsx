@@ -11,7 +11,7 @@ import { ButtonStyleProperties } from '@companion/shared/Model/StyleModel'
 interface ButtonStyleConfigProps {
 	controlId: string
 	controlType: string
-	style: Record<string, any>
+	style: Record<string, any> | undefined
 	configRef: MutableRefObject<SomeButtonModel | undefined>
 	mainDialog?: boolean
 }
@@ -64,16 +64,6 @@ export function ButtonStyleConfig({
 	const clearPng = useCallback(() => setValueInner('png64', null), [setValueInner])
 
 	switch (controlType) {
-		case undefined:
-			return (
-				<>
-					<h4>Empty button</h4>
-					<p className="mt-3">
-						To get started, click button above to create a regular button, or use the drop down to make a special
-						button.
-					</p>
-				</>
-			)
 		case 'pageup':
 			return (
 				<>
@@ -109,14 +99,16 @@ export function ButtonStyleConfig({
 
 			<CForm onSubmit={PreventDefaultHandler}>
 				<CRow form className="flex-form flex-form-row" style={{ clear: 'both' }}>
-					<ButtonStyleConfigFields
-						values={style}
-						setValueInner={setValueInner}
-						setPng={setPng}
-						setPngError={setPngError}
-						clearPng={clearPng}
-						mainDialog={mainDialog}
-					/>
+					{style && (
+						<ButtonStyleConfigFields
+							values={style}
+							setValueInner={setValueInner}
+							setPng={setPng}
+							setPngError={setPngError}
+							clearPng={clearPng}
+							mainDialog={mainDialog}
+						/>
+					)}
 				</CRow>
 			</CForm>
 		</CCol>
