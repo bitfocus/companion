@@ -1859,6 +1859,18 @@ micromark@^3.0.0:
     micromark-util-types "^1.0.1"
     uvu "^0.5.0"
 
+mobx-react-lite@^4.0.5:
+  version "4.0.5"
+  resolved "https://registry.yarnpkg.com/mobx-react-lite/-/mobx-react-lite-4.0.5.tgz#e2cb98f813e118917bcc463638f5bf6ea053a67b"
+  integrity sha512-StfB2wxE8imKj1f6T8WWPf4lVMx3cYH9Iy60bbKXEs21+HQ4tvvfIBZfSmMXgQAefi8xYEwQIz4GN9s0d2h7dg==
+  dependencies:
+    use-sync-external-store "^1.2.0"
+
+mobx@^6.12.0:
+  version "6.12.0"
+  resolved "https://registry.yarnpkg.com/mobx/-/mobx-6.12.0.tgz#72b2685ca5af031aaa49e77a4d76ed67fcbf9135"
+  integrity sha512-Mn6CN6meXEnMa0a5u6a5+RKrqRedHBhZGd15AWLk9O6uFY4KYHzImdt8JI8WODo1bjTSRnwXhJox+FCUZhCKCQ==
+
 mri@^1.1.0:
   version "1.2.0"
   resolved "https://registry.yarnpkg.com/mri/-/mri-1.2.0.tgz#6721480fec2a11a4889861115a48b6cbe7cc8f0b"
@@ -2626,6 +2638,11 @@ use-isomorphic-layout-effect@^1.1.2:
   version "1.1.2"
   resolved "https://registry.yarnpkg.com/use-isomorphic-layout-effect/-/use-isomorphic-layout-effect-1.1.2.tgz#497cefb13d863d687b08477d9e5a164ad8c1a6fb"
   integrity sha512-49L8yCO3iGT/ZF9QttjwLF/ZD9Iwto5LnH5LmEdk/6cFmXddqi2ulF0edxTwjj+7mqvpVVGQWvbXZdn32wRSHA==
+
+use-sync-external-store@^1.2.0:
+  version "1.2.0"
+  resolved "https://registry.yarnpkg.com/use-sync-external-store/-/use-sync-external-store-1.2.0.tgz#7dbefd6ef3fe4e767a0cf5d7287aacfb5846928a"
+  integrity sha512-eEgnFxGQ1Ife9bzYs6VLi8/4X6CObHMw9Qr9tPY43iKwsPw8xE8+EFsf/2cFZ5S3esXgpWgtSCtLNS41F+sKPA==
 
 usehooks-ts@^2.9.1:
   version "2.9.1"

@@ -10,6 +10,7 @@ import type {
 	CompanionInputFieldStaticText,
 	CompanionInputFieldTextInput,
 } from '@companion-module/base'
+import type { SetOptional } from 'type-fest'
 
 // TODO: move to '@companion-module/base'
 export type IsVisibleFunction = Required<CompanionInputFieldBase>['isVisible']
@@ -101,7 +102,8 @@ export interface ActionDefinition {
 	label: string
 	description: string | undefined
 	options: InternalActionInputField[]
-	hasLearn?: boolean
+	hasLearn: boolean
+	learnTimeout: number | undefined
 }
 
 export interface FeedbackDefinition {
@@ -111,14 +113,16 @@ export interface FeedbackDefinition {
 	type: 'advanced' | 'boolean'
 	style: Partial<CompanionButtonStyleProps> | undefined
 	hasLearn: boolean
+	learnTimeout: number | undefined
 	showInvert: boolean
 }
 
-export interface InternalFeedbackDefinition extends FeedbackDefinition {
+export interface InternalFeedbackDefinition extends SetOptional<FeedbackDefinition, 'hasLearn' | 'learnTimeout'> {
 	showButtonPreview?: boolean
 }
 
-export interface InternalActionDefinition extends Omit<ActionDefinition, 'options'> {
+export interface InternalActionDefinition
+	extends SetOptional<Omit<ActionDefinition, 'options'>, 'hasLearn' | 'learnTimeout'> {
 	showButtonPreview?: boolean
 	options: InternalActionInputField[]
 }

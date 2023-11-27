@@ -236,8 +236,6 @@ export const EditButton = memo(function EditButton({ location, onKeyUp }: EditBu
 	// const isTwoColumn = window.matchMedia('(min-width: 1200px)').matches
 	// const [, { height: hintHeight }] = useElementSize()
 
-	console.log('ty', dataReady, hasConfig, hasRuntimeProps, loadError)
-
 	return (
 		<KeyReceiver onKeyUp={onKeyUp} tabIndex={0} className="edit-button-panel flex-form">
 			<GenericConfirmModal ref={resetModalRef} />
