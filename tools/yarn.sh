@@ -37,6 +37,15 @@ fi
 
 set -e
 
+# Hack: This needs to be done first or npx fails to run typescript for some of the modules
+heading "Legacy Modules"
+yarn --frozen-lockfile --cwd module-legacy
+if [ -z "$CI" ]; then
+  echo "Warning: This next step can take many minutes to run"
+  yarn --cwd module-legacy generate-manifests
+fi 
+echo
+
 heading "Core"
 yarn --frozen-lockfile
 yarn build:writefile
@@ -47,14 +56,6 @@ yarn --frozen-lockfile --cwd webui
 if [ -z "$CI" ]; then
   echo "Warning: This next step can take many minutes to run"
   yarn --cwd webui build
-fi 
-echo
-
-heading "Legacy Modules"
-yarn --frozen-lockfile --cwd module-legacy
-if [ -z "$CI" ]; then
-  echo "Warning: This next step can take many minutes to run"
-  yarn --cwd module-legacy generate-manifests
 fi 
 echo
 
