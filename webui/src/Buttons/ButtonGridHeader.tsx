@@ -5,8 +5,11 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faChevronLeft, faChevronRight } from '@fortawesome/free-solid-svg-icons'
 import Select from 'react-select'
 import { PageModel } from '@companion/shared/Model/PageModel'
-import { DropdownChoice } from '@companion-module/base'
 
+interface SelectOption {
+	value: number
+	label: string
+}
 interface ButtonGridHeaderProps {
 	pageNumber: number
 	changePage?: (delta: number) => void
@@ -22,9 +25,9 @@ export const ButtonGridHeader = memo<React.PropsWithChildren<ButtonGridHeaderPro
 	const pagesContext = useContext(PagesContext)
 
 	const inputChange = useCallback(
-		(val) => {
-			const val2 = Number(val?.value)
-			if (setPage && !isNaN(val2)) {
+		(val: SelectOption | null) => {
+			const val2 = val?.value
+			if (val2 !== undefined && setPage && !isNaN(val2)) {
 				setPage(val2)
 			}
 		},
@@ -38,17 +41,22 @@ export const ButtonGridHeader = memo<React.PropsWithChildren<ButtonGridHeaderPro
 		changePage?.(-1)
 	}, [changePage])
 
-	const pageOptions: DropdownChoice[] = useMemo(() => {
+	const pageOptions: SelectOption[] = useMemo(() => {
 		return Object.entries(pagesContext)
 			.filter((pg): pg is [string, PageModel] => !!pg[1])
 			.map(([index, value]) => ({
-				id: index,
+				value: Number(index),
 				label: `${index} (${value.name})`,
 			}))
 	}, [pagesContext])
 
-	const currentValue: DropdownChoice | undefined = useMemo(() => {
-		return pageOptions.find((o) => o.id == pageNumber) ?? { id: pageNumber, label: pageNumber + '' }
+	const currentValue: SelectOption | undefined = useMemo(() => {
+		return (
+			pageOptions.find((o) => o.value == pageNumber) ?? {
+				value: pageNumber,
+				label: pageNumber + '',
+			}
+		)
 	}, [pageOptions, pageNumber])
 
 	return (
@@ -59,7 +67,7 @@ export const ButtonGridHeader = memo<React.PropsWithChildren<ButtonGridHeaderPro
 						<FontAwesomeIcon icon={faChevronLeft} />
 					</CButton>
 				</CInputGroupPrepend>
-				<Select
+				<Select<SelectOption>
 					className="button-page-input"
 					isDisabled={!setPage}
 					placeholder={pageNumber}
