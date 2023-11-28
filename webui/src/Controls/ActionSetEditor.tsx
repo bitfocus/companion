@@ -32,6 +32,7 @@ import type { FilterOptionOption } from 'react-select/dist/declarations/src/filt
 import { ActionInstance } from '@companion/shared/Model/ActionModel'
 import { ControlLocation } from '@companion/shared/Model/Common'
 import { useOptionsAndIsVisible } from '../Hooks/useOptionsAndIsVisible'
+import { LearnButton } from '../Components/LearnButton'
 
 interface ControlActionSetEditorProps {
 	controlId: string
@@ -548,17 +549,7 @@ function ActionTableRow({
 						</div>
 
 						<div className="cell-actions">
-							{actionSpec?.hasLearn && (
-								<CButton
-									disabled={readonly}
-									color="info"
-									size="sm"
-									onClick={innerLearn}
-									title="Capture the current values from the device"
-								>
-									Learn
-								</CButton>
-							)}
+							{actionSpec?.hasLearn && <LearnButton id={action.id} disabled={readonly} doLearn={innerLearn} />}
 						</div>
 
 						<div className="cell-option">
@@ -574,7 +565,7 @@ function ActionTableRow({
 											actionId={action.id}
 											value={(action.options || {})[opt.id]}
 											setValue={setValue}
-											visibility={optionVisibility[opt.id]}
+											visibility={optionVisibility[opt.id] ?? true}
 											readonly={readonly}
 										/>
 									</MyErrorBoundary>

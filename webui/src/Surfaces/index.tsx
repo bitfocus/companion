@@ -102,7 +102,15 @@ export const SurfacesPage = memo(function SurfacesPage() {
 		[socket]
 	)
 
-	const surfacesList = Object.values(surfacesContext).filter((grp): grp is ClientDevicesListItem => !!grp)
+	const surfacesList = Object.values(surfacesContext)
+		.filter((grp): grp is ClientDevicesListItem => !!grp)
+		.sort((a, b) => {
+			if (a.index === undefined && b.index === undefined) {
+				return a.id.localeCompare(b.id)
+			} else {
+				return (a.index ?? Number.POSITIVE_INFINITY) - (b.index ?? Number.POSITIVE_INFINITY)
+			}
+		})
 
 	return (
 		<div>

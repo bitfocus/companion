@@ -32,10 +32,11 @@ import { MenuPortalContext } from '../Components/DropdownInputField'
 import { ButtonStyleProperties } from '@companion/shared/Style'
 import { FilterOptionOption } from 'react-select/dist/declarations/src/filters'
 import { FeedbackInstance } from '@companion/shared/Model/FeedbackModel'
-import { FeedbackDefinition } from '@companion/shared/Model/Options'
+import { InternalFeedbackDefinition } from '@companion/shared/Model/Options'
 import { DropdownChoiceId } from '@companion-module/base'
 import { ControlLocation } from '@companion/shared/Model/Common'
 import { useOptionsAndIsVisible } from '../Hooks/useOptionsAndIsVisible'
+import { LearnButton } from '../Components/LearnButton'
 
 interface ControlFeedbacksEditorProps {
 	controlId: string
@@ -476,11 +477,7 @@ function FeedbackEditor({
 					)}
 
 					<div className="cell-actions">
-						{feedbackSpec?.hasLearn && (
-							<CButton color="info" size="sm" onClick={innerLearn} title="Capture the current values from the device">
-								Learn
-							</CButton>
-						)}
+						{feedbackSpec?.hasLearn && <LearnButton id={feedback.id} doLearn={innerLearn} />}
 					</div>
 
 					<div className="cell-option">
@@ -496,7 +493,7 @@ function FeedbackEditor({
 										actionId={feedback.id}
 										value={(feedback.options || {})[opt.id]}
 										setValue={setValue}
-										visibility={optionVisibility[opt.id]}
+										visibility={optionVisibility[opt.id] ?? true}
 									/>
 								</MyErrorBoundary>
 							))}
@@ -543,7 +540,7 @@ function FeedbackEditor({
 }
 
 interface FeedbackManageStylesProps {
-	feedbackSpec: FeedbackDefinition | undefined
+	feedbackSpec: InternalFeedbackDefinition | undefined
 	feedback: FeedbackInstance
 	setSelectedStyleProps: (keys: string[]) => void
 }
@@ -576,7 +573,7 @@ function FeedbackManageStyles({ feedbackSpec, feedback, setSelectedStyleProps }:
 }
 
 interface FeedbackStylesProps {
-	feedbackSpec: FeedbackDefinition | undefined
+	feedbackSpec: InternalFeedbackDefinition | undefined
 	feedback: FeedbackInstance
 	setStylePropsValue: (key: string, value: any) => void
 }

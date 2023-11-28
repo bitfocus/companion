@@ -100,6 +100,7 @@ export const EditButton = memo(function EditButton({ location, onKeyUp }: EditBu
 
 		socketEmitPromise(socket, 'controls:subscribe', [controlId])
 			.then((config) => {
+				console.log(config)
 				setConfig(config?.config ?? false)
 				setRuntimeProps(config?.runtime ?? {})
 				setConfigError(null)
@@ -242,34 +243,33 @@ export const EditButton = memo(function EditButton({ location, onKeyUp }: EditBu
 			{hasConfig && dataReady && (
 				<>
 					<ButtonPreviewBase fixedSize preview={previewImage} right={true} />
-					{!config ||
-						(config.type === undefined && (
-							<MyErrorBoundary>
-								{' '}
-								<CDropdown className="" style={{ display: 'inline-block', marginRight: -4 }}>
-									<CButtonGroup>
-										{/* This could be simplified to use the split property on CDropdownToggle, but then onClick doesnt work https://github.com/coreui/coreui-react/issues/179 */}
-										<CButton color="danger" onClick={() => setButtonType('button')}>
-											Create button
-										</CButton>
-										<CDropdownToggle
-											caret
-											color="danger"
-											style={{ opacity: 0.7, paddingLeft: 14, paddingRight: 16 }}
-											className="dropdown-toggle dropdown-toggle-split"
-										>
-											<span className="sr-only">Toggle Dropdown</span>
-										</CDropdownToggle>
-									</CButtonGroup>
-									<CDropdownMenu>
-										<CDropdownItem onClick={() => setButtonType('button')}>Regular button</CDropdownItem>
-										<CDropdownItem onClick={() => setButtonType('pageup')}>Page up</CDropdownItem>
-										<CDropdownItem onClick={() => setButtonType('pagenum')}>Page number</CDropdownItem>
-										<CDropdownItem onClick={() => setButtonType('pagedown')}>Page down</CDropdownItem>
-									</CDropdownMenu>
-								</CDropdown>
-							</MyErrorBoundary>
-						))}
+					{(!config || config.type === undefined) && (
+						<MyErrorBoundary>
+							{' '}
+							<CDropdown className="" style={{ display: 'inline-block', marginRight: -4 }}>
+								<CButtonGroup>
+									{/* This could be simplified to use the split property on CDropdownToggle, but then onClick doesnt work https://github.com/coreui/coreui-react/issues/179 */}
+									<CButton color="danger" onClick={() => setButtonType('button')}>
+										Create button
+									</CButton>
+									<CDropdownToggle
+										caret
+										color="danger"
+										style={{ opacity: 0.7, paddingLeft: 14, paddingRight: 16 }}
+										className="dropdown-toggle dropdown-toggle-split"
+									>
+										<span className="sr-only">Toggle Dropdown</span>
+									</CDropdownToggle>
+								</CButtonGroup>
+								<CDropdownMenu>
+									<CDropdownItem onClick={() => setButtonType('button')}>Regular button</CDropdownItem>
+									<CDropdownItem onClick={() => setButtonType('pageup')}>Page up</CDropdownItem>
+									<CDropdownItem onClick={() => setButtonType('pagenum')}>Page number</CDropdownItem>
+									<CDropdownItem onClick={() => setButtonType('pagedown')}>Page down</CDropdownItem>
+								</CDropdownMenu>
+							</CDropdown>
+						</MyErrorBoundary>
+					)}
 					&nbsp;
 					<MyErrorBoundary>
 						<CButton color="danger" hidden={!config} onClick={clearButton} title="Clear Button">
@@ -307,17 +307,29 @@ export const EditButton = memo(function EditButton({ location, onKeyUp }: EditBu
 							</CButton>
 						</MyErrorBoundary>
 					)}
+					{!config && (
+						<>
+							<h4>Empty button</h4>
+							<p className="mt-3">
+								To get started, click button above to create a regular button, or use the drop down to make a special
+								button.
+							</p>
+						</>
+					)}
+					{controlId && config && (
+						<MyErrorBoundary>
+							<ButtonStyleConfig
+								controlType={config.type}
+								style={'style' in config ? config.style : undefined}
+								configRef={configRef}
+								controlId={controlId}
+								mainDialog
+							/>
+						</MyErrorBoundary>
+					)}
 					{controlId && config && config.type === 'button' && (
 						<>
 							<MyErrorBoundary>
-								<ButtonStyleConfig
-									controlType={config.type}
-									style={config.style}
-									configRef={configRef}
-									controlId={controlId}
-									mainDialog
-								/>
-
 								<div style={{ marginLeft: '5px' }}>
 									<ControlOptionsEditor
 										controlType={config.type}

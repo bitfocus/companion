@@ -18,6 +18,7 @@ import {
 	ModulesContext,
 	RecentActionsContext,
 	RecentFeedbacksContext,
+	ActiveLearnContext,
 } from './util'
 import { NotificationsManager, NotificationsManagerRef } from './Components/Notifications'
 import { cloneDeep } from 'lodash-es'
@@ -30,6 +31,7 @@ import type { AllVariableDefinitions, ModuleVariableDefinitions } from '@compani
 import type { CustomVariablesModel } from '@companion/shared/Model/CustomVariableModel'
 import type { ClientDevicesListItem } from '@companion/shared/Model/Surfaces'
 import type { ClientTriggerData } from '@companion/shared/Model/TriggerModel'
+import { useActiveLearnRequests } from './_Model/ActiveLearn'
 
 interface ContextDataProps {
 	children: (progressPercent: number, loadingComplete: boolean) => React.JSX.Element | React.JSX.Element[]
@@ -301,6 +303,8 @@ export function ContextData({ children }: ContextDataProps) {
 		}
 	}, [socket])
 
+	const [activeLearnRequests, activeLearnRequestsReady] = useActiveLearnRequests(socket)
+
 	const notifierRef = useRef<NotificationsManagerRef>(null)
 
 	const steps = [
@@ -316,6 +320,7 @@ export function ContextData({ children }: ContextDataProps) {
 		surfaces,
 		pages,
 		triggers,
+		activeLearnRequestsReady,
 	]
 	const completedSteps = steps.filter((s) => s !== null && s !== undefined)
 
@@ -336,9 +341,11 @@ export function ContextData({ children }: ContextDataProps) {
 													<TriggersContext.Provider value={triggers!}>
 														<RecentActionsContext.Provider value={recentActionsContext}>
 															<RecentFeedbacksContext.Provider value={recentFeedbacksContext}>
-																<NotificationsManager ref={notifierRef} />
+																<ActiveLearnContext.Provider value={activeLearnRequests}>
+																	<NotificationsManager ref={notifierRef} />
 
-																{children(progressPercent, completedSteps.length === steps.length)}
+																	{children(progressPercent, completedSteps.length === steps.length)}
+																</ActiveLearnContext.Provider>
 															</RecentFeedbacksContext.Provider>
 														</RecentActionsContext.Provider>
 													</TriggersContext.Provider>

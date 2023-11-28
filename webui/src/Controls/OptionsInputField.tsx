@@ -161,7 +161,7 @@ export function OptionsInputField({
 		featureIcons.push(<FontAwesomeIcon key="variables" icon={faDollarSign} title={'Supports variables'} />)
 
 	return (
-		<CFormGroup className={classNames({ displayNone: !!visibility })}>
+		<CFormGroup className={classNames({ displayNone: !visibility })}>
 			<CLabel>
 				{option.label}
 				{featureIcons.length ? <span className="feature-icons">{featureIcons}</span> : ''}

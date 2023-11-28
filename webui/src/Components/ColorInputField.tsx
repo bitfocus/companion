@@ -8,7 +8,9 @@ import { colord } from 'colord'
 import { CompanionColorPresetValue } from '@companion-module/base'
 
 function splitColor(color: number | string) {
-	if (typeof color === 'number') {
+	if (typeof color === 'number' || !isNaN(Number(color))) {
+		color = Number(color)
+
 		if (color > 0xffffff) {
 			return {
 				r: (color >> 16) & 0xff,
