@@ -493,7 +493,7 @@ function FeedbackEditor({
 										actionId={feedback.id}
 										value={(feedback.options || {})[opt.id]}
 										setValue={setValue}
-										visibility={optionVisibility[opt.id]}
+										visibility={optionVisibility[opt.id] ?? true}
 									/>
 								</MyErrorBoundary>
 							))}

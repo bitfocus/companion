@@ -565,7 +565,7 @@ function ActionTableRow({
 											actionId={action.id}
 											value={(action.options || {})[opt.id]}
 											setValue={setValue}
-											visibility={optionVisibility[opt.id]}
+											visibility={optionVisibility[opt.id] ?? true}
 											readonly={readonly}
 										/>
 									</MyErrorBoundary>

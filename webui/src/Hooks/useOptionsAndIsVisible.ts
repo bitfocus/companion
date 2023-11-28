@@ -11,8 +11,8 @@ interface IsVisibleFunctionEntry {
 export function useOptionsAndIsVisible(
 	itemSpec: { options: Array<ExtendedInputField | InternalInputField> } | undefined,
 	item: { options: CompanionOptionValues } | undefined
-): [options: Array<ExtendedInputField | InternalInputField>, optionVisibility: Record<string, boolean>] {
-	const [optionVisibility, setOptionVisibility] = useState<Record<string, boolean>>({})
+): [options: Array<ExtendedInputField | InternalInputField>, optionVisibility: Record<string, boolean | undefined>] {
+	const [optionVisibility, setOptionVisibility] = useState<Record<string, boolean | undefined>>({})
 
 	const [options, isVisibleFns] = useMemo(() => {
 		const options = itemSpec?.options ?? []

@@ -340,7 +340,7 @@ function EventEditor({
 										actionId={event.id}
 										value={(event.options || {})[opt.id]}
 										setValue={setValue}
-										visibility={optionVisibility[opt.id]}
+										visibility={optionVisibility[opt.id] ?? true}
 									/>
 								</MyErrorBoundary>
 							))}
