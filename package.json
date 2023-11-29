@@ -68,7 +68,7 @@
 	},
 	"dependencies": {
 		"@companion-module/base": "~1.6.0",
-		"@elgato-stream-deck/node": "^6.0.0-async-test.4",
+		"@elgato-stream-deck/node": "^6.0.0",
 		"@jsep-plugin/numbers": "^1.0.1",
 		"@jsep-plugin/template": "^1.0.3",
 		"@julusian/image-rs": "^0.2.1",
@@ -124,14 +124,14 @@
 		"winston": "^3.11.0",
 		"workerpool": "^8.0.0",
 		"ws": "^8.14.2",
-		"xkeys": "npm:@julusian/xkeys@2.5.0-1"
+		"xkeys": "npm:@julusian/xkeys@3.1.0-0"
 	},
 	"collective": {
 		"type": "donorbox",
 		"url": "https://donorbox.org/bitfocus-opensource"
 	},
 	"resolutions": {
-		"node-hid": "npm:@julusian/hid@3.0.0-2",
+		"node-hid": "^3.0.0",
 		"node-gyp-build": "github:julusian/node-gyp-build#cross-install-support",
 		"osc/serialport": "^10.5.0"
 	}
