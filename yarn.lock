@@ -887,9 +887,9 @@
   integrity sha512-AanzbulOHljrku1NGfafxdpTCfw2ENaWzH01N2vqQM+cUFbk868Cgh0xylz0JIM9BoKbfI++bdD6EYX0Q/UTEw==
 
 "@octokit/webhooks@^10.0.0":
-  version "10.9.1"
-  resolved "https://registry.yarnpkg.com/@octokit/webhooks/-/webhooks-10.9.1.tgz#4674a6924567419d7d0187a8b6c88ec468a97a86"
-  integrity sha512-5NXU4VfsNOo2VSU/SrLrpPH2Z1ZVDOWFcET4EpnEBX1uh/v8Uz65UVuHIRx5TZiXhnWyRE9AO1PXHa+M/iWwZA==
+  version "10.9.2"
+  resolved "https://registry.yarnpkg.com/@octokit/webhooks/-/webhooks-10.9.2.tgz#1b1e79a70fa5b22a3149b18432cbf3f39dbcb544"
+  integrity sha512-hFVF/szz4l/Y/GQdKxNmQjUke0XJXK986p+ucIlubTGVPVtVtup5G1jarQfvCMBs9Fvlf9dvH8K83E4lefmofQ==
   dependencies:
     "@octokit/request-error" "^3.0.0"
     "@octokit/webhooks-methods" "^3.0.0"
@@ -4840,8 +4840,9 @@ resolve@^1.20.0:
     supports-preserve-symlinks-flag "^1.0.0"
 
 "respawn@link:./vendor/respawn":
-  version "0.0.0"
-  uid ""
+  version "2.6.0"
+  dependencies:
+    ps-tree "^1.2.0"
 
 responselike@^3.0.0:
   version "3.0.0"
