@@ -50,6 +50,7 @@ import type { ControlLocation } from '@companion/shared/Model/Common'
 import type { ClientTriggerData } from '@companion/shared/Model/TriggerModel'
 import type { RecordSessionInfo, RecordSessionListInfo } from '@companion/shared/Model/ActionRecorderModel'
 import type { NormalButtonModel } from '@companion/shared/Model/ButtonModel'
+import { useActionRecorderActionService } from '../Services/Controls/ControlActionsService'
 
 export function ActionRecorder() {
 	const socket = useContext(SocketContext)
@@ -669,59 +670,7 @@ interface RecorderSessionProps {
 }
 
 function RecorderSession({ sessionId, sessionInfo }: RecorderSessionProps) {
-	const socket = useContext(SocketContext)
-
-	const doActionDelete = useCallback(
-		(actionId: string) => {
-			socketEmitPromise(socket, 'action-recorder:session:action-delete', [sessionId, actionId]).catch((e) => {
-				console.error(e)
-			})
-		},
-		[socket, sessionId]
-	)
-	const doActionDuplicate = useCallback(
-		(actionId: string) => {
-			socketEmitPromise(socket, 'action-recorder:session:action-duplicate', [sessionId, actionId]).catch((e) => {
-				console.error(e)
-			})
-		},
-		[socket, sessionId]
-	)
-	const doActionDelay = useCallback(
-		(actionId: string, delay: number) => {
-			socketEmitPromise(socket, 'action-recorder:session:action-delay', [sessionId, actionId, delay]).catch((e) => {
-				console.error(e)
-			})
-		},
-		[socket, sessionId]
-	)
-	const doActionSetValue = useCallback(
-		(actionId: string, key: string, value: any) => {
-			socketEmitPromise(socket, 'action-recorder:session:action-set-value', [sessionId, actionId, key, value]).catch(
-				(e) => {
-					console.error(e)
-				}
-			)
-		},
-		[socket, sessionId]
-	)
-	const doActionReorder = useCallback(
-		(
-			_dragStepId: string,
-			_dragSetId: string | number,
-			dragIndex: number,
-			_dropStepId: string,
-			_dropSetId: string | number,
-			dropIndex: number
-		) => {
-			socketEmitPromise(socket, 'action-recorder:session:action-reorder', [sessionId, dragIndex, dropIndex]).catch(
-				(e) => {
-					console.error(e)
-				}
-			)
-		},
-		[socket, sessionId]
-	)
+	const actionsService = useActionRecorderActionService(sessionId)
 
 	const { setPanelCollapsed, isPanelCollapsed } = usePanelCollapseHelper(
 		`action_recorder`,
@@ -739,11 +688,7 @@ function RecorderSession({ sessionId, sessionInfo }: RecorderSessionProps) {
 				dragId={'triggerAction'}
 				actions={sessionInfo.actions}
 				readonly={!!sessionInfo.isRunning}
-				doDelete={doActionDelete}
-				doDuplicate={doActionDuplicate}
-				doSetDelay={doActionDelay}
-				doReorder={doActionReorder}
-				doSetValue={doActionSetValue}
+				actionsService={actionsService}
 				setPanelCollapsed={setPanelCollapsed}
 				isPanelCollapsed={isPanelCollapsed}
 			/>

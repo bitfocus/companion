@@ -11,14 +11,7 @@ import {
 } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import React, { useCallback, useContext, useMemo, useRef, useState } from 'react'
-import {
-	FeedbacksContext,
-	ConnectionsContext,
-	MyErrorBoundary,
-	socketEmitPromise,
-	SocketContext,
-	PreventDefaultHandler,
-} from '../util'
+import { FeedbacksContext, ConnectionsContext, MyErrorBoundary, PreventDefaultHandler } from '../util'
 import { OptionsInputField } from './OptionsInputField'
 import { useDrag, useDrop } from 'react-dnd'
 import { GenericConfirmModal, GenericConfirmModalRef } from '../Components/GenericConfirmModal'
@@ -35,6 +28,12 @@ import { ControlLocation } from '@companion/shared/Model/Common'
 import { useOptionsAndIsVisible } from '../Hooks/useOptionsAndIsVisible'
 import { LearnButton } from '../Components/LearnButton'
 import { AddFeedbackDropdown } from './AddFeedbackDropdown'
+import {
+	IFeedbackEditorFeedbackService,
+	IFeedbackEditorService,
+	useControlFeedbackService,
+	useControlFeedbacksEditorService,
+} from '../Services/Controls/ControlFeedbacksService'
 
 interface ControlFeedbacksEditorProps {
 	controlId: string
@@ -55,106 +54,12 @@ export function ControlFeedbacksEditor({
 	location,
 	addPlaceholder,
 }: ControlFeedbacksEditorProps) {
-	const socket = useContext(SocketContext)
-
 	const confirmModal = useRef<GenericConfirmModalRef>(null)
 
-	const feedbacksRef = useRef<FeedbackInstance[]>()
-	feedbacksRef.current = feedbacks
+	const feedbacksService = useControlFeedbacksEditorService(controlId, confirmModal, entityType)
 
 	const addFeedbacksRef = useRef<AddFeedbacksModalRef>(null)
-	const showAddModal = useCallback(() => {
-		addFeedbacksRef.current?.show()
-	}, [])
-
-	const setValue = useCallback(
-		(feedbackId: string, key: string, val: any) => {
-			const currentFeedback = feedbacksRef.current?.find((fb) => fb.id === feedbackId)
-			if (!currentFeedback?.options || currentFeedback.options[key] !== val) {
-				socketEmitPromise(socket, 'controls:feedback:set-option', [controlId, feedbackId, key, val]).catch((e) => {
-					console.error(`Set-option failed: ${e}`)
-				})
-			}
-		},
-		[socket, controlId]
-	)
-	const setInverted = useCallback(
-		(feedbackId: string, isInverted: boolean) => {
-			const currentFeedback = feedbacksRef.current?.find((fb) => fb.id === feedbackId)
-			if (!currentFeedback || currentFeedback.isInverted !== isInverted) {
-				socketEmitPromise(socket, 'controls:feedback:set-inverted', [controlId, feedbackId, isInverted]).catch((e) => {
-					console.error(`Set-inverted failed: ${e}`)
-				})
-			}
-		},
-		[socket, controlId]
-	)
-
-	const doDelete = useCallback(
-		(feedbackId: string) => {
-			confirmModal.current?.show(`Delete ${entityType}`, `Delete ${entityType}?`, 'Delete', () => {
-				socketEmitPromise(socket, 'controls:feedback:remove', [controlId, feedbackId]).catch((e) => {
-					console.error(`Failed to delete feedback: ${e}`)
-				})
-			})
-		},
-		[socket, controlId, entityType]
-	)
-
-	const doDuplicate = useCallback(
-		(feedbackId: string) => {
-			socketEmitPromise(socket, 'controls:feedback:duplicate', [controlId, feedbackId]).catch((e) => {
-				console.error(`Failed to duplicate feedback: ${e}`)
-			})
-		},
-		[socket, controlId]
-	)
-
-	const doLearn = useCallback(
-		(feedbackId: string) => {
-			socketEmitPromise(socket, 'controls:feedback:learn', [controlId, feedbackId]).catch((e) => {
-				console.error(`Failed to learn feedback values: ${e}`)
-			})
-		},
-		[socket, controlId]
-	)
-
-	const addFeedback = useCallback(
-		(feedbackType: string) => {
-			const [connectionId, feedbackId] = feedbackType.split(':', 2)
-			socketEmitPromise(socket, 'controls:feedback:add', [controlId, connectionId, feedbackId]).catch((e) => {
-				console.error('Failed to add control feedback', e)
-			})
-		},
-		[socket, controlId]
-	)
-
-	const moveCard = useCallback(
-		(dragIndex: number, hoverIndex: number) => {
-			socketEmitPromise(socket, 'controls:feedback:reorder', [controlId, dragIndex, hoverIndex]).catch((e) => {
-				console.error(`Move failed: ${e}`)
-			})
-		},
-		[socket, controlId]
-	)
-
-	const emitEnabled = useCallback(
-		(feedbackId: string, enabled: boolean) => {
-			socketEmitPromise(socket, 'controls:feedback:enabled', [controlId, feedbackId, enabled]).catch((e) => {
-				console.error('Failed to enable/disable feedback', e)
-			})
-		},
-		[socket, controlId]
-	)
-
-	const emitSetHeadline = useCallback(
-		(feedbackId: string, headline: string) => {
-			socketEmitPromise(socket, 'controls:feedback:set-headline', [controlId, feedbackId, headline]).catch((e) => {
-				console.error('Failed to set feedback headline', e)
-			})
-		},
-		[socket, controlId]
-	)
+	const showAddModal = useCallback(() => addFeedbacksRef.current?.show(), [])
 
 	const feedbackIds = useMemo(() => feedbacks.map((fb) => fb.id), [feedbacks])
 	const { setPanelCollapsed, isPanelCollapsed, setAllCollapsed, setAllExpanded, canExpandAll, canCollapseAll } =
@@ -165,7 +70,7 @@ export function ControlFeedbacksEditor({
 			<GenericConfirmModal ref={confirmModal} />
 
 			<MyErrorBoundary>
-				<AddFeedbacksModal ref={addFeedbacksRef} addFeedback={addFeedback} booleanOnly={booleanOnly} />
+				<AddFeedbacksModal ref={addFeedbacksRef} addFeedback={feedbacksService.addFeedback} booleanOnly={booleanOnly} />
 			</MyErrorBoundary>
 
 			<h4 className="mt-3">
@@ -196,17 +101,9 @@ export function ControlFeedbacksEditor({
 								key={a?.id ?? i}
 								entityType={entityType}
 								index={i}
-								controlId={controlId}
 								feedback={a}
-								setValue={setValue}
-								setInverted={setInverted}
-								doDelete={doDelete}
-								doDuplicate={doDuplicate}
-								doLearn={doLearn}
-								doEnabled={emitEnabled}
-								doSetHeadline={emitSetHeadline}
 								dragId={`feedback_${controlId}`}
-								moveCard={moveCard}
+								serviceFactory={feedbacksService}
 								setCollapsed={setPanelCollapsed}
 								isCollapsed={isPanelCollapsed(a.id)}
 								booleanOnly={booleanOnly}
@@ -218,7 +115,11 @@ export function ControlFeedbacksEditor({
 			</table>
 
 			<div className="add-dropdown-wrapper">
-				<AddFeedbackDropdown onSelect={addFeedback} booleanOnly={booleanOnly} addPlaceholder={addPlaceholder} />
+				<AddFeedbackDropdown
+					onSelect={feedbacksService.addFeedback}
+					booleanOnly={booleanOnly}
+					addPlaceholder={addPlaceholder}
+				/>
 				<CButton
 					color="primary"
 					onClick={showAddModal}
@@ -245,17 +146,9 @@ interface FeedbackTableRowDragStatus {
 interface FeedbackTableRowProps {
 	entityType: string
 	feedback: FeedbackInstance
-	controlId: string
+	serviceFactory: IFeedbackEditorService
 	index: number
 	dragId: string
-	moveCard: (dragIndex: number, hoverIndex: number) => void
-	setValue: (feedbackId: string, key: string, val: any) => void
-	setInverted: (feedbackId: string, inverted: boolean) => void
-	doDelete: (feedbackId: string) => void
-	doDuplicate: (feedbackId: string) => void
-	doLearn: (feedbackId: string) => void
-	doEnabled: (feedbackId: string, enabled: boolean) => void
-	doSetHeadline: ((actionId: string, headline: string) => void) | undefined
 	isCollapsed: boolean
 	setCollapsed: (feedbackId: string, collapsed: boolean) => void
 	booleanOnly: boolean
@@ -265,28 +158,15 @@ interface FeedbackTableRowProps {
 function FeedbackTableRow({
 	entityType,
 	feedback,
-	controlId,
+	serviceFactory,
 	index,
 	dragId,
-	moveCard,
-	setValue,
-	setInverted,
-	doDelete,
-	doDuplicate,
-	doLearn,
-	doEnabled,
-	doSetHeadline,
 	isCollapsed,
 	setCollapsed,
 	booleanOnly,
 	location,
 }: FeedbackTableRowProps) {
-	const socket = useContext(SocketContext)
-
-	const innerDelete = useCallback(() => doDelete(feedback.id), [feedback.id, doDelete])
-	const innerDuplicate = useCallback(() => doDuplicate(feedback.id), [feedback.id, doDuplicate])
-	const innerLearn = useCallback(() => doLearn(feedback.id), [doLearn, feedback.id])
-	const innerInverted = useCallback((isInverted) => setInverted(feedback.id, isInverted), [feedback.id, setInverted])
+	const service = useControlFeedbackService(serviceFactory, feedback)
 
 	const ref = useRef<HTMLTableRowElement>(null)
 	const [, drop] = useDrop<FeedbackTableRowDragItem>({
@@ -303,7 +183,7 @@ function FeedbackTableRow({
 			}
 
 			// Time to actually perform the action
-			moveCard(dragIndex, hoverIndex)
+			serviceFactory.moveCard(dragIndex, hoverIndex)
 
 			// Note: we're mutating the monitor item here!
 			// Generally it's better to avoid mutations,
@@ -324,34 +204,8 @@ function FeedbackTableRow({
 	})
 	preview(drop(ref))
 
-	const setSelectedStyleProps = useCallback(
-		(selected: string[]) => {
-			socketEmitPromise(socket, 'controls:feedback:set-style-selection', [controlId, feedback.id, selected]).catch(
-				(e) => {
-					console.error(`Failed: ${e}`)
-				}
-			)
-		},
-		[socket, controlId, feedback.id]
-	)
-
-	const setStylePropsValue = useCallback(
-		(key: string, value: any) => {
-			socketEmitPromise(socket, 'controls:feedback:set-style-value', [controlId, feedback.id, key, value]).catch(
-				(e) => {
-					console.error(`Failed: ${e}`)
-				}
-			)
-		},
-		[socket, controlId, feedback.id]
-	)
-
-	const doCollapse = useCallback(() => {
-		setCollapsed(feedback.id, true)
-	}, [setCollapsed, feedback.id])
-	const doExpand = useCallback(() => {
-		setCollapsed(feedback.id, false)
-	}, [setCollapsed, feedback.id])
+	const doCollapse = useCallback(() => setCollapsed(feedback.id, true), [setCollapsed, feedback.id])
+	const doExpand = useCallback(() => setCollapsed(feedback.id, false), [setCollapsed, feedback.id])
 
 	if (!feedback) {
 		// Invalid feedback, so skip
@@ -368,18 +222,10 @@ function FeedbackTableRow({
 					entityType={entityType}
 					location={location}
 					feedback={feedback}
-					setValue={setValue}
-					setInverted={innerInverted}
-					innerDelete={innerDelete}
-					innerDuplicate={innerDuplicate}
-					innerLearn={innerLearn}
-					setSelectedStyleProps={setSelectedStyleProps}
-					setStylePropsValue={setStylePropsValue}
+					service={service}
 					isCollapsed={isCollapsed}
 					doCollapse={doCollapse}
 					doExpand={doExpand}
-					doEnabled={doEnabled}
-					doSetHeadline={doSetHeadline}
 					booleanOnly={booleanOnly}
 				/>
 			</td>
@@ -391,18 +237,10 @@ interface FeedbackEditorProps {
 	entityType: string
 	feedback: FeedbackInstance
 	location: ControlLocation | undefined
-	setValue: (feedbackId: string, key: string, value: any) => void
-	setInverted: (inverted: boolean) => void
-	innerDelete: () => void
-	innerDuplicate: () => void
-	innerLearn: () => void
-	setSelectedStyleProps: (keys: string[]) => void
-	setStylePropsValue: (key: string, value: any) => void
+	service: IFeedbackEditorFeedbackService
 	isCollapsed: boolean
 	doCollapse: () => void
 	doExpand: () => void
-	doEnabled: (feedbackId: string, enabled: boolean) => void
-	doSetHeadline: ((actionId: string, headline: string) => void) | undefined
 	booleanOnly: boolean
 }
 
@@ -410,18 +248,10 @@ function FeedbackEditor({
 	entityType,
 	feedback,
 	location,
-	setValue,
-	setInverted,
-	innerDelete,
-	innerDuplicate,
-	innerLearn,
-	setSelectedStyleProps,
-	setStylePropsValue,
+	service,
 	isCollapsed,
 	doCollapse,
 	doExpand,
-	doEnabled,
-	doSetHeadline,
 	booleanOnly,
 }: FeedbackEditorProps) {
 	const feedbacksContext = useContext(FeedbacksContext)
@@ -434,11 +264,7 @@ function FeedbackEditor({
 
 	const [feedbackOptions, optionVisibility] = useOptionsAndIsVisible(feedbackSpec, feedback)
 
-	const innerSetEnabled = useCallback((e) => doEnabled(feedback.id, e.target.checked), [doEnabled, feedback.id])
-	const innerSetHeadline = useCallback(
-		(headline: string) => doSetHeadline && doSetHeadline(feedback.id, headline),
-		[doSetHeadline, feedback.id]
-	)
+	const innerSetEnabled = useCallback((e) => service.setEnabled(e.target.checked), [service.setEnabled])
 
 	const name = feedbackSpec
 		? `${connectionLabel}: ${feedbackSpec.label}`
@@ -446,7 +272,7 @@ function FeedbackEditor({
 
 	const showButtonPreview = feedback?.instance_id === 'internal' && feedbackSpec?.showButtonPreview
 
-	const canSetHeadline = !!doSetHeadline
+	const canSetHeadline = !!service.setHeadline
 	const headline = feedback.headline
 	const [headlineExpanded, setHeadlineExpanded] = useState(canSetHeadline && !!headline)
 	const doEditHeadline = useCallback(() => setHeadlineExpanded(true), [])
@@ -455,13 +281,13 @@ function FeedbackEditor({
 		<>
 			<div className="editor-grid-header remove075right">
 				<div className="cell-name">
-					{!canSetHeadline || !headlineExpanded || isCollapsed ? (
+					{!service.setHeadline || !headlineExpanded || isCollapsed ? (
 						headline || name
 					) : (
 						<TextInputField
 							value={headline ?? ''}
 							placeholder={'Describe the intent of the feedback'}
-							setValue={innerSetHeadline}
+							setValue={service.setHeadline}
 						/>
 					)}
 				</div>
@@ -482,13 +308,13 @@ function FeedbackEditor({
 								<FontAwesomeIcon icon={faCompressArrowsAlt} />
 							</CButton>
 						)}
-						<CButton size="sm" onClick={innerDuplicate} title={`Duplicate ${entityType}`}>
+						<CButton size="sm" onClick={service.performDuplicate} title={`Duplicate ${entityType}`}>
 							<FontAwesomeIcon icon={faCopy} />
 						</CButton>
-						<CButton size="sm" onClick={innerDelete} title={`Remove ${entityType}`}>
+						<CButton size="sm" onClick={service.performDelete} title={`Remove ${entityType}`}>
 							<FontAwesomeIcon icon={faTrash} />
 						</CButton>
-						{!!doEnabled && (
+						{!!service.setEnabled && (
 							<>
 								&nbsp;
 								<CSwitch
@@ -517,7 +343,7 @@ function FeedbackEditor({
 					)}
 
 					<div className="cell-actions">
-						{feedbackSpec?.hasLearn && <LearnButton id={feedback.id} doLearn={innerLearn} />}
+						{feedbackSpec?.hasLearn && <LearnButton id={feedback.id} doLearn={service.performLearn} />}
 					</div>
 
 					<div className="cell-option">
@@ -532,7 +358,7 @@ function FeedbackEditor({
 										option={opt}
 										actionId={feedback.id}
 										value={(feedback.options || {})[opt.id]}
-										setValue={setValue}
+										setValue={service.setValue}
 										visibility={optionVisibility[opt.id] ?? true}
 									/>
 								</MyErrorBoundary>
@@ -554,7 +380,7 @@ function FeedbackEditor({
 											/>
 										</CLabel>
 										<p>
-											<CheckboxInputField value={!!feedback.isInverted} setValue={setInverted} />
+											<CheckboxInputField value={!!feedback.isInverted} setValue={service.setInverted} />
 											&nbsp;
 										</p>
 									</CFormGroup>
@@ -565,11 +391,15 @@ function FeedbackEditor({
 
 					{!booleanOnly && (
 						<>
-							<FeedbackStyles feedbackSpec={feedbackSpec} feedback={feedback} setStylePropsValue={setStylePropsValue} />
+							<FeedbackStyles
+								feedbackSpec={feedbackSpec}
+								feedback={feedback}
+								setStylePropsValue={service.setStylePropsValue}
+							/>
 							<FeedbackManageStyles
 								feedbackSpec={feedbackSpec}
 								feedback={feedback}
-								setSelectedStyleProps={setSelectedStyleProps}
+								setSelectedStyleProps={service.setSelectedStyleProps}
 							/>
 						</>
 					)}

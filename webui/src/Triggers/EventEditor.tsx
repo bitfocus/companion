@@ -9,22 +9,21 @@ import {
 } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import React, { FormEvent, useCallback, useContext, useMemo, useRef, useState } from 'react'
-import {
-	MyErrorBoundary,
-	socketEmitPromise,
-	SocketContext,
-	EventDefinitionsContext,
-	PreventDefaultHandler,
-} from '../util.js'
+import { MyErrorBoundary, EventDefinitionsContext, PreventDefaultHandler } from '../util.js'
 import { OptionsInputField } from '../Controls/OptionsInputField.js'
 import { useDrag, useDrop } from 'react-dnd'
 import { GenericConfirmModal, GenericConfirmModalRef } from '../Components/GenericConfirmModal.js'
 import { usePanelCollapseHelper } from '../Helpers/CollapseHelper.js'
-import type { DropdownChoiceId } from '@companion-module/base'
 import type { EventInstance } from '@companion/shared/Model/EventModel.js'
 import { useOptionsAndIsVisible } from '../Hooks/useOptionsAndIsVisible.js'
 import { TextInputField } from '../Components/TextInputField.js'
 import { AddEventDropdown } from './AddEventDropdown.js'
+import {
+	IEventEditorEventService,
+	IEventEditorService,
+	useControlEventService,
+	useControlEventsEditorService,
+} from '../Services/Controls/ControlEventsService.js'
 
 interface TriggerEventEditorProps {
 	controlId: string
@@ -33,80 +32,12 @@ interface TriggerEventEditorProps {
 }
 
 export function TriggerEventEditor({ controlId, events, heading }: TriggerEventEditorProps) {
-	const socket = useContext(SocketContext)
-
 	const confirmModal = useRef<GenericConfirmModalRef>(null)
+
+	const eventsService = useControlEventsEditorService(controlId, confirmModal)
 
 	const eventsRef = useRef<EventInstance[]>()
 	eventsRef.current = events
-
-	const setValue = useCallback(
-		(eventId: string, key: string, val: any) => {
-			const currentEvent = eventsRef.current?.find((fb) => fb.id === eventId)
-			if (!currentEvent?.options || currentEvent.options[key] !== val) {
-				socketEmitPromise(socket, 'controls:event:set-option', [controlId, eventId, key, val]).catch((e) => {
-					console.error(`Set-option failed: ${e}`)
-				})
-			}
-		},
-		[socket, controlId]
-	)
-
-	const doDelete = useCallback(
-		(eventId: string) => {
-			confirmModal.current?.show('Delete event', 'Delete event?', 'Delete', () => {
-				socketEmitPromise(socket, 'controls:event:remove', [controlId, eventId]).catch((e) => {
-					console.error(`Failed to delete event: ${e}`)
-				})
-			})
-		},
-		[socket, controlId]
-	)
-
-	const doDuplicate = useCallback(
-		(eventId: string) => {
-			socketEmitPromise(socket, 'controls:event:duplicate', [controlId, eventId]).catch((e) => {
-				console.error(`Failed to duplicate feeeventdback: ${e}`)
-			})
-		},
-		[socket, controlId]
-	)
-
-	const addEvent = useCallback(
-		(eventType: DropdownChoiceId) => {
-			socketEmitPromise(socket, 'controls:event:add', [controlId, eventType]).catch((e) => {
-				console.error('Failed to add trigger event', e)
-			})
-		},
-		[socket, controlId]
-	)
-
-	const moveCard = useCallback(
-		(dragIndex: number, hoverIndex: number) => {
-			socketEmitPromise(socket, 'controls:event:reorder', [controlId, dragIndex, hoverIndex]).catch((e) => {
-				console.error(`Move failed: ${e}`)
-			})
-		},
-		[socket, controlId]
-	)
-
-	const emitEnabled = useCallback(
-		(eventId: string, enabled: boolean) => {
-			socketEmitPromise(socket, 'controls:event:enabled', [controlId, eventId, enabled]).catch((e) => {
-				console.error('Failed to enable/disable event', e)
-			})
-		},
-		[socket, controlId]
-	)
-
-	const emitSetHeadline = useCallback(
-		(eventId: string, headline: string) => {
-			socketEmitPromise(socket, 'controls:event:set-headline', [controlId, eventId, headline]).catch((e) => {
-				console.error('Failed to set event headline', e)
-			})
-		},
-		[socket, controlId]
-	)
 
 	const eventIds = useMemo(() => events.map((ev) => ev.id), [events])
 	const { setPanelCollapsed, isPanelCollapsed, setAllCollapsed, setAllExpanded, canExpandAll, canCollapseAll } =
@@ -144,13 +75,8 @@ export function TriggerEventEditor({ controlId, events, heading }: TriggerEventE
 								key={a?.id ?? i}
 								index={i}
 								event={a}
-								setValue={setValue}
-								doDelete={doDelete}
-								doDuplicate={doDuplicate}
-								doEnabled={emitEnabled}
-								doSetHeadline={emitSetHeadline}
 								dragId={`events_${controlId}`}
-								moveCard={moveCard}
+								serviceFactory={eventsService}
 								setCollapsed={setPanelCollapsed}
 								isCollapsed={isPanelCollapsed(a.id)}
 							/>
@@ -160,7 +86,7 @@ export function TriggerEventEditor({ controlId, events, heading }: TriggerEventE
 			</table>
 
 			<div className="add-dropdown-wrapper">
-				<AddEventDropdown onSelect={addEvent} />
+				<AddEventDropdown onSelect={eventsService.addEvent} />
 			</div>
 		</>
 	)
@@ -177,12 +103,8 @@ interface EventsTableRowProps {
 	event: EventInstance
 	index: number
 	dragId: string
-	moveCard: (dragIndex: number, hoverIndex: number) => void
-	setValue: (eventId: string, key: string, value: any) => void
-	doDelete: (eventId: string) => void
-	doDuplicate: (eventId: string) => void
-	doEnabled: (eventId: string, value: boolean) => void
-	doSetHeadline: ((actionId: string, headline: string) => void) | undefined
+	serviceFactory: IEventEditorService
+
 	isCollapsed: boolean
 	setCollapsed: (eventId: string, collapsed: boolean) => void
 }
@@ -191,17 +113,11 @@ function EventsTableRow({
 	event,
 	index,
 	dragId,
-	moveCard,
-	setValue,
-	doDelete,
-	doDuplicate,
-	doEnabled,
-	doSetHeadline,
+	serviceFactory,
 	isCollapsed,
 	setCollapsed,
 }: EventsTableRowProps): JSX.Element | null {
-	const innerDelete = useCallback(() => doDelete(event.id), [event.id, doDelete])
-	const innerDuplicate = useCallback(() => doDuplicate(event.id), [event.id, doDuplicate])
+	const service = useControlEventService(serviceFactory, event)
 
 	const ref = useRef<HTMLTableRowElement>(null)
 	const [, drop] = useDrop<EventsTableRowDragObject>({
@@ -218,7 +134,7 @@ function EventsTableRow({
 			}
 
 			// Time to actually perform the action
-			moveCard(dragIndex, hoverIndex)
+			serviceFactory.moveCard(dragIndex, hoverIndex)
 
 			// Note: we're mutating the monitor item here!
 			// Generally it's better to avoid mutations,
@@ -238,12 +154,8 @@ function EventsTableRow({
 	})
 	preview(drop(ref))
 
-	const doCollapse = useCallback(() => {
-		setCollapsed(event.id, true)
-	}, [setCollapsed, event.id])
-	const doExpand = useCallback(() => {
-		setCollapsed(event.id, false)
-	}, [setCollapsed, event.id])
+	const doCollapse = useCallback(() => setCollapsed(event.id, true), [setCollapsed, event.id])
+	const doExpand = useCallback(() => setCollapsed(event.id, false), [setCollapsed, event.id])
 
 	if (!event) {
 		// Invalid event, so skip
@@ -258,14 +170,10 @@ function EventsTableRow({
 			<td>
 				<EventEditor
 					event={event}
-					setValue={setValue}
-					innerDelete={innerDelete}
-					innerDuplicate={innerDuplicate}
+					service={service}
 					isCollapsed={isCollapsed}
 					doCollapse={doCollapse}
 					doExpand={doExpand}
-					doEnabled={doEnabled}
-					doSetHeadline={doSetHeadline}
 				/>
 			</td>
 		</tr>
@@ -274,27 +182,13 @@ function EventsTableRow({
 
 interface EventEditorProps {
 	event: EventInstance
-	setValue: (eventId: string, key: string, value: any) => void
-	innerDelete: () => void
-	innerDuplicate: () => void
+	service: IEventEditorEventService
 	isCollapsed: boolean
 	doCollapse: () => void
 	doExpand: () => void
-	doEnabled: (eventId: string, value: boolean) => void
-	doSetHeadline: ((actionId: string, headline: string) => void) | undefined
 }
 
-function EventEditor({
-	event,
-	setValue,
-	innerDelete,
-	innerDuplicate,
-	isCollapsed,
-	doCollapse,
-	doExpand,
-	doEnabled,
-	doSetHeadline,
-}: EventEditorProps) {
+function EventEditor({ event, service, isCollapsed, doCollapse, doExpand }: EventEditorProps) {
 	const EventDefinitions = useContext(EventDefinitionsContext)
 
 	const eventSpec = EventDefinitions[event.type]
@@ -302,17 +196,13 @@ function EventEditor({
 	const [eventOptions, optionVisibility] = useOptionsAndIsVisible(eventSpec, event)
 
 	const innerSetEnabled = useCallback(
-		(e: FormEvent<HTMLInputElement>) => doEnabled(event.id, e.currentTarget.checked),
-		[doEnabled, event.id]
-	)
-	const innerSetHeadline = useCallback(
-		(headline) => doSetHeadline && doSetHeadline(event.id, headline),
-		[doSetHeadline, event.id]
+		(e: FormEvent<HTMLInputElement>) => service.setEnabled(e.currentTarget.checked),
+		[service.setEnabled]
 	)
 
 	const name = eventSpec ? eventSpec.name : `${event.type} (undefined)`
 
-	const canSetHeadline = !!doSetHeadline
+	const canSetHeadline = !!service.setHeadline
 	const headline = event.headline
 	const [headlineExpanded, setHeadlineExpanded] = useState(canSetHeadline && !!headline)
 	const doEditHeadline = useCallback(() => setHeadlineExpanded(true), [])
@@ -321,13 +211,13 @@ function EventEditor({
 		<>
 			<div className="editor-grid-header editor-grid-events">
 				<div className="cell-name">
-					{!canSetHeadline || !headlineExpanded || isCollapsed ? (
+					{!service.setHeadline || !headlineExpanded || isCollapsed ? (
 						headline || name
 					) : (
 						<TextInputField
 							value={headline ?? ''}
 							placeholder={'Describe the intent of the event'}
-							setValue={innerSetHeadline}
+							setValue={service.setHeadline}
 						/>
 					)}
 				</div>
@@ -348,13 +238,13 @@ function EventEditor({
 								<FontAwesomeIcon icon={faCompressArrowsAlt} />
 							</CButton>
 						)}
-						<CButton size="sm" onClick={innerDuplicate} title="Duplicate event">
+						<CButton size="sm" onClick={service.performDuplicate} title="Duplicate event">
 							<FontAwesomeIcon icon={faCopy} />
 						</CButton>
-						<CButton size="sm" onClick={innerDelete} title="Remove event">
+						<CButton size="sm" onClick={service.performDelete} title="Remove event">
 							<FontAwesomeIcon icon={faTrash} />
 						</CButton>
-						{!!doEnabled && (
+						{!!service.setEnabled && (
 							<>
 								&nbsp;
 								<CSwitch
@@ -388,7 +278,7 @@ function EventEditor({
 										option={opt}
 										actionId={event.id}
 										value={(event.options || {})[opt.id]}
-										setValue={setValue}
+										setValue={service.setValue}
 										visibility={optionVisibility[opt.id] ?? true}
 									/>
 								</MyErrorBoundary>
