@@ -6,10 +6,11 @@ import {
 	faCompressArrowsAlt,
 	faCopy,
 	faFolderOpen,
+	faPencil,
 } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import React, { RefObject, memo, useCallback, useContext, useMemo, useRef } from 'react'
-import { NumberInputField } from '../Components'
+import React, { RefObject, memo, useCallback, useContext, useMemo, useRef, useState } from 'react'
+import { NumberInputField, TextInputField } from '../Components'
 import {
 	ActionsContext,
 	ConnectionsContext,
@@ -136,6 +137,16 @@ export const ControlActionSetEditor = memo(function ControlActionSetEditor({
 		},
 		[socket, controlId, stepId, setId]
 	)
+	const emitSetHeadline = useCallback(
+		(actionId: string, headline: string) => {
+			socketEmitPromise(socket, 'controls:action:set-headline', [controlId, stepId, setId, actionId, headline]).catch(
+				(e) => {
+					console.error('Failed to set action headline', e)
+				}
+			)
+		},
+		[socket, controlId, stepId, setId]
+	)
 
 	const addAction = useCallback(
 		(actionType: string) => {
@@ -185,6 +196,7 @@ export const ControlActionSetEditor = memo(function ControlActionSetEditor({
 				doDuplicate={emitDuplicate}
 				doReorder={emitOrder}
 				doEnabled={emitEnabled}
+				doSetHeadline={emitSetHeadline}
 				emitLearn={emitLearn}
 				setPanelCollapsed={setPanelCollapsed}
 				isPanelCollapsed={isPanelCollapsed}
@@ -231,6 +243,7 @@ interface ActionsListProps {
 	doDelete: (actionId: string) => void
 	doDuplicate: (actionId: string) => void
 	doEnabled?: (actionId: string, enabled: boolean) => void
+	doSetHeadline?: (actionId: string, headline: string) => void
 	doReorder: (
 		stepId: string,
 		setId: string | number,
@@ -257,6 +270,7 @@ export function ActionsList({
 	doDelete,
 	doDuplicate,
 	doEnabled,
+	doSetHeadline,
 	doReorder,
 	emitLearn,
 	readonly,
@@ -295,6 +309,7 @@ export function ActionsList({
 								doDuplicate={doDuplicate}
 								doDelay={doSetDelay}
 								doEnabled={doEnabled}
+								doSetHeadline={doSetHeadline}
 								moveCard={doReorder}
 								doLearn={emitLearn}
 								readonly={readonly ?? false}
@@ -383,6 +398,7 @@ interface ActionTableRowProps {
 	) => void
 	doLearn: ((actionId: string) => void) | undefined
 	doEnabled: ((actionId: string, enabled: boolean) => void) | undefined
+	doSetHeadline: ((actionId: string, headline: string) => void) | undefined
 	readonly: boolean
 	isCollapsed: boolean
 	setCollapsed: (actionId: string, collapsed: boolean) => void
@@ -402,6 +418,7 @@ function ActionTableRow({
 	moveCard,
 	doLearn,
 	doEnabled,
+	doSetHeadline,
 	readonly,
 	isCollapsed,
 	setCollapsed,
@@ -416,6 +433,10 @@ function ActionTableRow({
 	const innerSetEnabled = useCallback(
 		(e) => doEnabled && doEnabled(action.id, e.target.checked),
 		[doEnabled, action.id]
+	)
+	const innerSetHeadline = useCallback(
+		(headline) => doSetHeadline && doSetHeadline(action.id, headline),
+		[doSetHeadline, action.id]
 	)
 
 	const actionSpec = (actionsContext[action.instance] || {})[action.action]
@@ -463,12 +484,8 @@ function ActionTableRow({
 	})
 	preview(drop(ref))
 
-	const doCollapse = useCallback(() => {
-		setCollapsed(action.id, true)
-	}, [setCollapsed, action.id])
-	const doExpand = useCallback(() => {
-		setCollapsed(action.id, false)
-	}, [setCollapsed, action.id])
+	const doCollapse = useCallback(() => setCollapsed(action.id, true), [setCollapsed, action.id])
+	const doExpand = useCallback(() => setCollapsed(action.id, false), [setCollapsed, action.id])
 
 	if (!action) {
 		// Invalid action, so skip
@@ -485,6 +502,11 @@ function ActionTableRow({
 		? `${connectionLabel}: ${actionSpec.label}`
 		: `${connectionLabel}: ${action.action} (undefined)`
 
+	const canSetHeadline = !!doSetHeadline
+	const headline = action.headline
+	const [headlineExpanded, setHeadlineExpanded] = useState(canSetHeadline && !!headline)
+	const doEditHeadline = useCallback(() => setHeadlineExpanded(true), [])
+
 	return (
 		<tr ref={ref} className={isDragging ? 'actionlist-dragging' : ''}>
 			<td ref={drag} className="td-reorder">
@@ -492,10 +514,25 @@ function ActionTableRow({
 			</td>
 			<td style={{ paddingRight: 0 }}>
 				<div className="editor-grid-header">
-					<div className="cell-name">{name}</div>
+					<div className="cell-name">
+						{!canSetHeadline || !headlineExpanded || isCollapsed ? (
+							headline || name
+						) : (
+							<TextInputField
+								value={headline ?? ''}
+								placeholder={'Describe the intent of the action'}
+								setValue={innerSetHeadline}
+							/>
+						)}
+					</div>
 
 					<div className="cell-controls">
 						<CButtonGroup>
+							{canSetHeadline && !headlineExpanded && (
+								<CButton size="sm" onClick={doEditHeadline} title="Set headline">
+									<FontAwesomeIcon icon={faPencil} />
+								</CButton>
+							)}
 							{isCollapsed ? (
 								<CButton size="sm" onClick={doExpand} title="Expand action view">
 									<FontAwesomeIcon icon={faExpandArrowsAlt} />
@@ -528,7 +565,10 @@ function ActionTableRow({
 
 				{!isCollapsed && (
 					<div className="editor-grid">
-						<div className="cell-description">{actionSpec?.description || ''}</div>
+						<div className="cell-description">
+							{headlineExpanded && <p className="name">{name}</p>}
+							{actionSpec?.description}
+						</div>
 
 						{location && showButtonPreview && (
 							<div className="cell-button-preview">

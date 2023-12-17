@@ -7,6 +7,7 @@ import {
 	faCopy,
 	faFolderOpen,
 	faQuestionCircle,
+	faPencil,
 } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import React, { memo, useCallback, useContext, useMemo, useRef, useState } from 'react'
@@ -23,7 +24,7 @@ import Select, { createFilter } from 'react-select'
 import { OptionsInputField } from './OptionsInputField'
 import { useDrag, useDrop } from 'react-dnd'
 import { GenericConfirmModal, GenericConfirmModalRef } from '../Components/GenericConfirmModal'
-import { CheckboxInputField, DropdownInputField } from '../Components'
+import { CheckboxInputField, DropdownInputField, TextInputField } from '../Components'
 import { ButtonStyleConfigFields } from './ButtonStyleConfig'
 import { AddFeedbacksModal, AddFeedbacksModalRef } from './AddModal'
 import { usePanelCollapseHelper } from '../Helpers/CollapseHelper'
@@ -149,6 +150,15 @@ export function ControlFeedbacksEditor({
 		[socket, controlId]
 	)
 
+	const emitSetHeadline = useCallback(
+		(feedbackId: string, headline: string) => {
+			socketEmitPromise(socket, 'controls:feedback:set-headline', [controlId, feedbackId, headline]).catch((e) => {
+				console.error('Failed to set feedback headline', e)
+			})
+		},
+		[socket, controlId]
+	)
+
 	const feedbackIds = useMemo(() => feedbacks.map((fb) => fb.id), [feedbacks])
 	const { setPanelCollapsed, isPanelCollapsed, setAllCollapsed, setAllExpanded, canExpandAll, canCollapseAll } =
 		usePanelCollapseHelper(`feedbacks_${controlId}`, feedbackIds)
@@ -197,6 +207,7 @@ export function ControlFeedbacksEditor({
 								doDuplicate={doDuplicate}
 								doLearn={doLearn}
 								doEnabled={emitEnabled}
+								doSetHeadline={emitSetHeadline}
 								dragId={`feedback_${controlId}`}
 								moveCard={moveCard}
 								setCollapsed={setPanelCollapsed}
@@ -247,6 +258,7 @@ interface FeedbackTableRowProps {
 	doDuplicate: (feedbackId: string) => void
 	doLearn: (feedbackId: string) => void
 	doEnabled: (feedbackId: string, enabled: boolean) => void
+	doSetHeadline: ((actionId: string, headline: string) => void) | undefined
 	isCollapsed: boolean
 	setCollapsed: (feedbackId: string, collapsed: boolean) => void
 	booleanOnly: boolean
@@ -266,6 +278,7 @@ function FeedbackTableRow({
 	doDuplicate,
 	doLearn,
 	doEnabled,
+	doSetHeadline,
 	isCollapsed,
 	setCollapsed,
 	booleanOnly,
@@ -369,6 +382,7 @@ function FeedbackTableRow({
 					doCollapse={doCollapse}
 					doExpand={doExpand}
 					doEnabled={doEnabled}
+					doSetHeadline={doSetHeadline}
 					booleanOnly={booleanOnly}
 				/>
 			</td>
@@ -391,6 +405,7 @@ interface FeedbackEditorProps {
 	doCollapse: () => void
 	doExpand: () => void
 	doEnabled: (feedbackId: string, enabled: boolean) => void
+	doSetHeadline: ((actionId: string, headline: string) => void) | undefined
 	booleanOnly: boolean
 }
 
@@ -409,6 +424,7 @@ function FeedbackEditor({
 	doCollapse,
 	doExpand,
 	doEnabled,
+	doSetHeadline,
 	booleanOnly,
 }: FeedbackEditorProps) {
 	const feedbacksContext = useContext(FeedbacksContext)
@@ -422,6 +438,10 @@ function FeedbackEditor({
 	const [feedbackOptions, optionVisibility] = useOptionsAndIsVisible(feedbackSpec, feedback)
 
 	const innerSetEnabled = useCallback((e) => doEnabled(feedback.id, e.target.checked), [doEnabled, feedback.id])
+	const innerSetHeadline = useCallback(
+		(headline: string) => doSetHeadline && doSetHeadline(feedback.id, headline),
+		[doSetHeadline, feedback.id]
+	)
 
 	const name = feedbackSpec
 		? `${connectionLabel}: ${feedbackSpec.label}`
@@ -429,13 +449,33 @@ function FeedbackEditor({
 
 	const showButtonPreview = feedback?.instance_id === 'internal' && feedbackSpec?.showButtonPreview
 
+	const canSetHeadline = !!doSetHeadline
+	const headline = feedback.headline
+	const [headlineExpanded, setHeadlineExpanded] = useState(canSetHeadline && !!headline)
+	const doEditHeadline = useCallback(() => setHeadlineExpanded(true), [])
+
 	return (
 		<>
 			<div className="editor-grid-header remove075right">
-				<div className="cell-name">{name}</div>
+				<div className="cell-name">
+					{!canSetHeadline || !headlineExpanded || isCollapsed ? (
+						headline || name
+					) : (
+						<TextInputField
+							value={headline ?? ''}
+							placeholder={'Describe the intent of the feedback'}
+							setValue={innerSetHeadline}
+						/>
+					)}
+				</div>
 
 				<div className="cell-controls">
 					<CButtonGroup>
+						{canSetHeadline && !headlineExpanded && (
+							<CButton size="sm" onClick={doEditHeadline} title="Set headline">
+								<FontAwesomeIcon icon={faPencil} />
+							</CButton>
+						)}
 						{isCollapsed ? (
 							<CButton size="sm" onClick={doExpand} title={`Expand ${entityType} view`}>
 								<FontAwesomeIcon icon={faExpandArrowsAlt} />
@@ -468,7 +508,10 @@ function FeedbackEditor({
 
 			{!isCollapsed && (
 				<div className="editor-grid remove075right">
-					<div className="cell-description">{feedbackSpec?.description || ''}</div>
+					<div className="cell-description">
+						{headlineExpanded && <p className="name">{name}</p>}
+						{feedbackSpec?.description || ''}
+					</div>
 
 					{location && showButtonPreview && (
 						<div className="cell-button-preview">

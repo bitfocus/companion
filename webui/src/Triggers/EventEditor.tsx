@@ -1,7 +1,14 @@
 import { CButton, CForm, CButtonGroup, CSwitch } from '@coreui/react'
-import { faSort, faTrash, faCompressArrowsAlt, faExpandArrowsAlt, faCopy } from '@fortawesome/free-solid-svg-icons'
+import {
+	faSort,
+	faTrash,
+	faCompressArrowsAlt,
+	faExpandArrowsAlt,
+	faCopy,
+	faPencil,
+} from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import React, { FormEvent, memo, useCallback, useContext, useMemo, useRef } from 'react'
+import React, { FormEvent, memo, useCallback, useContext, useMemo, useRef, useState } from 'react'
 import {
 	MyErrorBoundary,
 	socketEmitPromise,
@@ -18,6 +25,7 @@ import { MenuPortalContext } from '../Components/DropdownInputField.js'
 import type { DropdownChoice, DropdownChoiceId } from '@companion-module/base'
 import type { EventInstance } from '@companion/shared/Model/EventModel.js'
 import { useOptionsAndIsVisible } from '../Hooks/useOptionsAndIsVisible.js'
+import { TextInputField } from '../Components/TextInputField.js'
 
 interface TriggerEventEditorProps {
 	controlId: string
@@ -92,6 +100,15 @@ export function TriggerEventEditor({ controlId, events, heading }: TriggerEventE
 		[socket, controlId]
 	)
 
+	const emitSetHeadline = useCallback(
+		(eventId: string, headline: string) => {
+			socketEmitPromise(socket, 'controls:event:set-headline', [controlId, eventId, headline]).catch((e) => {
+				console.error('Failed to set event headline', e)
+			})
+		},
+		[socket, controlId]
+	)
+
 	const eventIds = useMemo(() => events.map((ev) => ev.id), [events])
 	const { setPanelCollapsed, isPanelCollapsed, setAllCollapsed, setAllExpanded, canExpandAll, canCollapseAll } =
 		usePanelCollapseHelper(`events_${controlId}`, eventIds)
@@ -132,6 +149,7 @@ export function TriggerEventEditor({ controlId, events, heading }: TriggerEventE
 								doDelete={doDelete}
 								doDuplicate={doDuplicate}
 								doEnabled={emitEnabled}
+								doSetHeadline={emitSetHeadline}
 								dragId={`events_${controlId}`}
 								moveCard={moveCard}
 								setCollapsed={setPanelCollapsed}
@@ -165,6 +183,7 @@ interface EventsTableRowProps {
 	doDelete: (eventId: string) => void
 	doDuplicate: (eventId: string) => void
 	doEnabled: (eventId: string, value: boolean) => void
+	doSetHeadline: ((actionId: string, headline: string) => void) | undefined
 	isCollapsed: boolean
 	setCollapsed: (eventId: string, collapsed: boolean) => void
 }
@@ -178,6 +197,7 @@ function EventsTableRow({
 	doDelete,
 	doDuplicate,
 	doEnabled,
+	doSetHeadline,
 	isCollapsed,
 	setCollapsed,
 }: EventsTableRowProps): JSX.Element | null {
@@ -246,6 +266,7 @@ function EventsTableRow({
 					doCollapse={doCollapse}
 					doExpand={doExpand}
 					doEnabled={doEnabled}
+					doSetHeadline={doSetHeadline}
 				/>
 			</td>
 		</tr>
@@ -261,6 +282,7 @@ interface EventEditorProps {
 	doCollapse: () => void
 	doExpand: () => void
 	doEnabled: (eventId: string, value: boolean) => void
+	doSetHeadline: ((actionId: string, headline: string) => void) | undefined
 }
 
 function EventEditor({
@@ -272,6 +294,7 @@ function EventEditor({
 	doCollapse,
 	doExpand,
 	doEnabled,
+	doSetHeadline,
 }: EventEditorProps) {
 	const EventDefinitions = useContext(EventDefinitionsContext)
 
@@ -283,16 +306,40 @@ function EventEditor({
 		(e: FormEvent<HTMLInputElement>) => doEnabled(event.id, e.currentTarget.checked),
 		[doEnabled, event.id]
 	)
+	const innerSetHeadline = useCallback(
+		(headline) => doSetHeadline && doSetHeadline(event.id, headline),
+		[doSetHeadline, event.id]
+	)
 
 	const name = eventSpec ? eventSpec.name : `${event.type} (undefined)`
+
+	const canSetHeadline = !!doSetHeadline
+	const headline = event.headline
+	const [headlineExpanded, setHeadlineExpanded] = useState(canSetHeadline && !!headline)
+	const doEditHeadline = useCallback(() => setHeadlineExpanded(true), [])
 
 	return (
 		<>
 			<div className="editor-grid-header editor-grid-events">
-				<div className="cell-name">{name}</div>
+				<div className="cell-name">
+					{!canSetHeadline || !headlineExpanded || isCollapsed ? (
+						headline || name
+					) : (
+						<TextInputField
+							value={headline ?? ''}
+							placeholder={'Describe the intent of the event'}
+							setValue={innerSetHeadline}
+						/>
+					)}
+				</div>
 
 				<div className="cell-controls">
 					<CButtonGroup>
+						{canSetHeadline && !headlineExpanded && (
+							<CButton size="sm" onClick={doEditHeadline} title="Set headline">
+								<FontAwesomeIcon icon={faPencil} />
+							</CButton>
+						)}
 						{isCollapsed ? (
 							<CButton size="sm" onClick={doExpand} title="Expand event view">
 								<FontAwesomeIcon icon={faExpandArrowsAlt} />
@@ -325,7 +372,10 @@ function EventEditor({
 
 			{!isCollapsed && (
 				<div className="editor-grid editor-grid-events">
-					<div className="cell-description">{eventSpec?.description || ''}</div>
+					<div className="cell-description">
+						{headlineExpanded && <p className="name">{name}</p>}
+						{eventSpec?.description || ''}
+					</div>
 
 					<div className="cell-option">
 						<CForm onSubmit={PreventDefaultHandler}>

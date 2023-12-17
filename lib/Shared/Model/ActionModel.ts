@@ -1,6 +1,7 @@
 export interface ActionInstance {
 	id: string
 	instance: string
+	headline?: string
 	action: string
 	options: Record<string, any>
 	delay: number
