@@ -195,8 +195,20 @@ export function ContextData({ children }: ContextDataProps) {
 				setCustomVariables((oldVariables) => oldVariables && applyPatchOrReplaceObject(oldVariables, patch))
 			}
 			const updateTriggers = (controlId: string, patch: JsonPatchOperation[]) => {
-				console.log('trigger', controlId, patch)
-				setTriggers((oldTriggers) => oldTriggers && applyPatchOrReplaceSubObject(oldTriggers, controlId, patch, null))
+				setTriggers(
+					(oldTriggers) =>
+						oldTriggers &&
+						applyPatchOrReplaceSubObject(oldTriggers, controlId, patch, {
+							// Placeholder data
+							type: 'trigger',
+							name: '',
+							lastExecuted: undefined,
+							enabled: false,
+							description: '',
+							sortOrder: 0,
+							relativeDelay: false,
+						})
+				)
 			}
 
 			socketEmitPromise(socket, 'connections:subscribe', [])
