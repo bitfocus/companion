@@ -417,7 +417,6 @@ function ActionTableRow({
 											isAction={true}
 											connectionId={action.instance}
 											option={opt}
-											actionId={action.id}
 											value={(action.options || {})[opt.id]}
 											setValue={service.setValue}
 											visibility={optionVisibility[opt.id] ?? true}

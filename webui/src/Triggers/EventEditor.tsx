@@ -276,7 +276,6 @@ function EventEditor({ event, service, isCollapsed, doCollapse, doExpand }: Even
 										isAction={false}
 										connectionId={'internal'}
 										option={opt}
-										actionId={event.id}
 										value={(event.options || {})[opt.id]}
 										setValue={service.setValue}
 										visibility={optionVisibility[opt.id] ?? true}

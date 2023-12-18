@@ -356,7 +356,6 @@ function FeedbackEditor({
 										isAction={false}
 										connectionId={feedback.instance_id}
 										option={opt}
-										actionId={feedback.id}
 										value={(feedback.options || {})[opt.id]}
 										setValue={service.setValue}
 										visibility={optionVisibility[opt.id] ?? true}
