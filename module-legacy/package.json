@@ -208,7 +208,6 @@
     "companion-module-teradek-prismflex": "github:bitfocus/companion-module-teradek-prismflex#v1.0.0",
     "companion-module-teradek-vidiu": "github:bitfocus/companion-module-teradek-vidiu#v1.0.5",
     "companion-module-teradek-vidiux": "github:bitfocus/companion-module-teradek-vidiux#v1.0.1",
-    "companion-module-theatrixx-xpresscue": "github:bitfocus/companion-module-theatrixx-xpresscue#v1.2.1",
     "companion-module-thelightingcontroller": "github:bitfocus/companion-module-thelightingcontroller#v1.1.4",
     "companion-module-tplink-kasasmartstrip": "github:bitfocus/companion-module-tplink-kasasmartstrip#v1.0.0",
     "companion-module-tplink-taposmartplug": "github:bitfocus/companion-module-tplink-taposmartplug#v1.0.2",
