@@ -17,10 +17,9 @@ interface OptionsInputFieldProps {
 	connectionId: string
 	isOnControl: boolean
 	isAction: boolean
-	actionId: string
 	option: InternalActionInputField | InternalFeedbackInputField
 	value: any
-	setValue: (actionId: string, key: string, value: any) => void
+	setValue: (key: string, value: any) => void
 	visibility: boolean
 	readonly?: boolean
 }
@@ -29,14 +28,13 @@ export function OptionsInputField({
 	connectionId,
 	isOnControl,
 	isAction,
-	actionId,
 	option,
 	value,
 	setValue,
 	visibility,
 	readonly,
 }: OptionsInputFieldProps) {
-	const setValue2 = useCallback((val: any) => setValue(actionId, option.id, val), [actionId, option.id, setValue])
+	const setValue2 = useCallback((val: any) => setValue(option.id, val), [option.id, setValue])
 
 	if (!option) {
 		return <p>Bad option</p>

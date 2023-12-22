@@ -6,20 +6,12 @@ import {
 	faCompressArrowsAlt,
 	faCopy,
 	faFolderOpen,
+	faPencil,
 } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import React, { RefObject, memo, useCallback, useContext, useMemo, useRef } from 'react'
-import { NumberInputField } from '../Components'
-import {
-	ActionsContext,
-	ConnectionsContext,
-	MyErrorBoundary,
-	socketEmitPromise,
-	SocketContext,
-	PreventDefaultHandler,
-	RecentActionsContext,
-} from '../util'
-import Select, { createFilter } from 'react-select'
+import React, { memo, useCallback, useContext, useMemo, useRef, useState } from 'react'
+import { NumberInputField, TextInputField } from '../Components'
+import { ActionsContext, ConnectionsContext, MyErrorBoundary, PreventDefaultHandler } from '../util'
 import { OptionsInputField } from './OptionsInputField'
 import { useDrag, useDrop } from 'react-dnd'
 import { GenericConfirmModal, GenericConfirmModalRef } from '../Components/GenericConfirmModal'
@@ -27,12 +19,16 @@ import { AddActionsModal, AddActionsModalRef } from './AddModal'
 import { usePanelCollapseHelper } from '../Helpers/CollapseHelper'
 import CSwitch from '../CSwitch'
 import { OptionButtonPreview } from './OptionButtonPreview'
-import { MenuPortalContext } from '../Components/DropdownInputField'
-import type { FilterOptionOption } from 'react-select/dist/declarations/src/filters'
 import { ActionInstance } from '@companion/shared/Model/ActionModel'
 import { ControlLocation } from '@companion/shared/Model/Common'
 import { useOptionsAndIsVisible } from '../Hooks/useOptionsAndIsVisible'
 import { LearnButton } from '../Components/LearnButton'
+import { AddActionDropdown } from './AddActionDropdown'
+import {
+	IActionEditorService,
+	useControlActionService,
+	useControlActionsEditorService,
+} from '../Services/Controls/ControlActionsService'
 
 interface ControlActionSetEditorProps {
 	controlId: string
@@ -55,99 +51,9 @@ export const ControlActionSetEditor = memo(function ControlActionSetEditor({
 	heading,
 	headingActions,
 }: ControlActionSetEditorProps) {
-	const socket = useContext(SocketContext)
-
 	const confirmModal = useRef<GenericConfirmModalRef>(null)
 
-	const emitUpdateOption = useCallback(
-		(actionId: string, key: string, val: any) => {
-			socketEmitPromise(socket, 'controls:action:set-option', [controlId, stepId, setId, actionId, key, val]).catch(
-				(e) => {
-					console.error('Failed to set control action option', e)
-				}
-			)
-		},
-		[socket, controlId, stepId, setId]
-	)
-	const emitSetDelay = useCallback(
-		(actionId: string, delay: number) => {
-			socketEmitPromise(socket, 'controls:action:set-delay', [controlId, stepId, setId, actionId, delay]).catch((e) => {
-				console.error('Failed to set control action delay', e)
-			})
-		},
-		[socket, controlId, stepId, setId]
-	)
-
-	const emitDelete = useCallback(
-		(actionId: string) => {
-			socketEmitPromise(socket, 'controls:action:remove', [controlId, stepId, setId, actionId]).catch((e) => {
-				console.error('Failed to remove control action', e)
-			})
-		},
-		[socket, controlId, stepId, setId]
-	)
-	const emitDuplicate = useCallback(
-		(actionId: string) => {
-			socketEmitPromise(socket, 'controls:action:duplicate', [controlId, stepId, setId, actionId]).catch((e) => {
-				console.error('Failed to duplicate control action', e)
-			})
-		},
-		[socket, controlId, stepId, setId]
-	)
-
-	const emitLearn = useCallback(
-		(actionId: string) => {
-			socketEmitPromise(socket, 'controls:action:learn', [controlId, stepId, setId, actionId]).catch((e) => {
-				console.error('Failed to learn control action values', e)
-			})
-		},
-		[socket, controlId, stepId, setId]
-	)
-
-	const emitOrder = useCallback(
-		(
-			dragStepId: string,
-			dragSetId: string | number,
-			dragIndex: number,
-			dropStepId: string,
-			dropSetId: string | number,
-			dropIndex: number
-		) => {
-			socketEmitPromise(socket, 'controls:action:reorder', [
-				controlId,
-				dragStepId,
-				dragSetId,
-				dragIndex,
-				dropStepId,
-				dropSetId,
-				dropIndex,
-			]).catch((e) => {
-				console.error('Failed to reorder control actions', e)
-			})
-		},
-		[socket, controlId]
-	)
-
-	const emitEnabled = useCallback(
-		(actionId: string, enabled: boolean) => {
-			socketEmitPromise(socket, 'controls:action:enabled', [controlId, stepId, setId, actionId, enabled]).catch((e) => {
-				console.error('Failed to enable/disable action', e)
-			})
-		},
-		[socket, controlId, stepId, setId]
-	)
-
-	const addAction = useCallback(
-		(actionType: string) => {
-			const [connectionId, actionId] = actionType.split(':', 2)
-			socketEmitPromise(socket, 'controls:action:add', [controlId, stepId, setId, connectionId, actionId]).catch(
-				(e) => {
-					console.error('Failed to add control action', e)
-				}
-			)
-		},
-		[socket, controlId, stepId, setId]
-	)
+	const actionsService = useControlActionsEditorService(controlId, stepId, setId, confirmModal)
 
 	const actionIds = useMemo(() => (actions ? actions.map((act) => act.id) : []), [actions])
 	const { setPanelCollapsed, isPanelCollapsed, setAllCollapsed, setAllExpanded, canExpandAll, canCollapseAll } =
@@ -177,19 +83,12 @@ export const ControlActionSetEditor = memo(function ControlActionSetEditor({
 				dragId={`${controlId}_actions`}
 				stepId={stepId}
 				setId={setId}
-				confirmModal={confirmModal}
 				actions={actions}
-				doSetValue={emitUpdateOption}
-				doSetDelay={emitSetDelay}
-				doDelete={emitDelete}
-				doDuplicate={emitDuplicate}
-				doReorder={emitOrder}
-				doEnabled={emitEnabled}
-				emitLearn={emitLearn}
+				actionsService={actionsService}
 				setPanelCollapsed={setPanelCollapsed}
 				isPanelCollapsed={isPanelCollapsed}
 			/>
-			<AddActionsPanel addPlaceholder={addPlaceholder} addAction={addAction} />
+			<AddActionsPanel addPlaceholder={addPlaceholder} addAction={actionsService.addAction} />
 		</div>
 	)
 })
@@ -224,22 +123,8 @@ interface ActionsListProps {
 	dragId: string
 	stepId: string
 	setId: string | number
-	confirmModal?: RefObject<GenericConfirmModalRef>
 	actions: ActionInstance[] | undefined
-	doSetValue: (actionId: string, key: string, val: any) => void
-	doSetDelay: (actionId: string, delay: number) => void
-	doDelete: (actionId: string) => void
-	doDuplicate: (actionId: string) => void
-	doEnabled?: (actionId: string, enabled: boolean) => void
-	doReorder: (
-		stepId: string,
-		setId: string | number,
-		index: number,
-		targetStepId: string,
-		targetSetId: string | number,
-		targetIndex: number
-	) => void
-	emitLearn?: (actionId: string) => void
+	actionsService: IActionEditorService
 	readonly?: boolean
 	setPanelCollapsed: (panelId: string, collapsed: boolean) => void
 	isPanelCollapsed: (panelId: string) => boolean
@@ -250,32 +135,12 @@ export function ActionsList({
 	dragId,
 	stepId,
 	setId,
-	confirmModal,
 	actions,
-	doSetValue,
-	doSetDelay,
-	doDelete,
-	doDuplicate,
-	doEnabled,
-	doReorder,
-	emitLearn,
+	actionsService,
 	readonly,
 	setPanelCollapsed,
 	isPanelCollapsed,
 }: ActionsListProps) {
-	const doDelete2 = useCallback(
-		(actionId) => {
-			if (confirmModal) {
-				confirmModal.current?.show('Delete action', 'Delete action?', 'Delete', () => {
-					doDelete(actionId)
-				})
-			} else {
-				doDelete(actionId)
-			}
-		},
-		[doDelete, confirmModal]
-	)
-
 	return (
 		<table className="table action-table">
 			<tbody>
@@ -290,13 +155,7 @@ export function ActionsList({
 								stepId={stepId}
 								setId={setId}
 								dragId={dragId}
-								setValue={doSetValue}
-								doDelete={doDelete2}
-								doDuplicate={doDuplicate}
-								doDelay={doSetDelay}
-								doEnabled={doEnabled}
-								moveCard={doReorder}
-								doLearn={emitLearn}
+								serviceFactory={actionsService}
 								readonly={readonly ?? false}
 								setCollapsed={setPanelCollapsed}
 								isCollapsed={isPanelCollapsed(a.id)}
@@ -306,9 +165,7 @@ export function ActionsList({
 				<ActionRowDropPlaceholder
 					dragId={dragId}
 					actionCount={actions ? actions.length : 0}
-					stepId={stepId}
-					setId={setId}
-					moveCard={doReorder}
+					moveCard={actionsService.moveCard}
 				/>
 			</tbody>
 		</table>
@@ -316,28 +173,19 @@ export function ActionsList({
 }
 
 interface ActionRowDropPlaceholderProps {
-	stepId: string
-	setId: string | number
 	dragId: string
 	actionCount: number
-	moveCard: (
-		stepId: string,
-		setId: string | number,
-		index: number,
-		targetStepId: string,
-		targetSetId: string | number,
-		targetIndex: number
-	) => void
+	moveCard: (stepId: string, setId: string | number, index: number, targetIndex: number) => void
 }
 
-function ActionRowDropPlaceholder({ dragId, stepId, setId, actionCount, moveCard }: ActionRowDropPlaceholderProps) {
+function ActionRowDropPlaceholder({ dragId, actionCount, moveCard }: ActionRowDropPlaceholderProps) {
 	const [isDragging, drop] = useDrop<ActionTableRowDragItem, unknown, boolean>({
 		accept: dragId,
 		collect: (monitor) => {
 			return monitor.canDrop()
 		},
 		hover(item, _monitor) {
-			moveCard(item.stepId, item.setId, item.index, stepId, setId, 0)
+			moveCard(item.stepId, item.setId, item.index, 0)
 		},
 	})
 
@@ -369,20 +217,8 @@ interface ActionTableRowProps {
 	location: ControlLocation | undefined
 	index: number
 	dragId: string
-	setValue: (actionId: string, key: string, val: any) => void
-	doDelete: (actionId: string) => void
-	doDuplicate: (actionId: string) => void
-	doDelay: (actionId: string, delay: number) => void
-	moveCard: (
-		stepId: string,
-		setId: string | number,
-		index: number,
-		targetStepId: string,
-		targetSetId: string | number,
-		targetIndex: number
-	) => void
-	doLearn: ((actionId: string) => void) | undefined
-	doEnabled: ((actionId: string, enabled: boolean) => void) | undefined
+	serviceFactory: IActionEditorService
+
 	readonly: boolean
 	isCollapsed: boolean
 	setCollapsed: (actionId: string, collapsed: boolean) => void
@@ -395,13 +231,7 @@ function ActionTableRow({
 	location,
 	index,
 	dragId,
-	setValue,
-	doDelete,
-	doDuplicate,
-	doDelay,
-	moveCard,
-	doLearn,
-	doEnabled,
+	serviceFactory,
 	readonly,
 	isCollapsed,
 	setCollapsed,
@@ -409,13 +239,11 @@ function ActionTableRow({
 	const connectionsContext = useContext(ConnectionsContext)
 	const actionsContext = useContext(ActionsContext)
 
-	const innerDelete = useCallback(() => doDelete(action.id), [action.id, doDelete])
-	const innerDuplicate = useCallback(() => doDuplicate(action.id), [action.id, doDuplicate])
-	const innerDelay = useCallback((delay) => doDelay(action.id, delay), [doDelay, action.id])
-	const innerLearn = useCallback(() => doLearn && doLearn(action.id), [doLearn, action.id])
+	const service = useControlActionService(serviceFactory, action)
+
 	const innerSetEnabled = useCallback(
-		(e) => doEnabled && doEnabled(action.id, e.target.checked),
-		[doEnabled, action.id]
+		(e) => service.setEnabled && service.setEnabled(e.target.checked),
+		[service.setEnabled]
 	)
 
 	const actionSpec = (actionsContext[action.instance] || {})[action.action]
@@ -437,7 +265,7 @@ function ActionTableRow({
 			}
 
 			// Time to actually perform the action
-			moveCard(item.stepId, item.setId, item.index, stepId, setId, index)
+			serviceFactory.moveCard(item.stepId, item.setId, item.index, index)
 
 			// Note: we're mutating the monitor item here!
 			// Generally it's better to avoid mutations,
@@ -463,12 +291,8 @@ function ActionTableRow({
 	})
 	preview(drop(ref))
 
-	const doCollapse = useCallback(() => {
-		setCollapsed(action.id, true)
-	}, [setCollapsed, action.id])
-	const doExpand = useCallback(() => {
-		setCollapsed(action.id, false)
-	}, [setCollapsed, action.id])
+	const doCollapse = useCallback(() => setCollapsed(action.id, true), [setCollapsed, action.id])
+	const doExpand = useCallback(() => setCollapsed(action.id, false), [setCollapsed, action.id])
 
 	if (!action) {
 		// Invalid action, so skip
@@ -485,6 +309,11 @@ function ActionTableRow({
 		? `${connectionLabel}: ${actionSpec.label}`
 		: `${connectionLabel}: ${action.action} (undefined)`
 
+	const canSetHeadline = !!service.setHeadline
+	const headline = action.headline
+	const [headlineExpanded, setHeadlineExpanded] = useState(canSetHeadline && !!headline)
+	const doEditHeadline = useCallback(() => setHeadlineExpanded(true), [])
+
 	return (
 		<tr ref={ref} className={isDragging ? 'actionlist-dragging' : ''}>
 			<td ref={drag} className="td-reorder">
@@ -492,10 +321,25 @@ function ActionTableRow({
 			</td>
 			<td style={{ paddingRight: 0 }}>
 				<div className="editor-grid-header">
-					<div className="cell-name">{name}</div>
+					<div className="cell-name">
+						{!service.setHeadline || !headlineExpanded || isCollapsed ? (
+							headline || name
+						) : (
+							<TextInputField
+								value={headline ?? ''}
+								placeholder={'Describe the intent of the action'}
+								setValue={service.setHeadline}
+							/>
+						)}
+					</div>
 
 					<div className="cell-controls">
 						<CButtonGroup>
+							{canSetHeadline && !headlineExpanded && (
+								<CButton size="sm" onClick={doEditHeadline} title="Set headline">
+									<FontAwesomeIcon icon={faPencil} />
+								</CButton>
+							)}
 							{isCollapsed ? (
 								<CButton size="sm" onClick={doExpand} title="Expand action view">
 									<FontAwesomeIcon icon={faExpandArrowsAlt} />
@@ -505,13 +349,13 @@ function ActionTableRow({
 									<FontAwesomeIcon icon={faCompressArrowsAlt} />
 								</CButton>
 							)}
-							<CButton disabled={readonly} size="sm" onClick={innerDuplicate} title="Duplicate action">
+							<CButton disabled={readonly} size="sm" onClick={service.performDuplicate} title="Duplicate action">
 								<FontAwesomeIcon icon={faCopy} />
 							</CButton>
-							<CButton disabled={readonly} size="sm" onClick={innerDelete} title="Remove action">
+							<CButton disabled={readonly} size="sm" onClick={service.performDelete} title="Remove action">
 								<FontAwesomeIcon icon={faTrash} />
 							</CButton>
-							{!!doEnabled && (
+							{!!service.setEnabled && (
 								<>
 									&nbsp;
 									<CSwitch
@@ -528,7 +372,10 @@ function ActionTableRow({
 
 				{!isCollapsed && (
 					<div className="editor-grid">
-						<div className="cell-description">{actionSpec?.description || ''}</div>
+						<div className="cell-description">
+							{headlineExpanded && <p className="name">{name}</p>}
+							{actionSpec?.description}
+						</div>
 
 						{location && showButtonPreview && (
 							<div className="cell-button-preview">
@@ -540,7 +387,13 @@ function ActionTableRow({
 							<CForm onSubmit={PreventDefaultHandler}>
 								<label>Delay</label>
 								<CInputGroup>
-									<NumberInputField min={0} step={10} disabled={readonly} value={action.delay} setValue={innerDelay} />
+									<NumberInputField
+										min={0}
+										step={10}
+										disabled={readonly}
+										value={action.delay}
+										setValue={service.setDelay}
+									/>
 									<CInputGroupAppend>
 										<CInputGroupText>ms</CInputGroupText>
 									</CInputGroupAppend>
@@ -549,7 +402,9 @@ function ActionTableRow({
 						</div>
 
 						<div className="cell-actions">
-							{actionSpec?.hasLearn && <LearnButton id={action.id} disabled={readonly} doLearn={innerLearn} />}
+							{actionSpec?.hasLearn && service.performLearn && (
+								<LearnButton id={action.id} disabled={readonly} doLearn={service.performLearn} />
+							)}
 						</div>
 
 						<div className="cell-option">
@@ -562,9 +417,8 @@ function ActionTableRow({
 											isAction={true}
 											connectionId={action.instance}
 											option={opt}
-											actionId={action.id}
 											value={(action.options || {})[opt.id]}
-											setValue={setValue}
+											setValue={service.setValue}
 											visibility={optionVisibility[opt.id] ?? true}
 											readonly={readonly}
 										/>
@@ -576,111 +430,5 @@ function ActionTableRow({
 				)}
 			</td>
 		</tr>
-	)
-}
-
-const baseFilter = createFilter<AddActionOption>()
-const filterOptions = (candidate: FilterOptionOption<AddActionOption>, input: string): boolean => {
-	if (input) {
-		return !candidate.data.isRecent && baseFilter(candidate, input)
-	} else {
-		return candidate.data.isRecent
-	}
-}
-
-const noOptionsMessage = ({ inputValue }: { inputValue: string }) => {
-	if (inputValue) {
-		return 'No actions found'
-	} else {
-		return 'No recently used actions'
-	}
-}
-
-interface AddActionOption {
-	isRecent: boolean
-	value: string
-	label: string
-}
-interface AddActionGroup {
-	label: string
-	options: AddActionOption[]
-}
-
-interface AddActionDropdownProps {
-	onSelect: (actionType: string) => void
-	placeholder: string
-}
-
-function AddActionDropdown({ onSelect, placeholder }: AddActionDropdownProps) {
-	const recentActionsContext = useContext(RecentActionsContext)
-	const menuPortal = useContext(MenuPortalContext)
-	const connectionsContext = useContext(ConnectionsContext)
-	const actionsContext = useContext(ActionsContext)
-
-	const options = useMemo(() => {
-		const options: Array<AddActionOption | AddActionGroup> = []
-		for (const [connectionId, connectionActions] of Object.entries(actionsContext)) {
-			for (const [actionId, action] of Object.entries(connectionActions || {})) {
-				if (!action) continue
-				const connectionLabel = connectionsContext[connectionId]?.label ?? connectionId
-				options.push({
-					isRecent: false,
-					value: `${connectionId}:${actionId}`,
-					label: `${connectionLabel}: ${action.label}`,
-				})
-			}
-		}
-
-		const recents: AddActionOption[] = []
-		for (const actionType of recentActionsContext?.recentActions ?? []) {
-			if (actionType) {
-				const [connectionId, actionId] = actionType.split(':', 2)
-				const actionInfo = actionsContext[connectionId]?.[actionId]
-				if (actionInfo) {
-					const connectionLabel = connectionsContext[connectionId]?.label ?? connectionId
-					recents.push({
-						isRecent: true,
-						value: `${connectionId}:${actionId}`,
-						label: `${connectionLabel}: ${actionInfo.label}`,
-					})
-				}
-			}
-		}
-		options.push({
-			label: 'Recently Used',
-			options: recents,
-		})
-
-		return options
-	}, [actionsContext, connectionsContext, recentActionsContext?.recentActions])
-
-	const innerChange = useCallback(
-		(e: AddActionOption | null) => {
-			if (e?.value) {
-				recentActionsContext?.trackRecentAction(e.value)
-
-				onSelect(e.value)
-			}
-		},
-		[onSelect, recentActionsContext]
-	)
-
-	return (
-		<Select
-			menuShouldBlockScroll={!!menuPortal} // The dropdown doesn't follow scroll when in a modal
-			menuPortalTarget={menuPortal || document.body}
-			menuPosition={'fixed'}
-			classNamePrefix="select-control"
-			menuPlacement="auto"
-			isClearable={false}
-			isSearchable={true}
-			isMulti={false}
-			options={options}
-			placeholder={placeholder}
-			value={null}
-			onChange={innerChange}
-			filterOption={filterOptions}
-			noOptionsMessage={noOptionsMessage}
-		/>
 	)
 }
