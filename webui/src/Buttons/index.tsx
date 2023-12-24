@@ -13,6 +13,7 @@ import { ConnectionVariables } from './Variables.js'
 import { formatLocation } from '@companion/shared/ControlId.js'
 import { ControlLocation } from '@companion/shared/Model/Common.js'
 import { PagesList } from './Pages'
+import { usePageCount } from '../Hooks/usePagesInfoSubscription'
 
 interface ButtonsPageProps {
 	hotPress: boolean
@@ -21,6 +22,8 @@ interface ButtonsPageProps {
 export const ButtonsPage = memo(function ButtonsPage({ hotPress }: ButtonsPageProps) {
 	const socket = useContext(SocketContext)
 	const userConfig = useContext(UserConfigContext)
+
+	const pageCount = usePageCount()
 
 	const clearModalRef = useRef<GenericConfirmModalRef>(null)
 
@@ -131,7 +134,7 @@ export const ButtonsPage = memo(function ButtonsPage({ hotPress }: ButtonsPagePr
 					case 'PageUp':
 						setSelectedButton((selectedButton) => {
 							if (selectedButton) {
-								const newPageNumber = selectedButton.pageNumber >= 99 ? 1 : selectedButton.pageNumber + 1
+								const newPageNumber = selectedButton.pageNumber >= pageCount ? 1 : selectedButton.pageNumber + 1
 								setPageNumber(newPageNumber)
 								return {
 									...selectedButton,
@@ -145,7 +148,7 @@ export const ButtonsPage = memo(function ButtonsPage({ hotPress }: ButtonsPagePr
 					case 'PageDown':
 						setSelectedButton((selectedButton) => {
 							if (selectedButton) {
-								const newPageNumber = selectedButton.pageNumber <= 1 ? 99 : selectedButton.pageNumber - 1
+								const newPageNumber = selectedButton.pageNumber <= 1 ? pageCount : selectedButton.pageNumber - 1
 								setPageNumber(newPageNumber)
 								return {
 									...selectedButton,
@@ -202,7 +205,7 @@ export const ButtonsPage = memo(function ButtonsPage({ hotPress }: ButtonsPagePr
 				}
 			}
 		},
-		[socket, selectedButton, copyFromButton, userConfig?.gridSize]
+		[socket, selectedButton, copyFromButton, pageCount, userConfig?.gridSize]
 	)
 
 	return (

@@ -139,10 +139,15 @@ function InternalPageDropdown({ isOnControl, includeDirection, value, setValue, 
 			choices.push({ id: 'back', label: 'Back' }, { id: 'forward', label: 'Forward' })
 		}
 
-		for (let i = 1; i <= 99; i++) {
-			const name = pages?.[i]
-			choices.push({ id: i, label: `${i}` + (name ? ` (${name?.name || ''})` : '') })
+		for (const [pageNumber, pageInfo] of Object.entries(pages || {})) {
+			if (!pageInfo) continue
+
+			choices.push({
+				id: pageNumber,
+				label: `${pageNumber}` + ` (${pageInfo?.name || ''})`,
+			})
 		}
+
 		return choices
 	}, [pages, isOnControl, includeDirection])
 

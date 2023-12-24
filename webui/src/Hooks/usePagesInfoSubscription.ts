@@ -1,7 +1,10 @@
-import { useEffect, useState } from 'react'
-import { socketEmitPromise } from '../util.js'
+import { useContext, useEffect, useMemo, useState } from 'react'
+import { PagesContext, socketEmitPromise } from '../util.js'
 import { Socket } from 'socket.io-client'
 import type { PageModel } from '@companion/shared/Model/PageModel.js'
+import jsonPatch, { Operation as JsonPatchOperation } from 'fast-json-patch'
+import { cloneDeep } from 'lodash-es'
+import { useMap } from 'usehooks-ts'
 
 export function usePagesInfoSubscription(
 	socket: Socket,
@@ -25,23 +28,18 @@ export function usePagesInfoSubscription(
 				setPages(null)
 			})
 
-		const updatePageInfo = (page: number, info: PageModel) => {
+		const updatePageInfo = (patch: JsonPatchOperation[]) => {
 			setPages((oldPages) => {
-				if (oldPages) {
-					return {
-						...oldPages,
-						[page]: info,
-					}
-				} else {
-					return null
-				}
+				if (!oldPages) return oldPages
+				console.log(oldPages, patch)
+				return jsonPatch.applyPatch(cloneDeep(oldPages) || {}, patch).newDocument
 			})
 		}
 
-		socket.on('pages:update', updatePageInfo)
+		socket.on('pages:patch', updatePageInfo)
 
 		return () => {
-			socket.off('pages:update', updatePageInfo)
+			socket.off('pages:patch', updatePageInfo)
 
 			socketEmitPromise(socket, 'pages:unsubscribe', []).catch((e) => {
 				console.error('Failed to cleanup web-buttons:', e)
@@ -50,4 +48,18 @@ export function usePagesInfoSubscription(
 	}, [retryToken, socket])
 
 	return pages
+}
+
+export function usePageCount() {
+	const pages = useContext(PagesContext)
+
+	return useMemo(() => {
+		let pageCount = 0
+
+		for (const [pageNumber, pageInfo] of Object.entries(pages)) {
+			if (pageInfo) pageCount = Math.max(pageCount, Number(pageNumber))
+		}
+
+		return pageCount
+	}, [pages])
 }

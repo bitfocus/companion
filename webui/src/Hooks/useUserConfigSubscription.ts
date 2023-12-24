@@ -39,10 +39,6 @@ export function useUserConfigSubscription(
 
 		return () => {
 			socket.off('set_userconfig_key', updateUserConfigValue)
-
-			// socketEmitPromise(socket, 'pages:unsubscribe', []).catch((e) => {
-			// 	console.error('Failed to cleanup web-buttons:', e)
-			// })
 		}
 	}, [retryToken, socket])
 
