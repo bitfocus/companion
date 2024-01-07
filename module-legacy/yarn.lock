@@ -2005,10 +2005,6 @@ commist@^1.0.0:
   version "1.0.2"
   resolved "https://codeload.github.com/bitfocus/companion-module-sony-cled/tar.gz/d95479e67dd54a82415b8748f03fceeca82a9abe"
 
-"companion-module-spx-gc@github:bitfocus/companion-module-spx-gc#v1.0.5":
-  version "1.0.5"
-  resolved "https://codeload.github.com/bitfocus/companion-module-spx-gc/tar.gz/59fff3493e356d89475952df12074d516c45096f"
-
 "companion-module-symetrix-dsp@github:bitfocus/companion-module-symetrix-dsp#v1.5.1":
   version "1.5.1"
   resolved "https://codeload.github.com/bitfocus/companion-module-symetrix-dsp/tar.gz/be6b4731f6f940901d2f76eb7d3010c3ae8b4504"
@@ -2016,10 +2012,6 @@ commist@^1.0.0:
 "companion-module-tallyma-wirelesstally@github:bitfocus/companion-module-tallyma-wirelesstally#v1.0.5":
   version "1.0.5"
   resolved "https://codeload.github.com/bitfocus/companion-module-tallyma-wirelesstally/tar.gz/f15004ec74aee42d27620c4924e61a64f649b23a"
-
-"companion-module-tascam-cd@github:bitfocus/companion-module-tascam-cd#v1.0.4":
-  version "1.0.4"
-  resolved "https://codeload.github.com/bitfocus/companion-module-tascam-cd/tar.gz/f352e93b483cd5c0438a0a77100b6acb8ab7ce40"
 
 "companion-module-televic-dcerno@github:bitfocus/companion-module-televic-dcerno#v1.0.2":
   version "1.0.2"
