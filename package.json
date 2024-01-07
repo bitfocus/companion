@@ -67,7 +67,7 @@
 		"zx": "^7.2.3"
 	},
 	"dependencies": {
-		"@companion-module/base": "~1.6.0",
+		"@companion-module/base": "~1.7.0",
 		"@elgato-stream-deck/node": "^6.0.0",
 		"@jsep-plugin/numbers": "^1.0.1",
 		"@jsep-plugin/template": "^1.0.3",

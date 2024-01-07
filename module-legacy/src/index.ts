@@ -178,6 +178,7 @@ if (LegacyModule.GetUpgradeScripts) {
 						controlId: feedbackControlIds.get(fb.id) || '',
 						feedbackId: fb.type,
 						options: fb.options,
+						isInverted: false,
 					})),
 				})
 			} else {

@@ -423,7 +423,6 @@ function ConnectionsTableRow({
 								onClick={() => windowLinkOpen({ href: `/connection-debug/${id}`, title: 'View debug log' })}
 								size="md"
 								title="Logs"
-								disabled={!isEnabled}
 								style={{ padding: 4 }}
 							>
 								<FontAwesomeIcon icon={faTerminal} />
