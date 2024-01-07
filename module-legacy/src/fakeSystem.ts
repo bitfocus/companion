@@ -38,6 +38,7 @@ function convertPresetFeedback(feedback: CompanionPreset['feedbacks'][0]): Compl
 		feedbackId: feedback.type,
 		options: feedback.options ?? {},
 		style: feedback.style,
+		isInverted: undefined,
 	}
 }
 function convertPresetBank(bank: CompanionBankPreset): Complete<ModuleApi.CompanionButtonStyleProps> {
@@ -49,6 +50,7 @@ function convertPresetBank(bank: CompanionBankPreset): Complete<ModuleApi.Compan
 		alignment: bank.alignment,
 		png64: bank.png64,
 		pngalignment: bank.pngalignment,
+		show_topbar: undefined,
 	}
 
 	// Fix up some pre 2.0 styles
@@ -67,6 +69,7 @@ function convertInputFieldBase(input: CompanionInputField): Complete<Omit<Module
 		label: input.label,
 		tooltip: input.tooltip,
 		isVisible: input.isVisible,
+		isVisibleData: undefined,
 	}
 }
 
@@ -113,6 +116,9 @@ export function convertInputField(input: SomeCompanionInputField): Complete<Modu
 				...convertInputFieldBase(input),
 				type: 'colorpicker',
 				default: input.default,
+				returnType: undefined,
+				enableAlpha: undefined,
+				presetColors: undefined,
 			})
 		case 'checkbox':
 			return literal<Complete<ModuleApi.CompanionInputFieldCheckbox>>({
@@ -326,9 +332,9 @@ export class FakeSystem extends EventEmitter {
 								options: event.options ?? {},
 							},
 							{
-								deviceId: event._deviceId,
-								page: event._page,
-								bank: event._bank,
+								deviceId: event.surfaceId,
+								page: null,
+								bank: null,
 							},
 						)
 					}
@@ -342,6 +348,7 @@ export class FakeSystem extends EventEmitter {
 					subscribe: wrapActionSubscriptionCallback(id, action.subscribe),
 					unsubscribe: wrapActionSubscriptionCallback(id, action.unsubscribe),
 					learn: wrapActionSubscriptionCallback(id, action.learn),
+					learnTimeout: undefined,
 				})
 			}
 		}
@@ -369,7 +376,7 @@ export class FakeSystem extends EventEmitter {
 										type: id,
 										options: event.options ?? {},
 									},
-									event._rawBank,
+									{} as any,
 									null,
 								)
 							} else {
@@ -383,10 +390,12 @@ export class FakeSystem extends EventEmitter {
 							description: feedback.description,
 							options: (feedback.options ?? []).map(convertInputField) as ModuleApi.SomeCompanionFeedbackInputField[],
 							defaultStyle: feedback.style,
+							showInvert: undefined,
 							callback: cb,
 							subscribe: wrapFeedbackSubscriptionCallback(id, feedback.subscribe),
 							unsubscribe: wrapFeedbackSubscriptionCallback(id, feedback.unsubscribe),
 							learn: wrapFeedbackSubscriptionCallback(id, feedback.learn),
+							learnTimeout: undefined,
 						})
 						break
 					}
@@ -402,10 +411,10 @@ export class FakeSystem extends EventEmitter {
 										type: id,
 										options: event.options ?? {},
 									},
-									event._rawBank,
+									{} as any,
 									{
-										page: event._page,
-										bank: event._bank,
+										page: 0,
+										bank: 0,
 										width: event.image?.width ?? 72,
 										height: event.image?.height ?? 72,
 									},
@@ -424,6 +433,7 @@ export class FakeSystem extends EventEmitter {
 							subscribe: wrapFeedbackSubscriptionCallback(id, feedback.subscribe),
 							unsubscribe: wrapFeedbackSubscriptionCallback(id, feedback.unsubscribe),
 							learn: wrapFeedbackSubscriptionCallback(id, feedback.learn),
+							learnTimeout: undefined,
 						})
 						break
 					}
