@@ -4,7 +4,6 @@ import { Socket } from 'socket.io-client'
 import type { PageModel } from '@companion/shared/Model/PageModel.js'
 import jsonPatch, { Operation as JsonPatchOperation } from 'fast-json-patch'
 import { cloneDeep } from 'lodash-es'
-import { useMap } from 'usehooks-ts'
 
 export function usePagesInfoSubscription(
 	socket: Socket,
