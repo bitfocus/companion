@@ -1,6 +1,6 @@
 import { defineConfig } from 'vite'
 import reactPlugin from '@vitejs/plugin-react'
-import envCompatible from 'vite-plugin-env-compatible'
+import * as envCompatible from 'vite-plugin-env-compatible'
 
 // https://vitejs.dev/config/
 export default defineConfig({
