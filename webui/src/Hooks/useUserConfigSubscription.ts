@@ -30,7 +30,7 @@ export function useUserConfigSubscription(
 					? {
 							...oldState,
 							[key]: value,
-					  }
+						}
 					: null
 			)
 		}

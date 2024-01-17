@@ -5,7 +5,7 @@
 		"outDir": "./dist",
 		"baseUrl": "./",
 		"paths": {
-			"*": ["./node_modules/*"]
+			"*": ["./node_modules/*"],
 		},
 		"module": "Node16",
 		"moduleResolution": "Node16",
@@ -33,6 +33,6 @@
 		"noUnusedParameters": true,
 		"skipLibCheck": true,
 		"allowSyntheticDefaultImports": true,
-		"esModuleInterop": true
-	}
+		"esModuleInterop": true,
+	},
 }

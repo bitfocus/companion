@@ -179,7 +179,7 @@ const GridSizeModal = forwardRef<GridSizeModalRef, GridSizeModalProps>(function 
 				? {
 						...oldSize,
 						minColumn: newValue,
-				  }
+					}
 				: null
 		)
 	}, [])
@@ -190,7 +190,7 @@ const GridSizeModal = forwardRef<GridSizeModalRef, GridSizeModalProps>(function 
 				? {
 						...oldSize,
 						maxColumn: newValue,
-				  }
+					}
 				: null
 		)
 	}, [])
@@ -201,7 +201,7 @@ const GridSizeModal = forwardRef<GridSizeModalRef, GridSizeModalProps>(function 
 				? {
 						...oldSize,
 						minRow: newValue,
-				  }
+					}
 				: null
 		)
 	}, [])
@@ -212,7 +212,7 @@ const GridSizeModal = forwardRef<GridSizeModalRef, GridSizeModalProps>(function 
 				? {
 						...oldSize,
 						maxRow: newValue,
-				  }
+					}
 				: null
 		)
 	}, [])

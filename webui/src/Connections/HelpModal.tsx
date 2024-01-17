@@ -52,7 +52,7 @@ export const HelpModal = memo(
 						allowedTags: sanitizeHtml.defaults.allowedTags.concat(['img']),
 						disallowedTagsMode: 'escape',
 					}),
-			  }
+				}
 			: undefined
 
 		const moduleInfo = content && modules?.[content[0]]

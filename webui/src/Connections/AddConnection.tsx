@@ -79,7 +79,7 @@ const AddConnectionsInner = memo(function AddConnectionsInner({
 			? fuzzySearch(filter, allProducts, {
 					keys: ['product', 'name', 'manufacturer', 'keywords'],
 					threshold: -10_000,
-			  }).map((x) => x.obj)
+				}).map((x) => x.obj)
 			: allProducts
 
 		for (const module of searchResults) {
