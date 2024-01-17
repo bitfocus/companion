@@ -57,7 +57,7 @@ This API tries to follow REST principles, and the convention that a `POST` reque
   Path: `/api/custom-variable/<name>/value`
 - Rescan for USB surfaces  
   Method: POST  
-  Path: `/surfaces/rescan`  
+  Path: `/api/surfaces/rescan`  
 
 **Examples**  
 Press page 1 row 0 column 2:  

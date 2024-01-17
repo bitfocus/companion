@@ -2,7 +2,7 @@
 
 ## Companion v3.2.0 - Release Notes (unreleased)
 
-Up to 13984f3b4c3fb4f206cadfa5549573734f8e6432
+Up to 2a83fa2c2a0b3b5efd5f3d85f25e4120c947d118
 
 ### 📣 CORE FEATURES AND IMPROVEMENTS
 
@@ -13,6 +13,7 @@ Up to 13984f3b4c3fb4f206cadfa5549573734f8e6432
 - Change surface image scaling library to reduce install size and improve performance
 - Use async HID library, removing spawning of child processes to handle HID devices
 - Add fontsize and image scaling to satellite api
+- Surfaces can be grouped, so that they follow page changes with each other
 - Elgato Plugin performance improvements
 - Export and import compressed configs
 - Add support for Loupedeck CT
@@ -27,11 +28,18 @@ Up to 13984f3b4c3fb4f206cadfa5549573734f8e6432
 - Change webui build tooling to be more modern
 - Rework backend code to be loosely typed
 - Rework various api implementations, to support customisable grid size and avoid 'bank' terminology
+- Learn timeout can be configured by modules
+- Add variables about surfaces and surface groups
+- Add variables for connection statuses
+- Add seperate press/release if condition actions
 -
 
 ### 🐞 BUG FIXES
 
 - Streamdeck Plus LCD strip image positioning
+- Preserve sort order when importing connections
+- Restore `app_exit` action
+- Connections sometimes getting stuck and unable to start
 -
 
 ### 🧩 NEW & UPDATED MODULES
