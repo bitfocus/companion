@@ -215,7 +215,7 @@ export function ApplyStep({ oldConfig, newConfig }: ApplyStepProps) {
 						Change admin password from {oldConfig.admin_password === '' ? '(none)' : `'${oldConfig.admin_password}'`} to{' '}
 						'{newConfig.admin_password}'.
 					</li>
-			  )
+				)
 			: changes.push(<li>Set admin password to '{newConfig.admin_password}'.</li>)
 	}
 	if (
@@ -230,10 +230,10 @@ export function ApplyStep({ oldConfig, newConfig }: ApplyStepProps) {
 						Change admin GUI timeout from {oldAdminTimeoutStr === '0' ? 'none' : oldConfig.admin_timeout + ' minutes'}{' '}
 						to {newAdminTimeoutStr ? 'none' : newConfig.admin_timeout + ' minutes'}.
 					</li>
-			  )
+				)
 			: changes.push(
 					<li>Set admin GUI timeout to {newAdminTimeoutStr ? 'none' : newConfig.admin_timeout + ' minutes'}.</li>
-			  )
+				)
 	}
 
 	if (changes.length === 0) {

@@ -99,7 +99,7 @@ module.exports = {
 							urlPrefix: '~/',
 						},
 					},
-			  })
+				})
 			: '',
 	].filter(Boolean),
 }

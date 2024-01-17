@@ -7,14 +7,14 @@
 		"outDir": "dist",
 		"baseUrl": "./",
 		"paths": {
-			"*": ["node_modules/*", "types/*"]
+			"*": ["node_modules/*", "types/*"],
 		},
 		"declaration": true,
 		"importHelpers": true,
 		"pretty": true,
-		"types": ["node", "jest"]
+		"types": ["node", "jest"],
 	},
 	"include": ["src/**/*.ts", "scripts/**/*.ts"],
 	"compileOnSave": false,
-	"exclude": ["node_modules/**"]
+	"exclude": ["node_modules/**"],
 }
