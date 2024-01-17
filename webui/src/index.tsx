@@ -3,7 +3,7 @@
 import '@fontsource/roboto'
 import '@fontsource/fira-code'
 import './App.scss'
-import './Constants'
+import './Constants.js'
 
 if (process.env.NODE_ENV === 'development') {
 	const defineProperties = Object.defineProperties
@@ -20,18 +20,18 @@ import ReactDOM from 'react-dom'
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
 import io from 'socket.io-client'
 
-import App from './App'
-import { SocketContext } from './util'
+import App from './App.js'
+import { SocketContext } from './util.js'
 
 // import i18n from 'i18next'
 // import Backend from 'i18next-http-backend'
 // import LanguageDetector from 'i18next-browser-languagedetector'
 // import { initReactI18next } from 'react-i18next'
-import { GettingStarted } from './GettingStarted'
-import { TabletView } from './TabletView'
-import { Emulator } from './Emulator/Emulator'
-import { EmulatorList } from './Emulator/List'
-import { ConnectionDebug } from './ConnectionDebug'
+import { GettingStarted } from './GettingStarted.js'
+import { TabletView } from './TabletView/index.js'
+import { Emulator } from './Emulator/Emulator.js'
+import { EmulatorList } from './Emulator/List.js'
+import { ConnectionDebug } from './ConnectionDebug.js'
 
 // i18n
 // 	.use(Backend)

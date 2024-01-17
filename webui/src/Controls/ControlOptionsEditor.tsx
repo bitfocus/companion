@@ -1,10 +1,10 @@
 import { CLabel } from '@coreui/react'
 import React, { MutableRefObject, useCallback, useContext, useRef } from 'react'
-import { socketEmitPromise, SocketContext } from '../util'
-import { GenericConfirmModal, GenericConfirmModalRef } from '../Components/GenericConfirmModal'
+import { socketEmitPromise, SocketContext } from '../util.js'
+import { GenericConfirmModal, GenericConfirmModalRef } from '../Components/GenericConfirmModal.js'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faQuestionCircle } from '@fortawesome/free-solid-svg-icons'
-import CSwitch from '../CSwitch'
+import CSwitch from '../CSwitch.js'
 
 interface ControlOptionsEditorProps {
 	controlId: string

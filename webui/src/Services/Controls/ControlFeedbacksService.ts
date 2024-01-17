@@ -1,7 +1,7 @@
 import { useContext, useMemo, useRef } from 'react'
-import { SocketContext, socketEmitPromise } from '../../util'
-import { FeedbackInstance } from '@companion/shared/Model/FeedbackModel'
-import { GenericConfirmModalRef } from '../../Components/GenericConfirmModal'
+import { SocketContext, socketEmitPromise } from '../../util.js'
+import { FeedbackInstance } from '@companion/shared/Model/FeedbackModel.js'
+import { GenericConfirmModalRef } from '../../Components/GenericConfirmModal.js'
 
 export interface IFeedbackEditorService {
 	addFeedback: (feedbackType: string) => void

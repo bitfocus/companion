@@ -1,9 +1,9 @@
 import { CButton } from '@coreui/react'
 import React, { useCallback, useContext, useEffect, useState } from 'react'
-import { NotifierContext, SocketContext, socketEmitPromise } from '../../util'
-import { ImportPageWizard } from './Page'
-import { ImportFullWizard } from './Full'
-import type { ClientImportObject } from '@companion/shared/Model/ImportExport'
+import { NotifierContext, SocketContext, socketEmitPromise } from '../../util.js'
+import { ImportPageWizard } from './Page.js'
+import { ImportFullWizard } from './Full.js'
+import type { ClientImportObject } from '@companion/shared/Model/ImportExport.js'
 
 interface ImportWizardProps {
 	importInfo: [ClientImportObject, Record<string, string | undefined>]

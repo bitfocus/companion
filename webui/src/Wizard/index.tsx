@@ -1,13 +1,13 @@
 import React, { FormEvent, forwardRef, useCallback, useContext, useImperativeHandle, useState } from 'react'
 import { CAlert, CButton, CForm, CModal, CModalBody, CModalFooter, CModalHeader } from '@coreui/react'
-import { SocketContext, socketEmitPromise } from '../util'
-import { BeginStep } from './BeginStep'
-import { SurfacesStep } from './SurfacesStep'
-import { ServicesStep } from './ServicesStep'
-import { PasswordStep } from './PasswordStep'
-import { ApplyStep } from './ApplyStep'
-import { FinishStep } from './FinishStep'
-import { UserConfigModel } from '@companion/shared/Model/UserConfigModel'
+import { SocketContext, socketEmitPromise } from '../util.js'
+import { BeginStep } from './BeginStep.js'
+import { SurfacesStep } from './SurfacesStep.js'
+import { ServicesStep } from './ServicesStep.js'
+import { PasswordStep } from './PasswordStep.js'
+import { ApplyStep } from './ApplyStep.js'
+import { FinishStep } from './FinishStep.js'
+import { UserConfigModel } from '@companion/shared/Model/UserConfigModel.js'
 
 export const WIZARD_VERSION_2_2 = 22 // 2.2
 export const WIZARD_VERSION_3_0 = 30 // 3.0

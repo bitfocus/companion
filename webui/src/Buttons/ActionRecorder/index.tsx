@@ -1,11 +1,11 @@
 import React, { useCallback, useContext, useEffect, useState, useRef } from 'react'
-import { socketEmitPromise, SocketContext, applyPatchOrReplaceObject } from '../../util'
+import { socketEmitPromise, SocketContext, applyPatchOrReplaceObject } from '../../util.js'
 import { CAlert, CCol, CRow } from '@coreui/react'
-import { GenericConfirmModal } from '../../Components/GenericConfirmModal'
+import { GenericConfirmModal } from '../../Components/GenericConfirmModal.js'
 import { Operation as JsonPatchOperation } from 'fast-json-patch'
-import type { RecordSessionInfo, RecordSessionListInfo } from '@companion/shared/Model/ActionRecorderModel'
-import { RecorderSessionFinishModal } from './RecorderSessionFinishModal'
-import { RecorderSessionHeading, RecorderSession } from './RecorderSessionHeading'
+import type { RecordSessionInfo, RecordSessionListInfo } from '@companion/shared/Model/ActionRecorderModel.js'
+import { RecorderSessionFinishModal } from './RecorderSessionFinishModal.js'
+import { RecorderSessionHeading, RecorderSession } from './RecorderSessionHeading.js'
 
 export function ActionRecorder() {
 	const socket = useContext(SocketContext)

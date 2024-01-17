@@ -1,8 +1,8 @@
 import React, { memo, useCallback, useContext, useMemo } from 'react'
-import { FeedbacksContext, ConnectionsContext, RecentFeedbacksContext } from '../util'
+import { FeedbacksContext, ConnectionsContext, RecentFeedbacksContext } from '../util.js'
 import Select, { createFilter } from 'react-select'
-import { MenuPortalContext } from '../Components/DropdownInputField'
-import { FilterOptionOption } from 'react-select/dist/declarations/src/filters'
+import { MenuPortalContext } from '../Components/DropdownInputField.js'
+import { FilterOptionOption } from 'react-select/dist/declarations/src/filters.js'
 
 const baseFilter = createFilter<AddFeedbackOption>()
 const filterOptions = (candidate: FilterOptionOption<AddFeedbackOption>, input: string) => {

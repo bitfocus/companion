@@ -1,7 +1,7 @@
 import React from 'react'
 import { CAlert } from '@coreui/react'
-import CSwitch from '../CSwitch'
-import type { UserConfigModel } from '@companion/shared/Model/UserConfigModel'
+import CSwitch from '../CSwitch.js'
+import type { UserConfigModel } from '@companion/shared/Model/UserConfigModel.js'
 
 interface ExperimentsConfigProps {
 	config: UserConfigModel

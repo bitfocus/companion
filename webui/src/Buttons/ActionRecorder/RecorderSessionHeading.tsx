@@ -5,17 +5,17 @@ import {
 	SocketContext,
 	LoadingRetryOrError,
 	PreventDefaultHandler,
-} from '../../util'
+} from '../../util.js'
 import { CButton, CAlert, CButtonGroup, CCol, CRow, CForm, CLabel } from '@coreui/react'
 import { useMemo } from 'react'
-import { DropdownInputField } from '../../Components'
-import { ActionsList } from '../../Controls/ActionSetEditor'
-import { usePanelCollapseHelper } from '../../Helpers/CollapseHelper'
-import CSwitch from '../../CSwitch'
+import { DropdownInputField } from '../../Components/index.js'
+import { ActionsList } from '../../Controls/ActionSetEditor.js'
+import { usePanelCollapseHelper } from '../../Helpers/CollapseHelper.js'
+import CSwitch from '../../CSwitch.js'
 import type { DropdownChoiceId } from '@companion-module/base'
-import type { RecordSessionInfo } from '@companion/shared/Model/ActionRecorderModel'
-import { useActionRecorderActionService } from '../../Services/Controls/ControlActionsService'
-import { GenericConfirmModalRef } from '../../Components/GenericConfirmModal'
+import type { RecordSessionInfo } from '@companion/shared/Model/ActionRecorderModel.js'
+import { useActionRecorderActionService } from '../../Services/Controls/ControlActionsService.js'
+import { GenericConfirmModalRef } from '../../Components/GenericConfirmModal.js'
 
 interface RecorderSessionHeadingProps {
 	confirmRef: RefObject<GenericConfirmModalRef>

@@ -1,10 +1,10 @@
 import React, { useCallback, useContext } from 'react'
 import { CAlert, CButton, CDropdown, CDropdownItem, CDropdownMenu, CDropdownToggle, CInput } from '@coreui/react'
-import { SocketContext } from '../util'
+import { SocketContext } from '../util.js'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faSync, faTrash, faUndo } from '@fortawesome/free-solid-svg-icons'
-import CSwitch from '../CSwitch'
-import type { UserConfigModel } from '@companion/shared/Model/UserConfigModel'
+import CSwitch from '../CSwitch.js'
+import type { UserConfigModel } from '@companion/shared/Model/UserConfigModel.js'
 
 interface HttpsConfigProps {
 	config: UserConfigModel

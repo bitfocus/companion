@@ -23,17 +23,17 @@ import React, {
 	useRef,
 	useState,
 } from 'react'
-import { KeyReceiver, PagesContext, socketEmitPromise, SocketContext, UserConfigContext } from '../util'
+import { KeyReceiver, PagesContext, socketEmitPromise, SocketContext, UserConfigContext } from '../util.js'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faFileExport, faHome, faPencil } from '@fortawesome/free-solid-svg-icons'
-import { ConfirmExportModal, ConfirmExportModalRef } from '../Components/ConfirmExportModal'
-import { ButtonInfiniteGrid, ButtonInfiniteGridRef, PrimaryButtonGridIcon } from './ButtonInfiniteGrid'
-import { useHasBeenRendered } from '../Hooks/useHasBeenRendered'
+import { ConfirmExportModal, ConfirmExportModalRef } from '../Components/ConfirmExportModal.js'
+import { ButtonInfiniteGrid, ButtonInfiniteGridRef, PrimaryButtonGridIcon } from './ButtonInfiniteGrid.js'
+import { useHasBeenRendered } from '../Hooks/useHasBeenRendered.js'
 import { useElementSize } from 'usehooks-ts'
-import { ButtonGridHeader } from './ButtonGridHeader'
-import { ButtonGridActions, ButtonGridActionsRef } from './ButtonGridActions'
-import type { ControlLocation } from '@companion/shared/Model/Common'
-import type { PageModel } from '@companion/shared/Model/PageModel'
+import { ButtonGridHeader } from './ButtonGridHeader.js'
+import { ButtonGridActions, ButtonGridActionsRef } from './ButtonGridActions.js'
+import type { ControlLocation } from '@companion/shared/Model/Common.js'
+import type { PageModel } from '@companion/shared/Model/PageModel.js'
 
 interface ButtonsGridPanelProps {
 	pageNumber: number

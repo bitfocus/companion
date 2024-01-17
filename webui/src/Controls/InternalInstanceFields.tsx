@@ -1,5 +1,5 @@
 import React, { useContext, useMemo } from 'react'
-import { DropdownInputField } from '../Components'
+import { DropdownInputField } from '../Components/index.js'
 import {
 	CustomVariableDefinitionsContext,
 	ConnectionsContext,
@@ -7,9 +7,9 @@ import {
 	SurfacesContext,
 	TriggersContext,
 	VariableDefinitionsContext,
-} from '../util'
+} from '../util.js'
 import TimePicker from 'react-time-picker'
-import { InternalInputField } from '@companion/shared/Model/Options'
+import { InternalInputField } from '@companion/shared/Model/Options.js'
 import { DropdownChoice } from '@companion-module/base'
 
 export function InternalInstanceField(

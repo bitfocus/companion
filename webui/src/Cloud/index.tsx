@@ -2,9 +2,9 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faInfoCircle } from '@fortawesome/free-solid-svg-icons'
 import React, { Component } from 'react'
 import { CInput, CButton, CCallout, CCard, CCardBody, CCardHeader, CListGroup } from '@coreui/react'
-import { CloudRegionPanel } from './RegionPanel'
-import { CloudUserPass } from './UserPass'
-import CSwitch from '../CSwitch'
+import { CloudRegionPanel } from './RegionPanel.js'
+import { CloudUserPass } from './UserPass.js'
+import CSwitch from '../CSwitch.js'
 import type { Socket } from 'socket.io-client'
 
 // The cloud part is written in old fashioned Class-components because I am most

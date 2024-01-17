@@ -1,12 +1,18 @@
 import { CButton, CRow, CCol, CButtonGroup, CForm, CAlert, CInputGroup, CInputGroupAppend } from '@coreui/react'
 import React, { MutableRefObject, useCallback, useContext, useMemo, useState } from 'react'
-import { socketEmitPromise, SocketContext, PreventDefaultHandler } from '../util'
-import { AlignmentInputField, ColorInputField, DropdownInputField, PNGInputField, TextInputField } from '../Components'
-import { FONT_SIZES, SHOW_HIDE_TOP_BAR } from '../Constants'
+import { socketEmitPromise, SocketContext, PreventDefaultHandler } from '../util.js'
+import {
+	AlignmentInputField,
+	ColorInputField,
+	DropdownInputField,
+	PNGInputField,
+	TextInputField,
+} from '../Components/index.js'
+import { FONT_SIZES, SHOW_HIDE_TOP_BAR } from '../Constants.js'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faDollarSign, faFont, faQuestionCircle, faTrash } from '@fortawesome/free-solid-svg-icons'
-import { SomeButtonModel } from '@companion/shared/Model/ButtonModel'
-import { ButtonStyleProperties } from '@companion/shared/Model/StyleModel'
+import { SomeButtonModel } from '@companion/shared/Model/ButtonModel.js'
+import { ButtonStyleProperties } from '@companion/shared/Model/StyleModel.js'
 
 interface ButtonStyleConfigProps {
 	controlId: string

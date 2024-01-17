@@ -1,6 +1,6 @@
-import type { ExtendedInputField, InternalInputField, IsVisibleFunction } from '@companion/shared/Model/Options'
+import type { ExtendedInputField, InternalInputField, IsVisibleFunction } from '@companion/shared/Model/Options.js'
 import { useMemo, useEffect, useState } from 'react'
-import { sandbox } from '../util'
+import { sandbox } from '../util.js'
 import { CompanionOptionValues } from '@companion-module/base'
 
 interface IsVisibleFunctionEntry {

@@ -11,29 +11,29 @@ import {
 } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import React, { useCallback, useContext, useMemo, useRef, useState } from 'react'
-import { FeedbacksContext, ConnectionsContext, MyErrorBoundary, PreventDefaultHandler } from '../util'
-import { OptionsInputField } from './OptionsInputField'
+import { FeedbacksContext, ConnectionsContext, MyErrorBoundary, PreventDefaultHandler } from '../util.js'
+import { OptionsInputField } from './OptionsInputField.js'
 import { useDrag, useDrop } from 'react-dnd'
-import { GenericConfirmModal, GenericConfirmModalRef } from '../Components/GenericConfirmModal'
-import { CheckboxInputField, DropdownInputField, TextInputField } from '../Components'
-import { ButtonStyleConfigFields } from './ButtonStyleConfig'
-import { AddFeedbacksModal, AddFeedbacksModalRef } from './AddModal'
-import { usePanelCollapseHelper } from '../Helpers/CollapseHelper'
-import { OptionButtonPreview } from './OptionButtonPreview'
-import { ButtonStyleProperties } from '@companion/shared/Style'
-import { FeedbackInstance } from '@companion/shared/Model/FeedbackModel'
-import { InternalFeedbackDefinition } from '@companion/shared/Model/Options'
+import { GenericConfirmModal, GenericConfirmModalRef } from '../Components/GenericConfirmModal.js'
+import { CheckboxInputField, DropdownInputField, TextInputField } from '../Components/index.js'
+import { ButtonStyleConfigFields } from './ButtonStyleConfig.js'
+import { AddFeedbacksModal, AddFeedbacksModalRef } from './AddModal.js'
+import { usePanelCollapseHelper } from '../Helpers/CollapseHelper.js'
+import { OptionButtonPreview } from './OptionButtonPreview.js'
+import { ButtonStyleProperties } from '@companion/shared/Style.js'
+import { FeedbackInstance } from '@companion/shared/Model/FeedbackModel.js'
+import { InternalFeedbackDefinition } from '@companion/shared/Model/Options.js'
 import { DropdownChoiceId } from '@companion-module/base'
-import { ControlLocation } from '@companion/shared/Model/Common'
-import { useOptionsAndIsVisible } from '../Hooks/useOptionsAndIsVisible'
-import { LearnButton } from '../Components/LearnButton'
-import { AddFeedbackDropdown } from './AddFeedbackDropdown'
+import { ControlLocation } from '@companion/shared/Model/Common.js'
+import { useOptionsAndIsVisible } from '../Hooks/useOptionsAndIsVisible.js'
+import { LearnButton } from '../Components/LearnButton.js'
+import { AddFeedbackDropdown } from './AddFeedbackDropdown.js'
 import {
 	IFeedbackEditorFeedbackService,
 	IFeedbackEditorService,
 	useControlFeedbackService,
 	useControlFeedbacksEditorService,
-} from '../Services/Controls/ControlFeedbacksService'
+} from '../Services/Controls/ControlFeedbacksService.js'
 
 interface ControlFeedbacksEditorProps {
 	controlId: string

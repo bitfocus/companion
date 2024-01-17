@@ -12,14 +12,20 @@ import {
 	CModalHeader,
 	CSelect,
 } from '@coreui/react'
-import { LoadingRetryOrError, socketEmitPromise, SocketContext, PreventDefaultHandler, SurfacesContext } from '../util'
+import {
+	LoadingRetryOrError,
+	socketEmitPromise,
+	SocketContext,
+	PreventDefaultHandler,
+	SurfacesContext,
+} from '../util.js'
 import { nanoid } from 'nanoid'
 import { faQuestionCircle } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { InternalInstanceField } from '../Controls/InternalInstanceFields'
-import { MenuPortalContext } from '../Components/DropdownInputField'
-import { ClientDevicesListItem } from '@companion/shared/Model/Surfaces'
-import { InternalInputField } from '@companion/shared/Model/Options'
+import { InternalInstanceField } from '../Controls/InternalInstanceFields.js'
+import { MenuPortalContext } from '../Components/DropdownInputField.js'
+import { ClientDevicesListItem } from '@companion/shared/Model/Surfaces.js'
+import { InternalInputField } from '@companion/shared/Model/Options.js'
 
 const PAGE_FIELD_SPEC: InternalInputField = {
 	id: '',

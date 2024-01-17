@@ -10,10 +10,10 @@ import {
 	CInputCheckbox,
 	CLabel,
 } from '@coreui/react'
-import { NotifierContext, PreventDefaultHandler, SocketContext, socketEmitPromise } from '../util'
+import { NotifierContext, PreventDefaultHandler, SocketContext, socketEmitPromise } from '../util.js'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faDownload } from '@fortawesome/free-solid-svg-icons'
-import type { ClientResetSelection } from '@companion/shared/Model/ImportExport'
+import type { ClientResetSelection } from '@companion/shared/Model/ImportExport.js'
 
 interface ResetWizardModalProps {}
 export interface ResetWizardModalRef {

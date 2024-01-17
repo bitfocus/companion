@@ -1,8 +1,8 @@
 import React, { useContext, useRef, useState, useMemo, useEffect } from 'react'
-import { SocketContext, socketEmitPromise } from '../util'
-import { DropdownInputField } from './DropdownInputField'
+import { SocketContext, socketEmitPromise } from '../util.js'
+import { DropdownInputField } from './DropdownInputField.js'
 import type { DropdownChoice, DropdownChoiceId } from '@companion-module/base'
-import type { ClientBonjourService } from '@companion/shared/Model/Common'
+import type { ClientBonjourService } from '@companion/shared/Model/Common.js'
 
 interface BonjourDeviceInputFieldProps {
 	value: string

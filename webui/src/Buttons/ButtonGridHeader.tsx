@@ -1,10 +1,10 @@
 import { CButton, CInputGroup, CInputGroupAppend, CInputGroupPrepend } from '@coreui/react'
 import React, { memo, useCallback, useContext, useMemo } from 'react'
-import { PagesContext } from '../util'
+import { PagesContext } from '../util.js'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faChevronLeft, faChevronRight } from '@fortawesome/free-solid-svg-icons'
 import Select from 'react-select'
-import { PageModel } from '@companion/shared/Model/PageModel'
+import { PageModel } from '@companion/shared/Model/PageModel.js'
 
 interface SelectOption {
 	value: number

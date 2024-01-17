@@ -19,19 +19,23 @@ import {
 	RecentActionsContext,
 	RecentFeedbacksContext,
 	ActiveLearnContext,
-} from './util'
-import { NotificationsManager, NotificationsManagerRef } from './Components/Notifications'
+} from './util.js'
+import { NotificationsManager, NotificationsManagerRef } from './Components/Notifications.js'
 import { cloneDeep } from 'lodash-es'
 import jsonPatch, { Operation as JsonPatchOperation } from 'fast-json-patch'
-import { useUserConfigSubscription } from './Hooks/useUserConfigSubscription'
-import { usePagesInfoSubscription } from './Hooks/usePagesInfoSubscription'
-import type { ClientConnectionConfig, ClientEventDefinition, ModuleDisplayInfo } from '@companion/shared/Model/Common'
-import type { ClientActionDefinition, InternalFeedbackDefinition } from '@companion/shared/Model/Options'
-import type { AllVariableDefinitions, ModuleVariableDefinitions } from '@companion/shared/Model/Variables'
-import type { CustomVariablesModel } from '@companion/shared/Model/CustomVariableModel'
-import type { ClientDevicesListItem } from '@companion/shared/Model/Surfaces'
-import type { ClientTriggerData } from '@companion/shared/Model/TriggerModel'
-import { useActiveLearnRequests } from './_Model/ActiveLearn'
+import { useUserConfigSubscription } from './Hooks/useUserConfigSubscription.js'
+import { usePagesInfoSubscription } from './Hooks/usePagesInfoSubscription.js'
+import type {
+	ClientConnectionConfig,
+	ClientEventDefinition,
+	ModuleDisplayInfo,
+} from '@companion/shared/Model/Common.js'
+import type { ClientActionDefinition, InternalFeedbackDefinition } from '@companion/shared/Model/Options.js'
+import type { AllVariableDefinitions, ModuleVariableDefinitions } from '@companion/shared/Model/Variables.js'
+import type { CustomVariablesModel } from '@companion/shared/Model/CustomVariableModel.js'
+import type { ClientDevicesListItem } from '@companion/shared/Model/Surfaces.js'
+import type { ClientTriggerData } from '@companion/shared/Model/TriggerModel.js'
+import { useActiveLearnRequests } from './_Model/ActiveLearn.js'
 
 interface ContextDataProps {
 	children: (progressPercent: number, loadingComplete: boolean) => React.JSX.Element | React.JSX.Element[]

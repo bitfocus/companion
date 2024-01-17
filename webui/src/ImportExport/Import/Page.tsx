@@ -8,21 +8,21 @@ import {
 	SocketContext,
 	UserConfigContext,
 	socketEmitPromise,
-} from '../../util'
-import { ButtonGridHeader } from '../../Buttons/ButtonGridHeader'
-import { usePagePicker } from '../../Hooks/usePagePicker'
+} from '../../util.js'
+import { ButtonGridHeader } from '../../Buttons/ButtonGridHeader.js'
+import { usePagePicker } from '../../Hooks/usePagePicker.js'
 import {
 	ButtonGridIcon,
 	ButtonGridIconBase,
 	ButtonInfiniteGrid,
 	ButtonInfiniteGridButtonProps,
 	ButtonInfiniteGridRef,
-} from '../../Buttons/ButtonInfiniteGrid'
+} from '../../Buttons/ButtonInfiniteGrid.js'
 import { faHome } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { useHasBeenRendered } from '../../Hooks/useHasBeenRendered'
-import type { ClientImportObject } from '@companion/shared/Model/ImportExport'
-import { compareExportedInstances } from '@companion/shared/Import'
+import { useHasBeenRendered } from '../../Hooks/useHasBeenRendered.js'
+import type { ClientImportObject } from '@companion/shared/Model/ImportExport.js'
+import { compareExportedInstances } from '@companion/shared/Import.js'
 
 interface ImportPageWizardProps {
 	snapshot: ClientImportObject

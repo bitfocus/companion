@@ -1,6 +1,6 @@
 import React, { useContext } from 'react'
 import { CButton } from '@coreui/react'
-import { ActiveLearnContext } from '../util'
+import { ActiveLearnContext } from '../util.js'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faSync } from '@fortawesome/free-solid-svg-icons'
 import { observer } from 'mobx-react-lite'

@@ -1,14 +1,14 @@
 import React, { memo, useCallback, useContext, useRef, useState } from 'react'
 import { CAlert, CButton, CButtonGroup } from '@coreui/react'
-import { SurfacesContext, socketEmitPromise, SocketContext } from '../util'
+import { SurfacesContext, socketEmitPromise, SocketContext } from '../util.js'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faAdd, faCog, faFolderOpen, faSync, faTrash } from '@fortawesome/free-solid-svg-icons'
-import { TextInputField } from '../Components/TextInputField'
-import { GenericConfirmModal, GenericConfirmModalRef } from '../Components/GenericConfirmModal'
-import { SurfaceEditModal, SurfaceEditModalRef } from './EditModal'
-import { AddSurfaceGroupModal, AddSurfaceGroupModalRef } from './AddGroupModal'
+import { TextInputField } from '../Components/TextInputField.js'
+import { GenericConfirmModal, GenericConfirmModalRef } from '../Components/GenericConfirmModal.js'
+import { SurfaceEditModal, SurfaceEditModalRef } from './EditModal.js'
+import { AddSurfaceGroupModal, AddSurfaceGroupModalRef } from './AddGroupModal.js'
 import classNames from 'classnames'
-import { ClientDevicesListItem, ClientSurfaceItem } from '@companion/shared/Model/Surfaces'
+import { ClientDevicesListItem, ClientSurfaceItem } from '@companion/shared/Model/Surfaces.js'
 
 export const SurfacesPage = memo(function SurfacesPage() {
 	const socket = useContext(SocketContext)

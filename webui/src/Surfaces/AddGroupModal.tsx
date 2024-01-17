@@ -18,7 +18,7 @@ import {
 	CModalFooter,
 	CModalHeader,
 } from '@coreui/react'
-import { socketEmitPromise, SocketContext, PreventDefaultHandler } from '../util'
+import { socketEmitPromise, SocketContext, PreventDefaultHandler } from '../util.js'
 
 export interface AddSurfaceGroupModalRef {
 	show(): void

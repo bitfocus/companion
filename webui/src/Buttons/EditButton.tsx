@@ -43,8 +43,8 @@ import React, {
 	FormEvent,
 } from 'react'
 import { nanoid } from 'nanoid'
-import { ButtonPreviewBase } from '../Components/ButtonPreview'
-import { GenericConfirmModal, GenericConfirmModalRef } from '../Components/GenericConfirmModal'
+import { ButtonPreviewBase } from '../Components/ButtonPreview.js'
+import { GenericConfirmModal, GenericConfirmModalRef } from '../Components/GenericConfirmModal.js'
 import {
 	KeyReceiver,
 	LoadingRetryOrError,
@@ -52,21 +52,21 @@ import {
 	SocketContext,
 	MyErrorBoundary,
 	PagesContext,
-} from '../util'
-import { ControlActionSetEditor } from '../Controls/ActionSetEditor'
+} from '../util.js'
+import { ControlActionSetEditor } from '../Controls/ActionSetEditor.js'
 import jsonPatch, { Operation as JsonPatchOperation } from 'fast-json-patch'
-import { ButtonStyleConfig } from '../Controls/ButtonStyleConfig'
-import { ControlOptionsEditor } from '../Controls/ControlOptionsEditor'
-import { ControlFeedbacksEditor } from '../Controls/FeedbackEditor'
+import { ButtonStyleConfig } from '../Controls/ButtonStyleConfig.js'
+import { ControlOptionsEditor } from '../Controls/ControlOptionsEditor.js'
+import { ControlFeedbacksEditor } from '../Controls/FeedbackEditor.js'
 import { cloneDeep } from 'lodash-es'
 import { useElementSize } from 'usehooks-ts'
-import { GetStepIds } from '@companion/shared/Controls'
-import CSwitch from '../CSwitch'
-import { formatLocation } from '@companion/shared/ControlId'
-import { ControlLocation } from '@companion/shared/Model/Common'
-import { ActionInstance, ActionSetsModel, ActionStepOptions } from '@companion/shared/Model/ActionModel'
-import { FeedbackInstance } from '@companion/shared/Model/FeedbackModel'
-import { NormalButtonSteps, SomeButtonModel } from '@companion/shared/Model/ButtonModel'
+import { GetStepIds } from '@companion/shared/Controls.js'
+import CSwitch from '../CSwitch.js'
+import { formatLocation } from '@companion/shared/ControlId.js'
+import { ControlLocation } from '@companion/shared/Model/Common.js'
+import { ActionInstance, ActionSetsModel, ActionStepOptions } from '@companion/shared/Model/ActionModel.js'
+import { FeedbackInstance } from '@companion/shared/Model/FeedbackModel.js'
+import { NormalButtonSteps, SomeButtonModel } from '@companion/shared/Model/ButtonModel.js'
 
 interface EditButtonProps {
 	location: ControlLocation

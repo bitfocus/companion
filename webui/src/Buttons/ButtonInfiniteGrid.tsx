@@ -1,5 +1,5 @@
-import { formatLocation } from '@companion/shared/ControlId'
-import { ButtonPreview } from '../Components/ButtonPreview'
+import { formatLocation } from '@companion/shared/ControlId.js'
+import { ButtonPreview } from '../Components/ButtonPreview.js'
 import React, {
 	forwardRef,
 	memo,
@@ -12,15 +12,15 @@ import React, {
 	useState,
 } from 'react'
 import { useDrop } from 'react-dnd'
-import { SocketContext, socketEmitPromise } from '../util'
+import { SocketContext, socketEmitPromise } from '../util.js'
 import classNames from 'classnames'
-import useScrollPosition from '../Hooks/useScrollPosition'
-import useElementInnerSize from '../Hooks/useElementInnerSize'
-import { useButtonRenderCache } from '../Hooks/useSharedRenderCache'
+import useScrollPosition from '../Hooks/useScrollPosition.js'
+import useElementInnerSize from '../Hooks/useElementInnerSize.js'
+import { useButtonRenderCache } from '../Hooks/useSharedRenderCache.js'
 import { CButton, CInput } from '@coreui/react'
-import { ControlLocation } from '@companion/shared/Model/Common'
-import { UserConfigGridSize } from '@companion/shared/Model/UserConfigModel'
-import { PresetDragItem } from './Presets'
+import { ControlLocation } from '@companion/shared/Model/Common.js'
+import { UserConfigGridSize } from '@companion/shared/Model/UserConfigModel.js'
+import { PresetDragItem } from './Presets.js'
 
 export interface ButtonInfiniteGridRef {
 	resetPosition(): void

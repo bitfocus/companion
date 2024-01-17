@@ -1,9 +1,9 @@
 import React, { FormEvent, forwardRef, useCallback, useImperativeHandle, useState } from 'react'
 import { CButton, CForm, CInputCheckbox, CLabel, CModal, CModalBody, CModalFooter, CModalHeader } from '@coreui/react'
-import { PreventDefaultHandler } from '../util'
-import { ExportFormatDefault, SelectExportFormat } from './ExportFormat'
-import { MenuPortalContext } from '../Components/DropdownInputField'
-import { ClientExportSelection } from '@companion/shared/Model/ImportExport'
+import { PreventDefaultHandler } from '../util.js'
+import { ExportFormatDefault, SelectExportFormat } from './ExportFormat.js'
+import { MenuPortalContext } from '../Components/DropdownInputField.js'
+import { ClientExportSelection } from '@companion/shared/Model/ImportExport.js'
 
 interface ExportWizardModalProps {}
 export interface ExportWizardModalRef {

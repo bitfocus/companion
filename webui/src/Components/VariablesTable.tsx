@@ -1,11 +1,11 @@
 import React, { useCallback, useContext, useState, useMemo, useEffect, memo } from 'react'
 import { CAlert, CButton, CInput, CInputGroup, CInputGroupAppend } from '@coreui/react'
-import { SocketContext, socketEmitPromise, NotifierContext, VariableDefinitionsContext } from '../util'
+import { SocketContext, socketEmitPromise, NotifierContext, VariableDefinitionsContext } from '../util.js'
 import { CopyToClipboard } from 'react-copy-to-clipboard'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faCopy, faTimes } from '@fortawesome/free-solid-svg-icons'
 import { CompanionVariableValues, type CompanionVariableValue } from '@companion-module/base'
-import type { VariableDefinition } from '@companion/shared/Model/Variables'
+import type { VariableDefinition } from '@companion/shared/Model/Variables.js'
 
 interface VariablesTableProps {
 	label: string

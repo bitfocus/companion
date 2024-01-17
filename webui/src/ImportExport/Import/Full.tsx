@@ -1,6 +1,6 @@
 import React, { useCallback, useContext, useMemo, useState } from 'react'
 import ClassNames from 'classnames'
-import { MyErrorBoundary, NotifierContext, SocketContext, socketEmitPromise } from '../../util'
+import { MyErrorBoundary, NotifierContext, SocketContext, socketEmitPromise } from '../../util.js'
 import {
 	CAlert,
 	CButton,
@@ -15,9 +15,9 @@ import {
 } from '@coreui/react'
 import { faCalendar, faClock, faDownload, faFileImport, faGlobe } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { ImportPageWizard } from './Page'
-import { ImportTriggersTab } from './Triggers'
-import { ClientImportObject } from '@companion/shared/Model/ImportExport'
+import { ImportPageWizard } from './Page.js'
+import { ImportTriggersTab } from './Triggers.js'
+import { ClientImportObject } from '@companion/shared/Model/ImportExport.js'
 
 interface ImportFullWizardProps {
 	snapshot: ClientImportObject

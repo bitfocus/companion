@@ -1,4 +1,4 @@
-import { PageModel } from '@companion/shared/Model/PageModel'
+import { PageModel } from '@companion/shared/Model/PageModel.js'
 import { useCallback, useEffect, useRef, useState } from 'react'
 
 export function usePagePicker(pagesObj: Record<number, PageModel | undefined>, initialPage: number) {

@@ -10,25 +10,25 @@ import {
 } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import React, { memo, useCallback, useContext, useMemo, useRef, useState } from 'react'
-import { NumberInputField, TextInputField } from '../Components'
-import { ActionsContext, ConnectionsContext, MyErrorBoundary, PreventDefaultHandler } from '../util'
-import { OptionsInputField } from './OptionsInputField'
+import { NumberInputField, TextInputField } from '../Components/index.js'
+import { ActionsContext, ConnectionsContext, MyErrorBoundary, PreventDefaultHandler } from '../util.js'
+import { OptionsInputField } from './OptionsInputField.js'
 import { useDrag, useDrop } from 'react-dnd'
-import { GenericConfirmModal, GenericConfirmModalRef } from '../Components/GenericConfirmModal'
-import { AddActionsModal, AddActionsModalRef } from './AddModal'
-import { usePanelCollapseHelper } from '../Helpers/CollapseHelper'
-import CSwitch from '../CSwitch'
-import { OptionButtonPreview } from './OptionButtonPreview'
-import { ActionInstance } from '@companion/shared/Model/ActionModel'
-import { ControlLocation } from '@companion/shared/Model/Common'
-import { useOptionsAndIsVisible } from '../Hooks/useOptionsAndIsVisible'
-import { LearnButton } from '../Components/LearnButton'
-import { AddActionDropdown } from './AddActionDropdown'
+import { GenericConfirmModal, GenericConfirmModalRef } from '../Components/GenericConfirmModal.js'
+import { AddActionsModal, AddActionsModalRef } from './AddModal.js'
+import { usePanelCollapseHelper } from '../Helpers/CollapseHelper.js'
+import CSwitch from '../CSwitch.js'
+import { OptionButtonPreview } from './OptionButtonPreview.js'
+import { ActionInstance } from '@companion/shared/Model/ActionModel.js'
+import { ControlLocation } from '@companion/shared/Model/Common.js'
+import { useOptionsAndIsVisible } from '../Hooks/useOptionsAndIsVisible.js'
+import { LearnButton } from '../Components/LearnButton.js'
+import { AddActionDropdown } from './AddActionDropdown.js'
 import {
 	IActionEditorService,
 	useControlActionService,
 	useControlActionsEditorService,
-} from '../Services/Controls/ControlActionsService'
+} from '../Services/Controls/ControlActionsService.js'
 
 interface ControlActionSetEditorProps {
 	controlId: string

@@ -3,10 +3,10 @@ import React, { ChangeEvent } from 'react'
 import { useCallback } from 'react'
 import { useEffect } from 'react'
 import { useState } from 'react'
-import { ImportRemap } from './Page'
-import { NotifierContext, SocketContext, socketEmitPromise } from '../../util'
+import { ImportRemap } from './Page.js'
+import { NotifierContext, SocketContext, socketEmitPromise } from '../../util.js'
 import { useContext } from 'react'
-import type { ClientImportObject } from '@companion/shared/Model/ImportExport'
+import type { ClientImportObject } from '@companion/shared/Model/ImportExport.js'
 
 interface ImportTriggersTabProps {
 	snapshot: ClientImportObject

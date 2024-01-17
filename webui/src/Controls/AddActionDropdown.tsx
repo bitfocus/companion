@@ -1,8 +1,8 @@
 import React, { useCallback, useContext, useMemo } from 'react'
-import { ActionsContext, ConnectionsContext, RecentActionsContext } from '../util'
+import { ActionsContext, ConnectionsContext, RecentActionsContext } from '../util.js'
 import Select, { createFilter } from 'react-select'
-import { MenuPortalContext } from '../Components/DropdownInputField'
-import type { FilterOptionOption } from 'react-select/dist/declarations/src/filters'
+import { MenuPortalContext } from '../Components/DropdownInputField.js'
+import type { FilterOptionOption } from 'react-select/dist/declarations/src/filters.js'
 
 const baseFilter = createFilter<AddActionOption>()
 const filterOptions = (candidate: FilterOptionOption<AddActionOption>, input: string): boolean => {

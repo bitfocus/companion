@@ -17,8 +17,8 @@ import {
 	ConnectionsContext,
 	RecentActionsContext,
 	RecentFeedbacksContext,
-} from '../util'
-import { ClientConnectionConfig } from '@companion/shared/Model/Common'
+} from '../util.js'
+import { ClientConnectionConfig } from '@companion/shared/Model/Common.js'
 
 interface AddActionsModalProps {
 	addAction: (actionType: string) => void

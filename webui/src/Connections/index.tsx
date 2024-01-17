@@ -1,16 +1,16 @@
 import { CCol, CRow, CTabs, CTabContent, CTabPane, CNavItem, CNavLink, CNav } from '@coreui/react'
 import React, { memo, useCallback, useContext, useEffect, useRef, useState } from 'react'
-import { HelpModal, HelpModalRef } from './HelpModal'
-import { NotifierContext, MyErrorBoundary, socketEmitPromise, SocketContext } from '../util'
-import { ConnectionsList } from './ConnectionList'
-import { AddConnectionsPanel } from './AddConnection'
-import { ConnectionEditPanel } from './ConnectionEditPanel'
+import { HelpModal, HelpModalRef } from './HelpModal.js'
+import { NotifierContext, MyErrorBoundary, socketEmitPromise, SocketContext } from '../util.js'
+import { ConnectionsList } from './ConnectionList.js'
+import { AddConnectionsPanel } from './AddConnection.js'
+import { ConnectionEditPanel } from './ConnectionEditPanel.js'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { nanoid } from 'nanoid'
 import { faCog, faPlus } from '@fortawesome/free-solid-svg-icons'
 import jsonPatch, { Operation as JsonPatchOperation } from 'fast-json-patch'
 import { cloneDeep } from 'lodash-es'
-import { ConnectionStatusEntry } from '@companion/shared/Model/Common'
+import { ConnectionStatusEntry } from '@companion/shared/Model/Common.js'
 
 export const ConnectionsPage = memo(function ConnectionsPage() {
 	const socket = useContext(SocketContext)

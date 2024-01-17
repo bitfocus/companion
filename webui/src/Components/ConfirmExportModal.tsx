@@ -1,8 +1,8 @@
 import { CButton, CLabel, CModal, CModalBody, CModalFooter, CModalHeader } from '@coreui/react'
 import React, { forwardRef, useCallback, useImperativeHandle, useRef, useState } from 'react'
-import { ExportFormatDefault, SelectExportFormat } from '../ImportExport/ExportFormat'
-import { MenuPortalContext } from './DropdownInputField'
-import { windowLinkOpen } from '../Helpers/Window'
+import { ExportFormatDefault, SelectExportFormat } from '../ImportExport/ExportFormat.js'
+import { MenuPortalContext } from './DropdownInputField.js'
+import { windowLinkOpen } from '../Helpers/Window.js'
 
 export interface ConfirmExportModalRef {
 	show(url: string): void

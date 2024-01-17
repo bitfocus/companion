@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
-import { socketEmitPromise } from '../util'
+import { socketEmitPromise } from '../util.js'
 import { Socket } from 'socket.io-client'
-import type { PageModel } from '@companion/shared/Model/PageModel'
+import type { PageModel } from '@companion/shared/Model/PageModel.js'
 
 export function usePagesInfoSubscription(
 	socket: Socket,

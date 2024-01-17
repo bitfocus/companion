@@ -1,6 +1,6 @@
 import React, { useContext } from 'react'
-import { Cloud } from './Cloud'
-import { SocketContext } from './util'
+import { Cloud } from './Cloud/index.js'
+import { SocketContext } from './util.js'
 
 export function CloudPage() {
 	const socket = useContext(SocketContext)

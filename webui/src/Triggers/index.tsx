@@ -11,10 +11,10 @@ import {
 	CTabPane,
 	CTabs,
 } from '@coreui/react'
-import { MyErrorBoundary, SocketContext, socketEmitPromise, TriggersContext } from '../util'
+import { MyErrorBoundary, SocketContext, socketEmitPromise, TriggersContext } from '../util.js'
 import dayjs from 'dayjs'
 import sanitizeHtml from 'sanitize-html'
-import CSwitch from '../CSwitch'
+import CSwitch from '../CSwitch.js'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import {
 	faAdd,
@@ -27,12 +27,12 @@ import {
 } from '@fortawesome/free-solid-svg-icons'
 import { useDrag, useDrop } from 'react-dnd'
 import { nanoid } from 'nanoid'
-import { EditTriggerPanel } from './EditPanel'
-import { GenericConfirmModal, GenericConfirmModalRef } from '../Components/GenericConfirmModal'
-import { ParseControlId } from '@companion/shared/ControlId'
-import { ConfirmExportModal, ConfirmExportModalRef } from '../Components/ConfirmExportModal'
+import { EditTriggerPanel } from './EditPanel.js'
+import { GenericConfirmModal, GenericConfirmModalRef } from '../Components/GenericConfirmModal.js'
+import { ParseControlId } from '@companion/shared/ControlId.js'
+import { ConfirmExportModal, ConfirmExportModalRef } from '../Components/ConfirmExportModal.js'
 import classNames from 'classnames'
-import { ClientTriggerData } from '@companion/shared/Model/TriggerModel'
+import { ClientTriggerData } from '@companion/shared/Model/TriggerModel.js'
 
 export const Triggers = memo(function Triggers() {
 	const socket = useContext(SocketContext)

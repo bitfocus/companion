@@ -1,5 +1,5 @@
 import React, { useContext } from 'react'
-import { UserConfigContext } from '../util'
+import { UserConfigContext } from '../util.js'
 
 export function RosstalkProtocol() {
 	const config = useContext(UserConfigContext)

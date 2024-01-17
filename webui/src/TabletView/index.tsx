@@ -1,15 +1,15 @@
 import React, { useCallback, useContext, useEffect, useMemo, useState } from 'react'
-import { LoadingRetryOrError, MyErrorBoundary, SocketContext } from '../util'
+import { LoadingRetryOrError, MyErrorBoundary, SocketContext } from '../util.js'
 import { CCol, CContainer, CRow } from '@coreui/react'
 import { nanoid } from 'nanoid'
 import queryString from 'query-string'
 import rangeParser from 'parse-numeric-range'
 import { useNavigate } from 'react-router-dom'
-import { usePagesInfoSubscription } from '../Hooks/usePagesInfoSubscription'
-import { useUserConfigSubscription } from '../Hooks/useUserConfigSubscription'
-import useElementclientSize from '../Hooks/useElementInnerSize'
-import { ConfigurePanel } from './ConfigurePanel'
-import { ButtonsFromPage } from './ButtonsFromPage'
+import { usePagesInfoSubscription } from '../Hooks/usePagesInfoSubscription.js'
+import { useUserConfigSubscription } from '../Hooks/useUserConfigSubscription.js'
+import useElementclientSize from '../Hooks/useElementInnerSize.js'
+import { ConfigurePanel } from './ConfigurePanel.js'
+import { ButtonsFromPage } from './ButtonsFromPage.js'
 
 export function TabletView() {
 	const socket = useContext(SocketContext)

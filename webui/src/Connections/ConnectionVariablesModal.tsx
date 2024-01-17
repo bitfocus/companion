@@ -1,6 +1,6 @@
 import React, { forwardRef, useCallback, useImperativeHandle, useState } from 'react'
 import { CModal, CModalBody, CModalHeader, CModalFooter, CButton, CRow, CCol } from '@coreui/react'
-import { VariablesTable } from '../Components/VariablesTable'
+import { VariablesTable } from '../Components/VariablesTable.js'
 
 export interface ConnectionVariablesModalRef {
 	show(label: string): void

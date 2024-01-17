@@ -16,7 +16,7 @@ import {
 	SocketContext,
 	NotifierContext,
 	PreventDefaultHandler,
-} from '../util'
+} from '../util.js'
 import { CopyToClipboard } from 'react-copy-to-clipboard'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import {
@@ -27,14 +27,14 @@ import {
 	faTimes,
 	faTrash,
 } from '@fortawesome/free-solid-svg-icons'
-import { TextInputField } from '../Components/TextInputField'
-import { CheckboxInputField } from '../Components/CheckboxInputField'
-import { GenericConfirmModal, GenericConfirmModalRef } from '../Components/GenericConfirmModal'
-import { isCustomVariableValid } from '@companion/shared/CustomVariable'
+import { TextInputField } from '../Components/TextInputField.js'
+import { CheckboxInputField } from '../Components/CheckboxInputField.js'
+import { GenericConfirmModal, GenericConfirmModalRef } from '../Components/GenericConfirmModal.js'
+import { isCustomVariableValid } from '@companion/shared/CustomVariable.js'
 import { useDrag, useDrop } from 'react-dnd'
-import { usePanelCollapseHelper } from '../Helpers/CollapseHelper'
+import { usePanelCollapseHelper } from '../Helpers/CollapseHelper.js'
 import type { CompanionVariableValues } from '@companion-module/base'
-import { CustomVariablesModel, CustomVariableDefinition } from '@companion/shared/Model/CustomVariableModel'
+import { CustomVariablesModel, CustomVariableDefinition } from '@companion/shared/Model/CustomVariableModel.js'
 
 const DRAG_ID = 'custom-variables'
 

@@ -1,13 +1,13 @@
 import React, { FormEvent, useCallback, useContext, useRef, useState } from 'react'
-import { ConnectionsContext, SocketContext, socketEmitPromise } from '../util'
+import { ConnectionsContext, SocketContext, socketEmitPromise } from '../util.js'
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faDownload, faFileImport, faTrashAlt } from '@fortawesome/free-solid-svg-icons'
 import { CAlert, CButton } from '@coreui/react'
-import { ResetWizardModal, ResetWizardModalRef } from './Reset'
-import { ExportWizardModal, ExportWizardModalRef } from './Export'
-import { ImportWizard } from './Import'
-import type { ClientImportObject } from '@companion/shared/Model/ImportExport'
+import { ResetWizardModal, ResetWizardModalRef } from './Reset.js'
+import { ExportWizardModal, ExportWizardModalRef } from './Export.js'
+import { ImportWizard } from './Import/index.js'
+import type { ClientImportObject } from '@companion/shared/Model/ImportExport.js'
 
 export function ImportExport() {
 	const socket = useContext(SocketContext)

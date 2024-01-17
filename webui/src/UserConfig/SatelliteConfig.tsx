@@ -1,5 +1,5 @@
 import React from 'react'
-import type { UserConfigModel } from '@companion/shared/Model/UserConfigModel'
+import type { UserConfigModel } from '@companion/shared/Model/UserConfigModel.js'
 
 interface SatelliteConfigProps {
 	config: UserConfigModel

@@ -3,7 +3,7 @@ import { CModal, CModalBody, CModalHeader, CModalFooter, CButton } from '@coreui
 import sanitizeHtml from 'sanitize-html'
 import { Marked } from 'marked'
 import { baseUrl } from 'marked-base-url'
-import { ModulesContext } from '../util'
+import { ModulesContext } from '../util.js'
 
 interface HelpModalProps {
 	// Nothing

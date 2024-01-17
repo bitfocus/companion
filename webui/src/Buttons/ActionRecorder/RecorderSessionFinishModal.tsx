@@ -1,5 +1,5 @@
 import React, { useCallback, useContext, useState } from 'react'
-import { socketEmitPromise, SocketContext, PreventDefaultHandler } from '../../util'
+import { socketEmitPromise, SocketContext, PreventDefaultHandler } from '../../util.js'
 import {
 	CButton,
 	CCol,
@@ -18,9 +18,9 @@ import {
 } from '@coreui/react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faCalendarAlt, faClock } from '@fortawesome/free-solid-svg-icons'
-import { MenuPortalContext } from '../../Components/DropdownInputField'
-import { ButtonPicker } from './ButtonPicker'
-import { TriggerPicker } from './TriggerPicker'
+import { MenuPortalContext } from '../../Components/DropdownInputField.js'
+import { ButtonPicker } from './ButtonPicker.js'
+import { TriggerPicker } from './TriggerPicker.js'
 
 interface RecorderSessionFinishModalProps {
 	doClose: () => void

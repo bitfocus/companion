@@ -3,11 +3,11 @@ import { CAlert, CButton, CInput, CInputGroup, CInputGroupAppend } from '@coreui
 import { go as fuzzySearch } from 'fuzzysort'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faExclamationTriangle, faQuestionCircle, faTimes } from '@fortawesome/free-solid-svg-icons'
-import { socketEmitPromise, SocketContext, NotifierContext, ModulesContext } from '../util'
+import { socketEmitPromise, SocketContext, NotifierContext, ModulesContext } from '../util.js'
 import { useCallback } from 'react'
 import { useRef } from 'react'
-import { GenericConfirmModal, GenericConfirmModalRef } from '../Components/GenericConfirmModal'
-import { ModuleDisplayInfo } from '@companion/shared/Model/Common'
+import { GenericConfirmModal, GenericConfirmModalRef } from '../Components/GenericConfirmModal.js'
+import { ModuleDisplayInfo } from '@companion/shared/Model/Common.js'
 
 interface AddConnectionsPanelProps {
 	showHelp: (moduleId: string) => void

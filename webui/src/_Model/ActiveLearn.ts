@@ -1,7 +1,7 @@
 import { observable, ObservableSet } from 'mobx'
 import { useEffect, useMemo, useState } from 'react'
 import type { Socket } from 'socket.io-client'
-import { socketEmitPromise } from '../util'
+import { socketEmitPromise } from '../util.js'
 
 export function useActiveLearnRequests(socket: Socket): [ObservableSet<string>, boolean] {
 	const [isReady, setIsReady] = useState<boolean>(false)

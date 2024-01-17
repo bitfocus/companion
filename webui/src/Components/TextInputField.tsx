@@ -1,7 +1,7 @@
 import Tribute from 'tributejs'
 import React, { useEffect, useMemo, useState, useCallback, useContext, ChangeEvent } from 'react'
 import { CInput } from '@coreui/react'
-import { VariableDefinitionsContext } from '../util'
+import { VariableDefinitionsContext } from '../util.js'
 
 interface TextInputFieldProps {
 	regex?: string

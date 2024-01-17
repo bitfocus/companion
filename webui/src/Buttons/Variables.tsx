@@ -1,8 +1,8 @@
 import React, { useCallback, useContext, useEffect, useMemo, useState } from 'react'
 import { CButton } from '@coreui/react'
-import { ConnectionsContext, VariableDefinitionsContext, ModulesContext } from '../util'
-import { VariablesTable } from '../Components/VariablesTable'
-import { CustomVariablesList } from './CustomVariablesList'
+import { ConnectionsContext, VariableDefinitionsContext, ModulesContext } from '../util.js'
+import { VariablesTable } from '../Components/VariablesTable.js'
+import { CustomVariablesList } from './CustomVariablesList.js'
 
 interface ConnectionVariablesProps {
 	resetToken: string
