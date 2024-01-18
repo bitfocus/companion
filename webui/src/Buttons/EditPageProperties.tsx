@@ -43,9 +43,7 @@ export const EditPagePropertiesModal = forwardRef<EditPagePropertiesModalRef, Ed
 			(e: FormEvent) => {
 				if (e) e.preventDefault()
 
-				setPageNumber(null)
 				setShow(false)
-				setName(null)
 
 				if (pageNumber === null) return
 
