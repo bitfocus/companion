@@ -404,7 +404,7 @@ jobs:
 
       - name: Set up Docker Buildx
         if: ${{ steps.meta.outputs.tags }}
-        uses: docker/setup-buildx-action@v2
+        uses: docker/setup-buildx-action@v3
 
       - name: Login to registry
         if: ${{ steps.meta.outputs.tags }}
