@@ -54,7 +54,7 @@ jobs:
           node-version-file: '.node-version'
 
       - name: Cache build sources
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: .cache
           key: linux-x64-build-cache
@@ -93,7 +93,7 @@ jobs:
         uses: bitfocus/actions/upload-and-notify@main
         with:
           long-version: ${{ steps.filenames.outputs.longversion }}
-          beta-branch: beta
+          beta-branch: main
           dev-branch: develop
 
           source-filename: ${{ steps.filenames.outputs.sourcename }}
@@ -121,7 +121,7 @@ jobs:
           node-version-file: '.node-version'
 
       - name: Cache build sources
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: .cache
           key: linux-arm64-build-cache
@@ -159,7 +159,7 @@ jobs:
         uses: bitfocus/actions/upload-and-notify@main
         with:
           long-version: ${{ steps.filenames.outputs.longversion }}
-          beta-branch: beta
+          beta-branch: main
           dev-branch: develop
 
           source-filename: ${{ steps.filenames.outputs.sourcename }}
@@ -187,7 +187,7 @@ jobs:
           node-version-file: '.node-version'
 
       - name: Cache build sources
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: .cache
           key: macos-x64-build-cache
@@ -224,7 +224,7 @@ jobs:
         uses: bitfocus/actions/upload-and-notify@main
         with:
           long-version: ${{ steps.filenames.outputs.longversion }}
-          beta-branch: beta
+          beta-branch: main
           dev-branch: develop
 
           source-filename: ${{ steps.filenames.outputs.sourcename }}
@@ -252,7 +252,7 @@ jobs:
           node-version-file: '.node-version'
 
       - name: Cache build sources
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: .cache
           key: macos-arm64-build-cache
@@ -293,7 +293,7 @@ jobs:
         uses: bitfocus/actions/upload-and-notify@main
         with:
           long-version: ${{ steps.filenames.outputs.longversion }}
-          beta-branch: beta
+          beta-branch: main
           dev-branch: develop
 
           source-filename: ${{ steps.filenames.outputs.sourcename }}
@@ -321,7 +321,7 @@ jobs:
           node-version-file: '.node-version'
 
       - name: Cache build sources
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: .cache
           key: windows-x64-build-cache
@@ -361,7 +361,7 @@ jobs:
         uses: bitfocus/actions/upload-and-notify@main
         with:
           long-version: ${{ steps.filenames.outputs.longversion }}
-          beta-branch: beta
+          beta-branch: main
           dev-branch: develop
 
           source-filename: ${{ steps.filenames.outputs.sourcename }}
@@ -400,15 +400,15 @@ jobs:
 
       - name: Set up QEMU
         if: ${{ steps.meta.outputs.tags }}
-        uses: docker/setup-qemu-action@v2
+        uses: docker/setup-qemu-action@v3
 
       - name: Set up Docker Buildx
         if: ${{ steps.meta.outputs.tags }}
-        uses: docker/setup-buildx-action@v2
+        uses: docker/setup-buildx-action@v3
 
       - name: Login to registry
         if: ${{ steps.meta.outputs.tags }}
-        uses: docker/login-action@v2
+        uses: docker/login-action@v3
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
@@ -418,7 +418,7 @@ jobs:
         if: ${{ steps.meta.outputs.tags }}
 
       - name: Build and push
-        uses: docker/build-push-action@v3
+        uses: docker/build-push-action@v5
         if: ${{ steps.meta.outputs.tags }}
         with:
           context: .

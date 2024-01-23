@@ -8,7 +8,7 @@ on:
 
 env:
   MODULES_BRANCH: main
-  COMPANION_BRANCH: beta
+  COMPANION_BRANCH: main
 
 jobs:
   sync-modules:

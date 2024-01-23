@@ -1,8 +1,6 @@
 # Bitfocus Companion
 
-## Companion v3.2.0 - Release Notes (unreleased)
-
-Up to 2a83fa2c2a0b3b5efd5f3d85f25e4120c947d118
+## Companion v3.2.0 - Release Notes
 
 ### 📣 CORE FEATURES AND IMPROVEMENTS
 
@@ -32,7 +30,6 @@ Up to 2a83fa2c2a0b3b5efd5f3d85f25e4120c947d118
 - Add variables about surfaces and surface groups
 - Add variables for connection statuses
 - Add seperate press/release if condition actions
--
 
 ### 🐞 BUG FIXES
 
@@ -40,9 +37,132 @@ Up to 2a83fa2c2a0b3b5efd5f3d85f25e4120c947d118
 - Preserve sort order when importing connections
 - Restore `app_exit` action
 - Connections sometimes getting stuck and unable to start
--
 
 ### 🧩 NEW & UPDATED MODULES
+
+- agf-characterworks
+- audiostrom-liveprofessor
+- avmediatools-protimer
+- avocet-landscape
+- avstumpfl-pixera
+- aximmetry-composer
+- barco-clickshare
+- barco-eventmaster
+- behringer-x32
+- birddog-central
+- birddog-cloud
+- birddog-ptz
+- bmd-atem
+- bmd-hyperdeck
+- bmd-ultimatte
+- bmd-videohub
+- bmd-webpresenter
+- canon-ptz
+- christie-spyder
+- colorlight-grandshow
+- colorlight-processor
+- dan-dugan-automixer
+- dataton-watchout
+- denon-recorder
+- depili-clock-8001
+- emotimo-st4
+- etc-eos
+- etc-paradigm
+- etcaudiovisuel-onlyview
+- extron-smp351
+- figure53-go-button
+- figure53-qlab-advance
+- gdsys-muxkvmswitch
+- generic-bridge
+- generic-dataentry
+- generic-mqtt
+- generic-pjlink
+- generic-speedtest
+- generic-stopwatch
+- generic-swp02
+- generic-tcp-serial
+- getontime-ontime
+- glensound-minferno
+- globalcache-itac-cc
+- google-sheets
+- grassvalley-amp
+- h2r-graphics
+- iccms-sib
+- iiyama-prolite
+- imimot-mitti
+- ipl-ocp
+- kenku-fm
+- leolabs-ableset
+- lofas-ndistudioclock
+- logos-proclaim
+- luminex-gigacore
+- luminex-luminode
+- magewell-director
+- malighting-grandma2
+- malighting-grandma3
+- malighting-msc
+- massimo-callegari-qlcplus
+- microsoft-vscode
+- middlethings-middlecontrol
+- mixtech-theatremix
+- modulopi-moduloplayer
+- mt-viki-matrix
+- mvr-helios
+- newtek-tricaster
+- novastar-controller
+- novastar-mediaserver
+- novastar-switcher
+- ntp-technology-dot
+- obs-studio
+- openweather-rest
+- panasonic-kairos
+- panasonic-projector
+- panasonic-ptz
+- pixelhue-mediaserver
+- pixelhue-switcher
+- planningcenter-serviceslive
+- presentationtools-aps
+- ptzoptics-visca
+- qsys-remote-control
+- riedel-mediornet
+- rogueamoeba-farrago
+- roku-tv
+- roland-v60hd
+- shelly-ws
+- shure-mxcw
+- shure-scm820
+- shure-wireless
+- simedia-yesapi
+- singularlive-studio
+- smodetech-smodelive
+- snapav-wattbox
+- softron-movierecorder
+- softron-multicamlogger
+- sonos-speakers
+- soundcraft-ui
+- spx-graphics-controller
+- stagetimerio-api
+- studiocoast-vmix
+- tascam-cd
+- tascam-cd400u
+- tascam-da-6400
+- techministry-midirelay
+- tellyo-streamstudio
+- teradek-prism
+- theatrixx-xpresscue
+- timemachines-clock
+- tow-mixeffect
+- ubiquiti-unifi
+- vbaudio-voicemeeter
+- vdo-ninja
+- videolan-vlc
+- vistream-online
+- voicemod-api
+- wled-websocket
+- yamaha-rcp
+- youtube-live
+- zenvideo-ndirouter
+- zinc-oscpoint
 
 ## Companion v3.1.2 - Release Notes
 
