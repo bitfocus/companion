@@ -6,6 +6,7 @@ const ConfigReleaseDirs = [
 	'v3.1',
 	'v3.2',
 	'v3.3',
+	'v3.99',
 ]
 
 module.exports = {
