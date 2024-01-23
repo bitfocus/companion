@@ -418,7 +418,7 @@ jobs:
         if: ${{ steps.meta.outputs.tags }}
 
       - name: Build and push
-        uses: docker/build-push-action@v3
+        uses: docker/build-push-action@v5
         if: ${{ steps.meta.outputs.tags }}
         with:
           context: .
