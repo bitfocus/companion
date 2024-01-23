@@ -216,7 +216,7 @@ function RenderSubsection({ subsect, setVisibleFiles, visibleFiles }: RenderSubs
 							{subsect.label}
 						</h4>
 						<a
-							href={`https://github.com/bitfocus/companion/blob/master/docs/${subsect.file}`}
+							href={`https://github.com/bitfocus/companion/blob/main/docs/${subsect.file}`}
 							target="_new"
 							style={style.contentGithubLink}
 						>
