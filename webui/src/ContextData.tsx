@@ -18,7 +18,6 @@ import {
 	ModulesContext,
 	RecentActionsContext,
 	RecentFeedbacksContext,
-	ActiveLearnContext,
 } from './util.js'
 import { NotificationsManager, NotificationsManagerRef } from './Components/Notifications.js'
 import { cloneDeep } from 'lodash-es'
@@ -36,6 +35,8 @@ import type { CustomVariablesModel } from '@companion/shared/Model/CustomVariabl
 import type { ClientDevicesListItem } from '@companion/shared/Model/Surfaces.js'
 import type { ClientTriggerData } from '@companion/shared/Model/TriggerModel.js'
 import { useActiveLearnRequests } from './_Model/ActiveLearn.js'
+import { RootAppStore, RootAppStoreContext } from './Stores/RootAppStore.js'
+import { observable } from 'mobx'
 
 interface ContextDataProps {
 	children: (progressPercent: number, loadingComplete: boolean) => React.JSX.Element | React.JSX.Element[]
@@ -43,6 +44,16 @@ interface ContextDataProps {
 
 export function ContextData({ children }: ContextDataProps) {
 	const socket = useContext(SocketContext)
+
+	const notifierRef = useRef<NotificationsManagerRef>(null)
+
+	const rootStore = useMemo(() => {
+		return {
+			socket,
+			notifier: notifierRef,
+			activeLearns: observable.set(),
+		} satisfies RootAppStore
+	}, [socket])
 
 	const [eventDefinitions, setEventDefinitions] = useState<Record<string, ClientEventDefinition | undefined> | null>(
 		null
@@ -319,9 +330,7 @@ export function ContextData({ children }: ContextDataProps) {
 		}
 	}, [socket])
 
-	const [activeLearnRequests, activeLearnRequestsReady] = useActiveLearnRequests(socket)
-
-	const notifierRef = useRef<NotificationsManagerRef>(null)
+	const activeLearnRequestsReady = useActiveLearnRequests(socket, rootStore.activeLearns)
 
 	const steps = [
 		eventDefinitions,
@@ -343,38 +352,38 @@ export function ContextData({ children }: ContextDataProps) {
 	const progressPercent = (completedSteps.length / steps.length) * 100
 
 	return (
-		<NotifierContext.Provider value={notifierRef}>
-			<EventDefinitionsContext.Provider value={eventDefinitions!}>
-				<ModulesContext.Provider value={modules!}>
-					<ActionsContext.Provider value={actionDefinitions!}>
-						<FeedbacksContext.Provider value={feedbackDefinitions!}>
-							<ConnectionsContext.Provider value={connections!}>
-								<VariableDefinitionsContext.Provider value={completeVariableDefinitions}>
-									<CustomVariableDefinitionsContext.Provider value={customVariables!}>
-										<UserConfigContext.Provider value={userConfig}>
-											<SurfacesContext.Provider value={surfaces!}>
-												<PagesContext.Provider value={pages!}>
-													<TriggersContext.Provider value={triggers!}>
-														<RecentActionsContext.Provider value={recentActionsContext}>
-															<RecentFeedbacksContext.Provider value={recentFeedbacksContext}>
-																<ActiveLearnContext.Provider value={activeLearnRequests}>
+		<RootAppStoreContext.Provider value={rootStore}>
+			<NotifierContext.Provider value={notifierRef}>
+				<EventDefinitionsContext.Provider value={eventDefinitions!}>
+					<ModulesContext.Provider value={modules!}>
+						<ActionsContext.Provider value={actionDefinitions!}>
+							<FeedbacksContext.Provider value={feedbackDefinitions!}>
+								<ConnectionsContext.Provider value={connections!}>
+									<VariableDefinitionsContext.Provider value={completeVariableDefinitions}>
+										<CustomVariableDefinitionsContext.Provider value={customVariables!}>
+											<UserConfigContext.Provider value={userConfig}>
+												<SurfacesContext.Provider value={surfaces!}>
+													<PagesContext.Provider value={pages!}>
+														<TriggersContext.Provider value={triggers!}>
+															<RecentActionsContext.Provider value={recentActionsContext}>
+																<RecentFeedbacksContext.Provider value={recentFeedbacksContext}>
 																	<NotificationsManager ref={notifierRef} />
 
 																	{children(progressPercent, completedSteps.length === steps.length)}
-																</ActiveLearnContext.Provider>
-															</RecentFeedbacksContext.Provider>
-														</RecentActionsContext.Provider>
-													</TriggersContext.Provider>
-												</PagesContext.Provider>
-											</SurfacesContext.Provider>
-										</UserConfigContext.Provider>
-									</CustomVariableDefinitionsContext.Provider>
-								</VariableDefinitionsContext.Provider>
-							</ConnectionsContext.Provider>
-						</FeedbacksContext.Provider>
-					</ActionsContext.Provider>
-				</ModulesContext.Provider>
-			</EventDefinitionsContext.Provider>
-		</NotifierContext.Provider>
+																</RecentFeedbacksContext.Provider>
+															</RecentActionsContext.Provider>
+														</TriggersContext.Provider>
+													</PagesContext.Provider>
+												</SurfacesContext.Provider>
+											</UserConfigContext.Provider>
+										</CustomVariableDefinitionsContext.Provider>
+									</VariableDefinitionsContext.Provider>
+								</ConnectionsContext.Provider>
+							</FeedbacksContext.Provider>
+						</ActionsContext.Provider>
+					</ModulesContext.Provider>
+				</EventDefinitionsContext.Provider>
+			</NotifierContext.Provider>
+		</RootAppStoreContext.Provider>
 	)
 }

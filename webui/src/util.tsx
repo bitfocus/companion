@@ -54,7 +54,6 @@ export const RecentFeedbacksContext = React.createContext<{
 	recentFeedbacks: string[]
 	trackRecentFeedback: (feedbackType: string) => void
 } | null>(null)
-export const ActiveLearnContext = React.createContext<ObservableSet<string>>(observable.set())
 
 export function socketEmitPromise(
 	socket: Socket,

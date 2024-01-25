@@ -1,9 +1,9 @@
 import React, { useContext } from 'react'
 import { CButton } from '@coreui/react'
-import { ActiveLearnContext } from '../util.js'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faSync } from '@fortawesome/free-solid-svg-icons'
 import { observer } from 'mobx-react-lite'
+import { RootAppStoreContext } from '../Stores/RootAppStore.js'
 
 interface LearnButtonProps {
 	id: string
@@ -12,9 +12,9 @@ interface LearnButtonProps {
 }
 
 export const LearnButton = observer(function LearnButton({ id, disabled, doLearn }: LearnButtonProps) {
-	const activeLearnRequets = useContext(ActiveLearnContext)
+	const rootAppStore = useContext(RootAppStoreContext)
 
-	const isActive = activeLearnRequets.has(id)
+	const isActive = rootAppStore.activeLearns.has(id)
 
 	return (
 		<CButton
