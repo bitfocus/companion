@@ -10,10 +10,11 @@ import {
 	CInputCheckbox,
 	CLabel,
 } from '@coreui/react'
-import { NotifierContext, PreventDefaultHandler, SocketContext, socketEmitPromise } from '../util.js'
+import { PreventDefaultHandler, socketEmitPromise } from '../util.js'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faDownload } from '@fortawesome/free-solid-svg-icons'
 import type { ClientResetSelection } from '@companion/shared/Model/ImportExport.js'
+import { RootAppStoreContext } from '../Stores/RootAppStore.js'
 
 interface ResetWizardModalProps {}
 export interface ResetWizardModalRef {
@@ -22,8 +23,7 @@ export interface ResetWizardModalRef {
 
 export const ResetWizardModal = forwardRef<ResetWizardModalRef, ResetWizardModalProps>(
 	function WizardModal(_props, ref) {
-		const socket = useContext(SocketContext)
-		const notifier = useContext(NotifierContext)
+		const { socket, notifier } = useContext(RootAppStoreContext)
 
 		const [currentStep, setCurrentStep] = useState(1)
 		const maxSteps = 3

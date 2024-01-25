@@ -4,9 +4,10 @@ import { useCallback } from 'react'
 import { useEffect } from 'react'
 import { useState } from 'react'
 import { ImportRemap } from './Page.js'
-import { NotifierContext, SocketContext, socketEmitPromise } from '../../util.js'
+import { socketEmitPromise } from '../../util.js'
 import { useContext } from 'react'
 import type { ClientImportObject } from '@companion/shared/Model/ImportExport.js'
+import { RootAppStoreContext } from '../../Stores/RootAppStore.js'
 
 interface ImportTriggersTabProps {
 	snapshot: ClientImportObject
@@ -15,8 +16,7 @@ interface ImportTriggersTabProps {
 }
 
 export function ImportTriggersTab({ snapshot, instanceRemap, setInstanceRemap }: ImportTriggersTabProps) {
-	const socket = useContext(SocketContext)
-	const notifier = useContext(NotifierContext)
+	const { socket, notifier } = useContext(RootAppStoreContext)
 
 	const [selectedTriggers, setSelectedTriggers] = useState<string[]>([])
 

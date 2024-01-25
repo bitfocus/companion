@@ -13,7 +13,6 @@ import {
 	socketEmitPromise,
 	applyPatchOrReplaceObject,
 	SocketContext,
-	NotifierContext,
 	EventDefinitionsContext,
 	ModulesContext,
 	RecentActionsContext,
@@ -353,37 +352,35 @@ export function ContextData({ children }: ContextDataProps) {
 
 	return (
 		<RootAppStoreContext.Provider value={rootStore}>
-			<NotifierContext.Provider value={notifierRef}>
-				<EventDefinitionsContext.Provider value={eventDefinitions!}>
-					<ModulesContext.Provider value={modules!}>
-						<ActionsContext.Provider value={actionDefinitions!}>
-							<FeedbacksContext.Provider value={feedbackDefinitions!}>
-								<ConnectionsContext.Provider value={connections!}>
-									<VariableDefinitionsContext.Provider value={completeVariableDefinitions}>
-										<CustomVariableDefinitionsContext.Provider value={customVariables!}>
-											<UserConfigContext.Provider value={userConfig}>
-												<SurfacesContext.Provider value={surfaces!}>
-													<PagesContext.Provider value={pages!}>
-														<TriggersContext.Provider value={triggers!}>
-															<RecentActionsContext.Provider value={recentActionsContext}>
-																<RecentFeedbacksContext.Provider value={recentFeedbacksContext}>
-																	<NotificationsManager ref={notifierRef} />
+			<EventDefinitionsContext.Provider value={eventDefinitions!}>
+				<ModulesContext.Provider value={modules!}>
+					<ActionsContext.Provider value={actionDefinitions!}>
+						<FeedbacksContext.Provider value={feedbackDefinitions!}>
+							<ConnectionsContext.Provider value={connections!}>
+								<VariableDefinitionsContext.Provider value={completeVariableDefinitions}>
+									<CustomVariableDefinitionsContext.Provider value={customVariables!}>
+										<UserConfigContext.Provider value={userConfig}>
+											<SurfacesContext.Provider value={surfaces!}>
+												<PagesContext.Provider value={pages!}>
+													<TriggersContext.Provider value={triggers!}>
+														<RecentActionsContext.Provider value={recentActionsContext}>
+															<RecentFeedbacksContext.Provider value={recentFeedbacksContext}>
+																<NotificationsManager ref={notifierRef} />
 
-																	{children(progressPercent, completedSteps.length === steps.length)}
-																</RecentFeedbacksContext.Provider>
-															</RecentActionsContext.Provider>
-														</TriggersContext.Provider>
-													</PagesContext.Provider>
-												</SurfacesContext.Provider>
-											</UserConfigContext.Provider>
-										</CustomVariableDefinitionsContext.Provider>
-									</VariableDefinitionsContext.Provider>
-								</ConnectionsContext.Provider>
-							</FeedbacksContext.Provider>
-						</ActionsContext.Provider>
-					</ModulesContext.Provider>
-				</EventDefinitionsContext.Provider>
-			</NotifierContext.Provider>
+																{children(progressPercent, completedSteps.length === steps.length)}
+															</RecentFeedbacksContext.Provider>
+														</RecentActionsContext.Provider>
+													</TriggersContext.Provider>
+												</PagesContext.Provider>
+											</SurfacesContext.Provider>
+										</UserConfigContext.Provider>
+									</CustomVariableDefinitionsContext.Provider>
+								</VariableDefinitionsContext.Provider>
+							</ConnectionsContext.Provider>
+						</FeedbacksContext.Provider>
+					</ActionsContext.Provider>
+				</ModulesContext.Provider>
+			</EventDefinitionsContext.Provider>
 		</RootAppStoreContext.Provider>
 	)
 }

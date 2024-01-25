@@ -25,7 +25,7 @@ import {
 	faFileImport,
 } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { MyErrorBoundary, useMountEffect, UserConfigContext, SocketContext, NotifierContext } from './util.js'
+import { MyErrorBoundary, useMountEffect, UserConfigContext, SocketContext } from './util.js'
 import { SurfacesPage } from './Surfaces/index.js'
 import { UserConfig } from './UserConfig/index.js'
 import { LogPanel } from './LogPanel.js'
@@ -43,6 +43,7 @@ import { WizardModal, WIZARD_CURRENT_VERSION, WizardModalRef } from './Wizard/in
 import { Navigate, useLocation } from 'react-router-dom'
 import { useIdleTimer } from 'react-idle-timer'
 import { ImportExport } from './ImportExport/index.js'
+import { RootAppStoreContext } from './Stores/RootAppStore.js'
 
 const useTouchBackend = window.localStorage.getItem('test_touch_backend') === '1'
 const showCloudTab = window.localStorage.getItem('show_companion_cloud') === '1'
@@ -243,7 +244,7 @@ interface IdleTimerWrapperProps {
 
 /** Wrap the idle timer in its own component, as it invalidates every second */
 function IdleTimerWrapper({ setLocked, timeoutMinutes }: IdleTimerWrapperProps) {
-	const notifier = useContext(NotifierContext)
+	const { notifier } = useContext(RootAppStoreContext)
 
 	const [, setIdleTimeout] = useState<NodeJS.Timeout | null>(null)
 
