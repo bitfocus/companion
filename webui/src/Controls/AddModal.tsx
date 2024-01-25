@@ -11,14 +11,9 @@ import {
 	CModalHeader,
 } from '@coreui/react'
 import React, { forwardRef, useCallback, useContext, useImperativeHandle, useMemo, useState } from 'react'
-import {
-	ActionsContext,
-	FeedbacksContext,
-	ConnectionsContext,
-	RecentActionsContext,
-	RecentFeedbacksContext,
-} from '../util.js'
+import { ActionsContext, FeedbacksContext, ConnectionsContext } from '../util.js'
 import { ClientConnectionConfig } from '@companion/shared/Model/Common.js'
+import { RootAppStoreContext } from '../Stores/RootAppStore.js'
 
 interface AddActionsModalProps {
 	addAction: (actionType: string) => void
@@ -31,7 +26,7 @@ export const AddActionsModal = forwardRef<AddActionsModalRef, AddActionsModalPro
 	{ addAction },
 	ref
 ) {
-	const recentActionsContext = useContext(RecentActionsContext)
+	const { recentlyAddedActions } = useContext(RootAppStoreContext)
 	const actions = useContext(ActionsContext)
 	const connections = useContext(ConnectionsContext)
 
@@ -66,11 +61,11 @@ export const AddActionsModal = forwardRef<AddActionsModalRef, AddActionsModalPro
 
 	const addAction2 = useCallback(
 		(actionType: string) => {
-			recentActionsContext?.trackRecentAction(actionType)
+			recentlyAddedActions.trackId(actionType)
 
 			addAction(actionType)
 		},
-		[recentActionsContext, addAction]
+		[recentlyAddedActions, addAction]
 	)
 
 	return (
@@ -124,7 +119,7 @@ export const AddFeedbacksModal = forwardRef<AddFeedbacksModalRef, AddFeedbacksMo
 	{ addFeedback, booleanOnly },
 	ref
 ) {
-	const recentFeedbacksContext = useContext(RecentFeedbacksContext)
+	const { recentlyAddedFeedbacks } = useContext(RootAppStoreContext)
 	const feedbacks = useContext(FeedbacksContext)
 	const connections = useContext(ConnectionsContext)
 
@@ -159,11 +154,11 @@ export const AddFeedbacksModal = forwardRef<AddFeedbacksModalRef, AddFeedbacksMo
 
 	const addFeedback2 = useCallback(
 		(feedbackType) => {
-			recentFeedbacksContext?.trackRecentFeedback(feedbackType)
+			recentlyAddedFeedbacks.trackId(feedbackType)
 
 			addFeedback(feedbackType)
 		},
-		[recentFeedbacksContext, addFeedback]
+		[recentlyAddedFeedbacks, addFeedback]
 	)
 
 	return (

@@ -1,8 +1,11 @@
 import React, { useCallback, useContext, useMemo } from 'react'
-import { ActionsContext, ConnectionsContext, RecentActionsContext } from '../util.js'
+import { ActionsContext, ConnectionsContext } from '../util.js'
 import Select, { createFilter } from 'react-select'
 import { MenuPortalContext } from '../Components/DropdownInputField.js'
 import type { FilterOptionOption } from 'react-select/dist/declarations/src/filters.js'
+import { observer } from 'mobx-react-lite'
+import { RootAppStoreContext } from '../Stores/RootAppStore.js'
+import { computed } from 'mobx'
 
 const baseFilter = createFilter<AddActionOption>()
 const filterOptions = (candidate: FilterOptionOption<AddActionOption>, input: string): boolean => {
@@ -32,58 +35,65 @@ interface AddActionDropdownProps {
 	onSelect: (actionType: string) => void
 	placeholder: string
 }
-export function AddActionDropdown({ onSelect, placeholder }: AddActionDropdownProps) {
-	const recentActionsContext = useContext(RecentActionsContext)
+export const AddActionDropdown = observer(function AddActionDropdown({
+	onSelect,
+	placeholder,
+}: AddActionDropdownProps) {
+	const { recentlyAddedActions } = useContext(RootAppStoreContext)
 	const menuPortal = useContext(MenuPortalContext)
 	const connectionsContext = useContext(ConnectionsContext)
 	const actionsContext = useContext(ActionsContext)
 
-	const options = useMemo(() => {
-		const options: Array<AddActionOption | AddActionGroup> = []
-		for (const [connectionId, connectionActions] of Object.entries(actionsContext)) {
-			for (const [actionId, action] of Object.entries(connectionActions || {})) {
-				if (!action) continue
-				const connectionLabel = connectionsContext[connectionId]?.label ?? connectionId
-				options.push({
-					isRecent: false,
-					value: `${connectionId}:${actionId}`,
-					label: `${connectionLabel}: ${action.label}`,
-				})
-			}
-		}
-
-		const recents: AddActionOption[] = []
-		for (const actionType of recentActionsContext?.recentActions ?? []) {
-			if (actionType) {
-				const [connectionId, actionId] = actionType.split(':', 2)
-				const actionInfo = actionsContext[connectionId]?.[actionId]
-				if (actionInfo) {
-					const connectionLabel = connectionsContext[connectionId]?.label ?? connectionId
-					recents.push({
-						isRecent: true,
-						value: `${connectionId}:${actionId}`,
-						label: `${connectionLabel}: ${actionInfo.label}`,
-					})
+	const options = useMemo(
+		() =>
+			computed(() => {
+				const options: Array<AddActionOption | AddActionGroup> = []
+				for (const [connectionId, connectionActions] of Object.entries(actionsContext)) {
+					for (const [actionId, action] of Object.entries(connectionActions || {})) {
+						if (!action) continue
+						const connectionLabel = connectionsContext[connectionId]?.label ?? connectionId
+						options.push({
+							isRecent: false,
+							value: `${connectionId}:${actionId}`,
+							label: `${connectionLabel}: ${action.label}`,
+						})
+					}
 				}
-			}
-		}
-		options.push({
-			label: 'Recently Used',
-			options: recents,
-		})
 
-		return options
-	}, [actionsContext, connectionsContext, recentActionsContext?.recentActions])
+				const recents: AddActionOption[] = []
+				for (const actionType of recentlyAddedActions.recentIds) {
+					if (actionType) {
+						const [connectionId, actionId] = actionType.split(':', 2)
+						const actionInfo = actionsContext[connectionId]?.[actionId]
+						if (actionInfo) {
+							const connectionLabel = connectionsContext[connectionId]?.label ?? connectionId
+							recents.push({
+								isRecent: true,
+								value: `${connectionId}:${actionId}`,
+								label: `${connectionLabel}: ${actionInfo.label}`,
+							})
+						}
+					}
+				}
+				options.push({
+					label: 'Recently Used',
+					options: recents,
+				})
+
+				return options
+			}),
+		[actionsContext, connectionsContext, recentlyAddedActions.recentIds]
+	).get()
 
 	const innerChange = useCallback(
 		(e: AddActionOption | null) => {
 			if (e?.value) {
-				recentActionsContext?.trackRecentAction(e.value)
+				recentlyAddedActions.trackId(e.value)
 
 				onSelect(e.value)
 			}
 		},
-		[onSelect, recentActionsContext]
+		[onSelect, recentlyAddedActions]
 	)
 
 	return (
@@ -104,4 +114,4 @@ export function AddActionDropdown({ onSelect, placeholder }: AddActionDropdownPr
 			noOptionsMessage={noOptionsMessage}
 		/>
 	)
-}
+})

@@ -39,14 +39,6 @@ export const UserConfigContext = React.createContext<UserConfigModel | null>(nul
 export const SurfacesContext = React.createContext<Record<string, ClientDevicesListItem | undefined>>({})
 export const PagesContext = React.createContext<Record<number, PageModel | undefined>>({})
 export const TriggersContext = React.createContext<Record<string, ClientTriggerData | undefined>>({})
-export const RecentActionsContext = React.createContext<{
-	recentActions: string[]
-	trackRecentAction: (actionType: string) => void
-} | null>(null)
-export const RecentFeedbacksContext = React.createContext<{
-	recentFeedbacks: string[]
-	trackRecentFeedback: (feedbackType: string) => void
-} | null>(null)
 
 export function socketEmitPromise(
 	socket: Socket,

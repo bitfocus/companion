@@ -1,4 +1,4 @@
-import React, { useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react'
+import React, { useContext, useEffect, useMemo, useRef, useState } from 'react'
 import {
 	applyPatchOrReplaceSubObject,
 	ActionsContext,
@@ -15,8 +15,6 @@ import {
 	SocketContext,
 	EventDefinitionsContext,
 	ModulesContext,
-	RecentActionsContext,
-	RecentFeedbacksContext,
 } from './util.js'
 import { NotificationsManager, NotificationsManagerRef } from './Components/Notifications.js'
 import { cloneDeep } from 'lodash-es'
@@ -35,6 +33,7 @@ import type { ClientDevicesListItem } from '@companion/shared/Model/Surfaces.js'
 import type { ClientTriggerData } from '@companion/shared/Model/TriggerModel.js'
 import { useActiveLearnRequests } from './_Model/ActiveLearn.js'
 import { RootAppStore, RootAppStoreContext } from './Stores/RootAppStore.js'
+import { RecentlyUsedIdsStore } from './Stores/RecentlyUsedIdsStore.js'
 import { observable } from 'mobx'
 
 interface ContextDataProps {
@@ -50,7 +49,11 @@ export function ContextData({ children }: ContextDataProps) {
 		return {
 			socket,
 			notifier: notifierRef,
+
 			activeLearns: observable.set(),
+
+			recentlyAddedActions: new RecentlyUsedIdsStore('recent_actions', 20),
+			recentlyAddedFeedbacks: new RecentlyUsedIdsStore('recent_feedbacks', 20),
 		} satisfies RootAppStore
 	}, [socket])
 
@@ -71,50 +74,6 @@ export function ContextData({ children }: ContextDataProps) {
 	const [customVariables, setCustomVariables] = useState<CustomVariablesModel | null>(null)
 	const [surfaces, setSurfaces] = useState<Record<string, ClientDevicesListItem | undefined> | null>(null)
 	const [triggers, setTriggers] = useState<Record<string, ClientTriggerData | undefined> | null>(null)
-
-	const [recentActions, setRecentActions] = useState<string[]>(() => {
-		const recent = JSON.parse(window.localStorage.getItem('recent_actions') || '[]')
-		return Array.isArray(recent) ? recent : []
-	})
-
-	const trackRecentAction = useCallback((actionType: string) => {
-		setRecentActions((existing) => {
-			const newActions = [actionType, ...existing.filter((v) => v !== actionType)].slice(0, 20)
-
-			window.localStorage.setItem('recent_actions', JSON.stringify(newActions))
-
-			return newActions
-		})
-	}, [])
-	const recentActionsContext = useMemo(
-		() => ({
-			recentActions,
-			trackRecentAction,
-		}),
-		[recentActions, trackRecentAction]
-	)
-
-	const [recentFeedbacks, setRecentFeedbacks] = useState<string[]>(() => {
-		const recent = JSON.parse(window.localStorage.getItem('recent_feedbacks') || '[]')
-		return Array.isArray(recent) ? recent : []
-	})
-
-	const trackRecentFeedback = useCallback((feedbackType: string) => {
-		setRecentFeedbacks((existing) => {
-			const newFeedbacks = [feedbackType, ...existing.filter((v) => v !== feedbackType)].slice(0, 20)
-
-			window.localStorage.setItem('recent_feedbacks', JSON.stringify(newFeedbacks))
-
-			return newFeedbacks
-		})
-	}, [])
-	const recentFeedbacksContext = useMemo(
-		() => ({
-			recentFeedbacks,
-			trackRecentFeedback,
-		}),
-		[recentFeedbacks, trackRecentFeedback]
-	)
 
 	const completeVariableDefinitions = useMemo<AllVariableDefinitions>(() => {
 		if (variableDefinitions) {
@@ -363,13 +322,9 @@ export function ContextData({ children }: ContextDataProps) {
 											<SurfacesContext.Provider value={surfaces!}>
 												<PagesContext.Provider value={pages!}>
 													<TriggersContext.Provider value={triggers!}>
-														<RecentActionsContext.Provider value={recentActionsContext}>
-															<RecentFeedbacksContext.Provider value={recentFeedbacksContext}>
-																<NotificationsManager ref={notifierRef} />
+														<NotificationsManager ref={notifierRef} />
 
-																{children(progressPercent, completedSteps.length === steps.length)}
-															</RecentFeedbacksContext.Provider>
-														</RecentActionsContext.Provider>
+														{children(progressPercent, completedSteps.length === steps.length)}
 													</TriggersContext.Provider>
 												</PagesContext.Provider>
 											</SurfacesContext.Provider>
