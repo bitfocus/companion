@@ -34,18 +34,17 @@ export function TcpUdpProtocol() {
 				</li>
 
 				<li>
-					<code>LOCATION</code> &lt;page&gt;<code>/</code>&lt;row&gt;<code>/</code>&lt;column&gt;{' '}
-					<code>BANK-PRESS</code>
+					<code>LOCATION</code> &lt;page&gt;<code>/</code>&lt;row&gt;<code>/</code>&lt;column&gt; <code>PRESS</code>
 					<br />
 					<i>Press and release a button (run both down and up actions)</i>
 				</li>
 				<li>
-					<code>LOCATION</code> &lt;page&gt;<code>/</code>&lt;row&gt;<code>/</code>&lt;column&gt; <code>BANK-DOWN</code>
+					<code>LOCATION</code> &lt;page&gt;<code>/</code>&lt;row&gt;<code>/</code>&lt;column&gt; <code>DOWN</code>
 					<br />
 					<i>Press the button (run down actions)</i>
 				</li>
 				<li>
-					<code>LOCATION</code> &lt;page&gt;<code>/</code>&lt;row&gt;<code>/</code>&lt;column&gt; <code>BANK-UP</code>
+					<code>LOCATION</code> &lt;page&gt;<code>/</code>&lt;row&gt;<code>/</code>&lt;column&gt; <code>UP</code>
 					<br />
 					<i>Release the button (run up actions)</i>
 				</li>
