@@ -810,10 +810,12 @@ if (!lock) {
 					crashTimeout = null
 					customLog('Companion looks to be stable', 'Application')
 					restartCounter = 0
-				}, 5000)
+				}, 30000)
 			})
 
 			child.on('exit', (code) => {
+				customLog(`Companion exited with code: ${code}`, 'Application')
+
 				if (code === 0) return
 
 				restartCounter++
@@ -832,6 +834,9 @@ if (!lock) {
 				customLog(data.toString())
 			})
 			child.on('stderr', (data) => {
+				customLog(data.toString())
+			})
+			child.on('warn', (data) => {
 				customLog(data.toString())
 			})
 			child.on('message', (data) => {
