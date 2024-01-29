@@ -41,7 +41,7 @@ jobs:
           echo "EOF" >> $GITHUB_ENV
 
       - name: Commit module updates
-        uses: stefanzweifel/git-auto-commit-action@v4
+        uses: stefanzweifel/git-auto-commit-action@v5
         with:
           commit_message: "chore: update bundled-modules\n\n${{ env.CHANGES_MESSAGE }}"
           commit_author: 'Companion Module Sync <companion-module-bot@users.noreply.github.com>'
