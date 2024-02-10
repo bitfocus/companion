@@ -7,6 +7,7 @@ import { PageModel } from '@companion/shared/Model/PageModel.js'
 import { GenericConfirmModal, GenericConfirmModalRef } from '../Components/GenericConfirmModal.js'
 import { usePageCount } from '../Hooks/usePagesInfoSubscription.js'
 import { EditPagePropertiesModal, EditPagePropertiesModalRef } from './EditPageProperties.js'
+import { AddPagesModal, AddPagesModalRef } from './PagesAddModal.js'
 
 interface PagesListProps {
 	setPageNumber: (page: number) => void
@@ -18,6 +19,7 @@ export function PagesList({ setPageNumber }: PagesListProps): JSX.Element {
 
 	const pageCount = usePageCount()
 
+	const addRef = useRef<AddPagesModalRef>(null)
 	const deleteRef = useRef<GenericConfirmModalRef>(null)
 	const editRef = useRef<EditPagePropertiesModalRef>(null)
 
@@ -44,9 +46,7 @@ export function PagesList({ setPageNumber }: PagesListProps): JSX.Element {
 	const doInsertPage = useCallback((e: React.MouseEvent<HTMLButtonElement>) => {
 		const pageNumber = Number(e.currentTarget.getAttribute('data-page'))
 		if (!isNaN(pageNumber)) {
-			socketEmitPromise(socket, 'pages:insert-page', [pageNumber]).catch((e) => {
-				console.error('Page insert failed', e)
-			})
+			addRef.current?.show?.(pageNumber)
 		}
 	}, [])
 
@@ -75,6 +75,7 @@ export function PagesList({ setPageNumber }: PagesListProps): JSX.Element {
 		<CRow>
 			<CCol xs={12}>
 				<GenericConfirmModal ref={deleteRef} />
+				<AddPagesModal ref={addRef} />
 				<EditPagePropertiesModal ref={editRef} />
 
 				<table className="table table-responsive-sm">
