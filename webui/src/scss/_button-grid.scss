@@ -4,6 +4,10 @@
 	column-gap: 5px;
 	padding: 10px 0;
 
+	.input-group {
+		flex-wrap: nowrap;
+	}
+
 	.button-page-input {
 		flex-grow: 1;
 	}
