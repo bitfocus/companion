@@ -130,7 +130,7 @@
 		"url": "https://donorbox.org/bitfocus-opensource"
 	},
 	"resolutions": {
-		"node-hid": "^3.0.0",
+		"node-hid": "npm:@julusian/hid#3.0.1.0",
 		"node-gyp-build": "github:julusian/node-gyp-build#cross-install-support",
 		"osc/serialport": "^10.5.0"
 	}

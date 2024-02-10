@@ -4801,13 +4801,12 @@ node-forge@^1:
 
 node-gyp-build@^4.3.0, node-gyp-build@^4.5.0, "node-gyp-build@github:julusian/node-gyp-build#cross-install-support":
   version "4.5.0"
-  uid "33c9759a3215892a520d50ad20c947795b813904"
   resolved "https://codeload.github.com/julusian/node-gyp-build/tar.gz/33c9759a3215892a520d50ad20c947795b813904"
 
-node-hid@^2.1.1, node-hid@^2.1.2, node-hid@^3.0.0:
-  version "3.0.0"
-  resolved "https://registry.yarnpkg.com/node-hid/-/node-hid-3.0.0.tgz#fb2d09da8a3a776015f27a3ce4eca3cd63150ddd"
-  integrity sha512-8CZdobqYCKTnKx9M5r9/clAehC7jOLXu9Ts2ItMWVT6LJa0bjmkkM1SdB7TgJsothng7GE/Y+fex5AidiJLjKA==
+node-hid@^2.1.1, node-hid@^2.1.2, node-hid@^3.0.0, "node-hid@npm:@julusian/hid#3.0.1.0":
+  version "3.0.1-0"
+  resolved "https://registry.yarnpkg.com/@julusian/hid/-/hid-3.0.1-0.tgz#c5c10115d0c961acf745abff21baf496172166ff"
+  integrity sha512-NK93LUz9Jl5EfQVviZZSj76FjfX8xlEmCa3e25962eLCebrf9RB4oqGrfEKJdzvmmXEfDnKALvgW8aDYFPVfPw==
   dependencies:
     node-addon-api "^3.2.1"
     pkg-prebuilds "^0.2.1"
