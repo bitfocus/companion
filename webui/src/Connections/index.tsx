@@ -52,10 +52,12 @@ export const ConnectionsPage = memo(function ConnectionsPage() {
 		setActiveTab(connectionId ? 'edit' : 'add')
 	}, [])
 
-	const [connectionStatus, setConnectionStatus] = useState<Record<string, ConnectionStatusEntry>>({})
+	const [connectionStatus, setConnectionStatus] = useState<Record<string, ConnectionStatusEntry> | undefined>()
 	useEffect(() => {
+		let mounted = true
 		socketEmitPromise(socket, 'connections:get-statuses', [])
 			.then((statuses) => {
+				if (!mounted) return
 				setConnectionStatus(statuses)
 			})
 			.catch((e) => {
@@ -63,6 +65,7 @@ export const ConnectionsPage = memo(function ConnectionsPage() {
 			})
 
 		const patchStatuses = (patch: JsonPatchOperation[]) => {
+			if (!mounted) return
 			setConnectionStatus((oldStatuses) => {
 				if (!oldStatuses) return oldStatuses
 				return jsonPatch.applyPatch(cloneDeep(oldStatuses) || {}, patch).newDocument
@@ -71,6 +74,7 @@ export const ConnectionsPage = memo(function ConnectionsPage() {
 		socket.on('connections:patch-statuses', patchStatuses)
 
 		return () => {
+			mounted = false
 			socket.off('connections:patch-statuses', patchStatuses)
 		}
 	}, [socket])
