@@ -38,7 +38,7 @@ interface VisibleConnectionsState {
 interface ConnectionsListProps {
 	showHelp: (connectionId: string) => void
 	doConfigureConnection: (connectionId: string | null) => void
-	connectionStatus: Record<string, ConnectionStatusEntry | undefined>
+	connectionStatus: Record<string, ConnectionStatusEntry | undefined> | undefined
 	selectedConnectionId: string | null
 }
 
