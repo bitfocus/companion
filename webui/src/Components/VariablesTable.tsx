@@ -1,11 +1,12 @@
 import React, { useCallback, useContext, useState, useMemo, useEffect, memo } from 'react'
 import { CAlert, CButton, CInput, CInputGroup, CInputGroupAppend } from '@coreui/react'
-import { SocketContext, socketEmitPromise, NotifierContext, VariableDefinitionsContext } from '../util.js'
+import { socketEmitPromise, VariableDefinitionsContext } from '../util.js'
 import { CopyToClipboard } from 'react-copy-to-clipboard'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faCopy, faTimes } from '@fortawesome/free-solid-svg-icons'
 import { CompanionVariableValues, type CompanionVariableValue } from '@companion-module/base'
 import type { VariableDefinition } from '@companion/shared/Model/Variables.js'
+import { RootAppStoreContext } from '../Stores/RootAppStore.js'
 
 interface VariablesTableProps {
 	label: string
@@ -16,8 +17,7 @@ interface VariableDefinitionExt extends VariableDefinition {
 }
 
 export function VariablesTable({ label }: VariablesTableProps) {
-	const socket = useContext(SocketContext)
-	const notifier = useContext(NotifierContext)
+	const { socket, notifier } = useContext(RootAppStoreContext)
 	const variableDefinitionsContext = useContext(VariableDefinitionsContext)
 
 	const [variableValues, setVariableValues] = useState<CompanionVariableValues>({})

@@ -10,13 +10,7 @@ import {
 	CInputGroupAppend,
 	CLabel,
 } from '@coreui/react'
-import {
-	CustomVariableDefinitionsContext,
-	socketEmitPromise,
-	SocketContext,
-	NotifierContext,
-	PreventDefaultHandler,
-} from '../util.js'
+import { CustomVariableDefinitionsContext, socketEmitPromise, PreventDefaultHandler } from '../util.js'
 import { CopyToClipboard } from 'react-copy-to-clipboard'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import {
@@ -35,6 +29,7 @@ import { useDrag, useDrop } from 'react-dnd'
 import { usePanelCollapseHelper } from '../Helpers/CollapseHelper.js'
 import type { CompanionVariableValues } from '@companion-module/base'
 import { CustomVariablesModel, CustomVariableDefinition } from '@companion/shared/Model/CustomVariableModel.js'
+import { RootAppStoreContext } from '../Stores/RootAppStore.js'
 
 const DRAG_ID = 'custom-variables'
 
@@ -49,8 +44,7 @@ interface CustomVariablesListProps {
 export function CustomVariablesList({ setShowCustom }: CustomVariablesListProps) {
 	const doBack = useCallback(() => setShowCustom(false), [setShowCustom])
 
-	const socket = useContext(SocketContext)
-	const notifier = useContext(NotifierContext)
+	const { socket, notifier } = useContext(RootAppStoreContext)
 	const customVariableContext = useContext(CustomVariableDefinitionsContext)
 
 	const [variableValues, setVariableValues] = useState<CompanionVariableValues>({})

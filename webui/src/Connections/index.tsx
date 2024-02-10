@@ -1,7 +1,7 @@
 import { CCol, CRow, CTabs, CTabContent, CTabPane, CNavItem, CNavLink, CNav } from '@coreui/react'
 import React, { memo, useCallback, useContext, useEffect, useRef, useState } from 'react'
 import { HelpModal, HelpModalRef } from './HelpModal.js'
-import { NotifierContext, MyErrorBoundary, socketEmitPromise, SocketContext } from '../util.js'
+import { MyErrorBoundary, socketEmitPromise } from '../util.js'
 import { ConnectionsList } from './ConnectionList.js'
 import { AddConnectionsPanel } from './AddConnection.js'
 import { ConnectionEditPanel } from './ConnectionEditPanel.js'
@@ -11,10 +11,10 @@ import { faCog, faPlus } from '@fortawesome/free-solid-svg-icons'
 import jsonPatch, { Operation as JsonPatchOperation } from 'fast-json-patch'
 import { cloneDeep } from 'lodash-es'
 import { ConnectionStatusEntry } from '@companion/shared/Model/Common.js'
+import { RootAppStoreContext } from '../Stores/RootAppStore.js'
 
 export const ConnectionsPage = memo(function ConnectionsPage() {
-	const socket = useContext(SocketContext)
-	const notifier = useContext(NotifierContext)
+	const { socket, notifier } = useContext(RootAppStoreContext)
 
 	const helpModalRef = useRef<HelpModalRef>(null)
 
@@ -52,10 +52,12 @@ export const ConnectionsPage = memo(function ConnectionsPage() {
 		setActiveTab(connectionId ? 'edit' : 'add')
 	}, [])
 
-	const [connectionStatus, setConnectionStatus] = useState<Record<string, ConnectionStatusEntry>>({})
+	const [connectionStatus, setConnectionStatus] = useState<Record<string, ConnectionStatusEntry> | undefined>()
 	useEffect(() => {
+		let mounted = true
 		socketEmitPromise(socket, 'connections:get-statuses', [])
 			.then((statuses) => {
+				if (!mounted) return
 				setConnectionStatus(statuses)
 			})
 			.catch((e) => {
@@ -63,6 +65,7 @@ export const ConnectionsPage = memo(function ConnectionsPage() {
 			})
 
 		const patchStatuses = (patch: JsonPatchOperation[]) => {
+			if (!mounted) return
 			setConnectionStatus((oldStatuses) => {
 				if (!oldStatuses) return oldStatuses
 				return jsonPatch.applyPatch(cloneDeep(oldStatuses) || {}, patch).newDocument
@@ -71,6 +74,7 @@ export const ConnectionsPage = memo(function ConnectionsPage() {
 		socket.on('connections:patch-statuses', patchStatuses)
 
 		return () => {
+			mounted = false
 			socket.off('connections:patch-statuses', patchStatuses)
 		}
 	}, [socket])

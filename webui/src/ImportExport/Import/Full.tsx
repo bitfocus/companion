@@ -1,6 +1,6 @@
 import React, { useCallback, useContext, useMemo, useState } from 'react'
 import ClassNames from 'classnames'
-import { MyErrorBoundary, NotifierContext, SocketContext, socketEmitPromise } from '../../util.js'
+import { MyErrorBoundary, socketEmitPromise } from '../../util.js'
 import {
 	CAlert,
 	CButton,
@@ -18,6 +18,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { ImportPageWizard } from './Page.js'
 import { ImportTriggersTab } from './Triggers.js'
 import { ClientImportObject } from '@companion/shared/Model/ImportExport.js'
+import { RootAppStoreContext } from '../../Stores/RootAppStore.js'
 
 interface ImportFullWizardProps {
 	snapshot: ClientImportObject
@@ -26,8 +27,7 @@ interface ImportFullWizardProps {
 }
 
 export function ImportFullWizard({ snapshot, instanceRemap, setInstanceRemap }: ImportFullWizardProps) {
-	const socket = useContext(SocketContext)
-	const notifier = useContext(NotifierContext)
+	const { socket, notifier } = useContext(RootAppStoreContext)
 
 	const doSinglePageImport = useCallback(
 		(fromPage: number, toPage: number, instanceRemap: Record<string, string | undefined>) => {
@@ -109,8 +109,7 @@ interface FullImportTabProps {
 }
 
 function FullImportTab({ snapshot }: FullImportTabProps) {
-	const socket = useContext(SocketContext)
-	const notifier = useContext(NotifierContext)
+	const { socket, notifier } = useContext(RootAppStoreContext)
 
 	const snapshotKeys = useMemo(() => {
 		const keys: string[] = []

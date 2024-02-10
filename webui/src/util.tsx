@@ -10,7 +10,6 @@ import { useEventListener } from 'usehooks-ts'
 import type { LoaderHeightWidthProps } from 'react-spinners/helpers/props.js'
 import { Socket } from 'socket.io-client'
 import type { AllVariableDefinitions } from '@companion/shared/Model/Variables.js'
-import type { NotificationsManagerRef } from './Components/Notifications.js'
 import type {
 	ClientConnectionConfig,
 	ClientEventDefinition,
@@ -22,16 +21,10 @@ import type { UserConfigModel } from '@companion/shared/Model/UserConfigModel.js
 import type { ClientDevicesListItem } from '@companion/shared/Model/Surfaces.js'
 import type { PageModel } from '@companion/shared/Model/PageModel.js'
 import type { CustomVariablesModel } from '@companion/shared/Model/CustomVariableModel.js'
-import { observable, ObservableSet } from 'mobx'
 
 export const SocketContext = React.createContext<Socket>(null as any) // TODO - fix this
 export const EventDefinitionsContext = React.createContext<Record<string, ClientEventDefinition | undefined>>({})
-export const NotifierContext = React.createContext<React.RefObject<NotificationsManagerRef>>({ current: null }) // TODO - this is not good
-/*({
-	show: () => {
-		throw new Error('Not inside of context!')
-	},
-})*/
+
 export const ModulesContext = React.createContext<Record<string, ModuleDisplayInfo>>({})
 export const ActionsContext = React.createContext<
 	Record<string, Record<string, ClientActionDefinition | undefined> | undefined>
@@ -46,15 +39,6 @@ export const UserConfigContext = React.createContext<UserConfigModel | null>(nul
 export const SurfacesContext = React.createContext<Record<string, ClientDevicesListItem | undefined>>({})
 export const PagesContext = React.createContext<Record<number, PageModel | undefined>>({})
 export const TriggersContext = React.createContext<Record<string, ClientTriggerData | undefined>>({})
-export const RecentActionsContext = React.createContext<{
-	recentActions: string[]
-	trackRecentAction: (actionType: string) => void
-} | null>(null)
-export const RecentFeedbacksContext = React.createContext<{
-	recentFeedbacks: string[]
-	trackRecentFeedback: (feedbackType: string) => void
-} | null>(null)
-export const ActiveLearnContext = React.createContext<ObservableSet<string>>(observable.set())
 
 export function socketEmitPromise(
 	socket: Socket,

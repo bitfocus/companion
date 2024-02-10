@@ -1,11 +1,10 @@
-import { observable, ObservableSet } from 'mobx'
-import { useEffect, useMemo, useState } from 'react'
+import type { ObservableSet } from 'mobx'
+import { useEffect, useState } from 'react'
 import type { Socket } from 'socket.io-client'
 import { socketEmitPromise } from '../util.js'
 
-export function useActiveLearnRequests(socket: Socket): [ObservableSet<string>, boolean] {
+export function useActiveLearnRequests(socket: Socket, activeIds: ObservableSet<string>): boolean {
 	const [isReady, setIsReady] = useState<boolean>(false)
-	const activeIds = useMemo(() => observable.set<string>(), [])
 
 	useEffect(() => {
 		let aborted = false
@@ -43,5 +42,5 @@ export function useActiveLearnRequests(socket: Socket): [ObservableSet<string>, 
 		}
 	}, [activeIds, socket])
 
-	return [activeIds, isReady]
+	return isReady
 }

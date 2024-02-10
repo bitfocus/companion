@@ -1,9 +1,10 @@
 import { CButton } from '@coreui/react'
 import React, { useCallback, useContext, useEffect, useState } from 'react'
-import { NotifierContext, SocketContext, socketEmitPromise } from '../../util.js'
+import { socketEmitPromise } from '../../util.js'
 import { ImportPageWizard } from './Page.js'
 import { ImportFullWizard } from './Full.js'
 import type { ClientImportObject } from '@companion/shared/Model/ImportExport.js'
+import { RootAppStoreContext } from '../../Stores/RootAppStore.js'
 
 interface ImportWizardProps {
 	importInfo: [ClientImportObject, Record<string, string | undefined>]
@@ -11,8 +12,7 @@ interface ImportWizardProps {
 }
 
 export function ImportWizard({ importInfo, clearImport }: ImportWizardProps) {
-	const socket = useContext(SocketContext)
-	const notifier = useContext(NotifierContext)
+	const { socket, notifier } = useContext(RootAppStoreContext)
 
 	const [snapshot, instanceRemap0] = importInfo
 
