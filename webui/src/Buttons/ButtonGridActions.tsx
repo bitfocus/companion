@@ -2,7 +2,7 @@ import { CButton, CCol } from '@coreui/react'
 import React, { forwardRef, useCallback, useContext, useImperativeHandle, useRef, useState } from 'react'
 import { socketEmitPromise, SocketContext } from '../util.js'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faArrowsAlt, faCompass, faCopy, faEraser, faTrash } from '@fortawesome/free-solid-svg-icons'
+import { faArrowsLeftRight, faArrowsAlt, faCompass, faCopy, faEraser, faTrash } from '@fortawesome/free-solid-svg-icons'
 import classnames from 'classnames'
 import { GenericConfirmModal, GenericConfirmModalRef } from '../Components/GenericConfirmModal.js'
 import { useElementSize } from 'usehooks-ts'
@@ -144,6 +144,17 @@ export const ButtonGridActions = forwardRef<ButtonGridActionsRef, ButtonGridActi
 								setActiveFunctionButton(location)
 							}
 							return true
+						case 'swap':
+							if (activeFunctionButton) {
+								const fromInfo = activeFunctionButton
+								socketEmitPromise(socket, 'controls:swap', [fromInfo, location]).catch((e) => {
+									console.error(`swap failed: ${e}`)
+								})
+								stopFunction()
+							} else {
+								setActiveFunctionButton(location)
+							}
+							return true
 						default:
 							// show button edit page
 							return false
@@ -170,6 +181,8 @@ export const ButtonGridActions = forwardRef<ButtonGridActionsRef, ButtonGridActi
 						{getButton('Copy', faCopy, 'copy')}
 						&nbsp;
 						{getButton('Move', faArrowsAlt, 'move')}
+						&nbsp;
+						{getButton('Swap', faArrowsLeftRight, 'swap')}
 						&nbsp;
 						{getButton('Delete', faTrash, 'delete')}
 						&nbsp;
