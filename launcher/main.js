@@ -259,40 +259,38 @@ if (!lock) {
 				if (newPath0 && (await fs.pathExists(newPath0))) {
 					// Watch for changes in the modules
 					const devModulesPath = path.resolve(newPath0)
-					watcher = chokidar.watch(devModulesPath, {
+					watcher = chokidar.watch(['**/*.mjs', '**/*.js', '**/*.cjs', '**/*.json'], {
+						cwd: devModulesPath,
 						ignoreInitial: true,
 						ignored: ['**/node_modules/**'],
 					})
 
 					watcher.on('all', (event, filename) => {
 						const fullpath = path.resolve(filename)
-						if (fullpath.startsWith(devModulesPath)) {
-							const moduleDirName = fullpath.slice(devModulesPath.length + 1).split(path.sep)[0]
+						const moduleDirName = filename.split(path.sep)[0]
 
-							let fn = cachedDebounces[moduleDirName]
-							if (!fn) {
-								// Debounce, to avoid spamming when many files change
-								fn = debounceFn(
-									() => {
-										console.log('Sending reload for module:', moduleDirName)
-										if (child?.child) {
-											child.child.send({
-												messageType: 'reload-extra-module',
-												fullpath: path.join(devModulesPath, moduleDirName),
-											})
-										}
-									},
-									{
-										after: true,
-										before: false,
-										wait: 100,
+						let fn = cachedDebounces[moduleDirName]
+						if (!fn) {
+							// Debounce, to avoid spamming when many files change
+							fn = debounceFn(
+								() => {
+									console.log('Sending reload for module:', moduleDirName)
+									if (child?.child) {
+										child.child.send({
+											messageType: 'reload-extra-module',
+											fullpath: path.join(devModulesPath, moduleDirName),
+										})
 									}
-								)
-								cachedDebounces[moduleDirName] = fn
-							}
-
-							fn()
+								},
+								{
+									after: true,
+									before: false,
+									wait: 100,
+								}
+							)
+							cachedDebounces[moduleDirName] = fn
 						}
+						fn()
 					})
 				}
 			} catch (e) {
