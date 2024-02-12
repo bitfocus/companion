@@ -58,7 +58,7 @@ export const ButtonGridActions = forwardRef<ButtonGridActionsRef, ButtonGridActi
 	}, [])
 
 	const [setSizeRef, holderSize] = useElementSize()
-	const useCompactButtons = holderSize.width < 600 // Cutoff for what of the action buttons fit in their large mode
+	const useCompactButtons = holderSize.width < 650 // Cutoff for what of the action buttons fit in their large mode
 
 	const getButton = (label: string, icon: IconProp, func: string) => {
 		let color = 'light'
