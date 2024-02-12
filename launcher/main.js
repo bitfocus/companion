@@ -351,11 +351,17 @@ if (!lock) {
 				thisWindow.webContents.setBackgroundThrottling(false)
 			})
 
+		let width = 0
 		ipcMain.on('setHeight', (e, height) => {
 			// console.log('height', height)
-			const oldSize = thisWindow.getSize()
-			// window.setSize(oldSize[0], height, false)
-			thisWindow.setBounds({ width: oldSize[0], height: height })
+
+			// Cache the width, otherwise it can keep on growing unexpectedly on some machines
+			if (width === 0) {
+				const oldSize = thisWindow.getSize()
+				width = oldSize[0]
+			}
+
+			thisWindow.setBounds({ width: width, height: height })
 		})
 
 		ipcMain.on('info', () => {
