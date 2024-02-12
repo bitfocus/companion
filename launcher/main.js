@@ -1,7 +1,8 @@
+// @ts-check
 const path = require('path')
 const url = require('url')
 const fs = require('fs-extra')
-const { init, showReportDialog, configureScope } = require('@sentry/electron')
+const { init, configureScope } = require('@sentry/electron')
 const systeminformation = require('systeminformation')
 const Store = require('electron-store')
 const { ipcMain, app, BrowserWindow, dialog } = require('electron')
@@ -23,6 +24,7 @@ if (process.platform === 'darwin') {
 		const minimumVersion = '10.15'
 		const supportedVersions = new semver.Range(`>=${minimumVersion}`)
 
+		/** @type {any} */
 		const versionInfo = plist.parse(fs.readFileSync('/System/Library/CoreServices/SystemVersion.plist', 'utf8'))
 		const productVersion = semver.coerce(versionInfo.ProductVersion)
 
@@ -86,12 +88,8 @@ if (!lock) {
 	let machineId = nanoid()
 	const machineIdPath = path.join(configDir, 'machid')
 	if (fs.pathExistsSync(machineIdPath)) {
-		let text = ''
 		try {
-			text = fs.readFileSync(machineIdPath)
-			if (text) {
-				machineId = text.toString()
-			}
+			machineId = fs.readFileSync(machineIdPath).toString().trim() || machineId
 		} catch (e) {
 			console.warn(`Error reading machid file: ${e}`)
 		}
@@ -155,6 +153,14 @@ if (!lock) {
 		// }
 	}
 
+	/**
+	 * @type {{
+	 *   appVersion: string
+	 *   appStatus: string
+	 *   appURL: string
+	 *   appLaunch: string | null
+	 * }}
+	 */
 	let appInfo = {
 		// The version number of the build was set to match the BUILD file
 		appVersion: app.getVersion(),
@@ -170,9 +176,9 @@ if (!lock) {
 			dsn: sentryDsn,
 			release: `companion@${appInfo.appVersion}`,
 			beforeSend(event) {
-				if (event.exception) {
-					showReportDialog()
-				}
+				// if (event.exception) {
+				// 	showReportDialog()
+				// }
 				return event
 			},
 		})
@@ -219,7 +225,9 @@ if (!lock) {
 		}
 	}
 
+	/** @type {electron.BrowserWindow | null} */
 	let window
+	/** @type {electron.Tray | null} */
 	let tray = null
 
 	const cachedDebounces = {}
@@ -303,7 +311,7 @@ if (!lock) {
 	restartWatcher()
 
 	function createWindow() {
-		window = new BrowserWindow({
+		const thisWindow = (window = new BrowserWindow({
 			show: false,
 			width: 400,
 			height: 600,
@@ -314,12 +322,11 @@ if (!lock) {
 			resizable: false,
 			icon: path.join(__dirname, './assets/icon.png'),
 			webPreferences: {
-				pageVisibility: true,
 				nodeIntegration: true,
 				contextIsolation: true,
 				preload: path.join(__dirname, './window-preload.js'),
 			},
-		})
+		}))
 
 		// window.webContents.openDevTools({
 		// 	mode:'detach'
@@ -332,7 +339,7 @@ if (!lock) {
 			}
 		})
 
-		window
+		thisWindow
 			.loadURL(
 				url.format({
 					pathname: path.join(__dirname, './window.html'),
@@ -341,14 +348,14 @@ if (!lock) {
 				})
 			)
 			.then(() => {
-				window.webContents.setBackgroundThrottling(false)
+				thisWindow.webContents.setBackgroundThrottling(false)
 			})
 
 		ipcMain.on('setHeight', (e, height) => {
 			// console.log('height', height)
-			const oldSize = window.getSize()
+			const oldSize = thisWindow.getSize()
 			// window.setSize(oldSize[0], height, false)
-			window.setBounds({ width: oldSize[0], height: height })
+			thisWindow.setBounds({ width: oldSize[0], height: height })
 		})
 
 		ipcMain.on('info', () => {
@@ -369,7 +376,7 @@ if (!lock) {
 		})
 
 		ipcMain.on('launcher-minimize', () => {
-			window.hide()
+			thisWindow.hide()
 		})
 
 		ipcMain.on('launcher-open-gui', () => {
@@ -387,7 +394,7 @@ if (!lock) {
 			const newPort = Number(msg)
 			if (isNaN(newPort) || newPort < 1024 || newPort > 65535) {
 				electron.dialog
-					.showMessageBox(window, {
+					.showMessageBox(thisWindow, {
 						type: 'warning',
 						message: 'Port must be between 1024 and 65535',
 					})
@@ -426,7 +433,7 @@ if (!lock) {
 		ipcMain.on('pick-developer-modules-path', () => {
 			console.log('pick dev modules path')
 			electron.dialog
-				.showOpenDialog(window, {
+				.showOpenDialog(thisWindow, {
 					properties: ['openDirectory'],
 				})
 				.then((r) => {
@@ -455,15 +462,17 @@ if (!lock) {
 					{ id: '127.0.0.1', label: 'localhost: 127.0.0.1' },
 				]
 
-				for (const obj of list) {
-					if (obj.ip4 && !obj.internal) {
-						let label = `${obj.iface}: ${obj.ip4}`
-						if (obj.type && obj.type !== 'unknown') label += ` (${obj.type})`
+				if (Array.isArray(list)) {
+					for (const obj of list) {
+						if (obj.ip4 && !obj.internal) {
+							let label = `${obj.iface}: ${obj.ip4}`
+							if (obj.type && obj.type !== 'unknown') label += ` (${obj.type})`
 
-						interfaces.push({
-							id: obj.ip4,
-							label: label,
-						})
+							interfaces.push({
+								id: obj.ip4,
+								label: label,
+							})
+						}
 					}
 				}
 
@@ -539,7 +548,7 @@ if (!lock) {
 
 	function trayQuit() {
 		electron.dialog
-			.showMessageBox(undefined, {
+			.showMessageBox({
 				title: 'Companion',
 				message: 'Are you sure you want to quit Companion?',
 				buttons: ['Quit', 'Cancel'],
@@ -577,6 +586,7 @@ if (!lock) {
 	}
 
 	function toggleWindow() {
+		if (!window) return
 		if (window.isVisible()) {
 			window.hide()
 		} else {
@@ -585,6 +595,7 @@ if (!lock) {
 	}
 
 	function showWindow() {
+		if (!window) return
 		window.show()
 		window.focus()
 	}
@@ -594,6 +605,7 @@ if (!lock) {
 		.then(async () => {
 			// Check for a more recently modified db
 			const dirs = fs.readdirSync(configDir)
+			/** @type {[number, string] | null} */
 			let mostRecentDir = null
 			for (const dirname of dirs) {
 				try {
@@ -845,11 +857,11 @@ if (!lock) {
 				} else if (data.messageType === 'show-error') {
 					electron.dialog.showErrorBox(data.title, data.body)
 				} else if (data.messageType === 'http-bind-status') {
+					delete data.messageType
 					appInfo = {
 						...appInfo,
 						...data,
 					}
-					delete appInfo.messageType
 
 					sendAppInfo()
 				} else if (data.messageType === 'exit') {

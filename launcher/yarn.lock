@@ -272,7 +272,7 @@
   dependencies:
     undici-types "~5.26.4"
 
-"@types/plist@^3.0.1":
+"@types/plist@^3.0.1", "@types/plist@^3.0.5":
   version "3.0.5"
   resolved "https://registry.yarnpkg.com/@types/plist/-/plist-3.0.5.tgz#9a0c49c0f9886c8c8696a7904dd703f6284036e0"
   integrity sha512-E6OCaRmAe4WDmWNsL/9RMqdkkzDCY1etutkflWk4c+AcjDU07Pcz1fQwTX0TQz+Pxqn9i4L1TU3UFpjnrcDgxA==
