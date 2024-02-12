@@ -488,6 +488,12 @@ if (!lock) {
 				showWindow()
 			}
 		})
+
+		window.on('close', (e) => {
+			e.preventDefault()
+
+			performQuit()
+		})
 	}
 
 	function createTray() {
@@ -552,18 +558,22 @@ if (!lock) {
 			})
 			.then((v) => {
 				if (v.response === 0) {
-					if (watcher) watcher.close().catch(() => console.error('Failed to stop'))
-
-					if (child) {
-						child.shouldRestart = false
-						if (child.child) {
-							child.child.send({
-								messageType: 'exit',
-							})
-						}
-					}
+					performQuit()
 				}
 			})
+	}
+
+	function performQuit() {
+		if (watcher) watcher.close().catch(() => console.error('Failed to stop'))
+
+		if (child) {
+			child.shouldRestart = false
+			if (child.child) {
+				child.child.send({
+					messageType: 'exit',
+				})
+			}
+		}
 	}
 
 	function scanUsb() {
