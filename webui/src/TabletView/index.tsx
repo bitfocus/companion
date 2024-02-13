@@ -21,7 +21,7 @@ export function TabletView() {
 		const rawParsedQuery = queryString.parse(queryUrl)
 
 		const pagesStr = Array.isArray(rawParsedQuery.pages) ? rawParsedQuery.pages[0] : rawParsedQuery.pages
-		const pagesRange = rangeParser(pagesStr ?? '').filter((p) => p >= 1 && p <= 99)
+		const pagesRange = rangeParser(pagesStr ?? '').filter((p) => p >= 1)
 
 		if (rawParsedQuery['max_col'] === undefined && rawParsedQuery['cols'])
 			rawParsedQuery['max_col'] = Number(rawParsedQuery['cols']) - 1 + ''

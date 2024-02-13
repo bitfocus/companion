@@ -86,7 +86,7 @@ export const ButtonGridActions = forwardRef<ButtonGridActionsRef, ButtonGridActi
 			`Are you sure you want to clear all buttons on page ${pageNumber}?\nThere's no going back from this.`,
 			'Reset',
 			() => {
-				socketEmitPromise(socket, 'loadsave:reset-page-clear', [pageNumber]).catch((e) => {
+				socketEmitPromise(socket, 'pages:reset-page-clear', [pageNumber]).catch((e) => {
 					console.error(`Clear page failed: ${e}`)
 				})
 			}
@@ -100,7 +100,7 @@ export const ButtonGridActions = forwardRef<ButtonGridActionsRef, ButtonGridActi
 			`Are you sure you want to reset navigation buttons? This will completely erase button ${pageNumber}/0/0, ${pageNumber}/1/0 and ${pageNumber}/2/0`,
 			'Reset',
 			() => {
-				socketEmitPromise(socket, 'loadsave:reset-page-nav', [pageNumber]).catch((e) => {
+				socketEmitPromise(socket, 'pages:reset-page-nav', [pageNumber]).catch((e) => {
 					console.error(`Reset nav failed: ${e}`)
 				})
 			}

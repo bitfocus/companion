@@ -131,7 +131,7 @@ export function ImportPageWizard({ snapshot, instanceRemap, setInstanceRemap, do
 								<FontAwesomeIcon icon={faHome} /> Home Position
 							</CButton>
 
-							<ButtonGridHeader pageNumber={pageNumber} changePage={changePage} setPage={setPageNumber} />
+							<ButtonGridHeader pageNumber={pageNumber} changePage={changePage} setPage={setPageNumber} newPageAtEnd />
 						</CCol>
 						<div className="buttongrid">
 							{hasBeenRendered && destinationGridSize && (
@@ -157,7 +157,7 @@ export function ImportPageWizard({ snapshot, instanceRemap, setInstanceRemap, do
 
 			<CCol xs={12}>
 				<CButton color="warning" onClick={doImport2} disabled={isRunning}>
-					Import to page {pageNumber}
+					{pageNumber == -1 ? 'Import to new page' : `Import to page ${pageNumber}`}
 				</CButton>
 			</CCol>
 		</CRow>
