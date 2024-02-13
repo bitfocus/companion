@@ -14,12 +14,14 @@ interface ButtonGridHeaderProps {
 	pageNumber: number
 	changePage?: (delta: number) => void
 	setPage?: (page: number) => void
+	newPageAtEnd?: boolean
 }
 
 export const ButtonGridHeader = memo<React.PropsWithChildren<ButtonGridHeaderProps>>(function ButtonGridHeader({
 	pageNumber,
 	changePage,
 	setPage,
+	newPageAtEnd,
 	children,
 }) {
 	const pagesContext = useContext(PagesContext)
@@ -42,13 +44,21 @@ export const ButtonGridHeader = memo<React.PropsWithChildren<ButtonGridHeaderPro
 	}, [changePage])
 
 	const pageOptions: SelectOption[] = useMemo(() => {
-		return Object.entries(pagesContext)
+		const pageOptions: SelectOption[] = Object.entries(pagesContext)
 			.filter((pg): pg is [string, PageModel] => !!pg[1])
 			.map(([index, value]) => ({
 				value: Number(index),
 				label: `${index} (${value.name})`,
 			}))
-	}, [pagesContext])
+
+		if (newPageAtEnd) {
+			pageOptions.push({
+				value: -1,
+				label: `Insert new page`,
+			})
+		}
+		return pageOptions
+	}, [pagesContext, newPageAtEnd])
 
 	const currentValue: SelectOption | undefined = useMemo(() => {
 		return (
