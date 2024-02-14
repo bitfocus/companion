@@ -5,7 +5,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faArrowsLeftRight, faArrowsAlt, faCompass, faCopy, faEraser, faTrash } from '@fortawesome/free-solid-svg-icons'
 import classnames from 'classnames'
 import { GenericConfirmModal, GenericConfirmModalRef } from '../Components/GenericConfirmModal.js'
-import { useElementSize } from 'usehooks-ts'
+import { useResizeObserver } from 'usehooks-ts'
 import { ControlLocation } from '@companion/shared/Model/Common.js'
 import { IconProp } from '@fortawesome/fontawesome-svg-core'
 
@@ -57,8 +57,10 @@ export const ButtonGridActions = forwardRef<ButtonGridActionsRef, ButtonGridActi
 		setActiveFunctionButton(null)
 	}, [])
 
-	const [setSizeRef, holderSize] = useElementSize()
-	const useCompactButtons = holderSize.width < 650 // Cutoff for what of the action buttons fit in their large mode
+	const setSizeRef = useRef(null)
+	const holderSize = useResizeObserver({ ref: setSizeRef })
+	console.log('holderSize', holderSize)
+	const useCompactButtons = (holderSize.width ?? 0) < 650 // Cutoff for what of the action buttons fit in their large mode
 
 	const getButton = (label: string, icon: IconProp, func: string) => {
 		let color = 'light'
