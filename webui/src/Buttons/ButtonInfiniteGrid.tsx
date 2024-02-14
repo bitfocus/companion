@@ -77,6 +77,28 @@ export const ButtonInfiniteGrid = forwardRef<ButtonInfiniteGridRef, ButtonInfini
 			}
 		}, [scrollerRef, minColumn, minRow, tileSize, growWidth, growHeight])
 
+		// Make the scroll position sticky when zooming
+		const tmpScrollerPosition = useRef<{ left: number; top: number }>()
+		useEffect(() => {
+			if (!scrollerRef) return
+			const scrollerRef2 = scrollerRef
+			const drawScale2 = drawScale ?? 1
+
+			// The maths isn't 100% pixel accurate, but its only a slight shift so is acceptable
+
+			if (tmpScrollerPosition.current) {
+				scrollerRef2.scrollLeft = tmpScrollerPosition.current.left * drawScale2
+				scrollerRef2.scrollTop = tmpScrollerPosition.current.top * drawScale2
+			}
+
+			return () => {
+				tmpScrollerPosition.current = {
+					left: scrollerRef2.scrollLeft / drawScale2,
+					top: scrollerRef2.scrollTop / drawScale2,
+				}
+			}
+		}, [drawScale, scrollerRef])
+
 		const setRef = useCallback(
 			(ref: HTMLDivElement) => {
 				setSizeElement(ref)
