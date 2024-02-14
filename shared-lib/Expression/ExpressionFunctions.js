@@ -1,4 +1,4 @@
-import { pad } from '../../Resources/Util.js'
+import { pad } from '../Util.js'
 
 // Note: when adding new functions, make sure to update the docs!
 /** @type {Record<string, (...args: any[]) => any>} */

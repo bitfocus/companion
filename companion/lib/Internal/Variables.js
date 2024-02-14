@@ -200,7 +200,7 @@ export default class Variables {
 	}
 
 	/**
-	 * @param {import('../Shared/Model/FeedbackModel.js').FeedbackInstance} feedback
+	 * @param {import('@companion/shared/Model/FeedbackModel.js').FeedbackInstance} feedback
 	 * @returns {void}
 	 */
 	forgetFeedback(feedback) {
@@ -235,8 +235,8 @@ export default class Variables {
 	/**
 	 *
 	 * @param {import('./Types.js').InternalVisitor} visitor
-	 * @param {import('../Shared/Model/ActionModel.js').ActionInstance[]} _actions
-	 * @param {import('../Shared/Model/FeedbackModel.js').FeedbackInstance[]} feedbacks
+	 * @param {import('@companion/shared/Model/ActionModel.js').ActionInstance[]} _actions
+	 * @param {import('@companion/shared/Model/FeedbackModel.js').FeedbackInstance[]} feedbacks
 	 */
 	visitReferences(visitor, _actions, feedbacks) {
 		for (const feedback of feedbacks) {

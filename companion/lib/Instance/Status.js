@@ -4,7 +4,7 @@ import LogController from '../Log/Controller.js'
 import { EventEmitter } from 'events'
 
 /**
- * @typedef {import('../Shared/Model/Common.js').ConnectionStatusEntry} StatusEntry
+ * @typedef {import('@companion/shared/Model/Common.js').ConnectionStatusEntry} StatusEntry
  */
 
 export default class Status extends EventEmitter {

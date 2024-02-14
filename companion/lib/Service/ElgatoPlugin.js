@@ -1,7 +1,7 @@
 import LogController from '../Log/Controller.js'
 import ServiceBase from './Base.js'
 import { WebSocketServer, WebSocket } from 'ws'
-import { oldBankIndexToXY } from '../Shared/ControlId.js'
+import { oldBankIndexToXY } from '@companion/shared/ControlId.js'
 import { EventEmitter } from 'events'
 import ImageWriteQueue from '../Resources/ImageWriteQueue.js'
 import imageRs from '@julusian/image-rs'

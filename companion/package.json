@@ -7,11 +7,10 @@
 	"private": true,
 	"scripts": {
 		"dev": "yarn dev:inner --admin-address 127.0.0.1 --log-level debug",
-		"dev:inner": "yarn build:writefile && yarn zx ./tools/dev.mjs -- --extra-module-path=./module-local-dev",
+		"dev:inner": "yarn build:writefile && run -TB zx ../tools/dev.mjs -- --extra-module-path=../module-local-dev",
 		"dev:debug": "yarn dev:inner --admin-address 127.0.0.1 --log-level silly",
 		"test": "node --max-old-space-size=4000 --experimental-vm-modules ../node_modules/jest/bin/jest.js",
 		"jsdoc": "jsdoc -c jsdoc.json",
-		"build:writefile": "zx ../tools/build_writefile.mjs",
 		"check-types": "tsc --noEmit",
 		"watch-types": "tsc --noEmit --watch"
 	},
@@ -57,9 +56,8 @@
 	},
 	"dependencies": {
 		"@companion-module/base": "~1.7.0",
+		"@companion/shared": "*",
 		"@elgato-stream-deck/node": "^6.0.0",
-		"@jsep-plugin/numbers": "^1.0.1",
-		"@jsep-plugin/template": "^1.0.3",
 		"@julusian/image-rs": "^0.2.1",
 		"@julusian/jpeg-turbo": "^2.1.0",
 		"@julusian/skia-canvas": "^1.0.5",
@@ -87,7 +85,6 @@
 		"get-port": "^7.0.0",
 		"got": "^13.0.0",
 		"infinitton-idisplay": "^1.1.2",
-		"jsep": "^1.3.8",
 		"jsonpath-plus": "^8.0.0",
 		"lodash-es": "^4.17.21",
 		"lru-cache": "^10.2.0",

@@ -304,7 +304,7 @@ class SocketEventsHandler {
 
 	/**
 	 * Inform the child instance class about an updated feedback
-	 * @param {import('../Shared/Model/FeedbackModel.js').FeedbackInstance} feedback
+	 * @param {import('@companion/shared/Model/FeedbackModel.js').FeedbackInstance} feedback
 	 * @param {string} controlId
 	 * @returns {Promise<void>}
 	 */
@@ -335,7 +335,7 @@ class SocketEventsHandler {
 
 	/**
 	 *
-	 * @param {import('../Shared/Model/FeedbackModel.js').FeedbackInstance} feedback
+	 * @param {import('@companion/shared/Model/FeedbackModel.js').FeedbackInstance} feedback
 	 * @param {string} controlId
 	 * @returns {Promise<import('@companion-module/base').CompanionOptionValues | undefined | void>}
 	 */
@@ -377,7 +377,7 @@ class SocketEventsHandler {
 
 	/**
 	 * Inform the child instance class about an feedback that has been deleted
-	 * @param {import('../Shared/Model/FeedbackModel.js').FeedbackInstance} oldFeedback
+	 * @param {import('@companion/shared/Model/FeedbackModel.js').FeedbackInstance} oldFeedback
 	 * @returns {Promise<void>}
 	 */
 	async feedbackDelete(oldFeedback) {
@@ -393,7 +393,7 @@ class SocketEventsHandler {
 
 	/**
 	 * Inform the child instance class about an updated action
-	 * @param {import('../Shared/Model/ActionModel.js').ActionInstance} action
+	 * @param {import('@companion/shared/Model/ActionModel.js').ActionInstance} action
 	 * @param {string} controlId
 	 * @returns {Promise<void>}
 	 */
@@ -417,7 +417,7 @@ class SocketEventsHandler {
 	}
 	/**
 	 * Inform the child instance class about an action that has been deleted
-	 * @param {import('../Shared/Model/ActionModel.js').ActionInstance} oldAction
+	 * @param {import('@companion/shared/Model/ActionModel.js').ActionInstance} oldAction
 	 * @returns {Promise<void>}
 	 */
 	async actionDelete(oldAction) {
@@ -433,7 +433,7 @@ class SocketEventsHandler {
 
 	/**
 	 *
-	 * @param {import('../Shared/Model/ActionModel.js').ActionInstance} action
+	 * @param {import('@companion/shared/Model/ActionModel.js').ActionInstance} action
 	 * @param {string} controlId
 	 * @returns {Promise<import('@companion-module/base').CompanionOptionValues | undefined | void>}
 	 */
@@ -469,7 +469,7 @@ class SocketEventsHandler {
 
 	/**
 	 * Tell the child instance class to execute an action
-	 * @param {import('../Shared/Model/ActionModel.js').ActionInstance} action
+	 * @param {import('@companion/shared/Model/ActionModel.js').ActionInstance} action
 	 * @param {RunActionExtras} extras
 	 * @returns {Promise<void>}
 	 */

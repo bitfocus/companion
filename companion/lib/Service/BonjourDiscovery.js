@@ -115,7 +115,7 @@ class ServiceBonjourDiscovery extends ServiceBase {
 	/**
 	 * @param {string} id
 	 * @param {any} svc
-	 * @returns {import('../Shared/Model/Common.js').ClientBonjourService}
+	 * @returns {import('@companion/shared/Model/Common.js').ClientBonjourService}
 	 */
 	#convertService(id, svc) {
 		return {

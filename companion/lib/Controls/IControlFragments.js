@@ -6,9 +6,9 @@ import FragmentFeedbacks from './Fragments/FragmentFeedbacks.js'
  */
 
 /**
- * @typedef {import('../Shared/Model/ActionModel.js').ActionInstance} ActionInstance
- * @typedef {import('../Shared/Model/FeedbackModel.js').FeedbackInstance} FeedbackInstance
- * @typedef {import('../Shared/Model/EventModel.js').EventInstance} EventInstance
+ * @typedef {import('@companion/shared/Model/ActionModel.js').ActionInstance} ActionInstance
+ * @typedef {import('@companion/shared/Model/FeedbackModel.js').FeedbackInstance} FeedbackInstance
+ * @typedef {import('@companion/shared/Model/EventModel.js').EventInstance} EventInstance
  */
 
 /**

@@ -316,7 +316,7 @@ class SurfaceController extends CoreBase {
 			'emulator:startup',
 			/**
 			 * @param {string} id
-			 * @returns {import('../Shared/Model/Common.js').EmulatorConfig}
+			 * @returns {import('@companion/shared/Model/Common.js').EmulatorConfig}
 			 */
 			(id) => {
 				const fullId = EmulatorRoom(id)
@@ -1450,8 +1450,8 @@ class SurfaceController extends CoreBase {
 export default SurfaceController
 
 /**
- * @typedef {import('../Shared/Model/Surfaces.js').ClientSurfaceItem} ClientSurfaceItem
- * @typedef {import('../Shared/Model/Surfaces.js').ClientDevicesListItem} ClientDevicesListItem
+ * @typedef {import('@companion/shared/Model/Surfaces.js').ClientSurfaceItem} ClientSurfaceItem
+ * @typedef {import('@companion/shared/Model/Surfaces.js').ClientDevicesListItem} ClientDevicesListItem
  */
 
 /**

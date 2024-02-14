@@ -1,4 +1,4 @@
-import { ParseControlId } from '../../../../Shared/ControlId.js'
+import { ParseControlId } from '@companion/shared/ControlId.js'
 import LogController from '../../../../Log/Controller.js'
 
 /** @typedef {{ id: string, delay: number }} ConnectEvent */

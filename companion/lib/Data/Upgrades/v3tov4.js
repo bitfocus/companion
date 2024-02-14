@@ -1,5 +1,5 @@
 import { cloneDeep } from 'lodash-es'
-import { oldBankIndexToXY } from '../../Shared/ControlId.js'
+import { oldBankIndexToXY } from '@companion/shared/ControlId.js'
 import { nanoid } from 'nanoid'
 
 /**
@@ -77,11 +77,11 @@ function ParseBankControlId(controlId) {
 }
 
 /**
- * @param {{ triggers?: import('../../Shared/Model/TriggerModel.js').TriggerModel[] | Record<string, import('../../Shared/Model/TriggerModel.js').TriggerModel>; }} obj
+ * @param {{ triggers?: import('@companion/shared/Model/TriggerModel.js').TriggerModel[] | Record<string, import('@companion/shared/Model/TriggerModel.js').TriggerModel>; }} obj
  */
 function ensureTriggersAreObject(obj) {
 	if (obj.triggers && Array.isArray(obj.triggers)) {
-		/** @type {Record<string, import('../../Shared/Model/TriggerModel.js').TriggerModel>} */
+		/** @type {Record<string, import('@companion/shared/Model/TriggerModel.js').TriggerModel>} */
 		const triggersObj = {}
 		for (const trigger of obj.triggers) {
 			triggersObj[nanoid()] = trigger

@@ -1,4 +1,4 @@
-import { oldBankIndexToXY } from '../Shared/ControlId.js'
+import { oldBankIndexToXY } from '@companion/shared/ControlId.js'
 import ServiceTcpBase from './TcpBase.js'
 
 /**

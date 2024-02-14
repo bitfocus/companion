@@ -1,13 +1,12 @@
 {
 	"source": {
-		"include": ["lib", "package.json", "README.md"],
-		"exclude": ["lib/Resources/Font.js"],
+		"include": ["lib", "package.json", "../README.md"],
 		"includePattern": ".js$",
 		"excludePattern": "(node_modules/|docs/)"
 	},
 	"opts": {
 		"encoding": "utf8",
-		"readme": "./README.md",
+		"readme": "../README.md",
 		"destination": "docs/jsdoc/",
 		"recurse": true,
 		"verbose": true

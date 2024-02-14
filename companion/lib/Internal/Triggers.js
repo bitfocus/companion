@@ -16,7 +16,7 @@
  */
 
 import { rgb } from '../Resources/Util.js'
-import { CreateTriggerControlId } from '../Shared/ControlId.js'
+import { CreateTriggerControlId } from '@companion/shared/ControlId.js'
 import debounceFn from 'debounce-fn'
 
 export default class Triggers {
@@ -86,9 +86,9 @@ export default class Triggers {
 
 	/**
 	 * Perform an upgrade for an action
-	 * @param {import('../Shared/Model/ActionModel.js').ActionInstance} action
+	 * @param {import('@companion/shared/Model/ActionModel.js').ActionInstance} action
 	 * @param {string} _controlId
-	 * @returns {import('../Shared/Model/ActionModel.js').ActionInstance | void} Updated action if any changes were made
+	 * @returns {import('@companion/shared/Model/ActionModel.js').ActionInstance | void} Updated action if any changes were made
 	 */
 	actionUpgrade(action, _controlId) {
 		if (action.action === 'trigger_enabled' && !isNaN(Number(action.options.trigger_id))) {
@@ -100,7 +100,7 @@ export default class Triggers {
 
 	/**
 	 * Run a single internal action
-	 * @param {import('../Shared/Model/ActionModel.js').ActionInstance} action
+	 * @param {import('@companion/shared/Model/ActionModel.js').ActionInstance} action
 	 * @param {import('../Instance/Wrapper.js').RunActionExtras} _extras
 	 * @returns {boolean} Whether the action was handled
 	 */

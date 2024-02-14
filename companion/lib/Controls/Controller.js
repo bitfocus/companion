@@ -3,7 +3,12 @@ import ControlButtonNormal from './ControlTypes/Button/Normal.js'
 import ControlButtonPageDown from './ControlTypes/PageDown.js'
 import ControlButtonPageNumber from './ControlTypes/PageNumber.js'
 import ControlButtonPageUp from './ControlTypes/PageUp.js'
-import { CreateBankControlId, CreateTriggerControlId, ParseControlId, formatLocation } from '../Shared/ControlId.js'
+import {
+	CreateBankControlId,
+	CreateTriggerControlId,
+	ParseControlId,
+	formatLocation,
+} from '@companion/shared/ControlId.js'
 import { ControlConfigRoom } from './ControlBase.js'
 import ActionRunner from './ActionRunner.js'
 import ActionRecorder from './ActionRecorder.js'
@@ -16,7 +21,7 @@ export const TriggersListRoom = 'triggers:list'
 const ActiveLearnRoom = 'learn:active'
 
 /**
- * @typedef {import('../Shared/Model/ButtonModel.js').SomeButtonModel | import('../Shared/Model/TriggerModel.js').TriggerModel} SomeControlModel
+ * @typedef {import('@companion/shared/Model/ButtonModel.js').SomeButtonModel | import('@companion/shared/Model/TriggerModel.js').TriggerModel} SomeControlModel
  */
 
 /**
@@ -1431,7 +1436,7 @@ class ControlsController extends CoreBase {
 	/**
 	 * Import a control
 	 * @param {import('../Resources/Util.js').ControlLocation} location Location to import to
-	 * @param {import('../Shared/Model/ButtonModel.js').SomeButtonModel} definition object to import
+	 * @param {import('@companion/shared/Model/ButtonModel.js').SomeButtonModel} definition object to import
 	 * @param {string=} forceControlId
 	 * @returns
 	 * @access public
@@ -1469,7 +1474,7 @@ class ControlsController extends CoreBase {
 	/**
 	 * Import a trigger
 	 * @param {string} controlId Id for the trigger
-	 * @param {import('../Shared/Model/TriggerModel.js').TriggerModel} definition object to import
+	 * @param {import('@companion/shared/Model/TriggerModel.js').TriggerModel} definition object to import
 	 * @returns
 	 * @access public
 	 */

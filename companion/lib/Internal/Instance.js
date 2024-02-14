@@ -280,7 +280,7 @@ export default class Instance {
 
 	/**
 	 * Run a single internal action
-	 * @param {import('../Shared/Model/ActionModel.js').ActionInstance} action
+	 * @param {import('@companion/shared/Model/ActionModel.js').ActionInstance} action
 	 * @param {import('../Instance/Wrapper.js').RunActionExtras} _extras
 	 * @returns {boolean} Whether the action was handled
 	 */
@@ -430,8 +430,8 @@ export default class Instance {
 	/**
 	 *
 	 * @param {import('./Types.js').InternalVisitor} visitor
-	 * @param {import('../Shared/Model/ActionModel.js').ActionInstance[]} actions
-	 * @param {import('../Shared/Model/FeedbackModel.js').FeedbackInstance[]} feedbacks
+	 * @param {import('@companion/shared/Model/ActionModel.js').ActionInstance[]} actions
+	 * @param {import('@companion/shared/Model/FeedbackModel.js').FeedbackInstance[]} feedbacks
 	 */
 	visitReferences(visitor, actions, feedbacks) {
 		for (const action of actions) {

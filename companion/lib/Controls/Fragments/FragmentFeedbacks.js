@@ -4,7 +4,7 @@ import { cloneDeep, isEqual } from 'lodash-es'
 import { nanoid } from 'nanoid'
 
 /**
- * @typedef {import('../../Shared/Model/FeedbackModel.js').FeedbackInstance} FeedbackInstance
+ * @typedef {import('@companion/shared/Model/FeedbackModel.js').FeedbackInstance} FeedbackInstance
  */
 
 /**
@@ -32,7 +32,7 @@ import { nanoid } from 'nanoid'
 export default class FragmentFeedbacks extends CoreBase {
 	/**
 	 * The defaults style for a button
-	 * @type {import('../../Shared/Model/StyleModel.js').ButtonStyleProperties}
+	 * @type {import('@companion/shared/Model/StyleModel.js').ButtonStyleProperties}
 	 * @access public
 	 * @static
 	 */
@@ -50,7 +50,7 @@ export default class FragmentFeedbacks extends CoreBase {
 
 	/**
 	 * The base style without feedbacks applied
-	 * @type {import('../../Shared/Model/StyleModel.js').ButtonStyleProperties}
+	 * @type {import('@companion/shared/Model/StyleModel.js').ButtonStyleProperties}
 	 * @access public
 	 */
 	baseStyle = cloneDeep(FragmentFeedbacks.DefaultStyle)
@@ -580,13 +580,13 @@ export default class FragmentFeedbacks extends CoreBase {
 	/**
 	 * Get the unparsed style for these feedbacks
 	 * Note: Does not clone the style
-	 * @returns {import('../../Shared/Model/StyleModel.js').UnparsedButtonStyle} the unprocessed style
+	 * @returns {import('@companion/shared/Model/StyleModel.js').UnparsedButtonStyle} the unprocessed style
 	 * @access public
 	 */
 	getUnparsedStyle() {
 		if (this.#booleanOnly) throw new Error('FragmentFeedbacks not setup to use styles')
 
-		/** @type {import('../../Shared/Model/StyleModel.js').UnparsedButtonStyle} */
+		/** @type {import('@companion/shared/Model/StyleModel.js').UnparsedButtonStyle} */
 		let style = {
 			...this.baseStyle,
 			imageBuffers: [],

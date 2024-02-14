@@ -203,12 +203,12 @@ class InstanceDefinitions extends CoreBase {
 	/**
 	 *
 	 * @param {string} eventType
-	 * @returns {import('../Shared/Model/EventModel.js').EventInstance | null}
+	 * @returns {import('@companion/shared/Model/EventModel.js').EventInstance | null}
 	 */
 	createEventItem(eventType) {
 		const definition = EventDefinitions[eventType]
 		if (definition) {
-			/** @type {import('../Shared/Model/EventModel.js').EventInstance} */
+			/** @type {import('@companion/shared/Model/EventModel.js').EventInstance} */
 			const event = {
 				id: nanoid(),
 				type: eventType,
@@ -289,7 +289,7 @@ class InstanceDefinitions extends CoreBase {
 		const definition = this.#presetDefinitions[connectionId]?.[presetId]
 		if (!definition) return false
 
-		/** @type {import('../Shared/Model/ButtonModel.js').NormalButtonModel} */
+		/** @type {import('@companion/shared/Model/ButtonModel.js').NormalButtonModel} */
 		const result = {
 			type: 'button',
 			options: {
@@ -311,7 +311,7 @@ class InstanceDefinitions extends CoreBase {
 		}
 		if (definition.steps) {
 			for (let i = 0; i < definition.steps.length; i++) {
-				/** @type {import('../Shared/Model/ButtonModel.js').NormalButtonSteps[0]} */
+				/** @type {import('@companion/shared/Model/ButtonModel.js').NormalButtonSteps[0]} */
 				const newStep = {
 					action_sets: {},
 					options: cloneDeep(definition.steps[i].options) ?? cloneDeep(ControlButtonNormal.DefaultStepOptions),
@@ -558,16 +558,16 @@ class InstanceDefinitions extends CoreBase {
 export default InstanceDefinitions
 
 /**
- * @typedef {import('../Shared/Model/Options.js').ActionDefinition} ActionDefinition
- * @typedef {import('../Shared/Model/Options.js').FeedbackDefinition} FeedbackDefinition
+ * @typedef {import('@companion/shared/Model/Options.js').ActionDefinition} ActionDefinition
+ * @typedef {import('@companion/shared/Model/Options.js').FeedbackDefinition} FeedbackDefinition
  */
 
 /**
- * @typedef {import('../Shared/Model/Presets.js').PresetFeedbackInstance} PresetFeedbackInstance
- * @typedef {import('../Shared/Model/Presets.js').PresetActionInstance} PresetActionInstance
- * @typedef {import('../Shared/Model/Presets.js').PresetActionSets} PresetActionSets
- * @typedef {import('../Shared/Model/Presets.js').PresetActionSteps} PresetActionSteps
- * @typedef {import('../Shared/Model/Presets.js').PresetDefinition} PresetDefinition
+ * @typedef {import('@companion/shared/Model/Presets.js').PresetFeedbackInstance} PresetFeedbackInstance
+ * @typedef {import('@companion/shared/Model/Presets.js').PresetActionInstance} PresetActionInstance
+ * @typedef {import('@companion/shared/Model/Presets.js').PresetActionSets} PresetActionSets
+ * @typedef {import('@companion/shared/Model/Presets.js').PresetActionSteps} PresetActionSteps
+ * @typedef {import('@companion/shared/Model/Presets.js').PresetDefinition} PresetDefinition
  */
 
 /**
@@ -577,5 +577,5 @@ export default InstanceDefinitions
  */
 
 /**
- * @typedef {import('../Shared/Model/Presets.js').UIPresetDefinition} UIPresetDefinition
+ * @typedef {import('@companion/shared/Model/Presets.js').UIPresetDefinition} UIPresetDefinition
  */

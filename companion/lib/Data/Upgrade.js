@@ -65,7 +65,7 @@ export function upgradeStartup(db) {
 /**
  * Upgrade an exported page or full configuration to the latest format
  * @param {any} obj
- * @returns {import('../Shared/Model/ExportModel.js').SomeExportv4}
+ * @returns {import('@companion/shared/Model/ExportModel.js').SomeExportv4}
  */
 export function upgradeImport(obj) {
 	const currentVersion = obj.version || 1

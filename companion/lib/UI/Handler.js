@@ -164,7 +164,7 @@ class UIHandler {
 		const client = new ClientSocket(rawClient, this.#logger)
 
 		client.onPromise('app-version-info', () => {
-			/** @type {import('../Shared/Model/Common.js').AppVersionInfo} */
+			/** @type {import('@companion/shared/Model/Common.js').AppVersionInfo} */
 			return {
 				appVersion: this.registry.appInfo.appVersion,
 				appBuild: this.registry.appInfo.appBuild,

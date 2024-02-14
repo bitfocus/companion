@@ -15,9 +15,9 @@ function SessionRoom(id) {
 }
 
 /**
- * @typedef {import('../Shared/Model/ActionRecorderModel.js').RecordSessionInfo} RecordSessionInfo
- * @typedef {import('../Shared/Model/ActionRecorderModel.js').RecordSessionListInfo} RecordSessionListInfo
- * @typedef {import('../Shared/Model/ActionRecorderModel.js').RecordActionTmp} RecordActionTmp
+ * @typedef {import('@companion/shared/Model/ActionRecorderModel.js').RecordSessionInfo} RecordSessionInfo
+ * @typedef {import('@companion/shared/Model/ActionRecorderModel.js').RecordSessionListInfo} RecordSessionListInfo
+ * @typedef {import('@companion/shared/Model/ActionRecorderModel.js').RecordActionTmp} RecordActionTmp
  */
 
 /**

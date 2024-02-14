@@ -23,7 +23,7 @@ import ModuleHost, { ConnectionDebugLogRoom } from './Host.js'
 import InstanceStatus from './Status.js'
 import { cloneDeep } from 'lodash-es'
 import jsonPatch from 'fast-json-patch'
-import { isLabelValid, makeLabelSafe } from '../Shared/Label.js'
+import { isLabelValid, makeLabelSafe } from '@companion/shared/Label.js'
 import InstanceModules from './Modules.js'
 
 const InstancesRoom = 'instances'
@@ -40,7 +40,7 @@ const InstancesRoom = 'instances'
  * }} ConnectionConfig
  */
 /**
- * @typedef {import('../Shared/Model/Common.js').ClientConnectionConfig} ClientConnectionConfig
+ * @typedef {import('@companion/shared/Model/Common.js').ClientConnectionConfig} ClientConnectionConfig
  */
 /**
  * @typedef {{
@@ -429,7 +429,7 @@ class Instance extends CoreBase {
 	 * @param {string} instanceId
 	 * @param {boolean} minimal
 	 * @param {boolean} clone
-	 * @returns {import('../Shared/Model/ExportModel.js').ExportInstanceFullv4 | import('../Shared/Model/ExportModel.js').ExportInstanceMinimalv4}
+	 * @returns {import('@companion/shared/Model/ExportModel.js').ExportInstanceFullv4 | import('@companion/shared/Model/ExportModel.js').ExportInstanceMinimalv4}
 	 */
 	exportInstance(instanceId, minimal = false, clone = true) {
 		const rawObj = this.store.db[instanceId]

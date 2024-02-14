@@ -12,7 +12,7 @@ import os from 'os'
 
 // This is a messy way to load a package.json, but createRequire, or path.resolve aren't webpack safe
 const moduleBasePkgStr = fs
-	.readFileSync(new URL('../../node_modules/@companion-module/base/package.json', import.meta.url))
+	.readFileSync(new URL('../../../node_modules/@companion-module/base/package.json', import.meta.url))
 	.toString()
 const moduleBasePkg = JSON.parse(moduleBasePkgStr)
 

@@ -31,7 +31,7 @@ try {
 		buildNumber = '0.0.0-JEST'
 	} else {
 		buildNumber = fs
-			.readFileSync(new URL('../BUILD', import.meta.url))
+			.readFileSync(new URL('../../BUILD', import.meta.url)) // nocommit verify this works once built
 			.toString()
 			.trim()
 			.replace(/^-/, '')

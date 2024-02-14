@@ -30,7 +30,7 @@ export function EmulatorRoom(id) {
 	return `emulator:${id}`
 }
 
-/** @type {import('../../Shared/Model/Common.js').EmulatorConfig} */
+/** @type {import('@companion/shared/Model/Common.js').EmulatorConfig} */
 const DefaultConfig = {
 	emulator_control_enable: false,
 	emulator_prompt_fullscreen: false,
@@ -53,7 +53,7 @@ class SurfaceIPElgatoEmulator extends EventEmitter {
 	#io
 
 	/**
-	 * @type {import('../../Shared/Model/Common.js').EmulatorConfig}
+	 * @type {import('@companion/shared/Model/Common.js').EmulatorConfig}
 	 * @access private
 	 */
 	#lastSentConfigJson = cloneDeep(DefaultConfig)
@@ -72,7 +72,7 @@ class SurfaceIPElgatoEmulator extends EventEmitter {
 	#emitChanged = debounceFn(
 		() => {
 			if (this.#pendingBufferUpdates.size > 0) {
-				/** @type {import('../../Shared/Model/Common.js').EmulatorImage[]} */
+				/** @type {import('@companion/shared/Model/Common.js').EmulatorImage[]} */
 				const newImages = []
 				for (const [x, y] of this.#pendingBufferUpdates.values()) {
 					newImages.push({
@@ -129,7 +129,7 @@ class SurfaceIPElgatoEmulator extends EventEmitter {
 
 	/**
 	 * @param {import('../../UI/Handler.js').ClientSocket} client
-	 * @returns {import('../../Shared/Model/Common.js').EmulatorConfig}
+	 * @returns {import('@companion/shared/Model/Common.js').EmulatorConfig}
 	 */
 	setupClient(client) {
 		client.emit('emulator:images', this.imageCache)
@@ -143,7 +143,7 @@ class SurfaceIPElgatoEmulator extends EventEmitter {
 
 	/**
 	 * Process the information from the GUI and what is saved in database
-	 * @param {import('../../Shared/Model/Common.js').EmulatorConfig} config
+	 * @param {import('@companion/shared/Model/Common.js').EmulatorConfig} config
 	 * @param {boolean=} _force
 	 * @returns {void}
 	 */

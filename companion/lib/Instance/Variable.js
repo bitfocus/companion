@@ -19,9 +19,9 @@ import LogController from '../Log/Controller.js'
 import CoreBase from '../Core/Base.js'
 import InstanceCustomVariable from './CustomVariable.js'
 import jsonPatch from 'fast-json-patch'
-import { ResolveExpression } from '../Shared/Expression/ExpressionResolve.js'
-import { ParseExpression } from '../Shared/Expression/ExpressionParse.js'
-import { ExpressionFunctions } from '../Shared/Expression/ExpressionFunctions.js'
+import { ResolveExpression } from '@companion/shared/Expression/ExpressionResolve.js'
+import { ParseExpression } from '@companion/shared/Expression/ExpressionParse.js'
+import { ExpressionFunctions } from '@companion/shared/Expression/ExpressionFunctions.js'
 
 const logger = LogController.createLogger('Instance/Variable')
 
@@ -108,7 +108,7 @@ class InstanceVariable extends CoreBase {
 	#variableValues = {}
 
 	/**
-	 * @type {import('../Shared/Model/Variables.js').AllVariableDefinitions}
+	 * @type {import('@companion/shared/Model/Variables.js').AllVariableDefinitions}
 	 */
 	#variableDefinitions = {}
 
@@ -321,11 +321,11 @@ class InstanceVariable extends CoreBase {
 	setVariableDefinitions(instance_label, variables) {
 		this.logger.silly('got instance variable definitions for ' + instance_label)
 
-		/** @type {import('../Shared/Model/Variables.js').ModuleVariableDefinitions} */
+		/** @type {import('@companion/shared/Model/Variables.js').ModuleVariableDefinitions} */
 		const variablesObj = {}
 		for (const variable of variables || []) {
 			// Prune out the name
-			/** @type {import('../Shared/Model/Variables.js').VariableDefinition} */
+			/** @type {import('@companion/shared/Model/Variables.js').VariableDefinition} */
 			const newVarObj = {
 				label: variable.label,
 			}

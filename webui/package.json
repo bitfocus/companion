@@ -4,7 +4,7 @@
   "private": true,
   "type": "module",
   "dependencies": {
-    "@companion/shared": "link:../lib/Shared",
+    "@companion/shared": "*",
     "@coreui/coreui": "^3.4.0",
     "@coreui/react": "^3.4.6",
     "@fontsource/fira-code": "^5.0.16",

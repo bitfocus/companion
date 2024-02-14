@@ -21,7 +21,7 @@ import os from 'os'
 import { upgradeImport } from '../Data/Upgrade.js'
 import { cloneDeep } from 'lodash-es'
 import { getTimestamp, isFalsey } from '../Resources/Util.js'
-import { CreateTriggerControlId, ParseControlId } from '../Shared/ControlId.js'
+import { CreateTriggerControlId, ParseControlId } from '@companion/shared/ControlId.js'
 import CoreBase from '../Core/Base.js'
 import archiver from 'archiver'
 import { VisitorReferencesUpdater } from '../Util/Visitors/ReferencesUpdater.js'
@@ -30,7 +30,7 @@ import fs from 'fs'
 import zlib from 'node:zlib'
 import { stringify as csvStringify } from 'csv-stringify/sync'
 import { visitEventOptions } from '../Resources/EventDefinitions.js'
-import { compareExportedInstances } from '../Shared/Import.js'
+import { compareExportedInstances } from '@companion/shared/Import.js'
 
 /**
  * Default buttons on fresh pages
@@ -99,11 +99,11 @@ function downloadBlob(logger, res, next, data, filename, format) {
 
 /**
  *
- * @param {import('../Shared/Model/ExportModel.js').ExportPageContentv4} pageInfo
- * @returns {import('../Shared/Model/UserConfigModel.js').UserConfigGridSize}
+ * @param {import('@companion/shared/Model/ExportModel.js').ExportPageContentv4} pageInfo
+ * @returns {import('@companion/shared/Model/UserConfigModel.js').UserConfigGridSize}
  */
 const find_smallest_grid_for_page = (pageInfo) => {
-	/** @type {import('../Shared/Model/UserConfigModel.js').UserConfigGridSize} */
+	/** @type {import('@companion/shared/Model/UserConfigModel.js').UserConfigGridSize} */
 	const gridSize = {
 		minColumn: 0,
 		maxColumn: 7,
@@ -154,14 +154,14 @@ class DataImportExport extends CoreBase {
 		 * @param {Set<string>} referencedConnectionIds
 		 * @param {Set<string>} referencedConnectionLabels
 		 * @param {boolean} minimalExport
-		 * @returns {import('../Shared/Model/ExportModel.js').ExportInstancesv4}
+		 * @returns {import('@companion/shared/Model/ExportModel.js').ExportInstancesv4}
 		 */
 		const generate_export_for_referenced_instances = (
 			referencedConnectionIds,
 			referencedConnectionLabels,
 			minimalExport = false
 		) => {
-			/** @type {import('../Shared/Model/ExportModel.js').ExportInstancesv4} */
+			/** @type {import('@companion/shared/Model/ExportModel.js').ExportInstancesv4} */
 			const instancesExport = {}
 
 			referencedConnectionIds.delete('internal') // Ignore the internal module
@@ -183,10 +183,10 @@ class DataImportExport extends CoreBase {
 		/**
 		 *
 		 * @param {*} triggerControls
-		 * @returns {import('../Shared/Model/ExportModel.js').ExportTriggersListv4}
+		 * @returns {import('@companion/shared/Model/ExportModel.js').ExportTriggersListv4}
 		 */
 		const generate_export_for_triggers = (triggerControls) => {
-			/** @type {Record<string, import('../Shared/Model/ExportModel.js').ExportTriggerContentv4>} */
+			/** @type {Record<string, import('@companion/shared/Model/ExportModel.js').ExportTriggerContentv4>} */
 			const triggersExport = {}
 			const referencedConnectionIds = new Set()
 			const referencedConnectionLabels = new Set()
@@ -257,7 +257,7 @@ class DataImportExport extends CoreBase {
 				)
 
 				// Export file protocol version
-				/** @type {import('../Shared/Model/ExportModel.js').ExportPageModelv4} */
+				/** @type {import('@companion/shared/Model/ExportModel.js').ExportPageModelv4} */
 				const exp = {
 					version: FILE_VERSION,
 					type: 'page',
@@ -273,13 +273,13 @@ class DataImportExport extends CoreBase {
 		})
 
 		/**
-		 * @param {Readonly<import('../Shared/Model/PageModel.js').PageModel>} pageInfo
+		 * @param {Readonly<import('@companion/shared/Model/PageModel.js').PageModel>} pageInfo
 		 * @param {Set<string>} referencedConnectionIds
 		 * @param {Set<string>} referencedConnectionLabels
-		 * @returns {import('../Shared/Model/ExportModel.js').ExportPageContentv4}
+		 * @returns {import('@companion/shared/Model/ExportModel.js').ExportPageContentv4}
 		 */
 		const generatePageExportInfo = (pageInfo, referencedConnectionIds, referencedConnectionLabels) => {
-			/** @type {import('../Shared/Model/ExportModel.js').ExportPageContentv4} */
+			/** @type {import('@companion/shared/Model/ExportModel.js').ExportPageContentv4} */
 			const pageExport = {
 				name: pageInfo.name,
 				controls: {},
@@ -308,7 +308,7 @@ class DataImportExport extends CoreBase {
 		 */
 		const generateCustomExport = (config) => {
 			// Export file protocol version
-			/** @type {import('../Shared/Model/ExportModel.js').ExportFullv4} */
+			/** @type {import('@companion/shared/Model/ExportModel.js').ExportFullv4} */
 			const exp = {
 				version: FILE_VERSION,
 				type: 'full',
@@ -333,7 +333,7 @@ class DataImportExport extends CoreBase {
 			}
 
 			if (!config || !isFalsey(config.triggers)) {
-				/** @type {Record<string, import('../Shared/Model/ExportModel.js').ExportTriggerContentv4>} */
+				/** @type {Record<string, import('@companion/shared/Model/ExportModel.js').ExportTriggerContentv4>} */
 				const triggersExport = {}
 				for (const control of rawControls.values()) {
 					if (control.type === 'trigger') {
@@ -591,7 +591,7 @@ class DataImportExport extends CoreBase {
 				}
 
 				if (object.type === 'trigger_list') {
-					/** @type {import('../Shared/Model/ExportModel.js').ExportFullv4} */
+					/** @type {import('@companion/shared/Model/ExportModel.js').ExportFullv4} */
 					object = {
 						type: 'full',
 						version: FILE_VERSION,
@@ -628,7 +628,7 @@ class DataImportExport extends CoreBase {
 				}
 
 				/**
-				 * @param {import('../Shared/Model/ExportModel.js').ExportPageContentv4} pageInfo
+				 * @param {import('@companion/shared/Model/ExportModel.js').ExportPageContentv4} pageInfo
 				 * @returns {ClientPageInfo}
 				 */
 				function simplifyPageForClient(pageInfo) {
@@ -813,7 +813,7 @@ class DataImportExport extends CoreBase {
 		)
 
 		/**
-		 * @param {import('../Shared/Model/ExportModel.js').ExportPageContentv4} pageInfo
+		 * @param {import('@companion/shared/Model/ExportModel.js').ExportPageContentv4} pageInfo
 		 * @param {number} topage
 		 * @param {InstanceAppliedRemappings} instanceIdMap
 		 * @returns {void}
@@ -1031,7 +1031,7 @@ class DataImportExport extends CoreBase {
 	}
 
 	/**
-	 * @param {import('../Shared/Model/ExportModel.js').ExportInstancesv4 | undefined} instances
+	 * @param {import('@companion/shared/Model/ExportModel.js').ExportInstancesv4 | undefined} instances
 	 * @param {InstanceRemappings} instanceRemapping
 	 * @returns {InstanceAppliedRemappings}
 	 */
@@ -1092,9 +1092,9 @@ class DataImportExport extends CoreBase {
 	}
 
 	/**
-	 * @param {Readonly<import('../Shared/Model/ExportModel.js').ExportTriggerContentv4>} control
+	 * @param {Readonly<import('@companion/shared/Model/ExportModel.js').ExportTriggerContentv4>} control
 	 * @param {InstanceAppliedRemappings} instanceIdMap
-	 * @returns {import('../Shared/Model/TriggerModel.js').TriggerModel}
+	 * @returns {import('@companion/shared/Model/TriggerModel.js').TriggerModel}
 	 */
 	#fixupTriggerControl(control, instanceIdMap) {
 		// Future: this does not feel durable
@@ -1112,7 +1112,7 @@ class DataImportExport extends CoreBase {
 			}
 		}
 
-		/** @type {import('../Shared/Model/TriggerModel.js').TriggerModel} */
+		/** @type {import('@companion/shared/Model/TriggerModel.js').TriggerModel} */
 		const result = {
 			type: 'trigger',
 			options: cloneDeep(control.options),
@@ -1122,7 +1122,7 @@ class DataImportExport extends CoreBase {
 		}
 
 		if (control.condition) {
-			/** @type {import('../Shared/Model/FeedbackModel.js').FeedbackInstance[]} */
+			/** @type {import('@companion/shared/Model/FeedbackModel.js').FeedbackInstance[]} */
 			const newFeedbacks = []
 			for (const feedback of control.condition) {
 				const instanceInfo = instanceIdMap[feedback?.instance_id]
@@ -1137,11 +1137,11 @@ class DataImportExport extends CoreBase {
 			result.condition = newFeedbacks
 		}
 
-		/** @type {import('../Shared/Model/ActionModel.js').ActionInstance[]} */
+		/** @type {import('@companion/shared/Model/ActionModel.js').ActionInstance[]} */
 		const allActions = []
 		if (control.action_sets) {
 			for (const [setId, action_set] of Object.entries(control.action_sets)) {
-				/** @type {import('../Shared/Model/ActionModel.js').ActionInstance[]} */
+				/** @type {import('@companion/shared/Model/ActionModel.js').ActionInstance[]} */
 				const newActions = []
 				for (const action of action_set) {
 					const instanceInfo = instanceIdMap[action?.instance]
@@ -1174,9 +1174,9 @@ class DataImportExport extends CoreBase {
 	}
 
 	/**
-	 * @param {import('../Shared/Model/ExportModel.js').ExportControlv4 } control
+	 * @param {import('@companion/shared/Model/ExportModel.js').ExportControlv4 } control
 	 * @param {InstanceAppliedRemappings} instanceIdMap
-	 * @returns {import('../Shared/Model/ButtonModel.js').SomeButtonModel}
+	 * @returns {import('@companion/shared/Model/ButtonModel.js').SomeButtonModel}
 	 */
 	#fixupControl(control, instanceIdMap) {
 		// Future: this does not feel durable
@@ -1200,7 +1200,7 @@ class DataImportExport extends CoreBase {
 			}
 		}
 
-		/** @type {import('../Shared/Model/ButtonModel.js').NormalButtonModel} */
+		/** @type {import('@companion/shared/Model/ButtonModel.js').NormalButtonModel} */
 		const result = {
 			type: 'button',
 			options: cloneDeep(control.options),
@@ -1210,7 +1210,7 @@ class DataImportExport extends CoreBase {
 		}
 
 		if (control.feedbacks) {
-			/** @type {import('../Shared/Model/FeedbackModel.js').FeedbackInstance[]} */
+			/** @type {import('@companion/shared/Model/FeedbackModel.js').FeedbackInstance[]} */
 			const newFeedbacks = []
 			for (const feedback of control.feedbacks) {
 				const instanceInfo = instanceIdMap[feedback?.instance_id]
@@ -1225,11 +1225,11 @@ class DataImportExport extends CoreBase {
 			result.feedbacks = newFeedbacks
 		}
 
-		/** @type {import('../Shared/Model/ActionModel.js').ActionInstance[]} */
+		/** @type {import('@companion/shared/Model/ActionModel.js').ActionInstance[]} */
 		const allActions = []
 		if (control.steps) {
 			for (const [stepId, step] of Object.entries(control.steps)) {
-				/** @type {import('../Shared/Model/ActionModel.js').ActionSetsModel} */
+				/** @type {import('@companion/shared/Model/ActionModel.js').ActionSetsModel} */
 				const newStepSets = {}
 				result.steps[stepId] = {
 					action_sets: newStepSets,
@@ -1237,7 +1237,7 @@ class DataImportExport extends CoreBase {
 				}
 
 				for (const [setId, action_set] of Object.entries(step.action_sets)) {
-					/** @type {import('../Shared/Model/ActionModel.js').ActionInstance[]} */
+					/** @type {import('@companion/shared/Model/ActionModel.js').ActionInstance[]} */
 					const newActions = []
 					for (const action of action_set) {
 						const instanceInfo = instanceIdMap[action?.instance]
@@ -1273,10 +1273,10 @@ class DataImportExport extends CoreBase {
 	/**
 	 * Visit any references within the given control
 	 * @param {import('../Internal/Types.js').InternalVisitor} visitor Visitor to be used
-	 * @param {import('../Shared/Model/StyleModel.js').ButtonStyleProperties | undefined} style Style object of the control (if any)
-	 * @param {import('../Shared/Model/ActionModel.js').ActionInstance[]} actions Array of actions belonging to the control
-	 * @param {import('../Shared/Model/FeedbackModel.js').FeedbackInstance[]} feedbacks Array of feedbacks belonging to the control
-	 * @param {import('../Shared/Model/EventModel.js').EventInstance[] | undefined} events Array of events belonging to the control
+	 * @param {import('@companion/shared/Model/StyleModel.js').ButtonStyleProperties | undefined} style Style object of the control (if any)
+	 * @param {import('@companion/shared/Model/ActionModel.js').ActionInstance[]} actions Array of actions belonging to the control
+	 * @param {import('@companion/shared/Model/FeedbackModel.js').FeedbackInstance[]} feedbacks Array of feedbacks belonging to the control
+	 * @param {import('@companion/shared/Model/EventModel.js').EventInstance[] | undefined} events Array of events belonging to the control
 	 */
 	visitControlReferences(visitor, style, actions, feedbacks, events) {
 		// Update the base style
@@ -1313,10 +1313,10 @@ class DataImportExport extends CoreBase {
 	/**
 	 * Fixup any references within the given control
 	 * @param {FixupReferencesUpdateMaps} updateMaps Description of instance ids and labels to remap
-	 * @param {import('../Shared/Model/StyleModel.js').ButtonStyleProperties | undefined} style Style object of the control (if any)
-	 * @param {import('../Shared/Model/ActionModel.js').ActionInstance[]} actions Array of actions belonging to the control
-	 * @param {import('../Shared/Model/FeedbackModel.js').FeedbackInstance[]} feedbacks Array of feedbacks belonging to the control
-	 * @param {import('../Shared/Model/EventModel.js').EventInstance[] | undefined} events Array of events belonging to the control
+	 * @param {import('@companion/shared/Model/StyleModel.js').ButtonStyleProperties | undefined} style Style object of the control (if any)
+	 * @param {import('@companion/shared/Model/ActionModel.js').ActionInstance[]} actions Array of actions belonging to the control
+	 * @param {import('@companion/shared/Model/FeedbackModel.js').FeedbackInstance[]} feedbacks Array of feedbacks belonging to the control
+	 * @param {import('@companion/shared/Model/EventModel.js').EventInstance[] | undefined} events Array of events belonging to the control
 	 * @param {boolean} recheckChangedFeedbacks Whether to recheck the feedbacks that were modified
 	 * @returns {boolean} Whether any changes were made
 	 */
@@ -1345,14 +1345,14 @@ export default DataImportExport
  *   connectionIds?: Record<string, string>
  * }} FixupReferencesUpdateMaps
  *
- * @typedef {import('../Shared/Model/ImportExport.js').ClientPageInfo} ClientPageInfo
- * @typedef {import('../Shared/Model/ImportExport.js').ClientImportObject} ClientImportObject
- * @typedef {import('../Shared/Model/ImportExport.js').ClientImportSelection} ClientImportSelection
- * @typedef {import('../Shared/Model/ImportExport.js').ClientExportSelection} ClientExportSelection
- * @typedef {import('../Shared/Model/ImportExport.js').ClientResetSelection} ClientResetSelection
+ * @typedef {import('@companion/shared/Model/ImportExport.js').ClientPageInfo} ClientPageInfo
+ * @typedef {import('@companion/shared/Model/ImportExport.js').ClientImportObject} ClientImportObject
+ * @typedef {import('@companion/shared/Model/ImportExport.js').ClientImportSelection} ClientImportSelection
+ * @typedef {import('@companion/shared/Model/ImportExport.js').ClientExportSelection} ClientExportSelection
+ * @typedef {import('@companion/shared/Model/ImportExport.js').ClientResetSelection} ClientResetSelection
  *
  * @typedef {{
- *   object: import('../Shared/Model/ExportModel.js').ExportFullv4 | import('../Shared/Model/ExportModel.js').ExportPageModelv4
+ *   object: import('@companion/shared/Model/ExportModel.js').ExportFullv4 | import('@companion/shared/Model/ExportModel.js').ExportPageModelv4
  *   timeout: null
  * }} ClientPendingImport
  */

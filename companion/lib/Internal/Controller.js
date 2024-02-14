@@ -107,9 +107,9 @@ export default class InternalController extends CoreBase {
 
 	/**
 	 * Perform an upgrade for an action
-	 * @param {import('../Shared/Model/ActionModel.js').ActionInstance} action
+	 * @param {import('@companion/shared/Model/ActionModel.js').ActionInstance} action
 	 * @param {string} controlId
-	 * @returns {import('../Shared/Model/ActionModel.js').ActionInstance | undefined} Updated action if any changes were made
+	 * @returns {import('@companion/shared/Model/ActionModel.js').ActionInstance | undefined} Updated action if any changes were made
 	 */
 	actionUpgrade(action, controlId) {
 		for (const fragment of this.fragments) {
@@ -133,9 +133,9 @@ export default class InternalController extends CoreBase {
 	}
 	/**
 	 * Perform an upgrade for a feedback
-	 * @param {import('../Shared/Model/FeedbackModel.js').FeedbackInstance} feedback
+	 * @param {import('@companion/shared/Model/FeedbackModel.js').FeedbackInstance} feedback
 	 * @param {string} controlId
-	 * @returns {import('../Shared/Model/FeedbackModel.js').FeedbackInstance | undefined} Updated feedback if any changes were made
+	 * @returns {import('@companion/shared/Model/FeedbackModel.js').FeedbackInstance | undefined} Updated feedback if any changes were made
 	 */
 	feedbackUpgrade(feedback, controlId) {
 		for (const fragment of this.fragments) {
@@ -160,7 +160,7 @@ export default class InternalController extends CoreBase {
 
 	/**
 	 * A feedback has changed, and state should be updated
-	 * @param {import('../Shared/Model/FeedbackModel.js').FeedbackInstance} feedback
+	 * @param {import('@companion/shared/Model/FeedbackModel.js').FeedbackInstance} feedback
 	 * @param {string} controlId
 	 * @returns {void}
 	 */
@@ -189,7 +189,7 @@ export default class InternalController extends CoreBase {
 	}
 	/**
 	 * A feedback has been deleted
-	 * @param {import('../Shared/Model/FeedbackModel.js').FeedbackInstance} feedback
+	 * @param {import('@companion/shared/Model/FeedbackModel.js').FeedbackInstance} feedback
 	 * @returns {void}
 	 */
 	feedbackDelete(feedback) {
@@ -241,8 +241,8 @@ export default class InternalController extends CoreBase {
 	/**
 	 * Visit any references in some inactive internal actions and feedbacks
 	 * @param {import('./Types.js').InternalVisitor} visitor
-	 * @param {import('../Shared/Model/ActionModel.js').ActionInstance[]} actions
-	 * @param {import('../Shared/Model/FeedbackModel.js').FeedbackInstance[]} feedbacks
+	 * @param {import('@companion/shared/Model/ActionModel.js').ActionInstance[]} actions
+	 * @param {import('@companion/shared/Model/FeedbackModel.js').FeedbackInstance[]} feedbacks
 	 */
 	visitReferences(visitor, actions, feedbacks) {
 		const internalActions = actions.filter((a) => a.instance === 'internal')
@@ -257,7 +257,7 @@ export default class InternalController extends CoreBase {
 
 	/**
 	 * Run a single internal action
-	 * @param {import('../Shared/Model/ActionModel.js').ActionInstance} action
+	 * @param {import('@companion/shared/Model/ActionModel.js').ActionInstance} action
 	 * @param {import('../Instance/Wrapper.js').RunActionExtras} extras
 	 * @returns {void}
 	 */

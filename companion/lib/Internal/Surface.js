@@ -327,9 +327,9 @@ export default class Surface {
 
 	/**
 	 * Perform an upgrade for an action
-	 * @param {import('../Shared/Model/ActionModel.js').ActionInstance} action
+	 * @param {import('@companion/shared/Model/ActionModel.js').ActionInstance} action
 	 * @param {string} _controlId
-	 * @returns {import('../Shared/Model/ActionModel.js').ActionInstance | void} Updated action if any changes were made
+	 * @returns {import('@companion/shared/Model/ActionModel.js').ActionInstance | void} Updated action if any changes were made
 	 */
 	actionUpgrade(action, _controlId) {
 		// Upgrade an action. This check is not the safest, but it should be ok
@@ -431,7 +431,7 @@ export default class Surface {
 
 	/**
 	 * Run a single internal action
-	 * @param {import('../Shared/Model/ActionModel.js').ActionInstance} action
+	 * @param {import('@companion/shared/Model/ActionModel.js').ActionInstance} action
 	 * @param {import('../Instance/Wrapper.js').RunActionExtras} extras
 	 * @returns {boolean} Whether the action was handled
 	 */
@@ -644,8 +644,8 @@ export default class Surface {
 	/**
 	 *
 	 * @param {import('./Types.js').InternalVisitor} _visitor
-	 * @param {import('../Shared/Model/ActionModel.js').ActionInstance[]} _actions
-	 * @param {import('../Shared/Model/FeedbackModel.js').FeedbackInstance[]} _feedbacks
+	 * @param {import('@companion/shared/Model/ActionModel.js').ActionInstance[]} _actions
+	 * @param {import('@companion/shared/Model/FeedbackModel.js').FeedbackInstance[]} _feedbacks
 	 */
 	visitReferences(_visitor, _actions, _feedbacks) {
 		// actions page_variable handled by generic options visitor

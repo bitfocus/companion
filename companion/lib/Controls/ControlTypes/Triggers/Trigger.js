@@ -24,9 +24,9 @@ import {
 } from '../../IControlFragments.js'
 
 /**
- * @typedef {import('../../../Shared/Model/ActionModel.js').ActionInstance} ActionInstance
- * @typedef {import('../../../Shared/Model/FeedbackModel.js').FeedbackInstance} FeedbackInstance
- * @typedef {import('../../../Shared/Model/EventModel.js').EventInstance} EventInstance
+ * @typedef {import('@companion/shared/Model/ActionModel.js').ActionInstance} ActionInstance
+ * @typedef {import('@companion/shared/Model/FeedbackModel.js').FeedbackInstance} FeedbackInstance
+ * @typedef {import('@companion/shared/Model/EventModel.js').EventInstance} EventInstance
  */
 
 /**
@@ -107,7 +107,7 @@ export default class ControlTrigger extends ControlBase {
 
 	/**
 	 * The defaults options for a trigger
-	 * @type {import('../../../Shared/Model/TriggerModel.js').TriggerOptions}
+	 * @type {import('@companion/shared/Model/TriggerModel.js').TriggerOptions}
 	 * @access public
 	 * @static
 	 */
@@ -169,7 +169,7 @@ export default class ControlTrigger extends ControlBase {
 
 	/**
 	 * Basic trigger configuration
-	 * @type {import('../../../Shared/Model/TriggerModel.js').TriggerOptions}
+	 * @type {import('@companion/shared/Model/TriggerModel.js').TriggerOptions}
 	 * @access public
 	 */
 	options
@@ -198,7 +198,7 @@ export default class ControlTrigger extends ControlBase {
 	 * @param {import('../../../Registry.js').default} registry - the application core
 	 * @param {TriggerEvents} eventBus - the main trigger event bus
 	 * @param {string} controlId - id of the control
-	 * @param {import('../../../Shared/Model/TriggerModel.js').TriggerModel | null} storage - persisted storage object
+	 * @param {import('@companion/shared/Model/TriggerModel.js').TriggerModel | null} storage - persisted storage object
 	 * @param {boolean} isImport - if this is importing a button, not creating at startup
 	 */
 	constructor(registry, eventBus, controlId, storage, isImport) {
@@ -499,11 +499,11 @@ export default class ControlTrigger extends ControlBase {
 	 * Convert this control to JSON
 	 * To be sent to the client and written to the db
 	 * @param {boolean} clone - Whether to return a cloned object
-	 * @returns {import('../../../Shared/Model/TriggerModel.js').TriggerModel}
+	 * @returns {import('@companion/shared/Model/TriggerModel.js').TriggerModel}
 	 * @access public
 	 */
 	toJSON(clone = true) {
-		/** @type {import('../../../Shared/Model/TriggerModel.js').TriggerModel} */
+		/** @type {import('@companion/shared/Model/TriggerModel.js').TriggerModel} */
 		const obj = {
 			type: this.type,
 			options: this.options,
@@ -1024,5 +1024,5 @@ export default class ControlTrigger extends ControlBase {
 }
 
 /**
- * @typedef {import('../../../Shared/Model/TriggerModel.js').ClientTriggerData} ClientTriggerData
+ * @typedef {import('@companion/shared/Model/TriggerModel.js').ClientTriggerData} ClientTriggerData
  */

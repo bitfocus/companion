@@ -19,7 +19,7 @@ import { LRUCache } from 'lru-cache'
 import { FontLibrary } from '@julusian/skia-canvas'
 import GraphicsRenderer from './Renderer.js'
 import CoreBase from '../Core/Base.js'
-import { xyToOldBankIndex } from '../Shared/ControlId.js'
+import { xyToOldBankIndex } from '@companion/shared/ControlId.js'
 import { ImageResult } from './ImageResult.js'
 import ImageWriteQueue from '../Resources/ImageWriteQueue.js'
 import workerPool from 'workerpool'
@@ -46,7 +46,7 @@ function generateFontUrl(fontFilename) {
 	if (isPackaged()) {
 		return path.join(__dirname, 'assets/Fonts', fontFilename)
 	} else {
-		return fileURLToPath(new URL(path.join('../..', 'assets/Fonts', fontFilename), import.meta.url))
+		return fileURLToPath(new URL(path.join('../../../assets/Fonts', fontFilename), import.meta.url))
 	}
 }
 
@@ -238,7 +238,7 @@ class GraphicsController extends CoreBase {
 	 * @returns {Promise<ImageResult>}
 	 */
 	async drawPreview(buttonStyle) {
-		/** @type {import('../Shared/Model/StyleModel.js').DrawStyleModel} */
+		/** @type {import('@companion/shared/Model/StyleModel.js').DrawStyleModel} */
 		const drawStyle = {
 			...buttonStyle,
 
@@ -408,11 +408,11 @@ class GraphicsController extends CoreBase {
 
 	/**
 	 * Draw a button image in the worker pool
-	 * @param {import('../Shared/Model/StyleModel.js').DrawStyleModel} drawStyle The style to draw
+	 * @param {import('@companion/shared/Model/StyleModel.js').DrawStyleModel} drawStyle The style to draw
 	 * @param {import('../Resources/Util.js').ControlLocation | undefined} location
 	 * @param {string | undefined} pagename
 	 * @param {number} remainingAttempts
-	 * @returns {Promise<{ buffer: Buffer, width: number, height: number, dataUrl: string, draw_style: import('../Shared/Model/StyleModel.js').DrawStyleModel['style'] | undefined}>} Image render object
+	 * @returns {Promise<{ buffer: Buffer, width: number, height: number, dataUrl: string, draw_style: import('@companion/shared/Model/StyleModel.js').DrawStyleModel['style'] | undefined}>} Image render object
 	 */
 	async #executePoolDrawButtonImage(drawStyle, location, pagename, remainingAttempts) {
 		try {

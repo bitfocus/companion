@@ -3,7 +3,7 @@ import { cloneDeep } from 'lodash-es'
 import { nanoid } from 'nanoid'
 
 /**
- * @typedef {import('../../Shared/Model/ActionModel.js').ActionInstance} ActionInstance
+ * @typedef {import('@companion/shared/Model/ActionModel.js').ActionInstance} ActionInstance
  */
 
 /**
@@ -31,13 +31,13 @@ import { nanoid } from 'nanoid'
 export default class FragmentActions extends CoreBase {
 	/**
 	 * The action-sets on this button
-	 * @type {import('../../Shared/Model/ActionModel.js').ActionSetsModel}
+	 * @type {import('@companion/shared/Model/ActionModel.js').ActionSetsModel}
 	 * @access public
 	 */
 	action_sets = {}
 
 	/**
-	 * @type {import('../../Shared/Model/ActionModel.js').ActionStepOptions}
+	 * @type {import('@companion/shared/Model/ActionModel.js').ActionStepOptions}
 	 * @access public
 	 */
 	options

@@ -1,7 +1,7 @@
 import { decimalToRgb } from '../Resources/Util.js'
 import { ApiMessageError, ServiceTcpUdpApi } from './TcpUdpApi.js'
 import ServiceTcpBase from './TcpBase.js'
-import { xyToOldBankIndex } from '../Shared/ControlId.js'
+import { xyToOldBankIndex } from '@companion/shared/ControlId.js'
 
 /**
  * Class providing the TCP api.

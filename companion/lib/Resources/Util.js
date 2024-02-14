@@ -2,7 +2,7 @@ import { serializeIsVisibleFn } from '@companion-module/base/dist/internal/base.
 import imageRs from '@julusian/image-rs'
 import { colord } from 'colord'
 
-/** @typedef {import('../Shared/Model/Common.js').ControlLocation} ControlLocation */
+/** @typedef {import('@companion/shared/Model/Common.js').ControlLocation} ControlLocation */
 
 /**
  * Combine rgba components to a 32bit value
@@ -385,23 +385,6 @@ export function ParseAlignment(alignment, validate) {
 	}
 
 	return [halign, valign, `${halign}:${valign}`]
-}
-
-/**
- * Pad a string to the specified length
- * @param {string | number} str0
- * @param {string} ch
- * @param {number} len
- * @returns {string}
- */
-export function pad(str0, ch, len) {
-	let str = str0 + ''
-
-	while (str.length < len) {
-		str = ch + str
-	}
-
-	return str
 }
 
 /**

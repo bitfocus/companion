@@ -17,7 +17,7 @@
 
 import LogController from '../../Log/Controller.js'
 import { EventEmitter } from 'events'
-import { oldBankIndexToXY, xyToOldBankIndex } from '../../Shared/ControlId.js'
+import { oldBankIndexToXY, xyToOldBankIndex } from '@companion/shared/ControlId.js'
 import { convertPanelIndexToXY } from '../Util.js'
 import { LEGACY_MAX_BUTTONS } from '../../Util/Constants.js'
 
