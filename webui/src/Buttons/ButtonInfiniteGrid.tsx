@@ -56,7 +56,11 @@ export const ButtonInfiniteGrid = forwardRef<ButtonInfiniteGridRef, ButtonInfini
 		const countColumns = maxColumn - minColumn + 1
 		const countRows = maxRow - minRow + 1
 
-		const tileSize = 84
+		// TODO - shrink placeholder text to fit
+
+		const tileInnerSize = 90 //72 * 1.2
+		const tilePadding = Math.min(6, tileInnerSize * 0.05)
+		const tileSize = tileInnerSize + tilePadding * 2
 		const growWidth = doGrow ? 90 : 0
 		const growHeight = doGrow ? 60 : 0
 
@@ -179,8 +183,9 @@ export const ButtonInfiniteGrid = forwardRef<ButtonInfiniteGridRef, ButtonInfini
 			() => ({
 				width: Math.max(countColumns * tileSize, windowSize.width) + growWidth * 2,
 				height: Math.max(countRows * tileSize, windowSize.height) + growHeight * 2,
+				'--tile-inner-size': tileInnerSize,
 			}),
-			[countColumns, countRows, tileSize, windowSize, growWidth, growHeight]
+			[countColumns, countRows, tileSize, windowSize, growWidth, growHeight, tileInnerSize]
 		)
 
 		return (
