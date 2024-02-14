@@ -5,10 +5,6 @@ import {
 	CForm,
 	CFormGroup,
 	CInput,
-	CInputGroup,
-	CInputGroupAppend,
-	CInputGroupPrepend,
-	CInputGroupText,
 	CLabel,
 	CModal,
 	CModalBody,
@@ -19,7 +15,7 @@ import {
 import React, { FormEvent, forwardRef, useCallback, useContext, useImperativeHandle, useRef, useState } from 'react'
 import { KeyReceiver, socketEmitPromise, SocketContext } from '../util.js'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faFileExport, faHome, faMinus, faPencil, faPlus } from '@fortawesome/free-solid-svg-icons'
+import { faFileExport, faHome, faPencil } from '@fortawesome/free-solid-svg-icons'
 import { ConfirmExportModal, ConfirmExportModalRef } from '../Components/ConfirmExportModal.js'
 import { ButtonInfiniteGrid, ButtonInfiniteGridRef, PrimaryButtonGridIcon } from './ButtonInfiniteGrid.js'
 import { useHasBeenRendered } from '../Hooks/useHasBeenRendered.js'
@@ -30,7 +26,7 @@ import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import { RootAppStoreContext } from '../Stores/RootAppStore.js'
 import { PagesStoreModel } from '../Stores/PagesStore.js'
 import { observer } from 'mobx-react-lite'
-import { NumberInputField } from '../Components/NumberInputField.js'
+import { ButtonGridZoomSlider } from './ButtonGridZoomSlider.js'
 
 interface ButtonsGridPanelProps {
 	pageNumber: number
@@ -324,63 +320,3 @@ const EditPagePropertiesModal = forwardRef<EditPagePropertiesModalRef, EditPageP
 		)
 	}
 )
-
-interface ButtonGridZoomSlider {
-	value: number
-	setValue: (value: number) => void
-}
-function ButtonGridZoomSlider({ value, setValue }: ButtonGridZoomSlider) {
-	const minZoom = 50
-	const maxZoom = 200
-	const zoomStep = 10
-
-	const incrementZoom = useCallback(() => setValue(Math.min(value + zoomStep, maxZoom)), [value, setValue])
-	const decrementZoom = useCallback(() => setValue(Math.max(value - zoomStep, minZoom)), [value, setValue])
-
-	return (
-		<CRow>
-			<CCol sm={{ size: 5, offset: 3 }}>
-				<CInputGroup className={'fieldtype-range'}>
-					<CInputGroupPrepend>
-						<CButton onClick={decrementZoom}>
-							<FontAwesomeIcon icon={faMinus} />
-						</CButton>
-					</CInputGroupPrepend>
-					<CInput
-						name="zoom"
-						type="range"
-						min={minZoom}
-						max={maxZoom}
-						step={zoomStep}
-						title="Zoom"
-						value={value}
-						onChange={(e) => setValue(parseInt(e.currentTarget.value))}
-					/>
-					<CInputGroupAppend>
-						<CButton onClick={incrementZoom}>
-							<FontAwesomeIcon icon={faPlus} />
-						</CButton>
-					</CInputGroupAppend>
-				</CInputGroup>
-			</CCol>
-			<CCol sm={4}>
-				<CInputGroup>
-					{/* <CInputGroupPrepend>
-					<CButton
-						color="info"
-						variant="outline"
-						onClick={resetZoom}
-						title={'Reset'}
-					>
-						<FontAwesomeIcon icon={faMagnifyingGlass} />
-					</CButton>
-				</CInputGroupPrepend> */}
-					<NumberInputField value={value} setValue={setValue} min={minZoom} max={maxZoom} />
-					<CInputGroupAppend>
-						<CInputGroupText>%</CInputGroupText>
-					</CInputGroupAppend>
-				</CInputGroup>
-			</CCol>
-		</CRow>
-	)
-}
