@@ -45,11 +45,12 @@ interface ButtonInfiniteGridProps {
 	gridSize: UserConfigGridSize
 	doGrow?: (direction: 'left' | 'right' | 'top' | 'bottom', amount: number) => void
 	buttonIconFactory: React.ClassType<ButtonInfiniteGridButtonProps, any, any>
+	drawScale?: number
 }
 
 export const ButtonInfiniteGrid = forwardRef<ButtonInfiniteGridRef, ButtonInfiniteGridProps>(
 	function ButtonInfiniteGrid(
-		{ isHot, pageNumber, buttonClick, selectedButton, gridSize, doGrow, buttonIconFactory },
+		{ isHot, pageNumber, buttonClick, selectedButton, gridSize, doGrow, buttonIconFactory, drawScale },
 		ref
 	) {
 		const { minColumn, maxColumn, minRow, maxRow } = gridSize
@@ -58,7 +59,7 @@ export const ButtonInfiniteGrid = forwardRef<ButtonInfiniteGridRef, ButtonInfini
 
 		// TODO - shrink placeholder text to fit
 
-		const tileInnerSize = 90 //72 * 1.2
+		const tileInnerSize = 72 * (drawScale ?? 1)
 		const tilePadding = Math.min(6, tileInnerSize * 0.05)
 		const tileSize = tileInnerSize + tilePadding * 2
 		const growWidth = doGrow ? 90 : 0
