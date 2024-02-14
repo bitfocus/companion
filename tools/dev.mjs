@@ -55,6 +55,7 @@ await start()
 async function start() {
 	node = $.spawn('node', ['main.js', ...process.argv.slice(3)], {
 		stdio: ['inherit', 'inherit', 'inherit', 'ipc'],
+		cwd: path.resolve('companion'),
 		env: {
 			...process.env,
 			COMPANION_DEV_MODULES: '1',

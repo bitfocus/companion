@@ -12,7 +12,6 @@
 	},
 	"dependencies": {
 		"@sentry/electron": "^4.17.0",
-		"app-builder-bin": "npm:@julusian/app-builder-bin#v4.0.1",
 		"chokidar": "^3.6.0",
 		"debounce-fn": "^4.0.0",
 		"electron-store": "^8.1.0",
@@ -20,7 +19,7 @@
 		"fs-extra": "^11.2.0",
 		"nanoid": "^3.3.7",
 		"plist": "^3.1.0",
-		"respawn": "link:../vendor/respawn",
+		"respawn": "*",
 		"semver": "^7.6.0",
 		"strip-ansi": "^6.0.0",
 		"systeminformation": "^5.21.24"
@@ -32,7 +31,7 @@
 		"electron-builder": "24.9.1",
 		"electron-reloader": "^1.2.3"
 	},
-	"resolutions": {
+	"resolutions2": {
 		"app-builder-bin": "npm:@julusian/app-builder-bin#v4.0.1"
 	},
 	"build": {
