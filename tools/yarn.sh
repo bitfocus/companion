@@ -24,7 +24,7 @@ function heading() {
 
 heading "Check Node version"
 NODE_VERSION=$(node -v)
-REQUIRED_VERSION=$(node -p -e "require('./package.json').engines.node")
+REQUIRED_VERSION=$(node -p -e "require('./companion/package.json').engines.node")
 NODE_IS_CORRECT=$(npx -y semver --range "$REQUIRED_VERSION" $NODE_VERSION)
 echo "Found ${NODE_VERSION}"
 if [ "$NODE_IS_CORRECT" ]; then
@@ -39,23 +39,23 @@ set -e
 
 # Hack: This needs to be done first or npx fails to run typescript for some of the modules
 heading "Legacy Modules"
-yarn --frozen-lockfile --cwd module-legacy
+cd module-legacy
+yarn --frozen-lockfile
 if [ -z "$CI" ]; then
   echo "Warning: This next step can take many minutes to run"
-  yarn --cwd module-legacy generate-manifests
+#   yarn generate-manifests
 fi 
 echo
+cd ..
 
 heading "Core"
-yarn --frozen-lockfile
-yarn build:writefile
+yarn --immutable
 echo
 
 heading "UI"
-yarn --frozen-lockfile --cwd webui
 if [ -z "$CI" ]; then
   echo "Warning: This next step can take many minutes to run"
-  yarn --cwd webui build
+  yarn dist:webui
 fi 
 echo
 

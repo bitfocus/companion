@@ -15,7 +15,7 @@ import { assertNever, literal, InstanceStatus } from '@companion-module/base'
 import { ServiceRest } from './rest.js'
 
 // @ts-expect-error Not typescript
-import Image from '../../lib/Graphics/Image.js'
+import Image from '../../companion/lib/Graphics/Image.js'
 import { nanoid } from 'nanoid'
 
 /**
@@ -170,7 +170,7 @@ export function convertInputField(input: SomeCompanionInputField): Complete<Modu
 
 function wrapActionSubscriptionCallback<T>(
 	id: string,
-	cb: ((event: CompanionActionEvent) => T) | undefined,
+	cb: ((event: CompanionActionEvent) => T) | undefined
 ): ((action: ModuleApi.CompanionActionInfo) => T) | undefined {
 	if (cb) {
 		return (event) =>
@@ -186,7 +186,7 @@ function wrapActionSubscriptionCallback<T>(
 
 function wrapFeedbackSubscriptionCallback<T>(
 	id: string,
-	cb: ((event: CompanionFeedbackEvent) => T) | undefined,
+	cb: ((event: CompanionFeedbackEvent) => T) | undefined
 ): ((feedback: ModuleApi.CompanionFeedbackInfo) => T) | undefined {
 	if (cb) {
 		return (event) =>
@@ -205,10 +205,7 @@ export class FakeSystem extends EventEmitter {
 
 	readonly Image = Image
 
-	constructor(
-		public readonly parent: ModuleApi.InstanceBase<any>,
-		moduleName: string,
-	) {
+	constructor(public readonly parent: ModuleApi.InstanceBase<any>, moduleName: string) {
 		super()
 
 		this.#rest = new ServiceRest(this, moduleName)
@@ -335,7 +332,7 @@ export class FakeSystem extends EventEmitter {
 								deviceId: event.surfaceId,
 								page: null,
 								bank: null,
-							},
+							}
 						)
 					}
 				}
@@ -359,7 +356,7 @@ export class FakeSystem extends EventEmitter {
 	// setFeedbackDefinitions: InstanceSkel<any>['setFeedbackDefinitions'] = (feedbacks) => {
 	setFeedbackDefinitions = (
 		feedbacks: Parameters<InstanceSkel<any>['setFeedbackDefinitions']>[0],
-		defaultHandler: any,
+		defaultHandler: any
 	) => {
 		const newFeedbacks: ModuleApi.CompanionFeedbackDefinitions = {}
 
@@ -377,7 +374,7 @@ export class FakeSystem extends EventEmitter {
 										options: event.options ?? {},
 									},
 									{} as any,
-									null,
+									null
 								)
 							} else {
 								return false
@@ -417,7 +414,7 @@ export class FakeSystem extends EventEmitter {
 										bank: 0,
 										width: event.image?.width ?? 72,
 										height: event.image?.height ?? 72,
-									},
+									}
 								)
 							} else {
 								return {}

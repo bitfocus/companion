@@ -1,7 +1,7 @@
 {
 	"name": "companion-launcher",
 	"description": "Companion",
-	"version": "0.0.1",
+	"version": "3.3.0",
 	"main": "main.js",
 	"license": "MIT",
 	"private": true,
@@ -30,9 +30,6 @@
 		"electron": "^28.2.2",
 		"electron-builder": "24.9.1",
 		"electron-reloader": "^1.2.3"
-	},
-	"resolutions2": {
-		"app-builder-bin": "npm:@julusian/app-builder-bin#v4.0.1"
 	},
 	"build": {
 		"productName": "Companion",

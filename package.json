@@ -1,5 +1,6 @@
 {
-  "name": "companion-root",
+  "name": "@companion-app/workspace",
+  "version": "3.3.0",
   "packageManager": "yarn@4.1.0",
   "workspaces": [
     "companion",
@@ -8,21 +9,20 @@
     "vendor/*"
   ],
   "scripts": {
-    "dev": "yarn dev:inner --admin-address 127.0.0.1 --log-level debug",
-    "dev:inner": "yarn build:writefile && yarn zx ./tools/dev.mjs -- --extra-module-path=./module-local-dev",
-    "dev:debug": "yarn dev:inner --admin-address 127.0.0.1 --log-level silly",
+    "postinstall": "run build:writefile",
+    "dev": "yarn workspace companion dev",
+    "dev:inner": "yarn workspace companion dev:inner",
+    "dev:debug": "yarn workspace companion dev:debug",
+    "dev:webui": "yarn workspace companion-webui dev",
     "update": "./tools/update.sh",
-    "dist:webui": "yarn --cwd webui build",
+    "dist:webui": "yarn workspace companion-webui build",
     "dist": "zx ./tools/build/complete.mjs",
     "macdist": "yarn dist mac-x64",
     "macarmdist": "yarn dist mac-arm64",
     "windist": "yarn dist win-x64",
     "lindist": "yarn dist linux-x64",
     "rpidist": "yarn dist linux-arm7",
-    "test": "node --max-old-space-size=4000 --experimental-vm-modules node_modules/jest/bin/jest.js",
-    "dev-webui": "yarn --cwd webui dev",
     "format": "prettier --write .",
-    "jsdoc": "jsdoc -c jsdoc.json",
     "build:writefile": "zx ./tools/build_writefile.mjs",
     "module:bulk": "zx ./tools/module_bulk.mjs",
     "check-types": "tsc --noEmit",
@@ -31,10 +31,10 @@
   "devDependencies": {
     "zx": "^7.2.3"
   },
-  "resolutions2": {
-    "app-builder-bin": "npm:@julusian/app-builder-bin#v4.0.1",
-    "node-hid": "npm:@julusian/hid#3.0.1.0",
+  "resolutions": {
+    "app-builder-bin": "npm:@julusian/app-builder-bin@4.0.1",
     "node-gyp-build": "github:julusian/node-gyp-build#cross-install-support",
+    "node-hid": "npm:@julusian/hid@3.0.1-0",
     "osc/serialport": "^10.5.0"
   }
 }

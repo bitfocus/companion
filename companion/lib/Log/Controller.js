@@ -276,7 +276,7 @@ class LogController {
 		if (!sentryDsn) {
 			try {
 				sentryDsn = fs
-					.readFileSync(new URL('../../SENTRY', import.meta.url))
+					.readFileSync(new URL('../../../SENTRY', import.meta.url)) // nocommit ensure this will work once built
 					.toString()
 					.trim()
 			} catch (e) {
