@@ -1,5 +1,5 @@
-import { ParseExpression as parse } from '../lib/Shared/Expression/ExpressionParse'
-import { ResolveExpression as resolve } from '../lib/Shared/Expression/ExpressionResolve'
+import { ParseExpression as parse } from '@companion/shared/Expression/ExpressionParse'
+import { ResolveExpression as resolve } from '@companion/shared/Expression/ExpressionResolve'
 import jsep from 'jsep'
 
 describe('resolver', function () {
