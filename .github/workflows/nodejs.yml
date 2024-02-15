@@ -13,24 +13,18 @@ jobs:
         with:
           node-version-file: '.node-version'
 
-      - name: Prepare (server)
+      - name: Prepare
         run: |
-          # try and avoid timeout errors
-          yarn config set network-timeout 100000 -g
+          corepack enable
 
-          yarn --frozen-lockfile
+          # try and avoid timeout errors
+          yarn config set httpTimeout 100000
+
+          yarn --immutable
 
       - name: Check types (server)
         run: |
           yarn check-types
-
-      - name: Prepare (client)
-        run: |
-          cd webui
-          # try and avoid timeout errors
-          yarn config set network-timeout 100000 -g
-
-          yarn --frozen-lockfile
 
       - name: Check types (client)
         run: |
@@ -61,8 +55,10 @@ jobs:
 
       - name: build & package
         run: |
+          corepack enable
+
           # try and avoid timeout errors
-          yarn config set network-timeout 100000 -g
+          yarn config set httpTimeout 100000
 
           yarn update
 
@@ -128,8 +124,10 @@ jobs:
 
       - name: build & package
         run: |
+          corepack enable
+
           # try and avoid timeout errors
-          yarn config set network-timeout 100000 -g
+          yarn config set httpTimeout 100000
 
           yarn update
 
@@ -194,8 +192,10 @@ jobs:
 
       - name: build & package
         run: |
+          corepack enable
+
           # try and avoid timeout errors
-          yarn config set network-timeout 100000 -g
+          yarn config set httpTimeout 100000
 
           yarn update
 
@@ -259,8 +259,10 @@ jobs:
 
       - name: yarn update
         run: |
+          corepack enable
+
           # try and avoid timeout errors
-          yarn config set network-timeout 100000 -g
+          yarn config set httpTimeout 100000
 
           yarn update
         env:
@@ -329,8 +331,10 @@ jobs:
       - name: build & package
         shell: bash
         run: |
+          corepack enable
+
           # try and avoid timeout errors
-          yarn config set network-timeout 100000 -g
+          yarn config set httpTimeout 100000
 
           # This fixes it somehow, and without it we get no logs from any shell scripts which are run
           yarn config set script-shell bash

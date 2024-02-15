@@ -10,9 +10,15 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version-file: '.node-version'
-      - name: yarn update
+      - name: yarn install
         run: |
-          yarn
+          corepack enable
+
+          # try and avoid timeout errors
+          yarn config set httpTimeout 100000
+
+          yarn install --immutable
       - name: run tests
         run: |
+          cd companion
           yarn test
