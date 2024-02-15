@@ -110,7 +110,7 @@ class UIExpress {
 		/**
 		 * We don't want to ship hundreds of loose files, so instead we can serve the webui files from a zip file
 		 */
-		const resourcesDir = isPackaged() ? __dirname : fileURLToPath(new URL('../../../', import.meta.url))
+		const resourcesDir = fileURLToPath(new URL(isPackaged() ? '.' : '../../..', import.meta.url)) // nocommit verify
 
 		const webuiServer = createServeStatic(path.join(resourcesDir, 'webui.zip'), [
 			path.join(resourcesDir, 'static'),

@@ -1,5 +1,5 @@
 {
-	"name": "companion-launcher",
+	"name": "@companion-app/launcher",
 	"description": "Companion",
 	"version": "3.3.0",
 	"main": "main.js",
@@ -27,7 +27,7 @@
 	"devDependencies": {
 		"@electron/notarize": "^2.2.1",
 		"@types/plist": "^3.0.5",
-		"electron": "^28.2.2",
+		"electron": "28.2.2",
 		"electron-builder": "24.9.1",
 		"electron-reloader": "^1.2.3"
 	},

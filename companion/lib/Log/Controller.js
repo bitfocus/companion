@@ -73,7 +73,7 @@ class LogController {
 	#addBreadcrumb = null
 	/**
 	 * The log array
-	 * @type {import('../Shared/Model/LogLine.js').ClientLogLine[]}
+	 * @type {import('@companion/shared/Model/LogLine.js').ClientLogLine[]}
 	 * @access protected
 	 */
 	#history = []
@@ -197,7 +197,7 @@ class LogController {
 		})
 	}
 
-	/** @type {import('../Shared/Model/LogLine.js').ClientLogLine[]} */
+	/** @type {import('@companion/shared/Model/LogLine.js').ClientLogLine[]} */
 	#pendingLines = []
 	debounceSendLines = debounceFn(
 		() => {
@@ -219,7 +219,7 @@ class LogController {
 	 * @access private
 	 */
 	#addToHistory(line) {
-		/** @type {import('../Shared/Model/LogLine.js').ClientLogLine} */
+		/** @type {import('@companion/shared/Model/LogLine.js').ClientLogLine} */
 		const uiLine = {
 			time: line.timestamp,
 			source: stripAnsi(line.source),
@@ -248,7 +248,7 @@ class LogController {
 	/**
 	 * Get all of the log entries
 	 * @param {boolean} [clone = false] - <code>true</code> if a clone is needed instead of a reference
-	 * @return {import('../Shared/Model/LogLine.js').ClientLogLine[]} the log entries
+	 * @return {import('@companion/shared/Model/LogLine.js').ClientLogLine[]} the log entries
 	 * @access public
 	 */
 	getAllLines(clone = false) {

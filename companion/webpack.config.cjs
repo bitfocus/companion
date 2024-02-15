@@ -4,8 +4,8 @@ const { sentryWebpackPlugin } = require('@sentry/webpack-plugin')
 
 const sentryAuthToken = process.env.SENTRY_AUTH_TOKEN
 
-const distPath = path.resolve(__dirname, 'dist')
-const buildFile = fs.readFileSync(path.join(__dirname, 'BUILD')).toString().trim()
+const distPath = path.resolve(__dirname, '../dist')
+const buildFile = fs.readFileSync(path.join(__dirname, '../BUILD')).toString().trim()
 
 module.exports = {
 	entry: {

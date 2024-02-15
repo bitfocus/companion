@@ -129,8 +129,7 @@ if (process.env.ELECTRON !== '0') {
 
 	try {
 		// perform the electron build
-		await $`yarn --cwd launcher install`
-		await $`yarn --cwd launcher electron-builder --publish=never ${platformInfo.electronBuilderArgs}`
+		await $`yarn workspace @companion-app/launcher run -B electron-builder --publish=never ${platformInfo.electronBuilderArgs}`
 	} finally {
 		// undo the changes made
 		await fs.writeFile(launcherPkgJsonPath, launcherPkgJsonStr)

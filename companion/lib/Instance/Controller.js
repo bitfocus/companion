@@ -29,17 +29,6 @@ import InstanceModules from './Modules.js'
 const InstancesRoom = 'instances'
 
 /**
- * @typedef {{
- *   label: string
- *   config: unknown
- *   isFirstInit: boolean
- *   lastUpgradeIndex: number
- *   instance_type: string
- *   enabled: boolean
- *   sortOrder: number
- * }} ConnectionConfig
- */
-/**
  * @typedef {import('@companion/shared/Model/Common.js').ClientConnectionConfig} ClientConnectionConfig
  */
 /**
@@ -54,7 +43,7 @@ class Instance extends CoreBase {
 	#lastClientJson = null
 
 	store = {
-		/** @type {Record<string, ConnectionConfig>} */
+		/** @type {Record<string, import('@companion/shared/Model/Connections.js').ConnectionConfig>*/
 		db: {},
 	}
 
@@ -448,7 +437,7 @@ class Instance extends CoreBase {
 
 	/**
 	 * @param {boolean} clone
-	 * @returns {Record<string, ConnectionConfig | undefined>}
+	 * @returns {Record<string, import('@companion/shared/Model/Connections.js').ConnectionConfig | undefined>}
 	 */
 	exportAll(clone = true) {
 		const obj = this.store.db
@@ -467,7 +456,7 @@ class Instance extends CoreBase {
 	/**
 	 * Get the config object of an instance
 	 * @param {String} connectionId
-	 * @returns {ConnectionConfig | undefined}
+	 * @returns {import('@companion/shared/Model/Connections.js').ConnectionConfig | undefined}
 	 */
 	getInstanceConfig(connectionId) {
 		return this.store.db[connectionId]

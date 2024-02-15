@@ -476,6 +476,30 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@companion-app/launcher@workspace:launcher":
+  version: 0.0.0-use.local
+  resolution: "@companion-app/launcher@workspace:launcher"
+  dependencies:
+    "@electron/notarize": "npm:^2.2.1"
+    "@sentry/electron": "npm:^4.17.0"
+    "@types/plist": "npm:^3.0.5"
+    chokidar: "npm:^3.6.0"
+    debounce-fn: "npm:^4.0.0"
+    electron: "npm:28.2.2"
+    electron-builder: "npm:24.9.1"
+    electron-reloader: "npm:^1.2.3"
+    electron-store: "npm:^8.1.0"
+    file-stream-rotator: "npm:^1.0.0"
+    fs-extra: "npm:^11.2.0"
+    nanoid: "npm:^3.3.7"
+    plist: "npm:^3.1.0"
+    respawn: "npm:*"
+    semver: "npm:^7.6.0"
+    strip-ansi: "npm:^6.0.0"
+    systeminformation: "npm:^5.21.24"
+  languageName: unknown
+  linkType: soft
+
 "@companion-app/workspace@workspace:.":
   version: 0.0.0-use.local
   resolution: "@companion-app/workspace@workspace:."
@@ -4952,30 +4976,6 @@ asn1@evs-broadcast/node-asn1:
   languageName: node
   linkType: hard
 
-"companion-launcher@workspace:launcher":
-  version: 0.0.0-use.local
-  resolution: "companion-launcher@workspace:launcher"
-  dependencies:
-    "@electron/notarize": "npm:^2.2.1"
-    "@sentry/electron": "npm:^4.17.0"
-    "@types/plist": "npm:^3.0.5"
-    chokidar: "npm:^3.6.0"
-    debounce-fn: "npm:^4.0.0"
-    electron: "npm:^28.2.2"
-    electron-builder: "npm:24.9.1"
-    electron-reloader: "npm:^1.2.3"
-    electron-store: "npm:^8.1.0"
-    file-stream-rotator: "npm:^1.0.0"
-    fs-extra: "npm:^11.2.0"
-    nanoid: "npm:^3.3.7"
-    plist: "npm:^3.1.0"
-    respawn: "npm:*"
-    semver: "npm:^7.6.0"
-    strip-ansi: "npm:^6.0.0"
-    systeminformation: "npm:^5.21.24"
-  languageName: unknown
-  linkType: soft
-
 "companion-webui@workspace:webui":
   version: 0.0.0-use.local
   resolution: "companion-webui@workspace:webui"
@@ -5980,7 +5980,7 @@ asn1@evs-broadcast/node-asn1:
   languageName: node
   linkType: hard
 
-"electron@npm:^28.2.2":
+"electron@npm:28.2.2":
   version: 28.2.2
   resolution: "electron@npm:28.2.2"
   dependencies:

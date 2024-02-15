@@ -96,7 +96,7 @@ class InstanceModules extends CoreBase {
 	 * @param {string} extraModulePath - extra directory to search for modules
 	 */
 	async initInstances(extraModulePath) {
-		const rootPath = isPackaged() ? path.join(__dirname, '.') : fileURLToPath(new URL('../../..', import.meta.url))
+		const rootPath = fileURLToPath(new URL(isPackaged() ? '.' : '../../..', import.meta.url)) // nocommit verify
 
 		const searchDirs = [
 			// Paths to look for modules, lowest to highest priority
