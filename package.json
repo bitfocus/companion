@@ -25,11 +25,16 @@
     "rpidist": "yarn dist linux-arm7",
     "format": "prettier --write .",
     "build:writefile": "zx ./tools/build_writefile.mjs",
-    "module:bulk": "zx ./tools/module_bulk.mjs",
-    "check-types": "tsc --noEmit",
-    "watch-types": "tsc --noEmit --watch"
+    "module:bulk": "zx ./tools/module_bulk.mjs"
   },
   "devDependencies": {
+    "chokidar": "^3.6.0",
+    "dotenv": "^16.4.4",
+    "inquirer": "^9.2.14",
+    "octokit": "^3.1.2",
+    "open": "^10.0.3",
+    "prettier": "^3.2.5",
+    "tar": "^6.2.0",
     "zx": "^7.2.3"
   },
   "resolutions": {

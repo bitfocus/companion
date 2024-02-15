@@ -3,6 +3,6 @@
 	"references": [
 		//
 		{ "path": "companion" },
-		{ "path": "webui" },
-	],
+		{ "path": "webui" }
+	]
 }
