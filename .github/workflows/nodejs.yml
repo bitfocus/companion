@@ -24,6 +24,7 @@ jobs:
 
       - name: Check types (server)
         run: |
+          cd companion
           yarn check-types
 
       - name: Check types (client)
