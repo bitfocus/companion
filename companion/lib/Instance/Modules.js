@@ -96,14 +96,24 @@ class InstanceModules extends CoreBase {
 	 * @param {string} extraModulePath - extra directory to search for modules
 	 */
 	async initInstances(extraModulePath) {
-		const rootPath = fileURLToPath(new URL(isPackaged() ? '.' : '../../..', import.meta.url)) // nocommit verify
+		/**
+		 * @param {string} subpath
+		 * @returns {string}
+		 */
+		function generatePath(subpath) {
+			if (isPackaged()) {
+				return path.join(__dirname, subpath)
+			} else {
+				return fileURLToPath(new URL(path.join('../../..', subpath), import.meta.url))
+			}
+		}
 
 		const searchDirs = [
 			// Paths to look for modules, lowest to highest priority
-			path.resolve(path.join(rootPath, 'bundled-modules')),
+			path.resolve(generatePath('bundled-modules')),
 		]
 
-		const legacyCandidates = await this.#loadInfoForModulesInDir(path.join(rootPath, '/module-legacy/manifests'), false)
+		const legacyCandidates = await this.#loadInfoForModulesInDir(generatePath('module-legacy/manifests'), false)
 
 		// Start with 'legacy' candidates
 		for (const candidate of legacyCandidates) {

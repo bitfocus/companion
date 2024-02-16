@@ -108,15 +108,26 @@ class UIExpress {
 		this.app.use(this.legacyApiRouter)
 
 		/**
+		 * @param {string} subpath
+		 * @returns {string}
+		 */
+		function getResourcePath(subpath) {
+			if (isPackaged()) {
+				return path.join(__dirname, subpath)
+			} else {
+				return fileURLToPath(new URL(path.join('../../..', subpath), import.meta.url))
+			}
+		}
+
+		/**
 		 * We don't want to ship hundreds of loose files, so instead we can serve the webui files from a zip file
 		 */
-		const resourcesDir = fileURLToPath(new URL(isPackaged() ? '.' : '../../..', import.meta.url)) // nocommit verify
 
-		const webuiServer = createServeStatic(path.join(resourcesDir, 'webui.zip'), [
-			path.join(resourcesDir, 'static'),
-			path.join(resourcesDir, 'webui/build'),
+		const webuiServer = createServeStatic(getResourcePath('webui.zip'), [
+			getResourcePath('static'),
+			getResourcePath('webui/build'),
 		])
-		const docsServer = createServeStatic(path.join(resourcesDir, 'docs.zip'), [path.join(resourcesDir, 'docs')])
+		const docsServer = createServeStatic(getResourcePath('docs.zip'), [getResourcePath('docs')])
 
 		// Serve docs folder as static and public
 		this.app.use('/docs', docsServer)

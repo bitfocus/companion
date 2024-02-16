@@ -33,6 +33,7 @@
 	},
 	"build": {
 		"productName": "Companion",
+		"executableName": "companion-launcher",
 		"appId": "test-companion.bitfocus.no",
 		"dmg": {
 			"artifactName": "companion-mac-${arch}.dmg",
