@@ -101,11 +101,7 @@ for (const name of copyPrebuildsFromDependencies) {
 await fs.mkdirp('dist/assets/Fonts')
 await fs.copy(path.join('assets', 'Fonts'), 'dist/assets/Fonts')
 
-// Build legacy modules
-
-$.cwd = 'module-legacy'
-await $`yarn generate-manifests`
-$.cwd = undefined
+// Copy legacy modules
 await fs.mkdir('dist/module-legacy')
 await fs.copy('module-legacy/manifests', 'dist/module-legacy/manifests')
 
