@@ -236,7 +236,8 @@ class DataUserConfig extends CoreBase {
 	 */
 	createSslCertificate() {
 		try {
-			const attrs = [{ name: 'commonName', value: this.data.https_self_cn }]
+			/** @type {import('node-forge').pki.CertificateField[]} */
+			const attrs = [{ name: 'commonName', value: String(this.data.https_self_cn) }]
 			const pems = selfsigned.generate(attrs, {
 				days: Number(this.data.https_self_expiry) || undefined,
 				algorithm: 'sha256',
@@ -315,7 +316,8 @@ class DataUserConfig extends CoreBase {
 	 */
 	renewSslCertificate() {
 		try {
-			const attrs = [{ name: 'commonName', value: this.data.https_self_cert_cn }]
+			/** @type {import('node-forge').pki.CertificateField[]} */
+			const attrs = [{ name: 'commonName', value: String(this.data.https_self_cert_cn) }]
 			const pems = selfsigned.generate(attrs, {
 				days: Number(this.data.https_self_expiry) || undefined,
 				algorithm: 'sha256',

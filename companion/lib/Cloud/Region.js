@@ -226,6 +226,7 @@ class CloudRegion {
 		;(async () => {
 			while (this.socket) {
 				for await (let event of this.socket.listener('error')) {
+					// @ts-expect-error unknown property
 					if (event.error.code === 4401) {
 						// Disconnected by another process with the same id, let us disable this cloud instance,
 						// to prevent connection looping

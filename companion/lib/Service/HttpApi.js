@@ -201,7 +201,7 @@ export class ServiceHttpApi extends CoreBase {
 			const newFields = {}
 
 			if (req.query.bgcolor) {
-				const value = req.query.bgcolor.replace(/#/, '')
+				const value = String(req.query.bgcolor).replace(/#/, '')
 				const color = rgb(value.substr(0, 2), value.substr(2, 2), value.substr(4, 2), 16)
 				if (color !== false) {
 					newFields.bgcolor = color
@@ -209,7 +209,7 @@ export class ServiceHttpApi extends CoreBase {
 			}
 
 			if (req.query.color) {
-				const value = req.query.color.replace(/#/, '')
+				const value = String(req.query.color).replace(/#/, '')
 				const color = rgb(value.substr(0, 2), value.substr(2, 2), value.substr(4, 2), 16)
 				if (color !== false) {
 					newFields.color = color
@@ -217,7 +217,7 @@ export class ServiceHttpApi extends CoreBase {
 			}
 
 			if (req.query.size) {
-				const value = req.query.size.replace(/pt/i, '')
+				const value = String(req.query.size).replace(/pt/i, '')
 				newFields.size = value
 			}
 
@@ -228,7 +228,7 @@ export class ServiceHttpApi extends CoreBase {
 			if (req.query.png64 || req.query.png64 === '') {
 				if (req.query.png64 === '') {
 					newFields.png64 = null
-				} else if (!req.query.png64.match(/data:.*?image\/png/)) {
+				} else if (!String(req.query.png64).match(/data:.*?image\/png/)) {
 					res.status(400)
 					res.send('png64 must be a base64 encoded png file')
 					return
@@ -239,7 +239,7 @@ export class ServiceHttpApi extends CoreBase {
 
 			if (req.query.alignment) {
 				try {
-					const [, , alignment] = ParseAlignment(req.query.alignment)
+					const [, , alignment] = ParseAlignment(String(req.query.alignment))
 					newFields.alignment = alignment
 				} catch (e) {
 					// Ignore
@@ -248,7 +248,7 @@ export class ServiceHttpApi extends CoreBase {
 
 			if (req.query.pngalignment) {
 				try {
-					const [, , alignment] = ParseAlignment(req.query.pngalignment)
+					const [, , alignment] = ParseAlignment(String(req.query.pngalignment))
 					newFields.pngalignment = alignment
 				} catch (e) {
 					// Ignore
@@ -270,7 +270,7 @@ export class ServiceHttpApi extends CoreBase {
 			res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, Content-Length, X-Requested-With')
 
 			this.logger.debug(`Got HTTP /set/custom-variable/ name ${req.params.name} to value ${req.query.value}`)
-			const result = this.registry.instance.variable.custom.setValue(req.params.name, req.query.value)
+			const result = this.registry.instance.variable.custom.setValue(req.params.name, String(req.query.value))
 			if (result) {
 				return res.send(result)
 			} else {

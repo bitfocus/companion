@@ -60,6 +60,16 @@ const default_nav_buttons_definitions = [
 ]
 
 /**
+ *
+ * @param {import('qs').ParsedQs[0]} raw
+ * @returns {'json-gz' | 'json' | undefined}
+ */
+function parseDownloadFormat(raw) {
+	if (raw === 'json-gz' || raw === 'json') return raw
+	return undefined
+}
+
+/**
  * @param {import('winston').Logger} logger
  * @param {import("express").Response} res
  * @param {import("express").NextFunction} next
@@ -218,7 +228,7 @@ class DataImportExport extends CoreBase {
 
 			const filename = encodeURI(`${os.hostname()}_trigger_list_${getTimestamp()}.companionconfig`)
 
-			downloadBlob(this.logger, res, next, exp, filename, req.query.format)
+			downloadBlob(this.logger, res, next, exp, filename, parseDownloadFormat(req.query.format))
 		})
 
 		this.registry.api_router.get('/export/triggers/single/:id', (req, res, next) => {
@@ -232,7 +242,7 @@ class DataImportExport extends CoreBase {
 						.replace(/\W/, '')}_${getTimestamp()}.companionconfig`
 				)
 
-				downloadBlob(this.logger, res, next, exp, filename, req.query.format)
+				downloadBlob(this.logger, res, next, exp, filename, parseDownloadFormat(req.query.format))
 			} else {
 				next()
 			}
@@ -268,7 +278,7 @@ class DataImportExport extends CoreBase {
 
 				const filename = encodeURI(`${os.hostname()}_page${page}_${getTimestamp()}.companionconfig`)
 
-				downloadBlob(this.logger, res, next, exp, filename, req.query.format)
+				downloadBlob(this.logger, res, next, exp, filename, parseDownloadFormat(req.query.format))
 			}
 		})
 
@@ -371,11 +381,12 @@ class DataImportExport extends CoreBase {
 		}
 
 		this.registry.api_router.get('/export/custom', (req, res, next) => {
+			// @ts-expect-error
 			const exp = generateCustomExport(req.query)
 
 			const filename = encodeURI(`${os.hostname()}_custom-config_${getTimestamp()}.companionconfig`)
 
-			downloadBlob(this.logger, res, next, exp, filename, req.query.format)
+			downloadBlob(this.logger, res, next, exp, filename, parseDownloadFormat(req.query.format))
 		})
 
 		this.registry.api_router.get('/export/full', (req, res, next) => {
@@ -383,7 +394,7 @@ class DataImportExport extends CoreBase {
 
 			const filename = encodeURI(`${os.hostname()}full-config_${getTimestamp()}.companionconfig`)
 
-			downloadBlob(this.logger, res, next, exp, filename, req.query.format)
+			downloadBlob(this.logger, res, next, exp, filename, parseDownloadFormat(req.query.format))
 		})
 
 		this.registry.api_router.get('/export/log', (_req, res, _next) => {

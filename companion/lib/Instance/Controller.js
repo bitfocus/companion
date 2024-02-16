@@ -43,7 +43,7 @@ class Instance extends CoreBase {
 	#lastClientJson = null
 
 	store = {
-		/** @type {Record<string, import('@companion/shared/Model/Connections.js').ConnectionConfig>*/
+		/** @type {Record<string, import('@companion/shared/Model/Connections.js').ConnectionConfig>} */
 		db: {},
 	}
 
