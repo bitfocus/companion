@@ -22,6 +22,8 @@ jobs:
 
           yarn --immutable
 
+          yarn build:ts
+
       - name: Check types (server)
         run: |
           cd companion
