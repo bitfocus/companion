@@ -18,6 +18,8 @@ jobs:
           yarn config set httpTimeout 100000
 
           yarn install --immutable
+
+          yarn build:ts
       - name: run tests
         run: |
           cd companion
