@@ -82,6 +82,7 @@ await fs.writeFile(
 				// Force the same custom `node-gyp-build` version to allow better cross compiling
 				'node-gyp-build': companionPkgJson.resolutions['node-gyp-build'],
 			},
+			packageManager: companionPkgJson.packageManager,
 		},
 		undefined,
 		2

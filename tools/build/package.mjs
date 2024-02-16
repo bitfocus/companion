@@ -62,7 +62,9 @@ await fs.remove(path.join(runtimeDir, 'share'))
 await fs.remove(path.join(runtimeDir, 'include'))
 
 // Install dependencies
-await $`yarn --cwd dist install`
+$.cwd = 'dist'
+await $`yarn install`
+$.cwd = undefined
 
 // Prune out any prebuilds from other platforms
 if (platformInfo.runtimePlatform === 'win') {
