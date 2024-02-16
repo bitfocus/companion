@@ -1,4 +1,4 @@
-import { ExpressionFunctions } from '@companion/shared/Expression/ExpressionFunctions.js'
+import { ExpressionFunctions } from '../lib/Expression/ExpressionFunctions.js'
 
 describe('functions', () => {
 	describe('number', () => {

@@ -1,4 +1,4 @@
-import { ParseExpression, FindAllReferencedVariables } from '@companion/shared/Expression/ExpressionParse'
+import { ParseExpression, FindAllReferencedVariables } from '../lib/Expression/ExpressionParse'
 
 function ParseExpression2(str) {
 	const node = ParseExpression(str)

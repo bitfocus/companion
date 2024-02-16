@@ -2,6 +2,6 @@
 const config = {
 	verbose: true,
 	testPathIgnorePatterns: ['module-local-dev'],
-	roots: ['test'],
+	roots: ['companion/test', 'shared-lib/test'],
 }
 export default config

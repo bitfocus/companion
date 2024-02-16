@@ -10,7 +10,6 @@
 		"dev:inner": "yarn build:writefile && run -TB zx ../tools/dev.mjs -- --extra-module-path=../module-local-dev",
 		"dev:debug": "yarn dev:inner --admin-address 127.0.0.1 --log-level silly",
 		"build": "webpack",
-		"test": "node --max-old-space-size=4000 --experimental-vm-modules ../node_modules/jest/bin/jest.js",
 		"jsdoc": "jsdoc -c jsdoc.json",
 		"check-types": "tsc --noEmit",
 		"watch-types": "tsc --noEmit --watch"
@@ -40,7 +39,6 @@
 		"@types/supertest": "^6.0.2",
 		"@types/uuid": "^9.0.8",
 		"@types/ws": "^8.5.10",
-		"jest": "^29.7.0",
 		"jest-mock-extended": "^3.0.5",
 		"jsdoc": "^4.0.2",
 		"supertest": "^6.3.4",
