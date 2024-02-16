@@ -45,7 +45,7 @@ await $`yarn workspace @companion/shared build:ts`
 await $`yarn workspace companion build`
 
 // Build webui
-await $`yarn workspace companion-webui build`
+await $`yarn workspace @companion-app/webui build`
 
 // generate the 'static' zip files to serve
 await zipDirectory('./webui/build', 'dist/webui.zip')

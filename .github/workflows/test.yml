@@ -22,5 +22,4 @@ jobs:
           yarn build:ts
       - name: run tests
         run: |
-          cd companion
           yarn test
