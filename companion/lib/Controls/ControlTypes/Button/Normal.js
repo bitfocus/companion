@@ -578,7 +578,7 @@ export default class ControlButtonNormal extends ButtonControlBase {
 
 	/**
 	 * @param {import('@companion/shared/Model/ActionModel.js').ActionSetsModel=} existingActions
-	 * @param {import("../../../Shared/Model/ActionModel.js").ActionStepOptions=} existingOptions
+	 * @param {import("@companion/shared/Model/ActionModel.js").ActionStepOptions=} existingOptions
 	 */
 	#getNewStepValue(existingActions, existingOptions) {
 		/** @type {import('@companion/shared/Model/ActionModel.js').ActionSetsModel} */

@@ -3,6 +3,7 @@
 	"references": [
 		//
 		{ "path": "companion" },
-		{ "path": "webui" }
-	]
+		{ "path": "shared-lib" },
+		{ "path": "webui" },
+	],
 }

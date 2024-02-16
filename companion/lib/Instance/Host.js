@@ -371,7 +371,7 @@ class ModuleHost {
 	 * Start or restart an instance process
 	 * @access public
 	 * @param {string} connectionId
-	 * @param {import('./Controller.js').ConnectionConfig} config
+	 * @param {import('@companion/shared/Model/Connections.js').ConnectionConfig} config
 	 * @param {import('./Modules.js').ModuleInfo | undefined} moduleInfo
 	 */
 	async queueRestartConnection(connectionId, config, moduleInfo) {

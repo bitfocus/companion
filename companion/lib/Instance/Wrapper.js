@@ -126,7 +126,7 @@ class SocketEventsHandler {
 
 	/**
 	 * Initialise the instance class running in the child process
-	 * @param {import('./Controller.js').ConnectionConfig} config
+	 * @param {import('@companion/shared/Model/Connections.js').ConnectionConfig} config
 	 * @returns {Promise<void>}
 	 */
 	async init(config) {

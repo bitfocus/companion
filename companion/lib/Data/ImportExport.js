@@ -63,7 +63,7 @@ const default_nav_buttons_definitions = [
  * @param {import('winston').Logger} logger
  * @param {import("express").Response} res
  * @param {import("express").NextFunction} next
- * @param {import("../Shared/Model/ExportModel.js").SomeExportv4} data
+ * @param {import("@companion/shared/Model/ExportModel.js").SomeExportv4} data
  * @param {string} filename
  * @param {'json-gz' | 'json' | undefined} format
  * @returns {void}
