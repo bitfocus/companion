@@ -4,8 +4,8 @@
   "type": "module",
   "exports": {
     "./*.js": {
-      "default": "./lib/*.js",
-      "types": "./dist/*.d.ts"
+      "types": "./dist/*.d.ts",
+      "default": "./lib/*.js"
     }
   },
   "dependencies": {
