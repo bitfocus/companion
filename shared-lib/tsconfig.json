@@ -1,11 +1,11 @@
 {
-	"include": ["**/*.js", "**/*.ts"],
+	"include": ["lib/**/*.js", "lib/**/*.ts"],
 	"exclude": ["node_modules/**", "src/**/*spec.ts", "src/**/__tests__/*", "src/**/__mocks__/*"],
 	"compilerOptions": {
 		"outDir": "./dist",
 		"baseUrl": "./",
 		"paths": {
-			"*": ["./node_modules/*"],
+			"*": ["./node_modules/*"]
 		},
 		"module": "Node16",
 		"moduleResolution": "Node16",
@@ -16,7 +16,8 @@
 		"target": "es2022",
 		"noImplicitAny": true,
 		"sourceMap": true,
-		"declaration": false,
+		"declaration": true,
+		"declarationMap": true,
 		"importHelpers": false,
 		"listFiles": false,
 		"traceResolution": false,
@@ -32,6 +33,6 @@
 		"noUnusedParameters": true,
 		"skipLibCheck": true,
 		"allowSyntheticDefaultImports": true,
-		"esModuleInterop": true,
-	},
+		"esModuleInterop": true
+	}
 }

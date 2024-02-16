@@ -15,6 +15,7 @@
     "dev:inner": "yarn workspace companion dev:inner",
     "dev:debug": "yarn workspace companion dev:debug",
     "dev:webui": "yarn workspace companion-webui dev",
+    "build:ts": "yarn workspaces foreach --all run build:ts",
     "update": "./tools/update.sh",
     "dist:webui": "yarn workspace companion-webui build",
     "dist": "zx ./tools/build/complete.mjs",
@@ -29,6 +30,7 @@
   },
   "devDependencies": {
     "chokidar": "^3.6.0",
+    "concurrently": "^8.2.2",
     "dotenv": "^16.4.4",
     "inquirer": "^9.2.14",
     "octokit": "^3.1.2",
