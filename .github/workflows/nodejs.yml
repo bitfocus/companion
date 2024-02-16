@@ -63,6 +63,7 @@ jobs:
           # try and avoid timeout errors
           yarn config set httpTimeout 100000
 
+          yarn --immutable
           yarn update
 
           yarn zx tools/build/complete.mjs
@@ -132,6 +133,7 @@ jobs:
           # try and avoid timeout errors
           yarn config set httpTimeout 100000
 
+          yarn --immutable
           yarn update
 
           yarn zx tools/build/complete.mjs linux-arm64
@@ -200,6 +202,7 @@ jobs:
           # try and avoid timeout errors
           yarn config set httpTimeout 100000
 
+          yarn --immutable
           yarn update
 
           yarn zx tools/build/complete.mjs
@@ -267,6 +270,7 @@ jobs:
           # try and avoid timeout errors
           yarn config set httpTimeout 100000
 
+          yarn --immutable
           yarn update
         env:
           CI: 1
@@ -342,6 +346,7 @@ jobs:
           # This fixes it somehow, and without it we get no logs from any shell scripts which are run
           yarn config set script-shell bash
 
+          yarn --immutable
           yarn update
 
           # zx needs this to be unset..
