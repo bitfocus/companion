@@ -63,6 +63,7 @@ await fs.remove(path.join(runtimeDir, 'include'))
 
 // Install dependencies
 $.cwd = 'dist'
+await fs.writeFile(`dist/yarn.lock`, '')
 await $`yarn install`
 $.cwd = undefined
 
