@@ -178,6 +178,15 @@
 		.button-control {
 			position: absolute;
 			float: left;
+
+			.button-border {
+				width: calc(var(--tile-inner-size) * 1px);
+				height: calc(var(--tile-inner-size) * 1px);
+
+				.placeholder {
+					// TODO - shrink text to fit
+				}
+			}
 		}
 	}
 }
