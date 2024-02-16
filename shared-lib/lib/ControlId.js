@@ -1,6 +1,6 @@
 /**
  * Present a location as a string
- * @param {import("../Resources/Util.js").ControlLocation} location
+ * @param {import("./Model/Common.js").ControlLocation} location
  * @returns {string}
  */
 export function formatLocation(location) {
