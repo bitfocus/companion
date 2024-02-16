@@ -125,7 +125,7 @@ import('../../dist/index.js')
 }
 
 console.log('Bundling code. This will take a couple of minutes')
-await $`yarn webpack`
+await $`yarn run -B webpack`
 
 // trick node into treating them all as cjs
 await fs.writeFile(`manifests/package.json`, '')
