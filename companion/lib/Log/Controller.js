@@ -8,8 +8,8 @@ import winston from 'winston'
 import Transport from 'winston-transport'
 import supportsColor from 'supports-color'
 import consoleColors from './Colors.js'
-import { init, configureScope, addBreadcrumb } from '@sentry/node'
-import { RewriteFrames as RewriteFramesIntegration } from '@sentry/integrations'
+import { init, addBreadcrumb, getCurrentScope } from '@sentry/node'
+import { rewriteFramesIntegration } from '@sentry/integrations'
 import '@sentry/tracing'
 import debounceFn from 'debounce-fn'
 
@@ -295,13 +295,12 @@ class LogController {
 						}
 						return event
 					},
-					integrations: [new RewriteFramesIntegration()],
+					integrations: [rewriteFramesIntegration()],
 				})
 
-				configureScope((scope) => {
-					scope.setUser({ id: appInfo.machineId })
-					scope.setExtra('build', appInfo.appBuild)
-				})
+				const scope = getCurrentScope()
+				scope.setUser({ id: appInfo.machineId })
+				scope.setExtra('build', appInfo.appBuild)
 			} catch (e) {
 				this.logger.info(`Failed to setup sentry reporting: ${e}`)
 			}

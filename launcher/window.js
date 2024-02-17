@@ -1,26 +1,15 @@
-document.getElementById('launch').addEventListener('click', function () {
-	api.send('launcher-open-gui')
-})
+document.getElementById('launch').addEventListener('click', () => api.send('launcher-open-gui'))
+document.getElementById('hide').addEventListener('click', () => api.send('launcher-minimize'))
+document.getElementById('close').addEventListener('click', () => api.send('launcher-close'))
+document.getElementById('developer_settings').addEventListener('click', () => api.send('toggle-developer-settings'))
+document
+	.getElementById('dev_modules_path_pick')
+	.addEventListener('click', () => api.send('pick-developer-modules-path'))
+document
+	.getElementById('dev_modules_path_clear')
+	.addEventListener('click', () => api.send('clear-developer-modules-path'))
 
-document.getElementById('hide').addEventListener('click', function () {
-	api.send('launcher-minimize')
-})
-
-document.getElementById('close').addEventListener('click', function () {
-	api.send('launcher-close')
-})
-
-document.getElementById('developer_settings').addEventListener('click', () => {
-	api.send('toggle-developer-settings')
-})
-document.getElementById('dev_modules_path_pick').addEventListener('click', () => {
-	api.send('pick-developer-modules-path')
-})
-document.getElementById('dev_modules_path_clear').addEventListener('click', () => {
-	api.send('clear-developer-modules-path')
-})
-
-api.receive('info', function (config, info, platform) {
+api.receive('info', (config, info, platform) => {
 	if (platform !== 'win32' && platform !== 'darwin') {
 		document.getElementById('run_at_login_group')?.remove()
 	}
@@ -38,22 +27,22 @@ api.receive('info', function (config, info, platform) {
 })
 api.send('info')
 
-document.getElementById('http_port_button').addEventListener('click', function () {
-	var e = document.getElementById('http_port')
-	api.send('launcher-set-http-port', e.value)
+document.getElementById('http_port_button').addEventListener('click', () => {
+	const elm = document.getElementById('http_port')
+	api.send('launcher-set-http-port', elm.value)
 })
 
-document.getElementById('start_minimized').addEventListener('click', function () {
-	var e = document.getElementById('start_minimized')
-	api.send('launcher-set-start-minimised', e.checked)
+document.getElementById('start_minimized').addEventListener('click', () => {
+	const elm = document.getElementById('start_minimized')
+	api.send('launcher-set-start-minimised', elm.checked)
 })
 
-document.getElementById('run_at_login').addEventListener('click', function () {
-	var e = document.getElementById('run_at_login')
-	api.send('launcher-set-run-at-login', e.checked)
+document.getElementById('run_at_login').addEventListener('click', () => {
+	const elm = document.getElementById('run_at_login')
+	api.send('launcher-set-run-at-login', elm.checked)
 })
 
-api.receive('network-interfaces:get', function (interfaces) {
+api.receive('network-interfaces:get', (interfaces) => {
 	const elm = document.getElementById('ifs')
 	elm.innerHTML = "<option value='' selected>Change network interface</option>"
 
@@ -62,9 +51,9 @@ api.receive('network-interfaces:get', function (interfaces) {
 	}
 })
 
-document.getElementById('ifs').addEventListener('change', function () {
-	var e = document.getElementById('ifs')
-	var value = e.options[e.selectedIndex].value
+document.getElementById('ifs').addEventListener('change', () => {
+	const elm = document.getElementById('ifs')
+	const value = elm.options[elm.selectedIndex].value
 	api.send('launcher-set-bind-ip', value)
 })
 

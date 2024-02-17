@@ -5,23 +5,23 @@
 	"main": "main.js",
 	"license": "MIT",
 	"private": true,
-	"type": "commonjs",
+	"type": "module",
 	"scripts": {
 		"start": "electron main.js",
-		"dev": "electron dev.js"
+		"dev": "electron dev.cjs"
 	},
 	"dependencies": {
 		"@sentry/electron": "^4.18.0",
 		"chokidar": "^3.6.0",
-		"debounce-fn": "^4.0.0",
+		"debounce-fn": "^6.0.0",
 		"electron-store": "^8.1.0",
 		"file-stream-rotator": "^1.0.0",
 		"fs-extra": "^11.2.0",
-		"nanoid": "^3.3.7",
+		"nanoid": "^5.0.5",
 		"plist": "^3.1.0",
 		"respawn": "*",
 		"semver": "^7.6.0",
-		"strip-ansi": "^6.0.1",
+		"strip-ansi": "^7.1.0",
 		"systeminformation": "^5.21.25"
 	},
 	"devDependencies": {

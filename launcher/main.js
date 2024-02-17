@@ -1,19 +1,18 @@
 // @ts-check
-const path = require('path')
-const url = require('url')
-const fs = require('fs-extra')
-const { init, configureScope } = require('@sentry/electron')
-const systeminformation = require('systeminformation')
-const Store = require('electron-store')
-const { ipcMain, app, BrowserWindow, dialog } = require('electron')
-const electron = require('electron')
-const { nanoid } = require('nanoid')
-const respawn = require('respawn')
-const stripAnsi = require('strip-ansi')
-const chokidar = require('chokidar')
-const debounceFn = require('debounce-fn')
-const fileStreamRotator = require('file-stream-rotator')
-const { ConfigReleaseDirs } = require('./Paths.cjs')
+import path from 'path'
+import url, { fileURLToPath } from 'url'
+import fs from 'fs-extra'
+import { init, getCurrentScope } from '@sentry/electron'
+import systeminformation from 'systeminformation'
+import Store from 'electron-store'
+import electron, { ipcMain, app, BrowserWindow, dialog } from 'electron'
+import { nanoid } from 'nanoid'
+import respawn from 'respawn'
+import stripAnsi from 'strip-ansi'
+import chokidar from 'chokidar'
+import debounceFn from 'debounce-fn'
+import fileStreamRotator from 'file-stream-rotator'
+import { ConfigReleaseDirs } from './Paths.cjs'
 
 // Electron works on older versions of macos than nodejs, we should give a proper warning if we know companion will get stuck in a crash loop
 if (process.platform === 'darwin') {
@@ -41,7 +40,7 @@ if (process.platform === 'darwin') {
 }
 
 // Ensure there isn't another instance of companion running already
-var lock = app.requestSingleInstanceLock()
+const lock = app.requestSingleInstanceLock()
 if (!lock) {
 	electron.dialog.showErrorBox(
 		'Multiple instances',
@@ -136,7 +135,7 @@ if (!lock) {
 	let sentryDsn
 	try {
 		sentryDsn = fs
-			.readFileSync(__dirname + '/SENTRY')
+			.readFileSync(new URL('/SENTRY', import.meta.url))
 			.toString()
 			.trim()
 	} catch (e) {
@@ -149,7 +148,7 @@ if (!lock) {
 		// companionRootPath = path.join(__dirname, '../dist')
 		// if (!fs.pathExistsSync(path.join(companionRootPath, 'BUILD'))) {
 		// Finally, use the unbuilt parent
-		companionRootPath = path.join(__dirname, '..')
+		companionRootPath = fileURLToPath(new URL('../companion', import.meta.url))
 		// }
 	}
 
@@ -184,10 +183,9 @@ if (!lock) {
 		})
 
 		try {
-			configureScope((scope) => {
-				scope.setUser({ id: machineId })
-				scope.setExtra('build', appInfo.appVersion)
-			})
+			const scope = getCurrentScope()
+			scope.setUser({ id: machineId })
+			scope.setExtra('build', appInfo.appVersion)
 		} catch (e) {
 			console.log('Error setting up sentry info: ', e)
 		}
@@ -320,13 +318,14 @@ if (!lock) {
 			// maxHeight: 380,
 			frame: false,
 			resizable: false,
-			icon: path.join(__dirname, './assets/icon.png'),
+			icon: fileURLToPath(new URL('./assets/icon.png', import.meta.url)),
 			webPreferences: {
 				nodeIntegration: true,
 				contextIsolation: true,
-				preload: path.join(__dirname, './window-preload.js'),
+				preload: fileURLToPath(new URL('./window-preload.mjs', import.meta.url)),
 			},
 		}))
+		console.log('preload', fileURLToPath(new URL('./window-preload.js', import.meta.url)))
 
 		// window.webContents.openDevTools({
 		// 	mode:'detach'
@@ -342,7 +341,7 @@ if (!lock) {
 		thisWindow
 			.loadURL(
 				url.format({
-					pathname: path.join(__dirname, './window.html'),
+					pathname: fileURLToPath(new URL('./window.html', import.meta.url)),
 					protocol: 'file:',
 					slashes: true,
 				})
@@ -508,8 +507,8 @@ if (!lock) {
 	function createTray() {
 		tray = new electron.Tray(
 			process.platform == 'darwin'
-				? path.join(__dirname, 'assets/trayTemplate.png')
-				: path.join(__dirname, 'assets/icon.png')
+				? fileURLToPath(new URL('./assets/trayTemplate.png', import.meta.url))
+				: fileURLToPath(new URL('./assets/icon.png', import.meta.url))
 		)
 		tray.setIgnoreDoubleClickEvents(true)
 		if (process.platform !== 'darwin') {
