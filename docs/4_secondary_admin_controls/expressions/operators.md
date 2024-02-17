@@ -1,5 +1,7 @@
 Supported operators include:
 
+- Ternary operator:
+  - Conditional ternary: `a ? b : c`
 - Binary operators:
   - Addition: `a + b`
   - Subtraction: `a - b`
@@ -9,7 +11,7 @@ Supported operators include:
   - Equality (loose): `a == b`
   - Equality (strict): `a === b`
   - Inequality (loose): `a != b`
-  - Inequality (stirct): `a !== b`
+  - Inequality (strict): `a !== b`
   - Greater than: `a > b`
   - Greater than or equal: `a >= b`
   - Less than: `a < b`
@@ -22,7 +24,7 @@ Supported operators include:
   - Bitwise AND: `a & b`
   - Bitwise OR: `a | b`
 - Unary operators:
-  - Unary Negataion: `-a`
+  - Unary Negation: `-a`
   - Convert to number: `+a`
   - Logical NOT: `!a`
   - Bitwise NOT: `~a`
