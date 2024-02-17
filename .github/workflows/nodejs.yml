@@ -343,16 +343,8 @@ jobs:
           # try and avoid timeout errors
           yarn config set httpTimeout 100000
 
-          # # This fixes it somehow, and without it we get no logs from any shell scripts which are run
-          # cd module-legacy
-          # yarn config set script-shell bash
-          # cd ..
-
           yarn --immutable
           yarn update
-
-          # zx needs this to be unset..
-          # yarn config set script-shell ''
 
           yarn zx tools/build/complete.mjs
         env:
