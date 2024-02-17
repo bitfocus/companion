@@ -83,10 +83,6 @@ typings/
 # next.js build output
 .next
 
-# jsdoc
-docs/jsdoc/
-
-
 .pnp.*
 .yarn/*
 !.yarn/patches

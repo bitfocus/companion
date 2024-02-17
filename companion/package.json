@@ -10,7 +10,6 @@
 		"dev:inner": "yarn build:writefile && run -TB zx ../tools/dev.mjs -- --extra-module-path=../module-local-dev",
 		"dev:debug": "yarn dev:inner --admin-address 127.0.0.1 --log-level silly",
 		"build": "webpack",
-		"jsdoc": "jsdoc -c jsdoc.json",
 		"check-types": "tsc --noEmit",
 		"watch-types": "tsc --noEmit --watch"
 	},
@@ -40,7 +39,6 @@
 		"@types/uuid": "^9.0.8",
 		"@types/ws": "^8.5.10",
 		"jest-mock-extended": "^3.0.5",
-		"jsdoc": "^4.0.2",
 		"supertest": "^6.3.4",
 		"typescript": "~5.3.3",
 		"webpack": "^5.90.2",
