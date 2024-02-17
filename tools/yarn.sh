@@ -40,12 +40,14 @@ set -e
 # Hack: This needs to be done first or npx fails to run typescript for some of the modules
 heading "Legacy Modules"
 cd module-legacy
-yarn --frozen-lockfile
-echo "Warning: This next step can take many minutes to run"
 if [ -z "$CI" ]; then
+	yarn --frozen-lockfile
+	echo "Warning: This next step can take many minutes to run"
 	yarn generate-manifests
 else
 	yarn config set script-shell bash
+	yarn --frozen-lockfile
+	echo "Warning: This next step can take many minutes to run"
 	yarn generate-manifests
 	yarn config set script-shell ''
 fi
