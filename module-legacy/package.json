@@ -207,6 +207,7 @@
     "companion-module-tplink-taposmartplug": "github:bitfocus/companion-module-tplink-taposmartplug#v1.0.2",
     "companion-module-tvone-corio": "github:bitfocus/companion-module-tvone-corio#v1.0.1",
     "companion-module-vdwall-lvp615": "github:bitfocus/companion-module-vdwall-lvp615#v1.0.0",
+    "companion-module-videocom-zoom-bridge": "github:bitfocus/companion-module-videocom-zoom-bridge#ff87b02503bd9279d984bfc67ebca13705c2607f",
     "companion-module-vimeo-livestreamstudio6": "github:bitfocus/companion-module-vimeo-livestreamstudio6#v1.0.0",
     "companion-module-vislink-ulrx-ld": "github:bitfocus/companion-module-vislink-ulrx-ld#v1.0.4",
     "companion-module-visualproductions-bstation2": "github:bitfocus/companion-module-visualproductions-bstation2#v1.0.8",
