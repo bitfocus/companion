@@ -1,14 +1,14 @@
 {
-	"include": ["src/**/*.js", "src/**/*.jsx", "src/**/*.ts", "src/**/*.tsx", "../lib/Shared/*.js"],
+	"include": ["src/**/*.js", "src/**/*.jsx", "src/**/*.ts", "src/**/*.tsx"],
 	"exclude": ["node_modules/**", "src/**/*spec.ts", "src/**/__tests__/*", "src/**/__mocks__/*"],
 	"compilerOptions": {
 		"outDir": "./dist",
 		"baseUrl": "./",
 		"paths": {
-			"*": ["./node_modules/*"],
+			"*": ["./node_modules/*"]
 		},
-		"module": "ESNext",
-		"moduleResolution": "Node",
+		"module": "Node16",
+		"moduleResolution": "Node16",
 		"jsx": "react",
 		"allowJs": true,
 		// "checkJs": true,
@@ -33,6 +33,6 @@
 		"noUnusedParameters": true,
 		"skipLibCheck": true,
 		"allowSyntheticDefaultImports": true,
-		"esModuleInterop": true,
-	},
+		"esModuleInterop": true
+	}
 }

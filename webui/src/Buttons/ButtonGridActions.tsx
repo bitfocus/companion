@@ -2,11 +2,11 @@ import { CButton, CCol } from '@coreui/react'
 import React, { forwardRef, useCallback, useContext, useImperativeHandle, useRef, useState } from 'react'
 import { socketEmitPromise, SocketContext } from '../util.js'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faArrowsAlt, faCompass, faCopy, faEraser, faTrash } from '@fortawesome/free-solid-svg-icons'
+import { faArrowsLeftRight, faArrowsAlt, faCompass, faCopy, faEraser, faTrash } from '@fortawesome/free-solid-svg-icons'
 import classnames from 'classnames'
 import { GenericConfirmModal, GenericConfirmModalRef } from '../Components/GenericConfirmModal.js'
-import { useElementSize } from 'usehooks-ts'
-import { ControlLocation } from '@companion/shared/Model/Common.js'
+import { useResizeObserver } from 'usehooks-ts'
+import { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import { IconProp } from '@fortawesome/fontawesome-svg-core'
 
 export interface ButtonGridActionsRef {
@@ -57,8 +57,10 @@ export const ButtonGridActions = forwardRef<ButtonGridActionsRef, ButtonGridActi
 		setActiveFunctionButton(null)
 	}, [])
 
-	const [setSizeRef, holderSize] = useElementSize()
-	const useCompactButtons = holderSize.width < 600 // Cutoff for what of the action buttons fit in their large mode
+	const setSizeRef = useRef(null)
+	const holderSize = useResizeObserver({ ref: setSizeRef })
+	console.log('holderSize', holderSize)
+	const useCompactButtons = (holderSize.width ?? 0) < 650 // Cutoff for what of the action buttons fit in their large mode
 
 	const getButton = (label: string, icon: IconProp, func: string) => {
 		let color = 'light'
@@ -144,6 +146,17 @@ export const ButtonGridActions = forwardRef<ButtonGridActionsRef, ButtonGridActi
 								setActiveFunctionButton(location)
 							}
 							return true
+						case 'swap':
+							if (activeFunctionButton) {
+								const fromInfo = activeFunctionButton
+								socketEmitPromise(socket, 'controls:swap', [fromInfo, location]).catch((e) => {
+									console.error(`swap failed: ${e}`)
+								})
+								stopFunction()
+							} else {
+								setActiveFunctionButton(location)
+							}
+							return true
 						default:
 							// show button edit page
 							return false
@@ -170,6 +183,8 @@ export const ButtonGridActions = forwardRef<ButtonGridActionsRef, ButtonGridActi
 						{getButton('Copy', faCopy, 'copy')}
 						&nbsp;
 						{getButton('Move', faArrowsAlt, 'move')}
+						&nbsp;
+						{getButton('Swap', faArrowsLeftRight, 'swap')}
 						&nbsp;
 						{getButton('Delete', faTrash, 'delete')}
 						&nbsp;

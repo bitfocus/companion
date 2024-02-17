@@ -1,3 +1,4 @@
+/** @type string[] */
 const ConfigReleaseDirs = [
 	null, // Root
 	// The config subfolders that exist.

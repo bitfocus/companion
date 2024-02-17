@@ -1,41 +1,39 @@
 {
-	"name": "companion-launcher",
+	"name": "@companion-app/launcher",
 	"description": "Companion",
-	"version": "0.0.1",
+	"version": "3.99.0",
 	"main": "main.js",
 	"license": "MIT",
 	"private": true,
-	"type": "commonjs",
+	"type": "module",
 	"scripts": {
 		"start": "electron main.js",
-		"dev": "electron dev.js"
+		"dev": "electron dev.cjs"
 	},
 	"dependencies": {
-		"@sentry/electron": "^4.17.0",
-		"app-builder-bin": "npm:@julusian/app-builder-bin#v4.0.1",
-		"chokidar": "^3.5.3",
-		"debounce-fn": "^4.0.0",
+		"@sentry/electron": "^4.18.0",
+		"chokidar": "^3.6.0",
+		"debounce-fn": "^6.0.0",
 		"electron-store": "^8.1.0",
 		"file-stream-rotator": "^1.0.0",
 		"fs-extra": "^11.2.0",
-		"nanoid": "^3.3.7",
+		"nanoid": "^5.0.5",
 		"plist": "^3.1.0",
-		"respawn": "link:../vendor/respawn",
-		"semver": "^7.5.4",
-		"strip-ansi": "^6.0.0",
-		"systeminformation": "^5.21.22"
+		"respawn": "*",
+		"semver": "^7.6.0",
+		"strip-ansi": "^7.1.0",
+		"systeminformation": "^5.21.25"
 	},
 	"devDependencies": {
-		"@electron/notarize": "^2.2.0",
-		"electron": "^28.1.4",
+		"@electron/notarize": "^2.3.0",
+		"@types/plist": "^3.0.5",
+		"electron": "28.2.3",
 		"electron-builder": "24.9.1",
 		"electron-reloader": "^1.2.3"
 	},
-	"resolutions": {
-		"app-builder-bin": "npm:@julusian/app-builder-bin#v4.0.1"
-	},
 	"build": {
 		"productName": "Companion",
+		"executableName": "companion-launcher",
 		"appId": "test-companion.bitfocus.no",
 		"dmg": {
 			"artifactName": "companion-mac-${arch}.dmg",

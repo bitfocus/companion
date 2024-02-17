@@ -5,7 +5,7 @@ import { CopyToClipboard } from 'react-copy-to-clipboard'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faCopy, faTimes } from '@fortawesome/free-solid-svg-icons'
 import { CompanionVariableValues, type CompanionVariableValue } from '@companion-module/base'
-import type { VariableDefinition } from '@companion/shared/Model/Variables.js'
+import type { VariableDefinition } from '@companion-app/shared/Model/Variables.js'
 import { RootAppStoreContext } from '../Stores/RootAppStore.js'
 
 interface VariablesTableProps {

@@ -9,7 +9,7 @@ import {
 	VariableDefinitionsContext,
 } from '../util.js'
 import TimePicker from 'react-time-picker'
-import { InternalInputField } from '@companion/shared/Model/Options.js'
+import { InternalInputField } from '@companion-app/shared/Model/Options.js'
 import { DropdownChoice } from '@companion-module/base'
 
 export function InternalInstanceField(

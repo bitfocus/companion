@@ -6,11 +6,11 @@ import { faFileExport, faHome, faPencil } from '@fortawesome/free-solid-svg-icon
 import { ConfirmExportModal, ConfirmExportModalRef } from '../Components/ConfirmExportModal.js'
 import { ButtonInfiniteGrid, ButtonInfiniteGridRef, PrimaryButtonGridIcon } from './ButtonInfiniteGrid.js'
 import { useHasBeenRendered } from '../Hooks/useHasBeenRendered.js'
-import { useElementSize } from 'usehooks-ts'
+import { useResizeObserver } from 'usehooks-ts'
 import { ButtonGridHeader } from './ButtonGridHeader.js'
 import { ButtonGridActions, ButtonGridActionsRef } from './ButtonGridActions.js'
-import type { ControlLocation } from '@companion/shared/Model/Common.js'
-import type { PageModel } from '@companion/shared/Model/PageModel.js'
+import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
+import type { PageModel } from '@companion-app/shared/Model/PageModel.js'
 import { EditPagePropertiesModal, EditPagePropertiesModalRef } from './EditPageProperties.js'
 
 interface ButtonsGridPanelProps {
@@ -140,8 +140,9 @@ export const ButtonsGridPanel = memo(function ButtonsPage({
 
 	const [hasBeenInView, isInViewRef] = useHasBeenRendered()
 
-	const [setSizeRef, holderSize] = useElementSize()
-	const useCompactButtons = holderSize.width < 680 // Cutoff for what of the header row fit in the large mode
+	const setSizeRef = useRef(null)
+	const holderSize = useResizeObserver({ ref: setSizeRef })
+	const useCompactButtons = (holderSize.width ?? 0) < 680 // Cutoff for what of the header row fit in the large mode
 
 	return (
 		<KeyReceiver onKeyDown={onKeyDown} tabIndex={0} className="button-grid-panel">

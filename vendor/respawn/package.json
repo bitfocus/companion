@@ -7,12 +7,6 @@
   "dependencies": {
     "ps-tree": "^1.2.0"
   },
-  "scripts": {
-    "test": "tape test/index.js"
-  },
-  "devDependencies": {
-    "tape": "^4.9.2"
-  },
   "keywords": [
     "spawn",
     "restart",

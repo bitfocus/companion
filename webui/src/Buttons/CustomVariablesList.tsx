@@ -24,11 +24,11 @@ import {
 import { TextInputField } from '../Components/TextInputField.js'
 import { CheckboxInputField } from '../Components/CheckboxInputField.js'
 import { GenericConfirmModal, GenericConfirmModalRef } from '../Components/GenericConfirmModal.js'
-import { isCustomVariableValid } from '@companion/shared/CustomVariable.js'
+import { isCustomVariableValid } from '@companion-app/shared/CustomVariable.js'
 import { useDrag, useDrop } from 'react-dnd'
 import { usePanelCollapseHelper } from '../Helpers/CollapseHelper.js'
 import type { CompanionVariableValues } from '@companion-module/base'
-import { CustomVariablesModel, CustomVariableDefinition } from '@companion/shared/Model/CustomVariableModel.js'
+import { CustomVariablesModel, CustomVariableDefinition } from '@companion-app/shared/Model/CustomVariableModel.js'
 import { RootAppStoreContext } from '../Stores/RootAppStore.js'
 
 const DRAG_ID = 'custom-variables'

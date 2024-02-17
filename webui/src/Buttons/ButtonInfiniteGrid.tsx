@@ -1,4 +1,4 @@
-import { formatLocation } from '@companion/shared/ControlId.js'
+import { formatLocation } from '@companion-app/shared/ControlId.js'
 import { ButtonPreview } from '../Components/ButtonPreview.js'
 import React, {
 	forwardRef,
@@ -18,8 +18,8 @@ import useScrollPosition from '../Hooks/useScrollPosition.js'
 import useElementInnerSize from '../Hooks/useElementInnerSize.js'
 import { useButtonRenderCache } from '../Hooks/useSharedRenderCache.js'
 import { CButton, CInput } from '@coreui/react'
-import { ControlLocation } from '@companion/shared/Model/Common.js'
-import { UserConfigGridSize } from '@companion/shared/Model/UserConfigModel.js'
+import { ControlLocation } from '@companion-app/shared/Model/Common.js'
+import { UserConfigGridSize } from '@companion-app/shared/Model/UserConfigModel.js'
 import { PresetDragItem } from './Presets.js'
 
 export interface ButtonInfiniteGridRef {

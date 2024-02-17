@@ -19,7 +19,7 @@ import { TextInputField } from '../Components/index.js'
 import { TriggerEventEditor } from './EventEditor.js'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faQuestionCircle } from '@fortawesome/free-solid-svg-icons'
-import type { TriggerModel } from '@companion/shared/Model/TriggerModel.js'
+import type { TriggerModel } from '@companion-app/shared/Model/TriggerModel.js'
 
 interface EditTriggerPanelProps {
 	controlId: string

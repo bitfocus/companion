@@ -3,7 +3,7 @@ import { CHeader, CHeaderBrand, CHeaderNavItem, CHeaderNav, CHeaderNavLink, CTog
 import { SocketContext, socketEmitPromise } from '../util.js'
 import { faLock } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import type { AppUpdateInfo, AppVersionInfo } from '@companion/shared/Model/Common.js'
+import type { AppUpdateInfo, AppVersionInfo } from '@companion-app/shared/Model/Common.js'
 
 interface MyHeaderProps {
 	toggleSidebar: () => void

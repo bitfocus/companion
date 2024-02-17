@@ -1,6 +1,6 @@
 import React from 'react'
 import { CAlert, CInput, CInputCheckbox, CLabel } from '@coreui/react'
-import type { UserConfigModel } from '@companion/shared/Model/UserConfigModel.js'
+import type { UserConfigModel } from '@companion-app/shared/Model/UserConfigModel.js'
 
 interface PasswordStepProps {
 	config: Partial<UserConfigModel>

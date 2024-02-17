@@ -3,7 +3,7 @@ import { nanoid } from 'nanoid'
 import { ButtonPreviewBase } from '../Components/ButtonPreview.js'
 import { SocketContext, socketEmitPromise } from '../util.js'
 import { useDeepCompareEffect } from 'use-deep-compare'
-import { ControlLocation } from '@companion/shared/Model/Common.js'
+import { ControlLocation } from '@companion-app/shared/Model/Common.js'
 
 interface OptionButtonPreviewProps {
 	location: ControlLocation

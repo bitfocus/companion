@@ -1,6 +1,6 @@
 import React from 'react'
 import { CInputCheckbox, CInputRadio, CLabel } from '@coreui/react'
-import type { UserConfigModel } from '@companion/shared/Model/UserConfigModel.js'
+import type { UserConfigModel } from '@companion-app/shared/Model/UserConfigModel.js'
 
 interface SurfacesStepProps {
 	config: Partial<UserConfigModel>

@@ -24,7 +24,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faCog, faUndo } from '@fortawesome/free-solid-svg-icons'
 import CSwitch from '../CSwitch.js'
 import { SocketContext, UserConfigContext } from '../util.js'
-import type { UserConfigGridSize, UserConfigModel } from '@companion/shared/Model/UserConfigModel.js'
+import type { UserConfigGridSize, UserConfigModel } from '@companion-app/shared/Model/UserConfigModel.js'
 
 interface GridConfigProps {
 	config: UserConfigModel

@@ -1,6 +1,6 @@
 import React, { memo } from 'react'
 import { DropdownInputField } from '../Components/DropdownInputField.js'
-import type { ExportFormat } from '@companion/shared/Model/ExportFormat.js'
+import type { ExportFormat } from '@companion-app/shared/Model/ExportFormat.js'
 import { DropdownChoice, DropdownChoiceId } from '@companion-module/base'
 
 export const ExportFormatDefault: ExportFormat = 'json-gz'

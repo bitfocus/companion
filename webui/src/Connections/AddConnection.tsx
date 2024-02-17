@@ -7,7 +7,7 @@ import { socketEmitPromise, ModulesContext } from '../util.js'
 import { useCallback } from 'react'
 import { useRef } from 'react'
 import { GenericConfirmModal, GenericConfirmModalRef } from '../Components/GenericConfirmModal.js'
-import { ModuleDisplayInfo } from '@companion/shared/Model/Common.js'
+import { ModuleDisplayInfo } from '@companion-app/shared/Model/Common.js'
 import { RootAppStoreContext } from '../Stores/RootAppStore.js'
 
 interface AddConnectionsPanelProps {

@@ -5,7 +5,7 @@ import { nanoid } from 'nanoid'
 import { useParams } from 'react-router-dom'
 import { VariableSizeList as List, ListOnScrollProps } from 'react-window'
 import AutoSizer from 'react-virtualized-auto-sizer'
-import { useElementSize } from 'usehooks-ts'
+import { useResizeObserver } from 'usehooks-ts'
 import { stringify as csvStringify } from 'csv-stringify/sync'
 
 interface DebugLogLine {
@@ -140,7 +140,8 @@ export function ConnectionDebug() {
 	const doToggleDebug = useCallback(() => doToggleConfig('debug'), [doToggleConfig])
 	const doToggleConsole = useCallback(() => doToggleConfig('console'), [doToggleConfig])
 
-	const [contentRef, { width: contentWidth }] = useElementSize()
+	const contentRef = useRef(null)
+	const { width: contentWidth } = useResizeObserver({ ref: contentRef })
 
 	return (
 		<CContainer style={{ height: 'calc(100vh - 10px)', padding: '10px', background: '#eee' }}>
@@ -201,7 +202,7 @@ export function ConnectionDebug() {
 							linesBuffer={linesBuffer}
 							listChunkClearedToken={listChunkClearedToken}
 							config={config}
-							contentWidth={contentWidth}
+							contentWidth={contentWidth ?? 0}
 						/>
 					</CCol>
 				</CRow>

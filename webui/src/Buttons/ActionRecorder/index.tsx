@@ -3,7 +3,7 @@ import { socketEmitPromise, SocketContext, applyPatchOrReplaceObject } from '../
 import { CAlert, CCol, CRow } from '@coreui/react'
 import { GenericConfirmModal } from '../../Components/GenericConfirmModal.js'
 import { Operation as JsonPatchOperation } from 'fast-json-patch'
-import type { RecordSessionInfo, RecordSessionListInfo } from '@companion/shared/Model/ActionRecorderModel.js'
+import type { RecordSessionInfo, RecordSessionListInfo } from '@companion-app/shared/Model/ActionRecorderModel.js'
 import { RecorderSessionFinishModal } from './RecorderSessionFinishModal.js'
 import { RecorderSessionHeading, RecorderSession } from './RecorderSessionHeading.js'
 

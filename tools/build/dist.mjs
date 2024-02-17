@@ -41,10 +41,11 @@ const buildString = await generateVersionString()
 await fs.remove('dist')
 
 // Build application
-await $`yarn webpack`
+await $`yarn workspace @companion-app/shared build:ts`
+await $`yarn workspace companion build`
 
 // Build webui
-await $`yarn --cwd webui build`
+await $`yarn workspace @companion-app/webui build`
 
 // generate the 'static' zip files to serve
 await zipDirectory('./webui/build', 'dist/webui.zip')
@@ -53,7 +54,7 @@ await zipDirectory('./docs', 'dist/docs.zip')
 // generate a package.json for the required native dependencies
 const require = createRequire(import.meta.url)
 const dependencies = {}
-const webpackConfig = require('../../webpack.config.cjs')
+const webpackConfig = require('../../companion/webpack.config.cjs')
 const neededDependencies = Object.keys(webpackConfig.externals)
 for (const name of neededDependencies) {
 	const pkgJson = require(`${name}/package.json`)
@@ -81,6 +82,7 @@ await fs.writeFile(
 				// Force the same custom `node-gyp-build` version to allow better cross compiling
 				'node-gyp-build': companionPkgJson.resolutions['node-gyp-build'],
 			},
+			packageManager: companionPkgJson.packageManager,
 		},
 		undefined,
 		2
@@ -99,8 +101,7 @@ for (const name of copyPrebuildsFromDependencies) {
 await fs.mkdirp('dist/assets/Fonts')
 await fs.copy(path.join('assets', 'Fonts'), 'dist/assets/Fonts')
 
-// Build legacy modules
-await $`yarn --cwd module-legacy generate-manifests`
+// Copy legacy modules
 await fs.mkdir('dist/module-legacy')
 await fs.copy('module-legacy/manifests', 'dist/module-legacy/manifests')
 

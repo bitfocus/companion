@@ -13,7 +13,7 @@ import {
 import { PreventDefaultHandler, socketEmitPromise } from '../util.js'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faDownload } from '@fortawesome/free-solid-svg-icons'
-import type { ClientResetSelection } from '@companion/shared/Model/ImportExport.js'
+import type { ClientResetSelection } from '@companion-app/shared/Model/ImportExport.js'
 import { RootAppStoreContext } from '../Stores/RootAppStore.js'
 
 interface ResetWizardModalProps {}

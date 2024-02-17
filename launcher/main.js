@@ -1,18 +1,18 @@
-const path = require('path')
-const url = require('url')
-const fs = require('fs-extra')
-const { init, showReportDialog, configureScope } = require('@sentry/electron')
-const systeminformation = require('systeminformation')
-const Store = require('electron-store')
-const { ipcMain, app, BrowserWindow, dialog } = require('electron')
-const electron = require('electron')
-const { nanoid } = require('nanoid')
-const respawn = require('respawn')
-const stripAnsi = require('strip-ansi')
-const chokidar = require('chokidar')
-const debounceFn = require('debounce-fn')
-const fileStreamRotator = require('file-stream-rotator')
-const { ConfigReleaseDirs } = require('./Paths.cjs')
+// @ts-check
+import path from 'path'
+import url, { fileURLToPath } from 'url'
+import fs from 'fs-extra'
+import { init, getCurrentScope } from '@sentry/electron'
+import systeminformation from 'systeminformation'
+import Store from 'electron-store'
+import electron, { ipcMain, app, BrowserWindow, dialog } from 'electron'
+import { nanoid } from 'nanoid'
+import respawn from 'respawn'
+import stripAnsi from 'strip-ansi'
+import chokidar from 'chokidar'
+import debounceFn from 'debounce-fn'
+import fileStreamRotator from 'file-stream-rotator'
+import { ConfigReleaseDirs } from './Paths.cjs'
 
 // Electron works on older versions of macos than nodejs, we should give a proper warning if we know companion will get stuck in a crash loop
 if (process.platform === 'darwin') {
@@ -23,6 +23,7 @@ if (process.platform === 'darwin') {
 		const minimumVersion = '10.15'
 		const supportedVersions = new semver.Range(`>=${minimumVersion}`)
 
+		/** @type {any} */
 		const versionInfo = plist.parse(fs.readFileSync('/System/Library/CoreServices/SystemVersion.plist', 'utf8'))
 		const productVersion = semver.coerce(versionInfo.ProductVersion)
 
@@ -39,7 +40,7 @@ if (process.platform === 'darwin') {
 }
 
 // Ensure there isn't another instance of companion running already
-var lock = app.requestSingleInstanceLock()
+const lock = app.requestSingleInstanceLock()
 if (!lock) {
 	electron.dialog.showErrorBox(
 		'Multiple instances',
@@ -86,12 +87,8 @@ if (!lock) {
 	let machineId = nanoid()
 	const machineIdPath = path.join(configDir, 'machid')
 	if (fs.pathExistsSync(machineIdPath)) {
-		let text = ''
 		try {
-			text = fs.readFileSync(machineIdPath)
-			if (text) {
-				machineId = text.toString()
-			}
+			machineId = fs.readFileSync(machineIdPath).toString().trim() || machineId
 		} catch (e) {
 			console.warn(`Error reading machid file: ${e}`)
 		}
@@ -138,7 +135,7 @@ if (!lock) {
 	let sentryDsn
 	try {
 		sentryDsn = fs
-			.readFileSync(__dirname + '/SENTRY')
+			.readFileSync(new URL('/SENTRY', import.meta.url))
 			.toString()
 			.trim()
 	} catch (e) {
@@ -151,10 +148,18 @@ if (!lock) {
 		// companionRootPath = path.join(__dirname, '../dist')
 		// if (!fs.pathExistsSync(path.join(companionRootPath, 'BUILD'))) {
 		// Finally, use the unbuilt parent
-		companionRootPath = path.join(__dirname, '..')
+		companionRootPath = fileURLToPath(new URL('../companion', import.meta.url))
 		// }
 	}
 
+	/**
+	 * @type {{
+	 *   appVersion: string
+	 *   appStatus: string
+	 *   appURL: string
+	 *   appLaunch: string | null
+	 * }}
+	 */
 	let appInfo = {
 		// The version number of the build was set to match the BUILD file
 		appVersion: app.getVersion(),
@@ -170,18 +175,17 @@ if (!lock) {
 			dsn: sentryDsn,
 			release: `companion@${appInfo.appVersion}`,
 			beforeSend(event) {
-				if (event.exception) {
-					showReportDialog()
-				}
+				// if (event.exception) {
+				// 	showReportDialog()
+				// }
 				return event
 			},
 		})
 
 		try {
-			configureScope((scope) => {
-				scope.setUser({ id: machineId })
-				scope.setExtra('build', appInfo.appVersion)
-			})
+			const scope = getCurrentScope()
+			scope.setUser({ id: machineId })
+			scope.setExtra('build', appInfo.appVersion)
 		} catch (e) {
 			console.log('Error setting up sentry info: ', e)
 		}
@@ -219,7 +223,9 @@ if (!lock) {
 		}
 	}
 
+	/** @type {electron.BrowserWindow | null} */
 	let window
+	/** @type {electron.Tray | null} */
 	let tray = null
 
 	const cachedDebounces = {}
@@ -259,40 +265,38 @@ if (!lock) {
 				if (newPath0 && (await fs.pathExists(newPath0))) {
 					// Watch for changes in the modules
 					const devModulesPath = path.resolve(newPath0)
-					watcher = chokidar.watch(devModulesPath, {
+					watcher = chokidar.watch(['**/*.mjs', '**/*.js', '**/*.cjs', '**/*.json'], {
+						cwd: devModulesPath,
 						ignoreInitial: true,
 						ignored: ['**/node_modules/**'],
 					})
 
 					watcher.on('all', (event, filename) => {
 						const fullpath = path.resolve(filename)
-						if (fullpath.startsWith(devModulesPath)) {
-							const moduleDirName = fullpath.slice(devModulesPath.length + 1).split(path.sep)[0]
+						const moduleDirName = filename.split(path.sep)[0]
 
-							let fn = cachedDebounces[moduleDirName]
-							if (!fn) {
-								// Debounce, to avoid spamming when many files change
-								fn = debounceFn(
-									() => {
-										console.log('Sending reload for module:', moduleDirName)
-										if (child?.child) {
-											child.child.send({
-												messageType: 'reload-extra-module',
-												fullpath: path.join(devModulesPath, moduleDirName),
-											})
-										}
-									},
-									{
-										after: true,
-										before: false,
-										wait: 100,
+						let fn = cachedDebounces[moduleDirName]
+						if (!fn) {
+							// Debounce, to avoid spamming when many files change
+							fn = debounceFn(
+								() => {
+									console.log('Sending reload for module:', moduleDirName)
+									if (child?.child) {
+										child.child.send({
+											messageType: 'reload-extra-module',
+											fullpath: path.join(devModulesPath, moduleDirName),
+										})
 									}
-								)
-								cachedDebounces[moduleDirName] = fn
-							}
-
-							fn()
+								},
+								{
+									after: true,
+									before: false,
+									wait: 100,
+								}
+							)
+							cachedDebounces[moduleDirName] = fn
 						}
+						fn()
 					})
 				}
 			} catch (e) {
@@ -305,7 +309,7 @@ if (!lock) {
 	restartWatcher()
 
 	function createWindow() {
-		window = new BrowserWindow({
+		const thisWindow = (window = new BrowserWindow({
 			show: false,
 			width: 400,
 			height: 600,
@@ -314,14 +318,14 @@ if (!lock) {
 			// maxHeight: 380,
 			frame: false,
 			resizable: false,
-			icon: path.join(__dirname, './assets/icon.png'),
+			icon: fileURLToPath(new URL('./assets/icon.png', import.meta.url)),
 			webPreferences: {
-				pageVisibility: true,
 				nodeIntegration: true,
 				contextIsolation: true,
-				preload: path.join(__dirname, './window-preload.js'),
+				preload: fileURLToPath(new URL('./window-preload.mjs', import.meta.url)),
 			},
-		})
+		}))
+		console.log('preload', fileURLToPath(new URL('./window-preload.js', import.meta.url)))
 
 		// window.webContents.openDevTools({
 		// 	mode:'detach'
@@ -334,23 +338,29 @@ if (!lock) {
 			}
 		})
 
-		window
+		thisWindow
 			.loadURL(
 				url.format({
-					pathname: path.join(__dirname, './window.html'),
+					pathname: fileURLToPath(new URL('./window.html', import.meta.url)),
 					protocol: 'file:',
 					slashes: true,
 				})
 			)
 			.then(() => {
-				window.webContents.setBackgroundThrottling(false)
+				thisWindow.webContents.setBackgroundThrottling(false)
 			})
 
+		let width = 0
 		ipcMain.on('setHeight', (e, height) => {
 			// console.log('height', height)
-			const oldSize = window.getSize()
-			// window.setSize(oldSize[0], height, false)
-			window.setBounds({ width: oldSize[0], height: height })
+
+			// Cache the width, otherwise it can keep on growing unexpectedly on some machines
+			if (width === 0) {
+				const oldSize = thisWindow.getSize()
+				width = oldSize[0]
+			}
+
+			thisWindow.setBounds({ width: width, height: height })
 		})
 
 		ipcMain.on('info', () => {
@@ -371,7 +381,7 @@ if (!lock) {
 		})
 
 		ipcMain.on('launcher-minimize', () => {
-			window.hide()
+			thisWindow.hide()
 		})
 
 		ipcMain.on('launcher-open-gui', () => {
@@ -389,7 +399,7 @@ if (!lock) {
 			const newPort = Number(msg)
 			if (isNaN(newPort) || newPort < 1024 || newPort > 65535) {
 				electron.dialog
-					.showMessageBox(window, {
+					.showMessageBox(thisWindow, {
 						type: 'warning',
 						message: 'Port must be between 1024 and 65535',
 					})
@@ -428,7 +438,7 @@ if (!lock) {
 		ipcMain.on('pick-developer-modules-path', () => {
 			console.log('pick dev modules path')
 			electron.dialog
-				.showOpenDialog(window, {
+				.showOpenDialog(thisWindow, {
 					properties: ['openDirectory'],
 				})
 				.then((r) => {
@@ -457,15 +467,17 @@ if (!lock) {
 					{ id: '127.0.0.1', label: 'localhost: 127.0.0.1' },
 				]
 
-				for (const obj of list) {
-					if (obj.ip4 && !obj.internal) {
-						let label = `${obj.iface}: ${obj.ip4}`
-						if (obj.type && obj.type !== 'unknown') label += ` (${obj.type})`
+				if (Array.isArray(list)) {
+					for (const obj of list) {
+						if (obj.ip4 && !obj.internal) {
+							let label = `${obj.iface}: ${obj.ip4}`
+							if (obj.type && obj.type !== 'unknown') label += ` (${obj.type})`
 
-						interfaces.push({
-							id: obj.ip4,
-							label: label,
-						})
+							interfaces.push({
+								id: obj.ip4,
+								label: label,
+							})
+						}
 					}
 				}
 
@@ -484,13 +496,19 @@ if (!lock) {
 				showWindow()
 			}
 		})
+
+		window.on('close', (e) => {
+			e.preventDefault()
+
+			performQuit()
+		})
 	}
 
 	function createTray() {
 		tray = new electron.Tray(
 			process.platform == 'darwin'
-				? path.join(__dirname, 'assets/trayTemplate.png')
-				: path.join(__dirname, 'assets/icon.png')
+				? fileURLToPath(new URL('./assets/trayTemplate.png', import.meta.url))
+				: fileURLToPath(new URL('./assets/icon.png', import.meta.url))
 		)
 		tray.setIgnoreDoubleClickEvents(true)
 		if (process.platform !== 'darwin') {
@@ -541,25 +559,29 @@ if (!lock) {
 
 	function trayQuit() {
 		electron.dialog
-			.showMessageBox(undefined, {
+			.showMessageBox({
 				title: 'Companion',
 				message: 'Are you sure you want to quit Companion?',
 				buttons: ['Quit', 'Cancel'],
 			})
 			.then((v) => {
 				if (v.response === 0) {
-					if (watcher) watcher.close().catch(() => console.error('Failed to stop'))
-
-					if (child) {
-						child.shouldRestart = false
-						if (child.child) {
-							child.child.send({
-								messageType: 'exit',
-							})
-						}
-					}
+					performQuit()
 				}
 			})
+	}
+
+	function performQuit() {
+		if (watcher) watcher.close().catch(() => console.error('Failed to stop'))
+
+		if (child) {
+			child.shouldRestart = false
+			if (child.child) {
+				child.child.send({
+					messageType: 'exit',
+				})
+			}
+		}
 	}
 
 	function scanUsb() {
@@ -579,6 +601,7 @@ if (!lock) {
 	}
 
 	function toggleWindow() {
+		if (!window) return
 		if (window.isVisible()) {
 			window.hide()
 		} else {
@@ -587,6 +610,7 @@ if (!lock) {
 	}
 
 	function showWindow() {
+		if (!window) return
 		window.show()
 		window.focus()
 	}
@@ -596,6 +620,7 @@ if (!lock) {
 		.then(async () => {
 			// Check for a more recently modified db
 			const dirs = fs.readdirSync(configDir)
+			/** @type {[number, string] | null} */
 			let mostRecentDir = null
 			for (const dirname of dirs) {
 				try {
@@ -847,11 +872,11 @@ if (!lock) {
 				} else if (data.messageType === 'show-error') {
 					electron.dialog.showErrorBox(data.title, data.body)
 				} else if (data.messageType === 'http-bind-status') {
+					delete data.messageType
 					appInfo = {
 						...appInfo,
 						...data,
 					}
-					delete appInfo.messageType
 
 					sendAppInfo()
 				} else if (data.messageType === 'exit') {

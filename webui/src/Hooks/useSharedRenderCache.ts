@@ -1,7 +1,7 @@
 import { useContext, useEffect, useMemo, useState } from 'react'
 import { SocketContext, socketEmitPromise } from '../util.js'
 import { nanoid } from 'nanoid'
-import { ControlLocation } from '@companion/shared/Model/Common.js'
+import { ControlLocation } from '@companion-app/shared/Model/Common.js'
 
 interface ImageState {
 	image: string | null

@@ -15,7 +15,7 @@ import { dsanMastercueKeymap, keyboardKeymap, logitecKeymap } from './Keymaps.js
 import { ButtonPreview } from '../Components/ButtonPreview.js'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faCancel, faExpand } from '@fortawesome/free-solid-svg-icons'
-import { ControlLocation, EmulatorConfig, EmulatorImage } from '@companion/shared/Model/Common.js'
+import { ControlLocation, EmulatorConfig, EmulatorImage } from '@companion-app/shared/Model/Common.js'
 import { Operation as JsonPatchOperation } from 'fast-json-patch'
 
 type EmulatorImageCache = Record<number, Record<number, string | false | undefined> | undefined>

@@ -62,7 +62,10 @@ await fs.remove(path.join(runtimeDir, 'share'))
 await fs.remove(path.join(runtimeDir, 'include'))
 
 // Install dependencies
-await $`yarn --cwd dist install`
+$.cwd = 'dist'
+// await fs.writeFile(`dist/yarn.lock`, '')
+await $`yarn install --no-immutable`
+$.cwd = undefined
 
 // Prune out any prebuilds from other platforms
 if (platformInfo.runtimePlatform === 'win') {
@@ -129,8 +132,7 @@ if (process.env.ELECTRON !== '0') {
 
 	try {
 		// perform the electron build
-		await $`yarn --cwd launcher install`
-		await $`yarn --cwd launcher electron-builder --publish=never ${platformInfo.electronBuilderArgs}`
+		await $`yarn workspace @companion-app/launcher run -B electron-builder --publish=never ${platformInfo.electronBuilderArgs}`
 	} finally {
 		// undo the changes made
 		await fs.writeFile(launcherPkgJsonPath, launcherPkgJsonStr)

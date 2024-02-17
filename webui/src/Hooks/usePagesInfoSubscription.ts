@@ -1,7 +1,7 @@
 import { useContext, useEffect, useMemo, useState } from 'react'
 import { PagesContext, socketEmitPromise } from '../util.js'
 import { Socket } from 'socket.io-client'
-import type { PageModel } from '@companion/shared/Model/PageModel.js'
+import type { PageModel } from '@companion-app/shared/Model/PageModel.js'
 import jsonPatch, { Operation as JsonPatchOperation } from 'fast-json-patch'
 import { cloneDeep } from 'lodash-es'
 

@@ -8,7 +8,7 @@ import { GenericConfirmModal, GenericConfirmModalRef } from '../Components/Gener
 import { SurfaceEditModal, SurfaceEditModalRef } from './EditModal.js'
 import { AddSurfaceGroupModal, AddSurfaceGroupModalRef } from './AddGroupModal.js'
 import classNames from 'classnames'
-import { ClientDevicesListItem, ClientSurfaceItem } from '@companion/shared/Model/Surfaces.js'
+import { ClientDevicesListItem, ClientSurfaceItem } from '@companion-app/shared/Model/Surfaces.js'
 
 export const SurfacesPage = memo(function SurfacesPage() {
 	const socket = useContext(SocketContext)

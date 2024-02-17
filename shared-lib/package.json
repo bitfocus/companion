@@ -1,0 +1,24 @@
+{
+  "name": "@companion-app/shared",
+  "version": "0.0.0",
+  "type": "module",
+  "exports": {
+    "./*.js": {
+      "types": "./dist/*.d.ts",
+      "default": "./lib/*.js"
+    }
+  },
+  "dependencies": {
+    "@jsep-plugin/numbers": "^1.0.1",
+    "@jsep-plugin/template": "^1.0.3",
+    "jsep": "^1.3.8"
+  },
+  "scripts": {
+    "build": "run build:ts",
+    "build:ts": "tsc",
+    "dev": "tsc --watch"
+  },
+  "devDependencies": {
+    "typescript": "^5.3.3"
+  }
+}

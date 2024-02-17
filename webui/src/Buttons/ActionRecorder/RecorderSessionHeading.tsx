@@ -13,7 +13,7 @@ import { ActionsList } from '../../Controls/ActionSetEditor.js'
 import { usePanelCollapseHelper } from '../../Helpers/CollapseHelper.js'
 import CSwitch from '../../CSwitch.js'
 import type { DropdownChoiceId } from '@companion-module/base'
-import type { RecordSessionInfo } from '@companion/shared/Model/ActionRecorderModel.js'
+import type { RecordSessionInfo } from '@companion-app/shared/Model/ActionRecorderModel.js'
 import { useActionRecorderActionService } from '../../Services/Controls/ControlActionsService.js'
 import { GenericConfirmModalRef } from '../../Components/GenericConfirmModal.js'
 
