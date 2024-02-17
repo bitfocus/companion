@@ -13,7 +13,7 @@ const devModulesPath = argv['extra-module-path'] ? path.resolve(argv['extra-modu
 
 concurrently([
 	{
-		command: `yarn dev`,
+		command: `yarn dev --preserveWatchOutput`,
 		cwd: '../shared-lib',
 	},
 ]).result.catch((e) => {

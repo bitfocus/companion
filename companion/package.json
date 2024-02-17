@@ -6,9 +6,9 @@
 	"type": "module",
 	"private": true,
 	"scripts": {
-		"dev": "yarn dev:inner --admin-address 127.0.0.1 --log-level debug",
-		"dev:inner": "yarn build:writefile && run -TB zx ../tools/dev.mjs -- --extra-module-path=../module-local-dev",
-		"dev:debug": "yarn dev:inner --admin-address 127.0.0.1 --log-level silly",
+		"dev": "run dev:inner --admin-address 127.0.0.1 --log-level debug",
+		"dev:inner": "run -TB zx ../tools/dev.mjs --extra-module-path=../module-local-dev",
+		"dev:debug": "run dev:inner --admin-address 127.0.0.1 --log-level silly",
 		"build": "webpack",
 		"check-types": "tsc --noEmit",
 		"watch-types": "tsc --noEmit --watch"
