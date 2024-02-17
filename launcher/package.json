@@ -1,7 +1,7 @@
 {
-	"name": "companion-launcher",
+	"name": "@companion-app/launcher",
 	"description": "Companion",
-	"version": "0.0.1",
+	"version": "3.3.0",
 	"main": "main.js",
 	"license": "MIT",
 	"private": true,
@@ -12,7 +12,6 @@
 	},
 	"dependencies": {
 		"@sentry/electron": "^4.17.0",
-		"app-builder-bin": "npm:@julusian/app-builder-bin#v4.0.1",
 		"chokidar": "^3.6.0",
 		"debounce-fn": "^4.0.0",
 		"electron-store": "^8.1.0",
@@ -20,7 +19,7 @@
 		"fs-extra": "^11.2.0",
 		"nanoid": "^3.3.7",
 		"plist": "^3.1.0",
-		"respawn": "link:../vendor/respawn",
+		"respawn": "*",
 		"semver": "^7.6.0",
 		"strip-ansi": "^6.0.0",
 		"systeminformation": "^5.21.24"
@@ -28,15 +27,13 @@
 	"devDependencies": {
 		"@electron/notarize": "^2.2.1",
 		"@types/plist": "^3.0.5",
-		"electron": "^28.2.2",
+		"electron": "28.2.2",
 		"electron-builder": "24.9.1",
 		"electron-reloader": "^1.2.3"
 	},
-	"resolutions": {
-		"app-builder-bin": "npm:@julusian/app-builder-bin#v4.0.1"
-	},
 	"build": {
 		"productName": "Companion",
+		"executableName": "companion-launcher",
 		"appId": "test-companion.bitfocus.no",
 		"dmg": {
 			"artifactName": "companion-mac-${arch}.dmg",

@@ -2,13 +2,12 @@ import React, { useCallback, useContext, useMemo } from 'react'
 import { FeedbacksContext, ConnectionsContext } from '../util.js'
 import Select, { createFilter } from 'react-select'
 import { MenuPortalContext } from '../Components/DropdownInputField.js'
-import { FilterOptionOption } from 'react-select/dist/declarations/src/filters.js'
 import { RootAppStoreContext } from '../Stores/RootAppStore.js'
 import { observer } from 'mobx-react-lite'
 import { computed } from 'mobx'
 
 const baseFilter = createFilter<AddFeedbackOption>()
-const filterOptions = (candidate: FilterOptionOption<AddFeedbackOption>, input: string) => {
+const filterOptions: ReturnType<typeof createFilter<AddFeedbackOption>> = (candidate, input) => {
 	if (input) {
 		return !candidate.data.isRecent && baseFilter(candidate, input)
 	} else {

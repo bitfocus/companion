@@ -13,24 +13,21 @@ jobs:
         with:
           node-version-file: '.node-version'
 
-      - name: Prepare (server)
+      - name: Prepare
         run: |
-          # try and avoid timeout errors
-          yarn config set network-timeout 100000 -g
+          corepack enable
 
-          yarn --frozen-lockfile
+          # try and avoid timeout errors
+          yarn config set httpTimeout 100000
+
+          yarn --immutable
+
+          yarn build:ts
 
       - name: Check types (server)
         run: |
+          cd companion
           yarn check-types
-
-      - name: Prepare (client)
-        run: |
-          cd webui
-          # try and avoid timeout errors
-          yarn config set network-timeout 100000 -g
-
-          yarn --frozen-lockfile
 
       - name: Check types (client)
         run: |
@@ -61,9 +58,12 @@ jobs:
 
       - name: build & package
         run: |
-          # try and avoid timeout errors
-          yarn config set network-timeout 100000 -g
+          corepack enable
 
+          # try and avoid timeout errors
+          yarn config set httpTimeout 100000
+
+          yarn --immutable
           yarn update
 
           yarn zx tools/build/complete.mjs
@@ -128,9 +128,12 @@ jobs:
 
       - name: build & package
         run: |
-          # try and avoid timeout errors
-          yarn config set network-timeout 100000 -g
+          corepack enable
 
+          # try and avoid timeout errors
+          yarn config set httpTimeout 100000
+
+          yarn --immutable
           yarn update
 
           yarn zx tools/build/complete.mjs linux-arm64
@@ -194,9 +197,12 @@ jobs:
 
       - name: build & package
         run: |
-          # try and avoid timeout errors
-          yarn config set network-timeout 100000 -g
+          corepack enable
 
+          # try and avoid timeout errors
+          yarn config set httpTimeout 100000
+
+          yarn --immutable
           yarn update
 
           yarn zx tools/build/complete.mjs
@@ -259,9 +265,12 @@ jobs:
 
       - name: yarn update
         run: |
-          # try and avoid timeout errors
-          yarn config set network-timeout 100000 -g
+          corepack enable
 
+          # try and avoid timeout errors
+          yarn config set httpTimeout 100000
+
+          yarn --immutable
           yarn update
         env:
           CI: 1
@@ -329,16 +338,13 @@ jobs:
       - name: build & package
         shell: bash
         run: |
+          corepack enable
+
           # try and avoid timeout errors
-          yarn config set network-timeout 100000 -g
+          yarn config set httpTimeout 100000
 
-          # This fixes it somehow, and without it we get no logs from any shell scripts which are run
-          yarn config set script-shell bash
-
+          yarn --immutable
           yarn update
-
-          # zx needs this to be unset..
-          yarn config set script-shell ''
 
           yarn zx tools/build/complete.mjs
         env:

@@ -15,7 +15,7 @@ import { assertNever, literal, InstanceStatus } from '@companion-module/base'
 import { ServiceRest } from './rest.js'
 
 // @ts-expect-error Not typescript
-import Image from '../../lib/Graphics/Image.js'
+import Image from '../../companion/lib/Graphics/Image.js'
 import { nanoid } from 'nanoid'
 
 /**

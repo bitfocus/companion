@@ -4,10 +4,27 @@ import chokidar from 'chokidar'
 import { $ } from 'zx/core'
 import path from 'path'
 import debounceFn from 'debounce-fn'
+import { fileURLToPath } from 'url'
+import concurrently from 'concurrently'
 
 let node
 
 const devModulesPath = argv['extra-module-path'] ? path.resolve(argv['extra-module-path']) : undefined
+
+concurrently([
+	{
+		command: `yarn dev`,
+		cwd: '../shared-lib',
+	},
+]).result.catch((e) => {
+	console.error(e)
+
+	if (node) {
+		node.kill()
+	}
+
+	process.exit(1)
+})
 
 const cachedDebounces = {}
 
@@ -55,8 +72,10 @@ await start()
 async function start() {
 	node = $.spawn('node', ['main.js', ...process.argv.slice(3)], {
 		stdio: ['inherit', 'inherit', 'inherit', 'ipc'],
+		cwd: fileURLToPath(new URL('../companion', import.meta.url)),
 		env: {
 			...process.env,
+
 			COMPANION_DEV_MODULES: '1',
 		},
 	})

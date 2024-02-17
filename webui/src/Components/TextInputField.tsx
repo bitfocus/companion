@@ -42,7 +42,7 @@ export function TextInputField({
 
 	const tribute = useMemo(() => {
 		// Create it once, then we attach and detach whenever the ref changes
-		return new Tribute<TributeSuggestion>({
+		return new Tribute.default<TributeSuggestion>({
 			values: [],
 			trigger: '$(',
 
