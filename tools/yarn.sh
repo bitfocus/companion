@@ -42,7 +42,13 @@ heading "Legacy Modules"
 cd module-legacy
 yarn --frozen-lockfile
 echo "Warning: This next step can take many minutes to run"
-yarn generate-manifests
+if [ -z "$CI" ]; then
+	yarn generate-manifests
+else
+	yarn config set script-shell bash
+	yarn generate-manifests
+	yarn config set script-shell ''
+fi
 echo
 cd ..
 
