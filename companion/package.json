@@ -27,7 +27,7 @@
 	"author": "Bitfocus AS",
 	"license": "MIT",
 	"devDependencies": {
-		"@sentry/webpack-plugin": "^2.14.0",
+		"@sentry/webpack-plugin": "^2.14.1",
 		"@types/archiver": "^6.0.2",
 		"@types/cors": "^2.8.17",
 		"@types/ejson": "^2.2.2",
@@ -43,7 +43,7 @@
 		"jsdoc": "^4.0.2",
 		"supertest": "^6.3.4",
 		"typescript": "~5.3.3",
-		"webpack": "^5.90.1",
+		"webpack": "^5.90.2",
 		"webpack-cli": "^5.1.4"
 	},
 	"dependencies": {
@@ -54,9 +54,9 @@
 		"@julusian/jpeg-turbo": "^2.1.0",
 		"@julusian/skia-canvas": "^1.0.5",
 		"@loupedeck/node": "^1.0.0",
-		"@sentry/integrations": "^7.101.0",
-		"@sentry/node": "^7.101.0",
-		"@sentry/tracing": "^7.101.0",
+		"@sentry/integrations": "^7.101.1",
+		"@sentry/node": "^7.101.1",
+		"@sentry/tracing": "^7.101.1",
 		"archiver": "^6.0.1",
 		"body-parser": "^1.20.2",
 		"bonjour-service": "^1.2.1",
