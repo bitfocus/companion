@@ -1,5 +1,5 @@
 /**
- * @typedef {import("@companion/shared/Model/StyleModel.js").DrawStyleButtonModel | 'pagenum' | 'pageup' | 'pagedown'} ImageResultStyle
+ * @typedef {import("@companion-app/shared/Model/StyleModel.js").DrawStyleButtonModel | 'pagenum' | 'pageup' | 'pagedown'} ImageResultStyle
  */
 
 export class ImageResult {

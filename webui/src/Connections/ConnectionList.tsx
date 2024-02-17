@@ -26,7 +26,7 @@ import CSwitch from '../CSwitch.js'
 import { useDrag, useDrop } from 'react-dnd'
 import { windowLinkOpen } from '../Helpers/Window.js'
 import classNames from 'classnames'
-import type { ClientConnectionConfig, ConnectionStatusEntry } from '@companion/shared/Model/Common.js'
+import type { ClientConnectionConfig, ConnectionStatusEntry } from '@companion-app/shared/Model/Common.js'
 
 interface VisibleConnectionsState {
 	disabled: boolean

@@ -25,12 +25,12 @@ import type {
 	ClientConnectionConfig,
 	ClientEventDefinition,
 	ModuleDisplayInfo,
-} from '@companion/shared/Model/Common.js'
-import type { ClientActionDefinition, InternalFeedbackDefinition } from '@companion/shared/Model/Options.js'
-import type { AllVariableDefinitions, ModuleVariableDefinitions } from '@companion/shared/Model/Variables.js'
-import type { CustomVariablesModel } from '@companion/shared/Model/CustomVariableModel.js'
-import type { ClientDevicesListItem } from '@companion/shared/Model/Surfaces.js'
-import type { ClientTriggerData } from '@companion/shared/Model/TriggerModel.js'
+} from '@companion-app/shared/Model/Common.js'
+import type { ClientActionDefinition, InternalFeedbackDefinition } from '@companion-app/shared/Model/Options.js'
+import type { AllVariableDefinitions, ModuleVariableDefinitions } from '@companion-app/shared/Model/Variables.js'
+import type { CustomVariablesModel } from '@companion-app/shared/Model/CustomVariableModel.js'
+import type { ClientDevicesListItem } from '@companion-app/shared/Model/Surfaces.js'
+import type { ClientTriggerData } from '@companion-app/shared/Model/TriggerModel.js'
 import { useActiveLearnRequests } from './_Model/ActiveLearn.js'
 import { RootAppStore, RootAppStoreContext } from './Stores/RootAppStore.js'
 import { RecentlyUsedIdsStore } from './Stores/RecentlyUsedIdsStore.js'

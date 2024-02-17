@@ -17,8 +17,8 @@
 
 import { cloneDeep } from 'lodash-es'
 import { SplitVariableId, rgb, serializeIsVisibleFnSingle } from '../Resources/Util.js'
-import { oldBankIndexToXY, ParseControlId } from '@companion/shared/ControlId.js'
-import { ButtonStyleProperties } from '@companion/shared/Style.js'
+import { oldBankIndexToXY, ParseControlId } from '@companion-app/shared/ControlId.js'
+import { ButtonStyleProperties } from '@companion-app/shared/Style.js'
 import debounceFn from 'debounce-fn'
 import { ParseInternalControlReference } from './Util.js'
 import LogController from '../Log/Controller.js'
@@ -684,9 +684,9 @@ export default class Controls {
 	}
 
 	/**
-	 * @param {import('@companion/shared/Model/FeedbackModel.js').FeedbackInstance} feedback
+	 * @param {import('@companion-app/shared/Model/FeedbackModel.js').FeedbackInstance} feedback
 	 * @param {string} _controlId
-	 * @returns {import('@companion/shared/Model/FeedbackModel.js').FeedbackInstance | void}
+	 * @returns {import('@companion-app/shared/Model/FeedbackModel.js').FeedbackInstance | void}
 	 */
 	feedbackUpgrade(feedback, _controlId) {
 		let changed = false
@@ -825,9 +825,9 @@ export default class Controls {
 
 	/**
 	 * Perform an upgrade for an action
-	 * @param {import('@companion/shared/Model/ActionModel.js').ActionInstance} action
+	 * @param {import('@companion-app/shared/Model/ActionModel.js').ActionInstance} action
 	 * @param {string} _controlId
-	 * @returns {import('@companion/shared/Model/ActionModel.js').ActionInstance | void} Updated action if any changes were made
+	 * @returns {import('@companion-app/shared/Model/ActionModel.js').ActionInstance | void} Updated action if any changes were made
 	 */
 	actionUpgrade(action, _controlId) {
 		let changed = false
@@ -922,7 +922,7 @@ export default class Controls {
 
 	/**
 	 * Run a single internal action
-	 * @param {import('@companion/shared/Model/ActionModel.js').ActionInstance} action
+	 * @param {import('@companion-app/shared/Model/ActionModel.js').ActionInstance} action
 	 * @param {import('../Instance/Wrapper.js').RunActionExtras} extras
 	 * @returns {boolean} Whether the action was handled
 	 */
@@ -1146,8 +1146,8 @@ export default class Controls {
 	/**
 	 *
 	 * @param {import('./Types.js').InternalVisitor} visitor
-	 * @param {import('@companion/shared/Model/ActionModel.js').ActionInstance[]} actions
-	 * @param {import('@companion/shared/Model/FeedbackModel.js').FeedbackInstance[]} _feedbacks
+	 * @param {import('@companion-app/shared/Model/ActionModel.js').ActionInstance[]} actions
+	 * @param {import('@companion-app/shared/Model/FeedbackModel.js').FeedbackInstance[]} _feedbacks
 	 */
 	visitReferences(visitor, actions, _feedbacks) {
 		for (const action of actions) {

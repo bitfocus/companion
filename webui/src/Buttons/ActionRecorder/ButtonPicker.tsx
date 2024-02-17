@@ -12,8 +12,8 @@ import jsonPatch, { Operation as JsonPatchOperation } from 'fast-json-patch'
 import { ButtonGridIcon, ButtonInfiniteGrid, ButtonInfiniteGridRef } from '../ButtonInfiniteGrid.js'
 import { useHasBeenRendered } from '../../Hooks/useHasBeenRendered.js'
 import type { DropdownChoiceId } from '@companion-module/base'
-import type { ControlLocation } from '@companion/shared/Model/Common.js'
-import type { NormalButtonModel } from '@companion/shared/Model/ButtonModel.js'
+import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
+import type { NormalButtonModel } from '@companion-app/shared/Model/ButtonModel.js'
 
 interface ButtonPickerProps {
 	selectButton: (selectedControl: string, selectedStep: string, selectedSet: string, mode: 'replace' | 'append') => void

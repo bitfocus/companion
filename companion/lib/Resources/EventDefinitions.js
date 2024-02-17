@@ -24,7 +24,7 @@ import os from 'os'
  */
 
 /**
- * @typedef {import('@companion/shared/Model/Common.js').EventDefinition} EventDefinition
+ * @typedef {import('@companion-app/shared/Model/Common.js').EventDefinition} EventDefinition
  */
 
 /** @type {Record<string, EventDefinition>} */
@@ -179,7 +179,7 @@ switch (os.platform()) {
 /**
  * Visit any references within an event
  * @param {import('../Internal/Types.js').InternalVisitor} visitor Visitor to be used
- * @param {import('@companion/shared/Model/EventModel.js').EventInstance} event Events to fixup
+ * @param {import('@companion-app/shared/Model/EventModel.js').EventInstance} event Events to fixup
  * @returns {void}
  */
 export function visitEventOptions(visitor, event) {

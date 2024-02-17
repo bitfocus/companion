@@ -12,7 +12,7 @@ import {
 } from '@coreui/react'
 import React, { forwardRef, useCallback, useContext, useImperativeHandle, useMemo, useState } from 'react'
 import { ActionsContext, FeedbacksContext, ConnectionsContext } from '../util.js'
-import { ClientConnectionConfig } from '@companion/shared/Model/Common.js'
+import { ClientConnectionConfig } from '@companion-app/shared/Model/Common.js'
 import { RootAppStoreContext } from '../Stores/RootAppStore.js'
 
 interface AddActionsModalProps {

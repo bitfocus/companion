@@ -6,7 +6,7 @@ import { useState } from 'react'
 import { ImportRemap } from './Page.js'
 import { socketEmitPromise } from '../../util.js'
 import { useContext } from 'react'
-import type { ClientImportObject } from '@companion/shared/Model/ImportExport.js'
+import type { ClientImportObject } from '@companion-app/shared/Model/ImportExport.js'
 import { RootAppStoreContext } from '../../Stores/RootAppStore.js'
 
 interface ImportTriggersTabProps {

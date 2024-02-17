@@ -6,7 +6,7 @@ import { faArrowsLeftRight, faArrowsAlt, faCompass, faCopy, faEraser, faTrash } 
 import classnames from 'classnames'
 import { GenericConfirmModal, GenericConfirmModalRef } from '../Components/GenericConfirmModal.js'
 import { useResizeObserver } from 'usehooks-ts'
-import { ControlLocation } from '@companion/shared/Model/Common.js'
+import { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import { IconProp } from '@fortawesome/fontawesome-svg-core'
 
 export interface ButtonGridActionsRef {

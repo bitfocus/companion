@@ -1,6 +1,6 @@
 import React from 'react'
 import { WIZARD_VERSION_3_0 } from './index.js'
-import type { UserConfigModel } from '@companion/shared/Model/UserConfigModel.js'
+import type { UserConfigModel } from '@companion-app/shared/Model/UserConfigModel.js'
 
 interface ApplyStepProps {
 	oldConfig: UserConfigModel

@@ -1,6 +1,6 @@
 import { useContext, useMemo, useRef } from 'react'
 import { SocketContext, socketEmitPromise } from '../../util.js'
-import { ActionInstance } from '@companion/shared/Model/ActionModel.js'
+import { ActionInstance } from '@companion-app/shared/Model/ActionModel.js'
 import { GenericConfirmModalRef } from '../../Components/GenericConfirmModal.js'
 
 export interface IActionEditorService {

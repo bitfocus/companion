@@ -10,7 +10,7 @@ import {
 import { InternalCustomVariableDropdown, InternalInstanceField } from './InternalInstanceFields.jsx'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faDollarSign, faQuestionCircle } from '@fortawesome/free-solid-svg-icons'
-import { InternalActionInputField, InternalFeedbackInputField } from '@companion/shared/Model/Options.js'
+import { InternalActionInputField, InternalFeedbackInputField } from '@companion-app/shared/Model/Options.js'
 import classNames from 'classnames'
 
 interface OptionsInputFieldProps {

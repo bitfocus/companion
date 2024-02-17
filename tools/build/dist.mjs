@@ -41,7 +41,7 @@ const buildString = await generateVersionString()
 await fs.remove('dist')
 
 // Build application
-await $`yarn workspace @companion/shared build:ts`
+await $`yarn workspace @companion-app/shared build:ts`
 await $`yarn workspace companion build`
 
 // Build webui

@@ -26,7 +26,7 @@ import CoreBase from '../Core/Base.js'
 class DataUserConfig extends CoreBase {
 	/**
 	 * The defaults for the user config fields
-	 * @type {import('@companion/shared/Model/UserConfigModel.js').UserConfigModel}
+	 * @type {import('@companion-app/shared/Model/UserConfigModel.js').UserConfigModel}
 	 * @access public
 	 * @static
 	 */
@@ -166,7 +166,7 @@ class DataUserConfig extends CoreBase {
 	#populateMissingForExistingDb() {
 		if (!this.db.getIsFirstRun()) {
 			// This is an existing db, so setup the ports to match how it used to be
-			/** @type {Partial<import('@companion/shared/Model/UserConfigModel.js').UserConfigModel>} */
+			/** @type {Partial<import('@companion-app/shared/Model/UserConfigModel.js').UserConfigModel>} */
 			const legacy_config = {
 				tcp_enabled: true,
 				tcp_listen_port: 51234,

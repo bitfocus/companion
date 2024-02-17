@@ -32,8 +32,8 @@ import { useHasBeenRendered } from '../Hooks/useHasBeenRendered.js'
 import { useResizeObserver } from 'usehooks-ts'
 import { ButtonGridHeader } from './ButtonGridHeader.js'
 import { ButtonGridActions, ButtonGridActionsRef } from './ButtonGridActions.js'
-import type { ControlLocation } from '@companion/shared/Model/Common.js'
-import type { PageModel } from '@companion/shared/Model/PageModel.js'
+import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
+import type { PageModel } from '@companion-app/shared/Model/PageModel.js'
 
 interface ButtonsGridPanelProps {
 	pageNumber: number

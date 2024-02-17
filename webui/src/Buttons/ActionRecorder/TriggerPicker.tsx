@@ -1,8 +1,8 @@
 import React, { useCallback, useContext } from 'react'
 import { TriggersContext } from '../../util.js'
-import { CreateTriggerControlId } from '@companion/shared/ControlId.js'
+import { CreateTriggerControlId } from '@companion-app/shared/ControlId.js'
 import { CButton, CButtonGroup } from '@coreui/react'
-import type { ClientTriggerData } from '@companion/shared/Model/TriggerModel.js'
+import type { ClientTriggerData } from '@companion-app/shared/Model/TriggerModel.js'
 
 interface TriggerPickerRowProps {
 	id: string

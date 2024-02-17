@@ -10,7 +10,7 @@ import { nanoid } from 'nanoid'
 import { faCog, faPlus } from '@fortawesome/free-solid-svg-icons'
 import jsonPatch, { Operation as JsonPatchOperation } from 'fast-json-patch'
 import { cloneDeep } from 'lodash-es'
-import { ConnectionStatusEntry } from '@companion/shared/Model/Common.js'
+import { ConnectionStatusEntry } from '@companion-app/shared/Model/Common.js'
 import { RootAppStoreContext } from '../Stores/RootAppStore.js'
 
 export const ConnectionsPage = memo(function ConnectionsPage() {

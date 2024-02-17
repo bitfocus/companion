@@ -17,7 +17,7 @@ import { faCalendar, faClock, faDownload, faFileImport, faGlobe } from '@fortawe
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { ImportPageWizard } from './Page.js'
 import { ImportTriggersTab } from './Triggers.js'
-import { ClientImportObject } from '@companion/shared/Model/ImportExport.js'
+import { ClientImportObject } from '@companion-app/shared/Model/ImportExport.js'
 import { RootAppStoreContext } from '../../Stores/RootAppStore.js'
 
 interface ImportFullWizardProps {

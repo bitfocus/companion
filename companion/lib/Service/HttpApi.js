@@ -2,7 +2,7 @@ import CoreBase from '../Core/Base.js'
 import { ParseAlignment, parseColorToNumber, rgb } from '../Resources/Util.js'
 import express from 'express'
 import cors from 'cors'
-import { formatLocation } from '@companion/shared/ControlId.js'
+import { formatLocation } from '@companion-app/shared/ControlId.js'
 
 /**
  * Class providing the HTTP API.

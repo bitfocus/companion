@@ -151,7 +151,7 @@ export default class ControlBase extends CoreBase {
 
 	/**
 	 * Get the complete style object of a button
-	 * @returns {import('@companion/shared/Model/StyleModel.js').DrawStyleModel | null} the processed style of the button
+	 * @returns {import('@companion-app/shared/Model/StyleModel.js').DrawStyleModel | null} the processed style of the button
 	 * @access public
 	 */
 	getDrawStyle() {

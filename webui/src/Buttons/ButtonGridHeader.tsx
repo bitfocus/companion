@@ -4,7 +4,7 @@ import { PagesContext } from '../util.js'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faChevronLeft, faChevronRight } from '@fortawesome/free-solid-svg-icons'
 import Select from 'react-select'
-import { PageModel } from '@companion/shared/Model/PageModel.js'
+import { PageModel } from '@companion-app/shared/Model/PageModel.js'
 
 interface SelectOption {
 	value: number

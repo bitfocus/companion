@@ -6,10 +6,10 @@ import { nanoid } from 'nanoid'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faQuestionCircle } from '@fortawesome/free-solid-svg-icons'
 import sanitizeHtml from 'sanitize-html'
-import { isLabelValid } from '@companion/shared/Label.js'
+import { isLabelValid } from '@companion-app/shared/Label.js'
 import CSwitch from '../CSwitch.js'
 import { BonjourDeviceInputField } from '../Components/BonjourDeviceInputField.js'
-import { ConnectionStatusEntry } from '@companion/shared/Model/Common.js'
+import { ConnectionStatusEntry } from '@companion-app/shared/Model/Common.js'
 import { SomeCompanionConfigField } from '@companion-module/base'
 
 interface ConnectionEditPanelProps {

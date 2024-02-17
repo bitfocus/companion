@@ -193,7 +193,7 @@ export default class System {
 
 	/**
 	 * Run a single internal action
-	 * @param {import('@companion/shared/Model/ActionModel.js').ActionInstance} action
+	 * @param {import('@companion-app/shared/Model/ActionModel.js').ActionInstance} action
 	 * @param {import('../Instance/Wrapper.js').RunActionExtras} _extras
 	 * @returns {boolean} Whether the action was handled
 	 */

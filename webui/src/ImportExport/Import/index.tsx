@@ -3,7 +3,7 @@ import React, { useCallback, useContext, useEffect, useState } from 'react'
 import { socketEmitPromise } from '../../util.js'
 import { ImportPageWizard } from './Page.js'
 import { ImportFullWizard } from './Full.js'
-import type { ClientImportObject } from '@companion/shared/Model/ImportExport.js'
+import type { ClientImportObject } from '@companion-app/shared/Model/ImportExport.js'
 import { RootAppStoreContext } from '../../Stores/RootAppStore.js'
 
 interface ImportWizardProps {

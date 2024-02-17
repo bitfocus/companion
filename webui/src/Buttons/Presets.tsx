@@ -11,8 +11,8 @@ import {
 import { useDrag } from 'react-dnd'
 import { ButtonPreviewBase, RedImage } from '../Components/ButtonPreview.js'
 import { nanoid } from 'nanoid'
-import type { ClientConnectionConfig, ModuleDisplayInfo } from '@companion/shared/Model/Common.js'
-import type { UIPresetDefinition } from '@companion/shared/Model/Presets.js'
+import type { ClientConnectionConfig, ModuleDisplayInfo } from '@companion-app/shared/Model/Common.js'
+import type { UIPresetDefinition } from '@companion-app/shared/Model/Presets.js'
 import { Operation as JsonPatchOperation } from 'fast-json-patch'
 
 interface InstancePresetsProps {

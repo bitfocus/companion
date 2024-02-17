@@ -1,6 +1,6 @@
 import React from 'react'
 import classnames from 'classnames'
-import type { ControlLocation } from '@companion/shared/Model/Common.js'
+import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 
 // Single pixel of red
 export const RedImage: string =

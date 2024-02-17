@@ -2,7 +2,7 @@ import ButtonControlBase from './Base.js'
 import { cloneDeep } from 'lodash-es'
 import FragmentActions from '../../Fragments/FragmentActions.js'
 import { clamp } from '../../../Resources/Util.js'
-import { GetStepIds } from '@companion/shared/Controls.js'
+import { GetStepIds } from '@companion-app/shared/Controls.js'
 import { VisitorReferencesCollector } from '../../../Util/Visitors/ReferencesCollector.js'
 import {
 	ControlWithActionSets,
@@ -12,8 +12,8 @@ import {
 } from '../../IControlFragments.js'
 
 /**
- * @typedef {import('@companion/shared/Model/ActionModel.js').ActionInstance} ActionInstance
- * @typedef {import('@companion/shared/Model/FeedbackModel.js').FeedbackInstance} FeedbackInstance
+ * @typedef {import('@companion-app/shared/Model/ActionModel.js').ActionInstance} ActionInstance
+ * @typedef {import('@companion-app/shared/Model/FeedbackModel.js').FeedbackInstance} FeedbackInstance
  */
 
 /**
@@ -70,7 +70,7 @@ export default class ControlButtonNormal extends ButtonControlBase {
 
 	/**
 	 * The defaults options for a step
-	 * @type {import('@companion/shared/Model/ActionModel.js').ActionStepOptions}
+	 * @type {import('@companion-app/shared/Model/ActionModel.js').ActionStepOptions}
 	 * @access public
 	 * @static
 	 */
@@ -100,14 +100,14 @@ export default class ControlButtonNormal extends ButtonControlBase {
 
 	/**
 	 * The config of this button
-	 * @type {import('@companion/shared/Model/ButtonModel.js').NormalButtonOptions}
+	 * @type {import('@companion-app/shared/Model/ButtonModel.js').NormalButtonOptions}
 	 */
 	options
 
 	/**
 	 * @param {import('../../../Registry.js').default} registry - the application core
 	 * @param {string} controlId - id of the control
-	 * @param {import('@companion/shared/Model/ButtonModel.js').NormalButtonModel | null} storage - persisted storage object
+	 * @param {import('@companion-app/shared/Model/ButtonModel.js').NormalButtonModel | null} storage - persisted storage object
 	 * @param {boolean} isImport - if this is importing a button, not creating at startup
 	 */
 	constructor(registry, controlId, storage, isImport) {
@@ -562,7 +562,7 @@ export default class ControlButtonNormal extends ButtonControlBase {
 
 	/**
 	 * Get the complete style object of a button
-	 * @returns {import('@companion/shared/Model/StyleModel.js').DrawStyleButtonModel} the processed style of the button
+	 * @returns {import('@companion-app/shared/Model/StyleModel.js').DrawStyleButtonModel} the processed style of the button
 	 * @override
 	 */
 	getDrawStyle() {
@@ -577,11 +577,11 @@ export default class ControlButtonNormal extends ButtonControlBase {
 	}
 
 	/**
-	 * @param {import('@companion/shared/Model/ActionModel.js').ActionSetsModel=} existingActions
-	 * @param {import("@companion/shared/Model/ActionModel.js").ActionStepOptions=} existingOptions
+	 * @param {import('@companion-app/shared/Model/ActionModel.js').ActionSetsModel=} existingActions
+	 * @param {import("@companion-app/shared/Model/ActionModel.js").ActionStepOptions=} existingOptions
 	 */
 	#getNewStepValue(existingActions, existingOptions) {
-		/** @type {import('@companion/shared/Model/ActionModel.js').ActionSetsModel} */
+		/** @type {import('@companion-app/shared/Model/ActionModel.js').ActionSetsModel} */
 		const action_sets = existingActions || {
 			down: [],
 			up: [],
@@ -964,11 +964,11 @@ export default class ControlButtonNormal extends ButtonControlBase {
 	 * Convert this control to JSON
 	 * To be sent to the client and written to the db
 	 * @param {boolean} clone - Whether to return a cloned object
-	 * @returns {import('@companion/shared/Model/ButtonModel.js').NormalButtonModel}
+	 * @returns {import('@companion-app/shared/Model/ButtonModel.js').NormalButtonModel}
 	 * @access public
 	 */
 	toJSON(clone = true) {
-		/** @type {import('@companion/shared/Model/ButtonModel.js').NormalButtonSteps} */
+		/** @type {import('@companion-app/shared/Model/ButtonModel.js').NormalButtonSteps} */
 		const stepsJson = {}
 		for (const [id, step] of Object.entries(this.steps)) {
 			stepsJson[id] = {
@@ -977,7 +977,7 @@ export default class ControlButtonNormal extends ButtonControlBase {
 			}
 		}
 
-		/** @type {import('@companion/shared/Model/ButtonModel.js').NormalButtonModel} */
+		/** @type {import('@companion-app/shared/Model/ButtonModel.js').NormalButtonModel} */
 		const obj = {
 			type: this.type,
 			style: this.feedbacks.baseStyle,

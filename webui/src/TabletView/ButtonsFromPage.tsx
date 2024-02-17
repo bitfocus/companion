@@ -2,10 +2,10 @@ import React, { useCallback, useContext, useMemo } from 'react'
 import { SocketContext, socketEmitPromise } from '../util.js'
 import { ButtonPreview } from '../Components/ButtonPreview.js'
 import { useInView } from 'react-intersection-observer'
-import { formatLocation } from '@companion/shared/ControlId.js'
+import { formatLocation } from '@companion-app/shared/ControlId.js'
 import { useButtonRenderCache } from '../Hooks/useSharedRenderCache.js'
-import type { UserConfigGridSize } from '@companion/shared/Model/UserConfigModel.js'
-import { ControlLocation } from '@companion/shared/Model/Common.js'
+import type { UserConfigGridSize } from '@companion-app/shared/Model/UserConfigModel.js'
+import { ControlLocation } from '@companion-app/shared/Model/Common.js'
 
 export interface TabletGridSize extends UserConfigGridSize {
 	buttonCount: number

@@ -9,18 +9,18 @@ import { cloneDeep } from 'lodash-es'
 import { useEventListener } from 'usehooks-ts'
 import type { LoaderHeightWidthProps } from 'react-spinners/helpers/props.js'
 import { Socket } from 'socket.io-client'
-import type { AllVariableDefinitions } from '@companion/shared/Model/Variables.js'
+import type { AllVariableDefinitions } from '@companion-app/shared/Model/Variables.js'
 import type {
 	ClientConnectionConfig,
 	ClientEventDefinition,
 	ModuleDisplayInfo,
-} from '@companion/shared/Model/Common.js'
-import type { ClientTriggerData } from '@companion/shared/Model/TriggerModel.js'
-import type { InternalFeedbackDefinition, ClientActionDefinition } from '@companion/shared/Model/Options.js'
-import type { UserConfigModel } from '@companion/shared/Model/UserConfigModel.js'
-import type { ClientDevicesListItem } from '@companion/shared/Model/Surfaces.js'
-import type { PageModel } from '@companion/shared/Model/PageModel.js'
-import type { CustomVariablesModel } from '@companion/shared/Model/CustomVariableModel.js'
+} from '@companion-app/shared/Model/Common.js'
+import type { ClientTriggerData } from '@companion-app/shared/Model/TriggerModel.js'
+import type { InternalFeedbackDefinition, ClientActionDefinition } from '@companion-app/shared/Model/Options.js'
+import type { UserConfigModel } from '@companion-app/shared/Model/UserConfigModel.js'
+import type { ClientDevicesListItem } from '@companion-app/shared/Model/Surfaces.js'
+import type { PageModel } from '@companion-app/shared/Model/PageModel.js'
+import type { CustomVariablesModel } from '@companion-app/shared/Model/CustomVariableModel.js'
 
 export const SocketContext = React.createContext<Socket>(null as any) // TODO - fix this
 export const EventDefinitionsContext = React.createContext<Record<string, ClientEventDefinition | undefined>>({})

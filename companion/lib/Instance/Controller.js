@@ -23,13 +23,13 @@ import ModuleHost, { ConnectionDebugLogRoom } from './Host.js'
 import InstanceStatus from './Status.js'
 import { cloneDeep } from 'lodash-es'
 import jsonPatch from 'fast-json-patch'
-import { isLabelValid, makeLabelSafe } from '@companion/shared/Label.js'
+import { isLabelValid, makeLabelSafe } from '@companion-app/shared/Label.js'
 import InstanceModules from './Modules.js'
 
 const InstancesRoom = 'instances'
 
 /**
- * @typedef {import('@companion/shared/Model/Common.js').ClientConnectionConfig} ClientConnectionConfig
+ * @typedef {import('@companion-app/shared/Model/Common.js').ClientConnectionConfig} ClientConnectionConfig
  */
 /**
  * @typedef {{
@@ -43,7 +43,7 @@ class Instance extends CoreBase {
 	#lastClientJson = null
 
 	store = {
-		/** @type {Record<string, import('@companion/shared/Model/Connections.js').ConnectionConfig>} */
+		/** @type {Record<string, import('@companion-app/shared/Model/Connections.js').ConnectionConfig>} */
 		db: {},
 	}
 
@@ -418,7 +418,7 @@ class Instance extends CoreBase {
 	 * @param {string} instanceId
 	 * @param {boolean} minimal
 	 * @param {boolean} clone
-	 * @returns {import('@companion/shared/Model/ExportModel.js').ExportInstanceFullv4 | import('@companion/shared/Model/ExportModel.js').ExportInstanceMinimalv4}
+	 * @returns {import('@companion-app/shared/Model/ExportModel.js').ExportInstanceFullv4 | import('@companion-app/shared/Model/ExportModel.js').ExportInstanceMinimalv4}
 	 */
 	exportInstance(instanceId, minimal = false, clone = true) {
 		const rawObj = this.store.db[instanceId]
@@ -437,7 +437,7 @@ class Instance extends CoreBase {
 
 	/**
 	 * @param {boolean} clone
-	 * @returns {Record<string, import('@companion/shared/Model/Connections.js').ConnectionConfig | undefined>}
+	 * @returns {Record<string, import('@companion-app/shared/Model/Connections.js').ConnectionConfig | undefined>}
 	 */
 	exportAll(clone = true) {
 		const obj = this.store.db
@@ -456,7 +456,7 @@ class Instance extends CoreBase {
 	/**
 	 * Get the config object of an instance
 	 * @param {String} connectionId
-	 * @returns {import('@companion/shared/Model/Connections.js').ConnectionConfig | undefined}
+	 * @returns {import('@companion-app/shared/Model/Connections.js').ConnectionConfig | undefined}
 	 */
 	getInstanceConfig(connectionId) {
 		return this.store.db[connectionId]

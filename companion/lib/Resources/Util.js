@@ -2,7 +2,7 @@ import { serializeIsVisibleFn } from '@companion-module/base/dist/internal/base.
 import imageRs from '@julusian/image-rs'
 import { colord } from 'colord'
 
-/** @typedef {import('@companion/shared/Model/Common.js').ControlLocation} ControlLocation */
+/** @typedef {import('@companion-app/shared/Model/Common.js').ControlLocation} ControlLocation */
 
 /**
  * Combine rgba components to a 32bit value

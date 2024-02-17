@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { socketEmitPromise } from '../util.js'
 import { Socket } from 'socket.io-client'
-import { UserConfigModel } from '@companion/shared/Model/UserConfigModel.js'
+import { UserConfigModel } from '@companion-app/shared/Model/UserConfigModel.js'
 
 export function useUserConfigSubscription(
 	socket: Socket,

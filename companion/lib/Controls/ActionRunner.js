@@ -109,7 +109,7 @@ export default class ActionRunner extends CoreBase {
 
 	/**
 	 * Run a single action
-	 * @param {import('@companion/shared/Model/ActionModel.js').ActionInstance} action
+	 * @param {import('@companion-app/shared/Model/ActionModel.js').ActionInstance} action
 	 * @param {import('../Instance/Wrapper.js').RunActionExtras} extras
 	 * @access private
 	 */
@@ -143,7 +143,7 @@ export default class ActionRunner extends CoreBase {
 
 	/**
 	 * Run multiple actions
-	 * @param {import('@companion/shared/Model/ActionModel.js').ActionInstance[]} actions0
+	 * @param {import('@companion-app/shared/Model/ActionModel.js').ActionInstance[]} actions0
 	 * @param {string} controlId
 	 * @param {boolean} relative_delay
 	 * @param {Omit<import('../Instance/Wrapper.js').RunActionExtras, 'controlId' | 'location'>} extras

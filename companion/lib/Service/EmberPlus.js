@@ -1,9 +1,9 @@
 import { EmberServer, Model as EmberModel } from 'emberplus-connection'
 import { getPath } from 'emberplus-connection/dist/Ember/Lib/util.js'
 import ServiceBase from './Base.js'
-import { formatLocation, xyToOldBankIndex } from '@companion/shared/ControlId.js'
+import { formatLocation, xyToOldBankIndex } from '@companion-app/shared/ControlId.js'
 import { parseColorToNumber } from '../Resources/Util.js'
-import { pad } from '@companion/shared/Util.js'
+import { pad } from '@companion-app/shared/Util.js'
 
 // const LOCATION_NODE_CONTROLID = 0
 const LOCATION_NODE_PRESSED = 1
@@ -18,7 +18,7 @@ const LEGACY_NODE_BG_COLOR = 3
 
 /**
  * Generate ember+ path
- * @param {import('@companion/shared/Model/UserConfigModel.js').UserConfigGridSize} gridSize
+ * @param {import('@companion-app/shared/Model/UserConfigModel.js').UserConfigGridSize} gridSize
  * @param {import('../Resources/Util.js').ControlLocation} location
  * @param {number} node
  * @returns {string}
@@ -138,7 +138,7 @@ class ServiceEmberPlus extends ServiceBase {
 				const controlId = this.page.getControlIdAtOldBankIndex(pageNumber, bank)
 				const control = controlId ? this.controls.getControl(controlId) : undefined
 
-				/** @type {import('@companion/shared/Model/StyleModel.js').DrawStyleModel | null} */
+				/** @type {import('@companion-app/shared/Model/StyleModel.js').DrawStyleModel | null} */
 				let drawStyle = control?.getDrawStyle() || null
 				if (drawStyle?.style !== 'button') drawStyle = null
 
@@ -215,7 +215,7 @@ class ServiceEmberPlus extends ServiceBase {
 	 * @access private
 	 */
 	#getLocationTree() {
-		/** @type {import('@companion/shared/Model/UserConfigModel.js').UserConfigGridSize} */
+		/** @type {import('@companion-app/shared/Model/UserConfigModel.js').UserConfigGridSize} */
 		const gridSize = this.userconfig.getKey('gridSize')
 		if (!gridSize) return {}
 
@@ -246,7 +246,7 @@ class ServiceEmberPlus extends ServiceBase {
 					const controlId = this.page.getControlIdAt(location)
 					const control = controlId ? this.controls.getControl(controlId) : undefined
 
-					/** @type {import('@companion/shared/Model/StyleModel.js').DrawStyleModel | null} */
+					/** @type {import('@companion-app/shared/Model/StyleModel.js').DrawStyleModel | null} */
 					let drawStyle = control?.getDrawStyle() || null
 					if (drawStyle?.style !== 'button') drawStyle = null
 

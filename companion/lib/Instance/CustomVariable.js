@@ -17,7 +17,7 @@
 
 import jsonPatch from 'fast-json-patch'
 import LogController from '../Log/Controller.js'
-import { isCustomVariableValid } from '@companion/shared/CustomVariable.js'
+import { isCustomVariableValid } from '@companion-app/shared/CustomVariable.js'
 
 const custom_variable_prefix = `custom_`
 
@@ -43,7 +43,7 @@ export default class InstanceCustomVariable {
 
 	/**
 	 * Custom variable definitions
-	 * @type {import('@companion/shared/Model/CustomVariableModel.js').CustomVariablesModel}
+	 * @type {import('@companion-app/shared/Model/CustomVariableModel.js').CustomVariablesModel}
 	 * @access private
 	 */
 	#custom_variables
@@ -177,7 +177,7 @@ export default class InstanceCustomVariable {
 
 	/**
 	 * Get all the current custom variable definitions
-	 * @returns {import('@companion/shared/Model/CustomVariableModel.js').CustomVariablesModel}
+	 * @returns {import('@companion-app/shared/Model/CustomVariableModel.js').CustomVariablesModel}
 	 * @access public
 	 */
 	getDefinitions() {
@@ -210,7 +210,7 @@ export default class InstanceCustomVariable {
 
 	/**
 	 * Replace all of the current custom variables with new ones
-	 * @param {import('@companion/shared/Model/CustomVariableModel.js').CustomVariablesModel} custom_variables
+	 * @param {import('@companion-app/shared/Model/CustomVariableModel.js').CustomVariablesModel} custom_variables
 	 * @access public
 	 */
 	replaceDefinitions(custom_variables) {

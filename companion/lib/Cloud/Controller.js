@@ -3,7 +3,7 @@ import CoreBase from '../Core/Base.js'
 import CloudRegion from './Region.js'
 import got from 'got'
 import { v4 } from 'uuid'
-import { xyToOldBankIndex } from '@companion/shared/ControlId.js'
+import { xyToOldBankIndex } from '@companion-app/shared/ControlId.js'
 
 const CLOUD_URL = 'https://api.bitfocus.io/v1'
 

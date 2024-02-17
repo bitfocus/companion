@@ -10,8 +10,8 @@ import { ActionRecorder } from './ActionRecorder/index.js'
 import React, { memo, useCallback, useContext, useRef, useState } from 'react'
 import { GenericConfirmModal, GenericConfirmModalRef } from '../Components/GenericConfirmModal.js'
 import { ConnectionVariables } from './Variables.js'
-import { formatLocation } from '@companion/shared/ControlId.js'
-import { ControlLocation } from '@companion/shared/Model/Common.js'
+import { formatLocation } from '@companion-app/shared/ControlId.js'
+import { ControlLocation } from '@companion-app/shared/Model/Common.js'
 
 interface ButtonsPageProps {
 	hotPress: boolean

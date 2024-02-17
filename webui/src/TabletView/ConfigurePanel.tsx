@@ -3,7 +3,7 @@ import { PreventDefaultHandler, useMountEffect } from '../util.js'
 import { CButton, CCol, CForm, CFormGroup, CInput, CInputCheckbox, CRow } from '@coreui/react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faCog, faExpand } from '@fortawesome/free-solid-svg-icons'
-import type { UserConfigGridSize } from '@companion/shared/Model/UserConfigModel.js'
+import type { UserConfigGridSize } from '@companion-app/shared/Model/UserConfigModel.js'
 
 interface ConfigurePanelProps {
 	updateQueryUrl: (key: string, value: any) => void

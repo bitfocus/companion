@@ -11,8 +11,8 @@ import {
 } from '../../IControlFragments.js'
 
 /**
- * @typedef {import('@companion/shared/Model/ActionModel.js').ActionInstance} ActionInstance
- * @typedef {import('@companion/shared/Model/FeedbackModel.js').FeedbackInstance} FeedbackInstance
+ * @typedef {import('@companion-app/shared/Model/ActionModel.js').ActionInstance} ActionInstance
+ * @typedef {import('@companion-app/shared/Model/FeedbackModel.js').FeedbackInstance} FeedbackInstance
  */
 
 /**
@@ -65,7 +65,7 @@ export default class ButtonControlBase extends ControlBase {
 
 	/**
 	 * The defaults options for a button
-	 * @type {import('@companion/shared/Model/ButtonModel.js').ButtonOptionsBase}
+	 * @type {import('@companion-app/shared/Model/ButtonModel.js').ButtonOptionsBase}
 	 * @access public
 	 * @static
 	 */
@@ -90,7 +90,7 @@ export default class ButtonControlBase extends ControlBase {
 
 	/**
 	 * The config of this button
-	 * @type {import('@companion/shared/Model/ButtonModel.js').ButtonOptionsBase}
+	 * @type {import('@companion-app/shared/Model/ButtonModel.js').ButtonOptionsBase}
 	 */
 	options
 
@@ -260,7 +260,7 @@ export default class ButtonControlBase extends ControlBase {
 
 	/**
 	 * Get the complete style object of a button
-	 * @returns {import('@companion/shared/Model/StyleModel.js').DrawStyleButtonModel} the processed style of the button
+	 * @returns {import('@companion-app/shared/Model/StyleModel.js').DrawStyleButtonModel} the processed style of the button
 	 * @access public
 	 */
 	getDrawStyle() {

@@ -1,6 +1,6 @@
 import CoreBase from '../Core/Base.js'
 import { parseColorToNumber } from '../Resources/Util.js'
-import { formatLocation } from '@companion/shared/ControlId.js'
+import { formatLocation } from '@companion-app/shared/ControlId.js'
 import RegexRouter from './RegexRouter.js'
 
 /**

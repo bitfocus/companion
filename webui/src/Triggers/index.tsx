@@ -29,10 +29,10 @@ import { useDrag, useDrop } from 'react-dnd'
 import { nanoid } from 'nanoid'
 import { EditTriggerPanel } from './EditPanel.js'
 import { GenericConfirmModal, GenericConfirmModalRef } from '../Components/GenericConfirmModal.js'
-import { ParseControlId } from '@companion/shared/ControlId.js'
+import { ParseControlId } from '@companion-app/shared/ControlId.js'
 import { ConfirmExportModal, ConfirmExportModalRef } from '../Components/ConfirmExportModal.js'
 import classNames from 'classnames'
-import { ClientTriggerData } from '@companion/shared/Model/TriggerModel.js'
+import { ClientTriggerData } from '@companion-app/shared/Model/TriggerModel.js'
 
 export const Triggers = memo(function Triggers() {
 	const socket = useContext(SocketContext)

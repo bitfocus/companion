@@ -36,7 +36,7 @@ class UIUpdate {
 
 	/**
 	 * Latest update information
-	 * @type {import('@companion/shared/Model/Common.js').AppUpdateInfo | null}
+	 * @type {import('@companion-app/shared/Model/Common.js').AppUpdateInfo | null}
 	 * @access private
 	 */
 	#latestUpdateData = null

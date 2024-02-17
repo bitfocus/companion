@@ -38,7 +38,7 @@ const ModulesRoom = 'modules'
  */
 
 /**
- * @typedef {import('@companion/shared/Model/Common.js').ModuleDisplayInfo} ModuleDisplayInfo
+ * @typedef {import('@companion-app/shared/Model/Common.js').ModuleDisplayInfo} ModuleDisplayInfo
  */
 
 class InstanceModules extends CoreBase {

@@ -5,7 +5,7 @@ import { nanoid } from 'nanoid'
 import { useNavigate } from 'react-router-dom'
 import jsonPatch, { Operation as JsonPatchOperation } from 'fast-json-patch'
 import { cloneDeep } from 'lodash-es'
-import type { ClientDevicesListItem, ClientSurfaceItem } from '@companion/shared/Model/Surfaces.js'
+import type { ClientDevicesListItem, ClientSurfaceItem } from '@companion-app/shared/Model/Surfaces.js'
 
 export function EmulatorList() {
 	const socket = useContext(SocketContext)

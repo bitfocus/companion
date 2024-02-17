@@ -7,7 +7,7 @@ import { CAlert, CButton } from '@coreui/react'
 import { ResetWizardModal, ResetWizardModalRef } from './Reset.js'
 import { ExportWizardModal, ExportWizardModalRef } from './Export.js'
 import { ImportWizard } from './Import/index.js'
-import type { ClientImportObject } from '@companion/shared/Model/ImportExport.js'
+import type { ClientImportObject } from '@companion-app/shared/Model/ImportExport.js'
 
 export function ImportExport() {
 	const socket = useContext(SocketContext)

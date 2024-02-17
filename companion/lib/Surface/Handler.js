@@ -16,7 +16,7 @@
  */
 
 import CoreBase from '../Core/Base.js'
-import { oldBankIndexToXY } from '@companion/shared/ControlId.js'
+import { oldBankIndexToXY } from '@companion-app/shared/ControlId.js'
 import { cloneDeep } from 'lodash-es'
 import { LEGACY_MAX_BUTTONS } from '../Util/Constants.js'
 import { rotateXYForPanel, unrotateXYForPanel } from './Util.js'

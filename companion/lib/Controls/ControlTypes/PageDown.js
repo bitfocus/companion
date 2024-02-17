@@ -89,7 +89,7 @@ export default class ControlButtonPageDown extends ControlBase {
 	/**
 	 * @param {import('../../Registry.js').default} registry - the application core
 	 * @param {string} controlId - id of the control
-	 * @param {import('@companion/shared/Model/ButtonModel.js').PageDownButtonModel|null} storage - persisted storage object
+	 * @param {import('@companion-app/shared/Model/ButtonModel.js').PageDownButtonModel|null} storage - persisted storage object
 	 * @param {boolean} isImport - if this is importing a button, not creating at startup
 	 */
 	constructor(registry, controlId, storage, isImport) {
@@ -111,7 +111,7 @@ export default class ControlButtonPageDown extends ControlBase {
 
 	/**
 	 * Get the complete style object of a button
-	 * @returns {import('@companion/shared/Model/StyleModel.js').DrawStyleModel} the processed style of the button
+	 * @returns {import('@companion-app/shared/Model/StyleModel.js').DrawStyleModel} the processed style of the button
 	 * @access public
 	 */
 	getDrawStyle() {
@@ -153,7 +153,7 @@ export default class ControlButtonPageDown extends ControlBase {
 	 * Convert this control to JSON
 	 * To be sent to the client and written to the db
 	 * @param {boolean} _clone - Whether to return a cloned object
-	 * @returns {import('@companion/shared/Model/ButtonModel.js').PageDownButtonModel}
+	 * @returns {import('@companion-app/shared/Model/ButtonModel.js').PageDownButtonModel}
 	 * @access public
 	 */
 	toJSON(_clone = true) {

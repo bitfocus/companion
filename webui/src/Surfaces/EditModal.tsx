@@ -24,8 +24,8 @@ import { faQuestionCircle } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { InternalInstanceField } from '../Controls/InternalInstanceFields.js'
 import { MenuPortalContext } from '../Components/DropdownInputField.js'
-import { ClientDevicesListItem } from '@companion/shared/Model/Surfaces.js'
-import { InternalInputField } from '@companion/shared/Model/Options.js'
+import { ClientDevicesListItem } from '@companion-app/shared/Model/Surfaces.js'
+import { InternalInputField } from '@companion-app/shared/Model/Options.js'
 
 const PAGE_FIELD_SPEC: InternalInputField = {
 	id: '',

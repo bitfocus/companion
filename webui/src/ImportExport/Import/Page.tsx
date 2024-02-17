@@ -21,8 +21,8 @@ import {
 import { faHome } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { useHasBeenRendered } from '../../Hooks/useHasBeenRendered.js'
-import type { ClientImportObject } from '@companion/shared/Model/ImportExport.js'
-import { compareExportedInstances } from '@companion/shared/Import.js'
+import type { ClientImportObject } from '@companion-app/shared/Model/ImportExport.js'
+import { compareExportedInstances } from '@companion-app/shared/Import.js'
 
 interface ImportPageWizardProps {
 	snapshot: ClientImportObject

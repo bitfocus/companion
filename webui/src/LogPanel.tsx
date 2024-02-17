@@ -8,7 +8,7 @@ import { faFileExport } from '@fortawesome/free-solid-svg-icons'
 import { GenericConfirmModal, GenericConfirmModalRef } from './Components/GenericConfirmModal.js'
 import { VariableSizeList as List } from 'react-window'
 import AutoSizer from 'react-virtualized-auto-sizer'
-import type { ClientLogLine } from '@companion/shared/Model/LogLine.js'
+import type { ClientLogLine } from '@companion-app/shared/Model/LogLine.js'
 
 interface LogConfig {
 	debug: boolean | undefined
