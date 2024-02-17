@@ -11,6 +11,9 @@ db
 /module-tmp
 /bundle-*.zip
 .vscode
+NOTES
+TODO
+/run.sh
 
 dist
 
