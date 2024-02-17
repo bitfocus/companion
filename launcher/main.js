@@ -272,7 +272,6 @@ if (!lock) {
 					})
 
 					watcher.on('all', (event, filename) => {
-						const fullpath = path.resolve(filename)
 						const moduleDirName = filename.split(path.sep)[0]
 
 						let fn = cachedDebounces[moduleDirName]
