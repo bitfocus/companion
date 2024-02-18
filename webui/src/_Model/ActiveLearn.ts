@@ -9,7 +9,7 @@ export function useActiveLearnRequests(socket: Socket, activeIds: ObservableSet<
 	useEffect(() => {
 		let aborted = false
 		socketEmitPromise(socket, 'controls:subscribe:learn', [])
-			.then((active: string[]) => {
+			.then((active) => {
 				if (aborted) return
 				activeIds.clear()
 				for (const id of active) {

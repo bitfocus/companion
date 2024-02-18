@@ -265,7 +265,7 @@ const EditPagePropertiesModal = forwardRef<EditPagePropertiesModalRef, EditPageP
 
 				if (pageNumber === null) return
 
-				socketEmitPromise(socket, 'pages:set-name', [pageNumber, pageName]).catch((e) => {
+				socketEmitPromise(socket, 'pages:set-name', [pageNumber, pageName ?? '']).catch((e) => {
 					console.error('Failed to set name', e)
 				})
 			},

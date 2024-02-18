@@ -248,7 +248,7 @@ function ActionTableRow({
 
 	const actionSpec = (actionsContext[action.instance] || {})[action.action]
 
-	const [actionOptions, optionVisibility] = useOptionsAndIsVisible(actionSpec, action)
+	const [actionOptions, optionVisibility] = useOptionsAndIsVisible(actionSpec?.options, action?.options)
 
 	const ref = useRef<HTMLTableRowElement>(null)
 	const [, drop] = useDrop<ActionTableRowDragItem>({

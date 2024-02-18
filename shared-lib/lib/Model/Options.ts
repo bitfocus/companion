@@ -1,6 +1,7 @@
 import type {
 	CompanionButtonStyleProps,
 	CompanionInputFieldBase,
+	CompanionInputFieldBonjourDevice,
 	CompanionInputFieldCheckbox,
 	CompanionInputFieldColor,
 	CompanionInputFieldCustomVariable,
@@ -90,6 +91,8 @@ export type ExtendedInputField =
 	| EncodeIsVisible2<CompanionInputFieldNumber>
 	| EncodeIsVisible2<CompanionInputFieldCheckbox>
 	| EncodeIsVisible2<CompanionInputFieldCustomVariable>
+
+export type ExtendedConfigField = EncodeIsVisible2<CompanionInputFieldBonjourDevice>
 
 export type EncodeIsVisible2<T extends Pick<CompanionInputFieldBase, 'id' | 'isVisible'>> = Omit<T, 'isVisible'> & {
 	isVisibleFn?: string

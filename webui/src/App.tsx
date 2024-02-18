@@ -53,7 +53,7 @@ export default function App() {
 	const [connected, setConnected] = useState(false)
 	const [wasConnected, setWasConnected] = useState(false)
 	const [buttonGridHotPress, setButtonGridHotPress] = useState(false)
-	const [currentImportTask, setCurrentImportTask] = useState(null)
+	const [currentImportTask, setCurrentImportTask] = useState<'reset' | 'import' | null>(null)
 
 	useEffect(() => {
 		const onConnected = () => {

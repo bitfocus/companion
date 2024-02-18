@@ -193,7 +193,7 @@ function EventEditor({ event, service, isCollapsed, doCollapse, doExpand }: Even
 
 	const eventSpec = EventDefinitions[event.type]
 
-	const [eventOptions, optionVisibility] = useOptionsAndIsVisible(eventSpec, event)
+	const [eventOptions, optionVisibility] = useOptionsAndIsVisible(eventSpec?.options, event?.options)
 
 	const innerSetEnabled = useCallback(
 		(e: FormEvent<HTMLInputElement>) => service.setEnabled(e.currentTarget.checked),

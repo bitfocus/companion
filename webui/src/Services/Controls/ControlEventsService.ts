@@ -32,7 +32,7 @@ export function useControlEventsEditorService(
 	return useMemo(
 		() => ({
 			addEvent: (eventType: DropdownChoiceId) => {
-				socketEmitPromise(socket, 'controls:event:add', [controlId, eventType]).catch((e) => {
+				socketEmitPromise(socket, 'controls:event:add', [controlId, String(eventType)]).catch((e) => {
 					console.error('Failed to add trigger event', e)
 				})
 			},

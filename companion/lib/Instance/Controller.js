@@ -520,39 +520,48 @@ class Instance extends CoreBase {
 			client.leave(InstancesRoom)
 		})
 
-		client.onPromise('connections:edit', async (/** @type {string} */ id) => {
-			let instance = this.instance.moduleHost.getChild(id)
+		client.onPromise(
+			'connections:edit',
+			/**
+			 *
+			 * @param {string} id
+			 * @returns {Promise<import('@companion-app/shared/Model/Common.js').ClientEditConnectionConfig | null>}
+			 */
+			async (id) => {
+				let instance = this.instance.moduleHost.getChild(id)
 
-			if (!instance) {
-				// Maybe instance has just been created and isn't yet ready
+				if (!instance) {
+					// Maybe instance has just been created and isn't yet ready
 
-				// Wait a second then try again
-				await delay(1000)
+					// Wait a second then try again
+					await delay(1000)
 
-				instance = this.instance.moduleHost.getChild(id)
-			}
+					instance = this.instance.moduleHost.getChild(id)
+				}
 
-			if (instance) {
-				try {
-					const fields = await instance.requestConfigFields()
+				if (instance) {
+					try {
+						/** @type {any} Making types match is messy */
+						const fields = await instance.requestConfigFields()
 
-					const instanceConf = this.store.db[id]
+						const instanceConf = this.store.db[id]
 
-					return {
-						fields,
-						label: instanceConf?.label,
-						config: instanceConf?.config,
-						instance_type: instanceConf?.instance_type,
+						return {
+							fields,
+							label: instanceConf?.label,
+							config: instanceConf?.config,
+							instance_type: instanceConf?.instance_type,
+						}
+					} catch (/** @type {any} */ e) {
+						this.logger.silly(`Failed to load instance config_fields: ${e.message}`)
+						return null
 					}
-				} catch (/** @type {any} */ e) {
-					this.logger.silly(`Failed to load instance config_fields: ${e.message}`)
+				} else {
+					// Unknown instance
 					return null
 				}
-			} else {
-				// Unknown instance
-				return null
 			}
-		})
+		)
 
 		client.onPromise(
 			'connections:set-config',

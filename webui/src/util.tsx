@@ -21,8 +21,15 @@ import type { UserConfigModel } from '@companion-app/shared/Model/UserConfigMode
 import type { ClientDevicesListItem } from '@companion-app/shared/Model/Surfaces.js'
 import type { PageModel } from '@companion-app/shared/Model/PageModel.js'
 import type { CustomVariablesModel } from '@companion-app/shared/Model/CustomVariableModel.js'
+import type {
+	ClientToBackendEventsMap,
+	BackendToClientEventsMap,
+	AddCallbackParamToEvents,
+} from '@companion-app/shared/SocketIO.js'
 
-export const SocketContext = React.createContext<Socket>(null as any) // TODO - fix this
+export type CompanionSocketType = Socket<BackendToClientEventsMap, AddCallbackParamToEvents<ClientToBackendEventsMap>>
+
+export const SocketContext = React.createContext<CompanionSocketType>(null as any) // TODO - fix this
 export const EventDefinitionsContext = React.createContext<Record<string, ClientEventDefinition | undefined>>({})
 
 export const ModulesContext = React.createContext<Record<string, ModuleDisplayInfo>>({})
@@ -40,20 +47,37 @@ export const SurfacesContext = React.createContext<Record<string, ClientDevicesL
 export const PagesContext = React.createContext<Record<number, PageModel | undefined>>({})
 export const TriggersContext = React.createContext<Record<string, ClientTriggerData | undefined>>({})
 
-export function socketEmitPromise(
-	socket: Socket,
-	name: string,
-	args: any[],
+type IfReturnIsNever<T extends (...args: any[]) => void> = ReturnType<T> extends never ? never : T
+
+type StripNever<T extends object> = {
+	[K in keyof T as T[K] extends never ? never : K]: T[K]
+}
+
+type SocketEmitPromiseEvents = StripNever<{
+	[K in keyof ClientToBackendEventsMap]: ClientToBackendEventsMap[K] extends (...args: any[]) => any
+		? IfReturnIsNever<ClientToBackendEventsMap[K]>
+		: never
+}>
+
+export function socketEmitPromise<T extends keyof SocketEmitPromiseEvents>(
+	socket: CompanionSocketType,
+	name: T,
+	args: Parameters<SocketEmitPromiseEvents[T]>,
 	timeout?: number,
 	timeoutMessage?: string
-): Promise<any> {
-	const p = new Promise((resolve, reject) => {
+): Promise<ReturnType<SocketEmitPromiseEvents[T]>> {
+	const p = new Promise<ReturnType<SocketEmitPromiseEvents[T]>>((resolve, reject) => {
 		console.log('send', name, ...args)
 
-		socket.emit(name, ...args, (err: Error, res: any) => {
-			if (err) reject(err)
-			else resolve(res)
-		})
+		socket.emit(
+			name,
+			// @ts-expect-error types are unhappy because of the complex setup
+			args,
+			(err, res) => {
+				if (err) reject(err)
+				else resolve(res)
+			}
+		)
 	})
 
 	timeout = timeout ?? 5000

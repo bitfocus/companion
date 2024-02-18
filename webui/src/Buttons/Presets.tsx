@@ -261,7 +261,7 @@ interface PresetIconPreviewProps {
 
 function PresetIconPreview({ connectionId, presetId, title }: PresetIconPreviewProps) {
 	const socket = useContext(SocketContext)
-	const [previewImage, setPreviewImage] = useState(null)
+	const [previewImage, setPreviewImage] = useState<string | null>(null)
 	const [previewError, setPreviewError] = useState(false)
 	const [retryToken, setRetryToken] = useState(nanoid())
 

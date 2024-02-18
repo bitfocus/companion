@@ -1,4 +1,5 @@
-import type { InternalActionInputField } from './Options.js'
+import { SomeEncodedCompanionConfigField } from '@companion-module/base/dist/host-api/api.js'
+import type { ExtendedInputField, InternalActionInputField } from './Options.js'
 
 export interface AppVersionInfo {
 	appVersion: string
@@ -70,3 +71,20 @@ export interface EventDefinition {
 }
 
 export interface ClientEventDefinition extends EventDefinition {}
+
+export interface WrappedImage {
+	image: string | null
+	isUsed: boolean
+}
+
+export interface HelpDescription {
+	markdown: string
+	baseUrl: string
+}
+
+export interface ClientEditConnectionConfig {
+	fields: Array<ExtendedInputField & { width: number }>
+	label: string | undefined
+	config: unknown
+	instance_type: string | undefined
+}

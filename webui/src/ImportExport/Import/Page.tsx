@@ -239,7 +239,7 @@ export function ImportRemap({ snapshot, instanceRemap, setInstanceRemap }: Impor
 
 function ButtonImportPreview({ ...props }: ButtonInfiniteGridButtonProps) {
 	const socket = useContext(SocketContext)
-	const [previewImage, setPreviewImage] = useState(null)
+	const [previewImage, setPreviewImage] = useState<string | null>(null)
 
 	useEffect(() => {
 		setPreviewImage(null)

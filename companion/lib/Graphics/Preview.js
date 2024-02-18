@@ -108,7 +108,7 @@ class GraphicsPreview {
 			/**
 			 * @param {import('../Resources/Util.js').ControlLocation} location
 			 * @param {string} subId
-			 * @returns {{ image: string | null, isUsed: boolean }}
+			 * @returns {import('@companion-app/shared/Model/Common.js').WrappedImage}
 			 */
 			(location, subId) => {
 				if (!location || !subId) throw new Error('Invalid')

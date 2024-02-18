@@ -40,6 +40,8 @@ export function Emulator() {
 		setConfig(null)
 		setLoadError(null)
 
+		if (!emulatorId) return
+
 		socketEmitPromise(socket, 'emulator:startup', [emulatorId])
 			.then((config) => {
 				setConfig(config)
@@ -109,6 +111,8 @@ export function Emulator() {
 	// Register key handlers
 	useEffect(() => {
 		const onKeyDown = (e: KeyboardEvent) => {
+			if (!emulatorId) return
+
 			if (keymap[e.keyCode] !== undefined) {
 				const xy = keymap[e.keyCode]
 				if (xy) {
@@ -121,6 +125,8 @@ export function Emulator() {
 		}
 
 		const onKeyUp = (e: KeyboardEvent) => {
+			if (!emulatorId) return
+
 			const xy = keymap[e.keyCode]
 			if (xy) {
 				socketEmitPromise(socket, 'emulator:release', [emulatorId, ...xy]).catch((e: any) => {
@@ -141,7 +147,7 @@ export function Emulator() {
 
 	useEffect(() => {
 		// handle changes to keyDown, as it isnt safe to do inside setState
-		if (!keyDown) return
+		if (!keyDown || !emulatorId) return
 
 		socketEmitPromise(socket, 'emulator:press', [emulatorId, keyDown.column, keyDown.row]).catch((e: any) => {
 			console.error('press failed', e)

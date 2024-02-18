@@ -42,3 +42,5 @@ export interface ClientImportObject {
 	page?: ClientPageInfo
 	pages?: Record<number, ClientPageInfo>
 }
+
+export type InstanceRemappings = Record<string, string | undefined>

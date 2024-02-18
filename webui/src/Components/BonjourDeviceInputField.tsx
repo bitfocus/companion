@@ -15,7 +15,7 @@ export function BonjourDeviceInputField({ value, setValue, connectionId, queryId
 	const socket = useContext(SocketContext)
 
 	const [_subId, setSubId] = useState<string | null>(null)
-	const subIdRef = useRef(null)
+	const subIdRef = useRef<string | null>(null)
 
 	const [services, setServices] = useState<Record<string, ClientBonjourService | undefined>>({})
 
@@ -62,7 +62,7 @@ export function BonjourDeviceInputField({ value, setValue, connectionId, queryId
 			.then((newSubId) => {
 				// Make sure it hasnt been terminated
 				if (killed) {
-					socket.emit('bonjour:unsubscribe', [newSubId])
+					socket.emit('bonjour:unsubscribe', newSubId)
 					return
 				}
 

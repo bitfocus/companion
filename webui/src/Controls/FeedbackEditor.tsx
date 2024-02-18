@@ -262,7 +262,7 @@ function FeedbackEditor({
 
 	const feedbackSpec = (feedbacksContext[feedback.instance_id] || {})[feedback.type]
 
-	const [feedbackOptions, optionVisibility] = useOptionsAndIsVisible(feedbackSpec, feedback)
+	const [feedbackOptions, optionVisibility] = useOptionsAndIsVisible(feedbackSpec?.options, feedback?.options)
 
 	const innerSetEnabled = useCallback((e) => service.setEnabled(e.target.checked), [service.setEnabled])
 

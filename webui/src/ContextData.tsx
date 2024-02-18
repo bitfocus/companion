@@ -261,6 +261,9 @@ export function ContextData({ children }: ContextDataProps) {
 				socket.off('connections:patch', patchInstances)
 				socket.off('modules:patch', patchModules)
 
+				socketEmitPromise(socket, 'triggers:unsubscribe', []).catch((e) => {
+					console.error('Failed to unsubscribe to action definitions list', e)
+				})
 				socketEmitPromise(socket, 'action-definitions:unsubscribe', []).catch((e) => {
 					console.error('Failed to unsubscribe to action definitions list', e)
 				})

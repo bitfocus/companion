@@ -16,3 +16,12 @@ export interface ClientDevicesListItem {
 	isAutoGroup: boolean
 	surfaces: ClientSurfaceItem[]
 }
+
+export interface SurfaceGroupConfig {
+	name: string
+	last_page: number
+	startup_page: number
+	use_last_page: boolean
+}
+
+export type SurfacePanelConfig = Record<string, any>

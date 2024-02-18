@@ -60,7 +60,7 @@ export function ButtonPicker({ selectButton }: ButtonPickerProps) {
 		socketEmitPromise(socket, 'controls:subscribe', [selectedControl])
 			.then((config) => {
 				console.log(config)
-				setControlInfo(config?.config ?? false)
+				setControlInfo((config as any)?.config ?? false)
 			})
 			.catch((e) => {
 				console.error('Failed to load control config', e)

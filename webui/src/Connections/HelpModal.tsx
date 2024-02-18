@@ -4,14 +4,10 @@ import sanitizeHtml from 'sanitize-html'
 import { Marked } from 'marked'
 import { baseUrl } from 'marked-base-url'
 import { ModulesContext } from '../util.js'
+import { HelpDescription } from '@companion-app/shared/Model/Common.js'
 
 interface HelpModalProps {
 	// Nothing
-}
-
-interface HelpDescription {
-	markdown: string
-	baseUrl: string
 }
 
 export interface HelpModalRef {

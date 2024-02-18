@@ -445,7 +445,7 @@ class SurfaceController extends CoreBase {
 			'surfaces:config-get',
 			/**
 			 * @param {string} id
-			 * @returns {[config: unknown, info: unknown] | null}
+			 * @returns {import('@companion-app/shared/Model/Surfaces.js').SurfacePanelConfig | null}
 			 */
 			(id) => {
 				for (const surface of this.#surfaceHandlers.values()) {
@@ -608,7 +608,7 @@ class SurfaceController extends CoreBase {
 			'surfaces:group-config-get',
 			/**
 			 * @param {string} groupId
-			 * @returns {any}
+			 * @returns {import('@companion-app/shared/Model/Surfaces.js').SurfaceGroupConfig}
 			 */
 			(groupId) => {
 				const group = this.#surfaceGroups.get(groupId)
@@ -624,7 +624,7 @@ class SurfaceController extends CoreBase {
 			 * @param {string} groupId
 			 * @param {string} key
 			 * @param {any} value
-			 * @returns {any}
+			 * @returns {import('@companion-app/shared/Model/Surfaces.js').SurfaceGroupConfig | string}
 			 */
 			(groupId, key, value) => {
 				const group = this.#surfaceGroups.get(groupId)

@@ -43,6 +43,11 @@ export function ImportExport() {
 
 			var fr = new FileReader()
 			fr.onload = () => {
+				if (!fr.result) {
+					setLoadError('Failed to load file contents')
+					return
+				}
+
 				setLoadError(null)
 				socketEmitPromise(socket, 'loadsave:prepare-import', [fr.result], 20000)
 					.then(([err, config]: [string | null, ClientImportObject]) => {

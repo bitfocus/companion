@@ -21,19 +21,12 @@ import CoreBase from '../Core/Base.js'
 
 /**
  * @typedef {import('./Handler.js').default} SurfaceHandler
- *
- * @typedef {{
- *   name: string
- *   last_page: number
- *   startup_page: number
- *   use_last_page: boolean
- * }} SurfaceGroupConfig
  */
 
 export class SurfaceGroup extends CoreBase {
 	/**
 	 * The defaults config for a group
-	 * @type {SurfaceGroupConfig}
+	 * @type {import('@companion-app/shared/Model/Surfaces.js').SurfaceGroupConfig}
 	 * @access public
 	 * @static
 	 */
@@ -81,7 +74,7 @@ export class SurfaceGroup extends CoreBase {
 
 	/**
 	 * Configuration of this surface group
-	 * @type {SurfaceGroupConfig}
+	 * @type {import('@companion-app/shared/Model/Surfaces.js').SurfaceGroupConfig}
 	 * @access public
 	 */
 	groupConfig

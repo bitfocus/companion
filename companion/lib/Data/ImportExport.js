@@ -560,7 +560,7 @@ class DataImportExport extends CoreBase {
 			'loadsave:prepare-import',
 			/**
 			 *
-			 * @param {*} dataStr
+			 * @param {string | ArrayBuffer} dataStr
 			 * @returns {Promise<[null, ClientImportObject] | [string]>}
 			 */
 			async (dataStr) => {
@@ -883,8 +883,8 @@ class DataImportExport extends CoreBase {
 			/**
 			 * @param {number} topage
 			 * @param {number} frompage
-			 * @param {InstanceRemappings} instanceRemapping
-			 * @returns {Promise<InstanceRemappings>}
+			 * @param {import('@companion-app/shared/Model/ImportExport.js').InstanceRemappings} instanceRemapping
+			 * @returns {Promise<import('@companion-app/shared/Model/ImportExport.js').InstanceRemappings>}
 			 */
 			async (topage, frompage, instanceRemapping) => {
 				return this.checkOrRunImportTask('import', async () => {
@@ -917,7 +917,7 @@ class DataImportExport extends CoreBase {
 					doPageImport(pageInfo, topage, instanceIdMap)
 
 					// Report the used remap to the ui, for future imports
-					/** @type {InstanceRemappings} */
+					/** @type {import('@companion-app/shared/Model/ImportExport.js').InstanceRemappings} */
 					const instanceRemap2 = {}
 					for (const [id, obj] of Object.entries(instanceIdMap)) {
 						instanceRemap2[id] = obj.id
@@ -932,9 +932,9 @@ class DataImportExport extends CoreBase {
 			'loadsave:import-triggers',
 			/**
 			 * @param {string[]} idsToImport0
-			 * @param {InstanceRemappings} instanceRemapping
+			 * @param {import('@companion-app/shared/Model/ImportExport.js').InstanceRemappings} instanceRemapping
 			 * @param {boolean} replaceExisting
-			 * @returns {Promise<InstanceRemappings>}
+			 * @returns {Promise<import('@companion-app/shared/Model/ImportExport.js').InstanceRemappings>}
 			 */
 			async (idsToImport0, instanceRemapping, replaceExisting) => {
 				return this.checkOrRunImportTask('import', async () => {
@@ -966,7 +966,7 @@ class DataImportExport extends CoreBase {
 					}
 
 					// Report the used remap to the ui, for future imports
-					/** @type {InstanceRemappings} */
+					/** @type {import('@companion-app/shared/Model/ImportExport.js').InstanceRemappings} */
 					const instanceRemap2 = {}
 					for (const [id, obj] of Object.entries(instanceIdMap)) {
 						instanceRemap2[id] = obj.id
@@ -1043,7 +1043,7 @@ class DataImportExport extends CoreBase {
 
 	/**
 	 * @param {import('@companion-app/shared/Model/ExportModel.js').ExportInstancesv4 | undefined} instances
-	 * @param {InstanceRemappings} instanceRemapping
+	 * @param {import('@companion-app/shared/Model/ImportExport.js').InstanceRemappings} instanceRemapping
 	 * @returns {InstanceAppliedRemappings}
 	 */
 	#importInstances(instances, instanceRemapping) {
@@ -1348,7 +1348,6 @@ class DataImportExport extends CoreBase {
 export default DataImportExport
 
 /**
- * @typedef {Record<string, string | undefined>} InstanceRemappings
  * @typedef {Record<string, { id: string, label: string, lastUpgradeIndex?: number, oldLabel?: string}>} InstanceAppliedRemappings
  *
  * @typedef {{

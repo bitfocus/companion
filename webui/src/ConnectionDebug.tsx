@@ -66,24 +66,28 @@ export function ConnectionDebug() {
 			setLinesBuffer((oldLines) => [...oldLines, { level, message }])
 		}
 
-		socket.on(`connection-debug:update:${connectionId}`, onNewLines)
+		if (connectionId) {
+			socket.on(`connection-debug:update:${connectionId}`, onNewLines)
 
-		socketEmitPromise(socket, 'connection-debug:subscribe', [connectionId])
-			.then((info) => {
-				if (!info) {
-					onNewLines('system', 'Connection was not found')
-				}
-				console.log('subscribed', info)
-			})
-			.catch((err) => {
-				console.error('Subscribe failure', err)
-			})
+			socketEmitPromise(socket, 'connection-debug:subscribe', [connectionId])
+				.then((info) => {
+					if (!info) {
+						onNewLines('system', 'Connection was not found')
+					}
+					console.log('subscribed', info)
+				})
+				.catch((err) => {
+					console.error('Subscribe failure', err)
+				})
 
-		return () => {
-			socketEmitPromise(socket, 'connection-debug:unsubscribe', [connectionId]).catch((err) => {
-				console.error('Unsubscribe failure', err)
-			})
-			socket.off(`connection-debug:update:${connectionId}`, onNewLines)
+			return () => {
+				socketEmitPromise(socket, 'connection-debug:unsubscribe', [connectionId]).catch((err) => {
+					console.error('Unsubscribe failure', err)
+				})
+				socket.off(`connection-debug:update:${connectionId}`, onNewLines)
+			}
+		} else {
+			return undefined
 		}
 	}, [socket, connectionId, connectionToken])
 
@@ -111,11 +115,13 @@ export function ConnectionDebug() {
 	}, [linesBuffer])
 
 	const doStopConnection = useCallback(() => {
+		if (!connectionId) return
 		socketEmitPromise(socket, 'connections:set-enabled', [connectionId, false]).catch((e) => {
 			console.error('Failed', e)
 		})
 	}, [socket, connectionId])
 	const doStartConnection = useCallback(() => {
+		if (!connectionId) return
 		socketEmitPromise(socket, 'connections:set-enabled', [connectionId, true]).catch((e) => {
 			console.error('Failed', e)
 		})

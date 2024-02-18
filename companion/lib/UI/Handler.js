@@ -97,15 +97,14 @@ export class ClientSocket {
 	}
 	/**
 	 * A promise based alternative to the `on` method, for methods which want to return a value.
-	 * Note: it expects the last parameter of the call to be the callback
+	 * Note: it expects the first parameter of the call to be the callback
 	 * @param {string} name
 	 * @param {function} fcn
 	 * @returns {ClientSocket}
 	 */
 	onPromise(name, fcn) {
-		this.#socket.on(name, (...args) => {
+		this.#socket.on(name, (args, cb) => {
 			Promise.resolve().then(async () => {
-				const cb = args.pop()
 				try {
 					const result = await fcn(...args)
 					cb(null, result)

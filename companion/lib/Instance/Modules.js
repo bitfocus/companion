@@ -293,6 +293,7 @@ class InstanceModules extends CoreBase {
 	 * Load the help markdown file for a specified moduleId
 	 * @access public
 	 * @param {string} moduleId
+	 * @returns {Promise<import('@companion-app/shared/Model/Common.js').HelpDescription | undefined>}
 	 */
 	async getHelpForModule(moduleId) {
 		const moduleInfo = this.#knownModules.get(moduleId)

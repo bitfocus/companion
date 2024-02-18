@@ -93,6 +93,15 @@ export const EditButton = memo(function EditButton({ location, onKeyUp }: EditBu
 	const [reloadConfigToken, setReloadConfigToken] = useState(nanoid())
 
 	useEffect(() => {
+		if (!controlId) {
+			setConfig(false)
+			setRuntimeProps({})
+			setConfigError(null)
+			setPreviewImage(null)
+
+			return
+		}
+
 		setConfig(null)
 		setConfigError(null)
 		setPreviewImage(null)
@@ -101,7 +110,7 @@ export const EditButton = memo(function EditButton({ location, onKeyUp }: EditBu
 		socketEmitPromise(socket, 'controls:subscribe', [controlId])
 			.then((config) => {
 				console.log(config)
-				setConfig(config?.config ?? false)
+				setConfig((config as any)?.config ?? false)
 				setRuntimeProps(config?.runtime ?? {})
 				setConfigError(null)
 			})
@@ -215,12 +224,12 @@ export const EditButton = memo(function EditButton({ location, onKeyUp }: EditBu
 		)
 	}, [socket, location])
 	const hotRotateLeft = useCallback(() => {
-		socketEmitPromise(socket, 'controls:hot-rotate', [location, false]).catch((e) =>
+		socketEmitPromise(socket, 'controls:hot-rotate', [location, false, 'edit']).catch((e) =>
 			console.error(`Hot rotate failed: ${e}`)
 		)
 	}, [socket, location])
 	const hotRotateRight = useCallback(() => {
-		socketEmitPromise(socket, 'controls:hot-rotate', [location, true]).catch((e) =>
+		socketEmitPromise(socket, 'controls:hot-rotate', [location, true, 'edit']).catch((e) =>
 			console.error(`Hot rotate failed: ${e}`)
 		)
 	}, [socket, location])
@@ -472,7 +481,7 @@ function TabsSection({ style, controlId, location, steps, runtimeProps, rotaryAc
 	const removeSet = useCallback(
 		(stepId: string, setId: string | number) => {
 			confirmRef.current?.show('Remove set', 'Are you sure you wish to remove this group?', 'Remove', () => {
-				socketEmitPromise(socket, 'controls:action-set:remove', [controlId, stepId, setId]).catch((e) => {
+				socketEmitPromise(socket, 'controls:action-set:remove', [controlId, stepId, Number(setId)]).catch((e) => {
 					console.error('Failed to delete set:', e)
 				})
 			})
@@ -694,11 +703,13 @@ function EditActionsRelease({
 	const configureSet = useCallback(
 		(oldId: string | number) => {
 			if (editRef.current) {
-				console.log(stepOptions, oldId)
-				const runWhileHeld = stepOptions.runWhileHeld.includes(Number(oldId))
-				editRef.current?.show(Number(oldId), runWhileHeld, (newId: number, runWhileHeld: boolean) => {
+				const oldIdNumber = Number(oldId)
+				if (isNaN(oldIdNumber)) return
+
+				const runWhileHeld = stepOptions.runWhileHeld.includes(oldIdNumber)
+				editRef.current?.show(oldIdNumber, runWhileHeld, (newId: number, runWhileHeld: boolean) => {
 					if (!isNaN(newId)) {
-						socketEmitPromise(socket, 'controls:action-set:rename', [controlId, stepId, oldId, newId])
+						socketEmitPromise(socket, 'controls:action-set:rename', [controlId, stepId, oldIdNumber, newId])
 							.then(() => {
 								socketEmitPromise(socket, 'controls:action-set:set-run-while-held', [
 									controlId,
