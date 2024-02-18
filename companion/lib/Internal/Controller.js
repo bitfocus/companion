@@ -17,6 +17,7 @@
 
 import CoreBase from '../Core/Base.js'
 import ActionRecorder from './ActionRecorder.js'
+import BuildingBlocks from './BuildingBlocks.js'
 import Instance from './Instance.js'
 import Time from './Time.js'
 import Controls from './Controls.js'
@@ -43,6 +44,7 @@ export default class InternalController extends CoreBase {
 
 		this.fragments = [
 			new ActionRecorder(this, registry.controls.actionRecorder, registry.page, registry.instance.variable),
+			new BuildingBlocks(this),
 			new Instance(this, registry.instance),
 			new Time(this),
 			new Controls(this, registry.graphics, registry.controls, registry.page, registry.instance.variable),

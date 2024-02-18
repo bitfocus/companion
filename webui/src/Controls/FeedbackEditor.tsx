@@ -143,6 +143,105 @@ export function ControlFeedbacksEditor({
 	)
 }
 
+interface InlineFeedbacksEditorProps {
+	controlId: string
+	feedbacks: FeedbackInstance[]
+	entityType: string
+	booleanOnly: boolean
+	location: ControlLocation | undefined
+	addPlaceholder: string
+	feedbacksService: IFeedbackEditorService
+}
+
+export function InlineFeedbacksEditor({
+	controlId,
+	feedbacks,
+	entityType,
+	booleanOnly,
+	location,
+	addPlaceholder,
+	feedbacksService,
+}: InlineFeedbacksEditorProps) {
+	const confirmModal = useRef<GenericConfirmModalRef>(null)
+
+	// const feedbacksService = useControlFeedbacksEditorService(controlId, confirmModal, entityType)
+
+	const addFeedbacksRef = useRef<AddFeedbacksModalRef>(null)
+	const showAddModal = useCallback(() => addFeedbacksRef.current?.show(), [])
+
+	const feedbackIds = useMemo(() => feedbacks.map((fb) => fb.id), [feedbacks])
+	const { setPanelCollapsed, isPanelCollapsed, setAllCollapsed, setAllExpanded, canExpandAll, canCollapseAll } =
+		usePanelCollapseHelper(`feedbacks_${controlId}`, feedbackIds)
+
+	return (
+		<>
+			<GenericConfirmModal ref={confirmModal} />
+
+			<MyErrorBoundary>
+				<AddFeedbacksModal ref={addFeedbacksRef} addFeedback={feedbacksService.addFeedback} booleanOnly={booleanOnly} />
+			</MyErrorBoundary>
+
+			<h4 className="mt-3">
+				{feedbacks.length > 1 && (
+					<CButtonGroup className="right">
+						<CButtonGroup>
+							{canExpandAll && (
+								<CButton size="sm" onClick={setAllExpanded} title="Expand all feedbacks">
+									<FontAwesomeIcon icon={faExpandArrowsAlt} />
+								</CButton>
+							)}
+							{canCollapseAll && (
+								<CButton size="sm" onClick={setAllCollapsed} title="Collapse all feedbacks">
+									<FontAwesomeIcon icon={faCompressArrowsAlt} />
+								</CButton>
+							)}
+						</CButtonGroup>
+					</CButtonGroup>
+				)}
+			</h4>
+
+			<table className="table feedback-table">
+				<tbody>
+					{feedbacks.map((a, i) => (
+						<MyErrorBoundary key={a?.id ?? i}>
+							<FeedbackTableRow
+								key={a?.id ?? i}
+								entityType={entityType}
+								index={i}
+								feedback={a}
+								dragId={`feedback_${controlId}`}
+								serviceFactory={feedbacksService}
+								setCollapsed={setPanelCollapsed}
+								isCollapsed={isPanelCollapsed(a.id)}
+								booleanOnly={booleanOnly}
+								location={location}
+							/>
+						</MyErrorBoundary>
+					))}
+				</tbody>
+			</table>
+
+			<div className="add-dropdown-wrapper">
+				<AddFeedbackDropdown
+					onSelect={feedbacksService.addFeedback}
+					booleanOnly={booleanOnly}
+					addPlaceholder={addPlaceholder}
+				/>
+				<CButton
+					color="primary"
+					onClick={showAddModal}
+					style={{
+						borderTopLeftRadius: 0,
+						borderBottomLeftRadius: 0,
+					}}
+				>
+					<FontAwesomeIcon icon={faFolderOpen} />
+				</CButton>
+			</div>
+		</>
+	)
+}
+
 interface FeedbackTableRowDragItem {
 	feedbackId: string
 	index: number

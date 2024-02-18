@@ -7,6 +7,9 @@ import { DropdownChoice } from '@companion-module/base'
 import { RootAppStoreContext } from '../Stores/RootAppStore.js'
 import { observer } from 'mobx-react-lite'
 import { CFormLabel } from '@coreui/react'
+import { InlineFeedbacksEditor } from './FeedbackEditor.js'
+import { IFeedbackEditorService } from '../Services/Controls/ControlFeedbacksService.js'
+import { FeedbackInstance } from '@companion-app/shared/Model/FeedbackModel.js'
 
 export function InternalInstanceField(
 	label: React.ReactNode,
@@ -78,6 +81,8 @@ export function InternalInstanceField(
 			)
 		case 'internal:time':
 			return <InternalTimePicker label={label} disabled={readonly} value={value} setValue={setValue} />
+		case 'internal:feedbacks':
+			return <InternalFeedbacksPicker disabled={readonly} value={value} setValue={setValue} />
 		default:
 			// Use fallback
 			return null
@@ -410,4 +415,56 @@ function InternalTimePicker({ label, value, setValue, disabled }: InternalTimePi
 			/>
 		</>
 	)
+}
+
+interface InternalFeedbacksPickerProps {
+	value: any[]
+	setValue: (value: any[]) => void
+	disabled: boolean
+}
+
+function InternalFeedbacksPicker({ value, setValue, disabled }: InternalFeedbacksPickerProps) {
+	const service = useMemo(() => new InlineFeedbacksService(setValue), [setValue])
+	return (
+		<InlineFeedbacksEditor
+			controlId=""
+			feedbacks={value ?? []}
+			entityType="condition"
+			booleanOnly
+			location={undefined}
+			addPlaceholder="+ Add condition"
+			feedbacksService={{} as any}
+		/>
+	)
+	// return <>{value}</>
+}
+
+class InlineFeedbacksService implements IFeedbackEditorService {
+	readonly #setValue: (feedbacks: FeedbackInstance[]) => void
+
+	constructor(setValue: (feedbacks: FeedbackInstance[]) => void) {
+		this.#setValue = setValue
+
+		// nocommit I don't like the feel of this approach
+		// The frontend is going to have to do this merging logic and emit the whole blob as changed
+		// Then the backend is going to have to be inefficient and either assume everything in the tree has changed,
+		// or will need to deep diff to figure out what did change.
+
+		// Perhaps is would be better if instead of this, the api allows for a better description of where the feedback is,
+		// as this would allow it to use the same socket.io api, and allow for the subportions.
+		// It wouldn't be unreasonable for the feedback definition to have a 'usesChildFeedbacks: true' property to enable this
+		// And the backend could use a static array/set of feedbackIds which support this, to help its logic
+	}
+
+	addFeedback: (feedbackType: string) => void
+	moveCard: (dragIndex: number, hoverIndex: number) => void
+	setValue: (feedbackId: string, feedback: FeedbackInstance | undefined, key: string, value: any) => void
+	setInverted: (feedbackId: string, inverted: boolean) => void
+	performDelete: (feedbackId: string) => void
+	performDuplicate: (feedbackId: string) => void
+	performLearn: (feedbackId: string) => void
+	setSelectedStyleProps: (feedbackId: string, keys: string[]) => void
+	setStylePropsValue: (feedbackId: string, key: string, value: any) => void
+	setEnabled: (feedbackId: string, enabled: boolean) => void
+	setHeadline: ((feedbackId: string, headline: string) => void) | undefined
 }
