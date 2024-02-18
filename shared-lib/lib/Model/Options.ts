@@ -1,5 +1,4 @@
 import type {
-	CompanionButtonStyleProps,
 	CompanionInputFieldBase,
 	CompanionInputFieldBonjourDevice,
 	CompanionInputFieldCheckbox,
@@ -11,7 +10,6 @@ import type {
 	CompanionInputFieldStaticText,
 	CompanionInputFieldTextInput,
 } from '@companion-module/base'
-import type { SetOptional } from 'type-fest'
 
 // TODO: move to '@companion-module/base'
 export type IsVisibleFunction = Required<CompanionInputFieldBase>['isVisible']
@@ -100,18 +98,3 @@ export type EncodeIsVisible2<T extends Pick<CompanionInputFieldBase, 'id' | 'isV
 
 export type InternalActionInputField = ExtendedInputField | InternalInputField
 export type InternalFeedbackInputField = ExtendedInputField | InternalInputField
-
-export interface FeedbackDefinition {
-	label: string
-	description: string | undefined
-	options: InternalFeedbackInputField[]
-	type: 'advanced' | 'boolean'
-	style: Partial<CompanionButtonStyleProps> | undefined
-	hasLearn: boolean
-	learnTimeout: number | undefined
-	showInvert: boolean
-}
-
-export interface InternalFeedbackDefinition extends SetOptional<FeedbackDefinition, 'hasLearn' | 'learnTimeout'> {
-	showButtonPreview?: boolean
-}

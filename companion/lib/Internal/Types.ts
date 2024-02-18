@@ -5,6 +5,7 @@ import type { VisitorReferencesUpdater } from '../Util/Visitors/ReferencesUpdate
 
 export * from '@companion-app/shared/Model/Options.js'
 export * from '@companion-app/shared/Model/ActionDefinitionModel.js'
+export * from '@companion-app/shared/Model/FeedbackDefinitionModel.js'
 
 export interface FeedbackInstanceExt extends FeedbackInstance {
 	controlId: string

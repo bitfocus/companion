@@ -11,11 +11,12 @@ import {
 	CModalHeader,
 } from '@coreui/react'
 import React, { forwardRef, useCallback, useContext, useImperativeHandle, useState } from 'react'
-import { FeedbacksContext, ConnectionsContext, useComputed } from '../util.js'
+import { ConnectionsContext, useComputed } from '../util.js'
 import { ClientConnectionConfig } from '@companion-app/shared/Model/Common.js'
 import { RootAppStoreContext } from '../Stores/RootAppStore.js'
 import { observer } from 'mobx-react-lite'
 import { ConnectionActionDefinitions } from '../Stores/ActionDefinitionsStore.js'
+import { ConnectionFeedbackDefinitions } from '../Stores/FeedbackDefinitionsStore.js'
 
 interface AddActionsModalProps {
 	addAction: (actionType: string) => void
@@ -115,95 +116,96 @@ export interface AddFeedbacksModalRef {
 	show(): void
 }
 
-export const AddFeedbacksModal = forwardRef<AddFeedbacksModalRef, AddFeedbacksModalProps>(function AddFeedbacksModal(
-	{ addFeedback, booleanOnly },
-	ref
-) {
-	const { recentlyAddedFeedbacks } = useContext(RootAppStoreContext)
-	const feedbacks = useContext(FeedbacksContext)
-	const connections = useContext(ConnectionsContext)
+export const AddFeedbacksModal = observer(
+	forwardRef<AddFeedbacksModalRef, AddFeedbacksModalProps>(function AddFeedbacksModal(
+		{ addFeedback, booleanOnly },
+		ref
+	) {
+		const { feedbackDefinitions, recentlyAddedFeedbacks } = useContext(RootAppStoreContext)
+		const connections = useContext(ConnectionsContext)
 
-	const [show, setShow] = useState(false)
+		const [show, setShow] = useState(false)
 
-	const doClose = useCallback(() => setShow(false), [])
-	const onClosed = useCallback(() => {
-		setFilter('')
-	}, [])
+		const doClose = useCallback(() => setShow(false), [])
+		const onClosed = useCallback(() => {
+			setFilter('')
+		}, [])
 
-	useImperativeHandle(
-		ref,
-		() => ({
-			show() {
-				setShow(true)
-				setFilter('')
+		useImperativeHandle(
+			ref,
+			() => ({
+				show() {
+					setShow(true)
+					setFilter('')
+				},
+			}),
+			[]
+		)
+
+		const [expanded, setExpanded] = useState<Record<string, boolean>>({})
+		const toggleExpanded = useCallback((id: string) => {
+			setExpanded((oldVal) => {
+				return {
+					...oldVal,
+					[id]: !oldVal[id],
+				}
+			})
+		}, [])
+		const [filter, setFilter] = useState('')
+
+		const addFeedback2 = useCallback(
+			(feedbackType) => {
+				recentlyAddedFeedbacks.trackId(feedbackType)
+
+				addFeedback(feedbackType)
 			},
-		}),
-		[]
-	)
+			[recentlyAddedFeedbacks, addFeedback]
+		)
 
-	const [expanded, setExpanded] = useState<Record<string, boolean>>({})
-	const toggleExpanded = useCallback((id: string) => {
-		setExpanded((oldVal) => {
-			return {
-				...oldVal,
-				[id]: !oldVal[id],
-			}
-		})
-	}, [])
-	const [filter, setFilter] = useState('')
-
-	const addFeedback2 = useCallback(
-		(feedbackType) => {
-			recentlyAddedFeedbacks.trackId(feedbackType)
-
-			addFeedback(feedbackType)
-		},
-		[recentlyAddedFeedbacks, addFeedback]
-	)
-
-	return (
-		<CModal show={show} onClose={doClose} onClosed={onClosed} size="lg" scrollable={true}>
-			<CModalHeader closeButton>
-				<h5>Browse Feedbacks</h5>
-			</CModalHeader>
-			<CModalHeader>
-				<CInput
-					type="text"
-					placeholder="Search ..."
-					onChange={(e) => setFilter(e.currentTarget.value)}
-					value={filter}
-					style={{ fontSize: '1.2em' }}
-				/>
-			</CModalHeader>
-			<CModalBody>
-				{Object.entries(feedbacks).map(([connectionId, items]) => (
-					<ConnectionCollapse
-						key={connectionId}
-						connectionId={connectionId}
-						connectionInfo={connections[connectionId]}
-						items={items}
-						itemName="feedbacks"
-						expanded={!!filter || expanded[connectionId]}
-						filter={filter}
-						booleanOnly={booleanOnly}
-						doToggle={toggleExpanded}
-						doAdd={addFeedback2}
+		return (
+			<CModal show={show} onClose={doClose} onClosed={onClosed} size="lg" scrollable={true}>
+				<CModalHeader closeButton>
+					<h5>Browse Feedbacks</h5>
+				</CModalHeader>
+				<CModalHeader>
+					<CInput
+						type="text"
+						placeholder="Search ..."
+						onChange={(e) => setFilter(e.currentTarget.value)}
+						value={filter}
+						style={{ fontSize: '1.2em' }}
 					/>
-				))}
-			</CModalBody>
-			<CModalFooter>
-				<CButton color="secondary" onClick={doClose}>
-					Done
-				</CButton>
-			</CModalFooter>
-		</CModal>
-	)
-})
+				</CModalHeader>
+				<CModalBody>
+					{Array.from(feedbackDefinitions.connections.entries()).map(([connectionId, items]) => (
+						<ConnectionCollapse
+							key={connectionId}
+							connectionId={connectionId}
+							connectionInfo={connections[connectionId]}
+							items={items}
+							itemName="feedbacks"
+							expanded={!!filter || expanded[connectionId]}
+							filter={filter}
+							booleanOnly={booleanOnly}
+							doToggle={toggleExpanded}
+							doAdd={addFeedback2}
+						/>
+					))}
+				</CModalBody>
+				<CModalFooter>
+					<CButton color="secondary" onClick={doClose}>
+						Done
+					</CButton>
+				</CModalFooter>
+			</CModal>
+		)
+	})
+)
 
 interface ConnectionCollapseProps {
 	connectionId: string
 	connectionInfo: ClientConnectionConfig | undefined
-	items: ConnectionActionDefinitions | undefined
+	items: ConnectionActionDefinitions | ConnectionFeedbackDefinitions | undefined
 	itemName: string
 	expanded: boolean
 	filter: string
@@ -232,7 +234,7 @@ function ConnectionCollapse({
 			const res = []
 			if (items) {
 				for (const [id, info] of items.entries()) {
-					if (!info || (booleanOnly && info.type !== 'boolean')) continue
+					if (!info || (booleanOnly && (!('type' in info) || info.type !== 'boolean'))) continue
 
 					if (info.label?.match(regexp)) {
 						const fullId = `${connectionId}:${id}`

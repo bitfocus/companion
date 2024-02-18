@@ -1,7 +1,6 @@
 import React, { useContext, useEffect, useMemo, useRef, useState } from 'react'
 import {
 	applyPatchOrReplaceSubObject,
-	FeedbacksContext,
 	ConnectionsContext,
 	VariableDefinitionsContext,
 	CustomVariableDefinitionsContext,
@@ -20,7 +19,6 @@ import { useUserConfigSubscription } from './Hooks/useUserConfigSubscription.js'
 import { usePagesInfoSubscription } from './Hooks/usePagesInfoSubscription.js'
 import { useActionDefinitionsSubscription } from './Hooks/useActionDefinitionsSubscription.js'
 import type { ClientConnectionConfig, ModuleDisplayInfo } from '@companion-app/shared/Model/Common.js'
-import type { InternalFeedbackDefinition } from '@companion-app/shared/Model/Options.js'
 import type { AllVariableDefinitions, ModuleVariableDefinitions } from '@companion-app/shared/Model/Variables.js'
 import type { CustomVariablesModel } from '@companion-app/shared/Model/CustomVariableModel.js'
 import type { ClientDevicesListItem } from '@companion-app/shared/Model/Surfaces.js'
@@ -32,6 +30,8 @@ import { observable } from 'mobx'
 import { PagesStore } from './Stores/PagesStore.js'
 import { EventDefinitionsStore } from './Stores/EventDefinitionsStore.js'
 import { ActionDefinitionsStore } from './Stores/ActionDefinitionsStore.js'
+import { FeedbackDefinitionsStore } from './Stores/FeedbackDefinitionsStore.js'
+import { useFeedbackDefinitionsSubscription } from './Hooks/useFeedbackDefinitionsSubscription.js'
 
 interface ContextDataProps {
 	children: (progressPercent: number, loadingComplete: boolean) => React.JSX.Element | React.JSX.Element[]
@@ -54,6 +54,7 @@ export function ContextData({ children }: ContextDataProps) {
 
 			actionDefinitions: new ActionDefinitionsStore(),
 			eventDefinitions: new EventDefinitionsStore(),
+			feedbackDefinitions: new FeedbackDefinitionsStore(),
 
 			pages: new PagesStore(),
 		} satisfies RootAppStore
@@ -61,10 +62,7 @@ export function ContextData({ children }: ContextDataProps) {
 
 	const [connections, setConnections] = useState<Record<string, ClientConnectionConfig> | null>(null)
 	const [modules, setModules] = useState<Record<string, ModuleDisplayInfo> | null>(null)
-	const [feedbackDefinitions, setFeedbackDefinitions] = useState<Record<
-		string,
-		Record<string, InternalFeedbackDefinition | undefined> | undefined
-	> | null>(null)
+
 	const [variableDefinitions, setVariableDefinitions] = useState<AllVariableDefinitions | null>(null)
 	const [customVariables, setCustomVariables] = useState<CustomVariablesModel | null>(null)
 	const [surfaces, setSurfaces] = useState<Record<string, ClientDevicesListItem | undefined> | null>(null)
@@ -95,6 +93,7 @@ export function ContextData({ children }: ContextDataProps) {
 	const [loadedEventDefinitions, setLoadedEventDefinitions] = useState(false)
 
 	const actionDefinitionsReady = useActionDefinitionsSubscription(socket, rootStore.actionDefinitions)
+	const feedbackDefinitionsReady = useFeedbackDefinitionsSubscription(socket, rootStore.feedbackDefinitions)
 	const pagesReady = usePagesInfoSubscription(socket, rootStore.pages)
 	const userConfig = useUserConfigSubscription(socket)
 
@@ -116,13 +115,6 @@ export function ContextData({ children }: ContextDataProps) {
 				.catch((e) => {
 					console.error('Failed to load modules list', e)
 				})
-			socketEmitPromise(socket, 'feedback-definitions:subscribe', [])
-				.then((data) => {
-					setFeedbackDefinitions(data || {})
-				})
-				.catch((e) => {
-					console.error('Failed to load feedback definitions list', e)
-				})
 			socketEmitPromise(socket, 'variable-definitions:subscribe', [])
 				.then((data) => {
 					setVariableDefinitions(data || {})
@@ -143,11 +135,6 @@ export function ContextData({ children }: ContextDataProps) {
 					(oldDefinitions) =>
 						oldDefinitions &&
 						applyPatchOrReplaceSubObject<ModuleVariableDefinitions | undefined>(oldDefinitions, label, patch, {})
-				)
-			}
-			const updateFeedbackDefinitions = (id: string, patch: JsonPatchOperation[]) => {
-				setFeedbackDefinitions(
-					(oldDefinitions) => oldDefinitions && applyPatchOrReplaceSubObject(oldDefinitions, id, patch, {})
 				)
 			}
 
@@ -205,8 +192,6 @@ export function ContextData({ children }: ContextDataProps) {
 			socket.on('variable-definitions:update', updateVariableDefinitions)
 			socket.on('custom-variables:update', updateCustomVariables)
 
-			socket.on('feedback-definitions:update', updateFeedbackDefinitions)
-
 			socketEmitPromise(socket, 'surfaces:subscribe', [])
 				.then((surfaces) => {
 					setSurfaces(surfaces)
@@ -238,7 +223,6 @@ export function ContextData({ children }: ContextDataProps) {
 			return () => {
 				socket.off('variable-definitions:update', updateVariableDefinitions)
 				socket.off('custom-variables:update', updateCustomVariables)
-				socket.off('feedback-definitions:update', updateFeedbackDefinitions)
 				socket.off('surfaces:patch', patchSurfaces)
 
 				socket.off('triggers:update', updateTriggers)
@@ -249,9 +233,7 @@ export function ContextData({ children }: ContextDataProps) {
 				socketEmitPromise(socket, 'triggers:unsubscribe', []).catch((e) => {
 					console.error('Failed to unsubscribe to action definitions list', e)
 				})
-				socketEmitPromise(socket, 'feedback-definitions:unsubscribe', []).catch((e) => {
-					console.error('Failed to unsubscribe to feedback definitions list', e)
-				})
+
 				socketEmitPromise(socket, 'variable-definitions:unsubscribe', []).catch((e) => {
 					console.error('Failed to unsubscribe to variable definitions list', e)
 				})
@@ -282,7 +264,7 @@ export function ContextData({ children }: ContextDataProps) {
 		variableDefinitions != null,
 		completeVariableDefinitions != null,
 		actionDefinitionsReady,
-		feedbackDefinitions != null,
+		feedbackDefinitionsReady,
 		customVariables != null,
 		userConfig != null,
 		surfaces != null,
@@ -297,23 +279,21 @@ export function ContextData({ children }: ContextDataProps) {
 	return (
 		<RootAppStoreContext.Provider value={rootStore}>
 			<ModulesContext.Provider value={modules!}>
-				<FeedbacksContext.Provider value={feedbackDefinitions!}>
-					<ConnectionsContext.Provider value={connections!}>
-						<VariableDefinitionsContext.Provider value={completeVariableDefinitions}>
-							<CustomVariableDefinitionsContext.Provider value={customVariables!}>
-								<UserConfigContext.Provider value={userConfig}>
-									<SurfacesContext.Provider value={surfaces!}>
-										<TriggersContext.Provider value={triggers!}>
-											<NotificationsManager ref={notifierRef} />
+				<ConnectionsContext.Provider value={connections!}>
+					<VariableDefinitionsContext.Provider value={completeVariableDefinitions}>
+						<CustomVariableDefinitionsContext.Provider value={customVariables!}>
+							<UserConfigContext.Provider value={userConfig}>
+								<SurfacesContext.Provider value={surfaces!}>
+									<TriggersContext.Provider value={triggers!}>
+										<NotificationsManager ref={notifierRef} />
 
-											{children(progressPercent, completedSteps.length === steps.length)}
-										</TriggersContext.Provider>
-									</SurfacesContext.Provider>
-								</UserConfigContext.Provider>
-							</CustomVariableDefinitionsContext.Provider>
-						</VariableDefinitionsContext.Provider>
-					</ConnectionsContext.Provider>
-				</FeedbacksContext.Provider>
+										{children(progressPercent, completedSteps.length === steps.length)}
+									</TriggersContext.Provider>
+								</SurfacesContext.Provider>
+							</UserConfigContext.Provider>
+						</CustomVariableDefinitionsContext.Provider>
+					</VariableDefinitionsContext.Provider>
+				</ConnectionsContext.Provider>
 			</ModulesContext.Provider>
 		</RootAppStoreContext.Provider>
 	)

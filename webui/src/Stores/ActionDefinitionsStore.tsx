@@ -2,7 +2,7 @@ import type {
 	ActionDefinitionUpdate,
 	ClientActionDefinition,
 } from '@companion-app/shared/Model/ActionDefinitionModel.js'
-import { assertNever } from '@companion-module/base'
+import { assertNever } from '../util.js'
 import { ObservableMap, action, observable } from 'mobx'
 import { ApplyDiffToStore } from './ApplyDiffToMap.js'
 

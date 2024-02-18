@@ -26,7 +26,7 @@ import type {
 import type { PageModel } from './Model/PageModel.js'
 import type { ClientTriggerData } from './Model/TriggerModel.js'
 import type { CustomVariablesModel } from './Model/CustomVariableModel.js'
-import type { InternalFeedbackDefinition } from './Model/Options.js'
+import type { FeedbackDefinitionUpdate, InternalFeedbackDefinition } from './Model/FeedbackDefinitionModel.js'
 import type { AllVariableDefinitions } from './Model/Variables.js'
 import type { CompanionVariableValues } from '@companion-module/base'
 import type { UIPresetDefinition } from './Model/Presets.js'
@@ -295,7 +295,7 @@ export interface BackendToClientEventsMap {
 	'surfaces:patch': (patch: JsonPatchOperation[]) => void
 	'triggers:update': (controlId: string, patch: JsonPatchOperation[]) => void
 	'action-definitions:update': (changes: ActionDefinitionUpdate[]) => void
-	'feedback-definitions:update': (id: string, patch: JsonPatchOperation[]) => void
+	'feedback-definitions:update': (changes: FeedbackDefinitionUpdate) => void
 	'custom-variables:update': (patch: JsonPatchOperation[]) => void
 	'variable-definitions:update': (label: string, patch: JsonPatchOperation[]) => void
 	'presets:update': (id: string, patch: JsonPatchOperation[]) => void

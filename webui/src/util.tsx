@@ -12,7 +12,6 @@ import { Socket } from 'socket.io-client'
 import type { AllVariableDefinitions } from '@companion-app/shared/Model/Variables.js'
 import type { ClientConnectionConfig, ModuleDisplayInfo } from '@companion-app/shared/Model/Common.js'
 import type { ClientTriggerData } from '@companion-app/shared/Model/TriggerModel.js'
-import type { InternalFeedbackDefinition } from '@companion-app/shared/Model/Options.js'
 import type { UserConfigModel } from '@companion-app/shared/Model/UserConfigModel.js'
 import type { ClientDevicesListItem } from '@companion-app/shared/Model/Surfaces.js'
 import type { CustomVariablesModel } from '@companion-app/shared/Model/CustomVariableModel.js'
@@ -28,9 +27,6 @@ export type CompanionSocketType = Socket<BackendToClientEventsMap, AddCallbackPa
 export const SocketContext = React.createContext<CompanionSocketType>(null as any) // TODO - fix this
 
 export const ModulesContext = React.createContext<Record<string, ModuleDisplayInfo>>({})
-export const FeedbacksContext = React.createContext<
-	Record<string, Record<string, InternalFeedbackDefinition | undefined> | undefined>
->({})
 export const ConnectionsContext = React.createContext<Record<string, ClientConnectionConfig>>({})
 export const VariableDefinitionsContext = React.createContext<AllVariableDefinitions>({})
 export const CustomVariableDefinitionsContext = React.createContext<CustomVariablesModel>({})
@@ -332,4 +328,9 @@ export function useComputed<TCb extends (...args: any[]) => any>(
 	deps: DependencyList | undefined
 ): ReturnType<TCb> {
 	return useMemo(() => computed(cb), deps).get()
+}
+
+/** Type assert that a value is never */
+export function assertNever(_val: never): void {
+	// Nothing to do
 }

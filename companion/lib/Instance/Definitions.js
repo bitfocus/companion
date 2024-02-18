@@ -249,7 +249,10 @@ class InstanceDefinitions extends CoreBase {
 
 		delete this.#feedbackDefinitions[connectionId]
 		if (this.io.countRoomMembers(FeedbacksRoom) > 0) {
-			this.io.emitToRoom(FeedbacksRoom, 'feedback-definitions:update', connectionId, undefined)
+			this.io.emitToRoom(FeedbacksRoom, 'feedback-definitions:update', {
+				type: 'forget-connection',
+				connectionId,
+			})
 		}
 	}
 
@@ -394,11 +397,21 @@ class InstanceDefinitions extends CoreBase {
 
 		if (this.io.countRoomMembers(FeedbacksRoom) > 0) {
 			if (!lastFeedbackDefinitions) {
-				this.io.emitToRoom(FeedbacksRoom, 'feedback-definitions:update', connectionId, feedbackDefinitions)
+				this.io.emitToRoom(FeedbacksRoom, 'feedback-definitions:update', {
+					type: 'add-connection',
+					connectionId,
+
+					feedbacks: feedbackDefinitions,
+				})
 			} else {
-				const patch = jsonPatch.compare(lastFeedbackDefinitions, feedbackDefinitions || {})
-				if (patch.length > 0) {
-					this.io.emitToRoom(FeedbacksRoom, 'feedback-definitions:update', connectionId, patch)
+				const diff = diffObjects(lastFeedbackDefinitions, feedbackDefinitions || {})
+				if (diff) {
+					this.io.emitToRoom(FeedbacksRoom, 'feedback-definitions:update', {
+						type: 'update-connection',
+						connectionId,
+
+						...diff,
+					})
 				}
 			}
 		}
@@ -573,7 +586,7 @@ export default InstanceDefinitions
 
 /**
  * @typedef {import('@companion-app/shared/Model/ActionDefinitionModel.js').ActionDefinition} ActionDefinition
- * @typedef {import('@companion-app/shared/Model/Options.js').FeedbackDefinition} FeedbackDefinition
+ * @typedef {import('@companion-app/shared/Model/FeedbackDefinitionModel.js').FeedbackDefinition} FeedbackDefinition
  */
 
 /**
