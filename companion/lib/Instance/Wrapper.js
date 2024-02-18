@@ -100,6 +100,9 @@ class SocketEventsHandler {
 			upgradedItems: this.#handleUpgradedItems.bind(this),
 			recordAction: this.#handleRecordAction.bind(this),
 			setCustomVariable: this.#handleSetCustomVariable.bind(this),
+			sharedUdpSocketJoin: this.#handleSharedUdpSocketJoin.bind(this),
+			sharedUdpSocketLeave: this.#handleSharedUdpSocketLeave.bind(this),
+			sharedUdpSocketSend: this.#handleSharedUdpSocketSend.bind(this),
 		}
 
 		this.#ipcWrapper = new IpcWrapper(
@@ -515,6 +518,14 @@ class SocketEventsHandler {
 
 		// Cleanup any db collections
 		// Future: for use in refactoring
+		this.cleanup()
+	}
+
+	/**
+	 * Perform any cleanup
+	 */
+	cleanup() {
+		this.#registry.services.sharedUdpManager.leaveAllFromOwner(this.connectionId)
 	}
 
 	/**
@@ -873,6 +884,55 @@ class SocketEventsHandler {
 		await this.#ipcWrapper.sendWithCb('startStopRecordActions', {
 			recording: recording,
 		})
+	}
+
+	/**
+	 *
+	 * @param {import('@companion-module/base/dist/host-api/api.js').SharedUdpSocketMessageJoin} msg
+	 * @returns {Promise<string>}
+	 */
+	async #handleSharedUdpSocketJoin(msg) {
+		const handleId = await this.#registry.services.sharedUdpManager.joinPort(
+			msg.family,
+			msg.portNumber,
+			this.connectionId,
+			(message, rInfo) => {
+				this.#ipcWrapper.sendWithNoCb('sharedUdpSocketMessage', {
+					handleId,
+					portNumber: msg.portNumber,
+					message: message,
+					source: rInfo,
+				})
+			},
+			(error) => {
+				this.#ipcWrapper.sendWithNoCb('sharedUdpSocketError', {
+					handleId,
+					portNumber: msg.portNumber,
+					error: error,
+				})
+			}
+		)
+		return handleId
+	}
+	/**
+	 *
+	 * @param {import('@companion-module/base/dist/host-api/api.js').SharedUdpSocketMessageLeave} msg
+	 */
+	async #handleSharedUdpSocketLeave(msg) {
+		this.#registry.services.sharedUdpManager.leavePort(this.connectionId, msg.handleId)
+	}
+	/**
+	 *
+	 * @param {import('@companion-module/base/dist/host-api/api.js').SharedUdpSocketMessageSend} msg
+	 */
+	async #handleSharedUdpSocketSend(msg) {
+		this.#registry.services.sharedUdpManager.sendOnPort(
+			this.connectionId,
+			msg.handleId,
+			msg.address,
+			msg.port,
+			msg.message
+		)
 	}
 }
 
