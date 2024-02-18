@@ -12,7 +12,6 @@ import {
 	socketEmitPromise,
 	applyPatchOrReplaceObject,
 	SocketContext,
-	EventDefinitionsContext,
 	ModulesContext,
 } from './util.js'
 import { NotificationsManager, NotificationsManagerRef } from './Components/Notifications.js'
@@ -20,11 +19,7 @@ import { cloneDeep } from 'lodash-es'
 import jsonPatch, { Operation as JsonPatchOperation } from 'fast-json-patch'
 import { useUserConfigSubscription } from './Hooks/useUserConfigSubscription.js'
 import { usePagesInfoSubscription } from './Hooks/usePagesInfoSubscription.js'
-import type {
-	ClientConnectionConfig,
-	ClientEventDefinition,
-	ModuleDisplayInfo,
-} from '@companion-app/shared/Model/Common.js'
+import type { ClientConnectionConfig, ModuleDisplayInfo } from '@companion-app/shared/Model/Common.js'
 import type { ClientActionDefinition, InternalFeedbackDefinition } from '@companion-app/shared/Model/Options.js'
 import type { AllVariableDefinitions, ModuleVariableDefinitions } from '@companion-app/shared/Model/Variables.js'
 import type { CustomVariablesModel } from '@companion-app/shared/Model/CustomVariableModel.js'
@@ -35,6 +30,7 @@ import { RootAppStore, RootAppStoreContext } from './Stores/RootAppStore.js'
 import { RecentlyUsedIdsStore } from './Stores/RecentlyUsedIdsStore.js'
 import { observable } from 'mobx'
 import { PagesStore } from './Stores/PagesStore.js'
+import { EventDefinitionsStore } from './Stores/EventDefinitionsStore.js'
 
 interface ContextDataProps {
 	children: (progressPercent: number, loadingComplete: boolean) => React.JSX.Element | React.JSX.Element[]
@@ -55,13 +51,12 @@ export function ContextData({ children }: ContextDataProps) {
 			recentlyAddedActions: new RecentlyUsedIdsStore('recent_actions', 20),
 			recentlyAddedFeedbacks: new RecentlyUsedIdsStore('recent_feedbacks', 20),
 
+			eventDefinitions: new EventDefinitionsStore(),
+
 			pages: new PagesStore(),
 		} satisfies RootAppStore
 	}, [socket])
 
-	const [eventDefinitions, setEventDefinitions] = useState<Record<string, ClientEventDefinition | undefined> | null>(
-		null
-	)
 	const [connections, setConnections] = useState<Record<string, ClientConnectionConfig> | null>(null)
 	const [modules, setModules] = useState<Record<string, ModuleDisplayInfo> | null>(null)
 	const [actionDefinitions, setActionDefinitions] = useState<Record<
@@ -99,6 +94,8 @@ export function ContextData({ children }: ContextDataProps) {
 		}
 	}, [customVariables, variableDefinitions])
 
+	const [loadedEventDefinitions, setLoadedEventDefinitions] = useState(false)
+
 	const pagesReady = usePagesInfoSubscription(socket, rootStore.pages)
 	const userConfig = useUserConfigSubscription(socket)
 
@@ -106,7 +103,8 @@ export function ContextData({ children }: ContextDataProps) {
 		if (socket) {
 			socketEmitPromise(socket, 'event-definitions:get', [])
 				.then((definitions) => {
-					setEventDefinitions(definitions)
+					setLoadedEventDefinitions(true)
+					rootStore.eventDefinitions.setDefinitions(definitions)
 				})
 				.catch((e) => {
 					console.error('Failed to load event definitions', e)
@@ -295,50 +293,48 @@ export function ContextData({ children }: ContextDataProps) {
 
 	const activeLearnRequestsReady = useActiveLearnRequests(socket, rootStore.activeLearns)
 
-	const steps = [
-		eventDefinitions,
-		connections,
-		modules,
-		variableDefinitions,
-		completeVariableDefinitions,
-		actionDefinitions,
-		feedbackDefinitions,
-		customVariables,
-		userConfig,
-		surfaces,
-		pagesReady ? true : null,
-		triggers,
+	const steps: boolean[] = [
+		loadedEventDefinitions,
+		connections != null,
+		modules != null,
+		variableDefinitions != null,
+		completeVariableDefinitions != null,
+		actionDefinitions != null,
+		feedbackDefinitions != null,
+		customVariables != null,
+		userConfig != null,
+		surfaces != null,
+		pagesReady,
+		triggers != null,
 		activeLearnRequestsReady,
 	]
-	const completedSteps = steps.filter((s) => s !== null && s !== undefined)
+	const completedSteps = steps.filter((s) => !!s)
 
 	const progressPercent = (completedSteps.length / steps.length) * 100
 
 	return (
 		<RootAppStoreContext.Provider value={rootStore}>
-			<EventDefinitionsContext.Provider value={eventDefinitions!}>
-				<ModulesContext.Provider value={modules!}>
-					<ActionsContext.Provider value={actionDefinitions!}>
-						<FeedbacksContext.Provider value={feedbackDefinitions!}>
-							<ConnectionsContext.Provider value={connections!}>
-								<VariableDefinitionsContext.Provider value={completeVariableDefinitions}>
-									<CustomVariableDefinitionsContext.Provider value={customVariables!}>
-										<UserConfigContext.Provider value={userConfig}>
-											<SurfacesContext.Provider value={surfaces!}>
-												<TriggersContext.Provider value={triggers!}>
-													<NotificationsManager ref={notifierRef} />
+			<ModulesContext.Provider value={modules!}>
+				<ActionsContext.Provider value={actionDefinitions!}>
+					<FeedbacksContext.Provider value={feedbackDefinitions!}>
+						<ConnectionsContext.Provider value={connections!}>
+							<VariableDefinitionsContext.Provider value={completeVariableDefinitions}>
+								<CustomVariableDefinitionsContext.Provider value={customVariables!}>
+									<UserConfigContext.Provider value={userConfig}>
+										<SurfacesContext.Provider value={surfaces!}>
+											<TriggersContext.Provider value={triggers!}>
+												<NotificationsManager ref={notifierRef} />
 
-													{children(progressPercent, completedSteps.length === steps.length)}
-												</TriggersContext.Provider>
-											</SurfacesContext.Provider>
-										</UserConfigContext.Provider>
-									</CustomVariableDefinitionsContext.Provider>
-								</VariableDefinitionsContext.Provider>
-							</ConnectionsContext.Provider>
-						</FeedbacksContext.Provider>
-					</ActionsContext.Provider>
-				</ModulesContext.Provider>
-			</EventDefinitionsContext.Provider>
+												{children(progressPercent, completedSteps.length === steps.length)}
+											</TriggersContext.Provider>
+										</SurfacesContext.Provider>
+									</UserConfigContext.Provider>
+								</CustomVariableDefinitionsContext.Provider>
+							</VariableDefinitionsContext.Provider>
+						</ConnectionsContext.Provider>
+					</FeedbacksContext.Provider>
+				</ActionsContext.Provider>
+			</ModulesContext.Provider>
 		</RootAppStoreContext.Provider>
 	)
 }

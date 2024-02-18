@@ -29,7 +29,6 @@ import type {
 export type CompanionSocketType = Socket<BackendToClientEventsMap, AddCallbackParamToEvents<ClientToBackendEventsMap>>
 
 export const SocketContext = React.createContext<CompanionSocketType>(null as any) // TODO - fix this
-export const EventDefinitionsContext = React.createContext<Record<string, ClientEventDefinition | undefined>>({})
 
 export const ModulesContext = React.createContext<Record<string, ModuleDisplayInfo>>({})
 export const ActionsContext = React.createContext<
