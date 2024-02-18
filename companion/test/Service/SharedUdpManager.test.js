@@ -1,7 +1,5 @@
 import { jest } from '@jest/globals'
 import EventEmitter from 'events'
-import { mock } from 'jest-mock-extended'
-import { isTypedArray } from 'util/types'
 
 const mockCreateSocket = jest.fn(() => {
 	throw new Error('Not implemented')
@@ -12,22 +10,7 @@ jest.unstable_mockModule('dgram', () => ({
 	createSocket: mockCreateSocket,
 }))
 
-const dgram = await import('dgram')
 const { ServiceSharedUdpManager } = await import('../../lib/Service/SharedUdpManager')
-
-const mockOptions = {
-	fallbackMockImplementation: () => {
-		throw new Error('not mocked')
-	},
-}
-
-// dgram.createSocket = jest.fn(() => {
-// 	throw new Error('Not implemented')
-// })
-
-function sleepImmediate() {
-	return new Promise((resolve) => setImmediate(resolve))
-}
 
 class MockSocket extends EventEmitter {
 	// TODO
