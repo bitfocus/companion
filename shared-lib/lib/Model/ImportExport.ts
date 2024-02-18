@@ -31,9 +31,14 @@ export interface ClientPageInfo {
 	name: string
 	gridSize: UserConfigGridSize
 }
+export interface ClientImportObjectInstance {
+	label: string
+	instance_type: string
+	sortOrder?: number
+}
 export interface ClientImportObject {
 	type: 'page' | 'full'
-	instances: Record<string, { label: string; instance_type: string; sortOrder?: number }>
+	instances: Record<string, ClientImportObjectInstance>
 	controls: boolean
 	customVariables: boolean
 	surfaces: boolean

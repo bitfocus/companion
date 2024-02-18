@@ -1,8 +1,10 @@
 import React, { useCallback, useContext, useEffect, useMemo, useState } from 'react'
 import { CButton } from '@coreui/react'
-import { ConnectionsContext, VariableDefinitionsContext, ModulesContext } from '../util.js'
+import { ConnectionsContext, VariableDefinitionsContext } from '../util.js'
 import { VariablesTable } from '../Components/VariablesTable.js'
 import { CustomVariablesList } from './CustomVariablesList.js'
+import { RootAppStoreContext } from '../Stores/RootAppStore.js'
+import { observer } from 'mobx-react-lite'
 
 interface ConnectionVariablesProps {
 	resetToken: string
@@ -51,12 +53,12 @@ interface VariablesConnectionListProps {
 	connectionsLabelMap: ReadonlyMap<string, string>
 }
 
-function VariablesConnectionList({
+const VariablesConnectionList = observer(function VariablesConnectionList({
 	setConnectionId,
 	setShowCustom,
 	connectionsLabelMap,
 }: VariablesConnectionListProps) {
-	const modules = useContext(ModulesContext)
+	const { modules } = useContext(RootAppStoreContext)
 	const connectionsContext = useContext(ConnectionsContext)
 	const variableDefinitionsContext = useContext(VariableDefinitionsContext)
 
@@ -75,7 +77,7 @@ function VariablesConnectionList({
 
 		const connectionId = connectionsLabelMap.get(label)
 		const connectionInfo = connectionId ? connectionsContext[connectionId] : undefined
-		const moduleInfo = connectionInfo ? modules[connectionInfo.instance_type] : undefined
+		const moduleInfo = connectionInfo ? modules.modules.get(connectionInfo.instance_type) : undefined
 
 		return (
 			<div key={connectionId}>
@@ -102,7 +104,7 @@ function VariablesConnectionList({
 			{options}
 		</div>
 	)
-}
+})
 
 interface VariablesListProps {
 	selectedConnectionLabel: string

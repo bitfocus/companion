@@ -1,10 +1,11 @@
-import React, { forwardRef, memo, useCallback, useContext, useImperativeHandle, useMemo, useState } from 'react'
+import React, { forwardRef, useCallback, useContext, useImperativeHandle, useMemo, useState } from 'react'
 import { CModal, CModalBody, CModalHeader, CModalFooter, CButton } from '@coreui/react'
 import sanitizeHtml from 'sanitize-html'
 import { Marked } from 'marked'
 import { baseUrl } from 'marked-base-url'
-import { ModulesContext } from '../util.js'
 import { HelpDescription } from '@companion-app/shared/Model/Common.js'
+import { observer } from 'mobx-react-lite'
+import { RootAppStoreContext } from '../Stores/RootAppStore.js'
 
 interface HelpModalProps {
 	// Nothing
@@ -14,9 +15,9 @@ export interface HelpModalRef {
 	show(name: string, description: HelpDescription): void
 }
 
-export const HelpModal = memo(
+export const HelpModal = observer(
 	forwardRef<HelpModalRef, HelpModalProps>(function HelpModal(_props, ref) {
-		const modules = useContext(ModulesContext)
+		const { modules } = useContext(RootAppStoreContext)
 
 		const [content, setContent] = useState<[name: string, description: HelpDescription] | null>(null)
 		const [show, setShow] = useState(false)
@@ -51,7 +52,7 @@ export const HelpModal = memo(
 				}
 			: undefined
 
-		const moduleInfo = content && modules?.[content[0]]
+		const moduleInfo = content && modules.modules.get(content[0])
 
 		return (
 			<CModal show={show} onClose={doClose} onClosed={onClosed} size="lg">

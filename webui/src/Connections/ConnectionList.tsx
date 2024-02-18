@@ -1,12 +1,6 @@
 import React, { RefObject, useCallback, useContext, useEffect, useRef, useState } from 'react'
 import { CButton, CButtonGroup } from '@coreui/react'
-import {
-	ConnectionsContext,
-	VariableDefinitionsContext,
-	socketEmitPromise,
-	SocketContext,
-	ModulesContext,
-} from '../util.js'
+import { ConnectionsContext, VariableDefinitionsContext, socketEmitPromise, SocketContext } from '../util.js'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import {
 	faDollarSign,
@@ -27,6 +21,8 @@ import { useDrag, useDrop } from 'react-dnd'
 import { windowLinkOpen } from '../Helpers/Window.js'
 import classNames from 'classnames'
 import type { ClientConnectionConfig, ConnectionStatusEntry } from '@companion-app/shared/Model/Common.js'
+import { RootAppStoreContext } from '../Stores/RootAppStore.js'
+import { observer } from 'mobx-react-lite'
 
 interface VisibleConnectionsState {
 	disabled: boolean
@@ -264,7 +260,7 @@ interface ConnectionsTableRowProps {
 	isSelected: boolean
 }
 
-function ConnectionsTableRow({
+const ConnectionsTableRow = observer(function ConnectionsTableRow({
 	id,
 	connection,
 	connectionStatus,
@@ -275,11 +271,10 @@ function ConnectionsTableRow({
 	moveRow,
 	isSelected,
 }: ConnectionsTableRowProps) {
-	const socket = useContext(SocketContext)
-	const modules = useContext(ModulesContext)
+	const { socket, modules } = useContext(RootAppStoreContext)
 	const variableDefinitionsContext = useContext(VariableDefinitionsContext)
 
-	const moduleInfo = modules[connection.instance_type]
+	const moduleInfo = modules.modules.get(connection.instance_type)
 
 	const isEnabled = connection.enabled === undefined || connection.enabled
 
@@ -344,6 +339,11 @@ function ConnectionsTableRow({
 		configureConnection(id)
 	}
 
+	const openBugUrl = useCallback(() => {
+		const url = moduleInfo?.bugUrl
+		if (url) windowLinkOpen({ href: url })
+	}, [moduleInfo])
+
 	return (
 		<tr
 			ref={ref}
@@ -371,10 +371,10 @@ function ConnectionsTableRow({
 								/>{' '}
 							</>
 						)}
-						{moduleInfo?.shortname ?? ''}
+						{moduleInfo.shortname ?? ''}
 
 						<br />
-						{moduleInfo?.manufacturer ?? ''}
+						{moduleInfo.manufacturer ?? ''}
 					</>
 				) : (
 					connection.instance_type
@@ -396,7 +396,7 @@ function ConnectionsTableRow({
 							</CButton>
 
 							<CButton
-								onClick={() => windowLinkOpen({ href: moduleInfo?.bugUrl })}
+								onClick={openBugUrl}
 								size="md"
 								title="Issue Tracker"
 								disabled={!moduleInfo?.bugUrl}
@@ -446,7 +446,7 @@ function ConnectionsTableRow({
 			</td>
 		</tr>
 	)
-}
+})
 
 interface ModuleStatusCallProps {
 	isEnabled: boolean

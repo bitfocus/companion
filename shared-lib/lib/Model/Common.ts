@@ -37,19 +37,6 @@ export interface EmulatorImage {
 
 export type EmulatorImageCache = Record<number, Record<number, string | false | undefined> | undefined>
 
-export interface ModuleDisplayInfo {
-	id: string
-	name: string
-	version: string
-	hasHelp: boolean
-	bugUrl: string
-	shortname: string
-	manufacturer: string
-	products: string[]
-	keywords: string[]
-	isLegacy?: boolean
-}
-
 export interface ConnectionStatusEntry {
 	category: string | null
 	level: string | null

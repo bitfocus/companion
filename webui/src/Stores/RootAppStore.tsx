@@ -7,12 +7,15 @@ import type { PagesStore } from './PagesStore.js'
 import type { EventDefinitionsStore } from './EventDefinitionsStore.js'
 import type { ActionDefinitionsStore } from './ActionDefinitionsStore.js'
 import type { FeedbackDefinitionsStore } from './FeedbackDefinitionsStore.js'
+import { ModuleInfoStore } from './ModuleInfoStore.js'
 
 export const RootAppStoreContext = React.createContext<RootAppStore>(null as any) // TODO - fix this?
 
 export interface RootAppStore {
 	readonly socket: CompanionSocketType
 	readonly notifier: React.RefObject<NotificationsManagerRef> // TODO - this is not good
+
+	readonly modules: ModuleInfoStore
 
 	/** Currently running 'learn' callbacks */
 	readonly activeLearns: ObservableSet<string>

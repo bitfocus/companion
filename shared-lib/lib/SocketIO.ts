@@ -14,7 +14,6 @@ import type {
 	EmulatorImage,
 	EmulatorImageCache,
 	HelpDescription,
-	ModuleDisplayInfo,
 	WrappedImage,
 } from './Model/Common.js'
 import type { ClientDevicesListItem, SurfaceGroupConfig, SurfacePanelConfig } from './Model/Surfaces.js'
@@ -33,7 +32,8 @@ import type { CompanionVariableValues } from '@companion-module/base'
 import type { UIPresetDefinition } from './Model/Presets.js'
 import type { RecordSessionInfo, RecordSessionListInfo } from './Model/ActionRecorderModel.js'
 import type { ActionDefinitionUpdate, ClientActionDefinition } from './Model/ActionDefinitionModel.js'
-import { CloudControllerState, CloudRegionState } from './Model/Cloud.js'
+import type { CloudControllerState, CloudRegionState } from './Model/Cloud.js'
+import type { ModuleInfoUpdate, ModuleDisplayInfo } from './Model/ModuleInfo.js'
 
 export interface ClientToBackendEventsMap {
 	disconnect: () => never // Hack because type is missing
@@ -309,7 +309,7 @@ export interface BackendToClientEventsMap {
 	[selectedSessionId: `action-recorder:session:update:${string}`]: (patch: JsonPatchOperation[]) => void
 
 	'connections:patch': (patch: JsonPatchOperation[] | false) => void
-	'modules:patch': (patch: JsonPatchOperation[] | false) => void
+	'modules:patch': (patch: ModuleInfoUpdate) => void
 	'surfaces:patch': (patch: JsonPatchOperation[]) => void
 	'triggers:update': (controlId: string, patch: JsonPatchOperation[] | ClientTriggerData | null) => void
 	'action-definitions:update': (change: ActionDefinitionUpdate) => void

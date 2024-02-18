@@ -1,5 +1,5 @@
-import React, { memo, useCallback, useContext, useEffect, useMemo, useState } from 'react'
-import { LoadingRetryOrError, socketEmitPromise, SocketContext, ModulesContext } from '../util.js'
+import React, { useCallback, useContext, useEffect, useMemo, useState } from 'react'
+import { LoadingRetryOrError, socketEmitPromise } from '../util.js'
 import { CRow, CCol, CButton } from '@coreui/react'
 import { ColorInputField, DropdownInputField, NumberInputField, TextInputField } from '../Components/index.js'
 import { nanoid } from 'nanoid'
@@ -12,6 +12,8 @@ import { BonjourDeviceInputField } from '../Components/BonjourDeviceInputField.j
 import { ConnectionStatusEntry } from '@companion-app/shared/Model/Common.js'
 import { useOptionsAndIsVisible } from '../Hooks/useOptionsAndIsVisible.js'
 import { ExtendedConfigField, ExtendedInputField } from '@companion-app/shared/Model/Options.js'
+import { RootAppStoreContext } from '../Stores/RootAppStore.js'
+import { observer } from 'mobx-react-lite'
 
 interface ConnectionEditPanelProps {
 	connectionId: string
@@ -54,13 +56,12 @@ interface ConnectionEditPanelInnerProps {
 	showHelp: (moduleId: string) => void
 }
 
-const ConnectionEditPanelInner = memo(function ConnectionEditPanelInner({
+const ConnectionEditPanelInner = observer(function ConnectionEditPanelInner({
 	connectionId,
 	doConfigureConnection,
 	showHelp,
 }: ConnectionEditPanelInnerProps) {
-	const socket = useContext(SocketContext)
-	const modules = useContext(ModulesContext)
+	const { socket, modules } = useContext(RootAppStoreContext)
 
 	const [error, setError] = useState<string | null>(null)
 	const [reloadToken, setReloadToken] = useState(nanoid())
@@ -178,7 +179,7 @@ const ConnectionEditPanelInner = memo(function ConnectionEditPanelInner({
 		}))
 	}, [])
 
-	const moduleInfo = connectionType ? modules[connectionType] : undefined
+	const moduleInfo = connectionType ? modules.modules.get(connectionType) : undefined
 	const dataReady = !!connectionConfig && !!configFields && !!validFields
 	return (
 		<div>
