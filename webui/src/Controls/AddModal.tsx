@@ -10,10 +10,12 @@ import {
 	CModalFooter,
 	CModalHeader,
 } from '@coreui/react'
-import React, { forwardRef, useCallback, useContext, useImperativeHandle, useMemo, useState } from 'react'
-import { ActionsContext, FeedbacksContext, ConnectionsContext } from '../util.js'
+import React, { forwardRef, useCallback, useContext, useImperativeHandle, useState } from 'react'
+import { FeedbacksContext, ConnectionsContext, useComputed } from '../util.js'
 import { ClientConnectionConfig } from '@companion-app/shared/Model/Common.js'
 import { RootAppStoreContext } from '../Stores/RootAppStore.js'
+import { observer } from 'mobx-react-lite'
+import { ConnectionActionDefinitions } from '../Stores/ActionDefinitionsStore.js'
 
 interface AddActionsModalProps {
 	addAction: (actionType: string) => void
@@ -22,90 +24,88 @@ export interface AddActionsModalRef {
 	show(): void
 }
 
-export const AddActionsModal = forwardRef<AddActionsModalRef, AddActionsModalProps>(function AddActionsModal(
-	{ addAction },
-	ref
-) {
-	const { recentlyAddedActions } = useContext(RootAppStoreContext)
-	const actions = useContext(ActionsContext)
-	const connections = useContext(ConnectionsContext)
+export const AddActionsModal = observer(
+	forwardRef<AddActionsModalRef, AddActionsModalProps>(function AddActionsModal({ addAction }, ref) {
+		const { recentlyAddedActions, actionDefinitions } = useContext(RootAppStoreContext)
+		const connections = useContext(ConnectionsContext)
 
-	const [show, setShow] = useState(false)
+		const [show, setShow] = useState(false)
 
-	const doClose = useCallback(() => setShow(false), [])
-	const onClosed = useCallback(() => {
-		setFilter('')
-	}, [])
+		const doClose = useCallback(() => setShow(false), [])
+		const onClosed = useCallback(() => {
+			setFilter('')
+		}, [])
 
-	useImperativeHandle(
-		ref,
-		() => ({
-			show() {
-				setShow(true)
-				setFilter('')
+		useImperativeHandle(
+			ref,
+			() => ({
+				show() {
+					setShow(true)
+					setFilter('')
+				},
+			}),
+			[]
+		)
+
+		const [expanded, setExpanded] = useState<Record<string, boolean>>({})
+		const toggleExpanded = useCallback((id: string) => {
+			setExpanded((oldVal) => {
+				return {
+					...oldVal,
+					[id]: !oldVal[id],
+				}
+			})
+		}, [])
+		const [filter, setFilter] = useState('')
+
+		const addAction2 = useCallback(
+			(actionType: string) => {
+				recentlyAddedActions.trackId(actionType)
+
+				addAction(actionType)
 			},
-		}),
-		[]
-	)
+			[recentlyAddedActions, addAction]
+		)
 
-	const [expanded, setExpanded] = useState<Record<string, boolean>>({})
-	const toggleExpanded = useCallback((id: string) => {
-		setExpanded((oldVal) => {
-			return {
-				...oldVal,
-				[id]: !oldVal[id],
-			}
-		})
-	}, [])
-	const [filter, setFilter] = useState('')
-
-	const addAction2 = useCallback(
-		(actionType: string) => {
-			recentlyAddedActions.trackId(actionType)
-
-			addAction(actionType)
-		},
-		[recentlyAddedActions, addAction]
-	)
-
-	return (
-		<CModal show={show} onClose={doClose} onClosed={onClosed} size="lg" scrollable={true}>
-			<CModalHeader closeButton>
-				<h5>Browse Actions</h5>
-			</CModalHeader>
-			<CModalHeader>
-				<CInput
-					type="text"
-					placeholder="Search..."
-					onChange={(e) => setFilter(e.currentTarget.value)}
-					value={filter}
-					autoFocus={true}
-					style={{ fontSize: '1.5em' }}
-				/>
-			</CModalHeader>
-			<CModalBody className="shadow-inset">
-				{Object.entries(actions).map(([connectionId, items]) => (
-					<ConnectionCollapse
-						key={connectionId}
-						connectionId={connectionId}
-						connectionInfo={connections[connectionId]}
-						items={items}
-						itemName="actions"
-						expanded={!!filter || expanded[connectionId]}
-						filter={filter}
-						doToggle={toggleExpanded}
-						doAdd={addAction2}
+		return (
+			<CModal show={show} onClose={doClose} onClosed={onClosed} size="lg" scrollable={true}>
+				<CModalHeader closeButton>
+					<h5>Browse Actions</h5>
+				</CModalHeader>
+				<CModalHeader>
+					<CInput
+						type="text"
+						placeholder="Search..."
+						onChange={(e) => setFilter(e.currentTarget.value)}
+						value={filter}
+						autoFocus={true}
+						style={{ fontSize: '1.5em' }}
 					/>
-				))}
-			</CModalBody>
-			<CModalFooter>
-				<CButton color="secondary" onClick={doClose}>
-					Done
-				</CButton>
-			</CModalFooter>
-		</CModal>
-	)
-})
+				</CModalHeader>
+				<CModalBody className="shadow-inset">
+					{Array.from(actionDefinitions.connections.entries()).map(([connectionId, actions]) => (
+						<ConnectionCollapse
+							key={connectionId}
+							connectionId={connectionId}
+							connectionInfo={connections[connectionId]}
+							items={actions}
+							itemName="actions"
+							expanded={!!filter || expanded[connectionId]}
+							filter={filter}
+							doToggle={toggleExpanded}
+							doAdd={addAction2}
+						/>
+					))}
+				</CModalBody>
+				<CModalFooter>
+					<CButton color="secondary" onClick={doClose}>
+						Done
+					</CButton>
+				</CModalFooter>
+			</CModal>
+		)
+	})
+)
 
 interface AddFeedbacksModalProps {
 	addFeedback: (feedbackType: string) => void
@@ -203,7 +203,7 @@ export const AddFeedbacksModal = forwardRef<AddFeedbacksModalRef, AddFeedbacksMo
 interface ConnectionCollapseProps {
 	connectionId: string
 	connectionInfo: ClientConnectionConfig | undefined
-	items: Record<string, { label: string; type?: string; description?: string } | undefined> | undefined
+	items: ConnectionActionDefinitions | undefined
 	itemName: string
 	expanded: boolean
 	filter: string
@@ -225,20 +225,22 @@ function ConnectionCollapse({
 }: ConnectionCollapseProps) {
 	const doToggle2 = useCallback(() => doToggle(connectionId), [doToggle, connectionId])
 
-	const candidates = useMemo(() => {
+	const candidates = useComputed(() => {
 		try {
 			const regexp = new RegExp(filter, 'i')
 
 			const res = []
-			for (const [id, info] of Object.entries(items ?? {})) {
-				if (!info || (booleanOnly && info.type !== 'boolean')) continue
+			if (items) {
+				for (const [id, info] of items.entries()) {
+					if (!info || (booleanOnly && info.type !== 'boolean')) continue
 
-				if (info.label?.match(regexp)) {
-					const fullId = `${connectionId}:${id}`
-					res.push({
-						...info,
-						fullId: fullId,
-					})
+					if (info.label?.match(regexp)) {
+						const fullId = `${connectionId}:${id}`
+						res.push({
+							...info,
+							fullId: fullId,
+						})
+					}
 				}
 			}
 

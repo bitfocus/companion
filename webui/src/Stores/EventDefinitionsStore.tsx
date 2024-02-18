@@ -1,4 +1,4 @@
-import { ClientEventDefinition } from '@companion-app/shared/Model/Common.js'
+import type { ClientEventDefinition } from '@companion-app/shared/Model/Common.js'
 import { action, makeObservable, observable } from 'mobx'
 
 export class EventDefinitionsStore {

@@ -1,5 +1,11 @@
-import { SomeEncodedCompanionConfigField } from '@companion-module/base/dist/host-api/api.js'
 import type { ExtendedInputField, InternalActionInputField } from './Options.js'
+import type { Operation as JsonPatchOperation } from 'fast-json-patch'
+
+export interface ObjectsDiff<T> {
+	added: Record<string, T>
+	changed: Record<string, JsonPatchOperation[]>
+	removed: string[]
+}
 
 export interface AppVersionInfo {
 	appVersion: string

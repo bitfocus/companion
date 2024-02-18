@@ -101,14 +101,6 @@ export type EncodeIsVisible2<T extends Pick<CompanionInputFieldBase, 'id' | 'isV
 export type InternalActionInputField = ExtendedInputField | InternalInputField
 export type InternalFeedbackInputField = ExtendedInputField | InternalInputField
 
-export interface ActionDefinition {
-	label: string
-	description: string | undefined
-	options: InternalActionInputField[]
-	hasLearn: boolean
-	learnTimeout: number | undefined
-}
-
 export interface FeedbackDefinition {
 	label: string
 	description: string | undefined
@@ -123,11 +115,3 @@ export interface FeedbackDefinition {
 export interface InternalFeedbackDefinition extends SetOptional<FeedbackDefinition, 'hasLearn' | 'learnTimeout'> {
 	showButtonPreview?: boolean
 }
-
-export interface InternalActionDefinition
-	extends SetOptional<Omit<ActionDefinition, 'options'>, 'hasLearn' | 'learnTimeout'> {
-	showButtonPreview?: boolean
-	options: InternalActionInputField[]
-}
-
-export interface ClientActionDefinition extends InternalActionDefinition {}

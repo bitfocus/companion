@@ -4,6 +4,7 @@ import CoreBase from '../Core/Base.js'
 import { EventDefinitions } from '../Resources/EventDefinitions.js'
 import ControlButtonNormal from '../Controls/ControlTypes/Button/Normal.js'
 import jsonPatch from 'fast-json-patch'
+import { diffObjects } from '@companion-app/shared/Diff.js'
 
 const PresetsRoom = 'presets'
 const ActionsRoom = 'action-definitions'
@@ -240,7 +241,10 @@ class InstanceDefinitions extends CoreBase {
 
 		delete this.#actionDefinitions[connectionId]
 		if (this.io.countRoomMembers(ActionsRoom) > 0) {
-			this.io.emitToRoom(ActionsRoom, 'action-definitions:update', connectionId, undefined)
+			this.io.emitToRoom(ActionsRoom, 'action-definitions:update', {
+				type: 'forget-connection',
+				connectionId,
+			})
 		}
 
 		delete this.#feedbackDefinitions[connectionId]
@@ -358,11 +362,21 @@ class InstanceDefinitions extends CoreBase {
 
 		if (this.io.countRoomMembers(ActionsRoom) > 0) {
 			if (!lastActionDefinitions) {
-				this.io.emitToRoom(ActionsRoom, 'action-definitions:update', connectionId, actionDefinitions)
+				this.io.emitToRoom(ActionsRoom, 'action-definitions:update', {
+					type: 'add-connection',
+					connectionId,
+
+					actions: actionDefinitions,
+				})
 			} else {
-				const patch = jsonPatch.compare(lastActionDefinitions, actionDefinitions || {})
-				if (patch.length > 0) {
-					this.io.emitToRoom(ActionsRoom, 'action-definitions:update', connectionId, patch)
+				const diff = diffObjects(lastActionDefinitions, actionDefinitions || {})
+				if (diff) {
+					this.io.emitToRoom(ActionsRoom, 'action-definitions:update', {
+						type: 'update-connection',
+						connectionId,
+
+						...diff,
+					})
 				}
 			}
 		}
@@ -558,7 +572,7 @@ class InstanceDefinitions extends CoreBase {
 export default InstanceDefinitions
 
 /**
- * @typedef {import('@companion-app/shared/Model/Options.js').ActionDefinition} ActionDefinition
+ * @typedef {import('@companion-app/shared/Model/ActionDefinitionModel.js').ActionDefinition} ActionDefinition
  * @typedef {import('@companion-app/shared/Model/Options.js').FeedbackDefinition} FeedbackDefinition
  */
 

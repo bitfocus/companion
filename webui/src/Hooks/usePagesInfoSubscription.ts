@@ -10,7 +10,6 @@ export function usePagesInfoSubscription(
 	setLoadError?: ((error: string | null) => void) | undefined,
 	retryToken?: string
 ): boolean {
-	// const [pages, setPages] = useState<Record<number, PageModel | undefined> | null>(null)
 	const [ready, setReady] = useState(false)
 
 	useEffect(() => {

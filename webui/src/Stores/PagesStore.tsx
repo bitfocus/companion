@@ -1,5 +1,5 @@
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
-import { PageModel } from '@companion-app/shared/Model/PageModel.js'
+import type { PageModel } from '@companion-app/shared/Model/PageModel.js'
 import { ObservableMap, action, makeObservable, observable } from 'mobx'
 
 export class PagesStoreModel {

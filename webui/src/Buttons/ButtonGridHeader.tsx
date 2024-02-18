@@ -4,8 +4,8 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faChevronLeft, faChevronRight } from '@fortawesome/free-solid-svg-icons'
 import Select from 'react-select'
 import { RootAppStoreContext } from '../Stores/RootAppStore.js'
-import { computed } from 'mobx'
 import { observer } from 'mobx-react-lite'
+import { useComputed } from '../util.js'
 
 interface SelectOption {
 	value: number
@@ -42,16 +42,12 @@ export const ButtonGridHeader = observer(function ButtonGridHeader({
 		changePage?.(-1)
 	}, [changePage])
 
-	const pageOptions = useMemo(
-		() =>
-			computed(() => {
-				return pagesStore.sortedEntries.map(([index, value]) => ({
-					value: index,
-					label: `${index} (${value.name})`,
-				}))
-			}),
-		[pagesStore]
-	).get()
+	const pageOptions = useComputed(() => {
+		return pagesStore.sortedEntries.map(([index, value]) => ({
+			value: index,
+			label: `${index} (${value.name})`,
+		}))
+	}, [pagesStore])
 
 	const currentValue: SelectOption | undefined = useMemo(() => {
 		return (

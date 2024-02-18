@@ -11,7 +11,7 @@ import {
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import React, { memo, useCallback, useContext, useMemo, useRef, useState } from 'react'
 import { NumberInputField, TextInputField } from '../Components/index.js'
-import { ActionsContext, ConnectionsContext, MyErrorBoundary, PreventDefaultHandler } from '../util.js'
+import { ConnectionsContext, MyErrorBoundary, PreventDefaultHandler } from '../util.js'
 import { OptionsInputField } from './OptionsInputField.js'
 import { useDrag, useDrop } from 'react-dnd'
 import { GenericConfirmModal, GenericConfirmModalRef } from '../Components/GenericConfirmModal.js'
@@ -29,6 +29,8 @@ import {
 	useControlActionService,
 	useControlActionsEditorService,
 } from '../Services/Controls/ControlActionsService.js'
+import { RootAppStoreContext } from '../Stores/RootAppStore.js'
+import { observer } from 'mobx-react-lite'
 
 interface ControlActionSetEditorProps {
 	controlId: string
@@ -224,7 +226,7 @@ interface ActionTableRowProps {
 	setCollapsed: (actionId: string, collapsed: boolean) => void
 }
 
-function ActionTableRow({
+const ActionTableRow = observer(function ActionTableRow({
 	action,
 	stepId,
 	setId,
@@ -237,7 +239,7 @@ function ActionTableRow({
 	setCollapsed,
 }: ActionTableRowProps): JSX.Element | null {
 	const connectionsContext = useContext(ConnectionsContext)
-	const actionsContext = useContext(ActionsContext)
+	const { actionDefinitions } = useContext(RootAppStoreContext)
 
 	const service = useControlActionService(serviceFactory, action)
 
@@ -246,7 +248,7 @@ function ActionTableRow({
 		[service.setEnabled]
 	)
 
-	const actionSpec = (actionsContext[action.instance] || {})[action.action]
+	const actionSpec = actionDefinitions.connections.get(action.instance)?.get(action.action)
 
 	const [actionOptions, optionVisibility] = useOptionsAndIsVisible(actionSpec?.options, action?.options)
 
@@ -431,4 +433,4 @@ function ActionTableRow({
 			</td>
 		</tr>
 	)
-}
+})

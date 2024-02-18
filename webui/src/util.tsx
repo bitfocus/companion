@@ -1,4 +1,4 @@
-import React, { FormEvent, useEffect, useState } from 'react'
+import React, { DependencyList, FormEvent, useEffect, useMemo, useState } from 'react'
 import pTimeout from 'p-timeout'
 import { CAlert, CButton, CCol } from '@coreui/react'
 import { ErrorBoundary } from 'react-error-boundary'
@@ -10,13 +10,9 @@ import { useEventListener } from 'usehooks-ts'
 import type { LoaderHeightWidthProps } from 'react-spinners/helpers/props.js'
 import { Socket } from 'socket.io-client'
 import type { AllVariableDefinitions } from '@companion-app/shared/Model/Variables.js'
-import type {
-	ClientConnectionConfig,
-	ClientEventDefinition,
-	ModuleDisplayInfo,
-} from '@companion-app/shared/Model/Common.js'
+import type { ClientConnectionConfig, ModuleDisplayInfo } from '@companion-app/shared/Model/Common.js'
 import type { ClientTriggerData } from '@companion-app/shared/Model/TriggerModel.js'
-import type { InternalFeedbackDefinition, ClientActionDefinition } from '@companion-app/shared/Model/Options.js'
+import type { InternalFeedbackDefinition } from '@companion-app/shared/Model/Options.js'
 import type { UserConfigModel } from '@companion-app/shared/Model/UserConfigModel.js'
 import type { ClientDevicesListItem } from '@companion-app/shared/Model/Surfaces.js'
 import type { CustomVariablesModel } from '@companion-app/shared/Model/CustomVariableModel.js'
@@ -25,15 +21,13 @@ import type {
 	BackendToClientEventsMap,
 	AddCallbackParamToEvents,
 } from '@companion-app/shared/SocketIO.js'
+import { computed } from 'mobx'
 
 export type CompanionSocketType = Socket<BackendToClientEventsMap, AddCallbackParamToEvents<ClientToBackendEventsMap>>
 
 export const SocketContext = React.createContext<CompanionSocketType>(null as any) // TODO - fix this
 
 export const ModulesContext = React.createContext<Record<string, ModuleDisplayInfo>>({})
-export const ActionsContext = React.createContext<
-	Record<string, Record<string, ClientActionDefinition | undefined> | undefined>
->({})
 export const FeedbacksContext = React.createContext<
 	Record<string, Record<string, InternalFeedbackDefinition | undefined> | undefined>
 >({})
@@ -331,4 +325,11 @@ export function useOnClickOutsideExt(
 
 export const PreventDefaultHandler = (e: FormEvent): void => {
 	e.preventDefault()
+}
+
+export function useComputed<TCb extends (...args: any[]) => any>(
+	cb: TCb,
+	deps: DependencyList | undefined
+): ReturnType<TCb> {
+	return useMemo(() => computed(cb), deps).get()
 }
