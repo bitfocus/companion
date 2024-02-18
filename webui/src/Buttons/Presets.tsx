@@ -53,7 +53,7 @@ export const InstancePresets = function InstancePresets({ resetToken }: Instance
 				setPresetError('Failed to load presets')
 			})
 
-		const updatePresets = (id: string, patch: JsonPatchOperation[]) => {
+		const updatePresets = (id: string, patch: JsonPatchOperation[] | Record<string, UIPresetDefinition> | null) => {
 			setPresetsMap((oldPresets) =>
 				oldPresets
 					? applyPatchOrReplaceSubObject<Record<string, UIPresetDefinition> | undefined>(oldPresets, id, patch, {})

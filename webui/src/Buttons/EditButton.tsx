@@ -474,7 +474,7 @@ function TabsSection({ style, controlId, location, steps, runtimeProps, rotaryAc
 	const removeSet = useCallback(
 		(stepId: string, setId: string | number) => {
 			confirmRef.current?.show('Remove set', 'Are you sure you wish to remove this group?', 'Remove', () => {
-				socketEmitPromise(socket, 'controls:action-set:remove', [controlId, stepId, Number(setId)]).catch((e) => {
+				socketEmitPromise(socket, 'controls:action-set:remove', [controlId, stepId, setId + '']).catch((e) => {
 					console.error('Failed to delete set:', e)
 				})
 			})
@@ -702,12 +702,12 @@ function EditActionsRelease({
 				const runWhileHeld = stepOptions.runWhileHeld.includes(oldIdNumber)
 				editRef.current?.show(oldIdNumber, runWhileHeld, (newId: number, runWhileHeld: boolean) => {
 					if (!isNaN(newId)) {
-						socketEmitPromise(socket, 'controls:action-set:rename', [controlId, stepId, oldIdNumber, newId])
+						socketEmitPromise(socket, 'controls:action-set:rename', [controlId, stepId, oldIdNumber + '', newId + ''])
 							.then(() => {
 								socketEmitPromise(socket, 'controls:action-set:set-run-while-held', [
 									controlId,
 									stepId,
-									newId,
+									newId + '',
 									runWhileHeld,
 								]).catch((e) => {
 									console.error('Failed to set runWhileHeld:', e)

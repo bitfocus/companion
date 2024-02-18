@@ -140,7 +140,7 @@ export default class InstanceCustomVariable {
 
 		this.#setValueInner(name, defaultVal)
 
-		return undefined
+		return null
 	}
 
 	/**
@@ -262,7 +262,7 @@ export default class InstanceCustomVariable {
 	 * Set the persistence of a custom variable
 	 * @param {string} name
 	 * @param {boolean} persistent
-	 * @returns {string | void} Failure reason, if any
+	 * @returns {string | null} Failure reason, if any
 	 */
 	setPersistence(name, persistent) {
 		if (!this.#custom_variables[name]) {
@@ -291,6 +291,8 @@ export default class InstanceCustomVariable {
 				this.#io.emitToRoom(CustomVariablesRoom, 'custom-variables:update', patch)
 			}
 		}
+
+		return null
 	}
 
 	/**
@@ -352,12 +354,13 @@ export default class InstanceCustomVariable {
 	 * Set the value of a custom variable
 	 * @param {string} name
 	 * @param {CompanionVariableValue | undefined} value
-	 * @returns {string | void} Failure reason, if any
+	 * @returns {string | null} Failure reason, if any
 	 */
 	setValue(name, value) {
 		if (this.#custom_variables[name]) {
 			this.#logger.silly(`Set value "${name}":${value}`)
 			this.#setValueInner(name, value)
+			return null
 		} else {
 			return 'Unknown name'
 		}
@@ -463,7 +466,7 @@ export default class InstanceCustomVariable {
 			}
 		}
 
-		return undefined
+		return null
 	}
 
 	/**

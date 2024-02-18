@@ -31,7 +31,7 @@ export function OptionButtonPreview({ location, options }: OptionButtonPreviewPr
 				setImage(null)
 			})
 
-		const updateImage = (newImage: string) => {
+		const updateImage = (newImage: string | null) => {
 			setImage(newImage)
 		}
 

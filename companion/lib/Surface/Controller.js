@@ -50,10 +50,10 @@ const SurfacesRoom = 'surfaces'
 class SurfaceController extends CoreBase {
 	/**
 	 * The last sent json object
-	 * @type {Record<string, ClientDevicesListItem> | null}
+	 * @type {Record<string, ClientDevicesListItem> }
 	 * @access private
 	 */
-	#lastSentJson = null
+	#lastSentJson = {}
 
 	/**
 	 * All the opened and active surfaces
@@ -312,79 +312,54 @@ class SurfaceController extends CoreBase {
 	 * @access public
 	 */
 	clientConnect(client) {
-		client.onPromise(
-			'emulator:startup',
-			/**
-			 * @param {string} id
-			 * @returns {import('@companion-app/shared/Model/Common.js').EmulatorConfig}
-			 */
-			(id) => {
-				const fullId = EmulatorRoom(id)
+		client.onPromise('emulator:startup', (id) => {
+			const fullId = EmulatorRoom(id)
 
-				const surface = this.#surfaceHandlers.get(fullId)
-				if (!surface || !(surface.panel instanceof SurfaceIPElgatoEmulator)) {
-					throw new Error(`Emulator "${id}" does not exist!`)
-				}
-
-				// Subscribe to the bitmaps
-				client.join(fullId)
-
-				return surface.panel.setupClient(client)
+			const surface = this.#surfaceHandlers.get(fullId)
+			if (!surface || !(surface.panel instanceof SurfaceIPElgatoEmulator)) {
+				throw new Error(`Emulator "${id}" does not exist!`)
 			}
-		)
 
-		client.onPromise(
-			'emulator:press',
-			/**
-			 * @param {string} id
-			 * @param {number} x
-			 * @param {number} y
-			 * @returns {void}
-			 */
-			(id, x, y) => {
-				const fullId = EmulatorRoom(id)
+			// Subscribe to the bitmaps
+			client.join(fullId)
 
-				const surface = this.#surfaceHandlers.get(fullId)
-				if (!surface) {
-					throw new Error(`Emulator "${id}" does not exist!`)
-				}
+			return surface.panel.setupClient(client)
+		})
 
-				surface.panel.emit('click', x, y, true)
+		client.onPromise('emulator:press', (id, x, y) => {
+			const fullId = EmulatorRoom(id)
+
+			const surface = this.#surfaceHandlers.get(fullId)
+			if (!surface) {
+				throw new Error(`Emulator "${id}" does not exist!`)
 			}
-		)
 
-		client.onPromise(
-			'emulator:release',
-			/**
-			 * @param {string} id
-			 * @param {number} x
-			 * @param {number} y
-			 * @returns {void}
-			 */
-			(id, x, y) => {
-				const fullId = EmulatorRoom(id)
+			surface.panel.emit('click', x, y, true)
+		})
 
-				const surface = this.#surfaceHandlers.get(fullId)
-				if (!surface) {
-					throw new Error(`Emulator "${id}" does not exist!`)
-				}
+		client.onPromise('emulator:release', (id, x, y) => {
+			const fullId = EmulatorRoom(id)
 
-				surface.panel.emit('click', x, y, false)
+			const surface = this.#surfaceHandlers.get(fullId)
+			if (!surface) {
+				throw new Error(`Emulator "${id}" does not exist!`)
 			}
-		)
 
-		client.onPromise(
-			'emulator:stop',
-			/**
-			 * @param {string} id
-			 * @returns {void}
-			 */
-			(id) => {
-				const fullId = EmulatorRoom(id)
+			surface.panel.emit('click', x, y, false)
+		})
 
-				client.leave(fullId)
-			}
-		)
+		// client.onPromise(
+		// 	'emulator:stop',
+		// 	/**
+		// 	 * @param {string} id
+		// 	 * @returns {void}
+		// 	 */
+		// 	(id) => {
+		// 		const fullId = EmulatorRoom(id)
+
+		// 		client.leave(fullId)
+		// 	}
+		// )
 
 		client.onPromise('surfaces:subscribe', () => {
 			client.join(SurfacesRoom)
@@ -403,239 +378,158 @@ class SurfaceController extends CoreBase {
 			}
 		})
 
-		client.onPromise(
-			'surfaces:set-name',
-			/**
-			 * @param {string} id
-			 * @param {string} name
-			 * @returns {void}
-			 */
-			(id, name) => {
-				// Find a matching group
-				const group = this.#surfaceGroups.get(id)
-				if (group && !group.isAutoGroup) {
-					group.setName(name)
+		client.onPromise('surfaces:set-name', (id, name) => {
+			// Find a matching group
+			const group = this.#surfaceGroups.get(id)
+			if (group && !group.isAutoGroup) {
+				group.setName(name)
+				this.updateDevicesList()
+				return
+			}
+
+			// Find a connected surface
+			for (let surface of this.#surfaceHandlers.values()) {
+				if (surface && surface.surfaceId == id) {
+					surface.setPanelName(name)
 					this.updateDevicesList()
 					return
 				}
-
-				// Find a connected surface
-				for (let surface of this.#surfaceHandlers.values()) {
-					if (surface && surface.surfaceId == id) {
-						surface.setPanelName(name)
-						this.updateDevicesList()
-						return
-					}
-				}
-
-				// Find a disconnected surface
-				const configs = this.db.getKey('deviceconfig', {})
-				if (configs[id]) {
-					configs[id].name = name
-					this.db.setKey('deviceconfig', configs)
-					this.updateDevicesList()
-					return
-				}
-
-				throw new Error('not found')
 			}
-		)
 
-		client.onPromise(
-			'surfaces:config-get',
-			/**
-			 * @param {string} id
-			 * @returns {import('@companion-app/shared/Model/Surfaces.js').SurfacePanelConfig | null}
-			 */
-			(id) => {
-				for (const surface of this.#surfaceHandlers.values()) {
-					if (surface && surface.surfaceId == id) {
-						return surface.getPanelConfig()
-					}
-				}
-				return null
+			// Find a disconnected surface
+			const configs = this.db.getKey('deviceconfig', {})
+			if (configs[id]) {
+				configs[id].name = name
+				this.db.setKey('deviceconfig', configs)
+				this.updateDevicesList()
+				return
 			}
-		)
 
-		client.onPromise(
-			'surfaces:config-set',
-			/**
-			 * @param {string} id
-			 * @param {unknown} config
-			 * @returns {string | undefined}
-			 */
-			(id, config) => {
-				for (let surface of this.#surfaceHandlers.values()) {
-					if (surface && surface.surfaceId == id) {
-						surface.setPanelConfig(config)
-						return surface.getPanelConfig()
-					}
-				}
-				return 'device not found'
-			}
-		)
+			throw new Error('not found')
+		})
 
-		client.onPromise(
-			'surfaces:emulator-add',
-			/**
-			 * @returns {string}
-			 */
-			() => {
-				// TODO - should this do friendlier ids?
-				const id = nanoid()
-				this.addEmulator(id)
-
-				return id
-			}
-		)
-
-		client.onPromise(
-			'surfaces:emulator-remove',
-			/**
-			 * @param {string} id
-			 * @returns {boolean}
-			 */
-			(id) => {
-				if (id.startsWith('emulator:') && this.#surfaceHandlers.has(id)) {
-					this.removeDevice(id, true)
-
-					return true
-				} else {
-					return false
+		client.onPromise('surfaces:config-get', (id) => {
+			for (const surface of this.#surfaceHandlers.values()) {
+				if (surface && surface.surfaceId == id) {
+					return surface.getPanelConfig()
 				}
 			}
-		)
+			return null
+		})
 
-		client.onPromise(
-			'surfaces:forget',
-			/**
-			 * @param {string} id
-			 * @returns {string | true}
-			 */
-			(id) => {
-				for (let surface of this.#surfaceHandlers.values()) {
-					if (surface.surfaceId == id) {
-						return 'device is active'
-					}
+		client.onPromise('surfaces:config-set', (id, config) => {
+			for (let surface of this.#surfaceHandlers.values()) {
+				if (surface && surface.surfaceId == id) {
+					surface.setPanelConfig(config)
+					return surface.getPanelConfig()
 				}
-
-				if (this.setDeviceConfig(id, undefined)) {
-					this.updateDevicesList()
-
-					return true
-				}
-
-				return 'device not found'
 			}
-		)
+			return 'device not found'
+		})
 
-		client.onPromise(
-			'surfaces:group-add',
-			/**
-			 * @param {string} name
-			 * @returns {string}
-			 */
-			(name) => {
-				if (!name || typeof name !== 'string') throw new Error('Invalid name')
+		client.onPromise('surfaces:emulator-add', () => {
+			// TODO - should this do friendlier ids?
+			const id = nanoid()
+			this.addEmulator(id)
 
-				// TODO - should this do friendlier ids?
-				const groupId = `group:${nanoid()}`
+			return id
+		})
 
-				const newGroup = new SurfaceGroup(this.registry, groupId, null, this.isPinLockEnabled())
-				newGroup.setName(name)
-				this.#surfaceGroups.set(groupId, newGroup)
+		client.onPromise('surfaces:emulator-remove', (id) => {
+			if (id.startsWith('emulator:') && this.#surfaceHandlers.has(id)) {
+				this.removeDevice(id, true)
 
+				return true
+			} else {
+				return false
+			}
+		})
+
+		client.onPromise('surfaces:forget', (id) => {
+			for (let surface of this.#surfaceHandlers.values()) {
+				if (surface.surfaceId == id) {
+					return 'device is active'
+				}
+			}
+
+			if (this.setDeviceConfig(id, undefined)) {
 				this.updateDevicesList()
 
-				return groupId
+				return true
 			}
-		)
 
-		client.onPromise(
-			'surfaces:group-remove',
-			/**
-			 * @param {string} groupId
-			 * @returns {string}
-			 */
-			(groupId) => {
-				const group = this.#surfaceGroups.get(groupId)
-				if (!group || group.isAutoGroup) throw new Error(`Group does not exist`)
+			return 'device not found'
+		})
 
-				// Clear the group for all surfaces
-				for (const surfaceHandler of group.surfaceHandlers) {
-					surfaceHandler.setGroupId(null)
-					this.#attachSurfaceToGroup(surfaceHandler)
-				}
+		client.onPromise('surfaces:group-add', (name) => {
+			if (!name || typeof name !== 'string') throw new Error('Invalid name')
 
-				group.dispose()
-				group.forgetConfig()
-				this.#surfaceGroups.delete(groupId)
+			// TODO - should this do friendlier ids?
+			const groupId = `group:${nanoid()}`
 
-				this.updateDevicesList()
+			const newGroup = new SurfaceGroup(this.registry, groupId, null, this.isPinLockEnabled())
+			newGroup.setName(name)
+			this.#surfaceGroups.set(groupId, newGroup)
 
-				return groupId
-			}
-		)
+			this.updateDevicesList()
 
-		client.onPromise(
-			'surfaces:add-to-group',
-			/**
-			 * @param {string} groupId
-			 * @param {string} surfaceId
-			 * @returns {void}
-			 */
-			(groupId, surfaceId) => {
-				const group = groupId ? this.#surfaceGroups.get(groupId) : null
-				if (groupId && !group) throw new Error(`Group does not exist: ${groupId}`)
+			return groupId
+		})
 
-				const surfaceHandler = Array.from(this.#surfaceHandlers.values()).find(
-					(surface) => surface.surfaceId === surfaceId
-				)
-				if (!surfaceHandler) throw new Error(`Surface does not exist or is not connected: ${surfaceId}`)
-				// TODO - we can handle this if it is still in the config
+		client.onPromise('surfaces:group-remove', (groupId) => {
+			const group = this.#surfaceGroups.get(groupId)
+			if (!group || group.isAutoGroup) throw new Error(`Group does not exist`)
 
-				this.#detachSurfaceFromGroup(surfaceHandler)
-
-				surfaceHandler.setGroupId(groupId)
-
+			// Clear the group for all surfaces
+			for (const surfaceHandler of group.surfaceHandlers) {
+				surfaceHandler.setGroupId(null)
 				this.#attachSurfaceToGroup(surfaceHandler)
-
-				this.updateDevicesList()
 			}
-		)
 
-		client.onPromise(
-			'surfaces:group-config-get',
-			/**
-			 * @param {string} groupId
-			 * @returns {import('@companion-app/shared/Model/Surfaces.js').SurfaceGroupConfig}
-			 */
-			(groupId) => {
-				const group = this.#surfaceGroups.get(groupId)
-				if (!group) throw new Error(`Group does not exist: ${groupId}`)
+			group.dispose()
+			group.forgetConfig()
+			this.#surfaceGroups.delete(groupId)
 
-				return group.groupConfig
-			}
-		)
+			this.updateDevicesList()
 
-		client.onPromise(
-			'surfaces:group-config-set',
-			/**
-			 * @param {string} groupId
-			 * @param {string} key
-			 * @param {any} value
-			 * @returns {import('@companion-app/shared/Model/Surfaces.js').SurfaceGroupConfig | string}
-			 */
-			(groupId, key, value) => {
-				const group = this.#surfaceGroups.get(groupId)
-				if (!group) throw new Error(`Group does not exist: ${groupId}`)
+			return groupId
+		})
 
-				const err = group.setGroupConfigValue(key, value)
-				if (err) return err
+		client.onPromise('surfaces:add-to-group', (groupId, surfaceId) => {
+			const group = groupId ? this.#surfaceGroups.get(groupId) : null
+			if (groupId && !group) throw new Error(`Group does not exist: ${groupId}`)
 
-				return group.groupConfig
-			}
-		)
+			const surfaceHandler = Array.from(this.#surfaceHandlers.values()).find(
+				(surface) => surface.surfaceId === surfaceId
+			)
+			if (!surfaceHandler) throw new Error(`Surface does not exist or is not connected: ${surfaceId}`)
+			// TODO - we can handle this if it is still in the config
+
+			this.#detachSurfaceFromGroup(surfaceHandler)
+
+			surfaceHandler.setGroupId(groupId)
+
+			this.#attachSurfaceToGroup(surfaceHandler)
+
+			this.updateDevicesList()
+		})
+
+		client.onPromise('surfaces:group-config-get', (groupId) => {
+			const group = this.#surfaceGroups.get(groupId)
+			if (!group) throw new Error(`Group does not exist: ${groupId}`)
+
+			return group.groupConfig
+		})
+
+		client.onPromise('surfaces:group-config-set', (groupId, key, value) => {
+			const group = this.#surfaceGroups.get(groupId)
+			if (!group) throw new Error(`Group does not exist: ${groupId}`)
+
+			const err = group.setGroupConfigValue(key, value)
+			if (err) return err
+
+			return group.groupConfig
+		})
 	}
 
 	/**
@@ -867,7 +761,7 @@ class SurfaceController extends CoreBase {
 		}
 
 		if (this.io.countRoomMembers(SurfacesRoom) > 0) {
-			const patch = jsonPatch.compare(this.#lastSentJson || {}, newJson || {})
+			const patch = jsonPatch.compare(this.#lastSentJson, newJson || {})
 			if (patch.length > 0) {
 				this.io.emitToRoom(SurfacesRoom, `surfaces:patch`, patch)
 			}

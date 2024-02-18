@@ -19,6 +19,7 @@ import type {
 	ClientToBackendEventsMap,
 	BackendToClientEventsMap,
 	AddCallbackParamToEvents,
+	StripNever,
 } from '@companion-app/shared/SocketIO.js'
 import { computed } from 'mobx'
 
@@ -35,10 +36,6 @@ export const SurfacesContext = React.createContext<Record<string, ClientDevicesL
 export const TriggersContext = React.createContext<Record<string, ClientTriggerData | undefined>>({})
 
 type IfReturnIsNever<T extends (...args: any[]) => void> = ReturnType<T> extends never ? never : T
-
-type StripNever<T extends object> = {
-	[K in keyof T as T[K] extends never ? never : K]: T[K]
-}
 
 type SocketEmitPromiseEvents = StripNever<{
 	[K in keyof ClientToBackendEventsMap]: ClientToBackendEventsMap[K] extends (...args: any[]) => any
@@ -262,7 +259,7 @@ export function LoadingRetryOrError({ error, dataReady, doRetry, autoRetryAfter 
 export function applyPatchOrReplaceSubObject<T extends object | undefined>(
 	oldDefinitions: Record<string, T>,
 	key: string,
-	patch: JsonPatchOperation[],
+	patch: JsonPatchOperation[] | T | null,
 	defVal: T | null
 ) {
 	if (oldDefinitions) {

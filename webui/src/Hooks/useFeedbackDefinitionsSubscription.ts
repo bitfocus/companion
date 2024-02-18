@@ -1,10 +1,12 @@
 import { useEffect, useState } from 'react'
-import { socketEmitPromise } from '../util.js'
-import { Socket } from 'socket.io-client'
+import { CompanionSocketType, socketEmitPromise } from '../util.js'
 import { FeedbackDefinitionsStore } from '../Stores/FeedbackDefinitionsStore.js'
 import { FeedbackDefinitionUpdate } from '@companion-app/shared/Model/FeedbackDefinitionModel.js'
 
-export function useFeedbackDefinitionsSubscription(socket: Socket, store: FeedbackDefinitionsStore): boolean {
+export function useFeedbackDefinitionsSubscription(
+	socket: CompanionSocketType,
+	store: FeedbackDefinitionsStore
+): boolean {
 	const [ready, setReady] = useState(false)
 
 	useEffect(() => {

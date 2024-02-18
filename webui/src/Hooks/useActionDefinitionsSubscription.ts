@@ -1,10 +1,9 @@
 import { useEffect, useState } from 'react'
-import { socketEmitPromise } from '../util.js'
-import { Socket } from 'socket.io-client'
+import { CompanionSocketType, socketEmitPromise } from '../util.js'
 import { ActionDefinitionsStore } from '../Stores/ActionDefinitionsStore.js'
 import { ActionDefinitionUpdate } from '@companion-app/shared/Model/ActionDefinitionModel.js'
 
-export function useActionDefinitionsSubscription(socket: Socket, store: ActionDefinitionsStore): boolean {
+export function useActionDefinitionsSubscription(socket: CompanionSocketType, store: ActionDefinitionsStore): boolean {
 	const [ready, setReady] = useState(false)
 
 	useEffect(() => {

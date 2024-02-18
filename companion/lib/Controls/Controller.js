@@ -148,302 +148,221 @@ class ControlsController extends CoreBase {
 
 		this.triggers.emit('client_connect')
 
-		client.onPromise(
-			'controls:subscribe',
-			/**
-			 * @param {string} controlId
-			 * @returns {unknown}
-			 */
-			(controlId) => {
-				client.join(ControlConfigRoom(controlId))
+		client.onPromise('controls:subscribe', (controlId) => {
+			client.join(ControlConfigRoom(controlId))
 
-				setImmediate(() => {
-					// Send the preview image shortly after
-					const location = this.page.getLocationOfControlId(controlId)
-					if (location) {
-						const img = this.graphics.getCachedRenderOrGeneratePlaceholder(location)
-						// TODO - rework this to use the shared render cache concept
-						client.emit(`controls:preview-${controlId}`, img?.asDataUrl)
-					}
-				})
-
-				const control = this.getControl(controlId)
-				return {
-					config: control?.toJSON(false),
-					runtime: control?.toRuntimeJSON(),
+			setImmediate(() => {
+				// Send the preview image shortly after
+				const location = this.page.getLocationOfControlId(controlId)
+				if (location) {
+					const img = this.graphics.getCachedRenderOrGeneratePlaceholder(location)
+					// TODO - rework this to use the shared render cache concept
+					client.emit(`controls:preview-${controlId}`, img?.asDataUrl)
 				}
+			})
+
+			const control = this.getControl(controlId)
+			return {
+				config: control?.toJSON(false),
+				runtime: control?.toRuntimeJSON(),
 			}
-		)
+		})
 
-		client.onPromise(
-			'controls:unsubscribe',
-			/**
-			 * @param {string} controlId
-			 * @returns {void}
-			 */
-			(controlId) => {
-				client.leave(ControlConfigRoom(controlId))
+		client.onPromise('controls:unsubscribe', (controlId) => {
+			client.leave(ControlConfigRoom(controlId))
+		})
+
+		client.onPromise('controls:reset', (location, type) => {
+			const controlId = this.page.getControlIdAt(location)
+
+			if (controlId) {
+				this.deleteControl(controlId)
 			}
-		)
 
-		client.onPromise(
-			'controls:reset',
-			/**
-			 * @param {import('../Resources/Util.js').ControlLocation} location
-			 * @param {string} type
-			 * @returns {void}
-			 */
-			(location, type) => {
-				const controlId = this.page.getControlIdAt(location)
-
-				if (controlId) {
-					this.deleteControl(controlId)
-				}
-
-				if (type) {
-					this.createButtonControl(location, type)
-				}
+			if (type) {
+				this.createButtonControl(location, type)
 			}
-		)
-		client.onPromise(
-			'controls:copy',
-			/**
-			 * @param {import('../Resources/Util.js').ControlLocation} fromLocation
-			 * @param {import('../Resources/Util.js').ControlLocation} toLocation
-			 * @returns {boolean}
-			 */
-			(fromLocation, toLocation) => {
-				// Don't try copying over itself
-				if (
-					fromLocation.pageNumber === toLocation.pageNumber &&
-					fromLocation.column === toLocation.column &&
-					fromLocation.row === toLocation.row
-				)
-					return false
-
-				// Make sure target page number is valid
-				if (!this.page.isPageValid(toLocation.pageNumber)) return false
-
-				// Make sure there is something to copy
-				const fromControlId = this.page.getControlIdAt(fromLocation)
-				if (!fromControlId) return false
-
-				const fromControl = this.getControl(fromControlId)
-				if (!fromControl) return false
-				/** @type {any} */
-				const controlJson = fromControl.toJSON(true)
-
-				// Delete the control at the destination
-				const toControlId = this.page.getControlIdAt(toLocation)
-				if (toControlId) {
-					this.deleteControl(toControlId)
-				}
-
-				const newControlId = CreateBankControlId(nanoid())
-				const newControl = this.#createClassForControl(newControlId, 'button', controlJson, true)
-				if (newControl) {
-					this.#controls.set(newControlId, newControl)
-
-					this.page.setControlIdAt(toLocation, newControlId)
-
-					newControl.triggerRedraw()
-
-					return true
-				}
-
+		})
+		client.onPromise('controls:copy', (fromLocation, toLocation) => {
+			// Don't try copying over itself
+			if (
+				fromLocation.pageNumber === toLocation.pageNumber &&
+				fromLocation.column === toLocation.column &&
+				fromLocation.row === toLocation.row
+			)
 				return false
+
+			// Make sure target page number is valid
+			if (!this.page.isPageValid(toLocation.pageNumber)) return false
+
+			// Make sure there is something to copy
+			const fromControlId = this.page.getControlIdAt(fromLocation)
+			if (!fromControlId) return false
+
+			const fromControl = this.getControl(fromControlId)
+			if (!fromControl) return false
+			/** @type {any} */
+			const controlJson = fromControl.toJSON(true)
+
+			// Delete the control at the destination
+			const toControlId = this.page.getControlIdAt(toLocation)
+			if (toControlId) {
+				this.deleteControl(toControlId)
 			}
-		)
-		client.onPromise(
-			'controls:move',
-			/**
-			 * @param {import('../Resources/Util.js').ControlLocation} fromLocation
-			 * @param {import('../Resources/Util.js').ControlLocation} toLocation
-			 * @returns {boolean}
-			 */
-			(fromLocation, toLocation) => {
-				// Don't try moving over itself
-				if (
-					fromLocation.pageNumber === toLocation.pageNumber &&
-					fromLocation.column === toLocation.column &&
-					fromLocation.row === toLocation.row
-				)
-					return false
 
-				// Make sure target page number is valid
-				if (!this.page.isPageValid(toLocation.pageNumber)) return false
+			const newControlId = CreateBankControlId(nanoid())
+			const newControl = this.#createClassForControl(newControlId, 'button', controlJson, true)
+			if (newControl) {
+				this.#controls.set(newControlId, newControl)
 
-				// Make sure there is something to move
-				const fromControlId = this.page.getControlIdAt(fromLocation)
-				if (!fromControlId) return false
+				this.page.setControlIdAt(toLocation, newControlId)
 
-				// Delete the control at the destination
-				const toControlId = this.page.getControlIdAt(toLocation)
-				if (toControlId) {
-					this.deleteControl(toControlId)
-				}
-
-				// Perform the move
-				this.page.setControlIdAt(fromLocation, null)
-				this.page.setControlIdAt(toLocation, fromControlId)
-
-				// Inform the control it was moved
-				const control = this.getControl(fromControlId)
-				if (control) control.triggerLocationHasChanged()
-
-				// Force a redraw
-				this.graphics.invalidateButton(fromLocation)
-				this.graphics.invalidateButton(toLocation)
-
-				return false
-			}
-		)
-		client.onPromise(
-			'controls:swap',
-			/**
-			 * @param {import('../Resources/Util.js').ControlLocation} fromLocation
-			 * @param {import('../Resources/Util.js').ControlLocation} toLocation
-			 * @returns {boolean}
-			 */
-			(fromLocation, toLocation) => {
-				// Don't try moving over itself
-				if (
-					fromLocation.pageNumber === toLocation.pageNumber &&
-					fromLocation.column === toLocation.column &&
-					fromLocation.row === toLocation.row
-				)
-					return false
-
-				// Make sure both page numbers are valid
-				if (!this.page.isPageValid(toLocation.pageNumber) || !this.page.isPageValid(fromLocation.pageNumber))
-					return false
-
-				// Find the ids to move
-				const fromControlId = this.page.getControlIdAt(fromLocation)
-				const toControlId = this.page.getControlIdAt(toLocation)
-
-				// Perform the swap
-				this.page.setControlIdAt(toLocation, null)
-				this.page.setControlIdAt(fromLocation, toControlId)
-				this.page.setControlIdAt(toLocation, fromControlId)
-
-				// Inform the controls they were moved
-				const controlA = fromControlId && this.getControl(fromControlId)
-				if (controlA) controlA.triggerLocationHasChanged()
-				const controlB = toControlId && this.getControl(toControlId)
-				if (controlB) controlB.triggerLocationHasChanged()
-
-				// Force a redraw
-				this.graphics.invalidateButton(fromLocation)
-				this.graphics.invalidateButton(toLocation)
+				newControl.triggerRedraw()
 
 				return true
 			}
-		)
 
-		client.onPromise(
-			'controls:set-style-fields',
-			/**
-			 * @param {string} controlId
-			 * @param {Record<string, any>} diff
-			 * @returns {boolean}
-			 */
-			(controlId, diff) => {
-				const control = this.getControl(controlId)
-				if (!control) return false
+			return false
+		})
+		client.onPromise('controls:move', (fromLocation, toLocation) => {
+			// Don't try moving over itself
+			if (
+				fromLocation.pageNumber === toLocation.pageNumber &&
+				fromLocation.column === toLocation.column &&
+				fromLocation.row === toLocation.row
+			)
+				return false
 
-				if (control.supportsStyle) {
-					return control.styleSetFields(diff)
-				} else {
-					throw new Error(`Control "${controlId}" does not support config`)
-				}
+			// Make sure target page number is valid
+			if (!this.page.isPageValid(toLocation.pageNumber)) return false
+
+			// Make sure there is something to move
+			const fromControlId = this.page.getControlIdAt(fromLocation)
+			if (!fromControlId) return false
+
+			// Delete the control at the destination
+			const toControlId = this.page.getControlIdAt(toLocation)
+			if (toControlId) {
+				this.deleteControl(toControlId)
 			}
-		)
 
-		client.onPromise(
-			'controls:set-options-field',
-			/**
-			 * @param {string} controlId
-			 * @param {string} key
-			 * @param {any} value
-			 * @returns {boolean}
-			 */
-			(controlId, key, value) => {
-				const control = this.getControl(controlId)
-				if (!control) return false
+			// Perform the move
+			this.page.setControlIdAt(fromLocation, null)
+			this.page.setControlIdAt(toLocation, fromControlId)
 
-				if (control.supportsOptions) {
-					return control.optionsSetField(key, value)
-				} else {
-					throw new Error(`Control "${controlId}" does not support options`)
-				}
+			// Inform the control it was moved
+			const control = this.getControl(fromControlId)
+			if (control) control.triggerLocationHasChanged()
+
+			// Force a redraw
+			this.graphics.invalidateButton(fromLocation)
+			this.graphics.invalidateButton(toLocation)
+
+			return false
+		})
+		client.onPromise('controls:swap', (fromLocation, toLocation) => {
+			// Don't try moving over itself
+			if (
+				fromLocation.pageNumber === toLocation.pageNumber &&
+				fromLocation.column === toLocation.column &&
+				fromLocation.row === toLocation.row
+			)
+				return false
+
+			// Make sure both page numbers are valid
+			if (!this.page.isPageValid(toLocation.pageNumber) || !this.page.isPageValid(fromLocation.pageNumber)) return false
+
+			// Find the ids to move
+			const fromControlId = this.page.getControlIdAt(fromLocation)
+			const toControlId = this.page.getControlIdAt(toLocation)
+
+			// Perform the swap
+			this.page.setControlIdAt(toLocation, null)
+			this.page.setControlIdAt(fromLocation, toControlId)
+			this.page.setControlIdAt(toLocation, fromControlId)
+
+			// Inform the controls they were moved
+			const controlA = fromControlId && this.getControl(fromControlId)
+			if (controlA) controlA.triggerLocationHasChanged()
+			const controlB = toControlId && this.getControl(toControlId)
+			if (controlB) controlB.triggerLocationHasChanged()
+
+			// Force a redraw
+			this.graphics.invalidateButton(fromLocation)
+			this.graphics.invalidateButton(toLocation)
+
+			return true
+		})
+
+		client.onPromise('controls:set-style-fields', (controlId, diff) => {
+			const control = this.getControl(controlId)
+			if (!control) return false
+
+			if (control.supportsStyle) {
+				return control.styleSetFields(diff)
+			} else {
+				throw new Error(`Control "${controlId}" does not support config`)
 			}
-		)
+		})
 
-		client.onPromise(
-			'controls:feedback:add',
-			/**
-			 * @param {string} controlId
-			 * @param {string} connectionId
-			 * @param {string} feedbackId
-			 * @returns {boolean}
-			 */
-			(controlId, connectionId, feedbackId) => {
-				const control = this.getControl(controlId)
-				if (!control) return false
+		client.onPromise('controls:set-options-field', (controlId, key, value) => {
+			const control = this.getControl(controlId)
+			if (!control) return false
 
-				if (control.supportsFeedbacks) {
-					const feedbackItem = this.instance.definitions.createFeedbackItem(
-						connectionId,
-						feedbackId,
-						control.feedbacks.isBooleanOnly
-					)
-					if (feedbackItem) {
-						return control.feedbacks.feedbackAdd(feedbackItem)
-					} else {
-						return false
-					}
-				} else {
-					throw new Error(`Control "${controlId}" does not support feedbacks`)
-				}
+			if (control.supportsOptions) {
+				return control.optionsSetField(key, value)
+			} else {
+				throw new Error(`Control "${controlId}" does not support options`)
 			}
-		)
+		})
 
-		client.onPromise(
-			'controls:feedback:learn',
-			/**
-			 * @param {string} controlId
-			 * @param {string} id
-			 * @returns {Promise<boolean>}
-			 */
-			async (controlId, id) => {
-				const control = this.getControl(controlId)
-				if (!control) return false
+		client.onPromise('controls:feedback:add', (controlId, connectionId, feedbackId) => {
+			const control = this.getControl(controlId)
+			if (!control) return false
 
-				if (control.supportsFeedbacks) {
-					if (this.#activeLearnRequests.has(id)) throw new Error('Learn is already running')
-					try {
-						this.#setIsLearning(id, true)
-
-						control.feedbacks
-							.feedbackLearn(id)
-							.catch((e) => {
-								this.logger.error(`Learn failed: ${e}`)
-							})
-							.then(() => {
-								this.#setIsLearning(id, false)
-							})
-
-						return true
-					} catch (e) {
-						this.#setIsLearning(id, false)
-						throw e
-					}
+			if (control.supportsFeedbacks) {
+				const feedbackItem = this.instance.definitions.createFeedbackItem(
+					connectionId,
+					feedbackId,
+					control.feedbacks.isBooleanOnly
+				)
+				if (feedbackItem) {
+					return control.feedbacks.feedbackAdd(feedbackItem)
 				} else {
-					throw new Error(`Control "${controlId}" does not support feedbacks`)
+					return false
 				}
+			} else {
+				throw new Error(`Control "${controlId}" does not support feedbacks`)
 			}
-		)
+		})
+
+		client.onPromise('controls:feedback:learn', async (controlId, id) => {
+			const control = this.getControl(controlId)
+			if (!control) return false
+
+			if (control.supportsFeedbacks) {
+				if (this.#activeLearnRequests.has(id)) throw new Error('Learn is already running')
+				try {
+					this.#setIsLearning(id, true)
+
+					control.feedbacks
+						.feedbackLearn(id)
+						.catch((e) => {
+							this.logger.error(`Learn failed: ${e}`)
+						})
+						.then(() => {
+							this.#setIsLearning(id, false)
+						})
+
+					return true
+				} catch (e) {
+					this.#setIsLearning(id, false)
+					throw e
+				}
+			} else {
+				throw new Error(`Control "${controlId}" does not support feedbacks`)
+			}
+		})
 
 		client.onPromise(
 			'controls:feedback:enabled',
@@ -465,408 +384,222 @@ class ControlsController extends CoreBase {
 			}
 		)
 
-		client.onPromise(
-			'controls:feedback:set-headline',
-			/**
-			 * @param {string} controlId
-			 * @param {string} id
-			 * @param {string} headline
-			 * @returns {boolean}
-			 */
-			(controlId, id, headline) => {
-				const control = this.getControl(controlId)
-				if (!control) return false
+		client.onPromise('controls:feedback:set-headline', (controlId, id, headline) => {
+			const control = this.getControl(controlId)
+			if (!control) return false
 
-				if (control.supportsFeedbacks) {
-					return control.feedbacks.feedbackHeadline(id, headline)
+			if (control.supportsFeedbacks) {
+				return control.feedbacks.feedbackHeadline(id, headline)
+			} else {
+				throw new Error(`Control "${controlId}" does not support feedbacks`)
+			}
+		})
+
+		client.onPromise('controls:feedback:remove', (controlId, id) => {
+			const control = this.getControl(controlId)
+			if (!control) return false
+
+			if (control.supportsFeedbacks) {
+				return control.feedbacks.feedbackRemove(id)
+			} else {
+				throw new Error(`Control "${controlId}" does not support feedbacks`)
+			}
+		})
+
+		client.onPromise('controls:feedback:duplicate', (controlId, id) => {
+			const control = this.getControl(controlId)
+			if (!control) return false
+
+			if (control.supportsFeedbacks) {
+				return control.feedbacks.feedbackDuplicate(id)
+			} else {
+				throw new Error(`Control "${controlId}" does not support feedbacks`)
+			}
+		})
+
+		client.onPromise('controls:feedback:set-option', (controlId, id, key, value) => {
+			const control = this.getControl(controlId)
+			if (!control) return false
+
+			if (control.supportsFeedbacks) {
+				return control.feedbacks.feedbackSetOptions(id, key, value)
+			} else {
+				throw new Error(`Control "${controlId}" does not support feedbacks`)
+			}
+		})
+
+		client.onPromise('controls:feedback:set-inverted', (controlId, id, isInverted) => {
+			const control = this.getControl(controlId)
+			if (!control) return false
+
+			if (control.supportsFeedbacks) {
+				return control.feedbacks.feedbackSetInverted(id, isInverted)
+			} else {
+				throw new Error(`Control "${controlId}" does not support feedbacks`)
+			}
+		})
+
+		client.onPromise('controls:feedback:reorder', (controlId, oldIndex, newIndex) => {
+			const control = this.getControl(controlId)
+			if (!control) return false
+
+			if (control.supportsFeedbacks) {
+				return control.feedbacks.feedbackReorder(oldIndex, newIndex)
+			} else {
+				throw new Error(`Control "${controlId}" does not support feedbacks`)
+			}
+		})
+		client.onPromise('controls:feedback:set-style-selection', (controlId, id, selected) => {
+			const control = this.getControl(controlId)
+			if (!control) return false
+
+			if (control.supportsFeedbacks) {
+				return control.feedbacks.feedbackSetStyleSelection(id, selected)
+			} else {
+				throw new Error(`Control "${controlId}" does not support feedbacks`)
+			}
+		})
+		client.onPromise('controls:feedback:set-style-value', (controlId, id, key, value) => {
+			const control = this.getControl(controlId)
+			if (!control) return false
+
+			if (control.supportsFeedbacks) {
+				return control.feedbacks.feedbackSetStyleValue(id, key, value)
+			} else {
+				throw new Error(`Control "${controlId}" does not support feedbacks`)
+			}
+		})
+
+		client.onPromise('controls:hot-press', (location, direction, surfaceId) => {
+			this.logger.silly(`being told from gui to hot press ${formatLocation(location)} ${direction} ${surfaceId}`)
+			if (!surfaceId) throw new Error('Missing surfaceId')
+
+			const controlId = this.page.getControlIdAt(location)
+			if (!controlId) return
+
+			this.pressControl(controlId, direction, `hot:${surfaceId}`)
+		})
+
+		client.onPromise('controls:hot-rotate', (location, direction, surfaceId) => {
+			this.logger.silly(`being told from gui to hot rotate ${formatLocation(location)} ${direction} ${surfaceId}`)
+
+			const controlId = this.page.getControlIdAt(location)
+			if (!controlId) return
+
+			this.rotateControl(controlId, direction, surfaceId ? `hot:${surfaceId}` : undefined)
+		})
+
+		client.onPromise('controls:action:add', (controlId, stepId, setId, connectionId, actionId) => {
+			const control = this.getControl(controlId)
+			if (!control) return false
+
+			if (control.supportsActions) {
+				const actionItem = this.instance.definitions.createActionItem(connectionId, actionId)
+				if (actionItem) {
+					return control.actionAdd(stepId, setId, actionItem)
 				} else {
-					throw new Error(`Control "${controlId}" does not support feedbacks`)
+					return false
 				}
+			} else {
+				throw new Error(`Control "${controlId}" does not support actions`)
 			}
-		)
+		})
 
-		client.onPromise(
-			'controls:feedback:remove',
-			/**
-			 * @param {string} controlId
-			 * @param {string} id
-			 * @returns {boolean}
-			 */
-			(controlId, id) => {
-				const control = this.getControl(controlId)
-				if (!control) return false
+		client.onPromise('controls:action:learn', async (controlId, stepId, setId, id) => {
+			const control = this.getControl(controlId)
+			if (!control) return false
 
-				if (control.supportsFeedbacks) {
-					return control.feedbacks.feedbackRemove(id)
-				} else {
-					throw new Error(`Control "${controlId}" does not support feedbacks`)
+			if (control.supportsActions) {
+				if (this.#activeLearnRequests.has(id)) throw new Error('Learn is already running')
+				try {
+					this.#setIsLearning(id, true)
+
+					control
+						.actionLearn(stepId, setId, id)
+						.catch((e) => {
+							this.logger.error(`Learn failed: ${e}`)
+						})
+						.then(() => {
+							this.#setIsLearning(id, false)
+						})
+
+					return true
+				} catch (e) {
+					this.#setIsLearning(id, false)
+					throw e
 				}
+			} else {
+				throw new Error(`Control "${controlId}" does not support actions`)
 			}
-		)
+		})
 
-		client.onPromise(
-			'controls:feedback:duplicate',
-			/**
-			 * @param {string} controlId
-			 * @param {string} id
-			 * @returns {boolean}
-			 */
-			(controlId, id) => {
-				const control = this.getControl(controlId)
-				if (!control) return false
+		client.onPromise('controls:action:enabled', (controlId, stepId, setId, id, enabled) => {
+			const control = this.getControl(controlId)
+			if (!control) return false
 
-				if (control.supportsFeedbacks) {
-					return control.feedbacks.feedbackDuplicate(id)
-				} else {
-					throw new Error(`Control "${controlId}" does not support feedbacks`)
-				}
+			if (control.supportsActions) {
+				return control.actionEnabled(stepId, setId, id, enabled)
+			} else {
+				throw new Error(`Control "${controlId}" does not support actions`)
 			}
-		)
+		})
 
-		client.onPromise(
-			'controls:feedback:set-option',
-			/**
-			 * @param {string} controlId
-			 * @param {string} id
-			 * @param {string} key
-			 * @param {any} value
-			 * @returns {boolean}
-			 */
-			(controlId, id, key, value) => {
-				const control = this.getControl(controlId)
-				if (!control) return false
+		client.onPromise('controls:action:set-headline', (controlId, stepId, setId, id, headline) => {
+			const control = this.getControl(controlId)
+			if (!control) return false
 
-				if (control.supportsFeedbacks) {
-					return control.feedbacks.feedbackSetOptions(id, key, value)
-				} else {
-					throw new Error(`Control "${controlId}" does not support feedbacks`)
-				}
+			if (control.supportsActions) {
+				return control.actionHeadline(stepId, setId, id, headline)
+			} else {
+				throw new Error(`Control "${controlId}" does not support actions`)
 			}
-		)
+		})
 
-		client.onPromise(
-			'controls:feedback:set-inverted',
-			/**
-			 * @param {string} controlId
-			 * @param {string} id
-			 * @param {boolean} isInverted
-			 * @returns {boolean}
-			 */
-			(controlId, id, isInverted) => {
-				const control = this.getControl(controlId)
-				if (!control) return false
+		client.onPromise('controls:action:remove', (controlId, stepId, setId, id) => {
+			const control = this.getControl(controlId)
+			if (!control) return false
 
-				if (control.supportsFeedbacks) {
-					return control.feedbacks.feedbackSetInverted(id, isInverted)
-				} else {
-					throw new Error(`Control "${controlId}" does not support feedbacks`)
-				}
+			if (control.supportsActions) {
+				return control.actionRemove(stepId, setId, id)
+			} else {
+				throw new Error(`Control "${controlId}" does not support actions`)
 			}
-		)
+		})
 
-		client.onPromise(
-			'controls:feedback:reorder',
-			/**
-			 * @param {string} controlId
-			 * @param {number} oldIndex
-			 * @param {number} newIndex
-			 * @returns {boolean}
-			 */
-			(controlId, oldIndex, newIndex) => {
-				const control = this.getControl(controlId)
-				if (!control) return false
+		client.onPromise('controls:action:duplicate', (controlId, stepId, setId, id) => {
+			const control = this.getControl(controlId)
+			if (!control) return false
 
-				if (control.supportsFeedbacks) {
-					return control.feedbacks.feedbackReorder(oldIndex, newIndex)
-				} else {
-					throw new Error(`Control "${controlId}" does not support feedbacks`)
-				}
+			if (control.supportsActions) {
+				return control.actionDuplicate(stepId, setId, id)
+			} else {
+				throw new Error(`Control "${controlId}" does not support actions`)
 			}
-		)
-		client.onPromise(
-			'controls:feedback:set-style-selection',
-			/**
-			 * @param {string} controlId
-			 * @param {string} id
-			 * @param {string[]} selected
-			 * @returns {boolean}
-			 */
-			(controlId, id, selected) => {
-				const control = this.getControl(controlId)
-				if (!control) return false
+		})
 
-				if (control.supportsFeedbacks) {
-					return control.feedbacks.feedbackSetStyleSelection(id, selected)
-				} else {
-					throw new Error(`Control "${controlId}" does not support feedbacks`)
-				}
+		client.onPromise('controls:action:set-delay', (controlId, stepId, setId, id, delay) => {
+			const control = this.getControl(controlId)
+			if (!control) return false
+
+			if (control.supportsActions) {
+				return control.actionSetDelay(stepId, setId, id, delay)
+			} else {
+				throw new Error(`Control "${controlId}" does not support actions`)
 			}
-		)
-		client.onPromise(
-			'controls:feedback:set-style-value',
-			/**
-			 * @param {string} controlId
-			 * @param {string} id
-			 * @param {string} key
-			 * @param {any} value
-			 * @returns {boolean}
-			 */
-			(controlId, id, key, value) => {
-				const control = this.getControl(controlId)
-				if (!control) return false
+		})
 
-				if (control.supportsFeedbacks) {
-					return control.feedbacks.feedbackSetStyleValue(id, key, value)
-				} else {
-					throw new Error(`Control "${controlId}" does not support feedbacks`)
-				}
+		client.onPromise('controls:action:set-option', (controlId, stepId, setId, id, key, value) => {
+			const control = this.getControl(controlId)
+			if (!control) return false
+
+			if (control.supportsActions) {
+				return control.actionSetOption(stepId, setId, id, key, value)
+			} else {
+				throw new Error(`Control "${controlId}" does not support actions`)
 			}
-		)
-
-		client.onPromise(
-			'controls:hot-press',
-			/**
-			 * @param {import('../Resources/Util.js').ControlLocation} location
-			 * @param {boolean} direction
-			 * @param {string} surfaceId
-			 * @returns {void}
-			 */
-			(location, direction, surfaceId) => {
-				this.logger.silly(`being told from gui to hot press ${formatLocation(location)} ${direction} ${surfaceId}`)
-				if (!surfaceId) throw new Error('Missing surfaceId')
-
-				const controlId = this.page.getControlIdAt(location)
-				if (!controlId) return
-
-				this.pressControl(controlId, direction, `hot:${surfaceId}`)
-			}
-		)
-
-		client.onPromise(
-			'controls:hot-rotate',
-			/**
-			 * @param {import('../Resources/Util.js').ControlLocation} location
-			 * @param {boolean} direction
-			 * @param {string} surfaceId
-			 * @returns {void}
-			 */
-			(location, direction, surfaceId) => {
-				this.logger.silly(`being told from gui to hot rotate ${formatLocation(location)} ${direction} ${surfaceId}`)
-
-				const controlId = this.page.getControlIdAt(location)
-				if (!controlId) return
-
-				this.rotateControl(controlId, direction, surfaceId ? `hot:${surfaceId}` : undefined)
-			}
-		)
-
-		client.onPromise(
-			'controls:action:add',
-			/**
-			 * @param {string} controlId
-			 * @param {string} stepId
-			 * @param {string} setId
-			 * @param {string} connectionId
-			 * @param {string} actionId
-			 * @returns {boolean}
-			 */
-			(controlId, stepId, setId, connectionId, actionId) => {
-				const control = this.getControl(controlId)
-				if (!control) return false
-
-				if (control.supportsActions) {
-					const actionItem = this.instance.definitions.createActionItem(connectionId, actionId)
-					if (actionItem) {
-						return control.actionAdd(stepId, setId, actionItem)
-					} else {
-						return false
-					}
-				} else {
-					throw new Error(`Control "${controlId}" does not support actions`)
-				}
-			}
-		)
-
-		client.onPromise(
-			'controls:action:learn',
-			/**
-			 * @param {string} controlId
-			 * @param {string} stepId
-			 * @param {string} setId
-			 * @param {string} id
-			 * @returns {Promise<boolean>}
-			 */
-			async (controlId, stepId, setId, id) => {
-				const control = this.getControl(controlId)
-				if (!control) return false
-
-				if (control.supportsActions) {
-					if (this.#activeLearnRequests.has(id)) throw new Error('Learn is already running')
-					try {
-						this.#setIsLearning(id, true)
-
-						control
-							.actionLearn(stepId, setId, id)
-							.catch((e) => {
-								this.logger.error(`Learn failed: ${e}`)
-							})
-							.then(() => {
-								this.#setIsLearning(id, false)
-							})
-
-						return true
-					} catch (e) {
-						this.#setIsLearning(id, false)
-						throw e
-					}
-				} else {
-					throw new Error(`Control "${controlId}" does not support actions`)
-				}
-			}
-		)
-
-		client.onPromise(
-			'controls:action:enabled',
-			/**
-			 * @param {string} controlId
-			 * @param {string} stepId
-			 * @param {string} setId
-			 * @param {string} id
-			 * @param {boolean} enabled
-			 * @returns {boolean}
-			 */
-			(controlId, stepId, setId, id, enabled) => {
-				const control = this.getControl(controlId)
-				if (!control) return false
-
-				if (control.supportsActions) {
-					return control.actionEnabled(stepId, setId, id, enabled)
-				} else {
-					throw new Error(`Control "${controlId}" does not support actions`)
-				}
-			}
-		)
-
-		client.onPromise(
-			'controls:action:set-headline',
-			/**
-			 * @param {string} controlId
-			 * @param {string} stepId
-			 * @param {string} setId
-			 * @param {string} id
-			 * @param {string} headline
-			 * @returns {boolean}
-			 */
-			(controlId, stepId, setId, id, headline) => {
-				const control = this.getControl(controlId)
-				if (!control) return false
-
-				if (control.supportsActions) {
-					return control.actionHeadline(stepId, setId, id, headline)
-				} else {
-					throw new Error(`Control "${controlId}" does not support actions`)
-				}
-			}
-		)
-
-		client.onPromise(
-			'controls:action:remove',
-			/**
-			 * @param {string} controlId
-			 * @param {string} stepId
-			 * @param {string} setId
-			 * @param {string} id
-			 * @returns {boolean}
-			 */
-			(controlId, stepId, setId, id) => {
-				const control = this.getControl(controlId)
-				if (!control) return false
-
-				if (control.supportsActions) {
-					return control.actionRemove(stepId, setId, id)
-				} else {
-					throw new Error(`Control "${controlId}" does not support actions`)
-				}
-			}
-		)
-
-		client.onPromise(
-			'controls:action:duplicate',
-			/**
-			 * @param {string} controlId
-			 * @param {string} stepId
-			 * @param {string} setId
-			 * @param {string} id
-			 * @returns {boolean}
-			 */
-			(controlId, stepId, setId, id) => {
-				const control = this.getControl(controlId)
-				if (!control) return false
-
-				if (control.supportsActions) {
-					return control.actionDuplicate(stepId, setId, id)
-				} else {
-					throw new Error(`Control "${controlId}" does not support actions`)
-				}
-			}
-		)
-
-		client.onPromise(
-			'controls:action:set-delay',
-			/**
-			 * @param {string} controlId
-			 * @param {string} stepId
-			 * @param {string} setId
-			 * @param {string} id
-			 * @param {number} delay
-			 * @returns {boolean}
-			 */
-			(controlId, stepId, setId, id, delay) => {
-				const control = this.getControl(controlId)
-				if (!control) return false
-
-				if (control.supportsActions) {
-					return control.actionSetDelay(stepId, setId, id, delay)
-				} else {
-					throw new Error(`Control "${controlId}" does not support actions`)
-				}
-			}
-		)
-
-		client.onPromise(
-			'controls:action:set-option',
-			/**
-			 * @param {string} controlId
-			 * @param {string} stepId
-			 * @param {string} setId
-			 * @param {string} id
-			 * @param {string} key
-			 * @param {any} value
-			 * @returns {boolean}
-			 */
-			(controlId, stepId, setId, id, key, value) => {
-				const control = this.getControl(controlId)
-				if (!control) return false
-
-				if (control.supportsActions) {
-					return control.actionSetOption(stepId, setId, id, key, value)
-				} else {
-					throw new Error(`Control "${controlId}" does not support actions`)
-				}
-			}
-		)
+		})
 		client.onPromise(
 			'controls:action:reorder',
-			/**
-			 * @param {string} controlId
-			 * @param {string} dragStepId
-			 * @param {string} dragSetId
-			 * @param {number} dragIndex
-			 * @param {string} dropStepId
-			 * @param {string} dropSetId
-			 * @param {number} dropIndex
-			 * @returns {boolean}
-			 */
 			(controlId, dragStepId, dragSetId, dragIndex, dropStepId, dropSetId, dropIndex) => {
 				const control = this.getControl(controlId)
 				if (!control) return false
@@ -878,160 +611,91 @@ class ControlsController extends CoreBase {
 				}
 			}
 		)
-		client.onPromise(
-			'controls:action-set:add',
-			/**
-			 * @param {string} controlId
-			 * @param {string} stepId
-			 * @returns {boolean}
-			 */
-			(controlId, stepId) => {
-				const control = this.getControl(controlId)
-				if (!control) return false
+		client.onPromise('controls:action-set:add', (controlId, stepId) => {
+			const control = this.getControl(controlId)
+			if (!control) return false
 
-				if (control.supportsActionSets) {
-					return control.actionSetAdd(stepId)
-				} else {
-					throw new Error(`Control "${controlId}" does not support this operation`)
-				}
+			if (control.supportsActionSets) {
+				return control.actionSetAdd(stepId)
+			} else {
+				throw new Error(`Control "${controlId}" does not support this operation`)
 			}
-		)
-		client.onPromise(
-			'controls:action-set:remove',
-			/**
-			 * @param {string} controlId
-			 * @param {string} stepId
-			 * @param {string} setId
-			 * @returns {boolean}
-			 */
-			(controlId, stepId, setId) => {
-				const control = this.getControl(controlId)
-				if (!control) return false
+		})
+		client.onPromise('controls:action-set:remove', (controlId, stepId, setId) => {
+			const control = this.getControl(controlId)
+			if (!control) return false
 
-				if (control.supportsActionSets) {
-					return control.actionSetRemove(stepId, setId)
-				} else {
-					throw new Error(`Control "${controlId}" does not support this operation`)
-				}
+			if (control.supportsActionSets) {
+				return control.actionSetRemove(stepId, setId)
+			} else {
+				throw new Error(`Control "${controlId}" does not support this operation`)
 			}
-		)
+		})
 
-		client.onPromise(
-			'controls:action-set:rename',
-			/**
-			 * @param {string} controlId
-			 * @param {string} stepId
-			 * @param {string} oldSetId
-			 * @param {string} newSetId
-			 * @returns {boolean}
-			 */
-			(controlId, stepId, oldSetId, newSetId) => {
-				const control = this.getControl(controlId)
-				if (!control) return false
+		client.onPromise('controls:action-set:rename', (controlId, stepId, oldSetId, newSetId) => {
+			const control = this.getControl(controlId)
+			if (!control) return false
 
-				if (control.supportsActionSets) {
-					return control.actionSetRename(stepId, oldSetId, newSetId)
-				} else {
-					throw new Error(`Control "${controlId}" does not support this operation`)
-				}
+			if (control.supportsActionSets) {
+				return control.actionSetRename(stepId, oldSetId, newSetId)
+			} else {
+				throw new Error(`Control "${controlId}" does not support this operation`)
 			}
-		)
+		})
 
-		client.onPromise(
-			'controls:action-set:set-run-while-held',
-			/**
-			 * @param {string} controlId
-			 * @param {string} stepId
-			 * @param {string} setId
-			 * @param {boolean} runWhileHeld
-			 * @returns {boolean}
-			 */
-			(controlId, stepId, setId, runWhileHeld) => {
-				const control = this.getControl(controlId)
-				if (!control) return false
+		client.onPromise('controls:action-set:set-run-while-held', (controlId, stepId, setId, runWhileHeld) => {
+			const control = this.getControl(controlId)
+			if (!control) return false
 
-				if (control.supportsActionSets) {
-					return control.actionSetRunWhileHeld(stepId, setId, runWhileHeld)
-				} else {
-					throw new Error(`Control "${controlId}" does not support this operation`)
-				}
+			if (control.supportsActionSets) {
+				return control.actionSetRunWhileHeld(stepId, setId, runWhileHeld)
+			} else {
+				throw new Error(`Control "${controlId}" does not support this operation`)
 			}
-		)
+		})
 
-		client.onPromise(
-			'controls:step:add',
-			/**
-			 * @param {string} controlId
-			 * @returns {string | false}
-			 */
-			(controlId) => {
-				const control = this.getControl(controlId)
-				if (!control) return false
+		client.onPromise('controls:step:add', (controlId) => {
+			const control = this.getControl(controlId)
+			if (!control) return false
 
-				if (control.supportsSteps) {
-					return control.stepAdd()
-				} else {
-					throw new Error(`Control "${controlId}" does not support steps`)
-				}
+			if (control.supportsSteps) {
+				return control.stepAdd()
+			} else {
+				throw new Error(`Control "${controlId}" does not support steps`)
 			}
-		)
-		client.onPromise(
-			'controls:step:remove',
-			/**
-			 * @param {string} controlId
-			 * @param {string} stepId
-			 * @returns {boolean}
-			 */
-			(controlId, stepId) => {
-				const control = this.getControl(controlId)
-				if (!control) return false
+		})
+		client.onPromise('controls:step:remove', (controlId, stepId) => {
+			const control = this.getControl(controlId)
+			if (!control) return false
 
-				if (control.supportsSteps) {
-					return control.stepRemove(stepId)
-				} else {
-					throw new Error(`Control "${controlId}" does not support steps`)
-				}
+			if (control.supportsSteps) {
+				return control.stepRemove(stepId)
+			} else {
+				throw new Error(`Control "${controlId}" does not support steps`)
 			}
-		)
+		})
 
-		client.onPromise(
-			'controls:step:swap',
-			/**
-			 * @param {string} controlId
-			 * @param {string} stepId1
-			 * @param {string} stepId2
-			 * @returns {boolean}
-			 */
-			(controlId, stepId1, stepId2) => {
-				const control = this.getControl(controlId)
-				if (!control) return false
+		client.onPromise('controls:step:swap', (controlId, stepId1, stepId2) => {
+			const control = this.getControl(controlId)
+			if (!control) return false
 
-				if (control.supportsSteps) {
-					return control.stepSwap(stepId1, stepId2)
-				} else {
-					throw new Error(`Control "${controlId}" does not support steps`)
-				}
+			if (control.supportsSteps) {
+				return control.stepSwap(stepId1, stepId2)
+			} else {
+				throw new Error(`Control "${controlId}" does not support steps`)
 			}
-		)
+		})
 
-		client.onPromise(
-			'controls:step:set-current',
-			/**
-			 * @param {string} controlId
-			 * @param {string} stepId
-			 * @returns {boolean}
-			 */
-			(controlId, stepId) => {
-				const control = this.getControl(controlId)
-				if (!control) return false
+		client.onPromise('controls:step:set-current', (controlId, stepId) => {
+			const control = this.getControl(controlId)
+			if (!control) return false
 
-				if (control.supportsSteps) {
-					return control.stepSelectCurrent(stepId)
-				} else {
-					throw new Error(`Control "${controlId}" does not support steps`)
-				}
+			if (control.supportsSteps) {
+				return control.stepSelectCurrent(stepId)
+			} else {
+				throw new Error(`Control "${controlId}" does not support steps`)
 			}
-		)
+		})
 
 		client.onPromise('triggers:subscribe', () => {
 			client.join(TriggersListRoom)
@@ -1072,259 +736,170 @@ class ControlsController extends CoreBase {
 
 			return controlId
 		})
-		client.onPromise(
-			'triggers:delete',
-			/**
-			 * @param {string} controlId
-			 * @returns {boolean}
-			 */
-			(controlId) => {
-				if (!this.#validateTriggerControlId(controlId)) {
-					// Control id is not valid!
-					return false
-				}
-
-				const control = this.getControl(controlId)
-				if (control) {
-					control.destroy()
-
-					this.#controls.delete(controlId)
-
-					this.db.setKey(['controls', controlId], undefined)
-
-					return true
-				}
-
+		client.onPromise('triggers:delete', (controlId) => {
+			if (!this.#validateTriggerControlId(controlId)) {
+				// Control id is not valid!
 				return false
 			}
-		)
-		client.onPromise(
-			'triggers:clone',
-			/**
-			 * @param {string} controlId
-			 * @returns {string | false}
-			 */
-			(controlId) => {
-				if (!this.#validateTriggerControlId(controlId)) {
-					// Control id is not valid!
-					return false
-				}
 
-				const newControlId = CreateTriggerControlId(nanoid())
+			const control = this.getControl(controlId)
+			if (control) {
+				control.destroy()
 
-				const fromControl = this.getControl(controlId)
-				if (fromControl) {
-					/** @type {any} */
-					const controlJson = fromControl.toJSON(true)
+				this.#controls.delete(controlId)
 
-					const newControl = this.#createClassForControl(newControlId, 'trigger', controlJson, true)
-					if (newControl) {
-						this.#controls.set(newControlId, newControl)
-
-						return newControlId
-					}
-				}
-
-				return false
-			}
-		)
-		client.onPromise(
-			'triggers:test',
-			/**
-			 * @param {string} controlId
-			 * @returns {boolean}
-			 */
-			(controlId) => {
-				if (!this.#validateTriggerControlId(controlId)) {
-					// Control id is not valid!
-					return false
-				}
-
-				const control = this.getControl(controlId)
-				if (control && control instanceof ControlTrigger) {
-					control.executeActions(Date.now(), true)
-				}
-
-				return false
-			}
-		)
-		client.onPromise(
-			'triggers:set-order',
-			/**
-			 * @param {string[]} triggerIds
-			 * @returns {boolean}
-			 */
-			(triggerIds) => {
-				if (!Array.isArray(triggerIds)) throw new Error('Expected array of ids')
-
-				triggerIds = triggerIds.filter((id) => this.#validateTriggerControlId(id))
-
-				// This is a bit naive, but should be sufficient if the client behaves
-
-				// Update the order based on the ids provided
-				triggerIds.forEach((id, index) => {
-					const control = this.getControl(id)
-					if (control && control.supportsOptions) control.optionsSetField('sortOrder', index, true)
-				})
-
-				// Fill in for any which weren't specified
-				const updatedTriggerIds = new Set(triggerIds)
-				const triggerControls = this.getAllTriggers()
-				triggerControls.sort((a, b) => a.options.sortOrder - b.options.sortOrder)
-
-				let nextIndex = triggerIds.length
-				for (const control of triggerControls) {
-					if (!updatedTriggerIds.has(control.controlId) && control.supportsOptions) {
-						control.optionsSetField('sortOrder', nextIndex++, true)
-					}
-				}
+				this.db.setKey(['controls', controlId], undefined)
 
 				return true
 			}
-		)
 
-		client.onPromise(
-			'controls:event:add',
-			/**
-			 * @param {string} controlId
-			 * @param {string} eventType
-			 * @returns {boolean}
-			 */
-			(controlId, eventType) => {
-				const control = this.getControl(controlId)
-				if (!control) return false
+			return false
+		})
+		client.onPromise('triggers:clone', (controlId) => {
+			if (!this.#validateTriggerControlId(controlId)) {
+				// Control id is not valid!
+				return false
+			}
 
-				if (control.supportsEvents) {
-					const eventItem = this.instance.definitions.createEventItem(eventType)
-					if (eventItem) {
-						return control.eventAdd(eventItem)
-					} else {
-						return false
-					}
-				} else {
-					throw new Error(`Control "${controlId}" does not support events`)
+			const newControlId = CreateTriggerControlId(nanoid())
+
+			const fromControl = this.getControl(controlId)
+			if (fromControl) {
+				/** @type {any} */
+				const controlJson = fromControl.toJSON(true)
+
+				const newControl = this.#createClassForControl(newControlId, 'trigger', controlJson, true)
+				if (newControl) {
+					this.#controls.set(newControlId, newControl)
+
+					return newControlId
 				}
 			}
-		)
 
-		client.onPromise(
-			'controls:event:enabled',
-			/**
-			 * @param {string} controlId
-			 * @param {string} id
-			 * @param {boolean} enabled
-			 * @returns {boolean}
-			 */
-			(controlId, id, enabled) => {
-				const control = this.getControl(controlId)
-				if (!control) return false
+			return false
+		})
+		client.onPromise('triggers:test', (controlId) => {
+			if (!this.#validateTriggerControlId(controlId)) {
+				// Control id is not valid!
+				return false
+			}
 
-				if (control.supportsEvents) {
-					return control.eventEnabled(id, enabled)
-				} else {
-					throw new Error(`Control "${controlId}" does not support events`)
+			const control = this.getControl(controlId)
+			if (control && control instanceof ControlTrigger) {
+				control.executeActions(Date.now(), true)
+			}
+
+			return false
+		})
+		client.onPromise('triggers:set-order', (triggerIds) => {
+			if (!Array.isArray(triggerIds)) throw new Error('Expected array of ids')
+
+			triggerIds = triggerIds.filter((id) => this.#validateTriggerControlId(id))
+
+			// This is a bit naive, but should be sufficient if the client behaves
+
+			// Update the order based on the ids provided
+			triggerIds.forEach((id, index) => {
+				const control = this.getControl(id)
+				if (control && control.supportsOptions) control.optionsSetField('sortOrder', index, true)
+			})
+
+			// Fill in for any which weren't specified
+			const updatedTriggerIds = new Set(triggerIds)
+			const triggerControls = this.getAllTriggers()
+			triggerControls.sort((a, b) => a.options.sortOrder - b.options.sortOrder)
+
+			let nextIndex = triggerIds.length
+			for (const control of triggerControls) {
+				if (!updatedTriggerIds.has(control.controlId) && control.supportsOptions) {
+					control.optionsSetField('sortOrder', nextIndex++, true)
 				}
 			}
-		)
 
-		client.onPromise(
-			'controls:event:set-headline',
-			/**
-			 * @param {string} controlId
-			 * @param {string} id
-			 * @param {string} headline
-			 * @returns {boolean}
-			 */
-			(controlId, id, headline) => {
-				const control = this.getControl(controlId)
-				if (!control) return false
+			return true
+		})
 
-				if (control.supportsEvents) {
-					return control.eventHeadline(id, headline)
+		client.onPromise('controls:event:add', (controlId, eventType) => {
+			const control = this.getControl(controlId)
+			if (!control) return false
+
+			if (control.supportsEvents) {
+				const eventItem = this.instance.definitions.createEventItem(eventType)
+				if (eventItem) {
+					return control.eventAdd(eventItem)
 				} else {
-					throw new Error(`Control "${controlId}" does not support events`)
+					return false
 				}
+			} else {
+				throw new Error(`Control "${controlId}" does not support events`)
 			}
-		)
+		})
 
-		client.onPromise(
-			'controls:event:remove',
-			/**
-			 * @param {string} controlId
-			 * @param {string} id
-			 * @returns {boolean}
-			 */
-			(controlId, id) => {
-				const control = this.getControl(controlId)
-				if (!control) return false
+		client.onPromise('controls:event:enabled', (controlId, id, enabled) => {
+			const control = this.getControl(controlId)
+			if (!control) return false
 
-				if (control.supportsEvents) {
-					return control.eventRemove(id)
-				} else {
-					throw new Error(`Control "${controlId}" does not support events`)
-				}
+			if (control.supportsEvents) {
+				return control.eventEnabled(id, enabled)
+			} else {
+				throw new Error(`Control "${controlId}" does not support events`)
 			}
-		)
+		})
 
-		client.onPromise(
-			'controls:event:duplicate',
-			/**
-			 * @param {string} controlId
-			 * @param {string} id
-			 * @returns {boolean}
-			 */
-			(controlId, id) => {
-				const control = this.getControl(controlId)
-				if (!control) return false
+		client.onPromise('controls:event:set-headline', (controlId, id, headline) => {
+			const control = this.getControl(controlId)
+			if (!control) return false
 
-				if (control.supportsEvents) {
-					return control.eventDuplicate(id)
-				} else {
-					throw new Error(`Control "${controlId}" does not support events`)
-				}
+			if (control.supportsEvents) {
+				return control.eventHeadline(id, headline)
+			} else {
+				throw new Error(`Control "${controlId}" does not support events`)
 			}
-		)
+		})
 
-		client.onPromise(
-			'controls:event:set-option',
-			/**
-			 * @param {string} controlId
-			 * @param {string} id
-			 * @param {string} key
-			 * @param {any} value
-			 * @returns {boolean}
-			 */
-			(controlId, id, key, value) => {
-				const control = this.getControl(controlId)
-				if (!control) return false
+		client.onPromise('controls:event:remove', (controlId, id) => {
+			const control = this.getControl(controlId)
+			if (!control) return false
 
-				if (control.supportsEvents) {
-					return control.eventSetOptions(id, key, value)
-				} else {
-					throw new Error(`Control "${controlId}" does not support events`)
-				}
+			if (control.supportsEvents) {
+				return control.eventRemove(id)
+			} else {
+				throw new Error(`Control "${controlId}" does not support events`)
 			}
-		)
+		})
 
-		client.onPromise(
-			'controls:event:reorder',
-			/**
-			 * @param {string} controlId
-			 * @param {number} oldIndex
-			 * @param {number} newIndex
-			 * @returns {boolean}
-			 */
-			(controlId, oldIndex, newIndex) => {
-				const control = this.getControl(controlId)
-				if (!control) return false
+		client.onPromise('controls:event:duplicate', (controlId, id) => {
+			const control = this.getControl(controlId)
+			if (!control) return false
 
-				if (control.supportsEvents) {
-					return control.eventReorder(oldIndex, newIndex)
-				} else {
-					throw new Error(`Control "${controlId}" does not support events`)
-				}
+			if (control.supportsEvents) {
+				return control.eventDuplicate(id)
+			} else {
+				throw new Error(`Control "${controlId}" does not support events`)
 			}
-		)
+		})
+
+		client.onPromise('controls:event:set-option', (controlId, id, key, value) => {
+			const control = this.getControl(controlId)
+			if (!control) return false
+
+			if (control.supportsEvents) {
+				return control.eventSetOptions(id, key, value)
+			} else {
+				throw new Error(`Control "${controlId}" does not support events`)
+			}
+		})
+
+		client.onPromise('controls:event:reorder', (controlId, oldIndex, newIndex) => {
+			const control = this.getControl(controlId)
+			if (!control) return false
+
+			if (control.supportsEvents) {
+				return control.eventReorder(oldIndex, newIndex)
+			} else {
+				throw new Error(`Control "${controlId}" does not support events`)
+			}
+		})
 
 		client.onPromise('controls:subscribe:learn', async () => {
 			client.join(ActiveLearnRoom)

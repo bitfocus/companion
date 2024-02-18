@@ -35,6 +35,8 @@ export interface EmulatorImage {
 	buffer: string | false
 }
 
+export type EmulatorImageCache = Record<number, Record<number, string | false | undefined> | undefined>
+
 export interface ModuleDisplayInfo {
 	id: string
 	name: string

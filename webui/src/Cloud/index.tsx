@@ -5,25 +5,14 @@ import { CInput, CButton, CCallout, CCard, CCardBody, CCardHeader, CListGroup } 
 import { CloudRegionPanel } from './RegionPanel.js'
 import { CloudUserPass } from './UserPass.js'
 import CSwitch from '../CSwitch.js'
-import type { Socket } from 'socket.io-client'
+import type { CompanionSocketType } from '../util.js'
+import { CloudControllerState } from '@companion-app/shared/Model/Cloud.js'
 
 // The cloud part is written in old fashioned Class-components because I am most
 // familiar with it
 
 interface CloudControllerProps {
-	socket: Socket
-}
-
-interface CloudControllerState {
-	uuid: string // the machine UUID
-	authenticating: boolean // is the cloud authenticating
-	authenticated: boolean // is the cloud authenticated
-	authenticatedAs: string | undefined // the cloud username
-	ping: boolean // is someone watching ping info?
-	regions: string[] // the cloud regions
-	error: null | string // the error message
-	cloudActive: boolean // is the cloud active
-	canActivate: boolean // can the cloud be activated
+	socket: CompanionSocketType
 }
 
 export class Cloud extends Component<CloudControllerProps, CloudControllerState> {

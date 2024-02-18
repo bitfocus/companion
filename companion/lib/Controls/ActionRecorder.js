@@ -70,10 +70,10 @@ export default class ActionRecorder extends EventEmitter {
 
 	/**
 	 * The last sent info json object
-	 * @type {Record<string, RecordSessionListInfo> | null}
+	 * @type {Record<string, RecordSessionListInfo> }
 	 * @access private
 	 */
-	#lastSentSessionListJson = null
+	#lastSentSessionListJson = {}
 
 	/**
 	 * The last sent info json object
@@ -140,44 +140,30 @@ export default class ActionRecorder extends EventEmitter {
 
 		// 	return id
 		// })
-		client.onPromise('action-recorder:session:abort', (/** @type {string} */ sessionId) => {
+		client.onPromise('action-recorder:session:abort', (sessionId) => {
 			if (!this.#currentSession || this.#currentSession.id !== sessionId)
 				throw new Error(`Invalid session: ${sessionId}`)
 
 			this.destroySession()
-
-			return true
 		})
-		client.onPromise('action-recorder:session:discard-actions', (/** @type {string} */ sessionId) => {
+		client.onPromise('action-recorder:session:discard-actions', (sessionId) => {
 			if (!this.#currentSession || this.#currentSession.id !== sessionId)
 				throw new Error(`Invalid session: ${sessionId}`)
 
 			this.discardActions()
-
-			return true
 		})
-		client.onPromise(
-			'action-recorder:session:recording',
-			(/** @type {string} */ sessionId, /** @type {boolean} */ isRunning) => {
-				if (!this.#currentSession || this.#currentSession.id !== sessionId)
-					throw new Error(`Invalid session: ${sessionId}`)
+		client.onPromise('action-recorder:session:recording', (sessionId, isRunning) => {
+			if (!this.#currentSession || this.#currentSession.id !== sessionId)
+				throw new Error(`Invalid session: ${sessionId}`)
 
-				this.setRecording(isRunning)
+			this.setRecording(isRunning)
+		})
+		client.onPromise('action-recorder:session:set-connections', (sessionId, connectionIds) => {
+			if (!this.#currentSession || this.#currentSession.id !== sessionId)
+				throw new Error(`Invalid session: ${sessionId}`)
 
-				return true
-			}
-		)
-		client.onPromise(
-			'action-recorder:session:set-connections',
-			(/** @type {string} */ sessionId, /** @type {string[]} */ connectionIds) => {
-				if (!this.#currentSession || this.#currentSession.id !== sessionId)
-					throw new Error(`Invalid session: ${sessionId}`)
-
-				this.setSelectedConnectionIds(connectionIds)
-
-				return true
-			}
-		)
+			this.setSelectedConnectionIds(connectionIds)
+		})
 
 		client.onPromise('action-recorder:session:subscribe', (/** @type {string} */ sessionId) => {
 			if (!this.#currentSession || this.#currentSession.id !== sessionId)
@@ -191,77 +177,60 @@ export default class ActionRecorder extends EventEmitter {
 			client.leave(SessionRoom(sessionId))
 		})
 
-		client.onPromise(
-			'action-recorder:session:action-delete',
-			(/** @type {string} */ sessionId, /** @type {string} */ actionId) => {
-				if (!this.#currentSession || this.#currentSession.id !== sessionId)
-					throw new Error(`Invalid session: ${sessionId}`)
+		client.onPromise('action-recorder:session:action-delete', (sessionId, actionId) => {
+			if (!this.#currentSession || this.#currentSession.id !== sessionId)
+				throw new Error(`Invalid session: ${sessionId}`)
 
-				// Filter out the action
-				this.#currentSession.actions = this.#currentSession.actions.filter((a) => a.id !== actionId)
+			// Filter out the action
+			this.#currentSession.actions = this.#currentSession.actions.filter((a) => a.id !== actionId)
+
+			this.commitChanges([sessionId])
+		})
+		client.onPromise('action-recorder:session:action-duplicate', (sessionId, actionId) => {
+			if (!this.#currentSession || this.#currentSession.id !== sessionId)
+				throw new Error(`Invalid session: ${sessionId}`)
+
+			// Filter out the action
+			const index = this.#currentSession.actions.findIndex((a) => a.id === actionId)
+			if (index !== -1) {
+				const newAction = cloneDeep(this.#currentSession.actions[index])
+				newAction.id = nanoid()
+				this.#currentSession.actions.splice(index + 1, 0, newAction)
 
 				this.commitChanges([sessionId])
 			}
-		)
-		client.onPromise(
-			'action-recorder:session:action-duplicate',
-			(/** @type {string} */ sessionId, /** @type {string} */ actionId) => {
-				if (!this.#currentSession || this.#currentSession.id !== sessionId)
-					throw new Error(`Invalid session: ${sessionId}`)
+		})
+		client.onPromise('action-recorder:session:action-delay', (sessionId, actionId, delay0) => {
+			if (!this.#currentSession || this.#currentSession.id !== sessionId)
+				throw new Error(`Invalid session: ${sessionId}`)
 
-				// Filter out the action
-				const index = this.#currentSession.actions.findIndex((a) => a.id === actionId)
-				if (index !== -1) {
-					const newAction = cloneDeep(this.#currentSession.actions[index])
-					newAction.id = nanoid()
-					this.#currentSession.actions.splice(index + 1, 0, newAction)
+			const delay = Number(delay0)
 
-					this.commitChanges([sessionId])
-				}
+			if (isNaN(delay) || delay < 0) throw new Error(`Invalid delay: ${delay0}`)
+
+			// Find and update the action
+			const index = this.#currentSession.actions.findIndex((a) => a.id === actionId)
+			if (index !== -1) {
+				this.#currentSession.actions[index].delay = delay
+
+				this.commitChanges([sessionId])
 			}
-		)
-		client.onPromise(
-			'action-recorder:session:action-delay',
-			(/** @type {string} */ sessionId, /** @type {string} */ actionId, /** @type {number} */ delay0) => {
-				if (!this.#currentSession || this.#currentSession.id !== sessionId)
-					throw new Error(`Invalid session: ${sessionId}`)
+		})
+		client.onPromise('action-recorder:session:action-set-value', (sessionId, actionId, key, value) => {
+			if (!this.#currentSession || this.#currentSession.id !== sessionId)
+				throw new Error(`Invalid session: ${sessionId}`)
 
-				const delay = Number(delay0)
+			// Find and update the action
+			const index = this.#currentSession.actions.findIndex((a) => a.id === actionId)
+			if (index !== -1) {
+				const action = this.#currentSession.actions[index]
 
-				if (isNaN(delay) || delay < 0) throw new Error(`Invalid delay: ${delay0}`)
+				if (!action.options) action.options = {}
+				action.options[key] = value
 
-				// Find and update the action
-				const index = this.#currentSession.actions.findIndex((a) => a.id === actionId)
-				if (index !== -1) {
-					this.#currentSession.actions[index].delay = delay
-
-					this.commitChanges([sessionId])
-				}
+				this.commitChanges([sessionId])
 			}
-		)
-		client.onPromise(
-			'action-recorder:session:action-set-value',
-			(
-				/** @type {string} */ sessionId,
-				/** @type {string} */ actionId,
-				/** @type {string } */ key,
-				/** @type {any} */ value
-			) => {
-				if (!this.#currentSession || this.#currentSession.id !== sessionId)
-					throw new Error(`Invalid session: ${sessionId}`)
-
-				// Find and update the action
-				const index = this.#currentSession.actions.findIndex((a) => a.id === actionId)
-				if (index !== -1) {
-					const action = this.#currentSession.actions[index]
-
-					if (!action.options) action.options = {}
-					action.options[key] = value
-
-					this.commitChanges([sessionId])
-				}
-			}
-		)
+		})
 		client.onPromise(
 			'action-recorder:session:action-reorder',
 			(/** @type {string} */ sessionId, /** @type {number} */ oldIndex, /** @type {number} */ newIndex) => {
@@ -275,21 +244,12 @@ export default class ActionRecorder extends EventEmitter {
 				this.commitChanges([sessionId])
 			}
 		)
-		client.onPromise(
-			'action-recorder:session:save-to-control',
-			(
-				/** @type {string} */ sessionId,
-				/** @type {string} */ controlId,
-				/** @type {string} */ stepId,
-				/** @type {string} */ setId,
-				/** @type {string} */ mode
-			) => {
-				if (!this.#currentSession || this.#currentSession.id !== sessionId)
-					throw new Error(`Invalid session: ${sessionId}`)
+		client.onPromise('action-recorder:session:save-to-control', (sessionId, controlId, stepId, setId, mode) => {
+			if (!this.#currentSession || this.#currentSession.id !== sessionId)
+				throw new Error(`Invalid session: ${sessionId}`)
 
-				this.saveToControlId(controlId, stepId, setId, mode)
-			}
-		)
+			this.saveToControlId(controlId, stepId, setId, mode)
+		})
 	}
 
 	/**
@@ -331,7 +291,7 @@ export default class ActionRecorder extends EventEmitter {
 		}
 
 		if (this.#registry.io.countRoomMembers(SessionListRoom) > 0) {
-			const patch = jsonPatch.compare(this.#lastSentSessionListJson || {}, newSessionListJson || {})
+			const patch = jsonPatch.compare(this.#lastSentSessionListJson, newSessionListJson || {})
 			if (patch.length > 0) {
 				this.#registry.io.emitToRoom(SessionListRoom, `action-recorder:session-list`, patch)
 			}

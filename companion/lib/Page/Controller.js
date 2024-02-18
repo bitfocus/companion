@@ -58,7 +58,7 @@ class PageController extends CoreBase {
 	 * @access public
 	 */
 	clientConnect(client) {
-		client.onPromise('pages:set-name', (/** @type {number} */ pageNumber, /** @type {string} */ name) => {
+		client.onPromise('pages:set-name', (pageNumber, name) => {
 			this.logger.silly(`socket: pages:set-name ${pageNumber}: ${name}`)
 
 			const existingData = this.#pages[pageNumber]

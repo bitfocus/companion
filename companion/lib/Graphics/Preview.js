@@ -103,99 +103,67 @@ class GraphicsPreview {
 		const getLocationSubId = (/** @type {import('../Resources/Util.js').ControlLocation} */ location) =>
 			`${location.pageNumber}_${location.row}_${location.column}`
 
-		client.onPromise(
-			'preview:location:subscribe',
-			/**
-			 * @param {import('../Resources/Util.js').ControlLocation} location
-			 * @param {string} subId
-			 * @returns {import('@companion-app/shared/Model/Common.js').WrappedImage}
-			 */
-			(location, subId) => {
-				if (!location || !subId) throw new Error('Invalid')
+		client.onPromise('preview:location:subscribe', (location, subId) => {
+			if (!location || !subId) throw new Error('Invalid')
 
-				location = ensureLocationIsNumber(location)
+			location = ensureLocationIsNumber(location)
 
-				const locationId = getLocationSubId(location)
-				let entry = locationSubsForClient.get(locationId)
-				if (!entry) {
-					locationSubsForClient.set(locationId, (entry = new Set()))
-				}
-				entry.add(subId)
-
-				client.join(PreviewLocationRoom(location))
-
-				const render = this.#graphicsController.getCachedRenderOrGeneratePlaceholder(location)
-				return { image: render.asDataUrl, isUsed: !!render.style }
+			const locationId = getLocationSubId(location)
+			let entry = locationSubsForClient.get(locationId)
+			if (!entry) {
+				locationSubsForClient.set(locationId, (entry = new Set()))
 			}
-		)
-		client.onPromise(
-			'preview:location:unsubscribe',
-			/**
-			 * @param {import('../Resources/Util.js').ControlLocation} location
-			 * @param {string} subId
-			 * @returns {void}
-			 */
-			(location, subId) => {
-				if (!location || !subId) throw new Error('Invalid')
+			entry.add(subId)
 
-				location = ensureLocationIsNumber(location)
+			client.join(PreviewLocationRoom(location))
 
-				const locationId = getLocationSubId(location)
-				const entry = locationSubsForClient.get(locationId)
-				if (!entry) return
+			const render = this.#graphicsController.getCachedRenderOrGeneratePlaceholder(location)
+			return { image: render.asDataUrl, isUsed: !!render.style }
+		})
+		client.onPromise('preview:location:unsubscribe', (location, subId) => {
+			if (!location || !subId) throw new Error('Invalid')
 
-				entry.delete(subId)
-				if (entry.size === 0) {
-					locationSubsForClient.delete(locationId)
+			location = ensureLocationIsNumber(location)
 
-					client.leave(PreviewLocationRoom(location))
-				}
+			const locationId = getLocationSubId(location)
+			const entry = locationSubsForClient.get(locationId)
+			if (!entry) return
+
+			entry.delete(subId)
+			if (entry.size === 0) {
+				locationSubsForClient.delete(locationId)
+
+				client.leave(PreviewLocationRoom(location))
 			}
-		)
+		})
 
-		client.onPromise(
-			'preview:button-reference:subscribe',
-			/**
-			 * @param {string} id
-			 * @param {import('../Resources/Util.js').ControlLocation} location
-			 * @param {Record<string, any>} options
-			 * @returns {string | null} Image data-url
-			 */
-			(id, location, options) => {
-				const fullId = `${client.id}::${id}`
+		client.onPromise('preview:button-reference:subscribe', (id, location, options) => {
+			const fullId = `${client.id}::${id}`
 
-				if (this.#buttonReferencePreviews.get(fullId)) throw new Error('Session id is already in use')
+			if (this.#buttonReferencePreviews.get(fullId)) throw new Error('Session id is already in use')
 
-				// Do a resolve of the reference for the starting image
-				const result = ParseInternalControlReference(this.#logger, this.#variablesController, location, options, true)
+			// Do a resolve of the reference for the starting image
+			const result = ParseInternalControlReference(this.#logger, this.#variablesController, location, options, true)
 
-				// Track the subscription, to allow it to be invalidated
-				this.#buttonReferencePreviews.set(fullId, {
-					id,
-					location,
-					options,
-					resolvedLocation: result.location,
-					referencedVariableIds: Array.from(result.referencedVariables),
-					client,
-				})
+			// Track the subscription, to allow it to be invalidated
+			this.#buttonReferencePreviews.set(fullId, {
+				id,
+				location,
+				options,
+				resolvedLocation: result.location,
+				referencedVariableIds: Array.from(result.referencedVariables),
+				client,
+			})
 
-				return result.location
-					? this.#graphicsController.getCachedRenderOrGeneratePlaceholder(result.location).asDataUrl
-					: null
-			}
-		)
-		client.onPromise(
-			'preview:button-reference:unsubscribe',
-			/**
-			 * @param {string} id
-			 * @returns {void}
-			 */
-			(id) => {
-				const fullId = `${client.id}::${id}`
+			return result.location
+				? this.#graphicsController.getCachedRenderOrGeneratePlaceholder(result.location).asDataUrl
+				: null
+		})
+		client.onPromise('preview:button-reference:unsubscribe', (id) => {
+			const fullId = `${client.id}::${id}`
 
-				this.#buttonReferencePreviews.delete(fullId)
-			}
-		)
+			this.#buttonReferencePreviews.delete(fullId)
+		})
 	}
 
 	/**

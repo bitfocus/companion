@@ -271,17 +271,13 @@ class InstanceVariable extends CoreBase {
 		}
 
 		// Update the instance definitions
-		if (this.#variableDefinitions[labelFrom] !== undefined) {
-			this.#variableDefinitions[labelTo] = this.#variableDefinitions[labelFrom]
+		const oldDefinitions = this.#variableDefinitions[labelFrom]
+		if (oldDefinitions) {
+			const definitions = (this.#variableDefinitions[labelTo] = oldDefinitions)
 			delete this.#variableDefinitions[labelFrom]
 
 			if (this.io.countRoomMembers(VariableDefinitionsRoom) > 0) {
-				this.io.emitToRoom(
-					VariableDefinitionsRoom,
-					'variable-definitions:update',
-					labelTo,
-					this.#variableDefinitions[labelTo]
-				)
+				this.io.emitToRoom(VariableDefinitionsRoom, 'variable-definitions:update', labelTo, definitions)
 				this.io.emitToRoom(VariableDefinitionsRoom, 'variable-definitions:update', labelFrom, null)
 			}
 		}
@@ -306,7 +302,7 @@ class InstanceVariable extends CoreBase {
 			client.leave(VariableDefinitionsRoom)
 		})
 
-		client.onPromise('variables:instance-values', (/** @type {string} */ label) => {
+		client.onPromise('variables:instance-values', (label) => {
 			return this.#variableValues[label]
 		})
 	}

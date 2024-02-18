@@ -30,13 +30,13 @@ function TriggerPickerRow({ id, trigger, selectTrigger }: TriggerPickerRowProps)
 	)
 }
 interface TriggerPickerProps {
-	selectControl: (controlId: string, stepId: string | null, setId: string | null, mode: 'append' | 'replace') => void
+	selectControl: (controlId: string, stepId: string, setId: string, mode: 'append' | 'replace') => void
 }
 export function TriggerPicker({ selectControl }: TriggerPickerProps) {
 	const triggersList = useContext(TriggersContext)
 
 	const selectTrigger = useCallback(
-		(id: string, mode: 'append' | 'replace') => selectControl(CreateTriggerControlId(id), null, null, mode),
+		(id: string, mode: 'append' | 'replace') => selectControl(CreateTriggerControlId(id), '', '', mode),
 		[selectControl]
 	)
 

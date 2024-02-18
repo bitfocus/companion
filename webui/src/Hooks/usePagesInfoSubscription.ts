@@ -1,11 +1,10 @@
 import { useEffect, useState } from 'react'
-import { socketEmitPromise } from '../util.js'
-import { Socket } from 'socket.io-client'
+import { CompanionSocketType, socketEmitPromise } from '../util.js'
 import type { PageModel } from '@companion-app/shared/Model/PageModel.js'
 import { PagesStore } from '../Stores/PagesStore.js'
 
 export function usePagesInfoSubscription(
-	socket: Socket,
+	socket: CompanionSocketType,
 	store: PagesStore,
 	setLoadError?: ((error: string | null) => void) | undefined,
 	retryToken?: string

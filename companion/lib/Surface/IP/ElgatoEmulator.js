@@ -64,7 +64,7 @@ class SurfaceIPElgatoEmulator extends EventEmitter {
 	#pendingBufferUpdates = new Map()
 
 	/**
-	 * @type {Record<number, Record<number, string | null | undefined>>}
+	 * @type {import('@companion-app/shared/Model/Common.js').EmulatorImageCache}
 	 * @access private
 	 */
 	imageCache = {}
@@ -201,8 +201,9 @@ class SurfaceIPElgatoEmulator extends EventEmitter {
 			return
 		}
 
-		if (!this.imageCache[y]) this.imageCache[y] = {}
-		this.imageCache[y][x] = dataUrl || null
+		let yCache = this.imageCache[y]
+		if (!yCache) yCache = this.imageCache[y] = {}
+		yCache[x] = dataUrl || undefined
 
 		this.#trackChanged(x, y)
 		this.#emitChanged()

@@ -38,7 +38,7 @@ export function useControlActionsEditorService(
 		() => ({
 			addAction: (actionType: string) => {
 				const [connectionId, actionId] = actionType.split(':', 2)
-				socketEmitPromise(socket, 'controls:action:add', [controlId, stepId, setId, connectionId, actionId]).catch(
+				socketEmitPromise(socket, 'controls:action:add', [controlId, stepId, setId + '', connectionId, actionId]).catch(
 					(e) => {
 						console.error('Failed to add control action', e)
 					}
@@ -49,10 +49,10 @@ export function useControlActionsEditorService(
 				socketEmitPromise(socket, 'controls:action:reorder', [
 					controlId,
 					dragStepId,
-					dragSetId,
+					dragSetId + '',
 					dragIndex,
 					stepId,
-					setId,
+					setId + '',
 					dropIndex,
 				]).catch((e) => {
 					console.error('Failed to reorder control actions', e)
@@ -61,16 +61,21 @@ export function useControlActionsEditorService(
 
 			setValue: (actionId: string, action: ActionInstance | undefined, key: string, val: any) => {
 				if (!action?.options || action.options[key] !== val) {
-					socketEmitPromise(socket, 'controls:action:set-option', [controlId, stepId, setId, actionId, key, val]).catch(
-						(e) => {
-							console.error('Failed to set control action option', e)
-						}
-					)
+					socketEmitPromise(socket, 'controls:action:set-option', [
+						controlId,
+						stepId,
+						setId + '',
+						actionId,
+						key,
+						val,
+					]).catch((e) => {
+						console.error('Failed to set control action option', e)
+					})
 				}
 			},
 
 			setDelay: (actionId: string, delay: number) => {
-				socketEmitPromise(socket, 'controls:action:set-delay', [controlId, stepId, setId, actionId, delay]).catch(
+				socketEmitPromise(socket, 'controls:action:set-delay', [controlId, stepId, setId + '', actionId, delay]).catch(
 					(e) => {
 						console.error('Failed to set control action delay', e)
 					}
@@ -79,26 +84,26 @@ export function useControlActionsEditorService(
 
 			performDelete: (actionId: string) => {
 				confirmModal.current?.show('Delete action', 'Delete action?', 'Delete', () => {
-					socketEmitPromise(socket, 'controls:action:remove', [controlId, stepId, setId, actionId]).catch((e) => {
+					socketEmitPromise(socket, 'controls:action:remove', [controlId, stepId, setId + '', actionId]).catch((e) => {
 						console.error('Failed to remove control action', e)
 					})
 				})
 			},
 
 			performDuplicate: (actionId: string) => {
-				socketEmitPromise(socket, 'controls:action:duplicate', [controlId, stepId, setId, actionId]).catch((e) => {
+				socketEmitPromise(socket, 'controls:action:duplicate', [controlId, stepId, setId + '', actionId]).catch((e) => {
 					console.error('Failed to duplicate control action', e)
 				})
 			},
 
 			performLearn: (actionId: string) => {
-				socketEmitPromise(socket, 'controls:action:learn', [controlId, stepId, setId, actionId]).catch((e) => {
+				socketEmitPromise(socket, 'controls:action:learn', [controlId, stepId, setId + '', actionId]).catch((e) => {
 					console.error('Failed to learn control action values', e)
 				})
 			},
 
 			setEnabled: (actionId: string, enabled: boolean) => {
-				socketEmitPromise(socket, 'controls:action:enabled', [controlId, stepId, setId, actionId, enabled]).catch(
+				socketEmitPromise(socket, 'controls:action:enabled', [controlId, stepId, setId + '', actionId, enabled]).catch(
 					(e) => {
 						console.error('Failed to enable/disable action', e)
 					}
@@ -106,11 +111,15 @@ export function useControlActionsEditorService(
 			},
 
 			setHeadline: (actionId: string, headline: string) => {
-				socketEmitPromise(socket, 'controls:action:set-headline', [controlId, stepId, setId, actionId, headline]).catch(
-					(e) => {
-						console.error('Failed to set action headline', e)
-					}
-				)
+				socketEmitPromise(socket, 'controls:action:set-headline', [
+					controlId,
+					stepId,
+					setId + '',
+					actionId,
+					headline,
+				]).catch((e) => {
+					console.error('Failed to set action headline', e)
+				})
 			},
 		}),
 		[socket, confirmModal, controlId, stepId, setId]

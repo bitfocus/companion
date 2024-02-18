@@ -43,7 +43,7 @@ function sleepStrategy(i) {
 /**
  *
  * @param {string} id
- * @returns
+ * @returns {`connection-debug:update:${string}`}
  */
 export function ConnectionDebugLogRoom(id) {
 	return `connection-debug:update:${id}`

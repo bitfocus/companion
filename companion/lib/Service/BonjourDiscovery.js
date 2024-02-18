@@ -94,22 +94,10 @@ class ServiceBonjourDiscovery extends ServiceBase {
 			}
 		})
 
-		client.onPromise(
-			'bonjour:subscribe',
-			/**
-			 * @param {string} connectionId
-			 * @param {string} queryId
-			 * @returns {string} subId
-			 */
-			(connectionId, queryId) => this.#joinOrCreateSession(client, connectionId, queryId)
+		client.onPromise('bonjour:subscribe', (connectionId, queryId) =>
+			this.#joinOrCreateSession(client, connectionId, queryId)
 		)
-		client.on(
-			'bonjour:unsubscribe',
-			/**
-			 * @param {string} subId
-			 * @returns {void}
-			 */ (subId) => this.#leaveSession(client, subId)
-		)
+		client.on('bonjour:unsubscribe', (subId) => this.#leaveSession(client, subId))
 	}
 
 	/**

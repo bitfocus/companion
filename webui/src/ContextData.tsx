@@ -130,7 +130,10 @@ export function ContextData({ children }: ContextDataProps) {
 					console.error('Failed to load custom values list', e)
 				})
 
-			const updateVariableDefinitions = (label: string, patch: JsonPatchOperation[]) => {
+			const updateVariableDefinitions = (
+				label: string,
+				patch: JsonPatchOperation[] | ModuleVariableDefinitions | null
+			) => {
 				setVariableDefinitions(
 					(oldDefinitions) =>
 						oldDefinitions &&
@@ -141,7 +144,7 @@ export function ContextData({ children }: ContextDataProps) {
 			const updateCustomVariables = (patch: JsonPatchOperation[]) => {
 				setCustomVariables((oldVariables) => oldVariables && applyPatchOrReplaceObject(oldVariables, patch))
 			}
-			const updateTriggers = (controlId: string, patch: JsonPatchOperation[]) => {
+			const updateTriggers = (controlId: string, patch: JsonPatchOperation[] | ClientTriggerData | null) => {
 				setTriggers(
 					(oldTriggers) =>
 						oldTriggers &&

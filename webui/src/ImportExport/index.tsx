@@ -50,9 +50,9 @@ export function ImportExport() {
 
 				setLoadError(null)
 				socketEmitPromise(socket, 'loadsave:prepare-import', [fr.result], 20000)
-					.then(([err, config]: [string | null, ClientImportObject]) => {
-						if (err) {
-							setLoadError(err)
+					.then(([err, config]) => {
+						if (err || !config) {
+							setLoadError(err || 'Failed to prepare')
 						} else {
 							const initialRemap: Record<string, string | undefined> = {}
 

@@ -15,10 +15,13 @@ import { dsanMastercueKeymap, keyboardKeymap, logitecKeymap } from './Keymaps.js
 import { ButtonPreview } from '../Components/ButtonPreview.js'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faCancel, faExpand } from '@fortawesome/free-solid-svg-icons'
-import { ControlLocation, EmulatorConfig, EmulatorImage } from '@companion-app/shared/Model/Common.js'
+import {
+	ControlLocation,
+	EmulatorConfig,
+	EmulatorImage,
+	EmulatorImageCache,
+} from '@companion-app/shared/Model/Common.js'
 import { Operation as JsonPatchOperation } from 'fast-json-patch'
-
-type EmulatorImageCache = Record<number, Record<number, string | false | undefined> | undefined>
 
 export function Emulator() {
 	const socket = useContext(SocketContext)
@@ -51,7 +54,7 @@ export function Emulator() {
 				setLoadError(`Failed: ${e}`)
 			})
 
-		const updateConfig = (patch: JsonPatchOperation[]) => {
+		const updateConfig = (patch: JsonPatchOperation[] | EmulatorConfig) => {
 			setConfig((oldConfig) => oldConfig && applyPatchOrReplaceObject(oldConfig, patch))
 		}
 
@@ -71,7 +74,7 @@ export function Emulator() {
 	}, [config?.emulator_control_enable])
 
 	useEffect(() => {
-		const updateImages = (newImages: EmulatorImage[]) => {
+		const updateImages = (newImages: EmulatorImage[] | EmulatorImageCache) => {
 			console.log('new images', newImages)
 			setImageCache((old) => {
 				if (Array.isArray(newImages)) {

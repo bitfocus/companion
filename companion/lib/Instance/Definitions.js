@@ -106,29 +106,26 @@ class InstanceDefinitions extends CoreBase {
 
 		client.onPromise('presets:import-to-location', this.importPresetToLocation.bind(this))
 
-		client.onPromise(
-			'presets:preview_render',
-			async (/** @type {string } */ connectionId, /** @type {string } */ presetId) => {
-				const definition = this.#presetDefinitions[connectionId]?.[presetId]
-				if (definition) {
-					const style = {
-						...(definition.previewStyle ? definition.previewStyle : definition.style),
-						style: definition.type,
-					}
+		client.onPromise('presets:preview_render', async (connectionId, presetId) => {
+			const definition = this.#presetDefinitions[connectionId]?.[presetId]
+			if (definition) {
+				const style = {
+					...(definition.previewStyle ? definition.previewStyle : definition.style),
+					style: definition.type,
+				}
 
-					if (style.text) style.text = this.instance.variable.parseVariables(style.text).text
+				if (style.text) style.text = this.instance.variable.parseVariables(style.text).text
 
-					const render = await this.graphics.drawPreview(style)
-					if (render) {
-						return render.asDataUrl
-					} else {
-						return null
-					}
+				const render = await this.graphics.drawPreview(style)
+				if (render) {
+					return render.asDataUrl
 				} else {
 					return null
 				}
+			} else {
+				return null
 			}
-		)
+		})
 	}
 
 	/**
@@ -236,7 +233,7 @@ class InstanceDefinitions extends CoreBase {
 	forgetConnection(connectionId) {
 		delete this.#presetDefinitions[connectionId]
 		if (this.io.countRoomMembers(PresetsRoom) > 0) {
-			this.io.emitToRoom(PresetsRoom, 'presets:update', connectionId, undefined)
+			this.io.emitToRoom(PresetsRoom, 'presets:update', connectionId, null)
 		}
 
 		delete this.#actionDefinitions[connectionId]
