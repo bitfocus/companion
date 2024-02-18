@@ -33,6 +33,14 @@ export class ServiceSharedUdpManager {
 	#sockets = new Map()
 
 	/**
+	 * Count the number of active ports
+	 * @returns {number}
+	 */
+	countActivePorts() {
+		return this.#sockets.size
+	}
+
+	/**
 	 * Add a listener
 	 * @param {'udp4' | 'udp6'} family
 	 * @param {number} portNumber
@@ -63,7 +71,7 @@ export class ServiceSharedUdpManager {
 			messageHandler,
 			errorHandler,
 		})
-		socket.logMembers()
+		socket.logMemberCount()
 
 		await socket.waitForBind
 
@@ -77,8 +85,8 @@ export class ServiceSharedUdpManager {
 	 */
 	leavePort(ownerId, handleId) {
 		for (const [socketId, socket] of this.#sockets.entries()) {
-			socket.members = socket.members.filter((m) => m.ownerId !== ownerId && m.handleId !== handleId)
-			socket.logMembers()
+			socket.members = socket.members.filter((m) => m.ownerId !== ownerId || m.handleId !== handleId)
+			socket.logMemberCount()
 
 			if (socket.members.length === 0) {
 				this.#sockets.delete(socketId)
@@ -95,7 +103,7 @@ export class ServiceSharedUdpManager {
 	leaveAllFromOwner(ownerId) {
 		for (const [socketId, socket] of this.#sockets.entries()) {
 			socket.members = socket.members.filter((m) => m.ownerId !== ownerId)
-			socket.logMembers()
+			socket.logMemberCount()
 
 			if (socket.members.length === 0) {
 				this.#sockets.delete(socketId)
@@ -188,13 +196,13 @@ class ServiceSharedUdpPort {
 
 		this.waitForBind = /** @type {Promise<void>} */ (
 			new Promise((resolve, reject) => {
-				this.socket.bind(portNumber, resolve)
 				this.socket.once('error', reject)
+				this.socket.bind(portNumber, resolve)
 			})
 		)
 	}
 
-	logMembers() {
+	logMemberCount() {
 		this.#logger.debug(`Now has ${this.members.length} members`)
 	}
 
