@@ -19,7 +19,6 @@ import type { ClientTriggerData } from '@companion-app/shared/Model/TriggerModel
 import type { InternalFeedbackDefinition, ClientActionDefinition } from '@companion-app/shared/Model/Options.js'
 import type { UserConfigModel } from '@companion-app/shared/Model/UserConfigModel.js'
 import type { ClientDevicesListItem } from '@companion-app/shared/Model/Surfaces.js'
-import type { PageModel } from '@companion-app/shared/Model/PageModel.js'
 import type { CustomVariablesModel } from '@companion-app/shared/Model/CustomVariableModel.js'
 import type {
 	ClientToBackendEventsMap,
@@ -44,7 +43,6 @@ export const VariableDefinitionsContext = React.createContext<AllVariableDefinit
 export const CustomVariableDefinitionsContext = React.createContext<CustomVariablesModel>({})
 export const UserConfigContext = React.createContext<UserConfigModel | null>(null)
 export const SurfacesContext = React.createContext<Record<string, ClientDevicesListItem | undefined>>({})
-export const PagesContext = React.createContext<Record<number, PageModel | undefined>>({})
 export const TriggersContext = React.createContext<Record<string, ClientTriggerData | undefined>>({})
 
 type IfReturnIsNever<T extends (...args: any[]) => void> = ReturnType<T> extends never ? never : T

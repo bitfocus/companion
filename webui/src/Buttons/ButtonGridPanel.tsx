@@ -18,12 +18,11 @@ import React, {
 	memo,
 	useCallback,
 	useContext,
-	useEffect,
 	useImperativeHandle,
 	useRef,
 	useState,
 } from 'react'
-import { KeyReceiver, PagesContext, socketEmitPromise, SocketContext, UserConfigContext } from '../util.js'
+import { KeyReceiver, socketEmitPromise, SocketContext, UserConfigContext } from '../util.js'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faFileExport, faHome, faPencil } from '@fortawesome/free-solid-svg-icons'
 import { ConfirmExportModal, ConfirmExportModalRef } from '../Components/ConfirmExportModal.js'
@@ -33,7 +32,8 @@ import { useResizeObserver } from 'usehooks-ts'
 import { ButtonGridHeader } from './ButtonGridHeader.js'
 import { ButtonGridActions, ButtonGridActionsRef } from './ButtonGridActions.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
-import type { PageModel } from '@companion-app/shared/Model/PageModel.js'
+import { RootAppStoreContext } from '../Stores/RootAppStore.js'
+import { PagesStoreModel } from '../Stores/PagesStore.js'
 
 interface ButtonsGridPanelProps {
 	pageNumber: number
@@ -54,15 +54,8 @@ export const ButtonsGridPanel = memo(function ButtonsPage({
 	selectedButton,
 	clearSelectedButton,
 }: ButtonsGridPanelProps) {
-	const socket = useContext(SocketContext)
-	const pages = useContext(PagesContext)
+	const { socket, pages } = useContext(RootAppStoreContext)
 	const userConfig = useContext(UserConfigContext)
-
-	const pagesRef = useRef<Record<number, PageModel | undefined>>()
-	useEffect(() => {
-		// Avoid binding into callbacks
-		pagesRef.current = pages
-	}, [pages])
 
 	const actionsRef = useRef<ButtonGridActionsRef>(null)
 
@@ -77,19 +70,19 @@ export const ButtonsGridPanel = memo(function ButtonsPage({
 
 	const setPage = useCallback(
 		(newPage) => {
-			const pageNumbers = Object.keys(pagesRef.current || {})
-			const newIndex = pageNumbers.findIndex((p) => p === newPage + '')
+			const pageNumbers = pages.pageNumbers
+			const newIndex = pageNumbers.findIndex((p) => p === newPage)
 			if (newIndex !== -1) {
 				changePage(Number(newPage))
 			}
 		},
-		[changePage]
+		[changePage, pages]
 	)
 
 	const changePage2 = useCallback(
 		(delta) => {
-			const pageNumbers = Object.keys(pagesRef.current || {})
-			const currentIndex = pageNumbers.findIndex((p) => p === pageNumber + '')
+			const pageNumbers = pages.pageNumbers
+			const currentIndex = pageNumbers.findIndex((p) => p === pageNumber)
 			let newPage = pageNumbers[0]
 			if (currentIndex !== -1) {
 				let newIndex = currentIndex + delta
@@ -103,10 +96,10 @@ export const ButtonsGridPanel = memo(function ButtonsPage({
 				changePage(Number(newPage))
 			}
 		},
-		[changePage, pageNumber]
+		[changePage, pageNumber, pages]
 	)
 
-	const pageInfo = pages?.[pageNumber]
+	const pageInfo = pages.store.get(pageNumber)
 
 	const gridRef = useRef<ButtonInfiniteGridRef>(null)
 	const editRef = useRef<EditPagePropertiesModalRef>(null)
@@ -231,7 +224,7 @@ export const ButtonsGridPanel = memo(function ButtonsPage({
 })
 
 interface EditPagePropertiesModalRef {
-	show(pageNumber: number, pageInfo: PageModel | undefined): void
+	show(pageNumber: number, pageInfo: PagesStoreModel | undefined): void
 }
 interface EditPagePropertiesModalProps {
 	// Nothing

@@ -1,10 +1,11 @@
 import { CButton, CInputGroup, CInputGroupAppend, CInputGroupPrepend } from '@coreui/react'
-import React, { memo, useCallback, useContext, useMemo } from 'react'
-import { PagesContext } from '../util.js'
+import React, { useCallback, useContext, useMemo } from 'react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faChevronLeft, faChevronRight } from '@fortawesome/free-solid-svg-icons'
 import Select from 'react-select'
-import { PageModel } from '@companion-app/shared/Model/PageModel.js'
+import { RootAppStoreContext } from '../Stores/RootAppStore.js'
+import { computed } from 'mobx'
+import { observer } from 'mobx-react-lite'
 
 interface SelectOption {
 	value: number
@@ -16,13 +17,13 @@ interface ButtonGridHeaderProps {
 	setPage?: (page: number) => void
 }
 
-export const ButtonGridHeader = memo<React.PropsWithChildren<ButtonGridHeaderProps>>(function ButtonGridHeader({
+export const ButtonGridHeader = observer(function ButtonGridHeader({
 	pageNumber,
 	changePage,
 	setPage,
 	children,
-}) {
-	const pagesContext = useContext(PagesContext)
+}: React.PropsWithChildren<ButtonGridHeaderProps>) {
+	const { pages: pagesStore } = useContext(RootAppStoreContext)
 
 	const inputChange = useCallback(
 		(val: SelectOption | null) => {
@@ -41,14 +42,16 @@ export const ButtonGridHeader = memo<React.PropsWithChildren<ButtonGridHeaderPro
 		changePage?.(-1)
 	}, [changePage])
 
-	const pageOptions: SelectOption[] = useMemo(() => {
-		return Object.entries(pagesContext)
-			.filter((pg): pg is [string, PageModel] => !!pg[1])
-			.map(([index, value]) => ({
-				value: Number(index),
-				label: `${index} (${value.name})`,
-			}))
-	}, [pagesContext])
+	const pageOptions = useMemo(
+		() =>
+			computed(() => {
+				return pagesStore.sortedEntries.map(([index, value]) => ({
+					value: index,
+					label: `${index} (${value.name})`,
+				}))
+			}),
+		[pagesStore]
+	).get()
 
 	const currentValue: SelectOption | undefined = useMemo(() => {
 		return (

@@ -4,7 +4,6 @@ import {
 	ConnectionsContext,
 	ModulesContext,
 	MyErrorBoundary,
-	PagesContext,
 	SocketContext,
 	UserConfigContext,
 	socketEmitPromise,
@@ -23,6 +22,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { useHasBeenRendered } from '../../Hooks/useHasBeenRendered.js'
 import type { ClientImportObject } from '@companion-app/shared/Model/ImportExport.js'
 import { compareExportedInstances } from '@companion-app/shared/Import.js'
+import { RootAppStoreContext } from '../../Stores/RootAppStore.js'
 
 interface ImportPageWizardProps {
 	snapshot: ClientImportObject
@@ -32,7 +32,7 @@ interface ImportPageWizardProps {
 }
 
 export function ImportPageWizard({ snapshot, instanceRemap, setInstanceRemap, doImport }: ImportPageWizardProps) {
-	const pages = useContext(PagesContext)
+	const { pages } = useContext(RootAppStoreContext)
 	const userConfig = useContext(UserConfigContext)
 
 	const isSinglePage = snapshot.type === 'page'

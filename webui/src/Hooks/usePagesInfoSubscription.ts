@@ -2,52 +2,50 @@ import { useEffect, useState } from 'react'
 import { socketEmitPromise } from '../util.js'
 import { Socket } from 'socket.io-client'
 import type { PageModel } from '@companion-app/shared/Model/PageModel.js'
+import { PagesStore } from '../Stores/PagesStore.js'
 
 export function usePagesInfoSubscription(
 	socket: Socket,
+	store: PagesStore,
 	setLoadError?: ((error: string | null) => void) | undefined,
 	retryToken?: string
-) {
-	const [pages, setPages] = useState<Record<number, PageModel | undefined> | null>(null)
+): boolean {
+	// const [pages, setPages] = useState<Record<number, PageModel | undefined> | null>(null)
+	const [ready, setReady] = useState(false)
 
 	useEffect(() => {
 		setLoadError?.(null)
-		setPages(null)
+		store.reset(null)
+		setReady(false)
 
 		socketEmitPromise(socket, 'pages:subscribe', [])
 			.then((newPages) => {
 				setLoadError?.(null)
-				setPages(newPages)
+				store.reset(newPages)
+				setReady(true)
 			})
 			.catch((e) => {
 				console.error('Failed to load pages list:', e)
 				setLoadError?.(`Failed to load pages list`)
-				setPages(null)
+				store.reset(null)
 			})
 
 		const updatePageInfo = (page: number, info: PageModel) => {
-			setPages((oldPages) => {
-				if (oldPages) {
-					return {
-						...oldPages,
-						[page]: info,
-					}
-				} else {
-					return null
-				}
-			})
+			store.updatePage(page, info)
 		}
 
 		socket.on('pages:update', updatePageInfo)
 
 		return () => {
+			store.reset(null)
+
 			socket.off('pages:update', updatePageInfo)
 
 			socketEmitPromise(socket, 'pages:unsubscribe', []).catch((e) => {
 				console.error('Failed to cleanup web-buttons:', e)
 			})
 		}
-	}, [retryToken, socket])
+	}, [retryToken, socket, store])
 
-	return pages
+	return ready
 }

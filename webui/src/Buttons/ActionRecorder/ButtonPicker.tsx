@@ -1,5 +1,5 @@
 import React, { useCallback, useContext, useEffect, useState, useRef } from 'react'
-import { socketEmitPromise, SocketContext, PagesContext, PreventDefaultHandler, UserConfigContext } from '../../util.js'
+import { socketEmitPromise, PreventDefaultHandler, UserConfigContext } from '../../util.js'
 import { CButton, CButtonGroup, CCol, CRow, CForm, CLabel } from '@coreui/react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faHome } from '@fortawesome/free-solid-svg-icons'
@@ -14,13 +14,13 @@ import { useHasBeenRendered } from '../../Hooks/useHasBeenRendered.js'
 import type { DropdownChoiceId } from '@companion-module/base'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import type { NormalButtonModel } from '@companion-app/shared/Model/ButtonModel.js'
+import { RootAppStoreContext } from '../../Stores/RootAppStore.js'
 
 interface ButtonPickerProps {
 	selectButton: (selectedControl: string, selectedStep: string, selectedSet: string, mode: 'replace' | 'append') => void
 }
 export function ButtonPicker({ selectButton }: ButtonPickerProps) {
-	const socket = useContext(SocketContext)
-	const pages = useContext(PagesContext)
+	const { socket, pages } = useContext(RootAppStoreContext)
 	const userConfig = useContext(UserConfigContext)
 
 	const { pageNumber, setPageNumber, changePage } = usePagePicker(pages, 1)
@@ -29,16 +29,13 @@ export function ButtonPicker({ selectButton }: ButtonPickerProps) {
 	const [selectedStep, setSelectedStep] = useState<string | null>(null)
 	const [selectedSet, setSelectedSet] = useState<string | null>(null)
 
-	const buttonClick = useCallback(
-		(location, pressed) => {
-			if (pressed) setSelectedLocation(location)
-		},
-		[pages[pageNumber]]
-	)
+	const buttonClick = useCallback((location, pressed) => {
+		if (pressed) setSelectedLocation(location)
+	}, [])
 
-	const selectedControl = useMemo(() => {
-		return selectedLocation ? pages[pageNumber]?.controls?.[selectedLocation.row]?.[selectedLocation.column] : undefined
-	}, [selectedLocation, pages[pageNumber]])
+	const selectedControl = selectedLocation
+		? pages.getControlIdAt(pageNumber, selectedLocation.row, selectedLocation.column)
+		: undefined
 
 	// Reset set when control is changed
 	useEffect(() => setSelectedSet(null), [selectedControl])

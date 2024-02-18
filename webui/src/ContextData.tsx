@@ -8,7 +8,6 @@ import {
 	CustomVariableDefinitionsContext,
 	UserConfigContext,
 	SurfacesContext,
-	PagesContext,
 	TriggersContext,
 	socketEmitPromise,
 	applyPatchOrReplaceObject,
@@ -35,6 +34,7 @@ import { useActiveLearnRequests } from './_Model/ActiveLearn.js'
 import { RootAppStore, RootAppStoreContext } from './Stores/RootAppStore.js'
 import { RecentlyUsedIdsStore } from './Stores/RecentlyUsedIdsStore.js'
 import { observable } from 'mobx'
+import { PagesStore } from './Stores/PagesStore.js'
 
 interface ContextDataProps {
 	children: (progressPercent: number, loadingComplete: boolean) => React.JSX.Element | React.JSX.Element[]
@@ -54,6 +54,8 @@ export function ContextData({ children }: ContextDataProps) {
 
 			recentlyAddedActions: new RecentlyUsedIdsStore('recent_actions', 20),
 			recentlyAddedFeedbacks: new RecentlyUsedIdsStore('recent_feedbacks', 20),
+
+			pages: new PagesStore(),
 		} satisfies RootAppStore
 	}, [socket])
 
@@ -97,7 +99,7 @@ export function ContextData({ children }: ContextDataProps) {
 		}
 	}, [customVariables, variableDefinitions])
 
-	const pages = usePagesInfoSubscription(socket)
+	const pagesReady = usePagesInfoSubscription(socket, rootStore.pages)
 	const userConfig = useUserConfigSubscription(socket)
 
 	useEffect(() => {
@@ -304,7 +306,7 @@ export function ContextData({ children }: ContextDataProps) {
 		customVariables,
 		userConfig,
 		surfaces,
-		pages,
+		pagesReady ? true : null,
 		triggers,
 		activeLearnRequestsReady,
 	]
@@ -323,13 +325,11 @@ export function ContextData({ children }: ContextDataProps) {
 									<CustomVariableDefinitionsContext.Provider value={customVariables!}>
 										<UserConfigContext.Provider value={userConfig}>
 											<SurfacesContext.Provider value={surfaces!}>
-												<PagesContext.Provider value={pages!}>
-													<TriggersContext.Provider value={triggers!}>
-														<NotificationsManager ref={notifierRef} />
+												<TriggersContext.Provider value={triggers!}>
+													<NotificationsManager ref={notifierRef} />
 
-														{children(progressPercent, completedSteps.length === steps.length)}
-													</TriggersContext.Provider>
-												</PagesContext.Provider>
+													{children(progressPercent, completedSteps.length === steps.length)}
+												</TriggersContext.Provider>
 											</SurfacesContext.Provider>
 										</UserConfigContext.Provider>
 									</CustomVariableDefinitionsContext.Provider>

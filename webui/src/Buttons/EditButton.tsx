@@ -39,20 +39,12 @@ import React, {
 	useRef,
 	useState,
 	useMemo,
-	memo,
 	FormEvent,
 } from 'react'
 import { nanoid } from 'nanoid'
 import { ButtonPreviewBase } from '../Components/ButtonPreview.js'
 import { GenericConfirmModal, GenericConfirmModalRef } from '../Components/GenericConfirmModal.js'
-import {
-	KeyReceiver,
-	LoadingRetryOrError,
-	socketEmitPromise,
-	SocketContext,
-	MyErrorBoundary,
-	PagesContext,
-} from '../util.js'
+import { KeyReceiver, LoadingRetryOrError, socketEmitPromise, SocketContext, MyErrorBoundary } from '../util.js'
 import { ControlActionSetEditor } from '../Controls/ActionSetEditor.js'
 import jsonPatch, { Operation as JsonPatchOperation } from 'fast-json-patch'
 import { ButtonStyleConfig } from '../Controls/ButtonStyleConfig.js'
@@ -67,17 +59,18 @@ import { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import { ActionInstance, ActionSetsModel, ActionStepOptions } from '@companion-app/shared/Model/ActionModel.js'
 import { FeedbackInstance } from '@companion-app/shared/Model/FeedbackModel.js'
 import { NormalButtonSteps, SomeButtonModel } from '@companion-app/shared/Model/ButtonModel.js'
+import { RootAppStoreContext } from '../Stores/RootAppStore.js'
+import { observer } from 'mobx-react-lite'
 
 interface EditButtonProps {
 	location: ControlLocation
 	onKeyUp: (e: React.KeyboardEvent<HTMLDivElement>) => void
 }
 
-export const EditButton = memo(function EditButton({ location, onKeyUp }: EditButtonProps) {
-	const socket = useContext(SocketContext)
-	const pages = useContext(PagesContext)
+export const EditButton = observer(function EditButton({ location, onKeyUp }: EditButtonProps) {
+	const { socket, pages } = useContext(RootAppStoreContext)
 
-	const controlId = pages?.[location.pageNumber]?.controls?.[location.row]?.[location.column]
+	const controlId = pages.getControlIdAtLocation(location)
 
 	const resetModalRef = useRef<GenericConfirmModalRef>(null)
 

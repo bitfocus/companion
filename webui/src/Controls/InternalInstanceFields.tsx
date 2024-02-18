@@ -3,7 +3,6 @@ import { DropdownInputField } from '../Components/index.js'
 import {
 	CustomVariableDefinitionsContext,
 	ConnectionsContext,
-	PagesContext,
 	SurfacesContext,
 	TriggersContext,
 	VariableDefinitionsContext,
@@ -11,6 +10,9 @@ import {
 import TimePicker from 'react-time-picker'
 import { InternalInputField } from '@companion-app/shared/Model/Options.js'
 import { DropdownChoice } from '@companion-module/base'
+import { RootAppStoreContext } from '../Stores/RootAppStore.js'
+import { observer } from 'mobx-react-lite'
+import { computed } from 'mobx'
 
 export function InternalInstanceField(
 	option: InternalInputField,
@@ -127,27 +129,37 @@ interface InternalPageDropdownProps {
 	disabled: boolean
 }
 
-function InternalPageDropdown({ isOnControl, includeDirection, value, setValue, disabled }: InternalPageDropdownProps) {
-	const pages = useContext(PagesContext)
+const InternalPageDropdown = observer(function InternalPageDropdown({
+	isOnControl,
+	includeDirection,
+	value,
+	setValue,
+	disabled,
+}: InternalPageDropdownProps) {
+	const { pages } = useContext(RootAppStoreContext)
 
-	const choices = useMemo(() => {
-		const choices: DropdownChoice[] = []
-		if (isOnControl) {
-			choices.push({ id: 0, label: 'This page' })
-		}
-		if (includeDirection) {
-			choices.push({ id: 'back', label: 'Back' }, { id: 'forward', label: 'Forward' })
-		}
+	const choices = useMemo(
+		() =>
+			computed(() => {
+				const choices: DropdownChoice[] = []
+				if (isOnControl) {
+					choices.push({ id: 0, label: 'This page' })
+				}
+				if (includeDirection) {
+					choices.push({ id: 'back', label: 'Back' }, { id: 'forward', label: 'Forward' })
+				}
 
-		for (let i = 1; i <= 99; i++) {
-			const name = pages?.[i]
-			choices.push({ id: i, label: `${i}` + (name ? ` (${name?.name || ''})` : '') })
-		}
-		return choices
-	}, [pages, isOnControl, includeDirection])
+				const pagesSorted = pages.sortedEntries
+				for (const [i, pageInfo] of pagesSorted) {
+					choices.push({ id: i, label: `${i} (${pageInfo.name || ''})` })
+				}
+				return choices
+			}),
+		[pages, isOnControl, includeDirection]
+	).get()
 
 	return <DropdownInputField disabled={disabled} value={value} choices={choices} multiple={false} setValue={setValue} />
-}
+})
 
 interface InternalCustomVariableDropdownProps {
 	value: any
