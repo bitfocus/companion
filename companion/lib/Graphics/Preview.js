@@ -255,7 +255,7 @@ export default GraphicsPreview
 /**
  * @typedef {{
  *   id: string
- *   location: import('../Resources/Util.js').ControlLocation
+ *   location: import('../Resources/Util.js').ControlLocation | undefined
  *   options: Record<string, any>
  *   resolvedLocation: import('../Resources/Util.js').ControlLocation | null
  *   referencedVariableIds: string[]

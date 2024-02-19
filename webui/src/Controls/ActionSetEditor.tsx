@@ -379,7 +379,7 @@ const ActionTableRow = observer(function ActionTableRow({
 							{actionSpec?.description}
 						</div>
 
-						{location && showButtonPreview && (
+						{showButtonPreview && (
 							<div className="cell-button-preview">
 								<OptionButtonPreview location={location} options={action.options} />
 							</div>

@@ -6,7 +6,7 @@ import { useDeepCompareEffect } from 'use-deep-compare'
 import { ControlLocation } from '@companion-app/shared/Model/Common.js'
 
 interface OptionButtonPreviewProps {
-	location: ControlLocation
+	location: ControlLocation | undefined
 	options: Record<string, any>
 }
 
