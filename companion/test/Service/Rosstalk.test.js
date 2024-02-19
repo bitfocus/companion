@@ -13,6 +13,7 @@ describe('Rosstalk', () => {
 		const logger = mock(
 			{
 				info: jest.fn(),
+				warn: jest.fn(),
 				debug: jest.fn(),
 			},
 			mockOptions
