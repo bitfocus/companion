@@ -257,6 +257,7 @@ export interface ClientToBackendEventsMap {
 	'pages:set-name': (pageNumber: number, pageName: string) => void
 	'pages:insert-pages': (beforePageNumber: number, pageNames: string[]) => 'ok' | 'fail'
 	'pages:delete-page': (pageNumber: number) => 'ok' | 'fail'
+	'pages:move-page': (pageId: string, newPageNumber: number) => 'ok' | 'fail'
 	'pages:reset-page-nav': (pageNumber: number) => 'ok'
 	'pages:reset-page-clear': (pageNumber: number) => 'ok'
 

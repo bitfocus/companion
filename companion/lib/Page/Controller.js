@@ -156,6 +156,38 @@ class PageController extends CoreBase {
 			return 'ok'
 		})
 
+		client.onPromise('pages:move-page', (pageId, pageNumber) => {
+			this.logger.silly(`Move page ${pageId} to ${pageNumber}`)
+
+			// Bounds checks
+			if (this.getPageCount() === 1) return 'fail'
+			if (pageNumber < 1 || pageNumber > this.getPageCount()) return 'fail'
+
+			// Find current index of the page
+			const currentPageIndex = this.#pageIds.indexOf(pageId)
+			if (currentPageIndex === -1) return 'fail'
+
+			// move the page
+			this.#pageIds.splice(currentPageIndex, 1)
+			this.#pageIds.splice(pageNumber - 1, 0, pageId)
+
+			// Update cache for controls on later pages
+			const changedPageNumbers = this.#updateAndRedrawAllPagesAfter(
+				Math.min(currentPageIndex + 1, pageNumber),
+				Math.max(currentPageIndex + 1, pageNumber)
+			)
+
+			// save and report changes
+			this.#commitChanges(changedPageNumbers, false)
+			this.io.emitToRoom(PagesRoom, 'pages:update', {
+				updatedOrder: this.#pageIds,
+				added: [],
+				changes: [],
+			})
+
+			return 'ok'
+		})
+
 		client.onPromise('pages:reset-page-nav', (pageNumber) => {
 			// make magical page buttons!
 			this.createPageDefaultNavButtons(pageNumber)
@@ -187,7 +219,7 @@ class PageController extends CoreBase {
 		this.#pageIds.splice(pageNumber - 1, 1)
 
 		// Update cache for controls on later pages
-		const changedPageNumbers = this.#updateAndRedrawAllPagesAfter(pageNumber)
+		const changedPageNumbers = this.#updateAndRedrawAllPagesAfter(pageNumber, null)
 
 		// the list is a page shorter, ensure the 'old last' page is reported as undefined
 		const missingPageNumber = this.#pageIds.length + 1
@@ -241,7 +273,7 @@ class PageController extends CoreBase {
 		this.#pageIds.splice(asPageNumber - 1, 0, ...insertedPageIds)
 
 		// Update cache for controls on later pages
-		const changedPageNumbers = this.#updateAndRedrawAllPagesAfter(asPageNumber)
+		const changedPageNumbers = this.#updateAndRedrawAllPagesAfter(asPageNumber, null)
 
 		// the list is a page shorter, ensure the 'old last' page is reported as undefined
 		this.#commitChanges(changedPageNumbers, false)
@@ -260,17 +292,25 @@ class PageController extends CoreBase {
 	}
 
 	/**
-	 * Update page info and all renders for pages following
+	 * Update page info and all renders for pages between two pages (inclusive)
 	 * @param {number} firstPageNumber
+	 * @param {number | null} lastPageNumber If null, run to the end
 	 * @return {number[]} pageNumbers
 	 */
-	#updateAndRedrawAllPagesAfter(firstPageNumber) {
+	#updateAndRedrawAllPagesAfter(firstPageNumber, lastPageNumber) {
 		// Rebuild location cache
 		this.#rebuildLocationCache()
 
+		/** @type {number[]} */
 		const pageNumbers = []
 
-		for (let pageNumber = firstPageNumber; pageNumber <= this.#pageIds.length; pageNumber++) {
+		if (lastPageNumber) {
+			lastPageNumber = Math.min(lastPageNumber, this.#pageIds.length)
+		} else {
+			lastPageNumber = this.#pageIds.length
+		}
+
+		for (let pageNumber = firstPageNumber; pageNumber <= lastPageNumber; pageNumber++) {
 			const pageInfo = this.getPageInfo(pageNumber)
 			if (!pageInfo) continue
 
