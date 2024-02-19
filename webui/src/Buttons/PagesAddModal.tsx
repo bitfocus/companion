@@ -50,6 +50,7 @@ export const AddPagesModal = forwardRef<AddPagesModalRef, AddPagesModalProps>(fu
 		ref,
 		() => ({
 			show(beforePageNumber: number) {
+				console.log('show', beforePageNumber)
 				setState({
 					...defaultState,
 					show: true,

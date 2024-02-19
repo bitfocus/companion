@@ -45,7 +45,7 @@ export const ButtonGridHeader = observer(function ButtonGridHeader({
 	}, [changePage])
 
 	const pageOptions = useComputed(() => {
-		const pageOptions: SelectOption[] = pagesStore.sortedEntries.map((value, index) => ({
+		const pageOptions: SelectOption[] = pagesStore.data.map((value, index) => ({
 			value: index + 1,
 			label: `${index + 1} (${value.name})`,
 		}))

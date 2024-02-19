@@ -3,27 +3,26 @@ import { faCalculator, faDollarSign, faGift, faPaperPlane, faVideoCamera } from 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { nanoid } from 'nanoid'
 import { InstancePresets } from './Presets.js'
-import { SocketContext, MyErrorBoundary, socketEmitPromise, UserConfigContext } from '../util.js'
+import { MyErrorBoundary, socketEmitPromise, UserConfigContext } from '../util.js'
 import { ButtonsGridPanel } from './ButtonGridPanel.js'
 import { EditButton } from './EditButton.js'
 import { ActionRecorder } from './ActionRecorder/index.js'
-import React, { memo, useCallback, useContext, useRef, useState } from 'react'
+import React, { useCallback, useContext, useRef, useState } from 'react'
 import { GenericConfirmModal, GenericConfirmModalRef } from '../Components/GenericConfirmModal.js'
 import { ConnectionVariables } from './Variables.js'
 import { formatLocation } from '@companion-app/shared/ControlId.js'
 import { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import { PagesList } from './Pages.js'
-import { usePageCount } from '../Hooks/usePagesInfoSubscription.js'
+import { observer } from 'mobx-react-lite'
+import { RootAppStoreContext } from '../Stores/RootAppStore.js'
 
 interface ButtonsPageProps {
 	hotPress: boolean
 }
 
-export const ButtonsPage = memo(function ButtonsPage({ hotPress }: ButtonsPageProps) {
-	const socket = useContext(SocketContext)
+export const ButtonsPage = observer(function ButtonsPage({ hotPress }: ButtonsPageProps) {
+	const { socket, pages } = useContext(RootAppStoreContext)
 	const userConfig = useContext(UserConfigContext)
-
-	const pageCount = usePageCount()
 
 	const clearModalRef = useRef<GenericConfirmModalRef>(null)
 
@@ -134,7 +133,7 @@ export const ButtonsPage = memo(function ButtonsPage({ hotPress }: ButtonsPagePr
 					case 'PageUp':
 						setSelectedButton((selectedButton) => {
 							if (selectedButton) {
-								const newPageNumber = selectedButton.pageNumber >= pageCount ? 1 : selectedButton.pageNumber + 1
+								const newPageNumber = selectedButton.pageNumber >= pages.data.length ? 1 : selectedButton.pageNumber + 1
 								setPageNumber(newPageNumber)
 								return {
 									...selectedButton,
@@ -148,7 +147,7 @@ export const ButtonsPage = memo(function ButtonsPage({ hotPress }: ButtonsPagePr
 					case 'PageDown':
 						setSelectedButton((selectedButton) => {
 							if (selectedButton) {
-								const newPageNumber = selectedButton.pageNumber <= 1 ? pageCount : selectedButton.pageNumber - 1
+								const newPageNumber = selectedButton.pageNumber <= 1 ? pages.data.length : selectedButton.pageNumber - 1
 								setPageNumber(newPageNumber)
 								return {
 									...selectedButton,
@@ -205,7 +204,7 @@ export const ButtonsPage = memo(function ButtonsPage({ hotPress }: ButtonsPagePr
 				}
 			}
 		},
-		[socket, selectedButton, copyFromButton, pageCount, userConfig?.gridSize]
+		[socket, selectedButton, copyFromButton, pages, userConfig?.gridSize]
 	)
 
 	return (

@@ -47,31 +47,24 @@ export const ButtonsGridPanel = memo(function ButtonsPage({
 	)
 
 	const setPage = useCallback(
-		(newPage) => {
-			const pageNumbers = pages.pageNumbers
-			const newIndex = pageNumbers.findIndex((p) => p === newPage)
-			if (newIndex !== -1) {
-				changePage(Number(newPage))
+		(newPage: number) => {
+			if (newPage >= 1 && newPage <= pages.data.length) {
+				changePage(newPage)
 			}
 		},
 		[changePage, pages]
 	)
 
 	const changePage2 = useCallback(
-		(delta) => {
-			const pageNumbers = pages.pageNumbers
-			const currentIndex = pageNumbers.findIndex((p) => p === pageNumber)
-			let newPage = pageNumbers[0]
-			if (currentIndex !== -1) {
-				let newIndex = currentIndex + delta
-				if (newIndex < 0) newIndex += pageNumbers.length
-				if (newIndex >= pageNumbers.length) newIndex -= pageNumbers.length
+		(delta: number) => {
+			const pageCount = pages.data.length
 
-				newPage = pageNumbers[newIndex]
-			}
+			let newPage = pageNumber + delta
+			if (newPage < 1) newPage += pageCount
+			if (newPage > pageCount) newPage -= pageCount
 
-			if (newPage !== undefined && !isNaN(Number(newPage))) {
-				changePage(Number(newPage))
+			if (!isNaN(newPage)) {
+				changePage(newPage)
 			}
 		},
 		[changePage, pageNumber, pages]

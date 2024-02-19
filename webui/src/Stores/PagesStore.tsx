@@ -22,15 +22,11 @@ export class PagesStoreModel {
 export class PagesStore {
 	private readonly store = observable.array<PagesStoreModel>()
 
-	public get pageNumbers(): number[] {
-		return Array.from(this.store.keys()).sort()
-	}
-
 	public get(pageNumber: number): PagesStoreModel | undefined {
 		return this.store[pageNumber - 1]
 	}
 
-	public get sortedEntries(): PagesStoreModel[] {
+	public get data(): PagesStoreModel[] {
 		return this.store
 	}
 

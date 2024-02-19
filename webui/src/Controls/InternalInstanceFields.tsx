@@ -146,7 +146,7 @@ const InternalPageDropdown = observer(function InternalPageDropdown({
 			choices.push({ id: 'back', label: 'Back' }, { id: 'forward', label: 'Forward' })
 		}
 
-		pages.sortedEntries.forEach((pageInfo, i) => {
+		pages.data.forEach((pageInfo, i) => {
 			choices.push({ id: i + 1, label: `${i + 1} (${pageInfo.name || ''})` })
 		})
 

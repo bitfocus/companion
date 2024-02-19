@@ -1,8 +1,7 @@
-import { useContext, useEffect, useMemo, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { CompanionSocketType, socketEmitPromise } from '../util.js'
 import type { PageModelChanges } from '@companion-app/shared/Model/PageModel.js'
 import { PagesStore } from '../Stores/PagesStore.js'
-import { RootAppStoreContext } from '../Stores/RootAppStore.js'
 
 export function usePagesInfoSubscription(
 	socket: CompanionSocketType,
@@ -47,18 +46,4 @@ export function usePagesInfoSubscription(
 	}, [retryToken, socket, store])
 
 	return ready
-}
-
-export function usePageCount() {
-	const { pages } = useContext(RootAppStoreContext)
-
-	return useMemo(() => {
-		let pageCount = 0
-
-		for (const [pageNumber, pageInfo] of Object.entries(pages)) {
-			if (pageInfo) pageCount = Math.max(pageCount, Number(pageNumber))
-		}
-
-		return pageCount
-	}, [pages])
 }

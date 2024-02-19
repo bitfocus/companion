@@ -4,7 +4,6 @@ import { socketEmitPromise } from '../util.js'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faPlus, faTrash, faPencil } from '@fortawesome/free-solid-svg-icons'
 import { GenericConfirmModal, GenericConfirmModalRef } from '../Components/GenericConfirmModal.js'
-import { usePageCount } from '../Hooks/usePagesInfoSubscription.js'
 import { EditPagePropertiesModal, EditPagePropertiesModalRef } from './EditPageProperties.js'
 import { AddPagesModal, AddPagesModalRef } from './PagesAddModal.js'
 import { RootAppStoreContext } from '../Stores/RootAppStore.js'
@@ -17,8 +16,6 @@ interface PagesListProps {
 
 export const PagesList = observer(function PagesList({ setPageNumber }: PagesListProps): JSX.Element {
 	const { socket, pages } = useContext(RootAppStoreContext)
-
-	const pageCount = usePageCount()
 
 	const addRef = useRef<AddPagesModalRef>(null)
 	const deleteRef = useRef<GenericConfirmModalRef>(null)
@@ -88,12 +85,12 @@ export const PagesList = observer(function PagesList({ setPageNumber }: PagesLis
 						</tr>
 					</thead>
 					<tbody>
-						{pages.sortedEntries.map((info, id) => (
+						{pages.data.map((info, id) => (
 							<PageListRow
 								key={id}
 								id={id + 1}
 								info={info}
-								pageCount={pageCount}
+								pageCount={pages.data.length}
 								goToPage={goToPage}
 								configurePage={configurePage}
 								doInsertPage={doInsertPage}
@@ -110,7 +107,7 @@ export const PagesList = observer(function PagesList({ setPageNumber }: PagesLis
 										size="sm"
 										onClick={doInsertPage}
 										title="Insert page at end"
-										data-page={pageCount + 1}
+										data-page={pages.data.length + 1}
 									>
 										<FontAwesomeIcon icon={faPlus} />
 									</CButton>
