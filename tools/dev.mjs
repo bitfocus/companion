@@ -31,40 +31,46 @@ const cachedDebounces = {}
 chokidar
 	.watch(['**/*.mjs', '**/*.js', '**/*.cjs', '**/*.json'], {
 		ignoreInitial: true,
-		ignored: ['**/node_modules/**', './webui/', './launcher/', './dist/', './test/'],
+		cwd: '..',
+		ignored: ['**/node_modules/**', 'webui', 'launcher', 'module-local-dev', 'tools', 'test'],
 	})
 	.on('all', (event, filename) => {
-		const fullpath = path.resolve(filename)
-		if (fullpath.startsWith(devModulesPath)) {
-			const moduleDirName = fullpath.slice(devModulesPath.length + 1).split(path.sep)[0]
-			// Module changed
+		// Something else changed
+		restart()
+	})
 
-			let fn = cachedDebounces[moduleDirName]
-			if (!fn) {
-				fn = debounceFn(
-					() => {
-						console.log('Sending reload for module:', moduleDirName)
-						if (node) {
-							node.send({
-								messageType: 'reload-extra-module',
-								fullpath: path.join(devModulesPath, moduleDirName),
-							})
-						}
-					},
-					{
-						after: true,
-						before: false,
-						wait: 100,
+chokidar
+	.watch(['**/*.mjs', '**/*.js', '**/*.cjs', '**/*.json'], {
+		ignoreInitial: true,
+		cwd: devModulesPath,
+		ignored: ['**/node_modules/**'],
+	})
+	.on('all', (event, filename) => {
+		const moduleDirName = filename.split(path.sep)[0]
+		// Module changed
+
+		let fn = cachedDebounces[moduleDirName]
+		if (!fn) {
+			fn = debounceFn(
+				() => {
+					console.log('Sending reload for module:', moduleDirName)
+					if (node) {
+						node.send({
+							messageType: 'reload-extra-module',
+							fullpath: path.join(devModulesPath, moduleDirName),
+						})
 					}
-				)
-				cachedDebounces[moduleDirName] = fn
-			}
-
-			fn()
-		} else {
-			// Something else changed
-			restart()
+				},
+				{
+					after: true,
+					before: false,
+					wait: 100,
+				}
+			)
+			cachedDebounces[moduleDirName] = fn
 		}
+
+		fn()
 	})
 
 await start()
@@ -81,31 +87,38 @@ async function start() {
 	})
 }
 
-function restart() {
-	if (node) {
-		// Check if process has already exited
-		if (node.exitCode !== null) node = null
+const restart = debounceFn(
+	() => {
+		if (node) {
+			// Check if process has already exited
+			if (node.exitCode !== null) node = null
 
-		// Try and kill the process
-		if (node && !node.kill()) {
-			console.error('Failed to kill')
-			process.exit(1)
+			// Try and kill the process
+			if (node && !node.kill()) {
+				console.error('Failed to kill')
+				process.exit(1)
+			}
 		}
-	}
 
-	console.log('********')
-	console.log('RESTARTING')
-	console.log('********')
+		console.log('********')
+		console.log('RESTARTING')
+		console.log('********')
 
-	if (!node) {
-		start()
-	} else if (node.listenerCount('close') === 0) {
-		node.on('close', () => {
-			node = null
+		if (!node) {
 			start()
-		})
+		} else if (node.listenerCount('close') === 0) {
+			node.on('close', () => {
+				node = null
+				start()
+			})
+		}
+	},
+	{
+		after: true,
+		before: false,
+		wait: 100,
 	}
-}
+)
 
 function signalHandler(signal) {
 	process.exit()

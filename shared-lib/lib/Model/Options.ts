@@ -1,6 +1,6 @@
 import type {
-	CompanionButtonStyleProps,
 	CompanionInputFieldBase,
+	CompanionInputFieldBonjourDevice,
 	CompanionInputFieldCheckbox,
 	CompanionInputFieldColor,
 	CompanionInputFieldCustomVariable,
@@ -10,7 +10,6 @@ import type {
 	CompanionInputFieldStaticText,
 	CompanionInputFieldTextInput,
 } from '@companion-module/base'
-import type { SetOptional } from 'type-fest'
 
 // TODO: move to '@companion-module/base'
 export type IsVisibleFunction = Required<CompanionInputFieldBase>['isVisible']
@@ -91,40 +90,11 @@ export type ExtendedInputField =
 	| EncodeIsVisible2<CompanionInputFieldCheckbox>
 	| EncodeIsVisible2<CompanionInputFieldCustomVariable>
 
+export type ExtendedConfigField = EncodeIsVisible2<CompanionInputFieldBonjourDevice>
+
 export type EncodeIsVisible2<T extends Pick<CompanionInputFieldBase, 'id' | 'isVisible'>> = Omit<T, 'isVisible'> & {
 	isVisibleFn?: string
 }
 
 export type InternalActionInputField = ExtendedInputField | InternalInputField
 export type InternalFeedbackInputField = ExtendedInputField | InternalInputField
-
-export interface ActionDefinition {
-	label: string
-	description: string | undefined
-	options: InternalActionInputField[]
-	hasLearn: boolean
-	learnTimeout: number | undefined
-}
-
-export interface FeedbackDefinition {
-	label: string
-	description: string | undefined
-	options: InternalFeedbackInputField[]
-	type: 'advanced' | 'boolean'
-	style: Partial<CompanionButtonStyleProps> | undefined
-	hasLearn: boolean
-	learnTimeout: number | undefined
-	showInvert: boolean
-}
-
-export interface InternalFeedbackDefinition extends SetOptional<FeedbackDefinition, 'hasLearn' | 'learnTimeout'> {
-	showButtonPreview?: boolean
-}
-
-export interface InternalActionDefinition
-	extends SetOptional<Omit<ActionDefinition, 'options'>, 'hasLearn' | 'learnTimeout'> {
-	showButtonPreview?: boolean
-	options: InternalActionInputField[]
-}
-
-export interface ClientActionDefinition extends InternalActionDefinition {}

@@ -42,15 +42,16 @@ export function TextInputField({
 
 	const tribute = useMemo(() => {
 		// Create it once, then we attach and detach whenever the ref changes
-		return new Tribute.default<TributeSuggestion>({
+		// @ts-expect-error Tribute import is broken
+		return new Tribute<TributeSuggestion>({
 			values: [],
 			trigger: '$(',
 
 			// function called on select that returns the content to insert
-			selectTemplate: (item) => `$(${item.original.value})`,
+			selectTemplate: (item: any) => `$(${item.original.value})`,
 
 			// template for displaying item in menu
-			menuItemTemplate: (item) =>
+			menuItemTemplate: (item: any) =>
 				`<span class="var-name">${item.original.value}</span><span class="var-label">${item.original.label}</span>`,
 		})
 	}, [])

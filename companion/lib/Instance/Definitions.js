@@ -4,6 +4,7 @@ import CoreBase from '../Core/Base.js'
 import { EventDefinitions } from '../Resources/EventDefinitions.js'
 import ControlButtonNormal from '../Controls/ControlTypes/Button/Normal.js'
 import jsonPatch from 'fast-json-patch'
+import { diffObjects } from '@companion-app/shared/Diff.js'
 
 const PresetsRoom = 'presets'
 const ActionsRoom = 'action-definitions'
@@ -105,29 +106,26 @@ class InstanceDefinitions extends CoreBase {
 
 		client.onPromise('presets:import-to-location', this.importPresetToLocation.bind(this))
 
-		client.onPromise(
-			'presets:preview_render',
-			async (/** @type {string } */ connectionId, /** @type {string } */ presetId) => {
-				const definition = this.#presetDefinitions[connectionId]?.[presetId]
-				if (definition) {
-					const style = {
-						...(definition.previewStyle ? definition.previewStyle : definition.style),
-						style: definition.type,
-					}
+		client.onPromise('presets:preview_render', async (connectionId, presetId) => {
+			const definition = this.#presetDefinitions[connectionId]?.[presetId]
+			if (definition) {
+				const style = {
+					...(definition.previewStyle ? definition.previewStyle : definition.style),
+					style: definition.type,
+				}
 
-					if (style.text) style.text = this.instance.variable.parseVariables(style.text).text
+				if (style.text) style.text = this.instance.variable.parseVariables(style.text).text
 
-					const render = await this.graphics.drawPreview(style)
-					if (render) {
-						return render.asDataUrl
-					} else {
-						return null
-					}
+				const render = await this.graphics.drawPreview(style)
+				if (render) {
+					return render.asDataUrl
 				} else {
 					return null
 				}
+			} else {
+				return null
 			}
-		)
+		})
 	}
 
 	/**
@@ -235,17 +233,23 @@ class InstanceDefinitions extends CoreBase {
 	forgetConnection(connectionId) {
 		delete this.#presetDefinitions[connectionId]
 		if (this.io.countRoomMembers(PresetsRoom) > 0) {
-			this.io.emitToRoom(PresetsRoom, 'presets:update', connectionId, undefined)
+			this.io.emitToRoom(PresetsRoom, 'presets:update', connectionId, null)
 		}
 
 		delete this.#actionDefinitions[connectionId]
 		if (this.io.countRoomMembers(ActionsRoom) > 0) {
-			this.io.emitToRoom(ActionsRoom, 'action-definitions:update', connectionId, undefined)
+			this.io.emitToRoom(ActionsRoom, 'action-definitions:update', {
+				type: 'forget-connection',
+				connectionId,
+			})
 		}
 
 		delete this.#feedbackDefinitions[connectionId]
 		if (this.io.countRoomMembers(FeedbacksRoom) > 0) {
-			this.io.emitToRoom(FeedbacksRoom, 'feedback-definitions:update', connectionId, undefined)
+			this.io.emitToRoom(FeedbacksRoom, 'feedback-definitions:update', {
+				type: 'forget-connection',
+				connectionId,
+			})
 		}
 	}
 
@@ -358,11 +362,21 @@ class InstanceDefinitions extends CoreBase {
 
 		if (this.io.countRoomMembers(ActionsRoom) > 0) {
 			if (!lastActionDefinitions) {
-				this.io.emitToRoom(ActionsRoom, 'action-definitions:update', connectionId, actionDefinitions)
+				this.io.emitToRoom(ActionsRoom, 'action-definitions:update', {
+					type: 'add-connection',
+					connectionId,
+
+					actions: actionDefinitions,
+				})
 			} else {
-				const patch = jsonPatch.compare(lastActionDefinitions, actionDefinitions || {})
-				if (patch.length > 0) {
-					this.io.emitToRoom(ActionsRoom, 'action-definitions:update', connectionId, patch)
+				const diff = diffObjects(lastActionDefinitions, actionDefinitions || {})
+				if (diff) {
+					this.io.emitToRoom(ActionsRoom, 'action-definitions:update', {
+						type: 'update-connection',
+						connectionId,
+
+						...diff,
+					})
 				}
 			}
 		}
@@ -380,11 +394,21 @@ class InstanceDefinitions extends CoreBase {
 
 		if (this.io.countRoomMembers(FeedbacksRoom) > 0) {
 			if (!lastFeedbackDefinitions) {
-				this.io.emitToRoom(FeedbacksRoom, 'feedback-definitions:update', connectionId, feedbackDefinitions)
+				this.io.emitToRoom(FeedbacksRoom, 'feedback-definitions:update', {
+					type: 'add-connection',
+					connectionId,
+
+					feedbacks: feedbackDefinitions,
+				})
 			} else {
-				const patch = jsonPatch.compare(lastFeedbackDefinitions, feedbackDefinitions || {})
-				if (patch.length > 0) {
-					this.io.emitToRoom(FeedbacksRoom, 'feedback-definitions:update', connectionId, patch)
+				const diff = diffObjects(lastFeedbackDefinitions, feedbackDefinitions || {})
+				if (diff) {
+					this.io.emitToRoom(FeedbacksRoom, 'feedback-definitions:update', {
+						type: 'update-connection',
+						connectionId,
+
+						...diff,
+					})
 				}
 			}
 		}
@@ -558,8 +582,8 @@ class InstanceDefinitions extends CoreBase {
 export default InstanceDefinitions
 
 /**
- * @typedef {import('@companion-app/shared/Model/Options.js').ActionDefinition} ActionDefinition
- * @typedef {import('@companion-app/shared/Model/Options.js').FeedbackDefinition} FeedbackDefinition
+ * @typedef {import('@companion-app/shared/Model/ActionDefinitionModel.js').ActionDefinition} ActionDefinition
+ * @typedef {import('@companion-app/shared/Model/FeedbackDefinitionModel.js').FeedbackDefinition} FeedbackDefinition
  */
 
 /**

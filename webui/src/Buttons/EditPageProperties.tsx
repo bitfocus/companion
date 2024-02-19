@@ -12,10 +12,10 @@ import {
 } from '@coreui/react'
 import React, { FormEvent, forwardRef, useCallback, useContext, useImperativeHandle, useRef, useState } from 'react'
 import { socketEmitPromise, SocketContext } from '../util.js'
-import type { PageModel } from '@companion/shared/Model/PageModel.js'
+import { PagesStoreModel } from '../Stores/PagesStore.js'
 
 export interface EditPagePropertiesModalRef {
-	show(pageNumber: number, pageInfo: PageModel | undefined): void
+	show(pageNumber: number, pageInfo: PagesStoreModel | undefined): void
 }
 interface EditPagePropertiesModalProps {
 	// Nothing
@@ -47,7 +47,7 @@ export const EditPagePropertiesModal = forwardRef<EditPagePropertiesModalRef, Ed
 
 				if (pageNumber === null) return
 
-				socketEmitPromise(socket, 'pages:set-name', [pageNumber, pageName]).catch((e) => {
+				socketEmitPromise(socket, 'pages:set-name', [pageNumber, pageName ?? '']).catch((e) => {
 					console.error('Failed to set name', e)
 				})
 			},

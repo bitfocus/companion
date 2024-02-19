@@ -69,7 +69,8 @@ export function RecorderSessionHeading({ confirmRef, sessionId, sessionInfo, doF
 
 	const changeConnectionIds = useCallback(
 		(ids: DropdownChoiceId[]) => {
-			socketEmitPromise(socket, 'action-recorder:session:set-connections', [sessionId, ids]).catch((e) => {
+			const connectionIds = ids.map((id) => String(id))
+			socketEmitPromise(socket, 'action-recorder:session:set-connections', [sessionId, connectionIds]).catch((e) => {
 				console.error(e)
 			})
 		},

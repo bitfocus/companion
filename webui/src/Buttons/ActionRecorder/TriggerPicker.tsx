@@ -1,8 +1,9 @@
 import React, { useCallback, useContext } from 'react'
-import { TriggersContext } from '../../util.js'
 import { CreateTriggerControlId } from '@companion-app/shared/ControlId.js'
 import { CButton, CButtonGroup } from '@coreui/react'
 import type { ClientTriggerData } from '@companion-app/shared/Model/TriggerModel.js'
+import { observer } from 'mobx-react-lite'
+import { RootAppStoreContext } from '../../Stores/RootAppStore.js'
 
 interface TriggerPickerRowProps {
 	id: string
@@ -30,13 +31,13 @@ function TriggerPickerRow({ id, trigger, selectTrigger }: TriggerPickerRowProps)
 	)
 }
 interface TriggerPickerProps {
-	selectControl: (controlId: string, stepId: string | null, setId: string | null, mode: 'append' | 'replace') => void
+	selectControl: (controlId: string, stepId: string, setId: string, mode: 'append' | 'replace') => void
 }
-export function TriggerPicker({ selectControl }: TriggerPickerProps) {
-	const triggersList = useContext(TriggersContext)
+export const TriggerPicker = observer(function TriggerPicker({ selectControl }: TriggerPickerProps) {
+	const { triggersList } = useContext(RootAppStoreContext)
 
 	const selectTrigger = useCallback(
-		(id: string, mode: 'append' | 'replace') => selectControl(CreateTriggerControlId(id), null, null, mode),
+		(id: string, mode: 'append' | 'replace') => selectControl(CreateTriggerControlId(id), '', '', mode),
 		[selectControl]
 	)
 
@@ -50,10 +51,10 @@ export function TriggerPicker({ selectControl }: TriggerPickerProps) {
 					</tr>
 				</thead>
 				<tbody>
-					{triggersList && Object.keys(triggersList).length > 0 ? (
-						Object.entries(triggersList).map(
-							([id, item]) => item && <TriggerPickerRow key={id} id={id} trigger={item} selectTrigger={selectTrigger} />
-						)
+					{triggersList.triggers.size > 0 ? (
+						Array.from(triggersList.triggers.entries()).map(([id, trigger]) => (
+							<TriggerPickerRow key={id} id={id} trigger={trigger} selectTrigger={selectTrigger} />
+						))
 					) : (
 						<tr>
 							<td colSpan={2} className="currentlyNone">
@@ -65,4 +66,4 @@ export function TriggerPicker({ selectControl }: TriggerPickerProps) {
 			</table>
 		</>
 	)
-}
+})

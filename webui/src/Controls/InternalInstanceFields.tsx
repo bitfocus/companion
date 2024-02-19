@@ -3,14 +3,15 @@ import { DropdownInputField } from '../Components/index.js'
 import {
 	CustomVariableDefinitionsContext,
 	ConnectionsContext,
-	PagesContext,
 	SurfacesContext,
-	TriggersContext,
 	VariableDefinitionsContext,
+	useComputed,
 } from '../util.js'
 import TimePicker from 'react-time-picker'
 import { InternalInputField } from '@companion-app/shared/Model/Options.js'
 import { DropdownChoice } from '@companion-module/base'
+import { RootAppStoreContext } from '../Stores/RootAppStore.js'
+import { observer } from 'mobx-react-lite'
 
 export function InternalInstanceField(
 	option: InternalInputField,
@@ -127,10 +128,16 @@ interface InternalPageDropdownProps {
 	disabled: boolean
 }
 
-function InternalPageDropdown({ isOnControl, includeDirection, value, setValue, disabled }: InternalPageDropdownProps) {
-	const pages = useContext(PagesContext)
+const InternalPageDropdown = observer(function InternalPageDropdown({
+	isOnControl,
+	includeDirection,
+	value,
+	setValue,
+	disabled,
+}: InternalPageDropdownProps) {
+	const { pages } = useContext(RootAppStoreContext)
 
-	const choices = useMemo(() => {
+	const choices = useComputed(() => {
 		const choices: DropdownChoice[] = []
 		if (isOnControl) {
 			choices.push({ id: 0, label: 'This page' })
@@ -139,20 +146,15 @@ function InternalPageDropdown({ isOnControl, includeDirection, value, setValue, 
 			choices.push({ id: 'back', label: 'Back' }, { id: 'forward', label: 'Forward' })
 		}
 
-		for (const [pageNumber, pageInfo] of Object.entries(pages || {})) {
-			if (!pageInfo) continue
-
-			choices.push({
-				id: pageNumber,
-				label: `${pageNumber}` + ` (${pageInfo?.name || ''})`,
-			})
-		}
+		pages.sortedEntries.forEach((pageInfo, i) => {
+			choices.push({ id: i + 1, label: `${i + 1} (${pageInfo.name || ''})` })
+		})
 
 		return choices
 	}, [pages, isOnControl, includeDirection])
 
 	return <DropdownInputField disabled={disabled} value={value} choices={choices} multiple={false} setValue={setValue} />
-}
+})
 
 interface InternalCustomVariableDropdownProps {
 	value: any
@@ -299,34 +301,32 @@ interface InternalTriggerDropdownProps {
 	includeSelf: boolean | undefined
 }
 
-function InternalTriggerDropdown({
+const InternalTriggerDropdown = observer(function InternalTriggerDropdown({
 	isOnControl,
 	value,
 	setValue,
 	disabled,
 	includeSelf,
 }: InternalTriggerDropdownProps) {
-	const context = useContext(TriggersContext)
+	const { triggersList } = useContext(RootAppStoreContext)
 
-	const choices = useMemo(() => {
-		const choices = []
+	const choices = useComputed(() => {
+		const choices: DropdownChoice[] = []
 		if (!isOnControl && includeSelf) {
 			choices.push({ id: 'self', label: 'Current trigger' })
 		}
 
-		for (const [id, trigger] of Object.entries(context)) {
-			if (!trigger) continue
-
+		for (const [id, trigger] of triggersList.triggers.entries()) {
 			choices.push({
 				id: id,
 				label: trigger.name || `Trigger #${id}`,
 			})
 		}
 		return choices
-	}, [context, isOnControl, includeSelf])
+	}, [triggersList, isOnControl, includeSelf])
 
 	return <DropdownInputField disabled={disabled} value={value} choices={choices} multiple={false} setValue={setValue} />
-}
+})
 
 interface InternalTimePickerProps {
 	value: any

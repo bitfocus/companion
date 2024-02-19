@@ -103,7 +103,7 @@ class DataUserConfig extends CoreBase {
 	}
 	/**
 	 * The user configuration settings
-	 * @type {Object.<string,(boolean|number|string)>}
+	 * @type {import('@companion-app/shared/Model/UserConfigModel.js').UserConfigModel}
 	 * @access protected
 	 */
 	data
@@ -128,6 +128,7 @@ class DataUserConfig extends CoreBase {
 		let save = false
 		// copy default values. this will set newly added defaults too
 		for (let k in DataUserConfig.Defaults) {
+			// @ts-ignore
 			if (this.data[k] === undefined) {
 				// @ts-ignore
 				this.data[k] = DataUserConfig.Defaults[k]
@@ -185,6 +186,7 @@ class DataUserConfig extends CoreBase {
 			// check if these fields have already been defined
 			let has_been_defined = false
 			for (const k in legacy_config) {
+				// @ts-ignore
 				if (this.data[k] !== undefined) {
 					has_been_defined = true
 					break
@@ -195,6 +197,7 @@ class DataUserConfig extends CoreBase {
 			if (!has_been_defined) {
 				this.logger.info('Running one-time userconfig v2 upgrade')
 				for (let k in legacy_config) {
+					// @ts-ignore
 					if (this.data[k] === undefined) {
 						// @ts-ignore
 						this.data[k] = legacy_config[k]
@@ -278,22 +281,6 @@ class DataUserConfig extends CoreBase {
 	}
 
 	/**
-	 * Get all of the user configurable settings
-	 * @param {boolean} [clone = false] - <code>true</code> if a clone is needed instead of a link
-	 * @returns {Object.<string,(boolean|number|string)>} the key/value pairs
-	 * @access public
-	 */
-	get(clone = false) {
-		let out = this.data
-
-		if (clone === true) {
-			out = cloneDeep(out)
-		}
-
-		return out
-	}
-
-	/**
 	 * Get a specific use config setting
 	 * @param {string} key
 	 * @param {boolean} [clone = false] - <code>true</code> if a clone is needed instead of a link
@@ -301,6 +288,7 @@ class DataUserConfig extends CoreBase {
 	 * @access public
 	 */
 	getKey(key, clone = false) {
+		// @ts-ignore
 		let out = this.data[key]
 
 		if (clone === true) {
@@ -378,6 +366,7 @@ class DataUserConfig extends CoreBase {
 			checkControlsInBounds = true
 		}
 
+		// @ts-ignore
 		this.data[key] = value
 		if (save) {
 			this.db.setKey('userconfig', this.data)

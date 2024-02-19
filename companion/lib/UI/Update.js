@@ -68,7 +68,9 @@ class UIUpdate {
 	 */
 	clientConnect(client) {
 		client.on('app-update-info', () => {
-			client.emit('app-update-info', this.#latestUpdateData)
+			if (this.#latestUpdateData) {
+				client.emit('app-update-info', this.#latestUpdateData)
+			}
 		})
 	}
 

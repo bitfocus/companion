@@ -1,40 +1,38 @@
 import React, { useContext, useEffect, useMemo, useRef, useState } from 'react'
 import {
 	applyPatchOrReplaceSubObject,
-	ActionsContext,
-	FeedbacksContext,
 	ConnectionsContext,
 	VariableDefinitionsContext,
 	CustomVariableDefinitionsContext,
 	UserConfigContext,
 	SurfacesContext,
-	PagesContext,
-	TriggersContext,
 	socketEmitPromise,
 	applyPatchOrReplaceObject,
 	SocketContext,
-	EventDefinitionsContext,
-	ModulesContext,
 } from './util.js'
 import { NotificationsManager, NotificationsManagerRef } from './Components/Notifications.js'
 import { cloneDeep } from 'lodash-es'
 import jsonPatch, { Operation as JsonPatchOperation } from 'fast-json-patch'
 import { useUserConfigSubscription } from './Hooks/useUserConfigSubscription.js'
 import { usePagesInfoSubscription } from './Hooks/usePagesInfoSubscription.js'
-import type {
-	ClientConnectionConfig,
-	ClientEventDefinition,
-	ModuleDisplayInfo,
-} from '@companion-app/shared/Model/Common.js'
-import type { ClientActionDefinition, InternalFeedbackDefinition } from '@companion-app/shared/Model/Options.js'
+import { useActionDefinitionsSubscription } from './Hooks/useActionDefinitionsSubscription.js'
+import type { ClientConnectionConfig } from '@companion-app/shared/Model/Common.js'
 import type { AllVariableDefinitions, ModuleVariableDefinitions } from '@companion-app/shared/Model/Variables.js'
 import type { CustomVariablesModel } from '@companion-app/shared/Model/CustomVariableModel.js'
 import type { ClientDevicesListItem } from '@companion-app/shared/Model/Surfaces.js'
-import type { ClientTriggerData } from '@companion-app/shared/Model/TriggerModel.js'
 import { useActiveLearnRequests } from './_Model/ActiveLearn.js'
 import { RootAppStore, RootAppStoreContext } from './Stores/RootAppStore.js'
 import { RecentlyUsedIdsStore } from './Stores/RecentlyUsedIdsStore.js'
 import { observable } from 'mobx'
+import { PagesStore } from './Stores/PagesStore.js'
+import { EventDefinitionsStore } from './Stores/EventDefinitionsStore.js'
+import { ActionDefinitionsStore } from './Stores/ActionDefinitionsStore.js'
+import { FeedbackDefinitionsStore } from './Stores/FeedbackDefinitionsStore.js'
+import { useFeedbackDefinitionsSubscription } from './Hooks/useFeedbackDefinitionsSubscription.js'
+import { ModuleInfoStore } from './Stores/ModuleInfoStore.js'
+import { useModuleInfoSubscription } from './Hooks/useModuleInfoSubscription.js'
+import { TriggersListStore } from './Stores/TriggersListStore.js'
+import { useTriggersListSubscription } from './Hooks/useTriggersListSubscription.js'
 
 interface ContextDataProps {
 	children: (progressPercent: number, loadingComplete: boolean) => React.JSX.Element | React.JSX.Element[]
@@ -50,30 +48,28 @@ export function ContextData({ children }: ContextDataProps) {
 			socket,
 			notifier: notifierRef,
 
+			modules: new ModuleInfoStore(),
+
 			activeLearns: observable.set(),
 
 			recentlyAddedActions: new RecentlyUsedIdsStore('recent_actions', 20),
 			recentlyAddedFeedbacks: new RecentlyUsedIdsStore('recent_feedbacks', 20),
+
+			actionDefinitions: new ActionDefinitionsStore(),
+			eventDefinitions: new EventDefinitionsStore(),
+			feedbackDefinitions: new FeedbackDefinitionsStore(),
+
+			pages: new PagesStore(),
+
+			triggersList: new TriggersListStore(),
 		} satisfies RootAppStore
 	}, [socket])
 
-	const [eventDefinitions, setEventDefinitions] = useState<Record<string, ClientEventDefinition | undefined> | null>(
-		null
-	)
 	const [connections, setConnections] = useState<Record<string, ClientConnectionConfig> | null>(null)
-	const [modules, setModules] = useState<Record<string, ModuleDisplayInfo> | null>(null)
-	const [actionDefinitions, setActionDefinitions] = useState<Record<
-		string,
-		Record<string, ClientActionDefinition | undefined> | undefined
-	> | null>(null)
-	const [feedbackDefinitions, setFeedbackDefinitions] = useState<Record<
-		string,
-		Record<string, InternalFeedbackDefinition | undefined> | undefined
-	> | null>(null)
+
 	const [variableDefinitions, setVariableDefinitions] = useState<AllVariableDefinitions | null>(null)
 	const [customVariables, setCustomVariables] = useState<CustomVariablesModel | null>(null)
 	const [surfaces, setSurfaces] = useState<Record<string, ClientDevicesListItem | undefined> | null>(null)
-	const [triggers, setTriggers] = useState<Record<string, ClientTriggerData | undefined> | null>(null)
 
 	const completeVariableDefinitions = useMemo<AllVariableDefinitions>(() => {
 		if (variableDefinitions) {
@@ -97,40 +93,26 @@ export function ContextData({ children }: ContextDataProps) {
 		}
 	}, [customVariables, variableDefinitions])
 
-	const pages = usePagesInfoSubscription(socket)
+	const [loadedEventDefinitions, setLoadedEventDefinitions] = useState(false)
+
+	const actionDefinitionsReady = useActionDefinitionsSubscription(socket, rootStore.actionDefinitions)
+	const feedbackDefinitionsReady = useFeedbackDefinitionsSubscription(socket, rootStore.feedbackDefinitions)
+	const moduleInfoReady = useModuleInfoSubscription(socket, rootStore.modules)
+	const triggersListReady = useTriggersListSubscription(socket, rootStore.triggersList)
+	const pagesReady = usePagesInfoSubscription(socket, rootStore.pages)
 	const userConfig = useUserConfigSubscription(socket)
 
 	useEffect(() => {
 		if (socket) {
 			socketEmitPromise(socket, 'event-definitions:get', [])
 				.then((definitions) => {
-					setEventDefinitions(definitions)
+					setLoadedEventDefinitions(true)
+					rootStore.eventDefinitions.setDefinitions(definitions)
 				})
 				.catch((e) => {
 					console.error('Failed to load event definitions', e)
 				})
 
-			socketEmitPromise(socket, 'modules:subscribe', [])
-				.then((modules) => {
-					setModules(modules)
-				})
-				.catch((e) => {
-					console.error('Failed to load modules list', e)
-				})
-			socketEmitPromise(socket, 'action-definitions:subscribe', [])
-				.then((data) => {
-					setActionDefinitions(data || {})
-				})
-				.catch((e) => {
-					console.error('Failed to load action definitions list', e)
-				})
-			socketEmitPromise(socket, 'feedback-definitions:subscribe', [])
-				.then((data) => {
-					setFeedbackDefinitions(data || {})
-				})
-				.catch((e) => {
-					console.error('Failed to load feedback definitions list', e)
-				})
 			socketEmitPromise(socket, 'variable-definitions:subscribe', [])
 				.then((data) => {
 					setVariableDefinitions(data || {})
@@ -146,42 +128,19 @@ export function ContextData({ children }: ContextDataProps) {
 					console.error('Failed to load custom values list', e)
 				})
 
-			const updateVariableDefinitions = (label: string, patch: JsonPatchOperation[]) => {
+			const updateVariableDefinitions = (
+				label: string,
+				patch: JsonPatchOperation[] | ModuleVariableDefinitions | null
+			) => {
 				setVariableDefinitions(
 					(oldDefinitions) =>
 						oldDefinitions &&
 						applyPatchOrReplaceSubObject<ModuleVariableDefinitions | undefined>(oldDefinitions, label, patch, {})
 				)
 			}
-			const updateFeedbackDefinitions = (id: string, patch: JsonPatchOperation[]) => {
-				setFeedbackDefinitions(
-					(oldDefinitions) => oldDefinitions && applyPatchOrReplaceSubObject(oldDefinitions, id, patch, {})
-				)
-			}
-			const updateActionDefinitions = (id: string, patch: JsonPatchOperation[]) => {
-				setActionDefinitions(
-					(oldDefinitions) => oldDefinitions && applyPatchOrReplaceSubObject(oldDefinitions, id, patch, {})
-				)
-			}
 
 			const updateCustomVariables = (patch: JsonPatchOperation[]) => {
 				setCustomVariables((oldVariables) => oldVariables && applyPatchOrReplaceObject(oldVariables, patch))
-			}
-			const updateTriggers = (controlId: string, patch: JsonPatchOperation[]) => {
-				setTriggers(
-					(oldTriggers) =>
-						oldTriggers &&
-						applyPatchOrReplaceSubObject(oldTriggers, controlId, patch, {
-							// Placeholder data
-							type: 'trigger',
-							name: '',
-							lastExecuted: undefined,
-							enabled: false,
-							description: '',
-							sortOrder: 0,
-							relativeDelay: false,
-						})
-				)
 			}
 
 			socketEmitPromise(socket, 'connections:subscribe', [])
@@ -204,22 +163,8 @@ export function ContextData({ children }: ContextDataProps) {
 			}
 			socket.on('connections:patch', patchInstances)
 
-			const patchModules = (patch: JsonPatchOperation[] | false) => {
-				setModules((oldModules) => {
-					if (patch === false) {
-						return {}
-					} else {
-						return jsonPatch.applyPatch(cloneDeep(oldModules) || {}, patch).newDocument
-					}
-				})
-			}
-			socket.on('modules:patch', patchModules)
-
 			socket.on('variable-definitions:update', updateVariableDefinitions)
 			socket.on('custom-variables:update', updateCustomVariables)
-
-			socket.on('action-definitions:update', updateActionDefinitions)
-			socket.on('feedback-definitions:update', updateFeedbackDefinitions)
 
 			socketEmitPromise(socket, 'surfaces:subscribe', [])
 				.then((surfaces) => {
@@ -236,45 +181,18 @@ export function ContextData({ children }: ContextDataProps) {
 			}
 			socket.on('surfaces:patch', patchSurfaces)
 
-			socketEmitPromise(socket, 'triggers:subscribe', [])
-				.then((triggers) => {
-					// setLoadError(null)
-					setTriggers(triggers)
-				})
-				.catch((e) => {
-					console.error('Failed to load triggers list:', e)
-					// setLoadError(`Failed to load pages list`)
-					setTriggers(null)
-				})
-
-			socket.on('triggers:update', updateTriggers)
-
 			return () => {
 				socket.off('variable-definitions:update', updateVariableDefinitions)
 				socket.off('custom-variables:update', updateCustomVariables)
-				socket.off('action-definitions:update', updateActionDefinitions)
-				socket.off('feedback-definitions:update', updateFeedbackDefinitions)
 				socket.off('surfaces:patch', patchSurfaces)
 
-				socket.off('triggers:update', updateTriggers)
-
 				socket.off('connections:patch', patchInstances)
-				socket.off('modules:patch', patchModules)
 
-				socketEmitPromise(socket, 'action-definitions:unsubscribe', []).catch((e) => {
-					console.error('Failed to unsubscribe to action definitions list', e)
-				})
-				socketEmitPromise(socket, 'feedback-definitions:unsubscribe', []).catch((e) => {
-					console.error('Failed to unsubscribe to feedback definitions list', e)
-				})
 				socketEmitPromise(socket, 'variable-definitions:unsubscribe', []).catch((e) => {
 					console.error('Failed to unsubscribe to variable definitions list', e)
 				})
 				socketEmitPromise(socket, 'connections:unsubscribe', []).catch((e) => {
 					console.error('Failed to unsubscribe from instances list:', e)
-				})
-				socketEmitPromise(socket, 'modules:unsubscribe', []).catch((e) => {
-					console.error('Failed to unsubscribe from modules list:', e)
 				})
 				socketEmitPromise(socket, 'surfaces:unsubscribe', []).catch((e) => {
 					console.error('Failed to unsubscribe from surfaces', e)
@@ -290,52 +208,40 @@ export function ContextData({ children }: ContextDataProps) {
 
 	const activeLearnRequestsReady = useActiveLearnRequests(socket, rootStore.activeLearns)
 
-	const steps = [
-		eventDefinitions,
-		connections,
-		modules,
-		variableDefinitions,
-		completeVariableDefinitions,
-		actionDefinitions,
-		feedbackDefinitions,
-		customVariables,
-		userConfig,
-		surfaces,
-		pages,
-		triggers,
+	const steps: boolean[] = [
+		loadedEventDefinitions,
+		connections != null,
+		moduleInfoReady,
+		variableDefinitions != null,
+		completeVariableDefinitions != null,
+		actionDefinitionsReady,
+		feedbackDefinitionsReady,
+		customVariables != null,
+		userConfig != null,
+		surfaces != null,
+		pagesReady,
+		triggersListReady,
 		activeLearnRequestsReady,
 	]
-	const completedSteps = steps.filter((s) => s !== null && s !== undefined)
+	const completedSteps = steps.filter((s) => !!s)
 
 	const progressPercent = (completedSteps.length / steps.length) * 100
 
 	return (
 		<RootAppStoreContext.Provider value={rootStore}>
-			<EventDefinitionsContext.Provider value={eventDefinitions!}>
-				<ModulesContext.Provider value={modules!}>
-					<ActionsContext.Provider value={actionDefinitions!}>
-						<FeedbacksContext.Provider value={feedbackDefinitions!}>
-							<ConnectionsContext.Provider value={connections!}>
-								<VariableDefinitionsContext.Provider value={completeVariableDefinitions}>
-									<CustomVariableDefinitionsContext.Provider value={customVariables!}>
-										<UserConfigContext.Provider value={userConfig}>
-											<SurfacesContext.Provider value={surfaces!}>
-												<PagesContext.Provider value={pages!}>
-													<TriggersContext.Provider value={triggers!}>
-														<NotificationsManager ref={notifierRef} />
+			<ConnectionsContext.Provider value={connections!}>
+				<VariableDefinitionsContext.Provider value={completeVariableDefinitions}>
+					<CustomVariableDefinitionsContext.Provider value={customVariables!}>
+						<UserConfigContext.Provider value={userConfig}>
+							<SurfacesContext.Provider value={surfaces!}>
+								<NotificationsManager ref={notifierRef} />
 
-														{children(progressPercent, completedSteps.length === steps.length)}
-													</TriggersContext.Provider>
-												</PagesContext.Provider>
-											</SurfacesContext.Provider>
-										</UserConfigContext.Provider>
-									</CustomVariableDefinitionsContext.Provider>
-								</VariableDefinitionsContext.Provider>
-							</ConnectionsContext.Provider>
-						</FeedbacksContext.Provider>
-					</ActionsContext.Provider>
-				</ModulesContext.Provider>
-			</EventDefinitionsContext.Provider>
+								{children(progressPercent, completedSteps.length === steps.length)}
+							</SurfacesContext.Provider>
+						</UserConfigContext.Provider>
+					</CustomVariableDefinitionsContext.Provider>
+				</VariableDefinitionsContext.Provider>
+			</ConnectionsContext.Provider>
 		</RootAppStoreContext.Provider>
 	)
 }

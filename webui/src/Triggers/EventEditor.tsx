@@ -9,7 +9,7 @@ import {
 } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import React, { FormEvent, useCallback, useContext, useMemo, useRef, useState } from 'react'
-import { MyErrorBoundary, EventDefinitionsContext, PreventDefaultHandler } from '../util.js'
+import { MyErrorBoundary, PreventDefaultHandler } from '../util.js'
 import { OptionsInputField } from '../Controls/OptionsInputField.js'
 import { useDrag, useDrop } from 'react-dnd'
 import { GenericConfirmModal, GenericConfirmModalRef } from '../Components/GenericConfirmModal.js'
@@ -24,6 +24,8 @@ import {
 	useControlEventService,
 	useControlEventsEditorService,
 } from '../Services/Controls/ControlEventsService.js'
+import { observer } from 'mobx-react-lite'
+import { RootAppStoreContext } from '../Stores/RootAppStore.js'
 
 interface TriggerEventEditorProps {
 	controlId: string
@@ -188,12 +190,18 @@ interface EventEditorProps {
 	doExpand: () => void
 }
 
-function EventEditor({ event, service, isCollapsed, doCollapse, doExpand }: EventEditorProps) {
-	const EventDefinitions = useContext(EventDefinitionsContext)
+const EventEditor = observer(function EventEditor({
+	event,
+	service,
+	isCollapsed,
+	doCollapse,
+	doExpand,
+}: EventEditorProps) {
+	const { eventDefinitions } = useContext(RootAppStoreContext)
 
-	const eventSpec = EventDefinitions[event.type]
+	const eventSpec = eventDefinitions.definitions[event.type]
 
-	const [eventOptions, optionVisibility] = useOptionsAndIsVisible(eventSpec, event)
+	const [eventOptions, optionVisibility] = useOptionsAndIsVisible(eventSpec?.options, event?.options)
 
 	const innerSetEnabled = useCallback(
 		(e: FormEvent<HTMLInputElement>) => service.setEnabled(e.currentTarget.checked),
@@ -288,4 +296,4 @@ function EventEditor({ event, service, isCollapsed, doCollapse, doExpand }: Even
 			)}
 		</>
 	)
-}
+})

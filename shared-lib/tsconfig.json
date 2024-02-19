@@ -16,6 +16,7 @@
 		"target": "es2022",
 		"noImplicitAny": true,
 		"sourceMap": true,
+		"emitDeclarationOnly": true,
 		"declaration": true,
 		"declarationMap": true,
 		"importHelpers": false,

@@ -1,14 +1,15 @@
-import React, { memo, useContext, useMemo, useState } from 'react'
+import React, { useContext, useState } from 'react'
 import { CAlert, CButton, CInput, CInputGroup, CInputGroupAppend } from '@coreui/react'
 import { go as fuzzySearch } from 'fuzzysort'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faExclamationTriangle, faQuestionCircle, faTimes } from '@fortawesome/free-solid-svg-icons'
-import { socketEmitPromise, ModulesContext } from '../util.js'
+import { socketEmitPromise, useComputed } from '../util.js'
 import { useCallback } from 'react'
 import { useRef } from 'react'
 import { GenericConfirmModal, GenericConfirmModalRef } from '../Components/GenericConfirmModal.js'
-import { ModuleDisplayInfo } from '@companion-app/shared/Model/Common.js'
+import type { ModuleDisplayInfo } from '@companion-app/shared/Model/ModuleInfo.js'
 import { RootAppStoreContext } from '../Stores/RootAppStore.js'
+import { observer } from 'mobx-react-lite'
 
 interface AddConnectionsPanelProps {
 	showHelp: (moduleId: string) => void
@@ -23,12 +24,11 @@ export function AddConnectionsPanel({ showHelp, doConfigureConnection }: AddConn
 	)
 }
 
-const AddConnectionsInner = memo(function AddConnectionsInner({
+const AddConnectionsInner = observer(function AddConnectionsInner({
 	showHelp,
 	doConfigureConnection,
 }: AddConnectionsPanelProps) {
-	const { socket, notifier } = useContext(RootAppStoreContext)
-	const modules = useContext(ModulesContext)
+	const { socket, notifier, modules } = useContext(RootAppStoreContext)
 	const [filter, setFilter] = useState('')
 
 	const confirmRef = useRef<GenericConfirmModalRef>(null)
@@ -67,9 +67,13 @@ const AddConnectionsInner = memo(function AddConnectionsInner({
 		[addConnectionInner]
 	)
 
-	const allProducts = useMemo(() => {
-		return Object.values(modules).flatMap((module) => module.products.map((product) => ({ product, ...module })))
-	}, [modules])
+	const allProducts = useComputed(
+		() =>
+			Array.from(modules.modules.values()).flatMap((module) =>
+				module.products.map((product) => ({ product, ...module }))
+			),
+		[modules]
+	)
 
 	let candidates: JSX.Element[] = []
 	try {

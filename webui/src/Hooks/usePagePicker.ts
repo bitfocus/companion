@@ -1,31 +1,28 @@
-import { PageModel } from '@companion-app/shared/Model/PageModel.js'
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useState } from 'react'
+import type { PagesStore } from '../Stores/PagesStore.js'
 
-export function usePagePicker(pagesObj: Record<number, PageModel | undefined>, initialPage: number) {
+export function usePagePicker(pagesStore: PagesStore, initialPage: number) {
 	const [pageNumber, setPageNumber] = useState(Number(initialPage))
 
-	const pagesRef = useRef<Record<number, PageModel | undefined>>()
-	useEffect(() => {
-		// Avoid binding into callbacks
-		pagesRef.current = pagesObj
-	}, [pagesObj])
+	const changePage = useCallback(
+		(delta) => {
+			const pageNumbers = pagesStore.pageNumbers
+			setPageNumber((pageNumber) => {
+				const currentIndex = pageNumbers.findIndex((p) => p === pageNumber)
+				let newPage = Number(pageNumbers[0])
+				if (currentIndex !== -1) {
+					let newIndex = currentIndex + delta
+					if (newIndex < 0) newIndex += pageNumbers.length
+					if (newIndex >= pageNumbers.length) newIndex -= pageNumbers.length
 
-	const changePage = useCallback((delta) => {
-		setPageNumber((pageNumber) => {
-			const pageNumbers = Object.keys(pagesRef.current || {})
-			const currentIndex = pageNumbers.findIndex((p) => p === pageNumber + '')
-			let newPage = Number(pageNumbers[0])
-			if (currentIndex !== -1) {
-				let newIndex = currentIndex + delta
-				if (newIndex < 0) newIndex += pageNumbers.length
-				if (newIndex >= pageNumbers.length) newIndex -= pageNumbers.length
+					newPage = Number(pageNumbers[newIndex])
+				}
 
-				newPage = Number(pageNumbers[newIndex])
-			}
-
-			return newPage ?? pageNumber
-		})
-	}, [])
+				return newPage ?? pageNumber
+			})
+		},
+		[pagesStore]
+	)
 
 	return {
 		pageNumber,

@@ -32,6 +32,7 @@ import { stringify as csvStringify } from 'csv-stringify/sync'
 import { visitEventOptions } from '../Resources/EventDefinitions.js'
 import { compareExportedInstances } from '@companion-app/shared/Import.js'
 
+
 /**
  *
  * @param {import('qs').ParsedQs[0]} raw
@@ -509,221 +510,191 @@ class DataImportExport extends CoreBase {
 
 			return true
 		})
-		client.onPromise(
-			'loadsave:prepare-import',
-			/**
-			 *
-			 * @param {*} dataStr
-			 * @returns {Promise<[null, ClientImportObject] | [string]>}
-			 */
-			async (dataStr) => {
-				try {
-					dataStr = await new Promise((resolve, reject) => {
-						zlib.gunzip(dataStr, (err, data) => {
-							if (err) reject(err)
-							else resolve(data || dataStr)
-						})
+		client.onPromise('loadsave:prepare-import', async (dataStr) => {
+			try {
+				dataStr = await new Promise((resolve, reject) => {
+					zlib.gunzip(dataStr, (err, data) => {
+						if (err) reject(err)
+						else resolve(data || dataStr)
 					})
-				} catch (e) {
-					// Ignore, it is probably not compressed
+				})
+			} catch (e) {
+				// Ignore, it is probably not compressed
+			}
+
+			let rawObject
+			try {
+				rawObject = JSON.parse(dataStr.toString())
+			} catch (e) {
+				return ['File is corrupted or unknown format']
+			}
+
+			if (rawObject.version > FILE_VERSION) {
+				return ['File was saved with a newer unsupported version of Companion']
+			}
+
+			if (rawObject.type !== 'full' && rawObject.type !== 'page' && rawObject.type !== 'trigger_list') {
+				return ['Unknown import type']
+			}
+
+			let object = upgradeImport(rawObject)
+
+			// fix any db instances missing the upgradeIndex property
+			if (object.instances) {
+				for (const inst of Object.values(object.instances)) {
+					if (inst) {
+						inst.lastUpgradeIndex = inst.lastUpgradeIndex ?? -1
+					}
+				}
+			}
+
+			if (object.type === 'trigger_list') {
+				/** @type {import('@companion-app/shared/Model/ExportModel.js').ExportFullv4} */
+				object = {
+					type: 'full',
+					version: FILE_VERSION,
+					triggers: object.triggers,
+					instances: object.instances,
+				}
+			}
+
+			// Store the object on the client
+			clientPendingImport = {
+				object,
+				timeout: null, // TODO
+			}
+
+			// Build a minimal object to send back to the client
+			/** @type {ClientImportObject} */
+			const clientObject = {
+				type: object.type,
+				instances: {},
+				controls: 'pages' in object,
+				customVariables: 'custom_variables' in object,
+				surfaces: 'surfaces' in object,
+				triggers: 'triggers' in object,
+			}
+
+			for (const [instanceId, instance] of Object.entries(object.instances || {})) {
+				if (!instance || instanceId === 'internal' || instanceId === 'bitfocus-companion') continue
+
+				clientObject.instances[instanceId] = {
+					instance_type: this.instance.modules.verifyInstanceTypeIsCurrent(instance.instance_type),
+					label: instance.label,
+					sortOrder: instance.sortOrder,
+				}
+			}
+
+			/**
+			 * @param {import('@companion-app/shared/Model/ExportModel.js').ExportPageContentv4} pageInfo
+			 * @returns {ClientPageInfo}
+			 */
+			function simplifyPageForClient(pageInfo) {
+				return {
+					name: pageInfo.name,
+					gridSize: find_smallest_grid_for_page(pageInfo),
+				}
+			}
+
+			if (object.type === 'page') {
+				clientObject.page = simplifyPageForClient(object.page)
+				clientObject.oldPageNumber = object.oldPageNumber || 1
+			} else {
+				if (object.pages) {
+					clientObject.pages = Object.fromEntries(
+						Object.entries(object.pages).map(([id, pageInfo]) => [id, simplifyPageForClient(pageInfo)])
+					)
 				}
 
-				let rawObject
-				try {
-					rawObject = JSON.parse(dataStr.toString())
-				} catch (e) {
-					return ['File is corrupted or unknown format']
-				}
+				// Simplify triggers
+				if (object.triggers) {
+					clientObject.triggers = {}
 
-				if (rawObject.version > FILE_VERSION) {
-					return ['File was saved with a newer unsupported version of Companion']
-				}
-
-				if (rawObject.type !== 'full' && rawObject.type !== 'page' && rawObject.type !== 'trigger_list') {
-					return ['Unknown import type']
-				}
-
-				let object = upgradeImport(rawObject)
-
-				// fix any db instances missing the upgradeIndex property
-				if (object.instances) {
-					for (const inst of Object.values(object.instances)) {
-						if (inst) {
-							inst.lastUpgradeIndex = inst.lastUpgradeIndex ?? -1
+					for (const [id, trigger] of Object.entries(object.triggers)) {
+						clientObject.triggers[id] = {
+							name: trigger.options.name,
 						}
 					}
 				}
-
-				if (object.type === 'trigger_list') {
-					/** @type {import('@companion-app/shared/Model/ExportModel.js').ExportFullv4} */
-					object = {
-						type: 'full',
-						version: FILE_VERSION,
-						triggers: object.triggers,
-						instances: object.instances,
-					}
-				}
-
-				// Store the object on the client
-				clientPendingImport = {
-					object,
-					timeout: null, // TODO
-				}
-
-				// Build a minimal object to send back to the client
-				/** @type {ClientImportObject} */
-				const clientObject = {
-					type: object.type,
-					instances: {},
-					controls: 'pages' in object,
-					customVariables: 'custom_variables' in object,
-					surfaces: 'surfaces' in object,
-					triggers: 'triggers' in object,
-				}
-
-				for (const [instanceId, instance] of Object.entries(object.instances || {})) {
-					if (!instance || instanceId === 'internal' || instanceId === 'bitfocus-companion') continue
-
-					clientObject.instances[instanceId] = {
-						instance_type: this.instance.modules.verifyInstanceTypeIsCurrent(instance.instance_type),
-						label: instance.label,
-						sortOrder: instance.sortOrder,
-					}
-				}
-
-				/**
-				 * @param {import('@companion-app/shared/Model/ExportModel.js').ExportPageContentv4} pageInfo
-				 * @returns {ClientPageInfo}
-				 */
-				function simplifyPageForClient(pageInfo) {
-					return {
-						name: pageInfo.name,
-						gridSize: find_smallest_grid_for_page(pageInfo),
-					}
-				}
-
-				if (object.type === 'page') {
-					clientObject.page = simplifyPageForClient(object.page)
-					clientObject.oldPageNumber = object.oldPageNumber || 1
-				} else {
-					if (object.pages) {
-						clientObject.pages = Object.fromEntries(
-							Object.entries(object.pages).map(([id, pageInfo]) => [id, simplifyPageForClient(pageInfo)])
-						)
-					}
-
-					// Simplify triggers
-					if (object.triggers) {
-						clientObject.triggers = {}
-
-						for (const [id, trigger] of Object.entries(object.triggers)) {
-							clientObject.triggers[id] = {
-								name: trigger.options.name,
-							}
-						}
-					}
-				}
-
-				// rest is done from browser
-				return [null, clientObject]
 			}
-		)
 
-		client.onPromise(
-			'loadsave:control-preview',
-			/**
-			 *
-			 * @param {import('../Resources/Util.js').ControlLocation} location
-			 * @returns {Promise<string | null>} Image as data-url
-			 */
-			async (location) => {
-				const importObject = clientPendingImport?.object
-				if (!importObject) return null
+			// rest is done from browser
+			return [null, clientObject]
+		})
 
-				let importPage
-				if (importObject.type === 'page') {
-					importPage = importObject.page
-				} else if (importObject.type === 'full') {
-					importPage = importObject.pages?.[location.pageNumber]
+		client.onPromise('loadsave:control-preview', async (location) => {
+			const importObject = clientPendingImport?.object
+			if (!importObject) return null
+
+			let importPage
+			if (importObject.type === 'page') {
+				importPage = importObject.page
+			} else if (importObject.type === 'full') {
+				importPage = importObject.pages?.[location.pageNumber]
+			}
+			if (!importPage) return null
+
+			const controlObj = importPage.controls?.[location.row]?.[location.column]
+			if (!controlObj) return null
+
+			const res = await this.graphics.drawPreview({
+				...controlObj.style,
+				style: controlObj.type,
+			})
+			return !!res?.style ? res?.asDataUrl ?? null : null
+		})
+
+		client.onPromise('loadsave:reset', (config) => {
+			if (!config) throw new Error('Missing reset config')
+
+			return this.checkOrRunImportTask('reset', async () => {
+				return this.#reset(config)
+			})
+		})
+
+		client.onPromise('loadsave:import-full', async (config) => {
+			return this.checkOrRunImportTask('import', async () => {
+				const data = clientPendingImport?.object
+				if (!data) throw new Error('No in-progress import object')
+
+				if (data.type !== 'full') throw new Error('Invalid import object')
+
+				// Destroy old stuff
+				await this.#reset(undefined, !config || config.buttons)
+
+				// import custom variables
+				if (!config || config.customVariables) {
+					this.instance.variable.custom.replaceDefinitions(data.custom_variables || {})
 				}
-				if (!importPage) return null
 
-				const controlObj = importPage.controls?.[location.row]?.[location.column]
-				if (!controlObj) return null
+				// Always Import instances
+				const instanceIdMap = this.#importInstances(data.instances, {})
 
-				const res = await this.graphics.drawPreview({
-					...controlObj.style,
-					style: controlObj.type,
-				})
-				return !!res?.style ? res?.asDataUrl ?? null : null
-			}
-		)
-
-		client.onPromise(
-			'loadsave:reset',
-			/**
-			 * @param {ClientResetSelection} config
-			 * @returns {Promise<'ok'>}
-			 */
-			(config) => {
-				if (!config) throw new Error('Missing reset config')
-
-				return this.checkOrRunImportTask('reset', async () => {
-					return this.#reset(config)
-				})
-			}
-		)
-
-		client.onPromise(
-			'loadsave:import-full',
-			/**
-			 * @param {ClientImportSelection | null} config
-			 * @returns {Promise<void>}
-			 */
-			async (config) => {
-				return this.checkOrRunImportTask('import', async () => {
-					const data = clientPendingImport?.object
-					if (!data) throw new Error('No in-progress import object')
-
-					if (data.type !== 'full') throw new Error('Invalid import object')
-
-					// Destroy old stuff
-					await this.#reset(undefined, !config || config.buttons)
-
-					// import custom variables
-					if (!config || config.customVariables) {
-						this.instance.variable.custom.replaceDefinitions(data.custom_variables || {})
-					}
-
-					// Always Import instances
-					const instanceIdMap = this.#importInstances(data.instances, {})
-
-					if (data.pages && (!config || config.buttons)) {
-						// Import pages
+				if (data.pages && (!config || config.buttons)) {
+					// Import pages
 						for (const [pageNumber, pageInfo] of Object.entries(data.pages)) {
 							doPageImport(pageInfo, Number(pageNumber), instanceIdMap)
-						}
 					}
+				}
 
-					if (!config || config.surfaces) {
-						this.surfaces.importSurfaces(data.surfaceGroups || {}, data.surfaces || {})
+				if (!config || config.surfaces) {
+					this.surfaces.importSurfaces(data.surfaceGroups || {}, data.surfaces || {})
+				}
+
+				if (!config || config.triggers) {
+					for (const [id, trigger] of Object.entries(data.triggers || {})) {
+						const controlId = CreateTriggerControlId(id)
+						const fixedControlObj = this.#fixupTriggerControl(trigger, instanceIdMap)
+						this.controls.importTrigger(controlId, fixedControlObj)
 					}
+				}
 
-					if (!config || config.triggers) {
-						for (const [id, trigger] of Object.entries(data.triggers || {})) {
-							const controlId = CreateTriggerControlId(id)
-							const fixedControlObj = this.#fixupTriggerControl(trigger, instanceIdMap)
-							this.controls.importTrigger(controlId, fixedControlObj)
-						}
-					}
-
-					// trigger startup triggers to run
-					setImmediate(() => {
-						this.controls.triggers.emit('startup')
-					})
+				// trigger startup triggers to run
+				setImmediate(() => {
+					this.controls.triggers.emit('startup')
 				})
-			}
-		)
+			})
+		})
 
 		/**
 		 * @param {import('@companion-app/shared/Model/ExportModel.js').ExportPageContentv4} pageInfo
@@ -780,112 +751,94 @@ class DataImportExport extends CoreBase {
 			}
 		}
 
-		client.onPromise(
-			'loadsave:import-page',
-			/**
-			 * @param {number} topage
-			 * @param {number} frompage
-			 * @param {InstanceRemappings} instanceRemapping
-			 * @returns {Promise<InstanceRemappings>}
-			 */
-			async (topage, frompage, instanceRemapping) => {
-				return this.checkOrRunImportTask('import', async () => {
-					const data = clientPendingImport?.object
-					if (!data) throw new Error('No in-progress import object')
+		client.onPromise('loadsave:import-page', async (topage, frompage, instanceRemapping) => {
+			return this.checkOrRunImportTask('import', async () => {
+				const data = clientPendingImport?.object
+				if (!data) throw new Error('No in-progress import object')
 
-					if (topage === -1) {
-						// Add a new page at the end
-						const currentPageCount = this.page.getPageCount()
-						topage = currentPageCount + 1
-						this.page.insertPages(topage, ['Importing Page'])
-					} else {
-						const oldPageInfo = this.page.getPageInfo(topage, false)
-						if (!oldPageInfo) throw new Error('Invalid target page')
-					}
+				if (topage === -1) {
+					// Add a new page at the end
+					const currentPageCount = this.page.getPageCount()
+					topage = currentPageCount + 1
+					this.page.insertPages(topage, ['Importing Page'])
+				} else {
+					const oldPageInfo = this.page.getPageInfo(topage, false)
+					if (!oldPageInfo) throw new Error('Invalid target page')
+				}
 
-					let pageInfo
+				let pageInfo
 
-					if (data.type === 'full' && data.pages) {
-						pageInfo = data.pages[frompage]
+				if (data.type === 'full' && data.pages) {
+					pageInfo = data.pages[frompage]
 
-						// continue below
-					} else if (data.type === 'page') {
-						pageInfo = data.page
+					// continue below
+				} else if (data.type === 'page') {
+					pageInfo = data.page
 
-						frompage = data.oldPageNumber || 1
+					frompage = data.oldPageNumber || 1
 
-						// continue below
-					} else {
-						throw new Error('Cannot import page ')
-					}
+					// continue below
+				} else {
+					throw new Error('Cannot import page ')
+				}
 
-					if (!pageInfo) throw new Error(`No matching page to import`)
+				if (!pageInfo) throw new Error(`No matching page to import`)
 
-					// Setup the new instances
-					const instanceIdMap = this.#importInstances(data.instances, instanceRemapping)
+				// Setup the new instances
+				const instanceIdMap = this.#importInstances(data.instances, instanceRemapping)
 
-					doPageImport(pageInfo, topage, instanceIdMap)
+				doPageImport(pageInfo, topage, instanceIdMap)
 
-					// Report the used remap to the ui, for future imports
-					/** @type {InstanceRemappings} */
-					const instanceRemap2 = {}
-					for (const [id, obj] of Object.entries(instanceIdMap)) {
-						instanceRemap2[id] = obj.id
-					}
+				// Report the used remap to the ui, for future imports
+				/** @type {import('@companion-app/shared/Model/ImportExport.js').InstanceRemappings} */
+				const instanceRemap2 = {}
+				for (const [id, obj] of Object.entries(instanceIdMap)) {
+					instanceRemap2[id] = obj.id
+				}
 
-					return instanceRemap2
-				})
-			}
-		)
+				return instanceRemap2
+			})
+		})
 
-		client.onPromise(
-			'loadsave:import-triggers',
-			/**
-			 * @param {string[]} idsToImport0
-			 * @param {InstanceRemappings} instanceRemapping
-			 * @param {boolean} replaceExisting
-			 * @returns {Promise<InstanceRemappings>}
-			 */
-			async (idsToImport0, instanceRemapping, replaceExisting) => {
-				return this.checkOrRunImportTask('import', async () => {
-					const data = clientPendingImport?.object
-					if (!data) throw new Error('No in-progress import object')
+		client.onPromise('loadsave:import-triggers', async (idsToImport0, instanceRemapping, replaceExisting) => {
+			return this.checkOrRunImportTask('import', async () => {
+				const data = clientPendingImport?.object
+				if (!data) throw new Error('No in-progress import object')
 
-					if (data.type === 'page' || !data.triggers) throw new Error('No triggers in import')
+				if (data.type === 'page' || !data.triggers) throw new Error('No triggers in import')
 
-					// Remove existing triggers
-					if (replaceExisting) {
-						const controls = this.controls.getAllControls()
-						for (const [controlId, control] of controls.entries()) {
-							if (control.type === 'trigger') {
-								this.controls.deleteControl(controlId)
-							}
+				// Remove existing triggers
+				if (replaceExisting) {
+					const controls = this.controls.getAllControls()
+					for (const [controlId, control] of controls.entries()) {
+						if (control.type === 'trigger') {
+							this.controls.deleteControl(controlId)
 						}
 					}
+				}
 
-					// Setup the new instances
-					const instanceIdMap = this.#importInstances(data.instances, instanceRemapping)
+				// Setup the new instances
+				const instanceIdMap = this.#importInstances(data.instances, instanceRemapping)
 
-					const idsToImport = new Set(idsToImport0)
-					for (const id of idsToImport) {
-						const trigger = data.triggers[id]
+				const idsToImport = new Set(idsToImport0)
+				for (const id of idsToImport) {
+					const trigger = data.triggers[id]
 
-						const controlId = CreateTriggerControlId(id)
-						const fixedControlObj = this.#fixupTriggerControl(trigger, instanceIdMap)
-						this.controls.importTrigger(controlId, fixedControlObj)
-					}
+					const controlId = CreateTriggerControlId(id)
+					const fixedControlObj = this.#fixupTriggerControl(trigger, instanceIdMap)
+					this.controls.importTrigger(controlId, fixedControlObj)
+				}
 
-					// Report the used remap to the ui, for future imports
-					/** @type {InstanceRemappings} */
-					const instanceRemap2 = {}
-					for (const [id, obj] of Object.entries(instanceIdMap)) {
-						instanceRemap2[id] = obj.id
-					}
+				// Report the used remap to the ui, for future imports
+				/** @type {import('@companion-app/shared/Model/ImportExport.js').InstanceRemappings} */
+				const instanceRemap2 = {}
+				for (const [id, obj] of Object.entries(instanceIdMap)) {
+					instanceRemap2[id] = obj.id
+				}
 
-					return instanceRemap2
-				})
-			}
-		)
+				return instanceRemap2
+			})
+		})
 	}
 
 	/**
@@ -949,7 +902,7 @@ class DataImportExport extends CoreBase {
 
 	/**
 	 * @param {import('@companion-app/shared/Model/ExportModel.js').ExportInstancesv4 | undefined} instances
-	 * @param {InstanceRemappings} instanceRemapping
+	 * @param {import('@companion-app/shared/Model/ImportExport.js').InstanceRemappings} instanceRemapping
 	 * @returns {InstanceAppliedRemappings}
 	 */
 	#importInstances(instances, instanceRemapping) {
@@ -1254,7 +1207,6 @@ class DataImportExport extends CoreBase {
 export default DataImportExport
 
 /**
- * @typedef {Record<string, string | undefined>} InstanceRemappings
  * @typedef {Record<string, { id: string, label: string, lastUpgradeIndex?: number, oldLabel?: string}>} InstanceAppliedRemappings
  *
  * @typedef {{

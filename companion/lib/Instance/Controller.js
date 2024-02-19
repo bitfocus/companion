@@ -205,11 +205,14 @@ class Instance extends CoreBase {
 	 *
 	 * @param {CreateConnectionData} data
 	 * @param {boolean} disabled
-	 * @returns {string | void}
+	 * @returns {string}
 	 */
 	addInstance(data, disabled) {
 		let module = data.type
 		let product = data.product
+
+		const moduleInfo = this.modules.getModuleManifest(module)
+		if (!moduleInfo) throw new Error(`Unknown module type ${module}`)
 
 		// Find the highest rank given to an instance
 		const highestRank =
@@ -220,33 +223,30 @@ class Instance extends CoreBase {
 					.filter((n) => typeof n === 'number')
 			) || 0
 
-		const moduleInfo = this.modules.getModuleManifest(module)
-		if (moduleInfo) {
-			let id = nanoid()
+		let id = nanoid()
 
-			this.logger.info('Adding connection ' + module + ' ' + product)
+		this.logger.info('Adding connection ' + module + ' ' + product)
 
-			this.store.db[id] = {
-				instance_type: module,
-				sortOrder: highestRank + 1,
-				label: this.makeLabelUnique(moduleInfo.display.shortname),
-				isFirstInit: true,
-				config: {
-					product: product,
-				},
-				lastUpgradeIndex: -1,
-				enabled: !disabled,
-			}
-
-			this.activate_module(id, true)
-
-			this.logger.silly('instance_add', id)
-			this.commitChanges()
-
-			this.emit('connection_added', id)
-
-			return id
+		this.store.db[id] = {
+			instance_type: module,
+			sortOrder: highestRank + 1,
+			label: this.makeLabelUnique(moduleInfo.display.shortname),
+			isFirstInit: true,
+			config: {
+				product: product,
+			},
+			lastUpgradeIndex: -1,
+			enabled: !disabled,
 		}
+
+		this.activate_module(id, true)
+
+		this.logger.silly('instance_add', id)
+		this.commitChanges()
+
+		this.emit('connection_added', id)
+
+		return id
 	}
 
 	/**
@@ -520,7 +520,7 @@ class Instance extends CoreBase {
 			client.leave(InstancesRoom)
 		})
 
-		client.onPromise('connections:edit', async (/** @type {string} */ id) => {
+		client.onPromise('connections:edit', async (id) => {
 			let instance = this.instance.moduleHost.getChild(id)
 
 			if (!instance) {
@@ -534,6 +534,7 @@ class Instance extends CoreBase {
 
 			if (instance) {
 				try {
+					/** @type {any} Making types match is messy */
 					const fields = await instance.requestConfigFields()
 
 					const instanceConf = this.store.db[id]
@@ -554,38 +555,35 @@ class Instance extends CoreBase {
 			}
 		})
 
-		client.onPromise(
-			'connections:set-config',
-			(/** @type {string} */ id, /** @type {string} */ label, /** @type {object} */ config) => {
-				const idUsingLabel = this.getIdForLabel(label)
-				if (idUsingLabel && idUsingLabel !== id) {
-					return 'duplicate label'
-				}
-
-				if (!isLabelValid(label)) {
-					return 'invalid label'
-				}
-
-				this.setInstanceLabelAndConfig(id, label, config)
-
-				return null
+		client.onPromise('connections:set-config', (id, label, config) => {
+			const idUsingLabel = this.getIdForLabel(label)
+			if (idUsingLabel && idUsingLabel !== id) {
+				return 'duplicate label'
 			}
-		)
 
-		client.onPromise('connections:set-enabled', (/** @type {string} */ id, /** @type {boolean} */ state) => {
+			if (!isLabelValid(label)) {
+				return 'invalid label'
+			}
+
+			this.setInstanceLabelAndConfig(id, label, config)
+
+			return null
+		})
+
+		client.onPromise('connections:set-enabled', (id, state) => {
 			this.enableDisableInstance(id, !!state)
 		})
 
-		client.onPromise('connections:delete', async (/** @type {string} */ id) => {
+		client.onPromise('connections:delete', async (id) => {
 			await this.deleteInstance(id)
 		})
 
-		client.onPromise('connections:add', (/** @type {CreateConnectionData} */ module) => {
+		client.onPromise('connections:add', (module) => {
 			const id = this.addInstance(module, false)
 			return id
 		})
 
-		client.onPromise('connections:set-order', async (/** @type {string[]} */ connectionIds) => {
+		client.onPromise('connections:set-order', async (connectionIds) => {
 			if (!Array.isArray(connectionIds)) throw new Error('Expected array of ids')
 
 			// This is a bit naive, but should be sufficient if the client behaves
@@ -611,7 +609,7 @@ class Instance extends CoreBase {
 			this.commitChanges()
 		})
 
-		client.onPromise('connection-debug:subscribe', (/** @type {string} */ connectionId) => {
+		client.onPromise('connection-debug:subscribe', (connectionId) => {
 			if (!this.store.db[connectionId]) return false
 
 			client.join(ConnectionDebugLogRoom(connectionId))
@@ -619,7 +617,7 @@ class Instance extends CoreBase {
 			return true
 		})
 
-		client.onPromise('connection-debug:unsubscribe', (/** @type {string} */ connectionId) => {
+		client.onPromise('connection-debug:unsubscribe', (connectionId) => {
 			client.leave(ConnectionDebugLogRoom(connectionId))
 		})
 	}

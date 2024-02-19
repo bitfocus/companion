@@ -47,8 +47,8 @@ export function EditTriggerPanel({ controlId }: EditTriggerPanelProps) {
 
 		socketEmitPromise(socket, 'controls:subscribe', [controlId])
 			.then((config) => {
-				setConfig(config?.config ?? false)
-				setRuntimeProps(config?.runtime ?? {})
+				setConfig((config as any)?.config ?? false)
+				setRuntimeProps((config as any)?.runtime ?? {})
 				setConfigError(null)
 			})
 			.catch((e) => {

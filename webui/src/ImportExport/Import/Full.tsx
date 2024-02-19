@@ -151,7 +151,7 @@ function FullImportTab({ snapshot }: FullImportTabProps) {
 
 	const doImport = useCallback(() => {
 		socketEmitPromise(socket, 'loadsave:import-full', [config], 60000)
-			.then((_res) => {
+			.then(() => {
 				// notifier.current.show(`Import successful`, `Page was imported successfully`, 10000)
 				window.location.reload()
 			})

@@ -1,4 +1,4 @@
-import React, { FormEvent, useEffect, useState } from 'react'
+import React, { DependencyList, FormEvent, useEffect, useMemo, useState } from 'react'
 import pTimeout from 'p-timeout'
 import { CAlert, CButton, CCol } from '@coreui/react'
 import { ErrorBoundary } from 'react-error-boundary'
@@ -10,50 +10,55 @@ import { useEventListener } from 'usehooks-ts'
 import type { LoaderHeightWidthProps } from 'react-spinners/helpers/props.js'
 import { Socket } from 'socket.io-client'
 import type { AllVariableDefinitions } from '@companion-app/shared/Model/Variables.js'
-import type {
-	ClientConnectionConfig,
-	ClientEventDefinition,
-	ModuleDisplayInfo,
-} from '@companion-app/shared/Model/Common.js'
-import type { ClientTriggerData } from '@companion-app/shared/Model/TriggerModel.js'
-import type { InternalFeedbackDefinition, ClientActionDefinition } from '@companion-app/shared/Model/Options.js'
+import type { ClientConnectionConfig } from '@companion-app/shared/Model/Common.js'
 import type { UserConfigModel } from '@companion-app/shared/Model/UserConfigModel.js'
 import type { ClientDevicesListItem } from '@companion-app/shared/Model/Surfaces.js'
-import type { PageModel } from '@companion-app/shared/Model/PageModel.js'
 import type { CustomVariablesModel } from '@companion-app/shared/Model/CustomVariableModel.js'
+import type {
+	ClientToBackendEventsMap,
+	BackendToClientEventsMap,
+	AddCallbackParamToEvents,
+	StripNever,
+} from '@companion-app/shared/SocketIO.js'
+import { computed } from 'mobx'
 
-export const SocketContext = React.createContext<Socket>(null as any) // TODO - fix this
-export const EventDefinitionsContext = React.createContext<Record<string, ClientEventDefinition | undefined>>({})
+export type CompanionSocketType = Socket<BackendToClientEventsMap, AddCallbackParamToEvents<ClientToBackendEventsMap>>
 
-export const ModulesContext = React.createContext<Record<string, ModuleDisplayInfo>>({})
-export const ActionsContext = React.createContext<
-	Record<string, Record<string, ClientActionDefinition | undefined> | undefined>
->({})
-export const FeedbacksContext = React.createContext<
-	Record<string, Record<string, InternalFeedbackDefinition | undefined> | undefined>
->({})
+export const SocketContext = React.createContext<CompanionSocketType>(null as any) // TODO - fix this
+
 export const ConnectionsContext = React.createContext<Record<string, ClientConnectionConfig>>({})
 export const VariableDefinitionsContext = React.createContext<AllVariableDefinitions>({})
 export const CustomVariableDefinitionsContext = React.createContext<CustomVariablesModel>({})
 export const UserConfigContext = React.createContext<UserConfigModel | null>(null)
 export const SurfacesContext = React.createContext<Record<string, ClientDevicesListItem | undefined>>({})
-export const PagesContext = React.createContext<Record<number, PageModel | undefined>>({})
-export const TriggersContext = React.createContext<Record<string, ClientTriggerData | undefined>>({})
 
-export function socketEmitPromise(
-	socket: Socket,
-	name: string,
-	args: any[],
+type IfReturnIsNever<T extends (...args: any[]) => void> = ReturnType<T> extends never ? never : T
+
+type SocketEmitPromiseEvents = StripNever<{
+	[K in keyof ClientToBackendEventsMap]: ClientToBackendEventsMap[K] extends (...args: any[]) => any
+		? IfReturnIsNever<ClientToBackendEventsMap[K]>
+		: never
+}>
+
+export function socketEmitPromise<T extends keyof SocketEmitPromiseEvents>(
+	socket: CompanionSocketType,
+	name: T,
+	args: Parameters<SocketEmitPromiseEvents[T]>,
 	timeout?: number,
 	timeoutMessage?: string
-): Promise<any> {
-	const p = new Promise((resolve, reject) => {
+): Promise<ReturnType<SocketEmitPromiseEvents[T]>> {
+	const p = new Promise<ReturnType<SocketEmitPromiseEvents[T]>>((resolve, reject) => {
 		console.log('send', name, ...args)
 
-		socket.emit(name, ...args, (err: Error, res: any) => {
-			if (err) reject(err)
-			else resolve(res)
-		})
+		socket.emit(
+			name,
+			// @ts-expect-error types are unhappy because of the complex setup
+			args,
+			(err, res) => {
+				if (err) reject(err)
+				else resolve(res)
+			}
+		)
 	})
 
 	timeout = timeout ?? 5000
@@ -251,7 +256,7 @@ export function LoadingRetryOrError({ error, dataReady, doRetry, autoRetryAfter 
 export function applyPatchOrReplaceSubObject<T extends object | undefined>(
 	oldDefinitions: Record<string, T>,
 	key: string,
-	patch: JsonPatchOperation[],
+	patch: JsonPatchOperation[] | T | null,
 	defVal: T | null
 ) {
 	if (oldDefinitions) {
@@ -310,4 +315,16 @@ export function useOnClickOutsideExt(
 
 export const PreventDefaultHandler = (e: FormEvent): void => {
 	e.preventDefault()
+}
+
+export function useComputed<TCb extends (...args: any[]) => any>(
+	cb: TCb,
+	deps: DependencyList | undefined
+): ReturnType<TCb> {
+	return useMemo(() => computed(cb), deps).get()
+}
+
+/** Type assert that a value is never */
+export function assertNever(_val: never): void {
+	// Nothing to do
 }

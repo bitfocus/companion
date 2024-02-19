@@ -1,21 +1,22 @@
 import React, { useCallback, useContext, useRef } from 'react'
 import { CButton, CButtonGroup, CCol, CRow } from '@coreui/react'
-import { PagesContext, SocketContext, socketEmitPromise } from '../util.js'
+import { socketEmitPromise } from '../util.js'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faPlus, faTrash, faPencil } from '@fortawesome/free-solid-svg-icons'
-import { PageModel } from '@companion/shared/Model/PageModel.js'
 import { GenericConfirmModal, GenericConfirmModalRef } from '../Components/GenericConfirmModal.js'
 import { usePageCount } from '../Hooks/usePagesInfoSubscription.js'
 import { EditPagePropertiesModal, EditPagePropertiesModalRef } from './EditPageProperties.js'
 import { AddPagesModal, AddPagesModalRef } from './PagesAddModal.js'
+import { RootAppStoreContext } from '../Stores/RootAppStore.js'
+import { observer } from 'mobx-react-lite'
+import { PagesStoreModel } from '../Stores/PagesStore.js'
 
 interface PagesListProps {
 	setPageNumber: (page: number) => void
 }
 
-export function PagesList({ setPageNumber }: PagesListProps): JSX.Element {
-	const socket = useContext(SocketContext)
-	const pages = useContext(PagesContext)
+export const PagesList = observer(function PagesList({ setPageNumber }: PagesListProps): JSX.Element {
+	const { socket, pages } = useContext(RootAppStoreContext)
 
 	const pageCount = usePageCount()
 
@@ -87,10 +88,10 @@ export function PagesList({ setPageNumber }: PagesListProps): JSX.Element {
 						</tr>
 					</thead>
 					<tbody>
-						{Object.entries(pages).map(([id, info]) => (
+						{pages.sortedEntries.map((info, id) => (
 							<PageListRow
 								key={id}
-								id={Number(id)}
+								id={id + 1}
 								info={info}
 								pageCount={pageCount}
 								goToPage={goToPage}
@@ -121,11 +122,11 @@ export function PagesList({ setPageNumber }: PagesListProps): JSX.Element {
 			</CCol>
 		</CRow>
 	)
-}
+})
 
 interface PageListRowProps {
 	id: number
-	info: PageModel | undefined
+	info: PagesStoreModel
 	pageCount: number
 	goToPage: (e: React.MouseEvent<HTMLButtonElement>) => void
 	configurePage: (e: React.MouseEvent<HTMLButtonElement>) => void
@@ -133,7 +134,15 @@ interface PageListRowProps {
 	doDeletePage: (e: React.MouseEvent<HTMLButtonElement>) => void
 }
 
-function PageListRow({ id, info, pageCount, goToPage, configurePage, doInsertPage, doDeletePage }: PageListRowProps) {
+const PageListRow = observer(function PageListRow({
+	id,
+	info,
+	pageCount,
+	goToPage,
+	configurePage,
+	doInsertPage,
+	doDeletePage,
+}: PageListRowProps) {
 	return (
 		<tr>
 			<td style={{ width: 0 }}>
@@ -141,7 +150,7 @@ function PageListRow({ id, info, pageCount, goToPage, configurePage, doInsertPag
 					{id}
 				</CButton>
 			</td>
-			<td>{info?.name ?? ''}</td>
+			<td>{info.name ?? ''}</td>
 			<td style={{ width: 0 }}>
 				<CButtonGroup>
 					<CButton
@@ -164,7 +173,7 @@ function PageListRow({ id, info, pageCount, goToPage, configurePage, doInsertPag
 						onClick={doDeletePage}
 						title="Delete"
 						data-page={id}
-						data-name={info?.name}
+						data-name={info.name}
 						disabled={pageCount <= 1}
 					>
 						<FontAwesomeIcon icon={faTrash} />
@@ -173,4 +182,4 @@ function PageListRow({ id, info, pageCount, goToPage, configurePage, doInsertPag
 			</td>
 		</tr>
 	)
-}
+})

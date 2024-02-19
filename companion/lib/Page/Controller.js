@@ -2,7 +2,6 @@ import { cloneDeep } from 'lodash-es'
 import CoreBase from '../Core/Base.js'
 import { oldBankIndexToXY } from '@companion-app/shared/ControlId.js'
 import { nanoid } from 'nanoid'
-import jsonPatch from 'fast-json-patch'
 import { default_nav_buttons_definitions } from './Defaults.js'
 
 const PagesRoom = 'pages'
@@ -31,6 +30,7 @@ const PagesRoom = 'pages'
 class PageController extends CoreBase {
 	/**
 	 * Cache the location of each control
+	 * @type {Map<string, import('@companion-app/shared/Model/Common.js').ControlLocation>}
 	 * @access private
 	 * @readonly
 	 */
@@ -52,13 +52,6 @@ class PageController extends CoreBase {
 	#pageIds = []
 
 	/**
-	 * Last sent data to clients
-	 * @type {Record<number, import('@companion-app/shared/Model/PageModel.js').PageModel> | null}
-	 * @access private
-	 */
-	#lastClientJson = null
-
-	/**
 	 * @param {import('../Registry.js').default} registry - the application core
 	 */
 	constructor(registry) {
@@ -75,7 +68,7 @@ class PageController extends CoreBase {
 	 * @access public
 	 */
 	clientConnect(client) {
-		client.onPromise('pages:set-name', (/** @type {number} */ pageNumber, /** @type {string} */ name) => {
+		client.onPromise('pages:set-name', (pageNumber, name) => {
 			this.logger.silly(`socket: pages:set-name ${pageNumber}: ${name}`)
 
 			const existingData = this.getPageInfo(pageNumber)
@@ -85,6 +78,18 @@ class PageController extends CoreBase {
 			existingData.name = name
 
 			this.#commitChanges([pageNumber], true)
+
+			this.io.emitToRoom(PagesRoom, 'pages:update', {
+				updatedOrder: null,
+				added: [],
+				changes: [
+					{
+						id: existingData.id,
+						name: name,
+						controls: [],
+					},
+				],
+			})
 		})
 
 		client.onPromise('pages:subscribe', () => {
@@ -92,99 +97,71 @@ class PageController extends CoreBase {
 
 			client.join(PagesRoom)
 
-			if (!this.#lastClientJson) this.#lastClientJson = this.getAll(true)
-
-			return this.#lastClientJson
+			return {
+				order: this.#pageIds,
+				pages: this.#pagesById,
+			}
 		})
 		client.onPromise('pages:unsubscribe', () => {
 			client.leave(PagesRoom)
 		})
 
-		client.onPromise(
-			'pages:delete-page',
-			/**
-			 * @param {number} pageNumber
-			 * @returns {'ok' | 'fail'}
-			 */
-			(pageNumber) => {
-				this.logger.silly(`Delete page ${pageNumber}`)
+		client.onPromise('pages:delete-page', (pageNumber) => {
+			this.logger.silly(`Delete page ${pageNumber}`)
 
-				if (this.getPageCount() === 1) return 'fail'
+			if (this.getPageCount() === 1) return 'fail'
 
-				// Delete the controls, and allow them to redraw
-				const controlIds = this.getAllControlIdsOnPage(pageNumber)
-				for (const controlId of controlIds) {
-					this.controls.deleteControl(controlId)
-				}
-
-				// Delete the page
-				this.deletePage(pageNumber)
-
-				return 'ok'
+			// Delete the controls, and allow them to redraw
+			const controlIds = this.getAllControlIdsOnPage(pageNumber)
+			for (const controlId of controlIds) {
+				this.controls.deleteControl(controlId)
 			}
-		)
 
-		client.onPromise(
-			'pages:insert-pages',
-			/**
-			 * @param {number} asPageNumber
-			 * @param {string[]} pageNames
-			 * @returns {'ok' | 'fail'}
-			 */
-			(asPageNumber, pageNames) => {
-				this.logger.silly(`Insert new page ${asPageNumber}`)
+			// Delete the page
+			this.deletePage(pageNumber)
 
-				// Delete the page
-				const pageIds = this.insertPages(asPageNumber, pageNames)
-				if (pageIds.length === 0) throw new Error(`Failed to insert pages`)
+			return 'ok'
+		})
 
-				// Add nav buttons
-				for (let i = 0; i < pageIds.length; i++) {
-					this.createPageDefaultNavButtons(asPageNumber + i)
-				}
+		client.onPromise('pages:insert-pages', (asPageNumber, pageNames) => {
+			this.logger.silly(`Insert new page ${asPageNumber}`)
 
-				return 'ok'
+			// Delete the page
+			const pageIds = this.insertPages(asPageNumber, pageNames)
+			if (pageIds.length === 0) throw new Error(`Failed to insert pages`)
+
+			// Add nav buttons
+			for (let i = 0; i < pageIds.length; i++) {
+				this.createPageDefaultNavButtons(asPageNumber + i)
 			}
-		)
 
-		client.onPromise(
-			'pages:reset-page-clear',
-			/**
-			 * @param {number} pageNumber
-			 * @returns {'ok'}
-			 */
-			(pageNumber) => {
-				this.logger.silly(`Reset page ${pageNumber}`)
+			return 'ok'
+		})
 
-				// Delete the controls, and allow them to redraw
-				const controlIds = this.getAllControlIdsOnPage(pageNumber)
-				for (const controlId of controlIds) {
-					this.controls.deleteControl(controlId)
-				}
+		client.onPromise('pages:reset-page-clear', (pageNumber) => {
+			this.logger.silly(`Reset page ${pageNumber}`)
 
-				// Clear the references on the page
-				this.resetPage(pageNumber)
-
-				// Re-add the nav buttons
-				this.createPageDefaultNavButtons(pageNumber)
-
-				return 'ok'
+			// Delete the controls, and allow them to redraw
+			const controlIds = this.getAllControlIdsOnPage(pageNumber)
+			for (const controlId of controlIds) {
+				this.controls.deleteControl(controlId)
 			}
-		)
 
-		client.onPromise(
-			'pages:reset-page-nav',
-			/**
-			 * @param {number} pageNumber
-			 * @returns {'ok'}
-			 */
-			(pageNumber) => {
-				// make magical page buttons!
-				this.createPageDefaultNavButtons(pageNumber)
+			// Clear the references on the page
+			this.resetPage(pageNumber)
 
-				return 'ok'
-			}
-		)
+			// Re-add the nav buttons
+			this.createPageDefaultNavButtons(pageNumber)
+
+			return 'ok'
+		})
+
+		client.onPromise('pages:reset-page-nav', (pageNumber) => {
+			// make magical page buttons!
+			this.createPageDefaultNavButtons(pageNumber)
+
+			return 'ok'
+		})
 	}
 
 	/**
@@ -216,7 +193,13 @@ class PageController extends CoreBase {
 		const missingPageNumber = this.#pageIds.length + 1
 		changedPageNumbers.push(missingPageNumber)
 		this.graphics.clearAllForPage(missingPageNumber)
+
 		this.#commitChanges(changedPageNumbers, false)
+		this.io.emitToRoom(PagesRoom, 'pages:update', {
+			updatedOrder: this.#pageIds,
+			added: [],
+			changes: [],
+		})
 
 		// inform other interested controllers
 		this.emit('pagecount', this.getPageCount())
@@ -232,8 +215,8 @@ class PageController extends CoreBase {
 	insertPages(asPageNumber, pageNames) {
 		if (asPageNumber > this.getPageCount() + 1 || asPageNumber <= 0) throw new Error('New page number is out of range')
 
-		/** @type {string[]} */
-		const insertedPageIds = []
+		/** @type {import('@companion-app/shared/Model/PageModel.js').PageModel[]} */
+		const insertedPages = []
 
 		for (const pageName of pageNames) {
 			/** @type {import('@companion-app/shared/Model/PageModel.js').PageModel} */
@@ -245,13 +228,15 @@ class PageController extends CoreBase {
 
 			// store the new page
 			this.#pagesById[newPageInfo.id] = newPageInfo
-			insertedPageIds.push(newPageInfo.id)
+			insertedPages.push(newPageInfo)
 		}
 
 		// Early exit if not inserting anything
-		if (insertedPageIds.length === 0) {
+		if (insertedPages.length === 0) {
 			return []
 		}
+
+		const insertedPageIds = insertedPages.map((p) => p.id)
 
 		this.#pageIds.splice(asPageNumber - 1, 0, ...insertedPageIds)
 
@@ -260,6 +245,13 @@ class PageController extends CoreBase {
 
 		// the list is a page shorter, ensure the 'old last' page is reported as undefined
 		this.#commitChanges(changedPageNumbers, false)
+
+		// inform clients
+		this.io.emitToRoom(PagesRoom, 'pages:update', {
+			updatedOrder: this.#pageIds,
+			added: insertedPages,
+			changes: [],
+		})
 
 		// inform other interested controllers
 		this.emit('pagecount', this.getPageCount())
@@ -405,6 +397,23 @@ class PageController extends CoreBase {
 			}
 
 			this.#commitChanges([location.pageNumber], false)
+			this.io.emitToRoom(PagesRoom, 'pages:update', {
+				updatedOrder: null,
+				added: [],
+				changes: [
+					{
+						id: page.id,
+						name: null,
+						controls: [
+							{
+								row: location.row,
+								column: location.column,
+								controlId,
+							},
+						],
+					},
+				],
+			})
 
 			return true
 		} else {
@@ -501,9 +510,20 @@ class PageController extends CoreBase {
 		const pageInfo = this.getPageInfo(pageNumber)
 		if (!pageInfo) return removedControls
 
+		/** @type {import('@companion-app/shared/Model/PageModel.js').PageModelChangesItem['controls']} */
+		const controlChanges = []
+
 		// Clear cache for old controls
-		for (const controlId of Object.values(pageInfo.controls)) {
-			this.#locationCache.delete(controlId)
+		for (const [row, rowObj] of Object.entries(pageInfo.controls)) {
+			if (!rowObj) continue
+			for (const [col, controlId] of Object.entries(rowObj)) {
+				this.#locationCache.delete(controlId)
+				controlChanges.push({
+					row: Number(row),
+					column: Number(col),
+					controlId,
+				})
+			}
 		}
 
 		// Reset relevant properties, but not the id
@@ -511,6 +531,17 @@ class PageController extends CoreBase {
 		pageInfo.controls = {}
 
 		this.#commitChanges([pageNumber], redraw)
+		this.io.emitToRoom(PagesRoom, 'pages:update', {
+			updatedOrder: null,
+			added: [],
+			changes: [
+				{
+					id: pageInfo.id,
+					name: pageInfo.name,
+					controls: controlChanges,
+				},
+			],
+		})
 
 		return removedControls
 	}
@@ -584,6 +615,17 @@ class PageController extends CoreBase {
 		this.logger.silly('Set page ' + pageNumber + ' to ', name)
 
 		this.#commitChanges([pageNumber], redraw)
+		this.io.emitToRoom(PagesRoom, 'pages:update', {
+			updatedOrder: null,
+			added: [],
+			changes: [
+				{
+					id: pageInfo.id,
+					name: name,
+					controls: [],
+				},
+			],
+		})
 	}
 
 	/**
@@ -592,15 +634,6 @@ class PageController extends CoreBase {
 	 * @param {boolean} redraw
 	 */
 	#commitChanges(pageNumbers, redraw = true) {
-		const newJson = this.getAll(true)
-		if (this.io.countRoomMembers(PagesRoom) > 0) {
-			const patch = jsonPatch.compare(this.#lastClientJson || {}, newJson || {})
-			if (patch.length > 0) {
-				this.io.emitToRoom(PagesRoom, 'pages:patch', patch)
-			}
-		}
-		this.#lastClientJson = newJson
-
 		this.db.setKey('page', this.getAll(false))
 
 		for (const pageNumber of pageNumbers) {

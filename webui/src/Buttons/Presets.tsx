@@ -6,22 +6,23 @@ import {
 	socketEmitPromise,
 	applyPatchOrReplaceSubObject,
 	SocketContext,
-	ModulesContext,
 } from '../util.js'
 import { useDrag } from 'react-dnd'
 import { ButtonPreviewBase, RedImage } from '../Components/ButtonPreview.js'
 import { nanoid } from 'nanoid'
-import type { ClientConnectionConfig, ModuleDisplayInfo } from '@companion-app/shared/Model/Common.js'
+import type { ClientConnectionConfig } from '@companion-app/shared/Model/Common.js'
 import type { UIPresetDefinition } from '@companion-app/shared/Model/Presets.js'
-import { Operation as JsonPatchOperation } from 'fast-json-patch'
+import type { Operation as JsonPatchOperation } from 'fast-json-patch'
+import { RootAppStoreContext } from '../Stores/RootAppStore.js'
+import { observer } from 'mobx-react-lite'
+import type { ModuleDisplayInfo } from '@companion-app/shared/Model/ModuleInfo.js'
 
 interface InstancePresetsProps {
 	resetToken: string
 }
 
-export const InstancePresets = function InstancePresets({ resetToken }: InstancePresetsProps) {
-	const socket = useContext(SocketContext)
-	const modules = useContext(ModulesContext)
+export const InstancePresets = observer(function InstancePresets({ resetToken }: InstancePresetsProps) {
+	const { socket, modules } = useContext(RootAppStoreContext)
 	const connectionsContext = useContext(ConnectionsContext)
 
 	const [connectionAndCategory, setConnectionAndCategory] = useState<
@@ -53,7 +54,7 @@ export const InstancePresets = function InstancePresets({ resetToken }: Instance
 				setPresetError('Failed to load presets')
 			})
 
-		const updatePresets = (id: string, patch: JsonPatchOperation[]) => {
+		const updatePresets = (id: string, patch: JsonPatchOperation[] | Record<string, UIPresetDefinition> | null) => {
 			setPresetsMap((oldPresets) =>
 				oldPresets
 					? applyPatchOrReplaceSubObject<Record<string, UIPresetDefinition> | undefined>(oldPresets, id, patch, {})
@@ -83,7 +84,7 @@ export const InstancePresets = function InstancePresets({ resetToken }: Instance
 
 	if (connectionAndCategory[0]) {
 		const connectionInfo = connectionsContext[connectionAndCategory[0]]
-		const moduleInfo = connectionInfo ? modules[connectionInfo.instance_type] : undefined
+		const moduleInfo = connectionInfo ? modules.modules.get(connectionInfo.instance_type) : undefined
 
 		const presets = presetsMap[connectionAndCategory[0]] ?? {}
 
@@ -110,22 +111,25 @@ export const InstancePresets = function InstancePresets({ resetToken }: Instance
 	} else {
 		return <PresetsConnectionList presets={presetsMap} setConnectionAndCategory={setConnectionAndCategory} />
 	}
-}
+})
 
 interface PresetsConnectionListProps {
 	presets: Record<string, Record<string, UIPresetDefinition> | undefined>
 	setConnectionAndCategory: (info: [connectionId: string | null, category: string | null]) => void
 }
 
-function PresetsConnectionList({ presets, setConnectionAndCategory }: PresetsConnectionListProps) {
-	const modules = useContext(ModulesContext)
+const PresetsConnectionList = observer(function PresetsConnectionList({
+	presets,
+	setConnectionAndCategory,
+}: PresetsConnectionListProps) {
+	const { modules } = useContext(RootAppStoreContext)
 	const connectionsContext = useContext(ConnectionsContext)
 
 	const options = Object.entries(presets).map(([id, vals]) => {
 		if (!vals || Object.values(vals).length === 0) return ''
 
 		const connectionInfo = connectionsContext[id]
-		const moduleInfo = connectionInfo ? modules[connectionInfo.instance_type] : undefined
+		const moduleInfo = connectionInfo ? modules.modules.get(connectionInfo.instance_type) : undefined
 
 		return (
 			<div key={id}>
@@ -157,7 +161,7 @@ function PresetsConnectionList({ presets, setConnectionAndCategory }: PresetsCon
 			)}
 		</div>
 	)
-}
+})
 
 interface PresetsCategoryListProps {
 	presets: Record<string, UIPresetDefinition>
@@ -261,7 +265,7 @@ interface PresetIconPreviewProps {
 
 function PresetIconPreview({ connectionId, presetId, title }: PresetIconPreviewProps) {
 	const socket = useContext(SocketContext)
-	const [previewImage, setPreviewImage] = useState(null)
+	const [previewImage, setPreviewImage] = useState<string | null>(null)
 	const [previewError, setPreviewError] = useState(false)
 	const [retryToken, setRetryToken] = useState(nanoid())
 

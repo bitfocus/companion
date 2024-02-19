@@ -1,10 +1,11 @@
 import { CButton, CInputGroup, CInputGroupAppend, CInputGroupPrepend } from '@coreui/react'
-import React, { memo, useCallback, useContext, useMemo } from 'react'
-import { PagesContext } from '../util.js'
+import React, { useCallback, useContext, useMemo } from 'react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faChevronLeft, faChevronRight } from '@fortawesome/free-solid-svg-icons'
 import Select from 'react-select'
-import { PageModel } from '@companion-app/shared/Model/PageModel.js'
+import { RootAppStoreContext } from '../Stores/RootAppStore.js'
+import { observer } from 'mobx-react-lite'
+import { useComputed } from '../util.js'
 
 interface SelectOption {
 	value: number
@@ -17,14 +18,14 @@ interface ButtonGridHeaderProps {
 	newPageAtEnd?: boolean
 }
 
-export const ButtonGridHeader = memo<React.PropsWithChildren<ButtonGridHeaderProps>>(function ButtonGridHeader({
+export const ButtonGridHeader = observer(function ButtonGridHeader({
 	pageNumber,
 	changePage,
 	setPage,
 	newPageAtEnd,
 	children,
-}) {
-	const pagesContext = useContext(PagesContext)
+}: React.PropsWithChildren<ButtonGridHeaderProps>) {
+	const { pages: pagesStore } = useContext(RootAppStoreContext)
 
 	const inputChange = useCallback(
 		(val: SelectOption | null) => {
@@ -43,13 +44,11 @@ export const ButtonGridHeader = memo<React.PropsWithChildren<ButtonGridHeaderPro
 		changePage?.(-1)
 	}, [changePage])
 
-	const pageOptions: SelectOption[] = useMemo(() => {
-		const pageOptions: SelectOption[] = Object.entries(pagesContext)
-			.filter((pg): pg is [string, PageModel] => !!pg[1])
-			.map(([index, value]) => ({
-				value: Number(index),
-				label: `${index} (${value.name})`,
-			}))
+	const pageOptions = useComputed(() => {
+		const pageOptions: SelectOption[] = pagesStore.sortedEntries.map((value, index) => ({
+			value: index + 1,
+			label: `${index + 1} (${value.name})`,
+		}))
 
 		if (newPageAtEnd) {
 			pageOptions.push({
@@ -58,7 +57,7 @@ export const ButtonGridHeader = memo<React.PropsWithChildren<ButtonGridHeaderPro
 			})
 		}
 		return pageOptions
-	}, [pagesContext, newPageAtEnd])
+	}, [pagesStore, newPageAtEnd])
 
 	const currentValue: SelectOption | undefined = useMemo(() => {
 		return (

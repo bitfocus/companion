@@ -8,6 +8,7 @@ import ServiceOscListener from './OscListener.js'
 import ServiceOscSender from './OscSender.js'
 import ServiceRosstalk from './Rosstalk.js'
 import ServiceSatellite from './Satellite.js'
+import { ServiceSharedUdpManager } from './SharedUdpManager.js'
 import ServiceTcp from './Tcp.js'
 import ServiceUdp from './Udp.js'
 import ServiceVideohubPanel from './VideohubPanel.js'
@@ -39,8 +40,7 @@ class ServiceController {
 	constructor(registry) {
 		this.httpApi = new ServiceHttpApi(registry, registry.ui.express.legacyApiRouter)
 		this.httpApi.bindToApp(registry.ui.express.app)
-		// @ts-ignore
-		this.https = new ServiceHttps(registry, registry.ui.express, registry.io)
+		this.https = new ServiceHttps(registry, registry.ui.express)
 		this.oscSender = new ServiceOscSender(registry)
 		this.oscListener = new ServiceOscListener(registry)
 		this.tcp = new ServiceTcp(registry)
@@ -52,6 +52,7 @@ class ServiceController {
 		this.elgatoPlugin = new ServiceElgatoPlugin(registry)
 		this.videohubPanel = new ServiceVideohubPanel(registry)
 		this.bonjourDiscovery = new ServiceBonjourDiscovery(registry)
+		this.sharedUdpManager = new ServiceSharedUdpManager()
 	}
 
 	/**

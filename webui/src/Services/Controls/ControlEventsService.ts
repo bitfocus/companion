@@ -2,7 +2,7 @@ import { useContext, useMemo, useRef } from 'react'
 import { SocketContext, socketEmitPromise } from '../../util.js'
 import { EventInstance } from '@companion-app/shared/Model/EventModel.js'
 import { GenericConfirmModalRef } from '../../Components/GenericConfirmModal.js'
-import { DropdownChoiceId } from '@companion-module/base'
+import type { DropdownChoiceId } from '@companion-module/base'
 
 export interface IEventEditorService {
 	addEvent: (eventType: DropdownChoiceId) => void
@@ -32,7 +32,7 @@ export function useControlEventsEditorService(
 	return useMemo(
 		() => ({
 			addEvent: (eventType: DropdownChoiceId) => {
-				socketEmitPromise(socket, 'controls:event:add', [controlId, eventType]).catch((e) => {
+				socketEmitPromise(socket, 'controls:event:add', [controlId, String(eventType)]).catch((e) => {
 					console.error('Failed to add trigger event', e)
 				})
 			},

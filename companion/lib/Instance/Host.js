@@ -43,7 +43,7 @@ function sleepStrategy(i) {
 /**
  *
  * @param {string} id
- * @returns
+ * @returns {`connection-debug:update:${string}`}
  */
 export function ConnectionDebugLogRoom(id) {
 	return `connection-debug:update:${id}`
@@ -104,7 +104,7 @@ class ModuleHost {
 
 	/**
 	 * Bind events/initialise a connected child process
-	 * @param {?} child
+	 * @param {ModuleChild} child
 	 * @param {() => void} startupCompleted
 	 * @param {(err: Error) => void} startupFailed
 	 */
@@ -132,6 +132,7 @@ class ModuleHost {
 
 			// Stop it now
 			child.monitor?.stop()
+			child.handler?.cleanup()
 			delete child.handler
 		}
 
@@ -483,11 +484,15 @@ class ModuleHost {
 
 						monitor.on('start', () => {
 							child.isReady = false
+							child.handler?.cleanup()
+
 							this.#logger.debug(`Connection "${config.label}" started`)
 							this.#registry.io.emitToRoom(debugLogRoom, debugLogRoom, 'system', '** Connection started **')
 						})
 						monitor.on('stop', () => {
 							child.isReady = false
+							child.handler?.cleanup()
+
 							this.#instanceStatus.updateInstanceStatus(
 								connectionId,
 								child.crashed ? 'crashed' : null,
@@ -500,6 +505,8 @@ class ModuleHost {
 						})
 						monitor.on('crash', () => {
 							child.isReady = false
+							child.handler?.cleanup()
+
 							this.#instanceStatus.updateInstanceStatus(connectionId, null, 'Crashed')
 							this.#logger.debug(`Connection "${config.label}" crashed`)
 							this.#registry.io.emitToRoom(debugLogRoom, debugLogRoom, 'system', '** Connection crashed **')

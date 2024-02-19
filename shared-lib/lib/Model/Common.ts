@@ -1,4 +1,11 @@
-import type { InternalActionInputField } from './Options.js'
+import type { ExtendedInputField, InternalActionInputField } from './Options.js'
+import type { Operation as JsonPatchOperation } from 'fast-json-patch'
+
+export interface ObjectsDiff<T> {
+	added: Record<string, T>
+	changed: Record<string, JsonPatchOperation[]>
+	removed: string[]
+}
 
 export interface AppVersionInfo {
 	appVersion: string
@@ -28,18 +35,7 @@ export interface EmulatorImage {
 	buffer: string | false
 }
 
-export interface ModuleDisplayInfo {
-	id: string
-	name: string
-	version: string
-	hasHelp: boolean
-	bugUrl: string
-	shortname: string
-	manufacturer: string
-	products: string[]
-	keywords: string[]
-	isLegacy?: boolean
-}
+export type EmulatorImageCache = Record<number, Record<number, string | false | undefined> | undefined>
 
 export interface ConnectionStatusEntry {
 	category: string | null
@@ -70,3 +66,20 @@ export interface EventDefinition {
 }
 
 export interface ClientEventDefinition extends EventDefinition {}
+
+export interface WrappedImage {
+	image: string | null
+	isUsed: boolean
+}
+
+export interface HelpDescription {
+	markdown: string
+	baseUrl: string
+}
+
+export interface ClientEditConnectionConfig {
+	fields: Array<ExtendedInputField & { width: number }>
+	label: string | undefined
+	config: unknown
+	instance_type: string | undefined
+}

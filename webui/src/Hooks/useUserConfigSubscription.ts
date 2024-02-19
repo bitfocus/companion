@@ -1,10 +1,9 @@
 import { useEffect, useState } from 'react'
-import { socketEmitPromise } from '../util.js'
-import { Socket } from 'socket.io-client'
+import { CompanionSocketType, socketEmitPromise } from '../util.js'
 import { UserConfigModel } from '@companion-app/shared/Model/UserConfigModel.js'
 
 export function useUserConfigSubscription(
-	socket: Socket,
+	socket: CompanionSocketType,
 	setLoadError?: ((error: string | null) => void) | undefined,
 	retryToken?: string
 ) {
@@ -24,7 +23,7 @@ export function useUserConfigSubscription(
 				setLoadError?.(`Failed to load user config`)
 			})
 
-		const updateUserConfigValue = (key: keyof UserConfigModel, value: any) => {
+		const updateUserConfigValue = (key: string, value: any) => {
 			setUserConfig((oldState) =>
 				oldState
 					? {

@@ -10,8 +10,10 @@ import { useUserConfigSubscription } from '../Hooks/useUserConfigSubscription.js
 import useElementclientSize from '../Hooks/useElementInnerSize.js'
 import { ConfigurePanel } from './ConfigurePanel.js'
 import { ButtonsFromPage } from './ButtonsFromPage.js'
+import { PagesStore } from '../Stores/PagesStore.js'
+import { observer } from 'mobx-react-lite'
 
-export function TabletView() {
+export const TabletView = observer(function TabletView() {
 	const socket = useContext(SocketContext)
 
 	const [loadError, setLoadError] = useState<string | null>(null)
@@ -52,7 +54,9 @@ export function TabletView() {
 	const [retryToken, setRetryToken] = useState(nanoid())
 	const doRetryLoad = useCallback(() => setRetryToken(nanoid()), [])
 
-	const pages = usePagesInfoSubscription(socket, setLoadError, retryToken)
+	const pagesStore = useMemo(() => new PagesStore(), [])
+	const pagesReady = usePagesInfoSubscription(socket, pagesStore, setLoadError, retryToken)
+
 	const userConfig = useUserConfigSubscription(socket, setLoadError, retryToken)
 	const rawGridSize = userConfig?.gridSize
 
@@ -92,8 +96,9 @@ export function TabletView() {
 	)
 
 	// Compile the list of pages we will be showing
-	let validPages = orderedPages.filter((p) => pages && !!pages[p])
-	if (validPages.length === 0) validPages = Object.keys(pages || {}).map((p) => Number(p))
+	const allValidPageNumbers = pagesStore.pageNumbers
+	let validPages = orderedPages.filter((p) => allValidPageNumbers.includes(p))
+	if (validPages.length === 0) validPages = allValidPageNumbers
 
 	const gridSize = useMemo(() => {
 		if (!rawGridSize)
@@ -165,7 +170,7 @@ export function TabletView() {
 		<div className="page-tablet">
 			<div className="scroller">
 				<CContainer fluid className="d-flex flex-column">
-					{pages && rawGridSize ? (
+					{pagesReady && rawGridSize ? (
 						<>
 							<ConfigurePanel updateQueryUrl={updateQueryUrl} query={parsedQuery} gridSize={rawGridSize} />
 
@@ -177,9 +182,7 @@ export function TabletView() {
 												<MyErrorBoundary key={i}>
 													{showPageHeadings ? (
 														<>
-															<div className="page-heading">
-																<h1>{pages[number]?.name}</h1>
-															</div>
+															<PageHeading pagesStore={pagesStore} pageNumber={number} />
 															<div className="page-buttons" style={pageGroupStyle}>
 																<ButtonsFromPage
 																	pageNumber={number}
@@ -218,7 +221,20 @@ export function TabletView() {
 			</div>
 		</div>
 	)
+})
+
+interface PageHeadingProps {
+	pagesStore: PagesStore
+	pageNumber: number
 }
+
+const PageHeading = observer(function PageHeading({ pagesStore, pageNumber }: PageHeadingProps) {
+	return (
+		<div className="page-heading">
+			<h1>{pagesStore.get(pageNumber)?.name}</h1>
+		</div>
+	)
+})
 
 function clampValue(value: number, min: number, max: number, fallback: number): number {
 	const valueNumber = Number(value)

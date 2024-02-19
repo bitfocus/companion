@@ -1,10 +1,9 @@
-import React, { useCallback, useContext, useMemo } from 'react'
-import { ActionsContext, ConnectionsContext } from '../util.js'
+import React, { useCallback, useContext } from 'react'
+import { ConnectionsContext, useComputed } from '../util.js'
 import Select, { createFilter } from 'react-select'
 import { MenuPortalContext } from '../Components/DropdownInputField.js'
 import { observer } from 'mobx-react-lite'
 import { RootAppStoreContext } from '../Stores/RootAppStore.js'
-import { computed } from 'mobx'
 
 const baseFilter = createFilter<AddActionOption>()
 const filterOptions: ReturnType<typeof createFilter<AddActionOption>> = (candidate, input): boolean => {
@@ -38,51 +37,45 @@ export const AddActionDropdown = observer(function AddActionDropdown({
 	onSelect,
 	placeholder,
 }: AddActionDropdownProps) {
-	const { recentlyAddedActions } = useContext(RootAppStoreContext)
+	const { actionDefinitions, recentlyAddedActions } = useContext(RootAppStoreContext)
 	const menuPortal = useContext(MenuPortalContext)
 	const connectionsContext = useContext(ConnectionsContext)
-	const actionsContext = useContext(ActionsContext)
 
-	const options = useMemo(
-		() =>
-			computed(() => {
-				const options: Array<AddActionOption | AddActionGroup> = []
-				for (const [connectionId, connectionActions] of Object.entries(actionsContext)) {
-					for (const [actionId, action] of Object.entries(connectionActions || {})) {
-						if (!action) continue
-						const connectionLabel = connectionsContext[connectionId]?.label ?? connectionId
-						options.push({
-							isRecent: false,
-							value: `${connectionId}:${actionId}`,
-							label: `${connectionLabel}: ${action.label}`,
-						})
-					}
-				}
-
-				const recents: AddActionOption[] = []
-				for (const actionType of recentlyAddedActions.recentIds) {
-					if (actionType) {
-						const [connectionId, actionId] = actionType.split(':', 2)
-						const actionInfo = actionsContext[connectionId]?.[actionId]
-						if (actionInfo) {
-							const connectionLabel = connectionsContext[connectionId]?.label ?? connectionId
-							recents.push({
-								isRecent: true,
-								value: `${connectionId}:${actionId}`,
-								label: `${connectionLabel}: ${actionInfo.label}`,
-							})
-						}
-					}
-				}
+	const options = useComputed(() => {
+		const options: Array<AddActionOption | AddActionGroup> = []
+		for (const [connectionId, connectionActions] of actionDefinitions.connections.entries()) {
+			for (const [actionId, action] of connectionActions.entries()) {
+				const connectionLabel = connectionsContext[connectionId]?.label ?? connectionId
 				options.push({
-					label: 'Recently Used',
-					options: recents,
+					isRecent: false,
+					value: `${connectionId}:${actionId}`,
+					label: `${connectionLabel}: ${action.label}`,
 				})
+			}
+		}
 
-				return options
-			}),
-		[actionsContext, connectionsContext, recentlyAddedActions.recentIds]
-	).get()
+		const recents: AddActionOption[] = []
+		for (const actionType of recentlyAddedActions.recentIds) {
+			if (actionType) {
+				const [connectionId, actionId] = actionType.split(':', 2)
+				const actionInfo = actionDefinitions.connections.get(connectionId)?.get(actionId)
+				if (actionInfo) {
+					const connectionLabel = connectionsContext[connectionId]?.label ?? connectionId
+					recents.push({
+						isRecent: true,
+						value: `${connectionId}:${actionId}`,
+						label: `${connectionLabel}: ${actionInfo.label}`,
+					})
+				}
+			}
+		}
+		options.push({
+			label: 'Recently Used',
+			options: recents,
+		})
+
+		return options
+	}, [actionDefinitions, connectionsContext, recentlyAddedActions.recentIds])
 
 	const innerChange = useCallback(
 		(e: AddActionOption | null) => {

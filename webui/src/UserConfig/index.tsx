@@ -50,7 +50,7 @@ function UserConfigTable() {
 	const config = useContext(UserConfigContext)
 
 	const setValue = useCallback(
-		(key, value) => {
+		(key: string, value: any) => {
 			console.log('set ', key, value)
 			socket.emit('set_userconfig_key', key, value)
 		},
@@ -58,7 +58,7 @@ function UserConfigTable() {
 	)
 
 	const resetValue = useCallback(
-		(key) => {
+		(key: string) => {
 			console.log('reset ', key)
 			socket.emit('reset_userconfig_key', key)
 		},

@@ -11,7 +11,7 @@ import {
 } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import React, { useCallback, useContext, useMemo, useRef, useState } from 'react'
-import { FeedbacksContext, ConnectionsContext, MyErrorBoundary, PreventDefaultHandler } from '../util.js'
+import { ConnectionsContext, MyErrorBoundary, PreventDefaultHandler } from '../util.js'
 import { OptionsInputField } from './OptionsInputField.js'
 import { useDrag, useDrop } from 'react-dnd'
 import { GenericConfirmModal, GenericConfirmModalRef } from '../Components/GenericConfirmModal.js'
@@ -22,7 +22,7 @@ import { usePanelCollapseHelper } from '../Helpers/CollapseHelper.js'
 import { OptionButtonPreview } from './OptionButtonPreview.js'
 import { ButtonStyleProperties } from '@companion-app/shared/Style.js'
 import { FeedbackInstance } from '@companion-app/shared/Model/FeedbackModel.js'
-import { InternalFeedbackDefinition } from '@companion-app/shared/Model/Options.js'
+import { InternalFeedbackDefinition } from '@companion-app/shared/Model/FeedbackDefinitionModel.js'
 import { DropdownChoiceId } from '@companion-module/base'
 import { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import { useOptionsAndIsVisible } from '../Hooks/useOptionsAndIsVisible.js'
@@ -34,6 +34,8 @@ import {
 	useControlFeedbackService,
 	useControlFeedbacksEditorService,
 } from '../Services/Controls/ControlFeedbacksService.js'
+import { observer } from 'mobx-react-lite'
+import { RootAppStoreContext } from '../Stores/RootAppStore.js'
 
 interface ControlFeedbacksEditorProps {
 	controlId: string
@@ -244,7 +246,7 @@ interface FeedbackEditorProps {
 	booleanOnly: boolean
 }
 
-function FeedbackEditor({
+const FeedbackEditor = observer(function FeedbackEditor({
 	entityType,
 	feedback,
 	location,
@@ -254,15 +256,15 @@ function FeedbackEditor({
 	doExpand,
 	booleanOnly,
 }: FeedbackEditorProps) {
-	const feedbacksContext = useContext(FeedbacksContext)
+	const { feedbackDefinitions } = useContext(RootAppStoreContext)
 	const connectionsContext = useContext(ConnectionsContext)
 
 	const connectionInfo = connectionsContext[feedback.instance_id]
 	const connectionLabel = connectionInfo?.label ?? feedback.instance_id
 
-	const feedbackSpec = (feedbacksContext[feedback.instance_id] || {})[feedback.type]
+	const feedbackSpec = feedbackDefinitions.connections.get(feedback.instance_id)?.get(feedback.type)
 
-	const [feedbackOptions, optionVisibility] = useOptionsAndIsVisible(feedbackSpec, feedback)
+	const [feedbackOptions, optionVisibility] = useOptionsAndIsVisible(feedbackSpec?.options, feedback?.options)
 
 	const innerSetEnabled = useCallback((e) => service.setEnabled(e.target.checked), [service.setEnabled])
 
@@ -336,7 +338,7 @@ function FeedbackEditor({
 						{feedbackSpec?.description || ''}
 					</div>
 
-					{location && showButtonPreview && (
+					{showButtonPreview && (
 						<div className="cell-button-preview">
 							<OptionButtonPreview location={location} options={feedback.options} />
 						</div>
@@ -406,7 +408,7 @@ function FeedbackEditor({
 			)}
 		</>
 	)
-}
+})
 
 interface FeedbackManageStylesProps {
 	feedbackSpec: InternalFeedbackDefinition | undefined

@@ -1,6 +1,7 @@
 import React, { Component } from 'react'
 import { CAlert, CListGroupItem, CSwitch } from '@coreui/react'
-import type { Socket } from 'socket.io-client'
+import type { CompanionSocketType } from '../util.js'
+import { CloudRegionState } from '@companion-app/shared/Model/Cloud.js'
 
 // The cloud part is written in old fashioned Class-components
 // because even if the hipsters say it's slow and retarted, i think it's prettier.
@@ -8,19 +9,12 @@ import type { Socket } from 'socket.io-client'
 const onlineServerStyle: React.CSSProperties = { color: 'green' }
 
 interface CloudRegionPanelProps {
-	socket: Socket
+	socket: CompanionSocketType
 	id: string
 	disabled: boolean
 }
-interface CloudRegionPanelState {
-	connected: boolean
-	enabled: boolean
-	error: string | null
-	name: string
-	pingResults: number
-}
 
-export class CloudRegionPanel extends Component<CloudRegionPanelProps, CloudRegionPanelState> {
+export class CloudRegionPanel extends Component<CloudRegionPanelProps, CloudRegionState> {
 	constructor(props: CloudRegionPanelProps) {
 		super(props)
 
@@ -47,13 +41,13 @@ export class CloudRegionPanel extends Component<CloudRegionPanelProps, CloudRegi
 		this.props.socket.off('cloud_region_state', this.cloudStateDidUpdate)
 	}
 
-	private cloudStateDidUpdate(id: string, newState: CloudRegionPanelState) {
+	private cloudStateDidUpdate(id: string, newState: CloudRegionState) {
 		if (id === this.props.id) {
 			this.setState({ ...newState })
 		}
 	}
 
-	private cloudSetState(newState: Partial<CloudRegionPanelState>) {
+	private cloudSetState(newState: Partial<CloudRegionState>) {
 		if (!this.props.disabled) {
 			this.props.socket.emit('cloud_region_state_set', this.props.id, newState)
 			// Reset the error message if the user changes the enabled state

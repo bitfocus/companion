@@ -644,7 +644,7 @@ class SurfaceHandler extends CoreBase {
 
 	/**
 	 * Get the 'SurfaceGroup' config for this surface, when run as an auto group
-	 * @returns {import('./Group.js').SurfaceGroupConfig}
+	 * @returns {import('@companion-app/shared/Model/Surfaces.js').SurfaceGroupConfig}
 	 */
 	getGroupConfig() {
 		if (this.getGroupId()) throw new Error('Cannot retrieve the config from a non-auto surface')
@@ -662,7 +662,7 @@ class SurfaceHandler extends CoreBase {
 
 	/**
 	 * Set and save the 'SurfaceGroup' config for this surface, when run as an auto group
-	 * @param {import('./Group.js').SurfaceGroupConfig} groupConfig
+	 * @param {import('@companion-app/shared/Model/Surfaces.js').SurfaceGroupConfig} groupConfig
 	 * @returns {void}
 	 */
 	saveGroupConfig(groupConfig) {

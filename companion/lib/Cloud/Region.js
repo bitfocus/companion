@@ -343,7 +343,7 @@ class CloudRegion {
 
 		if ((!newState.enabled || !newState.cloudActive) && draftState.error) {
 			// Don't save error when disabled
-			delete newState.error
+			newState.error = null
 		}
 
 		let abortState = false
@@ -476,7 +476,7 @@ export default CloudRegion
  * @property {boolean} connected - is the cloud service connected
  * @property {boolean} enabled - is the region enabled
  * @property {number} loginRetry - number of ticks before retrying login
- * @property {string | undefined} error - error message
+ * @property {string | null} error - error message
  * @property {string} id - region id
  * @property {string} name - region name
  * @property {number} pingResults - ping result

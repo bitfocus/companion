@@ -30,7 +30,7 @@ export function RecorderSessionFinishModal({ doClose, sessionId }: RecorderSessi
 	const socket = useContext(SocketContext)
 
 	const doSave = useCallback(
-		(controlId: string, stepId: string | null, setId: string | null, mode: 'replace' | 'append') => {
+		(controlId: string, stepId: string, setId: string, mode: 'replace' | 'append') => {
 			socketEmitPromise(socket, 'action-recorder:session:save-to-control', [sessionId, controlId, stepId, setId, mode])
 				.then(() => {
 					doClose()

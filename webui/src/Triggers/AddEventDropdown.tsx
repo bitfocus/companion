@@ -1,8 +1,10 @@
-import React, { memo, useCallback, useContext, useMemo } from 'react'
-import { EventDefinitionsContext } from '../util.js'
+import React, { useCallback, useContext } from 'react'
 import Select from 'react-select'
 import { MenuPortalContext } from '../Components/DropdownInputField.js'
 import type { DropdownChoice, DropdownChoiceId } from '@companion-module/base'
+import { RootAppStoreContext } from '../Stores/RootAppStore.js'
+import { observer } from 'mobx-react-lite'
+import { useComputed } from '../util.js'
 
 const noOptionsMessage = ({}) => {
 	return 'No events found'
@@ -10,14 +12,15 @@ const noOptionsMessage = ({}) => {
 interface AddEventDropdownProps {
 	onSelect: (value: DropdownChoiceId) => void
 }
-export const AddEventDropdown = memo(function AddEventDropdown({ onSelect }: AddEventDropdownProps) {
+export const AddEventDropdown = observer(function AddEventDropdown({ onSelect }: AddEventDropdownProps) {
 	const menuPortal = useContext(MenuPortalContext)
-	const EventDefinitions = useContext(EventDefinitionsContext)
+	const { eventDefinitions } = useContext(RootAppStoreContext)
 
-	const options = useMemo(() => {
+	const options = useComputed(() => {
 		const options: DropdownChoice[] = []
-		for (const [eventId, event] of Object.entries(EventDefinitions || {})) {
+		for (const [eventId, event] of Object.entries(eventDefinitions.definitions)) {
 			if (!event) continue
+
 			options.push({
 				id: eventId,
 				label: event.name,
@@ -28,7 +31,7 @@ export const AddEventDropdown = memo(function AddEventDropdown({ onSelect }: Add
 		options.sort((a, b) => a.label.localeCompare(b.label))
 
 		return options
-	}, [EventDefinitions])
+	}, [eventDefinitions])
 
 	const innerChange = useCallback(
 		(e: DropdownChoice | null) => {

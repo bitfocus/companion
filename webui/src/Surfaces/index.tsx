@@ -19,7 +19,7 @@ export const SurfacesPage = memo(function SurfacesPage() {
 	const confirmRef = useRef<GenericConfirmModalRef>(null)
 
 	const [scanning, setScanning] = useState(false)
-	const [scanError, setScanError] = useState(null)
+	const [scanError, setScanError] = useState<string | null>(null)
 
 	const refreshUSB = useCallback(() => {
 		setScanning(true)

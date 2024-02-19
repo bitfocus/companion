@@ -804,9 +804,21 @@ export default class ControlTrigger extends ControlBase {
 		const newJson = cloneDeep(this.toTriggerJSON())
 
 		if (this.io.countRoomMembers(TriggersListRoom) > 0) {
-			const patch = jsonPatch.compare(this.#lastSentTriggerJson || {}, newJson || {})
-			if (patch.length > 0) {
-				this.io.emitToRoom(TriggersListRoom, `triggers:update`, this.controlId, patch)
+			if (this.#lastSentTriggerJson) {
+				const patch = jsonPatch.compare(this.#lastSentTriggerJson || {}, newJson || {})
+				if (patch.length > 0) {
+					this.io.emitToRoom(TriggersListRoom, `triggers:update`, {
+						type: 'update',
+						controlId: this.controlId,
+						patch,
+					})
+				}
+			} else {
+				this.io.emitToRoom(TriggersListRoom, `triggers:update`, {
+					type: 'add',
+					controlId: this.controlId,
+					info: newJson,
+				})
 			}
 		}
 
@@ -832,7 +844,10 @@ export default class ControlTrigger extends ControlBase {
 		super.destroy()
 
 		if (this.io.countRoomMembers(TriggersListRoom) > 0) {
-			this.io.emitToRoom(TriggersListRoom, `triggers:update`, this.controlId, null)
+			this.io.emitToRoom(TriggersListRoom, `triggers:update`, {
+				type: 'remove',
+				controlId: this.controlId,
+			})
 		}
 	}
 

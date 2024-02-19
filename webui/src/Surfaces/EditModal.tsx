@@ -24,7 +24,7 @@ import { faQuestionCircle } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { InternalInstanceField } from '../Controls/InternalInstanceFields.js'
 import { MenuPortalContext } from '../Components/DropdownInputField.js'
-import { ClientDevicesListItem } from '@companion-app/shared/Model/Surfaces.js'
+import { ClientDevicesListItem, SurfaceGroupConfig, SurfacePanelConfig } from '@companion-app/shared/Model/Surfaces.js'
 import { InternalInputField } from '@companion-app/shared/Model/Options.js'
 
 const PAGE_FIELD_SPEC: InternalInputField = {
@@ -79,8 +79,8 @@ export const SurfaceEditModal = forwardRef<SurfaceEditModalRef, SurfaceEditModal
 			}
 		}
 
-		const [surfaceConfig, setSurfaceConfig] = useState<Record<string, any> | null>(null)
-		const [groupConfig, setGroupConfig] = useState<Record<string, any> | null>(null)
+		const [surfaceConfig, setSurfaceConfig] = useState<SurfacePanelConfig | null>(null)
+		const [groupConfig, setGroupConfig] = useState<SurfaceGroupConfig | null>(null)
 		const [configLoadError, setConfigLoadError] = useState<string | null>(null)
 		const [reloadToken, setReloadToken] = useState(nanoid())
 
@@ -158,7 +158,7 @@ export const SurfaceEditModal = forwardRef<SurfaceEditModalRef, SurfaceEditModal
 				console.log('update surface', key, value)
 				if (surfaceId) {
 					setSurfaceConfig((oldConfig) => {
-						const newConfig = {
+						const newConfig: SurfacePanelConfig = {
 							...oldConfig,
 							[key]: value,
 						}
@@ -197,6 +197,7 @@ export const SurfaceEditModal = forwardRef<SurfaceEditModalRef, SurfaceEditModal
 						})
 
 					setGroupConfig((oldConfig) => {
+						if (!oldConfig) return oldConfig
 						return {
 							...oldConfig,
 							[key]: value,
@@ -209,6 +210,7 @@ export const SurfaceEditModal = forwardRef<SurfaceEditModalRef, SurfaceEditModal
 
 		const setSurfaceGroupId = useCallback(
 			(groupId0: string) => {
+				if (!surfaceId) return
 				const groupId = !groupId0 || groupId0 === 'null' ? null : groupId0
 				socketEmitPromise(socket, 'surfaces:add-to-group', [groupId, surfaceId]).catch((e) => {
 					console.log('Config update failed', e)

@@ -6,7 +6,7 @@ import { useDeepCompareEffect } from 'use-deep-compare'
 import { ControlLocation } from '@companion-app/shared/Model/Common.js'
 
 interface OptionButtonPreviewProps {
-	location: ControlLocation
+	location: ControlLocation | undefined
 	options: Record<string, any>
 }
 
@@ -31,7 +31,7 @@ export function OptionButtonPreview({ location, options }: OptionButtonPreviewPr
 				setImage(null)
 			})
 
-		const updateImage = (newImage: string) => {
+		const updateImage = (newImage: string | null) => {
 			setImage(newImage)
 		}
 

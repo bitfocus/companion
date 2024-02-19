@@ -1,14 +1,6 @@
 import React, { useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react'
 import { CButton, CCol, CRow, CSelect } from '@coreui/react'
-import {
-	ConnectionsContext,
-	ModulesContext,
-	MyErrorBoundary,
-	PagesContext,
-	SocketContext,
-	UserConfigContext,
-	socketEmitPromise,
-} from '../../util.js'
+import { ConnectionsContext, MyErrorBoundary, SocketContext, UserConfigContext, socketEmitPromise } from '../../util.js'
 import { ButtonGridHeader } from '../../Buttons/ButtonGridHeader.js'
 import { usePagePicker } from '../../Hooks/usePagePicker.js'
 import {
@@ -21,8 +13,10 @@ import {
 import { faHome } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { useHasBeenRendered } from '../../Hooks/useHasBeenRendered.js'
-import type { ClientImportObject } from '@companion-app/shared/Model/ImportExport.js'
+import type { ClientImportObject, ClientImportObjectInstance } from '@companion-app/shared/Model/ImportExport.js'
 import { compareExportedInstances } from '@companion-app/shared/Import.js'
+import { RootAppStoreContext } from '../../Stores/RootAppStore.js'
+import { observer } from 'mobx-react-lite'
 
 interface ImportPageWizardProps {
 	snapshot: ClientImportObject
@@ -32,7 +26,7 @@ interface ImportPageWizardProps {
 }
 
 export function ImportPageWizard({ snapshot, instanceRemap, setInstanceRemap, doImport }: ImportPageWizardProps) {
-	const pages = useContext(PagesContext)
+	const { pages } = useContext(RootAppStoreContext)
 	const userConfig = useContext(UserConfigContext)
 
 	const isSinglePage = snapshot.type === 'page'
@@ -171,9 +165,6 @@ interface ImportRemapProps {
 }
 
 export function ImportRemap({ snapshot, instanceRemap, setInstanceRemap }: ImportRemapProps) {
-	const modules = useContext(ModulesContext)
-	const connectionsContext = useContext(ConnectionsContext)
-
 	const sortedInstances = useMemo(() => {
 		if (!snapshot.instances) return []
 
@@ -200,46 +191,73 @@ export function ImportRemap({ snapshot, instanceRemap, setInstanceRemap }: Impor
 							<td colSpan={3}>No connections</td>
 						</tr>
 					)}
-					{sortedInstances.map(([key, instance]) => {
-						const snapshotModule = modules[instance.instance_type]
-						const currentInstances = Object.entries(connectionsContext).filter(
-							([_id, inst]) => inst.instance_type === instance.instance_type
-						)
-
-						return (
-							<tr>
-								<td>
-									{snapshotModule ? (
-										<CSelect
-											value={instanceRemap[key] ?? ''}
-											onChange={(e) => setInstanceRemap(key, e.currentTarget.value)}
-										>
-											<option value="_new">[ Create new connection ]</option>
-											<option value="_ignore">[ Ignore ]</option>
-											{currentInstances.map(([id, inst]) => (
-												<option key={id} value={id}>
-													{inst.label}
-												</option>
-											))}
-										</CSelect>
-									) : (
-										'Ignored'
-									)}
-								</td>
-								<td>{snapshotModule ? snapshotModule.name : `Unknown module (${instance.instance_type})`}</td>
-								<td>{instance.label}</td>
-							</tr>
-						)
-					})}
+					{sortedInstances.map(([key, instance]) => (
+						<ImportRemapRow
+							key={key}
+							id={key}
+							instance={instance}
+							instanceRemap={instanceRemap}
+							setInstanceRemap={setInstanceRemap}
+						/>
+					))}
 				</tbody>
 			</table>
 		</div>
 	)
 }
 
+interface ImportRemapRowProps {
+	id: string
+	instance: ClientImportObjectInstance
+	instanceRemap: Record<string, string | undefined>
+	setInstanceRemap: (fromId: string, toId: string) => void
+}
+
+const ImportRemapRow = observer(function ImportRemapRow({
+	id,
+	instance,
+	instanceRemap,
+	setInstanceRemap,
+}: ImportRemapRowProps) {
+	const { modules } = useContext(RootAppStoreContext)
+	const connectionsContext = useContext(ConnectionsContext)
+
+	const snapshotModule = modules.modules.get(instance.instance_type)
+	const currentInstances = Object.entries(connectionsContext).filter(
+		([_id, inst]) => inst.instance_type === instance.instance_type
+	)
+
+	const onChange = useCallback(
+		(e: React.ChangeEvent<HTMLSelectElement>) => setInstanceRemap(id, e.currentTarget.value),
+		[setInstanceRemap]
+	)
+
+	return (
+		<tr>
+			<td>
+				{snapshotModule ? (
+					<CSelect value={instanceRemap[id] ?? ''} onChange={onChange}>
+						<option value="_new">[ Create new connection ]</option>
+						<option value="_ignore">[ Ignore ]</option>
+						{currentInstances.map(([id, inst]) => (
+							<option key={id} value={id}>
+								{inst.label}
+							</option>
+						))}
+					</CSelect>
+				) : (
+					'Ignored'
+				)}
+			</td>
+			<td>{snapshotModule ? snapshotModule.name : `Unknown module (${instance.instance_type})`}</td>
+			<td>{instance.label}</td>
+		</tr>
+	)
+})
+
 function ButtonImportPreview({ ...props }: ButtonInfiniteGridButtonProps) {
 	const socket = useContext(SocketContext)
-	const [previewImage, setPreviewImage] = useState(null)
+	const [previewImage, setPreviewImage] = useState<string | null>(null)
 
 	useEffect(() => {
 		setPreviewImage(null)

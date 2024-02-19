@@ -1,5 +1,5 @@
-import React, { memo, useCallback, useContext, useEffect, useMemo, useState } from 'react'
-import { LoadingRetryOrError, sandbox, socketEmitPromise, SocketContext, ModulesContext } from '../util.js'
+import React, { useCallback, useContext, useEffect, useMemo, useState } from 'react'
+import { LoadingRetryOrError, socketEmitPromise } from '../util.js'
 import { CRow, CCol, CButton } from '@coreui/react'
 import { ColorInputField, DropdownInputField, NumberInputField, TextInputField } from '../Components/index.js'
 import { nanoid } from 'nanoid'
@@ -10,7 +10,10 @@ import { isLabelValid } from '@companion-app/shared/Label.js'
 import CSwitch from '../CSwitch.js'
 import { BonjourDeviceInputField } from '../Components/BonjourDeviceInputField.js'
 import { ConnectionStatusEntry } from '@companion-app/shared/Model/Common.js'
-import { SomeCompanionConfigField } from '@companion-module/base'
+import { useOptionsAndIsVisible } from '../Hooks/useOptionsAndIsVisible.js'
+import { ExtendedConfigField, ExtendedInputField } from '@companion-app/shared/Model/Options.js'
+import { RootAppStoreContext } from '../Stores/RootAppStore.js'
+import { observer } from 'mobx-react-lite'
 
 interface ConnectionEditPanelProps {
 	connectionId: string
@@ -53,24 +56,26 @@ interface ConnectionEditPanelInnerProps {
 	showHelp: (moduleId: string) => void
 }
 
-const ConnectionEditPanelInner = memo(function ConnectionEditPanelInner({
+const ConnectionEditPanelInner = observer(function ConnectionEditPanelInner({
 	connectionId,
 	doConfigureConnection,
 	showHelp,
 }: ConnectionEditPanelInnerProps) {
-	const socket = useContext(SocketContext)
-	const modules = useContext(ModulesContext)
+	const { socket, modules } = useContext(RootAppStoreContext)
 
 	const [error, setError] = useState<string | null>(null)
 	const [reloadToken, setReloadToken] = useState(nanoid())
 
-	const [configFields, setConfigFields] = useState<SomeCompanionConfigField[] | null>([])
+	const [configFields, setConfigFields] = useState<Array<ExtendedInputField & { width: number }> | null>([])
 	const [connectionConfig, setConnectionConfig] = useState<Record<string, any> | null>(null)
 	const [connectionLabel, setConnectionLabel] = useState<string | null>(null)
 	const [connectionType, setConnectionType] = useState<string | null>(null)
 	const [validFields, setValidFields] = useState<Record<string, boolean | undefined> | null>(null)
 
-	const [fieldVisibility, setFieldVisibility] = useState<Record<string, boolean>>({})
+	const [configOptions, fieldVisibility] = useOptionsAndIsVisible<ExtendedInputField & { width: number }>(
+		configFields,
+		connectionConfig
+	)
 
 	const invalidFieldNames = useMemo(() => {
 		const fieldNames: string[] = []
@@ -96,7 +101,7 @@ const ConnectionEditPanelInner = memo(function ConnectionEditPanelInner({
 
 		const newLabel = connectionLabel?.trim()
 
-		if (!newLabel || !isLabelValid(newLabel) || invalidFieldNames.length > 0) {
+		if (!newLabel || !isLabelValid(newLabel) || invalidFieldNames.length > 0 || !connectionConfig) {
 			setError(`Some config fields are not valid: ${invalidFieldNames.join(', ')}`)
 			return
 		}
@@ -130,17 +135,12 @@ const ConnectionEditPanelInner = memo(function ConnectionEditPanelInner({
 						for (const field of res.fields) {
 							// Real validation status gets generated when the editor components first mount
 							validFields[field.id] = true
-
-							// deserialize `isVisible` with a sandbox/proxy version
-							if (typeof field.isVisibleFn === 'string') {
-								field.isVisible = sandbox(field.isVisibleFn)
-							}
 						}
 
 						setConfigFields(res.fields)
-						setConnectionLabel(res.label)
-						setConnectionType(res.instance_type)
-						setConnectionConfig(res.config)
+						setConnectionLabel(res.label ?? null)
+						setConnectionType(res.instance_type ?? null)
+						setConnectionConfig(res.config as any)
 						setValidFields(validFields)
 					} else {
 						setError(`Connection config unavailable`)
@@ -179,26 +179,7 @@ const ConnectionEditPanelInner = memo(function ConnectionEditPanelInner({
 		}))
 	}, [])
 
-	useEffect(() => {
-		const visibility: Record<string, boolean> = {}
-
-		if (configFields === null || connectionConfig === null) {
-			return
-		}
-		for (const field of configFields) {
-			if (typeof field.isVisible === 'function') {
-				visibility[field.id] = field.isVisible(connectionConfig, field.isVisibleData)
-			}
-		}
-
-		setFieldVisibility(visibility)
-
-		return () => {
-			setFieldVisibility({})
-		}
-	}, [configFields, connectionConfig])
-
-	const moduleInfo = connectionType ? modules[connectionType] : undefined
+	const moduleInfo = connectionType ? modules.modules.get(connectionType) : undefined
 	const dataReady = !!connectionConfig && !!configFields && !!validFields
 	return (
 		<div>
@@ -223,7 +204,7 @@ const ConnectionEditPanelInner = memo(function ConnectionEditPanelInner({
 							/>
 						</CCol>
 
-						{configFields.map((field, i) => {
+						{configOptions.map((field, i) => {
 							return (
 								<CCol
 									key={i}
@@ -274,7 +255,7 @@ const ConnectionEditPanelInner = memo(function ConnectionEditPanelInner({
 interface ConfigFieldProps {
 	setValue: (key: string, value: any) => void
 	setValid: (key: string, valid: boolean) => void
-	definition: SomeCompanionConfigField
+	definition: ExtendedInputField | ExtendedConfigField
 	value: any
 	connectionId: string
 }

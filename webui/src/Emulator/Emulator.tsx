@@ -15,10 +15,13 @@ import { dsanMastercueKeymap, keyboardKeymap, logitecKeymap } from './Keymaps.js
 import { ButtonPreview } from '../Components/ButtonPreview.js'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faCancel, faExpand } from '@fortawesome/free-solid-svg-icons'
-import { ControlLocation, EmulatorConfig, EmulatorImage } from '@companion-app/shared/Model/Common.js'
+import {
+	ControlLocation,
+	EmulatorConfig,
+	EmulatorImage,
+	EmulatorImageCache,
+} from '@companion-app/shared/Model/Common.js'
 import { Operation as JsonPatchOperation } from 'fast-json-patch'
-
-type EmulatorImageCache = Record<number, Record<number, string | false | undefined> | undefined>
 
 export function Emulator() {
 	const socket = useContext(SocketContext)
@@ -40,6 +43,8 @@ export function Emulator() {
 		setConfig(null)
 		setLoadError(null)
 
+		if (!emulatorId) return
+
 		socketEmitPromise(socket, 'emulator:startup', [emulatorId])
 			.then((config) => {
 				setConfig(config)
@@ -49,7 +54,7 @@ export function Emulator() {
 				setLoadError(`Failed: ${e}`)
 			})
 
-		const updateConfig = (patch: JsonPatchOperation[]) => {
+		const updateConfig = (patch: JsonPatchOperation[] | EmulatorConfig) => {
 			setConfig((oldConfig) => oldConfig && applyPatchOrReplaceObject(oldConfig, patch))
 		}
 
@@ -69,7 +74,7 @@ export function Emulator() {
 	}, [config?.emulator_control_enable])
 
 	useEffect(() => {
-		const updateImages = (newImages: EmulatorImage[]) => {
+		const updateImages = (newImages: EmulatorImage[] | EmulatorImageCache) => {
 			console.log('new images', newImages)
 			setImageCache((old) => {
 				if (Array.isArray(newImages)) {
@@ -109,6 +114,8 @@ export function Emulator() {
 	// Register key handlers
 	useEffect(() => {
 		const onKeyDown = (e: KeyboardEvent) => {
+			if (!emulatorId) return
+
 			if (keymap[e.keyCode] !== undefined) {
 				const xy = keymap[e.keyCode]
 				if (xy) {
@@ -121,6 +128,8 @@ export function Emulator() {
 		}
 
 		const onKeyUp = (e: KeyboardEvent) => {
+			if (!emulatorId) return
+
 			const xy = keymap[e.keyCode]
 			if (xy) {
 				socketEmitPromise(socket, 'emulator:release', [emulatorId, ...xy]).catch((e: any) => {
@@ -141,7 +150,7 @@ export function Emulator() {
 
 	useEffect(() => {
 		// handle changes to keyDown, as it isnt safe to do inside setState
-		if (!keyDown) return
+		if (!keyDown || !emulatorId) return
 
 		socketEmitPromise(socket, 'emulator:press', [emulatorId, keyDown.column, keyDown.row]).catch((e: any) => {
 			console.error('press failed', e)

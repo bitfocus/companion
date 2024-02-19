@@ -596,12 +596,12 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@companion-module/base@npm:~1.7.0":
-  version: 1.7.0
-  resolution: "@companion-module/base@npm:1.7.0"
+"@companion-module/base@npm:~1.8.0-0":
+  version: 1.8.0-0
+  resolution: "@companion-module/base@npm:1.8.0-0"
   dependencies:
-    "@sentry/node": "npm:^7.82.0"
-    "@sentry/tracing": "npm:^7.82.0"
+    "@sentry/node": "npm:^7.101.1"
+    "@sentry/tracing": "npm:^7.101.1"
     ajv: "npm:^8.12.0"
     colord: "npm:^2.9.3"
     ejson: "npm:^2.2.3"
@@ -611,7 +611,7 @@ __metadata:
     p-queue: "npm:^6.6.2"
     p-timeout: "npm:^4.1.0"
     tslib: "npm:^2.6.2"
-  checksum: 10c0/6f644e3ad44d0332c105a7377bea686d0c8cc9bde19d784abc5d0cd6e63ad33a6c0ae0d8fc5cf04c9bbe3b29bd3b25f1057644be9960bd5c43509d89410f0cf1
+  checksum: 10c0/459dc8648d663968b963c95216315d3a96323217203cacff71cc15f1aed5bd84d2a0a78c28ac632e6a32968a0a870e54a6f200b033a29f7ed3fc61ee00c69b60
   languageName: node
   linkType: hard
 
@@ -2319,7 +2319,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@sentry/node@npm:^7.101.1, @sentry/node@npm:^7.60.0, @sentry/node@npm:^7.82.0":
+"@sentry/node@npm:^7.101.1, @sentry/node@npm:^7.60.0":
   version: 7.101.1
   resolution: "@sentry/node@npm:7.101.1"
   dependencies:
@@ -2343,7 +2343,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@sentry/tracing@npm:^7.101.1, @sentry/tracing@npm:^7.82.0":
+"@sentry/tracing@npm:^7.101.1":
   version: 7.101.1
   resolution: "@sentry/tracing@npm:7.101.1"
   dependencies:
@@ -5018,7 +5018,7 @@ asn1@evs-broadcast/node-asn1:
   resolution: "companion@workspace:companion"
   dependencies:
     "@companion-app/shared": "npm:*"
-    "@companion-module/base": "npm:~1.7.0"
+    "@companion-module/base": "npm:~1.8.0-0"
     "@elgato-stream-deck/node": "npm:^6.0.0"
     "@julusian/image-rs": "npm:^0.2.1"
     "@julusian/jpeg-turbo": "npm:^2.1.0"

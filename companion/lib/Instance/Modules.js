@@ -38,7 +38,7 @@ const ModulesRoom = 'modules'
  */
 
 /**
- * @typedef {import('@companion-app/shared/Model/Common.js').ModuleDisplayInfo} ModuleDisplayInfo
+ * @typedef {import('@companion-app/shared/Model/ModuleInfo.js').ModuleDisplayInfo} ModuleDisplayInfo
  */
 
 class InstanceModules extends CoreBase {
@@ -208,9 +208,22 @@ class InstanceModules extends CoreBase {
 
 			// Now broadcast to any interested clients
 			if (this.io.countRoomMembers(ModulesRoom) > 0) {
-				const patch = jsonPatch.compare(this.#lastModulesJson || {}, newJson || {})
-				if (patch.length > 0) {
-					this.io.emitToRoom(ModulesRoom, `modules:patch`, patch)
+				const oldObj = this.#lastModulesJson?.[reloadedModule.manifest.id]
+				if (oldObj) {
+					const patch = jsonPatch.compare(oldObj, reloadedModule.display)
+					if (patch.length > 0) {
+						this.io.emitToRoom(ModulesRoom, `modules:patch`, {
+							type: 'update',
+							id: reloadedModule.manifest.id,
+							patch,
+						})
+					}
+				} else {
+					this.io.emitToRoom(ModulesRoom, `modules:patch`, {
+						type: 'add',
+						id: reloadedModule.manifest.id,
+						info: reloadedModule.display,
+					})
 				}
 			}
 
@@ -293,6 +306,7 @@ class InstanceModules extends CoreBase {
 	 * Load the help markdown file for a specified moduleId
 	 * @access public
 	 * @param {string} moduleId
+	 * @returns {Promise<import('@companion-app/shared/Model/Common.js').HelpDescription | undefined>}
 	 */
 	async getHelpForModule(moduleId) {
 		const moduleInfo = this.#knownModules.get(moduleId)

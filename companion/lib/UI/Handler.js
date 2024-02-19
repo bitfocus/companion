@@ -15,8 +15,16 @@
  *
  */
 
-import { Server as _io, Socket } from 'socket.io'
+import { Server as _io, Server, Socket } from 'socket.io'
 import LogController from '../Log/Controller.js'
+
+/**
+ * @typedef {import('@companion-app/shared/SocketIO.js').ClientToBackendEventsListenMap} IOListenEvents
+ * @typedef {import('@companion-app/shared/SocketIO.js').BackendToClientEventsMap} IOEmitEvents
+ * @typedef {import('@companion-app/shared/SocketIO.js').ClientToBackendEventsWithNoResponse} IOListenEventsNoResponse
+ * @typedef {import('@companion-app/shared/SocketIO.js').ClientToBackendEventsWithPromiseResponse} IOListenEventsWithResponse
+ * @typedef {Server<IOListenEvents, IOEmitEvents>} IOServerType
+ */
 
 /**
  * Wrapper around a socket.io client socket, to provide a promise based api for async calls
@@ -30,13 +38,13 @@ export class ClientSocket {
 
 	/**
 	 * Socket.io socket
-	 * @type {Socket}
+	 * @type {Socket<IOListenEvents, IOEmitEvents>}
 	 * @access private
 	 */
 	#socket
 
 	/**
-	 * @param {Socket} socket
+	 * @param {Socket<IOListenEvents, IOEmitEvents>} socket
 	 * @param {import('winston').Logger} logger
 	 */
 	constructor(socket, logger) {
@@ -71,8 +79,9 @@ export class ClientSocket {
 
 	/**
 	 * Send a message to the client
-	 * @param {string} name
-	 * @param {any[]} args
+	 * @template {keyof IOEmitEvents} T
+	 * @param {T} name
+	 * @param {Parameters<IOEmitEvents[T]>} args
 	 * @returns {void}
 	 */
 	emit(name, ...args) {
@@ -81,13 +90,16 @@ export class ClientSocket {
 
 	/**
 	 * Listen to an event
-	 * @param {string} name
-	 * @param {function} fcn
+	 * @template {keyof IOListenEventsNoResponse} T
+	 * @param {T} name
+	 * @param {IOListenEvents[T]} fcn
 	 * @returns {ClientSocket}
 	 */
 	on(name, fcn) {
+		// @ts-expect-error Types are hard to get correct
 		this.#socket.on(name, (...args) => {
 			try {
+				// @ts-expect-error Typs are hard
 				fcn(...args)
 			} catch (/** @type {any} */ e) {
 				this.logger.warn(`Error in client handler '${name}': ${e} ${e?.stack}`)
@@ -97,15 +109,16 @@ export class ClientSocket {
 	}
 	/**
 	 * A promise based alternative to the `on` method, for methods which want to return a value.
-	 * Note: it expects the last parameter of the call to be the callback
-	 * @param {string} name
-	 * @param {function} fcn
+	 * Note: it expects the first parameter of the call to be the callback
+	 * @template {keyof IOListenEventsWithResponse} T
+	 * @param {T} name
+	 * @param {IOListenEvents[T]} fcn
 	 * @returns {ClientSocket}
 	 */
 	onPromise(name, fcn) {
-		this.#socket.on(name, (...args) => {
+		// @ts-expect-error Types are hard
+		this.#socket.on(name, (args, cb) => {
 			Promise.resolve().then(async () => {
-				const cb = args.pop()
 				try {
 					const result = await fcn(...args)
 					cb(null, result)
@@ -130,6 +143,17 @@ class UIHandler {
 	#socketIOOptions
 
 	/**
+	 * @type {IOServerType}
+	 * @access private
+	 */
+	#httpIO
+	/**
+	 * @type {IOServerType | undefined}
+	 * @access private
+	 */
+	#httpsIO
+
+	/**
 	 *
 	 * @param {import('../Registry.js').default} registry
 	 * @param {*} http
@@ -148,14 +172,14 @@ class UIHandler {
 			},
 		}
 
-		this.httpIO = new _io(http, this.#socketIOOptions)
+		this.#httpIO = new _io(http, this.#socketIOOptions)
 
-		this.httpIO.on('connect', this.#clientConnect.bind(this))
+		this.#httpIO.on('connect', this.#clientConnect.bind(this))
 	}
 
 	/**
 	 * Setup a new socket client's events
-	 * @param {Socket} rawClient - the client socket
+	 * @param {Socket<IOListenEvents, IOEmitEvents>} rawClient - the client socket
 	 * @access public
 	 */
 	#clientConnect(rawClient) {
@@ -164,7 +188,6 @@ class UIHandler {
 		const client = new ClientSocket(rawClient, this.#logger)
 
 		client.onPromise('app-version-info', () => {
-			/** @type {import('@companion-app/shared/Model/Common.js').AppVersionInfo} */
 			return {
 				appVersion: this.registry.appInfo.appVersion,
 				appBuild: this.registry.appInfo.appBuild,
@@ -189,28 +212,30 @@ class UIHandler {
 
 	/**
 	 * Send a message to all connected clients
-	 * @param {string} event Name of the event
-	 * @param {...any} args Arguments of the event
+	 * @template {keyof IOEmitEvents} T
+	 * @param {T} event Name of the event
+	 * @param {Parameters<IOEmitEvents[T]>} args Arguments of the event
 	 */
 	emit(event, ...args) {
-		this.httpIO.emit(event, ...args)
+		this.#httpIO.emit(event, ...args)
 
-		if (this.httpsIO) {
-			this.httpsIO.emit(event, ...args)
+		if (this.#httpsIO) {
+			this.#httpsIO.emit(event, ...args)
 		}
 	}
 
 	/**
 	 * Send a message to all connected clients in a room
+	 * @template {keyof IOEmitEvents} T
 	 * @param {string} room Name of the room
-	 * @param {string} event Name of the event
-	 * @param {...any} args Arguments of the event
+	 * @param {T} event Name of the event
+	 * @param {Parameters<IOEmitEvents[T]>} args Arguments of the event
 	 */
 	emitToRoom(room, event, ...args) {
-		this.httpIO.to(room).emit(event, ...args)
+		this.#httpIO.to(room).emit(event, ...args)
 
-		if (this.httpsIO) {
-			this.httpsIO.to(room).emit(event, ...args)
+		if (this.#httpsIO) {
+			this.#httpsIO.to(room).emit(event, ...args)
 		}
 	}
 
@@ -222,11 +247,11 @@ class UIHandler {
 	countRoomMembers(room) {
 		let clientsInRoom = 0
 
-		const httpRoom = this.httpIO.sockets.adapter.rooms.get(room)
+		const httpRoom = this.#httpIO.sockets.adapter.rooms.get(room)
 		if (httpRoom) clientsInRoom += httpRoom.size
 
-		if (this.httpsIO) {
-			const httpsRoom = this.httpsIO.sockets.adapter.rooms.get(room)
+		if (this.#httpsIO) {
+			const httpsRoom = this.#httpsIO.sockets.adapter.rooms.get(room)
 			if (httpsRoom) clientsInRoom += httpsRoom.size
 		}
 
@@ -239,9 +264,9 @@ class UIHandler {
 	 */
 	bindToHttps(https) {
 		if (https) {
-			this.httpsIO = new _io(https, this.#socketIOOptions)
+			this.#httpsIO = new _io(https, this.#socketIOOptions)
 
-			this.httpsIO.on('connect', this.#clientConnect.bind(this))
+			this.#httpsIO.on('connect', this.#clientConnect.bind(this))
 		}
 	}
 }
