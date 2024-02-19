@@ -12,9 +12,9 @@ export default defineConfig({
 	},
 	server: {
 		proxy: {
-			'/int': 'http://localhost:8000',
-			'/docs': 'http://localhost:8000',
-			'/socket.io': 'http://localhost:8000',
+			'/int': 'http://127.0.0.1:8000',
+			'/docs': 'http://127.0.0.1:8000',
+			'/socket.io': 'http://127.0.0.1:8000',
 		},
 	},
 	plugins: [
