@@ -19,10 +19,10 @@ import fs from 'fs-extra'
 import { isPackaged } from '../Resources/Util.js'
 import CoreBase from '../Core/Base.js'
 import path from 'path'
-import { validateManifest } from '@companion-module/base'
 import { fileURLToPath } from 'url'
 import { cloneDeep } from 'lodash-es'
 import jsonPatch from 'fast-json-patch'
+import { InstanceModuleScanner } from './ModuleScanner.js'
 
 const ModulesRoom = 'modules'
 
@@ -66,29 +66,19 @@ class InstanceModules extends CoreBase {
 	#moduleRenames = new Map()
 
 	/**
+	 * Module scanner helper
+	 * @access private
+	 * @readonly
+	 */
+	#moduleScanner = new InstanceModuleScanner()
+
+	/**
 	 * @param {import("../Registry.js").default} registry
 	 */
 	constructor(registry) {
 		super(registry, 'instance', 'Instance/Modules')
 
-		this.registry.api_router.get('/help/module/:moduleId/*', (req, res, next) => {
-			const moduleId = req.params.moduleId.replace(/\.\.+/g, '')
-			// @ts-ignore
-			const file = req.params[0].replace(/\.\.+/g, '')
-
-			const moduleInfo = this.#knownModules.get(moduleId)
-			if (moduleInfo && moduleInfo.helpPath && moduleInfo.basePath) {
-				const fullpath = path.join(moduleInfo.basePath, 'companion', file)
-				if (file.match(/\.(jpe?g|gif|png|pdf|companionconfig)$/) && fs.existsSync(fullpath)) {
-					// Send the file, then stop
-					res.sendFile(fullpath)
-					return
-				}
-			}
-
-			// Try next handler
-			next()
-		})
+		this.registry.api_router.get('/help/module/:moduleId/*', this.#getHelpAsset)
 	}
 
 	/**
@@ -113,7 +103,10 @@ class InstanceModules extends CoreBase {
 			path.resolve(generatePath('bundled-modules')),
 		]
 
-		const legacyCandidates = await this.#loadInfoForModulesInDir(generatePath('module-legacy/manifests'), false)
+		const legacyCandidates = await this.#moduleScanner.loadInfoForModulesInDir(
+			generatePath('module-legacy/manifests'),
+			false
+		)
 
 		// Start with 'legacy' candidates
 		for (const candidate of legacyCandidates) {
@@ -123,7 +116,7 @@ class InstanceModules extends CoreBase {
 
 		// Load modules from other folders in order of priority
 		for (const searchDir of searchDirs) {
-			const candidates = await this.#loadInfoForModulesInDir(searchDir, false)
+			const candidates = await this.#moduleScanner.loadInfoForModulesInDir(searchDir, false)
 			for (const candidate of candidates) {
 				// Replace any existing candidate
 				this.#knownModules.set(candidate.manifest.id, candidate)
@@ -132,7 +125,7 @@ class InstanceModules extends CoreBase {
 
 		if (extraModulePath) {
 			this.logger.info(`Looking for extra modules in: ${extraModulePath}`)
-			const candidates = await this.#loadInfoForModulesInDir(extraModulePath, true)
+			const candidates = await this.#moduleScanner.loadInfoForModulesInDir(extraModulePath, true)
 			for (const candidate of candidates) {
 				// Replace any existing candidate
 				this.#knownModules.set(candidate.manifest.id, {
@@ -192,7 +185,7 @@ class InstanceModules extends CoreBase {
 	async reloadExtraModule(fullpath) {
 		this.logger.info(`Attempting to reload module in: ${fullpath}`)
 
-		const reloadedModule = await this.#loadInfoForModule(fullpath, true)
+		const reloadedModule = await this.#moduleScanner.loadInfoForModule(fullpath, true)
 		if (reloadedModule) {
 			this.logger.info(
 				`Found new module "${reloadedModule.display.id}" v${reloadedModule.display.version} in: ${fullpath}`
@@ -261,20 +254,7 @@ class InstanceModules extends CoreBase {
 			client.leave(ModulesRoom)
 		})
 
-		client.onPromise('connections:get-help', async (/** @type {string} */ moduleId) => {
-			try {
-				const res = await this.getHelpForModule(moduleId)
-				if (res) {
-					return [null, res]
-				} else {
-					return ['nofile', null]
-				}
-			} catch (err) {
-				this.logger.silly(`Error loading help for ${moduleId}`)
-				this.logger.silly(err)
-				return ['nofile', null]
-			}
-		})
+		client.onPromise('connections:get-help', this.#getHelpForModule)
 	}
 
 	/**
@@ -306,117 +286,61 @@ class InstanceModules extends CoreBase {
 	 * Load the help markdown file for a specified moduleId
 	 * @access public
 	 * @param {string} moduleId
-	 * @returns {Promise<import('@companion-app/shared/Model/Common.js').HelpDescription | undefined>}
+	 * @returns {Promise<[err: string, result: null] | [err: null, result: import('@companion-app/shared/Model/Common.js').HelpDescription]>}
 	 */
-	async getHelpForModule(moduleId) {
-		const moduleInfo = this.#knownModules.get(moduleId)
-		if (moduleInfo && moduleInfo.helpPath) {
-			const stats = await fs.stat(moduleInfo.helpPath)
-			if (stats.isFile()) {
-				const data = await fs.readFile(moduleInfo.helpPath)
-				return {
-					markdown: data.toString(),
-					baseUrl: `/int/help/module/${moduleId}/`,
+	#getHelpForModule = async (moduleId) => {
+		try {
+			const moduleInfo = this.#knownModules.get(moduleId)
+			if (moduleInfo && moduleInfo.helpPath) {
+				const stats = await fs.stat(moduleInfo.helpPath)
+				if (stats.isFile()) {
+					const data = await fs.readFile(moduleInfo.helpPath)
+					return [
+						null,
+						{
+							markdown: data.toString(),
+							baseUrl: `/int/help/module/${moduleId}/`,
+						},
+					]
+				} else {
+					this.logger.silly(`Error loading help for ${moduleId}`, moduleInfo.helpPath)
+					this.logger.silly('Not a file')
+					return ['nofile', null]
 				}
 			} else {
-				this.logger.silly(`Error loading help for ${moduleId}`, moduleInfo.helpPath)
-				this.logger.silly('Not a file')
-				return undefined
+				return ['nofile', null]
 			}
-		} else {
-			return undefined
+		} catch (err) {
+			this.logger.silly(`Error loading help for ${moduleId}`)
+			this.logger.silly(err)
+			return ['nofile', null]
 		}
 	}
 
 	/**
-	 * Load information about all modules in a directory
-	 * @access private
-	 * @param {string} searchDir - Path to search for modules
-	 * @param {boolean} checkForPackaged - Whether to check for a packaged version
-	 * @returns {Promise<ModuleInfo[]>}
+	 * Return a module help asset over http
+	 * @param {import('express').Request<{ moduleId:string }>} req
+	 * @param {import('express').Response} res
+	 * @param {import('express').NextFunction} next
+	 * @returns
 	 */
-	async #loadInfoForModulesInDir(searchDir, checkForPackaged) {
-		if (await fs.pathExists(searchDir)) {
-			const candidates = await fs.readdir(searchDir)
+	#getHelpAsset = (req, res, next) => {
+		const moduleId = req.params.moduleId.replace(/\.\.+/g, '')
+		// @ts-ignore
+		const file = req.params[0].replace(/\.\.+/g, '')
 
-			const ps = []
-
-			for (const candidate of candidates) {
-				const candidatePath = path.join(searchDir, candidate)
-				ps.push(this.#loadInfoForModule(candidatePath, checkForPackaged))
-			}
-
-			const res = await Promise.all(ps)
-			// @ts-ignore
-			return res.filter((v) => !!v)
-		} else {
-			return []
-		}
-	}
-
-	/**
-	 * Load information about a module
-	 * @access private
-	 * @param {string} fullpath - Fullpath to the module
-	 * @param {boolean} checkForPackaged - Whether to check for a packaged version
-	 */
-	async #loadInfoForModule(fullpath, checkForPackaged) {
-		try {
-			let isPackaged = false
-			const pkgDir = path.join(fullpath, 'pkg')
-			if (
-				checkForPackaged &&
-				(await fs.pathExists(path.join(fullpath, 'DEBUG-PACKAGED'))) &&
-				(await fs.pathExists(pkgDir))
-			) {
-				fullpath = pkgDir
-				isPackaged = true
-			}
-
-			const manifestPath = path.join(fullpath, 'companion/manifest.json')
-			if (!(await fs.pathExists(manifestPath))) {
-				this.logger.silly(`Ignoring "${fullpath}", as it is not a new module`)
+		const moduleInfo = this.#knownModules.get(moduleId)
+		if (moduleInfo && moduleInfo.helpPath && moduleInfo.basePath) {
+			const fullpath = path.join(moduleInfo.basePath, 'companion', file)
+			if (file.match(/\.(jpe?g|gif|png|pdf|companionconfig)$/) && fs.existsSync(fullpath)) {
+				// Send the file, then stop
+				res.sendFile(fullpath)
 				return
 			}
-			const manifestJsonStr = await fs.readFile(manifestPath)
-			/** @type {import('@companion-module/base').ModuleManifest} */
-			const manifestJson = JSON.parse(manifestJsonStr.toString())
-
-			validateManifest(manifestJson)
-
-			const helpPath = path.join(fullpath, 'companion/HELP.md')
-
-			const hasHelp = await fs.pathExists(helpPath)
-			/** @type {ModuleDisplayInfo} */
-			const moduleDisplay = {
-				id: manifestJson.id,
-				name: manifestJson.manufacturer + ': ' + manifestJson.products.join('; '),
-				version: manifestJson.version,
-				hasHelp: hasHelp,
-				bugUrl: manifestJson.bugs || manifestJson.repository,
-				shortname: manifestJson.shortname,
-				manufacturer: manifestJson.manufacturer,
-				products: manifestJson.products,
-				keywords: manifestJson.keywords,
-			}
-
-			/** @type {ModuleInfo} */
-			const moduleManifestExt = {
-				manifest: manifestJson,
-				basePath: path.resolve(fullpath),
-				helpPath: hasHelp ? helpPath : null,
-				display: moduleDisplay,
-				isPackaged: isPackaged,
-			}
-
-			this.logger.silly(`found module ${moduleDisplay.id}@${moduleDisplay.version}`)
-
-			return moduleManifestExt
-		} catch (e) {
-			this.logger.silly(`Error loading module from ${fullpath}`, e)
-			this.logger.error(`Error loading module from "${fullpath}": ` + e)
-			return undefined
 		}
+
+		// Try next handler
+		next()
 	}
 }
 
