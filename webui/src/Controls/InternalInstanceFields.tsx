@@ -4,7 +4,6 @@ import {
 	CustomVariableDefinitionsContext,
 	ConnectionsContext,
 	SurfacesContext,
-	TriggersContext,
 	VariableDefinitionsContext,
 	useComputed,
 } from '../util.js'
@@ -302,34 +301,32 @@ interface InternalTriggerDropdownProps {
 	includeSelf: boolean | undefined
 }
 
-function InternalTriggerDropdown({
+const InternalTriggerDropdown = observer(function InternalTriggerDropdown({
 	isOnControl,
 	value,
 	setValue,
 	disabled,
 	includeSelf,
 }: InternalTriggerDropdownProps) {
-	const context = useContext(TriggersContext)
+	const { triggersList } = useContext(RootAppStoreContext)
 
-	const choices = useMemo(() => {
-		const choices = []
+	const choices = useComputed(() => {
+		const choices: DropdownChoice[] = []
 		if (!isOnControl && includeSelf) {
 			choices.push({ id: 'self', label: 'Current trigger' })
 		}
 
-		for (const [id, trigger] of Object.entries(context)) {
-			if (!trigger) continue
-
+		for (const [id, trigger] of triggersList.triggers.entries()) {
 			choices.push({
 				id: id,
 				label: trigger.name || `Trigger #${id}`,
 			})
 		}
 		return choices
-	}, [context, isOnControl, includeSelf])
+	}, [triggersList, isOnControl, includeSelf])
 
 	return <DropdownInputField disabled={disabled} value={value} choices={choices} multiple={false} setValue={setValue} />
-}
+})
 
 interface InternalTimePickerProps {
 	value: any

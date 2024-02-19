@@ -24,7 +24,7 @@ import type {
 	InstanceRemappings,
 } from './Model/ImportExport.js'
 import type { PageModel } from './Model/PageModel.js'
-import type { ClientTriggerData } from './Model/TriggerModel.js'
+import type { ClientTriggerData, TriggersUpdate } from './Model/TriggerModel.js'
 import type { CustomVariablesModel } from './Model/CustomVariableModel.js'
 import type { FeedbackDefinitionUpdate, InternalFeedbackDefinition } from './Model/FeedbackDefinitionModel.js'
 import type { AllVariableDefinitions, ModuleVariableDefinitions } from './Model/Variables.js'
@@ -311,7 +311,7 @@ export interface BackendToClientEventsMap {
 	'connections:patch': (patch: JsonPatchOperation[] | false) => void
 	'modules:patch': (patch: ModuleInfoUpdate) => void
 	'surfaces:patch': (patch: JsonPatchOperation[]) => void
-	'triggers:update': (controlId: string, patch: JsonPatchOperation[] | ClientTriggerData | null) => void
+	'triggers:update': (change: TriggersUpdate) => void
 	'action-definitions:update': (change: ActionDefinitionUpdate) => void
 	'feedback-definitions:update': (change: FeedbackDefinitionUpdate) => void
 	'custom-variables:update': (patch: JsonPatchOperation[]) => void

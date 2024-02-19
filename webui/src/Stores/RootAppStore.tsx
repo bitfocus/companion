@@ -8,6 +8,7 @@ import type { EventDefinitionsStore } from './EventDefinitionsStore.js'
 import type { ActionDefinitionsStore } from './ActionDefinitionsStore.js'
 import type { FeedbackDefinitionsStore } from './FeedbackDefinitionsStore.js'
 import { ModuleInfoStore } from './ModuleInfoStore.js'
+import { TriggersListStore as TriggersListStore } from './TriggersListStore.js'
 
 export const RootAppStoreContext = React.createContext<RootAppStore>(null as any) // TODO - fix this?
 
@@ -28,4 +29,6 @@ export interface RootAppStore {
 	readonly feedbackDefinitions: FeedbackDefinitionsStore
 
 	readonly pages: PagesStore
+
+	readonly triggersList: TriggersListStore
 }

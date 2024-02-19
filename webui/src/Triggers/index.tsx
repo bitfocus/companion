@@ -1,4 +1,4 @@
-import React, { memo, useCallback, useContext, useEffect, useState, useMemo, useRef } from 'react'
+import React, { useCallback, useContext, useEffect, useState, useMemo, useRef } from 'react'
 import {
 	CButton,
 	CButtonGroup,
@@ -11,7 +11,7 @@ import {
 	CTabPane,
 	CTabs,
 } from '@coreui/react'
-import { MyErrorBoundary, SocketContext, socketEmitPromise, TriggersContext } from '../util.js'
+import { MyErrorBoundary, SocketContext, socketEmitPromise } from '../util.js'
 import dayjs from 'dayjs'
 import sanitizeHtml from 'sanitize-html'
 import CSwitch from '../CSwitch.js'
@@ -33,11 +33,11 @@ import { ParseControlId } from '@companion-app/shared/ControlId.js'
 import { ConfirmExportModal, ConfirmExportModalRef } from '../Components/ConfirmExportModal.js'
 import classNames from 'classnames'
 import { ClientTriggerData } from '@companion-app/shared/Model/TriggerModel.js'
+import { observer } from 'mobx-react-lite'
+import { RootAppStoreContext } from '../Stores/RootAppStore.js'
 
-export const Triggers = memo(function Triggers() {
-	const socket = useContext(SocketContext)
-
-	const triggersList = useContext(TriggersContext)
+export const Triggers = observer(function Triggers() {
+	const { socket, triggersList } = useContext(RootAppStoreContext)
 
 	const [editItemId, setEditItemId] = useState<string | null>(null)
 	const [tabResetToken, setTabResetToken] = useState(nanoid())
@@ -46,7 +46,7 @@ export const Triggers = memo(function Triggers() {
 	// Ensure the selected trigger is valid
 	useEffect(() => {
 		setEditItemId((currentId) => {
-			if (currentId && triggersList[currentId]) {
+			if (currentId && triggersList.triggers.get(currentId)) {
 				return currentId
 			} else {
 				return null
@@ -99,7 +99,7 @@ export const Triggers = memo(function Triggers() {
 					</CButton>
 				</CButtonGroup>
 
-				<TriggersTable triggersList={triggersList} editItem={doEditItem} selectedControlId={editItemId} />
+				<TriggersTable editItem={doEditItem} selectedControlId={editItemId} />
 
 				<CButton
 					color="light"
@@ -147,44 +147,35 @@ export const Triggers = memo(function Triggers() {
 })
 
 interface TriggersTableProps {
-	triggersList: Record<string, ClientTriggerData | undefined>
 	editItem: (controlId: string) => void
 	selectedControlId: string | null
 }
 
 const tableDateFormat = 'MM/DD HH:mm:ss'
-function TriggersTable({ triggersList, editItem, selectedControlId }: TriggersTableProps) {
-	const socket = useContext(SocketContext)
-
-	const triggersRef = useRef(triggersList)
-	useEffect(() => {
-		triggersRef.current = triggersList
-	}, [triggersList])
+const TriggersTable = observer(function TriggersTable({ editItem, selectedControlId }: TriggersTableProps) {
+	const { socket, triggersList } = useContext(RootAppStoreContext)
 
 	const moveTrigger = useCallback(
 		(itemId, targetId) => {
 			itemId = itemId + ''
 			targetId = targetId + ''
 
-			if (triggersRef.current) {
-				const rawIds = Object.entries(triggersRef.current)
-					.filter((o): o is [string, ClientTriggerData] => !!o[1])
-					.sort(([, a], [, b]) => a.sortOrder - b.sortOrder)
-					.map(([id]) => id)
+			const rawIds = Array.from(triggersList.triggers.entries())
+				.sort(([, a], [, b]) => a.sortOrder - b.sortOrder)
+				.map(([id]) => id)
 
-				const itemIndex = rawIds.indexOf(itemId)
-				const targetIndex = rawIds.indexOf(targetId)
-				if (itemIndex === -1 || targetIndex === -1) return
+			const itemIndex = rawIds.indexOf(itemId)
+			const targetIndex = rawIds.indexOf(targetId)
+			if (itemIndex === -1 || targetIndex === -1) return
 
-				const newIds = rawIds.filter((id) => id !== itemId)
-				newIds.splice(targetIndex, 0, itemId)
+			const newIds = rawIds.filter((id) => id !== itemId)
+			newIds.splice(targetIndex, 0, itemId)
 
-				socketEmitPromise(socket, 'triggers:set-order', [newIds]).catch((e) => {
-					console.error('Reorder failed', e)
-				})
-			}
+			socketEmitPromise(socket, 'triggers:set-order', [newIds]).catch((e) => {
+				console.error('Reorder failed', e)
+			})
 		},
-		[socket]
+		[socket, triggersList]
 	)
 
 	return (
@@ -198,9 +189,8 @@ function TriggersTable({ triggersList, editItem, selectedControlId }: TriggersTa
 				</tr>
 			</thead>
 			<tbody>
-				{triggersList && Object.keys(triggersList).length > 0 ? (
-					Object.entries(triggersList)
-						.filter((o): o is [string, ClientTriggerData] => !!o[1])
+				{triggersList.triggers.size > 0 ? (
+					Array.from(triggersList.triggers.entries())
 						.sort((a, b) => a[1].sortOrder - b[1].sortOrder)
 						.map(([controlId, item]) => (
 							<TriggersTableRow
@@ -222,7 +212,7 @@ function TriggersTable({ triggersList, editItem, selectedControlId }: TriggersTa
 			</tbody>
 		</table>
 	)
-}
+})
 
 interface TriggersTableRowDragData {
 	id: string

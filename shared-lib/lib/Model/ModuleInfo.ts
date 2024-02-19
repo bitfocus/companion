@@ -1,4 +1,4 @@
-import { Operation as JsonPatchOperation } from 'fast-json-patch'
+import type { Operation as JsonPatchOperation } from 'fast-json-patch'
 
 export interface ModuleDisplayInfo {
 	id: string
