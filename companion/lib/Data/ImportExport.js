@@ -32,7 +32,6 @@ import { stringify as csvStringify } from 'csv-stringify/sync'
 import { visitEventOptions } from '../Resources/EventDefinitions.js'
 import { compareExportedInstances } from '@companion-app/shared/Import.js'
 
-
 /**
  *
  * @param {import('qs').ParsedQs[0]} raw
@@ -672,8 +671,8 @@ class DataImportExport extends CoreBase {
 
 				if (data.pages && (!config || config.buttons)) {
 					// Import pages
-						for (const [pageNumber, pageInfo] of Object.entries(data.pages)) {
-							doPageImport(pageInfo, Number(pageNumber), instanceIdMap)
+					for (const [pageNumber, pageInfo] of Object.entries(data.pages)) {
+						doPageImport(pageInfo, Number(pageNumber), instanceIdMap)
 					}
 				}
 
