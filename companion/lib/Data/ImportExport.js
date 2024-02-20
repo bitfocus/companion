@@ -130,7 +130,7 @@ class DataImportExport extends CoreBase {
 	 * @param {import("../Registry.js").default} registry
 	 */
 	constructor(registry) {
-		super(registry, 'import/export', 'Data/ImportExport')
+		super(registry, 'Data/ImportExport')
 
 		/**
 		 *

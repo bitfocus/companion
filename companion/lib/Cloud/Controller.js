@@ -97,7 +97,7 @@ class CloudController extends CoreBase {
 	 * @param {import('../Data/Cache.js').default} cache
 	 */
 	constructor(registry, clouddb, cache) {
-		super(registry, 'cloud', 'Cloud/Controller')
+		super(registry, 'Cloud/Controller')
 
 		this.clouddb = clouddb
 		this.cache = cache

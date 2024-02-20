@@ -46,7 +46,7 @@ class ServiceElgatoPlugin extends ServiceBase {
 	 * @param {import('../Registry.js').default} registry - the application's core
 	 */
 	constructor(registry) {
-		super(registry, 'elgato-plugin', 'Service/ElgatoPlugin', 'elgato_plugin_enable', null)
+		super(registry, 'Service/ElgatoPlugin', 'elgato_plugin_enable', null)
 
 		this.graphics.on('button_drawn', this.#handleButtonDrawn.bind(this))
 

@@ -194,7 +194,7 @@ class SurfaceHandler extends CoreBase {
 	 * @param {any | undefined} surfaceConfig
 	 */
 	constructor(registry, integrationType, panel, surfaceConfig) {
-		super(registry, `surface(${panel.info.deviceId})`, `Surface/Handler/${panel.info.deviceId}`)
+		super(registry, `Surface/Handler/${panel.info.deviceId}`)
 		this.logger.silly('loading for ' + panel.info.devicePath)
 
 		this.panel = panel

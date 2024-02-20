@@ -34,13 +34,12 @@ class ServiceUdpBase extends ServiceBase {
 	 * This needs to be called in the extending class
 	 * using <code>super(registry, 'module_name', 'module_path', enableConfig, portConfig)</code>.
 	 * @param {import('../Registry.js').default} registry - the core registry
-	 * @param {string} logSource - module name to be used in UI logs
 	 * @param {string} debugNamespace - module path to be used in the debugger
 	 * @param {?string} enableConfig - the key for the userconfig that sets if the module is enabled or disabled
 	 * @param {?string} portConfig - the key for the userconfig that sets the service ports
 	 */
-	constructor(registry, logSource, debugNamespace, enableConfig, portConfig) {
-		super(registry, logSource, debugNamespace, enableConfig, portConfig)
+	constructor(registry, debugNamespace, enableConfig, portConfig) {
+		super(registry, debugNamespace, enableConfig, portConfig)
 	}
 
 	/**

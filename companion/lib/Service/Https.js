@@ -57,7 +57,7 @@ class ServiceHttps extends ServiceBase {
 	 * @param {import('../UI/Express.js').default} express - the app framework
 	 */
 	constructor(registry, express) {
-		super(registry, 'https', 'Service/Https', 'https_enabled', 'https_port')
+		super(registry, 'Service/Https', 'https_enabled', 'https_port')
 		this.express = express
 
 		this.registry.on('http_rebind', (bindIP) => {

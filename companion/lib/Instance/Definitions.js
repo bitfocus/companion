@@ -56,7 +56,7 @@ class InstanceDefinitions extends CoreBase {
 	 * @param {import('../Registry.js').default} registry - the application core
 	 */
 	constructor(registry) {
-		super(registry, 'definitions', 'Instance/Definitions')
+		super(registry, 'Instance/Definitions')
 	}
 
 	/**

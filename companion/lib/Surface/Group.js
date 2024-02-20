@@ -87,7 +87,7 @@ export class SurfaceGroup extends CoreBase {
 	 * @param {boolean} isLocked
 	 */
 	constructor(registry, groupId, soleHandler, isLocked) {
-		super(registry, `group(${groupId})`, `Surface/Group/${groupId}`)
+		super(registry, `Surface/Group/${groupId}`)
 
 		this.groupId = groupId
 		this.#isLocked = isLocked

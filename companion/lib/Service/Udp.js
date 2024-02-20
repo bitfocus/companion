@@ -42,7 +42,7 @@ class ServiceUdp extends ServiceUdpBase {
 	 * @param {import('../Registry.js').default} registry - the application core
 	 */
 	constructor(registry) {
-		super(registry, 'udp', 'Service/Udp', 'udp_enabled', 'udp_listen_port')
+		super(registry, 'Service/Udp', 'udp_enabled', 'udp_listen_port')
 
 		this.#api = new ServiceTcpUdpApi(registry, 'udp', 'udp_legacy_api_enabled')
 

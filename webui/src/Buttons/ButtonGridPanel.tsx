@@ -38,7 +38,7 @@ export const ButtonsGridPanel = memo(function ButtonsPage({
 	const actionsRef = useRef<ButtonGridActionsRef>(null)
 
 	const buttonClick = useCallback(
-		(location, isDown) => {
+		(location: ControlLocation, isDown: boolean) => {
 			if (!actionsRef.current?.buttonClick(location, isDown)) {
 				buttonGridClick(location, isDown)
 			}

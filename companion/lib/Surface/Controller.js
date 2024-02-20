@@ -109,7 +109,7 @@ class SurfaceController extends CoreBase {
 	 * @param {import('../Registry.js').default} registry
 	 */
 	constructor(registry) {
-		super(registry, 'surfaces', 'Surface/Controller')
+		super(registry, 'Surface/Controller')
 
 		this.#surfacesAllLocked = !!this.userconfig.getKey('link_lockouts')
 

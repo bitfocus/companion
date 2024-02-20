@@ -123,11 +123,10 @@ export default class ButtonControlBase extends ControlBase {
 	/**
 	 * @param {import('../../../Registry.js').default} registry
 	 * @param {string} controlId
-	 * @param {string} logSource
 	 * @param {string} debugNamespace
 	 */
-	constructor(registry, controlId, logSource, debugNamespace) {
-		super(registry, controlId, logSource, debugNamespace)
+	constructor(registry, controlId, debugNamespace) {
+		super(registry, controlId, debugNamespace)
 
 		this.feedbacks = new FragmentFeedbacks(
 			registry,

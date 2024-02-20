@@ -55,7 +55,7 @@ export default class FragmentActions extends CoreBase {
 	 * @param {(redraw?: boolean) => void} commitChange
 	 */
 	constructor(registry, controlId, commitChange) {
-		super(registry, 'fragment-actions', 'Controls/Fragments/Actions')
+		super(registry, 'Controls/Fragments/Actions')
 
 		this.controlId = controlId
 		this.#commitChange = commitChange

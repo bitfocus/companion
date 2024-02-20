@@ -76,7 +76,7 @@ class InstanceModules extends CoreBase {
 	 * @param {import("../Registry.js").default} registry
 	 */
 	constructor(registry) {
-		super(registry, 'instance', 'Instance/Modules')
+		super(registry, 'Instance/Modules')
 
 		this.registry.api_router.get('/help/module/:moduleId/*', this.#getHelpAsset)
 	}
