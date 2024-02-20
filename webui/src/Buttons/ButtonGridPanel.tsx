@@ -60,7 +60,7 @@ export const ButtonsGridPanel = memo(function ButtonsPage({
 	const actionsRef = useRef<ButtonGridActionsRef>(null)
 
 	const buttonClick = useCallback(
-		(location, isDown) => {
+		(location: ControlLocation, isDown: boolean) => {
 			if (!actionsRef.current?.buttonClick(location, isDown)) {
 				buttonGridClick(location, isDown)
 			}
@@ -69,7 +69,7 @@ export const ButtonsGridPanel = memo(function ButtonsPage({
 	)
 
 	const setPage = useCallback(
-		(newPage) => {
+		(newPage: number) => {
 			const pageNumbers = pages.pageNumbers
 			const newIndex = pageNumbers.findIndex((p) => p === newPage)
 			if (newIndex !== -1) {
@@ -80,7 +80,7 @@ export const ButtonsGridPanel = memo(function ButtonsPage({
 	)
 
 	const changePage2 = useCallback(
-		(delta) => {
+		(delta: number) => {
 			const pageNumbers = pages.pageNumbers
 			const currentIndex = pageNumbers.findIndex((p) => p === pageNumber)
 			let newPage = pageNumbers[0]

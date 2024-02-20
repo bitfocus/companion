@@ -20,7 +20,7 @@ export class PagesStore {
 	readonly store = observable.map<number, PagesStoreModel>()
 
 	public get pageNumbers(): number[] {
-		return Array.from(this.store.keys()).sort()
+		return Array.from(this.store.keys()).sort((a, b) => a - b)
 	}
 
 	public get sortedEntries(): [number, PagesStoreModel][] {
