@@ -7,6 +7,10 @@ import { cloneDeep } from 'lodash-es'
 export class ModuleInfoStore {
 	readonly modules = observable.map<string, ModuleDisplayInfo>()
 
+	public get count() {
+		return this.modules.size
+	}
+
 	public reset = action((newData: Record<string, ModuleDisplayInfo | undefined> | null) => {
 		this.modules.clear()
 

@@ -160,8 +160,8 @@ const AddConnectionsInner = observer(function AddConnectionsInner({
 			<div style={{ clear: 'both' }} className="row-heading">
 				<h4>Add connection</h4>
 				<p>
-					Companion currently supports {Object.keys(modules).length} different things, and the list grows every day. If
-					you can't find the device you're looking for, please{' '}
+					Companion currently supports {modules.count} different things, and the list grows every day. If you can't find
+					the device you're looking for, please{' '}
 					<a target="_new" href="https://github.com/bitfocus/companion-module-requests">
 						add a request
 					</a>{' '}
