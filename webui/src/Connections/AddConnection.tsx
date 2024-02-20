@@ -1,13 +1,13 @@
 import React, { useContext, useState, useCallback, useRef } from 'react'
-import { CAlert, CButton, CFormInput, CInputGroup } from '@coreui/react'
-import { go as fuzzySearch } from 'fuzzysort'
+import { CAlert, CButton } from '@coreui/react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faExclamationTriangle, faQuestionCircle, faTimes } from '@fortawesome/free-solid-svg-icons'
-import { socketEmitPromise, useComputed } from '../util.js'
+import { faExclamationTriangle, faQuestionCircle } from '@fortawesome/free-solid-svg-icons'
+import { socketEmitPromise } from '../util.js'
 import { GenericConfirmModal, GenericConfirmModalRef } from '../Components/GenericConfirmModal.js'
-import type { ModuleDisplayInfo } from '@companion-app/shared/Model/ModuleInfo.js'
 import { RootAppStoreContext } from '../Stores/RootAppStore.js'
 import { observer } from 'mobx-react-lite'
+import { SearchBox } from '../Components/SearchBox.js'
+import { ModuleProductInfo, useFilteredProducts } from '../Hooks/useFilteredProducts.js'
 
 interface AddConnectionsPanelProps {
 	showHelp: (moduleId: string) => void
@@ -40,72 +40,31 @@ export const AddConnectionsPanel = observer(function AddConnectionsPanel({
 	)
 
 	const addConnection = useCallback(
-		(type: string, product: string | undefined, module: Omit<ModuleDisplayInfo, 'keywords'>) => {
+		(module: ModuleProductInfo) => {
 			if (module.isLegacy) {
 				confirmRef.current?.show(
-					`${module.manufacturer} ${product} is outdated`,
+					`${module.manufacturer} ${module.product} is outdated`,
 					null, // Passed as param to the thing
 					'Add anyway',
 					() => {
-						addConnectionInner(type, product)
+						addConnectionInner(module.id, module.product)
 					}
 				)
 			} else {
-				addConnectionInner(type, product)
+				addConnectionInner(module.id, module.product)
 			}
 		},
 		[addConnectionInner]
 	)
 
-	const allProducts = useComputed(
-		() =>
-			Array.from(modules.modules.values()).flatMap((module) =>
-				module.products.map((product) => ({
-					product,
-					...module,
-					// fuzzySearch can't handle arrays, so flatten the array to a string first
-					keywords: module.keywords?.join(';') ?? '',
-				}))
-			),
-		[modules]
-	)
-
 	let candidates: JSX.Element[] = []
 	try {
+		const searchResults = useFilteredProducts(filter)
+
 		const candidatesObj: Record<string, JSX.Element> = {}
-
-		const searchResults = filter
-			? fuzzySearch(filter, allProducts, {
-					keys: ['product', 'name', 'manufacturer', 'keywords'],
-					threshold: -10_000,
-				}).map((x) => x.obj)
-			: allProducts
-
 		for (const module of searchResults) {
 			candidatesObj[module.name] = (
-				<div key={module.name + module.id}>
-					<CButton color="primary" onClick={() => addConnection(module.id, module.product, module)}>
-						Add
-					</CButton>
-					&nbsp;
-					{module.isLegacy && (
-						<>
-							<FontAwesomeIcon
-								icon={faExclamationTriangle}
-								color="#ff6600"
-								size={'xl'}
-								title="This module has not been updated for Companion 3.0, and may not work fully"
-							/>
-							&nbsp;
-						</>
-					)}
-					{module.name}
-					{module.hasHelp && (
-						<div className="float_right" onClick={() => showHelp(module.id)}>
-							<FontAwesomeIcon icon={faQuestionCircle} />
-						</div>
-					)}
-				</div>
+				<AddConnectionEntry module={module} addConnection={addConnection} showHelp={showHelp} />
 			)
 		}
 
@@ -162,21 +121,48 @@ export const AddConnectionsPanel = observer(function AddConnectionsPanel({
 					</a>{' '}
 					on GitHub
 				</p>
-				<CInputGroup>
-					<CFormInput
-						type="text"
-						placeholder="Search ..."
-						onChange={(e) => setFilter(e.currentTarget.value)}
-						value={filter}
-						style={{ fontSize: '1.2em' }}
-					/>
-					<CButton color="danger" onClick={() => setFilter('')}>
-						<FontAwesomeIcon icon={faTimes} />
-					</CButton>
-				</CInputGroup>
+
+				<SearchBox filter={filter} setFilter={setFilter} />
 				<br />
 			</div>
 			<div id="connection_add_search_results">{candidates}</div>
 		</>
 	)
 })
+
+interface AddConnectionEntryProps {
+	module: ModuleProductInfo
+	addConnection(module: ModuleProductInfo): void
+	showHelp(moduleId: string): void
+}
+
+function AddConnectionEntry({ module, addConnection, showHelp }: AddConnectionEntryProps) {
+	const addConnectionClick = useCallback(() => addConnection(module), [addConnection, module])
+	const showHelpClick = useCallback(() => showHelp(module.id), [showHelp, module.id])
+
+	return (
+		<div key={module.name + module.id}>
+			<CButton color="primary" onClick={addConnectionClick}>
+				Add
+			</CButton>
+			&nbsp;
+			{module.isLegacy && (
+				<>
+					<FontAwesomeIcon
+						icon={faExclamationTriangle}
+						color="#ff6600"
+						size={'xl'}
+						title="This module has not been updated for Companion 3.0, and may not work fully"
+					/>
+					&nbsp;
+				</>
+			)}
+			{module.name}
+			{module.hasHelp && (
+				<div className="float_right" onClick={showHelpClick}>
+					<FontAwesomeIcon icon={faQuestionCircle} />
+				</div>
+			)}
+		</div>
+	)
+}
