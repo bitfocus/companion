@@ -85,7 +85,16 @@ describe('Rosstalk', () => {
 			expect(registry.controls.pressControl).toHaveBeenCalledTimes(0)
 		})
 
-		test('ok', async () => {
+		test('bad format', async () => {
+			const { registry, service } = createService()
+
+			service.processIncoming(null, 'CC 12:')
+
+			expect(registry.page.getControlIdAt).toHaveBeenCalledTimes(0)
+			expect(registry.controls.pressControl).toHaveBeenCalledTimes(0)
+		})
+
+		test('ok - index', async () => {
 			const { registry, service } = createService()
 			registry.page.getControlIdAt.mockReturnValue('myControl')
 
@@ -96,6 +105,37 @@ describe('Rosstalk', () => {
 				pageNumber: 12,
 				row: 2,
 				column: 7,
+			})
+
+			expect(registry.controls.pressControl).toHaveBeenCalledTimes(1)
+			expect(registry.controls.pressControl).toHaveBeenLastCalledWith('myControl', true, 'rosstalk')
+
+			jest.advanceTimersByTime(100)
+
+			expect(registry.controls.pressControl).toHaveBeenCalledTimes(2)
+			expect(registry.controls.pressControl).toHaveBeenLastCalledWith('myControl', false, 'rosstalk')
+		})
+
+		test('bad format coordinates', async () => {
+			const { registry, service } = createService()
+
+			service.processIncoming(null, 'CC 12/3/')
+
+			expect(registry.page.getControlIdAt).toHaveBeenCalledTimes(0)
+			expect(registry.controls.pressControl).toHaveBeenCalledTimes(0)
+		})
+
+		test('ok - coordinates', async () => {
+			const { registry, service } = createService()
+			registry.page.getControlIdAt.mockReturnValue('myControl')
+
+			service.processIncoming(null, 'CC 12/3/4')
+
+			expect(registry.page.getControlIdAt).toHaveBeenCalledTimes(1)
+			expect(registry.page.getControlIdAt).toHaveBeenLastCalledWith({
+				pageNumber: 12,
+				row: 3,
+				column: 4,
 			})
 
 			expect(registry.controls.pressControl).toHaveBeenCalledTimes(1)

@@ -1,4 +1,4 @@
-import { oldBankIndexToXY } from '@companion-app/shared/ControlId.js'
+import { formatLocation, oldBankIndexToXY } from '@companion-app/shared/ControlId.js'
 import ServiceTcpBase from './TcpBase.js'
 
 /**
@@ -55,41 +55,53 @@ class ServiceRosstalk extends ServiceTcpBase {
 	 */
 	processIncoming(_client, data) {
 		data = data.toString()
-		// Type, bank/page, CC/bnt number
-		const match = data.match(/(CC) ([0-9]*)\:([0-9]*)/)
-		if (!match) {
-			this.logger.warn(`Invalid incoming RossTalk command: ${data}`)
+
+		const matchCC = data.match(/CC ([0-9]+)\:([0-9]+)/)
+		if (matchCC) {
+			const xy = oldBankIndexToXY(parseInt(matchCC[2]))
+			if (!xy) {
+				this.logger.warn(`Invalid incoming RossTalk reference: ${data}`)
+				return
+			}
+
+			this.#executeTrigger({
+				pageNumber: parseInt(matchCC[1]),
+				row: xy[1],
+				column: xy[0],
+			})
 			return
 		}
 
-		if (match[1] === 'CC') {
-			const pageNumber = parseInt(match[2])
-			const bank = parseInt(match[3])
-
-			const xy = oldBankIndexToXY(bank)
-			if (!xy) {
-				this.logger.warn(`Invalid incoming RossTalk command: ${data}`)
-				return
-			}
-
-			const controlId = this.page.getControlIdAt({
-				pageNumber: pageNumber,
-				column: xy[0],
-				row: xy[1],
+		const matchCCControl = data.match(/CC ([0-9]+)\/([0-9]+)\/([0-9]+)/)
+		if (matchCCControl) {
+			this.#executeTrigger({
+				pageNumber: parseInt(matchCCControl[1]),
+				row: parseInt(matchCCControl[2]),
+				column: parseInt(matchCCControl[3]),
 			})
-			if (!controlId) {
-				this.logger.info(`Ignore empty button ${pageNumber}/${xy[1]}/${xy[0]}`)
-				return
-			}
-
-			this.logger.info(`Push button ${pageNumber}/${xy[1]}/${xy[0]}`)
-			this.controls.pressControl(controlId, true, 'rosstalk')
-
-			setTimeout(() => {
-				this.controls.pressControl(controlId, false, 'rosstalk')
-				this.logger.info(`Release button ${pageNumber}/${xy[1]}/${xy[0]}`)
-			}, this.releaseTime)
+			return
 		}
+	}
+
+	/**
+	 *
+	 * @param {import('@companion-app/shared/Model/Common.js').ControlLocation} location
+	 * @returns
+	 */
+	#executeTrigger(location) {
+		const controlId = this.page.getControlIdAt(location)
+		if (!controlId) {
+			this.logger.info(`Ignore empty button ${formatLocation(location)}`)
+			return
+		}
+
+		this.logger.info(`Push button ${formatLocation(location)}`)
+		this.controls.pressControl(controlId, true, 'rosstalk')
+
+		setTimeout(() => {
+			this.controls.pressControl(controlId, false, 'rosstalk')
+			this.logger.info(`Release button ${formatLocation(location)}`)
+		}, this.releaseTime)
 	}
 }
 
