@@ -15,7 +15,10 @@ export default defineConfig({
 		proxy: {
 			'/int': 'http://127.0.0.1:8000',
 			'/docs': 'http://127.0.0.1:8000',
-			'/socket.io': 'http://127.0.0.1:8000',
+			'/socket.io': {
+				target: 'ws://127.0.0.1:8000',
+				ws: true,
+			},
 		},
 	},
 	plugins: [
