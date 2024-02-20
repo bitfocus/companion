@@ -101,7 +101,7 @@ class GraphicsController extends CoreBase {
 	 * @param {import('../Registry.js').default} registry
 	 */
 	constructor(registry) {
-		super(registry, 'graphics', 'Graphics/Controller')
+		super(registry, 'Graphics/Controller')
 
 		this.setMaxListeners(0)
 

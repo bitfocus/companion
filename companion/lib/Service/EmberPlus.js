@@ -105,7 +105,7 @@ class ServiceEmberPlus extends ServiceBase {
 	 * @param {import('../Registry.js').default} registry - the application's core
 	 */
 	constructor(registry) {
-		super(registry, 'ember+', 'Service/EmberPlus', 'emberplus_enabled', null)
+		super(registry, 'Service/EmberPlus', 'emberplus_enabled', null)
 
 		this.graphics.on('button_drawn', this.#updateBankFromRender.bind(this))
 

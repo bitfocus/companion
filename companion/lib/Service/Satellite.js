@@ -62,7 +62,7 @@ class ServiceSatellite extends ServiceBase {
 	 * @param {import('../Registry.js').default} registry - the application core
 	 */
 	constructor(registry) {
-		super(registry, 'satellite', 'Service/Satellite', null, null)
+		super(registry, 'Service/Satellite', null, null)
 
 		this.init()
 	}

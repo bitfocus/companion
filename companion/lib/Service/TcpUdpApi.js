@@ -59,7 +59,7 @@ export class ServiceTcpUdpApi extends CoreBase {
 	 * @param {string | null} legacyRoutesEnableKey - Userconfig key to enable/disable legacy routes
 	 */
 	constructor(registry, protocolName, legacyRoutesEnableKey) {
-		super(registry, 'api', 'Service/Api')
+		super(registry, 'Service/Api')
 
 		this.#router = new RegexRouter(() => {
 			throw new ApiMessageError('Syntax error')

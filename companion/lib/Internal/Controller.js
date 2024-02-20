@@ -39,7 +39,7 @@ export default class InternalController extends CoreBase {
 	 * @param {import('../Registry.js').default} registry
 	 */
 	constructor(registry) {
-		super(registry, 'internal', 'Internal/Controller')
+		super(registry, 'Internal/Controller')
 
 		this.fragments = [
 			new ActionRecorder(this, registry.controls.actionRecorder, registry.page, registry.instance.variable),

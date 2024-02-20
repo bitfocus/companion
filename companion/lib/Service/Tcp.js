@@ -44,7 +44,7 @@ class ServiceTcp extends ServiceTcpBase {
 	 * @param {import('../Registry.js').default} registry - the application core
 	 */
 	constructor(registry) {
-		super(registry, 'tcp', 'Service/Tcp', 'tcp_enabled', 'tcp_listen_port')
+		super(registry, 'Service/Tcp', 'tcp_enabled', 'tcp_listen_port')
 
 		this.#api = new ServiceTcpUdpApi(registry, 'tcp', 'tcp_legacy_api_enabled')
 

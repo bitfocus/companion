@@ -107,7 +107,7 @@ export default class FragmentFeedbacks extends CoreBase {
 	 * @param {boolean} booleanOnly
 	 */
 	constructor(registry, controlId, commitChange, triggerRedraw, booleanOnly) {
-		super(registry, 'fragment-feedbacks', 'Controls/Fragments/Feedbacks')
+		super(registry, 'Controls/Fragments/Feedbacks')
 
 		this.controlId = controlId
 		this.#commitChange = commitChange

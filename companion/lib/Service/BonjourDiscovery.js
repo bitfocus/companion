@@ -50,7 +50,7 @@ class ServiceBonjourDiscovery extends ServiceBase {
 	 * @param {import('../Registry.js').default} registry - the application core
 	 */
 	constructor(registry) {
-		super(registry, 'bonjour-discovery', 'Service/BonjourDiscovery', null, null)
+		super(registry, 'Service/BonjourDiscovery', null, null)
 
 		this.init()
 	}

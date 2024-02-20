@@ -89,7 +89,7 @@ class ControlsController extends CoreBase {
 	 * @param {import('../Registry.js').default} registry - the application core
 	 */
 	constructor(registry) {
-		super(registry, 'controls', 'Controls/Controller')
+		super(registry, 'Controls/Controller')
 
 		this.actions = new ActionRunner(registry)
 		this.actionRecorder = new ActionRecorder(registry)

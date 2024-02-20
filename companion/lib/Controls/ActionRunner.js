@@ -34,7 +34,7 @@ export default class ActionRunner extends CoreBase {
 	 * @param {import('../Registry.js').default} registry - the application core
 	 */
 	constructor(registry) {
-		super(registry, 'action-runner', 'Control/ActionRunner')
+		super(registry, 'Control/ActionRunner')
 	}
 
 	/**

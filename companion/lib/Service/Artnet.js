@@ -49,7 +49,7 @@ class ServiceArtnet extends ServiceUdpBase {
 	 * @param {import('../Registry.js').default} registry - the application core
 	 */
 	constructor(registry) {
-		super(registry, 'artnet', 'Service/Artnet', 'artnet_enabled', null)
+		super(registry, 'Service/Artnet', 'artnet_enabled', null)
 
 		this.init()
 	}

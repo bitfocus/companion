@@ -40,7 +40,7 @@ class ServiceVideohubPanel extends ServiceBase {
 	 * @param {import('../Registry.js').default} registry - the application core
 	 */
 	constructor(registry) {
-		super(registry, 'videohub-panel', 'Service/VideohubPanel', 'videohub_panel_enabled', null)
+		super(registry, 'Service/VideohubPanel', 'videohub_panel_enabled', null)
 
 		this.init()
 	}

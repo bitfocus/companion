@@ -116,7 +116,7 @@ class InstanceVariable extends CoreBase {
 	 * @param {import('../Registry.js').default} registry
 	 */
 	constructor(registry) {
-		super(registry, 'variable', 'Instance/Variable')
+		super(registry, 'Instance/Variable')
 
 		this.custom = new InstanceCustomVariable(registry.db, registry.io, this)
 	}

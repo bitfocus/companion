@@ -67,11 +67,10 @@ export default class ControlBase extends CoreBase {
 	/**
 	 * @param {import('../Registry.js').default} registry - the application core
 	 * @param {string} controlId - id of the control
-	 * @param {string} logSource
 	 * @param {string} debugNamespace
 	 */
-	constructor(registry, controlId, logSource, debugNamespace) {
-		super(registry, logSource, debugNamespace)
+	constructor(registry, controlId, debugNamespace) {
+		super(registry, debugNamespace)
 
 		this.controlId = controlId
 	}

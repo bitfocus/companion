@@ -42,7 +42,7 @@ class ServiceRosstalk extends ServiceTcpBase {
 	 * @param {import('../Registry.js').default} registry - the application core
 	 */
 	constructor(registry) {
-		super(registry, 'rosstalk', 'Service/Rosstalk', 'rosstalk_enabled', null)
+		super(registry, 'Service/Rosstalk', 'rosstalk_enabled', null)
 
 		this.init()
 	}

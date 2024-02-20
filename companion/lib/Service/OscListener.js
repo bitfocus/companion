@@ -41,7 +41,7 @@ class ServiceOscListener extends ServiceOscBase {
 	 * @param {import('../Registry.js').default} registry - the application core
 	 */
 	constructor(registry) {
-		super(registry, 'osc-rx', 'Service/OscListener', 'osc_enabled', 'osc_listen_port')
+		super(registry, 'Service/OscListener', 'osc_enabled', 'osc_listen_port')
 
 		this.init()
 

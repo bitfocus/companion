@@ -93,7 +93,7 @@ export default class ControlButtonPageUp extends ControlBase {
 	 * @param {boolean} isImport - if this is importing a button, not creating at startup
 	 */
 	constructor(registry, controlId, storage, isImport) {
-		super(registry, controlId, 'page-button', 'Controls/Button/PageUp')
+		super(registry, controlId, 'Controls/Button/PageUp')
 
 		if (!storage) {
 			// New control

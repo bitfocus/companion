@@ -45,7 +45,7 @@ export class ServiceHttpApi extends CoreBase {
 	 * @param {import('express').Router} router - the http router
 	 */
 	constructor(registry, router) {
-		super(registry, 'http-api', 'Service/HttpApi')
+		super(registry, 'Service/HttpApi')
 
 		this.#legacyRouter = router
 		this.#apiRouter = express.Router()

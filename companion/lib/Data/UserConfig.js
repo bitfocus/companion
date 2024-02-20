@@ -112,7 +112,7 @@ class DataUserConfig extends CoreBase {
 	 * @param {import('../Registry.js').default} registry - the application core
 	 */
 	constructor(registry) {
-		super(registry, 'userconfig', 'Data/UserConfig')
+		super(registry, 'Data/UserConfig')
 
 		this.registry.on('http_rebind', (bind_ip) => {
 			if (this.data !== undefined && DataUserConfig.Defaults.https_self_cn == this.data.https_self_cn) {

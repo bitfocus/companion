@@ -52,7 +52,7 @@ class Instance extends CoreBase {
 	 * @param {import('./Variable.js').default} variable
 	 */
 	constructor(registry, variable) {
-		super(registry, 'instance', 'Instance/Controller')
+		super(registry, 'Instance/Controller')
 
 		this.variable = variable
 		this.definitions = new InstanceDefinitions(registry)

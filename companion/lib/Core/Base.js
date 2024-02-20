@@ -40,10 +40,9 @@ class CoreBase extends EventEmitter {
 	 * This needs to be called in the extending class
 	 * using <code>super(registry, 'module_name', 'module_path')</code>.
 	 * @param {import('../Registry.js').default} registry - the application core
-	 * @param {string} _logSource - module name to be used in UI logs
 	 * @param {string} debugNamespace - module path to be used in the debugger
 	 */
-	constructor(registry, _logSource, debugNamespace) {
+	constructor(registry, debugNamespace) {
 		super()
 
 		this.registry = registry

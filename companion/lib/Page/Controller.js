@@ -45,7 +45,7 @@ class PageController extends CoreBase {
 	 * @param {import('../Registry.js').default} registry - the application core
 	 */
 	constructor(registry) {
-		super(registry, 'page', 'Page/Controller')
+		super(registry, 'Page/Controller')
 
 		this.#pages = this.db.getKey('page', {}) ?? {}
 
