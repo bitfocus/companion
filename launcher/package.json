@@ -33,7 +33,7 @@
 	},
 	"build": {
 		"productName": "Companion",
-		"executableName": "companion-launcher",
+		"executableName": "Companion",
 		"appId": "test-companion.bitfocus.no",
 		"dmg": {
 			"artifactName": "companion-mac-${arch}.dmg",
@@ -75,6 +75,7 @@
 		},
 		"linux": {
 			"target": "dir",
+			"executableName": "companion-launcher",
 			"artifactName": "companion-x64",
 			"extraFiles": [
 				{
