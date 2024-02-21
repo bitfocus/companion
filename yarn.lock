@@ -1562,25 +1562,25 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@loupedeck/core@npm:1.0.0":
-  version: 1.0.0
-  resolution: "@loupedeck/core@npm:1.0.0"
+"@loupedeck/core@npm:1.1.0":
+  version: 1.1.0
+  resolution: "@loupedeck/core@npm:1.1.0"
   dependencies:
     eventemitter3: "npm:^4.0.7"
     p-queue: "npm:^6.6.2"
-    tslib: "npm:^2.6.0"
-  checksum: 10c0/632288e4c659745a8d1132634bdcff55cb4528f2c9d9550eeba33d75ff25af3dd06d0ded9ab2a56d70de56211657f71ce6a9fac5f12f9f29910d3a8cfeac8fd9
+    tslib: "npm:^2.6.2"
+  checksum: 10c0/ef5289eb52e5d4dfe91e72fc8b04c4e5a340bad7830af5e11721c6570eda07124cbbcc64c5a7acedefbcc49a76fae4219b10e1a26e79b06c85a0b2870b184abf
   languageName: node
   linkType: hard
 
-"@loupedeck/node@npm:^1.0.0":
-  version: 1.0.0
-  resolution: "@loupedeck/node@npm:1.0.0"
+"@loupedeck/node@npm:^1.1.0":
+  version: 1.1.0
+  resolution: "@loupedeck/node@npm:1.1.0"
   dependencies:
-    "@loupedeck/core": "npm:1.0.0"
+    "@loupedeck/core": "npm:1.1.0"
     serialport: "npm:^10.5.0"
-    tslib: "npm:^2.6.0"
-  checksum: 10c0/b03042dc99c2f8eeefe37636582ee8c0cae8c9b404bb4fb5421ad3b2f92a6ef39a5cb68f24da343b88a64a462c70942a6064f1dec6f97163555ea899c2c1d82a
+    tslib: "npm:^2.6.2"
+  checksum: 10c0/c94f1c3d0627c7acd58f3b1640f885930f6f6a6f44ffe988b46500862b56e977a7f7061ca51a8b92c62b0696f916123d192145c73f748ed347b57e7cec3b72ab
   languageName: node
   linkType: hard
 
@@ -5023,7 +5023,7 @@ asn1@evs-broadcast/node-asn1:
     "@julusian/image-rs": "npm:^0.2.1"
     "@julusian/jpeg-turbo": "npm:^2.1.0"
     "@julusian/skia-canvas": "npm:^1.0.5"
-    "@loupedeck/node": "npm:^1.0.0"
+    "@loupedeck/node": "npm:^1.1.0"
     "@sentry/integrations": "npm:^7.101.1"
     "@sentry/node": "npm:^7.101.1"
     "@sentry/tracing": "npm:^7.101.1"
@@ -12889,7 +12889,7 @@ asn1@evs-broadcast/node-asn1:
   languageName: node
   linkType: hard
 
-"tslib@npm:^2.1.0, tslib@npm:^2.4.0, tslib@npm:^2.5.0, tslib@npm:^2.6.0, tslib@npm:^2.6.2":
+"tslib@npm:^2.1.0, tslib@npm:^2.4.0, tslib@npm:^2.5.0, tslib@npm:^2.6.2":
   version: 2.6.2
   resolution: "tslib@npm:2.6.2"
   checksum: 10c0/e03a8a4271152c8b26604ed45535954c0a45296e32445b4b87f8a5abdb2421f40b59b4ca437c4346af0f28179780d604094eb64546bee2019d903d01c6c19bdb
