@@ -1,17 +1,18 @@
 import { action, observable } from 'mobx'
-import type { ModuleDisplayInfo, ModuleInfoUpdate } from '@companion-app/shared/Model/ModuleInfo.js'
+import type { ModuleInfoUpdate, NewClientModuleInfo } from '@companion-app/shared/Model/ModuleInfo.js'
 import { assertNever } from '../util.js'
 import { applyPatch } from 'fast-json-patch'
 import { cloneDeep } from 'lodash-es'
 
 export class ModuleInfoStore {
-	readonly modules = observable.map<string, ModuleDisplayInfo>()
+	// TODO - should this be more granular/observable?
+	readonly modules = observable.map<string, NewClientModuleInfo>()
 
 	public get count() {
 		return this.modules.size
 	}
 
-	public reset = action((newData: Record<string, ModuleDisplayInfo | undefined> | null) => {
+	public reset = action((newData: Record<string, NewClientModuleInfo | undefined> | null) => {
 		this.modules.clear()
 
 		if (newData) {

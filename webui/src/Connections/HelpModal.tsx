@@ -59,7 +59,8 @@ export const HelpModal = observer(
 			<CModalExt visible={show} onClose={doClose} onClosed={onClosed} size="lg">
 				<CModalHeader closeButton>
 					<h5>
-						Help for {moduleInfo?.name || content?.[0]} {moduleInfo?.version ? `v${moduleInfo.version}` : ''}
+						Help for {moduleInfo?.baseInfo?.name || content?.[0]}{' '}
+						{moduleInfo?.selectedVersion?.version ? `v${moduleInfo.selectedVersion?.version}` : ''}
 					</h5>
 				</CModalHeader>
 				<CModalBody>

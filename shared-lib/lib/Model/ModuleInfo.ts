@@ -13,6 +13,36 @@ export interface ModuleDisplayInfo {
 	isLegacy?: boolean
 }
 
+export interface NewModuleUseVersion {
+	type: 'builtin' | 'dev' | 'user'
+	id?: string
+}
+
+export interface NewClientModuleBaseInfo {
+	id: string
+	name: string
+	hasHelp: boolean
+	bugUrl: string
+	shortname: string
+	manufacturer: string
+	products: string[]
+	keywords: string[]
+}
+
+export interface NewClientModuleVersionInfo {
+	version: string
+	type: NewModuleUseVersion['type']
+	isLegacy: boolean
+}
+
+export interface NewClientModuleInfo {
+	baseInfo: NewClientModuleBaseInfo
+
+	selectedVersion: NewClientModuleVersionInfo
+
+	allVersions: NewClientModuleVersionInfo[]
+}
+
 export type ModuleInfoUpdate = ModuleInfoUpdateAddOp | ModuleInfoUpdateUpdateOp
 
 // export interface ModuleInfoUpdateRemoveOp {
@@ -23,7 +53,7 @@ export interface ModuleInfoUpdateAddOp {
 	type: 'add'
 	id: string
 
-	info: ModuleDisplayInfo
+	info: NewClientModuleInfo
 }
 export interface ModuleInfoUpdateUpdateOp {
 	type: 'update'

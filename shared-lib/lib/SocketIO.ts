@@ -43,7 +43,7 @@ import type { UIPresetDefinition } from './Model/Presets.js'
 import type { RecordSessionInfo, RecordSessionListInfo } from './Model/ActionRecorderModel.js'
 import type { ActionDefinitionUpdate, ClientActionDefinition } from './Model/ActionDefinitionModel.js'
 import type { CloudControllerState, CloudRegionState } from './Model/Cloud.js'
-import type { ModuleInfoUpdate, ModuleDisplayInfo } from './Model/ModuleInfo.js'
+import type { ModuleInfoUpdate, NewClientModuleInfo } from './Model/ModuleInfo.js'
 
 export interface ClientToBackendEventsMap {
 	disconnect: () => never // Hack because type is missing
@@ -80,7 +80,7 @@ export interface ClientToBackendEventsMap {
 	'event-definitions:get': () => Record<string, ClientEventDefinition | undefined>
 	'custom-variables:subscribe': () => CustomVariablesModel
 	'custom-variables:unsubscribe': () => void
-	'modules:subscribe': () => Record<string, ModuleDisplayInfo>
+	'modules:subscribe': () => Record<string, NewClientModuleInfo>
 	'modules:unsubscribe': () => void
 	'connections:subscribe': () => Record<string, ClientConnectionConfig>
 	'connections:unsubscribe': () => void

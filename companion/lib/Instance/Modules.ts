@@ -19,13 +19,18 @@ import fs from 'fs-extra'
 import { isPackaged } from '../Resources/Util.js'
 import path from 'path'
 import { fileURLToPath } from 'url'
-import { cloneDeep } from 'lodash-es'
+import { cloneDeep, compact } from 'lodash-es'
 import jsonPatch from 'fast-json-patch'
 import { InstanceModuleScanner } from './ModuleScanner.js'
 import LogController from '../Log/Controller.js'
 import type express from 'express'
 import { assertNever, type ModuleManifest } from '@companion-module/base'
-import type { ModuleDisplayInfo } from '@companion-app/shared/Model/ModuleInfo.js'
+import type {
+	ModuleDisplayInfo,
+	NewClientModuleInfo,
+	NewClientModuleVersionInfo,
+	NewModuleUseVersion,
+} from '@companion-app/shared/Model/ModuleInfo.js'
 import type { ClientSocket, UIHandler } from '../UI/Handler.js'
 import type { HelpDescription } from '@companion-app/shared/Model/Common.js'
 import { InstanceController } from './Controller.js'
@@ -47,11 +52,6 @@ export interface NewModuleVersionInfo {
 	display: ModuleDisplayInfo
 	manifest: ModuleManifest
 	isPackaged: boolean
-}
-
-export interface NewModuleUseVersion {
-	type: 'builtin' | 'dev' | 'user'
-	id?: string
 }
 
 class NewModuleInfo {
@@ -104,7 +104,7 @@ export class InstanceModules {
 	/**
 	 * Last module info sent to clients
 	 */
-	#lastModulesJson: Record<string, ModuleDisplayInfo> | null = null
+	#lastModulesJson: Record<string, NewClientModuleInfo> | null = null
 
 	/**
 	 * Known module info
@@ -369,12 +369,41 @@ export class InstanceModules {
 	/**
 	 * Get display version of module infos
 	 */
-	getModulesJson(): Record<string, ModuleDisplayInfo> {
-		const result: Record<string, ModuleDisplayInfo> = {}
+	getModulesJson(): Record<string, NewClientModuleInfo> {
+		const result: Record<string, NewClientModuleInfo> = {}
+
+		function translateVersion(
+			version: NewModuleVersionInfo,
+			type: NewModuleUseVersion['type']
+		): NewClientModuleVersionInfo {
+			return {
+				version: version.display.version,
+				isLegacy: version.display.isLegacy ?? false,
+				type,
+			}
+		}
 
 		for (const [id, module] of this.#knownModules.entries()) {
 			const moduleVersion = module.getSelectedVersion()
-			if (moduleVersion) result[id] = moduleVersion.display
+			if (moduleVersion) {
+				result[id] = {
+					baseInfo: moduleVersion.display,
+					selectedVersion: translateVersion(moduleVersion, module.useVersion?.type ?? 'builtin'),
+					allVersions: compact([
+						module.builtinModule ? translateVersion(module.builtinModule, 'builtin') : undefined,
+						...Object.values(module.userVersions).map((ver) => ver && translateVersion(ver, 'user')),
+						...Object.values(module.devVersions).map(
+							(ver, i) =>
+								ver &&
+								({
+									version: `dev-${i}`,
+									isLegacy: ver.display.isLegacy ?? false,
+									type: 'dev',
+								} satisfies NewClientModuleVersionInfo)
+						),
+					]),
+				}
+			}
 		}
 
 		return result

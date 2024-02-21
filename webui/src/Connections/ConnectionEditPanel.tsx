@@ -12,7 +12,7 @@ import { ExtendedInputField } from '@companion-app/shared/Model/Options.js'
 import { RootAppStoreContext } from '../Stores/RootAppStore.js'
 import { observer } from 'mobx-react-lite'
 import { ConnectionEditField } from './ConnectionEditField.js'
-import { ModuleDisplayInfo } from '@companion-app/shared/Model/ModuleInfo.js'
+import type { NewClientModuleInfo } from '@companion-app/shared/Model/ModuleInfo.js'
 
 interface ConnectionEditPanelProps {
 	connectionId: string
@@ -65,7 +65,7 @@ export const ConnectionEditPanel = observer(function ConnectionEditPanel({
 interface ConnectionEditPanelInnerProps {
 	connectionId: string
 	connectionInfo: ClientConnectionConfig
-	moduleInfo: ModuleDisplayInfo
+	moduleInfo: NewClientModuleInfo
 	doConfigureConnection: (connectionId: string | null) => void
 	showHelp: (moduleId: string) => void
 }
@@ -186,8 +186,8 @@ const ConnectionEditPanelInner = observer(function ConnectionEditPanelInner({
 	return (
 		<div>
 			<h5>
-				{moduleInfo.shortname ?? connectionInfo.instance_type} configuration
-				{moduleInfo.hasHelp && (
+				{moduleInfo.baseInfo.shortname ?? connectionInfo.instance_type} configuration
+				{moduleInfo.baseInfo.hasHelp && (
 					<div className="float_right" onClick={() => showHelp(connectionInfo.instance_type)}>
 						<FontAwesomeIcon icon={faQuestionCircle} />
 					</div>

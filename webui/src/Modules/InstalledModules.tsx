@@ -1,8 +1,9 @@
-import React, { useState } from 'react'
+import React, { useContext, useState } from 'react'
 import { SearchBox } from '../Components/SearchBox.js'
 import { observer } from 'mobx-react-lite'
 import { ModuleProductInfo, useFilteredProducts } from '../Hooks/useFilteredProducts.js'
 import { CAlert } from '@coreui/react'
+import { RootAppStoreContext } from '../Stores/RootAppStore.js'
 
 export const InstalledModules = observer(function InstalledModules() {
 	const [filter, setFilter] = useState('')
@@ -55,12 +56,16 @@ interface ModuleEntryProps {
 	module: ModuleProductInfo
 }
 
-function ModuleEntry({ module }: ModuleEntryProps) {
+const ModuleEntry = observer(function ModuleEntry({ module }: ModuleEntryProps) {
+	const { modules } = useContext(RootAppStoreContext)
+
+	const moduleFullInfo = modules.modules.get(module.id)
+
 	return (
 		<tr>
 			<td className="module-list-entry">
-				<p>{JSON.stringify(module)}</p>
+				<p>{JSON.stringify(moduleFullInfo)}</p>
 			</td>
 		</tr>
 	)
-}
+})
