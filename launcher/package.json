@@ -44,7 +44,8 @@
 			"category": "no.bitfocus.companion",
 			"extendInfo": {
 				"LSBackgroundOnly": 1,
-				"LSUIElement": 1
+				"LSUIElement": 1,
+				"NSAppleEventsUsageDescription": "Companion uses AppleEvents to control local applications."
 			},
 			"hardenedRuntime": "true",
 			"gatekeeperAssess": "false",
