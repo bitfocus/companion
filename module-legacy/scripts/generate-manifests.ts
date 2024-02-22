@@ -128,7 +128,7 @@ console.log('Bundling code. This will take a couple of minutes')
 await $`yarn run -B webpack`
 
 // trick node into treating them all as cjs
-await fs.writeFile(`manifests/package.json`, '')
+await fs.writeFile(`manifests/package.json`, '{}')
 
 // const useDir = await fs.pathExists('./module/legacy')
 // const baseDir = useDir ? './module/legacy' : './node_modules/companion-wrapped-module'
