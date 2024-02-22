@@ -888,7 +888,10 @@ class SurfaceController extends CoreBase {
 													LoupedeckLiveDriver,
 													true
 												)
-											} else if (deviceInfo.model === LoupedeckModelId.LoupedeckCt) {
+											} else if (
+												deviceInfo.model === LoupedeckModelId.LoupedeckCt ||
+												deviceInfo.model === LoupedeckModelId.LoupedeckCtV1
+											) {
 												await this.#addDevice(
 													{
 														path: deviceInfo.path,
