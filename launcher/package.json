@@ -33,7 +33,7 @@
 	},
 	"build": {
 		"productName": "Companion",
-		"executableName": "companion-launcher",
+		"executableName": "Companion",
 		"appId": "test-companion.bitfocus.no",
 		"dmg": {
 			"artifactName": "companion-mac-${arch}.dmg",
@@ -44,7 +44,8 @@
 			"category": "no.bitfocus.companion",
 			"extendInfo": {
 				"LSBackgroundOnly": 1,
-				"LSUIElement": 1
+				"LSUIElement": 1,
+				"NSAppleEventsUsageDescription": "Companion uses AppleEvents to control local applications."
 			},
 			"hardenedRuntime": "true",
 			"gatekeeperAssess": "false",
@@ -74,6 +75,7 @@
 		},
 		"linux": {
 			"target": "dir",
+			"executableName": "companion-launcher",
 			"artifactName": "companion-x64",
 			"extraFiles": [
 				{

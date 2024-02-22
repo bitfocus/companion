@@ -51,7 +51,7 @@
 		"@julusian/image-rs": "^0.2.1",
 		"@julusian/jpeg-turbo": "^2.1.0",
 		"@julusian/skia-canvas": "^1.0.5",
-		"@loupedeck/node": "^1.0.0",
+		"@loupedeck/node": "^1.1.1",
 		"@sentry/integrations": "^7.101.1",
 		"@sentry/node": "^7.101.1",
 		"@sentry/tracing": "^7.101.1",
