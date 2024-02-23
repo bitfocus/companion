@@ -131,6 +131,54 @@ export function ResolveExpression(node, getVariableValue, functions = {}) {
 
 						return result
 					}
+					// 	case 'Compound':
+					// 	// @ts-ignore
+					// 	for (const expr of node.body) {
+					// 		visitElements(expr, visitor)
+					// 	}
+					// 	break
+					case 'ArrayExpression': {
+						const vals = []
+						// @ts-ignore
+						for (const elm of node.elements) {
+							vals.push(resolve(elm))
+						}
+						return vals
+					}
+					case 'MemberExpression': {
+						// @ts-ignore
+						const object = resolve(node.object)
+						// @ts-ignore
+						const property = resolve(node.property)
+
+						// propogate null
+						if (object == null) return object
+
+						return object?.[property]
+					}
+					case 'ObjectExpression': {
+						/** @type {Record<any, any>} */
+						const obj = {}
+						// @ts-ignore
+						for (const prop of node.properties) {
+							if (prop.type !== 'Property') throw new Error(`Invalid property type in object: ${prop.type}`)
+
+							// @ts-ignore
+							const key = resolve(prop.key)
+							// @ts-ignore
+							const value = resolve(prop.value)
+
+							obj[key] = value
+						}
+						return obj
+					}
+					// case 'Property':
+					// 	// @ts-ignore
+					// 	visitElements(node.key, visitor)
+					// 	// @ts-ignore
+					// 	visitElements(node.value, visitor)
+
+					// 	break
 					default:
 						throw new Error(`Unknown node "${node.type}"`)
 				}

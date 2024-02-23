@@ -505,6 +505,7 @@ __metadata:
   resolution: "@companion-app/shared@workspace:shared-lib"
   dependencies:
     "@jsep-plugin/numbers": "npm:^1.0.1"
+    "@jsep-plugin/object": "npm:^1.2.1"
     "@jsep-plugin/template": "npm:^1.0.3"
     jsep: "npm:^1.3.8"
     typescript: "npm:^5.3.3"
@@ -1502,6 +1503,15 @@ __metadata:
   peerDependencies:
     jsep: ^0.4.0||^1.0.0
   checksum: 10c0/be9246069fdfedd76b0d9584d5d9ef31f6da378a6b3937f33d65f5c9ffd9e35c89fc2b993105e44acef3c335227686b794779d26291b6479d3bb7954606a953e
+  languageName: node
+  linkType: hard
+
+"@jsep-plugin/object@npm:^1.2.1":
+  version: 1.2.1
+  resolution: "@jsep-plugin/object@npm:1.2.1"
+  peerDependencies:
+    jsep: ^0.4.0||^1.0.0
+  checksum: 10c0/54a4cd209bdfc3229de0fb4e05b87062d15c4a19932e8ed2ec0ce7af2d3114397a6287414905d4fbc0f62779d76a39d2404af201e484add556ef62ce8523ef3d
   languageName: node
   linkType: hard
 

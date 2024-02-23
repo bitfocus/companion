@@ -337,6 +337,31 @@ describe('parser', () => {
 		})
 	})
 
+	describe('identifier', () => {
+		it('should accept null', () => {
+			const result = ParseExpression2('null')
+			expect(result).toEqual({
+				expr: {
+					raw: 'null',
+					type: 'Literal',
+					value: null,
+				},
+				variableIds: [],
+			})
+		})
+		it('should accept undefined', () => {
+			const result = ParseExpression2('undefined')
+			expect(result).toEqual({
+				expr: {
+					raw: 'undefined',
+					type: 'Literal',
+					value: undefined,
+				},
+				variableIds: [],
+			})
+		})
+	})
+
 	describe('ternaries', () => {
 		it('handle ternary', () => {
 			const result = ParseExpression2('(1 > 2) ? 3 : 4')
@@ -518,6 +543,167 @@ describe('parser', () => {
 					},
 				},
 				variableIds: [''],
+			})
+		})
+	})
+
+	describe('object property', () => {
+		it('from created object', () => {
+			const res = ParseExpression2("{ a: 1, b: { c: 3 }}['d']")
+
+			expect(res).toEqual({
+				expr: {
+					computed: true,
+					object: {
+						properties: [
+							{
+								computed: false,
+								key: {
+									raw: "'a'",
+									type: 'Literal',
+									value: 'a',
+								},
+								shorthand: false,
+								type: 'Property',
+								value: {
+									raw: '1',
+									type: 'Literal',
+									value: 1,
+								},
+							},
+							{
+								computed: false,
+								key: {
+									raw: "'b'",
+									type: 'Literal',
+									value: 'b',
+								},
+								shorthand: false,
+								type: 'Property',
+								value: {
+									properties: [
+										{
+											computed: false,
+											key: {
+												raw: "'c'",
+												type: 'Literal',
+												value: 'c',
+											},
+											shorthand: false,
+											type: 'Property',
+											value: {
+												raw: '3',
+												type: 'Literal',
+												value: 3,
+											},
+										},
+									],
+									type: 'ObjectExpression',
+								},
+							},
+						],
+						type: 'ObjectExpression',
+					},
+					property: {
+						raw: "'d'",
+						type: 'Literal',
+						value: 'd',
+					},
+					type: 'MemberExpression',
+				},
+				variableIds: [],
+			})
+		})
+
+		it('from variable', () => {
+			const res = ParseExpression2("$(my:variable)['d']")
+
+			expect(res).toEqual({
+				expr: {
+					computed: true,
+					object: {
+						name: 'my:variable',
+						type: 'CompanionVariable',
+					},
+					property: {
+						raw: "'d'",
+						type: 'Literal',
+						value: 'd',
+					},
+					type: 'MemberExpression',
+				},
+				variableIds: ['my:variable'],
+			})
+		})
+
+		it('chained', () => {
+			const res = ParseExpression2("{}['b']['c']['d']")
+
+			expect(res).toEqual({
+				expr: {
+					computed: true,
+					object: {
+						computed: true,
+						object: {
+							computed: true,
+							object: {
+								properties: [],
+								type: 'ObjectExpression',
+							},
+							property: {
+								raw: "'b'",
+								type: 'Literal',
+								value: 'b',
+							},
+							type: 'MemberExpression',
+						},
+						property: {
+							raw: "'c'",
+							type: 'Literal',
+							value: 'c',
+						},
+						type: 'MemberExpression',
+					},
+					property: {
+						raw: "'d'",
+						type: 'Literal',
+						value: 'd',
+					},
+					type: 'MemberExpression',
+				},
+				variableIds: [],
+			})
+		})
+
+		it('array', () => {
+			const res = ParseExpression2('[0,1][3]')
+
+			expect(res).toEqual({
+				expr: {
+					computed: true,
+					object: {
+						elements: [
+							{
+								raw: '0',
+								type: 'Literal',
+								value: 0,
+							},
+							{
+								raw: '1',
+								type: 'Literal',
+								value: 1,
+							},
+						],
+						type: 'ArrayExpression',
+					},
+					property: {
+						raw: '3',
+						type: 'Literal',
+						value: 3,
+					},
+					type: 'MemberExpression',
+				},
+				variableIds: [],
 			})
 		})
 	})
