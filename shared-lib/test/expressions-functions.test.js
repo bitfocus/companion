@@ -287,4 +287,19 @@ describe('functions', () => {
 			expect(ExpressionFunctions.bool(undefined)).toBe(false)
 		})
 	})
+
+	describe('object', () => {
+		describe('jsonpath', () => {
+			const obj = {
+				a: 1,
+				b: {
+					c: 5,
+				},
+			}
+			expect(ExpressionFunctions.jsonpath(obj, '$.b')).toEqual({ c: 5 })
+			expect(ExpressionFunctions.jsonpath(obj, '$.c')).toEqual(undefined)
+			expect(ExpressionFunctions.jsonpath(obj, '$.b.c')).toEqual(5)
+			expect(ExpressionFunctions.jsonpath(obj, '$')).toEqual(obj)
+		})
+	})
 })

@@ -173,3 +173,11 @@ Any of the following will be interpreted as true:
 * "true"
 
 Everything else will be false.
+
+##### Object/Array operations
+
+**jsonpath(obj, path)**
+
+Perform a jsonpath lookup on an object
+
+You can see examples of how to use this at: https://jsonpath.com/

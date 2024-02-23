@@ -1,4 +1,5 @@
 import { pad } from '../Util.js'
+import { JSONPath } from 'jsonpath-plus'
 
 // Note: when adding new functions, make sure to update the docs!
 /** @type {Record<string, (...args: any[]) => any>} */
@@ -101,4 +102,13 @@ export const ExpressionFunctions = {
 
 	// Bool operations
 	bool: (v) => !!v && v !== 'false' && v !== '0',
+
+	// Object operations
+	jsonpath: (obj, path) => {
+		return JSONPath({
+			wrap: false,
+			path: path,
+			json: obj,
+		})
+	},
 }
