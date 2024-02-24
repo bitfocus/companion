@@ -33,6 +33,7 @@ export interface NewClientModuleVersionInfo {
 	version: string
 	type: NewModuleUseVersion['type']
 	isLegacy: boolean
+	hasHelp: boolean
 }
 
 export interface NewClientModuleInfo {

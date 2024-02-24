@@ -380,6 +380,7 @@ export class InstanceModules {
 				version: version.display.version,
 				isLegacy: version.display.isLegacy ?? false,
 				type,
+				hasHelp: !!version.helpPath,
 			}
 		}
 
@@ -396,9 +397,8 @@ export class InstanceModules {
 							(ver, i) =>
 								ver &&
 								({
+									...translateVersion(ver, 'dev'),
 									version: `dev-${i}`,
-									isLegacy: ver.display.isLegacy ?? false,
-									type: 'dev',
 								} satisfies NewClientModuleVersionInfo)
 						),
 					]),
