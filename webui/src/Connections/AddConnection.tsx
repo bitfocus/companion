@@ -64,7 +64,7 @@ export const AddConnectionsPanel = observer(function AddConnectionsPanel({
 		const candidatesObj: Record<string, JSX.Element> = {}
 		for (const module of searchResults) {
 			candidatesObj[module.name] = (
-				<AddConnectionEntry module={module} addConnection={addConnection} showHelp={showHelp} />
+				<AddConnectionEntry key={module.name} module={module} addConnection={addConnection} showHelp={showHelp} />
 			)
 		}
 

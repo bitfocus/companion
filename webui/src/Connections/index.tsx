@@ -15,7 +15,7 @@ import { RootAppStoreContext } from '../Stores/RootAppStore.js'
 import classNames from 'classnames'
 
 export const ConnectionsPage = memo(function ConnectionsPage() {
-	const { socket, notifier } = useContext(RootAppStoreContext)
+	const { socket } = useContext(RootAppStoreContext)
 
 	const helpModalRef = useRef<HelpModalRef>(null)
 

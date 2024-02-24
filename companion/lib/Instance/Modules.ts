@@ -19,8 +19,7 @@ import fs from 'fs-extra'
 import { isPackaged } from '../Resources/Util.js'
 import path from 'path'
 import { fileURLToPath } from 'url'
-import { cloneDeep, compact } from 'lodash-es'
-import jsonPatch from 'fast-json-patch'
+import { compact } from 'lodash-es'
 import { InstanceModuleScanner } from './ModuleScanner.js'
 import LogController from '../Log/Controller.js'
 import type express from 'express'
@@ -358,6 +357,8 @@ export class InstanceModules {
 		const moduleInfo = this.#knownModules.get(instance_type)
 		if (!moduleInfo || moduleInfo.replacedByIds.length === 0) return instance_type
 
+		// TODO - should this ignore redirects if there are valid versions (that aren't legacy?)
+
 		// TODO - should this handle deeper references?
 		// TODO - should this choose one of the ids properly?
 		return moduleInfo.replacedByIds[0]
@@ -378,6 +379,10 @@ export class InstanceModules {
 		})
 
 		client.onPromise('connections:get-help', this.#getHelpForModule)
+
+		client.onPromise('modules:activate-version', (moduleId, versionId) => {
+			// TODO
+		})
 	}
 
 	/**

@@ -8,8 +8,11 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faExclamationTriangle, faQuestionCircle, faRectangleList } from '@fortawesome/free-solid-svg-icons'
 import { HelpModal, HelpModalRef } from '../Connections/HelpModal.js'
 import { NewClientModuleInfo } from '@companion-app/shared/Model/ModuleInfo.js'
+import { socketEmitPromise } from '../util.js'
 
 export const InstalledModules = observer(function InstalledModules() {
+	const { socket } = useContext(RootAppStoreContext)
+
 	const [filter, setFilter] = useState('')
 	const [expandedId, setExpandedId] = useState('')
 	const changeExpanded = useCallback((e: React.MouseEvent) => {
@@ -30,9 +33,22 @@ export const InstalledModules = observer(function InstalledModules() {
 		const moduleId = e.currentTarget.getAttribute('data-module-id')
 		if (!moduleId) return
 
-		const versionId = e.currentTarget.getAttribute('data-help-versionId')
-		helpModalRef.current?.show(moduleId, versionId)
+		const versionId = e.currentTarget.getAttribute('data-version-id')
+		helpModalRef.current?.show(moduleId, versionId) // TODO - this needs to pass in more data too
 	}, [])
+
+	const activateModuleVersion = useCallback(
+		(e: React.MouseEvent) => {
+			const moduleId = e.currentTarget.getAttribute('data-module-id')
+			const versionId = e.currentTarget.getAttribute('data-version-id')
+			if (!moduleId || !versionId) return
+
+			socketEmitPromise(socket, 'modules:activate-version', [moduleId, versionId]).catch((e) => {
+				console.error('Failed to activate module version', e)
+			})
+		},
+		[socket]
+	)
 
 	let components: JSX.Element[] = []
 	try {
@@ -42,8 +58,10 @@ export const InstalledModules = observer(function InstalledModules() {
 		for (const module of searchResults) {
 			candidatesObj[module.name] = (
 				<ModuleEntry
+					key={module.name}
 					module={module}
 					showHelpClick={showHelpClick}
+					activateModuleVersion={activateModuleVersion}
 					setExpanded={changeExpanded}
 					isExpanded={expandedId === module.id}
 				/>
@@ -89,6 +107,7 @@ export const InstalledModules = observer(function InstalledModules() {
 interface ModuleEntryProps {
 	module: ModuleProductInfo
 	showHelpClick: React.MouseEventHandler
+	activateModuleVersion: React.MouseEventHandler
 	setExpanded: React.MouseEventHandler
 	isExpanded: boolean
 }
@@ -96,6 +115,7 @@ interface ModuleEntryProps {
 const ModuleEntry = observer(function ModuleEntry({
 	module,
 	showHelpClick,
+	activateModuleVersion,
 	setExpanded,
 	isExpanded,
 }: ModuleEntryProps) {
@@ -106,9 +126,6 @@ const ModuleEntry = observer(function ModuleEntry({
 	return (
 		<CCard className="module-list-entry">
 			<CCardHeader>
-				{/* <CButton color="primary" onClick={toggle} className={'mb-1'}>
-							Toggle Collapse
-						</CButton> */}
 				<h4>
 					<a href="#" onClick={setExpanded} data-module-id={module.id}>
 						{module.name} - {module.version}
@@ -144,7 +161,13 @@ const ModuleEntry = observer(function ModuleEntry({
 			</CCardHeader>
 			<CCollapse show={isExpanded}>
 				<CCardBody>
-					{moduleFullInfo && <ModuleVersionsList moduleFullInfo={moduleFullInfo} showHelpClick={showHelpClick} />}
+					{moduleFullInfo && (
+						<ModuleVersionsList
+							moduleFullInfo={moduleFullInfo}
+							showHelpClick={showHelpClick}
+							activateModuleVersion={activateModuleVersion}
+						/>
+					)}
 					{/* <p>{JSON.stringify(moduleFullInfo)}</p> */}
 				</CCardBody>
 			</CCollapse>
@@ -155,9 +178,10 @@ const ModuleEntry = observer(function ModuleEntry({
 interface ModuleVersionsListProps {
 	moduleFullInfo: NewClientModuleInfo
 	showHelpClick: React.MouseEventHandler
+	activateModuleVersion: React.MouseEventHandler
 }
 
-function ModuleVersionsList({ moduleFullInfo, showHelpClick }: ModuleVersionsListProps) {
+function ModuleVersionsList({ moduleFullInfo, showHelpClick, activateModuleVersion }: ModuleVersionsListProps) {
 	// if (moduleFullInfo.allVersions.length <= 1) return <></>
 
 	return (
@@ -171,7 +195,14 @@ function ModuleVersionsList({ moduleFullInfo, showHelpClick }: ModuleVersionsLis
 								Current
 							</CButton>
 						) : (
-							<CButton color="info" size="sm" disabled={moduleFullInfo.allVersions.length <= 1}>
+							<CButton
+								color="info"
+								size="sm"
+								disabled={moduleFullInfo.allVersions.length <= 1}
+								onClick={activateModuleVersion}
+								data-module-id={moduleFullInfo.baseInfo.id}
+								data-version-id={version.version}
+							>
 								Activate
 							</CButton>
 						)}
@@ -189,7 +220,12 @@ function ModuleVersionsList({ moduleFullInfo, showHelpClick }: ModuleVersionsLis
 							</>
 						)}
 						{version.hasHelp && (
-							<div className="float_inline" onClick={showHelpClick} data-module-id={moduleFullInfo.baseInfo.id}>
+							<div
+								className="float_inline"
+								onClick={showHelpClick}
+								data-module-id={moduleFullInfo.baseInfo.id}
+								data-version-id={version.version}
+							>
 								<FontAwesomeIcon icon={faQuestionCircle} />
 							</div>
 						)}
