@@ -178,6 +178,24 @@ Everything else will be false.
 
 **jsonpath(obj, path)**
 
-Perform a jsonpath lookup on an object
+Perform a jsonpath lookup on an object or array.
+
+The input can either be an object or an stringified object. The output will match the input format
 
 You can see examples of how to use this at: https://jsonpath.com/
+
+**jsonparse(str)**
+
+Parse a string of json into an object.
+
+If this enounters invalid input, it will return null instead of throwing an error.
+
+eg: `jsonparse('{"a":1}')` will be an object `{ a: 1 }`
+
+**jsonstringify(obj)**
+
+Convert an object into a json string.
+
+If this enounters invalid input, it will return null instead of throwing an error.
+
+eg: `jsonstringify({ a: 1 })` will be a string containing `{"a":1}`

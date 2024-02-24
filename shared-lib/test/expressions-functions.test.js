@@ -289,17 +289,56 @@ describe('functions', () => {
 	})
 
 	describe('object', () => {
-		describe('jsonpath', () => {
+		it('jsonpath', () => {
 			const obj = {
 				a: 1,
 				b: {
 					c: 5,
 				},
 			}
+
 			expect(ExpressionFunctions.jsonpath(obj, '$.b')).toEqual({ c: 5 })
 			expect(ExpressionFunctions.jsonpath(obj, '$.c')).toEqual(undefined)
 			expect(ExpressionFunctions.jsonpath(obj, '$.b.c')).toEqual(5)
 			expect(ExpressionFunctions.jsonpath(obj, '$')).toEqual(obj)
+
+			expect(ExpressionFunctions.jsonpath(undefined, '$.c')).toEqual(undefined)
+
+			const objStr = JSON.stringify(obj)
+			expect(ExpressionFunctions.jsonpath(objStr, '$.b')).toEqual('{"c":5}')
+			expect(ExpressionFunctions.jsonpath(objStr, '$.c')).toEqual(undefined)
+			expect(ExpressionFunctions.jsonpath(objStr, '$.b.c')).toEqual(5)
+			expect(ExpressionFunctions.jsonpath(objStr, '$')).toEqual(JSON.stringify(obj))
+
+			const obj2 = [{ name: 'Default' }, { name: 'Second' }]
+			expect(ExpressionFunctions.jsonpath(obj2, '$[0]')).toEqual({ name: 'Default' })
+			expect(ExpressionFunctions.jsonpath(JSON.stringify(obj2), '$[0]')).toEqual('{"name":"Default"}')
+
+			expect(ExpressionFunctions.jsonpath('Test', '$')).toEqual('Test')
+			expect(ExpressionFunctions.jsonpath({}, '$')).toEqual({})
+		})
+
+		it('jsonparse', () => {
+			expect(ExpressionFunctions.jsonparse('')).toEqual(null)
+			expect(ExpressionFunctions.jsonparse('{}')).toEqual({})
+			expect(ExpressionFunctions.jsonparse('1')).toEqual(1)
+			expect(ExpressionFunctions.jsonparse(1)).toEqual(1)
+			expect(ExpressionFunctions.jsonparse(null)).toEqual(null)
+
+			expect(ExpressionFunctions.jsonparse('{a: 1}')).toEqual(null)
+			expect(ExpressionFunctions.jsonparse('{"a": 1}')).toEqual({ a: 1 })
+			expect(ExpressionFunctions.jsonparse('{"a": 1')).toEqual(null)
+		})
+
+		it('jsonparse', () => {
+			expect(ExpressionFunctions.jsonstringify('')).toEqual('""')
+			expect(ExpressionFunctions.jsonstringify(1)).toEqual('1')
+			expect(ExpressionFunctions.jsonstringify({})).toEqual('{}')
+			expect(ExpressionFunctions.jsonstringify(null)).toEqual('null')
+			expect(ExpressionFunctions.jsonstringify(undefined)).toEqual(undefined)
+
+			expect(ExpressionFunctions.jsonstringify({ a: 1 })).toEqual('{"a":1}')
+			expect(ExpressionFunctions.jsonstringify([1, 2, 3])).toEqual('[1,2,3]')
 		})
 	})
 })

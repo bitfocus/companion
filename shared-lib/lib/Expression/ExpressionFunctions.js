@@ -105,10 +105,45 @@ export const ExpressionFunctions = {
 
 	// Object operations
 	jsonpath: (obj, path) => {
-		return JSONPath({
+		const shouldParseInput = typeof obj === 'string'
+		if (shouldParseInput) {
+			try {
+				obj = JSON.parse(obj)
+			} catch (_e) {
+				// Ignore
+			}
+		}
+
+		const value = JSONPath({
 			wrap: false,
 			path: path,
 			json: obj,
 		})
+
+		if (shouldParseInput && typeof value !== 'number' && typeof value !== 'string' && value) {
+			try {
+				return JSON.stringify(value)
+			} catch (/** @type {any} */ e) {
+				// Ignore
+			}
+		}
+
+		return value
+	},
+
+	jsonparse: (str) => {
+		try {
+			return JSON.parse(str + '')
+		} catch (_e) {
+			return null
+		}
+	},
+
+	jsonstringify: (obj) => {
+		try {
+			return JSON.stringify(obj)
+		} catch (_e) {
+			return null
+		}
 	},
 }
