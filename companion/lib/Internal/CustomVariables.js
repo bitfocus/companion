@@ -15,12 +15,10 @@
  *
  */
 
-import { JSONPath } from 'jsonpath-plus'
-import LogController from '../Log/Controller.js'
 import { SplitVariableId } from '../Resources/Util.js'
 
 export default class CustomVariables {
-	#logger = LogController.createLogger('Internal/CustomVariables')
+	// #logger = LogController.createLogger('Internal/CustomVariables')
 
 	// /**
 	//  * @type {import('./Controller.js').default}
@@ -114,28 +112,6 @@ export default class CustomVariables {
 						id: 'variable',
 						label: 'Variable to store value from',
 						tooltip: 'What variable to store in the custom variable?',
-					},
-				],
-			},
-			custom_variable_set_via_jsonpath: {
-				label: 'Custom Variable: Set from a stored JSONresult via a JSONpath expression',
-				description: undefined,
-				options: [
-					{
-						type: 'internal:custom_variable',
-						label: 'JSON Result Data Variable',
-						id: 'jsonResultDataVariable',
-					},
-					{
-						type: 'textinput',
-						label: 'Path (like $.age)',
-						id: 'jsonPath',
-						default: '',
-					},
-					{
-						type: 'internal:custom_variable',
-						label: 'Target Variable',
-						id: 'targetVariable',
 					},
 				],
 			},
@@ -272,6 +248,17 @@ export default class CustomVariables {
 			delete action.options.result
 
 			return action
+		} else if (action.action === 'custom_variable_set_via_jsonpath') {
+			action.action = 'custom_variable_set_expression'
+			action.options.expression = `jsonpath($(internal:custom_${action.options.jsonResultDataVariable}), "${action.options.jsonPath?.replaceAll('"', '\\"')}")`
+
+			action.options.name = action.options.targetVariable
+
+			delete action.options.targetVariable
+			delete action.options.jsonResultDataVariable
+			delete action.options.jsonPath
+
+			return action
 		}
 	}
 
@@ -299,48 +286,6 @@ export default class CustomVariables {
 			const [connectionLabel, variableName] = SplitVariableId(action.options.variable)
 			const value = this.#variableController.getVariableValue(connectionLabel, variableName)
 			this.#variableController.custom.setValue(action.options.name, value)
-			return true
-		} else if (action.action === 'custom_variable_set_via_jsonpath') {
-			// extract value from the stored json response data, assign to target variable
-
-			// get the json response data from the custom variable that holds the data
-			const jsonResultData = this.#variableController.getCustomVariableValue(action.options.jsonResultDataVariable) + ''
-
-			// recreate a json object from stored json result data string
-			let objJson = ''
-			try {
-				objJson = JSON.parse(jsonResultData)
-			} catch (/** @type {any} */ e) {
-				this.#logger.error(
-					`custom_variable_set_via_jsonpath: Cannot create JSON object, malformed JSON data (${e.message})`
-				)
-				return true
-			}
-
-			// extract the value via the given standard JSONPath expression
-			let valueToSet = ''
-			try {
-				valueToSet = JSONPath({
-					wrap: false,
-					path: action.options.jsonPath,
-					json: objJson,
-				})
-			} catch (/** @type {any} */ e) {
-				this.#logger.error(`custom_variable_set_via_jsonpath: Cannot extract JSON value (${e.message})`)
-				return true
-			}
-
-			try {
-				if (typeof valueToSet !== 'number' && typeof valueToSet !== 'string' && valueToSet) {
-					valueToSet = JSON.stringify(valueToSet)
-				}
-			} catch (/** @type {any} */ e) {
-				this.#logger.error(`custom_variable_set_via_jsonpath: Cannot stringify JSON value (${e.message})`)
-				return true
-			}
-
-			this.#variableController.custom.setValue(action.options.targetVariable, valueToSet)
-
 			return true
 		} else if (action.action === 'custom_variable_reset_to_default') {
 			this.#variableController.custom.resetValueToDefault(action.options.name)

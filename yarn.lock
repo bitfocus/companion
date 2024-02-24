@@ -5071,7 +5071,6 @@ asn1@evs-broadcast/node-asn1:
     got: "npm:^13.0.0"
     infinitton-idisplay: "npm:^1.1.2"
     jest-mock-extended: "npm:^3.0.5"
-    jsonpath-plus: "npm:^8.0.0"
     lodash-es: "npm:^4.17.21"
     lru-cache: "npm:^10.2.0"
     nanoid: "npm:^5.0.5"
