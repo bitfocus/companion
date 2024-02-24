@@ -7,18 +7,19 @@ import { HelpDescription } from '@companion-app/shared/Model/Common.js'
 import { observer } from 'mobx-react-lite'
 import { RootAppStoreContext } from '../Stores/RootAppStore.js'
 import { CModalExt } from '../Components/CModalExt.js'
+import { socketEmitPromise } from '../util.js'
 
 interface HelpModalProps {
 	// Nothing
 }
 
 export interface HelpModalRef {
-	show(name: string, description: HelpDescription): void
+	show(name: string, versionId: string | null): void
 }
 
 export const HelpModal = observer(
 	forwardRef<HelpModalRef, HelpModalProps>(function HelpModal(_props, ref) {
-		const { modules } = useContext(RootAppStoreContext)
+		const { socket, notifier, modules } = useContext(RootAppStoreContext)
 
 		const [content, setContent] = useState<[name: string, description: HelpDescription] | null>(null)
 		const [show, setShow] = useState(false)
@@ -29,9 +30,17 @@ export const HelpModal = observer(
 		useImperativeHandle(
 			ref,
 			() => ({
-				show(name, description) {
-					setContent([name, description])
-					setShow(true)
+				show(name, versionId) {
+					socketEmitPromise(socket, 'connections:get-help', [name, versionId]).then(([err, result]) => {
+						if (err) {
+							notifier.current?.show('Instance help', `Failed to get help text: ${err}`)
+							return
+						}
+						if (result) {
+							setContent([name, result])
+							setShow(true)
+						}
+					})
 				},
 			}),
 			[]

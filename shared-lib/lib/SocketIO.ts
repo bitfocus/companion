@@ -307,7 +307,10 @@ export interface ClientToBackendEventsMap {
 	'connections:set-order': (sortedIds: string[]) => void
 	'connections:delete': (connectionId: string) => void
 	'connections:get-statuses': () => Record<string, ConnectionStatusEntry>
-	'connections:get-help': (id: string) => [err: string, result: null] | [err: null, result: HelpDescription]
+	'connections:get-help': (
+		id: string,
+		versionId: string | null
+	) => [err: string, result: null] | [err: null, result: HelpDescription]
 
 	'variables:instance-values': (label: string) => CompanionVariableValues | undefined
 

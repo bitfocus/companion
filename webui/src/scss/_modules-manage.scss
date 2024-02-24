@@ -6,5 +6,21 @@
 		// margin-bottom: 10px;
 
 		// padding: 5px;
+
+		h4 {
+			a {
+				color: #000000;
+
+				&:hover {
+					text-decoration: none;
+				}
+			}
+		}
+
+		.version-list {
+			li {
+				padding: 2px;
+			}
+		}
 	}
 }

@@ -52,6 +52,7 @@ export interface NewModuleVersionInfo {
 	display: ModuleDisplayInfo
 	manifest: ModuleManifest
 	isPackaged: boolean
+	versionId: string
 }
 
 class NewModuleInfo {
@@ -71,20 +72,35 @@ class NewModuleInfo {
 		this.id = id
 	}
 
+	get allVersions(): NewModuleVersionInfo[] {
+		return compact([...Object.values(this.devVersions), ...Object.values(this.userVersions), this.builtinModule])
+	}
+
 	getSelectedVersion(): NewModuleVersionInfo | null {
 		if (!this.useVersion) return null
 		switch (this.useVersion.type) {
 			case 'builtin':
 				return this.builtinModule
 			case 'dev':
-				return this.useVersion.id ? (this.devVersions[this.useVersion.id] ?? null) : null
+				if (!this.useVersion.id) return null
+				return this.devVersions[this.useVersion.id] ?? null
 			case 'user':
-				return this.useVersion.id ? (this.userVersions[this.useVersion.id] ?? null) : null
-
+				if (!this.useVersion.id) return null
+				return this.userVersions[this.useVersion.id] ?? null
 			default:
 				assertNever(this.useVersion.type)
 				return null
 		}
+	}
+
+	findVersion(versionId: string | null): NewModuleVersionInfo | null {
+		if (versionId == null) return this.getSelectedVersion()
+
+		for (const moduleVersion of this.allVersions) {
+			if (moduleVersion && moduleVersion.versionId === versionId) return moduleVersion
+		}
+
+		return null
 	}
 }
 
@@ -125,7 +141,7 @@ export class InstanceModules {
 		this.#io = io
 		this.#instanceController = instance
 
-		api_router.get('/help/module/:moduleId/*', this.#getHelpAsset)
+		api_router.get('/help/module/:moduleId/:versionId/*', this.#getHelpAsset)
 	}
 
 	/**
@@ -184,7 +200,10 @@ export class InstanceModules {
 			const candidates = await this.#moduleScanner.loadInfoForModulesInDir(extraModulePath, true)
 			for (const candidate of candidates) {
 				const moduleInfo = this.#getOrCreateModuleEntry(candidate.manifest.id)
-				moduleInfo.devVersions['default'] = candidate // TODO - allow multiple
+				moduleInfo.devVersions['dev'] = {
+					...candidate,
+					versionId: 'dev', // TODO - allow multiple
+				}
 			}
 
 			this.#logger.info(`Found ${candidates.length} extra modules`)
@@ -194,12 +213,7 @@ export class InstanceModules {
 		// TODO - could this have infinite loops?
 		const allModuleEntries = Array.from(this.#knownModules.entries()).sort((a, b) => a[0].localeCompare(b[0]))
 		for (const [id, moduleInfo] of allModuleEntries) {
-			const allVersions = [
-				...Object.values(moduleInfo.devVersions),
-				...Object.values(moduleInfo.userVersions),
-				moduleInfo.builtinModule,
-			]
-			for (const moduleVersion of allVersions) {
+			for (const moduleVersion of moduleInfo.allVersions) {
 				if (moduleVersion && Array.isArray(moduleVersion.manifest.legacyIds)) {
 					for (const legacyId of moduleVersion.manifest.legacyIds) {
 						const fromEntry = this.#getOrCreateModuleEntry(legacyId)
@@ -377,7 +391,7 @@ export class InstanceModules {
 			type: NewModuleUseVersion['type']
 		): NewClientModuleVersionInfo {
 			return {
-				version: version.display.version,
+				version: version.versionId,
 				isLegacy: version.display.isLegacy ?? false,
 				type,
 				hasHelp: !!version.helpPath,
@@ -393,14 +407,7 @@ export class InstanceModules {
 					allVersions: compact([
 						module.builtinModule ? translateVersion(module.builtinModule, 'builtin') : undefined,
 						...Object.values(module.userVersions).map((ver) => ver && translateVersion(ver, 'user')),
-						...Object.values(module.devVersions).map(
-							(ver, i) =>
-								ver &&
-								({
-									...translateVersion(ver, 'dev'),
-									version: `dev-${i}`,
-								} satisfies NewClientModuleVersionInfo)
-						),
+						...Object.values(module.devVersions).map((ver) => ver && translateVersion(ver, 'dev')),
 					]),
 				}
 			}
@@ -420,10 +427,11 @@ export class InstanceModules {
 	 * Load the help markdown file for a specified moduleId
 	 */
 	#getHelpForModule = async (
-		moduleId: string
+		moduleId: string,
+		versionId: string
 	): Promise<[err: string, result: null] | [err: null, result: HelpDescription]> => {
 		try {
-			const moduleInfo = this.#knownModules.get(moduleId)?.getSelectedVersion() // TODO - better selection
+			const moduleInfo = this.#knownModules.get(moduleId)?.findVersion(versionId)
 			if (moduleInfo && moduleInfo.helpPath) {
 				const stats = await fs.stat(moduleInfo.helpPath)
 				if (stats.isFile()) {
@@ -432,7 +440,7 @@ export class InstanceModules {
 						null,
 						{
 							markdown: data.toString(),
-							baseUrl: `/int/help/module/${moduleId}/`,
+							baseUrl: `/int/help/module/${moduleId}/${versionId ?? 'current'}`,
 						},
 					]
 				} else {
@@ -454,15 +462,16 @@ export class InstanceModules {
 	 * Return a module help asset over http
 	 */
 	#getHelpAsset = (
-		req: express.Request<{ moduleId: string }>,
+		req: express.Request<{ moduleId: string; versionId: string }>,
 		res: express.Response,
 		next: express.NextFunction
 	): void => {
 		const moduleId = req.params.moduleId.replace(/\.\.+/g, '')
+		const versionId = req.params.versionId
 		// @ts-ignore
 		const file = req.params[0].replace(/\.\.+/g, '')
 
-		const moduleInfo = this.#knownModules.get(moduleId)?.getSelectedVersion() // TODO - better selection
+		const moduleInfo = this.#knownModules.get(moduleId)?.findVersion(versionId === 'current' ? null : versionId) // TODO - better selection
 		if (moduleInfo && moduleInfo.helpPath && moduleInfo.basePath) {
 			const fullpath = path.join(moduleInfo.basePath, 'companion', file)
 			if (file.match(/\.(jpe?g|gif|png|pdf|companionconfig)$/) && fs.existsSync(fullpath)) {

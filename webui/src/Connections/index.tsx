@@ -32,20 +32,7 @@ export const ConnectionsPage = memo(function ConnectionsPage() {
 		})
 	}, [])
 
-	const showHelp = useCallback(
-		(id: string) => {
-			socketEmitPromise(socket, 'connections:get-help', [id]).then(([err, result]) => {
-				if (err) {
-					notifier.current?.show('Instance help', `Failed to get help text: ${err}`)
-					return
-				}
-				if (result) {
-					helpModalRef.current?.show(id, result)
-				}
-			})
-		},
-		[socket, notifier]
-	)
+	const showHelp = useCallback((id: string) => helpModalRef.current?.show(id, null), [])
 
 	const doConfigureConnection = useCallback((connectionId: string | null) => {
 		setSelectedConnectionId(connectionId)
