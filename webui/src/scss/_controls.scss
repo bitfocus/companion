@@ -28,7 +28,6 @@ label.disabled {
 }
 
 /* Style for autocomplete of variable */
-.tribute-container li span,
 .variable-suggestion-option span {
 	display: block;
 
@@ -44,13 +43,20 @@ label.disabled {
 	}
 }
 
-.variables-text-input {
-	& > div {
-		padding: 0 !important;
-	}
+.variable-select-root {
+	display: flex;
+	flex-grow: 1;
 
-	.form-control {
-		border: none;
+	.variables-text-input {
+		flex-grow: 1;
+
+		& > div {
+			padding: 0 !important;
+		}
+
+		.form-control {
+			border: none;
+		}
 	}
 }
 

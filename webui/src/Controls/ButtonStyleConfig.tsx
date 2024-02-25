@@ -206,7 +206,6 @@ export function ButtonStyleConfigFields({
 							</CButton>
 						</CInputGroupAppend>
 					</CInputGroup>
-					{/* <VariablesSelect /> */}
 				</div>
 			)}
 

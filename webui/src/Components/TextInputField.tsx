@@ -239,14 +239,9 @@ function VariablesSelect({ isOpen, searchValue, onVariableSelect, useLocationVar
 		return suggestions
 	}, [variableDefinitionsContext, useLocationVariables])
 
-	// const valueOption: DropdownChoiceInt = {
-	// 	value: searchValue,
-	// 	label: searchValue,
-	// }
-	console.log('s', searchValue)
-
 	return (
 		<Select
+			className="variable-select-root"
 			// classNamePrefix: 'select-control',
 			menuPortalTarget={menuPortal || document.body}
 			menuShouldBlockScroll={!!menuPortal} // The dropdown doesn't follow scroll when in a modal
@@ -255,7 +250,6 @@ function VariablesSelect({ isOpen, searchValue, onVariableSelect, useLocationVar
 			isSearchable
 			isMulti={false}
 			options={options}
-			// value={valueOption}
 			value={null}
 			inputValue={searchValue}
 			onChange={onVariableSelect}
@@ -263,7 +257,7 @@ function VariablesSelect({ isOpen, searchValue, onVariableSelect, useLocationVar
 			components={{
 				Option: CustomOption,
 				ValueContainer: CustomValueContainer,
-				Control: CustomControl /*Input: CustomInput*/,
+				Control: CustomControl,
 				IndicatorsContainer: EmptyComponent,
 			}}
 			filterOption={filterOption}
@@ -301,9 +295,6 @@ const EmptyComponent = () => {
 }
 
 const CustomControl = (props: ControlProps<DropdownChoiceInt>) => {
-	// const { data } = props
-	// const tempContext2 = useContext(tempContext)
-
 	return (
 		<SelectComponents.Control {...props} className={(props.className ?? '') + ' variables-text-input'}>
 			{props.children}
@@ -366,12 +357,10 @@ const CustomValueContainer = (props: ValueContainerProps<DropdownChoiceInt>) => 
 		<SelectComponents.ValueContainer {...props}>
 			<CInput
 				{...props.innerProps}
-				// innerRef={innerRef}
 				type="text"
 				// disabled={disabled}
 				// value={tmpValue ?? value ?? ''}
 				style={tempContext2.extraStyle}
-				// style={{ color: !isValueValid(tmpValue ?? value) ? 'red' : undefined, ...extraStyle }}
 				// title={tooltip}
 				value={tempContext2.value}
 				onChange={tempContext2.setValue}
