@@ -44,6 +44,16 @@ label.disabled {
 	}
 }
 
+.variables-text-input {
+	& > div {
+		padding: 0 !important;
+	}
+
+	.form-control {
+		border: none;
+	}
+}
+
 .alignmentinput {
 	display: grid;
 	width: 60px;

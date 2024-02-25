@@ -3,7 +3,6 @@ import { CInput } from '@coreui/react'
 import { VariableDefinitionsContext } from '../util.js'
 import Select, {
 	ControlProps,
-	InputProps,
 	OptionProps,
 	components as SelectComponents,
 	ValueContainerProps,
@@ -149,32 +148,31 @@ export const TextInputField = observer(function TextInputField({
 		setValue: doOnChange,
 		setTmpValue: setTmpValue,
 		setCursorPosition: setCursorPosition,
+		extraStyle: { color: !isValueValid(tmpValue ?? value) ? 'red' : undefined, ...style }, // TODO - memo
 	}
 
 	// Render the input
-	const extraStyle = style || {}
 	return (
 		<>
 			<tempContext.Provider value={tmpVal}>
-				<CInput
-					// innerRef={innerRef}
-					type="text"
-					disabled={disabled}
-					value={tmpValue ?? value ?? ''}
-					style={{ color: !isValueValid(tmpValue ?? value) ? 'red' : undefined, ...extraStyle }}
-					title={tooltip}
-					onChange={doOnChange}
-					onFocus={() => setTmpValue(value ?? '')}
-					onBlur={() => setTmpValue(null)}
-					placeholder={placeholder}
-				/>
-				<p style={{ width: '1000px' }}>aa</p>
-				{useVariables && (
+				{useVariables ? (
 					<VariablesSelect
 						isOpen={isPickerOpen}
 						searchValue={searchValue}
 						onVariableSelect={onVariableSelect}
 						useLocationVariables={!!useLocationVariables}
+					/>
+				) : (
+					<CInput
+						type="text"
+						disabled={disabled}
+						value={tmpValue ?? value ?? ''}
+						style={{ color: !isValueValid(tmpValue ?? value) ? 'red' : undefined, ...style }}
+						title={tooltip}
+						onChange={doOnChange}
+						onFocus={() => setTmpValue(value ?? '')}
+						onBlur={() => setTmpValue(null)}
+						placeholder={placeholder}
 					/>
 				)}
 			</tempContext.Provider>
@@ -265,7 +263,7 @@ function VariablesSelect({ isOpen, searchValue, onVariableSelect, useLocationVar
 			components={{
 				Option: CustomOption,
 				ValueContainer: CustomValueContainer,
-				// Control: CustomControl /*Input: CustomInput*/,
+				Control: CustomControl /*Input: CustomInput*/,
 				IndicatorsContainer: EmptyComponent,
 			}}
 			filterOption={filterOption}
@@ -285,6 +283,7 @@ const tempContext = React.createContext({
 	setValue: (_e: React.ChangeEvent<HTMLInputElement>) => {},
 	setTmpValue: (_val: string | null) => {},
 	setCursorPosition: (_pos: number | null) => {},
+	extraStyle: {} as React.CSSProperties,
 })
 
 const CustomOption = (props: OptionProps<DropdownChoiceInt>) => {
@@ -301,40 +300,18 @@ const EmptyComponent = () => {
 	return null
 }
 
-// const CustomControl = (props: ControlProps<DropdownChoiceInt>) => {
-// 	// const { data } = props
-// 	const tempContext2 = useContext(tempContext)
+const CustomControl = (props: ControlProps<DropdownChoiceInt>) => {
+	// const { data } = props
+	// const tempContext2 = useContext(tempContext)
 
-// 	return (
-// 		<CInput
-// 			// innerRef={innerRef}
-// 			type="text"
-// 			// disabled={disabled}
-// 			// value={tmpValue ?? value ?? ''}
-// 			// style={{ color: !isValueValid(tmpValue ?? value) ? 'red' : undefined, ...extraStyle }}
-// 			// title={tooltip}
-// 			value={tempContext2.value}
-// 			onChange={tempContext2.setValue}
-// 			// onFocus={() => setTmpValue(value ?? '')}
-// 			// onBlur={() => setTmpValue(null)}
-// 			// placeholder={placeholder}
-
-// 		/>
-// 	)
-// }
-// const CustomInput = memo((props: InputProps<DropdownChoiceInt>) => {
-// 	const tempContext2 = useContext(tempContext)
-// 	const { children } = props
-// 	return (
-// 		<SelectComponents.Input {...props} value={tempContext2.value} onChange={tempContext2.setValue}>
-// 			{children}
-// 		</SelectComponents.Input>
-// 	)
-// })
+	return (
+		<SelectComponents.Control {...props} className={(props.className ?? '') + ' variables-text-input'}>
+			{props.children}
+		</SelectComponents.Control>
+	)
+}
 
 const CustomValueContainer = (props: ValueContainerProps<DropdownChoiceInt>) => {
-	const { children } = props
-
 	const tempContext2 = useContext(tempContext)
 
 	const checkCursor = useCallback(
@@ -376,7 +353,8 @@ const CustomValueContainer = (props: ValueContainerProps<DropdownChoiceInt>) => 
 	const onKeyDown = useCallback(
 		(e: React.KeyboardEvent<HTMLInputElement>) => {
 			if (e.code === 'Escape') {
-				tempContext2.setCursorPosition(null)
+				// TODO - force hide
+				// tempContext2.setCursorPosition(null)
 			} else {
 				checkCursor(e)
 			}
@@ -392,6 +370,7 @@ const CustomValueContainer = (props: ValueContainerProps<DropdownChoiceInt>) => 
 				type="text"
 				// disabled={disabled}
 				// value={tmpValue ?? value ?? ''}
+				style={tempContext2.extraStyle}
 				// style={{ color: !isValueValid(tmpValue ?? value) ? 'red' : undefined, ...extraStyle }}
 				// title={tooltip}
 				value={tempContext2.value}
