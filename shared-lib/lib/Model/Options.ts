@@ -58,6 +58,7 @@ export interface InternalInputFieldSurfaceSerial extends CompanionInputFieldBase
 }
 export interface InternalInputFieldPage extends CompanionInputFieldBaseExtended {
 	type: 'internal:page'
+	includeStartup: boolean
 	includeDirection: boolean
 	default: number
 }

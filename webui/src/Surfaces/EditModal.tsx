@@ -31,6 +31,7 @@ const PAGE_FIELD_SPEC: InternalInputField = {
 	id: '',
 	type: 'internal:page',
 	label: '',
+	includeStartup: false,
 	includeDirection: false,
 	default: 0,
 }

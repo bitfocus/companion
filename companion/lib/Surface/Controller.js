@@ -1195,6 +1195,22 @@ class SurfaceController extends CoreBase {
 			return undefined
 		}
 	}
+	/**
+	 * Get the page number of a surface
+	 * @param {string} surfaceOrGroupId
+	 * @param {boolean=} looseIdMatching
+	 * @returns {number | undefined}
+	 */
+	devicePageGetStartup(surfaceOrGroupId, looseIdMatching = false) {
+		const surfaceGroup = this.#getGroupForId(surfaceOrGroupId, looseIdMatching)
+		if (surfaceGroup) {
+			return surfaceGroup.groupConfig.use_last_page
+				? surfaceGroup.groupConfig.last_page
+				: surfaceGroup.groupConfig.startup_page
+		} else {
+			return undefined
+		}
+	}
 
 	#resetAllDevices() {
 		// Destroy any groups and detach their contents

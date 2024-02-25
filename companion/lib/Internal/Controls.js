@@ -28,6 +28,7 @@ const CHOICES_PAGE = {
 	type: 'internal:page',
 	label: 'Page',
 	id: 'page',
+	includeStartup: false,
 	includeDirection: true,
 	default: 0,
 }
