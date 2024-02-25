@@ -99,36 +99,44 @@ export const TextInputField = observer(function TextInputField({
 		[storeValue]
 	)
 
+	const [cursorPosition, setCursorPosition] = useState<number | null>(null)
+
+	const showValue = tmpValue ?? value ?? ''
+
 	let isPickerOpen = false
 	let searchValue = ''
 
-	const innerRef = useRef<HTMLInputElement>(null)
-	if (innerRef.current) {
-		console.log('cursor', innerRef.current.selectionStart)
-		if (innerRef.current.selectionStart != null && innerRef.current.selectionStart === innerRef.current.selectionEnd) {
-			const lastOpen = FindVariableStartIndexFromCursor(value, innerRef.current.selectionStart)
-			isPickerOpen = lastOpen !== -1
-			console.log('open', FindVariableStartIndexFromCursor(value, innerRef.current.selectionStart))
+	// const innerRef = useRef<HTMLInputElement>(null)
+	// if (innerRef.current) {
+	console.log('cursor', cursorPosition)
+	if (cursorPosition != null) {
+		// && innerRef.current.selectionStart === innerRef.current.selectionEnd) {
+		const lastOpen = FindVariableStartIndexFromCursor(showValue, cursorPosition)
+		isPickerOpen = lastOpen !== -1
+		console.log('open', lastOpen)
 
-			searchValue = value.slice(lastOpen + 2, innerRef.current.selectionStart)
-			console.log('search', searchValue)
-		}
+		searchValue = showValue.slice(lastOpen + 2, cursorPosition)
+		console.log('search', searchValue)
 	}
+	// }
 
 	const valueRef = useRef<string>()
-	valueRef.current = value
+	valueRef.current = showValue
 
-	const onVariableSelect = useCallback((variable: DropdownChoiceInt | null) => {
-		const oldValue = valueRef.current
-		if (!variable || !oldValue || !innerRef.current) return
+	const onVariableSelect = useCallback(
+		(variable: DropdownChoiceInt | null) => {
+			const oldValue = valueRef.current
+			if (!variable || !oldValue) return
 
-		if (!innerRef.current.selectionStart) return // Nothing selected
+			if (!cursorPosition) return // Nothing selected
 
-		const openIndex = FindVariableStartIndexFromCursor(oldValue, innerRef.current.selectionStart)
-		if (openIndex === -1) return
+			const openIndex = FindVariableStartIndexFromCursor(oldValue, cursorPosition)
+			if (openIndex === -1) return
 
-		storeValue(oldValue.slice(0, openIndex) + `$(${variable.value})` + oldValue.slice(innerRef.current.selectionStart))
-	}, [])
+			storeValue(oldValue.slice(0, openIndex) + `$(${variable.value})` + oldValue.slice(cursorPosition))
+		},
+		[cursorPosition] // TODO - this is very inefficient
+	)
 
 	// const [variableSearchOpen, setVariableSearchOpen] = useState(false)
 
@@ -137,8 +145,10 @@ export const TextInputField = observer(function TextInputField({
 	// }, [])
 
 	const tmpVal = {
-		value,
+		value: showValue,
 		setValue: doOnChange,
+		setTmpValue: setTmpValue,
+		setCursorPosition: setCursorPosition,
 	}
 
 	// Render the input
@@ -147,7 +157,7 @@ export const TextInputField = observer(function TextInputField({
 		<>
 			<tempContext.Provider value={tmpVal}>
 				<CInput
-					innerRef={innerRef}
+					// innerRef={innerRef}
 					type="text"
 					disabled={disabled}
 					value={tmpValue ?? value ?? ''}
@@ -273,6 +283,8 @@ const filterOption: ReturnType<typeof createFilter<DropdownChoiceInt>> = (option
 const tempContext = React.createContext({
 	value: '',
 	setValue: (_e: React.ChangeEvent<HTMLInputElement>) => {},
+	setTmpValue: (_val: string | null) => {},
+	setCursorPosition: (_pos: number | null) => {},
 })
 
 const CustomOption = (props: OptionProps<DropdownChoiceInt>) => {
@@ -289,26 +301,27 @@ const EmptyComponent = () => {
 	return null
 }
 
-const CustomControl = (props: ControlProps<DropdownChoiceInt>) => {
-	// const { data } = props
-	const tempContext2 = useContext(tempContext)
+// const CustomControl = (props: ControlProps<DropdownChoiceInt>) => {
+// 	// const { data } = props
+// 	const tempContext2 = useContext(tempContext)
 
-	return (
-		<CInput
-			// innerRef={innerRef}
-			type="text"
-			// disabled={disabled}
-			// value={tmpValue ?? value ?? ''}
-			// style={{ color: !isValueValid(tmpValue ?? value) ? 'red' : undefined, ...extraStyle }}
-			// title={tooltip}
-			value={tempContext2.value}
-			onChange={tempContext2.setValue}
-			// onFocus={() => setTmpValue(value ?? '')}
-			// onBlur={() => setTmpValue(null)}
-			// placeholder={placeholder}
-		/>
-	)
-}
+// 	return (
+// 		<CInput
+// 			// innerRef={innerRef}
+// 			type="text"
+// 			// disabled={disabled}
+// 			// value={tmpValue ?? value ?? ''}
+// 			// style={{ color: !isValueValid(tmpValue ?? value) ? 'red' : undefined, ...extraStyle }}
+// 			// title={tooltip}
+// 			value={tempContext2.value}
+// 			onChange={tempContext2.setValue}
+// 			// onFocus={() => setTmpValue(value ?? '')}
+// 			// onBlur={() => setTmpValue(null)}
+// 			// placeholder={placeholder}
+
+// 		/>
+// 	)
+// }
 // const CustomInput = memo((props: InputProps<DropdownChoiceInt>) => {
 // 	const tempContext2 = useContext(tempContext)
 // 	const { children } = props
@@ -324,6 +337,53 @@ const CustomValueContainer = (props: ValueContainerProps<DropdownChoiceInt>) => 
 
 	const tempContext2 = useContext(tempContext)
 
+	const checkCursor = useCallback(
+		(
+			e:
+				| React.KeyboardEvent<HTMLInputElement>
+				| React.MouseEvent<HTMLInputElement>
+				| React.TouchEvent<HTMLInputElement>
+				| React.ClipboardEvent<HTMLInputElement>
+				| React.FocusEvent<HTMLInputElement>
+		) => {
+			const target = e.currentTarget
+
+			if (document.activeElement !== target) {
+				tempContext2.setCursorPosition(null)
+			} else {
+				tempContext2.setCursorPosition(target.selectionStart)
+			}
+		},
+		[tempContext2.setCursorPosition]
+	)
+
+	const onFocus = useCallback(
+		(e: React.FocusEvent<HTMLInputElement>) => {
+			tempContext2.setTmpValue(tempContext2.value ?? '')
+
+			checkCursor(e)
+		},
+		[tempContext2, checkCursor]
+	)
+	const onBlur = useCallback(
+		(e: React.FocusEvent<HTMLInputElement>) => {
+			tempContext2.setTmpValue(null)
+
+			checkCursor(e)
+		},
+		[tempContext2, checkCursor]
+	)
+	const onKeyDown = useCallback(
+		(e: React.KeyboardEvent<HTMLInputElement>) => {
+			if (e.code === 'Escape') {
+				tempContext2.setCursorPosition(null)
+			} else {
+				checkCursor(e)
+			}
+		},
+		[tempContext2, checkCursor]
+	)
+
 	return (
 		<SelectComponents.ValueContainer {...props}>
 			<CInput
@@ -336,10 +396,18 @@ const CustomValueContainer = (props: ValueContainerProps<DropdownChoiceInt>) => 
 				// title={tooltip}
 				value={tempContext2.value}
 				onChange={tempContext2.setValue}
-				// onFocus={() => setTmpValue(value ?? '')}
-				// onBlur={() => setTmpValue(null)}
+				onFocus={onFocus}
+				onBlur={onBlur}
 				// placeholder={placeholder}
-				// onk
+
+				onKeyUp={checkCursor}
+				onKeyDown={onKeyDown}
+				onMouseDown={checkCursor}
+				onTouchStart={checkCursor}
+				onInput={checkCursor}
+				onPaste={checkCursor}
+				onCut={checkCursor}
+				onSelect={checkCursor}
 			/>
 		</SelectComponents.ValueContainer>
 	)
