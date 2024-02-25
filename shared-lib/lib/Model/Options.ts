@@ -73,7 +73,6 @@ export type InternalInputField =
 
 export interface CompanionInputFieldTextInputExtended extends CompanionInputFieldTextInput {
 	placeholder?: string
-	useInternalLocationVariables?: boolean
 }
 export interface CompanionInputFieldMultiDropdownExtended extends CompanionInputFieldMultiDropdown {
 	allowCustom?: boolean

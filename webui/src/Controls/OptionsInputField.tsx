@@ -9,7 +9,7 @@ import {
 } from '../Components/index.js'
 import { InternalCustomVariableDropdown, InternalInstanceField } from './InternalInstanceFields.jsx'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faDollarSign, faQuestionCircle } from '@fortawesome/free-solid-svg-icons'
+import { faDollarSign, faGlobe, faQuestionCircle } from '@fortawesome/free-solid-svg-icons'
 import { InternalActionInputField, InternalFeedbackInputField } from '@companion-app/shared/Model/Options.js'
 import classNames from 'classnames'
 import sanitizeHtml from 'sanitize-html'
@@ -46,19 +46,21 @@ export function OptionsInputField({
 	let features: Record<string, boolean> = {}
 	switch (option.type) {
 		case 'textinput': {
+			features.variables = !!option.useVariables
+			features.locationVariables = typeof option.useVariables === 'object' && !!option.useVariables?.locationBased
+
 			control = (
 				<TextInputField
 					value={value}
 					regex={option.regex}
 					required={option.required}
 					placeholder={option.placeholder}
-					useVariables={option.useVariables}
-					useInternalLocationVariables={connectionId === 'internal' && option.useInternalLocationVariables}
+					useVariables={features.variables}
+					useLocationVariables={features.locationVariables}
 					disabled={readonly}
 					setValue={setValue2}
 				/>
 			)
-			features.variables = !!option.useVariables
 			break
 		}
 		case 'dropdown': {
@@ -170,6 +172,10 @@ export function OptionsInputField({
 	const featureIcons: JSX.Element[] = []
 	if (features.variables)
 		featureIcons.push(<FontAwesomeIcon key="variables" icon={faDollarSign} title={'Supports variables'} />)
+	if (features.locationVariables)
+		featureIcons.push(
+			<FontAwesomeIcon key="locationVariables" icon={faGlobe} title={'Supports location based variables'} />
+		)
 
 	return (
 		<CFormGroup className={classNames({ displayNone: !visibility })}>

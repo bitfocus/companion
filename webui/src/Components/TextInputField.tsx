@@ -14,7 +14,7 @@ interface TextInputFieldProps {
 	setValid?: (valid: boolean) => void
 	disabled?: boolean
 	useVariables?: boolean
-	useInternalLocationVariables?: boolean
+	useLocationVariables?: boolean
 }
 
 interface TributeSuggestion {
@@ -34,7 +34,7 @@ export function TextInputField({
 	setValid,
 	disabled,
 	useVariables,
-	useInternalLocationVariables,
+	useLocationVariables,
 }: TextInputFieldProps) {
 	const variableDefinitionsContext = useContext(VariableDefinitionsContext)
 
@@ -73,7 +73,7 @@ export function TextInputField({
 			}
 		}
 
-		if (useInternalLocationVariables) {
+		if (useLocationVariables) {
 			suggestions.push(
 				{
 					key: 'this:page)',
@@ -94,7 +94,7 @@ export function TextInputField({
 		}
 
 		tribute.append(0, suggestions, true)
-	}, [variableDefinitionsContext, tribute, useVariables, useInternalLocationVariables])
+	}, [variableDefinitionsContext, tribute, useVariables, useLocationVariables])
 
 	// Compile the regex (and cache)
 	const compiledRegex = useMemo(() => {

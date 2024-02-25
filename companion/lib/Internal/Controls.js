@@ -73,9 +73,9 @@ const CHOICES_DYNAMIC_LOCATION = [
 		id: 'location_text',
 		default: '$(this:page)/$(this:row)/$(this:column)',
 		isVisible: (options) => options.location_target === 'text',
-		useVariables: true,
-		// @ts-ignore
-		useInternalLocationVariables: true,
+		useVariables: {
+			locationBased: true,
+		},
 	}),
 	serializeIsVisibleFnSingle({
 		type: 'textinput',
@@ -84,9 +84,9 @@ const CHOICES_DYNAMIC_LOCATION = [
 		id: 'location_expression',
 		default: `concat($(this:page), '/', $(this:row), '/', $(this:column))`,
 		isVisible: (options) => options.location_target === 'expression',
-		useVariables: true,
-		// @ts-ignore
-		useInternalLocationVariables: true,
+		useVariables: {
+			locationBased: true,
+		},
 	}),
 ]
 
