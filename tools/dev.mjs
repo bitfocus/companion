@@ -6,10 +6,25 @@ import path from 'path'
 import debounceFn from 'debounce-fn'
 import { fileURLToPath } from 'url'
 import concurrently from 'concurrently'
+import dotenv from 'dotenv'
+
+dotenv.config({
+	path: path.resolve(process.cwd(), '..', '.env'),
+})
 
 let node
 
-const devModulesPath = argv['extra-module-path'] ? path.resolve(argv['extra-module-path']) : undefined
+const rawDevModulesPath = process.env.COMPANION_DEV_MODULES || argv['extra-module-path']
+const devModulesPath = rawDevModulesPath ? path.resolve(rawDevModulesPath) : undefined
+
+if (rawDevModulesPath) {
+	const argvIndex = process.argv.indexOf('--extra-module-path')
+	if (argvIndex === -1) {
+		process.argv.push('--extra-module-path', devModulesPath)
+	} else {
+		process.argv[argvIndex + 1] = devModulesPath
+	}
+}
 
 concurrently([
 	{
