@@ -1,5 +1,28 @@
 # Bitfocus Companion
 
+## Companion v3.2.2 - Release Notes
+
+### 🐞 BUG FIXES
+
+- Launcher window growing horizontally infinitely
+- Ensure application exits properly with the launcher
+- Fix logging of rosstalk connections #2758 #2747
+- Show button previews in actions/feedbacks while editing triggers
+- Grid header layout issues in firefox
+- Incomplete documentation for expression syntax #2743
+- Restarting modules during development being too agressive #2741
+
+### 🧩 UPDATED MODULES
+
+- allenheath-ahm
+- bmd-hyperdeck
+- bmd-webpresenter
+- colorlight-grandshow
+- figure53-qlab-advance
+- generic-ssh
+- justmacros-lua
+- studiocoast-vmix
+
 ## Companion v3.2.1 - Release Notes
 
 ### 🐞 BUG FIXES
@@ -16,7 +39,7 @@
 - Imported emulators not being setup until restart
 - Typo in tcp/udp documentation #2717
 
-### 🧩 NEW & UPDATED MODULES
+### 🧩 UPDATED MODULES
 
 - birddog-ptz
 - bmd-atem
