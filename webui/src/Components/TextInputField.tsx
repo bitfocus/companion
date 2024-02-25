@@ -1,13 +1,7 @@
-import React, { useEffect, useMemo, useState, useCallback, useContext, ChangeEvent, useRef, memo } from 'react'
+import React, { useEffect, useMemo, useState, useCallback, useContext, useRef } from 'react'
 import { CInput } from '@coreui/react'
 import { VariableDefinitionsContext } from '../util.js'
-import Select, {
-	ControlProps,
-	OptionProps,
-	components as SelectComponents,
-	ValueContainerProps,
-	createFilter,
-} from 'react-select'
+import Select, { ControlProps, OptionProps, components as SelectComponents, ValueContainerProps } from 'react-select'
 import { MenuPortalContext } from './DropdownInputField.js'
 import { DropdownChoiceId } from '@companion-module/base'
 import { observer } from 'mobx-react-lite'
@@ -143,18 +137,23 @@ export const TextInputField = observer(function TextInputField({
 	// 	console.log('focus change')
 	// }, [])
 
+	const extraStyle = useMemo(
+		() => ({ color: !isValueValid(showValue) ? 'red' : undefined, ...style }),
+		[isValueValid, showValue, style]
+	)
+
 	const tmpVal = {
 		value: showValue,
 		setValue: doOnChange,
 		setTmpValue: setTmpValue,
 		setCursorPosition: setCursorPosition,
-		extraStyle: { color: !isValueValid(tmpValue ?? value) ? 'red' : undefined, ...style }, // TODO - memo
+		extraStyle: extraStyle,
 	}
 
 	// Render the input
 	return (
 		<>
-			<tempContext.Provider value={tmpVal}>
+			<VariablesSelectContext.Provider value={tmpVal}>
 				{useVariables ? (
 					<VariablesSelect
 						isOpen={isPickerOpen}
@@ -166,8 +165,8 @@ export const TextInputField = observer(function TextInputField({
 					<CInput
 						type="text"
 						disabled={disabled}
-						value={tmpValue ?? value ?? ''}
-						style={{ color: !isValueValid(tmpValue ?? value) ? 'red' : undefined, ...style }}
+						value={showValue}
+						style={extraStyle}
 						title={tooltip}
 						onChange={doOnChange}
 						onFocus={() => setTmpValue(value ?? '')}
@@ -175,7 +174,7 @@ export const TextInputField = observer(function TextInputField({
 						placeholder={placeholder}
 					/>
 				)}
-			</tempContext.Provider>
+			</VariablesSelectContext.Provider>
 		</>
 	)
 })
@@ -202,10 +201,8 @@ function VariablesSelect({ isOpen, searchValue, onVariableSelect, useLocationVar
 		for (const [connectionLabel, variables] of Object.entries(variableDefinitionsContext)) {
 			for (const [name, va] of Object.entries(variables || {})) {
 				if (!va) continue
-				const variableId = `${connectionLabel}:${name}`
 				suggestions.push({
-					// key: variableId + ')',
-					value: variableId,
+					value: `${connectionLabel}:${name}`,
 					label: va.label,
 				})
 			}
@@ -214,22 +211,18 @@ function VariablesSelect({ isOpen, searchValue, onVariableSelect, useLocationVar
 		if (useLocationVariables) {
 			suggestions.push(
 				{
-					// key: 'this:page)',
 					value: 'this:page',
 					label: 'This page',
 				},
 				{
-					// key: 'this:column)',
 					value: 'this:column',
 					label: 'This column',
 				},
 				{
-					// key: 'this:row)',
 					value: 'this:row',
 					label: 'This row',
 				},
 				{
-					// key: 'this:page_name)',
 					value: 'this:page_name',
 					label: 'This page name',
 				}
@@ -242,7 +235,6 @@ function VariablesSelect({ isOpen, searchValue, onVariableSelect, useLocationVar
 	return (
 		<Select
 			className="variable-select-root"
-			// classNamePrefix: 'select-control',
 			menuPortalTarget={menuPortal || document.body}
 			menuShouldBlockScroll={!!menuPortal} // The dropdown doesn't follow scroll when in a modal
 			menuPosition="fixed"
@@ -260,19 +252,11 @@ function VariablesSelect({ isOpen, searchValue, onVariableSelect, useLocationVar
 				Control: CustomControl,
 				IndicatorsContainer: EmptyComponent,
 			}}
-			filterOption={filterOption}
-			// controlShouldRenderValue={false}
 		/>
 	)
 }
 
-const baseFilter = createFilter<DropdownChoiceInt>()
-const filterOption: ReturnType<typeof createFilter<DropdownChoiceInt>> = (option, inputValue) => {
-	console.log('filter', inputValue)
-	return baseFilter(option, inputValue)
-}
-
-const tempContext = React.createContext({
+const VariablesSelectContext = React.createContext({
 	value: '',
 	setValue: (_e: React.ChangeEvent<HTMLInputElement>) => {},
 	setTmpValue: (_val: string | null) => {},
@@ -290,9 +274,7 @@ const CustomOption = (props: OptionProps<DropdownChoiceInt>) => {
 	)
 }
 
-const EmptyComponent = () => {
-	return null
-}
+const EmptyComponent = () => null
 
 const CustomControl = (props: ControlProps<DropdownChoiceInt>) => {
 	return (
@@ -303,7 +285,7 @@ const CustomControl = (props: ControlProps<DropdownChoiceInt>) => {
 }
 
 const CustomValueContainer = (props: ValueContainerProps<DropdownChoiceInt>) => {
-	const tempContext2 = useContext(tempContext)
+	const context = useContext(VariablesSelectContext)
 
 	const checkCursor = useCallback(
 		(
@@ -317,29 +299,29 @@ const CustomValueContainer = (props: ValueContainerProps<DropdownChoiceInt>) => 
 			const target = e.currentTarget
 
 			if (document.activeElement !== target) {
-				tempContext2.setCursorPosition(null)
+				context.setCursorPosition(null)
 			} else {
-				tempContext2.setCursorPosition(target.selectionStart)
+				context.setCursorPosition(target.selectionStart)
 			}
 		},
-		[tempContext2.setCursorPosition]
+		[context.setCursorPosition]
 	)
 
 	const onFocus = useCallback(
 		(e: React.FocusEvent<HTMLInputElement>) => {
-			tempContext2.setTmpValue(tempContext2.value ?? '')
+			context.setTmpValue(context.value ?? '')
 
 			checkCursor(e)
 		},
-		[tempContext2, checkCursor]
+		[context, checkCursor]
 	)
 	const onBlur = useCallback(
 		(e: React.FocusEvent<HTMLInputElement>) => {
-			tempContext2.setTmpValue(null)
+			context.setTmpValue(null)
 
 			checkCursor(e)
 		},
-		[tempContext2, checkCursor]
+		[context, checkCursor]
 	)
 	const onKeyDown = useCallback(
 		(e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -350,7 +332,7 @@ const CustomValueContainer = (props: ValueContainerProps<DropdownChoiceInt>) => 
 				checkCursor(e)
 			}
 		},
-		[tempContext2, checkCursor]
+		[context, checkCursor]
 	)
 
 	return (
@@ -359,11 +341,10 @@ const CustomValueContainer = (props: ValueContainerProps<DropdownChoiceInt>) => 
 				{...props.innerProps}
 				type="text"
 				// disabled={disabled}
-				// value={tmpValue ?? value ?? ''}
-				style={tempContext2.extraStyle}
+				style={context.extraStyle}
 				// title={tooltip}
-				value={tempContext2.value}
-				onChange={tempContext2.setValue}
+				value={context.value}
+				onChange={context.setValue}
 				onFocus={onFocus}
 				onBlur={onBlur}
 				// placeholder={placeholder}
