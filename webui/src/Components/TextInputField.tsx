@@ -1,7 +1,14 @@
-import React, { useEffect, useMemo, useState, useCallback, useContext, ChangeEvent, useRef } from 'react'
+import React, { useEffect, useMemo, useState, useCallback, useContext, ChangeEvent, useRef, memo } from 'react'
 import { CInput } from '@coreui/react'
 import { VariableDefinitionsContext } from '../util.js'
-import Select, { OptionProps, components as SelectComponents, createFilter } from 'react-select'
+import Select, {
+	ControlProps,
+	InputProps,
+	OptionProps,
+	components as SelectComponents,
+	ValueContainerProps,
+	createFilter,
+} from 'react-select'
 import { MenuPortalContext } from './DropdownInputField.js'
 import { DropdownChoiceId } from '@companion-module/base'
 import { observer } from 'mobx-react-lite'
@@ -80,6 +87,7 @@ export const TextInputField = observer(function TextInputField({
 	const storeValue = useCallback(
 		(value: string) => {
 			// const newValue = decode(e.currentTarget.value, { scope: 'strict' })
+			console.log('store', value)
 			setTmpValue(value)
 			setValue(value)
 			setValid?.(isValueValid(value))
@@ -124,37 +132,42 @@ export const TextInputField = observer(function TextInputField({
 
 	// const [variableSearchOpen, setVariableSearchOpen] = useState(false)
 
-	const onFocusChange = useCallback(() => {
-		console.log('focus change')
-	}, [])
+	// const onFocusChange = useCallback(() => {
+	// 	console.log('focus change')
+	// }, [])
+
+	const tmpVal = {
+		value,
+		setValue: doOnChange,
+	}
 
 	// Render the input
 	const extraStyle = style || {}
 	return (
 		<>
-			<CInput
-				innerRef={innerRef}
-				type="text"
-				disabled={disabled}
-				value={tmpValue ?? value ?? ''}
-				style={{ color: !isValueValid(tmpValue ?? value) ? 'red' : undefined, ...extraStyle }}
-				title={tooltip}
-				onChange={doOnChange}
-				onFocus={() => setTmpValue(value ?? '')}
-				onBlur={() => setTmpValue(null)}
-				placeholder={placeholder}
-				onFocusCapture={onFocusChange}
-				onBlurCapture={onFocusChange}
-			/>
-			<p style={{ width: '1000px' }}>aa</p>
-			{useVariables && (
-				<VariablesSelect
-					isOpen={isPickerOpen}
-					searchValue={searchValue}
-					onVariableSelect={onVariableSelect}
-					useLocationVariables={!!useLocationVariables}
+			<tempContext.Provider value={tmpVal}>
+				<CInput
+					innerRef={innerRef}
+					type="text"
+					disabled={disabled}
+					value={tmpValue ?? value ?? ''}
+					style={{ color: !isValueValid(tmpValue ?? value) ? 'red' : undefined, ...extraStyle }}
+					title={tooltip}
+					onChange={doOnChange}
+					onFocus={() => setTmpValue(value ?? '')}
+					onBlur={() => setTmpValue(null)}
+					placeholder={placeholder}
 				/>
-			)}
+				<p style={{ width: '1000px' }}>aa</p>
+				{useVariables && (
+					<VariablesSelect
+						isOpen={isPickerOpen}
+						searchValue={searchValue}
+						onVariableSelect={onVariableSelect}
+						useLocationVariables={!!useLocationVariables}
+					/>
+				)}
+			</tempContext.Provider>
 		</>
 	)
 })
@@ -218,10 +231,10 @@ function VariablesSelect({ isOpen, searchValue, onVariableSelect, useLocationVar
 		return suggestions
 	}, [variableDefinitionsContext, useLocationVariables])
 
-	const valueOption: DropdownChoiceInt = {
-		value: searchValue,
-		label: searchValue,
-	}
+	// const valueOption: DropdownChoiceInt = {
+	// 	value: searchValue,
+	// 	label: searchValue,
+	// }
 	console.log('s', searchValue)
 
 	return (
@@ -239,9 +252,14 @@ function VariablesSelect({ isOpen, searchValue, onVariableSelect, useLocationVar
 			inputValue={searchValue}
 			onChange={onVariableSelect}
 			menuIsOpen={isOpen}
-			components={{ Option: CustomOption }}
+			components={{
+				Option: CustomOption,
+				ValueContainer: CustomValueContainer,
+				// Control: CustomControl /*Input: CustomInput*/,
+				IndicatorsContainer: EmptyComponent,
+			}}
 			filterOption={filterOption}
-			controlShouldRenderValue={false}
+			// controlShouldRenderValue={false}
 		/>
 	)
 }
@@ -252,6 +270,11 @@ const filterOption: ReturnType<typeof createFilter<DropdownChoiceInt>> = (option
 	return baseFilter(option, inputValue)
 }
 
+const tempContext = React.createContext({
+	value: '',
+	setValue: (_e: React.ChangeEvent<HTMLInputElement>) => {},
+})
+
 const CustomOption = (props: OptionProps<DropdownChoiceInt>) => {
 	const { data } = props
 	return (
@@ -259,6 +282,66 @@ const CustomOption = (props: OptionProps<DropdownChoiceInt>) => {
 			<span className="var-name">{data.value}</span>
 			<span className="var-label">{data.label}</span>
 		</SelectComponents.Option>
+	)
+}
+
+const EmptyComponent = () => {
+	return null
+}
+
+const CustomControl = (props: ControlProps<DropdownChoiceInt>) => {
+	// const { data } = props
+	const tempContext2 = useContext(tempContext)
+
+	return (
+		<CInput
+			// innerRef={innerRef}
+			type="text"
+			// disabled={disabled}
+			// value={tmpValue ?? value ?? ''}
+			// style={{ color: !isValueValid(tmpValue ?? value) ? 'red' : undefined, ...extraStyle }}
+			// title={tooltip}
+			value={tempContext2.value}
+			onChange={tempContext2.setValue}
+			// onFocus={() => setTmpValue(value ?? '')}
+			// onBlur={() => setTmpValue(null)}
+			// placeholder={placeholder}
+		/>
+	)
+}
+// const CustomInput = memo((props: InputProps<DropdownChoiceInt>) => {
+// 	const tempContext2 = useContext(tempContext)
+// 	const { children } = props
+// 	return (
+// 		<SelectComponents.Input {...props} value={tempContext2.value} onChange={tempContext2.setValue}>
+// 			{children}
+// 		</SelectComponents.Input>
+// 	)
+// })
+
+const CustomValueContainer = (props: ValueContainerProps<DropdownChoiceInt>) => {
+	const { children } = props
+
+	const tempContext2 = useContext(tempContext)
+
+	return (
+		<SelectComponents.ValueContainer {...props}>
+			<CInput
+				{...props.innerProps}
+				// innerRef={innerRef}
+				type="text"
+				// disabled={disabled}
+				// value={tmpValue ?? value ?? ''}
+				// style={{ color: !isValueValid(tmpValue ?? value) ? 'red' : undefined, ...extraStyle }}
+				// title={tooltip}
+				value={tempContext2.value}
+				onChange={tempContext2.setValue}
+				// onFocus={() => setTmpValue(value ?? '')}
+				// onBlur={() => setTmpValue(null)}
+				// placeholder={placeholder}
+				// onk
+			/>
+		</SelectComponents.ValueContainer>
 	)
 }
 
