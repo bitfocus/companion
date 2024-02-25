@@ -13,6 +13,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faDollarSign, faFont, faQuestionCircle, faTrash } from '@fortawesome/free-solid-svg-icons'
 import { SomeButtonModel } from '@companion-app/shared/Model/ButtonModel.js'
 import { ButtonStyleProperties } from '@companion-app/shared/Model/StyleModel.js'
+import { InputFeatureIcons, InputFeatureIconsProps } from './OptionsInputField.js'
 
 interface ButtonStyleConfigProps {
 	controlId: string
@@ -160,6 +161,11 @@ export function ButtonStyleConfigFields({
 
 	const showField2 = (id: string) => !showField || showField(id)
 
+	const textInputFeatures: InputFeatureIconsProps = {
+		variables: true,
+		locationVariables: true,
+	}
+
 	return (
 		<>
 			{showField2('text') && (
@@ -167,14 +173,18 @@ export function ButtonStyleConfigFields({
 					<label>
 						{values.textExpression ? (
 							<>
-								Button text expression&nbsp;
+								Button text expression
+								<InputFeatureIcons {...textInputFeatures} />
 								<FontAwesomeIcon
 									icon={faQuestionCircle}
 									title="You can read more about expressions in the Getting Started pages"
 								/>
 							</>
 						) : (
-							'Button text string'
+							<>
+								Button text string
+								<InputFeatureIcons {...textInputFeatures} />
+							</>
 						)}
 					</label>
 					<CInputGroup>

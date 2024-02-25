@@ -42,7 +42,9 @@ const CHOICES_SURFACE_GROUP_WITH_VARIABLES = [
 		id: 'controller_variable',
 		default: 'self',
 		isVisible: (options) => !!options.controller_from_variable,
-		useVariables: true,
+		useVariables: {
+			locationBased: true,
+		},
 	}),
 ]
 
@@ -69,7 +71,9 @@ const CHOICES_SURFACE_ID_WITH_VARIABLES = [
 		id: 'controller_variable',
 		default: 'self',
 		isVisible: (options) => !!options.controller_from_variable,
-		useVariables: true,
+		useVariables: {
+			locationBased: true,
+		},
 	}),
 ]
 
@@ -95,7 +99,9 @@ const CHOICES_PAGE_WITH_VARIABLES = [
 		id: 'page_variable',
 		default: '1',
 		isVisible: (options) => !!options.page_from_variable,
-		useVariables: true,
+		useVariables: {
+			locationBased: true,
+		},
 	}),
 ]
 
@@ -198,7 +204,7 @@ export default class Surface {
 		let theController = options.controller + ''
 
 		if (useVariableFields && options.controller_from_variable) {
-			theController = this.#variableController.parseVariables(options.controller_variable).text
+			theController = this.#variableController.parseVariables(options.controller_variable, info?.location).text
 		}
 
 		theController = theController.trim()
@@ -219,7 +225,7 @@ export default class Surface {
 		let thePage = options.page
 
 		if (useVariableFields && options.page_from_variable) {
-			thePage = Number(this.#variableController.parseExpression(options.page_variable, 'number').value)
+			thePage = Number(this.#variableController.parseExpression(options.page_variable, location, 'number').value)
 		}
 
 		if (location) {

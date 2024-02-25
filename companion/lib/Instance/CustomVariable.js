@@ -420,26 +420,6 @@ export default class InstanceCustomVariable {
 	}
 
 	/**
-	 * Set the current value of a custom variable to the result of an expression
-	 * @param {string} name The variable to update
-	 * @param {string} expression The expression to evaluate
-	 * @returns {boolean | void} success
-	 * @access public
-	 */
-	setValueToExpression(name, expression) {
-		if (this.#custom_variables[name]) {
-			try {
-				const result = this.#base.parseExpression(expression)
-				this.#setValueInner(name, result.value)
-				return true
-			} catch (/** @type {any} */ error) {
-				this.#logger.warn(`${error.toString()}, in expression: "${expression}"`)
-				return false
-			}
-		}
-	}
-
-	/**
 	 * Set the default value of a custom variable
 	 * @param {string} name
 	 * @param {string} value Default value of the variable (string)

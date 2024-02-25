@@ -151,7 +151,9 @@ export default class System {
 						type: 'textinput',
 						label: 'Path (supports variables in path)',
 						id: 'path',
-						useVariables: true,
+						useVariables: {
+							locationBased: true,
+						},
 					},
 					{
 						type: 'number',
@@ -194,13 +196,13 @@ export default class System {
 	/**
 	 * Run a single internal action
 	 * @param {import('@companion-app/shared/Model/ActionModel.js').ActionInstance} action
-	 * @param {import('../Instance/Wrapper.js').RunActionExtras} _extras
+	 * @param {import('../Instance/Wrapper.js').RunActionExtras} extras
 	 * @returns {boolean} Whether the action was handled
 	 */
-	executeAction(action, _extras) {
+	executeAction(action, extras) {
 		if (action.action === 'exec') {
 			if (action.options.path) {
-				const path = this.#variableController.parseVariables(action.options.path).text
+				const path = this.#variableController.parseVariables(action.options.path, extras.location).text
 				this.#logger.silly(`Running path: '${path}'`)
 
 				exec(

@@ -83,13 +83,6 @@ export function ParseInternalControlReference(logger, variablesController, press
 		}
 	}
 
-	/** @type {import('@companion-module/base').CompanionVariableValues} */
-	const injectedVariableValues = {
-		'$(this:page)': pressLocation?.pageNumber,
-		'$(this:column)': pressLocation?.column,
-		'$(this:row)': pressLocation?.row,
-	}
-
 	/** @type {import('../Resources/Util.js').ControlLocation | null} */
 	let location = null
 	/** @type {string[]} */
@@ -107,7 +100,7 @@ export function ParseInternalControlReference(logger, variablesController, press
 			break
 		case 'text':
 			if (useVariableFields) {
-				const result = variablesController.parseVariables(options.location_text, injectedVariableValues)
+				const result = variablesController.parseVariables(options.location_text, pressLocation)
 
 				location = parseLocationString(result.text)
 				referencedVariables = result.variableIds
@@ -118,11 +111,7 @@ export function ParseInternalControlReference(logger, variablesController, press
 		case 'expression':
 			if (useVariableFields) {
 				try {
-					const result = variablesController.parseExpression(
-						options.location_expression,
-						'string',
-						injectedVariableValues
-					)
+					const result = variablesController.parseExpression(options.location_expression, pressLocation, 'string')
 
 					location = parseLocationString(String(result.value))
 					referencedVariables = Array.from(result.variableIds)

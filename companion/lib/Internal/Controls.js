@@ -49,7 +49,9 @@ const CHOICES_PAGE_WITH_VARIABLES = [
 		id: 'page_variable',
 		default: '1',
 		isVisible: (options) => !!options.page_from_variable,
-		useVariables: true,
+		useVariables: {
+			locationBased: true,
+		},
 	}),
 ]
 
@@ -114,7 +116,9 @@ const CHOICES_STEP_WITH_VARIABLES = [
 		id: 'step_expression',
 		default: '1',
 		isVisible: (options) => !!options.step_from_expression,
-		useVariables: true,
+		useVariables: {
+			locationBased: true,
+		},
 	}),
 ]
 
@@ -219,7 +223,7 @@ export default class Controls {
 	#fetchPage(options, location) {
 		let thePage = options.page
 
-		thePage = this.#variableController.parseExpression(options.page_variable, 'number').value
+		thePage = this.#variableController.parseExpression(options.page_variable, location, 'number').value
 
 		if (thePage === 0 || thePage === '0') thePage = location?.pageNumber ?? null
 
@@ -258,15 +262,15 @@ export default class Controls {
 	}
 
 	/**
-	 *
 	 * @param {Record<string, any>} options
+	 * @param {import('../Instance/Wrapper.js').RunActionExtras} extras
 	 * @returns {number}
 	 */
-	#fetchStep(options) {
+	#fetchStep(options, extras) {
 		let theStep = options.step
 
 		if (options.step_from_expression) {
-			theStep = this.#variableController.parseExpression(options.step_expression, 'number').value
+			theStep = this.#variableController.parseExpression(options.step_expression, extras.location, 'number').value
 		}
 
 		return theStep
@@ -301,7 +305,9 @@ export default class Controls {
 						label: 'Expression',
 						id: 'expression',
 						default: '$(internal:time_s) >= 0',
-						useVariables: true,
+						useVariables: {
+							locationBased: true,
+						},
 					},
 
 					...CHOICES_DYNAMIC_LOCATION,
@@ -341,7 +347,9 @@ export default class Controls {
 						label: 'Value',
 						id: 'value',
 						default: '',
-						useVariables: true,
+						useVariables: {
+							locationBased: true,
+						},
 					},
 
 					...CHOICES_DYNAMIC_LOCATION,
@@ -374,7 +382,9 @@ export default class Controls {
 						label: 'Value',
 						id: 'value',
 						default: '',
-						useVariables: true,
+						useVariables: {
+							locationBased: true,
+						},
 					},
 
 					...CHOICES_DYNAMIC_LOCATION,
@@ -407,7 +417,9 @@ export default class Controls {
 						label: 'Value',
 						id: 'value',
 						default: '',
-						useVariables: true,
+						useVariables: {
+							locationBased: true,
+						},
 					},
 
 					...CHOICES_DYNAMIC_LOCATION,
@@ -578,7 +590,9 @@ export default class Controls {
 						label: 'Value',
 						id: 'value',
 						default: '',
-						useVariables: true,
+						useVariables: {
+							locationBased: true,
+						},
 					},
 
 					...CHOICES_DYNAMIC_LOCATION,
@@ -595,7 +609,9 @@ export default class Controls {
 						label: 'Expression',
 						id: 'expression',
 						default: '$(internal:time_s) >= 0',
-						useVariables: true,
+						useVariables: {
+							locationBased: true,
+						},
 					},
 					...CHOICES_DYNAMIC_LOCATION,
 					...CHOICES_STEP_WITH_VARIABLES,
@@ -942,7 +958,8 @@ export default class Controls {
 
 			const forcePress = !!action.options.force
 
-			const pressIt = !!this.#variableController.parseExpression(action.options.expression, 'boolean').value
+			const pressIt = !!this.#variableController.parseExpression(action.options.expression, extras.location, 'boolean')
+				.value
 
 			if (pressIt) {
 				this.#controlsController.pressControl(theControlId, true, extras.surfaceId, forcePress)
@@ -958,7 +975,7 @@ export default class Controls {
 			const [connectionLabel, variableName] = SplitVariableId(action.options.variable)
 			const variable_value = this.#variableController.getVariableValue(connectionLabel, variableName)
 
-			const condition = this.#variableController.parseVariables(action.options.value).text
+			const condition = this.#variableController.parseVariables(action.options.value, extras.location).text
 
 			let pressIt = checkCondition(action.options.op, condition, variable_value)
 
@@ -976,7 +993,7 @@ export default class Controls {
 			const [connectionLabel, variableName] = SplitVariableId(action.options.variable)
 			const variable_value = this.#variableController.getVariableValue(connectionLabel, variableName)
 
-			const condition = this.#variableController.parseVariables(action.options.value).text
+			const condition = this.#variableController.parseVariables(action.options.value, extras.location).text
 
 			let pressIt = checkCondition(action.options.op, condition, variable_value)
 
@@ -993,7 +1010,7 @@ export default class Controls {
 			const [connectionLabel, variableName] = SplitVariableId(action.options.variable)
 			const variable_value = this.#variableController.getVariableValue(connectionLabel, variableName)
 
-			const condition = this.#variableController.parseVariables(action.options.value).text
+			const condition = this.#variableController.parseVariables(action.options.value, extras.location).text
 
 			let pressIt = checkCondition(action.options.op, condition, variable_value)
 
@@ -1084,7 +1101,7 @@ export default class Controls {
 			const { theControlId } = this.#fetchLocationAndControlId(action.options, extras.location, true)
 			if (!theControlId) return true
 
-			const theStep = this.#fetchStep(action.options)
+			const theStep = this.#fetchStep(action.options, extras)
 
 			const control = this.#controlsController.getControl(theControlId)
 
@@ -1096,14 +1113,14 @@ export default class Controls {
 			const { theControlId } = this.#fetchLocationAndControlId(action.options, extras.location, true)
 			if (!theControlId) return true
 
-			const theStep = this.#fetchStep(action.options)
+			const theStep = this.#fetchStep(action.options, extras)
 
 			const control = this.#controlsController.getControl(theControlId)
 
 			const [connectionLabel, variableName] = SplitVariableId(action.options.variable)
 			const variable_value = this.#variableController.getVariableValue(connectionLabel, variableName)
 
-			const condition = this.#variableController.parseVariables(action.options.value).text
+			const condition = this.#variableController.parseVariables(action.options.value, extras.location).text
 
 			let pressIt = checkCondition(action.options.op, condition, variable_value)
 
@@ -1117,11 +1134,12 @@ export default class Controls {
 			const { theControlId } = this.#fetchLocationAndControlId(action.options, extras.location, true)
 			if (!theControlId) return true
 
-			const theStep = this.#fetchStep(action.options)
+			const theStep = this.#fetchStep(action.options, extras)
 
 			const control = this.#controlsController.getControl(theControlId)
 
-			const pressIt = !!this.#variableController.parseExpression(action.options.expression, 'boolean').value
+			const pressIt = !!this.#variableController.parseExpression(action.options.expression, extras.location, 'boolean')
+				.value
 
 			if (pressIt) {
 				if (control && control.supportsSteps) {

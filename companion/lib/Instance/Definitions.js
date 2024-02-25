@@ -114,7 +114,7 @@ class InstanceDefinitions extends CoreBase {
 					style: definition.type,
 				}
 
-				if (style.text) style.text = this.instance.variable.parseVariables(style.text).text
+				if (style.text) style.text = this.instance.variable.parseVariables(style.text, null).text
 
 				const render = await this.graphics.drawPreview(style)
 				if (render) {

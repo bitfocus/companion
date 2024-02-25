@@ -780,7 +780,7 @@ class SocketEventsHandler {
 	 */
 	async #handleParseVariablesInString(msg) {
 		try {
-			const result = this.#registry.instance.variable.parseVariables(msg.text)
+			const result = this.#registry.instance.variable.parseVariables(msg.text, null) // TODO
 
 			return { text: result.text, variableIds: result.variableIds }
 		} catch (/** @type {any} */ e) {

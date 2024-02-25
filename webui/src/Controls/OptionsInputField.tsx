@@ -43,7 +43,7 @@ export function OptionsInputField({
 
 	let control: JSX.Element | string | undefined = undefined
 	let showLabel = true
-	let features: Record<string, boolean> = {}
+	let features: InputFeatureIconsProps = {}
 	switch (option.type) {
 		case 'textinput': {
 			features.variables = !!option.useVariables
@@ -169,24 +169,33 @@ export function OptionsInputField({
 		control = <CInputGroupText>Unknown type "{option.type}"</CInputGroupText>
 	}
 
-	const featureIcons: JSX.Element[] = []
-	if (features.variables)
-		featureIcons.push(<FontAwesomeIcon key="variables" icon={faDollarSign} title={'Supports variables'} />)
-	if (features.locationVariables)
-		featureIcons.push(
-			<FontAwesomeIcon key="locationVariables" icon={faGlobe} title={'Supports location based variables'} />
-		)
-
 	return (
 		<CFormGroup className={classNames({ displayNone: !visibility })}>
 			{showLabel && (
 				<CLabel>
 					{option.label}
-					{featureIcons.length ? <span className="feature-icons">{featureIcons}</span> : ''}
+					<InputFeatureIcons {...features} />
 					{option.tooltip && <FontAwesomeIcon icon={faQuestionCircle} title={option.tooltip} />}
 				</CLabel>
 			)}
 			{control}
 		</CFormGroup>
 	)
+}
+
+export interface InputFeatureIconsProps {
+	variables?: boolean
+	locationVariables?: boolean
+}
+
+export function InputFeatureIcons(props: InputFeatureIconsProps): JSX.Element | null {
+	const featureIcons: JSX.Element[] = []
+	if (props.variables)
+		featureIcons.push(<FontAwesomeIcon key="variables" icon={faDollarSign} title={'Supports variables'} />)
+	if (props.locationVariables)
+		featureIcons.push(
+			<FontAwesomeIcon key="locationVariables" icon={faGlobe} title={'Supports location based variables'} />
+		)
+
+	return featureIcons.length ? <span className="feature-icons">{featureIcons}</span> : null
 }

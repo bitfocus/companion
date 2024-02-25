@@ -89,6 +89,11 @@ export function TextInputField({
 					key: 'this:row)',
 					value: 'this:row',
 					label: 'This row',
+				},
+				{
+					key: 'this:page_name)',
+					value: 'this:page_name',
+					label: 'This page name',
 				}
 			)
 		}

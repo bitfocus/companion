@@ -16,9 +16,10 @@
  */
 
 import { SplitVariableId } from '../Resources/Util.js'
+import LogController from '../Log/Controller.js'
 
 export default class CustomVariables {
-	// #logger = LogController.createLogger('Internal/CustomVariables')
+	#logger = LogController.createLogger('Internal/CustomVariables')
 
 	// /**
 	//  * @type {import('./Controller.js').default}
@@ -94,7 +95,9 @@ export default class CustomVariables {
 						label: 'Expression',
 						id: 'expression',
 						default: '',
-						useVariables: true,
+						useVariables: {
+							locationBased: true,
+						},
 					},
 				],
 			},
@@ -265,10 +268,10 @@ export default class CustomVariables {
 	/**
 	 * Run a single internal action
 	 * @param {import('@companion-app/shared/Model/ActionModel.js').ActionInstance} action
-	 * @param {import('../Instance/Wrapper.js').RunActionExtras} _extras
+	 * @param {import('../Instance/Wrapper.js').RunActionExtras} extras
 	 * @returns {boolean} Whether the action was handled
 	 */
-	executeAction(action, _extras) {
+	executeAction(action, extras) {
 		if (action.action === 'custom_variable_set_value') {
 			this.#variableController.custom.setValue(action.options.name, action.options.value)
 			return true
@@ -280,7 +283,13 @@ export default class CustomVariables {
 			}
 			return true
 		} else if (action.action === 'custom_variable_set_expression') {
-			this.#variableController.custom.setValueToExpression(action.options.name, action.options.expression)
+			try {
+				const result = this.#variableController.parseExpression(action.options.expression, extras.location)
+				this.#variableController.custom.setValue(action.options.name, result.value)
+			} catch (/** @type {any} */ error) {
+				this.#logger.warn(`${error.toString()}, in expression: "${action.options.expression}"`)
+			}
+
 			return true
 		} else if (action.action === 'custom_variable_store_variable') {
 			const [connectionLabel, variableName] = SplitVariableId(action.options.variable)

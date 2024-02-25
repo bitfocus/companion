@@ -1,4 +1,4 @@
-import { parseVariablesInString } from '../lib/Instance/Variable.js'
+import { VARIABLE_UNKNOWN_VALUE, parseVariablesInString } from '../lib/Instance/Variable.js'
 
 describe('variable parsing', () => {
 	test('undefined string', () => {
@@ -10,7 +10,10 @@ describe('variable parsing', () => {
 	})
 
 	test('simple unknown variable', () => {
-		expect(parseVariablesInString('$(abc:def)', {})).toMatchObject({ text: '$NA', variableIds: ['abc:def'] })
+		expect(parseVariablesInString('$(abc:def)', {})).toMatchObject({
+			text: VARIABLE_UNKNOWN_VALUE,
+			variableIds: ['abc:def'],
+		})
 	})
 	test('malformed variable', () => {
 		expect(parseVariablesInString('$(abc)', {})).toMatchObject({ text: '$(abc)', variableIds: [] })
@@ -26,10 +29,13 @@ describe('variable parsing', () => {
 			},
 		}
 		expect(parseVariablesInString('$(abc:def2) $(abc2:def)', variables)).toMatchObject({
-			text: '$NA $NA',
+			text: `${VARIABLE_UNKNOWN_VALUE} ${VARIABLE_UNKNOWN_VALUE}`,
 			variableIds: ['abc:def2', 'abc2:def'],
 		})
-		expect(parseVariablesInString('$(abc2:def)', variables)).toMatchObject({ text: '$NA', variableIds: ['abc2:def'] })
+		expect(parseVariablesInString('$(abc2:def)', variables)).toMatchObject({
+			text: VARIABLE_UNKNOWN_VALUE,
+			variableIds: ['abc2:def'],
+		})
 	})
 
 	test('basic variable', () => {
@@ -114,7 +120,7 @@ describe('variable parsing', () => {
 			variableIds: ['abc:def', 'abc:second'],
 		})
 		expect(parseVariablesInString('$(abc:$(abc:third))', variables)).toEqual({
-			text: '$NA',
+			text: VARIABLE_UNKNOWN_VALUE,
 			variableIds: ['abc:third', 'abc:nope'],
 		})
 	})
