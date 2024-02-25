@@ -28,14 +28,20 @@ label.disabled {
 }
 
 /* Style for autocomplete of variable */
-.tribute-container li span {
+.tribute-container li span,
+.variable-suggestion-option span {
 	display: block;
-}
-.tribute-container li span.var-label {
-	overflow: hidden;
-	font-weight: inherit;
-	text-overflow: ellipsis;
-	white-space: nowrap;
+
+	&.var-name {
+		font-weight: bold;
+	}
+
+	&.var-label {
+		overflow: hidden;
+		font-weight: inherit;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
 }
 
 .alignmentinput {

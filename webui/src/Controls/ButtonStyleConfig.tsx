@@ -1,6 +1,6 @@
 import { CButton, CRow, CCol, CButtonGroup, CForm, CAlert, CInputGroup, CInputGroupAppend } from '@coreui/react'
 import React, { MutableRefObject, useCallback, useContext, useMemo, useState } from 'react'
-import { socketEmitPromise, SocketContext, PreventDefaultHandler } from '../util.js'
+import { socketEmitPromise, SocketContext, PreventDefaultHandler, VariableDefinitionsContext } from '../util.js'
 import {
 	AlignmentInputField,
 	ColorInputField,
@@ -14,6 +14,7 @@ import { faDollarSign, faFont, faQuestionCircle, faTrash } from '@fortawesome/fr
 import { SomeButtonModel } from '@companion-app/shared/Model/ButtonModel.js'
 import { ButtonStyleProperties } from '@companion-app/shared/Model/StyleModel.js'
 import { InputFeatureIcons, InputFeatureIconsProps } from './OptionsInputField.js'
+import { MenuPortalContext } from '../Components/DropdownInputField.js'
 
 interface ButtonStyleConfigProps {
 	controlId: string
@@ -206,6 +207,7 @@ export function ButtonStyleConfigFields({
 							</CButton>
 						</CInputGroupAppend>
 					</CInputGroup>
+					{/* <VariablesSelect /> */}
 				</div>
 			)}
 

@@ -1,7 +1,10 @@
-import Tribute from 'tributejs'
-import React, { useEffect, useMemo, useState, useCallback, useContext, ChangeEvent } from 'react'
+import React, { useEffect, useMemo, useState, useCallback, useContext, ChangeEvent, useRef } from 'react'
 import { CInput } from '@coreui/react'
 import { VariableDefinitionsContext } from '../util.js'
+import Select, { OptionProps, components as SelectComponents, createFilter } from 'react-select'
+import { MenuPortalContext } from './DropdownInputField.js'
+import { DropdownChoiceId } from '@companion-module/base'
+import { observer } from 'mobx-react-lite'
 
 interface TextInputFieldProps {
 	regex?: string
@@ -17,13 +20,7 @@ interface TextInputFieldProps {
 	useLocationVariables?: boolean
 }
 
-interface TributeSuggestion {
-	key: string
-	value: string
-	label: string
-}
-
-export function TextInputField({
+export const TextInputField = observer(function TextInputField({
 	regex,
 	required,
 	tooltip,
@@ -36,70 +33,7 @@ export function TextInputField({
 	useVariables,
 	useLocationVariables,
 }: TextInputFieldProps) {
-	const variableDefinitionsContext = useContext(VariableDefinitionsContext)
-
 	const [tmpValue, setTmpValue] = useState<string | null>(null)
-
-	const tribute = useMemo(() => {
-		// Create it once, then we attach and detach whenever the ref changes
-		// @ts-expect-error Tribute import is broken
-		return new Tribute<TributeSuggestion>({
-			values: [],
-			trigger: '$(',
-
-			// function called on select that returns the content to insert
-			selectTemplate: (item: any) => `$(${item.original.value})`,
-
-			// template for displaying item in menu
-			menuItemTemplate: (item: any) =>
-				`<span class="var-name">${item.original.value}</span><span class="var-label">${item.original.label}</span>`,
-		})
-	}, [])
-
-	useEffect(() => {
-		// Update the suggestions list in tribute whenever anything changes
-		const suggestions: TributeSuggestion[] = []
-		if (useVariables) {
-			for (const [connectionLabel, variables] of Object.entries(variableDefinitionsContext)) {
-				for (const [name, va] of Object.entries(variables || {})) {
-					if (!va) continue
-					const variableId = `${connectionLabel}:${name}`
-					suggestions.push({
-						key: variableId + ')',
-						value: variableId,
-						label: va.label,
-					})
-				}
-			}
-		}
-
-		if (useLocationVariables) {
-			suggestions.push(
-				{
-					key: 'this:page)',
-					value: 'this:page',
-					label: 'This page',
-				},
-				{
-					key: 'this:column)',
-					value: 'this:column',
-					label: 'This column',
-				},
-				{
-					key: 'this:row)',
-					value: 'this:row',
-					label: 'This row',
-				},
-				{
-					key: 'this:page_name)',
-					value: 'this:page_name',
-					label: 'This page name',
-				}
-			)
-		}
-
-		tribute.append(0, suggestions, true)
-	}, [variableDefinitionsContext, tribute, useVariables, useLocationVariables])
 
 	// Compile the regex (and cache)
 	const compiledRegex = useMemo(() => {
@@ -143,55 +77,202 @@ export function TextInputField({
 		setValid?.(isValueValid(value))
 	}, [isValueValid, value, setValid])
 
-	const doOnChange = useCallback(
-		(e: React.ChangeEvent<HTMLInputElement>) => {
+	const storeValue = useCallback(
+		(value: string) => {
 			// const newValue = decode(e.currentTarget.value, { scope: 'strict' })
-			setTmpValue(e.currentTarget.value)
-			setValue(e.currentTarget.value)
-			setValid?.(isValueValid(e.currentTarget.value))
+			setTmpValue(value)
+			setValue(value)
+			setValid?.(isValueValid(value))
 		},
 		[setValue, setValid, isValueValid]
 	)
-
-	const [, setupTributePrevious] = useState<
-		[HTMLInputElement | null, ((e: React.ChangeEvent<HTMLInputElement>) => void) | null]
-	>([null, null])
-	const setupTribute = useCallback(
-		(ref: HTMLInputElement) => {
-			// we need to detach, so need to track the value manually
-			setupTributePrevious(([oldRef, oldDoOnChange]) => {
-				if (oldRef) {
-					tribute.detach(oldRef)
-					if (oldDoOnChange) {
-						// @ts-expect-error
-						oldRef.removeEventListener('tribute-replaced', oldDoOnChange)
-					}
-				}
-				if (ref) {
-					tribute.attach(ref)
-					// @ts-expect-error
-					ref.addEventListener('tribute-replaced', doOnChange)
-				}
-				return [ref, doOnChange]
-			})
-		},
-		[tribute, doOnChange]
+	const doOnChange = useCallback(
+		(e: React.ChangeEvent<HTMLInputElement>) => storeValue(e.currentTarget.value),
+		[storeValue]
 	)
+
+	let isPickerOpen = false
+	let searchValue = ''
+
+	const innerRef = useRef<HTMLInputElement>(null)
+	if (innerRef.current) {
+		console.log('cursor', innerRef.current.selectionStart)
+		if (innerRef.current.selectionStart != null && innerRef.current.selectionStart === innerRef.current.selectionEnd) {
+			const lastOpen = FindVariableStartIndexFromCursor(value, innerRef.current.selectionStart)
+			isPickerOpen = lastOpen !== -1
+			console.log('open', FindVariableStartIndexFromCursor(value, innerRef.current.selectionStart))
+
+			searchValue = value.slice(lastOpen + 2, innerRef.current.selectionStart)
+			console.log('search', searchValue)
+		}
+	}
+
+	const valueRef = useRef<string>()
+	valueRef.current = value
+
+	const onVariableSelect = useCallback((variable: DropdownChoiceInt | null) => {
+		const oldValue = valueRef.current
+		if (!variable || !oldValue || !innerRef.current) return
+
+		if (!innerRef.current.selectionStart) return // Nothing selected
+
+		const openIndex = FindVariableStartIndexFromCursor(oldValue, innerRef.current.selectionStart)
+		if (openIndex === -1) return
+
+		storeValue(oldValue.slice(0, openIndex) + `$(${variable.value})` + oldValue.slice(innerRef.current.selectionStart))
+	}, [])
+
+	// const [variableSearchOpen, setVariableSearchOpen] = useState(false)
+
+	const onFocusChange = useCallback(() => {
+		console.log('focus change')
+	}, [])
 
 	// Render the input
 	const extraStyle = style || {}
 	return (
-		<CInput
-			innerRef={useVariables ? setupTribute : undefined}
-			type="text"
-			disabled={disabled}
-			value={tmpValue ?? value ?? ''}
-			style={{ color: !isValueValid(tmpValue ?? value) ? 'red' : undefined, ...extraStyle }}
-			title={tooltip}
-			onChange={doOnChange}
-			onFocus={() => setTmpValue(value ?? '')}
-			onBlur={() => setTmpValue(null)}
-			placeholder={placeholder}
+		<>
+			<CInput
+				innerRef={innerRef}
+				type="text"
+				disabled={disabled}
+				value={tmpValue ?? value ?? ''}
+				style={{ color: !isValueValid(tmpValue ?? value) ? 'red' : undefined, ...extraStyle }}
+				title={tooltip}
+				onChange={doOnChange}
+				onFocus={() => setTmpValue(value ?? '')}
+				onBlur={() => setTmpValue(null)}
+				placeholder={placeholder}
+				onFocusCapture={onFocusChange}
+				onBlurCapture={onFocusChange}
+			/>
+			<p style={{ width: '1000px' }}>aa</p>
+			{useVariables && (
+				<VariablesSelect
+					isOpen={isPickerOpen}
+					searchValue={searchValue}
+					onVariableSelect={onVariableSelect}
+					useLocationVariables={!!useLocationVariables}
+				/>
+			)}
+		</>
+	)
+})
+
+interface DropdownChoiceInt {
+	value: string
+	label: DropdownChoiceId
+}
+
+interface VariablesSelectProps {
+	isOpen: boolean
+	searchValue: string
+	onVariableSelect: (newValue: DropdownChoiceInt | null) => void
+	useLocationVariables: boolean
+}
+
+function VariablesSelect({ isOpen, searchValue, onVariableSelect, useLocationVariables }: VariablesSelectProps) {
+	const variableDefinitionsContext = useContext(VariableDefinitionsContext)
+	const menuPortal = useContext(MenuPortalContext)
+
+	const options = useMemo(() => {
+		// Update the suggestions list in tribute whenever anything changes
+		const suggestions: DropdownChoiceInt[] = []
+		for (const [connectionLabel, variables] of Object.entries(variableDefinitionsContext)) {
+			for (const [name, va] of Object.entries(variables || {})) {
+				if (!va) continue
+				const variableId = `${connectionLabel}:${name}`
+				suggestions.push({
+					// key: variableId + ')',
+					value: variableId,
+					label: va.label,
+				})
+			}
+		}
+
+		if (useLocationVariables) {
+			suggestions.push(
+				{
+					// key: 'this:page)',
+					value: 'this:page',
+					label: 'This page',
+				},
+				{
+					// key: 'this:column)',
+					value: 'this:column',
+					label: 'This column',
+				},
+				{
+					// key: 'this:row)',
+					value: 'this:row',
+					label: 'This row',
+				},
+				{
+					// key: 'this:page_name)',
+					value: 'this:page_name',
+					label: 'This page name',
+				}
+			)
+		}
+
+		return suggestions
+	}, [variableDefinitionsContext, useLocationVariables])
+
+	const valueOption: DropdownChoiceInt = {
+		value: searchValue,
+		label: searchValue,
+	}
+	console.log('s', searchValue)
+
+	return (
+		<Select
+			// classNamePrefix: 'select-control',
+			menuPortalTarget={menuPortal || document.body}
+			menuShouldBlockScroll={!!menuPortal} // The dropdown doesn't follow scroll when in a modal
+			menuPosition="fixed"
+			menuPlacement="auto"
+			isSearchable
+			isMulti={false}
+			options={options}
+			// value={valueOption}
+			value={null}
+			inputValue={searchValue}
+			onChange={onVariableSelect}
+			menuIsOpen={isOpen}
+			components={{ Option: CustomOption }}
+			filterOption={filterOption}
+			controlShouldRenderValue={false}
 		/>
 	)
+}
+
+const baseFilter = createFilter<DropdownChoiceInt>()
+const filterOption: ReturnType<typeof createFilter<DropdownChoiceInt>> = (option, inputValue) => {
+	console.log('filter', inputValue)
+	return baseFilter(option, inputValue)
+}
+
+const CustomOption = (props: OptionProps<DropdownChoiceInt>) => {
+	const { data } = props
+	return (
+		<SelectComponents.Option {...props} className={(props.className ?? '') + 'variable-suggestion-option'}>
+			<span className="var-name">{data.value}</span>
+			<span className="var-label">{data.label}</span>
+		</SelectComponents.Option>
+	)
+}
+
+function FindVariableStartIndexFromCursor(text: string, cursor: number): number {
+	const previousOpen = cursor >= 2 ? text.lastIndexOf('$(', cursor - 2) : -1
+	const previousClose = cursor >= 1 ? text.lastIndexOf(')', cursor - 1) : -1
+
+	// Already closed
+	if (previousOpen < previousClose) return -1
+	// Not open
+	if (previousOpen === -1) return -1
+
+	// TODO - ensure contents is valid
+
+	console.log('open', previousOpen, 'close', previousClose)
+	return previousOpen
 }
