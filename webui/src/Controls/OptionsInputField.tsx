@@ -12,6 +12,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faDollarSign, faQuestionCircle } from '@fortawesome/free-solid-svg-icons'
 import { InternalActionInputField, InternalFeedbackInputField } from '@companion-app/shared/Model/Options.js'
 import classNames from 'classnames'
+import sanitizeHtml from 'sanitize-html'
 
 interface OptionsInputFieldProps {
 	connectionId: string
@@ -41,6 +42,7 @@ export function OptionsInputField({
 	}
 
 	let control: JSX.Element | string | undefined = undefined
+	let showLabel = true
 	let features: Record<string, boolean> = {}
 	switch (option.type) {
 		case 'textinput': {
@@ -129,8 +131,19 @@ export function OptionsInputField({
 			break
 		}
 		case 'static-text': {
-			// Just the label is wanted
+			showLabel = !!option.label
+
 			control = ''
+			if (option.value && option.value != option.label) {
+				const descriptionHtml = {
+					__html: sanitizeHtml(option.value ?? '', {
+						allowedTags: sanitizeHtml.defaults.allowedTags.concat([]),
+						disallowedTagsMode: 'escape',
+					}),
+				}
+
+				control = <p title={option.tooltip} dangerouslySetInnerHTML={descriptionHtml}></p>
+			}
 			break
 		}
 		case 'custom-variable': {
@@ -160,11 +173,13 @@ export function OptionsInputField({
 
 	return (
 		<CFormGroup className={classNames({ displayNone: !visibility })}>
-			<CLabel>
-				{option.label}
-				{featureIcons.length ? <span className="feature-icons">{featureIcons}</span> : ''}
-				{option.tooltip && <FontAwesomeIcon icon={faQuestionCircle} title={option.tooltip} />}
-			</CLabel>
+			{showLabel && (
+				<CLabel>
+					{option.label}
+					{featureIcons.length ? <span className="feature-icons">{featureIcons}</span> : ''}
+					{option.tooltip && <FontAwesomeIcon icon={faQuestionCircle} title={option.tooltip} />}
+				</CLabel>
+			)}
 			{control}
 		</CFormGroup>
 	)
