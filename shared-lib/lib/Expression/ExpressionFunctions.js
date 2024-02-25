@@ -37,6 +37,9 @@ export const ExpressionFunctions = {
 	substr: (str, start, end) => {
 		return (str + '').slice(start, end)
 	},
+	split: (str, separator) => {
+		return (str + '').split(separator)
+	},
 	concat: (...strs) => ''.concat(...strs),
 	includes: (str, arg) => {
 		return (str + '').includes(arg)

@@ -90,6 +90,10 @@ substr() extracts characters from indexStart up to but not including indexEnd.
 
 Tip: If you don't want the behaviour of negative numbers, you can use `max(0, index)` to limit the value to never be below 0.
 
+**split(str, separator)**
+
+Split a string based on a separator
+
 **concat(str1, str2)**
 
 Combine one or more values into a single string

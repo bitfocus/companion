@@ -170,6 +170,13 @@ describe('functions', () => {
 			expect(ExpressionFunctions.concat(false)).toBe('false')
 		})
 
+		it('split', () => {
+			expect(ExpressionFunctions.split()).toEqual(['undefined'])
+			expect(ExpressionFunctions.split(9, 'a')).toEqual(['9'])
+			expect(ExpressionFunctions.split('abc', 'b')).toEqual(['a', 'c'])
+			expect(ExpressionFunctions.split('abc', 'c')).toEqual(['ab', ''])
+		})
+
 		it('includes', () => {
 			expect(ExpressionFunctions.includes(912, 12)).toBe(true)
 			expect(ExpressionFunctions.includes(912, '91')).toBe(true)
