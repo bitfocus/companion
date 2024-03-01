@@ -56,7 +56,7 @@
     "react-virtualized-auto-sizer": "^1.0.22",
     "react-window": "^1.8.10",
     "remark-gfm": "^3.0.1",
-    "sanitize-html": "^2.11.0",
+    "sanitize-html": "^2.12.1",
     "sass": "^1.71.0",
     "socket.io-client": "^4.7.4",
     "tributejs": "^5.1.3",
