@@ -40,6 +40,9 @@ export const ExpressionFunctions = {
 	split: (str, separator) => {
 		return (str + '').split(separator)
 	},
+	join: (arr, separator = ',') => {
+		return arr.join(separator)
+	},
 	concat: (...strs) => ''.concat(...strs),
 	includes: (str, arg) => {
 		return (str + '').includes(arg)
