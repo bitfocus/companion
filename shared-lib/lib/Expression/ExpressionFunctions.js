@@ -41,7 +41,7 @@ export const ExpressionFunctions = {
 		return (str + '').split(separator)
 	},
 	join: (arr = [], separator = ',') => {
-		return ((arr.constructor === Array) ? arr : [arr]).join(separator)
+		return (arr.constructor === Array ? arr : [arr]).join(separator)
 	},
 	concat: (...strs) => ''.concat(...strs),
 	includes: (str, arg) => {
