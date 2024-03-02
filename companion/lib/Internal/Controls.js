@@ -666,6 +666,7 @@ export default class Controls {
 					color: rgb(255, 255, 255),
 					bgcolor: rgb(255, 0, 0),
 				},
+				showInvert: true,
 				options: [
 					...CHOICES_DYNAMIC_LOCATION,
 					{
@@ -685,6 +686,7 @@ export default class Controls {
 					color: rgb(0, 0, 0),
 					bgcolor: rgb(0, 255, 0),
 				},
+				showInvert: true,
 				options: [
 					...CHOICES_DYNAMIC_LOCATION,
 					{

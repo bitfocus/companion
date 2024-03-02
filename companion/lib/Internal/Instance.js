@@ -254,6 +254,7 @@ export default class Instance {
 					color: combineRgb(255, 255, 255),
 					bgcolor: combineRgb(0, 255, 0),
 				},
+				showInvert: true,
 				options: [
 					{
 						type: 'internal:instance_id',

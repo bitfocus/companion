@@ -293,6 +293,7 @@ export default class ActionRecorder {
 					color: rgb(255, 255, 255),
 					bgcolor: rgb(255, 0, 0),
 				},
+				showInvert: true,
 				options: [
 					{
 						type: 'internal:instance_id',

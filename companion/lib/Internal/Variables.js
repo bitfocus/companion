@@ -90,6 +90,7 @@ export default class Variables {
 					color: rgb(255, 255, 255),
 					bgcolor: rgb(255, 0, 0),
 				},
+				showInvert: true,
 				options: [
 					{
 						type: 'internal:variable',
@@ -127,6 +128,7 @@ export default class Variables {
 					color: rgb(255, 255, 255),
 					bgcolor: rgb(255, 0, 0),
 				},
+				showInvert: true,
 				options: [
 					{
 						type: 'internal:variable',
@@ -152,6 +154,7 @@ export default class Variables {
 					color: rgb(255, 255, 255),
 					bgcolor: rgb(255, 0, 0),
 				},
+				showInvert: true,
 				options: [
 					{
 						type: 'textinput',
