@@ -697,6 +697,21 @@ class ControlsController extends CoreBase {
 			}
 		})
 
+		client.onPromise('controls:step:rename', (controlId, stepId, newName) => {
+			console.log("in Controller")
+			console.log("New name: " + newName)
+			const control = this.getControl(controlId)
+			if (!control) return false
+
+			if (control.supportsSteps) {
+				const test = control.stepRename(stepId, newName)
+				console.log("Success: " + test)
+				return test
+			} else {
+				throw new Error(`Control "${controlId}" does not support steps`)
+			}
+		})
+
 		client.onPromise('triggers:subscribe', () => {
 			client.join(TriggersListRoom)
 
