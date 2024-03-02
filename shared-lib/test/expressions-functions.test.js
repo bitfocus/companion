@@ -179,9 +179,13 @@ describe('functions', () => {
 
 		it('join', () => {
 			expect(ExpressionFunctions.join()).toBe('')
+			expect(ExpressionFunctions.join('')).toBe('')
+			expect(ExpressionFunctions.join(9)).toBe('9')
 			expect(ExpressionFunctions.join([])).toBe('')
-			expect(ExpressionFunctions.join(['9'])).toBe('9')
-			expect(ExpressionFunctions.join(['9'], 'a')).toBe('9')
+			expect(ExpressionFunctions.join([9])).toBe('9')
+			expect(ExpressionFunctions.join([9], 'a')).toBe('9')
+			expect(ExpressionFunctions.join([9, 'a'])).toBe('9,a')
+			expect(ExpressionFunctions.join([9, 'b'], 'a')).toBe('9ab')
 			expect(ExpressionFunctions.join(['a', 'c'])).toBe('a,c')
 			expect(ExpressionFunctions.join(['a', 'c'], 'b')).toBe('abc')
 			expect(ExpressionFunctions.join(['a', 'c'], 'cademi')).toBe('academic')
