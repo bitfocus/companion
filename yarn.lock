@@ -562,7 +562,7 @@ __metadata:
     react-markdown: "npm:^8.0.7"
     react-popper: "npm:^2.3.0"
     react-router-dom: "npm:^6.22.1"
-    react-select: "npm:^5.8.0"
+    react-select: "npm:@julusian/react-select@^5.8.1-1"
     react-spinners: "npm:^0.13.8"
     react-time-picker: "npm:^6.6.0"
     react-use: "npm:^17.5.0"
@@ -11157,9 +11157,9 @@ asn1@evs-broadcast/node-asn1:
   languageName: node
   linkType: hard
 
-"react-select@npm:^5.8.0":
-  version: 5.8.0
-  resolution: "react-select@npm:5.8.0"
+"react-select@npm:@julusian/react-select@^5.8.1-1":
+  version: 5.8.1-1
+  resolution: "@julusian/react-select@npm:5.8.1-1"
   dependencies:
     "@babel/runtime": "npm:^7.12.0"
     "@emotion/cache": "npm:^11.4.0"
@@ -11173,7 +11173,7 @@ asn1@evs-broadcast/node-asn1:
   peerDependencies:
     react: ^16.8.0 || ^17.0.0 || ^18.0.0
     react-dom: ^16.8.0 || ^17.0.0 || ^18.0.0
-  checksum: 10c0/b4b98aaf117ee5cc4642871b7bd51fd0e2697988d0b880f30b21e933ca90258959147117d8aada36713b622e0e4cb06bd18ec02069f3f108896e0d31e69e3c16
+  checksum: 10c0/4a0e9e38e8a759fa7971ab2a35fdf6ab796f6519ea4ba1f1b3e96e036848a3ebc0bdb820e1ef22ced0f4de232dfbad6d5d27533305004c6325a1a8d1ab8de207
   languageName: node
   linkType: hard
 

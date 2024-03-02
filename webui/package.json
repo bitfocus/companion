@@ -49,7 +49,7 @@
     "react-markdown": "^8.0.7",
     "react-popper": "^2.3.0",
     "react-router-dom": "^6.22.1",
-    "react-select": "^5.8.0",
+    "react-select": "npm:@julusian/react-select@^5.8.1-1",
     "react-spinners": "^0.13.8",
     "react-time-picker": "^6.6.0",
     "react-use": "^17.5.0",
