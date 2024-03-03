@@ -464,11 +464,9 @@ function TabsSection({ style, controlId, location, steps, runtimeProps, rotaryAc
 	)
 	const renameStep = useCallback(
 		(stepId: string, newName: string) => {
-			console.log("In renameStep")
 			socketEmitPromise(socket, 'controls:step:rename', [controlId, stepId, newName]).catch((e) => {
 				console.error('Failed to rename step:', e)
 			})
-			console.log("steps.stepId?.name efter socket: " + steps.stepId?.name)
 		},
 		[socket, controlId]
 	)
@@ -516,8 +514,7 @@ function TabsSection({ style, controlId, location, steps, runtimeProps, rotaryAc
 								// both selected and the current step
 								const isActiveAndCurrent = k === selectedIndex && runtimeProps.current_step_id === k
 
-								const name = steps.k?.name;
-								console.log("Namn för key: " + k + " " + name);
+								const name = steps[k]?.name;
 
 								if (moreThanOneStep) {
 									if (isActiveAndCurrent) linkClassname = 'selected-and-active'
@@ -527,7 +524,7 @@ function TabsSection({ style, controlId, location, steps, runtimeProps, rotaryAc
 								return (
 									<CNavItem key={k} className="nav-steps-special">
 										<CNavLink data-tab={`step:${k}`} className={linkClassname}>
-											{name ?? (i === 0 ? (keys.length > 1 ? 'Step ' + (i + 1) : 'Actions') : i + 1)}
+											{name && name !== "" ? name : (i === 0 ? (keys.length > 1 ? 'Step ' + (i + 1) : 'Actions') : i + 1)}
 										</CNavLink>
 									</CNavItem>
 								)
@@ -556,8 +553,7 @@ function TabsSection({ style, controlId, location, steps, runtimeProps, rotaryAc
 					}
 				>
 					<p></p>
-					{selectedKey && (<><input onChange={(e) => renameStep(selectedKey, e.target.value)} placeholder='Rename step'></input>
-					<button onClick={(e) => renameStep(selectedKey, "NYTT")}>Press me</button></>)}
+					{selectedKey && <input onChange={(e) => renameStep(selectedKey, e.target.value)} placeholder='Rename step'></input>}
 					{selectedStep === 'feedbacks' && (
 						<MyErrorBoundary>
 							<ControlFeedbacksEditor

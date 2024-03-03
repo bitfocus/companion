@@ -968,10 +968,10 @@ export default class ControlButtonNormal extends ButtonControlBase {
 	 * @access public
 	 */
 	stepRename(stepId, newName) {
-		console.log("In Normal.js!")
-		console.log(stepId)
 		if (this.steps[stepId]) {
-			this.steps[stepId].rename(newName)
+			if (newName !== undefined) {
+				this.steps[stepId].rename(newName)
+			}
 			this.commitChange(true)
 			return true
 		}
@@ -993,6 +993,7 @@ export default class ControlButtonNormal extends ButtonControlBase {
 			stepsJson[id] = {
 				action_sets: step.action_sets,
 				options: step.options,
+				name: step.name,
 			}
 		}
 
