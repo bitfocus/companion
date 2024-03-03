@@ -961,6 +961,25 @@ export default class ControlButtonNormal extends ButtonControlBase {
 	}
 
 	/**
+	 * Rename step
+	 * @param {string} stepId the id of the action-set
+	 * @param {string | undefined} newName the new name of the step
+	 * @returns {boolean} success
+	 * @access public
+	 */
+	stepRename(stepId, newName) {
+		if (this.steps[stepId]) {
+			if (newName !== undefined) {
+				this.steps[stepId].rename(newName)
+			}
+			this.commitChange(true)
+			return true
+		}
+
+		return false
+	}
+
+	/**
 	 * Convert this control to JSON
 	 * To be sent to the client and written to the db
 	 * @param {boolean} clone - Whether to return a cloned object
@@ -974,6 +993,7 @@ export default class ControlButtonNormal extends ButtonControlBase {
 			stepsJson[id] = {
 				action_sets: step.action_sets,
 				options: step.options,
+				name: step.name,
 			}
 		}
 

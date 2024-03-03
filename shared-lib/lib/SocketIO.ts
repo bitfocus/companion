@@ -172,6 +172,7 @@ export interface ClientToBackendEventsMap {
 	'controls:step:remove': (controlId: string, stepId: string) => boolean
 	'controls:step:swap': (controlId: string, stepId1: string, stepId2: string) => boolean
 	'controls:step:set-current': (controlId: string, stepId: string) => boolean
+	'controls:step:rename': (controlId: string, stepId: string, newName: string) => boolean
 
 	'controls:event:set-headline': (controlId: string, eventId: string, headline: string) => boolean
 	'controls:event:enabled': (controlId: string, eventId: string, enabled: boolean) => boolean

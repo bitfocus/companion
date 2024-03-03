@@ -32,6 +32,7 @@ export type NormalButtonSteps = Record<
 	{
 		action_sets: ActionSetsModel
 		options: ActionStepOptions
+		name?: string
 	}
 >
 

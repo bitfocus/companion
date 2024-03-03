@@ -43,6 +43,12 @@ export default class FragmentActions extends CoreBase {
 	options
 
 	/**
+	 * @type {string | undefined}
+	 * @access public
+	 */
+	name
+
+	/**
 	 * Commit changes to the database and disk
 	 * @type {(redraw?: boolean) => void}
 	 * @access private
@@ -551,5 +557,15 @@ export default class FragmentActions extends CoreBase {
 		}
 
 		return changed
+	}
+
+	/**
+	 * Rename this control
+	 * @param {string} newName the new name
+	 * @returns {void}
+	 * @access public
+	 */
+	rename(newName) {
+		this.name = newName
 	}
 }
