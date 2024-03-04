@@ -22,7 +22,6 @@ import jsonPatch from 'fast-json-patch'
 import { ResolveExpression } from '@companion-app/shared/Expression/ExpressionResolve.js'
 import { ParseExpression } from '@companion-app/shared/Expression/ExpressionParse.js'
 import { ExpressionFunctions } from '@companion-app/shared/Expression/ExpressionFunctions.js'
-import { ParseControlId } from '@companion-app/shared/ControlId.js'
 
 const logger = LogController.createLogger('Instance/Variable')
 
@@ -320,6 +319,11 @@ class InstanceVariable extends CoreBase {
 		client.onPromise('variables:get-instances', (name) => {
 			const result = new Set()
 
+			const usageTypes = new Map([
+				["style", "name"],
+				["feedbacks", "feedbacks"],
+				["steps", "action"]
+			]);
 			// name -> style
 			// feedback -> feedbacks
 			// action -> steps
@@ -330,7 +334,13 @@ class InstanceVariable extends CoreBase {
 				if (typeof parsedControl != "string") {
 					for (const propName in parsedControl) {
 						if (JSON.stringify(parsedControl[propName]).includes(name)) {
-							result.add({ "button": controlId, "property": propName })
+							const location = this.registry.page.getLocationOfControlId(controlId)
+							const formattedLocation = location?.pageNumber + "/" + location?.row + "/" + location?.column
+							const formattedUsageType = usageTypes.get(propName) == undefined ? "unknown" : usageTypes.get(propName)
+
+							result.add({
+								"buttonName": formattedLocation, "usageType": formattedUsageType
+							})
 						}
 					}
 				}

@@ -76,23 +76,35 @@ export function CustomVariablesList({ setShowCustom }: CustomVariablesListProps)
 
 	const [newName, setNewName] = useState('')
 
-	const getInstances = useCallback(
-		(variableName: string) => {
-			console.log("Running getInstances in CustomVariableList.tsx!");
+	const [variableUsage, setVariableUsage] = useState<Map<string, { buttonName: string; usageType: string }[]>>(new Map());
 
-			return socketEmitPromise(socket, 'variables:get-instances', [variableName])
+	useEffect(() => {
+		const doPoll = (variableName: string) => {
+			return socketEmitPromise(socket, 'variables:get-instances', ["$(internal:custom_" + variableName + ")"])
 				.then((res) => {
-					console.log(res)
+					setVariableUsage((prevMap) => {
+						return new Map(prevMap.set(variableName, res));
+					});
 				})
 				.catch((e) => {
-					console.log("Error", e);
-					console.log("Error", e.name);
-					console.log("Error", e.message);
 					console.error('Failed to retrieve instances');
 				});
-		},
-		[socket]
-	);
+		}
+
+
+		const doPollAll = () => {
+			for (let name in allVariableNames) {
+				doPoll(allVariableNames[name])
+			}
+		}
+
+		doPollAll()
+		const interval = setInterval(doPollAll, 1000)
+
+		return () => {
+			clearInterval(interval)
+		}
+	}, [socket])
 
 	const doCreateNew = useCallback(
 		(e: FormEvent) => {
@@ -229,30 +241,13 @@ export function CustomVariablesList({ setShowCustom }: CustomVariablesListProps)
 		}
 	}, [variableDefinitions, filter])
 
-	const [usageData, setUsageData] = useState<Record<string, { buttonName: string; usageType: string }[]>>({});
-
-	useEffect(() => {
-		const fetchUsageData = async () => {
-			const data: Record<string, { buttonName: string; usageType: string }[]> = {};
-
-			for (const name of allVariableNames) {
-				const instances = await getInstances(name);
-				data[name] = instances;
-			}
-
-			setUsageData(data);
-		};
-
-		fetchUsageData();
-	}, [allVariableNames]);
-
 	return (
 		<div className="variables-panel">
 			<h5>
 				Custom Variables
 				<CButtonGroup>
 					{!hasNoVariables && canExpandAll && (
-						<CButton color="white" size="sm" onClick={getInstances} title="Expand all">
+						<CButton color="white" size="sm" onClick={setAllExpanded} title="Expand all">
 							<FontAwesomeIcon icon={faExpandArrowsAlt} />
 						</CButton>
 					)}
@@ -263,10 +258,6 @@ export function CustomVariablesList({ setShowCustom }: CustomVariablesListProps)
 					)}
 					<CButton color="primary" size="sm" onClick={doBack} className="gap-b">
 						Back
-					</CButton>
-
-					<CButton color="primary" size="sm" onClick={getInstances} className="gap-b">
-						Get Instances
 					</CButton>
 				</CButtonGroup>
 			</h5>
@@ -305,7 +296,6 @@ export function CustomVariablesList({ setShowCustom }: CustomVariablesListProps)
 					{candidates &&
 						candidates.map((info, index) => {
 							const shortname = `custom_${info.name}`
-
 							return (
 								<CustomVariableRow
 									key={info.name}
@@ -322,7 +312,7 @@ export function CustomVariablesList({ setShowCustom }: CustomVariablesListProps)
 									moveRow={moveRow}
 									setCollapsed={setPanelCollapsed}
 									isCollapsed={isPanelCollapsed(info.name)}
-									usage={usageData[info.name]}
+									usage={variableUsage.get(info.name)}
 								/>
 							)
 						})}
@@ -374,7 +364,7 @@ interface CustomVariableRowProps {
 	moveRow: (itemName: string, targetName: string) => void
 	isCollapsed: boolean
 	setCollapsed: (name: string, collapsed: boolean) => void
-	usage: Promise<{ buttonName: string; usageType: string }[]>
+	usage: { buttonName: string; usageType: string }[] | undefined
 }
 
 function CustomVariableRow({
@@ -497,18 +487,22 @@ function CustomVariableRow({
 									</CFormGroup>
 								</CForm>
 							</div>
-
-							<div className="cell-usage">
-								{Array.from(usage).map((item: { buttonName: string; usageType: string }, index: number) => (
-									<div key={index}>
-										<p>Button Name: {item.buttonName}</p>
-										<p>Usage Type: {item.usageType}</p>
-									</div>
-								))}
-							</div>
 						</>
 					)}
 				</div>
+				{!isCollapsed && (
+					<>
+						<div className="cell-usage">
+							{usage !== undefined && (
+								Array.from(usage).map((item: { buttonName: string; usageType: string }, index: number) => (
+									<div key={index}>
+										<p>Used by {item.buttonName} for {item.usageType}</p>
+									</div>
+								))
+							)}
+						</div>
+					</>
+				)}
 			</td>
 		</tr>
 	)
