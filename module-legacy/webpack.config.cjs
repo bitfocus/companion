@@ -26,6 +26,7 @@ module.exports = {
 
 		// Native libs that are needed
 		// TODO - these need to be made available at runtime
+		sharp: 'commonjs2 sharp',
 		serialport: 'commonjs2 fake-module-this-isnt-real',
 		'@napi-rs/canvas': 'commonjs2 @napi-rs/canvas',
 	},
