@@ -269,6 +269,7 @@ export interface ClientToBackendEventsMap {
 	'variables:instance-values': (label: string) => CompanionVariableValues | undefined
 	'variables:get-instances': (name: string) => { buttonName: string; usageType: string }[]
 
+
 	'presets:subscribe': () => Record<string, Record<string, UIPresetDefinition> | undefined>
 	'presets:unsubscribe': () => void
 	'presets:preview_render': (connectionId: string, presetId: string) => string | null
@@ -337,10 +338,10 @@ type ChangeSignatureToHaveCallback<T extends (...args: any[]) => any> = (
 
 export type AddCallbackParamToEvents<T extends object> = {
 	[K in keyof T]: T[K] extends (...args: any[]) => any
-	? ReturnType<T[K]> extends never
-	? T[K]
-	: ChangeSignatureToHaveCallback<T[K]>
-	: never
+		? ReturnType<T[K]> extends never
+			? T[K]
+			: ChangeSignatureToHaveCallback<T[K]>
+		: never
 }
 
 export type StripNever<T extends object> = {
@@ -349,8 +350,8 @@ export type StripNever<T extends object> = {
 
 export type ClientToBackendEventsWithNoResponse = {
 	[K in keyof ClientToBackendEventsListenMap as ReturnType<ClientToBackendEventsListenMap[K]> extends void
-	? K
-	: never]: true
+		? K
+		: never]: true
 }
 // {
 // 	[K in keyof ClientToBackendEventsMap as ClientToBackendEventsMap[K] extends (...args: any[]) => never ? never : K]: (
@@ -360,8 +361,8 @@ export type ClientToBackendEventsWithNoResponse = {
 
 export type ClientToBackendEventsWithPromiseResponse = {
 	[K in keyof ClientToBackendEventsListenMap as ReturnType<ClientToBackendEventsListenMap[K]> extends void
-	? never
-	: K]: true
+		? never
+		: K]: true
 }
 // StripNever<{
 // 	[K in keyof ClientToBackendEventsMap]: ClientToBackendEventsMap[K] extends (...args: any[]) => any
@@ -373,8 +374,8 @@ export type ClientToBackendEventsWithPromiseResponse = {
 
 export type ClientToBackendEventsListenMap = {
 	[K in keyof ClientToBackendEventsMap]: ClientToBackendEventsMap[K] extends (...args: any[]) => never
-	? (...args: Parameters<ClientToBackendEventsMap[K]>) => void
-	: (
-		...args: Parameters<ClientToBackendEventsMap[K]>
-	) => Promise<ReturnType<ClientToBackendEventsMap[K]>> | ReturnType<ClientToBackendEventsMap[K]>
+		? (...args: Parameters<ClientToBackendEventsMap[K]>) => void
+		: (
+				...args: Parameters<ClientToBackendEventsMap[K]>
+			) => Promise<ReturnType<ClientToBackendEventsMap[K]>> | ReturnType<ClientToBackendEventsMap[K]>
 }
