@@ -26,12 +26,8 @@ module.exports = {
 
 		// Native libs that are needed
 		// TODO - these need to be made available at runtime
-		sharp: 'commonjs2 sharp',
-		ssh2: 'commonjs2 ssh2',
-		'cpu-features': 'commonjs2 cpu-features',
-		'node-ssdp': 'commonjs2 node-ssdp',
 		serialport: 'commonjs2 fake-module-this-isnt-real',
-		'@julusian/skia-canvas': 'commonjs2 @julusian/skia-canvas',
+		'@napi-rs/canvas': 'commonjs2 @napi-rs/canvas',
 	},
 	// experiments: {
 	// 	topLevelAwait: true,
