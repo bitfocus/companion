@@ -177,6 +177,24 @@ describe('functions', () => {
 			expect(ExpressionFunctions.split('abc', 'c')).toEqual(['ab', ''])
 		})
 
+		it('join', () => {
+			expect(ExpressionFunctions.join()).toBe('')
+			expect(ExpressionFunctions.join('')).toBe('')
+			expect(ExpressionFunctions.join(9)).toBe('9')
+			expect(ExpressionFunctions.join([])).toBe('')
+			expect(ExpressionFunctions.join([9])).toBe('9')
+			expect(ExpressionFunctions.join([9], 'a')).toBe('9')
+			expect(ExpressionFunctions.join([9, 'a'])).toBe('9,a')
+			expect(ExpressionFunctions.join([9, 'b'], 'a')).toBe('9ab')
+			expect(ExpressionFunctions.join(['a', 'c'])).toBe('a,c')
+			expect(ExpressionFunctions.join(['a', 'c'], 'b')).toBe('abc')
+			expect(ExpressionFunctions.join(['a', 'c'], 'cademi')).toBe('academic')
+			expect(ExpressionFunctions.join(['ab', ''])).toBe('ab,')
+			expect(ExpressionFunctions.join(['ab', ''], 'c')).toBe('abc')
+			expect(ExpressionFunctions.join(['a', 'b', 'c'])).toBe('a,b,c')
+			expect(ExpressionFunctions.join(['a', 'b', 'c'], '-')).toBe('a-b-c')
+		})
+
 		it('includes', () => {
 			expect(ExpressionFunctions.includes(912, 12)).toBe(true)
 			expect(ExpressionFunctions.includes(912, '91')).toBe(true)

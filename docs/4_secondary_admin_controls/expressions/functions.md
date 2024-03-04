@@ -94,6 +94,10 @@ Tip: If you don't want the behaviour of negative numbers, you can use `max(0, in
 
 Split a string based on a separator
 
+**join(arr, separator)**
+
+Join an array of values into a single string separated by the specified separator
+
 **concat(str1, str2)**
 
 Combine one or more values into a single string
