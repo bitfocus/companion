@@ -72,7 +72,6 @@
 		"@jsep-plugin/template": "^1.0.3",
 		"@julusian/image-rs": "^0.2.1",
 		"@julusian/jpeg-turbo": "^2.1.0",
-		"@julusian/skia-canvas": "^1.0.5",
 		"@loupedeck/node": "^1.0.0",
 		"@napi-rs/canvas": "^0.1.51",
 		"@sentry/integrations": "^7.93.0",
