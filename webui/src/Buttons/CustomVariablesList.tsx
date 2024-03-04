@@ -76,6 +76,24 @@ export function CustomVariablesList({ setShowCustom }: CustomVariablesListProps)
 
 	const [newName, setNewName] = useState('')
 
+	const getInstances = useCallback(
+		(variableName: string) => {
+			console.log("Running getInstances in CustomVariableList.tsx!");
+
+			return socketEmitPromise(socket, 'variables:get-instances', [variableName])
+				.then((res) => {
+					console.log(res)
+				})
+				.catch((e) => {
+					console.log("Error", e);
+					console.log("Error", e.name);
+					console.log("Error", e.message);
+					console.error('Failed to retrieve instances');
+				});
+		},
+		[socket]
+	);
+
 	const doCreateNew = useCallback(
 		(e: FormEvent) => {
 			e?.preventDefault()
@@ -211,13 +229,30 @@ export function CustomVariablesList({ setShowCustom }: CustomVariablesListProps)
 		}
 	}, [variableDefinitions, filter])
 
+	const [usageData, setUsageData] = useState<Record<string, { buttonName: string; usageType: string }[]>>({});
+
+	useEffect(() => {
+		const fetchUsageData = async () => {
+			const data: Record<string, { buttonName: string; usageType: string }[]> = {};
+
+			for (const name of allVariableNames) {
+				const instances = await getInstances(name);
+				data[name] = instances;
+			}
+
+			setUsageData(data);
+		};
+
+		fetchUsageData();
+	}, [allVariableNames]);
+
 	return (
 		<div className="variables-panel">
 			<h5>
 				Custom Variables
 				<CButtonGroup>
 					{!hasNoVariables && canExpandAll && (
-						<CButton color="white" size="sm" onClick={setAllExpanded} title="Expand all">
+						<CButton color="white" size="sm" onClick={getInstances} title="Expand all">
 							<FontAwesomeIcon icon={faExpandArrowsAlt} />
 						</CButton>
 					)}
@@ -228,6 +263,10 @@ export function CustomVariablesList({ setShowCustom }: CustomVariablesListProps)
 					)}
 					<CButton color="primary" size="sm" onClick={doBack} className="gap-b">
 						Back
+					</CButton>
+
+					<CButton color="primary" size="sm" onClick={getInstances} className="gap-b">
+						Get Instances
 					</CButton>
 				</CButtonGroup>
 			</h5>
@@ -283,6 +322,7 @@ export function CustomVariablesList({ setShowCustom }: CustomVariablesListProps)
 									moveRow={moveRow}
 									setCollapsed={setPanelCollapsed}
 									isCollapsed={isPanelCollapsed(info.name)}
+									usage={usageData[info.name]}
 								/>
 							)
 						})}
@@ -334,6 +374,7 @@ interface CustomVariableRowProps {
 	moveRow: (itemName: string, targetName: string) => void
 	isCollapsed: boolean
 	setCollapsed: (name: string, collapsed: boolean) => void
+	usage: Promise<{ buttonName: string; usageType: string }[]>
 }
 
 function CustomVariableRow({
@@ -350,6 +391,7 @@ function CustomVariableRow({
 	moveRow,
 	isCollapsed,
 	setCollapsed,
+	usage
 }: CustomVariableRowProps) {
 	const fullname = `internal:${shortname}`
 
@@ -454,6 +496,15 @@ function CustomVariableRow({
 										/>
 									</CFormGroup>
 								</CForm>
+							</div>
+
+							<div className="cell-usage">
+								{Array.from(usage).map((item: { buttonName: string; usageType: string }, index: number) => (
+									<div key={index}>
+										<p>Button Name: {item.buttonName}</p>
+										<p>Usage Type: {item.usageType}</p>
+									</div>
+								))}
 							</div>
 						</>
 					)}

@@ -22,6 +22,7 @@ import jsonPatch from 'fast-json-patch'
 import { ResolveExpression } from '@companion-app/shared/Expression/ExpressionResolve.js'
 import { ParseExpression } from '@companion-app/shared/Expression/ExpressionParse.js'
 import { ExpressionFunctions } from '@companion-app/shared/Expression/ExpressionFunctions.js'
+import { ParseControlId } from '@companion-app/shared/ControlId.js'
 
 const logger = LogController.createLogger('Instance/Variable')
 
@@ -117,6 +118,8 @@ class InstanceVariable extends CoreBase {
 	/**
 	 * @param {import('../Registry.js').default} registry
 	 */
+
+
 	constructor(registry) {
 		super(registry, 'Instance/Variable')
 
@@ -313,6 +316,63 @@ class InstanceVariable extends CoreBase {
 		client.onPromise('variables:instance-values', (label) => {
 			return this.#variableValues[label]
 		})
+
+		client.onPromise('variables:get-instances', (name) => {
+			const result = new Set()
+
+			// name -> style
+			// feedback -> feedbacks
+			// action -> steps
+
+			for (let [controlId, control] of this.registry.controls.getAllControls()) {
+				const parsedControl = control.toJSON();
+
+				if (typeof parsedControl != "string") {
+					for (const propName in parsedControl) {
+						if (JSON.stringify(parsedControl[propName]).includes(name)) {
+							result.add({ "button": controlId, "property": propName })
+						}
+					}
+				}
+			}
+
+			return Array.from(result)
+		})
+	}
+
+	/**
+	* @param {any} obj
+	* @param {string} str
+	*/
+	objectContainsString(obj, str) {
+		if (typeof obj !== 'object' || obj === null) {
+			return false;
+		}
+
+		const seenObjects = new Set(); // To handle circular references
+
+		/**
+		 * @param {any} obj
+		 */
+		function checkObject(obj) {
+			if (seenObjects.has(obj)) {
+				return false; // Circular reference detected
+			}
+
+			seenObjects.add(obj);
+
+			for (const key in obj) {
+				if (typeof obj[key] === 'string' && obj[key].includes(str)) {
+					return true;
+				} else if (typeof obj[key] === 'object' && checkObject(obj[key])) {
+					return true;
+				}
+			}
+
+			return false;
+		}
+
+		return checkObject(obj);
 	}
 
 	/**
