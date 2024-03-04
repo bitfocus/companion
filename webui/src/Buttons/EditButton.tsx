@@ -376,14 +376,16 @@ interface TabsSectionProps {
 interface TabStepProps{
 	selectedKey: string | false
 	k: string | number
-	name:string|number
+	i: number
+	name:string | undefined
 	inputState: {showInputEle:boolean}
 	linkClassname: string | undefined
 	socket: CompanionSocketType
 	controlId: string
 
 }
-function TabStep({selectedKey, k, name, inputState, linkClassname, socket, controlId }: TabStepProps){
+function TabStep({selectedKey, k, i, name, inputState, linkClassname, socket, controlId }: TabStepProps){
+
 	const renameStep = useCallback(
 		(stepId: string, newName: string) => {
 			socketEmitPromise(socket, 'controls:step:rename', [controlId, stepId, newName]).catch((e) => {
@@ -404,17 +406,20 @@ function TabStep({selectedKey, k, name, inputState, linkClassname, socket, contr
 	return (
 		<CNavItem key={k} className="nav-steps-special">
 			{state.showInputEle? (
+				<CNavLink className={linkClassname}>
 				<input
 					type="text"
 					value={name}
 					onChange={(e)=>{onChangeHandler(e)}}
+					onKeyDown={(e)=>{e.key === 'Enter' && setState({showInputEle: false})}}
 					onBlur={(e)=>setState({showInputEle: false})}
 					autoFocus
 				>			
 				</input>
+				</CNavLink>
 			) : (
 				<CNavLink onDoubleClick={(e)=>setState({showInputEle: true})} data-tab={`step:${k}`} className={linkClassname}>
-					{name}
+					{name && name !== "" ? name : (i === 0 ? 'Step ' + (i + 1) : i + 1)}
 				</CNavLink>
 		)}	
 		</CNavItem>
@@ -571,7 +576,7 @@ function TabsSection({ style, controlId, location, steps, runtimeProps, rotaryAc
 								}
 
 								return (
-									<TabStep selectedKey={selectedKey} k={k} name={name && name !== "" ? name : (i === 0 ? (keys.length > 1 ? 'Step ' + (i + 1) : 'Actions') : i + 1)}inputState={{showInputEle:false}} linkClassname={linkClassname} socket={socket} controlId={controlId} ></TabStep>
+									<TabStep selectedKey={selectedKey} k={k} i={i} name={name} inputState={{showInputEle:false}} linkClassname={linkClassname} socket={socket} controlId={controlId} ></TabStep>
 								)
 							})}
 
@@ -598,7 +603,6 @@ function TabsSection({ style, controlId, location, steps, runtimeProps, rotaryAc
 					}
 				>
 					<p></p>
-					{selectedKey && <input onChange={(e) => renameStep(selectedKey, e.target.value)} placeholder='Rename step'></input>}
 					{selectedStep === 'feedbacks' && (
 						<MyErrorBoundary>
 							<ControlFeedbacksEditor
