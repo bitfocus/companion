@@ -203,20 +203,6 @@ class GraphicsController extends CoreBase {
 		) // TODO - dynamic limit
 
 		this.logger.info('Loading fonts')
-		// FontLibrary.reset()
-		// FontLibrary.use({
-		// 	'Companion-sans': generateFontUrl('Arimo-Regular.ttf'),
-		// 	'Companion-mono': generateFontUrl('NotoSansMono-wdth-wght.ttf'),
-		// 	'Companion-symbols1': generateFontUrl('NotoSansSymbols-wght.ttf'),
-		// 	'Companion-symbols2': generateFontUrl('NotoSansSymbols2-Regular.ttf'),
-		// 	'Companion-symbols3': generateFontUrl('NotoSansMath-Regular.ttf'),
-		// 	'Companion-symbols4': generateFontUrl('NotoMusic-Regular.ttf'),
-		// 	'Companion-symbols5': generateFontUrl('NotoSansLinearA-Regular.ttf'),
-		// 	'Companion-symbols6': generateFontUrl('NotoSansLinearB-Regular.ttf'),
-		// 	// 'Companion-emoji': generateFontUrl('NotoColorEmoji-compat.ttf'),
-		// 	'5x7': generateFontUrl('pf_tempesta_seven.ttf'),
-		// })
-		// this.fonts = FontLibrary.families
 
 		GlobalFonts.registerFromPath(generateFontUrl('Arimo-Regular.ttf'), 'Companion-sans')
 		GlobalFonts.registerFromPath(generateFontUrl('NotoSansMono-wdth-wght.ttf'), 'Companion-mono')
@@ -229,7 +215,7 @@ class GraphicsController extends CoreBase {
 		GlobalFonts.registerFromPath(generateFontUrl('NotoColorEmoji-compat.ttf'), 'Companion-emoji')
 		GlobalFonts.registerFromPath(generateFontUrl('pf_tempesta_seven.ttf'), '5x7')
 
-		console.log(JSON.stringify(GlobalFonts.families.filter((f) => f.family.startsWith('Companion'))))
+		// console.log(JSON.stringify(GlobalFonts.families.filter((f) => f.family.startsWith('Companion'))))
 		// console.log(GlobalFonts.families.filter((f) => f.family.startsWith('Ubuntu')))
 
 		this.logger.info('Fonts loaded')
