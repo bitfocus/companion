@@ -40,11 +40,12 @@ import React, {
 	useState,
 	useMemo,
 	FormEvent,
+	useReducer,
 } from 'react'
 import { nanoid } from 'nanoid'
 import { ButtonPreviewBase } from '../Components/ButtonPreview.js'
 import { GenericConfirmModal, GenericConfirmModalRef } from '../Components/GenericConfirmModal.js'
-import { KeyReceiver, LoadingRetryOrError, socketEmitPromise, SocketContext, MyErrorBoundary } from '../util.js'
+import { KeyReceiver, LoadingRetryOrError, socketEmitPromise, SocketContext, MyErrorBoundary, CompanionSocketType } from '../util.js'
 import { ControlActionSetEditor } from '../Controls/ActionSetEditor.js'
 import jsonPatch, { Operation as JsonPatchOperation } from 'fast-json-patch'
 import { ButtonStyleConfig } from '../Controls/ButtonStyleConfig.js'
@@ -372,6 +373,54 @@ interface TabsSectionProps {
 	feedbacks: FeedbackInstance[]
 }
 
+interface TabStepProps{
+	selectedKey: string | false
+	k: string | number
+	name:string|number
+	inputState: {showInputEle:boolean}
+	linkClassname: string | undefined
+	socket: CompanionSocketType
+	controlId: string
+
+}
+function TabStep({selectedKey, k, name, inputState, linkClassname, socket, controlId }: TabStepProps){
+	const renameStep = useCallback(
+		(stepId: string, newName: string) => {
+			socketEmitPromise(socket, 'controls:step:rename', [controlId, stepId, newName]).catch((e) => {
+				console.error('Failed to rename step:', e)
+			})
+		},
+		[socket, controlId]
+	)
+	
+	function onChangeHandler(e: React.ChangeEvent<HTMLInputElement>){
+		setState({showInputEle: state.showInputEle});
+		if(selectedKey){
+			renameStep(selectedKey, e.target.value);
+		}
+	}
+
+	const [state, setState] = useState(inputState);
+	return (
+		<CNavItem key={k} className="nav-steps-special">
+			{state.showInputEle? (
+				<input
+					type="text"
+					value={name}
+					onChange={(e)=>{onChangeHandler(e)}}
+					onBlur={(e)=>setState({showInputEle: false})}
+					autoFocus
+				>			
+				</input>
+			) : (
+				<CNavLink onDoubleClick={(e)=>setState({showInputEle: true})} data-tab={`step:${k}`} className={linkClassname}>
+					{name}
+				</CNavLink>
+		)}	
+		</CNavItem>
+	);
+}
+
 function TabsSection({ style, controlId, location, steps, runtimeProps, rotaryActions, feedbacks }: TabsSectionProps) {
 	const socket = useContext(SocketContext)
 
@@ -522,11 +571,7 @@ function TabsSection({ style, controlId, location, steps, runtimeProps, rotaryAc
 								}
 
 								return (
-									<CNavItem key={k} className="nav-steps-special">
-										<CNavLink data-tab={`step:${k}`} className={linkClassname}>
-											{name && name !== "" ? name : (i === 0 ? (keys.length > 1 ? 'Step ' + (i + 1) : 'Actions') : i + 1)}
-										</CNavLink>
-									</CNavItem>
+									<TabStep selectedKey={selectedKey} k={k} name={name && name !== "" ? name : (i === 0 ? (keys.length > 1 ? 'Step ' + (i + 1) : 'Actions') : i + 1)}inputState={{showInputEle:false}} linkClassname={linkClassname} socket={socket} controlId={controlId} ></TabStep>
 								)
 							})}
 
