@@ -74,7 +74,7 @@
 		"@julusian/jpeg-turbo": "^2.1.0",
 		"@julusian/skia-canvas": "^1.0.5",
 		"@loupedeck/node": "^1.0.0",
-		"@napi-rs/canvas": "^0.1.44",
+		"@napi-rs/canvas": "^0.1.51",
 		"@sentry/integrations": "^7.93.0",
 		"@sentry/node": "^7.93.0",
 		"@sentry/tracing": "^7.93.0",
