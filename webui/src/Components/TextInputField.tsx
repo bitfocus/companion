@@ -113,6 +113,9 @@ export const TextInputField = observer(function TextInputField({
 					storeValue={storeValue}
 					focusStoreValue={focusStoreValue}
 					blurClearValue={blurClearValue}
+					placeholder={placeholder}
+					title={tooltip}
+					disabled={disabled}
 				/>
 			) : (
 				<CInput
@@ -170,6 +173,9 @@ interface VariablesSelectProps {
 	storeValue: (value: string) => void
 	focusStoreValue: () => void
 	blurClearValue: () => void
+	placeholder: string | undefined
+	title: string | undefined
+	disabled: boolean | undefined
 }
 
 function VariablesSelect({
@@ -179,6 +185,9 @@ function VariablesSelect({
 	storeValue,
 	focusStoreValue,
 	blurClearValue,
+	placeholder,
+	title,
+	disabled,
 }: VariablesSelectProps) {
 	const variableDefinitionsContext = useContext(VariableDefinitionsContext)
 	const menuPortal = useContext(MenuPortalContext)
@@ -249,6 +258,8 @@ function VariablesSelect({
 		forceHideSuggestions: setIsForceHidden,
 		focusStoreValue,
 		blurClearValue,
+		title,
+		placeholder,
 	}
 
 	return (
@@ -261,6 +272,7 @@ function VariablesSelect({
 				menuPlacement="auto"
 				isSearchable
 				isMulti={false}
+				isDisabled={disabled}
 				options={options}
 				value={null}
 				inputValue={searchValue}
@@ -286,6 +298,8 @@ const VariablesSelectContext = React.createContext({
 	forceHideSuggestions: (_hidden: boolean) => {},
 	focusStoreValue: () => {},
 	blurClearValue: () => {},
+	title: undefined as string | undefined,
+	placeholder: undefined as string | undefined,
 })
 
 const CustomOption = (props: OptionProps<DropdownChoiceInt>) => {
@@ -368,17 +382,14 @@ const CustomValueContainer = (props: ValueContainerProps<DropdownChoiceInt>) => 
 	return (
 		<SelectComponents.ValueContainer {...props} isDisabled>
 			<CInput
-				// {...props.innerProps}
 				type="text"
-				// disabled={disabled}
 				style={context.extraStyle}
-				// title={tooltip}
+				title={context.title}
 				value={context.value}
 				onChange={doOnChange}
 				onFocus={onFocus}
 				onBlur={onBlur}
-				// placeholder={placeholder}
-
+				placeholder={context.placeholder}
 				onKeyUp={checkCursor}
 				onKeyDown={onKeyDown}
 				onMouseDown={checkCursor}
