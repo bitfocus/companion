@@ -50,7 +50,7 @@ const AddConnectionsInner = memo(function AddConnectionsInner({
 	)
 
 	const addConnection = useCallback(
-		(type: string, product: string | undefined, module: ModuleDisplayInfo) => {
+		(type: string, product: string | undefined, module: Omit<ModuleDisplayInfo, 'keywords'>) => {
 			if (module.isLegacy) {
 				confirmRef.current?.show(
 					`${module.manufacturer} ${product} is outdated`,
@@ -67,9 +67,18 @@ const AddConnectionsInner = memo(function AddConnectionsInner({
 		[addConnectionInner]
 	)
 
-	const allProducts = useMemo(() => {
-		return Object.values(modules).flatMap((module) => module.products.map((product) => ({ product, ...module })))
-	}, [modules])
+	const allProducts = useMemo(
+		() =>
+			Object.values(modules).flatMap((module) =>
+				module.products.map((product) => ({
+					product,
+					...module,
+					// fuzzySearch can't handle arrays, so flatten the array to a string first
+					keywords: module.keywords?.join(';') ?? '',
+				}))
+			),
+		[modules]
+	)
 
 	let candidates: JSX.Element[] = []
 	try {
