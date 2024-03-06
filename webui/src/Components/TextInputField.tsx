@@ -226,20 +226,20 @@ function VariablesSelect({
 	const valueRef = useRef<string>()
 	valueRef.current = showValue
 
-	const onVariableSelect = useCallback(
-		(variable: DropdownChoiceInt | null) => {
-			const oldValue = valueRef.current
-			if (!variable || !oldValue) return
+	const cursorPositionRef = useRef<number | null>()
+	cursorPositionRef.current = cursorPosition
 
-			if (!cursorPosition) return // Nothing selected
+	const onVariableSelect = useCallback((variable: DropdownChoiceInt | null) => {
+		const oldValue = valueRef.current
+		if (!variable || !oldValue) return
 
-			const openIndex = FindVariableStartIndexFromCursor(oldValue, cursorPosition)
-			if (openIndex === -1) return
+		if (cursorPositionRef.current == null) return // Nothing selected
 
-			storeValue(oldValue.slice(0, openIndex) + `$(${variable.value})` + oldValue.slice(cursorPosition))
-		},
-		[cursorPosition] // TODO - this is very inefficient
-	)
+		const openIndex = FindVariableStartIndexFromCursor(oldValue, cursorPositionRef.current)
+		if (openIndex === -1) return
+
+		storeValue(oldValue.slice(0, openIndex) + `$(${variable.value})` + oldValue.slice(cursorPositionRef.current))
+	}, [])
 
 	const selectContext = {
 		value: showValue,
