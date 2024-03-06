@@ -90,20 +90,10 @@ export const TextInputField = observer(function TextInputField({
 		[storeValue]
 	)
 
-	const [cursorPosition, setCursorPosition] = useState<number | null>(null)
-
 	const showValue = tmpValue ?? value ?? ''
 
-	let isPickerOpen = false
-	let searchValue = ''
-
-	if (cursorPosition != null) {
-		// && innerRef.current.selectionStart === innerRef.current.selectionEnd) {
-		const lastOpen = FindVariableStartIndexFromCursor(showValue, cursorPosition)
-		isPickerOpen = lastOpen !== -1
-
-		searchValue = showValue.slice(lastOpen + 2, cursorPosition)
-	}
+	const [cursorPosition, setCursorPosition] = useState<number | null>(null)
+	const { isPickerOpen, searchValue, setIsForceHidden } = useIsPickerOpen(showValue, cursorPosition)
 
 	const valueRef = useRef<string>()
 	valueRef.current = showValue
@@ -128,15 +118,6 @@ export const TextInputField = observer(function TextInputField({
 		[isValueValid, showValue, style]
 	)
 
-	const [isForceHidden, setIsForceHidden] = useState(false)
-
-	const previousIsPickerOpen = useRef(false)
-	if (isPickerOpen !== previousIsPickerOpen.current) {
-		// Clear the force hidden after a short delay (it doesn't work to call it directly)
-		setTimeout(() => setIsForceHidden(false), 1)
-	}
-	previousIsPickerOpen.current = isPickerOpen
-
 	const tmpVal = {
 		value: showValue,
 		setValue: doOnChange,
@@ -152,7 +133,7 @@ export const TextInputField = observer(function TextInputField({
 			<VariablesSelectContext.Provider value={tmpVal}>
 				{useVariables ? (
 					<VariablesSelect
-						isOpen={!isForceHidden && isPickerOpen}
+						isOpen={isPickerOpen}
 						searchValue={searchValue}
 						onVariableSelect={onVariableSelect}
 						useLocationVariables={!!useLocationVariables}
@@ -174,6 +155,33 @@ export const TextInputField = observer(function TextInputField({
 		</>
 	)
 })
+
+function useIsPickerOpen(showValue: string, cursorPosition: number | null) {
+	const [isForceHidden, setIsForceHidden] = useState(false)
+
+	let isPickerOpen = false
+	let searchValue = ''
+
+	if (cursorPosition != null) {
+		const lastOpenSequence = FindVariableStartIndexFromCursor(showValue, cursorPosition)
+		isPickerOpen = lastOpenSequence !== -1
+
+		searchValue = showValue.slice(lastOpenSequence + 2, cursorPosition)
+	}
+
+	const previousIsPickerOpen = useRef(false)
+	if (isPickerOpen !== previousIsPickerOpen.current) {
+		// Clear the force hidden after a short delay (it doesn't work to call it directly)
+		setTimeout(() => setIsForceHidden(false), 1)
+	}
+	previousIsPickerOpen.current = isPickerOpen
+
+	return {
+		searchValue,
+		isPickerOpen: !isForceHidden && isPickerOpen,
+		setIsForceHidden,
+	}
+}
 
 interface DropdownChoiceInt {
 	value: string
