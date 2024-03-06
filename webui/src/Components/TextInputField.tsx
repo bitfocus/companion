@@ -79,8 +79,6 @@ export const TextInputField = observer(function TextInputField({
 
 	const storeValue = useCallback(
 		(value: string) => {
-			// const newValue = decode(e.currentTarget.value, { scope: 'strict' })
-			console.log('store', value)
 			setTmpValue(value)
 			setValue(value)
 			setValid?.(isValueValid(value))
@@ -99,19 +97,13 @@ export const TextInputField = observer(function TextInputField({
 	let isPickerOpen = false
 	let searchValue = ''
 
-	// const innerRef = useRef<HTMLInputElement>(null)
-	// if (innerRef.current) {
-	console.log('cursor', cursorPosition)
 	if (cursorPosition != null) {
 		// && innerRef.current.selectionStart === innerRef.current.selectionEnd) {
 		const lastOpen = FindVariableStartIndexFromCursor(showValue, cursorPosition)
 		isPickerOpen = lastOpen !== -1
-		console.log('open', lastOpen)
 
 		searchValue = showValue.slice(lastOpen + 2, cursorPosition)
-		console.log('search', searchValue)
 	}
-	// }
 
 	const valueRef = useRef<string>()
 	valueRef.current = showValue
@@ -130,12 +122,6 @@ export const TextInputField = observer(function TextInputField({
 		},
 		[cursorPosition] // TODO - this is very inefficient
 	)
-
-	// const [variableSearchOpen, setVariableSearchOpen] = useState(false)
-
-	// const onFocusChange = useCallback(() => {
-	// 	console.log('focus change')
-	// }, [])
 
 	const extraStyle = useMemo(
 		() => ({ color: !isValueValid(showValue) ? 'red' : undefined, ...style }),
@@ -341,7 +327,6 @@ const CustomValueContainer = (props: ValueContainerProps<DropdownChoiceInt>) => 
 	)
 	const onKeyDown = useCallback(
 		(e: React.KeyboardEvent<HTMLInputElement>) => {
-			console.log('keyu', e.code, context.value)
 			if (e.code === 'Escape') {
 				context.forceHideSuggestions(true)
 			} else {
@@ -389,6 +374,5 @@ function FindVariableStartIndexFromCursor(text: string, cursor: number): number 
 
 	// TODO - ensure contents is valid
 
-	console.log('open', previousOpen, 'close', previousClose)
 	return previousOpen
 }
