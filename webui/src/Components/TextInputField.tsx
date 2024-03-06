@@ -90,68 +90,43 @@ export const TextInputField = observer(function TextInputField({
 		[storeValue]
 	)
 
+	const currentValueRef = useRef<string>()
+	currentValueRef.current = value ?? ''
+	const focusStoreValue = useCallback(() => setTmpValue(currentValueRef.current ?? ''), [])
+	const blurClearValue = useCallback(() => setTmpValue(null), [])
+
 	const showValue = tmpValue ?? value ?? ''
-
-	const [cursorPosition, setCursorPosition] = useState<number | null>(null)
-	const { isPickerOpen, searchValue, setIsForceHidden } = useIsPickerOpen(showValue, cursorPosition)
-
-	const valueRef = useRef<string>()
-	valueRef.current = showValue
-
-	const onVariableSelect = useCallback(
-		(variable: DropdownChoiceInt | null) => {
-			const oldValue = valueRef.current
-			if (!variable || !oldValue) return
-
-			if (!cursorPosition) return // Nothing selected
-
-			const openIndex = FindVariableStartIndexFromCursor(oldValue, cursorPosition)
-			if (openIndex === -1) return
-
-			storeValue(oldValue.slice(0, openIndex) + `$(${variable.value})` + oldValue.slice(cursorPosition))
-		},
-		[cursorPosition] // TODO - this is very inefficient
-	)
 
 	const extraStyle = useMemo(
 		() => ({ color: !isValueValid(showValue) ? 'red' : undefined, ...style }),
 		[isValueValid, showValue, style]
 	)
 
-	const tmpVal = {
-		value: showValue,
-		setValue: doOnChange,
-		setTmpValue: setTmpValue,
-		setCursorPosition: setCursorPosition,
-		extraStyle: extraStyle,
-		forceHideSuggestions: setIsForceHidden,
-	}
-
 	// Render the input
 	return (
 		<>
-			<VariablesSelectContext.Provider value={tmpVal}>
-				{useVariables ? (
-					<VariablesSelect
-						isOpen={isPickerOpen}
-						searchValue={searchValue}
-						onVariableSelect={onVariableSelect}
-						useLocationVariables={!!useLocationVariables}
-					/>
-				) : (
-					<CInput
-						type="text"
-						disabled={disabled}
-						value={showValue}
-						style={extraStyle}
-						title={tooltip}
-						onChange={doOnChange}
-						onFocus={() => setTmpValue(value ?? '')}
-						onBlur={() => setTmpValue(null)}
-						placeholder={placeholder}
-					/>
-				)}
-			</VariablesSelectContext.Provider>
+			{useVariables ? (
+				<VariablesSelect
+					showValue={showValue}
+					style={extraStyle}
+					useLocationVariables={!!useLocationVariables}
+					storeValue={storeValue}
+					focusStoreValue={focusStoreValue}
+					blurClearValue={blurClearValue}
+				/>
+			) : (
+				<CInput
+					type="text"
+					disabled={disabled}
+					value={showValue}
+					style={extraStyle}
+					title={tooltip}
+					onChange={doOnChange}
+					onFocus={focusStoreValue}
+					onBlur={blurClearValue}
+					placeholder={placeholder}
+				/>
+			)}
 		</>
 	)
 })
@@ -189,13 +164,22 @@ interface DropdownChoiceInt {
 }
 
 interface VariablesSelectProps {
-	isOpen: boolean
-	searchValue: string
-	onVariableSelect: (newValue: DropdownChoiceInt | null) => void
+	showValue: string
+	style: React.CSSProperties
 	useLocationVariables: boolean
+	storeValue: (value: string) => void
+	focusStoreValue: () => void
+	blurClearValue: () => void
 }
 
-function VariablesSelect({ isOpen, searchValue, onVariableSelect, useLocationVariables }: VariablesSelectProps) {
+function VariablesSelect({
+	showValue,
+	style,
+	useLocationVariables,
+	storeValue,
+	focusStoreValue,
+	blurClearValue,
+}: VariablesSelectProps) {
 	const variableDefinitionsContext = useContext(VariableDefinitionsContext)
 	const menuPortal = useContext(MenuPortalContext)
 
@@ -236,41 +220,72 @@ function VariablesSelect({ isOpen, searchValue, onVariableSelect, useLocationVar
 		return suggestions
 	}, [variableDefinitionsContext, useLocationVariables])
 
+	const [cursorPosition, setCursorPosition] = useState<number | null>(null)
+	const { isPickerOpen, searchValue, setIsForceHidden } = useIsPickerOpen(showValue, cursorPosition)
+
+	const valueRef = useRef<string>()
+	valueRef.current = showValue
+
+	const onVariableSelect = useCallback(
+		(variable: DropdownChoiceInt | null) => {
+			const oldValue = valueRef.current
+			if (!variable || !oldValue) return
+
+			if (!cursorPosition) return // Nothing selected
+
+			const openIndex = FindVariableStartIndexFromCursor(oldValue, cursorPosition)
+			if (openIndex === -1) return
+
+			storeValue(oldValue.slice(0, openIndex) + `$(${variable.value})` + oldValue.slice(cursorPosition))
+		},
+		[cursorPosition] // TODO - this is very inefficient
+	)
+
+	const selectContext = {
+		value: showValue,
+		setValue: storeValue,
+		setCursorPosition: setCursorPosition,
+		extraStyle: style,
+		forceHideSuggestions: setIsForceHidden,
+		focusStoreValue,
+		blurClearValue,
+	}
+
 	return (
-		<Select
-			className="variable-select-root"
-			menuPortalTarget={menuPortal || document.body}
-			menuShouldBlockScroll={!!menuPortal} // The dropdown doesn't follow scroll when in a modal
-			menuPosition="fixed"
-			menuPlacement="auto"
-			isSearchable
-			isMulti={false}
-			options={options}
-			value={null}
-			inputValue={searchValue}
-			onChange={onVariableSelect}
-			menuIsOpen={isOpen}
-			components={{
-				Option: CustomOption,
-				ValueContainer: CustomValueContainer,
-				Control: CustomControl,
-				IndicatorsContainer: EmptyComponent,
-			}}
-			backspaceRemovesValue={false}
-			// onKeyDown={(e) => {
-			// 	// e.preventDefault()
-			// }}
-		/>
+		<VariablesSelectContext.Provider value={selectContext}>
+			<Select
+				className="variable-select-root"
+				menuPortalTarget={menuPortal || document.body}
+				menuShouldBlockScroll={!!menuPortal} // The dropdown doesn't follow scroll when in a modal
+				menuPosition="fixed"
+				menuPlacement="auto"
+				isSearchable
+				isMulti={false}
+				options={options}
+				value={null}
+				inputValue={searchValue}
+				onChange={onVariableSelect}
+				menuIsOpen={isPickerOpen}
+				components={{
+					Option: CustomOption,
+					ValueContainer: CustomValueContainer,
+					Control: CustomControl,
+					IndicatorsContainer: EmptyComponent,
+				}}
+				backspaceRemovesValue={false}
+			/>
+		</VariablesSelectContext.Provider>
 	)
 }
 
 const VariablesSelectContext = React.createContext({
 	value: '',
-	setValue: (_e: React.ChangeEvent<HTMLInputElement> | React.FormEvent<HTMLInputElement>) => {},
-	setTmpValue: (_val: string | null) => {},
+	setValue: (_value: string) => {},
 	setCursorPosition: (_pos: number | null) => {},
 	extraStyle: {} as React.CSSProperties,
-	forceHideSuggestions: (hidden: boolean) => {},
+	forceHideSuggestions: (_hidden: boolean) => {},
+	focusStoreValue: () => {},
+	blurClearValue: () => {},
 })
 
 const CustomOption = (props: OptionProps<DropdownChoiceInt>) => {
@@ -318,20 +333,20 @@ const CustomValueContainer = (props: ValueContainerProps<DropdownChoiceInt>) => 
 
 	const onFocus = useCallback(
 		(e: React.FocusEvent<HTMLInputElement>) => {
-			context.setTmpValue(context.value ?? '')
+			context.focusStoreValue()
 
 			checkCursor(e)
 		},
-		[context, checkCursor]
+		[context.focusStoreValue, checkCursor]
 	)
 	const onBlur = useCallback(
 		(e: React.FocusEvent<HTMLInputElement>) => {
-			context.setTmpValue(null)
+			context.blurClearValue()
 
 			checkCursor(e)
 			context.forceHideSuggestions(false)
 		},
-		[context, checkCursor]
+		[context.blurClearValue, context.forceHideSuggestions, checkCursor]
 	)
 	const onKeyDown = useCallback(
 		(e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -344,6 +359,12 @@ const CustomValueContainer = (props: ValueContainerProps<DropdownChoiceInt>) => 
 		[context, checkCursor]
 	)
 
+	const doOnChange = useCallback(
+		(e: React.ChangeEvent<HTMLInputElement> | React.FormEvent<HTMLInputElement>) =>
+			context.setValue(e.currentTarget.value),
+		[context.setValue]
+	)
+
 	return (
 		<SelectComponents.ValueContainer {...props} isDisabled>
 			<CInput
@@ -353,7 +374,7 @@ const CustomValueContainer = (props: ValueContainerProps<DropdownChoiceInt>) => 
 				style={context.extraStyle}
 				// title={tooltip}
 				value={context.value}
-				onChange={context.setValue}
+				onChange={doOnChange}
 				onFocus={onFocus}
 				onBlur={onBlur}
 				// placeholder={placeholder}
