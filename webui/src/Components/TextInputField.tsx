@@ -88,7 +88,7 @@ export const TextInputField = observer(function TextInputField({
 		[setValue, setValid, isValueValid]
 	)
 	const doOnChange = useCallback(
-		(e: React.ChangeEvent<HTMLInputElement>) => storeValue(e.currentTarget.value),
+		(e: React.ChangeEvent<HTMLInputElement> | React.FormEvent<HTMLInputElement>) => storeValue(e.currentTarget.value),
 		[storeValue]
 	)
 
@@ -142,12 +142,22 @@ export const TextInputField = observer(function TextInputField({
 		[isValueValid, showValue, style]
 	)
 
+	const [isForceHidden, setIsForceHidden] = useState(false)
+
+	const previousIsPickerOpen = useRef(false)
+	if (isPickerOpen !== previousIsPickerOpen.current) {
+		// Clear the force hidden after a short delay (it doesn't work to call it directly)
+		setTimeout(() => setIsForceHidden(false), 1)
+	}
+	previousIsPickerOpen.current = isPickerOpen
+
 	const tmpVal = {
 		value: showValue,
 		setValue: doOnChange,
 		setTmpValue: setTmpValue,
 		setCursorPosition: setCursorPosition,
 		extraStyle: extraStyle,
+		forceHideSuggestions: setIsForceHidden,
 	}
 
 	// Render the input
@@ -156,7 +166,7 @@ export const TextInputField = observer(function TextInputField({
 			<VariablesSelectContext.Provider value={tmpVal}>
 				{useVariables ? (
 					<VariablesSelect
-						isOpen={isPickerOpen}
+						isOpen={!isForceHidden && isPickerOpen}
 						searchValue={searchValue}
 						onVariableSelect={onVariableSelect}
 						useLocationVariables={!!useLocationVariables}
@@ -252,16 +262,21 @@ function VariablesSelect({ isOpen, searchValue, onVariableSelect, useLocationVar
 				Control: CustomControl,
 				IndicatorsContainer: EmptyComponent,
 			}}
+			backspaceRemovesValue={false}
+			// onKeyDown={(e) => {
+			// 	// e.preventDefault()
+			// }}
 		/>
 	)
 }
 
 const VariablesSelectContext = React.createContext({
 	value: '',
-	setValue: (_e: React.ChangeEvent<HTMLInputElement>) => {},
+	setValue: (_e: React.ChangeEvent<HTMLInputElement> | React.FormEvent<HTMLInputElement>) => {},
 	setTmpValue: (_val: string | null) => {},
 	setCursorPosition: (_pos: number | null) => {},
 	extraStyle: {} as React.CSSProperties,
+	forceHideSuggestions: (hidden: boolean) => {},
 })
 
 const CustomOption = (props: OptionProps<DropdownChoiceInt>) => {
@@ -320,14 +335,15 @@ const CustomValueContainer = (props: ValueContainerProps<DropdownChoiceInt>) => 
 			context.setTmpValue(null)
 
 			checkCursor(e)
+			context.forceHideSuggestions(false)
 		},
 		[context, checkCursor]
 	)
 	const onKeyDown = useCallback(
 		(e: React.KeyboardEvent<HTMLInputElement>) => {
+			console.log('keyu', e.code, context.value)
 			if (e.code === 'Escape') {
-				// TODO - force hide
-				// tempContext2.setCursorPosition(null)
+				context.forceHideSuggestions(true)
 			} else {
 				checkCursor(e)
 			}
@@ -336,9 +352,9 @@ const CustomValueContainer = (props: ValueContainerProps<DropdownChoiceInt>) => 
 	)
 
 	return (
-		<SelectComponents.ValueContainer {...props}>
+		<SelectComponents.ValueContainer {...props} isDisabled>
 			<CInput
-				{...props.innerProps}
+				// {...props.innerProps}
 				type="text"
 				// disabled={disabled}
 				style={context.extraStyle}
