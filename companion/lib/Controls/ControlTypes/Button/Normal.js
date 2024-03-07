@@ -993,7 +993,6 @@ export default class ControlButtonNormal extends ButtonControlBase {
 			stepsJson[id] = {
 				action_sets: step.action_sets,
 				options: step.options,
-				name: step.name,
 			}
 		}
 

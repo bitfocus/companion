@@ -40,12 +40,11 @@ import React, {
 	useState,
 	useMemo,
 	FormEvent,
-	useReducer,
 } from 'react'
 import { nanoid } from 'nanoid'
 import { ButtonPreviewBase } from '../Components/ButtonPreview.js'
 import { GenericConfirmModal, GenericConfirmModalRef } from '../Components/GenericConfirmModal.js'
-import { KeyReceiver, LoadingRetryOrError, socketEmitPromise, SocketContext, MyErrorBoundary, CompanionSocketType } from '../util.js'
+import { KeyReceiver, LoadingRetryOrError, socketEmitPromise, SocketContext, MyErrorBoundary } from '../util.js'
 import { ControlActionSetEditor } from '../Controls/ActionSetEditor.js'
 import jsonPatch, { Operation as JsonPatchOperation } from 'fast-json-patch'
 import { ButtonStyleConfig } from '../Controls/ButtonStyleConfig.js'
@@ -373,59 +372,6 @@ interface TabsSectionProps {
 	feedbacks: FeedbackInstance[]
 }
 
-interface TabStepProps{
-	selectedKey: string | false
-	i: number
-	name:string | undefined
-	linkClassname: string | undefined
-	socket: CompanionSocketType
-	controlId: string
-
-}
-// function TabStep({selectedKey, i, name, linkClassname, socket, controlId }: TabStepProps){
-
-// 	const renameStep = useCallback(
-// 		(stepId: string, newName: string) => {
-// 			socketEmitPromise(socket, 'controls:step:rename', [controlId, stepId, newName]).catch((e) => {
-// 				console.error('Failed to rename step:', e)
-// 			})
-// 		},
-// 		[socket, controlId]
-// 	)
-	
-// 	function onChangeHandler(e: React.ChangeEvent<HTMLInputElement>){
-// 		if(selectedKey){
-// 			renameStep(selectedKey, e.target.value);
-// 		}
-// 	}
-
-// 	const [showInputField, setShowInputField] = useState(false);
-
-// 	const displayText = name && name !== "" ? 
-// 							name + ` (${i + 1})` 
-// 							: (i === 0 ? 'Step ' + (i + 1) : i + 1)
-// 	return (	
-// 			showInputField ? (
-// 				<CNavLink className={linkClassname}>
-// 					<input
-// 						type="text"
-// 						value={name}
-// 						onChange={(e)=>{onChangeHandler(e)}}
-// 						onKeyDown={(e)=>{(e.key === 'Enter' || e.key === "Escape") && setShowInputField(false)}}
-// 						onBlur={()=>setShowInputField(false)}
-// 						autoFocus
-// 					>			
-// 					</input>
-// 				</CNavLink>
-// 			) : (
-// 				<CNavLink onDoubleClick={()=>setShowInputField(true)} data-tab={displayText} className={linkClassname} title='Click to rename'>
-// 					{displayText}
-// 				</CNavLink>
-// 		)	
-
-// 	);
-// }
-
 function TabsSection({ style, controlId, location, steps, runtimeProps, rotaryActions, feedbacks }: TabsSectionProps) {
 	const socket = useContext(SocketContext)
 
@@ -568,7 +514,7 @@ function TabsSection({ style, controlId, location, steps, runtimeProps, rotaryAc
 								// both selected and the current step
 								const isActiveAndCurrent = k === selectedIndex && runtimeProps.current_step_id === k
 
-								const name = steps[k]?.name;
+								const name = steps[k].options?.name;
 								const displayText = name && name !== "" ? 
 										name + ` (${i + 1})` 
 										: (i === 0 ? 'Step ' + (i + 1) : i + 1)
