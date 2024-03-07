@@ -1,10 +1,17 @@
 import React, { useEffect, useMemo, useState, useCallback, useContext, useRef } from 'react'
 import { CInput } from '@coreui/react'
 import { VariableDefinitionsContext } from '../util.js'
-import Select, { ControlProps, OptionProps, components as SelectComponents, ValueContainerProps } from 'react-select'
+import Select, {
+	ControlProps,
+	OptionProps,
+	components as SelectComponents,
+	ValueContainerProps,
+	createFilter,
+} from 'react-select'
 import { MenuPortalContext } from './DropdownInputField.js'
 import { DropdownChoiceId } from '@companion-module/base'
 import { observer } from 'mobx-react-lite'
+import { WindowedMenuList } from 'react-windowed-select'
 
 interface TextInputFieldProps {
 	regex?: string
@@ -264,18 +271,32 @@ function VariablesSelect({
 		}, 0)
 	}, [])
 
-	const selectContext = {
-		value: showValue,
-		setValue: storeValue,
-		setCursorPosition: setCursorPosition,
-		extraStyle: style,
-		forceHideSuggestions: setIsForceHidden,
-		focusStoreValue,
-		blurClearValue,
-		title,
-		placeholder,
-		inputRef,
-	}
+	const selectContext = useMemo(
+		() => ({
+			value: showValue,
+			setValue: storeValue,
+			setCursorPosition: setCursorPosition,
+			extraStyle: style,
+			forceHideSuggestions: setIsForceHidden,
+			focusStoreValue,
+			blurClearValue,
+			title,
+			placeholder,
+			inputRef,
+		}),
+		[
+			showValue,
+			storeValue,
+			setCursorPosition,
+			style,
+			setIsForceHidden,
+			focusStoreValue,
+			blurClearValue,
+			title,
+			placeholder,
+			inputRef,
+		]
+	)
 
 	return (
 		<VariablesSelectContext.Provider value={selectContext}>
@@ -293,13 +314,9 @@ function VariablesSelect({
 				inputValue={searchValue}
 				onChange={onVariableSelect}
 				menuIsOpen={isPickerOpen}
-				components={{
-					Option: CustomOption,
-					ValueContainer: CustomValueContainer,
-					Control: CustomControl,
-					IndicatorsContainer: EmptyComponent,
-				}}
+				components={CustomSelectComponents}
 				backspaceRemovesValue={false}
+				filterOption={createFilter({ ignoreAccents: false })}
 			/>
 		</VariablesSelectContext.Provider>
 	)
@@ -318,7 +335,7 @@ const VariablesSelectContext = React.createContext({
 	inputRef: { current: null } as React.MutableRefObject<HTMLInputElement | null>,
 })
 
-const CustomOption = (props: OptionProps<DropdownChoiceInt>) => {
+const CustomOption = React.memo((props: OptionProps<DropdownChoiceInt>) => {
 	const { data } = props
 	return (
 		<SelectComponents.Option {...props} className={(props.className ?? '') + 'variable-suggestion-option'}>
@@ -326,19 +343,19 @@ const CustomOption = (props: OptionProps<DropdownChoiceInt>) => {
 			<span className="var-label">{data.label}</span>
 		</SelectComponents.Option>
 	)
-}
+})
 
 const EmptyComponent = () => null
 
-const CustomControl = (props: ControlProps<DropdownChoiceInt>) => {
+const CustomControl = React.memo((props: ControlProps<DropdownChoiceInt>) => {
 	return (
 		<SelectComponents.Control {...props} className={(props.className ?? '') + ' variables-text-input'}>
 			{props.children}
 		</SelectComponents.Control>
 	)
-}
+})
 
-const CustomValueContainer = (props: ValueContainerProps<DropdownChoiceInt>) => {
+const CustomValueContainer = React.memo((props: ValueContainerProps<DropdownChoiceInt>) => {
 	const context = useContext(VariablesSelectContext)
 
 	const checkCursor = useCallback(
@@ -418,6 +435,14 @@ const CustomValueContainer = (props: ValueContainerProps<DropdownChoiceInt>) => 
 			/>
 		</SelectComponents.ValueContainer>
 	)
+})
+
+const CustomSelectComponents = {
+	Option: CustomOption,
+	ValueContainer: CustomValueContainer,
+	Control: CustomControl,
+	IndicatorsContainer: EmptyComponent,
+	MenuList: WindowedMenuList,
 }
 
 function FindVariableStartIndexFromCursor(text: string, cursor: number): number {

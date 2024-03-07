@@ -55,6 +55,7 @@
     "react-use": "^17.5.0",
     "react-virtualized-auto-sizer": "^1.0.24",
     "react-window": "^1.8.10",
+    "react-windowed-select": "^5.2.0",
     "remark-gfm": "^3.0.1",
     "sanitize-html": "^2.12.1",
     "sass": "^1.71.1",
