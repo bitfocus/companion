@@ -11,6 +11,7 @@ export interface ActionInstance {
 
 export interface ActionStepOptions {
 	runWhileHeld: number[]
+	name?: string
 }
 
 // TODO - type better?
