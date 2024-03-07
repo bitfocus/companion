@@ -375,56 +375,56 @@ interface TabsSectionProps {
 
 interface TabStepProps{
 	selectedKey: string | false
-	k: string | number
 	i: number
 	name:string | undefined
-	inputState: {showInputEle:boolean}
 	linkClassname: string | undefined
 	socket: CompanionSocketType
 	controlId: string
 
 }
-function TabStep({selectedKey, k, i, name, inputState, linkClassname, socket, controlId }: TabStepProps){
+// function TabStep({selectedKey, i, name, linkClassname, socket, controlId }: TabStepProps){
 
-	const renameStep = useCallback(
-		(stepId: string, newName: string) => {
-			socketEmitPromise(socket, 'controls:step:rename', [controlId, stepId, newName]).catch((e) => {
-				console.error('Failed to rename step:', e)
-			})
-		},
-		[socket, controlId]
-	)
+// 	const renameStep = useCallback(
+// 		(stepId: string, newName: string) => {
+// 			socketEmitPromise(socket, 'controls:step:rename', [controlId, stepId, newName]).catch((e) => {
+// 				console.error('Failed to rename step:', e)
+// 			})
+// 		},
+// 		[socket, controlId]
+// 	)
 	
-	function onChangeHandler(e: React.ChangeEvent<HTMLInputElement>){
-		setState({showInputEle: state.showInputEle});
-		if(selectedKey){
-			renameStep(selectedKey, e.target.value);
-		}
-	}
+// 	function onChangeHandler(e: React.ChangeEvent<HTMLInputElement>){
+// 		if(selectedKey){
+// 			renameStep(selectedKey, e.target.value);
+// 		}
+// 	}
 
-	const [state, setState] = useState(inputState);
-	return (
-		<CNavItem key={k} className="nav-steps-special">
-			{state.showInputEle? (
-				<CNavLink className={linkClassname}>
-				<input
-					type="text"
-					value={name}
-					onChange={(e)=>{onChangeHandler(e)}}
-					onKeyDown={(e)=>{e.key === 'Enter' && setState({showInputEle: false})}}
-					onBlur={(e)=>setState({showInputEle: false})}
-					autoFocus
-				>			
-				</input>
-				</CNavLink>
-			) : (
-				<CNavLink onDoubleClick={(e)=>setState({showInputEle: true})} data-tab={`step:${k}`} className={linkClassname}>
-					{name && name !== "" ? name : (i === 0 ? 'Step ' + (i + 1) : i + 1)}
-				</CNavLink>
-		)}	
-		</CNavItem>
-	);
-}
+// 	const [showInputField, setShowInputField] = useState(false);
+
+// 	const displayText = name && name !== "" ? 
+// 							name + ` (${i + 1})` 
+// 							: (i === 0 ? 'Step ' + (i + 1) : i + 1)
+// 	return (	
+// 			showInputField ? (
+// 				<CNavLink className={linkClassname}>
+// 					<input
+// 						type="text"
+// 						value={name}
+// 						onChange={(e)=>{onChangeHandler(e)}}
+// 						onKeyDown={(e)=>{(e.key === 'Enter' || e.key === "Escape") && setShowInputField(false)}}
+// 						onBlur={()=>setShowInputField(false)}
+// 						autoFocus
+// 					>			
+// 					</input>
+// 				</CNavLink>
+// 			) : (
+// 				<CNavLink onDoubleClick={()=>setShowInputField(true)} data-tab={displayText} className={linkClassname} title='Click to rename'>
+// 					{displayText}
+// 				</CNavLink>
+// 		)	
+
+// 	);
+// }
 
 function TabsSection({ style, controlId, location, steps, runtimeProps, rotaryActions, feedbacks }: TabsSectionProps) {
 	const socket = useContext(SocketContext)
@@ -569,14 +569,38 @@ function TabsSection({ style, controlId, location, steps, runtimeProps, rotaryAc
 								const isActiveAndCurrent = k === selectedIndex && runtimeProps.current_step_id === k
 
 								const name = steps[k]?.name;
+								const displayText = name && name !== "" ? 
+										name + ` (${i + 1})` 
+										: (i === 0 ? 'Step ' + (i + 1) : i + 1)
 
 								if (moreThanOneStep) {
 									if (isActiveAndCurrent) linkClassname = 'selected-and-active'
 									else if (isCurrent) linkClassname = 'only-current'
 								}
 
+								const [showInputField, setShowInputField] = useState(false);
+
 								return (
-									<TabStep selectedKey={selectedKey} k={k} i={i} name={name} inputState={{showInputEle:false}} linkClassname={linkClassname} socket={socket} controlId={controlId} ></TabStep>
+									<CNavItem key={k} className="nav-steps-special">
+										{showInputField ? (
+											<CNavLink className={linkClassname}>
+												<input
+													type="text"
+													value={name}
+													onChange={(e)=>renameStep(k.toString(), e.target.value)}
+													onKeyDown={(e)=>{(e.key === 'Enter' || e.key === "Escape") && setShowInputField(false)}}
+													onBlur={()=>setShowInputField(false)}
+													autoFocus
+												>			
+												</input>
+											</CNavLink>
+										) 
+										: (
+											<CNavLink onDoubleClick={()=>setShowInputField(true)} data-tab={`step:${k}`} className={linkClassname}>
+												{displayText}
+											</CNavLink>
+										)}	
+									</CNavItem>
 								)
 							})}
 
