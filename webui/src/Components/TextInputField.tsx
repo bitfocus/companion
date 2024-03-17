@@ -46,7 +46,7 @@ export const TextInputField = observer(function TextInputField({
 	const compiledRegex = useMemo(() => {
 		if (regex) {
 			// Compile the regex string
-			const match = regex.match(/^\/(.*)\/(.*)$/)
+			const match = /^\/(.*)\/(.*)$/.exec(regex)
 			if (match) {
 				return new RegExp(match[1], match[2])
 			}
@@ -64,7 +64,7 @@ export const TextInputField = observer(function TextInputField({
 
 			// Must match the regex, if required or has a value
 			if (required || val !== '') {
-				if (compiledRegex && (typeof val !== 'string' || !val.match(compiledRegex))) {
+				if (compiledRegex && (typeof val !== 'string' || !compiledRegex.exec(val))) {
 					return false
 				}
 			}
@@ -102,7 +102,7 @@ export const TextInputField = observer(function TextInputField({
 	const focusStoreValue = useCallback(() => setTmpValue(currentValueRef.current ?? ''), [])
 	const blurClearValue = useCallback(() => setTmpValue(null), [])
 
-	const showValue = tmpValue ?? value ?? ''
+	const showValue = (tmpValue ?? value ?? '').toString()
 
 	const extraStyle = useMemo(
 		() => ({ color: !isValueValid(showValue) ? 'red' : undefined, ...style }),
@@ -195,7 +195,7 @@ function VariablesSelect({
 	placeholder,
 	title,
 	disabled,
-}: VariablesSelectProps) {
+}: Readonly<VariablesSelectProps>) {
 	const variableDefinitionsContext = useContext(VariableDefinitionsContext)
 	const menuPortal = useContext(MenuPortalContext)
 
