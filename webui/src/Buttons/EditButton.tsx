@@ -462,6 +462,14 @@ function TabsSection({ style, controlId, location, steps, runtimeProps, rotaryAc
 		},
 		[socket, controlId]
 	)
+	const renameStep = useCallback(
+		(stepId: string, newName: string) => {
+			socketEmitPromise(socket, 'controls:step:rename', [controlId, stepId, newName]).catch((e) => {
+				console.error('Failed to rename step:', e)
+			})
+		},
+		[socket, controlId]
+	)
 
 	const appendSet = useCallback(
 		(stepId: string) => {
@@ -506,16 +514,38 @@ function TabsSection({ style, controlId, location, steps, runtimeProps, rotaryAc
 								// both selected and the current step
 								const isActiveAndCurrent = k === selectedIndex && runtimeProps.current_step_id === k
 
+								const name = steps[k].options?.name;
+								const displayText = name && name !== "" ? 
+										name + ` (${i + 1})` 
+										: (i === 0 ? 'Step ' + (i + 1) : i + 1)
+
 								if (moreThanOneStep) {
 									if (isActiveAndCurrent) linkClassname = 'selected-and-active'
 									else if (isCurrent) linkClassname = 'only-current'
 								}
 
+								const [showInputField, setShowInputField] = useState(false);
+
 								return (
 									<CNavItem key={k} className="nav-steps-special">
-										<CNavLink data-tab={`step:${k}`} className={linkClassname}>
-											{i === 0 ? (keys.length > 1 ? 'Step ' + (i + 1) : 'Actions') : i + 1}
-										</CNavLink>
+										{showInputField ? (
+											<CNavLink className={linkClassname}>
+												<input
+													type="text"
+													value={name}
+													onChange={(e)=>renameStep(k.toString(), e.target.value)}
+													onKeyDown={(e)=>{(e.key === 'Enter' || e.key === "Escape") && setShowInputField(false)}}
+													onBlur={()=>setShowInputField(false)}
+													autoFocus
+												>			
+												</input>
+											</CNavLink>
+										) 
+										: (
+											<CNavLink onDoubleClick={()=>setShowInputField(true)} data-tab={`step:${k}`} className={linkClassname}>
+												{displayText}
+											</CNavLink>
+										)}	
 									</CNavItem>
 								)
 							})}
