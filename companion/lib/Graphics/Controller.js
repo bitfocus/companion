@@ -247,6 +247,7 @@ class GraphicsController extends CoreBase {
 			imageBuffers: [],
 			pushed: false,
 			cloud: false,
+			cloud_error: false,
 			button_status: undefined,
 			step_cycle: undefined,
 			action_running: false,

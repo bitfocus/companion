@@ -36,6 +36,15 @@ const internalIcons = {
 		'P/////+/v7/+/v7//n5+f/09PT/8PDw/+vr6//m5ub/4eHh/9zc3P/Y2Nj/1NTU/9HR0f/Ozs7HzMzM2Pv7+//5+fn/9fX1//Hx8f/s7' +
 		'Oz/5+fn/+Li4v/d3d3/2dnZ/9TU1P/R0dH/z8/P/83Nzf/MzMzGy8vLVvb29u7y8vL/7e3t/+jo6P/j4+P/3t7e/9nZ2f/V1dX/0dHR/' +
 		'87Ozv/Nzc3/zMzM/8zMzOHMzMwwysrK',
+	// 15x8 argb
+	cloudError:
+		'AAAAAAAAAAAAAAAAAAAAABj/AACj/wIC7P8BAfX/Cwv+/0xM///m5vD+/v51+/v7A////wAAAAAAAAAAAAAAAAAAA' +
+		'AAAAAAAGf8AAMz/AACk/z09kf///////////n5+//8ZGf/54eH/9vb2RfDw8AAAAAAAAAAAAAAAAAAAAAB7//////9bW///g4P0/////' +
+		'P7+/v/90tL//i0t//4UFP/6XFz/7e3tf+np6QAAAAAAAAAAAv///xz///+k//////8XF////////f39//ygoP//CAj/+mVl/+/n5//9F' +
+		'RX/5OTkquDg4DDV1dUC////N////6v////s/v7+//8XF//77+///FlZ//4QEP/0pKT/6urq/+Xl5f/8FBT/3Nzc8dfX18DS0tJKz8/Pt' +
+		'P/////+/v7/+/v7//1OTv/+ERH//DY2/+3Q0P/m5ub/4eHh/+5qav/vWlr/1NTU/9HR0f/Ozs7HzMzM2Pv7+//5+fn/9fX1//PNzf/9G' +
+		'Rn/83Z2/+Li4v/d3d3/7G9v//cqKv/Uw8P/z8/P/83Nzf/MzMzGy8vLVvb29u7y8vL/7e3t/+jo6P/mzc3/81NT//wREf/8ERH/8T4+/' +
+		'9O7u//Nzc3/zMzM/8zMzOHMzMwwysrK',
 }
 
 // let lastDraw = 0
@@ -323,7 +332,10 @@ export default class GraphicsRenderer {
 		let rightMax = 72
 
 		// first the cloud icon if present
-		if (drawStyle.cloud && show_topbar) {
+		if (drawStyle.cloud_error && show_topbar) {
+			img.drawPixelBuffer(rightMax - 17, 3, 15, 8, internalIcons.cloudError)
+			rightMax -= 17
+		} else if (drawStyle.cloud && show_topbar) {
 			img.drawPixelBuffer(rightMax - 17, 3, 15, 8, internalIcons.cloud)
 			rightMax -= 17
 		}

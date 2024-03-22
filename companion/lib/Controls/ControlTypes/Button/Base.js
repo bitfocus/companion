@@ -300,9 +300,11 @@ export default class ButtonControlBase extends ControlBase {
 		}
 
 		return {
+			cloud: false,
+			cloud_error: false,
+
 			...cloneDeep(style),
 
-			cloud: false,
 			step_cycle: undefined,
 
 			pushed: !!this.pushed,
