@@ -114,7 +114,22 @@ class InstanceDefinitions extends CoreBase {
 					style: definition.type,
 				}
 
-				if (style.text) style.text = this.instance.variable.parseVariables(style.text, null).text
+				if (style.text) {
+					// @ts-expect-error not in module typings
+					if (style.textExpression) {
+						try {
+							const parseResult = this.instance.variable.parseExpression(style.text, null)
+							style.text = parseResult.value + ''
+						} catch (e) {
+							this.logger.error(`Expression parse error: ${e}`)
+
+							style.text = 'ERR'
+						}
+					} else {
+						const parseResult = this.instance.variable.parseVariables(style.text, null)
+						style.text = parseResult.text
+					}
+				}
 
 				const render = await this.graphics.drawPreview(style)
 				if (render) {
@@ -302,8 +317,8 @@ class InstanceDefinitions extends CoreBase {
 				stepAutoProgress: definition.options?.stepAutoProgress ?? true,
 			},
 			style: {
-				...cloneDeep(definition.style),
 				textExpression: false,
+				...cloneDeep(definition.style),
 				// TODO - avoid defaults..
 				alignment: definition.style.alignment ?? 'center:center',
 				pngalignment: definition.style.pngalignment ?? 'center:center',
