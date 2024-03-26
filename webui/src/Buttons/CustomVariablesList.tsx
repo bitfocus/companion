@@ -76,6 +76,36 @@ export function CustomVariablesList({ setShowCustom }: CustomVariablesListProps)
 
 	const [newName, setNewName] = useState('')
 
+	const [variableUsage, setVariableUsage] = useState<Map<string, { buttonName: string; usageType: string }[]>>(new Map());
+
+	useEffect(() => {
+		const doPoll = (variableName: string) => {
+			return socketEmitPromise(socket, 'variables:get-instances', ["$(internal:custom_" + variableName + ")"])
+				.then((res) => {
+					setVariableUsage((prevMap) => {
+						return new Map(prevMap.set(variableName, res));
+					});
+				})
+				.catch((e) => {
+					console.error('Failed to retrieve instances');
+				});
+		}
+
+
+		const doPollAll = () => {
+			for (let name in allVariableNames) {
+				doPoll(allVariableNames[name])
+			}
+		}
+
+		doPollAll()
+		const interval = setInterval(doPollAll, 1000)
+
+		return () => {
+			clearInterval(interval)
+		}
+	}, [socket])
+
 	const doCreateNew = useCallback(
 		(e: FormEvent) => {
 			e?.preventDefault()
@@ -266,7 +296,6 @@ export function CustomVariablesList({ setShowCustom }: CustomVariablesListProps)
 					{candidates &&
 						candidates.map((info, index) => {
 							const shortname = `custom_${info.name}`
-
 							return (
 								<CustomVariableRow
 									key={info.name}
@@ -283,6 +312,7 @@ export function CustomVariablesList({ setShowCustom }: CustomVariablesListProps)
 									moveRow={moveRow}
 									setCollapsed={setPanelCollapsed}
 									isCollapsed={isPanelCollapsed(info.name)}
+									usage={variableUsage.get(info.name)}
 								/>
 							)
 						})}
@@ -334,6 +364,7 @@ interface CustomVariableRowProps {
 	moveRow: (itemName: string, targetName: string) => void
 	isCollapsed: boolean
 	setCollapsed: (name: string, collapsed: boolean) => void
+	usage: { buttonName: string; usageType: string }[] | undefined
 }
 
 function CustomVariableRow({
@@ -350,6 +381,7 @@ function CustomVariableRow({
 	moveRow,
 	isCollapsed,
 	setCollapsed,
+	usage
 }: CustomVariableRowProps) {
 	const fullname = `internal:${shortname}`
 
@@ -458,6 +490,19 @@ function CustomVariableRow({
 						</>
 					)}
 				</div>
+				{!isCollapsed && (
+					<>
+						<div className="cell-usage">
+							{usage !== undefined && (
+								Array.from(usage).map((item: { buttonName: string; usageType: string }, index: number) => (
+									<div key={index}>
+										<p>Used by {item.buttonName} for {item.usageType}</p>
+									</div>
+								))
+							)}
+						</div>
+					</>
+				)}
 			</td>
 		</tr>
 	)

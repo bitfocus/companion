@@ -117,6 +117,8 @@ class InstanceVariable extends CoreBase {
 	/**
 	 * @param {import('../Registry.js').default} registry
 	 */
+
+
 	constructor(registry) {
 		super(registry, 'Instance/Variable')
 
@@ -313,6 +315,74 @@ class InstanceVariable extends CoreBase {
 		client.onPromise('variables:instance-values', (label) => {
 			return this.#variableValues[label]
 		})
+
+		client.onPromise('variables:get-instances', (name) => {
+			const result = new Set()
+
+			const usageTypes = new Map([
+				["style", "name"],
+				["feedbacks", "feedbacks"],
+				["steps", "action"]
+			]);
+			// name -> style
+			// feedback -> feedbacks
+			// action -> steps
+
+			for (let [controlId, control] of this.registry.controls.getAllControls()) {
+				const parsedControl = control.toJSON();
+
+				if (typeof parsedControl != "string") {
+					for (const propName in parsedControl) {
+						if (JSON.stringify(parsedControl[propName]).includes(name)) {
+							const location = this.registry.page.getLocationOfControlId(controlId)
+							const formattedLocation = location?.pageNumber + "/" + location?.row + "/" + location?.column
+							const formattedUsageType = usageTypes.get(propName) == undefined ? "unknown" : usageTypes.get(propName)
+
+							result.add({
+								"buttonName": formattedLocation, "usageType": formattedUsageType
+							})
+						}
+					}
+				}
+			}
+
+			return Array.from(result)
+		})
+	}
+
+	/**
+	* @param {any} obj
+	* @param {string} str
+	*/
+	objectContainsString(obj, str) {
+		if (typeof obj !== 'object' || obj === null) {
+			return false;
+		}
+
+		const seenObjects = new Set(); // To handle circular references
+
+		/**
+		 * @param {any} obj
+		 */
+		function checkObject(obj) {
+			if (seenObjects.has(obj)) {
+				return false; // Circular reference detected
+			}
+
+			seenObjects.add(obj);
+
+			for (const key in obj) {
+				if (typeof obj[key] === 'string' && obj[key].includes(str)) {
+					return true;
+				} else if (typeof obj[key] === 'object' && checkObject(obj[key])) {
+					return true;
+				}
+			}
+
+			return false;
+		}
+
+		return checkObject(obj);
 	}
 
 	/**
