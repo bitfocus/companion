@@ -1,6 +1,7 @@
 import { defineConfig } from 'vite'
 import reactPlugin from '@vitejs/plugin-react'
 import * as envCompatible from 'vite-plugin-env-compatible'
+import legacyPlugin from '@vitejs/plugin-legacy'
 
 const upstreamUrl = process.env.UPSTREAM_URL || '127.0.0.1:8000'
 
@@ -27,6 +28,9 @@ export default defineConfig({
 		reactPlugin(),
 		envCompatible.default({
 			prefix: 'DEV',
+		}),
+		legacyPlugin({
+			targets: ['defaults', 'not IE 11', 'safari >= 12.1'],
 		}),
 	],
 	css: {
