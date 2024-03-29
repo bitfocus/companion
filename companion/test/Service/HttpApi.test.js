@@ -52,16 +52,24 @@ describe('HttpApi', () => {
 			mockOptions
 		)
 
-		const legacyRouter = express.Router()
-		const service = new ServiceHttpApi(registry, legacyRouter)
+		let router = express.Router()
 
 		const app = express()
 
+		const appHandler = {
+			set apiRouter(newRouter) {
+				router = newRouter
+			},
+		}
+
 		app.use(bodyParser.text())
 		app.use(bodyParser.json())
+		app.use('/api', (r, s, n) => router(r, s, n))
+		app.get('*', (_req, res, _next) => {
+			res.status(421).send('')
+		})
 
-		app.use(legacyRouter)
-		service.bindToApp(app)
+		const service = new ServiceHttpApi(registry, appHandler)
 
 		return {
 			app,
@@ -70,6 +78,17 @@ describe('HttpApi', () => {
 			logger,
 		}
 	}
+
+	describe('api', () => {
+		test('nonApiRequest', async () => {
+			const { app, registry } = createService()
+			registry.surfaces.triggerRefreshDevices.mockResolvedValue()
+
+			// Perform the request
+			const res = await supertest(app).get('/index.js').send()
+			expect(res.status).toBe(421)
+		})
+	})
 
 	describe('surfaces', () => {
 		describe('rescan', () => {

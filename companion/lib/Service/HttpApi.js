@@ -1,8 +1,8 @@
 import CoreBase from '../Core/Base.js'
 import { ParseAlignment, parseColorToNumber, rgb } from '../Resources/Util.js'
 import express from 'express'
-import cors from 'cors'
 import { formatLocation } from '@companion-app/shared/ControlId.js'
+import Express from 'express'
 
 /**
  * Class providing the HTTP API.
@@ -27,53 +27,51 @@ import { formatLocation } from '@companion-app/shared/ControlId.js'
  */
 export class ServiceHttpApi extends CoreBase {
 	/**
-	 * Root express router
-	 * @type {import('express').Router}
-	 * @access private
-	 */
-	#legacyRouter
-
-	/**
-	 * Api router
+	 * new Api express router
 	 * @type {import('express').Router}
 	 * @access private
 	 */
 	#apiRouter
 
 	/**
-	 * @param {import('../Registry.js').default} registry - the application core
-	 * @param {import('express').Router} router - the http router
+	 * The web application framework
+	 * @type {import('../UI/Express.js').default}
+	 * @access protected
+	 * @readonly
 	 */
-	constructor(registry, router) {
-		super(registry, 'Service/HttpApi')
-
-		this.#legacyRouter = router
-		this.#apiRouter = express.Router()
-		this.#apiRouter.use(cors())
-
-		this.#setupLegacyHttpRoutes()
-		this.#setupNewHttpRoutes()
-	}
+	#express
 
 	/**
-	 *
-	 * @param {import('express').Application} app
+	 * @param {import('../Registry.js').default} registry - the application core
+	 * @param {import('../UI/Express.js').default} express - express
 	 */
-	bindToApp(app) {
-		app.use(
-			'/api',
-			(_req, res, next) => {
-				// Check that the API is enabled
-				if (this.userconfig.getKey('http_api_enabled')) {
-					// Continue
-					next()
-				} else {
-					// Disabled
-					res.status(403).send()
-				}
-			},
-			this.#apiRouter
-		)
+	constructor(registry, express) {
+		super(registry, 'Service/HttpApi')
+
+		this.#express = express
+		// @ts-ignore
+		this.#apiRouter = new Express.Router()
+
+		this.#apiRouter.use((_req, res, next) => {
+			// Check that the API is enabled
+			if (this.userconfig.getKey('http_api_enabled')) {
+				// Continue
+				next()
+			} else {
+				// Disabled
+				res.status(403).send()
+			}
+		})
+
+		this.#setupNewHttpRoutes()
+		this.#setupLegacyHttpRoutes()
+
+		// Finally, default all unhandled to 404
+		this.#apiRouter.use('*', (_req, res) => {
+			res.status(404).send('')
+		})
+
+		this.#express.apiRouter = this.#apiRouter
 	}
 
 	#isLegacyRouteAllowed() {
@@ -81,7 +79,7 @@ export class ServiceHttpApi extends CoreBase {
 	}
 
 	#setupLegacyHttpRoutes() {
-		this.#legacyRouter.options('/press/bank/*', (_req, res, _next) => {
+		this.#apiRouter.options('/press/bank/*', (_req, res, _next) => {
 			if (!this.#isLegacyRouteAllowed()) return res.status(403).send()
 
 			res.header('Access-Control-Allow-Origin', '*')
@@ -90,7 +88,7 @@ export class ServiceHttpApi extends CoreBase {
 			return res.send(200)
 		})
 
-		this.#legacyRouter.get('^/press/bank/:page([0-9]{1,2})/:bank([0-9]{1,2})', (req, res) => {
+		this.#apiRouter.get('/press/bank/:page([0-9]{1,2})/:bank([0-9]{1,2})', (req, res) => {
 			if (!this.#isLegacyRouteAllowed()) return res.status(403).send()
 
 			res.header('Access-Control-Allow-Origin', '*')
@@ -116,7 +114,7 @@ export class ServiceHttpApi extends CoreBase {
 			return res.send('ok')
 		})
 
-		this.#legacyRouter.get('^/press/bank/:page([0-9]{1,2})/:bank([0-9]{1,2})/:direction(down|up)', (req, res) => {
+		this.#apiRouter.get('/press/bank/:page([0-9]{1,2})/:bank([0-9]{1,2})/:direction(down|up)', (req, res) => {
 			if (!this.#isLegacyRouteAllowed()) return res.status(403).send()
 
 			res.header('Access-Control-Allow-Origin', '*')
@@ -156,7 +154,7 @@ export class ServiceHttpApi extends CoreBase {
 			return res.send('ok')
 		})
 
-		this.#legacyRouter.get('^/rescan', (_req, res) => {
+		this.#apiRouter.get('/rescan', (_req, res) => {
 			if (!this.#isLegacyRouteAllowed()) return res.status(403).send()
 
 			res.header('Access-Control-Allow-Origin', '*')
@@ -174,7 +172,7 @@ export class ServiceHttpApi extends CoreBase {
 			)
 		})
 
-		this.#legacyRouter.get('^/style/bank/:page([0-9]{1,2})/:bank([0-9]{1,2})', (req, res) => {
+		this.#apiRouter.get('/style/bank/:page([0-9]{1,2})/:bank([0-9]{1,2})', (req, res) => {
 			if (!this.#isLegacyRouteAllowed()) return res.status(403).send()
 
 			res.header('Access-Control-Allow-Origin', '*')
@@ -262,7 +260,7 @@ export class ServiceHttpApi extends CoreBase {
 			return res.send('ok')
 		})
 
-		this.#legacyRouter.get('^/set/custom-variable/:name', (req, res) => {
+		this.#apiRouter.get('/set/custom-variable/:name', (req, res) => {
 			if (!this.#isLegacyRouteAllowed()) return res.status(403).send()
 
 			res.header('Access-Control-Allow-Origin', '*')
@@ -296,16 +294,13 @@ export class ServiceHttpApi extends CoreBase {
 		this.#apiRouter.post('/location/:page([0-9]{1,2})/:row(-?[0-9]+)/:column(-?[0-9]+)/style', this.#locationStyle)
 
 		// custom variables
-		this.#apiRouter.post('/custom-variable/:name/value', this.#customVariableSetValue)
-		this.#apiRouter.get('/custom-variable/:name/value', this.#customVariableGetValue)
+		this.#apiRouter
+			.route('/custom-variable/:name/value')
+			.post(this.#customVariableSetValue)
+			.get(this.#customVariableGetValue)
 
 		// surfaces
 		this.#apiRouter.post('/surfaces/rescan', this.#surfacesRescan)
-
-		// Finally, default all unhandled to 404
-		this.#apiRouter.use('*', (_req, res) => {
-			res.status(404).send('')
-		})
 	}
 
 	/**
