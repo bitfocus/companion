@@ -43,7 +43,7 @@ export class ServiceHttpApi extends CoreBase {
 
 	/**
 	 * @param {import('../Registry.js').default} registry - the application core
-	 * @param {import('../UI/Express.js').default} express - express 
+	 * @param {import('../UI/Express.js').default} express - express
 	 */
 	constructor(registry, express) {
 		super(registry, 'Service/HttpApi')
@@ -52,18 +52,16 @@ export class ServiceHttpApi extends CoreBase {
 		// @ts-ignore
 		this.#apiRouter = new Express.Router()
 
-		this.#apiRouter.use(
-			(_req, res, next) => {
-				// Check that the API is enabled
-				if (this.userconfig.getKey('http_api_enabled')) {
-					// Continue
-					next()
-				} else {
-					// Disabled
-					res.status(403).send()
-				}
+		this.#apiRouter.use((_req, res, next) => {
+			// Check that the API is enabled
+			if (this.userconfig.getKey('http_api_enabled')) {
+				// Continue
+				next()
+			} else {
+				// Disabled
+				res.status(403).send()
 			}
-		)
+		})
 
 		this.#setupNewHttpRoutes()
 		this.#setupLegacyHttpRoutes()
@@ -296,13 +294,13 @@ export class ServiceHttpApi extends CoreBase {
 		this.#apiRouter.post('/location/:page([0-9]{1,2})/:row(-?[0-9]+)/:column(-?[0-9]+)/style', this.#locationStyle)
 
 		// custom variables
-		this.#apiRouter.route('/custom-variable/:name/value')
+		this.#apiRouter
+			.route('/custom-variable/:name/value')
 			.post(this.#customVariableSetValue)
 			.get(this.#customVariableGetValue)
 
 		// surfaces
 		this.#apiRouter.post('/surfaces/rescan', this.#surfacesRescan)
-
 	}
 
 	/**

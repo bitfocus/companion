@@ -105,7 +105,7 @@ class UIExpress {
 		})
 
 		// Use the router #apiRouter to add API routes dynamically, this router can be redefined at runtime with setter
-		this.app.use('/api', (r,s,n) => this.#apiRouter(r,s,n))
+		this.app.use('/api', (r, s, n) => this.#apiRouter(r, s, n))
 
 		/**
 		 * @param {string} subpath
@@ -144,9 +144,9 @@ class UIExpress {
 
 	/**
 	 * Set a new router as the ApiRouter
-	 * @param {*} router 
+	 * @param {*} router
 	 */
-	set apiRouter (router) {
+	set apiRouter(router) {
 		this.#apiRouter = router
 	}
 }
