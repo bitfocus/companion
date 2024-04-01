@@ -75,8 +75,6 @@ export class ServiceHttpApi extends CoreBase {
 		this.#setupNewHttpRoutes()
 		this.#setupLegacyHttpRoutes()
 
-
-
 		this.#express.apiRouter = this.#apiRouter
 		this.#express.legacyApiRouter = this.#legacyApiRouter
 	}
