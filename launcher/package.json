@@ -11,7 +11,7 @@
 		"dev": "electron dev.cjs"
 	},
 	"dependencies": {
-		"@sentry/electron": "^4.21.0",
+		"@sentry/electron": "^4.22.0",
 		"chokidar": "^3.6.0",
 		"debounce-fn": "^6.0.0",
 		"electron-store": "^8.2.0",
