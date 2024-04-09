@@ -19,6 +19,7 @@ export function isLabelValid(label) {
 	if (
 		label.toLowerCase() === 'internal' ||
 		label.toLowerCase() === 'this' ||
+		label.toLowerCase() === 'local' ||
 		label.toLowerCase() === 'companion' ||
 		label.toLowerCase() === 'custom'
 	)
