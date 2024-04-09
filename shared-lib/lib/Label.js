@@ -16,7 +16,12 @@ export function isLabelValid(label) {
 	if (!label || typeof label !== 'string') return false
 
 	// Check a few reserved words
-	if (label.toLowerCase() === 'internal' || label.toLowerCase() === 'companion' || label.toLowerCase() === 'custom')
+	if (
+		label.toLowerCase() === 'internal' ||
+		label.toLowerCase() === 'this' ||
+		label.toLowerCase() === 'companion' ||
+		label.toLowerCase() === 'custom'
+	)
 		return false
 
 	const safeLabel = makeLabelSafe(label)
