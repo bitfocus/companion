@@ -189,7 +189,7 @@ export function InternalCustomVariableDropdown({
 		for (const [id, info] of Object.entries(context)) {
 			choices.push({
 				id,
-				label: `${info.description} (${id})`,
+				label: `${info.description} (internal:custom_${id})`,
 			})
 		}
 
