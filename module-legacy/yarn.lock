@@ -917,7 +917,7 @@ axios@^0.19.0:
   dependencies:
     follow-redirects "1.5.10"
 
-axios@^0.21.1, axios@^0.21.4:
+axios@^0.21.1:
   version "0.21.4"
   resolved "https://registry.yarnpkg.com/axios/-/axios-0.21.4.tgz#c67b90dc0568e5c1cf2b0b858c43ba28e2eda575"
   integrity sha512-ut5vewkiu8jjGBdqpM44XxjuCjq9LAKeHVmoVfHVzy8eHgxxq8SbAVQNovDA8mVi05kP0Ea/n/UzcSHcTJQfNg==
@@ -1156,11 +1156,6 @@ chrome-trace-event@^1.0.2:
   resolved "https://registry.yarnpkg.com/chrome-trace-event/-/chrome-trace-event-1.0.3.tgz#1015eced4741e15d06664a957dbbf50d041e26ac"
   integrity sha512-p3KULyQg4S7NIHixdwbGX+nFHkoBiA4YQmyWtjb8XngSKV124nJmRysgAeujbUVb15vh+RvFUfCPqU7rXk+hZg==
 
-cidr-regex@^1.0.7:
-  version "1.0.7"
-  resolved "https://registry.yarnpkg.com/cidr-regex/-/cidr-regex-1.0.7.tgz#3782fefb79c81d7d330690cde31a0fe3445fd39b"
-  integrity sha1-N4L++3nIHX0zBpDN4xoP40Rf05s=
-
 clone-deep@^4.0.1:
   version "4.0.1"
   resolved "https://registry.yarnpkg.com/clone-deep/-/clone-deep-4.0.1.tgz#c19fd9bdbbf85942b4fd979c84dcf7d5f07c2387"
@@ -1277,10 +1272,6 @@ commist@^1.0.0:
 "companion-module-arkaos-mediamaster@github:bitfocus/companion-module-arkaos-mediamaster#v1.0.5":
   version "1.0.5"
   resolved "https://codeload.github.com/bitfocus/companion-module-arkaos-mediamaster/tar.gz/b2a69f65be372bd18cd907124f5fd6e43cf7d6d0"
-
-"companion-module-aten-matrix@github:bitfocus/companion-module-aten-matrix#v1.0.1":
-  version "1.0.1"
-  resolved "https://codeload.github.com/bitfocus/companion-module-aten-matrix/tar.gz/6c66b5375c554062ec382cea010a0a39c9e26fee"
 
 "companion-module-avishop-hdbaset-matrix@github:bitfocus/companion-module-avishop-hdbaset-matrix#v1.0.3":
   version "1.0.3"
@@ -1508,10 +1499,6 @@ commist@^1.0.0:
     node-fetch "2.6.0"
     xml2js "^0.4.23"
 
-"companion-module-dolby-cinemaprocessor@github:bitfocus/companion-module-dolby-cinemaprocessor#v1.1.1":
-  version "1.1.1"
-  resolved "https://codeload.github.com/bitfocus/companion-module-dolby-cinemaprocessor/tar.gz/6a02dad1cbfd737d041a9b5fa3b2485e297a6421"
-
 "companion-module-draco-tera@github:bitfocus/companion-module-draco-tera#v1.0.7":
   version "1.0.7"
   resolved "https://codeload.github.com/bitfocus/companion-module-draco-tera/tar.gz/eca0f57e06babbff6dc6e1cd74259509c1fe5bfc"
@@ -1629,12 +1616,6 @@ commist@^1.0.0:
 "companion-module-joy-playdeck@github:bitfocus/companion-module-joy-playdeck#v1.0.2":
   version "1.0.2"
   resolved "https://codeload.github.com/bitfocus/companion-module-joy-playdeck/tar.gz/f854d9662c452c2715c79bf142b257a3790fa14f"
-
-"companion-module-jvc-ptz@github:bitfocus/companion-module-jvc-ptz#v1.1.0":
-  version "1.1.0"
-  resolved "https://codeload.github.com/bitfocus/companion-module-jvc-ptz/tar.gz/5e3c8611ad3893abb5d842d3a2caf530f390124d"
-  dependencies:
-    urllib "^2.38.0"
 
 "companion-module-kiloview-ndi@github:bitfocus/companion-module-kiloview-ndi#v1.0.2":
   version "1.0.2"
@@ -1784,12 +1765,6 @@ commist@^1.0.0:
   dependencies:
     xml2js "^0.4.23"
 
-"companion-module-neumannmueller-stageflow@github:bitfocus/companion-module-neumannmueller-stageflow#v1.0.3":
-  version "1.0.3"
-  resolved "https://codeload.github.com/bitfocus/companion-module-neumannmueller-stageflow/tar.gz/fa83011b4951996b8c0733243dbe41e97a93e2fb"
-  dependencies:
-    socket.io-client "^4.5.3"
-
 "companion-module-nevion-mrp@github:bitfocus/companion-module-nevion-mrp#v2.0.3":
   version "2.0.3"
   resolved "https://codeload.github.com/bitfocus/companion-module-nevion-mrp/tar.gz/e65d5aaa88d7cd5b27a8a439351bf0bf65444d65"
@@ -1865,10 +1840,6 @@ commist@^1.0.0:
 "companion-module-orfast-ndi@github:bitfocus/companion-module-orfast-ndi#v1.0.1":
   version "1.0.1"
   resolved "https://codeload.github.com/bitfocus/companion-module-orfast-ndi/tar.gz/b79ffb6c95b49443b5afa61a24732f51a3452565"
-
-"companion-module-panasonic-avhs@github:bitfocus/companion-module-panasonic-avhs#v1.0.6":
-  version "1.0.6"
-  resolved "https://codeload.github.com/bitfocus/companion-module-panasonic-avhs/tar.gz/edfde2efa81b5dcbda9458f4afa6275b474b113b"
 
 "companion-module-panasonic-lumix@github:bitfocus/companion-module-panasonic-lumix#v1.0.0":
   version "1.0.0"
@@ -1990,25 +1961,13 @@ commist@^1.0.0:
   version "1.0.2"
   resolved "https://codeload.github.com/bitfocus/companion-module-sharp-tv/tar.gz/6d5cd827ebec2fed9f6939203579d9476dcd46f4"
 
-"companion-module-showcuesystems-scs@github:bitfocus/companion-module-showcuesystems-scs#v1.0.5":
-  version "1.0.5"
-  resolved "https://codeload.github.com/bitfocus/companion-module-showcuesystems-scs/tar.gz/52481a6d15e690dc213cd74a154667fcfd077a40"
-
 "companion-module-shure-dis-ccu@github:bitfocus/companion-module-shure-dis-ccu#v1.0.2":
   version "1.0.2"
   resolved "https://codeload.github.com/bitfocus/companion-module-shure-dis-ccu/tar.gz/b3c7f6b11cbce98b0452f702dc46f2cab768cfff"
 
-"companion-module-shure-mxa910@github:bitfocus/companion-module-shure-mxa910#v1.0.1":
-  version "1.0.1"
-  resolved "https://codeload.github.com/bitfocus/companion-module-shure-mxa910/tar.gz/9456c294fb3e064974148842af96f39770e62918"
-
 "companion-module-shure-mxn5@github:bitfocus/companion-module-shure-mxn5#v1.0.1":
   version "1.0.1"
   resolved "https://codeload.github.com/bitfocus/companion-module-shure-mxn5/tar.gz/9e3fb5a00db1497902242a3c6e27920161d06c97"
-
-"companion-module-shure-p300@github:bitfocus/companion-module-shure-p300#v1.0.1":
-  version "1.0.1"
-  resolved "https://codeload.github.com/bitfocus/companion-module-shure-p300/tar.gz/90ed1f67ea8237d91db455e0aab4b6d1ee94cf50"
 
 "companion-module-sienna-ndimonitor@github:bitfocus/companion-module-sienna-ndimonitor#v1.0.1":
   version "1.0.1"
@@ -2089,12 +2048,6 @@ commist@^1.0.0:
     colorsys "^1.0.22"
     tplink-smarthome-api "^4.2.0"
 
-"companion-module-tplink-taposmartplug@github:bitfocus/companion-module-tplink-taposmartplug#v1.0.2":
-  version "1.0.2"
-  resolved "https://codeload.github.com/bitfocus/companion-module-tplink-taposmartplug/tar.gz/fc7e1e609b1daa9c58ae3af0cb78a2d9e2ac293b"
-  dependencies:
-    tp-link-tapo-connect "^1.0.6"
-
 "companion-module-tvone-corio@github:bitfocus/companion-module-tvone-corio#v1.0.1":
   version "1.0.1"
   resolved "https://codeload.github.com/bitfocus/companion-module-tvone-corio/tar.gz/0f1adbe3241f177d5b97c78286561b6a87ddb9fc"
@@ -2126,10 +2079,6 @@ commist@^1.0.0:
 "companion-module-visualproductions-cuety@github:bitfocus/companion-module-visualproductions-cuety#v1.0.3":
   version "1.0.3"
   resolved "https://codeload.github.com/bitfocus/companion-module-visualproductions-cuety/tar.gz/66c9591b71d7c2a8256d7c7c7848c5549d8caed1"
-
-"companion-module-vivitek-projector@github:bitfocus/companion-module-vivitek-projector#v1.0.5":
-  version "1.0.5"
-  resolved "https://codeload.github.com/bitfocus/companion-module-vivitek-projector/tar.gz/3dbacfc91aff5b135ca139abdea57db4218fa35a"
 
 "companion-module-vizrt-tcp-engine-trio@github:bitfocus/companion-module-vizrt-tcp-engine-trio#v1.0.0":
   version "1.0.0"
@@ -3016,15 +2965,6 @@ get-intrinsic@^1.0.2:
     has "^1.0.3"
     has-symbols "^1.0.1"
 
-get-ip-range@^2.1.0:
-  version "2.1.1"
-  resolved "https://registry.yarnpkg.com/get-ip-range/-/get-ip-range-2.1.1.tgz#0e67edb2a72a6d13f64b4e9060ac14d229edd147"
-  integrity sha512-n401kTpf57VhbW2UvInXxhw1DgTJSsZf24gpNhJrFU8Cv+Jk/sQ+qukP2x0EF4MUEjDWlDLeIhIY/f80IV0kqg==
-  dependencies:
-    cidr-regex "^1.0.7"
-    ip "^1.1.5"
-    ip-address "^6.1.0"
-
 get-ssl-certificate@^2.3.3:
   version "2.3.3"
   resolved "https://registry.yarnpkg.com/get-ssl-certificate/-/get-ssl-certificate-2.3.3.tgz#c8a43da1c77969b2a1dabe8f8356a7d60cf0c4b5"
@@ -3362,19 +3302,6 @@ interpret@^3.1.1:
   resolved "https://registry.yarnpkg.com/interpret/-/interpret-3.1.1.tgz#5be0ceed67ca79c6c4bc5cf0d7ee843dcea110c4"
   integrity sha512-6xwYfHbajpoF0xLW+iwLkhwgvLoZDfjYfoFNu8ftMoXINzwuymNLd9u/KmwtdT2GbR+/Cz66otEGEVVUHX9QLQ==
 
-ip-address@^6.1.0:
-  version "6.4.0"
-  resolved "https://registry.yarnpkg.com/ip-address/-/ip-address-6.4.0.tgz#8f7d43e76002a1c3c230792c748f5d8c143f908a"
-  integrity sha512-c5uxc2WUTuRBVHT/6r4m7HIr/DfV0bF6DvLH3iZGSK8wp8iMwwZSgIq2do0asFf8q9ECug0SE+6+1ACMe4sorA==
-  dependencies:
-    jsbn "1.1.0"
-    lodash.find "4.6.0"
-    lodash.max "4.0.1"
-    lodash.merge "4.6.2"
-    lodash.padstart "4.6.1"
-    lodash.repeat "4.1.0"
-    sprintf-js "1.1.2"
-
 ip-range-check@^0.0.2:
   version "0.0.2"
   resolved "https://registry.yarnpkg.com/ip-range-check/-/ip-range-check-0.0.2.tgz#605c859687aa4f18463918d46190d8b3699a293c"
@@ -3543,11 +3470,6 @@ js-yaml@^4.1.0:
   dependencies:
     argparse "^2.0.1"
 
-jsbn@1.1.0:
-  version "1.1.0"
-  resolved "https://registry.yarnpkg.com/jsbn/-/jsbn-1.1.0.tgz#b01307cb29b618a1ed26ec79e911f803c4da0040"
-  integrity sha1-sBMHyym2GKHtJux56RH4A8TaAEA=
-
 jsbn@~0.1.0:
   version "0.1.1"
   resolved "https://registry.yarnpkg.com/jsbn/-/jsbn-0.1.1.tgz#a5e654c2e5a2deb5f201d96cefbca80c0ef2f513"
@@ -3649,15 +3571,6 @@ loader-runner@^4.2.0:
   resolved "https://registry.yarnpkg.com/loader-runner/-/loader-runner-4.3.0.tgz#c1b4a163b99f614830353b16755e7149ac2314e1"
   integrity sha512-3R/1M+yS3j5ou80Me59j7F9IMs4PXs3VqRrm0TU3AbKPxlmpoY1TNscJV/oGJXo8qCatFGTfDbY6W6ipGOYXfg==
 
-local-devices@^3.1.0:
-  version "3.2.0"
-  resolved "https://registry.yarnpkg.com/local-devices/-/local-devices-3.2.0.tgz#02cbcaa06cb6a66d751b39979ba2190b62d8f163"
-  integrity sha512-JkWPXdFbu0l4nPXtINrcz8fkLA0WLMopmsHLvYsOMLnFx1SUM5cTVlLz6ZXcYMZHzWXoy0pOreKKLzsWBq5muQ==
-  dependencies:
-    get-ip-range "^2.1.0"
-    ip "^1.1.5"
-    mz "^2.7.0"
-
 locate-path@^5.0.0:
   version "5.0.0"
   resolved "https://registry.yarnpkg.com/locate-path/-/locate-path-5.0.0.tgz#1afba396afd676a6d42504d0a67a3a7eb9f62aa0"
@@ -3694,11 +3607,6 @@ lodash.defaultto@^4.14.0:
   resolved "https://registry.yarnpkg.com/lodash.defaultto/-/lodash.defaultto-4.14.0.tgz#38bd3d425acee733e0e2bbbd4e4b29711cc2ee11"
   integrity sha1-OL09QlrO5zPg4ru9TkspcRzC7hE=
 
-lodash.find@4.6.0:
-  version "4.6.0"
-  resolved "https://registry.yarnpkg.com/lodash.find/-/lodash.find-4.6.0.tgz#cb0704d47ab71789ffa0de8b97dd926fb88b13b1"
-  integrity sha1-ywcE1Hq3F4n/oN6Ll92Sb7iLE7E=
-
 lodash.get@^4.4.2:
   version "4.4.2"
   resolved "https://registry.yarnpkg.com/lodash.get/-/lodash.get-4.4.2.tgz#2d177f652fa31e939b4438d5341499dfa3825e99"
@@ -3714,25 +3622,10 @@ lodash.isequal@^4.5.0:
   resolved "https://registry.yarnpkg.com/lodash.isequal/-/lodash.isequal-4.5.0.tgz#415c4478f2bcc30120c22ce10ed3226f7d3e18e0"
   integrity sha1-QVxEePK8wwEgwizhDtMib30+GOA=
 
-lodash.max@4.0.1:
-  version "4.0.1"
-  resolved "https://registry.yarnpkg.com/lodash.max/-/lodash.max-4.0.1.tgz#8735566c618b35a9f760520b487ae79658af136a"
-  integrity sha1-hzVWbGGLNan3YFILSHrnllivE2o=
-
-lodash.merge@4.6.2, lodash.merge@^4.6.2:
+lodash.merge@^4.6.2:
   version "4.6.2"
   resolved "https://registry.yarnpkg.com/lodash.merge/-/lodash.merge-4.6.2.tgz#558aa53b43b661e1925a0afdfa36a9a1085fe57a"
   integrity sha512-0KpjqXRVvrYyCsX1swR/XTK0va6VQkQM6MNo7PqW77ByjAhoARA8EfrP1N4+KlKj8YS0ZUCtRT/YUuhyYDujIQ==
-
-lodash.padstart@4.6.1:
-  version "4.6.1"
-  resolved "https://registry.yarnpkg.com/lodash.padstart/-/lodash.padstart-4.6.1.tgz#d2e3eebff0d9d39ad50f5cbd1b52a7bce6bb611b"
-  integrity sha1-0uPuv/DZ05rVD1y9G1KnvOa7YRs=
-
-lodash.repeat@4.1.0:
-  version "4.1.0"
-  resolved "https://registry.yarnpkg.com/lodash.repeat/-/lodash.repeat-4.1.0.tgz#fc7de8131d8c8ac07e4b49f74ffe829d1f2bec44"
-  integrity sha1-/H3oEx2MisB+S0n3T/6CnR8r7EQ=
 
 lodash@^4.17.19, lodash@^4.17.21:
   version "4.17.21"
@@ -4718,7 +4611,7 @@ socket.io-client@2.4.0, socket.io-client@^2.3.0:
     socket.io-parser "~3.3.0"
     to-array "0.1.4"
 
-socket.io-client@^4.4.0, socket.io-client@^4.5.3:
+socket.io-client@^4.4.0:
   version "4.5.3"
   resolved "https://registry.yarnpkg.com/socket.io-client/-/socket.io-client-4.5.3.tgz#bed69209d001465b2fea650d2e95c1e82768ab5e"
   integrity sha512-I/hqDYpQ6JKwtJOf5ikM+Qz+YujZPMEl6qBLhxiP0nX+TfXKhW4KZZG8lamrD6Y5ngjmYHreESVasVCgi5Kl3A==
@@ -4792,11 +4685,6 @@ split@0.3:
   integrity sha1-zQ7qXmOiEd//frDwkcQTPi0N0o8=
   dependencies:
     through "2"
-
-sprintf-js@1.1.2:
-  version "1.1.2"
-  resolved "https://registry.yarnpkg.com/sprintf-js/-/sprintf-js-1.1.2.tgz#da1765262bf8c0f571749f2ad6c26300207ae673"
-  integrity sha512-VE0SOVEHCk7Qc8ulkWw3ntAzXuqf7S2lvwQaDLRnUeIEaKNQJzV6BwmLKhOqT61aGhfUMrXeaBk+oDGCzvhcug==
 
 sshpk@^1.7.0:
   version "1.17.0"
@@ -4997,14 +4885,6 @@ tough-cookie@~2.5.0:
   dependencies:
     psl "^1.1.28"
     punycode "^2.1.1"
-
-tp-link-tapo-connect@^1.0.6:
-  version "1.0.6"
-  resolved "https://registry.yarnpkg.com/tp-link-tapo-connect/-/tp-link-tapo-connect-1.0.6.tgz#429603c4e2f15c460716058388128a29950808d7"
-  integrity sha512-eLyqv/mFX9j2c5MY6SUGSk25v+ASfyrAlUxTkgOcVHtbk8tD+euQHlBIFxOaY5nuUHCY2NQe9eV1o+OqxwGDoQ==
-  dependencies:
-    axios "^0.21.4"
-    local-devices "^3.1.0"
 
 tplink-smarthome-api@^4.2.0:
   version "4.2.0"
