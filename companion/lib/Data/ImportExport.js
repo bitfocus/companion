@@ -1012,11 +1012,11 @@ class DataImportExport extends CoreBase {
 				} else {
 					// Create a new instance
 					const instance_type = this.instance.modules.verifyInstanceTypeIsCurrent(obj.instance_type)
-					const newId = this.instance.addInstance({ type: instance_type }, true)
+					const newLabel = this.instance.makeLabelUnique(obj.label)
+					const newId = this.instance.addInstanceWithLabel({ type: instance_type }, newLabel, true)
 					console.log('created', instance_type, newId)
 					if (newId) {
-						const newLabel = this.instance.makeLabelUnique(obj.label, newId)
-						this.instance.setInstanceLabelAndConfig(newId, newLabel, 'config' in obj ? obj.config : null)
+						this.instance.setInstanceLabelAndConfig(newId, null, 'config' in obj ? obj.config : null)
 
 						if (!('enabled' in obj) || obj.enabled !== false) {
 							this.instance.enableDisableInstance(newId, true)
