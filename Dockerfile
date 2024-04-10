@@ -1,4 +1,4 @@
-FROM node:18-bullseye as companion-builder
+FROM node:18-bookworm as companion-builder
 
 # Installation Prep
 RUN apt-get update && apt-get install -y \
@@ -21,7 +21,7 @@ RUN yarn build:writefile
 RUN ELECTRON=0 yarn dist
 
 # make the production image
-FROM debian:bullseye-slim
+FROM debian:bookworm-slim
 
 WORKDIR /app
 COPY --from=companion-builder /app/dist	/app/
