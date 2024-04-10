@@ -17,12 +17,12 @@
 		"electron-store": "^8.2.0",
 		"file-stream-rotator": "^1.0.0",
 		"fs-extra": "^11.2.0",
-		"nanoid": "^5.0.6",
+		"nanoid": "^5.0.7",
 		"plist": "^3.1.0",
 		"respawn": "*",
 		"semver": "^7.6.0",
 		"strip-ansi": "^7.1.0",
-		"systeminformation": "^5.22.6"
+		"systeminformation": "^5.22.7"
 	},
 	"devDependencies": {
 		"@electron/notarize": "^2.3.0",
