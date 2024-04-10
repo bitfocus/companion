@@ -215,9 +215,6 @@ class GraphicsController extends CoreBase {
 		GlobalFonts.registerFromPath(generateFontUrl('NotoColorEmoji-compat.ttf'), 'Companion-emoji')
 		GlobalFonts.registerFromPath(generateFontUrl('pf_tempesta_seven.ttf'), '5x7')
 
-		// console.log(JSON.stringify(GlobalFonts.families.filter((f) => f.family.startsWith('Companion'))))
-		// console.log(GlobalFonts.families.filter((f) => f.family.startsWith('Ubuntu')))
-
 		this.logger.info('Fonts loaded')
 	}
 
