@@ -27,8 +27,8 @@
 	"devDependencies": {
 		"@electron/notarize": "^2.3.0",
 		"@types/plist": "^3.0.5",
-		"electron": "28.2.8",
-		"electron-builder": "24.9.1",
+		"electron": "29.3.0",
+		"electron-builder": "24.13.3",
 		"electron-reloader": "^1.2.3"
 	},
 	"build": {
