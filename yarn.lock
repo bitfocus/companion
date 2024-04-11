@@ -3520,16 +3520,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/async-stream-emitter@npm:^4":
-  version: 4.1.0
-  resolution: "@types/async-stream-emitter@npm:4.1.0"
-  dependencies:
-    "@types/consumable-stream": "npm:^2"
-    "@types/writable-consumable-stream": "npm:^3"
-  checksum: 10c0/aef1e603392730dcd4ab7a57c27326b955ad0ff2fba45ff4b2fe9a4247a23b29783516566df8b7296ba01b7822986370bfd350981a59f1ad8628eba32d24f24a
-  languageName: node
-  linkType: hard
-
 "@types/aws-lambda@npm:^8.10.83":
   version: 8.10.133
   resolution: "@types/aws-lambda@npm:8.10.133"
@@ -3622,15 +3612,6 @@ __metadata:
   dependencies:
     "@types/node": "npm:*"
   checksum: 10c0/9e0d7496f29468c45a33e6c428b63348f4307dcda3a88621cd1ed84f69f4d8bfcf644589ae6d02b5c16ef773b94893ceb9c5070deba7a8cf7833287015d51d0a
-  languageName: node
-  linkType: hard
-
-"@types/consumable-stream@npm:^2":
-  version: 2.0.2
-  resolution: "@types/consumable-stream@npm:2.0.2"
-  dependencies:
-    "@types/node": "npm:*"
-  checksum: 10c0/e5ed1c5ddb8a0bc5c9d99f0630cbb5aa652fdc2ce62fae7d3d38b288dde6f49cc99903de86de4639e8435cbeb6b48e6f479aa06b686c9860a437c60f866183d8
   languageName: node
   linkType: hard
 
@@ -4130,19 +4111,19 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/socketcluster-client@npm:^16.1.0":
-  version: 16.1.0
-  resolution: "@types/socketcluster-client@npm:16.1.0"
+"@types/socketcluster-client@npm:^19.1.0":
+  version: 19.1.0
+  resolution: "@types/socketcluster-client@npm:19.1.0"
   dependencies:
     "@types/ag-channel": "npm:*"
-    "@types/async-stream-emitter": "npm:^4"
-    "@types/consumable-stream": "npm:^2"
+    "@types/async-stream-emitter": "npm:*"
+    "@types/consumable-stream": "npm:*"
     "@types/sc-errors": "npm:*"
-    "@types/socketcluster-server": "npm:^16"
-    "@types/stream-demux": "npm:^8"
-    "@types/writable-consumable-stream": "npm:^3"
+    "@types/socketcluster-server": "npm:*"
+    "@types/stream-demux": "npm:*"
+    "@types/writable-consumable-stream": "npm:*"
     "@types/ws": "npm:*"
-  checksum: 10c0/421692c6966fc3d8c9ae0f1780d4d0e411ddf1b063dfeabf83b564006fc5b216b8198c9cba4b4549344c922f70d38321f80901e03a14aafee340c7b02483e347
+  checksum: 10c0/4dc500d2a3f00d1ccbee75de20b00a97997d7c8bb80f4febab04a3e2a01177fb0b2fd9e1b1d31106e51b562d5ff19dbd3a5f5ff99562362b5e876f8028de0258
   languageName: node
   linkType: hard
 
@@ -4164,23 +4145,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/socketcluster-server@npm:^16":
-  version: 16.2.1
-  resolution: "@types/socketcluster-server@npm:16.2.1"
-  dependencies:
-    "@types/ag-auth": "npm:*"
-    "@types/ag-simple-broker": "npm:*"
-    "@types/async-stream-emitter": "npm:^4"
-    "@types/consumable-stream": "npm:^2"
-    "@types/jsonwebtoken": "npm:*"
-    "@types/sc-errors": "npm:*"
-    "@types/stream-demux": "npm:^8"
-    "@types/writable-consumable-stream": "npm:^3"
-    "@types/ws": "npm:*"
-  checksum: 10c0/f69b46d7349241bc89976f49314665b1e2d528df683b02baae620ba861bf17161f9e44a4e24e5ac19fb30e2ac9d0f6471b4fa55dcf1c1f63b4640044fb950c4b
-  languageName: node
-  linkType: hard
-
 "@types/stack-utils@npm:^2.0.0":
   version: 2.0.3
   resolution: "@types/stack-utils@npm:2.0.3"
@@ -4195,16 +4159,6 @@ __metadata:
     "@types/consumable-stream": "npm:*"
     "@types/writable-consumable-stream": "npm:*"
   checksum: 10c0/47e44bb279aa0831d1b679f4ab1400a67936ed9ae24f9cb05e7492ac4ca74bd359446e52961facffac9c71c5c2beb0a5d833549a48cbe587a5b3df1bcc75b54b
-  languageName: node
-  linkType: hard
-
-"@types/stream-demux@npm:^8":
-  version: 8.1.0
-  resolution: "@types/stream-demux@npm:8.1.0"
-  dependencies:
-    "@types/consumable-stream": "npm:^2"
-    "@types/writable-consumable-stream": "npm:^3"
-  checksum: 10c0/975f2057cb28bf1ce1507bce5088ee2511f819256e1812878e8b51ef90503f2d219d7c20679ba8d6f1c52b24232bc1c15b6351caba8daa5adfb79923959d6554
   languageName: node
   linkType: hard
 
@@ -4277,15 +4231,6 @@ __metadata:
   dependencies:
     "@types/consumable-stream": "npm:*"
   checksum: 10c0/033e8f3feb2e546a8c5e9f344fb57fe3c53a9fb1e2065992662ff60224203be06459b2a857359a120619c4b3057dd89dfb1b2cb3a31e4acb851b43cca2ca9c36
-  languageName: node
-  linkType: hard
-
-"@types/writable-consumable-stream@npm:^3":
-  version: 3.0.0
-  resolution: "@types/writable-consumable-stream@npm:3.0.0"
-  dependencies:
-    "@types/consumable-stream": "npm:^2"
-  checksum: 10c0/0979b0a51b80b80ee947cc47dac7ff27a1b346cacef12773714f6261facc52ccc10cac35374ed0cf6fdad21e702f1cf5e96e2b7737c023763171117f7370d67f
   languageName: node
   linkType: hard
 
@@ -4665,7 +4610,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"ag-request@npm:^1.0.0":
+"ag-request@npm:^1.0.1":
   version: 1.0.1
   resolution: "ag-request@npm:1.0.1"
   dependencies:
@@ -4977,12 +4922,12 @@ asn1@evs-broadcast/node-asn1:
   languageName: node
   linkType: hard
 
-"async-stream-emitter@npm:^4.0.0":
-  version: 4.1.0
-  resolution: "async-stream-emitter@npm:4.1.0"
+"async-stream-emitter@npm:^7.0.1":
+  version: 7.0.1
+  resolution: "async-stream-emitter@npm:7.0.1"
   dependencies:
-    stream-demux: "npm:^8.1.0"
-  checksum: 10c0/d8b47a8f3a923cb923b6d0f0c7eb57e2a7eb291f1fc640398fc4b12545c101718a4bac65a540121b28c8987da6b5d138f8e6814ad0c46a150fb9ba12f41c16c3
+    stream-demux: "npm:^10.0.1"
+  checksum: 10c0/0e8d1daaca584f741dd10375748fa11bb7a52282d88c5b4ddcefeba776edf60dc3d4aa4820cdc0d162519b0838085ec250d427dd3e3b7f0926a91d95da320473
   languageName: node
   linkType: hard
 
@@ -5982,7 +5927,7 @@ asn1@evs-broadcast/node-asn1:
     "@types/lodash-es": "npm:^4.17.12"
     "@types/pngjs": "npm:^6.0.4"
     "@types/semver": "npm:^7.5.8"
-    "@types/socketcluster-client": "npm:^16.1.0"
+    "@types/socketcluster-client": "npm:^19.1.0"
     "@types/supertest": "npm:^6.0.2"
     "@types/uuid": "npm:^9.0.8"
     "@types/ws": "npm:^8.5.10"
@@ -6021,7 +5966,7 @@ asn1@evs-broadcast/node-asn1:
     semver: "npm:^7.6.0"
     shuttle-control-usb: "npm:^1.4.0"
     socket.io: "npm:^4.7.5"
-    socketcluster-client: "npm:^16.1.1"
+    socketcluster-client: "npm:^19.1.2"
     supertest: "npm:^6.3.4"
     supports-color: "npm:^9.4.0"
     type-fest: "npm:^4.15.0"
@@ -6132,6 +6077,13 @@ asn1@evs-broadcast/node-asn1:
   version: 2.0.0
   resolution: "consumable-stream@npm:2.0.0"
   checksum: 10c0/4276ac662d254ef17e38daeaf280584801906a661ab215bde5cc3a37e6bd3def428c19abd8db601527a1582c065529ad9608466f09619ba3d1dcd89abcfadaea
+  languageName: node
+  linkType: hard
+
+"consumable-stream@npm:^3.0.0":
+  version: 3.0.0
+  resolution: "consumable-stream@npm:3.0.0"
+  checksum: 10c0/a6e9a7f29666aa135e898628edf3671d92b6fe061dcab1eff6f8eadb35438ea0f6eb2d782b9ca8320bb05ae2e73706986a17392f2c6bcd5e5c6826745d353fcb
   languageName: node
   linkType: hard
 
@@ -9644,10 +9596,10 @@ asn1@evs-broadcast/node-asn1:
   languageName: node
   linkType: hard
 
-"linked-list@npm:^0.1.0":
-  version: 0.1.0
-  resolution: "linked-list@npm:0.1.0"
-  checksum: 10c0/b63862851a95af9bb71ef2e6fb0d607edefa3336fa74e6ad1c42a307bcd9900bdd25b59f7ea92ff96d94a10fa95181304663edca8efc735a7a15c1f985815426
+"linked-list@npm:^2.1.0":
+  version: 2.1.0
+  resolution: "linked-list@npm:2.1.0"
+  checksum: 10c0/d039f664f847022be908460a06a7f63792aadcdfd3061f999726a92d89bf3a10688e7dfb98236f65d9980e2a175839028a374070e48e0676ab9e66122fca7063
   languageName: node
   linkType: hard
 
@@ -12759,17 +12711,17 @@ asn1@evs-broadcast/node-asn1:
   languageName: node
   linkType: hard
 
-"sc-errors@npm:^2.0.1, sc-errors@npm:^2.0.2":
+"sc-errors@npm:^2.0.2, sc-errors@npm:^2.0.3":
   version: 2.0.3
   resolution: "sc-errors@npm:2.0.3"
   checksum: 10c0/08b18a9cbab4269fdec84e28eec3f083604eeeaf0f989a857596cfff09daedd89a2f4f677b1e87449f0579e3d6d752f821e7fb02677dfc0265f1c0b717edc985
   languageName: node
   linkType: hard
 
-"sc-formatter@npm:^3.0.2":
-  version: 3.0.3
-  resolution: "sc-formatter@npm:3.0.3"
-  checksum: 10c0/8b29dbe1fc964240e67376fbbbd7ea24546241269279905fc5c2cc6824582b9dff8d3c45709e0175cd7ff54516f9c0ab19f8e63b5e45616e6d1f2030d0e3b34a
+"sc-formatter@npm:^4.0.0":
+  version: 4.0.0
+  resolution: "sc-formatter@npm:4.0.0"
+  checksum: 10c0/1ef2e29bbfcd4ee17c9bbeaaa766169b8e0d210cecac6bcfd71341306438948536b59e060e1edd28ddee1ede1108c3ac1e1789813349d15aab677a5f64ea7cc9
   languageName: node
   linkType: hard
 
@@ -13151,23 +13103,23 @@ asn1@evs-broadcast/node-asn1:
   languageName: node
   linkType: hard
 
-"socketcluster-client@npm:^16.1.1":
-  version: 16.1.1
-  resolution: "socketcluster-client@npm:16.1.1"
+"socketcluster-client@npm:^19.1.2":
+  version: 19.1.2
+  resolution: "socketcluster-client@npm:19.1.2"
   dependencies:
     ag-channel: "npm:^5.0.0"
-    ag-request: "npm:^1.0.0"
-    async-stream-emitter: "npm:^4.0.0"
+    ag-request: "npm:^1.0.1"
+    async-stream-emitter: "npm:^7.0.1"
     buffer: "npm:^5.2.1"
     clone-deep: "npm:^4.0.1"
-    linked-list: "npm:^0.1.0"
-    sc-errors: "npm:^2.0.1"
-    sc-formatter: "npm:^3.0.2"
-    stream-demux: "npm:^8.0.0"
+    linked-list: "npm:^2.1.0"
+    sc-errors: "npm:^2.0.3"
+    sc-formatter: "npm:^4.0.0"
+    stream-demux: "npm:^10.0.1"
     uuid: "npm:^8.3.2"
     vinyl-buffer: "npm:^1.0.1"
-    ws: "npm:^7.4.6"
-  checksum: 10c0/93e0bf03e73eeb95fc7c7c540e4d759b3634e67fecc57b1335d122ea35e706d2d4b50e51cd38f4e1928bf457a70607dec69244d336dd5f36d02127f549387faa
+    ws: "npm:^8.9.0"
+  checksum: 10c0/ffe67bf6860da01ccc245a3765d06a7a4c86fba08bc8994d4c4f5041277d8d7dbabd5f99c5538ae848f12b30c72f0746f5498350e6209df77aded75a543b91c4
   languageName: node
   linkType: hard
 
@@ -13369,13 +13321,13 @@ asn1@evs-broadcast/node-asn1:
   languageName: node
   linkType: hard
 
-"stream-demux@npm:^8.0.0, stream-demux@npm:^8.1.0":
-  version: 8.1.0
-  resolution: "stream-demux@npm:8.1.0"
+"stream-demux@npm:^10.0.1":
+  version: 10.0.1
+  resolution: "stream-demux@npm:10.0.1"
   dependencies:
-    consumable-stream: "npm:^2.0.0"
-    writable-consumable-stream: "npm:^3.0.1"
-  checksum: 10c0/dd378f16eacb3cb74a7258537d1f3f174377e05126489fcbc4c8ed23521fc36a22482bb60f6cf1ebc7457bbceef05e182330e0da3b3e33b01fbc7f5708117635
+    consumable-stream: "npm:^3.0.0"
+    writable-consumable-stream: "npm:^4.1.0"
+  checksum: 10c0/9c6b42af758560ceab49b0fdae169599cfca95fcd6f234b45fa3e1465751c2576ad65fd86e54bf5365fda6152955d06d6e6957c506b51460343c4801260402cf
   languageName: node
   linkType: hard
 
@@ -14727,12 +14679,12 @@ asn1@evs-broadcast/node-asn1:
   languageName: node
   linkType: hard
 
-"writable-consumable-stream@npm:^3.0.1":
-  version: 3.0.1
-  resolution: "writable-consumable-stream@npm:3.0.1"
+"writable-consumable-stream@npm:^4.1.0":
+  version: 4.1.0
+  resolution: "writable-consumable-stream@npm:4.1.0"
   dependencies:
-    consumable-stream: "npm:^2.0.0"
-  checksum: 10c0/2c2d388ff0c4971bb6c6d4da13d7388242916dd6b8ced7e828ef43c18b83d0c265308a8a05eeffc10f60217f03dac0b71eb82a56505d4922eb4046f982119df0
+    consumable-stream: "npm:^3.0.0"
+  checksum: 10c0/4b5fc9d84276aa0c4362c37b82ccca496978630eccd0b91cb853ca690431f149d5d109d5748e4ff7080510575a994709eb54489bc7cffcfcbf326cfbef3c4686
   languageName: node
   linkType: hard
 
@@ -14761,22 +14713,7 @@ asn1@evs-broadcast/node-asn1:
   languageName: node
   linkType: hard
 
-"ws@npm:^7.4.6":
-  version: 7.5.9
-  resolution: "ws@npm:7.5.9"
-  peerDependencies:
-    bufferutil: ^4.0.1
-    utf-8-validate: ^5.0.2
-  peerDependenciesMeta:
-    bufferutil:
-      optional: true
-    utf-8-validate:
-      optional: true
-  checksum: 10c0/aec4ef4eb65821a7dde7b44790f8699cfafb7978c9b080f6d7a98a7f8fc0ce674c027073a78574c94786ba7112cc90fa2cc94fc224ceba4d4b1030cff9662494
-  languageName: node
-  linkType: hard
-
-"ws@npm:^8.16.0":
+"ws@npm:^8.16.0, ws@npm:^8.9.0":
   version: 8.16.0
   resolution: "ws@npm:8.16.0"
   peerDependencies:
