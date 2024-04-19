@@ -193,8 +193,8 @@ class CloudController extends CoreBase {
 		const reduceinit = {}
 		const pages = this.registry.page.getAll(false) ?? {}
 
-		return Object.keys(pages).reduce((acc, key) => {
-			acc[key] = pages[key].name
+		return Object.entries(pages).reduce((acc, [key, page]) => {
+			if (page) acc[key] = page.name
 			return acc
 		}, reduceinit)
 	}
