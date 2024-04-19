@@ -52,16 +52,29 @@ describe('HttpApi', () => {
 			mockOptions
 		)
 
-		const legacyRouter = express.Router()
-		const service = new ServiceHttpApi(registry, legacyRouter)
+		let router = express.Router()
+		let legacyRouter = express.Router()
 
 		const app = express()
 
+		const appHandler = {
+			set apiRouter(newRouter) {
+				router = newRouter
+			},
+			set legacyApiRouter(newRouter) {
+				legacyRouter = newRouter
+			},
+		}
+
 		app.use(bodyParser.text())
 		app.use(bodyParser.json())
+		app.use('/api', (r, s, n) => router(r, s, n))
+		app.use((r, s, n) => legacyRouter(r, s, n))
+		app.get('*', (_req, res, _next) => {
+			res.status(421).send('')
+		})
 
-		app.use(legacyRouter)
-		service.bindToApp(app)
+		const service = new ServiceHttpApi(registry, appHandler)
 
 		return {
 			app,
@@ -70,6 +83,56 @@ describe('HttpApi', () => {
 			logger,
 		}
 	}
+
+	describe('legacy api', () => {
+		describe('custom-variable', () => {
+			describe('set value', () => {
+				test('no value', async () => {
+					const { app, registry } = createService()
+
+					const mockFn = registry.instance.variable.custom.setValue
+					mockFn.mockReturnValue()
+
+					// Perform the request
+					const res = await supertest(app).get('/set/custom-variable/my-var-name').send()
+					expect(res.status).toBe(200)
+					expect(res.text).toBe('ok')
+					expect(mockFn).toHaveBeenCalledTimes(1)
+					expect(mockFn).toHaveBeenCalledWith('my-var-name', 'undefined')
+				})
+
+				test('ok from query', async () => {
+					const { app, registry } = createService()
+
+					const mockFn = registry.instance.variable.custom.setValue
+					mockFn.mockReturnValue()
+
+					// Perform the request
+					const res = await supertest(app).get('/set/custom-variable/my-var-name?value=123').send()
+					expect(res.status).toBe(200)
+					expect(res.text).toBe('ok')
+
+					expect(mockFn).toHaveBeenCalledTimes(1)
+					expect(mockFn).toHaveBeenCalledWith('my-var-name', '123')
+				})
+
+				test('unknown name', async () => {
+					const { app, registry } = createService()
+
+					const mockFn = registry.instance.variable.custom.setValue
+					mockFn.mockReturnValue('Unknown name')
+
+					// Perform the request
+					const res = await supertest(app).get('/set/custom-variable/unknown-var-name?value=42').send()
+					expect(res.status).toBe(200)
+					expect(res.text).toBe('Unknown name')
+
+					expect(mockFn).toHaveBeenCalledTimes(1)
+					expect(mockFn).toHaveBeenCalledWith('unknown-var-name', '42')
+				})
+			})
+		})
+	})
 
 	describe('surfaces', () => {
 		describe('rescan', () => {

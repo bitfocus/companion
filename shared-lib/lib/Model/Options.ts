@@ -58,6 +58,7 @@ export interface InternalInputFieldSurfaceSerial extends CompanionInputFieldBase
 }
 export interface InternalInputFieldPage extends CompanionInputFieldBaseExtended {
 	type: 'internal:page'
+	includeStartup: boolean
 	includeDirection: boolean
 	default: number
 }
@@ -73,7 +74,6 @@ export type InternalInputField =
 
 export interface CompanionInputFieldTextInputExtended extends CompanionInputFieldTextInput {
 	placeholder?: string
-	useInternalLocationVariables?: boolean
 }
 export interface CompanionInputFieldMultiDropdownExtended extends CompanionInputFieldMultiDropdown {
 	allowCustom?: boolean

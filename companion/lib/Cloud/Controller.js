@@ -49,6 +49,11 @@ class CloudController extends CoreBase {
 		cloudActive: false,
 	}
 	/**
+	 * Protocol version
+	 * @readonly
+	 */
+	protocolVersion = 1
+	/**
 	 * The current comapnion ID
 	 * @type {string}
 	 * @access public
@@ -144,6 +149,8 @@ class CloudController extends CoreBase {
 		this.graphics.on('button_drawn', this.updateBank.bind(this))
 
 		this.updateAllBanks()
+
+		this.page.on('name', this.handlePageNameUpdate.bind(this))
 	}
 
 	/**
@@ -176,6 +183,23 @@ class CloudController extends CoreBase {
 	}
 
 	/**
+	 * Get the current page names
+	 * @return {Record<string, string>}
+	 */
+	getPages() {
+		/**
+		 * @type {Record<string, string>}
+		 */
+		const reduceinit = {}
+		const pages = this.registry.page.getAll(false) ?? {}
+
+		return Object.keys(pages).reduce((acc, key) => {
+			acc[key] = pages[key].name
+			return acc
+		}, reduceinit)
+	}
+
+	/**
 	 * Get the current bank database
 	 * @returns {Object} the bank database
 	 * @access public
@@ -183,26 +207,38 @@ class CloudController extends CoreBase {
 	getBanks() {
 		const retval = []
 
-		for (const control of this.controls.getAllControls().values()) {
-			if (control.type !== 'button') continue
+		for (const controlId of this.controls.getAllControls().keys()) {
+			const location = this.page.getLocationOfControlId(controlId)
+			if (!location) {
+				continue
+			}
+
+			const control = this.controls.getControl(controlId)
+			if (!control) {
+				continue
+			}
+			if (control.type !== 'button') {
+				continue
+			}
 			const drawStyle = control.getDrawStyle()
-			if (!drawStyle || drawStyle.style !== 'button') continue
+			if (!drawStyle || drawStyle.style !== 'button') {
+				continue
+			}
 
 			// Don't expose a cloud control
-			if (drawStyle.cloud) continue
+			if (drawStyle.cloud) {
+				continue
+			}
 
-			const location = this.page.getLocationOfControlId(control.controlId)
-			if (!location) continue
-
-			const bank = xyToOldBankIndex(location.column, location.row)
-			if (bank === null) continue
+			const bankIndex = xyToOldBankIndex(location.column, location.row)
 
 			retval.push({
-				page: location.pageNumber,
-				// TODO - handle locations normaly
-				bank: bank,
+				location,
+				bank: bankIndex, // backwards compatibility, TODO: remove in release
+				page: location.pageNumber, // backwards compatibility, remove in release
+				p: this.protocolVersion,
 				data: {
-					...control.toJSON(false).style,
+					...drawStyle,
 					pushed: control.supportsPushed && control.pushed,
 					actions_running: control.supportsActions && control.has_actions_running,
 					bank_status: control.supportsStyle && control.button_status,
@@ -312,6 +348,19 @@ class CloudController extends CoreBase {
 		this.setState({ cloudActive: false })
 		await new Promise((resolve) => setTimeout(resolve, 1000))
 		this.setState({ cloudActive: true })
+	}
+
+	/**
+	 * Handle a page name update
+	 * @param {string} _id - the page ID
+	 * @param {string} _name - the new name
+	 */
+	handlePageNameUpdate(_id, _name) {
+		for (let region in this.regionInstances) {
+			if (!!this.regionInstances[region]?.socketTransmit) {
+				//TODO: Push page name
+			}
+		}
 	}
 
 	/**
@@ -671,8 +720,10 @@ class CloudController extends CoreBase {
 					this.regionInstances[region].socketTransmit('companion-banks:' + this.state.uuid, {
 						updateId,
 						type: 'single',
-						page: location.pageNumber,
-						bank,
+						location,
+						p: this.protocolVersion,
+						page: location.pageNumber, // backwards compatibility, remove in release
+						bank, // backwards compatibility, remove in release
 						data: render.style,
 					})
 				}

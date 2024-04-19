@@ -33,19 +33,19 @@
   "devDependencies": {
     "chokidar": "^3.6.0",
     "concurrently": "^8.2.2",
-    "dotenv": "^16.4.4",
-    "inquirer": "^9.2.14",
+    "dotenv": "^16.4.5",
+    "inquirer": "^9.2.17",
     "jest": "^29.7.0",
-    "octokit": "^3.1.2",
-    "open": "^10.0.3",
+    "octokit": "^3.2.0",
+    "open": "^10.1.0",
     "prettier": "^3.2.5",
-    "tar": "^6.2.0",
     "zx": "^7.2.3"
   },
   "resolutions": {
     "app-builder-bin": "npm:@julusian/app-builder-bin@4.0.1",
     "node-gyp-build": "github:julusian/node-gyp-build#cross-install-support",
     "node-hid": "npm:@julusian/hid@3.0.1-0",
-    "osc/serialport": "^10.5.0"
+    "osc/serialport": "^10.5.0",
+    "react-select": "npm:@julusian/react-select@^5.8.1-1"
   }
 }

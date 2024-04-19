@@ -9,9 +9,10 @@ import {
 } from '../Components/index.js'
 import { InternalCustomVariableDropdown, InternalInstanceField } from './InternalInstanceFields.jsx'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faDollarSign, faQuestionCircle } from '@fortawesome/free-solid-svg-icons'
+import { faDollarSign, faGlobe, faQuestionCircle } from '@fortawesome/free-solid-svg-icons'
 import { InternalActionInputField, InternalFeedbackInputField } from '@companion-app/shared/Model/Options.js'
 import classNames from 'classnames'
+import sanitizeHtml from 'sanitize-html'
 
 interface OptionsInputFieldProps {
 	connectionId: string
@@ -41,22 +42,25 @@ export function OptionsInputField({
 	}
 
 	let control: JSX.Element | string | undefined = undefined
-	let features: Record<string, boolean> = {}
+	let showLabel = true
+	let features: InputFeatureIconsProps = {}
 	switch (option.type) {
 		case 'textinput': {
+			features.variables = !!option.useVariables
+			features.locationVariables = typeof option.useVariables === 'object' && !!option.useVariables?.locationBased
+
 			control = (
 				<TextInputField
 					value={value}
 					regex={option.regex}
 					required={option.required}
 					placeholder={option.placeholder}
-					useVariables={option.useVariables}
-					useInternalLocationVariables={connectionId === 'internal' && option.useInternalLocationVariables}
+					useVariables={features.variables}
+					useLocationVariables={features.locationVariables}
 					disabled={readonly}
 					setValue={setValue2}
 				/>
 			)
-			features.variables = !!option.useVariables
 			break
 		}
 		case 'dropdown': {
@@ -129,8 +133,19 @@ export function OptionsInputField({
 			break
 		}
 		case 'static-text': {
-			// Just the label is wanted
+			showLabel = !!option.label
+
 			control = ''
+			if (option.value && option.value != option.label) {
+				const descriptionHtml = {
+					__html: sanitizeHtml(option.value ?? '', {
+						allowedTags: sanitizeHtml.defaults.allowedTags.concat([]),
+						disallowedTagsMode: 'escape',
+					}),
+				}
+
+				control = <p title={option.tooltip} dangerouslySetInnerHTML={descriptionHtml}></p>
+			}
 			break
 		}
 		case 'custom-variable': {
@@ -154,18 +169,33 @@ export function OptionsInputField({
 		control = <CInputGroupText>Unknown type "{option.type}"</CInputGroupText>
 	}
 
-	const featureIcons: JSX.Element[] = []
-	if (features.variables)
-		featureIcons.push(<FontAwesomeIcon key="variables" icon={faDollarSign} title={'Supports variables'} />)
-
 	return (
 		<CFormGroup className={classNames({ displayNone: !visibility })}>
-			<CLabel>
-				{option.label}
-				{featureIcons.length ? <span className="feature-icons">{featureIcons}</span> : ''}
-				{option.tooltip && <FontAwesomeIcon icon={faQuestionCircle} title={option.tooltip} />}
-			</CLabel>
+			{showLabel && (
+				<CLabel>
+					{option.label}
+					<InputFeatureIcons {...features} />
+					{option.tooltip && <FontAwesomeIcon icon={faQuestionCircle} title={option.tooltip} />}
+				</CLabel>
+			)}
 			{control}
 		</CFormGroup>
 	)
+}
+
+export interface InputFeatureIconsProps {
+	variables?: boolean
+	locationVariables?: boolean
+}
+
+export function InputFeatureIcons(props: InputFeatureIconsProps): JSX.Element | null {
+	const featureIcons: JSX.Element[] = []
+	if (props.variables)
+		featureIcons.push(<FontAwesomeIcon key="variables" icon={faDollarSign} title={'Supports variables'} />)
+	if (props.locationVariables)
+		featureIcons.push(
+			<FontAwesomeIcon key="locationVariables" icon={faGlobe} title={'Supports location based variables'} />
+		)
+
+	return featureIcons.length ? <span className="feature-icons">{featureIcons}</span> : null
 }

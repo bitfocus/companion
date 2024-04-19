@@ -110,9 +110,21 @@ class CloudRegion {
 	 * @access protected
 	 */
 	async clientPushBank(args) {
+		/**
+		 * @type {import('../Resources/Util.js').ControlLocation}
+		 */
+		const location = args.location
+
 		this.logger.silly(`Client requested pushBank(${JSON.stringify(args)})`)
+
+		// TODO: Deprecated: remove
 		if (args.bank && args.page) {
 			const controlId = this.cloud.page.getControlIdAtOldBankIndex(args.page, args.bank)
+			if (controlId) {
+				this.cloud.controls.pressControl(controlId, true, 'cloud')
+			}
+		} else if (location) {
+			const controlId = this.cloud.page.getControlIdAt(location)
 			if (controlId) {
 				this.cloud.controls.pressControl(controlId, true, 'cloud')
 			}
@@ -128,9 +140,21 @@ class CloudRegion {
 	 * @access protected
 	 */
 	async clientReleaseBank(args) {
+		/**
+		 * @type {import('../Resources/Util.js').ControlLocation}
+		 */
+		const location = args.location
+
 		this.logger.silly(`Client requested releaseBank(${JSON.stringify(args)})`)
+
+		// TODO: Deprecated: remove
 		if (args.bank && args.page) {
 			const controlId = this.cloud.page.getControlIdAtOldBankIndex(args.page, args.bank)
+			if (controlId) {
+				this.cloud.controls.pressControl(controlId, false, 'cloud')
+			}
+		} else if (location) {
+			const controlId = this.cloud.page.getControlIdAt(location)
 			if (controlId) {
 				this.cloud.controls.pressControl(controlId, false, 'cloud')
 			}
@@ -240,7 +264,6 @@ class CloudRegion {
 							error: 'Disconnected from cloud by another instance from this computer',
 						})
 					} else {
-						//console.log(`DISCONNECT::::::::`, event)
 						this.setState({
 							connected: false,
 							pingResults: -1,

@@ -90,6 +90,7 @@ export default class Variables {
 					color: rgb(255, 255, 255),
 					bgcolor: rgb(255, 0, 0),
 				},
+				showInvert: true,
 				options: [
 					{
 						type: 'internal:variable',
@@ -127,6 +128,7 @@ export default class Variables {
 					color: rgb(255, 255, 255),
 					bgcolor: rgb(255, 0, 0),
 				},
+				showInvert: true,
 				options: [
 					{
 						type: 'internal:variable',
@@ -152,13 +154,16 @@ export default class Variables {
 					color: rgb(255, 255, 255),
 					bgcolor: rgb(255, 0, 0),
 				},
+				showInvert: true,
 				options: [
 					{
 						type: 'textinput',
 						label: 'Expression',
 						id: 'expression',
 						default: '2 > 1',
-						useVariables: true,
+						useVariables: {
+							locationBased: true,
+						},
 					},
 				],
 			},
@@ -172,21 +177,21 @@ export default class Variables {
 	 */
 	executeFeedback(feedback) {
 		if (feedback.type == 'variable_value') {
-			const result = this.#variableController.parseVariables(`$(${feedback.options.variable})`)
+			const result = this.#variableController.parseVariables(`$(${feedback.options.variable})`, null)
 
 			this.#variableSubscriptions.set(feedback.id, result.variableIds)
 
 			return compareValues(feedback.options.op, result.text, feedback.options.value)
 		} else if (feedback.type == 'variable_variable') {
-			const result1 = this.#variableController.parseVariables(`$(${feedback.options.variable})`)
-			const result2 = this.#variableController.parseVariables(`$(${feedback.options.variable2})`)
+			const result1 = this.#variableController.parseVariables(`$(${feedback.options.variable})`, null)
+			const result2 = this.#variableController.parseVariables(`$(${feedback.options.variable2})`, null)
 
 			this.#variableSubscriptions.set(feedback.id, [...result1.variableIds, ...result2.variableIds])
 
 			return compareValues(feedback.options.op, result1.text, result2.text)
 		} else if (feedback.type == 'check_expression') {
 			try {
-				const res = this.#variableController.parseExpression(feedback.options.expression, 'boolean')
+				const res = this.#variableController.parseExpression(feedback.options.expression, feedback.location, 'boolean')
 
 				this.#variableSubscriptions.set(feedback.id, Array.from(res.variableIds))
 

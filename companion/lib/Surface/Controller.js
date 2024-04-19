@@ -888,7 +888,10 @@ class SurfaceController extends CoreBase {
 													LoupedeckLiveDriver,
 													true
 												)
-											} else if (deviceInfo.model === LoupedeckModelId.LoupedeckCt) {
+											} else if (
+												deviceInfo.model === LoupedeckModelId.LoupedeckCt ||
+												deviceInfo.model === LoupedeckModelId.LoupedeckCtV1
+											) {
 												await this.#addDevice(
 													{
 														path: deviceInfo.path,
@@ -1188,6 +1191,22 @@ class SurfaceController extends CoreBase {
 		const surfaceGroup = this.#getGroupForId(surfaceOrGroupId, looseIdMatching)
 		if (surfaceGroup) {
 			return surfaceGroup.getCurrentPage()
+		} else {
+			return undefined
+		}
+	}
+	/**
+	 * Get the page number of a surface
+	 * @param {string} surfaceOrGroupId
+	 * @param {boolean=} looseIdMatching
+	 * @returns {number | undefined}
+	 */
+	devicePageGetStartup(surfaceOrGroupId, looseIdMatching = false) {
+		const surfaceGroup = this.#getGroupForId(surfaceOrGroupId, looseIdMatching)
+		if (surfaceGroup) {
+			return surfaceGroup.groupConfig.use_last_page
+				? surfaceGroup.groupConfig.last_page
+				: surfaceGroup.groupConfig.startup_page
 		} else {
 			return undefined
 		}

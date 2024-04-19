@@ -15,6 +15,11 @@ export function RosstalkProtocol() {
 			</p>
 			<ul>
 				<li>
+					<code>CC</code> &lt;page&gt;/&lt;row&gt;/&lt;column&gt;
+					<br />
+					<i>Press and release button</i>
+				</li>
+				<li>
 					<code>CC</code> &lt;page&gt;:&lt;button&gt;
 					<br />
 					<i>Press and release button</i>
@@ -25,6 +30,11 @@ export function RosstalkProtocol() {
 				<strong>Examples</strong>
 			</p>
 
+			<p>
+				Press and release row 3, column 1 on page 2
+				<br />
+				<code>CC 2/3/1</code>
+			</p>
 			<p>
 				Press and release button 5 on page 2
 				<br />

@@ -1,4 +1,5 @@
 import { pad } from '../Util.js'
+import { JSONPath } from 'jsonpath-plus'
 
 // Note: when adding new functions, make sure to update the docs!
 /** @type {Record<string, (...args: any[]) => any>} */
@@ -35,6 +36,12 @@ export const ExpressionFunctions = {
 	strlen: (v) => (v + '').length,
 	substr: (str, start, end) => {
 		return (str + '').slice(start, end)
+	},
+	split: (str, separator) => {
+		return (str + '').split(separator)
+	},
+	join: (arr = [], separator = ',') => {
+		return (arr.constructor === Array ? arr : [arr]).join(separator)
 	},
 	concat: (...strs) => ''.concat(...strs),
 	includes: (str, arg) => {
@@ -101,4 +108,48 @@ export const ExpressionFunctions = {
 
 	// Bool operations
 	bool: (v) => !!v && v !== 'false' && v !== '0',
+
+	// Object operations
+	jsonpath: (obj, path) => {
+		const shouldParseInput = typeof obj === 'string'
+		if (shouldParseInput) {
+			try {
+				obj = JSON.parse(obj)
+			} catch (_e) {
+				// Ignore
+			}
+		}
+
+		const value = JSONPath({
+			wrap: false,
+			path: path,
+			json: obj,
+		})
+
+		if (shouldParseInput && typeof value !== 'number' && typeof value !== 'string' && value) {
+			try {
+				return JSON.stringify(value)
+			} catch (/** @type {any} */ e) {
+				// Ignore
+			}
+		}
+
+		return value
+	},
+
+	jsonparse: (str) => {
+		try {
+			return JSON.parse(str + '')
+		} catch (_e) {
+			return null
+		}
+	},
+
+	jsonstringify: (obj) => {
+		try {
+			return JSON.stringify(obj)
+		} catch (_e) {
+			return null
+		}
+	},
 }

@@ -1,5 +1,61 @@
 # Bitfocus Companion
 
+## Companion v3.2.2 - Release Notes
+
+### 🐞 BUG FIXES
+
+- Launcher window growing horizontally infinitely
+- Ensure application exits properly with the launcher
+- Fix logging of rosstalk connections #2758 #2747
+- Show button previews in actions/feedbacks while editing triggers
+- Grid header layout issues in firefox
+- Incomplete documentation for expression syntax #2743
+- Restarting modules during development being too agressive #2741
+
+### 🧩 UPDATED MODULES
+
+- allenheath-ahm
+- bmd-hyperdeck
+- bmd-webpresenter
+- colorlight-grandshow
+- figure53-qlab-advance
+- generic-ssh
+- justmacros-lua
+- studiocoast-vmix
+
+## Companion v3.2.1 - Release Notes
+
+### 🐞 BUG FIXES
+
+- Disable emoji font, as it causes consume to consume all available memory on some windows machines #2714
+- Ensure font paths are loaded relative to the application, not working directory #2716
+- Buttons incorrectly scale up small images #2718
+- Ignore disabled actions when checking connection status on a button
+- Changing connection label fails if actions/feedbacks/events reference invalid variables #2719
+- Connection list crashing #2735
+- Ensure long page names don't cause page picker to split into multiple lines
+- Occasional crash when disconnecting usb device #2735
+- Increase launcher stable check timeout
+- Imported emulators not being setup until restart
+- Typo in tcp/udp documentation #2717
+
+### 🧩 UPDATED MODULES
+
+- birddog-ptz
+- bmd-atem
+- figure53-qlab-advance
+- malighting-grandma3
+- middlethings-middlecontrol
+- netgear-avline
+- pixelhue-switcher
+- restream-api
+- roku-tv
+- roland-v60hd
+- smodetech-smodelive
+- softron-ontheairvideo
+- studiocoast-vmix
+- techministry-midirelay
+
 ## Companion v3.2.0 - Release Notes
 
 ### 📣 CORE FEATURES AND IMPROVEMENTS

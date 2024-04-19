@@ -170,6 +170,31 @@ describe('functions', () => {
 			expect(ExpressionFunctions.concat(false)).toBe('false')
 		})
 
+		it('split', () => {
+			expect(ExpressionFunctions.split()).toEqual(['undefined'])
+			expect(ExpressionFunctions.split(9, 'a')).toEqual(['9'])
+			expect(ExpressionFunctions.split('abc', 'b')).toEqual(['a', 'c'])
+			expect(ExpressionFunctions.split('abc', 'c')).toEqual(['ab', ''])
+		})
+
+		it('join', () => {
+			expect(ExpressionFunctions.join()).toBe('')
+			expect(ExpressionFunctions.join('')).toBe('')
+			expect(ExpressionFunctions.join(9)).toBe('9')
+			expect(ExpressionFunctions.join([])).toBe('')
+			expect(ExpressionFunctions.join([9])).toBe('9')
+			expect(ExpressionFunctions.join([9], 'a')).toBe('9')
+			expect(ExpressionFunctions.join([9, 'a'])).toBe('9,a')
+			expect(ExpressionFunctions.join([9, 'b'], 'a')).toBe('9ab')
+			expect(ExpressionFunctions.join(['a', 'c'])).toBe('a,c')
+			expect(ExpressionFunctions.join(['a', 'c'], 'b')).toBe('abc')
+			expect(ExpressionFunctions.join(['a', 'c'], 'cademi')).toBe('academic')
+			expect(ExpressionFunctions.join(['ab', ''])).toBe('ab,')
+			expect(ExpressionFunctions.join(['ab', ''], 'c')).toBe('abc')
+			expect(ExpressionFunctions.join(['a', 'b', 'c'])).toBe('a,b,c')
+			expect(ExpressionFunctions.join(['a', 'b', 'c'], '-')).toBe('a-b-c')
+		})
+
 		it('includes', () => {
 			expect(ExpressionFunctions.includes(912, 12)).toBe(true)
 			expect(ExpressionFunctions.includes(912, '91')).toBe(true)
@@ -285,6 +310,60 @@ describe('functions', () => {
 			expect(ExpressionFunctions.bool('false')).toBe(false)
 			expect(ExpressionFunctions.bool('')).toBe(false)
 			expect(ExpressionFunctions.bool(undefined)).toBe(false)
+		})
+	})
+
+	describe('object', () => {
+		it('jsonpath', () => {
+			const obj = {
+				a: 1,
+				b: {
+					c: 5,
+				},
+			}
+
+			expect(ExpressionFunctions.jsonpath(obj, '$.b')).toEqual({ c: 5 })
+			expect(ExpressionFunctions.jsonpath(obj, '$.c')).toEqual(undefined)
+			expect(ExpressionFunctions.jsonpath(obj, '$.b.c')).toEqual(5)
+			expect(ExpressionFunctions.jsonpath(obj, '$')).toEqual(obj)
+
+			expect(ExpressionFunctions.jsonpath(undefined, '$.c')).toEqual(undefined)
+
+			const objStr = JSON.stringify(obj)
+			expect(ExpressionFunctions.jsonpath(objStr, '$.b')).toEqual('{"c":5}')
+			expect(ExpressionFunctions.jsonpath(objStr, '$.c')).toEqual(undefined)
+			expect(ExpressionFunctions.jsonpath(objStr, '$.b.c')).toEqual(5)
+			expect(ExpressionFunctions.jsonpath(objStr, '$')).toEqual(JSON.stringify(obj))
+
+			const obj2 = [{ name: 'Default' }, { name: 'Second' }]
+			expect(ExpressionFunctions.jsonpath(obj2, '$[0]')).toEqual({ name: 'Default' })
+			expect(ExpressionFunctions.jsonpath(JSON.stringify(obj2), '$[0]')).toEqual('{"name":"Default"}')
+
+			expect(ExpressionFunctions.jsonpath('Test', '$')).toEqual('Test')
+			expect(ExpressionFunctions.jsonpath({}, '$')).toEqual({})
+		})
+
+		it('jsonparse', () => {
+			expect(ExpressionFunctions.jsonparse('')).toEqual(null)
+			expect(ExpressionFunctions.jsonparse('{}')).toEqual({})
+			expect(ExpressionFunctions.jsonparse('1')).toEqual(1)
+			expect(ExpressionFunctions.jsonparse(1)).toEqual(1)
+			expect(ExpressionFunctions.jsonparse(null)).toEqual(null)
+
+			expect(ExpressionFunctions.jsonparse('{a: 1}')).toEqual(null)
+			expect(ExpressionFunctions.jsonparse('{"a": 1}')).toEqual({ a: 1 })
+			expect(ExpressionFunctions.jsonparse('{"a": 1')).toEqual(null)
+		})
+
+		it('jsonparse', () => {
+			expect(ExpressionFunctions.jsonstringify('')).toEqual('""')
+			expect(ExpressionFunctions.jsonstringify(1)).toEqual('1')
+			expect(ExpressionFunctions.jsonstringify({})).toEqual('{}')
+			expect(ExpressionFunctions.jsonstringify(null)).toEqual('null')
+			expect(ExpressionFunctions.jsonstringify(undefined)).toEqual(undefined)
+
+			expect(ExpressionFunctions.jsonstringify({ a: 1 })).toEqual('{"a":1}')
+			expect(ExpressionFunctions.jsonstringify([1, 2, 3])).toEqual('[1,2,3]')
 		})
 	})
 })

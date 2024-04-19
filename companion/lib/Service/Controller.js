@@ -38,8 +38,7 @@ class ServiceController {
 	 * @param {import('../Registry.js').default} registry - the application core
 	 */
 	constructor(registry) {
-		this.httpApi = new ServiceHttpApi(registry, registry.ui.express.legacyApiRouter)
-		this.httpApi.bindToApp(registry.ui.express.app)
+		this.httpApi = new ServiceHttpApi(registry, registry.ui.express)
 		this.https = new ServiceHttps(registry, registry.ui.express)
 		this.oscSender = new ServiceOscSender(registry)
 		this.oscListener = new ServiceOscListener(registry)

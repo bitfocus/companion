@@ -30,5 +30,9 @@ Supported operators include:
   - Bitwise NOT: `~a`
 - Expression grouping:
   - Parenthesis: `(a + b) * c`
+- Objects:
+  - Define an object: `{ a: 1 }`
+  - Define an array: `[1, 2]`
+  - Object/array lookup: `$(my:var)['some-prop']`
 
 > **Note:** In the examples able `a` and `b` should be replaced with custom variables, module variables or number literals. They are only used here for brevity.

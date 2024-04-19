@@ -64,14 +64,14 @@ class UIExpress {
 	logger = LogController.createLogger('UI/Express')
 
 	app = Express()
+	#apiRouter = Express.Router()
+	#legacyApiRouter = Express.Router()
 
 	/**
 	 * @param {import('../Registry.js').default} registry
 	 */
 	constructor(registry) {
 		this.registry = registry
-
-		this.legacyApiRouter = Express.Router()
 
 		this.app.use(cors())
 
@@ -105,7 +105,11 @@ class UIExpress {
 			}
 		})
 
-		this.app.use(this.legacyApiRouter)
+		// Use the router #apiRouter to add API routes dynamically, this router can be redefined at runtime with setter
+		this.app.use('/api', (r, s, n) => this.#apiRouter(r, s, n))
+
+		// Use the router #legacyApiRouter to add API routes dynamically, this router can be redefined at runtime with setter
+		this.app.use((r, s, n) => this.#legacyApiRouter(r, s, n))
 
 		/**
 		 * @param {string} subpath
@@ -140,6 +144,22 @@ class UIExpress {
 			req.url = '/index.html'
 			return webuiServer(req, res, next)
 		})
+	}
+
+	/**
+	 * Set a new router as the ApiRouter
+	 * @param {*} router
+	 */
+	set apiRouter(router) {
+		this.#apiRouter = router
+	}
+
+	/**
+	 * Set a new router as the legacyApiRouter
+	 * @param {*} router
+	 */
+	set legacyApiRouter(router) {
+		this.#legacyApiRouter = router
 	}
 }
 

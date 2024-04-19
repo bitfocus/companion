@@ -38,6 +38,7 @@ export function InternalInstanceField(
 					disabled={readonly}
 					isOnControl={isOnControl}
 					includeDirection={option.includeDirection}
+					includeStartup={option.includeStartup}
 					value={value}
 					setValue={setValue}
 				/>
@@ -122,6 +123,7 @@ function InternalInstanceIdDropdown({
 
 interface InternalPageDropdownProps {
 	isOnControl: boolean
+	includeStartup: boolean | undefined
 	includeDirection: boolean | undefined
 	value: any
 	setValue: (value: any) => void
@@ -130,6 +132,7 @@ interface InternalPageDropdownProps {
 
 const InternalPageDropdown = observer(function InternalPageDropdown({
 	isOnControl,
+	includeStartup,
 	includeDirection,
 	value,
 	setValue,
@@ -142,6 +145,9 @@ const InternalPageDropdown = observer(function InternalPageDropdown({
 		if (isOnControl) {
 			choices.push({ id: 0, label: 'This page' })
 		}
+		if (includeStartup) {
+			choices.push({ id: 'startup', label: 'Startup page' })
+		}
 		if (includeDirection) {
 			choices.push({ id: 'back', label: 'Back' }, { id: 'forward', label: 'Forward' })
 		}
@@ -151,7 +157,7 @@ const InternalPageDropdown = observer(function InternalPageDropdown({
 		})
 
 		return choices
-	}, [pages, isOnControl, includeDirection])
+	}, [pages, isOnControl, includeStartup, includeDirection])
 
 	return <DropdownInputField disabled={disabled} value={value} choices={choices} multiple={false} setValue={setValue} />
 })
@@ -183,7 +189,7 @@ export function InternalCustomVariableDropdown({
 		for (const [id, info] of Object.entries(context)) {
 			choices.push({
 				id,
-				label: `${info.description} (${id})`,
+				label: `${info.description} (internal:custom_${id})`,
 			})
 		}
 

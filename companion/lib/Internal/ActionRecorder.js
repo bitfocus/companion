@@ -133,28 +133,36 @@ export default class ActionRecorder {
 						label: 'Page (0 = this page)',
 						id: 'page',
 						default: '0',
-						useVariables: true,
+						useVariables: {
+							locationBased: true,
+						},
 					},
 					{
 						type: 'textinput',
 						label: 'Button (0 = this position)',
 						id: 'bank',
 						default: '0',
-						useVariables: true,
+						useVariables: {
+							locationBased: true,
+						},
 					},
 					{
 						type: 'textinput',
 						label: 'Button Step (eg 1, 2)',
 						id: 'step',
 						default: '1',
-						useVariables: true,
+						useVariables: {
+							locationBased: true,
+						},
 					},
 					{
 						type: 'textinput',
 						label: 'Action Group (eg press, release, rotate_left, rotate_right, 1000, 2000)',
 						id: 'set',
 						default: 'press',
-						useVariables: true,
+						useVariables: {
+							locationBased: true,
+						},
 					},
 					{
 						type: 'dropdown',
@@ -229,10 +237,10 @@ export default class ActionRecorder {
 
 			return true
 		} else if (action.action === 'action_recorder_save_to_button') {
-			let stepId = this.#variableController.parseVariables(action.options.step).text
-			let setId = this.#variableController.parseVariables(action.options.set).text
-			const pageRaw = this.#variableController.parseVariables(action.options.page).text
-			const bankRaw = this.#variableController.parseVariables(action.options.bank).text
+			let stepId = this.#variableController.parseVariables(action.options.step, extras.location).text
+			let setId = this.#variableController.parseVariables(action.options.set, extras.location).text
+			const pageRaw = this.#variableController.parseVariables(action.options.page, extras.location).text
+			const bankRaw = this.#variableController.parseVariables(action.options.bank, extras.location).text
 
 			if (setId === 'press') setId = 'down'
 			else if (setId === 'release') setId = 'up'
@@ -285,6 +293,7 @@ export default class ActionRecorder {
 					color: rgb(255, 255, 255),
 					bgcolor: rgb(255, 0, 0),
 				},
+				showInvert: true,
 				options: [
 					{
 						type: 'internal:instance_id',

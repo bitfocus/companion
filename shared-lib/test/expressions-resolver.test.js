@@ -214,4 +214,60 @@ describe('resolver', function () {
 			expect(result).toBe('val: 3dB or var1 and 99')
 		})
 	})
+
+	describe('objects', () => {
+		it('handle object define and lookup', () => {
+			const result = resolve(parse("{a: 1}['a']"))
+			expect(result).toBe(1)
+		})
+
+		it('handle object define and lookup - multi level', () => {
+			const result = resolve(parse("{a: 1, 'b': 2, c: {v: 4}}['c']['v']"))
+			expect(result).toBe(4)
+		})
+
+		it('handle object define and lookup - missing prop', () => {
+			const result = resolve(parse("{a: 1}['b']"))
+			expect(result).toBe(undefined)
+		})
+
+		it('handle object define and lookup - off string', () => {
+			const result = resolve(parse("'abc'[0]"))
+			expect(result).toBe('a')
+		})
+
+		it('handle object define and lookup - off companion variable', () => {
+			const getVariable = (id) => {
+				switch (id) {
+					case 'my:var':
+						return { val: 4 }
+				}
+			}
+
+			const result = resolve(parse("$(my:var)['val']"), getVariable)
+			expect(result).toBe(4)
+		})
+
+		it('define object - using companion variable', () => {
+			const getVariable = (id) => {
+				switch (id) {
+					case 'my:var':
+						return 'val'
+				}
+			}
+
+			const result = resolve(parse("{a: 1, 'v': {a: $(my:var), c: null}}"), getVariable)
+			expect(result).toEqual({ a: 1, v: { a: 'val', c: null } })
+		})
+
+		it('define array', () => {
+			const result = resolve(parse("[1, 'c', null]"))
+			expect(result).toEqual([1, 'c', null])
+		})
+
+		it('define array - with lookup', () => {
+			const result = resolve(parse("[1, 'c', null][1]"))
+			expect(result).toEqual('c')
+		})
+	})
 })

@@ -27,6 +27,8 @@ const logger = LogController.createLogger('Instance/Variable')
 
 const VariableDefinitionsRoom = 'variable-definitions'
 
+export const VARIABLE_UNKNOWN_VALUE = '$NA'
+
 /**
  * @typedef {Record<string, Record<string, import('@companion-module/base').CompanionVariableValue | undefined> | undefined>} VariableValueData
  * @typedef {Record<string, import('@companion-module/base').CompanionVariableValue | undefined>} VariablesCache
@@ -84,7 +86,7 @@ export function parseVariablesInString(string, rawVariableValues, cachedVariable
 				if (cachedValue === undefined) cachedValue = ''
 			} else {
 				// Variable has no value
-				cachedValue = '$NA'
+				cachedValue = VARIABLE_UNKNOWN_VALUE
 			}
 
 			cachedVariableValues[fullId] = cachedValue
@@ -143,21 +145,27 @@ class InstanceVariable extends CoreBase {
 	/**
 	 * Parse the variables in a string
 	 * @param {string} str - String to parse variables in
+	 * @param {import('@companion-app/shared/Model/Common.js').ControlLocation | null | undefined} controlLocation - Location of the control
 	 * @param {VariablesCache=} injectedVariableValues - Inject some variable values
 	 * @returns {ParseVariablesResult} with variables replaced with values
 	 */
-	parseVariables(str, injectedVariableValues) {
-		return parseVariablesInString(str, this.#variableValues, injectedVariableValues)
+	parseVariables(str, controlLocation, injectedVariableValues) {
+		const injectedVariableValuesComplete = {
+			...this.#getInjectedVariablesForLocation(controlLocation),
+			...injectedVariableValues,
+		}
+		return parseVariablesInString(str, this.#variableValues, injectedVariableValuesComplete)
 	}
 
 	/**
 	 * Parse and execute an expression in a string
 	 * @param {string} str - String containing the expression to parse
+	 * @param {import('@companion-app/shared/Model/Common.js').ControlLocation | null | undefined} controlLocation - Location of the control
 	 * @param {string=} requiredType - Fail if the result is not of specified type
 	 * @param {import('@companion-module/base').CompanionVariableValues=} injectedVariableValues - Inject some variable values
 	 * @returns {{ value: boolean|number|string|undefined, variableIds: Set<string> }} result of the expression
 	 */
-	parseExpression(str, requiredType, injectedVariableValues) {
+	parseExpression(str, controlLocation, requiredType, injectedVariableValues) {
 		/** @type {Set<string>} */
 		const referencedVariableIds = new Set()
 
@@ -166,7 +174,7 @@ class InstanceVariable extends CoreBase {
 		 * @returns {string}
 		 */
 		const getVariableValue = (variableId) => {
-			const result = this.parseVariables(`$(${variableId})`, injectedVariableValues)
+			const result = this.parseVariables(`$(${variableId})`, controlLocation, injectedVariableValues)
 
 			for (const id of result.variableIds) {
 				referencedVariableIds.add(id)
@@ -182,7 +190,7 @@ class InstanceVariable extends CoreBase {
 			 * @returns {string}
 			 */
 			parseVariables: (str) => {
-				const result = this.parseVariables(str, injectedVariableValues)
+				const result = this.parseVariables(str, controlLocation, injectedVariableValues)
 
 				// Track referenced variables
 				for (const varId of result.variableIds) {
@@ -387,6 +395,20 @@ class InstanceVariable extends CoreBase {
 			}
 		} catch (e) {
 			this.logger.error(`Failed to process variables update: ${e}`)
+		}
+	}
+
+	/**
+	 * Variables to inject based on location
+	 * @param {import('@companion-app/shared/Model/Common.js').ControlLocation | null | undefined} location
+	 * @returns {import('@companion-module/base').CompanionVariableValues}
+	 */
+	#getInjectedVariablesForLocation(location) {
+		return {
+			'$(this:page)': location?.pageNumber,
+			'$(this:column)': location?.column,
+			'$(this:row)': location?.row,
+			'$(this:page_name)': location ? `$(internal:page_number_${location.pageNumber}_name)` : VARIABLE_UNKNOWN_VALUE,
 		}
 	}
 }

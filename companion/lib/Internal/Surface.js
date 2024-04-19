@@ -42,7 +42,9 @@ const CHOICES_SURFACE_GROUP_WITH_VARIABLES = [
 		id: 'controller_variable',
 		default: 'self',
 		isVisible: (options) => !!options.controller_from_variable,
-		useVariables: true,
+		useVariables: {
+			locationBased: true,
+		},
 	}),
 ]
 
@@ -69,7 +71,9 @@ const CHOICES_SURFACE_ID_WITH_VARIABLES = [
 		id: 'controller_variable',
 		default: 'self',
 		isVisible: (options) => !!options.controller_from_variable,
-		useVariables: true,
+		useVariables: {
+			locationBased: true,
+		},
 	}),
 ]
 
@@ -85,6 +89,7 @@ const CHOICES_PAGE_WITH_VARIABLES = [
 		type: 'internal:page',
 		label: 'Page',
 		id: 'page',
+		includeStartup: true,
 		includeDirection: true,
 		default: 0,
 		isVisible: (options) => !options.page_from_variable,
@@ -95,7 +100,9 @@ const CHOICES_PAGE_WITH_VARIABLES = [
 		id: 'page_variable',
 		default: '1',
 		isVisible: (options) => !!options.page_from_variable,
-		useVariables: true,
+		useVariables: {
+			locationBased: true,
+		},
 	}),
 ]
 
@@ -201,33 +208,34 @@ export default class Surface {
 	 * @param {boolean} useVariableFields
 	 * @returns {string | undefined}
 	 */
-	#fetchControllerId(options, info, useVariableFields) {
+	#fetchSurfaceId(options, info, useVariableFields) {
 		/** @type {string | undefined} */
-		let theController = options.controller + ''
+		let surfaceId = options.controller + ''
 
 		if (useVariableFields && options.controller_from_variable) {
-			theController = this.#variableController.parseVariables(options.controller_variable).text
+			surfaceId = this.#variableController.parseVariables(options.controller_variable, info?.location).text
 		}
 
-		theController = theController.trim()
+		surfaceId = surfaceId.trim()
 
-		if (info && theController === 'self') theController = info.surfaceId
+		if (info && surfaceId === 'self') surfaceId = info.surfaceId
 
-		return theController
+		return surfaceId
 	}
 
 	/**
 	 * @param {Record<string, any>} options
 	 * @param {import('../Resources/Util.js').ControlLocation | undefined} location
 	 * @param {boolean} useVariableFields
+	 * @param {string | undefined} surfaceId
 	 * @returns {number | undefined}
 	 */
-	#fetchPage(options, location, useVariableFields) {
-		/** @type {number | undefined} */
+	#fetchPage(options, location, useVariableFields, surfaceId) {
+		/** @type {number | string | undefined} */
 		let thePage = options.page
 
 		if (useVariableFields && options.page_from_variable) {
-			thePage = Number(this.#variableController.parseExpression(options.page_variable, 'number').value)
+			thePage = Number(this.#variableController.parseExpression(options.page_variable, location, 'number').value)
 		}
 
 		if (location) {
@@ -235,7 +243,11 @@ export default class Surface {
 			if (thePage === 0 || thePage === '0') thePage = location.pageNumber ?? location.page
 		}
 
-		return thePage
+		if (thePage === 'startup') {
+			thePage = surfaceId && this.#surfaceController.devicePageGetStartup(surfaceId)
+		}
+
+		return Number(thePage) || undefined
 	}
 
 	/**
@@ -445,49 +457,50 @@ export default class Surface {
 	 */
 	executeAction(action, extras) {
 		if (action.action === 'set_brightness') {
-			const theController = this.#fetchControllerId(action.options, extras, true)
-			if (!theController) return true
+			const surfaceId = this.#fetchSurfaceId(action.options, extras, true)
+			if (!surfaceId) return true
 
-			this.#surfaceController.setDeviceBrightness(theController, action.options.brightness, true)
+			this.#surfaceController.setDeviceBrightness(surfaceId, action.options.brightness, true)
 			return true
 		} else if (action.action === 'set_page') {
-			const theController = this.#fetchControllerId(action.options, extras, true)
-			if (!theController) return true
+			const surfaceId = this.#fetchSurfaceId(action.options, extras, true)
+			if (!surfaceId) return true
 
-			const thePage = this.#fetchPage(action.options, extras.location, true)
+			const thePage = this.#fetchPage(action.options, extras.location, true, surfaceId)
 			if (thePage === undefined) return true
 
-			this.#changeSurfacePage(theController, thePage)
+			this.#changeSurfacePage(surfaceId, thePage)
 			return true
 		} else if (action.action === 'set_page_byindex') {
-			const thePage = this.#fetchPage(action.options, extras.location, true)
+			const surfaceId = this.#surfaceController.getDeviceIdFromIndex(action.options.controller)
+			if (surfaceId === undefined) {
+				this.#logger.warn(`Trying to set controller #${action.options.controller} but it isn't available.`)
+				return true
+			}
+
+			const thePage = this.#fetchPage(action.options, extras.location, true, surfaceId)
 			if (thePage === undefined) return true
 
-			const surfaceId = this.#surfaceController.getDeviceIdFromIndex(action.options.controller)
-			if (surfaceId !== undefined) {
-				this.#changeSurfacePage(surfaceId, thePage)
-			} else {
-				this.#logger.warn(`Trying to set controller #${action.options.controller} but it isn't available.`)
-			}
+			this.#changeSurfacePage(surfaceId, thePage)
 			return true
 		} else if (action.action === 'inc_page') {
-			const theController = this.#fetchControllerId(action.options, extras, true)
-			if (!theController) return true
+			const surfaceId = this.#fetchSurfaceId(action.options, extras, true)
+			if (!surfaceId) return true
 
-			this.#changeSurfacePage(theController, '+1')
+			this.#changeSurfacePage(surfaceId, '+1')
 			return true
 		} else if (action.action === 'dec_page') {
-			const theController = this.#fetchControllerId(action.options, extras, true)
-			if (!theController) return true
+			const surfaceId = this.#fetchSurfaceId(action.options, extras, true)
+			if (!surfaceId) return true
 
-			this.#changeSurfacePage(theController, '-1')
+			this.#changeSurfacePage(surfaceId, '-1')
 			return true
 		} else if (action.action === 'lockout_device') {
 			if (this.#surfaceController.isPinLockEnabled()) {
-				const theController = this.#fetchControllerId(action.options, extras, true)
-				if (!theController) return true
+				const surfaceId = this.#fetchSurfaceId(action.options, extras, true)
+				if (!surfaceId) return true
 
-				if (extras.controlId && extras.surfaceId == theController) {
+				if (extras.controlId && extras.surfaceId == surfaceId) {
 					const control = this.#controlsController.getControl(extras.controlId)
 					if (control && control.supportsPushed) {
 						// Make sure the button doesn't show as pressed
@@ -496,16 +509,16 @@ export default class Surface {
 				}
 
 				setImmediate(() => {
-					this.#surfaceController.setSurfaceOrGroupLocked(theController, true, true)
+					this.#surfaceController.setSurfaceOrGroupLocked(surfaceId, true, true)
 				})
 			}
 			return true
 		} else if (action.action === 'unlockout_device') {
-			const theController = this.#fetchControllerId(action.options, extras, true)
-			if (!theController) return true
+			const surfaceId = this.#fetchSurfaceId(action.options, extras, true)
+			if (!surfaceId) return true
 
 			setImmediate(() => {
-				this.#surfaceController.setSurfaceOrGroupLocked(theController, false, true)
+				this.#surfaceController.setSurfaceOrGroupLocked(surfaceId, false, true)
 			})
 
 			return true
@@ -616,6 +629,7 @@ export default class Surface {
 					color: combineRgb(255, 255, 255),
 					bgcolor: combineRgb(255, 0, 0),
 				},
+				showInvert: true,
 				options: [
 					{
 						type: 'internal:surface_serial',
@@ -626,6 +640,7 @@ export default class Surface {
 						type: 'internal:page',
 						label: 'Page',
 						id: 'page',
+						includeStartup: true,
 						includeDirection: false,
 						default: 0,
 					},
@@ -641,12 +656,12 @@ export default class Surface {
 	 */
 	executeFeedback(feedback) {
 		if (feedback.type == 'surface_on_page') {
-			const theController = this.#fetchControllerId(feedback.options, undefined, false)
-			if (!theController) return false
+			const surfaceId = this.#fetchSurfaceId(feedback.options, undefined, false)
+			if (!surfaceId) return false
 
-			const thePage = this.#fetchPage(feedback.options, feedback.location, false)
+			const thePage = this.#fetchPage(feedback.options, feedback.location, false, surfaceId)
 
-			const currentPage = this.#surfaceController.devicePageGet(theController, true)
+			const currentPage = this.#surfaceController.devicePageGet(surfaceId, true)
 
 			return currentPage == thePage
 		}

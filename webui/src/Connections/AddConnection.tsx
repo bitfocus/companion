@@ -50,7 +50,7 @@ const AddConnectionsInner = observer(function AddConnectionsInner({
 	)
 
 	const addConnection = useCallback(
-		(type: string, product: string | undefined, module: ModuleDisplayInfo) => {
+		(type: string, product: string | undefined, module: Omit<ModuleDisplayInfo, 'keywords'>) => {
 			if (module.isLegacy) {
 				confirmRef.current?.show(
 					`${module.manufacturer} ${product} is outdated`,
@@ -70,7 +70,12 @@ const AddConnectionsInner = observer(function AddConnectionsInner({
 	const allProducts = useComputed(
 		() =>
 			Array.from(modules.modules.values()).flatMap((module) =>
-				module.products.map((product) => ({ product, ...module }))
+				module.products.map((product) => ({
+					product,
+					...module,
+					// fuzzySearch can't handle arrays, so flatten the array to a string first
+					keywords: module.keywords?.join(';') ?? '',
+				}))
 			),
 		[modules]
 	)

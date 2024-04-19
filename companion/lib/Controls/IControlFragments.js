@@ -89,6 +89,17 @@ export class ControlWithSteps extends ControlBase {
 	stepSwap(_stepId1, _stepId2) {
 		throw new Error('Not implemented')
 	}
+
+	/**
+	 * Rename step
+	 * @param {string} _stepId the id of the action-set
+	 * @param {string | undefined} _newName The new name of the step
+	 * @returns {boolean} success
+	 * @access public
+	 */
+	stepRename(_stepId, _newName) {
+		throw new Error('Not implemented')
+	}
 }
 
 /**

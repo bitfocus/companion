@@ -141,11 +141,11 @@ class Instance extends CoreBase {
 			return
 		}
 
-		// Mark as definitely been initialised
-		entry.isFirstInit = false
-
-		// Update the config blob
 		if (config) {
+			// Mark as definitely been initialised
+			entry.isFirstInit = false
+
+			// Update the config blob
 			entry.config = config
 		}
 
@@ -202,17 +202,34 @@ class Instance extends CoreBase {
 	}
 
 	/**
-	 *
+	 * Add a new instance of a module
 	 * @param {CreateConnectionData} data
 	 * @param {boolean} disabled
 	 * @returns {string}
 	 */
 	addInstance(data, disabled) {
 		let module = data.type
-		let product = data.product
 
 		const moduleInfo = this.modules.getModuleManifest(module)
 		if (!moduleInfo) throw new Error(`Unknown module type ${module}`)
+
+		const label = this.makeLabelUnique(moduleInfo.display.shortname)
+
+		return this.addInstanceWithLabel(data, label, disabled)
+	}
+
+	/**
+	 * Add a new instance of a module with a predetermined label
+	 * @param {CreateConnectionData} data
+	 * @param {string} label
+	 * @param {boolean} disabled
+	 * @returns {string}
+	 */
+	addInstanceWithLabel(data, label, disabled) {
+		let module = data.type
+		let product = data.product
+
+		if (this.getIdForLabel(label)) throw new Error(`Label "${label}" already in use`)
 
 		// Find the highest rank given to an instance
 		const highestRank =
@@ -230,7 +247,7 @@ class Instance extends CoreBase {
 		this.store.db[id] = {
 			instance_type: module,
 			sortOrder: highestRank + 1,
-			label: this.makeLabelUnique(moduleInfo.display.shortname),
+			label: label,
 			isFirstInit: true,
 			config: {
 				product: product,

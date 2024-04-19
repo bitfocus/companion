@@ -1,6 +1,9 @@
 import { defineConfig } from 'vite'
 import reactPlugin from '@vitejs/plugin-react'
 import * as envCompatible from 'vite-plugin-env-compatible'
+import legacyPlugin from '@vitejs/plugin-legacy'
+
+const upstreamUrl = process.env.UPSTREAM_URL || '127.0.0.1:8000'
 
 // https://vitejs.dev/config/
 export default defineConfig({
@@ -13,10 +16,10 @@ export default defineConfig({
 	},
 	server: {
 		proxy: {
-			'/int': 'http://127.0.0.1:8000',
-			'/docs': 'http://127.0.0.1:8000',
+			'/int': `http://${upstreamUrl}`,
+			'/docs': `http://${upstreamUrl}`,
 			'/socket.io': {
-				target: 'ws://127.0.0.1:8000',
+				target: `ws://${upstreamUrl}`,
 				ws: true,
 			},
 		},
@@ -26,12 +29,21 @@ export default defineConfig({
 		envCompatible.default({
 			prefix: 'DEV',
 		}),
+		legacyPlugin({
+			targets: ['defaults', 'not IE 11', 'safari >= 12.1'],
+		}),
 	],
 	css: {
 		preprocessorOptions: {
 			scss: {
 				quietDeps: true,
 			},
+		},
+	},
+
+	resolve: {
+		alias: {
+			'react-windowed-select': 'react-windowed-select/dist/main.js',
 		},
 	},
 })

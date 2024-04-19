@@ -28,14 +28,36 @@ label.disabled {
 }
 
 /* Style for autocomplete of variable */
-.tribute-container li span {
+.variable-suggestion-option span {
 	display: block;
+
+	&.var-name {
+		font-weight: bold;
+	}
+
+	&.var-label {
+		overflow: hidden;
+		font-weight: inherit;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
 }
-.tribute-container li span.var-label {
-	overflow: hidden;
-	font-weight: inherit;
-	text-overflow: ellipsis;
-	white-space: nowrap;
+
+.variable-select-root {
+	display: flex;
+	flex-grow: 1;
+
+	.variables-text-input {
+		flex-grow: 1;
+
+		& > div {
+			padding: 0 !important;
+		}
+
+		.form-control {
+			border: none;
+		}
+	}
 }
 
 .alignmentinput {
