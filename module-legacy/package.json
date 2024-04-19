@@ -12,7 +12,7 @@
   },
   "dependencies": {
     "@companion-module/base": "~1.7.0",
-    "@tsconfig/node18": "^1.0.1",
+    "@tsconfig/node18": "^18.2.4",
     "@types/debug": "^4.1.12",
     "@types/ws": "^8.5.10",
     "app-root-path": "^3.1.0",
@@ -212,8 +212,8 @@
     "companion-module-wyrestorm-sw0402mv": "github:bitfocus/companion-module-wyrestorm-sw0402mv#v1.0.3",
     "companion-module-xiamen-sprolink-vd-series": "github:bitfocus/companion-module-xiamen-sprolink-vd-series#v1.0.3",
     "debug": "^4.3.3",
-    "nanoid": "^3.3.4",
-    "node-fetch": "^2.6.7",
+    "nanoid": "^3.3.7",
+    "node-fetch": "^2.7.0",
     "node-rest-client": "^3.1.1",
     "osc": "^2.4.4",
     "ping": "^0.4.4",
@@ -223,17 +223,17 @@
     "websocket": "^1.0.26"
   },
   "devDependencies": {
-    "@companion-module/tools": "^1.4.2",
-    "@types/node": "^14",
+    "@companion-module/tools": "^1.5.0",
+    "@types/node": "^14.18.63",
     "@types/parse-author": "^2.0.3",
     "parse-author": "^2.0.0",
     "rimraf": "^5.0.5",
     "ts-node": "^10.9.2",
-    "typescript": "~4.8",
+    "typescript": "~5.3",
     "zx": "^7.2.3"
   },
   "resolutions": {
-    "@types/node": "^14"
+    "@types/node": "^14.18.63"
   },
   "packageManager": "yarn@1.22.0"
 }
