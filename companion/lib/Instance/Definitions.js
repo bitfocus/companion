@@ -539,7 +539,7 @@ class InstanceDefinitions extends CoreBase {
 	 * @param {Record<string, PresetDefinition>} presets
 	 */
 	#updateVariablePrefixesAndStoreDefinitions(connectionId, label, presets) {
-		const variableRegex = /\$\(([^:)]+):([^)]+)\)/g
+		const variableRegex = /\$\(([^:$)]+):([^)$]+)\)/
 
 		/**
 		 * @param {string} fixtext
@@ -547,10 +547,21 @@ class InstanceDefinitions extends CoreBase {
 		 */
 		function replaceAllVariables(fixtext) {
 			if (fixtext && fixtext.includes('$(')) {
+				let matchCount = 0
 				let matches
-				while ((matches = variableRegex.exec(fixtext)) !== null) {
+				let fromIndex = 0
+				while ((matches = variableRegex.exec(fixtext.slice(fromIndex))) !== null) {
+					if (matchCount++ > 100) {
+						// Crudely avoid infinite loops with an iteration limit
+						// logger.info(`Reached iteration limit for variable parsing`)
+						break
+					}
+
+					// ensure we don't try and match the same thing again
+					fromIndex = matches.index + 1
+
 					if (matches[2] !== undefined) {
-						fixtext = fixtext.replace(matches[0], '$(' + label + ':' + matches[2] + ')')
+						fixtext = fixtext.replace(matches[0], `$(${label}:${matches[2]})`)
 					}
 				}
 			}
