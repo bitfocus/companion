@@ -64,28 +64,6 @@ describe('functions', () => {
 			expect(ExpressionFunctions.toRadix(11)).toBe('11')
 		})
 
-		it('fromHex', () => {
-			expect(ExpressionFunctions.fromHex('4b55933')).toBe('KEY3')
-			expect(ExpressionFunctions.fromHex('66617578')).toBe('faux')
-			expect(ExpressionFunctions.fromHex('436f6d70616e696f6e')).toBe('Companion')
-			expect(ExpressionFunctions.fromHex('3c54455354233e0a0d')).toBe('<TEST#>' + String.fromCharCode(0x0a, 0x0d))
-		})
-
-		it('toHex', () => {
-			expect(ExpressionFunctions.toHex('KEY3')).toBe('4b55933')
-			expect(ExpressionFunctions.toHex('faux')).toBe('66617578')
-			expect(ExpressionFunctions.toHex('Companion')).toBe('436f6d70616e696f6e')
-			expect(ExpressionFunctions.toHex('<TEST#>' + String.fromCharCode(0x0a, 0x0d))).toBe('3c54455354233e0a0d')
-		})
-
-		it('from64', () => {
-			expect(ExpressionFunctions.from64('Q29tcGFuaW9uCg==')).toBe('Companion')
-		})
-
-		it('to64', () => {
-			expect(ExpressionFunctions.to64('Companion')).toBe('Q29tcGFuaW9uCg==')
-		})
-
 		it('toFixed', () => {
 			expect(ExpressionFunctions.toFixed(Math.PI, 3)).toBe('3.142')
 			expect(ExpressionFunctions.toFixed(Math.PI, 2)).toBe('3.14')
@@ -269,6 +247,28 @@ describe('functions', () => {
 			expect(ExpressionFunctions.replaceAll(11, 1, 2)).toBe('22')
 			expect(ExpressionFunctions.replaceAll(false, 'a', false)).toBe('ffalselse')
 			expect(ExpressionFunctions.replaceAll(true, 'e', true)).toBe('trutrue')
+		})
+
+		it('fromHex', () => {
+			expect(ExpressionFunctions.fromHex('4b455933')).toBe('KEY3')
+			expect(ExpressionFunctions.fromHex('66617578')).toBe('faux')
+			expect(ExpressionFunctions.fromHex('436f6d70616e696f6e')).toBe('Companion')
+			expect(ExpressionFunctions.fromHex('3c54455354233e0a0d')).toBe('<TEST#>' + String.fromCharCode(0x0a, 0x0d))
+		})
+
+		it('toHex', () => {
+			expect(ExpressionFunctions.toHex('KEY3')).toBe('4b455933')
+			expect(ExpressionFunctions.toHex('faux')).toBe('66617578')
+			expect(ExpressionFunctions.toHex('Companion')).toBe('436f6d70616e696f6e')
+			expect(ExpressionFunctions.toHex('<TEST#>' + String.fromCharCode(0x0a, 0x0d))).toBe('3c54455354233e0a0d')
+		})
+
+		it('from64', () => {
+			expect(ExpressionFunctions.from64('Q29tcGFuaW9u')).toBe('Companion')
+		})
+
+		it('to64', () => {
+			expect(ExpressionFunctions.to64('Companion')).toBe('Q29tcGFuaW9u')
 		})
 
 		it('secondsToTimestamp', () => {

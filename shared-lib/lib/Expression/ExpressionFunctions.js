@@ -12,10 +12,6 @@ export const ExpressionFunctions = {
 	abs: (v) => Math.abs(v),
 	fromRadix: (v, radix) => parseInt(v, radix || 10),
 	toRadix: (v, radix) => v.toString(radix || 10),
-	fromHex: (v) => Buffer.from(v, 'hex').toString(),
-	toHex: (v) => Buffer.from(v).toString('hex'),
-	from64: (v) => btoa(v),
-	to64: (v) => atob(v),
 	toFixed: (v, dp) => Number(v).toFixed(Math.max(0, dp || 0)),
 	isNumber: (v) => !isNaN(v),
 	max: (...args) => Math.max(...args),
@@ -66,6 +62,10 @@ export const ExpressionFunctions = {
 	replaceAll: (str, find, replace) => {
 		return (str + '').replaceAll(find, replace)
 	},
+	fromHex: (str) => Buffer.from('' + str, 'hex').toString(),
+	toHex: (str) => Buffer.from('' + str).toString('hex'),
+	from64: (str) => Buffer.from('' + str, 'base64').toString(),
+	to64: (str) => Buffer.from('' + str).toString('base64'),
 	secondsToTimestamp: (v, type) => {
 		v = Math.max(0, v)
 
