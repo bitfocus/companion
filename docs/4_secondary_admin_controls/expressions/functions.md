@@ -135,6 +135,30 @@ Searches a string for a specific value, and then replaces all instances of that 
 
 eg `replaceAll("This is great!", "This", "Companion")` gives `Companion is great!`
 
+**fromHex(val)**
+
+Decodes a Hex encoded string.
+
+eg `fromHex("436f6d70616e696f6e")` gives `"Companion"`
+
+**toHex(val)**
+
+Hex encodes a string.
+
+eg `toHex("Companion")` gives `"436f6d70616e696f6e"`
+
+**from64(val)**
+
+Decodes a Base64 encoded string.
+
+eg `from64("Q29tcGFuaW9uCg=="")` gives `"Companion"`
+
+**to64(val)**
+
+Encodes a string to Base64.
+
+eg `to64("Companion")` gives `"Q29tcGFuaW9uCg=="`
+
 **secondsToTimestamp(seconds, format)**
 
 Convert a number of seconds into a timestamp of format 'HH:mm:ss'.
