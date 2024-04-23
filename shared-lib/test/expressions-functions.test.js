@@ -250,21 +250,21 @@ describe('functions', () => {
 		})
 
 		it('decode', () => {
-			expect(ExpressionFunctions.decode('4b455933','hex')).toBe('KEY3')
-			expect(ExpressionFunctions.decode('66617578','hex')).toBe('faux')
-			expect(ExpressionFunctions.decode('436f6d70616e696f6e','hex')).toBe('Companion')
-			expect(ExpressionFunctions.decode('3c54455354233e0a0d','hex')).toBe('<TEST#>' + String.fromCharCode(0x0a, 0x0d))
-      expect(ExpressionFunctions.decode('Q29tcGFuaW9u','base64')).toBe('Companion')
-      expect(ExpressionFunctions.decode('Companion')).toBe('Companion')
+			expect(ExpressionFunctions.decode('4b455933', 'hex')).toBe('KEY3')
+			expect(ExpressionFunctions.decode('66617578', 'hex')).toBe('faux')
+			expect(ExpressionFunctions.decode('436f6d70616e696f6e', 'hex')).toBe('Companion')
+			expect(ExpressionFunctions.decode('3c54455354233e0a0d', 'hex')).toBe('<TEST#>' + String.fromCharCode(0x0a, 0x0d))
+			expect(ExpressionFunctions.decode('Q29tcGFuaW9u', 'base64')).toBe('Companion')
+			expect(ExpressionFunctions.decode('Companion')).toBe('Companion')
 		})
 
 		it('encode', () => {
-			expect(ExpressionFunctions.encode('KEY3','hex')).toBe('4b455933')
-			expect(ExpressionFunctions.encode('faux','hex')).toBe('66617578')
-			expect(ExpressionFunctions.encode('Companion','hex')).toBe('436f6d70616e696f6e')
-			expect(ExpressionFunctions.encode('<TEST#>' + String.fromCharCode(0x0a, 0x0d),'hex')).toBe('3c54455354233e0a0d')
-			expect(ExpressionFunctions.encode('Companion','base64')).toBe('Q29tcGFuaW9u')
-      expect(ExpressionFunctions.encode('Companion')).toBe('Companion')
+			expect(ExpressionFunctions.encode('KEY3', 'hex')).toBe('4b455933')
+			expect(ExpressionFunctions.encode('faux', 'hex')).toBe('66617578')
+			expect(ExpressionFunctions.encode('Companion', 'hex')).toBe('436f6d70616e696f6e')
+			expect(ExpressionFunctions.encode('<TEST#>' + String.fromCharCode(0x0a, 0x0d), 'hex')).toBe('3c54455354233e0a0d')
+			expect(ExpressionFunctions.encode('Companion', 'base64')).toBe('Q29tcGFuaW9u')
+			expect(ExpressionFunctions.encode('Companion')).toBe('Companion')
 		})
 
 		it('secondsToTimestamp', () => {
