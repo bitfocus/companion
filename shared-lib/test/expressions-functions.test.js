@@ -249,26 +249,22 @@ describe('functions', () => {
 			expect(ExpressionFunctions.replaceAll(true, 'e', true)).toBe('trutrue')
 		})
 
-		it('fromHex', () => {
-			expect(ExpressionFunctions.fromHex('4b455933')).toBe('KEY3')
-			expect(ExpressionFunctions.fromHex('66617578')).toBe('faux')
-			expect(ExpressionFunctions.fromHex('436f6d70616e696f6e')).toBe('Companion')
-			expect(ExpressionFunctions.fromHex('3c54455354233e0a0d')).toBe('<TEST#>' + String.fromCharCode(0x0a, 0x0d))
+		it('decode', () => {
+			expect(ExpressionFunctions.decode('4b455933','hex')).toBe('KEY3')
+			expect(ExpressionFunctions.decode('66617578','hex')).toBe('faux')
+			expect(ExpressionFunctions.decode('436f6d70616e696f6e','hex')).toBe('Companion')
+			expect(ExpressionFunctions.decode('3c54455354233e0a0d','hex')).toBe('<TEST#>' + String.fromCharCode(0x0a, 0x0d))
+      expect(ExpressionFunctions.decode('Q29tcGFuaW9u','base64')).toBe('Companion')
+      expect(ExpressionFunctions.decode('Companion')).toBe('Companion')
 		})
 
-		it('toHex', () => {
-			expect(ExpressionFunctions.toHex('KEY3')).toBe('4b455933')
-			expect(ExpressionFunctions.toHex('faux')).toBe('66617578')
-			expect(ExpressionFunctions.toHex('Companion')).toBe('436f6d70616e696f6e')
-			expect(ExpressionFunctions.toHex('<TEST#>' + String.fromCharCode(0x0a, 0x0d))).toBe('3c54455354233e0a0d')
-		})
-
-		it('from64', () => {
-			expect(ExpressionFunctions.from64('Q29tcGFuaW9u')).toBe('Companion')
-		})
-
-		it('to64', () => {
-			expect(ExpressionFunctions.to64('Companion')).toBe('Q29tcGFuaW9u')
+		it('encode', () => {
+			expect(ExpressionFunctions.encode('KEY3','hex')).toBe('4b455933')
+			expect(ExpressionFunctions.encode('faux','hex')).toBe('66617578')
+			expect(ExpressionFunctions.encode('Companion','hex')).toBe('436f6d70616e696f6e')
+			expect(ExpressionFunctions.encode('<TEST#>' + String.fromCharCode(0x0a, 0x0d),'hex')).toBe('3c54455354233e0a0d')
+			expect(ExpressionFunctions.encode('Companion','base64')).toBe('Q29tcGFuaW9u')
+      expect(ExpressionFunctions.encode('Companion')).toBe('Companion')
 		})
 
 		it('secondsToTimestamp', () => {

@@ -62,10 +62,22 @@ export const ExpressionFunctions = {
 	replaceAll: (str, find, replace) => {
 		return (str + '').replaceAll(find, replace)
 	},
-	fromHex: (str) => Buffer.from('' + str, 'hex').toString(),
-	toHex: (str) => Buffer.from('' + str).toString('hex'),
-	from64: (str) => Buffer.from('' + str, 'base64').toString(),
-	to64: (str) => Buffer.from('' + str).toString('base64'),
+	decode: (str,enc) => {
+    if (enc === undefined) {
+			enc = 'latin1'
+		} else {
+			enc = '' + enc
+		}
+    return Buffer.from('' + str, enc).toString('latin1')
+  },
+	encode: (str,enc) => {
+    if (enc === undefined) {
+      enc = 'latin1'
+    } else {
+      enc = '' + enc
+    }
+    return Buffer.from('' + str).toString(enc)
+  },
 	secondsToTimestamp: (v, type) => {
 		v = Math.max(0, v)
 
