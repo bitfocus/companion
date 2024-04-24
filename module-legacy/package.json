@@ -235,5 +235,5 @@
   "resolutions": {
     "@types/node": "^14.18.63"
   },
-  "packageManager": "yarn@1.22.0"
+  "packageManager": "yarn@1.22.19"
 }

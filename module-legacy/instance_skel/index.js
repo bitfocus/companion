@@ -30,8 +30,6 @@ function instance(system, id, config) {
 	self.config = config
 	self.package_info = pkgJson
 
-	self.Image = self.system.Image
-
 	self.label = config.label
 
 	// Debug with module-name prepeded
