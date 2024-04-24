@@ -457,10 +457,10 @@ class SurfaceUSBLoupedeckCt extends EventEmitter {
 		const lcdX = x - screen.lcdXOffset
 
 		if (x === 3 && y === 4) {
-			this.#writeQueue.queue(35, render.buffer)
+			this.#writeQueue.queue(35, render)
 		} else if (lcdX >= 0 && lcdX < screen.lcdCols && y >= 0 && y < screen.lcdRows) {
 			const button = lcdX + y * screen.lcdCols
-			this.#writeQueue.queue(button, render.buffer)
+			this.#writeQueue.queue(button, render)
 		}
 
 		const buttonIndex = this.#modelInfo.buttons.findIndex((btn) => btn[0] == x && btn[1] == y)
