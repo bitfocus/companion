@@ -11,7 +11,7 @@ import { useDrag } from 'react-dnd'
 import { ButtonPreviewBase, RedImage } from '../Components/ButtonPreview.js'
 import { nanoid } from 'nanoid'
 import type { ClientConnectionConfig } from '@companion-app/shared/Model/Common.js'
-import type { UIPresetDefinition } from '@companion-app/shared/Model/Presets.js'
+import type { UIPresetDefinition, UIPresetDefinitionText } from '@companion-app/shared/Model/Presets.js'
 import type { Operation as JsonPatchOperation } from 'fast-json-patch'
 import { RootAppStoreContext } from '../Stores/RootAppStore.js'
 import { observer } from 'mobx-react-lite'
@@ -47,6 +47,7 @@ export const InstancePresets = observer(function InstancePresets({ resetToken }:
 
 		socketEmitPromise(socket, 'presets:subscribe', [])
 			.then((data) => {
+				console.log('presets:subscribe', data)
 				setPresetsMap(data)
 			})
 			.catch((e) => {
@@ -247,12 +248,30 @@ function PresetsButtonList({
 			<p>Drag and drop the preset buttons below into your buttons-configuration.</p>
 
 			{filteredPresets.map((preset, i) => {
-				return (
-					<PresetIconPreview key={i} connectionId={selectedConnectionId} presetId={preset.id} title={preset.label} />
-				)
+				if (preset.type === 'button') {
+					return (
+						<PresetIconPreview key={i} connectionId={selectedConnectionId} presetId={preset.id} title={preset.label} />
+					)
+				} else if (preset.type === 'text') {
+					return <PresetText key={i} preset={preset} />
+				}
+				return null
 			})}
 
 			<br style={{ clear: 'both' }} />
+		</div>
+	)
+}
+
+interface PresetTextProps {
+	preset: UIPresetDefinitionText
+}
+
+function PresetText({ preset }: PresetTextProps) {
+	return (
+		<div>
+			<h5>{preset.label}</h5>
+			<p>{preset.text}</p>
 		</div>
 	)
 }

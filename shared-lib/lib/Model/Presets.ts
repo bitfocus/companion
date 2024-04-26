@@ -29,7 +29,9 @@ export interface PresetActionSteps {
 	action_sets: PresetActionSets
 }
 
-export interface PresetDefinition {
+export type PresetDefinition = PresetDefinitionButton | PresetDefinitionText
+
+export interface PresetDefinitionButton {
 	id: string
 	name: string
 	category: string
@@ -41,8 +43,27 @@ export interface PresetDefinition {
 	steps: PresetActionSteps[]
 }
 
-export interface UIPresetDefinition {
+export interface PresetDefinitionText {
+	id: string
+	name: string
+	category: string
+	type: 'text'
+	text: string
+}
+
+export type UIPresetDefinition = UIPresetDefinitionButton | UIPresetDefinitionText
+
+export interface UIPresetDefinitionButton {
 	id: string
 	label: string
 	category: string
+	type: 'button'
+}
+
+export interface UIPresetDefinitionText {
+	id: string
+	label: string
+	category: string
+	type: 'text'
+	text: string
 }
