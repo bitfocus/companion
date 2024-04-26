@@ -457,32 +457,35 @@ class InstanceDefinitions extends CoreBase {
 							style: fb.style,
 							isInverted: !!fb.isInverted,
 						})),
-						steps: rawPreset.steps.length === 0 ? [{ action_sets: { down: [], up: [] } }] : rawPreset.steps.map((step) => {
-							const options = cloneDeep(ControlButtonNormal.DefaultStepOptions)
-							/** @type {PresetActionSets} */
-							const action_sets = {
-								down: [],
-								up: [],
-							}
+						steps:
+							rawPreset.steps.length === 0
+								? [{ action_sets: { down: [], up: [] } }]
+								: rawPreset.steps.map((step) => {
+										const options = cloneDeep(ControlButtonNormal.DefaultStepOptions)
+										/** @type {PresetActionSets} */
+										const action_sets = {
+											down: [],
+											up: [],
+										}
 
-							for (const [setId, set] of Object.entries(step)) {
-								/** @type {import('@companion-module/base').CompanionPresetAction[]} */
-								const setActions = Array.isArray(set) ? set : set.actions
-								if (!isNaN(Number(setId)) && set.options?.runWhileHeld) options.runWhileHeld.push(Number(setId))
+										for (const [setId, set] of Object.entries(step)) {
+											/** @type {import('@companion-module/base').CompanionPresetAction[]} */
+											const setActions = Array.isArray(set) ? set : set.actions
+											if (!isNaN(Number(setId)) && set.options?.runWhileHeld) options.runWhileHeld.push(Number(setId))
 
-								// @ts-ignore
-								action_sets[setId] = setActions.map((act) => ({
-									action: act.actionId,
-									options: act.options,
-									delay: act.delay,
-								}))
-							}
+											// @ts-ignore
+											action_sets[setId] = setActions.map((act) => ({
+												action: act.actionId,
+												options: act.options,
+												delay: act.delay,
+											}))
+										}
 
-							return {
-								options,
-								action_sets,
-							}
-						}),
+										return {
+											options,
+											action_sets,
+										}
+									}),
 					}
 				} else if (rawPreset.type === 'text') {
 					newPresets[id] = {
@@ -516,7 +519,7 @@ class InstanceDefinitions extends CoreBase {
 					id: preset.id,
 					label: preset.name,
 					category: preset.category,
-					type: 'button'
+					type: 'button',
 				}
 			} else if (preset.type === 'text') {
 				res[id] = {
@@ -524,7 +527,7 @@ class InstanceDefinitions extends CoreBase {
 					label: preset.name,
 					category: preset.category,
 					type: 'text',
-					text: preset.text
+					text: preset.text,
 				}
 			}
 		}
@@ -588,7 +591,6 @@ class InstanceDefinitions extends CoreBase {
 		 */
 		for (const preset of Object.values(presets)) {
 			if (preset.type !== 'text') {
-
 				if (preset.style) {
 					preset.style.text = replaceAllVariables(preset.style.text)
 				}

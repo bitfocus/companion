@@ -253,9 +253,7 @@ function PresetsButtonList({
 						<PresetIconPreview key={i} connectionId={selectedConnectionId} presetId={preset.id} title={preset.label} />
 					)
 				} else if (preset.type === 'text') {
-					return (
-						<PresetText key={i} preset={preset} />
-					)
+					return <PresetText key={i} preset={preset} />
 				}
 				return null
 			})}
@@ -272,11 +270,9 @@ interface PresetTextProps {
 function PresetText({ preset }: PresetTextProps) {
 	return (
 		<div>
-		<h5>{preset.label}</h5>
-		<p>
-			{preset.text}
-		</p>
-	</div>
+			<h5>{preset.label}</h5>
+			<p>{preset.text}</p>
+		</div>
 	)
 }
 
