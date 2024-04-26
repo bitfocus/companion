@@ -62,6 +62,22 @@ export const ExpressionFunctions = {
 	replaceAll: (str, find, replace) => {
 		return (str + '').replaceAll(find, replace)
 	},
+	decode: (str, enc) => {
+		if (enc === undefined) {
+			enc = 'latin1'
+		} else {
+			enc = '' + enc
+		}
+		return Buffer.from('' + str, enc).toString('latin1')
+	},
+	encode: (str, enc) => {
+		if (enc === undefined) {
+			enc = 'latin1'
+		} else {
+			enc = '' + enc
+		}
+		return Buffer.from('' + str).toString(enc)
+	},
 	secondsToTimestamp: (v, type) => {
 		v = Math.max(0, v)
 
