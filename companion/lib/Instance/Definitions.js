@@ -554,7 +554,6 @@ class InstanceDefinitions extends CoreBase {
 	 * @param {Record<string, PresetDefinition>} presets
 	 */
 	#updateVariablePrefixesAndStoreDefinitions(connectionId, label, presets) {
-		console.log(123, 'updateVariablePrefixesAndStoreDefinitions')
 		const variableRegex = /\$\(([^:$)]+):([^)$]+)\)/
 
 		/**
@@ -604,7 +603,6 @@ class InstanceDefinitions extends CoreBase {
 				}
 			}
 		}
-		console.log(456, 'updateVariablePrefixesAndStoreDefinitions')
 
 		const lastPresetDefinitions = this.#presetDefinitions[connectionId]
 		this.#presetDefinitions[connectionId] = cloneDeep(presets)
