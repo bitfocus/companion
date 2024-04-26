@@ -43,7 +43,7 @@ const CHOICES_SURFACE_GROUP_WITH_VARIABLES = [
 		default: 'self',
 		isVisible: (options) => !!options.controller_from_variable,
 		useVariables: {
-			locationBased: true,
+			local: true,
 		},
 	}),
 ]
@@ -72,7 +72,7 @@ const CHOICES_SURFACE_ID_WITH_VARIABLES = [
 		default: 'self',
 		isVisible: (options) => !!options.controller_from_variable,
 		useVariables: {
-			locationBased: true,
+			local: true,
 		},
 	}),
 ]
@@ -101,7 +101,7 @@ const CHOICES_PAGE_WITH_VARIABLES = [
 		default: '1',
 		isVisible: (options) => !!options.page_from_variable,
 		useVariables: {
-			locationBased: true,
+			local: true,
 		},
 	}),
 ]

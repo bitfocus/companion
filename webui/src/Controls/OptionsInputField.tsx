@@ -34,7 +34,7 @@ export function OptionsInputField({
 	setValue,
 	visibility,
 	readonly,
-}: OptionsInputFieldProps) {
+}: Readonly<OptionsInputFieldProps>) {
 	const setValue2 = useCallback((val: any) => setValue(option.id, val), [option.id, setValue])
 
 	if (!option) {
@@ -47,7 +47,7 @@ export function OptionsInputField({
 	switch (option.type) {
 		case 'textinput': {
 			features.variables = !!option.useVariables
-			features.locationVariables = typeof option.useVariables === 'object' && !!option.useVariables?.locationBased
+			features.local = typeof option.useVariables === 'object' && !!option.useVariables?.local
 
 			control = (
 				<TextInputField
@@ -56,7 +56,7 @@ export function OptionsInputField({
 					required={option.required}
 					placeholder={option.placeholder}
 					useVariables={features.variables}
-					useLocationVariables={features.locationVariables}
+					useLocalVariables={features.local}
 					disabled={readonly}
 					setValue={setValue2}
 				/>
@@ -185,17 +185,14 @@ export function OptionsInputField({
 
 export interface InputFeatureIconsProps {
 	variables?: boolean
-	locationVariables?: boolean
+	local?: boolean
 }
 
 export function InputFeatureIcons(props: InputFeatureIconsProps): JSX.Element | null {
 	const featureIcons: JSX.Element[] = []
 	if (props.variables)
 		featureIcons.push(<FontAwesomeIcon key="variables" icon={faDollarSign} title={'Supports variables'} />)
-	if (props.locationVariables)
-		featureIcons.push(
-			<FontAwesomeIcon key="locationVariables" icon={faGlobe} title={'Supports location based variables'} />
-		)
+	if (props.local) featureIcons.push(<FontAwesomeIcon key="local" icon={faGlobe} title={'Supports local variables'} />)
 
 	return featureIcons.length ? <span className="feature-icons">{featureIcons}</span> : null
 }

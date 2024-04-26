@@ -51,7 +51,7 @@ const CHOICES_PAGE_WITH_VARIABLES = [
 		default: '1',
 		isVisible: (options) => !!options.page_from_variable,
 		useVariables: {
-			locationBased: true,
+			local: true,
 		},
 	}),
 ]
@@ -77,7 +77,7 @@ const CHOICES_DYNAMIC_LOCATION = [
 		default: '$(this:page)/$(this:row)/$(this:column)',
 		isVisible: (options) => options.location_target === 'text',
 		useVariables: {
-			locationBased: true,
+			local: true,
 		},
 	}),
 	serializeIsVisibleFnSingle({
@@ -88,7 +88,7 @@ const CHOICES_DYNAMIC_LOCATION = [
 		default: `concat($(this:page), '/', $(this:row), '/', $(this:column))`,
 		isVisible: (options) => options.location_target === 'expression',
 		useVariables: {
-			locationBased: true,
+			local: true,
 		},
 	}),
 ]
@@ -118,7 +118,7 @@ const CHOICES_STEP_WITH_VARIABLES = [
 		default: '1',
 		isVisible: (options) => !!options.step_from_expression,
 		useVariables: {
-			locationBased: true,
+			local: true,
 		},
 	}),
 ]
@@ -307,7 +307,7 @@ export default class Controls {
 						id: 'expression',
 						default: '$(internal:time_s) >= 0',
 						useVariables: {
-							locationBased: true,
+							local: true,
 						},
 					},
 
@@ -349,7 +349,7 @@ export default class Controls {
 						id: 'value',
 						default: '',
 						useVariables: {
-							locationBased: true,
+							local: true,
 						},
 					},
 
@@ -384,7 +384,7 @@ export default class Controls {
 						id: 'value',
 						default: '',
 						useVariables: {
-							locationBased: true,
+							local: true,
 						},
 					},
 
@@ -419,7 +419,7 @@ export default class Controls {
 						id: 'value',
 						default: '',
 						useVariables: {
-							locationBased: true,
+							local: true,
 						},
 					},
 
@@ -592,7 +592,7 @@ export default class Controls {
 						id: 'value',
 						default: '',
 						useVariables: {
-							locationBased: true,
+							local: true,
 						},
 					},
 
@@ -611,7 +611,7 @@ export default class Controls {
 						id: 'expression',
 						default: '$(internal:time_s) >= 0',
 						useVariables: {
-							locationBased: true,
+							local: true,
 						},
 					},
 					...CHOICES_DYNAMIC_LOCATION,
