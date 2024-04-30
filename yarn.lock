@@ -1710,27 +1710,27 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@elgato-stream-deck/core@npm:6.0.0":
-  version: 6.0.0
-  resolution: "@elgato-stream-deck/core@npm:6.0.0"
+"@elgato-stream-deck/core@npm:6.2.0":
+  version: 6.2.0
+  resolution: "@elgato-stream-deck/core@npm:6.2.0"
   dependencies:
     eventemitter3: "npm:^4.0.7"
     tslib: "npm:^2.6.2"
-  checksum: 10c0/ef3dcbad3cb0118b870c84669b437d124d68b79f6970a77c70a7754dfd7d731afbd3ffc2c51168b62987d2432765743eb95f5ada7deb0882ebb82990277b1607
+  checksum: 10c0/bacb14c826efe040a03ecf920260db636d80ce59e0b60761f974d1ebcf525204efafaf3076b29f1be95630c96e9b7f83d235e2033682b4792c76f4320b61740f
   languageName: node
   linkType: hard
 
-"@elgato-stream-deck/node@npm:^6.0.0":
-  version: 6.0.0
-  resolution: "@elgato-stream-deck/node@npm:6.0.0"
+"@elgato-stream-deck/node@npm:^6.2.0":
+  version: 6.2.0
+  resolution: "@elgato-stream-deck/node@npm:6.2.0"
   dependencies:
-    "@elgato-stream-deck/core": "npm:6.0.0"
+    "@elgato-stream-deck/core": "npm:6.2.0"
     jpeg-js: "npm:^0.4.4"
     node-hid: "npm:^3.0.0"
     tslib: "npm:^2.6.2"
   peerDependencies:
     "@julusian/jpeg-turbo": ^1.1.2 || ^2.0.0
-  checksum: 10c0/31673bff2d8b9f040190939635cbd38426f3f093aab402b2b94e831090d852288db50b60f997f3e0f1ed25488b5f22f62bc948002c6bbad9ec181f206feed981
+  checksum: 10c0/fd98637b3c6507dde86619fc4f6599ece978eaa0765f2a2bc4df70c9849df35f2eab1d541ca224838686f9e21453bda9d79c96107879dd89110759714e1394e9
   languageName: node
   linkType: hard
 
@@ -5967,7 +5967,7 @@ asn1@evs-broadcast/node-asn1:
   dependencies:
     "@companion-app/shared": "npm:*"
     "@companion-module/base": "npm:~1.8.0"
-    "@elgato-stream-deck/node": "npm:^6.0.0"
+    "@elgato-stream-deck/node": "npm:^6.2.0"
     "@julusian/image-rs": "npm:^0.2.1"
     "@julusian/jpeg-turbo": "npm:^2.1.0"
     "@julusian/skia-canvas": "npm:^1.0.5"
