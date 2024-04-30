@@ -1,5 +1,40 @@
 # Bitfocus Companion
 
+## Companion v3.3.0 - Release Notes
+
+### 📣 CORE FEATURES AND IMPROVEMENTS
+
+- Improvements to code flow and performance of webui
+- Add swap button to UI #2740
+
+- Support 'local' variables in all internal actions, feedbacks and button text
+- Support 'local' variables from modules (Note: modules need to opt into this)
+- Shared udp listener #2399 (#2754)
+- Extend expression syntax:
+  - support for creating and decomposing objects and arrays
+  - jsonpath function
+  - split to array expressions function #2559
+  - array join function (#2782)
+  - encode and decode functions (#2842)
+- add 'startup' page option in surface actions and feedbacks
+- replace variable picker dropdown #2344 (#2787)
+- Support custom names for Step Tabs (#2783)
+- Preset text sub-headings (#2846)
+
+### 🐞 BUG FIXES
+
+- support the new location system in companion cloud
+- preset text not allowing expressions
+- http api routes precedence #2820
+- improve custom variable naming consistency in the ui #2812
+- fix importing a config with an unknown module fails
+- ensure variables in presets button text get replaced correctly #2837
+- typo causing a crash in loupedeck-ct integration #2744
+
+### 🧩 NEW & UPDATED MODULES
+
+-
+
 ## Companion v3.2.2 - Release Notes
 
 ### 🐞 BUG FIXES
