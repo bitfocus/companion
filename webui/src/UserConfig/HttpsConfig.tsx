@@ -5,6 +5,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faSync, faTrash, faUndo } from '@fortawesome/free-solid-svg-icons'
 import CSwitch from '../CSwitch.js'
 import type { UserConfigModel } from '@companion-app/shared/Model/UserConfigModel.js'
+import { observer } from 'mobx-react-lite'
 
 interface HttpsConfigProps {
 	config: UserConfigModel
@@ -12,7 +13,7 @@ interface HttpsConfigProps {
 	resetValue: (key: keyof UserConfigModel) => void
 }
 
-export function HttpsConfig({ config, setValue, resetValue }: HttpsConfigProps) {
+export const HttpsConfig = observer(function HttpsConfig({ config, setValue, resetValue }: HttpsConfigProps) {
 	const socket = useContext(SocketContext)
 
 	const createSslCertificate = useCallback(() => {
@@ -272,4 +273,4 @@ export function HttpsConfig({ config, setValue, resetValue }: HttpsConfigProps) 
 			)}
 		</>
 	)
-}
+})

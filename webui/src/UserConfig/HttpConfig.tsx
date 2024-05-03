@@ -4,6 +4,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faUndo } from '@fortawesome/free-solid-svg-icons'
 import CSwitch from '../CSwitch.js'
 import type { UserConfigModel } from '@companion-app/shared/Model/UserConfigModel.js'
+import { observer } from 'mobx-react-lite'
 
 interface HttpConfigProps {
 	config: UserConfigModel
@@ -11,7 +12,7 @@ interface HttpConfigProps {
 	resetValue: (key: keyof UserConfigModel) => void
 }
 
-export function HttpConfig({ config, setValue, resetValue }: HttpConfigProps) {
+export const HttpConfig = observer(function HttpConfig({ config, setValue, resetValue }: HttpConfigProps) {
 	return (
 		<>
 			<tr>
@@ -61,4 +62,4 @@ export function HttpConfig({ config, setValue, resetValue }: HttpConfigProps) {
 			</tr>
 		</>
 	)
-}
+})

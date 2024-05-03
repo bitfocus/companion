@@ -12,6 +12,7 @@ import { ConfigurePanel } from './ConfigurePanel.js'
 import { ButtonsFromPage } from './ButtonsFromPage.js'
 import { PagesStore } from '../Stores/PagesStore.js'
 import { observer } from 'mobx-react-lite'
+import { UserConfigStore } from '../Stores/UserConfigStore.js'
 
 export const TabletView = observer(function TabletView() {
 	const socket = useContext(SocketContext)
@@ -57,8 +58,9 @@ export const TabletView = observer(function TabletView() {
 	const pagesStore = useMemo(() => new PagesStore(), [])
 	const pagesReady = usePagesInfoSubscription(socket, pagesStore, setLoadError, retryToken)
 
-	const userConfig = useUserConfigSubscription(socket, setLoadError, retryToken)
-	const rawGridSize = userConfig?.gridSize
+	const userConfigStore = useMemo(() => new UserConfigStore(), [])
+	useUserConfigSubscription(socket, userConfigStore, setLoadError, retryToken)
+	const rawGridSize = userConfigStore.properties?.gridSize
 
 	useEffect(() => {
 		const onConnect = () => {

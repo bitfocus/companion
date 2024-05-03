@@ -1,13 +1,4 @@
-import React, {
-	FormEvent,
-	forwardRef,
-	useCallback,
-	useContext,
-	useEffect,
-	useImperativeHandle,
-	useRef,
-	useState,
-} from 'react'
+import React, { FormEvent, useCallback, useContext, useEffect, useImperativeHandle, useRef, useState } from 'react'
 import {
 	CAlert,
 	CButton,
@@ -23,8 +14,9 @@ import {
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faCog, faUndo } from '@fortawesome/free-solid-svg-icons'
 import CSwitch from '../CSwitch.js'
-import { SocketContext, UserConfigContext } from '../util.js'
 import type { UserConfigGridSize, UserConfigModel } from '@companion-app/shared/Model/UserConfigModel.js'
+import { observer } from 'mobx-react-lite'
+import { RootAppStoreContext } from '../Stores/RootAppStore.js'
 
 interface GridConfigProps {
 	config: UserConfigModel
@@ -32,7 +24,7 @@ interface GridConfigProps {
 	resetValue: (key: keyof UserConfigModel) => void
 }
 
-export function GridConfig({ config, setValue, resetValue }: GridConfigProps) {
+export const GridConfig = observer(function GridConfig({ config, setValue, resetValue }: GridConfigProps) {
 	const gridSizeRef = useRef<GridSizeModalRef>(null)
 
 	const editGridSize = useCallback(() => {
@@ -107,7 +99,7 @@ export function GridConfig({ config, setValue, resetValue }: GridConfigProps) {
 			</tr>
 		</>
 	)
-}
+})
 
 interface GridSizeModalProps {
 	// Nothing
@@ -116,153 +108,156 @@ interface GridSizeModalRef {
 	show(): void
 }
 
-const GridSizeModal = forwardRef<GridSizeModalRef, GridSizeModalProps>(function GridSizeModal(_props, ref) {
-	const socket = useContext(SocketContext)
-	const userConfig = useContext(UserConfigContext)
-	const [show, setShow] = useState(false)
+const GridSizeModal = observer<GridSizeModalProps, GridSizeModalRef>(
+	function GridSizeModal(_props, ref) {
+		const { userConfig, socket } = useContext(RootAppStoreContext)
 
-	const [newGridSize, setNewGridSize] = useState<UserConfigGridSize | null>(null)
+		const [show, setShow] = useState(false)
 
-	const buttonRef = useRef<HTMLElement>()
+		const [newGridSize, setNewGridSize] = useState<UserConfigGridSize | null>(null)
 
-	const buttonFocus = () => {
-		if (buttonRef.current) {
-			buttonRef.current.focus()
+		const buttonRef = useRef<HTMLElement>()
+
+		const buttonFocus = () => {
+			if (buttonRef.current) {
+				buttonRef.current.focus()
+			}
 		}
-	}
 
-	const doClose = useCallback(() => setShow(false), [])
-	const onClosed = useCallback(() => {
-		setNewGridSize(null)
-	}, [])
-	const doAction = useCallback(
-		(e: FormEvent) => {
-			if (e) e.preventDefault()
-
-			setShow(false)
+		const doClose = useCallback(() => setShow(false), [])
+		const onClosed = useCallback(() => {
 			setNewGridSize(null)
+		}, [])
+		const doAction = useCallback(
+			(e: FormEvent) => {
+				if (e) e.preventDefault()
 
-			if (!newGridSize) return
+				setShow(false)
+				setNewGridSize(null)
 
-			console.log('set gridSize', newGridSize)
-			socket.emit('set_userconfig_key', 'gridSize', newGridSize)
-		},
-		[socket, newGridSize]
-	)
+				if (!newGridSize) return
 
-	useImperativeHandle(
-		ref,
-		() => ({
-			show() {
-				setShow(true)
-
-				// Focus the button asap. It also gets focused once the open is complete
-				setTimeout(buttonFocus, 50)
+				console.log('set gridSize', newGridSize)
+				socket.emit('set_userconfig_key', 'gridSize', newGridSize)
 			},
-		}),
-		[]
-	)
-
-	useEffect(() => {
-		if (show) {
-			setNewGridSize((oldGridSize) => {
-				if (!oldGridSize && userConfig) return userConfig.gridSize
-				return oldGridSize
-			})
-		}
-	}, [show, userConfig])
-
-	const setMinColumn = useCallback((e) => {
-		const newValue = Number(e.currentTarget.value)
-		setNewGridSize((oldSize) =>
-			oldSize
-				? {
-						...oldSize,
-						minColumn: newValue,
-					}
-				: null
+			[socket, newGridSize]
 		)
-	}, [])
-	const setMaxColumn = useCallback((e) => {
-		const newValue = Number(e.currentTarget.value)
-		setNewGridSize((oldSize) =>
-			oldSize
-				? {
-						...oldSize,
-						maxColumn: newValue,
-					}
-				: null
-		)
-	}, [])
-	const setMinRow = useCallback((e) => {
-		const newValue = Number(e.currentTarget.value)
-		setNewGridSize((oldSize) =>
-			oldSize
-				? {
-						...oldSize,
-						minRow: newValue,
-					}
-				: null
-		)
-	}, [])
-	const setMaxRow = useCallback((e) => {
-		const newValue = Number(e.currentTarget.value)
-		setNewGridSize((oldSize) =>
-			oldSize
-				? {
-						...oldSize,
-						maxRow: newValue,
-					}
-				: null
-		)
-	}, [])
 
-	const isReducingSize =
-		newGridSize &&
-		userConfig?.gridSize &&
-		(newGridSize.minColumn > userConfig.gridSize.minColumn ||
-			newGridSize.maxColumn < userConfig.gridSize.maxColumn ||
-			newGridSize.minRow > userConfig.gridSize.minRow ||
-			newGridSize.maxRow < userConfig.gridSize.maxRow)
+		useImperativeHandle(
+			ref,
+			() => ({
+				show() {
+					setShow(true)
 
-	return (
-		<CModal show={show} onClose={doClose} onClosed={onClosed} onOpened={buttonFocus}>
-			<CModalHeader closeButton>
-				<h5>Configure Grid Size</h5>
-			</CModalHeader>
-			<CModalBody>
-				<CForm onSubmit={doAction}>
-					<CFormGroup>
-						<CLabel>Min Column</CLabel>
-						<CInput type="number" value={newGridSize?.minColumn} max={0} step={1} onChange={setMinColumn} />
-					</CFormGroup>
-					<CFormGroup>
-						<CLabel>Max Column</CLabel>
-						<CInput type="number" value={newGridSize?.maxColumn} min={0} step={1} onChange={setMaxColumn} />
-					</CFormGroup>
-					<CFormGroup>
-						<CLabel>Min Row</CLabel>
-						<CInput type="number" value={newGridSize?.minRow} max={0} step={1} onChange={setMinRow} />
-					</CFormGroup>
-					<CFormGroup>
-						<CLabel>Max Row</CLabel>
-						<CInput type="number" value={newGridSize?.maxRow} min={0} step={1} onChange={setMaxRow} />
-					</CFormGroup>
-				</CForm>
-				{isReducingSize && (
-					<CAlert color="danger">
-						By reducing the grid size, any buttons outside of the new boundaries will be deleted.
-					</CAlert>
-				)}
-			</CModalBody>
-			<CModalFooter>
-				<CButton color="secondary" onClick={doClose}>
-					Cancel
-				</CButton>
-				<CButton innerRef={buttonRef} color="primary" onClick={doAction}>
-					Save
-				</CButton>
-			</CModalFooter>
-		</CModal>
-	)
-})
+					// Focus the button asap. It also gets focused once the open is complete
+					setTimeout(buttonFocus, 50)
+				},
+			}),
+			[]
+		)
+
+		useEffect(() => {
+			if (show) {
+				setNewGridSize((oldGridSize) => {
+					if (!oldGridSize && userConfig.properties) return userConfig.properties.gridSize
+					return oldGridSize
+				})
+			}
+		}, [show, userConfig])
+
+		const setMinColumn = useCallback((e) => {
+			const newValue = Number(e.currentTarget.value)
+			setNewGridSize((oldSize) =>
+				oldSize
+					? {
+							...oldSize,
+							minColumn: newValue,
+						}
+					: null
+			)
+		}, [])
+		const setMaxColumn = useCallback((e) => {
+			const newValue = Number(e.currentTarget.value)
+			setNewGridSize((oldSize) =>
+				oldSize
+					? {
+							...oldSize,
+							maxColumn: newValue,
+						}
+					: null
+			)
+		}, [])
+		const setMinRow = useCallback((e) => {
+			const newValue = Number(e.currentTarget.value)
+			setNewGridSize((oldSize) =>
+				oldSize
+					? {
+							...oldSize,
+							minRow: newValue,
+						}
+					: null
+			)
+		}, [])
+		const setMaxRow = useCallback((e) => {
+			const newValue = Number(e.currentTarget.value)
+			setNewGridSize((oldSize) =>
+				oldSize
+					? {
+							...oldSize,
+							maxRow: newValue,
+						}
+					: null
+			)
+		}, [])
+
+		const isReducingSize =
+			newGridSize &&
+			userConfig?.properties?.gridSize &&
+			(newGridSize.minColumn > userConfig.properties.gridSize.minColumn ||
+				newGridSize.maxColumn < userConfig.properties.gridSize.maxColumn ||
+				newGridSize.minRow > userConfig.properties.gridSize.minRow ||
+				newGridSize.maxRow < userConfig.properties.gridSize.maxRow)
+
+		return (
+			<CModal show={show} onClose={doClose} onClosed={onClosed} onOpened={buttonFocus}>
+				<CModalHeader closeButton>
+					<h5>Configure Grid Size</h5>
+				</CModalHeader>
+				<CModalBody>
+					<CForm onSubmit={doAction}>
+						<CFormGroup>
+							<CLabel>Min Column</CLabel>
+							<CInput type="number" value={newGridSize?.minColumn} max={0} step={1} onChange={setMinColumn} />
+						</CFormGroup>
+						<CFormGroup>
+							<CLabel>Max Column</CLabel>
+							<CInput type="number" value={newGridSize?.maxColumn} min={0} step={1} onChange={setMaxColumn} />
+						</CFormGroup>
+						<CFormGroup>
+							<CLabel>Min Row</CLabel>
+							<CInput type="number" value={newGridSize?.minRow} max={0} step={1} onChange={setMinRow} />
+						</CFormGroup>
+						<CFormGroup>
+							<CLabel>Max Row</CLabel>
+							<CInput type="number" value={newGridSize?.maxRow} min={0} step={1} onChange={setMaxRow} />
+						</CFormGroup>
+					</CForm>
+					{isReducingSize && (
+						<CAlert color="danger">
+							By reducing the grid size, any buttons outside of the new boundaries will be deleted.
+						</CAlert>
+					)}
+				</CModalBody>
+				<CModalFooter>
+					<CButton color="secondary" onClick={doClose}>
+						Cancel
+					</CButton>
+					<CButton innerRef={buttonRef} color="primary" onClick={doAction}>
+						Save
+					</CButton>
+				</CModalFooter>
+			</CModal>
+		)
+	},
+	{ forwardRef: true }
+)

@@ -4,6 +4,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faUndo } from '@fortawesome/free-solid-svg-icons'
 import CSwitch from '../CSwitch.js'
 import type { UserConfigModel } from '@companion-app/shared/Model/UserConfigModel.js'
+import { observer } from 'mobx-react-lite'
 
 interface PinLockoutConfigProps {
 	config: UserConfigModel
@@ -11,7 +12,11 @@ interface PinLockoutConfigProps {
 	resetValue: (key: keyof UserConfigModel) => void
 }
 
-export function PinLockoutConfig({ config, setValue, resetValue }: PinLockoutConfigProps) {
+export const PinLockoutConfig = observer(function PinLockoutConfig({
+	config,
+	setValue,
+	resetValue,
+}: PinLockoutConfigProps) {
 	return (
 		<>
 			<tr>
@@ -92,4 +97,4 @@ export function PinLockoutConfig({ config, setValue, resetValue }: PinLockoutCon
 			</tr>
 		</>
 	)
-}
+})

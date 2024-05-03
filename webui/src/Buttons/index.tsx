@@ -3,23 +3,24 @@ import { faCalculator, faDollarSign, faGift, faVideoCamera } from '@fortawesome/
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { nanoid } from 'nanoid'
 import { InstancePresets } from './Presets.js'
-import { SocketContext, MyErrorBoundary, socketEmitPromise, UserConfigContext } from '../util.js'
+import { MyErrorBoundary, socketEmitPromise } from '../util.js'
 import { ButtonsGridPanel } from './ButtonGridPanel.js'
 import { EditButton } from './EditButton.js'
 import { ActionRecorder } from './ActionRecorder/index.js'
-import React, { memo, useCallback, useContext, useRef, useState } from 'react'
+import React, { useCallback, useContext, useRef, useState } from 'react'
 import { GenericConfirmModal, GenericConfirmModalRef } from '../Components/GenericConfirmModal.js'
 import { ConnectionVariables } from './Variables.js'
 import { formatLocation } from '@companion-app/shared/ControlId.js'
 import { ControlLocation } from '@companion-app/shared/Model/Common.js'
+import { observer } from 'mobx-react-lite'
+import { RootAppStoreContext } from '../Stores/RootAppStore.js'
 
 interface ButtonsPageProps {
 	hotPress: boolean
 }
 
-export const ButtonsPage = memo(function ButtonsPage({ hotPress }: ButtonsPageProps) {
-	const socket = useContext(SocketContext)
-	const userConfig = useContext(UserConfigContext)
+export const ButtonsPage = observer(function ButtonsPage({ hotPress }: ButtonsPageProps) {
+	const { userConfig, socket } = useContext(RootAppStoreContext)
 
 	const clearModalRef = useRef<GenericConfirmModalRef>(null)
 
@@ -59,19 +60,18 @@ export const ButtonsPage = memo(function ButtonsPage({ hotPress }: ButtonsPagePr
 		doChangeTab('presets')
 	}, [doChangeTab])
 
+	const gridSize = userConfig.properties?.gridSize
+
 	const handleKeyDownInButtons = useCallback(
 		(e) => {
 			if (e.target.tagName !== 'INPUT' && e.target.tagName !== 'TEXTAREA') {
 				switch (e.key) {
 					case 'ArrowDown':
 						setSelectedButton((selectedButton) => {
-							if (selectedButton && userConfig?.gridSize) {
+							if (selectedButton && gridSize) {
 								return {
 									...selectedButton,
-									row:
-										selectedButton.row >= userConfig.gridSize.maxRow
-											? userConfig.gridSize.minRow
-											: selectedButton.row + 1,
+									row: selectedButton.row >= gridSize.maxRow ? gridSize.minRow : selectedButton.row + 1,
 								}
 							} else {
 								return selectedButton
@@ -81,13 +81,10 @@ export const ButtonsPage = memo(function ButtonsPage({ hotPress }: ButtonsPagePr
 						break
 					case 'ArrowUp':
 						setSelectedButton((selectedButton) => {
-							if (selectedButton && userConfig?.gridSize) {
+							if (selectedButton && gridSize) {
 								return {
 									...selectedButton,
-									row:
-										selectedButton.row <= userConfig.gridSize.minRow
-											? userConfig.gridSize.maxRow
-											: selectedButton.row - 1,
+									row: selectedButton.row <= gridSize.minRow ? gridSize.maxRow : selectedButton.row - 1,
 								}
 							} else {
 								return selectedButton
@@ -97,13 +94,10 @@ export const ButtonsPage = memo(function ButtonsPage({ hotPress }: ButtonsPagePr
 						break
 					case 'ArrowLeft':
 						setSelectedButton((selectedButton) => {
-							if (selectedButton && userConfig?.gridSize) {
+							if (selectedButton && gridSize) {
 								return {
 									...selectedButton,
-									column:
-										selectedButton.column <= userConfig.gridSize.minColumn
-											? userConfig.gridSize.maxColumn
-											: selectedButton.column - 1,
+									column: selectedButton.column <= gridSize.minColumn ? gridSize.maxColumn : selectedButton.column - 1,
 								}
 							} else {
 								return selectedButton
@@ -113,13 +107,10 @@ export const ButtonsPage = memo(function ButtonsPage({ hotPress }: ButtonsPagePr
 						break
 					case 'ArrowRight':
 						setSelectedButton((selectedButton) => {
-							if (selectedButton && userConfig?.gridSize) {
+							if (selectedButton && gridSize) {
 								return {
 									...selectedButton,
-									column:
-										selectedButton.column >= userConfig.gridSize.maxColumn
-											? userConfig.gridSize.minColumn
-											: selectedButton.column + 1,
+									column: selectedButton.column >= gridSize.maxColumn ? gridSize.minColumn : selectedButton.column + 1,
 								}
 							} else {
 								return selectedButton
@@ -201,7 +192,7 @@ export const ButtonsPage = memo(function ButtonsPage({ hotPress }: ButtonsPagePr
 				}
 			}
 		},
-		[socket, selectedButton, copyFromButton, userConfig?.gridSize]
+		[socket, selectedButton, copyFromButton, gridSize]
 	)
 
 	return (

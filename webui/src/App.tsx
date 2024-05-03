@@ -25,7 +25,7 @@ import {
 	faFileImport,
 } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { MyErrorBoundary, useMountEffect, UserConfigContext, SocketContext } from './util.js'
+import { MyErrorBoundary, useMountEffect, SocketContext } from './util.js'
 import { SurfacesPage } from './Surfaces/index.js'
 import { UserConfig } from './UserConfig/index.js'
 import { LogPanel } from './LogPanel.js'
@@ -44,6 +44,7 @@ import { Navigate, useLocation } from 'react-router-dom'
 import { useIdleTimer } from 'react-idle-timer'
 import { ImportExport } from './ImportExport/index.js'
 import { RootAppStoreContext } from './Stores/RootAppStore.js'
+import { observer } from 'mobx-react-lite'
 
 const useTouchBackend = window.localStorage.getItem('test_touch_backend') === '1'
 const showCloudTab = window.localStorage.getItem('show_companion_cloud') === '1'
@@ -170,8 +171,13 @@ interface AppMainProps {
 	buttonGridHotPress: boolean
 }
 
-function AppMain({ connected, loadingComplete, loadingProgress, buttonGridHotPress }: AppMainProps) {
-	const config = useContext(UserConfigContext)
+const AppMain = observer(function AppMain({
+	connected,
+	loadingComplete,
+	loadingProgress,
+	buttonGridHotPress,
+}: AppMainProps) {
+	const { userConfig } = useContext(RootAppStoreContext)
 
 	const [showSidebar, setShowSidebar] = useState(true)
 	const [unlocked, setUnlocked] = useState(false)
@@ -179,7 +185,7 @@ function AppMain({ connected, loadingComplete, loadingProgress, buttonGridHotPre
 	const toggleSidebar = useCallback(() => {
 		setShowSidebar((oldVal) => !oldVal)
 	}, [])
-	const canLock = !!config?.admin_lockout
+	const canLock = !!userConfig.properties?.admin_lockout
 	const setLocked = useCallback(() => {
 		if (canLock) {
 			setUnlocked(false)
@@ -193,27 +199,29 @@ function AppMain({ connected, loadingComplete, loadingProgress, buttonGridHotPre
 		}
 	}, [unlocked])
 
+	const setup_wizard = userConfig.properties?.setup_wizard
 	const setUnlockedInner = useCallback(() => {
 		setUnlocked(true)
-		if (config && config?.setup_wizard < WIZARD_CURRENT_VERSION) {
+		if (setup_wizard !== undefined && setup_wizard < WIZARD_CURRENT_VERSION) {
 			showWizard()
 		}
-	}, [config, showWizard])
+	}, [setup_wizard, showWizard])
 
 	// If lockout is disabled, then we are logged in
+	const admin_lockout = userConfig.properties && !userConfig.properties?.admin_lockout
 	useEffect(() => {
-		if (config && !config?.admin_lockout) {
+		if (admin_lockout) {
 			setUnlocked(true)
-			if (config?.setup_wizard < WIZARD_CURRENT_VERSION) {
+			if (setup_wizard !== undefined && setup_wizard < WIZARD_CURRENT_VERSION) {
 				showWizard()
 			}
 		}
-	}, [config, showWizard])
+	}, [admin_lockout, setup_wizard, showWizard])
 
 	return (
 		<div className="c-app">
-			{canLock && unlocked && (config.admin_timeout ?? 0) > 0 ? (
-				<IdleTimerWrapper setLocked={setLocked} timeoutMinutes={config.admin_timeout} />
+			{canLock && unlocked && (userConfig.properties?.admin_timeout ?? 0) > 0 ? (
+				<IdleTimerWrapper setLocked={setLocked} timeoutMinutes={userConfig.properties?.admin_timeout} />
 			) : (
 				''
 			)}
@@ -235,7 +243,7 @@ function AppMain({ connected, loadingComplete, loadingProgress, buttonGridHotPre
 			</div>
 		</div>
 	)
-}
+})
 
 interface IdleTimerWrapperProps {
 	setLocked: () => void
@@ -347,8 +355,8 @@ interface AppAuthWrapperProps {
 	setUnlocked: () => void
 }
 
-function AppAuthWrapper({ setUnlocked }: AppAuthWrapperProps) {
-	const config = useContext(UserConfigContext)
+const AppAuthWrapper = observer(function AppAuthWrapper({ setUnlocked }: AppAuthWrapperProps) {
+	const { userConfig } = useContext(RootAppStoreContext)
 
 	const [password, setPassword] = useState('')
 	const [showError, setShowError] = useState(false)
@@ -363,7 +371,7 @@ function AppAuthWrapper({ setUnlocked }: AppAuthWrapperProps) {
 			e.preventDefault()
 
 			setPassword((currentPassword) => {
-				if (currentPassword === config?.admin_password) {
+				if (currentPassword === userConfig.properties?.admin_password) {
 					setShowError(false)
 					setUnlocked()
 					return ''
@@ -376,7 +384,7 @@ function AppAuthWrapper({ setUnlocked }: AppAuthWrapperProps) {
 
 			return false
 		},
-		[config?.admin_password, setUnlocked]
+		[userConfig, setUnlocked]
 	)
 
 	return (
@@ -392,7 +400,7 @@ function AppAuthWrapper({ setUnlocked }: AppAuthWrapperProps) {
 								value={password}
 								onChange={(e) => passwordChanged(e.currentTarget.value)}
 								invalid={showError}
-								readOnly={!config}
+								readOnly={!userConfig.properties}
 							/>
 							<CButton type="submit" color="primary">
 								Unlock
@@ -403,7 +411,7 @@ function AppAuthWrapper({ setUnlocked }: AppAuthWrapperProps) {
 			</CRow>
 		</CContainer>
 	)
-}
+})
 
 interface AppContentProps {
 	buttonGridHotPress: boolean

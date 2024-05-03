@@ -11,7 +11,6 @@ import type { LoaderHeightWidthProps } from 'react-spinners/helpers/props.js'
 import { Socket } from 'socket.io-client'
 import type { AllVariableDefinitions } from '@companion-app/shared/Model/Variables.js'
 import type { ClientConnectionConfig } from '@companion-app/shared/Model/Common.js'
-import type { UserConfigModel } from '@companion-app/shared/Model/UserConfigModel.js'
 import type { CustomVariablesModel } from '@companion-app/shared/Model/CustomVariableModel.js'
 import type {
 	ClientToBackendEventsMap,
@@ -28,7 +27,6 @@ export const SocketContext = React.createContext<CompanionSocketType>(null as an
 export const ConnectionsContext = React.createContext<Record<string, ClientConnectionConfig>>({})
 export const VariableDefinitionsContext = React.createContext<AllVariableDefinitions>({})
 export const CustomVariableDefinitionsContext = React.createContext<CustomVariablesModel>({})
-export const UserConfigContext = React.createContext<UserConfigModel | null>(null)
 
 type IfReturnIsNever<T extends (...args: any[]) => void> = ReturnType<T> extends never ? never : T
 

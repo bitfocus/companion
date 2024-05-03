@@ -12,17 +12,8 @@ import {
 	CModalHeader,
 	CRow,
 } from '@coreui/react'
-import React, {
-	FormEvent,
-	forwardRef,
-	memo,
-	useCallback,
-	useContext,
-	useImperativeHandle,
-	useRef,
-	useState,
-} from 'react'
-import { KeyReceiver, socketEmitPromise, SocketContext, UserConfigContext } from '../util.js'
+import React, { FormEvent, forwardRef, useCallback, useContext, useImperativeHandle, useRef, useState } from 'react'
+import { KeyReceiver, socketEmitPromise, SocketContext } from '../util.js'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faFileExport, faHome, faPencil } from '@fortawesome/free-solid-svg-icons'
 import { ConfirmExportModal, ConfirmExportModalRef } from '../Components/ConfirmExportModal.js'
@@ -34,6 +25,7 @@ import { ButtonGridActions, ButtonGridActionsRef } from './ButtonGridActions.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import { RootAppStoreContext } from '../Stores/RootAppStore.js'
 import { PagesStoreModel } from '../Stores/PagesStore.js'
+import { observer } from 'mobx-react-lite'
 
 interface ButtonsGridPanelProps {
 	pageNumber: number
@@ -45,7 +37,7 @@ interface ButtonsGridPanelProps {
 	clearSelectedButton: () => void
 }
 
-export const ButtonsGridPanel = memo(function ButtonsPage({
+export const ButtonsGridPanel = observer(function ButtonsPage({
 	pageNumber,
 	onKeyDown,
 	isHot,
@@ -54,8 +46,7 @@ export const ButtonsGridPanel = memo(function ButtonsPage({
 	selectedButton,
 	clearSelectedButton,
 }: ButtonsGridPanelProps) {
-	const { socket, pages } = useContext(RootAppStoreContext)
-	const userConfig = useContext(UserConfigContext)
+	const { socket, pages, userConfig } = useContext(RootAppStoreContext)
 
 	const actionsRef = useRef<ButtonGridActionsRef>(null)
 
@@ -117,7 +108,7 @@ export const ButtonsGridPanel = memo(function ButtonsPage({
 		editRef.current?.show(Number(pageNumber), pageInfo)
 	}, [pageNumber, pageInfo])
 
-	const gridSize = userConfig?.gridSize
+	const gridSize = userConfig.properties?.gridSize
 
 	const doGrow = useCallback(
 		(direction, amount) => {
@@ -198,7 +189,7 @@ export const ButtonsGridPanel = memo(function ButtonsPage({
 						buttonClick={buttonClick}
 						selectedButton={selectedButton}
 						gridSize={gridSize}
-						doGrow={userConfig.gridSizeInlineGrow ? doGrow : undefined}
+						doGrow={userConfig.properties?.gridSizeInlineGrow ? doGrow : undefined}
 						buttonIconFactory={PrimaryButtonGridIcon}
 					/>
 				)}

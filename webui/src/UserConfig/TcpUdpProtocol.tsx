@@ -1,11 +1,18 @@
 import React, { useContext } from 'react'
-import { UserConfigContext } from '../util.js'
+import { RootAppStoreContext } from '../Stores/RootAppStore.js'
+import { observer } from 'mobx-react-lite'
 
-export function TcpUdpProtocol() {
-	const config = useContext(UserConfigContext)
+export const TcpUdpProtocol = observer(function TcpUdpProtocol() {
+	const { userConfig } = useContext(RootAppStoreContext)
 
-	const tcpPort = config?.tcp_enabled && config?.tcp_listen_port ? config?.tcp_listen_port : 'disabled'
-	const udpPort = config?.udp_enabled && config?.udp_listen_port ? config?.udp_listen_port : 'disabled'
+	const tcpPort =
+		userConfig.properties?.tcp_enabled && userConfig.properties?.tcp_listen_port
+			? userConfig.properties?.tcp_listen_port
+			: 'disabled'
+	const udpPort =
+		userConfig.properties?.udp_enabled && userConfig.properties?.udp_listen_port
+			? userConfig.properties?.udp_listen_port
+			: 'disabled'
 
 	return (
 		<>
@@ -189,4 +196,4 @@ export function TcpUdpProtocol() {
 			</ul>
 		</>
 	)
-}
+})

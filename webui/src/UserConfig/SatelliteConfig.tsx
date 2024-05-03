@@ -1,5 +1,6 @@
 import React from 'react'
 import type { UserConfigModel } from '@companion-app/shared/Model/UserConfigModel.js'
+import { observer } from 'mobx-react-lite'
 
 interface SatelliteConfigProps {
 	config: UserConfigModel
@@ -7,7 +8,7 @@ interface SatelliteConfigProps {
 	resetValue: (key: keyof UserConfigModel) => void
 }
 
-export function SatelliteConfig({}: SatelliteConfigProps) {
+export const SatelliteConfig = observer(function SatelliteConfig({}: SatelliteConfigProps) {
 	return (
 		<>
 			<tr>
@@ -22,4 +23,4 @@ export function SatelliteConfig({}: SatelliteConfigProps) {
 			</tr>
 		</>
 	)
-}
+})

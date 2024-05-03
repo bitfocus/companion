@@ -10,6 +10,7 @@ import type { FeedbackDefinitionsStore } from './FeedbackDefinitionsStore.js'
 import type { ModuleInfoStore } from './ModuleInfoStore.js'
 import type { TriggersListStore } from './TriggersListStore.js'
 import type { SurfacesStore } from './SurfacesStore.js'
+import type { UserConfigStore } from './UserConfigStore.js'
 
 export const RootAppStoreContext = React.createContext<RootAppStore>(null as any) // TODO - fix this?
 
@@ -33,4 +34,6 @@ export interface RootAppStore {
 	readonly surfaces: SurfacesStore
 
 	readonly triggersList: TriggersListStore
+
+	readonly userConfig: UserConfigStore
 }

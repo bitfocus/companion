@@ -4,6 +4,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faUndo } from '@fortawesome/free-solid-svg-icons'
 import CSwitch from '../CSwitch.js'
 import type { UserConfigModel } from '@companion-app/shared/Model/UserConfigModel.js'
+import { observer } from 'mobx-react-lite'
 
 interface UdpConfigProps {
 	config: UserConfigModel
@@ -11,7 +12,7 @@ interface UdpConfigProps {
 	resetValue: (key: keyof UserConfigModel) => void
 }
 
-export function UdpConfig({ config, setValue, resetValue }: UdpConfigProps) {
+export const UdpConfig = observer(function UdpConfig({ config, setValue, resetValue }: UdpConfigProps) {
 	return (
 		<>
 			<tr>
@@ -78,4 +79,4 @@ export function UdpConfig({ config, setValue, resetValue }: UdpConfigProps) {
 			</tr>
 		</>
 	)
-}
+})

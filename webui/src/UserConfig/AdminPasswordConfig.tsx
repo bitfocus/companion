@@ -4,6 +4,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faUndo } from '@fortawesome/free-solid-svg-icons'
 import CSwitch from '../CSwitch.js'
 import type { UserConfigModel } from '@companion-app/shared/Model/UserConfigModel.js'
+import { observer } from 'mobx-react-lite'
 
 interface AdminPasswordConfigProps {
 	config: UserConfigModel
@@ -11,7 +12,11 @@ interface AdminPasswordConfigProps {
 	resetValue: (key: keyof UserConfigModel) => void
 }
 
-export function AdminPasswordConfig({ config, setValue, resetValue }: AdminPasswordConfigProps) {
+export const AdminPasswordConfig = observer(function AdminPasswordConfig({
+	config,
+	setValue,
+	resetValue,
+}: AdminPasswordConfigProps) {
 	return (
 		<>
 			<tr>
@@ -84,4 +89,4 @@ export function AdminPasswordConfig({ config, setValue, resetValue }: AdminPassw
 			</tr>
 		</>
 	)
-}
+})

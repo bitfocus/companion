@@ -1,14 +1,15 @@
 import React, { useContext } from 'react'
-import { UserConfigContext } from '../util.js'
+import { RootAppStoreContext } from '../Stores/RootAppStore.js'
+import { observer } from 'mobx-react-lite'
 
-export function RosstalkProtocol() {
-	const config = useContext(UserConfigContext)
+export const RosstalkProtocol = observer(function RosstalkProtocol() {
+	const { userConfig } = useContext(RootAppStoreContext)
 
 	return (
 		<>
 			<p>
 				Remote triggering can be done by sending RossTalk commands to port{' '}
-				<code>{config?.rosstalk_enabled ? '7788' : 'disabled'}</code>.
+				<code>{userConfig.properties?.rosstalk_enabled ? '7788' : 'disabled'}</code>.
 			</p>
 			<p>
 				<strong>Commands:</strong>
@@ -42,4 +43,4 @@ export function RosstalkProtocol() {
 			</p>
 		</>
 	)
-}
+})

@@ -4,6 +4,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faUndo } from '@fortawesome/free-solid-svg-icons'
 import CSwitch from '../CSwitch.js'
 import type { UserConfigModel } from '@companion-app/shared/Model/UserConfigModel.js'
+import { observer } from 'mobx-react-lite'
 
 interface OscConfigProps {
 	config: UserConfigModel
@@ -11,7 +12,7 @@ interface OscConfigProps {
 	resetValue: (key: keyof UserConfigModel) => void
 }
 
-export function OscConfig({ config, setValue, resetValue }: OscConfigProps) {
+export const OscConfig = observer(function OscConfig({ config, setValue, resetValue }: OscConfigProps) {
 	return (
 		<>
 			<tr>
@@ -78,4 +79,4 @@ export function OscConfig({ config, setValue, resetValue }: OscConfigProps) {
 			</tr>
 		</>
 	)
-}
+})

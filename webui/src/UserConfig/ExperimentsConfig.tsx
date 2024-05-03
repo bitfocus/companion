@@ -2,6 +2,7 @@ import React from 'react'
 import { CAlert } from '@coreui/react'
 import CSwitch from '../CSwitch.js'
 import type { UserConfigModel } from '@companion-app/shared/Model/UserConfigModel.js'
+import { observer } from 'mobx-react-lite'
 
 interface ExperimentsConfigProps {
 	config: UserConfigModel
@@ -9,7 +10,7 @@ interface ExperimentsConfigProps {
 	resetValue: (key: keyof UserConfigModel) => void
 }
 
-export function ExperimentsConfig({}: ExperimentsConfigProps) {
+export const ExperimentsConfig = observer(function ExperimentsConfig({}: ExperimentsConfigProps) {
 	return (
 		<>
 			<tr>
@@ -58,4 +59,4 @@ export function ExperimentsConfig({}: ExperimentsConfigProps) {
 			</tr>
 		</>
 	)
-}
+})

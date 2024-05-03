@@ -4,6 +4,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faUndo } from '@fortawesome/free-solid-svg-icons'
 import CSwitch from '../CSwitch.js'
 import type { UserConfigModel } from '@companion-app/shared/Model/UserConfigModel.js'
+import { observer } from 'mobx-react-lite'
 
 interface ArtnetConfigProps {
 	config: UserConfigModel
@@ -11,7 +12,7 @@ interface ArtnetConfigProps {
 	resetValue: (key: keyof UserConfigModel) => void
 }
 
-export function ArtnetConfig({ config, setValue, resetValue }: ArtnetConfigProps) {
+export const ArtnetConfig = observer(function ArtnetConfig({ config, setValue, resetValue }: ArtnetConfigProps) {
 	return (
 		<>
 			<tr>
@@ -75,4 +76,4 @@ export function ArtnetConfig({ config, setValue, resetValue }: ArtnetConfigProps
 			</tr>
 		</>
 	)
-}
+})

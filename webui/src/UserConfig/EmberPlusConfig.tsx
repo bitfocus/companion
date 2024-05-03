@@ -4,6 +4,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faUndo } from '@fortawesome/free-solid-svg-icons'
 import CSwitch from '../CSwitch.js'
 import type { UserConfigModel } from '@companion-app/shared/Model/UserConfigModel.js'
+import { observer } from 'mobx-react-lite'
 
 interface EmberPlusConfigProps {
 	config: UserConfigModel
@@ -11,7 +12,11 @@ interface EmberPlusConfigProps {
 	resetValue: (key: keyof UserConfigModel) => void
 }
 
-export function EmberPlusConfig({ config, setValue, resetValue }: EmberPlusConfigProps) {
+export const EmberPlusConfig = observer(function EmberPlusConfig({
+	config,
+	setValue,
+	resetValue,
+}: EmberPlusConfigProps) {
 	return (
 		<>
 			<tr>
@@ -44,4 +49,4 @@ export function EmberPlusConfig({ config, setValue, resetValue }: EmberPlusConfi
 			</tr>
 		</>
 	)
-}
+})

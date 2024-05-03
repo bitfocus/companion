@@ -4,7 +4,6 @@ import {
 	ConnectionsContext,
 	VariableDefinitionsContext,
 	CustomVariableDefinitionsContext,
-	UserConfigContext,
 	socketEmitPromise,
 	applyPatchOrReplaceObject,
 	SocketContext,
@@ -33,6 +32,7 @@ import { TriggersListStore } from './Stores/TriggersListStore.js'
 import { useTriggersListSubscription } from './Hooks/useTriggersListSubscription.js'
 import { useSurfacesSubscription } from './Hooks/useSurfacesSubscription.js'
 import { SurfacesStore } from './Stores/SurfacesStore.js'
+import { UserConfigStore } from './Stores/UserConfigStore.js'
 
 interface ContextDataProps {
 	children: (progressPercent: number, loadingComplete: boolean) => React.JSX.Element | React.JSX.Element[]
@@ -63,6 +63,8 @@ export function ContextData({ children }: Readonly<ContextDataProps>) {
 			surfaces: new SurfacesStore(),
 
 			triggersList: new TriggersListStore(),
+
+			userConfig: new UserConfigStore(),
 		} satisfies RootAppStore
 	}, [socket])
 
@@ -100,7 +102,7 @@ export function ContextData({ children }: Readonly<ContextDataProps>) {
 	const moduleInfoReady = useModuleInfoSubscription(socket, rootStore.modules)
 	const triggersListReady = useTriggersListSubscription(socket, rootStore.triggersList)
 	const pagesReady = usePagesInfoSubscription(socket, rootStore.pages)
-	const userConfig = useUserConfigSubscription(socket)
+	const userConfigReady = useUserConfigSubscription(socket, rootStore.userConfig)
 	const surfacesReady = useSurfacesSubscription(socket, rootStore.surfaces)
 
 	useEffect(() => {
@@ -202,7 +204,7 @@ export function ContextData({ children }: Readonly<ContextDataProps>) {
 		actionDefinitionsReady,
 		feedbackDefinitionsReady,
 		customVariables != null,
-		userConfig != null,
+		userConfigReady,
 		surfacesReady,
 		pagesReady,
 		triggersListReady,
@@ -217,11 +219,9 @@ export function ContextData({ children }: Readonly<ContextDataProps>) {
 			<ConnectionsContext.Provider value={connections!}>
 				<VariableDefinitionsContext.Provider value={completeVariableDefinitions}>
 					<CustomVariableDefinitionsContext.Provider value={customVariables!}>
-						<UserConfigContext.Provider value={userConfig}>
-							<NotificationsManager ref={notifierRef} />
+						<NotificationsManager ref={notifierRef} />
 
-							{children(progressPercent, completedSteps.length === steps.length)}
-						</UserConfigContext.Provider>
+						{children(progressPercent, completedSteps.length === steps.length)}
 					</CustomVariableDefinitionsContext.Provider>
 				</VariableDefinitionsContext.Provider>
 			</ConnectionsContext.Provider>

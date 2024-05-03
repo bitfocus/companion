@@ -1,6 +1,6 @@
 import React, { useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react'
 import { CButton, CCol, CRow, CSelect } from '@coreui/react'
-import { ConnectionsContext, MyErrorBoundary, SocketContext, UserConfigContext, socketEmitPromise } from '../../util.js'
+import { ConnectionsContext, MyErrorBoundary, SocketContext, socketEmitPromise } from '../../util.js'
 import { ButtonGridHeader } from '../../Buttons/ButtonGridHeader.js'
 import { usePagePicker } from '../../Hooks/usePagePicker.js'
 import {
@@ -25,9 +25,13 @@ interface ImportPageWizardProps {
 	doImport: (importPageNumber: number, pageNumber: number, instanceRemap: Record<string, string | undefined>) => void
 }
 
-export function ImportPageWizard({ snapshot, instanceRemap, setInstanceRemap, doImport }: ImportPageWizardProps) {
-	const { pages } = useContext(RootAppStoreContext)
-	const userConfig = useContext(UserConfigContext)
+export const ImportPageWizard = observer(function ImportPageWizard({
+	snapshot,
+	instanceRemap,
+	setInstanceRemap,
+	doImport,
+}: ImportPageWizardProps) {
+	const { pages, userConfig } = useContext(RootAppStoreContext)
 
 	const isSinglePage = snapshot.type === 'page'
 
@@ -52,7 +56,7 @@ export function ImportPageWizard({ snapshot, instanceRemap, setInstanceRemap, do
 		doImport(importPageNumber, pageNumber, instanceRemap)
 	}, [doImport, importPageNumber, pageNumber, instanceRemap])
 
-	const destinationGridSize = userConfig?.gridSize
+	const destinationGridSize = userConfig.properties?.gridSize
 
 	const destinationGridRef = useRef<ButtonInfiniteGridRef>(null)
 	const resetDestinationPosition = useCallback(() => {
@@ -156,7 +160,7 @@ export function ImportPageWizard({ snapshot, instanceRemap, setInstanceRemap, do
 			</CCol>
 		</CRow>
 	)
-}
+})
 
 interface ImportRemapProps {
 	snapshot: ClientImportObject

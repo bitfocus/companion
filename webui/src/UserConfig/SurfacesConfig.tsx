@@ -4,6 +4,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faUndo } from '@fortawesome/free-solid-svg-icons'
 import CSwitch from '../CSwitch.js'
 import type { UserConfigModel } from '@companion-app/shared/Model/UserConfigModel.js'
+import { observer } from 'mobx-react-lite'
 
 interface SurfacesConfigProps {
 	config: UserConfigModel
@@ -11,7 +12,7 @@ interface SurfacesConfigProps {
 	resetValue: (key: keyof UserConfigModel) => void
 }
 
-export function SurfacesConfig({ config, setValue, resetValue }: SurfacesConfigProps) {
+export const SurfacesConfig = observer(function SurfacesConfig({ config, setValue, resetValue }: SurfacesConfigProps) {
 	return (
 		<>
 			<tr>
@@ -151,4 +152,4 @@ export function SurfacesConfig({ config, setValue, resetValue }: SurfacesConfigP
 			</tr>
 		</>
 	)
-}
+})
