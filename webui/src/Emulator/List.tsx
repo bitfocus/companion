@@ -1,52 +1,27 @@
-import React, { useCallback, useEffect, useMemo, useState, useContext } from 'react'
-import { LoadingRetryOrError, SocketContext, socketEmitPromise } from '../util.js'
+import React, { useCallback, useMemo, useState, useContext } from 'react'
+import { LoadingRetryOrError, SocketContext, useComputed } from '../util.js'
 import { CAlert, CCol, CContainer, CRow, CWidgetSimple } from '@coreui/react'
 import { nanoid } from 'nanoid'
 import { useNavigate } from 'react-router-dom'
-import jsonPatch, { Operation as JsonPatchOperation } from 'fast-json-patch'
-import { cloneDeep } from 'lodash-es'
-import type { ClientDevicesListItem, ClientSurfaceItem } from '@companion-app/shared/Model/Surfaces.js'
+import type { ClientSurfaceItem } from '@companion-app/shared/Model/Surfaces.js'
+import { SurfacesStore } from '../Stores/SurfacesStore.js'
+import { useSurfacesSubscription } from '../Hooks/useSurfacesSubscription.js'
 
 export function EmulatorList() {
 	const socket = useContext(SocketContext)
 
-	const [surfaceGroups, setSurfaceGroups] = useState<Record<string, ClientDevicesListItem | undefined> | null>(null)
 	const [loadError, setLoadError] = useState<string | null>(null)
 	const [reloadToken, setReloadToken] = useState(nanoid())
 
 	const doRetryLoad = useCallback(() => setReloadToken(nanoid()), [])
 
-	useEffect(() => {
-		setSurfaceGroups(null)
-		setLoadError(null)
+	const surfacesStore = useMemo(() => new SurfacesStore(), [])
+	const surfacesReady = useSurfacesSubscription(socket, surfacesStore, setLoadError, reloadToken)
 
-		socketEmitPromise(socket, 'surfaces:subscribe', [])
-			.then((surfaces) => {
-				setSurfaceGroups(surfaces)
-			})
-			.catch((e) => {
-				console.error('Failed to load surfaces', e)
-				setLoadError('Failed to load surfaces')
-			})
-
-		const patchSurfaces = (patch: JsonPatchOperation[]) => {
-			setSurfaceGroups((oldSurfaces) => {
-				return oldSurfaces && jsonPatch.applyPatch(cloneDeep(oldSurfaces) || {}, patch).newDocument
-			})
-		}
-		socket.on('surfaces:patch', patchSurfaces)
-
-		return () => {
-			socketEmitPromise(socket, 'surfaces:unsubscribe', []).catch((e: any) => {
-				console.error('Failed to unsubscribe from surfaces', e)
-			})
-		}
-	}, [socket, reloadToken])
-
-	const emulators = useMemo(() => {
+	const emulators = useComputed(() => {
 		const emulators: ClientSurfaceItem[] = []
 
-		for (const group of Object.values(surfaceGroups ?? {})) {
+		for (const group of surfacesStore.store.values()) {
 			if (!group) continue
 
 			for (const surface of group.surfaces) {
@@ -57,13 +32,13 @@ export function EmulatorList() {
 		}
 
 		return emulators
-	}, [surfaceGroups])
+	}, [surfacesStore])
 
 	return (
 		<div className="page-emulator-list">
 			<CContainer fluid className="d-flex flex-column">
-				<LoadingRetryOrError error={loadError} dataReady={!!surfaceGroups} doRetry={doRetryLoad} />
-				{surfaceGroups && (
+				<LoadingRetryOrError error={loadError} dataReady={!!surfacesReady} doRetry={doRetryLoad} />
+				{surfacesReady && (
 					<CRow alignHorizontal="center">
 						<CCol sm={12}>
 							<p>&nbsp;</p>

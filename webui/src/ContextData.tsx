@@ -5,7 +5,6 @@ import {
 	VariableDefinitionsContext,
 	CustomVariableDefinitionsContext,
 	UserConfigContext,
-	SurfacesContext,
 	socketEmitPromise,
 	applyPatchOrReplaceObject,
 	SocketContext,
@@ -19,7 +18,6 @@ import { useActionDefinitionsSubscription } from './Hooks/useActionDefinitionsSu
 import type { ClientConnectionConfig } from '@companion-app/shared/Model/Common.js'
 import type { AllVariableDefinitions, ModuleVariableDefinitions } from '@companion-app/shared/Model/Variables.js'
 import type { CustomVariablesModel } from '@companion-app/shared/Model/CustomVariableModel.js'
-import type { ClientDevicesListItem } from '@companion-app/shared/Model/Surfaces.js'
 import { useActiveLearnRequests } from './_Model/ActiveLearn.js'
 import { RootAppStore, RootAppStoreContext } from './Stores/RootAppStore.js'
 import { RecentlyUsedIdsStore } from './Stores/RecentlyUsedIdsStore.js'
@@ -33,12 +31,14 @@ import { ModuleInfoStore } from './Stores/ModuleInfoStore.js'
 import { useModuleInfoSubscription } from './Hooks/useModuleInfoSubscription.js'
 import { TriggersListStore } from './Stores/TriggersListStore.js'
 import { useTriggersListSubscription } from './Hooks/useTriggersListSubscription.js'
+import { useSurfacesSubscription } from './Hooks/useSurfacesSubscription.js'
+import { SurfacesStore } from './Stores/SurfacesStore.js'
 
 interface ContextDataProps {
 	children: (progressPercent: number, loadingComplete: boolean) => React.JSX.Element | React.JSX.Element[]
 }
 
-export function ContextData({ children }: ContextDataProps) {
+export function ContextData({ children }: Readonly<ContextDataProps>) {
 	const socket = useContext(SocketContext)
 
 	const notifierRef = useRef<NotificationsManagerRef>(null)
@@ -60,6 +60,7 @@ export function ContextData({ children }: ContextDataProps) {
 			feedbackDefinitions: new FeedbackDefinitionsStore(),
 
 			pages: new PagesStore(),
+			surfaces: new SurfacesStore(),
 
 			triggersList: new TriggersListStore(),
 		} satisfies RootAppStore
@@ -69,7 +70,6 @@ export function ContextData({ children }: ContextDataProps) {
 
 	const [variableDefinitions, setVariableDefinitions] = useState<AllVariableDefinitions | null>(null)
 	const [customVariables, setCustomVariables] = useState<CustomVariablesModel | null>(null)
-	const [surfaces, setSurfaces] = useState<Record<string, ClientDevicesListItem | undefined> | null>(null)
 
 	const completeVariableDefinitions = useMemo<AllVariableDefinitions>(() => {
 		if (variableDefinitions) {
@@ -101,6 +101,7 @@ export function ContextData({ children }: ContextDataProps) {
 	const triggersListReady = useTriggersListSubscription(socket, rootStore.triggersList)
 	const pagesReady = usePagesInfoSubscription(socket, rootStore.pages)
 	const userConfig = useUserConfigSubscription(socket)
+	const surfacesReady = useSurfacesSubscription(socket, rootStore.surfaces)
 
 	useEffect(() => {
 		if (socket) {
@@ -166,25 +167,9 @@ export function ContextData({ children }: ContextDataProps) {
 			socket.on('variable-definitions:update', updateVariableDefinitions)
 			socket.on('custom-variables:update', updateCustomVariables)
 
-			socketEmitPromise(socket, 'surfaces:subscribe', [])
-				.then((surfaces) => {
-					setSurfaces(surfaces)
-				})
-				.catch((e) => {
-					console.error('Failed to load surfaces', e)
-				})
-
-			const patchSurfaces = (patch: JsonPatchOperation[]) => {
-				setSurfaces((oldSurfaces) => {
-					return oldSurfaces && jsonPatch.applyPatch(cloneDeep(oldSurfaces) || {}, patch).newDocument
-				})
-			}
-			socket.on('surfaces:patch', patchSurfaces)
-
 			return () => {
 				socket.off('variable-definitions:update', updateVariableDefinitions)
 				socket.off('custom-variables:update', updateCustomVariables)
-				socket.off('surfaces:patch', patchSurfaces)
 
 				socket.off('connections:patch', patchInstances)
 
@@ -218,7 +203,7 @@ export function ContextData({ children }: ContextDataProps) {
 		feedbackDefinitionsReady,
 		customVariables != null,
 		userConfig != null,
-		surfaces != null,
+		surfacesReady,
 		pagesReady,
 		triggersListReady,
 		activeLearnRequestsReady,
@@ -233,11 +218,9 @@ export function ContextData({ children }: ContextDataProps) {
 				<VariableDefinitionsContext.Provider value={completeVariableDefinitions}>
 					<CustomVariableDefinitionsContext.Provider value={customVariables!}>
 						<UserConfigContext.Provider value={userConfig}>
-							<SurfacesContext.Provider value={surfaces!}>
-								<NotificationsManager ref={notifierRef} />
+							<NotificationsManager ref={notifierRef} />
 
-								{children(progressPercent, completedSteps.length === steps.length)}
-							</SurfacesContext.Provider>
+							{children(progressPercent, completedSteps.length === steps.length)}
 						</UserConfigContext.Provider>
 					</CustomVariableDefinitionsContext.Provider>
 				</VariableDefinitionsContext.Provider>

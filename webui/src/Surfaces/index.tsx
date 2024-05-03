@@ -1,6 +1,6 @@
-import React, { memo, useCallback, useContext, useRef, useState } from 'react'
+import React, { useCallback, useContext, useRef, useState } from 'react'
 import { CAlert, CButton, CButtonGroup } from '@coreui/react'
-import { SurfacesContext, socketEmitPromise, SocketContext } from '../util.js'
+import { socketEmitPromise } from '../util.js'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faAdd, faCog, faFolderOpen, faSync, faTrash } from '@fortawesome/free-solid-svg-icons'
 import { TextInputField } from '../Components/TextInputField.js'
@@ -9,10 +9,11 @@ import { SurfaceEditModal, SurfaceEditModalRef } from './EditModal.js'
 import { AddSurfaceGroupModal, AddSurfaceGroupModalRef } from './AddGroupModal.js'
 import classNames from 'classnames'
 import { ClientDevicesListItem, ClientSurfaceItem } from '@companion-app/shared/Model/Surfaces.js'
+import { RootAppStoreContext } from '../Stores/RootAppStore.js'
+import { observer } from 'mobx-react-lite'
 
-export const SurfacesPage = memo(function SurfacesPage() {
-	const socket = useContext(SocketContext)
-	const surfacesContext = useContext(SurfacesContext)
+export const SurfacesPage = observer(function SurfacesPage() {
+	const { surfaces, socket } = useContext(RootAppStoreContext)
 
 	const editModalRef = useRef<SurfaceEditModalRef>(null)
 	const addGroupModalRef = useRef<AddSurfaceGroupModalRef>(null)
@@ -102,15 +103,13 @@ export const SurfacesPage = memo(function SurfacesPage() {
 		[socket]
 	)
 
-	const surfacesList = Object.values(surfacesContext)
-		.filter((grp): grp is ClientDevicesListItem => !!grp)
-		.sort((a, b) => {
-			if (a.index === undefined && b.index === undefined) {
-				return a.id.localeCompare(b.id)
-			} else {
-				return (a.index ?? Number.POSITIVE_INFINITY) - (b.index ?? Number.POSITIVE_INFINITY)
-			}
-		})
+	const surfacesList = Array.from(surfaces.store.values()).sort((a, b) => {
+		if (a.index === undefined && b.index === undefined) {
+			return a.id.localeCompare(b.id)
+		} else {
+			return (a.index ?? Number.POSITIVE_INFINITY) - (b.index ?? Number.POSITIVE_INFINITY)
+		}
+	})
 
 	return (
 		<div>

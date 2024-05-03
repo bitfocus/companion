@@ -1,4 +1,4 @@
-import React, { forwardRef, useCallback, useContext, useEffect, useImperativeHandle, useState } from 'react'
+import React, { useCallback, useContext, useEffect, useImperativeHandle, useState } from 'react'
 import {
 	CButton,
 	CForm,
@@ -12,13 +12,7 @@ import {
 	CModalHeader,
 	CSelect,
 } from '@coreui/react'
-import {
-	LoadingRetryOrError,
-	socketEmitPromise,
-	SocketContext,
-	PreventDefaultHandler,
-	SurfacesContext,
-} from '../util.js'
+import { LoadingRetryOrError, socketEmitPromise, PreventDefaultHandler, useComputed } from '../util.js'
 import { nanoid } from 'nanoid'
 import { faQuestionCircle } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
@@ -26,6 +20,8 @@ import { InternalInstanceField } from '../Controls/InternalInstanceFields.js'
 import { MenuPortalContext } from '../Components/DropdownInputField.js'
 import { ClientDevicesListItem, SurfaceGroupConfig, SurfacePanelConfig } from '@companion-app/shared/Model/Surfaces.js'
 import { InternalInputField } from '@companion-app/shared/Model/Options.js'
+import { RootAppStoreContext } from '../Stores/RootAppStore.js'
+import { observer } from 'mobx-react-lite'
 
 const PAGE_FIELD_SPEC: InternalInputField = {
 	id: '',
@@ -43,10 +39,9 @@ interface SurfaceEditModalProps {
 	// Nothing
 }
 
-export const SurfaceEditModal = forwardRef<SurfaceEditModalRef, SurfaceEditModalProps>(
+export const SurfaceEditModal = observer<SurfaceEditModalProps, SurfaceEditModalRef>(
 	function SurfaceEditModal(_props, ref) {
-		const socket = useContext(SocketContext)
-		const surfacesContext = useContext(SurfacesContext)
+		const { surfaces, socket } = useContext(RootAppStoreContext)
 
 		const [rawGroupId, setGroupId] = useState<string | null>(null)
 		const [surfaceId, setSurfaceId] = useState<string | null>(null)
@@ -54,7 +49,7 @@ export const SurfaceEditModal = forwardRef<SurfaceEditModalRef, SurfaceEditModal
 
 		let surfaceInfo = null
 		if (surfaceId) {
-			for (const group of Object.values(surfacesContext)) {
+			for (const group of surfaces.store.values()) {
 				if (surfaceInfo || !group) break
 
 				for (const surface of group.surfaces) {
@@ -72,7 +67,7 @@ export const SurfaceEditModal = forwardRef<SurfaceEditModalRef, SurfaceEditModal
 		const groupId = surfaceInfo && !surfaceInfo.groupId ? surfaceId : rawGroupId
 		let groupInfo = null
 		if (groupId) {
-			for (const group of Object.values(surfacesContext)) {
+			for (const group of surfaces.store.values()) {
 				if (group && group.id === groupId) {
 					groupInfo = group
 					break
@@ -133,11 +128,9 @@ export const SurfaceEditModal = forwardRef<SurfaceEditModalRef, SurfaceEditModal
 			[]
 		)
 
-		useEffect(() => {
-			// If surface disappears/disconnects, hide this
-
+		const onlineSurfaceIds = useComputed(() => {
 			const onlineSurfaceIds = new Set()
-			for (const group of Object.values(surfacesContext)) {
+			for (const group of surfaces.store.values()) {
 				if (!group) continue
 				for (const surface of group.surfaces) {
 					if (surface.isConnected) {
@@ -145,6 +138,11 @@ export const SurfaceEditModal = forwardRef<SurfaceEditModalRef, SurfaceEditModal
 					}
 				}
 			}
+			return onlineSurfaceIds
+		}, [surfaces])
+
+		useEffect(() => {
+			// If surface disappears/disconnects, hide this
 
 			setSurfaceId((oldSurfaceId) => {
 				if (oldSurfaceId && !onlineSurfaceIds.has(oldSurfaceId)) {
@@ -152,7 +150,7 @@ export const SurfaceEditModal = forwardRef<SurfaceEditModalRef, SurfaceEditModal
 				}
 				return oldSurfaceId
 			})
-		}, [surfacesContext])
+		}, [onlineSurfaceIds])
 
 		const setSurfaceConfigValue = useCallback(
 			(key: string, value: any) => {
@@ -252,7 +250,7 @@ export const SurfaceEditModal = forwardRef<SurfaceEditModalRef, SurfaceEditModal
 									>
 										<option value="null">Standalone (Default)</option>
 
-										{Object.values(surfacesContext)
+										{Array.from(surfaces.store.values())
 											.filter((group): group is ClientDevicesListItem => !!group && !group.isAutoGroup)
 											.map((group) => (
 												<option key={group.id} value={group.id}>
@@ -460,5 +458,6 @@ export const SurfaceEditModal = forwardRef<SurfaceEditModalRef, SurfaceEditModal
 				</MenuPortalContext.Provider>
 			</CModal>
 		)
-	}
+	},
+	{ forwardRef: true }
 )

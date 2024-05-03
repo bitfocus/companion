@@ -1,3 +1,5 @@
+import type { Operation as JsonPatchOperation } from 'fast-json-patch'
+
 export interface ClientSurfaceItem {
 	id: string
 	type: string
@@ -25,3 +27,22 @@ export interface SurfaceGroupConfig {
 }
 
 export type SurfacePanelConfig = Record<string, any>
+
+export type SurfacesUpdate = SurfacesUpdateRemoveOp | SurfacesUpdateAddOp | SurfacesUpdateUpdateOp
+
+export interface SurfacesUpdateRemoveOp {
+	type: 'remove'
+	itemId: string
+}
+export interface SurfacesUpdateAddOp {
+	type: 'add'
+	itemId: string
+
+	info: ClientDevicesListItem
+}
+export interface SurfacesUpdateUpdateOp {
+	type: 'update'
+	itemId: string
+
+	patch: JsonPatchOperation[]
+}

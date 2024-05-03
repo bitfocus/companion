@@ -755,17 +755,55 @@ class SurfaceController extends CoreBase {
 
 	updateDevicesList() {
 		const newJsonArr = cloneDeep(this.getDevicesList())
+
+		const hasSubscribers = this.io.countRoomMembers(SurfacesRoom) > 0
+
 		/** @type {Record<string, ClientDevicesListItem>} */
 		const newJson = {}
 		for (const surface of newJsonArr) {
 			newJson[surface.id] = surface
 		}
 
-		if (this.io.countRoomMembers(SurfacesRoom) > 0) {
-			const patch = jsonPatch.compare(this.#lastSentJson, newJson || {})
-			if (patch.length > 0) {
-				this.io.emitToRoom(SurfacesRoom, `surfaces:patch`, patch)
+		if (hasSubscribers) {
+			/** @type {import('@companion-app/shared/Model/Surfaces.js').SurfacesUpdate[]} */
+			const changes = []
+
+			for (const [id, info] of Object.entries(newJson)) {
+				if (!info) continue
+
+				const lastInfo = this.#lastSentJson?.[id]
+				if (!lastInfo) {
+					changes.push({
+						type: 'add',
+						itemId: id,
+						info,
+					})
+				} else {
+					const patch = jsonPatch.compare(lastInfo, info)
+					if (patch.length > 0) {
+						changes.push({
+							type: 'update',
+							itemId: id,
+							patch,
+						})
+					}
+				}
 			}
+
+			if (this.#lastSentJson) {
+				for (const [oldId, oldInfo] of Object.entries(this.#lastSentJson)) {
+					if (!oldInfo) continue
+
+					if (!newJson[oldId]) {
+						changes.push({
+							type: 'remove',
+							itemId: oldId,
+						})
+					}
+				}
+			}
+
+			this.io.emitToRoom(SurfacesRoom, `surfaces:update`, changes)
 		}
 		this.#lastSentJson = newJson
 	}

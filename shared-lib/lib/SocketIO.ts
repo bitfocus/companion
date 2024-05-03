@@ -16,7 +16,7 @@ import type {
 	HelpDescription,
 	WrappedImage,
 } from './Model/Common.js'
-import type { ClientDevicesListItem, SurfaceGroupConfig, SurfacePanelConfig } from './Model/Surfaces.js'
+import type { ClientDevicesListItem, SurfaceGroupConfig, SurfacePanelConfig, SurfacesUpdate } from './Model/Surfaces.js'
 import type {
 	ClientImportObject,
 	ClientImportSelection,
@@ -311,7 +311,7 @@ export interface BackendToClientEventsMap {
 
 	'connections:patch': (patch: JsonPatchOperation[] | false) => void
 	'modules:patch': (patch: ModuleInfoUpdate) => void
-	'surfaces:patch': (patch: JsonPatchOperation[]) => void
+	'surfaces:update': (patch: SurfacesUpdate[]) => void
 	'triggers:update': (change: TriggersUpdate) => void
 	'action-definitions:update': (change: ActionDefinitionUpdate) => void
 	'feedback-definitions:update': (change: FeedbackDefinitionUpdate) => void

@@ -43,7 +43,7 @@ export function useUserConfigSubscription(
 			// 	console.error('Failed to cleanup web-buttons:', e)
 			// })
 		}
-	}, [retryToken, socket])
+	}, [retryToken, setLoadError, socket])
 
 	return userConfig
 }

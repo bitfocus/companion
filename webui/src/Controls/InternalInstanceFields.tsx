@@ -3,7 +3,6 @@ import { DropdownInputField } from '../Components/index.js'
 import {
 	CustomVariableDefinitionsContext,
 	ConnectionsContext,
-	SurfacesContext,
 	VariableDefinitionsContext,
 	useComputed,
 } from '../util.js'
@@ -255,7 +254,7 @@ interface InternalSurfaceBySerialDropdownProps {
 	useRawSurfaces: boolean | undefined
 }
 
-function InternalSurfaceBySerialDropdown({
+const InternalSurfaceBySerialDropdown = observer(function InternalSurfaceBySerialDropdown({
 	isOnControl,
 	value,
 	setValue,
@@ -263,16 +262,16 @@ function InternalSurfaceBySerialDropdown({
 	includeSelf,
 	useRawSurfaces,
 }: InternalSurfaceBySerialDropdownProps) {
-	const surfacesContext = useContext(SurfacesContext)
+	const { surfaces } = useContext(RootAppStoreContext)
 
-	const choices = useMemo(() => {
+	const choices = useComputed(() => {
 		const choices: DropdownChoice[] = []
 		if (isOnControl && includeSelf) {
 			choices.push({ id: 'self', label: 'Current surface' })
 		}
 
 		if (!useRawSurfaces) {
-			for (const group of Object.values(surfacesContext ?? {})) {
+			for (const group of surfaces.store.values()) {
 				if (!group) continue
 
 				choices.push({
@@ -281,7 +280,7 @@ function InternalSurfaceBySerialDropdown({
 				})
 			}
 		} else {
-			for (const group of Object.values(surfacesContext ?? {})) {
+			for (const group of surfaces.store.values()) {
 				if (!group) continue
 
 				for (const surface of group.surfaces) {
@@ -294,10 +293,10 @@ function InternalSurfaceBySerialDropdown({
 		}
 
 		return choices
-	}, [surfacesContext, isOnControl, includeSelf, useRawSurfaces])
+	}, [surfaces, isOnControl, includeSelf, useRawSurfaces])
 
 	return <DropdownInputField disabled={disabled} value={value} choices={choices} multiple={false} setValue={setValue} />
-}
+})
 
 interface InternalTriggerDropdownProps {
 	isOnControl: boolean
