@@ -53,17 +53,18 @@ export interface PresetDefinitionText {
 
 export type UIPresetDefinition = UIPresetDefinitionButton | UIPresetDefinitionText
 
-export interface UIPresetDefinitionButton {
+export interface UIPresetDefinitionBase {
 	id: string
+	order: number
 	label: string
 	category: string
+}
+
+export interface UIPresetDefinitionButton extends UIPresetDefinitionBase {
 	type: 'button'
 }
 
-export interface UIPresetDefinitionText {
-	id: string
-	label: string
-	category: string
+export interface UIPresetDefinitionText extends UIPresetDefinitionBase {
 	type: 'text'
 	text: string
 }

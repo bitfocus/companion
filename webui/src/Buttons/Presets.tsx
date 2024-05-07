@@ -31,7 +31,7 @@ export const InstancePresets = observer(function InstancePresets({ resetToken }:
 	const [presetsMap, setPresetsMap] = useState<Record<string, Record<string, UIPresetDefinition> | undefined> | null>(
 		null
 	)
-	const [presetsError, setPresetError] = useState<string | null>(null)
+	const [presetsError, setPresetsError] = useState<string | null>(null)
 	const [reloadToken, setReloadToken] = useState(nanoid())
 
 	const doRetryPresetsLoad = useCallback(() => setReloadToken(nanoid()), [])
@@ -43,7 +43,7 @@ export const InstancePresets = observer(function InstancePresets({ resetToken }:
 
 	useEffect(() => {
 		setPresetsMap(null)
-		setPresetError(null)
+		setPresetsError(null)
 
 		socketEmitPromise(socket, 'presets:subscribe', [])
 			.then((data) => {
@@ -52,7 +52,7 @@ export const InstancePresets = observer(function InstancePresets({ resetToken }:
 			})
 			.catch((e) => {
 				console.error('Failed to load presets', e)
-				setPresetError('Failed to load presets')
+				setPresetsError('Failed to load presets')
 			})
 
 		const updatePresets = (id: string, patch: JsonPatchOperation[] | Record<string, UIPresetDefinition> | null) => {
@@ -178,7 +178,7 @@ function PresetsCategoryList({
 	moduleInfo,
 	selectedConnectionId,
 	setConnectionAndCategory,
-}: PresetsCategoryListProps) {
+}: Readonly<PresetsCategoryListProps>) {
 	const categories = new Set<string>()
 	for (const preset of Object.values(presets)) {
 		categories.add(preset.category)
@@ -186,18 +186,20 @@ function PresetsCategoryList({
 
 	const doBack = useCallback(() => setConnectionAndCategory([null, null]), [setConnectionAndCategory])
 
-	const buttons = Array.from(categories).map((category) => {
-		return (
-			<CButton
-				key={category}
-				color="danger"
-				block
-				onClick={() => setConnectionAndCategory([selectedConnectionId, category])}
-			>
-				{category}
-			</CButton>
-		)
-	})
+	const buttons = Array.from(categories)
+		.sort((a, b) => a.localeCompare(b))
+		.map((category) => {
+			return (
+				<CButton
+					key={category}
+					color="danger"
+					block
+					onClick={() => setConnectionAndCategory([selectedConnectionId, category])}
+				>
+					{category}
+				</CButton>
+			)
+		})
 
 	return (
 		<div>
@@ -229,13 +231,15 @@ function PresetsButtonList({
 	selectedConnectionId,
 	selectedCategory,
 	setConnectionAndCategory,
-}: PresetsButtonListProps) {
+}: Readonly<PresetsButtonListProps>) {
 	const doBack = useCallback(
 		() => setConnectionAndCategory([selectedConnectionId, null]),
 		[setConnectionAndCategory, selectedConnectionId]
 	)
 
-	const filteredPresets = Object.values(presets).filter((p) => p.category === selectedCategory)
+	const filteredPresets = Object.values(presets)
+		.filter((p) => p.category === selectedCategory)
+		.sort((a, b) => a.order - b.order)
 
 	return (
 		<div>
@@ -247,13 +251,18 @@ function PresetsButtonList({
 			</h5>
 			<p>Drag and drop the preset buttons below into your buttons-configuration.</p>
 
-			{filteredPresets.map((preset, i) => {
+			{filteredPresets.map((preset) => {
 				if (preset.type === 'button') {
 					return (
-						<PresetIconPreview key={i} connectionId={selectedConnectionId} presetId={preset.id} title={preset.label} />
+						<PresetIconPreview
+							key={preset.id}
+							connectionId={selectedConnectionId}
+							presetId={preset.id}
+							title={preset.label}
+						/>
 					)
 				} else if (preset.type === 'text') {
-					return <PresetText key={i} preset={preset} />
+					return <PresetText key={preset.id} preset={preset} />
 				}
 				return null
 			})}
@@ -267,7 +276,7 @@ interface PresetTextProps {
 	preset: UIPresetDefinitionText
 }
 
-function PresetText({ preset }: PresetTextProps) {
+function PresetText({ preset }: Readonly<PresetTextProps>) {
 	return (
 		<div>
 			<h5>{preset.label}</h5>
@@ -282,7 +291,7 @@ interface PresetIconPreviewProps {
 	title: string
 }
 
-function PresetIconPreview({ connectionId, presetId, title }: PresetIconPreviewProps) {
+function PresetIconPreview({ connectionId, presetId, title }: Readonly<PresetIconPreviewProps>) {
 	const socket = useContext(SocketContext)
 	const [previewImage, setPreviewImage] = useState<string | null>(null)
 	const [previewError, setPreviewError] = useState(false)

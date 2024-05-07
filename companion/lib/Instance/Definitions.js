@@ -513,10 +513,11 @@ class InstanceDefinitions extends CoreBase {
 		/** @type {Record<string, UIPresetDefinition>} */
 		const res = {}
 
-		for (const [id, preset] of Object.entries(presets)) {
+		Object.entries(presets).forEach(([id, preset], index) => {
 			if (preset.type === 'button') {
 				res[id] = {
 					id: preset.id,
+					order: index,
 					label: preset.name,
 					category: preset.category,
 					type: 'button',
@@ -524,13 +525,14 @@ class InstanceDefinitions extends CoreBase {
 			} else if (preset.type === 'text') {
 				res[id] = {
 					id: preset.id,
+					order: index,
 					label: preset.name,
 					category: preset.category,
 					type: 'text',
 					text: preset.text,
 				}
 			}
-		}
+		})
 
 		return res
 	}
