@@ -69,7 +69,7 @@ class SurfaceIPElgatoPlugin extends EventEmitter {
 		this.info = {
 			type: 'Elgato Streamdeck Plugin',
 			devicePath: devicePath,
-			configFields: ['no_rotation', 'no_lock'],
+			configFields: ['no_rotation', 'no_lock', 'no_offset'],
 			deviceId: 'plugin', // Note: this is also defined elsewhere
 		}
 

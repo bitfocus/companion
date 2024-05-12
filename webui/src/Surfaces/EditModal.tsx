@@ -324,26 +324,30 @@ export const SurfaceEditModal = forwardRef<SurfaceEditModalRef, SurfaceEditModal
 										</>
 									)}
 
-									<CFormGroup>
-										<CLabel htmlFor="page">Horizontal Offset in grid</CLabel>
-										<CInput
-											name="page"
-											type="number"
-											step={1}
-											value={surfaceConfig.xOffset}
-											onChange={(e) => setSurfaceConfigValue('xOffset', parseInt(e.currentTarget.value))}
-										/>
-									</CFormGroup>
-									<CFormGroup>
-										<CLabel htmlFor="page">Vertical Offset in grid</CLabel>
-										<CInput
-											name="page"
-											type="number"
-											step={1}
-											value={surfaceConfig.yOffset}
-											onChange={(e) => setSurfaceConfigValue('yOffset', parseInt(e.currentTarget.value))}
-										/>
-									</CFormGroup>
+									{!surfaceInfo.configFields?.includes('no_offset') && (
+										<>
+											<CFormGroup>
+												<CLabel htmlFor="page">Horizontal Offset in grid</CLabel>
+												<CInput
+													name="page"
+													type="number"
+													step={1}
+													value={surfaceConfig.xOffset}
+													onChange={(e) => setSurfaceConfigValue('xOffset', parseInt(e.currentTarget.value))}
+												/>
+											</CFormGroup>
+											<CFormGroup>
+												<CLabel htmlFor="page">Vertical Offset in grid</CLabel>
+												<CInput
+													name="page"
+													type="number"
+													step={1}
+													value={surfaceConfig.yOffset}
+													onChange={(e) => setSurfaceConfigValue('yOffset', parseInt(e.currentTarget.value))}
+												/>
+											</CFormGroup>
+										</>
+									)}
 
 									{surfaceInfo.configFields?.includes('brightness') && (
 										<CFormGroup>
