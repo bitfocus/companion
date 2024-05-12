@@ -56,13 +56,21 @@ class SurfaceIPElgatoPlugin extends EventEmitter {
 
 		this.socket = socket
 
+		if (this.socket.supportsCoordinates) {
+			// The size doesn't matter when in coordinate mode, interaction gets done differently
+			this.gridSize = {
+				columns: 0,
+				rows: 0,
+			}
+		}
+
 		this.#logger.debug(`Adding Elgato Streamdeck Plugin (${this.socket.supportsPng ? 'PNG' : 'Bitmap'})`)
 
 		this.info = {
 			type: 'Elgato Streamdeck Plugin',
 			devicePath: devicePath,
 			configFields: ['no_rotation', 'no_lock'],
-			deviceId: 'plugin',
+			deviceId: 'plugin', // Note: this is also defined elsewhere
 		}
 
 		const triggerKeyPress = (/** @type {Record<string,any>} */ data, /** @type {boolean} */ pressed) => {
@@ -170,6 +178,11 @@ class SurfaceIPElgatoPlugin extends EventEmitter {
 	 * @returns {void}
 	 */
 	draw(x, y, render) {
+		if (this.socket.supportsCoordinates) {
+			// Uses manual subscriptions
+			return
+		}
+
 		if (render.buffer === undefined || render.buffer.length === 0) {
 			this.#logger.silly('buffer was not 15552, but ', render.buffer?.length)
 			return
@@ -183,10 +196,15 @@ class SurfaceIPElgatoPlugin extends EventEmitter {
 
 	clearDeck() {
 		this.#logger.silly('elgato.prototype.clearDeck()')
-		const emptyBuffer = Buffer.alloc(72 * 72 * 3)
 
-		for (let i = 0; i < LEGACY_MAX_BUTTONS; ++i) {
-			this.socket.apicommand('fillImage', { keyIndex: i, data: emptyBuffer })
+		if (this.socket.supportsCoordinates) {
+			this.socket.apicommand('clearAllKeys', {})
+		} else {
+			const emptyBuffer = Buffer.alloc(72 * 72 * 3)
+
+			for (let i = 0; i < LEGACY_MAX_BUTTONS; ++i) {
+				this.socket.apicommand('fillImage', { keyIndex: i, data: emptyBuffer })
+			}
 		}
 	}
 

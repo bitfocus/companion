@@ -47,7 +47,28 @@ class ServiceElgatoPlugin extends ServiceBase {
 	constructor(registry) {
 		super(registry, 'Service/ElgatoPlugin', 'elgato_plugin_enable', null)
 
-		this.graphics.on('button_drawn', this.#handleButtonDrawn.bind(this))
+		this.graphics.on('button_drawn', (location, render) => {
+			// Send dynamic page
+			if (this.client && location.pageNumber === this.client.currentPage) {
+				this.#handleButtonDrawn(
+					{
+						...location,
+						pageNumber: null,
+					},
+					render
+				)
+			}
+
+			// Send specific page
+			this.#handleButtonDrawn(location, render)
+		})
+		this.surfaces.on('surface_page', (surfaceId, newPage) => {
+			if (this.client && surfaceId === 'plugin') {
+				this.client.currentPage = newPage
+
+				this.#redrawAllDynamicButtons()
+			}
+		})
 
 		this.init()
 	}
@@ -70,11 +91,11 @@ class ServiceElgatoPlugin extends ServiceBase {
 	}
 
 	/**
-	 * @param {import('../Resources/Util.js').ControlLocation} location
+	 * @param {{ pageNumber: number | null; row: number; column: number }} location
 	 * @param {import('../Graphics/ImageResult.js').ImageResult} render
 	 */
 	#handleButtonDrawn(location, render) {
-		location.pageNumber = Number(location.pageNumber)
+		if (location.pageNumber !== null) location.pageNumber = Number(location.pageNumber)
 
 		if (this.client && this.client.buttonListeners) {
 			const id = `${location.pageNumber}_${location.column}_${location.row}`
@@ -111,6 +132,30 @@ class ServiceElgatoPlugin extends ServiceBase {
 		}
 	}
 
+	#redrawAllDynamicButtons() {
+		if (!this.client || !this.client.supportsCoordinates) return
+
+		for (const listenerId of this.client.buttonListeners) {
+			if (!listenerId.startsWith('null_')) continue
+
+			const [_page, column, row] = listenerId.split('_').map((i) => Number(i))
+			if (isNaN(column) || isNaN(row)) continue
+
+			this.#handleButtonDrawn(
+				{
+					pageNumber: null,
+					column: column,
+					row: row,
+				},
+				this.graphics.getCachedRenderOrGeneratePlaceholder({
+					pageNumber: this.client.currentPage,
+					column: column,
+					row: row,
+				})
+			)
+		}
+	}
+
 	/**
 	 * Setup the socket for v2 API
 	 * @param {ServiceElgatoPluginSocket} socket
@@ -130,10 +175,19 @@ class ServiceElgatoPlugin extends ServiceBase {
 				const id = 'elgato_plugin-' + socket.remoteAddress
 
 				socket.supportsPng = !!clientInfo.supportsPng
+				socket.supportsCoordinates = !!clientInfo.supportsCoordinates
 
 				this.surfaces.addElgatoPluginDevice(id, socket)
 
-				socket.apireply('new_device', { result: true })
+				socket.currentPage = this.surfaces.devicePageGet('plugin') || 1
+
+				socket.apireply('new_device', {
+					result: true,
+
+					// confirm support for opt-in features
+					supportsPng: socket.supportsPng,
+					supportsCoordinates: socket.supportsCoordinates,
+				})
 
 				this.client = socket
 
@@ -157,13 +211,18 @@ class ServiceElgatoPlugin extends ServiceBase {
 
 				socket.apireply('request_button', { result: 'ok' })
 
-				const location = {
-					pageNumber: Number(args.page),
+				const fromLocation = {
+					pageNumber: args.page === null ? socket.currentPage : Number(args.page),
+					column: Number(args.column),
+					row: Number(args.row),
+				}
+				const displayLocation = {
+					pageNumber: args.page === null ? null : Number(args.page),
 					column: Number(args.column),
 					row: Number(args.row),
 				}
 
-				this.#handleButtonDrawn(location, this.graphics.getCachedRenderOrGeneratePlaceholder(location))
+				this.#handleButtonDrawn(displayLocation, this.graphics.getCachedRenderOrGeneratePlaceholder(fromLocation))
 			} else {
 				socket.buttonListeners.add(`${args.page}_${args.bank}`)
 
@@ -304,6 +363,21 @@ export class ServiceElgatoPluginSocket extends EventEmitter {
 	supportsPng = false
 
 	/**
+	 * Whether the connected plugin supports using coordinates.
+	 * This also means that it will require explicit subscribing to each dynamic button
+	 * @type {boolean}
+	 * @access public
+	 */
+	supportsCoordinates = false
+
+	/**
+	 * The current page number of the surface
+	 * @type {number}
+	 * @access public
+	 */
+	currentPage = 1
+
+	/**
 	 * @type {ImageWriteQueue}
 	 * @access private
 	 */
@@ -350,7 +424,7 @@ export class ServiceElgatoPluginSocket extends EventEmitter {
 	/**
 	 *
 	 * @param {string | number} id
-	 * @param {Record<string, number>} partial
+	 * @param {Record<string, number | null>} partial
 	 * @param {import('../Graphics/ImageResult.js').ImageResult} render
 	 */
 	fillImage(id, partial, render) {
