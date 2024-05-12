@@ -64,71 +64,72 @@ class SurfaceIPElgatoPlugin extends EventEmitter {
 			deviceId: 'plugin',
 		}
 
-		socket.on('keydown', (data) => {
-			let key = data.keyIndex
-			let page = data.page
-			let bank = data.bank
+		const triggerKeyPress = (/** @type {Record<string,any>} */ data, /** @type {boolean} */ pressed) => {
+			if ('row' in data || 'column' in data) {
+				if (data.page == null) {
+					this.emit('click', Number(data.column), Number(data.row), pressed)
+				} else {
+					const controlId = this.page.getControlIdAt({
+						pageNumber: Number(data.page),
+						column: Number(data.column),
+						row: Number(data.row),
+					})
+					if (controlId) {
+						this.controls.pressControl(controlId, pressed, this.info.devicePath)
 
-			if (key !== undefined) {
-				this.#emitClick(key, true)
-			} else if (page !== undefined && bank !== undefined) {
-				const xy = oldBankIndexToXY(bank + 1)
+						this.#logger.debug(`${controlId} ${pressed ? 'pressed' : 'released'}`)
+					}
+				}
+			} else if ('keyIndex' in data) {
+				this.#emitClick(data.keyIndex, pressed)
+			} else {
+				const xy = oldBankIndexToXY(data.bank + 1)
 				if (xy) {
 					const controlId = this.page.getControlIdAt({
-						pageNumber: page,
+						pageNumber: Number(data.page),
 						column: xy[0],
 						row: xy[1],
 					})
 					if (controlId) {
-						this.controls.pressControl(controlId, true, this.info.devicePath)
+						this.controls.pressControl(controlId, pressed, this.info.devicePath)
 
-						this.#logger.debug(`${controlId} pressed`)
+						this.#logger.debug(`${controlId} ${pressed ? 'pressed' : 'released'}`)
 					}
 				}
 			}
-		})
+		}
 
-		socket.on('keyup', (data) => {
-			let key = data.keyIndex
-			let page = data.page
-			let bank = data.bank
-
-			if (key !== undefined) {
-				this.#emitClick(key, false)
-			} else if (page !== undefined && bank !== undefined) {
-				const xy = oldBankIndexToXY(bank + 1)
-				if (xy) {
-					const controlId = this.page.getControlIdAt({
-						pageNumber: page,
-						column: xy[0],
-						row: xy[1],
-					})
-					if (controlId) {
-						this.controls.pressControl(controlId, false, this.info.devicePath)
-
-						this.#logger.debug(`${controlId} released`)
-					}
-				}
-			}
-		})
+		socket.on('keydown', (data) => triggerKeyPress(data, true))
+		socket.on('keyup', (data) => triggerKeyPress(data, false))
 
 		socket.on('rotate', (data) => {
-			let key = data.keyIndex
-			let page = data.page
-			let bank = data.bank
+			const right = data.ticks > 0
 
-			let right = data.ticks > 0
+			if ('row' in data || 'column' in data) {
+				if (data.page == null) {
+					this.emit('rotate', Number(data.column), Number(data.row), right)
+				} else {
+					const controlId = this.page.getControlIdAt({
+						pageNumber: Number(data.page),
+						column: Number(data.column),
+						row: Number(data.row),
+					})
+					if (controlId) {
+						this.controls.rotateControl(controlId, right, this.info.devicePath)
 
-			if (key !== undefined) {
-				const xy = convertPanelIndexToXY(key, this.gridSize)
+						this.#logger.debug(`${controlId} rotated ${right}`)
+					}
+				}
+			} else if ('keyIndex' in data) {
+				const xy = convertPanelIndexToXY(data.keyIndex, this.gridSize)
 				if (xy) {
 					this.emit('rotate', ...xy, right)
 				}
-			} else if (page !== undefined && bank !== undefined) {
-				const xy = oldBankIndexToXY(bank + 1)
+			} else {
+				const xy = oldBankIndexToXY(data.bank + 1)
 				if (xy) {
 					const controlId = this.page.getControlIdAt({
-						pageNumber: page,
+						pageNumber: Number(data.page),
 						column: xy[0],
 						row: xy[1],
 					})
