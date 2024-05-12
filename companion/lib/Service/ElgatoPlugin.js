@@ -5,7 +5,6 @@ import { oldBankIndexToXY } from '@companion-app/shared/ControlId.js'
 import { EventEmitter } from 'events'
 import ImageWriteQueue from '../Resources/ImageWriteQueue.js'
 import imageRs from '@julusian/image-rs'
-import { translateRotation } from '../Resources/Util.js'
 
 /**
  * Class providing the Elgato Plugin service.
@@ -305,12 +304,6 @@ export class ServiceElgatoPluginSocket extends EventEmitter {
 	supportsPng = false
 
 	/**
-	 * @type {import('../Surface/Util.js').SurfaceRotation | 90 | -90 | 180 | 0 | null}
-	 * @access public
-	 */
-	rotation = 0
-
-	/**
 	 * @type {ImageWriteQueue}
 	 * @access private
 	 */
@@ -341,9 +334,6 @@ export class ServiceElgatoPluginSocket extends EventEmitter {
 						render.bufferHeight,
 						imageRs.PixelFormat.Rgba
 					).scale(targetSize, targetSize)
-
-					const rotation = translateRotation(this.rotation)
-					if (rotation !== null) image = image.rotate(rotation)
 
 					const newbuffer = await image.toBuffer(imageRs.PixelFormat.Rgb)
 

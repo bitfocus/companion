@@ -40,6 +40,7 @@ class SurfaceIPElgatoPlugin extends EventEmitter {
 	 */
 	_config = {
 		rotation: 0,
+		never_lock: true,
 	}
 
 	/**
@@ -60,7 +61,7 @@ class SurfaceIPElgatoPlugin extends EventEmitter {
 		this.info = {
 			type: 'Elgato Streamdeck Plugin',
 			devicePath: devicePath,
-			configFields: ['legacy_rotation'],
+			configFields: ['no_rotation', 'no_lock'],
 			deviceId: 'plugin',
 		}
 
@@ -198,7 +199,9 @@ class SurfaceIPElgatoPlugin extends EventEmitter {
 	setConfig(config, _force) {
 		this._config = config
 
-		this.socket.rotation = this._config.rotation
+		// ensure rotation is disabled
+		this._config.rotation = 0
+		this._config.never_lock = true
 	}
 }
 
