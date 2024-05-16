@@ -220,7 +220,7 @@ export default class Surface {
 	 * @param {import('../Resources/Util.js').ControlLocation | undefined} location
 	 * @param {boolean} useVariableFields
 	 * @param {string | undefined} surfaceId
-	 * @returns {number | undefined}
+	 * @returns {number | 'back' | 'forward' | '+1' | '-1' | undefined}
 	 */
 	#fetchPage(options, location, useVariableFields, surfaceId) {
 		/** @type {number | string | undefined} */
@@ -237,6 +237,9 @@ export default class Surface {
 
 		if (thePage === 'startup') {
 			thePage = surfaceId && this.#surfaceController.devicePageGetStartup(surfaceId)
+		}
+		if (thePage === 'back' || thePage === 'forward' || thePage === '+1' || thePage === '-1') {
+			return thePage
 		}
 
 		return Number(thePage) || undefined
