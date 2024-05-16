@@ -227,6 +227,10 @@ function VariablesSelect({
 					label: 'This row',
 				},
 				{
+					value: 'this:step',
+					label: 'The step of this button',
+				},
+				{
 					value: 'this:page_name',
 					label: 'This page name',
 				}
