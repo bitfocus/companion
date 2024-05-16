@@ -191,7 +191,7 @@ export interface InputFeatureIconsProps {
 export function InputFeatureIcons(props: InputFeatureIconsProps): JSX.Element | null {
 	const featureIcons: JSX.Element[] = []
 	if (props.variables)
-		featureIcons.push(<FontAwesomeIcon key="variables" icon={faDollarSign} title={'Supports variables'} />)
+		featureIcons.push(<FontAwesomeIcon key="variables" icon={faDollarSign} title={'Supports global variables'} />)
 	if (props.local) featureIcons.push(<FontAwesomeIcon key="local" icon={faGlobe} title={'Supports local variables'} />)
 
 	return featureIcons.length ? <span className="feature-icons">{featureIcons}</span> : null
