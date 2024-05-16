@@ -22,6 +22,7 @@ import imageRs from '@julusian/image-rs'
 import LogController from '../../Log/Controller.js'
 import { convertPanelIndexToXY } from '../Util.js'
 import { translateRotation } from '../../Resources/Util.js'
+import { colorToRgb } from './Util.js'
 
 /**
  * @typedef {{
@@ -98,19 +99,6 @@ const razerStreamControllerXInfo = {
 
 	encoders: [],
 	buttons: [],
-}
-
-/**
- * Convert a number to rgb components
- * @param {number} dec
- * @returns {{ r: number, g: number, b: number }}
- */
-function colorToRgb(dec) {
-	const r = Math.round((dec & 0xff0000) >> 16)
-	const g = Math.round((dec & 0x00ff00) >> 8)
-	const b = Math.round(dec & 0x0000ff)
-
-	return { r, g, b }
 }
 
 /**

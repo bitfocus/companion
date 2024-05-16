@@ -462,14 +462,6 @@ function TabsSection({ style, controlId, location, steps, runtimeProps, rotaryAc
 		},
 		[socket, controlId]
 	)
-	const renameStep = useCallback(
-		(stepId: string, newName: string) => {
-			socketEmitPromise(socket, 'controls:step:rename', [controlId, stepId, newName]).catch((e) => {
-				console.error('Failed to rename step:', e)
-			})
-		},
-		[socket, controlId]
-	)
 
 	const appendSet = useCallback(
 		(stepId: string) => {
@@ -504,53 +496,20 @@ function TabsSection({ style, controlId, location, steps, runtimeProps, rotaryAc
 				<div ref={setTabsRef} className={'row-heading'}>
 					<CTabs activeTab={selectedStep} onActiveTabChange={clickSelectedStep}>
 						<CNav variant="tabs">
-							{keys.map((k: string | number, i) => {
-								let linkClassname: string | undefined = undefined
-
-								// if there's more than one step, we need to show the current step
-								const moreThanOneStep = keys.length > 1
-								// the current step is the one that is currently being executed
-								const isCurrent = runtimeProps.current_step_id === k
-								// both selected and the current step
-								const isActiveAndCurrent = k === selectedIndex && runtimeProps.current_step_id === k
-
-								const name = steps[k].options?.name
-								const displayText = name && name !== '' ? name + ` (${i + 1})` : i === 0 ? 'Step ' + (i + 1) : i + 1
-
-								if (moreThanOneStep) {
-									if (isActiveAndCurrent) linkClassname = 'selected-and-active'
-									else if (isCurrent) linkClassname = 'only-current'
-								}
-
-								const [showInputField, setShowInputField] = useState(false)
-
-								return (
-									<CNavItem key={k} className="nav-steps-special">
-										{showInputField ? (
-											<CNavLink className={linkClassname}>
-												<input
-													type="text"
-													value={name}
-													onChange={(e) => renameStep(k.toString(), e.target.value)}
-													onKeyDown={(e) => {
-														;(e.key === 'Enter' || e.key === 'Escape') && setShowInputField(false)
-													}}
-													onBlur={() => setShowInputField(false)}
-													autoFocus
-												></input>
-											</CNavLink>
-										) : (
-											<CNavLink
-												onDoubleClick={() => setShowInputField(true)}
-												data-tab={`step:${k}`}
-												className={linkClassname}
-											>
-												{displayText}
-											</CNavLink>
-										)}
-									</CNavItem>
-								)
-							})}
+							{keys.map((stepId, i) => (
+								<ActionSetTab
+									key={stepId}
+									controlId={controlId}
+									stepId={stepId}
+									stepIndex={i}
+									stepOptions={steps[stepId]?.options}
+									moreThanOneStep={keys.length > 1}
+									isCurrent={runtimeProps.current_step_id === stepId}
+									isActiveAndCurrent={
+										stepId.toString() === selectedIndex.toString() && runtimeProps.current_step_id === stepId
+									}
+								/>
+							))}
 
 							<CNavItem key="feedbacks" className="nav-steps-special">
 								<CNavLink data-tab="feedbacks">Feedbacks</CNavLink>
@@ -702,6 +661,85 @@ function TabsSection({ style, controlId, location, steps, runtimeProps, rotaryAc
 	} else {
 		return <div key="else"></div>
 	}
+}
+
+interface ActionSetTabProps {
+	controlId: string
+	stepId: string
+	stepIndex: number
+	stepOptions: ActionStepOptions | undefined
+	// if there's more than one step, we need to show the current step
+	moreThanOneStep: boolean
+	// the current step is the one that is currently being executed
+	isCurrent: boolean
+	// both selected and the current step
+	isActiveAndCurrent: boolean
+}
+function ActionSetTab({
+	controlId,
+	stepId,
+	stepIndex,
+	stepOptions,
+	moreThanOneStep,
+	isCurrent,
+	isActiveAndCurrent,
+}: Readonly<ActionSetTabProps>) {
+	const socket = useContext(SocketContext)
+
+	console.log(stepId, moreThanOneStep, isCurrent, isActiveAndCurrent)
+
+	let linkClassname: string | undefined = undefined
+
+	const name = stepOptions?.name
+	const displayText = name ? name + ` (${stepIndex + 1})` : stepIndex === 0 ? 'Step ' + (stepIndex + 1) : stepIndex + 1
+
+	if (moreThanOneStep) {
+		if (isActiveAndCurrent) linkClassname = 'selected-and-active'
+		else if (isCurrent) linkClassname = 'only-current'
+	}
+
+	const renameStep = useCallback(
+		(e: React.ChangeEvent<HTMLInputElement>) => {
+			socketEmitPromise(socket, 'controls:step:rename', [controlId, stepId, e.target.value]).catch((e) => {
+				console.error('Failed to rename step:', e)
+			})
+		},
+		[socket, controlId, stepId]
+	)
+
+	const [showInputField, setShowInputField] = useState(false)
+
+	const showField = useCallback(() => setShowInputField(true), [setShowInputField])
+	const hideField = useCallback(() => setShowInputField(false), [setShowInputField])
+	const onKeyDown = useCallback(
+		(e: React.KeyboardEvent<HTMLInputElement>) => {
+			if (e.key === 'Enter' || e.key === 'Escape') {
+				setShowInputField(false)
+			}
+		},
+		[setShowInputField]
+	)
+
+	return (
+		<CNavItem className="nav-steps-special">
+			{showInputField ? (
+				<CNavLink className={linkClassname}>
+					<input
+						type="text"
+						value={name}
+						onChange={renameStep}
+						onKeyDown={onKeyDown}
+						onBlur={hideField}
+						autoFocus
+					></input>
+				</CNavLink>
+			) : (
+				<CNavLink onDoubleClick={showField} data-tab={`step:${stepId}`} className={linkClassname}>
+					{displayText}
+				</CNavLink>
+			)}
+		</CNavItem>
+	)
 }
 
 interface EditActionsReleaseProps {

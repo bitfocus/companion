@@ -96,7 +96,7 @@ export default class CustomVariables {
 						id: 'expression',
 						default: '',
 						useVariables: {
-							locationBased: true,
+							local: true,
 						},
 					},
 				],

@@ -324,26 +324,30 @@ export const SurfaceEditModal = forwardRef<SurfaceEditModalRef, SurfaceEditModal
 										</>
 									)}
 
-									<CFormGroup>
-										<CLabel htmlFor="page">Horizontal Offset in grid</CLabel>
-										<CInput
-											name="page"
-											type="number"
-											step={1}
-											value={surfaceConfig.xOffset}
-											onChange={(e) => setSurfaceConfigValue('xOffset', parseInt(e.currentTarget.value))}
-										/>
-									</CFormGroup>
-									<CFormGroup>
-										<CLabel htmlFor="page">Vertical Offset in grid</CLabel>
-										<CInput
-											name="page"
-											type="number"
-											step={1}
-											value={surfaceConfig.yOffset}
-											onChange={(e) => setSurfaceConfigValue('yOffset', parseInt(e.currentTarget.value))}
-										/>
-									</CFormGroup>
+									{!surfaceInfo.configFields?.includes('no_offset') && (
+										<>
+											<CFormGroup>
+												<CLabel htmlFor="page">Horizontal Offset in grid</CLabel>
+												<CInput
+													name="page"
+													type="number"
+													step={1}
+													value={surfaceConfig.xOffset}
+													onChange={(e) => setSurfaceConfigValue('xOffset', parseInt(e.currentTarget.value))}
+												/>
+											</CFormGroup>
+											<CFormGroup>
+												<CLabel htmlFor="page">Vertical Offset in grid</CLabel>
+												<CInput
+													name="page"
+													type="number"
+													step={1}
+													value={surfaceConfig.yOffset}
+													onChange={(e) => setSurfaceConfigValue('yOffset', parseInt(e.currentTarget.value))}
+												/>
+											</CFormGroup>
+										</>
+									)}
 
 									{surfaceInfo.configFields?.includes('brightness') && (
 										<CFormGroup>
@@ -371,30 +375,32 @@ export const SurfaceEditModal = forwardRef<SurfaceEditModalRef, SurfaceEditModal
 										</CFormGroup>
 									)}
 
-									<CFormGroup>
-										<CLabel htmlFor="rotation">Button rotation</CLabel>
-										<CSelect
-											name="rotation"
-											value={surfaceConfig.rotation}
-											onChange={(e) => {
-												const valueNumber = parseInt(e.currentTarget.value)
-												setSurfaceConfigValue('rotation', isNaN(valueNumber) ? e.currentTarget.value : valueNumber)
-											}}
-										>
-											<option value="0">Normal</option>
-											<option value="surface-90">90 CCW</option>
-											<option value="surface90">90 CW</option>
-											<option value="surface180">180</option>
+									{!surfaceInfo.configFields?.includes('no_rotation') && (
+										<CFormGroup>
+											<CLabel htmlFor="rotation">Button rotation</CLabel>
+											<CSelect
+												name="rotation"
+												value={surfaceConfig.rotation}
+												onChange={(e) => {
+													const valueNumber = parseInt(e.currentTarget.value)
+													setSurfaceConfigValue('rotation', isNaN(valueNumber) ? e.currentTarget.value : valueNumber)
+												}}
+											>
+												<option value="0">Normal</option>
+												<option value="surface-90">90 CCW</option>
+												<option value="surface90">90 CW</option>
+												<option value="surface180">180</option>
 
-											{surfaceInfo.configFields?.includes('legacy_rotation') && (
-												<>
-													<option value="-90">90 CCW (Legacy)</option>
-													<option value="90">90 CW (Legacy)</option>
-													<option value="180">180 (Legacy)</option>
-												</>
-											)}
-										</CSelect>
-									</CFormGroup>
+												{surfaceInfo.configFields?.includes('legacy_rotation') && (
+													<>
+														<option value="-90">90 CCW (Legacy)</option>
+														<option value="90">90 CW (Legacy)</option>
+														<option value="180">180 (Legacy)</option>
+													</>
+												)}
+											</CSelect>
+										</CFormGroup>
+									)}
 									{surfaceInfo.configFields?.includes('emulator_control_enable') && (
 										<CFormGroup>
 											<CLabel htmlFor="emulator_control_enable">Enable support for Logitech R400/Mastercue/DSan</CLabel>
@@ -431,15 +437,17 @@ export const SurfaceEditModal = forwardRef<SurfaceEditModalRef, SurfaceEditModal
 											/>
 										</CFormGroup>
 									)}
-									<CFormGroup>
-										<CLabel htmlFor="never_lock">Never Pin code lock</CLabel>
-										<CInputCheckbox
-											name="never_lock"
-											type="checkbox"
-											checked={!!surfaceConfig.never_lock}
-											onChange={(e) => setSurfaceConfigValue('never_lock', !!e.currentTarget.checked)}
-										/>
-									</CFormGroup>
+									{!surfaceInfo.configFields?.includes('no_lock') && (
+										<CFormGroup>
+											<CLabel htmlFor="never_lock">Never Pin code lock</CLabel>
+											<CInputCheckbox
+												name="never_lock"
+												type="checkbox"
+												checked={!!surfaceConfig.never_lock}
+												onChange={(e) => setSurfaceConfigValue('never_lock', !!e.currentTarget.checked)}
+											/>
+										</CFormGroup>
+									)}
 								</>
 							)}
 						</CForm>

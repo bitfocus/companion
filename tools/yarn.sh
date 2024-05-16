@@ -40,6 +40,7 @@ set -e
 # Hack: This needs to be done first or npx fails to run typescript for some of the modules
 heading "Legacy Modules"
 cd module-legacy
+yarn set version 1.22.19
 yarn --frozen-lockfile
 echo "Warning: This next step can take many minutes to run"
 yarn generate-manifests
@@ -54,7 +55,7 @@ heading "UI"
 if [ -z "$CI" ]; then
   echo "Warning: This next step can take many minutes to run"
   yarn dist:webui
-fi 
+fi
 echo
 
 exit 0

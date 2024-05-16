@@ -14,10 +14,6 @@ import type InstanceSkel = require('../instance_skel')
 import { assertNever, literal, InstanceStatus } from '@companion-module/base'
 import { ServiceRest } from './rest.js'
 
-// @ts-expect-error Not typescript
-import Image from '../../companion/lib/Graphics/Image.js'
-import { nanoid } from 'nanoid'
-
 /**
  * Make all optional properties be required and `| undefined`
  * This is useful to ensure that no property is missed, when manually converting between types, but allowing fields to be undefined
@@ -202,8 +198,6 @@ function wrapFeedbackSubscriptionCallback<T>(
 
 export class FakeSystem extends EventEmitter {
 	#rest: ServiceRest
-
-	readonly Image = Image
 
 	constructor(
 		public readonly parent: ModuleApi.InstanceBase<any>,

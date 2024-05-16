@@ -408,7 +408,11 @@ class InstanceVariable extends CoreBase {
 			'$(this:page)': location?.pageNumber,
 			'$(this:column)': location?.column,
 			'$(this:row)': location?.row,
+			// Reactivity happens for these because of references to the inner variables
 			'$(this:page_name)': location ? `$(internal:page_number_${location.pageNumber}_name)` : VARIABLE_UNKNOWN_VALUE,
+			'$(this:step)': location
+				? `$(internal:b_step_${location.pageNumber}_${location.row}_${location.column})`
+				: VARIABLE_UNKNOWN_VALUE,
 		}
 	}
 }

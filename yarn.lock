@@ -1518,9 +1518,9 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@companion-module/base@npm:~1.8.0-2":
-  version: 1.8.0-2
-  resolution: "@companion-module/base@npm:1.8.0-2"
+"@companion-module/base@npm:~1.8.0":
+  version: 1.8.0
+  resolution: "@companion-module/base@npm:1.8.0"
   dependencies:
     "@sentry/node": "npm:^7.109.0"
     "@sentry/tracing": "npm:^7.109.0"
@@ -1533,7 +1533,7 @@ __metadata:
     p-queue: "npm:^6.6.2"
     p-timeout: "npm:^4.1.0"
     tslib: "npm:^2.6.2"
-  checksum: 10c0/425d9c7fb3bc622d36be6c0d335cc62ba57a53606e11880dd9ca6c71c7f958a99f0ba1f01155ccb82ea1a038a9af4977060bcf81c6f5367ccc7fb9f8f0a2b5d5
+  checksum: 10c0/4b8f7fef7452edcc3be97557d838f19601ce7e330c013447900fdc370bad94c1ad8a139ead164c863fb153691d6eb872f9b7bad53027688fb3d8eb2e84d63284
   languageName: node
   linkType: hard
 
@@ -1710,27 +1710,27 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@elgato-stream-deck/core@npm:6.0.0":
-  version: 6.0.0
-  resolution: "@elgato-stream-deck/core@npm:6.0.0"
+"@elgato-stream-deck/core@npm:6.2.0":
+  version: 6.2.0
+  resolution: "@elgato-stream-deck/core@npm:6.2.0"
   dependencies:
     eventemitter3: "npm:^4.0.7"
     tslib: "npm:^2.6.2"
-  checksum: 10c0/ef3dcbad3cb0118b870c84669b437d124d68b79f6970a77c70a7754dfd7d731afbd3ffc2c51168b62987d2432765743eb95f5ada7deb0882ebb82990277b1607
+  checksum: 10c0/bacb14c826efe040a03ecf920260db636d80ce59e0b60761f974d1ebcf525204efafaf3076b29f1be95630c96e9b7f83d235e2033682b4792c76f4320b61740f
   languageName: node
   linkType: hard
 
-"@elgato-stream-deck/node@npm:^6.0.0":
-  version: 6.0.0
-  resolution: "@elgato-stream-deck/node@npm:6.0.0"
+"@elgato-stream-deck/node@npm:^6.2.0":
+  version: 6.2.0
+  resolution: "@elgato-stream-deck/node@npm:6.2.0"
   dependencies:
-    "@elgato-stream-deck/core": "npm:6.0.0"
+    "@elgato-stream-deck/core": "npm:6.2.0"
     jpeg-js: "npm:^0.4.4"
     node-hid: "npm:^3.0.0"
     tslib: "npm:^2.6.2"
   peerDependencies:
     "@julusian/jpeg-turbo": ^1.1.2 || ^2.0.0
-  checksum: 10c0/31673bff2d8b9f040190939635cbd38426f3f093aab402b2b94e831090d852288db50b60f997f3e0f1ed25488b5f22f62bc948002c6bbad9ec181f206feed981
+  checksum: 10c0/fd98637b3c6507dde86619fc4f6599ece978eaa0765f2a2bc4df70c9849df35f2eab1d541ca224838686f9e21453bda9d79c96107879dd89110759714e1394e9
   languageName: node
   linkType: hard
 
@@ -2500,25 +2500,25 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@loupedeck/core@npm:1.1.1":
-  version: 1.1.1
-  resolution: "@loupedeck/core@npm:1.1.1"
+"@loupedeck/core@npm:1.1.2":
+  version: 1.1.2
+  resolution: "@loupedeck/core@npm:1.1.2"
   dependencies:
     eventemitter3: "npm:^4.0.7"
     p-queue: "npm:^6.6.2"
     tslib: "npm:^2.6.2"
-  checksum: 10c0/43de27b9a084ce567a4bb85314fc6736813862efbe117a07bba9b4ce1ba582c6b3fdb0d60c18790cb5f2c6c968d86e6557b5a625ba2a42437b44e5acd76001b9
+  checksum: 10c0/fb6cd765549c728386c269f7ce546e7280de665f449a50e24c54bb8be73334cd99fb678f61b13290e75915cbaa8cfb0684516599f6827c9857d5a8355b0a734b
   languageName: node
   linkType: hard
 
-"@loupedeck/node@npm:^1.1.1":
-  version: 1.1.1
-  resolution: "@loupedeck/node@npm:1.1.1"
+"@loupedeck/node@npm:^1.1.2":
+  version: 1.1.2
+  resolution: "@loupedeck/node@npm:1.1.2"
   dependencies:
-    "@loupedeck/core": "npm:1.1.1"
+    "@loupedeck/core": "npm:1.1.2"
     serialport: "npm:^10.5.0"
     tslib: "npm:^2.6.2"
-  checksum: 10c0/7d6e083a73676d6fca6deaeba95a47167db5f67c883ca88164a0a2652e703929737fdad34c5ce6cbdaeda3e531fc107884d26a4e9e6f5889ead3c3d10839738a
+  checksum: 10c0/abd53b9eae4fb7ed386b368070cb10fc71d8896b509bf979d820193ba4c24f8ec074a5a7b20f26698a36fb6c967da841da6ad6f49fb7c3b1b1dcf49254a7c522
   languageName: node
   linkType: hard
 
@@ -5966,12 +5966,12 @@ asn1@evs-broadcast/node-asn1:
   resolution: "companion@workspace:companion"
   dependencies:
     "@companion-app/shared": "npm:*"
-    "@companion-module/base": "npm:~1.8.0-2"
-    "@elgato-stream-deck/node": "npm:^6.0.0"
+    "@companion-module/base": "npm:~1.8.0"
+    "@elgato-stream-deck/node": "npm:^6.2.0"
     "@julusian/image-rs": "npm:^0.2.1"
     "@julusian/jpeg-turbo": "npm:^2.1.0"
     "@julusian/skia-canvas": "npm:^1.0.5"
-    "@loupedeck/node": "npm:^1.1.1"
+    "@loupedeck/node": "npm:^1.1.2"
     "@sentry/integrations": "npm:^7.111.0"
     "@sentry/node": "npm:^7.111.0"
     "@sentry/tracing": "npm:^7.111.0"
@@ -6828,13 +6828,13 @@ asn1@evs-broadcast/node-asn1:
   linkType: hard
 
 "ejs@npm:^3.1.8":
-  version: 3.1.9
-  resolution: "ejs@npm:3.1.9"
+  version: 3.1.10
+  resolution: "ejs@npm:3.1.10"
   dependencies:
     jake: "npm:^10.8.5"
   bin:
     ejs: bin/cli.js
-  checksum: 10c0/f0e249c79128810f5f6d5cbf347fc906d86bb9384263db0b2a9004aea649f2bc2d112736de5716c509c80afb4721c47281bd5b57c757d3b63f1bf5ac5f885893
+  checksum: 10c0/52eade9e68416ed04f7f92c492183340582a36482836b11eab97b159fcdcfdedc62233a1bf0bf5e5e1851c501f2dca0e2e9afd111db2599e4e7f53ee29429ae1
   languageName: node
   linkType: hard
 

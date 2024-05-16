@@ -23,6 +23,7 @@ import LogController from '../../Log/Controller.js'
 import ImageWriteQueue from '../../Resources/ImageWriteQueue.js'
 import { translateRotation } from '../../Resources/Util.js'
 import { convertXYToIndexForPanel, convertPanelIndexToXY } from '../Util.js'
+import { colorToRgb } from './Util.js'
 const setTimeoutPromise = util.promisify(setTimeout)
 
 class SurfaceUSBElgatoStreamDeck extends EventEmitter {
@@ -78,6 +79,8 @@ class SurfaceUSBElgatoStreamDeck extends EventEmitter {
 		}
 		if (this.#streamDeck.MODEL === DeviceModelId.PLUS) {
 			this.gridSize.rows += 2
+		} else if (this.#streamDeck.MODEL === DeviceModelId.NEO) {
+			this.gridSize.rows += 1
 		}
 
 		this.write_queue = new ImageWriteQueue(
@@ -218,6 +221,11 @@ class SurfaceUSBElgatoStreamDeck extends EventEmitter {
 	 * @param {boolean} state
 	 */
 	#emitClick(key, state) {
+		if (this.#streamDeck.MODEL === DeviceModelId.NEO && key === 9) {
+			// pad around the lcd
+			key += 2
+		}
+
 		const xy = convertPanelIndexToXY(key, this.gridSize)
 		if (xy) {
 			this.emit('click', ...xy, state)
@@ -327,6 +335,19 @@ class SurfaceUSBElgatoStreamDeck extends EventEmitter {
 		const segmentIndex = key - this.#streamDeck.NUM_KEYS
 		if (this.lcdWriteQueue && segmentIndex >= 0 && segmentIndex < this.#streamDeck.KEY_COLUMNS) {
 			this.lcdWriteQueue.queue(segmentIndex, render)
+		}
+
+		if (this.#streamDeck.MODEL === DeviceModelId.NEO && key >= this.#streamDeck.NUM_KEYS) {
+			const color = render.style ? colorToRgb(render.bgcolor) : { r: 0, g: 0, b: 0 }
+			if (key === this.#streamDeck.NUM_KEYS) {
+				this.#streamDeck.fillKeyColor(this.#streamDeck.NUM_KEYS, color.r, color.g, color.b).catch((e) => {
+					this.#logger.debug(`color failed: ${e}`)
+				})
+			} else if (key === this.#streamDeck.NUM_KEYS + 3) {
+				this.#streamDeck.fillKeyColor(this.#streamDeck.NUM_KEYS + 1, color.r, color.g, color.b).catch((e) => {
+					this.#logger.debug(`color failed: ${e}`)
+				})
+			}
 		}
 	}
 }

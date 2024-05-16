@@ -24,7 +24,7 @@ interface TextInputFieldProps {
 	setValid?: (valid: boolean) => void
 	disabled?: boolean
 	useVariables?: boolean
-	useLocationVariables?: boolean
+	useLocalVariables?: boolean
 }
 
 export const TextInputField = observer(function TextInputField({
@@ -38,7 +38,7 @@ export const TextInputField = observer(function TextInputField({
 	setValid,
 	disabled,
 	useVariables,
-	useLocationVariables,
+	useLocalVariables,
 }: TextInputFieldProps) {
 	const [tmpValue, setTmpValue] = useState<string | null>(null)
 
@@ -116,7 +116,7 @@ export const TextInputField = observer(function TextInputField({
 				<VariablesSelect
 					showValue={showValue}
 					style={extraStyle}
-					useLocationVariables={!!useLocationVariables}
+					useLocalVariables={!!useLocalVariables}
 					storeValue={storeValue}
 					focusStoreValue={focusStoreValue}
 					blurClearValue={blurClearValue}
@@ -176,7 +176,7 @@ interface DropdownChoiceInt {
 interface VariablesSelectProps {
 	showValue: string
 	style: React.CSSProperties
-	useLocationVariables: boolean
+	useLocalVariables: boolean
 	storeValue: (value: string) => void
 	focusStoreValue: () => void
 	blurClearValue: () => void
@@ -188,7 +188,7 @@ interface VariablesSelectProps {
 function VariablesSelect({
 	showValue,
 	style,
-	useLocationVariables,
+	useLocalVariables,
 	storeValue,
 	focusStoreValue,
 	blurClearValue,
@@ -212,7 +212,7 @@ function VariablesSelect({
 			}
 		}
 
-		if (useLocationVariables) {
+		if (useLocalVariables) {
 			suggestions.push(
 				{
 					value: 'this:page',
@@ -227,6 +227,10 @@ function VariablesSelect({
 					label: 'This row',
 				},
 				{
+					value: 'this:step',
+					label: 'The current step of this button',
+				},
+				{
 					value: 'this:page_name',
 					label: 'This page name',
 				}
@@ -234,7 +238,7 @@ function VariablesSelect({
 		}
 
 		return suggestions
-	}, [variableDefinitionsContext, useLocationVariables])
+	}, [variableDefinitionsContext, useLocalVariables])
 
 	const [cursorPosition, setCursorPosition] = useState<number | null>(null)
 	const { isPickerOpen, searchValue, setIsForceHidden } = useIsPickerOpen(showValue, cursorPosition)

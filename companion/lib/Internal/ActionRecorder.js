@@ -134,7 +134,7 @@ export default class ActionRecorder {
 						id: 'page',
 						default: '0',
 						useVariables: {
-							locationBased: true,
+							local: true,
 						},
 					},
 					{
@@ -143,7 +143,7 @@ export default class ActionRecorder {
 						id: 'bank',
 						default: '0',
 						useVariables: {
-							locationBased: true,
+							local: true,
 						},
 					},
 					{
@@ -152,7 +152,7 @@ export default class ActionRecorder {
 						id: 'step',
 						default: '1',
 						useVariables: {
-							locationBased: true,
+							local: true,
 						},
 					},
 					{
@@ -161,7 +161,7 @@ export default class ActionRecorder {
 						id: 'set',
 						default: 'press',
 						useVariables: {
-							locationBased: true,
+							local: true,
 						},
 					},
 					{

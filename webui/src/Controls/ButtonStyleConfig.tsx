@@ -163,7 +163,7 @@ export function ButtonStyleConfigFields({
 
 	const textInputFeatures: InputFeatureIconsProps = {
 		variables: true,
-		locationVariables: true,
+		local: true,
 	}
 
 	return (
@@ -193,7 +193,7 @@ export function ButtonStyleConfigFields({
 							setValue={setTextValue}
 							value={values.text}
 							useVariables
-							useLocationVariables
+							useLocalVariables
 							style={{ fontWeight: 'bold', fontSize: 18 }}
 						/>
 						<CInputGroupAppend>

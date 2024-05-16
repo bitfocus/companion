@@ -133,23 +133,30 @@ class GraphicsController extends CoreBase {
 					const control = controlId ? this.controls.getControl(controlId) : undefined
 					const buttonStyle = control?.getDrawStyle() ?? undefined
 
+					if (location && locationIsInBounds) {
+						// Update the internal b_text_1_4 variable
+						setImmediate(() => {
+							/** @type {import('@companion-module/base').CompanionVariableValues} */
+							const values = {}
+
+							// Update text, if it is present
+							values[`b_text_${location.pageNumber}_${location.row}_${location.column}`] =
+								buttonStyle?.style === 'button' ? buttonStyle.text : undefined
+							const bankIndex = xyToOldBankIndex(location.column, location.row)
+							if (bankIndex)
+								values[`b_text_${location.pageNumber}_${bankIndex}`] =
+									buttonStyle?.style === 'button' ? buttonStyle.text : undefined
+
+							// Update step
+							values[`b_step_${location.pageNumber}_${location.row}_${location.column}`] =
+								buttonStyle?.style === 'button' ? buttonStyle.step_cycle ?? 1 : undefined
+
+							this.instance.variable.setVariableValues('internal', values)
+						})
+					}
+
 					let render
 					if (location && locationIsInBounds && buttonStyle && buttonStyle.style) {
-						// Update the internal b_text_1_4 variable
-						if (location && 'text' in buttonStyle) {
-							const variableValue = buttonStyle.text
-							setImmediate(() => {
-								const values = {
-									[`b_text_${location.pageNumber}_${location.row}_${location.column}`]: variableValue,
-								}
-
-								const bankIndex = xyToOldBankIndex(location.column, location.row)
-								if (bankIndex) values[`b_text_${location.pageNumber}_${bankIndex}`] = variableValue
-
-								this.instance.variable.setVariableValues('internal', values)
-							})
-						}
-
 						const pagename = this.page.getPageName(location.pageNumber)
 
 						// Check if the image is already present in the render cache and if so, return it
