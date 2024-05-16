@@ -162,7 +162,7 @@ export default class Variables {
 						id: 'expression',
 						default: '2 > 1',
 						useVariables: {
-							locationBased: true,
+							local: true,
 						},
 					},
 				],

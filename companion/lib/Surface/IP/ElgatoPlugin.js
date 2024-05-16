@@ -40,6 +40,7 @@ class SurfaceIPElgatoPlugin extends EventEmitter {
 	 */
 	_config = {
 		rotation: 0,
+		never_lock: true,
 	}
 
 	/**
@@ -55,80 +56,89 @@ class SurfaceIPElgatoPlugin extends EventEmitter {
 
 		this.socket = socket
 
+		if (this.socket.supportsCoordinates) {
+			// The size doesn't matter when in coordinate mode, interaction gets done differently
+			this.gridSize = {
+				columns: 0,
+				rows: 0,
+			}
+		}
+
 		this.#logger.debug(`Adding Elgato Streamdeck Plugin (${this.socket.supportsPng ? 'PNG' : 'Bitmap'})`)
 
 		this.info = {
 			type: 'Elgato Streamdeck Plugin',
 			devicePath: devicePath,
-			configFields: ['legacy_rotation'],
-			deviceId: 'plugin',
+			configFields: ['no_rotation', 'no_lock', 'no_offset'],
+			deviceId: 'plugin', // Note: this is also defined elsewhere
 		}
 
-		socket.on('keydown', (data) => {
-			let key = data.keyIndex
-			let page = data.page
-			let bank = data.bank
+		const triggerKeyPress = (/** @type {Record<string,any>} */ data, /** @type {boolean} */ pressed) => {
+			if ('row' in data || 'column' in data) {
+				if (data.page == null) {
+					this.emit('click', Number(data.column), Number(data.row), pressed)
+				} else {
+					const controlId = this.page.getControlIdAt({
+						pageNumber: Number(data.page),
+						column: Number(data.column),
+						row: Number(data.row),
+					})
+					if (controlId) {
+						this.controls.pressControl(controlId, pressed, this.info.devicePath)
 
-			if (key !== undefined) {
-				this.#emitClick(key, true)
-			} else if (page !== undefined && bank !== undefined) {
-				const xy = oldBankIndexToXY(bank + 1)
+						this.#logger.debug(`${controlId} ${pressed ? 'pressed' : 'released'}`)
+					}
+				}
+			} else if ('keyIndex' in data) {
+				this.#emitClick(data.keyIndex, pressed)
+			} else {
+				const xy = oldBankIndexToXY(data.bank + 1)
 				if (xy) {
 					const controlId = this.page.getControlIdAt({
-						pageNumber: page,
+						pageNumber: Number(data.page),
 						column: xy[0],
 						row: xy[1],
 					})
 					if (controlId) {
-						this.controls.pressControl(controlId, true, this.info.devicePath)
+						this.controls.pressControl(controlId, pressed, this.info.devicePath)
 
-						this.#logger.debug(`${controlId} pressed`)
+						this.#logger.debug(`${controlId} ${pressed ? 'pressed' : 'released'}`)
 					}
 				}
 			}
-		})
+		}
 
-		socket.on('keyup', (data) => {
-			let key = data.keyIndex
-			let page = data.page
-			let bank = data.bank
-
-			if (key !== undefined) {
-				this.#emitClick(key, false)
-			} else if (page !== undefined && bank !== undefined) {
-				const xy = oldBankIndexToXY(bank + 1)
-				if (xy) {
-					const controlId = this.page.getControlIdAt({
-						pageNumber: page,
-						column: xy[0],
-						row: xy[1],
-					})
-					if (controlId) {
-						this.controls.pressControl(controlId, false, this.info.devicePath)
-
-						this.#logger.debug(`${controlId} released`)
-					}
-				}
-			}
-		})
+		socket.on('keydown', (data) => triggerKeyPress(data, true))
+		socket.on('keyup', (data) => triggerKeyPress(data, false))
 
 		socket.on('rotate', (data) => {
-			let key = data.keyIndex
-			let page = data.page
-			let bank = data.bank
+			const right = data.ticks > 0
 
-			let right = data.ticks > 0
+			if ('row' in data || 'column' in data) {
+				if (data.page == null) {
+					this.emit('rotate', Number(data.column), Number(data.row), right)
+				} else {
+					const controlId = this.page.getControlIdAt({
+						pageNumber: Number(data.page),
+						column: Number(data.column),
+						row: Number(data.row),
+					})
+					if (controlId) {
+						this.controls.rotateControl(controlId, right, this.info.devicePath)
 
-			if (key !== undefined) {
-				const xy = convertPanelIndexToXY(key, this.gridSize)
+						this.#logger.debug(`${controlId} rotated ${right}`)
+					}
+				}
+			} else if ('keyIndex' in data) {
+				const xy = convertPanelIndexToXY(data.keyIndex, this.gridSize)
 				if (xy) {
 					this.emit('rotate', ...xy, right)
 				}
-			} else if (page !== undefined && bank !== undefined) {
-				const xy = oldBankIndexToXY(bank + 1)
+			} else {
+				const xy = oldBankIndexToXY(data.bank + 1)
 				if (xy) {
 					const controlId = this.page.getControlIdAt({
-						pageNumber: page,
+						pageNumber: Number(data.page),
 						column: xy[0],
 						row: xy[1],
 					})
@@ -168,6 +178,11 @@ class SurfaceIPElgatoPlugin extends EventEmitter {
 	 * @returns {void}
 	 */
 	draw(x, y, render) {
+		if (this.socket.supportsCoordinates) {
+			// Uses manual subscriptions
+			return
+		}
+
 		if (render.buffer === undefined || render.buffer.length === 0) {
 			this.#logger.silly('buffer was not 15552, but ', render.buffer?.length)
 			return
@@ -181,10 +196,15 @@ class SurfaceIPElgatoPlugin extends EventEmitter {
 
 	clearDeck() {
 		this.#logger.silly('elgato.prototype.clearDeck()')
-		const emptyBuffer = Buffer.alloc(72 * 72 * 3)
 
-		for (let i = 0; i < LEGACY_MAX_BUTTONS; ++i) {
-			this.socket.apicommand('fillImage', { keyIndex: i, data: emptyBuffer })
+		if (this.socket.supportsCoordinates) {
+			this.socket.apicommand('clearAllKeys', {})
+		} else {
+			const emptyBuffer = Buffer.alloc(72 * 72 * 3)
+
+			for (let i = 0; i < LEGACY_MAX_BUTTONS; ++i) {
+				this.socket.apicommand('fillImage', { keyIndex: i, data: emptyBuffer })
+			}
 		}
 	}
 
@@ -197,7 +217,9 @@ class SurfaceIPElgatoPlugin extends EventEmitter {
 	setConfig(config, _force) {
 		this._config = config
 
-		this.socket.rotation = this._config.rotation
+		// ensure rotation is disabled
+		this._config.rotation = 0
+		this._config.never_lock = true
 	}
 }
 

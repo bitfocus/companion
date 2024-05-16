@@ -152,7 +152,7 @@ export default class System {
 						label: 'Path (supports variables in path)',
 						id: 'path',
 						useVariables: {
-							locationBased: true,
+							local: true,
 						},
 					},
 					{

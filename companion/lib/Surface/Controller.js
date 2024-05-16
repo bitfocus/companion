@@ -38,6 +38,7 @@ import LoupedeckLiveDriver from './USB/LoupedeckLive.js'
 import SurfaceUSBLoupedeckCt from './USB/LoupedeckCt.js'
 import ContourShuttleDriver from './USB/ContourShuttle.js'
 import SurfaceIPVideohubPanel from './IP/VideohubPanel.js'
+import FrameworkMacropadDriver from './USB/FrameworkMacropad.js'
 import CoreBase from '../Core/Base.js'
 import { SurfaceGroup } from './Group.js'
 
@@ -862,6 +863,20 @@ class SurfaceController extends CoreBase {
 												ContourShuttleDriver
 											)
 										}
+									} else if (
+										deviceInfo.vendorId === 0x32ac && // frame.work
+										deviceInfo.productId === 0x0013 && // macropod
+										deviceInfo.usagePage === 0xffdd && // rawhid interface
+										deviceInfo.usage === 0x61
+									) {
+										await this.#addDevice(
+											{
+												path: deviceInfo.path,
+												options: {},
+											},
+											'framework-macropad',
+											FrameworkMacropadDriver
+										)
 									}
 								}
 							})

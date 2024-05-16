@@ -296,6 +296,11 @@ const ActionTableRow = observer(function ActionTableRow({
 	const doCollapse = useCallback(() => setCollapsed(action.id, true), [setCollapsed, action.id])
 	const doExpand = useCallback(() => setCollapsed(action.id, false), [setCollapsed, action.id])
 
+	const canSetHeadline = !!service.setHeadline
+	const headline = action.headline
+	const [headlineExpanded, setHeadlineExpanded] = useState(canSetHeadline && !!headline)
+	const doEditHeadline = useCallback(() => setHeadlineExpanded(true), [])
+
 	if (!action) {
 		// Invalid action, so skip
 		return null
@@ -310,11 +315,6 @@ const ActionTableRow = observer(function ActionTableRow({
 	const name = actionSpec
 		? `${connectionLabel}: ${actionSpec.label}`
 		: `${connectionLabel}: ${action.action} (undefined)`
-
-	const canSetHeadline = !!service.setHeadline
-	const headline = action.headline
-	const [headlineExpanded, setHeadlineExpanded] = useState(canSetHeadline && !!headline)
-	const doEditHeadline = useCallback(() => setHeadlineExpanded(true), [])
 
 	return (
 		<tr ref={ref} className={isDragging ? 'actionlist-dragging' : ''}>

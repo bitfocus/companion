@@ -5,7 +5,7 @@ import parseAuthor from 'parse-author'
 
 import type { ModuleManifest, ModuleManifestMaintainer } from '@companion-module/base'
 const moduleBasePkgStr = fs
-	.readFileSync(new URL('../../node_modules/@companion-module/base/package.json', import.meta.url))
+	.readFileSync(new URL('../node_modules/@companion-module/base/package.json', import.meta.url))
 	.toString()
 const moduleBasePkg = JSON.parse(moduleBasePkgStr)
 

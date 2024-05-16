@@ -108,7 +108,7 @@ class InstanceDefinitions extends CoreBase {
 
 		client.onPromise('presets:preview_render', async (connectionId, presetId) => {
 			const definition = this.#presetDefinitions[connectionId]?.[presetId]
-			if (definition) {
+			if (definition && definition.type === 'button') {
 				const style = {
 					...(definition.previewStyle ? definition.previewStyle : definition.style),
 					style: definition.type,
@@ -306,7 +306,7 @@ class InstanceDefinitions extends CoreBase {
 	 */
 	importPresetToLocation(connectionId, presetId, location) {
 		const definition = this.#presetDefinitions[connectionId]?.[presetId]
-		if (!definition) return false
+		if (!definition || definition.type !== 'button') return false
 
 		/** @type {import('@companion-app/shared/Model/ButtonModel.js').NormalButtonModel} */
 		const result = {
@@ -442,55 +442,59 @@ class InstanceDefinitions extends CoreBase {
 
 		for (const [id, rawPreset] of Object.entries(rawPresets)) {
 			try {
-				newPresets[id] = {
-					id: id,
-					category: rawPreset.category,
-					name: rawPreset.name,
-					type: rawPreset.type,
-					style: rawPreset.style,
-					previewStyle: rawPreset.previewStyle,
-					options: rawPreset.options,
-					feedbacks: (rawPreset.feedbacks ?? []).map((fb) => ({
-						type: fb.feedbackId,
-						options: fb.options,
-						style: fb.style,
-						isInverted: !!fb.isInverted,
-					})),
-					steps: rawPreset.steps.map((step) => {
-						const options = cloneDeep(ControlButtonNormal.DefaultStepOptions)
-						/** @type {PresetActionSets} */
-						const action_sets = {
-							down: [],
-							up: [],
-						}
+				if (rawPreset.type === 'button') {
+					newPresets[id] = {
+						id: id,
+						category: rawPreset.category,
+						name: rawPreset.name,
+						type: rawPreset.type,
+						style: rawPreset.style,
+						previewStyle: rawPreset.previewStyle,
+						options: rawPreset.options,
+						feedbacks: (rawPreset.feedbacks ?? []).map((fb) => ({
+							type: fb.feedbackId,
+							options: fb.options,
+							style: fb.style,
+							isInverted: !!fb.isInverted,
+						})),
+						steps:
+							rawPreset.steps.length === 0
+								? [{ action_sets: { down: [], up: [] } }]
+								: rawPreset.steps.map((step) => {
+										const options = cloneDeep(ControlButtonNormal.DefaultStepOptions)
+										/** @type {PresetActionSets} */
+										const action_sets = {
+											down: [],
+											up: [],
+										}
 
-						for (const [setId, set] of Object.entries(step)) {
-							/** @type {import('@companion-module/base').CompanionPresetAction[]} */
-							const setActions = Array.isArray(set) ? set : set.actions
-							if (!isNaN(Number(setId)) && set.options?.runWhileHeld) options.runWhileHeld.push(Number(setId))
+										for (const [setId, set] of Object.entries(step)) {
+											/** @type {import('@companion-module/base').CompanionPresetAction[]} */
+											const setActions = Array.isArray(set) ? set : set.actions
+											if (!isNaN(Number(setId)) && set.options?.runWhileHeld) options.runWhileHeld.push(Number(setId))
 
-							// @ts-ignore
-							action_sets[setId] = setActions.map((act) => ({
-								action: act.actionId,
-								options: act.options,
-								delay: act.delay,
-							}))
-						}
+											// @ts-ignore
+											action_sets[setId] = setActions.map((act) => ({
+												action: act.actionId,
+												options: act.options,
+												delay: act.delay,
+											}))
+										}
 
-						return {
-							options,
-							action_sets,
-						}
-					}),
-				}
-
-				if (!newPresets[id].steps.length) {
-					newPresets[id].steps.push({
-						action_sets: {
-							down: [],
-							up: [],
-						},
-					})
+										return {
+											options,
+											action_sets,
+										}
+									}),
+					}
+				} else if (rawPreset.type === 'text') {
+					newPresets[id] = {
+						id: id,
+						category: rawPreset.category,
+						name: rawPreset.name,
+						type: rawPreset.type,
+						text: rawPreset.text,
+					}
 				}
 			} catch (e) {
 				this.logger.warn(`${label} gave invalid preset "${id}": ${e}`)
@@ -509,13 +513,26 @@ class InstanceDefinitions extends CoreBase {
 		/** @type {Record<string, UIPresetDefinition>} */
 		const res = {}
 
-		for (const [id, preset] of Object.entries(presets)) {
-			res[id] = {
-				id: preset.id,
-				label: preset.name,
-				category: preset.category,
+		Object.entries(presets).forEach(([id, preset], index) => {
+			if (preset.type === 'button') {
+				res[id] = {
+					id: preset.id,
+					order: index,
+					label: preset.name,
+					category: preset.category,
+					type: 'button',
+				}
+			} else if (preset.type === 'text') {
+				res[id] = {
+					id: preset.id,
+					order: index,
+					label: preset.name,
+					category: preset.category,
+					type: 'text',
+					text: preset.text,
+				}
 			}
-		}
+		})
 
 		return res
 	}
@@ -539,7 +556,7 @@ class InstanceDefinitions extends CoreBase {
 	 * @param {Record<string, PresetDefinition>} presets
 	 */
 	#updateVariablePrefixesAndStoreDefinitions(connectionId, label, presets) {
-		const variableRegex = /\$\(([^:)]+):([^)]+)\)/g
+		const variableRegex = /\$\(([^:$)]+):([^)$]+)\)/
 
 		/**
 		 * @param {string} fixtext
@@ -547,10 +564,21 @@ class InstanceDefinitions extends CoreBase {
 		 */
 		function replaceAllVariables(fixtext) {
 			if (fixtext && fixtext.includes('$(')) {
+				let matchCount = 0
 				let matches
-				while ((matches = variableRegex.exec(fixtext)) !== null) {
+				let fromIndex = 0
+				while ((matches = variableRegex.exec(fixtext.slice(fromIndex))) !== null) {
+					if (matchCount++ > 100) {
+						// Crudely avoid infinite loops with an iteration limit
+						// logger.info(`Reached iteration limit for variable parsing`)
+						break
+					}
+
+					// ensure we don't try and match the same thing again
+					fromIndex = matches.index + 1
+
 					if (matches[2] !== undefined) {
-						fixtext = fixtext.replace(matches[0], '$(' + label + ':' + matches[2] + ')')
+						fixtext = fixtext.replace(matches[0], `$(${label}:${matches[2]})`)
 					}
 				}
 			}
@@ -563,14 +591,16 @@ class InstanceDefinitions extends CoreBase {
 		 * demand that your presets MUST be dynamically generated.
 		 */
 		for (const preset of Object.values(presets)) {
-			if (preset.style) {
-				preset.style.text = replaceAllVariables(preset.style.text)
-			}
+			if (preset.type !== 'text') {
+				if (preset.style) {
+					preset.style.text = replaceAllVariables(preset.style.text)
+				}
 
-			if (preset.feedbacks) {
-				for (const feedback of preset.feedbacks) {
-					if (feedback.style && feedback.style.text) {
-						feedback.style.text = replaceAllVariables(feedback.style.text)
+				if (preset.feedbacks) {
+					for (const feedback of preset.feedbacks) {
+						if (feedback.style && feedback.style.text) {
+							feedback.style.text = replaceAllVariables(feedback.style.text)
+						}
 					}
 				}
 			}
@@ -612,7 +642,7 @@ export default InstanceDefinitions
 /**
  * @typedef {{
  *   id: string
- * } & import('@companion-module/base').CompanionButtonPresetDefinition} PresetDefinitionTmp
+ * } & import('@companion-module/base').CompanionPresetDefinition} PresetDefinitionTmp
  */
 
 /**
