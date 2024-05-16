@@ -228,7 +228,7 @@ function VariablesSelect({
 				},
 				{
 					value: 'this:step',
-					label: 'The step of this button',
+					label: 'The current step of this button',
 				},
 				{
 					value: 'this:page_name',
