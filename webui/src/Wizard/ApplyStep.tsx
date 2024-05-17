@@ -80,6 +80,40 @@ export function ApplyStep({ oldConfig, newConfig }: ApplyStepProps) {
 	}
 
 	if (
+		oldConfig.setup_wizard === 0 ||
+		newConfig?.gridSize.minColumn !== oldConfig.gridSize.minColumn ||
+		newConfig?.gridSize.maxColumn !== oldConfig.gridSize.maxColumn ||
+		newConfig?.gridSize.minRow !== oldConfig.gridSize.minRow ||
+		newConfig?.gridSize.maxRow !== oldConfig.gridSize.maxRow
+	) {
+		const isReducingSize =
+			newConfig?.gridSize &&
+			oldConfig?.gridSize &&
+			(newConfig?.gridSize.minColumn > oldConfig.gridSize.minColumn ||
+				newConfig?.gridSize.maxColumn < oldConfig.gridSize.maxColumn ||
+				newConfig?.gridSize.minRow > oldConfig.gridSize.minRow ||
+				newConfig?.gridSize.maxRow < oldConfig.gridSize.maxRow)
+
+		const newGridSize = newConfig?.gridSize
+
+		changes.push(
+			<li>
+				Button grid size will be {newGridSize?.maxRow - newGridSize?.minRow + 1} rows x{' '}
+				{newGridSize?.maxColumn - newGridSize?.minColumn + 1} columns: [{newGridSize?.minRow}/{newGridSize?.minColumn}]
+				- [{newGridSize?.maxRow}/{newGridSize?.maxColumn}]
+				{oldConfig.setup_wizard !== 0 && isReducingSize && (
+					<>
+						<br />
+						<span style={{ color: 'red' }}>
+							By reducing the grid size, any buttons outside of the new boundaries will be deleted.
+						</span>
+					</>
+				)}
+			</li>
+		)
+	}
+
+	if (
 		oldConfig.setup_wizard === 0 &&
 		!newConfig.tcp_enabled &&
 		!newConfig.udp_enabled &&
