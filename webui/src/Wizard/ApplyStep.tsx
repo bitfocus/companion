@@ -69,6 +69,16 @@ export function ApplyStep({ oldConfig, newConfig }: ApplyStepProps) {
 		)
 	}
 
+	if (oldConfig.setup_wizard === 0 || oldConfig.videohub_panel_enabled !== newConfig.videohub_panel_enabled) {
+		changes.push(
+			newConfig.videohub_panel_enabled ? (
+				<li>Companion will listen for Videohub Panels.</li>
+			) : (
+				<li>Companion will {oldConfig.setup_wizard > 0 ? 'no longer' : 'not'} listen for Videohub Panels.</li>
+			)
+		)
+	}
+
 	if (
 		oldConfig.setup_wizard === 0 &&
 		!newConfig.tcp_enabled &&

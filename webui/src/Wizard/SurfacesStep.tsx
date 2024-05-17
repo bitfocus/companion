@@ -81,6 +81,20 @@ export function SurfacesStep({ config, setValue }: SurfacesStepProps) {
 					<CLabel htmlFor="userconfig_contour_shuttle_enable">Enable</CLabel>
 				</div>
 			</div>
+
+			<br />
+			<h5>IP Surface Detection Configuration</h5>
+			<p className="indent3">Videohub Panel Listener</p>
+			<div className="indent3">
+				<div className="form-check form-check-inline mr-1">
+					<CInputCheckbox
+						id="userconfig_videohub_panel_enabled"
+						checked={config.videohub_panel_enabled}
+						onChange={(e) => setValue('videohub_panel_enabled', e.currentTarget.checked)}
+					/>
+					<CLabel htmlFor="userconfig_videohub_panel_enabled">Enable</CLabel>
+				</div>
+			</div>
 		</div>
 	)
 }
