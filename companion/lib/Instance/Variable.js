@@ -68,8 +68,14 @@ export function parseVariablesInString(string, rawVariableValues, cachedVariable
 		}
 
 		const fullId = matches[0]
-		const connectionLabel = matches[1]
-		const variableId = matches[2]
+		let connectionLabel = matches[1]
+		let variableId = matches[2]
+
+		if (connectionLabel === 'internal' && variableId.substr(0, 7) === 'custom_') {
+			connectionLabel = 'custom'
+			variableId = variableId.substring(7)
+		}
+
 		referencedVariableIds.push(`${connectionLabel}:${variableId}`)
 
 		let cachedValue = cachedVariableValues[fullId]
@@ -161,6 +167,11 @@ class InstanceVariable extends CoreBase {
 	 * @returns {import('@companion-module/base').CompanionVariableValue | undefined}
 	 */
 	getVariableValue(label, name) {
+		if (label === 'internal' && name.substr(0, 7) == 'custom_') {
+			label = 'custom'
+			name = name.substring(7)
+		}
+		
 		return this.#variableValues[label]?.[name]
 	}
 
@@ -170,7 +181,7 @@ class InstanceVariable extends CoreBase {
 	 * @returns {import('@companion-module/base').CompanionVariableValue | undefined}
 	 */
 	getCustomVariableValue(name) {
-		return this.getVariableValue('internal', `custom_${name}`)
+		return this.getVariableValue('custom', name)
 	}
 
 	/**
@@ -414,7 +425,7 @@ class InstanceVariable extends CoreBase {
 
 				// Skip debug if it's just internal:time_* spamming.
 				if (this.logger.isSillyEnabled() && !(label === 'internal' && variable.startsWith('time_'))) {
-					this.logger.silly('Variable $(' + label + ':' + variable + ') is "' + value + '"')
+					this.logger.debug('Variable $(' + label + ':' + variable + ') is "' + value + '"')
 				}
 			}
 		}

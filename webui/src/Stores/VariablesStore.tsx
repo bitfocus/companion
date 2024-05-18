@@ -112,8 +112,8 @@ export class VariablesStore {
 		for (const [id, info] of this.customVariables) {
 			definitions.push({
 				label: info.description,
-				connectionLabel: 'internal',
-				name: `custom_${id}`,
+				connectionLabel: 'custom',
+				name: id,
 			})
 		}
 
@@ -123,7 +123,7 @@ export class VariablesStore {
 	public variableDefinitionsForLabel = (label: string): VariableDefinitionExt[] => {
 		const definitions: VariableDefinitionExt[] = []
 
-		if (label === 'internal') {
+		if (label === 'custom') {
 			definitions.push(...this.customVariableDefinitions.get())
 		}
 

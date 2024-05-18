@@ -72,6 +72,10 @@ const VariablesConnectionList = observer(function VariablesConnectionList({
 			)
 		}
 
+		if (label === 'custom') {
+			return ''
+		}
+
 		const connectionId = connectionsLabelMap.get(label)
 		const connectionInfo = connectionId ? connectionsContext[connectionId] : undefined
 		const moduleInfo = connectionInfo ? modules.modules.get(connectionInfo.instance_type) : undefined
