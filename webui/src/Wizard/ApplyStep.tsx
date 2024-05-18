@@ -99,8 +99,7 @@ export function ApplyStep({ oldConfig, newConfig }: ApplyStepProps) {
 		changes.push(
 			<li>
 				Button grid size will be {newGridSize?.maxRow - newGridSize?.minRow + 1} rows x{' '}
-				{newGridSize?.maxColumn - newGridSize?.minColumn + 1} columns: [{newGridSize?.minRow}/{newGridSize?.minColumn}]
-				- [{newGridSize?.maxRow}/{newGridSize?.maxColumn}]
+				{newGridSize?.maxColumn - newGridSize?.minColumn + 1} columns
 				{oldConfig.setup_wizard !== 0 && isReducingSize && (
 					<>
 						<br />

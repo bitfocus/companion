@@ -1,6 +1,10 @@
 import React from 'react'
 
-export function BeginStep() {
+interface BeginStepProps {
+	allowGrid: number
+}
+
+export function BeginStep({ allowGrid }: BeginStepProps) {
 	return (
 		<div>
 			<p style={{ marginTop: 0 }}>
@@ -9,7 +13,7 @@ export function BeginStep() {
 			</p>
 			<ol>
 				<li>Surface Detection Configuration</li>
-				<li>Button Grid Size</li>
+				{allowGrid === 1 && <li>Button Grid Size</li>}
 				<li>Remote Control Services</li>
 				<li>Admin GUI Password</li>
 			</ol>
