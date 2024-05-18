@@ -430,6 +430,12 @@ function AppContent({ buttonGridHotPress }: AppContentProps) {
 		}
 	}
 
+	const userConfig = useContext(UserConfigContext)
+
+	useEffect(() => {
+		document.title = `${userConfig?.installName} - Admin`
+	}, [userConfig])
+
 	return (
 		<CContainer fluid className="fadeIn">
 			<CNav variant="tabs">

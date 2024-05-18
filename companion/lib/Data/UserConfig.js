@@ -100,6 +100,8 @@ class DataUserConfig extends CoreBase {
 			maxRow: 3,
 		},
 		gridSizeInlineGrow: false, // TODO: temporary until the styling of growing is better
+
+		installName: 'Bitfocus Companion',
 	}
 	/**
 	 * The user configuration settings

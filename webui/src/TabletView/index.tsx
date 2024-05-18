@@ -63,6 +63,10 @@ export const TabletView = observer(function TabletView() {
 	const rawGridSize = userConfigStore.properties?.gridSize
 
 	useEffect(() => {
+		document.title = `${userConfigStore.properties?.installName} - Web Buttons`
+	}, [userConfigStore])
+
+	useEffect(() => {
 		const onConnect = () => {
 			setRetryToken(nanoid())
 		}

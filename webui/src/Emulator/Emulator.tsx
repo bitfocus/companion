@@ -22,6 +22,8 @@ import {
 	EmulatorImageCache,
 } from '@companion-app/shared/Model/Common.js'
 import { Operation as JsonPatchOperation } from 'fast-json-patch'
+import { UserConfigStore } from '../Stores/UserConfigStore.js'
+import { useUserConfigSubscription } from '../Hooks/useUserConfigSubscription.js'
 
 export function Emulator() {
 	const socket = useContext(SocketContext)
@@ -64,6 +66,13 @@ export function Emulator() {
 			socket.off('emulator:config', updateConfig)
 		}
 	}, [retryToken, socket, emulatorId])
+
+	const userConfigStore = useMemo(() => new UserConfigStore(), [])
+	useUserConfigSubscription(socket, userConfigStore)
+
+	useEffect(() => {
+		document.title = `${userConfigStore?.properties?.installName} - Emulator`
+	}, [userConfigStore])
 
 	const keymap = useMemo(() => {
 		if (config?.emulator_control_enable) {
