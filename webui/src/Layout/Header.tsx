@@ -1,6 +1,6 @@
 import React, { useContext, useEffect, useState } from 'react'
 import { CHeader, CHeaderBrand, CHeaderNavItem, CHeaderNav, CHeaderNavLink, CToggler } from '@coreui/react'
-import { SocketContext, socketEmitPromise } from '../util.js'
+import { SocketContext, UserConfigContext, socketEmitPromise } from '../util.js'
 import { faLock } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import type { AppUpdateInfo, AppVersionInfo } from '@companion-app/shared/Model/Common.js'
@@ -13,6 +13,7 @@ interface MyHeaderProps {
 
 export function MyHeader({ toggleSidebar, canLock, setLocked }: MyHeaderProps) {
 	const socket = useContext(SocketContext)
+	const userConfig = useContext(UserConfigContext)
 
 	const [versionInfo, setVersionInfo] = useState<AppVersionInfo | null>(null)
 	const [updateData, setUpdateData] = useState<AppUpdateInfo | null>(null)
@@ -46,6 +47,10 @@ export function MyHeader({ toggleSidebar, canLock, setLocked }: MyHeaderProps) {
 			</CHeaderBrand>
 
 			<CHeaderNav className="d-md-down-none">
+				{userConfig?.installName !== 'Bitfocus Companion' && (
+					<CHeaderNavItem className="install-name">{userConfig?.installName}:</CHeaderNavItem>
+				)}
+
 				<CHeaderNavItem>
 					<CHeaderNavLink target="_new" title="Version Number" href="https://bitfocus.io/companion/">
 						{versionString}
