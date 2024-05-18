@@ -11,7 +11,6 @@ export function SurfacesStep({ config, setValue }: SurfacesStepProps) {
 	return (
 		<div>
 			<h5>USB Surface Detection Configuration</h5>
-			<p className="indent3">Watch for newly connected USB devices</p>
 			<div className="indent3">
 				<div className="form-check form-check-inline mr-1">
 					<CInputCheckbox
@@ -19,11 +18,11 @@ export function SurfacesStep({ config, setValue }: SurfacesStepProps) {
 						checked={config.usb_hotplug}
 						onChange={(e) => setValue('usb_hotplug', e.currentTarget.checked)}
 					/>
-					<CLabel htmlFor="userconfig_watch_for_devices">Enable</CLabel>
+					<CLabel htmlFor="userconfig_watch_for_devices">Watch for newly connected USB devices</CLabel>
 				</div>
 			</div>
-			<p className="indent3">Stream Deck USB Hardware</p>
-			<div className="indent3">
+			<div className="indent4">
+				<p>Stream Deck USB Hardware</p>
 				<div className="form-check form-check-inline mr-1">
 					<CInputRadio
 						id="userconfig_elgato_plugin_disable"
@@ -34,8 +33,6 @@ export function SurfacesStep({ config, setValue }: SurfacesStepProps) {
 						Use Companion natively (requires Stream Deck software to be closed)
 					</CLabel>
 				</div>
-			</div>
-			<div className="indent3">
 				<div className="form-check form-check-inline mr-1">
 					<CInputRadio
 						id="userconfig_elgato_plugin_enable"
@@ -45,8 +42,6 @@ export function SurfacesStep({ config, setValue }: SurfacesStepProps) {
 					<CLabel htmlFor="userconfig_elgato_plugin_enable">Use Stream Deck software via Companion plugin</CLabel>
 				</div>
 			</div>
-
-			<p className="indent3">X-keys USB Keypads</p>
 			<div className="indent3">
 				<div className="form-check form-check-inline mr-1">
 					<CInputCheckbox
@@ -54,11 +49,10 @@ export function SurfacesStep({ config, setValue }: SurfacesStepProps) {
 						checked={config.xkeys_enable}
 						onChange={(e) => setValue('xkeys_enable', e.currentTarget.checked)}
 					/>
-					<CLabel htmlFor="userconfig_xkeys_enable">Enable</CLabel>
+					<CLabel htmlFor="userconfig_xkeys_enable">X-keys USB Keypads</CLabel>
 				</div>
 			</div>
 
-			<p className="indent3">Loupedeck and Razer Stream Controller USB Devices</p>
 			<div className="indent3">
 				<div className="form-check form-check-inline mr-1">
 					<CInputCheckbox
@@ -66,11 +60,10 @@ export function SurfacesStep({ config, setValue }: SurfacesStepProps) {
 						checked={config.loupedeck_enable}
 						onChange={(e) => setValue('loupedeck_enable', e.currentTarget.checked)}
 					/>
-					<CLabel htmlFor="userconfig_loupedeck_enable">Enable</CLabel>
+					<CLabel htmlFor="userconfig_loupedeck_enable">Loupedeck and Razer Stream Controller USB Devices</CLabel>
 				</div>
 			</div>
 
-			<p className="indent3">Contour Shuttle USB Devices</p>
 			<div className="indent3">
 				<div className="form-check form-check-inline mr-1">
 					<CInputCheckbox
@@ -78,13 +71,12 @@ export function SurfacesStep({ config, setValue }: SurfacesStepProps) {
 						checked={config.contour_shuttle_enable}
 						onChange={(e) => setValue('contour_shuttle_enable', e.currentTarget.checked)}
 					/>
-					<CLabel htmlFor="userconfig_contour_shuttle_enable">Enable</CLabel>
+					<CLabel htmlFor="userconfig_contour_shuttle_enable">Contour Shuttle USB Devices</CLabel>
 				</div>
 			</div>
 
 			<br />
-			<h5>IP Surface Detection Configuration</h5>
-			<p className="indent3">Videohub Panel Listener</p>
+			<h5>IP Surface Listeners</h5>
 			<div className="indent3">
 				<div className="form-check form-check-inline mr-1">
 					<CInputCheckbox
@@ -92,7 +84,7 @@ export function SurfacesStep({ config, setValue }: SurfacesStepProps) {
 						checked={config.videohub_panel_enabled}
 						onChange={(e) => setValue('videohub_panel_enabled', e.currentTarget.checked)}
 					/>
-					<CLabel htmlFor="userconfig_videohub_panel_enabled">Enable</CLabel>
+					<CLabel htmlFor="userconfig_videohub_panel_enabled">Videohub Panel Listener</CLabel>
 				</div>
 			</div>
 		</div>
