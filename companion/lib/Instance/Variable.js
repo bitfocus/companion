@@ -171,7 +171,7 @@ class InstanceVariable extends CoreBase {
 			label = 'custom'
 			name = name.substring(7)
 		}
-		
+
 		return this.#variableValues[label]?.[name]
 	}
 
