@@ -2,11 +2,15 @@ import jsep from 'jsep'
 import jsepNumbers from '@jsep-plugin/numbers'
 import jsepObject from '@jsep-plugin/object'
 import jsepTemplateLiteral from '@jsep-plugin/template'
+import jsepComments from '@jsep-plugin/comment'
+// import jsepAssignment from '@jsep-plugin/assignment'
 
 // setup plugins
 jsep.plugins.register(jsepNumbers)
 jsep.plugins.register(jsepObject)
 jsep.plugins.register(jsepTemplateLiteral)
+jsep.plugins.register(jsepComments)
+// jsep.plugins.register(jsepAssignment)
 
 // remove some unwanted operators
 jsep.removeBinaryOp('<<<')

@@ -707,4 +707,48 @@ describe('parser', () => {
 			})
 		})
 	})
+
+	describe('comments', () => {
+		it('ignore end of line comments', () => {
+			const result = ParseExpression2('1 + 2 // test')
+			expect(result).toEqual({
+				expr: {
+					type: 'BinaryExpression',
+					operator: '+',
+					left: {
+						raw: '1',
+						type: 'Literal',
+						value: 1,
+					},
+					right: {
+						raw: '2',
+						type: 'Literal',
+						value: 2,
+					},
+				},
+				variableIds: [],
+			})
+		})
+
+		it('ignore middle of line comments', () => {
+			const result = ParseExpression2('1 /* Test */ + 2')
+			expect(result).toEqual({
+				expr: {
+					type: 'BinaryExpression',
+					operator: '+',
+					left: {
+						raw: '1',
+						type: 'Literal',
+						value: 1,
+					},
+					right: {
+						raw: '2',
+						type: 'Literal',
+						value: 2,
+					},
+				},
+				variableIds: [],
+			})
+		})
+	})
 })
