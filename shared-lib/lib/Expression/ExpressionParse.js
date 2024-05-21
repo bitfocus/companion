@@ -3,6 +3,7 @@ import jsepNumbers from '@jsep-plugin/numbers'
 import jsepObject from '@jsep-plugin/object'
 import jsepTemplateLiteral from '@jsep-plugin/template'
 import jsepComments from '@jsep-plugin/comment'
+import { CompanionVariablesPlugin } from './Plugins/CompanionVariables.js'
 // import jsepAssignment from '@jsep-plugin/assignment'
 
 // setup plugins
@@ -11,42 +12,11 @@ jsep.plugins.register(jsepObject)
 jsep.plugins.register(jsepTemplateLiteral)
 jsep.plugins.register(jsepComments)
 // jsep.plugins.register(jsepAssignment)
+jsep.plugins.register(CompanionVariablesPlugin)
 
 // remove some unwanted operators
 jsep.removeBinaryOp('<<<')
 jsep.removeBinaryOp('>>>')
-
-/** @type{jsep.IPlugin} */
-const companionVariablesPlugin = {
-	name: 'companion variables plugin',
-	init(/** @type {any} */ jsep) {
-		// jsep.addIdentifierChar('$(')
-		jsep.hooks.add(
-			'gobble-token',
-			/**
-			 * TODO: this is bad, but necessary for now
-			 * @this {any}
-			 * @param {any} env
-			 */
-			function myPlugin(env) {
-				const tokenStart = this.expr.slice(this.index, this.index + 2)
-				if (tokenStart == '$(') {
-					const end = this.expr.indexOf(')', this.index + 2)
-
-					if (end !== -1) {
-						env.node = {
-							type: 'CompanionVariable',
-							name: this.expr.slice(this.index + 2, end),
-						}
-
-						this.index = end + 1
-					}
-				}
-			}
-		)
-	},
-}
-jsep.plugins.register(companionVariablesPlugin)
 
 /**
  * Parse an expression into executable nodes
@@ -158,6 +128,13 @@ function visitElements(node, visitor) {
 					visitElements(node.value, visitor)
 
 					break
+				case 'ReturnStatement':
+					// @ts-ignore
+					visitElements(node.argument, visitor)
+					break
+				// case 'Identifier':
+				// 	console.log(node)
+				// 	break
 				default:
 					throw new Error(`Unknown node "${node.type}"`)
 			}
@@ -180,6 +157,26 @@ function fixupExpression(node) {
 			return
 		}
 
+		// Fixup return statements detected as a function
+		if (
+			node.type === 'CallExpression' &&
+			// @ts-ignore
+			node.callee.name === 'return' &&
+			// @ts-ignore
+			node.arguments.length === 1
+		) {
+			console.log(node)
+			node.type = 'ReturnStatement'
+
+			// @ts-ignore
+			node.argument = node.arguments[0]
+
+			delete node.arguments
+			delete node.callee
+
+			return
+		}
+
 		// Fix up object properties being defined as 'Identifier'
 		if (node.type === 'ObjectExpression') {
 			// @ts-ignore
@@ -196,26 +193,55 @@ function fixupExpression(node) {
 			return
 		}
 
-		// Fix up a $(my:var)[1]
 		if (node.type === 'Compound' && node.body) {
 			/** @type {jsep.Expression[]} */
 			// @ts-ignore
 			const body = node.body
 
-			if (
-				body.length === 2 &&
-				body[0].type === 'CompanionVariable' &&
-				body[1].type === 'ArrayExpression' &&
-				// @ts-ignore
-				body[1].elements.length === 1
-			) {
-				node.computed = true
-				node.type = 'MemberExpression'
-				node.object = body[0]
-				// @ts-ignore
-				node.property = body[1].elements[0]
+			// Fix up a $(my:var)[1]
+			for (let i = 0; i + 1 < body.length; i++) {
+				const exprA = body[i]
+				const exprB = body[i + 1]
 
+				if (
+					exprA.type === 'CompanionVariable' &&
+					exprB.type === 'ArrayExpression' &&
+					// @ts-ignore
+					exprB.elements.length === 1
+				) {
+					body[i] = {
+						computed: true,
+						type: 'MemberExpression',
+						object: exprA,
+						// @ts-ignore
+						property: exprB.elements[0],
+					}
+
+					// delete node.body
+
+					body.splice(i + 1, 1)
+				}
+			}
+
+			// Combine a return identifier with the expression that follows
+			for (let i = 0; i + 1 < body.length; i++) {
+				const exprA = body[i]
+				const exprB = body[i + 1]
+
+				if (exprA.type === 'Identifier' && exprA.name === 'return') {
+					exprA.type = 'ReturnStatement'
+					exprA.argument = exprB
+
+					delete exprA.name
+
+					body.splice(i + 1, 1)
+				}
+			}
+
+			// If the compound node contains just a single node now, flatten it
+			if (body.length === 1) {
 				delete node.body
+				Object.assign(node, body[0])
 			}
 		}
 	})

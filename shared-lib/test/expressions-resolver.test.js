@@ -270,4 +270,33 @@ describe('resolver', function () {
 			expect(result).toEqual('c')
 		})
 	})
+
+	describe('return', () => {
+		it('return value', () => {
+			const result = resolve(parse('return 1'), undefined)
+			expect(result).toBe(1)
+		})
+
+		it('return formula', () => {
+			const result = resolve(parse('return 1 + 2 / 3'), undefined)
+			expect(result).toBe(1 + 2 / 3)
+		})
+
+		it('return brackets', () => {
+			const result = resolve(parse('return (1 / 2)'), undefined)
+			expect(result).toBe(1 / 2)
+		})
+
+		it('return variable', () => {
+			const getVariable = (id) => {
+				switch (id) {
+					case 'some:var':
+						return 'var1'
+				}
+			}
+
+			const result = resolve(parse('return $(some:var)'), getVariable)
+			expect(result).toBe('var1')
+		})
+	})
 })

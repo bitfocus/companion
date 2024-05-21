@@ -172,6 +172,10 @@ export function ResolveExpression(node, getVariableValue, functions = {}) {
 						}
 						return obj
 					}
+					case 'ReturnStatement': {
+						// @ts-ignore
+						return resolve(node.argument)
+					}
 					// case 'Property':
 					// 	// @ts-ignore
 					// 	visitElements(node.key, visitor)

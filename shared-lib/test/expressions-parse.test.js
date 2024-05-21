@@ -751,4 +751,217 @@ describe('parser', () => {
 			})
 		})
 	})
+
+	describe('line terminator', () => {
+		it('multi-statement with semicolon', () => {
+			const result = ParseExpression2('1 + 2;3 + 4')
+			expect(result).toEqual({
+				expr: {
+					body: [
+						{
+							type: 'BinaryExpression',
+							operator: '+',
+							left: {
+								raw: '1',
+								type: 'Literal',
+								value: 1,
+							},
+							right: {
+								raw: '2',
+								type: 'Literal',
+								value: 2,
+							},
+						},
+						{
+							type: 'BinaryExpression',
+							operator: '+',
+							left: {
+								raw: '3',
+								type: 'Literal',
+								value: 3,
+							},
+							right: {
+								raw: '4',
+								type: 'Literal',
+								value: 4,
+							},
+						},
+					],
+					type: 'Compound',
+				},
+				variableIds: [],
+			})
+		})
+		it('multi-statement with line split', () => {
+			const result = ParseExpression2('1 + 2\n3 + 4')
+			expect(result).toEqual({
+				expr: {
+					body: [
+						{
+							type: 'BinaryExpression',
+							operator: '+',
+							left: {
+								raw: '1',
+								type: 'Literal',
+								value: 1,
+							},
+							right: {
+								raw: '2',
+								type: 'Literal',
+								value: 2,
+							},
+						},
+						{
+							type: 'BinaryExpression',
+							operator: '+',
+							left: {
+								raw: '3',
+								type: 'Literal',
+								value: 3,
+							},
+							right: {
+								raw: '4',
+								type: 'Literal',
+								value: 4,
+							},
+						},
+					],
+					type: 'Compound',
+				},
+				variableIds: [],
+			})
+		})
+
+		it('multi-statement with extra newlines', () => {
+			const result = ParseExpression2('1\n+ \n2\n3 +\n 4\n')
+			expect(result).toEqual({
+				expr: {
+					body: [
+						{
+							type: 'BinaryExpression',
+							operator: '+',
+							left: {
+								raw: '1',
+								type: 'Literal',
+								value: 1,
+							},
+							right: {
+								raw: '2',
+								type: 'Literal',
+								value: 2,
+							},
+						},
+						{
+							type: 'BinaryExpression',
+							operator: '+',
+							left: {
+								raw: '3',
+								type: 'Literal',
+								value: 3,
+							},
+							right: {
+								raw: '4',
+								type: 'Literal',
+								value: 4,
+							},
+						},
+					],
+					type: 'Compound',
+				},
+				variableIds: [],
+			})
+		})
+	})
+
+	describe('return statement', () => {
+		it('basic statement', () => {
+			const result = ParseExpression2('1\n+ \n2\n return 3 +\n 4\n')
+			expect(result).toEqual({
+				expr: {
+					body: [
+						{
+							type: 'BinaryExpression',
+							operator: '+',
+							left: {
+								raw: '1',
+								type: 'Literal',
+								value: 1,
+							},
+							right: {
+								raw: '2',
+								type: 'Literal',
+								value: 2,
+							},
+						},
+						{
+							type: 'ReturnStatement',
+							argument: {
+								type: 'BinaryExpression',
+								operator: '+',
+								left: {
+									raw: '3',
+									type: 'Literal',
+									value: 3,
+								},
+								right: {
+									raw: '4',
+									type: 'Literal',
+									value: 4,
+								},
+							},
+						},
+					],
+					type: 'Compound',
+				},
+				variableIds: [],
+			})
+		})
+
+		it('with brackets', () => {
+			const result = ParseExpression2('return (1 + 2)')
+			expect(result).toEqual({
+				expr: {
+					type: 'ReturnStatement',
+					argument: {
+						type: 'BinaryExpression',
+						operator: '+',
+						left: {
+							raw: '1',
+							type: 'Literal',
+							value: 1,
+						},
+						right: {
+							raw: '2',
+							type: 'Literal',
+							value: 2,
+						},
+					},
+				},
+				variableIds: [],
+			})
+		})
+
+		it('return statement complex', () => {
+			const result = ParseExpression2('return $(int:a)[1]')
+			expect(result).toEqual({
+				expr: {
+					type: 'ReturnStatement',
+					argument: {
+						computed: true,
+						object: {
+							name: 'int:a',
+							type: 'CompanionVariable',
+						},
+						property: {
+							raw: '1',
+							type: 'Literal',
+							value: 1,
+						},
+						type: 'MemberExpression',
+					},
+				},
+				variableIds: ['int:a'],
+			})
+		})
+	})
 })
