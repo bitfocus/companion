@@ -15,7 +15,6 @@
  *
  */
 
-import CoreBase from '../Core/Base.js'
 import { oldBankIndexToXY } from '@companion-app/shared/ControlId.js'
 import { cloneDeep } from 'lodash-es'
 import { LEGACY_MAX_BUTTONS } from '../Util/Constants.js'
@@ -23,6 +22,7 @@ import { rotateXYForPanel, unrotateXYForPanel } from './Util.js'
 import { SurfaceGroup } from './Group.js'
 import { EventEmitter } from 'events'
 import { ImageResult } from '../Graphics/ImageResult.js'
+import LogController from '../Log/Controller.js'
 
 /**
  * @type {[number, number][]}
@@ -98,7 +98,7 @@ export function getSurfaceName(config, surfaceId) {
 	return `${config?.name || config?.type || 'Unknown'} (${surfaceId})`
 }
 
-class SurfaceHandler extends CoreBase {
+class SurfaceHandler extends EventEmitter {
 	static PanelDefaults = {
 		// defaults from the panel - TODO properly
 		brightness: 100,
@@ -187,6 +187,55 @@ class SurfaceHandler extends CoreBase {
 	}
 
 	/**
+	 * @type {import('winston').Logger}
+	 * @access private
+	 */
+	#logger
+
+	/**
+	 * The core controls controller
+	 * @type {import('../Controls/Controller.js').default}
+	 * @readonly
+	 * @access public
+	 */
+	#controls
+	/**
+	 * The core graphics controller
+	 * @type {import('../Graphics/Controller.js').default}
+	 * @readonly
+	 * @access public
+	 */
+	#graphics
+	/**
+	 * The core instance controller
+	 * @type {import('../Instance/Controller.js').default}
+	 * @readonly
+	 * @access public
+	 */
+	#instance
+	/**
+	 * The core page controller
+	 * @type {import('../Page/Controller.js').default}
+	 * @readonly
+	 * @access public
+	 */
+	#page
+	/**
+	 * The core device controller
+	 * @type {import('./Controller.js').default}
+	 * @readonly
+	 * @access public
+	 */
+	#surfaces
+	/**
+	 * The core user config manager
+	 * @type {import('../Data/UserConfig.js').default}
+	 * @readonly
+	 * @access public
+	 */
+	#userconfig
+
+	/**
 	 *
 	 * @param {import('../Registry.js').default} registry
 	 * @param {string} integrationType
@@ -194,11 +243,23 @@ class SurfaceHandler extends CoreBase {
 	 * @param {any | undefined} surfaceConfig
 	 */
 	constructor(registry, integrationType, panel, surfaceConfig) {
-		super(registry, `Surface/Handler/${panel.info.deviceId}`)
-		this.logger.silly('loading for ' + panel.info.devicePath)
+		super()
+
+		this.#logger = LogController.createLogger(`Surface/Handler/${panel.info.deviceId}`)
+		this.#logger.silly('loading for ' + panel.info.devicePath)
+
+		this.#controls = registry.controls
+		this.#graphics = registry.graphics
+		this.#instance = registry.instance
+		this.#page = registry.page
+		this.#surfaces = registry.surfaces
+		this.#userconfig = registry.userconfig
 
 		this.panel = panel
 		this.#surfaceConfig = surfaceConfig ?? {}
+
+		// Setup logger to use the name
+		this.#recreateLogger()
 
 		this.#pincodeNumberPositions = PINCODE_NUMBER_POSITIONS
 		this.#pincodeCodePosition = PINCODE_CODE_POSITION
@@ -256,7 +317,7 @@ class SurfaceHandler extends CoreBase {
 			this.#isSurfaceLocked = false
 		}
 
-		this.graphics.on('button_drawn', this.#onButtonDrawn)
+		this.#graphics.on('button_drawn', this.#onButtonDrawn)
 
 		this.panel.on('click', this.#onDeviceClick.bind(this))
 		this.panel.on('rotate', this.#onDeviceRotate.bind(this))
@@ -277,6 +338,11 @@ class SurfaceHandler extends CoreBase {
 
 			this.#drawPage()
 		})
+	}
+
+	#recreateLogger() {
+		const suffix = this.#surfaceConfig?.name ? ` (${this.#surfaceConfig.name})` : ''
+		this.#logger = LogController.createLogger(`Surface/Handler/${this.panel.info.deviceId}${suffix}`)
 	}
 
 	/**
@@ -314,7 +380,7 @@ class SurfaceHandler extends CoreBase {
 	#drawPage() {
 		if (this.panel) {
 			if (this.#isSurfaceLocked) {
-				const buffers = this.graphics.getImagesForPincode(this.#currentPincodeEntry)
+				const buffers = this.#graphics.getImagesForPincode(this.#currentPincodeEntry)
 				this.panel.clearDeck()
 
 				this.panel.draw(this.#pincodeCodePosition[0], this.#pincodeCodePosition[1], buffers.code)
@@ -333,7 +399,7 @@ class SurfaceHandler extends CoreBase {
 
 				for (let y = 0; y < gridSize.rows; y++) {
 					for (let x = 0; x < gridSize.columns; x++) {
-						const image = this.graphics.getCachedRenderOrGeneratePlaceholder({
+						const image = this.#graphics.getCachedRenderOrGeneratePlaceholder({
 							pageNumber: this.#currentPage,
 							column: x + xOffset,
 							row: y + yOffset,
@@ -440,9 +506,9 @@ class SurfaceHandler extends CoreBase {
 		if (!this.panel) return
 
 		try {
-			this.surfaces.removeDevice(this.panel.info.devicePath)
+			this.#surfaces.removeDevice(this.panel.info.devicePath)
 		} catch (e) {
-			this.logger.error(`Remove failed: ${e}`)
+			this.#logger.error(`Remove failed: ${e}`)
 		}
 	}
 
@@ -492,15 +558,15 @@ class SurfaceHandler extends CoreBase {
 				// loop at page 99
 				if (thisPage > 99) thisPage = 1
 
-				const controlId = this.page.getControlIdAt({
+				const controlId = this.#page.getControlIdAt({
 					pageNumber: thisPage,
 					column: x2 + xOffset,
 					row: y2 + yOffset,
 				})
 				if (controlId) {
-					this.controls.pressControl(controlId, pressed, this.surfaceId)
+					this.#controls.pressControl(controlId, pressed, this.surfaceId)
 				}
-				this.logger.debug(`Button ${thisPage}/${coordinate} ${pressed ? 'pressed' : 'released'}`)
+				this.#logger.debug(`Button ${thisPage}/${coordinate} ${pressed ? 'pressed' : 'released'}`)
 			} else {
 				if (pressed) {
 					const pressCode = this.#pincodeNumberPositions.findIndex((pos) => pos[0] == x && pos[1] == y)
@@ -508,23 +574,23 @@ class SurfaceHandler extends CoreBase {
 						this.#currentPincodeEntry += pressCode.toString()
 					}
 
-					if (this.#currentPincodeEntry == this.userconfig.getKey('pin').toString()) {
+					if (this.#currentPincodeEntry == this.#userconfig.getKey('pin').toString()) {
 						this.#currentPincodeEntry = ''
 
 						this.emit('unlocked')
-					} else if (this.#currentPincodeEntry.length >= this.userconfig.getKey('pin').toString().length) {
+					} else if (this.#currentPincodeEntry.length >= this.#userconfig.getKey('pin').toString().length) {
 						this.#currentPincodeEntry = ''
 					}
 				}
 
 				if (this.#isSurfaceLocked) {
 					// Update lockout button
-					const datap = this.graphics.getImagesForPincode(this.#currentPincodeEntry)
+					const datap = this.#graphics.getImagesForPincode(this.#currentPincodeEntry)
 					this.panel.draw(this.#pincodeCodePosition[0], this.#pincodeCodePosition[1], datap.code)
 				}
 			}
 		} catch (e) {
-			this.logger.error(`Click failed: ${e}`)
+			this.#logger.error(`Click failed: ${e}`)
 		}
 	}
 
@@ -554,20 +620,20 @@ class SurfaceHandler extends CoreBase {
 				// loop at page 99
 				if (thisPage > 99) thisPage = 1
 
-				const controlId = this.page.getControlIdAt({
+				const controlId = this.#page.getControlIdAt({
 					pageNumber: thisPage,
 					column: x2 + xOffset,
 					row: y2 + yOffset,
 				})
 				if (controlId) {
-					this.controls.rotateControl(controlId, direction, this.surfaceId)
+					this.#controls.rotateControl(controlId, direction, this.surfaceId)
 				}
-				this.logger.debug(`Rotary ${thisPage}/${x2 + xOffset}/${y2 + yOffset} rotated ${direction ? 'right' : 'left'}`)
+				this.#logger.debug(`Rotary ${thisPage}/${x2 + xOffset}/${y2 + yOffset} rotated ${direction ? 'right' : 'left'}`)
 			} else {
 				// Ignore when locked out
 			}
 		} catch (e) {
-			this.logger.error(`Click failed: ${e}`)
+			this.#logger.error(`Click failed: ${e}`)
 		}
 	}
 
@@ -578,7 +644,7 @@ class SurfaceHandler extends CoreBase {
 	 * @returns {void}
 	 */
 	#onSetVariable(name, value) {
-		this.instance.variable.setVariableValues('internal', {
+		this.#instance.variable.setVariableValues('internal', {
 			[name]: value,
 		})
 	}
@@ -605,7 +671,7 @@ class SurfaceHandler extends CoreBase {
 			for (let bank = 0; bank < LEGACY_MAX_BUTTONS; bank++) {
 				const xy = oldBankIndexToXY(bank)
 				if (xy) {
-					const render = this.graphics.getCachedRenderOrGeneratePlaceholder({
+					const render = this.#graphics.getCachedRenderOrGeneratePlaceholder({
 						pageNumber: this.#currentPage + page,
 						column: xy[0],
 						row: xy[1],
@@ -709,10 +775,13 @@ class SurfaceHandler extends CoreBase {
 		if (typeof newname === 'string') {
 			this.#surfaceConfig.name = newname
 
+			// update the logger
+			this.#recreateLogger()
+
 			// save it
 			this.#saveConfig()
 
-			this.surfaces.emit('surface_name', this.surfaceId, this.#surfaceConfig.name)
+			this.#surfaces.emit('surface_name', this.surfaceId, this.#surfaceConfig.name)
 		}
 	}
 
@@ -725,7 +794,7 @@ class SurfaceHandler extends CoreBase {
 	storeNewDevicePage(newpage, defer = false) {
 		this.#currentPage = newpage
 
-		this.surfaces.emit('surface_page', this.surfaceId, newpage)
+		this.#surfaces.emit('surface_page', this.surfaceId, newpage)
 
 		if (defer) {
 			setImmediate(() => {
@@ -742,9 +811,9 @@ class SurfaceHandler extends CoreBase {
 	 * @returns {void}
 	 */
 	unload(purge = false) {
-		this.logger.error(this.panel.info.type + ' disconnected')
-		this.logger.silly('unloading for ' + this.panel.info.devicePath)
-		this.graphics.off('button_drawn', this.#onButtonDrawn)
+		this.#logger.error(this.panel.info.type + ' disconnected')
+		this.#logger.silly('unloading for ' + this.panel.info.devicePath)
+		this.#graphics.off('button_drawn', this.#onButtonDrawn)
 
 		try {
 			this.panel.quit()
