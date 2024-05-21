@@ -686,8 +686,6 @@ function ActionSetTab({
 }: Readonly<ActionSetTabProps>) {
 	const socket = useContext(SocketContext)
 
-	console.log(stepId, moreThanOneStep, isCurrent, isActiveAndCurrent)
-
 	let linkClassname: string | undefined = undefined
 
 	const name = stepOptions?.name

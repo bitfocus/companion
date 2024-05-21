@@ -1,6 +1,6 @@
 import React, { RefObject, useCallback, useContext, useEffect, useRef, useState } from 'react'
 import { CButton, CButtonGroup } from '@coreui/react'
-import { ConnectionsContext, VariableDefinitionsContext, socketEmitPromise, SocketContext } from '../util.js'
+import { ConnectionsContext, socketEmitPromise, SocketContext } from '../util.js'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import {
 	faDollarSign,
@@ -271,8 +271,7 @@ const ConnectionsTableRow = observer(function ConnectionsTableRow({
 	moveRow,
 	isSelected,
 }: ConnectionsTableRowProps) {
-	const { socket, modules } = useContext(RootAppStoreContext)
-	const variableDefinitionsContext = useContext(VariableDefinitionsContext)
+	const { socket, modules, variablesStore } = useContext(RootAppStoreContext)
 
 	const moduleInfo = modules.modules.get(connection.instance_type)
 
@@ -329,7 +328,7 @@ const ConnectionsTableRow = observer(function ConnectionsTableRow({
 	})
 	preview(drop(ref))
 
-	const connectionVariables = variableDefinitionsContext[connection.label]
+	const connectionVariables = variablesStore.variables.get(connection.label)
 
 	const doEdit = () => {
 		if (!moduleInfo || !isEnabled) {
@@ -411,10 +410,9 @@ const ConnectionsTableRow = observer(function ConnectionsTableRow({
 								size="md"
 								style={{
 									padding: 4,
-									opacity:
-										!isEnabled || !(connectionVariables && Object.keys(connectionVariables).length > 0) ? 0.2 : 1,
+									opacity: !isEnabled || !(connectionVariables && connectionVariables.size > 0) ? 0.2 : 1,
 								}}
-								disabled={!isEnabled || !(connectionVariables && Object.keys(connectionVariables).length > 0)}
+								disabled={!isEnabled || !(connectionVariables && connectionVariables.size > 0)}
 							>
 								<FontAwesomeIcon icon={faDollarSign} />
 							</CButton>

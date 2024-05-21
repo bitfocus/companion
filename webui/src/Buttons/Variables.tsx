@@ -1,6 +1,6 @@
 import React, { useCallback, useContext, useEffect, useMemo, useState } from 'react'
 import { CButton } from '@coreui/react'
-import { ConnectionsContext, VariableDefinitionsContext } from '../util.js'
+import { ConnectionsContext } from '../util.js'
 import { VariablesTable } from '../Components/VariablesTable.js'
 import { CustomVariablesList } from './CustomVariablesList.js'
 import { RootAppStoreContext } from '../Stores/RootAppStore.js'
@@ -58,13 +58,10 @@ const VariablesConnectionList = observer(function VariablesConnectionList({
 	setShowCustom,
 	connectionsLabelMap,
 }: VariablesConnectionListProps) {
-	const { modules } = useContext(RootAppStoreContext)
+	const { modules, variablesStore } = useContext(RootAppStoreContext)
 	const connectionsContext = useContext(ConnectionsContext)
-	const variableDefinitionsContext = useContext(VariableDefinitionsContext)
 
-	const options = Object.entries(variableDefinitionsContext || []).map(([label, defs]) => {
-		if (!defs || Object.keys(defs).length === 0) return ''
-
+	const options = variablesStore.connectionLabelsWithDefinitions.get().map((label) => {
 		if (label === 'internal') {
 			return (
 				<div key={label}>

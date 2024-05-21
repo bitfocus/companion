@@ -25,9 +25,9 @@ import type {
 } from './Model/ImportExport.js'
 import type { PageModel } from './Model/PageModel.js'
 import type { ClientTriggerData, TriggersUpdate } from './Model/TriggerModel.js'
-import type { CustomVariablesModel } from './Model/CustomVariableModel.js'
+import type { CustomVariableUpdate, CustomVariablesModel } from './Model/CustomVariableModel.js'
 import type { FeedbackDefinitionUpdate, InternalFeedbackDefinition } from './Model/FeedbackDefinitionModel.js'
-import type { AllVariableDefinitions, ModuleVariableDefinitions } from './Model/Variables.js'
+import type { AllVariableDefinitions, ModuleVariableDefinitions, VariableDefinitionUpdate } from './Model/Variables.js'
 import type { CompanionVariableValues } from '@companion-module/base'
 import type { UIPresetDefinition } from './Model/Presets.js'
 import type { RecordSessionInfo, RecordSessionListInfo } from './Model/ActionRecorderModel.js'
@@ -315,8 +315,8 @@ export interface BackendToClientEventsMap {
 	'triggers:update': (change: TriggersUpdate) => void
 	'action-definitions:update': (change: ActionDefinitionUpdate) => void
 	'feedback-definitions:update': (change: FeedbackDefinitionUpdate) => void
-	'custom-variables:update': (patch: JsonPatchOperation[]) => void
-	'variable-definitions:update': (label: string, patch: JsonPatchOperation[] | ModuleVariableDefinitions | null) => void
+	'custom-variables:update': (changes: CustomVariableUpdate[]) => void
+	'variable-definitions:update': (label: string, changes: VariableDefinitionUpdate | null) => void
 	'presets:update': (id: string, patch: JsonPatchOperation[] | Record<string, UIPresetDefinition> | null) => void
 	'connections:patch-statuses': (patch: JsonPatchOperation[]) => void
 

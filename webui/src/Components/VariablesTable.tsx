@@ -1,12 +1,13 @@
 import React, { useCallback, useContext, useState, useMemo, useEffect, memo } from 'react'
 import { CAlert, CButton, CInput, CInputGroup, CInputGroupAppend } from '@coreui/react'
-import { socketEmitPromise, VariableDefinitionsContext } from '../util.js'
+import { socketEmitPromise, useComputed } from '../util.js'
 import { CopyToClipboard } from 'react-copy-to-clipboard'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faCopy, faTimes } from '@fortawesome/free-solid-svg-icons'
 import { CompanionVariableValues, type CompanionVariableValue } from '@companion-module/base'
 import type { VariableDefinition } from '@companion-app/shared/Model/Variables.js'
 import { RootAppStoreContext } from '../Stores/RootAppStore.js'
+import { observer } from 'mobx-react-lite'
 
 interface VariablesTableProps {
 	label: string
@@ -16,23 +17,14 @@ interface VariableDefinitionExt extends VariableDefinition {
 	name: string
 }
 
-export function VariablesTable({ label }: VariablesTableProps) {
-	const { socket, notifier } = useContext(RootAppStoreContext)
-	const variableDefinitionsContext = useContext(VariableDefinitionsContext)
+export const VariablesTable = observer(function VariablesTable({ label }: VariablesTableProps) {
+	const { socket, notifier, variablesStore } = useContext(RootAppStoreContext)
 
 	const [variableValues, setVariableValues] = useState<CompanionVariableValues>({})
 	const [filter, setFilter] = useState('')
 
-	const variableDefinitions = useMemo(() => {
-		const defs: VariableDefinitionExt[] = []
-		for (const [name, variable] of Object.entries(variableDefinitionsContext[label] || {})) {
-			if (variable) {
-				defs.push({
-					...variable,
-					name,
-				})
-			}
-		}
+	const variableDefinitions = useComputed(() => {
+		const defs = variablesStore.variableDefinitionsForLabel(label)
 
 		defs.sort((a, b) =>
 			a.name.localeCompare(b.name, undefined, {
@@ -41,7 +33,7 @@ export function VariablesTable({ label }: VariablesTableProps) {
 		)
 
 		return defs
-	}, [variableDefinitionsContext, label])
+	}, [variablesStore, label])
 
 	useEffect(() => {
 		if (!label) return
@@ -138,21 +130,20 @@ export function VariablesTable({ label }: VariablesTableProps) {
 							</td>
 						</tr>
 					)}
-					{candidates &&
-						candidates.map((variable) => (
-							<VariablesTableRow
-								key={variable.name}
-								variable={variable}
-								value={variableValues[variable.name]}
-								label={label}
-								onCopied={onCopied}
-							/>
-						))}
+					{candidates?.map((variable) => (
+						<VariablesTableRow
+							key={variable.name}
+							variable={variable}
+							value={variableValues[variable.name]}
+							label={label}
+							onCopied={onCopied}
+						/>
+					))}
 				</tbody>
 			</table>
 		</>
 	)
-}
+})
 
 interface VariablesTableRowProps {
 	variable: VariableDefinitionExt

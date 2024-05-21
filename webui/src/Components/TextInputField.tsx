@@ -1,6 +1,5 @@
 import React, { useEffect, useMemo, useState, useCallback, useContext, useRef } from 'react'
 import { CInput } from '@coreui/react'
-import { VariableDefinitionsContext } from '../util.js'
 import Select, {
 	ControlProps,
 	OptionProps,
@@ -12,6 +11,7 @@ import { MenuPortalContext } from './DropdownInputField.js'
 import { DropdownChoiceId } from '@companion-module/base'
 import { observer } from 'mobx-react-lite'
 import { WindowedMenuList } from 'react-windowed-select'
+import { RootAppStoreContext } from '../Stores/RootAppStore.js'
 
 interface TextInputFieldProps {
 	regex?: string
@@ -185,7 +185,7 @@ interface VariablesSelectProps {
 	disabled: boolean | undefined
 }
 
-function VariablesSelect({
+const VariablesSelect = observer(function VariablesSelect({
 	showValue,
 	style,
 	useLocalVariables,
@@ -196,20 +196,18 @@ function VariablesSelect({
 	title,
 	disabled,
 }: Readonly<VariablesSelectProps>) {
-	const variableDefinitionsContext = useContext(VariableDefinitionsContext)
+	const { variablesStore } = useContext(RootAppStoreContext)
 	const menuPortal = useContext(MenuPortalContext)
 
+	const baseVariableDefinitions = variablesStore.allVariableDefinitions.get()
 	const options = useMemo(() => {
 		// Update the suggestions list in tribute whenever anything changes
 		const suggestions: DropdownChoiceInt[] = []
-		for (const [connectionLabel, variables] of Object.entries(variableDefinitionsContext)) {
-			for (const [name, va] of Object.entries(variables || {})) {
-				if (!va) continue
-				suggestions.push({
-					value: `${connectionLabel}:${name}`,
-					label: va.label,
-				})
-			}
+		for (const variable of baseVariableDefinitions) {
+			suggestions.push({
+				value: `${variable.connectionLabel}:${variable.name}`,
+				label: variable.label,
+			})
 		}
 
 		if (useLocalVariables) {
@@ -238,7 +236,7 @@ function VariablesSelect({
 		}
 
 		return suggestions
-	}, [variableDefinitionsContext, useLocalVariables])
+	}, [baseVariableDefinitions, useLocalVariables])
 
 	const [cursorPosition, setCursorPosition] = useState<number | null>(null)
 	const { isPickerOpen, searchValue, setIsForceHidden } = useIsPickerOpen(showValue, cursorPosition)
@@ -324,7 +322,7 @@ function VariablesSelect({
 			/>
 		</VariablesSelectContext.Provider>
 	)
-}
+})
 
 const VariablesSelectContext = React.createContext({
 	value: '',

@@ -285,7 +285,10 @@ class InstanceVariable extends CoreBase {
 			delete this.#variableDefinitions[labelFrom]
 
 			if (this.io.countRoomMembers(VariableDefinitionsRoom) > 0) {
-				this.io.emitToRoom(VariableDefinitionsRoom, 'variable-definitions:update', labelTo, definitions)
+				this.io.emitToRoom(VariableDefinitionsRoom, 'variable-definitions:update', labelTo, {
+					type: 'set',
+					variables: definitions,
+				})
 				this.io.emitToRoom(VariableDefinitionsRoom, 'variable-definitions:update', labelFrom, null)
 			}
 		}
@@ -342,11 +345,18 @@ class InstanceVariable extends CoreBase {
 
 		if (this.io.countRoomMembers(VariableDefinitionsRoom) > 0) {
 			if (!variablesBefore) {
-				this.io.emitToRoom(VariableDefinitionsRoom, 'variable-definitions:update', instance_label, variablesObj)
+				this.io.emitToRoom(VariableDefinitionsRoom, 'variable-definitions:update', instance_label, {
+					type: 'set',
+					variables: variablesObj,
+				})
 			} else {
 				const patch = jsonPatch.compare(variablesBefore, variablesObj || {})
+
 				if (patch.length > 0) {
-					this.io.emitToRoom(VariableDefinitionsRoom, 'variable-definitions:update', instance_label, patch)
+					this.io.emitToRoom(VariableDefinitionsRoom, 'variable-definitions:update', instance_label, {
+						type: 'patch',
+						patch: patch,
+					})
 				}
 			}
 		}
