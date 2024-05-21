@@ -74,6 +74,8 @@ export type InternalInputField =
 
 export interface CompanionInputFieldTextInputExtended extends CompanionInputFieldTextInput {
 	placeholder?: string
+	/** A UI hint indicating the field is an expression */
+	isExpression?: boolean
 }
 export interface CompanionInputFieldMultiDropdownExtended extends CompanionInputFieldMultiDropdown {
 	allowCustom?: boolean

@@ -103,6 +103,7 @@ const CHOICES_PAGE_WITH_VARIABLES = [
 		useVariables: {
 			local: true,
 		},
+		isExpression: true,
 	}),
 ]
 

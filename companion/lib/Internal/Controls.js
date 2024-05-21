@@ -57,6 +57,7 @@ const CHOICES_DYNAMIC_LOCATION = [
 		useVariables: {
 			local: true,
 		},
+		isExpression: true,
 	}),
 ]
 
@@ -87,6 +88,7 @@ const CHOICES_STEP_WITH_VARIABLES = [
 		useVariables: {
 			local: true,
 		},
+		isExpression: true,
 	}),
 ]
 
@@ -278,6 +280,7 @@ export default class Controls {
 						useVariables: {
 							local: true,
 						},
+						isExpression: true,
 					},
 
 					...CHOICES_DYNAMIC_LOCATION,
@@ -523,6 +526,7 @@ export default class Controls {
 						useVariables: {
 							local: true,
 						},
+						isExpression: true,
 					}),
 					{
 						type: 'checkbox',
@@ -606,6 +610,7 @@ export default class Controls {
 						useVariables: {
 							local: true,
 						},
+						isExpression: true,
 					},
 					...CHOICES_DYNAMIC_LOCATION,
 					...CHOICES_STEP_WITH_VARIABLES,

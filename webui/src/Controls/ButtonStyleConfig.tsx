@@ -194,6 +194,7 @@ export function ButtonStyleConfigFields({
 							value={values.text}
 							useVariables
 							useLocalVariables
+							isExpression={values.textExpression}
 							style={{ fontWeight: 'bold', fontSize: 18 }}
 						/>
 						<CInputGroupAppend>

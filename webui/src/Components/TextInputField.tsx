@@ -12,6 +12,7 @@ import { DropdownChoiceId } from '@companion-module/base'
 import { observer } from 'mobx-react-lite'
 import { WindowedMenuList } from 'react-windowed-select'
 import { RootAppStoreContext } from '../Stores/RootAppStore.js'
+import { ParseExpression } from '@companion-app/shared/Expression/ExpressionParse.js'
 
 interface TextInputFieldProps {
 	regex?: string
@@ -25,6 +26,7 @@ interface TextInputFieldProps {
 	disabled?: boolean
 	useVariables?: boolean
 	useLocalVariables?: boolean
+	isExpression?: boolean
 }
 
 export const TextInputField = observer(function TextInputField({
@@ -39,6 +41,7 @@ export const TextInputField = observer(function TextInputField({
 	disabled,
 	useVariables,
 	useLocalVariables,
+	isExpression,
 }: TextInputFieldProps) {
 	const [tmpValue, setTmpValue] = useState<string | null>(null)
 
@@ -57,26 +60,36 @@ export const TextInputField = observer(function TextInputField({
 	// Check if the value is valid
 	const isValueValid = useCallback(
 		(val: string) => {
-			// We need a string here, but sometimes get a number...
-			if (typeof val === 'number') {
-				val = `${val}`
-			}
-
-			// Must match the regex, if required or has a value
-			if (required || val !== '') {
-				if (compiledRegex && (typeof val !== 'string' || !compiledRegex.exec(val))) {
+			if (isExpression) {
+				// Try and parse the expression to see if it is valid
+				try {
+					ParseExpression(val)
+					return true
+				} catch (e) {
 					return false
 				}
-			}
+			} else {
+				// We need a string here, but sometimes get a number...
+				if (typeof val === 'number') {
+					val = `${val}`
+				}
 
-			// if required, must not be empty
-			if (required && val === '') {
-				return false
-			}
+				// Must match the regex, if required or has a value
+				if (required || val !== '') {
+					if (compiledRegex && (typeof val !== 'string' || !compiledRegex.exec(val))) {
+						return false
+					}
+				}
 
-			return true
+				// if required, must not be empty
+				if (required && val === '') {
+					return false
+				}
+
+				return true
+			}
 		},
-		[compiledRegex, required]
+		[compiledRegex, required, isExpression]
 	)
 
 	// If the value is undefined, populate with the default. Also inform the parent about the validity
