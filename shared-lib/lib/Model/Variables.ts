@@ -12,7 +12,6 @@ export type VariableDefinitionUpdate = VariableDefinitionUpdateSetOp | VariableD
 
 export interface VariableDefinitionUpdateSetOp {
 	type: 'set'
-	// moduleId: string
 
 	variables: Record<string, VariableDefinition | undefined>
 }

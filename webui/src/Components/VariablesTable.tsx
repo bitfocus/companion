@@ -5,16 +5,12 @@ import { CopyToClipboard } from 'react-copy-to-clipboard'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faCopy, faTimes } from '@fortawesome/free-solid-svg-icons'
 import { CompanionVariableValues, type CompanionVariableValue } from '@companion-module/base'
-import type { VariableDefinition } from '@companion-app/shared/Model/Variables.js'
 import { RootAppStoreContext } from '../Stores/RootAppStore.js'
 import { observer } from 'mobx-react-lite'
+import { VariableDefinitionExt } from '../Stores/VariablesStore.js'
 
 interface VariablesTableProps {
 	label: string
-}
-
-interface VariableDefinitionExt extends VariableDefinition {
-	name: string
 }
 
 export const VariablesTable = observer(function VariablesTable({ label }: VariablesTableProps) {
