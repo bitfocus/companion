@@ -964,4 +964,51 @@ describe('parser', () => {
 			})
 		})
 	})
+
+	describe('assignment', () => {
+		it('basic assignment', () => {
+			const result = ParseExpression2('a = 1; a')
+			expect(result).toEqual({
+				expr: {
+					type: 'Compound',
+					body: [
+						{
+							type: 'AssignmentExpression',
+							operator: '=',
+							left: {
+								type: 'Identifier',
+								name: 'a',
+							},
+							right: {
+								type: 'Literal',
+								raw: '1',
+								value: 1,
+							},
+						},
+						{
+							type: 'Identifier',
+							name: 'a',
+						},
+					],
+				},
+				variableIds: [],
+			})
+		})
+
+		it('increment', () => {
+			const result = ParseExpression2('a++')
+			expect(result).toEqual({
+				expr: {
+					type: 'UpdateExpression',
+					operator: '++',
+					prefix: false,
+					argument: {
+						type: 'Identifier',
+						name: 'a',
+					},
+				},
+				variableIds: [],
+			})
+		})
+	})
 })

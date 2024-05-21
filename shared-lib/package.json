@@ -9,7 +9,6 @@
     }
   },
   "dependencies": {
-    "@jsep-plugin/assignment": "^1.2.1",
     "@jsep-plugin/comment": "^1.0.3",
     "@jsep-plugin/numbers": "^1.0.1",
     "@jsep-plugin/object": "^1.2.1",

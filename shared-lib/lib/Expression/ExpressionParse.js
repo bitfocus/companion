@@ -4,14 +4,14 @@ import jsepObject from '@jsep-plugin/object'
 import jsepTemplateLiteral from '@jsep-plugin/template'
 import jsepComments from '@jsep-plugin/comment'
 import { CompanionVariablesPlugin } from './Plugins/CompanionVariables.js'
-// import jsepAssignment from '@jsep-plugin/assignment'
+import { AssignmentPlugin } from './Plugins/Assignment.js'
 
 // setup plugins
 jsep.plugins.register(jsepNumbers)
 jsep.plugins.register(jsepObject)
 jsep.plugins.register(jsepTemplateLiteral)
 jsep.plugins.register(jsepComments)
-// jsep.plugins.register(jsepAssignment)
+jsep.plugins.register(AssignmentPlugin)
 jsep.plugins.register(CompanionVariablesPlugin)
 
 // remove some unwanted operators
@@ -129,12 +129,20 @@ function visitElements(node, visitor) {
 
 					break
 				case 'ReturnStatement':
+				case 'UpdateExpression':
 					// @ts-ignore
 					visitElements(node.argument, visitor)
 					break
-				// case 'Identifier':
-				// 	console.log(node)
-				// 	break
+				case 'AssignmentExpression':
+					// @ts-ignore
+					visitElements(node.left, visitor)
+					// @ts-ignore
+					visitElements(node.right, visitor)
+					break
+				case 'Identifier':
+					// console.log(node)
+					// Nothing to do
+					break
 				default:
 					throw new Error(`Unknown node "${node.type}"`)
 			}
@@ -142,11 +150,32 @@ function visitElements(node, visitor) {
 }
 
 /**
- *
  * @param {jsep.Expression} node
  */
-function fixupExpression(node) {
-	visitElements(node, (node) => {
+function fixReturnDetectedAsFunction(node) {
+	if (
+		node.type === 'CallExpression' &&
+		// @ts-ignore
+		node.callee.name === 'return' &&
+		// @ts-ignore
+		node.arguments.length === 1
+	) {
+		node.type = 'ReturnStatement'
+
+		// @ts-ignore
+		node.argument = node.arguments[0]
+
+		delete node.arguments
+		delete node.callee
+	}
+}
+
+/**
+ *
+ * @param {jsep.Expression} rootNode
+ */
+function fixupExpression(rootNode) {
+	visitElements(rootNode, (node) => {
 		// Accept undefined
 		if (node.type === 'Identifier' && node.name === 'undefined') {
 			node.type = 'Literal'
@@ -157,24 +186,9 @@ function fixupExpression(node) {
 			return
 		}
 
-		// Fixup return statements detected as a function
-		if (
-			node.type === 'CallExpression' &&
-			// @ts-ignore
-			node.callee.name === 'return' &&
-			// @ts-ignore
-			node.arguments.length === 1
-		) {
-			console.log(node)
-			node.type = 'ReturnStatement'
-
-			// @ts-ignore
-			node.argument = node.arguments[0]
-
-			delete node.arguments
-			delete node.callee
-
-			return
+		if (rootNode === node) {
+			// Fixup return statements detected as a function, if at the root
+			fixReturnDetectedAsFunction(node)
 		}
 
 		// Fix up object properties being defined as 'Identifier'
@@ -197,6 +211,11 @@ function fixupExpression(node) {
 			/** @type {jsep.Expression[]} */
 			// @ts-ignore
 			const body = node.body
+
+			// Fixup return statements detected as a function
+			for (const expr of body) {
+				fixReturnDetectedAsFunction(expr)
+			}
 
 			// Fix up a $(my:var)[1]
 			for (let i = 0; i + 1 < body.length; i++) {

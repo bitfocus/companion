@@ -1443,7 +1443,6 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@companion-app/shared@workspace:shared-lib"
   dependencies:
-    "@jsep-plugin/assignment": "npm:^1.2.1"
     "@jsep-plugin/comment": "npm:^1.0.3"
     "@jsep-plugin/numbers": "npm:^1.0.1"
     "@jsep-plugin/object": "npm:^1.2.1"

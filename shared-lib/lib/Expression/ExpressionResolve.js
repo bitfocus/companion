@@ -1,5 +1,9 @@
 /**
  * @typedef {import('@companion-module/base').CompanionVariableValue} VariableValue
+ * @typedef {{
+ *   values: Record<string, any>
+ *   isComplete: boolean
+ * }} ResolverState
  */
 
 /**
@@ -11,6 +15,12 @@
  */
 export function ResolveExpression(node, getVariableValue, functions = {}) {
 	if (!node) throw new Error('Invalid expression')
+
+	/** @type {ResolverState} */
+	const resolverState = {
+		values: {},
+		isComplete: false,
+	}
 
 	/**
 	 * @param {import('jsep').Expression} node
@@ -131,12 +141,15 @@ export function ResolveExpression(node, getVariableValue, functions = {}) {
 
 						return result
 					}
-					// 	case 'Compound':
-					// 	// @ts-ignore
-					// 	for (const expr of node.body) {
-					// 		visitElements(expr, visitor)
-					// 	}
-					// 	break
+					case 'Compound': {
+						let result
+						// @ts-ignore
+						for (const expr of node.body) {
+							result = resolve(expr)
+							if (resolverState.isComplete) return result
+						}
+						return result
+					}
 					case 'ArrayExpression': {
 						const vals = []
 						// @ts-ignore
@@ -173,8 +186,97 @@ export function ResolveExpression(node, getVariableValue, functions = {}) {
 						return obj
 					}
 					case 'ReturnStatement': {
+						if (resolverState.isComplete) throw new Error('Cannot return inside a return')
+
+						resolverState.isComplete = true
+
 						// @ts-ignore
 						return resolve(node.argument)
+					}
+					case 'AssignmentExpression': {
+						// @ts-ignore
+						const rightValue = resolve(node.right)
+
+						/** @type {any} */
+						const left = node.left
+						if (left.type !== 'Identifier') throw new Error('Can only assign to an Identifier')
+
+						let newValue = resolverState.values[left.name]
+						switch (node.operator) {
+							case '=':
+								newValue = rightValue
+								break
+							case '*=':
+								newValue = Number(newValue) * Number(rightValue)
+								break
+							case '**=':
+								newValue = Number(newValue) ** Number(rightValue)
+								break
+							case '/=':
+								newValue = Number(newValue) / Number(rightValue)
+								break
+							case '%=':
+								newValue = Number(newValue) % Number(rightValue)
+								break
+							case '+=':
+								newValue = Number(newValue) + Number(rightValue)
+								break
+							case '-=':
+								newValue = Number(newValue) - Number(rightValue)
+								break
+							case '<<=':
+								newValue = Number(newValue) << Number(rightValue)
+								break
+							case '>>=':
+								newValue = Number(newValue) >> Number(rightValue)
+								break
+							case '&=':
+								newValue = Number(newValue) & Number(rightValue)
+								break
+							case '^=':
+								newValue = Number(newValue) ^ Number(rightValue)
+								break
+							case '|=':
+								newValue = Number(newValue) | Number(rightValue)
+								break
+							case '||=':
+								newValue = newValue || rightValue
+								break
+							case '&&=':
+								newValue = newValue || rightValue
+								break
+							default:
+								throw new Error(`Unsupported assignment operator "${coreNode.operator}"`)
+						}
+
+						resolverState.values[left.name] = newValue
+						return newValue
+					}
+					case 'UpdateExpression': {
+						/** @type {any} */
+						const arg = node.argument
+						if (arg.type !== 'Identifier') throw new Error('Can only update an Identifier')
+
+						switch (node.operator) {
+							case '++':
+								if (node.prefix) {
+									return ++resolverState.values[arg.name]
+								} else {
+									return resolverState.values[arg.name]++
+								}
+							case '--':
+								if (node.prefix) {
+									return --resolverState.values[arg.name]
+								} else {
+									return resolverState.values[arg.name]--
+								}
+							default:
+								throw new Error(`Unsupported assignment operator "${coreNode.operator}"`)
+						}
+					}
+					case 'Identifier': {
+						// @ts-ignore
+						return resolverState.values[node.name]
 					}
 					// case 'Property':
 					// 	// @ts-ignore

@@ -7,8 +7,8 @@ describe('resolver', function () {
 		for (const op of Object.keys(jsep.binary_ops)) {
 			if (op) {
 				it(`should handle "${op}" operator`, function () {
-					const result = resolve(parse(`1 ${op} 2`))
-					expect(typeof result).toMatch(/^number|boolean$/)
+					const result = resolve(parse(`a = 1 ; a ${op} 2`))
+					expect(typeof result).toMatch(/^(number|boolean)$/)
 				})
 			}
 		}
@@ -19,7 +19,7 @@ describe('resolver', function () {
 			if (op) {
 				it(`should handle "${op}" operator`, function () {
 					const result = resolve(parse(`${op}2`))
-					expect(typeof result).toMatch(/^number|boolean$/)
+					expect(typeof result).toMatch(/^(number|boolean)$/)
 				})
 			}
 		}
@@ -151,9 +151,9 @@ describe('resolver', function () {
 			expect(fn).toThrow(/Expected expression after/)
 		})
 
-		it('should detect extraneous operands', function () {
-			const fn = () => resolve(parse('10 + 10 20 30'))
-			expect(fn).toThrow(/Unknown node "Compound"/)
+		it('should treat extraneous operands as multiple statements', function () {
+			const value = resolve(parse('10 + 10 20 30'))
+			expect(value).toEqual(30)
 		})
 	})
 
@@ -297,6 +297,33 @@ describe('resolver', function () {
 
 			const result = resolve(parse('return $(some:var)'), getVariable)
 			expect(result).toBe('var1')
+		})
+
+		it('return in the middle', () => {
+			const result = resolve(parse('return 1\n return 2'), undefined)
+			expect(result).toBe(1)
+		})
+	})
+
+	describe('assignment', () => {
+		it('basic maths', () => {
+			const result = resolve(parse('a = 1\nb=2\nreturn a+b'), undefined)
+			expect(result).toBe(3)
+		})
+
+		it('basic maths with semicolons', () => {
+			const result = resolve(parse('a=1;b=2;return a+b;'), undefined)
+			expect(result).toBe(3)
+		})
+
+		it('no return', () => {
+			const result = resolve(parse('a = 1'), undefined)
+			expect(result).toBe(1)
+		})
+
+		it('no return with update', () => {
+			const result = resolve(parse('a = 1; ++a'), undefined)
+			expect(result).toBe(2)
 		})
 	})
 })
