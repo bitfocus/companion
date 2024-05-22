@@ -29,6 +29,9 @@ const VariableDefinitionsRoom = 'variable-definitions'
 
 export const VARIABLE_UNKNOWN_VALUE = '$NA'
 
+// Everybody stand back. I know regular expressions. - xckd #208 /ck/kc/
+const VARIABLE_REGEX = /\$\(([^:$)]+):([^)$]+)\)/
+
 /**
  * @typedef {Record<string, Record<string, import('@companion-module/base').CompanionVariableValue | undefined> | undefined>} VariableValueData
  * @typedef {Record<string, import('@companion-module/base').CompanionVariableValue | undefined>} VariablesCache
@@ -55,12 +58,9 @@ export function parseVariablesInString(string, rawVariableValues, cachedVariable
 
 	const referencedVariableIds = []
 
-	// Everybody stand back. I know regular expressions. - xckd #208 /ck/kc/
-	const reg = /\$\(([^:$)]+):([^)$]+)\)/
-
 	let matchCount = 0
 	let matches
-	while ((matches = reg.exec(string))) {
+	while ((matches = VARIABLE_REGEX.exec(string))) {
 		if (matchCount++ > 100) {
 			// Crudely avoid infinite loops with an iteration limit
 			logger.info(`Reached iteration limit for variable parsing`)
@@ -101,6 +101,37 @@ export function parseVariablesInString(string, rawVariableValues, cachedVariable
 		text: string,
 		variableIds: referencedVariableIds,
 	}
+}
+
+/**
+ * Replace all the variables in a string, to reference a new label
+ * @param {string} string
+ * @param {string} newLabel
+ * @returns {string}
+ */
+export function replaceAllVariables(string, newLabel) {
+	if (string && string.includes('$(')) {
+		let matchCount = 0
+		let matches
+		let fromIndex = 0
+		while ((matches = VARIABLE_REGEX.exec(string.slice(fromIndex))) !== null) {
+			if (matchCount++ > 100) {
+				// nocommit was 100
+				// Crudely avoid infinite loops with an iteration limit
+				// logger.info(`Reached iteration limit for variable parsing`)
+				break
+			}
+
+			// ensure we don't try and match the same thing again
+			fromIndex = matches.index + fromIndex + 1
+
+			if (matches[2] !== undefined) {
+				string = string.replace(matches[0], `$(${newLabel}:${matches[2]})`)
+			}
+		}
+	}
+
+	return string
 }
 
 class InstanceVariable extends CoreBase {
