@@ -71,8 +71,11 @@ export function Emulator() {
 	useUserConfigSubscription(socket, userConfigStore)
 
 	useEffect(() => {
-		document.title = `${userConfigStore?.properties?.installName} - Emulator`
-	}, [userConfigStore])
+		document.title =
+			userConfigStore.properties?.installName && userConfigStore.properties?.installName.length > 0
+				? `${userConfigStore.properties?.installName} - Emulator (Bitfocus Companion)`
+				: 'Bitfocus Companion - Emulator'
+	}, [userConfigStore.properties?.installName])
 
 	const keymap = useMemo(() => {
 		if (config?.emulator_control_enable) {

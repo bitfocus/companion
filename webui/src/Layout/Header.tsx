@@ -1,9 +1,11 @@
 import React, { useContext, useEffect, useState } from 'react'
 import { CHeader, CHeaderBrand, CHeaderNavItem, CHeaderNav, CHeaderNavLink, CToggler } from '@coreui/react'
-import { SocketContext, UserConfigContext, socketEmitPromise } from '../util.js'
+import { socketEmitPromise } from '../util.js'
 import { faLock } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import type { AppUpdateInfo, AppVersionInfo } from '@companion-app/shared/Model/Common.js'
+import { RootAppStoreContext } from '../Stores/RootAppStore.js'
+import { observer } from 'mobx-react-lite'
 
 interface MyHeaderProps {
 	toggleSidebar: () => void
@@ -11,9 +13,8 @@ interface MyHeaderProps {
 	setLocked: (locked: boolean) => void
 }
 
-export function MyHeader({ toggleSidebar, canLock, setLocked }: MyHeaderProps) {
-	const socket = useContext(SocketContext)
-	const userConfig = useContext(UserConfigContext)
+export const MyHeader = observer(function MyHeader({ toggleSidebar, canLock, setLocked }: MyHeaderProps) {
+	const { socket, userConfig } = useContext(RootAppStoreContext)
 
 	const [versionInfo, setVersionInfo] = useState<AppVersionInfo | null>(null)
 	const [updateData, setUpdateData] = useState<AppUpdateInfo | null>(null)
@@ -47,8 +48,8 @@ export function MyHeader({ toggleSidebar, canLock, setLocked }: MyHeaderProps) {
 			</CHeaderBrand>
 
 			<CHeaderNav className="d-md-down-none">
-				{userConfig?.installName !== 'Bitfocus Companion' && (
-					<CHeaderNavItem className="install-name">{userConfig?.installName}:</CHeaderNavItem>
+				{userConfig.properties?.installName && userConfig.properties?.installName.length > 0 && (
+					<CHeaderNavItem className="install-name">{userConfig.properties?.installName}:</CHeaderNavItem>
 				)}
 
 				<CHeaderNavItem>
@@ -75,4 +76,4 @@ export function MyHeader({ toggleSidebar, canLock, setLocked }: MyHeaderProps) {
 			)}
 		</CHeader>
 	)
-}
+})

@@ -3,6 +3,7 @@ import { CButton, CInput } from '@coreui/react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faUndo } from '@fortawesome/free-solid-svg-icons'
 import type { UserConfigModel } from '@companion-app/shared/Model/UserConfigModel.js'
+import { observer } from 'mobx-react-lite'
 
 interface CompanionConfigProps {
 	config: UserConfigModel
@@ -10,7 +11,7 @@ interface CompanionConfigProps {
 	resetValue: (key: keyof UserConfigModel) => void
 }
 
-export function CompanionConfig({ config, setValue, resetValue }: CompanionConfigProps) {
+export const CompanionConfig = observer(function CompanionConfig({ config, setValue, resetValue }: CompanionConfigProps) {
 	return (
 		<>
 			<tr>
@@ -36,4 +37,4 @@ export function CompanionConfig({ config, setValue, resetValue }: CompanionConfi
 			</tr>
 		</>
 	)
-}
+})

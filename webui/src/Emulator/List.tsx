@@ -8,8 +8,9 @@ import { SurfacesStore } from '../Stores/SurfacesStore.js'
 import { useSurfacesSubscription } from '../Hooks/useSurfacesSubscription.js'
 import { UserConfigStore } from '../Stores/UserConfigStore.js'
 import { useUserConfigSubscription } from '../Hooks/useUserConfigSubscription.js'
+import { observer } from 'mobx-react-lite'
 
-export function EmulatorList() {
+export const EmulatorList = observer(function EmulatorList() {
 	const socket = useContext(SocketContext)
 
 	const [loadError, setLoadError] = useState<string | null>(null)
@@ -24,8 +25,11 @@ export function EmulatorList() {
 	const userConfigReady = useUserConfigSubscription(socket, userConfigStore)
 
 	useEffect(() => {
-		document.title = `${userConfigStore?.properties?.installName} - Emulators`
-	}, [userConfigStore])	
+		document.title =
+			userConfigStore.properties?.installName && userConfigStore.properties?.installName.length > 0
+				? `${userConfigStore.properties?.installName} - Emulators (Bitfocus Companion)`
+				: 'Bitfocus Companion - Emulators'
+	}, [userConfigStore.properties?.installName])
 
 	const emulators = useComputed(() => {
 		const emulators: ClientSurfaceItem[] = []
@@ -77,7 +81,7 @@ export function EmulatorList() {
 			</CContainer>
 		</div>
 	)
-}
+})
 
 interface EmulatorCardProps {
 	surface: ClientSurfaceItem
