@@ -26,7 +26,6 @@ import { UserConfigStore } from '../Stores/UserConfigStore.js'
 import { useUserConfigSubscription } from '../Hooks/useUserConfigSubscription.js'
 import { observer } from 'mobx-react-lite'
 
-
 export const Emulator = observer(function Emulator() {
 	const socket = useContext(SocketContext)
 
