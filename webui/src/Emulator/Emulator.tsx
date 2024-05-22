@@ -24,8 +24,10 @@ import {
 import { Operation as JsonPatchOperation } from 'fast-json-patch'
 import { UserConfigStore } from '../Stores/UserConfigStore.js'
 import { useUserConfigSubscription } from '../Hooks/useUserConfigSubscription.js'
+import { observer } from 'mobx-react-lite'
 
-export function Emulator() {
+
+export const Emulator = observer(function Emulator() {
 	const socket = useContext(SocketContext)
 
 	const [config, setConfig] = useState<EmulatorConfig | null>(null)
@@ -211,7 +213,7 @@ export function Emulator() {
 			)}
 		</div>
 	)
-}
+})
 
 interface ConfigurePanelProps {
 	config: EmulatorConfig
