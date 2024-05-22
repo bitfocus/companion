@@ -1,6 +1,10 @@
 import React from 'react'
 
-export function BeginStep() {
+interface BeginStepProps {
+	allowGrid: number
+}
+
+export function BeginStep({ allowGrid }: BeginStepProps) {
 	return (
 		<div>
 			<p style={{ marginTop: 0 }}>
@@ -8,14 +12,11 @@ export function BeginStep() {
 				Companion. This wizard will walk you through the following configuration settings:
 			</p>
 			<ol>
-				<li>USB Surface Detection Configuration</li>
+				<li>Surface Detection Configuration</li>
+				{allowGrid === 1 && <li>Button Grid Size</li>}
 				<li>Remote Control Services</li>
 				<li>Admin GUI Password</li>
 			</ol>
-			<p>
-				Once you have completed the wizard, it is strongly advised to review the programming of all of your buttons and
-				triggers, as some bits may have gotten broken during the upgrade to v3.0
-			</p>
 		</div>
 	)
 }

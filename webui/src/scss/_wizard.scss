@@ -27,8 +27,12 @@
 	margin-left: 1.5em;
 }
 
-.wizard p.indent3 {
-	margin-left: 1.5em;
+.wizard div.indent4 {
+	margin: 1em 0 1em 2em;
+}
+
+.wizard div.indent4 p {
+	margin: 0;
 	font-weight: bold;
 }
 
@@ -46,7 +50,7 @@
 }
 
 .wizard h5 {
-	margin: 0;
+	margin: 0 0 0.5rem 0;
 }
 
 .wizard p {

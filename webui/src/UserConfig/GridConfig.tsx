@@ -35,25 +35,21 @@ export const GridConfig = observer(function GridConfig({ config, setValue, reset
 		<>
 			<tr>
 				<th colSpan={3} className="settings-category">
-					Grid
+					Button Grid
 					<GridSizeModal ref={gridSizeRef} />
 				</th>
 			</tr>
 
-			<tr>
-				<td>Min Column</td>
-				<td>
-					<div className="form-check form-check-inline mr-1">{config.gridSize?.minColumn}</div>
-				</td>
-				<td></td>
-			</tr>
-			<tr>
-				<td>Max Column</td>
-				<td>
-					<div className="form-check form-check-inline mr-1">{config.gridSize?.maxColumn}</div>
-				</td>
-				<td></td>
-			</tr>
+			{config.gridSize && (
+				<tr>
+					<td>Grid Size</td>
+					<td colSpan={2}>
+						{config.gridSize?.maxRow - config.gridSize?.minRow + 1} rows x{' '}
+						{config.gridSize?.maxColumn - config.gridSize?.minColumn + 1} columns
+					</td>
+				</tr>
+			)}
+
 			<tr>
 				<td>Min Row</td>
 				<td>
@@ -65,6 +61,20 @@ export const GridConfig = observer(function GridConfig({ config, setValue, reset
 				<td>Max Row</td>
 				<td>
 					<div className="form-check form-check-inline mr-1">{config.gridSize?.maxRow}</div>
+				</td>
+				<td></td>
+			</tr>
+			<tr>
+				<td>Min Column</td>
+				<td>
+					<div className="form-check form-check-inline mr-1">{config.gridSize?.minColumn}</div>
+				</td>
+				<td></td>
+			</tr>
+			<tr>
+				<td>Max Column</td>
+				<td>
+					<div className="form-check form-check-inline mr-1">{config.gridSize?.maxColumn}</div>
 				</td>
 				<td></td>
 			</tr>
@@ -225,14 +235,12 @@ const GridSizeModal = observer<GridSizeModalProps, GridSizeModalRef>(
 				</CModalHeader>
 				<CModalBody>
 					<CForm onSubmit={doAction}>
-						<CFormGroup>
-							<CLabel>Min Column</CLabel>
-							<CInput type="number" value={newGridSize?.minColumn} max={0} step={1} onChange={setMinColumn} />
-						</CFormGroup>
-						<CFormGroup>
-							<CLabel>Max Column</CLabel>
-							<CInput type="number" value={newGridSize?.maxColumn} min={0} step={1} onChange={setMaxColumn} />
-						</CFormGroup>
+						{newGridSize && (
+							<CFormGroup>
+								New Grid Size: {newGridSize.maxRow - newGridSize.minRow + 1} rows x{' '}
+								{newGridSize.maxColumn - newGridSize.minColumn + 1} columns
+							</CFormGroup>
+						)}
 						<CFormGroup>
 							<CLabel>Min Row</CLabel>
 							<CInput type="number" value={newGridSize?.minRow} max={0} step={1} onChange={setMinRow} />
@@ -240,6 +248,14 @@ const GridSizeModal = observer<GridSizeModalProps, GridSizeModalRef>(
 						<CFormGroup>
 							<CLabel>Max Row</CLabel>
 							<CInput type="number" value={newGridSize?.maxRow} min={0} step={1} onChange={setMaxRow} />
+						</CFormGroup>
+						<CFormGroup>
+							<CLabel>Min Column</CLabel>
+							<CInput type="number" value={newGridSize?.minColumn} max={0} step={1} onChange={setMinColumn} />
+						</CFormGroup>
+						<CFormGroup>
+							<CLabel>Max Column</CLabel>
+							<CInput type="number" value={newGridSize?.maxColumn} min={0} step={1} onChange={setMaxColumn} />
 						</CFormGroup>
 					</CForm>
 					{isReducingSize && (
