@@ -5,6 +5,7 @@ import { EventDefinitions } from '../Resources/EventDefinitions.js'
 import ControlButtonNormal from '../Controls/ControlTypes/Button/Normal.js'
 import jsonPatch from 'fast-json-patch'
 import { diffObjects } from '@companion-app/shared/Diff.js'
+import { replaceAllVariables } from './Variable.js'
 
 const PresetsRoom = 'presets'
 const ActionsRoom = 'action-definitions'
@@ -556,35 +557,6 @@ class InstanceDefinitions extends CoreBase {
 	 * @param {Record<string, PresetDefinition>} presets
 	 */
 	#updateVariablePrefixesAndStoreDefinitions(connectionId, label, presets) {
-		const variableRegex = /\$\(([^:$)]+):([^)$]+)\)/
-
-		/**
-		 * @param {string} fixtext
-		 * @returns {string}
-		 */
-		function replaceAllVariables(fixtext) {
-			if (fixtext && fixtext.includes('$(')) {
-				let matchCount = 0
-				let matches
-				let fromIndex = 0
-				while ((matches = variableRegex.exec(fixtext.slice(fromIndex))) !== null) {
-					if (matchCount++ > 100) {
-						// Crudely avoid infinite loops with an iteration limit
-						// logger.info(`Reached iteration limit for variable parsing`)
-						break
-					}
-
-					// ensure we don't try and match the same thing again
-					fromIndex = matches.index + 1
-
-					if (matches[2] !== undefined) {
-						fixtext = fixtext.replace(matches[0], `$(${label}:${matches[2]})`)
-					}
-				}
-			}
-			return fixtext
-		}
-
 		/*
 		 * Clean up variable references: $(label:variable)
 		 * since the name of the connection is dynamic. We don't want to
@@ -593,13 +565,13 @@ class InstanceDefinitions extends CoreBase {
 		for (const preset of Object.values(presets)) {
 			if (preset.type !== 'text') {
 				if (preset.style) {
-					preset.style.text = replaceAllVariables(preset.style.text)
+					preset.style.text = replaceAllVariables(preset.style.text, label)
 				}
 
 				if (preset.feedbacks) {
 					for (const feedback of preset.feedbacks) {
 						if (feedback.style && feedback.style.text) {
-							feedback.style.text = replaceAllVariables(feedback.style.text)
+							feedback.style.text = replaceAllVariables(feedback.style.text, label)
 						}
 					}
 				}
