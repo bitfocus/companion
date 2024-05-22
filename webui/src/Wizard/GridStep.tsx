@@ -49,20 +49,20 @@ export function GridStep({ rows, columns, setValue }: GridStepProps) {
 				For example, to accomodate two Stream Deck XL's side-by-side you can set the grid size as 4 rows x 16 columns.
 			</p>
 			<div className="indent2, group">
-						<div className="col-left">Rows</div>
-						<div className="col-right">
-							<div className="form-check form-check-inline mr-1">
-							<CInput type="number" value={totalRows} min={0} step={1} onChange={setMaxRow} />
-							</div>
-						</div>
-						<br />
-						<div className="col-left">Columns</div>
-						<div className="col-right">
-							<div className="form-check form-check-inline mr-1">
-							<CInput type="number" value={totalColumns} min={0} step={1} onChange={setMaxColumn} />
-							</div>
-						</div>
+				<div className="col-left">Rows</div>
+				<div className="col-right">
+					<div className="form-check form-check-inline mr-1">
+						<CInput type="number" value={totalRows} min={0} step={1} onChange={setMaxRow} />
 					</div>
+				</div>
+				<br />
+				<div className="col-left">Columns</div>
+				<div className="col-right">
+					<div className="form-check form-check-inline mr-1">
+						<CInput type="number" value={totalColumns} min={0} step={1} onChange={setMaxColumn} />
+					</div>
+				</div>
+			</div>
 			<p>You can change this at any time on the 'Settings' tab in the GUI.</p>
 		</div>
 	)

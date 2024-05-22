@@ -242,20 +242,20 @@ const GridSizeModal = observer<GridSizeModalProps, GridSizeModalRef>(
 							</CFormGroup>
 						)}
 						<CFormGroup>
-							<CLabel>Min Column</CLabel>
-							<CInput type="number" value={newGridSize?.minColumn} max={0} step={1} onChange={setMinColumn} />
-						</CFormGroup>
-						<CFormGroup>
-							<CLabel>Max Column</CLabel>
-							<CInput type="number" value={newGridSize?.maxColumn} min={0} step={1} onChange={setMaxColumn} />
-						</CFormGroup>
-						<CFormGroup>
 							<CLabel>Min Row</CLabel>
 							<CInput type="number" value={newGridSize?.minRow} max={0} step={1} onChange={setMinRow} />
 						</CFormGroup>
 						<CFormGroup>
 							<CLabel>Max Row</CLabel>
 							<CInput type="number" value={newGridSize?.maxRow} min={0} step={1} onChange={setMaxRow} />
+						</CFormGroup>
+						<CFormGroup>
+							<CLabel>Min Column</CLabel>
+							<CInput type="number" value={newGridSize?.minColumn} max={0} step={1} onChange={setMinColumn} />
+						</CFormGroup>
+						<CFormGroup>
+							<CLabel>Max Column</CLabel>
+							<CInput type="number" value={newGridSize?.maxColumn} min={0} step={1} onChange={setMaxColumn} />
 						</CFormGroup>
 					</CForm>
 					{isReducingSize && (
