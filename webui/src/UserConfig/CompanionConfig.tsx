@@ -11,7 +11,11 @@ interface CompanionConfigProps {
 	resetValue: (key: keyof UserConfigModel) => void
 }
 
-export const CompanionConfig = observer(function CompanionConfig({ config, setValue, resetValue }: CompanionConfigProps) {
+export const CompanionConfig = observer(function CompanionConfig({
+	config,
+	setValue,
+	resetValue,
+}: CompanionConfigProps) {
 	return (
 		<>
 			<tr>
