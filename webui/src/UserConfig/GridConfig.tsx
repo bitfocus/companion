@@ -40,13 +40,15 @@ export const GridConfig = observer(function GridConfig({ config, setValue, reset
 				</th>
 			</tr>
 
-			<tr>
-				<td>Grid Size</td>
-				<td colSpan={2}>
-					{config.gridSize?.maxRow - config.gridSize?.minRow + 1} rows x{' '}
-					{config.gridSize?.maxColumn - config.gridSize?.minColumn + 1} columns
-				</td>
-			</tr>
+			{config.gridSize && (
+				<tr>
+					<td>Grid Size</td>
+					<td colSpan={2}>
+						{config.gridSize?.maxRow - config.gridSize?.minRow + 1} rows x{' '}
+						{config.gridSize?.maxColumn - config.gridSize?.minColumn + 1} columns
+					</td>
+				</tr>
+			)}
 
 			<tr>
 				<td>Min Row</td>
@@ -157,7 +159,6 @@ const GridSizeModal = observer<GridSizeModalProps, GridSizeModalRef>(
 				show() {
 					setShow(true)
 
-<<<<<<< HEAD
 					// Focus the button asap. It also gets focused once the open is complete
 					setTimeout(buttonFocus, 50)
 				},
@@ -234,6 +235,12 @@ const GridSizeModal = observer<GridSizeModalProps, GridSizeModalRef>(
 				</CModalHeader>
 				<CModalBody>
 					<CForm onSubmit={doAction}>
+						{newGridSize && (
+							<CFormGroup>
+								New Grid Size: {newGridSize.maxRow - newGridSize.minRow + 1} rows x{' '}
+								{newGridSize.maxColumn - newGridSize.minColumn + 1} columns
+							</CFormGroup>
+						)}
 						<CFormGroup>
 							<CLabel>Min Column</CLabel>
 							<CInput type="number" value={newGridSize?.minColumn} max={0} step={1} onChange={setMinColumn} />
@@ -270,51 +277,3 @@ const GridSizeModal = observer<GridSizeModalProps, GridSizeModalRef>(
 	},
 	{ forwardRef: true }
 )
-=======
-	return (
-		<CModal show={show} onClose={doClose} onClosed={onClosed} onOpened={buttonFocus}>
-			<CModalHeader closeButton>
-				<h5>Configure Grid Size</h5>
-			</CModalHeader>
-			<CModalBody>
-				<CForm onSubmit={doAction}>
-					<CFormGroup>
-						New Grid Size: {newGridSize?.maxRow - newGridSize?.minRow + 1} rows x{' '}
-						{newGridSize?.maxColumn - newGridSize?.minColumn + 1} columns
-					</CFormGroup>
-
-					<CFormGroup>
-						<CLabel>Min Row</CLabel>
-						<CInput type="number" value={newGridSize?.minRow} max={0} step={1} onChange={setMinRow} />
-					</CFormGroup>
-					<CFormGroup>
-						<CLabel>Max Row</CLabel>
-						<CInput type="number" value={newGridSize?.maxRow} min={0} step={1} onChange={setMaxRow} />
-					</CFormGroup>
-					<CFormGroup>
-						<CLabel>Min Column</CLabel>
-						<CInput type="number" value={newGridSize?.minColumn} max={0} step={1} onChange={setMinColumn} />
-					</CFormGroup>
-					<CFormGroup>
-						<CLabel>Max Column</CLabel>
-						<CInput type="number" value={newGridSize?.maxColumn} min={0} step={1} onChange={setMaxColumn} />
-					</CFormGroup>
-				</CForm>
-				{isReducingSize && (
-					<CAlert color="danger">
-						By reducing the grid size, any buttons outside of the new boundaries will be deleted.
-					</CAlert>
-				)}
-			</CModalBody>
-			<CModalFooter>
-				<CButton color="secondary" onClick={doClose}>
-					Cancel
-				</CButton>
-				<CButton innerRef={buttonRef} color="primary" onClick={doAction}>
-					Save
-				</CButton>
-			</CModalFooter>
-		</CModal>
-	)
-})
->>>>>>> 4659180f (button grid)

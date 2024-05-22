@@ -48,18 +48,22 @@ export function GridStep({ rows, columns, setValue }: GridStepProps) {
 				The grid can also be enlarged to group multiple control surfaces together to create a larger control surface.
 				For example, to accomodate two Stream Deck XL's side-by-side you can set the grid size as 4 rows x 16 columns.
 			</p>
-			<p className="indent3">Rows</p>
-			<div className="indent3">
-				<div className="form-check form-check-inline mr-1">
-					<CInput type="number" value={totalRows} min={0} step={1} onChange={setMaxRow} />
-				</div>
-			</div>
-			<p className="indent3">Columns</p>
-			<div className="indent3">
-				<div className="form-check form-check-inline mr-1">
-					<CInput type="number" value={totalColumns} min={0} step={1} onChange={setMaxColumn} />
-				</div>
-			</div>
+			<div className="indent2, group">
+						<div className="col-left">Rows</div>
+						<div className="col-right">
+							<div className="form-check form-check-inline mr-1">
+							<CInput type="number" value={totalRows} min={0} step={1} onChange={setMaxRow} />
+							</div>
+						</div>
+						<br />
+						<div className="col-left">Columns</div>
+						<div className="col-right">
+							<div className="form-check form-check-inline mr-1">
+							<CInput type="number" value={totalColumns} min={0} step={1} onChange={setMaxColumn} />
+							</div>
+						</div>
+					</div>
+			<p>You can change this at any time on the 'Settings' tab in the GUI.</p>
 		</div>
 	)
 }
