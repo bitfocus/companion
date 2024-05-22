@@ -11025,13 +11025,13 @@ asn1@evs-broadcast/node-asn1:
   linkType: hard
 
 "node-gyp-build@github:julusian/node-gyp-build#cross-install-support":
-  version: 4.5.0
-  resolution: "node-gyp-build@https://github.com/julusian/node-gyp-build.git#commit=33c9759a3215892a520d50ad20c947795b813904"
+  version: 4.8.1
+  resolution: "node-gyp-build@https://github.com/julusian/node-gyp-build.git#commit=52ef582b6e6394bff838d8e8b6c9d79995f2d706"
   bin:
     node-gyp-build: ./bin.js
     node-gyp-build-optional: ./optional.js
     node-gyp-build-test: ./build-test.js
-  checksum: 10c0/ff1901bf426a2608947c1969a6779663c04eba6ece428eaf5f9491909bb506b59467fcac2bb4a6479b1736575611998c99f51dcae3192a668ff48732c72e31fb
+  checksum: 10c0/94a657094760f15871308f9c7b72cb78955423ccc690cfa9c377f2e7fee30d69a52d72ac0b031d037e19f53f51e1a82eb591d78f69b05b44f7ba54da9d811fc9
   languageName: node
   linkType: hard
 
