@@ -15,7 +15,7 @@ import {
 import React, { FormEvent, forwardRef, useCallback, useContext, useImperativeHandle, useRef, useState } from 'react'
 import { KeyReceiver, socketEmitPromise, SocketContext } from '../util.js'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faFileExport, faHome, faPencil } from '@fortawesome/free-solid-svg-icons'
+import { faFileExport, faHome, faMagnifyingGlass, faPencil } from '@fortawesome/free-solid-svg-icons'
 import { ConfirmExportModal, ConfirmExportModalRef } from '../Components/ConfirmExportModal.js'
 import { ButtonInfiniteGrid, ButtonInfiniteGridRef, PrimaryButtonGridIcon } from './ButtonInfiniteGrid.js'
 import { useHasBeenRendered } from '../Hooks/useHasBeenRendered.js'
@@ -27,6 +27,8 @@ import { RootAppStoreContext } from '../Stores/RootAppStore.js'
 import { PagesStoreModel } from '../Stores/PagesStore.js'
 import { observer } from 'mobx-react-lite'
 import { ButtonGridZoomSlider } from './ButtonGridZoomSlider.js'
+import classNames from 'classnames'
+import { CPopover } from '../CPopover.js'
 
 interface ButtonsGridPanelProps {
 	pageNumber: number
@@ -166,6 +168,8 @@ export const ButtonsGridPanel = observer(function ButtonsPage({
 		[setGridZoom]
 	)
 
+	console.log('draw outer')
+
 	return (
 		<KeyReceiver onKeyDown={onKeyDown} tabIndex={0} className="button-grid-panel">
 			<div className="button-grid-panel-header" ref={isInViewRef}>
@@ -181,17 +185,37 @@ export const ButtonsGridPanel = observer(function ButtonsPage({
 				<CRow innerRef={setSizeRef}>
 					<CCol sm={12}>
 						<ButtonGridHeader pageNumber={pageNumber} changePage={changePage2} setPage={setPage}>
-							<CButton color="light" onClick={showExportModal} title="Export page" className="btn-right">
+							<CButton color="light" onClick={showExportModal} title="Export Page" className="btn-right">
 								<FontAwesomeIcon icon={faFileExport} />
 								&nbsp;
-								{useCompactButtons ? '' : 'Export page'}
-							</CButton>
-							<CButton color="light" onClick={resetPosition} title="Home Position" className="btn-right">
-								<FontAwesomeIcon icon={faHome} /> {useCompactButtons ? '' : 'Home Position'}
+								{useCompactButtons ? '' : 'Export Page'}
 							</CButton>
 							<CButton color="light" onClick={configurePage} title="Edit Page" className="btn-right">
 								<FontAwesomeIcon icon={faPencil} /> {useCompactButtons ? '' : 'Edit Page'}
 							</CButton>
+							<CButton color="light" onClick={resetPosition} title="Home Position" className="btn-right">
+								<FontAwesomeIcon icon={faHome} /> {useCompactButtons ? '' : 'Home'}
+							</CButton>
+							<CPopover
+								// header="Popover header"
+								content={
+									<div className="popover-body">
+										<ButtonGridZoomSlider value={gridZoom} setValue={setAndStoreGridZoom} />
+									</div>
+								}
+								placement="bottom"
+								trigger="click"
+								advancedOptions={{ theme: 'cpopover' }}
+								interactive
+							>
+								<CButton
+									color="light"
+									title="Grid Scale"
+									className={classNames('btn-right', { 'btn-grid-scale': !useCompactButtons })}
+								>
+									<FontAwesomeIcon icon={faMagnifyingGlass} /> {useCompactButtons ? '' : `${Math.round(gridZoom)}%`}
+								</CButton>
+							</CPopover>
 						</ButtonGridHeader>
 					</CCol>
 				</CRow>

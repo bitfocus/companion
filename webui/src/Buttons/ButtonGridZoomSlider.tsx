@@ -25,35 +25,34 @@ export function ButtonGridZoomSlider({ value, setValue }: ButtonGridZoomSlider) 
 	const incrementZoom = useCallback(() => setValue(Math.min(value + zoomStep, maxZoom)), [value, setValue])
 	const decrementZoom = useCallback(() => setValue(Math.max(value - zoomStep, minZoom)), [value, setValue])
 
+	console.log('draw inner')
+
 	return (
-		<CRow>
-			<CCol sm={{ size: 5, offset: 3 }}>
-				<CInputGroup className={'fieldtype-range'}>
-					<CInputGroupPrepend>
-						<CButton onClick={decrementZoom}>
-							<FontAwesomeIcon icon={faMinus} />
-						</CButton>
-					</CInputGroupPrepend>
-					<CInput
-						name="zoom"
-						type="range"
-						min={minZoom}
-						max={maxZoom}
-						step={zoomStep}
-						title="Zoom"
-						value={value}
-						onChange={(e) => setValue(parseInt(e.currentTarget.value))}
-					/>
-					<CInputGroupAppend>
-						<CButton onClick={incrementZoom}>
-							<FontAwesomeIcon icon={faPlus} />
-						</CButton>
-					</CInputGroupAppend>
-				</CInputGroup>
-			</CCol>
-			<CCol sm={4}>
-				<CInputGroup>
-					{/* <CInputGroupPrepend>
+		<>
+			<CInputGroup className={'fieldtype-range'}>
+				<CInputGroupPrepend>
+					<CButton onClick={decrementZoom}>
+						<FontAwesomeIcon icon={faMinus} />
+					</CButton>
+				</CInputGroupPrepend>
+				<CInput
+					name="zoom"
+					type="range"
+					min={minZoom}
+					max={maxZoom}
+					step={zoomStep}
+					title="Zoom"
+					value={value}
+					onChange={(e) => setValue(parseInt(e.currentTarget.value))}
+				/>
+				<CInputGroupAppend>
+					<CButton onClick={incrementZoom}>
+						<FontAwesomeIcon icon={faPlus} />
+					</CButton>
+				</CInputGroupAppend>
+			</CInputGroup>
+			<CInputGroup>
+				{/* <CInputGroupPrepend>
             <CButton
                 color="info"
                 variant="outline"
@@ -63,12 +62,11 @@ export function ButtonGridZoomSlider({ value, setValue }: ButtonGridZoomSlider) 
                 <FontAwesomeIcon icon={faMagnifyingGlass} />
             </CButton>
         </CInputGroupPrepend> */}
-					<NumberInputField value={value} setValue={setValue} min={minZoom} max={maxZoom} />
-					<CInputGroupAppend>
-						<CInputGroupText>%</CInputGroupText>
-					</CInputGroupAppend>
-				</CInputGroup>
-			</CCol>
-		</CRow>
+				<NumberInputField value={value} setValue={setValue} min={minZoom} max={maxZoom} />
+				<CInputGroupAppend>
+					<CInputGroupText>%</CInputGroupText>
+				</CInputGroupAppend>
+			</CInputGroup>
+		</>
 	)
 }
