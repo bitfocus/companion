@@ -63,6 +63,13 @@ export const TabletView = observer(function TabletView() {
 	const rawGridSize = userConfigStore.properties?.gridSize
 
 	useEffect(() => {
+		document.title =
+			userConfigStore.properties?.installName && userConfigStore.properties?.installName.length > 0
+				? `${userConfigStore.properties?.installName} - Web Buttons (Bitfocus Companion)`
+				: 'Bitfocus Companion - Web Buttons'
+	}, [userConfigStore.properties?.installName])
+
+	useEffect(() => {
 		const onConnect = () => {
 			setRetryToken(nanoid())
 		}

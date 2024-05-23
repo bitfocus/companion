@@ -417,7 +417,7 @@ interface AppContentProps {
 	buttonGridHotPress: boolean
 }
 
-function AppContent({ buttonGridHotPress }: AppContentProps) {
+const AppContent = observer(function AppContent({ buttonGridHotPress }: AppContentProps) {
 	const routerLocation = useLocation()
 	let hasMatchedPane = false
 	const getClassForPane = (prefix: string) => {
@@ -429,6 +429,15 @@ function AppContent({ buttonGridHotPress }: AppContentProps) {
 			return ''
 		}
 	}
+
+	const { userConfig } = useContext(RootAppStoreContext)
+
+	useEffect(() => {
+		document.title =
+			userConfig.properties?.installName && userConfig.properties?.installName.length > 0
+				? `${userConfig.properties?.installName} - Admin (Bitfocus Companion)`
+				: 'Bitfocus Companion - Admin'
+	}, [userConfig.properties?.installName])
 
 	return (
 		<CContainer fluid className="fadeIn">
@@ -536,4 +545,4 @@ function AppContent({ buttonGridHotPress }: AppContentProps) {
 			</CTabContent>
 		</CContainer>
 	)
-}
+})

@@ -22,6 +22,7 @@ import { ArtnetConfig } from './ArtnetConfig.js'
 import { GridConfig } from './GridConfig.js'
 import { VideohubServerConfig } from './VideohubServerConfig.js'
 import { HttpConfig } from './HttpConfig.js'
+import { CompanionConfig } from './CompanionConfig.js'
 import { RootAppStoreContext } from '../Stores/RootAppStore.js'
 import { observer } from 'mobx-react-lite'
 
@@ -71,6 +72,7 @@ const UserConfigTable = observer(function UserConfigTable() {
 	return (
 		<table className="table table-responsive-sm">
 			<tbody>
+				<CompanionConfig config={userConfig.properties} setValue={setValue} resetValue={resetValue} />
 				<ButtonsConfig config={userConfig.properties} setValue={setValue} resetValue={resetValue} />
 				<GridConfig config={userConfig.properties} setValue={setValue} resetValue={resetValue} />
 				<SurfacesConfig config={userConfig.properties} setValue={setValue} resetValue={resetValue} />

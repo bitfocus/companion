@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo, useState, useContext } from 'react'
+import React, { useCallback, useEffect, useMemo, useState, useContext } from 'react'
 import { LoadingRetryOrError, SocketContext, useComputed } from '../util.js'
 import { CAlert, CCol, CContainer, CRow, CWidgetSimple } from '@coreui/react'
 import { nanoid } from 'nanoid'
@@ -6,8 +6,11 @@ import { useNavigate } from 'react-router-dom'
 import type { ClientSurfaceItem } from '@companion-app/shared/Model/Surfaces.js'
 import { SurfacesStore } from '../Stores/SurfacesStore.js'
 import { useSurfacesSubscription } from '../Hooks/useSurfacesSubscription.js'
+import { UserConfigStore } from '../Stores/UserConfigStore.js'
+import { useUserConfigSubscription } from '../Hooks/useUserConfigSubscription.js'
+import { observer } from 'mobx-react-lite'
 
-export function EmulatorList() {
+export const EmulatorList = observer(function EmulatorList() {
 	const socket = useContext(SocketContext)
 
 	const [loadError, setLoadError] = useState<string | null>(null)
@@ -17,6 +20,16 @@ export function EmulatorList() {
 
 	const surfacesStore = useMemo(() => new SurfacesStore(), [])
 	const surfacesReady = useSurfacesSubscription(socket, surfacesStore, setLoadError, reloadToken)
+
+	const userConfigStore = useMemo(() => new UserConfigStore(), [])
+	const userConfigReady = useUserConfigSubscription(socket, userConfigStore)
+
+	useEffect(() => {
+		document.title =
+			userConfigStore.properties?.installName && userConfigStore.properties?.installName.length > 0
+				? `${userConfigStore.properties?.installName} - Emulators (Bitfocus Companion)`
+				: 'Bitfocus Companion - Emulators'
+	}, [userConfigStore.properties?.installName])
 
 	const emulators = useComputed(() => {
 		const emulators: ClientSurfaceItem[] = []
@@ -37,7 +50,7 @@ export function EmulatorList() {
 	return (
 		<div className="page-emulator-list">
 			<CContainer fluid className="d-flex flex-column">
-				<LoadingRetryOrError error={loadError} dataReady={!!surfacesReady} doRetry={doRetryLoad} />
+				<LoadingRetryOrError error={loadError} dataReady={!!surfacesReady || !!userConfigReady} doRetry={doRetryLoad} />
 				{surfacesReady && (
 					<CRow alignHorizontal="center">
 						<CCol sm={12}>
@@ -68,7 +81,7 @@ export function EmulatorList() {
 			</CContainer>
 		</div>
 	)
-}
+})
 
 interface EmulatorCardProps {
 	surface: ClientSurfaceItem

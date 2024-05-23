@@ -88,6 +88,10 @@
 				"file": "3_config/settings.md",
 				"children": [
 					{
+						"label": "Installation Name",
+						"file": "3_config/settings/install_name.md"
+					},
+					{
 						"label": "Navigation buttons",
 						"file": "3_config/settings/navigation_buttons.md"
 					},
