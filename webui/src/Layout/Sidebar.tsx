@@ -1,5 +1,5 @@
 import React, { memo, useCallback, useState } from 'react'
-import { CSidebar, CSidebarNav, CNavItem, CSidebarBrand, CSidebarToggler } from '@coreui/react'
+import { CSidebar, CSidebarNav, CNavItem, CSidebarBrand, CSidebarToggler, CSidebarHeader } from '@coreui/react'
 import {
 	faBug,
 	faComments,
@@ -30,17 +30,19 @@ export const MySidebar = memo(function MySidebar({ sidebarShow, showWizard }: My
 	)
 
 	return (
-		<CSidebar position="fixed" unfoldable={unfoldable} visible={sidebarShow}>
-			<CSidebarBrand>
-				<div className="sidebar-brand-full">
-					<img src="/img/icons/48x48.png" height="30" alt="logo" />
-					&nbsp; Bitfocus&nbsp;
-					<span style={{ fontWeight: 'bold' }}>Companion</span>
-				</div>
-				<div className="sidebar-brand-narrow">
-					<img src="/img/icons/48x48.png" height="42px" alt="logo" />
-				</div>
-			</CSidebarBrand>
+		<CSidebar position="fixed" unfoldable={unfoldable} visible={sidebarShow} colorScheme="dark">
+			<CSidebarHeader className="brand">
+				<CSidebarBrand>
+					<div className="sidebar-brand-full">
+						<img src="/img/icons/48x48.png" height="30" alt="logo" />
+						&nbsp; Bitfocus&nbsp;
+						<span style={{ fontWeight: 'bold' }}>Companion</span>
+					</div>
+					<div className="sidebar-brand-narrow">
+						<img src="/img/icons/48x48.png" height="42px" alt="logo" />
+					</div>
+				</CSidebarBrand>
+			</CSidebarHeader>
 			<CSidebarNav>
 				<CNavItem href="#" onClick={showWizard2}>
 					<FontAwesomeIcon className="nav-icon" icon={faHatWizard} /> Configuration Wizard
@@ -70,7 +72,9 @@ export const MySidebar = memo(function MySidebar({ sidebarShow, showWizard }: My
 					<FontAwesomeIcon className="nav-icon" icon={faInfo} /> Getting Started
 				</CNavItem>
 			</CSidebarNav>
-			<CSidebarToggler className="d-none d-lg-flex" onClick={() => setUnfoldable((val) => !val)} />
+			<CSidebarHeader className="border-top">
+				<CSidebarToggler className="d-none d-lg-flex" onClick={() => setUnfoldable((val) => !val)} />
+			</CSidebarHeader>
 		</CSidebar>
 	)
 })

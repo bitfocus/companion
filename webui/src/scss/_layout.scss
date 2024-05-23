@@ -174,13 +174,27 @@ body {
 	}
 }
 
+.header > .container-fluid,
+.sidebar-header {
+	min-height: calc(4rem + 1px); // stylelint-disable-line function-disallowed-list
+}
+
 .sidebar {
 	.sidebar-brand {
 		font-size: 1.3em;
+		text-decoration: none;
 
 		.sidebar-brand-full {
 			white-space: nowrap;
+
+			img {
+				margin-top: -5px;
+			}
 		}
+	}
+
+	.sidebar-header.brand {
+		background-color: $sidebar-brand-bg;
 	}
 
 	.nav-link {
