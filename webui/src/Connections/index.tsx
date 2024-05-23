@@ -1,4 +1,4 @@
-import { CCol, CRow, CTabs, CTabContent, CTabPane, CNavItem, CNavLink, CNav } from '@coreui/react'
+import { CCol, CRow, CTabContent, CTabPane, CNavItem, CNavLink, CNav } from '@coreui/react'
 import React, { memo, useCallback, useContext, useEffect, useRef, useState } from 'react'
 import { HelpModal, HelpModalRef } from './HelpModal.js'
 import { MyErrorBoundary, socketEmitPromise } from '../util.js'
@@ -94,40 +94,40 @@ export const ConnectionsPage = memo(function ConnectionsPage() {
 
 			<CCol xl={6} className="connections-panel secondary-panel add-connections-panel">
 				<div className="secondary-panel-inner">
-					<CTabs activeTab={activeTab} onActiveTabChange={doChangeTab}>
-						<CNav variant="tabs">
-							<CNavItem>
-								<CNavLink data-tab="add">
-									<FontAwesomeIcon icon={faPlus} /> Add connection
-								</CNavLink>
-							</CNavItem>
-							<CNavItem hidden={!selectedConnectionId}>
-								<CNavLink data-tab="edit">
-									<FontAwesomeIcon icon={faCog} /> Edit connection
-								</CNavLink>
-							</CNavItem>
-						</CNav>
-						<CTabContent fade={false} className="remove075right">
-							<CTabPane data-tab="add">
-								<MyErrorBoundary>
-									<AddConnectionsPanel showHelp={showHelp} doConfigureConnection={doConfigureConnection} />
-								</MyErrorBoundary>
-							</CTabPane>
-							<CTabPane data-tab="edit">
-								<MyErrorBoundary>
-									{selectedConnectionId && (
-										<ConnectionEditPanel
-											key={tabResetToken}
-											showHelp={showHelp}
-											doConfigureConnection={doConfigureConnection}
-											connectionId={selectedConnectionId}
-											connectionStatus={connectionStatus?.[selectedConnectionId]}
-										/>
-									)}
-								</MyErrorBoundary>
-							</CTabPane>
-						</CTabContent>
-					</CTabs>
+					{/* <CTabs activeTab={activeTab} onActiveTabChange={doChangeTab}> */}
+					<CNav variant="tabs">
+						<CNavItem>
+							<CNavLink data-tab="add">
+								<FontAwesomeIcon icon={faPlus} /> Add connection
+							</CNavLink>
+						</CNavItem>
+						<CNavItem hidden={!selectedConnectionId}>
+							<CNavLink data-tab="edit">
+								<FontAwesomeIcon icon={faCog} /> Edit connection
+							</CNavLink>
+						</CNavItem>
+					</CNav>
+					<CTabContent className="remove075right">
+						<CTabPane data-tab="add">
+							<MyErrorBoundary>
+								<AddConnectionsPanel showHelp={showHelp} doConfigureConnection={doConfigureConnection} />
+							</MyErrorBoundary>
+						</CTabPane>
+						<CTabPane data-tab="edit">
+							<MyErrorBoundary>
+								{selectedConnectionId && (
+									<ConnectionEditPanel
+										key={tabResetToken}
+										showHelp={showHelp}
+										doConfigureConnection={doConfigureConnection}
+										connectionId={selectedConnectionId}
+										connectionStatus={connectionStatus?.[selectedConnectionId]}
+									/>
+								)}
+							</MyErrorBoundary>
+						</CTabPane>
+					</CTabContent>
+					{/* </CTabs> */}
 				</div>
 			</CCol>
 		</CRow>

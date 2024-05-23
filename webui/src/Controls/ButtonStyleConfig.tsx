@@ -1,4 +1,4 @@
-import { CButton, CRow, CCol, CButtonGroup, CForm, CAlert, CInputGroup, CInputGroupAppend } from '@coreui/react'
+import { CButton, CRow, CCol, CButtonGroup, CForm, CAlert, CInputGroup } from '@coreui/react'
 import React, { MutableRefObject, useCallback, useContext, useMemo, useState } from 'react'
 import { socketEmitPromise, SocketContext, PreventDefaultHandler } from '../util.js'
 import {
@@ -196,16 +196,14 @@ export function ButtonStyleConfigFields({
 							useLocalVariables
 							style={{ fontWeight: 'bold', fontSize: 18 }}
 						/>
-						<CInputGroupAppend>
-							<CButton
-								color="info"
-								variant="outline"
-								onClick={toggleExpression}
-								title={values.textExpression ? 'Expression mode ' : 'String mode'}
-							>
-								<FontAwesomeIcon icon={values.textExpression ? faDollarSign : faFont} />
-							</CButton>
-						</CInputGroupAppend>
+						<CButton
+							color="info"
+							variant="outline"
+							onClick={toggleExpression}
+							title={values.textExpression ? 'Expression mode ' : 'String mode'}
+						>
+							<FontAwesomeIcon icon={values.textExpression ? faDollarSign : faFont} />
+						</CButton>
 					</CInputGroup>
 				</div>
 			)}

@@ -1,5 +1,5 @@
 import React from 'react'
-import { CButton, CInput } from '@coreui/react'
+import { CButton, CFormInput } from '@coreui/react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faUndo } from '@fortawesome/free-solid-svg-icons'
 import CSwitch from '../CSwitch.js'
@@ -43,7 +43,7 @@ export const ArtnetConfig = observer(function ArtnetConfig({ config, setValue, r
 				<td>Artnet Universe (first is 0)</td>
 				<td>
 					<div className="form-check form-check-inline mr-1">
-						<CInput
+						<CFormInput
 							type="number"
 							value={config.artnet_universe}
 							onChange={(e) => setValue('artnet_universe', e.currentTarget.value)}
@@ -61,7 +61,7 @@ export const ArtnetConfig = observer(function ArtnetConfig({ config, setValue, r
 				<td>Artnet Channel</td>
 				<td>
 					<div className="form-check form-check-inline mr-1">
-						<CInput
+						<CFormInput
 							type="number"
 							value={config.artnet_channel}
 							onChange={(e) => setValue('artnet_channel', e.currentTarget.value)}

@@ -1,7 +1,7 @@
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faInfoCircle } from '@fortawesome/free-solid-svg-icons'
 import React, { Component } from 'react'
-import { CInput, CButton, CCallout, CCard, CCardBody, CCardHeader, CListGroup } from '@coreui/react'
+import { CFormInput, CButton, CCallout, CCard, CCardBody, CCardHeader, CListGroup } from '@coreui/react'
 import { CloudRegionPanel } from './RegionPanel.js'
 import { CloudUserPass } from './UserPass.js'
 import CSwitch from '../CSwitch.js'
@@ -151,7 +151,7 @@ export class Cloud extends Component<CloudControllerProps, CloudControllerState>
 							}}
 						>
 							<div style={{ fontWeight: 'bold', fontSize: 15, marginBottom: 4 }}>Logged in as</div>
-							<CInput
+							<CFormInput
 								readOnly
 								type="text"
 								style={{

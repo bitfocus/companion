@@ -55,7 +55,7 @@ export const HelpModal = observer(
 		const moduleInfo = content && modules.modules.get(content[0])
 
 		return (
-			<CModal show={show} onClose={doClose} onClosed={onClosed} size="lg">
+			<CModal visible={show} onClose={doClose} onClosed={onClosed} size="lg">
 				<CModalHeader closeButton>
 					<h5>
 						Help for {moduleInfo?.name || content?.[0]} {moduleInfo?.version ? `v${moduleInfo.version}` : ''}

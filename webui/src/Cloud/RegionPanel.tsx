@@ -1,5 +1,5 @@
 import React, { Component } from 'react'
-import { CAlert, CListGroupItem, CSwitch } from '@coreui/react'
+import { CAlert, CFormSwitch, CListGroupItem } from '@coreui/react'
 import type { CompanionSocketType } from '../util.js'
 import { CloudRegionState } from '@companion-app/shared/Model/Cloud.js'
 
@@ -69,7 +69,7 @@ export class CloudRegionPanel extends Component<CloudRegionPanelProps, CloudRegi
 		return !this.props.disabled || this.state.enabled ? (
 			<CListGroupItem>
 				<span style={{ display: 'inline-block', paddingTop: 5, float: 'left' }}>
-					<CSwitch
+					<CFormSwitch
 						color={this.state.connected ? 'success' : 'danger'}
 						checked={!!this.state.enabled}
 						onChange={(e) => this.cloudSetState({ enabled: e.currentTarget.checked })}

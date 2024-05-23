@@ -1,5 +1,5 @@
 import React, { useCallback, useState } from 'react'
-import { CInput } from '@coreui/react'
+import { CFormInput } from '@coreui/react'
 import type { UserConfigGridSize, UserConfigModel } from '@companion-app/shared/Model/UserConfigModel.js'
 
 interface GridStepProps {
@@ -52,14 +52,14 @@ export function GridStep({ rows, columns, setValue }: GridStepProps) {
 				<div className="col-left">Rows</div>
 				<div className="col-right">
 					<div className="form-check form-check-inline mr-1">
-						<CInput type="number" value={totalRows} min={0} step={1} onChange={setMaxRow} />
+						<CFormInput type="number" value={totalRows} min={0} step={1} onChange={setMaxRow} />
 					</div>
 				</div>
 				<br />
 				<div className="col-left">Columns</div>
 				<div className="col-right">
 					<div className="form-check form-check-inline mr-1">
-						<CInput type="number" value={totalColumns} min={0} step={1} onChange={setMaxColumn} />
+						<CFormInput type="number" value={totalColumns} min={0} step={1} onChange={setMaxColumn} />
 					</div>
 				</div>
 			</div>

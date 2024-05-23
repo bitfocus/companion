@@ -7,8 +7,8 @@ import {
 	CModalFooter,
 	CModalHeader,
 	CAlert,
-	CInputCheckbox,
-	CLabel,
+	CFormCheck,
+	CFormLabel,
 } from '@coreui/react'
 import { PreventDefaultHandler, socketEmitPromise } from '../util.js'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
@@ -162,7 +162,7 @@ export const ResetWizardModal = forwardRef<ResetWizardModalRef, ResetWizardModal
 		}
 
 		return (
-			<CModal show={show} onClose={doClose} className={'wizard'} closeOnBackdrop={false}>
+			<CModal visible={show} onClose={doClose} className={'wizard'} closeOnBackdrop={false}>
 				<CForm onSubmit={PreventDefaultHandler}>
 					<CModalHeader>
 						<h2>
@@ -217,12 +217,12 @@ function ResetOptionsStep({ config, setValue }: ResetOptionsStepProps) {
 			<p>Please select the components you'd like to reset.</p>
 			<div className="indent3">
 				<div className="form-check form-check-inline mr-1">
-					<CInputCheckbox
+					<CFormCheck
 						id="wizard_connections"
 						checked={config.connections}
 						onChange={(e) => setValue('connections', e.currentTarget.checked)}
 					/>
-					<CLabel htmlFor="wizard_connections">Connections</CLabel>
+					<CFormLabel htmlFor="wizard_connections">Connections</CFormLabel>
 				</div>
 				{config.connections && !(config.buttons && config.triggers) ? (
 					<CAlert color="warning">
@@ -235,32 +235,32 @@ function ResetOptionsStep({ config, setValue }: ResetOptionsStepProps) {
 			</div>
 			<div className="indent3">
 				<div className="form-check form-check-inline mr-1">
-					<CInputCheckbox
+					<CFormCheck
 						id="wizard_buttons"
 						checked={config.buttons}
 						onChange={(e) => setValue('buttons', e.currentTarget.checked)}
 					/>
-					<CLabel htmlFor="wizard_buttons">Buttons</CLabel>
+					<CFormLabel htmlFor="wizard_buttons">Buttons</CFormLabel>
 				</div>
 			</div>
 			<div className="indent3">
 				<div className="form-check form-check-inline mr-1">
-					<CInputCheckbox
+					<CFormCheck
 						id="wizard_triggers"
 						checked={config.triggers}
 						onChange={(e) => setValue('triggers', e.currentTarget.checked)}
 					/>
-					<CLabel htmlFor="wizard_triggers">Triggers</CLabel>
+					<CFormLabel htmlFor="wizard_triggers">Triggers</CFormLabel>
 				</div>
 			</div>
 			<div className="indent3">
 				<div className="form-check form-check-inline mr-1">
-					<CInputCheckbox
+					<CFormCheck
 						id="wizard_custom_variables"
 						checked={config.customVariables}
 						onChange={(e) => setValue('customVariables', e.currentTarget.checked)}
 					/>
-					<CLabel htmlFor="wizard_custom_variables">Custom Variables</CLabel>
+					<CFormLabel htmlFor="wizard_custom_variables">Custom Variables</CFormLabel>
 				</div>
 				{config.customVariables && !(config.buttons && config.triggers) ? (
 					<CAlert color="warning">
@@ -273,22 +273,22 @@ function ResetOptionsStep({ config, setValue }: ResetOptionsStepProps) {
 			</div>
 			<div className="indent3">
 				<div className="form-check form-check-inline mr-1">
-					<CInputCheckbox
+					<CFormCheck
 						id="wizard_surfaces"
 						checked={config.surfaces}
 						onChange={(e) => setValue('surfaces', e.currentTarget.checked)}
 					/>
-					<CLabel htmlFor="wizard_surfaces">Surfaces</CLabel>
+					<CFormLabel htmlFor="wizard_surfaces">Surfaces</CFormLabel>
 				</div>
 			</div>
 			<div className="indent3">
 				<div className="form-check form-check-inline mr-1">
-					<CInputCheckbox
+					<CFormCheck
 						id="wizard_userconfig"
 						checked={config.userconfig}
 						onChange={(e) => setValue('userconfig', e.currentTarget.checked)}
 					/>
-					<CLabel htmlFor="wizard_userconfig">Settings</CLabel>
+					<CFormLabel htmlFor="wizard_userconfig">Settings</CFormLabel>
 				</div>
 			</div>
 		</div>

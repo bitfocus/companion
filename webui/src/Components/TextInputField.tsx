@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState, useCallback, useContext, useRef } from 'react'
-import { CInput } from '@coreui/react'
+import { CFormInput } from '@coreui/react'
 import Select, {
 	ControlProps,
 	OptionProps,
@@ -14,6 +14,7 @@ import { WindowedMenuList } from 'react-windowed-select'
 import { RootAppStoreContext } from '../Stores/RootAppStore.js'
 
 interface TextInputFieldProps {
+	label?: React.ReactNode
 	regex?: string
 	required?: boolean
 	tooltip?: string
@@ -28,6 +29,7 @@ interface TextInputFieldProps {
 }
 
 export const TextInputField = observer(function TextInputField({
+	label,
 	regex,
 	required,
 	tooltip,
@@ -125,7 +127,8 @@ export const TextInputField = observer(function TextInputField({
 					disabled={disabled}
 				/>
 			) : (
-				<CInput
+				<CFormInput
+					label={label}
 					type="text"
 					disabled={disabled}
 					value={showValue}
@@ -416,8 +419,8 @@ const CustomValueContainer = React.memo((props: ValueContainerProps<DropdownChoi
 
 	return (
 		<SelectComponents.ValueContainer {...props} isDisabled>
-			<CInput
-				innerRef={context.inputRef}
+			<CFormInput
+				ref={context.inputRef}
 				type="text"
 				style={context.extraStyle}
 				title={context.title}

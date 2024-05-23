@@ -1,18 +1,7 @@
 import React, { useCallback, useContext, useMemo, useState } from 'react'
 import ClassNames from 'classnames'
 import { MyErrorBoundary, socketEmitPromise } from '../../util.js'
-import {
-	CAlert,
-	CButton,
-	CInputCheckbox,
-	CLabel,
-	CNav,
-	CNavItem,
-	CNavLink,
-	CTabContent,
-	CTabPane,
-	CTabs,
-} from '@coreui/react'
+import { CAlert, CButton, CFormCheck, CFormLabel, CNav, CNavItem, CNavLink, CTabContent, CTabPane } from '@coreui/react'
 import { faCalendar, faClock, faDownload, faFileImport, faGlobe } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { ImportPageWizard } from './Page.js'
@@ -48,7 +37,8 @@ export function ImportFullWizard({ snapshot, instanceRemap, setInstanceRemap }: 
 	)
 
 	return (
-		<CTabs activeTab="full">
+		<>
+			{/* <CTabs activeTab="full"> */}
 			<CNav variant="tabs">
 				<CNavItem>
 					<CNavLink data-tab="full">
@@ -66,7 +56,7 @@ export function ImportFullWizard({ snapshot, instanceRemap, setInstanceRemap }: 
 					</CNavLink>
 				</CNavItem>
 			</CNav>
-			<CTabContent fade={false} className="no-height-limit">
+			<CTabContent className="no-height-limit">
 				<CTabPane data-tab="full">
 					<MyErrorBoundary>
 						<FullImportTab snapshot={snapshot} />
@@ -100,7 +90,8 @@ export function ImportFullWizard({ snapshot, instanceRemap, setInstanceRemap }: 
 					</MyErrorBoundary>
 				</CTabPane>
 			</CTabContent>
-		</CTabs>
+			{/* </CTabs> */}
+		</>
 	)
 }
 
@@ -243,20 +234,20 @@ function InputCheckbox({ config, allowKeys, keyName, setValue, label }: InputChe
 	return (
 		<div className="indent3">
 			<div className="form-check form-check-inline mr-1">
-				<CInputCheckbox
+				<CFormCheck
 					id={`check-${keyName}`}
 					checked={!disabled && !!config[keyName]}
 					onChange={setValue2}
 					disabled={disabled}
 				/>
-				<CLabel
+				<CFormLabel
 					htmlFor={`check-${keyName}`}
 					className={ClassNames({
 						disabled: disabled,
 					})}
 				>
 					{label}
-				</CLabel>
+				</CFormLabel>
 			</div>
 		</div>
 	)

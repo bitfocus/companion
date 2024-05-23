@@ -1,5 +1,5 @@
 import React, { FormEvent, forwardRef, useCallback, useImperativeHandle, useState } from 'react'
-import { CButton, CForm, CInputCheckbox, CLabel, CModal, CModalBody, CModalFooter, CModalHeader } from '@coreui/react'
+import { CButton, CForm, CFormCheck, CFormLabel, CModal, CModalBody, CModalFooter, CModalHeader } from '@coreui/react'
 import { PreventDefaultHandler } from '../util.js'
 import { ExportFormatDefault, SelectExportFormat } from './ExportFormat.js'
 import { MenuPortalContext } from '../Components/DropdownInputField.js'
@@ -123,12 +123,12 @@ function ExportOptionsStep({ config, setValue }: ExportOptionsStepProps) {
 			<p>Please select the components you'd like to export.</p>
 			<div className="indent3">
 				<div className="form-check form-check-inline mr-1">
-					<CInputCheckbox
+					<CFormCheck
 						id="wizard_connections"
 						checked={config.connections}
 						onChange={(e) => setValue('connections', e.currentTarget.checked)}
 					/>
-					<CLabel htmlFor="wizard_connections">Connections</CLabel>
+					<CFormLabel htmlFor="wizard_connections">Connections</CFormLabel>
 				</div>
 				{/* {!config.connections && (config.buttons || config.triggers) && (
 					<CAlert color="warning">
@@ -139,58 +139,58 @@ function ExportOptionsStep({ config, setValue }: ExportOptionsStepProps) {
 			</div>
 			<div className="indent3">
 				<div className="form-check form-check-inline mr-1">
-					<CInputCheckbox
+					<CFormCheck
 						id="wizard_buttons"
 						checked={config.buttons}
 						onChange={(e) => setValue('buttons', e.currentTarget.checked)}
 					/>
-					<CLabel htmlFor="wizard_buttons">Buttons</CLabel>
+					<CFormLabel htmlFor="wizard_buttons">Buttons</CFormLabel>
 				</div>
 			</div>
 			<div className="indent3">
 				<div className="form-check form-check-inline mr-1">
-					<CInputCheckbox
+					<CFormCheck
 						id="wizard_triggers"
 						checked={config.triggers}
 						onChange={(e) => setValue('triggers', e.currentTarget.checked)}
 					/>
-					<CLabel htmlFor="wizard_triggers">Triggers</CLabel>
+					<CFormLabel htmlFor="wizard_triggers">Triggers</CFormLabel>
 				</div>
 			</div>
 			<div className="indent3">
 				<div className="form-check form-check-inline mr-1">
-					<CInputCheckbox
+					<CFormCheck
 						id="wizard_custom_variables"
 						checked={config.customVariables}
 						onChange={(e) => setValue('customVariables', e.currentTarget.checked)}
 					/>
-					<CLabel htmlFor="wizard_custom_variables">Custom Variables</CLabel>
+					<CFormLabel htmlFor="wizard_custom_variables">Custom Variables</CFormLabel>
 				</div>
 			</div>
 			<div className="indent3">
 				<div className="form-check form-check-inline mr-1">
-					<CInputCheckbox
+					<CFormCheck
 						id="wizard_surfaces"
 						checked={config.surfaces}
 						onChange={(e) => setValue('surfaces', e.currentTarget.checked)}
 					/>
-					<CLabel htmlFor="wizard_surfaces">Surfaces</CLabel>
+					<CFormLabel htmlFor="wizard_surfaces">Surfaces</CFormLabel>
 				</div>
 			</div>
 			{/* <div className="indent3">
 				<div className="form-check form-check-inline mr-1">
-					<CInputCheckbox
+					<CFormCheck
 						id="wizard_userconfig"
 						checked={config.userconfig}
 						onChange={(e) => setValue('userconfig', e.currentTarget.checked)}
 					/>
-					<CLabel htmlFor="wizard_userconfig">Settings</CLabel>
+					<CFormLabel htmlFor="wizard_userconfig">Settings</CFormLabel>
 				</div>
 			</div> */}
 
 			<div className="indent3">
 				<div className="form-check form-check-inline mr-1">
-					<CLabel htmlFor="file_format">File format</CLabel>
+					<CFormLabel htmlFor="file_format">File format</CFormLabel>
 					&nbsp;
 					<SelectExportFormat value={config.format} setValue={(val) => setValue('format', val)} />
 				</div>

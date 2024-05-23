@@ -194,9 +194,10 @@ table.feedback-table {
 	tbody {
 		border-bottom: $table-border-width solid;
 
-		@include themes($table-theme-map, $create: parent) {
-			border-bottom-color: themes-get-value('table-border-color');
-		}
+		// nocommit
+		// @include themes($table-theme-map, $create: parent) {
+		// 	border-bottom-color: themes-get-value('table-border-color');
+		// }
 	}
 }
 

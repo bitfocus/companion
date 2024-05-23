@@ -9,6 +9,7 @@ export const MenuPortalContext = createContext<HTMLElement | null>(null)
 type AsType<Multi extends boolean> = Multi extends true ? DropdownChoiceId[] : DropdownChoiceId
 
 interface DropdownInputFieldProps<Multi extends boolean> {
+	label?: React.ReactNode
 	choices: DropdownChoice[] | Record<string, DropdownChoice>
 	allowCustom?: boolean
 	minSelection?: number
@@ -29,6 +30,7 @@ interface DropdownChoiceInt {
 }
 
 export const DropdownInputField = memo(function DropdownInputField<Multi extends boolean>({
+	label,
 	choices,
 	allowCustom,
 	minSelection,

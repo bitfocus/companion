@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useState, useContext } from 'react'
 import { LoadingRetryOrError, SocketContext, useComputed } from '../util.js'
-import { CAlert, CCol, CContainer, CRow, CWidgetSimple } from '@coreui/react'
+import { CAlert, CCol, CContainer, CRow, CWidgetStatsA } from '@coreui/react'
 import { nanoid } from 'nanoid'
 import { useNavigate } from 'react-router-dom'
 import type { ClientSurfaceItem } from '@companion-app/shared/Model/Surfaces.js'
@@ -63,9 +63,10 @@ export const EmulatorList = observer(function EmulatorList() {
 
 						{emulators.length === 0 && (
 							<CCol sm={4}>
-								<CWidgetSimple text="No Emulators have been created">
+								nocommit: change this
+								<CWidgetStatsA title="No Emulators have been created">
 									You can create one in the Surfaces tab
-								</CWidgetSimple>
+								</CWidgetStatsA>
 							</CCol>
 						)}
 					</CRow>
@@ -93,9 +94,10 @@ function EmulatorCard({ surface }: EmulatorCardProps) {
 	}, [navigate, surface.id])
 	return (
 		<CCol sm={4}>
-			<CWidgetSimple text={surface.name || 'Emulator'} onClick={click} className="widget-clickable">
+			nocommit: change this
+			<CWidgetStatsA title={surface.name || 'Emulator'} onClick={click} className="widget-clickable">
 				{/* <CButton color="primary">Open</CButton> */}
-			</CWidgetSimple>
+			</CWidgetStatsA>
 		</CCol>
 	)
 }

@@ -1,5 +1,5 @@
 import React, { memo, useCallback, useContext } from 'react'
-import { CCol, CNav, CNavItem, CNavLink, CRow, CTabContent, CTabPane, CTabs } from '@coreui/react'
+import { CCol, CNav, CNavItem, CNavLink, CRow, CTabContent, CTabPane } from '@coreui/react'
 import { MyErrorBoundary } from '../util.js'
 import { ArtnetProtocol } from './ArtnetProtocol.js'
 import { RosstalkProtocol } from './RosstalkProtocol.js'
@@ -101,52 +101,50 @@ const UserConfigTable = observer(function UserConfigTable() {
 function RemoteControlInfo() {
 	return (
 		<>
-			<CTabs activeTab="tcp-udp">
-				<CNav variant="tabs">
-					<CNavItem>
-						<CNavLink data-tab="tcp-udp">TCP/UDP</CNavLink>
-					</CNavItem>
-					<CNavItem>
-						<CNavLink data-tab="http">HTTP</CNavLink>
-					</CNavItem>
-					<CNavItem>
-						<CNavLink data-tab="osc">OSC</CNavLink>
-					</CNavItem>
-					<CNavItem>
-						<CNavLink data-tab="artnet">Artnet / DMX</CNavLink>
-					</CNavItem>
-					<CNavItem>
-						<CNavLink data-tab="rosstalk">Rosstalk</CNavLink>
-					</CNavItem>
-				</CNav>
-				<CTabContent fade={false}>
-					<CTabPane data-tab="tcp-udp">
-						<MyErrorBoundary>
-							<TcpUdpProtocol />
-						</MyErrorBoundary>
-					</CTabPane>
-					<CTabPane data-tab="http">
-						<MyErrorBoundary>
-							<HttpProtocol />
-						</MyErrorBoundary>
-					</CTabPane>
-					<CTabPane data-tab="osc">
-						<MyErrorBoundary>
-							<OscProtocol />
-						</MyErrorBoundary>
-					</CTabPane>
-					<CTabPane data-tab="artnet">
-						<MyErrorBoundary>
-							<ArtnetProtocol />
-						</MyErrorBoundary>
-					</CTabPane>
-					<CTabPane data-tab="rosstalk">
-						<MyErrorBoundary>
-							<RosstalkProtocol />
-						</MyErrorBoundary>
-					</CTabPane>
-				</CTabContent>
-			</CTabs>
+			<CNav variant="tabs" role="tablist">
+				<CNavItem>
+					<CNavLink data-tab="tcp-udp">TCP/UDP</CNavLink>
+				</CNavItem>
+				<CNavItem>
+					<CNavLink data-tab="http">HTTP</CNavLink>
+				</CNavItem>
+				<CNavItem>
+					<CNavLink data-tab="osc">OSC</CNavLink>
+				</CNavItem>
+				<CNavItem>
+					<CNavLink data-tab="artnet">Artnet / DMX</CNavLink>
+				</CNavItem>
+				<CNavItem>
+					<CNavLink data-tab="rosstalk">Rosstalk</CNavLink>
+				</CNavItem>
+			</CNav>
+			<CTabContent>
+				<CTabPane data-tab="tcp-udp">
+					<MyErrorBoundary>
+						<TcpUdpProtocol />
+					</MyErrorBoundary>
+				</CTabPane>
+				<CTabPane data-tab="http">
+					<MyErrorBoundary>
+						<HttpProtocol />
+					</MyErrorBoundary>
+				</CTabPane>
+				<CTabPane data-tab="osc">
+					<MyErrorBoundary>
+						<OscProtocol />
+					</MyErrorBoundary>
+				</CTabPane>
+				<CTabPane data-tab="artnet">
+					<MyErrorBoundary>
+						<ArtnetProtocol />
+					</MyErrorBoundary>
+				</CTabPane>
+				<CTabPane data-tab="rosstalk">
+					<MyErrorBoundary>
+						<RosstalkProtocol />
+					</MyErrorBoundary>
+				</CTabPane>
+			</CTabContent>
 		</>
 	)
 }

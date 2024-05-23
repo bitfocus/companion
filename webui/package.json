@@ -5,8 +5,8 @@
   "type": "module",
   "dependencies": {
     "@companion-app/shared": "*",
-    "@coreui/coreui": "^3.4.0",
-    "@coreui/react": "^3.4.6",
+    "@coreui/coreui": "^4.3.2",
+    "@coreui/react": "^4.11.1",
     "@fontsource/fira-code": "^5.0.18",
     "@fontsource/roboto": "^5.0.13",
     "@fortawesome/fontawesome-svg-core": "^6.5.2",

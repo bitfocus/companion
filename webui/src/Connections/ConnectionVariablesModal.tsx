@@ -26,7 +26,7 @@ export const ConnectionVariablesModal = forwardRef<ConnectionVariablesModalRef>(
 		)
 
 		return (
-			<CModal show={show} onClose={doClose} onClosed={onClosed} size="lg">
+			<CModal visible={show} onClose={doClose} onClosed={onClosed} size="lg">
 				<CModalHeader closeButton>
 					<h5>Variables for {connectionLabel}</h5>
 				</CModalHeader>

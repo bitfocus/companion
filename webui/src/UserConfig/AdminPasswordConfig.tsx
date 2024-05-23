@@ -1,5 +1,5 @@
 import React from 'react'
-import { CAlert, CButton, CInput } from '@coreui/react'
+import { CAlert, CButton, CFormInput } from '@coreui/react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faUndo } from '@fortawesome/free-solid-svg-icons'
 import CSwitch from '../CSwitch.js'
@@ -55,7 +55,7 @@ export const AdminPasswordConfig = observer(function AdminPasswordConfig({
 				<td>Session Timeout (minutes, 0 for no timeout)</td>
 				<td>
 					<div className="form-check form-check-inline mr-1">
-						<CInput
+						<CFormInput
 							type="number"
 							value={config.admin_timeout}
 							min={0}
@@ -74,7 +74,7 @@ export const AdminPasswordConfig = observer(function AdminPasswordConfig({
 				<td>Password</td>
 				<td>
 					<div className="form-check form-check-inline mr-1">
-						<CInput
+						<CFormInput
 							type="text"
 							value={config.admin_password}
 							onChange={(e) => setValue('admin_password', e.currentTarget.value)}

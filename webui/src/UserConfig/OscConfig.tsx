@@ -1,5 +1,5 @@
 import React from 'react'
-import { CButton, CInput } from '@coreui/react'
+import { CButton, CFormInput } from '@coreui/react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faUndo } from '@fortawesome/free-solid-svg-icons'
 import CSwitch from '../CSwitch.js'
@@ -42,7 +42,7 @@ export const OscConfig = observer(function OscConfig({ config, setValue, resetVa
 				<td>OSC Listen Port</td>
 				<td>
 					<div className="form-check form-check-inline mr-1">
-						<CInput
+						<CFormInput
 							type="number"
 							value={config.osc_listen_port}
 							onChange={(e) => setValue('osc_listen_port', e.currentTarget.value)}

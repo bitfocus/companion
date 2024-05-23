@@ -4,7 +4,7 @@ import {
 	CCard,
 	CCardBody,
 	CCollapse,
-	CInput,
+	CFormInput,
 	CModal,
 	CModalBody,
 	CModalFooter,
@@ -69,12 +69,12 @@ export const AddActionsModal = observer(
 		)
 
 		return (
-			<CModal show={show} onClose={doClose} onClosed={onClosed} size="lg" scrollable={true}>
+			<CModal visible={show} onClose={doClose} onClosed={onClosed} size="lg" scrollable={true}>
 				<CModalHeader closeButton>
 					<h5>Browse Actions</h5>
 				</CModalHeader>
 				<CModalHeader>
-					<CInput
+					<CFormInput
 						type="text"
 						placeholder="Search..."
 						onChange={(e) => setFilter(e.currentTarget.value)}
@@ -163,12 +163,12 @@ export const AddFeedbacksModal = observer(
 		)
 
 		return (
-			<CModal show={show} onClose={doClose} onClosed={onClosed} size="lg" scrollable={true}>
+			<CModal visible={show} onClose={doClose} onClosed={onClosed} size="lg" scrollable={true}>
 				<CModalHeader closeButton>
 					<h5>Browse Feedbacks</h5>
 				</CModalHeader>
 				<CModalHeader>
-					<CInput
+					<CFormInput
 						type="text"
 						placeholder="Search ..."
 						onChange={(e) => setFilter(e.currentTarget.value)}

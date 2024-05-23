@@ -10,13 +10,11 @@ import {
 	CModalBody,
 	CModalFooter,
 	CForm,
-	CFormGroup,
-	CLabel,
-	CInput,
+	CFormLabel,
+	CFormInput,
 	CNavItem,
 	CNavLink,
 	CNav,
-	CTabs,
 } from '@coreui/react'
 import {
 	faChevronLeft,
@@ -494,35 +492,35 @@ function TabsSection({ style, controlId, location, steps, runtimeProps, rotaryAc
 				<br />
 
 				<div ref={setTabsRef} className={'row-heading'}>
-					<CTabs activeTab={selectedStep} onActiveTabChange={clickSelectedStep}>
-						<CNav variant="tabs">
-							{keys.map((stepId, i) => (
-								<ActionSetTab
-									key={stepId}
-									controlId={controlId}
-									stepId={stepId}
-									stepIndex={i}
-									stepOptions={steps[stepId]?.options}
-									moreThanOneStep={keys.length > 1}
-									isCurrent={runtimeProps.current_step_id === stepId}
-									isActiveAndCurrent={
-										stepId.toString() === selectedIndex.toString() && runtimeProps.current_step_id === stepId
-									}
-								/>
-							))}
+					{/* <CTabs activeTab={selectedStep} onActiveTabChange={clickSelectedStep}> */}
+					<CNav variant="tabs">
+						{keys.map((stepId, i) => (
+							<ActionSetTab
+								key={stepId}
+								controlId={controlId}
+								stepId={stepId}
+								stepIndex={i}
+								stepOptions={steps[stepId]?.options}
+								moreThanOneStep={keys.length > 1}
+								isCurrent={runtimeProps.current_step_id === stepId}
+								isActiveAndCurrent={
+									stepId.toString() === selectedIndex.toString() && runtimeProps.current_step_id === stepId
+								}
+							/>
+						))}
 
-							<CNavItem key="feedbacks" className="nav-steps-special">
-								<CNavLink data-tab="feedbacks">Feedbacks</CNavLink>
+						<CNavItem key="feedbacks" className="nav-steps-special">
+							<CNavLink data-tab="feedbacks">Feedbacks</CNavLink>
+						</CNavItem>
+						{keys.length === 1 && (
+							<CNavItem key="add-step" className="nav-steps-special">
+								<CNavLink onClick={appendStep}>
+									<FontAwesomeIcon icon={faPlus} /> Add step
+								</CNavLink>
 							</CNavItem>
-							{keys.length === 1 && (
-								<CNavItem key="add-step" className="nav-steps-special">
-									<CNavLink onClick={appendStep}>
-										<FontAwesomeIcon icon={faPlus} /> Add step
-									</CNavLink>
-								</CNavItem>
-							)}
-						</CNav>
-					</CTabs>
+						)}
+					</CNav>
+					{/* </CTabs> */}
 				</div>
 
 				<div
@@ -914,37 +912,33 @@ const EditDurationGroupPropertiesModal = forwardRef<
 	}, [])
 
 	return (
-		<CModal show={show} onClose={doClose} onClosed={onClosed} onOpened={buttonFocus}>
+		<CModal visible={show} onClose={doClose} onClosed={onClosed} onOpened={buttonFocus}>
 			<CModalHeader closeButton>
 				<h5>Change delay group properties</h5>
 			</CModalHeader>
 			<CModalBody>
 				<CForm onSubmit={doAction}>
-					<CFormGroup>
-						<CLabel>Press duration</CLabel>
-						<CInput
-							type="number"
-							value={newDurationValue || ''}
-							min={1}
-							step={1}
-							style={{ color: !newDurationValue || newDurationValue <= 0 ? 'red' : undefined }}
-							onChange={onDurationChange}
-						/>
-					</CFormGroup>
+					<CFormInput
+						label="Press duration"
+						type="number"
+						value={newDurationValue || ''}
+						min={1}
+						step={1}
+						style={{ color: !newDurationValue || newDurationValue <= 0 ? 'red' : undefined }}
+						onChange={onDurationChange}
+					/>
 
-					<CFormGroup>
-						<CLabel>Execute while held</CLabel>
-						<p>
-							<CSwitch color="success" checked={!!newWhileHeldValue} onChange={onWhileHeldChange} />
-						</p>
-					</CFormGroup>
+					<CFormLabel>Execute while held</CFormLabel>
+					<p>
+						<CSwitch color="success" checked={!!newWhileHeldValue} onChange={onWhileHeldChange} />
+					</p>
 				</CForm>
 			</CModalBody>
 			<CModalFooter>
 				<CButton color="secondary" onClick={doClose}>
 					Cancel
 				</CButton>
-				<CButton innerRef={buttonRef} color="primary" onClick={doAction}>
+				<CButton ref={buttonRef} color="primary" onClick={doAction}>
 					Save
 				</CButton>
 			</CModalFooter>

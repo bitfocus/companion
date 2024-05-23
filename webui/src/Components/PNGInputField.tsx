@@ -1,5 +1,5 @@
 import React, { useCallback, useRef } from 'react'
-import { CButton, CInputFile } from '@coreui/react'
+import { CButton, CFormInput } from '@coreui/react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faFolderOpen } from '@fortawesome/free-solid-svg-icons'
 
@@ -16,7 +16,7 @@ interface PNGInputFieldProps {
 }
 
 export function PNGInputField({ min, max, onSelect, onError }: PNGInputFieldProps) {
-	const inputRef = useRef<HTMLElement>(null)
+	const inputRef = useRef<HTMLInputElement>(null)
 
 	const apiIsSupported = !!(window.File && window.FileReader && window.FileList && window.Blob)
 
@@ -108,7 +108,7 @@ export function PNGInputField({ min, max, onSelect, onError }: PNGInputFieldProp
 			title={apiIsSupported ? undefined : 'Not supported in your browser'}
 		>
 			<FontAwesomeIcon icon={faFolderOpen} />
-			<CInputFile innerRef={inputRef} onChange={onChange} disabled={!apiIsSupported} />
+			<CFormInput type="file" ref={inputRef} onChange={onChange} disabled={!apiIsSupported} />
 		</CButton>
 	)
 }

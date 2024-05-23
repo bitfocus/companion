@@ -1,5 +1,5 @@
 import React, { Component, FormEvent } from 'react'
-import { CButton, CInput } from '@coreui/react'
+import { CButton, CFormInput } from '@coreui/react'
 
 // The cloud part is written in old fashioned Class-components
 // because even if the hipsters say it's slow and retarted, i think it's prettier.
@@ -49,7 +49,7 @@ export class CloudUserPass extends Component<CloudUserPassProps, CloudUserPassSt
 					}}
 				>
 					<label>Email address</label>
-					<CInput
+					<CFormInput
 						type="text"
 						value={this.state.username}
 						onChange={(e: FormEvent<HTMLInputElement>) => this.setState({ username: e.currentTarget.value })}
@@ -65,7 +65,7 @@ export class CloudUserPass extends Component<CloudUserPassProps, CloudUserPassSt
 					}}
 				>
 					<label>Password</label>
-					<CInput
+					<CFormInput
 						type="password"
 						value={this.state.password}
 						onChange={(e: FormEvent<HTMLInputElement>) => this.setState({ password: e.currentTarget.value })}

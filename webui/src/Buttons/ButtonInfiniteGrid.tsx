@@ -17,7 +17,7 @@ import classNames from 'classnames'
 import useScrollPosition from '../Hooks/useScrollPosition.js'
 import useElementInnerSize from '../Hooks/useElementInnerSize.js'
 import { useButtonRenderCache } from '../Hooks/useSharedRenderCache.js'
-import { CButton, CInput } from '@coreui/react'
+import { CButton, CFormInput } from '@coreui/react'
 import { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import { UserConfigGridSize } from '@companion-app/shared/Model/UserConfigModel.js'
 import { PresetDragItem } from './Presets.js'
@@ -196,28 +196,28 @@ export const ButtonInfiniteGrid = forwardRef<ButtonInfiniteGridRef, ButtonInfini
 							<div className="expand left">
 								<div className="sticky-center">
 									<CButton onClick={doGrowLeft}>Add</CButton>
-									<CInput innerRef={growLeftRef} type="number" min={1} defaultValue={2} />
+									<CFormInput ref={growLeftRef} type="number" min={1} defaultValue={2} />
 									&nbsp;&nbsp;columns
 								</div>
 							</div>
 							<div className="expand right">
 								<div className="sticky-center">
 									<CButton onClick={doGrowRight}>Add</CButton>
-									<CInput innerRef={growRightRef} type="number" min={1} defaultValue={2} />
+									<CFormInput ref={growRightRef} type="number" min={1} defaultValue={2} />
 									&nbsp;&nbsp;columns
 								</div>
 							</div>
 							<div className="expand top">
 								<div className="sticky-center">
 									<CButton onClick={doGrowTop}>Add</CButton>
-									<CInput innerRef={growTopRef} type="number" min={1} defaultValue={2} />
+									<CFormInput ref={growTopRef} type="number" min={1} defaultValue={2} />
 									&nbsp;&nbsp;rows
 								</div>
 							</div>
 							<div className="expand bottom">
 								<div className="sticky-center">
 									<CButton onClick={doGrowBottom}>Add</CButton>
-									<CInput innerRef={growBottomRef} type="number" min={1} defaultValue={2} />
+									<CFormInput ref={growBottomRef} type="number" min={1} defaultValue={2} />
 									&nbsp;&nbsp;rows
 								</div>
 							</div>

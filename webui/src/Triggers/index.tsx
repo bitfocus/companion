@@ -1,16 +1,5 @@
 import React, { useCallback, useContext, useEffect, useState, useMemo, useRef } from 'react'
-import {
-	CButton,
-	CButtonGroup,
-	CCol,
-	CNav,
-	CNavItem,
-	CNavLink,
-	CRow,
-	CTabContent,
-	CTabPane,
-	CTabs,
-} from '@coreui/react'
+import { CButton, CButtonGroup, CCol, CNav, CNavItem, CNavLink, CRow, CTabContent, CTabPane } from '@coreui/react'
 import { MyErrorBoundary, SocketContext, socketEmitPromise } from '../util.js'
 import dayjs from 'dayjs'
 import sanitizeHtml from 'sanitize-html'
@@ -114,32 +103,32 @@ export const Triggers = observer(function Triggers() {
 
 			<CCol xs={12} xl={6} className="secondary-panel">
 				<div className="secondary-panel-inner">
-					<CTabs activeTab={activeTab} onActiveTabChange={doChangeTab}>
-						<CNav variant="tabs">
-							{!editItemId && (
-								<CNavItem>
-									<CNavLink data-tab="placeholder">Select a trigger</CNavLink>
-								</CNavItem>
-							)}
-							<CNavItem hidden={!editItemId}>
-								<CNavLink data-tab="edit">
-									<FontAwesomeIcon icon={faCalculator} /> Edit Trigger
-								</CNavLink>
+					{/* <CTabs activeTab={activeTab} onActiveTabChange={doChangeTab}> */}
+					<CNav variant="tabs">
+						{!editItemId && (
+							<CNavItem>
+								<CNavLink data-tab="placeholder">Select a trigger</CNavLink>
 							</CNavItem>
-						</CNav>
-						<CTabContent fade={false}>
-							{!editItemId && (
-								<CTabPane data-tab="placeholder">
-									<p>Select a trigger...</p>
-								</CTabPane>
-							)}
-							<CTabPane data-tab="edit">
-								<MyErrorBoundary>
-									{editItemId ? <EditTriggerPanel key={`${editItemId}.${tabResetToken}`} controlId={editItemId} /> : ''}
-								</MyErrorBoundary>
+						)}
+						<CNavItem hidden={!editItemId}>
+							<CNavLink data-tab="edit">
+								<FontAwesomeIcon icon={faCalculator} /> Edit Trigger
+							</CNavLink>
+						</CNavItem>
+					</CNav>
+					<CTabContent>
+						{!editItemId && (
+							<CTabPane data-tab="placeholder">
+								<p>Select a trigger...</p>
 							</CTabPane>
-						</CTabContent>
-					</CTabs>
+						)}
+						<CTabPane data-tab="edit">
+							<MyErrorBoundary>
+								{editItemId ? <EditTriggerPanel key={`${editItemId}.${tabResetToken}`} controlId={editItemId} /> : ''}
+							</MyErrorBoundary>
+						</CTabPane>
+					</CTabContent>
+					{/* </CTabs> */}
 				</div>
 			</CCol>
 		</CRow>

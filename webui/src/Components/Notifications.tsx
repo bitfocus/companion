@@ -81,18 +81,22 @@ export const NotificationsManager = forwardRef<NotificationsManagerRef, Notifica
 		)
 
 		return (
-			<>
-				<CToaster position={'top-right'}>
-					{toasts.map((toast) => {
-						return (
-							<CToast key={toast.id} show={toast.show} autohide={toast.autohide} fade={toast.fade}>
-								<CToastHeader closeButton={toast.closeButton}>{toast.title}</CToastHeader>
-								<CToastBody>{toast.message}</CToastBody>
-							</CToast>
-						)
-					})}
-				</CToaster>
-			</>
+			<CToaster placement={'top-right'}>
+				{toasts.map((toast) => {
+					return (
+						<CToast
+							key={toast.id}
+							show={toast.show}
+							autohide={(toast.autohide ?? 0) > 0}
+							delay={toast.autohide}
+							fade={toast.fade}
+						>
+							<CToastHeader closeButton={toast.closeButton}>{toast.title}</CToastHeader>
+							<CToastBody>{toast.message}</CToastBody>
+						</CToast>
+					)
+				})}
+			</CToaster>
 		)
 	}
 )

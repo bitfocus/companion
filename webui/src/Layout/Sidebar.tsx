@@ -1,5 +1,5 @@
 import React, { memo } from 'react'
-import { CSidebar, CSidebarNav, CSidebarNavItem, CSidebarBrand, CSidebarMinimizer } from '@coreui/react'
+import { CSidebar, CSidebarNav, CNavItem, CSidebarBrand, CSidebarToggler } from '@coreui/react'
 import {
 	faBug,
 	faComments,
@@ -19,7 +19,7 @@ interface MySidebarProps {
 
 export const MySidebar = memo(function MySidebar({ show, showWizard }: MySidebarProps) {
 	return (
-		<CSidebar show={show}>
+		<CSidebar visible={show}>
 			<CSidebarNav>
 				<CSidebarBrand>
 					<div className="c-sidebar-brand-full">
@@ -32,58 +32,35 @@ export const MySidebar = memo(function MySidebar({ show, showWizard }: MySidebar
 					</div>
 				</CSidebarBrand>
 
-				<CSidebarNavItem
-					icon={<FontAwesomeIcon className="c-sidebar-nav-icon" icon={faHatWizard} />}
-					name={'Configuration Wizard'}
-					onClick={showWizard}
-				/>
-				<CSidebarNavItem
-					target="_new"
-					href="/emulators"
-					icon={<FontAwesomeIcon className="c-sidebar-nav-icon" icon={faGamepad} />}
-					name={'Emulator'}
-				/>
+				<CNavItem onClick={showWizard}>
+					<FontAwesomeIcon className="c-sidebar-nav-icon" icon={faHatWizard} /> Configuration Wizard
+				</CNavItem>
+				<CNavItem target="_new" href="/emulators">
+					<FontAwesomeIcon className="c-sidebar-nav-icon" icon={faGamepad} /> Emulator
+				</CNavItem>
 
-				<CSidebarNavItem
-					target="_new"
-					href="/tablet"
-					icon={<FontAwesomeIcon className="c-sidebar-nav-icon" icon={faTabletAlt} />}
-					name={'Web buttons'}
-				/>
+				<CNavItem target="_new" href="/tablet">
+					<FontAwesomeIcon className="c-sidebar-nav-icon" icon={faTabletAlt} /> Web buttons
+				</CNavItem>
 
-				<CSidebarNavItem
-					target="_new"
-					href="https://github.com/bitfocus/companion/issues"
-					icon={<FontAwesomeIcon className="c-sidebar-nav-icon" icon={faBug} />}
-					name={'Bugs & Features'}
-				/>
-				<CSidebarNavItem
-					target="_new"
-					href="https://www.facebook.com/groups/companion/"
-					icon={<FontAwesomeIcon className="c-sidebar-nav-icon" icon={faUsers} />}
-					name={'Facebook'}
-				/>
-				<CSidebarNavItem
-					target="_new"
-					href="https://bitfocus.io/api/slackinvite"
-					icon={<FontAwesomeIcon className="c-sidebar-nav-icon" icon={faComments} />}
-					name={'Slack Chat'}
-				/>
-				<CSidebarNavItem
-					target="_new"
-					href="https://donorbox.org/bitfocus-opensource"
-					icon={<FontAwesomeIcon className="c-sidebar-nav-icon" icon={faDollarSign} />}
-					name={'Donate'}
-				/>
+				<CNavItem target="_new" href="https://github.com/bitfocus/companion/issues">
+					<FontAwesomeIcon className="c-sidebar-nav-icon" icon={faBug} /> Bugs & Features
+				</CNavItem>
+				<CNavItem target="_new" href="https://www.facebook.com/groups/companion/">
+					<FontAwesomeIcon className="c-sidebar-nav-icon" icon={faUsers} /> Facebook
+				</CNavItem>
+				<CNavItem target="_new" href="https://bitfocus.io/api/slackinvite">
+					<FontAwesomeIcon className="c-sidebar-nav-icon" icon={faComments} /> Slack Chat
+				</CNavItem>
+				<CNavItem target="_new" href="https://donorbox.org/bitfocus-opensource">
+					<FontAwesomeIcon className="c-sidebar-nav-icon" icon={faDollarSign} /> Donate
+				</CNavItem>
 
-				<CSidebarNavItem
-					target="_new"
-					href="/getting-started"
-					icon={<FontAwesomeIcon className="c-sidebar-nav-icon" icon={faInfo} />}
-					name={'Getting Started'}
-				/>
+				<CNavItem target="_new" href="/getting-started">
+					<FontAwesomeIcon className="c-sidebar-nav-icon" icon={faInfo} /> Getting Started
+				</CNavItem>
 			</CSidebarNav>
-			<CSidebarMinimizer />
+			<CSidebarToggler />
 		</CSidebar>
 	)
 })

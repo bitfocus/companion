@@ -6,7 +6,7 @@ import {
 	LoadingRetryOrError,
 	PreventDefaultHandler,
 } from '../../util.js'
-import { CButton, CAlert, CButtonGroup, CCol, CRow, CForm, CLabel } from '@coreui/react'
+import { CButton, CAlert, CButtonGroup, CCol, CRow, CForm, CFormLabel } from '@coreui/react'
 import { useMemo } from 'react'
 import { DropdownInputField } from '../../Components/index.js'
 import { ActionsList } from '../../Controls/ActionSetEditor.js'
@@ -98,7 +98,7 @@ export function RecorderSessionHeading({ confirmRef, sessionId, sessionInfo, doF
 				<CRow form className="flex-form flex-form-row" style={{ clear: 'both' }}>
 					<div className="flex w-full gap-2">
 						<div className="w-full">
-							<CLabel>Connections</CLabel>
+							<CFormLabel>Connections</CFormLabel>
 							<DropdownInputField<true>
 								value={sessionInfo.connectionIds}
 								setValue={changeConnectionIds}
@@ -108,7 +108,7 @@ export function RecorderSessionHeading({ confirmRef, sessionId, sessionInfo, doF
 						</div>
 
 						<div>
-							<CLabel>Recording</CLabel>
+							<CFormLabel>Recording</CFormLabel>
 							<p>
 								<CSwitch color="success" size="lg" checked={!!sessionInfo.isRunning} onChange={changeRecording} />
 							</p>

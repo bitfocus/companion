@@ -1,5 +1,5 @@
 import React from 'react'
-import { CButton, CInput } from '@coreui/react'
+import { CButton, CFormInput } from '@coreui/react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faUndo } from '@fortawesome/free-solid-svg-icons'
 import CSwitch from '../CSwitch.js'
@@ -66,7 +66,7 @@ export const PinLockoutConfig = observer(function PinLockoutConfig({
 				<td>Pin Code</td>
 				<td>
 					<div className="form-check form-check-inline mr-1">
-						<CInput type="text" value={config.pin} onChange={(e) => setValue('pin', e.currentTarget.value)} />
+						<CFormInput type="text" value={config.pin} onChange={(e) => setValue('pin', e.currentTarget.value)} />
 					</div>
 				</td>
 				<td>
@@ -80,7 +80,7 @@ export const PinLockoutConfig = observer(function PinLockoutConfig({
 				<td>Pin Timeout (seconds, 0 to turn off)</td>
 				<td>
 					<div className="form-check form-check-inline mr-1">
-						<CInput
+						<CFormInput
 							type="number"
 							value={config.pin_timeout}
 							min={0}

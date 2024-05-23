@@ -32,7 +32,7 @@ body {
 	background-color: #eee;
 
 	// Fit minus the header
-	height: calc(100% - #{$header-height});
+	// height: calc(100% - #{$header-height}); // nocommit
 
 	// Force to fill the screen and scroll internally
 	> .container-fluid {

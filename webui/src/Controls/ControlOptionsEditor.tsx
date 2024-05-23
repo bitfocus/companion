@@ -1,4 +1,4 @@
-import { CLabel } from '@coreui/react'
+import { CFormLabel } from '@coreui/react'
 import React, { MutableRefObject, useCallback, useContext, useRef } from 'react'
 import { socketEmitPromise, SocketContext } from '../util.js'
 import { GenericConfirmModal, GenericConfirmModalRef } from '../Components/GenericConfirmModal.js'
@@ -73,13 +73,13 @@ export function ControlOptionsEditor({
 			<GenericConfirmModal ref={confirmRef} />
 			<div className="flex w-full gap-2 flex-form">
 				<div>
-					<CLabel>
+					<CFormLabel>
 						Relative Delays &nbsp;{' '}
 						<FontAwesomeIcon
 							icon={faQuestionCircle}
 							title="Delay times will be relative to the previous action, rather than all delays being relative to the button press."
 						/>
-					</CLabel>
+					</CFormLabel>
 					<p>
 						<CSwitch
 							color="success"

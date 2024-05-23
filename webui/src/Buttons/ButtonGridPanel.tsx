@@ -3,9 +3,7 @@ import {
 	CButton,
 	CCol,
 	CForm,
-	CFormGroup,
-	CInput,
-	CLabel,
+	CFormInput,
 	CModal,
 	CModalBody,
 	CModalFooter,
@@ -162,7 +160,7 @@ export const ButtonsGridPanel = observer(function ButtonsPage({
 					and what they should do when you press or click on them.
 				</p>
 
-				<CRow innerRef={setSizeRef}>
+				<CRow ref={setSizeRef}>
 					<CCol sm={12}>
 						<ButtonGridHeader pageNumber={pageNumber} changePage={changePage2} setPage={setPage}>
 							<CButton color="light" onClick={showExportModal} title="Export page" className="btn-right">
@@ -276,17 +274,13 @@ const EditPagePropertiesModal = forwardRef<EditPagePropertiesModalRef, EditPageP
 		}, [])
 
 		return (
-			<CModal show={show} onClose={doClose} onClosed={onClosed} onOpened={buttonFocus}>
+			<CModal visible={show} onClose={doClose} onClosed={onClosed} onOpened={buttonFocus}>
 				<CModalHeader closeButton>
 					<h5>Configure Page {pageNumber}</h5>
 				</CModalHeader>
 				<CModalBody>
 					<CForm onSubmit={doAction}>
-						<CFormGroup>
-							<CLabel>Name</CLabel>
-							<CInput type="text" value={pageName || ''} onChange={onNameChange} />
-						</CFormGroup>
-
+						<CFormInput type="text" label="Name" value={pageName || ''} onChange={onNameChange} />
 						<CAlert color="info">You can use resize the grid in the Settings tab</CAlert>
 					</CForm>
 				</CModalBody>
@@ -294,7 +288,7 @@ const EditPagePropertiesModal = forwardRef<EditPagePropertiesModalRef, EditPageP
 					<CButton color="secondary" onClick={doClose}>
 						Cancel
 					</CButton>
-					<CButton innerRef={buttonRef} color="primary" onClick={doAction}>
+					<CButton ref={buttonRef} color="primary" onClick={doAction}>
 						Save
 					</CButton>
 				</CModalFooter>

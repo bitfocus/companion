@@ -8,9 +8,8 @@ import {
 	CNavLink,
 	CRow,
 	CCol,
-	CFormGroup,
 	CProgress,
-	CInput,
+	CFormInput,
 	CForm,
 	CButton,
 } from '@coreui/react'
@@ -341,10 +340,8 @@ function AppLoading({ progress, connected }: AppLoadingProps) {
 			<CRow>
 				<CCol xxl={4} md={3} sm={2} xs={1}></CCol>
 				<CCol xxl={4} md={6} sm={8} xs={10}>
-					<CFormGroup>
-						<h3>{message}</h3>
-						<CProgress min={0} max={100} value={connected ? progress : 0} />
-					</CFormGroup>
+					<h3>{message}</h3>
+					<CProgress value={connected ? progress : 0} />
 				</CCol>
 			</CRow>
 		</CContainer>
@@ -395,7 +392,7 @@ const AppAuthWrapper = observer(function AppAuthWrapper({ setUnlocked }: AppAuth
 					<h3>Companion is locked</h3>
 					<CForm onSubmit={tryLogin}>
 						<div className="login-form">
-							<CInput
+							<CFormInput
 								type="password"
 								value={password}
 								onChange={(e) => passwordChanged(e.currentTarget.value)}
@@ -485,7 +482,7 @@ const AppContent = observer(function AppContent({ buttonGridHotPress }: AppConte
 					</CNavItem>
 				)}
 			</CNav>
-			<CTabContent fade={false}>
+			<CTabContent>
 				<CTabPane className={getClassForPane('/connections')}>
 					<MyErrorBoundary>
 						<ConnectionsPage />

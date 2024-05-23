@@ -1,5 +1,5 @@
 import React, { useCallback, useContext } from 'react'
-import { CAlert, CButton, CDropdown, CDropdownItem, CDropdownMenu, CDropdownToggle, CInput } from '@coreui/react'
+import { CAlert, CButton, CDropdown, CDropdownItem, CDropdownMenu, CDropdownToggle, CFormInput } from '@coreui/react'
 import { SocketContext } from '../util.js'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faSync, faTrash, faUndo } from '@fortawesome/free-solid-svg-icons'
@@ -70,7 +70,7 @@ export const HttpsConfig = observer(function HttpsConfig({ config, setValue, res
 				<td>HTTPS Port</td>
 				<td>
 					<div className="form-check form-check-inline mr-1">
-						<CInput
+						<CFormInput
 							type="number"
 							value={config.https_port}
 							onChange={(e) => setValue('https_port', e.currentTarget.value)}
@@ -117,7 +117,7 @@ export const HttpsConfig = observer(function HttpsConfig({ config, setValue, res
 									<td>Common Name (Domain Name)</td>
 									<td>
 										<div className="form-check form-check-inline mr-1">
-											<CInput
+											<CFormInput
 												type="text"
 												value={config.https_self_cn}
 												onChange={(e) => setValue('https_self_cn', e.currentTarget.value)}
@@ -134,7 +134,7 @@ export const HttpsConfig = observer(function HttpsConfig({ config, setValue, res
 									<td>Certificate Expiry Days</td>
 									<td>
 										<div className="form-check form-check-inline mr-1">
-											<CInput
+											<CFormInput
 												type="number"
 												value={config.https_self_expiry}
 												onChange={(e) => setValue('https_self_expiry', e.currentTarget.value)}
@@ -213,7 +213,7 @@ export const HttpsConfig = observer(function HttpsConfig({ config, setValue, res
 									<td>Private Key File (full path)</td>
 									<td>
 										<div className="form-check form-check-inline mr-1">
-											<CInput
+											<CFormInput
 												type="text"
 												value={config.https_ext_private_key}
 												onChange={(e) => setValue('https_ext_private_key', e.currentTarget.value)}
@@ -231,7 +231,7 @@ export const HttpsConfig = observer(function HttpsConfig({ config, setValue, res
 									<td>Certificate File (full path)</td>
 									<td>
 										<div className="form-check form-check-inline mr-1">
-											<CInput
+											<CFormInput
 												type="text"
 												value={config.https_ext_certificate}
 												onChange={(e) => setValue('https_ext_certificate', e.currentTarget.value)}
@@ -253,7 +253,7 @@ export const HttpsConfig = observer(function HttpsConfig({ config, setValue, res
 									</td>
 									<td>
 										<div className="form-check form-check-inline mr-1">
-											<CInput
+											<CFormInput
 												type="text"
 												value={config.https_ext_chain}
 												onChange={(e) => setValue('https_ext_chain', e.currentTarget.value)}

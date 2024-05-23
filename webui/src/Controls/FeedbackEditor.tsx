@@ -1,4 +1,4 @@
-import { CAlert, CButton, CForm, CFormGroup, CButtonGroup, CSwitch, CLabel } from '@coreui/react'
+import { CAlert, CButton, CForm, CButtonGroup, CFormSwitch } from '@coreui/react'
 import {
 	faSort,
 	faTrash,
@@ -319,7 +319,7 @@ const FeedbackEditor = observer(function FeedbackEditor({
 						{!!service.setEnabled && (
 							<>
 								&nbsp;
-								<CSwitch
+								<CFormSwitch
 									color="success"
 									checked={!feedback.disabled}
 									title={feedback.disabled ? `Enable ${entityType}` : `Disable ${entityType}`}
@@ -371,20 +371,20 @@ const FeedbackEditor = observer(function FeedbackEditor({
 						<div className="cell-invert">
 							<MyErrorBoundary>
 								<CForm onSubmit={PreventDefaultHandler}>
-									<CFormGroup>
-										<CLabel>
-											Invert
-											<FontAwesomeIcon
-												style={{ marginLeft: '5px' }}
-												icon={faQuestionCircle}
-												title={'If checked, the behaviour of this feedback is inverted'}
-											/>
-										</CLabel>
-										<p>
-											<CheckboxInputField value={!!feedback.isInverted} setValue={service.setInverted} />
-											&nbsp;
-										</p>
-									</CFormGroup>
+									<CheckboxInputField
+										label={
+											<>
+												Invert
+												<FontAwesomeIcon
+													style={{ marginLeft: '5px' }}
+													icon={faQuestionCircle}
+													title={'If checked, the behaviour of this feedback is inverted'}
+												/>
+											</>
+										}
+										value={!!feedback.isInverted}
+										setValue={service.setInverted}
+									/>
 								</CForm>
 							</MyErrorBoundary>
 						</div>
@@ -425,15 +425,13 @@ function FeedbackManageStyles({ feedbackSpec, feedback, setSelectedStyleProps }:
 			<div className="cell-styles-manage">
 				<CForm onSubmit={PreventDefaultHandler}>
 					<MyErrorBoundary>
-						<CFormGroup>
-							<label>Change style properties</label>
-							<DropdownInputField
-								multiple={true}
-								choices={ButtonStyleProperties}
-								setValue={setSelectedStyleProps as (keys: DropdownChoiceId[]) => void}
-								value={currentValue}
-							/>
-						</CFormGroup>
+						<DropdownInputField
+							label="Change style properties"
+							multiple={true}
+							choices={ButtonStyleProperties}
+							setValue={setSelectedStyleProps as (keys: DropdownChoiceId[]) => void}
+							value={currentValue}
+						/>
 					</MyErrorBoundary>
 				</CForm>
 			</div>

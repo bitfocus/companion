@@ -1,5 +1,5 @@
 import React from 'react'
-import { CButton, CInput } from '@coreui/react'
+import { CButton, CFormInput } from '@coreui/react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faUndo } from '@fortawesome/free-solid-svg-icons'
 import CSwitch from '../CSwitch.js'
@@ -42,7 +42,7 @@ export const UdpConfig = observer(function UdpConfig({ config, setValue, resetVa
 				<td>UDP Listen Port</td>
 				<td>
 					<div className="form-check form-check-inline mr-1">
-						<CInput
+						<CFormInput
 							type="number"
 							value={config.udp_listen_port}
 							onChange={(e) => setValue('udp_listen_port', e.currentTarget.value)}

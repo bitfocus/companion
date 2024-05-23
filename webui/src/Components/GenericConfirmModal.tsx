@@ -21,7 +21,7 @@ export const GenericConfirmModal = forwardRef<GenericConfirmModalRef, GenericCon
 		const [data, setData] = useState<GenericConfirmModalData | null>(null)
 		const [show, setShow] = useState(false)
 
-		const buttonRef = useRef<HTMLElement>(null)
+		const buttonRef = useRef<HTMLButtonElement>(null)
 
 		const buttonFocus = () => {
 			if (buttonRef.current) {
@@ -64,7 +64,7 @@ export const GenericConfirmModal = forwardRef<GenericConfirmModalRef, GenericCon
 		}
 
 		return (
-			<CModal show={show} onClose={doClose} onClosed={onClosed} onOpened={buttonFocus}>
+			<CModal visible={show} onClose={doClose} onClosed={onClosed} onOpened={buttonFocus}>
 				<CModalHeader closeButton>
 					<h5>{data?.title}</h5>
 				</CModalHeader>
@@ -73,7 +73,7 @@ export const GenericConfirmModal = forwardRef<GenericConfirmModalRef, GenericCon
 					<CButton color="secondary" onClick={doClose}>
 						Cancel
 					</CButton>
-					<CButton innerRef={buttonRef} color="primary" onClick={doAction}>
+					<CButton ref={buttonRef} color="primary" onClick={doAction}>
 						{data?.buttonLabel}
 					</CButton>
 				</CModalFooter>

@@ -1,15 +1,5 @@
 import React, { FormEvent, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react'
-import {
-	CAlert,
-	CButton,
-	CButtonGroup,
-	CForm,
-	CFormGroup,
-	CInput,
-	CInputGroup,
-	CInputGroupAppend,
-	CLabel,
-} from '@coreui/react'
+import { CAlert, CButton, CButtonGroup, CForm, CFormInput, CInputGroup } from '@coreui/react'
 import { socketEmitPromise, PreventDefaultHandler, useComputed } from '../util.js'
 import { CopyToClipboard } from 'react-copy-to-clipboard'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
@@ -228,18 +218,16 @@ export const CustomVariablesList = observer(function CustomVariablesList({ setSh
 			<GenericConfirmModal ref={confirmRef} />
 
 			<CInputGroup className="variables-table-filter">
-				<CInput
+				<CFormInput
 					type="text"
 					placeholder="Filter ..."
 					onChange={updateFilter}
 					value={filter}
 					style={{ fontSize: '1.2em' }}
 				/>
-				<CInputGroupAppend>
-					<CButton color="danger" onClick={clearFilter}>
-						<FontAwesomeIcon icon={faTimes} />
-					</CButton>
-				</CInputGroupAppend>
+				<CButton color="danger" onClick={clearFilter}>
+					<FontAwesomeIcon icon={faTimes} />
+				</CButton>
 			</CInputGroup>
 
 			<table className="table variables-table">
@@ -290,13 +278,15 @@ export const CustomVariablesList = observer(function CustomVariablesList({ setSh
 			<hr />
 			<div>
 				<CForm inline onSubmit={doCreateNew}>
-					<CFormGroup>
-						<CLabel htmlFor="new_name">Create custom variable:&nbsp;</CLabel>
-						<CInput name="new_name" type="text" value={newName} onChange={(e) => setNewName(e.currentTarget.value)} />
-						<CButton color="primary" onClick={doCreateNew} disabled={!isCustomVariableValid(newName)}>
-							Add
-						</CButton>
-					</CFormGroup>
+					<CFormInput
+						label="Create custom variable:&nbsp;"
+						type="text"
+						value={newName}
+						onChange={(e) => setNewName(e.currentTarget.value)}
+					/>
+					<CButton color="primary" onClick={doCreateNew} disabled={!isCustomVariableValid(newName)}>
+						Add
+					</CButton>
 				</CForm>
 			</div>
 
@@ -421,31 +411,28 @@ function CustomVariableRow({
 						<>
 							<div className="cell-options">
 								<CForm onSubmit={PreventDefaultHandler}>
-									<CFormGroup>
-										<CLabel htmlFor="persist_value">Persist value: </CLabel>
-										<CheckboxInputField
-											value={info.persistCurrentValue}
-											setValue={(val) => setPersistenceValue(name, val)}
-										/>
-									</CFormGroup>
+									<CheckboxInputField
+										label="Persist value: "
+										value={info.persistCurrentValue}
+										setValue={(val) => setPersistenceValue(name, val)}
+									/>
 								</CForm>
 							</div>
 
 							<div className="cell-values">
 								<CForm onSubmit={PreventDefaultHandler}>
-									<CFormGroup>
-										<CLabel htmlFor="current_value">Current value: </CLabel>
-										<TextInputField value={value || ''} setValue={(val) => setCurrentValue(name, val)} />
-									</CFormGroup>
+									<TextInputField
+										label="Current value: "
+										value={value || ''}
+										setValue={(val) => setCurrentValue(name, val)}
+									/>
 
-									<CFormGroup>
-										<CLabel htmlFor="startup_value">Startup value: </CLabel>
-										<TextInputField
-											disabled={!!info.persistCurrentValue}
-											value={info.defaultValue + ''}
-											setValue={(val) => setStartupValue(name, val)}
-										/>
-									</CFormGroup>
+									<TextInputField
+										label="Startup value: "
+										disabled={!!info.persistCurrentValue}
+										value={info.defaultValue + ''}
+										setValue={(val) => setStartupValue(name, val)}
+									/>
 								</CForm>
 							</div>
 						</>

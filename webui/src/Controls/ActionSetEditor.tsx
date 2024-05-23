@@ -1,4 +1,4 @@
-import { CButton, CForm, CInputGroup, CInputGroupAppend, CInputGroupText, CButtonGroup } from '@coreui/react'
+import { CButton, CForm, CInputGroup, CInputGroupText, CButtonGroup } from '@coreui/react'
 import {
 	faSort,
 	faTrash,
@@ -396,9 +396,7 @@ const ActionTableRow = observer(function ActionTableRow({
 										value={action.delay}
 										setValue={service.setDelay}
 									/>
-									<CInputGroupAppend>
-										<CInputGroupText>ms</CInputGroupText>
-									</CInputGroupAppend>
+									<CInputGroupText>ms</CInputGroupText>
 								</CInputGroup>
 							</CForm>
 						</div>

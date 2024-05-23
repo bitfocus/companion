@@ -1,4 +1,4 @@
-import { CButton, CButtonGroup, CInputCheckbox } from '@coreui/react'
+import { CButton, CButtonGroup, CFormCheck } from '@coreui/react'
 import React, { ChangeEvent } from 'react'
 import { useCallback } from 'react'
 import { useEffect } from 'react'
@@ -89,7 +89,7 @@ export function ImportTriggersTab({ snapshot, instanceRemap, setInstanceRemap }:
 						<tr key={id}>
 							<td>
 								<div className="form-check form-check-inline mr-1">
-									<CInputCheckbox data-id={id} checked={selectedTriggers.includes(id)} onChange={toggleTrigger} />
+									<CFormCheck data-id={id} checked={selectedTriggers.includes(id)} onChange={toggleTrigger} />
 								</div>
 							</td>
 							<td>{info.name}</td>

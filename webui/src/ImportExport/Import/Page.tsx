@@ -1,5 +1,5 @@
 import React, { useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react'
-import { CButton, CCol, CRow, CSelect } from '@coreui/react'
+import { CButton, CCol, CRow, CFormSelect } from '@coreui/react'
 import { ConnectionsContext, MyErrorBoundary, SocketContext, socketEmitPromise } from '../../util.js'
 import { ButtonGridHeader } from '../../Buttons/ButtonGridHeader.js'
 import { usePagePicker } from '../../Hooks/usePagePicker.js'
@@ -240,7 +240,7 @@ const ImportRemapRow = observer(function ImportRemapRow({
 		<tr>
 			<td>
 				{snapshotModule ? (
-					<CSelect value={instanceRemap[id] ?? ''} onChange={onChange}>
+					<CFormSelect value={instanceRemap[id] ?? ''} onChange={onChange}>
 						<option value="_new">[ Create new connection ]</option>
 						<option value="_ignore">[ Ignore ]</option>
 						{currentInstances.map(([id, inst]) => (
@@ -248,7 +248,7 @@ const ImportRemapRow = observer(function ImportRemapRow({
 								{inst.label}
 							</option>
 						))}
-					</CSelect>
+					</CFormSelect>
 				) : (
 					'Ignored'
 				)}

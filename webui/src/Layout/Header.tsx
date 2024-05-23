@@ -1,5 +1,5 @@
 import React, { useContext, useEffect, useState } from 'react'
-import { CHeader, CHeaderBrand, CHeaderNavItem, CHeaderNav, CHeaderNavLink, CToggler } from '@coreui/react'
+import { CHeader, CHeaderBrand, CHeaderNav, CNavItem, CNavLink, CHeaderToggler } from '@coreui/react'
 import { socketEmitPromise } from '../util.js'
 import { faLock } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
@@ -42,36 +42,36 @@ export const MyHeader = observer(function MyHeader({ toggleSidebar, canLock, set
 
 	return (
 		<CHeader colorScheme="dark">
-			<CToggler inHeader onClick={toggleSidebar} />
+			<CHeaderToggler onClick={toggleSidebar} />
 			<CHeaderBrand className="d-lg-none">
 				Bitfocus&nbsp;<span style={{ fontWeight: 'bold' }}>Companion</span>
 			</CHeaderBrand>
 
 			<CHeaderNav className="d-md-down-none">
 				{userConfig.properties?.installName && userConfig.properties?.installName.length > 0 && (
-					<CHeaderNavItem className="install-name">{userConfig.properties?.installName}:</CHeaderNavItem>
+					<CNavItem className="install-name">{userConfig.properties?.installName}:</CNavItem>
 				)}
 
-				<CHeaderNavItem>
-					<CHeaderNavLink target="_new" title="Version Number" href="https://bitfocus.io/companion/">
+				<CNavItem>
+					<CNavLink target="_new" title="Version Number" href="https://bitfocus.io/companion/">
 						{versionString}
-					</CHeaderNavLink>
-				</CHeaderNavItem>
+					</CNavLink>
+				</CNavItem>
 
-				<CHeaderNavItem>
-					<CHeaderNavLink target="_new" href={updateData?.link || 'https://bitfocus.io/companion/'}>
+				<CNavItem>
+					<CNavLink target="_new" href={updateData?.link || 'https://bitfocus.io/companion/'}>
 						{updateData?.message || ''}
-					</CHeaderNavLink>
-				</CHeaderNavItem>
+					</CNavLink>
+				</CNavItem>
 			</CHeaderNav>
 
 			{canLock && (
 				<CHeaderNav className="ml-auto header-right">
-					<CHeaderNavItem>
-						<CHeaderNavLink onClick={setLocked} title="Lock Admin UI">
+					<CNavItem>
+						<CNavLink onClick={() => setLocked(true)} title="Lock Admin UI">
 							<FontAwesomeIcon icon={faLock} />
-						</CHeaderNavLink>
-					</CHeaderNavItem>
+						</CNavLink>
+					</CNavItem>
 				</CHeaderNav>
 			)}
 		</CHeader>

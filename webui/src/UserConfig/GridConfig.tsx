@@ -1,16 +1,5 @@
 import React, { FormEvent, useCallback, useContext, useEffect, useImperativeHandle, useRef, useState } from 'react'
-import {
-	CAlert,
-	CButton,
-	CForm,
-	CFormGroup,
-	CInput,
-	CLabel,
-	CModal,
-	CModalBody,
-	CModalFooter,
-	CModalHeader,
-} from '@coreui/react'
+import { CAlert, CButton, CCol, CForm, CFormInput, CModal, CModalBody, CModalFooter, CModalHeader } from '@coreui/react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faCog, faUndo } from '@fortawesome/free-solid-svg-icons'
 import CSwitch from '../CSwitch.js'
@@ -126,7 +115,7 @@ const GridSizeModal = observer<GridSizeModalProps, GridSizeModalRef>(
 
 		const [newGridSize, setNewGridSize] = useState<UserConfigGridSize | null>(null)
 
-		const buttonRef = useRef<HTMLElement>()
+		const buttonRef = useRef<HTMLButtonElement | null>(null)
 
 		const buttonFocus = () => {
 			if (buttonRef.current) {
@@ -229,34 +218,58 @@ const GridSizeModal = observer<GridSizeModalProps, GridSizeModalRef>(
 				newGridSize.maxRow < userConfig.properties.gridSize.maxRow)
 
 		return (
-			<CModal show={show} onClose={doClose} onClosed={onClosed} onOpened={buttonFocus}>
+			<CModal visible={show} onClose={doClose} onClosed={onClosed} onOpened={buttonFocus}>
 				<CModalHeader closeButton>
 					<h5>Configure Grid Size</h5>
 				</CModalHeader>
 				<CModalBody>
-					<CForm onSubmit={doAction}>
+					<CForm onSubmit={doAction} className="row">
 						{newGridSize && (
-							<CFormGroup>
+							<CCol sm={12}>
 								New Grid Size: {newGridSize.maxRow - newGridSize.minRow + 1} rows x{' '}
 								{newGridSize.maxColumn - newGridSize.minColumn + 1} columns
-							</CFormGroup>
+							</CCol>
 						)}
-						<CFormGroup>
-							<CLabel>Min Row</CLabel>
-							<CInput type="number" value={newGridSize?.minRow} max={0} step={1} onChange={setMinRow} />
-						</CFormGroup>
-						<CFormGroup>
-							<CLabel>Max Row</CLabel>
-							<CInput type="number" value={newGridSize?.maxRow} min={0} step={1} onChange={setMaxRow} />
-						</CFormGroup>
-						<CFormGroup>
-							<CLabel>Min Column</CLabel>
-							<CInput type="number" value={newGridSize?.minColumn} max={0} step={1} onChange={setMinColumn} />
-						</CFormGroup>
-						<CFormGroup>
-							<CLabel>Max Column</CLabel>
-							<CInput type="number" value={newGridSize?.maxColumn} min={0} step={1} onChange={setMaxColumn} />
-						</CFormGroup>
+						<CCol sm={12}>
+							<CFormInput
+								label="Min Row"
+								type="number"
+								value={newGridSize?.minRow}
+								max={0}
+								step={1}
+								onChange={setMinRow}
+							/>
+						</CCol>
+						<CCol sm={12}>
+							<CFormInput
+								label="Max Row"
+								type="number"
+								value={newGridSize?.maxRow}
+								min={0}
+								step={1}
+								onChange={setMaxRow}
+							/>
+						</CCol>
+						<CCol sm={12}>
+							<CFormInput
+								label="Min Column"
+								type="number"
+								value={newGridSize?.minColumn}
+								max={0}
+								step={1}
+								onChange={setMinColumn}
+							/>
+						</CCol>
+						<CCol sm={12}>
+							<CFormInput
+								label="Max Column"
+								type="number"
+								value={newGridSize?.maxColumn}
+								min={0}
+								step={1}
+								onChange={setMaxColumn}
+							/>
+						</CCol>
 					</CForm>
 					{isReducingSize && (
 						<CAlert color="danger">
@@ -268,7 +281,7 @@ const GridSizeModal = observer<GridSizeModalProps, GridSizeModalRef>(
 					<CButton color="secondary" onClick={doClose}>
 						Cancel
 					</CButton>
-					<CButton innerRef={buttonRef} color="primary" onClick={doAction}>
+					<CButton ref={buttonRef} color="primary" onClick={doAction}>
 						Save
 					</CButton>
 				</CModalFooter>

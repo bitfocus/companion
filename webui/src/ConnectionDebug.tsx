@@ -202,7 +202,7 @@ export function ConnectionDebug() {
 						</CButtonGroup>
 					</div>
 				</CRow>
-				<CRow innerRef={contentRef} className="log-panel">
+				<CRow ref={contentRef} className="log-panel">
 					<CCol lg={12} style={{ overflow: 'hidden', height: '100%', width: '100%' }}>
 						<LogPanelContents
 							linesBuffer={linesBuffer}

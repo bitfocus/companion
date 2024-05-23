@@ -7,17 +7,7 @@ import React, {
 	useImperativeHandle,
 	useState,
 } from 'react'
-import {
-	CButton,
-	CForm,
-	CFormGroup,
-	CInput,
-	CLabel,
-	CModal,
-	CModalBody,
-	CModalFooter,
-	CModalHeader,
-} from '@coreui/react'
+import { CButton, CForm, CFormInput, CModal, CModalBody, CModalFooter, CModalHeader } from '@coreui/react'
 import { socketEmitPromise, SocketContext, PreventDefaultHandler } from '../util.js'
 
 export interface AddSurfaceGroupModalRef {
@@ -70,16 +60,13 @@ export const AddSurfaceGroupModal = forwardRef<AddSurfaceGroupModalRef, AddSurfa
 		const onNameChange = useCallback((e: ChangeEvent<HTMLInputElement>) => setGroupName(e.currentTarget.value), [])
 
 		return (
-			<CModal show={show} onClose={doClose} onClosed={onClosed}>
+			<CModal visible={show} onClose={doClose} onClosed={onClosed}>
 				<CModalHeader closeButton>
 					<h5>Add Surface Group</h5>
 				</CModalHeader>
 				<CModalBody>
 					<CForm onSubmit={PreventDefaultHandler}>
-						<CFormGroup>
-							<CLabel>Name</CLabel>
-							<CInput type="text" value={groupName || ''} onChange={onNameChange} />
-						</CFormGroup>
+						<CFormInput label="Name" type="text" value={groupName || ''} onChange={onNameChange} />
 					</CForm>
 				</CModalBody>
 				<CModalFooter>

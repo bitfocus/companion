@@ -12,7 +12,6 @@ import {
 	CNav,
 	CNavItem,
 	CNavLink,
-	CTabs,
 	CTabContent,
 	CTabPane,
 } from '@coreui/react'
@@ -42,42 +41,42 @@ export function RecorderSessionFinishModal({ doClose, sessionId }: RecorderSessi
 		[socket, sessionId, doClose]
 	)
 
-	const [modalRef, setModalRef] = useState(null)
+	const [modalRef, setModalRef] = useState<HTMLDivElement | null>(null)
 
 	return (
-		<CModal innerRef={setModalRef} show={true} onClose={doClose} size="lg" className="modal-full-height" scrollable>
+		<CModal ref={setModalRef} visible={true} onClose={doClose} size="lg" className="modal-full-height" scrollable>
 			<MenuPortalContext.Provider value={modalRef}>
 				<CForm onSubmit={PreventDefaultHandler} className={'action-recorder-finish-panel'}>
 					<CModalHeader closeButton>
 						<h5>Select destination</h5>
 					</CModalHeader>
 					<CModalBody>
-						<CTabs activeTab="buttons">
-							<CNav variant="tabs">
-								<CNavItem>
-									<CNavLink data-tab="buttons">
-										<FontAwesomeIcon icon={faCalendarAlt} /> Buttons
-									</CNavLink>
-								</CNavItem>
-								<CNavItem>
-									<CNavLink data-tab="triggers">
-										<FontAwesomeIcon icon={faClock} /> Triggers
-									</CNavLink>
-								</CNavItem>
-							</CNav>
-							<CTabContent fade={false} className="default-scroll">
-								<CTabPane data-tab="buttons" className="action-recorder-finish-button-grid">
-									<ButtonPicker selectButton={doSave} />
-								</CTabPane>
-								<CTabPane data-tab="triggers">
-									<CRow>
-										<CCol sm={12}>
-											<TriggerPicker selectControl={doSave} />
-										</CCol>
-									</CRow>
-								</CTabPane>
-							</CTabContent>
-						</CTabs>
+						{/* <CTabs activeTab="buttons"> */}
+						<CNav variant="tabs">
+							<CNavItem>
+								<CNavLink data-tab="buttons">
+									<FontAwesomeIcon icon={faCalendarAlt} /> Buttons
+								</CNavLink>
+							</CNavItem>
+							<CNavItem>
+								<CNavLink data-tab="triggers">
+									<FontAwesomeIcon icon={faClock} /> Triggers
+								</CNavLink>
+							</CNavItem>
+						</CNav>
+						<CTabContent className="default-scroll">
+							<CTabPane data-tab="buttons" className="action-recorder-finish-button-grid">
+								<ButtonPicker selectButton={doSave} />
+							</CTabPane>
+							<CTabPane data-tab="triggers">
+								<CRow>
+									<CCol sm={12}>
+										<TriggerPicker selectControl={doSave} />
+									</CCol>
+								</CRow>
+							</CTabPane>
+						</CTabContent>
+						{/* </CTabs> */}
 					</CModalBody>
 					<CModalFooter>
 						<CButton color="secondary" onClick={doClose}>

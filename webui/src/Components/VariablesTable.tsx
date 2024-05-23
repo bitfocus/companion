@@ -1,5 +1,5 @@
 import React, { useCallback, useContext, useState, useMemo, useEffect, memo } from 'react'
-import { CAlert, CButton, CInput, CInputGroup, CInputGroupAppend } from '@coreui/react'
+import { CAlert, CButton, CFormInput, CInputGroup } from '@coreui/react'
 import { socketEmitPromise, useComputed } from '../util.js'
 import { CopyToClipboard } from 'react-copy-to-clipboard'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
@@ -92,18 +92,16 @@ export const VariablesTable = observer(function VariablesTable({ label }: Variab
 	return (
 		<>
 			<CInputGroup className="variables-table-filter">
-				<CInput
+				<CFormInput
 					type="text"
 					placeholder="Filter ..."
 					onChange={updateFilter}
 					value={filter}
 					style={{ fontSize: '1.2em' }}
 				/>
-				<CInputGroupAppend>
-					<CButton color="danger" onClick={clearFilter}>
-						<FontAwesomeIcon icon={faTimes} />
-					</CButton>
-				</CInputGroupAppend>
+				<CButton color="danger" onClick={clearFilter}>
+					<FontAwesomeIcon icon={faTimes} />
+				</CButton>
 			</CInputGroup>
 			<table className="table table-responsive-sm variables-table">
 				<thead>

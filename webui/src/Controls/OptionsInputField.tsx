@@ -1,4 +1,4 @@
-import { CFormGroup, CInputGroupText, CLabel } from '@coreui/react'
+import { CInputGroupText, CFormLabel } from '@coreui/react'
 import React, { useCallback } from 'react'
 import {
 	CheckboxInputField,
@@ -151,7 +151,13 @@ export function OptionsInputField({
 		case 'custom-variable': {
 			if (isAction) {
 				control = (
-					<InternalCustomVariableDropdown disabled={!!readonly} value={value} setValue={setValue2} includeNone={true} />
+					<InternalCustomVariableDropdown
+						label={'TEST LABEL'}
+						disabled={!!readonly}
+						value={value}
+						setValue={setValue2}
+						includeNone={true}
+					/>
 				)
 			}
 			break
@@ -159,7 +165,7 @@ export function OptionsInputField({
 		default:
 			// The 'internal instance' is allowed to use some special input fields, to minimise when it reacts to changes elsewhere in the system
 			if (connectionId === 'internal') {
-				control = InternalInstanceField(option, isOnControl, !!readonly, value, setValue2) ?? undefined
+				control = InternalInstanceField('TEST LABEL', option, isOnControl, !!readonly, value, setValue2) ?? undefined
 			}
 			// Use default below
 			break
@@ -172,11 +178,11 @@ export function OptionsInputField({
 	return (
 		<CFormGroup className={classNames({ displayNone: !visibility })}>
 			{showLabel && (
-				<CLabel>
+				<CFormLabel>
 					{option.label}
 					<InputFeatureIcons {...features} />
 					{option.tooltip && <FontAwesomeIcon icon={faQuestionCircle} title={option.tooltip} />}
-				</CLabel>
+				</CFormLabel>
 			)}
 			{control}
 		</CFormGroup>

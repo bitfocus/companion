@@ -1,5 +1,5 @@
 import React from 'react'
-import { CAlert, CInput, CInputCheckbox, CLabel } from '@coreui/react'
+import { CAlert, CFormInput, CFormCheck, CFormLabel } from '@coreui/react'
 import type { UserConfigModel } from '@companion-app/shared/Model/UserConfigModel.js'
 
 interface PasswordStepProps {
@@ -18,19 +18,19 @@ export function PasswordStep({ config, setValue }: PasswordStepProps) {
 			<CAlert color="danger">This does not make an installation more secure!</CAlert>
 			<div className="indent3">
 				<div className="form-check form-check-inline mr-1">
-					<CInputCheckbox
+					<CFormCheck
 						id="userconfig_admin_lockout"
 						checked={config.admin_lockout}
 						onChange={(e) => setValue('admin_lockout', e.currentTarget.checked)}
 					/>
-					<CLabel htmlFor="userconfig_admin_lockout">Enable Admin Password</CLabel>
+					<CFormLabel htmlFor="userconfig_admin_lockout">Enable Admin Password</CFormLabel>
 				</div>
 				{config.admin_lockout && (
 					<div className="indent2, group">
 						<div className="col-left">Password</div>
 						<div className="col-right">
 							<div className="form-check form-check-inline mr-1">
-								<CInput
+								<CFormInput
 									type="text"
 									value={config.admin_password}
 									onChange={(e) => setValue('admin_password', e.currentTarget.value)}
@@ -45,7 +45,7 @@ export function PasswordStep({ config, setValue }: PasswordStepProps) {
 						</div>
 						<div className="col-right">
 							<div className="form-check form-check-inline mr-1">
-								<CInput
+								<CFormInput
 									type="number"
 									value={config.admin_timeout}
 									min={0}
