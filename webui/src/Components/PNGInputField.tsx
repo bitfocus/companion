@@ -53,22 +53,22 @@ export function PNGInputField({ min, max, onSelect, onError }: PNGInputFieldProp
 		}
 	}, [onError])
 	const onChange = useCallback(
-		(e) => {
+		(e: React.ChangeEvent<HTMLInputElement>) => {
 			const newFiles = e.currentTarget.files
 			e.currentTarget.files = null
 			console.log('change', newFiles)
 
 			//check whether browser fully supports all File API
 			if (apiIsSupported) {
-				if (!newFiles.length || newFiles[0].type !== 'image/png') {
+				if (!newFiles || !newFiles.length || newFiles[0].type !== 'image/png') {
 					onError('Sorry. Only proper PNG files are supported.')
 					return
 				}
 
-				var fr = new FileReader()
+				const fr = new FileReader()
 				fr.onload = () => {
 					// file is loaded
-					var img = new Image()
+					const img = new Image()
 
 					img.onload = () => {
 						if (!fr.result) return

@@ -34,7 +34,7 @@ export function ButtonStyleConfig({
 
 	const [pngError, setPngError] = useState<string | null>(null)
 	const setPng = useCallback(
-		(data) => {
+		(data: string | null) => {
 			setPngError(null)
 			socketEmitPromise(socket, 'controls:set-style-fields', [
 				controlId,

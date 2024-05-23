@@ -145,7 +145,7 @@ const TriggersTable = observer(function TriggersTable({ editItem, selectedContro
 	const { socket, triggersList } = useContext(RootAppStoreContext)
 
 	const moveTrigger = useCallback(
-		(itemId, targetId) => {
+		(itemId: string, targetId: string) => {
 			itemId = itemId + ''
 			targetId = targetId + ''
 

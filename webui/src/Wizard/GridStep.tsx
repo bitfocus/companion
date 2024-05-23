@@ -12,7 +12,7 @@ export function GridStep({ rows, columns, setValue }: GridStepProps) {
 	const [totalRows, setTotalRows] = useState(rows)
 	const [totalColumns, setTotalColumns] = useState(columns)
 
-	const setMaxColumn = useCallback((e) => {
+	const setMaxColumn = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
 		const newValue = Number(e.currentTarget.value)
 		const grid: UserConfigGridSize = {
 			minRow: 0,
@@ -24,7 +24,7 @@ export function GridStep({ rows, columns, setValue }: GridStepProps) {
 		setTotalColumns(newValue)
 		setValue('gridSize', grid)
 	}, [])
-	const setMaxRow = useCallback((e) => {
+	const setMaxRow = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
 		const newValue = Number(e.currentTarget.value)
 		const grid: UserConfigGridSize = {
 			minRow: 0,

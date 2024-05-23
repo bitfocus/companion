@@ -266,7 +266,10 @@ const FeedbackEditor = observer(function FeedbackEditor({
 
 	const [feedbackOptions, optionVisibility] = useOptionsAndIsVisible(feedbackSpec?.options, feedback?.options)
 
-	const innerSetEnabled = useCallback((e) => service.setEnabled(e.target.checked), [service.setEnabled])
+	const innerSetEnabled = useCallback(
+		(e: React.ChangeEvent<HTMLInputElement>) => service.setEnabled(e.target.checked),
+		[service.setEnabled]
+	)
 
 	const name = feedbackSpec
 		? `${connectionLabel}: ${feedbackSpec.label}`
@@ -451,7 +454,7 @@ function FeedbackStyles({ feedbackSpec, feedback, setStylePropsValue }: Feedback
 	const [pngError, setPngError] = useState<string | null>(null)
 	const clearPngError = useCallback(() => setPngError(null), [])
 	const setPng = useCallback(
-		(data) => {
+		(data: string | null) => {
 			setPngError(null)
 			setStylePropsValue('png64', data)
 		},
@@ -463,7 +466,7 @@ function FeedbackStyles({ feedbackSpec, feedback, setStylePropsValue }: Feedback
 	}, [setStylePropsValue])
 
 	const currentStyle = useMemo(() => feedback?.style || {}, [feedback?.style])
-	const showField = useCallback((id) => id in currentStyle, [currentStyle])
+	const showField = useCallback((id: string) => id in currentStyle, [currentStyle])
 
 	if (feedbackSpec?.type === 'boolean') {
 		return (

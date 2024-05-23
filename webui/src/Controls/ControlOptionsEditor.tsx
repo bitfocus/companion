@@ -34,8 +34,11 @@ export function ControlOptionsEditor({
 		[socket, controlId, configRef]
 	)
 
-	const setStepAutoProgressValue = useCallback((val) => setValueInner('stepAutoProgress', val), [setValueInner])
-	const setRelativeDelayValue = useCallback((val) => setValueInner('relativeDelay', val), [setValueInner])
+	const setStepAutoProgressValue = useCallback(
+		(val: boolean) => setValueInner('stepAutoProgress', val),
+		[setValueInner]
+	)
+	const setRelativeDelayValue = useCallback((val: boolean) => setValueInner('relativeDelay', val), [setValueInner])
 	const setRotaryActions = useCallback(
 		(val: boolean) => {
 			if (!val && confirmRef.current && configRef.current && configRef.current.options.rotaryActions === true) {

@@ -164,7 +164,7 @@ const GridSizeModal = observer<GridSizeModalProps, GridSizeModalRef>(
 			}
 		}, [show, userConfig])
 
-		const setMinColumn = useCallback((e) => {
+		const setMinColumn = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
 			const newValue = Number(e.currentTarget.value)
 			setNewGridSize((oldSize) =>
 				oldSize
@@ -175,7 +175,7 @@ const GridSizeModal = observer<GridSizeModalProps, GridSizeModalRef>(
 					: null
 			)
 		}, [])
-		const setMaxColumn = useCallback((e) => {
+		const setMaxColumn = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
 			const newValue = Number(e.currentTarget.value)
 			setNewGridSize((oldSize) =>
 				oldSize
@@ -186,7 +186,7 @@ const GridSizeModal = observer<GridSizeModalProps, GridSizeModalRef>(
 					: null
 			)
 		}, [])
-		const setMinRow = useCallback((e) => {
+		const setMinRow = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
 			const newValue = Number(e.currentTarget.value)
 			setNewGridSize((oldSize) =>
 				oldSize
@@ -197,7 +197,7 @@ const GridSizeModal = observer<GridSizeModalProps, GridSizeModalRef>(
 					: null
 			)
 		}, [])
-		const setMaxRow = useCallback((e) => {
+		const setMaxRow = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
 			const newValue = Number(e.currentTarget.value)
 			setNewGridSize((oldSize) =>
 				oldSize

@@ -79,7 +79,7 @@ export function ConnectionsList({
 	const doToggleError = useCallback(() => doToggleVisibility('error'), [doToggleVisibility])
 
 	const moveRow = useCallback(
-		(itemId, targetId) => {
+		(itemId: string, targetId: string) => {
 			if (connectionsRef.current) {
 				const rawIds = Object.entries(connectionsRef.current)
 					.sort(([, a], [, b]) => a.sortOrder - b.sortOrder)

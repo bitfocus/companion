@@ -91,12 +91,12 @@ export default function App() {
 		setButtonGridHotPress(false)
 	}, [])
 
-	const handleKeyDown = useCallback((e) => {
+	const handleKeyDown = useCallback((e: KeyboardEvent) => {
 		if (e.key === 'Shift') {
 			setButtonGridHotPress(true)
 		}
 	}, [])
-	const handleKeyUp = useCallback((e) => {
+	const handleKeyUp = useCallback((e: KeyboardEvent) => {
 		if (e.key === 'Shift') {
 			setButtonGridHotPress(false)
 		}
@@ -358,13 +358,13 @@ const AppAuthWrapper = observer(function AppAuthWrapper({ setUnlocked }: AppAuth
 	const [password, setPassword] = useState('')
 	const [showError, setShowError] = useState(false)
 
-	const passwordChanged = useCallback((newValue) => {
+	const passwordChanged = useCallback((newValue: string) => {
 		setPassword(newValue)
 		setShowError(false)
 	}, [])
 
 	const tryLogin = useCallback(
-		(e) => {
+		(e: React.FormEvent<HTMLFormElement>) => {
 			e.preventDefault()
 
 			setPassword((currentPassword) => {
@@ -440,37 +440,37 @@ const AppContent = observer(function AppContent({ buttonGridHotPress }: AppConte
 		<CContainer fluid className="fadeIn">
 			<CNav variant="tabs">
 				<CNavItem>
-					<CNavLink to="/connections" component={NavLink}>
+					<CNavLink to="/connections" as={NavLink}>
 						<FontAwesomeIcon icon={faPlug} /> Connections
 					</CNavLink>
 				</CNavItem>
 				<CNavItem>
-					<CNavLink to="/buttons" component={NavLink}>
+					<CNavLink to="/buttons" as={NavLink}>
 						<FontAwesomeIcon icon={faCalendarAlt} /> Buttons
 					</CNavLink>
 				</CNavItem>
 				<CNavItem>
-					<CNavLink to="/surfaces" component={NavLink}>
+					<CNavLink to="/surfaces" as={NavLink}>
 						<FontAwesomeIcon icon={faGamepad} /> Surfaces
 					</CNavLink>
 				</CNavItem>
 				<CNavItem>
-					<CNavLink to="/triggers" component={NavLink}>
+					<CNavLink to="/triggers" as={NavLink}>
 						<FontAwesomeIcon icon={faClock} /> Triggers
 					</CNavLink>
 				</CNavItem>
 				<CNavItem>
-					<CNavLink to="/settings" component={NavLink}>
+					<CNavLink to="/settings" as={NavLink}>
 						<FontAwesomeIcon icon={faCog} /> Settings
 					</CNavLink>
 				</CNavItem>
 				<CNavItem>
-					<CNavLink to="/import-export" component={NavLink}>
+					<CNavLink to="/import-export" as={NavLink}>
 						<FontAwesomeIcon icon={faFileImport} /> Import / Export
 					</CNavLink>
 				</CNavItem>
 				<CNavItem>
-					<CNavLink to="/log" component={NavLink}>
+					<CNavLink to="/log" as={NavLink}>
 						<FontAwesomeIcon icon={faClipboardList} /> Log
 					</CNavLink>
 				</CNavItem>

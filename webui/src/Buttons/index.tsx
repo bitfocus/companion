@@ -30,7 +30,7 @@ export const ButtonsPage = observer(function ButtonsPage({ hotPress }: ButtonsPa
 	const [pageNumber, setPageNumber] = useState(1)
 	const [copyFromButton, setCopyFromButton] = useState<[ControlLocation, string] | null>(null)
 
-	const doChangeTab = useCallback((newTab) => {
+	const doChangeTab = useCallback((newTab: string) => {
 		setActiveTab((oldTab) => {
 			const preserveButtonsTab = newTab === 'variables' && oldTab === 'edit'
 			if (newTab !== 'edit' && oldTab !== newTab && !preserveButtonsTab) {
@@ -42,7 +42,7 @@ export const ButtonsPage = observer(function ButtonsPage({ hotPress }: ButtonsPa
 	}, [])
 
 	const doButtonGridClick = useCallback(
-		(location, isDown) => {
+		(location: ControlLocation, isDown: boolean) => {
 			if (hotPress) {
 				socketEmitPromise(socket, 'controls:hot-press', [location, isDown, 'grid']).catch((e) =>
 					console.error(`Hot press failed: ${e}`)
@@ -63,8 +63,8 @@ export const ButtonsPage = observer(function ButtonsPage({ hotPress }: ButtonsPa
 	const gridSize = userConfig.properties?.gridSize
 
 	const handleKeyDownInButtons = useCallback(
-		(e) => {
-			if (e.target.tagName !== 'INPUT' && e.target.tagName !== 'TEXTAREA') {
+		(e: React.KeyboardEvent) => {
+			if (e.currentTarget.tagName !== 'INPUT' && e.currentTarget.tagName !== 'TEXTAREA') {
 				switch (e.key) {
 					case 'ArrowDown':
 						setSelectedButton((selectedButton) => {

@@ -109,7 +109,7 @@ export const ButtonsGridPanel = observer(function ButtonsPage({
 	const gridSize = userConfig.properties?.gridSize
 
 	const doGrow = useCallback(
-		(direction, amount) => {
+		(direction: 'left' | 'right' | 'top' | 'bottom', amount: number) => {
 			if (amount <= 0 || !gridSize) return
 
 			switch (direction) {
@@ -269,7 +269,7 @@ const EditPagePropertiesModal = forwardRef<EditPagePropertiesModalRef, EditPageP
 			[]
 		)
 
-		const onNameChange = useCallback((e) => {
+		const onNameChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
 			setName(e.target.value)
 		}, [])
 

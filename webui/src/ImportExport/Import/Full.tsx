@@ -133,7 +133,7 @@ function FullImportTab({ snapshot }: FullImportTabProps) {
 	const validConfigKeys = Object.entries(config).filter(([k, v]) => v && snapshotKeys.includes(k))
 	// console.log('validkeys', validConfigKeys)
 
-	const setValue = useCallback((key, value) => {
+	const setValue = useCallback((key: string, value: any) => {
 		setConfig((oldConfig) => ({
 			...oldConfig,
 			[key]: value,
@@ -229,7 +229,10 @@ interface InputCheckboxProps {
 function InputCheckbox({ config, allowKeys, keyName, setValue, label }: InputCheckboxProps) {
 	const disabled = allowKeys && !allowKeys.includes(keyName)
 
-	const setValue2 = useCallback((e) => setValue(keyName, !!e.currentTarget.checked), [setValue, keyName])
+	const setValue2 = useCallback(
+		(e: React.ChangeEvent<HTMLInputElement>) => setValue(keyName, !!e.currentTarget.checked),
+		[setValue, keyName]
+	)
 
 	return (
 		<div className="indent3">

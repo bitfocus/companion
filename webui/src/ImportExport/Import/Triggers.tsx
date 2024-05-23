@@ -1,11 +1,7 @@
 import { CButton, CButtonGroup, CFormCheck } from '@coreui/react'
-import React, { ChangeEvent } from 'react'
-import { useCallback } from 'react'
-import { useEffect } from 'react'
-import { useState } from 'react'
+import React, { ChangeEvent, useCallback, useEffect, useState, useContext } from 'react'
 import { ImportRemap } from './Page.js'
 import { socketEmitPromise } from '../../util.js'
-import { useContext } from 'react'
 import type { ClientImportObject } from '@companion-app/shared/Model/ImportExport.js'
 import { RootAppStoreContext } from '../../Stores/RootAppStore.js'
 
@@ -53,10 +49,10 @@ export function ImportTriggersTab({ snapshot, instanceRemap, setInstanceRemap }:
 	}, [])
 
 	const doImport = useCallback(
-		(e) => {
-			const doReplace = e.target.getAttribute('data-replace') === 'true'
+		(e: React.MouseEvent<HTMLElement>) => {
+			const doReplace = e.currentTarget.getAttribute('data-replace') === 'true'
 
-			console.log('import', selectedTriggers, doReplace, e.target.getAttribute('data-replace'))
+			console.log('import', selectedTriggers, doReplace, e.currentTarget.getAttribute('data-replace'))
 
 			socketEmitPromise(socket, 'loadsave:import-triggers', [selectedTriggers, instanceRemap, doReplace])
 				.then((res) => {

@@ -28,7 +28,7 @@ export const ButtonPicker = observer(function ButtonPicker({ selectButton }: But
 	const [selectedStep, setSelectedStep] = useState<string | null>(null)
 	const [selectedSet, setSelectedSet] = useState<string | null>(null)
 
-	const buttonClick = useCallback((location, pressed) => {
+	const buttonClick = useCallback((location: ControlLocation, pressed: boolean) => {
 		if (pressed) setSelectedLocation(location)
 	}, [])
 

@@ -309,10 +309,7 @@ export const PreventDefaultHandler = (e: FormEvent): void => {
 	e.preventDefault()
 }
 
-export function useComputed<TCb extends (...args: any[]) => any>(
-	cb: TCb,
-	deps: DependencyList | undefined
-): ReturnType<TCb> {
+export function useComputed<TCb extends (...args: any[]) => any>(cb: TCb, deps: DependencyList): ReturnType<TCb> {
 	return useMemo(() => computed(cb), deps).get()
 }
 

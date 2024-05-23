@@ -154,7 +154,7 @@ export const AddFeedbacksModal = observer(
 		const [filter, setFilter] = useState('')
 
 		const addFeedback2 = useCallback(
-			(feedbackType) => {
+			(feedbackType: string) => {
 				recentlyAddedFeedbacks.trackId(feedbackType)
 
 				addFeedback(feedbackType)
@@ -272,7 +272,7 @@ function ConnectionCollapse({
 				<div className="header" onClick={doToggle2}>
 					{connectionInfo?.label || connectionId}
 				</div>
-				<CCollapse show={expanded}>
+				<CCollapse visible={expanded}>
 					<CCardBody>
 						{!Array.isArray(candidates) ? (
 							candidates

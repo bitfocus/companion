@@ -91,7 +91,7 @@ export function ColorInputField<T extends 'string' | 'number'>({
 	}, [setValid])
 
 	const handleClick = useCallback(() => setDisplayPicker((d) => !d), [])
-	const setHide = useCallback((e) => {
+	const setHide = useCallback((e: MouseEvent) => {
 		if (e) {
 			e.preventDefault()
 			e.stopPropagation()

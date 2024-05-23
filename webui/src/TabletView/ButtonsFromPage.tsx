@@ -29,7 +29,7 @@ export function ButtonsFromPage({
 	const socket = useContext(SocketContext)
 
 	const buttonClick = useCallback(
-		(location, pressed) => {
+		(location: ControlLocation, pressed: boolean) => {
 			socketEmitPromise(socket, 'controls:hot-press', [location, pressed, 'tablet']).catch((e) =>
 				console.error(`Hot press failed: ${e}`)
 			)
