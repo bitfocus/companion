@@ -430,7 +430,7 @@ export default class InstanceCustomVariable {
 	 */
 	syncValueToDefault(name) {
 		if (this.#custom_variables[name]) {
-			const value = this.#base.getVariableValue('custom', fullname)
+			const value = this.#base.getVariableValue('custom', name)
 			this.#logger.silly(`Set default value "${name}":${value}`)
 			this.#custom_variables[name].defaultValue = value ?? ''
 

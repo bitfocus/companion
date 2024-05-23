@@ -102,6 +102,8 @@ export class VariablesStore {
 			definitions.push(...this.variableDefinitionsForLabel(label))
 		}
 
+		definitions.push(...this.customVariableDefinitions.get())
+
 		return definitions
 	})
 
@@ -122,10 +124,6 @@ export class VariablesStore {
 
 	public variableDefinitionsForLabel = (label: string): VariableDefinitionExt[] => {
 		const definitions: VariableDefinitionExt[] = []
-
-		if (label === 'custom') {
-			definitions.push(...this.customVariableDefinitions.get())
-		}
 
 		// Module variables
 		const variables = this.variables.get(label)
