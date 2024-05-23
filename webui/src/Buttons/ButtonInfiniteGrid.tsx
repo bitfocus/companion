@@ -207,8 +207,9 @@ export const ButtonInfiniteGrid = forwardRef<ButtonInfiniteGridRef, ButtonInfini
 				width: Math.max(countColumns * tileSize, windowSize.width) + growWidth * 2,
 				height: Math.max(countRows * tileSize, windowSize.height) + growHeight * 2,
 				'--tile-inner-size': tileInnerSize,
+				'--grid-scale': drawScale,
 			}),
-			[countColumns, countRows, tileSize, windowSize, growWidth, growHeight, tileInnerSize]
+			[countColumns, countRows, tileSize, windowSize, growWidth, growHeight, tileInnerSize, drawScale]
 		)
 
 		return (

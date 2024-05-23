@@ -113,6 +113,9 @@
 		width: 1000px;
 		height: 1000px;
 
+		// default grid scale, used for button text
+		--grid-scale: 1;
+
 		.expand {
 			float: left;
 			position: absolute;
@@ -188,7 +191,8 @@
 				height: calc(var(--tile-inner-size) * 1px);
 
 				.placeholder {
-					// TODO - shrink text to fit
+					// shrink text with scaling
+					font-size: calc(var(--grid-scale) * 1.5rem);
 				}
 			}
 		}
