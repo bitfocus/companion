@@ -28,7 +28,7 @@ body {
 	@include ltr-rtl('padding-left', var(--cui-sidebar-occupy-start, 0));
 }
 
-.c-body {
+.body {
 	padding: 15px 0;
 	background-color: #eee;
 
@@ -54,13 +54,21 @@ body {
 	}
 }
 
-.c-header .c-header-brand {
-	font-size: 1.3em;
-	margin: 0 auto;
+// .c-header .c-header-brand {
+// 	font-size: 1.3em;
+// 	margin: 0 auto;
+// }
+
+.header-toggler svg {
+	color: #fff;
 }
 
 .header-right {
 	margin-right: 5px;
+}
+
+.header .nav-link:hover {
+	color: #ddd;
 }
 
 .choose_connection {

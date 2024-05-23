@@ -39,7 +39,7 @@ import { ButtonsPage } from './Buttons/index.js'
 import { ContextData } from './ContextData.js'
 import { CloudPage } from './CloudPage.js'
 import { WizardModal, WIZARD_CURRENT_VERSION, WizardModalRef } from './Wizard/index.js'
-import { Navigate, useLocation } from 'react-router-dom'
+import { NavLink, Navigate, useLocation } from 'react-router-dom'
 import { useIdleTimer } from 'react-idle-timer'
 import { ImportExport } from './ImportExport/index.js'
 import { RootAppStoreContext } from './Stores/RootAppStore.js'
@@ -440,37 +440,37 @@ const AppContent = observer(function AppContent({ buttonGridHotPress }: AppConte
 		<CContainer fluid className="fadeIn">
 			<CNav variant="tabs">
 				<CNavItem>
-					<CNavLink to="/connections">
+					<CNavLink to="/connections" component={NavLink}>
 						<FontAwesomeIcon icon={faPlug} /> Connections
 					</CNavLink>
 				</CNavItem>
 				<CNavItem>
-					<CNavLink to="/buttons">
+					<CNavLink to="/buttons" component={NavLink}>
 						<FontAwesomeIcon icon={faCalendarAlt} /> Buttons
 					</CNavLink>
 				</CNavItem>
 				<CNavItem>
-					<CNavLink to="/surfaces">
+					<CNavLink to="/surfaces" component={NavLink}>
 						<FontAwesomeIcon icon={faGamepad} /> Surfaces
 					</CNavLink>
 				</CNavItem>
 				<CNavItem>
-					<CNavLink to="/triggers">
+					<CNavLink to="/triggers" component={NavLink}>
 						<FontAwesomeIcon icon={faClock} /> Triggers
 					</CNavLink>
 				</CNavItem>
 				<CNavItem>
-					<CNavLink to="/settings">
+					<CNavLink to="/settings" component={NavLink}>
 						<FontAwesomeIcon icon={faCog} /> Settings
 					</CNavLink>
 				</CNavItem>
 				<CNavItem>
-					<CNavLink to="/import-export">
+					<CNavLink to="/import-export" component={NavLink}>
 						<FontAwesomeIcon icon={faFileImport} /> Import / Export
 					</CNavLink>
 				</CNavItem>
 				<CNavItem>
-					<CNavLink to="/log">
+					<CNavLink to="/log" component={NavLink}>
 						<FontAwesomeIcon icon={faClipboardList} /> Log
 					</CNavLink>
 				</CNavItem>
