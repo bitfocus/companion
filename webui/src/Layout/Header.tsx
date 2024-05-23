@@ -41,7 +41,7 @@ export const MyHeader = observer(function MyHeader({ toggleSidebar, canLock, set
 	const versionString = versionInfo ? `${versionInfo.appVersion} (${versionInfo.appBuild})` : '?'
 
 	return (
-		<CHeader colorScheme="dark">
+		<CHeader colorScheme="dark" position="sticky" className="mb-4 p-0">
 			<CHeaderToggler onClick={toggleSidebar} />
 			<CHeaderBrand className="d-lg-none">
 				Bitfocus&nbsp;<span style={{ fontWeight: 'bold' }}>Companion</span>

@@ -225,10 +225,10 @@ const AppMain = observer(function AppMain({
 				''
 			)}
 			<WizardModal ref={wizardModal} />
-			<MySidebar show={showSidebar} showWizard={showWizard} />
-			<div className="c-wrapper">
+			<MySidebar sidebarShow={showSidebar} showWizard={showWizard} />
+			<div className="wrapper d-flex flex-column min-vh-100 bg-body-tertiary">
 				<MyHeader toggleSidebar={toggleSidebar} setLocked={setLocked} canLock={canLock && unlocked} />
-				<div className="c-body">
+				<div className="body flex-grow-1 px-3">
 					{connected && loadingComplete ? (
 						unlocked ? (
 							<AppContent buttonGridHotPress={buttonGridHotPress} />

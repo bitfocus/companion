@@ -2,10 +2,10 @@ $primary: #d50215;
 $secondary: #ccc;
 $body-bg: #333;
 
-$header-dark-bg: #d50215;
-$header-dark-border: (
+$header-bg: #d50215;
+$header-border: (
 	bottom: none,
 );
-$header-dark-color: #fff;
-$sidebar-dark-bg: #111;
-$sidebar-dark-brand-bg: adjust-color($header-dark-bg, $lightness: -10%);
+$header-color: #fff;
+$sidebar-bg: #111;
+$sidebar-brand-bg: adjust-color($header-bg, $lightness: -10%);
