@@ -30,7 +30,7 @@ export const Triggers = observer(function Triggers() {
 
 	const [editItemId, setEditItemId] = useState<string | null>(null)
 	const [tabResetToken, setTabResetToken] = useState(nanoid())
-	const [activeTab, setActiveTab] = useState('placeholder')
+	const [activeTab, setActiveTab] = useState<'placeholder' | 'edit'>('placeholder')
 
 	// Ensure the selected trigger is valid
 	useEffect(() => {
@@ -43,10 +43,10 @@ export const Triggers = observer(function Triggers() {
 		})
 	}, [triggersList])
 
-	const doChangeTab = useCallback((newTab: string) => {
+	const doChangeTab = useCallback((newTab: 'placeholder' | 'edit') => {
 		setActiveTab((oldTab) => {
-			const preserveButtonsTab = newTab === 'variables' && oldTab === 'edit'
-			if (newTab !== 'edit' && oldTab !== newTab && !preserveButtonsTab) {
+			// const preserveButtonsTab =  newTab === 'variables' && oldTab === 'edit'
+			if (newTab !== 'edit' && oldTab !== newTab /*&& !preserveButtonsTab*/) {
 				setEditItemId(null)
 				setTabResetToken(nanoid())
 			}
@@ -107,7 +107,9 @@ export const Triggers = observer(function Triggers() {
 					<CNav variant="tabs" role="tablist">
 						{!editItemId && (
 							<CNavItem>
-								<CNavLink data-tab="placeholder">Select a trigger</CNavLink>
+								<CNavLink active={activeTab === 'placeholder'} onClick={() => doChangeTab('placeholder')}>
+									Select a trigger
+								</CNavLink>
 							</CNavItem>
 						)}
 						<CNavItem
@@ -115,18 +117,18 @@ export const Triggers = observer(function Triggers() {
 								hidden: !editItemId,
 							})}
 						>
-							<CNavLink data-tab="edit">
+							<CNavLink active={activeTab === 'edit'} onClick={() => doChangeTab('edit')}>
 								<FontAwesomeIcon icon={faCalculator} /> Edit Trigger
 							</CNavLink>
 						</CNavItem>
 					</CNav>
 					<CTabContent>
 						{!editItemId && (
-							<CTabPane data-tab="placeholder">
+							<CTabPane data-tab="placeholder" visible={activeTab === 'placeholder'}>
 								<p>Select a trigger...</p>
 							</CTabPane>
 						)}
-						<CTabPane data-tab="edit">
+						<CTabPane data-tab="edit" visible={activeTab === 'edit'}>
 							<MyErrorBoundary>
 								{editItemId ? <EditTriggerPanel key={`${editItemId}.${tabResetToken}`} controlId={editItemId} /> : ''}
 							</MyErrorBoundary>
@@ -321,10 +323,10 @@ function TriggersTableRow({ controlId, item, editItem, moveTrigger, isSelected }
 				<div style={{ display: 'flex' }}>
 					<div>
 						<CButtonGroup>
-							<CButton size="md" color="white" onClick={doClone} title="Clone" style={{ padding: 3, paddingRight: 6 }}>
+							<CButton color="white" onClick={doClone} title="Clone" style={{ padding: 3, paddingRight: 6 }}>
 								<FontAwesomeIcon icon={faClone} />
 							</CButton>
-							<CButton size="md" color="gray" onClick={doDelete} title="Delete" style={{ padding: 3, paddingRight: 6 }}>
+							<CButton color="gray" onClick={doDelete} title="Delete" style={{ padding: 3, paddingRight: 6 }}>
 								<FontAwesomeIcon icon={faTrash} />
 							</CButton>
 							<CButton

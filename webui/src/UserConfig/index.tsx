@@ -25,7 +25,6 @@ import { HttpConfig } from './HttpConfig.js'
 import { CompanionConfig } from './CompanionConfig.js'
 import { RootAppStoreContext } from '../Stores/RootAppStore.js'
 import { observer } from 'mobx-react-lite'
-import { useStartTyping } from 'react-use'
 
 export const UserConfig = memo(function UserConfig() {
 	return (

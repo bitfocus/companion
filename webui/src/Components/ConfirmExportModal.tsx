@@ -1,4 +1,4 @@
-import { CButton, CFormLabel, CModal, CModalBody, CModalFooter, CModalHeader } from '@coreui/react'
+import { CButton, CModal, CModalBody, CModalFooter, CModalHeader } from '@coreui/react'
 import React, { forwardRef, useCallback, useImperativeHandle, useRef, useState } from 'react'
 import { ExportFormatDefault, SelectExportFormat } from '../ImportExport/ExportFormat.js'
 import { MenuPortalContext } from './DropdownInputField.js'
@@ -18,16 +18,24 @@ export const ConfirmExportModal = forwardRef<ConfirmExportModalRef, ConfirmExpor
 		const [show, setShow] = useState(false)
 		const [format, setFormat] = useState(ExportFormatDefault)
 
-		const buttonRef = useRef<HTMLElement>(null)
+		const buttonRef = useRef<HTMLButtonElement>(null)
 
 		const buttonFocus = () => {
-			if (buttonRef.current) {
-				buttonRef.current.focus()
-			}
+			setTimeout(() => {
+				if (buttonRef.current) {
+					buttonRef.current.focus()
+				}
+			}, 500)
 		}
 
-		const doClose = useCallback(() => setShow(false), [])
-		const onClosed = useCallback(() => setData(null), [])
+		const doClose = useCallback(() => {
+			setShow(false)
+
+			// Delay clearing the data so the modal can animate out
+			setTimeout(() => {
+				setData(null)
+			}, 1500)
+		}, [])
 		const doAction = useCallback(() => {
 			setData(null)
 			setShow(false)
@@ -57,7 +65,7 @@ export const ConfirmExportModal = forwardRef<ConfirmExportModalRef, ConfirmExpor
 		const [modalRef, setModalRef] = useState<HTMLDivElement | null>(null)
 
 		return (
-			<CModal ref={setModalRef} visible={show} onClose={doClose} onClosed={onClosed} onOpened={buttonFocus}>
+			<CModal ref={setModalRef} visible={show} onClose={doClose} onShow={buttonFocus}>
 				<MenuPortalContext.Provider value={modalRef}>
 					<CModalHeader closeButton>
 						<h5>{props.title}</h5>
@@ -65,11 +73,7 @@ export const ConfirmExportModal = forwardRef<ConfirmExportModalRef, ConfirmExpor
 					<CModalBody>
 						<div>
 							<div className="indent3">
-								<div className="form-check form-check-inline mr-1">
-									<CFormLabel htmlFor="file_format">File format</CFormLabel>
-									&nbsp;
-									<SelectExportFormat value={format} setValue={setFormat} />
-								</div>
+								<SelectExportFormat value={format} setValue={setFormat} label="File format" />
 							</div>
 						</div>
 					</CModalBody>

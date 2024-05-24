@@ -92,9 +92,10 @@ export const DropdownInputField = memo(function DropdownInputField<Multi extends
 	}, [regex])
 
 	const isValueValid = useCallback(
-		(newValue) => {
+		(newValue: DropdownChoiceId | DropdownChoiceId[]) => {
 			if (isMultiple) {
-				for (const val of newValue) {
+				const newValueArr = Array.isArray(newValue) ? newValue : [newValue]
+				for (const val of newValueArr) {
 					// Require the selected choices to be valid
 					if (
 						allowCustom &&
@@ -179,11 +180,11 @@ export const DropdownInputField = memo(function DropdownInputField<Multi extends
 	}
 
 	const isValidNewOption = useCallback(
-		(newValue) => typeof newValue === 'string' && (!compiledRegex || !!newValue.match(compiledRegex)),
+		(newValue: string | number) => typeof newValue === 'string' && (!compiledRegex || !!newValue.match(compiledRegex)),
 		[compiledRegex]
 	)
 	const noOptionsMessage = useCallback(
-		(inputValue) => {
+		({ inputValue }: { inputValue: string | number }) => {
 			if (!isValidNewOption(inputValue)) {
 				return 'Input is not a valid value'
 			} else {
@@ -192,7 +193,7 @@ export const DropdownInputField = memo(function DropdownInputField<Multi extends
 		},
 		[isValidNewOption]
 	)
-	const formatCreateLabel = useCallback((v) => `Use "${v}"`, [])
+	const formatCreateLabel = useCallback((v: string | number) => `Use "${v}"`, [])
 
 	return (
 		<div

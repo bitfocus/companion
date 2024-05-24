@@ -33,6 +33,10 @@ legend {
 	&.margin-bottom {
 		margin-bottom: 1rem;
 	}
+
+	.form-switch {
+		margin-top: 0.2rem;
+	}
 }
 
 h5 {
@@ -176,7 +180,8 @@ code {
 }
 
 .form-control,
-.form-control:focus {
+.form-control:focus,
+.form-select {
 	background-color: #fff;
 }
 

@@ -6,6 +6,7 @@ import { InternalInputField } from '@companion-app/shared/Model/Options.js'
 import { DropdownChoice } from '@companion-module/base'
 import { RootAppStoreContext } from '../Stores/RootAppStore.js'
 import { observer } from 'mobx-react-lite'
+import { CFormLabel } from '@coreui/react'
 
 export function InternalInstanceField(
 	label: string,
@@ -387,7 +388,7 @@ const InternalTriggerDropdown = observer(function InternalTriggerDropdown({
 })
 
 interface InternalTimePickerProps {
-	label: React.ReactNode
+	label: string
 	value: any
 	setValue: (value: any) => void
 	disabled: boolean
@@ -395,15 +396,18 @@ interface InternalTimePickerProps {
 
 function InternalTimePicker({ label, value, setValue, disabled }: InternalTimePickerProps) {
 	return (
-		<TimePicker
-			disabled={disabled}
-			format="HH:mm:ss"
-			maxDetail="second"
-			required
-			value={value}
-			onChange={setValue}
-			className={''}
-			openClockOnFocus={false}
-		/>
+		<>
+			{label ? <CFormLabel>{label}</CFormLabel> : null}
+			<TimePicker
+				disabled={disabled}
+				format="HH:mm:ss"
+				maxDetail="second"
+				required
+				value={value}
+				onChange={setValue}
+				className={''}
+				openClockOnFocus={false}
+			/>
+		</>
 	)
 }

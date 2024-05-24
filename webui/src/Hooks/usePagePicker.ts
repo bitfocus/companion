@@ -5,7 +5,7 @@ export function usePagePicker(pagesStore: PagesStore, initialPage: number) {
 	const [pageNumber, setPageNumber] = useState(Number(initialPage))
 
 	const changePage = useCallback(
-		(delta) => {
+		(delta: number) => {
 			const pageNumbers = pagesStore.pageNumbers
 			setPageNumber((pageNumber) => {
 				const currentIndex = pageNumbers.findIndex((p) => p === pageNumber)

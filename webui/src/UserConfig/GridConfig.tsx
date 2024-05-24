@@ -125,14 +125,20 @@ const GridSizeModal = observer<GridSizeModalProps, GridSizeModalRef>(
 		const buttonRef = useRef<HTMLButtonElement | null>(null)
 
 		const buttonFocus = () => {
-			if (buttonRef.current) {
-				buttonRef.current.focus()
-			}
+			setTimeout(() => {
+				if (buttonRef.current) {
+					buttonRef.current.focus()
+				}
+			}, 500)
 		}
 
-		const doClose = useCallback(() => setShow(false), [])
-		const onClosed = useCallback(() => {
-			setNewGridSize(null)
+		const doClose = useCallback(() => {
+			setShow(false)
+
+			// Delay clearing the data so the modal can animate out
+			setTimeout(() => {
+				setNewGridSize(null)
+			}, 1500)
 		}, [])
 		const doAction = useCallback(
 			(e: FormEvent) => {
@@ -225,7 +231,7 @@ const GridSizeModal = observer<GridSizeModalProps, GridSizeModalRef>(
 				newGridSize.maxRow < userConfig.properties.gridSize.maxRow)
 
 		return (
-			<CModal visible={show} onClose={doClose} onClosed={onClosed} onOpened={buttonFocus}>
+			<CModal visible={show} onClose={doClose} onShow={buttonFocus}>
 				<CModalHeader closeButton>
 					<h5>Configure Grid Size</h5>
 				</CModalHeader>
