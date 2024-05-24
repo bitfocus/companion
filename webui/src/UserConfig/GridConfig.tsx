@@ -1,8 +1,18 @@
 import React, { FormEvent, useCallback, useContext, useEffect, useImperativeHandle, useRef, useState } from 'react'
-import { CAlert, CButton, CCol, CForm, CFormInput, CModal, CModalBody, CModalFooter, CModalHeader } from '@coreui/react'
+import {
+	CAlert,
+	CButton,
+	CCol,
+	CForm,
+	CFormInput,
+	CFormSwitch,
+	CModal,
+	CModalBody,
+	CModalFooter,
+	CModalHeader,
+} from '@coreui/react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faCog, faUndo } from '@fortawesome/free-solid-svg-icons'
-import CSwitch from '../CSwitch.js'
 import type { UserConfigGridSize, UserConfigModel } from '@companion-app/shared/Model/UserConfigModel.js'
 import { observer } from 'mobx-react-lite'
 import { RootAppStoreContext } from '../Stores/RootAppStore.js'
@@ -70,25 +80,22 @@ export const GridConfig = observer(function GridConfig({ config, setValue, reset
 			<tr>
 				<td></td>
 				<td colSpan={2}>
-					<div className="form-check form-check-inline mr-1">
-						<CButton onClick={editGridSize} color="success">
-							<FontAwesomeIcon icon={faCog} />
-							&nbsp;Edit Grid Size
-						</CButton>
-					</div>
+					<CButton onClick={editGridSize} color="success">
+						<FontAwesomeIcon icon={faCog} />
+						&nbsp;Edit Grid Size
+					</CButton>
 				</td>
 			</tr>
 			<tr>
 				<td>Allow expanding in grid view</td>
 				<td>
-					<div className="form-check form-check-inline mr-1 float-right">
-						<CSwitch
-							color="success"
-							checked={config.gridSizeInlineGrow}
-							size={'lg'}
-							onChange={(e) => setValue('gridSizeInlineGrow', e.currentTarget.checked)}
-						/>
-					</div>
+					<CFormSwitch
+						className="float-right"
+						color="success"
+						checked={config.gridSizeInlineGrow}
+						size="xl"
+						onChange={(e) => setValue('gridSizeInlineGrow', e.currentTarget.checked)}
+					/>
 				</td>
 				<td>
 					<CButton onClick={() => resetValue('gridSizeInlineGrow')} title="Reset to default">

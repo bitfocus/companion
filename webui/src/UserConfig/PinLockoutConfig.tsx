@@ -1,8 +1,7 @@
 import React from 'react'
-import { CButton, CFormInput } from '@coreui/react'
+import { CButton, CFormInput, CFormSwitch } from '@coreui/react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faUndo } from '@fortawesome/free-solid-svg-icons'
-import CSwitch from '../CSwitch.js'
 import type { UserConfigModel } from '@companion-app/shared/Model/UserConfigModel.js'
 import { observer } from 'mobx-react-lite'
 
@@ -27,14 +26,13 @@ export const PinLockoutConfig = observer(function PinLockoutConfig({
 			<tr>
 				<td>Enable Pin Codes</td>
 				<td>
-					<div className="form-check form-check-inline mr-1 float-right">
-						<CSwitch
-							color="success"
-							checked={config.pin_enable}
-							size={'lg'}
-							onChange={(e) => setValue('pin_enable', e.currentTarget.checked)}
-						/>
-					</div>
+					<CFormSwitch
+						className="float-right"
+						color="success"
+						checked={config.pin_enable}
+						size="xl"
+						onChange={(e) => setValue('pin_enable', e.currentTarget.checked)}
+					/>
 				</td>
 				<td>
 					<CButton onClick={() => resetValue('pin_enable')} title="Reset to default">
@@ -46,14 +44,13 @@ export const PinLockoutConfig = observer(function PinLockoutConfig({
 			<tr>
 				<td>Link Lockouts</td>
 				<td>
-					<div className="form-check form-check-inline mr-1 float-right">
-						<CSwitch
-							color="success"
-							checked={config.link_lockouts}
-							size={'lg'}
-							onChange={(e) => setValue('link_lockouts', e.currentTarget.checked)}
-						/>
-					</div>
+					<CFormSwitch
+						className="float-right"
+						color="success"
+						checked={config.link_lockouts}
+						size="xl"
+						onChange={(e) => setValue('link_lockouts', e.currentTarget.checked)}
+					/>
 				</td>
 				<td>
 					<CButton onClick={() => resetValue('link_lockouts')} title="Reset to default">
@@ -65,9 +62,7 @@ export const PinLockoutConfig = observer(function PinLockoutConfig({
 			<tr>
 				<td>Pin Code</td>
 				<td>
-					<div className="form-check form-check-inline mr-1">
-						<CFormInput type="text" value={config.pin} onChange={(e) => setValue('pin', e.currentTarget.value)} />
-					</div>
+					<CFormInput type="text" value={config.pin} onChange={(e) => setValue('pin', e.currentTarget.value)} />
 				</td>
 				<td>
 					<CButton onClick={() => resetValue('pin')} title="Reset to default">
@@ -79,15 +74,13 @@ export const PinLockoutConfig = observer(function PinLockoutConfig({
 			<tr>
 				<td>Pin Timeout (seconds, 0 to turn off)</td>
 				<td>
-					<div className="form-check form-check-inline mr-1">
-						<CFormInput
-							type="number"
-							value={config.pin_timeout}
-							min={0}
-							step={1}
-							onChange={(e) => setValue('pin_timeout', e.currentTarget.value)}
-						/>
-					</div>
+					<CFormInput
+						type="number"
+						value={config.pin_timeout}
+						min={0}
+						step={1}
+						onChange={(e) => setValue('pin_timeout', e.currentTarget.value)}
+					/>
 				</td>
 				<td>
 					<CButton onClick={() => resetValue('pin_timeout')} title="Reset to default">

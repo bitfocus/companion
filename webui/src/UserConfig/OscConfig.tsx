@@ -1,8 +1,7 @@
 import React from 'react'
-import { CButton, CFormInput } from '@coreui/react'
+import { CButton, CFormInput, CFormSwitch } from '@coreui/react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faUndo } from '@fortawesome/free-solid-svg-icons'
-import CSwitch from '../CSwitch.js'
 import type { UserConfigModel } from '@companion-app/shared/Model/UserConfigModel.js'
 import { observer } from 'mobx-react-lite'
 
@@ -23,14 +22,13 @@ export const OscConfig = observer(function OscConfig({ config, setValue, resetVa
 			<tr>
 				<td>OSC Listener</td>
 				<td>
-					<div className="form-check form-check-inline mr-1 float-right">
-						<CSwitch
-							color="success"
-							checked={config.osc_enabled}
-							size={'lg'}
-							onChange={(e) => setValue('osc_enabled', e.currentTarget.checked)}
-						/>
-					</div>
+					<CFormSwitch
+						className="float-right"
+						color="success"
+						checked={config.osc_enabled}
+						size="xl"
+						onChange={(e) => setValue('osc_enabled', e.currentTarget.checked)}
+					/>
 				</td>
 				<td>
 					<CButton onClick={() => resetValue('osc_enabled')} title="Reset to default">
@@ -41,13 +39,11 @@ export const OscConfig = observer(function OscConfig({ config, setValue, resetVa
 			<tr>
 				<td>OSC Listen Port</td>
 				<td>
-					<div className="form-check form-check-inline mr-1">
-						<CFormInput
-							type="number"
-							value={config.osc_listen_port}
-							onChange={(e) => setValue('osc_listen_port', e.currentTarget.value)}
-						/>
-					</div>
+					<CFormInput
+						type="number"
+						value={config.osc_listen_port}
+						onChange={(e) => setValue('osc_listen_port', e.currentTarget.value)}
+					/>
 				</td>
 				<td>
 					<CButton onClick={() => resetValue('osc_listen_port')} title="Reset to default">
@@ -62,14 +58,13 @@ export const OscConfig = observer(function OscConfig({ config, setValue, resetVa
 					<em>(This portion of the API will be removed in a future release)</em>
 				</td>
 				<td>
-					<div className="form-check form-check-inline mr-1 float-right">
-						<CSwitch
-							color="success"
-							checked={config.osc_legacy_api_enabled}
-							size={'lg'}
-							onChange={(e) => setValue('osc_legacy_api_enabled', e.currentTarget.checked)}
-						/>
-					</div>
+					<CFormSwitch
+						className="float-right"
+						color="success"
+						checked={config.osc_legacy_api_enabled}
+						size="xl"
+						onChange={(e) => setValue('osc_legacy_api_enabled', e.currentTarget.checked)}
+					/>
 				</td>
 				<td>
 					<CButton onClick={() => resetValue('osc_legacy_api_enabled')} title="Reset to default">

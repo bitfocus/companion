@@ -1,4 +1,4 @@
-import React, { memo, useCallback, useContext } from 'react'
+import React, { memo, useCallback, useContext, useState } from 'react'
 import { CCol, CNav, CNavItem, CNavLink, CRow, CTabContent, CTabPane } from '@coreui/react'
 import { MyErrorBoundary } from '../util.js'
 import { ArtnetProtocol } from './ArtnetProtocol.js'
@@ -25,6 +25,7 @@ import { HttpConfig } from './HttpConfig.js'
 import { CompanionConfig } from './CompanionConfig.js'
 import { RootAppStoreContext } from '../Stores/RootAppStore.js'
 import { observer } from 'mobx-react-lite'
+import { useStartTyping } from 'react-use'
 
 export const UserConfig = memo(function UserConfig() {
 	return (
@@ -98,48 +99,60 @@ const UserConfigTable = observer(function UserConfigTable() {
 	)
 })
 
-function RemoteControlInfo() {
+const RemoteControlInfo = memo(function RemoteControlInfo() {
+	const [activeTab, setActiveTab] = useState<'tcp-udp' | 'http' | 'osc' | 'artnet' | 'rosstalk'>('tcp-udp')
+
 	return (
 		<>
-			<CNav variant="tabs" role="tablist">
+			<CNav variant="tabs" role="tablist" className="remote-control-tabs">
 				<CNavItem>
-					<CNavLink data-tab="tcp-udp">TCP/UDP</CNavLink>
+					<CNavLink active={activeTab === 'tcp-udp'} onClick={() => setActiveTab('tcp-udp')}>
+						TCP/UDP
+					</CNavLink>
 				</CNavItem>
 				<CNavItem>
-					<CNavLink data-tab="http">HTTP</CNavLink>
+					<CNavLink active={activeTab === 'http'} onClick={() => setActiveTab('http')}>
+						HTTP
+					</CNavLink>
 				</CNavItem>
 				<CNavItem>
-					<CNavLink data-tab="osc">OSC</CNavLink>
+					<CNavLink active={activeTab === 'osc'} onClick={() => setActiveTab('osc')}>
+						OSC
+					</CNavLink>
 				</CNavItem>
 				<CNavItem>
-					<CNavLink data-tab="artnet">Artnet / DMX</CNavLink>
+					<CNavLink active={activeTab === 'artnet'} onClick={() => setActiveTab('artnet')}>
+						Artnet / DMX
+					</CNavLink>
 				</CNavItem>
 				<CNavItem>
-					<CNavLink data-tab="rosstalk">Rosstalk</CNavLink>
+					<CNavLink active={activeTab === 'rosstalk'} onClick={() => setActiveTab('rosstalk')}>
+						Rosstalk
+					</CNavLink>
 				</CNavItem>
 			</CNav>
 			<CTabContent>
-				<CTabPane data-tab="tcp-udp">
+				<CTabPane role="tabpanel" aria-labelledby="tcp-udp-tab" visible={activeTab === 'tcp-udp'}>
 					<MyErrorBoundary>
 						<TcpUdpProtocol />
 					</MyErrorBoundary>
 				</CTabPane>
-				<CTabPane data-tab="http">
+				<CTabPane role="tabpanel" aria-labelledby="http-tab" visible={activeTab === 'http'}>
 					<MyErrorBoundary>
 						<HttpProtocol />
 					</MyErrorBoundary>
 				</CTabPane>
-				<CTabPane data-tab="osc">
+				<CTabPane role="tabpanel" aria-labelledby="osc-tab" visible={activeTab === 'osc'}>
 					<MyErrorBoundary>
 						<OscProtocol />
 					</MyErrorBoundary>
 				</CTabPane>
-				<CTabPane data-tab="artnet">
+				<CTabPane role="tabpanel" aria-labelledby="artnet-tab" visible={activeTab === 'artnet'}>
 					<MyErrorBoundary>
 						<ArtnetProtocol />
 					</MyErrorBoundary>
 				</CTabPane>
-				<CTabPane data-tab="rosstalk">
+				<CTabPane role="tabpanel" aria-labelledby="rosstalk-tab" visible={activeTab === 'rosstalk'}>
 					<MyErrorBoundary>
 						<RosstalkProtocol />
 					</MyErrorBoundary>
@@ -147,4 +160,4 @@ function RemoteControlInfo() {
 			</CTabContent>
 		</>
 	)
-}
+})

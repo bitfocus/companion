@@ -25,7 +25,7 @@ export const CompanionConfig = observer(function CompanionConfig({
 			</tr>
 			<tr>
 				<td colSpan={2}>
-					<div className="form-check form-check-inline mr-1">
+					<div className="mr-1">
 						<CFormInput
 							type="text"
 							value={config.installName}

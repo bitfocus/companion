@@ -1,5 +1,14 @@
 import React, { useCallback, useContext } from 'react'
-import { CAlert, CButton, CDropdown, CDropdownItem, CDropdownMenu, CDropdownToggle, CFormInput } from '@coreui/react'
+import {
+	CAlert,
+	CButton,
+	CDropdown,
+	CDropdownItem,
+	CDropdownMenu,
+	CDropdownToggle,
+	CFormInput,
+	CFormSwitch,
+} from '@coreui/react'
 import { SocketContext } from '../util.js'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faSync, faTrash, faUndo } from '@fortawesome/free-solid-svg-icons'
@@ -50,14 +59,13 @@ export const HttpsConfig = observer(function HttpsConfig({ config, setValue, res
 			<tr>
 				<td>HTTPS Web Server</td>
 				<td>
-					<div className="form-check form-check-inline mr-1 float-right">
-						<CSwitch
-							color="success"
-							checked={config.https_enabled}
-							size={'lg'}
-							onChange={(e) => setValue('https_enabled', e.currentTarget.checked)}
-						/>
-					</div>
+					<CFormSwitch
+						className="float-right"
+						color="success"
+						checked={config.https_enabled}
+						size="xl"
+						onChange={(e) => setValue('https_enabled', e.currentTarget.checked)}
+					/>
 				</td>
 				<td>
 					<CButton onClick={() => resetValue('https_enabled')} title="Reset to default">
@@ -69,13 +77,11 @@ export const HttpsConfig = observer(function HttpsConfig({ config, setValue, res
 			<tr>
 				<td>HTTPS Port</td>
 				<td>
-					<div className="form-check form-check-inline mr-1">
-						<CFormInput
-							type="number"
-							value={config.https_port}
-							onChange={(e) => setValue('https_port', e.currentTarget.value)}
-						/>
-					</div>
+					<CFormInput
+						type="number"
+						value={config.https_port}
+						onChange={(e) => setValue('https_port', e.currentTarget.value)}
+					/>
 				</td>
 				<td>
 					<CButton onClick={() => resetValue('https_port')} title="Reset to default">
@@ -87,15 +93,13 @@ export const HttpsConfig = observer(function HttpsConfig({ config, setValue, res
 			<tr>
 				<td>Certificate Type</td>
 				<td>
-					<div className="form-check form-check-inline mr-1">
-						<CDropdown className="mt-2" style={{ display: 'inline-block' }}>
-							<CDropdownToggle>{config.https_cert_type === 'external' ? 'External' : 'Self Signed'}</CDropdownToggle>
-							<CDropdownMenu>
-								<CDropdownItem onClick={() => setValue('https_cert_type', 'self')}>Self Signed</CDropdownItem>
-								<CDropdownItem onClick={() => setValue('https_cert_type', 'external')}>External</CDropdownItem>
-							</CDropdownMenu>
-						</CDropdown>
-					</div>
+					<CDropdown className="mt-2" style={{ display: 'inline-block', overflow: 'visible' }}>
+						<CDropdownToggle>{config.https_cert_type === 'external' ? 'External' : 'Self Signed'}</CDropdownToggle>
+						<CDropdownMenu>
+							<CDropdownItem onClick={() => setValue('https_cert_type', 'self')}>Self Signed</CDropdownItem>
+							<CDropdownItem onClick={() => setValue('https_cert_type', 'external')}>External</CDropdownItem>
+						</CDropdownMenu>
+					</CDropdown>
 				</td>
 				<td>
 					<CButton onClick={() => resetValue('https_cert_type')} title="Reset to default">
@@ -116,13 +120,11 @@ export const HttpsConfig = observer(function HttpsConfig({ config, setValue, res
 								<tr>
 									<td>Common Name (Domain Name)</td>
 									<td>
-										<div className="form-check form-check-inline mr-1">
-											<CFormInput
-												type="text"
-												value={config.https_self_cn}
-												onChange={(e) => setValue('https_self_cn', e.currentTarget.value)}
-											/>
-										</div>
+										<CFormInput
+											type="text"
+											value={config.https_self_cn}
+											onChange={(e) => setValue('https_self_cn', e.currentTarget.value)}
+										/>
 									</td>
 									<td>
 										<CButton onClick={() => resetValue('https_self_cn')} title="Reset to default">
@@ -133,13 +135,11 @@ export const HttpsConfig = observer(function HttpsConfig({ config, setValue, res
 								<tr>
 									<td>Certificate Expiry Days</td>
 									<td>
-										<div className="form-check form-check-inline mr-1">
-											<CFormInput
-												type="number"
-												value={config.https_self_expiry}
-												onChange={(e) => setValue('https_self_expiry', e.currentTarget.value)}
-											/>
-										</div>
+										<CFormInput
+											type="number"
+											value={config.https_self_expiry}
+											onChange={(e) => setValue('https_self_expiry', e.currentTarget.value)}
+										/>
 									</td>
 									<td>
 										<CButton onClick={() => resetValue('https_self_expiry')} title="Reset to default">
@@ -212,13 +212,11 @@ export const HttpsConfig = observer(function HttpsConfig({ config, setValue, res
 								<tr>
 									<td>Private Key File (full path)</td>
 									<td>
-										<div className="form-check form-check-inline mr-1">
-											<CFormInput
-												type="text"
-												value={config.https_ext_private_key}
-												onChange={(e) => setValue('https_ext_private_key', e.currentTarget.value)}
-											/>
-										</div>
+										<CFormInput
+											type="text"
+											value={config.https_ext_private_key}
+											onChange={(e) => setValue('https_ext_private_key', e.currentTarget.value)}
+										/>
 									</td>
 									<td>
 										<CButton onClick={() => resetValue('https_ext_private_key')} title="Reset to default">
@@ -230,13 +228,11 @@ export const HttpsConfig = observer(function HttpsConfig({ config, setValue, res
 								<tr>
 									<td>Certificate File (full path)</td>
 									<td>
-										<div className="form-check form-check-inline mr-1">
-											<CFormInput
-												type="text"
-												value={config.https_ext_certificate}
-												onChange={(e) => setValue('https_ext_certificate', e.currentTarget.value)}
-											/>
-										</div>
+										<CFormInput
+											type="text"
+											value={config.https_ext_certificate}
+											onChange={(e) => setValue('https_ext_certificate', e.currentTarget.value)}
+										/>
 									</td>
 									<td>
 										<CButton onClick={() => resetValue('https_ext_certificate')} title="Reset to default">
@@ -252,13 +248,11 @@ export const HttpsConfig = observer(function HttpsConfig({ config, setValue, res
 										*Optional
 									</td>
 									<td>
-										<div className="form-check form-check-inline mr-1">
-											<CFormInput
-												type="text"
-												value={config.https_ext_chain}
-												onChange={(e) => setValue('https_ext_chain', e.currentTarget.value)}
-											/>
-										</div>
+										<CFormInput
+											type="text"
+											value={config.https_ext_chain}
+											onChange={(e) => setValue('https_ext_chain', e.currentTarget.value)}
+										/>
 									</td>
 									<td>
 										<CButton onClick={() => resetValue('https_ext_chain')} title="Reset to default">
