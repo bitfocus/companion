@@ -395,7 +395,7 @@ describe('functions', () => {
 		})
 
 		it('timeDiff', () => {
-			expect(ExpressionFunctions.timeDiff('2024-05-23T12:00', '2024-05-23T18:00-04:00')).toBe(39600)
+			expect(ExpressionFunctions.timeDiff('2024-05-23T12:00Z', '2024-05-23T18:00-04:00')).toBe(36000)
 			expect(ExpressionFunctions.timeDiff('12:00', '18:00')).toBe(21600)
 		})
 	})
