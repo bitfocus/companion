@@ -153,54 +153,61 @@ export function ConnectionDebug() {
 		<CContainer style={{ height: 'calc(100vh - 10px)', padding: '10px', background: '#eee' }}>
 			<div className="log-page">
 				<CRow className="log-debug-buttons">
-					<CButtonGroup>
-						<CButton color={isConnected ? 'success' : 'warning'} size="sm" disabled>
-							{isConnected ? 'Connected' : 'Reconnecting'}
-						</CButton>
-					</CButtonGroup>
-
-					<CButtonGroup>
-						<CButton color="danger" size="sm" onClick={doClearLog}>
-							Clear log
-						</CButton>
-						<CButton color="info" size="sm" onClick={doExportLog}>
-							Export log
-						</CButton>
-					</CButtonGroup>
-
-					<CButtonGroup>
-						<CButton color="danger" size="sm" onClick={doStopConnection}>
-							Stop connection
-						</CButton>
-						<CButton color="success" size="sm" onClick={doStartConnection}>
-							Start connection
-						</CButton>
-					</CButtonGroup>
-
-					<div className="float-right">
+					<CCol>
 						<CButtonGroup>
-							<CButton color="danger" size="sm" onClick={doToggleError} style={{ opacity: config.error ? 1 : 0.2 }}>
-								Error
-							</CButton>
-							<CButton color="warning" size="sm" onClick={doToggleWarn} style={{ opacity: config.warn ? 1 : 0.2 }}>
-								Warning
-							</CButton>
-							<CButton color="info" size="sm" onClick={doToggleInfo} style={{ opacity: config.info ? 1 : 0.2 }}>
-								Info
-							</CButton>
-							<CButton color="secondary" size="sm" onClick={doToggleDebug} style={{ opacity: config.debug ? 1 : 0.2 }}>
-								Debug
-							</CButton>
-							<CButton
-								color="secondary"
-								size="sm"
-								onClick={doToggleConsole}
-								style={{ opacity: config.console ? 1 : 0.2 }}
-							>
-								Console
+							<CButton color={isConnected ? 'success' : 'warning'} size="sm" disabled>
+								{isConnected ? 'Connected' : 'Reconnecting'}
 							</CButton>
 						</CButtonGroup>
-					</div>
+
+						<CButtonGroup>
+							<CButton color="danger" size="sm" onClick={doClearLog}>
+								Clear log
+							</CButton>
+							<CButton color="info" size="sm" onClick={doExportLog}>
+								Export log
+							</CButton>
+						</CButtonGroup>
+
+						<CButtonGroup>
+							<CButton color="danger" size="sm" onClick={doStopConnection}>
+								Stop connection
+							</CButton>
+							<CButton color="success" size="sm" onClick={doStartConnection}>
+								Start connection
+							</CButton>
+						</CButtonGroup>
+
+						<div className="float-right">
+							<CButtonGroup>
+								<CButton color="danger" size="sm" onClick={doToggleError} style={{ opacity: config.error ? 1 : 0.2 }}>
+									Error
+								</CButton>
+								<CButton color="warning" size="sm" onClick={doToggleWarn} style={{ opacity: config.warn ? 1 : 0.2 }}>
+									Warning
+								</CButton>
+								<CButton color="info" size="sm" onClick={doToggleInfo} style={{ opacity: config.info ? 1 : 0.2 }}>
+									Info
+								</CButton>
+								<CButton
+									color="secondary"
+									size="sm"
+									onClick={doToggleDebug}
+									style={{ opacity: config.debug ? 1 : 0.2 }}
+								>
+									Debug
+								</CButton>
+								<CButton
+									color="secondary"
+									size="sm"
+									onClick={doToggleConsole}
+									style={{ opacity: config.console ? 1 : 0.2 }}
+								>
+									Console
+								</CButton>
+							</CButtonGroup>
+						</div>
+					</CCol>
 				</CRow>
 				<CRow ref={contentRef} className="log-panel">
 					<CCol lg={12} style={{ overflow: 'hidden', height: '100%', width: '100%' }}>

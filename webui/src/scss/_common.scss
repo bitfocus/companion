@@ -118,7 +118,8 @@ code {
 	color: black;
 }
 .btn-danger,
-.btn-success {
+.btn-success,
+.btn-info {
 	color: #fff;
 }
 
@@ -177,4 +178,12 @@ code {
 .form-control,
 .form-control:focus {
 	background-color: #fff;
+}
+
+.float-right {
+	float: right;
+}
+
+.form-check-label {
+	margin-left: 0.25rem;
 }

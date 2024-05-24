@@ -1,4 +1,5 @@
 import { DropdownChoice, DropdownChoiceId } from '@companion-module/base'
+import { CFormLabel } from '@coreui/react'
 import classNames from 'classnames'
 import React, { createContext, useContext, useMemo, useEffect, useCallback, memo } from 'react'
 import Select from 'react-select'
@@ -203,6 +204,7 @@ export const DropdownInputField = memo(function DropdownInputField<Multi extends
 			})}
 			title={tooltip}
 		>
+			{label ? <CFormLabel>{label}</CFormLabel> : null}
 			{allowCustom ? (
 				<CreatableSelect
 					{...selectProps}

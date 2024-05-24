@@ -1,15 +1,5 @@
 import React, { FormEvent, forwardRef, useCallback, useContext, useImperativeHandle, useState } from 'react'
-import {
-	CButton,
-	CForm,
-	CModal,
-	CModalBody,
-	CModalFooter,
-	CModalHeader,
-	CAlert,
-	CFormCheck,
-	CFormLabel,
-} from '@coreui/react'
+import { CButton, CForm, CModal, CModalBody, CModalFooter, CModalHeader, CAlert, CFormCheck } from '@coreui/react'
 import { PreventDefaultHandler, socketEmitPromise } from '../util.js'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faDownload } from '@fortawesome/free-solid-svg-icons'
@@ -162,7 +152,7 @@ export const ResetWizardModal = forwardRef<ResetWizardModalRef, ResetWizardModal
 		}
 
 		return (
-			<CModal visible={show} onClose={doClose} className={'wizard'} closeOnBackdrop={false}>
+			<CModal visible={show} onClose={doClose} className={'wizard'} backdrop="static">
 				<CForm onSubmit={PreventDefaultHandler}>
 					<CModalHeader>
 						<h2>
@@ -216,14 +206,11 @@ function ResetOptionsStep({ config, setValue }: ResetOptionsStepProps) {
 			<h5>Reset Options</h5>
 			<p>Please select the components you'd like to reset.</p>
 			<div className="indent3">
-				<div className="form-check form-check-inline mr-1">
-					<CFormCheck
-						id="wizard_connections"
-						checked={config.connections}
-						onChange={(e) => setValue('connections', e.currentTarget.checked)}
-					/>
-					<CFormLabel htmlFor="wizard_connections">Connections</CFormLabel>
-				</div>
+				<CFormCheck
+					checked={config.connections}
+					onChange={(e) => setValue('connections', e.currentTarget.checked)}
+					label="Connections"
+				/>
 				{config.connections && !(config.buttons && config.triggers) ? (
 					<CAlert color="warning">
 						Resetting 'Connections' will remove all actions, feedbacks, and triggers associated with the connections
@@ -234,34 +221,25 @@ function ResetOptionsStep({ config, setValue }: ResetOptionsStepProps) {
 				)}
 			</div>
 			<div className="indent3">
-				<div className="form-check form-check-inline mr-1">
-					<CFormCheck
-						id="wizard_buttons"
-						checked={config.buttons}
-						onChange={(e) => setValue('buttons', e.currentTarget.checked)}
-					/>
-					<CFormLabel htmlFor="wizard_buttons">Buttons</CFormLabel>
-				</div>
+				<CFormCheck
+					checked={config.buttons}
+					onChange={(e) => setValue('buttons', e.currentTarget.checked)}
+					label="Buttons"
+				/>
 			</div>
 			<div className="indent3">
-				<div className="form-check form-check-inline mr-1">
-					<CFormCheck
-						id="wizard_triggers"
-						checked={config.triggers}
-						onChange={(e) => setValue('triggers', e.currentTarget.checked)}
-					/>
-					<CFormLabel htmlFor="wizard_triggers">Triggers</CFormLabel>
-				</div>
+				<CFormCheck
+					checked={config.triggers}
+					onChange={(e) => setValue('triggers', e.currentTarget.checked)}
+					label="Triggers"
+				/>
 			</div>
 			<div className="indent3">
-				<div className="form-check form-check-inline mr-1">
-					<CFormCheck
-						id="wizard_custom_variables"
-						checked={config.customVariables}
-						onChange={(e) => setValue('customVariables', e.currentTarget.checked)}
-					/>
-					<CFormLabel htmlFor="wizard_custom_variables">Custom Variables</CFormLabel>
-				</div>
+				<CFormCheck
+					checked={config.customVariables}
+					onChange={(e) => setValue('customVariables', e.currentTarget.checked)}
+					label="Custom Variables"
+				/>
 				{config.customVariables && !(config.buttons && config.triggers) ? (
 					<CAlert color="warning">
 						Resetting 'Custom Variables' without also resetting 'Buttons', and 'Triggers' that may utilize them can
@@ -272,24 +250,18 @@ function ResetOptionsStep({ config, setValue }: ResetOptionsStepProps) {
 				)}
 			</div>
 			<div className="indent3">
-				<div className="form-check form-check-inline mr-1">
-					<CFormCheck
-						id="wizard_surfaces"
-						checked={config.surfaces}
-						onChange={(e) => setValue('surfaces', e.currentTarget.checked)}
-					/>
-					<CFormLabel htmlFor="wizard_surfaces">Surfaces</CFormLabel>
-				</div>
+				<CFormCheck
+					checked={config.surfaces}
+					onChange={(e) => setValue('surfaces', e.currentTarget.checked)}
+					label="Surfaces"
+				/>
 			</div>
 			<div className="indent3">
-				<div className="form-check form-check-inline mr-1">
-					<CFormCheck
-						id="wizard_userconfig"
-						checked={config.userconfig}
-						onChange={(e) => setValue('userconfig', e.currentTarget.checked)}
-					/>
-					<CFormLabel htmlFor="wizard_userconfig">Settings</CFormLabel>
-				</div>
+				<CFormCheck
+					checked={config.userconfig}
+					onChange={(e) => setValue('userconfig', e.currentTarget.checked)}
+					label="Settings"
+				/>
 			</div>
 		</div>
 	)
