@@ -1,6 +1,6 @@
 import React, { useCallback, useContext, useEffect, useMemo, useState } from 'react'
 import { LoadingRetryOrError, socketEmitPromise } from '../util.js'
-import { CRow, CCol, CButton } from '@coreui/react'
+import { CRow, CCol, CButton, CFormSwitch } from '@coreui/react'
 import { ColorInputField, DropdownInputField, NumberInputField, TextInputField } from '../Components/index.js'
 import { nanoid } from 'nanoid'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
@@ -235,6 +235,7 @@ const ConnectionEditPanelInner = observer(function ConnectionEditPanelInner({
 				<CCol sm={12}>
 					<CButton
 						color="success"
+						className="me-md-1"
 						disabled={
 							!validFields || invalidFieldNames.length > 0 || !connectionLabel || !isLabelValid(connectionLabel)
 						}
@@ -243,7 +244,7 @@ const ConnectionEditPanelInner = observer(function ConnectionEditPanelInner({
 						Save
 					</CButton>
 
-					<CButton color="secondary" className="ml-1" onClick={doCancel}>
+					<CButton color="secondary" onClick={doCancel}>
 						Cancel
 					</CButton>
 				</CCol>
@@ -303,11 +304,11 @@ function ConfigField({ setValue, setValid, definition, value, connectionId }: Co
 		case 'checkbox':
 			return (
 				<div style={{ marginRight: 40, marginTop: 2 }}>
-					<CSwitch
+					<CFormSwitch
 						color="success"
 						checked={value}
-						size={'lg'}
-						tooltip={definition.tooltip}
+						size="xl"
+						title={definition.tooltip} // nocommit: this needs fixing
 						onChange={() => {
 							setValue2(!value)
 							//setValid2(true)

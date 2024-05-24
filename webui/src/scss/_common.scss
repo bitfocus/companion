@@ -117,6 +117,10 @@ code {
 	background-color: $secondary;
 	color: black;
 }
+.btn-danger,
+.btn-success {
+	color: #fff;
+}
 
 .text-right {
 	text-align: right;
@@ -158,4 +162,19 @@ code {
 
 .noBorder td {
 	border: none;
+}
+
+.btn-undefined:disabled {
+	border-color: transparent;
+}
+
+.nav-item {
+	&.hidden {
+		display: none;
+	}
+}
+
+.form-control,
+.form-control:focus {
+	background-color: #fff;
 }

@@ -21,10 +21,14 @@ body {
 		'Noto Color Emoji';
 	font-feature-settings: normal;
 	min-width: 400px;
+	font-size: 0.9rem;
 }
 
 .wrapper {
 	width: 100%;
+	height: 100vh;
+	overflow-y: hidden;
+
 	@include ltr-rtl('padding-left', var(--cui-sidebar-occupy-start, 0));
 }
 
@@ -32,12 +36,19 @@ body {
 	padding: 15px 0;
 	background-color: #eee;
 
+	display: flex;
+	flex-flow: column;
+
+	max-height: 100%;
+	overflow-y: hidden;
+
 	// Fit minus the header
 	// height: calc(100% - #{$header-height}); // nocommit
 
 	// Force to fill the screen and scroll internally
 	> .container-fluid {
 		height: 100%;
+		flex: 1;
 
 		display: grid;
 		grid-template-rows: auto 1fr;

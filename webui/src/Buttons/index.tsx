@@ -14,6 +14,7 @@ import { formatLocation } from '@companion-app/shared/ControlId.js'
 import { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import { observer } from 'mobx-react-lite'
 import { RootAppStoreContext } from '../Stores/RootAppStore.js'
+import classNames from 'classnames'
 
 interface ButtonsPageProps {
 	hotPress: boolean
@@ -217,7 +218,11 @@ export const ButtonsPage = observer(function ButtonsPage({ hotPress }: ButtonsPa
 				<div className="secondary-panel-inner">
 					{/* <CTabs activeTab={activeTab} onActiveTabChange={doChangeTab}> */}
 					<CNav variant="tabs">
-						<CNavItem hidden={!selectedButton}>
+						<CNavItem
+							className={classNames({
+								hidden: !selectedButton,
+							})}
+						>
 							<CNavLink data-tab="edit">
 								<FontAwesomeIcon icon={faCalculator} /> Edit Button{' '}
 								{selectedButton ? `${formatLocation(selectedButton)}` : '?'}

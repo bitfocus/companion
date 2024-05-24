@@ -104,13 +104,17 @@ export const Triggers = observer(function Triggers() {
 			<CCol xs={12} xl={6} className="secondary-panel">
 				<div className="secondary-panel-inner">
 					{/* <CTabs activeTab={activeTab} onActiveTabChange={doChangeTab}> */}
-					<CNav variant="tabs">
+					<CNav variant="tabs" role="tablist">
 						{!editItemId && (
 							<CNavItem>
 								<CNavLink data-tab="placeholder">Select a trigger</CNavLink>
 							</CNavItem>
 						)}
-						<CNavItem hidden={!editItemId}>
+						<CNavItem
+							className={classNames({
+								hidden: !editItemId,
+							})}
+						>
 							<CNavLink data-tab="edit">
 								<FontAwesomeIcon icon={faCalculator} /> Edit Trigger
 							</CNavLink>

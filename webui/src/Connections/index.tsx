@@ -12,6 +12,7 @@ import jsonPatch, { Operation as JsonPatchOperation } from 'fast-json-patch'
 import { cloneDeep } from 'lodash-es'
 import { ConnectionStatusEntry } from '@companion-app/shared/Model/Common.js'
 import { RootAppStoreContext } from '../Stores/RootAppStore.js'
+import classNames from 'classnames'
 
 export const ConnectionsPage = memo(function ConnectionsPage() {
 	const { socket, notifier } = useContext(RootAppStoreContext)
@@ -19,9 +20,9 @@ export const ConnectionsPage = memo(function ConnectionsPage() {
 	const helpModalRef = useRef<HelpModalRef>(null)
 
 	const [tabResetToken, setTabResetToken] = useState(nanoid())
-	const [activeTab, setActiveTab] = useState('add')
+	const [activeTab, setActiveTab] = useState<'add' | 'edit'>('add')
 	const [selectedConnectionId, setSelectedConnectionId] = useState<string | null>(null)
-	const doChangeTab = useCallback((newTab: string) => {
+	const doChangeTab = useCallback((newTab: 'add' | 'edit') => {
 		setActiveTab((oldTab) => {
 			if (oldTab !== newTab) {
 				setSelectedConnectionId(null)
@@ -94,26 +95,29 @@ export const ConnectionsPage = memo(function ConnectionsPage() {
 
 			<CCol xl={6} className="connections-panel secondary-panel add-connections-panel">
 				<div className="secondary-panel-inner">
-					{/* <CTabs activeTab={activeTab} onActiveTabChange={doChangeTab}> */}
 					<CNav variant="tabs">
 						<CNavItem>
-							<CNavLink data-tab="add">
+							<CNavLink active={activeTab === 'add'} onClick={() => doChangeTab('add')}>
 								<FontAwesomeIcon icon={faPlus} /> Add connection
 							</CNavLink>
 						</CNavItem>
-						<CNavItem hidden={!selectedConnectionId}>
-							<CNavLink data-tab="edit">
+						<CNavItem
+							className={classNames({
+								hidden: !selectedConnectionId,
+							})}
+						>
+							<CNavLink active={activeTab === 'edit'} onClick={() => doChangeTab('edit')}>
 								<FontAwesomeIcon icon={faCog} /> Edit connection
 							</CNavLink>
 						</CNavItem>
 					</CNav>
 					<CTabContent className="remove075right">
-						<CTabPane data-tab="add">
+						<CTabPane role="tabpanel" aria-labelledby="add-tab" visible={activeTab === 'add'}>
 							<MyErrorBoundary>
 								<AddConnectionsPanel showHelp={showHelp} doConfigureConnection={doConfigureConnection} />
 							</MyErrorBoundary>
 						</CTabPane>
-						<CTabPane data-tab="edit">
+						<CTabPane role="tabpanel" aria-labelledby="edit-tab" visible={activeTab === 'edit'}>
 							<MyErrorBoundary>
 								{selectedConnectionId && (
 									<ConnectionEditPanel
@@ -127,7 +131,6 @@ export const ConnectionsPage = memo(function ConnectionsPage() {
 							</MyErrorBoundary>
 						</CTabPane>
 					</CTabContent>
-					{/* </CTabs> */}
 				</div>
 			</CCol>
 		</CRow>
