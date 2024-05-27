@@ -51,7 +51,7 @@ export const AdminPasswordConfig = observer(function AdminPasswordConfig({
 					</CButton>
 				</td>
 			</tr>
-			<tr>
+			{ config.admin_lockout && (<tr>
 				<td>Session Timeout (minutes, 0 for no timeout)</td>
 				<td>
 					<div className="form-check form-check-inline mr-1">
@@ -60,7 +60,11 @@ export const AdminPasswordConfig = observer(function AdminPasswordConfig({
 							value={config.admin_timeout}
 							min={0}
 							step={1}
-							onChange={(e) => setValue('admin_timeout', e.currentTarget.value)}
+							onChange={(e) => {
+								let value = Math.floor(e.currentTarget.value)
+								value = Math.max(value, 0)
+								setValue('admin_timeout', value)
+							}}
 						/>
 					</div>
 				</td>
@@ -69,8 +73,8 @@ export const AdminPasswordConfig = observer(function AdminPasswordConfig({
 						<FontAwesomeIcon icon={faUndo} />
 					</CButton>
 				</td>
-			</tr>
-			<tr>
+			</tr>)}
+			{ config.admin_lockout && (<tr>
 				<td>Password</td>
 				<td>
 					<div className="form-check form-check-inline mr-1">
@@ -86,7 +90,7 @@ export const AdminPasswordConfig = observer(function AdminPasswordConfig({
 						<FontAwesomeIcon icon={faUndo} />
 					</CButton>
 				</td>
-			</tr>
+			</tr>)}
 		</>
 	)
 })

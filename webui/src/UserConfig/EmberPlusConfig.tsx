@@ -42,11 +42,11 @@ export const EmberPlusConfig = observer(function EmberPlusConfig({
 					</CButton>
 				</td>
 			</tr>
-			<tr>
+			{ config.emberplus_enabled && (<tr>
 				<td>Ember+ Listen Port</td>
 				<td>9092</td>
 				<td></td>
-			</tr>
+			</tr>)}
 		</>
 	)
 })

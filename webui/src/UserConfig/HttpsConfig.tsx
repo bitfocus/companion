@@ -66,14 +66,21 @@ export const HttpsConfig = observer(function HttpsConfig({ config, setValue, res
 				</td>
 			</tr>
 
-			<tr>
+			{ config.https_enabled && (<tr>
 				<td>HTTPS Port</td>
 				<td>
 					<div className="form-check form-check-inline mr-1">
 						<CInput
 							type="number"
 							value={config.https_port}
-							onChange={(e) => setValue('https_port', e.currentTarget.value)}
+							min={1024}
+							max={65535}
+							onChange={(e) => {
+								let value = Math.floor(e.currentTarget.value)
+								value = Math.min(value, 65535)
+								value = Math.max(value, 1024)
+								setValue('https_port', value)
+							}}
 						/>
 					</div>
 				</td>
@@ -82,9 +89,9 @@ export const HttpsConfig = observer(function HttpsConfig({ config, setValue, res
 						<FontAwesomeIcon icon={faUndo} />
 					</CButton>
 				</td>
-			</tr>
+			</tr>)}
 
-			<tr>
+			{ config.https_enabled && (<tr>
 				<td>Certificate Type</td>
 				<td>
 					<div className="form-check form-check-inline mr-1">
@@ -102,9 +109,9 @@ export const HttpsConfig = observer(function HttpsConfig({ config, setValue, res
 						<FontAwesomeIcon icon={faUndo} />
 					</CButton>
 				</td>
-			</tr>
+			</tr>)}
 
-			{config.https_cert_type === 'self' && (
+			{ config.https_enabled && config.https_cert_type === 'self' && (
 				<tr>
 					<td colSpan={3}>
 						<table className="table table-responsive-sm">
@@ -137,7 +144,14 @@ export const HttpsConfig = observer(function HttpsConfig({ config, setValue, res
 											<CInput
 												type="number"
 												value={config.https_self_expiry}
-												onChange={(e) => setValue('https_self_expiry', e.currentTarget.value)}
+												min={1}
+												max={65535}
+												onChange={(e) => {
+													let value = Math.floor(e.currentTarget.value)
+													value = Math.min(value, 65535)
+													value = Math.max(value, 1)
+													setValue('https_self_expiry', value)
+												}}
 											/>
 										</div>
 									</td>
@@ -191,7 +205,7 @@ export const HttpsConfig = observer(function HttpsConfig({ config, setValue, res
 				</tr>
 			)}
 
-			{config.https_cert_type === 'external' && (
+			{ config.https_enabled && config.https_cert_type === 'external' && (
 				<tr>
 					<td colSpan={3}>
 						<table className="table table-responsive-sm">

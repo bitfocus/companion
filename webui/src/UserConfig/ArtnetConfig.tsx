@@ -17,7 +17,7 @@ export const ArtnetConfig = observer(function ArtnetConfig({ config, setValue, r
 		<>
 			<tr>
 				<th colSpan={3} className="settings-category">
-					Artnet Listener
+					Artnet II Listener
 				</th>
 			</tr>
 			<tr>
@@ -39,14 +39,21 @@ export const ArtnetConfig = observer(function ArtnetConfig({ config, setValue, r
 				</td>
 			</tr>
 
-			<tr>
+			{ config.artnet_enabled && (<tr>
 				<td>Artnet Universe (first is 0)</td>
 				<td>
 					<div className="form-check form-check-inline mr-1">
 						<CInput
 							type="number"
 							value={config.artnet_universe}
-							onChange={(e) => setValue('artnet_universe', e.currentTarget.value)}
+							min={0}
+							max={20055}
+							onChange={(e) => {
+								let value = Math.floor(e.currentTarget.value)
+								value = Math.min(value, 255)
+								value = Math.max(value, 0)
+								setValue('artnet_universe', value)
+							}}
 						/>
 					</div>
 				</td>
@@ -55,16 +62,23 @@ export const ArtnetConfig = observer(function ArtnetConfig({ config, setValue, r
 						<FontAwesomeIcon icon={faUndo} />
 					</CButton>
 				</td>
-			</tr>
+			</tr>)}
 
-			<tr>
+			{ config.artnet_enabled && (<tr>
 				<td>Artnet Channel</td>
 				<td>
 					<div className="form-check form-check-inline mr-1">
 						<CInput
 							type="number"
 							value={config.artnet_channel}
-							onChange={(e) => setValue('artnet_channel', e.currentTarget.value)}
+							min={1}
+							max={509}
+							onChange={(e) => {
+								let value = Math.floor(e.currentTarget.value)
+								value = Math.min(value, 509)
+								value = Math.max(value, 1)
+								setValue('artnet_channel', value)
+							}}
 						/>
 					</div>
 				</td>
@@ -73,7 +87,7 @@ export const ArtnetConfig = observer(function ArtnetConfig({ config, setValue, r
 						<FontAwesomeIcon icon={faUndo} />
 					</CButton>
 				</td>
-			</tr>
+			</tr>)}
 		</>
 	)
 })
