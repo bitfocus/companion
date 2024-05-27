@@ -23,39 +23,6 @@ import debounceFn from 'debounce-fn'
 import { ParseInternalControlReference } from './Util.js'
 import LogController from '../Log/Controller.js'
 
-/** @type {import('./Types.js').InternalActionInputField} */
-const CHOICES_PAGE = {
-	type: 'internal:page',
-	label: 'Page',
-	id: 'page',
-	includeStartup: false,
-	includeDirection: true,
-	default: 0,
-}
-/** @type {import('./Types.js').InternalActionInputField[]} */
-const CHOICES_PAGE_WITH_VARIABLES = [
-	{
-		type: 'checkbox',
-		label: 'Use variables for page',
-		id: 'page_from_variable',
-		default: false,
-	},
-	serializeIsVisibleFnSingle({
-		...CHOICES_PAGE,
-		isVisible: (options) => !options.page_from_variable,
-	}),
-	serializeIsVisibleFnSingle({
-		type: 'textinput',
-		label: 'Page (expression)',
-		id: 'page_variable',
-		default: '1',
-		isVisible: (options) => !!options.page_from_variable,
-		useVariables: {
-			local: true,
-		},
-	}),
-]
-
 /** @type {import('./Types.js').InternalActionInputField[]} */
 const CHOICES_DYNAMIC_LOCATION = [
 	{
@@ -224,7 +191,9 @@ export default class Controls {
 	#fetchPage(options, location) {
 		let thePage = options.page
 
-		thePage = this.#variableController.parseExpression(options.page_variable, location, 'number').value
+		if (options.page_from_variable) {
+			thePage = this.#variableController.parseExpression(options.page_variable, location, 'number').value
+		}
 
 		if (thePage === 0 || thePage === '0') thePage = location?.pageNumber ?? null
 
@@ -530,7 +499,31 @@ export default class Controls {
 				label: 'Actions: Abort all delayed actions on a page',
 				description: undefined,
 				options: [
-					...CHOICES_PAGE_WITH_VARIABLES,
+					{
+						type: 'checkbox',
+						label: 'Use variables for page',
+						id: 'page_from_variable',
+						default: false,
+					},
+					serializeIsVisibleFnSingle({
+						type: 'internal:page',
+						label: 'Page',
+						id: 'page',
+						includeStartup: false,
+						includeDirection: false,
+						default: 0,
+						isVisible: (options) => !options.page_from_variable,
+					}),
+					serializeIsVisibleFnSingle({
+						type: 'textinput',
+						label: 'Page (expression)',
+						id: 'page_variable',
+						default: '1',
+						isVisible: (options) => !!options.page_from_variable,
+						useVariables: {
+							local: true,
+						},
+					}),
 					{
 						type: 'checkbox',
 						label: 'Skip this button?',
@@ -1082,6 +1075,8 @@ export default class Controls {
 		} else if (action.action === 'panic_page') {
 			const { thePage } = this.#fetchPage(action.options, extras.location)
 			if (thePage === null) return true
+
+			console.log('thePage', thePage, action.options.ignoreSelf, extras.location)
 
 			this.#controlsController.actions.abortPageDelayed(
 				thePage,
