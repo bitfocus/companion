@@ -34,9 +34,9 @@ export const CompanionConfig = observer(function CompanionConfig({
 					</div>
 				</td>
 				<td>
-					<div 
+					<div
 						style={{
-							minWidth: '8em' // provide minimum width for second column
+							minWidth: '8em', // provide minimum width for second column
 						}}
 					></div>
 				</td>

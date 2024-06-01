@@ -13,8 +13,13 @@ import LogController from '../Log/Controller.js'
  * 1.4.0 - Add TEXT_STYLE as ADD-DEVICE flags with FONT_SIZE as KEY-STATE property
  * 1.5.0 - Specify desired bitmap size with BITMAPS parameter when adding device
  * 1.5.1 - Remove surface size limit
+ * 1.6.0 - Allow for row/column notation,
+ * 		 - add streaming of text color when color is requested,
+ * 		 - allow choice of returned color format
+ * 		 - compatibility with internal CSS colors,
+ * 		 - allow buttons > 32
  */
-const API_VERSION = '1.5.1'
+const API_VERSION = '1.6.0'
 
 /**
  * Class providing the Satellite/Remote Surface api.
@@ -125,7 +130,10 @@ class ServiceSatellite extends ServiceBase {
 			}
 		}
 
-		const streamColors = params.COLORS !== undefined && !isFalsey(params.COLORS)
+		const streamColors =
+			params.COLORS && ['01', '1', 'true', 'hex', 'rgb'].includes(params.COLORS.toString().toLowerCase())
+				? params.COLORS.toString().toLowerCase()
+				: false
 		const streamText = params.TEXT !== undefined && !isFalsey(params.TEXT)
 		const streamTextStyle = params.TEXT_STYLE !== undefined && !isFalsey(params.TEXT_STYLE)
 
@@ -292,31 +300,41 @@ class ServiceSatellite extends ServiceBase {
 			socket.write(`KEY-PRESS ERROR MESSAGE="Missing DEVICEID"\n`)
 			return
 		}
+		const id = `${params.DEVICEID}`
+		const device = this.#devices.get(id)
+		if (device === undefined || device.socket !== socket) {
+			socket.write(`KEY-PRESS ERROR DEVICEID="${id}" MESSAGE="Device not found"\n`)
+			return
+		}
 		if (!params.KEY) {
-			socket.write(`KEY-PRESS ERROR DEVICEID="${params.DEVICEID}" MESSAGE="Missing KEY"\n`)
+			socket.write(`KEY-PRESS ERROR DEVICEID="${id}" MESSAGE="Missing KEY"\n`)
 			return
 		}
 		if (!params.PRESSED) {
-			socket.write(`KEY-PRESS ERROR DEVICEID="${params.DEVICEID}" MESSAGE="Missing PRESSED"\n`)
+			socket.write(`KEY-PRESS ERROR DEVICEID="${id}" MESSAGE="Missing PRESSED"\n`)
 			return
 		}
-
-		const key = Number(params.KEY)
-		if (isNaN(key) || key > LEGACY_MAX_BUTTONS || key < 0) {
-			socket.write(`KEY-PRESS ERROR DEVICEID="${params.DEVICEID}" MESSAGE="Invalid KEY"\n`)
-			return
-		}
-
 		const pressed = !isFalsey(params.PRESSED)
 
-		const id = `${params.DEVICEID}`
-		const device = this.#devices.get(id)
+		const keynum = Number(params.KEY)
+		const keyParse = params.KEY.toString().match(/^\+?(\d+)\/\+?(\d+)$/)
 
-		if (device && device.socket === socket) {
-			device.device.doButton(key, pressed)
+		if (
+			Array.isArray(keyParse) &&
+			Number(keyParse[1]) < device.device.gridSize.rows &&
+			Number(keyParse[2]) < device.device.gridSize.columns
+		) {
+			this.emit('click', Number(keyParse[2]), Number(keyParse[1]), pressed)
+			socket.write(`KEY-PRESS OK\n`)
+		} else if (
+			!isNaN(keynum) &&
+			keynum <= device.device.gridSize.columns * device.device.gridSize.rows &&
+			keynum >= 0
+		) {
+			device.device.doButton(keynum, pressed)
 			socket.write(`KEY-PRESS OK\n`)
 		} else {
-			socket.write(`KEY-PRESS ERROR DEVICEID="${params.DEVICEID}" MESSAGE="Device not found"\n`)
+			socket.write(`KEY-PRESS ERROR DEVICEID="${id}" MESSAGE="Invalid KEY"\n`)
 		}
 	}
 
@@ -330,30 +348,38 @@ class ServiceSatellite extends ServiceBase {
 			socket.write(`KEY-ROTATE ERROR MESSAGE="Missing DEVICEID"\n`)
 			return
 		}
+		const id = `${params.DEVICEID}`
+		const device = this.#devices.get(id)
+		if (device === undefined || device.socket !== socket) {
+			socket.write(`KEY-ROTATE ERROR DEVICEID="${id}" MESSAGE="Device not found"\n`)
+			return
+		}
 		if (!params.KEY) {
-			socket.write(`KEY-ROTATE ERROR DEVICEID="${params.DEVICEID}" MESSAGE="Missing KEY"\n`)
+			socket.write(`KEY-ROTATE ERROR DEVICEID="${id}" MESSAGE="Missing KEY"\n`)
 			return
 		}
 		if (!params.DIRECTION) {
-			socket.write(`KEY-ROTATE ERROR DEVICEID="${params.DEVICEID}" MESSAGE="Missing DIRECTION"\n`)
-			return
-		}
-
-		const key = Number(params.KEY)
-		if (isNaN(key) || key > LEGACY_MAX_BUTTONS || key < 0) {
-			socket.write(`KEY-ROTATE ERROR DEVICEID="${params.DEVICEID}" MESSAGE="Invalid KEY"\n`)
+			socket.write(`KEY-ROTATE ERROR DEVICEID="${id}" MESSAGE="Missing DIRECTION"\n`)
 			return
 		}
 
 		const direction = params.DIRECTION >= '1'
 
-		const id = `${params.DEVICEID}`
-		const device = this.#devices.get(id)
-		if (device && device.socket === socket) {
-			device.device.doRotate(key, direction)
+		const keynum = Number(params.KEY)
+		const keyParse = params.KEY.toString().match(/^([+-]?\d+)\/([+-]?\d+)$/)
+
+		if (Array.isArray(keyParse)) {
+			this.emit('rotate', Number(keyParse[2]), Number(keyParse[1]), direction)
+			socket.write(`KEY-ROTATE OK\n`)
+		} else if (
+			!isNaN(keynum) &&
+			keynum <= device.device.gridSize.columns * device.device.gridSize.rows &&
+			keynum >= 0
+		) {
+			device.device.doRotate(keynum, direction)
 			socket.write(`KEY-ROTATE OK\n`)
 		} else {
-			socket.write(`KEY-ROTATE ERROR DEVICEID="${params.DEVICEID}" MESSAGE="Device not found"\n`)
+			socket.write(`KEY-ROTATE ERROR DEVICEID="${id}" MESSAGE="Invalid KEY"\n`)
 		}
 	}
 

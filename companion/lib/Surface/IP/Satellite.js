@@ -18,7 +18,7 @@ import LogController from '../../Log/Controller.js'
 import { EventEmitter } from 'events'
 import ImageWriteQueue from '../../Resources/ImageWriteQueue.js'
 import imageRs from '@julusian/image-rs'
-import { translateRotation } from '../../Resources/Util.js'
+import { parseColor, parseColorToNumber, translateRotation } from '../../Resources/Util.js'
 import { convertXYToIndexForPanel, convertPanelIndexToXY } from '../Util.js'
 
 /**
@@ -29,7 +29,7 @@ import { convertXYToIndexForPanel, convertPanelIndexToXY } from '../Util.js'
  *   socket: import('net').Socket
  *   gridSize: import('../Util.js').GridSize
  *   streamBitmapSize: number | null
- *   streamColors: boolean
+ *   streamColors: string | boolean
  *   streamText: boolean
  *   streamTextStyle: boolean
  * }} SatelliteDeviceInfo
@@ -57,8 +57,9 @@ class SurfaceIPSatellite extends EventEmitter {
 	 */
 	#streamBitmapSize
 	/**
-	 * Whether to stream button colors to the satellite device
-	 * @type {boolean}
+	 * Whether to stream button colors to the satellite device and which format
+	 * can be false, true or 'hex' for hex format, 'rgb' for css rgb format.
+	 * @type {string | boolean}
 	 * @access private
 	 */
 	#streamColors = false
@@ -154,11 +155,18 @@ class SurfaceIPSatellite extends EventEmitter {
 		if (this.socket !== undefined) {
 			let params = ``
 			if (this.#streamColors) {
-				// convert color to hex
-				const bgcolor = style && typeof style.bgcolor === 'number' ? style.bgcolor : 0
-				const color = bgcolor.toString(16).padStart(6, '0')
+				let bgcolor = 'rgb(0,0,0)'
+				let fgcolor = 'rgb(0,0,0)'
+				if (style && style.color && style.bgcolor) {
+					bgcolor = parseColor(style.bgcolor).replaceAll(' ', '')
+					fgcolor = parseColor(style.color).replaceAll(' ', '')
+				}
+				if (this.#streamColors !== 'rgb') {
+					bgcolor = '#' + parseColorToNumber(bgcolor).toString(16).padStart(6, '0')
+					fgcolor = '#' + parseColorToNumber(fgcolor).toString(16).padStart(6, '0')
+				}
 
-				params += ` COLOR=#${color}`
+				params += ` COLOR=${bgcolor} TEXTCOLOR=${fgcolor}`
 			}
 			if (this.#streamBitmapSize) {
 				if (buffer === undefined || buffer.length == 0) {
