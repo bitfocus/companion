@@ -202,3 +202,12 @@
 		}
 	}
 }
+
+.dropdown-zoom {
+	position: inherit;
+	display: inline-block;
+
+	.dropdown-item-padding {
+		padding: 0.5rem 1.25rem;
+	}
+}

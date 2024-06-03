@@ -15,7 +15,7 @@ import {
 import React, { FormEvent, forwardRef, useCallback, useContext, useImperativeHandle, useRef, useState } from 'react'
 import { KeyReceiver, socketEmitPromise, SocketContext } from '../util.js'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faFileExport, faHome, faMagnifyingGlass, faPencil } from '@fortawesome/free-solid-svg-icons'
+import { faFileExport, faHome, faPencil } from '@fortawesome/free-solid-svg-icons'
 import { ConfirmExportModal, ConfirmExportModalRef } from '../Components/ConfirmExportModal.js'
 import { ButtonInfiniteGrid, ButtonInfiniteGridRef, PrimaryButtonGridIcon } from './ButtonInfiniteGrid.js'
 import { useHasBeenRendered } from '../Hooks/useHasBeenRendered.js'
@@ -26,9 +26,7 @@ import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import { RootAppStoreContext } from '../Stores/RootAppStore.js'
 import { PagesStoreModel } from '../Stores/PagesStore.js'
 import { observer } from 'mobx-react-lite'
-import { ButtonGridZoomSlider } from './ButtonGridZoomSlider.js'
-import classNames from 'classnames'
-import { CPopover } from '../CPopover.js'
+import { ButtonGridZoomControl } from './ButtonGridZoomSlider.js'
 
 interface ButtonsGridPanelProps {
 	pageNumber: number
@@ -196,30 +194,14 @@ export const ButtonsGridPanel = observer(function ButtonsPage({
 							<CButton color="light" onClick={resetPosition} title="Home Position" className="btn-right">
 								<FontAwesomeIcon icon={faHome} /> {useCompactButtons ? '' : 'Home'}
 							</CButton>
-							<CPopover
-								// header="Popover header"
-								content={
-									<div className="popover-body">
-										<ButtonGridZoomSlider value={gridZoom} setValue={setAndStoreGridZoom} />
-									</div>
-								}
-								placement="bottom"
-								trigger="click"
-								advancedOptions={{ theme: 'cpopover' }}
-								interactive
-							>
-								<CButton
-									color="light"
-									title="Grid Scale"
-									className={classNames('btn-right', { 'btn-grid-scale': !useCompactButtons })}
-								>
-									<FontAwesomeIcon icon={faMagnifyingGlass} /> {useCompactButtons ? '' : `${Math.round(gridZoom)}%`}
-								</CButton>
-							</CPopover>
+							<ButtonGridZoomControl
+								useCompactButtons={useCompactButtons}
+								value={gridZoom}
+								setValue={setAndStoreGridZoom}
+							/>
 						</ButtonGridHeader>
 					</CCol>
 				</CRow>
-				<ButtonGridZoomSlider value={gridZoom} setValue={setAndStoreGridZoom} />
 			</div>
 			<div className="button-grid-panel-content">
 				{hasBeenInView && gridSize && (
