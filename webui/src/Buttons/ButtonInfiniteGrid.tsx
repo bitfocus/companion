@@ -57,8 +57,6 @@ export const ButtonInfiniteGrid = forwardRef<ButtonInfiniteGridRef, ButtonInfini
 		const countColumns = maxColumn - minColumn + 1
 		const countRows = maxRow - minRow + 1
 
-		// TODO - shrink placeholder text to fit
-
 		const tileInnerSize = 72 * (drawScale ?? 1)
 		const tilePadding = Math.min(6, tileInnerSize * 0.05)
 		const tileSize = tileInnerSize + tilePadding * 2
