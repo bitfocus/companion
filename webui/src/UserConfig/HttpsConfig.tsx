@@ -66,52 +66,56 @@ export const HttpsConfig = observer(function HttpsConfig({ config, setValue, res
 				</td>
 			</tr>
 
-			{ config.https_enabled && (<tr>
-				<td>HTTPS Port</td>
-				<td>
-					<div className="form-check form-check-inline mr-1">
-						<CInput
-							type="number"
-							value={config.https_port}
-							min={1024}
-							max={65535}
-							onChange={(e) => {
-								let value = Math.floor(e.currentTarget.value)
-								value = Math.min(value, 65535)
-								value = Math.max(value, 1024)
-								setValue('https_port', value)
-							}}
-						/>
-					</div>
-				</td>
-				<td>
-					<CButton onClick={() => resetValue('https_port')} title="Reset to default">
-						<FontAwesomeIcon icon={faUndo} />
-					</CButton>
-				</td>
-			</tr>)}
+			{config.https_enabled && (
+				<tr>
+					<td>HTTPS Port</td>
+					<td>
+						<div className="form-check form-check-inline mr-1">
+							<CInput
+								type="number"
+								value={config.https_port}
+								min={1024}
+								max={65535}
+								onChange={(e) => {
+									let value = Math.floor(e.currentTarget.value)
+									value = Math.min(value, 65535)
+									value = Math.max(value, 1024)
+									setValue('https_port', value)
+								}}
+							/>
+						</div>
+					</td>
+					<td>
+						<CButton onClick={() => resetValue('https_port')} title="Reset to default">
+							<FontAwesomeIcon icon={faUndo} />
+						</CButton>
+					</td>
+				</tr>
+			)}
 
-			{ config.https_enabled && (<tr>
-				<td>Certificate Type</td>
-				<td>
-					<div className="form-check form-check-inline mr-1">
-						<CDropdown className="mt-2" style={{ display: 'inline-block' }}>
-							<CDropdownToggle>{config.https_cert_type === 'external' ? 'External' : 'Self Signed'}</CDropdownToggle>
-							<CDropdownMenu>
-								<CDropdownItem onClick={() => setValue('https_cert_type', 'self')}>Self Signed</CDropdownItem>
-								<CDropdownItem onClick={() => setValue('https_cert_type', 'external')}>External</CDropdownItem>
-							</CDropdownMenu>
-						</CDropdown>
-					</div>
-				</td>
-				<td>
-					<CButton onClick={() => resetValue('https_cert_type')} title="Reset to default">
-						<FontAwesomeIcon icon={faUndo} />
-					</CButton>
-				</td>
-			</tr>)}
+			{config.https_enabled && (
+				<tr>
+					<td>Certificate Type</td>
+					<td>
+						<div className="form-check form-check-inline mr-1">
+							<CDropdown className="mt-2" style={{ display: 'inline-block' }}>
+								<CDropdownToggle>{config.https_cert_type === 'external' ? 'External' : 'Self Signed'}</CDropdownToggle>
+								<CDropdownMenu>
+									<CDropdownItem onClick={() => setValue('https_cert_type', 'self')}>Self Signed</CDropdownItem>
+									<CDropdownItem onClick={() => setValue('https_cert_type', 'external')}>External</CDropdownItem>
+								</CDropdownMenu>
+							</CDropdown>
+						</div>
+					</td>
+					<td>
+						<CButton onClick={() => resetValue('https_cert_type')} title="Reset to default">
+							<FontAwesomeIcon icon={faUndo} />
+						</CButton>
+					</td>
+				</tr>
+			)}
 
-			{ config.https_enabled && config.https_cert_type === 'self' && (
+			{config.https_enabled && config.https_cert_type === 'self' && (
 				<tr>
 					<td colSpan={3}>
 						<table className="table table-responsive-sm">
@@ -205,7 +209,7 @@ export const HttpsConfig = observer(function HttpsConfig({ config, setValue, res
 				</tr>
 			)}
 
-			{ config.https_enabled && config.https_cert_type === 'external' && (
+			{config.https_enabled && config.https_cert_type === 'external' && (
 				<tr>
 					<td colSpan={3}>
 						<table className="table table-responsive-sm">
