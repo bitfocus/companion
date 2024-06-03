@@ -15,18 +15,18 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faMagnifyingGlass, faMinus, faPlus } from '@fortawesome/free-solid-svg-icons'
 import { NumberInputField } from '../Components/NumberInputField.js'
 
+export const ZOOM_MIN = 50
+export const ZOOM_MAX = 200
+export const ZOOM_STEP = 10
+
 export interface ButtonGridZoomControlProps {
 	useCompactButtons: boolean
 	value: number
-	setValue: (value: number) => void
+	setValue: (updater: ((oldValue: number) => number) | number) => void
 }
 export function ButtonGridZoomControl({ useCompactButtons, value, setValue }: ButtonGridZoomControlProps) {
-	const minZoom = 50
-	const maxZoom = 200
-	const zoomStep = 10
-
-	const incrementZoom = useCallback(() => setValue(Math.min(value + zoomStep, maxZoom)), [value, setValue])
-	const decrementZoom = useCallback(() => setValue(Math.max(value - zoomStep, minZoom)), [value, setValue])
+	const incrementZoom = useCallback(() => setValue((oldValue) => Math.min(oldValue + ZOOM_STEP, ZOOM_MAX)), [setValue])
+	const decrementZoom = useCallback(() => setValue((oldValue) => Math.max(oldValue - ZOOM_STEP, ZOOM_MIN)), [setValue])
 
 	return (
 		<CDropdown className="dropdown-zoom">
@@ -44,9 +44,9 @@ export function ButtonGridZoomControl({ useCompactButtons, value, setValue }: Bu
 					<CInput
 						name="zoom"
 						type="range"
-						min={minZoom}
-						max={maxZoom}
-						step={zoomStep}
+						min={ZOOM_MIN}
+						max={ZOOM_MAX}
+						step={ZOOM_STEP}
 						title="Zoom"
 						value={value}
 						onChange={(e) => setValue(parseInt(e.currentTarget.value))}
@@ -58,7 +58,7 @@ export function ButtonGridZoomControl({ useCompactButtons, value, setValue }: Bu
 					</CInputGroupAppend>
 				</CInputGroup>
 				<CInputGroup className="dropdown-item-padding">
-					<NumberInputField value={value} setValue={setValue} min={minZoom} max={maxZoom} />
+					<NumberInputField value={value} setValue={setValue} min={ZOOM_MIN} max={ZOOM_MAX} />
 					<CInputGroupAppend>
 						<CInputGroupText>%</CInputGroupText>
 					</CInputGroupAppend>
