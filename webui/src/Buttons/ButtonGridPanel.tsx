@@ -26,13 +26,8 @@ import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import { RootAppStoreContext } from '../Stores/RootAppStore.js'
 import { PagesStoreModel } from '../Stores/PagesStore.js'
 import { observer } from 'mobx-react-lite'
-import { ButtonGridZoomControl, ZOOM_MIN, ZOOM_STEP } from './ButtonGridZoomSlider.js'
-
-export interface ButtonsGridPanelRef {
-	zoomIn: () => void
-	zoomOut: () => void
-	zoomReset: () => void
-}
+import { ButtonGridZoomControl } from './ButtonGridZoomSlider.js'
+import { GridZoomController } from './GridZoom.js'
 
 interface ButtonsGridPanelProps {
 	pageNumber: number
@@ -42,235 +37,194 @@ interface ButtonsGridPanelProps {
 	changePage: (pageNumber: number) => void
 	selectedButton: ControlLocation | null
 	clearSelectedButton: () => void
+	gridZoomValue: number
+	gridZoomController: GridZoomController
 }
 
-export const ButtonsGridPanel = observer<ButtonsGridPanelProps, ButtonsGridPanelRef>(
-	function ButtonsPage(
-		{
-			pageNumber,
-			onKeyDown,
-			isHot,
-			buttonGridClick,
-			changePage,
-			selectedButton,
-			clearSelectedButton,
-		}: ButtonsGridPanelProps,
-		ref
-	) {
-		const { socket, pages, userConfig } = useContext(RootAppStoreContext)
+export const ButtonsGridPanel = observer(function ButtonsPage({
+	pageNumber,
+	onKeyDown,
+	isHot,
+	buttonGridClick,
+	changePage,
+	selectedButton,
+	clearSelectedButton,
+	gridZoomValue,
+	gridZoomController,
+}: ButtonsGridPanelProps) {
+	const { socket, pages, userConfig } = useContext(RootAppStoreContext)
 
-		const actionsRef = useRef<ButtonGridActionsRef>(null)
+	const actionsRef = useRef<ButtonGridActionsRef>(null)
 
-		const buttonClick = useCallback(
-			(location: ControlLocation, isDown: boolean) => {
-				if (!actionsRef.current?.buttonClick(location, isDown)) {
-					buttonGridClick(location, isDown)
-				}
-			},
-			[buttonGridClick]
-		)
+	const buttonClick = useCallback(
+		(location: ControlLocation, isDown: boolean) => {
+			if (!actionsRef.current?.buttonClick(location, isDown)) {
+				buttonGridClick(location, isDown)
+			}
+		},
+		[buttonGridClick]
+	)
 
-		const setPage = useCallback(
-			(newPage: number) => {
-				const pageNumbers = pages.pageNumbers
-				const newIndex = pageNumbers.findIndex((p) => p === newPage)
-				if (newIndex !== -1) {
-					changePage(Number(newPage))
-				}
-			},
-			[changePage, pages]
-		)
+	const setPage = useCallback(
+		(newPage: number) => {
+			const pageNumbers = pages.pageNumbers
+			const newIndex = pageNumbers.findIndex((p) => p === newPage)
+			if (newIndex !== -1) {
+				changePage(Number(newPage))
+			}
+		},
+		[changePage, pages]
+	)
 
-		const changePage2 = useCallback(
-			(delta: number) => {
-				const pageNumbers = pages.pageNumbers
-				const currentIndex = pageNumbers.findIndex((p) => p === pageNumber)
-				let newPage = pageNumbers[0]
-				if (currentIndex !== -1) {
-					let newIndex = currentIndex + delta
-					if (newIndex < 0) newIndex += pageNumbers.length
-					if (newIndex >= pageNumbers.length) newIndex -= pageNumbers.length
+	const changePage2 = useCallback(
+		(delta: number) => {
+			const pageNumbers = pages.pageNumbers
+			const currentIndex = pageNumbers.findIndex((p) => p === pageNumber)
+			let newPage = pageNumbers[0]
+			if (currentIndex !== -1) {
+				let newIndex = currentIndex + delta
+				if (newIndex < 0) newIndex += pageNumbers.length
+				if (newIndex >= pageNumbers.length) newIndex -= pageNumbers.length
 
-					newPage = pageNumbers[newIndex]
-				}
+				newPage = pageNumbers[newIndex]
+			}
 
-				if (newPage !== undefined && !isNaN(Number(newPage))) {
-					changePage(Number(newPage))
-				}
-			},
-			[changePage, pageNumber, pages]
-		)
+			if (newPage !== undefined && !isNaN(Number(newPage))) {
+				changePage(Number(newPage))
+			}
+		},
+		[changePage, pageNumber, pages]
+	)
 
-		const pageInfo = pages.store.get(pageNumber)
+	const pageInfo = pages.store.get(pageNumber)
 
-		const gridRef = useRef<ButtonInfiniteGridRef>(null)
-		const editRef = useRef<EditPagePropertiesModalRef>(null)
+	const gridRef = useRef<ButtonInfiniteGridRef>(null)
+	const editRef = useRef<EditPagePropertiesModalRef>(null)
 
-		const exportModalRef = useRef<ConfirmExportModalRef>(null)
-		const showExportModal = useCallback(() => {
-			exportModalRef.current?.show(`/int/export/page/${pageNumber}`)
-		}, [pageNumber])
+	const exportModalRef = useRef<ConfirmExportModalRef>(null)
+	const showExportModal = useCallback(() => {
+		exportModalRef.current?.show(`/int/export/page/${pageNumber}`)
+	}, [pageNumber])
 
-		const resetPosition = useCallback(() => {
-			gridRef.current?.resetPosition()
-		}, [gridRef])
+	const resetPosition = useCallback(() => {
+		gridRef.current?.resetPosition()
+	}, [gridRef])
 
-		const configurePage = useCallback(() => {
-			editRef.current?.show(Number(pageNumber), pageInfo)
-		}, [pageNumber, pageInfo])
+	const configurePage = useCallback(() => {
+		editRef.current?.show(Number(pageNumber), pageInfo)
+	}, [pageNumber, pageInfo])
 
-		const gridSize = userConfig.properties?.gridSize
+	const gridSize = userConfig.properties?.gridSize
 
-		const doGrow = useCallback(
-			(direction, amount) => {
-				if (amount <= 0 || !gridSize) return
+	const doGrow = useCallback(
+		(direction, amount) => {
+			if (amount <= 0 || !gridSize) return
 
-				switch (direction) {
-					case 'left':
-						socket.emit('set_userconfig_key', 'gridSize', {
-							...gridSize,
-							minColumn: gridSize.minColumn - (amount || 2),
-						})
-						break
-					case 'right':
-						socket.emit('set_userconfig_key', 'gridSize', {
-							...gridSize,
-							maxColumn: gridSize.maxColumn + (amount || 2),
-						})
-						break
-					case 'top':
-						socket.emit('set_userconfig_key', 'gridSize', {
-							...gridSize,
-							minRow: gridSize.minRow - (amount || 2),
-						})
-						break
-					case 'bottom':
-						socket.emit('set_userconfig_key', 'gridSize', {
-							...gridSize,
-							maxRow: gridSize.maxRow + (amount || 2),
-						})
-						break
-				}
-			},
-			[socket, gridSize]
-		)
+			switch (direction) {
+				case 'left':
+					socket.emit('set_userconfig_key', 'gridSize', {
+						...gridSize,
+						minColumn: gridSize.minColumn - (amount || 2),
+					})
+					break
+				case 'right':
+					socket.emit('set_userconfig_key', 'gridSize', {
+						...gridSize,
+						maxColumn: gridSize.maxColumn + (amount || 2),
+					})
+					break
+				case 'top':
+					socket.emit('set_userconfig_key', 'gridSize', {
+						...gridSize,
+						minRow: gridSize.minRow - (amount || 2),
+					})
+					break
+				case 'bottom':
+					socket.emit('set_userconfig_key', 'gridSize', {
+						...gridSize,
+						maxRow: gridSize.maxRow + (amount || 2),
+					})
+					break
+			}
+		},
+		[socket, gridSize]
+	)
 
-		const [hasBeenInView, isInViewRef] = useHasBeenRendered()
+	const [hasBeenInView, isInViewRef] = useHasBeenRendered()
 
-		const setSizeRef = useRef(null)
-		const holderSize = useResizeObserver({ ref: setSizeRef })
-		const useCompactButtons = (holderSize.width ?? 0) < 720 // Cutoff for what of the header row fit in the large mode
+	const setSizeRef = useRef(null)
+	const holderSize = useResizeObserver({ ref: setSizeRef })
+	const useCompactButtons = (holderSize.width ?? 0) < 720 // Cutoff for what of the header row fit in the large mode
 
-		const [gridZoom, setGridZoom] = useState(() => {
-			// load the cached value, or start with default
-			const storedZoom = Number(window.localStorage.getItem(`grid:zoom-scale`))
-			return storedZoom && !isNaN(storedZoom) ? storedZoom : 100
-		})
-		const setAndStoreGridZoom = useCallback(
-			(updater: ((oldValue: number) => number) | number) => {
-				setGridZoom((oldValue) => {
-					const newValue = typeof updater === 'function' ? updater(oldValue) : updater
+	return (
+		<KeyReceiver onKeyDown={onKeyDown} tabIndex={0} className="button-grid-panel">
+			<div className="button-grid-panel-header" ref={isInViewRef}>
+				<ConfirmExportModal ref={exportModalRef} title="Export Page" />
+				<EditPagePropertiesModal ref={editRef} />
 
-					// Cache the value for future page loads
-					window.localStorage.setItem(`grid:zoom-scale`, newValue + '')
+				<h4>Buttons</h4>
+				<p>
+					The squares below represent each button on your Streamdeck. Click on them to set up how you want them to look,
+					and what they should do when you press or click on them.
+				</p>
 
-					// Use the new value
-					return newValue
-				})
-			},
-			[setGridZoom]
-		)
+				<CRow innerRef={setSizeRef}>
+					<CCol sm={12}>
+						<ButtonGridHeader pageNumber={pageNumber} changePage={changePage2} setPage={setPage}>
+							<CButton color="light" onClick={showExportModal} title="Export Page" className="btn-right">
+								<FontAwesomeIcon icon={faFileExport} />
+								&nbsp;
+								{useCompactButtons ? '' : 'Export Page'}
+							</CButton>
+							<CButton color="light" onClick={configurePage} title="Edit Page" className="btn-right">
+								<FontAwesomeIcon icon={faPencil} /> {useCompactButtons ? '' : 'Edit Page'}
+							</CButton>
+							<CButton color="light" onClick={resetPosition} title="Home Position" className="btn-right">
+								<FontAwesomeIcon icon={faHome} /> {useCompactButtons ? '' : 'Home'}
+							</CButton>
+							<ButtonGridZoomControl
+								useCompactButtons={useCompactButtons}
+								gridZoomValue={gridZoomValue}
+								gridZoomController={gridZoomController}
+							/>
+						</ButtonGridHeader>
+					</CCol>
+				</CRow>
+			</div>
+			<div className="button-grid-panel-content">
+				{hasBeenInView && gridSize && (
+					<ButtonInfiniteGrid
+						ref={gridRef}
+						isHot={isHot}
+						pageNumber={pageNumber}
+						buttonClick={buttonClick}
+						selectedButton={selectedButton}
+						gridSize={gridSize}
+						doGrow={userConfig.properties?.gridSizeInlineGrow ? doGrow : undefined}
+						buttonIconFactory={PrimaryButtonGridIcon}
+						drawScale={gridZoomValue / 100}
+					/>
+				)}
+			</div>
+			<div className="button-grid-panel-footer">
+				<CRow style={{ paddingTop: '15px' }}>
+					<ButtonGridActions
+						ref={actionsRef}
+						isHot={isHot}
+						pageNumber={pageNumber}
+						clearSelectedButton={clearSelectedButton}
+					/>
+				</CRow>
 
-		// Expose to the parent
-		useImperativeHandle(
-			ref,
-			() => ({
-				zoomIn() {
-					setAndStoreGridZoom((oldValue) => oldValue + ZOOM_STEP)
-				},
-				zoomOut() {
-					setAndStoreGridZoom((oldValue) => Math.max(ZOOM_MIN, oldValue - ZOOM_STEP))
-				},
-				zoomReset() {
-					setAndStoreGridZoom(100)
-				},
-			}),
-			[setAndStoreGridZoom]
-		)
-
-		return (
-			<KeyReceiver onKeyDown={onKeyDown} tabIndex={0} className="button-grid-panel">
-				<div className="button-grid-panel-header" ref={isInViewRef}>
-					<ConfirmExportModal ref={exportModalRef} title="Export Page" />
-					<EditPagePropertiesModal ref={editRef} />
-
-					<h4>Buttons</h4>
-					<p>
-						The squares below represent each button on your Streamdeck. Click on them to set up how you want them to
-						look, and what they should do when you press or click on them.
-					</p>
-
-					<CRow innerRef={setSizeRef}>
-						<CCol sm={12}>
-							<ButtonGridHeader pageNumber={pageNumber} changePage={changePage2} setPage={setPage}>
-								<CButton color="light" onClick={showExportModal} title="Export Page" className="btn-right">
-									<FontAwesomeIcon icon={faFileExport} />
-									&nbsp;
-									{useCompactButtons ? '' : 'Export Page'}
-								</CButton>
-								<CButton color="light" onClick={configurePage} title="Edit Page" className="btn-right">
-									<FontAwesomeIcon icon={faPencil} /> {useCompactButtons ? '' : 'Edit Page'}
-								</CButton>
-								<CButton color="light" onClick={resetPosition} title="Home Position" className="btn-right">
-									<FontAwesomeIcon icon={faHome} /> {useCompactButtons ? '' : 'Home'}
-								</CButton>
-								<ButtonGridZoomControl
-									useCompactButtons={useCompactButtons}
-									value={gridZoom}
-									setValue={setAndStoreGridZoom}
-								/>
-							</ButtonGridHeader>
-						</CCol>
-					</CRow>
-				</div>
-				<div className="button-grid-panel-content">
-					{hasBeenInView && gridSize && (
-						<ButtonInfiniteGrid
-							ref={gridRef}
-							isHot={isHot}
-							pageNumber={pageNumber}
-							buttonClick={buttonClick}
-							selectedButton={selectedButton}
-							gridSize={gridSize}
-							doGrow={userConfig.properties?.gridSizeInlineGrow ? doGrow : undefined}
-							buttonIconFactory={PrimaryButtonGridIcon}
-							drawScale={gridZoom / 100}
-						/>
-					)}
-				</div>
-				<div className="button-grid-panel-footer">
-					<CRow style={{ paddingTop: '15px' }}>
-						<ButtonGridActions
-							ref={actionsRef}
-							isHot={isHot}
-							pageNumber={pageNumber}
-							clearSelectedButton={clearSelectedButton}
-						/>
-					</CRow>
-
-					<CAlert color="info">
-						You can use the arrow keys, pageup and pagedown to navigate with the keyboard, and use common key commands
-						such as copy, paste, and cut to rearrange buttons. You can also press the delete or backspace key with any
-						button highlighted to delete it.
-					</CAlert>
-				</div>
-			</KeyReceiver>
-		)
-	},
-	{
-		forwardRef: true,
-	}
-)
+				<CAlert color="info">
+					You can use the arrow keys, pageup and pagedown to navigate with the keyboard, and use common key commands
+					such as copy, paste, and cut to rearrange buttons. You can also press the delete or backspace key with any
+					button highlighted to delete it.
+				</CAlert>
+			</div>
+		</KeyReceiver>
+	)
+})
 
 interface EditPagePropertiesModalRef {
 	show(pageNumber: number, pageInfo: PagesStoreModel | undefined): void

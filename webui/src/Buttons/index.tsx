@@ -4,7 +4,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { nanoid } from 'nanoid'
 import { InstancePresets } from './Presets.js'
 import { MyErrorBoundary, socketEmitPromise } from '../util.js'
-import { ButtonsGridPanel, ButtonsGridPanelRef } from './ButtonGridPanel.js'
+import { ButtonsGridPanel } from './ButtonGridPanel.js'
 import { EditButton } from './EditButton.js'
 import { ActionRecorder } from './ActionRecorder/index.js'
 import React, { useCallback, useContext, useRef, useState } from 'react'
@@ -14,6 +14,7 @@ import { formatLocation } from '@companion-app/shared/ControlId.js'
 import { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import { observer } from 'mobx-react-lite'
 import { RootAppStoreContext } from '../Stores/RootAppStore.js'
+import { useGridZoom } from './GridZoom.js'
 
 interface ButtonsPageProps {
 	hotPress: boolean
@@ -23,6 +24,7 @@ export const ButtonsPage = observer(function ButtonsPage({ hotPress }: ButtonsPa
 	const { userConfig, socket } = useContext(RootAppStoreContext)
 
 	const clearModalRef = useRef<GenericConfirmModalRef>(null)
+	const [gridZoomController, gridZoomValue] = useGridZoom()
 
 	const [tabResetToken, setTabResetToken] = useState(nanoid())
 	const [activeTab, setActiveTab] = useState('presets')
@@ -64,7 +66,18 @@ export const ButtonsPage = observer(function ButtonsPage({ hotPress }: ButtonsPa
 
 	const handleKeyDownInButtons = useCallback(
 		(e) => {
-			if (e.target.tagName !== 'INPUT' && e.target.tagName !== 'TEXTAREA') {
+			const isControlOrCommandCombo = (e.ctrlKey || e.metaKey) && !e.altKey
+
+			if (isControlOrCommandCombo && e.key === '=') {
+				e.preventDefault()
+				gridZoomController.zoomIn(true)
+			} else if (isControlOrCommandCombo && e.key === '-') {
+				e.preventDefault()
+				gridZoomController.zoomOut(true)
+			} else if (isControlOrCommandCombo && e.key === '0') {
+				e.preventDefault()
+				gridZoomController.zoomReset()
+			} else if (e.target.tagName !== 'INPUT' && e.target.tagName !== 'TEXTAREA') {
 				switch (e.key) {
 					case 'ArrowDown':
 						setSelectedButton((selectedButton) => {
@@ -148,18 +161,7 @@ export const ButtonsPage = observer(function ButtonsPage({ hotPress }: ButtonsPa
 						break
 				}
 
-				const isControlOrCommandCombo = (e.ctrlKey || e.metaKey) && !e.altKey
-
-				if (isControlOrCommandCombo && e.key === '=') {
-					e.preventDefault()
-					buttonGridPanelRef.current?.zoomIn()
-				} else if (isControlOrCommandCombo && e.key === '-') {
-					e.preventDefault()
-					buttonGridPanelRef.current?.zoomOut()
-				} else if (isControlOrCommandCombo && e.key === '0') {
-					e.preventDefault()
-					buttonGridPanelRef.current?.zoomReset()
-				} else if (selectedButton) {
+				if (selectedButton) {
 					// keyup with button selected
 
 					if (!e.ctrlKey && !e.metaKey && !e.altKey && (e.key === 'Backspace' || e.key === 'Delete')) {
@@ -206,8 +208,6 @@ export const ButtonsPage = observer(function ButtonsPage({ hotPress }: ButtonsPa
 		[socket, selectedButton, copyFromButton, gridSize]
 	)
 
-	const buttonGridPanelRef = useRef<ButtonsGridPanelRef>(null)
-
 	return (
 		<CRow className="buttons-page split-panels">
 			<GenericConfirmModal ref={clearModalRef} />
@@ -215,7 +215,6 @@ export const ButtonsPage = observer(function ButtonsPage({ hotPress }: ButtonsPa
 			<CCol xs={12} xl={6} className="primary-panel">
 				<MyErrorBoundary>
 					<ButtonsGridPanel
-						ref={buttonGridPanelRef}
 						buttonGridClick={doButtonGridClick}
 						isHot={hotPress}
 						selectedButton={selectedButton}
@@ -223,6 +222,8 @@ export const ButtonsPage = observer(function ButtonsPage({ hotPress }: ButtonsPa
 						changePage={setPageNumber}
 						onKeyDown={handleKeyDownInButtons}
 						clearSelectedButton={clearSelectedButton}
+						gridZoomController={gridZoomController}
+						gridZoomValue={gridZoomValue}
 					/>
 				</MyErrorBoundary>
 			</CCol>

@@ -10,34 +10,32 @@ import {
 	CInputGroupText,
 	CLink,
 } from '@coreui/react'
-import React, { useCallback } from 'react'
+import React from 'react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faMagnifyingGlass, faMinus, faPlus } from '@fortawesome/free-solid-svg-icons'
 import { NumberInputField } from '../Components/NumberInputField.js'
-
-export const ZOOM_MIN = 50
-export const ZOOM_MAX = 200
-export const ZOOM_STEP = 10
+import { GridZoomController, ZOOM_MAX, ZOOM_MIN, ZOOM_STEP } from './GridZoom.js'
 
 export interface ButtonGridZoomControlProps {
 	useCompactButtons: boolean
-	value: number
-	setValue: (updater: ((oldValue: number) => number) | number) => void
+	gridZoomValue: number
+	gridZoomController: GridZoomController
 }
-export function ButtonGridZoomControl({ useCompactButtons, value, setValue }: ButtonGridZoomControlProps) {
-	const incrementZoom = useCallback(() => setValue((oldValue) => Math.min(oldValue + ZOOM_STEP, ZOOM_MAX)), [setValue])
-	const decrementZoom = useCallback(() => setValue((oldValue) => Math.max(oldValue - ZOOM_STEP, ZOOM_MIN)), [setValue])
-
+export function ButtonGridZoomControl({
+	useCompactButtons,
+	gridZoomValue,
+	gridZoomController,
+}: ButtonGridZoomControlProps) {
 	return (
 		<CDropdown className="dropdown-zoom">
 			<CDropdownToggle caret={!useCompactButtons} color="light">
 				<span className="sr-only">Zoom</span>
-				<FontAwesomeIcon icon={faMagnifyingGlass} /> {useCompactButtons ? '' : `${Math.round(value)}%`}
+				<FontAwesomeIcon icon={faMagnifyingGlass} /> {useCompactButtons ? '' : `${Math.round(gridZoomValue)}%`}
 			</CDropdownToggle>
 			<CDropdownMenu>
 				<CInputGroup className={'fieldtype-range'}>
 					<CInputGroupPrepend>
-						<CButton onClick={decrementZoom}>
+						<CButton onClick={gridZoomController.zoomOut}>
 							<FontAwesomeIcon icon={faMinus} />
 						</CButton>
 					</CInputGroupPrepend>
@@ -48,22 +46,22 @@ export function ButtonGridZoomControl({ useCompactButtons, value, setValue }: Bu
 						max={ZOOM_MAX}
 						step={ZOOM_STEP}
 						title="Zoom"
-						value={value}
-						onChange={(e) => setValue(parseInt(e.currentTarget.value))}
+						value={gridZoomValue}
+						onChange={(e) => gridZoomController.setZoom(parseInt(e.currentTarget.value))}
 					/>
 					<CInputGroupAppend>
-						<CButton onClick={incrementZoom}>
+						<CButton onClick={gridZoomController.zoomIn}>
 							<FontAwesomeIcon icon={faPlus} />
 						</CButton>
 					</CInputGroupAppend>
 				</CInputGroup>
 				<CInputGroup className="dropdown-item-padding">
-					<NumberInputField value={value} setValue={setValue} min={ZOOM_MIN} max={ZOOM_MAX} />
+					<NumberInputField value={gridZoomValue} setValue={gridZoomController.setZoom} min={ZOOM_MIN} max={ZOOM_MAX} />
 					<CInputGroupAppend>
 						<CInputGroupText>%</CInputGroupText>
 					</CInputGroupAppend>
 				</CInputGroup>
-				<CLink className="dropdown-item" onClick={() => setValue(100)}>
+				<CLink className="dropdown-item" onClick={gridZoomController.zoomReset}>
 					Zoom to 100%
 				</CLink>
 			</CDropdownMenu>
