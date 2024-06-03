@@ -11056,16 +11056,16 @@ asn1@evs-broadcast/node-asn1:
   languageName: node
   linkType: hard
 
-"node-hid@npm:@julusian/hid@3.0.1-0":
-  version: 3.0.1-0
-  resolution: "@julusian/hid@npm:3.0.1-0"
+"node-hid@npm:^3.1.0":
+  version: 3.1.0
+  resolution: "node-hid@npm:3.1.0"
   dependencies:
     node-addon-api: "npm:^3.2.1"
     node-gyp: "npm:latest"
-    pkg-prebuilds: "npm:^0.2.1"
+    pkg-prebuilds: "npm:^1.0.0"
   bin:
     hid-showdevices: src/show-devices.js
-  checksum: 10c0/5d47fc56b7998a7eecdd0895e7158c47ec20c1b05696f5386e5bfa33eabe703e416d25d25832ae86c4ca7772ded5765058429c06862100fcfc06f4ff8049d3ea
+  checksum: 10c0/497c45284c024458d890b9327ded8e870cc56356bdc510f93b7e0b3b9bf0ca154a017ef8547de4dc51af4a83321dd4684251f9f4ed748aa8973a0216b3beeb4e
   languageName: node
   linkType: hard
 
@@ -11547,15 +11547,15 @@ asn1@evs-broadcast/node-asn1:
   languageName: node
   linkType: hard
 
-"pkg-prebuilds@npm:^0.2.1":
-  version: 0.2.1
-  resolution: "pkg-prebuilds@npm:0.2.1"
+"pkg-prebuilds@npm:^1.0.0":
+  version: 1.0.0
+  resolution: "pkg-prebuilds@npm:1.0.0"
   dependencies:
-    yargs: "npm:^17.5.1"
+    yargs: "npm:^17.7.2"
   bin:
     pkg-prebuilds-copy: bin/copy.mjs
     pkg-prebuilds-verify: bin/verify.mjs
-  checksum: 10c0/68177a2756246adf64e47dd9e89f3233dfe241ac5f28ba2f9f541ccbae896e060fc9dd1114528039b5380d2d84a1f8864176152e9921f3f1192ac44451dc27ba
+  checksum: 10c0/a955b097d3693216c06015fe03ae5866da5f1d2ec6a75971194e3cf5c342e1fdde27786bf0cce85814183cd98aecaf732ae1373fc2389a576daca2f3375661ae
   languageName: node
   linkType: hard
 
