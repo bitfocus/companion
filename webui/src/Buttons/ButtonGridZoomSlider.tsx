@@ -1,7 +1,6 @@
 import {
 	CButton,
 	CDropdown,
-	CDropdownItem,
 	CDropdownMenu,
 	CDropdownToggle,
 	CInput,
@@ -9,6 +8,7 @@ import {
 	CInputGroupAppend,
 	CInputGroupPrepend,
 	CInputGroupText,
+	CLink,
 } from '@coreui/react'
 import React, { useCallback } from 'react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
@@ -30,12 +30,10 @@ export function ButtonGridZoomControl({ useCompactButtons, value, setValue }: Bu
 
 	return (
 		<CDropdown className="dropdown-zoom">
-			{/* <CButtonGroup> */}
-			<CDropdownToggle caret={false} color="light">
+			<CDropdownToggle caret={!useCompactButtons} color="light">
 				<span className="sr-only">Zoom</span>
 				<FontAwesomeIcon icon={faMagnifyingGlass} /> {useCompactButtons ? '' : `${Math.round(value)}%`}
 			</CDropdownToggle>
-			{/* </CButtonGroup> */}
 			<CDropdownMenu>
 				<CInputGroup className={'fieldtype-range'}>
 					<CInputGroupPrepend>
@@ -65,7 +63,9 @@ export function ButtonGridZoomControl({ useCompactButtons, value, setValue }: Bu
 						<CInputGroupText>%</CInputGroupText>
 					</CInputGroupAppend>
 				</CInputGroup>
-				<CDropdownItem onClick={() => setValue(100)}>Zoom to 100%</CDropdownItem>
+				<CLink className="dropdown-item" onClick={() => setValue(100)}>
+					Zoom to 100%
+				</CLink>
 			</CDropdownMenu>
 		</CDropdown>
 	)
