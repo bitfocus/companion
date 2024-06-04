@@ -74,6 +74,9 @@ if (!lock) {
 		max_logs: '7d',
 		audit_file: path.join(logsDir, 'audit.json'),
 	})
+	logStream.on('error', (e) => {
+		console.log('Error writing log:', e)
+	})
 
 	function customLog(line, prefix) {
 		line = stripAnsi(line.trim())
