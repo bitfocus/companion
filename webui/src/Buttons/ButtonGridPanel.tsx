@@ -154,7 +154,7 @@ export const ButtonsGridPanel = observer(function ButtonsPage({
 
 	const setSizeRef = useRef(null)
 	const holderSize = useResizeObserver({ ref: setSizeRef })
-	const useCompactButtons = (holderSize.width ?? 0) < 720 // Cutoff for what of the header row fit in the large mode
+	const useCompactButtons = (holderSize.width ?? 0) < 700 // Cutoff for what of the header row fit in the large mode
 
 	return (
 		<KeyReceiver onKeyDown={onKeyDown} tabIndex={0} className="button-grid-panel">
