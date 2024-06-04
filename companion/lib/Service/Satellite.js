@@ -1,5 +1,5 @@
 import ServiceBase from './Base.js'
-import { isFalsey, parseLineParameters } from '../Resources/Util.js'
+import { isFalsey, isTruthy, parseLineParameters, parseStringParamWithBooleanFallback } from '../Resources/Util.js'
 import net, { Socket } from 'net'
 import { LEGACY_BUTTONS_PER_ROW, LEGACY_MAX_BUTTONS } from '../Util/Constants.js'
 import LogController from '../Log/Controller.js'
@@ -130,12 +130,9 @@ class ServiceSatellite extends ServiceBase {
 			}
 		}
 
-		const streamColors =
-			params.COLORS && ['01', '1', 'true', 'hex', 'rgb'].includes(params.COLORS.toString().toLowerCase())
-				? params.COLORS.toString().toLowerCase()
-				: false
-		const streamText = params.TEXT !== undefined && !isFalsey(params.TEXT)
-		const streamTextStyle = params.TEXT_STYLE !== undefined && !isFalsey(params.TEXT_STYLE)
+		const streamColors = parseStringParamWithBooleanFallback(['hex', 'rgb'], 'hex', params.COLORS) || false
+		const streamText = params.TEXT !== undefined && isTruthy(params.TEXT)
+		const streamTextStyle = params.TEXT_STYLE !== undefined && isTruthy(params.TEXT_STYLE)
 
 		const device = this.surfaces.addSatelliteDevice({
 			path: id,
@@ -310,32 +307,19 @@ class ServiceSatellite extends ServiceBase {
 			socket.write(`KEY-PRESS ERROR DEVICEID="${id}" MESSAGE="Missing KEY"\n`)
 			return
 		}
+		const xy = device.device.parseKeyParam(params.KEY.toString())
+		if (!xy) {
+			socket.write(`KEY-PRESS ERROR DEVICEID="${id}" MESSAGE="Invalid KEY"\n`)
+			return
+		}
 		if (!params.PRESSED) {
 			socket.write(`KEY-PRESS ERROR DEVICEID="${id}" MESSAGE="Missing PRESSED"\n`)
 			return
 		}
 		const pressed = !isFalsey(params.PRESSED)
 
-		const keynum = Number(params.KEY)
-		const keyParse = params.KEY.toString().match(/^\+?(\d+)\/\+?(\d+)$/)
-
-		if (
-			Array.isArray(keyParse) &&
-			Number(keyParse[1]) < device.device.gridSize.rows &&
-			Number(keyParse[2]) < device.device.gridSize.columns
-		) {
-			this.emit('click', Number(keyParse[2]), Number(keyParse[1]), pressed)
-			socket.write(`KEY-PRESS OK\n`)
-		} else if (
-			!isNaN(keynum) &&
-			keynum <= device.device.gridSize.columns * device.device.gridSize.rows &&
-			keynum >= 0
-		) {
-			device.device.doButton(keynum, pressed)
-			socket.write(`KEY-PRESS OK\n`)
-		} else {
-			socket.write(`KEY-PRESS ERROR DEVICEID="${id}" MESSAGE="Invalid KEY"\n`)
-		}
+		device.device.doButton(...xy, pressed)
+		socket.write(`KEY-PRESS OK\n`)
 	}
 
 	/**
@@ -358,6 +342,11 @@ class ServiceSatellite extends ServiceBase {
 			socket.write(`KEY-ROTATE ERROR DEVICEID="${id}" MESSAGE="Missing KEY"\n`)
 			return
 		}
+		const xy = device.device.parseKeyParam(params.KEY.toString())
+		if (!xy) {
+			socket.write(`KEY-ROTATE ERROR DEVICEID="${id}" MESSAGE="Invalid KEY"\n`)
+			return
+		}
 		if (!params.DIRECTION) {
 			socket.write(`KEY-ROTATE ERROR DEVICEID="${id}" MESSAGE="Missing DIRECTION"\n`)
 			return
@@ -365,22 +354,8 @@ class ServiceSatellite extends ServiceBase {
 
 		const direction = params.DIRECTION >= '1'
 
-		const keynum = Number(params.KEY)
-		const keyParse = params.KEY.toString().match(/^([+-]?\d+)\/([+-]?\d+)$/)
-
-		if (Array.isArray(keyParse)) {
-			this.emit('rotate', Number(keyParse[2]), Number(keyParse[1]), direction)
-			socket.write(`KEY-ROTATE OK\n`)
-		} else if (
-			!isNaN(keynum) &&
-			keynum <= device.device.gridSize.columns * device.device.gridSize.rows &&
-			keynum >= 0
-		) {
-			device.device.doRotate(keynum, direction)
-			socket.write(`KEY-ROTATE OK\n`)
-		} else {
-			socket.write(`KEY-ROTATE ERROR DEVICEID="${id}" MESSAGE="Invalid KEY"\n`)
-		}
+		device.device.doRotate(...xy, direction)
+		socket.write(`KEY-ROTATE OK\n`)
 	}
 
 	/**
