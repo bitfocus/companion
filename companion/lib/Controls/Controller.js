@@ -95,14 +95,16 @@ class ControlsController extends CoreBase {
 		this.actionRecorder = new ActionRecorder(registry)
 		this.triggers = new TriggerEvents()
 
-		// Init all the control classes
-		const config = this.db.getKey('controls', {})
-		for (const [controlId, controlObj] of Object.entries(config)) {
-			if (controlObj && controlObj.type) {
-				const inst = this.#createClassForControl(controlId, 'all', controlObj, false)
-				if (inst) this.#controls.set(controlId, inst)
+		setImmediate(() => {
+			// Init all the control classes
+			const config = this.db.getKey('controls', {})
+			for (const [controlId, controlObj] of Object.entries(config)) {
+				if (controlObj && controlObj.type) {
+					const inst = this.#createClassForControl(controlId, 'all', controlObj, false)
+					if (inst) this.#controls.set(controlId, inst)
+				}
 			}
-		}
+		})
 	}
 
 	/**
