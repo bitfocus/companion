@@ -194,7 +194,7 @@ class UIHandler {
 			}
 		})
 
-		this.registry.log.clientConnect(client)
+		LogController.clientConnect(client)
 		this.registry.ui?.clientConnect(client)
 		this.registry.data?.clientConnect(client)
 		this.registry.page.clientConnect(client)

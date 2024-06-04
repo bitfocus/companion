@@ -31,6 +31,7 @@ import zlib from 'node:zlib'
 import { stringify as csvStringify } from 'csv-stringify/sync'
 import { visitEventOptions } from '../Resources/EventDefinitions.js'
 import { compareExportedInstances } from '@companion-app/shared/Import.js'
+import LogController from '../Log/Controller.js'
 
 /**
  * Default buttons on fresh pages
@@ -398,7 +399,7 @@ class DataImportExport extends CoreBase {
 		})
 
 		this.registry.api_router.get('/export/log', (_req, res, _next) => {
-			const logs = this.registry.log.getAllLines()
+			const logs = LogController.getAllLines()
 
 			const filename = encodeURI(`${os.hostname()}_companion_log_${getTimestamp()}.csv`)
 
@@ -463,7 +464,7 @@ class DataImportExport extends CoreBase {
 			}
 
 			{
-				const logs = this.registry.log.getAllLines()
+				const logs = LogController.getAllLines()
 
 				let out = `"Date","Module","Type","Log"\r\n`
 				for (const line of logs) {

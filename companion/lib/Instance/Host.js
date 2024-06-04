@@ -364,7 +364,7 @@ class ModuleHost {
 	updateChildLabel(connectionId, label) {
 		let child = this.#children.get(connectionId)
 		if (child) {
-			child.logger = this.#registry.log.createLogger(`Instance/${label}`)
+			child.logger = LogController.createLogger(`Instance/${label}`)
 		}
 	}
 
@@ -384,7 +384,7 @@ class ModuleHost {
 			child = {
 				connectionId,
 				lifeCycleQueue: new PQueue({ concurrency: 1 }),
-				logger: this.#registry.log.createLogger(`Instance/${config.label}`),
+				logger: LogController.createLogger(`Instance/${config.label}`),
 				restartCount: 0,
 				isReady: false,
 			}
