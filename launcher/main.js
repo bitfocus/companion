@@ -73,6 +73,7 @@ if (!lock) {
 		size: '100m',
 		max_logs: '7d',
 		audit_file: path.join(logsDir, 'audit.json'),
+		end_stream: true,
 	})
 	logStream.on('error', (e) => {
 		console.log('Error writing log:', e)
