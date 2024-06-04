@@ -121,7 +121,7 @@ export function ImportExport() {
 
 						<label className="btn btn-success btn-file">
 							<FontAwesomeIcon icon={faFileImport} /> Import
-							<input type="file" onChange={loadSnapshot} style={{ display: 'none' }} />
+							<input type="file" onChange={loadSnapshot} style={{ display: 'none' }} accept=".companionconfig" />
 						</label>
 					</p>
 				</>
