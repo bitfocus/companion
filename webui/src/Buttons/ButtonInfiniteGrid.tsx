@@ -45,7 +45,7 @@ interface ButtonInfiniteGridProps {
 	gridSize: UserConfigGridSize
 	doGrow?: (direction: 'left' | 'right' | 'top' | 'bottom', amount: number) => void
 	buttonIconFactory: React.ClassType<ButtonInfiniteGridButtonProps, any, any>
-	drawScale?: number
+	drawScale: number
 }
 
 export const ButtonInfiniteGrid = forwardRef<ButtonInfiniteGridRef, ButtonInfiniteGridProps>(

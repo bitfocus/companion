@@ -24,7 +24,7 @@ export const ButtonsPage = observer(function ButtonsPage({ hotPress }: ButtonsPa
 	const { userConfig, socket } = useContext(RootAppStoreContext)
 
 	const clearModalRef = useRef<GenericConfirmModalRef>(null)
-	const [gridZoomController, gridZoomValue] = useGridZoom()
+	const [gridZoomController, gridZoomValue] = useGridZoom('grid')
 
 	const [tabResetToken, setTabResetToken] = useState(nanoid())
 	const [activeTab, setActiveTab] = useState('presets')

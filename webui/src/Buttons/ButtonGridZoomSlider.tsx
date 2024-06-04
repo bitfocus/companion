@@ -20,14 +20,16 @@ export interface ButtonGridZoomControlProps {
 	useCompactButtons: boolean
 	gridZoomValue: number
 	gridZoomController: GridZoomController
+	style?: React.CSSProperties
 }
 export function ButtonGridZoomControl({
 	useCompactButtons,
 	gridZoomValue,
 	gridZoomController,
+	style,
 }: ButtonGridZoomControlProps) {
 	return (
-		<CDropdown className="dropdown-zoom">
+		<CDropdown className="dropdown-zoom" style={style}>
 			<CDropdownToggle caret={!useCompactButtons} color="light">
 				<span className="sr-only">Zoom</span>
 				<FontAwesomeIcon icon={faMagnifyingGlass} /> {useCompactButtons ? '' : `${Math.round(gridZoomValue)}%`}
