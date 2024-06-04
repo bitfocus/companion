@@ -9,6 +9,7 @@ import {
 	ControlWithPushed,
 	ControlWithStyle,
 } from '../../IControlFragments.js'
+import { ReferencesVisitors } from '../../../Util/Visitors/ReferencesVisitors.js'
 
 /**
  * @typedef {import('@companion-app/shared/Model/ActionModel.js').ActionInstance} ActionInstance
@@ -129,7 +130,9 @@ export default class ButtonControlBase extends ControlBase {
 		super(registry, controlId, debugNamespace)
 
 		this.feedbacks = new FragmentFeedbacks(
-			registry,
+			registry.instance.definitions,
+			registry.internalModule,
+			registry.instance.moduleHost,
 			controlId,
 			this.commitChange.bind(this),
 			this.triggerRedraw.bind(this),
@@ -397,7 +400,8 @@ export default class ButtonControlBase extends ControlBase {
 		}
 
 		// Fix up references
-		const changed = this.registry.data.importExport.fixupControlReferences(
+		const changed = ReferencesVisitors.fixupControlReferences(
+			this.registry.internalModule,
 			{ connectionLabels: { [labelFrom]: labelTo } },
 			this.feedbacks.baseStyle,
 			allActions,
