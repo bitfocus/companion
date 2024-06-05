@@ -579,7 +579,15 @@ class Image {
 			// we found possible closest match, check if the assumed nWidth was not too big
 			//console.log('possible match', substring(text, 0, chars), 'diff', diff, 'nWidth', nWidth, 'chardiff', Math.round(diff / nWidth))
 			for (let i = 0; i <= length; i += 1) {
-				if (diff > 0 && w - this.context2d.measureText(substring(text, 0, chars + 1)).width < 0) {
+				if (diff == 0 || (diff < 0 && chars == 1)) {
+					// perfect match or one char is too wide meaning we can't try less
+					//console.log('line algo says perfect match with '+chars+' chars', substring(text, 0, chars));
+					return {
+						ascent: measure.actualBoundingBoxAscent,
+						descent: measure.actualBoundingBoxDescent,
+						maxCodepoints: chars,
+					}
+				} else if (diff > 0 && w - this.context2d.measureText(substring(text, 0, chars + 1)).width < 0) {
 					// we are smaller and next char is too big
 					//console.log('line algo says '+chars+' chars are smaller', substring(text, 0, chars), this.context2d.measureText(substring(text, 0, chars)).width);
 					return {
@@ -594,14 +602,6 @@ class Image {
 						ascent: measure.actualBoundingBoxAscent,
 						descent: measure.actualBoundingBoxDescent,
 						maxCodepoints: chars - 1,
-					}
-				} else if (diff == 0) {
-					// perfect match
-					//console.log('line algo says perfect match with '+chars+' chars', substring(text, 0, chars));
-					return {
-						ascent: measure.actualBoundingBoxAscent,
-						descent: measure.actualBoundingBoxDescent,
-						maxCodepoints: chars,
 					}
 				} else {
 					// our assumed nWidth was too big, let's approach now char by char
@@ -654,6 +654,11 @@ class Image {
 				lastDrawnByte = textArr.length
 			} else {
 				let line = textArr.slice(lastDrawnByte, lastDrawnByte + maxCodepoints)
+				if (line.length === 0) {
+					// line is somehow empty, try skipping a character
+					lastDrawnByte += 1
+					continue
+				}
 
 				//lets look for a newline
 				const newlinePos = line.indexOf(String.fromCharCode(10))
