@@ -1,5 +1,40 @@
 # Bitfocus Companion
 
+## Companion v3.3.1 - Release Notes
+
+### 🐞 BUG FIXES
+
+- Less agressive log rotating #2895
+- Add error handler for logStream writer #2895
+- Handle 'node-machine-id' failures #2885
+- Ensure variables in presets button text get replaced correctly #2837
+- 'Abort all delayed actions on a page' not respecting 'use variables' checkbox #2877
+- Apply wizard style
+
+### 🐞 MODULE FIXES
+
+- aimedia-lexilive
+- aten-matrix
+- avstumpfl-pixera
+- barco-eventmaster
+- behringer-xair
+- figure53-qlab-advance
+- generic-dataentry
+- generic-tcp-serial
+- middleman-breaktime
+- ptzoptics-visca
+- roku-tv
+- roland-v160hd
+- sony-serialtally
+- studiocoast-vmix
+- tascam-cd
+- tascam-cd400u
+- tascam-da-6400
+- telestream-prism
+- videolan-vlc
+- vitec-avediaplayer9300-series
+- zenvideo-ndirouter
+
 ## Companion v3.3.0 - Release Notes
 
 ### 📣 CORE FEATURES AND IMPROVEMENTS
