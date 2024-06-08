@@ -145,13 +145,16 @@ function useIsPickerOpen(showValue: string, cursorPosition: number | null) {
 	const [isForceHidden, setIsForceHidden] = useState(false)
 
 	let isPickerOpen = false
-	let searchValue = ''
+	let searchValue = ' '
 
 	if (cursorPosition != null) {
 		const lastOpenSequence = FindVariableStartIndexFromCursor(showValue, cursorPosition)
 		isPickerOpen = lastOpenSequence !== -1
 
-		searchValue = showValue.slice(lastOpenSequence + 2, cursorPosition)
+		searchValue = showValue.slice(isPickerOpen ? lastOpenSequence + 2 : 0, cursorPosition)
+
+		// If it has no length, then the input field swallows the 'space' character as 'select the focussed option'
+		if (searchValue.length === 0) searchValue = ' '
 	}
 
 	const previousIsPickerOpen = useRef(false)
