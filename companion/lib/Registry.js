@@ -240,6 +240,7 @@ class Registry extends EventEmitter {
 		// old 'modules_loaded' events
 		this.data.metrics.startCycle()
 
+		this.controls.init()
 		this.controls.verifyConnectionIds()
 		this.instance.variable.custom.init()
 		this.internalModule.init()
