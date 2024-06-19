@@ -177,7 +177,7 @@ jobs:
           api-secret: ${{ secrets.BITFOCUS_API_PROJECT_SECRET }}
 
   osx:
-    runs-on: macos-11
+    runs-on: macos-12
     needs: check-types
 
     steps:
@@ -245,7 +245,7 @@ jobs:
           api-secret: ${{ secrets.BITFOCUS_API_PROJECT_SECRET }}
 
   osx-arm64:
-    runs-on: macos-11
+    runs-on: macos-12
     needs: check-types
 
     steps:
