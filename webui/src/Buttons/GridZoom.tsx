@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 
-export const ZOOM_MIN = 50
+export const ZOOM_MIN = 20
 export const ZOOM_MAX = 200
 export const ZOOM_STEP = 10
 
