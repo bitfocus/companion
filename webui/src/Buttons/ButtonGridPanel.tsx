@@ -26,6 +26,8 @@ import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import { RootAppStoreContext } from '../Stores/RootAppStore.js'
 import { PagesStoreModel } from '../Stores/PagesStore.js'
 import { observer } from 'mobx-react-lite'
+import { ButtonGridZoomControl } from './ButtonGridZoomSlider.js'
+import { GridZoomController } from './GridZoom.js'
 
 interface ButtonsGridPanelProps {
 	pageNumber: number
@@ -35,6 +37,8 @@ interface ButtonsGridPanelProps {
 	changePage: (pageNumber: number) => void
 	selectedButton: ControlLocation | null
 	clearSelectedButton: () => void
+	gridZoomValue: number
+	gridZoomController: GridZoomController
 }
 
 export const ButtonsGridPanel = observer(function ButtonsPage({
@@ -45,6 +49,8 @@ export const ButtonsGridPanel = observer(function ButtonsPage({
 	changePage,
 	selectedButton,
 	clearSelectedButton,
+	gridZoomValue,
+	gridZoomController,
 }: ButtonsGridPanelProps) {
 	const { socket, pages, userConfig } = useContext(RootAppStoreContext)
 
@@ -148,7 +154,7 @@ export const ButtonsGridPanel = observer(function ButtonsPage({
 
 	const setSizeRef = useRef(null)
 	const holderSize = useResizeObserver({ ref: setSizeRef })
-	const useCompactButtons = (holderSize.width ?? 0) < 680 // Cutoff for what of the header row fit in the large mode
+	const useCompactButtons = (holderSize.width ?? 0) < 700 // Cutoff for what of the header row fit in the large mode
 
 	return (
 		<KeyReceiver onKeyDown={onKeyDown} tabIndex={0} className="button-grid-panel">
@@ -165,17 +171,22 @@ export const ButtonsGridPanel = observer(function ButtonsPage({
 				<CRow innerRef={setSizeRef}>
 					<CCol sm={12}>
 						<ButtonGridHeader pageNumber={pageNumber} changePage={changePage2} setPage={setPage}>
-							<CButton color="light" onClick={showExportModal} title="Export page" className="btn-right">
+							<CButton color="light" onClick={showExportModal} title="Export Page" className="btn-right">
 								<FontAwesomeIcon icon={faFileExport} />
 								&nbsp;
-								{useCompactButtons ? '' : 'Export page'}
-							</CButton>
-							<CButton color="light" onClick={resetPosition} title="Home Position" className="btn-right">
-								<FontAwesomeIcon icon={faHome} /> {useCompactButtons ? '' : 'Home Position'}
+								{useCompactButtons ? '' : 'Export Page'}
 							</CButton>
 							<CButton color="light" onClick={configurePage} title="Edit Page" className="btn-right">
 								<FontAwesomeIcon icon={faPencil} /> {useCompactButtons ? '' : 'Edit Page'}
 							</CButton>
+							<CButton color="light" onClick={resetPosition} title="Home Position" className="btn-right">
+								<FontAwesomeIcon icon={faHome} /> {useCompactButtons ? '' : 'Home'}
+							</CButton>
+							<ButtonGridZoomControl
+								useCompactButtons={useCompactButtons}
+								gridZoomValue={gridZoomValue}
+								gridZoomController={gridZoomController}
+							/>
 						</ButtonGridHeader>
 					</CCol>
 				</CRow>
@@ -191,6 +202,7 @@ export const ButtonsGridPanel = observer(function ButtonsPage({
 						gridSize={gridSize}
 						doGrow={userConfig.properties?.gridSizeInlineGrow ? doGrow : undefined}
 						buttonIconFactory={PrimaryButtonGridIcon}
+						drawScale={gridZoomValue / 100}
 					/>
 				)}
 			</div>

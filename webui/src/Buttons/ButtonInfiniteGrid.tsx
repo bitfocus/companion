@@ -45,18 +45,21 @@ interface ButtonInfiniteGridProps {
 	gridSize: UserConfigGridSize
 	doGrow?: (direction: 'left' | 'right' | 'top' | 'bottom', amount: number) => void
 	buttonIconFactory: React.ClassType<ButtonInfiniteGridButtonProps, any, any>
+	drawScale: number
 }
 
 export const ButtonInfiniteGrid = forwardRef<ButtonInfiniteGridRef, ButtonInfiniteGridProps>(
 	function ButtonInfiniteGrid(
-		{ isHot, pageNumber, buttonClick, selectedButton, gridSize, doGrow, buttonIconFactory },
+		{ isHot, pageNumber, buttonClick, selectedButton, gridSize, doGrow, buttonIconFactory, drawScale },
 		ref
 	) {
 		const { minColumn, maxColumn, minRow, maxRow } = gridSize
 		const countColumns = maxColumn - minColumn + 1
 		const countRows = maxRow - minRow + 1
 
-		const tileSize = 84
+		const tileInnerSize = 72 * (drawScale ?? 1)
+		const tilePadding = Math.min(6, tileInnerSize * 0.05)
+		const tileSize = tileInnerSize + tilePadding * 2
 		const growWidth = doGrow ? 90 : 0
 		const growHeight = doGrow ? 60 : 0
 
@@ -71,6 +74,28 @@ export const ButtonInfiniteGrid = forwardRef<ButtonInfiniteGridRef, ButtonInfini
 				scrollerRef.scrollLeft = -minColumn * tileSize + growWidth
 			}
 		}, [scrollerRef, minColumn, minRow, tileSize, growWidth, growHeight])
+
+		// Make the scroll position sticky when zooming
+		const tmpScrollerPosition = useRef<{ left: number; top: number }>()
+		useEffect(() => {
+			if (!scrollerRef) return
+			const scrollerRef2 = scrollerRef
+			const drawScale2 = drawScale ?? 1
+
+			// The maths isn't 100% pixel accurate, but its only a slight shift so is acceptable
+
+			if (tmpScrollerPosition.current) {
+				scrollerRef2.scrollLeft = tmpScrollerPosition.current.left * drawScale2
+				scrollerRef2.scrollTop = tmpScrollerPosition.current.top * drawScale2
+			}
+
+			return () => {
+				tmpScrollerPosition.current = {
+					left: scrollerRef2.scrollLeft / drawScale2,
+					top: scrollerRef2.scrollTop / drawScale2,
+				}
+			}
+		}, [drawScale, scrollerRef])
 
 		const setRef = useCallback(
 			(ref: HTMLDivElement) => {
@@ -179,8 +204,10 @@ export const ButtonInfiniteGrid = forwardRef<ButtonInfiniteGridRef, ButtonInfini
 			() => ({
 				width: Math.max(countColumns * tileSize, windowSize.width) + growWidth * 2,
 				height: Math.max(countRows * tileSize, windowSize.height) + growHeight * 2,
+				'--tile-inner-size': tileInnerSize,
+				'--grid-scale': drawScale,
 			}),
-			[countColumns, countRows, tileSize, windowSize, growWidth, growHeight]
+			[countColumns, countRows, tileSize, windowSize, growWidth, growHeight, tileInnerSize, drawScale]
 		)
 
 		return (
