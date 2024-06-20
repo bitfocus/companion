@@ -22,6 +22,7 @@ import {
 	ControlWithoutSteps,
 	ControlWithoutStyle,
 } from '../../IControlFragments.js'
+import { ReferencesVisitors } from '../../../Util/Visitors/ReferencesVisitors.js'
 
 /**
  * @typedef {import('@companion-app/shared/Model/ActionModel.js').ActionInstance} ActionInstance
@@ -204,9 +205,16 @@ export default class ControlTrigger extends ControlBase {
 	constructor(registry, eventBus, controlId, storage, isImport) {
 		super(registry, controlId, 'Controls/ControlTypes/Triggers')
 
-		this.actions = new FragmentActions(registry, controlId, this.commitChange.bind(this))
+		this.actions = new FragmentActions(
+			registry.internalModule,
+			registry.instance.moduleHost,
+			controlId,
+			this.commitChange.bind(this)
+		)
 		this.feedbacks = new FragmentFeedbacks(
-			registry,
+			registry.instance.definitions,
+			registry.internalModule,
+			registry.instance.moduleHost,
 			controlId,
 			this.commitChange.bind(this),
 			this.triggerRedraw.bind(this),
@@ -484,7 +492,14 @@ export default class ControlTrigger extends ControlBase {
 
 		const visitor = new VisitorReferencesCollector(foundConnectionIds, foundConnectionLabels)
 
-		this.registry.data.importExport.visitControlReferences(visitor, undefined, allActions, allFeedbacks, this.events)
+		ReferencesVisitors.visitControlReferences(
+			this.internalModule,
+			visitor,
+			undefined,
+			allActions,
+			allFeedbacks,
+			this.events
+		)
 	}
 
 	/**
@@ -614,7 +629,8 @@ export default class ControlTrigger extends ControlBase {
 		const allActions = this.actions.getAllActions()
 
 		// Fix up references
-		const changed = this.registry.data.importExport.fixupControlReferences(
+		const changed = ReferencesVisitors.fixupControlReferences(
+			this.internalModule,
 			{ connectionLabels: { [labelFrom]: labelTo } },
 			undefined,
 			allActions,

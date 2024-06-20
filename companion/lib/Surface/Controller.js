@@ -118,7 +118,7 @@ class SurfaceController extends CoreBase {
 			// Setup groups
 			const groupsConfigs = this.db.getKey('surface-groups', {})
 			for (const groupId of Object.keys(groupsConfigs)) {
-				const newGroup = new SurfaceGroup(this.registry, groupId, null, this.isPinLockEnabled())
+				const newGroup = new SurfaceGroup(this, this.db, this.userconfig, groupId, null, this.isPinLockEnabled())
 				this.#surfaceGroups.set(groupId, newGroup)
 			}
 
@@ -261,7 +261,7 @@ class SurfaceController extends CoreBase {
 			throw new Error(`Emulator "${id}" already exists!`)
 		}
 
-		this.#createSurfaceHandler(fullId, 'emulator', new SurfaceIPElgatoEmulator(this.registry.io, id))
+		this.#createSurfaceHandler(fullId, 'emulator', new SurfaceIPElgatoEmulator(this.io, id))
 
 		if (!skipUpdate) this.updateDevicesList()
 	}
@@ -468,7 +468,7 @@ class SurfaceController extends CoreBase {
 			// TODO - should this do friendlier ids?
 			const groupId = `group:${nanoid()}`
 
-			const newGroup = new SurfaceGroup(this.registry, groupId, null, this.isPinLockEnabled())
+			const newGroup = new SurfaceGroup(this, this.db, this.userconfig, groupId, null, this.isPinLockEnabled())
 			newGroup.setName(name)
 			this.#surfaceGroups.set(groupId, newGroup)
 
@@ -563,7 +563,9 @@ class SurfaceController extends CoreBase {
 			}
 
 			const newGroup = new SurfaceGroup(
-				this.registry,
+				this,
+				this.db,
+				this.userconfig,
 				surfaceGroupId,
 				!rawSurfaceGroupId ? surfaceHandler : null,
 				isLocked
@@ -1027,7 +1029,7 @@ class SurfaceController extends CoreBase {
 	addElgatoPluginDevice(devicePath, socket) {
 		this.removeDevice(devicePath)
 
-		const device = new SurfaceIPElgatoPlugin(this.registry, devicePath, socket)
+		const device = new SurfaceIPElgatoPlugin(this.controls, this.page, devicePath, socket)
 
 		this.#createSurfaceHandler(devicePath, 'elgato-plugin', device)
 
@@ -1097,7 +1099,7 @@ class SurfaceController extends CoreBase {
 			let group = this.#getGroupForId(id, true)
 			if (!group) {
 				// Group does not exist
-				group = new SurfaceGroup(this.registry, id, null, this.isPinLockEnabled())
+				group = new SurfaceGroup(this, this.db, this.userconfig, id, null, this.isPinLockEnabled())
 				this.#surfaceGroups.set(id, group)
 			}
 

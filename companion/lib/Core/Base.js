@@ -1,4 +1,5 @@
 import { EventEmitter } from 'events'
+import LogController from '../Log/Controller.js'
 
 /**
  * Abstract class to be extended by most core classes.  Provides access to the
@@ -47,7 +48,7 @@ class CoreBase extends EventEmitter {
 
 		this.registry = registry
 
-		this.logger = this.registry.log.createLogger(debugNamespace)
+		this.logger = LogController.createLogger(debugNamespace)
 	}
 
 	/**
