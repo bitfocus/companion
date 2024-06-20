@@ -34,5 +34,22 @@ Supported operators include:
   - Define an object: `{ a: 1 }`
   - Define an array: `[1, 2]`
   - Object/array lookup: `$(my:var)['some-prop']`
+- Assignment of temporary variables:
+  - Assignment: `a = 1`
+  - Addition assignment: `a += 1`
+  - Subtraction assignment: `a -= 1`
+  - Multiplication assignment: `a *= 1`
+  - Division assignment: `a /= 1`
+  - Modulous assignment: `a %= 1`
+  - Increment: `a++` or `++a`
+  - Decrement: `a--` or `--a`
+  - Logical OR assignment: `a ||= 1`
+  - Logical AND assignment: `a &&= 1`
+  - Left shift assignment: `a <<= 1`
+  - Right shift assignment: `a >>= 1`
+  - Bitwise XOR assignment: `a ^= 1`
+  - Bitwise AND assignment: `a &= 1`
+  - Bitwise OR assignment: `a |= 1`
+  - Exponent assignment: `a **= 2`
 
 > **Note:** In the examples able `a` and `b` should be replaced with custom variables, module variables or number literals. They are only used here for brevity.
