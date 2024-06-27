@@ -7,7 +7,7 @@ Supported operators include:
   - Subtraction: `a - b`
   - Multiplication: `a * b`
   - Division: `a / b`
-  - Modulous: `a % b`
+  - Modulus: `a % b`
   - Equality (loose): `a == b`
   - Equality (strict): `a === b`
   - Inequality (loose): `a != b`
@@ -35,4 +35,4 @@ Supported operators include:
   - Define an array: `[1, 2]`
   - Object/array lookup: `$(my:var)['some-prop']`
 
-> **Note:** In the examples able `a` and `b` should be replaced with custom variables, module variables or number literals. They are only used here for brevity.
+> **Note:** In the examples `a` and `b` should be replaced with custom variables, module variables or number literals. They are only used here for brevity.
