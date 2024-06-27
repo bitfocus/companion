@@ -95,22 +95,6 @@ describe('functions', () => {
 			expect(ExpressionFunctions.min('a', 1, 9)).toBe(NaN)
 		})
 
-		it('unixNow', () => {
-			const value = ExpressionFunctions.unixNow()
-			expect(value / 10).toBeCloseTo(Date.now() / 10, 0)
-		})
-
-		it('timestampToSeconds', () => {
-			expect(ExpressionFunctions.timestampToSeconds('00:00:11')).toBe(11)
-			expect(ExpressionFunctions.timestampToSeconds('00:16:39')).toBe(999)
-			expect(ExpressionFunctions.timestampToSeconds('02:46:39')).toBe(9999)
-			expect(ExpressionFunctions.timestampToSeconds('342:56:07')).toBe(1234567)
-
-			expect(ExpressionFunctions.timestampToSeconds('00:00_11')).toBe(0)
-			expect(ExpressionFunctions.timestampToSeconds(false)).toBe(0)
-			expect(ExpressionFunctions.timestampToSeconds(99)).toBe(0)
-		})
-
 		it('randomInt', () => {
 			for (let i = 0; i < 50; i++) {
 				const result = ExpressionFunctions.randomInt()
@@ -266,54 +250,6 @@ describe('functions', () => {
 			expect(ExpressionFunctions.encode('Companion', 'base64')).toBe('Q29tcGFuaW9u')
 			expect(ExpressionFunctions.encode('Companion')).toBe('Companion')
 		})
-
-		it('secondsToTimestamp', () => {
-			expect(ExpressionFunctions.secondsToTimestamp(11)).toBe('00:00:11')
-			expect(ExpressionFunctions.secondsToTimestamp(999)).toBe('00:16:39')
-			expect(ExpressionFunctions.secondsToTimestamp(9999)).toBe('02:46:39')
-			expect(ExpressionFunctions.secondsToTimestamp(1234567)).toBe('342:56:07')
-
-			expect(ExpressionFunctions.secondsToTimestamp('99')).toBe('00:01:39')
-			expect(ExpressionFunctions.secondsToTimestamp(false)).toBe('00:00:00')
-			expect(ExpressionFunctions.secondsToTimestamp(-11)).toBe('00:00:00')
-
-			// hh:mm:ss
-			expect(ExpressionFunctions.secondsToTimestamp(11, 'hh:mm:ss')).toBe('00:00:11')
-			expect(ExpressionFunctions.secondsToTimestamp(9999, 'hh:mm:ss')).toBe('02:46:39')
-			expect(ExpressionFunctions.secondsToTimestamp(1234567, 'hh:mm:ss')).toBe('342:56:07')
-
-			// hh:ss
-			expect(ExpressionFunctions.secondsToTimestamp(11, 'hh:ss')).toBe('00:11')
-			expect(ExpressionFunctions.secondsToTimestamp(9999, 'hh:ss')).toBe('02:39')
-			expect(ExpressionFunctions.secondsToTimestamp(1234567, 'hh:ss')).toBe('342:07')
-
-			// hh:mm
-			expect(ExpressionFunctions.secondsToTimestamp(11, 'hh:mm')).toBe('00:00')
-			expect(ExpressionFunctions.secondsToTimestamp(9999, 'hh:mm')).toBe('02:46')
-			expect(ExpressionFunctions.secondsToTimestamp(1234567, 'hh:mm')).toBe('342:56')
-
-			// mm:ss
-			expect(ExpressionFunctions.secondsToTimestamp(11, 'mm:ss')).toBe('00:11')
-			expect(ExpressionFunctions.secondsToTimestamp(9999, 'mm:ss')).toBe('46:39')
-			expect(ExpressionFunctions.secondsToTimestamp(1234567, 'mm:ss')).toBe('56:07')
-		})
-
-		it('msToTimestamp', () => {
-			expect(ExpressionFunctions.msToTimestamp(1100)).toBe('00:01.1')
-			expect(ExpressionFunctions.msToTimestamp(999123)).toBe('16:39.1')
-			expect(ExpressionFunctions.msToTimestamp(1234567)).toBe('20:34.5')
-
-			expect(ExpressionFunctions.msToTimestamp('9900')).toBe('00:09.9')
-			expect(ExpressionFunctions.msToTimestamp(false)).toBe('00:00.0')
-			expect(ExpressionFunctions.msToTimestamp(-11)).toBe('00:00.0')
-
-			// TODO - format
-
-			// // hh:mm:ss
-			// expect(ExpressionFunctions.msToTimestamp(11, 'hh:mm:ss')).toBe('00:00:11')
-			// expect(ExpressionFunctions.msToTimestamp(9999, 'hh:mm:ss')).toBe('02:46:39')
-			// expect(ExpressionFunctions.msToTimestamp(1234567, 'hh:mm:ss')).toBe('342:56:07')
-		})
 	})
 
 	describe('boolean', () => {
@@ -382,6 +318,85 @@ describe('functions', () => {
 
 			expect(ExpressionFunctions.jsonstringify({ a: 1 })).toEqual('{"a":1}')
 			expect(ExpressionFunctions.jsonstringify([1, 2, 3])).toEqual('[1,2,3]')
+		})
+	})
+
+	describe('time', () => {
+		it('unixNow', () => {
+			const value = ExpressionFunctions.unixNow()
+			expect(value / 10).toBeCloseTo(Date.now() / 10, 0)
+		})
+
+		it('secondsToTimestamp', () => {
+			expect(ExpressionFunctions.secondsToTimestamp(11)).toBe('00:00:11')
+			expect(ExpressionFunctions.secondsToTimestamp(999)).toBe('00:16:39')
+			expect(ExpressionFunctions.secondsToTimestamp(9999)).toBe('02:46:39')
+			expect(ExpressionFunctions.secondsToTimestamp(1234567)).toBe('342:56:07')
+
+			expect(ExpressionFunctions.secondsToTimestamp('99')).toBe('00:01:39')
+			expect(ExpressionFunctions.secondsToTimestamp(false)).toBe('00:00:00')
+			expect(ExpressionFunctions.secondsToTimestamp(-11)).toBe('-00:00:11')
+
+			// hh:mm:ss
+			expect(ExpressionFunctions.secondsToTimestamp(11, 'hh:mm:ss')).toBe('00:00:11')
+			expect(ExpressionFunctions.secondsToTimestamp(9999, 'hh:mm:ss')).toBe('02:46:39')
+			expect(ExpressionFunctions.secondsToTimestamp(1234567, 'hh:mm:ss')).toBe('342:56:07')
+
+			// hh:ss
+			expect(ExpressionFunctions.secondsToTimestamp(11, 'hh:ss')).toBe('00:11')
+			expect(ExpressionFunctions.secondsToTimestamp(9999, 'hh:ss')).toBe('02:39')
+			expect(ExpressionFunctions.secondsToTimestamp(1234567, 'hh:ss')).toBe('342:07')
+
+			// hh:mm
+			expect(ExpressionFunctions.secondsToTimestamp(11, 'hh:mm')).toBe('00:00')
+			expect(ExpressionFunctions.secondsToTimestamp(9999, 'hh:mm')).toBe('02:46')
+			expect(ExpressionFunctions.secondsToTimestamp(1234567, 'hh:mm')).toBe('342:56')
+
+			// mm:ss
+			expect(ExpressionFunctions.secondsToTimestamp(11, 'mm:ss')).toBe('00:11')
+			expect(ExpressionFunctions.secondsToTimestamp(9999, 'mm:ss')).toBe('46:39')
+			expect(ExpressionFunctions.secondsToTimestamp(1234567, 'mm:ss')).toBe('56:07')
+		})
+
+		it('timestampToSeconds', () => {
+			expect(ExpressionFunctions.timestampToSeconds('00:00:11')).toBe(11)
+			expect(ExpressionFunctions.timestampToSeconds('00:16:39')).toBe(999)
+			expect(ExpressionFunctions.timestampToSeconds('02:46:39')).toBe(9999)
+			expect(ExpressionFunctions.timestampToSeconds('342:56:07')).toBe(1234567)
+
+			expect(ExpressionFunctions.timestampToSeconds('00:00_11')).toBe(0)
+			expect(ExpressionFunctions.timestampToSeconds(false)).toBe(0)
+			expect(ExpressionFunctions.timestampToSeconds(99)).toBe(0)
+		})
+
+		it('msToTimestamp', () => {
+			expect(ExpressionFunctions.msToTimestamp(1100)).toBe('00:01.1')
+			expect(ExpressionFunctions.msToTimestamp(999123)).toBe('16:39.1')
+			expect(ExpressionFunctions.msToTimestamp(1234567)).toBe('20:34.5')
+
+			expect(ExpressionFunctions.msToTimestamp('9900')).toBe('00:09.9')
+			expect(ExpressionFunctions.msToTimestamp(false)).toBe('00:00.0')
+			expect(ExpressionFunctions.msToTimestamp(-11)).toBe('00:00.0')
+
+			expect(ExpressionFunctions.msToTimestamp(11000, 'hh:mm:ss')).toBe('00:00:11')
+			expect(ExpressionFunctions.msToTimestamp(9999000, 'hh:mm:ss')).toBe('02:46:39')
+			expect(ExpressionFunctions.msToTimestamp(1234567890, 'hh:mm:ss')).toBe('342:56:07')
+
+			expect(ExpressionFunctions.msToTimestamp(11000, 'hh:mm')).toBe('00:00')
+			expect(ExpressionFunctions.msToTimestamp(9999000, 'hh:mm')).toBe('02:46')
+			expect(ExpressionFunctions.msToTimestamp(1234567890, 'hh:mm')).toBe('342:56')
+		})
+
+		it('timeOffset', () => {
+			expect(ExpressionFunctions.timeOffset('15:00:00', +5)).toBe('20:00:00')
+			expect(ExpressionFunctions.timeOffset('15:00:00', -5)).toBe('10:00:00')
+			expect(ExpressionFunctions.timeOffset('15:00:00', '-02:00:00', true)).toBe('01:00:00')
+			expect(ExpressionFunctions.timeOffset('15:00', -5)).toBe('10:00')
+		})
+
+		it('timeDiff', () => {
+			expect(ExpressionFunctions.timeDiff('2024-05-23T12:00Z', '2024-05-23T18:00-04:00')).toBe(36000)
+			expect(ExpressionFunctions.timeDiff('12:00', '18:00')).toBe(21600)
 		})
 	})
 })
