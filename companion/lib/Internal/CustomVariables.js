@@ -98,6 +98,7 @@ export default class CustomVariables {
 						useVariables: {
 							local: true,
 						},
+						isExpression: true,
 					},
 				],
 			},

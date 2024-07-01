@@ -164,6 +164,7 @@ export default class Variables {
 						useVariables: {
 							local: true,
 						},
+						isExpression: true,
 					},
 				],
 			},

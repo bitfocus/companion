@@ -707,4 +707,308 @@ describe('parser', () => {
 			})
 		})
 	})
+
+	describe('comments', () => {
+		it('ignore end of line comments', () => {
+			const result = ParseExpression2('1 + 2 // test')
+			expect(result).toEqual({
+				expr: {
+					type: 'BinaryExpression',
+					operator: '+',
+					left: {
+						raw: '1',
+						type: 'Literal',
+						value: 1,
+					},
+					right: {
+						raw: '2',
+						type: 'Literal',
+						value: 2,
+					},
+				},
+				variableIds: [],
+			})
+		})
+
+		it('ignore middle of line comments', () => {
+			const result = ParseExpression2('1 /* Test */ + 2')
+			expect(result).toEqual({
+				expr: {
+					type: 'BinaryExpression',
+					operator: '+',
+					left: {
+						raw: '1',
+						type: 'Literal',
+						value: 1,
+					},
+					right: {
+						raw: '2',
+						type: 'Literal',
+						value: 2,
+					},
+				},
+				variableIds: [],
+			})
+		})
+	})
+
+	describe('line terminator', () => {
+		it('multi-statement with semicolon', () => {
+			const result = ParseExpression2('1 + 2;3 + 4')
+			expect(result).toEqual({
+				expr: {
+					body: [
+						{
+							type: 'BinaryExpression',
+							operator: '+',
+							left: {
+								raw: '1',
+								type: 'Literal',
+								value: 1,
+							},
+							right: {
+								raw: '2',
+								type: 'Literal',
+								value: 2,
+							},
+						},
+						{
+							type: 'BinaryExpression',
+							operator: '+',
+							left: {
+								raw: '3',
+								type: 'Literal',
+								value: 3,
+							},
+							right: {
+								raw: '4',
+								type: 'Literal',
+								value: 4,
+							},
+						},
+					],
+					type: 'Compound',
+				},
+				variableIds: [],
+			})
+		})
+		it('multi-statement with line split', () => {
+			const result = ParseExpression2('1 + 2\n3 + 4')
+			expect(result).toEqual({
+				expr: {
+					body: [
+						{
+							type: 'BinaryExpression',
+							operator: '+',
+							left: {
+								raw: '1',
+								type: 'Literal',
+								value: 1,
+							},
+							right: {
+								raw: '2',
+								type: 'Literal',
+								value: 2,
+							},
+						},
+						{
+							type: 'BinaryExpression',
+							operator: '+',
+							left: {
+								raw: '3',
+								type: 'Literal',
+								value: 3,
+							},
+							right: {
+								raw: '4',
+								type: 'Literal',
+								value: 4,
+							},
+						},
+					],
+					type: 'Compound',
+				},
+				variableIds: [],
+			})
+		})
+
+		it('multi-statement with extra newlines', () => {
+			const result = ParseExpression2('1\n+ \n2\n3 +\n 4\n')
+			expect(result).toEqual({
+				expr: {
+					body: [
+						{
+							type: 'BinaryExpression',
+							operator: '+',
+							left: {
+								raw: '1',
+								type: 'Literal',
+								value: 1,
+							},
+							right: {
+								raw: '2',
+								type: 'Literal',
+								value: 2,
+							},
+						},
+						{
+							type: 'BinaryExpression',
+							operator: '+',
+							left: {
+								raw: '3',
+								type: 'Literal',
+								value: 3,
+							},
+							right: {
+								raw: '4',
+								type: 'Literal',
+								value: 4,
+							},
+						},
+					],
+					type: 'Compound',
+				},
+				variableIds: [],
+			})
+		})
+	})
+
+	describe('return statement', () => {
+		it('basic statement', () => {
+			const result = ParseExpression2('1\n+ \n2\n return 3 +\n 4\n')
+			expect(result).toEqual({
+				expr: {
+					body: [
+						{
+							type: 'BinaryExpression',
+							operator: '+',
+							left: {
+								raw: '1',
+								type: 'Literal',
+								value: 1,
+							},
+							right: {
+								raw: '2',
+								type: 'Literal',
+								value: 2,
+							},
+						},
+						{
+							type: 'ReturnStatement',
+							argument: {
+								type: 'BinaryExpression',
+								operator: '+',
+								left: {
+									raw: '3',
+									type: 'Literal',
+									value: 3,
+								},
+								right: {
+									raw: '4',
+									type: 'Literal',
+									value: 4,
+								},
+							},
+						},
+					],
+					type: 'Compound',
+				},
+				variableIds: [],
+			})
+		})
+
+		it('with brackets', () => {
+			const result = ParseExpression2('return (1 + 2)')
+			expect(result).toEqual({
+				expr: {
+					type: 'ReturnStatement',
+					argument: {
+						type: 'BinaryExpression',
+						operator: '+',
+						left: {
+							raw: '1',
+							type: 'Literal',
+							value: 1,
+						},
+						right: {
+							raw: '2',
+							type: 'Literal',
+							value: 2,
+						},
+					},
+				},
+				variableIds: [],
+			})
+		})
+
+		it('return statement complex', () => {
+			const result = ParseExpression2('return $(int:a)[1]')
+			expect(result).toEqual({
+				expr: {
+					type: 'ReturnStatement',
+					argument: {
+						computed: true,
+						object: {
+							name: 'int:a',
+							type: 'CompanionVariable',
+						},
+						property: {
+							raw: '1',
+							type: 'Literal',
+							value: 1,
+						},
+						type: 'MemberExpression',
+					},
+				},
+				variableIds: ['int:a'],
+			})
+		})
+	})
+
+	describe('assignment', () => {
+		it('basic assignment', () => {
+			const result = ParseExpression2('a = 1; a')
+			expect(result).toEqual({
+				expr: {
+					type: 'Compound',
+					body: [
+						{
+							type: 'AssignmentExpression',
+							operator: '=',
+							left: {
+								type: 'Identifier',
+								name: 'a',
+							},
+							right: {
+								type: 'Literal',
+								raw: '1',
+								value: 1,
+							},
+						},
+						{
+							type: 'Identifier',
+							name: 'a',
+						},
+					],
+				},
+				variableIds: [],
+			})
+		})
+
+		it('increment', () => {
+			const result = ParseExpression2('a++')
+			expect(result).toEqual({
+				expr: {
+					type: 'UpdateExpression',
+					operator: '++',
+					prefix: false,
+					argument: {
+						type: 'Identifier',
+						name: 'a',
+					},
+				},
+				variableIds: [],
+			})
+		})
+	})
 })
