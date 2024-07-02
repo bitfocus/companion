@@ -30,6 +30,7 @@ function getNetworkInterfacesVariables() {
 	let allIps = ''
 
 	try {
+		values['hostname'] = os.hostname()
 		const networkInterfaces = os.networkInterfaces()
 		for (const iface in networkInterfaces) {
 			const v4Addresses = []
@@ -125,6 +126,10 @@ export default class System {
 	 */
 	getVariableDefinitions() {
 		return [
+			{
+				label: 'System: Hostname',
+				name: 'hostname',
+			},
 			{
 				label: 'System: IP of admin network interface',
 				name: 'bind_ip',
