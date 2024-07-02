@@ -51,7 +51,7 @@ export const CustomVariablesList = observer(function CustomVariablesList({ setSh
 
 	useEffect(() => {
 		const doPoll = () => {
-			socketEmitPromise(socket, 'variables:instance-values', ['internal'])
+			socketEmitPromise(socket, 'variables:instance-values', ['custom'])
 				.then((values) => {
 					setVariableValues(values || {})
 				})
@@ -258,15 +258,12 @@ export const CustomVariablesList = observer(function CustomVariablesList({ setSh
 
 					{candidates &&
 						candidates.map((info, index) => {
-							const shortname = `custom_${info.name}`
-
 							return (
 								<CustomVariableRow
 									key={info.name}
 									index={index}
 									name={info.name}
-									shortname={shortname}
-									value={variableValues[shortname]}
+									value={variableValues[info.name]}
 									info={info}
 									onCopied={onCopied}
 									doDelete={doDelete}
@@ -316,7 +313,6 @@ interface CustomVariableDragStatus {
 interface CustomVariableRowProps {
 	index: number
 	name: string
-	shortname: string
 	value: any
 	info: CustomVariableDefinitionExt
 	onCopied: () => void
@@ -332,7 +328,6 @@ interface CustomVariableRowProps {
 function CustomVariableRow({
 	index,
 	name,
-	shortname,
 	value,
 	info,
 	onCopied,
@@ -344,7 +339,7 @@ function CustomVariableRow({
 	isCollapsed,
 	setCollapsed,
 }: CustomVariableRowProps) {
-	const fullname = `internal:${shortname}`
+	const fullname = `custom:${name}`
 
 	const doCollapse = useCallback(() => setCollapsed(name, true), [setCollapsed, name])
 	const doExpand = useCallback(() => setCollapsed(name, false), [setCollapsed, name])
