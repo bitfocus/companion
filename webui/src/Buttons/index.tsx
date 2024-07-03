@@ -69,6 +69,9 @@ export const ButtonsPage = observer(function ButtonsPage({ hotPress }: ButtonsPa
 		(e: React.KeyboardEvent) => {
 			const isControlOrCommandCombo = (e.ctrlKey || e.metaKey) && !e.altKey
 
+			// e.target is the actual element where the event happened, e.currentTarget is the element where the event listener is attached
+			const targetElement = e.target as HTMLElement
+
 			if (isControlOrCommandCombo && e.key === '=') {
 				e.preventDefault()
 				gridZoomController.zoomIn(true)
@@ -78,7 +81,7 @@ export const ButtonsPage = observer(function ButtonsPage({ hotPress }: ButtonsPa
 			} else if (isControlOrCommandCombo && e.key === '0') {
 				e.preventDefault()
 				gridZoomController.zoomReset()
-			} else if (e.currentTarget.tagName !== 'INPUT' && e.currentTarget.tagName !== 'TEXTAREA') {
+			} else if (targetElement.tagName !== 'INPUT' && targetElement.tagName !== 'TEXTAREA') {
 				switch (e.key) {
 					case 'ArrowDown':
 						setSelectedButton((selectedButton) => {

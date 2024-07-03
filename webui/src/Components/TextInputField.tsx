@@ -359,7 +359,7 @@ const VariablesSelectContext = React.createContext({
 	blurClearValue: () => {},
 	title: undefined as string | undefined,
 	placeholder: undefined as string | undefined,
-	inputRef: { current: null } as React.MutableRefObject<HTMLInputElement | null>,
+	inputRef: { current: null } as React.MutableRefObject<HTMLInputElement | HTMLTextAreaElement | null>,
 })
 
 const CustomOption = React.memo((props: OptionProps<DropdownChoiceInt>) => {
@@ -459,7 +459,9 @@ const CustomValueContainerTextInput = React.memo((props: ValueContainerProps<Dro
 	return (
 		<SelectComponents.ValueContainer {...props} isDisabled>
 			<CFormInput
-				ref={context.inputRef}
+				ref={(elm) => {
+					context.inputRef.current = elm
+				}}
 				type="text"
 				style={context.extraStyle}
 				title={context.title}
@@ -487,8 +489,9 @@ const CustomValueContainerTextarea = React.memo((props: ValueContainerProps<Drop
 	return (
 		<SelectComponents.ValueContainer {...props} isDisabled>
 			<CFormTextarea
-				innerRef={context.inputRef}
-				type="text"
+				ref={(elm) => {
+					context.inputRef.current = elm
+				}}
 				style={context.extraStyle}
 				title={context.title}
 				value={context.value}
