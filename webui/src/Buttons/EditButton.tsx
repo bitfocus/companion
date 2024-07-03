@@ -497,10 +497,7 @@ function TabsSection({ style, controlId, location, steps, runtimeProps, rotaryAc
 			<div key="button">
 				<GenericConfirmModal ref={confirmRef} />
 
-				<br />
-
 				<div ref={setTabsRef} className={'row-heading'}>
-					{/* <CTabs activeTab={selectedStep} onActiveTabChange={clickSelectedStep}> */}
 					<CNav variant="tabs">
 						{keys.map((stepId, i) => (
 							<ActionSetTab
@@ -532,7 +529,6 @@ function TabsSection({ style, controlId, location, steps, runtimeProps, rotaryAc
 							</CNavItem>
 						)}
 					</CNav>
-					{/* </CTabs> */}
 				</div>
 
 				<div

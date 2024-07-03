@@ -43,6 +43,8 @@ export function RecorderSessionFinishModal({ doClose, sessionId }: RecorderSessi
 
 	const [modalRef, setModalRef] = useState<HTMLDivElement | null>(null)
 
+	const [activeTab, setActiveTab] = useState<'buttons' | 'triggers'>('buttons')
+
 	return (
 		<CModal ref={setModalRef} visible={true} onClose={doClose} size="lg" className="modal-full-height" scrollable>
 			<MenuPortalContext.Provider value={modalRef}>
@@ -54,21 +56,21 @@ export function RecorderSessionFinishModal({ doClose, sessionId }: RecorderSessi
 						{/* <CTabs activeTab="buttons"> */}
 						<CNav variant="tabs">
 							<CNavItem>
-								<CNavLink data-tab="buttons">
+								<CNavLink active={activeTab === 'buttons'} onClick={() => setActiveTab('buttons')}>
 									<FontAwesomeIcon icon={faCalendarAlt} /> Buttons
 								</CNavLink>
 							</CNavItem>
 							<CNavItem>
-								<CNavLink data-tab="triggers">
+								<CNavLink active={activeTab === 'triggers'} onClick={() => setActiveTab('triggers')}>
 									<FontAwesomeIcon icon={faClock} /> Triggers
 								</CNavLink>
 							</CNavItem>
 						</CNav>
 						<CTabContent className="default-scroll">
-							<CTabPane data-tab="buttons" className="action-recorder-finish-button-grid">
+							<CTabPane className="action-recorder-finish-button-grid" visible={activeTab === 'buttons'}>
 								<ButtonPicker selectButton={doSave} />
 							</CTabPane>
-							<CTabPane data-tab="triggers">
+							<CTabPane visible={activeTab === 'triggers'}>
 								<CRow>
 									<CCol sm={12}>
 										<TriggerPicker selectControl={doSave} />

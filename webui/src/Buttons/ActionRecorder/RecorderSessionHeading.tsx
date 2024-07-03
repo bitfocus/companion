@@ -109,24 +109,26 @@ export function RecorderSessionHeading({ confirmRef, sessionId, sessionInfo, doF
 						<div>
 							<CFormLabel>Recording</CFormLabel>
 							<p>
-								<CFormSwitch color="success" size="lg" checked={!!sessionInfo.isRunning} onChange={changeRecording} />
+								<CFormSwitch color="success" size="xl" checked={!!sessionInfo.isRunning} onChange={changeRecording} />
 							</p>
 						</div>
 					</div>
 				</CRow>
 
 				<CRow form className="flex-form-row" style={{ clear: 'both' }}>
-					<CButtonGroup className={'margin-bottom'}>
-						<CButton onClick={doClearActions} color="danger" disabled={!sessionInfo.actions?.length}>
-							Clear Actions
-						</CButton>
-						<CButton onClick={doAbort} color="danger">
-							Discard
-						</CButton>
-						<CButton onClick={doFinish2} color="danger" disabled={!sessionInfo.actions?.length}>
-							Finish
-						</CButton>
-					</CButtonGroup>
+					<div>
+						<CButtonGroup className={'margin-bottom'}>
+							<CButton onClick={doClearActions} color="danger" disabled={!sessionInfo.actions?.length}>
+								Clear Actions
+							</CButton>
+							<CButton onClick={doAbort} color="danger">
+								Discard
+							</CButton>
+							<CButton onClick={doFinish2} color="danger" disabled={!sessionInfo.actions?.length}>
+								Finish
+							</CButton>
+						</CButtonGroup>
+					</div>
 				</CRow>
 			</CForm>
 		</>
