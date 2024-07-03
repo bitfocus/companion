@@ -53,7 +53,6 @@ export function RecorderSessionFinishModal({ doClose, sessionId }: RecorderSessi
 						<h5>Select destination</h5>
 					</CModalHeader>
 					<CModalBody>
-						{/* <CTabs activeTab="buttons"> */}
 						<CNav variant="tabs">
 							<CNavItem>
 								<CNavLink active={activeTab === 'buttons'} onClick={() => setActiveTab('buttons')}>
@@ -78,7 +77,6 @@ export function RecorderSessionFinishModal({ doClose, sessionId }: RecorderSessi
 								</CRow>
 							</CTabPane>
 						</CTabContent>
-						{/* </CTabs> */}
 					</CModalBody>
 					<CModalFooter>
 						<CButton color="secondary" onClick={doClose}>

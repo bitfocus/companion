@@ -113,7 +113,6 @@ export const Triggers = observer(function Triggers() {
 
 			<CCol xs={12} xl={6} className="secondary-panel">
 				<div className="secondary-panel-inner">
-					{/* <CTabs activeTab={activeTab} onActiveTabChange={doChangeTab}> */}
 					<CNav variant="tabs" role="tablist">
 						{!editItemId && (
 							<CNavItem>
@@ -144,7 +143,6 @@ export const Triggers = observer(function Triggers() {
 							</MyErrorBoundary>
 						</CTabPane>
 					</CTabContent>
-					{/* </CTabs> */}
 				</div>
 			</CCol>
 		</CRow>

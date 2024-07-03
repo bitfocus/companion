@@ -83,7 +83,7 @@ export function ImportTriggersTab({ snapshot, instanceRemap, setInstanceRemap }:
 				<tbody>
 					{Object.entries(snapshot.triggers || {}).map(([id, info]) => (
 						<tr key={id}>
-							<td>
+							<td className="compact">
 								<div className="form-check form-check-inline mr-1">
 									<CFormCheck data-id={id} checked={selectedTriggers.includes(id)} onChange={toggleTrigger} />
 								</div>

@@ -19,6 +19,12 @@ h4 {
 	}
 }
 
+.alert {
+	&.margin-top {
+		margin-top: 1rem;
+	}
+}
+
 .right {
 	float: right;
 }
