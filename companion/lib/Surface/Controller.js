@@ -1267,6 +1267,18 @@ class SurfaceController extends CoreBase {
 		}
 	}
 
+	/**
+	 * Get the groupId for a surfaceId (or groupId)
+	 * @param {string} surfaceOrGroupId
+	 * @param {boolean=} looseIdMatching
+	 * @returns {string | undefined}
+	 */
+	getGroupIdFromDeviceId(surfaceOrGroupId, looseIdMatching) {
+		const surfaceGroup = this.#getGroupForId(surfaceOrGroupId, looseIdMatching)
+
+		return surfaceGroup?.groupId
+	}
+
 	#resetAllDevices() {
 		// Destroy any groups and detach their contents
 		for (const surfaceGroup of this.#surfaceGroups.values()) {
