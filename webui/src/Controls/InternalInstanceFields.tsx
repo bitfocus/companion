@@ -9,7 +9,7 @@ import { observer } from 'mobx-react-lite'
 import { CFormLabel } from '@coreui/react'
 
 export function InternalInstanceField(
-	label: string | React.ReactNode,
+	label: React.ReactNode,
 	option: InternalInputField,
 	isOnControl: boolean,
 	readonly: boolean,
@@ -141,7 +141,7 @@ interface InternalPageDropdownProps {
 	disabled: boolean
 }
 
-const InternalPageDropdown = observer(function InternalPageDropdown({
+export const InternalPageDropdown = observer(function InternalPageDropdown({
 	label,
 	isOnControl,
 	includeStartup,
@@ -388,7 +388,7 @@ const InternalTriggerDropdown = observer(function InternalTriggerDropdown({
 })
 
 interface InternalTimePickerProps {
-	label: string | React.ReactNode
+	label: React.ReactNode
 	value: any
 	setValue: (value: any) => void
 	disabled: boolean

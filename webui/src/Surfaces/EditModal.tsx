@@ -1,4 +1,4 @@
-import React, { useCallback, useContext, useEffect, useImperativeHandle, useState } from 'react'
+import React, { useCallback, useContext, useEffect, useImperativeHandle, useRef, useState } from 'react'
 import {
 	CButton,
 	CForm,
@@ -17,21 +17,11 @@ import { LoadingRetryOrError, socketEmitPromise, PreventDefaultHandler, useCompu
 import { nanoid } from 'nanoid'
 import { faQuestionCircle } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { InternalInstanceField } from '../Controls/InternalInstanceFields.js'
+import { InternalPageDropdown } from '../Controls/InternalInstanceFields.js'
 import { MenuPortalContext } from '../Components/DropdownInputField.js'
 import { ClientDevicesListItem, SurfaceGroupConfig, SurfacePanelConfig } from '@companion-app/shared/Model/Surfaces.js'
-import { InternalInputField } from '@companion-app/shared/Model/Options.js'
 import { RootAppStoreContext } from '../Stores/RootAppStore.js'
 import { observer } from 'mobx-react-lite'
-
-const PAGE_FIELD_SPEC: InternalInputField = {
-	id: '',
-	type: 'internal:page',
-	label: '',
-	includeStartup: false,
-	includeDirection: false,
-	default: 0,
-}
 
 export interface SurfaceEditModalRef {
 	show(surfaceId: string | null, groupId: string | null): void
@@ -43,6 +33,7 @@ interface SurfaceEditModalProps {
 export const SurfaceEditModal = observer<SurfaceEditModalProps, SurfaceEditModalRef>(
 	function SurfaceEditModal(_props, ref) {
 		const { surfaces, socket } = useContext(RootAppStoreContext)
+		const clearTimeoutRef = useRef<NodeJS.Timeout>()
 
 		const [rawGroupId, setGroupId] = useState<string | null>(null)
 		const [surfaceId, setSurfaceId] = useState<string | null>(null)
@@ -85,7 +76,9 @@ export const SurfaceEditModal = observer<SurfaceEditModalProps, SurfaceEditModal
 			setShow(false)
 
 			// Delay clearing the data so the modal can animate out
-			setTimeout(() => {
+			if (clearTimeoutRef.current) clearTimeout(clearTimeoutRef.current)
+			clearTimeoutRef.current = setTimeout(() => {
+				console.log('clear me')
 				setSurfaceId(null)
 				setSurfaceConfig(null)
 				setConfigLoadError(null)
@@ -125,6 +118,9 @@ export const SurfaceEditModal = observer<SurfaceEditModalProps, SurfaceEditModal
 			ref,
 			() => ({
 				show(surfaceId, groupId) {
+					console.log('show', clearTimeoutRef.current)
+					if (clearTimeoutRef.current) clearTimeout(clearTimeoutRef.current)
+
 					setSurfaceId(surfaceId)
 					setGroupId(groupId)
 					setShow(true)
@@ -226,7 +222,7 @@ export const SurfaceEditModal = observer<SurfaceEditModalProps, SurfaceEditModal
 		const [modalRef, setModalRef] = useState<HTMLElement | null>(null)
 
 		return (
-			<CModal ref={setModalRef} visible={show} onClose={doClose}>
+			<CModal ref={setModalRef} visible={show} onClose={doClose} size="lg">
 				<MenuPortalContext.Provider value={modalRef}>
 					<CModalHeader closeButton>
 						<h5>Settings for {surfaceInfo?.displayName ?? surfaceInfo?.type ?? groupInfo?.displayName}</h5>
@@ -240,39 +236,42 @@ export const SurfaceEditModal = observer<SurfaceEditModalProps, SurfaceEditModal
 
 						<CForm className="row g-3" onSubmit={PreventDefaultHandler}>
 							{surfaceInfo && (
-								<CCol xs={12}>
-									<CFormSelect
-										label={
-											<>
-												Surface Group&nbsp;
-												<FontAwesomeIcon
-													icon={faQuestionCircle}
-													title="When in a group, surfaces will follow the page number of that group"
-												/>
-											</>
-										}
-										value={surfaceInfo.groupId || 'null'}
-										onChange={(e) => setSurfaceGroupId(e.currentTarget.value)}
-									>
-										<option value="null">Standalone (Default)</option>
+								<>
+									<CFormLabel htmlFor="colFormGroupId" className="col-sm-4 col-form-label col-form-label-sm">
+										Surface Group&nbsp;
+										<FontAwesomeIcon
+											icon={faQuestionCircle}
+											title="When in a group, surfaces will follow the page number of that group"
+										/>
+									</CFormLabel>
+									<CCol sm={8}>
+										<CFormSelect
+											name="colFormGroupId"
+											value={surfaceInfo.groupId || 'null'}
+											onChange={(e) => setSurfaceGroupId(e.currentTarget.value)}
+										>
+											<option value="null">Standalone (Default)</option>
 
-										{Array.from(surfaces.store.values())
-											.filter((group): group is ClientDevicesListItem => !!group && !group.isAutoGroup)
-											.map((group) => (
-												<option key={group.id} value={group.id}>
-													{group.displayName}
-												</option>
-											))}
-									</CFormSelect>
-								</CCol>
+											{Array.from(surfaces.store.values())
+												.filter((group): group is ClientDevicesListItem => !!group && !group.isAutoGroup)
+												.map((group) => (
+													<option key={group.id} value={group.id}>
+														{group.displayName}
+													</option>
+												))}
+										</CFormSelect>
+									</CCol>
+								</>
 							)}
 
 							{groupConfig && (
 								<>
-									<CCol xs={12}>
-										<CFormLabel>Use Last Page At Startup</CFormLabel>
-										<br />
+									<CFormLabel htmlFor="colFormUseLastPage" className="col-sm-4 col-form-label col-form-label-sm">
+										Use Last Page At Startup
+									</CFormLabel>
+									<CCol sm={8}>
 										<CFormSwitch
+											name="colFormUseLastPage"
 											className="mx-2"
 											size="xl"
 											checked={!!groupConfig.use_last_page}
@@ -280,26 +279,34 @@ export const SurfaceEditModal = observer<SurfaceEditModalProps, SurfaceEditModal
 										/>
 									</CCol>
 
-									<CCol xs={12}>
-										{InternalInstanceField(
-											'Startup Page',
-											PAGE_FIELD_SPEC,
-											false,
-											!!groupConfig.use_last_page,
-											groupConfig.startup_page,
-											(val) => setGroupConfigValue('startup_page', val)
-										)}
+									<CFormLabel htmlFor="colFormStartupPage" className="col-sm-4 col-form-label col-form-label-sm">
+										Startup Page
+									</CFormLabel>
+									<CCol sm={8}>
+										<InternalPageDropdown
+											label={null}
+											disabled={!!groupConfig.use_last_page}
+											isOnControl={false}
+											includeDirection={false}
+											includeStartup={false}
+											value={groupConfig.startup_page}
+											setValue={(val) => setGroupConfigValue('startup_page', val)}
+										/>
 									</CCol>
 
-									<CCol xs={12}>
-										{InternalInstanceField(
-											'Current Page',
-											PAGE_FIELD_SPEC,
-											false,
-											false,
-											groupConfig.last_page,
-											(val) => setGroupConfigValue('last_page', val)
-										)}
+									<CFormLabel htmlFor="colFormCurrentPage" className="col-sm-4 col-form-label col-form-label-sm">
+										Current Page
+									</CFormLabel>
+									<CCol sm={8}>
+										<InternalPageDropdown
+											label={null}
+											disabled={false}
+											isOnControl={false}
+											includeDirection={false}
+											includeStartup={false}
+											value={groupConfig.last_page}
+											setValue={(val) => setGroupConfigValue('last_page', val)}
+										/>
 									</CCol>
 								</>
 							)}
@@ -308,9 +315,12 @@ export const SurfaceEditModal = observer<SurfaceEditModalProps, SurfaceEditModal
 								<>
 									{surfaceInfo.configFields?.includes('emulator_size') && (
 										<>
-											<CCol xs={12}>
+											<CFormLabel htmlFor="colFormEmulatorRows" className="col-sm-4 col-form-label col-form-label-sm">
+												Row count
+											</CFormLabel>
+											<CCol sm={8}>
 												<CFormInput
-													label="Row count"
+													name="colFormEmulatorRows"
 													type="number"
 													min={1}
 													step={1}
@@ -318,9 +328,13 @@ export const SurfaceEditModal = observer<SurfaceEditModalProps, SurfaceEditModal
 													onChange={(e) => setSurfaceConfigValue('emulator_rows', parseInt(e.currentTarget.value))}
 												/>
 											</CCol>
-											<CCol xs={12}>
+
+											<CFormLabel htmlFor="colFormEmulatorCols" className="col-sm-4 col-form-label col-form-label-sm">
+												Column count
+											</CFormLabel>
+											<CCol sm={8}>
 												<CFormInput
-													label="Column count"
+													name="colFormEmulatorCols"
 													type="number"
 													min={1}
 													step={1}
@@ -333,18 +347,28 @@ export const SurfaceEditModal = observer<SurfaceEditModalProps, SurfaceEditModal
 
 									{!surfaceInfo.configFields?.includes('no_offset') && (
 										<>
-											<CCol xs={12}>
+											<CFormLabel
+												htmlFor="colFormHorizontalOffset"
+												className="col-sm-4 col-form-label col-form-label-sm"
+											>
+												Horizontal Offset in grid
+											</CFormLabel>
+											<CCol sm={8}>
 												<CFormInput
-													label="Horizontal Offset in grid"
+													name="colFormHorizontalOffset"
 													type="number"
 													step={1}
 													value={surfaceConfig.xOffset}
 													onChange={(e) => setSurfaceConfigValue('xOffset', parseInt(e.currentTarget.value))}
 												/>
 											</CCol>
-											<CCol xs={12}>
+
+											<CFormLabel htmlFor="colFormVerticalOffset" className="col-sm-4 col-form-label col-form-label-sm">
+												Vertical Offset in grid
+											</CFormLabel>
+											<CCol sm={8}>
 												<CFormInput
-													label="Vertical Offset in grid"
+													name="colFormVerticalOffset"
 													type="number"
 													step={1}
 													value={surfaceConfig.yOffset}
@@ -355,101 +379,153 @@ export const SurfaceEditModal = observer<SurfaceEditModalProps, SurfaceEditModal
 									)}
 
 									{surfaceInfo.configFields?.includes('brightness') && (
-										<CCol xs={12}>
-											<CFormRange
-												label="Brightness"
-												min={0}
-												max={100}
-												step={1}
-												value={surfaceConfig.brightness}
-												onChange={(e) => setSurfaceConfigValue('brightness', parseInt(e.currentTarget.value))}
-											/>
-										</CCol>
+										<>
+											<CFormLabel htmlFor="colFormBrightness" className="col-sm-4 col-form-label col-form-label-sm">
+												Brightness
+											</CFormLabel>
+											<CCol sm={8}>
+												<CFormRange
+													name="colFormBrightness"
+													min={0}
+													max={100}
+													step={1}
+													value={surfaceConfig.brightness}
+													onChange={(e) => setSurfaceConfigValue('brightness', parseInt(e.currentTarget.value))}
+												/>
+											</CCol>
+										</>
 									)}
 									{surfaceInfo.configFields?.includes('illuminate_pressed') && (
-										<CCol xs={12}>
-											<CFormLabel>Illuminate pressed buttons</CFormLabel>
-											<br />
-											<CFormSwitch
-												className="mx-2"
-												size="xl"
-												checked={!!surfaceConfig.illuminate_pressed}
-												onChange={(e) => setSurfaceConfigValue('illuminate_pressed', !!e.currentTarget.checked)}
-											/>
-										</CCol>
+										<>
+											<CFormLabel
+												htmlFor="colFormIlluminatePressed"
+												className="col-sm-4 col-form-label col-form-label-sm"
+											>
+												Illuminate pressed buttons
+											</CFormLabel>
+											<CCol sm={8}>
+												<CFormSwitch
+													name="colFormIlluminatePressed"
+													className="mx-2"
+													size="xl"
+													checked={!!surfaceConfig.illuminate_pressed}
+													onChange={(e) => setSurfaceConfigValue('illuminate_pressed', !!e.currentTarget.checked)}
+												/>
+											</CCol>
+										</>
 									)}
 
 									{!surfaceInfo.configFields?.includes('no_rotation') && (
-										<CCol xs={12}>
-											<CFormSelect
-												label="Button rotation"
-												value={surfaceConfig.rotation}
-												onChange={(e) => {
-													const valueNumber = parseInt(e.currentTarget.value)
-													setSurfaceConfigValue('rotation', isNaN(valueNumber) ? e.currentTarget.value : valueNumber)
-												}}
-											>
-												<option value="0">Normal</option>
-												<option value="surface-90">90 CCW</option>
-												<option value="surface90">90 CW</option>
-												<option value="surface180">180</option>
+										<>
+											<CFormLabel htmlFor="colFormRotationMode" className="col-sm-4 col-form-label col-form-label-sm">
+												Button rotation
+											</CFormLabel>
+											<CCol sm={8}>
+												<CFormSelect
+													name="colFormRotationMode"
+													value={surfaceConfig.rotation}
+													onChange={(e) => {
+														const valueNumber = parseInt(e.currentTarget.value)
+														setSurfaceConfigValue('rotation', isNaN(valueNumber) ? e.currentTarget.value : valueNumber)
+													}}
+												>
+													<option value="0">Normal</option>
+													<option value="surface-90">90 CCW</option>
+													<option value="surface90">90 CW</option>
+													<option value="surface180">180</option>
 
-												{surfaceInfo.configFields?.includes('legacy_rotation') && (
-													<>
-														<option value="-90">90 CCW (Legacy)</option>
-														<option value="90">90 CW (Legacy)</option>
-														<option value="180">180 (Legacy)</option>
-													</>
-												)}
-											</CFormSelect>
-										</CCol>
+													{surfaceInfo.configFields?.includes('legacy_rotation') && (
+														<>
+															<option value="-90">90 CCW (Legacy)</option>
+															<option value="90">90 CW (Legacy)</option>
+															<option value="180">180 (Legacy)</option>
+														</>
+													)}
+												</CFormSelect>
+											</CCol>
+										</>
 									)}
 									{surfaceInfo.configFields?.includes('emulator_control_enable') && (
-										<CCol xs={12}>
-											<CFormLabel>Enable support for Logitech R400/Mastercue/DSan</CFormLabel>
-											<br />
-											<CFormSwitch
-												className="mx-2"
-												size="xl"
-												checked={!!surfaceConfig.emulator_control_enable}
-												onChange={(e) => setSurfaceConfigValue('emulator_control_enable', !!e.currentTarget.checked)}
-											/>
-										</CCol>
+										<>
+											<CFormLabel
+												htmlFor="colFormEmulatorHotkeys"
+												className="col-sm-4 col-form-label col-form-label-sm"
+											>
+												Enable support for Logitech R400/Mastercue/DSan
+											</CFormLabel>
+											<CCol sm={8}>
+												<CFormSwitch
+													name="colFormEmulatorHotkeys"
+													className="mx-2"
+													size="xl"
+													checked={!!surfaceConfig.emulator_control_enable}
+													onChange={(e) => setSurfaceConfigValue('emulator_control_enable', !!e.currentTarget.checked)}
+												/>
+											</CCol>
+										</>
 									)}
 									{surfaceInfo.configFields?.includes('emulator_prompt_fullscreen') && (
-										<CCol xs={12}>
-											<CFormLabel>Prompt to enter fullscreem</CFormLabel>
-											<br />
-											<CFormSwitch
-												className="mx-2"
-												size="xl"
-												checked={!!surfaceConfig.emulator_prompt_fullscreen}
-												onChange={(e) => setSurfaceConfigValue('emulator_prompt_fullscreen', !!e.currentTarget.checked)}
-											/>
-										</CCol>
+										<>
+											<CFormLabel
+												htmlFor="colFormPromptFullscreen"
+												className="col-sm-4 col-form-label col-form-label-sm"
+											>
+												Prompt to enter fullscreem
+											</CFormLabel>
+											<CCol sm={8}>
+												<CFormSwitch
+													name="colFormPromptFullscreen"
+													className="mx-2"
+													size="xl"
+													checked={!!surfaceConfig.emulator_prompt_fullscreen}
+													onChange={(e) =>
+														setSurfaceConfigValue('emulator_prompt_fullscreen', !!e.currentTarget.checked)
+													}
+												/>
+											</CCol>
+										</>
 									)}
 									{surfaceInfo.configFields?.includes('videohub_page_count') && (
-										<CFormInput
-											label="Page Count"
-											type="range"
-											min={0}
-											max={8}
-											step={2}
-											value={surfaceConfig.videohub_page_count}
-											onChange={(e) => setSurfaceConfigValue('videohub_page_count', parseInt(e.currentTarget.value))}
-										/>
+										<>
+											<CFormLabel
+												htmlFor="colFormVideohubPageCount"
+												className="col-sm-4 col-form-label col-form-label-sm"
+											>
+												Page Count
+											</CFormLabel>
+											<CCol sm={8}>
+												<CFormInput
+													name="colFormVideohubPageCount"
+													type="range"
+													min={0}
+													max={8}
+													step={2}
+													value={surfaceConfig.videohub_page_count}
+													onChange={(e) =>
+														setSurfaceConfigValue('videohub_page_count', parseInt(e.currentTarget.value))
+													}
+												/>
+											</CCol>
+										</>
 									)}
 									{!surfaceInfo.configFields?.includes('no_lock') && (
-										<CCol xs={12}>
-											<CFormLabel>Never Pin code lock</CFormLabel>
-											<br />
-											<CFormSwitch
-												className="mx-2"
-												size="xl"
-												checked={!!surfaceConfig.never_lock}
-												onChange={(e) => setSurfaceConfigValue('never_lock', !!e.currentTarget.checked)}
-											/>
-										</CCol>
+										<>
+											<CFormLabel
+												htmlFor="colFormNeverPinCodeLock"
+												className="col-sm-4 col-form-label col-form-label-sm"
+											>
+												Never Pin code lock
+											</CFormLabel>
+											<CCol sm={8}>
+												<CFormSwitch
+													name="colFormNeverPinCodeLock"
+													className="mx-2"
+													size="xl"
+													checked={!!surfaceConfig.never_lock}
+													onChange={(e) => setSurfaceConfigValue('never_lock', !!e.currentTarget.checked)}
+												/>
+											</CCol>
+										</>
 									)}
 								</>
 							)}

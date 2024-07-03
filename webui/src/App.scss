@@ -91,5 +91,9 @@
 }
 
 .install-name {
-	color: white;
+	padding: 0 var(--cui-header-nav-link-padding-x);
+	color: var(--cui-header-color);
+
+	align-content: center;
+	font-size: 1.25em;
 }
