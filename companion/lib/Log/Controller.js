@@ -9,7 +9,6 @@ import Transport from 'winston-transport'
 import supportsColor from 'supports-color'
 import consoleColors from './Colors.js'
 import { init, addBreadcrumb, getCurrentScope, rewriteFramesIntegration } from '@sentry/node'
-import '@sentry/tracing'
 import debounceFn from 'debounce-fn'
 
 const SentrySeverity = {
