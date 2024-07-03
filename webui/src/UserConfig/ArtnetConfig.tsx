@@ -38,57 +38,57 @@ export const ArtnetConfig = observer(function ArtnetConfig({ config, setValue, r
 			</tr>
 
 			{config.artnet_enabled && (
-				<tr>
-					<td>Artnet Universe (first is 0)</td>
-					<td>
-						<CFormInput
-							type="number"
-							value={config.artnet_universe}
-							min={0}
-							max={20055}
-							onChange={(e) => {
-								let value = Math.floor(Number(e.currentTarget.value))
-								if (isNaN(value)) return
+				<>
+					<tr>
+						<td>Artnet Universe (first is 0)</td>
+						<td>
+							<CFormInput
+								type="number"
+								value={config.artnet_universe}
+								min={0}
+								max={20055}
+								onChange={(e) => {
+									let value = Math.floor(Number(e.currentTarget.value))
+									if (isNaN(value)) return
 
-								value = Math.min(value, 255)
-								value = Math.max(value, 0)
-								setValue('artnet_universe', value)
-							}}
-						/>
-					</td>
-					<td>
-						<CButton onClick={() => resetValue('artnet_universe')} title="Reset to default">
-							<FontAwesomeIcon icon={faUndo} />
-						</CButton>
-					</td>
-				</tr>
-			)}
+									value = Math.min(value, 255)
+									value = Math.max(value, 0)
+									setValue('artnet_universe', value)
+								}}
+							/>
+						</td>
+						<td>
+							<CButton onClick={() => resetValue('artnet_universe')} title="Reset to default">
+								<FontAwesomeIcon icon={faUndo} />
+							</CButton>
+						</td>
+					</tr>
 
-			{config.artnet_enabled && (
-				<tr>
-					<td>Artnet Channel</td>
-					<td>
-						<CFormInput
-							type="number"
-							value={config.artnet_channel}
-							min={1}
-							max={509}
-							onChange={(e) => {
-								let value = Math.floor(Number(e.currentTarget.value))
-								if (isNaN(value)) return
+					<tr>
+						<td>Artnet Channel</td>
+						<td>
+							<CFormInput
+								type="number"
+								value={config.artnet_channel}
+								min={1}
+								max={509}
+								onChange={(e) => {
+									let value = Math.floor(Number(e.currentTarget.value))
+									if (isNaN(value)) return
 
-								value = Math.min(value, 509)
-								value = Math.max(value, 1)
-								setValue('artnet_channel', value)
-							}}
-						/>
-					</td>
-					<td>
-						<CButton onClick={() => resetValue('artnet_channel')} title="Reset to default">
-							<FontAwesomeIcon icon={faUndo} />
-						</CButton>
-					</td>
-				</tr>
+									value = Math.min(value, 509)
+									value = Math.max(value, 1)
+									setValue('artnet_channel', value)
+								}}
+							/>
+						</td>
+						<td>
+							<CButton onClick={() => resetValue('artnet_channel')} title="Reset to default">
+								<FontAwesomeIcon icon={faUndo} />
+							</CButton>
+						</td>
+					</tr>
+				</>
 			)}
 		</>
 	)

@@ -36,53 +36,56 @@ export const TcpConfig = observer(function TcpConfig({ config, setValue, resetVa
 					</CButton>
 				</td>
 			</tr>
-			<tr>
-				<td>
-					Deprecated TCP API
-					<br />
-					<em>(This portion of the API will be removed in a future release)</em>
-				</td>
-				<td>
-					<CFormSwitch
-						className="float-right"
-						color="success"
-						checked={config.tcp_legacy_api_enabled}
-						size="xl"
-						onChange={(e) => setValue('tcp_legacy_api_enabled', e.currentTarget.checked)}
-					/>
-				</td>
-				<td>
-					<CButton onClick={() => resetValue('tcp_legacy_api_enabled')} title="Reset to default">
-						<FontAwesomeIcon icon={faUndo} />
-					</CButton>
-				</td>
-			</tr>
-			{(config.tcp_enabled || config.tcp_legacy_api_enabled) && (
-				<tr>
-					<td>TCP Listen Port</td>
-					<td>
-						<CFormInput
-							type="number"
-							value={config.tcp_listen_port}
-							min={1024}
-							max={65535}
-							step={1}
-							onChange={(e) => {
-								let value = Math.floor(Number(e.currentTarget.value))
-								if (isNaN(value)) return
 
-								value = Math.min(value, 65535)
-								value = Math.max(value, 1024)
-								setValue('tcp_listen_port', value)
-							}}
-						/>
-					</td>
-					<td>
-						<CButton onClick={() => resetValue('tcp_listen_port')} title="Reset to default">
-							<FontAwesomeIcon icon={faUndo} />
-						</CButton>
-					</td>
-				</tr>
+			{config.tcp_enabled && (
+				<>
+					<tr>
+						<td>TCP Listen Port</td>
+						<td>
+							<CFormInput
+								type="number"
+								value={config.tcp_listen_port}
+								min={1024}
+								max={65535}
+								step={1}
+								onChange={(e) => {
+									let value = Math.floor(Number(e.currentTarget.value))
+									if (isNaN(value)) return
+
+									value = Math.min(value, 65535)
+									value = Math.max(value, 1024)
+									setValue('tcp_listen_port', value)
+								}}
+							/>
+						</td>
+						<td>
+							<CButton onClick={() => resetValue('tcp_listen_port')} title="Reset to default">
+								<FontAwesomeIcon icon={faUndo} />
+							</CButton>
+						</td>
+					</tr>
+					<tr>
+						<td>
+							Deprecated TCP API
+							<br />
+							<em>(This portion of the API will be removed in a future release)</em>
+						</td>
+						<td>
+							<CFormSwitch
+								className="float-right"
+								color="success"
+								checked={config.tcp_legacy_api_enabled}
+								size="xl"
+								onChange={(e) => setValue('tcp_legacy_api_enabled', e.currentTarget.checked)}
+							/>
+						</td>
+						<td>
+							<CButton onClick={() => resetValue('tcp_legacy_api_enabled')} title="Reset to default">
+								<FontAwesomeIcon icon={faUndo} />
+							</CButton>
+						</td>
+					</tr>
+				</>
 			)}
 		</>
 	)
