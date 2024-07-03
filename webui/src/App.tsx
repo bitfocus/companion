@@ -37,7 +37,7 @@ import { Triggers } from './Triggers/index.js'
 import { ConnectionsPage } from './Connections/index.js'
 import { ButtonsPage } from './Buttons/index.js'
 import { ContextData } from './ContextData.js'
-import { CloudPage } from './CloudPage.js'
+import { CloudPage } from './Cloud/index.js'
 import { WizardModal, WIZARD_CURRENT_VERSION, WizardModalRef } from './Wizard/index.js'
 import { NavLink, Navigate, useLocation } from 'react-router-dom'
 import { useIdleTimer } from 'react-idle-timer'
@@ -476,7 +476,7 @@ const AppContent = observer(function AppContent({ buttonGridHotPress }: AppConte
 				</CNavItem>
 				{showCloudTab && (
 					<CNavItem>
-						<CNavLink to="/cloud">
+						<CNavLink to="/cloud" as={NavLink}>
 							<FontAwesomeIcon icon={faCloud} /> Cloud
 						</CNavLink>
 					</CNavItem>

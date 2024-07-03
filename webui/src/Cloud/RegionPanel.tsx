@@ -1,96 +1,76 @@
-import React, { Component } from 'react'
+import React, { useCallback, useContext, useEffect, useState } from 'react'
 import { CAlert, CFormSwitch, CListGroupItem } from '@coreui/react'
-import type { CompanionSocketType } from '../util.js'
+import { SocketContext, type CompanionSocketType } from '../util.js'
 import { CloudRegionState } from '@companion-app/shared/Model/Cloud.js'
-
-// The cloud part is written in old fashioned Class-components
-// because even if the hipsters say it's slow and retarted, i think it's prettier.
-
-const onlineServerStyle: React.CSSProperties = { color: 'green' }
+import classNames from 'classnames'
 
 interface CloudRegionPanelProps {
-	socket: CompanionSocketType
-	id: string
-	disabled: boolean
+	regionId: string
+	hideDisabled: boolean
 }
 
-export class CloudRegionPanel extends Component<CloudRegionPanelProps, CloudRegionState> {
-	constructor(props: CloudRegionPanelProps) {
-		super(props)
+export function CloudRegionPanel({ regionId, hideDisabled }: CloudRegionPanelProps) {
+	const socket = useContext(SocketContext)
 
-		this.state = {
-			connected: false,
-			enabled: false,
-			error: null,
-			name: '',
-			pingResults: -1,
-		}
+	const cloudSetStateEnabled = useCallback(
+		(e: React.ChangeEvent<HTMLInputElement>) => {
+			const enabled = !!e.currentTarget.checked
+			if (!hideDisabled) {
+				socket.emit('cloud_region_state_set', regionId, { enabled })
 
-		this.cloudStateDidUpdate = this.cloudStateDidUpdate.bind(this)
-		this.cloudSetState = this.cloudSetState.bind(this)
-	}
+				// 	// Reset the error message if the user changes the enabled state
+				// 	if (newState.enabled !== undefined) {
+				// 		this.setState({ error: null })
+				// 	}
+			}
+		},
+		[socket, regionId, hideDisabled]
+	)
 
-	componentDidMount() {
-		this.props.socket.on('cloud_region_state', this.cloudStateDidUpdate)
-		this.props.socket.emit('cloud_region_state_get', this.props.id)
-		console.log(`Mounted CLOUD REGION ${this.props.id}`)
-	}
+	const regionState = useRegionState(socket, regionId)
+	if (!regionState || (hideDisabled && !regionState.enabled)) return null
 
-	componentWillUnmount() {
-		console.log(`Unmounted CLOUD REGION ${this.props.id}`)
-		this.props.socket.off('cloud_region_state', this.cloudStateDidUpdate)
-	}
+	return (
+		<CListGroupItem className="cloud-region-item">
+			<p
+				className={classNames('cloud-region-text', {
+					online: regionState.connected,
+				})}
+			>
+				<CFormSwitch
+					color={regionState.connected ? 'success' : 'danger'}
+					checked={!!regionState.enabled}
+					onChange={cloudSetStateEnabled}
+					disabled={hideDisabled}
+					width={100}
+				/>{' '}
+				{regionState.name} {regionState.pingResults > -1 ? `(${regionState.pingResults}ms)` : ''}
+			</p>
 
-	private cloudStateDidUpdate(id: string, newState: CloudRegionState) {
-		if (id === this.props.id) {
-			this.setState({ ...newState })
-		}
-	}
+			{regionState.enabled && regionState.error && <CAlert color="danger">{regionState.error}</CAlert>}
+		</CListGroupItem>
+	)
+}
 
-	private cloudSetState(newState: Partial<CloudRegionState>) {
-		if (!this.props.disabled) {
-			this.props.socket.emit('cloud_region_state_set', this.props.id, newState)
-			// Reset the error message if the user changes the enabled state
-			if (newState.enabled !== undefined) {
-				this.setState({ error: null })
+function useRegionState(socket: CompanionSocketType, regionId: string) {
+	const [regionState, setRegionState] = useState<CloudRegionState>()
+
+	useEffect(() => {
+		const cloudStateDidUpdate = (updateRegionId: string, newState: CloudRegionState) => {
+			if (regionId === updateRegionId) {
+				setRegionState(newState)
 			}
 		}
-	}
 
-	render() {
-		const styleText: React.CSSProperties = {
-			marginLeft: 6,
-			marginTop: -10,
-			display: 'inline-block',
-			height: 20,
-			paddingTop: 19,
+		console.log(`Mounted CLOUD REGION ${regionId}`)
+		socket.on('cloud_region_state', cloudStateDidUpdate)
+		socket.emit('cloud_region_state_get', regionId)
+
+		return () => {
+			console.log(`Unmounted CLOUD REGION ${regionId}`)
+			socket.off('cloud_region_state', cloudStateDidUpdate)
 		}
+	}, [socket, regionId])
 
-		return !this.props.disabled || this.state.enabled ? (
-			<CListGroupItem>
-				<span style={{ display: 'inline-block', paddingTop: 5, float: 'left' }}>
-					<CFormSwitch
-						color={this.state.connected ? 'success' : 'danger'}
-						checked={!!this.state.enabled}
-						onChange={(e) => this.cloudSetState({ enabled: e.currentTarget.checked })}
-						disabled={this.props.disabled}
-						width={100}
-					/>{' '}
-				</span>
-				<span
-					style={{
-						...styleText,
-						...(this.state.connected ? onlineServerStyle : this.props.disabled ? { opacity: 0.5 } : {}),
-					}}
-				>
-					{this.state.name} {this.state.pingResults > -1 ? `(${this.state.pingResults}ms)` : ''}
-				</span>
-				{this.state.enabled && this.state.error && (
-					<CAlert color="danger" style={{ marginTop: '10px', marginBottom: 0 }}>
-						{this.state.error}
-					</CAlert>
-				)}
-			</CListGroupItem>
-		) : null
-	}
+	return regionState
 }

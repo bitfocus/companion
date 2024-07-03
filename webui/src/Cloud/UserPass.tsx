@@ -1,88 +1,69 @@
-import React, { Component, FormEvent } from 'react'
-import { CButton, CFormInput } from '@coreui/react'
-
-// The cloud part is written in old fashioned Class-components
-// because even if the hipsters say it's slow and retarted, i think it's prettier.
+import React, { memo, useContext, useState } from 'react'
+import { CAlert, CButton, CCol, CForm, CFormInput, CFormLabel, CRow } from '@coreui/react'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faInfoCircle } from '@fortawesome/free-solid-svg-icons'
+import { SocketContext } from '../util.js'
 
 interface CloudUserPassProps {
 	username: string | undefined
 	working: boolean
 	onClearError?: () => void
-	onAuth: (username: string, password: string) => void
-}
-interface CloudUserPassState {
-	username: string
-	password: string
 }
 
-export class CloudUserPass extends Component<CloudUserPassProps, CloudUserPassState> {
-	constructor(props: CloudUserPassProps) {
-		super(props)
+export const CloudUserPass = memo(function CloudUserPass({
+	username: defaultUsername,
+	working,
+	onClearError,
+}: CloudUserPassProps) {
+	const socket = useContext(SocketContext)
+	const [username, setUsername] = useState(defaultUsername || '')
+	const [password, setPassword] = useState('')
 
-		this.state = {
-			username: props.username || '',
-			password: '',
-		}
-	}
+	return (
+		<CForm
+			className="cloud-auth-form"
+			onSubmit={(e) => {
+				e.preventDefault()
 
-	componentDidMount() {}
+				if (onClearError) {
+					console.log('onClearError')
+					onClearError()
+				}
 
-	componentWillUnmount() {}
+				if (username === '' || password === '') return
 
-	render() {
-		return (
-			<form
-				onSubmit={(e) => {
-					e.preventDefault()
-					if (this.props.onClearError) {
-						console.log('onClearError')
-						this.props.onClearError()
-					}
-					if (this.state.username === '' || this.state.password === '') return
-					this.props.onAuth(this.state.username, this.state.password)
-				}}
-			>
-				<div
-					style={{
-						fontWeight: 'bold',
-						marginBottom: 16,
-					}}
-				>
-					<label>Email address</label>
-					<CFormInput
-						type="text"
-						value={this.state.username}
-						onChange={(e: FormEvent<HTMLInputElement>) => this.setState({ username: e.currentTarget.value })}
-						style={{
-							width: 500,
-						}}
-					/>
-				</div>
-				<div
-					style={{
-						fontWeight: 'bold',
-						marginBottom: 16,
-					}}
-				>
-					<label>Password</label>
-					<CFormInput
-						type="password"
-						value={this.state.password}
-						onChange={(e: FormEvent<HTMLInputElement>) => this.setState({ password: e.currentTarget.value })}
-						style={{
-							width: 500,
-						}}
-					/>
-				</div>
-				<CButton
-					color="success"
-					type="submit"
-					// loading={this.props.working}
-					disabled={this.props.working || this.state.username === '' || this.state.password === ''}
-				>
-					Log in
-				</CButton>
-			</form>
-		)
-	}
-}
+				socket.emit('cloud_login', username, password)
+			}}
+		>
+			<CRow>
+				<CCol sm={6}>
+					<CFormLabel>Email address</CFormLabel>
+					<CFormInput type="text" value={username} onChange={(e) => setUsername(e.currentTarget.value)} />
+				</CCol>
+				<CCol sm={6}></CCol>
+
+				<CCol sm={6}>
+					<CFormLabel>Password</CFormLabel>
+					<CFormInput type="password" value={password} onChange={(e) => setPassword(e.currentTarget.value)} />
+				</CCol>
+				<CCol sm={6}></CCol>
+
+				<CCol sm={6}>
+					<CButton color="success" type="submit" disabled={working || !username || !password}>
+						Log in
+					</CButton>
+				</CCol>
+
+				<CCol sm={12}>
+					<CAlert color="info">
+						<FontAwesomeIcon icon={faInfoCircle} /> &nbsp;Companion Cloud is a premium service. Learn more and sign up{' '}
+						<a target="_new" href="http://bitfocus.io/companion-cloud">
+							here
+						</a>
+						.
+					</CAlert>
+				</CCol>
+			</CRow>
+		</CForm>
+	)
+})

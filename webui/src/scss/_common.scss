@@ -110,6 +110,9 @@ code {
 .form-control:focus {
 	color: #111;
 }
+.form-control[type='text']:read-only {
+	background-color: #eeeeee;
+}
 .table {
 	color: #111;
 
@@ -217,4 +220,8 @@ table .td-reorder {
 
 	// as narrow as possible
 	width: 0;
+}
+
+.list-group {
+	--cui-list-group-bg: #f7f7f7;
 }
