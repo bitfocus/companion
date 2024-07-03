@@ -3,7 +3,7 @@ import {
 	CDropdown,
 	CDropdownMenu,
 	CDropdownToggle,
-	CFormInput,
+	CFormRange,
 	CInputGroup,
 	CInputGroupText,
 	CLink,
@@ -33,13 +33,12 @@ export function ButtonGridZoomControl({
 				<FontAwesomeIcon icon={faMagnifyingGlass} /> {useCompactButtons ? '' : `${Math.round(gridZoomValue)}%`}
 			</CDropdownToggle>
 			<CDropdownMenu>
-				<CInputGroup className={'fieldtype-range'}>
+				<CInputGroup>
 					<CButton onClick={() => gridZoomController.zoomOut()}>
 						<FontAwesomeIcon icon={faMinus} />
 					</CButton>
-					<CFormInput
+					<CFormRange
 						name="zoom"
-						type="range"
 						min={ZOOM_MIN}
 						max={ZOOM_MAX}
 						step={ZOOM_STEP}

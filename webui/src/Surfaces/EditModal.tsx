@@ -494,9 +494,8 @@ export const SurfaceEditModal = observer<SurfaceEditModalProps, SurfaceEditModal
 												Page Count
 											</CFormLabel>
 											<CCol sm={8}>
-												<CFormInput
+												<CFormRange
 													name="colFormVideohubPageCount"
-													type="range"
 													min={0}
 													max={8}
 													step={2}

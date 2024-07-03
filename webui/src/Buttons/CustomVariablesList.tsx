@@ -1,5 +1,5 @@
 import React, { FormEvent, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react'
-import { CAlert, CButton, CButtonGroup, CForm, CFormInput, CInputGroup } from '@coreui/react'
+import { CAlert, CButton, CButtonGroup, CForm, CFormInput, CInputGroup, CInputGroupText } from '@coreui/react'
 import { socketEmitPromise, PreventDefaultHandler, useComputed } from '../util.js'
 import { CopyToClipboard } from 'react-copy-to-clipboard'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
@@ -159,7 +159,7 @@ export const CustomVariablesList = observer(function CustomVariablesList({ setSh
 
 	const [filter, setFilter] = useState('')
 	const clearFilter = useCallback(() => setFilter(''), [])
-	const updateFilter = useCallback((e) => setFilter(e.currentTarget.value), [])
+	const updateFilter = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setFilter(e.currentTarget.value), [])
 
 	const variableDefinitions = useComputed(() => {
 		const defs: CustomVariableDefinitionExt[] = []
@@ -277,16 +277,14 @@ export const CustomVariablesList = observer(function CustomVariablesList({ setSh
 
 			<hr />
 			<div>
-				<CForm inline onSubmit={doCreateNew}>
-					<CFormInput
-						label="Create custom variable:&nbsp;"
-						type="text"
-						value={newName}
-						onChange={(e) => setNewName(e.currentTarget.value)}
-					/>
-					<CButton color="primary" onClick={doCreateNew} disabled={!isCustomVariableValid(newName)}>
-						Add
-					</CButton>
+				<CForm onSubmit={doCreateNew}>
+					<CInputGroup>
+						<CInputGroupText>Create custom variable:</CInputGroupText>
+						<CFormInput type="text" value={newName} onChange={(e) => setNewName(e.currentTarget.value)} />
+						<CButton color="primary" onClick={doCreateNew} disabled={!isCustomVariableValid(newName)}>
+							Add
+						</CButton>
+					</CInputGroup>
 				</CForm>
 			</div>
 
@@ -401,7 +399,7 @@ function CustomVariableRow({
 									<FontAwesomeIcon icon={faCopy} />
 								</CButton>
 							</CopyToClipboard>
-							<CButton color="danger" size="sm" onClick={() => doDelete(name)}>
+							<CButton size="sm" onClick={() => doDelete(name)}>
 								<FontAwesomeIcon icon={faTrash} />
 							</CButton>
 						</CButtonGroup>

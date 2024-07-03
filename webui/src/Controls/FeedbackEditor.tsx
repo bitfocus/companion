@@ -473,7 +473,7 @@ function FeedbackStyles({ feedbackSpec, feedback, setStylePropsValue }: Feedback
 			<div className="cell-styles">
 				<CForm onSubmit={PreventDefaultHandler}>
 					{pngError && (
-						<CAlert color="warning" closeButton>
+						<CAlert color="warning" dismissible>
 							{pngError}
 						</CAlert>
 					)}

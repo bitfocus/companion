@@ -1,4 +1,4 @@
-import { CInputGroupText } from '@coreui/react'
+import { CFormLabel, CInputGroupText } from '@coreui/react'
 import React, { useCallback } from 'react'
 import {
 	CheckboxInputField,
@@ -172,7 +172,9 @@ export function OptionsInputField({
 			if (!!option.label) {
 				control = (
 					<>
-						<OptionLabel option={option} />
+						<CFormLabel>
+							<OptionLabel option={option} />
+						</CFormLabel>
 						{control}
 					</>
 				)

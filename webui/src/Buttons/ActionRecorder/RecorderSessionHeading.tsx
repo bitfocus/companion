@@ -94,7 +94,7 @@ export function RecorderSessionHeading({ confirmRef, sessionId, sessionInfo, doF
 	return (
 		<>
 			<CForm onSubmit={PreventDefaultHandler}>
-				<CRow form className="flex-form flex-form-row" style={{ clear: 'both' }}>
+				<CRow className="flex-form flex-form-row" style={{ clear: 'both' }}>
 					<div className="flex w-full gap-2rem">
 						<div className="w-full">
 							<CFormLabel>Connections</CFormLabel>
@@ -115,7 +115,7 @@ export function RecorderSessionHeading({ confirmRef, sessionId, sessionInfo, doF
 					</div>
 				</CRow>
 
-				<CRow form className="flex-form-row" style={{ clear: 'both' }}>
+				<CRow className="flex-form-row" style={{ clear: 'both' }}>
 					<div>
 						<CButtonGroup className={'margin-bottom'}>
 							<CButton onClick={doClearActions} color="danger" disabled={!sessionInfo.actions?.length}>

@@ -1,4 +1,4 @@
-import { CButton, CRow, CCol, CButtonGroup, CForm, CAlert, CInputGroup } from '@coreui/react'
+import { CButton, CCol, CButtonGroup, CForm, CAlert, CInputGroup } from '@coreui/react'
 import React, { MutableRefObject, useCallback, useContext, useMemo, useState } from 'react'
 import { socketEmitPromise, SocketContext, PreventDefaultHandler } from '../util.js'
 import {
@@ -99,24 +99,22 @@ export function ButtonStyleConfig({
 	return (
 		<CCol sm={12} className="p-0 mt-0">
 			{pngError && (
-				<CAlert color="warning" closeButton>
+				<CAlert color="warning" dismissible>
 					{pngError}
 				</CAlert>
 			)}
 
-			<CForm onSubmit={PreventDefaultHandler}>
-				<CRow form className="flex-form flex-form-row" style={{ clear: 'both' }}>
-					{style && (
-						<ButtonStyleConfigFields
-							values={style}
-							setValueInner={setValueInner}
-							setPng={setPng}
-							setPngError={setPngError}
-							clearPng={clearPng}
-							mainDialog={mainDialog}
-						/>
-					)}
-				</CRow>
+			<CForm className="flex-form flex-form-row" style={{ clear: 'both' }} onSubmit={PreventDefaultHandler}>
+				{style && (
+					<ButtonStyleConfigFields
+						values={style}
+						setValueInner={setValueInner}
+						setPng={setPng}
+						setPngError={setPngError}
+						clearPng={clearPng}
+						mainDialog={mainDialog}
+					/>
+				)}
 			</CForm>
 		</CCol>
 	)

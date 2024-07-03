@@ -5,13 +5,20 @@ import type { DropdownChoice, DropdownChoiceId } from '@companion-module/base'
 import type { ClientBonjourService } from '@companion-app/shared/Model/Common.js'
 
 interface BonjourDeviceInputFieldProps {
+	label: React.ReactNode
 	value: string
 	setValue: (value: DropdownChoiceId) => void
 	connectionId: string
 	queryId: string
 }
 
-export function BonjourDeviceInputField({ value, setValue, connectionId, queryId }: BonjourDeviceInputFieldProps) {
+export function BonjourDeviceInputField({
+	label,
+	value,
+	setValue,
+	connectionId,
+	queryId,
+}: BonjourDeviceInputFieldProps) {
 	const socket = useContext(SocketContext)
 
 	const [_subId, setSubId] = useState<string | null>(null)
@@ -119,5 +126,7 @@ export function BonjourDeviceInputField({ value, setValue, connectionId, queryId
 		return choices
 	}, [choicesRaw, value])
 
-	return <DropdownInputField<false> value={value} setValue={setValue} choices={choices} multiple={false} />
+	return (
+		<DropdownInputField<false> label={label} value={value} setValue={setValue} choices={choices} multiple={false} />
+	)
 }

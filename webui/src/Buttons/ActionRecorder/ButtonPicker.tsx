@@ -201,7 +201,7 @@ export const ButtonPicker = observer(function ButtonPicker({ selectButton }: But
 			</div>
 			<div>
 				<CForm className="flex-form" onSubmit={PreventDefaultHandler}>
-					<CRow form>
+					<CRow>
 						<CCol sm={10} xs={9} hidden={actionStepOptions.length <= 1}>
 							<CFormLabel>Step</CFormLabel>
 
