@@ -79,7 +79,7 @@ export const VariablesTable = observer(function VariablesTable({ label }: Variab
 	}, [variableDefinitions, filter])
 
 	const clearFilter = useCallback(() => setFilter(''), [])
-	const updateFilter = useCallback((e) => setFilter(e.currentTarget.value), [])
+	const updateFilter = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setFilter(e.currentTarget.value), [])
 
 	if (variableDefinitions.length === 0) {
 		return (

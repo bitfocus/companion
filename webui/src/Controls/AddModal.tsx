@@ -5,7 +5,6 @@ import {
 	CCardBody,
 	CCollapse,
 	CFormInput,
-	CModal,
 	CModalBody,
 	CModalFooter,
 	CModalHeader,
@@ -18,6 +17,7 @@ import { observer } from 'mobx-react-lite'
 import { ConnectionActionDefinitions } from '../Stores/ActionDefinitionsStore.js'
 import { ConnectionFeedbackDefinitions } from '../Stores/FeedbackDefinitionsStore.js'
 import { capitalize } from 'lodash-es'
+import { CModalExt } from '../Components/CModalExt.js'
 
 interface AddActionsModalProps {
 	addAction: (actionType: string) => void
@@ -70,7 +70,7 @@ export const AddActionsModal = observer(
 		)
 
 		return (
-			<CModal visible={show} onClose={doClose} onClosed={onClosed} size="lg" scrollable={true}>
+			<CModalExt visible={show} onClose={doClose} onClosed={onClosed} size="lg" scrollable={true}>
 				<CModalHeader closeButton>
 					<h5>Browse Actions</h5>
 				</CModalHeader>
@@ -104,7 +104,7 @@ export const AddActionsModal = observer(
 						Done
 					</CButton>
 				</CModalFooter>
-			</CModal>
+			</CModalExt>
 		)
 	})
 )
@@ -165,7 +165,7 @@ export const AddFeedbacksModal = observer(
 		)
 
 		return (
-			<CModal visible={show} onClose={doClose} onClosed={onClosed} size="lg" scrollable={true}>
+			<CModalExt visible={show} onClose={doClose} onClosed={onClosed} size="lg" scrollable={true}>
 				<CModalHeader closeButton>
 					<h5>Browse {capitalize(entityType)}s</h5>
 				</CModalHeader>
@@ -199,7 +199,7 @@ export const AddFeedbacksModal = observer(
 						Done
 					</CButton>
 				</CModalFooter>
-			</CModal>
+			</CModalExt>
 		)
 	})
 )

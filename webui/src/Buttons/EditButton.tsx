@@ -5,7 +5,6 @@ import {
 	CDropdownMenu,
 	CButton,
 	CButtonGroup,
-	CModal,
 	CModalHeader,
 	CModalBody,
 	CModalFooter,
@@ -60,6 +59,7 @@ import { FeedbackInstance } from '@companion-app/shared/Model/FeedbackModel.js'
 import { NormalButtonSteps, SomeButtonModel } from '@companion-app/shared/Model/ButtonModel.js'
 import { RootAppStoreContext } from '../Stores/RootAppStore.js'
 import { observer } from 'mobx-react-lite'
+import { CModalExt } from '../Components/CModalExt.js'
 
 interface EditButtonProps {
 	location: ControlLocation
@@ -928,7 +928,7 @@ const EditDurationGroupPropertiesModal = forwardRef<
 	}, [])
 
 	return (
-		<CModal visible={show} onClose={doClose} onClosed={onClosed} onOpened={buttonFocus}>
+		<CModalExt visible={show} onClose={doClose} onClosed={onClosed} onOpened={buttonFocus}>
 			<CModalHeader closeButton>
 				<h5>Change delay group properties</h5>
 			</CModalHeader>
@@ -970,6 +970,6 @@ const EditDurationGroupPropertiesModal = forwardRef<
 					Save
 				</CButton>
 			</CModalFooter>
-		</CModal>
+		</CModalExt>
 	)
 })

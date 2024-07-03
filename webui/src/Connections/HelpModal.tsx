@@ -1,11 +1,12 @@
 import React, { forwardRef, useCallback, useContext, useImperativeHandle, useMemo, useState } from 'react'
-import { CModal, CModalBody, CModalHeader, CModalFooter, CButton } from '@coreui/react'
+import { CModalBody, CModalHeader, CModalFooter, CButton } from '@coreui/react'
 import sanitizeHtml from 'sanitize-html'
 import { Marked } from 'marked'
 import { baseUrl } from 'marked-base-url'
 import { HelpDescription } from '@companion-app/shared/Model/Common.js'
 import { observer } from 'mobx-react-lite'
 import { RootAppStoreContext } from '../Stores/RootAppStore.js'
+import { CModalExt } from '../Components/CModalExt.js'
 
 interface HelpModalProps {
 	// Nothing
@@ -55,7 +56,7 @@ export const HelpModal = observer(
 		const moduleInfo = content && modules.modules.get(content[0])
 
 		return (
-			<CModal visible={show} onClose={doClose} onClosed={onClosed} size="lg">
+			<CModalExt visible={show} onClose={doClose} onClosed={onClosed} size="lg">
 				<CModalHeader closeButton>
 					<h5>
 						Help for {moduleInfo?.name || content?.[0]} {moduleInfo?.version ? `v${moduleInfo.version}` : ''}
@@ -69,7 +70,7 @@ export const HelpModal = observer(
 						Close
 					</CButton>
 				</CModalFooter>
-			</CModal>
+			</CModalExt>
 		)
 	})
 )

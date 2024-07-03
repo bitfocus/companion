@@ -5,7 +5,6 @@ import {
 	CForm,
 	CFormInput,
 	CFormLabel,
-	CModal,
 	CModalBody,
 	CModalFooter,
 	CModalHeader,
@@ -27,6 +26,7 @@ import { PagesStoreModel } from '../Stores/PagesStore.js'
 import { observer } from 'mobx-react-lite'
 import { ButtonGridZoomControl } from './ButtonGridZoomSlider.js'
 import { GridZoomController } from './GridZoom.js'
+import { CModalExt } from '../Components/CModalExt.js'
 
 interface ButtonsGridPanelProps {
 	pageNumber: number
@@ -287,7 +287,7 @@ const EditPagePropertiesModal = forwardRef<EditPagePropertiesModalRef, EditPageP
 		}, [])
 
 		return (
-			<CModal visible={show} onClose={doClose} onClosed={onClosed} onOpened={buttonFocus}>
+			<CModalExt visible={show} onClose={doClose} onClosed={onClosed} onOpened={buttonFocus}>
 				<CModalHeader closeButton>
 					<h5>Configure Page {pageNumber}</h5>
 				</CModalHeader>
@@ -315,7 +315,7 @@ const EditPagePropertiesModal = forwardRef<EditPagePropertiesModalRef, EditPageP
 						Save
 					</CButton>
 				</CModalFooter>
-			</CModal>
+			</CModalExt>
 		)
 	}
 )

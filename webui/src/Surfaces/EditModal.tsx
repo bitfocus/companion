@@ -1,9 +1,8 @@
-import React, { useCallback, useContext, useEffect, useImperativeHandle, useRef, useState } from 'react'
+import React, { useCallback, useContext, useEffect, useImperativeHandle, useState } from 'react'
 import {
 	CButton,
 	CForm,
 	CFormInput,
-	CModal,
 	CModalBody,
 	CModalFooter,
 	CModalHeader,
@@ -22,6 +21,7 @@ import { MenuPortalContext } from '../Components/DropdownInputField.js'
 import { ClientDevicesListItem, SurfaceGroupConfig, SurfacePanelConfig } from '@companion-app/shared/Model/Surfaces.js'
 import { RootAppStoreContext } from '../Stores/RootAppStore.js'
 import { observer } from 'mobx-react-lite'
+import { CModalExt } from '../Components/CModalExt.js'
 
 export interface SurfaceEditModalRef {
 	show(surfaceId: string | null, groupId: string | null): void
@@ -33,7 +33,6 @@ interface SurfaceEditModalProps {
 export const SurfaceEditModal = observer<SurfaceEditModalProps, SurfaceEditModalRef>(
 	function SurfaceEditModal(_props, ref) {
 		const { surfaces, socket } = useContext(RootAppStoreContext)
-		const clearTimeoutRef = useRef<NodeJS.Timeout>()
 
 		const [rawGroupId, setGroupId] = useState<string | null>(null)
 		const [surfaceId, setSurfaceId] = useState<string | null>(null)
@@ -72,17 +71,14 @@ export const SurfaceEditModal = observer<SurfaceEditModalProps, SurfaceEditModal
 		const [configLoadError, setConfigLoadError] = useState<string | null>(null)
 		const [reloadToken, setReloadToken] = useState(nanoid())
 
+		const onClosed = useCallback(() => {
+			setSurfaceId(null)
+			setSurfaceConfig(null)
+			setConfigLoadError(null)
+		}, [])
+
 		const doClose = useCallback(() => {
 			setShow(false)
-
-			// Delay clearing the data so the modal can animate out
-			if (clearTimeoutRef.current) clearTimeout(clearTimeoutRef.current)
-			clearTimeoutRef.current = setTimeout(() => {
-				console.log('clear me')
-				setSurfaceId(null)
-				setSurfaceConfig(null)
-				setConfigLoadError(null)
-			}, 1500)
 		}, [])
 
 		const doRetryConfigLoad = useCallback(() => setReloadToken(nanoid()), [])
@@ -118,9 +114,6 @@ export const SurfaceEditModal = observer<SurfaceEditModalProps, SurfaceEditModal
 			ref,
 			() => ({
 				show(surfaceId, groupId) {
-					console.log('show', clearTimeoutRef.current)
-					if (clearTimeoutRef.current) clearTimeout(clearTimeoutRef.current)
-
 					setSurfaceId(surfaceId)
 					setGroupId(groupId)
 					setShow(true)
@@ -222,7 +215,7 @@ export const SurfaceEditModal = observer<SurfaceEditModalProps, SurfaceEditModal
 		const [modalRef, setModalRef] = useState<HTMLElement | null>(null)
 
 		return (
-			<CModal ref={setModalRef} visible={show} onClose={doClose} size="lg">
+			<CModalExt ref={setModalRef} visible={show} onClose={doClose} onClosed={onClosed} size="lg">
 				<MenuPortalContext.Provider value={modalRef}>
 					<CModalHeader closeButton>
 						<h5>Settings for {surfaceInfo?.displayName ?? surfaceInfo?.type ?? groupInfo?.displayName}</h5>
@@ -536,7 +529,7 @@ export const SurfaceEditModal = observer<SurfaceEditModalProps, SurfaceEditModal
 						</CButton>
 					</CModalFooter>
 				</MenuPortalContext.Provider>
-			</CModal>
+			</CModalExt>
 		)
 	},
 	{ forwardRef: true }

@@ -7,8 +7,9 @@ import React, {
 	useImperativeHandle,
 	useState,
 } from 'react'
-import { CButton, CForm, CFormInput, CModal, CModalBody, CModalFooter, CModalHeader } from '@coreui/react'
+import { CButton, CForm, CFormInput, CModalBody, CModalFooter, CModalHeader } from '@coreui/react'
 import { socketEmitPromise, SocketContext, PreventDefaultHandler } from '../util.js'
+import { CModalExt } from '../Components/CModalExt.js'
 
 export interface AddSurfaceGroupModalRef {
 	show(): void
@@ -60,7 +61,7 @@ export const AddSurfaceGroupModal = forwardRef<AddSurfaceGroupModalRef, AddSurfa
 		const onNameChange = useCallback((e: ChangeEvent<HTMLInputElement>) => setGroupName(e.currentTarget.value), [])
 
 		return (
-			<CModal visible={show} onClose={doClose} onClosed={onClosed}>
+			<CModalExt visible={show} onClose={doClose} onClosed={onClosed} onShow={() => console.log('show')}>
 				<CModalHeader closeButton>
 					<h5>Add Surface Group</h5>
 				</CModalHeader>
@@ -77,7 +78,7 @@ export const AddSurfaceGroupModal = forwardRef<AddSurfaceGroupModalRef, AddSurfa
 						Save
 					</CButton>
 				</CModalFooter>
-			</CModal>
+			</CModalExt>
 		)
 	}
 )
