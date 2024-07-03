@@ -34,7 +34,7 @@
     "chokidar": "^3.6.0",
     "concurrently": "^8.2.2",
     "dotenv": "^16.4.5",
-    "inquirer": "^9.2.23",
+    "inquirer": "^9.3.2",
     "jest": "^29.7.0",
     "octokit": "^4.0.2",
     "open": "^10.1.0",
