@@ -252,7 +252,7 @@ function ConnectionCollapse({
 			res.sort((a, b) => a.label.localeCompare(b.label))
 
 			return res
-		} catch (e) {
+		} catch (e: any) {
 			console.error('Failed to compile candidates list:', e)
 
 			return (

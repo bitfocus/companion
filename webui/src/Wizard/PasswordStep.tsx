@@ -1,5 +1,5 @@
 import React from 'react'
-import { CAlert, CFormInput, CFormCheck, CFormLabel } from '@coreui/react'
+import { CAlert, CFormInput, CFormCheck } from '@coreui/react'
 import type { UserConfigModel } from '@companion-app/shared/Model/UserConfigModel.js'
 
 interface PasswordStepProps {
@@ -17,25 +17,20 @@ export function PasswordStep({ config, setValue }: PasswordStepProps) {
 			</p>
 			<CAlert color="danger">This does not make an installation more secure!</CAlert>
 			<div className="indent3">
-				<div className="form-check form-check-inline mr-1">
-					<CFormCheck
-						id="userconfig_admin_lockout"
-						checked={config.admin_lockout}
-						onChange={(e) => setValue('admin_lockout', e.currentTarget.checked)}
-					/>
-					<CFormLabel htmlFor="userconfig_admin_lockout">Enable Admin Password</CFormLabel>
-				</div>
+				<CFormCheck
+					label="Enable Admin Password"
+					checked={config.admin_lockout}
+					onChange={(e) => setValue('admin_lockout', e.currentTarget.checked)}
+				/>
 				{config.admin_lockout && (
 					<div className="indent2, group">
 						<div className="col-left">Password</div>
 						<div className="col-right">
-							<div className="form-check form-check-inline mr-1">
-								<CFormInput
-									type="text"
-									value={config.admin_password}
-									onChange={(e) => setValue('admin_password', e.currentTarget.value)}
-								/>
-							</div>
+							<CFormInput
+								type="text"
+								value={config.admin_password}
+								onChange={(e) => setValue('admin_password', e.currentTarget.value)}
+							/>
 						</div>
 						<br />
 						<div className="col-left">
@@ -44,15 +39,13 @@ export function PasswordStep({ config, setValue }: PasswordStepProps) {
 							(minutes, 0 for none)
 						</div>
 						<div className="col-right">
-							<div className="form-check form-check-inline mr-1">
-								<CFormInput
-									type="number"
-									value={config.admin_timeout}
-									min={0}
-									step={1}
-									onChange={(e) => setValue('admin_timeout', e.currentTarget.value)}
-								/>
-							</div>
+							<CFormInput
+								type="number"
+								value={config.admin_timeout}
+								min={0}
+								step={1}
+								onChange={(e) => setValue('admin_timeout', e.currentTarget.value)}
+							/>
 						</div>
 					</div>
 				)}
