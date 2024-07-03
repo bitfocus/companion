@@ -4,6 +4,7 @@ import {
 	CCol,
 	CForm,
 	CFormInput,
+	CFormLabel,
 	CModal,
 	CModalBody,
 	CModalFooter,
@@ -292,8 +293,18 @@ const EditPagePropertiesModal = forwardRef<EditPagePropertiesModalRef, EditPageP
 				</CModalHeader>
 				<CModalBody>
 					<CForm onSubmit={doAction}>
-						<CFormInput type="text" label="Name" value={pageName || ''} onChange={onNameChange} />
-						<CAlert color="info">You can use resize the grid in the Settings tab</CAlert>
+						<CRow className="mb-3">
+							<CFormLabel htmlFor="colFormName" className="col-sm-3 col-form-label col-form-label-sm">
+								Name
+							</CFormLabel>
+							<CCol sm={9}>
+								<CFormInput name="colFormName" type="text" value={pageName || ''} onChange={onNameChange} />
+							</CCol>
+							<CCol sm={12}>
+								<br />
+								<CAlert color="info">You can use resize the grid in the Settings tab</CAlert>
+							</CCol>
+						</CRow>
 					</CForm>
 				</CModalBody>
 				<CModalFooter>

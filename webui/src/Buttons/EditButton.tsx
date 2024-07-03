@@ -506,11 +506,15 @@ function TabsSection({ style, controlId, location, steps, runtimeProps, rotaryAc
 								isActiveAndCurrent={
 									stepId.toString() === selectedIndex.toString() && runtimeProps.current_step_id === stepId
 								}
+								active={selectedStep === `step:${stepId}`}
+								onClick={() => clickSelectedStep(`step:${stepId}`)}
 							/>
 						))}
 
 						<CNavItem key="feedbacks" className="nav-steps-special">
-							<CNavLink data-tab="feedbacks">Feedbacks</CNavLink>
+							<CNavLink active={selectedStep === 'feedbacks'} onClick={() => clickSelectedStep('feedbacks')}>
+								Feedbacks
+							</CNavLink>
 						</CNavItem>
 						{keys.length === 1 && (
 							<CNavItem key="add-step" className="nav-steps-special">
@@ -672,6 +676,8 @@ interface ActionSetTabProps {
 	isCurrent: boolean
 	// both selected and the current step
 	isActiveAndCurrent: boolean
+	active: boolean
+	onClick: () => void
 }
 function ActionSetTab({
 	controlId,
@@ -681,6 +687,8 @@ function ActionSetTab({
 	moreThanOneStep,
 	isCurrent,
 	isActiveAndCurrent,
+	active,
+	onClick,
 }: Readonly<ActionSetTabProps>) {
 	const socket = useContext(SocketContext)
 
@@ -730,7 +738,7 @@ function ActionSetTab({
 					></input>
 				</CNavLink>
 			) : (
-				<CNavLink onDoubleClick={showField} data-tab={`step:${stepId}`} className={linkClassname}>
+				<CNavLink onDoubleClick={showField} active={active} onClick={onClick} className={linkClassname}>
 					{displayText}
 				</CNavLink>
 			)}

@@ -231,36 +231,35 @@ export const ButtonsPage = observer(function ButtonsPage({ hotPress }: ButtonsPa
 
 			<CCol xs={12} xl={6} className="secondary-panel">
 				<div className="secondary-panel-inner">
-					{/* <CTabs activeTab={activeTab} onActiveTabChange={doChangeTab}> */}
 					<CNav variant="tabs">
 						<CNavItem
 							className={classNames({
 								hidden: !selectedButton,
 							})}
 						>
-							<CNavLink data-tab="edit">
+							<CNavLink active={activeTab === 'edit'} onClick={() => doChangeTab('edit')}>
 								<FontAwesomeIcon icon={faCalculator} /> Edit Button{' '}
 								{selectedButton ? `${formatLocation(selectedButton)}` : '?'}
 							</CNavLink>
 						</CNavItem>
 						<CNavItem>
-							<CNavLink data-tab="presets">
+							<CNavLink active={activeTab === 'presets'} onClick={() => doChangeTab('presets')}>
 								<FontAwesomeIcon icon={faGift} /> Presets
 							</CNavLink>
 						</CNavItem>
 						<CNavItem>
-							<CNavLink data-tab="variables">
+							<CNavLink active={activeTab === 'variables'} onClick={() => doChangeTab('variables')}>
 								<FontAwesomeIcon icon={faDollarSign} /> Variables
 							</CNavLink>
 						</CNavItem>
 						<CNavItem>
-							<CNavLink data-tab="action-recorder">
+							<CNavLink active={activeTab === 'action-recorder'} onClick={() => doChangeTab('action-recorder')}>
 								<FontAwesomeIcon icon={faVideoCamera} /> Recorder
 							</CNavLink>
 						</CNavItem>
 					</CNav>
 					<CTabContent>
-						<CTabPane data-tab="edit">
+						<CTabPane visible={activeTab === 'edit'}>
 							<MyErrorBoundary>
 								{selectedButton && (
 									<EditButton
@@ -271,23 +270,22 @@ export const ButtonsPage = observer(function ButtonsPage({ hotPress }: ButtonsPa
 								)}
 							</MyErrorBoundary>
 						</CTabPane>
-						<CTabPane data-tab="presets">
+						<CTabPane visible={activeTab === 'presets'}>
 							<MyErrorBoundary>
 								<InstancePresets resetToken={tabResetToken} />
 							</MyErrorBoundary>
 						</CTabPane>
-						<CTabPane data-tab="variables">
+						<CTabPane visible={activeTab === 'variables'}>
 							<MyErrorBoundary>
 								<ConnectionVariables resetToken={tabResetToken} />
 							</MyErrorBoundary>
 						</CTabPane>
-						<CTabPane data-tab="action-recorder">
+						<CTabPane visible={activeTab === 'action-recorder'}>
 							<MyErrorBoundary>
 								<ActionRecorder key={tabResetToken} />
 							</MyErrorBoundary>
 						</CTabPane>
 					</CTabContent>
-					{/* </CTabs> */}
 				</div>
 			</CCol>
 		</CRow>

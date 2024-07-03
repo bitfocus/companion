@@ -124,6 +124,16 @@ code {
 .modal {
 	max-height: 94vh;
 	margin-top: 6vh;
+
+	.modal-header {
+		h1,
+		h2,
+		h3,
+		h4,
+		h5 {
+			margin: 0;
+		}
+	}
 }
 
 .btn-secondary {
@@ -147,6 +157,12 @@ code {
 	color: #777;
 	text-align: center;
 	padding: 30px !important;
+}
+
+.form-check-label,
+.form-label {
+	font-weight: bold;
+	align-content: center;
 }
 
 .flex {

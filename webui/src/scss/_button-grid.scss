@@ -16,6 +16,10 @@
 		grid-template-columns: minmax(0, 1fr);
 	}
 
+	.right-buttons {
+		align-content: center;
+	}
+
 	.right-buttons .btn {
 		margin-top: 0;
 	}
@@ -64,6 +68,8 @@
 	display: flex;
 	flex-flow: row wrap;
 	justify-content: center;
+
+	margin-top: 1rem;
 
 	& > div {
 		white-space: nowrap;
@@ -194,7 +200,7 @@
 				width: calc(var(--tile-inner-size) * 1px);
 				height: calc(var(--tile-inner-size) * 1px);
 
-				.placeholder {
+				.button-placeholder {
 					// shrink text with scaling
 					font-size: calc(var(--grid-scale) * 1.5rem);
 				}
