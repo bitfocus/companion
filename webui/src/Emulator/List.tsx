@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useState, useContext } from 'react'
 import { LoadingRetryOrError, SocketContext, useComputed } from '../util.js'
-import { CAlert, CCol, CContainer, CRow, CWidgetStatsA } from '@coreui/react'
+import { CAlert, CButton, CCol, CContainer, CRow, CWidgetStatsA } from '@coreui/react'
 import { nanoid } from 'nanoid'
 import { useNavigate } from 'react-router-dom'
 import type { ClientSurfaceItem } from '@companion-app/shared/Model/Surfaces.js'
@@ -12,6 +12,7 @@ import { observer } from 'mobx-react-lite'
 
 export const EmulatorList = observer(function EmulatorList() {
 	const socket = useContext(SocketContext)
+	const navigate = useNavigate()
 
 	const [loadError, setLoadError] = useState<string | null>(null)
 	const [reloadToken, setReloadToken] = useState(nanoid())
@@ -52,13 +53,21 @@ export const EmulatorList = observer(function EmulatorList() {
 			<CContainer fluid className="d-flex flex-column">
 				<LoadingRetryOrError error={loadError} dataReady={!!surfacesReady || !!userConfigReady} doRetry={doRetryLoad} />
 				{surfacesReady && (
-					<CRow alignHorizontal="center">
+					<CRow>
 						<CCol sm={12}>
-							<p>&nbsp;</p>
+							<h1>Emulator Chooser</h1>
 						</CCol>
 
-						{emulators.map((dev) => (
-							<EmulatorCard key={dev.id} surface={dev} />
+						{emulators.map((surface) => (
+							<CCol sm={4}>
+								<CButton
+									key={surface.id}
+									color="light"
+									onClick={() => navigate(`/emulator/${surface.id.substring(9)}`)}
+								>
+									{surface.name || 'Emulator'}
+								</CButton>
+							</CCol>
 						))}
 
 						{emulators.length === 0 && (
@@ -72,7 +81,7 @@ export const EmulatorList = observer(function EmulatorList() {
 					</CRow>
 				)}
 
-				<CAlert color="info">
+				<CAlert color="info" className="margin-top">
 					Use <b>1 2 3 4 5 6 7 8</b>, <b>Q W E R T Y U I</b>, <b>A S D F G H J K</b>, <b>Z X C V B N M ,</b> to control
 					this surface with your keyboard!
 					<br />
@@ -83,21 +92,3 @@ export const EmulatorList = observer(function EmulatorList() {
 		</div>
 	)
 })
-
-interface EmulatorCardProps {
-	surface: ClientSurfaceItem
-}
-function EmulatorCard({ surface }: EmulatorCardProps) {
-	const navigate = useNavigate()
-	const click = useCallback(() => {
-		navigate(`/emulator/${surface.id.substring(9)}`)
-	}, [navigate, surface.id])
-	return (
-		<CCol sm={4}>
-			nocommit: change this
-			<CWidgetStatsA title={surface.name || 'Emulator'} onClick={click} className="widget-clickable">
-				{/* <CButton color="primary">Open</CButton> */}
-			</CWidgetStatsA>
-		</CCol>
-	)
-}
