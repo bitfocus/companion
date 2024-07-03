@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState, useCallback, useContext, useRef } from 'react'
-import { CFormInput, CFormTextarea } from '@coreui/react'
+import { CFormInput, CFormLabel, CFormTextarea } from '@coreui/react'
 import Select, {
 	ControlProps,
 	OptionProps,
@@ -128,18 +128,21 @@ export const TextInputField = observer(function TextInputField({
 	return (
 		<>
 			{useVariables || isExpression ? (
-				<VariablesSelect
-					showValue={showValue}
-					style={extraStyle}
-					useLocalVariables={!!useLocalVariables}
-					storeValue={storeValue}
-					focusStoreValue={focusStoreValue}
-					blurClearValue={blurClearValue}
-					placeholder={placeholder}
-					title={tooltip}
-					disabled={disabled}
-					multiline={isExpression}
-				/>
+				<>
+					{label ? <CFormLabel>{label}</CFormLabel> : ''}
+					<VariablesSelect
+						showValue={showValue}
+						style={extraStyle}
+						useLocalVariables={!!useLocalVariables}
+						storeValue={storeValue}
+						focusStoreValue={focusStoreValue}
+						blurClearValue={blurClearValue}
+						placeholder={placeholder}
+						title={tooltip}
+						disabled={disabled}
+						multiline={isExpression}
+					/>
+				</>
 			) : (
 				<CFormInput
 					label={label}

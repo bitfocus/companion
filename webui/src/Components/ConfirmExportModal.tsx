@@ -1,4 +1,4 @@
-import { CButton, CModal, CModalBody, CModalFooter, CModalHeader } from '@coreui/react'
+import { CButton, CCol, CFormLabel, CModal, CModalBody, CModalFooter, CModalHeader, CRow } from '@coreui/react'
 import React, { forwardRef, useCallback, useImperativeHandle, useRef, useState } from 'react'
 import { ExportFormatDefault, SelectExportFormat } from '../ImportExport/ExportFormat.js'
 import { MenuPortalContext } from './DropdownInputField.js'
@@ -71,11 +71,14 @@ export const ConfirmExportModal = forwardRef<ConfirmExportModalRef, ConfirmExpor
 						<h5>{props.title}</h5>
 					</CModalHeader>
 					<CModalBody>
-						<div>
-							<div className="indent3">
-								<SelectExportFormat value={format} setValue={setFormat} label="File format" />
-							</div>
-						</div>
+						<CRow className="mb-3">
+							<CFormLabel htmlFor="colFormLabelSm" className="col-sm-3 col-form-label col-form-label-sm">
+								File format
+							</CFormLabel>
+							<CCol sm={9}>
+								<SelectExportFormat value={format} setValue={setFormat} />
+							</CCol>
+						</CRow>
 					</CModalBody>
 					<CModalFooter>
 						<CButton color="secondary" onClick={doClose}>

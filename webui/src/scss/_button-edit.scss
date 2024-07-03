@@ -156,6 +156,10 @@ table.feedback-table {
 			// @include media-breakpoint-up('sm') {
 			// 	width: 70%;
 			// }
+
+			.form-check {
+				padding-left: 0.25rem;
+			}
 		}
 
 		.cell-actions {

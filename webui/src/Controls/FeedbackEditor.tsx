@@ -1,4 +1,4 @@
-import { CAlert, CButton, CForm, CButtonGroup, CFormSwitch } from '@coreui/react'
+import { CAlert, CButton, CForm, CButtonGroup, CFormSwitch, CFormLabel } from '@coreui/react'
 import {
 	faSort,
 	faTrash,
@@ -72,7 +72,12 @@ export function ControlFeedbacksEditor({
 			<GenericConfirmModal ref={confirmModal} />
 
 			<MyErrorBoundary>
-				<AddFeedbacksModal ref={addFeedbacksRef} addFeedback={feedbacksService.addFeedback} booleanOnly={booleanOnly} />
+				<AddFeedbacksModal
+					ref={addFeedbacksRef}
+					addFeedback={feedbacksService.addFeedback}
+					booleanOnly={booleanOnly}
+					entityType={entityType}
+				/>
 			</MyErrorBoundary>
 
 			<h4 className="mt-3">
@@ -374,20 +379,15 @@ const FeedbackEditor = observer(function FeedbackEditor({
 						<div className="cell-invert">
 							<MyErrorBoundary>
 								<CForm onSubmit={PreventDefaultHandler}>
-									<CheckboxInputField
-										label={
-											<>
-												Invert
-												<FontAwesomeIcon
-													style={{ marginLeft: '5px' }}
-													icon={faQuestionCircle}
-													title={'If checked, the behaviour of this feedback is inverted'}
-												/>
-											</>
-										}
-										value={!!feedback.isInverted}
-										setValue={service.setInverted}
-									/>
+									<CFormLabel>
+										Invert
+										<FontAwesomeIcon
+											style={{ marginLeft: '5px' }}
+											icon={faQuestionCircle}
+											title={'If checked, the behaviour of this feedback is inverted'}
+										/>
+									</CFormLabel>
+									<CheckboxInputField value={!!feedback.isInverted} setValue={service.setInverted} />
 								</CForm>
 							</MyErrorBoundary>
 						</div>

@@ -1,9 +1,19 @@
 import React, { useCallback, useContext, useEffect, useState, useMemo, useRef } from 'react'
-import { CButton, CButtonGroup, CCol, CNav, CNavItem, CNavLink, CRow, CTabContent, CTabPane } from '@coreui/react'
+import {
+	CButton,
+	CButtonGroup,
+	CCol,
+	CFormSwitch,
+	CNav,
+	CNavItem,
+	CNavLink,
+	CRow,
+	CTabContent,
+	CTabPane,
+} from '@coreui/react'
 import { MyErrorBoundary, SocketContext, socketEmitPromise } from '../util.js'
 import dayjs from 'dayjs'
 import sanitizeHtml from 'sanitize-html'
-import CSwitch from '../CSwitch.js'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import {
 	faAdd,
@@ -320,36 +330,30 @@ function TriggersTableRow({ controlId, item, editItem, moveTrigger, isSelected }
 				{item.lastExecuted ? <small>Last run: {dayjs(item.lastExecuted).format(tableDateFormat)}</small> : ''}
 			</td>
 			<td className="action-buttons">
-				<div style={{ display: 'flex' }}>
-					<div>
-						<CButtonGroup>
-							<CButton color="white" onClick={doClone} title="Clone" style={{ padding: 3, paddingRight: 6 }}>
-								<FontAwesomeIcon icon={faClone} />
-							</CButton>
-							<CButton color="gray" onClick={doDelete} title="Delete" style={{ padding: 3, paddingRight: 6 }}>
-								<FontAwesomeIcon icon={faTrash} />
-							</CButton>
-							<CButton
-								style={{ padding: 3, paddingRight: 6 }}
-								color="white"
-								href={`/int/export/triggers/single/${exportId}`}
-								target="_new"
-								disabled={!exportId}
-								title="Export"
-							>
-								<FontAwesomeIcon icon={faDownload} />
-							</CButton>
-						</CButtonGroup>
-					</div>
-					<div style={{ marginTop: 0, marginLeft: 4 }}>
-						<CSwitch
-							color="success"
-							checked={item.enabled}
-							onChange={doEnableDisable}
-							title={item.enabled ? 'Disable trigger' : 'Enable trigger'}
-						/>
-					</div>
-				</div>
+				<CButtonGroup>
+					<CButton color="white" onClick={doClone} title="Clone">
+						<FontAwesomeIcon icon={faClone} />
+					</CButton>
+					<CButton color="gray" onClick={doDelete} title="Delete">
+						<FontAwesomeIcon icon={faTrash} />
+					</CButton>
+					<CButton
+						color="white"
+						href={`/int/export/triggers/single/${exportId}`}
+						target="_new"
+						disabled={!exportId}
+						title="Export"
+					>
+						<FontAwesomeIcon icon={faDownload} />
+					</CButton>
+
+					<CFormSwitch
+						color="success"
+						checked={item.enabled}
+						onChange={doEnableDisable}
+						title={item.enabled ? 'Disable trigger' : 'Enable trigger'}
+					/>
+				</CButtonGroup>
 			</td>
 		</tr>
 	)

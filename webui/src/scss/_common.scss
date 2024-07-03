@@ -10,6 +10,12 @@ h4 {
 
 	.btn {
 		text-transform: uppercase;
+
+		padding: 0px 6px;
+	}
+
+	.btn-primary.disabled {
+		opacity: 0.5;
 	}
 }
 
@@ -163,6 +169,14 @@ code {
 
 .displayNone {
 	display: none;
+}
+
+.option-field {
+	margin-bottom: 0.75rem;
+
+	.form-check {
+		padding-left: 0.25rem;
+	}
 }
 
 .noBorder td {

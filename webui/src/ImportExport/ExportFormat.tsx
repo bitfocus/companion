@@ -18,7 +18,8 @@ const formatOptions: DropdownChoice[] = [
 interface SelectExportFormatProps {
 	value: ExportFormat
 	setValue: (value: ExportFormat) => void
-	label: string
+	/** @deprecated */
+	label?: string
 }
 
 export const SelectExportFormat = memo(function SelectExportFormat({

@@ -1,5 +1,5 @@
 import React, { useEffect, useCallback } from 'react'
-import { CFormCheck } from '@coreui/react'
+import { CFormCheck, CFormLabel } from '@coreui/react'
 
 interface CheckboxInputFieldProps {
 	tooltip?: string
@@ -25,14 +25,18 @@ export function CheckboxInputField({ tooltip, label, value, setValue, setValid, 
 	)
 
 	return (
-		<CFormCheck
-			type="checkbox"
-			label={label}
-			disabled={disabled}
-			checked={!!value}
-			value={true as any}
-			title={tooltip}
-			onChange={onChange}
-		/>
+		<>
+			{label ? <CFormLabel>{label}</CFormLabel> : ''}
+			<div className="form-check">
+				<CFormCheck
+					type="checkbox"
+					disabled={disabled}
+					checked={!!value}
+					value={true as any}
+					title={tooltip}
+					onChange={onChange}
+				/>
+			</div>
+		</>
 	)
 }

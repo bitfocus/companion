@@ -17,6 +17,7 @@ import { RootAppStoreContext } from '../Stores/RootAppStore.js'
 import { observer } from 'mobx-react-lite'
 import { ConnectionActionDefinitions } from '../Stores/ActionDefinitionsStore.js'
 import { ConnectionFeedbackDefinitions } from '../Stores/FeedbackDefinitionsStore.js'
+import { capitalize } from 'lodash-es'
 
 interface AddActionsModalProps {
 	addAction: (actionType: string) => void
@@ -111,6 +112,7 @@ export const AddActionsModal = observer(
 interface AddFeedbacksModalProps {
 	addFeedback: (feedbackType: string) => void
 	booleanOnly: boolean
+	entityType: string
 }
 export interface AddFeedbacksModalRef {
 	show(): void
@@ -118,7 +120,7 @@ export interface AddFeedbacksModalRef {
 
 export const AddFeedbacksModal = observer(
 	forwardRef<AddFeedbacksModalRef, AddFeedbacksModalProps>(function AddFeedbacksModal(
-		{ addFeedback, booleanOnly },
+		{ addFeedback, booleanOnly, entityType },
 		ref
 	) {
 		const { feedbackDefinitions, recentlyAddedFeedbacks } = useContext(RootAppStoreContext)
@@ -165,7 +167,7 @@ export const AddFeedbacksModal = observer(
 		return (
 			<CModal visible={show} onClose={doClose} onClosed={onClosed} size="lg" scrollable={true}>
 				<CModalHeader closeButton>
-					<h5>Browse Feedbacks</h5>
+					<h5>Browse {capitalize(entityType)}s</h5>
 				</CModalHeader>
 				<CModalHeader>
 					<CFormInput

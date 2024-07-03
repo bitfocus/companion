@@ -1,4 +1,4 @@
-import { CInputGroupText, CFormLabel } from '@coreui/react'
+import { CInputGroupText } from '@coreui/react'
 import React, { useCallback } from 'react'
 import {
 	CheckboxInputField,
@@ -25,6 +25,22 @@ interface OptionsInputFieldProps {
 	readonly?: boolean
 }
 
+function OptionLabel({
+	option,
+	features,
+}: {
+	option: InternalActionInputField | InternalFeedbackInputField
+	features?: InputFeatureIconsProps
+}) {
+	return (
+		<>
+			{option.label}
+			<InputFeatureIcons {...features} />
+			{option.tooltip && <FontAwesomeIcon icon={faQuestionCircle} title={option.tooltip} />}
+		</>
+	)
+}
+
 export function OptionsInputField({
 	connectionId,
 	isOnControl,
@@ -42,15 +58,16 @@ export function OptionsInputField({
 	}
 
 	let control: JSX.Element | string | undefined = undefined
-	let showLabel = true
-	let features: InputFeatureIconsProps = {}
 	switch (option.type) {
 		case 'textinput': {
-			features.variables = !!option.useVariables
-			features.local = typeof option.useVariables === 'object' && !!option.useVariables?.local
+			const features: InputFeatureIconsProps = {
+				variables: !!option.useVariables,
+				local: typeof option.useVariables === 'object' && !!option.useVariables?.local,
+			}
 
 			control = (
 				<TextInputField
+					label={<OptionLabel option={option} features={features} />}
 					value={value}
 					regex={option.regex}
 					required={option.required}
@@ -67,6 +84,7 @@ export function OptionsInputField({
 		case 'dropdown': {
 			control = (
 				<DropdownInputField
+					label={<OptionLabel option={option} />}
 					value={value}
 					choices={option.choices}
 					allowCustom={option.allowCustom}
@@ -82,6 +100,7 @@ export function OptionsInputField({
 		case 'multidropdown': {
 			control = (
 				<DropdownInputField
+					label={<OptionLabel option={option} />}
 					value={value}
 					choices={option.choices}
 					allowCustom={option.allowCustom}
@@ -98,16 +117,19 @@ export function OptionsInputField({
 		}
 		case 'checkbox': {
 			control = (
-				<p>
-					<CheckboxInputField value={value} disabled={readonly} setValue={setValue2} />
-					&nbsp;
-				</p>
+				<CheckboxInputField
+					label={<OptionLabel option={option} />}
+					value={value}
+					disabled={readonly}
+					setValue={setValue2}
+				/>
 			)
 			break
 		}
 		case 'colorpicker': {
 			control = (
 				<ColorInputField
+					label={<OptionLabel option={option} />}
 					value={value}
 					disabled={readonly}
 					setValue={setValue2}
@@ -121,6 +143,7 @@ export function OptionsInputField({
 		case 'number': {
 			control = (
 				<NumberInputField
+					label={<OptionLabel option={option} />}
 					value={value}
 					required={option.required}
 					min={option.min}
@@ -134,8 +157,6 @@ export function OptionsInputField({
 			break
 		}
 		case 'static-text': {
-			showLabel = !!option.label
-
 			control = ''
 			if (option.value && option.value != option.label) {
 				const descriptionHtml = {
@@ -147,13 +168,22 @@ export function OptionsInputField({
 
 				control = <p title={option.tooltip} dangerouslySetInnerHTML={descriptionHtml}></p>
 			}
+
+			if (!!option.label) {
+				control = (
+					<>
+						<OptionLabel option={option} />
+						{control}
+					</>
+				)
+			}
 			break
 		}
 		case 'custom-variable': {
 			if (isAction) {
 				control = (
 					<InternalCustomVariableDropdown
-						label={'TEST LABEL'}
+						label={<OptionLabel option={option} />}
 						disabled={!!readonly}
 						value={value}
 						setValue={setValue2}
@@ -166,7 +196,9 @@ export function OptionsInputField({
 		default:
 			// The 'internal instance' is allowed to use some special input fields, to minimise when it reacts to changes elsewhere in the system
 			if (connectionId === 'internal') {
-				control = InternalInstanceField('TEST LABEL', option, isOnControl, !!readonly, value, setValue2) ?? undefined
+				control =
+					InternalInstanceField(<OptionLabel option={option} />, option, isOnControl, !!readonly, value, setValue2) ??
+					undefined
 			}
 			// Use default below
 			break
@@ -176,18 +208,7 @@ export function OptionsInputField({
 		control = <CInputGroupText>Unknown type "{option.type}"</CInputGroupText>
 	}
 
-	return (
-		<CFormGroup className={classNames({ displayNone: !visibility })}>
-			{showLabel && (
-				<CFormLabel>
-					{option.label}
-					<InputFeatureIcons {...features} />
-					{option.tooltip && <FontAwesomeIcon icon={faQuestionCircle} title={option.tooltip} />}
-				</CFormLabel>
-			)}
-			{control}
-		</CFormGroup>
-	)
+	return <div className={classNames('option-field', { displayNone: !visibility })}>{control}</div>
 }
 
 export interface InputFeatureIconsProps {
