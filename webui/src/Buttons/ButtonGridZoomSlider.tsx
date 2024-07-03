@@ -3,10 +3,8 @@ import {
 	CDropdown,
 	CDropdownMenu,
 	CDropdownToggle,
-	CInput,
+	CFormInput,
 	CInputGroup,
-	CInputGroupAppend,
-	CInputGroupPrepend,
 	CInputGroupText,
 	CLink,
 } from '@coreui/react'
@@ -36,12 +34,10 @@ export function ButtonGridZoomControl({
 			</CDropdownToggle>
 			<CDropdownMenu>
 				<CInputGroup className={'fieldtype-range'}>
-					<CInputGroupPrepend>
-						<CButton onClick={gridZoomController.zoomOut}>
-							<FontAwesomeIcon icon={faMinus} />
-						</CButton>
-					</CInputGroupPrepend>
-					<CInput
+					<CButton onClick={() => gridZoomController.zoomOut()}>
+						<FontAwesomeIcon icon={faMinus} />
+					</CButton>
+					<CFormInput
 						name="zoom"
 						type="range"
 						min={ZOOM_MIN}
@@ -51,17 +47,13 @@ export function ButtonGridZoomControl({
 						value={gridZoomValue}
 						onChange={(e) => gridZoomController.setZoom(parseInt(e.currentTarget.value))}
 					/>
-					<CInputGroupAppend>
-						<CButton onClick={gridZoomController.zoomIn}>
-							<FontAwesomeIcon icon={faPlus} />
-						</CButton>
-					</CInputGroupAppend>
+					<CButton onClick={() => gridZoomController.zoomIn()}>
+						<FontAwesomeIcon icon={faPlus} />
+					</CButton>
 				</CInputGroup>
 				<CInputGroup className="dropdown-item-padding">
 					<NumberInputField value={gridZoomValue} setValue={gridZoomController.setZoom} min={ZOOM_MIN} max={ZOOM_MAX} />
-					<CInputGroupAppend>
-						<CInputGroupText>%</CInputGroupText>
-					</CInputGroupAppend>
+					<CInputGroupText>%</CInputGroupText>
 				</CInputGroup>
 				<CLink className="dropdown-item" onClick={gridZoomController.zoomReset}>
 					Zoom to 100%
