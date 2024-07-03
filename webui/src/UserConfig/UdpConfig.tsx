@@ -38,54 +38,57 @@ export const UdpConfig = observer(function UdpConfig({ config, setValue, resetVa
 					</CButton>
 				</td>
 			</tr>
-			<tr>
-				<td>
-					Deprecated UDP API
-					<br />
-					<em>(This portion of the API will be removed in a future release)</em>
-				</td>
-				<td>
-					<div className="form-check form-check-inline mr-1 float-right">
-						<CSwitch
-							color="success"
-							checked={config.udp_legacy_api_enabled}
-							size={'lg'}
-							onChange={(e) => setValue('udp_legacy_api_enabled', e.currentTarget.checked)}
-						/>
-					</div>
-				</td>
-				<td>
-					<CButton onClick={() => resetValue('udp_legacy_api_enabled')} title="Reset to default">
-						<FontAwesomeIcon icon={faUndo} />
-					</CButton>
-				</td>
-			</tr>
-			{(config.udp_enabled || config.udp_legacy_api_enabled) && (
-				<tr>
-					<td>UDP Listen Port</td>
-					<td>
-						<div className="form-check form-check-inline mr-1">
-							<CInput
-								type="number"
-								value={config.udp_listen_port}
-								min={1024}
-								max={65535}
-								step={1}
-								onChange={(e) => {
-									let value = Math.floor(e.currentTarget.value)
-									value = Math.min(value, 65535)
-									value = Math.max(value, 1024)
-									setValue('udp_listen_port', value)
-								}}
-							/>
-						</div>
-					</td>
-					<td>
-						<CButton onClick={() => resetValue('udp_listen_port')} title="Reset to default">
-							<FontAwesomeIcon icon={faUndo} />
-						</CButton>
-					</td>
-				</tr>
+
+			{config.udp_enabled && (
+				<>
+					<tr>
+						<td>UDP Listen Port</td>
+						<td>
+							<div className="form-check form-check-inline mr-1">
+								<CInput
+									type="number"
+									value={config.udp_listen_port}
+									min={1024}
+									max={65535}
+									step={1}
+									onChange={(e) => {
+										let value = Math.floor(e.currentTarget.value)
+										value = Math.min(value, 65535)
+										value = Math.max(value, 1024)
+										setValue('udp_listen_port', value)
+									}}
+								/>
+							</div>
+						</td>
+						<td>
+							<CButton onClick={() => resetValue('udp_listen_port')} title="Reset to default">
+								<FontAwesomeIcon icon={faUndo} />
+							</CButton>
+						</td>
+					</tr>
+					<tr>
+						<td>
+							Deprecated UDP API
+							<br />
+							<em>(This portion of the API will be removed in a future release)</em>
+						</td>
+						<td>
+							<div className="form-check form-check-inline mr-1 float-right">
+								<CSwitch
+									color="success"
+									checked={config.udp_legacy_api_enabled}
+									size={'lg'}
+									onChange={(e) => setValue('udp_legacy_api_enabled', e.currentTarget.checked)}
+								/>
+							</div>
+						</td>
+						<td>
+							<CButton onClick={() => resetValue('udp_legacy_api_enabled')} title="Reset to default">
+								<FontAwesomeIcon icon={faUndo} />
+							</CButton>
+						</td>
+					</tr>
+				</>
 			)}
 		</>
 	)

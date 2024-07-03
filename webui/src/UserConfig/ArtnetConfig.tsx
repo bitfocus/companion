@@ -40,57 +40,57 @@ export const ArtnetConfig = observer(function ArtnetConfig({ config, setValue, r
 			</tr>
 
 			{config.artnet_enabled && (
-				<tr>
-					<td>Artnet Universe (first is 0)</td>
-					<td>
-						<div className="form-check form-check-inline mr-1">
-							<CInput
-								type="number"
-								value={config.artnet_universe}
-								min={0}
-								max={20055}
-								onChange={(e) => {
-									let value = Math.floor(e.currentTarget.value)
-									value = Math.min(value, 255)
-									value = Math.max(value, 0)
-									setValue('artnet_universe', value)
-								}}
-							/>
-						</div>
-					</td>
-					<td>
-						<CButton onClick={() => resetValue('artnet_universe')} title="Reset to default">
-							<FontAwesomeIcon icon={faUndo} />
-						</CButton>
-					</td>
-				</tr>
-			)}
+				<>
+					<tr>
+						<td>Artnet Universe (first is 0)</td>
+						<td>
+							<div className="form-check form-check-inline mr-1">
+								<CInput
+									type="number"
+									value={config.artnet_universe}
+									min={0}
+									max={20055}
+									onChange={(e) => {
+										let value = Math.floor(e.currentTarget.value)
+										value = Math.min(value, 255)
+										value = Math.max(value, 0)
+										setValue('artnet_universe', value)
+									}}
+								/>
+							</div>
+						</td>
+						<td>
+							<CButton onClick={() => resetValue('artnet_universe')} title="Reset to default">
+								<FontAwesomeIcon icon={faUndo} />
+							</CButton>
+						</td>
+					</tr>
 
-			{config.artnet_enabled && (
-				<tr>
-					<td>Artnet Channel</td>
-					<td>
-						<div className="form-check form-check-inline mr-1">
-							<CInput
-								type="number"
-								value={config.artnet_channel}
-								min={1}
-								max={509}
-								onChange={(e) => {
-									let value = Math.floor(e.currentTarget.value)
-									value = Math.min(value, 509)
-									value = Math.max(value, 1)
-									setValue('artnet_channel', value)
-								}}
-							/>
-						</div>
-					</td>
-					<td>
-						<CButton onClick={() => resetValue('artnet_channel')} title="Reset to default">
-							<FontAwesomeIcon icon={faUndo} />
-						</CButton>
-					</td>
-				</tr>
+					<tr>
+						<td>Artnet Channel</td>
+						<td>
+							<div className="form-check form-check-inline mr-1">
+								<CInput
+									type="number"
+									value={config.artnet_channel}
+									min={1}
+									max={509}
+									onChange={(e) => {
+										let value = Math.floor(e.currentTarget.value)
+										value = Math.min(value, 509)
+										value = Math.max(value, 1)
+										setValue('artnet_channel', value)
+									}}
+								/>
+							</div>
+						</td>
+						<td>
+							<CButton onClick={() => resetValue('artnet_channel')} title="Reset to default">
+								<FontAwesomeIcon icon={faUndo} />
+							</CButton>
+						</td>
+					</tr>
+				</>
 			)}
 		</>
 	)
