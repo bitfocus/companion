@@ -6108,7 +6108,7 @@ asn1@evs-broadcast/node-asn1:
     express: "npm:^4.19.2"
     express-serve-zip: "npm:^1.1.0"
     fast-json-patch: "npm:^3.1.1"
-    find-process: "github:julusian/find-process#fix/spawn-error-handler"
+    find-process: "patch:find-process@npm%3A1.4.7#~/.yarn/patches/find-process-npm-1.4.7-e91aca1924.patch"
     fs-extra: "npm:^11.2.0"
     get-port: "npm:^7.1.0"
     got: "npm:^13.0.0"
@@ -7752,16 +7752,29 @@ asn1@evs-broadcast/node-asn1:
   languageName: node
   linkType: hard
 
-"find-process@github:julusian/find-process#fix/spawn-error-handler":
+"find-process@npm:1.4.7":
   version: 1.4.7
-  resolution: "find-process@https://github.com/julusian/find-process.git#commit=82fe76d7129d5f92600d27fb74e3e7389da825b4"
+  resolution: "find-process@npm:1.4.7"
   dependencies:
     chalk: "npm:^4.0.0"
     commander: "npm:^5.1.0"
-    loglevel: "npm:^1.8.0"
+    debug: "npm:^4.1.1"
   bin:
     find-process: bin/find-process.js
-  checksum: 10c0/36134cb08050b28ffcff6847601ebbda5cbe2d5bf1b0baef660c1dba0f1d318548cc7a336b133ff3cf7fc7a1f2a1f423645320c0112e0143237a52a49a8ea7d1
+  checksum: 10c0/cea8cd43f41e0a9d26dfb70db73fdbc5d14d3ed0f8975e1688492babfa3a2a5f97f52dd986679ee8ddc0e6ff5e8f0a6013821f15eb9970e8031d44ad3c0b2deb
+  languageName: node
+  linkType: hard
+
+"find-process@patch:find-process@npm%3A1.4.7#~/.yarn/patches/find-process-npm-1.4.7-e91aca1924.patch":
+  version: 1.4.7
+  resolution: "find-process@patch:find-process@npm%3A1.4.7#~/.yarn/patches/find-process-npm-1.4.7-e91aca1924.patch::version=1.4.7&hash=5b2108"
+  dependencies:
+    chalk: "npm:^4.0.0"
+    commander: "npm:^5.1.0"
+    debug: "npm:^4.1.1"
+  bin:
+    find-process: bin/find-process.js
+  checksum: 10c0/b778aa4b1158106d4299ab87a9f5a8eed90ede08ac03679d72d426693cdb274419449157d2914e3a14d60d79719f83909e78e34fc3067ec9a62cd87c4ba954a9
   languageName: node
   linkType: hard
 
@@ -9825,13 +9838,6 @@ asn1@evs-broadcast/node-asn1:
     safe-stable-stringify: "npm:^2.3.1"
     triple-beam: "npm:^1.3.0"
   checksum: 10c0/6e02f8617a03155b2fce451bacf777a2c01da16d32c4c745b3ec85be6c3f2602f2a4953a8bd096441cb4c42c447b52318541d6b6bc335dce903cb9ad77a1749f
-  languageName: node
-  linkType: hard
-
-"loglevel@npm:^1.8.0":
-  version: 1.9.1
-  resolution: "loglevel@npm:1.9.1"
-  checksum: 10c0/152f0501cea367cf998c844a38b19f0b5af555756ad7d8650214a1f8c6a5b045e31b8cf5dae27d28339a061624ce3f618aadb333aed386cac041d6ddc5101a39
   languageName: node
   linkType: hard
 

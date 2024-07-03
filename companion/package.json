@@ -70,7 +70,7 @@
 		"express": "^4.19.2",
 		"express-serve-zip": "^1.1.0",
 		"fast-json-patch": "^3.1.1",
-		"find-process": "github:julusian/find-process#fix/spawn-error-handler",
+		"find-process": "patch:find-process@npm%3A1.4.7#~/.yarn/patches/find-process-npm-1.4.7-e91aca1924.patch",
 		"fs-extra": "^11.2.0",
 		"get-port": "^7.1.0",
 		"got": "^13.0.0",
