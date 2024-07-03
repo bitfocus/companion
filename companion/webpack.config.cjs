@@ -99,6 +99,9 @@ module.exports = {
 							urlPrefix: '~/',
 						},
 					},
+					errorHandler: (err) => {
+						console.warn('Sentry error', err)
+					},
 				})
 			: '',
 	].filter(Boolean),

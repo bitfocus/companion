@@ -18,7 +18,7 @@ import LogController from '../../Log/Controller.js'
 import { EventEmitter } from 'events'
 import ImageWriteQueue from '../../Resources/ImageWriteQueue.js'
 import imageRs from '@julusian/image-rs'
-import { translateRotation } from '../../Resources/Util.js'
+import { parseColor, parseColorToNumber, translateRotation } from '../../Resources/Util.js'
 import { convertXYToIndexForPanel, convertPanelIndexToXY } from '../Util.js'
 
 /**
@@ -29,7 +29,7 @@ import { convertXYToIndexForPanel, convertPanelIndexToXY } from '../Util.js'
  *   socket: import('net').Socket
  *   gridSize: import('../Util.js').GridSize
  *   streamBitmapSize: number | null
- *   streamColors: boolean
+ *   streamColors: string | boolean
  *   streamText: boolean
  *   streamTextStyle: boolean
  * }} SatelliteDeviceInfo
@@ -57,8 +57,9 @@ class SurfaceIPSatellite extends EventEmitter {
 	 */
 	#streamBitmapSize
 	/**
-	 * Whether to stream button colors to the satellite device
-	 * @type {boolean}
+	 * Whether to stream button colors to the satellite device and which format
+	 * can be false, true or 'hex' for hex format, 'rgb' for css rgb format.
+	 * @type {string | boolean}
 	 * @access private
 	 */
 	#streamColors = false
@@ -154,11 +155,18 @@ class SurfaceIPSatellite extends EventEmitter {
 		if (this.socket !== undefined) {
 			let params = ``
 			if (this.#streamColors) {
-				// convert color to hex
-				const bgcolor = style && typeof style.bgcolor === 'number' ? style.bgcolor : 0
-				const color = bgcolor.toString(16).padStart(6, '0')
+				let bgcolor = 'rgb(0,0,0)'
+				let fgcolor = 'rgb(0,0,0)'
+				if (style && style.color && style.bgcolor) {
+					bgcolor = parseColor(style.bgcolor).replaceAll(' ', '')
+					fgcolor = parseColor(style.color).replaceAll(' ', '')
+				}
+				if (this.#streamColors !== 'rgb') {
+					bgcolor = '#' + parseColorToNumber(bgcolor).toString(16).padStart(6, '0')
+					fgcolor = '#' + parseColorToNumber(fgcolor).toString(16).padStart(6, '0')
+				}
 
-				params += ` COLOR=#${color}`
+				params += ` COLOR=${bgcolor} TEXTCOLOR=${fgcolor}`
 			}
 			if (this.#streamBitmapSize) {
 				if (buffer === undefined || buffer.length == 0) {
@@ -191,6 +199,28 @@ class SurfaceIPSatellite extends EventEmitter {
 	}
 
 	/**
+	 * parses a received key parameter
+	 * @param {string} key either as key number in legacy format starting at 0 or in row/column format starting at 0/0 top left
+	 * @returns {[x: number, y: number] | null} local key position in [x,y] format or null if input is not valid
+	 */
+	parseKeyParam(key) {
+		const keynum = Number(key)
+		const keyParse = key.match(/^\+?(\d+)\/\+?(\d+)$/)
+
+		if (
+			Array.isArray(keyParse) &&
+			Number(keyParse[1]) < this.gridSize.rows &&
+			Number(keyParse[2]) < this.gridSize.columns
+		) {
+			return [Number(keyParse[2]), Number(keyParse[1])]
+		} else if (!isNaN(keynum) && keynum < this.gridSize.columns * this.gridSize.rows && keynum >= 0) {
+			return convertPanelIndexToXY(Number(key), this.gridSize)
+		} else {
+			return null
+		}
+	}
+
+	/**
 	 * Draw a button
 	 * @param {number} x
 	 * @param {number} y
@@ -211,26 +241,22 @@ class SurfaceIPSatellite extends EventEmitter {
 
 	/**
 	 * Produce a click event
-	 * @param {number} key
+	 * @param {number} column
+	 * @param {number} row
 	 * @param {boolean} state
 	 */
-	doButton(key, state) {
-		const xy = convertPanelIndexToXY(key, this.gridSize)
-		if (xy) {
-			this.emit('click', ...xy, state)
-		}
+	doButton(column, row, state) {
+		this.emit('click', column, row, state)
 	}
 
 	/**
 	 * Produce a rotation event
-	 * @param {number} key
+	 * @param {number} column
+	 * @param {number} row
 	 * @param {boolean} direction
 	 */
-	doRotate(key, direction) {
-		const xy = convertPanelIndexToXY(key, this.gridSize)
-		if (xy) {
-			this.emit('rotate', ...xy, direction)
-		}
+	doRotate(column, row, direction) {
+		this.emit('rotate', column, row, direction)
 	}
 
 	clearDeck() {

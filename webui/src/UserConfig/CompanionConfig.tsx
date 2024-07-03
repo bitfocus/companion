@@ -24,7 +24,7 @@ export const CompanionConfig = observer(function CompanionConfig({
 				</th>
 			</tr>
 			<tr>
-				<td colSpan={2}>
+				<td>
 					<div className="mr-1">
 						<CFormInput
 							type="text"
@@ -32,6 +32,13 @@ export const CompanionConfig = observer(function CompanionConfig({
 							onChange={(e) => setValue('installName', e.currentTarget.value)}
 						/>
 					</div>
+				</td>
+				<td>
+					<div
+						style={{
+							minWidth: '8em', // provide minimum width for second column
+						}}
+					></div>
 				</td>
 				<td>
 					<CButton onClick={() => resetValue('installName')} title="Reset to default">

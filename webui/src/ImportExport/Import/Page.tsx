@@ -17,6 +17,8 @@ import type { ClientImportObject, ClientImportObjectInstance } from '@companion-
 import { compareExportedInstances } from '@companion-app/shared/Import.js'
 import { RootAppStoreContext } from '../../Stores/RootAppStore.js'
 import { observer } from 'mobx-react-lite'
+import { ButtonGridZoomControl } from '../../Buttons/ButtonGridZoomSlider.js'
+import { useGridZoom } from '../../Buttons/GridZoom.js'
 
 interface ImportPageWizardProps {
 	snapshot: ClientImportObject
@@ -75,6 +77,8 @@ export const ImportPageWizard = observer(function ImportPageWizard({
 
 	const [hasBeenRendered, hasBeenRenderedRef] = useHasBeenRendered()
 
+	const [gridZoomController, gridZoomValue] = useGridZoom('import')
+
 	return (
 		<CRow className="">
 			<CCol xs={12} xl={6}>
@@ -90,7 +94,7 @@ export const ImportPageWizard = observer(function ImportPageWizard({
 								}}
 								onClick={resetSourcePosition}
 							>
-								<FontAwesomeIcon icon={faHome} /> Home Position
+								<FontAwesomeIcon icon={faHome} /> Home
 							</CButton>
 
 							<ButtonGridHeader
@@ -106,6 +110,7 @@ export const ImportPageWizard = observer(function ImportPageWizard({
 									pageNumber={isSinglePage ? snapshot.oldPageNumber ?? 1 : importPageNumber}
 									gridSize={sourceGridSize}
 									buttonIconFactory={ButtonImportPreview}
+									drawScale={gridZoomValue / 100}
 								/>
 							)}
 						</div>
@@ -126,8 +131,19 @@ export const ImportPageWizard = observer(function ImportPageWizard({
 								}}
 								onClick={resetDestinationPosition}
 							>
-								<FontAwesomeIcon icon={faHome} /> Home Position
+								<FontAwesomeIcon icon={faHome} /> Home
 							</CButton>
+
+							<ButtonGridZoomControl
+								useCompactButtons={false}
+								gridZoomValue={gridZoomValue}
+								gridZoomController={gridZoomController}
+								style={{
+									float: 'right',
+									marginTop: 10,
+									marginRight: 3,
+								}}
+							/>
 
 							<ButtonGridHeader pageNumber={pageNumber} changePage={changePage} setPage={setPageNumber} />
 						</CCol>
@@ -138,6 +154,7 @@ export const ImportPageWizard = observer(function ImportPageWizard({
 									pageNumber={pageNumber}
 									gridSize={destinationGridSize}
 									buttonIconFactory={ButtonGridIcon}
+									drawScale={gridZoomValue / 100}
 								/>
 							)}
 						</div>

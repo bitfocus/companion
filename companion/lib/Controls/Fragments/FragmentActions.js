@@ -1,6 +1,6 @@
-import CoreBase from '../../Core/Base.js'
 import { cloneDeep } from 'lodash-es'
 import { nanoid } from 'nanoid'
+import LogController from '../../Log/Controller.js'
 
 /**
  * @typedef {import('@companion-app/shared/Model/ActionModel.js').ActionInstance} ActionInstance
@@ -9,7 +9,6 @@ import { nanoid } from 'nanoid'
 /**
  * Helper for ControlTypes with actions
  *
- * @extends CoreBase
  * @author Håkon Nessjøen <haakon@bitfocus.io>
  * @author Keith Rocheck <keith.rocheck@gmail.com>
  * @author William Viker <william@bitfocus.io>
@@ -28,7 +27,7 @@ import { nanoid } from 'nanoid'
  * develop commercial activities involving the Companion software without
  * disclosing the source code of your own applications.
  */
-export default class FragmentActions extends CoreBase {
+export default class FragmentActions {
 	/**
 	 * The action-sets on this button
 	 * @type {import('@companion-app/shared/Model/ActionModel.js').ActionSetsModel}
@@ -50,12 +49,35 @@ export default class FragmentActions extends CoreBase {
 	#commitChange
 
 	/**
-	 * @param {import('../../Registry.js').default} registry - the application core
+	 * The logger
+	 * @type {import('winston').Logger}
+	 * @access private
+	 */
+	#logger
+
+	/**
+	 * @type {import('../../Internal/Controller.js').default}
+	 * @access private
+	 */
+	#internalModule
+
+	/**
+	 * @type {import('../../Instance/Host.js').default}
+	 * @access private
+	 */
+	#moduleHost
+
+	/**
+	 * @param {import('../../Internal/Controller.js').default} internalModule
+	 * @param {import('../../Instance/Host.js').default} moduleHost
 	 * @param {string} controlId - id of the control
 	 * @param {(redraw?: boolean) => void} commitChange
 	 */
-	constructor(registry, controlId, commitChange) {
-		super(registry, 'Controls/Fragments/Actions')
+	constructor(internalModule, moduleHost, controlId, commitChange) {
+		this.#logger = LogController.createLogger(`Controls/Fragments/Actions/${controlId}`)
+
+		this.#internalModule = internalModule
+		this.#moduleHost = moduleHost
 
 		this.controlId = controlId
 		this.#commitChange = commitChange
@@ -72,7 +94,7 @@ export default class FragmentActions extends CoreBase {
 		const action_set = this.action_sets[setId]
 		if (!action_set) {
 			// cant implicitly create a set
-			this.logger.silly(`Missing set ${this.controlId}:${setId}`)
+			this.#logger.silly(`Missing set ${this.controlId}:${setId}`)
 			return false
 		}
 
@@ -230,7 +252,7 @@ export default class FragmentActions extends CoreBase {
 		if (action_set) {
 			const action = action_set.find((act) => act.id === id)
 			if (action) {
-				const instance = this.instance.moduleHost.getChild(action.instance)
+				const instance = this.#moduleHost.getChild(action.instance)
 				if (instance) {
 					const newOptions = await instance.actionLearnValues(action, this.controlId)
 					if (newOptions) {
@@ -408,10 +430,10 @@ export default class FragmentActions extends CoreBase {
 	 */
 	#actionSubscribe(action) {
 		if (!action.disabled) {
-			const instance = this.instance.moduleHost.getChild(action.instance, true)
+			const instance = this.#moduleHost.getChild(action.instance, true)
 			if (instance) {
 				instance.actionUpdate(action, this.controlId).catch((/** @type {any} */ e) => {
-					this.logger.silly(`action_update to connection failed: ${e.message}`)
+					this.#logger.silly(`action_update to connection failed: ${e.message}`)
 				})
 			}
 		}
@@ -425,10 +447,10 @@ export default class FragmentActions extends CoreBase {
 	 */
 	cleanupAction(action) {
 		// Inform relevant module
-		const instance = this.instance.moduleHost.getChild(action.instance, true)
+		const instance = this.#moduleHost.getChild(action.instance, true)
 		if (instance) {
 			instance.actionDelete(action).catch((/** @type {any} */ e) => {
-				this.logger.silly(`action_delete to connection failed: ${e.message}`)
+				this.#logger.silly(`action_delete to connection failed: ${e.message}`)
 			})
 		}
 	}
@@ -511,12 +533,12 @@ export default class FragmentActions extends CoreBase {
 				action.id = nanoid()
 
 				if (action.instance === 'internal') {
-					const newAction = this.internalModule.actionUpgrade(action, this.controlId)
+					const newAction = this.#internalModule.actionUpgrade(action, this.controlId)
 					if (newAction) {
 						action_set[i] = newAction
 					}
 				} else {
-					const instance = this.instance.moduleHost.getChild(action.instance, true)
+					const instance = this.#moduleHost.getChild(action.instance, true)
 					if (instance) {
 						ps.push(instance.actionUpdate(action, this.controlId))
 					}
@@ -525,7 +547,7 @@ export default class FragmentActions extends CoreBase {
 		}
 
 		await Promise.all(ps).catch((e) => {
-			this.logger.silly(`postProcessImport for ${this.controlId} failed: ${e.message}`)
+			this.#logger.silly(`postProcessImport for ${this.controlId} failed: ${e.message}`)
 		})
 	}
 

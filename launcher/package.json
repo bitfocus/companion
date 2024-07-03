@@ -14,7 +14,7 @@
 		"@sentry/electron": "^4.24.0",
 		"chokidar": "^3.6.0",
 		"debounce-fn": "^6.0.0",
-		"electron-store": "^9.0.0",
+		"electron-store": "^10.0.0",
 		"file-stream-rotator": "^1.0.0",
 		"fs-extra": "^11.2.0",
 		"nanoid": "^5.0.7",
@@ -22,12 +22,12 @@
 		"respawn": "*",
 		"semver": "^7.6.2",
 		"strip-ansi": "^7.1.0",
-		"systeminformation": "^5.22.9"
+		"systeminformation": "^5.22.11"
 	},
 	"devDependencies": {
 		"@electron/notarize": "^2.3.2",
 		"@types/plist": "^3.0.5",
-		"electron": "30.0.6",
+		"electron": "31.1.0",
 		"electron-builder": "24.13.3",
 		"electron-reloader": "^1.2.3"
 	},

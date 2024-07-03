@@ -37,21 +37,6 @@ export const OscConfig = observer(function OscConfig({ config, setValue, resetVa
 				</td>
 			</tr>
 			<tr>
-				<td>OSC Listen Port</td>
-				<td>
-					<CFormInput
-						type="number"
-						value={config.osc_listen_port}
-						onChange={(e) => setValue('osc_listen_port', e.currentTarget.value)}
-					/>
-				</td>
-				<td>
-					<CButton onClick={() => resetValue('osc_listen_port')} title="Reset to default">
-						<FontAwesomeIcon icon={faUndo} />
-					</CButton>
-				</td>
-			</tr>
-			<tr>
 				<td>
 					Deprecated OSC API
 					<br />
@@ -72,6 +57,30 @@ export const OscConfig = observer(function OscConfig({ config, setValue, resetVa
 					</CButton>
 				</td>
 			</tr>
+			{(config.osc_enabled || config.osc_legacy_api_enabled) && (
+				<tr>
+					<td>OSC Listen Port</td>
+					<td>
+						<CFormInput
+							type="number"
+							value={config.osc_listen_port}
+							onChange={(e) => {
+								let value = Math.floor(Number(e.currentTarget.value))
+								if (isNaN(value)) return
+
+								value = Math.min(value, 65535)
+								value = Math.max(value, 1024)
+								setValue('osc_listen_port', value)
+							}}
+						/>
+					</td>
+					<td>
+						<CButton onClick={() => resetValue('osc_listen_port')} title="Reset to default">
+							<FontAwesomeIcon icon={faUndo} />
+						</CButton>
+					</td>
+				</tr>
+			)}
 		</>
 	)
 })

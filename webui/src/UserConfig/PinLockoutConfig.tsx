@@ -41,53 +41,62 @@ export const PinLockoutConfig = observer(function PinLockoutConfig({
 				</td>
 			</tr>
 
-			<tr>
-				<td>Link Lockouts</td>
-				<td>
-					<CFormSwitch
-						className="float-right"
-						color="success"
-						checked={config.link_lockouts}
-						size="xl"
-						onChange={(e) => setValue('link_lockouts', e.currentTarget.checked)}
-					/>
-				</td>
-				<td>
-					<CButton onClick={() => resetValue('link_lockouts')} title="Reset to default">
-						<FontAwesomeIcon icon={faUndo} />
-					</CButton>
-				</td>
-			</tr>
+			{config.pin_enable && (
+				<>
+					<tr>
+						<td>Link Lockouts</td>
+						<td>
+							<CFormSwitch
+								color="success"
+								checked={config.link_lockouts}
+								size={'lg'}
+								onChange={(e) => setValue('link_lockouts', e.currentTarget.checked)}
+							/>
+						</td>
+						<td>
+							<CButton onClick={() => resetValue('link_lockouts')} title="Reset to default">
+								<FontAwesomeIcon icon={faUndo} />
+							</CButton>
+						</td>
+					</tr>
 
-			<tr>
-				<td>Pin Code</td>
-				<td>
-					<CFormInput type="text" value={config.pin} onChange={(e) => setValue('pin', e.currentTarget.value)} />
-				</td>
-				<td>
-					<CButton onClick={() => resetValue('pin')} title="Reset to default">
-						<FontAwesomeIcon icon={faUndo} />
-					</CButton>
-				</td>
-			</tr>
+					<tr>
+						<td>Pin Code</td>
+						<td>
+							<CFormInput type="text" value={config.pin} onChange={(e) => setValue('pin', e.currentTarget.value)} />
+						</td>
+						<td>
+							<CButton onClick={() => resetValue('pin')} title="Reset to default">
+								<FontAwesomeIcon icon={faUndo} />
+							</CButton>
+						</td>
+					</tr>
 
-			<tr>
-				<td>Pin Timeout (seconds, 0 to turn off)</td>
-				<td>
-					<CFormInput
-						type="number"
-						value={config.pin_timeout}
-						min={0}
-						step={1}
-						onChange={(e) => setValue('pin_timeout', e.currentTarget.value)}
-					/>
-				</td>
-				<td>
-					<CButton onClick={() => resetValue('pin_timeout')} title="Reset to default">
-						<FontAwesomeIcon icon={faUndo} />
-					</CButton>
-				</td>
-			</tr>
+					<tr>
+						<td>Pin Timeout (seconds, 0 to turn off)</td>
+						<td>
+							<CFormInput
+								type="number"
+								value={config.pin_timeout}
+								min={0}
+								step={1}
+								onChange={(e) => {
+									let value = Math.floor(Number(e.currentTarget.value))
+									if (isNaN(value)) return
+
+									value = Math.max(value, 0)
+									setValue('pin_timeout', value)
+								}}
+							/>
+						</td>
+						<td>
+							<CButton onClick={() => resetValue('pin_timeout')} title="Reset to default">
+								<FontAwesomeIcon icon={faUndo} />
+							</CButton>
+						</td>
+					</tr>
+				</>
+			)}
 		</>
 	)
 })

@@ -37,21 +37,6 @@ export const UdpConfig = observer(function UdpConfig({ config, setValue, resetVa
 				</td>
 			</tr>
 			<tr>
-				<td>UDP Listen Port</td>
-				<td>
-					<CFormInput
-						type="number"
-						value={config.udp_listen_port}
-						onChange={(e) => setValue('udp_listen_port', e.currentTarget.value)}
-					/>
-				</td>
-				<td>
-					<CButton onClick={() => resetValue('udp_listen_port')} title="Reset to default">
-						<FontAwesomeIcon icon={faUndo} />
-					</CButton>
-				</td>
-			</tr>
-			<tr>
 				<td>
 					Deprecated UDP API
 					<br />
@@ -72,6 +57,33 @@ export const UdpConfig = observer(function UdpConfig({ config, setValue, resetVa
 					</CButton>
 				</td>
 			</tr>
+			{(config.udp_enabled || config.udp_legacy_api_enabled) && (
+				<tr>
+					<td>UDP Listen Port</td>
+					<td>
+						<CFormInput
+							type="number"
+							value={config.udp_listen_port}
+							min={1024}
+							max={65535}
+							step={1}
+							onChange={(e) => {
+								let value = Math.floor(Number(e.currentTarget.value))
+								if (isNaN(value)) return
+
+								value = Math.min(value, 65535)
+								value = Math.max(value, 1024)
+								setValue('udp_listen_port', value)
+							}}
+						/>
+					</td>
+					<td>
+						<CButton onClick={() => resetValue('udp_listen_port')} title="Reset to default">
+							<FontAwesomeIcon icon={faUndo} />
+						</CButton>
+					</td>
+				</tr>
+			)}
 		</>
 	)
 })

@@ -73,41 +73,54 @@ export const HttpsConfig = observer(function HttpsConfig({ config, setValue, res
 				</td>
 			</tr>
 
-			<tr>
-				<td>HTTPS Port</td>
-				<td>
-					<CFormInput
-						type="number"
-						value={config.https_port}
-						onChange={(e) => setValue('https_port', e.currentTarget.value)}
-					/>
-				</td>
-				<td>
-					<CButton onClick={() => resetValue('https_port')} title="Reset to default">
-						<FontAwesomeIcon icon={faUndo} />
-					</CButton>
-				</td>
-			</tr>
+			{config.https_enabled && (
+				<tr>
+					<td>HTTPS Port</td>
+					<td>
+						<CFormInput
+							type="number"
+							value={config.https_port}
+							min={1024}
+							max={65535}
+							onChange={(e) => {
+								let value = Math.floor(Number(e.currentTarget.value))
+								if (isNaN(value)) return
 
-			<tr>
-				<td>Certificate Type</td>
-				<td>
-					<CDropdown className="mt-2" style={{ display: 'inline-block', overflow: 'visible' }}>
-						<CDropdownToggle>{config.https_cert_type === 'external' ? 'External' : 'Self Signed'}</CDropdownToggle>
-						<CDropdownMenu>
-							<CDropdownItem onClick={() => setValue('https_cert_type', 'self')}>Self Signed</CDropdownItem>
-							<CDropdownItem onClick={() => setValue('https_cert_type', 'external')}>External</CDropdownItem>
-						</CDropdownMenu>
-					</CDropdown>
-				</td>
-				<td>
-					<CButton onClick={() => resetValue('https_cert_type')} title="Reset to default">
-						<FontAwesomeIcon icon={faUndo} />
-					</CButton>
-				</td>
-			</tr>
+								value = Math.min(value, 65535)
+								value = Math.max(value, 1024)
+								setValue('https_port', value)
+							}}
+						/>
+					</td>
+					<td>
+						<CButton onClick={() => resetValue('https_port')} title="Reset to default">
+							<FontAwesomeIcon icon={faUndo} />
+						</CButton>
+					</td>
+				</tr>
+			)}
 
-			{config.https_cert_type === 'self' && (
+			{config.https_enabled && (
+				<tr>
+					<td>Certificate Type</td>
+					<td>
+						<CDropdown className="mt-2" style={{ display: 'inline-block', overflow: 'visible' }}>
+							<CDropdownToggle>{config.https_cert_type === 'external' ? 'External' : 'Self Signed'}</CDropdownToggle>
+							<CDropdownMenu>
+								<CDropdownItem onClick={() => setValue('https_cert_type', 'self')}>Self Signed</CDropdownItem>
+								<CDropdownItem onClick={() => setValue('https_cert_type', 'external')}>External</CDropdownItem>
+							</CDropdownMenu>
+						</CDropdown>
+					</td>
+					<td>
+						<CButton onClick={() => resetValue('https_cert_type')} title="Reset to default">
+							<FontAwesomeIcon icon={faUndo} />
+						</CButton>
+					</td>
+				</tr>
+			)}
+
+			{config.https_enabled && config.https_cert_type === 'self' && (
 				<tr>
 					<td colSpan={3}>
 						<table className="table table-responsive-sm">
@@ -137,7 +150,16 @@ export const HttpsConfig = observer(function HttpsConfig({ config, setValue, res
 										<CFormInput
 											type="number"
 											value={config.https_self_expiry}
-											onChange={(e) => setValue('https_self_expiry', e.currentTarget.value)}
+											min={1}
+											max={65535}
+											onChange={(e) => {
+												let value = Math.floor(Number(e.currentTarget.value))
+												if (isNaN(value)) return
+
+												value = Math.min(value, 65535)
+												value = Math.max(value, 1)
+												setValue('https_self_expiry', value)
+											}}
 										/>
 									</td>
 									<td>
@@ -190,7 +212,7 @@ export const HttpsConfig = observer(function HttpsConfig({ config, setValue, res
 				</tr>
 			)}
 
-			{config.https_cert_type === 'external' && (
+			{config.https_enabled && config.https_cert_type === 'external' && (
 				<tr>
 					<td colSpan={3}>
 						<table className="table table-responsive-sm">

@@ -15,6 +15,7 @@ import { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import { observer } from 'mobx-react-lite'
 import { RootAppStoreContext } from '../Stores/RootAppStore.js'
 import classNames from 'classnames'
+import { useGridZoom } from './GridZoom.js'
 
 interface ButtonsPageProps {
 	hotPress: boolean
@@ -24,6 +25,7 @@ export const ButtonsPage = observer(function ButtonsPage({ hotPress }: ButtonsPa
 	const { userConfig, socket } = useContext(RootAppStoreContext)
 
 	const clearModalRef = useRef<GenericConfirmModalRef>(null)
+	const [gridZoomController, gridZoomValue] = useGridZoom('grid')
 
 	const [tabResetToken, setTabResetToken] = useState(nanoid())
 	const [activeTab, setActiveTab] = useState('presets')
@@ -65,7 +67,18 @@ export const ButtonsPage = observer(function ButtonsPage({ hotPress }: ButtonsPa
 
 	const handleKeyDownInButtons = useCallback(
 		(e: React.KeyboardEvent) => {
-			if (e.currentTarget.tagName !== 'INPUT' && e.currentTarget.tagName !== 'TEXTAREA') {
+			const isControlOrCommandCombo = (e.ctrlKey || e.metaKey) && !e.altKey
+
+			if (isControlOrCommandCombo && e.key === '=') {
+				e.preventDefault()
+				gridZoomController.zoomIn(true)
+			} else if (isControlOrCommandCombo && e.key === '-') {
+				e.preventDefault()
+				gridZoomController.zoomOut(true)
+			} else if (isControlOrCommandCombo && e.key === '0') {
+				e.preventDefault()
+				gridZoomController.zoomReset()
+			} else if (e.currentTarget.tagName !== 'INPUT' && e.currentTarget.tagName !== 'TEXTAREA') {
 				switch (e.key) {
 					case 'ArrowDown':
 						setSelectedButton((selectedButton) => {
@@ -164,15 +177,15 @@ export const ButtonsPage = observer(function ButtonsPage({ hotPress }: ButtonsPa
 							}
 						)
 					}
-					if ((e.ctrlKey || e.metaKey) && !e.altKey && e.key.toLowerCase() === 'c') {
+					if (isControlOrCommandCombo && e.key.toLowerCase() === 'c') {
 						console.log('prepare copy', selectedButton)
 						setCopyFromButton([selectedButton, 'copy'])
 					}
-					if ((e.ctrlKey || e.metaKey) && !e.altKey && e.key.toLowerCase() === 'x') {
+					if (isControlOrCommandCombo && e.key.toLowerCase() === 'x') {
 						console.log('prepare cut', selectedButton)
 						setCopyFromButton([selectedButton, 'cut'])
 					}
-					if ((e.ctrlKey || e.metaKey) && !e.altKey && e.key.toLowerCase() === 'v' && copyFromButton) {
+					if (isControlOrCommandCombo && e.key.toLowerCase() === 'v' && copyFromButton) {
 						console.log('do paste', copyFromButton, selectedButton)
 
 						if (copyFromButton[1] === 'copy') {
@@ -210,6 +223,8 @@ export const ButtonsPage = observer(function ButtonsPage({ hotPress }: ButtonsPa
 						changePage={setPageNumber}
 						onKeyDown={handleKeyDownInButtons}
 						clearSelectedButton={clearSelectedButton}
+						gridZoomController={gridZoomController}
+						gridZoomValue={gridZoomValue}
 					/>
 				</MyErrorBoundary>
 			</CCol>

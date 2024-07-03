@@ -57,6 +57,7 @@ export function OptionsInputField({
 					placeholder={option.placeholder}
 					useVariables={features.variables}
 					useLocalVariables={features.local}
+					isExpression={option.isExpression}
 					disabled={readonly}
 					setValue={setValue2}
 				/>

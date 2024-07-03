@@ -36,11 +36,13 @@ export const RosstalkConfig = observer(function RosstalkConfig({ config, setValu
 					</CButton>
 				</td>
 			</tr>
-			<tr>
-				<td>Rosstalk Listen Port</td>
-				<td>7788</td>
-				<td></td>
-			</tr>
+			{config.rosstalk_enabled && (
+				<tr>
+					<td>Rosstalk Listen Port</td>
+					<td>7788</td>
+					<td></td>
+				</tr>
+			)}
 		</>
 	)
 })

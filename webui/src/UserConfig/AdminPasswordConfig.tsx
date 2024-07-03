@@ -49,38 +49,50 @@ export const AdminPasswordConfig = observer(function AdminPasswordConfig({
 					</CButton>
 				</td>
 			</tr>
-			<tr>
-				<td>Session Timeout (minutes, 0 for no timeout)</td>
-				<td>
-					<CFormInput
-						type="number"
-						value={config.admin_timeout}
-						min={0}
-						step={1}
-						onChange={(e) => setValue('admin_timeout', e.currentTarget.value)}
-					/>
-				</td>
-				<td>
-					<CButton onClick={() => resetValue('admin_timeout')} title="Reset to default">
-						<FontAwesomeIcon icon={faUndo} />
-					</CButton>
-				</td>
-			</tr>
-			<tr>
-				<td>Password</td>
-				<td>
-					<CFormInput
-						type="text"
-						value={config.admin_password}
-						onChange={(e) => setValue('admin_password', e.currentTarget.value)}
-					/>
-				</td>
-				<td>
-					<CButton onClick={() => resetValue('admin_password')} title="Reset to default">
-						<FontAwesomeIcon icon={faUndo} />
-					</CButton>
-				</td>
-			</tr>
+			{config.admin_lockout && (
+				<tr>
+					<td>Session Timeout (minutes, 0 for no timeout)</td>
+					<td>
+						<CFormInput
+							type="number"
+							value={config.admin_timeout}
+							min={0}
+							step={1}
+							onChange={(e) => {
+								let value = Math.floor(Number(e.currentTarget.value))
+								if (isNaN(value)) return
+
+								value = Math.max(value, 0)
+								setValue('admin_timeout', value)
+							}}
+						/>
+					</td>
+					<td>
+						<CButton onClick={() => resetValue('admin_timeout')} title="Reset to default">
+							<FontAwesomeIcon icon={faUndo} />
+						</CButton>
+					</td>
+				</tr>
+			)}
+			{config.admin_lockout && (
+				<tr>
+					<td>Password</td>
+					<td>
+						<div className="form-check form-check-inline mr-1">
+							<CFormInput
+								type="text"
+								value={config.admin_password}
+								onChange={(e) => setValue('admin_password', e.currentTarget.value)}
+							/>
+						</div>
+					</td>
+					<td>
+						<CButton onClick={() => resetValue('admin_password')} title="Reset to default">
+							<FontAwesomeIcon icon={faUndo} />
+						</CButton>
+					</td>
+				</tr>
+			)}
 		</>
 	)
 })

@@ -1,7 +1,7 @@
-import CoreBase from '../../Core/Base.js'
 import { clamp } from '../../Resources/Util.js'
 import { cloneDeep, isEqual } from 'lodash-es'
 import { nanoid } from 'nanoid'
+import LogController from '../../Log/Controller.js'
 
 /**
  * @typedef {import('@companion-app/shared/Model/FeedbackModel.js').FeedbackInstance} FeedbackInstance
@@ -10,7 +10,6 @@ import { nanoid } from 'nanoid'
 /**
  * Helper for ControlTypes with feedbacks
  *
- * @extends CoreBase
  * @author Håkon Nessjøen <haakon@bitfocus.io>
  * @author Keith Rocheck <keith.rocheck@gmail.com>
  * @author William Viker <william@bitfocus.io>
@@ -29,7 +28,7 @@ import { nanoid } from 'nanoid'
  * develop commercial activities involving the Companion software without
  * disclosing the source code of your own applications.
  */
-export default class FragmentFeedbacks extends CoreBase {
+export default class FragmentFeedbacks {
 	/**
 	 * The defaults style for a button
 	 * @type {import('@companion-app/shared/Model/StyleModel.js').ButtonStyleProperties}
@@ -100,14 +99,45 @@ export default class FragmentFeedbacks extends CoreBase {
 	#triggerRedraw
 
 	/**
-	 * @param {import('../../Registry.js').default} registry - the application core
+	 * The logger
+	 * @type {import('winston').Logger}
+	 * @access private
+	 */
+	#logger
+
+	/**
+	 * @type {import('../../Instance/Definitions.js').default}
+	 * @access private
+	 */
+	#instanceDefinitions
+
+	/**
+	 * @type {import('../../Internal/Controller.js').default}
+	 * @access private
+	 */
+	#internalModule
+
+	/**
+	 * @type {import('../../Instance/Host.js').default}
+	 * @access private
+	 */
+	#moduleHost
+
+	/**
+	 * @param {import('../../Instance/Definitions.js').default} instanceDefinitions
+	 * @param {import('../../Internal/Controller.js').default} internalModule
+	 * @param {import('../../Instance/Host.js').default} moduleHost
 	 * @param {string} controlId - id of the control
 	 * @param {(redraw?: boolean) => void} commitChange
 	 * @param {() => void} triggerRedraw
 	 * @param {boolean} booleanOnly
 	 */
-	constructor(registry, controlId, commitChange, triggerRedraw, booleanOnly) {
-		super(registry, 'Controls/Fragments/Feedbacks')
+	constructor(instanceDefinitions, internalModule, moduleHost, controlId, commitChange, triggerRedraw, booleanOnly) {
+		this.#logger = LogController.createLogger(`Controls/Fragments/Feedbacks/${controlId}`)
+
+		this.#instanceDefinitions = instanceDefinitions
+		this.#internalModule = internalModule
+		this.#moduleHost = moduleHost
 
 		this.controlId = controlId
 		this.#commitChange = commitChange
@@ -126,7 +156,7 @@ export default class FragmentFeedbacks extends CoreBase {
 		for (const feedback of this.feedbacks) {
 			if (feedback.disabled) continue
 
-			const definition = this.instance.definitions.getFeedbackDefinition(feedback.instance_id, feedback.type)
+			const definition = this.#instanceDefinitions.getFeedbackDefinition(feedback.instance_id, feedback.type)
 
 			let rawValue = this.#cachedFeedbackValues[feedback.id]
 
@@ -151,10 +181,10 @@ export default class FragmentFeedbacks extends CoreBase {
 	 */
 	#cleanupFeedback(feedback) {
 		// Inform relevant module
-		const connection = this.instance.moduleHost.getChild(feedback.instance_id, true)
+		const connection = this.#moduleHost.getChild(feedback.instance_id, true)
 		if (connection) {
 			connection.feedbackDelete(feedback).catch((/** @type {any} */ e) => {
-				this.logger.silly(`feedback_delete to connection failed: ${e.message}`)
+				this.#logger.silly(`feedback_delete to connection failed: ${e.message}`)
 			})
 		}
 
@@ -293,7 +323,7 @@ export default class FragmentFeedbacks extends CoreBase {
 	async feedbackLearn(id) {
 		const feedback = this.feedbacks.find((fb) => fb.id === id)
 		if (feedback) {
-			const instance = this.instance.moduleHost.getChild(feedback.instance_id)
+			const instance = this.#moduleHost.getChild(feedback.instance_id)
 			if (instance) {
 				const newOptions = await instance.feedbackLearnValues(feedback, this.controlId)
 				if (newOptions) {
@@ -450,7 +480,7 @@ export default class FragmentFeedbacks extends CoreBase {
 
 		for (const feedback of this.feedbacks) {
 			if (feedback && feedback.id === id) {
-				const definition = this.instance.definitions.getFeedbackDefinition(feedback.instance_id, feedback.type)
+				const definition = this.#instanceDefinitions.getFeedbackDefinition(feedback.instance_id, feedback.type)
 				if (!definition || definition.type !== 'boolean') return false
 
 				/** @type {Partial<import('@companion-module/base').CompanionButtonStyleProps>} */
@@ -516,7 +546,7 @@ export default class FragmentFeedbacks extends CoreBase {
 
 		for (const feedback of this.feedbacks) {
 			if (feedback && feedback.id === id) {
-				const definition = this.instance.definitions.getFeedbackDefinition(feedback.instance_id, feedback.type)
+				const definition = this.#instanceDefinitions.getFeedbackDefinition(feedback.instance_id, feedback.type)
 				if (!definition || definition.type !== 'boolean') return false
 
 				if (!feedback.style) feedback.style = {}
@@ -541,12 +571,12 @@ export default class FragmentFeedbacks extends CoreBase {
 	#feedbackSubscribe(feedback) {
 		if (!feedback.disabled) {
 			if (feedback.instance_id === 'internal') {
-				this.internalModule.feedbackUpdate(feedback, this.controlId)
+				this.#internalModule.feedbackUpdate(feedback, this.controlId)
 			} else {
-				const connection = this.instance.moduleHost.getChild(feedback.instance_id, true)
+				const connection = this.#moduleHost.getChild(feedback.instance_id, true)
 				if (connection) {
 					connection.feedbackUpdate(feedback, this.controlId).catch((/** @type {any} */ e) => {
-						this.logger.silly(`feedback_update to connection failed: ${e.message} ${e.stack}`)
+						this.#logger.silly(`feedback_update to connection failed: ${e.message} ${e.stack}`)
 					})
 				}
 			}
@@ -596,7 +626,7 @@ export default class FragmentFeedbacks extends CoreBase {
 		for (const feedback of this.feedbacks) {
 			if (feedback.disabled) continue
 
-			const definition = this.instance.definitions.getFeedbackDefinition(feedback.instance_id, feedback.type)
+			const definition = this.#instanceDefinitions.getFeedbackDefinition(feedback.instance_id, feedback.type)
 			const rawValue = this.#cachedFeedbackValues[feedback.id]
 			if (definition && rawValue !== undefined) {
 				if (definition.type === 'boolean' && rawValue == !feedback.isInverted) {
@@ -649,16 +679,16 @@ export default class FragmentFeedbacks extends CoreBase {
 			feedback.id = nanoid()
 
 			if (feedback.instance_id === 'internal') {
-				const newFeedback = this.internalModule.feedbackUpgrade(feedback, this.controlId)
+				const newFeedback = this.#internalModule.feedbackUpgrade(feedback, this.controlId)
 				if (newFeedback) {
 					this.feedbacks[i] = newFeedback
 				}
 
 				setImmediate(() => {
-					this.internalModule.feedbackUpdate(newFeedback || feedback, this.controlId)
+					this.#internalModule.feedbackUpdate(newFeedback || feedback, this.controlId)
 				})
 			} else {
-				const instance = this.instance.moduleHost.getChild(feedback.instance_id, true)
+				const instance = this.#moduleHost.getChild(feedback.instance_id, true)
 				if (instance) {
 					ps.push(instance.feedbackUpdate(feedback, this.controlId))
 				}
@@ -666,7 +696,7 @@ export default class FragmentFeedbacks extends CoreBase {
 		}
 
 		await Promise.all(ps).catch((/** @type {any} */ e) => {
-			this.logger.silly(`postProcessImport for ${this.controlId} failed: ${e.message}`)
+			this.#logger.silly(`postProcessImport for ${this.controlId} failed: ${e.message}`)
 		})
 	}
 
