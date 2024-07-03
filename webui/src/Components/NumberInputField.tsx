@@ -2,6 +2,7 @@ import React, { useEffect, useCallback, useState } from 'react'
 import { CCol, CFormInput, CRow } from '@coreui/react'
 
 interface NumberInputFieldProps {
+	label?: React.ReactNode
 	required?: boolean
 	min?: number
 	max?: number
@@ -15,6 +16,7 @@ interface NumberInputFieldProps {
 }
 
 export function NumberInputField({
+	label,
 	required,
 	min,
 	max,

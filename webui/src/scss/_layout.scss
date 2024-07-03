@@ -82,11 +82,6 @@ body {
 	color: #ddd;
 }
 
-.choose_connection {
-	width: 45%;
-	float: left;
-}
-
 .login-form {
 	display: grid;
 	grid-auto-flow: column;
@@ -119,7 +114,7 @@ body {
 
 	.row-heading {
 		position: sticky;
-		padding-top: 1rem;
+		padding-top: 0;
 		margin-top: -1rem;
 		top: 0;
 		left: 0;
@@ -364,8 +359,8 @@ hr.slim {
 	display: block;
 }
 
-.action-category {
-	margin-top: 40px;
+.action-category:not(:first-child) {
+	margin-top: 2rem;
 }
 
 .add-browse-card .header {

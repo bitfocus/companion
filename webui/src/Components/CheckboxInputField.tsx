@@ -17,7 +17,7 @@ export function CheckboxInputField({ tooltip, label, value, setValue, setValid, 
 	}, [setValid])
 
 	const onChange = useCallback(
-		(e) => {
+		(e: React.ChangeEvent<HTMLInputElement>) => {
 			setValue(!!e.currentTarget.checked)
 			setValid?.(true)
 		},

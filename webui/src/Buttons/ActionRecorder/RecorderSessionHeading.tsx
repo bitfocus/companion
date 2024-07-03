@@ -6,12 +6,11 @@ import {
 	LoadingRetryOrError,
 	PreventDefaultHandler,
 } from '../../util.js'
-import { CButton, CAlert, CButtonGroup, CCol, CRow, CForm, CFormLabel } from '@coreui/react'
+import { CButton, CAlert, CButtonGroup, CCol, CRow, CForm, CFormLabel, CFormSwitch } from '@coreui/react'
 import { useMemo } from 'react'
 import { DropdownInputField } from '../../Components/index.js'
 import { ActionsList } from '../../Controls/ActionSetEditor.js'
 import { usePanelCollapseHelper } from '../../Helpers/CollapseHelper.js'
-import CSwitch from '../../CSwitch.js'
 import type { DropdownChoiceId } from '@companion-module/base'
 import type { RecordSessionInfo } from '@companion-app/shared/Model/ActionRecorderModel.js'
 import { useActionRecorderActionService } from '../../Services/Controls/ControlActionsService.js'
@@ -96,7 +95,7 @@ export function RecorderSessionHeading({ confirmRef, sessionId, sessionInfo, doF
 		<>
 			<CForm onSubmit={PreventDefaultHandler}>
 				<CRow form className="flex-form flex-form-row" style={{ clear: 'both' }}>
-					<div className="flex w-full gap-2">
+					<div className="flex w-full gap-2rem">
 						<div className="w-full">
 							<CFormLabel>Connections</CFormLabel>
 							<DropdownInputField<true>
@@ -110,7 +109,7 @@ export function RecorderSessionHeading({ confirmRef, sessionId, sessionInfo, doF
 						<div>
 							<CFormLabel>Recording</CFormLabel>
 							<p>
-								<CSwitch color="success" size="lg" checked={!!sessionInfo.isRunning} onChange={changeRecording} />
+								<CFormSwitch color="success" size="lg" checked={!!sessionInfo.isRunning} onChange={changeRecording} />
 							</p>
 						</div>
 					</div>

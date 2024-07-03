@@ -73,7 +73,7 @@ export function ControlOptionsEditor({
 		<>
 			{' '}
 			<GenericConfirmModal ref={confirmRef} />
-			<div className="flex w-full gap-2 flex-form">
+			<div className="flex w-full gap-2rem flex-form">
 				<div>
 					<CFormLabel>
 						Relative Delays{' '}

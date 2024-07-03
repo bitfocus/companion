@@ -64,11 +64,9 @@ const VariablesConnectionList = observer(function VariablesConnectionList({
 	const options = variablesStore.connectionLabelsWithDefinitions.get().map((label) => {
 		if (label === 'internal') {
 			return (
-				<div key={label}>
-					<CButton color="info" className="choose_connection mb-3 mr-2" onClick={() => setConnectionId('internal')}>
-						Internal
-					</CButton>
-				</div>
+				<CButton key={label} color="info" onClick={() => setConnectionId('internal')}>
+					Internal
+				</CButton>
 			)
 		}
 
@@ -77,15 +75,9 @@ const VariablesConnectionList = observer(function VariablesConnectionList({
 		const moduleInfo = connectionInfo ? modules.modules.get(connectionInfo.instance_type) : undefined
 
 		return (
-			<div key={connectionId}>
-				<CButton
-					color="info"
-					className="choose_connection mb-3 mr-2"
-					onClick={() => setConnectionId(connectionId ?? null)}
-				>
-					{moduleInfo?.name ?? moduleInfo?.name ?? '?'} ({label ?? connectionId})
-				</CButton>
-			</div>
+			<CButton key={connectionId} color="info" onClick={() => setConnectionId(connectionId ?? null)}>
+				{moduleInfo?.name ?? moduleInfo?.name ?? '?'} ({label ?? connectionId})
+			</CButton>
 		)
 	})
 
@@ -93,12 +85,13 @@ const VariablesConnectionList = observer(function VariablesConnectionList({
 		<div>
 			<h5>Variables</h5>
 			<p>Some connection types provide variables for you to use in button text.</p>
-			<div>
-				<CButton color="info" className="choose_connection mb-3 mr-2" onClick={() => setShowCustom(true)}>
+			<div className="variables-category-grid">
+				<CButton color="info" onClick={() => setShowCustom(true)}>
 					Custom Variables
 				</CButton>
+
+				{options}
 			</div>
-			{options}
 		</div>
 	)
 })

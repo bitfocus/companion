@@ -155,7 +155,7 @@ export function ButtonStyleConfigFields({
 
 	// this style will be different when you use it in the main dialog compared to in the feedback editor.
 	const specialStyleForButtonEditor = useMemo(
-		() => (mainDialog ? { width: 'calc(100% - 100px)', marginTop: -35, paddingLeft: 4 } : {}),
+		() => (mainDialog ? { width: 'calc(100% - 100px)', paddingLeft: 4 } : {}),
 		[mainDialog]
 	)
 
@@ -209,13 +209,13 @@ export function ButtonStyleConfigFields({
 				</div>
 			)}
 
-			<div style={{ display: 'block', padding: 4 }}>
-				<div className="flex flex-wrap gap-1 flex-form">
+			<div style={{ display: 'block', padding: '0 4px', margin: 0 }}>
+				<div className="flex flex-wrap gap-1rem flex-form">
 					{showField2('size') && (
 						<div>
 							<div>
-								<label>Font size</label>
 								<DropdownInputField
+									label={'Font size'}
 									choices={FONT_SIZES}
 									setValue={setSizeValue}
 									value={values.size}
@@ -227,25 +227,28 @@ export function ButtonStyleConfigFields({
 						</div>
 					)}
 					<div>
-						<div className="flex gap-1">
+						<div className="flex gap-1rem">
 							{showField2('color') && (
 								<div>
-									<label>Text</label>
-									<ColorInputField setValue={setColorValue} value={values.color} returnType="number" />
+									<ColorInputField label={'Text'} setValue={setColorValue} value={values.color} returnType="number" />
 								</div>
 							)}
 							{showField2('bgcolor') && (
 								<div>
-									<label>BG</label>
-									<ColorInputField setValue={setBackgroundColorValue} value={values.bgcolor} returnType="number" />
+									<ColorInputField
+										label={'BG'}
+										setValue={setBackgroundColorValue}
+										value={values.bgcolor}
+										returnType="number"
+									/>
 								</div>
 							)}
 						</div>
 					</div>
 					{showField2('show_topbar') && (
 						<div>
-							<label>Topbar</label>
 							<DropdownInputField
+								label={'Topbar'}
 								choices={SHOW_HIDE_TOP_BAR}
 								setValue={setShowTopBar}
 								value={values.show_topbar}
