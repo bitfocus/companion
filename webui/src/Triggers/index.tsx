@@ -301,7 +301,7 @@ function TriggersTableRow({ controlId, item, editItem, moveTrigger, isSelected }
 				'connectionlist-selected': isSelected,
 			})}
 		>
-			<td ref={drag} className="td-reorder" style={{ maxWidth: 20 }}>
+			<td ref={drag} className="td-reorder">
 				<FontAwesomeIcon icon={faSort} />
 			</td>
 			<td onClick={doEdit} className="hand">
