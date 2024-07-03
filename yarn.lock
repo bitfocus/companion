@@ -6121,7 +6121,7 @@ asn1@evs-broadcast/node-asn1:
     fs-extra: "npm:^11.2.0"
     get-port: "npm:^7.1.0"
     got: "npm:^13.0.0"
-    infinitton-idisplay: "npm:^1.1.2"
+    infinitton-idisplay: "npm:^1.2.0"
     jest-mock-extended: "npm:^3.0.7"
     lodash-es: "npm:^4.17.21"
     lru-cache: "npm:^10.2.2"
@@ -6135,7 +6135,7 @@ asn1@evs-broadcast/node-asn1:
     respawn: "npm:*"
     selfsigned: "npm:^2.4.1"
     semver: "npm:^7.6.2"
-    shuttle-control-usb: "npm:^1.4.0"
+    shuttle-control-usb: "npm:^1.5.0"
     socket.io: "npm:^4.7.5"
     socketcluster-client: "npm:^19.2.1"
     supertest: "npm:^7.0.0"
@@ -8550,12 +8550,12 @@ asn1@evs-broadcast/node-asn1:
   languageName: node
   linkType: hard
 
-"infinitton-idisplay@npm:^1.1.2":
-  version: 1.1.2
-  resolution: "infinitton-idisplay@npm:1.1.2"
+"infinitton-idisplay@npm:^1.2.0":
+  version: 1.2.0
+  resolution: "infinitton-idisplay@npm:1.2.0"
   dependencies:
-    node-hid: "npm:^2.1.1"
-  checksum: 10c0/d4286404afe6b9919da25c2d160b1659f5a3ee8f2057e33852e196844ce61a1d01df4885842f7594f6e367410f9852960778514c94439fc267fea8bd28c51c9f
+    node-hid: "npm:^3.1.0"
+  checksum: 10c0/5d73afa25812a0ff7339f67161ab2eb33c0bc1c6070749a8cfd6a8c4606ab198a9c5a1ef3cb48a7ddbb7e172f9b7efb7c219d8783e4380ec27776a7fe212e536
   languageName: node
   linkType: hard
 
@@ -11057,7 +11057,7 @@ asn1@evs-broadcast/node-asn1:
   languageName: node
   linkType: hard
 
-"node-hid@npm:^3.1.0":
+"node-hid@npm:^3.0.0, node-hid@npm:^3.1.0":
   version: 3.1.0
   resolution: "node-hid@npm:3.1.0"
   dependencies:
@@ -12954,13 +12954,13 @@ asn1@evs-broadcast/node-asn1:
   languageName: node
   linkType: hard
 
-"shuttle-control-usb@npm:^1.4.0":
-  version: 1.4.0
-  resolution: "shuttle-control-usb@npm:1.4.0"
+"shuttle-control-usb@npm:^1.5.0":
+  version: 1.5.0
+  resolution: "shuttle-control-usb@npm:1.5.0"
   dependencies:
-    node-hid: "npm:^2.1.2"
+    node-hid: "npm:^3.1.0"
     usb: "npm:^2.9.0"
-  checksum: 10c0/c7fdd695e08bfae0e81c6de3f9cc86e2c01bae020668e3b13d7774aeb774360ed8677ef5eccf2ed55b1dfd22af0823e6ea2fc4ac96d54725ebcb3410ccdaef6b
+  checksum: 10c0/7cb21a1157b3081921273e7cc3508ab73914c99432374dbc04c7cbc586cab892e347f4782e962d5420dca375be064250df73118592639e744b8023f9d821e2a5
   languageName: node
   linkType: hard
 
