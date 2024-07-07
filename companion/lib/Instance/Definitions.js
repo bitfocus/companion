@@ -116,7 +116,6 @@ class InstanceDefinitions extends CoreBase {
 				}
 
 				if (style.text) {
-					// @ts-expect-error not in module typings
 					if (style.textExpression) {
 						try {
 							const parseResult = this.instance.variable.parseExpression(style.text, null)
