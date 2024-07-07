@@ -434,6 +434,8 @@ jobs:
       - name: Build and push
         uses: docker/build-push-action@v6
         if: ${{ steps.meta.outputs.tags }}
+        env:
+          DOCKER_BUILD_SUMMARY: false
         with:
           context: .
           file: Dockerfile.prebuild
