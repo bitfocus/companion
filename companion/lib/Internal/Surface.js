@@ -554,19 +554,22 @@ export default class Surface {
 	 * @param {number | 'back' | 'forward' | '+1' | '-1'} toPage
 	 */
 	#changeSurfacePage(surfaceId, toPage) {
-		const currentPage = this.#surfaceController.devicePageGet(surfaceId, true)
+		const groupId = this.#surfaceController.getGroupIdFromDeviceId(surfaceId)
+		if (!groupId) return
+
+		const currentPage = this.#surfaceController.devicePageGet(groupId, true)
 		if (currentPage === undefined) {
-			// Bad surfaceId
+			// Bad groupId
 		} else {
 			// no history yet
 			// start with the current (from) page
-			let pageHistory = this.#pageHistory.get(surfaceId)
+			let pageHistory = this.#pageHistory.get(groupId)
 			if (!pageHistory) {
 				pageHistory = {
 					history: [currentPage],
 					index: 0,
 				}
-				this.#pageHistory.set(surfaceId, pageHistory)
+				this.#pageHistory.set(groupId, pageHistory)
 			}
 
 			if (toPage === 'back' || toPage === 'forward') {
@@ -579,7 +582,7 @@ export default class Surface {
 				if (pageTarget !== undefined) {
 					pageHistory.index = pageIndex
 
-					this.#surfaceController.devicePageSet(surfaceId, pageTarget, true)
+					this.#surfaceController.devicePageSet(groupId, pageTarget, true)
 				}
 			} else {
 				let newPage = toPage
@@ -595,7 +598,7 @@ export default class Surface {
 				if (isNaN(newPage)) newPage = 1
 
 				// Change page
-				this.#surfaceController.devicePageSet(surfaceId, newPage, true, true)
+				this.#surfaceController.devicePageSet(groupId, newPage, true, true)
 
 				// Clear forward page history beyond current index, add new history entry, increment index;
 				pageHistory.history = pageHistory.history.slice(0, pageHistory.index + 1)

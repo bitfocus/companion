@@ -8,9 +8,7 @@ import winston from 'winston'
 import Transport from 'winston-transport'
 import supportsColor from 'supports-color'
 import consoleColors from './Colors.js'
-import { init, addBreadcrumb, getCurrentScope } from '@sentry/node'
-import { rewriteFramesIntegration } from '@sentry/integrations'
-import '@sentry/tracing'
+import { init, addBreadcrumb, getCurrentScope, rewriteFramesIntegration } from '@sentry/node'
 import debounceFn from 'debounce-fn'
 
 const SentrySeverity = {

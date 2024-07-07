@@ -2,7 +2,7 @@
 import path from 'path'
 import url, { fileURLToPath } from 'url'
 import fs from 'fs-extra'
-import { init, getCurrentScope } from '@sentry/electron'
+import { init, getCurrentScope } from '@sentry/electron/main'
 import systeminformation from 'systeminformation'
 import Store from 'electron-store'
 import electron, { ipcMain, app, BrowserWindow, dialog } from 'electron'

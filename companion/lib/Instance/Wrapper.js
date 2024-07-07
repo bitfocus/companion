@@ -797,11 +797,15 @@ class SocketEventsHandler {
 	 * @returns {Promise<void>}
 	 */
 	async #handleRecordAction(msg) {
+		let delay = msg.delay || 0
+		if (isNaN(delay) || delay < 0) delay = 0
+
 		try {
 			this.#registry.controls.actionRecorder.receiveAction(
 				this.connectionId,
 				msg.actionId,
 				msg.options,
+				delay,
 				msg.uniquenessId ?? undefined
 			)
 		} catch (/** @type {any} */ e) {

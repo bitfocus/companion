@@ -116,7 +116,6 @@ class InstanceDefinitions extends CoreBase {
 				}
 
 				if (style.text) {
-					// @ts-expect-error not in module typings
 					if (style.textExpression) {
 						try {
 							const parseResult = this.instance.variable.parseExpression(style.text, null)
@@ -345,6 +344,7 @@ class InstanceDefinitions extends CoreBase {
 						action: action.action,
 						options: cloneDeep(action.options ?? {}),
 						delay: action.delay ?? 0,
+						headline: action.headline,
 					}))
 				}
 			}
@@ -358,6 +358,7 @@ class InstanceDefinitions extends CoreBase {
 				options: cloneDeep(feedback.options ?? {}),
 				isInverted: feedback.isInverted,
 				style: cloneDeep(feedback.style),
+				headline: feedback.headline,
 			}))
 		}
 
@@ -457,6 +458,7 @@ class InstanceDefinitions extends CoreBase {
 							options: fb.options,
 							style: fb.style,
 							isInverted: !!fb.isInverted,
+							headline: fb.headline,
 						})),
 						steps:
 							rawPreset.steps.length === 0
@@ -479,6 +481,7 @@ class InstanceDefinitions extends CoreBase {
 												action: act.actionId,
 												options: act.options,
 												delay: act.delay,
+												headline: act.headline,
 											}))
 										}
 
