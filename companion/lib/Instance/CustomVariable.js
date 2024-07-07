@@ -15,7 +15,6 @@
  *
  */
 
-import jsonPatch from 'fast-json-patch'
 import LogController from '../Log/Controller.js'
 import { isCustomVariableValid } from '@companion-app/shared/CustomVariable.js'
 
@@ -121,7 +120,6 @@ export default class InstanceCustomVariable {
 
 		const highestSortOrder = Math.max(-1, ...Object.values(this.#custom_variables).map((v) => v.sortOrder))
 
-		const variablesBefore = { ...this.#custom_variables }
 		this.#custom_variables[name] = {
 			description: 'A custom variable',
 			defaultValue: defaultVal,
@@ -132,10 +130,13 @@ export default class InstanceCustomVariable {
 		this.doSave()
 
 		if (this.#io.countRoomMembers(CustomVariablesRoom) > 0) {
-			const patch = jsonPatch.compare(variablesBefore || {}, this.#custom_variables || {})
-			if (patch.length > 0) {
-				this.#io.emitToRoom(CustomVariablesRoom, 'custom-variables:update', patch)
-			}
+			this.#io.emitToRoom(CustomVariablesRoom, 'custom-variables:update', [
+				{
+					type: 'update',
+					itemId: name,
+					info: this.#custom_variables[name],
+				},
+			])
 		}
 
 		this.#setValueInner(name, defaultVal)
@@ -150,16 +151,17 @@ export default class InstanceCustomVariable {
 	 * @access public
 	 */
 	deleteVariable(name) {
-		const variablesBefore = { ...this.#custom_variables }
 		delete this.#custom_variables[name]
 
 		this.doSave()
 
 		if (this.#io.countRoomMembers(CustomVariablesRoom) > 0) {
-			const patch = jsonPatch.compare(variablesBefore || {}, this.#custom_variables || {})
-			if (patch.length > 0) {
-				this.#io.emitToRoom(CustomVariablesRoom, 'custom-variables:update', patch)
-			}
+			this.#io.emitToRoom(CustomVariablesRoom, 'custom-variables:update', [
+				{
+					type: 'remove',
+					itemId: name,
+				},
+			])
 		}
 
 		this.#setValueInner(name, undefined)
@@ -225,7 +227,7 @@ export default class InstanceCustomVariable {
 			newValues[`${custom_variable_prefix}${name}`] = info.defaultValue || ''
 		}
 
-		const variablesBefore = this.#custom_variables
+		const namesBefore = Object.keys(this.#custom_variables)
 
 		this.#custom_variables = custom_variables || {}
 		this.doSave()
@@ -234,9 +236,32 @@ export default class InstanceCustomVariable {
 		this.#base.setVariableValues('internal', newValues)
 
 		if (this.#io.countRoomMembers(CustomVariablesRoom) > 0) {
-			const patch = jsonPatch.compare(variablesBefore || {}, this.#custom_variables || {})
-			if (patch.length > 0) {
-				this.#io.emitToRoom(CustomVariablesRoom, 'custom-variables:update', patch)
+			/** @type {import('@companion-app/shared/Model/CustomVariableModel.js').CustomVariableUpdate[]} **/
+			const changes = []
+
+			// Add inserts
+			for (const [id, info] of Object.entries(this.#custom_variables)) {
+				if (!info) continue
+
+				changes.push({
+					type: 'update',
+					itemId: id,
+					info,
+				})
+			}
+
+			// Add deletes
+			for (const id of namesBefore) {
+				if (this.#custom_variables[id]) continue // Replaced
+
+				changes.push({
+					type: 'remove',
+					itemId: id,
+				})
+			}
+
+			if (changes.length > 0) {
+				this.#io.emitToRoom(CustomVariablesRoom, 'custom-variables:update', changes)
 			}
 		}
 	}
@@ -245,16 +270,21 @@ export default class InstanceCustomVariable {
 	 * Remove any custom variables
 	 */
 	reset() {
-		const variablesBefore = this.#custom_variables
+		const namesBefore = Object.keys(this.#custom_variables)
 
 		this.#custom_variables = {}
 		this.doSave()
 
-		if (this.#io.countRoomMembers(CustomVariablesRoom) > 0) {
-			const patch = jsonPatch.compare(variablesBefore || {}, this.#custom_variables || {})
-			if (patch.length > 0) {
-				this.#io.emitToRoom(CustomVariablesRoom, 'custom-variables:update', patch)
-			}
+		if (this.#io.countRoomMembers(CustomVariablesRoom) > 0 && namesBefore.length > 0) {
+			this.#io.emitToRoom(
+				CustomVariablesRoom,
+				'custom-variables:update',
+				namesBefore.map(
+					/** @return {import('@companion-app/shared/Model/CustomVariableModel.js').CustomVariableUpdateRemoveOp} **/ (
+						name
+					) => ({ type: 'remove', itemId: name })
+				)
+			)
 		}
 	}
 
@@ -269,11 +299,6 @@ export default class InstanceCustomVariable {
 			return 'Unknown name'
 		}
 
-		const variablesBefore = {
-			...this.#custom_variables,
-			[name]: { ...this.#custom_variables[name] },
-		}
-
 		this.#custom_variables[name].persistCurrentValue = !!persistent
 
 		if (this.#custom_variables[name].persistCurrentValue) {
@@ -286,10 +311,13 @@ export default class InstanceCustomVariable {
 		this.doSave()
 
 		if (this.#io.countRoomMembers(CustomVariablesRoom) > 0) {
-			const patch = jsonPatch.compare(variablesBefore || {}, this.#custom_variables || {})
-			if (patch.length > 0) {
-				this.#io.emitToRoom(CustomVariablesRoom, 'custom-variables:update', patch)
-			}
+			this.#io.emitToRoom(CustomVariablesRoom, 'custom-variables:update', [
+				{
+					type: 'update',
+					itemId: name,
+					info: this.#custom_variables[name],
+				},
+			])
 		}
 
 		return null
@@ -301,8 +329,6 @@ export default class InstanceCustomVariable {
 	 */
 	setOrder(newNames) {
 		if (!Array.isArray(newNames)) throw new Error('Expected array of names')
-
-		const variablesBefore = { ...this.#custom_variables }
 
 		// Update the order based on the ids provided
 		newNames.forEach((name, index) => {
@@ -333,10 +359,21 @@ export default class InstanceCustomVariable {
 		this.doSave()
 
 		if (this.#io.countRoomMembers(CustomVariablesRoom) > 0) {
-			const patch = jsonPatch.compare(variablesBefore, this.#custom_variables || {})
-			if (patch.length > 0) {
-				this.#io.emitToRoom(CustomVariablesRoom, 'custom-variables:update', patch)
+			/** @type {import('@companion-app/shared/Model/CustomVariableModel.js').CustomVariableUpdate[]} **/
+			const changes = []
+
+			// Add inserts
+			for (const [id, info] of Object.entries(this.#custom_variables)) {
+				if (!info) continue
+
+				changes.push({
+					type: 'update',
+					itemId: id,
+					info,
+				})
 			}
+
+			this.#io.emitToRoom(CustomVariablesRoom, 'custom-variables:update', changes)
 		}
 	}
 
@@ -398,11 +435,6 @@ export default class InstanceCustomVariable {
 	 */
 	syncValueToDefault(name) {
 		if (this.#custom_variables[name]) {
-			const variablesBefore = {
-				...this.#custom_variables,
-				[name]: { ...this.#custom_variables[name] },
-			}
-
 			const fullname = `${custom_variable_prefix}${name}`
 			const value = this.#base.getVariableValue('internal', fullname)
 			this.#logger.silly(`Set default value "${name}":${value}`)
@@ -411,10 +443,13 @@ export default class InstanceCustomVariable {
 			this.doSave()
 
 			if (this.#io.countRoomMembers(CustomVariablesRoom) > 0) {
-				const patch = jsonPatch.compare(variablesBefore || {}, this.#custom_variables || {})
-				if (patch.length > 0) {
-					this.#io.emitToRoom(CustomVariablesRoom, 'custom-variables:update', patch)
-				}
+				this.#io.emitToRoom(CustomVariablesRoom, 'custom-variables:update', [
+					{
+						type: 'update',
+						itemId: name,
+						info: this.#custom_variables[name],
+					},
+				])
 			}
 		}
 	}
@@ -434,16 +469,18 @@ export default class InstanceCustomVariable {
 			return 'Cannot change default'
 		}
 
-		const variablesBefore = { ...this.#custom_variables, [name]: { ...this.#custom_variables[name] } }
 		this.#custom_variables[name].defaultValue = value
 
 		this.doSave()
 
 		if (this.#io.countRoomMembers(CustomVariablesRoom) > 0) {
-			const patch = jsonPatch.compare(variablesBefore || {}, this.#custom_variables || {})
-			if (patch.length > 0) {
-				this.#io.emitToRoom(CustomVariablesRoom, 'custom-variables:update', patch)
-			}
+			this.#io.emitToRoom(CustomVariablesRoom, 'custom-variables:update', [
+				{
+					type: 'update',
+					itemId: name,
+					info: this.#custom_variables[name],
+				},
+			])
 		}
 
 		return null
@@ -456,16 +493,18 @@ export default class InstanceCustomVariable {
 	 */
 	#persistCustomVariableValue(name, value) {
 		if (this.#custom_variables[name] && this.#custom_variables[name].persistCurrentValue) {
-			const variablesBefore = { ...this.#custom_variables, [name]: { ...this.#custom_variables[name] } }
 			this.#custom_variables[name].defaultValue = value ?? ''
 
 			this.doSave()
 
 			if (this.#io.countRoomMembers(CustomVariablesRoom) > 0) {
-				const patch = jsonPatch.compare(variablesBefore || {}, this.#custom_variables || {})
-				if (patch.length > 0) {
-					this.#io.emitToRoom(CustomVariablesRoom, 'custom-variables:update', patch)
-				}
+				this.#io.emitToRoom(CustomVariablesRoom, 'custom-variables:update', [
+					{
+						type: 'update',
+						itemId: name,
+						info: this.#custom_variables[name],
+					},
+				])
 			}
 		}
 	}

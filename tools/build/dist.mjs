@@ -5,6 +5,7 @@ import archiver from 'archiver'
 import { fs } from 'zx'
 import { createRequire } from 'node:module'
 import path from 'node:path'
+import yaml from 'yaml'
 import { determinePlatformInfo } from './util.mjs'
 
 const companionPkgJsonPath = new URL('../../package.json', import.meta.url)
@@ -90,6 +91,16 @@ await fs.writeFile(
 )
 await fs.copyFile('yarn.lock', 'dist/yarn.lock') // use the same yarn.lock file, to keep deps as similar as possible
 await fs.copyFile('.node-version', 'dist/.node-version')
+await fs.writeFile(
+	'dist/.yarnrc.yml',
+	yaml.stringify({
+		nodeLinker: 'node-modules',
+		supportedArchitectures: {
+			os: 'current',
+			cpu: platformInfo.nodeArch,
+		},
+	})
+)
 
 // Copy prebuilds
 const copyPrebuildsFromDependencies = ['@julusian/jpeg-turbo', 'node-hid', '@julusian/image-rs']

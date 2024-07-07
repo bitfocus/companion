@@ -10,12 +10,14 @@ export interface PresetFeedbackInstance {
 	options: CompanionOptionValues
 	style: Partial<CompanionButtonStyleProps> | undefined
 	isInverted?: boolean
+	headline?: string
 }
 
 export interface PresetActionInstance {
 	action: string
 	options: CompanionOptionValues
 	delay: number
+	headline?: string
 }
 
 export interface PresetActionSets {

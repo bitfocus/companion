@@ -18,7 +18,6 @@ interface CurrentToast {
 	show: boolean
 	autohide: number | undefined
 
-	fade?: never
 	closeButton?: never
 }
 
@@ -81,18 +80,18 @@ export const NotificationsManager = forwardRef<NotificationsManagerRef, Notifica
 		)
 
 		return (
-			<>
-				<CToaster position={'top-right'}>
-					{toasts.map((toast) => {
-						return (
-							<CToast key={toast.id} show={toast.show} autohide={toast.autohide} fade={toast.fade}>
+			<CToaster placement={'top-right'}>
+				{toasts.map((toast) => {
+					return (
+						<React.Fragment key={toast.id}>
+							<CToast visible={toast.show} autohide={(toast.autohide ?? 0) > 0} delay={toast.autohide}>
 								<CToastHeader closeButton={toast.closeButton}>{toast.title}</CToastHeader>
 								<CToastBody>{toast.message}</CToastBody>
 							</CToast>
-						)
-					})}
-				</CToaster>
-			</>
+						</React.Fragment>
+					)
+				})}
+			</CToaster>
 		)
 	}
 )

@@ -12,6 +12,7 @@ import { ConfigurePanel } from './ConfigurePanel.js'
 import { ButtonsFromPage } from './ButtonsFromPage.js'
 import { PagesStore } from '../Stores/PagesStore.js'
 import { observer } from 'mobx-react-lite'
+import { UserConfigStore } from '../Stores/UserConfigStore.js'
 
 export const TabletView = observer(function TabletView() {
 	const socket = useContext(SocketContext)
@@ -57,8 +58,16 @@ export const TabletView = observer(function TabletView() {
 	const pagesStore = useMemo(() => new PagesStore(), [])
 	const pagesReady = usePagesInfoSubscription(socket, pagesStore, setLoadError, retryToken)
 
-	const userConfig = useUserConfigSubscription(socket, setLoadError, retryToken)
-	const rawGridSize = userConfig?.gridSize
+	const userConfigStore = useMemo(() => new UserConfigStore(), [])
+	useUserConfigSubscription(socket, userConfigStore, setLoadError, retryToken)
+	const rawGridSize = userConfigStore.properties?.gridSize
+
+	useEffect(() => {
+		document.title =
+			userConfigStore.properties?.installName && userConfigStore.properties?.installName.length > 0
+				? `${userConfigStore.properties?.installName} - Web Buttons (Bitfocus Companion)`
+				: 'Bitfocus Companion - Web Buttons'
+	}, [userConfigStore.properties?.installName])
 
 	useEffect(() => {
 		const onConnect = () => {
@@ -72,7 +81,7 @@ export const TabletView = observer(function TabletView() {
 
 	const navigate = useNavigate()
 	const updateQueryUrl = useCallback(
-		(key, value) => {
+		(key: string, value: any) => {
 			setQueryUrl((oldUrl) => {
 				const newQuery = queryString.parse(oldUrl)
 				if (value === '' || value === undefined || value === null || value === false) {

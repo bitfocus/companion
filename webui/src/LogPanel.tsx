@@ -6,7 +6,7 @@ import dayjs from 'dayjs'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faFileExport } from '@fortawesome/free-solid-svg-icons'
 import { GenericConfirmModal, GenericConfirmModalRef } from './Components/GenericConfirmModal.js'
-import { VariableSizeList as List } from 'react-window'
+import { VariableSizeList as List, ListOnScrollProps } from 'react-window'
 import AutoSizer from 'react-virtualized-auto-sizer'
 import type { ClientLogLine } from '@companion-app/shared/Model/LogLine.js'
 
@@ -205,7 +205,7 @@ function LogPanelContents({ config }: LogPanelContentsProps) {
 
 	const hasMountedRef = useRef(false)
 	const userScroll = useCallback(
-		(event) => {
+		(event: ListOnScrollProps) => {
 			// Ignore scroll event on mount
 			if (!hasMountedRef.current) {
 				hasMountedRef.current = true
@@ -237,7 +237,7 @@ function LogPanelContents({ config }: LogPanelContentsProps) {
 	)
 
 	const getRowHeight = useCallback(
-		(index) => {
+		(index: number) => {
 			return rowHeights.current[index] || 18
 		},
 		[rowHeights]

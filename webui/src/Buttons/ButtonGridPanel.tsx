@@ -1,6 +1,6 @@
 import { CAlert, CButton, CCol, CRow } from '@coreui/react'
-import React, { memo, useCallback, useContext, useRef } from 'react'
-import { KeyReceiver, UserConfigContext } from '../util.js'
+import React, { useCallback, useContext, useRef } from 'react'
+import { KeyReceiver } from '../util.js'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faFileExport, faHome, faPencil } from '@fortawesome/free-solid-svg-icons'
 import { ConfirmExportModal, ConfirmExportModalRef } from '../Components/ConfirmExportModal.js'
@@ -11,7 +11,9 @@ import { ButtonGridHeader } from './ButtonGridHeader.js'
 import { ButtonGridActions, ButtonGridActionsRef } from './ButtonGridActions.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import { RootAppStoreContext } from '../Stores/RootAppStore.js'
-import { EditPagePropertiesModal, EditPagePropertiesModalRef } from './EditPageProperties.js'
+import { observer } from 'mobx-react-lite'
+import { ButtonGridZoomControl } from './ButtonGridZoomSlider.js'
+import { GridZoomController } from './GridZoom.js'
 
 interface ButtonsGridPanelProps {
 	pageNumber: number
@@ -21,9 +23,11 @@ interface ButtonsGridPanelProps {
 	changePage: (pageNumber: number) => void
 	selectedButton: ControlLocation | null
 	clearSelectedButton: () => void
+	gridZoomValue: number
+	gridZoomController: GridZoomController
 }
 
-export const ButtonsGridPanel = memo(function ButtonsPage({
+export const ButtonsGridPanel = observer(function ButtonsPage({
 	pageNumber,
 	onKeyDown,
 	isHot,
@@ -31,9 +35,10 @@ export const ButtonsGridPanel = memo(function ButtonsPage({
 	changePage,
 	selectedButton,
 	clearSelectedButton,
+	gridZoomValue,
+	gridZoomController,
 }: ButtonsGridPanelProps) {
-	const { socket, pages } = useContext(RootAppStoreContext)
-	const userConfig = useContext(UserConfigContext)
+	const { socket, pages, userConfig } = useContext(RootAppStoreContext)
 
 	const actionsRef = useRef<ButtonGridActionsRef>(null)
 
@@ -88,10 +93,10 @@ export const ButtonsGridPanel = memo(function ButtonsPage({
 		editRef.current?.show(Number(pageNumber), pageInfo)
 	}, [pageNumber, pageInfo])
 
-	const gridSize = userConfig?.gridSize
+	const gridSize = userConfig.properties?.gridSize
 
 	const doGrow = useCallback(
-		(direction, amount) => {
+		(direction: 'left' | 'right' | 'top' | 'bottom', amount: number) => {
 			if (amount <= 0 || !gridSize) return
 
 			switch (direction) {
@@ -128,7 +133,7 @@ export const ButtonsGridPanel = memo(function ButtonsPage({
 
 	const setSizeRef = useRef(null)
 	const holderSize = useResizeObserver({ ref: setSizeRef })
-	const useCompactButtons = (holderSize.width ?? 0) < 680 // Cutoff for what of the header row fit in the large mode
+	const useCompactButtons = (holderSize.width ?? 0) < 700 // Cutoff for what of the header row fit in the large mode
 
 	return (
 		<KeyReceiver onKeyDown={onKeyDown} tabIndex={0} className="button-grid-panel">
@@ -142,20 +147,25 @@ export const ButtonsGridPanel = memo(function ButtonsPage({
 					and what they should do when you press or click on them.
 				</p>
 
-				<CRow innerRef={setSizeRef}>
+				<CRow ref={setSizeRef}>
 					<CCol sm={12}>
 						<ButtonGridHeader pageNumber={pageNumber} changePage={changePage2} setPage={setPage}>
-							<CButton color="light" onClick={showExportModal} title="Export page" className="btn-right">
+							<CButton color="light" onClick={showExportModal} title="Export Page" className="btn-right">
 								<FontAwesomeIcon icon={faFileExport} />
 								&nbsp;
-								{useCompactButtons ? '' : 'Export page'}
-							</CButton>
-							<CButton color="light" onClick={resetPosition} title="Home Position" className="btn-right">
-								<FontAwesomeIcon icon={faHome} /> {useCompactButtons ? '' : 'Home Position'}
+								{useCompactButtons ? '' : 'Export Page'}
 							</CButton>
 							<CButton color="light" onClick={configurePage} title="Edit Page" className="btn-right">
 								<FontAwesomeIcon icon={faPencil} /> {useCompactButtons ? '' : 'Edit Page'}
 							</CButton>
+							<CButton color="light" onClick={resetPosition} title="Home Position" className="btn-right">
+								<FontAwesomeIcon icon={faHome} /> {useCompactButtons ? '' : 'Home'}
+							</CButton>
+							<ButtonGridZoomControl
+								useCompactButtons={useCompactButtons}
+								gridZoomValue={gridZoomValue}
+								gridZoomController={gridZoomController}
+							/>
 						</ButtonGridHeader>
 					</CCol>
 				</CRow>
@@ -169,8 +179,9 @@ export const ButtonsGridPanel = memo(function ButtonsPage({
 						buttonClick={buttonClick}
 						selectedButton={selectedButton}
 						gridSize={gridSize}
-						doGrow={userConfig.gridSizeInlineGrow ? doGrow : undefined}
+						doGrow={userConfig.properties?.gridSizeInlineGrow ? doGrow : undefined}
 						buttonIconFactory={PrimaryButtonGridIcon}
+						drawScale={gridZoomValue / 100}
 					/>
 				)}
 			</div>

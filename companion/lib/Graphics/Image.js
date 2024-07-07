@@ -15,7 +15,7 @@
  *
  */
 
-import { Canvas, ImageData } from '@julusian/skia-canvas'
+import { Canvas, ImageData } from '@napi-rs/canvas'
 import LogController from '../Log/Controller.js'
 import { PNG } from 'pngjs'
 
@@ -39,6 +39,12 @@ async function pngParse(pngData) {
  * Class for generating an image and rendering some content to it
  */
 class Image {
+	/** @type {Canvas} */
+	canvas
+
+	/** @type {import('@napi-rs/canvas').SKRSContext2D} */
+	context2d
+
 	/**
 	 * Create an image
 	 * @param {number} width the width of the image in integer
@@ -375,12 +381,7 @@ class Image {
 		if (!dummy) {
 			this.context2d.textAlign = 'left'
 			this.context2d.fillStyle = color
-			if (fontsize < 10) {
-				let textPath = this.context2d.outlineText(text) // trick for disabling Antialiasing, but it also breaks support for some unicode
-				this.context2d.fill(textPath.offset(x, y + Math.round(metrics.actualBoundingBoxAscent)))
-			} else {
-				this.context2d.fillText(text, x, y + Math.round(metrics.actualBoundingBoxAscent))
-			}
+			this.context2d.fillText(text, x, y + Math.round(metrics.fontBoundingBoxAscent))
 		}
 
 		return metrics.width
@@ -410,23 +411,18 @@ class Image {
 		let vOffset = 0
 		switch (valignment) {
 			case 'top':
-				vOffset = metrics.actualBoundingBoxAscent
+				vOffset = metrics.fontBoundingBoxAscent
 				break
 
 			case 'center':
-				vOffset = metrics.actualBoundingBoxAscent / 2
+				vOffset = metrics.fontBoundingBoxAscent / 2
 				break
 
 			case 'bottom':
-				vOffset = metrics.actualBoundingBoxDescent * -1
+				vOffset = metrics.fontBoundingBoxDescent * -1
 				break
 		}
-		if (fontsize < 10) {
-			let textPath = this.context2d.outlineText(text) // trick for disabling Antialiasing, but it also breaks support for some unicode
-			this.context2d.fill(textPath.offset(x, y + vOffset))
-		} else {
-			this.context2d.fillText(text, x, y + vOffset)
-		}
+
 		this.context2d.fillText(text, x, y + vOffset)
 
 		return metrics.width
@@ -549,8 +545,8 @@ class Image {
 			// if all fits we are done
 			if (diff >= 0) {
 				return {
-					ascent: measure.actualBoundingBoxAscent,
-					descent: measure.actualBoundingBoxDescent,
+					ascent: measure.fontBoundingBoxAscent,
+					descent: measure.fontBoundingBoxDescent,
 					maxCodepoints: length,
 				}
 			}
@@ -579,29 +575,29 @@ class Image {
 			// we found possible closest match, check if the assumed nWidth was not too big
 			//console.log('possible match', substring(text, 0, chars), 'diff', diff, 'nWidth', nWidth, 'chardiff', Math.round(diff / nWidth))
 			for (let i = 0; i <= length; i += 1) {
-				if (diff > 0 && w - this.context2d.measureText(substring(text, 0, chars + 1)).width < 0) {
+				if (diff == 0 || (diff < 0 && chars == 1)) {
+					// perfect match or one char is too wide meaning we can't try less
+					//console.log('line algo says perfect match with '+chars+' chars', substring(text, 0, chars));
+					return {
+						ascent: measure.fontBoundingBoxAscent,
+						descent: measure.fontBoundingBoxDescent,
+						maxCodepoints: chars,
+					}
+				} else if (diff > 0 && w - this.context2d.measureText(substring(text, 0, chars + 1)).width < 0) {
 					// we are smaller and next char is too big
 					//console.log('line algo says '+chars+' chars are smaller', substring(text, 0, chars), this.context2d.measureText(substring(text, 0, chars)).width);
 					return {
-						ascent: measure.actualBoundingBoxAscent,
-						descent: measure.actualBoundingBoxDescent,
+						ascent: measure.fontBoundingBoxAscent,
+						descent: measure.fontBoundingBoxDescent,
 						maxCodepoints: chars,
 					}
 				} else if (diff < 0 && w - this.context2d.measureText(substring(text, 0, chars - 1)).width > 0) {
 					// we are bigger and one less char fits
 					//console.log('line algo says '+chars+' chars are bigger', substring(text, 0, chars-1), this.context2d.measureText(substring(text, 0, chars-1)).width);
 					return {
-						ascent: measure.actualBoundingBoxAscent,
-						descent: measure.actualBoundingBoxDescent,
+						ascent: measure.fontBoundingBoxAscent,
+						descent: measure.fontBoundingBoxDescent,
 						maxCodepoints: chars - 1,
-					}
-				} else if (diff == 0) {
-					// perfect match
-					//console.log('line algo says perfect match with '+chars+' chars', substring(text, 0, chars));
-					return {
-						ascent: measure.actualBoundingBoxAscent,
-						descent: measure.actualBoundingBoxDescent,
-						maxCodepoints: chars,
 					}
 				} else {
 					// our assumed nWidth was too big, let's approach now char by char
@@ -618,8 +614,8 @@ class Image {
 
 			//console.log('line algo failed', chars);
 			return {
-				ascent: measure.actualBoundingBoxAscent,
-				descent: measure.actualBoundingBoxDescent,
+				ascent: measure.fontBoundingBoxAscent,
+				descent: measure.fontBoundingBoxDescent,
 				maxCodepoints: length,
 			}
 		}
@@ -654,6 +650,11 @@ class Image {
 				lastDrawnByte = textArr.length
 			} else {
 				let line = textArr.slice(lastDrawnByte, lastDrawnByte + maxCodepoints)
+				if (line.length === 0) {
+					// line is somehow empty, try skipping a character
+					lastDrawnByte += 1
+					continue
+				}
 
 				//lets look for a newline
 				const newlinePos = line.indexOf(String.fromCharCode(10))
@@ -771,13 +772,8 @@ class Image {
 
 		for (let l = 0; l <= lastFittingLine; l += 1) {
 			const text = lines[l].text.join('')
-			//this.context2d.fillText(text, xAnchor, yAnchor)
-			if (fontheight < 10) {
-				let textPath = this.context2d.outlineText(text) // trick for disabling Antialiasing, but it also breaks support for some unicode
-				this.context2d.fill(textPath.offset(xAnchor, yAnchor))
-			} else {
-				this.context2d.fillText(text, xAnchor, yAnchor)
-			}
+			this.context2d.fillText(text, xAnchor, yAnchor)
+
 			//this.horizontalLine(yAnchor - fontsize, 'rgb(255,0,255)')
 			//this.horizontalLine(yAnchor + correctedDescent, 'rgb(0, 255, 0)')
 			//this.horizontalLine(yAnchor - correctedAscent, ''''rgb(0,0,255)')
@@ -989,7 +985,6 @@ class Image {
 	 */
 	buffer() {
 		const buffer = Buffer.from(this.context2d.getImageData(0, 0, this.realwidth, this.realheight).data)
-		//const buffer = this.canvas.toBuffer('png')
 		return buffer
 	}
 
@@ -998,7 +993,7 @@ class Image {
 	 * @returns {Promise<string>}
 	 */
 	toDataURL() {
-		return this.canvas.toDataURL('png')
+		return this.canvas.toDataURLAsync('image/png')
 	}
 
 	/**
@@ -1006,7 +1001,7 @@ class Image {
 	 * @returns {string}
 	 */
 	toDataURLSync() {
-		return this.canvas.toDataURLSync('png')
+		return this.canvas.toDataURL('image/png')
 	}
 }
 

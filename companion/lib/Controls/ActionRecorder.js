@@ -367,9 +367,10 @@ export default class ActionRecorder extends EventEmitter {
 	 * @param {string} connectionId
 	 * @param {string} actionId
 	 * @param {Record<string,any>} options
+	 * @param {number} delay
 	 * @param {string | undefined} uniquenessId
 	 */
-	receiveAction(connectionId, actionId, options, uniquenessId) {
+	receiveAction(connectionId, actionId, options, delay, uniquenessId) {
 		const changedSessionIds = []
 
 		if (this.#currentSession) {
@@ -382,7 +383,7 @@ export default class ActionRecorder extends EventEmitter {
 					instance: connectionId,
 					action: actionId,
 					options: options,
-					delay: session.actionDelay ?? 0,
+					delay: (session.actionDelay ?? 0) + delay,
 
 					uniquenessId,
 				}

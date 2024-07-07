@@ -18,15 +18,22 @@ const formatOptions: DropdownChoice[] = [
 interface SelectExportFormatProps {
 	value: ExportFormat
 	setValue: (value: ExportFormat) => void
+	/** @deprecated */
+	label?: string
 }
 
-export const SelectExportFormat = memo(function SelectExportFormat({ value, setValue }: SelectExportFormatProps) {
+export const SelectExportFormat = memo(function SelectExportFormat({
+	value,
+	setValue,
+	label,
+}: SelectExportFormatProps) {
 	return (
 		<DropdownInputField
 			choices={formatOptions}
 			value={value}
 			multiple={false}
 			setValue={setValue as (value: DropdownChoiceId) => void}
+			label={label}
 		/>
 	)
 })

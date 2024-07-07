@@ -1,14 +1,20 @@
 import React, { useContext } from 'react'
-import { UserConfigContext } from '../util.js'
+import { RootAppStoreContext } from '../Stores/RootAppStore.js'
+import { observer } from 'mobx-react-lite'
 
-export function OscProtocol() {
-	const config = useContext(UserConfigContext)
+export const OscProtocol = observer(function OscProtocol() {
+	const { userConfig } = useContext(RootAppStoreContext)
 
 	return (
 		<>
 			<p>
 				Remote triggering can be done by sending OSC commands to port{' '}
-				<code>{config?.osc_enabled && config?.osc_listen_port ? config?.osc_listen_port : 'disabled'}</code>.
+				<code>
+					{userConfig.properties?.osc_enabled && userConfig.properties?.osc_listen_port
+						? userConfig.properties?.osc_listen_port
+						: 'disabled'}
+				</code>
+				.
 			</p>
 			<p>
 				<strong>Commands:</strong>
@@ -171,4 +177,4 @@ export function OscProtocol() {
 			</ul>
 		</>
 	)
-}
+})

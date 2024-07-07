@@ -1,11 +1,9 @@
-import React, { useContext, useState } from 'react'
-import { CAlert, CButton, CInput, CInputGroup, CInputGroupAppend } from '@coreui/react'
+import React, { useContext, useState, useCallback, useRef } from 'react'
+import { CAlert, CButton, CFormInput, CInputGroup } from '@coreui/react'
 import { go as fuzzySearch } from 'fuzzysort'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faExclamationTriangle, faQuestionCircle, faTimes } from '@fortawesome/free-solid-svg-icons'
 import { socketEmitPromise, useComputed } from '../util.js'
-import { useCallback } from 'react'
-import { useRef } from 'react'
 import { GenericConfirmModal, GenericConfirmModalRef } from '../Components/GenericConfirmModal.js'
 import type { ModuleDisplayInfo } from '@companion-app/shared/Model/ModuleInfo.js'
 import { RootAppStoreContext } from '../Stores/RootAppStore.js'
@@ -173,18 +171,16 @@ const AddConnectionsInner = observer(function AddConnectionsInner({
 					on GitHub
 				</p>
 				<CInputGroup>
-					<CInput
+					<CFormInput
 						type="text"
 						placeholder="Search ..."
 						onChange={(e) => setFilter(e.currentTarget.value)}
 						value={filter}
 						style={{ fontSize: '1.2em' }}
 					/>
-					<CInputGroupAppend>
-						<CButton color="danger" onClick={() => setFilter('')}>
-							<FontAwesomeIcon icon={faTimes} />
-						</CButton>
-					</CInputGroupAppend>
+					<CButton color="danger" onClick={() => setFilter('')}>
+						<FontAwesomeIcon icon={faTimes} />
+					</CButton>
 				</CInputGroup>
 				<br />
 			</div>

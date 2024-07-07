@@ -51,18 +51,6 @@ Finds the largest of the provided values.
 
 Finds the smallest of the provided values.
 
-**unixNow()**
-
-Get the current unix time in milliseconds.
-
-**timestampToSeconds(timestamp)**
-
-Convert a timestamp of format 'HH:MM:SS' into the number of seconds it represents.
-
-eg `00:10:15` gives 615
-
-You can do the reverse of this with `secondsToTimestamp(str)`
-
 **randomInt(min, max)**
 
 Generate a random integer in the specified range (inclusive).
@@ -148,33 +136,6 @@ Decode a string from the requested format ('hex','base64'). If `enc` is missing,
 
 eg `decode("436f6d70616e696f6e","hex")` gives `"Companion"`
 
-**secondsToTimestamp(seconds, format)**
-
-Convert a number of seconds into a timestamp of format 'HH:mm:ss'.
-
-Note: If the value is less than 0, it will report 0. There is no limit to the number of hours shown, it will display values greater than 24.
-
-By supplying the format parameter, you can choose which components will be included in the output string.
-
-The following components are allowed:
-* `HH` / `hh` - hours
-* `mm` - minutes
-* `ss` - seconds
-
-**msToTimestamp(milliseconds, format)**
-
-Convert a number of milliseconds into a timestamp of format 'HH:mm:ss.SSS'.
-
-Note: If the value is less than 0, it will report 0. There is no limit to the number of hours shown, it will display values greater than 24.
-
-By supplying the format parameter, you can choose which components will be included in the output string.
-
-The following components are allowed:
-* `HH` / `hh` - hours
-* `mm` - minutes
-* `ss` - seconds
-* `.S` / `.SS` / `.SSS` - milliseconds, in varying levels of accuracy. Must be at the end of the string
-
 **parseVariables(string)**
 
 In some scenarios it can be beneficial to have nested variables. This is not supported in the expression syntax.
@@ -220,3 +181,62 @@ Convert an object into a json string.
 If this enounters invalid input, it will return null instead of throwing an error.
 
 eg: `jsonstringify({ a: 1 })` will be a string containing `{"a":1}`
+
+##### Time operations
+
+**unixNow()**
+
+Get the current unix time in milliseconds.
+
+**timestampToSeconds(timestamp)**
+
+Convert a timestamp of format 'HH:MM:SS' into the number of seconds it represents.
+
+eg `00:10:15` gives 615
+
+You can do the reverse of this with `secondsToTimestamp(str)`
+
+
+**secondsToTimestamp(seconds, format)**
+
+Convert a number of seconds into a timestamp of format 'HH:mm:ss'.
+
+Note: If the value is less than 0, it will report 0. There is no limit to the number of hours shown, it will display values greater than 24.
+
+By supplying the format parameter, you can choose which components will be included in the output string.
+
+The following components are allowed:
+* `HH` / `hh` - hours
+* `mm` - minutes
+* `ss` - seconds
+
+**msToTimestamp(milliseconds, format)**
+
+Convert a number of milliseconds into a timestamp of format 'HH:mm:ss.SSS'.
+
+Note: If the value is less than 0, it will report 0. There is no limit to the number of hours shown, it will display values greater than 24.
+
+By supplying the format parameter, you can choose which components will be included in the output string.
+
+The following components are allowed:
+* `HH` / `hh` - hours
+* `mm` - minutes
+* `ss` - seconds
+* `.S` / `.SS` / `.SSS` - milliseconds, in varying levels of accuracy. Must be at the end of the string
+
+**timeOffset(timestamp, offset, 12hour)**
+
+Offset a provided timestamp (supporting `hours:minutes` or `hours:minutes:seconds`) by a given number of hours, minutes, or seconds, and optionally return in 12 hour format.
+
+eg `timeOffset($(internal:time_hms), -5)` will return the hours, minutes, and seconds, of 5 hours prior to the current time.
+
+The offset also supports a timestamp, so  `timeOffset($(internal:time_hms), "01:30:00", true)` will add 1 hour and 30 minutes to the current time, and return a 12 hour clock adjusted to that time.
+
+**timeDiff(fromTime, toTime)**
+
+Return the number of seconds between 2 timestamps. Timestamps support `hours:minutes`, `hours:minutes:seconds`, and `YYYY-MM-DDTHH:mm:ss.sssZ`.
+
+eg `timeDiff($(internal:time_hms), "18:00:00")` will return the seconds until `18:00:00` on the same day, and after that time will return a negative value.
+An example using a Date Time String could be `timeDiff($(internal:time_hms), "2024-07-04T20:00-04:00")` which would return the number of seconds from the current Companion time until 4th July 2024, 8pm, in the UTC-4 Timezone.
+
+The returned seconds can also be used within `secondsToTimestamp` to format the result as needed.

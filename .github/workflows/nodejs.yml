@@ -4,6 +4,8 @@ on: [push]
 jobs:
   check-types:
     runs-on: ubuntu-latest
+    timeout-minutes: 5
+
     steps:
       - uses: actions/checkout@v4
         with:
@@ -37,6 +39,7 @@ jobs:
   linux64:
     runs-on: ubuntu-20.04
     needs: check-types
+    timeout-minutes: 20
 
     outputs:
       version: ${{ steps.filenames.outputs.longversion }}
@@ -110,6 +113,7 @@ jobs:
   linux-arm64:
     runs-on: ubuntu-20.04
     needs: check-types
+    timeout-minutes: 20
 
     steps:
       - uses: actions/checkout@v4
@@ -177,8 +181,9 @@ jobs:
           api-secret: ${{ secrets.BITFOCUS_API_PROJECT_SECRET }}
 
   osx:
-    runs-on: macos-11
+    runs-on: macos-12
     needs: check-types
+    timeout-minutes: 60
 
     steps:
       - uses: actions/checkout@v4
@@ -245,8 +250,9 @@ jobs:
           api-secret: ${{ secrets.BITFOCUS_API_PROJECT_SECRET }}
 
   osx-arm64:
-    runs-on: macos-11
+    runs-on: macos-12
     needs: check-types
+    timeout-minutes: 60
 
     steps:
       - uses: actions/checkout@v4
@@ -319,6 +325,7 @@ jobs:
   win64:
     runs-on: windows-2019
     needs: check-types
+    timeout-minutes: 30
 
     steps:
       - uses: actions/checkout@v4
@@ -383,6 +390,7 @@ jobs:
 
   docker-image:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
 
     needs:
       - linux64
@@ -424,7 +432,7 @@ jobs:
         if: ${{ steps.meta.outputs.tags }}
 
       - name: Build and push
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v6
         if: ${{ steps.meta.outputs.tags }}
         with:
           context: .

@@ -13,12 +13,14 @@
 @import 'scss/button-edit';
 @import 'scss/button-grid';
 @import 'scss/page-list';
+@import 'scss/cloud';
 @import 'scss/controls';
 @import 'scss/instances';
 @import 'scss/loading';
 @import 'scss/log';
 @import 'scss/presets';
 @import 'scss/settings';
+@import 'scss/wizard';
 
 @keyframes fadeIn {
 	from {
@@ -88,4 +90,12 @@
 
 .unstable-warning {
 	z-index: 10000;
+}
+
+.install-name {
+	padding: 0 var(--cui-header-nav-link-padding-x);
+	color: var(--cui-header-color);
+
+	align-content: center;
+	font-size: 1.25em;
 }

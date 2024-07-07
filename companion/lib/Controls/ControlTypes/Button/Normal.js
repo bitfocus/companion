@@ -10,6 +10,7 @@ import {
 	ControlWithSteps,
 	ControlWithoutEvents,
 } from '../../IControlFragments.js'
+import { ReferencesVisitors } from '../../../Util/Visitors/ReferencesVisitors.js'
 
 /**
  * @typedef {import('@companion-app/shared/Model/ActionModel.js').ActionInstance} ActionInstance
@@ -597,7 +598,12 @@ export default class ControlButtonNormal extends ButtonControlBase {
 			action_sets.rotate_right = action_sets.rotate_right || []
 		}
 
-		const actions = new FragmentActions(this.registry, this.controlId, this.commitChange.bind(this))
+		const actions = new FragmentActions(
+			this.registry.internalModule,
+			this.registry.instance.moduleHost,
+			this.controlId,
+			this.commitChange.bind(this)
+		)
 
 		actions.options = options
 		actions.action_sets = action_sets
@@ -628,7 +634,8 @@ export default class ControlButtonNormal extends ButtonControlBase {
 
 		const visitor = new VisitorReferencesCollector(foundConnectionIds, foundConnectionLabels)
 
-		this.registry.data.importExport.visitControlReferences(
+		ReferencesVisitors.visitControlReferences(
+			this.registry.internalModule,
 			visitor,
 			this.feedbacks.baseStyle,
 			allActions,

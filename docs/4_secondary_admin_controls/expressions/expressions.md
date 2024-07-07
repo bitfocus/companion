@@ -13,4 +13,14 @@ There are various functions that you can use. These can be used in the usual way
 
 Strings can be formed using `` `${$(internal:a)}dB` ``. You can use anything instead of `$(internal:a)`, even other templates and conditional logic.
 
+You can split your expression over multiple lines or statements, and create intermediary values too
+```
+myval = $(internal:a) + $(internal:b)
+myval / 2
+```
+Note: the parser is looser than js in how statements have to be written, it is valid for multiple to be on one line (eg `10 20 30`).  
+The value of the last statement will be taken as the output of the expression.
+
+And you can add either `/* block comments */` or `// end of line comments` to document your expressions.
+
 All of these features can be combined into long and complex expressions, and more is sure to be possible in the future. We look forward to seeing what you come up with!

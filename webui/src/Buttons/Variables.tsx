@@ -1,6 +1,6 @@
 import React, { useCallback, useContext, useEffect, useMemo, useState } from 'react'
 import { CButton } from '@coreui/react'
-import { ConnectionsContext, VariableDefinitionsContext } from '../util.js'
+import { ConnectionsContext } from '../util.js'
 import { VariablesTable } from '../Components/VariablesTable.js'
 import { CustomVariablesList } from './CustomVariablesList.js'
 import { RootAppStoreContext } from '../Stores/RootAppStore.js'
@@ -58,20 +58,15 @@ const VariablesConnectionList = observer(function VariablesConnectionList({
 	setShowCustom,
 	connectionsLabelMap,
 }: VariablesConnectionListProps) {
-	const { modules } = useContext(RootAppStoreContext)
+	const { modules, variablesStore } = useContext(RootAppStoreContext)
 	const connectionsContext = useContext(ConnectionsContext)
-	const variableDefinitionsContext = useContext(VariableDefinitionsContext)
 
-	const options = Object.entries(variableDefinitionsContext || []).map(([label, defs]) => {
-		if (!defs || Object.keys(defs).length === 0) return ''
-
+	const options = variablesStore.connectionLabelsWithDefinitions.get().map((label) => {
 		if (label === 'internal') {
 			return (
-				<div key={label}>
-					<CButton color="info" className="choose_connection mb-3 mr-2" onClick={() => setConnectionId('internal')}>
-						Internal
-					</CButton>
-				</div>
+				<CButton key={label} color="info" onClick={() => setConnectionId('internal')}>
+					Internal
+				</CButton>
 			)
 		}
 
@@ -80,15 +75,9 @@ const VariablesConnectionList = observer(function VariablesConnectionList({
 		const moduleInfo = connectionInfo ? modules.modules.get(connectionInfo.instance_type) : undefined
 
 		return (
-			<div key={connectionId}>
-				<CButton
-					color="info"
-					className="choose_connection mb-3 mr-2"
-					onClick={() => setConnectionId(connectionId ?? null)}
-				>
-					{moduleInfo?.name ?? moduleInfo?.name ?? '?'} ({label ?? connectionId})
-				</CButton>
-			</div>
+			<CButton key={connectionId} color="info" onClick={() => setConnectionId(connectionId ?? null)}>
+				{moduleInfo?.name ?? moduleInfo?.name ?? '?'} ({label ?? connectionId})
+			</CButton>
 		)
 	})
 
@@ -96,12 +85,13 @@ const VariablesConnectionList = observer(function VariablesConnectionList({
 		<div>
 			<h5>Variables</h5>
 			<p>Some connection types provide variables for you to use in button text.</p>
-			<div>
-				<CButton color="info" className="choose_connection mb-3 mr-2" onClick={() => setShowCustom(true)}>
+			<div className="variables-category-grid">
+				<CButton color="info" onClick={() => setShowCustom(true)}>
 					Custom Variables
 				</CButton>
+
+				{options}
 			</div>
-			{options}
 		</div>
 	)
 })

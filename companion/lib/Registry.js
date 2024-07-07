@@ -31,7 +31,7 @@ try {
 		buildNumber = '0.0.0-JEST'
 	} else {
 		buildNumber = fs
-			.readFileSync(new URL('../../BUILD', import.meta.url)) // nocommit verify this works once built
+			.readFileSync(new URL('../../BUILD', import.meta.url))
 			.toString()
 			.trim()
 			.replace(/^-/, '')
@@ -108,17 +108,10 @@ class Registry extends EventEmitter {
 	io
 	/**
 	 * The logger
-	 * @type {LogController}
-	 * @access public
-	 * @deprecated
-	 */
-	log
-	/**
-	 * The logger
 	 * @type {import('winston').Logger}
-	 * @access public
+	 * @access private
 	 */
-	logger
+	#logger
 	/**
 	 * The core page controller
 	 * @type {PageController}
@@ -202,11 +195,10 @@ class Registry extends EventEmitter {
 		if (!configDir) throw new Error(`Missing configDir`)
 		if (!machineId) throw new Error(`Missing machineId`)
 
-		this.log = LogController
-		this.logger = LogController.createLogger('Registry')
+		this.#logger = LogController.createLogger('Registry')
 
-		this.logger.info(`Build ${buildNumber}`)
-		this.logger.info(`configuration directory: ${configDir}`)
+		this.#logger.info(`Build ${buildNumber}`)
+		this.#logger.info(`configuration directory: ${configDir}`)
 
 		this.appInfo = {
 			configDir: configDir,
@@ -224,7 +216,7 @@ class Registry extends EventEmitter {
 	 * @param {number} http_port
 	 */
 	async ready(extraModulePath, bind_ip, http_port) {
-		this.logger.debug('launching core modules')
+		this.#logger.debug('launching core modules')
 
 		this.api_router = express.Router()
 		this.ui = new UIController(this)
@@ -248,6 +240,7 @@ class Registry extends EventEmitter {
 		// old 'modules_loaded' events
 		this.data.metrics.startCycle()
 
+		this.controls.init()
 		this.controls.verifyConnectionIds()
 		this.instance.variable.custom.init()
 		this.internalModule.init()
@@ -284,7 +277,7 @@ class Registry extends EventEmitter {
 							this.controls.triggers.emit('locked', !!msg.status)
 						}
 					} catch (e) {
-						this.logger.debug(`Failed to handle IPC message: ${e}`)
+						this.#logger.debug(`Failed to handle IPC message: ${e}`)
 					}
 				}
 			)
@@ -300,11 +293,11 @@ class Registry extends EventEmitter {
 					try {
 						if (msg.messageType === 'reload-extra-module') {
 							this.instance.modules.reloadExtraModule(msg.fullpath).catch((e) => {
-								this.logger.warn(`Failed to reload module: ${e}`)
+								this.#logger.warn(`Failed to reload module: ${e}`)
 							})
 						}
 					} catch (e) {
-						this.logger.debug(`Failed to handle IPC message: ${e}`)
+						this.#logger.debug(`Failed to handle IPC message: ${e}`)
 					}
 				}
 			)
@@ -318,7 +311,7 @@ class Registry extends EventEmitter {
 	 */
 	exit(fromInternal, restart) {
 		Promise.resolve().then(async () => {
-			this.logger.info('somewhere, the system wants to exit. kthxbai')
+			this.#logger.info('somewhere, the system wants to exit. kthxbai')
 
 			// Save the db to disk
 			this.db.save()

@@ -22,8 +22,11 @@ import {
 	EmulatorImageCache,
 } from '@companion-app/shared/Model/Common.js'
 import { Operation as JsonPatchOperation } from 'fast-json-patch'
+import { UserConfigStore } from '../Stores/UserConfigStore.js'
+import { useUserConfigSubscription } from '../Hooks/useUserConfigSubscription.js'
+import { observer } from 'mobx-react-lite'
 
-export function Emulator() {
+export const Emulator = observer(function Emulator() {
 	const socket = useContext(SocketContext)
 
 	const [config, setConfig] = useState<EmulatorConfig | null>(null)
@@ -64,6 +67,16 @@ export function Emulator() {
 			socket.off('emulator:config', updateConfig)
 		}
 	}, [retryToken, socket, emulatorId])
+
+	const userConfigStore = useMemo(() => new UserConfigStore(), [])
+	useUserConfigSubscription(socket, userConfigStore)
+
+	useEffect(() => {
+		document.title =
+			userConfigStore.properties?.installName && userConfigStore.properties?.installName.length > 0
+				? `${userConfigStore.properties?.installName} - Emulator (Bitfocus Companion)`
+				: 'Bitfocus Companion - Emulator'
+	}, [userConfigStore.properties?.installName])
 
 	const keymap = useMemo(() => {
 		if (config?.emulator_control_enable) {
@@ -199,7 +212,7 @@ export function Emulator() {
 			)}
 		</div>
 	)
-}
+})
 
 interface ConfigurePanelProps {
 	config: EmulatorConfig

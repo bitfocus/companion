@@ -1,9 +1,9 @@
-import { CCol, CNav, CNavItem, CNavLink, CRow, CTabContent, CTabPane, CTabs } from '@coreui/react'
+import { CCol, CNav, CNavItem, CNavLink, CRow, CTabContent, CTabPane } from '@coreui/react'
 import { faCalculator, faDollarSign, faGift, faPaperPlane, faVideoCamera } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { nanoid } from 'nanoid'
 import { InstancePresets } from './Presets.js'
-import { MyErrorBoundary, socketEmitPromise, UserConfigContext } from '../util.js'
+import { MyErrorBoundary, socketEmitPromise } from '../util.js'
 import { ButtonsGridPanel } from './ButtonGridPanel.js'
 import { EditButton } from './EditButton.js'
 import { ActionRecorder } from './ActionRecorder/index.js'
@@ -12,19 +12,21 @@ import { GenericConfirmModal, GenericConfirmModalRef } from '../Components/Gener
 import { ConnectionVariables } from './Variables.js'
 import { formatLocation } from '@companion-app/shared/ControlId.js'
 import { ControlLocation } from '@companion-app/shared/Model/Common.js'
-import { PagesList } from './Pages.js'
 import { observer } from 'mobx-react-lite'
 import { RootAppStoreContext } from '../Stores/RootAppStore.js'
+import classNames from 'classnames'
+import { useGridZoom } from './GridZoom.js'
+import { PagesList } from './Pages.js'
 
 interface ButtonsPageProps {
 	hotPress: boolean
 }
 
 export const ButtonsPage = observer(function ButtonsPage({ hotPress }: ButtonsPageProps) {
-	const { socket, pages } = useContext(RootAppStoreContext)
-	const userConfig = useContext(UserConfigContext)
+	const { userConfig, socket, pages } = useContext(RootAppStoreContext)
 
 	const clearModalRef = useRef<GenericConfirmModalRef>(null)
+	const [gridZoomController, gridZoomValue] = useGridZoom('grid')
 
 	const [tabResetToken, setTabResetToken] = useState(nanoid())
 	const [activeTab, setActiveTab] = useState('pages')
@@ -32,7 +34,7 @@ export const ButtonsPage = observer(function ButtonsPage({ hotPress }: ButtonsPa
 	const [pageNumber, setPageNumber] = useState(1)
 	const [copyFromButton, setCopyFromButton] = useState<[ControlLocation, string] | null>(null)
 
-	const doChangeTab = useCallback((newTab) => {
+	const doChangeTab = useCallback((newTab: string) => {
 		setActiveTab((oldTab) => {
 			const preserveButtonsTab = newTab === 'variables' && oldTab === 'edit'
 			if (newTab !== 'edit' && oldTab !== newTab && !preserveButtonsTab) {
@@ -44,7 +46,7 @@ export const ButtonsPage = observer(function ButtonsPage({ hotPress }: ButtonsPa
 	}, [])
 
 	const doButtonGridClick = useCallback(
-		(location, isDown) => {
+		(location: ControlLocation, isDown: boolean) => {
 			if (hotPress) {
 				socketEmitPromise(socket, 'controls:hot-press', [location, isDown, 'grid']).catch((e) =>
 					console.error(`Hot press failed: ${e}`)
@@ -62,19 +64,32 @@ export const ButtonsPage = observer(function ButtonsPage({ hotPress }: ButtonsPa
 		doChangeTab('pages')
 	}, [doChangeTab])
 
+	const gridSize = userConfig.properties?.gridSize
+
 	const handleKeyDownInButtons = useCallback(
-		(e) => {
-			if (e.target.tagName !== 'INPUT' && e.target.tagName !== 'TEXTAREA') {
+		(e: React.KeyboardEvent) => {
+			const isControlOrCommandCombo = (e.ctrlKey || e.metaKey) && !e.altKey
+
+			// e.target is the actual element where the event happened, e.currentTarget is the element where the event listener is attached
+			const targetElement = e.target as HTMLElement
+
+			if (isControlOrCommandCombo && e.key === '=') {
+				e.preventDefault()
+				gridZoomController.zoomIn(true)
+			} else if (isControlOrCommandCombo && e.key === '-') {
+				e.preventDefault()
+				gridZoomController.zoomOut(true)
+			} else if (isControlOrCommandCombo && e.key === '0') {
+				e.preventDefault()
+				gridZoomController.zoomReset()
+			} else if (targetElement.tagName !== 'INPUT' && targetElement.tagName !== 'TEXTAREA') {
 				switch (e.key) {
 					case 'ArrowDown':
 						setSelectedButton((selectedButton) => {
-							if (selectedButton && userConfig?.gridSize) {
+							if (selectedButton && gridSize) {
 								return {
 									...selectedButton,
-									row:
-										selectedButton.row >= userConfig.gridSize.maxRow
-											? userConfig.gridSize.minRow
-											: selectedButton.row + 1,
+									row: selectedButton.row >= gridSize.maxRow ? gridSize.minRow : selectedButton.row + 1,
 								}
 							} else {
 								return selectedButton
@@ -84,13 +99,10 @@ export const ButtonsPage = observer(function ButtonsPage({ hotPress }: ButtonsPa
 						break
 					case 'ArrowUp':
 						setSelectedButton((selectedButton) => {
-							if (selectedButton && userConfig?.gridSize) {
+							if (selectedButton && gridSize) {
 								return {
 									...selectedButton,
-									row:
-										selectedButton.row <= userConfig.gridSize.minRow
-											? userConfig.gridSize.maxRow
-											: selectedButton.row - 1,
+									row: selectedButton.row <= gridSize.minRow ? gridSize.maxRow : selectedButton.row - 1,
 								}
 							} else {
 								return selectedButton
@@ -100,13 +112,10 @@ export const ButtonsPage = observer(function ButtonsPage({ hotPress }: ButtonsPa
 						break
 					case 'ArrowLeft':
 						setSelectedButton((selectedButton) => {
-							if (selectedButton && userConfig?.gridSize) {
+							if (selectedButton && gridSize) {
 								return {
 									...selectedButton,
-									column:
-										selectedButton.column <= userConfig.gridSize.minColumn
-											? userConfig.gridSize.maxColumn
-											: selectedButton.column - 1,
+									column: selectedButton.column <= gridSize.minColumn ? gridSize.maxColumn : selectedButton.column - 1,
 								}
 							} else {
 								return selectedButton
@@ -116,13 +125,10 @@ export const ButtonsPage = observer(function ButtonsPage({ hotPress }: ButtonsPa
 						break
 					case 'ArrowRight':
 						setSelectedButton((selectedButton) => {
-							if (selectedButton && userConfig?.gridSize) {
+							if (selectedButton && gridSize) {
 								return {
 									...selectedButton,
-									column:
-										selectedButton.column >= userConfig.gridSize.maxColumn
-											? userConfig.gridSize.minColumn
-											: selectedButton.column + 1,
+									column: selectedButton.column >= gridSize.maxColumn ? gridSize.minColumn : selectedButton.column + 1,
 								}
 							} else {
 								return selectedButton
@@ -175,15 +181,15 @@ export const ButtonsPage = observer(function ButtonsPage({ hotPress }: ButtonsPa
 							}
 						)
 					}
-					if ((e.ctrlKey || e.metaKey) && !e.altKey && e.key.toLowerCase() === 'c') {
+					if (isControlOrCommandCombo && e.key.toLowerCase() === 'c') {
 						console.log('prepare copy', selectedButton)
 						setCopyFromButton([selectedButton, 'copy'])
 					}
-					if ((e.ctrlKey || e.metaKey) && !e.altKey && e.key.toLowerCase() === 'x') {
+					if (isControlOrCommandCombo && e.key.toLowerCase() === 'x') {
 						console.log('prepare cut', selectedButton)
 						setCopyFromButton([selectedButton, 'cut'])
 					}
-					if ((e.ctrlKey || e.metaKey) && !e.altKey && e.key.toLowerCase() === 'v' && copyFromButton) {
+					if (isControlOrCommandCombo && e.key.toLowerCase() === 'v' && copyFromButton) {
 						console.log('do paste', copyFromButton, selectedButton)
 
 						if (copyFromButton[1] === 'copy') {
@@ -204,7 +210,7 @@ export const ButtonsPage = observer(function ButtonsPage({ hotPress }: ButtonsPa
 				}
 			}
 		},
-		[socket, selectedButton, copyFromButton, pages, userConfig?.gridSize]
+		[socket, selectedButton, copyFromButton, gridSize]
 	)
 
 	return (
@@ -221,76 +227,79 @@ export const ButtonsPage = observer(function ButtonsPage({ hotPress }: ButtonsPa
 						changePage={setPageNumber}
 						onKeyDown={handleKeyDownInButtons}
 						clearSelectedButton={clearSelectedButton}
+						gridZoomController={gridZoomController}
+						gridZoomValue={gridZoomValue}
 					/>
 				</MyErrorBoundary>
 			</CCol>
 
 			<CCol xs={12} xl={6} className="secondary-panel">
 				<div className="secondary-panel-inner">
-					<CTabs activeTab={activeTab} onActiveTabChange={doChangeTab}>
-						<CNav variant="tabs">
-							<CNavItem hidden={!selectedButton}>
-								<CNavLink data-tab="edit">
-									<FontAwesomeIcon icon={faCalculator} /> Edit Button{' '}
-									{selectedButton ? `${formatLocation(selectedButton)}` : '?'}
-								</CNavLink>
-							</CNavItem>
-
-							<CNavItem>
-								<CNavLink data-tab="pages">
-									<FontAwesomeIcon icon={faPaperPlane} /> Pages
-								</CNavLink>
-							</CNavItem>
-							<CNavItem>
-								<CNavLink data-tab="presets">
-									<FontAwesomeIcon icon={faGift} /> Presets
-								</CNavLink>
-							</CNavItem>
-							<CNavItem>
-								<CNavLink data-tab="variables">
-									<FontAwesomeIcon icon={faDollarSign} /> Variables
-								</CNavLink>
-							</CNavItem>
-							<CNavItem>
-								<CNavLink data-tab="action-recorder">
-									<FontAwesomeIcon icon={faVideoCamera} /> Recorder
-								</CNavLink>
-							</CNavItem>
-						</CNav>
-						<CTabContent fade={false}>
-							<CTabPane data-tab="edit">
-								<MyErrorBoundary>
-									{selectedButton && (
-										<EditButton
-											key={`${formatLocation(selectedButton)}-${tabResetToken}`}
-											location={selectedButton}
-											onKeyUp={handleKeyDownInButtons}
-										/>
-									)}
-								</MyErrorBoundary>
-							</CTabPane>
-							<CTabPane data-tab="pages">
-								<MyErrorBoundary>
-									<PagesList setPageNumber={setPageNumber} />
-								</MyErrorBoundary>
-							</CTabPane>
-							<CTabPane data-tab="presets">
-								<MyErrorBoundary>
-									<InstancePresets resetToken={tabResetToken} />
-								</MyErrorBoundary>
-							</CTabPane>
-							<CTabPane data-tab="variables">
-								<MyErrorBoundary>
-									<ConnectionVariables resetToken={tabResetToken} />
-								</MyErrorBoundary>
-							</CTabPane>
-							<CTabPane data-tab="action-recorder">
-								<MyErrorBoundary>
-									<ActionRecorder key={tabResetToken} />
-								</MyErrorBoundary>
-							</CTabPane>
-						</CTabContent>
-					</CTabs>
+					<CNav variant="tabs">
+						<CNavItem
+							className={classNames({
+								hidden: !selectedButton,
+							})}
+						>
+							<CNavLink active={activeTab === 'edit'} onClick={() => doChangeTab('edit')}>
+								<FontAwesomeIcon icon={faCalculator} /> Edit Button{' '}
+								{selectedButton ? `${formatLocation(selectedButton)}` : '?'}
+							</CNavLink>
+						</CNavItem>
+						<CNavItem>
+							<CNavLink active={activeTab === 'pages'} onClick={() => doChangeTab('pages')}>
+								<FontAwesomeIcon icon={faPaperPlane} /> Pages
+							</CNavLink>
+						</CNavItem>
+						<CNavItem>
+							<CNavLink active={activeTab === 'presets'} onClick={() => doChangeTab('presets')}>
+								<FontAwesomeIcon icon={faGift} /> Presets
+							</CNavLink>
+						</CNavItem>
+						<CNavItem>
+							<CNavLink active={activeTab === 'variables'} onClick={() => doChangeTab('variables')}>
+								<FontAwesomeIcon icon={faDollarSign} /> Variables
+							</CNavLink>
+						</CNavItem>
+						<CNavItem>
+							<CNavLink active={activeTab === 'action-recorder'} onClick={() => doChangeTab('action-recorder')}>
+								<FontAwesomeIcon icon={faVideoCamera} /> Recorder
+							</CNavLink>
+						</CNavItem>
+					</CNav>
+					<CTabContent>
+						<CTabPane visible={activeTab === 'edit'}>
+							<MyErrorBoundary>
+								{selectedButton && (
+									<EditButton
+										key={`${formatLocation(selectedButton)}-${tabResetToken}`}
+										location={selectedButton}
+										onKeyUp={handleKeyDownInButtons}
+									/>
+								)}
+							</MyErrorBoundary>
+						</CTabPane>
+						<CTabPane visible={activeTab === 'pages'}>
+							<MyErrorBoundary>
+								<PagesList setPageNumber={setPageNumber} />
+							</MyErrorBoundary>
+						</CTabPane>
+						<CTabPane visible={activeTab === 'presets'}>
+							<MyErrorBoundary>
+								<InstancePresets resetToken={tabResetToken} />
+							</MyErrorBoundary>
+						</CTabPane>
+						<CTabPane visible={activeTab === 'variables'}>
+							<MyErrorBoundary>
+								<ConnectionVariables resetToken={tabResetToken} />
+							</MyErrorBoundary>
+						</CTabPane>
+						<CTabPane visible={activeTab === 'action-recorder'}>
+							<MyErrorBoundary>
+								<ActionRecorder key={tabResetToken} />
+							</MyErrorBoundary>
+						</CTabPane>
+					</CTabContent>
 				</div>
 			</CCol>
 		</CRow>

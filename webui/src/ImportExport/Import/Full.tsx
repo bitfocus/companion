@@ -1,18 +1,6 @@
 import React, { useCallback, useContext, useMemo, useState } from 'react'
-import ClassNames from 'classnames'
 import { MyErrorBoundary, socketEmitPromise } from '../../util.js'
-import {
-	CAlert,
-	CButton,
-	CInputCheckbox,
-	CLabel,
-	CNav,
-	CNavItem,
-	CNavLink,
-	CTabContent,
-	CTabPane,
-	CTabs,
-} from '@coreui/react'
+import { CAlert, CButton, CFormCheck, CNav, CNavItem, CNavLink, CTabContent, CTabPane } from '@coreui/react'
 import { faCalendar, faClock, faDownload, faFileImport, faGlobe } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { ImportPageWizard } from './Page.js'
@@ -47,32 +35,42 @@ export function ImportFullWizard({ snapshot, instanceRemap, setInstanceRemap }: 
 		[socket, notifier, setInstanceRemap]
 	)
 
+	const [activeTab, setActiveTab] = useState<'full' | 'buttons' | 'triggers'>('full')
+
 	return (
-		<CTabs activeTab="full">
+		<>
 			<CNav variant="tabs">
 				<CNavItem>
-					<CNavLink data-tab="full">
+					<CNavLink active={activeTab === 'full'} onClick={() => setActiveTab('full')}>
 						<FontAwesomeIcon icon={faGlobe} /> Full Import
 					</CNavLink>
 				</CNavItem>
 				<CNavItem>
-					<CNavLink data-tab="buttons" disabled={!snapshot.controls}>
+					<CNavLink
+						active={activeTab === 'buttons'}
+						onClick={() => setActiveTab('buttons')}
+						disabled={!snapshot.controls}
+					>
 						<FontAwesomeIcon icon={faCalendar} /> Buttons
 					</CNavLink>
 				</CNavItem>
 				<CNavItem>
-					<CNavLink data-tab="triggers" disabled={!snapshot.triggers}>
+					<CNavLink
+						active={activeTab === 'triggers'}
+						onClick={() => setActiveTab('triggers')}
+						disabled={!snapshot.triggers}
+					>
 						<FontAwesomeIcon icon={faClock} /> Triggers
 					</CNavLink>
 				</CNavItem>
 			</CNav>
-			<CTabContent fade={false} className="no-height-limit">
-				<CTabPane data-tab="full">
+			<CTabContent className="no-height-limit">
+				<CTabPane visible={activeTab === 'full'}>
 					<MyErrorBoundary>
 						<FullImportTab snapshot={snapshot} />
 					</MyErrorBoundary>
 				</CTabPane>
-				<CTabPane data-tab="buttons">
+				<CTabPane visible={activeTab === 'buttons'}>
 					<MyErrorBoundary>
 						{snapshot.controls ? (
 							<ImportPageWizard
@@ -86,7 +84,7 @@ export function ImportFullWizard({ snapshot, instanceRemap, setInstanceRemap }: 
 						)}
 					</MyErrorBoundary>
 				</CTabPane>
-				<CTabPane data-tab="triggers">
+				<CTabPane visible={activeTab === 'triggers'}>
 					<MyErrorBoundary>
 						{snapshot.triggers ? (
 							<ImportTriggersTab
@@ -100,7 +98,7 @@ export function ImportFullWizard({ snapshot, instanceRemap, setInstanceRemap }: 
 					</MyErrorBoundary>
 				</CTabPane>
 			</CTabContent>
-		</CTabs>
+		</>
 	)
 }
 
@@ -142,7 +140,7 @@ function FullImportTab({ snapshot }: FullImportTabProps) {
 	const validConfigKeys = Object.entries(config).filter(([k, v]) => v && snapshotKeys.includes(k))
 	// console.log('validkeys', validConfigKeys)
 
-	const setValue = useCallback((key, value) => {
+	const setValue = useCallback((key: string, value: any) => {
 		setConfig((oldConfig) => ({
 			...oldConfig,
 			[key]: value,
@@ -216,7 +214,7 @@ function FullImportTab({ snapshot }: FullImportTabProps) {
 				label="Settings"
 			/> */}
 
-			<CAlert color="info">
+			<CAlert color="info" className="margin-top">
 				All the connections will be imported, as they are required to be able to import any actions and feedbacks.
 			</CAlert>
 
@@ -238,26 +236,20 @@ interface InputCheckboxProps {
 function InputCheckbox({ config, allowKeys, keyName, setValue, label }: InputCheckboxProps) {
 	const disabled = allowKeys && !allowKeys.includes(keyName)
 
-	const setValue2 = useCallback((e) => setValue(keyName, !!e.currentTarget.checked), [setValue, keyName])
+	const setValue2 = useCallback(
+		(e: React.ChangeEvent<HTMLInputElement>) => setValue(keyName, !!e.currentTarget.checked),
+		[setValue, keyName]
+	)
 
 	return (
 		<div className="indent3">
-			<div className="form-check form-check-inline mr-1">
-				<CInputCheckbox
-					id={`check-${keyName}`}
-					checked={!disabled && !!config[keyName]}
-					onChange={setValue2}
-					disabled={disabled}
-				/>
-				<CLabel
-					htmlFor={`check-${keyName}`}
-					className={ClassNames({
-						disabled: disabled,
-					})}
-				>
-					{label}
-				</CLabel>
-			</div>
+			<CFormCheck
+				id={`check-${keyName}`}
+				label={label}
+				checked={!disabled && !!config[keyName]}
+				onChange={setValue2}
+				disabled={disabled}
+			/>
 		</div>
 	)
 }

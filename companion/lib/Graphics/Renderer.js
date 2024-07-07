@@ -62,7 +62,7 @@ export default class GraphicsRenderer {
 		// console.log('starting drawBlank ' + now, 'time elapsed since last start ' + (now - lastDraw))
 		// lastDraw = now
 		// console.time('drawBlankImage')
-		const img = new Image(72, 72, 1)
+		const img = new Image(72, 72, 2)
 
 		img.fillColor('black')
 

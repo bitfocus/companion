@@ -9,11 +9,7 @@ import { cloneDeep } from 'lodash-es'
 import { useEventListener } from 'usehooks-ts'
 import type { LoaderHeightWidthProps } from 'react-spinners/helpers/props.js'
 import { Socket } from 'socket.io-client'
-import type { AllVariableDefinitions } from '@companion-app/shared/Model/Variables.js'
 import type { ClientConnectionConfig } from '@companion-app/shared/Model/Common.js'
-import type { UserConfigModel } from '@companion-app/shared/Model/UserConfigModel.js'
-import type { ClientDevicesListItem } from '@companion-app/shared/Model/Surfaces.js'
-import type { CustomVariablesModel } from '@companion-app/shared/Model/CustomVariableModel.js'
 import type {
 	ClientToBackendEventsMap,
 	BackendToClientEventsMap,
@@ -27,10 +23,6 @@ export type CompanionSocketType = Socket<BackendToClientEventsMap, AddCallbackPa
 export const SocketContext = React.createContext<CompanionSocketType>(null as any) // TODO - fix this
 
 export const ConnectionsContext = React.createContext<Record<string, ClientConnectionConfig>>({})
-export const VariableDefinitionsContext = React.createContext<AllVariableDefinitions>({})
-export const CustomVariableDefinitionsContext = React.createContext<CustomVariablesModel>({})
-export const UserConfigContext = React.createContext<UserConfigModel | null>(null)
-export const SurfacesContext = React.createContext<Record<string, ClientDevicesListItem | undefined>>({})
 
 type IfReturnIsNever<T extends (...args: any[]) => void> = ReturnType<T> extends never ? never : T
 
@@ -317,10 +309,7 @@ export const PreventDefaultHandler = (e: FormEvent): void => {
 	e.preventDefault()
 }
 
-export function useComputed<TCb extends (...args: any[]) => any>(
-	cb: TCb,
-	deps: DependencyList | undefined
-): ReturnType<TCb> {
+export function useComputed<TCb extends (...args: any[]) => any>(cb: TCb, deps: DependencyList): ReturnType<TCb> {
 	return useMemo(() => computed(cb), deps).get()
 }
 

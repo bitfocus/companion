@@ -1,9 +1,9 @@
 import React from 'react'
-import { CButton } from '@coreui/react'
+import { CButton, CFormSwitch } from '@coreui/react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faUndo } from '@fortawesome/free-solid-svg-icons'
-import CSwitch from '../CSwitch.js'
 import type { UserConfigModel } from '@companion-app/shared/Model/UserConfigModel.js'
+import { observer } from 'mobx-react-lite'
 
 interface ButtonsConfigProps {
 	config: UserConfigModel
@@ -11,7 +11,7 @@ interface ButtonsConfigProps {
 	resetValue: (key: keyof UserConfigModel) => void
 }
 
-export function ButtonsConfig({ config, setValue, resetValue }: ButtonsConfigProps) {
+export const ButtonsConfig = observer(function ButtonsConfig({ config, setValue, resetValue }: ButtonsConfigProps) {
 	return (
 		<>
 			<tr>
@@ -25,14 +25,13 @@ export function ButtonsConfig({ config, setValue, resetValue }: ButtonsConfigPro
 			<tr>
 				<td>Flip counting direction on page up/down buttons</td>
 				<td>
-					<div className="form-check form-check-inline mr-1 float-right">
-						<CSwitch
-							color="success"
-							checked={config.page_direction_flipped}
-							size={'lg'}
-							onChange={(e) => setValue('page_direction_flipped', e.currentTarget.checked)}
-						/>
-					</div>
+					<CFormSwitch
+						className="float-right"
+						color="success"
+						checked={config.page_direction_flipped}
+						size="xl"
+						onChange={(e) => setValue('page_direction_flipped', e.currentTarget.checked)}
+					/>
 				</td>
 				<td>
 					<CButton onClick={() => resetValue('page_direction_flipped')} title="Reset to default">
@@ -44,14 +43,13 @@ export function ButtonsConfig({ config, setValue, resetValue }: ButtonsConfigPro
 			<tr>
 				<td>Show + and - instead of arrows on page up/down buttons</td>
 				<td>
-					<div className="form-check form-check-inline mr-1 float-right">
-						<CSwitch
-							color="success"
-							checked={config.page_plusminus}
-							size={'lg'}
-							onChange={(e) => setValue('page_plusminus', e.currentTarget.checked)}
-						/>
-					</div>
+					<CFormSwitch
+						className="float-right"
+						color="success"
+						checked={config.page_plusminus}
+						size="xl"
+						onChange={(e) => setValue('page_plusminus', e.currentTarget.checked)}
+					/>
 				</td>
 				<td>
 					<CButton onClick={() => resetValue('page_plusminus')} title="Reset to default">
@@ -63,14 +61,13 @@ export function ButtonsConfig({ config, setValue, resetValue }: ButtonsConfigPro
 			<tr>
 				<td>Show the topbar on each button. This can be overridden per-button</td>
 				<td>
-					<div className="form-check form-check-inline mr-1 float-right">
-						<CSwitch
-							color="success"
-							checked={!config.remove_topbar}
-							size={'lg'}
-							onChange={(e) => setValue('remove_topbar', !e.currentTarget.checked)}
-						/>
-					</div>
+					<CFormSwitch
+						className="float-right"
+						color="success"
+						checked={!config.remove_topbar}
+						size="xl"
+						onChange={(e) => setValue('remove_topbar', !e.currentTarget.checked)}
+					/>
 				</td>
 				<td>
 					<CButton onClick={() => resetValue('remove_topbar')} title="Reset to default">
@@ -80,4 +77,4 @@ export function ButtonsConfig({ config, setValue, resetValue }: ButtonsConfigPro
 			</tr>
 		</>
 	)
-}
+})

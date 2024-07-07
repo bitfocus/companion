@@ -1,22 +1,23 @@
 import React, { useEffect, useCallback } from 'react'
-import { CInputCheckbox } from '@coreui/react'
+import { CFormCheck, CFormLabel } from '@coreui/react'
 
 interface CheckboxInputFieldProps {
 	tooltip?: string
+	label?: React.ReactNode
 	value: boolean
 	setValue: (value: boolean) => void
 	setValid?: (valid: boolean) => void
 	disabled?: boolean
 }
 
-export function CheckboxInputField({ tooltip, value, setValue, setValid, disabled }: CheckboxInputFieldProps) {
+export function CheckboxInputField({ tooltip, label, value, setValue, setValid, disabled }: CheckboxInputFieldProps) {
 	// If the value is undefined, populate with the default. Also inform the parent about the validity
 	useEffect(() => {
 		setValid?.(true)
 	}, [setValid])
 
 	const onChange = useCallback(
-		(e) => {
+		(e: React.ChangeEvent<HTMLInputElement>) => {
 			setValue(!!e.currentTarget.checked)
 			setValid?.(true)
 		},
@@ -24,13 +25,18 @@ export function CheckboxInputField({ tooltip, value, setValue, setValid, disable
 	)
 
 	return (
-		<CInputCheckbox
-			type="checkbox"
-			disabled={disabled}
-			checked={!!value}
-			value={true as any}
-			title={tooltip}
-			onChange={onChange}
-		/>
+		<>
+			{label ? <CFormLabel>{label}</CFormLabel> : ''}
+			<div className="form-check">
+				<CFormCheck
+					type="checkbox"
+					disabled={disabled}
+					checked={!!value}
+					value={true as any}
+					title={tooltip}
+					onChange={onChange}
+				/>
+			</div>
+		</>
 	)
 }

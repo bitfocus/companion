@@ -1,6 +1,7 @@
 import React, { forwardRef, useCallback, useImperativeHandle, useState } from 'react'
-import { CModal, CModalBody, CModalHeader, CModalFooter, CButton, CRow, CCol } from '@coreui/react'
+import { CModalBody, CModalHeader, CModalFooter, CButton, CRow, CCol } from '@coreui/react'
 import { VariablesTable } from '../Components/VariablesTable.js'
+import { CModalExt } from '../Components/CModalExt.js'
 
 export interface ConnectionVariablesModalRef {
 	show(label: string): void
@@ -26,7 +27,7 @@ export const ConnectionVariablesModal = forwardRef<ConnectionVariablesModalRef>(
 		)
 
 		return (
-			<CModal show={show} onClose={doClose} onClosed={onClosed} size="lg">
+			<CModalExt visible={show} onClose={doClose} onClosed={onClosed} size="lg">
 				<CModalHeader closeButton>
 					<h5>Variables for {connectionLabel}</h5>
 				</CModalHeader>
@@ -40,7 +41,7 @@ export const ConnectionVariablesModal = forwardRef<ConnectionVariablesModalRef>(
 						Close
 					</CButton>
 				</CModalFooter>
-			</CModal>
+			</CModalExt>
 		)
 	}
 )

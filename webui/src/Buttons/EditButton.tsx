@@ -5,18 +5,17 @@ import {
 	CDropdownMenu,
 	CButton,
 	CButtonGroup,
-	CModal,
 	CModalHeader,
 	CModalBody,
 	CModalFooter,
 	CForm,
-	CFormGroup,
-	CLabel,
-	CInput,
+	CFormLabel,
+	CFormInput,
 	CNavItem,
 	CNavLink,
 	CNav,
-	CTabs,
+	CCol,
+	CFormSwitch,
 } from '@coreui/react'
 import {
 	faChevronLeft,
@@ -53,7 +52,6 @@ import { ControlFeedbacksEditor } from '../Controls/FeedbackEditor.js'
 import { cloneDeep } from 'lodash-es'
 import { useElementSize } from 'usehooks-ts'
 import { GetStepIds } from '@companion-app/shared/Controls.js'
-import CSwitch from '../CSwitch.js'
 import { formatLocation } from '@companion-app/shared/ControlId.js'
 import { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import { ActionInstance, ActionSetsModel, ActionStepOptions } from '@companion-app/shared/Model/ActionModel.js'
@@ -61,6 +59,7 @@ import { FeedbackInstance } from '@companion-app/shared/Model/FeedbackModel.js'
 import { NormalButtonSteps, SomeButtonModel } from '@companion-app/shared/Model/ButtonModel.js'
 import { RootAppStoreContext } from '../Stores/RootAppStore.js'
 import { observer } from 'mobx-react-lite'
+import { CModalExt } from '../Components/CModalExt.js'
 
 interface EditButtonProps {
 	location: ControlLocation
@@ -244,80 +243,87 @@ export const EditButton = observer(function EditButton({ location, onKeyUp }: Ed
 			<LoadingRetryOrError dataReady={dataReady} error={loadError} doRetry={doRetryLoad} />
 			{hasConfig && dataReady && (
 				<>
-					<ButtonPreviewBase fixedSize preview={previewImage} right={true} />
-					{(!config || config.type === undefined) && (
-						<MyErrorBoundary>
-							{' '}
-							<CDropdown className="" style={{ display: 'inline-block', marginRight: -4 }}>
-								<CButtonGroup>
-									{/* This could be simplified to use the split property on CDropdownToggle, but then onClick doesnt work https://github.com/coreui/coreui-react/issues/179 */}
-									<CButton color="danger" onClick={() => setButtonType('button')}>
-										Create button
-									</CButton>
-									<CDropdownToggle
-										caret
-										color="danger"
-										style={{ opacity: 0.7, paddingLeft: 14, paddingRight: 16 }}
-										className="dropdown-toggle dropdown-toggle-split"
-									>
-										<span className="sr-only">Toggle Dropdown</span>
-									</CDropdownToggle>
-								</CButtonGroup>
-								<CDropdownMenu>
-									<CDropdownItem onClick={() => setButtonType('button')}>Regular button</CDropdownItem>
-									<CDropdownItem onClick={() => setButtonType('pageup')}>Page up</CDropdownItem>
-									<CDropdownItem onClick={() => setButtonType('pagenum')}>Page number</CDropdownItem>
-									<CDropdownItem onClick={() => setButtonType('pagedown')}>Page down</CDropdownItem>
-								</CDropdownMenu>
-							</CDropdown>
-						</MyErrorBoundary>
-					)}
-					&nbsp;
-					<MyErrorBoundary>
-						<CButton color="danger" hidden={!config} onClick={clearButton} title="Clear Button">
-							<FontAwesomeIcon icon={faTrashAlt} />
-						</CButton>
+					<CCol sm={12}>
+						<ButtonPreviewBase fixedSize preview={previewImage} right={true} />
+						{(!config || config.type === undefined) && (
+							<MyErrorBoundary>
+								{' '}
+								<CDropdown className="" style={{ display: 'inline-block', marginRight: -4 }}>
+									<CButtonGroup>
+										{/* This could be simplified to use the split property on CDropdownToggle, but then onClick doesnt work https://github.com/coreui/coreui-react/issues/179 */}
+										<CButton color="danger" onClick={() => setButtonType('button')}>
+											Create button
+										</CButton>
+										<CDropdownToggle
+											caret
+											color="danger"
+											style={{ opacity: 0.7, paddingLeft: 14, paddingRight: 16 }}
+											className="dropdown-toggle dropdown-toggle-split"
+										>
+											<span className="sr-only">Toggle Dropdown</span>
+										</CDropdownToggle>
+									</CButtonGroup>
+									<CDropdownMenu>
+										<CDropdownItem onClick={() => setButtonType('button')}>Regular button</CDropdownItem>
+										<CDropdownItem onClick={() => setButtonType('pageup')}>Page up</CDropdownItem>
+										<CDropdownItem onClick={() => setButtonType('pagenum')}>Page number</CDropdownItem>
+										<CDropdownItem onClick={() => setButtonType('pagedown')}>Page down</CDropdownItem>
+									</CDropdownMenu>
+								</CDropdown>
+							</MyErrorBoundary>
+						)}
 						&nbsp;
-						<CButtonGroup>
-							<CButton
-								color="warning"
-								hidden={!config || config.type !== 'button'}
-								onMouseDown={hotPressDown}
-								onMouseUp={hotPressUp}
-								style={{ color: 'white' }}
-								title="Test press button"
-							>
-								<FontAwesomeIcon icon={faPlay} />
-								&nbsp;Test
-							</CButton>
-						</CButtonGroup>{' '}
-					</MyErrorBoundary>
-					&nbsp;
-					{config && 'options' in config && config?.options?.rotaryActions && (
 						<MyErrorBoundary>
-							<CButton color="warning" onMouseDown={hotRotateLeft} style={{ color: 'white' }} title="Test rotate left">
-								<FontAwesomeIcon icon={faUndo} />
+							<CButton color="danger" hidden={!config} onClick={clearButton} title="Clear Button">
+								<FontAwesomeIcon icon={faTrashAlt} />
 							</CButton>
 							&nbsp;
-							<CButton
-								color="warning"
-								onMouseDown={hotRotateRight}
-								style={{ color: 'white' }}
-								title="Test rotate right"
-							>
-								<FontAwesomeIcon icon={faRedo} />
-							</CButton>
+							<CButtonGroup>
+								<CButton
+									color="warning"
+									hidden={!config || config.type !== 'button'}
+									onMouseDown={hotPressDown}
+									onMouseUp={hotPressUp}
+									style={{ color: 'white' }}
+									title="Test press button"
+								>
+									<FontAwesomeIcon icon={faPlay} />
+									&nbsp;Test
+								</CButton>
+							</CButtonGroup>{' '}
 						</MyErrorBoundary>
-					)}
-					{!config && (
-						<>
-							<h4>Empty button</h4>
-							<p className="mt-3">
-								To get started, click button above to create a regular button, or use the drop down to make a special
-								button.
-							</p>
-						</>
-					)}
+						&nbsp;
+						{config && 'options' in config && config?.options?.rotaryActions && (
+							<MyErrorBoundary>
+								<CButton
+									color="warning"
+									onMouseDown={hotRotateLeft}
+									style={{ color: 'white' }}
+									title="Test rotate left"
+								>
+									<FontAwesomeIcon icon={faUndo} />
+								</CButton>
+								&nbsp;
+								<CButton
+									color="warning"
+									onMouseDown={hotRotateRight}
+									style={{ color: 'white' }}
+									title="Test rotate right"
+								>
+									<FontAwesomeIcon icon={faRedo} />
+								</CButton>
+							</MyErrorBoundary>
+						)}
+						{!config && (
+							<>
+								<h4>Empty button</h4>
+								<p className="mt-3">
+									To get started, click button above to create a regular button, or use the drop down to make a special
+									button.
+								</p>
+							</>
+						)}
+					</CCol>
 					{controlId && config && (
 						<MyErrorBoundary>
 							<ButtonStyleConfig
@@ -377,13 +383,13 @@ function TabsSection({ style, controlId, location, steps, runtimeProps, rotaryAc
 
 	const confirmRef = useRef<GenericConfirmModalRef>(null)
 
-	const tabsScrollRef = useRef(null)
+	const tabsScrollRef = useRef<HTMLDivElement>()
 	const [tabsSizeRef] = useElementSize()
 
 	const setTabsRef = useCallback(
-		(ref) => {
+		(ref: HTMLDivElement | null) => {
 			tabsSizeRef(ref)
-			tabsScrollRef.current = ref
+			tabsScrollRef.current = ref ?? undefined
 		},
 		[tabsSizeRef]
 	)
@@ -491,38 +497,38 @@ function TabsSection({ style, controlId, location, steps, runtimeProps, rotaryAc
 			<div key="button">
 				<GenericConfirmModal ref={confirmRef} />
 
-				<br />
-
 				<div ref={setTabsRef} className={'row-heading'}>
-					<CTabs activeTab={selectedStep} onActiveTabChange={clickSelectedStep}>
-						<CNav variant="tabs">
-							{keys.map((stepId, i) => (
-								<ActionSetTab
-									key={stepId}
-									controlId={controlId}
-									stepId={stepId}
-									stepIndex={i}
-									stepOptions={steps[stepId]?.options}
-									moreThanOneStep={keys.length > 1}
-									isCurrent={runtimeProps.current_step_id === stepId}
-									isActiveAndCurrent={
-										stepId.toString() === selectedIndex.toString() && runtimeProps.current_step_id === stepId
-									}
-								/>
-							))}
+					<CNav variant="tabs">
+						{keys.map((stepId, i) => (
+							<ActionSetTab
+								key={stepId}
+								controlId={controlId}
+								stepId={stepId}
+								stepIndex={i}
+								stepOptions={steps[stepId]?.options}
+								moreThanOneStep={keys.length > 1}
+								isCurrent={runtimeProps.current_step_id === stepId}
+								isActiveAndCurrent={
+									stepId.toString() === selectedIndex.toString() && runtimeProps.current_step_id === stepId
+								}
+								active={selectedStep === `step:${stepId}`}
+								onClick={() => clickSelectedStep(`step:${stepId}`)}
+							/>
+						))}
 
-							<CNavItem key="feedbacks" className="nav-steps-special">
-								<CNavLink data-tab="feedbacks">Feedbacks</CNavLink>
+						<CNavItem key="feedbacks" className="nav-steps-special">
+							<CNavLink active={selectedStep === 'feedbacks'} onClick={() => clickSelectedStep('feedbacks')}>
+								Feedbacks
+							</CNavLink>
+						</CNavItem>
+						{keys.length === 1 && (
+							<CNavItem key="add-step" className="nav-steps-special">
+								<CNavLink onClick={appendStep}>
+									<FontAwesomeIcon icon={faPlus} /> Add step
+								</CNavLink>
 							</CNavItem>
-							{keys.length === 1 && (
-								<CNavItem key="add-step" className="nav-steps-special">
-									<CNavLink onClick={appendStep}>
-										<FontAwesomeIcon icon={faPlus} /> Add step
-									</CNavLink>
-								</CNavItem>
-							)}
-						</CNav>
-					</CTabs>
+						)}
+					</CNav>
 				</div>
 
 				<div
@@ -594,58 +600,62 @@ function TabsSection({ style, controlId, location, steps, runtimeProps, rotaryAc
 								</CButton>
 							</CButtonGroup>
 
-							{rotaryActions && selectedStep2 && (
-								<>
-									<MyErrorBoundary>
-										<ControlActionSetEditor
-											heading="Rotate left actions"
+							<div>
+								{/* Wrap the action-category, for :first-child to work */}
+
+								{rotaryActions && selectedStep2 && (
+									<>
+										<MyErrorBoundary>
+											<ControlActionSetEditor
+												heading="Rotate left actions"
+												controlId={controlId}
+												location={location}
+												stepId={selectedKey}
+												setId="rotate_left"
+												addPlaceholder="+ Add rotate left action"
+												actions={selectedStep2.action_sets['rotate_left']}
+											/>
+										</MyErrorBoundary>
+
+										<MyErrorBoundary>
+											<ControlActionSetEditor
+												heading="Rotate right actions"
+												controlId={controlId}
+												location={location}
+												stepId={selectedKey}
+												setId="rotate_right"
+												addPlaceholder="+ Add rotate right action"
+												actions={selectedStep2.action_sets['rotate_right']}
+											/>
+										</MyErrorBoundary>
+									</>
+								)}
+
+								{selectedStep2 && (
+									<>
+										<MyErrorBoundary>
+											<ControlActionSetEditor
+												heading={`Press actions`}
+												controlId={controlId}
+												location={location}
+												stepId={selectedKey}
+												setId="down"
+												addPlaceholder={`+ Add press action`}
+												actions={selectedStep2.action_sets['down']}
+											/>
+										</MyErrorBoundary>
+
+										<EditActionsRelease
 											controlId={controlId}
 											location={location}
+											action_sets={selectedStep2.action_sets}
+											stepOptions={selectedStep2.options}
 											stepId={selectedKey}
-											setId="rotate_left"
-											addPlaceholder="+ Add rotate left action"
-											actions={selectedStep2.action_sets['rotate_left']}
+											removeSet={removeSet}
 										/>
-									</MyErrorBoundary>
-
-									<MyErrorBoundary>
-										<ControlActionSetEditor
-											heading="Rotate right actions"
-											controlId={controlId}
-											location={location}
-											stepId={selectedKey}
-											setId="rotate_right"
-											addPlaceholder="+ Add rotate right action"
-											actions={selectedStep2.action_sets['rotate_right']}
-										/>
-									</MyErrorBoundary>
-								</>
-							)}
-
-							{selectedStep2 && (
-								<>
-									<MyErrorBoundary>
-										<ControlActionSetEditor
-											heading={`Press actions`}
-											controlId={controlId}
-											location={location}
-											stepId={selectedKey}
-											setId="down"
-											addPlaceholder={`+ Add press action`}
-											actions={selectedStep2.action_sets['down']}
-										/>
-									</MyErrorBoundary>
-
-									<EditActionsRelease
-										controlId={controlId}
-										location={location}
-										action_sets={selectedStep2.action_sets}
-										stepOptions={selectedStep2.options}
-										stepId={selectedKey}
-										removeSet={removeSet}
-									/>
-								</>
-							)}
+									</>
+								)}
+							</div>
 
 							<br />
 							<p>
@@ -674,6 +684,8 @@ interface ActionSetTabProps {
 	isCurrent: boolean
 	// both selected and the current step
 	isActiveAndCurrent: boolean
+	active: boolean
+	onClick: () => void
 }
 function ActionSetTab({
 	controlId,
@@ -683,10 +695,10 @@ function ActionSetTab({
 	moreThanOneStep,
 	isCurrent,
 	isActiveAndCurrent,
+	active,
+	onClick,
 }: Readonly<ActionSetTabProps>) {
 	const socket = useContext(SocketContext)
-
-	console.log(stepId, moreThanOneStep, isCurrent, isActiveAndCurrent)
 
 	let linkClassname: string | undefined = undefined
 
@@ -734,7 +746,7 @@ function ActionSetTab({
 					></input>
 				</CNavLink>
 			) : (
-				<CNavLink onDoubleClick={showField} data-tab={`step:${stepId}`} className={linkClassname}>
+				<CNavLink onDoubleClick={showField} active={active} onClick={onClick} className={linkClassname}>
 					{displayText}
 				</CNavLink>
 			)}
@@ -907,24 +919,27 @@ const EditDurationGroupPropertiesModal = forwardRef<
 		[]
 	)
 
-	const onDurationChange = useCallback((e) => {
+	const onDurationChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
 		setNewDurationValue(Number(e.target.value))
 	}, [])
 
-	const onWhileHeldChange = useCallback((e) => {
+	const onWhileHeldChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
 		setNewWhileHeldValue(!!e.target.checked)
 	}, [])
 
 	return (
-		<CModal show={show} onClose={doClose} onClosed={onClosed} onOpened={buttonFocus}>
+		<CModalExt visible={show} onClose={doClose} onClosed={onClosed} onOpened={buttonFocus}>
 			<CModalHeader closeButton>
 				<h5>Change delay group properties</h5>
 			</CModalHeader>
 			<CModalBody>
-				<CForm onSubmit={doAction}>
-					<CFormGroup>
-						<CLabel>Press duration</CLabel>
-						<CInput
+				<CForm className="row g-3" onSubmit={doAction}>
+					<CFormLabel htmlFor="colFormPressDuration" className="col-sm-4 col-form-label col-form-label-sm">
+						Press duration
+					</CFormLabel>
+					<CCol sm={8}>
+						<CFormInput
+							name="colFormPressDuration"
 							type="number"
 							value={newDurationValue || ''}
 							min={1}
@@ -932,24 +947,29 @@ const EditDurationGroupPropertiesModal = forwardRef<
 							style={{ color: !newDurationValue || newDurationValue <= 0 ? 'red' : undefined }}
 							onChange={onDurationChange}
 						/>
-					</CFormGroup>
+					</CCol>
 
-					<CFormGroup>
-						<CLabel>Execute while held</CLabel>
-						<p>
-							<CSwitch color="success" checked={!!newWhileHeldValue} onChange={onWhileHeldChange} />
-						</p>
-					</CFormGroup>
+					<CFormLabel htmlFor="colFormExecuteWhileHeld" className="col-sm-4 col-form-label col-form-label-sm">
+						Execute while held
+					</CFormLabel>
+					<CCol sm={8}>
+						<CFormSwitch
+							name="colFormExecuteWhileHeld"
+							size="xl"
+							checked={!!newWhileHeldValue}
+							onChange={onWhileHeldChange}
+						/>
+					</CCol>
 				</CForm>
 			</CModalBody>
 			<CModalFooter>
 				<CButton color="secondary" onClick={doClose}>
 					Cancel
 				</CButton>
-				<CButton innerRef={buttonRef} color="primary" onClick={doAction}>
+				<CButton ref={buttonRef} color="primary" onClick={doAction}>
 					Save
 				</CButton>
 			</CModalFooter>
-		</CModal>
+		</CModalExt>
 	)
 })

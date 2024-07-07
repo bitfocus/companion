@@ -32,7 +32,7 @@ export function usePanelCollapseHelper(storageId: string, panelIds: string[]): P
 	}, [collapseStorageId])
 
 	const setPanelCollapsed = useCallback(
-		(panelId, collapsed) => {
+		(panelId: string, collapsed: boolean) => {
 			setCollapsed((oldState) => {
 				const newState: CollapsedState = {
 					...oldState,

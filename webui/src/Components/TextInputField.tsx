@@ -1,6 +1,5 @@
 import React, { useEffect, useMemo, useState, useCallback, useContext, useRef } from 'react'
-import { CInput } from '@coreui/react'
-import { VariableDefinitionsContext } from '../util.js'
+import { CFormInput, CFormLabel, CFormTextarea } from '@coreui/react'
 import Select, {
 	ControlProps,
 	OptionProps,
@@ -12,8 +11,11 @@ import { MenuPortalContext } from './DropdownInputField.js'
 import { DropdownChoiceId } from '@companion-module/base'
 import { observer } from 'mobx-react-lite'
 import { WindowedMenuList } from 'react-windowed-select'
+import { RootAppStoreContext } from '../Stores/RootAppStore.js'
+import { ParseExpression } from '@companion-app/shared/Expression/ExpressionParse.js'
 
 interface TextInputFieldProps {
+	label?: React.ReactNode
 	regex?: string
 	required?: boolean
 	tooltip?: string
@@ -25,9 +27,11 @@ interface TextInputFieldProps {
 	disabled?: boolean
 	useVariables?: boolean
 	useLocalVariables?: boolean
+	isExpression?: boolean
 }
 
 export const TextInputField = observer(function TextInputField({
+	label,
 	regex,
 	required,
 	tooltip,
@@ -39,6 +43,7 @@ export const TextInputField = observer(function TextInputField({
 	disabled,
 	useVariables,
 	useLocalVariables,
+	isExpression,
 }: TextInputFieldProps) {
 	const [tmpValue, setTmpValue] = useState<string | null>(null)
 
@@ -57,26 +62,36 @@ export const TextInputField = observer(function TextInputField({
 	// Check if the value is valid
 	const isValueValid = useCallback(
 		(val: string) => {
-			// We need a string here, but sometimes get a number...
-			if (typeof val === 'number') {
-				val = `${val}`
-			}
-
-			// Must match the regex, if required or has a value
-			if (required || val !== '') {
-				if (compiledRegex && (typeof val !== 'string' || !compiledRegex.exec(val))) {
+			if (isExpression) {
+				// Try and parse the expression to see if it is valid
+				try {
+					ParseExpression(val)
+					return true
+				} catch (e) {
 					return false
 				}
-			}
+			} else {
+				// We need a string here, but sometimes get a number...
+				if (typeof val === 'number') {
+					val = `${val}`
+				}
 
-			// if required, must not be empty
-			if (required && val === '') {
-				return false
-			}
+				// Must match the regex, if required or has a value
+				if (required || val !== '') {
+					if (compiledRegex && (typeof val !== 'string' || !compiledRegex.exec(val))) {
+						return false
+					}
+				}
 
-			return true
+				// if required, must not be empty
+				if (required && val === '') {
+					return false
+				}
+
+				return true
+			}
 		},
-		[compiledRegex, required]
+		[compiledRegex, required, isExpression]
 	)
 
 	// If the value is undefined, populate with the default. Also inform the parent about the validity
@@ -112,20 +127,25 @@ export const TextInputField = observer(function TextInputField({
 	// Render the input
 	return (
 		<>
-			{useVariables ? (
-				<VariablesSelect
-					showValue={showValue}
-					style={extraStyle}
-					useLocalVariables={!!useLocalVariables}
-					storeValue={storeValue}
-					focusStoreValue={focusStoreValue}
-					blurClearValue={blurClearValue}
-					placeholder={placeholder}
-					title={tooltip}
-					disabled={disabled}
-				/>
+			{useVariables || isExpression ? (
+				<>
+					{label ? <CFormLabel>{label}</CFormLabel> : ''}
+					<VariablesSelect
+						showValue={showValue}
+						style={extraStyle}
+						useLocalVariables={!!useLocalVariables}
+						storeValue={storeValue}
+						focusStoreValue={focusStoreValue}
+						blurClearValue={blurClearValue}
+						placeholder={placeholder}
+						title={tooltip}
+						disabled={disabled}
+						multiline={isExpression}
+					/>
+				</>
 			) : (
-				<CInput
+				<CFormInput
+					label={label}
 					type="text"
 					disabled={disabled}
 					value={showValue}
@@ -145,13 +165,16 @@ function useIsPickerOpen(showValue: string, cursorPosition: number | null) {
 	const [isForceHidden, setIsForceHidden] = useState(false)
 
 	let isPickerOpen = false
-	let searchValue = ''
+	let searchValue = ' '
 
 	if (cursorPosition != null) {
 		const lastOpenSequence = FindVariableStartIndexFromCursor(showValue, cursorPosition)
 		isPickerOpen = lastOpenSequence !== -1
 
-		searchValue = showValue.slice(lastOpenSequence + 2, cursorPosition)
+		searchValue = showValue.slice(isPickerOpen ? lastOpenSequence + 2 : 0, cursorPosition)
+
+		// If it has no length, then the input field swallows the 'space' character as 'select the focussed option'
+		if (searchValue.length === 0) searchValue = ' '
 	}
 
 	const previousIsPickerOpen = useRef(false)
@@ -183,9 +206,10 @@ interface VariablesSelectProps {
 	placeholder: string | undefined
 	title: string | undefined
 	disabled: boolean | undefined
+	multiline: boolean | undefined
 }
 
-function VariablesSelect({
+const VariablesSelect = observer(function VariablesSelect({
 	showValue,
 	style,
 	useLocalVariables,
@@ -195,21 +219,20 @@ function VariablesSelect({
 	placeholder,
 	title,
 	disabled,
+	multiline,
 }: Readonly<VariablesSelectProps>) {
-	const variableDefinitionsContext = useContext(VariableDefinitionsContext)
+	const { variablesStore } = useContext(RootAppStoreContext)
 	const menuPortal = useContext(MenuPortalContext)
 
+	const baseVariableDefinitions = variablesStore.allVariableDefinitions.get()
 	const options = useMemo(() => {
 		// Update the suggestions list in tribute whenever anything changes
 		const suggestions: DropdownChoiceInt[] = []
-		for (const [connectionLabel, variables] of Object.entries(variableDefinitionsContext)) {
-			for (const [name, va] of Object.entries(variables || {})) {
-				if (!va) continue
-				suggestions.push({
-					value: `${connectionLabel}:${name}`,
-					label: va.label,
-				})
-			}
+		for (const variable of baseVariableDefinitions) {
+			suggestions.push({
+				value: `${variable.connectionLabel}:${variable.name}`,
+				label: variable.label,
+			})
 		}
 
 		if (useLocalVariables) {
@@ -238,7 +261,7 @@ function VariablesSelect({
 		}
 
 		return suggestions
-	}, [variableDefinitionsContext, useLocalVariables])
+	}, [baseVariableDefinitions, useLocalVariables])
 
 	const [cursorPosition, setCursorPosition] = useState<number | null>(null)
 	const { isPickerOpen, searchValue, setIsForceHidden } = useIsPickerOpen(showValue, cursorPosition)
@@ -318,13 +341,13 @@ function VariablesSelect({
 				inputValue={searchValue}
 				onChange={onVariableSelect}
 				menuIsOpen={isPickerOpen}
-				components={CustomSelectComponents}
+				components={multiline ? CustomMultilineSelectComponents : CustomSelectComponents}
 				backspaceRemovesValue={false}
 				filterOption={createFilter({ ignoreAccents: false })}
 			/>
 		</VariablesSelectContext.Provider>
 	)
-}
+})
 
 const VariablesSelectContext = React.createContext({
 	value: '',
@@ -336,7 +359,7 @@ const VariablesSelectContext = React.createContext({
 	blurClearValue: () => {},
 	title: undefined as string | undefined,
 	placeholder: undefined as string | undefined,
-	inputRef: { current: null } as React.MutableRefObject<HTMLInputElement | null>,
+	inputRef: { current: null } as React.MutableRefObject<HTMLInputElement | HTMLTextAreaElement | null>,
 })
 
 const CustomOption = React.memo((props: OptionProps<DropdownChoiceInt>) => {
@@ -359,17 +382,18 @@ const CustomControl = React.memo((props: ControlProps<DropdownChoiceInt>) => {
 	)
 })
 
-const CustomValueContainer = React.memo((props: ValueContainerProps<DropdownChoiceInt>) => {
+function useValueContainerCallbacks() {
 	const context = useContext(VariablesSelectContext)
 
 	const checkCursor = useCallback(
 		(
 			e:
-				| React.KeyboardEvent<HTMLInputElement>
-				| React.MouseEvent<HTMLInputElement>
-				| React.TouchEvent<HTMLInputElement>
-				| React.ClipboardEvent<HTMLInputElement>
-				| React.FocusEvent<HTMLInputElement>
+				| React.KeyboardEvent<HTMLInputElement | HTMLTextAreaElement>
+				| React.MouseEvent<HTMLInputElement | HTMLTextAreaElement>
+				| React.TouchEvent<HTMLInputElement | HTMLTextAreaElement>
+				| React.ClipboardEvent<HTMLInputElement | HTMLTextAreaElement>
+				| React.FocusEvent<HTMLInputElement | HTMLTextAreaElement>
+				| React.FormEvent<HTMLInputElement | HTMLTextAreaElement>
 		) => {
 			const target = e.currentTarget
 
@@ -383,7 +407,7 @@ const CustomValueContainer = React.memo((props: ValueContainerProps<DropdownChoi
 	)
 
 	const onFocus = useCallback(
-		(e: React.FocusEvent<HTMLInputElement>) => {
+		(e: React.FocusEvent<HTMLInputElement | HTMLTextAreaElement>) => {
 			context.focusStoreValue()
 
 			checkCursor(e)
@@ -391,7 +415,7 @@ const CustomValueContainer = React.memo((props: ValueContainerProps<DropdownChoi
 		[context.focusStoreValue, checkCursor]
 	)
 	const onBlur = useCallback(
-		(e: React.FocusEvent<HTMLInputElement>) => {
+		(e: React.FocusEvent<HTMLInputElement | HTMLTextAreaElement>) => {
 			context.blurClearValue()
 
 			checkCursor(e)
@@ -400,7 +424,7 @@ const CustomValueContainer = React.memo((props: ValueContainerProps<DropdownChoi
 		[context.blurClearValue, context.forceHideSuggestions, checkCursor]
 	)
 	const onKeyDown = useCallback(
-		(e: React.KeyboardEvent<HTMLInputElement>) => {
+		(e: React.KeyboardEvent<HTMLInputElement | HTMLTextAreaElement>) => {
 			if (e.code === 'Escape') {
 				context.forceHideSuggestions(true)
 			} else {
@@ -411,16 +435,63 @@ const CustomValueContainer = React.memo((props: ValueContainerProps<DropdownChoi
 	)
 
 	const doOnChange = useCallback(
-		(e: React.ChangeEvent<HTMLInputElement> | React.FormEvent<HTMLInputElement>) =>
-			context.setValue(e.currentTarget.value),
+		(
+			e:
+				| React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+				| React.FormEvent<HTMLInputElement | HTMLTextAreaElement>
+		) => context.setValue(e.currentTarget.value),
 		[context.setValue]
 	)
 
+	return {
+		context,
+		checkCursor,
+		onFocus,
+		onBlur,
+		onKeyDown,
+		doOnChange,
+	}
+}
+
+const CustomValueContainerTextInput = React.memo((props: ValueContainerProps<DropdownChoiceInt>) => {
+	const { context, checkCursor, onFocus, onBlur, onKeyDown, doOnChange } = useValueContainerCallbacks()
+
 	return (
 		<SelectComponents.ValueContainer {...props} isDisabled>
-			<CInput
-				innerRef={context.inputRef}
+			<CFormInput
+				ref={(elm) => {
+					context.inputRef.current = elm
+				}}
 				type="text"
+				style={context.extraStyle}
+				title={context.title}
+				value={context.value}
+				onChange={doOnChange}
+				onFocus={onFocus}
+				onBlur={onBlur}
+				placeholder={context.placeholder}
+				onKeyUp={checkCursor}
+				onKeyDown={onKeyDown}
+				onMouseDown={checkCursor}
+				onTouchStart={checkCursor}
+				onInput={checkCursor}
+				onPaste={checkCursor}
+				onCut={checkCursor}
+				onSelect={checkCursor}
+			/>
+		</SelectComponents.ValueContainer>
+	)
+})
+
+const CustomValueContainerTextarea = React.memo((props: ValueContainerProps<DropdownChoiceInt>) => {
+	const { context, checkCursor, onFocus, onBlur, onKeyDown, doOnChange } = useValueContainerCallbacks()
+
+	return (
+		<SelectComponents.ValueContainer {...props} isDisabled>
+			<CFormTextarea
+				ref={(elm) => {
+					context.inputRef.current = elm
+				}}
 				style={context.extraStyle}
 				title={context.title}
 				value={context.value}
@@ -443,10 +514,15 @@ const CustomValueContainer = React.memo((props: ValueContainerProps<DropdownChoi
 
 const CustomSelectComponents = {
 	Option: CustomOption,
-	ValueContainer: CustomValueContainer,
+	ValueContainer: CustomValueContainerTextInput,
 	Control: CustomControl,
 	IndicatorsContainer: EmptyComponent,
 	MenuList: WindowedMenuList,
+}
+
+const CustomMultilineSelectComponents = {
+	...CustomSelectComponents,
+	ValueContainer: CustomValueContainerTextarea,
 }
 
 function FindVariableStartIndexFromCursor(text: string, cursor: number): number {

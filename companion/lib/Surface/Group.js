@@ -17,13 +17,13 @@
  */
 
 import { cloneDeep } from 'lodash-es'
-import CoreBase from '../Core/Base.js'
+import LogController from '../Log/Controller.js'
 
 /**
  * @typedef {import('./Handler.js').default} SurfaceHandler
  */
 
-export class SurfaceGroup extends CoreBase {
+export class SurfaceGroup {
 	/**
 	 * The defaults config for a group
 	 * @type {import('@companion-app/shared/Model/Surfaces.js').SurfaceGroupConfig}
@@ -80,14 +80,45 @@ export class SurfaceGroup extends CoreBase {
 	groupConfig
 
 	/**
-	 *
-	 * @param {import('../Registry.js').default} registry
+	 * The logger
+	 * @type {import('winston').Logger}
+	 * @access private
+	 */
+	#logger
+
+	/**
+	 * @type {import('../Surface/Controller.js').default}
+	 * @access public
+	 */
+	#surfaceController
+
+	/**
+	 * The core database library
+	 * @type {import('../Data/Database.js').default}
+	 * @access public
+	 */
+	#db
+	/**
+	 * The core user config manager
+	 * @type {import('../Data/UserConfig.js').default}
+	 * @access public
+	 */
+	#userconfig
+
+	/**
+	 * @param {import('../Surface/Controller.js').default} surfaceController
+	 * @param {import('../Data/Database.js').default} db
+	 * @param {import('../Data/UserConfig.js').default} userconfig
 	 * @param {string} groupId
 	 * @param {SurfaceHandler | null} soleHandler
 	 * @param {boolean} isLocked
 	 */
-	constructor(registry, groupId, soleHandler, isLocked) {
-		super(registry, `Surface/Group/${groupId}`)
+	constructor(surfaceController, db, userconfig, groupId, soleHandler, isLocked) {
+		this.#logger = LogController.createLogger(`Surface/Group/${groupId}`)
+
+		this.#surfaceController = surfaceController
+		this.#db = db
+		this.#userconfig = userconfig
 
 		this.groupId = groupId
 		this.#isLocked = isLocked
@@ -99,7 +130,7 @@ export class SurfaceGroup extends CoreBase {
 
 			this.#isAutoGroup = true
 		} else {
-			this.groupConfig = this.db.getKey('surface-groups', {})[this.groupId] || {}
+			this.groupConfig = this.#db.getKey('surface-groups', {})[this.groupId] || {}
 		}
 		// Apply missing defaults
 		this.groupConfig = {
@@ -132,9 +163,9 @@ export class SurfaceGroup extends CoreBase {
 	 * Delete this group from the config
 	 */
 	forgetConfig() {
-		const groupsConfig = this.db.getKey('surface-groups', {})
+		const groupsConfig = this.#db.getKey('surface-groups', {})
 		delete groupsConfig[this.groupId]
-		this.db.setKey('surface-groups', groupsConfig)
+		this.#db.setKey('surface-groups', groupsConfig)
 	}
 
 	/**
@@ -186,7 +217,7 @@ export class SurfaceGroup extends CoreBase {
 	 * @returns {void}
 	 */
 	doPageDown() {
-		if (this.userconfig.getKey('page_direction_flipped') === true) {
+		if (this.#userconfig.getKey('page_direction_flipped') === true) {
 			this.#increasePage()
 		} else {
 			this.#decreasePage()
@@ -223,7 +254,7 @@ export class SurfaceGroup extends CoreBase {
 	 * @returns {void}
 	 */
 	doPageUp() {
-		if (this.userconfig.getKey('page_direction_flipped') === true) {
+		if (this.#userconfig.getKey('page_direction_flipped') === true) {
 			this.#decreasePage()
 		} else {
 			this.#increasePage()
@@ -258,7 +289,7 @@ export class SurfaceGroup extends CoreBase {
 		this.#currentPage = this.groupConfig.last_page = newPage
 		this.#saveConfig()
 
-		this.surfaces.emit('group_page', this.groupId, newPage)
+		this.#surfaceController.emit('group_page', this.groupId, newPage)
 
 		for (const surfaceHandler of this.surfaceHandlers) {
 			surfaceHandler.storeNewDevicePage(newPage, defer)
@@ -272,7 +303,7 @@ export class SurfaceGroup extends CoreBase {
 	 * @returns
 	 */
 	setGroupConfigValue(key, value) {
-		this.logger.debug(`Set config "${key}" to "${value}"`)
+		this.#logger.debug(`Set config "${key}" to "${value}"`)
 		switch (key) {
 			case 'use_last_page': {
 				value = Boolean(value)
@@ -285,7 +316,7 @@ export class SurfaceGroup extends CoreBase {
 			case 'startup_page': {
 				value = Number(value)
 				if (isNaN(value)) {
-					this.logger.warn(`Invalid startup_page "${value}"`)
+					this.#logger.warn(`Invalid startup_page "${value}"`)
 					return 'invalid value'
 				}
 
@@ -297,7 +328,7 @@ export class SurfaceGroup extends CoreBase {
 			case 'last_page': {
 				value = Number(value)
 				if (isNaN(value)) {
-					this.logger.warn(`Invalid current_page "${value}"`)
+					this.#logger.warn(`Invalid current_page "${value}"`)
 					return 'invalid value'
 				}
 
@@ -306,7 +337,7 @@ export class SurfaceGroup extends CoreBase {
 				return
 			}
 			default:
-				this.logger.warn(`Cannot set unknown config field "${key}"`)
+				this.#logger.warn(`Cannot set unknown config field "${key}"`)
 				return 'invalid key'
 		}
 	}
@@ -338,7 +369,7 @@ export class SurfaceGroup extends CoreBase {
 		this.groupConfig.name = name || 'Unnamed group'
 		this.#saveConfig()
 
-		this.surfaces.emit('group_name', this.groupId, this.groupConfig.name)
+		this.#surfaceController.emit('group_name', this.groupId, this.groupConfig.name)
 	}
 
 	/**
@@ -350,9 +381,9 @@ export class SurfaceGroup extends CoreBase {
 			const surface = this.surfaceHandlers[0]
 			surface.saveGroupConfig(this.groupConfig)
 		} else {
-			const groupsConfig = this.db.getKey('surface-groups', {})
+			const groupsConfig = this.#db.getKey('surface-groups', {})
 			groupsConfig[this.groupId] = this.groupConfig
-			this.db.setKey('surface-groups', groupsConfig)
+			this.#db.setKey('surface-groups', groupsConfig)
 		}
 	}
 }

@@ -1,5 +1,6 @@
-import React, { CButton, CModal, CModalBody, CModalFooter, CModalHeader } from '@coreui/react'
+import React, { CButton, CModalBody, CModalFooter, CModalHeader } from '@coreui/react'
 import { forwardRef, useCallback, useImperativeHandle, useRef, useState } from 'react'
+import { CModalExt } from './CModalExt.js'
 
 export interface GenericConfirmModalRef {
 	show(title: string, message: string | string[] | null, buttonLabel: string, completeCallback: () => void): void
@@ -21,7 +22,7 @@ export const GenericConfirmModal = forwardRef<GenericConfirmModalRef, GenericCon
 		const [data, setData] = useState<GenericConfirmModalData | null>(null)
 		const [show, setShow] = useState(false)
 
-		const buttonRef = useRef<HTMLElement>(null)
+		const buttonRef = useRef<HTMLButtonElement>(null)
 
 		const buttonFocus = () => {
 			if (buttonRef.current) {
@@ -64,7 +65,7 @@ export const GenericConfirmModal = forwardRef<GenericConfirmModalRef, GenericCon
 		}
 
 		return (
-			<CModal show={show} onClose={doClose} onClosed={onClosed} onOpened={buttonFocus}>
+			<CModalExt visible={show} onClose={doClose} onClosed={onClosed} onOpened={buttonFocus}>
 				<CModalHeader closeButton>
 					<h5>{data?.title}</h5>
 				</CModalHeader>
@@ -73,11 +74,11 @@ export const GenericConfirmModal = forwardRef<GenericConfirmModalRef, GenericCon
 					<CButton color="secondary" onClick={doClose}>
 						Cancel
 					</CButton>
-					<CButton innerRef={buttonRef} color="primary" onClick={doAction}>
+					<CButton ref={buttonRef} color="primary" onClick={doAction}>
 						{data?.buttonLabel}
 					</CButton>
 				</CModalFooter>
-			</CModal>
+			</CModalExt>
 		)
 	}
 )

@@ -1,9 +1,8 @@
-import React, { useCallback, useContext, useEffect, useState, useRef } from 'react'
-import { socketEmitPromise, PreventDefaultHandler, UserConfigContext } from '../../util.js'
-import { CButton, CButtonGroup, CCol, CRow, CForm, CLabel } from '@coreui/react'
+import React, { useCallback, useContext, useEffect, useState, useRef, useMemo } from 'react'
+import { socketEmitPromise, PreventDefaultHandler } from '../../util.js'
+import { CButton, CButtonGroup, CCol, CRow, CForm, CFormLabel } from '@coreui/react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faHome } from '@fortawesome/free-solid-svg-icons'
-import { useMemo } from 'react'
 import { DropdownInputField } from '../../Components/index.js'
 import { ButtonGridHeader } from '../ButtonGridHeader.js'
 import { usePagePicker } from '../../Hooks/usePagePicker.js'
@@ -15,13 +14,13 @@ import type { DropdownChoiceId } from '@companion-module/base'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import type { NormalButtonModel } from '@companion-app/shared/Model/ButtonModel.js'
 import { RootAppStoreContext } from '../../Stores/RootAppStore.js'
+import { observer } from 'mobx-react-lite'
 
 interface ButtonPickerProps {
 	selectButton: (selectedControl: string, selectedStep: string, selectedSet: string, mode: 'replace' | 'append') => void
 }
-export function ButtonPicker({ selectButton }: ButtonPickerProps) {
-	const { socket, pages } = useContext(RootAppStoreContext)
-	const userConfig = useContext(UserConfigContext)
+export const ButtonPicker = observer(function ButtonPicker({ selectButton }: ButtonPickerProps) {
+	const { socket, pages, userConfig } = useContext(RootAppStoreContext)
 
 	const { pageNumber, setPageNumber, changePage } = usePagePicker(pages, 1)
 
@@ -29,7 +28,7 @@ export function ButtonPicker({ selectButton }: ButtonPickerProps) {
 	const [selectedStep, setSelectedStep] = useState<string | null>(null)
 	const [selectedSet, setSelectedSet] = useState<string | null>(null)
 
-	const buttonClick = useCallback((location, pressed) => {
+	const buttonClick = useCallback((location: ControlLocation, pressed: boolean) => {
 		if (pressed) setSelectedLocation(location)
 	}, [])
 
@@ -162,7 +161,7 @@ export function ButtonPicker({ selectButton }: ButtonPickerProps) {
 		})
 	}, [actionSetOptions])
 
-	const gridSize = userConfig?.gridSize
+	const gridSize = userConfig.properties?.gridSize
 
 	const [hasBeenInView, isInViewRef] = useHasBeenRendered()
 
@@ -196,14 +195,15 @@ export function ButtonPicker({ selectButton }: ButtonPickerProps) {
 						selectedButton={selectedLocation}
 						gridSize={gridSize}
 						buttonIconFactory={ButtonGridIcon}
+						drawScale={1} // TODO
 					/>
 				)}
 			</div>
 			<div>
 				<CForm className="flex-form" onSubmit={PreventDefaultHandler}>
-					<CRow form>
+					<CRow>
 						<CCol sm={10} xs={9} hidden={actionStepOptions.length <= 1}>
-							<CLabel>Step</CLabel>
+							<CFormLabel>Step</CFormLabel>
 
 							<DropdownInputField
 								choices={actionStepOptions}
@@ -214,7 +214,7 @@ export function ButtonPicker({ selectButton }: ButtonPickerProps) {
 							/>
 						</CCol>
 						<CCol sm={10} xs={9} hidden={actionSetOptions.length === 0}>
-							<CLabel>Action Group</CLabel>
+							<CFormLabel>Action Group</CFormLabel>
 
 							<DropdownInputField
 								choices={actionSetOptions}
@@ -249,4 +249,4 @@ export function ButtonPicker({ selectButton }: ButtonPickerProps) {
 			</div>
 		</>
 	)
-}
+})

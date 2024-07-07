@@ -162,6 +162,18 @@ export const isFalsey = (val) => {
 }
 
 /**
+ * Check if Satellite API value is truthy
+ * @param {any} val
+ * @returns {boolean}
+ */
+export const isTruthy = (val) => {
+	return (
+		!isFalsey(val) &&
+		((typeof val === 'string' && (val.toLowerCase() == 'true' || val.toLowerCase() == 'yes')) || Number(val) >= 1)
+	)
+}
+
+/**
  * @typedef {Record<string, string | true | undefined>} ParsedParams
  */
 
@@ -229,6 +241,26 @@ export function parseLineParameters(line) {
 	}
 
 	return res
+}
+
+/**
+ * Checks if parameter is one of the list and returns it if so.
+ * If it is not in the list but a trueish value, the defaultVal will be returned.
+ * Otherwise returnes null.
+ * @param {string[]} list
+ * @param {string} defaultVal
+ * @param {unknown} parameter
+ * @returns {string | null}
+ */
+export function parseStringParamWithBooleanFallback(list, defaultVal, parameter) {
+	const param = String(parameter)
+	if (list.includes(param)) {
+		return param
+	}
+	if (isTruthy(parameter)) {
+		return defaultVal
+	}
+	return null
 }
 
 /**

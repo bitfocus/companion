@@ -1,5 +1,40 @@
 # Bitfocus Companion
 
+## Companion v3.3.1 - Release Notes
+
+### 🐞 BUG FIXES
+
+- Less agressive log rotating #2895
+- Add error handler for logStream writer #2895
+- Handle 'node-machine-id' failures #2885
+- Ensure variables in presets button text get replaced correctly #2837
+- 'Abort all delayed actions on a page' not respecting 'use variables' checkbox #2877
+- Apply wizard style
+
+### 🐞 MODULE FIXES
+
+- aimedia-lexilive
+- aten-matrix
+- avstumpfl-pixera
+- barco-eventmaster
+- behringer-xair
+- figure53-qlab-advance
+- generic-dataentry
+- generic-tcp-serial
+- middleman-breaktime
+- ptzoptics-visca
+- roku-tv
+- roland-v160hd
+- sony-serialtally
+- studiocoast-vmix
+- tascam-cd
+- tascam-cd400u
+- tascam-da-6400
+- telestream-prism
+- videolan-vlc
+- vitec-avediaplayer9300-series
+- zenvideo-ndirouter
+
 ## Companion v3.3.0 - Release Notes
 
 ### 📣 CORE FEATURES AND IMPROVEMENTS
@@ -20,6 +55,9 @@
 - replace variable picker dropdown #2344 (#2787)
 - Support custom names for Step Tabs (#2783)
 - Preset text sub-headings (#2846)
+- Support for Streamdeck Neo
+- Support for older Loupedeck CT models
+- Support for coordinates in Elgato software plugin (requires 3.0.0 of the plugin)
 
 ### 🐞 BUG FIXES
 
@@ -30,10 +68,159 @@
 - fix importing a config with an unknown module fails
 - ensure variables in presets button text get replaced correctly #2837
 - typo causing a crash in loupedeck-ct integration #2744
+- correct order of presets
 
 ### 🧩 NEW & UPDATED MODULES
 
--
+- adder-infinity100xseries
+- adder-xdip
+- aimedia-lexilive
+- aja-helo
+- aja-kipro
+- aja-kumo
+- allenheath-ahm
+- arkaos-mediamaster
+- aten-matrix
+- audiotechnica-discussionsystem
+- aver-ptz
+- avstumpfl-pixera
+- aws-elementallive
+- axeltechnology-cgplus
+- axeltechnology-vjpro
+- barco-clickshare
+- barco-pulse
+- behringer-xair
+- binwiederhier-ntfy
+- birddog-cloud
+- birddog-ptz
+- bitfocus-cloud
+- bmd-atem
+- bmd-hyperdeck
+- bmd-smartview
+- bmd-teranex
+- bmd-webpresenter
+- broadlink-remote
+- bss-soundweb
+- canon-ptz
+- canon-xf
+- chamsys-quickq
+- christie-spyder
+- churchapps-freeshow
+- colorlight-grandshow
+- combitech-vidblasterx
+- dan-dugan-automixer
+- dashare-multiplay3
+- dataton-watchout-json
+- denon-recorder
+- digitalprojection-projectors
+- discord-api
+- dolby-cinemaprocessor
+- elgato-keylight
+- emotimo-st4
+- etc-eos
+- figure53-go-button
+- figure53-qlab-advance
+- fora-mfr
+- generic-blink
+- generic-emberplus
+- generic-midi
+- generic-onvif
+- generic-pjlink
+- generic-ssh
+- generic-stopwatch
+- generic-swp02
+- generic-tcp-serial
+- generic-tcp-udp
+- getontime-ontime
+- glensound-minferno
+- google-sheets
+- h2r-graphics
+- hdtv-wolfpackgreen
+- hologfx-holographics
+- homeassistant-server
+- imimot-mitti
+- interspace-mastercuev7
+- justmacros-lua
+- jvc-ptz
+- lightware-lw3
+- limagiran-holyrics
+- malighting-grandma2
+- malighting-grandma3
+- malighting-msc
+- microsoft-teams
+- microsoft-vscode
+- middleman-adit
+- middleman-breaktime
+- middlethings-middlecontrol
+- mrmoco-mhc
+- mvr-helios
+- nec-display
+- netgear-avline
+- netio-powerbox
+- neumannmueller-stageflow
+- newblue-captivate
+- notion-timestamp
+- novastar-controller
+- ntp-technology-dot
+- obs-studio
+- openweather-rest
+- panasonic-avhs
+- panasonic-kairos
+- peavy-ratc
+- pixelhue-switcher
+- planningcenter-serviceslive
+- polecam-autopod
+- presentationtools-aps
+- ptzoptics-superjoy
+- ptzoptics-visca
+- qsys-remote-control
+- raspberry-gpio
+- resolume-arena
+- restream-api
+- riedel-mediornet
+- rogueamoeba-farrago
+- roku-tv
+- roland-v160hd
+- roland-v60hd
+- rundown-studio
+- sgl-dct
+- showcuesystems-scs
+- shure-mxa910
+- shure-p300
+- shure-wireless
+- simedia-yesapi
+- singularlive-studio
+- slack-webhooks
+- smartavi-ipmatrix
+- smodetech-smodelive
+- softron-ontheairvideo
+- sony-serialtally
+- soundcraft-ui
+- stagetec-xci
+- studiocoast-vmix
+- tascam-cd
+- tascam-cd400u
+- tascam-da-6400
+- techministry-midirelay
+- techministry-spotifycontroller
+- telestream-prism
+- tellyo-streamstudio
+- tow-mixeffect
+- tplink-kasasmartbulb
+- tplink-kasasmartplug
+- tplink-taposmartplug
+- tslproducts-usp3
+- vdo-ninja
+- vicreo-hotkey
+- videolan-vlc
+- vitec-avediaplayer9300-series
+- vivitek-projector
+- voicemod-api
+- yamaha-rcp
+- zenvideo-ndirouter
+- zerodensity-realityhub
+- zinc-oscpoint
+- zoom-osc-iso
 
 ## Companion v3.2.2 - Release Notes
 

@@ -3,6 +3,7 @@ import { CAlert, CButton, CForm, CModal, CModalBody, CModalFooter, CModalHeader 
 import { SocketContext, socketEmitPromise } from '../util.js'
 import { BeginStep } from './BeginStep.js'
 import { SurfacesStep } from './SurfacesStep.js'
+import { GridStep } from './GridStep.js'
 import { ServicesStep } from './ServicesStep.js'
 import { PasswordStep } from './PasswordStep.js'
 import { ApplyStep } from './ApplyStep.js'
@@ -11,8 +12,9 @@ import { UserConfigModel } from '@companion-app/shared/Model/UserConfigModel.js'
 
 export const WIZARD_VERSION_2_2 = 22 // 2.2
 export const WIZARD_VERSION_3_0 = 30 // 3.0
+export const WIZARD_VERSION_3_4 = 34 // 3.0
 
-export const WIZARD_CURRENT_VERSION = WIZARD_VERSION_3_0
+export const WIZARD_CURRENT_VERSION = WIZARD_VERSION_3_4
 
 export interface WizardModalRef {
 	show(): void
@@ -24,8 +26,9 @@ interface WizardModalProps {
 export const WizardModal = forwardRef<WizardModalRef, WizardModalProps>(function WizardModal(_props, ref) {
 	const socket = useContext(SocketContext)
 	const [currentStep, setCurrentStep] = useState(1)
-	const maxSteps = 6 // can use useState in the future if the number of steps needs to be dynamic
-	const applyStep = 5 // can use useState in the future if the number of steps needs to be dynamic
+	const [maxSteps, setMaxSteps] = useState(7)
+	const [applyStep, setApplyStep] = useState(6)
+	const [allowGridStep, setAllowGridStep] = useState(1)
 	const [startConfig, setStartConfig] = useState<UserConfigModel | null>(null)
 	const [oldConfig, setOldConfig] = useState<UserConfigModel | null>(null)
 	const [newConfig, setNewConfig] = useState<UserConfigModel | null>(null)
@@ -38,6 +41,16 @@ export const WizardModal = forwardRef<WizardModalRef, WizardModalProps>(function
 				setStartConfig(config)
 				setOldConfig(config)
 				setNewConfig(config)
+
+				if (config.gridSize.minColumn === 0 && config.gridSize.minRow === 0) {
+					setMaxSteps(7)
+					setApplyStep(6)
+					setAllowGridStep(1)
+				} else {
+					setMaxSteps(6)
+					setApplyStep(5)
+					setAllowGridStep(0)
+				}
 			})
 			.catch((e) => {
 				setError('Could not load configuration for wizard.  Please close and try again.')
@@ -125,14 +138,14 @@ export const WizardModal = forwardRef<WizardModalRef, WizardModalProps>(function
 
 	let nextButton
 	switch (currentStep) {
-		case 5:
+		case applyStep:
 			nextButton = (
 				<CButton color="primary" onClick={doSave}>
 					Apply
 				</CButton>
 			)
 			break
-		case 6:
+		case maxSteps:
 			nextButton = (
 				<CButton color="primary" onClick={doClose}>
 					Finish
@@ -148,7 +161,7 @@ export const WizardModal = forwardRef<WizardModalRef, WizardModalProps>(function
 	}
 
 	return (
-		<CModal show={show} onClose={doClose} className={'wizard'}>
+		<CModal visible={show} onClose={doClose} className={'wizard'}>
 			<CForm onSubmit={doSave} className={'flex-form'}>
 				<CModalHeader>
 					<h2>
@@ -158,16 +171,33 @@ export const WizardModal = forwardRef<WizardModalRef, WizardModalProps>(function
 				</CModalHeader>
 				<CModalBody>
 					{error ? <CAlert color="danger">{error}</CAlert> : ''}
-					{currentStep === 1 && newConfig && !error ? <BeginStep /> : ''}
+					{currentStep === 1 && newConfig && !error ? <BeginStep allowGrid={allowGridStep} /> : ''}
 					{currentStep === 2 && newConfig && !error ? <SurfacesStep config={newConfig} setValue={setValue} /> : ''}
-					{currentStep === 3 && newConfig && !error ? <ServicesStep config={newConfig} setValue={setValue} /> : ''}
-					{currentStep === 4 && newConfig && !error ? <PasswordStep config={newConfig} setValue={setValue} /> : ''}
-					{currentStep === 5 && newConfig && oldConfig && !error ? (
+					{currentStep === 3 && allowGridStep === 1 && newConfig && !error ? (
+						<GridStep
+							rows={newConfig.gridSize.maxRow + 1}
+							columns={newConfig.gridSize.maxColumn + 1}
+							setValue={setValue}
+						/>
+					) : (
+						''
+					)}
+					{currentStep === 3 + allowGridStep && newConfig && !error ? (
+						<ServicesStep config={newConfig} setValue={setValue} />
+					) : (
+						''
+					)}
+					{currentStep === 4 + allowGridStep && newConfig && !error ? (
+						<PasswordStep config={newConfig} setValue={setValue} />
+					) : (
+						''
+					)}
+					{currentStep === applyStep && newConfig && oldConfig && !error ? (
 						<ApplyStep oldConfig={oldConfig} newConfig={newConfig} />
 					) : (
 						''
 					)}
-					{currentStep === 6 && newConfig && startConfig && !error ? (
+					{currentStep === maxSteps && newConfig && startConfig && !error ? (
 						<FinishStep oldConfig={startConfig} newConfig={newConfig} />
 					) : (
 						''

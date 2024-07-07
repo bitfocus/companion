@@ -58,7 +58,7 @@ export const ButtonPreview = React.memo(function ButtonPreview(props: ButtonPrev
 				}}
 				title={props.title}
 			>
-				{!props.preview && props.placeholder && <div className="placeholder">{props.placeholder}</div>}
+				{!props.preview && props.placeholder && <div className="button-placeholder">{props.placeholder}</div>}
 			</div>
 		</div>
 	)
@@ -126,7 +126,7 @@ export const ButtonPreviewBase = React.memo(function ButtonPreview(props: Button
 				}}
 				title={props.title}
 			>
-				{!props.preview && props.placeholder && <div className="placeholder">{props.placeholder}</div>}
+				{!props.preview && props.placeholder && <div className="button-placeholder">{props.placeholder}</div>}
 			</div>
 		</div>
 	)

@@ -24,13 +24,13 @@ import { getTimestamp, isFalsey } from '../Resources/Util.js'
 import { CreateTriggerControlId, ParseControlId } from '@companion-app/shared/ControlId.js'
 import CoreBase from '../Core/Base.js'
 import archiver from 'archiver'
-import { VisitorReferencesUpdater } from '../Util/Visitors/ReferencesUpdater.js'
 import path from 'path'
 import fs from 'fs'
 import zlib from 'node:zlib'
 import { stringify as csvStringify } from 'csv-stringify/sync'
-import { visitEventOptions } from '../Resources/EventDefinitions.js'
 import { compareExportedInstances } from '@companion-app/shared/Import.js'
+import LogController from '../Log/Controller.js'
+import { ReferencesVisitors } from '../Util/Visitors/ReferencesVisitors.js'
 
 /**
  *
@@ -371,7 +371,7 @@ class DataImportExport extends CoreBase {
 		})
 
 		this.registry.api_router.get('/export/log', (_req, res, _next) => {
-			const logs = this.registry.log.getAllLines()
+			const logs = LogController.getAllLines()
 
 			const filename = encodeURI(`${os.hostname()}_companion_log_${getTimestamp()}.csv`)
 
@@ -436,7 +436,7 @@ class DataImportExport extends CoreBase {
 			}
 
 			{
-				const logs = this.registry.log.getAllLines()
+				const logs = LogController.getAllLines()
 
 				let out = `"Date","Module","Type","Log"\r\n`
 				for (const line of logs) {
@@ -1027,7 +1027,8 @@ class DataImportExport extends CoreBase {
 			}
 		}
 
-		this.fixupControlReferences(
+		ReferencesVisitors.fixupControlReferences(
+			this.internalModule,
 			{
 				connectionLabels: connectionLabelRemap,
 				connectionIds: connectionIdRemap,
@@ -1124,7 +1125,8 @@ class DataImportExport extends CoreBase {
 			}
 		}
 
-		this.fixupControlReferences(
+		ReferencesVisitors.fixupControlReferences(
+			this.internalModule,
 			{
 				connectionLabels: connectionLabelRemap,
 				connectionIds: connectionIdRemap,
@@ -1138,80 +1140,12 @@ class DataImportExport extends CoreBase {
 
 		return result
 	}
-
-	/**
-	 * Visit any references within the given control
-	 * @param {import('../Internal/Types.js').InternalVisitor} visitor Visitor to be used
-	 * @param {import('@companion-app/shared/Model/StyleModel.js').ButtonStyleProperties | undefined} style Style object of the control (if any)
-	 * @param {import('@companion-app/shared/Model/ActionModel.js').ActionInstance[]} actions Array of actions belonging to the control
-	 * @param {import('@companion-app/shared/Model/FeedbackModel.js').FeedbackInstance[]} feedbacks Array of feedbacks belonging to the control
-	 * @param {import('@companion-app/shared/Model/EventModel.js').EventInstance[] | undefined} events Array of events belonging to the control
-	 */
-	visitControlReferences(visitor, style, actions, feedbacks, events) {
-		// Update the base style
-		if (style) visitor.visitString(style, 'text')
-
-		// Apply any updates to the internal actions/feedbacks
-		this.internalModule.visitReferences(visitor, actions, feedbacks)
-
-		for (const feedback of feedbacks) {
-			// Fixup any boolean feedbacks
-			if (feedback.style?.text) {
-				visitor.visitString(feedback.style, 'text')
-			}
-
-			// Fixup any references in feedback options
-			for (const key of Object.keys(feedback.options || {})) {
-				visitor.visitString(feedback.options, key, feedback.id)
-			}
-		}
-
-		// Fixup any references in action options
-		for (const action of actions) {
-			for (const key of Object.keys(action.options || {})) {
-				visitor.visitString(action.options, key)
-			}
-		}
-
-		// Fixup any references in event options
-		for (const event of events || []) {
-			visitEventOptions(visitor, event)
-		}
-	}
-
-	/**
-	 * Fixup any references within the given control
-	 * @param {FixupReferencesUpdateMaps} updateMaps Description of instance ids and labels to remap
-	 * @param {import('@companion-app/shared/Model/StyleModel.js').ButtonStyleProperties | undefined} style Style object of the control (if any)
-	 * @param {import('@companion-app/shared/Model/ActionModel.js').ActionInstance[]} actions Array of actions belonging to the control
-	 * @param {import('@companion-app/shared/Model/FeedbackModel.js').FeedbackInstance[]} feedbacks Array of feedbacks belonging to the control
-	 * @param {import('@companion-app/shared/Model/EventModel.js').EventInstance[] | undefined} events Array of events belonging to the control
-	 * @param {boolean} recheckChangedFeedbacks Whether to recheck the feedbacks that were modified
-	 * @returns {boolean} Whether any changes were made
-	 */
-	fixupControlReferences(updateMaps, style, actions, feedbacks, events, recheckChangedFeedbacks) {
-		const visitor = new VisitorReferencesUpdater(updateMaps.connectionLabels, updateMaps.connectionIds)
-
-		this.visitControlReferences(visitor, style, actions, feedbacks, events)
-
-		// Trigger the feedbacks to be rechecked, this will cause a redraw if needed
-		if (recheckChangedFeedbacks && visitor.changedFeedbackIds.size > 0) {
-			this.internalModule.checkFeedbacksById(...visitor.changedFeedbackIds)
-		}
-
-		return visitor.changed
-	}
 }
 
 export default DataImportExport
 
 /**
  * @typedef {Record<string, { id: string, label: string, lastUpgradeIndex?: number, oldLabel?: string}>} InstanceAppliedRemappings
- *
- * @typedef {{
- *   connectionLabels?: Record<string, string>
- *   connectionIds?: Record<string, string>
- * }} FixupReferencesUpdateMaps
  *
  * @typedef {import('@companion-app/shared/Model/ImportExport.js').ClientPageInfo} ClientPageInfo
  * @typedef {import('@companion-app/shared/Model/ImportExport.js').ClientImportObject} ClientImportObject

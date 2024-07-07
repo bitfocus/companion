@@ -1,6 +1,6 @@
 import React, { useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react'
-import { CButton, CCol, CRow, CSelect } from '@coreui/react'
-import { ConnectionsContext, MyErrorBoundary, SocketContext, UserConfigContext, socketEmitPromise } from '../../util.js'
+import { CButton, CCol, CRow, CFormSelect } from '@coreui/react'
+import { ConnectionsContext, MyErrorBoundary, SocketContext, socketEmitPromise } from '../../util.js'
 import { ButtonGridHeader } from '../../Buttons/ButtonGridHeader.js'
 import { usePagePicker } from '../../Hooks/usePagePicker.js'
 import {
@@ -17,6 +17,8 @@ import type { ClientImportObject, ClientImportObjectInstance } from '@companion-
 import { compareExportedInstances } from '@companion-app/shared/Import.js'
 import { RootAppStoreContext } from '../../Stores/RootAppStore.js'
 import { observer } from 'mobx-react-lite'
+import { ButtonGridZoomControl } from '../../Buttons/ButtonGridZoomSlider.js'
+import { useGridZoom } from '../../Buttons/GridZoom.js'
 
 interface ImportPageWizardProps {
 	snapshot: ClientImportObject
@@ -25,9 +27,13 @@ interface ImportPageWizardProps {
 	doImport: (importPageNumber: number, pageNumber: number, instanceRemap: Record<string, string | undefined>) => void
 }
 
-export function ImportPageWizard({ snapshot, instanceRemap, setInstanceRemap, doImport }: ImportPageWizardProps) {
-	const { pages } = useContext(RootAppStoreContext)
-	const userConfig = useContext(UserConfigContext)
+export const ImportPageWizard = observer(function ImportPageWizard({
+	snapshot,
+	instanceRemap,
+	setInstanceRemap,
+	doImport,
+}: ImportPageWizardProps) {
+	const { pages, userConfig } = useContext(RootAppStoreContext)
 
 	const isSinglePage = snapshot.type === 'page'
 
@@ -52,7 +58,7 @@ export function ImportPageWizard({ snapshot, instanceRemap, setInstanceRemap, do
 		doImport(importPageNumber, pageNumber, instanceRemap)
 	}, [doImport, importPageNumber, pageNumber, instanceRemap])
 
-	const destinationGridSize = userConfig?.gridSize
+	const destinationGridSize = userConfig.properties?.gridSize
 
 	const destinationGridRef = useRef<ButtonInfiniteGridRef>(null)
 	const resetDestinationPosition = useCallback(() => {
@@ -71,6 +77,8 @@ export function ImportPageWizard({ snapshot, instanceRemap, setInstanceRemap, do
 
 	const [hasBeenRendered, hasBeenRenderedRef] = useHasBeenRendered()
 
+	const [gridZoomController, gridZoomValue] = useGridZoom('import')
+
 	return (
 		<CRow className="">
 			<CCol xs={12} xl={6}>
@@ -86,7 +94,7 @@ export function ImportPageWizard({ snapshot, instanceRemap, setInstanceRemap, do
 								}}
 								onClick={resetSourcePosition}
 							>
-								<FontAwesomeIcon icon={faHome} /> Home Position
+								<FontAwesomeIcon icon={faHome} /> Home
 							</CButton>
 
 							<ButtonGridHeader
@@ -102,6 +110,7 @@ export function ImportPageWizard({ snapshot, instanceRemap, setInstanceRemap, do
 									pageNumber={isSinglePage ? snapshot.oldPageNumber ?? 1 : importPageNumber}
 									gridSize={sourceGridSize}
 									buttonIconFactory={ButtonImportPreview}
+									drawScale={gridZoomValue / 100}
 								/>
 							)}
 						</div>
@@ -122,8 +131,19 @@ export function ImportPageWizard({ snapshot, instanceRemap, setInstanceRemap, do
 								}}
 								onClick={resetDestinationPosition}
 							>
-								<FontAwesomeIcon icon={faHome} /> Home Position
+								<FontAwesomeIcon icon={faHome} /> Home
 							</CButton>
+
+							<ButtonGridZoomControl
+								useCompactButtons={false}
+								gridZoomValue={gridZoomValue}
+								gridZoomController={gridZoomController}
+								style={{
+									float: 'right',
+									marginTop: 10,
+									marginRight: 3,
+								}}
+							/>
 
 							<ButtonGridHeader pageNumber={pageNumber} changePage={changePage} setPage={setPageNumber} newPageAtEnd />
 						</CCol>
@@ -134,6 +154,7 @@ export function ImportPageWizard({ snapshot, instanceRemap, setInstanceRemap, do
 									pageNumber={pageNumber}
 									gridSize={destinationGridSize}
 									buttonIconFactory={ButtonGridIcon}
+									drawScale={gridZoomValue / 100}
 								/>
 							)}
 						</div>
@@ -156,7 +177,7 @@ export function ImportPageWizard({ snapshot, instanceRemap, setInstanceRemap, do
 			</CCol>
 		</CRow>
 	)
-}
+})
 
 interface ImportRemapProps {
 	snapshot: ClientImportObject
@@ -236,7 +257,7 @@ const ImportRemapRow = observer(function ImportRemapRow({
 		<tr>
 			<td>
 				{snapshotModule ? (
-					<CSelect value={instanceRemap[id] ?? ''} onChange={onChange}>
+					<CFormSelect value={instanceRemap[id] ?? ''} onChange={onChange}>
 						<option value="_new">[ Create new connection ]</option>
 						<option value="_ignore">[ Ignore ]</option>
 						{currentInstances.map(([id, inst]) => (
@@ -244,7 +265,7 @@ const ImportRemapRow = observer(function ImportRemapRow({
 								{inst.label}
 							</option>
 						))}
-					</CSelect>
+					</CFormSelect>
 				) : (
 					'Ignored'
 				)}

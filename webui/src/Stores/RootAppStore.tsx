@@ -7,8 +7,11 @@ import type { PagesStore } from './PagesStore.js'
 import type { EventDefinitionsStore } from './EventDefinitionsStore.js'
 import type { ActionDefinitionsStore } from './ActionDefinitionsStore.js'
 import type { FeedbackDefinitionsStore } from './FeedbackDefinitionsStore.js'
-import { ModuleInfoStore } from './ModuleInfoStore.js'
-import { TriggersListStore as TriggersListStore } from './TriggersListStore.js'
+import type { ModuleInfoStore } from './ModuleInfoStore.js'
+import type { TriggersListStore } from './TriggersListStore.js'
+import type { SurfacesStore } from './SurfacesStore.js'
+import type { UserConfigStore } from './UserConfigStore.js'
+import type { VariablesStore } from './VariablesStore.js'
 
 export const RootAppStoreContext = React.createContext<RootAppStore>(null as any) // TODO - fix this?
 
@@ -29,6 +32,10 @@ export interface RootAppStore {
 	readonly feedbackDefinitions: FeedbackDefinitionsStore
 
 	readonly pages: PagesStore
+	readonly surfaces: SurfacesStore
+	readonly variablesStore: VariablesStore
 
 	readonly triggersList: TriggersListStore
+
+	readonly userConfig: UserConfigStore
 }

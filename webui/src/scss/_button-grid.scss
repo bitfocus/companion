@@ -16,6 +16,10 @@
 		grid-template-columns: minmax(0, 1fr);
 	}
 
+	.right-buttons {
+		align-content: center;
+	}
+
 	.right-buttons .btn {
 		margin-top: 0;
 	}
@@ -65,6 +69,8 @@
 	flex-flow: row wrap;
 	justify-content: center;
 
+	margin-top: 1rem;
+
 	& > div {
 		white-space: nowrap;
 		margin-bottom: 1rem;
@@ -94,6 +100,10 @@
 		margin-top: 10px;
 		margin-left: 3px;
 	}
+
+	.btn-grid-scale {
+		min-width: 80px;
+	}
 }
 
 .button-infinite-grid {
@@ -112,6 +122,9 @@
 		position: relative;
 		width: 1000px;
 		height: 1000px;
+
+		// default grid scale, used for button text
+		--grid-scale: 1;
 
 		.expand {
 			float: left;
@@ -182,6 +195,25 @@
 		.button-control {
 			position: absolute;
 			float: left;
+
+			.button-border {
+				width: calc(var(--tile-inner-size) * 1px);
+				height: calc(var(--tile-inner-size) * 1px);
+
+				.button-placeholder {
+					// shrink text with scaling
+					font-size: calc(var(--grid-scale) * 1.5rem);
+				}
+			}
 		}
+	}
+}
+
+.dropdown-zoom {
+	position: inherit;
+	display: inline-block;
+
+	.dropdown-item-padding {
+		padding: 0.5rem 1.25rem;
 	}
 }

@@ -1,5 +1,7 @@
 # Getting Started with Companion React UI
 
+This package contains the admin web interface of Companion.
+
 ## Available Scripts
 
 ### `yarn dev`

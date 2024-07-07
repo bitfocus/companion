@@ -1,4 +1,4 @@
-import { CButton, CForm, CInputGroup, CInputGroupAppend, CInputGroupText, CButtonGroup } from '@coreui/react'
+import { CButton, CForm, CInputGroup, CInputGroupText, CButtonGroup, CFormSwitch } from '@coreui/react'
 import {
 	faSort,
 	faTrash,
@@ -17,7 +17,6 @@ import { useDrag, useDrop } from 'react-dnd'
 import { GenericConfirmModal, GenericConfirmModalRef } from '../Components/GenericConfirmModal.js'
 import { AddActionsModal, AddActionsModalRef } from './AddModal.js'
 import { usePanelCollapseHelper } from '../Helpers/CollapseHelper.js'
-import CSwitch from '../CSwitch.js'
 import { OptionButtonPreview } from './OptionButtonPreview.js'
 import { ActionInstance } from '@companion-app/shared/Model/ActionModel.js'
 import { ControlLocation } from '@companion-app/shared/Model/Common.js'
@@ -244,7 +243,7 @@ const ActionTableRow = observer(function ActionTableRow({
 	const service = useControlActionService(serviceFactory, action)
 
 	const innerSetEnabled = useCallback(
-		(e) => service.setEnabled && service.setEnabled(e.target.checked),
+		(e: React.ChangeEvent<HTMLInputElement>) => service.setEnabled && service.setEnabled(e.target.checked),
 		[service.setEnabled]
 	)
 
@@ -360,7 +359,7 @@ const ActionTableRow = observer(function ActionTableRow({
 							{!!service.setEnabled && (
 								<>
 									&nbsp;
-									<CSwitch
+									<CFormSwitch
 										color="success"
 										checked={!action.disabled}
 										title={action.disabled ? 'Enable action' : 'Disable action'}
@@ -396,9 +395,7 @@ const ActionTableRow = observer(function ActionTableRow({
 										value={action.delay}
 										setValue={service.setDelay}
 									/>
-									<CInputGroupAppend>
-										<CInputGroupText>ms</CInputGroupText>
-									</CInputGroupAppend>
+									<CInputGroupText>ms</CInputGroupText>
 								</CInputGroup>
 							</CForm>
 						</div>

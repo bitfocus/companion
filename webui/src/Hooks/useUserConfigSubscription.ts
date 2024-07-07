@@ -1,37 +1,34 @@
 import { useEffect, useState } from 'react'
 import { CompanionSocketType, socketEmitPromise } from '../util.js'
-import { UserConfigModel } from '@companion-app/shared/Model/UserConfigModel.js'
+import type { UserConfigStore } from '../Stores/UserConfigStore.js'
 
 export function useUserConfigSubscription(
 	socket: CompanionSocketType,
+	store: UserConfigStore,
 	setLoadError?: ((error: string | null) => void) | undefined,
 	retryToken?: string
-) {
-	const [userConfig, setUserConfig] = useState<UserConfigModel | null>(null)
+): boolean {
+	const [ready, setReady] = useState(false)
 
 	useEffect(() => {
 		setLoadError?.(null)
-		setUserConfig(null)
+		store.reset(null)
+		setReady(false)
 
 		socketEmitPromise(socket, 'userconfig:get-all', [])
 			.then((config) => {
 				setLoadError?.(null)
-				setUserConfig(config)
+				store.reset(config)
+				setReady(true)
 			})
 			.catch((e) => {
 				console.error('Failed to load user config', e)
 				setLoadError?.(`Failed to load user config`)
+				store.reset(null)
 			})
 
 		const updateUserConfigValue = (key: string, value: any) => {
-			setUserConfig((oldState) =>
-				oldState
-					? {
-							...oldState,
-							[key]: value,
-						}
-					: null
-			)
+			store.setValue(key, value)
 		}
 
 		socket.on('set_userconfig_key', updateUserConfigValue)
@@ -39,7 +36,7 @@ export function useUserConfigSubscription(
 		return () => {
 			socket.off('set_userconfig_key', updateUserConfigValue)
 		}
-	}, [retryToken, socket])
+	}, [retryToken, setLoadError, socket, store])
 
-	return userConfig
+	return ready
 }

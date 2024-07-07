@@ -2,10 +2,23 @@ $primary: #d50215;
 $secondary: #ccc;
 $body-bg: #333;
 
-$header-dark-bg: #d50215;
-$header-dark-border: (
+$header-bg: #d50215;
+$header-border: (
 	bottom: none,
 );
-$header-dark-color: #fff;
-$sidebar-dark-bg: #111;
-$sidebar-dark-brand-bg: adjust-color($header-dark-bg, $lightness: -10%);
+$header-color: #fff;
+$sidebar-bg: #111;
+$sidebar-brand-bg: adjust-color($header-bg, $lightness: -10%);
+
+$form-switch-color: #fff;
+$form-switch-checked-color: #fff;
+$form-switch-focus-color: #fff;
+
+$btn-font-size-sm: 12px;
+$btn-font-size: 0.9rem;
+
+$modal-content-bg: #fff;
+$table-bg: #fff;
+$dropdown-bg: #fff;
+
+$card-bg: #f7f7f7;

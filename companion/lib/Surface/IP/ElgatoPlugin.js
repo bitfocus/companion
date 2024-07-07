@@ -44,15 +44,28 @@ class SurfaceIPElgatoPlugin extends EventEmitter {
 	}
 
 	/**
-	 * @param {import('../../Registry.js').default} registry
+	 * @type {import('../../Controls/Controller.js').default}
+	 * @access private
+	 */
+	#controlsController
+
+	/**
+	 * @type {import('../../Page/Controller.js').default}
+	 * @access private
+	 */
+	#pageController
+
+	/**
+	 * @param {import('../../Controls/Controller.js').default} controlsController
+	 * @param {import('../../Page/Controller.js').default} pageController
 	 * @param {string} devicePath
 	 * @param {import('../../Service/ElgatoPlugin.js').ServiceElgatoPluginSocket} socket
 	 */
-	constructor(registry, devicePath, socket) {
+	constructor(controlsController, pageController, devicePath, socket) {
 		super()
 
-		this.controls = registry.controls
-		this.page = registry.page
+		this.#controlsController = controlsController
+		this.#pageController = pageController
 
 		this.socket = socket
 
@@ -78,13 +91,13 @@ class SurfaceIPElgatoPlugin extends EventEmitter {
 				if (data.page == null) {
 					this.emit('click', Number(data.column), Number(data.row), pressed)
 				} else {
-					const controlId = this.page.getControlIdAt({
+					const controlId = this.#pageController.getControlIdAt({
 						pageNumber: Number(data.page),
 						column: Number(data.column),
 						row: Number(data.row),
 					})
 					if (controlId) {
-						this.controls.pressControl(controlId, pressed, this.info.devicePath)
+						this.#controlsController.pressControl(controlId, pressed, this.info.devicePath)
 
 						this.#logger.debug(`${controlId} ${pressed ? 'pressed' : 'released'}`)
 					}
@@ -94,13 +107,13 @@ class SurfaceIPElgatoPlugin extends EventEmitter {
 			} else {
 				const xy = oldBankIndexToXY(data.bank + 1)
 				if (xy) {
-					const controlId = this.page.getControlIdAt({
+					const controlId = this.#pageController.getControlIdAt({
 						pageNumber: Number(data.page),
 						column: xy[0],
 						row: xy[1],
 					})
 					if (controlId) {
-						this.controls.pressControl(controlId, pressed, this.info.devicePath)
+						this.#controlsController.pressControl(controlId, pressed, this.info.devicePath)
 
 						this.#logger.debug(`${controlId} ${pressed ? 'pressed' : 'released'}`)
 					}
@@ -118,13 +131,13 @@ class SurfaceIPElgatoPlugin extends EventEmitter {
 				if (data.page == null) {
 					this.emit('rotate', Number(data.column), Number(data.row), right)
 				} else {
-					const controlId = this.page.getControlIdAt({
+					const controlId = this.#pageController.getControlIdAt({
 						pageNumber: Number(data.page),
 						column: Number(data.column),
 						row: Number(data.row),
 					})
 					if (controlId) {
-						this.controls.rotateControl(controlId, right, this.info.devicePath)
+						this.#controlsController.rotateControl(controlId, right, this.info.devicePath)
 
 						this.#logger.debug(`${controlId} rotated ${right}`)
 					}
@@ -137,13 +150,13 @@ class SurfaceIPElgatoPlugin extends EventEmitter {
 			} else {
 				const xy = oldBankIndexToXY(data.bank + 1)
 				if (xy) {
-					const controlId = this.page.getControlIdAt({
+					const controlId = this.#pageController.getControlIdAt({
 						pageNumber: Number(data.page),
 						column: xy[0],
 						row: xy[1],
 					})
 					if (controlId) {
-						this.controls.rotateControl(controlId, right, this.info.devicePath)
+						this.#controlsController.rotateControl(controlId, right, this.info.devicePath)
 
 						this.#logger.debug(`${controlId} rotated ${right}`)
 					}

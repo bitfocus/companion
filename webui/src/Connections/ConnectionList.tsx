@@ -1,6 +1,6 @@
 import React, { RefObject, useCallback, useContext, useEffect, useRef, useState } from 'react'
-import { CButton, CButtonGroup } from '@coreui/react'
-import { ConnectionsContext, VariableDefinitionsContext, socketEmitPromise, SocketContext } from '../util.js'
+import { CButton, CButtonGroup, CFormSwitch } from '@coreui/react'
+import { ConnectionsContext, socketEmitPromise, SocketContext } from '../util.js'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import {
 	faDollarSign,
@@ -16,7 +16,6 @@ import {
 
 import { ConnectionVariablesModal, ConnectionVariablesModalRef } from './ConnectionVariablesModal.js'
 import { GenericConfirmModal, GenericConfirmModalRef } from '../Components/GenericConfirmModal.js'
-import CSwitch from '../CSwitch.js'
 import { useDrag, useDrop } from 'react-dnd'
 import { windowLinkOpen } from '../Helpers/Window.js'
 import classNames from 'classnames'
@@ -79,7 +78,7 @@ export function ConnectionsList({
 	const doToggleError = useCallback(() => doToggleVisibility('error'), [doToggleVisibility])
 
 	const moveRow = useCallback(
-		(itemId, targetId) => {
+		(itemId: string, targetId: string) => {
 			if (connectionsRef.current) {
 				const rawIds = Object.entries(connectionsRef.current)
 					.sort(([, a], [, b]) => a.sortOrder - b.sortOrder)
@@ -271,8 +270,7 @@ const ConnectionsTableRow = observer(function ConnectionsTableRow({
 	moveRow,
 	isSelected,
 }: ConnectionsTableRowProps) {
-	const { socket, modules } = useContext(RootAppStoreContext)
-	const variableDefinitionsContext = useContext(VariableDefinitionsContext)
+	const { socket, modules, variablesStore } = useContext(RootAppStoreContext)
 
 	const moduleInfo = modules.modules.get(connection.instance_type)
 
@@ -329,7 +327,7 @@ const ConnectionsTableRow = observer(function ConnectionsTableRow({
 	})
 	preview(drop(ref))
 
-	const connectionVariables = variableDefinitionsContext[connection.label]
+	const connectionVariables = variablesStore.variables.get(connection.label)
 
 	const doEdit = () => {
 		if (!moduleInfo || !isEnabled) {
@@ -385,60 +383,47 @@ const ConnectionsTableRow = observer(function ConnectionsTableRow({
 				<div style={{ display: 'flex' }}>
 					<div>
 						<CButtonGroup>
-							<CButton
-								onClick={doShowHelp}
-								title="Help"
-								size="md"
-								disabled={!moduleInfo?.hasHelp}
-								style={{ padding: 4 }}
-							>
+							<CButton onClick={doShowHelp} title="Help" disabled={!moduleInfo?.hasHelp} style={{ padding: 4 }}>
 								<FontAwesomeIcon icon={faQuestionCircle} />
 							</CButton>
 
-							<CButton
-								onClick={openBugUrl}
-								size="md"
-								title="Issue Tracker"
-								disabled={!moduleInfo?.bugUrl}
-								style={{ padding: 4 }}
-							>
+							<CButton onClick={openBugUrl} title="Issue Tracker" disabled={!moduleInfo?.bugUrl} style={{ padding: 4 }}>
 								<FontAwesomeIcon icon={faBug} />
 							</CButton>
 
 							<CButton
 								onClick={doShowVariables}
 								title="Variables"
-								size="md"
 								style={{
 									padding: 4,
-									opacity:
-										!isEnabled || !(connectionVariables && Object.keys(connectionVariables).length > 0) ? 0.2 : 1,
+									opacity: !isEnabled || !(connectionVariables && connectionVariables.size > 0) ? 0.2 : 1,
 								}}
-								disabled={!isEnabled || !(connectionVariables && Object.keys(connectionVariables).length > 0)}
+								disabled={!isEnabled || !(connectionVariables && connectionVariables.size > 0)}
 							>
 								<FontAwesomeIcon icon={faDollarSign} />
 							</CButton>
 
 							<CButton
 								onClick={() => windowLinkOpen({ href: `/connection-debug/${id}`, title: 'View debug log' })}
-								size="md"
 								title="Logs"
 								style={{ padding: 4 }}
 							>
 								<FontAwesomeIcon icon={faTerminal} />
 							</CButton>
 
-							<CButton onClick={doDelete} size="md" title="Delete" color="#ff00ff" style={{ padding: 4 }}>
+							<CButton onClick={doDelete} title="Delete" color="#ff00ff" style={{ padding: 4 }}>
 								<FontAwesomeIcon icon={faTrash} />
 							</CButton>
 						</CButtonGroup>
 					</div>
-					<div style={{ paddingTop: 1, paddingLeft: 4 }}>
-						<CSwitch
+					<div>
+						<CFormSwitch
+							className="connection-enabled-switch"
 							disabled={!moduleInfo}
 							color="success"
 							checked={isEnabled}
 							onChange={doToggleEnabled}
+							size="xl"
 							title={isEnabled ? 'Disable connection' : 'Enable connection'}
 						/>
 					</div>

@@ -46,7 +46,7 @@ module.exports = {
 		bufferutil: 'commonjs2 bufferutil',
 		'utf-8-validate': 'commonjs2 utf-8-validate',
 		'@serialport/bindings-cpp': 'commonjs2 @serialport/bindings-cpp',
-		'@julusian/skia-canvas': 'commonjs2 @julusian/skia-canvas',
+		'@napi-rs/canvas': 'commonjs2 @napi-rs/canvas',
 	},
 	experiments: {
 		topLevelAwait: true,
@@ -98,6 +98,9 @@ module.exports = {
 							paths: [distPath],
 							urlPrefix: '~/',
 						},
+					},
+					errorHandler: (err) => {
+						console.warn('Sentry error', err)
 					},
 				})
 			: '',

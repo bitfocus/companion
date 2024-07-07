@@ -1,5 +1,16 @@
+import { v4 } from 'uuid'
 import DataStoreBase from './StoreBase.js'
 import nodeMachineId from 'node-machine-id'
+
+function generateMachineId() {
+	try {
+		return nodeMachineId.machineIdSync(true)
+	} catch (e) {
+		// The nodeMachineId call can fail if the machine has stricter security that blocks regedit
+		// If that happens, fallback to a uuid, which while not stable, is better than nothing
+		return v4()
+	}
+}
 
 /**
  * The class that manages the applications's cloud config database
@@ -29,7 +40,7 @@ class CloudDatabase extends DataStoreBase {
 	 * @access protected
 	 */
 	static Defaults = {
-		uuid: nodeMachineId.machineIdSync(true),
+		uuid: generateMachineId(),
 		auth: {
 			token: '',
 			user: '',

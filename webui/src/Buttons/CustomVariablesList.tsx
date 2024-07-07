@@ -1,16 +1,6 @@
 import React, { FormEvent, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react'
-import {
-	CAlert,
-	CButton,
-	CButtonGroup,
-	CForm,
-	CFormGroup,
-	CInput,
-	CInputGroup,
-	CInputGroupAppend,
-	CLabel,
-} from '@coreui/react'
-import { CustomVariableDefinitionsContext, socketEmitPromise, PreventDefaultHandler } from '../util.js'
+import { CAlert, CButton, CButtonGroup, CForm, CFormInput, CInputGroup, CInputGroupText } from '@coreui/react'
+import { socketEmitPromise, PreventDefaultHandler, useComputed } from '../util.js'
 import { CopyToClipboard } from 'react-copy-to-clipboard'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import {
@@ -28,8 +18,9 @@ import { isCustomVariableValid } from '@companion-app/shared/CustomVariable.js'
 import { useDrag, useDrop } from 'react-dnd'
 import { usePanelCollapseHelper } from '../Helpers/CollapseHelper.js'
 import type { CompanionVariableValues } from '@companion-module/base'
-import { CustomVariablesModel, CustomVariableDefinition } from '@companion-app/shared/Model/CustomVariableModel.js'
+import { CustomVariableDefinition } from '@companion-app/shared/Model/CustomVariableModel.js'
 import { RootAppStoreContext } from '../Stores/RootAppStore.js'
+import { observer } from 'mobx-react-lite'
 
 const DRAG_ID = 'custom-variables'
 
@@ -41,11 +32,10 @@ interface CustomVariablesListProps {
 	setShowCustom: (show: boolean) => void
 }
 
-export function CustomVariablesList({ setShowCustom }: CustomVariablesListProps) {
+export const CustomVariablesList = observer(function CustomVariablesList({ setShowCustom }: CustomVariablesListProps) {
 	const doBack = useCallback(() => setShowCustom(false), [setShowCustom])
 
-	const { socket, notifier } = useContext(RootAppStoreContext)
-	const customVariableContext = useContext(CustomVariableDefinitionsContext)
+	const { socket, notifier, variablesStore: customVariables } = useContext(RootAppStoreContext)
 
 	const [variableValues, setVariableValues] = useState<CompanionVariableValues>({})
 
@@ -143,44 +133,37 @@ export function CustomVariablesList({ setShowCustom }: CustomVariablesListProps)
 		[socket]
 	)
 
-	const customVariablesRef = useRef<CustomVariablesModel>()
-	useEffect(() => {
-		customVariablesRef.current = customVariableContext
-	}, [customVariableContext])
-
 	const moveRow = useCallback(
 		(itemName: string, targetName: string) => {
-			if (customVariablesRef.current) {
-				const rawNames = Object.entries(customVariablesRef.current)
-					.sort(([, a], [, b]) => a.sortOrder - b.sortOrder)
-					.map(([id]) => id)
+			const rawNames = Array.from(customVariables.customVariables)
+				.sort(([, a], [, b]) => a.sortOrder - b.sortOrder)
+				.map(([id]) => id)
 
-				const itemIndex = rawNames.indexOf(itemName)
-				const targetIndex = rawNames.indexOf(targetName)
-				if (itemIndex === -1 || targetIndex === -1) return
+			const itemIndex = rawNames.indexOf(itemName)
+			const targetIndex = rawNames.indexOf(targetName)
+			if (itemIndex === -1 || targetIndex === -1) return
 
-				const newNames = rawNames.filter((id) => id !== itemName)
-				newNames.splice(targetIndex, 0, itemName)
+			const newNames = rawNames.filter((id) => id !== itemName)
+			newNames.splice(targetIndex, 0, itemName)
 
-				socketEmitPromise(socket, 'custom-variables:set-order', [newNames]).catch((e) => {
-					console.error('Reorder failed', e)
-				})
-			}
+			socketEmitPromise(socket, 'custom-variables:set-order', [newNames]).catch((e) => {
+				console.error('Reorder failed', e)
+			})
 		},
-		[socket]
+		[socket, customVariables]
 	)
 
-	const allVariableNames = useMemo(() => Object.keys(customVariableContext || {}), [customVariableContext])
+	const allVariableNames = useComputed(() => Array.from(customVariables.customVariables.keys()), [customVariables])
 	const { setPanelCollapsed, isPanelCollapsed, setAllCollapsed, setAllExpanded, canExpandAll, canCollapseAll } =
 		usePanelCollapseHelper(`custom_variables`, allVariableNames)
 
 	const [filter, setFilter] = useState('')
 	const clearFilter = useCallback(() => setFilter(''), [])
-	const updateFilter = useCallback((e) => setFilter(e.currentTarget.value), [])
+	const updateFilter = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setFilter(e.currentTarget.value), [])
 
-	const variableDefinitions = useMemo(() => {
+	const variableDefinitions = useComputed(() => {
 		const defs: CustomVariableDefinitionExt[] = []
-		for (const [name, variable] of Object.entries(customVariableContext || {})) {
+		for (const [name, variable] of customVariables.customVariables.entries()) {
 			defs.push({
 				...variable,
 				name,
@@ -190,7 +173,7 @@ export function CustomVariablesList({ setShowCustom }: CustomVariablesListProps)
 		defs.sort((a, b) => a.sortOrder - b.sortOrder)
 
 		return defs
-	}, [customVariableContext])
+	}, [customVariables])
 	const hasNoVariables = variableDefinitions.length === 0
 
 	const [candidates, errorMsg] = useMemo(() => {
@@ -235,18 +218,16 @@ export function CustomVariablesList({ setShowCustom }: CustomVariablesListProps)
 			<GenericConfirmModal ref={confirmRef} />
 
 			<CInputGroup className="variables-table-filter">
-				<CInput
+				<CFormInput
 					type="text"
 					placeholder="Filter ..."
 					onChange={updateFilter}
 					value={filter}
 					style={{ fontSize: '1.2em' }}
 				/>
-				<CInputGroupAppend>
-					<CButton color="danger" onClick={clearFilter}>
-						<FontAwesomeIcon icon={faTimes} />
-					</CButton>
-				</CInputGroupAppend>
+				<CButton color="danger" onClick={clearFilter}>
+					<FontAwesomeIcon icon={faTimes} />
+				</CButton>
 			</CInputGroup>
 
 			<table className="table variables-table">
@@ -296,21 +277,21 @@ export function CustomVariablesList({ setShowCustom }: CustomVariablesListProps)
 
 			<hr />
 			<div>
-				<CForm inline onSubmit={doCreateNew}>
-					<CFormGroup>
-						<CLabel htmlFor="new_name">Create custom variable:&nbsp;</CLabel>
-						<CInput name="new_name" type="text" value={newName} onChange={(e) => setNewName(e.currentTarget.value)} />
+				<CForm onSubmit={doCreateNew}>
+					<CInputGroup>
+						<CInputGroupText>Create custom variable:</CInputGroupText>
+						<CFormInput type="text" value={newName} onChange={(e) => setNewName(e.currentTarget.value)} />
 						<CButton color="primary" onClick={doCreateNew} disabled={!isCustomVariableValid(newName)}>
 							Add
 						</CButton>
-					</CFormGroup>
+					</CInputGroup>
 				</CForm>
 			</div>
 
 			<br style={{ clear: 'both' }} />
 		</div>
 	)
-}
+})
 
 interface CustomVariableDragItem {
 	index: number
@@ -418,7 +399,7 @@ function CustomVariableRow({
 									<FontAwesomeIcon icon={faCopy} />
 								</CButton>
 							</CopyToClipboard>
-							<CButton color="danger" size="sm" onClick={() => doDelete(name)}>
+							<CButton size="sm" onClick={() => doDelete(name)}>
 								<FontAwesomeIcon icon={faTrash} />
 							</CButton>
 						</CButtonGroup>
@@ -428,31 +409,28 @@ function CustomVariableRow({
 						<>
 							<div className="cell-options">
 								<CForm onSubmit={PreventDefaultHandler}>
-									<CFormGroup>
-										<CLabel htmlFor="persist_value">Persist value: </CLabel>
-										<CheckboxInputField
-											value={info.persistCurrentValue}
-											setValue={(val) => setPersistenceValue(name, val)}
-										/>
-									</CFormGroup>
+									<CheckboxInputField
+										label="Persist value: "
+										value={info.persistCurrentValue}
+										setValue={(val) => setPersistenceValue(name, val)}
+									/>
 								</CForm>
 							</div>
 
 							<div className="cell-values">
 								<CForm onSubmit={PreventDefaultHandler}>
-									<CFormGroup>
-										<CLabel htmlFor="current_value">Current value: </CLabel>
-										<TextInputField value={value || ''} setValue={(val) => setCurrentValue(name, val)} />
-									</CFormGroup>
+									<TextInputField
+										label="Current value: "
+										value={value || ''}
+										setValue={(val) => setCurrentValue(name, val)}
+									/>
 
-									<CFormGroup>
-										<CLabel htmlFor="startup_value">Startup value: </CLabel>
-										<TextInputField
-											disabled={!!info.persistCurrentValue}
-											value={info.defaultValue + ''}
-											setValue={(val) => setStartupValue(name, val)}
-										/>
-									</CFormGroup>
+									<TextInputField
+										label="Startup value: "
+										disabled={!!info.persistCurrentValue}
+										value={info.defaultValue + ''}
+										setValue={(val) => setStartupValue(name, val)}
+									/>
 								</CForm>
 							</div>
 						</>

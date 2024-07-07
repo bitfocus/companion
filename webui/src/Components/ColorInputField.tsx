@@ -6,6 +6,7 @@ import { usePopper } from 'react-popper'
 import { MenuPortalContext } from './DropdownInputField.js'
 import { colord } from 'colord'
 import { CompanionColorPresetValue } from '@companion-module/base'
+import { CFormLabel } from '@coreui/react'
 
 function splitColor(color: number | string) {
 	if (typeof color === 'number' || !isNaN(Number(color))) {
@@ -62,6 +63,7 @@ const toReturnType = <T extends 'string' | 'number'>(
 type AsType<T extends 'string' | 'number'> = T extends 'string' ? string : number
 
 interface ColorInputFieldProps<T extends 'string' | 'number'> {
+	label: React.ReactNode
 	value: AsType<T>
 	setValue: (value: AsType<T>) => void
 	setValid?: (valid: boolean) => void
@@ -72,6 +74,7 @@ interface ColorInputFieldProps<T extends 'string' | 'number'> {
 }
 
 export function ColorInputField<T extends 'string' | 'number'>({
+	label,
 	value,
 	setValue,
 	setValid,
@@ -91,7 +94,7 @@ export function ColorInputField<T extends 'string' | 'number'>({
 	}, [setValid])
 
 	const handleClick = useCallback(() => setDisplayPicker((d) => !d), [])
-	const setHide = useCallback((e) => {
+	const setHide = useCallback((e: MouseEvent) => {
 		if (e) {
 			e.preventDefault()
 			e.stopPropagation()
@@ -149,25 +152,28 @@ export function ColorInputField<T extends 'string' | 'number'>({
 	useOnClickOutsideExt([{ current: referenceElement }, { current: popperElement }], setHide)
 
 	return (
-		<div style={{ lineHeight: 0 }}>
-			<div style={styles.swatch} onClick={handleClick} ref={setReferenceElement}>
-				<div style={styles.color} />
+		<>
+			{label ? <CFormLabel>{label}</CFormLabel> : ''}
+			<div style={{ lineHeight: 0 }}>
+				<div style={styles.swatch} onClick={handleClick} ref={setReferenceElement}>
+					<div style={styles.color} />
+				</div>
+				{displayPicker &&
+					createPortal(
+						<div ref={setPopperElement} style={{ ...popperStyles.popper, zIndex: 3 }} {...attributes.popper}>
+							<SketchPicker
+								// disabled={disabled}
+								color={color}
+								onChange={onChange}
+								onChangeComplete={onChangeComplete}
+								disableAlpha={enableAlpha ? false : true}
+								presetColors={Array.isArray(presetColors) ? (presetColors as any) : PICKER_COLORS}
+							/>
+						</div>,
+						menuPortal || document.body
+					)}
 			</div>
-			{displayPicker &&
-				createPortal(
-					<div ref={setPopperElement} style={{ ...popperStyles.popper, zIndex: 3 }} {...attributes.popper}>
-						<SketchPicker
-							// disabled={disabled}
-							color={color}
-							onChange={onChange}
-							onChangeComplete={onChangeComplete}
-							disableAlpha={enableAlpha ? false : true}
-							presetColors={Array.isArray(presetColors) ? (presetColors as any) : PICKER_COLORS}
-						/>
-					</div>,
-					menuPortal || document.body
-				)}
-		</div>
+		</>
 	)
 }
 

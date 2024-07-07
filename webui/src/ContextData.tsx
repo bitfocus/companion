@@ -1,15 +1,5 @@
 import React, { useContext, useEffect, useMemo, useRef, useState } from 'react'
-import {
-	applyPatchOrReplaceSubObject,
-	ConnectionsContext,
-	VariableDefinitionsContext,
-	CustomVariableDefinitionsContext,
-	UserConfigContext,
-	SurfacesContext,
-	socketEmitPromise,
-	applyPatchOrReplaceObject,
-	SocketContext,
-} from './util.js'
+import { ConnectionsContext, socketEmitPromise, SocketContext } from './util.js'
 import { NotificationsManager, NotificationsManagerRef } from './Components/Notifications.js'
 import { cloneDeep } from 'lodash-es'
 import jsonPatch, { Operation as JsonPatchOperation } from 'fast-json-patch'
@@ -17,9 +7,6 @@ import { useUserConfigSubscription } from './Hooks/useUserConfigSubscription.js'
 import { usePagesInfoSubscription } from './Hooks/usePagesInfoSubscription.js'
 import { useActionDefinitionsSubscription } from './Hooks/useActionDefinitionsSubscription.js'
 import type { ClientConnectionConfig } from '@companion-app/shared/Model/Common.js'
-import type { AllVariableDefinitions, ModuleVariableDefinitions } from '@companion-app/shared/Model/Variables.js'
-import type { CustomVariablesModel } from '@companion-app/shared/Model/CustomVariableModel.js'
-import type { ClientDevicesListItem } from '@companion-app/shared/Model/Surfaces.js'
 import { useActiveLearnRequests } from './_Model/ActiveLearn.js'
 import { RootAppStore, RootAppStoreContext } from './Stores/RootAppStore.js'
 import { RecentlyUsedIdsStore } from './Stores/RecentlyUsedIdsStore.js'
@@ -33,12 +20,18 @@ import { ModuleInfoStore } from './Stores/ModuleInfoStore.js'
 import { useModuleInfoSubscription } from './Hooks/useModuleInfoSubscription.js'
 import { TriggersListStore } from './Stores/TriggersListStore.js'
 import { useTriggersListSubscription } from './Hooks/useTriggersListSubscription.js'
+import { useSurfacesSubscription } from './Hooks/useSurfacesSubscription.js'
+import { SurfacesStore } from './Stores/SurfacesStore.js'
+import { UserConfigStore } from './Stores/UserConfigStore.js'
+import { VariablesStore } from './Stores/VariablesStore.js'
+import { useCustomVariablesSubscription } from './Hooks/useCustomVariablesSubscription.js'
+import { useVariablesSubscription } from './Hooks/useVariablesSubscription.js'
 
 interface ContextDataProps {
 	children: (progressPercent: number, loadingComplete: boolean) => React.JSX.Element | React.JSX.Element[]
 }
 
-export function ContextData({ children }: ContextDataProps) {
+export function ContextData({ children }: Readonly<ContextDataProps>) {
 	const socket = useContext(SocketContext)
 
 	const notifierRef = useRef<NotificationsManagerRef>(null)
@@ -60,38 +53,16 @@ export function ContextData({ children }: ContextDataProps) {
 			feedbackDefinitions: new FeedbackDefinitionsStore(),
 
 			pages: new PagesStore(),
+			surfaces: new SurfacesStore(),
+			variablesStore: new VariablesStore(),
 
 			triggersList: new TriggersListStore(),
+
+			userConfig: new UserConfigStore(),
 		} satisfies RootAppStore
 	}, [socket])
 
 	const [connections, setConnections] = useState<Record<string, ClientConnectionConfig> | null>(null)
-
-	const [variableDefinitions, setVariableDefinitions] = useState<AllVariableDefinitions | null>(null)
-	const [customVariables, setCustomVariables] = useState<CustomVariablesModel | null>(null)
-	const [surfaces, setSurfaces] = useState<Record<string, ClientDevicesListItem | undefined> | null>(null)
-
-	const completeVariableDefinitions = useMemo<AllVariableDefinitions>(() => {
-		if (variableDefinitions) {
-			// Generate definitions for all the custom variables
-			const customVariableDefinitions: ModuleVariableDefinitions = {}
-			for (const [id, info] of Object.entries(customVariables || {})) {
-				customVariableDefinitions[`custom_${id}`] = {
-					label: info.description,
-				}
-			}
-
-			return {
-				...variableDefinitions,
-				internal: {
-					...variableDefinitions.internal,
-					...customVariableDefinitions,
-				},
-			}
-		} else {
-			return {}
-		}
-	}, [customVariables, variableDefinitions])
 
 	const [loadedEventDefinitions, setLoadedEventDefinitions] = useState(false)
 
@@ -100,7 +71,10 @@ export function ContextData({ children }: ContextDataProps) {
 	const moduleInfoReady = useModuleInfoSubscription(socket, rootStore.modules)
 	const triggersListReady = useTriggersListSubscription(socket, rootStore.triggersList)
 	const pagesReady = usePagesInfoSubscription(socket, rootStore.pages)
-	const userConfig = useUserConfigSubscription(socket)
+	const userConfigReady = useUserConfigSubscription(socket, rootStore.userConfig)
+	const surfacesReady = useSurfacesSubscription(socket, rootStore.surfaces)
+	const variablesReady = useVariablesSubscription(socket, rootStore.variablesStore)
+	const customVariablesReady = useCustomVariablesSubscription(socket, rootStore.variablesStore)
 
 	useEffect(() => {
 		if (socket) {
@@ -112,36 +86,6 @@ export function ContextData({ children }: ContextDataProps) {
 				.catch((e) => {
 					console.error('Failed to load event definitions', e)
 				})
-
-			socketEmitPromise(socket, 'variable-definitions:subscribe', [])
-				.then((data) => {
-					setVariableDefinitions(data || {})
-				})
-				.catch((e) => {
-					console.error('Failed to load variable definitions list', e)
-				})
-			socketEmitPromise(socket, 'custom-variables:subscribe', [])
-				.then((data) => {
-					setCustomVariables(data || {})
-				})
-				.catch((e) => {
-					console.error('Failed to load custom values list', e)
-				})
-
-			const updateVariableDefinitions = (
-				label: string,
-				patch: JsonPatchOperation[] | ModuleVariableDefinitions | null
-			) => {
-				setVariableDefinitions(
-					(oldDefinitions) =>
-						oldDefinitions &&
-						applyPatchOrReplaceSubObject<ModuleVariableDefinitions | undefined>(oldDefinitions, label, patch, {})
-				)
-			}
-
-			const updateCustomVariables = (patch: JsonPatchOperation[]) => {
-				setCustomVariables((oldVariables) => oldVariables && applyPatchOrReplaceObject(oldVariables, patch))
-			}
 
 			socketEmitPromise(socket, 'connections:subscribe', [])
 				.then((connections) => {
@@ -163,29 +107,7 @@ export function ContextData({ children }: ContextDataProps) {
 			}
 			socket.on('connections:patch', patchInstances)
 
-			socket.on('variable-definitions:update', updateVariableDefinitions)
-			socket.on('custom-variables:update', updateCustomVariables)
-
-			socketEmitPromise(socket, 'surfaces:subscribe', [])
-				.then((surfaces) => {
-					setSurfaces(surfaces)
-				})
-				.catch((e) => {
-					console.error('Failed to load surfaces', e)
-				})
-
-			const patchSurfaces = (patch: JsonPatchOperation[]) => {
-				setSurfaces((oldSurfaces) => {
-					return oldSurfaces && jsonPatch.applyPatch(cloneDeep(oldSurfaces) || {}, patch).newDocument
-				})
-			}
-			socket.on('surfaces:patch', patchSurfaces)
-
 			return () => {
-				socket.off('variable-definitions:update', updateVariableDefinitions)
-				socket.off('custom-variables:update', updateCustomVariables)
-				socket.off('surfaces:patch', patchSurfaces)
-
 				socket.off('connections:patch', patchInstances)
 
 				socketEmitPromise(socket, 'variable-definitions:unsubscribe', []).catch((e) => {
@@ -212,13 +134,12 @@ export function ContextData({ children }: ContextDataProps) {
 		loadedEventDefinitions,
 		connections != null,
 		moduleInfoReady,
-		variableDefinitions != null,
-		completeVariableDefinitions != null,
+		variablesReady,
 		actionDefinitionsReady,
 		feedbackDefinitionsReady,
-		customVariables != null,
-		userConfig != null,
-		surfaces != null,
+		customVariablesReady,
+		userConfigReady,
+		surfacesReady,
 		pagesReady,
 		triggersListReady,
 		activeLearnRequestsReady,
@@ -230,17 +151,9 @@ export function ContextData({ children }: ContextDataProps) {
 	return (
 		<RootAppStoreContext.Provider value={rootStore}>
 			<ConnectionsContext.Provider value={connections!}>
-				<VariableDefinitionsContext.Provider value={completeVariableDefinitions}>
-					<CustomVariableDefinitionsContext.Provider value={customVariables!}>
-						<UserConfigContext.Provider value={userConfig}>
-							<SurfacesContext.Provider value={surfaces!}>
-								<NotificationsManager ref={notifierRef} />
+				<NotificationsManager ref={notifierRef} />
 
-								{children(progressPercent, completedSteps.length === steps.length)}
-							</SurfacesContext.Provider>
-						</UserConfigContext.Provider>
-					</CustomVariableDefinitionsContext.Provider>
-				</VariableDefinitionsContext.Provider>
+				{children(progressPercent, completedSteps.length === steps.length)}
 			</ConnectionsContext.Provider>
 		</RootAppStoreContext.Provider>
 	)

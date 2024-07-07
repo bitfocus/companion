@@ -1,13 +1,12 @@
 import React, { useCallback, useContext, useEffect, useMemo, useState } from 'react'
 import { LoadingRetryOrError, socketEmitPromise } from '../util.js'
-import { CRow, CCol, CButton } from '@coreui/react'
+import { CRow, CCol, CButton, CFormSwitch, CFormLabel } from '@coreui/react'
 import { ColorInputField, DropdownInputField, NumberInputField, TextInputField } from '../Components/index.js'
 import { nanoid } from 'nanoid'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faQuestionCircle } from '@fortawesome/free-solid-svg-icons'
 import sanitizeHtml from 'sanitize-html'
 import { isLabelValid } from '@companion-app/shared/Label.js'
-import CSwitch from '../CSwitch.js'
 import { BonjourDeviceInputField } from '../Components/BonjourDeviceInputField.js'
 import { ConnectionStatusEntry } from '@companion-app/shared/Model/Common.js'
 import { useOptionsAndIsVisible } from '../Hooks/useOptionsAndIsVisible.js'
@@ -212,11 +211,19 @@ const ConnectionEditPanelInner = observer(function ConnectionEditPanelInner({
 									sm={field.width}
 									style={{ display: fieldVisibility[field.id] === false ? 'none' : undefined }}
 								>
-									<label>{field.label}</label>
-									{field.tooltip && (
-										<FontAwesomeIcon style={{ marginLeft: '5px' }} icon={faQuestionCircle} title={field.tooltip} />
-									)}
 									<ConfigField
+										label={
+											<>
+												{field.label}
+												{field.tooltip && (
+													<FontAwesomeIcon
+														style={{ marginLeft: '5px' }}
+														icon={faQuestionCircle}
+														title={field.tooltip}
+													/>
+												)}
+											</>
+										}
 										definition={field}
 										value={connectionConfig[field.id]}
 										// valid={validFields[field.id] ?? false}
@@ -235,6 +242,7 @@ const ConnectionEditPanelInner = observer(function ConnectionEditPanelInner({
 				<CCol sm={12}>
 					<CButton
 						color="success"
+						className="me-md-1"
 						disabled={
 							!validFields || invalidFieldNames.length > 0 || !connectionLabel || !isLabelValid(connectionLabel)
 						}
@@ -243,7 +251,7 @@ const ConnectionEditPanelInner = observer(function ConnectionEditPanelInner({
 						Save
 					</CButton>
 
-					<CButton color="secondary" className="ml-1" onClick={doCancel}>
+					<CButton color="secondary" onClick={doCancel}>
 						Cancel
 					</CButton>
 				</CCol>
@@ -253,6 +261,7 @@ const ConnectionEditPanelInner = observer(function ConnectionEditPanelInner({
 })
 
 interface ConfigFieldProps {
+	label: React.ReactNode
 	setValue: (key: string, value: any) => void
 	setValid: (key: string, valid: boolean) => void
 	definition: ExtendedInputField | ExtendedConfigField
@@ -260,7 +269,7 @@ interface ConfigFieldProps {
 	connectionId: string
 }
 
-function ConfigField({ setValue, setValid, definition, value, connectionId }: ConfigFieldProps) {
+function ConfigField({ label, setValue, setValid, definition, value, connectionId }: ConfigFieldProps) {
 	const id = definition.id
 	const setValue2 = useCallback((val: any) => setValue(id, val), [setValue, id])
 	const setValid2 = useCallback((valid: boolean) => setValid(id, valid), [setValid, id])
@@ -268,18 +277,33 @@ function ConfigField({ setValue, setValid, definition, value, connectionId }: Co
 	const fieldType = definition.type
 	switch (definition.type) {
 		case 'static-text': {
-			const descriptionHtml = {
-				__html: sanitizeHtml(definition.value ?? '', {
-					allowedTags: sanitizeHtml.defaults.allowedTags.concat(['img']),
-					disallowedTagsMode: 'escape',
-				}),
+			let control: React.ReactNode = ''
+			if (definition.value && definition.value != definition.label) {
+				const descriptionHtml = {
+					__html: sanitizeHtml(definition.value ?? '', {
+						allowedTags: sanitizeHtml.defaults.allowedTags.concat(['img']),
+						disallowedTagsMode: 'escape',
+					}),
+				}
+
+				control = <p title={definition.tooltip} dangerouslySetInnerHTML={descriptionHtml}></p>
 			}
 
-			return <p title={definition.tooltip} dangerouslySetInnerHTML={descriptionHtml}></p>
+			if (!!label) {
+				return (
+					<>
+						<CFormLabel>{label}</CFormLabel>
+						{control}
+					</>
+				)
+			}
+
+			return control
 		}
 		case 'textinput':
 			return (
 				<TextInputField
+					label={label}
 					value={value}
 					regex={definition.regex}
 					required={definition.required}
@@ -290,6 +314,7 @@ function ConfigField({ setValue, setValid, definition, value, connectionId }: Co
 		case 'number':
 			return (
 				<NumberInputField
+					label={label}
 					required={definition.required}
 					min={definition.min}
 					max={definition.max}
@@ -303,11 +328,12 @@ function ConfigField({ setValue, setValid, definition, value, connectionId }: Co
 		case 'checkbox':
 			return (
 				<div style={{ marginRight: 40, marginTop: 2 }}>
-					<CSwitch
+					{label ? <CFormLabel>{label}</CFormLabel> : ''}
+					<CFormSwitch
 						color="success"
 						checked={value}
-						size={'lg'}
-						tooltip={definition.tooltip}
+						size="xl"
+						title={definition.tooltip} // nocommit: this needs fixing
 						onChange={() => {
 							setValue2(!value)
 							//setValid2(true)
@@ -318,6 +344,7 @@ function ConfigField({ setValue, setValid, definition, value, connectionId }: Co
 		case 'dropdown':
 			return (
 				<DropdownInputField
+					label={label}
 					choices={definition.choices}
 					allowCustom={definition.allowCustom}
 					minChoicesForSearch={definition.minChoicesForSearch}
@@ -331,6 +358,7 @@ function ConfigField({ setValue, setValid, definition, value, connectionId }: Co
 		case 'multidropdown':
 			return (
 				<DropdownInputField
+					label={label}
 					choices={definition.choices}
 					// allowCustom={definition.allowCustom}
 					minSelection={definition.minSelection}
@@ -346,6 +374,7 @@ function ConfigField({ setValue, setValid, definition, value, connectionId }: Co
 		case 'colorpicker': {
 			return (
 				<ColorInputField
+					label={label}
 					value={value}
 					setValue={setValue2}
 					setValid={setValid2}
@@ -359,6 +388,7 @@ function ConfigField({ setValue, setValid, definition, value, connectionId }: Co
 		case 'bonjour-device':
 			return (
 				<BonjourDeviceInputField
+					label={label}
 					value={value}
 					setValue={setValue2}
 					connectionId={connectionId}

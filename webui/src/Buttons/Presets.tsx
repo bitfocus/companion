@@ -133,15 +133,9 @@ const PresetsConnectionList = observer(function PresetsConnectionList({
 		const moduleInfo = connectionInfo ? modules.modules.get(connectionInfo.instance_type) : undefined
 
 		return (
-			<div key={id}>
-				<CButton
-					color="danger"
-					className="choose_connection mr-2 mb-2"
-					onClick={() => setConnectionAndCategory([id, null])}
-				>
-					{moduleInfo?.name ?? '?'} ({connectionInfo?.label ?? id})
-				</CButton>
-			</div>
+			<CButton key={id} color="danger" onClick={() => setConnectionAndCategory([id, null])}>
+				{moduleInfo?.name ?? '?'} ({connectionInfo?.label ?? id})
+			</CButton>
 		)
 	})
 
@@ -158,7 +152,7 @@ const PresetsConnectionList = observer(function PresetsConnectionList({
 			{options.length === 0 ? (
 				<CAlert color="info">You have no connections that support presets at the moment.</CAlert>
 			) : (
-				options
+				<div className="preset-category-grid">{options}</div>
 			)}
 		</div>
 	)
@@ -193,7 +187,6 @@ function PresetsCategoryList({
 				<CButton
 					key={category}
 					color="danger"
-					block
 					onClick={() => setConnectionAndCategory([selectedConnectionId, category])}
 				>
 					{category}
@@ -318,7 +311,7 @@ function PresetIconPreview({ connectionId, presetId, title }: Readonly<PresetIco
 			})
 	}, [presetId, socket, connectionId, retryToken])
 
-	const onClick = useCallback((isDown) => isDown && setRetryToken(nanoid()), [])
+	const onClick = useCallback((isDown: boolean) => isDown && setRetryToken(nanoid()), [])
 
 	return (
 		<ButtonPreviewBase

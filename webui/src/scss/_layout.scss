@@ -21,22 +21,34 @@ body {
 		'Noto Color Emoji';
 	font-feature-settings: normal;
 	min-width: 400px;
+	font-size: 0.9rem;
 }
 
-.c-wrapper {
+.wrapper {
+	width: 100%;
 	height: 100vh;
+	overflow-y: hidden;
+
+	@include ltr-rtl('padding-left', var(--cui-sidebar-occupy-start, 0));
 }
 
-.c-body {
+.body {
 	padding: 15px 0;
 	background-color: #eee;
 
+	display: flex;
+	flex-flow: column;
+
+	max-height: 100%;
+	overflow-y: hidden;
+
 	// Fit minus the header
-	height: calc(100% - #{$header-height});
+	// height: calc(100% - #{$header-height}); // nocommit
 
 	// Force to fill the screen and scroll internally
 	> .container-fluid {
 		height: 100%;
+		flex: 1;
 
 		display: grid;
 		grid-template-rows: auto 1fr;
@@ -53,31 +65,21 @@ body {
 	}
 }
 
-.c-sidebar-nav-link {
-	background-color: #151515;
-	border-bottom: 1px solid #262626;
-}
+// .c-header .c-header-brand {
+// 	font-size: 1.3em;
+// 	margin: 0 auto;
+// }
 
-.c-sidebar-nav-link:hover {
-	background-color: #262626 !important;
-}
-
-.c-sidebar .c-sidebar-brand {
-	font-size: 1.3em;
-}
-
-.c-header .c-header-brand {
-	font-size: 1.3em;
-	margin: 0 auto;
+.header-toggler svg {
+	color: #fff;
 }
 
 .header-right {
 	margin-right: 5px;
 }
 
-.choose_connection {
-	width: 45%;
-	float: left;
+.header .nav-link:hover {
+	color: #ddd;
 }
 
 .login-form {
@@ -112,6 +114,7 @@ body {
 
 	.row-heading {
 		position: sticky;
+		padding-top: 0;
 		padding-top: 1rem;
 		margin-top: -1rem;
 		top: 0;
@@ -178,10 +181,37 @@ body {
 	}
 }
 
-.c-sidebar-brand-full {
-	margin-left: -22px;
-	text-align: left;
-	margin-top: 3px;
+.header > .container-fluid,
+.sidebar-header {
+	min-height: calc(4rem + 1px); // stylelint-disable-line function-disallowed-list
+}
+
+.sidebar {
+	.sidebar-brand {
+		font-size: 1.3em;
+		text-decoration: none;
+
+		.sidebar-brand-full {
+			white-space: nowrap;
+
+			img {
+				margin-top: -5px;
+			}
+		}
+	}
+
+	.sidebar-header.brand {
+		background-color: $sidebar-brand-bg;
+	}
+
+	.nav-link {
+		background-color: #151515;
+		border-bottom: 1px solid #262626;
+	}
+
+	.nav-link:hover {
+		background-color: #262626 !important;
+	}
 }
 
 .secondary-panel-inner {
@@ -330,8 +360,8 @@ hr.slim {
 	display: block;
 }
 
-.action-category {
-	margin-top: 40px;
+.action-category:not(:first-child) {
+	margin-top: 2rem;
 }
 
 .add-browse-card .header {
@@ -379,4 +409,8 @@ hr.slim {
 		display: grid;
 		grid-template-rows: auto 1fr;
 	}
+}
+
+.compact {
+	width: 0;
 }

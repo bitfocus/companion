@@ -16,7 +16,7 @@ import type {
 	HelpDescription,
 	WrappedImage,
 } from './Model/Common.js'
-import type { ClientDevicesListItem, SurfaceGroupConfig, SurfacePanelConfig } from './Model/Surfaces.js'
+import type { ClientDevicesListItem, SurfaceGroupConfig, SurfacePanelConfig, SurfacesUpdate } from './Model/Surfaces.js'
 import type {
 	ClientImportObject,
 	ClientImportSelection,
@@ -25,9 +25,9 @@ import type {
 } from './Model/ImportExport.js'
 import type { ClientPagesInfo, PageModelChanges } from './Model/PageModel.js'
 import type { ClientTriggerData, TriggersUpdate } from './Model/TriggerModel.js'
-import type { CustomVariablesModel } from './Model/CustomVariableModel.js'
+import type { CustomVariableUpdate, CustomVariablesModel } from './Model/CustomVariableModel.js'
 import type { FeedbackDefinitionUpdate, InternalFeedbackDefinition } from './Model/FeedbackDefinitionModel.js'
-import type { AllVariableDefinitions, ModuleVariableDefinitions } from './Model/Variables.js'
+import type { AllVariableDefinitions, VariableDefinitionUpdate } from './Model/Variables.js'
 import type { CompanionVariableValues } from '@companion-module/base'
 import type { UIPresetDefinition } from './Model/Presets.js'
 import type { RecordSessionInfo, RecordSessionListInfo } from './Model/ActionRecorderModel.js'
@@ -314,12 +314,12 @@ export interface BackendToClientEventsMap {
 
 	'connections:patch': (patch: JsonPatchOperation[] | false) => void
 	'modules:patch': (patch: ModuleInfoUpdate) => void
-	'surfaces:patch': (patch: JsonPatchOperation[]) => void
+	'surfaces:update': (patch: SurfacesUpdate[]) => void
 	'triggers:update': (change: TriggersUpdate) => void
 	'action-definitions:update': (change: ActionDefinitionUpdate) => void
 	'feedback-definitions:update': (change: FeedbackDefinitionUpdate) => void
-	'custom-variables:update': (patch: JsonPatchOperation[]) => void
-	'variable-definitions:update': (label: string, patch: JsonPatchOperation[] | ModuleVariableDefinitions | null) => void
+	'custom-variables:update': (changes: CustomVariableUpdate[]) => void
+	'variable-definitions:update': (label: string, changes: VariableDefinitionUpdate | null) => void
 	'presets:update': (id: string, patch: JsonPatchOperation[] | Record<string, UIPresetDefinition> | null) => void
 	'connections:patch-statuses': (patch: JsonPatchOperation[]) => void
 
@@ -329,7 +329,7 @@ export interface BackendToClientEventsMap {
 	'bonjour:service:up': (svc: ClientBonjourService) => void
 	'bonjour:service:down': (svc: ClientBonjourService) => void
 
-	cloud_state: (newState: Partial<CloudControllerState>) => void
+	cloud_state: (newState: CloudControllerState) => void
 	cloud_region_state: (id: string, newState: CloudRegionState) => void
 }
 

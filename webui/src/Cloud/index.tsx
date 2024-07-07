@@ -1,262 +1,206 @@
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faInfoCircle } from '@fortawesome/free-solid-svg-icons'
-import React, { Component } from 'react'
-import { CInput, CButton, CCallout, CCard, CCardBody, CCardHeader, CListGroup } from '@coreui/react'
+import React, { memo, useContext, useEffect, useState } from 'react'
+import {
+	CFormInput,
+	CButton,
+	CCallout,
+	CCard,
+	CCardBody,
+	CCardHeader,
+	CListGroup,
+	CFormSwitch,
+	CAlert,
+	CCol,
+	CFormLabel,
+} from '@coreui/react'
 import { CloudRegionPanel } from './RegionPanel.js'
 import { CloudUserPass } from './UserPass.js'
-import CSwitch from '../CSwitch.js'
-import type { CompanionSocketType } from '../util.js'
+import { SocketContext, type CompanionSocketType, LoadingRetryOrError } from '../util.js'
 import { CloudControllerState } from '@companion-app/shared/Model/Cloud.js'
 
-// The cloud part is written in old fashioned Class-components because I am most
-// familiar with it
+export function CloudPage() {
+	const socket = useContext(SocketContext)
 
-interface CloudControllerProps {
-	socket: CompanionSocketType
+	const cloudState = useCloudState(socket)
+
+	return (
+		<div className="cloud-region-panel">
+			<h4>Companion Cloud</h4>
+			<p>
+				Access your Companion buttons from your Bitfocus Cloud account, or create a sophisticated network of Companion
+				installations that work together over the internet for all your remote production needs.
+			</p>
+			<p>
+				When enabled, Companion will make several persistent secure connections to different Bitfocus Cloud regions for
+				redundancy. You can learn more about the service, the service provider and the safety of your data in the
+				Companion Cloud documentation{' '}
+				<a target="_new" href="https://user.bitfocus.io/docs/companion-cloud">
+					here
+				</a>
+				.
+			</p>
+
+			{cloudState ? <CloudPageContent cloudState={cloudState} /> : <LoadingRetryOrError dataReady={false} />}
+		</div>
+	)
 }
 
-export class Cloud extends Component<CloudControllerProps, CloudControllerState> {
-	state = {
-		uuid: '',
-		authenticating: false,
-		authenticated: false,
-		authenticatedAs: undefined,
-		ping: false,
-		regions: [],
-		enabled: false,
-		error: null,
-		cloudActive: false,
-		canActivate: false,
-	}
+function useCloudState(socket: CompanionSocketType) {
+	const [cloudState, setCloudState] = useState<CloudControllerState>()
 
-	constructor(props: CloudControllerProps) {
-		super(props)
-
-		this.cloudStateDidUpdate = this.cloudStateDidUpdate.bind(this)
-		this.cloudSetState = this.cloudSetState.bind(this)
-	}
-
-	componentDidMount() {
-		this.props.socket.on('cloud_state', this.cloudStateDidUpdate)
-		this.props.socket.emit('cloud_state_get')
-		console.log('Mounted CLOUD')
-		this.cloudSetState({ ping: true })
-	}
-
-	componentWillUnmount() {
-		this.cloudSetState({ ping: false })
-		console.log('Unmounted CLOUD')
-		this.props.socket.off('cloud_state', this.cloudStateDidUpdate)
-	}
-
-	private cloudStateDidUpdate(newState: Partial<CloudControllerState>) {
-		console.log('cloud state did update to:', { ...this.state, ...newState })
-		this.setState({ ...this.state, ...newState })
-	}
-
-	/**
-	 * Set a new state for the cloud controller
-	 */
-	private cloudSetState(newState: Partial<CloudControllerState>) {
-		this.props.socket.emit('cloud_state_set', newState)
-	}
-
-	private cloudLogin(user: string, pass: string) {
-		this.props.socket.emit('cloud_login', user, pass)
-	}
-
-	/**
-	 * Regenerate the UUID for the cloud controller
-	 */
-	private cloudRegenerateUUID() {
-		this.props.socket.emit('cloud_regenerate_uuid')
-	}
-
-	shouldComponentUpdate(_nextProps: CloudControllerProps, nextState: CloudControllerState) {
-		const a = JSON.stringify(nextState)
-		const b = JSON.stringify(this.state)
-		if (a !== b) {
-			return true
+	useEffect(() => {
+		const cloudStateDidUpdate = (newState: CloudControllerState) => {
+			setCloudState(newState)
 		}
-		return false
-	}
 
-	render() {
-		const regions = this.state.regions || []
+		socket.on('cloud_state', cloudStateDidUpdate)
+		socket.emit('cloud_state_get')
+		console.log('Mounted CLOUD')
+		socket.emit('cloud_state_set', { ping: true })
 
-		return (
-			<div
-				style={{
-					maxWidth: 1000,
-				}}
-			>
-				<h4>Companion Cloud</h4>
-				<p>
-					Access your Companion buttons from your Bitfocus Cloud account, or create a sophisticated network of Companion
-					installations that work together over the internet for all your remote production needs.
-				</p>
-				<div
-					style={{
-						marginBottom: 16,
-					}}
-				>
-					<div>
-						When enabled, Companion will make several persistent secure connections to different Bitfocus Cloud regions
-						for redundancy. You can learn more about the service, the service provider and the safety of your data in
-						the Companion Cloud documentation{' '}
-						<a target="_new" href="https://user.bitfocus.io/docs/companion-cloud">
-							here
-						</a>
-						.
-					</div>
-				</div>
+		return () => {
+			socket.emit('cloud_state_set', { ping: false })
+			console.log('Unmounted CLOUD')
+			socket.off('cloud_state', cloudStateDidUpdate)
+		}
+	}, [socket])
 
-				{!this.state.authenticated ? (
-					<div>
-						<CloudUserPass
-							working={this.state.authenticating}
-							username={this.state.authenticatedAs}
-							onAuth={(user, pass) => {
-								this.cloudLogin(user, pass)
-							}}
-							onClearError={() => {
-								this.setState({ error: null })
-							}}
-						/>
-						<div
-							style={{
-								backgroundColor: 'rgba(100,200,0,0.15)',
-								display: 'block',
-								borderRadius: 4,
-								padding: '10px 15px',
-								marginTop: 40,
-								fontSize: 15,
-								fontWeight: 'bold',
-								marginBottom: 16,
-							}}
-						>
-							<FontAwesomeIcon icon={faInfoCircle} /> &nbsp;Companion Cloud is a premium service. Learn more and sign up{' '}
-							<a target="_new" href="http://bitfocus.io/companion-cloud">
-								here
-							</a>
-							.
-						</div>
-					</div>
-				) : (
-					<div>
-						<div
-							style={{
-								fontWeight: 'bold',
-								marginBottom: 16,
-							}}
-						>
-							<div style={{ fontWeight: 'bold', fontSize: 15, marginBottom: 4 }}>Logged in as</div>
-							<CInput
-								readOnly
-								type="text"
-								style={{
-									width: 500,
-								}}
-								value={this.state.authenticatedAs}
-							/>
-							{!this.state.cloudActive && (
-								<div style={{ marginTop: 10, marginBottom: 20 }}>
-									<CButton
-										color="success"
-										onClick={() => {
-											this.setState({ error: null })
-											this.props.socket.emit('cloud_logout')
-										}}
-									>
-										Log out
-									</CButton>
-								</div>
-							)}
-						</div>
-						{this.state.authenticated && (
-							<CCard>
-								<CCardHeader style={{ backgroundColor: '#eee', fontWeight: 600 }}>Cloud regions</CCardHeader>
-								{!this.state.cloudActive ? (
-									<CCardBody style={this.state.cloudActive ? { opacity: 0.5 } : {}}>
-										Please select the regions that is closest to you. You need to select at least <b>two regions</b>{' '}
-										which will give you redundancy.
-									</CCardBody>
-								) : null}
-								<CListGroup flush>
-									{regions.map((region) => (
-										<CloudRegionPanel
-											key={region}
-											disabled={this.state.cloudActive}
-											id={region}
-											socket={this.props.socket}
-										/>
-									))}
-								</CListGroup>
-								<CCardBody>
-									{this.state.cloudActive ? (
-										<CCallout color={this.state.cloudActive ? 'info' : 'success'}>
-											<div style={{ fontSize: 14, clear: 'both' }}>
-												Companion Cloud is currently activated. Deactivate to change regions.
-											</div>
-										</CCallout>
-									) : null}
-									<span style={{ display: 'inline-block', float: 'left' }}>
-										<CSwitch
-											color="success"
-											disabled={!this.state.cloudActive && !this.state.canActivate}
-											title="Activate Companion Cloud"
-											checked={this.state.cloudActive}
-											onChange={(e) => this.cloudSetState({ cloudActive: e.target.checked })}
-										/>
-									</span>
-
-									<span style={{ marginLeft: 10, fontSize: 15, fontWeight: 'bold' }}>Activate Companion Cloud</span>
-								</CCardBody>
-							</CCard>
-						)}
-
-						{this.state.authenticated && (
-							<div style={{ marginTop: 15 }}>
-								<div style={{ fontWeight: 'bold', fontSize: 16, marginBottom: 4 }}>Super secret key</div>
-								<div
-									style={{
-										color: 'rgba(50,100,50,0.9)',
-										backgroundColor: 'rgba(0,200,0,0.1)',
-										display: 'inline-block',
-										padding: '4px 8px',
-										fontFamily: 'monospace',
-										fontWeight: 'bold',
-										fontSize: 17,
-										border: '1px solid rgba(0,200,0,0.3)',
-										borderRadius: 5,
-									}}
-								>
-									{this.state.uuid}
-								</div>
-								<div style={{ marginTop: 5 }}>
-									When you have successfully connected to two or more regions, you can use this key in another remote
-									companion to control this companion. Go to the connections tab in another companion and search for
-									"companion cloud", and add it with the key above to start controlling this companion via internet.
-								</div>
-								<div style={{ marginTop: 5 }}>
-									<CButton color="primary" onClick={() => this.cloudRegenerateUUID()}>
-										Change UUID
-									</CButton>
-								</div>
-							</div>
-						)}
-					</div>
-				)}
-
-				{this.state.error !== null && this.state.error !== '' && (
-					<CCallout
-						style={{ fontSize: 16, fontWeight: 'bold', backgroundColor: 'rgba(255,0,0,0.2)', padding: 10 }}
-						color="danger"
-					>
-						{this.state.error}
-					</CCallout>
-				)}
-			</div>
-		)
-	}
+	return cloudState
 }
+
+function CloudPageContent({ cloudState }: { cloudState: CloudControllerState }) {
+	return (
+		<>
+			{!!cloudState.error && <CAlert color="danger">{cloudState.error}</CAlert>}
+
+			{!cloudState.authenticated ? (
+				<CloudUserPass
+					working={cloudState.authenticating}
+					username={cloudState.authenticatedAs}
+					onClearError={() => {
+						// TODO: reimplement
+						// this.setState({ error: null })
+					}}
+				/>
+			) : (
+				<>
+					<AuthState
+						authenticatedAs={cloudState.authenticatedAs}
+						cloudActive={cloudState.cloudActive}
+						clearError={() => {
+							// TODO: reimplement
+							// this.setState({ error: null })
+						}}
+					/>
+
+					<RegionsList
+						regionIds={cloudState.regions || []}
+						cloudActive={cloudState.cloudActive}
+						canActivate={cloudState.canActivate}
+					/>
+
+					<SecretKeyPanel uuid={cloudState.uuid} />
+				</>
+			)}
+		</>
+	)
+}
+
+interface AuthStateProps {
+	authenticatedAs: string | undefined
+	cloudActive: boolean
+	clearError: () => void
+}
+
+function AuthState({ authenticatedAs, cloudActive, clearError }: AuthStateProps) {
+	const socket = useContext(SocketContext)
+
+	return (
+		<CCol sm={6} className="cloud-auth-state">
+			<CFormLabel>Logged in as</CFormLabel>
+			<CFormInput readOnly type="text" value={authenticatedAs} />
+			{!cloudActive && (
+				<p>
+					<CButton
+						color="success"
+						onClick={() => {
+							clearError()
+							socket.emit('cloud_logout')
+						}}
+					>
+						Log out
+					</CButton>
+				</p>
+			)}
+		</CCol>
+	)
+}
+
+interface RegionsListProps {
+	regionIds: string[]
+	cloudActive: boolean
+	canActivate: boolean
+}
+
+function RegionsList({ regionIds, cloudActive, canActivate }: RegionsListProps) {
+	const socket = useContext(SocketContext)
+
+	return (
+		<CCol sm={12}>
+			<CCard>
+				<CCardHeader>Cloud regions</CCardHeader>
+
+				{!cloudActive && (
+					<CCardBody>
+						Please select the regions that is closest to you. You need to select at least <b>two regions</b> which will
+						give you redundancy.
+					</CCardBody>
+				)}
+
+				<CListGroup flush>
+					{regionIds.map((regionId) => (
+						<CloudRegionPanel key={regionId} hideDisabled={cloudActive} regionId={regionId} />
+					))}
+				</CListGroup>
+
+				<CCardBody>
+					{cloudActive && (
+						<CCallout color={'info'}>Companion Cloud is currently activated. Deactivate to change regions.</CCallout>
+					)}
+
+					<CFormSwitch
+						label="Activate Companion Cloud"
+						color="success"
+						disabled={!cloudActive && !canActivate}
+						title="Activate Companion Cloud"
+						checked={cloudActive}
+						onChange={(e) => socket.emit('cloud_state_set', { cloudActive: !!e.target.checked })}
+					/>
+				</CCardBody>
+			</CCard>
+		</CCol>
+	)
+}
+
+const SecretKeyPanel = memo(function SecretKeyPanel({ uuid }: { uuid: string }) {
+	const socket = useContext(SocketContext)
+
+	return (
+		<CCol sm={12} className="super-secret-key">
+			<h5>Super secret key</h5>
+
+			<p>
+				When you have successfully connected to two or more regions, you can use this key in another remote companion to
+				control this companion. Go to the connections tab in another companion and search for "companion cloud", and add
+				it with the key above to start controlling this companion via internet.
+			</p>
+
+			<CAlert color="success">{uuid}</CAlert>
+
+			<p>
+				<CButton color="primary" onClick={() => socket.emit('cloud_regenerate_uuid')}>
+					Regenerate secret key
+				</CButton>
+			</p>
+		</CCol>
+	)
+})

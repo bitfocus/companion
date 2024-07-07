@@ -8,3 +8,16 @@ export interface CustomVariableDefinition {
 }
 
 export type CustomVariablesModel = Record<string, CustomVariableDefinition>
+
+export type CustomVariableUpdate = CustomVariableUpdateRemoveOp | CustomVariableUpdateUpdateOp
+
+export interface CustomVariableUpdateRemoveOp {
+	type: 'remove'
+	itemId: string
+}
+export interface CustomVariableUpdateUpdateOp {
+	type: 'update'
+	itemId: string
+
+	info: CustomVariableDefinition
+}
