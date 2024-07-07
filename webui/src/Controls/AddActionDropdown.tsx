@@ -4,11 +4,11 @@ import Select, { createFilter } from 'react-select'
 import { MenuPortalContext } from '../Components/DropdownInputField.js'
 import { observer } from 'mobx-react-lite'
 import { RootAppStoreContext } from '../Stores/RootAppStore.js'
+import { prepare as fuzzyPrepare, single as fuzzySingle } from 'fuzzysort'
 
-const baseFilter = createFilter<AddActionOption>()
 const filterOptions: ReturnType<typeof createFilter<AddActionOption>> = (candidate, input): boolean => {
 	if (input) {
-		return !candidate.data.isRecent && baseFilter(candidate, input)
+		return !candidate.data.isRecent && (fuzzySingle(input, candidate.data.fuzzy)?.score ?? 0) >= 0.5
 	} else {
 		return candidate.data.isRecent
 	}
@@ -24,6 +24,7 @@ interface AddActionOption {
 	isRecent: boolean
 	value: string
 	label: string
+	fuzzy: ReturnType<typeof fuzzyPrepare>
 }
 interface AddActionGroup {
 	label: string
@@ -46,10 +47,12 @@ export const AddActionDropdown = observer(function AddActionDropdown({
 		for (const [connectionId, connectionActions] of actionDefinitions.connections.entries()) {
 			for (const [actionId, action] of connectionActions.entries()) {
 				const connectionLabel = connectionsContext[connectionId]?.label ?? connectionId
+				const optionLabel = `${connectionLabel}: ${action.label}`
 				options.push({
 					isRecent: false,
 					value: `${connectionId}:${actionId}`,
-					label: `${connectionLabel}: ${action.label}`,
+					label: optionLabel,
+					fuzzy: fuzzyPrepare(optionLabel),
 				})
 			}
 		}
@@ -61,10 +64,12 @@ export const AddActionDropdown = observer(function AddActionDropdown({
 				const actionInfo = actionDefinitions.connections.get(connectionId)?.get(actionId)
 				if (actionInfo) {
 					const connectionLabel = connectionsContext[connectionId]?.label ?? connectionId
+					const optionLabel = `${connectionLabel}: ${actionInfo.label}`
 					recents.push({
 						isRecent: true,
 						value: `${connectionId}:${actionId}`,
-						label: `${connectionLabel}: ${actionInfo.label}`,
+						label: optionLabel,
+						fuzzy: fuzzyPrepare(optionLabel),
 					})
 				}
 			}
