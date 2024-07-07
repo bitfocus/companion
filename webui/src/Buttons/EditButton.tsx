@@ -50,7 +50,6 @@ import { ButtonStyleConfig } from '../Controls/ButtonStyleConfig.js'
 import { ControlOptionsEditor } from '../Controls/ControlOptionsEditor.js'
 import { ControlFeedbacksEditor } from '../Controls/FeedbackEditor.js'
 import { cloneDeep } from 'lodash-es'
-import { useElementSize } from 'usehooks-ts'
 import { GetStepIds } from '@companion-app/shared/Controls.js'
 import { formatLocation } from '@companion-app/shared/ControlId.js'
 import { ControlLocation } from '@companion-app/shared/Model/Common.js'
@@ -384,15 +383,10 @@ function TabsSection({ style, controlId, location, steps, runtimeProps, rotaryAc
 	const confirmRef = useRef<GenericConfirmModalRef>(null)
 
 	const tabsScrollRef = useRef<HTMLDivElement>()
-	const [tabsSizeRef] = useElementSize()
 
-	const setTabsRef = useCallback(
-		(ref: HTMLDivElement | null) => {
-			tabsSizeRef(ref)
-			tabsScrollRef.current = ref ?? undefined
-		},
-		[tabsSizeRef]
-	)
+	const setTabsRef = useCallback((ref: HTMLDivElement | null) => {
+		tabsScrollRef.current = ref ?? undefined
+	}, [])
 
 	const clickSelectedStep = useCallback((newStep: string) => {
 		setSelectedStep(newStep)

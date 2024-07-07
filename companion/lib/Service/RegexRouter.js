@@ -66,19 +66,15 @@ class RegexRouter {
 	 * @param {(match: Record<string, string>, ...args: any[]) => void} handler
 	 */
 	addPath(path, handler) {
-		/**
-		 * @type {import ('path-to-regexp').Key[] }
-		 */
-		const keys = []
-		const regexp = pathToRegexp(path, keys)
+		const regexp = pathToRegexp(path)
 
 		this.addRegex(regexp, (match, ...args) => {
 			/**
 			 * @type {Record<string, string>}
 			 */
 			const values = {}
-			for (let i = 0; i < keys.length; i++) {
-				const key = keys[i]
+			for (let i = 0; i < regexp.keys.length; i++) {
+				const key = regexp.keys[i]
 				// @ts-ignore
 				values[key.name] = match[i + 1]
 			}

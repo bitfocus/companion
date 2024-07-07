@@ -14,15 +14,7 @@ interface AddConnectionsPanelProps {
 	doConfigureConnection: (connectionId: string) => void
 }
 
-export function AddConnectionsPanel({ showHelp, doConfigureConnection }: AddConnectionsPanelProps) {
-	return (
-		<>
-			<AddConnectionsInner showHelp={showHelp} doConfigureConnection={doConfigureConnection} />
-		</>
-	)
-}
-
-const AddConnectionsInner = observer(function AddConnectionsInner({
+export const AddConnectionsPanel = observer(function AddConnectionsPanel({
 	showHelp,
 	doConfigureConnection,
 }: AddConnectionsPanelProps) {
