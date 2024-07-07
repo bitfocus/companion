@@ -19,7 +19,7 @@ export const ExportWizardModal = forwardRef<ExportWizardModalRef, ExportWizardMo
 			surfaces: true,
 			triggers: true,
 			customVariables: true,
-			// userconfig: true,
+			userconfig: true,
 			format: ExportFormatDefault,
 		})
 
@@ -69,7 +69,7 @@ export const ExportWizardModal = forwardRef<ExportWizardModalRef, ExportWizardMo
 						surfaces: true,
 						triggers: true,
 						customVariables: true,
-						// userconfig: true,
+						userconfig: true,
 						format: ExportFormatDefault,
 					})
 
@@ -177,7 +177,7 @@ function ExportOptionsStep({ config, setValue }: ExportOptionsStepProps) {
 					<CLabel htmlFor="wizard_surfaces">Surfaces</CLabel>
 				</div>
 			</div>
-			{/* <div className="indent3">
+			<div className="indent3">
 				<div className="form-check form-check-inline mr-1">
 					<CInputCheckbox
 						id="wizard_userconfig"
@@ -186,7 +186,7 @@ function ExportOptionsStep({ config, setValue }: ExportOptionsStepProps) {
 					/>
 					<CLabel htmlFor="wizard_userconfig">Settings</CLabel>
 				</div>
-			</div> */}
+			</div>
 
 			<div className="indent3">
 				<div className="form-check form-check-inline mr-1">

@@ -1,4 +1,4 @@
-import type { UserConfigGridSize } from './UserConfigModel.js'
+import type { UserConfigGridSize, UserConfigModel } from './UserConfigModel.js'
 import type { ConnectionConfig } from './Connections.js'
 import type { CustomVariablesModel } from './CustomVariableModel.js'
 
@@ -16,6 +16,7 @@ export interface ExportFullv4 extends ExportBase<'full'> {
 	instances?: ExportInstancesv4
 	surfaces?: unknown
 	surfaceGroups?: unknown
+	userconfig?: UserConfigModel
 }
 
 export interface ExportPageModelv4 extends ExportBase<'page'> {
