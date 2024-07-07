@@ -1,4 +1,4 @@
-import { CButton, CInputGroup, CInputGroupAppend, CInputGroupPrepend } from '@coreui/react'
+import { CButton, CInputGroup } from '@coreui/react'
 import React, { useCallback, useContext, useMemo } from 'react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faChevronLeft, faChevronRight } from '@fortawesome/free-solid-svg-icons'
@@ -61,11 +61,9 @@ export const ButtonGridHeader = observer(function ButtonGridHeader({
 	return (
 		<div className="button-grid-header">
 			<CInputGroup>
-				<CInputGroupPrepend>
-					<CButton color="dark" hidden={!changePage} onClick={prevPage}>
-						<FontAwesomeIcon icon={faChevronLeft} />
-					</CButton>
-				</CInputGroupPrepend>
+				<CButton color="dark" hidden={!changePage} onClick={prevPage}>
+					<FontAwesomeIcon icon={faChevronLeft} />
+				</CButton>
 				<Select<SelectOption>
 					className="button-page-input"
 					isDisabled={!setPage}
@@ -78,11 +76,9 @@ export const ButtonGridHeader = observer(function ButtonGridHeader({
 					value={currentValue}
 					onChange={inputChange}
 				/>
-				<CInputGroupAppend>
-					<CButton color="dark" hidden={!changePage} onClick={nextPage}>
-						<FontAwesomeIcon icon={faChevronRight} />
-					</CButton>
-				</CInputGroupAppend>
+				<CButton color="dark" hidden={!changePage} onClick={nextPage}>
+					<FontAwesomeIcon icon={faChevronRight} />
+				</CButton>
 			</CInputGroup>
 			<div className="right-buttons">{children}</div>
 		</div>

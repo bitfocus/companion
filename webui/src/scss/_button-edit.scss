@@ -78,14 +78,6 @@ table.feedback-table {
 		}
 	}
 
-	td.td-reorder {
-		padding-right: 10px;
-		padding-left: 10px;
-		vertical-align: middle;
-
-		// as narrow as possible
-		width: 0;
-	}
 	.editor-grid-events {
 		margin-right: -0.75rem;
 	}
@@ -164,6 +156,10 @@ table.feedback-table {
 			// @include media-breakpoint-up('sm') {
 			// 	width: 70%;
 			// }
+
+			.form-check {
+				padding-left: 0.25rem;
+			}
 		}
 
 		.cell-actions {
@@ -194,9 +190,10 @@ table.feedback-table {
 	tbody {
 		border-bottom: $table-border-width solid;
 
-		@include themes($table-theme-map, $create: parent) {
-			border-bottom-color: themes-get-value('table-border-color');
-		}
+		// nocommit
+		// @include themes($table-theme-map, $create: parent) {
+		// 	border-bottom-color: themes-get-value('table-border-color');
+		// }
 	}
 }
 

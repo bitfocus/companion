@@ -1,4 +1,4 @@
-import { CButton, CForm, CButtonGroup, CSwitch } from '@coreui/react'
+import { CButton, CForm, CButtonGroup, CFormSwitch } from '@coreui/react'
 import {
 	faSort,
 	faTrash,
@@ -255,7 +255,7 @@ const EventEditor = observer(function EventEditor({
 						{!!service.setEnabled && (
 							<>
 								&nbsp;
-								<CSwitch
+								<CFormSwitch
 									color="success"
 									checked={event.enabled}
 									title={event.enabled ? 'Disable event' : 'Enable event'}

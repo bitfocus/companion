@@ -2,10 +2,10 @@ import React, { FormEvent, useCallback, useContext, useEffect, useImperativeHand
 import {
 	CAlert,
 	CButton,
+	CCol,
 	CForm,
-	CFormGroup,
-	CInput,
-	CLabel,
+	CFormInput,
+	CFormSwitch,
 	CModal,
 	CModalBody,
 	CModalFooter,
@@ -13,7 +13,6 @@ import {
 } from '@coreui/react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faCog, faUndo } from '@fortawesome/free-solid-svg-icons'
-import CSwitch from '../CSwitch.js'
 import type { UserConfigGridSize, UserConfigModel } from '@companion-app/shared/Model/UserConfigModel.js'
 import { observer } from 'mobx-react-lite'
 import { RootAppStoreContext } from '../Stores/RootAppStore.js'
@@ -81,25 +80,22 @@ export const GridConfig = observer(function GridConfig({ config, setValue, reset
 			<tr>
 				<td></td>
 				<td colSpan={2}>
-					<div className="form-check form-check-inline mr-1">
-						<CButton onClick={editGridSize} color="success">
-							<FontAwesomeIcon icon={faCog} />
-							&nbsp;Edit Grid Size
-						</CButton>
-					</div>
+					<CButton onClick={editGridSize} color="success">
+						<FontAwesomeIcon icon={faCog} />
+						&nbsp;Edit Grid Size
+					</CButton>
 				</td>
 			</tr>
 			<tr>
 				<td>Allow expanding in grid view</td>
 				<td>
-					<div className="form-check form-check-inline mr-1 float-right">
-						<CSwitch
-							color="success"
-							checked={config.gridSizeInlineGrow}
-							size={'lg'}
-							onChange={(e) => setValue('gridSizeInlineGrow', e.currentTarget.checked)}
-						/>
-					</div>
+					<CFormSwitch
+						className="float-right"
+						color="success"
+						checked={config.gridSizeInlineGrow}
+						size="xl"
+						onChange={(e) => setValue('gridSizeInlineGrow', e.currentTarget.checked)}
+					/>
 				</td>
 				<td>
 					<CButton onClick={() => resetValue('gridSizeInlineGrow')} title="Reset to default">
@@ -126,17 +122,23 @@ const GridSizeModal = observer<GridSizeModalProps, GridSizeModalRef>(
 
 		const [newGridSize, setNewGridSize] = useState<UserConfigGridSize | null>(null)
 
-		const buttonRef = useRef<HTMLElement>()
+		const buttonRef = useRef<HTMLButtonElement | null>(null)
 
 		const buttonFocus = () => {
-			if (buttonRef.current) {
-				buttonRef.current.focus()
-			}
+			setTimeout(() => {
+				if (buttonRef.current) {
+					buttonRef.current.focus()
+				}
+			}, 500)
 		}
 
-		const doClose = useCallback(() => setShow(false), [])
-		const onClosed = useCallback(() => {
-			setNewGridSize(null)
+		const doClose = useCallback(() => {
+			setShow(false)
+
+			// Delay clearing the data so the modal can animate out
+			setTimeout(() => {
+				setNewGridSize(null)
+			}, 1500)
 		}, [])
 		const doAction = useCallback(
 			(e: FormEvent) => {
@@ -175,7 +177,7 @@ const GridSizeModal = observer<GridSizeModalProps, GridSizeModalRef>(
 			}
 		}, [show, userConfig])
 
-		const setMinColumn = useCallback((e) => {
+		const setMinColumn = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
 			const newValue = Number(e.currentTarget.value)
 			setNewGridSize((oldSize) =>
 				oldSize
@@ -186,7 +188,7 @@ const GridSizeModal = observer<GridSizeModalProps, GridSizeModalRef>(
 					: null
 			)
 		}, [])
-		const setMaxColumn = useCallback((e) => {
+		const setMaxColumn = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
 			const newValue = Number(e.currentTarget.value)
 			setNewGridSize((oldSize) =>
 				oldSize
@@ -197,7 +199,7 @@ const GridSizeModal = observer<GridSizeModalProps, GridSizeModalRef>(
 					: null
 			)
 		}, [])
-		const setMinRow = useCallback((e) => {
+		const setMinRow = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
 			const newValue = Number(e.currentTarget.value)
 			setNewGridSize((oldSize) =>
 				oldSize
@@ -208,7 +210,7 @@ const GridSizeModal = observer<GridSizeModalProps, GridSizeModalRef>(
 					: null
 			)
 		}, [])
-		const setMaxRow = useCallback((e) => {
+		const setMaxRow = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
 			const newValue = Number(e.currentTarget.value)
 			setNewGridSize((oldSize) =>
 				oldSize
@@ -229,34 +231,58 @@ const GridSizeModal = observer<GridSizeModalProps, GridSizeModalRef>(
 				newGridSize.maxRow < userConfig.properties.gridSize.maxRow)
 
 		return (
-			<CModal show={show} onClose={doClose} onClosed={onClosed} onOpened={buttonFocus}>
+			<CModal visible={show} onClose={doClose} onShow={buttonFocus}>
 				<CModalHeader closeButton>
 					<h5>Configure Grid Size</h5>
 				</CModalHeader>
 				<CModalBody>
-					<CForm onSubmit={doAction}>
+					<CForm onSubmit={doAction} className="row">
 						{newGridSize && (
-							<CFormGroup>
+							<CCol sm={12}>
 								New Grid Size: {newGridSize.maxRow - newGridSize.minRow + 1} rows x{' '}
 								{newGridSize.maxColumn - newGridSize.minColumn + 1} columns
-							</CFormGroup>
+							</CCol>
 						)}
-						<CFormGroup>
-							<CLabel>Min Row</CLabel>
-							<CInput type="number" value={newGridSize?.minRow} max={0} step={1} onChange={setMinRow} />
-						</CFormGroup>
-						<CFormGroup>
-							<CLabel>Max Row</CLabel>
-							<CInput type="number" value={newGridSize?.maxRow} min={0} step={1} onChange={setMaxRow} />
-						</CFormGroup>
-						<CFormGroup>
-							<CLabel>Min Column</CLabel>
-							<CInput type="number" value={newGridSize?.minColumn} max={0} step={1} onChange={setMinColumn} />
-						</CFormGroup>
-						<CFormGroup>
-							<CLabel>Max Column</CLabel>
-							<CInput type="number" value={newGridSize?.maxColumn} min={0} step={1} onChange={setMaxColumn} />
-						</CFormGroup>
+						<CCol sm={12}>
+							<CFormInput
+								label="Min Row"
+								type="number"
+								value={newGridSize?.minRow}
+								max={0}
+								step={1}
+								onChange={setMinRow}
+							/>
+						</CCol>
+						<CCol sm={12}>
+							<CFormInput
+								label="Max Row"
+								type="number"
+								value={newGridSize?.maxRow}
+								min={0}
+								step={1}
+								onChange={setMaxRow}
+							/>
+						</CCol>
+						<CCol sm={12}>
+							<CFormInput
+								label="Min Column"
+								type="number"
+								value={newGridSize?.minColumn}
+								max={0}
+								step={1}
+								onChange={setMinColumn}
+							/>
+						</CCol>
+						<CCol sm={12}>
+							<CFormInput
+								label="Max Column"
+								type="number"
+								value={newGridSize?.maxColumn}
+								min={0}
+								step={1}
+								onChange={setMaxColumn}
+							/>
+						</CCol>
 					</CForm>
 					{isReducingSize && (
 						<CAlert color="danger">
@@ -268,7 +294,7 @@ const GridSizeModal = observer<GridSizeModalProps, GridSizeModalRef>(
 					<CButton color="secondary" onClick={doClose}>
 						Cancel
 					</CButton>
-					<CButton innerRef={buttonRef} color="primary" onClick={doAction}>
+					<CButton ref={buttonRef} color="primary" onClick={doAction}>
 						Save
 					</CButton>
 				</CModalFooter>

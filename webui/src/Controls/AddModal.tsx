@@ -4,8 +4,7 @@ import {
 	CCard,
 	CCardBody,
 	CCollapse,
-	CInput,
-	CModal,
+	CFormInput,
 	CModalBody,
 	CModalFooter,
 	CModalHeader,
@@ -17,6 +16,8 @@ import { RootAppStoreContext } from '../Stores/RootAppStore.js'
 import { observer } from 'mobx-react-lite'
 import { ConnectionActionDefinitions } from '../Stores/ActionDefinitionsStore.js'
 import { ConnectionFeedbackDefinitions } from '../Stores/FeedbackDefinitionsStore.js'
+import { capitalize } from 'lodash-es'
+import { CModalExt } from '../Components/CModalExt.js'
 
 interface AddActionsModalProps {
 	addAction: (actionType: string) => void
@@ -69,12 +70,12 @@ export const AddActionsModal = observer(
 		)
 
 		return (
-			<CModal show={show} onClose={doClose} onClosed={onClosed} size="lg" scrollable={true}>
+			<CModalExt visible={show} onClose={doClose} onClosed={onClosed} size="lg" scrollable={true}>
 				<CModalHeader closeButton>
 					<h5>Browse Actions</h5>
 				</CModalHeader>
 				<CModalHeader>
-					<CInput
+					<CFormInput
 						type="text"
 						placeholder="Search..."
 						onChange={(e) => setFilter(e.currentTarget.value)}
@@ -103,7 +104,7 @@ export const AddActionsModal = observer(
 						Done
 					</CButton>
 				</CModalFooter>
-			</CModal>
+			</CModalExt>
 		)
 	})
 )
@@ -111,6 +112,7 @@ export const AddActionsModal = observer(
 interface AddFeedbacksModalProps {
 	addFeedback: (feedbackType: string) => void
 	booleanOnly: boolean
+	entityType: string
 }
 export interface AddFeedbacksModalRef {
 	show(): void
@@ -118,7 +120,7 @@ export interface AddFeedbacksModalRef {
 
 export const AddFeedbacksModal = observer(
 	forwardRef<AddFeedbacksModalRef, AddFeedbacksModalProps>(function AddFeedbacksModal(
-		{ addFeedback, booleanOnly },
+		{ addFeedback, booleanOnly, entityType },
 		ref
 	) {
 		const { feedbackDefinitions, recentlyAddedFeedbacks } = useContext(RootAppStoreContext)
@@ -154,7 +156,7 @@ export const AddFeedbacksModal = observer(
 		const [filter, setFilter] = useState('')
 
 		const addFeedback2 = useCallback(
-			(feedbackType) => {
+			(feedbackType: string) => {
 				recentlyAddedFeedbacks.trackId(feedbackType)
 
 				addFeedback(feedbackType)
@@ -163,12 +165,12 @@ export const AddFeedbacksModal = observer(
 		)
 
 		return (
-			<CModal show={show} onClose={doClose} onClosed={onClosed} size="lg" scrollable={true}>
+			<CModalExt visible={show} onClose={doClose} onClosed={onClosed} size="lg" scrollable={true}>
 				<CModalHeader closeButton>
-					<h5>Browse Feedbacks</h5>
+					<h5>Browse {capitalize(entityType)}s</h5>
 				</CModalHeader>
 				<CModalHeader>
-					<CInput
+					<CFormInput
 						type="text"
 						placeholder="Search ..."
 						onChange={(e) => setFilter(e.currentTarget.value)}
@@ -197,7 +199,7 @@ export const AddFeedbacksModal = observer(
 						Done
 					</CButton>
 				</CModalFooter>
-			</CModal>
+			</CModalExt>
 		)
 	})
 )
@@ -250,7 +252,7 @@ function ConnectionCollapse({
 			res.sort((a, b) => a.label.localeCompare(b.label))
 
 			return res
-		} catch (e) {
+		} catch (e: any) {
 			console.error('Failed to compile candidates list:', e)
 
 			return (
@@ -272,7 +274,7 @@ function ConnectionCollapse({
 				<div className="header" onClick={doToggle2}>
 					{connectionInfo?.label || connectionId}
 				</div>
-				<CCollapse show={expanded}>
+				<CCollapse visible={expanded}>
 					<CCardBody>
 						{!Array.isArray(candidates) ? (
 							candidates

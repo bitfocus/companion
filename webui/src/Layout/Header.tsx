@@ -1,7 +1,7 @@
 import React, { useContext, useEffect, useState } from 'react'
-import { CHeader, CHeaderBrand, CHeaderNavItem, CHeaderNav, CHeaderNavLink, CToggler } from '@coreui/react'
+import { CHeader, CHeaderBrand, CHeaderNav, CNavItem, CNavLink, CHeaderToggler, CContainer } from '@coreui/react'
 import { socketEmitPromise } from '../util.js'
-import { faLock } from '@fortawesome/free-solid-svg-icons'
+import { faBars, faLock } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import type { AppUpdateInfo, AppVersionInfo } from '@companion-app/shared/Model/Common.js'
 import { RootAppStoreContext } from '../Stores/RootAppStore.js'
@@ -41,39 +41,43 @@ export const MyHeader = observer(function MyHeader({ toggleSidebar, canLock, set
 	const versionString = versionInfo ? `${versionInfo.appVersion} (${versionInfo.appBuild})` : '?'
 
 	return (
-		<CHeader colorScheme="dark">
-			<CToggler inHeader onClick={toggleSidebar} />
-			<CHeaderBrand className="d-lg-none">
-				Bitfocus&nbsp;<span style={{ fontWeight: 'bold' }}>Companion</span>
-			</CHeaderBrand>
+		<CHeader position="sticky" className="p-0">
+			<CContainer fluid>
+				<CHeaderToggler className="ps-1" onClick={toggleSidebar}>
+					<FontAwesomeIcon icon={faBars} />
+				</CHeaderToggler>
+				<CHeaderBrand className="mx-auto d-md-none">
+					Bitfocus&nbsp;<span style={{ fontWeight: 'bold' }}>Companion</span>
+				</CHeaderBrand>
 
-			<CHeaderNav className="d-md-down-none">
-				{userConfig.properties?.installName && userConfig.properties?.installName.length > 0 && (
-					<CHeaderNavItem className="install-name">{userConfig.properties?.installName}:</CHeaderNavItem>
-				)}
+				<CHeaderNav className="d-none d-md-flex me-auto">
+					{userConfig.properties?.installName && userConfig.properties?.installName.length > 0 && (
+						<CNavItem className="install-name">{userConfig.properties?.installName}:</CNavItem>
+					)}
 
-				<CHeaderNavItem>
-					<CHeaderNavLink target="_new" title="Version Number" href="https://bitfocus.io/companion/">
-						{versionString}
-					</CHeaderNavLink>
-				</CHeaderNavItem>
+					<CNavItem>
+						<CNavLink target="_new" title="Version Number" href="https://bitfocus.io/companion/">
+							{versionString}
+						</CNavLink>
+					</CNavItem>
 
-				<CHeaderNavItem>
-					<CHeaderNavLink target="_new" href={updateData?.link || 'https://bitfocus.io/companion/'}>
-						{updateData?.message || ''}
-					</CHeaderNavLink>
-				</CHeaderNavItem>
-			</CHeaderNav>
-
-			{canLock && (
-				<CHeaderNav className="ml-auto header-right">
-					<CHeaderNavItem>
-						<CHeaderNavLink onClick={setLocked} title="Lock Admin UI">
-							<FontAwesomeIcon icon={faLock} />
-						</CHeaderNavLink>
-					</CHeaderNavItem>
+					<CNavItem>
+						<CNavLink target="_new" href={updateData?.link || 'https://bitfocus.io/companion/'}>
+							{updateData?.message || ''}
+						</CNavLink>
+					</CNavItem>
 				</CHeaderNav>
-			)}
+
+				{canLock && (
+					<CHeaderNav className="ml-auto header-right">
+						<CNavItem>
+							<CNavLink onClick={() => setLocked(true)} title="Lock Admin UI">
+								<FontAwesomeIcon icon={faLock} />
+							</CNavLink>
+						</CNavItem>
+					</CHeaderNav>
+				)}
+			</CContainer>
 		</CHeader>
 	)
 })

@@ -81,7 +81,7 @@ export const TabletView = observer(function TabletView() {
 
 	const navigate = useNavigate()
 	const updateQueryUrl = useCallback(
-		(key, value) => {
+		(key: string, value: any) => {
 			setQueryUrl((oldUrl) => {
 				const newQuery = queryString.parse(oldUrl)
 				if (value === '' || value === undefined || value === null || value === false) {

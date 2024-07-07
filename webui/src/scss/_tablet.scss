@@ -13,6 +13,10 @@
 		}
 	}
 
+	.form-label {
+		margin-top: 0.5rem;
+	}
+
 	.container-fluid {
 		// max-width: 1200px;
 		height: 100%;
@@ -26,6 +30,8 @@
 
 	.header {
 		padding: 10px 10px;
+		background-color: transparent;
+		border: none;
 	}
 
 	.configure {

@@ -8,9 +8,8 @@ import {
 	CNavLink,
 	CRow,
 	CCol,
-	CFormGroup,
 	CProgress,
-	CInput,
+	CFormInput,
 	CForm,
 	CButton,
 } from '@coreui/react'
@@ -38,9 +37,9 @@ import { Triggers } from './Triggers/index.js'
 import { ConnectionsPage } from './Connections/index.js'
 import { ButtonsPage } from './Buttons/index.js'
 import { ContextData } from './ContextData.js'
-import { CloudPage } from './CloudPage.js'
+import { CloudPage } from './Cloud/index.js'
 import { WizardModal, WIZARD_CURRENT_VERSION, WizardModalRef } from './Wizard/index.js'
-import { Navigate, useLocation } from 'react-router-dom'
+import { NavLink, Navigate, useLocation } from 'react-router-dom'
 import { useIdleTimer } from 'react-idle-timer'
 import { ImportExport } from './ImportExport/index.js'
 import { RootAppStoreContext } from './Stores/RootAppStore.js'
@@ -92,12 +91,12 @@ export default function App() {
 		setButtonGridHotPress(false)
 	}, [])
 
-	const handleKeyDown = useCallback((e) => {
+	const handleKeyDown = useCallback((e: KeyboardEvent) => {
 		if (e.key === 'Shift') {
 			setButtonGridHotPress(true)
 		}
 	}, [])
-	const handleKeyUp = useCallback((e) => {
+	const handleKeyUp = useCallback((e: KeyboardEvent) => {
 		if (e.key === 'Shift') {
 			setButtonGridHotPress(false)
 		}
@@ -226,10 +225,10 @@ const AppMain = observer(function AppMain({
 				''
 			)}
 			<WizardModal ref={wizardModal} />
-			<MySidebar show={showSidebar} showWizard={showWizard} />
-			<div className="c-wrapper">
+			<MySidebar sidebarShow={showSidebar} showWizard={showWizard} />
+			<div className="wrapper d-flex flex-column min-vh-100 bg-body-tertiary">
 				<MyHeader toggleSidebar={toggleSidebar} setLocked={setLocked} canLock={canLock && unlocked} />
-				<div className="c-body">
+				<div className="body flex-grow-1 px-3">
 					{connected && loadingComplete ? (
 						unlocked ? (
 							<AppContent buttonGridHotPress={buttonGridHotPress} />
@@ -341,10 +340,8 @@ function AppLoading({ progress, connected }: AppLoadingProps) {
 			<CRow>
 				<CCol xxl={4} md={3} sm={2} xs={1}></CCol>
 				<CCol xxl={4} md={6} sm={8} xs={10}>
-					<CFormGroup>
-						<h3>{message}</h3>
-						<CProgress min={0} max={100} value={connected ? progress : 0} />
-					</CFormGroup>
+					<h3>{message}</h3>
+					<CProgress value={connected ? progress : 0} />
 				</CCol>
 			</CRow>
 		</CContainer>
@@ -361,13 +358,13 @@ const AppAuthWrapper = observer(function AppAuthWrapper({ setUnlocked }: AppAuth
 	const [password, setPassword] = useState('')
 	const [showError, setShowError] = useState(false)
 
-	const passwordChanged = useCallback((newValue) => {
+	const passwordChanged = useCallback((newValue: string) => {
 		setPassword(newValue)
 		setShowError(false)
 	}, [])
 
 	const tryLogin = useCallback(
-		(e) => {
+		(e: React.FormEvent<HTMLFormElement>) => {
 			e.preventDefault()
 
 			setPassword((currentPassword) => {
@@ -395,7 +392,7 @@ const AppAuthWrapper = observer(function AppAuthWrapper({ setUnlocked }: AppAuth
 					<h3>Companion is locked</h3>
 					<CForm onSubmit={tryLogin}>
 						<div className="login-form">
-							<CInput
+							<CFormInput
 								type="password"
 								value={password}
 								onChange={(e) => passwordChanged(e.currentTarget.value)}
@@ -443,49 +440,49 @@ const AppContent = observer(function AppContent({ buttonGridHotPress }: AppConte
 		<CContainer fluid className="fadeIn">
 			<CNav variant="tabs">
 				<CNavItem>
-					<CNavLink to="/connections">
+					<CNavLink to="/connections" as={NavLink}>
 						<FontAwesomeIcon icon={faPlug} /> Connections
 					</CNavLink>
 				</CNavItem>
 				<CNavItem>
-					<CNavLink to="/buttons">
+					<CNavLink to="/buttons" as={NavLink}>
 						<FontAwesomeIcon icon={faCalendarAlt} /> Buttons
 					</CNavLink>
 				</CNavItem>
 				<CNavItem>
-					<CNavLink to="/surfaces">
+					<CNavLink to="/surfaces" as={NavLink}>
 						<FontAwesomeIcon icon={faGamepad} /> Surfaces
 					</CNavLink>
 				</CNavItem>
 				<CNavItem>
-					<CNavLink to="/triggers">
+					<CNavLink to="/triggers" as={NavLink}>
 						<FontAwesomeIcon icon={faClock} /> Triggers
 					</CNavLink>
 				</CNavItem>
 				<CNavItem>
-					<CNavLink to="/settings">
+					<CNavLink to="/settings" as={NavLink}>
 						<FontAwesomeIcon icon={faCog} /> Settings
 					</CNavLink>
 				</CNavItem>
 				<CNavItem>
-					<CNavLink to="/import-export">
+					<CNavLink to="/import-export" as={NavLink}>
 						<FontAwesomeIcon icon={faFileImport} /> Import / Export
 					</CNavLink>
 				</CNavItem>
 				<CNavItem>
-					<CNavLink to="/log">
+					<CNavLink to="/log" as={NavLink}>
 						<FontAwesomeIcon icon={faClipboardList} /> Log
 					</CNavLink>
 				</CNavItem>
 				{showCloudTab && (
 					<CNavItem>
-						<CNavLink to="/cloud">
+						<CNavLink to="/cloud" as={NavLink}>
 							<FontAwesomeIcon icon={faCloud} /> Cloud
 						</CNavLink>
 					</CNavItem>
 				)}
 			</CNav>
-			<CTabContent fade={false}>
+			<CTabContent>
 				<CTabPane className={getClassForPane('/connections')}>
 					<MyErrorBoundary>
 						<ConnectionsPage />

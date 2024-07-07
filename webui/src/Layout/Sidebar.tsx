@@ -1,5 +1,5 @@
-import React, { memo } from 'react'
-import { CSidebar, CSidebarNav, CSidebarNavItem, CSidebarBrand, CSidebarMinimizer } from '@coreui/react'
+import React, { memo, useCallback, useState } from 'react'
+import { CSidebar, CSidebarNav, CNavItem, CSidebarBrand, CSidebarToggler, CSidebarHeader } from '@coreui/react'
 import {
 	faBug,
 	faComments,
@@ -13,77 +13,68 @@ import {
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 
 interface MySidebarProps {
-	show: boolean
+	sidebarShow: boolean
 	showWizard: () => void
 }
 
-export const MySidebar = memo(function MySidebar({ show, showWizard }: MySidebarProps) {
+export const MySidebar = memo(function MySidebar({ sidebarShow, showWizard }: MySidebarProps) {
+	const [unfoldable, setUnfoldable] = useState(false)
+
+	const showWizard2 = useCallback(
+		(e: React.MouseEvent<HTMLElement>) => {
+			e.preventDefault()
+
+			showWizard()
+		},
+		[showWizard]
+	)
+
 	return (
-		<CSidebar show={show}>
-			<CSidebarNav>
+		<CSidebar position="fixed" unfoldable={unfoldable} visible={sidebarShow} colorScheme="dark">
+			<CSidebarHeader className="brand">
 				<CSidebarBrand>
-					<div className="c-sidebar-brand-full">
+					<div className="sidebar-brand-full">
 						<img src="/img/icons/48x48.png" height="30" alt="logo" />
 						&nbsp; Bitfocus&nbsp;
 						<span style={{ fontWeight: 'bold' }}>Companion</span>
 					</div>
-					<div className="c-sidebar-brand-minimized">
+					<div className="sidebar-brand-narrow">
 						<img src="/img/icons/48x48.png" height="42px" alt="logo" />
 					</div>
 				</CSidebarBrand>
+			</CSidebarHeader>
+			<CSidebarNav>
+				<CNavItem href="#" onClick={showWizard2}>
+					<FontAwesomeIcon className="nav-icon" icon={faHatWizard} /> Configuration Wizard
+				</CNavItem>
+				<CNavItem target="_new" href="/emulators">
+					<FontAwesomeIcon className="nav-icon" icon={faGamepad} /> Emulator
+				</CNavItem>
 
-				<CSidebarNavItem
-					icon={<FontAwesomeIcon className="c-sidebar-nav-icon" icon={faHatWizard} />}
-					name={'Configuration Wizard'}
-					onClick={showWizard}
-				/>
-				<CSidebarNavItem
-					target="_new"
-					href="/emulators"
-					icon={<FontAwesomeIcon className="c-sidebar-nav-icon" icon={faGamepad} />}
-					name={'Emulator'}
-				/>
+				<CNavItem target="_new" href="/tablet">
+					<FontAwesomeIcon className="nav-icon" icon={faTabletAlt} /> Web buttons
+				</CNavItem>
 
-				<CSidebarNavItem
-					target="_new"
-					href="/tablet"
-					icon={<FontAwesomeIcon className="c-sidebar-nav-icon" icon={faTabletAlt} />}
-					name={'Web buttons'}
-				/>
+				<CNavItem target="_new" href="https://github.com/bitfocus/companion/issues">
+					<FontAwesomeIcon className="nav-icon" icon={faBug} /> Bugs & Features
+				</CNavItem>
+				<CNavItem target="_new" href="https://www.facebook.com/groups/companion/">
+					<FontAwesomeIcon className="nav-icon" icon={faUsers} /> Facebook
+				</CNavItem>
+				<CNavItem target="_new" href="https://bitfocus.io/api/slackinvite">
+					<FontAwesomeIcon className="nav-icon" icon={faComments} /> Slack Chat
+				</CNavItem>
+				<CNavItem target="_new" href="https://donorbox.org/bitfocus-opensource">
+					<FontAwesomeIcon className="nav-icon" icon={faDollarSign} /> Donate
+				</CNavItem>
 
-				<CSidebarNavItem
-					target="_new"
-					href="https://github.com/bitfocus/companion/issues"
-					icon={<FontAwesomeIcon className="c-sidebar-nav-icon" icon={faBug} />}
-					name={'Bugs & Features'}
-				/>
-				<CSidebarNavItem
-					target="_new"
-					href="https://www.facebook.com/groups/companion/"
-					icon={<FontAwesomeIcon className="c-sidebar-nav-icon" icon={faUsers} />}
-					name={'Facebook'}
-				/>
-				<CSidebarNavItem
-					target="_new"
-					href="https://bitfocus.io/api/slackinvite"
-					icon={<FontAwesomeIcon className="c-sidebar-nav-icon" icon={faComments} />}
-					name={'Slack Chat'}
-				/>
-				<CSidebarNavItem
-					target="_new"
-					href="https://donorbox.org/bitfocus-opensource"
-					icon={<FontAwesomeIcon className="c-sidebar-nav-icon" icon={faDollarSign} />}
-					name={'Donate'}
-				/>
-
-				<CSidebarNavItem
-					target="_new"
-					href="/getting-started"
-					icon={<FontAwesomeIcon className="c-sidebar-nav-icon" icon={faInfo} />}
-					name={'Getting Started'}
-				/>
+				<CNavItem target="_new" href="/getting-started">
+					<FontAwesomeIcon className="nav-icon" icon={faInfo} /> Getting Started
+				</CNavItem>
 			</CSidebarNav>
-			<CSidebarMinimizer />
+			<CSidebarHeader className="border-top">
+				<CSidebarToggler className="d-none d-lg-flex" onClick={() => setUnfoldable((val) => !val)} />
+			</CSidebarHeader>
 		</CSidebar>
 	)
 })

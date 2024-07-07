@@ -1,5 +1,5 @@
 import React, { useCallback, useRef } from 'react'
-import { CButton, CInputFile } from '@coreui/react'
+import { CButton, CFormInput } from '@coreui/react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faFolderOpen } from '@fortawesome/free-solid-svg-icons'
 
@@ -16,7 +16,7 @@ interface PNGInputFieldProps {
 }
 
 export function PNGInputField({ min, max, onSelect, onError }: PNGInputFieldProps) {
-	const inputRef = useRef<HTMLElement>(null)
+	const inputRef = useRef<HTMLInputElement>(null)
 
 	const apiIsSupported = !!(window.File && window.FileReader && window.FileList && window.Blob)
 
@@ -53,22 +53,22 @@ export function PNGInputField({ min, max, onSelect, onError }: PNGInputFieldProp
 		}
 	}, [onError])
 	const onChange = useCallback(
-		(e) => {
+		(e: React.ChangeEvent<HTMLInputElement>) => {
 			const newFiles = e.currentTarget.files
 			e.currentTarget.files = null
 			console.log('change', newFiles)
 
 			//check whether browser fully supports all File API
 			if (apiIsSupported) {
-				if (!newFiles.length || newFiles[0].type !== 'image/png') {
+				if (!newFiles || !newFiles.length || newFiles[0].type !== 'image/png') {
 					onError('Sorry. Only proper PNG files are supported.')
 					return
 				}
 
-				var fr = new FileReader()
+				const fr = new FileReader()
 				fr.onload = () => {
 					// file is loaded
-					var img = new Image()
+					const img = new Image()
 
 					img.onload = () => {
 						if (!fr.result) return
@@ -108,7 +108,7 @@ export function PNGInputField({ min, max, onSelect, onError }: PNGInputFieldProp
 			title={apiIsSupported ? undefined : 'Not supported in your browser'}
 		>
 			<FontAwesomeIcon icon={faFolderOpen} />
-			<CInputFile innerRef={inputRef} onChange={onChange} disabled={!apiIsSupported} />
+			<CFormInput type="file" ref={inputRef} onChange={onChange} disabled={!apiIsSupported} />
 		</CButton>
 	)
 }

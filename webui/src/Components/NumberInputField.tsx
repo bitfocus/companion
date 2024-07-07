@@ -1,7 +1,8 @@
 import React, { useEffect, useCallback, useState } from 'react'
-import { CCol, CInput, CRow } from '@coreui/react'
+import { CCol, CFormInput, CFormRange, CRow } from '@coreui/react'
 
 interface NumberInputFieldProps {
+	label?: React.ReactNode
 	required?: boolean
 	min?: number
 	max?: number
@@ -15,6 +16,7 @@ interface NumberInputFieldProps {
 }
 
 export function NumberInputField({
+	label,
 	required,
 	min,
 	max,
@@ -75,7 +77,8 @@ export function NumberInputField({
 
 	// Render the input
 	const input = (
-		<CInput
+		<CFormInput
+			label={label}
 			type="number"
 			disabled={disabled}
 			value={tmpValue ?? value ?? 0}
@@ -95,8 +98,7 @@ export function NumberInputField({
 			<CRow>
 				<CCol sm={12}>{input}</CCol>
 				<CCol sm={12}>
-					<CInput
-						type="range"
+					<CFormRange
 						disabled={disabled}
 						value={tmpValue ?? value ?? 0}
 						min={min}

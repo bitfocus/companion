@@ -3,18 +3,17 @@ import {
 	CButton,
 	CButtonGroup,
 	CCol,
+	CFormSwitch,
 	CNav,
 	CNavItem,
 	CNavLink,
 	CRow,
 	CTabContent,
 	CTabPane,
-	CTabs,
 } from '@coreui/react'
 import { MyErrorBoundary, SocketContext, socketEmitPromise } from '../util.js'
 import dayjs from 'dayjs'
 import sanitizeHtml from 'sanitize-html'
-import CSwitch from '../CSwitch.js'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import {
 	faAdd,
@@ -41,7 +40,7 @@ export const Triggers = observer(function Triggers() {
 
 	const [editItemId, setEditItemId] = useState<string | null>(null)
 	const [tabResetToken, setTabResetToken] = useState(nanoid())
-	const [activeTab, setActiveTab] = useState('placeholder')
+	const [activeTab, setActiveTab] = useState<'placeholder' | 'edit'>('placeholder')
 
 	// Ensure the selected trigger is valid
 	useEffect(() => {
@@ -54,10 +53,10 @@ export const Triggers = observer(function Triggers() {
 		})
 	}, [triggersList])
 
-	const doChangeTab = useCallback((newTab: string) => {
+	const doChangeTab = useCallback((newTab: 'placeholder' | 'edit') => {
 		setActiveTab((oldTab) => {
-			const preserveButtonsTab = newTab === 'variables' && oldTab === 'edit'
-			if (newTab !== 'edit' && oldTab !== newTab && !preserveButtonsTab) {
+			// const preserveButtonsTab =  newTab === 'variables' && oldTab === 'edit'
+			if (newTab !== 'edit' && oldTab !== newTab /*&& !preserveButtonsTab*/) {
 				setEditItemId(null)
 				setTabResetToken(nanoid())
 			}
@@ -114,32 +113,36 @@ export const Triggers = observer(function Triggers() {
 
 			<CCol xs={12} xl={6} className="secondary-panel">
 				<div className="secondary-panel-inner">
-					<CTabs activeTab={activeTab} onActiveTabChange={doChangeTab}>
-						<CNav variant="tabs">
-							{!editItemId && (
-								<CNavItem>
-									<CNavLink data-tab="placeholder">Select a trigger</CNavLink>
-								</CNavItem>
-							)}
-							<CNavItem hidden={!editItemId}>
-								<CNavLink data-tab="edit">
-									<FontAwesomeIcon icon={faCalculator} /> Edit Trigger
+					<CNav variant="tabs" role="tablist">
+						{!editItemId && (
+							<CNavItem>
+								<CNavLink active={activeTab === 'placeholder'} onClick={() => doChangeTab('placeholder')}>
+									Select a trigger
 								</CNavLink>
 							</CNavItem>
-						</CNav>
-						<CTabContent fade={false}>
-							{!editItemId && (
-								<CTabPane data-tab="placeholder">
-									<p>Select a trigger...</p>
-								</CTabPane>
-							)}
-							<CTabPane data-tab="edit">
-								<MyErrorBoundary>
-									{editItemId ? <EditTriggerPanel key={`${editItemId}.${tabResetToken}`} controlId={editItemId} /> : ''}
-								</MyErrorBoundary>
+						)}
+						<CNavItem
+							className={classNames({
+								hidden: !editItemId,
+							})}
+						>
+							<CNavLink active={activeTab === 'edit'} onClick={() => doChangeTab('edit')}>
+								<FontAwesomeIcon icon={faCalculator} /> Edit Trigger
+							</CNavLink>
+						</CNavItem>
+					</CNav>
+					<CTabContent>
+						{!editItemId && (
+							<CTabPane data-tab="placeholder" visible={activeTab === 'placeholder'}>
+								<p>Select a trigger...</p>
 							</CTabPane>
-						</CTabContent>
-					</CTabs>
+						)}
+						<CTabPane data-tab="edit" visible={activeTab === 'edit'}>
+							<MyErrorBoundary>
+								{editItemId ? <EditTriggerPanel key={`${editItemId}.${tabResetToken}`} controlId={editItemId} /> : ''}
+							</MyErrorBoundary>
+						</CTabPane>
+					</CTabContent>
 				</div>
 			</CCol>
 		</CRow>
@@ -156,7 +159,7 @@ const TriggersTable = observer(function TriggersTable({ editItem, selectedContro
 	const { socket, triggersList } = useContext(RootAppStoreContext)
 
 	const moveTrigger = useCallback(
-		(itemId, targetId) => {
+		(itemId: string, targetId: string) => {
 			itemId = itemId + ''
 			targetId = targetId + ''
 
@@ -306,7 +309,7 @@ function TriggersTableRow({ controlId, item, editItem, moveTrigger, isSelected }
 				'connectionlist-selected': isSelected,
 			})}
 		>
-			<td ref={drag} className="td-reorder" style={{ maxWidth: 20 }}>
+			<td ref={drag} className="td-reorder">
 				<FontAwesomeIcon icon={faSort} />
 			</td>
 			<td onClick={doEdit} className="hand">
@@ -325,36 +328,30 @@ function TriggersTableRow({ controlId, item, editItem, moveTrigger, isSelected }
 				{item.lastExecuted ? <small>Last run: {dayjs(item.lastExecuted).format(tableDateFormat)}</small> : ''}
 			</td>
 			<td className="action-buttons">
-				<div style={{ display: 'flex' }}>
-					<div>
-						<CButtonGroup>
-							<CButton size="md" color="white" onClick={doClone} title="Clone" style={{ padding: 3, paddingRight: 6 }}>
-								<FontAwesomeIcon icon={faClone} />
-							</CButton>
-							<CButton size="md" color="gray" onClick={doDelete} title="Delete" style={{ padding: 3, paddingRight: 6 }}>
-								<FontAwesomeIcon icon={faTrash} />
-							</CButton>
-							<CButton
-								style={{ padding: 3, paddingRight: 6 }}
-								color="white"
-								href={`/int/export/triggers/single/${exportId}`}
-								target="_new"
-								disabled={!exportId}
-								title="Export"
-							>
-								<FontAwesomeIcon icon={faDownload} />
-							</CButton>
-						</CButtonGroup>
-					</div>
-					<div style={{ marginTop: 0, marginLeft: 4 }}>
-						<CSwitch
-							color="success"
-							checked={item.enabled}
-							onChange={doEnableDisable}
-							title={item.enabled ? 'Disable trigger' : 'Enable trigger'}
-						/>
-					</div>
-				</div>
+				<CButtonGroup>
+					<CButton color="white" onClick={doClone} title="Clone">
+						<FontAwesomeIcon icon={faClone} />
+					</CButton>
+					<CButton color="gray" onClick={doDelete} title="Delete">
+						<FontAwesomeIcon icon={faTrash} />
+					</CButton>
+					<CButton
+						color="white"
+						href={`/int/export/triggers/single/${exportId}`}
+						target="_new"
+						disabled={!exportId}
+						title="Export"
+					>
+						<FontAwesomeIcon icon={faDownload} />
+					</CButton>
+
+					<CFormSwitch
+						color="success"
+						checked={item.enabled}
+						onChange={doEnableDisable}
+						title={item.enabled ? 'Disable trigger' : 'Enable trigger'}
+					/>
+				</CButtonGroup>
 			</td>
 		</tr>
 	)

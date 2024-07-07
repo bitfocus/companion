@@ -1,4 +1,4 @@
-import { CButton, CRow, CCol, CButtonGroup, CForm, CAlert, CInputGroup, CInputGroupAppend } from '@coreui/react'
+import { CButton, CCol, CButtonGroup, CForm, CAlert, CInputGroup } from '@coreui/react'
 import React, { MutableRefObject, useCallback, useContext, useMemo, useState } from 'react'
 import { socketEmitPromise, SocketContext, PreventDefaultHandler } from '../util.js'
 import {
@@ -34,7 +34,7 @@ export function ButtonStyleConfig({
 
 	const [pngError, setPngError] = useState<string | null>(null)
 	const setPng = useCallback(
-		(data) => {
+		(data: string | null) => {
 			setPngError(null)
 			socketEmitPromise(socket, 'controls:set-style-fields', [
 				controlId,
@@ -99,24 +99,22 @@ export function ButtonStyleConfig({
 	return (
 		<CCol sm={12} className="p-0 mt-0">
 			{pngError && (
-				<CAlert color="warning" closeButton>
+				<CAlert color="warning" dismissible>
 					{pngError}
 				</CAlert>
 			)}
 
-			<CForm onSubmit={PreventDefaultHandler}>
-				<CRow form className="flex-form flex-form-row" style={{ clear: 'both' }}>
-					{style && (
-						<ButtonStyleConfigFields
-							values={style}
-							setValueInner={setValueInner}
-							setPng={setPng}
-							setPngError={setPngError}
-							clearPng={clearPng}
-							mainDialog={mainDialog}
-						/>
-					)}
-				</CRow>
+			<CForm className="flex-form flex-form-row" style={{ clear: 'both' }} onSubmit={PreventDefaultHandler}>
+				{style && (
+					<ButtonStyleConfigFields
+						values={style}
+						setValueInner={setValueInner}
+						setPng={setPng}
+						setPngError={setPngError}
+						clearPng={clearPng}
+						mainDialog={mainDialog}
+					/>
+				)}
 			</CForm>
 		</CCol>
 	)
@@ -155,7 +153,7 @@ export function ButtonStyleConfigFields({
 
 	// this style will be different when you use it in the main dialog compared to in the feedback editor.
 	const specialStyleForButtonEditor = useMemo(
-		() => (mainDialog ? { width: 'calc(100% - 100px)', marginTop: -35, paddingLeft: 4 } : {}),
+		() => (mainDialog ? { width: 'calc(100% - 100px)', paddingLeft: 4 } : {}),
 		[mainDialog]
 	)
 
@@ -197,27 +195,25 @@ export function ButtonStyleConfigFields({
 							isExpression={values.textExpression}
 							style={{ fontWeight: 'bold', fontSize: 18 }}
 						/>
-						<CInputGroupAppend>
-							<CButton
-								color="info"
-								variant="outline"
-								onClick={toggleExpression}
-								title={values.textExpression ? 'Expression mode ' : 'String mode'}
-							>
-								<FontAwesomeIcon icon={values.textExpression ? faDollarSign : faFont} />
-							</CButton>
-						</CInputGroupAppend>
+						<CButton
+							color="info"
+							variant="outline"
+							onClick={toggleExpression}
+							title={values.textExpression ? 'Expression mode ' : 'String mode'}
+						>
+							<FontAwesomeIcon icon={values.textExpression ? faDollarSign : faFont} />
+						</CButton>
 					</CInputGroup>
 				</div>
 			)}
 
-			<div style={{ display: 'block', padding: 4 }}>
-				<div className="flex flex-wrap gap-1 flex-form">
+			<div style={{ display: 'block', padding: '0 4px', margin: 0 }}>
+				<div className="flex flex-wrap gap-1rem flex-form">
 					{showField2('size') && (
 						<div>
 							<div>
-								<label>Font size</label>
 								<DropdownInputField
+									label={'Font size'}
 									choices={FONT_SIZES}
 									setValue={setSizeValue}
 									value={values.size}
@@ -229,25 +225,28 @@ export function ButtonStyleConfigFields({
 						</div>
 					)}
 					<div>
-						<div className="flex gap-1">
+						<div className="flex gap-1rem">
 							{showField2('color') && (
 								<div>
-									<label>Text</label>
-									<ColorInputField setValue={setColorValue} value={values.color} returnType="number" />
+									<ColorInputField label={'Text'} setValue={setColorValue} value={values.color} returnType="number" />
 								</div>
 							)}
 							{showField2('bgcolor') && (
 								<div>
-									<label>BG</label>
-									<ColorInputField setValue={setBackgroundColorValue} value={values.bgcolor} returnType="number" />
+									<ColorInputField
+										label={'BG'}
+										setValue={setBackgroundColorValue}
+										value={values.bgcolor}
+										returnType="number"
+									/>
 								</div>
 							)}
 						</div>
 					</div>
 					{showField2('show_topbar') && (
 						<div>
-							<label>Topbar</label>
 							<DropdownInputField
+								label={'Topbar'}
 								choices={SHOW_HIDE_TOP_BAR}
 								setValue={setShowTopBar}
 								value={values.show_topbar}

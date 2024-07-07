@@ -326,7 +326,7 @@ export interface BackendToClientEventsMap {
 	'bonjour:service:up': (svc: ClientBonjourService) => void
 	'bonjour:service:down': (svc: ClientBonjourService) => void
 
-	cloud_state: (newState: Partial<CloudControllerState>) => void
+	cloud_state: (newState: CloudControllerState) => void
 	cloud_region_state: (id: string, newState: CloudRegionState) => void
 }
 

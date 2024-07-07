@@ -161,7 +161,7 @@ export const WizardModal = forwardRef<WizardModalRef, WizardModalProps>(function
 	}
 
 	return (
-		<CModal show={show} onClose={doClose} className={'wizard'}>
+		<CModal visible={show} onClose={doClose} className={'wizard'}>
 			<CForm onSubmit={doSave} className={'flex-form'}>
 				<CModalHeader>
 					<h2>

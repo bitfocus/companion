@@ -1,6 +1,5 @@
 import React from 'react'
-import { CAlert } from '@coreui/react'
-import CSwitch from '../CSwitch.js'
+import { CAlert, CFormSwitch } from '@coreui/react'
 import type { UserConfigModel } from '@companion-app/shared/Model/UserConfigModel.js'
 import { observer } from 'mobx-react-lite'
 
@@ -26,34 +25,32 @@ export const ExperimentsConfig = observer(function ExperimentsConfig({}: Experim
 			<tr>
 				<td>Use TouchBackend for Drag and Drop</td>
 				<td>
-					<div className="form-check form-check-inline mr-1 float-right">
-						<CSwitch
-							color="success"
-							checked={window.localStorage.getItem('test_touch_backend') === '1'}
-							size={'lg'}
-							onChange={(e) => {
-								window.localStorage.setItem('test_touch_backend', e.currentTarget.checked ? '1' : '0')
-								window.location.reload()
-							}}
-						/>
-					</div>
+					<CFormSwitch
+						className="float-right"
+						color="success"
+						checked={window.localStorage.getItem('test_touch_backend') === '1'}
+						size="xl"
+						onChange={(e) => {
+							window.localStorage.setItem('test_touch_backend', e.currentTarget.checked ? '1' : '0')
+							window.location.reload()
+						}}
+					/>
 				</td>
 				<td>&nbsp;</td>
 			</tr>
 			<tr>
 				<td>Companion Cloud Tab</td>
 				<td>
-					<div className="form-check form-check-inline mr-1 float-right">
-						<CSwitch
-							color="success"
-							checked={window.localStorage.getItem('show_companion_cloud') === '1'}
-							size={'lg'}
-							onChange={(e) => {
-								window.localStorage.setItem('show_companion_cloud', e.currentTarget.checked ? '1' : '0')
-								window.location.reload()
-							}}
-						/>
-					</div>
+					<CFormSwitch
+						className="float-right"
+						color="success"
+						checked={window.localStorage.getItem('show_companion_cloud') === '1'}
+						size="xl"
+						onChange={(e) => {
+							window.localStorage.setItem('show_companion_cloud', e.currentTarget.checked ? '1' : '0')
+							window.location.reload()
+						}}
+					/>
 				</td>
 				<td>&nbsp;</td>
 			</tr>

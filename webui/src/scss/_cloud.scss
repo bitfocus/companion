@@ -1,0 +1,65 @@
+.cloud-auth-form {
+	.row > div {
+		margin-bottom: 1rem;
+	}
+}
+
+.cloud-region-panel {
+	max-width: 1000px;
+
+	.super-secret-key {
+		margin-top: 1em;
+
+		.alert {
+			display: inline-block;
+
+			font-family: 'monospace';
+			font-weight: bold;
+		}
+	}
+
+	.form-label {
+		margin-bottom: 0.1em;
+		padding-left: 0.3em;
+	}
+
+	.callout {
+		margin-top: 0;
+	}
+
+	.cloud-auth-state {
+		margin-bottom: 0.75em;
+
+		.form-control {
+			margin-bottom: 0.5em;
+		}
+	}
+
+	.card-header {
+		font-weight: bold;
+	}
+}
+
+.cloud-region-item {
+	.cloud-region-text {
+		align-content: center;
+		margin-bottom: 0;
+		margin-top: 0.2em;
+		display: flex;
+
+		&.online {
+			color: $success;
+		}
+
+		.form-switch {
+			display: inline-block;
+
+			// align-content: center;
+		}
+	}
+
+	.alert {
+		margin-bottom: 0;
+		margin-top: 0.5rem;
+	}
+}

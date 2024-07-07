@@ -1,8 +1,7 @@
 import React from 'react'
-import { CButton } from '@coreui/react'
+import { CButton, CFormSwitch } from '@coreui/react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faUndo } from '@fortawesome/free-solid-svg-icons'
-import CSwitch from '../CSwitch.js'
 import type { UserConfigModel } from '@companion-app/shared/Model/UserConfigModel.js'
 import { observer } from 'mobx-react-lite'
 
@@ -23,14 +22,13 @@ export const RosstalkConfig = observer(function RosstalkConfig({ config, setValu
 			<tr>
 				<td>RossTalk Listener</td>
 				<td>
-					<div className="form-check form-check-inline mr-1 float-right">
-						<CSwitch
-							color="success"
-							checked={config.rosstalk_enabled}
-							size={'lg'}
-							onChange={(e) => setValue('rosstalk_enabled', e.currentTarget.checked)}
-						/>
-					</div>
+					<CFormSwitch
+						className="float-right"
+						color="success"
+						checked={config.rosstalk_enabled}
+						size="xl"
+						onChange={(e) => setValue('rosstalk_enabled', e.currentTarget.checked)}
+					/>
 				</td>
 				<td>
 					<CButton onClick={() => resetValue('rosstalk_enabled')} title="Reset to default">

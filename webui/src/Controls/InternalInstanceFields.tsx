@@ -6,8 +6,10 @@ import { InternalInputField } from '@companion-app/shared/Model/Options.js'
 import { DropdownChoice } from '@companion-module/base'
 import { RootAppStoreContext } from '../Stores/RootAppStore.js'
 import { observer } from 'mobx-react-lite'
+import { CFormLabel } from '@coreui/react'
 
 export function InternalInstanceField(
+	label: React.ReactNode,
 	option: InternalInputField,
 	isOnControl: boolean,
 	readonly: boolean,
@@ -18,6 +20,7 @@ export function InternalInstanceField(
 		case 'internal:instance_id':
 			return (
 				<InternalInstanceIdDropdown
+					label={label}
 					disabled={readonly}
 					value={value}
 					includeAll={option.includeAll}
@@ -29,6 +32,7 @@ export function InternalInstanceField(
 		case 'internal:page':
 			return (
 				<InternalPageDropdown
+					label={label}
 					disabled={readonly}
 					isOnControl={isOnControl}
 					includeDirection={option.includeDirection}
@@ -40,6 +44,7 @@ export function InternalInstanceField(
 		case 'internal:custom_variable':
 			return (
 				<InternalCustomVariableDropdown
+					label={label}
 					disabled={readonly}
 					value={value}
 					setValue={setValue}
@@ -47,10 +52,11 @@ export function InternalInstanceField(
 				/>
 			)
 		case 'internal:variable':
-			return <InternalVariableDropdown disabled={readonly} value={value} setValue={setValue} />
+			return <InternalVariableDropdown label={label} disabled={readonly} value={value} setValue={setValue} />
 		case 'internal:surface_serial':
 			return (
 				<InternalSurfaceBySerialDropdown
+					label={label}
 					disabled={readonly}
 					isOnControl={isOnControl}
 					value={value}
@@ -62,6 +68,7 @@ export function InternalInstanceField(
 		case 'internal:trigger':
 			return (
 				<InternalTriggerDropdown
+					label={label}
 					disabled={readonly}
 					isOnControl={isOnControl}
 					value={value}
@@ -70,7 +77,7 @@ export function InternalInstanceField(
 				/>
 			)
 		case 'internal:time':
-			return <InternalTimePicker disabled={readonly} value={value} setValue={setValue} />
+			return <InternalTimePicker label={label} disabled={readonly} value={value} setValue={setValue} />
 		default:
 			// Use fallback
 			return null
@@ -78,6 +85,7 @@ export function InternalInstanceField(
 }
 
 interface InternalInstanceIdDropdownProps {
+	label: React.ReactNode
 	includeAll: boolean | undefined
 	value: any
 	setValue: (value: any) => void
@@ -87,6 +95,7 @@ interface InternalInstanceIdDropdownProps {
 }
 
 function InternalInstanceIdDropdown({
+	label,
 	includeAll,
 	value,
 	setValue,
@@ -111,11 +120,19 @@ function InternalInstanceIdDropdown({
 	}, [context, includeAll, filterActionsRecorder])
 
 	return (
-		<DropdownInputField disabled={disabled} value={value} choices={choices} multiple={!!multiple} setValue={setValue} />
+		<DropdownInputField
+			label={label}
+			disabled={disabled}
+			value={value}
+			choices={choices}
+			multiple={!!multiple}
+			setValue={setValue}
+		/>
 	)
 }
 
 interface InternalPageDropdownProps {
+	label: React.ReactNode
 	isOnControl: boolean
 	includeStartup: boolean | undefined
 	includeDirection: boolean | undefined
@@ -124,7 +141,8 @@ interface InternalPageDropdownProps {
 	disabled: boolean
 }
 
-const InternalPageDropdown = observer(function InternalPageDropdown({
+export const InternalPageDropdown = observer(function InternalPageDropdown({
+	label,
 	isOnControl,
 	includeStartup,
 	includeDirection,
@@ -153,10 +171,20 @@ const InternalPageDropdown = observer(function InternalPageDropdown({
 		return choices
 	}, [pages, isOnControl, includeStartup, includeDirection])
 
-	return <DropdownInputField disabled={disabled} value={value} choices={choices} multiple={false} setValue={setValue} />
+	return (
+		<DropdownInputField
+			label={label}
+			disabled={disabled}
+			value={value}
+			choices={choices}
+			multiple={false}
+			setValue={setValue}
+		/>
+	)
 })
 
 interface InternalCustomVariableDropdownProps {
+	label: React.ReactNode
 	value: any
 	setValue: (value: any) => void
 	includeNone: boolean | undefined
@@ -164,6 +192,7 @@ interface InternalCustomVariableDropdownProps {
 }
 
 export const InternalCustomVariableDropdown = observer(function InternalCustomVariableDropdown({
+	label,
 	value,
 	setValue,
 	includeNone,
@@ -193,6 +222,7 @@ export const InternalCustomVariableDropdown = observer(function InternalCustomVa
 
 	return (
 		<DropdownInputField
+			label={label}
 			disabled={disabled}
 			value={value ?? ''}
 			choices={choices}
@@ -203,12 +233,14 @@ export const InternalCustomVariableDropdown = observer(function InternalCustomVa
 })
 
 interface InternalVariableDropdownProps {
+	label: React.ReactNode
 	value: any
 	setValue: (value: any) => void
 	disabled: boolean
 }
 
 const InternalVariableDropdown = observer(function InternalVariableDropdown({
+	label,
 	value,
 	setValue,
 	disabled,
@@ -234,6 +266,7 @@ const InternalVariableDropdown = observer(function InternalVariableDropdown({
 
 	return (
 		<DropdownInputField
+			label={label}
 			disabled={disabled}
 			value={value}
 			choices={choices}
@@ -245,6 +278,7 @@ const InternalVariableDropdown = observer(function InternalVariableDropdown({
 })
 
 interface InternalSurfaceBySerialDropdownProps {
+	label: React.ReactNode
 	isOnControl: boolean
 	value: any
 	setValue: (value: any) => void
@@ -254,6 +288,7 @@ interface InternalSurfaceBySerialDropdownProps {
 }
 
 const InternalSurfaceBySerialDropdown = observer(function InternalSurfaceBySerialDropdown({
+	label,
 	isOnControl,
 	value,
 	setValue,
@@ -294,10 +329,20 @@ const InternalSurfaceBySerialDropdown = observer(function InternalSurfaceBySeria
 		return choices
 	}, [surfaces, isOnControl, includeSelf, useRawSurfaces])
 
-	return <DropdownInputField disabled={disabled} value={value} choices={choices} multiple={false} setValue={setValue} />
+	return (
+		<DropdownInputField
+			label={label}
+			disabled={disabled}
+			value={value}
+			choices={choices}
+			multiple={false}
+			setValue={setValue}
+		/>
+	)
 })
 
 interface InternalTriggerDropdownProps {
+	label: React.ReactNode
 	isOnControl: boolean
 	value: any
 	setValue: (value: any) => void
@@ -306,6 +351,7 @@ interface InternalTriggerDropdownProps {
 }
 
 const InternalTriggerDropdown = observer(function InternalTriggerDropdown({
+	label,
 	isOnControl,
 	value,
 	setValue,
@@ -329,26 +375,39 @@ const InternalTriggerDropdown = observer(function InternalTriggerDropdown({
 		return choices
 	}, [triggersList, isOnControl, includeSelf])
 
-	return <DropdownInputField disabled={disabled} value={value} choices={choices} multiple={false} setValue={setValue} />
+	return (
+		<DropdownInputField
+			label={label}
+			disabled={disabled}
+			value={value}
+			choices={choices}
+			multiple={false}
+			setValue={setValue}
+		/>
+	)
 })
 
 interface InternalTimePickerProps {
+	label: React.ReactNode
 	value: any
 	setValue: (value: any) => void
 	disabled: boolean
 }
 
-function InternalTimePicker({ value, setValue, disabled }: InternalTimePickerProps) {
+function InternalTimePicker({ label, value, setValue, disabled }: InternalTimePickerProps) {
 	return (
-		<TimePicker
-			disabled={disabled}
-			format="HH:mm:ss"
-			maxDetail="second"
-			required
-			value={value}
-			onChange={setValue}
-			className={''}
-			openClockOnFocus={false}
-		/>
+		<>
+			{label ? <CFormLabel>{label}</CFormLabel> : null}
+			<TimePicker
+				disabled={disabled}
+				format="HH:mm:ss"
+				maxDetail="second"
+				required
+				value={value}
+				onChange={setValue}
+				className={''}
+				openClockOnFocus={false}
+			/>
+		</>
 	)
 }

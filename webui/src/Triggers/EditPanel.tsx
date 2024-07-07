@@ -1,4 +1,4 @@
-import { CButton, CCol, CForm, CInputGroup, CInputGroupAppend, CLabel, CRow } from '@coreui/react'
+import { CButton, CCol, CForm, CInputGroup, CFormLabel } from '@coreui/react'
 import React, { useCallback, useContext, useEffect, useRef, useState } from 'react'
 import { nanoid } from 'nanoid'
 import { GenericConfirmModal, GenericConfirmModalRef } from '../Components/GenericConfirmModal.js'
@@ -207,21 +207,19 @@ function TriggerConfig({ controlId, options, hotPressDown }: TriggerConfigProps)
 	return (
 		<CCol sm={12} className="p-0">
 			<CForm onSubmit={PreventDefaultHandler}>
-				<CRow form className="flex-form">
+				<CForm className="row flex-form">
 					<CCol xs={12}>
-						<CLabel>Name</CLabel>
+						<CFormLabel>Name</CFormLabel>
 						<p>
 							<CInputGroup>
 								<TextInputField setValue={setName} value={options.name} />
-								<CInputGroupAppend>
-									<CButton color="warning" hidden={!options} onMouseDown={hotPressDown}>
-										Test actions
-									</CButton>
-								</CInputGroupAppend>
+								<CButton color="warning" hidden={!options} onMouseDown={hotPressDown}>
+									Test actions
+								</CButton>
 							</CInputGroup>
 						</p>
 					</CCol>
-				</CRow>
+				</CForm>
 			</CForm>
 		</CCol>
 	)

@@ -3,10 +3,8 @@ import {
 	CButton,
 	CCol,
 	CForm,
-	CFormGroup,
-	CInput,
-	CLabel,
-	CModal,
+	CFormInput,
+	CFormLabel,
 	CModalBody,
 	CModalFooter,
 	CModalHeader,
@@ -28,6 +26,7 @@ import { PagesStoreModel } from '../Stores/PagesStore.js'
 import { observer } from 'mobx-react-lite'
 import { ButtonGridZoomControl } from './ButtonGridZoomSlider.js'
 import { GridZoomController } from './GridZoom.js'
+import { CModalExt } from '../Components/CModalExt.js'
 
 interface ButtonsGridPanelProps {
 	pageNumber: number
@@ -117,7 +116,7 @@ export const ButtonsGridPanel = observer(function ButtonsPage({
 	const gridSize = userConfig.properties?.gridSize
 
 	const doGrow = useCallback(
-		(direction, amount) => {
+		(direction: 'left' | 'right' | 'top' | 'bottom', amount: number) => {
 			if (amount <= 0 || !gridSize) return
 
 			switch (direction) {
@@ -168,7 +167,7 @@ export const ButtonsGridPanel = observer(function ButtonsPage({
 					and what they should do when you press or click on them.
 				</p>
 
-				<CRow innerRef={setSizeRef}>
+				<CRow ref={setSizeRef}>
 					<CCol sm={12}>
 						<ButtonGridHeader pageNumber={pageNumber} changePage={changePage2} setPage={setPage}>
 							<CButton color="light" onClick={showExportModal} title="Export Page" className="btn-right">
@@ -283,34 +282,40 @@ const EditPagePropertiesModal = forwardRef<EditPagePropertiesModalRef, EditPageP
 			[]
 		)
 
-		const onNameChange = useCallback((e) => {
+		const onNameChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
 			setName(e.target.value)
 		}, [])
 
 		return (
-			<CModal show={show} onClose={doClose} onClosed={onClosed} onOpened={buttonFocus}>
+			<CModalExt visible={show} onClose={doClose} onClosed={onClosed} onOpened={buttonFocus}>
 				<CModalHeader closeButton>
 					<h5>Configure Page {pageNumber}</h5>
 				</CModalHeader>
 				<CModalBody>
 					<CForm onSubmit={doAction}>
-						<CFormGroup>
-							<CLabel>Name</CLabel>
-							<CInput type="text" value={pageName || ''} onChange={onNameChange} />
-						</CFormGroup>
-
-						<CAlert color="info">You can use resize the grid in the Settings tab</CAlert>
+						<CRow className="mb-3">
+							<CFormLabel htmlFor="colFormName" className="col-sm-3 col-form-label col-form-label-sm">
+								Name
+							</CFormLabel>
+							<CCol sm={9}>
+								<CFormInput name="colFormName" type="text" value={pageName || ''} onChange={onNameChange} />
+							</CCol>
+							<CCol sm={12}>
+								<br />
+								<CAlert color="info">You can use resize the grid in the Settings tab</CAlert>
+							</CCol>
+						</CRow>
 					</CForm>
 				</CModalBody>
 				<CModalFooter>
 					<CButton color="secondary" onClick={doClose}>
 						Cancel
 					</CButton>
-					<CButton innerRef={buttonRef} color="primary" onClick={doAction}>
+					<CButton ref={buttonRef} color="primary" onClick={doAction}>
 						Save
 					</CButton>
 				</CModalFooter>
-			</CModal>
+			</CModalExt>
 		)
 	}
 )

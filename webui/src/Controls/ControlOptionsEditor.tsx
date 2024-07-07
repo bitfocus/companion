@@ -1,10 +1,9 @@
-import { CLabel } from '@coreui/react'
+import { CFormLabel, CFormSwitch } from '@coreui/react'
 import React, { MutableRefObject, useCallback, useContext, useRef } from 'react'
 import { socketEmitPromise, SocketContext } from '../util.js'
 import { GenericConfirmModal, GenericConfirmModalRef } from '../Components/GenericConfirmModal.js'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faQuestionCircle } from '@fortawesome/free-solid-svg-icons'
-import CSwitch from '../CSwitch.js'
 
 interface ControlOptionsEditorProps {
 	controlId: string
@@ -34,8 +33,11 @@ export function ControlOptionsEditor({
 		[socket, controlId, configRef]
 	)
 
-	const setStepAutoProgressValue = useCallback((val) => setValueInner('stepAutoProgress', val), [setValueInner])
-	const setRelativeDelayValue = useCallback((val) => setValueInner('relativeDelay', val), [setValueInner])
+	const setStepAutoProgressValue = useCallback(
+		(val: boolean) => setValueInner('stepAutoProgress', val),
+		[setValueInner]
+	)
+	const setRelativeDelayValue = useCallback((val: boolean) => setValueInner('relativeDelay', val), [setValueInner])
 	const setRotaryActions = useCallback(
 		(val: boolean) => {
 			if (!val && confirmRef.current && configRef.current && configRef.current.options.rotaryActions === true) {
@@ -71,61 +73,61 @@ export function ControlOptionsEditor({
 		<>
 			{' '}
 			<GenericConfirmModal ref={confirmRef} />
-			<div className="flex w-full gap-2 flex-form">
+			<div className="flex w-full gap-2rem flex-form">
 				<div>
-					<CLabel>
-						Relative Delays &nbsp;{' '}
+					<CFormLabel>
+						Relative Delays{' '}
 						<FontAwesomeIcon
 							icon={faQuestionCircle}
 							title="Delay times will be relative to the previous action, rather than all delays being relative to the button press."
 						/>
-					</CLabel>
-					<p>
-						<CSwitch
-							color="success"
-							checked={options.relativeDelay}
-							onChange={() => {
-								setRelativeDelayValue(!options.relativeDelay)
-							}}
-						/>
-					</p>
+					</CFormLabel>
+					<br />
+					<CFormSwitch
+						size="xl"
+						color="success"
+						checked={options.relativeDelay}
+						onChange={() => {
+							setRelativeDelayValue(!options.relativeDelay)
+						}}
+					/>
 				</div>
 
 				{controlType === 'button' && (
 					<>
 						<div>
-							<label>
+							<CFormLabel>
 								Progress &nbsp;
 								<FontAwesomeIcon
 									icon={faQuestionCircle}
 									title="When this button has multiple steps, progress to the next step when the button is released"
 								/>
-							</label>
-							<p>
-								<CSwitch
-									color="success"
-									checked={options.stepAutoProgress}
-									onChange={() => {
-										setStepAutoProgressValue(!options.stepAutoProgress)
-									}}
-								/>
-							</p>
+							</CFormLabel>
+							<br />
+							<CFormSwitch
+								size="xl"
+								color="success"
+								checked={options.stepAutoProgress}
+								onChange={() => {
+									setStepAutoProgressValue(!options.stepAutoProgress)
+								}}
+							/>
 						</div>
 
 						<div>
-							<label>
+							<CFormLabel>
 								Rotary Actions &nbsp;
 								<FontAwesomeIcon icon={faQuestionCircle} title="Make this button compatible with rotation events" />
-							</label>
-							<p>
-								<CSwitch
-									color="success"
-									checked={options.rotaryActions}
-									onChange={() => {
-										setRotaryActions(!options.rotaryActions)
-									}}
-								/>
-							</p>
+							</CFormLabel>
+							<br />
+							<CFormSwitch
+								size="xl"
+								color="success"
+								checked={options.rotaryActions}
+								onChange={() => {
+									setRotaryActions(!options.rotaryActions)
+								}}
+							/>
 						</div>
 					</>
 				)}

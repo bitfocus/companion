@@ -1,6 +1,6 @@
 import React, { useCallback, useContext, useEffect, useState, useRef, useMemo } from 'react'
 import { socketEmitPromise, PreventDefaultHandler } from '../../util.js'
-import { CButton, CButtonGroup, CCol, CRow, CForm, CLabel } from '@coreui/react'
+import { CButton, CButtonGroup, CCol, CRow, CForm, CFormLabel } from '@coreui/react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faHome } from '@fortawesome/free-solid-svg-icons'
 import { DropdownInputField } from '../../Components/index.js'
@@ -28,7 +28,7 @@ export const ButtonPicker = observer(function ButtonPicker({ selectButton }: But
 	const [selectedStep, setSelectedStep] = useState<string | null>(null)
 	const [selectedSet, setSelectedSet] = useState<string | null>(null)
 
-	const buttonClick = useCallback((location, pressed) => {
+	const buttonClick = useCallback((location: ControlLocation, pressed: boolean) => {
 		if (pressed) setSelectedLocation(location)
 	}, [])
 
@@ -201,9 +201,9 @@ export const ButtonPicker = observer(function ButtonPicker({ selectButton }: But
 			</div>
 			<div>
 				<CForm className="flex-form" onSubmit={PreventDefaultHandler}>
-					<CRow form>
+					<CRow>
 						<CCol sm={10} xs={9} hidden={actionStepOptions.length <= 1}>
-							<CLabel>Step</CLabel>
+							<CFormLabel>Step</CFormLabel>
 
 							<DropdownInputField
 								choices={actionStepOptions}
@@ -214,7 +214,7 @@ export const ButtonPicker = observer(function ButtonPicker({ selectButton }: But
 							/>
 						</CCol>
 						<CCol sm={10} xs={9} hidden={actionSetOptions.length === 0}>
-							<CLabel>Action Group</CLabel>
+							<CFormLabel>Action Group</CFormLabel>
 
 							<DropdownInputField
 								choices={actionSetOptions}

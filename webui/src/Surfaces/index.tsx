@@ -45,7 +45,7 @@ export const SurfacesPage = observer(function SurfacesPage() {
 	}, [socket])
 
 	const deleteEmulator = useCallback(
-		(surfaceId) => {
+		(surfaceId: string) => {
 			confirmRef?.current?.show('Remove Emulator', 'Are you sure?', 'Remove', () => {
 				socketEmitPromise(socket, 'surfaces:emulator-remove', [surfaceId]).catch((err) => {
 					console.error('Emulator remove failed', err)
@@ -60,7 +60,7 @@ export const SurfacesPage = observer(function SurfacesPage() {
 	}, [socket])
 
 	const deleteGroup = useCallback(
-		(groupId) => {
+		(groupId: string) => {
 			confirmRef?.current?.show('Remove Group', 'Are you sure?', 'Remove', () => {
 				socketEmitPromise(socket, 'surfaces:group-remove', [groupId]).catch((err) => {
 					console.error('Group remove failed', err)
@@ -79,7 +79,7 @@ export const SurfacesPage = observer(function SurfacesPage() {
 	}, [])
 
 	const forgetSurface = useCallback(
-		(surfaceId) => {
+		(surfaceId: string) => {
 			confirmRef.current?.show(
 				'Forget Surface',
 				'Are you sure you want to forget this surface? Any settings will be lost',
@@ -95,7 +95,7 @@ export const SurfacesPage = observer(function SurfacesPage() {
 	)
 
 	const updateName = useCallback(
-		(surfaceId, name) => {
+		(surfaceId: string, name: string) => {
 			socketEmitPromise(socket, 'surfaces:set-name', [surfaceId, name]).catch((err) => {
 				console.error('Update name failed', err)
 			})
@@ -221,7 +221,7 @@ function ManualGroupRow({
 }: ManualGroupRowProps) {
 	const configureGroup2 = useCallback(() => configureGroup(group.id), [configureGroup, group.id])
 	const deleteGroup2 = useCallback(() => deleteGroup(group.id), [deleteGroup, group.id])
-	const updateName2 = useCallback((val) => updateName(group.id, val), [updateName, group.id])
+	const updateName2 = useCallback((val: string) => updateName(group.id, val), [updateName, group.id])
 
 	return (
 		<>
@@ -280,7 +280,7 @@ function SurfaceRow({
 	forgetSurface,
 	noBorder,
 }: SurfaceRowProps) {
-	const updateName2 = useCallback((val) => updateName(surface.id, val), [updateName, surface.id])
+	const updateName2 = useCallback((val: string) => updateName(surface.id, val), [updateName, surface.id])
 	const configureSurface2 = useCallback(() => configureSurface(surface.id), [configureSurface, surface.id])
 	const deleteEmulator2 = useCallback(() => deleteEmulator(surface.id), [deleteEmulator, surface.id])
 	const forgetSurface2 = useCallback(() => forgetSurface(surface.id), [forgetSurface, surface.id])

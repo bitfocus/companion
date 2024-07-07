@@ -76,11 +76,6 @@
 	}
 }
 
-.td-reorder {
-	cursor: ns-resize;
-	background-color: #f7f7f7;
-}
-
 .variables-panel {
 	margin-right: -0.5rem;
 	.variables-table-filter {
@@ -127,10 +122,7 @@
 	margin: 0 0 1rem 0;
 }
 
-.connections-panel {
-	.action-buttons {
-		.btn-primary.disabled {
-			opacity: 0.5;
-		}
-	}
+.connection-enabled-switch {
+	// padding-left: 0;
+	padding-top: 0.25rem;
 }

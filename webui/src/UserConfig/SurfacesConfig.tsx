@@ -1,8 +1,7 @@
 import React from 'react'
-import { CButton } from '@coreui/react'
+import { CButton, CFormSwitch } from '@coreui/react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faUndo } from '@fortawesome/free-solid-svg-icons'
-import CSwitch from '../CSwitch.js'
 import type { UserConfigModel } from '@companion-app/shared/Model/UserConfigModel.js'
 import { observer } from 'mobx-react-lite'
 
@@ -23,14 +22,13 @@ export const SurfacesConfig = observer(function SurfacesConfig({ config, setValu
 			<tr>
 				<td>Watch for new USB Devices</td>
 				<td>
-					<div className="form-check form-check-inline mr-1 float-right">
-						<CSwitch
-							color="success"
-							checked={config.usb_hotplug}
-							size={'lg'}
-							onChange={(e) => setValue('usb_hotplug', e.currentTarget.checked)}
-						/>
-					</div>
+					<CFormSwitch
+						className="float-right"
+						color="success"
+						checked={config.usb_hotplug}
+						size="xl"
+						onChange={(e) => setValue('usb_hotplug', e.currentTarget.checked)}
+					/>
 				</td>
 				<td>
 					<CButton onClick={() => resetValue('usb_hotplug')} title="Reset to default">
@@ -47,14 +45,13 @@ export const SurfacesConfig = observer(function SurfacesConfig({ config, setValu
 					<em>(Requires Companion restart)</em>
 				</td>
 				<td>
-					<div className="form-check form-check-inline mr-1 float-right">
-						<CSwitch
-							color="success"
-							checked={!config.elgato_plugin_enable}
-							size={'lg'}
-							onChange={(e) => setValue('elgato_plugin_enable', !e.currentTarget.checked)}
-						/>
-					</div>
+					<CFormSwitch
+						className="float-right"
+						color="success"
+						checked={!config.elgato_plugin_enable}
+						size="xl"
+						onChange={(e) => setValue('elgato_plugin_enable', !e.currentTarget.checked)}
+					/>
 				</td>
 				<td>
 					<CButton onClick={() => resetValue('elgato_plugin_enable')} title="Reset to default">
@@ -69,14 +66,13 @@ export const SurfacesConfig = observer(function SurfacesConfig({ config, setValu
 					<em>(Requires Companion restart)</em>
 				</td>
 				<td>
-					<div className="form-check form-check-inline mr-1 float-right">
-						<CSwitch
-							color="success"
-							checked={config.xkeys_enable}
-							size={'lg'}
-							onChange={(e) => setValue('xkeys_enable', e.currentTarget.checked)}
-						/>
-					</div>
+					<CFormSwitch
+						className="float-right"
+						color="success"
+						checked={config.xkeys_enable}
+						size="xl"
+						onChange={(e) => setValue('xkeys_enable', e.currentTarget.checked)}
+					/>
 				</td>
 				<td>
 					<CButton onClick={() => resetValue('xkeys_enable')} title="Reset to default">
@@ -91,14 +87,13 @@ export const SurfacesConfig = observer(function SurfacesConfig({ config, setValu
 					<em>(Requires Companion restart)</em>
 				</td>
 				<td>
-					<div className="form-check form-check-inline mr-1 float-right">
-						<CSwitch
-							color="success"
-							checked={config.xkeys_legacy_layout}
-							size={'lg'}
-							onChange={(e) => setValue('xkeys_legacy_layout', e.currentTarget.checked)}
-						/>
-					</div>
+					<CFormSwitch
+						className="float-right"
+						color="success"
+						checked={config.xkeys_legacy_layout}
+						size="xl"
+						onChange={(e) => setValue('xkeys_legacy_layout', e.currentTarget.checked)}
+					/>
 				</td>
 				<td>
 					<CButton onClick={() => resetValue('xkeys_legacy_layout')} title="Reset to default">
@@ -113,14 +108,13 @@ export const SurfacesConfig = observer(function SurfacesConfig({ config, setValu
 					<em>(Requires Companion restart)</em>
 				</td>
 				<td>
-					<div className="form-check form-check-inline mr-1 float-right">
-						<CSwitch
-							color="success"
-							checked={config.loupedeck_enable}
-							size={'lg'}
-							onChange={(e) => setValue('loupedeck_enable', e.currentTarget.checked)}
-						/>
-					</div>
+					<CFormSwitch
+						className="float-right"
+						color="success"
+						checked={config.loupedeck_enable}
+						size="xl"
+						onChange={(e) => setValue('loupedeck_enable', e.currentTarget.checked)}
+					/>
 				</td>
 				<td>
 					<CButton onClick={() => resetValue('loupedeck_enable')} title="Reset to default">
@@ -135,14 +129,13 @@ export const SurfacesConfig = observer(function SurfacesConfig({ config, setValu
 					<em>(Requires Companion restart)</em>
 				</td>
 				<td>
-					<div className="form-check form-check-inline mr-1 float-right">
-						<CSwitch
-							color="success"
-							checked={config.contour_shuttle_enable}
-							size={'lg'}
-							onChange={(e) => setValue('contour_shuttle_enable', e.currentTarget.checked)}
-						/>
-					</div>
+					<CFormSwitch
+						className="float-right"
+						color="success"
+						checked={config.contour_shuttle_enable}
+						size="xl"
+						onChange={(e) => setValue('contour_shuttle_enable', e.currentTarget.checked)}
+					/>
 				</td>
 				<td>
 					<CButton onClick={() => resetValue('contour_shuttle_enable')} title="Reset to default">

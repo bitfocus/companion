@@ -1,5 +1,5 @@
 import React from 'react'
-import { CButton, CInput } from '@coreui/react'
+import { CButton, CFormInput } from '@coreui/react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faUndo } from '@fortawesome/free-solid-svg-icons'
 import type { UserConfigModel } from '@companion-app/shared/Model/UserConfigModel.js'
@@ -25,8 +25,8 @@ export const CompanionConfig = observer(function CompanionConfig({
 			</tr>
 			<tr>
 				<td>
-					<div className="form-check form-check-inline mr-1">
-						<CInput
+					<div className="mr-1">
+						<CFormInput
 							type="text"
 							value={config.installName}
 							onChange={(e) => setValue('installName', e.currentTarget.value)}

@@ -8,10 +8,10 @@ If you hold down the SHIFT key on your keyboard, you can trigger a button direct
 
 
 Several actions exist for rearranging your buttons, **Copy**, **Move**,
-**Swap**, or *Delete**.  First click on the desired action, then click on the
-*button you want to apply that action to. Finally (in the case of the `Copy`,
-*`Swap` and `Move` actions) click on the destination button.  Alternatively, use
-*the standard keyboard shortcuts to perform these operations.
+**Swap**, or **Delete**.  First click on the desired action, then click on the
+button you want to apply that action to. Finally (in the case of the `Copy`,
+`Swap` and `Move` actions) click on the destination button.  Alternatively, use
+the standard keyboard shortcuts to perform these operations.
 
 
 There are also two buttons for resetting the page:

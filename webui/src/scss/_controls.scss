@@ -1,19 +1,19 @@
-input[type='checkbox'] {
-	-webkit-appearance: none;
-	width: 22px;
-	height: 22px;
-	background: white;
-	border-radius: 4px;
-	border: 1px solid #999;
+.form-check:not(.form-switch) {
+	input[type='checkbox'] {
+		-webkit-appearance: none;
+		width: 22px;
+		height: 22px;
+		background: white;
+		border-radius: 4px;
+		border: 1px solid #999;
+	}
 
-	margin-left: 0.3em !important;
-}
-
-input[type='checkbox']:checked {
-	background: 0 0 url('/img/check.png') no-repeat;
-}
-input[type='checkbox']:disabled {
-	background: #eee;
+	input[type='checkbox']:checked {
+		background: 0 0 url('/img/check.png') no-repeat;
+	}
+	input[type='checkbox']:disabled {
+		background: #eee;
+	}
 }
 
 label.disabled {

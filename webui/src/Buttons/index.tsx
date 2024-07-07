@@ -1,4 +1,4 @@
-import { CCol, CNav, CNavItem, CNavLink, CRow, CTabContent, CTabPane, CTabs } from '@coreui/react'
+import { CCol, CNav, CNavItem, CNavLink, CRow, CTabContent, CTabPane } from '@coreui/react'
 import { faCalculator, faDollarSign, faGift, faVideoCamera } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { nanoid } from 'nanoid'
@@ -14,6 +14,7 @@ import { formatLocation } from '@companion-app/shared/ControlId.js'
 import { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import { observer } from 'mobx-react-lite'
 import { RootAppStoreContext } from '../Stores/RootAppStore.js'
+import classNames from 'classnames'
 import { useGridZoom } from './GridZoom.js'
 
 interface ButtonsPageProps {
@@ -32,7 +33,7 @@ export const ButtonsPage = observer(function ButtonsPage({ hotPress }: ButtonsPa
 	const [pageNumber, setPageNumber] = useState(1)
 	const [copyFromButton, setCopyFromButton] = useState<[ControlLocation, string] | null>(null)
 
-	const doChangeTab = useCallback((newTab) => {
+	const doChangeTab = useCallback((newTab: string) => {
 		setActiveTab((oldTab) => {
 			const preserveButtonsTab = newTab === 'variables' && oldTab === 'edit'
 			if (newTab !== 'edit' && oldTab !== newTab && !preserveButtonsTab) {
@@ -44,7 +45,7 @@ export const ButtonsPage = observer(function ButtonsPage({ hotPress }: ButtonsPa
 	}, [])
 
 	const doButtonGridClick = useCallback(
-		(location, isDown) => {
+		(location: ControlLocation, isDown: boolean) => {
 			if (hotPress) {
 				socketEmitPromise(socket, 'controls:hot-press', [location, isDown, 'grid']).catch((e) =>
 					console.error(`Hot press failed: ${e}`)
@@ -65,8 +66,11 @@ export const ButtonsPage = observer(function ButtonsPage({ hotPress }: ButtonsPa
 	const gridSize = userConfig.properties?.gridSize
 
 	const handleKeyDownInButtons = useCallback(
-		(e) => {
+		(e: React.KeyboardEvent) => {
 			const isControlOrCommandCombo = (e.ctrlKey || e.metaKey) && !e.altKey
+
+			// e.target is the actual element where the event happened, e.currentTarget is the element where the event listener is attached
+			const targetElement = e.target as HTMLElement
 
 			if (isControlOrCommandCombo && e.key === '=') {
 				e.preventDefault()
@@ -77,7 +81,7 @@ export const ButtonsPage = observer(function ButtonsPage({ hotPress }: ButtonsPa
 			} else if (isControlOrCommandCombo && e.key === '0') {
 				e.preventDefault()
 				gridZoomController.zoomReset()
-			} else if (e.target.tagName !== 'INPUT' && e.target.tagName !== 'TEXTAREA') {
+			} else if (targetElement.tagName !== 'INPUT' && targetElement.tagName !== 'TEXTAREA') {
 				switch (e.key) {
 					case 'ArrowDown':
 						setSelectedButton((selectedButton) => {
@@ -230,59 +234,61 @@ export const ButtonsPage = observer(function ButtonsPage({ hotPress }: ButtonsPa
 
 			<CCol xs={12} xl={6} className="secondary-panel">
 				<div className="secondary-panel-inner">
-					<CTabs activeTab={activeTab} onActiveTabChange={doChangeTab}>
-						<CNav variant="tabs">
-							<CNavItem hidden={!selectedButton}>
-								<CNavLink data-tab="edit">
-									<FontAwesomeIcon icon={faCalculator} /> Edit Button{' '}
-									{selectedButton ? `${formatLocation(selectedButton)}` : '?'}
-								</CNavLink>
-							</CNavItem>
-							<CNavItem>
-								<CNavLink data-tab="presets">
-									<FontAwesomeIcon icon={faGift} /> Presets
-								</CNavLink>
-							</CNavItem>
-							<CNavItem>
-								<CNavLink data-tab="variables">
-									<FontAwesomeIcon icon={faDollarSign} /> Variables
-								</CNavLink>
-							</CNavItem>
-							<CNavItem>
-								<CNavLink data-tab="action-recorder">
-									<FontAwesomeIcon icon={faVideoCamera} /> Recorder
-								</CNavLink>
-							</CNavItem>
-						</CNav>
-						<CTabContent fade={false}>
-							<CTabPane data-tab="edit">
-								<MyErrorBoundary>
-									{selectedButton && (
-										<EditButton
-											key={`${formatLocation(selectedButton)}-${tabResetToken}`}
-											location={selectedButton}
-											onKeyUp={handleKeyDownInButtons}
-										/>
-									)}
-								</MyErrorBoundary>
-							</CTabPane>
-							<CTabPane data-tab="presets">
-								<MyErrorBoundary>
-									<InstancePresets resetToken={tabResetToken} />
-								</MyErrorBoundary>
-							</CTabPane>
-							<CTabPane data-tab="variables">
-								<MyErrorBoundary>
-									<ConnectionVariables resetToken={tabResetToken} />
-								</MyErrorBoundary>
-							</CTabPane>
-							<CTabPane data-tab="action-recorder">
-								<MyErrorBoundary>
-									<ActionRecorder key={tabResetToken} />
-								</MyErrorBoundary>
-							</CTabPane>
-						</CTabContent>
-					</CTabs>
+					<CNav variant="tabs">
+						<CNavItem
+							className={classNames({
+								hidden: !selectedButton,
+							})}
+						>
+							<CNavLink active={activeTab === 'edit'} onClick={() => doChangeTab('edit')}>
+								<FontAwesomeIcon icon={faCalculator} /> Edit Button{' '}
+								{selectedButton ? `${formatLocation(selectedButton)}` : '?'}
+							</CNavLink>
+						</CNavItem>
+						<CNavItem>
+							<CNavLink active={activeTab === 'presets'} onClick={() => doChangeTab('presets')}>
+								<FontAwesomeIcon icon={faGift} /> Presets
+							</CNavLink>
+						</CNavItem>
+						<CNavItem>
+							<CNavLink active={activeTab === 'variables'} onClick={() => doChangeTab('variables')}>
+								<FontAwesomeIcon icon={faDollarSign} /> Variables
+							</CNavLink>
+						</CNavItem>
+						<CNavItem>
+							<CNavLink active={activeTab === 'action-recorder'} onClick={() => doChangeTab('action-recorder')}>
+								<FontAwesomeIcon icon={faVideoCamera} /> Recorder
+							</CNavLink>
+						</CNavItem>
+					</CNav>
+					<CTabContent>
+						<CTabPane visible={activeTab === 'edit'}>
+							<MyErrorBoundary>
+								{selectedButton && (
+									<EditButton
+										key={`${formatLocation(selectedButton)}-${tabResetToken}`}
+										location={selectedButton}
+										onKeyUp={handleKeyDownInButtons}
+									/>
+								)}
+							</MyErrorBoundary>
+						</CTabPane>
+						<CTabPane visible={activeTab === 'presets'}>
+							<MyErrorBoundary>
+								<InstancePresets resetToken={tabResetToken} />
+							</MyErrorBoundary>
+						</CTabPane>
+						<CTabPane visible={activeTab === 'variables'}>
+							<MyErrorBoundary>
+								<ConnectionVariables resetToken={tabResetToken} />
+							</MyErrorBoundary>
+						</CTabPane>
+						<CTabPane visible={activeTab === 'action-recorder'}>
+							<MyErrorBoundary>
+								<ActionRecorder key={tabResetToken} />
+							</MyErrorBoundary>
+						</CTabPane>
+					</CTabContent>
 				</div>
 			</CCol>
 		</CRow>

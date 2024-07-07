@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState, useCallback, useContext, useRef } from 'react'
-import { CInput, CTextarea } from '@coreui/react'
+import { CFormInput, CFormLabel, CFormTextarea } from '@coreui/react'
 import Select, {
 	ControlProps,
 	OptionProps,
@@ -15,6 +15,7 @@ import { RootAppStoreContext } from '../Stores/RootAppStore.js'
 import { ParseExpression } from '@companion-app/shared/Expression/ExpressionParse.js'
 
 interface TextInputFieldProps {
+	label?: React.ReactNode
 	regex?: string
 	required?: boolean
 	tooltip?: string
@@ -30,6 +31,7 @@ interface TextInputFieldProps {
 }
 
 export const TextInputField = observer(function TextInputField({
+	label,
 	regex,
 	required,
 	tooltip,
@@ -126,20 +128,24 @@ export const TextInputField = observer(function TextInputField({
 	return (
 		<>
 			{useVariables || isExpression ? (
-				<VariablesSelect
-					showValue={showValue}
-					style={extraStyle}
-					useLocalVariables={!!useLocalVariables}
-					storeValue={storeValue}
-					focusStoreValue={focusStoreValue}
-					blurClearValue={blurClearValue}
-					placeholder={placeholder}
-					title={tooltip}
-					disabled={disabled}
-					multiline={isExpression}
-				/>
+				<>
+					{label ? <CFormLabel>{label}</CFormLabel> : ''}
+					<VariablesSelect
+						showValue={showValue}
+						style={extraStyle}
+						useLocalVariables={!!useLocalVariables}
+						storeValue={storeValue}
+						focusStoreValue={focusStoreValue}
+						blurClearValue={blurClearValue}
+						placeholder={placeholder}
+						title={tooltip}
+						disabled={disabled}
+						multiline={isExpression}
+					/>
+				</>
 			) : (
-				<CInput
+				<CFormInput
+					label={label}
 					type="text"
 					disabled={disabled}
 					value={showValue}
@@ -353,7 +359,7 @@ const VariablesSelectContext = React.createContext({
 	blurClearValue: () => {},
 	title: undefined as string | undefined,
 	placeholder: undefined as string | undefined,
-	inputRef: { current: null } as React.MutableRefObject<HTMLInputElement | null>,
+	inputRef: { current: null } as React.MutableRefObject<HTMLInputElement | HTMLTextAreaElement | null>,
 })
 
 const CustomOption = React.memo((props: OptionProps<DropdownChoiceInt>) => {
@@ -376,92 +382,139 @@ const CustomControl = React.memo((props: ControlProps<DropdownChoiceInt>) => {
 	)
 })
 
-const CustomValueContainerWrapper = (ChildComponent: (props: CTextarea | CInput) => JSX.Element) =>
-	React.memo((props: ValueContainerProps<DropdownChoiceInt>) => {
-		const context = useContext(VariablesSelectContext)
+function useValueContainerCallbacks() {
+	const context = useContext(VariablesSelectContext)
 
-		const checkCursor = useCallback(
-			(
-				e:
-					| React.KeyboardEvent<HTMLInputElement>
-					| React.MouseEvent<HTMLInputElement>
-					| React.TouchEvent<HTMLInputElement>
-					| React.ClipboardEvent<HTMLInputElement>
-					| React.FocusEvent<HTMLInputElement>
-			) => {
-				const target = e.currentTarget
+	const checkCursor = useCallback(
+		(
+			e:
+				| React.KeyboardEvent<HTMLInputElement | HTMLTextAreaElement>
+				| React.MouseEvent<HTMLInputElement | HTMLTextAreaElement>
+				| React.TouchEvent<HTMLInputElement | HTMLTextAreaElement>
+				| React.ClipboardEvent<HTMLInputElement | HTMLTextAreaElement>
+				| React.FocusEvent<HTMLInputElement | HTMLTextAreaElement>
+				| React.FormEvent<HTMLInputElement | HTMLTextAreaElement>
+		) => {
+			const target = e.currentTarget
 
-				if (document.activeElement !== target) {
-					context.setCursorPosition(null)
-				} else {
-					context.setCursorPosition(target.selectionStart)
-				}
-			},
-			[context.setCursorPosition]
-		)
+			if (document.activeElement !== target) {
+				context.setCursorPosition(null)
+			} else {
+				context.setCursorPosition(target.selectionStart)
+			}
+		},
+		[context.setCursorPosition]
+	)
 
-		const onFocus = useCallback(
-			(e: React.FocusEvent<HTMLInputElement>) => {
-				context.focusStoreValue()
+	const onFocus = useCallback(
+		(e: React.FocusEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+			context.focusStoreValue()
 
+			checkCursor(e)
+		},
+		[context.focusStoreValue, checkCursor]
+	)
+	const onBlur = useCallback(
+		(e: React.FocusEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+			context.blurClearValue()
+
+			checkCursor(e)
+			context.forceHideSuggestions(false)
+		},
+		[context.blurClearValue, context.forceHideSuggestions, checkCursor]
+	)
+	const onKeyDown = useCallback(
+		(e: React.KeyboardEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+			if (e.code === 'Escape') {
+				context.forceHideSuggestions(true)
+			} else {
 				checkCursor(e)
-			},
-			[context.focusStoreValue, checkCursor]
-		)
-		const onBlur = useCallback(
-			(e: React.FocusEvent<HTMLInputElement>) => {
-				context.blurClearValue()
+			}
+		},
+		[context, checkCursor]
+	)
 
-				checkCursor(e)
-				context.forceHideSuggestions(false)
-			},
-			[context.blurClearValue, context.forceHideSuggestions, checkCursor]
-		)
-		const onKeyDown = useCallback(
-			(e: React.KeyboardEvent<HTMLInputElement>) => {
-				if (e.code === 'Escape') {
-					context.forceHideSuggestions(true)
-				} else {
-					checkCursor(e)
-				}
-			},
-			[context, checkCursor]
-		)
+	const doOnChange = useCallback(
+		(
+			e:
+				| React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+				| React.FormEvent<HTMLInputElement | HTMLTextAreaElement>
+		) => context.setValue(e.currentTarget.value),
+		[context.setValue]
+	)
 
-		const doOnChange = useCallback(
-			(e: React.ChangeEvent<HTMLInputElement> | React.FormEvent<HTMLInputElement>) =>
-				context.setValue(e.currentTarget.value),
-			[context.setValue]
-		)
+	return {
+		context,
+		checkCursor,
+		onFocus,
+		onBlur,
+		onKeyDown,
+		doOnChange,
+	}
+}
 
-		return (
-			<SelectComponents.ValueContainer {...props} isDisabled>
-				<ChildComponent
-					innerRef={context.inputRef}
-					type="text"
-					style={context.extraStyle}
-					title={context.title}
-					value={context.value}
-					onChange={doOnChange}
-					onFocus={onFocus}
-					onBlur={onBlur}
-					placeholder={context.placeholder}
-					onKeyUp={checkCursor}
-					onKeyDown={onKeyDown}
-					onMouseDown={checkCursor}
-					onTouchStart={checkCursor}
-					onInput={checkCursor}
-					onPaste={checkCursor}
-					onCut={checkCursor}
-					onSelect={checkCursor}
-				/>
-			</SelectComponents.ValueContainer>
-		)
-	})
+const CustomValueContainerTextInput = React.memo((props: ValueContainerProps<DropdownChoiceInt>) => {
+	const { context, checkCursor, onFocus, onBlur, onKeyDown, doOnChange } = useValueContainerCallbacks()
+
+	return (
+		<SelectComponents.ValueContainer {...props} isDisabled>
+			<CFormInput
+				ref={(elm) => {
+					context.inputRef.current = elm
+				}}
+				type="text"
+				style={context.extraStyle}
+				title={context.title}
+				value={context.value}
+				onChange={doOnChange}
+				onFocus={onFocus}
+				onBlur={onBlur}
+				placeholder={context.placeholder}
+				onKeyUp={checkCursor}
+				onKeyDown={onKeyDown}
+				onMouseDown={checkCursor}
+				onTouchStart={checkCursor}
+				onInput={checkCursor}
+				onPaste={checkCursor}
+				onCut={checkCursor}
+				onSelect={checkCursor}
+			/>
+		</SelectComponents.ValueContainer>
+	)
+})
+
+const CustomValueContainerTextarea = React.memo((props: ValueContainerProps<DropdownChoiceInt>) => {
+	const { context, checkCursor, onFocus, onBlur, onKeyDown, doOnChange } = useValueContainerCallbacks()
+
+	return (
+		<SelectComponents.ValueContainer {...props} isDisabled>
+			<CFormTextarea
+				ref={(elm) => {
+					context.inputRef.current = elm
+				}}
+				style={context.extraStyle}
+				title={context.title}
+				value={context.value}
+				onChange={doOnChange}
+				onFocus={onFocus}
+				onBlur={onBlur}
+				placeholder={context.placeholder}
+				onKeyUp={checkCursor}
+				onKeyDown={onKeyDown}
+				onMouseDown={checkCursor}
+				onTouchStart={checkCursor}
+				onInput={checkCursor}
+				onPaste={checkCursor}
+				onCut={checkCursor}
+				onSelect={checkCursor}
+			/>
+		</SelectComponents.ValueContainer>
+	)
+})
 
 const CustomSelectComponents = {
 	Option: CustomOption,
-	ValueContainer: CustomValueContainerWrapper(CInput),
+	ValueContainer: CustomValueContainerTextInput,
 	Control: CustomControl,
 	IndicatorsContainer: EmptyComponent,
 	MenuList: WindowedMenuList,
@@ -469,7 +522,7 @@ const CustomSelectComponents = {
 
 const CustomMultilineSelectComponents = {
 	...CustomSelectComponents,
-	ValueContainer: CustomValueContainerWrapper(CTextarea),
+	ValueContainer: CustomValueContainerTextarea,
 }
 
 function FindVariableStartIndexFromCursor(text: string, cursor: number): number {
