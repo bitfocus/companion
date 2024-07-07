@@ -1,18 +1,19 @@
 import {
 	CAlert,
 	CButton,
+	CCol,
 	CForm,
-	CFormGroup,
-	CInput,
-	CLabel,
-	CModal,
+	CFormInput,
+	CFormLabel,
 	CModalBody,
 	CModalFooter,
 	CModalHeader,
+	CRow,
 } from '@coreui/react'
 import React, { FormEvent, forwardRef, useCallback, useContext, useImperativeHandle, useRef, useState } from 'react'
 import { socketEmitPromise, SocketContext } from '../util.js'
 import { PagesStoreModel } from '../Stores/PagesStore.js'
+import { CModalExt } from '../Components/CModalExt.js'
 
 export interface EditPagePropertiesModalRef {
 	show(pageNumber: number, pageInfo: PagesStoreModel | undefined): void
@@ -69,34 +70,40 @@ export const EditPagePropertiesModal = forwardRef<EditPagePropertiesModalRef, Ed
 			[]
 		)
 
-		const onNameChange = useCallback((e) => {
+		const onNameChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
 			setName(e.target.value)
 		}, [])
 
 		return (
-			<CModal show={show} onClose={doClose} onClosed={onClosed} onOpened={buttonFocus}>
+			<CModalExt visible={show} onClose={doClose} onClosed={onClosed} onOpened={buttonFocus}>
 				<CModalHeader closeButton>
 					<h5>Configure Page {pageNumber}</h5>
 				</CModalHeader>
 				<CModalBody>
 					<CForm onSubmit={doAction}>
-						<CFormGroup>
-							<CLabel>Name</CLabel>
-							<CInput type="text" value={pageName || ''} onChange={onNameChange} />
-						</CFormGroup>
-
-						<CAlert color="info">You can use resize the grid in the Settings tab</CAlert>
+						<CRow className="mb-3">
+							<CFormLabel htmlFor="colFormName" className="col-sm-3 col-form-label col-form-label-sm">
+								Name
+							</CFormLabel>
+							<CCol sm={9}>
+								<CFormInput name="colFormName" type="text" value={pageName || ''} onChange={onNameChange} />
+							</CCol>
+							<CCol sm={12}>
+								<br />
+								<CAlert color="info">You can use resize the grid in the Settings tab</CAlert>
+							</CCol>
+						</CRow>
 					</CForm>
 				</CModalBody>
 				<CModalFooter>
 					<CButton color="secondary" onClick={doClose}>
 						Cancel
 					</CButton>
-					<CButton innerRef={buttonRef} color="primary" onClick={doAction}>
+					<CButton ref={buttonRef} color="primary" onClick={doAction}>
 						Save
 					</CButton>
 				</CModalFooter>
-			</CModal>
+			</CModalExt>
 		)
 	}
 )

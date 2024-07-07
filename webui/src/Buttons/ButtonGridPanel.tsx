@@ -14,6 +14,7 @@ import { RootAppStoreContext } from '../Stores/RootAppStore.js'
 import { observer } from 'mobx-react-lite'
 import { ButtonGridZoomControl } from './ButtonGridZoomSlider.js'
 import { GridZoomController } from './GridZoom.js'
+import { EditPagePropertiesModal, EditPagePropertiesModalRef } from './EditPageProperties.js'
 
 interface ButtonsGridPanelProps {
 	pageNumber: number

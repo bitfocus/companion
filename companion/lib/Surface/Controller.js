@@ -118,7 +118,15 @@ class SurfaceController extends CoreBase {
 			// Setup groups
 			const groupsConfigs = this.db.getKey('surface-groups', {})
 			for (const groupId of Object.keys(groupsConfigs)) {
-				const newGroup = new SurfaceGroup(this, this.db, this.userconfig, groupId, null, this.isPinLockEnabled())
+				const newGroup = new SurfaceGroup(
+					this,
+					this.db,
+					this.page,
+					this.userconfig,
+					groupId,
+					null,
+					this.isPinLockEnabled()
+				)
 				this.#surfaceGroups.set(groupId, newGroup)
 			}
 
@@ -468,7 +476,15 @@ class SurfaceController extends CoreBase {
 			// TODO - should this do friendlier ids?
 			const groupId = `group:${nanoid()}`
 
-			const newGroup = new SurfaceGroup(this, this.db, this.userconfig, groupId, null, this.isPinLockEnabled())
+			const newGroup = new SurfaceGroup(
+				this,
+				this.db,
+				this.page,
+				this.userconfig,
+				groupId,
+				null,
+				this.isPinLockEnabled()
+			)
 			newGroup.setName(name)
 			this.#surfaceGroups.set(groupId, newGroup)
 
@@ -565,6 +581,7 @@ class SurfaceController extends CoreBase {
 			const newGroup = new SurfaceGroup(
 				this,
 				this.db,
+				this.page,
 				this.userconfig,
 				surfaceGroupId,
 				!rawSurfaceGroupId ? surfaceHandler : null,
@@ -1099,7 +1116,7 @@ class SurfaceController extends CoreBase {
 			let group = this.#getGroupForId(id, true)
 			if (!group) {
 				// Group does not exist
-				group = new SurfaceGroup(this, this.db, this.userconfig, id, null, this.isPinLockEnabled())
+				group = new SurfaceGroup(this, this.db, this.page, this.userconfig, id, null, this.isPinLockEnabled())
 				this.#surfaceGroups.set(id, group)
 			}
 

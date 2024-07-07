@@ -99,6 +99,12 @@ export class SurfaceGroup {
 	 */
 	#db
 	/**
+	 * The core page controller
+	 * @type {import('../Page/Controller.js').default}
+	 * @access public
+	 */
+	#page
+	/**
 	 * The core user config manager
 	 * @type {import('../Data/UserConfig.js').default}
 	 * @access public
@@ -108,16 +114,18 @@ export class SurfaceGroup {
 	/**
 	 * @param {import('../Surface/Controller.js').default} surfaceController
 	 * @param {import('../Data/Database.js').default} db
+	 * @param {import('../Page/Controller.js').default} page
 	 * @param {import('../Data/UserConfig.js').default} userconfig
 	 * @param {string} groupId
 	 * @param {SurfaceHandler | null} soleHandler
 	 * @param {boolean} isLocked
 	 */
-	constructor(surfaceController, db, userconfig, groupId, soleHandler, isLocked) {
+	constructor(surfaceController, db, page, userconfig, groupId, soleHandler, isLocked) {
 		this.#logger = LogController.createLogger(`Surface/Group/${groupId}`)
 
 		this.#surfaceController = surfaceController
 		this.#db = db
+		this.#page = page
 		this.#userconfig = userconfig
 
 		this.groupId = groupId
@@ -149,14 +157,14 @@ export class SurfaceGroup {
 		if (soleHandler) this.attachSurface(soleHandler)
 
 		this.#saveConfig()
-		this.page.on('pagecount', this.#pageCountChange)
+		this.#page.on('pagecount', this.#pageCountChange)
 	}
 
 	/**
 	 * Stop anything processing this group, it is being marked as inactive
 	 */
 	dispose() {
-		this.page.off('pagecount', this.#pageCountChange)
+		this.#page.off('pagecount', this.#pageCountChange)
 	}
 
 	/**
@@ -231,7 +239,7 @@ export class SurfaceGroup {
 	 * @returns {void}
 	 */
 	setCurrentPage(newPage, defer = false) {
-		const pageCount = this.page.getPageCount()
+		const pageCount = this.#page.getPageCount()
 		if (newPage > pageCount) {
 			newPage = 1
 		}

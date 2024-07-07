@@ -1,8 +1,9 @@
-import { CModal, CModalHeader, CInput, CModalBody, CModalFooter, CButton, CButtonGroup } from '@coreui/react'
+import { CModalHeader, CFormInput, CModalBody, CModalFooter, CButton, CButtonGroup } from '@coreui/react'
 import { faPlus, faTrash } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import React, { forwardRef, useCallback, useContext, useImperativeHandle, useState } from 'react'
 import { SocketContext, socketEmitPromise } from '../util.js'
+import { CModalExt } from '../Components/CModalExt.js'
 
 interface AddPagesModalProps {
 	// addAction: (actionType: string) => void
@@ -106,7 +107,7 @@ export const AddPagesModal = forwardRef<AddPagesModalRef, AddPagesModalProps>(fu
 	}, [])
 
 	return (
-		<CModal show={state.show} onClose={doClose} onClosed={onClosed} size="lg" scrollable={true}>
+		<CModalExt visible={state.show} onClose={doClose} onClosed={onClosed} size="lg" scrollable={true}>
 			<CModalHeader closeButton>
 				<h5>Add Pages</h5>
 			</CModalHeader>
@@ -158,7 +159,7 @@ export const AddPagesModal = forwardRef<AddPagesModalRef, AddPagesModalProps>(fu
 					Add
 				</CButton>
 			</CModalFooter>
-		</CModal>
+		</CModalExt>
 	)
 })
 
@@ -175,7 +176,7 @@ function AddPageRow({ index, name, canDelete, changeName, doInsertPage, doDelete
 	return (
 		<tr>
 			<td>
-				<CInput type="text" value={name} onChange={changeName} data-page={index} />
+				<CFormInput type="text" value={name} onChange={changeName} data-page={index} />
 			</td>
 			<td style={{ width: 0 }}>
 				<CButtonGroup>

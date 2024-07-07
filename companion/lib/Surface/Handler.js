@@ -557,7 +557,7 @@ class SurfaceHandler extends EventEmitter {
 				thisPage += pageOffset ?? 0
 
 				// loop after last page
-				const pageCount = this.page.getPageCount()
+				const pageCount = this.#page.getPageCount()
 				if (thisPage > pageCount) thisPage = 1
 
 				const controlId = this.#page.getControlIdAt({
@@ -620,7 +620,7 @@ class SurfaceHandler extends EventEmitter {
 				// allow the xkeys (legacy mode) to span pages
 				thisPage += pageOffset ?? 0
 				// loop after last page
-				const pageCount = this.page.getPageCount()
+				const pageCount = this.#page.getPageCount()
 				if (thisPage > pageCount) thisPage = 1
 
 				const controlId = this.#page.getControlIdAt({
