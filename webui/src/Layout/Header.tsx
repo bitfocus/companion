@@ -38,7 +38,11 @@ export const MyHeader = observer(function MyHeader({ toggleSidebar, canLock, set
 		}
 	}, [socket])
 
-	const versionString = versionInfo ? `${versionInfo.appVersion}` : '?'
+	const versionString = versionInfo
+		? versionInfo.appBuild.includes('stable')
+			? `v${versionInfo.appVersion}`
+			: `v${versionInfo.appBuild}`
+		: ''
 	const buildString = versionInfo ? `Build ${versionInfo.appBuild}` : ''
 
 	return (
@@ -62,12 +66,16 @@ export const MyHeader = observer(function MyHeader({ toggleSidebar, canLock, set
 						</CNavLink>
 					</CNavItem>
 
-					<CNavItem className="header-update-warn">
-						<CNavLink target="_new" href={updateData?.link || 'https://bitfocus.io/companion/'}>
-							<FontAwesomeIcon icon={faTriangleExclamation} className="header-update-icon" />
-							{updateData?.message || ''}
-						</CNavLink>
-					</CNavItem>
+					{updateData?.message ? (
+						<CNavItem className="header-update-warn">
+							<CNavLink target="_new" href={updateData?.link || 'https://bitfocus.io/companion/'}>
+								<FontAwesomeIcon icon={faTriangleExclamation} className="header-update-icon" />
+								{updateData.message}
+							</CNavLink>
+						</CNavItem>
+					) : (
+						''
+					)}
 				</CHeaderNav>
 
 				{canLock && (
