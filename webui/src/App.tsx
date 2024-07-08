@@ -22,6 +22,7 @@ import {
 	faPlug,
 	faCog,
 	faFileImport,
+	faDollarSign,
 } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { MyErrorBoundary, useMountEffect, SocketContext } from './util.js'
@@ -44,6 +45,7 @@ import { useIdleTimer } from 'react-idle-timer'
 import { ImportExport } from './ImportExport/index.js'
 import { RootAppStoreContext } from './Stores/RootAppStore.js'
 import { observer } from 'mobx-react-lite'
+import { ConnectionVariables } from './Variables/index.js'
 
 const useTouchBackend = window.localStorage.getItem('test_touch_backend') === '1'
 const showCloudTab = window.localStorage.getItem('show_companion_cloud') === '1'
@@ -460,6 +462,11 @@ const AppContent = observer(function AppContent({ buttonGridHotPress }: AppConte
 					</CNavLink>
 				</CNavItem>
 				<CNavItem>
+					<CNavLink to="/variables" as={NavLink}>
+						<FontAwesomeIcon icon={faDollarSign} /> Variables
+					</CNavLink>
+				</CNavItem>
+				<CNavItem>
 					<CNavLink to="/settings" as={NavLink}>
 						<FontAwesomeIcon icon={faCog} /> Settings
 					</CNavLink>
@@ -501,6 +508,11 @@ const AppContent = observer(function AppContent({ buttonGridHotPress }: AppConte
 				<CTabPane className={getClassForPane('/triggers')}>
 					<MyErrorBoundary>
 						<Triggers />
+					</MyErrorBoundary>
+				</CTabPane>
+				<CTabPane className={getClassForPane('/variables')}>
+					<MyErrorBoundary>
+						<ConnectionVariables />
 					</MyErrorBoundary>
 				</CTabPane>
 				<CTabPane className={getClassForPane('/settings')}>
