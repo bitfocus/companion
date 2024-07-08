@@ -38,7 +38,8 @@ export const MyHeader = observer(function MyHeader({ toggleSidebar, canLock, set
 		}
 	}, [socket])
 
-	const versionString = versionInfo ? `${versionInfo.appVersion} (${versionInfo.appBuild})` : '?'
+	const versionString = versionInfo ? `${versionInfo.appVersion}` : '?'
+	const buildString = versionInfo ? `Build ${versionInfo.appBuild}` : ''
 
 	return (
 		<CHeader position="sticky" className="p-0">
@@ -56,7 +57,7 @@ export const MyHeader = observer(function MyHeader({ toggleSidebar, canLock, set
 					)}
 
 					<CNavItem>
-						<CNavLink target="_new" title="Version Number" href="https://bitfocus.io/companion/">
+						<CNavLink target="_new" title={buildString} href="https://bitfocus.io/companion/">
 							{versionString}
 						</CNavLink>
 					</CNavItem>
