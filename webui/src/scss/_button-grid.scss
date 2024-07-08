@@ -105,7 +105,7 @@
 	max-height: 60vh;
 
 	background-color: #222;
-	border-radius: 5px;
+	// border-radius: 5px; // A radius here breaks safari, causing the div to draw over the scrollbars
 	overflow: scroll;
 
 	&.button-armed {
