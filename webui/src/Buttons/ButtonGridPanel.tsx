@@ -27,6 +27,7 @@ import { ButtonGridZoomControl } from './ButtonGridZoomControl.js'
 import { GridZoomController } from './GridZoom.js'
 import { CModalExt } from '../Components/CModalExt.js'
 import { GridViewSelectedSurfaceInfo, GridViewSpecialSurface } from './GridViewAs.js'
+import { ButtonGridViewAsSurfaceControl } from './ButtonGridViewAsSurfaceControl.js'
 
 interface ButtonsGridPanelProps {
 	pageNumber: number
@@ -146,6 +147,7 @@ export const ButtonsGridPanel = observer(function ButtonsPage({
 								gridZoomValue={gridZoomValue}
 								gridZoomController={gridZoomController}
 							/>
+							<ButtonGridViewAsSurfaceControl useCompactButtons={true} />
 						</ButtonGridHeader>
 					</CCol>
 				</CRow>
