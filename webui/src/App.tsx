@@ -34,7 +34,7 @@ import { HTML5Backend } from 'react-dnd-html5-backend'
 import { TouchBackend } from 'react-dnd-touch-backend'
 import { MySidebar } from './Layout/Sidebar.js'
 import { MyHeader } from './Layout/Header.js'
-import { Triggers } from './Triggers/index.js'
+import { Triggers, TRIGGERS_PAGE_PREFIX } from './Triggers/index.js'
 import { ConnectionsPage } from './Connections/index.js'
 import { ButtonsPage } from './Buttons/index.js'
 import { ContextData } from './ContextData.js'
@@ -457,7 +457,7 @@ const AppContent = observer(function AppContent({ buttonGridHotPress }: AppConte
 					</CNavLink>
 				</CNavItem>
 				<CNavItem>
-					<CNavLink to="/triggers" as={NavLink}>
+					<CNavLink to={TRIGGERS_PAGE_PREFIX} as={NavLink}>
 						<FontAwesomeIcon icon={faClock} /> Triggers
 					</CNavLink>
 				</CNavItem>
@@ -505,7 +505,7 @@ const AppContent = observer(function AppContent({ buttonGridHotPress }: AppConte
 						<SurfacesPage />
 					</MyErrorBoundary>
 				</CTabPane>
-				<CTabPane className={getClassForPane('/triggers')}>
+				<CTabPane className={getClassForPane(TRIGGERS_PAGE_PREFIX)}>
 					<MyErrorBoundary>
 						<Triggers />
 					</MyErrorBoundary>

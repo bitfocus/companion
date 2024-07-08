@@ -1,4 +1,4 @@
-import React, { useCallback, useContext, useEffect, useState, useMemo, useRef } from 'react'
+import React, { useCallback, useContext, useEffect, useMemo, useRef } from 'react'
 import {
 	CButton,
 	CButtonGroup,
@@ -25,48 +25,65 @@ import {
 	faTrash,
 } from '@fortawesome/free-solid-svg-icons'
 import { useDrag, useDrop } from 'react-dnd'
-import { nanoid } from 'nanoid'
 import { EditTriggerPanel } from './EditPanel.js'
 import { GenericConfirmModal, GenericConfirmModalRef } from '../Components/GenericConfirmModal.js'
-import { ParseControlId } from '@companion-app/shared/ControlId.js'
+import { CreateTriggerControlId, ParseControlId } from '@companion-app/shared/ControlId.js'
 import { ConfirmExportModal, ConfirmExportModalRef } from '../Components/ConfirmExportModal.js'
 import classNames from 'classnames'
 import { ClientTriggerData } from '@companion-app/shared/Model/TriggerModel.js'
 import { observer } from 'mobx-react-lite'
 import { RootAppStoreContext } from '../Stores/RootAppStore.js'
+import { NavigateFunction, useLocation, useNavigate } from 'react-router-dom'
+
+export const TRIGGERS_PAGE_PREFIX = '/triggers'
+
+function useSelectedTriggerId(): string | null {
+	const routerLocation = useLocation()
+	if (!routerLocation.pathname.startsWith(TRIGGERS_PAGE_PREFIX)) return null
+
+	const fragments = routerLocation.pathname.slice(TRIGGERS_PAGE_PREFIX.length + 1).split('/')
+
+	const triggerId = fragments[0]
+	if (!triggerId) return null
+
+	return CreateTriggerControlId(triggerId)
+}
+
+function navigateToTriggersPage(navigate: NavigateFunction, controlId: string | null): void {
+	if (!controlId) {
+		navigate(TRIGGERS_PAGE_PREFIX)
+		return
+	}
+
+	navigate(`${TRIGGERS_PAGE_PREFIX}/${controlId}`)
+}
 
 export const Triggers = observer(function Triggers() {
 	const { socket, triggersList } = useContext(RootAppStoreContext)
 
-	const [editItemId, setEditItemId] = useState<string | null>(null)
-	const [tabResetToken, setTabResetToken] = useState(nanoid())
-	const [activeTab, setActiveTab] = useState<'placeholder' | 'edit'>('placeholder')
+	const editItemId = useSelectedTriggerId()
+	const activeTab = editItemId ? 'edit' : 'placeholder'
+	const navigate = useNavigate()
 
 	// Ensure the selected trigger is valid
 	useEffect(() => {
-		setEditItemId((currentId) => {
-			if (currentId && triggersList.triggers.get(currentId)) {
-				return currentId
-			} else {
-				return null
-			}
-		})
-	}, [triggersList])
+		if (editItemId && !triggersList.triggers.get(editItemId)) {
+			navigateToTriggersPage(navigate, null)
+		}
+	}, [navigate, triggersList, editItemId])
 
-	const doChangeTab = useCallback((newTab: 'placeholder' | 'edit') => {
-		setActiveTab((oldTab) => {
-			// const preserveButtonsTab =  newTab === 'variables' && oldTab === 'edit'
-			if (newTab !== 'edit' && oldTab !== newTab /*&& !preserveButtonsTab*/) {
-				setEditItemId(null)
-				setTabResetToken(nanoid())
-			}
-			return newTab
-		})
+	const doChangeTab = useCallback((_newTab: 'placeholder' | 'edit') => {
+		// setActiveTab(newTab)
 	}, [])
-	const doEditItem = useCallback((controlId: string) => {
-		setEditItemId(controlId)
-		setActiveTab('edit')
-	}, [])
+	const doEditItem = useCallback(
+		(controlId: string) => {
+			const parsedId = ParseControlId(controlId)
+			if (parsedId?.type !== 'trigger') return
+
+			navigateToTriggersPage(navigate, parsedId.trigger)
+		},
+		[navigate]
+	)
 
 	const doAddNew = useCallback(() => {
 		socketEmitPromise(socket, 'triggers:create', [])
@@ -139,7 +156,7 @@ export const Triggers = observer(function Triggers() {
 						)}
 						<CTabPane data-tab="edit" visible={activeTab === 'edit'}>
 							<MyErrorBoundary>
-								{editItemId ? <EditTriggerPanel key={`${editItemId}.${tabResetToken}`} controlId={editItemId} /> : ''}
+								{editItemId ? <EditTriggerPanel key={`${editItemId}`} controlId={editItemId} /> : ''}
 							</MyErrorBoundary>
 						</CTabPane>
 					</CTabContent>
