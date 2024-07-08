@@ -27,7 +27,7 @@ export function ButtonGridZoomControl({
 	style,
 }: ButtonGridZoomControlProps) {
 	return (
-		<CDropdown className="dropdown-zoom" style={style}>
+		<CDropdown className="dropdown-zoom" style={style} autoClose="outside">
 			<CDropdownToggle caret={!useCompactButtons} color="light">
 				<span className="sr-only">Zoom</span>
 				<FontAwesomeIcon icon={faMagnifyingGlass} /> {useCompactButtons ? '' : `${Math.round(gridZoomValue)}%`}

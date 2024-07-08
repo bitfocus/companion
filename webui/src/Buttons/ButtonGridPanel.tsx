@@ -24,7 +24,7 @@ import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import { RootAppStoreContext } from '../Stores/RootAppStore.js'
 import { PagesStoreModel } from '../Stores/PagesStore.js'
 import { observer } from 'mobx-react-lite'
-import { ButtonGridZoomControl } from './ButtonGridZoomSlider.js'
+import { ButtonGridZoomControl } from './ButtonGridZoomControl.js'
 import { GridZoomController } from './GridZoom.js'
 import { CModalExt } from '../Components/CModalExt.js'
 

@@ -17,7 +17,7 @@ import type { ClientImportObject, ClientImportObjectInstance } from '@companion-
 import { compareExportedInstances } from '@companion-app/shared/Import.js'
 import { RootAppStoreContext } from '../../Stores/RootAppStore.js'
 import { observer } from 'mobx-react-lite'
-import { ButtonGridZoomControl } from '../../Buttons/ButtonGridZoomSlider.js'
+import { ButtonGridZoomControl } from '../../Buttons/ButtonGridZoomControl.js'
 import { useGridZoom } from '../../Buttons/GridZoom.js'
 
 interface ImportPageWizardProps {
