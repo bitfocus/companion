@@ -383,21 +383,17 @@ const ConnectionsTableRow = observer(function ConnectionsTableRow({
 				<div style={{ display: 'flex' }}>
 					<div>
 						<CButtonGroup>
-							<CButton onClick={doShowHelp} title="Help" disabled={!moduleInfo?.hasHelp} style={{ padding: 4 }}>
+							<CButton onClick={doShowHelp} title="Help" disabled={!moduleInfo?.hasHelp}>
 								<FontAwesomeIcon icon={faQuestionCircle} />
 							</CButton>
 
-							<CButton onClick={openBugUrl} title="Issue Tracker" disabled={!moduleInfo?.bugUrl} style={{ padding: 4 }}>
+							<CButton onClick={openBugUrl} title="Issue Tracker" disabled={!moduleInfo?.bugUrl}>
 								<FontAwesomeIcon icon={faBug} />
 							</CButton>
 
 							<CButton
 								onClick={doShowVariables}
 								title="Variables"
-								style={{
-									padding: 4,
-									opacity: !isEnabled || !(connectionVariables && connectionVariables.size > 0) ? 0.2 : 1,
-								}}
 								disabled={!isEnabled || !(connectionVariables && connectionVariables.size > 0)}
 							>
 								<FontAwesomeIcon icon={faDollarSign} />
@@ -406,12 +402,11 @@ const ConnectionsTableRow = observer(function ConnectionsTableRow({
 							<CButton
 								onClick={() => windowLinkOpen({ href: `/connection-debug/${id}`, title: 'View debug log' })}
 								title="Logs"
-								style={{ padding: 4 }}
 							>
 								<FontAwesomeIcon icon={faTerminal} />
 							</CButton>
 
-							<CButton onClick={doDelete} title="Delete" color="#ff00ff" style={{ padding: 4 }}>
+							<CButton onClick={doDelete} title="Delete" color="#ff00ff">
 								<FontAwesomeIcon icon={faTrash} />
 							</CButton>
 						</CButtonGroup>

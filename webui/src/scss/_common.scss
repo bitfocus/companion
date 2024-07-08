@@ -11,7 +11,11 @@ h4 {
 	.btn {
 		text-transform: uppercase;
 
-		padding: 0px 6px;
+		padding: 4px;
+
+		&:disabled {
+			opacity: 0.2;
+		}
 	}
 
 	.btn-primary.disabled {
