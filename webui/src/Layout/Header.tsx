@@ -64,7 +64,8 @@ export const MyHeader = observer(function MyHeader({ toggleSidebar, canLock, set
 
 					<CNavItem className="header-update-warn">
 						<CNavLink target="_new" href={updateData?.link || 'https://bitfocus.io/companion/'}>
-						<FontAwesomeIcon icon={faTriangleExclamation} className="header-update-icon" />{updateData?.message || ''}
+							<FontAwesomeIcon icon={faTriangleExclamation} className="header-update-icon" />
+							{updateData?.message || ''}
 						</CNavLink>
 					</CNavItem>
 				</CHeaderNav>
