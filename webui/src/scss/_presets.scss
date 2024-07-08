@@ -11,9 +11,9 @@
 	align-content: stretch;
 	padding-top: 10px;
 
-	@include media-breakpoint-down('xs') {
-		grid-template-columns: repeat(2, 1fr);
-	}
+	// @include media-breakpoint-down('xs') {
+	// 	grid-template-columns: repeat(2, 1fr);
+	// }
 
 	.btn-block {
 		margin-top: 0;

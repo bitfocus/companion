@@ -1,5 +1,5 @@
 import { CCol, CNav, CNavItem, CNavLink, CRow, CTabContent, CTabPane } from '@coreui/react'
-import { faCalculator, faDollarSign, faGift, faPaperPlane, faVideoCamera } from '@fortawesome/free-solid-svg-icons'
+import { faCalculator, faGift, faPaperPlane, faVideoCamera } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { nanoid } from 'nanoid'
 import { InstancePresets } from './Presets.js'
@@ -9,7 +9,6 @@ import { EditButton } from './EditButton.js'
 import { ActionRecorder } from './ActionRecorder/index.js'
 import React, { useCallback, useContext, useRef, useState } from 'react'
 import { GenericConfirmModal, GenericConfirmModalRef } from '../Components/GenericConfirmModal.js'
-import { ConnectionVariables } from './Variables.js'
 import { formatLocation } from '@companion-app/shared/ControlId.js'
 import { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import { observer } from 'mobx-react-lite'
@@ -36,8 +35,7 @@ export const ButtonsPage = observer(function ButtonsPage({ hotPress }: ButtonsPa
 
 	const doChangeTab = useCallback((newTab: string) => {
 		setActiveTab((oldTab) => {
-			const preserveButtonsTab = newTab === 'variables' && oldTab === 'edit'
-			if (newTab !== 'edit' && oldTab !== newTab && !preserveButtonsTab) {
+			if (newTab !== 'edit' && oldTab !== newTab) {
 				setSelectedButton(null)
 				setTabResetToken(nanoid())
 			}
@@ -257,11 +255,6 @@ export const ButtonsPage = observer(function ButtonsPage({ hotPress }: ButtonsPa
 							</CNavLink>
 						</CNavItem>
 						<CNavItem>
-							<CNavLink active={activeTab === 'variables'} onClick={() => doChangeTab('variables')}>
-								<FontAwesomeIcon icon={faDollarSign} /> Variables
-							</CNavLink>
-						</CNavItem>
-						<CNavItem>
 							<CNavLink active={activeTab === 'action-recorder'} onClick={() => doChangeTab('action-recorder')}>
 								<FontAwesomeIcon icon={faVideoCamera} /> Recorder
 							</CNavLink>
@@ -287,11 +280,6 @@ export const ButtonsPage = observer(function ButtonsPage({ hotPress }: ButtonsPa
 						<CTabPane visible={activeTab === 'presets'}>
 							<MyErrorBoundary>
 								<InstancePresets resetToken={tabResetToken} />
-							</MyErrorBoundary>
-						</CTabPane>
-						<CTabPane visible={activeTab === 'variables'}>
-							<MyErrorBoundary>
-								<ConnectionVariables resetToken={tabResetToken} />
 							</MyErrorBoundary>
 						</CTabPane>
 						<CTabPane visible={activeTab === 'action-recorder'}>

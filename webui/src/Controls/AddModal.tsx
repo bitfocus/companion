@@ -1,14 +1,4 @@
-import {
-	CAlert,
-	CButton,
-	CCard,
-	CCardBody,
-	CCollapse,
-	CFormInput,
-	CModalBody,
-	CModalFooter,
-	CModalHeader,
-} from '@coreui/react'
+import { CButton, CCard, CCardBody, CCollapse, CFormInput, CModalBody, CModalFooter, CModalHeader } from '@coreui/react'
 import React, { forwardRef, useCallback, useContext, useImperativeHandle, useState } from 'react'
 import { ConnectionsContext, useComputed } from '../util.js'
 import { ClientConnectionConfig } from '@companion-app/shared/Model/Common.js'
@@ -18,6 +8,7 @@ import { ConnectionActionDefinitions } from '../Stores/ActionDefinitionsStore.js
 import { ConnectionFeedbackDefinitions } from '../Stores/FeedbackDefinitionsStore.js'
 import { capitalize } from 'lodash-es'
 import { CModalExt } from '../Components/CModalExt.js'
+import { go as fuzzySearch } from 'fuzzysort'
 
 interface AddActionsModalProps {
 	addAction: (actionType: string) => void
@@ -204,6 +195,12 @@ export const AddFeedbacksModal = observer(
 	})
 )
 
+interface ConnectionItem {
+	fullId: string
+	label: string
+	description: string | undefined
+}
+
 interface ConnectionCollapseProps {
 	connectionId: string
 	connectionInfo: ClientConnectionConfig | undefined
@@ -229,41 +226,31 @@ function ConnectionCollapse({
 }: ConnectionCollapseProps) {
 	const doToggle2 = useCallback(() => doToggle(connectionId), [doToggle, connectionId])
 
-	const candidates = useComputed(() => {
-		try {
-			const regexp = new RegExp(filter, 'i')
+	const allValues: ConnectionItem[] = useComputed(() => {
+		if (!items) return []
 
-			const res = []
-			if (items) {
-				for (const [id, info] of items.entries()) {
-					if (!info || (booleanOnly && (!('type' in info) || info.type !== 'boolean'))) continue
+		return Array.from(items.entries())
+			.map(([id, info]) => {
+				if (!info || (booleanOnly && (!('type' in info) || info.type !== 'boolean'))) return null
 
-					if (info.label?.match(regexp)) {
-						const fullId = `${connectionId}:${id}`
-						res.push({
-							...info,
-							fullId: fullId,
-						})
-					}
+				const fullId = `${connectionId}:${id}`
+				return {
+					fullId: fullId,
+					label: info.label,
+					description: info.description,
 				}
-			}
+			})
+			.filter((v): v is ConnectionItem => !!v)
+	}, [items, booleanOnly])
 
-			// Sort by label
-			res.sort((a, b) => a.label.localeCompare(b.label))
+	const searchResults = filter
+		? fuzzySearch(filter, allValues, {
+				keys: ['label'],
+				threshold: -10_000,
+			}).map((x) => x.obj)
+		: allValues
 
-			return res
-		} catch (e: any) {
-			console.error('Failed to compile candidates list:', e)
-
-			return (
-				<CAlert color="warning" role="alert">
-					Failed to build list of {itemName}:
-					<br />
-					{e}
-				</CAlert>
-			)
-		}
-	}, [items, filter, connectionId, itemName, booleanOnly])
+	searchResults.sort((a, b) => a.label.localeCompare(b.label))
 
 	if (!items || Object.keys(items).length === 0) {
 		// Hide card if there are no actions which match
@@ -276,12 +263,10 @@ function ConnectionCollapse({
 				</div>
 				<CCollapse visible={expanded}>
 					<CCardBody>
-						{!Array.isArray(candidates) ? (
-							candidates
-						) : candidates.length > 0 ? (
+						{searchResults.length > 0 ? (
 							<table className="table">
 								<tbody>
-									{candidates.map((info) => (
+									{searchResults.map((info) => (
 										<AddRow key={info.fullId} info={info} id={info.fullId} doAdd={doAdd} />
 									))}
 								</tbody>
@@ -297,7 +282,7 @@ function ConnectionCollapse({
 }
 
 interface AddRowProps {
-	info: { label: string; description?: string }
+	info: ConnectionItem
 	id: string
 	doAdd: (itemId: string) => void
 }

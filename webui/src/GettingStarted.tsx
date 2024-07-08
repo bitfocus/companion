@@ -1,6 +1,6 @@
 import React, { Fragment, useRef, useState, useEffect } from 'react'
 import { useHash } from 'react-use'
-import ReactMarkdown from 'react-markdown'
+import ReactMarkdown, { defaultUrlTransform } from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import { useIntersectionObserver } from 'usehooks-ts'
 
@@ -259,8 +259,13 @@ function LoadContent({ file }: LoadContentProps) {
 				'loading'
 			) : (
 				<ReactMarkdown
-					transformImageUri={(src, _alt, _title) => {
-						return `/docs/${baseUrl}${src}`
+					urlTransform={(src, key, _node) => {
+						if (key === 'src') {
+							// img tag
+							return `/docs/${baseUrl}${defaultUrlTransform(src)}`
+						} else {
+							return defaultUrlTransform(src)
+						}
 					}}
 					children={content}
 					remarkPlugins={[remarkGfm]}
@@ -274,18 +279,16 @@ interface OnScreenReporterProps {
 	onChange: (isOnScreen: boolean) => void
 }
 function OnScreenReporter({ children, onChange }: React.PropsWithChildren<OnScreenReporterProps>) {
-	const ref = useRef<HTMLDivElement>(null)
-	const entry = useIntersectionObserver(ref, {})
-	const isOnScreen = entry?.isIntersecting ?? false
+	const { ref, isIntersecting } = useIntersectionObserver({})
 
 	const [visible, setVisible] = useState<boolean | null>(null)
 
 	useEffect(() => {
-		if (isOnScreen !== visible) {
-			setVisible(isOnScreen)
-			onChange(isOnScreen)
+		if (isIntersecting !== visible) {
+			setVisible(isIntersecting)
+			onChange(isIntersecting)
 		}
-	}, [visible, isOnScreen, onChange])
+	}, [visible, isIntersecting, onChange])
 
 	return <div ref={ref}>{children}</div>
 }

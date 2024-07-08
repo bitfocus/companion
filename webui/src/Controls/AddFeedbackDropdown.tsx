@@ -4,11 +4,11 @@ import Select, { createFilter } from 'react-select'
 import { MenuPortalContext } from '../Components/DropdownInputField.js'
 import { RootAppStoreContext } from '../Stores/RootAppStore.js'
 import { observer } from 'mobx-react-lite'
+import { prepare as fuzzyPrepare, single as fuzzySingle } from 'fuzzysort'
 
-const baseFilter = createFilter<AddFeedbackOption>()
 const filterOptions: ReturnType<typeof createFilter<AddFeedbackOption>> = (candidate, input) => {
 	if (input) {
-		return !candidate.data.isRecent && baseFilter(candidate, input)
+		return !candidate.data.isRecent && (fuzzySingle(input, candidate.data.fuzzy)?.score ?? 0) >= 0.5
 	} else {
 		return candidate.data.isRecent
 	}
@@ -26,6 +26,7 @@ export interface AddFeedbackOption {
 	isRecent: boolean
 	value: string
 	label: string
+	fuzzy: ReturnType<typeof fuzzyPrepare>
 }
 interface AddFeedbackGroup {
 	label: string
@@ -51,10 +52,12 @@ export const AddFeedbackDropdown = observer(function AddFeedbackDropdown({
 			for (const [feedbackId, feedback] of instanceFeedbacks.entries()) {
 				if (!booleanOnly || feedback.type === 'boolean') {
 					const connectionLabel = connectionsContext[connectionId]?.label ?? connectionId
+					const optionLabel = `${connectionLabel}: ${feedback.label}`
 					options.push({
 						isRecent: false,
 						value: `${connectionId}:${feedbackId}`,
-						label: `${connectionLabel}: ${feedback.label}`,
+						label: optionLabel,
+						fuzzy: fuzzyPrepare(optionLabel),
 					})
 				}
 			}
@@ -67,10 +70,12 @@ export const AddFeedbackDropdown = observer(function AddFeedbackDropdown({
 				const feedbackInfo = feedbackDefinitions.connections.get(connectionId)?.get(feedbackId)
 				if (feedbackInfo) {
 					const connectionLabel = connectionsContext[connectionId]?.label ?? connectionId
+					const optionLabel = `${connectionLabel}: ${feedbackInfo.label}`
 					recents.push({
 						isRecent: true,
 						value: `${connectionId}:${feedbackId}`,
-						label: `${connectionLabel}: ${feedbackInfo.label}`,
+						label: optionLabel,
+						fuzzy: fuzzyPrepare(optionLabel),
 					})
 				}
 			}
