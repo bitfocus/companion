@@ -86,22 +86,15 @@ export const ImportPageWizard = observer(function ImportPageWizard({
 				<MyErrorBoundary>
 					<div>
 						<CCol sm={12}>
-							<CButton
-								color="light"
-								style={{
-									float: 'right',
-									marginTop: 10,
-								}}
-								onClick={resetSourcePosition}
-							>
-								<FontAwesomeIcon icon={faHome} /> Home
-							</CButton>
-
 							<ButtonGridHeader
 								pageNumber={isSinglePage ? snapshot.oldPageNumber ?? 1 : importPageNumber}
 								changePage={isSinglePage ? undefined : changeImportPage}
 								setPage={isSinglePage ? undefined : setImportPageNumber}
-							/>
+							>
+								<CButton color="light" className="btn-right" title="Home Position" onClick={resetSourcePosition}>
+									<FontAwesomeIcon icon={faHome} />
+								</CButton>
+							</ButtonGridHeader>
 						</CCol>
 						<div className="buttongrid" ref={hasBeenRenderedRef}>
 							{hasBeenRendered && sourceGridSize && (
@@ -123,29 +116,17 @@ export const ImportPageWizard = observer(function ImportPageWizard({
 				<MyErrorBoundary>
 					<div>
 						<CCol sm={12}>
-							<CButton
-								color="light"
-								style={{
-									float: 'right',
-									marginTop: 10,
-								}}
-								onClick={resetDestinationPosition}
-							>
-								<FontAwesomeIcon icon={faHome} /> Home
-							</CButton>
+							<ButtonGridHeader pageNumber={pageNumber} changePage={changePage} setPage={setPageNumber}>
+								<ButtonGridZoomControl
+									useCompactButtons={true}
+									gridZoomValue={gridZoomValue}
+									gridZoomController={gridZoomController}
+								/>
 
-							<ButtonGridZoomControl
-								useCompactButtons={false}
-								gridZoomValue={gridZoomValue}
-								gridZoomController={gridZoomController}
-								style={{
-									float: 'right',
-									marginTop: 10,
-									marginRight: 3,
-								}}
-							/>
-
-							<ButtonGridHeader pageNumber={pageNumber} changePage={changePage} setPage={setPageNumber} />
+								<CButton color="light" className="btn-right" title="Home Position" onClick={resetDestinationPosition}>
+									<FontAwesomeIcon icon={faHome} />
+								</CButton>
+							</ButtonGridHeader>
 						</CCol>
 						<div className="buttongrid">
 							{hasBeenRendered && destinationGridSize && (
