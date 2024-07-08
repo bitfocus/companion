@@ -363,10 +363,12 @@ function TriggersTableRow({ controlId, item, editItem, moveTrigger, isSelected }
 					</CButton>
 
 					<CFormSwitch
+						className="connection-enabled-switch"
 						color="success"
 						checked={item.enabled}
 						onChange={doEnableDisable}
 						title={item.enabled ? 'Disable trigger' : 'Enable trigger'}
+						size="xl"
 					/>
 				</CButtonGroup>
 			</td>
