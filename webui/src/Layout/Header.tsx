@@ -1,7 +1,7 @@
 import React, { useContext, useEffect, useState } from 'react'
 import { CHeader, CHeaderBrand, CHeaderNav, CNavItem, CNavLink, CHeaderToggler, CContainer } from '@coreui/react'
 import { socketEmitPromise } from '../util.js'
-import { faBars, faLock } from '@fortawesome/free-solid-svg-icons'
+import { faBars, faLock, faTriangleExclamation } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import type { AppUpdateInfo, AppVersionInfo } from '@companion-app/shared/Model/Common.js'
 import { RootAppStoreContext } from '../Stores/RootAppStore.js'
@@ -62,9 +62,9 @@ export const MyHeader = observer(function MyHeader({ toggleSidebar, canLock, set
 						</CNavLink>
 					</CNavItem>
 
-					<CNavItem>
+					<CNavItem className="header-update-warn">
 						<CNavLink target="_new" href={updateData?.link || 'https://bitfocus.io/companion/'}>
-							{updateData?.message || ''}
+						<FontAwesomeIcon icon={faTriangleExclamation} className="header-update-icon" />{updateData?.message || ''}
 						</CNavLink>
 					</CNavItem>
 				</CHeaderNav>
