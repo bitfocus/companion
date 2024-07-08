@@ -36,7 +36,7 @@ import { MySidebar } from './Layout/Sidebar.js'
 import { MyHeader } from './Layout/Header.js'
 import { Triggers, TRIGGERS_PAGE_PREFIX } from './Triggers/index.js'
 import { ConnectionsPage } from './Connections/index.js'
-import { ButtonsPage } from './Buttons/index.js'
+import { BUTTONS_PAGE_PREFIX, ButtonsPage } from './Buttons/index.js'
 import { ContextData } from './ContextData.js'
 import { CloudPage } from './Cloud/index.js'
 import { WizardModal, WIZARD_CURRENT_VERSION, WizardModalRef } from './Wizard/index.js'
@@ -447,7 +447,7 @@ const AppContent = observer(function AppContent({ buttonGridHotPress }: AppConte
 					</CNavLink>
 				</CNavItem>
 				<CNavItem>
-					<CNavLink to="/buttons" as={NavLink}>
+					<CNavLink to={BUTTONS_PAGE_PREFIX} as={NavLink}>
 						<FontAwesomeIcon icon={faCalendarAlt} /> Buttons
 					</CNavLink>
 				</CNavItem>
@@ -495,7 +495,7 @@ const AppContent = observer(function AppContent({ buttonGridHotPress }: AppConte
 						<ConnectionsPage />
 					</MyErrorBoundary>
 				</CTabPane>
-				<CTabPane className={getClassForPane('/buttons')}>
+				<CTabPane className={getClassForPane(BUTTONS_PAGE_PREFIX)}>
 					<MyErrorBoundary>
 						<ButtonsPage hotPress={buttonGridHotPress} />
 					</MyErrorBoundary>
