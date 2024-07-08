@@ -69,6 +69,18 @@ export function ApplyStep({ oldConfig, newConfig }: ApplyStepProps) {
 		)
 	}
 
+	if (oldConfig.setup_wizard === 0 || oldConfig.vec_footpedal_enable !== newConfig.vec_footpedal_enable) {
+		changes.push(
+			newConfig.vec_footpedal_enable ? (
+				<li>VEC Footpedal hardware will be detected by Companion.</li>
+			) : (
+				<li>
+					VEC Footpedal hardware will {oldConfig.setup_wizard > 0 ? 'no longer' : 'not'} be detected by Companion.
+				</li>
+			)
+		)
+	}
+
 	if (oldConfig.setup_wizard === 0 || oldConfig.videohub_panel_enabled !== newConfig.videohub_panel_enabled) {
 		changes.push(
 			newConfig.videohub_panel_enabled ? (

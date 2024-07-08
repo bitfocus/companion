@@ -57,6 +57,14 @@ export function SurfacesStep({ config, setValue }: SurfacesStepProps) {
 				/>
 			</div>
 
+			<div className="indent3">
+				<CFormCheck
+					label="VEC Footpedal USB Devices"
+					checked={config.vec_footpedal_enable}
+					onChange={(e) => setValue('vec_footpedal_enable', e.currentTarget.checked)}
+				/>
+			</div>
+
 			<br />
 			<h5>IP Surface Listeners</h5>
 			<div className="indent3">
