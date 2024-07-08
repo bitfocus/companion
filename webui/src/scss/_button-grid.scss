@@ -19,10 +19,6 @@
 	.right-buttons {
 		align-content: center;
 	}
-
-	.right-buttons .btn {
-		margin-top: 0;
-	}
 }
 
 .tab-pane .nav.nav-tabs .nav-link {
@@ -99,7 +95,7 @@
 .button-grid-header {
 	.btn-right {
 		float: right;
-		margin-top: 10px;
+		// margin-top: 10px;
 		margin-left: 3px;
 	}
 }
