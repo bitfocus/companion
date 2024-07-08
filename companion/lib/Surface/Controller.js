@@ -893,8 +893,8 @@ class SurfaceController extends CoreBase {
 											'infinitton',
 											InfinittonDriver
 										)
-									// More specific match has to be above xkeys
 									} else if (
+										// More specific match has to be above xkeys
 										deviceInfo.vendorId === vecFootpedal.vids.VEC &&
 										deviceInfo.productId === vecFootpedal.pids.FOOTPEDAL
 									) {
