@@ -329,10 +329,10 @@ function TriggersTableRow({ controlId, item, editItem, moveTrigger, isSelected }
 			</td>
 			<td className="action-buttons">
 				<CButtonGroup>
-					<CButton color="white" onClick={doClone} title="Clone">
+					<CButton color="white" onClick={doClone} title="Clone" style={{ padding: 4 }}>
 						<FontAwesomeIcon icon={faClone} />
 					</CButton>
-					<CButton color="gray" onClick={doDelete} title="Delete">
+					<CButton color="gray" onClick={doDelete} title="Delete" style={{ padding: 4 }}>
 						<FontAwesomeIcon icon={faTrash} />
 					</CButton>
 					<CButton
@@ -341,15 +341,18 @@ function TriggersTableRow({ controlId, item, editItem, moveTrigger, isSelected }
 						target="_new"
 						disabled={!exportId}
 						title="Export"
+						style={{ padding: 4 }}
 					>
 						<FontAwesomeIcon icon={faDownload} />
 					</CButton>
 
 					<CFormSwitch
+						className="connection-enabled-switch"
 						color="success"
 						checked={item.enabled}
 						onChange={doEnableDisable}
 						title={item.enabled ? 'Disable trigger' : 'Enable trigger'}
+						size="xl"
 					/>
 				</CButtonGroup>
 			</td>
