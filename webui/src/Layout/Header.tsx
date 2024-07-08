@@ -52,7 +52,7 @@ export const MyHeader = observer(function MyHeader({ toggleSidebar, canLock, set
 
 				<CHeaderNav className="d-none d-md-flex me-auto">
 					{userConfig.properties?.installName && userConfig.properties?.installName.length > 0 && (
-						<CNavItem className="install-name">{userConfig.properties?.installName}:</CNavItem>
+						<CNavItem className="install-name">{userConfig.properties?.installName}</CNavItem>
 					)}
 
 					<CNavItem>
