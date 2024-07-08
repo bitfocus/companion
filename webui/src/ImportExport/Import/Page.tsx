@@ -84,7 +84,7 @@ export const ImportPageWizard = observer(function ImportPageWizard({
 			<CCol xs={12} xl={6}>
 				<h5>Source Page</h5>
 				<MyErrorBoundary>
-					<div>
+					<>
 						<CCol sm={12}>
 							<ButtonGridHeader
 								pageNumber={isSinglePage ? snapshot.oldPageNumber ?? 1 : importPageNumber}
@@ -107,14 +107,14 @@ export const ImportPageWizard = observer(function ImportPageWizard({
 								/>
 							)}
 						</div>
-					</div>
+					</>
 				</MyErrorBoundary>
 			</CCol>
 
 			<CCol xs={12} xl={6}>
 				<h5>Destination Page</h5>
 				<MyErrorBoundary>
-					<div>
+					<>
 						<CCol sm={12}>
 							<ButtonGridHeader pageNumber={pageNumber} changePage={changePage} setPage={setPageNumber}>
 								<ButtonGridZoomControl
@@ -139,7 +139,7 @@ export const ImportPageWizard = observer(function ImportPageWizard({
 								/>
 							)}
 						</div>
-					</div>
+					</>
 				</MyErrorBoundary>
 			</CCol>
 			<CCol xs={12}>
