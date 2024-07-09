@@ -25,31 +25,137 @@ export class SurfaceLayoutRegistry {
 	#layouts = []
 
 	constructor() {
+		this.#addCountourShuttleLayouts()
 		this.#addStreamdeckLayouts()
+		this.#addLoupedeckLayouts()
+		this.#addInfinittonLayouts()
+		this.#addVideohubLayouts()
+		this.#addXKeysLayouts()
+
+		// Sort by name
+		this.#layouts.sort((a, b) => a.name.localeCompare(b.name))
+	}
+
+	#addCountourShuttleLayouts() {
+		// TODO
 	}
 
 	#addStreamdeckLayouts() {
 		this.#layouts.push(
 			{
 				id: 'streamdeck-15',
-				name: 'Stream Deck: Original',
+				name: 'Elgato Streamdeck Original',
+				type: 'grid',
 				rows: 3,
 				columns: 5,
 			},
 			{
 				id: 'streamdeck-xl',
-				name: 'Stream Deck: XL',
+				name: 'Elgato Streamdeck XL',
+				type: 'grid',
 				rows: 4,
 				columns: 8,
 			},
 			{
 				id: 'streamdeck-mini',
-				name: 'Stream Deck: Mini',
+				name: 'Elgato Streamdeck Mini',
+				type: 'grid',
 				rows: 2,
 				columns: 3,
+			},
+			{
+				id: 'streamdeck-plus',
+				name: 'Elgato Streamdeck +',
+				type: 'grid',
+				rows: 4,
+				columns: 4,
+			},
+			{
+				id: 'streamdeck-pedal',
+				name: 'Elgato Streamdeck Pedal',
+				type: 'grid',
+				rows: 1,
+				columns: 3,
+			},
+			{
+				id: 'streamdeck-neo',
+				name: 'Elgato Streamdeck Neo',
+				type: 'grid',
+				rows: 3,
+				columns: 4,
 			}
-			// TODO - add more layouts
 		)
+	}
+
+	#addLoupedeckLayouts() {
+		this.#layouts.push(
+			{
+				id: 'loupedeck-live',
+				name: 'Loupedeck Live',
+				type: 'grid',
+				rows: 4,
+				columns: 8,
+			},
+			{
+				id: 'loupedeck-live-s',
+				name: 'Loupedeck Live S',
+				type: 'grid',
+				rows: 3,
+				columns: 7,
+			},
+			{
+				id: 'razer-stream-controller',
+				name: 'Razer Stream Controller',
+				type: 'grid',
+				rows: 4,
+				columns: 8,
+			},
+			{
+				id: 'razer-stream-controller-x',
+				name: 'Razer Stream Controller X',
+				type: 'grid',
+				rows: 3,
+				columns: 5,
+			},
+			{
+				id: 'loupedeck-ct',
+				name: 'Loupedeck CT',
+				type: 'grid',
+				rows: 8, // TODO verify
+				columns: 8,
+			}
+		)
+	}
+
+	#addInfinittonLayouts() {
+		this.#layouts.push({
+			id: 'infinitton-idisplay',
+			name: 'Infinitton idisplay',
+			type: 'grid',
+			rows: 3,
+			columns: 5,
+		})
+	}
+
+	#addVideohubLayouts() {
+		this.#layouts.push({
+			id: 'blackmagic-videohub-smart-control',
+			name: 'Videohub Smart Control',
+			type: 'grid',
+			rows: 2,
+			columns: 20,
+		})
+	}
+
+	#addXKeysLayouts() {
+		// TODO
+		// this.#layouts.push({
+		// 	id: 'blackmagic-videohub-smart-control',
+		// 	name: 'Videohub Smart Control',
+		// 	type: 'grid',
+		// 	rows: 2,
+		// 	columns: 20,
+		// })
 	}
 
 	/**

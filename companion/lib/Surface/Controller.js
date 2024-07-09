@@ -685,6 +685,7 @@ class SurfaceController extends CoreBase {
 					id: surfaceInfo.id,
 					name: surfaceInfo.displayName,
 
+					type: 'grid',
 					rows: surfaceHandler.panelGridSize.rows,
 					columns: surfaceHandler.panelGridSize.columns,
 				}
