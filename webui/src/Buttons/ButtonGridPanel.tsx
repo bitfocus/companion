@@ -26,7 +26,7 @@ import { observer } from 'mobx-react-lite'
 import { ButtonGridZoomControl } from './ButtonGridZoomControl.js'
 import { GridZoomController } from './GridZoom.js'
 import { CModalExt } from '../Components/CModalExt.js'
-import { GridViewSelectedSurfaceInfo, GridViewSpecialSurface } from './GridViewAs.js'
+import { GridViewAsController, GridViewSelectedSurfaceInfo } from './GridViewAs.js'
 import { ButtonGridViewAsSurfaceControl } from './ButtonGridViewAsSurfaceControl.js'
 
 interface ButtonsGridPanelProps {
@@ -39,7 +39,7 @@ interface ButtonsGridPanelProps {
 	clearSelectedButton: () => void
 	gridZoomValue: number
 	gridZoomController: GridZoomController
-	gridViewAsSurface: GridViewSelectedSurfaceInfo
+	gridViewAsController: GridViewAsController
 }
 
 export const ButtonsGridPanel = observer(function ButtonsPage({
@@ -52,7 +52,7 @@ export const ButtonsGridPanel = observer(function ButtonsPage({
 	clearSelectedButton,
 	gridZoomValue,
 	gridZoomController,
-	gridViewAsSurface,
+	gridViewAsController,
 }: ButtonsGridPanelProps) {
 	const { pages } = useContext(RootAppStoreContext)
 
@@ -147,14 +147,14 @@ export const ButtonsGridPanel = observer(function ButtonsPage({
 								gridZoomValue={gridZoomValue}
 								gridZoomController={gridZoomController}
 							/>
-							<ButtonGridViewAsSurfaceControl useCompactButtons={true} />
+							<ButtonGridViewAsSurfaceControl gridViewAsController={gridViewAsController} />
 						</ButtonGridHeader>
 					</CCol>
 				</CRow>
 			</div>
 			<div className="button-grid-panel-content">
 				{hasBeenInView &&
-					(gridViewAsSurface.id !== GridViewSpecialSurface.None ? (
+					(gridViewAsController.enabled ? (
 						<ButtonViewAsLayout
 							gridRef={gridRef}
 							isHot={isHot}
@@ -162,7 +162,7 @@ export const ButtonsGridPanel = observer(function ButtonsPage({
 							buttonClick={buttonClick}
 							selectedButton={selectedButton}
 							gridZoomValue={gridZoomValue}
-							gridViewAsSurface={gridViewAsSurface}
+							gridViewAsSurface={gridViewAsController.selectedSurface}
 						/>
 					) : (
 						<ButtonFullGridLayout

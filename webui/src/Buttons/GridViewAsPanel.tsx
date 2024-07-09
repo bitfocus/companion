@@ -1,5 +1,5 @@
 import React, { useContext } from 'react'
-import { CAlert, CCol, CForm, CFormLabel } from '@coreui/react'
+import { CAlert, CCol, CForm, CFormLabel, CFormSwitch } from '@coreui/react'
 import { PreventDefaultHandler, useComputed } from '../util.js'
 import { RootAppStoreContext } from '../Stores/RootAppStore.js'
 import { observer } from 'mobx-react-lite'
@@ -37,6 +37,16 @@ export const GridViewAsPanel = observer(function GridViewAsPanel({ gridViewAsCon
 			<p>Here you can change how the grid is displayed, to view it as a particular surface.</p>
 
 			<CForm className="row g-3" onSubmit={PreventDefaultHandler}>
+				<CFormLabel className="col-sm-2 col-form-label col-form-label-sm">View Enabled</CFormLabel>
+				<CCol sm={9}>
+					<CFormSwitch
+						checked={gridViewAsController.enabled}
+						onChange={(e) => gridViewAsController.setEnabled(!!e.currentTarget.checked)}
+						size="xl"
+					/>
+				</CCol>
+				<CCol sm={1}></CCol>
+
 				<CFormLabel className="col-sm-2 col-form-label col-form-label-sm">Surface</CFormLabel>
 				<CCol sm={9}>
 					<DropdownInputField
@@ -48,14 +58,13 @@ export const GridViewAsPanel = observer(function GridViewAsPanel({ gridViewAsCon
 				</CCol>
 				<CCol sm={1}></CCol>
 
-				{gridViewAsController.selectedSurface.id !== GridViewSpecialSurface.None &&
-					!gridViewAsController.selectedSurface.layout && (
-						<CCol sm={12}>
-							<CAlert color="warning">
-								The layout of this surface is not known, the full grid will be shown instead
-							</CAlert>
-						</CCol>
-					)}
+				{!gridViewAsController.selectedSurface.layout && (
+					<CCol sm={12}>
+						<CAlert color="warning">
+							The layout of this surface is not known, the full grid will be shown instead
+						</CAlert>
+					</CCol>
+				)}
 
 				<CFormLabel className="col-sm-2 col-form-label col-form-label-sm">Surface Type</CFormLabel>
 				<CCol sm={9}>

@@ -273,7 +273,7 @@ export const ButtonsPage = observer(function ButtonsPage({ hotPress }: ButtonsPa
 						clearSelectedButton={clearSelectedButton}
 						gridZoomController={gridZoomController}
 						gridZoomValue={gridZoomValue}
-						gridViewAsSurface={gridViewAsController.selectedSurface}
+						gridViewAsController={gridViewAsController}
 					/>
 				</MyErrorBoundary>
 			</CCol>
