@@ -1,6 +1,6 @@
-import React, { useCallback, useContext, useEffect, useState } from 'react'
-import { CAlert, CButton, CRow } from '@coreui/react'
-import { ConnectionsContext, useComputed } from '../util.js'
+import React, { useContext } from 'react'
+import { CAlert } from '@coreui/react'
+import { useComputed } from '../util.js'
 import { RootAppStoreContext } from '../Stores/RootAppStore.js'
 import { observer } from 'mobx-react-lite'
 import { GridViewAsController, GridViewSpecialSurface } from './GridViewAs.js'
@@ -13,19 +13,6 @@ interface GridViewAsPanelProps {
 
 export const GridViewAsPanel = observer(function GridViewAsPanel({ gridViewAsController }: GridViewAsPanelProps) {
 	const { surfaces } = useContext(RootAppStoreContext)
-
-	// const options = Object.entries(presets).map(([id, vals]) => {
-	// 	if (!vals || Object.values(vals).length === 0) return ''
-
-	// 	const connectionInfo = connectionsContext[id]
-	// 	const moduleInfo = connectionInfo ? modules.modules.get(connectionInfo.instance_type) : undefined
-
-	// 	return (
-	// 		<CButton key={id} color="danger" onClick={() => setConnectionAndCategory([id, null])}>
-	// 			{moduleInfo?.name ?? '?'} ({connectionInfo?.label ?? id})
-	// 		</CButton>
-	// 	)
-	// })
 
 	const surfaceTypeChoices: DropdownChoice[] = useComputed(() => {
 		if (gridViewAsController.selectedSurface.id === GridViewSpecialSurface.Custom) {

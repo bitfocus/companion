@@ -53,7 +53,7 @@ export const ButtonsGridPanel = observer(function ButtonsPage({
 	gridZoomController,
 	gridViewAsSurface,
 }: ButtonsGridPanelProps) {
-	const { socket, pages, userConfig } = useContext(RootAppStoreContext)
+	const { pages } = useContext(RootAppStoreContext)
 
 	const actionsRef = useRef<ButtonGridActionsRef>(null)
 
@@ -115,53 +115,7 @@ export const ButtonsGridPanel = observer(function ButtonsPage({
 		editRef.current?.show(Number(pageNumber), pageInfo)
 	}, [pageNumber, pageInfo])
 
-	let gridSize = userConfig.properties?.gridSize
-
-	const doGrow = useCallback(
-		(direction: 'left' | 'right' | 'top' | 'bottom', amount: number) => {
-			if (amount <= 0 || !gridSize) return
-
-			switch (direction) {
-				case 'left':
-					socket.emit('set_userconfig_key', 'gridSize', {
-						...gridSize,
-						minColumn: gridSize.minColumn - (amount || 2),
-					})
-					break
-				case 'right':
-					socket.emit('set_userconfig_key', 'gridSize', {
-						...gridSize,
-						maxColumn: gridSize.maxColumn + (amount || 2),
-					})
-					break
-				case 'top':
-					socket.emit('set_userconfig_key', 'gridSize', {
-						...gridSize,
-						minRow: gridSize.minRow - (amount || 2),
-					})
-					break
-				case 'bottom':
-					socket.emit('set_userconfig_key', 'gridSize', {
-						...gridSize,
-						maxRow: gridSize.maxRow + (amount || 2),
-					})
-					break
-			}
-		},
-		[socket, gridSize]
-	)
-
 	const [hasBeenInView, isInViewRef] = useHasBeenRendered()
-
-	if (gridViewAsSurface.id !== GridViewSpecialSurface.None && gridViewAsSurface.layout) {
-		// A custom view has been selected, limit what is shown
-		gridSize = {
-			minRow: gridViewAsSurface.yOffset,
-			minColumn: gridViewAsSurface.xOffset,
-			maxRow: gridViewAsSurface.yOffset + gridViewAsSurface.layout.rows - 1,
-			maxColumn: gridViewAsSurface.xOffset + gridViewAsSurface.layout.columns - 1,
-		}
-	}
 
 	return (
 		<KeyReceiver onKeyDown={onKeyDown} tabIndex={0} className="button-grid-panel">
@@ -197,23 +151,27 @@ export const ButtonsGridPanel = observer(function ButtonsPage({
 				</CRow>
 			</div>
 			<div className="button-grid-panel-content">
-				{hasBeenInView && gridSize && (
-					<ButtonInfiniteGrid
-						ref={gridRef}
-						isHot={isHot}
-						pageNumber={pageNumber}
-						buttonClick={buttonClick}
-						selectedButton={selectedButton}
-						gridSize={gridSize}
-						doGrow={
-							gridViewAsSurface.id === GridViewSpecialSurface.None && userConfig.properties?.gridSizeInlineGrow
-								? doGrow
-								: undefined
-						}
-						buttonIconFactory={PrimaryButtonGridIcon}
-						drawScale={gridZoomValue / 100}
-					/>
-				)}
+				{hasBeenInView &&
+					(gridViewAsSurface.id !== GridViewSpecialSurface.None ? (
+						<ButtonViewAsLayout
+							gridRef={gridRef}
+							isHot={isHot}
+							pageNumber={pageNumber}
+							buttonClick={buttonClick}
+							selectedButton={selectedButton}
+							gridZoomValue={gridZoomValue}
+							gridViewAsSurface={gridViewAsSurface}
+						/>
+					) : (
+						<ButtonFullGridLayout
+							gridRef={gridRef}
+							isHot={isHot}
+							pageNumber={pageNumber}
+							buttonClick={buttonClick}
+							selectedButton={selectedButton}
+							gridZoomValue={gridZoomValue}
+						/>
+					))}
 			</div>
 			<div className="button-grid-panel-footer">
 				<CRow style={{ paddingTop: '15px' }}>
@@ -234,6 +192,127 @@ export const ButtonsGridPanel = observer(function ButtonsPage({
 		</KeyReceiver>
 	)
 })
+
+interface ButtonFullGridLayoutProps {
+	gridRef: React.RefObject<ButtonInfiniteGridRef>
+	isHot: boolean
+	pageNumber: number
+	buttonClick: (location: ControlLocation, isDown: boolean) => void
+	selectedButton: ControlLocation | null
+	gridZoomValue: number
+}
+function ButtonFullGridLayout({
+	gridRef,
+	isHot,
+	pageNumber,
+	buttonClick,
+	selectedButton,
+	gridZoomValue,
+}: ButtonFullGridLayoutProps) {
+	const { socket, userConfig } = useContext(RootAppStoreContext)
+
+	const gridSize = userConfig.properties?.gridSize
+
+	const doGrow = useCallback(
+		(direction: 'left' | 'right' | 'top' | 'bottom', amount: number) => {
+			if (amount <= 0 || !gridSize) return
+
+			switch (direction) {
+				case 'left':
+					socket.emit('set_userconfig_key', 'gridSize', {
+						...gridSize,
+						minColumn: gridSize.minColumn - (amount || 2),
+					})
+					break
+				case 'right':
+					socket.emit('set_userconfig_key', 'gridSize', {
+						...gridSize,
+						maxColumn: gridSize.maxColumn + (amount || 2),
+					})
+					break
+				case 'top':
+					socket.emit('set_userconfig_key', 'gridSize', {
+						...gridSize,
+						minRow: gridSize.minRow - (amount || 2),
+					})
+					break
+				case 'bottom':
+					socket.emit('set_userconfig_key', 'gridSize', {
+						...gridSize,
+						maxRow: gridSize.maxRow + (amount || 2),
+					})
+					break
+			}
+		},
+		[socket, gridSize]
+	)
+
+	return (
+		gridSize && (
+			<ButtonInfiniteGrid
+				ref={gridRef}
+				isHot={isHot}
+				pageNumber={pageNumber}
+				buttonClick={buttonClick}
+				selectedButton={selectedButton}
+				gridSize={gridSize}
+				doGrow={userConfig.properties?.gridSizeInlineGrow ? doGrow : undefined}
+				buttonIconFactory={PrimaryButtonGridIcon}
+				drawScale={gridZoomValue / 100}
+			/>
+		)
+	)
+}
+
+interface ButtonViewAsLayoutProps {
+	gridRef: React.RefObject<ButtonInfiniteGridRef>
+	isHot: boolean
+	pageNumber: number
+	buttonClick: (location: ControlLocation, isDown: boolean) => void
+	selectedButton: ControlLocation | null
+	gridZoomValue: number
+	gridViewAsSurface: GridViewSelectedSurfaceInfo
+}
+function ButtonViewAsLayout({
+	gridRef,
+	isHot,
+	pageNumber,
+	buttonClick,
+	selectedButton,
+	gridZoomValue,
+	gridViewAsSurface,
+}: ButtonViewAsLayoutProps) {
+	const { userConfig } = useContext(RootAppStoreContext)
+
+	if (gridViewAsSurface.layout?.type === 'complex') {
+		return <p>TODO</p>
+	} else {
+		// A custom view has been selected, limit what is shown
+		const gridSize = gridViewAsSurface.layout
+			? {
+					minRow: gridViewAsSurface.yOffset,
+					minColumn: gridViewAsSurface.xOffset,
+					maxRow: gridViewAsSurface.yOffset + gridViewAsSurface.layout.rows - 1,
+					maxColumn: gridViewAsSurface.xOffset + gridViewAsSurface.layout.columns - 1,
+				}
+			: userConfig.properties?.gridSize // fallback to the default grid size
+
+		return (
+			gridSize && (
+				<ButtonInfiniteGrid
+					ref={gridRef}
+					isHot={isHot}
+					pageNumber={pageNumber}
+					buttonClick={buttonClick}
+					selectedButton={selectedButton}
+					gridSize={gridSize}
+					buttonIconFactory={PrimaryButtonGridIcon}
+					drawScale={gridZoomValue / 100}
+				/>
+			)
+		)
+	}
+}
 
 interface EditPagePropertiesModalRef {
 	show(pageNumber: number, pageInfo: PagesStoreModel | undefined): void

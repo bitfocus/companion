@@ -51,10 +51,31 @@ export interface SurfacesUpdateUpdateOp {
 	patch: JsonPatchOperation[]
 }
 
-export interface SurfaceLayoutSchema {
+export type SurfaceLayoutSchema = SurfaceLayoutSchemaGrid | SurfaceLayoutSchemaComplex
+
+export interface SurfaceLayoutSchemaBase {
+	id: string
+	name: string
+}
+
+export interface SurfaceLayoutSchemaGrid {
 	id: string
 	name: string
 
+	type: 'grid'
+
 	rows: number
 	columns: number
+}
+
+export interface SurfaceLayoutSchemaComplex {
+	id: string
+	name: string
+
+	type: 'complex'
+
+	/**
+	 * Background image, recommended to be a svg when possible
+	 */
+	backgroundImage: string
 }
