@@ -5,6 +5,7 @@ import { RootAppStoreContext } from '../Stores/RootAppStore.js'
 import { observer } from 'mobx-react-lite'
 import { GridViewAsController, GridViewSpecialSurface } from './GridViewAs.js'
 import { DropdownInputField, NumberInputField } from '../Components/index.js'
+import { DropdownChoice } from '@companion-module/base'
 
 interface GridViewAsPanelProps {
 	gridViewAsController: GridViewAsController
@@ -26,9 +27,12 @@ export const GridViewAsPanel = observer(function GridViewAsPanel({ gridViewAsCon
 	// 	)
 	// })
 
-	const surfaceTypeChoices = useComputed(() => {
+	const surfaceTypeChoices: DropdownChoice[] = useComputed(() => {
 		if (gridViewAsController.selectedSurface.id === GridViewSpecialSurface.Custom) {
-			return []
+			return surfaces.layouts.map((layout) => ({
+				id: layout.id,
+				label: layout.name,
+			}))
 		} else {
 			// Field is disabled, show just the current value
 			return [
@@ -52,6 +56,11 @@ export const GridViewAsPanel = observer(function GridViewAsPanel({ gridViewAsCon
 				value={gridViewAsController.selectedSurface.id}
 				setValue={(value) => gridViewAsController.setSelectedSurface(value as GridViewSpecialSurface | string)}
 			/>
+
+			{gridViewAsController.selectedSurface.id !== GridViewSpecialSurface.None &&
+				!gridViewAsController.selectedSurface.layout && (
+					<CAlert color="warning">The layout of this surface is not known, the full grid will be shown instead</CAlert>
+				)}
 
 			<DropdownInputField
 				label="Surface Type"

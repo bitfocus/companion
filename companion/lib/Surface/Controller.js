@@ -1,4 +1,3 @@
-// @ts-check
 /*
  * This file is part of the Companion project
  * Copyright (c) 2018 Bitfocus AS
@@ -41,6 +40,7 @@ import SurfaceIPVideohubPanel from './IP/VideohubPanel.js'
 import FrameworkMacropadDriver from './USB/FrameworkMacropad.js'
 import CoreBase from '../Core/Base.js'
 import { SurfaceGroup } from './Group.js'
+import { SurfaceLayoutRegistry } from './LayoutRegistry.js'
 
 // Force it to load the hidraw driver just in case
 HID.setDriverType('hidraw')
@@ -49,6 +49,13 @@ HID.devices()
 const SurfacesRoom = 'surfaces'
 
 class SurfaceController extends CoreBase {
+	/**
+	 * @type {SurfaceLayoutRegistry}
+	 * @access private
+	 * @readonly
+	 */
+	#surfaceLayouts
+
 	/**
 	 * The last sent json object
 	 * @type {Record<string, ClientDevicesListItem> }
@@ -111,6 +118,8 @@ class SurfaceController extends CoreBase {
 	 */
 	constructor(registry) {
 		super(registry, 'Surface/Controller')
+
+		this.#surfaceLayouts = new SurfaceLayoutRegistry()
 
 		this.#surfacesAllLocked = !!this.userconfig.getKey('link_lockouts')
 
@@ -536,6 +545,10 @@ class SurfaceController extends CoreBase {
 
 			return group.groupConfig
 		})
+
+		client.onPromise('surfaces:get-layouts', () => {
+			return this.#surfaceLayouts.getLayouts()
+		})
 	}
 
 	/**
@@ -658,10 +671,7 @@ class SurfaceController extends CoreBase {
 				location: null,
 				xOffset: config.config?.xOffset ?? 0,
 				yOffset: config.config?.yOffset ?? 0,
-				layout: {
-					rows: 0,
-					columns: 0,
-				},
+				layout: config.layout ?? null,
 			}
 
 			if (surfaceHandler) {
@@ -672,6 +682,9 @@ class SurfaceController extends CoreBase {
 				surfaceInfo.configFields = surfaceHandler.panel.info.configFields || []
 
 				surfaceInfo.layout = {
+					id: surfaceInfo.id,
+					name: surfaceInfo.displayName,
+
 					rows: surfaceHandler.panelGridSize.rows,
 					columns: surfaceHandler.panelGridSize.columns,
 				}

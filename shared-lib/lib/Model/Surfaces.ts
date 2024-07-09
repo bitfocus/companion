@@ -12,7 +12,7 @@ export interface ClientSurfaceItem {
 
 	xOffset: number
 	yOffset: number
-	layout: SurfaceLayoutSchema
+	layout: SurfaceLayoutSchema | null
 }
 
 export interface ClientDevicesListItem {
@@ -52,6 +52,9 @@ export interface SurfacesUpdateUpdateOp {
 }
 
 export interface SurfaceLayoutSchema {
+	id: string
+	name: string
+
 	rows: number
 	columns: number
 }
