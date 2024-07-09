@@ -26,6 +26,7 @@ import { getStreamDeckDeviceInfo } from '@elgato-stream-deck/node'
 import { usb } from 'usb'
 // @ts-ignore
 import shuttleControlUSB from 'shuttle-control-usb'
+// @ts-ignore
 import vecFootpedal from 'vec-footpedal'
 import { listLoupedecks, LoupedeckModelId } from '@loupedeck/node'
 import SurfaceHandler, { getSurfaceName } from './Handler.js'
