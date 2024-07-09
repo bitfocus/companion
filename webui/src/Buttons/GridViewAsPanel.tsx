@@ -31,8 +31,6 @@ export const GridViewAsPanel = observer(function GridViewAsPanel({ gridViewAsCon
 		}
 	}, [surfaces, gridViewAsController.selectedSurface.id])
 
-	console.log(gridViewAsController.selectedSurface, surfaceTypeChoices)
-
 	return (
 		<div>
 			<h5>View Grid As</h5>

@@ -83,6 +83,15 @@ export function useGridViewAs(): GridViewAsController {
 		[setStoredData]
 	)
 
+	const selectedSurfaceIsValid =
+		storedData.surfaceId === GridViewSpecialSurface.None ||
+		storedData.surfaceId === GridViewSpecialSurface.Custom ||
+		surfaces.getSurfaceItem(storedData.surfaceId) !== undefined
+	if (!selectedSurfaceIsValid) {
+		// If the selected surface is invalid, reset to the default
+		updateStoredData((oldStore) => ({ ...oldStore, surfaceId: GridViewSpecialSurface.None }))
+	}
+
 	const surfaceChoices = useComputed(() => {
 		return [
 			{
