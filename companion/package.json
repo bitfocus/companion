@@ -93,6 +93,7 @@
 		"usb": "2.13.0",
 		"utf-8-validate": "^6.0.4",
 		"uuid": "^10.0.0",
+		"vec-footpedal": "^2.0.1",
 		"videohub-server": "^0.3.0",
 		"winston": "^3.13.0",
 		"workerpool": "^9.1.3",

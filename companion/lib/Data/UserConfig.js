@@ -43,6 +43,7 @@ class DataUserConfig extends CoreBase {
 		usb_hotplug: true,
 		loupedeck_enable: false,
 		contour_shuttle_enable: false,
+		vec_footpedal_enable: false,
 
 		pin_enable: false,
 		link_lockouts: false,

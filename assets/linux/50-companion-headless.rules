@@ -39,3 +39,7 @@ SUBSYSTEM=="usb", ATTRS{idVendor}=="0b33", ATTRS{idProduct}=="0030", MODE:="666"
 KERNEL=="hidraw*", ATTRS{idVendor}=="0b33", ATTRS{idProduct}=="0010", MODE:="666", GROUP="companion"
 KERNEL=="hidraw*", ATTRS{idVendor}=="0b33", ATTRS{idProduct}=="0020", MODE:="666", GROUP="companion"
 KERNEL=="hidraw*", ATTRS{idVendor}=="0b33", ATTRS{idProduct}=="0030", MODE:="666", GROUP="companion"
+
+# vec footpedal
+SUBSYSTEM=="usb", ATTRS{idVendor}=="05f3", ATTRS{idProduct}=="00ff", MODE:="666", GROUP="companion"
+KERNEL=="hidraw*", ATTRS{idVendor}=="05f3", ATTRS{idProduct}=="00ff", MODE:="666", GROUP="companion"

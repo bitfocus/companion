@@ -265,6 +265,10 @@
 			{
 				"label": "Contour Shuttle",
 				"file": "7_surfaces/contour_shuttle.md"
+			},
+			{
+				"label": "VEC Footpedal",
+				"file": "7_surfaces/vec_footpedal.md"
 			}
 		]
 	}

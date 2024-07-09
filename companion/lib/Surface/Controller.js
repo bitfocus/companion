@@ -26,6 +26,8 @@ import { getStreamDeckDeviceInfo } from '@elgato-stream-deck/node'
 import { usb } from 'usb'
 // @ts-ignore
 import shuttleControlUSB from 'shuttle-control-usb'
+// @ts-ignore
+import vecFootpedal from 'vec-footpedal'
 import { listLoupedecks, LoupedeckModelId } from '@loupedeck/node'
 import SurfaceHandler, { getSurfaceName } from './Handler.js'
 import SurfaceIPElgatoEmulator, { EmulatorRoom } from './IP/ElgatoEmulator.js'
@@ -37,6 +39,7 @@ import XKeysDriver from './USB/XKeys.js'
 import LoupedeckLiveDriver from './USB/LoupedeckLive.js'
 import SurfaceUSBLoupedeckCt from './USB/LoupedeckCt.js'
 import ContourShuttleDriver from './USB/ContourShuttle.js'
+import VECFootpedalDriver from './USB/VECFootpedal.js'
 import SurfaceIPVideohubPanel from './IP/VideohubPanel.js'
 import FrameworkMacropadDriver from './USB/FrameworkMacropad.js'
 import CoreBase from '../Core/Base.js'
@@ -874,6 +877,21 @@ class SurfaceController extends CoreBase {
 											'infinitton',
 											InfinittonDriver
 										)
+									} else if (
+										// More specific match has to be above xkeys
+										deviceInfo.vendorId === vecFootpedal.vids.VEC &&
+										deviceInfo.productId === vecFootpedal.pids.FOOTPEDAL
+									) {
+										if (this.userconfig.getKey('vec_footpedal_enable')) {
+											await this.#addDevice(
+												{
+													path: deviceInfo.path,
+													options: {},
+												},
+												'vec-footpedal',
+												VECFootpedalDriver
+											)
+										}
 									} else if (deviceInfo.vendorId === 1523 && deviceInfo.interface === 0) {
 										if (this.userconfig.getKey('xkeys_enable')) {
 											await this.#addDevice(
