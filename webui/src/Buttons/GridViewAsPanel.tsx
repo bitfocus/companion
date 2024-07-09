@@ -78,7 +78,7 @@ export const GridViewAsPanel = observer(function GridViewAsPanel({ gridViewAsCon
 				</CCol>
 				<CCol sm={1}></CCol>
 
-				<CFormLabel className="col-sm-2 col-form-label col-form-label-sm">X Offset</CFormLabel>
+				<CFormLabel className="col-sm-2 col-form-label col-form-label-sm">Horizontal Offset</CFormLabel>
 				<CCol sm={9}>
 					<NumberInputField
 						value={gridViewAsController.selectedSurface.xOffset}
@@ -88,7 +88,7 @@ export const GridViewAsPanel = observer(function GridViewAsPanel({ gridViewAsCon
 				</CCol>
 				<CCol sm={1}></CCol>
 
-				<CFormLabel className="col-sm-2 col-form-label col-form-label-sm">Y Offset</CFormLabel>
+				<CFormLabel className="col-sm-2 col-form-label col-form-label-sm">Vertical Offset</CFormLabel>
 				<CCol sm={9}>
 					<NumberInputField
 						value={gridViewAsController.selectedSurface.yOffset}

@@ -20,7 +20,7 @@ import EventEmitter from 'events'
 import shuttleControlUSB from 'shuttle-control-usb'
 import LogController from '../../Log/Controller.js'
 
-const contourShuttleXpressInfo = {
+export const contourShuttleXpressInfo = {
 	// Treat as:
 	// 3 buttons
 	// button, two encoders (jog and shuttle), button
@@ -40,7 +40,7 @@ const contourShuttleXpressInfo = {
 		[3, 1],
 	],
 }
-const contourShuttleProV1Info = {
+export const contourShuttleProV1Info = {
 	// Same as Pro V2 only without the buttons either side of the encoders
 	// Map the same for consistency and compatibility
 	totalCols: 5,
@@ -72,7 +72,7 @@ const contourShuttleProV1Info = {
 		[2, 3],
 	],
 }
-const contourShuttleProV2Info = {
+export const contourShuttleProV2Info = {
 	// 4 buttons
 	// 5 buttons
 	// button, two encoders (jog and shuttle), button

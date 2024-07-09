@@ -15,6 +15,9 @@
  *
  */
 
+import { PRODUCTS as XKeysProducts } from 'xkeys'
+import { contourShuttleXpressInfo, contourShuttleProV1Info, contourShuttleProV2Info } from './USB/ContourShuttle.js'
+
 export class SurfaceLayoutRegistry {
 	/**
 	 * The list of known surface layouts
@@ -37,7 +40,29 @@ export class SurfaceLayoutRegistry {
 	}
 
 	#addCountourShuttleLayouts() {
-		// TODO
+		this.#layouts.push(
+			{
+				id: 'contour-shuttle-xpress',
+				name: 'Contour Shuttle Xpress',
+				type: 'grid',
+				rows: contourShuttleXpressInfo.totalRows,
+				columns: contourShuttleXpressInfo.totalCols,
+			},
+			{
+				id: 'contour-shuttle-pro-v1',
+				name: 'Contour Shuttle Pro v1',
+				type: 'grid',
+				rows: contourShuttleProV1Info.totalRows,
+				columns: contourShuttleProV1Info.totalCols,
+			},
+			{
+				id: 'contour-shuttle-pro-v2',
+				name: 'Contour Shuttle Pro v2',
+				type: 'grid',
+				rows: contourShuttleProV2Info.totalRows,
+				columns: contourShuttleProV2Info.totalCols,
+			}
+		)
 	}
 
 	#addStreamdeckLayouts() {
@@ -148,14 +173,16 @@ export class SurfaceLayoutRegistry {
 	}
 
 	#addXKeysLayouts() {
-		// TODO
-		// this.#layouts.push({
-		// 	id: 'blackmagic-videohub-smart-control',
-		// 	name: 'Videohub Smart Control',
-		// 	type: 'grid',
-		// 	rows: 2,
-		// 	columns: 20,
-		// })
+		for (const [id, product] of Object.entries(XKeysProducts)) {
+			this.#layouts.push({
+				id: `xkeys-${id}`,
+				name: `XKeys ${product.name}`,
+				type: 'grid',
+
+				rows: product.rowCount,
+				columns: product.colCount,
+			})
+		}
 	}
 
 	/**
