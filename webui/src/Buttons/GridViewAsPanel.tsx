@@ -44,6 +44,8 @@ export const GridViewAsPanel = observer(function GridViewAsPanel({ gridViewAsCon
 		}
 	}, [surfaces, gridViewAsController.selectedSurface.id])
 
+	console.log(gridViewAsController.selectedSurface, surfaceTypeChoices)
+
 	return (
 		<div>
 			<h5>View Grid As</h5>
@@ -68,23 +70,21 @@ export const GridViewAsPanel = observer(function GridViewAsPanel({ gridViewAsCon
 				multiple={false}
 				disabled={gridViewAsController.selectedSurface.id !== GridViewSpecialSurface.Custom}
 				value={gridViewAsController.selectedSurface.type}
-				setValue={(value) => {
-					console.log('type', value)
-				}}
+				setValue={(value) => gridViewAsController.setCustomType(value as string)}
 			/>
 
 			<NumberInputField
 				label="X Offset"
 				value={gridViewAsController.selectedSurface.xOffset}
 				disabled={gridViewAsController.selectedSurface.id !== GridViewSpecialSurface.Custom}
-				setValue={() => {}}
+				setValue={gridViewAsController.setCustomXOffset}
 			/>
 
 			<NumberInputField
 				label="Y Offset"
 				value={gridViewAsController.selectedSurface.yOffset}
 				disabled={gridViewAsController.selectedSurface.id !== GridViewSpecialSurface.Custom}
-				setValue={() => {}}
+				setValue={gridViewAsController.setCustomYOffset}
 			/>
 		</div>
 	)

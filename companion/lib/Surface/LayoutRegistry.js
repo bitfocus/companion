@@ -41,6 +41,12 @@ export class SurfaceLayoutRegistry {
 				name: 'Stream Deck: XL',
 				rows: 4,
 				columns: 8,
+			},
+			{
+				id: 'streamdeck-mini',
+				name: 'Stream Deck: Mini',
+				rows: 2,
+				columns: 3,
 			}
 			// TODO - add more layouts
 		)
