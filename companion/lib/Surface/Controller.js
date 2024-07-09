@@ -674,6 +674,18 @@ class SurfaceController extends CoreBase {
 				layout: config.layout ?? null,
 			}
 
+			// If the surface has a cached grid size, a crude layout can be generated
+			if (config.gridSize && !surfaceInfo.layout) {
+				surfaceInfo.layout = {
+					id: '__auto__',
+					name: surfaceInfo.displayName,
+
+					type: 'grid',
+					rows: config.gridSize.rows,
+					columns: config.gridSize.columns,
+				}
+			}
+
 			if (surfaceHandler) {
 				let location = surfaceHandler.panel.info.location
 				if (location && location.startsWith('::ffff:')) location = location.substring(7)
@@ -682,7 +694,7 @@ class SurfaceController extends CoreBase {
 				surfaceInfo.configFields = surfaceHandler.panel.info.configFields || []
 
 				surfaceInfo.layout = {
-					id: surfaceInfo.id,
+					id: '__auto__',
 					name: surfaceInfo.displayName,
 
 					type: 'grid',
