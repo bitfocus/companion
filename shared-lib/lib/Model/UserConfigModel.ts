@@ -11,6 +11,7 @@ export interface UserConfigModel {
 	usb_hotplug: boolean
 	loupedeck_enable: boolean
 	contour_shuttle_enable: boolean
+	vec_footpedal_enable: boolean
 
 	pin_enable: boolean
 	link_lockouts: boolean
