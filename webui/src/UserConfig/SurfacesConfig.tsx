@@ -143,6 +143,27 @@ export const SurfacesConfig = observer(function SurfacesConfig({ config, setValu
 					</CButton>
 				</td>
 			</tr>
+			<tr>
+				<td>
+					Enable connected VEC Footpedal
+					<br />
+					<em>(Requires Companion restart)</em>
+				</td>
+				<td>
+					<CFormSwitch
+						className="float-right"
+						color="success"
+						checked={config.vec_footpedal_enable}
+						size="xl"
+						onChange={(e) => setValue('vec_footpedal_enable', e.currentTarget.checked)}
+					/>
+				</td>
+				<td>
+					<CButton onClick={() => resetValue('vec_footpedal_enable')} title="Reset to default">
+						<FontAwesomeIcon icon={faUndo} />
+					</CButton>
+				</td>
+			</tr>
 		</>
 	)
 })

@@ -16,3 +16,6 @@ More details on supported surfaces are available in the chapter on [Surfaces](#7
 
 - **Enable connected Contour Shuttle (Requires Companion restart)**
   Whether to enable support for connecting to Contour Shuttle devices.
+
+- **Enable connected VEC Footpedal (Requires Companion restart)**
+  Whether to enable support for connecting to VEC Footpedal devices.
