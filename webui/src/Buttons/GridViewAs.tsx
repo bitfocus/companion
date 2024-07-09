@@ -79,8 +79,8 @@ export function useGridViewAs(): GridViewAsController {
 		selectedSurface: {
 			id: selectedSurfaceId,
 			type: getSurfaceType(selectedSurfaceId, selectedSurfaceInfo),
-			xOffset: 0, // TODO
-			yOffset: 0, // TODO
+			xOffset: selectedSurfaceInfo?.xOffset ?? 0,
+			yOffset: selectedSurfaceInfo?.yOffset ?? 0,
 		},
 		surfaceChoices,
 	}

@@ -9,6 +9,9 @@ export interface ClientSurfaceItem {
 	isConnected: boolean
 	displayName: string
 	location: string | null
+
+	xOffset: number
+	yOffset: number
 }
 
 export interface ClientDevicesListItem {

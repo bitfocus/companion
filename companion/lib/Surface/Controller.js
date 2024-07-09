@@ -422,6 +422,11 @@ class SurfaceController extends CoreBase {
 			for (let surface of this.#surfaceHandlers.values()) {
 				if (surface && surface.surfaceId == id) {
 					surface.setPanelConfig(config)
+
+					setImmediate(() => {
+						this.updateDevicesList()
+					})
+
 					return surface.getPanelConfig()
 				}
 			}
@@ -651,6 +656,8 @@ class SurfaceController extends CoreBase {
 				isConnected: !!surfaceHandler,
 				displayName: getSurfaceName(config, id),
 				location: null,
+				xOffset: config.config?.xOffset ?? 0,
+				yOffset: config.config?.yOffset ?? 0,
 			}
 
 			if (surfaceHandler) {
