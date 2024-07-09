@@ -26,6 +26,7 @@ import { observer } from 'mobx-react-lite'
 import { ButtonGridZoomControl } from './ButtonGridZoomControl.js'
 import { GridZoomController } from './GridZoom.js'
 import { CModalExt } from '../Components/CModalExt.js'
+import { GridViewSelectedSurfaceInfo, GridViewSpecialSurface } from './GridViewAs.js'
 
 interface ButtonsGridPanelProps {
 	pageNumber: number
@@ -37,6 +38,7 @@ interface ButtonsGridPanelProps {
 	clearSelectedButton: () => void
 	gridZoomValue: number
 	gridZoomController: GridZoomController
+	gridViewAsSurface: GridViewSelectedSurfaceInfo
 }
 
 export const ButtonsGridPanel = observer(function ButtonsPage({
@@ -49,6 +51,7 @@ export const ButtonsGridPanel = observer(function ButtonsPage({
 	clearSelectedButton,
 	gridZoomValue,
 	gridZoomController,
+	gridViewAsSurface,
 }: ButtonsGridPanelProps) {
 	const { socket, pages, userConfig } = useContext(RootAppStoreContext)
 
@@ -112,7 +115,7 @@ export const ButtonsGridPanel = observer(function ButtonsPage({
 		editRef.current?.show(Number(pageNumber), pageInfo)
 	}, [pageNumber, pageInfo])
 
-	const gridSize = userConfig.properties?.gridSize
+	let gridSize = userConfig.properties?.gridSize
 
 	const doGrow = useCallback(
 		(direction: 'left' | 'right' | 'top' | 'bottom', amount: number) => {
@@ -149,6 +152,16 @@ export const ButtonsGridPanel = observer(function ButtonsPage({
 	)
 
 	const [hasBeenInView, isInViewRef] = useHasBeenRendered()
+
+	if (gridViewAsSurface.id !== GridViewSpecialSurface.None && gridViewAsSurface.layout) {
+		// A custom view has been selected, limit what is shown
+		gridSize = {
+			minRow: gridViewAsSurface.yOffset,
+			minColumn: gridViewAsSurface.xOffset,
+			maxRow: gridViewAsSurface.yOffset + gridViewAsSurface.layout.rows - 1,
+			maxColumn: gridViewAsSurface.xOffset + gridViewAsSurface.layout.columns - 1,
+		}
+	}
 
 	return (
 		<KeyReceiver onKeyDown={onKeyDown} tabIndex={0} className="button-grid-panel">
@@ -192,7 +205,11 @@ export const ButtonsGridPanel = observer(function ButtonsPage({
 						buttonClick={buttonClick}
 						selectedButton={selectedButton}
 						gridSize={gridSize}
-						doGrow={userConfig.properties?.gridSizeInlineGrow ? doGrow : undefined}
+						doGrow={
+							gridViewAsSurface.id === GridViewSpecialSurface.None && userConfig.properties?.gridSizeInlineGrow
+								? doGrow
+								: undefined
+						}
 						buttonIconFactory={PrimaryButtonGridIcon}
 						drawScale={gridZoomValue / 100}
 					/>

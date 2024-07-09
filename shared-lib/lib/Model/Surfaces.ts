@@ -12,6 +12,7 @@ export interface ClientSurfaceItem {
 
 	xOffset: number
 	yOffset: number
+	layout: SurfaceLayoutSchema
 }
 
 export interface ClientDevicesListItem {
@@ -48,4 +49,9 @@ export interface SurfacesUpdateUpdateOp {
 	itemId: string
 
 	patch: JsonPatchOperation[]
+}
+
+export interface SurfaceLayoutSchema {
+	rows: number
+	columns: number
 }

@@ -3,13 +3,15 @@ import { CAlert, CButton, CRow } from '@coreui/react'
 import { ConnectionsContext, useComputed } from '../util.js'
 import { RootAppStoreContext } from '../Stores/RootAppStore.js'
 import { observer } from 'mobx-react-lite'
-import { GridViewSpecialSurface, useGridViewAs } from './GridViewAs.js'
+import { GridViewAsController, GridViewSpecialSurface } from './GridViewAs.js'
 import { DropdownInputField, NumberInputField } from '../Components/index.js'
 
-export const GridViewAsPanel = observer(function GridViewAsPanel() {
-	const { socket, surfaces } = useContext(RootAppStoreContext)
+interface GridViewAsPanelProps {
+	gridViewAsController: GridViewAsController
+}
 
-	const viewController = useGridViewAs()
+export const GridViewAsPanel = observer(function GridViewAsPanel({ gridViewAsController }: GridViewAsPanelProps) {
+	const { surfaces } = useContext(RootAppStoreContext)
 
 	// const options = Object.entries(presets).map(([id, vals]) => {
 	// 	if (!vals || Object.values(vals).length === 0) return ''
@@ -25,18 +27,18 @@ export const GridViewAsPanel = observer(function GridViewAsPanel() {
 	// })
 
 	const surfaceTypeChoices = useComputed(() => {
-		if (viewController.selectedSurface.id === GridViewSpecialSurface.Custom) {
+		if (gridViewAsController.selectedSurface.id === GridViewSpecialSurface.Custom) {
 			return []
 		} else {
 			// Field is disabled, show just the current value
 			return [
 				{
-					id: viewController.selectedSurface.type,
-					label: viewController.selectedSurface.type,
+					id: gridViewAsController.selectedSurface.type,
+					label: gridViewAsController.selectedSurface.type,
 				},
 			]
 		}
-	}, [surfaces, viewController.selectedSurface.id])
+	}, [surfaces, gridViewAsController.selectedSurface.id])
 
 	return (
 		<div>
@@ -45,18 +47,18 @@ export const GridViewAsPanel = observer(function GridViewAsPanel() {
 
 			<DropdownInputField
 				label="Surface"
-				choices={viewController.surfaceChoices}
+				choices={gridViewAsController.surfaceChoices}
 				multiple={false}
-				value={viewController.selectedSurface.id}
-				setValue={(value) => viewController.setSelectedSurface(value as GridViewSpecialSurface | string)}
+				value={gridViewAsController.selectedSurface.id}
+				setValue={(value) => gridViewAsController.setSelectedSurface(value as GridViewSpecialSurface | string)}
 			/>
 
 			<DropdownInputField
 				label="Surface Type"
 				choices={surfaceTypeChoices}
 				multiple={false}
-				disabled={viewController.selectedSurface.id !== GridViewSpecialSurface.Custom}
-				value={viewController.selectedSurface.type}
+				disabled={gridViewAsController.selectedSurface.id !== GridViewSpecialSurface.Custom}
+				value={gridViewAsController.selectedSurface.type}
 				setValue={(value) => {
 					console.log('type', value)
 				}}
@@ -64,15 +66,15 @@ export const GridViewAsPanel = observer(function GridViewAsPanel() {
 
 			<NumberInputField
 				label="X Offset"
-				value={viewController.selectedSurface.xOffset}
-				disabled={viewController.selectedSurface.id !== GridViewSpecialSurface.Custom}
+				value={gridViewAsController.selectedSurface.xOffset}
+				disabled={gridViewAsController.selectedSurface.id !== GridViewSpecialSurface.Custom}
 				setValue={() => {}}
 			/>
 
 			<NumberInputField
 				label="Y Offset"
-				value={viewController.selectedSurface.yOffset}
-				disabled={viewController.selectedSurface.id !== GridViewSpecialSurface.Custom}
+				value={gridViewAsController.selectedSurface.yOffset}
+				disabled={gridViewAsController.selectedSurface.id !== GridViewSpecialSurface.Custom}
 				setValue={() => {}}
 			/>
 		</div>

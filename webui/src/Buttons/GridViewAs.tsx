@@ -2,7 +2,7 @@ import { useContext, useMemo, useState } from 'react'
 import { RootAppStoreContext } from '../Stores/RootAppStore.js'
 import { useComputed } from '../util.js'
 import { DropdownChoice } from '@companion-module/base'
-import { ClientSurfaceItem } from '@companion-app/shared/Model/Surfaces.js'
+import { ClientSurfaceItem, SurfaceLayoutSchema } from '@companion-app/shared/Model/Surfaces.js'
 
 export const ZOOM_MIN = 20
 export const ZOOM_MAX = 200
@@ -18,6 +18,7 @@ export interface GridViewSelectedSurfaceInfo {
 	type: string
 	xOffset: number
 	yOffset: number
+	layout: SurfaceLayoutSchema | null
 }
 
 export interface GridViewAsController {
@@ -81,6 +82,7 @@ export function useGridViewAs(): GridViewAsController {
 			type: getSurfaceType(selectedSurfaceId, selectedSurfaceInfo),
 			xOffset: selectedSurfaceInfo?.xOffset ?? 0,
 			yOffset: selectedSurfaceInfo?.yOffset ?? 0,
+			layout: selectedSurfaceInfo?.layout ?? null,
 		},
 		surfaceChoices,
 	}

@@ -658,6 +658,10 @@ class SurfaceController extends CoreBase {
 				location: null,
 				xOffset: config.config?.xOffset ?? 0,
 				yOffset: config.config?.yOffset ?? 0,
+				layout: {
+					rows: 0,
+					columns: 0,
+				},
 			}
 
 			if (surfaceHandler) {
@@ -666,6 +670,11 @@ class SurfaceController extends CoreBase {
 
 				surfaceInfo.location = location || null
 				surfaceInfo.configFields = surfaceHandler.panel.info.configFields || []
+
+				surfaceInfo.layout = {
+					rows: surfaceHandler.panelGridSize.rows,
+					columns: surfaceHandler.panelGridSize.columns,
+				}
 			}
 
 			return surfaceInfo

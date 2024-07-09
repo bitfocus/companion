@@ -17,6 +17,7 @@ import classNames from 'classnames'
 import { useGridZoom } from './GridZoom.js'
 import { NavigateFunction, useLocation, useNavigate } from 'react-router-dom'
 import { GridViewAsPanel } from './GridViewAsPanel.js'
+import { useGridViewAs } from './GridViewAs.js'
 
 export const BUTTONS_PAGE_PREFIX = '/buttons'
 const SESSION_STORAGE_LAST_BUTTONS_PAGE = 'lastButtonsPage'
@@ -55,6 +56,7 @@ export const ButtonsPage = observer(function ButtonsPage({ hotPress }: ButtonsPa
 
 	const clearModalRef = useRef<GenericConfirmModalRef>(null)
 	const [gridZoomController, gridZoomValue] = useGridZoom('grid')
+	const gridViewAsController = useGridViewAs()
 
 	const [tabResetToken, setTabResetToken] = useState(nanoid())
 	const [activeTab, setActiveTab] = useState('presets')
@@ -271,6 +273,7 @@ export const ButtonsPage = observer(function ButtonsPage({ hotPress }: ButtonsPa
 						clearSelectedButton={clearSelectedButton}
 						gridZoomController={gridZoomController}
 						gridZoomValue={gridZoomValue}
+						gridViewAsSurface={gridViewAsController.selectedSurface}
 					/>
 				</MyErrorBoundary>
 			</CCol>
@@ -323,7 +326,7 @@ export const ButtonsPage = observer(function ButtonsPage({ hotPress }: ButtonsPa
 						</CTabPane>
 						<CTabPane visible={activeTab === 'view-as'}>
 							<MyErrorBoundary>
-								<GridViewAsPanel />
+								<GridViewAsPanel gridViewAsController={gridViewAsController} />
 							</MyErrorBoundary>
 						</CTabPane>
 						<CTabPane visible={activeTab === 'action-recorder'}>
