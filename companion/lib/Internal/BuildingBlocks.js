@@ -15,9 +15,11 @@
  *
  */
 
+// TODO building-blocks
+// @ts-nocheck
+
 import { combineRgb } from '@companion-module/base'
 import LogController from '../Log/Controller.js'
-import { rgb } from '../Resources/Util.js'
 
 export default class BuildingBlocks {
 	#logger = LogController.createLogger('Internal/BuildingBlocks')

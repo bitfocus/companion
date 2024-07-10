@@ -135,7 +135,7 @@ export default class ControlButtonNormal extends ButtonControlBase {
 
 			this.options = Object.assign(this.options, storage.options || {})
 			this.feedbacks.baseStyle = Object.assign(this.feedbacks.baseStyle, storage.style || {})
-			this.feedbacks.feedbacks = storage.feedbacks || this.feedbacks.feedbacks
+			this.feedbacks.loadStorage(storage.feedbacks || [])
 
 			if (storage.steps) {
 				this.steps = {}
@@ -618,7 +618,7 @@ export default class ControlButtonNormal extends ButtonControlBase {
 	 * @access public
 	 */
 	collectReferencedConnections(foundConnectionIds, foundConnectionLabels) {
-		const allFeedbacks = this.feedbacks.feedbacks
+		const allFeedbacks = this.feedbacks.getAllFeedbackInstances()
 		const allActions = []
 
 		for (const step of Object.values(this.steps)) {
@@ -1008,7 +1008,7 @@ export default class ControlButtonNormal extends ButtonControlBase {
 			type: this.type,
 			style: this.feedbacks.baseStyle,
 			options: this.options,
-			feedbacks: this.feedbacks.feedbacks,
+			feedbacks: this.feedbacks.getAllFeedbackInstances(),
 			steps: stepsJson,
 		}
 

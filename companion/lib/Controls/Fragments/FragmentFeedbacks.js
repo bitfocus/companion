@@ -73,7 +73,7 @@ export default class FragmentFeedbacks {
 	 * @type {FeedbackInstance[]}
 	 * @access public
 	 */
-	feedbacks = []
+	#feedbacks = []
 
 	/**
 	 * Whether this set of feedbacks can only use boolean feedbacks
@@ -146,6 +146,24 @@ export default class FragmentFeedbacks {
 	}
 
 	/**
+	 * Initialise from storage
+	 * @param {FeedbackInstance[]} feedbacks
+	 * @param {boolean=} skipSubscribe Whether to skip calling subscribe for the new feedbacks
+	 */
+	loadStorage(feedbacks, skipSubscribe) {
+		// Inform modules of feedback cleanup
+		for (const feedback of this.#feedbacks) {
+			this.#cleanupFeedback(feedback)
+		}
+
+		this.#feedbacks = feedbacks || []
+
+		if (!skipSubscribe) {
+			this.resubscribeAllFeedbacks()
+		}
+	}
+
+	/**
 	 * Get the value from all feedbacks as a single boolean
 	 */
 	checkValueAsBoolean() {
@@ -153,7 +171,7 @@ export default class FragmentFeedbacks {
 
 		let result = true
 
-		for (const feedback of this.feedbacks) {
+		for (const feedback of this.#feedbacks) {
 			if (feedback.disabled) continue
 
 			const definition = this.#instanceDefinitions.getFeedbackDefinition(feedback.instance_id, feedback.type)
@@ -201,7 +219,7 @@ export default class FragmentFeedbacks {
 	 * @param {(feedback: FeedbackInstance) => void} callback
 	 */
 	#executeForEachFeedback(callback) {
-		for (const feedback of this.feedbacks) {
+		for (const feedback of this.#feedbacks) {
 			this.#executeForFeedbackAndChildren(feedback, callback)
 		}
 	}
@@ -246,11 +264,9 @@ export default class FragmentFeedbacks {
 	 * @access public
 	 */
 	destroy() {
-		// Inform modules of feedback cleanup
-		for (const feedback of this.feedbacks) {
-			this.#cleanupFeedback(feedback)
-		}
+		this.loadStorage([])
 	}
+
 	/**
 	 * Add a feedback to this control
 	 * @param {FeedbackInstance} feedbackItem the item to add
@@ -264,7 +280,7 @@ export default class FragmentFeedbacks {
 			let parentItem
 			for (const parentId of parentFeedbackIds) {
 				/** @type {FeedbackInstance []|undefined} */
-				const searchList = parentItem ? parentItem.children : this.feedbacks
+				const searchList = parentItem ? parentItem.children : this.#feedbacks
 				parentItem = searchList?.find((fb) => fb.id === parentId)
 
 				// Stop if the parent wasn't found, or isn't valid
@@ -279,7 +295,7 @@ export default class FragmentFeedbacks {
 
 			parentItem.children.push(feedbackItem)
 		} else {
-			this.feedbacks.push(feedbackItem)
+			this.#feedbacks.push(feedbackItem)
 		}
 
 		// Inform relevant module
@@ -297,15 +313,15 @@ export default class FragmentFeedbacks {
 	 * @access public
 	 */
 	feedbackDuplicate(id) {
-		const index = this.feedbacks.findIndex((fb) => fb.id === id)
+		const index = this.#feedbacks.findIndex((fb) => fb.id === id)
 		if (index !== -1) {
-			const feedbackItem = cloneDeep(this.feedbacks[index])
+			const feedbackItem = cloneDeep(this.#feedbacks[index])
 			// Recursively update the ids
 			this.#executeForFeedbackAndChildren(feedbackItem, (feedback) => {
 				feedback.id = nanoid()
 			})
 
-			this.feedbacks.splice(index + 1, 0, feedbackItem)
+			this.#feedbacks.splice(index + 1, 0, feedbackItem)
 
 			this.#feedbackSubscribe(feedbackItem)
 
@@ -325,7 +341,7 @@ export default class FragmentFeedbacks {
 	 * @access public
 	 */
 	feedbackEnabled(id, enabled) {
-		for (const feedback of this.feedbacks) {
+		for (const feedback of this.#feedbacks) {
 			if (feedback && feedback.id === id) {
 				if (!feedback.options) feedback.options = {}
 
@@ -357,7 +373,7 @@ export default class FragmentFeedbacks {
 	 * @returns {boolean} success
 	 */
 	feedbackHeadline(id, headline) {
-		for (const feedback of this.feedbacks) {
+		for (const feedback of this.#feedbacks) {
 			if (feedback && feedback.id === id) {
 				feedback.headline = headline
 
@@ -377,7 +393,7 @@ export default class FragmentFeedbacks {
 	 * @access public
 	 */
 	async feedbackLearn(id) {
-		const feedback = this.feedbacks.find((fb) => fb.id === id)
+		const feedback = this.#feedbacks.find((fb) => fb.id === id)
 		if (feedback) {
 			const instance = this.#moduleHost.getChild(feedback.instance_id)
 			if (instance) {
@@ -404,10 +420,10 @@ export default class FragmentFeedbacks {
 	 * @access public
 	 */
 	feedbackRemove(id) {
-		const index = this.feedbacks.findIndex((fb) => fb.id === id)
+		const index = this.#feedbacks.findIndex((fb) => fb.id === id)
 		if (index !== -1) {
-			const feedback = this.feedbacks[index]
-			this.feedbacks.splice(index, 1)
+			const feedback = this.#feedbacks[index]
+			this.#feedbacks.splice(index, 1)
 
 			this.#cleanupFeedback(feedback)
 
@@ -427,9 +443,9 @@ export default class FragmentFeedbacks {
 	 * @access public
 	 */
 	feedbackReorder(oldIndex, newIndex) {
-		oldIndex = clamp(oldIndex, 0, this.feedbacks.length)
-		newIndex = clamp(newIndex, 0, this.feedbacks.length)
-		this.feedbacks.splice(newIndex, 0, ...this.feedbacks.splice(oldIndex, 1))
+		oldIndex = clamp(oldIndex, 0, this.#feedbacks.length)
+		newIndex = clamp(newIndex, 0, this.#feedbacks.length)
+		this.#feedbacks.splice(newIndex, 0, ...this.#feedbacks.splice(oldIndex, 1))
 
 		this.#commitChange()
 
@@ -442,7 +458,7 @@ export default class FragmentFeedbacks {
 	 * @access public
 	 */
 	feedbackReplace(newProps, skipNotifyModule = false) {
-		for (const feedback of this.feedbacks) {
+		for (const feedback of this.#feedbacks) {
 			// Replace the new feedback in place
 			if (feedback.id === newProps.id) {
 				feedback.type = newProps.type // || newProps.feedbackId nocommit
@@ -476,7 +492,7 @@ export default class FragmentFeedbacks {
 	 * @access public
 	 */
 	feedbackSetOptions(id, key, value) {
-		for (const feedback of this.feedbacks) {
+		for (const feedback of this.#feedbacks) {
 			if (feedback && feedback.id === id) {
 				if (!feedback.options) feedback.options = {}
 
@@ -505,7 +521,7 @@ export default class FragmentFeedbacks {
 	 * @access public
 	 */
 	feedbackSetInverted(id, isInverted) {
-		for (const feedback of this.feedbacks) {
+		for (const feedback of this.#feedbacks) {
 			if (feedback && feedback.id === id) {
 				// TODO - verify this is a boolean feedback
 
@@ -534,7 +550,7 @@ export default class FragmentFeedbacks {
 	feedbackSetStyleSelection(id, selected) {
 		if (this.#booleanOnly) throw new Error('FragmentFeedbacks not setup to use styles')
 
-		for (const feedback of this.feedbacks) {
+		for (const feedback of this.#feedbacks) {
 			if (feedback && feedback.id === id) {
 				const definition = this.#instanceDefinitions.getFeedbackDefinition(feedback.instance_id, feedback.type)
 				if (!definition || definition.type !== 'boolean') return false
@@ -600,7 +616,7 @@ export default class FragmentFeedbacks {
 			value = value.replace(/^.*base64,/, '')
 		}
 
-		for (const feedback of this.feedbacks) {
+		for (const feedback of this.#feedbacks) {
 			if (feedback && feedback.id === id) {
 				const definition = this.#instanceDefinitions.getFeedbackDefinition(feedback.instance_id, feedback.type)
 				if (!definition || definition.type !== 'boolean') return false
@@ -669,7 +685,7 @@ export default class FragmentFeedbacks {
 
 		// Cleanup any feedbacks
 		const newFeedbacks = []
-		for (const feedback of this.feedbacks) {
+		for (const feedback of this.#feedbacks) {
 			if (feedback.instance_id === connectionId) {
 				this.#cleanupFeedback(feedback)
 				changed = true
@@ -680,6 +696,19 @@ export default class FragmentFeedbacks {
 		this.feedbacks = newFeedbacks
 
 		return changed
+	}
+
+	/**
+	 * Get all the feedback instances
+	 * @param {string=} onlyConnectionId Optionally, only for a specific connection
+	 * @returns {FeedbackInstance[]}
+	 */
+	getAllFeedbackInstances(onlyConnectionId) {
+		if (onlyConnectionId) {
+			return this.#feedbacks.filter((feedback) => feedback.instance_id === onlyConnectionId)
+		} else {
+			return this.#feedbacks
+		}
 	}
 
 	/**
@@ -698,7 +727,7 @@ export default class FragmentFeedbacks {
 		}
 
 		// Iterate through feedback-overrides
-		for (const feedback of this.feedbacks) {
+		for (const feedback of this.#feedbacks) {
 			if (feedback.disabled) continue
 
 			const definition = this.#instanceDefinitions.getFeedbackDefinition(feedback.instance_id, feedback.type)
@@ -751,14 +780,14 @@ export default class FragmentFeedbacks {
 
 		// TODO building-block
 
-		for (let i = 0; i < this.feedbacks.length; i++) {
-			const feedback = this.feedbacks[i]
+		for (let i = 0; i < this.#feedbacks.length; i++) {
+			const feedback = this.#feedbacks[i]
 			feedback.id = nanoid()
 
 			if (feedback.instance_id === 'internal') {
 				const newFeedback = this.#internalModule.feedbackUpgrade(feedback, this.controlId)
 				if (newFeedback) {
-					this.feedbacks[i] = newFeedback
+					this.#feedbacks[i] = newFeedback
 				}
 
 				setImmediate(() => {
@@ -785,7 +814,7 @@ export default class FragmentFeedbacks {
 	 */
 	resubscribeAllFeedbacks(onlyConnectionId) {
 		// Some feedbacks will need to redraw
-		for (const feedback of this.feedbacks) {
+		for (const feedback of this.#feedbacks) {
 			this.#feedbackSubscribeRecursive(feedback, onlyConnectionId)
 		}
 	}
@@ -809,7 +838,7 @@ export default class FragmentFeedbacks {
 
 		// TODO building-block
 
-		for (const feedback of this.feedbacks) {
+		for (const feedback of this.#feedbacks) {
 			if (feedback.instance_id === connectionId) {
 				if (feedback.id in newValues) {
 					// Feedback is present in new values (might be set to undefined)
@@ -841,9 +870,9 @@ export default class FragmentFeedbacks {
 		// TODO building-block
 
 		// Clean out feedbacks
-		const feedbackLength = this.feedbacks.length
-		this.feedbacks = this.feedbacks.filter((feedback) => !!feedback && knownConnectionIds.has(feedback.instance_id))
-		changed = changed || this.feedbacks.length !== feedbackLength
+		const feedbackLength = this.#feedbacks.length
+		this.feedbacks = this.#feedbacks.filter((feedback) => !!feedback && knownConnectionIds.has(feedback.instance_id))
+		changed = changed || this.#feedbacks.length !== feedbackLength
 
 		return changed
 	}

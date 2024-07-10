@@ -230,7 +230,6 @@ export default class ControlTrigger extends ControlBase {
 		this.actions.action_sets = {
 			0: [],
 		}
-		this.feedbacks.feedbacks = []
 		this.events = []
 
 		if (!storage) {
@@ -245,7 +244,7 @@ export default class ControlTrigger extends ControlBase {
 
 			this.options = storage.options || this.options
 			this.actions.action_sets = storage.action_sets || this.actions.action_sets
-			this.feedbacks.feedbacks = storage.condition || this.feedbacks.feedbacks
+			this.feedbacks.loadStorage(storage.condition || [], true)
 			this.events = storage.events || this.events
 
 			if (isImport) this.postProcessImport()
@@ -480,7 +479,7 @@ export default class ControlTrigger extends ControlBase {
 	 * @access public
 	 */
 	collectReferencedConnections(foundConnectionIds, foundConnectionLabels) {
-		const allFeedbacks = this.feedbacks.feedbacks
+		const allFeedbacks = this.feedbacks.getAllFeedbackInstances()
 		const allActions = this.actions.getAllActions()
 
 		for (const feedback of allFeedbacks) {
@@ -523,7 +522,7 @@ export default class ControlTrigger extends ControlBase {
 			type: this.type,
 			options: this.options,
 			action_sets: this.actions.action_sets,
-			condition: this.feedbacks.feedbacks,
+			condition: this.feedbacks.getAllFeedbackInstances(),
 			events: this.events,
 		}
 		return clone ? cloneDeep(obj) : obj
@@ -625,7 +624,7 @@ export default class ControlTrigger extends ControlBase {
 	 * @access public
 	 */
 	renameVariables(labelFrom, labelTo) {
-		const allFeedbacks = this.feedbacks.feedbacks
+		const allFeedbacks = this.feedbacks.getAllFeedbackInstances()
 		const allActions = this.actions.getAllActions()
 
 		// Fix up references

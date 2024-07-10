@@ -67,19 +67,17 @@ export default class InternalController extends CoreBase {
 		const allControls = this.registry.controls.getAllControls()
 		for (const [controlId, control] of allControls.entries()) {
 			// Discover feedbacks to process
-			if (control.supportsFeedbacks && control.feedbacks.feedbacks) {
-				for (let feedback of control.feedbacks.feedbacks) {
-					if (feedback.instance_id === 'internal') {
-						if (control.feedbacks.feedbackReplace) {
-							const newFeedback = this.feedbackUpgrade(feedback, controlId)
-							if (newFeedback) {
-								feedback = newFeedback
-								control.feedbacks.feedbackReplace(newFeedback)
-							}
+			if (control.supportsFeedbacks) {
+				for (let feedback of control.feedbacks.getAllFeedbackInstances('internal')) {
+					if (control.feedbacks.feedbackReplace) {
+						const newFeedback = this.feedbackUpgrade(feedback, controlId)
+						if (newFeedback) {
+							feedback = newFeedback
+							control.feedbacks.feedbackReplace(newFeedback)
 						}
-
-						this.feedbackUpdate(feedback, controlId)
 					}
+
+					this.feedbackUpdate(feedback, controlId)
 				}
 			}
 
