@@ -307,7 +307,7 @@ class ControlsController extends CoreBase {
 			}
 		})
 
-		client.onPromise('controls:feedback:add', (controlId, connectionId, feedbackId) => {
+		client.onPromise('controls:feedback:add', (controlId, parentFeedbackIds, connectionId, feedbackId) => {
 			const control = this.getControl(controlId)
 			if (!control) return false
 

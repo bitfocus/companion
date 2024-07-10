@@ -29,7 +29,6 @@ import { useOptionsAndIsVisible } from '../Hooks/useOptionsAndIsVisible.js'
 import { LearnButton } from '../Components/LearnButton.js'
 import { AddFeedbackDropdown } from './AddFeedbackDropdown.js'
 import {
-	IFeedbackEditorFeedbackService,
 	IFeedbackEditorService,
 	useControlFeedbackService,
 	useControlFeedbacksEditorService,
@@ -37,6 +36,7 @@ import {
 import { observer } from 'mobx-react-lite'
 import { RootAppStoreContext } from '../Stores/RootAppStore.js'
 import classNames from 'classnames'
+import { InternalFeedbacksPicker } from './InternalFeedbacksPicker.js'
 
 interface ControlFeedbacksEditorProps {
 	controlId: string
@@ -59,14 +59,14 @@ export function ControlFeedbacksEditor({
 }: ControlFeedbacksEditorProps) {
 	const confirmModal = useRef<GenericConfirmModalRef>(null)
 
-	const feedbacksService = useControlFeedbacksEditorService(controlId, confirmModal, entityType, null)
+	const feedbacksService = useControlFeedbacksEditorService(controlId, confirmModal, entityType)
 
 	const addFeedbacksRef = useRef<AddFeedbacksModalRef>(null)
 	const showAddModal = useCallback(() => addFeedbacksRef.current?.show(), [])
 
 	const feedbackIds = useMemo(() => feedbacks.map((fb) => fb.id), [feedbacks])
 	const { setPanelCollapsed, isPanelCollapsed, setAllCollapsed, setAllExpanded, canExpandAll, canCollapseAll } =
-		usePanelCollapseHelper(`feedbacks_${controlId}`, feedbackIds)
+		usePanelCollapseHelper(feedbacksService.collapseHelperKey, feedbackIds)
 
 	return (
 		<>
@@ -110,7 +110,7 @@ export function ControlFeedbacksEditor({
 								entityType={entityType}
 								index={i}
 								feedback={a}
-								dragId={`feedback_${controlId}`}
+								dragId={feedbacksService.dragId}
 								serviceFactory={feedbacksService}
 								setCollapsed={setPanelCollapsed}
 								isCollapsed={isPanelCollapsed(a.id)}
@@ -144,7 +144,6 @@ export function ControlFeedbacksEditor({
 }
 
 interface InlineFeedbacksEditorProps {
-	controlId: string
 	feedbacks: FeedbackInstance[]
 	entityType: string
 	booleanOnly: boolean
@@ -153,8 +152,8 @@ interface InlineFeedbacksEditorProps {
 	feedbacksService: IFeedbackEditorService
 }
 
+// TODO: can this be deduplicated a bit with the above?
 export function InlineFeedbacksEditor({
-	controlId,
 	feedbacks,
 	entityType,
 	booleanOnly,
@@ -171,7 +170,7 @@ export function InlineFeedbacksEditor({
 
 	const feedbackIds = useMemo(() => feedbacks.map((fb) => fb.id), [feedbacks])
 	const { setPanelCollapsed, isPanelCollapsed, setAllCollapsed, setAllExpanded, canExpandAll, canCollapseAll } =
-		usePanelCollapseHelper(`feedbacks_${controlId}`, feedbackIds)
+		usePanelCollapseHelper(feedbacksService.collapseHelperKey, feedbackIds)
 
 	return (
 		<>
@@ -214,7 +213,7 @@ export function InlineFeedbacksEditor({
 								entityType={entityType}
 								index={i}
 								feedback={a}
-								dragId={`feedback_${controlId}`}
+								dragId={feedbacksService.dragId}
 								serviceFactory={feedbacksService}
 								setCollapsed={setPanelCollapsed}
 								isCollapsed={isPanelCollapsed(a.id)}
@@ -279,8 +278,6 @@ function FeedbackTableRow({
 	booleanOnly,
 	location,
 }: FeedbackTableRowProps) {
-	const service = useControlFeedbackService(serviceFactory, feedback)
-
 	const ref = useRef<HTMLTableRowElement>(null)
 	const [, drop] = useDrop<FeedbackTableRowDragItem>({
 		accept: dragId,
@@ -346,7 +343,7 @@ function FeedbackTableRow({
 					entityType={entityType}
 					location={location}
 					feedback={feedback}
-					service={service}
+					serviceFactory={serviceFactory}
 					isCollapsed={isCollapsed}
 					doCollapse={doCollapse}
 					doExpand={doExpand}
@@ -361,7 +358,7 @@ interface FeedbackEditorProps {
 	entityType: string
 	feedback: FeedbackInstance
 	location: ControlLocation | undefined
-	service: IFeedbackEditorFeedbackService
+	serviceFactory: IFeedbackEditorService
 	isCollapsed: boolean
 	doCollapse: () => void
 	doExpand: () => void
@@ -372,12 +369,14 @@ const FeedbackEditor = observer(function FeedbackEditor({
 	entityType,
 	feedback,
 	location,
-	service,
+	serviceFactory,
 	isCollapsed,
 	doCollapse,
 	doExpand,
 	booleanOnly,
 }: FeedbackEditorProps) {
+	const service = useControlFeedbackService(serviceFactory, feedback)
+
 	const { feedbackDefinitions } = useContext(RootAppStoreContext)
 	const connectionsContext = useContext(ConnectionsContext)
 
@@ -481,16 +480,25 @@ const FeedbackEditor = observer(function FeedbackEditor({
 						<CForm onSubmit={PreventDefaultHandler}>
 							{feedbackOptions.map((opt, i) => (
 								<MyErrorBoundary key={i}>
-									<OptionsInputField
-										key={i}
-										isLocatedInGrid={!!location}
-										isAction={false}
-										connectionId={feedback.instance_id}
-										option={opt}
-										value={(feedback.options || {})[opt.id]}
-										setValue={service.setValue}
-										visibility={optionVisibility[opt.id] ?? true}
-									/>
+									{feedback.instance_id === 'internal' && opt.type === 'internal:feedbacks' ? (
+										// Handle the special case of nested feedbacks
+										<InternalFeedbacksPicker
+											serviceFactory={serviceFactory}
+											parentId={feedback.id}
+											feedbacks={(feedback.options || {})[opt.id]}
+										/>
+									) : (
+										<OptionsInputField
+											key={i}
+											isLocatedInGrid={!!location}
+											isAction={false}
+											connectionId={feedback.instance_id}
+											option={opt}
+											value={(feedback.options || {})[opt.id]}
+											setValue={service.setValue}
+											visibility={optionVisibility[opt.id] ?? true}
+										/>
+									)}
 								</MyErrorBoundary>
 							))}
 						</CForm>

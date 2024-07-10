@@ -13,11 +13,10 @@ import { faDollarSign, faGlobe, faQuestionCircle } from '@fortawesome/free-solid
 import { InternalActionInputField, InternalFeedbackInputField } from '@companion-app/shared/Model/Options.js'
 import classNames from 'classnames'
 import sanitizeHtml from 'sanitize-html'
-import { IActionEditorActionService } from '../Services/Controls/ControlActionsService.js'
-import { IFeedbackEditorService } from '../Services/Controls/ControlFeedbacksService.js'
+// import { IActionEditorActionService } from '../Services/Controls/ControlActionsService.js'
+// import { IFeedbackEditorService } from '../Services/Controls/ControlFeedbacksService.js'
 
 interface OptionsInputFieldProps {
-	editorService: IFeedbackEditorService | IActionEditorActionService
 	connectionId: string
 	isLocatedInGrid: boolean
 	isAction: boolean
@@ -45,7 +44,6 @@ function OptionLabel({
 }
 
 export function OptionsInputField({
-	editorService,
 	connectionId,
 	isLocatedInGrid,
 	isAction,
