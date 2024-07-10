@@ -167,6 +167,7 @@ export const DropdownInputField = memo(function DropdownInputField<Multi extends
 	const selectProps: Partial<CreatableProps<any, any, any>> = {
 		isDisabled: disabled,
 		classNamePrefix: 'select-control',
+		className: 'select-control',
 		menuPortalTarget: menuPortal || document.body,
 		menuShouldBlockScroll: !!menuPortal, // The dropdown doesn't follow scroll when in a modal
 		menuPosition: 'fixed',

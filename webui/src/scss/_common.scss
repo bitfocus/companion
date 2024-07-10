@@ -255,3 +255,9 @@ table .td-reorder {
 .form-range {
 	align-self: center;
 }
+
+.select-control {
+	// avoid blowout
+	display: grid;
+	grid-template-columns: minmax(0, 1fr);
+}

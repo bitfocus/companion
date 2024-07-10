@@ -26,6 +26,7 @@ import {
 } from '../Services/Controls/ControlEventsService.js'
 import { observer } from 'mobx-react-lite'
 import { RootAppStoreContext } from '../Stores/RootAppStore.js'
+import classNames from 'classnames'
 
 interface TriggerEventEditorProps {
 	controlId: string
@@ -269,7 +270,11 @@ const EventEditor = observer(function EventEditor({
 
 			{!isCollapsed && (
 				<div className="editor-grid editor-grid-events">
-					<div className="cell-description">
+					<div
+						className={classNames('cell-description', {
+							'no-options': eventOptions.length === 0,
+						})}
+					>
 						{headlineExpanded && <p className="name">{name}</p>}
 						{eventSpec?.description || ''}
 					</div>

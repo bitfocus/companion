@@ -36,6 +36,7 @@ import {
 } from '../Services/Controls/ControlFeedbacksService.js'
 import { observer } from 'mobx-react-lite'
 import { RootAppStoreContext } from '../Stores/RootAppStore.js'
+import classNames from 'classnames'
 
 interface ControlFeedbacksEditorProps {
 	controlId: string
@@ -304,7 +305,7 @@ const FeedbackEditor = observer(function FeedbackEditor({
 
 				<div className="cell-controls">
 					<CButtonGroup>
-						{canSetHeadline && !headlineExpanded && (
+						{canSetHeadline && !headlineExpanded && !isCollapsed && (
 							<CButton size="sm" onClick={doEditHeadline} title="Set headline">
 								<FontAwesomeIcon icon={faPencil} />
 							</CButton>
@@ -341,7 +342,11 @@ const FeedbackEditor = observer(function FeedbackEditor({
 
 			{!isCollapsed && (
 				<div className="editor-grid remove075right">
-					<div className="cell-description">
+					<div
+						className={classNames('cell-description', {
+							'no-options': feedbackOptions.length === 0,
+						})}
+					>
 						{headlineExpanded && <p className="name">{name}</p>}
 						{feedbackSpec?.description || ''}
 					</div>

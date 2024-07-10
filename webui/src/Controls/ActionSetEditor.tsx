@@ -30,6 +30,7 @@ import {
 } from '../Services/Controls/ControlActionsService.js'
 import { RootAppStoreContext } from '../Stores/RootAppStore.js'
 import { observer } from 'mobx-react-lite'
+import classNames from 'classnames'
 
 interface ControlActionSetEditorProps {
 	controlId: string
@@ -336,7 +337,7 @@ const ActionTableRow = observer(function ActionTableRow({
 
 					<div className="cell-controls">
 						<CButtonGroup>
-							{canSetHeadline && !headlineExpanded && (
+							{canSetHeadline && !headlineExpanded && !isCollapsed && (
 								<CButton size="sm" onClick={doEditHeadline} title="Set headline">
 									<FontAwesomeIcon icon={faPencil} />
 								</CButton>
@@ -373,7 +374,11 @@ const ActionTableRow = observer(function ActionTableRow({
 
 				{!isCollapsed && (
 					<div className="editor-grid">
-						<div className="cell-description">
+						<div
+							className={classNames('cell-description', {
+								'no-options': actionOptions.length === 0,
+							})}
+						>
 							{headlineExpanded && <p className="name">{name}</p>}
 							{actionSpec?.description}
 						</div>
