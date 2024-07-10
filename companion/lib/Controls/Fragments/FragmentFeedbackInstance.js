@@ -149,6 +149,9 @@ export class FragmentFeedbackInstance {
 		if (!definition || definition.type !== 'boolean') return false
 
 		// TODO building-blocks consider children
+		if (this.#data.type === 'logic_and') {
+			return this.#children.getBooleanValue()
+		}
 
 		if (typeof this.#cachedValue === 'boolean') {
 			if (definition.showInvert && this.#data.isInverted) return !this.#cachedValue

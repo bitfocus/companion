@@ -1,6 +1,6 @@
 import React, { useContext, useMemo } from 'react'
 import { DropdownInputField } from '../Components/index.js'
-import { ConnectionsContext, SocketContext, socketEmitPromise, useComputed } from '../util.js'
+import { ConnectionsContext, useComputed } from '../util.js'
 import TimePicker from 'react-time-picker'
 import { InternalInputField } from '@companion-app/shared/Model/Options.js'
 import { DropdownChoice } from '@companion-module/base'

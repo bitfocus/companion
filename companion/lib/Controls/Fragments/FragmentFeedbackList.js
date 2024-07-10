@@ -71,6 +71,8 @@ export class FragmentFeedbackList {
 		let result = true
 
 		for (const feedback of this.#feedbacks) {
+			if (feedback.disabled) continue
+
 			result = result && feedback.getBooleanValue()
 		}
 
