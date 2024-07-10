@@ -27,6 +27,13 @@ export class FragmentFeedbackList {
 	#controlId
 
 	/**
+	 * Whether this set of feedbacks can only use boolean feedbacks
+	 * @type {boolean}
+	 * @access private
+	 */
+	#booleanOnly
+
+	/**
 	 * @type {FragmentFeedbackInstance[]}
 	 */
 	#feedbacks = []
@@ -36,12 +43,14 @@ export class FragmentFeedbackList {
 	 * @param {import('../../Internal/Controller.js').default} internalModule
 	 * @param {import('../../Instance/Host.js').default} moduleHost
 	 * @param {string} controlId - id of the control
+	 * @param {boolean} booleanOnly
 	 */
-	constructor(instanceDefinitions, internalModule, moduleHost, controlId) {
+	constructor(instanceDefinitions, internalModule, moduleHost, controlId, booleanOnly) {
 		this.#instanceDefinitions = instanceDefinitions
 		this.#internalModule = internalModule
 		this.#moduleHost = moduleHost
 		this.#controlId = controlId
+		this.#booleanOnly = booleanOnly
 	}
 
 	/**
@@ -57,8 +66,8 @@ export class FragmentFeedbackList {
 	 * @returns {boolean}
 	 */
 	getBooleanValue() {
-		// TODO - should this be implemented?
-		// if (!this.#booleanOnly) throw new Error('FragmentFeedbacks is setup to use styles')
+		if (!this.#booleanOnly) throw new Error('FragmentFeedbacks is setup to use styles')
+
 		let result = true
 
 		for (const feedback of this.#feedbacks) {
@@ -71,8 +80,8 @@ export class FragmentFeedbackList {
 	/**
 	 * Initialise from storage
 	 * @param {import('./FragmentFeedbackInstance.js').FeedbackInstance[]} feedbacks
-	 * @param {boolean=} skipSubscribe Whether to skip calling subscribe for the new feedbacks
-	 * @param {boolean=} isCloned Whether this is a cloned instance
+	 * @param {boolean} skipSubscribe Whether to skip calling subscribe for the new feedbacks
+	 * @param {boolean} isCloned Whether this is a cloned instance
 	 */
 	loadStorage(feedbacks, skipSubscribe, isCloned) {
 		// Inform modules of feedback cleanup
@@ -184,6 +193,8 @@ export class FragmentFeedbackList {
 			feedback,
 			!!isCloned
 		)
+
+		// TODO - verify that the feedback matches this.#booleanOnly?
 
 		this.#feedbacks.push(newFeedback)
 
@@ -297,6 +308,8 @@ export class FragmentFeedbackList {
 	 * @access public
 	 */
 	getUnparsedStyle(baseStyle) {
+		if (this.#booleanOnly) throw new Error('FragmentFeedbacks not setup to use styles')
+
 		/** @type {import('@companion-app/shared/Model/StyleModel.js').UnparsedButtonStyle} */
 		let style = {
 			...baseStyle,

@@ -111,10 +111,11 @@ export class FragmentFeedbackInstance {
 			this.#instanceDefinitions,
 			this.#internalModule,
 			this.#moduleHost,
-			this.#controlId
+			this.#controlId,
+			true
 		)
 		if (data.instance_id === 'internal' && data.children) {
-			this.#children.loadStorage(data.children, false, isCloned) // TODO - should this subscribe?
+			this.#children.loadStorage(data.children, true, isCloned)
 		}
 	}
 
@@ -147,7 +148,7 @@ export class FragmentFeedbackInstance {
 		const definition = this.getDefinition()
 		if (!definition || definition.type !== 'boolean') return false
 
-		// TODO consider children
+		// TODO building-blocks consider children
 
 		if (typeof this.#cachedValue === 'boolean') {
 			if (definition.showInvert && this.#data.isInverted) return !this.#cachedValue

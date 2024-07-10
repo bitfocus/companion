@@ -142,7 +142,8 @@ export default class FragmentFeedbacks {
 			this.#instanceDefinitions,
 			this.#internalModule,
 			this.#moduleHost,
-			this.controlId
+			this.controlId,
+			this.#booleanOnly
 		)
 	}
 
@@ -153,15 +154,13 @@ export default class FragmentFeedbacks {
 	 * @param {boolean=} isCloned Whether this is a cloned instance
 	 */
 	loadStorage(feedbacks, skipSubscribe, isCloned) {
-		this.#feedbacks.loadStorage(feedbacks, skipSubscribe, isCloned)
+		this.#feedbacks.loadStorage(feedbacks, !!skipSubscribe, !!isCloned)
 	}
 
 	/**
 	 * Get the value from all feedbacks as a single boolean
 	 */
 	checkValueAsBoolean() {
-		if (!this.#booleanOnly) throw new Error('FragmentFeedbacks is setup to use styles')
-
 		return this.#feedbacks.getBooleanValue()
 	}
 
@@ -496,8 +495,6 @@ export default class FragmentFeedbacks {
 	 * @access public
 	 */
 	getUnparsedStyle() {
-		if (this.#booleanOnly) throw new Error('FragmentFeedbacks not setup to use styles')
-
 		return this.#feedbacks.getUnparsedStyle(this.baseStyle)
 	}
 
