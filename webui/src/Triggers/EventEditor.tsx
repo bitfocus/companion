@@ -9,7 +9,7 @@ import {
 } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import React, { FormEvent, useCallback, useContext, useMemo, useRef, useState } from 'react'
-import { MyErrorBoundary, PreventDefaultHandler } from '../util.js'
+import { DragState, MyErrorBoundary, PreventDefaultHandler, checkDragState } from '../util.js'
 import { OptionsInputField } from '../Controls/OptionsInputField.js'
 import { useDrag, useDrop } from 'react-dnd'
 import { GenericConfirmModal, GenericConfirmModalRef } from '../Components/GenericConfirmModal.js'
@@ -97,6 +97,7 @@ export function TriggerEventEditor({ controlId, events, heading }: TriggerEventE
 
 interface EventsTableRowDragObject {
 	index: number
+	dragState: DragState | null
 }
 interface EventsTableRowDragCollection {
 	isDragging: boolean
@@ -125,16 +126,23 @@ function EventsTableRow({
 	const ref = useRef<HTMLTableRowElement>(null)
 	const [, drop] = useDrop<EventsTableRowDragObject>({
 		accept: dragId,
-		hover(item, _monitor) {
+		hover(item, monitor) {
 			if (!ref.current) {
 				return
 			}
+
+			// Ensure the hover targets this element, and not a child element
+			if (!monitor.isOver({ shallow: true })) return
+
 			const dragIndex = item.index
 			const hoverIndex = index
+			const hoverId = event.id
 			// Don't replace items with themselves
 			if (dragIndex === hoverIndex) {
 				return
 			}
+
+			if (!checkDragState(item, monitor, hoverId)) return
 
 			// Time to actually perform the action
 			serviceFactory.moveCard(dragIndex, hoverIndex)
@@ -145,11 +153,15 @@ function EventsTableRow({
 			// to avoid expensive index searches.
 			item.index = hoverIndex
 		},
+		drop(item, _monitor) {
+			item.dragState = null
+		},
 	})
 	const [{ isDragging }, drag, preview] = useDrag<EventsTableRowDragObject, never, EventsTableRowDragCollection>({
 		type: dragId,
 		item: {
 			index: index,
+			dragState: null,
 		},
 		collect: (monitor) => ({
 			isDragging: monitor.isDragging(),

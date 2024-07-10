@@ -11,7 +11,7 @@ import {
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import React, { memo, useCallback, useContext, useMemo, useRef, useState } from 'react'
 import { NumberInputField, TextInputField } from '../Components/index.js'
-import { ConnectionsContext, MyErrorBoundary, PreventDefaultHandler } from '../util.js'
+import { ConnectionsContext, DragState, MyErrorBoundary, PreventDefaultHandler, checkDragState } from '../util.js'
 import { OptionsInputField } from './OptionsInputField.js'
 import { useDrag, useDrop } from 'react-dnd'
 import { GenericConfirmModal, GenericConfirmModalRef } from '../Components/GenericConfirmModal.js'
@@ -207,6 +207,7 @@ interface ActionTableRowDragItem {
 	stepId: string
 	setId: string | number
 	index: number
+	dragState: DragState | null
 }
 interface ActionTableRowDragStatus {
 	isDragging: boolean
@@ -255,16 +256,23 @@ const ActionTableRow = observer(function ActionTableRow({
 	const ref = useRef<HTMLTableRowElement>(null)
 	const [, drop] = useDrop<ActionTableRowDragItem>({
 		accept: dragId,
-		hover(item, _monitor) {
+		hover(item, monitor) {
 			if (!ref.current) {
 				return
 			}
+
+			// Ensure the hover targets this element, and not a child element
+			if (!monitor.isOver({ shallow: true })) return
+
 			const dragIndex = item.index
 			const hoverIndex = index
+			const hoverId = action.id
 			// Don't replace items with themselves
-			if (dragIndex === hoverIndex && item.setId === setId && item.stepId === stepId) {
+			if (item.actionId === hoverId || (dragIndex === hoverIndex && item.setId === setId && item.stepId === stepId)) {
 				return
 			}
+
+			if (!checkDragState(item, monitor, hoverId)) return
 
 			// Time to actually perform the action
 			serviceFactory.moveCard(item.stepId, item.setId, item.index, index)
@@ -276,6 +284,9 @@ const ActionTableRow = observer(function ActionTableRow({
 			item.index = hoverIndex
 			item.setId = setId
 		},
+		drop(item, _monitor) {
+			item.dragState = null
+		},
 	})
 	const [{ isDragging }, drag, preview] = useDrag<ActionTableRowDragItem, unknown, ActionTableRowDragStatus>({
 		type: dragId,
@@ -286,6 +297,7 @@ const ActionTableRow = observer(function ActionTableRow({
 			setId: setId,
 			index: index,
 			// ref: ref,
+			dragState: null,
 		},
 		collect: (monitor) => ({
 			isDragging: monitor.isDragging(),

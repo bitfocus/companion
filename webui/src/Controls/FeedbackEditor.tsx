@@ -11,7 +11,7 @@ import {
 } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import React, { useCallback, useContext, useMemo, useRef, useState } from 'react'
-import { ConnectionsContext, MyErrorBoundary, PreventDefaultHandler } from '../util.js'
+import { ConnectionsContext, DragState, MyErrorBoundary, PreventDefaultHandler, checkDragState } from '../util.js'
 import { OptionsInputField } from './OptionsInputField.js'
 import { useDrag, useDrop } from 'react-dnd'
 import { GenericConfirmModal, GenericConfirmModalRef } from '../Components/GenericConfirmModal.js'
@@ -146,6 +146,7 @@ export function ControlFeedbacksEditor({
 interface FeedbackTableRowDragItem {
 	feedbackId: string
 	index: number
+	dragState: DragState | null
 }
 interface FeedbackTableRowDragStatus {
 	isDragging: boolean
@@ -179,16 +180,23 @@ function FeedbackTableRow({
 	const ref = useRef<HTMLTableRowElement>(null)
 	const [, drop] = useDrop<FeedbackTableRowDragItem>({
 		accept: dragId,
-		hover(item, _monitor) {
+		hover(item, monitor) {
 			if (!ref.current) {
 				return
 			}
+
+			// Ensure the hover targets this element, and not a child element
+			if (!monitor.isOver({ shallow: true })) return
+
 			const dragIndex = item.index
 			const hoverIndex = index
+			const hoverId = feedback.id
 			// Don't replace items with themselves
-			if (dragIndex === hoverIndex) {
+			if (item.feedbackId === hoverId || dragIndex === hoverIndex) {
 				return
 			}
+
+			if (!checkDragState(item, monitor, hoverId)) return
 
 			// Time to actually perform the action
 			serviceFactory.moveCard(dragIndex, hoverIndex)
@@ -199,12 +207,16 @@ function FeedbackTableRow({
 			// to avoid expensive index searches.
 			item.index = hoverIndex
 		},
+		drop(item, _monitor) {
+			item.dragState = null
+		},
 	})
 	const [{ isDragging }, drag, preview] = useDrag<FeedbackTableRowDragItem, unknown, FeedbackTableRowDragStatus>({
 		type: dragId,
 		item: {
 			feedbackId: feedback.id,
 			index: index,
+			dragState: null,
 		},
 		collect: (monitor) => ({
 			isDragging: monitor.isDragging(),
