@@ -37,6 +37,7 @@ import { observer } from 'mobx-react-lite'
 import { RootAppStoreContext } from '../Stores/RootAppStore.js'
 import classNames from 'classnames'
 import { InternalFeedbacksPicker } from './InternalFeedbacksPicker.js'
+import classNames from 'classnames'
 
 interface ControlFeedbacksEditorProps {
 	controlId: string
@@ -501,15 +502,20 @@ const FeedbackEditor = observer(function FeedbackEditor({
 									{/* )} */}
 								</MyErrorBoundary>
 							))}
-							{feedback.instance_id === 'internal' && feedbackSpec?.supportsChildFeedbacks && (
+						</CForm>
+					</div>
+
+					{feedback.instance_id === 'internal' && feedbackSpec?.supportsChildFeedbacks && (
+						<div className="cell-children">
+							<CForm onSubmit={PreventDefaultHandler}>
 								<InternalFeedbacksPicker
 									serviceFactory={serviceFactory}
 									parentId={feedback.id}
 									feedbacks={feedback.children}
 								/>
-							)}
-						</CForm>
-					</div>
+							</CForm>
+						</div>
+					)}
 
 					{feedbackSpec?.type === 'boolean' && feedbackSpec.showInvert !== false && (
 						<div className="cell-invert">

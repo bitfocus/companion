@@ -166,6 +166,11 @@ table.feedback-table {
 			}
 		}
 
+		.cell-children {
+			grid-row: 5;
+			grid-column: 1 / 4;
+		}
+
 		.cell-actions {
 			grid-row: 4;
 			grid-column: 1;
@@ -177,7 +182,7 @@ table.feedback-table {
 		}
 
 		.cell-styles {
-			grid-row: 5;
+			grid-row: 6;
 			grid-column: 3;
 
 			.png-browse {
@@ -185,7 +190,7 @@ table.feedback-table {
 			}
 		}
 		.cell-styles-manage {
-			grid-row: 5;
+			grid-row: 6;
 			grid-column: 1 / 3;
 		}
 	}
