@@ -185,20 +185,18 @@ export default class FragmentFeedbacks {
 	/**
 	 * Add a feedback to this control
 	 * @param {FeedbackInstance} feedbackItem the item to add
-	 * @param {string[]} parentFeedbackIds the ids of parent feedbacks that this feedback should be added as a child of
+	 * @param {string | null} parentId the ids of parent feedback that this feedback should be added as a child of
 	 * @returns {boolean} success
 	 * @access public
 	 */
-	feedbackAdd(feedbackItem, parentFeedbackIds) {
+	feedbackAdd(feedbackItem, parentId) {
 		/** @type {FragmentFeedbackInstance} */
 		let newFeedback
 
-		// TODO - don't need an array of these ids
-		const parentId = last(parentFeedbackIds)
 		if (parentId) {
 			const parent = this.#feedbacks.findById(parentId)
 			if (!parent) {
-				throw new Error(`Failed to find parent feedback ${parentFeedbackIds.join('/')} when adding child feedback`)
+				throw new Error(`Failed to find parent feedback ${parentId} when adding child feedback`)
 			}
 
 			// this.#feedbacks.push(newFeedback)
@@ -325,9 +323,10 @@ export default class FragmentFeedbacks {
 	 * @access public
 	 */
 	feedbackReorder(oldIndex, newIndex) {
-		oldIndex = clamp(oldIndex, 0, this.#feedbacks.length)
-		newIndex = clamp(newIndex, 0, this.#feedbacks.length)
-		this.#feedbacks.splice(newIndex, 0, ...this.#feedbacks.splice(oldIndex, 1))
+		// TODO building-blocks reimplement
+		// oldIndex = clamp(oldIndex, 0, this.#feedbacks.length)
+		// newIndex = clamp(newIndex, 0, this.#feedbacks.length)
+		// this.#feedbacks.splice(newIndex, 0, ...this.#feedbacks.splice(oldIndex, 1))
 
 		this.#commitChange()
 

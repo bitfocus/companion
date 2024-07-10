@@ -57,11 +57,11 @@ class FeedbackEditorServiceImpl {
 		this.#entityType = entityType
 	}
 
-	addFeedback(parentFeedbackIds: string[], feedbackType: string) {
+	addFeedback(parentId: string | null, feedbackType: string) {
 		const [connectionId, feedbackId] = feedbackType.split(':', 2)
 		socketEmitPromise(this.#socket, 'controls:feedback:add', [
 			this.#controlId,
-			parentFeedbackIds,
+			parentId,
 			connectionId,
 			feedbackId,
 		]).catch((e) => {
@@ -150,13 +150,15 @@ class FeedbackEditorServiceImpl {
 	}
 }
 
-function wrapServiceImpl(serviceImpl: FeedbackEditorServiceImpl, parentFeedbackIds: string[]): IFeedbackEditorService {
-	const fullIdChain = [serviceImpl.controlId, ...parentFeedbackIds].join('_')
+function wrapServiceImpl(serviceImpl: FeedbackEditorServiceImpl, parentId: string | null): IFeedbackEditorService {
+	let collapseHelperKey = `feedbacks_${serviceImpl.controlId}`
+	if (parentId) collapseHelperKey += `_${parentId}`
+
 	return {
-		collapseHelperKey: `feedbacks_${fullIdChain}`,
+		collapseHelperKey: collapseHelperKey,
 		dragId: `feedbacks_${serviceImpl.controlId}`, // TODO - confirm this
 		addFeedback: (feedbackType: string) => {
-			serviceImpl.addFeedback(parentFeedbackIds, feedbackType)
+			serviceImpl.addFeedback(parentId, feedbackType)
 		},
 		moveCard: (dragIndex: number, hoverIndex: number) => {
 			serviceImpl.moveCard(dragIndex, hoverIndex)
@@ -199,7 +201,7 @@ function wrapServiceImpl(serviceImpl: FeedbackEditorServiceImpl, parentFeedbackI
 		},
 
 		createChildService: (parentId: string): IFeedbackEditorService => {
-			return wrapServiceImpl(serviceImpl, [...parentFeedbackIds, parentId])
+			return wrapServiceImpl(serviceImpl, parentId)
 		},
 	}
 }
@@ -216,7 +218,7 @@ export function useControlFeedbacksEditorService(
 		[socket, controlId, confirmModal, entityType]
 	)
 
-	return useMemo(() => wrapServiceImpl(helper, []), [helper])
+	return useMemo(() => wrapServiceImpl(helper, null), [helper])
 }
 
 export function useControlFeedbackService(
