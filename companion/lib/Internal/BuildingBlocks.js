@@ -37,7 +37,7 @@ export default class BuildingBlocks {
 
 	/**
 	 *
-	 * @returns {Record<string, import('../Instance/Definitions.js').FeedbackDefinition>}
+	 * @returns {Record<string, import('./Types.js').InternalFeedbackDefinition>}
 	 */
 	getFeedbackDefinitions() {
 		return {
@@ -50,15 +50,10 @@ export default class BuildingBlocks {
 					bgcolor: combineRgb(255, 0, 0),
 				},
 				showInvert: false,
-				options: [
-					{
-						type: 'internal:feedbacks',
-						label: 'Conditions',
-						id: 'feedbacks',
-					},
-				],
+				options: [],
 				hasLearn: false,
 				learnTimeout: undefined,
+				supportsChildFeedbacks: true,
 			},
 		}
 	}

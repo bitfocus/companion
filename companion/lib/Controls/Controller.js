@@ -318,7 +318,7 @@ class ControlsController extends CoreBase {
 					control.feedbacks.isBooleanOnly
 				)
 				if (feedbackItem) {
-					return control.feedbacks.feedbackAdd(feedbackItem)
+					return control.feedbacks.feedbackAdd(feedbackItem, parentFeedbackIds)
 				} else {
 					return false
 				}

@@ -158,6 +158,8 @@ export default class FragmentFeedbacks {
 
 			const definition = this.#instanceDefinitions.getFeedbackDefinition(feedback.instance_id, feedback.type)
 
+			// TODO building-blocks
+
 			let rawValue = this.#cachedFeedbackValues[feedback.id]
 
 			if (definition && typeof rawValue === 'boolean') {
@@ -180,16 +182,44 @@ export default class FragmentFeedbacks {
 	 * @access private
 	 */
 	#cleanupFeedback(feedback) {
-		// Inform relevant module
-		const connection = this.#moduleHost.getChild(feedback.instance_id, true)
-		if (connection) {
-			connection.feedbackDelete(feedback).catch((/** @type {any} */ e) => {
-				this.#logger.silly(`feedback_delete to connection failed: ${e.message}`)
-			})
-		}
+		this.#executeForFeedbackAndChildren(feedback, (feedback) => {
+			// Inform relevant module
+			const connection = this.#moduleHost.getChild(feedback.instance_id, true)
+			if (connection) {
+				connection.feedbackDelete(feedback).catch((/** @type {any} */ e) => {
+					this.#logger.silly(`feedback_delete to connection failed: ${e.message}`)
+				})
+			}
 
-		// Remove from cached feedback values
-		delete this.#cachedFeedbackValues[feedback.id]
+			// Remove from cached feedback values
+			delete this.#cachedFeedbackValues[feedback.id]
+		})
+	}
+
+	/**
+	 * Execute a callback for each feedback, and its children
+	 * @param {(feedback: FeedbackInstance) => void} callback
+	 */
+	#executeForEachFeedback(callback) {
+		for (const feedback of this.feedbacks) {
+			this.#executeForFeedbackAndChildren(feedback, callback)
+		}
+	}
+
+	/**
+	 * Execute a callback for a feedback, and its children
+	 * @param {FeedbackInstance} feedback
+	 * @param {(feedback: FeedbackInstance) => void} callback
+	 */
+	#executeForFeedbackAndChildren(feedback, callback) {
+		callback(feedback)
+
+		// Execute for children
+		if (feedback.instance_id === 'internal' && feedback.children) {
+			for (const child of feedback.children) {
+				this.#executeForFeedbackAndChildren(child, callback)
+			}
+		}
 	}
 
 	/**
@@ -199,13 +229,14 @@ export default class FragmentFeedbacks {
 	 */
 	clearConnectionState(connectionId) {
 		let changed = false
-		for (const feedback of this.feedbacks) {
+
+		this.#executeForEachFeedback((feedback) => {
 			if (feedback.instance_id === connectionId) {
 				delete this.#cachedFeedbackValues[feedback.id]
 
 				changed = true
 			}
-		}
+		})
 
 		if (changed) this.#triggerRedraw()
 	}
@@ -223,14 +254,36 @@ export default class FragmentFeedbacks {
 	/**
 	 * Add a feedback to this control
 	 * @param {FeedbackInstance} feedbackItem the item to add
+	 * @param {string[]} parentFeedbackIds the ids of parent feedbacks that this feedback should be added as a child of
 	 * @returns {boolean} success
 	 * @access public
 	 */
-	feedbackAdd(feedbackItem) {
-		this.feedbacks.push(feedbackItem)
+	feedbackAdd(feedbackItem, parentFeedbackIds) {
+		if (parentFeedbackIds.length > 0) {
+			/** @type {FeedbackInstance | undefined} */
+			let parentItem
+			for (const parentId of parentFeedbackIds) {
+				/** @type {FeedbackInstance []|undefined} */
+				const searchList = parentItem ? parentItem.children : this.feedbacks
+				parentItem = searchList?.find((fb) => fb.id === parentId)
+
+				// Stop if the parent wasn't found, or isn't valid
+				if (!parentItem || parentItem.instance_id !== 'internal') break
+			}
+
+			if (!parentItem || parentItem.instance_id !== 'internal') {
+				throw new Error(`Failed to find parent feedback ${parentFeedbackIds.join('/')} when adding child feedback`)
+			}
+
+			if (!parentItem.children) parentItem.children = []
+
+			parentItem.children.push(feedbackItem)
+		} else {
+			this.feedbacks.push(feedbackItem)
+		}
 
 		// Inform relevant module
-		this.#feedbackSubscribe(feedbackItem)
+		this.#feedbackSubscribeRecursive(feedbackItem)
 
 		this.#commitChange()
 
@@ -247,7 +300,10 @@ export default class FragmentFeedbacks {
 		const index = this.feedbacks.findIndex((fb) => fb.id === id)
 		if (index !== -1) {
 			const feedbackItem = cloneDeep(this.feedbacks[index])
-			feedbackItem.id = nanoid()
+			// Recursively update the ids
+			this.#executeForFeedbackAndChildren(feedbackItem, (feedback) => {
+				feedback.id = nanoid()
+			})
 
 			this.feedbacks.splice(index + 1, 0, feedbackItem)
 
@@ -280,7 +336,7 @@ export default class FragmentFeedbacks {
 
 				// Inform relevant module
 				if (!feedback.disabled) {
-					this.#feedbackSubscribe(feedback)
+					this.#feedbackSubscribeRecursive(feedback)
 				} else {
 					this.#cleanupFeedback(feedback)
 				}
@@ -569,18 +625,35 @@ export default class FragmentFeedbacks {
 	 * @access private
 	 */
 	#feedbackSubscribe(feedback) {
-		if (!feedback.disabled) {
-			if (feedback.instance_id === 'internal') {
-				this.#internalModule.feedbackUpdate(feedback, this.controlId)
-			} else {
-				const connection = this.#moduleHost.getChild(feedback.instance_id, true)
-				if (connection) {
-					connection.feedbackUpdate(feedback, this.controlId).catch((/** @type {any} */ e) => {
-						this.#logger.silly(`feedback_update to connection failed: ${e.message} ${e.stack}`)
-					})
-				}
+		if (feedback.disabled) return
+
+		if (feedback.instance_id === 'internal') {
+			this.#internalModule.feedbackUpdate(feedback, this.controlId)
+		} else {
+			const connection = this.#moduleHost.getChild(feedback.instance_id, true)
+			if (connection) {
+				connection.feedbackUpdate(feedback, this.controlId).catch((/** @type {any} */ e) => {
+					this.#logger.silly(`feedback_update to connection failed: ${e.message} ${e.stack}`)
+				})
 			}
 		}
+	}
+
+	/**
+	 * Inform the instance of an updated feedback and check its children
+	 * @param {FeedbackInstance} feedback the feedback which changed
+	 * @param {string=} onlyConnectionId If set, only re-subscribe feedbacks for this connection
+	 * @returns {void}
+	 * @access private
+	 */
+	#feedbackSubscribeRecursive(feedback, onlyConnectionId) {
+		this.#executeForFeedbackAndChildren(feedback, (feedback) => {
+			if (feedback.disabled) return
+
+			if (onlyConnectionId && feedback.instance_id !== onlyConnectionId) return
+
+			this.#feedbackSubscribe(feedback)
+		})
 	}
 
 	/**
@@ -591,6 +664,8 @@ export default class FragmentFeedbacks {
 	 */
 	forgetConnection(connectionId) {
 		let changed = false
+
+		// TODO building-block
 
 		// Cleanup any feedbacks
 		const newFeedbacks = []
@@ -674,6 +749,8 @@ export default class FragmentFeedbacks {
 		/** @type {Promise<any>[]} */
 		const ps = []
 
+		// TODO building-block
+
 		for (let i = 0; i < this.feedbacks.length; i++) {
 			const feedback = this.feedbacks[i]
 			feedback.id = nanoid()
@@ -703,12 +780,13 @@ export default class FragmentFeedbacks {
 	/**
 	 * Re-trigger 'subscribe' for all feedbacks
 	 * This should be used when something has changed which will require all feedbacks to be re-run
+	 * @param {string=} onlyConnectionId If set, only re-subscribe feedbacks for this connection
 	 * @returns {void}
 	 */
-	resubscribeAllFeedbacks() {
+	resubscribeAllFeedbacks(onlyConnectionId) {
 		// Some feedbacks will need to redraw
 		for (const feedback of this.feedbacks) {
-			this.#feedbackSubscribe(feedback)
+			this.#feedbackSubscribeRecursive(feedback, onlyConnectionId)
 		}
 	}
 
@@ -717,11 +795,7 @@ export default class FragmentFeedbacks {
 	 * @returns {void}
 	 */
 	updateAllInternal() {
-		for (const feedback of this.feedbacks) {
-			if (feedback.instance_id === 'internal') {
-				this.#feedbackSubscribe(feedback)
-			}
-		}
+		this.resubscribeAllFeedbacks('internal')
 	}
 
 	/**
@@ -732,6 +806,8 @@ export default class FragmentFeedbacks {
 	 */
 	updateFeedbackValues(connectionId, newValues) {
 		let changed = false
+
+		// TODO building-block
 
 		for (const feedback of this.feedbacks) {
 			if (feedback.instance_id === connectionId) {
@@ -761,6 +837,8 @@ export default class FragmentFeedbacks {
 	 */
 	verifyConnectionIds(knownConnectionIds) {
 		let changed = false
+
+		// TODO building-block
 
 		// Clean out feedbacks
 		const feedbackLength = this.feedbacks.length

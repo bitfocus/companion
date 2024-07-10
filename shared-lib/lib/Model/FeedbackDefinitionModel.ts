@@ -16,6 +16,8 @@ export interface FeedbackDefinition {
 
 export interface InternalFeedbackDefinition extends SetOptional<FeedbackDefinition, 'hasLearn' | 'learnTimeout'> {
 	showButtonPreview?: boolean
+
+	supportsChildFeedbacks?: boolean
 }
 
 export type FeedbackDefinitionUpdate =
